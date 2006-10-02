@@ -77,6 +77,25 @@ static BOOL GuidToString(LPGUID Guid, LPWSTR String)
 
 
 /***********************************************************************
+ * CMP_WaitNoPendingInstallEvents [SETUPAPI.@]
+ */
+DWORD WINAPI CMP_WaitNoPendingInstallEvents(
+    DWORD dwTimeout)
+{
+    HANDLE hEvent;
+    DWORD ret;
+
+    hEvent = OpenEventW(SYNCHRONIZE, FALSE, L"Global\\PnP_No_Pending_Install_Events");
+    if (hEvent == NULL)
+       return WAIT_FAILED;
+
+    ret = WaitForSingleObject(hEvent, dwTimeout);
+    CloseHandle(hEvent);
+    return ret;
+}
+
+
+/***********************************************************************
  * CMP_Init_Detection [SETUPAPI.@]
  */
 CONFIGRET WINAPI CMP_Init_Detection(

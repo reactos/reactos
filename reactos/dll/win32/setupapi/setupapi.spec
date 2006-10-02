@@ -7,7 +7,7 @@
 @ stub CMP_RegisterNotification
 @ stdcall CMP_Report_LogOn(long long)
 @ stub CMP_UnregisterNotification
-@ stub CMP_WaitNoPendingInstallEvents
+@ stdcall CMP_WaitNoPendingInstallEvents(long)
 @ stub CMP_WaitServicesAvailable
 @ stdcall CM_Add_Empty_Log_Conf(ptr ptr long long)
 @ stdcall CM_Add_Empty_Log_Conf_Ex(ptr ptr long long ptr)

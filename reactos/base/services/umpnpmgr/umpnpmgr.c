@@ -26,6 +26,7 @@
  */
 
 /* INCLUDES *****************************************************************/
+//#define HAVE_SLIST_ENTRY_IMPLEMENTED
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <cmtypes.h>
@@ -61,7 +62,24 @@ static HKEY hClassKey = NULL;
 
 static HANDLE hUserToken = NULL;
 static HANDLE hInstallEvent = NULL;
+static HANDLE hNoPendingInstalls = NULL;
 
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+static SLIST_HEADER DeviceInstallListHead;
+#else
+static LIST_ENTRY DeviceInstallListHead;
+#endif
+static HANDLE hDeviceInstallListNotEmpty;
+
+typedef struct
+{
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+    SLIST_ENTRY ListEntry;
+#else
+    LIST_ENTRY ListEntry;
+#endif
+    WCHAR DeviceIds[1];
+} DeviceInstallParams;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1437,6 +1455,51 @@ cleanup:
 }
 
 
+/* Loop to install all queued devices installations */
+static DWORD WINAPI
+DeviceInstallThread(LPVOID lpParameter)
+{
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+    PSLIST_ENTRY ListEntry;
+#else
+    PLIST_ENTRY ListEntry;
+#endif
+    DeviceInstallParams* Params;
+    BOOL setupActive;
+
+    setupActive = SetupIsActive();
+
+    SetEnvironmentVariable(L"USERPROFILE", L"."); /* FIXME: why is it needed? */
+
+    while (TRUE)
+    {
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+        ListEntry = InterlockedPopEntrySList(&DeviceInstallListHead);
+#else
+        if (IsListEmpty(&DeviceInstallListHead))
+            ListEntry = NULL;
+        else
+            ListEntry = RemoveHeadList(&DeviceInstallListHead);
+#endif
+        if (ListEntry == NULL)
+        {
+            SetEvent(hNoPendingInstalls);
+            DPRINT1("*** EVENT SETTED\n");
+            WaitForSingleObject(hDeviceInstallListNotEmpty, INFINITE);
+        }
+        else
+        {
+            ResetEvent(hNoPendingInstalls);
+            DPRINT1("*** EVENT RESETTED\n");
+            Params = CONTAINING_RECORD(ListEntry, DeviceInstallParams, ListEntry);
+            InstallDevice(Params->DeviceIds, setupActive);
+        }
+    }
+
+    return 0;
+}
+
+
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
 {
@@ -1444,14 +1507,11 @@ PnpEventThread(LPVOID lpParameter)
     ULONG PnpEventSize;
     NTSTATUS Status;
     RPC_STATUS RpcStatus;
-    BOOL setupActive;
 
     PnpEventSize = 0x1000;
     PnpEvent = HeapAlloc(GetProcessHeap(), 0, PnpEventSize);
     if (PnpEvent == NULL)
         return ERROR_OUTOFMEMORY;
-
-    setupActive = SetupIsActive();
 
     for (;;)
     {
@@ -1476,18 +1536,34 @@ PnpEventThread(LPVOID lpParameter)
             break;
         }
 
+        /* Process the pnp event */
         DPRINT("Received PnP Event\n");
         if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
+            DeviceInstallParams* Params;
+            DWORD len;
+
             DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
-            InstallDevice(PnpEvent->TargetDevice.DeviceIds, setupActive);
+
+            /* Queue device install (will be dequeued by DeviceInstallThread */
+            len = FIELD_OFFSET(DeviceInstallParams, DeviceIds)
+                + wcslen(PnpEvent->TargetDevice.DeviceIds) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+            Params = HeapAlloc(GetProcessHeap(), 0, len);
+            if (Params)
+            {
+                wcscpy(Params->DeviceIds, PnpEvent->TargetDevice.DeviceIds);
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+                InterlockedPushEntrySList(&DeviceInstallListHead, &Params->ListEntry);
+#else
+                InsertTailList(&DeviceInstallListHead, &Params->ListEntry);
+#endif
+                SetEvent(hDeviceInstallListNotEmpty);
+            }
         }
         else
         {
             DPRINT1("Unknown event\n");
         }
-
-        /* FIXME: Process the pnp event */
 
         /* Dequeue the current pnp event and signal the next one */
         NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
@@ -1507,9 +1583,23 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 
     DPRINT("ServiceMain() called\n");
 
+    hNoPendingInstalls = CreateEventW(NULL,
+                                      TRUE,
+                                      FALSE,
+                                      L"Global\\PnP_No_Pending_Install_Events");
+
     hThread = CreateThread(NULL,
                            0,
                            PnpEventThread,
+                           NULL,
+                           0,
+                           &dwThreadId);
+    if (hThread != NULL)
+        CloseHandle(hThread);
+
+    hThread = CreateThread(NULL,
+                           0,
+                           DeviceInstallThread,
                            NULL,
                            0,
                            &dwThreadId);
@@ -1543,6 +1633,20 @@ main(int argc, char *argv[])
         DPRINT1("Could not create the Install Event! (Error %lu)\n", dwError);
         return dwError;
     }
+
+    hDeviceInstallListNotEmpty = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (hDeviceInstallListNotEmpty == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT1("Could not create the Event! (Error %lu)\n", dwError);
+        return dwError;
+    }
+
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+    InitializeSListHead(&DeviceInstallListHead);
+#else
+    InitializeListHead(&DeviceInstallListHead);
+#endif
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"System\\CurrentControlSet\\Enum",

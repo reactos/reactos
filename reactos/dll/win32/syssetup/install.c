@@ -49,6 +49,8 @@
 #include "globals.h"
 #include "resource.h"
 
+DWORD WINAPI
+CMP_WaitNoPendingInstallEvents(DWORD dwTimeout);
 
 /* GLOBALS ******************************************************************/
 
@@ -653,6 +655,12 @@ InstallReactOS (HINSTANCE hInstance)
   if (!EnableUserModePnpManager())
   {
     DebugPrint("EnableUserModePnpManager() failed!\n");
+    return 0;
+  }
+
+  if (CMP_WaitNoPendingInstallEvents(INFINITE) != WAIT_OBJECT_0)
+  {
+    DebugPrint("CMP_WaitNoPendingInstallEvents() failed!\n");
     return 0;
   }
 
