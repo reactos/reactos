@@ -483,7 +483,7 @@ IoInit3(VOID)
 
     /* Create the SystemRoot symbolic link */
     DPRINT("CommandLine: %s\n", KeLoaderBlock->LoadOptions);
-    Status = IoCreateSystemRootLink(KeLoaderBlock->LoadOptions);
+    Status = IoCreateSystemRootLink(KeLoaderBlock);
     if (!NT_SUCCESS(Status)) {
         CPRINT("IoCreateSystemRootLink FAILED: (0x%x) - ", Status);
         KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);

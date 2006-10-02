@@ -307,9 +307,20 @@ VOID
 INIT_FUNCTION
 NTAPI
 PoInit(BOOLEAN HaveAcpiTable,
-       BOOLEAN ForceAcpiDisable)
+       IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   PVOID NotificationEntry;
+  PCHAR CommandLine;
+  BOOLEAN ForceAcpiDisable = FALSE;
+
+  /* Get the Command Line */
+  CommandLine = KeLoaderBlock->LoadOptions;
+
+  /* Upcase it */
+  _strupr(CommandLine);
+
+  /* Check for ACPI disable */
+  if (strstr(CommandLine, "NOACPI")) ForceAcpiDisable = TRUE;
 
   if (ForceAcpiDisable)
     {

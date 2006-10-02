@@ -29,7 +29,6 @@ extern LOADER_MODULE KeLoaderModules[64];
 extern ULONG KeLoaderModuleCount;
 extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
 BOOLEAN NoGuiBoot = FALSE;
-static BOOLEAN ForceAcpiDisable = FALSE;
 
 /* Init flags and settings */
 ULONG ExpInitializationPhase;
@@ -48,7 +47,7 @@ NLSTABLEINFO ExpNlsTableInfo;
 static
 VOID
 INIT_FUNCTION
-InitSystemSharedUserPage (PCSZ ParameterLine)
+InitSystemSharedUserPage (IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     UNICODE_STRING ArcDeviceName;
     UNICODE_STRING ArcName;
@@ -56,9 +55,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
     UNICODE_STRING DriveDeviceName;
     UNICODE_STRING DriveName;
     WCHAR DriveNameBuffer[20];
-    PCHAR ParamBuffer;
     PWCHAR ArcNameBuffer;
-    PCHAR p;
     NTSTATUS Status;
     ULONG Length;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -86,39 +83,16 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      * Format: "<arc_name>\<path> [options...]"
      */
 
-    /* Create local parameter line copy */
-    ParamBuffer = ExAllocatePool(PagedPool, 256);
-    strcpy (ParamBuffer, (const char *)ParameterLine);
-    DPRINT("%s\n", ParamBuffer);
+    RtlCreateUnicodeStringFromAsciiz(&BootPath, LoaderBlock->NtBootPathName);
 
-    /* Cut options off */
-    p = strchr (ParamBuffer, ' ');
-    if (p) *p = 0;
-    DPRINT("%s\n", ParamBuffer);
-
-    /* Extract path */
-    p = strchr (ParamBuffer, '\\');
-    if (p) {
-
-        DPRINT("Boot path: %s\n", p);
-        RtlCreateUnicodeStringFromAsciiz (&BootPath, p);
-        *p = 0;
-
-    } else {
-
-        DPRINT("Boot path: %s\n", "\\");
-        RtlCreateUnicodeStringFromAsciiz (&BootPath, "\\");
-    }
-    DPRINT("Arc name: %s\n", ParamBuffer);
+    /* Remove the trailing backslash */
+    BootPath.Length -= sizeof(WCHAR);
+    BootPath.MaximumLength -= sizeof(WCHAR);
 
     /* Only ARC Name left - Build full ARC Name */
     ArcNameBuffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
-    swprintf (ArcNameBuffer, L"\\ArcName\\%S", ParamBuffer);
+    swprintf (ArcNameBuffer, L"\\ArcName\\%S", LoaderBlock->ArcBootDeviceName);
     RtlInitUnicodeString (&ArcName, ArcNameBuffer);
-    DPRINT("Arc name: %wZ\n", &ArcName);
-
-    /* Free ParamBuffer */
-    ExFreePool (ParamBuffer);
 
     /* Allocate ARC Device Name string */
     ArcDeviceName.Length = 0;
@@ -163,7 +137,6 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
         CPRINT("NtQuerySymbolicLinkObject() failed (Status %x)\n", Status);
         KEBUGCHECK(0);
     }
-    DPRINT("Length: %lu ArcDeviceName: %wZ\n", Length, &ArcDeviceName);
 
     /* Allocate Device Name string */
     DriveDeviceName.Length = 0;
@@ -228,48 +201,6 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 
         DbgPrint("No system drive found!\n");
         KEBUGCHECK (NO_BOOT_DEVICE);
-    }
-}
-
-__inline
-VOID
-STDCALL
-ParseCommandLine(PBOOLEAN NoGuiBoot,
-                 PBOOLEAN ForceAcpiDisable)
-{
-    PCHAR p1, p2;
-
-    p1 = KeLoaderBlock->LoadOptions;
-    while(*p1 && (p2 = strchr(p1, '/'))) {
-
-        p2++;
-        if (!_strnicmp(p2, "NOGUIBOOT", 9)) {
-
-            p2 += 9;
-            *NoGuiBoot = TRUE;
-
-        } else if (!_strnicmp(p2, "CRASHDUMP", 9)) {
-
-            p2 += 9;
-            if (*p2 == ':') {
-
-                p2++;
-                if (!_strnicmp(p2, "FULL", 4)) {
-
-                    MmCoreDumpType = MM_CORE_DUMP_TYPE_FULL;
-
-                } else {
-
-                    MmCoreDumpType = MM_CORE_DUMP_TYPE_NONE;
-                }
-            }
-        } else if (!_strnicmp(p2, "NOACPI", 6)) {
-
-            p2 += 6;
-            *ForceAcpiDisable = TRUE;
-        }
-
-        p1 = p2;
     }
 }
 
@@ -472,9 +403,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
 {
     PNLS_DATA_BLOCK NlsData;
 
-    /* Parse Command Line Settings */
-    ParseCommandLine(&NoGuiBoot, &ForceAcpiDisable);
-
     /* FIXME: Deprecate soon */
     ParseAndCacheLoadedModules();
 
@@ -630,7 +558,7 @@ ExPhase2Init(PVOID Context)
     IoInit();
 
     /* TBD */
-    PoInit(AcpiTableDetected, ForceAcpiDisable);
+    PoInit(AcpiTableDetected, KeLoaderBlock);
 
     /* Initialize the Registry (Hives are NOT yet loaded!) */
     CmInitializeRegistry();
@@ -649,6 +577,9 @@ ExPhase2Init(PVOID Context)
 
     /* Clear the screen to blue */
     HalInitSystem(2, KeLoaderBlock);
+
+    /* Check if GUI Boot is enabled */
+    if (strstr(KeLoaderBlock->LoadOptions, "NOGUIBOOT")) NoGuiBoot = TRUE;
 
     /* Display version number and copyright/warranty message */
     if (NoGuiBoot) ExpDisplayNotice();
@@ -685,7 +616,7 @@ ExPhase2Init(PVOID Context)
     PsLocateSystemDll();
 
     /* Initialize shared user page. Set dos system path, dos device map, etc. */
-    InitSystemSharedUserPage (KeLoaderBlock->LoadOptions);
+    InitSystemSharedUserPage(KeLoaderBlock);
 
     /* Create 'ReactOSInitDone' event */
     RtlInitUnicodeString(&EventName, L"\\ReactOSInitDone");

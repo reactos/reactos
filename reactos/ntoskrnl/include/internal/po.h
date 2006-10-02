@@ -39,7 +39,7 @@ VOID
 NTAPI
 PoInit(
     BOOLEAN HaveAcpiTable,
-    BOOLEAN ForceAcpiDisable
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 VOID

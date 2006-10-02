@@ -568,7 +568,7 @@ IoCreateArcNames(
 
 NTSTATUS
 IoCreateSystemRootLink(
-    IN PCHAR ParameterLine
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 //

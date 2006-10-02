@@ -43,6 +43,10 @@ extern LDR_DATA_TABLE_ENTRY HalModuleObject;
 LOADER_PARAMETER_BLOCK BldrLoaderBlock;
 LOADER_PARAMETER_EXTENSION BldrExtensionBlock;
 CHAR BldrCommandLine[256];
+CHAR BldrArcBootPath[64];
+CHAR BldrArcHalPath[64];
+CHAR BldrNtHalPath[64];
+CHAR BldrNtBootPath[64];
 LDR_DATA_TABLE_ENTRY BldrModules[64];
 MEMORY_ALLOCATION_DESCRIPTOR BldrMemoryDescriptors[64];
 WCHAR BldrModuleStrings[64][260];
@@ -63,6 +67,8 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     ULONG i, j, ModSize;
     PVOID ModStart;
     PCHAR DriverName;
+    PCHAR BootPath, HalPath;
+    CHAR CommandLine[256];
 
     /* First get some kernel-loader globals */
     AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
@@ -256,6 +262,36 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         /* All we'll setup right now is the flag for text-mode setup */
         LoaderBlock->SetupLdrBlock->Flags = 1;
     }
+
+    /* Make a copy of the command line */
+    strcpy(CommandLine, LoaderBlock->LoadOptions);
+
+    /* Find the first \, separating the ARC path from NT path */
+    BootPath = strchr(CommandLine, '\\');
+    *BootPath = ANSI_NULL;
+    strncpy(BldrArcBootPath, CommandLine, 63);
+    LoaderBlock->ArcBootDeviceName = BldrArcBootPath;
+
+    /* The rest of the string is the NT path */
+    HalPath = strchr(BootPath + 1, ' ');
+    *HalPath = ANSI_NULL;
+    BldrNtBootPath[0] = '\\';
+    strncat(BldrNtBootPath, BootPath + 1, 63);
+    strcat(BldrNtBootPath,"\\");
+    LoaderBlock->NtBootPathName = BldrNtBootPath;
+
+    /* Set the HAL paths */
+    strncpy(BldrArcHalPath, BldrArcBootPath, 63);
+    LoaderBlock->ArcHalDeviceName = BldrArcHalPath;
+    strcpy(BldrNtHalPath, "\\");
+    LoaderBlock->NtHalPathName = BldrNtHalPath;
+
+    /* Use this new command line */
+    strncpy(LoaderBlock->LoadOptions, HalPath + 2, 255);
+
+    /* Parse it and change every slash to a space */
+    BootPath = LoaderBlock->LoadOptions;
+    do {if (*BootPath == '/') *BootPath = ' ';} while (*BootPath++);
 }
 
 VOID

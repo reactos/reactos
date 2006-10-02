@@ -188,10 +188,15 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
-        
+
         /* Display separator + ReactOS version at start of the debug log */
-        DPRINT1("---------------------------------------------------------------\n");
+        DPRINT1("-----------------------------------------------------\n");
         DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+        DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
+        DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName,
+                                            KeLoaderBlock->NtHalPathName,
+                                            KeLoaderBlock->ArcHalDeviceName,
+                                            KeLoaderBlock->NtBootPathName);
     }
     else if (BootPhase == 2)
     {

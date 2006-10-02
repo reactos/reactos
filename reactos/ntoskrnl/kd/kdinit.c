@@ -166,87 +166,83 @@ KdInitSystem(ULONG BootPhase,
 {
     ULONG Value;
     ULONG i;
-    PCHAR p1, p2;
-
-#if 0
-    /* NTLDR HACK */
-    KdpSerialInit(&DispatchTable[KdSerial], 0);
-    KdpDebugMode.Serial = TRUE;
-    SerialPortInfo.ComPort = 1;
-    KdpPort = 1;
-    KdDebuggerEnabled = TRUE;
-#endif
+    PCHAR CommandLine, Port, BaudRate, Irq;
 
     /* Set Default Port Options */
     if (BootPhase == 0)
     {
+        /* Get the Command Line */
+        CommandLine = LoaderBlock->LoadOptions;
 
-        /* Parse the Command Line */
-        p1 = LoaderBlock->LoadOptions;
-        while (p1 && (p2 = strchr(p1, '/')))
+        /* Upcase it */
+        _strupr(CommandLine);
+
+        /* Check for settings that we support */
+        if (strstr(CommandLine, "BREAK")) KdpEarlyBreak = TRUE;
+        if (strstr(CommandLine, "NODEBUG")) KdDebuggerEnabled = FALSE;
+        if (strstr(CommandLine, "CRASHDEBUG")) KdDebuggerEnabled = FALSE;
+        if (strstr(CommandLine, "DEBUG"))
         {
-            /* Move past the slash */
-            p2++;
+            /* Enable on the serial port */
+            KdDebuggerEnabled = TRUE;
+            KdpDebugMode.Serial = TRUE;
+        }
 
-            /* Identify the Debug Type being Used */
-            if (!_strnicmp(p2, "DEBUGPORT=", 10))
-            {
-                p2 += 10;
-                p2 = KdpGetDebugMode(p2);
-                p2 = KdpGetWrapperDebugMode(p2, LoaderBlock);
-                KdDebuggerEnabled = TRUE;
-            }
-            /* Check for early breakpoint */
-            else if (!_strnicmp(p2, "BREAK", 5))
-            {
-                p2 += 5;
-                KdpEarlyBreak = TRUE;
-            }
-            /* Check for Kernel Debugging Enable */
-            else if (!_strnicmp(p2, "DEBUG", 5))
-            {
-                /* Enable it on the Serial Port */
-                p2 += 5;
-                KdDebuggerEnabled = TRUE;
-                KdpDebugMode.Serial = TRUE;
-            }
-            /* Check for Kernel Debugging Bypass */
-            else if (!_strnicmp(p2, "NODEBUG", 7))
-            {
-                /* Disable Debugging */
-                p2 += 7;
-                KdDebuggerEnabled = FALSE;
-            }
-            /* Check for Kernel Debugging Bypass unless STOP Error */
-            else if (!_strnicmp(p2, "CRASHDEBUG", 10))
-            {
-                /* Disable Debugging */
-                p2 += 10;
-                KdDebuggerEnabled = FALSE;
-            }
-            /* Check Serial Port Settings [Baud Rate] */
-            else if (!_strnicmp(p2, "BAUDRATE=", 9))
-            {
-                /* Get the Baud Rate */
-                p2 += 9;
-                Value = (ULONG)atol(p2);
+        /* Get the port and baud rate */
+        Port = strstr(CommandLine, "DEBUGPORT");
+        BaudRate = strstr(CommandLine, "BAUDRATE");
+        Irq = strstr(CommandLine, "IRQ");
 
-                /* Check if it's valid and Set it */
-                if (0 < Value) PortInfo.BaudRate = SerialPortInfo.BaudRate = Value;
-            }
-            /* Check Serial Port Settings [IRQ] */
-            else if (!_strnicmp(p2, "IRQ=", 4))
+        /* Check if we got the /DEBUGPORT parameter */
+        if (Port)
+        {
+            /* Move past the actual string, to reach the port*/
+            Port += strlen("DEBUGPORT");
+
+            /* Now get past any spaces and skip the equal sign */
+            while (*Port == ' ') Port++;
+            Port++;
+
+            /* Get the debug mode and wrapper */
+            Port = KdpGetDebugMode(Port);
+            Port = KdpGetWrapperDebugMode(Port, LoaderBlock);
+            KdDebuggerEnabled = TRUE;
+        }
+
+        /* Check if we got a baud rate */
+        if (BaudRate)
+        {
+            /* Move past the actual string, to reach the rate */
+            BaudRate += strlen("BAUDRATE");
+
+            /* Now get past any spaces */
+            while (*BaudRate == ' ') BaudRate++;
+
+            /* And make sure we have a rate */
+            if (*BaudRate)
             {
-                /* Get the IRQ */
-                p2 += 3;
-                Value = (ULONG)atol(p2);
-
-                /* Check if it's valid and set it */
-                if (0 < Value) KdpPortIrq = Value;
+                /* Read and set it */
+                Value = atol(BaudRate + 1);
+                if (Value) PortInfo.BaudRate = SerialPortInfo.BaudRate = Value;
             }
+        }
 
-            /* Move to next */
-            p1 = p2;
+        /* Check Serial Port Settings [IRQ] */
+        if (Irq)
+        {
+            /* Move past the actual string, to reach the rate */
+            Irq += strlen("IRQ");
+
+            /* Now get past any spaces */
+            while (*Irq == ' ') Irq++;
+
+            /* And make sure we have an IRQ */
+            if (*Irq)
+            {
+                /* Read and set it */
+                Value = atol(Irq + 1);
+                if (Value) KdpPortIrq = Value;
+            }
         }
 
         /* Call Providers at Phase 0 */
@@ -257,7 +253,6 @@ KdInitSystem(ULONG BootPhase,
 
         /* Call Wrapper at Phase 0 */
         if (WrapperInitRoutine) WrapperInitRoutine(&WrapperTable, 0);
-
         return;
     }
 
