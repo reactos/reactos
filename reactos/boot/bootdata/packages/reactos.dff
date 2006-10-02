@@ -270,6 +270,7 @@ drivers\storage\pciidex\pciidex.sys                 2
 ;drivers\usb\miniport\usbuhci\usbuhci.sys            2
 ;drivers\usb\usbhub\usbhub.sys                       2
 ;drivers\usb\usbport\usbport.sys                     2
+drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
 
 drivers\video\displays\vga\vgaddi.dll               1
 drivers\video\displays\framebuf\framebuf.dll        1

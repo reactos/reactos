@@ -710,6 +710,13 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.XResolution",0x00010001,640
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.YResolution",0x00010001,480
 
+; USB uhci/ehci driver
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ErrorControl",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Group",0x00000000,"Base"
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ImagePath",0x00020000,"system32\drivers\usbdriver.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Start",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Type",0x00010001,0x00000001
+
 ; Windows Installer Service
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Description",0x00000000,"Adds, modifies, and removes applications provided as a Windows Installer (*.msi) package. If this service is disabled, any services that explicitly depend on it will fail to start."
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Group",0x00000000,"Windows Installer"
