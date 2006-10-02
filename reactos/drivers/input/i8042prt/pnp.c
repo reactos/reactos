@@ -80,6 +80,10 @@ i8042BasicDetect(
 	NTSTATUS Status;
 	UCHAR Value = 0;
 
+	/* Don't enable keyboard and mouse interrupts, disable keyboard/mouse */
+	if (!i8042ChangeMode(DeviceExtension, CCB_KBD_INT_ENAB | CCB_MOUSE_INT_ENAB, CCB_KBD_DISAB | CCB_MOUSE_DISAB))
+		return STATUS_IO_DEVICE_ERROR;
+
 	i8042Flush(DeviceExtension);
 
 	if (!i8042Write(DeviceExtension, DeviceExtension->ControlPort, CTRL_SELF_TEST))
@@ -100,10 +104,6 @@ i8042BasicDetect(
 		DPRINT1("Got 0x%02x instead of 0x55\n", Value);
 		return STATUS_IO_DEVICE_ERROR;
 	}
-
-	/* Don't enable keyboard and mouse interrupts, disable keyboard/mouse */
-	if (!i8042ChangeMode(DeviceExtension, CCB_KBD_INT_ENAB | CCB_MOUSE_INT_ENAB, CCB_KBD_DISAB | CCB_MOUSE_DISAB))
-		return STATUS_IO_DEVICE_ERROR;
 
 	/*
 	 * We used to send a KBD_LINE_TEST (0xAB) command here, but on at least HP
@@ -131,11 +131,6 @@ i8042DetectKeyboard(
 	IN PPORT_DEVICE_EXTENSION DeviceExtension)
 {
 	NTSTATUS Status;
-
-	if (!i8042ChangeMode(DeviceExtension, 0, CCB_KBD_DISAB))
-		return FALSE;
-
-	i8042Flush(DeviceExtension);
 
 	/* Set LEDs (that is not fatal if some error occurs) */
 	Status = i8042SynchWritePort(DeviceExtension, 0, KBD_CMD_SET_LEDS, TRUE);
@@ -332,6 +327,8 @@ EnableInterrupts(
 {
 	UCHAR FlagsToDisable = 0;
 	UCHAR FlagsToEnable = 0;
+
+	i8042Flush(DeviceExtension);
 
 	/* Select the devices we have */
 	if (DeviceExtension->Flags & KEYBOARD_PRESENT)
