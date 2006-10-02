@@ -71,30 +71,136 @@ InitImageInfo(PIMGINFO ImgInfo)
 
 
 static VOID
+SetRegTextData(HWND hwnd,
+               HKEY hKey,
+               LPTSTR Value,
+               UINT uID)
+{
+    LPTSTR lpBuf = NULL;
+    DWORD BufSize = 0;
+    DWORD Type;
+
+    if (RegQueryValueEx(hKey,
+                        Value,
+                        NULL,
+                        &Type,
+                        NULL,
+                        &BufSize) == ERROR_SUCCESS)
+    {
+        lpBuf = HeapAlloc(GetProcessHeap(),
+                          0,
+                          BufSize);
+        if (!lpBuf) return;
+
+        if (RegQueryValueEx(hKey,
+                            Value,
+                            NULL,
+                            &Type,
+                            (PBYTE)lpBuf,
+                            &BufSize) == ERROR_SUCCESS)
+        {
+            SetDlgItemText(hwnd,
+                           uID,
+                           lpBuf);
+        }
+
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpBuf);
+    }
+}
+
+static  VOID
+SetProcSpeed(HWND hwnd,
+             HKEY hKey,
+             LPTSTR Value,
+             UINT uID)
+
+{
+    TCHAR szBuf[64];
+    DWORD dwBuf;
+    DWORD BufSize = sizeof(DWORD);
+    DWORD Type = REG_SZ;
+
+    if (RegQueryValueEx(hKey,
+                        Value,
+                        NULL,
+                        &Type,
+                        (PBYTE)&dwBuf,
+                        &BufSize) == ERROR_SUCCESS)
+    {
+        if (dwBuf < 1000)
+        {
+            wsprintf(szBuf, _T("%lu MHz"), dwBuf);
+        }
+        else
+        {
+            double flt = dwBuf / 1000.0;
+            wsprintf(szBuf, _T("%l GHz"), flt);
+        }
+
+        SetDlgItemText(hwnd,
+                       uID,
+                       szBuf);
+    }
+}
+
+
+static VOID
 GetSystemInformation(HWND hwnd)
 {
+    HKEY hKey;
+    TCHAR ProcKey[] = _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
     MEMORYSTATUS MemStat;
     TCHAR Buf[32];
     INT Ret = 0;
+    
+
+
+    /* Get Processor information *
+     * although undocumented, this information is being pulled
+     * directly out of the registry instead of via setupapi as it
+     * contains all the info we need, and should remain static
+     */
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                     ProcKey,
+                     0,
+                     KEY_READ,
+                     &hKey) == ERROR_SUCCESS)
+    {
+        SetRegTextData(hwnd, 
+                       hKey, 
+                       _T("VendorIdentifier"), 
+                       IDC_PROCESSORMANUFACTURER);
+
+        SetRegTextData(hwnd, 
+                       hKey, 
+                       _T("ProcessorNameString"), 
+                       IDC_PROCESSOR);
+
+        SetProcSpeed(hwnd, 
+                     hKey, 
+                     _T("~MHz"), 
+                     IDC_PROCESSORSPEED);
+    }
+
 
     /* Get total physical RAM */
     MemStat.dwLength = sizeof(MemStat);
     GlobalMemoryStatus(&MemStat);
 
     if (MemStat.dwTotalPhys < KB_DIV)
-        Ret = wsprintf(Buf, _T("%luKB of RAM"), MemStat.dwTotalPhys/1024);
+        Ret = wsprintf(Buf, _T("%luKB of RAM"), MemStat.dwTotalPhys/KB_DIV);
     else if (MemStat.dwTotalPhys >= KB_DIV && MemStat.dwTotalPhys < GB_DIV)
-        Ret = wsprintf(Buf, _T("%luMB of RAM"), MemStat.dwTotalPhys/1048576);
+        Ret = wsprintf(Buf, _T("%luMB of RAM"), MemStat.dwTotalPhys/MB_DIV);
     else if (MemStat.dwTotalPhys > GB_DIV)
-        Ret = wsprintf(Buf, _T("%luGB of RAM"), MemStat.dwTotalPhys/1073741824);
+        Ret = wsprintf(Buf, _T("%luGB of RAM"), MemStat.dwTotalPhys/GB_DIV);
 
     if (Ret)
     {
-        SendDlgItemMessage(hwnd,
-                           IDC_SYSTEMMEMORY,
-                           WM_SETTEXT,
-                           0,
-                           (LPARAM)Buf);
+        SetDlgItemText(hwnd,
+                       IDC_SYSTEMMEMORY,
+                       Buf);
     }
 }
 
