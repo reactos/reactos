@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#define NTOSAPI
 #include <ntddk.h>
 #include <arc/arc.h>
 #include <ketypes.h>
