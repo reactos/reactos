@@ -869,7 +869,7 @@ SearchForLegacyDrivers(
 		Status = IoGetDeviceObjectPointer(&PortName, FILE_READ_ATTRIBUTES, &FileObject, &PortDeviceObject);
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT("IoGetDeviceObjectPointer(%wZ) failed with status 0x%08lx\n", Status);
+			DPRINT("IoGetDeviceObjectPointer(%wZ) failed with status 0x%08lx\n", &PortName, Status);
 			continue;
 		}
 		DPRINT("Legacy driver found: %wZ\n", &PortDeviceObject->DriverObject->DriverName);
