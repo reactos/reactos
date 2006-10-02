@@ -64,7 +64,6 @@ VOID IoInit(VOID);
 VOID IoInit2(BOOLEAN BootLog);
 VOID NTAPI IoInit3(VOID);
 BOOLEAN NTAPI ObInit(VOID);
-VOID PsInit(VOID);
 VOID CmInitializeRegistry(VOID);
 VOID NTAPI CmInitHives(BOOLEAN SetupBoot);
 VOID CmInit2(PCHAR CommandLine);

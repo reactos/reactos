@@ -6,6 +6,7 @@
 extern TIME_ZONE_INFORMATION ExpTimeZoneInfo;
 extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
+extern ULONG ExpTickCountMultiplier;
 extern POBJECT_TYPE ExEventPairObjectType;
 extern ULONG NtBuildNumber;
 extern ULONG NtMajorVersion;

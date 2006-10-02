@@ -81,7 +81,7 @@ PspShutdownProcessManager(
 
 BOOLEAN
 NTAPI
-PspInitPhase0(
+PsInitSystem(
     VOID
 );
 

@@ -27,8 +27,7 @@ static ERESOURCE SepSubjectContextLock;
 static BOOLEAN SepInitExports(VOID);
 
 #if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, SeInit1)
-#pragma alloc_text(INIT, SeInit2)
+#pragma alloc_text(INIT, SeInit)
 #pragma alloc_text(INIT, SepInitExports)
 #endif
 
@@ -37,7 +36,7 @@ static BOOLEAN SepInitExports(VOID);
 BOOLEAN 
 INIT_FUNCTION
 NTAPI
-SeInit1(VOID)
+SeInit(VOID)
 {
   SepInitLuid();
 
@@ -58,29 +57,19 @@ SeInit1(VOID)
   /* Initialize the subject context lock */
   ExInitializeResource(&SepSubjectContextLock);
 
+  /* Initialize token objects */
+  SepInitializeTokenImplementation();
+
+  /* Clear impersonation info for the idle thread */
+  PsGetCurrentThread()->ImpersonationInfo = NULL;
+  PspClearCrossThreadFlag(PsGetCurrentThread(), CT_ACTIVE_IMPERSONATION_INFO_BIT);
+
+  /* Initailize the boot token */
+  ObInitializeFastReference(&PsGetCurrentProcess()->Token, NULL);
+  ObInitializeFastReference(&PsGetCurrentProcess()->Token,
+      SepCreateSystemProcessToken());
   return TRUE;
 }
-
-
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-SeInit2(VOID)
-{
-    /* Initialize token objects */
-    SepInitializeTokenImplementation();
-
-    /* Clear impersonation info for the idle thread */
-    PsGetCurrentThread()->ImpersonationInfo = NULL;
-    PspClearCrossThreadFlag(PsGetCurrentThread(), CT_ACTIVE_IMPERSONATION_INFO_BIT);
-
-    /* Initailize the boot token */
-    ObInitializeFastReference(&PsGetCurrentProcess()->Token, NULL);
-    ObInitializeFastReference(&PsGetCurrentProcess()->Token,
-                              SepCreateSystemProcessToken());
-    return TRUE;
-}
-
 
 BOOLEAN
 NTAPI

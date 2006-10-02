@@ -367,6 +367,38 @@ ExInit3(VOID)
     ExpInitUuids();
 }
 
+ULONG
+NTAPI
+ExComputeTickCountMultiplier(IN ULONG ClockIncrement)
+{
+    ULONG MsRemainder = 0, MsIncrement;
+    ULONG IncrementRemainder;
+    ULONG i;
+
+    /* Count the number of milliseconds for each clock interrupt */
+    MsIncrement = ClockIncrement / (10 * 1000);
+
+    /* Count the remainder from the division above, with 24-bit precision */
+    IncrementRemainder = ClockIncrement - (MsIncrement * (10 * 1000));
+    for (i= 0; i < 24; i++)
+    {
+        /* Shift the remainders */
+        MsRemainder <<= 1;
+        IncrementRemainder <<= 1;
+
+        /* Check if we've went past 1 ms */
+        if (IncrementRemainder >= (10 * 1000))
+        {
+            /* Increase the remainder by one, and substract from increment */
+            IncrementRemainder -= (10 * 1000);
+            MsRemainder |= 1;
+        }
+    }
+
+    /* Return the increment */
+    return (MsIncrement << 24) | MsRemainder;
+}
+
 BOOLEAN
 NTAPI
 ExpInitSystemPhase0(VOID)
@@ -574,11 +606,11 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Setup system time */
     KiInitializeSystemClock();
 
-    /* Initialize the second stage of the kernel */
-    KeInit2();
-
     /* Initialize the executive at phase 0 */
     if (!ExInitSystem()) KEBUGCHECK(PHASE0_INITIALIZATION_FAILED);
+
+    /* Break into the Debugger if requested */
+    if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 
     /* Set system ranges */
     SharedUserData->Reserved1 = (ULONG_PTR)MmHighestUserAddress;
@@ -611,10 +643,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
      */
     ExpNlsTableSize += 2 * PAGE_SIZE; // BIAS FOR FREELDR. HACK!
 
-    /*
-     * Allocate the table in pool memory, so we can stop depending on the
-     * memory given to use by the loader, which is freed later.
-     */
+    /* Allocate the NLS buffer in the pool since loader memory will be freed */
     ExpNlsTableBase = ExAllocatePoolWithTag(NonPagedPool,
                                             ExpNlsTableSize,
                                             TAG('R', 't', 'l', 'i'));
@@ -661,8 +690,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     if (!ObInit()) KEBUGCHECK(OBJECT_INITIALIZATION_FAILED);
 
     /* Load basic Security for other Managers */
-    if (!SeInit1()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
-    if (!SeInit2()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
+    if (!SeInit()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
     /* Set up Region Maps, Sections and the Paging File */
     MmInit2();
@@ -671,16 +699,26 @@ ExpInitializeExecutive(IN ULONG Cpu,
     if (!ObInit()) KEBUGCHECK(OBJECT_INITIALIZATION_FAILED);
 
     /* Initialize the Process Manager */
-    PspInitPhase0();
+    if (!PsInitSystem()) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
 
-    /* Break into the Debugger if requested */
-    if (KdPollBreakIn()) DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
+    /* Calculate the tick count multiplier */
+    ExpTickCountMultiplier = ExComputeTickCountMultiplier(KeMaximumIncrement);
+    SharedUserData->TickCountMultiplier = ExpTickCountMultiplier;
 
-    /* Initialize all processors */
-    HalAllProcessorsStarted();
+    /* Set the OS Version */
+    SharedUserData->NtMajorVersion = NtMajorVersion;
+    SharedUserData->NtMinorVersion = NtMinorVersion;
 
-    /* Do Phase 1 HAL Initialization */
-    HalInitSystem(1, KeLoaderBlock);
+    /* Set the machine type */
+#if defined(_X86_)
+    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_I386;
+    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_I386;
+#elif defined(_PPC_) // <3 Arty
+    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_POWERPC;
+    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_POWERPC;
+#elif
+#error "Unsupported ReactOS Target"
+#endif
 }
 
 VOID
@@ -697,6 +735,15 @@ ExPhase2Init(PVOID Context)
 
     /* Set us at maximum priority */
     KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
+
+    /* Initialize the second stage of the kernel */
+    KeInit2();
+
+    /* Initialize all processors */
+    HalAllProcessorsStarted();
+
+    /* Do Phase 1 HAL Initialization */
+    HalInitSystem(1, KeLoaderBlock);
 
     /* Initialize Basic System Objects and Worker Threads */
     ExInit3();

@@ -397,6 +397,14 @@ PspInitPhase0(VOID)
     return TRUE;
 }
 
+BOOLEAN
+NTAPI
+PsInitSystem(VOID)
+{
+    /* For now, do only Phase 0 */
+    return PspInitPhase0();
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
