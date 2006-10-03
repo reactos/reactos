@@ -8,7 +8,7 @@ BEGIN
   BEGIN
     MENUITEM "Print",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Properties...",           IDC_PROP
+    MENUITEM "Properties",           IDC_PROP
     MENUITEM SEPARATOR
     MENUITEM "Help",                    IDC_PROGHELP, GRAYED
   END
@@ -30,7 +30,7 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Properties...",           IDC_PROP, GRAYED
+    MENUITEM "Properties",           IDC_PROP
     MENUITEM SEPARATOR
     MENUITEM "Help",                    IDC_PROGHELP
   END

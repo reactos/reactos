@@ -11,6 +11,7 @@
 
 static const TCHAR szMainWndClass[] = TEXT("DevMgmtWndClass");
 
+
 /* Toolbar buttons */
 TBBUTTON Buttons [] =
 {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
@@ -39,6 +40,7 @@ static const MENU_HINT MainMenuHintTable[] = {
     {IDC_PROGHELP, IDS_HINT_HELP},
     {IDC_ABOUT,    IDS_HINT_ABOUT}
 };
+
 /* system menu hints */
 static const MENU_HINT SystemMenuHintTable[] = {
     {SC_RESTORE,    IDS_HINT_SYS_RESTORE},
@@ -153,11 +155,11 @@ CreateTreeView(PMAIN_WND_INFO Info)
     Info->hTreeView = CreateWindowEx(0,
                                      WC_TREEVIEW,
                                      NULL,
-                                     WS_CHILD | WS_VISIBLE | WS_BORDER |
-                                        TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_LINESATROOT,
+                                     WS_CHILD | WS_VISIBLE | WS_BORDER | TVS_HASLINES |
+                                      TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_LINESATROOT,
                                      0, 0, 0, 0,
                                      Info->hMainWnd,
-                                     (HMENU) IDC_TREEVIEW,
+                                     (HMENU)IDC_TREEVIEW,
                                      hInstance,
                                      NULL);
     if (Info->hTreeView == NULL)
@@ -200,6 +202,7 @@ CreateStatusBar(PMAIN_WND_INFO Info)
 static VOID
 InitMainWnd(PMAIN_WND_INFO Info)
 {
+    HMENU hMenu;
     HTREEITEM hRoot;
 
     if (!CreateToolbar(Info))
@@ -214,15 +217,122 @@ InitMainWnd(PMAIN_WND_INFO Info)
     if (!CreateStatusBar(Info))
         DisplayString(_T("error creating status bar"));
 
+    /* make 'properties' bold */
+    hMenu = GetMenu(Info->hMainWnd);
+    hMenu = GetSubMenu(hMenu, 1);
+    SetMenuDefaultItem(hMenu, IDC_PROP, FALSE);
+
     /* Create Popup Menu */
     Info->hShortcutMenu = LoadMenu(hInstance,
                                    MAKEINTRESOURCE(IDR_POPUP));
     Info->hShortcutMenu = GetSubMenu(Info->hShortcutMenu,
                                      0);
+    SetMenuDefaultItem(Info->hShortcutMenu, IDC_PROP, FALSE);
 
+    /* emum all devices */
     hRoot = InitTreeView(Info);
     if (hRoot)
         ListDevicesByType(Info, hRoot);
+}
+
+
+static VOID
+OnContext(PMAIN_WND_INFO Info,
+          LPARAM lParam)
+{
+    HTREEITEM hSelected;
+    POINT pt;
+    RECT rc;
+
+    INT xPos = GET_X_LPARAM(lParam);
+    INT yPos = GET_Y_LPARAM(lParam);
+
+    hSelected = TreeView_GetSelection(Info->hTreeView);
+
+    if (TreeView_GetItemRect(Info->hTreeView,
+                         hSelected,
+                         &rc,
+                         TRUE))
+    {
+        if (GetCursorPos(&pt) &&
+            ScreenToClient(Info->hTreeView, &pt) &&
+            PtInRect(&rc, pt))
+        {
+            TrackPopupMenuEx(Info->hShortcutMenu,
+                             TPM_RIGHTBUTTON,
+                             xPos,
+                             yPos,
+                             Info->hMainWnd,
+                             NULL);
+        }
+    }
+}
+
+
+static VOID
+OnNotify(PMAIN_WND_INFO Info,
+         LPARAM lParam)
+{
+
+    LPNMHDR pnmhdr = (LPNMHDR)lParam;
+
+    switch (pnmhdr->code)
+    {
+        case NM_DBLCLK:
+        {
+            HTREEITEM hSelected = TreeView_GetSelection(Info->hTreeView);
+
+            if (!TreeView_GetChild(Info->hTreeView,
+                                   hSelected))
+            {
+                OpenPropSheet(hSelected);
+            }
+        }
+        break;
+
+        case NM_RCLICK:
+        {
+            TV_HITTESTINFO HitTest;
+
+            if (GetCursorPos(&HitTest.pt) &&
+                ScreenToClient(Info->hTreeView, &HitTest.pt))
+            {
+                if (TreeView_HitTest(Info->hTreeView, &HitTest))
+                    TreeView_SelectItem(Info->hTreeView, HitTest.hItem);
+            }
+        }
+        break;
+
+        case TTN_GETDISPINFO:
+        {
+            LPTOOLTIPTEXT lpttt;
+            UINT idButton;
+
+            lpttt = (LPTOOLTIPTEXT)lParam;
+
+            idButton = (UINT)lpttt->hdr.idFrom;
+            switch (idButton)
+            {
+                case IDC_PROP:
+                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_PROP);
+                break;
+
+                case IDC_REFRESH:
+                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_REFRESH);
+                break;
+
+                case IDC_PROGHELP:
+                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_HELP);
+                break;
+
+                case IDC_EXIT:
+                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_EXIT);
+                break;
+
+            }
+        }
+        break;
+    }
 }
 
 
@@ -237,7 +347,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
     {
         case IDC_PROP:
         {
-            // call builtin driver prop sheet
+            HTREEITEM hSelected = TreeView_GetSelection(Info->hTreeView);
+            OpenPropSheet(hSelected);
         }
         break;
 
@@ -360,88 +471,14 @@ MainWndProc(HWND hwnd,
 
         case WM_NOTIFY:
         {
-            LPNMHDR pnmhdr = (LPNMHDR)lParam;
-
-            switch (pnmhdr->code)
-            {
-                case NM_DBLCLK:
-                {
-                    POINT pt;
-                    RECT rect;
-
-                    GetCursorPos(&pt);
-                    GetWindowRect(Info->hTreeView, &rect);
-
-                    if (PtInRect(&rect, pt))
-                    {
-                        SendMessage(hwnd,
-                                    WM_COMMAND,
-                                    //ID_PROP,
-                                    MAKEWPARAM((WORD)IDC_PROP, (WORD)0),
-                                    0);
-                    }
-
-                    //OpenPropSheet(Info);
-                }
-                break;
-
-                case TTN_GETDISPINFO:
-                {
-                    LPTOOLTIPTEXT lpttt;
-                    UINT idButton;
-
-                    lpttt = (LPTOOLTIPTEXT)lParam;
-
-                    /* Specify the resource identifier of the descriptive
-                     * text for the given button. */
-                    idButton = (UINT)lpttt->hdr.idFrom;
-                    switch (idButton)
-                    {
-                        case IDC_PROP:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_PROP);
-                        break;
-
-                        case IDC_REFRESH:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_REFRESH);
-                        break;
-
-                        case IDC_PROGHELP:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_HELP);
-                        break;
-
-                        case IDC_EXIT:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_EXIT);
-                        break;
-
-                    }
-                }
-                break;
-            }
+            OnNotify(Info, lParam);
         }
         break;
 
         case WM_CONTEXTMENU:
-            {
-                POINT pt;
-                RECT lvRect;
-
-                INT xPos = GET_X_LPARAM(lParam);
-                INT yPos = GET_Y_LPARAM(lParam);
-
-                GetCursorPos(&pt);
-
-                /* display popup when cursor is in the list view */
-                GetWindowRect(Info->hTreeView, &lvRect);
-                if (PtInRect(&lvRect, pt))
-                {
-                    TrackPopupMenuEx(Info->hShortcutMenu,
-                                     TPM_RIGHTBUTTON,
-                                     xPos,
-                                     yPos,
-                                     Info->hMainWnd,
-                                     NULL);
-                }
-            }
+        {
+            OnContext(Info, lParam);
+        }
         break;
 
         case WM_COMMAND:

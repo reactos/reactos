@@ -15,7 +15,7 @@
 #pragma warning(disable : 4100)
 #endif
 
-#define MAX_DEV_LEN 1000
+#define MAX_DEV_LEN 256
 
 typedef struct _MAIN_WND_INFO
 {
@@ -36,7 +36,7 @@ typedef struct _MAIN_WND_INFO
 BOOL CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 
-/* servman.c */
+/* devmgmt.c */
 extern HINSTANCE hInstance;
 extern HANDLE ProcessHeap;
 
@@ -53,6 +53,7 @@ HWND CreateMainWindow(LPCTSTR lpCaption, int nCmdShow);
 
 
 /* enumdevices.c */
+VOID OpenPropSheet(HTREEITEM hItem);
 HTREEITEM InitTreeView(PMAIN_WND_INFO Info);
 VOID ListDevicesByType(PMAIN_WND_INFO Info, HTREEITEM hRoot);
 

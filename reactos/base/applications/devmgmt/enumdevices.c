@@ -9,9 +9,15 @@
 
 #include "precomp.h"
 
-
 static SP_CLASSIMAGELIST_DATA ImageListData;
 static HDEVINFO hDevInfo;
+
+
+VOID OpenPropSheet(HTREEITEM hItem)
+{
+    DisplayString(_T("Device Propsheet not yet implemented"));
+}
+
 
 static HTREEITEM
 InsertIntoTreeView(HWND hTV,
@@ -91,12 +97,12 @@ EnumDeviceClasses(INT ClassIndex,
         /* FIXME: can we do this?
          * Set the blank icon: IDI_SETUPAPI_BLANK = 41
          * it'll be image 24 in the imagelist */
-        *ClassImage = 41;
+        *ClassImage = 24;
     }
 
     /* Get device info for all devices of a particular class */
     hDevInfo = SetupDiGetClassDevs(&ClassGuid,
-                                   0,
+                                   NULL,
                                    NULL,
                                    DIGCF_PRESENT);
     if (hDevInfo == INVALID_HANDLE_VALUE)
