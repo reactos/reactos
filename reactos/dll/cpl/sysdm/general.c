@@ -131,12 +131,12 @@ SetProcSpeed(HWND hwnd,
     {
         if (dwBuf < 1000)
         {
-            _stprintf(szBuf, _T("%lu MHz"), dwBuf);
+            _stprintf(szBuf, _T("%.2f MHz"), dwBuf);
         }
         else
         {
             double flt = dwBuf / 1000.0;
-            _stprintf(szBuf, _T("%l GHz"), flt);
+            _stprintf(szBuf, _T("%.2f GHz"), flt);
         }
 
         SetDlgItemText(hwnd,
