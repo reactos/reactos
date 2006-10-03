@@ -298,7 +298,7 @@ OnNotify(PMAIN_WND_INFO Info,
                 ScreenToClient(Info->hTreeView, &HitTest.pt))
             {
                 if (TreeView_HitTest(Info->hTreeView, &HitTest))
-                    TreeView_SelectItem(Info->hTreeView, HitTest.hItem);
+                    (void)TreeView_SelectItem(Info->hTreeView, HitTest.hItem);
             }
         }
         break;
