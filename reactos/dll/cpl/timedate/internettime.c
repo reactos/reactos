@@ -116,7 +116,7 @@ SetNTPServer(HWND hwnd)
                         &hKey);
     if (Ret != ERROR_SUCCESS)
     {
-        GetError();
+        DisplayWin32Error(Ret);
         return;
     }
 
@@ -127,7 +127,7 @@ SetNTPServer(HWND hwnd)
                          (LPBYTE)szSel,
                          sizeof(szSel));
     if (Ret != ERROR_SUCCESS)
-        GetError();
+        DisplayWin32Error(Ret);
 
     RegCloseKey(hKey);
 
@@ -180,7 +180,10 @@ GetNTPServerAddress(LPSTR* lpAddress)
                         0,
                         dwSize);
         if (buf == NULL)
+        {
+            Ret = ERROR_NOT_ENOUGH_MEMORY;
             goto fail;
+        }
 
         Ret = RegQueryValueExW(hKey,
                                szSel,
@@ -212,6 +215,7 @@ GetNTPServerAddress(LPSTR* lpAddress)
                               NULL,
                               NULL))
     {
+        Ret = GetLastError();
         goto fail;
     }
 
@@ -223,7 +227,7 @@ GetNTPServerAddress(LPSTR* lpAddress)
     return TRUE;
 
 fail:
-    GetError();
+    DisplayWin32Error(Ret);
     if (hKey) RegCloseKey(hKey);
     HeapFree(GetProcessHeap(), 0, buf);
     HeapFree(GetProcessHeap(), 0, *lpAddress);
@@ -242,7 +246,7 @@ GetTimeFromServer(VOID)
     if (! GetNTPServerAddress(&lpAddress))
         return 0;
 
-    if (InitialiseConnection(lpAddress))
+    if (InitializeConnection(lpAddress))
     {
         if (SendData())
         {
@@ -283,7 +287,7 @@ UpdateSystemTime(ULONG ulTime)
     /* convert to a file time */
     if (! SystemTimeToFileTime(&stNew, &ftNew))
     {
-        GetError();
+        DisplayWin32Error(GetLastError());
         return;
     }
 
@@ -295,7 +299,7 @@ UpdateSystemTime(ULONG ulTime)
     /* convert back to a system time */
     if (! FileTimeToSystemTime(&ftNew, &stNew))
     {
-        GetError();
+        DisplayWin32Error(GetLastError());
         return;
     }
 
@@ -304,7 +308,7 @@ UpdateSystemTime(ULONG ulTime)
              I thought SetSystemTime already dealt
              with this */
     if (! SetSystemTime(&stNew))
-         GetError();
+         DisplayWin32Error(GetLastError());
 
 }
 
@@ -342,7 +346,7 @@ GetSyncSetting(HWND hwnd)
                         &hKey);
     if (Ret != ERROR_SUCCESS)
     {
-        GetError();
+        DisplayWin32Error(Ret);
         return;
     }
 
@@ -355,7 +359,7 @@ GetSyncSetting(HWND hwnd)
                            &Size);
     if (Ret != ERROR_SUCCESS)
     {
-        GetError();
+        DisplayWin32Error(Ret);
     }
 
     if (lstrcmp(Data, L"NTP") == 0)
@@ -369,7 +373,7 @@ GetSyncSetting(HWND hwnd)
 
 
 static VOID
-InitialiseDialog(HWND hwnd)
+InitializeDialog(HWND hwnd)
 {
     GetSyncSetting(hwnd);
 
@@ -390,7 +394,7 @@ InetTimePageProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            InitialiseDialog(hwndDlg);
+            InitializeDialog(hwndDlg);
         }
         break;
 

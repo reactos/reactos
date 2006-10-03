@@ -15,7 +15,7 @@ SOCKET Sock;
 SOCKADDR_IN myAddr, ntpAddr;
 
 BOOL
-InitialiseConnection(LPSTR lpAddress)
+InitializeConnection(LPSTR lpAddress)
 {
     WSADATA wsaData;
     HOSTENT *he;

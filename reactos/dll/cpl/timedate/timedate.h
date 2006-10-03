@@ -42,7 +42,12 @@ INT_PTR CALLBACK InetTimePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 
 /* timedate.c */
-VOID GetError(VOID);
+#if DBG
+VOID DisplayWin32ErrorDbg(DWORD dwErrorCode, const char *file, int line);
+#define DisplayWin32Error(e) DisplayWin32ErrorDbg(e, __FILE__, __LINE__);
+#else
+VOID DisplayWin32Error(DWORD dwErrorCode);
+#endif
 
 
 /* clock.c */
@@ -51,7 +56,7 @@ VOID UnregisterClockControl(VOID);
 
 
 /* ntpclient.c */
-BOOL InitialiseConnection(CHAR *szIpAddr);
+BOOL InitializeConnection(CHAR *szIpAddr);
 VOID DestroyConnection(VOID);
 BOOL SendData(VOID);
 ULONG RecieveData(VOID);

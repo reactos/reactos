@@ -22,22 +22,35 @@ APPLET Applets[NUM_APPLETS] =
     {IDC_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, Applet}
 };
 
-
-VOID GetError(VOID)
+#if DBG
+VOID DisplayWin32ErrorDbg(DWORD dwErrorCode, const char *file, int line)
+#else
+VOID DisplayWin32Error(DWORD dwErrorCode)
+#endif
 {
     LPVOID lpMsgBuf;
+#if DBG
+    TCHAR szMsg[255];
+#endif
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                   FORMAT_MESSAGE_FROM_SYSTEM |
                   FORMAT_MESSAGE_IGNORE_INSERTS,
                   NULL,
-                  GetLastError(),
+                  dwErrorCode,
                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                   (LPTSTR) &lpMsgBuf,
                   0,
                   NULL );
 
-    MessageBox(NULL, lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
+#if DBG
+    if (_stprintf(szMsg, _T("%hs:%d: %s"), file, line, lpMsgBuf))
+    {
+        MessageBox(NULL, szMsg, NULL, MB_OK | MB_ICONERROR);
+    }
+#else
+    MessageBox(NULL, lpMsgBuf, NULL, MB_OK | MB_ICONERROR);
+#endif
 
     LocalFree(lpMsgBuf);
 }
