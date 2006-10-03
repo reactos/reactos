@@ -131,12 +131,12 @@ SetProcSpeed(HWND hwnd,
     {
         if (dwBuf < 1000)
         {
-            wsprintf(szBuf, _T("%lu MHz"), dwBuf);
+            _stprintf(szBuf, _T("%lu MHz"), dwBuf);
         }
         else
         {
             double flt = dwBuf / 1000.0;
-            wsprintf(szBuf, _T("%l GHz"), flt);
+            _stprintf(szBuf, _T("%l GHz"), flt);
         }
 
         SetDlgItemText(hwnd,
@@ -145,16 +145,14 @@ SetProcSpeed(HWND hwnd,
     }
 }
 
-
 static VOID
 GetSystemInformation(HWND hwnd)
 {
     HKEY hKey;
     TCHAR ProcKey[] = _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
-    MEMORYSTATUS MemStat;
+    MEMORYSTATUSEX MemStat;
     TCHAR Buf[32];
     INT Ret = 0;
-    
 
 
     /* Get Processor information *
@@ -187,14 +185,56 @@ GetSystemInformation(HWND hwnd)
 
     /* Get total physical RAM */
     MemStat.dwLength = sizeof(MemStat);
-    GlobalMemoryStatus(&MemStat);
+    if (GlobalMemoryStatusEx(&MemStat))
+    {
+        TCHAR szStr[32];
+        double dTotalPhys;
+        UINT i = 0;
+        static const UINT uStrId[] = {
+            IDS_MEGABYTE,
+            IDS_GIGABYTE,
+            IDS_TERABYTE,
+            IDS_PETABYTE
+        };
 
-    if (MemStat.dwTotalPhys < KB_DIV)
-        Ret = wsprintf(Buf, _T("%luKB of RAM"), MemStat.dwTotalPhys/KB_DIV);
-    else if (MemStat.dwTotalPhys >= KB_DIV && MemStat.dwTotalPhys < GB_DIV)
-        Ret = wsprintf(Buf, _T("%luMB of RAM"), MemStat.dwTotalPhys/MB_DIV);
-    else if (MemStat.dwTotalPhys > GB_DIV)
-        Ret = wsprintf(Buf, _T("%luGB of RAM"), MemStat.dwTotalPhys/GB_DIV);
+        if (MemStat.ullTotalPhys > 1024 * 1024 * 1024)
+        {
+            /* We're dealing with GBs or more */
+            MemStat.ullTotalPhys /= 1024 * 1024;
+            i++;
+
+            if (MemStat.ullTotalPhys > 1024 * 1024)
+            {
+                /* We're dealing with TBs or more */
+                MemStat.ullTotalPhys /= 1024;
+                i++;
+
+                if (MemStat.ullTotalPhys > 1024 * 1024)
+                {
+                    /* We're dealing with PBs or more */
+
+                    MemStat.ullTotalPhys /= 1024;
+                    i++;
+
+                    dTotalPhys = (double)MemStat.ullTotalPhys / 1024;
+                }
+                else
+                    dTotalPhys = (double)MemStat.ullTotalPhys / 1024;
+            }
+            else
+                dTotalPhys = (double)MemStat.ullTotalPhys / 1024;
+        }
+        else
+        {
+            /* We're daling with MBs */
+            dTotalPhys = (double)MemStat.ullTotalPhys / 1024 / 1024;
+        }
+
+        if (LoadString(hApplet, uStrId[i], szStr, sizeof(szStr) / sizeof(szStr[0])))
+        {
+            Ret = _stprintf(Buf, _T("%.2f %s"), dTotalPhys, szStr);
+        }
+    }
 
     if (Ret)
     {

@@ -14,6 +14,11 @@
 #define IDS_CPLSYSTEMNAME               60
 #define IDS_CPLSYSTEMDESCRIPTION        61
 
+#define IDS_MEGABYTE                    62
+#define IDS_GIGABYTE                    63
+#define IDS_TERABYTE                    64
+#define IDS_PETABYTE                    65
+
 
 /* propsheet - general */
 #define IDD_PROPPAGEGENERAL             100

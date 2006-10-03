@@ -8,12 +8,12 @@
 	<define name="WINVER">0x501</define>
 	<library>kernel32</library>
 	<library>advapi32</library>
+	<library>msvcrt</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>comctl32</library>
 	<library>netapi32</library>
 	<library>ntdll</library>
-	<library>msvcrt</library>
 	<library>msimg32</library>
 	<library>shell32</library>
 	<file>advanced.c</file>

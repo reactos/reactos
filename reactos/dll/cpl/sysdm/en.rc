@@ -283,4 +283,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CPLSYSTEMNAME "System"
     IDS_CPLSYSTEMDESCRIPTION "See information about your computer and change various system and hardware settings."
+    IDS_MEGABYTE "MB of RAM"
+    IDS_GIGABYTE "GB of RAM"
+    IDS_TERABYTE "TB of RAM"
+    IDS_PETABYTE "PB of RAM"
 END
