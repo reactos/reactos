@@ -2546,11 +2546,12 @@ ImageList_SetImageCount (HIMAGELIST himl, UINT iImageCount)
 
     if (!is_valid(himl))
 	return FALSE;
-    if (himl->cCurImage >= iImageCount)
-	return FALSE;
+    if (iImageCount < 0)
+        return FALSE;
     if (himl->cMaxImage > iImageCount)
     {
         himl->cCurImage = iImageCount;
+        /* TODO: shrink the bitmap when cMaxImage-cCurImage>cGrow ? */
 	return TRUE;
     }
 

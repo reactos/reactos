@@ -1449,6 +1449,67 @@ void COMCTL32_DrawInsertMark(HDC hDC, const RECT *lpRect, COLORREF clrInsertMark
 }
 
 /***********************************************************************
+ * COMCTL32_EnsureBitmapSize [internal]
+ *
+ * If needed enlarge the bitmap so that the width is at least cxMinWidth
+ * the height is at least cyMinHeight. If the bitmap already have these
+ * dimensions nothing changes.
+ *
+ * PARAMS
+ *     hBitmap       [I/O] Bitmap to modify. The handle may change
+ *     cxMinWidth    [I]   If the width of the bitmap is smaller then it will
+ *                         be enlarged to this value
+ *     cyMinHeight   [I]   If the height of the bitmap is smaller then it will
+ *                         be enlarged to this value
+ *     cyBackground  [I]   The color with which the new area will be filled
+ *
+ * RETURNS
+ *     none
+ */
+void COMCTL32_EnsureBitmapSize(HBITMAP *pBitmap, int cxMinWidth, int cyMinHeight, COLORREF crBackground)
+{
+    int cxNew, cyNew;
+    BITMAP bmp;
+    HBITMAP hNewBitmap;
+    HBITMAP hNewDCBitmap, hOldDCBitmap;
+    HBRUSH hNewDCBrush;
+    HDC hdcNew, hdcOld;
+
+    if (!GetObjectW(*pBitmap, sizeof(BITMAP), &bmp))
+        return;
+    cxNew = (cxMinWidth > bmp.bmWidth ? cxMinWidth : bmp.bmWidth);
+    cyNew = (cyMinHeight > bmp.bmHeight ? cyMinHeight : bmp.bmHeight);
+    if (cxNew == bmp.bmWidth && cyNew == bmp.bmHeight)
+        return;
+
+    hdcNew = CreateCompatibleDC(NULL);
+    hNewBitmap = CreateBitmap(cxNew, cyNew, bmp.bmPlanes, bmp.bmBitsPixel, NULL);
+    hNewDCBitmap = SelectObject(hdcNew, hNewBitmap);
+    hNewDCBrush = SelectObject(hdcNew, CreateSolidBrush(crBackground));
+
+    hdcOld = CreateCompatibleDC(NULL);
+    hOldDCBitmap = SelectObject(hdcOld, *pBitmap);
+
+    BitBlt(hdcNew, 0, 0, bmp.bmWidth, bmp.bmHeight, hdcOld, 0, 0, SRCCOPY);
+    if (bmp.bmWidth < cxMinWidth)
+        PatBlt(hdcNew, bmp.bmWidth, 0, cxNew, bmp.bmHeight, PATCOPY);
+    if (bmp.bmHeight < cyMinHeight)
+        PatBlt(hdcNew, 0, bmp.bmHeight, bmp.bmWidth, cyNew, PATCOPY);
+    if (bmp.bmWidth < cxMinWidth && bmp.bmHeight < cyMinHeight)
+        PatBlt(hdcNew, bmp.bmWidth, bmp.bmHeight, cxNew, cyNew, PATCOPY);
+
+    SelectObject(hdcNew, hNewDCBitmap);
+    DeleteObject(SelectObject(hdcNew, hNewDCBrush));
+    DeleteDC(hdcNew);
+    SelectObject(hdcOld, hOldDCBitmap);
+    DeleteDC(hdcOld);
+
+    DeleteObject(*pBitmap);    
+    *pBitmap = hNewBitmap;
+    return;
+}
+
+/***********************************************************************
  * MirrorIcon [COMCTL32.414]
  *
  * Mirrors an icon so that it will appear correctly on a mirrored DC.

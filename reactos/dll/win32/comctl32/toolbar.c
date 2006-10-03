@@ -250,6 +250,7 @@ static HIMAGELIST TOOLBAR_InsertImageList(PIMLENTRY **pies, INT *cies, HIMAGELIS
 static LRESULT TOOLBAR_LButtonDown(HWND hwnd, WPARAM wParam, LPARAM lParam);
 static void TOOLBAR_SetHotItemEx (TOOLBAR_INFO *infoPtr, INT nHit, DWORD dwReason);
 static LRESULT TOOLBAR_AutoSize(HWND hwnd);
+static void TOOLBAR_CheckImageListIconSize(TOOLBAR_INFO *infoPtr);
 
 static LRESULT
 TOOLBAR_NotifyFormat(TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam);
@@ -1090,6 +1091,9 @@ TOOLBAR_Refresh (HWND hwnd, HDC hdc, PAINTSTRUCT* ps)
     }
 
     TOOLBAR_DumpToolbar (infoPtr, __LINE__);
+
+    /* change the imagelist icon size if we manage the list and it is necessary */
+    TOOLBAR_CheckImageListIconSize(infoPtr);
 
     /* Send initial notify */
     ZeroMemory (&tbcd, sizeof(NMTBCUSTOMDRAW));
@@ -2568,6 +2572,101 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 }
 
+static BOOL
+TOOLBAR_AddBitmapToImageList(TOOLBAR_INFO *infoPtr, HIMAGELIST himlDef, const TBITMAP_INFO *bitmap)
+{
+    HBITMAP hbmLoad;
+    INT nCountBefore = ImageList_GetImageCount(himlDef);
+    INT nCountAfter;
+    INT cxIcon, cyIcon;
+    INT nAdded;
+    INT nIndex;
+
+    TRACE("adding hInst=%p nID=%d nButtons=%d\n", bitmap->hInst, bitmap->nID, bitmap->nButtons);
+    /* Add bitmaps to the default image list */
+    if (bitmap->hInst == NULL)         /* a handle was passed */
+    {
+       BITMAP  bmp;
+       HBITMAP hOldBitmapBitmap, hOldBitmapLoad;
+       HDC     hdcImage, hdcBitmap;
+
+       /* copy the bitmap before adding it so that the user's bitmap
+        * doesn't get modified.
+        */
+       GetObjectW ((HBITMAP)bitmap->nID, sizeof(BITMAP), (LPVOID)&bmp);
+
+       hdcImage  = CreateCompatibleDC(0);
+       hdcBitmap = CreateCompatibleDC(0);
+
+       /* create new bitmap */
+       hbmLoad = CreateBitmap (bmp.bmWidth, bmp.bmHeight, bmp.bmPlanes, bmp.bmBitsPixel, NULL);
+       hOldBitmapBitmap = SelectObject(hdcBitmap, (HBITMAP)bitmap->nID);
+       hOldBitmapLoad = SelectObject(hdcImage, hbmLoad);
+
+       /* Copy the user's image */
+       BitBlt (hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight,
+               hdcBitmap, 0, 0, SRCCOPY);
+
+       SelectObject (hdcImage, hOldBitmapLoad);
+       SelectObject (hdcBitmap, hOldBitmapBitmap);
+       DeleteDC (hdcImage);
+       DeleteDC (hdcBitmap);
+    }
+    else
+        hbmLoad = CreateMappedBitmap(bitmap->hInst, bitmap->nID, 0, NULL, 0);
+
+    /* enlarge the bitmap if needed */
+    ImageList_GetIconSize(himlDef, &cxIcon, &cyIcon);
+    COMCTL32_EnsureBitmapSize(&hbmLoad, cxIcon*(INT)bitmap->nButtons, cyIcon, comctl32_color.clrBtnFace);
+    
+    nIndex = ImageList_AddMasked(himlDef, hbmLoad, comctl32_color.clrBtnFace);
+    DeleteObject(hbmLoad);
+    if (nIndex == -1)
+        return FALSE;
+    
+    nCountAfter = ImageList_GetImageCount(himlDef);
+    nAdded =  nCountAfter - nCountBefore;
+    if (bitmap->nButtons == 0) /* wParam == 0 is special and means add only one image */
+    {
+        ImageList_SetImageCount(himlDef, nCountBefore + 1);
+    } else if (nAdded > (INT)bitmap->nButtons) {
+        TRACE("Added more images than wParam: Previous image number %i added %i while wParam %i. Images in list %i\n",
+            nCountBefore, nAdded, bitmap->nButtons, nCountAfter);
+    }
+
+    infoPtr->nNumBitmaps += nAdded;
+    return TRUE;
+}
+
+static void
+TOOLBAR_CheckImageListIconSize(TOOLBAR_INFO *infoPtr)
+{
+    HIMAGELIST himlDef;
+    HIMAGELIST himlNew;
+    INT cx, cy;
+    INT i;
+    
+    himlDef = GETDEFIMAGELIST(infoPtr, 0);
+    if (himlDef == NULL || himlDef != infoPtr->himlInt)
+        return;
+    if (!ImageList_GetIconSize(himlDef, &cx, &cy))
+        return;
+    if (cx == infoPtr->nBitmapWidth && cy == infoPtr->nBitmapHeight)
+        return;
+
+    TRACE("Update icon size: %dx%d -> %dx%d\n",
+        cx, cy, infoPtr->nBitmapWidth, infoPtr->nBitmapHeight);
+
+    himlNew = ImageList_Create(infoPtr->nBitmapWidth, infoPtr->nBitmapHeight,
+                                ILC_COLORDDB|ILC_MASK, 8, 2);
+    for (i = 0; i < infoPtr->nNumBitmapInfos; i++)
+        TOOLBAR_AddBitmapToImageList(infoPtr, himlNew, &infoPtr->bitmaps[i]);
+    TOOLBAR_InsertImageList(&infoPtr->himlDef, &infoPtr->cimlDef, himlNew, 0);
+    infoPtr->himlInt = himlNew;
+
+    infoPtr->nNumBitmaps -= ImageList_GetImageCount(himlDef);
+    ImageList_Destroy(himlDef);
+}
 
 /***********************************************************************
  * TOOLBAR_AddBitmap:  Add the bitmaps to the default image list.
@@ -2578,8 +2677,8 @@ TOOLBAR_AddBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
     LPTBADDBITMAP lpAddBmp = (LPTBADDBITMAP)lParam;
-    INT nIndex = 0, nButtons, nCount;
-    HBITMAP hbmLoad;
+    TBITMAP_INFO info;
+    INT iSumButtons, i;
     HIMAGELIST himlDef;
 
     TRACE("hwnd=%p wParam=%x lParam=%lx\n", hwnd, wParam, lParam);
@@ -2588,16 +2687,38 @@ TOOLBAR_AddBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if (lpAddBmp->hInst == HINST_COMMCTRL)
     {
-	if ((lpAddBmp->nID & ~1) == IDB_STD_SMALL_COLOR)
-	    nButtons = 15;
-	else if ((lpAddBmp->nID & ~1) == IDB_VIEW_SMALL_COLOR)
-	    nButtons = 13;
-	else if ((lpAddBmp->nID & ~1) == IDB_HIST_SMALL_COLOR)
-	    nButtons = 5;
-	else
-	    return -1;
+        info.hInst = COMCTL32_hModule;
+        switch (lpAddBmp->nID)
+        {
+            case IDB_STD_SMALL_COLOR:
+	        info.nButtons = 15;
+	        info.nID = IDB_STD_SMALL;
+	        break;
+            case IDB_STD_LARGE_COLOR:
+	        info.nButtons = 15;
+	        info.nID = IDB_STD_LARGE;
+	        break;
+            case IDB_VIEW_SMALL_COLOR:
+	        info.nButtons = 12;
+	        info.nID = IDB_VIEW_SMALL;
+	        break;
+            case IDB_VIEW_LARGE_COLOR:
+	        info.nButtons = 12;
+	        info.nID = IDB_VIEW_LARGE;
+	        break;
+            case IDB_HIST_SMALL_COLOR:
+	        info.nButtons = 5;
+	        info.nID = IDB_HIST_SMALL;
+	        break;
+            case IDB_HIST_LARGE_COLOR:
+	        info.nButtons = 5;
+	        info.nID = IDB_HIST_LARGE;
+	        break;
+	    default:
+	        return -1;
+	}
 
-	TRACE ("adding %d internal bitmaps!\n", nButtons);
+	TRACE ("adding %d internal bitmaps!\n", info.nButtons);
 
 	/* Windows resize all the buttons to the size of a newly added standard image */
 	if (lpAddBmp->nID & 1)
@@ -2624,11 +2745,20 @@ TOOLBAR_AddBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
     }
     else
     {
-	nButtons = (INT)wParam;
-	if (nButtons <= 0)
-	    return -1;
-
-	TRACE ("adding %d bitmaps!\n", nButtons);
+	info.nButtons = (INT)wParam;
+	info.hInst = lpAddBmp->hInst;
+	info.nID = lpAddBmp->nID;
+	TRACE("adding %d bitmaps!\n", info.nButtons);
+    }
+    
+    /* check if the bitmap is already loaded and compute iSumButtons */
+    iSumButtons = 0;
+    for (i = 0; i < infoPtr->nNumBitmapInfos; i++)
+    {
+        if (infoPtr->bitmaps[i].hInst == info.hInst &&
+            infoPtr->bitmaps[i].nID == info.nID)
+            return iSumButtons;
+        iSumButtons += infoPtr->bitmaps[i].nButtons;
     }
 
     if (!infoPtr->cimlDef) {
@@ -2636,7 +2766,7 @@ TOOLBAR_AddBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	TRACE ("creating default image list!\n");
 
         himlDef = ImageList_Create (infoPtr->nBitmapWidth, infoPtr->nBitmapHeight,
-                                    ILC_COLORDDB | ILC_MASK, nButtons, 2);
+                                    ILC_COLORDDB | ILC_MASK, info.nButtons, 2);
 	TOOLBAR_InsertImageList(&infoPtr->himlDef, &infoPtr->cimlDef, himlDef, 0);
         infoPtr->himlInt = himlDef;
     }
@@ -2649,145 +2779,17 @@ TOOLBAR_AddBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
         return -1;
     }
 
-    nCount = ImageList_GetImageCount(himlDef);
-
-    /* Add bitmaps to the default image list */
-    if (lpAddBmp->hInst == NULL)
-    {
-       BITMAP  bmp;
-       HBITMAP hOldBitmapBitmap, hOldBitmapLoad;
-       HDC     hdcImage, hdcBitmap;
-
-       /* copy the bitmap before adding it so that the user's bitmap
-        * doesn't get modified.
-        */
-       GetObjectW ((HBITMAP)lpAddBmp->nID, sizeof(BITMAP), (LPVOID)&bmp);
-
-       hdcImage  = CreateCompatibleDC(0);
-       hdcBitmap = CreateCompatibleDC(0);
-
-       /* create new bitmap */
-       hbmLoad = CreateBitmap (bmp.bmWidth, bmp.bmHeight, bmp.bmPlanes, bmp.bmBitsPixel, NULL);
-       hOldBitmapBitmap = SelectObject(hdcBitmap, (HBITMAP)lpAddBmp->nID);
-       hOldBitmapLoad = SelectObject(hdcImage, hbmLoad);
-
-       /* Copy the user's image */
-       BitBlt (hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight,
-               hdcBitmap, 0, 0, SRCCOPY);
-
-       SelectObject (hdcImage, hOldBitmapLoad);
-       SelectObject (hdcBitmap, hOldBitmapBitmap);
-       DeleteDC (hdcImage);
-       DeleteDC (hdcBitmap);
-
-       nIndex = ImageList_AddMasked (himlDef, hbmLoad, comctl32_color.clrBtnFace);
-       DeleteObject (hbmLoad);
-    }
-    else if (lpAddBmp->hInst == HINST_COMMCTRL)
-    {
-	/* Add system bitmaps */
-	switch (lpAddBmp->nID)
-    {
-	    case IDB_STD_SMALL_COLOR:
-		hbmLoad = CreateMappedBitmap (COMCTL32_hModule,
-                                              IDB_STD_SMALL, 0, NULL, 0);
-		nIndex = ImageList_AddMasked (himlDef,
-					      hbmLoad, comctl32_color.clrBtnFace);
-		DeleteObject (hbmLoad);
-		break;
-
-	    case IDB_STD_LARGE_COLOR:
-		hbmLoad = CreateMappedBitmap (COMCTL32_hModule,
-                                              IDB_STD_LARGE, 0, NULL, 0);
-		nIndex = ImageList_AddMasked (himlDef,
-					      hbmLoad, comctl32_color.clrBtnFace);
-		DeleteObject (hbmLoad);
-		break;
-
-	    case IDB_VIEW_SMALL_COLOR:
-		hbmLoad = CreateMappedBitmap (COMCTL32_hModule,
-                                              IDB_VIEW_SMALL, 0, NULL, 0);
-		nIndex = ImageList_AddMasked (himlDef,
-					      hbmLoad, comctl32_color.clrBtnFace);
-		DeleteObject (hbmLoad);
-		break;
-
-	    case IDB_VIEW_LARGE_COLOR:
-		hbmLoad = CreateMappedBitmap (COMCTL32_hModule,
-                                              IDB_VIEW_LARGE, 0, NULL, 0);
-		nIndex = ImageList_AddMasked (himlDef,
-					      hbmLoad, comctl32_color.clrBtnFace);
-		DeleteObject (hbmLoad);
-		break;
-
-	    case IDB_HIST_SMALL_COLOR:
-		hbmLoad = CreateMappedBitmap (COMCTL32_hModule,
-                                              IDB_HIST_SMALL, 0, NULL, 0);
-		nIndex = ImageList_AddMasked (himlDef,
-					      hbmLoad, comctl32_color.clrBtnFace);
-		DeleteObject (hbmLoad);
-		break;
-
-	    case IDB_HIST_LARGE_COLOR:
-		hbmLoad = CreateMappedBitmap (COMCTL32_hModule,
-                                              IDB_HIST_LARGE, 0, NULL, 0);
-		nIndex = ImageList_AddMasked (himlDef,
-					      hbmLoad, comctl32_color.clrBtnFace);
-		DeleteObject (hbmLoad);
-		break;
-
-	    default:
-	nIndex = ImageList_GetImageCount (himlDef);
-		ERR ("invalid imagelist!\n");
-		break;
-	}
-    }
-    else
-    {
-        hbmLoad = CreateMappedBitmap(lpAddBmp->hInst, lpAddBmp->nID, 0, NULL, 0);
-	nIndex = ImageList_AddMasked (himlDef, hbmLoad, comctl32_color.clrBtnFace);
-	DeleteObject (hbmLoad);
-    }
+    if (!TOOLBAR_AddBitmapToImageList(infoPtr, himlDef, &info))
+        return -1;
 
     TRACE("Number of bitmap infos: %d\n", infoPtr->nNumBitmapInfos);
-
-    if (infoPtr->nNumBitmapInfos == 0)
-    {
-        infoPtr->bitmaps = Alloc(sizeof(TBITMAP_INFO));
-    }
-    else
-    {
-        TBITMAP_INFO *oldBitmaps = infoPtr->bitmaps;
-        infoPtr->bitmaps = Alloc((infoPtr->nNumBitmapInfos + 1) * sizeof(TBITMAP_INFO));
-        memcpy(&infoPtr->bitmaps[0], &oldBitmaps[0], infoPtr->nNumBitmapInfos * sizeof(TBITMAP_INFO));
-    }
-
-    infoPtr->bitmaps[infoPtr->nNumBitmapInfos].nButtons = nButtons;
-    infoPtr->bitmaps[infoPtr->nNumBitmapInfos].hInst = lpAddBmp->hInst;
-    infoPtr->bitmaps[infoPtr->nNumBitmapInfos].nID = lpAddBmp->nID;
-
+    infoPtr->bitmaps = ReAlloc(infoPtr->bitmaps, (infoPtr->nNumBitmapInfos + 1) * sizeof(TBITMAP_INFO));
+    infoPtr->bitmaps[infoPtr->nNumBitmapInfos] = info;
     infoPtr->nNumBitmapInfos++;
     TRACE("Number of bitmap infos: %d\n", infoPtr->nNumBitmapInfos);
 
-    if (nIndex != -1)
-    {
-       INT imagecount = ImageList_GetImageCount(himlDef);
-
-       if (infoPtr->nNumBitmaps + nButtons != imagecount)
-       {
-         WARN("Desired images do not match received images : Previous image number %i Previous images in list %i added %i expecting total %i, Images in list %i\n",
-	      infoPtr->nNumBitmaps, nCount, imagecount - nCount,
-	      infoPtr->nNumBitmaps+nButtons,imagecount);
-
-	 infoPtr->nNumBitmaps = imagecount;
-       }
-       else
-         infoPtr->nNumBitmaps += nButtons;
-    }
-
     InvalidateRect(hwnd, NULL, TRUE);
-
-    return nIndex;
+    return iSumButtons;
 }
 
 
@@ -2929,64 +2931,57 @@ TOOLBAR_AddButtonsW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLBAR_AddStringA (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLBAR_AddStringW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
+#define MAX_RESOURCE_STRING_LENGTH 512
     TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
-    INT nIndex;
+    INT nIndex = infoPtr->nNumStrings;
 
     if ((wParam) && (HIWORD(lParam) == 0)) {
-	char szString[256];
+	WCHAR szString[MAX_RESOURCE_STRING_LENGTH];
+	WCHAR delimiter;
+	WCHAR *next_delim;
+	WCHAR *p;
 	INT len;
 	TRACE("adding string from resource!\n");
 
-	len = LoadStringA ((HINSTANCE)wParam, (UINT)lParam, szString, sizeof(szString));
+        LoadStringW ((HINSTANCE)wParam, (UINT)lParam,
+                             szString, MAX_RESOURCE_STRING_LENGTH);
+        len = lstrlenW(szString);
 
-	TRACE("len=%d \"%s\"\n", len, szString);
-	nIndex = infoPtr->nNumStrings;
-	if (infoPtr->nNumStrings == 0) {
-	    infoPtr->strings =
-		Alloc (sizeof(LPWSTR));
-	}
-	else {
-	    LPWSTR *oldStrings = infoPtr->strings;
-	    infoPtr->strings =
-		Alloc (sizeof(LPWSTR) * (infoPtr->nNumStrings + 1));
-	    memcpy (&infoPtr->strings[0], &oldStrings[0],
-		    sizeof(LPWSTR) * infoPtr->nNumStrings);
-	    Free (oldStrings);
-	}
+        TRACE("len=%d %s\n", len, debugstr_w(szString));
+        if (len == 0 || len == 1)
+            return nIndex;
 
-        /*Alloc zeros out the allocated memory*/
-        Str_SetPtrAtoW (&infoPtr->strings[infoPtr->nNumStrings], szString );
-	infoPtr->nNumStrings++;
+        TRACE("Delimiter: 0x%x\n", *szString);
+        delimiter = *szString;
+        p = szString + 1;
+        if (szString[len-1] == delimiter)
+            szString[len-1] = 0;
+
+        while ((next_delim = strchrW(p, delimiter)) != NULL) {
+            *next_delim = 0;
+
+            infoPtr->strings = ReAlloc(infoPtr->strings, sizeof(LPWSTR)*(infoPtr->nNumStrings+1));
+            Str_SetPtrW(&infoPtr->strings[infoPtr->nNumStrings], p);
+            infoPtr->nNumStrings++;
+
+            p = next_delim + 1;
+        }
     }
     else {
-	LPSTR p = (LPSTR)lParam;
+	LPWSTR p = (LPWSTR)lParam;
 	INT len;
 
 	if (p == NULL)
 	    return -1;
 	TRACE("adding string(s) from array!\n");
-
-	nIndex = infoPtr->nNumStrings;
 	while (*p) {
-	    len = strlen (p);
-	    TRACE("len=%d \"%s\"\n", len, p);
+            len = strlenW (p);
 
-	    if (infoPtr->nNumStrings == 0) {
-		infoPtr->strings =
-		    Alloc (sizeof(LPWSTR));
-	    }
-	    else {
-		LPWSTR *oldStrings = infoPtr->strings;
-		infoPtr->strings =
-		    Alloc (sizeof(LPWSTR) * (infoPtr->nNumStrings + 1));
-		memcpy (&infoPtr->strings[0], &oldStrings[0],
-			sizeof(LPWSTR) * infoPtr->nNumStrings);
-		Free (oldStrings);
-	    }
-
-            Str_SetPtrAtoW (&infoPtr->strings[infoPtr->nNumStrings], p );
+            TRACE("len=%d %s\n", len, debugstr_w(p));
+            infoPtr->strings = ReAlloc(infoPtr->strings, sizeof(LPWSTR)*(infoPtr->nNumStrings+1));
+            Str_SetPtrW (&infoPtr->strings[infoPtr->nNumStrings], p);
 	    infoPtr->nNumStrings++;
 
 	    p += (len+1);
@@ -2998,109 +2993,31 @@ TOOLBAR_AddStringA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLBAR_AddStringW (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLBAR_AddStringA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-#define MAX_RESOURCE_STRING_LENGTH 512
     TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
+    LPSTR p;
     INT nIndex;
+    INT len;
 
-    if ((wParam) && (HIWORD(lParam) == 0)) {
-	WCHAR szString[MAX_RESOURCE_STRING_LENGTH];
-	INT len;
-	TRACE("adding string from resource!\n");
+    if ((wParam) && (HIWORD(lParam) == 0))  /* load from resources */
+        return TOOLBAR_AddStringW(hwnd, wParam, lParam);
 
-	len = LoadStringW ((HINSTANCE)wParam, (UINT)lParam,
-			     szString, MAX_RESOURCE_STRING_LENGTH);
+    p = (LPSTR)lParam;
+    if (p == NULL)
+        return -1;
 
-	TRACE("len=%d %s\n", len, debugstr_w(szString));
-	TRACE("First char: 0x%x\n", *szString);
-	if (szString[0] == L'|')
-	{
-	    PWSTR p = szString + 1;
+    TRACE("adding string(s) from array!\n");
+    nIndex = infoPtr->nNumStrings;
+    while (*p) {
+        len = strlen (p);
+        TRACE("len=%d \"%s\"\n", len, p);
 
-            nIndex = infoPtr->nNumStrings;
-            while (*p != L'|' && *p != L'\0') {
-                PWSTR np;
+        infoPtr->strings = ReAlloc(infoPtr->strings, sizeof(LPWSTR)*(infoPtr->nNumStrings+1));
+        Str_SetPtrAtoW(&infoPtr->strings[infoPtr->nNumStrings], p);
+        infoPtr->nNumStrings++;
 
-                if (infoPtr->nNumStrings == 0) {
-                    infoPtr->strings = Alloc (sizeof(LPWSTR));
-                }
-                else
-                {
-                    LPWSTR *oldStrings = infoPtr->strings;
-                    infoPtr->strings = Alloc(sizeof(LPWSTR) * (infoPtr->nNumStrings + 1));
-                    memcpy(&infoPtr->strings[0], &oldStrings[0],
-                           sizeof(LPWSTR) * infoPtr->nNumStrings);
-                    Free(oldStrings);
-                }
-
-                np=strchrW (p, '|');
-                if (np!=NULL) {
-                    len = np - p;
-                    np++;
-                } else {
-                    len = strlenW(p);
-                    np = p + len;
-                }
-                TRACE("len=%d %s\n", len, debugstr_w(p));
-                infoPtr->strings[infoPtr->nNumStrings] =
-                    Alloc (sizeof(WCHAR)*(len+1));
-                lstrcpynW (infoPtr->strings[infoPtr->nNumStrings], p, len+1);
-                infoPtr->nNumStrings++;
-
-                p = np;
-            }
-	}
-	else
-	{
-            nIndex = infoPtr->nNumStrings;
-            if (infoPtr->nNumStrings == 0) {
-                infoPtr->strings =
-                    Alloc (sizeof(LPWSTR));
-            }
-            else {
-                LPWSTR *oldStrings = infoPtr->strings;
-                infoPtr->strings =
-                    Alloc (sizeof(LPWSTR) * (infoPtr->nNumStrings + 1));
-                memcpy (&infoPtr->strings[0], &oldStrings[0],
-                        sizeof(LPWSTR) * infoPtr->nNumStrings);
-                Free (oldStrings);
-            }
-
-            Str_SetPtrW (&infoPtr->strings[infoPtr->nNumStrings], szString);
-            infoPtr->nNumStrings++;
-        }
-    }
-    else {
-	LPWSTR p = (LPWSTR)lParam;
-	INT len;
-
-	if (p == NULL)
-	    return -1;
-	TRACE("adding string(s) from array!\n");
-	nIndex = infoPtr->nNumStrings;
-	while (*p) {
-	    len = strlenW (p);
-
-	    TRACE("len=%d %s\n", len, debugstr_w(p));
-	    if (infoPtr->nNumStrings == 0) {
-		infoPtr->strings =
-		    Alloc (sizeof(LPWSTR));
-	    }
-	    else {
-		LPWSTR *oldStrings = infoPtr->strings;
-		infoPtr->strings =
-		    Alloc (sizeof(LPWSTR) * (infoPtr->nNumStrings + 1));
-		memcpy (&infoPtr->strings[0], &oldStrings[0],
-			sizeof(LPWSTR) * infoPtr->nNumStrings);
-		Free (oldStrings);
-	    }
-
-	    Str_SetPtrW (&infoPtr->strings[infoPtr->nNumStrings], p);
-	    infoPtr->nNumStrings++;
-
-	    p += (len+1);
-	}
+        p += (len+1);
     }
 
     return nIndex;
@@ -3301,7 +3218,7 @@ TOOLBAR_Customize (HWND hwnd)
 	return FALSE;
 
     ret = DialogBoxIndirectParamW ((HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE),
-                                   (LPDLGTEMPLATEW)template,
+                                   (LPCDLGTEMPLATEW)template,
                                    hwnd,
                                    TOOLBAR_CustomizeDialogProc,
                                    (LPARAM)&custInfo);
@@ -4746,6 +4663,7 @@ TOOLBAR_SetBitmapSize (HWND hwnd, WPARAM wParam, LPARAM lParam)
             infoPtr->nBitmapHeight);
     }
 
+    InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
     return TRUE;
 }
 
@@ -5672,6 +5590,7 @@ TOOLBAR_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     /* delete temporary buffer for tooltip text */
     Free (infoPtr->pszTooltipText);
+    Free (infoPtr->bitmaps);            /* bitmaps list */
 
     /* delete button data */
     if (infoPtr->buttons)
