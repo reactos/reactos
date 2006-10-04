@@ -58,19 +58,21 @@ ULONG KeProcessorRevision;
 ULONG KeFeatureBits;
 ULONG KiFastSystemCallDisable = 1;
 ULONG KeI386NpxPresent = 0;
+ULONG KiMXCsrMask = 0;
 ULONG MxcsrFeatureMask = 0;
 ULONG KeI386XMMIPresent = 0;
 ULONG KeI386FxsrPresent = 0;
 ULONG KeI386MachineType;
 ULONG Ke386Pae = FALSE;
 ULONG Ke386NoExecute = FALSE;
-BOOLEAN KiI386PentiumLockErrataPresent;
 ULONG KeLargestCacheLine = 0x40;
 ULONG KeDcacheFlushCount = 0;
 ULONG KeIcacheFlushCount = 0;
 ULONG KiDmaIoCoherency = 0;
 CHAR KeNumberProcessors;
 KAFFINITY KeActiveProcessors = 1;
+BOOLEAN KiI386PentiumLockErrataPresent;
+BOOLEAN KiSMTProcessorsPresent;
 
 /* CPU Signatures */
 CHAR CmpIntelID[]       = "GenuineIntel";
@@ -255,6 +257,9 @@ KiGetFeatureBits(VOID)
     /* Get the CPUID Info. Features are in Reg[3]. */
     CPUID(Reg, 1);
 
+    /* Set the initial APIC ID */
+    Prcb->InitialApicId = (UCHAR)(Reg[1] >> 24);
+
     /* Check for AMD CPU */
     if (Vendor == CPU_AMD)
     {
@@ -351,6 +356,24 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & 0x00800000) FeatureBits |= KF_MMX;
     if (CpuFeatures & 0x01000000) FeatureBits |= KF_FXSR;
     if (CpuFeatures & 0x02000000) FeatureBits |= KF_XMMI;
+    if (CpuFeatures & 0x04000000) FeatureBits |= KF_XMMI64;
+
+    /* Check if the CPU has hyper-threading */
+    if (CpuFeatures & 0x10000000)
+    {
+        /* Set the number of logical CPUs */
+        Prcb->LogicalProcessorsPerPhysicalProcessor = (UCHAR)(Reg[1] >> 16);
+        if (Prcb->LogicalProcessorsPerPhysicalProcessor > 1)
+        {
+            /* We're on dual-core */
+            KiSMTProcessorsPresent = TRUE;
+        }
+    }
+    else
+    {
+        /* We only have a single CPU */
+        Prcb->LogicalProcessorsPerPhysicalProcessor = 1;
+    }
 
     /* Check if CPUID 0x80000000 is supported */
     if (ExtendedCPUID)
@@ -765,7 +788,7 @@ KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
 {
     /* Set CS and ESP */
     Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
-    Ke386Wrmsr(0x175, 0, 0);
+    Ke386Wrmsr(0x175, KeGetCurrentPrcb()->DpcStack, 0);
 
     /* Set LSTAR */
     Ke386Wrmsr(0x176, KiFastCallEntry, 0);
@@ -811,6 +834,14 @@ Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
     /* FIXME: Support this */
     DPRINT1("Your machine supports XMMI exceptions but ReactOS doesn't\n");
     return 0;
+}
+
+VOID
+NTAPI
+KiI386PentiumLockErrataFixup(VOID)
+{
+    /* FIXME: Support this */
+    DPRINT1("WARNING: Your machine has a CPU bug that ReactOS can't bypass!\n");
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

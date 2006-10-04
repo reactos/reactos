@@ -82,6 +82,7 @@ extern ULONG_PTR KERNEL_BASE;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
 extern ULONG KeI386FxsrPresent;
+extern ULONG KiMXCsrMask;
 extern ULONG KeI386CpuType;
 extern ULONG KeI386CpuStep;
 extern ULONG KeProcessorArchitecture;
@@ -89,6 +90,7 @@ extern ULONG KeProcessorLevel;
 extern ULONG KeProcessorRevision;
 extern ULONG KeFeatureBits;
 extern ULONG Ke386GlobalPagesEnabled;
+extern BOOLEAN KiI386PentiumLockErrataPresent;
 extern KNODE KiNode0;
 extern PKNODE KeNodeBlock[1];
 extern UCHAR KeNumberNodes;
@@ -119,6 +121,7 @@ extern ULONG KiIdealDpcRate;
 extern BOOLEAN KeThreadDpcEnable;
 extern LARGE_INTEGER KiTimeIncrementReciprocal;
 extern UCHAR KiTimeIncrementShiftCount;
+extern ULONG KiTimeLimitIsrMicroseconds;
 extern LIST_ENTRY BugcheckCallbackListHead, BugcheckReasonCallbackListHead;
 extern KSPIN_LOCK BugCheckCallbackLock;
 extern KDPC KiExpireTimerDpc;
@@ -859,6 +862,10 @@ Ki386EnableXMMIExceptions(IN ULONG_PTR Context);
 VOID
 NTAPI
 KiInitMachineDependent(VOID);
+
+VOID
+NTAPI
+KiI386PentiumLockErrataFixup(VOID);
 
 VOID
 WRMSR(

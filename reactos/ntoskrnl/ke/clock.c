@@ -37,7 +37,7 @@ LARGE_INTEGER SystemBootTime = { 0 };
 
 KDPC KiExpireTimerDpc;
 BOOLEAN KiClockSetupComplete = FALSE;
-
+ULONG KiTimeLimitIsrMicroseconds;
 
 /*
  * Number of timer interrupts since initialisation

@@ -111,9 +111,13 @@ _KiFastCallEntry:
     /* Set FS to PCR */
     mov ecx, KGDT_R0_PCR
     mov fs, cx
+    //push KGDT_R0_PCR
+    //pop fs
+
+    /* Set user selector */
+    mov ecx, KGDT_R3_DATA | RPL_MASK
 
     /* Set DS/ES to User Selector */
-    mov ecx, KGDT_R3_DATA | RPL_MASK
     mov ds, cx
     mov es, cx
 

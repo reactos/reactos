@@ -30,6 +30,8 @@ KiInitMachineDependent(VOID)
     NTSTATUS Status;
     //ULONG ReturnLength;
     ULONG i, Affinity;
+    PFX_SAVE_AREA FxSaveArea;
+    ULONG MXCsrMask = 0xFFBF, NewMask;
 
     /* Check for large page support */
     if (KeFeatureBits & KF_LARGE_PAGE)
@@ -68,6 +70,30 @@ KiInitMachineDependent(VOID)
 
     /* Check for PAT support and enable it */
     if (KeFeatureBits & KF_PAT) KiInitializePAT();
+
+    /* Assume no errata for now */
+    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = 0;
+
+    /* If there's no NPX, then we're emulating the FPU */
+    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] =
+        !KeI386NpxPresent;
+
+    /* Check if there's no NPX, so that we can disable associated features */
+    if (!KeI386NpxPresent)
+    {
+        /* Remove NPX-related bits */
+        KeFeatureBits &= ~(KF_XMMI64 | KF_XMMI | KF_FXSR | KF_MMX);
+
+        /* Disable kernel flags */
+        KeI386FxsrPresent = KeI386XMMIPresent = FALSE;
+
+        /* Disable processor features that might've been set until now */
+        SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] =
+        SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE]   =
+        SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE]     =
+        SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE]    =
+        SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] = 0;
+    }
 
     /* Check for CR4 support */
     if (KeFeatureBits & KF_CR4)
@@ -143,12 +169,67 @@ KiInitMachineDependent(VOID)
             /* Check if we have AMD MTRR and initialize it for the CPU */
             if (KeFeatureBits & KF_AMDK6MTRR) KiAmdK6InitializeMTRR();
 
-            /* FIXME: Apply P5 LOCK Errata fixups */
+            /* Check if this is a buggy Pentium and apply the fixup if so */
+            if (KiI386PentiumLockErrataPresent) KiI386PentiumLockErrataFixup();
+
+            /* Get the current thread NPX state */
+            FxSaveArea = (PVOID)
+                         ((ULONG_PTR)KeGetCurrentThread()->InitialStack -
+                         NPX_FRAME_LENGTH);
+
+            /* Clear initial MXCsr mask */
+            FxSaveArea->U.FxArea.MXCsrMask = 0;
+
+            /* Save the current NPX State */
+#ifdef __GNUC__
+            asm volatile("fxsave %0\n\t" : "=m" (*FxSaveArea));
+#else
+            __asm fxsave [FxSaveArea]
+#endif
+            /* Check if the current mask doesn't match the reserved bits */
+            if (FxSaveArea->U.FxArea.MXCsrMask != MXCsrMask)
+            {
+                /* Then use whatever it's holding */
+                MXCsrMask = FxSaveArea->U.FxArea.MXCsrMask;
+            }
+
+            /* Check if nobody set the kernel-wide mask */
+            if (!KiMXCsrMask)
+            {
+                /* Then use the one we calculated above */
+                NewMask = MXCsrMask;
+            }
+            else
+            {
+                /* Use the existing mask */
+                NewMask = KiMXCsrMask;
+
+                /* Was it set to the same value we found now? */
+                if (NewMask != MXCsrMask)
+                {
+                    /* No, something is definitely wrong */
+                    KEBUGCHECKEX(MULTIPROCESSOR_CONFIGURATION_NOT_SUPPORTED,
+                                 KF_FXSR,
+                                 NewMask,
+                                 MXCsrMask,
+                                 0);
+                }
+            }
+
+            /* Now set the kernel mask */
+            KiMXCsrMask = NewMask & MXCsrMask;
         }
     }
 
     /* Return affinity back to where it was */
     KeRevertToUserAffinityThread();
+
+    /* NT allows limiting the duration of an ISR with a registry key */
+    if (KiTimeLimitIsrMicroseconds)
+    {
+        /* FIXME: TODO */
+        DPRINT1("ISR Time Limit not yet supported\n");
+    }
 }
 
 VOID
@@ -519,11 +600,17 @@ AppCpuInit:
 
     /* Align stack and make space for the trap frame and NPX frame */
     InitialStack &= ~KTRAP_FRAME_ALIGN;
+#ifdef __GNUC__
     __asm__ __volatile__("movl %0,%%esp" : :"r" (InitialStack));
     __asm__ __volatile__("subl %0,%%esp" : :"r" (NPX_FRAME_LENGTH +
                                                  KTRAP_FRAME_LENGTH +
                                                  KTRAP_FRAME_ALIGN));
     __asm__ __volatile__("push %0" : :"r" (CR0_EM + CR0_TS + CR0_MP));
+#else
+    __asm mov esp, InitialStack;
+    __asm sub esp, NPX_FRAME_LENGTH + KTRAP_FRAME_ALIGN + KTRAP_FRAME_LENGTH;
+    __asm push CR0_EM + CR0_TS + CR0_MP
+#endif
 
     /* Call main kernel initialization */
     KiInitializeKernel(&KiInitialProcess.Pcb,
