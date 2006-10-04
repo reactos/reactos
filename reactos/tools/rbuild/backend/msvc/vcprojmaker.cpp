@@ -70,6 +70,14 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	size_t i;
 
 	string vcproj_file = VcprojFileName(module);
+
+	string username = getenv ( "USERNAME" );
+	string computername = getenv ( "COMPUTERNAME" );
+	string vcproj_file_user = "";
+
+	if ((computername != "") && (username != ""))
+		vcproj_file_user = vcproj_file + "." + computername + "." + username + ".user";
+
 	printf ( "Creating MSVC.NET project: '%s'\n", vcproj_file.c_str() );
 	FILE* OUT = fopen ( vcproj_file.c_str(), "wb" );
 
@@ -616,7 +624,57 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	fprintf ( OUT, "\t<Globals>\r\n" );
 	fprintf ( OUT, "\t</Globals>\r\n" );
 	fprintf ( OUT, "</VisualStudioProject>\r\n" );
-	fclose(OUT);
+	fclose ( OUT );
+
+	/* User configuration file */
+	if (vcproj_file_user != "")
+	{
+		OUT = fopen ( vcproj_file_user.c_str(), "wb" );
+		fprintf ( OUT, "<?xml version=\"1.0\" encoding = \"Windows-1252\"?>\r\n" );
+		fprintf ( OUT, "<VisualStudioUserFile\r\n" );
+		fprintf ( OUT, "\tProjectType=\"Visual C++\"\r\n" );
+		fprintf ( OUT, "\tVersion=\"%s\"\r\n", configuration.VSProjectVersion.c_str() );
+		fprintf ( OUT, "\tShowAllFiles=\"false\"\r\n" );
+		fprintf ( OUT, "\t>\r\n" );
+
+		fprintf ( OUT, "\t<Configurations>\r\n" );
+		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
+		{
+			const MSVCConfiguration& cfg = *m_configurations[icfg];
+			fprintf ( OUT, "\t\t<Configuration\r\n" );
+			fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.name.c_str() );
+			fprintf ( OUT, "\t\t\t>\r\n" );
+			fprintf ( OUT, "\t\t\t<DebugSettings\r\n" );
+			fprintf ( OUT, "\t\t\t\tCommand=\"rundll32.exe\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tCommandArguments=\" shell32,Control_RunDLL &quot;$(TargetPath)&quot;,@\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tAttach=\"false\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tDebuggerType=\"3\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tRemote=\"1\"\r\n" );
+			string remote_machine = "\t\t\t\tRemoteMachine=\"" + computername + "\"\r\n";
+			fprintf ( OUT, remote_machine.c_str() );
+			fprintf ( OUT, "\t\t\t\tRemoteCommand=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tHttpUrl=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tPDBPath=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tSQLDebugging=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tEnvironment=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tEnvironmentMerge=\"true\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tDebuggerFlavor=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tMPIRunCommand=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tMPIRunArguments=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tMPIRunWorkingDirectory=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tApplicationCommand=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tApplicationArguments=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tShimCommand=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tMPIAcceptMode=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tMPIAcceptFilter=\"\"\r\n" );
+			fprintf ( OUT, "\t\t\t/>\r\n" );
+			fprintf ( OUT, "\t\t</Configuration>\r\n" );
+		}
+		fprintf ( OUT, "\t</Configurations>\r\n" );
+		fprintf ( OUT, "</VisualStudioUserFile>\r\n" );
+		fclose ( OUT );
+	}
+
 }
 
 std::string
@@ -754,6 +812,7 @@ MSVCBackend::_generate_sln ( FILE* OUT )
 		Module& module = *ProjectNode.modules[i];
 		
 		std::string vcproj_file = VcprojFileName ( module );
+		std::string vcproj_file_user = vcproj_file + "CHRIS-NOTEBOOK.Christoph.user";
 		_generate_sln_project ( OUT, module, vcproj_file, sln_guid, module.guid, module.non_if_data.libraries );
 	}
 	_generate_sln_footer ( OUT );

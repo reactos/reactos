@@ -384,6 +384,15 @@ MSVCBackend::_clean_project_files ( void )
 		remove ( SuoFileName ( module ).c_str () );
 		remove ( VcprojFileName ( module ).c_str () );	
 
+		string username = getenv ( "USERNAME" );
+		string computername = getenv ( "COMPUTERNAME" );
+		string vcproj_file_user = "";
+
+		if ((computername != "") && (username != ""))
+			vcproj_file_user = VcprojFileName ( module ) + "." + computername + "." + username + ".user";
+
+		remove ( vcproj_file_user.c_str () );	
+
 		_get_object_files ( module, out );
 		for ( size_t j = 0; j < out.size (); j++)
 		{
