@@ -297,6 +297,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ULONG FeatureBits;
     LARGE_INTEGER PageDirectory;
     PVOID DpcStack;
+    ULONG NXSupportPolicy;
 
     /* Detect and set the CPU Type */
     KiSetProcessorType();
@@ -316,38 +317,38 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     /* Get the processor features for the CPU */
     FeatureBits = KiGetFeatureBits();
 
-    /* Save feature bits */
-    Prcb->FeatureBits = FeatureBits;
-
     /* Set the default NX policy (opt-in) */
-    SharedUserData->NXSupportPolicy = 2;
+    NXSupportPolicy = 2;
 
     /* Check if NPX is always on */
     if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=ALWAYSON"))
     {
         /* Set it always on */
-        SharedUserData->NXSupportPolicy = 1;
-        KeFeatureBits |= KF_NX_ENABLED;
+        NXSupportPolicy = 1;
+        FeatureBits |= KF_NX_ENABLED;
     }
     else if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTOUT"))
     {
         /* Set it in opt-out mode */
-        SharedUserData->NXSupportPolicy = 3;
-        KeFeatureBits |= KF_NX_ENABLED;
+        NXSupportPolicy = 3;
+        FeatureBits |= KF_NX_ENABLED;
     }
     else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTIN")) ||
              (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE")))
     {
         /* Set the feature bits */
-        KeFeatureBits |= KF_NX_ENABLED;
+        FeatureBits |= KF_NX_ENABLED;
     }
     else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=ALWAYSOFF")) ||
              (strstr(KeLoaderBlock->LoadOptions, "EXECUTE")))
     {
         /* Set disabled mode */
-        SharedUserData->NXSupportPolicy = 0;
-        KeFeatureBits |= KF_NX_DISABLED;
+        NXSupportPolicy = 0;
+        FeatureBits |= KF_NX_DISABLED;
     }
+
+    /* Save feature bits */
+    Prcb->FeatureBits = FeatureBits;
 
     /* Save CPU state */
     KiSaveProcessorControlState(&Prcb->ProcessorState);
@@ -416,6 +417,9 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
     /* Sets up the Text Sections of the Kernel and HAL for debugging */
     LdrInit1();
+
+    /* Set the NX Support policy */
+    SharedUserData->NXSupportPolicy = NXSupportPolicy;
 
     /* Setup the Idle Thread */
     KeInitializeThread(InitProcess,
