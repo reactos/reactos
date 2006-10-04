@@ -812,7 +812,6 @@ MSVCBackend::_generate_sln ( FILE* OUT )
 		Module& module = *ProjectNode.modules[i];
 		
 		std::string vcproj_file = VcprojFileName ( module );
-		std::string vcproj_file_user = vcproj_file + "CHRIS-NOTEBOOK.Christoph.user";
 		_generate_sln_project ( OUT, module, vcproj_file, sln_guid, module.guid, module.non_if_data.libraries );
 	}
 	_generate_sln_footer ( OUT );
