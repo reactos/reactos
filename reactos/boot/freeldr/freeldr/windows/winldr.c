@@ -21,7 +21,9 @@
 
 #include <freeldr.h>
 
-#define NDEBUG
+#include <ndk/ldrtypes.h>
+
+//#define NDEBUG
 #include <debug.h>
 
 VOID DumpMemoryAllocMap(VOID);
@@ -442,7 +444,6 @@ void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	RtlZeroMemory(*GdtIdt, NumPages << MM_PAGE_SHIFT);
 }
 
-
 VOID
 LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 {
@@ -454,13 +455,16 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	BOOLEAN Status;
 	ULONG SectionId;
 	ULONG BootDevice;
-	PLOADER_PARAMETER_BLOCK LoaderBlock=NULL, LoaderBlockVA;
-	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE;
+	PLOADER_PARAMETER_BLOCK LoaderBlock, LoaderBlockVA;
 	KERNEL_ENTRY_POINT KiSystemStartup;
+	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE;
+	PIMAGE_NT_HEADERS NtosHeader;
 	// Mm-related things
-	PVOID GdtIdt=NULL;
+	PVOID GdtIdt;
 	ULONG PcrBasePage=0;
 	ULONG TssBasePage=0;
+
+
 
 	//sprintf(MsgBuffer,"Booting Microsoft(R) Windows(R) OS version '%04x' is not implemented yet", OperatingSystemVersion);
 	//UiMessageBox(MsgBuffer);
@@ -562,6 +566,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 
 	/* Save entry-point pointer (VA) */
 	KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;
+
 	LoaderBlockVA = PaToVa(LoaderBlock);
 
 	/* Debugging... */
@@ -575,23 +580,17 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 
 	WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
 
-	/*__asm
-	{
-		or esp, KSEG0_BASE;
-		or ebp, KSEG0_BASE;
-	}*/
+	// temp: offset C9000
 
-	/*
-	{
-		ULONG *trrr = (ULONG *)(512*1024*1024);
+	//FIXME: If I substitute this debugging checkpoint, GCC will "optimize away" the code below
+	//while (1) {};
+	asm(".intel_syntax noprefix\n");
+		asm("test1:\n");
+		asm("jmp test1\n");
+	asm(".att_syntax\n");
 
-		*trrr = 0x13131414;
-	}
 
-	//FIXME!
-	while (1) {};*/
-
-	(KiSystemStartup)(LoaderBlockVA);
+	(*KiSystemStartup)(LoaderBlockVA);
 
 	return;
 }
