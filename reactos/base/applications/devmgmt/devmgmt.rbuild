@@ -15,6 +15,7 @@
 		<library>user32</library>
 		<library>comctl32</library>
 		<library>advapi32</library>
+		<library>devmgr</library>
 		<compilationunit name="unit.c">
 			<file>about.c</file>
 			<file>devmgmt.c</file>

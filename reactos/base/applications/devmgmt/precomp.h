@@ -53,7 +53,29 @@ HWND CreateMainWindow(LPCTSTR lpCaption, int nCmdShow);
 
 
 /* enumdevices.c */
-VOID OpenPropSheet(HTREEITEM hItem);
+// undocumented API's from devmgr
+#ifdef _UNICODE
+#define DevicePropertiesEx DevicePropertiesExW
+INT_PTR
+WINAPI
+DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
+                    IN LPCWSTR lpMachineName  OPTIONAL,
+                    IN LPCWSTR lpDeviceID  OPTIONAL,
+                    IN DWORD dwFlags  OPTIONAL,
+                    IN BOOL bShowDevMgr);
+#else
+#define DevicePropertiesEx DevicePropertiesExA
+INT_PTR
+WINAPI
+DevicePropertiesExA(IN HWND hWndParent  OPTIONAL,
+                    IN LPCSTR lpMachineName  OPTIONAL,
+                    IN LPCSTR lpDeviceID  OPTIONAL,
+                    IN DWORD dwFlags  OPTIONAL,
+                    IN BOOL bShowDevMgr);
+#endif
+
+VOID FreeDeviceStrings(HWND hTV);
+VOID OpenPropSheet(HWND hTV, HTREEITEM hItem);
 HTREEITEM InitTreeView(PMAIN_WND_INFO Info);
 VOID ListDevicesByType(PMAIN_WND_INFO Info, HTREEITEM hRoot);
 

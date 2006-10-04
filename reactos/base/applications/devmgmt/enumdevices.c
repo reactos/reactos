@@ -12,10 +12,84 @@
 static SP_CLASSIMAGELIST_DATA ImageListData;
 static HDEVINFO hDevInfo;
 
-
-VOID OpenPropSheet(HTREEITEM hItem)
+VOID
+FreeDeviceStrings(HWND hTV)
 {
-    DisplayString(_T("Device Propsheet not yet implemented"));
+    HTREEITEM hItem;
+
+    hItem = TreeView_GetRoot(hTV);
+
+    if (hItem)
+    {
+        hItem = TreeView_GetChild(hTV,
+                                  hItem);
+        /* loop the parent items */
+        while (hItem)
+        {
+            hItem = TreeView_GetChild(hTV,
+                                      hItem);
+            if (hItem == NULL)
+                break;
+
+            /* loop the child items and free the DeviceID */
+            while (TRUE)
+            {
+                HTREEITEM hOldItem;
+                TV_ITEM tvItem;
+                //TCHAR Buf[100];
+
+                tvItem.hItem = hItem;
+                tvItem.mask = TVIF_PARAM;// | TVIF_TEXT;
+                //tvItem.pszText = Buf;
+                //tvItem.cchTextMax = 99;
+
+                (void)TreeView_GetItem(hTV, &tvItem);
+
+                //MessageBox(NULL, Buf, NULL, 0);
+
+                HeapFree(GetProcessHeap(),
+                         0,
+                         (LPTSTR)tvItem.lParam);
+
+                hOldItem = hItem;
+
+                hItem = TreeView_GetNextSibling(hTV,
+                                                hItem);
+                if (hItem == NULL)
+                {
+                    hItem = hOldItem;
+                    break;
+                }
+            }
+
+            hItem = TreeView_GetParent(hTV,
+                                       hItem);
+            hItem = TreeView_GetNextSibling(hTV,
+                                            hItem);
+        }
+    }
+}
+
+
+VOID
+OpenPropSheet(HWND hTV,
+              HTREEITEM hItem)
+{
+    TV_ITEM tvItem;
+
+    tvItem.hItem = hItem;
+    tvItem.mask = TVIF_PARAM;
+
+    if (TreeView_GetItem(hTV, &tvItem) &&
+        (LPTSTR)tvItem.lParam != NULL)
+    {
+        DevicePropertiesExW(hTV,
+                            NULL,
+                            (LPTSTR)tvItem.lParam,
+                            0,
+                            FALSE);
+    }
+
 }
 
 
@@ -23,6 +97,7 @@ static HTREEITEM
 InsertIntoTreeView(HWND hTV,
                    HTREEITEM hRoot,
                    LPTSTR lpLabel,
+                   LPTSTR DeviceID,
                    INT DevImage)
 {
     TV_ITEM tvi;
@@ -31,9 +106,10 @@ InsertIntoTreeView(HWND hTV,
     ZeroMemory(&tvi, sizeof(tvi));
     ZeroMemory(&tvins, sizeof(tvins));
 
-    tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+    tvi.mask = TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
     tvi.pszText = lpLabel;
     tvi.cchTextMax = lstrlen(lpLabel);
+    tvi.lParam = (LPARAM)DeviceID;
     tvi.iImage = DevImage;
     tvi.iSelectedImage = DevImage;
 
@@ -58,11 +134,11 @@ EnumDeviceClasses(INT ClassIndex,
     UINT Ret;
 
     *DevPresent = FALSE;
+    *DevClassName = _T('\0');
 
     Ret = CM_Enumerate_Classes(ClassIndex,
                                &ClassGuid,
                                0);
-
     if (Ret != CR_SUCCESS)
     {
         /* all classes enumerated */
@@ -85,10 +161,6 @@ EnumDeviceClasses(INT ClassIndex,
     {
         lstrcpy(DevClassName, ClassName);
     }
-    else
-    {
-        *DevClassName = _T('\0');
-    }
 
     if (!SetupDiGetClassImageIndex(&ImageListData,
                                    &ClassGuid,
@@ -110,7 +182,6 @@ EnumDeviceClasses(INT ClassIndex,
         hDevInfo = NULL;
         return 0;
     }
-
 
     KeyClass = SetupDiOpenClassRegKeyEx(&ClassGuid,
                                         MAXIMUM_ALLOWED,
@@ -145,65 +216,54 @@ EnumDeviceClasses(INT ClassIndex,
 
 static INT
 EnumDevices(INT index,
-            TCHAR* DeviceClassName,
-            TCHAR* DeviceName)
+            LPTSTR DeviceClassName,
+            LPTSTR DeviceName,
+            LPTSTR *DeviceID)
 {
     SP_DEVINFO_DATA DeviceInfoData;
-    DWORD RequiredSize = 0;
-    GUID *guids = NULL;
-    BOOL bRet;
+    DWORD DevIdSize;
 
     *DeviceName = _T('\0');
-
-    bRet = SetupDiClassGuidsFromName(DeviceClassName,
-                                     NULL,
-                                     RequiredSize,
-                                     &RequiredSize);
-    if (RequiredSize == 0)
-        return -2;
-
-    if (!bRet)
-    {
-        guids = HeapAlloc(GetProcessHeap(),
-                          0,
-                          RequiredSize * sizeof(GUID));
-        if (guids == NULL)
-            return -1;
-
-        bRet = SetupDiClassGuidsFromName(DeviceClassName,
-                                         guids,
-                                         RequiredSize,
-                                         &RequiredSize);
-
-        if (!bRet || RequiredSize == 0)
-        {
-            /* incorrect class name */
-            HeapFree(GetProcessHeap(), 0, guids);
-            return -3;
-        }
-    }
-
-    HeapFree(GetProcessHeap(), 0, guids);
-    if(hDevInfo == INVALID_HANDLE_VALUE)
-    {
-        if(!bRet)
-        {
-            /* device info is unavailable */
-            return -4;
-        }
-    }
+    *DeviceID = NULL;
 
     ZeroMemory(&DeviceInfoData, sizeof(SP_DEVINFO_DATA));
     DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
 
-    bRet = SetupDiEnumDeviceInfo(hDevInfo,
-                                 index,
-                                 &DeviceInfoData);
-
-    if (!bRet)
+    if (!SetupDiEnumDeviceInfo(hDevInfo,
+                               index,
+                               &DeviceInfoData))
     {
         /* no such device */
         return -1;
+    }
+
+    /* get the device ID */
+    if (!SetupDiGetDeviceInstanceId(hDevInfo,
+                                    &DeviceInfoData,
+                                    NULL,
+                                    0,
+                                    &DevIdSize))
+    {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {
+            (*DeviceID) = (LPTSTR)HeapAlloc(GetProcessHeap(),
+                                            0,
+                                            DevIdSize * sizeof(TCHAR));
+            if (*DeviceID)
+            {
+                if (!SetupDiGetDeviceInstanceId(hDevInfo,
+                                                &DeviceInfoData,
+                                                *DeviceID,
+                                                DevIdSize,
+                                                NULL))
+                {
+                    HeapFree(GetProcessHeap(),
+                             0,
+                             *DeviceID);
+                    *DeviceID = NULL;
+                }
+            }
+        }
     }
 
     /* get the device's friendly name */
@@ -216,17 +276,16 @@ EnumDevices(INT index,
                                           NULL))
     {
         /* if the friendly name fails, try the description instead */
-        bRet = SetupDiGetDeviceRegistryProperty(hDevInfo,
-                                               &DeviceInfoData,
-                                               SPDRP_DEVICEDESC,
-                                               0,
-                                               (BYTE*)DeviceName,
-                                               MAX_DEV_LEN,
-                                               NULL);
-        if (!bRet)
+        if (!SetupDiGetDeviceRegistryProperty(hDevInfo,
+                                              &DeviceInfoData,
+                                              SPDRP_DEVICEDESC,
+                                              0,
+                                              (BYTE*)DeviceName,
+                                              MAX_DEV_LEN,
+                                              NULL))
         {
             /* if the description fails, just give up! */
-            return -5;
+            return -2;
         }
     }
 
@@ -241,6 +300,7 @@ ListDevicesByType(PMAIN_WND_INFO Info,
     HTREEITEM hDevItem;
     TCHAR DevName[MAX_DEV_LEN];
     TCHAR DevDesc[MAX_DEV_LEN];
+    LPTSTR DeviceID = NULL;
     BOOL DevExist = FALSE;
     INT ClassRet;
     INT index = 0;
@@ -264,6 +324,7 @@ ListDevicesByType(PMAIN_WND_INFO Info,
                 hDevItem = InsertIntoTreeView(Info->hTreeView,
                                               hRoot,
                                               DevDesc,
+                                              NULL,
                                               DevImage);
             }
             else
@@ -271,6 +332,7 @@ ListDevicesByType(PMAIN_WND_INFO Info,
                 hDevItem = InsertIntoTreeView(Info->hTreeView,
                                               hRoot,
                                               DevName,
+                                              NULL,
                                               DevImage);
             }
 
@@ -278,12 +340,14 @@ ListDevicesByType(PMAIN_WND_INFO Info,
             {
                 Ret = EnumDevices(DevIndex,
                                   DevName,
-                                  DeviceName);
+                                  DeviceName,
+                                  &DeviceID);
                 if (Ret == 0)
                 {
                     InsertIntoTreeView(Info->hTreeView,
                                        hDevItem,
                                        DeviceName,
+                                       DeviceID,
                                        DevImage);
                 }
 
@@ -298,6 +362,7 @@ ListDevicesByType(PMAIN_WND_INFO Info,
                 hDevInfo = NULL;
             }
 
+            /* don't insert classes with no devices */
             if (!TreeView_GetChild(Info->hTreeView,
                                    hDevItem))
             {
@@ -366,6 +431,7 @@ InitTreeView(PMAIN_WND_INFO Info)
     hRoot = InsertIntoTreeView(Info->hTreeView,
                                NULL,
                                ComputerName,
+                               NULL,
                                RootImage);
 
     return hRoot;

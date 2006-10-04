@@ -285,7 +285,8 @@ OnNotify(PMAIN_WND_INFO Info,
             if (!TreeView_GetChild(Info->hTreeView,
                                    hSelected))
             {
-                OpenPropSheet(hSelected);
+                OpenPropSheet(Info->hTreeView,
+                              hSelected);
             }
         }
         break;
@@ -348,13 +349,18 @@ MainWndCommand(PMAIN_WND_INFO Info,
         case IDC_PROP:
         {
             HTREEITEM hSelected = TreeView_GetSelection(Info->hTreeView);
-            OpenPropSheet(hSelected);
+            OpenPropSheet(Info->hTreeView,
+                          hSelected);
         }
         break;
 
         case IDC_REFRESH:
         {
-            HTREEITEM hRoot = InitTreeView(Info);
+            HTREEITEM hRoot;
+
+            FreeDeviceStrings(Info->hTreeView);
+
+            hRoot = InitTreeView(Info);
             if (hRoot)
                 ListDevicesByType(Info, hRoot);
         }
@@ -525,6 +531,7 @@ MainWndProc(HWND hwnd,
 
         case WM_CLOSE:
         {
+            FreeDeviceStrings(Info->hTreeView);
             DestroyMenu(Info->hShortcutMenu);
             DestroyWindow(hwnd);
         }
@@ -532,8 +539,6 @@ MainWndProc(HWND hwnd,
 
         case WM_DESTROY:
         {
-            //DestroyMainWnd(Info);
-
             HeapFree(ProcessHeap,
                      0,
                      Info);
