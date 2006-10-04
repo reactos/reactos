@@ -335,40 +335,31 @@ GetSyncSetting(HWND hwnd)
 {
     HKEY hKey;
     HWND hCheck;
-    LONG Ret;
     WCHAR Data[8];
     DWORD Size;
 
-    Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Parameters",
                         0,
                         KEY_QUERY_VALUE,
-                        &hKey);
-    if (Ret != ERROR_SUCCESS)
-    {
-        DisplayWin32Error(Ret);
-        return;
-    }
-
-    Size = sizeof(Data);
-    Ret = RegQueryValueExW(hKey,
+                        &hKey) == ERROR_SUCCESS)
+        {
+        Size = sizeof(Data);
+        if (RegQueryValueExW(hKey,
                            L"Type",
                            NULL,
                            NULL,
                            (LPBYTE)Data,
-                           &Size);
-    if (Ret != ERROR_SUCCESS)
-    {
-        DisplayWin32Error(Ret);
+                           &Size) == ERROR_SUCCESS)
+        {
+            if (lstrcmp(Data, L"NTP") == 0)
+            {
+                hCheck = GetDlgItem(hwnd, IDC_AUTOSYNC);
+                SendMessageW(hCheck, BM_SETCHECK, 0, 0);
+            }
+        }
+        RegCloseKey(hKey);
     }
-
-    if (lstrcmp(Data, L"NTP") == 0)
-    {
-        hCheck = GetDlgItem(hwnd, IDC_AUTOSYNC);
-        SendMessageW(hCheck, BM_SETCHECK, 0, 0);
-    }
-
-    RegCloseKey(hKey);
 }
 
 
