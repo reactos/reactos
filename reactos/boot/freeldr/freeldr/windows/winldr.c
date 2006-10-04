@@ -458,7 +458,6 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	PLOADER_PARAMETER_BLOCK LoaderBlock, LoaderBlockVA;
 	KERNEL_ENTRY_POINT KiSystemStartup;
 	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE;
-	PIMAGE_NT_HEADERS NtosHeader;
 	// Mm-related things
 	PVOID GdtIdt;
 	ULONG PcrBasePage=0;
