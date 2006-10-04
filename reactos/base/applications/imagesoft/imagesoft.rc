@@ -11,12 +11,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 1 24 DISCARDABLE "manifest.xml"
 
-STRINGTABLE DISCARDABLE
-BEGIN
-  IDS_APPNAME   "ImageSoft"
-  IDS_VERSION   "v0.1"
-END
-
 IDI_IMAGESOFTICON ICON "res/imagesoft.ico"
 
 /* main toolbar icons */
