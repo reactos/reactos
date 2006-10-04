@@ -66,7 +66,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
         NamePtr = (PULONG)((ULONG_PTR)BaseAddress + (ULONG)ExportDir->AddressOfNames);
         for( i = 0; i < ExportDir->NumberOfNames; i++, NamePtr++, OrdinalPtr++)
           {
-             if (!_strnicmp(Name->Buffer, (char*)((ULONG_PTR)BaseAddress + *NamePtr), Name->Length))
+             if (!strcmp(Name->Buffer, (char*)((ULONG_PTR)BaseAddress + *NamePtr)))
                {
                   *ProcedureAddress = (PVOID)((ULONG_PTR)BaseAddress + (ULONG)AddressPtr[*OrdinalPtr]);
                   return STATUS_SUCCESS;
