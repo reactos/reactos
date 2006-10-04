@@ -42,7 +42,7 @@ ANSI_STRING ExceptName = RTL_CONSTANT_STRING("KiUserExceptionDispatcher");
 ANSI_STRING CallbackName = RTL_CONSTANT_STRING("KiUserCallbackDispatcher");
 ANSI_STRING RaiseName = RTL_CONSTANT_STRING("KiRaiseUserExceptionDispatcher");
 ANSI_STRING FastName = RTL_CONSTANT_STRING("KiFastSystemCall");
-ANSI_STRING FastReturnName = RTL_CONSTANT_STRING("KeFastSystemCallRet");
+ANSI_STRING FastReturnName = RTL_CONSTANT_STRING("KiFastSystemCallRet");
 ANSI_STRING InterruptName = RTL_CONSTANT_STRING("KiIntSystemCall");
 
 PHANDLE_TABLE PspCidTable;

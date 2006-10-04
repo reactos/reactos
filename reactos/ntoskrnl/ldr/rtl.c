@@ -69,22 +69,15 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
       {
          mid = (minn + maxn) / 2;
          CurrentNamePtr = (PCHAR)RVA(BaseAddress, NamePtr[mid]);
-         res = strncmp(CurrentNamePtr, Name->Buffer, Name->Length);
+         res = strcmp(CurrentNamePtr, Name->Buffer);
          if (res == 0)
          {
             /*
              * Check if the beginning of the name matched, but it's still
              * not the whole name.
              */
-            if (CurrentNamePtr[Name->Length] != 0)
-            {
-               res = -1;
-            }
-            else
-            {
-               *ProcedureAddress = (PVOID)RVA(BaseAddress, AddressPtr[OrdinalPtr[mid]]);
-               return STATUS_SUCCESS;
-            }
+             *ProcedureAddress = (PVOID)RVA(BaseAddress, AddressPtr[OrdinalPtr[mid]]);
+             return STATUS_SUCCESS;
          }
          if (res > 0)
             maxn = mid - 1;

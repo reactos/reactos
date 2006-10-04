@@ -257,9 +257,9 @@ _KiFastSystemCall@0:
     sysenter
 .endfunc
 
-.func KeFastSystemCallRet@0
-.globl _KeFastSystemCallRet@0
-_KeFastSystemCallRet@0:
+.func KiFastSystemCallRet@0
+.globl _KiFastSystemCallRet@0
+_KiFastSystemCallRet@0:
 
     /* Just return to caller */
     ret
