@@ -37,6 +37,9 @@ KiRaiseUserExceptionDispatcher@0
 KiUserApcDispatcher@16
 KiUserCallbackDispatcher@12
 KiUserExceptionDispatcher@8
+KiIntSystemCall@0
+KeFastSystemCallRet@0 ; big hack since LdrGetProcedureAddress is broken
+KiFastSystemCall@0
 LdrAccessResource@16
 LdrAddRefDll@8
 LdrDisableThreadCalloutsForDll@4

@@ -51,7 +51,7 @@
 #if defined(__GNUC__)
 #define UserModeStub_x86    "    movl $0x%x, %%eax\n" \
                             "    movl $KUSER_SHARED_SYSCALL, %%ecx\n" \
-                            "    call *%%ecx\n" \
+                            "    call *(%%ecx)\n" \
                             "    ret $0x%x\n\n"
 #elif defined(_MSC_VER)
 #define UserModeStub_x86    "    asm { \n" \

@@ -421,6 +421,20 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     /* Set the NX Support policy */
     SharedUserData->NXSupportPolicy = NXSupportPolicy;
 
+    /* Set basic CPU Features that user mode can read */
+    SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
+        (KeFeatureBits & KF_MMX);
+    SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
+        (KeFeatureBits & KF_CMPXCHG8B);
+    SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] =
+        ((KeFeatureBits & KF_FXSR) && (KeFeatureBits & KF_XMMI));
+    SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
+        ((KeFeatureBits & KF_FXSR) && (KeFeatureBits & KF_XMMI64));
+    SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
+        (KeFeatureBits & KF_3DNOW);
+    SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
+        (KeFeatureBits & KF_RDTSC);
+
     /* Setup the Idle Thread */
     KeInitializeThread(InitProcess,
                        InitThread,

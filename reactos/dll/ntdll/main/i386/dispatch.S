@@ -236,6 +236,35 @@ Exit:
     ret 8
 .endfunc
 
+.func KiIntSystemCall@0
+.globl _KiIntSystemCall@0
+_KiIntSystemCall@0:
+
+    /* Set stack in EDX and do the interrupt */
+    lea edx, [esp+8]
+    int 0x2E
+
+    /* Return to caller */
+    ret
+.endfunc
+
+.func KiFastSystemCall@0
+.globl _KiFastSystemCall@0
+_KiFastSystemCall@0:
+
+    /* Put ESP in EDX and do the SYSENTER */
+    mov edx, esp
+    sysenter
+.endfunc
+
+.func KeFastSystemCallRet@0
+.globl _KeFastSystemCallRet@0
+_KeFastSystemCallRet@0:
+
+    /* Just return to caller */
+    ret
+.endfunc
+
 .func RtlpGetStackLimits@8
 .globl _RtlpGetStackLimits@8
 _RtlpGetStackLimits@8:

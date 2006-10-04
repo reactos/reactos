@@ -41,6 +41,9 @@ ANSI_STRING ApcName = RTL_CONSTANT_STRING("KiUserApcDispatcher");
 ANSI_STRING ExceptName = RTL_CONSTANT_STRING("KiUserExceptionDispatcher");
 ANSI_STRING CallbackName = RTL_CONSTANT_STRING("KiUserCallbackDispatcher");
 ANSI_STRING RaiseName = RTL_CONSTANT_STRING("KiRaiseUserExceptionDispatcher");
+ANSI_STRING FastName = RTL_CONSTANT_STRING("KiFastSystemCall");
+ANSI_STRING FastReturnName = RTL_CONSTANT_STRING("KeFastSystemCallRet");
+ANSI_STRING InterruptName = RTL_CONSTANT_STRING("KiIntSystemCall");
 
 PHANDLE_TABLE PspCidTable;
 
@@ -97,6 +100,34 @@ PspLookupKernelUserEntryPoints(VOID)
     /* Get user-mode exception raise trampoline */
     Status = PspLookupSystemDllEntryPoint(&RaiseName,
                                           &KeRaiseUserExceptionDispatcher);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check if this is a machine that supports SYSENTER */
+    if (KeFeatureBits & KF_FAST_SYSCALL)
+    {
+        /* Get user-mode sysenter stub */
+        Status = PspLookupSystemDllEntryPoint(&FastName,
+                                              (PVOID)&SharedUserData->
+                                              SystemCall);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        /* Get user-mode sysenter return stub */
+        Status = PspLookupSystemDllEntryPoint(&FastReturnName,
+                                              (PVOID)&SharedUserData->
+                                              SystemCallReturn);
+    }
+    else
+    {
+        /* Get the user-mode interrupt stub */
+        Status = PspLookupSystemDllEntryPoint(&InterruptName,
+                                              (PVOID)&SharedUserData->
+                                              SystemCall);
+    }
+
+    /* Set the test instruction */
+    if (!NT_SUCCESS(Status)) SharedUserData->TestRetInstruction = 0xC3;
+
+    /* Return the status */
     return Status;
 }
 

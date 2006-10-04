@@ -134,7 +134,7 @@ _KiFastCallEntry:
     popf                                /* Set our EFLAGS */
     or dword ptr [esp], EFLAGS_INTERRUPT_MASK   /* Re-enable IRQs in EFLAGS, to fake INT */
     push KGDT_R3_CODE + RPL_MASK
-    push KUSER_SHARED_SYSCALL_RET
+    push dword ptr ds:KUSER_SHARED_SYSCALL_RET
 
     /* Setup the Trap Frame stack */
     push 0

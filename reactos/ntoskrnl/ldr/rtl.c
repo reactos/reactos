@@ -55,6 +55,12 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
        * -- Filip Navara, August 1st, 2005
        */
 
+      /*
+       * I don't know who wrote this code but it's not working.
+       * Test case: KiFastSystemCall and KiFastSystemCallRet in ntdll.
+       * Former can't be found even though it's exported.
+       */
+
       OrdinalPtr = (PUSHORT)RVA(BaseAddress, ExportDir->AddressOfNameOrdinals);
       NamePtr = (PULONG)RVA(BaseAddress, ExportDir->AddressOfNames);
 

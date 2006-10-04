@@ -67,18 +67,9 @@ InitSystemSharedUserPage (IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG i;
     BOOLEAN BootDriveFound = FALSE;
 
-   /*
-    * NOTE:
-    *   The shared user page has been zeroed-out right after creation.
-    *   There is NO need to do this again.
-    */
-    Ki386SetProcessorFeatures();
-
-    /* Set the Version Data */
+    /* Set the Product Type */
     SharedUserData->NtProductType = NtProductWinNt;
     SharedUserData->ProductTypeIsValid = TRUE;
-    SharedUserData->NtMajorVersion = 5;
-    SharedUserData->NtMinorVersion = 0;
 
     /*
      * Retrieve the current dos system path
