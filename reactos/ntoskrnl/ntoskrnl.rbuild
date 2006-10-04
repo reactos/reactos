@@ -37,6 +37,8 @@
                 <!-- <file>irq.c</file> -->
                 <file>kiinit.c</file>
                 <file>ldt.c</file>
+                <file>mtrr.c</file>
+                <file>patpge.c</file>
                 <file>thread.c</file>
                 <file>trap.s</file>
                 <file>usercall_asm.S</file>

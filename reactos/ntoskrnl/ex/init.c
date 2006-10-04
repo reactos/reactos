@@ -736,8 +736,8 @@ ExPhase2Init(PVOID Context)
     /* Set us at maximum priority */
     KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
 
-    /* Initialize the second stage of the kernel */
-    KeInit2();
+    /* Initialize the later stages of the kernel */
+    KeInitSystem();
 
     /* Initialize all processors */
     HalAllProcessorsStarted();

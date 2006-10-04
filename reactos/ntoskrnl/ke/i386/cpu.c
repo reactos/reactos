@@ -63,7 +63,6 @@ ULONG KeI386XMMIPresent = 0;
 ULONG KeI386FxsrPresent = 0;
 ULONG KeI386MachineType;
 ULONG Ke386Pae = FALSE;
-ULONG Ke386GlobalPagesEnabled = FALSE;
 ULONG Ke386NoExecute = FALSE;
 BOOLEAN KiI386PentiumLockErrataPresent;
 ULONG KeLargestCacheLine = 0x40;
@@ -758,6 +757,60 @@ KiInitializeMachineType(VOID)
 {
     /* Set the Machine Type we got from NTLDR */
     KeI386MachineType = KeLoaderBlock->u.I386.MachineType & 0x000FF;
+}
+
+ULONG_PTR
+NTAPI
+KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
+{
+    /* Set CS and ESP */
+    Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
+    Ke386Wrmsr(0x175, 0, 0);
+
+    /* Set LSTAR */
+    Ke386Wrmsr(0x176, KiFastCallEntry, 0);
+    return 0;
+}
+
+VOID
+NTAPI
+KiRestoreFastSyscallReturnState(VOID)
+{
+    /* FIXME: NT has support for SYSCALL, IA64-SYSENTER, etc. */
+
+    /* Check if the CPU Supports fast system call */
+    if (KeFeatureBits & KF_FAST_SYSCALL)
+    {
+        /* Do an IPI to enable it */
+        KeIpiGenericCall(KiLoadFastSyscallMachineSpecificRegisters, 0);
+    }
+}
+
+ULONG_PTR
+NTAPI
+Ki386EnableDE(IN ULONG_PTR Context)
+{
+    /* Enable DE */
+    Ke386SetCr4(Ke386GetCr4() | CR4_DE);
+    return 0;
+}
+
+ULONG_PTR
+NTAPI
+Ki386EnableFxsr(IN ULONG_PTR Context)
+{
+    /* Enable FXSR */
+    Ke386SetCr4(Ke386GetCr4() | CR4_FXSR);
+    return 0;
+}
+
+ULONG_PTR
+NTAPI
+Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
+{
+    /* FIXME: Support this */
+    DPRINT1("Your machine supports XMMI exceptions but ReactOS doesn't\n");
+    return 0;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

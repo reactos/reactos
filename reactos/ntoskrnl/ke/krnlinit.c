@@ -6,7 +6,7 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
@@ -273,63 +273,18 @@ KiInitSpinLocks(IN PKPRCB Prcb,
     }
 }
 
-/* FIXME: Rename and make portable */
 VOID
 NTAPI
-KeInit2(VOID)
+KeInitSystem(VOID)
 {
-    ULONG Protect;
-
-    /* Check if Fxsr was found */
-    if (KeI386FxsrPresent)
+    /* Check if Threaded DPCs are enabled */
+    if (KeThreadDpcEnable)
     {
-        /* Enable it. FIXME: Send an IPI */
-        Ke386SetCr4(Ke386GetCr4() | X86_CR4_OSFXSR);
-
-        /* Check if XMM was found too */
-        if (KeI386XMMIPresent)
-        {
-            /* Enable it: FIXME: Send an IPI. */
-            Ke386SetCr4(Ke386GetCr4() | X86_CR4_OSXMMEXCPT);
-
-            /* FIXME: Implement and enable XMM Page Zeroing for Mm */
-        }
+        /* FIXME: TODO */
+        DPRINT1("Threaded DPCs not yet supported\n");
     }
 
-    if (KeFeatureBits & KF_GLOBAL_PAGE)
-    {
-        ULONG Flags;
-        /* Enable global pages */
-        Ke386GlobalPagesEnabled = TRUE;
-        Ke386SaveFlags(Flags);
-        Ke386DisableInterrupts();
-        Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
-        Ke386RestoreFlags(Flags);
-    }
-
-    if (KeFeatureBits & KF_FAST_SYSCALL)
-    {
-        extern void KiFastCallEntry(void);
-
-        /* CS Selector of the target segment. */
-        Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
-        /* Target ESP. */
-        Ke386Wrmsr(0x175, 0, 0);
-        /* Target EIP. */
-        Ke386Wrmsr(0x176, (ULONG_PTR)KiFastCallEntry, 0);
-    }
-
-    /* Does the CPU Support 'prefetchnta' (SSE)  */
-    if(KeFeatureBits & KF_XMMI)
-    {
-        Protect = MmGetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal);
-        MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect | PAGE_IS_WRITABLE);
-        /* Replace the ret by a nop */
-        *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
-        MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect);
-    }
-
-    /* Set IDT to writable */
-    Protect = MmGetPageProtect(NULL, (PVOID)KiIdt);
-    MmSetPageProtect(NULL, (PVOID)KiIdt, Protect | PAGE_IS_WRITABLE);
+    /* Initialize non-portable parts of the kernel */
+    KiInitMachineDependent();
 }
+

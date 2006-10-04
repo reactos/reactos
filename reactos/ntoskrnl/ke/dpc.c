@@ -22,6 +22,7 @@ ULONG KiMaximumDpcQueueDepth = 4;
 ULONG KiMinimumDpcRate = 3;
 ULONG KiAdjustDpcThreshold = 20;
 ULONG KiIdealDpcRate = 20;
+BOOLEAN KeThreadDpcEnable;
 KMUTEX KiGenericCallDpcMutex;
 
 /* PRIVATE FUNCTIONS *********************************************************/

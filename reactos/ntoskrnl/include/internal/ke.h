@@ -116,6 +116,7 @@ extern ULONG KiMaximumDpcQueueDepth;
 extern ULONG KiMinimumDpcRate;
 extern ULONG KiAdjustDpcThreshold;
 extern ULONG KiIdealDpcRate;
+extern BOOLEAN KeThreadDpcEnable;
 extern LARGE_INTEGER KiTimeIncrementReciprocal;
 extern UCHAR KiTimeIncrementShiftCount;
 extern LIST_ENTRY BugcheckCallbackListHead, BugcheckReasonCallbackListHead;
@@ -135,6 +136,7 @@ extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
 extern ULONG KiIdleSummary;
 extern VOID KiTrap8(VOID);
 extern VOID KiTrap2(VOID);
+extern VOID KiFastCallEntry(VOID);
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
@@ -550,10 +552,6 @@ KiWaitTest(
     KPRIORITY Increment
 );
 
-PULONG 
-NTAPI
-KeGetStackTopThread(struct _ETHREAD* Thread);
-
 VOID
 NTAPI
 KeContextToTrapFrame(
@@ -638,6 +636,10 @@ KiActivateWaiterQueue(IN PKQUEUE Queue);
 
 VOID
 NTAPI
+KeInitSystem(VOID);
+
+VOID
+NTAPI
 KeInitExceptions(VOID);
 
 VOID
@@ -646,11 +648,7 @@ KeInitInterrupts(VOID);
 
 VOID
 NTAPI
-KeInitTimer(VOID);
-
-VOID
-NTAPI
-KeInitDispatcher(VOID);
+KiInitializeBugCheck(VOID);
 
 VOID
 NTAPI
@@ -658,21 +656,9 @@ KiInitializeSystemClock(VOID);
 
 VOID
 NTAPI
-KiInitializeBugCheck(VOID);
-
-VOID
-NTAPI
-Phase1Initialization(PVOID Context);
-
-VOID
-NTAPI
 KiSystemStartup(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
-
-VOID
-NTAPI
-KeInit2(VOID);
 
 BOOLEAN
 NTAPI
@@ -709,33 +695,6 @@ KeTrapFrameToContext(
     IN PKEXCEPTION_FRAME ExceptionFrame,
     IN OUT PCONTEXT Context
 );
-
-VOID
-NTAPI
-KeApplicationProcessorInit(VOID);
-
-VOID
-NTAPI
-KePrepareForApplicationProcessorInit(ULONG id);
-
-ULONG
-NTAPI
-KiUserTrapHandler(
-    PKTRAP_FRAME Tf,
-    ULONG ExceptionNr,
-    PVOID Cr2
-);
-
-VOID
-NTAPI
-KePushAndStackSwitchAndSysRet(
-    ULONG Push,
-    PVOID NewStack
-);
-
-VOID
-NTAPI
-KeStackSwitchAndRet(PVOID NewStack);
 
 VOID
 NTAPI
@@ -813,7 +772,6 @@ KeI386VdmInitialize(
     VOID
 );
 
-
 VOID
 NTAPI
 KiInitializeMachineType(
@@ -864,6 +822,48 @@ PULONG
 NTAPI
 KiGetUserModeStackAddress(
     VOID
+);
+
+ULONG_PTR
+NTAPI
+Ki386EnableGlobalPage(IN volatile ULONG_PTR Context);
+
+VOID
+NTAPI
+KiInitializePAT(VOID);
+
+VOID
+NTAPI
+KiInitializeMTRR(IN BOOLEAN FinalCpu);
+
+VOID
+NTAPI
+KiAmdK6InitializeMTRR(VOID);
+
+VOID
+NTAPI
+KiRestoreFastSyscallReturnState(VOID);
+
+ULONG_PTR
+NTAPI
+Ki386EnableDE(IN ULONG_PTR Context);
+
+ULONG_PTR
+NTAPI
+Ki386EnableFxsr(IN ULONG_PTR Context);
+
+ULONG_PTR
+NTAPI
+Ki386EnableXMMIExceptions(IN ULONG_PTR Context);
+
+VOID
+NTAPI
+KiInitMachineDependent(VOID);
+
+VOID
+WRMSR(
+    IN ULONG Register,
+    IN LONGLONG Value
 );
 
 #include "ke_x.h"

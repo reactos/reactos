@@ -22,6 +22,137 @@ KSPIN_LOCK Ki486CompatibilityLock;
 
 VOID
 NTAPI
+KiInitMachineDependent(VOID)
+{
+    ULONG Protect;
+    ULONG CpuCount;
+    BOOLEAN FbCaching = FALSE;
+    NTSTATUS Status;
+    //ULONG ReturnLength;
+    ULONG i, Affinity;
+
+    /* Check for large page support */
+    if (KeFeatureBits & KF_LARGE_PAGE)
+    {
+        /* FIXME: Support this */
+        DPRINT1("Your machine supports PGE but ReactOS doesn't yet.\n");
+    }
+
+    /* Check for global page support */
+    if (KeFeatureBits & KF_GLOBAL_PAGE)
+    {
+        /* Do an IPI to enable it on all CPUs */
+        CpuCount = KeNumberProcessors;
+        KeIpiGenericCall(Ki386EnableGlobalPage, (ULONG_PTR)&CpuCount);
+    }
+
+    /* Check for PAT and/or MTRR support */
+    if (KeFeatureBits & (KF_PAT | KF_MTRR))
+    {
+        /* FIXME: ROS HAL Doesn't initialize this! */
+#if 1
+        Status = STATUS_UNSUCCESSFUL;
+#else
+        /* Query the HAL to make sure we can use it */
+        Status = HalQuerySystemInformation(HalFrameBufferCachingInformation,
+                                           sizeof(BOOLEAN),
+                                           &FbCaching,
+                                           &ReturnLength);
+#endif
+        if ((NT_SUCCESS(Status)) && (FbCaching))
+        {
+            /* We can't, disable it */
+            KeFeatureBits &= ~(KF_PAT | KF_MTRR);
+        }
+    }
+
+    /* Check for PAT support and enable it */
+    if (KeFeatureBits & KF_PAT) KiInitializePAT();
+
+    /* Check for CR4 support */
+    if (KeFeatureBits & KF_CR4)
+    {
+        /* Do an IPI call to enable the Debug Exceptions */
+        CpuCount = KeNumberProcessors;
+        KeIpiGenericCall(Ki386EnableDE, (ULONG_PTR)&CpuCount);
+    }
+
+    /* Check if FXSR was found */
+    if (KeFeatureBits & KF_FXSR)
+    {
+        /* Do an IPI call to enable the FXSR */
+        CpuCount = KeNumberProcessors;
+        KeIpiGenericCall(Ki386EnableFxsr, (ULONG_PTR)&CpuCount);
+
+        /* Check if XMM was found too */
+        if (KeFeatureBits & KF_XMMI)
+        {
+            /* Do an IPI call to enable XMMI exceptions */
+            CpuCount = KeNumberProcessors;
+            KeIpiGenericCall(Ki386EnableXMMIExceptions, (ULONG_PTR)&CpuCount);
+
+            /* FIXME: Implement and enable XMM Page Zeroing for Mm */
+
+            /* Patch the RtlPrefetchMemoryNonTemporal routine to enable it */
+            Protect = MmGetPageProtect(NULL, RtlPrefetchMemoryNonTemporal);
+            MmSetPageProtect(NULL,
+                             RtlPrefetchMemoryNonTemporal,
+                             Protect | PAGE_IS_WRITABLE);
+            *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
+            MmSetPageProtect(NULL, RtlPrefetchMemoryNonTemporal, Protect);
+        }
+    }
+
+    /* Check for, and enable SYSENTER support */
+    KiRestoreFastSyscallReturnState();
+
+    /* Loop every CPU */
+    i = KeActiveProcessors;
+    for (Affinity = 1; i; Affinity <<= 1)
+    {
+        /* Check if this is part of the set */
+        if (i & Affinity)
+        {
+            /* Run on this CPU */
+            i &= ~Affinity;
+            KeSetSystemAffinityThread(Affinity);
+
+            /* Reset MHz to 0 for this CPU */
+            KeGetCurrentPrcb()->MHz = 0;
+
+            /* Check if we can use RDTSC */
+            if (KeFeatureBits & KF_RDTSC)
+            {
+                /* Start sampling loop */
+                for (;;)
+                {
+                    //
+                    // FIXME: TODO
+                    //
+                    break;
+                }
+            }
+
+            /* Check if we have MTRR without PAT */
+            if (!(KeFeatureBits & KF_PAT) && (KeFeatureBits & KF_MTRR))
+            {
+                /* Then manually initialize MTRR for the CPU */
+                KiInitializeMTRR((BOOLEAN)i);
+            }
+
+            /* Check if we have AMD MTRR and initialize it for the CPU */
+            if (KeFeatureBits & KF_AMDK6MTRR) KiAmdK6InitializeMTRR();
+
+            /* FIXME: Apply P5 LOCK Errata fixups */
+        }
+    }
+
+    /* Return affinity back to where it was */
+    KeRevertToUserAffinityThread();
+}
+
+VOID
+NTAPI
 KiInitializePcr(IN ULONG ProcessorNumber,
                 IN PKIPCR Pcr,
                 IN PKIDTENTRY Idt,
