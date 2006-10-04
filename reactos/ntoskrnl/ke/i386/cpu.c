@@ -303,7 +303,7 @@ KiGetFeatureBits(VOID)
         }
         else
         {
-            /* Familes below 5 don't support PGE, PSE or CMOV at all */
+            /* Families below 5 don't support PGE, PSE or CMOV at all */
             Reg[3] &= ~(0x08 | 0x2000 | 0x8000);
 
             /* They also don't support advanced CPUID functions. */

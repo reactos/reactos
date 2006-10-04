@@ -8,6 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#define NTDDI_VERSION NTDDI_WS03SP1
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
@@ -317,6 +318,36 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
     /* Save feature bits */
     Prcb->FeatureBits = FeatureBits;
+
+    /* Set the default NX policy (opt-in) */
+    SharedUserData->NXSupportPolicy = 2;
+
+    /* Check if NPX is always on */
+    if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=ALWAYSON"))
+    {
+        /* Set it always on */
+        SharedUserData->NXSupportPolicy = 1;
+        KeFeatureBits |= KF_NX_ENABLED;
+    }
+    else if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTOUT"))
+    {
+        /* Set it in opt-out mode */
+        SharedUserData->NXSupportPolicy = 3;
+        KeFeatureBits |= KF_NX_ENABLED;
+    }
+    else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTIN")) ||
+             (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE")))
+    {
+        /* Set the feature bits */
+        KeFeatureBits |= KF_NX_ENABLED;
+    }
+    else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=ALWAYSOFF")) ||
+             (strstr(KeLoaderBlock->LoadOptions, "EXECUTE")))
+    {
+        /* Set disabled mode */
+        SharedUserData->NXSupportPolicy = 0;
+        KeFeatureBits |= KF_NX_DISABLED;
+    }
 
     /* Save CPU state */
     KiSaveProcessorControlState(&Prcb->ProcessorState);

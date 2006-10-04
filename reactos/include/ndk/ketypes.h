@@ -87,6 +87,8 @@ Author:
 #define KF_3DNOW                        0x00004000
 #define KF_AMDK6MTRR                    0x00008000
 #define KF_XMMI64                       0x00010000
+#define KF_NX_DISABLED                  0x00400000
+#define KF_NX_ENABLED                   0x00800000
 
 //
 // KPCR Access for non-IA64 builds

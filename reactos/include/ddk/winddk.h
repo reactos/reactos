@@ -458,6 +458,9 @@ typedef struct _KUSER_SHARED_DATA
     LARGE_INTEGER SystemExpirationDate;
     ULONG SuiteMask;
     BOOLEAN KdDebuggerEnabled;
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+    UCHAR NXSupportPolicy;
+#endif
     volatile ULONG ActiveConsoleId;
     volatile ULONG DismountCount;
     ULONG ComPlusPackage;
@@ -475,9 +478,29 @@ typedef struct _KUSER_SHARED_DATA
         volatile ULONG64 TickCountQuad;
     };
     ULONG Cookie;
+#if (NTDDI_VERSION >= NTDDI_WS03)
     LONGLONG ConsoleSessionForegroundProcessId;
     ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
-    ULONG UserModeGlobalLogging;
+#endif
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    USHORT UserModeGlobalLogger[8];
+    ULONG HeapTracingPid[2];
+    ULONG CritSecTracingPid[2];
+    union
+    {
+        ULONG SharedDataFlags;
+        struct
+        {
+            ULONG DbgErrorPortPresent:1;
+            ULONG DbgElevationEnabled:1;
+            ULONG DbgVirtEnabled:1;
+            ULONG DbgInstallerDetectEnabled:1;
+            ULONG SpareBits:28;
+        };
+    };
+    ULONG ImageFileExecutionOptions;
+    KAFFINITY ActiveProcessorAffinity;
+#endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 /*
