@@ -293,7 +293,7 @@ int PpcVirt2phys( int virt, int inst ) {
 }
 
 /* Add a new page table entry for the indicated mapping */
-BOOLEAN InsertPageEntry( int virt, int phys ) {
+BOOLEAN InsertPageEntry( int virt, int phys, int slot ) {
     int i, ptehi, ptelo;
     int sdr1 = GetSDR1();
     int sr = GetSR( (virt >> 28) & 0xf );
@@ -307,7 +307,7 @@ BOOLEAN InsertPageEntry( int virt, int phys ) {
     for( i = 0; i < 8; i++ ) {
 	ptehi = GetPhys( ptegaddr + (i * 8) );
 	
-	if( ptehi & 0x80000000 ) continue;
+	if( (slot != i) && (ptehi & 0x80000000) ) continue;
 
 	ptehi = (1 << 31) | (vsid << 7) | ((virt >> 22) & 0x3f);
 	ptelo = phys & ~0xfff;

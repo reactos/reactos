@@ -20,12 +20,15 @@
 
 #include <freeldr.h>
 #include <of_call.h>
+#include "ppcboot.h"
 #include "mmu.h"
+#include "compat.h"
 
 #define NDEBUG
 #include <debug.h>
 
 static PVOID KernelMemory = 0;
+extern boot_infos_t BootInfo;
 
 /* Bits to shift to convert a Virtual Address into an Offset in the Page Table */
 #define PFN_SHIFT 12
@@ -108,25 +111,96 @@ ULONG_PTR KernelEntry;
 typedef void (*KernelEntryFn)( void * );
 
 VOID
+DrawDigit(boot_infos_t *BootInfo, ULONG Digit, int x, int y)
+{
+    int i,j,k;
+
+    for( i = 0; i < 7; i++ ) {
+	for( j = 0; j < 8; j++ ) {
+	    for( k = 0; k < BootInfo->dispDeviceDepth/8; k++ ) {
+		SetPhysByte(((ULONG_PTR)BootInfo->dispDeviceBase)+
+			    k +
+			    (((j+x) * (BootInfo->dispDeviceDepth/8)) +
+			     ((i+y) * (BootInfo->dispDeviceRowBytes))),
+			    BootInfo->dispFont[Digit][i*8+j] == ' ' ? 0 : 255);
+	    }
+	}
+    }
+}
+
+VOID
+DrawNumber(boot_infos_t *BootInfo, ULONG Number, int x, int y)
+{
+    int i;
+
+    for( i = 0; i < 8; i++, Number<<=4 ) {
+	DrawDigit(BootInfo,(Number>>28)&0xf,x+(i*8),y);
+    }
+}
+
+VOID
 NTAPI
 FrLdrStartup(ULONG Magic)
 {
     KernelEntryFn KernelEntryAddress = 
 	(KernelEntryFn)(KernelEntry + KernelBase);
-    ULONG_PTR PhysAddr, i;
-
-    for( i = 0; i < KernelMemorySize; i+=1<<PFN_SHIFT ) 
+    register ULONG_PTR i asm("r4"), j asm("r5");
+    UINT NeededPTE = ((UINT)KernelMemory) >> PFN_SHIFT;
+    UINT NeededMemory = 
+	(2 * sizeof(ULONG_PTR) * (NeededPTE + NeededPTE / 512)) + 
+	sizeof(BootInfo) + sizeof(BootDigits);
+    UINT NeededPages = ROUND_UP(NeededMemory,(1<<PFN_SHIFT));
+    register PULONG_PTR TranslationMap asm("r6") = 
+	MmAllocateMemory(NeededMemory);
+    boot_infos_t *LocalBootInfo = (boot_infos_t *)TranslationMap;
+    TranslationMap = (PULONG_PTR)
+	(((PCHAR)&LocalBootInfo[1]) + sizeof(BootDigits));
+    memcpy(&LocalBootInfo[1], BootDigits, sizeof(BootDigits));
+    *LocalBootInfo = BootInfo;
+    LocalBootInfo->dispFont = (font_char *)&LocalBootInfo[1];
+    
+    TranslationMap[0] = (ULONG_PTR)FrLdrStartup;
+    for( i = 1; i < NeededPages; i++ )
     {
-	PhysAddr = PpcVirt2phys((ULONG)KernelMemory + i,0);
-
-	if( !InsertPageEntry(KernelBase + i,PhysAddr) ) 
-	{
-	    printf("Foo: couldn't find a page slot for %x\n", i);
-	    while(1);
-	}
+	TranslationMap[i*2] = NeededMemory+(i<<PFN_SHIFT);
     }
 
-    KernelEntryAddress( (void*)Magic );
+    for( j = 0; j < KernelMemorySize>>PFN_SHIFT; j++ )
+    {
+	TranslationMap[(i+j)*2] = ((UINT)(KernelMemory+(i<<PFN_SHIFT)));
+    }
+
+    for( i = 0; i < j; i++ ) 
+    {
+	TranslationMap[(i*2)+1] = PpcVirt2phys(TranslationMap[i*2],0);
+    }
+
+    printf("Built map of %d pages\n", j);
+
+    /* 
+     * Stuff page table entries for the page containing this code,
+     * The pages containing the page table entries, and finally the kernel
+     * pages.
+     * 
+     * When done, we'll be able to flop over to kernel land! 
+     */
+    for( i = 0; i < j; i++ )
+    {
+	DrawNumber(LocalBootInfo,i,10,90);
+	DrawNumber(LocalBootInfo,TranslationMap[i*2],10,100);
+	DrawNumber(LocalBootInfo,TranslationMap[i*2+1],10,110);
+
+	InsertPageEntry
+	    (TranslationMap[i*2],
+	     TranslationMap[(i*2)+1],
+	     (i>>10));
+    }
+
+    /* Tell them we're booting */
+    DrawNumber(LocalBootInfo,0x1cabba9e,10,120);
+    DrawNumber(LocalBootInfo,(ULONG)KernelEntryAddress,100,120);
+
+    KernelEntryAddress( (void*)LocalBootInfo );
     while(1);
 }
 

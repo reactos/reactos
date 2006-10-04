@@ -14,6 +14,6 @@ int BatHit( int bath, int batl, int virt );
 int BatTranslate( int bath, int batl, int virt );
 /* translate address */
 int PpcVirt2phys( int virt, int inst );
-BOOLEAN InsertPageEntry( int virt, int phys );
+BOOLEAN InsertPageEntry( int virt, int phys, int slot );
 
 #endif/*FREELDR_MMU_H*/

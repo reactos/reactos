@@ -28,7 +28,7 @@ extern PCHAR GetFreeLoaderVersionString();
 extern ULONG CacheSizeLimit;
 of_proxy ofproxy;
 void *PageDirectoryStart, *PageDirectoryEnd;
-static int chosen_package, stdin_handle, part_handle = -1;
+static int chosen_package, stdin_handle, part_handle = -1, kernel_mem = 0;
 BOOLEAN AcpiPresent = FALSE;
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { 0 };
 jmp_buf jmp;
@@ -340,10 +340,20 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 	       (int)BiosMemoryMap[slots].BaseAddress,
 	       (int)BiosMemoryMap[slots].Length);
 
-	if( BiosMemoryMap[slots].Length &&
+	/* Hack for pearpc */
+	if( kernel_mem ) {
+	    BiosMemoryMap[slots].Length = kernel_mem * 1024;
 	    ofw_claim((int)BiosMemoryMap[slots].BaseAddress,
 		      (int)BiosMemoryMap[slots].Length,
-		      0x1000) ) {
+		      0x1000);
+	    total += BiosMemoryMap[slots].Length;
+	    slots++;
+	    break;
+	/* Normal way */
+	} else if( BiosMemoryMap[slots].Length &&
+		   ofw_claim((int)BiosMemoryMap[slots].BaseAddress,
+			     (int)BiosMemoryMap[slots].Length,
+			     0x1000) ) {
 	    total += BiosMemoryMap[slots].Length;
 	    slots++;
 	}
@@ -555,10 +565,10 @@ void PpcInit( of_proxy the_ofproxy ) {
     len = ofw_getprop(chosen_package, "bootargs",
 		      CmdLine, sizeof(CmdLine));
 
-    printf("bootargs: len %d\n", len);
-
     if( len < 0 ) len = 0;
     CmdLine[len] = 0;
+
+    printf("bootargs: len %d [%s]\n", len, CmdLine);
 
     BootMain( CmdLine );
 }
@@ -572,15 +582,19 @@ void MachInit(const char *CmdLine) {
 
     printf( "Determining boot device: [%s]\n", CmdLine );
 
-    printf( "Boot Args: %s\n", CmdLine );
     sep = NULL;
     for( i = 0; i < strlen(CmdLine); i++ ) {
 	if( strncmp(CmdLine + i, "boot=", 5) == 0) {
 	    strcpy(BootPart, CmdLine + i + 5);
-	    sep = strchr(BootPart, ' ');
+	    sep = strchr(BootPart, ',');
 	    if( sep )
 		*sep = 0;
-	    break;
+	    while(CmdLine[i] && CmdLine[i]!=',') i++;
+	}
+	if( strncmp(CmdLine + i, "mem=", 4) == 0) {
+	    kernel_mem = atoi(CmdLine+i+4);
+	    printf("Allocate %dk kernel memory\n", kernel_mem);
+	    while(CmdLine[i] && CmdLine[i]!=',') i++;
 	}
     }
 
