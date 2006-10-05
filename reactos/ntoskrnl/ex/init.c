@@ -332,60 +332,140 @@ NTSTATUS
 ExpLoadInitialProcess(PHANDLE ProcessHandle,
                       PHANDLE ThreadHandle)
 {
-    UNICODE_STRING CurrentDirectory;
-    UNICODE_STRING ImagePath = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\smss.exe");
+    PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
     NTSTATUS Status;
-    PRTL_USER_PROCESS_PARAMETERS Params=NULL;
-    RTL_USER_PROCESS_INFORMATION Info;
+    ULONG Size;
+    RTL_USER_PROCESS_INFORMATION ProcessInformation;
+    PWSTR p;
+    UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
+    UNICODE_STRING SmssName, Environment, SystemDriveString;
 
-    RtlInitUnicodeString(&CurrentDirectory,
-                         SharedUserData->NtSystemRoot);
-
-    /* Create the Parameters */
-    Status = RtlCreateProcessParameters(&Params,
-                                        &ImagePath,
-                                        NULL,
-                                        &CurrentDirectory,
-                                        NULL,
-                                        NULL,
-                                        NULL,
-                                        NULL,
-                                        NULL,
-                                        NULL);
-    if(!NT_SUCCESS(Status))
+    /* Allocate memory for the process parameters */
+    Size = sizeof(RTL_USER_PROCESS_PARAMETERS) +
+           ((MAX_PATH * 4) * sizeof(WCHAR));
+    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                     (PVOID)&ProcessParameters,
+                                     0,
+                                     &Size,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create ppb!\n");
-        return Status;
+        /* Failed */
+        KeBugCheckEx(SESSION1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
-    DPRINT("Creating process\n");
-    Status = RtlCreateUserProcess(&ImagePath,
+    /* Setup the basic header, and give the process the low 1MB to itself */
+    ProcessParameters->Length = Size;
+    ProcessParameters->MaximumLength = Size;
+    ProcessParameters->Flags = RTL_USER_PROCESS_PARAMETERS_NORMALIZED |
+                               RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB;
+
+    /* Allocate a page for the environment */
+    Size = PAGE_SIZE;
+    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                     (PVOID)&ProcessParameters->Environment,
+                                     0,
+                                     &Size,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE
+                                     );
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        KeBugCheckEx(SESSION2_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
+
+    /* Make a buffer for the DOS path */
+    p = (PWSTR)(ProcessParameters + 1);
+    ProcessParameters->CurrentDirectory.DosPath.Buffer = p;
+    ProcessParameters->
+        CurrentDirectory.DosPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
+
+    /* Copy the DOS path */
+    RtlCopyUnicodeString(&ProcessParameters->CurrentDirectory.DosPath,
+                         &NtSystemRoot);
+
+    /* Make a buffer for the DLL Path */
+    p = (PWSTR)((PCHAR)ProcessParameters->CurrentDirectory.DosPath.Buffer +
+                ProcessParameters->CurrentDirectory.DosPath.MaximumLength);
+    ProcessParameters->DllPath.Buffer = p;
+    ProcessParameters->DllPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
+
+    /* Copy the DLL path and append the system32 directory */
+    RtlCopyUnicodeString(&ProcessParameters->DllPath,
+                         &ProcessParameters->CurrentDirectory.DosPath);
+    RtlAppendUnicodeToString(&ProcessParameters->DllPath, L"\\System32");
+
+    /* Make a buffer for the image name */
+    p = (PWSTR)((PCHAR)ProcessParameters->DllPath.Buffer +
+                ProcessParameters->DllPath.MaximumLength);
+    ProcessParameters->ImagePathName.Buffer = p;
+    ProcessParameters->ImagePathName.MaximumLength = MAX_PATH * sizeof(WCHAR);
+
+    /* Append the system path and session manager name */
+    RtlAppendUnicodeToString(&ProcessParameters->ImagePathName,
+                             L"\\SystemRoot\\System32");
+    RtlAppendUnicodeToString(&ProcessParameters->ImagePathName,
+                             L"\\smss.exe");
+
+    /* Create the environment string */
+    RtlInitEmptyUnicodeString(&Environment,
+                              ProcessParameters->Environment,
+                              Size);
+
+    /* Append the DLL path to it */
+    RtlAppendUnicodeToString(&Environment, L"Path=" );
+    RtlAppendUnicodeStringToString(&Environment, &ProcessParameters->DllPath);
+    RtlAppendUnicodeStringToString(&Environment, &NullString );
+
+    /* Create the system drive string */
+    SystemDriveString = NtSystemRoot;
+    SystemDriveString.Length = 2 * sizeof(WCHAR);
+
+    /* Append it to the environment */
+    RtlAppendUnicodeToString(&Environment, L"SystemDrive=");
+    RtlAppendUnicodeStringToString(&Environment, &SystemDriveString);
+    RtlAppendUnicodeStringToString(&Environment, &NullString);
+
+    /* Append the system root to the environment */
+    RtlAppendUnicodeToString(&Environment, L"SystemRoot=");
+    RtlAppendUnicodeStringToString(&Environment, &NtSystemRoot);
+    RtlAppendUnicodeStringToString(&Environment, &NullString);
+
+    /* Get and set the command line equal to the image path */
+    ProcessParameters->CommandLine = ProcessParameters->ImagePathName;
+    SmssName = ProcessParameters->ImagePathName;
+
+    /* Create SMSS process */
+    Status = RtlCreateUserProcess(&SmssName,
                                   OBJ_CASE_INSENSITIVE,
-                                  Params,
+                                  RtlDeNormalizeProcessParams(
+                                  ProcessParameters),
                                   NULL,
                                   NULL,
                                   NULL,
                                   FALSE,
                                   NULL,
                                   NULL,
-                                  &Info);
-    
-    /* Close the handle and free the params */
-    RtlDestroyProcessParameters(Params);
-
+                                  &ProcessInformation);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtCreateProcess() failed (Status %lx)\n", Status);
-        return(Status);
+        /* Failed */
+        KeBugCheckEx(SESSION3_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
-    /* Start it up */
-    ZwResumeThread(Info.ThreadHandle, NULL);
+    /* Resume the thread */
+    Status = ZwResumeThread(ProcessInformation.ThreadHandle, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        KeBugCheckEx(SESSION4_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
 
     /* Return Handles */
-    *ProcessHandle = Info.ProcessHandle;
-    *ThreadHandle = Info.ThreadHandle;
-    DPRINT("Process created successfully\n");
+    *ProcessHandle = ProcessInformation.ProcessHandle;
+    *ThreadHandle = ProcessInformation.ThreadHandle;
     return STATUS_SUCCESS;
 }
 
