@@ -48,7 +48,7 @@ PVOID ExpNlsSectionPointer;
 
 VOID
 NTAPI
-ExpInitNls(VOID)
+ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     LARGE_INTEGER SectionSize;
     NTSTATUS Status;
@@ -56,6 +56,61 @@ ExpInitNls(VOID)
     PVOID SectionBase = NULL;
     ULONG ViewSize = 0;
     LARGE_INTEGER SectionOffset = {{0}};
+    PLIST_ENTRY ListHead, NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+
+    /* Check if this is boot-time phase 0 initialization */
+    if (!ExpInitializationPhase)
+    {
+        /* Loop the memory descriptors */
+        ListHead = &LoaderBlock->MemoryDescriptorListHead;
+        NextEntry = ListHead->Flink;
+        while (NextEntry != ListHead)
+        {
+            /* Get the current block */
+            MdBlock = CONTAINING_RECORD(NextEntry,
+                                        MEMORY_ALLOCATION_DESCRIPTOR,
+                                        ListEntry);
+
+            /* Check if this is an NLS block */
+            if (MdBlock->MemoryType == LoaderNlsData)
+            {
+                /* Increase the table size */
+                ExpNlsTableSize += MdBlock->PageCount * PAGE_SIZE;
+            }
+
+            /* Go to the next block */
+            NextEntry = MdBlock->ListEntry.Flink;
+        }
+
+        /*
+         * In NT, the memory blocks are contiguous, but in ReactOS they aren't,
+         * so unless someone fixes FreeLdr, we'll have to use this icky hack.
+         */
+        ExpNlsTableSize += 2 * PAGE_SIZE; // BIAS FOR FREELDR. HACK!
+
+        /* Allocate the a new buffer since loader memory will be freed */
+        ExpNlsTableBase = ExAllocatePoolWithTag(NonPagedPool,
+                                                ExpNlsTableSize,
+                                                TAG('R', 't', 'l', 'i'));
+        if (!ExpNlsTableBase) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
+
+        /* Copy the codepage data in its new location. */
+        RtlMoveMemory(ExpNlsTableBase,
+                      LoaderBlock->NlsData->AnsiCodePageData,
+                      ExpNlsTableSize);
+
+        /* Initialize and reset the NLS TAbles */
+        RtlInitNlsTables((PVOID)((ULONG_PTR)ExpNlsTableBase +
+                                 ExpAnsiCodePageDataOffset),
+                         (PVOID)((ULONG_PTR)ExpNlsTableBase +
+                                 ExpOemCodePageDataOffset),
+                         (PVOID)((ULONG_PTR)ExpNlsTableBase +
+                                 ExpUnicodeCaseTableDataOffset),
+                         &ExpNlsTableInfo);
+        RtlResetRtlTranslations(&ExpNlsTableInfo);
+        return;
+    }
 
     /* Set the section size */
     SectionSize.QuadPart = ExpNlsTableSize;
@@ -619,8 +674,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
     CHAR Buffer[256];
     ANSI_STRING AnsiPath;
     NTSTATUS Status;
-    PLIST_ENTRY NextEntry, ListHead;
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
 
     /* Validate Loader */
     if (!ExpIsLoaderValid(LoaderBlock))
@@ -731,9 +784,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Setup bugcheck messages */
     KiInitializeBugCheck();
 
-    /* Setup system time */
-    KiInitializeSystemClock();
-
     /* Initialize the executive at phase 0 */
     if (!ExInitSystem()) KEBUGCHECK(PHASE0_INITIALIZATION_FAILED);
 
@@ -744,53 +794,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     SharedUserData->Reserved1 = (ULONG_PTR)MmHighestUserAddress;
     SharedUserData->Reserved3 = (ULONG_PTR)MmSystemRangeStart;
 
-    /* Loop the memory descriptors */
-    ListHead = &LoaderBlock->MemoryDescriptorListHead;
-    NextEntry = ListHead->Flink;
-    while (NextEntry != ListHead)
-    {
-        /* Get the current block */
-        MdBlock = CONTAINING_RECORD(NextEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
-
-        /* Check if this is an NLS block */
-        if (MdBlock->MemoryType == LoaderNlsData)
-        {
-            /* Increase the table size */
-            ExpNlsTableSize += MdBlock->PageCount * PAGE_SIZE;
-        }
-
-        /* Go to the next block */
-        NextEntry = MdBlock->ListEntry.Flink;
-    }
-
-    /*
-     * In NT, the memory blocks are contiguous, but in ReactOS they are not,
-     * so unless someone fixes FreeLdr, we'll have to use this icky hack.
-     */
-    ExpNlsTableSize += 2 * PAGE_SIZE; // BIAS FOR FREELDR. HACK!
-
-    /* Allocate the NLS buffer in the pool since loader memory will be freed */
-    ExpNlsTableBase = ExAllocatePoolWithTag(NonPagedPool,
-                                            ExpNlsTableSize,
-                                            TAG('R', 't', 'l', 'i'));
-    if (!ExpNlsTableBase) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
-
-    /* Copy the codepage data in its new location. */
-    RtlMoveMemory(ExpNlsTableBase,
-                  LoaderBlock->NlsData->AnsiCodePageData,
-                  ExpNlsTableSize);
-
-    /* Initialize and reset the NLS TAbles */
-    RtlInitNlsTables((PVOID)((ULONG_PTR)ExpNlsTableBase +
-                             ExpAnsiCodePageDataOffset),
-                     (PVOID)((ULONG_PTR)ExpNlsTableBase +
-                             ExpOemCodePageDataOffset),
-                     (PVOID)((ULONG_PTR)ExpNlsTableBase +
-                             ExpUnicodeCaseTableDataOffset),
-                     &ExpNlsTableInfo);
-    RtlResetRtlTranslations(&ExpNlsTableInfo);
+    /* Make a copy of the NLS Tables */
+    ExpInitNls(LoaderBlock);
 
     /* Initialize the Handle Table */
     ExpInitializeHandleTables();
@@ -822,9 +827,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* Set up Region Maps, Sections and the Paging File */
     MmInit2();
-
-    /* Call OB initialization again */
-    if (!ObInit()) KEBUGCHECK(OBJECT_INITIALIZATION_FAILED);
 
     /* Initialize the Process Manager */
     if (!PsInitSystem()) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
@@ -864,17 +866,26 @@ ExPhase2Init(PVOID Context)
     /* Set us at maximum priority */
     KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
 
-    /* Initialize the later stages of the kernel */
-    KeInitSystem();
+    /* Do Phase 1 HAL Initialization */
+    HalInitSystem(1, KeLoaderBlock);
+
+    /* Setup system time */
+    KiInitializeSystemClock();
 
     /* Initialize all processors */
     HalAllProcessorsStarted();
 
-    /* Do Phase 1 HAL Initialization */
-    HalInitSystem(1, KeLoaderBlock);
+    /* Call OB initialization again */
+    if (!ObInit()) KEBUGCHECK(OBJECT1_INITIALIZATION_FAILED);
 
     /* Initialize Basic System Objects and Worker Threads */
-    ExInitSystem();
+    if (!ExInitSystem()) KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
+
+    /* Initialize the later stages of the kernel */
+    if (!KeInitSystem()) KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
+
+    /* Create NLS section */
+    ExpInitNls(KeLoaderBlock);
 
     /* Call KD Providers at Phase 1 */
     KdInitSystem(1, KeLoaderBlock);
@@ -888,7 +899,7 @@ ExPhase2Init(PVOID Context)
     /* Initialize the Registry (Hives are NOT yet loaded!) */
     CmInitializeRegistry();
 
-    /* Unmap Low memory, initialize the Page Zeroing and the Balancer Thread */
+    /* Unmap Low memory, and initialize the MPW and Balancer Thread */
     MmInit3();
 
     /* Initialize Cache Views */
@@ -911,9 +922,6 @@ ExPhase2Init(PVOID Context)
 
     /* Call KD Providers at Phase 2 */
     KdInitSystem(2, KeLoaderBlock);
-
-    /* Create NLS section */
-    ExpInitNls();
 
     /* Initialize LPC */
     LpcpInitSystem();

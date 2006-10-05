@@ -626,7 +626,7 @@ KiActivateWaiterQueue(IN PKQUEUE Queue);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
-VOID
+BOOLEAN
 NTAPI
 KeInitSystem(VOID);
 

@@ -273,7 +273,7 @@ KiInitSpinLocks(IN PKPRCB Prcb,
     }
 }
 
-VOID
+BOOLEAN
 NTAPI
 KeInitSystem(VOID)
 {
@@ -286,5 +286,6 @@ KeInitSystem(VOID)
 
     /* Initialize non-portable parts of the kernel */
     KiInitMachineDependent();
+    return TRUE;
 }
 
