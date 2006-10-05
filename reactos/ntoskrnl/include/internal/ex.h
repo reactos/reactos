@@ -63,6 +63,10 @@ ExPhase2Init(
 
 VOID
 NTAPI
+ExpInitializePushLocks(VOID);
+
+VOID
+NTAPI
 ExpInitTimeZoneInfo(VOID);
 
 VOID

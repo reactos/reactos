@@ -327,10 +327,10 @@ ExpDisplayNotice(VOID)
     
 }
 
-INIT_FUNCTION
 NTSTATUS
-ExpLoadInitialProcess(PHANDLE ProcessHandle,
-                      PHANDLE ThreadHandle)
+NTAPI
+ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
+                      IN PHANDLE ThreadHandle)
 {
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
     NTSTATUS Status;
@@ -469,21 +469,6 @@ ExpLoadInitialProcess(PHANDLE ProcessHandle,
     return STATUS_SUCCESS;
 }
 
-VOID
-NTAPI
-ExInit3(VOID)
-{
-    ExpInitializeEventImplementation();
-    ExpInitializeEventPairImplementation();
-    ExpInitializeMutantImplementation();
-    ExpInitializeSemaphoreImplementation();
-    ExpInitializeTimerImplementation();
-    LpcpInitSystem();
-    ExpInitializeProfileImplementation();
-    ExpWin32kInit();
-    ExpInitUuids();
-}
-
 ULONG
 NTAPI
 ExComputeTickCountMultiplier(IN ULONG ClockIncrement)
@@ -542,8 +527,37 @@ BOOLEAN
 NTAPI
 ExpInitSystemPhase1(VOID)
 {
-    /* Not yet done */
-    return FALSE;
+    /* Initialize worker threads */
+    ExpInitializeWorkerThreads();
+
+    /* Initialize pushlocks */
+    ExpInitializePushLocks();
+
+    /* Initialize events and event pairs */
+    ExpInitializeEventImplementation();
+    ExpInitializeEventPairImplementation();
+
+    /* Initialize callbacks */
+    ExpInitializeCallbacks();
+
+    /* Initialize mutants */
+    ExpInitializeMutantImplementation();
+
+    /* Initialize semaphores */
+    ExpInitializeSemaphoreImplementation();
+
+    /* Initialize timers */
+    ExpInitializeTimerImplementation();
+
+    /* Initialize profiling */
+    ExpInitializeProfileImplementation();
+
+    /* Initialize UUIDs */
+    ExpInitUuids();
+
+    /* Initialize Win32K */
+    ExpWin32kInit();
+    return TRUE;
 }
 
 BOOLEAN
@@ -847,6 +861,9 @@ ExPhase2Init(PVOID Context)
     HANDLE ThreadHandle;
     NTSTATUS Status;
 
+    /* Set to phase 1 */
+    ExpInitializationPhase = 1;
+
     /* Set us at maximum priority */
     KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
 
@@ -860,13 +877,7 @@ ExPhase2Init(PVOID Context)
     HalInitSystem(1, KeLoaderBlock);
 
     /* Initialize Basic System Objects and Worker Threads */
-    ExInit3();
-
-    /* initialize the worker threads */
-    ExpInitializeWorkerThreads();
-
-    /* initialize callbacks */
-    ExpInitializeCallbacks();
+    ExInitSystem();
 
     /* Call KD Providers at Phase 1 */
     KdInitSystem(1, KeLoaderBlock);
@@ -906,6 +917,9 @@ ExPhase2Init(PVOID Context)
 
     /* Create NLS section */
     ExpInitNls();
+
+    /* Initialize LPC */
+    LpcpInitSystem();
 
     /* Import and Load Registry Hives */
     CmInitHives(ExpInTextModeSetup);
