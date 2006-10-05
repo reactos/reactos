@@ -64,7 +64,7 @@
 //
 #define CmpAcquireKcbLockExclusive(k)                               \
 {                                                                   \
-    ExAcquirePushLockExclusive(GET_HASH_ENTRY(CmpCacheTable,        \
+    ExAcquirePushLockExclusive(&GET_HASH_ENTRY(CmpCacheTable,       \
                                               (k)->ConvKey).Lock);  \
     GET_HASH_ENTRY(CmpCacheTable,                                   \
                    (k)->ConvKey).Owner = KeGetCurrentThread();      \
@@ -76,8 +76,8 @@
 #define CmpReleaseKcbLock(k)                                        \
 {                                                                   \
     GET_HASH_ENTRY(CmpCacheTable, (k)->ConvKey).Owner = NULL;       \
-    ExReleasePushLock(GET_HASH_ENTRY(CmpCacheTable,                 \
-                                     (k)->ConvKey).Lock);           \
+    ExReleasePushLock(&GET_HASH_ENTRY(CmpCacheTable,                \
+                                      (k)->ConvKey).Lock);          \
 }
 
 //
@@ -85,7 +85,7 @@
 //
 #define CmpAcquireNcbLockExclusive(n)                               \
 {                                                                   \
-    ExAcquirePushLockExclusive(GET_HASH_ENTRY(CmpNameCacheTable,    \
+    ExAcquirePushLockExclusive(&GET_HASH_ENTRY(CmpNameCacheTable,   \
                                               (n)->ConvKey).Lock);  \
 }
 
@@ -94,6 +94,6 @@
 //
 #define CmpReleaseNcbLock(k)                                        \
 {                                                                   \
-    ExReleasePushLock(GET_HASH_ENTRY(CmpNameCacheTable,             \
+    ExReleasePushLock(&GET_HASH_ENTRY(CmpNameCacheTable,            \
                                      (k)->ConvKey).Lock);           \
 }

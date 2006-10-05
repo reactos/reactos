@@ -211,8 +211,8 @@ CmpTryToConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     /* Convert the lock */
     ASSERT(CmpIsKcbLockedExclusive(Kcb) == FALSE);
-    if (ExConvertPushLockSharedToExclusive(GET_HASH_ENTRY(CmpCacheTable,
-                                                          Kcb->ConvKey).Lock))
+    if (ExConvertPushLockSharedToExclusive(&GET_HASH_ENTRY(CmpCacheTable,
+                                                           Kcb->ConvKey).Lock))
     {
         /* Set the lock owner */
         GET_HASH_ENTRY(CmpCacheTable, Kcb->ConvKey).Owner = KeGetCurrentThread();

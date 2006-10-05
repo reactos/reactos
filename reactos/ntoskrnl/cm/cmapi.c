@@ -12,4 +12,34 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+
+BOOLEAN CmpNoWrite;
+BOOLEAN CmpForceForceFlush;
+
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+NTAPI
+CmpFlushEntireRegistry(IN BOOLEAN ForceFlush)
+{
+    BOOLEAN Flushed = TRUE;
+
+    /* Make sure that the registry isn't read-only now */
+    if (CmpNoWrite) return TRUE;
+
+    /* Otherwise, acquire the hive list lock and disable force flush */
+    CmpForceForceFlush = FALSE;
+    ExAcquirePushLockShared(&CmpHiveListHeadLock);
+
+    /* Check if the hive list isn't empty */
+    if (!IsListEmpty(&CmpHiveListHead))
+    {
+        /* FIXME: TODO */
+        ASSERT(FALSE);
+    }
+
+    /* Release the lock and return the flush state */
+    ExReleasePushLock(&CmpHiveListHeadLock);
+    return Flushed;
+}

@@ -1,11 +1,11 @@
 /*
-* PROJECT:         ReactOS Kernel
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/cm/cm.h
-* PURPOSE:         Internal header for the Configuration Manager
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*/
-
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/cm/cm.h
+ * PURPOSE:         Internal header for the Configuration Manager
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ */
+#define _CM_
 #include "cmlib.h"
 
 //
@@ -611,11 +611,21 @@ CmpCompareCompressedName(
 );
 
 //
+// Flush Routines
+//
+BOOLEAN
+NTAPI
+CmpFlushEntireRegistry(
+    IN BOOLEAN ForceFlush
+);
+
+//
 // Global variables accessible from all of Cm
 //
 extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
-
+extern EX_PUSH_LOCK CmpHiveListHeadLock;
+extern LIST_ENTRY CmpHiveListHead;
 
 //
 // Inlined functions

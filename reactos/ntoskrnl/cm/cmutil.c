@@ -50,7 +50,6 @@ CmpTestRegistryLockExclusive(VOID)
     return ExIsResourceAcquiredExclusiveLite(&CmpRegistryLock);
 }
 
-// FIXME: THIS FUNCTION IS PARTIALLY FUCKED
 PVOID
 NTAPI
 CmpAllocateDelayItem(VOID)
@@ -63,45 +62,63 @@ CmpAllocateDelayItem(VOID)
 
     /* Lock the allocation buckets */
     KeAcquireGuardedMutex(&CmpDelayAllocBucketLock);
-    if (TRUE)
+    while (TRUE)
     {
-        /* Allocate an allocation page */
-        AllocPage = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, TAG_CM);
-        if (AllocPage)
-        {
-            /* Set default entries */
-            AllocPage->FreeCount = CM_DELAYS_PER_PAGE;
+        /* Get the current entry in the list */
+        NextEntry = CmpFreeDelayItemsListHead.Flink;
 
-            /* Loop each entry */
-            for (i = 0; i < CM_DELAYS_PER_PAGE; i++)
+        /* Check if we need to allocate an entry */
+        if (((NextEntry) && (CmpFreeDelayItemsListHead.Blink) &&
+             IsListEmpty(&CmpFreeDelayItemsListHead)) ||
+            (!(NextEntry) && !(CmpFreeDelayItemsListHead.Blink)))
+        {
+            /* Allocate an allocation page */
+            AllocPage = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, TAG_CM);
+            if (AllocPage)
             {
-                /* Get this entry and link it */
-                Entry = (PCM_DELAYED_CLOSE_ENTRY)(&AllocPage[i]);
-                InsertHeadList(&Entry->DelayedLRUList,
-                               &CmpFreeDelayItemsListHead);
+                /* Set default entries */
+                AllocPage->FreeCount = CM_DELAYS_PER_PAGE;
+
+                /* Loop each entry */
+                for (i = 0; i < CM_DELAYS_PER_PAGE; i++)
+                {
+                    /* Get this entry and link it */
+                    Entry = (PCM_DELAYED_CLOSE_ENTRY)(&AllocPage[i]);
+                    InsertHeadList(&Entry->DelayedLRUList,
+                                   &CmpFreeDelayItemsListHead);
+
+                    /* Clear the KCB pointer */
+                    Entry->KeyControlBlock = NULL;
+                }
+            }
+            else
+            {
+                /* Release the lock */
+                KeReleaseGuardedMutex(&CmpDelayAllocBucketLock);
+                return NULL;
             }
         }
-
-        /* Get the entry and the alloc page */
-        Entry = CONTAINING_RECORD(NextEntry,
-                                  CM_DELAYED_CLOSE_ENTRY,
-                                  DelayedLRUList);
-        AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)Entry & 0xFFFFF000);
-
-        /* Decrease free entries */
-        ASSERT(AllocPage->FreeCount != 0);
-        AllocPage->FreeCount--;
-
-        /* Release the lock */
-        KeReleaseGuardedMutex(&CmpDelayAllocBucketLock);
-        return Entry;
     }
+
+    /* Set the next item in the list */
+    CmpFreeDelayItemsListHead.Flink = NextEntry->Flink;
+    NextEntry->Flink->Blink = &CmpFreeDelayItemsListHead;
+    NextEntry->Blink = NULL;
+
+    /* Get the entry and the alloc page */
+    Entry = CONTAINING_RECORD(NextEntry,
+                              CM_DELAYED_CLOSE_ENTRY,
+                              DelayedLRUList);
+    AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)Entry & 0xFFFFF000);
+
+    /* Decrease free entries */
+    ASSERT(AllocPage->FreeCount != 0);
+    AllocPage->FreeCount--;
 
     /* Release the lock */
     KeReleaseGuardedMutex(&CmpDelayAllocBucketLock);
     return Entry;
 }
-
 
 VOID
 NTAPI
