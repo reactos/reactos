@@ -18,18 +18,6 @@ typedef struct _KPROFILE_SOURCE_OBJECT
     LIST_ENTRY ListEntry;
 } KPROFILE_SOURCE_OBJECT, *PKPROFILE_SOURCE_OBJECT;
 
-/* Cached modules from the loader block */
-typedef enum _CACHED_MODULE_TYPE
-{
-    AnsiCodepage,
-    OemCodepage,
-    UnicodeCasemap,
-    SystemRegistry,
-    HardwareRegistry,
-    MaximumCachedModuleType,
-} CACHED_MODULE_TYPE, *PCACHED_MODULE_TYPE;
-extern PLOADER_MODULE CachedModules[MaximumCachedModuleType];
-
 typedef enum _CONNECT_TYPE
 {
     NoConnect,
@@ -122,6 +110,7 @@ extern BOOLEAN KeThreadDpcEnable;
 extern LARGE_INTEGER KiTimeIncrementReciprocal;
 extern UCHAR KiTimeIncrementShiftCount;
 extern ULONG KiTimeLimitIsrMicroseconds;
+extern ULONG KiServiceLimit;
 extern LIST_ENTRY BugcheckCallbackListHead, BugcheckReasonCallbackListHead;
 extern KSPIN_LOCK BugCheckCallbackLock;
 extern KDPC KiExpireTimerDpc;

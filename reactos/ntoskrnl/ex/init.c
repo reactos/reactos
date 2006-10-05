@@ -25,16 +25,13 @@ ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG NtGlobalFlag;
 ULONG ExSuiteMask;
 
-extern LOADER_MODULE KeLoaderModules[64];
-extern ULONG KeLoaderModuleCount;
-extern ULONG KiServiceLimit;
-BOOLEAN NoGuiBoot = FALSE;
-
 /* Init flags and settings */
 ULONG ExpInitializationPhase;
 BOOLEAN ExpInTextModeSetup;
 BOOLEAN IoRemoteBootClient;
 ULONG InitSafeBootMode;
+
+BOOLEAN NoGuiBoot = FALSE;
 
 /* NT Boot Path */
 UNICODE_STRING NtSystemRoot;
@@ -295,52 +292,6 @@ InitSystemSharedUserPage (IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 }
 
 VOID
-FORCEINLINE
-ParseAndCacheLoadedModules(VOID)
-{
-    ULONG i;
-    PCHAR Name;
-
-    /* Loop the Module List and get the modules we want */
-    for (i = 1; i < KeLoaderModuleCount; i++)
-    {
-        /* Get the Name of this Module */
-        if (!(Name = strrchr((PCHAR)KeLoaderModules[i].String, '\\')))
-        {
-            /* Save the name */
-            Name = (PCHAR)KeLoaderModules[i].String;
-        }
-        else
-        {
-            /* No name, skip */
-            Name++;
-        }
-
-        /* Now check for any of the modules we will need later */
-        if (!_stricmp(Name, "ansi.nls"))
-        {
-            CachedModules[AnsiCodepage] = &KeLoaderModules[i];
-        }
-        else if (!_stricmp(Name, "oem.nls"))
-        {
-            CachedModules[OemCodepage] = &KeLoaderModules[i];
-        }
-        else if (!_stricmp(Name, "casemap.nls"))
-        {
-            CachedModules[UnicodeCasemap] = &KeLoaderModules[i];
-        }
-        else if (!_stricmp(Name, "system") || !_stricmp(Name, "system.hiv"))
-        {
-            CachedModules[SystemRegistry] = &KeLoaderModules[i];
-        }
-        else if (!_stricmp(Name, "hardware") || !_stricmp(Name, "hardware.hiv"))
-        {
-            CachedModules[HardwareRegistry] = &KeLoaderModules[i];
-        }
-    }
-}
-
-VOID
 INIT_FUNCTION
 ExpDisplayNotice(VOID)
 {
@@ -576,9 +527,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
     NTSTATUS Status;
     PLIST_ENTRY NextEntry, ListHead;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
-
-    /* FIXME: Deprecate soon */
-    ParseAndCacheLoadedModules();
 
     /* Validate Loader */
     if (!ExpIsLoaderValid(LoaderBlock))

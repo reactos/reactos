@@ -27,10 +27,9 @@
 // Ke:
 //
 //  - FIXES:
-//      * Stop using CachedModules.
-//      * Try to make MmInit1 NTLDR compatible.
 //      * Sanitize some context fields during conversions.
 //      * Figure out why the DPC stack doesn't really work.
+//      * Try to make MmInit1 NTLDR compatible.
 //      * Add DR macro/save and VM macro/save.
 //  - FEATURES:
 //      * New optimized table-based tick-hashed timer implementation.

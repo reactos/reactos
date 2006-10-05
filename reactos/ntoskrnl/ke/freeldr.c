@@ -18,7 +18,6 @@
 LOADER_MODULE KeLoaderModules[64];
 ULONG KeLoaderModuleCount;
 static CHAR KeLoaderModuleStrings[64][256];
-PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 
 /* FreeLDR Memory Data */
 ADDRESS_RANGE KeMemoryMap[64];
@@ -171,10 +170,6 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         if (!(_stricmp(DriverName, "hardware")) ||
             !(_stricmp(DriverName, "hardware.hiv")))
         {
-            /* Save registry data */
-            LoaderBlock->RegistryBase = ModStart;
-            LoaderBlock->RegistryLength = ModSize;
-
             /* Create an MD for it */
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderRegistryData;

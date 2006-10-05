@@ -136,18 +136,48 @@ STDCALL
 CmInitHives(BOOLEAN SetupBoot)
 {
     PCHAR BaseAddress;
+    PLIST_ENTRY ListHead, NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock = NULL;
 
     /* Load Registry Hives. This one can be missing. */
-    if (CachedModules[SystemRegistry]) {
-        BaseAddress = (PCHAR)CachedModules[SystemRegistry]->ModStart;
+    BaseAddress = KeLoaderBlock->RegistryBase;
+    if (BaseAddress)
+    {
         CmImportSystemHive(BaseAddress,
-                           CachedModules[SystemRegistry]->ModEnd - (ULONG_PTR)BaseAddress);
+                           KeLoaderBlock->RegistryLength);
     }
 
-    BaseAddress = (PCHAR)CachedModules[HardwareRegistry]->ModStart;
-    CmImportHardwareHive(BaseAddress,
-                         CachedModules[HardwareRegistry]->ModEnd - (ULONG_PTR)BaseAddress);
+    /* Loop the memory descriptors */
+    ListHead = &KeLoaderBlock->MemoryDescriptorListHead;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the current block */
+        MdBlock = CONTAINING_RECORD(NextEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
 
+        /* Check if this is an registry block */
+        if (MdBlock->MemoryType == LoaderRegistryData)
+        {
+            /* Check if it's not the SYSTEM hive that we already initialized */
+            if ((MdBlock->BasePage) != ((ULONG_PTR)BaseAddress >> PAGE_SHIFT))
+            {
+                /* Hardware hive break out */
+                break;
+            }
+        }
+
+        /* Go to the next block */
+        NextEntry = MdBlock->ListEntry.Flink;
+    }
+
+    /* We need a hardware hive */
+    ASSERT(MdBlock);
+
+    BaseAddress = (PCHAR)(MdBlock->BasePage << PAGE_SHIFT);
+    CmImportHardwareHive(BaseAddress,
+                         MdBlock->PageCount << PAGE_SHIFT);
 
     /* Create dummy keys if no hardware hive was found */
     CmImportHardwareHive (NULL, 0);
