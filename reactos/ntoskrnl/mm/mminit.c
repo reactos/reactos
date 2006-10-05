@@ -455,7 +455,6 @@ MmInit3(VOID)
    MmDeletePageTable(NULL, 0);
 #endif
 
-   MmInitZeroPageThread();
    MmCreatePhysicalMemorySection();
    MiInitBalancerThread();
 

@@ -853,9 +853,6 @@ VOID
 NTAPI
 ExPhase2Init(PVOID Context)
 {
-    UNICODE_STRING EventName;
-    HANDLE InitDoneEventHandle;
-    OBJECT_ATTRIBUTES ObjectAttributes;
     LARGE_INTEGER Timeout;
     HANDLE ProcessHandle;
     HANDLE ThreadHandle;
@@ -949,113 +946,37 @@ ExPhase2Init(PVOID Context)
     /* Initialize shared user page. Set dos system path, dos device map, etc. */
     InitSystemSharedUserPage(KeLoaderBlock);
 
-    /* Create 'ReactOSInitDone' event */
-    RtlInitUnicodeString(&EventName, L"\\ReactOSInitDone");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &EventName,
-                               0,
-                               NULL,
-                               NULL);
-    Status = ZwCreateEvent(&InitDoneEventHandle,
-                           EVENT_ALL_ACCESS,
-                           &ObjectAttributes,
-                           SynchronizationEvent,
-                           FALSE);
-
-    /* Check for Success */
-    if (!NT_SUCCESS(Status)) {
-
-        DPRINT1("Failed to create 'ReactOSInitDone' event (Status 0x%x)\n", Status);
-        InitDoneEventHandle = INVALID_HANDLE_VALUE;
-    }
-
     /* Launch initial process */
     Status = ExpLoadInitialProcess(&ProcessHandle,
                                    &ThreadHandle);
 
-    /* Check for success, Bugcheck if we failed */
-    if (!NT_SUCCESS(Status)) {
-
-        KEBUGCHECKEX(SESSION4_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    /* Wait 5 seconds for it to initialize */
+    Timeout.QuadPart = Int32x32To64(5, -10000000);
+    Status = ZwWaitForSingleObject(ProcessHandle, FALSE, &Timeout);
+    if (Status == STATUS_SUCCESS)
+    {
+        /* Bugcheck the system if SMSS couldn't initialize */
+        KeBugCheck(SESSION5_INITIALIZATION_FAILED);
     }
-
-    /* Wait on the Completion Event */
-    if (InitDoneEventHandle != INVALID_HANDLE_VALUE) {
-
-        HANDLE Handles[2]; /* Init event, Initial process */
-
-        /* Setup the Handles to wait on */
-        Handles[0] = InitDoneEventHandle;
-        Handles[1] = ProcessHandle;
-
-        /* Wait for the system to be initialized */
-        Timeout.QuadPart = (LONGLONG)-1200000000;  /* 120 second timeout */
-        Status = ZwWaitForMultipleObjects(2,
-                                          Handles,
-                                          WaitAny,
-                                          FALSE,
-                                          &Timeout);
-        if (!NT_SUCCESS(Status)) {
-
-            DPRINT1("NtWaitForMultipleObjects failed with status 0x%x!\n", Status);
-
-        } else if (Status == STATUS_TIMEOUT) {
-
-            DPRINT1("WARNING: System not initialized after 120 seconds.\n");
-
-        } else if (Status == STATUS_WAIT_0 + 1) {
-
-            /* Crash the system if the initial process was terminated. */
-            KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 0, 0, 0);
-        }
+    else
+    {
+        /* Close process handles */
+        ZwClose(ThreadHandle);
+        ZwClose(ProcessHandle);
 
         /*
-         * FIXME: FILIP!
-         * Disable the Boot Logo
-         */
+        * FIXME: FILIP!
+        * Disable the Boot Logo
+        */
         if (!NoGuiBoot) InbvEnableBootDriver(FALSE);
 
-        /* Signal the Event and close the handle */
-        ZwSetEvent(InitDoneEventHandle, NULL);
-        ZwClose(InitDoneEventHandle);
+        /* FIXME: We should free the initial process' memory!*/
 
-    } else {
+        /* Increase init phase */
+        ExpInitializationPhase += 1;
 
-        /* On failure to create 'ReactOSInitDone' event, go to text mode ASAP */
-        if (!NoGuiBoot) InbvEnableBootDriver(FALSE);
-
-        /* Crash the system if the initial process terminates within 5 seconds. */
-        Timeout.QuadPart = (LONGLONG)-50000000;  /* 5 second timeout */
-        Status = ZwWaitForSingleObject(ProcessHandle,
-                                       FALSE,
-                                       &Timeout);
-
-        /* Check for timeout, crash if the initial process didn't initalize */
-        if (Status != STATUS_TIMEOUT) KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 1, 0, 0);
-    }
-
-    /* Enable the Clock, close remaining handles */
-    ZwClose(ThreadHandle);
-    ZwClose(ProcessHandle);
-
-    DPRINT1("System initialization complete\n");
-    {
-        /* FIXME: We should instead jump to zero-page thread */
-        /* Free initial kernel memory */
-        MiFreeInitMemory();
-
-        /* Set our priority to 0 */
-        KeGetCurrentThread()->BasePriority = 0;
-        KeSetPriorityThread(KeGetCurrentThread(), 0);
-
-        /* Wait ad-infinitum */
-        for (;;)
-        {
-            LARGE_INTEGER Timeout;
-            Timeout.QuadPart = 0x7fffffffffffffffLL;
-            KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
-        }
+        /* Jump into zero page thread */
+        MmZeroPageThreadMain(NULL);
     }
 }
-
 /* EOF */

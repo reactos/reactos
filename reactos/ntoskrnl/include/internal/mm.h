@@ -974,7 +974,9 @@ MmGetContinuousPages(
 
 NTSTATUS
 NTAPI
-MmInitZeroPageThread(VOID);
+MmZeroPageThreadMain(
+    PVOID Context
+);
 
 /* i386/page.c *********************************************************/
 
