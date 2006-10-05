@@ -45,8 +45,103 @@ ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 NLSTABLEINFO ExpNlsTableInfo;
 ULONG ExpNlsTableSize;
+PVOID ExpNlsSectionPointer;
 
 /* FUNCTIONS ****************************************************************/
+
+VOID
+NTAPI
+ExpInitNls(VOID)
+{
+    LARGE_INTEGER SectionSize;
+    NTSTATUS Status;
+    HANDLE NlsSection;
+    PVOID SectionBase = NULL;
+    ULONG ViewSize = 0;
+    LARGE_INTEGER SectionOffset = {{0}};
+
+    /* Set the section size */
+    SectionSize.QuadPart = ExpNlsTableSize;
+
+    /* Create the NLS Section */
+    Status = ZwCreateSection(&NlsSection,
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             &SectionSize,
+                             PAGE_READWRITE,
+                             SEC_COMMIT,
+                             NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 1, 0, 0);
+    }
+
+    /* Get a pointer to the section */
+    Status = ObReferenceObjectByHandle(NlsSection,
+                                       SECTION_ALL_ACCESS,
+                                       MmSectionObjectType,
+                                       KernelMode,
+                                       &ExpNlsSectionPointer,
+                                       NULL);
+    ZwClose(NlsSection);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 2, 0, 0);
+    }
+
+    /* Map the NLS Section in system space */
+    Status = MmMapViewInSystemSpace(ExpNlsSectionPointer,
+                                    &SectionBase,
+                                    &ExpNlsTableSize);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 3, 0, 0);
+    }
+
+    /* Copy the codepage data in its new location. */
+    RtlMoveMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
+
+    /* Free the previously allocated buffer and set the new location */
+    ExFreePool(ExpNlsTableBase);
+    ExpNlsTableBase = SectionBase;
+
+    /* Initialize the NLS Tables */
+    RtlInitNlsTables((PVOID)((ULONG_PTR)ExpNlsTableBase +
+                             ExpAnsiCodePageDataOffset),
+                     (PVOID)((ULONG_PTR)ExpNlsTableBase +
+                             ExpOemCodePageDataOffset),
+                     (PVOID)((ULONG_PTR)ExpNlsTableBase +
+                             ExpUnicodeCaseTableDataOffset),
+                     &ExpNlsTableInfo);
+    RtlResetRtlTranslations(&ExpNlsTableInfo);
+
+    /* Reset the base to 0 */
+    SectionBase = NULL;
+
+    /* Map the section in the system process */
+    Status = MmMapViewOfSection(ExpNlsSectionPointer,
+                                PsGetCurrentProcess(),
+                                &SectionBase,
+                                0L,
+                                0L,
+                                &SectionOffset,
+                                &ViewSize,
+                                ViewShare,
+                                0L,
+                                PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 5, 0, 0);
+    }
+
+    /* Copy the table into the system process and set this as the base */
+    RtlMoveMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
+    ExpNlsTableBase = SectionBase;
+}
 
 static
 VOID
@@ -781,8 +876,8 @@ ExPhase2Init(PVOID Context)
     /* Call KD Providers at Phase 2 */
     KdInitSystem(2, KeLoaderBlock);
 
-    /* Import and create NLS Data and Sections */
-    RtlpInitNls();
+    /* Create NLS section */
+    ExpInitNls();
 
     /* Import and Load Registry Hives */
     CmInitHives(ExpInTextModeSetup);

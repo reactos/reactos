@@ -198,9 +198,6 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
 
     /* FIXME: Super native implementation */
 
-    /* FIXME: ROS HACK */
-    if (!Thread) return FALSE;
-
     /* Start with defaults */
     *StackBegin = Thread->StackLimit;
     *StackEnd = (ULONG_PTR)Thread->StackBase;

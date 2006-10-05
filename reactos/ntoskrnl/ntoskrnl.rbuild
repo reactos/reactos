@@ -315,7 +315,6 @@
         </if>
             <file>libsupp.c</file>
             <file>misc.c</file>
-            <file>nls.c</file>
             <file>regio.c</file>
             <file>strtok.c</file>
     </directory>

@@ -14,6 +14,9 @@ extern ULONG NtMinorVersion;
 extern FAST_MUTEX ExpEnvironmentLock;
 extern ERESOURCE ExpFirmwareTableResource;
 extern LIST_ENTRY ExpFirmwareTableProviderListHead;
+ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
+ULONG ExpUnicodeCaseTableDataOffset;
+PVOID ExpNlsSectionPointer;
 
 #define MAX_FAST_REFS           7
 

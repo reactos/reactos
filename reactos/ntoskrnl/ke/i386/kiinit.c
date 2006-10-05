@@ -407,6 +407,25 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         DPRINT1("SMP Boot support not yet present\n");
     }
 
+    /* Setup the Idle Thread */
+    KeInitializeThread(InitProcess,
+                       InitThread,
+                       NULL,
+                       NULL,
+                       NULL,
+                       NULL,
+                       NULL,
+                       IdleStack);
+    InitThread->NextProcessor = Number;
+    InitThread->Priority = HIGH_PRIORITY;
+    InitThread->State = Running;
+    InitThread->Affinity = 1 << Number;
+    InitThread->WaitIrql = DISPATCH_LEVEL;
+    InitProcess->ActiveProcessors = 1 << Number;
+
+    /* HACK for MmUpdatePageDir */
+    ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
+
     /* Initialize Kernel Memory Address Space */
     MmInit1(FirstKrnlPhysAddr,
             LastKrnlPhysAddr,
@@ -434,25 +453,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         (KeFeatureBits & KF_3DNOW);
     SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
         (KeFeatureBits & KF_RDTSC);
-
-    /* Setup the Idle Thread */
-    KeInitializeThread(InitProcess,
-                       InitThread,
-                       NULL,
-                       NULL,
-                       NULL,
-                       NULL,
-                       NULL,
-                       IdleStack);
-    InitThread->NextProcessor = Number;
-    InitThread->Priority = HIGH_PRIORITY;
-    InitThread->State = Running;
-    InitThread->Affinity = 1 << Number;
-    InitThread->WaitIrql = DISPATCH_LEVEL;
-    InitProcess->ActiveProcessors = 1 << Number;
-
-    /* HACK for MmUpdatePageDir */
-    ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
 
     /* Set up the thread-related fields in the PRCB */
     Prcb->CurrentThread = InitThread;
