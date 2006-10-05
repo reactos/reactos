@@ -63,7 +63,7 @@ extern POBJECT_TYPE NTSYSAPI ExTimerType;
 //
 // Exported NT Build Number
 //
-extern ULONG NTSYSAPI NtBuildNumber;
+extern ULONG NtBuildNumber;
 
 //
 // Invalid Handle Value Constant

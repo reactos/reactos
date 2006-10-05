@@ -18,6 +18,8 @@
 #define  REG_VALUE_CELL_ID             0x6b76
 #define  REG_SECURITY_CELL_ID          0x6b73
 
+#ifndef _CM_
+
 #include <pshpack1.h>
 
 typedef struct _CM_VIEW_OF_FILE
@@ -146,5 +148,7 @@ typedef struct _CM_KEY_SECURITY
 } CM_KEY_SECURITY, *PCM_KEY_SECURITY;
 
 #include <poppack.h>
+
+#endif
 
 #endif /* CMLIB_CMDATA_H */

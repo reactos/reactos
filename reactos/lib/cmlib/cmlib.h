@@ -64,7 +64,7 @@ typedef struct _HMAP_ENTRY
 {
     ULONG_PTR Bin;
     ULONG_PTR Block;
-    PCM_VIEW_OF_FILE CmHive;
+    struct _CM_VIEW_OF_FILE *CmHive;
     ULONG MemAlloc;
 } HMAP_ENTRY, *PHMAP_ENTRY;
 
@@ -118,6 +118,7 @@ typedef struct _HHIVE
     DUAL Storage[HvMaxStorageType];
 } HHIVE, *PHHIVE;
 
+#ifndef _CM_
 typedef struct _EREGISTRY_HIVE
 {
   HHIVE Hive;
@@ -129,6 +130,7 @@ typedef struct _EREGISTRY_HIVE
   HANDLE  HiveHandle;
   HANDLE  LogHandle;
 } EREGISTRY_HIVE, *PEREGISTRY_HIVE;
+#endif
 
 /*
  * Public functions.
