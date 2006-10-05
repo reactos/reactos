@@ -21,7 +21,7 @@ LIST_ENTRY CmpHiveListHead;
 
 PVOID
 NTAPI
-CmpAllocate(IN ULONG Size,
+CmpAllocate(IN SIZE_T Size,
             IN BOOLEAN Paged)
 {
     /* FIXME: TODO */
@@ -41,9 +41,9 @@ BOOLEAN
 NTAPI
 CmpFileRead(IN PHHIVE Hive,
             IN ULONG FileType,
-            IN ULONG FileOffset,
+            IN ULONGLONG FileOffset,
             IN PVOID Buffer,
-            IN ULONG BufferLength)
+            IN SIZE_T BufferLength)
 {
     /* FIXME: TODO */
     DbgBreakPoint();
@@ -54,9 +54,9 @@ BOOLEAN
 NTAPI
 CmpFileWrite(IN PHHIVE Hive,
              IN ULONG FileType,
-             IN ULONG FileOffset,
+             IN ULONGLONG FileOffset,
              IN PVOID Buffer,
-             IN ULONG BufferLength)
+             IN SIZE_T BufferLength)
 {
     /* FIXME: TODO */
     DbgBreakPoint();
@@ -67,7 +67,7 @@ BOOLEAN
 NTAPI
 CmpFileSetSize(IN PHHIVE Hive,
                IN ULONG FileType,
-               IN ULONG FileSize)
+               IN ULONGLONG FileSize)
 {
     /* FIXME: TODO */
     DbgBreakPoint();
@@ -272,20 +272,20 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
     /* Initialize the hive */
     Status = HvInitialize(&Hive->Hive,
                           Operation,
+                          (ULONG_PTR)HiveData,
+                          Cluster,
                           Flags,
                           FileType,
-                          (ULONG_PTR)HiveData,
                           CmpAllocate,
                           CmpFree,
                           CmpFileRead,
                           CmpFileWrite,
                           CmpFileSetSize,
                           CmpFileFlush,
-                          Cluster,
                           FileName);
     if (NT_SUCCESS(Status))
     {
-        /* Free all alocations */
+        /* Free all allocations */
         ExFreePool(Hive->ViewLock);
         ExFreePool(Hive->FlusherLock);
         ExFreePool(Hive);
