@@ -52,7 +52,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
 
   /* Allocate hive header */
   ((PHBASE_BLOCK)ChunkBase)->Length = ChunkSize;
-  Status = HvInitialize(&Hive->Hive, HV_OPERATION_MEMORY,
+  Status = HvInitialize(&Hive->Hive, HV_OPERATION_MEMORY, 0, 0,
                         (ULONG_PTR)ChunkBase, 0,
                         CmpAllocate, CmpFree,
                         CmpFileRead, CmpFileWrite, CmpFileSetSize,

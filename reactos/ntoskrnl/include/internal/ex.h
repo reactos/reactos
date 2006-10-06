@@ -14,6 +14,7 @@ extern ULONG NtMinorVersion;
 extern FAST_MUTEX ExpEnvironmentLock;
 extern ERESOURCE ExpFirmwareTableResource;
 extern LIST_ENTRY ExpFirmwareTableProviderListHead;
+extern BOOLEAN ExpIsWinPEMode;
 ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 PVOID ExpNlsSectionPointer;
@@ -138,6 +139,14 @@ ExpResourceInitialization(VOID);
 VOID
 NTAPI
 ExInitPoolLookasidePointers(VOID);
+
+/* Callback Functions ********************************************************/
+
+VOID
+NTAPI
+ExInitializeCallBack(
+    IN PEX_CALLBACK Callback
+);
 
 /* Rundown Functions ********************************************************/
 
@@ -312,6 +321,7 @@ static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
 #define ExpSetRundown(x, y) InterlockedExchange64((PLONGLONG)x, y)
 #else
 #define ExpChangeRundown(x, y, z) InterlockedCompareExchange((PLONG)x, PtrToLong(y), PtrToLong(z))
+#define ExpChangePushlock(x, y, z) LongToPtr(InterlockedCompareExchange((PLONG)x, PtrToLong(y), PtrToLong(z)))
 #define ExpSetRundown(x, y) InterlockedExchange((PLONG)x, y)
 #endif
 
@@ -484,6 +494,28 @@ _ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
 /* PUSHLOCKS *****************************************************************/
 
 /*++
+ * @name ExInitializePushLock
+ * INTERNAL MACRO
+ *
+ *     The ExInitializePushLock macro initializes a PushLock.
+ *
+ * @params PushLock
+ *         Pointer to the pushlock which is to be initialized.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExInitializePushLock(IN PEX_PUSH_LOCK PushLock)
+{
+    /* Set the value to 0 */
+    PushLock->Value = 0;
+}
+
+/*++
  * @name ExAcquirePushLockExclusive
  * INTERNAL MACRO
  *
@@ -545,7 +577,7 @@ ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 
     /* Try acquiring the lock */
     NewValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
-    if (InterlockedCompareExchangePointer(PushLock, NewValue.Ptr, 0))
+    if (ExpChangePushlock(PushLock, NewValue.Ptr, 0))
     {
         /* Someone changed it, use the slow path */
         DbgPrint("%s - Contention!\n", __FUNCTION__);
@@ -555,6 +587,44 @@ ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
     /* Sanity checks */
     ASSERT(PushLock->Locked);
     ASSERT(PushLock->Waiting || PushLock->Shared > 0);
+}
+
+/*++
+ * @name ExConvertPushLockSharedToExclusive
+ * INTERNAL MACRO
+ *
+ *     The ExConvertPushLockSharedToExclusive macro converts an exclusive
+ *     pushlock to a shared pushlock.
+ *
+ * @params PushLock
+ *         Pointer to the pushlock which is to be converted.
+ *
+ * @return FALSE if conversion failed, TRUE otherwise.
+ *
+ * @remarks The function attempts the quickest route to convert the lock, which is
+ *          to simply set the lock bit and remove any other bits.
+ *
+ *--*/
+BOOLEAN
+FORCEINLINE
+ExConvertPushLockSharedToExclusive(IN PEX_PUSH_LOCK PushLock)
+{
+    EX_PUSH_LOCK OldValue;
+
+    /* Set the expected old value */
+    OldValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
+
+    /* Try converting the lock */
+    if (ExpChangePushlock(PushLock, EX_PUSH_LOCK_LOCK, OldValue.Value) !=
+        OldValue.Ptr)
+    {
+        /* Conversion failed */
+        return FALSE;
+    }
+
+    /* Sanity check */
+    ASSERT(PushLock->Locked);
+    return TRUE;
 }
 
 /*++
@@ -617,8 +687,7 @@ ExReleasePushLockShared(PEX_PUSH_LOCK PushLock)
 
     /* Try to clear the pushlock */
     OldValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
-    if (InterlockedCompareExchangePointer(PushLock, 0, OldValue.Ptr) !=
-        OldValue.Ptr)
+    if (ExpChangePushlock(PushLock, 0, OldValue.Ptr) != OldValue.Ptr)
     {
         /* There are still other people waiting on it */
         DbgPrint("%s - Contention!\n", __FUNCTION__);
@@ -716,7 +785,7 @@ ExReleasePushLock(PEX_PUSH_LOCK PushLock)
 
     /* Check if nobody is waiting on us and try clearing the lock here */
     if ((OldValue.Waiting) ||
-        (InterlockedCompareExchangePointer(PushLock, NewValue.Ptr, OldValue.Ptr) ==
+        (ExpChangePushlock(PushLock, NewValue.Ptr, OldValue.Ptr) ==
          OldValue.Ptr))
     {
         /* We have waiters, use the long path */

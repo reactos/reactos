@@ -141,7 +141,7 @@ CmiCreateNewRegFile(HANDLE FileHandle)
 
   CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE);
   CmHive->HiveHandle = FileHandle;
-  Status = HvInitialize(&CmHive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0,
+  Status = HvInitialize(&CmHive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0, 0, 0,
                         CmpAllocate, CmpFree,
                         CmpFileRead, CmpFileWrite, CmpFileSetSize,
                         CmpFileFlush, NULL);
@@ -570,7 +570,7 @@ CmiInitNonVolatileRegistryHive (PEREGISTRY_HIVE RegistryHive,
   DPRINT("ViewBase %p  ViewSize %lx\n", ViewBase, ViewSize);
 
   ((PHBASE_BLOCK)ViewBase)->Length = ViewSize;
-  Status = HvInitialize(&RegistryHive->Hive, HV_OPERATION_MEMORY,
+  Status = HvInitialize(&RegistryHive->Hive, HV_OPERATION_MEMORY, 0, 0,
                         (ULONG_PTR)ViewBase, 0,
                         CmpAllocate, CmpFree,
                         CmpFileRead, CmpFileWrite, CmpFileSetSize,
@@ -622,7 +622,7 @@ CmiCreateTempHive(PEREGISTRY_HIVE *RegistryHive)
 
   DPRINT("Hive 0x%p\n", Hive);
 
-  Status = HvInitialize(&Hive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0,
+  Status = HvInitialize(&Hive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0, 0, 0,
                         CmpAllocate, CmpFree,
                         CmpFileRead, CmpFileWrite, CmpFileSetSize,
                         CmpFileFlush, NULL);

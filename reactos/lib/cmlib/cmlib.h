@@ -18,7 +18,7 @@
 #define ROUND_DOWN(a,b)      (((a)/(b))*(b))
 #endif
 
-#define CMAPI
+#define CMAPI NTAPI
 
 struct _HHIVE;
 
@@ -110,6 +110,10 @@ typedef struct _HHIVE
     BOOLEAN ReadOnly;
     BOOLEAN Log;
     BOOLEAN DirtyFlag;
+    ULONG HvBinHeadersUse;
+    ULONG HvFreeCellsUse;
+    ULONG HvUsedcellsUse;
+    ULONG CmUsedCellsUse;
     ULONG HiveFlags;
     ULONG LogSize;
     ULONG RefreshCount;
@@ -146,6 +150,8 @@ HvInitialize(
    ULONG Operation,
    ULONG_PTR HiveData OPTIONAL,
    ULONG Cluster OPTIONAL,
+   ULONG Flags,
+   ULONG FileType,
    PALLOCATE_ROUTINE Allocate,
    PFREE_ROUTINE Free,
    PFILE_READ_ROUTINE FileRead,
@@ -162,6 +168,9 @@ PVOID CMAPI
 HvGetCell(
    PHHIVE RegistryHive,
    HCELL_INDEX CellOffset);
+
+#define HvReleaseCell(h, c)     \
+    if (h->ReleaseCellRoutine) h->ReleaseCellRoutine(h, c)
 
 LONG CMAPI
 HvGetCellSize(

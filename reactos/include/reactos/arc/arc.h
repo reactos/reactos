@@ -151,6 +151,16 @@ typedef struct _NLS_DATA_BLOCK
 } NLS_DATA_BLOCK, *PNLS_DATA_BLOCK;
 
 //
+// ACPI Docking State
+//
+typedef struct _PROFILE_ACPI_DOCKING_STATE
+{
+    USHORT DockingState;
+    USHORT SerialLength;
+    WCHAR SerialNumber[1];
+} PROFILE_ACPI_DOCKING_STATE, *PPROFILE_ACPI_DOCKING_STATE;
+
+//
 // Subsystem Specific Loader Blocks
 //
 typedef struct _PROFILE_PARAMETER_BLOCK
