@@ -112,6 +112,7 @@
 // Number of various lists and hashes
 //
 #define CMP_SECURITY_HASH_LISTS                         64
+#define CMP_MAX_CALLBACKS                               100
 
 //
 // Hashing Constants
@@ -569,11 +570,120 @@ CmCheckRegistry(
 );
 
 //
+// KCB Cache/Delay Routines
+//
+VOID
+NTAPI
+CmpInitializeCache(
+    VOID
+);
+
+VOID
+NTAPI
+CmpInitializeCmAllocations(
+    VOID
+);
+
+VOID
+NTAPI
+CmpInitializeKcbDelayedDeref(
+    VOID
+);
+
+//
+// Key Object Routines
+//
+VOID
+NTAPI
+CmpCloseKeyObject(
+    IN PEPROCESS Process OPTIONAL,
+    IN PVOID Object,
+    IN ACCESS_MASK GrantedAccess,
+    IN ULONG ProcessHandleCount,
+    IN ULONG SystemHandleCount
+);
+
+VOID
+NTAPI
+CmpDeleteKeyObject(
+    IN PVOID Object
+);
+
+NTSTATUS
+NTAPI
+CmpParseKey(
+    IN PVOID ParseObject,
+    IN PVOID ObjectType,
+    IN OUT PACCESS_STATE AccessState,
+    IN KPROCESSOR_MODE AccessMode,
+    IN ULONG Attributes,
+    IN OUT PUNICODE_STRING CompleteName,
+    IN OUT PUNICODE_STRING RemainingName,
+    IN OUT PVOID Context OPTIONAL,
+    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+    OUT PVOID *Object
+);
+
+NTSTATUS
+NTAPI
+CmpSecurityMethod(
+    IN PVOID Object,
+    IN SECURITY_OPERATION_CODE OperationType,
+    IN SECURITY_INFORMATION SecurityInformation, // FIXME: <= should be a pointer
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN OUT PULONG CapturedLength,
+    IN OUT PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
+    IN POOL_TYPE PoolType,
+    IN PGENERIC_MAPPING GenericMapping
+);
+
+NTSTATUS
+NTAPI
+CmpQueryKeyName(
+    IN PVOID Object,
+    IN BOOLEAN HasObjectName,
+    OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+    IN ULONG Length,
+    OUT PULONG ReturnLength,
+    IN KPROCESSOR_MODE AccessMode
+);
+
+//
+// Hive Routines
+//
+NTSTATUS
+NTAPI
+CmpInitializeHive(
+    OUT PCMHIVE *CmHive,
+    IN ULONG Operation,
+    IN ULONG Flags,
+    IN ULONG FileType,
+    IN PVOID HiveData,
+    IN HANDLE Primary,
+    IN HANDLE Alternate,
+    IN HANDLE Log,
+    IN HANDLE External,
+    IN PUNICODE_STRING FileName
+);
+
+//
 // Registry Utility Functions
 //
 BOOLEAN
 NTAPI
 CmpTestRegistryLockExclusive(
+    VOID
+);
+
+VOID
+NTAPI
+CmpLockRegistryExclusive(
+    VOID
+);
+
+VOID
+NTAPI
+CmpUnlockRegistry(
     VOID
 );
 
@@ -592,6 +702,17 @@ CmpFreeDelayItem(
 //
 // KCB Functions
 //
+PCM_KEY_CONTROL_BLOCK
+NTAPI
+CmpCreateKcb(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Index,
+    IN PCM_KEY_NODE Node,
+    IN PCM_KEY_CONTROL_BLOCK Parent,
+    IN ULONG Flags,
+    IN PUNICODE_STRING KeyName
+);
+
 VOID
 NTAPI
 CmpDereferenceKcbWithLock(
@@ -626,6 +747,11 @@ extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
 extern EX_PUSH_LOCK CmpHiveListHeadLock;
 extern LIST_ENTRY CmpHiveListHead;
+extern POBJECT_TYPE CmpKeyObjectType;
+extern ERESOURCE CmpRegistryLock;
+extern PCM_KEY_HASH_TABLE_ENTRY *CmpCacheTable;
+extern PCM_NAME_HASH_TABLE_ENTRY *CmpNameCacheTable;
+extern KGUARDED_MUTEX CmpDelayedCloseTableLock;
 
 //
 // Inlined functions
