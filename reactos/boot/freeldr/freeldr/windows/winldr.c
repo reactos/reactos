@@ -29,162 +29,6 @@
 VOID DumpMemoryAllocMap(VOID);
 VOID WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
-BOOLEAN
-WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                  IN LPCSTR DirectoryPath,
-                  IN LPCSTR AnsiFileName,
-                  IN LPCSTR OemFileName,
-                  IN LPCSTR LanguageFileName)
-{
-	CHAR FileName[255];
-	PFILE AnsiFileHandle;
-	PFILE OemFileHandle;
-	PFILE LanguageFileHandle;
-	ULONG AnsiFileSize, OemFileSize, LanguageFileSize;
-	ULONG TotalSize;
-	ULONG_PTR NlsDataBase;
-	PVOID NlsVirtual;
-	BOOLEAN Status, AnsiEqualsOem = FALSE;
-
-	/* There may be a case, when OEM and ANSI page coincide */
-	if (!strcmp(AnsiFileName, OemFileName))
-		AnsiEqualsOem = TRUE;
-
-	/* Open file with ANSI and store its size */
-	//Print(L"Loading %s...\n", Filename);
-	strcpy(FileName, DirectoryPath);
-	strcat(FileName, AnsiFileName);
-	AnsiFileHandle = FsOpenFile(FileName);
-
-	if (AnsiFileHandle == NULL)
-		goto Failure;
-
-	AnsiFileSize = FsGetFileSize(AnsiFileHandle);
-	DbgPrint((DPRINT_WINDOWS, "AnsiFileSize: %d\n", AnsiFileSize));
-	FsCloseFile(AnsiFileHandle);
-
-	/* Open OEM file and store its length */
-	if (AnsiEqualsOem)
-	{
-		OemFileSize = 0;
-	}
-	else
-	{
-		//Print(L"Loading %s...\n", Filename);
-		strcpy(FileName, DirectoryPath);
-		strcat(FileName, OemFileName);
-		OemFileHandle = FsOpenFile(FileName);
-
-		if (OemFileHandle == NULL)
-			goto Failure;
-
-		OemFileSize = FsGetFileSize(OemFileHandle);
-		FsCloseFile(OemFileHandle);
-	}
-	DbgPrint((DPRINT_WINDOWS, "OemFileSize: %d\n", OemFileSize));
-
-	/* And finally open the language codepage file and store its length */
-	//Print(L"Loading %s...\n", Filename);
-	strcpy(FileName, DirectoryPath);
-	strcat(FileName, LanguageFileName);
-	LanguageFileHandle = FsOpenFile(FileName);
-
-	if (LanguageFileHandle == NULL)
-		goto Failure;
-
-	LanguageFileSize = FsGetFileSize(LanguageFileHandle);
-	FsCloseFile(LanguageFileHandle);
-	DbgPrint((DPRINT_WINDOWS, "LanguageFileSize: %d\n", LanguageFileSize));
-
-	/* Sum up all three length, having in mind that every one of them
-	   must start at a page boundary => thus round up each file to a page */
-	TotalSize = MM_SIZE_TO_PAGES(AnsiFileSize) +
-		MM_SIZE_TO_PAGES(OemFileSize)  +
-		MM_SIZE_TO_PAGES(LanguageFileSize);
-
-	NlsDataBase = (ULONG_PTR)MmAllocateMemory(TotalSize*MM_PAGE_SIZE);
-
-	if (NlsDataBase == 0)
-		goto Failure;
-
-	NlsVirtual = (PVOID)(KSEG0_BASE | NlsDataBase);
-	LoaderBlock->NlsData->AnsiCodePageData = NlsVirtual;
-	LoaderBlock->NlsData->OemCodePageData = (PVOID)((PUCHAR)NlsVirtual +
-		(MM_SIZE_TO_PAGES(AnsiFileSize) << MM_PAGE_SHIFT));
-	LoaderBlock->NlsData->UnicodeCodePageData = (PVOID)((PUCHAR)NlsVirtual +
-		(MM_SIZE_TO_PAGES(AnsiFileSize) << MM_PAGE_SHIFT) +
-		(MM_SIZE_TO_PAGES(OemFileSize) << MM_PAGE_SHIFT));
-
-	/* Ansi and OEM data are the same - just set pointers to the same area */
-	if (AnsiEqualsOem)
-		LoaderBlock->NlsData->OemCodePageData = LoaderBlock->NlsData->AnsiCodePageData;
-
-
-	/* Now actually read the data into memory, starting with Ansi file */
-	strcpy(FileName, DirectoryPath);
-	strcat(FileName, AnsiFileName);
-	AnsiFileHandle = FsOpenFile(FileName);
-
-	if (AnsiFileHandle == NULL)
-		goto Failure;
-
-	Status = FsReadFile(AnsiFileHandle, AnsiFileSize, NULL, VaToPa(LoaderBlock->NlsData->AnsiCodePageData));
-
-	if (!Status)
-		goto Failure;
-
-	FsCloseFile(AnsiFileHandle);
-
-	/* OEM now, if it doesn't equal Ansi of course */
-	if (!AnsiEqualsOem)
-	{
-		strcpy(FileName, DirectoryPath);
-		strcat(FileName, OemFileName);
-		OemFileHandle = FsOpenFile(FileName);
-
-		if (OemFileHandle == NULL)
-			goto Failure;
-
-		Status = FsReadFile(OemFileHandle, OemFileSize, NULL, VaToPa(LoaderBlock->NlsData->OemCodePageData));
-
-		if (!Status)
-			goto Failure;
-
-		FsCloseFile(AnsiFileHandle);
-	}
-
-	/* finally the language file */
-	strcpy(FileName, DirectoryPath);
-	strcat(FileName, LanguageFileName);
-	LanguageFileHandle = FsOpenFile(FileName);
-
-	if (LanguageFileHandle == NULL)
-		goto Failure;
-
-	Status = FsReadFile(LanguageFileHandle, LanguageFileSize, NULL, VaToPa(LoaderBlock->NlsData->UnicodeCodePageData));
-
-	if (!Status)
-		goto Failure;
-
-	FsCloseFile(LanguageFileHandle);
-
-	//
-	// THIS IS HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACK
-	// Should go to WinLdrLoadOemHalFont(), when it will be implemented
-	//
-	LoaderBlock->OemFontFile = VaToPa(LoaderBlock->NlsData->UnicodeCodePageData);
-
-	/* Convert NlsTables address to VA */
-	LoaderBlock->NlsData = PaToVa(LoaderBlock->NlsData);
-
-	return TRUE;
-
-Failure:
-	//UiMessageBox("Error reading NLS file %s\n", Filename);
-	UiMessageBox("Error reading NLS file!");
-	return FALSE;
-}
-
 void InitializeHWConfig(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
 	PCONFIGURATION_COMPONENT_DATA ConfigurationRoot;
@@ -393,7 +237,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	ULONG BootDevice;
 	PLOADER_PARAMETER_BLOCK LoaderBlock, LoaderBlockVA;
 	KERNEL_ENTRY_POINT KiSystemStartup;
-	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE;
+	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE = NULL;
 	// Mm-related things
 	PVOID GdtIdt;
 	ULONG PcrBasePage=0;
@@ -493,13 +337,6 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	/* Load Hive, and then NLS data, OEM font, and prepare boot drivers list */
 	Status = WinLdrLoadAndScanSystemHive(LoaderBlock, BootPath);
 	DbgPrint((DPRINT_WINDOWS, "SYSTEM hive loaded and scanned with status %d\n", Status));
-
-	/* FIXME: Load NLS data, should be moved to WinLdrLoadAndScanSystemHive() */
-	strcpy(SearchPath, BootPath);
-	strcat(SearchPath, "SYSTEM32\\");
-	Status = WinLdrLoadNLSData(LoaderBlock, SearchPath,
-		"c_1252.nls", "c_437.nls", "l_intl.nls");
-	DbgPrint((DPRINT_WINDOWS, "NLS data loaded with status %d\n", Status));
 
 	/* FIXME: Load OEM HAL font, should be moved to WinLdrLoadAndScanSystemHive() */
 
