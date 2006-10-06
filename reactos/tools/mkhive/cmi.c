@@ -27,6 +27,7 @@
 #include "mkhive.h"
 
 static PVOID
+NTAPI
 CmpAllocate(
 	IN SIZE_T Size,
 	IN BOOLEAN Paged)
@@ -35,6 +36,7 @@ CmpAllocate(
 }
 
 static VOID
+NTAPI
 CmpFree(
 	IN PVOID Ptr)
 {
@@ -42,6 +44,7 @@ CmpFree(
 }
 
 static BOOLEAN
+NTAPI
 CmpFileRead(
 	IN PHHIVE RegistryHive,
 	IN ULONG FileType,
@@ -54,6 +57,7 @@ CmpFileRead(
 }
 
 static BOOLEAN
+NTAPI
 CmpFileWrite(
 	IN PHHIVE RegistryHive,
 	IN ULONG FileType,
@@ -69,6 +73,7 @@ CmpFileWrite(
 }
 
 static BOOLEAN
+NTAPI
 CmpFileSetSize(
 	IN PHHIVE RegistryHive,
 	IN ULONG FileType,
@@ -79,6 +84,7 @@ CmpFileSetSize(
 }
 
 static BOOLEAN
+NTAPI
 CmpFileFlush(
 	IN PHHIVE RegistryHive,
 	IN ULONG FileType)
@@ -102,7 +108,7 @@ CmiInitializeTempHive(
 
 	Status = HvInitialize(
 		&Hive->Hive,
-		HV_OPERATION_CREATE_HIVE, 0, 0,
+		HV_OPERATION_CREATE_HIVE, 0, 0, 0, 0,
 		CmpAllocate, CmpFree,
 		CmpFileRead, CmpFileWrite, CmpFileSetSize,
 		CmpFileFlush, NULL);
