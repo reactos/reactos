@@ -323,3 +323,243 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
     return STATUS_SUCCESS;
 }
 
+PSECURITY_DESCRIPTOR
+NTAPI
+CmpHiveRootSecurityDescriptor(VOID)
+{
+    SID_IDENTIFIER_AUTHORITY WorldAuthority = SECURITY_WORLD_SID_AUTHORITY;
+    SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+    PSID WorldSid;
+    PSID RestrictedSid;
+    PSID SystemSid;
+    PSID AdminSid;
+    NTSTATUS Status;
+    ULONG AceSize, AclSize;
+    PACL Acl, SdAcl;
+    PACE_HEADER AceHeader;
+    PSECURITY_DESCRIPTOR HiveSd;
+    PAGED_CODE();
+
+    /* Allocate all the SIDs */
+    WorldSid  = ExAllocatePoolWithTag(PagedPool,
+                                      RtlLengthRequiredSid(1),
+                                      TAG_CM);
+    RestrictedSid  = ExAllocatePoolWithTag(PagedPool,
+                                           RtlLengthRequiredSid(1),
+                                           TAG_CM);
+    SystemSid = ExAllocatePoolWithTag(PagedPool,
+                                      RtlLengthRequiredSid(1),
+                                      TAG_CM);
+    AdminSid  = ExAllocatePoolWithTag(PagedPool,
+                                      RtlLengthRequiredSid(2),
+                                      TAG_CM);
+
+    /* Make sure that all were allocated */
+    if (!(WorldSid) || !(RestrictedSid) || !(SystemSid) || !(AdminSid))
+    {
+        /* Fail */
+        KeBugCheckEx(REGISTRY_ERROR, 10, 0, 0, 0);
+    }
+
+    /* Now initialize all the SIDs */
+    Status = RtlInitializeSid(WorldSid, &WorldAuthority, 1);
+    if (NT_SUCCESS(Status))
+    {
+        Status = RtlInitializeSid(RestrictedSid, &NtAuthority, 1);
+    }
+    if (NT_SUCCESS(Status))
+    {
+        Status = RtlInitializeSid(SystemSid, &NtAuthority, 1);
+    }
+    if (NT_SUCCESS(Status))
+    {
+        Status = RtlInitializeSid(AdminSid, &NtAuthority, 2);
+    }
+    if (NT_SUCCESS(Status)) KeBugCheckEx(REGISTRY_ERROR, 10, 1, 0, 0);
+
+    /* Setup the sub-authority SIDs */
+    *(RtlSubAuthoritySid(WorldSid, 0)) = SECURITY_WORLD_RID;
+    *(RtlSubAuthoritySid(RestrictedSid, 0)) = SECURITY_RESTRICTED_CODE_RID;
+    *(RtlSubAuthoritySid(SystemSid, 0)) = SECURITY_LOCAL_SYSTEM_RID;
+    *(RtlSubAuthoritySid(AdminSid, 0)) = SECURITY_BUILTIN_DOMAIN_RID;
+    *(RtlSubAuthoritySid(AdminSid, 1)) = DOMAIN_ALIAS_RID_ADMINS;
+
+    /* Sanity checks */
+    ASSERT(RtlValidSid(WorldSid));
+    ASSERT(RtlValidSid(RestrictedSid));
+    ASSERT(RtlValidSid(SystemSid));
+    ASSERT(RtlValidSid(AdminSid));
+
+    /* Calculate length of the ACE */
+    AceSize = (SeLengthSid(WorldSid) -
+               sizeof(ULONG) + sizeof(ACCESS_ALLOWED_ACE)) +
+              (SeLengthSid(RestrictedSid) -
+               sizeof(ULONG) + sizeof(ACCESS_ALLOWED_ACE))+
+              (SeLengthSid(SystemSid) -
+               sizeof(ULONG) + sizeof(ACCESS_ALLOWED_ACE)) +
+              (SeLengthSid(AdminSid) -
+               sizeof(ULONG) + sizeof(ACCESS_ALLOWED_ACE));
+
+    /* Calculate the ACL length and allocate it */
+    AclSize = AceSize + sizeof(ACL);
+    Acl = ExAllocatePoolWithTag(PagedPool, AclSize, TAG_CM);
+    if (!Acl) KeBugCheckEx(REGISTRY_ERROR, 10, 2, 0, 0);
+
+    /* Create it */
+    Status = RtlCreateAcl(Acl, AclSize, ACL_REVISION);
+    if (!NT_SUCCESS(Status)) KeBugCheckEx(REGISTRY_ERROR, 10, 3, 0, 0);
+
+    /* Add our ACEs */
+    Status = RtlAddAccessAllowedAce(Acl,
+                                    ACL_REVISION,
+                                    KEY_ALL_ACCESS,
+                                    SystemSid);
+    if (NT_SUCCESS(Status))
+    {
+        Status = RtlAddAccessAllowedAce(Acl,
+                                        ACL_REVISION,
+                                        KEY_ALL_ACCESS,
+                                        AdminSid);
+    }
+    if (NT_SUCCESS(Status))
+    {
+        Status = RtlAddAccessAllowedAce(Acl,
+                                        ACL_REVISION,
+                                        KEY_READ,
+                                        WorldSid);
+    }
+    if (NT_SUCCESS(Status))
+    {
+        Status = RtlAddAccessAllowedAce(Acl,
+                                        ACL_REVISION,
+                                        KEY_READ,
+                                        RestrictedSid);
+    }
+    if (!NT_SUCCESS(Status)) KeBugCheckEx(REGISTRY_ERROR, 10, 4, 0, 0);
+
+    /* Get every ACE and turn on the inherit flag */
+    Status = RtlGetAce(Acl,0,&AceHeader);
+    ASSERT(NT_SUCCESS(Status));
+    AceHeader->AceFlags |= CONTAINER_INHERIT_ACE;
+    Status = RtlGetAce(Acl,1,&AceHeader);
+    ASSERT(NT_SUCCESS(Status));
+    AceHeader->AceFlags |= CONTAINER_INHERIT_ACE;
+    Status = RtlGetAce(Acl,2,&AceHeader);
+    ASSERT(NT_SUCCESS(Status));
+    AceHeader->AceFlags |= CONTAINER_INHERIT_ACE;
+    Status = RtlGetAce(Acl,3,&AceHeader);
+    ASSERT(NT_SUCCESS(Status));
+    AceHeader->AceFlags |= CONTAINER_INHERIT_ACE;
+
+    /* Allocate the SD */
+    HiveSd = ExAllocatePoolWithTag(PagedPool,
+                                   AclSize + sizeof(SECURITY_DESCRIPTOR),
+                                   TAG_CM);
+    if (!HiveSd) KeBugCheckEx(REGISTRY_ERROR, 10, 5, 0, 0);
+
+    /* Copy the ACL into it */
+    SdAcl = (PACL)((PISECURITY_DESCRIPTOR)HiveSd + 1);
+    RtlMoveMemory(SdAcl, Acl, AclSize);
+
+    /* Create the SD */
+    Status = RtlCreateSecurityDescriptor(HiveSd, SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, free the descriptor and bugcheck */
+        ExFreePool(HiveSd);
+        KeBugCheckEx(REGISTRY_ERROR, 10, 6, 0, 0);
+    }
+
+    /* Set the DACL */
+    Status = RtlSetDaclSecurityDescriptor(HiveSd, TRUE, SdAcl, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, free the descriptor and bugcheck */
+        ExFreePool(HiveSd);
+        KeBugCheckEx(REGISTRY_ERROR, 10, 7, 0, 0);
+    }
+
+    /* Free all allocations */
+    ExFreePool(WorldSid);
+    ExFreePool(RestrictedSid);
+    ExFreePool(SystemSid);
+    ExFreePool(AdminSid);
+    ExFreePool(Acl);
+
+    /* Return the SD */
+    return HiveSd;
+}
+
+NTSTATUS
+NTAPI
+CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
+                    IN HANDLE RootDirectory,
+                    IN PCMHIVE CmHive,
+                    IN BOOLEAN Allocate,
+                    IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+    CM_PARSE_CONTEXT ParseContext;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    PCM_KEY_BODY KeyBody;
+    PAGED_CODE();
+
+    /* Fill out the parse context */
+    ParseContext.TitleIndex = 0;
+    ParseContext.Class.Length = 0;
+    ParseContext.Class.MaximumLength = 0;
+    ParseContext.Class.Buffer = NULL;
+    ParseContext.CreateOptions = 0;
+    ParseContext.CreateLink = TRUE;
+    ParseContext.Flag2 = TRUE;
+    ParseContext.PostActions = 0;
+    ParseContext.ChildHive.KeyHive = &CmHive->Hive;
+
+    /* Check if we're allocating */
+    if (Allocate)
+    {
+        /* Set no child */
+        ParseContext.ChildHive.KeyCell = HCELL_NIL;
+    }
+    else
+    {
+        /* Otherwise, set the root cell */
+        ParseContext.ChildHive.KeyCell = CmHive->Hive.HiveHeader->RootCell;
+    }
+
+    /* Open the key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               LinkName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               RootDirectory,
+                               SecurityDescriptor);
+    Status = ObOpenObjectByName(&ObjectAttributes,
+                                CmpKeyObjectType,
+                                KernelMode,
+                                NULL,
+                                KEY_READ | KEY_WRITE,
+                                &ParseContext,
+                                &KeyHandle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Reference the key body */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       0,
+                                       CmpKeyObjectType,
+                                       KernelMode,
+                                       &KeyBody,
+                                       NULL);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Send a notification */
+    CmpReportNotify(KeyBody->KeyControlBlock,
+                    KeyBody->KeyControlBlock->KeyHive,
+                    KeyBody->KeyControlBlock->KeyCell,
+                    REG_NOTIFY_CHANGE_NAME);
+
+    /* Dereference the key and close the handle */
+    ObDereferenceObject((PVOID)KeyBody);
+    ZwClose(KeyHandle);
+    return STATUS_SUCCESS;
+}

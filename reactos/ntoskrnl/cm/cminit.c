@@ -12,16 +12,29 @@
 #define NDEBUG
 #include <debug.h>
 
+UNICODE_STRING CmRegistryMachineSystemName =
+    RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM");
+UNICODE_STRING CmpSystemFileName =
+    RTL_CONSTANT_STRING(L"SYSTEM");
+
+BOOLEAN CmpMiniNTBoot;
+BOOLEAN CmpShareSystemHives;
+ULONG CmpBootType;
+
 PEPROCESS CmpSystemProcess;
 PCMHIVE CmpMasterHive;
 HANDLE CmpRegistryRootHandle;
 
+BOOLEAN CmSelfHeal, CmpSelfHeal;
 KGUARDED_MUTEX CmpSelfHealQueueLock;
 LIST_ENTRY CmpSelfHealQueueListHead;
+
+HIVE_LIST_ENTRY CmpMachineHiveList[];
 
 EX_PUSH_LOCK CmpLoadHiveLock;
 
 UNICODE_STRING CmpSystemStartOptions;
+UNICODE_STRING CmpLoadOptions;
 
 ULONG CmpCallBackCount;
 
@@ -237,9 +250,113 @@ CmpSetSystemBootValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NtClose(KeyHandle);
 }
 
+BOOLEAN
+NTAPI
+CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PCMHIVE SystemHive;
+    PVOID HiveImageBase;
+    BOOLEAN Allocate = FALSE;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    NTSTATUS Status;
+    STRING  TempString;
+    PAGED_CODE();
+
+    /* Create ANSI_STRING from the loader options */
+    RtlInitAnsiString(&TempString, LoaderBlock->LoadOptions);
+
+    /* Setup UNICODE_STRING */
+    CmpLoadOptions.Length = 0;
+    CmpLoadOptions.MaximumLength = TempString.Length * sizeof(WCHAR) +
+                                   sizeof(UNICODE_NULL);
+    CmpLoadOptions.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                  CmpLoadOptions.MaximumLength,
+                                                  TAG_CM);
+    if (!CmpLoadOptions.Buffer)
+    {
+        /* Fail */
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 5, 6, 0, 0);
+    }
+
+    /* Convert it to Unicode and nul-terminate it */
+    RtlAnsiStringToUnicodeString(&CmpLoadOptions, &TempString, FALSE);
+    CmpLoadOptions.Buffer[TempString.Length] = UNICODE_NULL;
+    CmpLoadOptions.Length += sizeof(WCHAR);
+
+    /* Get the image base */
+    HiveImageBase = LoaderBlock->RegistryBase;
+    if (!HiveImageBase)
+    {
+        /* Don't have a system hive, create it */
+        Status = CmpInitializeHive(&SystemHive,
+                                   HINIT_CREATE,
+                                   0,
+                                   HFILE_TYPE_ALTERNATE,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &CmpSystemFileName);
+        if (!NT_SUCCESS(Status)) return FALSE;
+        Allocate = TRUE;
+    }
+    else
+    {
+        /* Make a copy of the loaded hive */
+        Status = CmpInitializeHive(&SystemHive,
+                                   HINIT_MEMORY,
+                                   0,
+                                   HFILE_TYPE_ALTERNATE,
+                                   HiveImageBase,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &CmpSystemFileName);
+        if (!NT_SUCCESS(Status)) return FALSE;
+
+        /* Check if we loaded with shared hives */
+        if (CmpShareSystemHives) SystemHive->Hive.HvBinHeadersUse = 0;
+
+        /* Set the boot type */
+        CmpBootType = SystemHive->Hive.HiveHeader->BootType;
+
+        /* Check if we loaded in self-healing mode */
+        if (!CmSelfHeal)
+        {
+            /* We didn't, check the boot type */
+            if (CmpBootType & 4)
+            {
+                /* Invalid boot type */
+                CmpSelfHeal = FALSE;
+                KeBugCheckEx(REGISTRY_ERROR, 3, 3, (ULONG_PTR)SystemHive, 0);
+            }
+        }
+    }
+
+    /* Create security descriptor */
+    SecurityDescriptor = CmpHiveRootSecurityDescriptor();
+
+    /* Link the hive to the master */
+    Status = CmpLinkHiveToMaster(&CmRegistryMachineSystemName,
+                                 NULL,
+                                 SystemHive,
+                                 Allocate,
+                                 SecurityDescriptor);
+
+    /* Free the descriptor and check for success */
+    ExFreePool(SecurityDescriptor);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Save the hive */
+    CmpMachineHiveList[3].CmHive = SystemHive;
+    return TRUE;
+}
+
 VOID
 NTAPI
-CmInitializeRegistry(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+CmInitSystem1(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -248,6 +365,14 @@ CmInitializeRegistry(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     HANDLE KeyHandle;
     NTSTATUS Status;
     PAGED_CODE();
+
+    /* Check if this is PE-boot */
+    if (ExpIsWinPEMode)
+    {
+        /* Set registry to PE mode */
+        CmpMiniNTBoot = TRUE;
+        CmpShareSystemHives = TRUE;
+    }
 
     /* Initialize the hive list and lock */
     InitializeListHead(&CmpHiveListHead);

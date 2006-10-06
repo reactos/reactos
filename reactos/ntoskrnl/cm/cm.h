@@ -560,6 +560,40 @@ typedef struct _CM_CACHED_VALUE
 } CM_CACHED_VALUE, *PCM_CACHED_VALUE;
 
 //
+// Hive List Entry
+//
+typedef struct _HIVE_LIST_ENTRY
+{
+    PWCHAR FileName;
+    PWCHAR BaseName;
+    PWCHAR RegRootName;
+    PCMHIVE CmHive;
+    ULONG HHiveFlags;
+    ULONG CmHiveFlags;
+    PCMHIVE CmHive2;
+    BOOLEAN ThreadFinished;
+    BOOLEAN ThreadStarted;
+    BOOLEAN Allocate;
+    BOOLEAN WinPERequired;
+} HIVE_LIST_ENTRY, *PHIVE_LIST_ENTRY;
+
+//
+// Parse context for Key Object
+//
+typedef struct _CM_PARSE_CONTEXT
+{
+    ULONG TitleIndex;
+    UNICODE_STRING Class;
+    ULONG CreateOptions;
+    ULONG Disposition;
+    CM_KEY_REFERENCE ChildHive;
+    BOOLEAN CreateLink;
+    BOOLEAN Flag2;
+    HANDLE PredefinedHandle;
+    ULONG PostActions;
+} CM_PARSE_CONTEXT, *PCM_PARSE_CONTEXT;
+
+//
 // Registry Validation Functions
 //
 BOOLEAN
@@ -567,6 +601,17 @@ NTAPI
 CmCheckRegistry(
     IN PCMHIVE Hive,
     IN BOOLEAN CleanFlag
+);
+
+//
+// Notification Routines
+//
+VOID
+CmpReportNotify(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell,
+    IN ULONG Filter
 );
 
 //
@@ -664,6 +709,22 @@ CmpInitializeHive(
     IN HANDLE Log,
     IN HANDLE External,
     IN PUNICODE_STRING FileName
+);
+
+PSECURITY_DESCRIPTOR
+NTAPI
+CmpHiveRootSecurityDescriptor(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+CmpLinkHiveToMaster(
+    IN PUNICODE_STRING LinkName,
+    IN HANDLE RootDirectory,
+    IN PCMHIVE CmHive,
+    IN BOOLEAN Allocate,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
 //

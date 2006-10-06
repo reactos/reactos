@@ -43,3 +43,13 @@ CmpFlushEntireRegistry(IN BOOLEAN ForceFlush)
     ExReleasePushLock(&CmpHiveListHeadLock);
     return Flushed;
 }
+
+VOID
+CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
+                IN PHHIVE Hive,
+                IN HCELL_INDEX Cell,
+                IN ULONG Filter)
+{
+    /* FIXME: TODO */
+    ASSERT(FALSE);
+}
