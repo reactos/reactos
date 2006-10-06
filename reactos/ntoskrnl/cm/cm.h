@@ -731,6 +731,21 @@ CmpCompareCompressedName(
     IN ULONG NameLength
 );
 
+USHORT
+NTAPI
+CmpNameSize(
+    IN PHHIVE Hive,
+    IN PUNICODE_STRING Name
+);
+
+USHORT
+NTAPI
+CmpCopyName(
+    IN PHHIVE Hive,
+    IN PWCHAR Destination,
+    IN PUNICODE_STRING Source
+);
+
 //
 // Flush Routines
 //

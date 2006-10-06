@@ -25,6 +25,16 @@ UNICODE_STRING CmpSystemStartOptions;
 
 ULONG CmpCallBackCount;
 
+GENERIC_MAPPING CmpKeyMapping =
+{
+    KEY_READ,
+    KEY_WRITE,
+    KEY_EXECUTE,
+    KEY_ALL_ACCESS
+};
+
+EX_CALLBACK CmpCallBackVector[CMP_MAX_CALLBACKS];
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -51,7 +61,7 @@ CmpCreateRootNode(IN PHHIVE Hive,
     Cell = HvGetCell(Hive, *Index);
 
     /* Fill out the cell */
-    Cell->u.KeyNode.Signature = CM_KEY_NODE_SIGNATURE;
+    Cell->u.KeyNode.Signature = (USHORT)CM_KEY_NODE_SIGNATURE;
     Cell->u.KeyNode.Flags = KEY_HIVE_ENTRY | KEY_NO_DELETE;
     KeQuerySystemTime(&SystemTime);
     Cell->u.KeyNode.LastWriteTime = SystemTime;
@@ -93,7 +103,6 @@ CmpCreateRootKey(VOID)
     HCELL_INDEX RootCell;
     PCM_KEY_BODY Key;
     PVOID KeyBody;
-    HANDLE KeyHandle;
     PCM_KEY_CONTROL_BLOCK RootKcb;
     UNICODE_STRING RootName = RTL_CONSTANT_STRING(L"\\REGISTRY");
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -148,7 +157,7 @@ CmpCreateRootKey(VOID)
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Now reference it as a keep alive and return the status */
-    Status = ObReferenceObjectByHandle(KeyHandle,
+    Status = ObReferenceObjectByHandle(CmpRegistryRootHandle,
                                        KEY_READ,
                                        NULL,
                                        KernelMode,
@@ -183,8 +192,6 @@ CmpSetSystemBootValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     UNICODE_STRING KeyName, ValueName;
     HANDLE KeyHandle;
     NTSTATUS Status;
-    PCHAR CommandLine;
-    PCHAR SystemBootDevice;
     ULONG i = 0;
     ASSERT(LoaderBlock != NULL);
 
@@ -225,7 +232,6 @@ CmpSetSystemBootValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Free the buffers */
     RtlFreeUnicodeString(&ValueName);
-    ExFreePool(SystemBootDevice);
 
     /* Close the key and return */
     NtClose(KeyHandle);
@@ -274,7 +280,7 @@ CmInitializeRegistry(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlInitUnicodeString(&Name, L"Key");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(CM_KEY_BODY);
-    ObjectTypeInitializer.GenericMapping = NULL;
+    ObjectTypeInitializer.GenericMapping = CmpKeyMapping;
     ObjectTypeInitializer.PoolType = PagedPool;
     ObjectTypeInitializer.SecurityRequired = TRUE;
     ObjectTypeInitializer.ValidAccessMask = KEY_ALL_ACCESS;
