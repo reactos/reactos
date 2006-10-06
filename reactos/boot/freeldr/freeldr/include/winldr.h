@@ -74,4 +74,9 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    ULONG TssBasePage,
                    PVOID GdtIdt);
 
+// wlregistry.c
+BOOLEAN WinLdrLoadAndScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                                    IN LPCSTR DirectoryPath);
+
+
 #endif // defined __WINLDR_H

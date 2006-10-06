@@ -185,70 +185,6 @@ Failure:
 	return FALSE;
 }
 
-BOOLEAN
-WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                     IN LPCSTR DirectoryPath,
-                     IN LPCSTR HiveName)
-{
-	PFILE FileHandle;
-	CHAR FullHiveName[256];
-	BOOLEAN Status;
-	ULONG HiveFileSize;
-	ULONG_PTR HiveDataPhysical;
-	PVOID HiveDataVirtual;
-
-	/* Concatenate path and filename to get the full name */
-	strcpy(FullHiveName, DirectoryPath);
-	strcat(FullHiveName, HiveName);
-	//Print(L"Loading %s...\n", FullHiveName);
-	FileHandle = FsOpenFile(FullHiveName);
-
-	if (FileHandle == NULL)
-	{
-		UiMessageBox("Opening hive file failed!");
-		return FALSE;
-	}
-
-	/* Get the file length */
-	HiveFileSize = FsGetFileSize(FileHandle);
-
-	if (HiveFileSize == 0)
-	{
-		FsCloseFile(FileHandle);
-		UiMessageBox("Hive file has 0 size!");
-		return FALSE;
-	}
-
-	/* Round up the size to page boundary and alloc memory */
-	HiveDataPhysical = (ULONG_PTR)MmAllocateMemory(
-		MM_SIZE_TO_PAGES(HiveFileSize + MM_PAGE_SIZE - 1) << MM_PAGE_SHIFT);
-
-	if (HiveDataPhysical == 0)
-	{
-		FsCloseFile(FileHandle);
-		UiMessageBox("Unable to alloc memory for a hive!");
-		return FALSE;
-	}
-
-	/* Convert address to virtual */
-	HiveDataVirtual = (PVOID)(KSEG0_BASE | HiveDataPhysical);
-
-	/* Fill LoaderBlock's entries */
-	LoaderBlock->RegistryLength = HiveFileSize;
-	LoaderBlock->RegistryBase = HiveDataVirtual;
-
-	/* Finally read from file to the memory */
-	Status = FsReadFile(FileHandle, HiveFileSize, NULL, (PVOID)HiveDataPhysical);
-	FsCloseFile(FileHandle);
-	if (!Status)
-	{
-		UiMessageBox("Unable to read from hive file!");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
 void InitializeHWConfig(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
 	PCONFIGURATION_COMPONENT_DATA ConfigurationRoot;
@@ -313,12 +249,12 @@ AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
 VOID
 WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-	//CHAR	Options[] = "/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200";
+	//CHAR	Options[] = "/CRASHDEBUG /DEBUGPORT=COM1 /BAUDRATE=115200";
 	CHAR	Options[] = "/NODEBUG";
 	CHAR	SystemRoot[] = "\\WINNT";
 	CHAR	HalPath[] = "\\";
-	CHAR	ArcBoot[] = "multi(0)";
-	CHAR	ArcHal[] = "multi(0)";
+	CHAR	ArcBoot[] = "multi(0)disk(0)rdisk(1)partition(1)";
+	CHAR	ArcHal[] = "multi(0)disk(0)rdisk(1)partition(1)";
 
 	PLOADER_PARAMETER_EXTENSION Extension;
 
@@ -451,13 +387,13 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	CHAR  SystemPath[1024], SearchPath[1024];
 	CHAR  FileName[1024];
 	CHAR  BootPath[256];
-	PVOID NtosBase = NULL, HalBase = NULL;
+	PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
 	BOOLEAN Status;
 	ULONG SectionId;
 	ULONG BootDevice;
 	PLOADER_PARAMETER_BLOCK LoaderBlock, LoaderBlockVA;
 	KERNEL_ENTRY_POINT KiSystemStartup;
-	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE;
+	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE;
 	// Mm-related things
 	PVOID GdtIdt;
 	ULONG PcrBasePage=0;
@@ -468,10 +404,8 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	//sprintf(MsgBuffer,"Booting Microsoft(R) Windows(R) OS version '%04x' is not implemented yet", OperatingSystemVersion);
 	//UiMessageBox(MsgBuffer);
 
-	//
 	// Open the operating system section
 	// specified in the .ini file
-	//
 	if (!IniOpenSection(OperatingSystemName, &SectionId))
 	{
 		sprintf(MsgBuffer,"Operating System section '%s' not found in freeldr.ini", OperatingSystemName);
@@ -479,9 +413,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 		return;
 	}
 
-	/*
-	 * Make sure the system path is set in the .ini file
-	 */
+	/* Make sure the system path is set in the .ini file */
 	if (!IniReadSettingByName(SectionId, "SystemPath", SystemPath, sizeof(SystemPath)))
 	{
 		UiMessageBox("System path not specified for selected operating system.");
@@ -497,9 +429,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 
 	UiDrawStatusText("Loading...");
 
-	/*
-	 * Try to open system drive
-	 */
+	/* Try to open system drive */
 	BootDevice = 0xffffffff;
 	if (!FsOpenSystemVolume(SystemPath, BootPath, &BootDevice))
 	{
@@ -514,51 +444,67 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 
 	DbgPrint((DPRINT_WINDOWS,"SystemRoot: '%s'\n", BootPath));
 
-	/* Allocate and minimalistic-initialize LPB */
+	// Allocate and minimalistic-initialize LPB
 	AllocateAndInitLPB(&LoaderBlock);
 
 	// Load kernel
 	strcpy(FileName, BootPath);
 	strcat(FileName, "SYSTEM32\\NTOSKRNL.EXE");
 	Status = WinLdrLoadImage(FileName, &NtosBase);
-	DbgPrint((DPRINT_WINDOWS, "Ntos loaded with status %d\n", Status));
+	DbgPrint((DPRINT_WINDOWS, "Ntos loaded with status %d at %p\n", Status, NtosBase));
 
 	// Load HAL
 	strcpy(FileName, BootPath);
 	strcat(FileName, "SYSTEM32\\HAL.DLL");
 	Status = WinLdrLoadImage(FileName, &HalBase);
-	DbgPrint((DPRINT_WINDOWS, "HAL loaded with status %d\n", Status));
+	DbgPrint((DPRINT_WINDOWS, "HAL loaded with status %d at %p\n", Status, HalBase));
 
+	// Load kernel-debugger support dll
+	if (OperatingSystemVersion > _WIN32_WINNT_NT4)
+	{
+		strcpy(FileName, BootPath);
+		strcat(FileName, "SYSTEM32\\KDCOM.DLL");
+		Status = WinLdrLoadImage(FileName, &KdComBase);
+		DbgPrint((DPRINT_WINDOWS, "KdCom loaded with status %d at %p\n", Status, KdComBase));
+	}
+
+	// Allocate data table entries for above-loaded modules
 	WinLdrAllocateDataTableEntry(LoaderBlock, "ntoskrnl.exe",
 		"WINNT\\SYSTEM32\\NTOSKRNL.EXE", NtosBase, &KernelDTE);
 	WinLdrAllocateDataTableEntry(LoaderBlock, "hal.dll",
-		"WINNT\\SYSTEM32\\HAL.EXE", HalBase, &HalDTE);
+		"WINNT\\SYSTEM32\\HAL.DLL", HalBase, &HalDTE);
+	if (OperatingSystemVersion > _WIN32_WINNT_NT4)
+	{
+		WinLdrAllocateDataTableEntry(LoaderBlock, "kdcom.dll",
+			"WINNT\\SYSTEM32\\KDCOM.DLL", KdComBase, &KdComDTE);
+	}
 
-	/* Load all referenced DLLs for kernel and HAL */
+	/* Load all referenced DLLs for kernel, HAL and kdcom.dll */
 	strcpy(SearchPath, BootPath);
 	strcat(SearchPath, "SYSTEM32\\");
 	WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KernelDTE);
 	WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, HalDTE);
+	if (KdComDTE)
+		WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KdComDTE);
 
 	/* Initialize Phase 1 - before NLS */
 	WinLdrInitializePhase1(LoaderBlock);
 
-	/* Load SYSTEM hive and its LOG file */
-	strcpy(SearchPath, BootPath);
-	strcat(SearchPath, "SYSTEM32\\CONFIG\\");
-	Status = WinLdrLoadSystemHive(LoaderBlock, SearchPath, "SYSTEM");
-	DbgPrint((DPRINT_WINDOWS, "SYSTEM hive loaded with status %d\n", Status));
+	/* Load Hive, and then NLS data, OEM font, and prepare boot drivers list */
+	Status = WinLdrLoadAndScanSystemHive(LoaderBlock, BootPath);
+	DbgPrint((DPRINT_WINDOWS, "SYSTEM hive loaded and scanned with status %d\n", Status));
 
-	/* Load NLS data */
+	/* FIXME: Load NLS data, should be moved to WinLdrLoadAndScanSystemHive() */
 	strcpy(SearchPath, BootPath);
 	strcat(SearchPath, "SYSTEM32\\");
 	Status = WinLdrLoadNLSData(LoaderBlock, SearchPath,
 		"c_1252.nls", "c_437.nls", "l_intl.nls");
 	DbgPrint((DPRINT_WINDOWS, "NLS data loaded with status %d\n", Status));
 
-	/* Load OEM HAL font */
+	/* FIXME: Load OEM HAL font, should be moved to WinLdrLoadAndScanSystemHive() */
 
 	/* Load boot drivers */
+	//WinLdrLoadBootDrivers();
 
 	/* Alloc PCR, TSS, do magic things with the GDT/IDT */
 	WinLdrSetupForNt(LoaderBlock, &GdtIdt, &PcrBasePage, &TssBasePage);
@@ -579,14 +525,12 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 
 	WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
 
-	// temp: offset C9000
-
 	//FIXME: If I substitute this debugging checkpoint, GCC will "optimize away" the code below
 	//while (1) {};
-	asm(".intel_syntax noprefix\n");
+	/*asm(".intel_syntax noprefix\n");
 		asm("test1:\n");
 		asm("jmp test1\n");
-	asm(".att_syntax\n");
+	asm(".att_syntax\n");*/
 
 
 	(*KiSystemStartup)(LoaderBlockVA);

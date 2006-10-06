@@ -72,6 +72,7 @@
 		<file>peloader.c</file>
 		<file>winldr.c</file>
 		<file>wlmemory.c</file>
+		<file>wlregistry.c</file>
 	</directory>
 	<file>freeldr.c</file>
 	<file>debug.c</file>
