@@ -1221,7 +1221,7 @@ co_WinPosSetWindowPos(
          }
          if (RgnType != ERROR && RgnType != NULLREGION)
          {
-            if (Window->Parent)
+            if ((Window->Parent == UserGetDesktopWindow()) && (Window->Style & WS_VISIBLE))
             {
                NtGdiOffsetRgn(DirtyRgn,
                   Window->WindowRect.left - Window->Parent->ClientRect.left,
@@ -1229,7 +1229,7 @@ co_WinPosSetWindowPos(
                co_UserRedrawWindow(Window->Parent, NULL, DirtyRgn,
                   RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
             }
-            else
+            else 
             {
                NtGdiOffsetRgn(DirtyRgn,
                   Window->WindowRect.left - Window->ClientRect.left,
