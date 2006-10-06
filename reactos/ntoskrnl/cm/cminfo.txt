@@ -92,6 +92,16 @@ and definitions for a compatible internal implementation.
   ~90% of the KCB/NCB code is complete.
   Work about to resume on initialization code.
 
+**As of 6/10/2006
+  ~90% of the KCB/NCB code is complete.
+  ~70% of Initialization code is complete.
+
+  TODOs:
+    Complete KCB implementation with CmpEnlistKeyWithKcb.
+    Re-write some parts of CmInitSystem1 to handle NTLDR-style Hardware Hive.
+    The idea is that, by the time this branch is ready, this will be compatible
+    with ROS. Otherwise, I'll work with Hervé, Filip and Aleksey to make it happen.
+
 -= Structure =-
 
 cmapi.c    - Contains the low-level Cmp APIs that correspond to the external Nt
