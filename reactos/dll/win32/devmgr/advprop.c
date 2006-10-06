@@ -1906,7 +1906,7 @@ DeviceProperties_RunDLLW(HWND hWndParent,
 {
     WCHAR szDeviceID[MAX_DEVICE_ID_LEN+1];
     WCHAR szMachineName[MAX_COMPUTERNAME_LENGTH+1];
-    LPTSTR lpString = (LPTSTR)lpDeviceCmd;
+    LPWSTR lpString = (LPWSTR)lpDeviceCmd;
 
     szDeviceID[0] = L'\0';
     szMachineName[0] = L'\0';
