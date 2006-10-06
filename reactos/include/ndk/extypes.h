@@ -486,6 +486,24 @@ typedef struct _CALLBACK_OBJECT
 } CALLBACK_OBJECT , *PCALLBACK_OBJECT;
 
 //
+// Internal Callback Object
+//
+typedef struct _EX_CALLBACK_ROUTINE_BLOCK
+{
+    EX_RUNDOWN_REF RundownProtect;
+    PVOID Function;
+    PVOID Context;
+} EX_CALLBACK_ROUTINE_BLOCK, *PEX_CALLBACK_ROUTINE_BLOCK;
+
+//
+// Internal Callback Handle
+//
+typedef struct _EX_CALLBACK
+{
+    EX_FAST_REF RoutineBlock;
+} EX_CALLBACK, *PEX_CALLBACK;
+
+//
 // Profile Object
 //
 typedef struct _EPROFILE
