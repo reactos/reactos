@@ -28,6 +28,7 @@
 /* FUNCTIONS ****************************************************************/
 
 static PVOID
+NTAPI
 CmpAllocate (ULONG Size, BOOLEAN Paged)
 {
   return MmAllocateMemory(Size);
@@ -35,6 +36,7 @@ CmpAllocate (ULONG Size, BOOLEAN Paged)
 
 
 static VOID
+NTAPI
 CmpFree (PVOID Ptr)
 {
   return MmFreeMemory(Ptr);
@@ -714,7 +716,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
   DbgPrint((DPRINT_REGISTRY, "RegImportBinaryHive(%x, %u) called\n",ChunkBase,ChunkSize));
 
   CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE);
-  Status = HvInitialize (&CmHive->Hive, HV_OPERATION_MEMORY_INPLACE,
+  Status = HvInitialize (&CmHive->Hive, HV_OPERATION_MEMORY_INPLACE, 0, 0,
                          (ULONG_PTR)ChunkBase, 0,
                          CmpAllocate, CmpFree,
                          NULL, NULL, NULL, NULL, NULL);
@@ -813,7 +815,7 @@ RegExportBinaryHive(PCWSTR KeyName,
   DbgPrint((DPRINT_REGISTRY, "Creating binary hardware hive\n"));
 
   CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE);
-  Status = HvInitialize (&CmHive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0,
+  Status = HvInitialize (&CmHive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0, 0, 0,
                          CmpAllocate, CmpFree,
                          NULL, NULL, NULL, NULL, NULL);
   Hive = &CmHive->Hive;
