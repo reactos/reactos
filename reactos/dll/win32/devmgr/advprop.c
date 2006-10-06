@@ -16,12 +16,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: hwpage.c 19599 2005-11-26 02:12:58Z weiden $
+/*
  *
  * PROJECT:         ReactOS devmgr.dll
  * FILE:            lib/devmgr/advprop.c
  * PURPOSE:         ReactOS Device Manager
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
+ *                  Ged Murphy <gedmurphy@reactos.org>
  * UPDATE HISTORY:
  *      04-04-2004  Created
  */
@@ -1742,7 +1743,7 @@ Cleanup:
  *   1:  if bShowDevMgr is non-zero and no error occured
  *   -1: a call to GetLastError returns 0 if successful
  *
- * @unimplemented
+ * @implemented
  */
 INT_PTR
 WINAPI
@@ -1813,4 +1814,154 @@ DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
     }
 
     return Ret;
+}
+
+
+/***************************************************************************
+ * NAME                                                         EXPORTED
+ *      DeviceProperties_RunDLLA
+ *
+ * DESCRIPTION
+ *   Invokes the device properties dialog
+ *
+ * ARGUMENTS
+ *   hWndParent:  Handle to the parent window
+ *   hInst:       Handle to the application instance
+ *   lpDeviceCmd: A command that includes the DeviceID of the properties to be shown,
+ *                also see NOTEs
+ *   nCmdShow:    Specifies how the window should be shown
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ *
+ * NOTE
+ *   - lpDeviceCmd is a string in the form of "/MachineName MACHINE /DeviceID DEVICEPATH"
+ *     (/MachineName is optional). This function only parses this string and eventually
+ *     calls DeviceProperties().
+ *
+ * @implemented
+ */
+VOID
+WINAPI
+DeviceProperties_RunDLLA(HWND hWndParent,
+                         HINSTANCE hInst,
+                         LPCSTR lpDeviceCmd,
+                         int nCmdShow)
+{
+    LPWSTR lpDeviceCmdW = NULL;
+
+    if (lpDeviceCmd != NULL)
+    {
+        if ((lpDeviceCmdW = ConvertMultiByteToUnicode(lpDeviceCmd,
+                                                      CP_ACP)))
+        {
+            DeviceProperties_RunDLLW(hWndParent,
+                                     hInst,
+                                     lpDeviceCmdW,
+                                     nCmdShow);
+        }
+    }
+
+    if (lpDeviceCmdW != NULL)
+    {
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpDeviceCmdW);
+    }
+}
+
+
+/***************************************************************************
+ * NAME                                                         EXPORTED
+ *      DeviceProperties_RunDLLW
+ *
+ * DESCRIPTION
+ *   Invokes the device properties dialog
+ *
+ * ARGUMENTS
+ *   hWndParent:  Handle to the parent window
+ *   hInst:       Handle to the application instance
+ *   lpDeviceCmd: A command that includes the DeviceID of the properties to be shown,
+ *                also see NOTEs
+ *   nCmdShow:    Specifies how the window should be shown
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ *
+ * NOTE
+ *   - lpDeviceCmd is a string in the form of "/MachineName MACHINE /DeviceID DEVICEPATH"
+ *     (/MachineName is optional). This function only parses this string and eventually
+ *     calls DeviceProperties().
+ *
+ * @implemented
+ */
+VOID
+WINAPI
+DeviceProperties_RunDLLW(HWND hWndParent,
+                         HINSTANCE hInst,
+                         LPCWSTR lpDeviceCmd,
+                         int nCmdShow)
+{
+    WCHAR szDeviceID[MAX_DEVICE_ID_LEN+1];
+    WCHAR szMachineName[MAX_COMPUTERNAME_LENGTH+1];
+    LPTSTR lpString = (LPTSTR)lpDeviceCmd;
+
+    szDeviceID[0] = L'\0';
+    szMachineName[0] = L'\0';
+
+    while (*lpString != L'\0')
+    {
+        if (*lpString == L'/')
+        {
+            lpString++;
+            if(!wcsnicmp(lpString, L"DeviceID", 8))
+            {
+                lpString += 9;
+                if (*lpString != L'\0')
+                {
+                    int i = 0;
+                    while ((*lpString != L' ') &&
+                           (*lpString != L'\0') &&
+                           (i <= MAX_DEVICE_ID_LEN))
+                    {
+                        szDeviceID[i++] = *lpString++;
+                    }
+                    szDeviceID[i] = L'\0';
+                }
+            }
+            else if (!wcsnicmp(lpString, L"MachineName", 11))
+            {
+                lpString += 12;
+                if (*lpString != L'\0')
+                {
+                    int i = 0;
+                    while ((*lpString != L' ') &&
+                           (*lpString != L'\0') &&
+                           (i <= MAX_COMPUTERNAME_LENGTH))
+                    {
+                        szMachineName[i++] = *lpString++;
+                    }
+                    szMachineName[i] = L'\0';
+                }
+            }
+            /* knock the pointer back one and let the next
+             * pointer deal with incrementing, otherwise we
+             * go past the end of the string */
+             lpString--;
+        }
+        lpString++;
+    }
+
+    //DPRINT("DeviceID: %S, MachineName: %S\n", szDeviceID, szMachineName);
+
+    if (szDeviceID == L'\0')
+        return;
+
+    DevicePropertiesW(hWndParent,
+                      hInst,
+                      szMachineName,
+                      szDeviceID,
+                      0);
 }

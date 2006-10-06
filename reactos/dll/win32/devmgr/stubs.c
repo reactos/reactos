@@ -1,4 +1,4 @@
-/* $Id$
+/* 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS devmgr.dll
@@ -91,78 +91,6 @@ DeviceManager_ExecuteW(HWND hWndParent,
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-
-/***************************************************************************
- * NAME                                                         EXPORTED
- *      DeviceProperties_RunDLLA
- *
- * DESCRIPTION
- *   Invokes the device properties dialog
- *
- * ARGUMENTS
- *   hWndParent:  Handle to the parent window
- *   hInst:       Handle to the application instance
- *   lpDeviceCmd: A command that includes the DeviceID of the properties to be shown,
- *                also see NOTEs
- *   nCmdShow:    Specifies how the window should be shown
- *
- * RETURN VALUE
- *
- * REVISIONS
- *
- * NOTE
- *   - lpDeviceCmd is a string in the form of "/MachineName MACHINE /DeviceID DEVICEPATH"
- *     (/MachineName is optional). This function only parses this string and eventually
- *     calls DeviceProperties().
- *
- * @unimplemented
- */
-VOID
-WINAPI
-DeviceProperties_RunDLLA(HWND hWndParent,
-                         HINSTANCE hInst,
-                         LPCSTR lpDeviceCmd,
-                         int nCmdShow)
-{
-  UNIMPLEMENTED;
-}
-
-
-/***************************************************************************
- * NAME                                                         EXPORTED
- *      DeviceProperties_RunDLLW
- *
- * DESCRIPTION
- *   Invokes the device properties dialog
- *
- * ARGUMENTS
- *   hWndParent:  Handle to the parent window
- *   hInst:       Handle to the application instance
- *   lpDeviceCmd: A command that includes the DeviceID of the properties to be shown,
- *                also see NOTEs
- *   nCmdShow:    Specifies how the window should be shown
- *
- * RETURN VALUE
- *
- * REVISIONS
- *
- * NOTE
- *   - lpDeviceCmd is a string in the form of "/MachineName MACHINE /DeviceID DEVICEPATH"
- *     (/MachineName is optional). This function only parses this string and eventually
- *     calls DeviceProperties().
- *
- * @unimplemented
- */
-VOID
-WINAPI
-DeviceProperties_RunDLLW(HWND hWndParent,
-                         HINSTANCE hInst,
-                         LPCWSTR lpDeviceCmd,
-                         int nCmdShow)
-{
-  UNIMPLEMENTED;
 }
 
 
