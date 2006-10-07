@@ -158,8 +158,9 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
                       0,
                       BoundaryAddressMultiple);
 
-   BaseAddress = (PVOID)KERNEL_BASE;
-   Length = PAGE_ROUND_UP(((ULONG_PTR)&_text_end__)) - KERNEL_BASE;
+   extern unsigned int _image_base__;
+   BaseAddress = (PVOID)&_image_base__;
+   Length = PAGE_ROUND_UP(((ULONG_PTR)&_text_end__)) - (ULONG_PTR)&_image_base__;
    ParamLength = ParamLength - Length;
 
    /*
@@ -305,6 +306,9 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
           LastKrnlPhysAddr,
           LastKernelAddress);
 
+   /* Set the page directory */
+   PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
+
    if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
    {
       // If we have a bios memory map, recalulate the memory size
@@ -322,6 +326,10 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
          MmFreeLdrMemHigher = (last - 256) * 4;
       }
    }
+
+   /* NTLDR Hacks */
+   if (!MmFreeLdrMemHigher) MmFreeLdrMemHigher = 32768;
+   if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
 
    if (MmFreeLdrMemHigher >= (MaxMem - 1) * 1024)
    {
@@ -390,6 +398,10 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
                        AddressRangeCount);
    kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
 
+   //extern LOADER_MODULE KeLoaderModules[];
+   //DPRINT1("Module one: %p %p\n", KeLoaderModules[0].ModStart, KeLoaderModules[0].ModEnd);
+   //while (TRUE);
+
    /*
     * Unmap low memory
     */
@@ -413,9 +425,9 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
 #endif
 
    DPRINT("Invalidating between %x and %x\n",
-          LastKernelAddress, KERNEL_BASE + 0x00600000);
+          LastKernelAddress, KSEG0_BASE + 0x00600000);
    for (MappingAddress = LastKernelAddress;
-        MappingAddress < KERNEL_BASE + 0x00600000;
+        MappingAddress < KSEG0_BASE + 0x00600000;
         MappingAddress += PAGE_SIZE)
    {
       MmRawDeleteVirtualMapping((PVOID)MappingAddress);

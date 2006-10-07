@@ -21,7 +21,9 @@ LdrLoadAutoConfigDrivers(VOID);
 
 VOID
 NTAPI
-LdrInitModuleManagement(VOID);
+LdrInitModuleManagement(
+    IN PVOID KernelBase
+);
 
 NTSTATUS
 NTAPI

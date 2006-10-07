@@ -427,9 +427,9 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
 
     /* Initialize Kernel Memory Address Space */
-    MmInit1(FirstKrnlPhysAddr,
-            LastKrnlPhysAddr,
-            LastKernelAddress,
+    MmInit1(MmFreeLdrFirstKrnlPhysAddr,
+            MmFreeLdrLastKrnlPhysAddr,
+            MmFreeLdrLastKernelAddress,
             (PADDRESS_RANGE)&KeMemoryMap,
             KeMemoryMapRangeCount,
             4096);

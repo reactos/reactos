@@ -423,8 +423,7 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
                                      0,
                                      &Size,
                                      MEM_COMMIT,
-                                     PAGE_READWRITE
-                                     );
+                                     PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
         /* Failed */

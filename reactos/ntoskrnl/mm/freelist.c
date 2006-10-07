@@ -332,8 +332,9 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
    NTSTATUS Status;
    PFN_TYPE LastPage;
    PFN_TYPE FirstUninitializedPage;
+   ULONG PdeStart = PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart;
 
-   DPRINT("MmInitializePageList(FirstPhysKernelAddress %x, "
+   DPRINT1("MmInitializePageList(FirstPhysKernelAddress %x, "
           "LastPhysKernelAddress %x, "
           "MemorySizeInPages %x, LastKernelAddress %x)\n",
           FirstPhysKernelAddress,
@@ -452,7 +453,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
 	       MmStats.NrReservedPages++;
 	    }
         /* Protect the Page Directory. This will be changed in r3 */
-        else if (j >= (MmFreeLdrPageDirectoryStart / PAGE_SIZE) && j < (MmFreeLdrPageDirectoryEnd / PAGE_SIZE))
+        else if (j >= (PdeStart / PAGE_SIZE) && j < (MmFreeLdrPageDirectoryEnd / PAGE_SIZE))
 	    {
                MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
                MmPageArray[j].Flags.Zero = 0;

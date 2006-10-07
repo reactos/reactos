@@ -107,7 +107,7 @@ LdrInit1 ( VOID )
 VOID
 INIT_FUNCTION
 NTAPI
-LdrInitModuleManagement ( VOID )
+LdrInitModuleManagement ( PVOID KernelBase )
 {
     PIMAGE_NT_HEADERS NtHeader;
 
@@ -117,11 +117,11 @@ LdrInitModuleManagement ( VOID )
 
     /* Initialize ModuleObject for NTOSKRNL */
     RtlZeroMemory(&NtoskrnlModuleObject, sizeof(LDR_DATA_TABLE_ENTRY));
-    NtoskrnlModuleObject.DllBase = (PVOID) KERNEL_BASE;
+    NtoskrnlModuleObject.DllBase = (PVOID) KernelBase;
     RtlInitUnicodeString(&NtoskrnlModuleObject.FullDllName, KERNEL_MODULE_NAME);
     LdrpBuildModuleBaseName(&NtoskrnlModuleObject.BaseDllName, &NtoskrnlModuleObject.FullDllName);
 
-    NtHeader = RtlImageNtHeader((PVOID)KERNEL_BASE);
+    NtHeader = RtlImageNtHeader((PVOID)KernelBase);
     NtoskrnlModuleObject.EntryPoint = (PVOID) ((ULONG_PTR) NtoskrnlModuleObject.DllBase + NtHeader->OptionalHeader.AddressOfEntryPoint);
     DPRINT("ModuleObject:%08x  entrypoint at %x\n", &NtoskrnlModuleObject, NtoskrnlModuleObject.EntryPoint);
     NtoskrnlModuleObject.SizeOfImage = NtHeader->OptionalHeader.SizeOfImage;

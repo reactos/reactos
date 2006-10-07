@@ -22,11 +22,10 @@ static CHAR KeLoaderModuleStrings[64][256];
 /* FreeLDR Memory Data */
 ADDRESS_RANGE KeMemoryMap[64];
 ULONG KeMemoryMapRangeCount;
-ULONG_PTR FirstKrnlPhysAddr;
-ULONG_PTR LastKrnlPhysAddr;
-ULONG_PTR LastKernelAddress;
-ULONG MmFreeLdrMemHigher, MmFreeLdrMemLower;
-ULONG MmFreeLdrPageDirectoryStart, MmFreeLdrPageDirectoryEnd;
+ULONG_PTR MmFreeLdrFirstKrnlPhysAddr, MmFreeLdrLastKrnlPhysAddr;
+ULONG_PTR MmFreeLdrLastKernelAddress;
+ULONG MmFreeLdrMemHigher;
+ULONG MmFreeLdrPageDirectoryEnd;
 
 /* FreeLDR Loader Data */
 ROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
@@ -34,8 +33,6 @@ static CHAR KeLoaderCommandLine[256];
 BOOLEAN AcpiTableDetected;
 
 /* FreeLDR PE Hack Data */
-extern unsigned int _image_base__;
-ULONG_PTR KERNEL_BASE = (ULONG_PTR)&_image_base__;
 extern LDR_DATA_TABLE_ENTRY HalModuleObject;
 
 /* NT Loader Data */
@@ -72,8 +69,6 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     /* First get some kernel-loader globals */
     AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
     MmFreeLdrMemHigher = RosLoaderBlock->MemHigher;
-    MmFreeLdrMemLower = RosLoaderBlock->MemLower;
-    MmFreeLdrPageDirectoryStart = RosLoaderBlock->PageDirectoryStart;
     MmFreeLdrPageDirectoryEnd = RosLoaderBlock->PageDirectoryEnd;
     KeLoaderModuleCount = RosLoaderBlock->ModsCount;
 
@@ -299,8 +294,8 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     ULONG HalBase;
     ULONG DriverBase;
     ULONG DriverSize;
-    PIMAGE_NT_HEADERS NtHeader;
-    PIMAGE_OPTIONAL_HEADER OptHead;
+    //PIMAGE_NT_HEADERS NtHeader;
+    //PIMAGE_OPTIONAL_HEADER OptHead;
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
     CHAR* s;
     PKTSS Tss;
@@ -322,10 +317,10 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 
     /* Copy the Loader Block Data locally since Low-Memory will be wiped */
     memcpy(&KeRosLoaderBlock, LoaderBlock, sizeof(ROS_LOADER_PARAMETER_BLOCK));
-    memcpy(&KeLoaderModules[1],
+    memcpy(&KeLoaderModules[0],
            (PVOID)KeRosLoaderBlock.ModsAddr,
            sizeof(LOADER_MODULE) * KeRosLoaderBlock.ModsCount);
-    KeRosLoaderBlock.ModsCount++;
+    //KeRosLoaderBlock.ModsCount++;
     KeRosLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
 
     /* Check for BIOS memory map */
@@ -370,19 +365,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     strcpy(KeLoaderCommandLine, (PCHAR)LoaderBlock->CommandLine);
     KeRosLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
 
-    /* Write the first Module (the Kernel) */
-    strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
-    KeLoaderModules[0].String = (ULONG)KeLoaderModuleStrings[0];
-    KeLoaderModules[0].ModStart = KERNEL_BASE;
-
-    /* Read PE Data */
-    NtHeader = RtlImageNtHeader((PVOID)KeLoaderModules[0].ModStart);
-    OptHead = &NtHeader->OptionalHeader;
-
-    /* Set Kernel Ending */
-    KeLoaderModules[0].ModEnd = KeLoaderModules[0].ModStart +
-                                PAGE_ROUND_UP((ULONG)OptHead->SizeOfImage);
-
     /* Create a block for each module */
     for (i = 1; i < KeRosLoaderBlock.ModsCount; i++)
     {
@@ -400,36 +382,36 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
         KeLoaderModules[i].ModStart -= 0x200000;
 
         /* Add the Kernel Base Address in Virtual Memory */
-        KeLoaderModules[i].ModStart += KERNEL_BASE;
+        KeLoaderModules[i].ModStart += KSEG0_BASE;
 
         /* Substract the base Address in Physical Memory */
         KeLoaderModules[i].ModEnd -= 0x200000;
 
         /* Add the Kernel Base Address in Virtual Memory */
-        KeLoaderModules[i].ModEnd += KERNEL_BASE;
+        KeLoaderModules[i].ModEnd += KSEG0_BASE;
 
         /* Select the proper String */
         KeLoaderModules[i].String = (ULONG)KeLoaderModuleStrings[i];
     }
 
     /* Choose last module address as the final kernel address */
-    LastKernelAddress = PAGE_ROUND_UP(KeLoaderModules[KeRosLoaderBlock.
-                                                      ModsCount - 1].ModEnd);
+    MmFreeLdrLastKernelAddress =
+        PAGE_ROUND_UP(KeLoaderModules[KeRosLoaderBlock.ModsCount - 1].ModEnd);
 
     /* Select the HAL Base */
     HalBase = KeLoaderModules[1].ModStart;
 
     /* Choose Driver Base */
-    DriverBase = LastKernelAddress;
+    DriverBase = MmFreeLdrLastKernelAddress;
     LdrHalBase = (ULONG_PTR)DriverBase;
 
     /* Initialize Module Management */
-    LdrInitModuleManagement();
+    LdrInitModuleManagement((PVOID)KeLoaderModules[0].ModStart);
 
     /* Load HAL.DLL with the PE Loader */
     LdrSafePEProcessModule((PVOID)HalBase,
                             (PVOID)DriverBase,
-                            (PVOID)KERNEL_BASE,
+                            (PVOID)KeLoaderModules[0].ModStart,
                             &DriverSize);
 
     //
@@ -446,19 +428,21 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
                                                     OptionalHeader.SizeOfImage;
 
     /* Increase the last kernel address with the size of HAL */
-    LastKernelAddress += PAGE_ROUND_UP(DriverSize);
+    MmFreeLdrLastKernelAddress += PAGE_ROUND_UP(DriverSize);
 
     /* Now select the final beginning and ending Kernel Addresses */
-    FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - KERNEL_BASE + 0x200000;
-    LastKrnlPhysAddr = LastKernelAddress - KERNEL_BASE + 0x200000;
+    MmFreeLdrFirstKrnlPhysAddr = KeLoaderModules[0].ModStart -
+                                 KSEG0_BASE + 0x200000;
+    MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress -
+                                KSEG0_BASE + 0x200000;
 
     /* Setup the IDT */
     KeInitExceptions(); // ONCE HACK BELOW IS GONE, MOVE TO KISYSTEMSTARTUP!
     KeInitInterrupts(); // ROS HACK DEPRECATED SOON BY NEW HAL
 
     /* Load the Kernel with the PE Loader */
-    LdrSafePEProcessModule((PVOID)KERNEL_BASE,
-                           (PVOID)KERNEL_BASE,
+    LdrSafePEProcessModule((PVOID)KeLoaderModules[0].ModStart,
+                           (PVOID)KeLoaderModules[0].ModStart,
                            (PVOID)DriverBase,
                            &DriverSize);
 

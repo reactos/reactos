@@ -693,6 +693,13 @@ FrLdrMapKernel(FILE *KernelImage)
         RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDir->SizeOfBlock);
     }
 
+    /* Fill out Module Data Structure */
+    reactos_modules[0].ModStart = KernelBase;
+    reactos_modules[0].ModEnd = KernelBase + ImageSize;
+    strcpy(reactos_module_strings[0], "ntoskrnl.exe");
+    reactos_modules[0].String = (ULONG_PTR)reactos_module_strings[0];
+    LoaderBlock.ModsCount++;
+
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP(KERNEL_BASE_PHYS + ImageSize, PAGE_SIZE);
 

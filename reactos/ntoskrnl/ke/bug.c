@@ -126,6 +126,12 @@ KiInitializeBugCheck(VOID)
     LDR_RESOURCE_INFO ResourceInfo;
     PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
     NTSTATUS Status;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+
+    /* Get the kernel entry */
+    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink,
+                                 LDR_DATA_TABLE_ENTRY,
+                                 InLoadOrderLinks);
 
     /* Cache the Bugcheck Message Strings. Prepare the Lookup Data */
     ResourceInfo.Type = 11;
@@ -133,7 +139,7 @@ KiInitializeBugCheck(VOID)
     ResourceInfo.Language = 9;
 
     /* Do the lookup. */
-    Status = LdrFindResource_U((PVOID)KERNEL_BASE,
+    Status = LdrFindResource_U(LdrEntry->DllBase,
                                &ResourceInfo,
                                RESOURCE_DATA_LEVEL,
                                &ResourceDataEntry);
@@ -142,7 +148,7 @@ KiInitializeBugCheck(VOID)
     if (NT_SUCCESS(Status))
     {
         /* Now actually get a pointer to it */
-        Status = LdrAccessResource((PVOID)KERNEL_BASE,
+        Status = LdrAccessResource(LdrEntry->DllBase,
                                    ResourceDataEntry,
                                    (PVOID*)&BugCheckData,
                                    NULL);

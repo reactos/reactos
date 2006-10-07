@@ -392,10 +392,6 @@ PspInitPhase0(VOID)
                               (PVOID*)&PsInitialSystemProcess,
                               NULL);
 
-    /* The PD we gave it is invalid at this point, do what old ROS did */
-    PsInitialSystemProcess->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
-    PsIdleProcess->Pcb.DirectoryTableBase = PsInitialSystemProcess->Pcb.DirectoryTableBase;
-
     /* Copy the process names */
     strcpy(PsIdleProcess->ImageFileName, "Idle");
     strcpy(PsInitialSystemProcess->ImageFileName, "System");

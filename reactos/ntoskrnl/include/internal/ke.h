@@ -57,16 +57,16 @@ struct _KEXCEPTION_FRAME;
 
 extern ADDRESS_RANGE KeMemoryMap[64];
 extern ULONG KeMemoryMapRangeCount;
-extern ULONG_PTR FirstKrnlPhysAddr;
-extern ULONG_PTR LastKrnlPhysAddr;
-extern ULONG_PTR LastKernelAddress;
+
+extern ULONG_PTR MmFreeLdrFirstKrnlPhysAddr;
+extern ULONG_PTR MmFreeLdrLastKrnlPhysAddr;
+extern ULONG_PTR MmFreeLdrLastKernelAddress;
 
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
 extern LARGE_INTEGER SystemBootTime;
-extern ULONG_PTR KERNEL_BASE;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
 extern ULONG KeI386FxsrPresent;
