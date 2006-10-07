@@ -49,7 +49,7 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
                        ArgCount,
                        ServiceArgs))
     {
-		_tprintf(_T("[SC] StartService FAILED %lu:\n\n"), GetLastError());
+        _tprintf(_T("[SC] StartService FAILED %lu:\n\n"), GetLastError());
         goto fail;
     }
 
