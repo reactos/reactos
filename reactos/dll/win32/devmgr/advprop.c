@@ -1502,6 +1502,64 @@ Cleanup:
 }
 
 
+static BOOL
+GetDeviceAndComputerName(LPWSTR lpString,
+                         WCHAR szDeviceID[],
+                         WCHAR szMachineName[])
+{
+    BOOL ret = FALSE;
+
+    szDeviceID[0] = L'\0';
+    szMachineName[0] = L'\0';
+
+    while (*lpString != L'\0')
+    {
+        if (*lpString == L'/')
+        {
+            lpString++;
+            if(!wcsnicmp(lpString, L"DeviceID", 8))
+            {
+                lpString += 9;
+                if (*lpString != L'\0')
+                {
+                    int i = 0;
+                    while ((*lpString != L' ') &&
+                           (*lpString != L'\0') &&
+                           (i <= MAX_DEVICE_ID_LEN))
+                    {
+                        szDeviceID[i++] = *lpString++;
+                    }
+                    szDeviceID[i] = L'\0';
+                    ret = TRUE;
+                }
+            }
+            else if (!wcsnicmp(lpString, L"MachineName", 11))
+            {
+                lpString += 12;
+                if (*lpString != L'\0')
+                {
+                    int i = 0;
+                    while ((*lpString != L' ') &&
+                           (*lpString != L'\0') &&
+                           (i <= MAX_COMPUTERNAME_LENGTH))
+                    {
+                        szMachineName[i++] = *lpString++;
+                    }
+                    szMachineName[i] = L'\0';
+                }
+            }
+            /* knock the pointer back one and let the next
+             * pointer deal with incrementing, otherwise we
+             * go past the end of the string */
+             lpString--;
+        }
+        lpString++;
+    }
+
+    return ret;
+}
+
+
 /***************************************************************************
  * NAME                                                         EXPORTED
  *      DeviceAdvancedPropertiesW
@@ -1908,56 +1966,13 @@ DeviceProperties_RunDLLW(HWND hWndParent,
     WCHAR szMachineName[MAX_COMPUTERNAME_LENGTH+1];
     LPWSTR lpString = (LPWSTR)lpDeviceCmd;
 
-    szDeviceID[0] = L'\0';
-    szMachineName[0] = L'\0';
-
-    while (*lpString != L'\0')
+    if (!GetDeviceAndComputerName(lpString,
+                                  szDeviceID,
+                                  szMachineName))
     {
-        if (*lpString == L'/')
-        {
-            lpString++;
-            if(!wcsnicmp(lpString, L"DeviceID", 8))
-            {
-                lpString += 9;
-                if (*lpString != L'\0')
-                {
-                    int i = 0;
-                    while ((*lpString != L' ') &&
-                           (*lpString != L'\0') &&
-                           (i <= MAX_DEVICE_ID_LEN))
-                    {
-                        szDeviceID[i++] = *lpString++;
-                    }
-                    szDeviceID[i] = L'\0';
-                }
-            }
-            else if (!wcsnicmp(lpString, L"MachineName", 11))
-            {
-                lpString += 12;
-                if (*lpString != L'\0')
-                {
-                    int i = 0;
-                    while ((*lpString != L' ') &&
-                           (*lpString != L'\0') &&
-                           (i <= MAX_COMPUTERNAME_LENGTH))
-                    {
-                        szMachineName[i++] = *lpString++;
-                    }
-                    szMachineName[i] = L'\0';
-                }
-            }
-            /* knock the pointer back one and let the next
-             * pointer deal with incrementing, otherwise we
-             * go past the end of the string */
-             lpString--;
-        }
-        lpString++;
-    }
-
-    //DPRINT("DeviceID: %S, MachineName: %S\n", szDeviceID, szMachineName);
-
-    if (szDeviceID == L'\0')
+        DPRINT1("DeviceProperties_RunDLLW DeviceID: %S, MachineName: %S\n", szDeviceID, szMachineName);
         return;
+    }
 
     DevicePropertiesW(hWndParent,
                       hInst,
