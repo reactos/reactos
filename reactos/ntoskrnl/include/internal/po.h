@@ -38,8 +38,8 @@
 VOID
 NTAPI
 PoInit(
-    BOOLEAN HaveAcpiTable,
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+    IN ULONG BootPhase,
+    IN BOOLEAN HaveAcpiTable
 );
 
 VOID

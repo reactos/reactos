@@ -17,6 +17,7 @@
 #pragma alloc_text(INIT, PoInit)
 #endif
 
+extern ULONG ExpInitialiationPhase;
 
 typedef struct _REQUEST_POWER_ITEM
 {
@@ -306,41 +307,47 @@ PopSetSystemPowerState(
 VOID
 INIT_FUNCTION
 NTAPI
-PoInit(BOOLEAN HaveAcpiTable,
-       IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+PoInit(IN ULONG BootPhase,
+       IN BOOLEAN HaveAcpiTable)
 {
-  PVOID NotificationEntry;
-  PCHAR CommandLine;
-  BOOLEAN ForceAcpiDisable = FALSE;
+    PVOID NotificationEntry;
+    PCHAR CommandLine;
+    BOOLEAN ForceAcpiDisable = FALSE;
 
-  /* Get the Command Line */
-  CommandLine = KeLoaderBlock->LoadOptions;
-
-  /* Upcase it */
-  _strupr(CommandLine);
-
-  /* Check for ACPI disable */
-  if (strstr(CommandLine, "NOACPI")) ForceAcpiDisable = TRUE;
-
-  if (ForceAcpiDisable)
+    /* Check if this is phase 1 init */
+    if (BootPhase == 1)
     {
-      /* Set the ACPI State to False if it's been forced that way */
-      PopAcpiPresent = FALSE;
-    }
-  else
-    {
-      /* Otherwise check the LoaderBlock's Flag */
-      PopAcpiPresent = HaveAcpiTable;
+        /* Registry power button notification */
+        IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
+                                       0, /* The registry has not been initialized yet */
+                                       (PVOID)&GUID_DEVICE_SYS_BUTTON,
+                                       IopRootDeviceNode->
+                                       PhysicalDeviceObject->DriverObject,
+                                       PopAddRemoveSysCapsCallback,
+                                       NULL,
+                                       &NotificationEntry);
+        return;
     }
 
-  IoRegisterPlugPlayNotification(
-    EventCategoryDeviceInterfaceChange,
-    0, /* The registry has not been initialized yet */
-    (PVOID)&GUID_DEVICE_SYS_BUTTON,
-    IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
-    PopAddRemoveSysCapsCallback,
-    NULL,
-    &NotificationEntry);
+    /* Get the Command Line */
+    CommandLine = KeLoaderBlock->LoadOptions;
+
+    /* Upcase it */
+    _strupr(CommandLine);
+
+    /* Check for ACPI disable */
+    if (strstr(CommandLine, "NOACPI")) ForceAcpiDisable = TRUE;
+
+    if (ForceAcpiDisable)
+    {
+        /* Set the ACPI State to False if it's been forced that way */
+        PopAcpiPresent = FALSE;
+    }
+    else
+    {
+        /* Otherwise check the LoaderBlock's Flag */
+        PopAcpiPresent = HaveAcpiTable;
+    }
 }
 
 VOID

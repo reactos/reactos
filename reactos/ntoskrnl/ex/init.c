@@ -876,6 +876,14 @@ ExPhase2Init(PVOID Context)
     /* Check if GUI Boot is enabled */
     if (strstr(KeLoaderBlock->LoadOptions, "NOGUIBOOT")) NoGuiBoot = TRUE;
 
+    /* Clear the screen to blue and display the boot notice and debug status */
+    HalInitSystem(2, KeLoaderBlock);
+    if (NoGuiBoot) ExpDisplayNotice();
+    KdInitSystem(2, KeLoaderBlock);
+
+    /* Initialize Power Subsystem in Phase 0 */
+    PoInit(0, AcpiTableDetected);
+
     /* Query the clock */
     if (HalQueryRealTimeClock(&TimeFields))
     {
@@ -925,11 +933,10 @@ ExPhase2Init(PVOID Context)
         KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 3, 0, 0, 0);
     }
 
+    /* Create SystemRoot Link */
+
     /* Create NLS section */
     ExpInitNls(KeLoaderBlock);
-
-    /* Initialize I/O Objects, Filesystems, Error Logging and Shutdown */
-    IoInit();
 
     /* Initialize Cache Views */
     CcInitializeCacheManager();
@@ -940,39 +947,26 @@ ExPhase2Init(PVOID Context)
     /* Update timezone information */
     ExRefreshTimeZoneInformation(&SystemBootTime);
 
-    /* TBD */
-    PoInit(AcpiTableDetected, KeLoaderBlock);
-
-    /* Unmap Low memory, and initialize the MPW and Balancer Thread */
-    MmInit3();
-
     /* Initialize the File System Runtime Library */
     FsRtlInitSystem();
 
     /* Report all resources used by HAL */
     HalReportResourceUsage();
 
-    /* Clear the screen to blue */
-    HalInitSystem(2, KeLoaderBlock);
-
-    /* Display version number and copyright/warranty message */
-    if (NoGuiBoot) ExpDisplayNotice();
-
-    /* Call KD Providers at Phase 2 */
-    KdInitSystem(2, KeLoaderBlock);
-
     /* Initialize LPC */
     LpcpInitSystem();
+
+    /* Initialize I/O Objects, Filesystems, Error Logging and Shutdown */
+    IoInit();
+
+    /* Unmap Low memory, and initialize the MPW and Balancer Thread */
+    MmInit3();
 
     /* Import and Load Registry Hives */
     CmInitHives(ExpInTextModeSetup);
 
-    /* Initialize VDM support */
-    KeI386VdmInitialize();
-
     /* Enter the kernel debugger before starting up the boot drivers */
-    if (KdDebuggerEnabled && KdpEarlyBreak)
-        DbgBreakPoint();
+    if (KdDebuggerEnabled && KdpEarlyBreak) DbgBreakPoint();
 
     /* Setup Drivers and Root Device Node */
     IoInit2(FALSE);
@@ -988,6 +982,12 @@ ExPhase2Init(PVOID Context)
 
     /* Initialize shared user page. Set dos system path, dos device map, etc. */
     InitSystemSharedUserPage(KeLoaderBlock);
+
+    /* Initialize VDM support */
+    KeI386VdmInitialize();
+
+    /* Initialize Power Subsystem in Phase 1*/
+    PoInit(1, AcpiTableDetected);
 
     /* Initialize the Process Manager at Phase 1 */
     if (!PsInitSystem()) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
