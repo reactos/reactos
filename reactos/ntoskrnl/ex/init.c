@@ -15,6 +15,9 @@
 
 /* DATA **********************************************************************/
 
+/* HACK */
+extern BOOLEAN KiClockSetupComplete;
+
 #define BUILD_OSCSDVERSION(major, minor) (((major & 0xFF) << 8) | (minor & 0xFF))
 
 /* NT Version Info */
@@ -858,6 +861,8 @@ ExPhase2Init(PVOID Context)
     HANDLE ProcessHandle;
     HANDLE ThreadHandle;
     NTSTATUS Status;
+    TIME_FIELDS TimeFields;
+    LARGE_INTEGER SystemBootTime, UniversalBootTime;
 
     /* Set to phase 1 */
     ExpInitializationPhase = 1;
@@ -868,53 +873,87 @@ ExPhase2Init(PVOID Context)
     /* Do Phase 1 HAL Initialization */
     HalInitSystem(1, KeLoaderBlock);
 
-    /* Setup system time */
-    KiInitializeSystemClock();
+    /* Check if GUI Boot is enabled */
+    if (strstr(KeLoaderBlock->LoadOptions, "NOGUIBOOT")) NoGuiBoot = TRUE;
+
+    /* Query the clock */
+    if (HalQueryRealTimeClock(&TimeFields))
+    {
+        /* Convert to time fields */
+        RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
+        UniversalBootTime = SystemBootTime;
+
+#if 0 // FIXME: Won't work until we can read registry data here
+        /* FIXME: This assumes that the RTC is not already in GMT */
+        ExpTimeZoneBias.QuadPart = Int32x32To64(ExpLastTimeZoneBias * 60,
+                                                10000000);
+
+        /* Set the boot time-zone bias */
+        SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.HighPart;
+        SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.LowPart;
+        SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.HighPart;
+
+        /* Convert the boot time to local time, and set it */
+        UniversalBootTime.QuadPart = SystemBootTime.QuadPart +
+                                     ExpTimeZoneBias.QuadPart;
+#endif
+        KiSetSystemTime(&UniversalBootTime);
+
+        /* Remember this as the boot time */
+        KeBootTime = UniversalBootTime;
+    }
+
+    /* The clock is ready now (FIXME: HACK FOR OLD HAL) */
+    KiClockSetupComplete = TRUE;
 
     /* Initialize all processors */
     HalAllProcessorsStarted();
 
     /* Call OB initialization again */
-    if (!ObInit()) KEBUGCHECK(OBJECT1_INITIALIZATION_FAILED);
+    if (!ObInit()) KeBugCheck(OBJECT1_INITIALIZATION_FAILED);
 
     /* Initialize Basic System Objects and Worker Threads */
-    if (!ExInitSystem()) KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
+    if (!ExInitSystem()) KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 1, 0, 0, 0);
 
     /* Initialize the later stages of the kernel */
-    if (!KeInitSystem()) KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
+    if (!KeInitSystem()) KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 2, 0, 0, 0);
+
+    /* Call KD Providers at Phase 1 */
+    if (!KdInitSystem(ExpInitializationPhase, KeLoaderBlock))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 3, 0, 0, 0);
+    }
 
     /* Create NLS section */
     ExpInitNls(KeLoaderBlock);
 
-    /* Call KD Providers at Phase 1 */
-    KdInitSystem(1, KeLoaderBlock);
-
     /* Initialize I/O Objects, Filesystems, Error Logging and Shutdown */
     IoInit();
+
+    /* Initialize Cache Views */
+    CcInitializeCacheManager();
+
+    /* Initialize the Registry (Hives are NOT yet loaded!) */
+    CmInitSystem1();
+
+    /* Update timezone information */
+    ExRefreshTimeZoneInformation(&SystemBootTime);
 
     /* TBD */
     PoInit(AcpiTableDetected, KeLoaderBlock);
 
-    /* Initialize the Registry (Hives are NOT yet loaded!) */
-    CmInitializeRegistry();
-
     /* Unmap Low memory, and initialize the MPW and Balancer Thread */
     MmInit3();
 
-    /* Initialize Cache Views */
-    CcInit();
+    /* Initialize the File System Runtime Library */
+    FsRtlInitSystem();
 
-    /* Initialize File Locking */
-    FsRtlpInitFileLockingImplementation();
-
-    /* Report all resources used by hal */
+    /* Report all resources used by HAL */
     HalReportResourceUsage();
 
     /* Clear the screen to blue */
     HalInitSystem(2, KeLoaderBlock);
-
-    /* Check if GUI Boot is enabled */
-    if (strstr(KeLoaderBlock->LoadOptions, "NOGUIBOOT")) NoGuiBoot = TRUE;
 
     /* Display version number and copyright/warranty message */
     if (NoGuiBoot) ExpDisplayNotice();
@@ -930,9 +969,6 @@ ExPhase2Init(PVOID Context)
 
     /* Initialize VDM support */
     KeI386VdmInitialize();
-
-    /* Initialize the time zone information from the registry */
-    ExpInitTimeZoneInfo();
 
     /* Enter the kernel debugger before starting up the boot drivers */
     if (KdDebuggerEnabled && KdpEarlyBreak)
@@ -953,7 +989,7 @@ ExPhase2Init(PVOID Context)
     /* Initialize shared user page. Set dos system path, dos device map, etc. */
     InitSystemSharedUserPage(KeLoaderBlock);
 
-    /* Initailize the Process Manager at Phase 1 */
+    /* Initialize the Process Manager at Phase 1 */
     if (!PsInitSystem()) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
 
     /* Launch initial process */

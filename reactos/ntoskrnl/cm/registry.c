@@ -188,7 +188,8 @@ CmInitHives(BOOLEAN SetupBoot)
 
 VOID 
 INIT_FUNCTION
-CmInitializeRegistry(VOID)
+NTAPI
+CmInitSystem1(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;

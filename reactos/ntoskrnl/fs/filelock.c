@@ -77,7 +77,7 @@ IsSurroundingLock(
  */
 VOID
 STDCALL INIT_FUNCTION
-FsRtlpInitFileLockingImplementation(VOID)
+FsRtlInitSystem(VOID)
 {
    ExInitializeNPagedLookasideList( &LockTocLookaside,
                                     NULL,

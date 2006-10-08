@@ -7,6 +7,7 @@ extern TIME_ZONE_INFORMATION ExpTimeZoneInfo;
 extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
 extern ULONG ExpTickCountMultiplier;
+extern ULONG ExpLastTimeZoneBias;
 extern POBJECT_TYPE ExEventPairObjectType;
 extern ULONG NtBuildNumber;
 extern ULONG NtMajorVersion;
@@ -66,9 +67,11 @@ VOID
 NTAPI
 ExpInitializePushLocks(VOID);
 
-VOID
+BOOLEAN
 NTAPI
-ExpInitTimeZoneInfo(VOID);
+ExRefreshTimeZoneInformation(
+    IN PLARGE_INTEGER SystemBootTime
+);
 
 VOID
 NTAPI

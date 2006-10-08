@@ -22,7 +22,7 @@ FsRtlpInitNotifyImplementation(VOID);
 
 VOID 
 NTAPI
-FsRtlpInitFileLockingImplementation(VOID);
+FsRtlInitSystem(VOID);
 
 VOID
 NTAPI

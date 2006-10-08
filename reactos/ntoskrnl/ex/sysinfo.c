@@ -548,7 +548,7 @@ QSI_DEF(SystemTimeOfDayInformation)
 
   KeQuerySystemTime(&CurrentTime);
 
-  Sti->BootTime= SystemBootTime;
+  Sti->BootTime= KeBootTime;
   Sti->CurrentTime = CurrentTime;
   Sti->TimeZoneBias.QuadPart = ExpTimeZoneBias.QuadPart;
   Sti->TimeZoneId = ExpTimeZoneId;

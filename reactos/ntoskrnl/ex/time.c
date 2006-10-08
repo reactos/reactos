@@ -23,21 +23,21 @@
 
 /* Note: Bias[minutes] = UTC - local time */
 TIME_ZONE_INFORMATION ExpTimeZoneInfo;
+ULONG ExpLastTimeZoneBias = -1;
 LARGE_INTEGER ExpTimeZoneBias;
 ULONG ExpTimeZoneId;
 ULONG ExpTickCountMultiplier;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
-INIT_FUNCTION
+BOOLEAN
 NTAPI
-ExpInitTimeZoneInfo(VOID)
+ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
 {
     LARGE_INTEGER CurrentTime;
     NTSTATUS Status;
 
-     /* Read time zone information from the registry */
+    /* Read time zone information from the registry */
     Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
     if (!NT_SUCCESS(Status))
     {
@@ -52,8 +52,8 @@ ExpInitTimeZoneInfo(VOID)
 
         /* Set bias and ID */
         ExpTimeZoneBias.QuadPart = ((LONGLONG)(ExpTimeZoneInfo.Bias +
-                                               ExpTimeZoneInfo.StandardBias)) *
-                                               TICKSPERMINUTE;
+            ExpTimeZoneInfo.StandardBias)) *
+            TICKSPERMINUTE;
         ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
     }
 
@@ -64,7 +64,7 @@ ExpInitTimeZoneInfo(VOID)
     SharedUserData->TimeZoneId = ExpTimeZoneId;
 
     /* Convert boot time from local time to UTC */
-    SystemBootTime.QuadPart += ExpTimeZoneBias.QuadPart;
+    KeBootTime.QuadPart += ExpTimeZoneBias.QuadPart;
 
     /* Convert system time from local time to UTC */
     do
@@ -78,6 +78,9 @@ ExpInitTimeZoneInfo(VOID)
     SharedUserData->SystemTime.LowPart = CurrentTime.u.LowPart;
     SharedUserData->SystemTime.High1Time = CurrentTime.u.HighPart;
     SharedUserData->SystemTime.High2Time = CurrentTime.u.HighPart;
+
+    /* Return success */
+    return TRUE;
 }
 
 NTSTATUS

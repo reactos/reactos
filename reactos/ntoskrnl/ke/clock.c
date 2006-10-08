@@ -26,15 +26,7 @@
 
 /* GLOBALS ****************************************************************/
 
-/*
- * Current time
- */
-#if defined(__GNUC__)
-LARGE_INTEGER SystemBootTime = (LARGE_INTEGER)0LL;
-#else
-LARGE_INTEGER SystemBootTime = { 0 };
-#endif
-
+LARGE_INTEGER KeBootTime, KeBootTimeBias;
 KDPC KiExpireTimerDpc;
 BOOLEAN KiClockSetupComplete = FALSE;
 ULONG KiTimeLimitIsrMicroseconds;
@@ -66,28 +58,6 @@ ULONG KeTimeAdjustment   = 100000;
 
 /* FUNCTIONS **************************************************************/
 
-/*
- * FUNCTION: Initializes timer irq handling
- * NOTE: This is only called once from main()
- */
-VOID
-INIT_FUNCTION
-NTAPI
-KiInitializeSystemClock(VOID)
-{
-    TIME_FIELDS TimeFields;
-
-    /* Calculate the starting time for the system clock */
-    HalQueryRealTimeClock(&TimeFields);
-    RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
-
-    /* Set up the Used Shared Data */
-    SharedUserData->SystemTime.High2Time = SystemBootTime.u.HighPart;
-    SharedUserData->SystemTime.LowPart = SystemBootTime.u.LowPart;
-    SharedUserData->SystemTime.High1Time = SystemBootTime.u.HighPart;
-    KiClockSetupComplete = TRUE;
-}
-
 VOID
 NTAPI
 KiSetSystemTime(PLARGE_INTEGER NewSystemTime)
@@ -116,7 +86,7 @@ KiSetSystemTime(PLARGE_INTEGER NewSystemTime)
   DeltaTime.QuadPart = NewSystemTime->QuadPart - OldSystemTime.QuadPart;
 
   /* Update system boot time */
-  SystemBootTime.QuadPart += DeltaTime.QuadPart;
+  KeBootTime.QuadPart += DeltaTime.QuadPart;
 
   /* Update absolute timers */
   DPRINT1("FIXME: TIMER UPDATE NOT DONE!!!\n");

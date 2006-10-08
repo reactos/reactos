@@ -159,8 +159,9 @@ KdpCallInitRoutine(ULONG BootPhase)
         WrapperTable.KdpInitRoutine(&WrapperTable, BootPhase);
 }
 
-VOID
+BOOLEAN
 INIT_FUNCTION
+NTAPI
 KdInitSystem(ULONG BootPhase,
              PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -253,11 +254,14 @@ KdInitSystem(ULONG BootPhase,
 
         /* Call Wrapper at Phase 0 */
         if (WrapperInitRoutine) WrapperInitRoutine(&WrapperTable, 0);
-        return;
+        return TRUE;
     }
 
     /* Call the Initialization Routines of the Registered Providers */
     KdpCallInitRoutine(BootPhase);
+
+    /* Return success */
+    return TRUE;
 }
 
  /* EOF */

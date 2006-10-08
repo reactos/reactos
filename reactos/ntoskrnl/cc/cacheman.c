@@ -18,7 +18,7 @@
 
 VOID
 NTAPI
-CcInit(VOID)
+CcInitializeCacheManager(VOID)
 {
   CcInitView();
 }
