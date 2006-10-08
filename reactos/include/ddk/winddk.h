@@ -31,6 +31,8 @@
 extern "C" {
 #endif
 
+#include "intrin.h"
+
 /*
 ** Definitions specific to this Device Driver Kit
 */
@@ -40,11 +42,15 @@ extern "C" {
 #define DDKCDECLAPI __cdecl
 
 /* FIXME: REMOVE THIS UNCOMPATIBLE CRUFT!!! */
-#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined (_NTIFS_) || defined(_NTHAL_)
-#define NTKERNELAPI DECLSPEC_IMPORT
+//#define NTKERNELAPI
+
+#ifdef _NTOSKRNL_
+#define NTKERNELAPI 
 #else
-#define NTKERNELAPI
+#define NTKERNELAPI DECLSPEC_IMPORT
 #endif
+
+
 #ifndef NTOSAPI
 #define NTOSAPI NTKERNELAPI
 #endif
@@ -393,7 +399,6 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 extern POBJECT_TYPE NTSYSAPI IoFileObjectType;
 extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI LpcPortObjectType;
-extern POBJECT_TYPE NTSYSAPI MmSectionObjectType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
@@ -453,6 +458,9 @@ typedef struct _KUSER_SHARED_DATA
     LARGE_INTEGER SystemExpirationDate;
     ULONG SuiteMask;
     BOOLEAN KdDebuggerEnabled;
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+    UCHAR NXSupportPolicy;
+#endif
     volatile ULONG ActiveConsoleId;
     volatile ULONG DismountCount;
     ULONG ComPlusPackage;
@@ -470,9 +478,29 @@ typedef struct _KUSER_SHARED_DATA
         volatile ULONG64 TickCountQuad;
     };
     ULONG Cookie;
+#if (NTDDI_VERSION >= NTDDI_WS03)
     LONGLONG ConsoleSessionForegroundProcessId;
     ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
-    ULONG UserModeGlobalLogging;
+#endif
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    USHORT UserModeGlobalLogger[8];
+    ULONG HeapTracingPid[2];
+    ULONG CritSecTracingPid[2];
+    union
+    {
+        ULONG SharedDataFlags;
+        struct
+        {
+            ULONG DbgErrorPortPresent:1;
+            ULONG DbgElevationEnabled:1;
+            ULONG DbgVirtEnabled:1;
+            ULONG DbgInstallerDetectEnabled:1;
+            ULONG SpareBits:28;
+        };
+    };
+    ULONG ImageFileExecutionOptions;
+    KAFFINITY ActiveProcessorAffinity;
+#endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 /*
@@ -1082,10 +1110,16 @@ typedef struct _KLOCK_QUEUE_HANDLE {
 #define DPC_NORMAL 0
 #define DPC_THREADED 1
 
-#define ASSERT_DPC(Object)                                                   \
-    ASSERT(((Object)->Type == 0) ||                                          \
-           ((Object)->Type == DpcObject) ||                                  \
+#define ASSERT_APC(Object) \
+    ASSERT((Object)->Type == ApcObject)
+
+#define ASSERT_DPC(Object) \
+    ASSERT(((Object)->Type == 0) || \
+           ((Object)->Type == DpcObject) || \
            ((Object)->Type == ThreadedDpcObject))
+
+#define ASSERT_DEVICE_QUEUE(Object) \
+    ASSERT((Object)->Type == DeviceQueueObject)
 
 typedef struct _KDPC
 {
@@ -1222,6 +1256,16 @@ typedef struct _KTIMER {
 #define ASSERT_TIMER(E) \
     ASSERT(((E)->Header.Type == TimerNotificationObject) || \
            ((E)->Header.Type == TimerSynchronizationObject))
+
+#define ASSERT_MUTANT(E) \
+    ASSERT((E)->Header.Type == MutantObject)
+
+#define ASSERT_SEMAPHORE(E) \
+    ASSERT((E)->Header.Type == SemaphoreObject)
+
+#define ASSERT_EVENT(E) \
+    ASSERT(((E)->Header.Type == NotificationEvent) || \
+           ((E)->Header.Type == SynchronizationEvent))
 
 typedef struct _KMUTANT {
   DISPATCHER_HEADER  Header;
@@ -4095,6 +4139,11 @@ typedef enum _POOL_TYPE {
 	NonPagedPoolCacheAlignedMustSSession
 } POOL_TYPE;
 
+#define POOL_COLD_ALLOCATION                256
+#define POOL_QUOTA_FAIL_INSTEAD_OF_RAISE    8
+#define POOL_RAISE_IF_ALLOCATION_FAILURE    16
+
+
 typedef enum _EX_POOL_PRIORITY {
   LowPoolPriority,
   LowPoolPrioritySpecialPoolOverrun = 8,
@@ -4623,7 +4672,7 @@ typedef enum _MM_SYSTEM_SIZE {
   MmSmallSystem,
   MmMediumSystem,
   MmLargeSystem
-} MM_SYSTEM_SIZE;
+} MM_SYSTEMSIZE;
 
 typedef struct _OBJECT_HANDLE_INFORMATION {
   ULONG HandleAttributes;
@@ -4873,10 +4922,11 @@ typedef enum _REG_NOTIFY_CLASS
 } REG_NOTIFY_CLASS, *PREG_NOTIFY_CLASS;
 
 typedef NTSTATUS
-(DDKAPI *PEX_CALLBACK_FUNCTION)(
-  IN PVOID  CallbackContext,
-  IN REG_NOTIFY_CLASS  Argument1,
-  IN PVOID  Argument2);
+(NTAPI *PEX_CALLBACK_FUNCTION)(
+    IN PVOID CallbackContext,
+    IN PVOID Argument1,
+    IN PVOID Argument2
+);
 
 typedef struct _REG_DELETE_KEY_INFORMATION
 {
@@ -4985,6 +5035,11 @@ typedef struct _REG_POST_OPERATION_INFORMATION
     PVOID Object;
     NTSTATUS Status;
 } REG_POST_OPERATION_INFORMATION,*PREG_POST_OPERATION_INFORMATION;
+
+typedef struct _REG_KEY_HANDLE_CLOSE_INFORMATION
+{
+    PVOID Object;
+} REG_KEY_HANDLE_CLOSE_INFORMATION, *PREG_KEY_HANDLE_CLOSE_INFORMATION;
 
 /*
 ** Storage structures
@@ -5110,7 +5165,6 @@ typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 #define CLOCK1_LEVEL                      28
 #define CLOCK2_LEVEL                      28
 #define IPI_LEVEL                         29
-#define SYNCH_LEVEL			 (IPI_LEVEL-1)
 #define POWER_LEVEL                       30
 #define HIGH_LEVEL                        31
 
@@ -9183,6 +9237,20 @@ KeWaitForSingleObject(
   IN BOOLEAN  Alertable,
   IN PLARGE_INTEGER  Timeout  OPTIONAL);
 
+typedef
+ULONG_PTR
+(NTAPI *PKIPI_BROADCAST_WORKER)(
+    IN ULONG_PTR Argument
+);
+
+NTKERNELAPI
+ULONG_PTR
+NTAPI
+KeIpiGenericCall(
+    IN PKIPI_BROADCAST_WORKER BroadcastFunction,
+    IN ULONG_PTR Context
+);
+
 #if defined(_X86_)
 
 NTHALAPI
@@ -9607,7 +9675,7 @@ MmMapLockedPages(
   IN KPROCESSOR_MODE  AccessMode);
 
 NTOSAPI
-VOID
+PVOID
 DDKAPI
 MmPageEntireDriver(
   IN PVOID  AddressWithinSection);
@@ -9677,7 +9745,7 @@ MmProbeAndLockPages(
   IN LOCK_OPERATION  Operation);
 
 NTOSAPI
-MM_SYSTEM_SIZE
+MM_SYSTEMSIZE
 DDKAPI
 MmQuerySystemSize(
   VOID);
@@ -9765,7 +9833,7 @@ ObDereferenceSecurityDescriptor(
   ULONG  Count);
 
 NTOSAPI
-VOID
+LONG_PTR
 DDKFASTAPI
 ObfDereferenceObject(
   IN PVOID  Object);
@@ -9797,7 +9865,7 @@ ObInsertObject(
   OUT PHANDLE  Handle);
 
 NTOSAPI
-VOID
+LONG_PTR
 DDKFASTAPI
 ObfReferenceObject(
   IN PVOID  Object);
@@ -10457,7 +10525,6 @@ ZwSetValueKey(
 
 /* [Nt|Zw]MapViewOfSection.InheritDisposition constants */
 #define AT_EXTENDABLE_FILE                0x00002000
-#define SEC_NO_CHANGE                     0x00400000
 #define AT_RESERVED                       0x20000000
 #define AT_ROUND_TO_PAGE                  0x40000000
 
@@ -10665,13 +10732,13 @@ WmiTraceMessageVa(
 /** Kernel debugger routines **/
 
 NTOSAPI
-VOID
+NTSTATUS
 DDKAPI
 KdDisableDebugger(
   VOID);
 
 NTOSAPI
-VOID
+NTSTATUS
 DDKAPI
 KdEnableDebugger(
   VOID);
@@ -10778,6 +10845,8 @@ static __inline ULONG64 __readcr4(void)
     return (ULONG64)Ret;
 }
 #elif defined(_PPC_)
+#ifndef _ENABLE_DISABLE_DEFINED
+#define _ENABLE_DISABLE_DEFINED
 static __inline void _disable(void) {
 	/* Turn off EE bit */
 	__asm__ __volatile__
@@ -10796,6 +10865,7 @@ static __inline void _enable(void)  {
 		 "mtmsr 0\n\t"
 		 );
 }
+#endif
 #endif /*_X86_*/
 #endif
 

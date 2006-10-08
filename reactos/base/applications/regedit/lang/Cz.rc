@@ -1,0 +1,373 @@
+/*
+ * Regedit resources
+ *
+ * Copyright 2002 Robert Dickenson
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+{
+    VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
+    "^F", ID_EDIT_FIND
+    VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+}
+
+/*
+ * Menu
+ */
+
+IDC_REGEDIT MENU DISCARDABLE
+BEGIN
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "U&konËit",                       ID_REGISTRY_EXIT
+    END
+    POPUP "&N·povÏda"
+    BEGIN
+        MENUITEM "&O editoru registru ...",                  ID_HELP_ABOUT
+    END
+END
+
+IDR_REGEDIT_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "&Registry"
+    BEGIN
+        MENUITEM "&Importovat soubor registru...",    ID_REGISTRY_IMPORTREGISTRYFILE
+
+        MENUITEM "&Exportovat do souboru registru...",    ID_REGISTRY_EXPORTREGISTRYFILE
+
+        MENUITEM SEPARATOR
+        MENUITEM "&P¯ipojit sÌùov˝ registr...",
+                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
+
+        MENUITEM "&Odpojit sÌùov˝ registr...",
+                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Tisk\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "U&konËit",                       ID_REGISTRY_EXIT
+    END
+    POPUP "&⁄pravy"
+    BEGIN
+        MENUITEM "&ZmÏnit hodnotu",                     ID_EDIT_MODIFY
+        MENUITEM SEPARATOR
+        POPUP "&Nov˝"
+        BEGIN
+            MENUITEM "&KlÌË",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&ÿetÏzec",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Bin·rnÌ hodnota",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Hodnota DWORD",                ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Opr·vnÏnÌ...",		ID_EDIT_PERMISSIONS
+        MENUITEM SEPARATOR
+        MENUITEM "&Odstranit\tDel",                ID_EDIT_DELETE
+        MENUITEM "&P¯ejmenovat",                     ID_EDIT_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "Z&kopÌrovat n·zev klÌËe",              ID_EDIT_COPYKEYNAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Hledat\tCtrl+F",               ID_EDIT_FIND, GRAYED
+        MENUITEM "Hledat &dalöÌ\tF3",              ID_EDIT_FINDNEXT, GRAYED
+    END
+    POPUP "&Zobrazit"
+    BEGIN
+        MENUITEM "&Stavov˝ ¯·dek",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&RozdÏlit",                      ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Aktualizovat\tF5",                ID_VIEW_REFRESH
+    END
+    POPUP "&OblÌbenÈ"
+    BEGIN
+        MENUITEM "&P¯idat k oblÌben˝m",          ID_FAVOURITES_ADDTOFAVOURITES
+        , GRAYED
+        MENUITEM "&Odebrat z oblÌben˝ch",           ID_FAVOURITES_REMOVEFAVOURITE
+        , GRAYED
+    END
+    POPUP "&N·povÏda"
+    BEGIN
+        MENUITEM "&TÈmata n·povÏdy\tF1",            ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&O editoru registru",      ID_HELP_ABOUT
+    END
+END
+
+IDR_POPUP_MENUS MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "&Upravit",                     ID_EDIT_MODIFY
+	MENUITEM "Upravit &bin·rnÌ data",          ID_EDIT_MODIFY_BIN
+	MENUITEM SEPARATOR
+	MENUITEM "&Odstranit\tDel",                ID_EDIT_DELETE
+	MENUITEM "&P¯ejmenovat",                     ID_EDIT_RENAME
+  END
+  POPUP ""
+  BEGIN
+        POPUP "&Nov˝"
+        BEGIN
+            MENUITEM "&KlÌË",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&ÿetÏzec",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Bin·rnÌ hodnota",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Hodnota DWORD",                ID_EDIT_NEW_DWORDVALUE
+        END
+  END
+END
+
+
+/*
+ * Dialog
+ */
+
+IDD_EDIT_STRING DIALOG  32, 24, 252, 84
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "⁄prava ¯etÏzce"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&N·zev:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
+    PUSHBUTTON      "Storno",IDCANCEL,196,64,50,14
+END
+
+IDD_EDIT_MULTI_STRING DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "⁄prava vÌce-¯etÏzce"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&N·zev:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "Storno",IDCANCEL,196,154,50,14
+END
+
+IDD_EDIT_BIN_DATA DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "⁄prava bin·rnÌ hodnoty"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&N·zev:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
+    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "Storno",IDCANCEL,196,154,50,14
+END
+
+
+IDD_EDIT_DWORD DIALOG  32, 24, 252, 104
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "⁄prava DWORD"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&N·zev:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
+    GROUPBOX        "Soustava",IDC_STATIC,130,35,116,39
+    AUTORADIOBUTTON "&äestn·ctkov·",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
+    AUTORADIOBUTTON "&DesÌtkov·",IDC_FORMAT_DEC,141,59,60,10
+    DEFPUSHBUTTON   "OK",IDOK,142,82,50,14
+    PUSHBUTTON      "Storno",IDCANCEL,196,82,50,14
+END
+
+/*
+ * String Table
+ */
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LIST_COLUMN_NAME    "N·zev"
+    IDS_LIST_COLUMN_TYPE    "Typ"
+    IDS_LIST_COLUMN_DATA    "Data"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_TITLE           "Editor registru"
+    IDC_REGEDIT             "REGEDIT"
+    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_MENU        "Obsahuje p¯Ìkazy pro pr·ci s cel˝m registrem"
+    ID_EDIT_MENU            "Obsahuje p¯Ìkazy pro ˙pravu hodnot a klÌË˘"
+    ID_VIEW_MENU            "Obsahuje p¯Ìkazy pro p¯izp˘sobenÌ okna registru"
+    ID_FAVOURITES_MENU      "Obsahuje p¯Ìkazy pro p¯Ìstup k Ëasto pouûÌvan˝m klÌË˘m"
+    ID_HELP_MENU            "Obsahuje p¯Ìkazy pro zobrazenÌ n·povÏdy a informacÌ o editoru registru"
+    ID_EDIT_NEW_MENU        "Obsahuje p¯Ìkazy pro vytv·¯enÌ nov˝ch klÌË˘ a hodnot"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_EDIT_MODIFY          "Upravuje data poloûky"
+    ID_EDIT_NEW_KEY         "P¯id· nov˝ klÌË"
+    ID_EDIT_NEW_STRINGVALUE "P¯id· novou poloûku ve formÏ ¯etÏzce"
+    ID_EDIT_NEW_BINARYVALUE "P¯id· novou poloûku s bin·rnÌ hodnotou"
+    ID_EDIT_NEW_DWORDVALUE  "P¯id· novou DWORD poloûku"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Importuje textov˝ soubor do registru"
+    ID_REGISTRY_EXPORTREGISTRYFILE
+                            "Exportuje vöechny Ë·sti registru do textovÈho souboru"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY
+                            "P¯ipojÌ se ke vzd·lenÈmu registru jinÈho poËÌtaËe"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+                            "OdpojÌ se od vzd·lenÈmu registru jinÈho poËÌtaËe"
+    ID_REGISTRY_PRINT       "Vytiskne vöechny Ë·sti registru"
+/*    ID_HELP_HELPTOPICS      "Otev¯e tÈmata n·povÏdy pro editor registru" */
+    ID_HELP_ABOUT           "ZobrazÌ informace o aplikaci, verzi a copyright"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_EXIT        "UkonËÌ editor registru"
+    ID_FAVOURITES_ADDTOFAVOURITES "P¯id· klÌË do seznamu oblÌben˝ch"
+    ID_FAVOURITES_REMOVEFAVOURITE "Odebere klÌË ze seznamu oblÌben˝ch"
+    ID_VIEW_STATUSBAR       "ZobrazÌ nebo skryje stavov˝ ¯·dek"
+    ID_VIEW_SPLIT           "Upravuje polohu rozdÏlovaËe obou panel˘"
+    ID_VIEW_REFRESH         "ObnovÌ okno"
+    ID_EDIT_DELETE          "Smaûe v˝bÏr"
+    ID_EDIT_RENAME          "P¯ejmenuje v˝bÏr"
+    ID_EDIT_COPYKEYNAME     "ZkopÌruje n·zev klÌËe do schr·nky"
+    ID_EDIT_FIND            "Hled· textov˝ ¯etÏzec v klÌËi, poloûk·ch, nebo datech"
+    ID_EDIT_FINDNEXT        "Hled· dalöÌ v˝skyt textu zadanÈho v p¯edchozÌm hled·nÌ"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR		    "Chyba"
+    IDS_WARNING		    "UpozornÏnÌ"
+    IDS_BAD_VALUE           "Nelze se dot·zat poloûky '%s'"
+    IDS_UNSUPPORTED_TYPE    "Nelze upravovat klÌËe tohoto typu (%ld)"
+    IDS_TOO_BIG_VALUE       "Poloûka je p¯Ìliö velk· (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "Poloûky typu REG_MULTI_SZ nemohou obsahovat pr·zdnÈ ¯etezce.\nPr·zdnÈ ¯etÏzce byly odebr·ny ze seznamu."
+    IDS_QUERY_DELETE_ONE    "Opravdu chcete odstranit tuto poloûku?"
+    IDS_QUERY_DELETE_MORE   "Opravdu chcete odstranit tyto poloûky?"
+    IDS_QUERY_DELETE_CONFIRM "PotvrzenÌ odstranÏnÌ poloûky"
+    IDS_ERR_DELVAL_CAPTION  "Chyba p¯i odstraÚov·nÌ poloûek"
+    IDS_ERR_DELETEVALUE     "Nelze odstranit vöechny vybranÈ poloûky!"
+    IDS_ERR_RENVAL_CAPTION  "Chyba p¯i p¯ejmenov·nÌ poloûky"
+    IDS_ERR_RENVAL_TOEMPTY  "Nelze p¯ejmenovat %s. Vybran· poloûka je pr·zdn·. Vyzkouöejte jin˝ n·zev."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BINARY_EMPTY	    "(bin·rnÌ poloûka nulovÈ hodnoty)"
+    IDS_DEFAULT_VALUE_NAME  "(V˝chozÌ)"
+    IDS_VALUE_NOT_SET       "(Hodnota nezad·na)"
+    IDS_UNKNOWN_TYPE        "Nezn·m˝ typ: (0x%lx)"
+    IDS_MY_COMPUTER         "Tento poËÌtaË"
+    IDS_IMPORT_REG_FILE     "Importovat soubor registru"
+    IDS_EXPORT_REG_FILE     "Exportovat do souboru registru"
+    IDS_INVALID_DWORD       "(Neplatn· hodnota DWORD)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FLT_REGFILES        "Soubory registru"
+    IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_REGEDIT4        "Soubory registru Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_REGEDIT4_FLT    "*.reg"
+    IDS_FLT_ALLFILES        "Vöechny soubory (*.*)"
+    IDS_FLT_ALLFILES_FLT    "*.*"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_ACCESS_FULLCONTROL        "⁄plnÈ opr·vnÏnÌ"
+  IDS_ACCESS_READ               "»tenÌ"
+  IDS_ACCESS_QUERYVALUE         "Dotaz na hodnotu"
+  IDS_ACCESS_SETVALUE           "NastavenÌ hodnoty"
+  IDS_ACCESS_CREATESUBKEY       "Vytvo¯it podklÌË"
+  IDS_ACCESS_ENUMERATESUBKEYS   "Zjistit poËet podklÌË˘"
+  IDS_ACCESS_NOTIFY             "Upozornit"
+  IDS_ACCESS_CREATELINK         "Vytvo¯it odkaz"
+  IDS_ACCESS_DELETE             "Odstranit"
+  IDS_ACCESS_WRITEDAC           "Zapsat DAC"
+  IDS_ACCESS_WRITEOWNER         "Zapsat vlastnÌka"
+  IDS_ACCESS_READCONTROL        "Opr·vnÏnÌ ke ËtenÌ"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_INHERIT_THISKEYONLY        "Pouze tento klÌË"
+  IDS_INHERIT_THISKEYANDSUBKEYS  "Tento klÌË a jeho podklÌËe"
+  IDS_INHERIT_SUBKEYSONLY        "Pouze podklÌËe"
+END
+
+/*****************************************************************/
+
+
+/*
+ * Dialog
+ */
+
+IDD_DIALOG1 DIALOG DISCARDABLE  50, 50, 268, 98
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
+    WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 187, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14
+    PUSHBUTTON      "Storno",IDCANCEL,130,24,50,14
+END
+
+
+/*
+ * TEXTINCLUDE
+ */
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+
+
+/*
+ * String Table
+ */
+
+/*
+ *STRINGTABLE DISCARDABLE
+ *BEGIN
+ *    ID_HELP_HELPTOPICS      "Otev¯e n·povÏdu pro editor registru."
+ *    ID_HELP_ABOUT           "ZobrazÌ informace o aplikaci, verzi a copyright."
+ *END
+ */
+
+/*****************************************************************/

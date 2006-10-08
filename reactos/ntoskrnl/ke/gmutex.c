@@ -131,6 +131,9 @@ KiReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+/*
+ * @implemented
+ */
 VOID
 FASTCALL
 KeInitializeGuardedMutex(OUT PKGUARDED_MUTEX GuardedMutex)
@@ -144,6 +147,9 @@ KeInitializeGuardedMutex(OUT PKGUARDED_MUTEX GuardedMutex)
     KeInitializeGate(&GuardedMutex->Gate);
 }
 
+/*
+ * @implemented
+ */
 VOID
 FASTCALL
 KeAcquireGuardedMutexUnsafe(IN OUT PKGUARDED_MUTEX GuardedMutex)
@@ -164,6 +170,9 @@ KeAcquireGuardedMutexUnsafe(IN OUT PKGUARDED_MUTEX GuardedMutex)
     GuardedMutex->Owner = Thread;
 }
 
+/*
+ * @implemented
+ */
 VOID
 FASTCALL
 KeReleaseGuardedMutexUnsafe(IN OUT PKGUARDED_MUTEX GuardedMutex)
@@ -179,6 +188,9 @@ KeReleaseGuardedMutexUnsafe(IN OUT PKGUARDED_MUTEX GuardedMutex)
     KiReleaseGuardedMutex(GuardedMutex);
 }
 
+/*
+ * @implemented
+ */
 VOID
 FASTCALL
 KeAcquireGuardedMutex(IN PKGUARDED_MUTEX GuardedMutex)
@@ -200,6 +212,9 @@ KeAcquireGuardedMutex(IN PKGUARDED_MUTEX GuardedMutex)
     GuardedMutex->SpecialApcDisable = Thread->SpecialApcDisable;
 }
 
+/*
+ * @implemented
+ */
 VOID
 FASTCALL
 KeReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
@@ -217,6 +232,9 @@ KeReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
     KeLeaveGuardedRegion();
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 FASTCALL
 KeTryToAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
@@ -251,21 +269,12 @@ KeTryToAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
  * Enters a guarded region. This causes all (incl. special kernel) APCs
  * to be disabled.
  */
-#undef KeEnterGuardedRegion
 VOID
 NTAPI
-KeEnterGuardedRegion(VOID)
+_KeEnterGuardedRegion(VOID)
 {
-    PKTHREAD Thread = KeGetCurrentThread();
-
-    /* Sanity checks */
-    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
-    ASSERT(Thread == KeGetCurrentThread());
-    ASSERT((Thread->SpecialApcDisable <= 0) &&
-           (Thread->SpecialApcDisable != -32768));
-
-    /* Disable Special APCs */
-    Thread->SpecialApcDisable--;
+    /* Use the inlined version */
+    KeEnterGuardedRegion();
 }
 
 /**
@@ -273,28 +282,12 @@ KeEnterGuardedRegion(VOID)
  *
  * Leaves a guarded region and delivers pending APCs if possible.
  */
-#undef KeLeaveGuardedRegion
 VOID
 NTAPI
-KeLeaveGuardedRegion(VOID)
+_KeLeaveGuardedRegion(VOID)
 {
-    PKTHREAD Thread = KeGetCurrentThread();
-
-    /* Sanity checks */
-    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
-    ASSERT(Thread == KeGetCurrentThread());
-    ASSERT(Thread->SpecialApcDisable < 0);
-
-    /* Boost the enable count and check if Special APCs are enabled */
-    if (!(++Thread->SpecialApcDisable))
-    {
-        /* Check if there are Kernel APCs on the list */
-        if (!IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]))
-        {
-            /* Check for APC Delivery */
-            KiCheckForKernelApcDelivery();
-        }
-    }
+    /* Use the inlined version */
+    KeLeaveGuardedRegion();
 }
 
 /* EOF */

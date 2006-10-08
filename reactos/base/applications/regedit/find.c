@@ -76,6 +76,9 @@ static void SetFindFlags(DWORD dwFlags)
 
 static INT_PTR CALLBACK AbortFindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(hDlg);
+
     switch(uMsg)
     {
         case WM_CLOSE:
@@ -102,6 +105,7 @@ static INT_PTR CALLBACK AbortFindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 static BOOL RegSearchProc(LPVOID lpParam)
 {
     MSG msg;
+    UNREFERENCED_PARAMETER(lpParam);
 
     if (s_hwndAbortDialog && PeekMessage(&msg, s_hwndAbortDialog, 0, 0, PM_REMOVE))
     {

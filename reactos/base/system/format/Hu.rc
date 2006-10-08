@@ -10,7 +10,7 @@ STRINGTABLE DISCARDABLE
 {
 STRING_HELP,  "Használat: %S kötet: [-FS:állományrendszer] [-V:címke] [-Q] [-A:méret] [-C]\n\n\
   [kötet:]         A meghajtóbetûjelet adja meg (kettõsponttal a végén).\n\
-  -FS:állományrendszer Az állományrendszer típusát adja meg (pl.: FAT).\n\
+  -FS:állományrendszer Az állományrendszer típusát adja meg (%s).\n\
   -V:címke         A Kötetcímke neve.\n\
   -Q               Gyorsformázást hajt végre.\n\
   -A:méret         Felülbírálja az alapértelmezett szektorcsoport-\n\

@@ -6,7 +6,18 @@
 extern TIME_ZONE_INFORMATION ExpTimeZoneInfo;
 extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
+extern ULONG ExpTickCountMultiplier;
 extern POBJECT_TYPE ExEventPairObjectType;
+extern ULONG NtBuildNumber;
+extern ULONG NtMajorVersion;
+extern ULONG NtMinorVersion;
+extern FAST_MUTEX ExpEnvironmentLock;
+extern ERESOURCE ExpFirmwareTableResource;
+extern LIST_ENTRY ExpFirmwareTableProviderListHead;
+extern BOOLEAN ExpIsWinPEMode;
+ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
+ULONG ExpUnicodeCaseTableDataOffset;
+PVOID ExpNlsSectionPointer;
 
 #define MAX_FAST_REFS           7
 
@@ -35,71 +46,113 @@ extern POBJECT_TYPE ExEventPairObjectType;
 #define ExReleaseResourceLock(l,i) KeReleaseSpinLock(l,i);
 #endif
 
+#define ExAcquireRundownProtection                      _ExAcquireRundownProtection
+#define ExReleaseRundownProtection                      _ExReleaseRundownProtection
+#define ExInitializeRundownProtection                   _ExInitializeRundownProtection
+#define ExWaitForRundownProtectionRelease               _ExWaitForRundownProtectionRelease
+#define ExRundownCompleted                              _ExRundownCompleted
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID
-STDCALL
+NTAPI
 ExpWin32kInit(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExInit2(VOID);
 
 VOID
-STDCALL
+NTAPI
+ExPhase2Init(
+    IN PVOID Context
+);
+
+VOID
+NTAPI
+ExpInitializePushLocks(VOID);
+
+VOID
+NTAPI
 ExpInitTimeZoneInfo(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeWorkerThreads(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitLookasideLists(VOID);
 
 VOID
-STDCALL
+NTAPI
+ExInitializeSystemLookasideList(
+    IN PGENERAL_LOOKASIDE List,
+    IN POOL_TYPE Type,
+    IN ULONG Size,
+    IN ULONG Tag,
+    IN USHORT MaximumDepth,
+    IN PLIST_ENTRY ListHead
+);
+
+VOID
+NTAPI
 ExpInitializeCallbacks(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitUuids(VOID);
 
 VOID
-STDCALL
-ExpInitializeExecutive(VOID);
+NTAPI
+ExpInitializeExecutive(
+    IN ULONG Cpu,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeEventImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeEventImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeEventPairImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeSemaphoreImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeMutantImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeTimerImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeProfileImplementation(VOID);
 
 VOID
 NTAPI
 ExpResourceInitialization(VOID);
+
+VOID
+NTAPI
+ExInitPoolLookasidePointers(VOID);
+
+/* Callback Functions ********************************************************/
+
+VOID
+NTAPI
+ExInitializeCallBack(
+    IN PEX_CALLBACK Callback
+);
 
 /* Rundown Functions ********************************************************/
 
@@ -167,19 +220,19 @@ ExfWaitForRundownProtectionRelease(
                                    EX_HANDLE_ENTRY_INHERITABLE |               \
                                    EX_HANDLE_ENTRY_AUDITONCLOSE)
 
-typedef VOID (STDCALL PEX_SWEEP_HANDLE_CALLBACK)(
+typedef VOID (NTAPI PEX_SWEEP_HANDLE_CALLBACK)(
     PHANDLE_TABLE_ENTRY HandleTableEntry,
     HANDLE Handle,  
     PVOID Context
 );
 
-typedef BOOLEAN (STDCALL PEX_DUPLICATE_HANDLE_CALLBACK)(
+typedef BOOLEAN (NTAPI PEX_DUPLICATE_HANDLE_CALLBACK)(
     PHANDLE_TABLE HandleTable, 
     PHANDLE_TABLE_ENTRY HandleTableEntry, 
     PVOID Context
 );
 
-typedef BOOLEAN (STDCALL PEX_CHANGE_HANDLE_CALLBACK)(
+typedef BOOLEAN (NTAPI PEX_CHANGE_HANDLE_CALLBACK)(
     PHANDLE_TABLE HandleTable, 
     PHANDLE_TABLE_ENTRY HandleTableEntry, 
     PVOID Context
@@ -259,7 +312,7 @@ ExChangeHandle(
 /* PSEH EXCEPTION HANDLING **************************************************/
 
 LONG
-STDCALL
+NTAPI
 ExSystemExceptionFilter(VOID);
 
 static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
@@ -274,6 +327,7 @@ static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
 #define ExpSetRundown(x, y) InterlockedExchange64((PLONGLONG)x, y)
 #else
 #define ExpChangeRundown(x, y, z) InterlockedCompareExchange((PLONG)x, PtrToLong(y), PtrToLong(z))
+#define ExpChangePushlock(x, y, z) LongToPtr(InterlockedCompareExchange((PLONG)x, PtrToLong(y), PtrToLong(z)))
 #define ExpSetRundown(x, y) InterlockedExchange((PLONG)x, y)
 #endif
 
@@ -296,7 +350,7 @@ static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
  *--*/
 BOOLEAN
 FORCEINLINE
-ExAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
+_ExAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
     ULONG_PTR Value, NewValue, OldValue;
 
@@ -337,7 +391,7 @@ ExAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
  *--*/
 VOID
 FORCEINLINE
-ExReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
+_ExReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
     ULONG_PTR Value, NewValue, OldValue;
 
@@ -380,7 +434,7 @@ ExReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
  *--*/
 VOID
 FORCEINLINE
-ExInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
+_ExInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
     /* Set the count to zero */
     RunRef->Count = 0;
@@ -404,7 +458,7 @@ ExInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
  *--*/
 VOID
 FORCEINLINE
-ExWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
+_ExWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
 {
     ULONG_PTR Value;
 
@@ -434,7 +488,7 @@ ExWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
  *--*/
 VOID
 FORCEINLINE
-ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
+_ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
 {
     /* Sanity check */
     ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
@@ -444,6 +498,28 @@ ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
 }
 
 /* PUSHLOCKS *****************************************************************/
+
+/*++
+ * @name ExInitializePushLock
+ * INTERNAL MACRO
+ *
+ *     The ExInitializePushLock macro initializes a PushLock.
+ *
+ * @params PushLock
+ *         Pointer to the pushlock which is to be initialized.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExInitializePushLock(IN PEX_PUSH_LOCK PushLock)
+{
+    /* Set the value to 0 */
+    PushLock->Value = 0;
+}
 
 /*++
  * @name ExAcquirePushLockExclusive
@@ -507,7 +583,7 @@ ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 
     /* Try acquiring the lock */
     NewValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
-    if (InterlockedCompareExchangePointer(PushLock, NewValue.Ptr, 0))
+    if (ExpChangePushlock(PushLock, NewValue.Ptr, 0))
     {
         /* Someone changed it, use the slow path */
         DbgPrint("%s - Contention!\n", __FUNCTION__);
@@ -517,6 +593,44 @@ ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
     /* Sanity checks */
     ASSERT(PushLock->Locked);
     ASSERT(PushLock->Waiting || PushLock->Shared > 0);
+}
+
+/*++
+ * @name ExConvertPushLockSharedToExclusive
+ * INTERNAL MACRO
+ *
+ *     The ExConvertPushLockSharedToExclusive macro converts an exclusive
+ *     pushlock to a shared pushlock.
+ *
+ * @params PushLock
+ *         Pointer to the pushlock which is to be converted.
+ *
+ * @return FALSE if conversion failed, TRUE otherwise.
+ *
+ * @remarks The function attempts the quickest route to convert the lock, which is
+ *          to simply set the lock bit and remove any other bits.
+ *
+ *--*/
+BOOLEAN
+FORCEINLINE
+ExConvertPushLockSharedToExclusive(IN PEX_PUSH_LOCK PushLock)
+{
+    EX_PUSH_LOCK OldValue;
+
+    /* Set the expected old value */
+    OldValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
+
+    /* Try converting the lock */
+    if (ExpChangePushlock(PushLock, EX_PUSH_LOCK_LOCK, OldValue.Value) !=
+        OldValue.Ptr)
+    {
+        /* Conversion failed */
+        return FALSE;
+    }
+
+    /* Sanity check */
+    ASSERT(PushLock->Locked);
+    return TRUE;
 }
 
 /*++
@@ -579,8 +693,7 @@ ExReleasePushLockShared(PEX_PUSH_LOCK PushLock)
 
     /* Try to clear the pushlock */
     OldValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
-    if (InterlockedCompareExchangePointer(PushLock, 0, OldValue.Ptr) !=
-        OldValue.Ptr)
+    if (ExpChangePushlock(PushLock, 0, OldValue.Ptr) != OldValue.Ptr)
     {
         /* There are still other people waiting on it */
         DbgPrint("%s - Contention!\n", __FUNCTION__);
@@ -678,7 +791,7 @@ ExReleasePushLock(PEX_PUSH_LOCK PushLock)
 
     /* Check if nobody is waiting on us and try clearing the lock here */
     if ((OldValue.Waiting) ||
-        (InterlockedCompareExchangePointer(PushLock, NewValue.Ptr, OldValue.Ptr) ==
+        (ExpChangePushlock(PushLock, NewValue.Ptr, OldValue.Ptr) ==
          OldValue.Ptr))
     {
         /* We have waiters, use the long path */
@@ -704,7 +817,7 @@ NTAPI
 ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId);
 
 VOID
-STDCALL
+NTAPI
 ExTimerRundown(VOID);
 
 #define InterlockedDecrementUL(Addend) \

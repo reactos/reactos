@@ -5,6 +5,7 @@
 //    Copyright J Brown 2001
 //
 #include <windows.h>
+#include <stdlib.h>
 #include "cardlib.h"
 #include "cardregion.h"
 #include "cardcolor.h"

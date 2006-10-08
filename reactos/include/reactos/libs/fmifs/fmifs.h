@@ -1,7 +1,6 @@
 #ifndef _FMIFS_H
 #define _FMIFS_H
-/* $Id$
- *
+/*
  * fmifs.h
  *
  * Copyright (c) 1998 Mark Russinovich
@@ -16,21 +15,51 @@
  * 1999-02-18 (Emanuele Aliberti)
  * 	Normalized function names.
  *
+ * ---
+ *
+ * 2006-09-04 (Hervé Poussineau)
+ * 	Add some prototypes
+ *
  */
 
 /* Output command */
-typedef
-struct
+typedef struct
 {
 	ULONG Lines;
 	PCHAR Output;
-	
 } TEXTOUTPUT, *PTEXTOUTPUT;
 
+/* media flags */
+typedef enum
+{
+	FMIFS_UNKNOWN0,
+	FMIFS_UNKNOWN1,
+	FMIFS_UNKNOWN2,
+	FMIFS_UNKNOWN3,
+	FMIFS_UNKNOWN4,
+	FMIFS_UNKNOWN5,
+	FMIFS_UNKNOWN6,
+	FMIFS_UNKNOWN7,
+	FMIFS_FLOPPY,
+	FMIFS_UNKNOWN9,
+	FMIFS_UNKNOWN10,
+	FMIFS_REMOVABLE,
+	FMIFS_HARDDISK,
+	FMIFS_UNKNOWN13,
+	FMIFS_UNKNOWN14,
+	FMIFS_UNKNOWN15,
+	FMIFS_UNKNOWN16,
+	FMIFS_UNKNOWN17,
+	FMIFS_UNKNOWN18,
+	FMIFS_UNKNOWN19,
+	FMIFS_UNKNOWN20,
+	FMIFS_UNKNOWN21,
+	FMIFS_UNKNOWN22,
+	FMIFS_UNKNOWN23,
+} FMIFS_MEDIA_FLAG;
 
 /* Callback command types */
-typedef
-enum
+typedef enum
 {
 	PROGRESS,
 	DONEWITHSTRUCTURE,
@@ -39,88 +68,134 @@ enum
 	UNKNOWN4,
 	UNKNOWN5,
 	INSUFFICIENTRIGHTS,
-	UNKNOWN7,
-	UNKNOWN8,
+	FSNOTSUPPORTED,
+	VOLUMEINUSE,
 	UNKNOWN9,
 	UNKNOWNA,
 	DONE,
 	UNKNOWNC,
 	UNKNOWND,
 	OUTPUT,
-	STRUCTUREPROGRESS
-
+	STRUCTUREPROGRESS,
+	CLUSTERSIZETOOSMALL,
 } CALLBACKCOMMAND;
 
-
 /* FMIFS callback definition */
-typedef
-BOOLEAN
-(NTAPI * PFMIFSCALLBACK) (
-	CALLBACKCOMMAND	Command,
-	ULONG		SubAction,
-	PVOID		ActionInfo
-	);
+typedef BOOLEAN
+(NTAPI* PFMIFSCALLBACK)(
+	IN CALLBACKCOMMAND Command,
+	IN ULONG SubAction,
+	IN PVOID ActionInfo);
 
 /* Chkdsk command in FMIFS */
-VOID
-NTAPI
+VOID NTAPI
 Chkdsk(
-	PWCHAR		DriveRoot,
-	PWCHAR		Format,
-	BOOLEAN		CorrectErrors,
-	BOOLEAN		Verbose,
-	BOOLEAN		CheckOnlyIfDirty,
-	BOOLEAN		ScanDrive,
-	PVOID		Unused2,
-	PVOID		Unused3,
-	PFMIFSCALLBACK	Callback
-	);
+	IN PWCHAR DriveRoot,
+	IN PWCHAR Format,
+	IN BOOLEAN CorrectErrors,
+	IN BOOLEAN Verbose,
+	IN BOOLEAN CheckOnlyIfDirty,
+	IN BOOLEAN ScanDrive,
+	IN PVOID Unused2,
+	IN PVOID Unused3,
+	IN PFMIFSCALLBACK Callback);
 
 /* ChkdskEx command in FMIFS (not in the original) */
-VOID
-NTAPI
-ChkDskEx(
-	PWCHAR		DriveRoot,
-	PWCHAR		Format,
-	BOOLEAN		CorrectErrors,
-	BOOLEAN		Verbose,
-	BOOLEAN		CheckOnlyIfDirty,
-	BOOLEAN		ScanDrive,
-	PVOID		Unused2,
-	PVOID		Unused3,
-	PFMIFSCALLBACK	Callback
-	);
+VOID NTAPI
+ChkdskEx(
+	IN PWCHAR DriveRoot,
+	IN PWCHAR Format,
+	IN BOOLEAN CorrectErrors,
+	IN BOOLEAN Verbose,
+	IN BOOLEAN CheckOnlyIfDirty,
+	IN BOOLEAN ScanDrive,
+	IN PVOID Unused2,
+	IN PVOID Unused3,
+	IN PFMIFSCALLBACK Callback);
+
+FMIFS_MEDIA_FLAG NTAPI
+ComputeFmMediaType(
+	IN ULONG MediaType);
 
 /* DiskCopy command in FMIFS */
-
-VOID
-NTAPI
+VOID NTAPI
 DiskCopy(VOID);
 
 /* Enable/Disable volume compression */
-BOOL
-NTAPI
+BOOLEAN NTAPI
 EnableVolumeCompression(
-	PWCHAR	DriveRoot,
-	USHORT Compression
-	);
+	IN PWCHAR DriveRoot,
+	IN USHORT Compression);
 
 /* Format command in FMIFS */
-
-/* media flags */
-#define FMIFS_HARDDISK 0xC
-#define FMIFS_FLOPPY   0x8
-
-VOID
-NTAPI
+VOID NTAPI
 FormatEx(
-	PWCHAR		DriveRoot,
-	ULONG		MediaFlag,
-	PWCHAR		Format,
-	PWCHAR		Label,
-	BOOLEAN		QuickFormat,
-	ULONG		ClusterSize,
-	PFMIFSCALLBACK	Callback
-	);
+	IN PWCHAR DriveRoot,
+	IN FMIFS_MEDIA_FLAG MediaFlag,
+	IN PWCHAR Format,
+	IN PWCHAR Label,
+	IN BOOLEAN QuickFormat,
+	IN ULONG ClusterSize,
+	IN PFMIFSCALLBACK Callback);
+
+BOOLEAN NTAPI
+QueryAvailableFileSystemFormat(
+	IN DWORD Index,
+	IN OUT PWCHAR FileSystem, /* FIXME: Probably one minimal size is mandatory, but which one? */
+	OUT UCHAR* Major,
+	OUT UCHAR* Minor,
+	OUT BOOLEAN* LastestVersion);
+
+BOOL NTAPI
+QueryDeviceInformation(
+	IN PWCHAR DriveRoot,
+	OUT ULONG* Buffer, /* That is probably some 4-bytes structure */
+	IN ULONG BufferSize); /* 4 */
+
+BOOL NTAPI
+QueryFileSystemName(
+	IN PWCHAR DriveRoot,
+	OUT PWCHAR FileSystem OPTIONAL, /* FIXME: Probably one minimal size is mandatory, but which one? */
+	OUT UCHAR* Unknown2 OPTIONAL, /* Always 0? */
+	OUT UCHAR* Unknown3 OPTIONAL, /* Always 0? */
+	OUT ULONG* Unknown4 OPTIONAL); /* Always 0? */
+
+BOOLEAN NTAPI
+QueryLatestFileSystemVersion(
+	IN PWCHAR FileSystem,
+	OUT UCHAR* Major OPTIONAL,
+	OUT UCHAR* Minor OPTIONAL);
+
+BOOL NTAPI
+QuerySupportedMedia(
+	IN PWCHAR DriveRoot,
+	OUT FMIFS_MEDIA_FLAG *CurrentMedia OPTIONAL,
+	IN ULONG Unknown3,
+	OUT PULONG Unknown4); /* Always 1? */
+
+BOOL NTAPI
+SetLabel(
+	IN PWCHAR DriveRoot,
+	IN PWCHAR Label);
+
+/* Functions provided by u*.dll */
+
+typedef NTSTATUS
+(NTAPI *FORMATEX)(
+	IN PUNICODE_STRING DriveRoot,
+	IN FMIFS_MEDIA_FLAG MediaFlag,
+	IN PUNICODE_STRING Label,
+	IN BOOLEAN QuickFormat,
+	IN ULONG ClusterSize,
+	IN PFMIFSCALLBACK Callback);
+
+typedef NTSTATUS
+(NTAPI *CHKDSKEX)(
+	IN PUNICODE_STRING DriveRoot,
+	IN BOOLEAN FixErrors,
+	IN BOOLEAN Verbose,
+	IN BOOLEAN CheckOnlyIfDirty,
+	IN BOOLEAN ScanDrive,
+	IN PFMIFSCALLBACK Callback);
 
 #endif /* ndef _FMIFS_H */

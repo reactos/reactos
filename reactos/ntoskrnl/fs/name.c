@@ -179,10 +179,10 @@ PUCHAR FsRtlLegalAnsiCharacterArray = LegalAnsiCharacterArray;
  *--*/
 BOOLEAN
 NTAPI
-FsRtlAreNamesEqual(IN PUNICODE_STRING Name1,
-                   IN PUNICODE_STRING Name2,
+FsRtlAreNamesEqual(IN PCUNICODE_STRING Name1,
+                   IN PCUNICODE_STRING Name2,
                    IN BOOLEAN IgnoreCase,
-                   IN PWCHAR UpcaseTable OPTIONAL)
+                   IN PCWCH UpcaseTable OPTIONAL)
 {
     UNICODE_STRING UpcaseName1;
     UNICODE_STRING UpcaseName2;

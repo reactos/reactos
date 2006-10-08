@@ -16,8 +16,9 @@ extern "C"{
 
 void * __RPC_USER MIDL_user_allocate(size_t);
 void __RPC_USER MIDL_user_free(void*);
-EXTERN_C const IID IID_IUnknown;
-EXTERN_C const IID IID_IClassFactory;
+
+DEFINE_GUID(IID_IUnknown, 0x00000000, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
+DEFINE_OLEGUID(IID_IClassFactory, 0x00000001, 0, 0);
 #ifndef __IUnknown_INTERFACE_DEFINED__
 #define __IUnknown_INTERFACE_DEFINED__
 #define INTERFACE IUnknown

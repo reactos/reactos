@@ -5,9 +5,15 @@
  * Use these to place a function in a specific section of the executable
  */
 #define PLACE_IN_SECTION(s)	__attribute__((section (s)))
+#ifdef __GNUC__
 #define INIT_FUNCTION		PLACE_IN_SECTION("init")
 #define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
 #define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
+#else
+#define INIT_FUNCTION
+#define PAGE_LOCKED_FUNCTION	
+#define PAGE_UNLOCKED_FUNCTION	
+#endif
 
 #ifdef _NTOSKRNL_
 
@@ -59,19 +65,18 @@ typedef struct __DESCRIPTOR
 /*
  * Initalization functions (called once by main())
  */
-VOID MmInitSystem(ULONG Phase, PROS_LOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
+VOID MmInitSystem(ULONG Phase, PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
 VOID IoInit(VOID);
 VOID IoInit2(BOOLEAN BootLog);
-VOID STDCALL IoInit3(VOID);
-VOID ObInit(VOID);
-VOID PsInit(VOID);
+VOID NTAPI IoInit3(VOID);
+BOOLEAN NTAPI ObInit(VOID);
 VOID CmInitializeRegistry(VOID);
-VOID STDCALL CmInitHives(BOOLEAN SetupBoot);
+VOID NTAPI CmInitHives(BOOLEAN SetupBoot);
 VOID CmInit2(PCHAR CommandLine);
 VOID CmShutdownRegistry(VOID);
 BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
 BOOLEAN CmImportHardwareHive(PCHAR ChunkBase, ULONG ChunkSize);
-VOID KdInitSystem(ULONG Reserved, PROS_LOADER_PARAMETER_BLOCK LoaderBlock);
+VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 /* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */
 BOOLEAN FASTCALL
@@ -88,6 +93,7 @@ RtlpLogException(IN PEXCEPTION_RECORD ExceptionRecord,
                  IN ULONG Size);
 
 /* FIXME: Interlocked functions that need to be made into a public header */
+#ifdef __GNUC__
 FORCEINLINE
 LONG
 InterlockedAnd(IN OUT LONG volatile *Target,
@@ -127,6 +133,7 @@ InterlockedOr(IN OUT LONG volatile *Target,
 
     return j;
 }
+#endif
 
 /*
  * generic information class probing code
@@ -162,10 +169,11 @@ typedef struct _INFORMATION_CLASS_INFO
 #define IQS(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
   { sizeof(TypeQuery), sizeof(TypeSet), sizeof(AlignmentQuery), sizeof(AlignmentSet), Flags }
 
-static __inline NTSTATUS
-DefaultSetInfoBufferCheck(UINT Class,
+FORCEINLINE
+NTSTATUS
+DefaultSetInfoBufferCheck(ULONG Class,
                           const INFORMATION_CLASS_INFO *ClassList,
-                          UINT ClassListEntries,
+                          ULONG ClassListEntries,
                           PVOID Buffer,
                           ULONG BufferLength,
                           KPROCESSOR_MODE PreviousMode)
@@ -211,10 +219,11 @@ DefaultSetInfoBufferCheck(UINT Class,
     return Status;
 }
 
-static __inline NTSTATUS
-DefaultQueryInfoBufferCheck(UINT Class,
+FORCEINLINE
+NTSTATUS
+DefaultQueryInfoBufferCheck(ULONG Class,
                             const INFORMATION_CLASS_INFO *ClassList,
-                            UINT ClassListEntries,
+                            ULONG ClassListEntries,
                             PVOID Buffer,
                             ULONG BufferLength,
                             PULONG ReturnLength,
@@ -289,6 +298,38 @@ DefaultQueryInfoBufferCheck(UINT Class,
 #error IsPointerOffset() needs to be defined for this architecture
 #endif
 
+#endif
+
+C_ASSERT(FIELD_OFFSET(KUSER_SHARED_DATA, SystemCall) == 0x300);
+C_ASSERT(FIELD_OFFSET(KTHREAD, InitialStack) == KTHREAD_INITIAL_STACK);
+C_ASSERT(FIELD_OFFSET(KTHREAD, Teb) == KTHREAD_TEB);
+C_ASSERT(FIELD_OFFSET(KTHREAD, KernelStack) == KTHREAD_KERNEL_STACK);
+C_ASSERT(FIELD_OFFSET(KTHREAD, NpxState) == KTHREAD_NPX_STATE);
+C_ASSERT(FIELD_OFFSET(KTHREAD, ServiceTable) == KTHREAD_SERVICE_TABLE);
+C_ASSERT(FIELD_OFFSET(KTHREAD, PreviousMode) == KTHREAD_PREVIOUS_MODE);
+C_ASSERT(FIELD_OFFSET(KTHREAD, TrapFrame) == KTHREAD_TRAP_FRAME);
+C_ASSERT(FIELD_OFFSET(KTHREAD, CallbackStack) == KTHREAD_CALLBACK_STACK);
+C_ASSERT(FIELD_OFFSET(KTHREAD, ApcState.Process) == KTHREAD_APCSTATE_PROCESS);
+C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
+#ifdef _M_IX86
+C_ASSERT(FIELD_OFFSET(KPROCESS, IopmOffset) == KPROCESS_IOPM_OFFSET);
+C_ASSERT(FIELD_OFFSET(KPROCESS, LdtDescriptor) == KPROCESS_LDT_DESCRIPTOR0);
+C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, SavedExceptionStack) == TF_SAVED_EXCEPTION_STACK);
+C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
+C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
+#endif
+//C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
+//C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
+C_ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
+C_ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);
+C_ASSERT(FIELD_OFFSET(KPCR, Irql) == KPCR_IRQL);
+#ifdef _M_IX86
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
+C_ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
+C_ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcStack) == KPCR_PRCB_DPC_STACK);
+C_ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
 #endif
 
 #endif /* INCLUDE_INTERNAL_NTOSKRNL_H */

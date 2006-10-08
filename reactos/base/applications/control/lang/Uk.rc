@@ -1,0 +1,34 @@
+/*
+ * PROJECT:     ReactOS System Control Panel
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/control/Uk.rc
+ * PURPOSE:     Ukraianian Language File for ReactOS System Control Panel
+ * PROGRAMMERS: temarez
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Закрити",                    IDM_CLOSE
+    END
+    POPUP "&Вигляд"
+    BEGIN
+        MENUITEM "&Великі Іконки",              IDM_LARGEICONS
+        MENUITEM "&Малі Іконки",                IDM_SMALLICONS
+        MENUITEM "&Список",                     IDM_LIST
+        MENUITEM "&Подробиці",                  IDM_DETAILS
+    END
+    POPUP "&Довідка"
+    BEGIN
+        MENUITEM "&Про програму",               IDM_ABOUT
+    END
+END
+

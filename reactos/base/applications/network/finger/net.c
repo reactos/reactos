@@ -33,16 +33,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#include <sys/types.h>
-#include <winsock2.h>
 
+#include <winsock2.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 
 #include "various.h"
-
-int close(int);
 
 void
 netfinger(char *name)
@@ -90,7 +87,7 @@ netfinger(char *name)
 	(void)printf("[%s]\n", hp->h_name);
 	if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
 		fprintf(stderr, "finger: connect rc = %d", WSAGetLastError());
-		(void)close(s);
+		(void)closesocket(s);
 		return;
 	}
 

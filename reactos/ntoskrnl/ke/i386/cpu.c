@@ -58,19 +58,21 @@ ULONG KeProcessorRevision;
 ULONG KeFeatureBits;
 ULONG KiFastSystemCallDisable = 1;
 ULONG KeI386NpxPresent = 0;
+ULONG KiMXCsrMask = 0;
 ULONG MxcsrFeatureMask = 0;
 ULONG KeI386XMMIPresent = 0;
 ULONG KeI386FxsrPresent = 0;
+ULONG KeI386MachineType;
 ULONG Ke386Pae = FALSE;
-ULONG Ke386GlobalPagesEnabled = FALSE;
 ULONG Ke386NoExecute = FALSE;
-BOOLEAN KiI386PentiumLockErrataPresent;
 ULONG KeLargestCacheLine = 0x40;
 ULONG KeDcacheFlushCount = 0;
 ULONG KeIcacheFlushCount = 0;
 ULONG KiDmaIoCoherency = 0;
 CHAR KeNumberProcessors;
 KAFFINITY KeActiveProcessors = 1;
+BOOLEAN KiI386PentiumLockErrataPresent;
+BOOLEAN KiSMTProcessorsPresent;
 
 /* CPU Signatures */
 CHAR CmpIntelID[]       = "GenuineIntel";
@@ -255,6 +257,9 @@ KiGetFeatureBits(VOID)
     /* Get the CPUID Info. Features are in Reg[3]. */
     CPUID(Reg, 1);
 
+    /* Set the initial APIC ID */
+    Prcb->InitialApicId = (UCHAR)(Reg[1] >> 24);
+
     /* Check for AMD CPU */
     if (Vendor == CPU_AMD)
     {
@@ -298,7 +303,7 @@ KiGetFeatureBits(VOID)
         }
         else
         {
-            /* Familes below 5 don't support PGE, PSE or CMOV at all */
+            /* Families below 5 don't support PGE, PSE or CMOV at all */
             Reg[3] &= ~(0x08 | 0x2000 | 0x8000);
 
             /* They also don't support advanced CPUID functions. */
@@ -351,6 +356,24 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & 0x00800000) FeatureBits |= KF_MMX;
     if (CpuFeatures & 0x01000000) FeatureBits |= KF_FXSR;
     if (CpuFeatures & 0x02000000) FeatureBits |= KF_XMMI;
+    if (CpuFeatures & 0x04000000) FeatureBits |= KF_XMMI64;
+
+    /* Check if the CPU has hyper-threading */
+    if (CpuFeatures & 0x10000000)
+    {
+        /* Set the number of logical CPUs */
+        Prcb->LogicalProcessorsPerPhysicalProcessor = (UCHAR)(Reg[1] >> 16);
+        if (Prcb->LogicalProcessorsPerPhysicalProcessor > 1)
+        {
+            /* We're on dual-core */
+            KiSMTProcessorsPresent = TRUE;
+        }
+    }
+    else
+    {
+        /* We only have a single CPU */
+        Prcb->LogicalProcessorsPerPhysicalProcessor = 1;
+    }
 
     /* Check if CPUID 0x80000000 is supported */
     if (ExtendedCPUID)
@@ -549,40 +572,30 @@ KiInitializeTSS(IN PKTSS Tss)
 }
 
 VOID
-NTAPI
-Ki386InitializeTss(VOID)
+FASTCALL
+Ki386InitializeTss(IN PKTSS Tss,
+                   IN PKIDTENTRY Idt,
+                   IN PKGDTENTRY Gdt)
 {
-    PKTSS Tss;
-    PKGDTENTRY TssEntry;
-    PKIDTENTRY TaskGateEntry;
-    PKIDT_ACCESS TaskGateAccess;
+    PKGDTENTRY TssEntry, TaskGateEntry;
 
     /* Initialize the boot TSS. */
-    Tss = &KiBootTss;
-    TssEntry = &KiBootGdt[KGDT_TSS / sizeof(KGDTENTRY)];
-    KiInitializeTSS2(Tss, TssEntry);
-    KiInitializeTSS(Tss);
-
-    /* Initialize a descriptor for the TSS */
+    TssEntry = &Gdt[KGDT_TSS / sizeof(KGDTENTRY)];
     TssEntry->HighWord.Bits.Type = I386_TSS;
     TssEntry->HighWord.Bits.Pres = 1;
     TssEntry->HighWord.Bits.Dpl = 0;
-    TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
-    TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
-    TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
+    KiInitializeTSS2(Tss, TssEntry);
+    KiInitializeTSS(Tss);
 
     /* Load the task register */
     Ke386SetTr(KGDT_TSS);
 
     /* Setup the Task Gate for Double Fault Traps */
-    TaskGateEntry = &KiIdt[8];
-    TaskGateAccess = (PKIDT_ACCESS)&TaskGateEntry->Access;
-#if 0
-    TaskGateAccess->SegmentType = I386_TASK_GATE;
-    TaskGateAccess->Present = 1;
-    TaskGateAccess->Dpl = 0;
-    TaskGateEntry->Selector = KGDT_DF_TSS;
-#endif
+    TaskGateEntry = (PKGDTENTRY)&Idt[8];
+    TaskGateEntry->HighWord.Bits.Type = I386_TASK_GATE;
+    TaskGateEntry->HighWord.Bits.Pres = 1;
+    TaskGateEntry->HighWord.Bits.Dpl = 0;
+    ((PKIDTENTRY)TaskGateEntry)->Selector = KGDT_DF_TSS;
 
     /* Initialize the TSS used for handling double faults. */
     Tss = (PKTSS)KiDoubleFaultTSS;
@@ -597,7 +610,7 @@ Ki386InitializeTss(VOID)
     Tss->Ds = KGDT_R3_DATA | RPL_MASK;
 
     /* Setup the Double Trap TSS entry in the GDT */
-    TssEntry = &KiBootGdt[KGDT_DF_TSS / sizeof(KGDTENTRY)];
+    TssEntry = &Gdt[KGDT_DF_TSS / sizeof(KGDTENTRY)];
     TssEntry->HighWord.Bits.Type = I386_TSS;
     TssEntry->HighWord.Bits.Pres = 1;
     TssEntry->HighWord.Bits.Dpl = 0;
@@ -607,13 +620,11 @@ Ki386InitializeTss(VOID)
     TssEntry->LimitLow = KTSS_IO_MAPS;
 
     /* Now setup the NMI Task Gate */
-    TaskGateEntry = &KiIdt[2];
-    TaskGateAccess = (PKIDT_ACCESS)&TaskGateEntry->Access;
-#if 0
-    TaskGateAccess->SegmentType = I386_TASK_GATE;
-    TaskGateAccess->Present = 1;
-    TaskGateEntry->Selector = KGDT_NMI_TSS;
-#endif
+    TaskGateEntry = (PKGDTENTRY)&Idt[2];
+    TaskGateEntry->HighWord.Bits.Type = I386_TASK_GATE;
+    TaskGateEntry->HighWord.Bits.Pres = 1;
+    TaskGateEntry->HighWord.Bits.Dpl = 0;
+    ((PKIDTENTRY)TaskGateEntry)->Selector = KGDT_NMI_TSS;
 
     /* Initialize the actual TSS */
     Tss = (PKTSS)KiNMITSS;
@@ -628,7 +639,7 @@ Ki386InitializeTss(VOID)
     Tss->Ds = KGDT_R3_DATA | RPL_MASK;
 
     /* And its associated TSS Entry */
-    TssEntry = &KiBootGdt[KGDT_NMI_TSS / sizeof(KGDTENTRY)];
+    TssEntry = &Gdt[KGDT_NMI_TSS / sizeof(KGDTENTRY)];
     TssEntry->HighWord.Bits.Type = I386_TSS;
     TssEntry->HighWord.Bits.Pres = 1;
     TssEntry->HighWord.Bits.Dpl = 0;
@@ -636,135 +647,6 @@ Ki386InitializeTss(VOID)
     TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
     TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
     TssEntry->LimitLow = KTSS_IO_MAPS;
-}
-
-/* This is a rather naive implementation of Ke(Save/Restore)FloatingPointState
-   which will not work for WDM drivers. Please feel free to improve */
-NTSTATUS
-NTAPI
-KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
-{
-    PFNSAVE_FORMAT FpState;
-    ASSERT_IRQL(DISPATCH_LEVEL);
-
-    /* check if we are doing software emulation */
-    if (!KeI386NpxPresent) return STATUS_ILLEGAL_FLOAT_CONTEXT;
-
-    FpState = ExAllocatePool(NonPagedPool, sizeof (FNSAVE_FORMAT));
-    if (!FpState) return STATUS_INSUFFICIENT_RESOURCES;
-
-    *((PVOID *) Save) = FpState;
-    asm volatile("fnsave %0\n\t" : "=m" (*FpState));
-
-    KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
-{
-    PFNSAVE_FORMAT FpState = *((PVOID *) Save);
-
-    ASSERT(KeGetCurrentThread()->DispatcherHeader.NpxIrql == KeGetCurrentIrql());
-
-    asm volatile("fnclex\n\t");
-    asm volatile("frstor %0\n\t" : "=m" (*FpState));
-
-    ExFreePool(FpState);
-    return STATUS_SUCCESS;
-}
-
-VOID
-INIT_FUNCTION
-Ki386SetProcessorFeatures(VOID)
-{
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING KeyName =
-   RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager\\Kernel");
-   UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"FastSystemCallDisable");
-   HANDLE KeyHandle;
-   ULONG ResultLength;
-   struct
-   {
-       KEY_VALUE_PARTIAL_INFORMATION Info;
-       UCHAR Buffer[FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
-                                 Data[0]) + sizeof(ULONG)];
-   } ValueData;
-   NTSTATUS Status;
-   ULONG FastSystemCallDisable = 0;
-   
-   SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
-   SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] = FALSE;
-   SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
-       (KeFeatureBits & KF_CMPXCHG8B) ? TRUE : FALSE;
-   SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
-       (KeFeatureBits & KF_MMX) ? TRUE : FALSE;
-   SharedUserData->ProcessorFeatures[PF_PPC_MOVEMEM_64BIT_OK] = FALSE;
-   SharedUserData->ProcessorFeatures[PF_ALPHA_BYTE_INSTRUCTIONS] = FALSE;
-   SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] =
-       (KeFeatureBits & KF_XMMI) ? TRUE : FALSE;
-   SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
-       (KeFeatureBits & KF_RDTSC) ? TRUE : FALSE;
-
-   /* Does the CPU Support Fast System Call? */   
-   if (KeFeatureBits & KF_FAST_SYSCALL) {
-
-        /* FIXME: Check for Family == 6, Model < 3 and Stepping < 3 and disable */
-
-        /* Make sure it's not disabled in registry */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-        Status = ZwOpenKey(&KeyHandle,
-                           KEY_QUERY_VALUE,
-                           &ObjectAttributes);
-
-        if (NT_SUCCESS(Status)) {
-
-            /* Read the Value then Close the Key */
-            Status = ZwQueryValueKey(KeyHandle,
-                                     &ValueName,
-                                     KeyValuePartialInformation,
-                                     &ValueData,
-                                     sizeof(ValueData),
-                                     &ResultLength);
-            if (NT_SUCCESS(Status))
-            {
-                if (ResultLength == sizeof(ValueData) &&
-                    ValueData.Info.Type == REG_DWORD)
-                {
-                    FastSystemCallDisable = *(PULONG)ValueData.Info.Data != 0;
-                }
-
-                ZwClose(KeyHandle);
-            }
-        }
-
-    } else {
-
-        /* Disable SYSENTER/SYSEXIT, because the CPU doesn't support it */
-        FastSystemCallDisable = 1;
-
-    }
-
-    if (FastSystemCallDisable) {
-        /* Use INT2E */
-        const unsigned char Entry[7] = {0x8D, 0x54, 0x24, 0x08,     /* lea    0x8(%esp),%edx    */
-                                        0xCD, 0x2E,                 /* int    0x2e              */
-                                        0xC3};                      /* ret                      */
-        memcpy(&SharedUserData->SystemCall, Entry, sizeof(Entry));
-    } else {
-        /* Use SYSENTER */
-        const unsigned char Entry[5] = {0x8B, 0xD4,                 /* movl    %esp,%edx        */ 
-                                        0x0F, 0x34,                 /* sysenter                 */
-                                        0xC3};                      /* ret                      */    
-        memcpy(&SharedUserData->SystemCall, Entry, sizeof(Entry));
-        /* Enable SYSENTER/SYSEXIT */
-        KiFastSystemCallDisable = 0;
-    }
 }
 
 VOID
@@ -775,12 +657,231 @@ KeFlushCurrentTb(VOID)
     _Ke386SetCr(3, _Ke386GetCr(3));
 }
 
+VOID
+NTAPI
+KiSaveProcessorControlState(IN PKPROCESSOR_STATE ProcessorState)
+{
+    /* Save the CR registers */
+    ProcessorState->SpecialRegisters.Cr0 = _Ke386GetCr(0);
+    ProcessorState->SpecialRegisters.Cr2 = _Ke386GetCr(2);
+    ProcessorState->SpecialRegisters.Cr3 = _Ke386GetCr(3);
+    ProcessorState->SpecialRegisters.Cr4 = _Ke386GetCr(4);
+
+    /* Save the DR registers */
+    ProcessorState->SpecialRegisters.KernelDr0 = _Ke386GetDr(0);
+    ProcessorState->SpecialRegisters.KernelDr1 = _Ke386GetDr(1);
+    ProcessorState->SpecialRegisters.KernelDr2 = _Ke386GetDr(2);
+    ProcessorState->SpecialRegisters.KernelDr3 = _Ke386GetDr(3);
+    ProcessorState->SpecialRegisters.KernelDr6 = _Ke386GetDr(6);
+    ProcessorState->SpecialRegisters.KernelDr7 = _Ke386GetDr(7);
+    _Ke386SetDr(7, 0);
+
+    /* Save GDT, IDT, LDT and TSS */
+    Ke386GetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr);
+    Ke386GetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr);
+    Ke386GetTr(ProcessorState->SpecialRegisters.Tr);
+    Ke386GetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
+}
+
+VOID
+NTAPI
+KiInitializeMachineType(VOID)
+{
+    /* Set the Machine Type we got from NTLDR */
+    KeI386MachineType = KeLoaderBlock->u.I386.MachineType & 0x000FF;
+}
+
+ULONG_PTR
+NTAPI
+KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
+{
+    /* Set CS and ESP */
+    Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
+    Ke386Wrmsr(0x175, KeGetCurrentPrcb()->DpcStack, 0);
+
+    /* Set LSTAR */
+    Ke386Wrmsr(0x176, KiFastCallEntry, 0);
+    return 0;
+}
+
+VOID
+NTAPI
+KiRestoreFastSyscallReturnState(VOID)
+{
+    /* FIXME: NT has support for SYSCALL, IA64-SYSENTER, etc. */
+
+    /* Check if the CPU Supports fast system call */
+    if (KeFeatureBits & KF_FAST_SYSCALL)
+    {
+        /* Do an IPI to enable it */
+        KeIpiGenericCall(KiLoadFastSyscallMachineSpecificRegisters, 0);
+    }
+}
+
+ULONG_PTR
+NTAPI
+Ki386EnableDE(IN ULONG_PTR Context)
+{
+    /* Enable DE */
+    Ke386SetCr4(Ke386GetCr4() | CR4_DE);
+    return 0;
+}
+
+ULONG_PTR
+NTAPI
+Ki386EnableFxsr(IN ULONG_PTR Context)
+{
+    /* Enable FXSR */
+    Ke386SetCr4(Ke386GetCr4() | CR4_FXSR);
+    return 0;
+}
+
+ULONG_PTR
+NTAPI
+Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
+{
+    /* FIXME: Support this */
+    DPRINT1("Your machine supports XMMI exceptions but ReactOS doesn't\n");
+    return 0;
+}
+
+VOID
+NTAPI
+KiI386PentiumLockErrataFixup(VOID)
+{
+    /* FIXME: Support this */
+    DPRINT1("WARNING: Your machine has a CPU bug that ReactOS can't bypass!\n");
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
+{
+    PFNSAVE_FORMAT FpState;
+    ASSERT_IRQL(DISPATCH_LEVEL);
+    DPRINT1("%s is not really implemented\n", __FUNCTION__);
+
+    /* check if we are doing software emulation */
+    if (!KeI386NpxPresent) return STATUS_ILLEGAL_FLOAT_CONTEXT;
+
+    FpState = ExAllocatePool(NonPagedPool, sizeof (FNSAVE_FORMAT));
+    if (!FpState) return STATUS_INSUFFICIENT_RESOURCES;
+
+    *((PVOID *) Save) = FpState;
+#ifdef __GNUC__
+    asm volatile("fnsave %0\n\t" : "=m" (*FpState));
+#else
+    __asm
+    {
+        fnsave [FpState]
+    };
+#endif
+
+    KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
+{
+    PFNSAVE_FORMAT FpState = *((PVOID *) Save);
+    ASSERT(KeGetCurrentThread()->DispatcherHeader.NpxIrql == KeGetCurrentIrql());
+    DPRINT1("%s is not really implemented\n", __FUNCTION__);
+
+#ifdef __GNUC__
+    asm volatile("fnclex\n\t");
+    asm volatile("frstor %0\n\t" : "=m" (*FpState));
+#else
+    __asm
+    {
+        fnclex
+        frstor [FpState]
+    };
+#endif
+
+    ExFreePool(FpState);
+    return STATUS_SUCCESS;
+}
+
 /*
  * @implemented
  */
 ULONG
-STDCALL
+NTAPI
 KeGetRecommendedSharedDataAlignment(VOID)
 {
+    /* Return the global variable */
     return KeLargestCacheLine;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeFlushEntireTb(IN BOOLEAN Invalid,
+                IN BOOLEAN AllProcessors)
+{
+    KIRQL OldIrql;
+
+    /* Raise the IRQL for the TB Flush */
+    OldIrql = KeRaiseIrqlToSynchLevel();
+
+#ifdef CONFIG_SMP
+    /* FIXME: Support IPI Flush */
+#error Not yet implemented!
+#endif
+
+    /* Flush the TB for the Current CPU */
+    KeFlushCurrentTb();
+
+    /* Return to Original IRQL */
+    KeLowerIrql(OldIrql);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeSetDmaIoCoherency(IN ULONG Coherency)
+{
+    /* Save the coherency globally */
+    KiDmaIoCoherency = Coherency;
+}
+
+/*
+ * @implemented
+ */
+KAFFINITY
+NTAPI
+KeQueryActiveProcessors(VOID)
+{
+    PAGED_CODE();
+
+    /* Simply return the number of active processors */
+    return KeActiveProcessors;
+}
+
+/*
+ * @implemented
+ */
+VOID
+__cdecl
+KeSaveStateForHibernate(IN PKPROCESSOR_STATE State)
+{
+    /* Capture the context */
+    RtlCaptureContext(&State->ContextFrame);
+
+    /* Capture the control state */
+    KiSaveProcessorControlState(State);
 }

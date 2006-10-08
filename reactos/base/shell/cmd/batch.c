@@ -272,6 +272,20 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	bc->forvar = _T('\0');
 	bc->forproto = NULL;
 	bc->params = BatchParams (firstword, param);
+    //
+    // Allocate enough memory to hold the params and copy them over without modifications
+    //
+    bc->raw_params = malloc((_tcslen(param)+1) * sizeof(TCHAR));
+    if (bc->raw_params != NULL)
+    {
+        memset (bc->raw_params, 0, _tcslen(bc->raw_params) * sizeof(TCHAR));
+        _tcscpy(bc->raw_params,param);
+    }
+    else
+    {
+        error_out_of_memory();
+        return FALSE;
+    }
 
 #ifdef _DEBUG
 	DebugPrintf (_T("Batch: returns TRUE\n"));

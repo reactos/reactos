@@ -616,7 +616,7 @@ xHalpGetDiskNumberFromRDisk(ULONG RDisk, PULONG DiskNumber)
 
 
 VOID FASTCALL
-xHalIoAssignDriveLetters(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
+xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 			 IN PSTRING NtDeviceName,
 			 OUT PUCHAR NtSystemPath,
 			 OUT PSTRING NtSystemPathString)

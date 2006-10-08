@@ -235,11 +235,11 @@ PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
       /* Conventional memory */
       BiosMemoryMap[0].BaseAddress = 0;
       BiosMemoryMap[0].Length = PcMemGetConventionalMemorySize() * 1024;
-      BiosMemoryMap[0].Type = MEMTYPE_USABLE;
+      BiosMemoryMap[0].Type = BiosMemoryUsable;
       /* Extended memory */
       BiosMemoryMap[1].BaseAddress = 1024 * 1024;
       BiosMemoryMap[1].Length = PcMemGetExtendedMemorySize() * 1024;
-      BiosMemoryMap[1].Type = MEMTYPE_USABLE;
+      BiosMemoryMap[1].Type = BiosMemoryUsable;
       EntryCount = 2;
     }
 

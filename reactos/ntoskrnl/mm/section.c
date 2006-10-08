@@ -461,7 +461,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
    return(SHARE_COUNT_FROM_SSE(Entry) > 0);
 }
 
-BOOL MiIsPageFromCache(PMEMORY_AREA MemoryArea,
+BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
                        ULONG SegOffset)
 {
    if (!(MemoryArea->Data.SectionData.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
@@ -669,7 +669,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    ULONG Attributes;
    PMM_PAGEOP PageOp;
    PMM_REGION Region;
-   BOOL HasSwapEntry;
+   BOOLEAN HasSwapEntry;
 
    /*
     * There is a window between taking the page fault and locking the
@@ -1889,7 +1889,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    return(STATUS_SUCCESS);
 }
 
-VOID STATIC
+VOID static
 MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
                       PVOID BaseAddress,
                       ULONG RegionSize,
@@ -1900,7 +1900,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
 {
    PMEMORY_AREA MemoryArea;
    PMM_SECTION_SEGMENT Segment;
-   BOOL DoCOW = FALSE;
+   BOOLEAN DoCOW = FALSE;
    ULONG i;
 
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
@@ -2011,7 +2011,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    if (Section->AllocationAttributes & SEC_IMAGE)
    {
       Segment = MemoryArea->Data.SectionData.Segment;
-      Info->AllocationBase = (PBYTE)MemoryArea->StartingAddress - Segment->VirtualAddress;
+      Info->AllocationBase = (PUCHAR)MemoryArea->StartingAddress - Segment->VirtualAddress;
       Info->Type = MEM_IMAGE;
    }
    else
@@ -3500,7 +3500,7 @@ NtOpenSection(PHANDLE   SectionHandle,
    return(Status);
 }
 
-NTSTATUS STATIC
+NTSTATUS static
 MmMapViewOfSegment(PMADDRESS_SPACE AddressSpace,
                    PROS_SECTION_OBJECT Section,
                    PMM_SECTION_SEGMENT Segment,
@@ -3748,7 +3748,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    return(Status);
 }
 
-VOID STATIC
+VOID static
 MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                   PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
@@ -3855,7 +3855,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
    }
 }
 
-STATIC NTSTATUS
+static NTSTATUS
 MmUnmapViewOfSegment(PMADDRESS_SPACE AddressSpace,
                      PVOID BaseAddress)
 {
@@ -4623,7 +4623,7 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
  * @unimplemented
  */
 BOOLEAN STDCALL
-MmDisableModifiedWriteOfSection (DWORD Unknown0)
+MmDisableModifiedWriteOfSection (ULONG Unknown0)
 {
    UNIMPLEMENTED;
    return (FALSE);
@@ -4763,12 +4763,12 @@ MmUnmapViewInSessionSpace (
  * @unimplemented
  */
 NTSTATUS STDCALL
-MmSetBankedSection (DWORD Unknown0,
-                    DWORD Unknown1,
-                    DWORD Unknown2,
-                    DWORD Unknown3,
-                    DWORD Unknown4,
-                    DWORD Unknown5)
+MmSetBankedSection (ULONG Unknown0,
+                    ULONG Unknown1,
+                    ULONG Unknown2,
+                    ULONG Unknown3,
+                    ULONG Unknown4,
+                    ULONG Unknown5)
 {
    UNIMPLEMENTED;
    return (STATUS_NOT_IMPLEMENTED);

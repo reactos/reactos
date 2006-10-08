@@ -9,18 +9,22 @@
 
 #include <fmifs/fmifs.h>
 
-NTSTATUS
-VfatInitialize (VOID);
+NTSTATUS NTAPI
+VfatChkdsk(
+	IN PUNICODE_STRING DriveRoot,
+	IN BOOLEAN FixErrors,
+	IN BOOLEAN Verbose,
+	IN BOOLEAN CheckOnlyIfDirty,
+	IN BOOLEAN ScanDrive,
+	IN PFMIFSCALLBACK Callback);
 
-NTSTATUS
-VfatCleanup (VOID);
-
-NTSTATUS
-VfatFormat (PUNICODE_STRING DriveRoot,
-	    ULONG MediaFlag,
-	    PUNICODE_STRING Label,
-	    BOOLEAN QuickFormat,
-	    ULONG ClusterSize,
-	    PFMIFSCALLBACK Callback);
+NTSTATUS NTAPI
+VfatFormat(
+	IN PUNICODE_STRING DriveRoot,
+	IN FMIFS_MEDIA_FLAG MediaFlag,
+	IN PUNICODE_STRING Label,
+	IN BOOLEAN QuickFormat,
+	IN ULONG ClusterSize,
+	IN PFMIFSCALLBACK Callback);
 
 #endif /*__VFATLIB_H */

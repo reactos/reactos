@@ -31,43 +31,6 @@
 
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS
-SmpSignalInitEvent(VOID)
-{
-  NTSTATUS          Status = STATUS_SUCCESS;
-  OBJECT_ATTRIBUTES ObjectAttributes = {0};
-  UNICODE_STRING    EventName ={0};
-  HANDLE            ReactOSInitEvent = (HANDLE) 0;
-
-  RtlInitUnicodeString (& EventName, L"\\ReactOSInitDone");
-  InitializeObjectAttributes(&ObjectAttributes,
-    & EventName,
-    0,
-    0,
-    NULL);
-  Status = NtOpenEvent(&ReactOSInitEvent,
-    EVENT_ALL_ACCESS,
-    &ObjectAttributes);
-  if (NT_SUCCESS(Status))
-    {
-      LARGE_INTEGER Timeout;
-      /* This will cause the boot screen image to go away (if displayed) */
-      NtPulseEvent(ReactOSInitEvent, NULL);
-
-      /* Wait for the display mode to be changed (if in graphics mode) */
-      Timeout.QuadPart = -50000000LL;  /* 5 second timeout */
-      NtWaitForSingleObject(ReactOSInitEvent, FALSE, &Timeout);
-
-      NtClose(ReactOSInitEvent);
-    }
-  else
-    {
-      /* We don't really care if this fails */
-      DPRINT1("SM: Failed to open ReactOS init notification event\n");
-    }
-  return Status;
-}
-
 typedef NTSTATUS (* SM_INIT_ROUTINE)(VOID);
 
 struct {
@@ -88,8 +51,7 @@ struct {
 	{TRUE,  SmInitializeRegistry,         "initialize the registry"},
 	{FALSE, SmUpdateEnvironment,          "update environment variables"},
 	{TRUE,  SmInitializeClientManagement, "initialize client management"},
-	{TRUE,  SmLoadSubsystems,             "load subsystems"},
-	{FALSE, SmpSignalInitEvent,           "open ReactOS init notification event"},
+	{TRUE,  SmLoadSubsystems,             "load subsystems"}
 };
 
 NTSTATUS

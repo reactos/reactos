@@ -41,7 +41,7 @@ CHAR PspJobSchedulingClasses[PSP_JOB_SCHEDULING_CLASSES] =
     10 * 6
 };
 
-static GENERIC_MAPPING PiJobMapping =
+GENERIC_MAPPING PspJobMapping =
 {
     STANDARD_RIGHTS_READ | JOB_OBJECT_QUERY,
     STANDARD_RIGHTS_WRITE | JOB_OBJECT_ASSIGN_PROCESS | JOB_OBJECT_SET_ATTRIBUTES | JOB_OBJECT_TERMINATE | JOB_OBJECT_SET_SECURITY_ATTRIBUTES,
@@ -53,7 +53,7 @@ static GENERIC_MAPPING PiJobMapping =
 
 VOID
 NTAPI
-PiDeleteJob ( PVOID ObjectBody )
+PspDeleteJob ( PVOID ObjectBody )
 {
     PEJOB Job = (PEJOB)ObjectBody;
 
@@ -74,28 +74,10 @@ PiDeleteJob ( PVOID ObjectBody )
     ExDeleteResource(&Job->JobLock);
 }
 
-VOID 
-INIT_FUNCTION
+VOID
 NTAPI
-PsInitJobManagment ( VOID )
+PspInitializeJobStructures(VOID)
 {
-    UNICODE_STRING Name;
-    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
-    
-    DPRINT("Creating Job Object Type\n");
-  
-    /*  Initialize the Job type  */
-    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
-    RtlInitUnicodeString(&Name, L"Job");
-    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EJOB);
-    ObjectTypeInitializer.GenericMapping = PiJobMapping;
-    ObjectTypeInitializer.PoolType = NonPagedPool;
-    ObjectTypeInitializer.ValidAccessMask = JOB_OBJECT_ALL_ACCESS;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
-    ObjectTypeInitializer.DeleteProcedure = PiDeleteJob;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsJobType);
-
     InitializeListHead(&PsJobListHead);
     ExInitializeFastMutex(&PsJobListLock);
 }

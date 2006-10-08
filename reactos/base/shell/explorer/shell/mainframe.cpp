@@ -1285,7 +1285,7 @@ bool MDIMainFrame::activate_drive_window(LPCTSTR path)
 	_tsplitpath_s(path, drv1, COUNTOF(drv1), NULL, 0, NULL, 0, NULL, 0);
 
 	 // search for a already open window for the same drive
-	for(child_wnd=::GetNextWindow(_hmdiclient,GW_CHILD); child_wnd; child_wnd=::GetNextWindow(child_wnd, GW_HWNDNEXT)) {
+	for(child_wnd=GetNextWindow(_hmdiclient,GW_CHILD); child_wnd; child_wnd=GetNextWindow(child_wnd, GW_HWNDNEXT)) {
 		FileChildWindow* child = (FileChildWindow*) SendMessage(child_wnd, PM_GET_FILEWND_PTR, 0, 0);
 
 		if (child) {
@@ -1310,7 +1310,7 @@ bool MDIMainFrame::activate_child_window(LPCTSTR filesys)
 	HWND child_wnd;
 
 	 // search for a already open window of the given file system name
-	for(child_wnd=::GetNextWindow(_hmdiclient,GW_CHILD); child_wnd; child_wnd=::GetNextWindow(child_wnd, GW_HWNDNEXT)) {
+	for(child_wnd=GetNextWindow(_hmdiclient,GW_CHILD); child_wnd; child_wnd=GetNextWindow(child_wnd, GW_HWNDNEXT)) {
 		FileChildWindow* child = (FileChildWindow*) SendMessage(child_wnd, PM_GET_FILEWND_PTR, 0, 0);
 
 		if (child) {

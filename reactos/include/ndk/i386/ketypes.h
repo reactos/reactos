@@ -107,11 +107,12 @@ Author:
 #define KSEG0_BASE              0x80000000
 
 //
-// Macro to get current KPRCB
+// Synchronization-level IRQL
 //
-#ifndef _REACTOS_ // fixme
-#define KeGetCurrentPrcb() \
-    (PKPRCB)__readfsdword(KPCR_PRCB);
+#ifndef CONFIG_SMP
+#define SYNCH_LEVEL             DISPATCH_LEVEL
+#else
+#define SYNCH_LEVEL             (IPI_LEVEL - 1)
 #endif
 
 //
@@ -263,6 +264,23 @@ typedef struct _DESCRIPTOR
 #include <poppack.h>
 
 #ifndef NTOS_MODE_USER
+
+//
+// Macro to get current KPRCB
+//
+#ifndef __GNUC__ // fixme
+FORCEINLINE
+struct _KPRCB *
+KeGetCurrentPrcb(VOID)
+{
+    return (struct _KPRCB *)(ULONG_PTR)__readfsdword(FIELD_OFFSET(KPCR, Prcb));
+}
+
+//
+// Macro to get current previous mode
+//
+#define KeGetPreviousMode       ExGetPreviousMode
+#endif
 
 //
 // FN/FX (FPU) Save Area Structures

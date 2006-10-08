@@ -176,11 +176,12 @@ PoRequestPowerIrp(
   return STATUS_PENDING;
 }
 
+#undef PoSetDeviceBusy
 VOID
-STDCALL
-PoSetDeviceBusy(
-  PULONG IdlePointer)
+NTAPI
+PoSetDeviceBusy(IN PULONG IdlePointer)
 {
+    *IdlePointer = 0;
 }
 
 VOID
@@ -305,9 +306,22 @@ PopSetSystemPowerState(
 VOID
 INIT_FUNCTION
 NTAPI
-PoInit(PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
-       BOOLEAN ForceAcpiDisable)
+PoInit(BOOLEAN HaveAcpiTable,
+       IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+  PVOID NotificationEntry;
+  PCHAR CommandLine;
+  BOOLEAN ForceAcpiDisable = FALSE;
+
+  /* Get the Command Line */
+  CommandLine = KeLoaderBlock->LoadOptions;
+
+  /* Upcase it */
+  _strupr(CommandLine);
+
+  /* Check for ACPI disable */
+  if (strstr(CommandLine, "NOACPI")) ForceAcpiDisable = TRUE;
+
   if (ForceAcpiDisable)
     {
       /* Set the ACPI State to False if it's been forced that way */
@@ -316,8 +330,17 @@ PoInit(PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
   else
     {
       /* Otherwise check the LoaderBlock's Flag */
-      PopAcpiPresent = (LoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
+      PopAcpiPresent = HaveAcpiTable;
     }
+
+  IoRegisterPlugPlayNotification(
+    EventCategoryDeviceInterfaceChange,
+    0, /* The registry has not been initialized yet */
+    (PVOID)&GUID_DEVICE_SYS_BUTTON,
+    IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
+    PopAddRemoveSysCapsCallback,
+    NULL,
+    &NotificationEntry);
 }
 
 VOID
@@ -340,9 +363,10 @@ PopPerfIdleDpc(IN PKDPC Dpc,
 
 VOID
 FASTCALL
-PopIdle0(IN PKPRCB Prcb)
+PopIdle0(IN PPROCESSOR_POWER_STATE PowerState)
 {
-    DPRINT1("Idle function: %p\n", Prcb);
+    /* FIXME: Extremly naive implementation */
+    HalProcessorIdle();
 }
 
 VOID
@@ -358,7 +382,7 @@ PoInitializePrcb(IN PKPRCB Prcb)
 
     /* Initialize the Perf DPC and Timer */
     KeInitializeDpc(&Prcb->PowerState.PerfDpc, PopPerfIdleDpc, Prcb);
-    //KeSetTargetProcessorDpc(&Prcb->PowerState.PerfDpc, Prcb->Number);
+    KeSetTargetProcessorDpc(&Prcb->PowerState.PerfDpc, Prcb->Number);
     KeInitializeTimerEx(&Prcb->PowerState.PerfTimer, SynchronizationTimer);
 }
 

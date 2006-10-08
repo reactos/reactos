@@ -43,6 +43,7 @@ Author:
 // Object Type Mask for Kernel Dispatcher Objects
 //
 #define KOBJECT_TYPE_MASK               0x7F
+#define KOBJECT_LOCK_BIT                0x80
 
 //
 // Dispatcher Priority increments
@@ -58,6 +59,13 @@ Author:
 // Physical memory offset of KUSER_SHARED_DATA
 //
 #define KI_USER_SHARED_DATA_PHYSICAL    0x41000
+
+//
+// Quantum values and decrements
+//
+#define MAX_QUANTUM                     0x7F
+#define WAIT_QUANTUM_DECREMENT          1
+#define CLOCK_QUANTUM_DECREMENT         3
 
 //
 // Kernel Feature Bits
@@ -78,13 +86,20 @@ Author:
 #define KF_XMMI                         0x00002000
 #define KF_3DNOW                        0x00004000
 #define KF_AMDK6MTRR                    0x00008000
+#define KF_XMMI64                       0x00010000
+#define KF_NX_DISABLED                  0x00400000
+#define KF_NX_ENABLED                   0x00800000
 
 //
 // KPCR Access for non-IA64 builds
 //
 #define K0IPCR                          ((ULONG_PTR)(KIP0PCRADDRESS))
 #define PCR                             ((volatile KPCR * const)K0IPCR)
+#ifdef _WE_USE_THE_SAME_PCR_ADDRESS
 #define KeGetPcr()                      PCR
+#else
+#define KeGetPcr()                      ((volatile KPCR * const)__readfsdword(0x1C))
+#endif
 
 //
 // Number of dispatch codes supported by KINTERRUPT
@@ -466,7 +481,8 @@ typedef enum _KAPC_ENVIRONMENT
 {
     OriginalApcEnvironment,
     AttachedApcEnvironment,
-    CurrentApcEnvironment
+    CurrentApcEnvironment,
+    InsertApcEnvironment
 } KAPC_ENVIRONMENT;
 
 //
@@ -679,13 +695,13 @@ typedef struct _KTHREAD
     volatile UCHAR NextProcessor;
     volatile UCHAR DeferredProcessor;
     UCHAR AdjustReason;
-    UCHAR AdjustIncrement;
+    SCHAR AdjustIncrement;
     KSPIN_LOCK ApcQueueLock;
     ULONG ContextSwitches;
     volatile UCHAR State;
     UCHAR NpxState;
     UCHAR WaitIrql;
-    UCHAR WaitMode;
+    SCHAR WaitMode;
     LONG WaitStatus;
     union
     {
@@ -695,7 +711,7 @@ typedef struct _KTHREAD
     UCHAR Alertable;
     UCHAR WaitNext;
     UCHAR WaitReason;
-    UCHAR Priority;
+    SCHAR Priority;
     UCHAR EnableStackSwap;
     volatile UCHAR SwapBusy;
     UCHAR Alerted[2];
@@ -752,7 +768,7 @@ typedef struct _KTHREAD
             struct
             {
                 UCHAR WaitBlockFill1[47];
-                UCHAR PreviousMode;
+                SCHAR PreviousMode;
             };
             struct
             {
@@ -810,10 +826,10 @@ typedef struct _KTHREAD
         union
         {
             UCHAR SavedApcStateFill[23];
-            CHAR FreezeCount;
+            SCHAR FreezeCount;
         };
     };
-    CHAR SuspendCount;
+    SCHAR SuspendCount;
     UCHAR UserIdealProcessor;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     union
@@ -838,7 +854,7 @@ typedef struct _KTHREAD
         struct
         {
             UCHAR SuspendApcFill0[1];
-            CHAR Quantum;
+            SCHAR Quantum;
         };
         struct
         {
@@ -888,6 +904,9 @@ typedef struct _KTHREAD
 } KTHREAD;
 #include <poppack.h>
 
+#define ASSERT_THREAD(object) \
+    ASSERT((((object)->DispatcherHeader.Type & KOBJECT_TYPE_MASK) == ThreadObject))
+
 //
 // Kernel Process (KPROCESS)
 //
@@ -895,7 +914,7 @@ typedef struct _KPROCESS
 {
     DISPATCHER_HEADER Header;
     LIST_ENTRY ProfileListHead;
-    PHYSICAL_ADDRESS DirectoryTableBase;
+    LARGE_INTEGER DirectoryTableBase;
 #if defined(_M_IX86)
     KGDTENTRY LdtDescriptor;
     KIDTENTRY Int21Descriptor;
@@ -916,15 +935,15 @@ typedef struct _KPROCESS
     {
         struct
         {
-            ULONG AutoAlignment:1;
-            ULONG DisableBoost:1;
-            ULONG DisableQuantum:1;
-            ULONG ReservedFlags:29;
+            LONG AutoAlignment:1;
+            LONG DisableBoost:1;
+            LONG DisableQuantum:1;
+            LONG ReservedFlags:29;
         };
-        ULONG ProcessFlags;
+        LONG ProcessFlags;
     };
-    CHAR BasePriority;
-    CHAR QuantumReset;
+    SCHAR BasePriority;
+    SCHAR QuantumReset;
     UCHAR State;
     UCHAR ThreadSeed;
     UCHAR PowerState;
@@ -933,9 +952,7 @@ typedef struct _KPROCESS
     union
     {
         KEXECUTE_OPTIONS Flags;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
         UCHAR ExecuteOptions;
-#endif
     };
     ULONG StackCount;
     LIST_ENTRY ProcessListEntry;
@@ -964,11 +981,7 @@ typedef struct _KSERVICE_TABLE_DESCRIPTOR
 //
 // Exported Loader Parameter Block
 //
-#ifndef _REACTOS_
 extern struct _LOADER_PARAMETER_BLOCK NTSYSAPI *KeLoaderBlock;
-#else
-extern struct _ROS_LOADER_PARAMETER_BLOCK NTSYSAPI KeLoaderBlock;
-#endif
 
 //
 // Exported Hardware Data

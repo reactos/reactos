@@ -16,6 +16,7 @@
 	<library>comctl32</library>
 	<library>comdlg32</library>
 	<library>shlwapi</library>
+	<library>uuid</library>
 	<file>about.c</file>
 	<file>childwnd.c</file>
 	<file>edit.c</file>

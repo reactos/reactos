@@ -27,11 +27,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* NDK FIXME */
-NTSTATUS
-STDCALL
-NtVdmControl (ULONG ControlCode, PVOID ControlData);
-
 static PKINTERRUPT AcpiInterrupt;
 static BOOLEAN AcpiInterruptHandlerRegistered = FALSE;
 static OSD_HANDLER AcpiIrqHandler = NULL;
@@ -143,13 +138,9 @@ acpi_os_map_memory(ACPI_PHYSICAL_ADDRESS phys, u32 size, void **virt)
   if (phys == 0x0) {
     /* Real mode Interrupt Vector Table */
     Virtual = ExAllocatePool(NonPagedPool, size);
-    if (NT_SUCCESS(NtVdmControl(0, Virtual))) {
       IVTVirtualAddress = Virtual;
       *virt = Virtual;
       return AE_OK;
-    } else {
-      return AE_ERROR;
-    }
   }
 
   Address.QuadPart = (ULONG)phys;

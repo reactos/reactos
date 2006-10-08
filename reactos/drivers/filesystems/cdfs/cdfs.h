@@ -180,6 +180,7 @@ typedef struct _FCB
 {
   FSRTL_COMMON_FCB_HEADER RFCB;
   SECTION_OBJECT_POINTERS SectionObjectPointers;
+  ERESOURCE PagingIoResource;
 
   PFILE_OBJECT FileObject;
   PDEVICE_EXTENSION DevExt;

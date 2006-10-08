@@ -105,8 +105,13 @@
 
 #else /* DBG */
 
+#ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
 #define CPRINT(args...)
 #define DPRINT1(args...)
+#else
+#define CPRINT
+#define DPRINT1
+#endif
 #ifndef __USE_W32API
 #define assert(x)
 #define ASSERT(x)

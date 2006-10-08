@@ -50,8 +50,8 @@ FsRtlRemovePerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
  */
 NTSTATUS
 NTAPI
-FsRtlInsertPerFileObjectContext(IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
-                                IN PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/ Ptr)
+FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
+                                IN PFSRTL_PER_FILEOBJECT_CONTEXT Ptr)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -60,7 +60,7 @@ FsRtlInsertPerFileObjectContext(IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectConte
 /*
  * @unimplemented
  */
-PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/
+PFSRTL_PER_FILEOBJECT_CONTEXT
 NTAPI
 FsRtlRemovePerFileObjectContext(IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
                                 IN PVOID OwnerId OPTIONAL,

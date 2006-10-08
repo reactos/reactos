@@ -338,15 +338,8 @@ Fat12Format (HANDLE FileHandle,
   DPRINT("BootSector.FATSectors = %hx\n", BootSector.FATSectors);
 
   /* Init context data */
-  if (QuickFormat)
-    {
-      Context->TotalSectorCount =
-	1 + (BootSector.FATSectors * 2) + RootDirSectors;
-    }
-  else
-    {
-      Context->TotalSectorCount = SectorCount;
-    }
+  Context->TotalSectorCount =
+    1 + (BootSector.FATSectors * 2) + RootDirSectors;
 
   Status = Fat12WriteBootSector (FileHandle,
 				 &BootSector,

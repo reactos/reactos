@@ -1,9 +1,8 @@
 <?xml version="1.0"?>
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-  <module name="ibrowser" type="win32gui" installbase="system32" installname="ibrowser.exe" allowwarnings ="true">
+  <module name="ibrowser" type="win32gui" installbase="system32" installname="ibrowser.exe" allowwarnings="true" stdlib="host">
     <linkerflag>-fexceptions</linkerflag>
     <include base="ibrowser">.</include>
-    <include base="ReactOS">include/expat</include>
     <define name="__USE_W32API" />
     <define name="UNICODE" />
     <define name="WIN32" />
@@ -18,12 +17,12 @@
     <library>ole32</library>
     <library>oleaut32</library>
     <library>shell32</library>
-    <library>expat</library>
     <pch>precomp.h</pch>
     <directory name="utility">
       <file>utility.cpp</file>
       <file>window.cpp</file>
       <file>xmlstorage.cpp</file>
+	  <file>xs-native.cpp</file>
     </directory>
     <file>ibrowser.cpp</file>
     <file>favorites.cpp</file>

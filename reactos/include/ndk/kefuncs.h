@@ -47,7 +47,7 @@ VOID
 NTAPI
 KiDeliverApc(
     IN KPROCESSOR_MODE PreviousMode,
-    IN PVOID Reserved,
+    IN PKEXCEPTION_FRAME ExceptionFrame,
     IN PKTRAP_FRAME TrapFrame
 );
 
@@ -73,7 +73,7 @@ KeSetEventBoostPriority(
     IN PKTHREAD *Thread OPTIONAL
 );
 
-NTSTATUS
+KAFFINITY
 NTAPI
 KeSetAffinityThread(
     PKTHREAD Thread,
@@ -117,7 +117,7 @@ KeAcquireQueuedSpinLockRaiseToSynch(
     IN KSPIN_LOCK_QUEUE_NUMBER LockNumber
 );
 
-KIRQL
+VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLockRaiseToSynch(
     IN PKSPIN_LOCK SpinLock,

@@ -232,7 +232,7 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG StringLength, MaximumLength;
     PWCHAR StringBuffer = NULL;
-    UNICODE_STRING LocalName = {}; /* <= GCC 4.0 + Optimizer */
+    UNICODE_STRING LocalName = {0}; /* <= GCC 4.0 + Optimizer */
     PAGED_CODE();
 
     /* Initialize the Input String */

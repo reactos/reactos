@@ -239,7 +239,10 @@ Type ECHO without a parameter to display the current ECHO setting."
 
 STRING_ECHO_HELP5, "ECHO is %s\n"
 
-STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT\n"
+STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT [/b] [ExitCode]\n\n\
+  /B            Exits a batch file only.  \n\
+                If run outside of a batch file it will exit cmd.exe\n\
+  ExitCode      This value will be assigned to ERRORLEVEL on exit\n"
 
 STRING_FOR_HELP1, "Runs a specified command for each file in a set of files\n\n\
 FOR %variable IN (set) DO command [parameters]\n\n\

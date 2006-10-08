@@ -2,7 +2,7 @@
 #define __NTOSKRNL_INCLUDE_INTERNAL_DBGK_H
 
 VOID
-STDCALL
+NTAPI
 DbgkCreateThread(PVOID StartAddress);
 
 VOID

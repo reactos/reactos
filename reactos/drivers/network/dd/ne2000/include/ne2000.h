@@ -78,7 +78,8 @@ typedef struct _NIC_ADAPTER
 
     /* I/O base address and interrupt number of adapter */
     ULONG IoBaseAddress;
-    ULONG InterruptNumber;
+    ULONG InterruptLevel;
+    ULONG InterruptVector;
 
     /* Mapped address of the I/O base port */
     PUCHAR IOBase;

@@ -1,0 +1,63 @@
+#!/usr/bin/env python2
+# -*-Python-*-
+#
+# 
+# Copyright (C) 2001  Peter Åstrand <peter@cendio.se>
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License. 
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+import sys
+
+def main():
+    f = open(sys.argv[1])
+    while 1:
+        line = f.readline()
+        if not line: break
+
+        if line.startswith("#") or line.startswith("include"):
+            print line,
+            continue
+
+        fields = line.split()
+
+        if line.startswith("map"):
+            print "map 0x%s" % fields[1]
+            continue
+
+        scancode = fields[0]
+        for pos in range(1, len(fields)):
+            keysym = fields[pos]
+
+            if pos == 1:
+                modifiers = ""
+            elif pos == 2:
+                modifiers = "shift"
+            elif pos == 3:
+                modifiers = "altgr"
+            elif pos == 4:
+                modifiers = "shift altgr"
+            else:
+                raise("Invalid line: %s" % line)
+            
+            print "%s 0x%s %s" % (keysym, scancode, modifiers)
+
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print "Convert old-style keymaps to new style"
+        print "Usage: %s <old-style-keymap>" % sys.argv[0]
+        sys.exit(1)
+    else:
+        main()

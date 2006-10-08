@@ -1376,15 +1376,15 @@ IoStartNextPacketByKey(IN PDEVICE_OBJECT DeviceObject,
     if (DeviceExtension->StartIoFlags & DOE_SIO_DEFERRED)
     {
         /* Call our internal function to handle the defered case */
-        return IopStartNextPacketByKeyEx(DeviceObject,
-                                         Key,
-                                         DOE_SIO_WITH_KEY |
-                                         (Cancelable) ? DOE_SIO_CANCELABLE : 0);
+        IopStartNextPacketByKeyEx(DeviceObject,
+                                  Key,
+                                  DOE_SIO_WITH_KEY |
+                                  (Cancelable) ? DOE_SIO_CANCELABLE : 0);
     }
     else
     {
         /* Call the normal routine */
-        return IopStartNextPacketByKey(DeviceObject, Cancelable, Key);
+        IopStartNextPacketByKey(DeviceObject, Cancelable, Key);
     }
 }
 
@@ -1405,15 +1405,15 @@ IoStartNextPacket(IN PDEVICE_OBJECT DeviceObject,
     if (DeviceExtension->StartIoFlags & DOE_SIO_DEFERRED)
     {
         /* Call our internal function to handle the defered case */
-        return IopStartNextPacketByKeyEx(DeviceObject,
-                                         0,
-                                         DOE_SIO_NO_KEY |
-                                         (Cancelable) ? DOE_SIO_CANCELABLE : 0);
+        IopStartNextPacketByKeyEx(DeviceObject,
+                                  0,
+                                  DOE_SIO_NO_KEY |
+                                  (Cancelable) ? DOE_SIO_CANCELABLE : 0);
     }
     else
     {
         /* Call the normal routine */
-        return IopStartNextPacket(DeviceObject, Cancelable);
+        IopStartNextPacket(DeviceObject, Cancelable);
     }
 }
 

@@ -229,7 +229,7 @@ FsRtlIsNameInExpression@16
 FsRtlIsNtstatusExpected@4
 FsRtlIsPagingFile@4
 FsRtlIsTotalDeviceFailure@4
-FsRtlLegalAnsiCharacterArray DATA
+FsRtlLegalAnsiCharacterArray=_FsRtlLegalAnsiCharacterArray
 FsRtlLookupLargeMcbEntry@32
 FsRtlLookupLastLargeMcbEntry@12
 FsRtlLookupLastLargeMcbEntryAndIndex@16
@@ -280,7 +280,7 @@ FsRtlUninitializeFileLock@4
 FsRtlUninitializeLargeMcb@4
 FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock@4
-HalDispatchTable DATA
+HalDispatchTable=_HalDispatchTable
 HalPrivateDispatchTable DATA
 @HalExamineMBR@16
 InbvAcquireDisplayOwnership@0
@@ -368,7 +368,7 @@ IoDriverObjectType DATA
 IoEnqueueIrp@4
 IoEnumerateDeviceObjectList@16
 IoFastQueryNetworkAttributes@20
-IoFileObjectType DATA
+IoFileObjectType=_IoFileObjectType
 IoForwardAndCatchIrp@8=IoForwardIrpSynchronously@8
 IoForwardIrpSynchronously@8
 IoFreeController@4
@@ -504,8 +504,8 @@ IoWriteTransferCount DATA
 @IofCompleteRequest@8
 IoIsWdmVersionAvailable@8
 KdComPortInUse DATA
-KdDebuggerEnabled DATA
-KdDebuggerNotPresent DATA
+KdDebuggerEnabled=_KdDebuggerEnabled
+KdDebuggerNotPresent=_KdDebuggerNotPresent
 KdDisableDebugger@0
 KdEnableDebugger@0
 KdEnteredDebugger
@@ -534,8 +534,8 @@ KeDeregisterBugCheckCallback@4
 KeDeregisterBugCheckReasonCallback@4
 KeDetachProcess@0
 KeDisconnectInterrupt@4
-KeEnterCriticalRegion@0
-KeEnterGuardedRegion@0
+KeEnterCriticalRegion@0=_KeEnterCriticalRegion@0
+KeEnterGuardedRegion@0=_KeEnterGuardedRegion@0
 KeEnterKernelDebugger@0
 KeFindConfigurationEntry@16
 KeFindConfigurationNextEntry@20
@@ -576,8 +576,8 @@ KeInsertQueueApc@16
 KeInsertQueueDpc@12
 KeIsAttachedProcess@0
 KeIsExecutingDpc@0
-KeLeaveCriticalRegion@0
-KeLeaveGuardedRegion@0
+KeLeaveCriticalRegion@0=_KeLeaveCriticalRegion@0
+KeLeaveGuardedRegion@0=_KeLeaveGuardedRegion@0
 KeLoaderBlock DATA
 KeNumberProcessors DATA
 KeProfileInterrupt@4
@@ -638,7 +638,6 @@ KeSetTargetProcessorDpc@8
 KeSetTimeIncrement@8
 KeSetTimer@16
 KeSetTimerEx@20
-@KeSetTimeUpdateNotifyRoutine@4
 KeStackAttachProcess@8
 KeSynchronizeExecution@12
 KeTerminateThread@4
@@ -892,7 +891,7 @@ PsDereferencePrimaryToken@4
 PsDisableImpersonation@8
 PsEstablishWin32Callouts@4
 PsGetContextThread@12
-PsGetCurrentProcess@0=KeGetCurrentProcess@0
+PsGetCurrentProcess@0=IoGetCurrentProcess@0
 PsGetCurrentProcessId@0
 PsGetCurrentProcessWin32Process@0
 PsGetCurrentProcessSessionId@0
@@ -965,7 +964,7 @@ PsSetThreadHardErrorsAreDisabled@8
 PsSetThreadWin32Thread@8
 PsSetLoadImageNotifyRoutine@4
 PsTerminateSystemThread@4
-PsThreadType DATA
+PsThreadType=_PsThreadType
 READ_REGISTER_UCHAR@4
 READ_REGISTER_ULONG@4
 READ_REGISTER_USHORT@4

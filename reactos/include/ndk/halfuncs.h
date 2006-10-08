@@ -89,6 +89,16 @@ HalStartNextProcessor(
 );
 
 //
+// CPU Routines
+//
+NTHALAPI
+VOID
+NTAPI
+HalProcessorIdle(
+    VOID
+);
+
+//
 // Interrupt Functions
 //
 NTHALAPI

@@ -23,6 +23,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	TCHAR first[CMDLINE_LENGTH];
 	TCHAR *rest = NULL; 
 	TCHAR *param = NULL;
+	TCHAR RestWithoutArgs[CMDLINE_LENGTH];
 	INT size;
 	LPTSTR comspec;
 	BOOL bWait = FALSE;
@@ -31,15 +32,63 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	TCHAR szFullCmdLine [CMDLINE_LENGTH];
 	PROCESS_INFORMATION prci;
 	STARTUPINFO stui;
-
+	LPTSTR *arg;
+	INT argc = 0;
+	INT i = 0;
+	DWORD Priority = 0;
 		
-	
-	if (_tcsncmp (Rest, _T("/?"), 2) == 0)
-	{
-		ConOutResPaging(TRUE,STRING_START_HELP1);
-		return 0;
-	}
+	RestWithoutArgs[0] = _T('\0');
+	_tcscpy(first,First);
+	arg = split (Rest, &argc, FALSE);
+ 
 
+	for (i = 0; i < argc; i++)
+	{
+		if (!_tcsncmp (arg[i], _T("/?"), 2))
+		{
+			freep(arg);
+			ConOutResPaging(TRUE,STRING_START_HELP1);
+			return 0;
+		}
+		else if(!_tcsicmp(arg[i], "/LOW"))
+		{
+			Priority = IDLE_PRIORITY_CLASS;		
+		}
+		else if(!_tcsicmp(arg[i], "/NORMAL"))
+		{
+			Priority = NORMAL_PRIORITY_CLASS;
+		}
+		else if(!_tcsicmp(arg[i], "/HIGH"))
+		{
+			Priority = HIGH_PRIORITY_CLASS;		
+		}
+		else if(!_tcsicmp(arg[i], "/REALTIME"))
+		{
+			Priority = REALTIME_PRIORITY_CLASS;
+		}
+		else if(!_tcsicmp(arg[i], "/ABOVENORMAL"))
+		{
+			Priority = ABOVE_NORMAL_PRIORITY_CLASS;		
+		}
+		else if(!_tcsicmp(arg[i], "/BELOWNORMAL"))
+		{
+			Priority = BELOW_NORMAL_PRIORITY_CLASS;
+		}
+		else
+		{
+			if(RestWithoutArgs[0] != _T('\0'))
+			{
+				_tcscat(RestWithoutArgs,_T(" "));
+			}
+			_tcscat(RestWithoutArgs,arg[i]);
+		}
+	}
+	
+	
+	
+	
+	freep (arg);
+	
 	/* get comspec */
 	comspec = malloc ( MAX_PATH * sizeof(TCHAR));
 	if (comspec == NULL)
@@ -51,7 +100,10 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	size = GetEnvironmentVariable (_T("COMSPEC"), comspec, 512);
 	if(GetLastError() == ERROR_ENVVAR_NOT_FOUND)
 	{
-		Rest = _T("cmd");
+		RestWithoutArgs[0] = _T('c');
+		RestWithoutArgs[1] = _T('m');
+		RestWithoutArgs[2] = _T('d');
+		RestWithoutArgs[3] = _T('\0');
 	}
 	else
 	{
@@ -68,14 +120,14 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 
 	nErrorLevel = 0;
 
-	if( !*Rest )
+	if(!_tcslen(RestWithoutArgs))
 	{
-		_tcscpy(Rest,_T("\""));
-		_tcscat(Rest,comspec);
-		_tcscat(Rest,_T("\""));
+		_tcscpy(RestWithoutArgs,_T("\""));
+		_tcscat(RestWithoutArgs,comspec);
+		_tcscat(RestWithoutArgs,_T("\""));
 	}
 
-	rest = malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
+	rest = malloc ( _tcslen(RestWithoutArgs) + 1 * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
 	 if(comspec != NULL)
@@ -84,7 +136,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	 return 1;
 	}
 
-	param =malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
+	param =malloc ( _tcslen(RestWithoutArgs) + 1 * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
 	 if(comspec != NULL)
@@ -97,12 +149,11 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	param[0] = _T('\0');
 
 
-	_tcscpy(rest,Rest);
+	_tcscpy(rest,RestWithoutArgs);
 	
 	/* Parsing the command that gets called by start, and it's parameters */
 	if(!_tcschr(rest,_T('\"')))
 	{
-		INT i = 0;
 		INT count = _tcslen(rest);
 		
 		/* find the end of the command and start of the args */
@@ -111,7 +162,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			if(rest[i] == _T(' '))
 			{	
 				
-				_tcscpy(param,&rest[i]);
+				_tcscpy(param,&rest[i+1]);
 				rest[i] = _T('\0');
 				break;
 			}
@@ -119,7 +170,6 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	}
 	else
 	{
-		INT i = 0;	
 		INT count = _tcslen(rest);		
 		BOOL bInside = FALSE;
 
@@ -130,7 +180,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 				bInside = !bInside;
 			if((rest[i] == _T(' ')) && !bInside)
 			{					
-				_tcscpy(param,&rest[i]);
+				_tcscpy(param,&rest[i+1]);
 				rest[i] = _T('\0');
 				break;
 			}
@@ -233,12 +283,12 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		if (bBat == TRUE)
 		{
 		 bCreate = CreateProcess (NULL, szFullCmdLine, NULL, NULL, FALSE,
-			 CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci);
+			 CREATE_NEW_CONSOLE | Priority, NULL, NULL, &stui, &prci);
 		}
 		else
 		{
 				bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
-					CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci);
+					CREATE_NEW_CONSOLE | Priority, NULL, NULL, &stui, &prci);
 		}
 		
 		if (bCreate)

@@ -4,13 +4,13 @@
  * FILE:            drivers/dd/serial/create.c
  * PURPOSE:         Serial IRP_MJ_CREATE operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
 #include "serial.h"
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialCreate(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -19,7 +19,7 @@ SerialCreate(
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status;
 
-	DPRINT("Serial: IRP_MJ_CREATE\n");
+	DPRINT("IRP_MJ_CREATE\n");
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
@@ -32,12 +32,12 @@ SerialCreate(
 
 	if(DeviceExtension->IsOpened)
 	{
-		DPRINT("Serial: COM%lu is already opened\n", DeviceExtension->ComPort);
+		DPRINT("COM%lu is already opened\n", DeviceExtension->ComPort);
 		Status = STATUS_ACCESS_DENIED;
 		goto ByeBye;
 	}
 
-	DPRINT("Serial: open COM%lu: successfull\n", DeviceExtension->ComPort);
+	DPRINT("Open COM%lu: successfull\n", DeviceExtension->ComPort);
 	DeviceExtension->IsOpened = TRUE;
 	Status = STATUS_SUCCESS;
 

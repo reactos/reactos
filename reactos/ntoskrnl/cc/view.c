@@ -556,7 +556,7 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS STATIC
+NTSTATUS static
 CcRosCreateCacheSegment(PBCB Bcb,
 			ULONG FileOffset,
 			PCACHE_SEGMENT* CacheSeg)
@@ -863,7 +863,7 @@ CcRosRequestCacheSegment(PBCB Bcb,
 }
 #ifdef CACHE_BITMAP
 #else
-STATIC VOID
+static VOID
 CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 		PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {

@@ -156,7 +156,6 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     PEPROCESS Process;
     PETHREAD Thread;
     PTEB TebBase = NULL;
-    KIRQL OldIrql;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status, AccessStatus;
     HANDLE_TABLE_ENTRY CidEntry;
@@ -397,9 +396,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         if (CreateSuspended) KeResumeThread(&Thread->Tcb);
 
         /* Dispatch thread */
-        OldIrql = KeAcquireDispatcherDatabaseLock ();
-        KiReadyThread(&Thread->Tcb);
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        KeReadyThread(&Thread->Tcb);
 
         /* Dereference completely to kill it */
         ObDereferenceObjectEx(Thread, 2);
@@ -439,9 +436,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             if (CreateSuspended) KeResumeThread(&Thread->Tcb);
 
             /* Dispatch thread */
-            OldIrql = KeAcquireDispatcherDatabaseLock ();
-            KiReadyThread(&Thread->Tcb);
-            KeReleaseDispatcherDatabaseLock(OldIrql);
+            KeReadyThread(&Thread->Tcb);
 
             /* Dereference it, leaving only the keep-alive */
             ObDereferenceObject(Thread);
@@ -482,9 +477,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             if (CreateSuspended) KeResumeThread(&Thread->Tcb);
 
             /* Dispatch thread */
-            OldIrql = KeAcquireDispatcherDatabaseLock ();
-            KiReadyThread(&Thread->Tcb);
-            KeReleaseDispatcherDatabaseLock(OldIrql);
+            KeReadyThread(&Thread->Tcb);
 
             /* Dereference it, leaving only the keep-alive */
             ObDereferenceObject(Thread);
@@ -533,9 +526,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
     /* Dispatch thread */
     PSREFTRACE(Thread);
-    OldIrql = KeAcquireDispatcherDatabaseLock ();
-    KiReadyThread(&Thread->Tcb);
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KeReadyThread(&Thread->Tcb);
 
     /* Dereference it, leaving only the keep-alive */
     ObDereferenceObject(Thread);
@@ -1075,17 +1066,6 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
 
     /* Return status */
     return Status;
-}
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-NtYieldExecution(VOID)
-{
-    KiDispatchThread(Ready);
-    return STATUS_SUCCESS;
 }
 
 /* EOF */

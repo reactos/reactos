@@ -2,11 +2,11 @@
 #define __NTOSKRNL_INCLUDE_INTERNAL_TEST_H
 
 typedef VOID
-STDCALL
+NTAPI
 PExFreePool(PVOID Block);
 
 typedef PMDL
-STDCALL
+NTAPI
 PMmCreateMdl(
     PMDL Mdl,
     PVOID Base,
@@ -14,19 +14,19 @@ PMmCreateMdl(
 );
 
 typedef VOID
-STDCALL
+NTAPI
 PMmProbeAndLockPages(
     PMDL Mdl,
     KPROCESSOR_MODE AccessMode,
     LOCK_OPERATION Operation
 );
 
-typedef VOID
+typedef LONG_PTR
 FASTCALL
 PObDereferenceObject(PVOID Object);
 
 typedef NTSTATUS
-STDCALL
+NTAPI
 PObReferenceObjectByHandle(
     HANDLE Handle,
     ACCESS_MASK DesiredAccess,

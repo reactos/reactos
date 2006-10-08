@@ -349,6 +349,8 @@ extern "C" {
 #define FCW_STATUS	1
 #define FCW_TOOLBAR	2
 #define FCW_TREE	3
+#define FCW_INTERNETBAR	6
+#define FCW_PROGRESS	8
 #define FCT_MERGE	1
 #define FCT_CONFIGABLE	2
 #define FCT_ADDTOEND	4
@@ -1549,8 +1551,36 @@ DECLARE_INTERFACE_(IShellView2,IShellView)
 	STDMETHOD(GetItemObject)(THIS_ UINT,REFIID,PVOID*) PURE;
 	STDMETHOD(GetView)(THIS_ SHELLVIEWID*,ULONG) PURE;
 	STDMETHOD(CreateViewWindow2)(THIS_ LPSV2CVW2_PARAMS) PURE;
+    STDMETHOD(HandleRename)(THIS_ PCUITEMID_CHILD) PURE;
+    STDMETHOD(SelectAndPositionItem)(THIS_ PCUITEMID_CHILD,UINT,POINT*) PURE;
 };
 #undef INTERFACE
+#ifdef COBJMACROS
+#define IShellView2_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IShellView2_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IShellView2_Release(T) (T)->lpVtbl->Release(T)
+#define IShellView2_GetWindow(T,a) (T)->lpVtbl->GetWindow(T,a)
+#define IShellView2_ContextSensitiveHelp(T,a) (T)->lpVtbl->ContextSensitiveHelp(T,a)
+#define IShellView2_TranslateAccelerator(T,a) (T)->lpVtbl->TranslateAccelerator(T,a)
+#ifdef _FIX_ENABLEMODELESS_CONFLICT
+#define IShellView2_EnableModeless(T,a) (T)->lpVtbl->EnableModelessSV(T,a)
+#else
+#define IShellView2_EnableModeless(T,a) (T)->lpVtbl->EnableModeless(T,a)
+#endif
+#define IShellView2_UIActivate(T,a) (T)->lpVtbl->UIActivate(T,a)
+#define IShellView2_Refresh(T) (T)->lpVtbl->Refresh(T)
+#define IShellView2_CreateViewWindow(T,a,b,c,d,e) (T)->lpVtbl->CreateViewWindow(T,a,b,c,d,e)
+#define IShellView2_DestroyViewWindow(T) (T)->lpVtbl->DestroyViewWindow(T)
+#define IShellView2_GetCurrentInfo(T,a) (T)->lpVtbl->GetCurrentInfo(T,a)
+#define IShellView2_AddPropertySheetPages(T,a,b,c) (T)->lpVtbl->AddPropertySheetPages(T,a,b,c)
+#define IShellView2_SaveViewState(T) (T)->lpVtbl->SaveViewState(T)
+#define IShellView2_SelectItem(T,a,b) (T)->lpVtbl->SelectItem(T,a,b)
+#define IShellView2_GetItemObject(T,a,b,c) (T)->lpVtbl->GetItemObject(T,a,b,c)
+#define IShellView2_GetView(T,a,b) (T)->lpVtbl->GetView(T,a,b)
+#define IShellView2_CreateViewWindow2(T,a) (T)->lpVtbl->CreateViewWindow2(T,a)
+#define IShellView2_HandleRename(T,a) (T)->lpVtbl->HandleRename(T,a)
+#define IShellView2_SelectAndPositionItem(T,a,b,c) (T)->lpVtbl->SelectAndPositionItem(T,a,b,c)
+#endif
 
 #define INTERFACE IShellExecuteHookA
 DECLARE_INTERFACE_(IShellExecuteHookA,IUnknown)
@@ -1698,6 +1728,19 @@ DECLARE_INTERFACE_(IDropTargetHelper, IUnknown)
 #undef INTERFACE
 #endif /* _WIN32_IE >= 0x0500 */
 
+#if defined(COBJMACROS)
+/*** IUnknown methods ***/
+#define IDropTargetHelper_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDropTargetHelper_AddRef(p)             (p)->lpVtbl->AddRef(p)
+#define IDropTargetHelper_Release(p)            (p)->lpVtbl->Release(p)
+/*** IDropTargetHelper methods ***/
+#define IDropTargetHelper_DragEnter(p,a,b,c,d)  (p)->lpVtbl->DragEnter(p,a,b,c,d)
+#define IDropTargetHelper_DragLeave(p)          (p)->lpVtbl->DragLeave(p)
+#define IDropTargetHelper_DragOver(p,a,b)       (p)->lpVtbl->DragOver(p,a,b)
+#define IDropTargetHelper_Drop(p,a,b,c)         (p)->lpVtbl->Drop(p,a,b,c)
+#define IDropTargetHelper_Show(p,a)             (p)->lpVtbl->Show(p,a)
+#endif
+
 #define INTERFACE IInputObject
 DECLARE_INTERFACE_(IInputObject,IUnknown)
 {
@@ -1762,11 +1805,62 @@ typedef struct _CSFV
   FOLDERVIEWMODE   fvm;
 } CSFV, *LPCSFV;
 
+#define INTERFACE IShellFolderViewCB
+DECLARE_INTERFACE_(IShellFolderViewCB,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    /*** IShellFolderViewCB methods ***/
+    STDMETHOD(MessageSFVCB)(THIS_ UINT uMsg, WPARAM wParam, LPARAM lParam) PURE;
+};
+#undef INTERFACE
+
+#define SFVM_MERGEMENU	1
+#define SFVM_INVOKECOMMAND	2
+#define SFVM_GETHELPTEXT	3
+#define SFVM_GETTOOLTIPTEXT	4
+#define SFVM_GETBUTTONINFO	5
+#define SFVM_GETBUTTONS	6
+#define SFVM_INITMENUPOPUP	7
+#define SFVM_FSNOTIFY	14
+#define SFVM_WINDOWCREATED	15
+#define SFVM_GETDETAILSOF	23
+#define SFVM_COLUMNCLICK	24
+#define SFVM_QUERYFSNOTIFY	25
+#define SFVM_DEFITEMCOUNT	26
+#define SFVM_DEFVIEWMODE	27
+#define SFVM_UNMERGEMENU	28
+#define SFVM_UPDATESTATUSBAR	31
+#define SFVM_BACKGROUNDENUM	32
+#define SFVM_DIDDRAGDROP	36
+#define SFVM_SETISFV	39
+#define SFVM_THISIDLIST	41
+#define SFVM_ADDPROPERTYPAGES	47
+#define SFVM_BACKGROUNDENUMDONE	48
+#define SFVM_GETNOTIFY	49
+#define SFVM_GETSORTDEFAULTS	53
+#define SFVM_SIZE	57
+#define SFVM_GETZONE	58
+#define SFVM_GETPANE	59
+#define SFVM_GETHELPTOPIC	63
+#define SFVM_GETANIMATION	68
+
+typedef struct _SFV_CREATE
+{
+    UINT cbSize;
+    IShellFolder *pshf;
+    IShellView *psvOuter;
+    IShellFolderViewCB *psfvcb;
+} SFV_CREATE;
+
 void WINAPI SHAddToRecentDocs(UINT,PCVOID);
 LPITEMIDLIST WINAPI SHBrowseForFolderA(PBROWSEINFOA);
 LPITEMIDLIST WINAPI SHBrowseForFolderW(PBROWSEINFOW);
 DWORD WINAPI SHCLSIDFromStringA(LPCSTR,CLSID*);
 DWORD WINAPI SHCLSIDFromStringW(LPCWSTR,CLSID*);
+HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE*,IShellView**);
 HRESULT WINAPI SHCreateShellFolderViewEx(LPCSFV pshfvi, IShellView **ppshv);
 void WINAPI SHChangeNotify(LONG,UINT,PCVOID,PCVOID);
 HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER,LPCITEMIDLIST,int,PVOID,int);
@@ -1824,6 +1918,9 @@ LPITEMIDLIST WINAPI ILFindLastID(LPCITEMIDLIST);
 LPITEMIDLIST WINAPI ILGetNext(LPCITEMIDLIST);
 UINT WINAPI ILGetSize(LPCITEMIDLIST);
 void WINAPI ILFree(LPITEMIDLIST);
+
+void WINAPI SHFree(LPVOID);
+LPITEMIDLIST WINAPI SHCloneSpecialIDList(HWND,DWORD,BOOL);
 
 HRESULT WINAPI SHCoCreateInstance(LPCWSTR,REFCLSID,IUnknown*,REFIID,void**);
 BOOL WINAPI SHObjectProperties(HWND,DWORD,LPCWSTR,LPCWSTR);

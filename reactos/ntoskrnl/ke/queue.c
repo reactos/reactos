@@ -21,7 +21,7 @@
  */
 VOID
 FASTCALL
-KiWakeQueue(IN PKQUEUE Queue)
+KiActivateWaiterQueue(IN PKQUEUE Queue)
 {
     PLIST_ENTRY QueueEntry;
     PLIST_ENTRY WaitEntry;
@@ -57,7 +57,7 @@ KiWakeQueue(IN PKQUEUE Queue)
                                           KWAIT_BLOCK,
                                           WaitListEntry);
             Thread = WaitBlock->Thread;
-            KiAbortWaitThread(Thread, (NTSTATUS)QueueEntry, IO_NO_INCREMENT);
+            KiUnwaitThread(Thread, (NTSTATUS)QueueEntry, IO_NO_INCREMENT);
         }
     }
 }
@@ -69,7 +69,7 @@ LONG
 NTAPI
 KiInsertQueue(IN PKQUEUE Queue,
               IN PLIST_ENTRY Entry,
-              BOOLEAN Head)
+              IN BOOLEAN Head)
 {
     ULONG InitialState;
     PKTHREAD Thread = KeGetCurrentThread();
@@ -103,10 +103,10 @@ KiInsertQueue(IN PKQUEUE Queue,
         /* Remove the queue from the thread's wait list */
         Thread->WaitStatus = (NTSTATUS)Entry;
         if (Thread->WaitListEntry.Flink) RemoveEntryList(&Thread->WaitListEntry);
-        Thread->WaitReason = 0;
 
-        /* Increase the active threads and set the status*/
+        /* Increase the active threads and remove any wait reason */
         Queue->CurrentCount++;
+        Thread->WaitReason = 0;
 
         /* Check if there's a Thread Timer */
         if (Thread->Timer.Header.Inserted)
@@ -180,13 +180,13 @@ KeInsertHeadQueue(IN PKQUEUE Queue,
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Insert the Queue */
     PreviousState = KiInsertQueue(Queue, Entry, TRUE);
 
     /* Release the Dispatcher Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
 
     /* Return previous State */
     return PreviousState;
@@ -206,13 +206,13 @@ KeInsertQueue(IN PKQUEUE Queue,
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Insert the Queue */
     PreviousState = KiInsertQueue(Queue, Entry, FALSE);
 
     /* Release the Dispatcher Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
 
     /* Return previous State */
     return PreviousState;
@@ -263,7 +263,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
     else
     {
         /* Lock the Dispatcher Database */
-        OldIrql = KeAcquireDispatcherDatabaseLock();
+        OldIrql = KiAcquireDispatcherLock();
         Thread->WaitIrql = OldIrql;
     }
 
@@ -285,7 +285,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             RemoveEntryList(QueueEntry);
 
             /* Wake the queue */
-            KiWakeQueue(PreviousQueue);
+            KiActivateWaiterQueue(PreviousQueue);
         }
 
         /* Insert in this new Queue */
@@ -335,7 +335,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             {
                 /* Increment the count and unlock the dispatcher */
                 Queue->CurrentCount++;
-                KeReleaseDispatcherDatabaseLock(Thread->WaitIrql);
+                KiReleaseDispatcherLock(Thread->WaitIrql);
             }
             else
             {
@@ -359,7 +359,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
 
                 /* Check if we can swap the thread's stack */
                 Thread->WaitListEntry.Flink = NULL;
-                KiCheckThreadStackSwap(WaitMode, Thread, Swappable);
+                Swappable = KiCheckThreadStackSwap(Thread, WaitMode);
 
                 /* We need to wait for the object... check for a timeout */
                 if (Timeout)
@@ -401,7 +401,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
                     if (!KiInsertTimer(Timer, *Timeout))
                     {
                         /* FIXME */
-                        DPRINT1("If you see thie message contact Alex ASAP\n");
+                        DPRINT1("If you see this message contact Alex ASAP\n");
                         KEBUGCHECK(0);
                     }
 
@@ -426,7 +426,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
 
                 /* Find a new thread to run */
                 KiAddThreadToWaitList(Thread, Swappable);
-                Status = KiSwapThread();
+                Status = KiSwapThread(Thread, KeGetCurrentPrcb());
 
                 /* Reset the wait reason */
                 Thread->WaitReason = 0;
@@ -449,7 +449,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             }
 
             /* Reacquire the lock */
-            OldIrql = KeAcquireDispatcherDatabaseLock();
+            OldIrql = KiAcquireDispatcherLock();
 
             /* Save the new IRQL and decrease number of waiting threads */
             Thread->WaitIrql = OldIrql;
@@ -458,7 +458,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
     }
 
     /* Unlock Database and return */
-    KeReleaseDispatcherDatabaseLock(Thread->WaitIrql);
+    KiReleaseDispatcherLock(Thread->WaitIrql);
     return QueueEntry;
 }
 
@@ -469,7 +469,7 @@ PLIST_ENTRY
 NTAPI
 KeRundownQueue(IN PKQUEUE Queue)
 {
-    PLIST_ENTRY EnumEntry;
+    PLIST_ENTRY ListHead, NextEntry;
     PLIST_ENTRY FirstEntry = NULL;
     PKTHREAD Thread;
     KIRQL OldIrql;
@@ -478,7 +478,7 @@ KeRundownQueue(IN PKQUEUE Queue)
     ASSERT(IsListEmpty(&Queue->Header.WaitListHead));
 
     /* Get the Dispatcher Lock */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Make sure the list is not empty */
     if (!IsListEmpty(&Queue->EntryListHead))
@@ -488,20 +488,25 @@ KeRundownQueue(IN PKQUEUE Queue)
     }
 
     /* Unlink threads and clear their Thread->Queue */
-    while (!IsListEmpty(&Queue->ThreadListHead))
+    ListHead = &Queue->ThreadListHead;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
     {
-        /* Get the Entry and Remove it */
-        EnumEntry = RemoveHeadList(&Queue->ThreadListHead);
-
         /* Get the Entry's Thread */
-        Thread = CONTAINING_RECORD(EnumEntry, KTHREAD, QueueListEntry);
+        Thread = CONTAINING_RECORD(NextEntry, KTHREAD, QueueListEntry);
 
         /* Kill its Queue */
         Thread->Queue = NULL;
+
+        /* Remove this entry */
+        RemoveEntryList(NextEntry);
+
+        /* Get the next entry */
+        NextEntry = NextEntry->Flink;
     }
 
     /* Release the lock and return */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
     return FirstEntry;
 }
 

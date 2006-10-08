@@ -407,7 +407,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         {
             /* Set the Debug Flag */
             KeGetCurrentThread()->DispatcherHeader.DebugActive =
-                (Context->Dr7 & DR7_ACTIVE);
+                (Context->Dr7 & DR7_ACTIVE) ? TRUE: FALSE;
         }
     }
 
@@ -594,14 +594,13 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 NTAPI
-KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
-                    PKEXCEPTION_FRAME ExceptionFrame,
-                    PKTRAP_FRAME TrapFrame,
-                    KPROCESSOR_MODE PreviousMode,
-                    BOOLEAN FirstChance)
+KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
+                    IN PKEXCEPTION_FRAME ExceptionFrame,
+                    IN PKTRAP_FRAME TrapFrame,
+                    IN KPROCESSOR_MODE PreviousMode,
+                    IN BOOLEAN FirstChance)
 {
     CONTEXT Context;
-    KD_CONTINUE_TYPE Action;
     ULONG_PTR Stack, NewStack;
     ULONG Size;
     EXCEPTION_RECORD LocalExceptRecord;
@@ -637,6 +636,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
         Context.Eip--;
     }
 
+    /* Sanity check */
     ASSERT(!((PreviousMode == KernelMode) &&
              (Context.EFlags & EFLAGS_V86_MASK)));
 
@@ -647,30 +647,35 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
         if (FirstChance == TRUE)
         {
             /* Break into the debugger for the first time */
-            Action = KdpEnterDebuggerException(ExceptionRecord,
-                                               PreviousMode,
-                                               &Context,
-                                               TrapFrame,
-                                               TRUE,
-                                               TRUE);
+            if (KiDebugRoutine(TrapFrame,
+                               ExceptionFrame,
+                               ExceptionRecord,
+                               &Context,
+                               PreviousMode,
+                               FALSE))
+            {
+                /* Exception was handled */
+                goto Handled;
+            }
 
-            /* If the debugger said continue, then continue */
-            if (Action == kdContinue) goto Handled;
+            /* HACK: GDB Entry */
+            if (KdpCallGdb(TrapFrame, ExceptionRecord, &Context)) goto Handled;
 
             /* If the Debugger couldn't handle it, dispatch the exception */
             if (RtlDispatchException(ExceptionRecord, &Context)) goto Handled;
         }
 
         /* This is a second-chance exception, only for the debugger */
-        Action = KdpEnterDebuggerException(ExceptionRecord,
-                                           PreviousMode,
-                                           &Context,
-                                           TrapFrame,
-                                           FALSE,
-                                           FALSE);
-
-        /* If the debugger said continue, then continue */
-        if (Action == kdContinue) goto Handled;
+        if (KiDebugRoutine(TrapFrame,
+                           ExceptionFrame,
+                           ExceptionRecord,
+                           &Context,
+                           PreviousMode,
+                           TRUE))
+        {
+            /* Exception was handled */
+            goto Handled;
+        }
 
         /* Third strike; you're out */
         KeBugCheckEx(KMODE_EXCEPTION_NOT_HANDLED,
@@ -685,17 +690,26 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
         if (FirstChance)
         {
             /* Enter Debugger if available */
-            Action = KdpEnterDebuggerException(ExceptionRecord,
-                                               PreviousMode,
-                                               &Context,
-                                               TrapFrame,
-                                               TRUE,
-                                               TRUE);
+            if (PsGetCurrentProcess()->DebugPort)
+            {
+                /* FIXME : TODO */
+                ASSERT(FALSE);
+            }
+            else if (KiDebugRoutine(TrapFrame,
+                                    ExceptionFrame,
+                                    ExceptionRecord,
+                                    &Context,
+                                    PreviousMode,
+                                    FALSE))
+            {
+                /* Exception was handled */
+                goto Handled;
+            }
 
-            /* Exit if we're continuing */
-            if (Action == kdContinue) goto Handled;
+            /* HACK: GDB Entry */
+            if (KdpCallGdb(TrapFrame, ExceptionRecord, &Context)) goto Handled;
 
-            /* FIXME: Forward exception to user mode debugger */
+            /* Forward exception to user mode debugger */
             if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) goto Exit;
 
             /* Set up the user-stack */
@@ -771,6 +785,9 @@ DispatchToUser:
                 }
             }
             _SEH_END;
+
+            /* Dispatch exception to user-mode */
+            return;
         }
 
         /* Try second chance */
@@ -797,7 +814,7 @@ DispatchToUser:
 Handled:
     /* Convert the context back into Trap/Exception Frames */
     KeContextToTrapFrame(&Context,
-                         NULL,
+                         ExceptionFrame,
                          TrapFrame,
                          Context.ContextFlags,
                          PreviousMode);

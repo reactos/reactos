@@ -26,7 +26,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <usetup.h>
+#include "usetup.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -257,13 +257,13 @@ do_reg_operation(HANDLE KeyHandle,
     }
 
   if (!(Flags & FLG_ADDREG_BINVALUETYPE) ||
-      (Type == REG_DWORD && InfGetFieldCount (Context) == 5))
+      (Type == REG_DWORD && SetupGetFieldCount (Context) == 5))
     {
       PWCHAR Str = NULL;
 
       if (Type == REG_MULTI_SZ)
 	{
-	  if (!InfGetMultiSzField (Context, 5, NULL, 0, &Size))
+	  if (!SetupGetMultiSzFieldW (Context, 5, NULL, 0, &Size))
 	    Size = 0;
 
 	  if (Size)
@@ -272,7 +272,7 @@ do_reg_operation(HANDLE KeyHandle,
 	      if (Str == NULL)
 		return FALSE;
 
-	      InfGetMultiSzField (Context, 5, Str, Size, NULL);
+	      SetupGetMultiSzFieldW (Context, 5, Str, Size, NULL);
 	    }
 
 	  if (Flags & FLG_ADDREG_APPEND)
@@ -289,7 +289,7 @@ do_reg_operation(HANDLE KeyHandle,
 	}
       else
 	{
-	  if (!InfGetStringField (Context, 5, NULL, 0, &Size))
+	  if (!SetupGetStringFieldW (Context, 5, NULL, 0, &Size))
 	    Size = 0;
 
 	  if (Size)
@@ -298,7 +298,7 @@ do_reg_operation(HANDLE KeyHandle,
 	      if (Str == NULL)
 		return FALSE;
 
-	      InfGetStringField (Context, 5, Str, Size, NULL);
+	      SetupGetStringFieldW (Context, 5, Str, Size, NULL);
 	    }
 	}
 
@@ -344,7 +344,7 @@ do_reg_operation(HANDLE KeyHandle,
     {
       PUCHAR Data = NULL;
 
-      if (!InfGetBinaryField (Context, 5, NULL, 0, &Size))
+      if (!SetupGetBinaryField (Context, 5, NULL, 0, &Size))
 	Size = 0;
 
       if (Size)
@@ -354,7 +354,7 @@ do_reg_operation(HANDLE KeyHandle,
 	    return FALSE;
 
 	  DPRINT("setting binary data %wZ len %lu\n", ValueName, Size);
-	  InfGetBinaryField (Context, 5, Data, Size, NULL);
+	  SetupGetBinaryField (Context, 5, Data, Size, NULL);
 	}
 
       NtSetValueKey (KeyHandle,
@@ -481,35 +481,35 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
   UNICODE_STRING Value;
   PUNICODE_STRING ValuePtr;
   NTSTATUS Status;
-  ULONG Flags;
+  UINT Flags;
   ULONG Length;
 
-  PINFCONTEXT Context;
+  INFCONTEXT Context;
   HANDLE KeyHandle;
   BOOLEAN Ok;
 
 
-  Ok = InfFindFirstLine (hInf, Section, NULL, &Context);
+  Ok = SetupFindFirstLineW (hInf, Section, NULL, &Context);
 
   if (Ok)
     {
-      for (;Ok; Ok = InfFindNextLine (Context, Context))
+      for (;Ok; Ok = SetupFindNextLine (&Context, &Context))
         {
           /* get root */
-          if (!InfGetStringField (Context, 1, Buffer, MAX_INF_STRING_LENGTH, NULL))
+          if (!SetupGetStringFieldW (&Context, 1, Buffer, MAX_INF_STRING_LENGTH, NULL))
               continue;
           if (!GetRootKey (Buffer))
             continue;
 
           /* get key */
           Length = wcslen (Buffer);
-          if (!InfGetStringField (Context, 2, Buffer + Length, MAX_INF_STRING_LENGTH - Length, NULL))
+          if (!SetupGetStringFieldW (&Context, 2, Buffer + Length, MAX_INF_STRING_LENGTH - Length, NULL))
             *Buffer = 0;
 
           DPRINT("KeyName: <%S>\n", Buffer);
 
           /* get flags */
-          if (!InfGetIntField (Context, 4, (PLONG)&Flags))
+          if (!SetupGetIntField (&Context, 4, (PINT)&Flags))
             Flags = 0;
 
           DPRINT("Flags: %lx\n", Flags);
@@ -547,7 +547,7 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
             }
 
           /* get value name */
-          if (InfGetStringField (Context, 3, Buffer, MAX_INF_STRING_LENGTH, NULL))
+          if (SetupGetStringFieldW (&Context, 3, Buffer, MAX_INF_STRING_LENGTH, NULL))
             {
               RtlInitUnicodeString (&Value,
                                     Buffer);
@@ -559,7 +559,7 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
             }
 
           /* and now do it */
-          if (!do_reg_operation (KeyHandle, ValuePtr, Context, Flags))
+          if (!do_reg_operation (KeyHandle, ValuePtr, &Context, Flags))
             {
               NtClose (KeyHandle);
               return FALSE;
@@ -567,7 +567,6 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
 
           NtClose (KeyHandle);
         }
-      InfFreeContext(Context);
     }
 
   return TRUE;
@@ -580,25 +579,22 @@ ImportRegistryFile(PWSTR Filename,
 		   BOOLEAN Delete)
 {
   WCHAR FileNameBuffer[MAX_PATH];
-  UNICODE_STRING FileName;
   HINF hInf;
-  NTSTATUS Status;
-  ULONG ErrorLine;
+  UINT ErrorLine;
 
   /* Load inf file from install media. */
   wcscpy(FileNameBuffer, SourceRootPath.Buffer);
   wcscat(FileNameBuffer, L"\\reactos\\");
   wcscat(FileNameBuffer, Filename);
 
-  RtlInitUnicodeString(&FileName,
-		       FileNameBuffer);
-
-  Status = InfOpenFile(&hInf,
-		       &FileName,
+  hInf = SetupOpenInfFileW(
+		       FileNameBuffer,
+		       NULL,
+		       INF_STYLE_WIN4,
 		       &ErrorLine);
-  if (!NT_SUCCESS(Status))
+  if (hInf == INVALID_HANDLE_VALUE)
     {
-      DPRINT1("InfOpenFile() failed (Status %lx)\n", Status);
+      DPRINT1("SetupOpenInfFile() failed\n");
       return FALSE;
     }
 
@@ -607,7 +603,7 @@ ImportRegistryFile(PWSTR Filename,
       DPRINT1("registry_callback() failed\n");
     }
 
-  InfCloseFile (hInf);
+  SetupCloseInfFile (hInf);
 
   return TRUE;
 }

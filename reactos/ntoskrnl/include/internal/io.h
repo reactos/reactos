@@ -558,12 +558,6 @@ IopInitializePnpServices(
     IN BOOLEAN BootDrivers)
 ;
 
-NTSTATUS
-IopInvalidateDeviceRelations(
-    IN PDEVICE_NODE DeviceNode,
-    IN DEVICE_RELATION_TYPE Type
-);
-
 //
 // Initialization Routines
 //
@@ -574,7 +568,7 @@ IoCreateArcNames(
 
 NTSTATUS
 IoCreateSystemRootLink(
-    IN PCHAR ParameterLine
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 //
@@ -730,7 +724,7 @@ IopSaveBootLogToFile(
 // I/O Cancellation Routines
 //
 VOID
-STDCALL
+NTAPI
 IoCancelThreadIo(
     IN PETHREAD Thread
 );
@@ -777,7 +771,7 @@ RawFsIsRawFileSystemDeviceObject(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 RawFsDriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -787,7 +781,7 @@ RawFsDriverEntry(
 // PnP Root MiniDriver
 //
 NTSTATUS
-STDCALL
+NTAPI
 PnpRootDriverEntry(
    IN PDRIVER_OBJECT DriverObject,
    IN PUNICODE_STRING RegistryPath
@@ -908,13 +902,13 @@ IopParseFile(
 );
 
 VOID
-STDCALL
+NTAPI
 IopDeleteFile(
     IN PVOID ObjectBody
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 IopSecurityFile(
     IN PVOID ObjectBody,
     IN SECURITY_OPERATION_CODE OperationCode,
@@ -927,7 +921,7 @@ IopSecurityFile(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 IopQueryNameFile(
     IN PVOID ObjectBody,
     IN BOOLEAN HasName,
@@ -938,7 +932,7 @@ IopQueryNameFile(
 );
 
 VOID
-STDCALL
+NTAPI
 IopCloseFile(
     IN PEPROCESS Process OPTIONAL,
     IN PVOID Object,
@@ -957,7 +951,7 @@ IopInitTimerImplementation(
 );
 
 VOID
-STDCALL
+NTAPI
 IopRemoveTimerFromTimerList(
     IN PIO_TIMER Timer
 );
@@ -981,20 +975,10 @@ xHalQueryDriveLayout(
     OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo
 );
 
-#undef HalExamineMBR
-VOID 
-FASTCALL
-HalExamineMBR(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG SectorSize,
-    IN ULONG MBRTypeIdentifier,
-    OUT PVOID *Buffer
-);
-
 VOID
 FASTCALL
 xHalIoAssignDriveLetters(
-    IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     IN PSTRING NtDeviceName,
     OUT PUCHAR NtSystemPath,
     OUT PSTRING NtSystemPathString
@@ -1037,6 +1021,8 @@ extern ULONG IopTraceLevel;
 extern NPAGED_LOOKASIDE_LIST IopMdlLookasideList;
 extern GENERIC_MAPPING IopCompletionMapping;
 extern GENERIC_MAPPING IopFileMapping;
+extern POBJECT_TYPE _IoFileObjectType;
+extern HAL_DISPATCH _HalDispatchTable;
 
 //
 // Inlined Functions

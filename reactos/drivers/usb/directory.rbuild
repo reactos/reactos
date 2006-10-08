@@ -1,6 +1,9 @@
 <directory name="miniport">
 	<xi:include href="miniport/directory.rbuild" />
 </directory>
+<directory name="nt4compat">
+	<xi:include href="nt4compat/directory.rbuild" />
+</directory>
 <!--directory name="usbd">
 	<xi:include href="usbd/usbd.rbuild" />
 </directory-->

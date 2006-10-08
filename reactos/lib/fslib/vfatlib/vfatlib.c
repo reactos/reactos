@@ -12,18 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
-NTSTATUS
-VfatInitialize(VOID)
-{
-  DPRINT("VfatInitialize()\n");
-
-  return STATUS_SUCCESS;
-}
-
-
-NTSTATUS
+NTSTATUS NTAPI
 VfatFormat (PUNICODE_STRING DriveRoot,
-	    ULONG MediaFlag,
+	    FMIFS_MEDIA_FLAG MediaFlag,
 	    PUNICODE_STRING Label,
 	    BOOLEAN QuickFormat,
 	    ULONG ClusterSize,
@@ -194,15 +185,6 @@ VfatFormat (PUNICODE_STRING DriveRoot,
 }
 
 
-NTSTATUS
-VfatCleanup(VOID)
-{
-  DPRINT("VfatCleanup()\n");
-
-  return STATUS_SUCCESS;
-}
-
-
 VOID
 UpdateProgress (PFORMAT_CONTEXT Context,
 		ULONG Increment)
@@ -219,6 +201,19 @@ UpdateProgress (PFORMAT_CONTEXT Context,
       Context->Percent = NewPercent;
       Context->Callback (PROGRESS, 0, &Context->Percent);
     }
+}
+
+NTSTATUS WINAPI
+VfatChkdsk(
+	IN PUNICODE_STRING DriveRoot,
+	IN BOOLEAN FixErrors,
+	IN BOOLEAN Verbose,
+	IN BOOLEAN CheckOnlyIfDirty,
+	IN BOOLEAN ScanDrive,
+	IN PFMIFSCALLBACK Callback)
+{
+	DPRINT1("VfatChkdsk() unimplemented!\n");
+	return STATUS_SUCCESS;
 }
 
 /* EOF */

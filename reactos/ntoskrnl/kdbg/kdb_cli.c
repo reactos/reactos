@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb_cli.c
  * PURPOSE:         Kernel debugger command line interface
@@ -78,6 +77,7 @@ STATIC BOOLEAN KdbpCmdPcr(ULONG Argc, PCHAR Argv[]);
 STATIC BOOLEAN KdbpCmdTss(ULONG Argc, PCHAR Argv[]);
 
 STATIC BOOLEAN KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[]);
+STATIC BOOLEAN KdbpCmdFilter(ULONG Argc, PCHAR Argv[]);
 STATIC BOOLEAN KdbpCmdSet(ULONG Argc, PCHAR Argv[]);
 STATIC BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
 
@@ -146,6 +146,7 @@ STATIC CONST struct
    /* Others */
    { NULL, NULL, "Others", NULL },
    { "bugcheck", "bugcheck", "Bugchecks the system.", KdbpCmdBugCheck },
+   { "filter", "filter [componentid] [error|warning|trace|info|level] [on|off]", "Enable/disable debug channels", KdbpCmdFilter },
    { "set", "set [var] [value]", "Sets var to value or displays value of var.", KdbpCmdSet },
    { "help", "help", "Display help screen.", KdbpCmdHelp }
 };
@@ -242,6 +243,81 @@ KdbpCmdEvalExpression(ULONG Argc, PCHAR Argv[])
    }
 
    return TRUE;
+}
+
+/*!\brief Display list of active debug channels
+ */
+STATIC BOOLEAN
+KdbpCmdFilter(ULONG Argc, PCHAR Argv[])
+{
+   ULONG ComponentId, Level;
+   BOOLEAN State;
+   PCHAR pend;
+
+   if (Argc < 2)
+   {
+      KdbpPrint("filter: component id argument required!\n");
+      return TRUE;
+   }
+   ComponentId = strtoul(Argv[1], &pend, 0);
+   if (Argv[1] == pend)
+   {
+      KdbpPrint("filter: '%s' is not a valid component id!\n", Argv[1]);
+      return TRUE;
+   }
+
+   if (Argc < 3)
+   {
+      KdbpPrint("filter: level argument required!\n");
+      return TRUE;
+   }
+   if (_stricmp(Argv[2], "error") == 0)
+      Level = DPFLTR_ERROR_LEVEL;
+   else if (_stricmp(Argv[2], "warning") == 0)
+      Level = DPFLTR_WARNING_LEVEL;
+   else if (_stricmp(Argv[2], "trace") == 0)
+      Level = DPFLTR_TRACE_LEVEL;
+   else if (_stricmp(Argv[2], "info") == 0)
+      Level = DPFLTR_INFO_LEVEL;
+   else
+   {
+      Level = strtoul(Argv[2], &pend, 0);
+      if (Argv[2] == pend)
+      {
+         KdbpPrint("filter: '%s' is not a valid level!\n", Argv[2]);
+         return TRUE;
+      }
+   }
+   if (Level < 31)
+   {
+      /* Interpret it as a bit shift */
+      Level = 1 << Level;
+   }
+
+   if (Argc < 4)
+   {
+      /* Display the state of the filter */
+      if (NtQueryDebugFilterState(ComponentId, Level))
+         KdbpPrint("Debug messages are enabled.\n");
+      else
+         KdbpPrint("Debug messages are disabled.\n");
+      return TRUE;
+   }
+   else
+   {
+      /* Set the filter state */
+      if (_stricmp(Argv[3], "on") == 0)
+         State = TRUE;
+      else if (_stricmp(Argv[3], "off") == 0)
+         State = FALSE;
+      else
+      {
+         KdbpPrint("filter: '%s' is not a valid state!\n", Argv[3]);
+         return TRUE;
+      }
+
+      return NT_SUCCESS(NtSetDebugFilterState(ComponentId, Level, State));
+   }
 }
 
 /*!\brief Disassembles 10 instructions at eip or given address or

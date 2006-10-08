@@ -54,7 +54,6 @@ SerenumAddDevice(
 	DeviceExtension->Common.PnpState = dsStopped;
 	DeviceExtension->Pdo = Pdo;
 	IoInitializeRemoveLock(&DeviceExtension->RemoveLock, SERENUM_TAG, 0, 0);
-	Fdo->Flags |= DO_POWER_PAGABLE;
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
 	{
@@ -62,7 +61,12 @@ SerenumAddDevice(
 		IoDeleteDevice(Fdo);
 		return Status;
 	}
-	Fdo->Flags |= DO_BUFFERED_IO;
+	if (DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE)
+		Fdo->Flags |= DO_POWER_PAGABLE;
+	if (DeviceExtension->LowerDevice->Flags & DO_BUFFERED_IO)
+		Fdo->Flags |= DO_BUFFERED_IO;
+	if (DeviceExtension->LowerDevice->Flags & DO_DIRECT_IO)
+		Fdo->Flags |= DO_DIRECT_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	return STATUS_SUCCESS;

@@ -9,16 +9,12 @@
 
 #include <fmifs/fmifs.h>
 
-NTSTATUS
-VfatxInitialize (VOID);
-
-NTSTATUS
-VfatxCleanup (VOID);
-
-NTSTATUS
+NTSTATUS NTAPI
 VfatxFormat (PUNICODE_STRING DriveRoot,
-	    ULONG MediaFlag,
+	    FMIFS_MEDIA_FLAG MediaFlag,
+	    PUNICODE_STRING Label,
 	    BOOLEAN QuickFormat,
+	    ULONG ClusterSize,
 	    PFMIFSCALLBACK Callback);
 
 #endif /*__VFATLIB_H */

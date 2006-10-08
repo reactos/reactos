@@ -8,6 +8,7 @@
 #ifndef CMLIB_H
 #define CMLIB_H
 
+#define WIN32_NO_STATUS
 #include <ntddk.h>
 #include "hivedata.h"
 #include "cmdata.h"
@@ -17,7 +18,7 @@
 #define ROUND_DOWN(a,b)      (((a)/(b))*(b))
 #endif
 
-#define CMAPI
+#define CMAPI NTAPI
 
 struct _HHIVE;
 
@@ -30,7 +31,7 @@ typedef VOID (CMAPI *PRELEASE_CELL_ROUTINE)(
    HCELL_INDEX Cell);
 
 typedef PVOID (CMAPI *PALLOCATE_ROUTINE)(
-   ULONG Size,
+   SIZE_T Size,
    BOOLEAN Paged);
 
 typedef VOID (CMAPI *PFREE_ROUTINE)(
@@ -39,21 +40,21 @@ typedef VOID (CMAPI *PFREE_ROUTINE)(
 typedef BOOLEAN (CMAPI *PFILE_READ_ROUTINE)(
    struct _HHIVE *RegistryHive,
    ULONG FileType,
-   ULONG FileOffset,
+   ULONGLONG FileOffset,
    PVOID Buffer,
-   ULONG BufferLength);
+   SIZE_T BufferLength);
 
 typedef BOOLEAN (CMAPI *PFILE_WRITE_ROUTINE)(
    struct _HHIVE *RegistryHive,
    ULONG FileType,
-   ULONG FileOffset,
+   ULONGLONG FileOffset,
    PVOID Buffer,
-   ULONG BufferLength);
+   SIZE_T BufferLength);
 
 typedef BOOLEAN (CMAPI *PFILE_SET_SIZE_ROUTINE)(
    struct _HHIVE *RegistryHive,
    ULONG FileType,
-   ULONG FileSize);
+   ULONGLONG FileSize);
 
 typedef BOOLEAN (CMAPI *PFILE_FLUSH_ROUTINE)(
    struct _HHIVE *RegistryHive,
@@ -63,7 +64,7 @@ typedef struct _HMAP_ENTRY
 {
     ULONG_PTR Bin;
     ULONG_PTR Block;
-    PCM_VIEW_OF_FILE CmHive;
+    struct _CM_VIEW_OF_FILE *CmHive;
     ULONG MemAlloc;
 } HMAP_ENTRY, *PHMAP_ENTRY;
 
@@ -109,6 +110,10 @@ typedef struct _HHIVE
     BOOLEAN ReadOnly;
     BOOLEAN Log;
     BOOLEAN DirtyFlag;
+    ULONG HvBinHeadersUse;
+    ULONG HvFreeCellsUse;
+    ULONG HvUsedcellsUse;
+    ULONG CmUsedCellsUse;
     ULONG HiveFlags;
     ULONG LogSize;
     ULONG RefreshCount;
@@ -117,6 +122,7 @@ typedef struct _HHIVE
     DUAL Storage[HvMaxStorageType];
 } HHIVE, *PHHIVE;
 
+#ifndef _CM_
 typedef struct _EREGISTRY_HIVE
 {
   HHIVE Hive;
@@ -128,6 +134,7 @@ typedef struct _EREGISTRY_HIVE
   HANDLE  HiveHandle;
   HANDLE  LogHandle;
 } EREGISTRY_HIVE, *PEREGISTRY_HIVE;
+#endif
 
 /*
  * Public functions.
@@ -143,6 +150,8 @@ HvInitialize(
    ULONG Operation,
    ULONG_PTR HiveData OPTIONAL,
    ULONG Cluster OPTIONAL,
+   ULONG Flags,
+   ULONG FileType,
    PALLOCATE_ROUTINE Allocate,
    PFREE_ROUTINE Free,
    PFILE_READ_ROUTINE FileRead,
@@ -160,6 +169,9 @@ HvGetCell(
    PHHIVE RegistryHive,
    HCELL_INDEX CellOffset);
 
+#define HvReleaseCell(h, c)     \
+    if (h->ReleaseCellRoutine) h->ReleaseCellRoutine(h, c)
+
 LONG CMAPI
 HvGetCellSize(
    PHHIVE RegistryHive,
@@ -168,7 +180,7 @@ HvGetCellSize(
 HCELL_INDEX CMAPI
 HvAllocateCell(
    PHHIVE RegistryHive,
-   ULONG Size,
+   SIZE_T Size,
    HV_STORAGE_TYPE Storage);
 
 HCELL_INDEX CMAPI

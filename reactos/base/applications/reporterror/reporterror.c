@@ -28,7 +28,7 @@
 #include <commctrl.h>
 #include <stdio.h>
 #include <string.h>
-#include "reporterror.h"
+#include "resource.h"
 
 static LPSTR ErrorReportingServerName = "errors.reactos.com";
 static HINSTANCE hAppInstance;

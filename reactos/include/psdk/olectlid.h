@@ -97,8 +97,6 @@ extern const GUID IID_IOleLink;
 extern const GUID IID_IOleCache;
 extern const GUID IID_IOleManager;
 extern const GUID IID_IOlePresObj;
-extern const GUID IID_IDropSource;
-extern const GUID IID_IDropTarget;
 extern const GUID IID_IDebug;
 extern const GUID IID_IDebugStream;
 extern const GUID IID_IAdviseSink2;

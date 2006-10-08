@@ -16,20 +16,6 @@
 #define ExceptionNestedException	2
 #define ExceptionCollidedUnwind		3
 
-#define EXCEPTION_NONCONTINUABLE	0x01
-#define EXCEPTION_UNWINDING			0x02
-#define EXCEPTION_EXIT_UNWIND		0x04
-#define EXCEPTION_STACK_INVALID		0x08
-#define EXCEPTION_NESTED_CALL		0x10
-#define EXCEPTION_TARGET_UNWIND		0x20
-#define EXCEPTION_COLLIDED_UNWIND	0x40
-
-#define EXCEPTION_UNWIND_MODE \
-(  EXCEPTION_UNWINDING \
- | EXCEPTION_EXIT_UNWIND \
- | EXCEPTION_TARGET_UNWIND \
- | EXCEPTION_COLLIDED_UNWIND)
-
 #define EREC_CODE		0x00
 #define EREC_FLAGS		0x04
 #define EREC_RECORD		0x08
@@ -178,7 +164,7 @@ __except_handler3:
 
     // Either we're called to handle an exception or we're called to unwind    
     movl	EH3_ERECORD(%ebp), %eax
-    testl	$EXCEPTION_UNWIND_MODE, EREC_FLAGS(%eax)
+    testl	$EXCEPTION_UNWIND, EREC_FLAGS(%eax)
     jnz		.eh3_unwind
 
     // Keep a pointer to the exception registration in EBX

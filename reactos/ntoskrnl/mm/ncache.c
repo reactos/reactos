@@ -84,7 +84,7 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
    return ((PVOID)Result);
 }
 
-VOID STATIC
+VOID static
 MmFreeNonCachedPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                     PFN_TYPE Page, SWAPENTRY SwapEntry,
                     BOOLEAN Dirty)

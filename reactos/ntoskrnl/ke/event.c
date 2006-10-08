@@ -1,30 +1,27 @@
 /*
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/event.c
- * PURPOSE:         Implements events
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  David Welch (welch@mcmail.com)
+ * PURPOSE:         Implements the Event Dispatcher Object
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FUNCTIONS ****************************************************************/
+/* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
  */
 VOID
-STDCALL
-KeClearEvent(PKEVENT Event)
+NTAPI
+KeClearEvent(IN PKEVENT Event)
 {
-    DPRINT("KeClearEvent(Event %x)\n", Event);
+    ASSERT_EVENT(Event);
 
     /* Reset Signal State */
     Event->Header.SignalState = FALSE;
@@ -34,13 +31,11 @@ KeClearEvent(PKEVENT Event)
  * @implemented
  */
 VOID
-STDCALL
-KeInitializeEvent(PKEVENT Event,
-                  EVENT_TYPE Type,
-                  BOOLEAN State)
+NTAPI
+KeInitializeEvent(IN PKEVENT Event,
+                  IN EVENT_TYPE Type,
+                  IN BOOLEAN State)
 {
-    DPRINT("KeInitializeEvent(Event %x)\n", Event);
-
     /* Initialize the Dispatcher Header */
     KeInitializeDispatcherHeader(&Event->Header,
                                  Type,
@@ -52,11 +47,9 @@ KeInitializeEvent(PKEVENT Event,
  * @implemented
  */
 VOID
-STDCALL
-KeInitializeEventPair(PKEVENT_PAIR EventPair)
+NTAPI
+KeInitializeEventPair(IN PKEVENT_PAIR EventPair)
 {
-    DPRINT("KeInitializeEventPair(Event %x)\n", EventPair);
-
     /* Initialize the Event Pair Type and Size */
     EventPair->Type = EventPairObject;
     EventPair->Size = sizeof(KEVENT_PAIR);
@@ -69,25 +62,27 @@ KeInitializeEventPair(PKEVENT_PAIR EventPair)
 /*
  * @implemented
  */
-LONG STDCALL
+LONG
+NTAPI
 KePulseEvent(IN PKEVENT Event,
              IN KPRIORITY Increment,
              IN BOOLEAN Wait)
 {
     KIRQL OldIrql;
     LONG PreviousState;
-
-    DPRINT("KePulseEvent(Event %x, Wait %x)\n",Event,Wait);
+    PKTHREAD Thread;
+    ASSERT_EVENT(Event);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Save the Old State */
     PreviousState = Event->Header.SignalState;
 
     /* Check if we are non-signaled and we have stuff in the Wait Queue */
-    if (!PreviousState && !IsListEmpty(&Event->Header.WaitListHead)) {
-
+    if (!PreviousState && !IsListEmpty(&Event->Header.WaitListHead))
+    {
         /* Set the Event to Signaled */
         Event->Header.SignalState = 1;
 
@@ -99,15 +94,15 @@ KePulseEvent(IN PKEVENT Event,
     Event->Header.SignalState = 0;
 
     /* Check what wait state was requested */
-    if (Wait == FALSE) {
-
+    if (Wait == FALSE)
+    {
         /* Wait not requested, release Dispatcher Database and return */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
-
-    } else {
-
+        KiReleaseDispatcherLock(OldIrql);
+    }
+    else
+    {
         /* Return Locked and with a Wait */
-        KTHREAD *Thread = KeGetCurrentThread();
+        Thread = KeGetCurrentThread();
         Thread->WaitNext = TRUE;
         Thread->WaitIrql = OldIrql;
     }
@@ -120,9 +115,11 @@ KePulseEvent(IN PKEVENT Event,
  * @implemented
  */
 LONG
-STDCALL
-KeReadStateEvent(PKEVENT Event)
+NTAPI
+KeReadStateEvent(IN PKEVENT Event)
 {
+    ASSERT_EVENT(Event);
+
     /* Return the Signal State */
     return Event->Header.SignalState;
 }
@@ -131,16 +128,16 @@ KeReadStateEvent(PKEVENT Event)
  * @implemented
  */
 LONG
-STDCALL
-KeResetEvent(PKEVENT Event)
+NTAPI
+KeResetEvent(IN PKEVENT Event)
 {
     KIRQL OldIrql;
     LONG PreviousState;
-
-    DPRINT("KeResetEvent(Event %x)\n",Event);
+    ASSERT_EVENT(Event);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Save the Previous State */
     PreviousState = Event->Header.SignalState;
@@ -149,7 +146,7 @@ KeResetEvent(PKEVENT Event)
     Event->Header.SignalState = 0;
 
     /* Release Dispatcher Database and return previous state */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
     return PreviousState;
 }
 
@@ -157,73 +154,75 @@ KeResetEvent(PKEVENT Event)
  * @implemented
  */
 LONG
-STDCALL
-KeSetEvent(PKEVENT Event,
-           KPRIORITY Increment,
-           BOOLEAN Wait)
+NTAPI
+KeSetEvent(IN PKEVENT Event,
+           IN KPRIORITY Increment,
+           IN BOOLEAN Wait)
 {
     KIRQL OldIrql;
     LONG PreviousState;
     PKWAIT_BLOCK WaitBlock;
+    PKTHREAD Thread;
+    ASSERT_EVENT(Event);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    DPRINT("KeSetEvent(Event %x, Wait %x)\n",Event,Wait);
+    /*
+     * Check if this is an signaled notification event without an upcoming wait.
+     * In this case, we can immediately return TRUE, without locking.
+     */
+    if ((Event->Header.Type == NotificationEvent) &&
+        (Event->Header.SignalState == 1) &&
+        !(Wait))
+    {
+        /* Return the signal state (TRUE/Signalled) */
+        return TRUE;
+    }
 
     /* Lock the Dispathcer Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Save the Previous State */
     PreviousState = Event->Header.SignalState;
 
-    /* Check if we have stuff in the Wait Queue */
-    if (IsListEmpty(&Event->Header.WaitListHead)) {
+    /* Set the Event to Signaled */
+    Event->Header.SignalState = 1;
 
-        /* Set the Event to Signaled */
-        DPRINT("Empty Wait Queue, Signal the Event\n");
-        Event->Header.SignalState = 1;
-
-    } else {
-
+    /* Check if the event just became signaled now, and it has waiters */
+    if (!(PreviousState) && !(IsListEmpty(&Event->Header.WaitListHead)))
+    {
         /* Get the Wait Block */
         WaitBlock = CONTAINING_RECORD(Event->Header.WaitListHead.Flink,
                                       KWAIT_BLOCK,
                                       WaitListEntry);
 
-
         /* Check the type of event */
-        if (Event->Header.Type == NotificationEvent || WaitBlock->WaitType == WaitAll) {
-
-            if (PreviousState == 0) {
-
-                /* We must do a full wait satisfaction */
-                DPRINT("Notification Event or WaitAll, Wait on the Event and Signal\n");
-                Event->Header.SignalState = 1;
-                KiWaitTest(&Event->Header, Increment);
-            }
-
-        } else {
-
-            /* We can satisfy wait simply by waking the thread, since our signal state is 0 now */
-            DPRINT("WaitAny or Sync Event, just unwait the thread\n");
-            KiAbortWaitThread(WaitBlock->Thread, WaitBlock->WaitKey, Increment);
+        if (Event->Header.Type == NotificationEvent)
+        {
+            /* Unwait the thread */
+            KxUnwaitThread(&Event->Header, Increment);
+        }
+        else
+        {
+            /* Otherwise unwait the thread and unsignal the event */
+            KxUnwaitThreadForEvent(Event, Increment);
         }
     }
 
     /* Check what wait state was requested */
-    if (Wait == FALSE) {
-
+    if (!Wait)
+    {
         /* Wait not requested, release Dispatcher Database and return */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
-
-    } else {
-
+        KiReleaseDispatcherLock(OldIrql);
+    }
+    else
+    {
         /* Return Locked and with a Wait */
-        KTHREAD *Thread = KeGetCurrentThread();
+        Thread = KeGetCurrentThread();
         Thread->WaitNext = TRUE;
         Thread->WaitIrql = OldIrql;
     }
 
     /* Return the previous State */
-    DPRINT("Done: %d\n", PreviousState);
     return PreviousState;
 }
 
@@ -231,40 +230,66 @@ KeSetEvent(PKEVENT Event,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KeSetEventBoostPriority(IN PKEVENT Event,
-                        IN PKTHREAD *Thread OPTIONAL)
+                        IN PKTHREAD *WaitingThread OPTIONAL)
 {
-    PKTHREAD WaitingThread;
     KIRQL OldIrql;
-
-    DPRINT("KeSetEventBoostPriority(Event %x, Thread %x)\n",Event,Thread);
+    PKWAIT_BLOCK WaitBlock;
+    PKTHREAD Thread = KeGetCurrentThread(), WaitThread;
+    ASSERT_EVENT(Event);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Acquire Dispatcher Database Lock */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
-    /* If our wait list is empty, then signal the event and return */
-    if (IsListEmpty(&Event->Header.WaitListHead)) {
-
+    /* Check if the list is empty */
+    if (IsListEmpty(&Event->Header.WaitListHead))
+    {
+        /* Set the Event to Signaled */
         Event->Header.SignalState = 1;
 
-    } else {
+        /* Return */
+        KiReleaseDispatcherLock(OldIrql);
+        return;
+    }
 
-        /* Get Thread that is currently waiting. First get the Wait Block, then the Thread */
-        WaitingThread = CONTAINING_RECORD(Event->Header.WaitListHead.Flink,
-                                          KWAIT_BLOCK,
-                                          WaitListEntry)->Thread;
+    /* Get the Wait Block */
+    WaitBlock = CONTAINING_RECORD(Event->Header.WaitListHead.Flink,
+                                  KWAIT_BLOCK,
+                                  WaitListEntry);
 
-        /* Return it to caller if requested */
-        if ARGUMENT_PRESENT(Thread) *Thread = WaitingThread;
+    /* Check if this is a WaitAll */
+    if (WaitBlock->WaitType == WaitAll)
+    {
+        /* Set the Event to Signaled */
+        Event->Header.SignalState = 1;
 
-        /* Reset the Quantum and Unwait the Thread */
-        WaitingThread->Quantum = WaitingThread->QuantumReset;
-        KiAbortWaitThread(WaitingThread, STATUS_SUCCESS, EVENT_INCREMENT);
+        /* Unwait the thread and unsignal the event */
+        KxUnwaitThreadForEvent(Event, EVENT_INCREMENT);
+    }
+    else
+    {
+        /* Return waiting thread to caller */
+        WaitThread = WaitBlock->Thread;
+        if (WaitingThread) *WaitingThread = WaitThread;
+
+        /* Calculate new priority */
+        Thread->Priority = KiComputeNewPriority(Thread);
+
+        /* Unlink the waiting thread */
+        KiUnlinkThread(WaitThread, STATUS_WAIT_0);
+
+        /* Request priority boosting */
+        WaitThread->AdjustIncrement = Thread->Priority;
+        WaitThread->AdjustReason = 2;
+
+        /* Ready the thread */
+        KiReadyThread(WaitThread);
     }
 
     /* Release the Dispatcher Database Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
 }
 
 /* EOF */

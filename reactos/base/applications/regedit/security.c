@@ -28,6 +28,8 @@ DEFINE_GUID(IID_IRegKeySecurity, 0x965fc360, 0x16ff, 0x11d0, 0x0091, 0xcb,0x00,0
 #if REGEDIT_IMPLEMENT_ISECURITYINFORMATION2
 DEFINE_GUID(IID_IRegKeySecurity2, 0xc3ccfdb4, 0x6f88, 0x11d2, 0x00a3, 0xce,0x00,0xc0,0x4f,0xb1,0x78,0x2a);
 #endif
+
+/* FIXME: already defined in aclui.h - causing problems when compiling with MSVC/PSDK*/
 DEFINE_GUID(IID_IEffectivePermission, 0x3853dc76, 0x9f35, 0x407c, 0x0088, 0xa1,0xd1,0x93,0x44,0x36,0x5f,0xbc);
 DEFINE_GUID(IID_ISecurityObjectTypeInfo, 0xfc3066eb, 0x79ef, 0x444b, 0x0091, 0x11,0xd1,0x8a,0x75,0xeb,0xf2,0xfa);
 
@@ -839,7 +841,7 @@ RegKeyEditPermissions(HWND hWndOwner,
     LPTSTR lpKeyPath = NULL;
     PCRegKeySecurity RegKeySecurity;
     SI_OBJECT_INFO ObjectInfo;
-    int lnMachine = 0, lnKeyName = 0;
+    size_t lnMachine = 0, lnKeyName = 0;
 
     if (pfnEditSecurity == NULL)
     {

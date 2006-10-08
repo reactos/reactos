@@ -246,9 +246,12 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 
 	_header_wdths_ok = false;
 
+	if (!_left_hwnd && !_right_hwnd)
+		return;
+
 	if (entry)
 		set_curdir(entry);
-	else
+	else if (_root._entry)
 		set_curdir(_root._entry);
 
 	if (_left_hwnd) {
@@ -390,6 +393,11 @@ FileChildWindow* FileChildWindow::create(const FileChildWndInfo& info)
 
 	FileChildWindow* child = static_cast<FileChildWindow*>(
 		create_mdi_child(info, mcs, WINDOW_CREATOR_INFO(FileChildWindow,FileChildWndInfo)));
+
+	if (!child->_left_hwnd && !child->_right_hwnd) {
+		SendMessage(info._hmdiclient, WM_MDIDESTROY, (WPARAM)child->_hwnd, 0);
+		MessageBox(info._hmdiclient, TEXT("Error opening child window"), TEXT("ROS Explorer"), MB_OK);
+	}
 
 	return child;
 }

@@ -584,6 +584,9 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   PWSTR ValueName;
   UNICODE_STRING EnvValue;
   UNICODE_STRING EnvExpandedValue;
+#ifdef DEBUG
+  ULONG DataSize = 0;
+#endif
 
   PAGED_CODE_RTL();
 

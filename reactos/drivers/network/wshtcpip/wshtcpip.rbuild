@@ -1,4 +1,4 @@
-<module name="wshtcpip" type="win32dll" baseaddress="${BASEADDRESS_WSHTCPIP}" installbase="system32" installname="wshtcpip.dll">
+<module name="wshtcpip" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_WSHTCPIP}" installbase="system32" installname="wshtcpip.dll">
 	<importlibrary definition="wshtcpip.def"></importlibrary>
 	<include base="wshtcpip">.</include>
 	<define name="UNICODE" />

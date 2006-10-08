@@ -202,6 +202,7 @@ IopNotifyPlugPlayNotification(
 	IN PVOID EventCategoryData2)
 {
 	PPNP_NOTIFY_ENTRY ChangeEntry;
+	PLIST_ENTRY ListEntry;
 	PVOID NotificationStructure;
 	BOOLEAN CallCurrentEntry;
 
@@ -265,9 +266,10 @@ IopNotifyPlugPlayNotification(
 	/* Loop through procedures registred in PnpNotifyListHead
 	 * list to find those that meet some criteria.
 	 */
-
-	LIST_FOR_EACH(ChangeEntry,&PnpNotifyListHead, PNP_NOTIFY_ENTRY, PnpNotifyList)
+	ListEntry = PnpNotifyListHead.Flink;
+	while (ListEntry != &PnpNotifyListHead)
 	{
+		ChangeEntry = CONTAINING_RECORD(ListEntry, PNP_NOTIFY_ENTRY, PnpNotifyList);
 		CallCurrentEntry = FALSE;
 
 		switch (EventCategory)
@@ -298,15 +300,22 @@ IopNotifyPlugPlayNotification(
 			}
 		}
 
+		/* Move to the next element now, as callback may unregister itself */
+		ListEntry = ListEntry->Flink;
+		/* FIXME: If ListEntry was the last element and that callback registers
+		 * new notifications, those won't be checked... */
+
 		if (CallCurrentEntry)
 		{
 			/* Call entry into new allocated memory */
 			DPRINT("IopNotifyPlugPlayNotification(): found suitable callback %p\n",
 				ChangeEntry);
 
+			KeReleaseGuardedMutex(&PnpNotifyListLock);
 			(ChangeEntry->PnpNotificationProc)(
 				NotificationStructure,
 				ChangeEntry->Context);
+			KeAcquireGuardedMutex(&PnpNotifyListLock);
 		}
 
 	}

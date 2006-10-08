@@ -17,15 +17,15 @@ typedef struct _FILE_LOCK_TOC
 
 VOID
 INIT_FUNCTION
-STDCALL
+NTAPI
 FsRtlpInitNotifyImplementation(VOID);
 
 VOID 
-STDCALL
+NTAPI
 FsRtlpInitFileLockingImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 FsRtlpFileLockCancelRoutine(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -49,7 +49,7 @@ FsRtlpFastUnlockAllByKey(
     IN PFILE_LOCK FileLock,
     IN PFILE_OBJECT FileObject,
     IN PEPROCESS Process,
-    IN DWORD Key,
+    IN ULONG Key,
     IN BOOLEAN UseKey,
     IN PVOID Context OPTIONAL
 );

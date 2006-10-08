@@ -1,0 +1,72 @@
+#include "resource.h"
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005
+ */
+
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+{
+STRING_HELP,  "bruk: %S stasjon: [-FS:fil-system] [-V:merke] [-Q] [-A:størrelse] [-C]\n\n\
+  [stasjon:]         Spesifisere stasjon til formater.\n\
+  -FS:file-system  Spesifisere typen av fil system (%s).\n\
+  -V:merke         Spesifisere volum merke.\n\
+  -Q               Fullføre en rask formatering.\n\
+  -A:størrelse     Dominerende standard fordeling enhet størrelse. Standard innstilling\n\
+                   er sterkt anbefalt for generielt bruk\n\
+                   NTFS støtter 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   FAT støtter 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   NTFS komprimering er ikke støttet for fordeling enhet størrelse\n\
+                   ovenfor 4096.\n\
+  -C               Filer opprettet på nytt volum vil bli komprimert etter\n\
+                   standard.\n\n"
+
+STRING_COMPLETE   "%lu prosent ferdig.\r"
+
+STRING_FORMAT_FAIL "FormatEx var ikke i stand til fullstendig vellykket.\n\n"
+
+STRING_NO_SUPPORT  "Operasjon ikke støttet"
+
+STRING_FMIFS_FAIL  "Kunne ikke befinne seg FMIFS artikkel momenter.\n\n"
+
+STRING_UNKNOW_ARG  "Ukjent argument: %S\n"
+
+STRING_DRIVE_PARM  "Obligatorisk drive parameter er mistet.\n\n"
+
+STRING_ERROR_DRIVE_TYPE  "Kunne ikke få drive typen"
+
+STRING_INSERT_DISK       "Sett inn en ny diskett i stasjon %C:\nog trykk på Enter når du er klar..."
+
+STRING_NO_VOLUME         "Kunne ikke spørre om volumet"
+
+STRING_NO_VOLUME_SIZE    "Kunne ikke spørre om volumet størrelse"
+
+STRING_FILESYSTEM        "Typen av filsystem er %S.\n"
+
+STRING_LABEL_NAME_EDIT  "Velg aktuell volum merke for stasjon %C: "
+
+STRING_ERROR_LABEL     "Et uriktig volum merke ble innskrivet for denne stasjonen.\n"
+
+STRING_YN_FORMAT       "\nADVARSEL, ALLE DATA PÅ EN DISK SOM IKKE KAN FJERNES \n\
+STASJON %C: VIL BLI BORTE!\nFortsette med Formateringen (J/N)? "
+
+STRING_YES_NO_FAQ      "JN"
+
+STRING_VERIFYING       "kontrollerer"
+
+STRING_FAST_FMT        "Rask Formatering"
+
+STRING_CREATE_FSYS     "Opprett filsystem struktur.\n"
+
+STRING_FMT_COMPLETE    "Formateringen fullført.\n"
+
+STRING_VOL_COMPRESS    "Volumet støtter ikke komprimering.\n"
+
+STRING_ENTER_LABEL     "Volum merke (11 tegn, legge inn for ingen)? "
+
+STRING_NO_LABEL        "Kunne ikke merke volumet"
+
+STRING_FREE_SPACE     "\n%I64d byte total ledig plass.\n%I64d byte tilgjengelig på disken.\n"
+
+STRING_SERIAL_NUMBER   "\nVolumet Serie nummer er %04X-%04X\n"
+}

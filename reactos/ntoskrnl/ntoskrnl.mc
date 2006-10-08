@@ -1154,6 +1154,17 @@ restart your computer, press F8 to select Advanced Startup Options,
 and then select Safe Mode.
 .
 
+MessageId=0xC8
+Severity=Success
+Facility=System
+SymbolicName=IRQL_UNEXPECTED_VALUE
+Language=English
+The processor's IRQL is not valid for the currently executing context.
+This is a software error condition and is usually caused by a device
+driver changing IRQL and not restoring it to its previous value when
+it has finished its task.
+.
+
 MessageId=0xCB
 Severity=Success
 Facility=System

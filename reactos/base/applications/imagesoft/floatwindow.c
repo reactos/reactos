@@ -49,7 +49,7 @@ ShowHideWindow(PFLT_WND FltInfo)
 }
 
 
-VOID
+BOOL
 FloatToolbarCreateToolsGui(PMAIN_WND_INFO Info)
 {
     HWND hTb;
@@ -67,39 +67,45 @@ FloatToolbarCreateToolsGui(PMAIN_WND_INFO Info)
                          NULL,
                          hInstance,
                          NULL);
+    if (hTb != NULL)
+    {
+        SendMessage(hTb,
+                    TB_SETEXTENDEDSTYLE,
+                    0,
+                    TBSTYLE_EX_HIDECLIPPEDBUTTONS);
 
-    SendMessage(hTb,
-                TB_SETEXTENDEDSTYLE,
-                0,
-                TBSTYLE_EX_HIDECLIPPEDBUTTONS);
+        SendMessage(hTb,
+                    TB_BUTTONSTRUCTSIZE,
+                    sizeof(ToolsButtons[0]),
+                    0);
 
-    SendMessage(hTb,
-                TB_BUTTONSTRUCTSIZE,
-                sizeof(ToolsButtons[0]),
-                0);
+        SendMessage(hTb,
+                    TB_SETBITMAPSIZE,
+                    0,
+                    (LPARAM)MAKELONG(16, 16));
 
-    SendMessage(hTb,
-                TB_SETBITMAPSIZE,
-                0,
-                (LPARAM)MAKELONG(16, 16));
+        hImageList = InitImageList(NumButtons,
+                                   IDB_TOOLSRECTSEL);
 
-    hImageList = InitImageList(NumButtons,
-                               IDB_TOOLSRECTSEL);
+        ImageList_Destroy((HIMAGELIST)SendMessage(hTb,
+                                                  TB_SETIMAGELIST,
+                                                  0,
+                                                  (LPARAM)hImageList));
 
-    ImageList_Destroy((HIMAGELIST)SendMessage(hTb,
-                                              TB_SETIMAGELIST,
-                                              0,
-                                              (LPARAM)hImageList));
+        SendMessage(hTb,
+                    TB_ADDBUTTONS,
+                    NumButtons,
+                    (LPARAM)ToolsButtons);
 
-    SendMessage(hTb,
-                TB_ADDBUTTONS,
-                NumButtons,
-                (LPARAM)ToolsButtons);
+        SendMessage(hTb,
+                    TB_AUTOSIZE,
+                    0,
+                    0);
 
-    SendMessage(hTb,
-                TB_AUTOSIZE,
-                0,
-                0);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 
@@ -158,7 +164,7 @@ FloatWindowPaintHueSlider(HWND hHueSlider)
 }
 
 
-VOID
+BOOL
 FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info)
 {
     HWND hColorPicker;
@@ -183,6 +189,8 @@ FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info)
                                   NULL,
                                   hInstance,
                                   NULL);
+    if (hColorPicker == NULL)
+        return FALSE;
 
     hHueSlider = CreateWindowEx(0,
                                 WC_STATIC,
@@ -196,6 +204,8 @@ FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info)
                                 NULL,
                                 hInstance,
                                 NULL);
+    if (hHueSlider == NULL)
+        return FALSE;
 
     hMouseButton = CreateWindowEx(0,
                                   WC_COMBOBOX,
@@ -206,16 +216,16 @@ FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info)
                                   NULL,
                                   hInstance,
                                   NULL);
+    if (hMouseButton == NULL)
+        return FALSE;
+
     //MakeFlatCombo(hMouseButton);
 
     /* temp, just testing */
-    if (hMouseButton != NULL)
-    {
-        SendMessage(hMouseButton, CB_ADDSTRING, 0, (LPARAM)_T("Primary"));
-        SendMessage(hMouseButton, CB_ADDSTRING, 0, (LPARAM)_T("Secondary"));
-        SendMessage(hMouseButton, CB_SETCURSEL, 0, 0);
+    SendMessage(hMouseButton, CB_ADDSTRING, 0, (LPARAM)_T("Primary"));
+    SendMessage(hMouseButton, CB_ADDSTRING, 0, (LPARAM)_T("Secondary"));
+    SendMessage(hMouseButton, CB_SETCURSEL, 0, 0);
 
-    }
 
     hMore = CreateWindowEx(WS_EX_STATICEDGE,
                            WC_BUTTON,
@@ -228,6 +238,8 @@ FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info)
                            NULL,
                            hInstance,
                            NULL);
+    if (hMore == NULL)
+        return FALSE;
 
     hMoreBitmap = (HBITMAP)LoadImage(hInstance,
                                      MAKEINTRESOURCE(IDB_COLORSMORE),
@@ -255,10 +267,12 @@ FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info)
         ReleaseDC(hColorPicker, hDc);
     }
 
+    return TRUE;
+
 }
 
 
-VOID
+BOOL
 FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info)
 {
     HWND hList;
@@ -275,6 +289,8 @@ FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info)
                            NULL,
                            hInstance,
                            NULL);
+    if (hList == NULL)
+        return FALSE;
 
     NumButtons = sizeof(HistoryButtons) / sizeof(HistoryButtons[0]);
     hButtons = CreateWindowEx(0,
@@ -286,34 +302,40 @@ FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info)
                               NULL,
                               hInstance,
                               NULL);
+    if (hButtons != NULL)
+    {
+        SendMessage(hButtons,
+                    TB_BUTTONSTRUCTSIZE,
+                    sizeof(ToolsButtons[0]),
+                    0);
 
-    SendMessage(hButtons,
-                TB_BUTTONSTRUCTSIZE,
-                sizeof(ToolsButtons[0]),
-                0);
+        SendMessage(hButtons,
+                    TB_SETBITMAPSIZE,
+                    0,
+                    (LPARAM)MAKELONG(10, 10));
 
-    SendMessage(hButtons,
-                TB_SETBITMAPSIZE,
-                0,
-                (LPARAM)MAKELONG(10, 10));
+        hImageList = InitImageList(NumButtons,
+                                   IDB_HISTBACK);
 
-    hImageList = InitImageList(NumButtons,
-                               IDB_HISTBACK);
+        ImageList_Destroy((HIMAGELIST)SendMessage(hButtons,
+                                                  TB_SETIMAGELIST,
+                                                  0,
+                                                  (LPARAM)hImageList));
 
-    ImageList_Destroy((HIMAGELIST)SendMessage(hButtons,
-                                              TB_SETIMAGELIST,
-                                              0,
-                                              (LPARAM)hImageList));
+        SendMessage(hButtons,
+                    TB_SETBUTTONSIZE,
+                    0,
+                    MAKELONG(18, 16));
 
-    SendMessage(hButtons,
-                TB_SETBUTTONSIZE,
-                0,
-                MAKELONG(18, 16));
+        SendMessage(hButtons,
+                    TB_ADDBUTTONS,
+                    NumButtons,
+                    (LPARAM)HistoryButtons);
 
-    SendMessage(hButtons,
-                TB_ADDBUTTONS,
-                NumButtons,
-                (LPARAM)HistoryButtons);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 LRESULT CALLBACK

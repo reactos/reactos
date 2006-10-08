@@ -387,7 +387,8 @@ STRING_REN_HELP2, "    %lu fichier renommé\n"
 STRING_REN_HELP3, "    %lu fichiers renommés\n"
 
 STRING_RMDIR_HELP,   "Efface un répertoire.\n\n\
-RMDIR [lecteur:]chemin\nRD [lecteur:]chemin"  
+RMDIR [lecteur:]chemin\nRD [lecteur:]chemin"
+STRING_RMDIR_HELP2,	 "Le répertoire n'est pas vide !\n"
 
 STRING_SCREEN_HELP, "Déplace le curseur, optionnellement affiche du texte\n\n\
 SCREEN lig col [texte]\n\n\
@@ -471,7 +472,7 @@ STRING_VERSION_HELP3, "\n This program is distributed in the hope that it will b
 STRING_VERSION_HELP4, "\n This program is free software; you can redistribute it and/or modify\n\
  it under the terms of the GNU General Public License as published by\n\
  the Free Software Foundation; either version 2 of the License, or\n\
- (at your option) any later version."
+ (at your option) any later version.\n"
 
 STRING_VERSION_HELP5, "\nEnvoyer les rapports d'erreur à <ros-dev@reactos.org>.\n\
 Les mises à jour sont disponibles à : http://www.reactos.org"
@@ -502,13 +503,69 @@ MAX           maximise la fenêtre\n\
 RESTORE       restaure la fenêtre\n\
 titre         titre de la fenêtre"
 
+STRING_HELP1, "List of all available commands (+ description)\n\n\
+  command /?     For more information on a specific command\n\n\
+?        List all available commands without description).\n\
+ALIAS    Sets, removes or shows aliases.\n\
+ATTRIB   Displays or changes file attributes.\n\
+BEEP     Beep the speaker.\n\
+CALL     Calls one batch program from another.\n\
+CD       Displays the name of or changes the current directory.\n\
+CHCP     Displays or sets the active code page number.\n\
+CHOICE   Waits for the user to choose one of a set of choices.\n\
+CLS      Clears the screen.\n\
+CMD      Starts a new instance of the ReactOS command interpreter.\n\
+COLOR    Sets the default console foreground and background colors.\n\
+COPY     Copies one or more files to another location.\n\
+DATE     Displays or sets the date.\n\
+DELETE   Deletes one or more files.\n\
+DIR      Displays a list of files and subdirectories in a directory.\n\
+ECHO     Displays messages, or turns command echoing on or off.\n\
+ERASE    Deletes one or more files.\n\
+EXIT     Quits the CMD.EXE program (command interpreter).\n\
+FOR      Runs a specified command for each file in a set of files.\n\
+FREE     (free) disc space.\n\
+GOTO     Directs the ReactOS command interpreter to a labeled line in\n\
+         a batch program.\n\
+HELP     Provides Help information for ReactOS commands.\n\
+HISTORY  List alle commands which has been used\n\
+IF       Performs conditional processing in batch programs.\n\
+LABEL    Creates, changes, or deletes the volume label of a disk.\n\
+MD       Creates a directory.\n\
+MKDIR    Creates a directory.\n\
+MOVE     Moves one or more files from one directory to another\n\
+         directory.\n\
+PATH     Displays or sets a search path for executable files.\n\
+PAUSE    Suspends processing of a batch file and displays a message.\n\
+POPD     Restores the previous value of the current directory saved by\n\
+         PUSHD.\n\
+PROMPT   Changes the command prompt.\n\
+PUSHD    Saves the current directory then changes it.\n\
+RD       Removes a directory.\n\
+REM      Records comments (remarks) in batch files.\n\
+REN      Renames a file or files.\n\
+RENAME   Renames a file or files.\n\
+RMDIR    Removes a directory.\n\
+SCREEN   Move cursor and optionally print text.\n\
+SET      Displays, sets, or removes ReactOS environment variables.\n\
+SHIFT    Shifts the position of replaceable parameters in batch files.\n"
+STRING_HELP2, "START    Starts a separate window to run a specified program or command.\n\
+         Executes command.\n\
+TIME     Displays or sets the system time.\n\
+TIMER    Allow the use of ten stopwaches.\n\
+TITLE    Sets the window title for a CMD.EXE session.\n\
+TYPE     Displays the contents of a text file.\n\
+VER      Displays the ReactOS version.\n\
+VERIFY   Tells ReactOS whether to verify that your files are written\n\
+         correctly to a disk.\n\
+VOL      Displays a disk volume label and serial number.\n"
+
 STRING_CHOICE_OPTION         "ON"
 STRING_COPY_OPTION,          "ONT"
 
 STRING_ALIAS_ERROR,          "Ligne de commande trop longue après remplacement de l'alias!\n"
 STRING_BATCH_ERROR,          "Erreur à l'ouverture du fichier batch\n"
 STRING_CHCP_ERROR1,          "Page de codes actuelle : %u\n"
-STRING_ERROR_INVALID_PARAM_FORMAT,          "Format de paramètre incorrect - %s\n"
 STRING_CHCP_ERROR4,          "Page de code invalide \n"
 STRING_CHOICE_ERROR,         "Option invalide. Format attendu: /C[:]options"
 STRING_CHOICE_ERROR_TXT,     "Option invalide. Format attendu: /T[:]c,nn"
@@ -545,8 +602,6 @@ STRING_GOTO_ERROR2,          "Label '%s' non trouvé\n"
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[Erreur]\n"
 
-STRING_PATH_ERROR,           "CMD: Pas dans l'environnement '%s'\n"
-
 STRING_REN_ERROR1,           "MoveFile() a échoué. Erreur: %lu\n"
 
 STRING_START_ERROR1,         "No batch support at the moment!"
@@ -564,6 +619,16 @@ STRING_ERROR_TOO_MANY_PARAMETERS,  "Trop de paramètres - %s\n"
 STRING_ERROR_PATH_NOT_FOUND,       "Chemin non trouvé\n"
 STRING_ERROR_FILE_NOT_FOUND,       "Fichier non trouvé\n"
 STRING_ERROR_REQ_PARAM_MISSING,    "Paramètre requis manquant\n"
+STRING_ERROR_INVALID_DRIVE,        "Lecteur spécifié introuvable\n"
+STRING_ERROR_INVALID_PARAM_FORMAT, "Format de paramètre incorrect - %s\n"
+STRING_ERROR_BADCOMMAND,           "Commande ou nom de fichier inconnu\n"
+STRING_ERROR_OUT_OF_MEMORY,        "Erreur Pas assez de mémoire.\n"
+STRING_ERROR_CANNOTPIPE,           "Error!  Cannot pipe!  Cannot open temporary file!\n"
+STRING_ERROR_D_PAUSEMSG,           "Appuyez sur une touche pour continuer . . ."
+STRING_ERROR_DRIVER_NOT_READY,     "Lecteur non prêt"
+
+STRING_PATH_ERROR,                 "CMD: Pas dans l'environnement '%s'\n"
+
 STRING_CMD_SHELLINFO,              "\n Interpréteur de ligne de commandes ReactOS"
 STRING_VERSION_RUNVER,             " tournant sur %s"
 STRING_COPY_FILE,                  "        %d fichier(s) copié(s)\n"
@@ -572,4 +637,10 @@ STRING_FOR_ERROR,                  "mauvaise variable spécifiée."
 STRING_SCREEN_COL,                 "valeur invalide pour col"
 STRING_SCREEN_ROW,                 "valeur invalide pour lig"
 STRING_TIMER_TIME                  "Le timer n°%d est %s: "
+
+STRING_INVALID_OPERAND,            "Opérande invalide."
+STRING_EXPECTED_CLOSE_PAREN,       "Attendu ')'."
+STRING_EXPECTED_NUMBER_OR_VARIABLE,"Attendu nombre ou nom de variable."
+STRING_SYNTAX_COMMAND_INCORRECT,   "La syntaxe the la commande est incorrecte."
+
 }

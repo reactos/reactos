@@ -13,6 +13,8 @@ seek			3	1	int int int int
 # MMU methods 
 # claim (virt size align -- base)
 claim			3	1	int int int int
+# claim-mem (size align -- base)
+claim-mem		2	1	int int int
 # release (virt size --)
 release			2	0	int int
 package-to-path         3       1       int char*:arg2 int int

@@ -23,6 +23,7 @@
 #include "ppcboot.h"
 #include "mmu.h"
 #include "compat.h"
+#include "font.h"
 
 #define NDEBUG
 #include <debug.h>

@@ -25,7 +25,7 @@
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-#include <usetup.h>
+#include "usetup.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -214,8 +214,8 @@ AddPartitionToList (ULONG DiskNumber,
     {
       for (j = 0; j < 4; j++)
 	{
-	  if (LayoutBuffer->PartitionEntry[j].PartitionType != PARTITION_ENTRY_UNUSED ||
-	      LayoutBuffer->PartitionEntry[j].PartitionLength.QuadPart != 0ULL)
+	  if (LayoutBuffer->PartitionEntry[i+j].PartitionType != PARTITION_ENTRY_UNUSED ||
+	      LayoutBuffer->PartitionEntry[i+j].PartitionLength.QuadPart != 0ULL)
 	    {
 	      break;
 	    }
@@ -422,7 +422,7 @@ ScanForUnpartitionedDiskSpace (PDISKENTRY DiskEntry)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 DiskIdentifierQueryRoutine(PWSTR ValueName,
                            ULONG ValueType,
                            PVOID ValueData,
@@ -449,7 +449,7 @@ DiskIdentifierQueryRoutine(PWSTR ValueName,
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 DiskConfigurationDataQueryRoutine(PWSTR ValueName,
                                   ULONG ValueType,
                                   PVOID ValueData,
@@ -485,7 +485,7 @@ DiskConfigurationDataQueryRoutine(PWSTR ValueName,
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 SystemConfigurationDataQueryRoutine(PWSTR ValueName,
                                     ULONG ValueType,
                                     PVOID ValueData,
@@ -1056,12 +1056,14 @@ PrintEmptyLine (PPARTLIST List)
 
   if (List->Line >= 0 && List->Line <= Height)
     {
-      FillConsoleOutputAttribute (0x17,
+      FillConsoleOutputAttribute (StdOutput,
+			          FOREGROUND_WHITE | BACKGROUND_BLUE,
 			          Width,
 			          coPos,
 			          &Written);
 
-      FillConsoleOutputCharacter (' ',
+      FillConsoleOutputCharacterA (StdOutput,
+			          ' ',
 			          Width,
 			          coPos,
 			          &Written);
@@ -1081,7 +1083,7 @@ PrintPartitionData (PPARTLIST List,
   USHORT Width;
   USHORT Height;
 
-  ULONGLONG PartSize;
+  LARGE_INTEGER PartSize;
   PCHAR Unit;
   UCHAR Attribute;
   PCHAR PartType;
@@ -1098,25 +1100,25 @@ PrintPartitionData (PPARTLIST List,
 #if 0
       if (PartEntry->UnpartitionledLength >= 0x280000000ULL) /* 10 GB */
 	{
-	  PartSize = (PartEntry->UnpartitionedLength + (1 << 29)) >> 30;
+	  PartSize.QuadPart = (PartEntry->UnpartitionedLength + (1 << 29)) >> 30;
 	  Unit = "GB";
 	}
       else
 #endif
       if (PartEntry->UnpartitionedLength >= 0xA00000ULL) /* 10 MB */
 	{
-	  PartSize = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;
+	  PartSize.QuadPart = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;
 	  Unit = "MB";
 	}
       else
 	{
-	  PartSize = (PartEntry->UnpartitionedLength + (1 << 9)) >> 10;
+	  PartSize.QuadPart = (PartEntry->UnpartitionedLength + (1 << 9)) >> 10;
 	  Unit = "KB";
 	}
 
       sprintf (LineBuffer,
-	       "    Unpartitioned space              %6I64u %s",
-	       PartSize,
+	       "    Unpartitioned space              %6lu %s",
+	       PartSize.u.LowPart,
 	       Unit);
     }
   else
@@ -1150,50 +1152,53 @@ PrintPartitionData (PPARTLIST List,
 #if 0
       if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000LL) /* 10 GB */
 	{
-	  PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
+	  PartSize.QuadPart = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
 	  Unit = "GB";
 	}
       else
 #endif
       if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0xA00000LL) /* 10 MB */
 	{
-	  PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 19)) >> 20;
+	  PartSize.QuadPart = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 19)) >> 20;
 	  Unit = "MB";
 	}
       else
 	{
-	  PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 9)) >> 10;
+	  PartSize.QuadPart = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 9)) >> 10;
 	  Unit = "KB";
 	}
 
       if (PartType == NULL)
 	{
 	  sprintf (LineBuffer,
-		   "%c%c  Type %-3u                         %6I64u %s",
+		   "%c%c  Type %-3u                         %6lu %s",
 		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		   (PartEntry->DriveLetter == 0) ? '-' : ':',
 		   PartEntry->PartInfo[0].PartitionType,
-		   PartSize,
+		   PartSize.u.LowPart,
 		   Unit);
 	}
       else
 	{
 	  sprintf (LineBuffer,
-		   "%c%c  %-24s         %6I64u %s",
+		   "%c%c  %-24s         %6lu %s",
 		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		   (PartEntry->DriveLetter == 0) ? '-' : ':',
 		   PartType,
-		   PartSize,
+		   PartSize.u.LowPart,
 		   Unit);
 	}
     }
 
   Attribute = (List->CurrentDisk == DiskEntry &&
-	       List->CurrentPartition == PartEntry) ? 0x71 : 0x17;
+	       List->CurrentPartition == PartEntry) ?
+	           FOREGROUND_BLUE | BACKGROUND_WHITE :
+	           FOREGROUND_WHITE | BACKGROUND_BLUE;
 
   if (List->Line >= 0 && List->Line <= Height)
     {
-      FillConsoleOutputCharacter (' ',
+      FillConsoleOutputCharacterA (StdOutput,
+			          ' ',
 			          Width,
 			          coPos,
 			          &Written);
@@ -1202,7 +1207,8 @@ PrintPartitionData (PPARTLIST List,
   Width -= 8;
   if (List->Line >= 0 && List->Line <= Height)
     {
-      FillConsoleOutputAttribute (Attribute,
+      FillConsoleOutputAttribute (StdOutput,
+			          Attribute,
 			          Width,
 			          coPos,
 			          &Written);
@@ -1211,9 +1217,11 @@ PrintPartitionData (PPARTLIST List,
   Width -= 2;
   if (List->Line >= 0 && List->Line <= Height)
     {
-      WriteConsoleOutputCharacters (LineBuffer,
+      WriteConsoleOutputCharacterA (StdOutput,
+				    LineBuffer,
 				    min (strlen (LineBuffer), Width),
-				    coPos);
+				    coPos,
+				    &Written);
     }
   List->Line++;
 }
@@ -1229,7 +1237,7 @@ PrintDiskData (PPARTLIST List,
   ULONG Written;
   USHORT Width;
   USHORT Height;
-  ULONGLONG DiskSize;
+  ULARGE_INTEGER DiskSize;
   PCHAR Unit;
 
   Width = List->Right - List->Left - 1;
@@ -1242,35 +1250,35 @@ PrintDiskData (PPARTLIST List,
 #if 0
   if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
     {
-      DiskSize = (DiskEntry->DiskSize + (1 << 29)) >> 30;
+      DiskSize.QuadPart = (DiskEntry->DiskSize + (1 << 29)) >> 30;
       Unit = "GB";
     }
   else
 #endif
     {
-      DiskSize = (DiskEntry->DiskSize + (1 << 19)) >> 20;
-      if (DiskSize == 0)
-	DiskSize = 1;
+      DiskSize.QuadPart = (DiskEntry->DiskSize + (1 << 19)) >> 20;
+      if (DiskSize.QuadPart == 0)
+	DiskSize.QuadPart = 1;
       Unit = "MB";
     }
 
   if (DiskEntry->DriverName.Length > 0)
     {
       sprintf (LineBuffer,
-	       "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ",
-	       DiskSize,
+	       "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S",
+	       DiskSize.u.LowPart,
 	       Unit,
 	       DiskEntry->DiskNumber,
 	       DiskEntry->Port,
 	       DiskEntry->Bus,
 	       DiskEntry->Id,
-	       &DiskEntry->DriverName);
+	       DiskEntry->DriverName.Buffer);
     }
   else
     {
       sprintf (LineBuffer,
-	       "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
-	       DiskSize,
+	       "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
+	       DiskSize.u.LowPart,
 	       Unit,
 	       DiskEntry->DiskNumber,
 	       DiskEntry->Port,
@@ -1279,12 +1287,14 @@ PrintDiskData (PPARTLIST List,
     }
   if (List->Line >= 0 && List->Line <= Height)
     {
-      FillConsoleOutputAttribute (0x17,
+      FillConsoleOutputAttribute (StdOutput,
+			          FOREGROUND_WHITE | BACKGROUND_BLUE,
 			          Width,
 			          coPos,
 			          &Written);
 
-      FillConsoleOutputCharacter (' ',
+      FillConsoleOutputCharacterA (StdOutput,
+			          ' ',
 			          Width,
 			          coPos,
 			          &Written);
@@ -1293,9 +1303,11 @@ PrintDiskData (PPARTLIST List,
   coPos.X++;
   if (List->Line >= 0 && List->Line <= Height)
     {
-      WriteConsoleOutputCharacters (LineBuffer,
+      WriteConsoleOutputCharacterA (StdOutput,
+				    LineBuffer,
 				    min (strlen (LineBuffer), Width - 2),
-				    coPos);
+				    coPos,
+				    &Written);
     }
   List->Line++;
 
@@ -1397,7 +1409,8 @@ DrawPartitionList (PPARTLIST List)
   /* draw upper left corner */
   coPos.X = List->Left;
   coPos.Y = List->Top;
-  FillConsoleOutputCharacter (0xDA, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xDA, // '+',
 			      1,
 			      coPos,
 			      &Written);
@@ -1407,23 +1420,28 @@ DrawPartitionList (PPARTLIST List)
   coPos.Y = List->Top;
   if (List->Offset == 0)
     {
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          List->Right - List->Left - 1,
 			          coPos,
 			          &Written);
     }
   else
     {
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          List->Right - List->Left - 5,
 			          coPos,
 			          &Written);
       coPos.X = List->Right - 5;
-      WriteConsoleOutputCharacters ("(\x18)", // "(up)"
+      WriteConsoleOutputCharacterA (StdOutput,
+			            "(\x18)", // "(up)"
 			            3,
-			            coPos);
+			            coPos,
+			            &Written);
       coPos.X = List->Right - 2;
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          2,
 			          coPos,
 			          &Written);
@@ -1432,7 +1450,8 @@ DrawPartitionList (PPARTLIST List)
   /* draw upper right corner */
   coPos.X = List->Right;
   coPos.Y = List->Top;
-  FillConsoleOutputCharacter (0xBF, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xBF, // '+',
 			      1,
 			      coPos,
 			      &Written);
@@ -1442,13 +1461,15 @@ DrawPartitionList (PPARTLIST List)
     {
       coPos.X = List->Left;
       coPos.Y = i;
-      FillConsoleOutputCharacter (0xB3, // '|',
+      FillConsoleOutputCharacterA (StdOutput,
+				  0xB3, // '|',
 				  1,
 				  coPos,
 				  &Written);
 
       coPos.X = List->Right;
-      FillConsoleOutputCharacter (0xB3, //'|',
+      FillConsoleOutputCharacterA (StdOutput,
+				  0xB3, //'|',
 				  1,
 				  coPos,
 				  &Written);
@@ -1457,7 +1478,8 @@ DrawPartitionList (PPARTLIST List)
   /* draw lower left corner */
   coPos.X = List->Left;
   coPos.Y = List->Bottom;
-  FillConsoleOutputCharacter (0xC0, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xC0, // '+',
 			      1,
 			      coPos,
 			      &Written);
@@ -1467,23 +1489,28 @@ DrawPartitionList (PPARTLIST List)
   coPos.Y = List->Bottom;
   if (LastLine - List->Offset <= List->Bottom - List->Top - 2)
     {
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          List->Right - List->Left - 1,
 			          coPos,
 			          &Written);
     }
   else
     {
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          List->Right - List->Left - 5,
 			          coPos,
 			          &Written);
       coPos.X = List->Right - 5;
-      WriteConsoleOutputCharacters ("(\x19)", // "(down)"
+      WriteConsoleOutputCharacterA (StdOutput,
+			            "(\x19)", // "(down)"
 			            3,
-			            coPos);
+			            coPos,
+			            &Written);
       coPos.X = List->Right - 2;
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          2,
 			          coPos,
 			          &Written);
@@ -1492,7 +1519,8 @@ DrawPartitionList (PPARTLIST List)
   /* draw lower right corner */
   coPos.X = List->Right;
   coPos.Y = List->Bottom;
-  FillConsoleOutputCharacter (0xD9, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xD9, // '+',
 			      1,
 			      coPos,
 			      &Written);

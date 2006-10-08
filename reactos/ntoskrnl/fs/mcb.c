@@ -117,7 +117,7 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
                         IN POOL_TYPE PoolType)
 {
     UNIMPLEMENTED;
-    Mcb->PoolType = PoolType;
+    Mcb->BaseMcb.PoolType = PoolType;
 }
 
 /*
@@ -179,11 +179,11 @@ FsRtlLookupPerStreamContextInternal(IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
 /*
  * @unimplemented
  */
-PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/
+PFSRTL_PER_FILEOBJECT_CONTEXT
 NTAPI
-FsRtlLookupPerFileObjectContext(IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
-    IN PVOID OwnerId OPTIONAL,
-    IN PVOID InstanceId OPTIONAL)
+FsRtlLookupPerFileObjectContext(IN PFILE_OBJECT FileObject,
+                                IN PVOID OwnerId OPTIONAL,
+                                IN PVOID InstanceId OPTIONAL)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -269,9 +269,9 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 {
     ULONG NumberOfRuns;
 
-    ExAcquireFastMutex(Mcb->FastMutex);
-    NumberOfRuns = Mcb->PairCount;
-    ExReleaseFastMutex(Mcb->FastMutex);
+    KeAcquireGuardedMutex(Mcb->GuardedMutex);
+    NumberOfRuns = Mcb->BaseMcb.PairCount;
+    KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
     return NumberOfRuns;
 }

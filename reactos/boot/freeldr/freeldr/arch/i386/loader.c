@@ -38,11 +38,11 @@
 #define RaToPa(p) \
     (ULONG_PTR)((ULONG_PTR)p + KERNEL_BASE_PHYS)
 
-/* Converts a Phsyical Address Pointer into a Page Frame Number */
+/* Converts a Physical Address Pointer into a Page Frame Number */
 #define PaPtrToPfn(p) \
     (((ULONG_PTR)&p) >> PFN_SHIFT)
 
-/* Converts a Phsyical Address into a Page Frame Number */
+/* Converts a Physical Address into a Page Frame Number */
 #define PaToPfn(p) \
     ((p) >> PFN_SHIFT)
 
@@ -76,7 +76,7 @@ PLOADER_MODULE CurrentModule = NULL;
 /* Unrelocated Kernel Base in Virtual Memory */
 ULONG_PTR KernelBase;
 
-/* Wether PAE is to be used or not */
+/* Whether PAE is to be used or not */
 BOOLEAN PaeModeEnabled;
 
 /* Kernel Entrypoint in Physical Memory */
@@ -261,7 +261,7 @@ FrLdrGetKernelBase(VOID)
  * FrLdrGetPaeMode
  * INTERNAL
  *
- *     Determines whether PAE mode shoudl be enabled or not.
+ *     Determines whether PAE mode should be enabled or not.
  *
  * Params:
  *     None.

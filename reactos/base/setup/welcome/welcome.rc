@@ -61,5 +61,6 @@ END
 #include "Ru.rc"
 #include "Uk.rc"
 #include "It.rc"
+#include "No.rc"
 
 /* EOF */

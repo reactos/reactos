@@ -28,39 +28,46 @@
 #ifndef __FSLIST_H__
 #define __FSLIST_H__
 
-typedef enum
+typedef struct _FILE_SYSTEM_ITEM
 {
-  FsFat = 0,
-  FsKeep = 1
-} FILE_SYSTEM;
+  LIST_ENTRY ListEntry;
+  LPCSTR FileSystem; /* Not owned by the item */
+  FORMATEX FormatFunc;
+  CHKDSKEX ChkdskFunc;
+  BOOLEAN QuickFormat;
+} FILE_SYSTEM_ITEM, *PFILE_SYSTEM_ITEM;
 
 typedef struct _FILE_SYSTEM_LIST
 {
   SHORT Left;
   SHORT Top;
-  BOOLEAN ForceFormat;
-  FILE_SYSTEM CurrentFileSystem;
-  ULONG FileSystemCount;
+  PFILE_SYSTEM_ITEM Selected;
+  LIST_ENTRY ListHead; /* List of FILE_SYSTEM_ITEM */
 } FILE_SYSTEM_LIST, *PFILE_SYSTEM_LIST;
 
 
 PFILE_SYSTEM_LIST
-CreateFileSystemList (SHORT Left,
-		      SHORT Top,
-		      BOOLEAN ForceFormat,
-		      FILE_SYSTEM ForceFileSystem);
+CreateFileSystemList(
+    IN SHORT Left,
+    IN SHORT Top,
+    IN BOOLEAN ForceFormat,
+    IN LPCSTR ForceFileSystem);
 
 VOID
-DestroyFileSystemList (PFILE_SYSTEM_LIST List);
+DestroyFileSystemList(
+    IN PFILE_SYSTEM_LIST List);
 
 VOID
-DrawFileSystemList (PFILE_SYSTEM_LIST List);
+DrawFileSystemList(
+    IN PFILE_SYSTEM_LIST List);
 
 VOID
-ScrollDownFileSystemList (PFILE_SYSTEM_LIST List);
+ScrollDownFileSystemList(
+    IN PFILE_SYSTEM_LIST List);
 
 VOID
-ScrollUpFileSystemList (PFILE_SYSTEM_LIST List);
+ScrollUpFileSystemList(
+    IN PFILE_SYSTEM_LIST List);
 
 #endif /* __FSLIST_H__ */
 

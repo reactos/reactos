@@ -6,7 +6,7 @@ MODULE    = explorer.exe
 APPMODE   = gui
 IMPORTS   = shell32 comctl32 msimg32 ole32 user32 gdi32 kernel32 advapi32 oleaut32
 EXTRADEFS = -D__WINE__ -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -DWINVER=0x0500 -D__MINGW32__ -DCINTERFACE
-EXTRA_OBJS = notifyhook.dll libexpat.dll
+EXTRA_OBJS = notifyhook.dll
 EXTRALIBS = $(LIBUUID)
 
 C_SRCS = \
@@ -22,6 +22,8 @@ CPP_SRCS = \
 	utility/dragdropimpl.cpp \
 	utility/shellbrowserimpl.cpp \
 	utility/xmlstorage.cpp \
+	utility/xmlstorage.cpp \
+	utility/xs-native.cpp
 	shell/entries.cpp \
 	shell/winfs.cpp \
 	shell/unixfs.cpp \

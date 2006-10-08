@@ -354,6 +354,7 @@ FdoStartDevice(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
 {
+  static BOOLEAN FoundBuggyAllocatedResourcesList = FALSE;
   PFDO_DEVICE_EXTENSION DeviceExtension;
   PCM_RESOURCE_LIST AllocatedResources;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
@@ -363,8 +364,17 @@ FdoStartDevice(
   DPRINT("Called\n");
 
   DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  
+
   AllocatedResources = IoGetCurrentIrpStackLocation(Irp)->Parameters.StartDevice.AllocatedResources;
+  /* HACK due to a bug in ACPI driver, which doesn't report the bus number */
+  if (!FoundBuggyAllocatedResourcesList || !AllocatedResources || AllocatedResources->Count == 0)
+  {
+    FoundBuggyAllocatedResourcesList = TRUE;
+    DPRINT1("No bus number resource found (bug in acpi.sys?), assuming bus number #0\n");
+    DeviceExtension->BusNumber = 0;
+    goto next;
+  }
+  /* END HACK */
   if (!AllocatedResources)
   {
     DPRINT("No allocated resources sent to driver\n");
@@ -405,6 +415,7 @@ FdoStartDevice(
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
+next:
   InitializeListHead(&DeviceExtension->DeviceListHead);
   KeInitializeSpinLock(&DeviceExtension->DeviceListLock);
   DeviceExtension->DeviceListCount = 0;

@@ -26,14 +26,12 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
 {
     CONTEXT Context;
     NTSTATUS Status;
-    DPRINT1("RtlRaiseException(Status %p)\n", ExceptionRecord);
 
     /* Capture the context */
     RtlCaptureContext(&Context);
 
     /* Save the exception address */
     ExceptionRecord->ExceptionAddress = RtlpGetExceptionAddress();
-    DPRINT1("ExceptionAddress %p\n", ExceptionRecord->ExceptionAddress);
 
     /* Write the context flag */
     Context.ContextFlags = CONTEXT_FULL;
@@ -72,7 +70,6 @@ RtlRaiseStatus(NTSTATUS Status)
 {
     EXCEPTION_RECORD ExceptionRecord;
     CONTEXT Context;
-    DPRINT1("RtlRaiseStatus(Status 0x%.08lx)\n", Status);
 
      /* Capture the context */
     RtlCaptureContext(&Context);
@@ -131,8 +128,6 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 #elif defined(_MSC_VER)
     __asm mov Stack, ebp
 #endif
-#elif defined(_M_PPC)
-    __asm__("mr %0, %%r1" : "=r" (Stack) : );
 #endif
 
     /* Set it as the stack begin limit as well */

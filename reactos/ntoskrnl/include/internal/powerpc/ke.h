@@ -19,6 +19,8 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_POWERPC_KE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_POWERPC_KE_H
 
+#include <ndk/powerpc/ketypes.h>
+
 #if __GNUC__ >=3
 #pragma GCC system_header
 #endif
@@ -132,14 +134,19 @@ __asm__ __volatile__("mfmsr 0\n\t" \
 static __inline struct _KPRCB * KeGetCurrentPrcb(
   VOID)
 {
-  ULONG Value = 0;
-  return (struct _KPRCB *) Value;
+    return (struct _KPRCB *)__readfsdword(0x20);
 }
 
-static __inline KIRQL KeGetCurrentIrql(
+__inline struct _KPCR * NTHALAPI KeGetCurrentKPCR(
     VOID)
 {
-    return PASSIVE_LEVEL;
+    return (struct _KPCR *)__readfsdword(0x1c);
+}
+
+__inline KIRQL NTHALAPI KeGetCurrentIrql(
+    VOID)
+{
+    return ((KIPCR *)KeGetCurrentKPCR())->CurrentIrql;
 }
 
 VOID

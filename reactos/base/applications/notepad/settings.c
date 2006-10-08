@@ -187,7 +187,7 @@ static BOOL SaveString(HKEY hKey, LPCSTR pszValueName, LPCTSTR pszValue)
 	pszValueNameT = pszValueName;
 #endif
 
-	return RegSetValueEx(hKey, pszValueNameT, 0, REG_SZ, (LPBYTE) pszValue, _tcslen(pszValue) * sizeof(*pszValue)) == ERROR_SUCCESS;
+	return RegSetValueEx(hKey, pszValueNameT, 0, REG_SZ, (LPBYTE) pszValue, (DWORD) _tcslen(pszValue) * sizeof(*pszValue)) == ERROR_SUCCESS;
 }
 
 void SaveSettings(void)

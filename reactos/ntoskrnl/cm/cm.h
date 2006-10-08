@@ -116,12 +116,6 @@ extern ERESOURCE CmiRegistryLock;
 
 
 /* Registry Callback Function */
-typedef NTSTATUS (STDCALL *PEX_CALLBACK_FUNCTION ) (
-    IN PVOID CallbackContext,
-    IN REG_NOTIFY_CLASS Argument1,
-    IN PVOID Argument2
-    );
-
 typedef struct _REGISTRY_CALLBACK
 {
     LIST_ENTRY ListEntry;
@@ -401,23 +395,23 @@ BOOLEAN CMAPI
 CmpFileRead(
    PHHIVE RegistryHive,
    ULONG FileType,
-   ULONG FileOffset,
+   ULONGLONG FileOffset,
    PVOID Buffer,
-   ULONG BufferLength);
+   SIZE_T BufferLength);
 
 BOOLEAN CMAPI
 CmpFileWrite(
    PHHIVE RegistryHive,
    ULONG FileType,
-   ULONG FileOffset,
+   ULONGLONG FileOffset,
    PVOID Buffer,
-   ULONG BufferLength);
+   SIZE_T BufferLength);
 
 BOOLEAN CMAPI
 CmpFileSetSize(
    PHHIVE RegistryHive,
    ULONG FileType,
-   ULONG FileSize);
+   ULONGLONG FileSize);
 
 BOOLEAN CMAPI
 CmpFileFlush(

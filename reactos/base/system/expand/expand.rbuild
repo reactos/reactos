@@ -8,6 +8,7 @@
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>lz32</library>
 	<library>user32</library>
-      <file>expand.c</file>	
-      <file>expand.rc</file> 
+	<library>kernel32</library>
+	<file>expand.c</file>	
+	<file>expand.rc</file> 
 </module>

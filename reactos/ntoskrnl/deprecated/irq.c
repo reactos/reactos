@@ -177,7 +177,7 @@ KeInitInterrupts (VOID)
      }
 }
 
-STATIC VOID
+static VOID
 KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
                           PKTRAP_FRAME TrapFrame)
 {
@@ -198,7 +198,7 @@ KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
    TrapFrame->EFlags = IrqTrapFrame->Eflags;
 }
 
-STATIC VOID
+static VOID
 KeTrapFrameToIRQTrapFrame(PKTRAP_FRAME TrapFrame,
                           PKIRQ_TRAPFRAME IrqTrapFrame)
 {

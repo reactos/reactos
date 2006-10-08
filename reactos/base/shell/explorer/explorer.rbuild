@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-  <module name="explorer" type="win32gui" installname="explorer.exe" allowwarnings="true">
-    <linkerflag>-luuid</linkerflag>
-    <linkerflag>-lstdc++</linkerflag>
+  <module name="explorer" type="win32gui" installname="explorer.exe" allowwarnings="true" stdlib="host">
     <linkerflag>-fexceptions</linkerflag>
     <include base="explorer">.</include>
     <define name="__USE_W32API" />
@@ -22,7 +20,7 @@
     <library>ole32</library>
     <library>oleaut32</library>
     <library>shell32</library>
-    <library>expat</library>
+    <library>uuid</library>
     <library>notifyhook</library>
     <pch>precomp.h</pch>
     <directory name="desktop">
@@ -65,6 +63,7 @@
       <file>dragdropimpl.cpp</file>
       <file>shellbrowserimpl.cpp</file>
       <file>xmlstorage.cpp</file>
+	  <file>xs-native.cpp</file>
     </directory>
     <file>explorer.cpp</file>
     <file>i386-stub-win32.c</file>

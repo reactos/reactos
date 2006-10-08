@@ -147,6 +147,7 @@ Author:
 #define KPCR_TSS                                0x40
 #define KPCR_SET_MEMBER                         0x48
 #define KPCR_NUMBER                             0x51
+#define KPCR_PRCB_DATA                          0x120
 #define KPCR_CURRENT_THREAD                     0x124
 #define KPCR_PRCB_NEXT_THREAD                   0x128
 #define KPCR_PRCB_IDLE_THREAD                   0x12C
@@ -175,6 +176,7 @@ Author:
 #define KPCR_PRCB_TIMER_REQUEST                 0xA88
 #define KPCR_PRCB_QUANTUM_END                   0xAA1
 #define KPCR_PRCB_DEFERRED_READY_LIST_HEAD      0xC10
+#define KPCR_PRCB_POWER_STATE_IDLE_FUNCTION     0xEC0
 
 //
 // KINTERRUPT Offsets
@@ -198,13 +200,28 @@ Author:
 //
 // FPU Save Area Offsets
 //
-#define FN_CONTROL_WORD                         0x0
-#define FN_STATUS_WORD                          0x4
-#define FN_TAG_WORD                             0x8
-#define FN_DATA_SELECTOR                        0x18
+#define FP_CONTROL_WORD                         0x0
+#define FP_STATUS_WORD                          0x4
+#define FP_TAG_WORD                             0x8
+#define FP_ERROR_OFFSET                         0xC
+#define FP_ERROR_SELECTOR                       0x10
+#define FP_DATA_OFFSET                          0x14
+#define FP_DATA_SELECTOR                        0x18
 #define FN_CR0_NPX_STATE                        0x20C
 #define SIZEOF_FX_SAVE_AREA                     528
 #define NPX_FRAME_LENGTH                        0x210
+
+//
+// FX Save Area Offsets
+//
+#define FX_CONTROL_WORD                         0x0
+#define FX_STATUS_WORD                          0x2
+#define FX_TAG_WORD                             0x4
+#define FX_ERROR_OPCODE                         0x6
+#define FX_ERROR_OFFSET                         0x8
+#define FX_ERROR_SELECTOR                       0xC
+#define FX_DATA_OFFSET                          0x10
+#define FX_DATA_SELECTOR                        0x14
 
 //
 // NPX States
@@ -305,9 +322,10 @@ Author:
 #define CONTEXT_EFLAGS                          0xC0
 #define CONTEXT_ESP                             0xC4
 #define CONTEXT_SEGSS                           0xC8
-#define CONTEXT_FLOAT_SAVE_CONTROL_WORD         CONTEXT_FLOAT_SAVE + FN_CONTROL_WORD
-#define CONTEXT_FLOAT_SAVE_STATUS_WORD          CONTEXT_FLOAT_SAVE + FN_STATUS_WORD
-#define CONTEXT_FLOAT_SAVE_TAG_WORD             CONTEXT_FLOAT_SAVE + FN_TAG_WORD
+#define CONTEXT_FLOAT_SAVE_CONTROL_WORD         CONTEXT_FLOAT_SAVE + FP_CONTROL_WORD
+#define CONTEXT_FLOAT_SAVE_STATUS_WORD          CONTEXT_FLOAT_SAVE + FP_STATUS_WORD
+#define CONTEXT_FLOAT_SAVE_TAG_WORD             CONTEXT_FLOAT_SAVE + FP_TAG_WORD
+#define CONTEXT_ALIGNED_SIZE                    0x2CC
 
 //
 // EXCEPTION_RECORD Offsets
@@ -319,6 +337,24 @@ Author:
 #define EXCEPTION_RECORD_NUMBER_PARAMETERS      0x10
 #define SIZEOF_EXCEPTION_RECORD                 0x14
 #define EXCEPTION_RECORD_LENGTH                 0x50
+
+//
+// Exception types
+//
+#ifdef __ASM__
+#define EXCEPTION_NONCONTINUABLE                0x0001
+#define EXCEPTION_UNWINDING                     0x0002
+#define EXCEPTION_EXIT_UNWIND                   0x0004
+#define EXCEPTION_STACK_INVALID                 0x0008
+#define EXCEPTION_NESTED_CALL                   0x00010
+#define EXCEPTION_TARGET_UNWIND                 0x00020
+#define EXCEPTION_COLLIDED_UNWIND               0x00040
+#define EXCEPTION_UNWIND                        0x00066
+#define EXCEPTION_EXECUTE_HANDLER               0x00001
+#define EXCEPTION_CONTINUE_SEARCH               0x00000
+#define EXCEPTION_CONTINUE_EXECUTION            0xFFFFFFFF
+#define EXCEPTION_CHAIN_END                     0xFFFFFFFF
+#endif
 
 //
 // TEB Offsets
@@ -381,6 +417,7 @@ Author:
 #define EFLAG_ZERO                              0x4000
 #define EFLAG_SELECT                            (EFLAG_SIGN + EFLAG_ZERO)
 #endif
+#define EFLAGS_USER_SANITIZE                    0x3F4DD7
 
 //
 // CR0
@@ -437,12 +474,23 @@ Author:
 #define STATUS_CALLBACK_POP_STACK               0xC0000423
 #define STATUS_ARRAY_BOUNDS_EXCEEDED            0xC000008C
 #define STATUS_ILLEGAL_INSTRUCTION              0xC000001D
+#define STATUS_INVALID_LOCK_SEQUENCE            0xC000001E
 #define STATUS_BREAKPOINT                       0x80000003
 #define STATUS_SINGLE_STEP                      0x80000004
 #define STATUS_INTEGER_DIVIDE_BY_ZERO           0xC0000094
 #define STATUS_INTEGER_OVERFLOW                 0xC0000095
+#define STATUS_FLOAT_DENORMAL_OPERAND           0xC000008D
+#define STATUS_FLOAT_DIVIDE_BY_ZERO             0xC000008E
+#define STATUS_FLOAT_INEXACT_RESULT             0xC000008F
+#define STATUS_FLOAT_INVALID_OPERATION          0xC0000090
+#define STATUS_FLOAT_OVERFLOW                   0xC0000091
+#define STATUS_FLOAT_STACK_CHECK                0xC0000092
+#define STATUS_FLOAT_UNDERFLOW                  0xC0000093
+#define STATUS_FLOAT_MULTIPLE_FAULTS            0xC00002B4
+#define STATUS_FLOAT_MULTIPLE_TRAPS             0xC00002B5
 #define APC_INDEX_MISMATCH                      0x01
 #define TRAP_CAUSE_UNKNOWN                      0x12
+#define KMODE_EXCEPTION_NOT_HANDLED             0x13
 #define IRQL_GT_ZERO_AT_SYSTEM_SERVICE          0x4A
 #define UNEXPECTED_KERNEL_MODE_TRAP             0x7F
 #define ATTEMPTED_SWITCH_FROM_DPC               0xB8

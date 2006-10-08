@@ -14,6 +14,15 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+PTOKEN PspBootAccessToken;
+
+VOID
+NTAPI
+SeAssignPrimaryToken(
+    IN PEPROCESS Process,
+    IN PTOKEN Token
+);
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
@@ -86,13 +95,9 @@ PspInitializeProcessSecurity(IN PEPROCESS Process,
     }
     else
     {
-#ifdef SCHED_REWRITE
         /* No parent, assign the Boot Token */
         ObInitializeFastReference(&Process->Token, NULL);
         SeAssignPrimaryToken(Process, PspBootAccessToken);
-#else
-        DPRINT1("PspInitializeProcessSecurity called with no parent.\n");
-#endif
     }
 
     /* Return to caller */

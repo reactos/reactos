@@ -29,7 +29,7 @@ extern unsigned int _bss_end__;
 
 
 static BOOLEAN IsThisAnNtAsSystem = FALSE;
-MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
+MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
 
 PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 
@@ -58,7 +58,7 @@ BOOLEAN STDCALL MmIsThisAnNtAsSystem(VOID)
 /*
  * @implemented
  */
-MM_SYSTEM_SIZE STDCALL MmQuerySystemSize(VOID)
+MM_SYSTEMSIZE STDCALL MmQuerySystemSize(VOID)
 {
    return(MmSystemSize);
 }
@@ -317,15 +317,15 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
             last = (BIOSMemoryMap[i].BaseAddrLow + BIOSMemoryMap[i].LengthLow + PAGE_SIZE -1) / PAGE_SIZE;
          }
       }
-      if ((last - 256) * 4 > KeLoaderBlock.MemHigher)
+      if ((last - 256) * 4 > MmFreeLdrMemHigher)
       {
-         KeLoaderBlock.MemHigher = (last - 256) * 4;
+         MmFreeLdrMemHigher = (last - 256) * 4;
       }
    }
 
-   if (KeLoaderBlock.MemHigher >= (MaxMem - 1) * 1024)
+   if (MmFreeLdrMemHigher >= (MaxMem - 1) * 1024)
    {
-      KeLoaderBlock.MemHigher = (MaxMem - 1) * 1024;
+      MmFreeLdrMemHigher = (MaxMem - 1) * 1024;
    }
 
    /* Set memory limits */
@@ -357,7 +357,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    /*
     * Free physical memory not used by the kernel
     */
-   MmStats.NrTotalPages = KeLoaderBlock.MemHigher/4;
+   MmStats.NrTotalPages = MmFreeLdrMemHigher/4;
    if (!MmStats.NrTotalPages)
    {
       DbgPrint("Memory not detected, default to 8 MB\n");
@@ -455,7 +455,6 @@ MmInit3(VOID)
    MmDeletePageTable(NULL, 0);
 #endif
 
-   MmInitZeroPageThread();
    MmCreatePhysicalMemorySection();
    MiInitBalancerThread();
 
@@ -467,7 +466,7 @@ MmInit3(VOID)
    /* FIXME: Read parameters from memory */
 }
 
-VOID STATIC
+VOID static
 MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                      PFN_TYPE Page, SWAPENTRY SwapEntry,
                      BOOLEAN Dirty)

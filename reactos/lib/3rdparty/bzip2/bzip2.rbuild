@@ -1,4 +1,4 @@
-<module name="bzip2" type="kernelmodedll" installbase="system32/drivers" installname="bzip2.dll">
+<module name="bzip2" type="kernelmodedll" entrypoint="0" installbase="system32/drivers" installname="bzip2.dll">
 	<importlibrary definition="unbzip2.def" />
 	<define name="BZ_NO_STDIO" />
 	<define name="BZ_DECOMPRESS_ONLY" />

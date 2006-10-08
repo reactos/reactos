@@ -67,7 +67,8 @@ static void draw_splitbar(HWND hWnd, int x)
 static void ResizeWnd(ChildWnd* pChildWnd, int cx, int cy)
 {
     HDWP hdwp = BeginDeferWindowPos(2);
-    RECT rt = {0, 0, cx, cy};
+    RECT rt;
+    SetRect(&rt, 0, 0, cx, cy);
 
     cx = pChildWnd->nSplitPos + SPLIT_WIDTH/2;
     DeferWindowPos(hdwp, pChildWnd->hTreeWnd, 0, rt.left, rt.top, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
@@ -102,6 +103,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     HKEY hRootKey;
     LPCTSTR keyPath, s;
     WORD wID = LOWORD(wParam);
+
+    UNREFERENCED_PARAMETER(message);
 
     switch (wID) {
         /* Parse the menu selections: */
@@ -209,12 +212,12 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
 				{
 					if (RegOpenKey(hRootKey, szBuffer, &hOtherKey) == ERROR_SUCCESS)
 					{
-						lstrcpyn(pszSuggestions, TEXT("HKCR\\"), iSuggestionsLength);
+						lstrcpyn(pszSuggestions, TEXT("HKCR\\"), (int) iSuggestionsLength);
 						i = _tcslen(pszSuggestions);
 						pszSuggestions += i;
 	    				iSuggestionsLength -= i;
 
-						lstrcpyn(pszSuggestions, szBuffer, iSuggestionsLength);
+						lstrcpyn(pszSuggestions, szBuffer, (int) iSuggestionsLength);
 						i = MIN(_tcslen(pszSuggestions) + 1, iSuggestionsLength);
 						pszSuggestions += i;
 						iSuggestionsLength -= i;
@@ -235,12 +238,12 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
 			if (RegQueryStringValue(hSubKey, TEXT("CLSID"), NULL,
 				szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])) == ERROR_SUCCESS)
 			{
-				lstrcpyn(pszSuggestions, TEXT("HKCR\\CLSID\\"), iSuggestionsLength);
+				lstrcpyn(pszSuggestions, TEXT("HKCR\\CLSID\\"), (int) iSuggestionsLength);
 				i = _tcslen(pszSuggestions);
 				pszSuggestions += i;
 				iSuggestionsLength -= i;
 
-				lstrcpyn(pszSuggestions, szBuffer, iSuggestionsLength);
+				lstrcpyn(pszSuggestions, szBuffer, (int) iSuggestionsLength);
 				i = MIN(_tcslen(pszSuggestions) + 1, iSuggestionsLength);
 				pszSuggestions += i;
 				iSuggestionsLength -= i;
@@ -263,7 +266,7 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
  */
 LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static short last_split;
+    static int last_split;
     BOOL Result;
     ChildWnd* pChildWnd = g_pChildWnd;
 
@@ -432,7 +435,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			        	_T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit"),
 			    	    &hKey) == ERROR_SUCCESS)
 			    	{
-			    	    RegSetValueEx(hKey, _T("LastKey"), 0, REG_SZ, (LPBYTE) szBuffer, _tcslen(szBuffer) * sizeof(szBuffer[0]));
+			    	    RegSetValueEx(hKey, _T("LastKey"), 0, REG_SZ, (LPBYTE) szBuffer, (DWORD) _tcslen(szBuffer) * sizeof(szBuffer[0]));
 			    	    RegCloseKey(hKey);
 			    	}
 			    }

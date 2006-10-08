@@ -31,7 +31,7 @@
 #define	PM_DISPLAY_VERSION		(WM_APP+0x24)
 
 
- /// subclassed Background window behind the visible desktop window
+ /// subclassed background window behind the visible desktop window
 struct BackgroundWindow : public SubclassedWindow
 {
 	typedef SubclassedWindow super;

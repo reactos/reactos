@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#define NTOSAPI
 #include <ntddk.h>
 #include <arc/arc.h>
 #include <ketypes.h>
@@ -43,8 +44,12 @@
 #include <inffile.h>
 #include <video.h>
 #include <portio.h>
+/* NDK, needed for ReactOS/Windows loaders */
+#include <ndk/rtlfuncs.h>
+#include <ndk/ldrtypes.h>
 #include <reactos.h>
 #include <registry.h>
+#include <winldr.h>
 #include <fsrec.h>
 /* file system headers */
 #include <fs/ext2.h>
@@ -66,7 +71,7 @@
 #endif
 /* misc files */
 #include <keycodes.h>
-#include <version.h>
+#include <ver.h>
 #include <cmdline.h>
 /* Needed by boot manager */
 #include <bootmgr.h>

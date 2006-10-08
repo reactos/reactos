@@ -24,19 +24,46 @@ typedef enum _CONFIGURATION_CLASS
     MaximumClass
 } CONFIGURATION_CLASS;
 
-typedef enum
+typedef enum _TYPE_OF_MEMORY
 {
-    HwFileDriver,
-    HwFilePort,
-    HwFileClass,
-    HwFileInf,
-    HwFileDll,
-    HwFileDetect,
-    HwFileHal,
-    HwFileCatalog,
-    HwFileMax,
-    HwFileDynUpdt = 31,
-} HwFileType;
+    LoaderExceptionBlock,
+    LoaderSystemBlock,
+    LoaderFree,
+    LoaderBad,
+    LoaderLoadedProgram,
+    LoaderFirmwareTemporary,
+    LoaderFirmwarePermanent,
+    LoaderOsloaderHeap,
+    LoaderOsloaderStack,
+    LoaderSystemCode,
+    LoaderHalCode,
+    LoaderBootDriver,
+    LoaderConsoleInDriver,
+    LoaderConsoleOutDriver,
+    LoaderStartupDpcStack,
+    LoaderStartupKernelStack,
+    LoaderStartupPanicStack,
+    LoaderStartupPcrPage,
+    LoaderStartupPdrPage,
+    LoaderRegistryData,
+    LoaderMemoryData,
+    LoaderNlsData,
+    LoaderSpecialMemory,
+    LoaderBBTMemory,
+    LoaderReserve,
+    LoaderXIPRom,
+    LoaderHALCachedMemory,
+    LoaderLargePageFiller,
+    LoaderMaximum
+} TYPE_OF_MEMORY;
+
+typedef struct _MEMORY_ALLOCATION_DESCRIPTOR
+{
+    LIST_ENTRY ListEntry;
+    TYPE_OF_MEMORY MemoryType;
+    ULONG BasePage;
+    ULONG PageCount;
+} MEMORY_ALLOCATION_DESCRIPTOR, *PMEMORY_ALLOCATION_DESCRIPTOR;
 
 typedef struct _CONFIGURATION_COMPONENT
 {
@@ -122,6 +149,16 @@ typedef struct _NLS_DATA_BLOCK
     PVOID OemCodePageData;
     PVOID UnicodeCodePageData;
 } NLS_DATA_BLOCK, *PNLS_DATA_BLOCK;
+
+//
+// ACPI Docking State
+//
+typedef struct _PROFILE_ACPI_DOCKING_STATE
+{
+    USHORT DockingState;
+    USHORT SerialLength;
+    WCHAR SerialNumber[1];
+} PROFILE_ACPI_DOCKING_STATE, *PPROFILE_ACPI_DOCKING_STATE;
 
 //
 // Subsystem Specific Loader Blocks

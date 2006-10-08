@@ -416,7 +416,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 			int new_id = ButtonHitTest(pt);
 
-			if (new_id > 0 && new_id != _selected_id)
+			if (new_id>0 && new_id!=_selected_id)
 				SelectButton(new_id);
 
 			_last_mouse_pos = lparam;
@@ -707,13 +707,13 @@ bool StartMenu::Navigate(int step)
 	for(;;) {
 		idx += step;
 
-		if ((int)_buttons.size() <= 1 && (idx<0 || idx>(int)_buttons.size()))
+		if (_buttons.size()<=1 && (idx<0 || idx>(int)_buttons.size()))
 			break;
 
-		if (idx<0)
+		if (idx < 0)
 			idx += _buttons.size();
 
-		if (idx>(int)_buttons.size())
+		if (idx > (int)_buttons.size())
 			idx -= _buttons.size()+1;
 
 		if (SelectButtonIndex(idx, false))

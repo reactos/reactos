@@ -20,8 +20,8 @@
 #include "machine.h"
 #include "of.h"
 #include "mmu.h"
-#include "compat.h"
 #include "ppcboot.h"
+#include "compat.h"
 
 extern void BootMain( LPSTR CmdLine );
 extern PCHAR GetFreeLoaderVersionString();
@@ -29,6 +29,7 @@ extern ULONG CacheSizeLimit;
 of_proxy ofproxy;
 void *PageDirectoryStart, *PageDirectoryEnd;
 static int chosen_package, stdin_handle, part_handle = -1, kernel_mem = 0;
+int mmu_handle = 0;
 BOOLEAN AcpiPresent = FALSE;
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { 0 };
 jmp_buf jmp;
@@ -332,7 +333,7 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     printf("\n");
 
     for( i = 0; i < returned / 2; i++ ) {
-	BiosMemoryMap[slots].Type = MEMTYPE_USABLE;
+	BiosMemoryMap[slots].Type = 1/*MEMTYPE_USABLE*/;
 	BiosMemoryMap[slots].BaseAddress = REV(memdata[i*2]);
 	BiosMemoryMap[slots].Length = REV(memdata[i*2+1]);
 	printf("MemoryMap[%d] = (%x:%x)\n", 
@@ -507,7 +508,7 @@ BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
 extern int _bss;
 typedef unsigned int uint32_t;
 void PpcInit( of_proxy the_ofproxy ) {
-    int len, stdin_handle_chosen;
+    int len, stdin_handle_chosen, mmu_handle_chosen;
     ofproxy = the_ofproxy;
 
     //SetPhys(0x900, (19 << 26) | (50 << 1));
@@ -516,8 +517,11 @@ void PpcInit( of_proxy the_ofproxy ) {
 
     ofw_getprop( chosen_package, "stdin",
 		 (char *)&stdin_handle_chosen, sizeof(stdin_handle_chosen) );
+    ofw_getprop( chosen_package, "mmu",
+		 (char *)&mmu_handle_chosen, sizeof(mmu_handle_chosen) );
 
     stdin_handle = REV(stdin_handle_chosen);
+    mmu_handle = REV(mmu_handle_chosen);
 
     MachVtbl.ConsPutChar = PpcPutChar;
     MachVtbl.ConsKbHit   = PpcConsKbHit;
@@ -640,5 +644,9 @@ void BootNewLinuxKernel() {
 }
 
 void ChainLoadBiosBootSectorCode() {
+    ofw_exit();
+}
+
+void DbgBreakPoint() {
     ofw_exit();
 }

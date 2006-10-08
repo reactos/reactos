@@ -615,7 +615,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		DbgPrint((DPRINT_REACTOS, "dumping memory map:\n"));
 		for (i=0; i<(LoaderBlock.MmapLength/sizeof(memory_map_t)); i++)
 		{
-			if (MEMTYPE_USABLE == reactos_memory_map[i].type &&
+			if (BiosMemoryUsable == reactos_memory_map[i].type &&
 			    0 == reactos_memory_map[i].base_addr_low)
 			{
 				LoaderBlock.MemLower = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024;
@@ -624,7 +624,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 					LoaderBlock.MemLower = 640;
 				}
 			}
-			if (MEMTYPE_USABLE == reactos_memory_map[i].type &&
+			if (BiosMemoryUsable == reactos_memory_map[i].type &&
 			    reactos_memory_map[i].base_addr_low <= 1024 * 1024 &&
 			    1024 * 1024 <= reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low)
 			{

@@ -1,4 +1,4 @@
-<module name="usetup" type="nativecui" installbase="system32" installname="usetup.exe" allowwarnings="true">
+<module name="usetup" type="nativecui" installbase="system32" installname="usetup.exe" allowwarnings="false">
 	<bootstrap base="reactos/system32" nameoncd="smss.exe" />
 	<include base="usetup">.</include>
 	<include base="zlib">.</include>
@@ -17,6 +17,7 @@
 	<compilationunit name="unit.c">
 		<file>bootsup.c</file>
 		<file>cabinet.c</file>
+		<file>chkdsk.c</file>
 		<file>console.c</file>
 		<file>drivesup.c</file>
 		<file>filequeue.c</file>
@@ -24,6 +25,7 @@
 		<file>format.c</file>
 		<file>fslist.c</file>
 		<file>genlist.c</file>
+		<file>inffile.c</file>
 		<file>inicache.c</file>
 		<file>keytrans.c</file>
 		<file>partlist.c</file>

@@ -21,9 +21,11 @@
  * PROJECT:     ReactOS Userinit Logon Application
  * FILE:        subsys/system/userinit/userinit.c
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ *              Hervé Poussineau (hpoussin@reactos.org)
  */
 #include <windows.h>
 #include <cfgmgr32.h>
+#include <shlobj.h>
 #include "resource.h"
 
 #define CMP_MAGIC  0x01234567
@@ -32,6 +34,80 @@
 
 /* FUNCTIONS ****************************************************************/
 
+static LONG
+ReadRegSzKey(
+	IN HKEY hKey,
+	IN LPCWSTR pszKey,
+	OUT LPWSTR* pValue)
+{
+	LONG rc;
+	DWORD dwType;
+	DWORD cbData = 0;
+	LPWSTR Value;
+
+	rc = RegQueryValueExW(hKey, pszKey, NULL, &dwType, NULL, &cbData);
+	if (rc != ERROR_SUCCESS)
+		return rc;
+	if (dwType != REG_SZ)
+		return ERROR_FILE_NOT_FOUND;
+	Value = HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
+	if (!Value)
+		return ERROR_NOT_ENOUGH_MEMORY;
+	rc = RegQueryValueExW(hKey, pszKey, NULL, NULL, (LPBYTE)Value, &cbData);
+	if (rc != ERROR_SUCCESS)
+	{
+		HeapFree(GetProcessHeap(), 0, Value);
+		return rc;
+	}
+	/* NULL-terminate the string */
+	Value[cbData / sizeof(WCHAR)] = '\0';
+
+	*pValue = Value;
+	return ERROR_SUCCESS;
+}
+
+static
+BOOL IsConsoleShell(void)
+{
+	HKEY ControlKey = NULL;
+	LPWSTR SystemStartOptions = NULL;
+	LPWSTR CurrentOption, NextOption; /* Pointers into SystemStartOptions */
+	LONG rc;
+	BOOL ret = FALSE;
+
+	rc = RegOpenKeyEx(
+		HKEY_LOCAL_MACHINE,
+		L"SYSTEM\\CurrentControlSet\\Control",
+		0,
+		KEY_QUERY_VALUE,
+		&ControlKey);
+
+	rc = ReadRegSzKey(ControlKey, L"SystemStartOptions", &SystemStartOptions);
+	if (rc != ERROR_SUCCESS)
+		goto cleanup;
+
+	/* Check for CMDCONS in SystemStartOptions */
+	CurrentOption = SystemStartOptions;
+	while (CurrentOption)
+	{
+		NextOption = wcschr(CurrentOption, L' ');
+		if (NextOption)
+			*NextOption = L'\0';
+		if (wcsicmp(CurrentOption, L"CMDCONS") == 0)
+		{
+			ret = TRUE;
+			goto cleanup;
+		}
+		CurrentOption = NextOption ? NextOption + 1 : NULL;
+	}
+
+cleanup:
+	if (ControlKey != NULL)
+		RegCloseKey(ControlKey);
+	HeapFree(GetProcessHeap(), 0, SystemStartOptions);
+	return ret;
+}
+
 static
 BOOL GetShell(WCHAR *CommandLine)
 {
@@ -39,14 +115,15 @@ BOOL GetShell(WCHAR *CommandLine)
   DWORD Type, Size;
   WCHAR Shell[MAX_PATH];
   BOOL Ret = FALSE;
+  BOOL ConsoleShell = IsConsoleShell();
 
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                  L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon",
+                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                   0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
   {
     Size = MAX_PATH * sizeof(WCHAR);
     if(RegQueryValueEx(hKey,
-                       L"Shell",
+                       ConsoleShell ? L"ConsoleShell" : L"Shell",
                        NULL,
                        &Type,
                        (LPBYTE)Shell,
@@ -63,14 +140,66 @@ BOOL GetShell(WCHAR *CommandLine)
 
   if(!Ret)
   {
-    if(GetWindowsDirectory(CommandLine, MAX_PATH - 13))
-      wcscat(CommandLine, L"\\explorer.exe");
+    if (ConsoleShell)
+    {
+      if(GetSystemDirectory(CommandLine, MAX_PATH - 8))
+        wcscat(CommandLine, L"\\cmd.exe");
+      else
+        wcscpy(CommandLine, L"cmd.exe");
+    }
     else
-      wcscpy(CommandLine, L"explorer.exe");
+    {
+      if(GetWindowsDirectory(CommandLine, MAX_PATH - 13))
+        wcscat(CommandLine, L"\\explorer.exe");
+      else
+        wcscpy(CommandLine, L"explorer.exe");
+    }
   }
 
   return Ret;
 }
+
+static VOID
+StartAutoApplications(int clsid)
+{
+    WCHAR szPath[MAX_PATH] = {0};
+    HRESULT hResult;
+    HANDLE hFind;
+    WIN32_FIND_DATAW findData;
+    SHELLEXECUTEINFOW ExecInfo;
+    size_t len;
+
+    hResult = SHGetFolderPathW(NULL, clsid, NULL, SHGFP_TYPE_CURRENT, szPath);
+    len = wcslen(szPath);
+    if (!SUCCEEDED(hResult) || len == 0)
+    {
+      return;
+    }
+
+    wcscat(szPath, L"\\*");
+    hFind = FindFirstFileW(szPath, &findData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+      return;
+    }
+    szPath[len] = L'\0';
+
+    do
+    {
+      if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (findData.nFileSizeHigh || findData.nFileSizeLow))
+      {
+        memset(&ExecInfo, 0x0, sizeof(SHELLEXECUTEINFOW));
+        ExecInfo.cbSize = sizeof(ExecInfo);
+        ExecInfo.lpVerb = L"open";
+        ExecInfo.lpFile = findData.cFileName;
+        ExecInfo.lpDirectory = szPath;
+        ShellExecuteExW(&ExecInfo);
+      }
+    }while(FindNextFileW(hFind, &findData));
+    FindClose(hFind);
+}
+
+
 
 static
 void StartShell(void)
@@ -100,6 +229,8 @@ void StartShell(void)
                    &si,
                    &pi))
   {
+    StartAutoApplications(CSIDL_STARTUP);
+    StartAutoApplications(CSIDL_COMMON_STARTUP);
     WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -162,6 +293,7 @@ NotifyLogon(VOID)
         FreeLibrary(hModule);
     }
 }
+
 
 
 #ifdef _MSC_VER

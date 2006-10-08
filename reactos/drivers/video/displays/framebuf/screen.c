@@ -191,6 +191,9 @@ IntInitScreenInfo(
    ppdev->ScreenDelta = SelectedMode->ScreenStride;
    ppdev->BitsPerPixel = SelectedMode->BitsPerPlane * SelectedMode->NumberOfPlanes;
 
+   ppdev->MemWidth = SelectedMode->VideoMemoryBitmapWidth;
+   ppdev->MemHeight = SelectedMode->VideoMemoryBitmapHeight;
+
    ppdev->RedMask = SelectedMode->RedMask;
    ppdev->GreenMask = SelectedMode->GreenMask;
    ppdev->BlueMask = SelectedMode->BlueMask;

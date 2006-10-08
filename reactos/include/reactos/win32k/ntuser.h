@@ -1447,6 +1447,12 @@ NtUserRegisterHotKey(HWND hWnd,
 		     UINT fsModifiers,
 		     UINT vk);
 
+		     
+BOOL
+NTAPI
+NtUserGetLastInputInfo(
+    PLASTINPUTINFO plii);
+
 DWORD
 NTAPI
 NtUserRegisterTasklist(

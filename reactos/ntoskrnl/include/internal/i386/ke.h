@@ -56,9 +56,25 @@ VOID
 KiInitializeGdt(struct _KPCR* Pcr);
 VOID
 Ki386ApplicationProcessorInitializeTSS(VOID);
+
+VOID
+FASTCALL
+Ki386InitializeTss(
+    IN PKTSS Tss,
+    IN PKIDTENTRY Idt,
+    IN PKGDTENTRY Gdt
+);
+
 VOID
 NTAPI
-Ki386InitializeTss(VOID);
+KiSaveProcessorControlState(
+    IN PKPROCESSOR_STATE ProcessorState
+);
+
+VOID
+FASTCALL
+KiIdleLoop(VOID);
+
 VOID
 KiGdtPrepareForApplicationProcessorInit(ULONG Id);
 VOID
@@ -99,11 +115,11 @@ KeCreateApplicationProcessorIdleThread(ULONG Id);
 
 typedef
 VOID
-(STDCALL*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
+(NTAPI*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
                     PVOID StartContext);
 
 VOID
-STDCALL
+NTAPI
 Ke386InitThreadWithContext(PKTHREAD Thread,
                            PKSYSTEM_ROUTINE SystemRoutine,
                            PKSTART_ROUTINE StartRoutine,
@@ -112,7 +128,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
 
 #ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID
-STDCALL
+NTAPI
 KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 PKSTART_ROUTINE StartRoutine,
                 PVOID StartContext,
@@ -124,7 +140,6 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define LOCK "lock ; "
 #else
 #define LOCK ""
-#define KeGetCurrentIrql() (((PKPCR)KPCR_BASE)->Irql)
 #endif
 
 #if defined(__GNUC__)
@@ -153,6 +168,22 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                                  __asm__("lgdt %0\n\t" \
                                      : /* no outputs */ \
                                      : "m" (X));
+
+#define Ke386GetInterruptDescriptorTable(X) \
+                                 __asm__("sidt %0\n\t" \
+                                     : /* no outputs */ \
+                                     : "m" (X));
+
+#define Ke386GetGlobalDescriptorTable(X) \
+                                 __asm__("sgdt %0\n\t" \
+                                     : /* no outputs */ \
+                                     : "m" (X));
+
+#define Ke386GetLocalDescriptorTable(X) \
+                                 __asm__("lldt %0\n\t" \
+                                     : /* no outputs */ \
+                                     : "m" (X));
+
 #define Ke386SaveFlags(x)        __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
 #define Ke386RestoreFlags(x)     __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
 
@@ -167,8 +198,17 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                                      __asm__("movl %%cr" #N ",%0\n\t" :"=r" (__d)); \
                                      __d; \
                                  })
+
+#define _Ke386GetDr(N)           ({ \
+                                     unsigned int __d; \
+                                     __asm__("movl %%dr" #N ",%0\n\t" :"=r" (__d)); \
+                                     __d; \
+                                 })
 #define _Ke386SetCr(N,X)         __asm__ __volatile__("movl %0,%%cr" #N : :"r" (X));
+#define _Ke386SetDr(N,X)         __asm__ __volatile__("movl %0,%%dr" #N : :"r" (X));
 #define Ke386SetTr(X)         __asm__ __volatile__("ltr %%ax" : :"a" (X));
+
+#define Ke386GetTr(X)         __asm__ __volatile__("str %%ax" : :"a" (X));
 
 #define _Ke386SetSeg(N,X)         __asm__ __volatile__("movl %0,%%" #N : :"r" (X));
 
@@ -179,6 +219,7 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define Ke386GetCr4()            _Ke386GetCr(4)
 #define Ke386SetCr4(X)           _Ke386SetCr(4,X)
 #define Ke386GetSs()             _Ke386GetSeg(ss)
+#define Ke386GetFs()             _Ke386GetSeg(fs)
 #define Ke386SetFs(X)            _Ke386SetSeg(fs, X)
 #define Ke386SetDs(X)            _Ke386SetSeg(ds, X)
 #define Ke386SetEs(X)            _Ke386SetSeg(es, X)
@@ -224,8 +265,8 @@ static inline void Ki386Cpuid(ULONG Op, PULONG Eax, PULONG Ebx, PULONG Ecx, PULO
 
 #elif defined(_MSC_VER)
 
-#define Ke386DisableInterrupts() __asm cli
-#define Ke386EnableInterrupts()  __asm sti
+#define Ke386DisableInterrupts() _cli()
+#define Ke386EnableInterrupts()  _sti()
 #define Ke386HaltProcessor()     __asm hlt
 #define Ke386GetPageTableDirectory(X) \
                                 __asm mov eax, cr3; \
@@ -239,8 +280,9 @@ static __forceinline void Ke386SetPageTableDirectory(ULONG X)
 #error Unknown compiler for inline assembler
 #endif
 
-static __inline struct _KPCR * KeGetCurrentKPCR(
-  VOID)
+FORCEINLINE
+struct _KPCR *
+KeGetCurrentKPCR(VOID)
 {
   ULONG Value;
 #if defined(__GNUC__)
@@ -255,8 +297,10 @@ static __inline struct _KPCR * KeGetCurrentKPCR(
   return (struct _KPCR *) Value;
 }
 
-static __inline struct _KPRCB * KeGetCurrentPrcb(
-  VOID)
+#ifdef __GNUC__
+FORCEINLINE
+struct _KPRCB *
+KeGetCurrentPrcb(VOID)
 {
   ULONG Value;
 #if defined(__GNUC__)
@@ -270,6 +314,7 @@ static __inline struct _KPRCB * KeGetCurrentPrcb(
 #endif
   return (struct _KPRCB *) Value;
 }
+#endif
 
 #endif
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H */

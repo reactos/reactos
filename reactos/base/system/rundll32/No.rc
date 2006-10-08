@@ -1,0 +1,12 @@
+#include "resource.h"
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
+ */
+
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+{
+IDS_DllNotLoaded,   "LoadLibrary mislykket å laste '%s'"
+IDS_MissingEntry, "Mistet oppføring moment:%s\nIn %s"
+}

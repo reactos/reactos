@@ -70,6 +70,8 @@ FillDeviceComboBox(PSND_MIXER Mixer,
     LRESULT lres;
     PPREFERENCES_FILL_DEVICES FillContext = (PPREFERENCES_FILL_DEVICES)Context;
 
+    UNREFERENCED_PARAMETER(Mixer);
+
     lres = SendMessage(FillContext->hComboBox,
                        CB_ADDSTRING,
                        0,
@@ -101,7 +103,10 @@ PrefDlgAddLine(PSND_MIXER Mixer,
                PVOID Context)
 {
     PPREFERENCES_CONTEXT PrefContext = (PPREFERENCES_CONTEXT)Context;
-    
+
+    UNREFERENCED_PARAMETER(Mixer);
+	UNREFERENCED_PARAMETER(DisplayControls);
+
     switch (Line->dwComponentType)
     {
         case MIXERLINE_COMPONENTTYPE_DST_SPEAKERS:
@@ -178,6 +183,9 @@ PrefDlgAddConnection(PSND_MIXER Mixer,
     HWND hwndControls;
     LVITEM lvi;
     UINT i;
+
+    UNREFERENCED_PARAMETER(Mixer);
+	UNREFERENCED_PARAMETER(LineID);
     
     if (Line->cControls != 0)
     {
@@ -543,6 +551,7 @@ DlgPreferencesProc(HWND hwndDlg,
 static VOID
 DeleteMixerWindowControls(PMIXER_WINDOW MixerWindow)
 {
+    UNREFERENCED_PARAMETER(MixerWindow);
 }
 
 static BOOL
@@ -796,6 +805,10 @@ WinMain(HINSTANCE hInstance,
 {
     MSG Msg;
     int Ret = 1;
+
+    UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpszCmdLine);
+	UNREFERENCED_PARAMETER(nCmdShow);
 
     hAppInstance = hInstance;
     hAppHeap = GetProcessHeap();

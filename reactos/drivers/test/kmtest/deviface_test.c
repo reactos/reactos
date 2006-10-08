@@ -23,6 +23,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ndk/iotypes.h>
 #include "kmtest.h"
 
 //#define NDEBUG
@@ -101,12 +102,53 @@ VOID FASTCALL DeviceInterfaceTest_Func()
    ExFreePool(SymbolicLinkList);
 }
 
-VOID FASTCALL DeviceInterfaceTest()
+VOID RegisterDI_Test()
 {
-   DPRINT("Calling DeviceInterfaceTest_Func with native functions\n");
-   IoGetDeviceInterfaces_Func = IoGetDeviceInterfaces;
-   DeviceInterfaceTest_Func();
-   DPRINT("Calling DeviceInterfaceTest_Func with ReactOS functions\n");
-   IoGetDeviceInterfaces_Func = ReactOS_IoGetDeviceInterfaces;
-   DeviceInterfaceTest_Func();
+    GUID Guid = {0x378de44c, 0x56ef, 0x11d1, {0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd}};
+    DEVICE_OBJECT DeviceObject;
+    EXTENDED_DEVOBJ_EXTENSION DeviceObjectExtension;
+    DEVICE_NODE DeviceNode;
+    UNICODE_STRING SymbolicLinkName;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&SymbolicLinkName, L"");
+
+    // Prepare our surrogate of a Device Object
+    DeviceObject.DeviceObjectExtension = (PDEVOBJ_EXTENSION)&DeviceObjectExtension;
+
+    // 1. DeviceNode = NULL
+    DeviceObjectExtension.DeviceNode = NULL;
+    Status = IoRegisterDeviceInterface(&DeviceObject, &Guid, NULL,
+        &SymbolicLinkName);
+
+    ok(Status == STATUS_INVALID_DEVICE_REQUEST,
+        "IoRegisterDeviceInterface returned 0x%08lX\n", Status);
+
+    // 2. DeviceNode->InstancePath is of a null length
+    DeviceObjectExtension.DeviceNode = &DeviceNode;
+    DeviceNode.InstancePath.Length = 0;
+    Status = IoRegisterDeviceInterface(&DeviceObject, &Guid, NULL,
+        &SymbolicLinkName);
+
+    ok(Status == STATUS_INVALID_DEVICE_REQUEST,
+        "IoRegisterDeviceInterface returned 0x%08lX\n", Status);
+}
+
+VOID FASTCALL NtoskrnlIoDeviceInterface()
+{
+    StartTest();
+
+    // Test IoRegisterDeviceInterface() failures now
+    RegisterDI_Test();
+
+/*
+    DPRINT("Calling DeviceInterfaceTest_Func with native functions\n");
+    IoGetDeviceInterfaces_Func = IoGetDeviceInterfaces;
+    DeviceInterfaceTest_Func();
+    DPRINT("Calling DeviceInterfaceTest_Func with ReactOS functions\n");
+    IoGetDeviceInterfaces_Func = ReactOS_IoGetDeviceInterfaces;
+    DeviceInterfaceTest_Func();
+*/
+
+    FinishTest("NTOSKRNL Io Device Interface Test");
 }

@@ -22,20 +22,26 @@ ULONG KiMaximumDpcQueueDepth = 4;
 ULONG KiMinimumDpcRate = 3;
 ULONG KiAdjustDpcThreshold = 20;
 ULONG KiIdealDpcRate = 20;
+BOOLEAN KeThreadDpcEnable;
 KMUTEX KiGenericCallDpcMutex;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+//
+// This routine executes at the end of a thread's quantum.
+// If the thread's quantum has expired, then a new thread is attempted
+// to be scheduled.
+//
+// If no candidate thread has been found, the routine will return, otherwise
+// it will swap contexts to the next scheduled thread.
+//
 VOID
 NTAPI
 KiQuantumEnd(VOID)
 {
+    KPRIORITY Priority;
     PKPRCB Prcb = KeGetCurrentPrcb();
-    PKTHREAD CurrentThread = KeGetCurrentThread();
-    KIRQL OldIrql;
-    PKPROCESS Process;
-    KPRIORITY OldPriority;
-    KPRIORITY NewPriority;
+    PKTHREAD NextThread, Thread = Prcb->CurrentThread;
 
     /* Check if a DPC Event was requested to be signaled */
     if (InterlockedExchange(&Prcb->DpcSetEventRequest, 0))
@@ -44,68 +50,84 @@ KiQuantumEnd(VOID)
         KeSetEvent((PVOID)&Prcb->DpcEvent, 0, 0);
     }
 
-    /* Lock dispatcher */
-    OldIrql = KeRaiseIrqlToSynchLevel();
-    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
-
-    /* Get the Thread's Process */
-    Process = CurrentThread->ApcState.Process;
+    /* Raise to synchronization level and lock the PRCB and thread */
+    KeRaiseIrqlToSynchLevel();
+    KiAcquireThreadLock(Thread);
+    KiAcquirePrcbLock(Prcb);
 
     /* Check if Quantum expired */
-    if (CurrentThread->Quantum <= 0)
+    if (Thread->Quantum <= 0)
     {
-        /* Reset the new Quantum */
-        CurrentThread->Quantum = CurrentThread->QuantumReset;
-
-        /* Calculate new priority */
-        OldPriority = CurrentThread->Priority;
-        if (OldPriority < LOW_REALTIME_PRIORITY)
+        /* Make sure that we're not real-time or without a quantum */
+        if ((Thread->Priority < LOW_REALTIME_PRIORITY) &&
+            !(Thread->ApcState.Process->DisableQuantum))
         {
-            /* Set the New Priority and add the Priority Decrement */
-            NewPriority = OldPriority - CurrentThread->PriorityDecrement - 1;
+            /* Reset the new Quantum */
+            Thread->Quantum = Thread->QuantumReset;
 
-            /* Don't go out of bounds */
-            if (NewPriority < CurrentThread->BasePriority)
+            /* Calculate new priority */
+            Priority = Thread->Priority = KiComputeNewPriority(Thread);
+
+            /* Check if a new thread is scheduled */
+            if (!Prcb->NextThread)
             {
-                NewPriority = CurrentThread->BasePriority;
-            }
-
-            /* Reset the priority decrement */
-            CurrentThread->PriorityDecrement = 0;
-
-            /* Set a new priority if needed */
-            if (OldPriority != NewPriority)
-            {
-                /* Set new Priority */
-                BOOLEAN Dummy; /* <- This is a hack anyways... */
-                KiSetPriorityThread(CurrentThread, NewPriority, &Dummy);
+                /* FIXME: TODO. Add code from new scheduler */
             }
             else
             {
-                /* Queue new thread if none is already */
-                if (!Prcb->NextThread)
-                {
-                    /* FIXME: Schedule a New Thread, when ROS will have NT Scheduler */
-                }
-                else
-                {
-                    /* Make the current thread non-premeptive if a new thread is queued */
-                    CurrentThread->Preempted = FALSE;
-                }
+                /* Otherwise, make sure that this thread doesn't get preempted */
+                Thread->Preempted = FALSE;
             }
         }
         else
         {
-            /* Set the Quantum back to Maximum */
-            //if (CurrentThread->DisableQuantum) {
-            //    CurrentThread->Quantum = MAX_QUANTUM;
-            //}
+            /* Otherwise, set maximum quantum */
+            Thread->Quantum = MAX_QUANTUM;
         }
     }
 
-    /* Dispatch the Thread */
+    /* Release the thread lock */
+    KiReleaseThreadLock(Thread);
+
+    /* Check if there's no thread scheduled */
+    if (!Prcb->NextThread)
+    {
+        /* Just leave now */
+        KiReleasePrcbLock(Prcb);
+        KeLowerIrql(DISPATCH_LEVEL);
+        KiDispatchThread(Ready); // FIXME: ROS
+        return;
+    }
+
+    /* This shouldn't happen on ROS yet */
+    DPRINT1("The impossible happened - Tell Alex\n");
+    ASSERT(FALSE);
+
+    /* Get the next thread now */
+    NextThread = Prcb->NextThread;
+
+    /* Set current thread's swap busy to true */
+    KiSetThreadSwapBusy(Thread);
+
+    /* Switch threads in PRCB */
+    Prcb->NextThread = NULL;
+    Prcb->CurrentThread = NextThread;
+
+    /* Set thread to running and the switch reason to Quantum End */
+    NextThread->State = Running;
+    Thread->WaitReason = WrQuantumEnd;
+
+    /* Queue it on the ready lists */
+    KxQueueReadyThread(Thread, Prcb);
+
+    /* Set wait IRQL to APC_LEVEL */
+    Thread->WaitIrql = APC_LEVEL;
+
+    /* Swap threads */
+    KiSwapContext(Thread, NextThread);
+
+    /* Lower IRQL back to DISPATCH_LEVEL */
     KeLowerIrql(DISPATCH_LEVEL);
-    KiDispatchThread(Ready);
 }
 
 VOID
@@ -339,7 +361,7 @@ KeInsertQueueDpc(IN PKDPC Dpc,
                          Prcb->MaximumDpcQueueDepth))
 #ifndef _M_PPC
 				    &&
-                        (!(AFFINITY_MASK(Cpu) & IdleProcessorMask) ||
+                        (!(AFFINITY_MASK(Cpu) & KiIdleSummary) ||
                          (Prcb->Sleeping))
 #endif
 		       )

@@ -174,7 +174,6 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
   PIO_RESOURCE_DESCRIPTOR RequirementDescriptor;
   RESOURCE* resource;
   ULONG i;
-  KIRQL Dirql;
 
   /* Count number of resources */
   Done = FALSE;
@@ -263,11 +262,9 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
             (irq_data->shared_exclusive == SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
           ResourceDescriptor->Flags =
             (irq_data->edge_level == LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
-          ResourceDescriptor->u.Interrupt.Vector = HalGetInterruptVector(
-            Internal, 0, 0, irq_data->interrupts[i],
-            &Dirql,
-            &ResourceDescriptor->u.Interrupt.Affinity);
-          ResourceDescriptor->u.Interrupt.Level = (ULONG)Dirql;
+          ResourceDescriptor->u.Interrupt.Level = 0;
+          ResourceDescriptor->u.Interrupt.Vector = irq_data->interrupts[i];
+          ResourceDescriptor->u.Interrupt.Affinity = (KAFFINITY)(-1);
 
           RequirementDescriptor->Option = 0; /* Required */
           RequirementDescriptor->Type = ResourceDescriptor->Type;

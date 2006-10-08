@@ -124,6 +124,22 @@ NoGui:
 		{
 			LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
+		else if (_stricmp(SettingValue, "WindowsNT40") == 0)
+		{
+			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_NT4);
+		}
+		else if (_stricmp(SettingValue, "Windows2000") == 0)
+		{
+			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_WIN2K);
+		}
+		else if (_stricmp(SettingValue, "WindowsXP") == 0)
+		{
+			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_WINXP);
+		}
+		else if (_stricmp(SettingValue, "Windows2003") == 0)
+		{
+			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_WS03);
+		}
 		else if (_stricmp(SettingValue, "Linux") == 0)
 		{
 			LoadAndBootLinux(OperatingSystemSectionNames[SelectedOperatingSystem], OperatingSystemDisplayNames[SelectedOperatingSystem]);

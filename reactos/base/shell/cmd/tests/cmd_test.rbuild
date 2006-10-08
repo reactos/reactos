@@ -8,6 +8,9 @@
 	<library>rtshared</library>
 	<library>regtests</library>
 	<library>cmd_base</library>
+	<library>kernel32</library>
+	<library>advapi32</library>
+	<library>cmd_base</library>
 	<library>pseh</library>
 	<library>ntdll</library>
 	<file>setup.c</file>

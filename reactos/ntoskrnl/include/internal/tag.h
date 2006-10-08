@@ -140,6 +140,7 @@
 
 /* formerly located in ps/notify.c */
 #define TAG_KAPC TAG('k','p','a','p') /* kpap - kernel ps apc */
+#define TAG_PS_APC TAG('P', 's', 'a', 'p') /* Psap - Ps APC */
 
 /* formerly located in rtl/handle.c */
 #define TAG_HDTB  TAG('H', 'D', 'T', 'B')

@@ -1,16 +1,14 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS SC utility
- * FILE:        subsys/system/sc/usage.c
- * PURPOSE:     control ReactOS services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *           Ged Murphy 20/10/05 Created
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/sc/usage.c
+ * PURPOSE:     display usage info
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 #include "sc.h"
 
-INT MainUsage(VOID)
+VOID MainUsage(VOID)
 {
     INT c;
 
@@ -26,7 +24,7 @@ INT MainUsage(VOID)
     _T("\t  query          : Queries the status for a service, or\n")
     _T("\t                   enumerates the status for types of services.\n")
     _T("\t  queryex        : Queries the extended status for a service, or\n")
-//    _T("\t                   enumerates the status for types of services.\n"
+    _T("\t                   enumerates the status for types of services.\n")
     _T("\t  start          : Starts a service.\n")
     _T("\t  pause          : Sends a PAUSE control request to a service.\n")
     _T("\t  interrogate    : Sends a INTERROGATE control request to a service.\n")
@@ -63,7 +61,7 @@ INT MainUsage(VOID)
         _T("        for that service is returned.  Further options do not apply in\n")
         _T("        this case.  If the query command is followed by nothing or one of\n")
         _T("        the options listed below, the services are enumerated.\n")
-        _T("    type=    Type of services to enumerate (driver, service, all)\n")
+        _T("    type=    Type of services to enumerate (driver, service, interact, all)\n")
         _T("             (default = service)\n")
         _T("    state=   State of services to enumerate (inactive, all)\n")
         _T("             (default = active)\n")
@@ -85,87 +83,70 @@ INT MainUsage(VOID)
 //        _T("sc query bufsize= 50    - Enumerates with a 50 byte buffer.\n")
 //        _T("sc query ri= 14         - Enumerates with resume index = 14\n")
 //        _T("sc queryex group= ""    - Enumerates active services not in a group\n")
-        _T("sc query type= service type= interact - Enumerates all interactive services\n"));
-//        _T("sc query type= driver group= NDIS     - Enumerates all NDIS drivers\n"));
+        _T("sc query type= service type= interact - Enumerates all interactive services\n")
+        _T("sc query type= driver group= NDIS     - Enumerates all NDIS drivers\n"));
     }
-
-
-    return 0;
 }
 
 
-INT StartUsage(VOID)
+VOID StartUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
                 _T("        Starts a service running.\n")
                 _T("USAGE:\n")
                 _T("        sc <server> start [service name] <arg1> <arg2> ...\n"));
-
-    return 0;
 }
 
 
-INT PauseUsage(VOID)
+VOID PauseUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
                 _T("        Sends a PAUSE control request to a service.\n")
                 _T("USAGE:\n")
                 _T("        sc <server> pause [service name]\n"));
-
-    return 0;
 }
 
-INT InterrogateUsage(VOID)
+VOID InterrogateUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
                 _T("        Sends an INTERROGATE control request to a service.\n")
                 _T("USAGE:\n")
                 _T("        sc <server> interrogate [service name]\n"));
-
-    return 0;
 }
 
 
-INT StopUsage(VOID)
+VOID StopUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
                 _T("        Sends an STOP control request to a service.\n")
                 _T("USAGE:\n")
                 _T("        sc <server> stop [service name]\n"));
-
-    return 0;
 }
 
-INT ContinueUsage(VOID)
+VOID ContinueUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
                 _T("        Sends an CONTINUE control request to a service.\n")
                 _T("USAGE:\n")
                 _T("        sc <server> continue [service name]\n"));
-
-    return 0;
 }
 
 
-INT ConfigUsage(VOID)
+VOID ConfigUsage(VOID)
 {
     _tprintf(_T("not yet implemented\n"));
-
-    return 0;
 }
 
 
-INT DescriptionUsage(VOID)
+VOID DescriptionUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
                 _T("        Sets the description string for a service.\n")
                 _T("USAGE:\n")
                 _T("        sc <server> description [service name]\n"));
-
-    return 0;
 }
 
-INT DeleteUsage(VOID)
+VOID DeleteUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
                 _T("        Deletes a service entry from the registry.\n")
@@ -174,11 +155,9 @@ INT DeleteUsage(VOID)
                 _T("        for deletion.\n")
                 _T("USAGE:\n")
                 _T("        sc <server> delete [service name]\n"));
-
-    return 0;
 }
 
-INT CreateUsage(VOID)
+VOID CreateUsage(VOID)
 {
     _tprintf(_T("Creates a service entry in the registry and Service Database.\n")
                 _T("SYNTAX:\n")
@@ -199,6 +178,4 @@ INT CreateUsage(VOID)
                 _T("       (default = LocalSystem)\n")
                 _T(" DisplayName= <display name>\n")
                 _T(" password= <password>\n"));
-
-    return 0;
 }

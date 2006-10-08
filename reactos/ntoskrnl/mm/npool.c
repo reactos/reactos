@@ -95,7 +95,7 @@ typedef struct _HDR_FREE
 
 #define HDR_FREE_SIZE ROUND_UP(sizeof(HDR_FREE), MM_POOL_ALIGNMENT)
 
-#if defined(NPOOL_REDZONE_CHECK) || #defined(NPOOL_REDZONE_CHECK_FULL)
+#if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
 #define HDR_USED_SIZE ROUND_UP(sizeof(HDR_USED) + NPOOL_REDZONE_SIZE, MM_POOL_ALIGNMENT)
 #else
 #define HDR_USED_SIZE ROUND_UP(sizeof(HDR_USED), MM_POOL_ALIGNMENT)
@@ -760,7 +760,7 @@ MiAddToTagHashTable(HDR_USED* block)
 #endif /* TAG_STATISTICS_TRACKING */
 
 #if defined(TAG_STATISTICS_TRACKING)
-VOID STATIC
+VOID static
 MiDumpTagStats(ULONG CurrentTag, ULONG CurrentNrBlocks, ULONG CurrentSize)
 {
    CHAR c1, c2, c3, c4;
@@ -1106,7 +1106,7 @@ static void validate_kernel_pool(void)
 #endif
 
 #if 0
-STATIC VOID
+static VOID
 free_pages(HDR_FREE* blk)
 {
    ULONG start;
@@ -1154,7 +1154,7 @@ add_to_free_list(HDR_FREE* blk)
  */
 {
    HDR_FREE* current;
-   BOOL UpdatePrevPtr = FALSE;
+   BOOLEAN UpdatePrevPtr = FALSE;
 
    DPRINT("add_to_free_list (%d)\n", blk->hdr.Size);
 
@@ -1469,10 +1469,10 @@ ExRosQueryNonPagedPoolTag ( PVOID Addr )
 #if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
 void check_redzone_header(HDR_USED* hdr)
 {
-   PBYTE LoZone = (PBYTE)((ULONG_PTR)hdr + HDR_USED_SIZE - NPOOL_REDZONE_SIZE);
-   PBYTE HiZone = (PBYTE)((ULONG_PTR)hdr + HDR_USED_SIZE + hdr->UserSize);
-   BOOL LoOK = TRUE;
-   BOOL HiOK = TRUE;
+   PUCHAR LoZone = (PUCHAR)((ULONG_PTR)hdr + HDR_USED_SIZE - NPOOL_REDZONE_SIZE);
+   PUCHAR HiZone = (PUCHAR)((ULONG_PTR)hdr + HDR_USED_SIZE + hdr->UserSize);
+   BOOLEAN LoOK = TRUE;
+   BOOLEAN HiOK = TRUE;
    ULONG i;
    CHAR c[5];
 

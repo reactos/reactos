@@ -85,16 +85,7 @@ PEPROCESS
 NTAPI
 IoGetCurrentProcess(VOID)
 {
-    /* FIXME: Completely broken */
-    if (PsGetCurrentThread() == NULL ||
-        PsGetCurrentThread()->Tcb.ApcState.Process == NULL)
-    {
-        return(PsInitialSystemProcess);
-    }
-    else
-    {
-        return(PEPROCESS)(PsGetCurrentThread()->Tcb.ApcState.Process);
-    }
+    return (PEPROCESS)PsGetCurrentThread()->Tcb.ApcState.Process;
 }
 
 /*

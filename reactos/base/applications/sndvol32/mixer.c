@@ -25,7 +25,7 @@
  */
 #include <sndvol32.h>
 
-#define NO_MIXER_SELECTED (~0)
+#define NO_MIXER_SELECTED ((UINT)(~0))
 
 static VOID
 ClearMixerCache(PSND_MIXER Mixer)
@@ -394,7 +394,7 @@ SndMixerGetLineName(PSND_MIXER Mixer,
 {
     if (Mixer->hmx)
     {
-        int lnsz;
+        UINT lnsz;
         PSND_MIXER_DESTINATION Line;
         LPMIXERLINE lpl = NULL;
 

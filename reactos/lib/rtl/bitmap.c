@@ -36,6 +36,7 @@ static const signed char NTDLL_mostSignificant[16] = {
 
 static
 int
+__cdecl
 NTDLL_RunSortFn(const void *lhs,
                 const void *rhs)
 {
@@ -873,7 +874,7 @@ RtlTestBit(PRTL_BITMAP BitMapHeader,
 
   Ptr = (PULONG)BitMapHeader->Buffer + (BitNumber / 32);
 
-  return (*Ptr & (1 << (BitNumber % 32)));
+  return (BOOLEAN)(*Ptr & (1 << (BitNumber % 32)));
 }
 
 /*
@@ -922,7 +923,7 @@ CCHAR WINAPI RtlFindMostSignificantBit(ULONGLONG ulLong)
     signed char ret = 32;
     DWORD dw;
 
-    if (!(dw = (ulLong >> 32)))
+    if (!(dw = (DWORD)(ulLong >> 32)))
     {
         ret = 0;
         dw = (DWORD)ulLong;
@@ -956,7 +957,7 @@ CCHAR WINAPI RtlFindLeastSignificantBit(ULONGLONG ulLong)
     if (!(dw = (DWORD)ulLong))
     {
         ret = 32;
-        if (!(dw = ulLong >> 32)) return -1;
+        if (!(dw = (DWORD)(ulLong >> 32))) return -1;
     }
     if (!(dw & 0xffff))
     {

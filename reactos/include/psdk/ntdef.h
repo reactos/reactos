@@ -64,6 +64,8 @@ typedef STRING CANSI_STRING;
 typedef PSTRING PCANSI_STRING;
 typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
 typedef CONST CHAR *LPCCH, *PCCH;
+typedef signed char SCHAR;
+typedef SCHAR *PSCHAR;
 typedef enum _SECTION_INHERIT {
   ViewShare = 1,
   ViewUnmap = 2
@@ -104,4 +106,7 @@ typedef struct _OBJECT_ATTRIBUTES {
 #define MAXUCHAR  0xff
 #define MAXUSHORT 0xffff
 #define MAXULONG  0xffffffff
+
+#define C_ASSERT(e) extern char __C_ASSERT__[(e)?1:-1]
+
 #endif /* _NTDEF_H */

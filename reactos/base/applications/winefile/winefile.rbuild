@@ -11,6 +11,7 @@
     <library>gdi32</library>
     <library>user32</library>
     <library>comctl32</library>
+    <library>advapi32</library>
     <library>comdlg32</library>
     <library>shell32</library>
     <library>ole32</library>

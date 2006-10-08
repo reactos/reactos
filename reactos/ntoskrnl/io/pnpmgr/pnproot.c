@@ -33,6 +33,9 @@ typedef struct _PNPROOT_DEVICE
   UNICODE_STRING InstanceID;
   // Device description
   UNICODE_STRING DeviceDescription;
+  // Boot resource list
+  PCM_FULL_RESOURCE_DESCRIPTOR BootResourceList;
+  SIZE_T BootResourceListSize;
   // Resource requirement list
   PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirementsList;
 } PNPROOT_DEVICE, *PPNPROOT_DEVICE;
@@ -67,12 +70,8 @@ typedef struct _PNPROOT_PDO_DEVICE_EXTENSION
 {
   // Common device data
   PNPROOT_COMMON_DEVICE_EXTENSION Common;
-  // Device ID
-  UNICODE_STRING DeviceID;
-  // Instance ID
-  UNICODE_STRING InstanceID;
-  // Resource requirement list
-  PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirementsList;
+  // Device
+  PPNPROOT_DEVICE Device;
 } PNPROOT_PDO_DEVICE_EXTENSION, *PPNPROOT_PDO_DEVICE_EXTENSION;
 
 
@@ -158,23 +157,6 @@ PnpRootCreateDevice(
 
   PdoDeviceExtension->Common.DevicePowerState = PowerDeviceD0;
 
-  if (!RtlCreateUnicodeString(
-    &PdoDeviceExtension->DeviceID,
-    ENUM_NAME_ROOT \
-    L"\\LEGACY_UNKNOWN"))
-  {
-    /* FIXME: */
-    DPRINT("RtlCreateUnicodeString() failed\n");
-  }
-
-  if (!RtlCreateUnicodeString(
-    &PdoDeviceExtension->InstanceID,
-    L"0000"))
-  {
-    /* FIXME: */
-    DPRINT("RtlCreateUnicodeString() failed\n");
-  }
-
   ExInterlockedInsertTailList(
     &DeviceExtension->DeviceListHead,
     &Device->ListEntry,
@@ -210,9 +192,12 @@ PdoQueryId(
 
   switch (IrpSp->Parameters.QueryId.IdType) {
     case BusQueryDeviceID:
-      Status = RtlDuplicateUnicodeString(TRUE,
-                                         &DeviceExtension->DeviceID,
+      if (DeviceExtension->Device)
+        Status = RtlDuplicateUnicodeString(TRUE,
+                                         &DeviceExtension->Device->DeviceID,
                                          &String);
+      else
+        Status = RtlCreateUnicodeString(&String, ENUM_NAME_ROOT L"\\LEGACY_UNKNOWN");
 
       DPRINT("DeviceID: %wZ\n", &String);
 
@@ -225,9 +210,12 @@ PdoQueryId(
       break;
 
     case BusQueryInstanceID:
-      Status = RtlDuplicateUnicodeString(TRUE,
-                                         &DeviceExtension->InstanceID,
+      if (DeviceExtension->Device)
+        Status = RtlDuplicateUnicodeString(TRUE,
+                                         &DeviceExtension->Device->InstanceID,
                                          &String);
+      else
+        Status = RtlCreateUnicodeString(&String, L"0000");
 
       DPRINT("InstanceID: %S\n", String.Buffer);
 
@@ -249,16 +237,40 @@ PdoQueryResources(
   IN PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
+  PPNPROOT_PDO_DEVICE_EXTENSION DeviceExtension;
   PCM_RESOURCE_LIST ResourceList;
   ULONG ResourceListSize = FIELD_OFFSET(CM_RESOURCE_LIST, List);
 
-  ResourceList = ExAllocatePool(PagedPool, ResourceListSize);
-  if (ResourceList == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
+  DPRINT("Called\n");
 
-  ResourceList->Count = 0;
+  DeviceExtension = (PPNPROOT_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  
+  if (!DeviceExtension->Device || DeviceExtension->Device->BootResourceList == NULL)
+  {
+    /* Create an empty resource list */
+    ResourceList = ExAllocatePool(PagedPool, ResourceListSize);
+    if (ResourceList == NULL)
+      return STATUS_INSUFFICIENT_RESOURCES;
 
-  Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+    ResourceList->Count = 0;
+
+    Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+  }
+  else
+  {
+    /* Copy existing resource list */
+    ResourceList = ExAllocatePool(PagedPool,
+      FIELD_OFFSET(CM_RESOURCE_LIST, List) +  DeviceExtension->Device->BootResourceListSize);
+    if (ResourceList == NULL)
+      return STATUS_INSUFFICIENT_RESOURCES;
+
+    ResourceList->Count = 1;
+    RtlCopyMemory(
+      &ResourceList->List,
+      DeviceExtension->Device->BootResourceList,
+      DeviceExtension->Device->BootResourceListSize);
+    Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+  }
 
   return STATUS_SUCCESS;
 }
@@ -278,7 +290,7 @@ PdoQueryResourceRequirements(
 
   DeviceExtension = (PPNPROOT_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
   
-  if (DeviceExtension->ResourceRequirementsList == NULL)
+  if (!DeviceExtension->Device || DeviceExtension->Device->ResourceRequirementsList == NULL)
   {
     /* Create an empty resource list */
     ResourceList = ExAllocatePool(PagedPool, ResourceListSize);
@@ -293,14 +305,14 @@ PdoQueryResourceRequirements(
   else
   {
     /* Copy existing resource requirement list */
-    ResourceList = ExAllocatePool(PagedPool, DeviceExtension->ResourceRequirementsList->ListSize);
+    ResourceList = ExAllocatePool(PagedPool, DeviceExtension->Device->ResourceRequirementsList->ListSize);
     if (ResourceList == NULL)
       return STATUS_INSUFFICIENT_RESOURCES;
 
     RtlCopyMemory(
       ResourceList,
-      DeviceExtension->ResourceRequirementsList,
-      DeviceExtension->ResourceRequirementsList->ListSize);
+      DeviceExtension->Device->ResourceRequirementsList,
+      DeviceExtension->Device->ResourceRequirementsList->ListSize);
     Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
   }
 
@@ -449,7 +461,8 @@ static NTSTATUS
 PnpRootReadRegistryBinary(
   IN PWSTR KeyName,
   IN PWSTR ValueKeyName,
-  OUT PVOID* Buffer)
+  OUT PVOID* Buffer,
+  OUT SIZE_T* BufferSize OPTIONAL)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyNameU;
@@ -500,7 +513,7 @@ PnpRootReadRegistryBinary(
     {
       DPRINT("ExAllocatePoolWithTag() failed\n", Status);
       ZwClose(KeyHandle);
-      return Status;
+      return STATUS_NO_MEMORY;
     }
     
     Status = ZwQueryValueKey(
@@ -512,12 +525,13 @@ PnpRootReadRegistryBinary(
     if (NT_SUCCESS(Status))
     {
       *Buffer = ExAllocatePoolWithTag(PagedPool, Data->DataLength, TAG_PNP_ROOT);
+      if (BufferSize) *BufferSize = Data->DataLength;
       if (!*Buffer)
       {
         DPRINT("ExAllocatePoolWithTag() failed\n", Status);
         ExFreePoolWithTag(Data, TAG_PNP_ROOT);
         ZwClose(KeyHandle);
-        return Status;
+        return STATUS_NO_MEMORY;
       }
       
       RtlCopyMemory(
@@ -591,7 +605,21 @@ PnpRootFdoReadDeviceInfo(
   Status = PnpRootReadRegistryBinary(
     KeyName,
     L"BasicConfigVector",
-    (PVOID*)&Device->ResourceRequirementsList);
+    (PVOID*)&Device->ResourceRequirementsList,
+    NULL);
+
+  DPRINT("PnpRootReadRegistryBinary() returned status 0x%08lx\n", Status);
+
+  if (!NT_SUCCESS(Status))
+  {
+    /* FIXME: */
+  }
+
+  Status = PnpRootReadRegistryBinary(
+    KeyName,
+    L"BootConfig",
+    (PVOID*)&Device->BootResourceList,
+    &Device->BootResourceListSize);
 
   DPRINT("PnpRootReadRegistryBinary() returned status 0x%08lx\n", Status);
 
@@ -861,52 +889,18 @@ PnpRootQueryBusRelations(
 
       PdoDeviceExtension->Common.DevicePowerState = PowerDeviceD0;
 
-      if (!RtlCreateUnicodeString(
-        &PdoDeviceExtension->DeviceID,
-        Device->DeviceID.Buffer))
-      {
-        DPRINT("Insufficient resources\n");
-        /* FIXME: */
-      }
+      PdoDeviceExtension->Device = Device;
 
       DPRINT("DeviceID: %wZ  PDO %p\n",
-        &PdoDeviceExtension->DeviceID,
+        &PdoDeviceExtension->Device->DeviceID,
         Device->Pdo);
-
-      if (!RtlCreateUnicodeString(
-        &PdoDeviceExtension->InstanceID,
-        Device->InstanceID.Buffer))
-      {
-        DPRINT("Insufficient resources\n");
-        /* FIXME: */
-      }
 
       DPRINT("InstanceID: %wZ  PDO %p\n",
-        &PdoDeviceExtension->InstanceID,
+        &PdoDeviceExtension->Device->InstanceID,
         Device->Pdo);
 
-      if (Device->ResourceRequirementsList != NULL)
-      {
-        PdoDeviceExtension->ResourceRequirementsList = ExAllocatePoolWithTag(
-          PagedPool,
-          Device->ResourceRequirementsList->ListSize,
-          TAG_PNP_ROOT);
-        if (PdoDeviceExtension->ResourceRequirementsList)
-        {
-          RtlCopyMemory(
-            PdoDeviceExtension->ResourceRequirementsList,
-            Device->ResourceRequirementsList,
-            Device->ResourceRequirementsList->ListSize);
-        }
-        else
-        {
-          /* FIXME */
-          DPRINT("ExAllocatePoolWithTag() failed\n");
-        }
-      }
-
       DPRINT("ResourceRequirementsList: %p  PDO %p\n",
-        PdoDeviceExtension->ResourceRequirementsList,
+        PdoDeviceExtension->Device->ResourceRequirementsList,
         Device->Pdo);
     }
 

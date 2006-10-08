@@ -53,7 +53,7 @@ IopCheckCdromDevices(PULONG DeviceNumber);
 
 /* FUNCTIONS ****************************************************************/
 
-STATIC 
+static 
 NTSTATUS
 STDCALL
 INIT_FUNCTION
@@ -94,7 +94,7 @@ DiskQueryRoutine(PWSTR ValueName,
 
 #define ROOT_NAME   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter"
 
-STATIC VOID INIT_FUNCTION
+static VOID INIT_FUNCTION
 IopEnumerateBiosDisks(PLIST_ENTRY ListHead)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
@@ -178,7 +178,7 @@ IopEnumerateBiosDisks(PLIST_ENTRY ListHead)
     }
 }
 
-STATIC VOID INIT_FUNCTION
+static VOID INIT_FUNCTION
 IopEnumerateDisks(PLIST_ENTRY ListHead)
 {
   ULONG i, k;
@@ -321,7 +321,7 @@ IopEnumerateDisks(PLIST_ENTRY ListHead)
     }
 }
 
-STATIC NTSTATUS INIT_FUNCTION
+static NTSTATUS INIT_FUNCTION
 IopAssignArcNamesToDisk(PDEVICE_OBJECT DeviceObject, ULONG RDisk, ULONG DiskNumber)
 {
   WCHAR DeviceNameBuffer[80];
@@ -679,7 +679,7 @@ IopCheckCdromDevices(PULONG DeviceNumber)
 
 
 NTSTATUS INIT_FUNCTION
-IoCreateSystemRootLink(PCHAR ParameterLine)
+IoCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
@@ -694,33 +694,14 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
   ULONG Length;
   HANDLE Handle;
 
-  /* Create local parameter line copy */
-  ParamBuffer = ExAllocatePool(PagedPool, 256);
-  strcpy(ParamBuffer, (char *)ParameterLine);
+  RtlCreateUnicodeStringFromAsciiz(&BootPath, LoaderBlock->NtBootPathName);
 
-  DPRINT("%s\n", ParamBuffer);
-  /* Format: <arc_name>\<path> [options...] */
+  /* Remove the trailing backslash */
+  BootPath.Length -= sizeof(WCHAR);
+  BootPath.MaximumLength -= sizeof(WCHAR);
 
-  /* cut options off */
-  p = strchr(ParamBuffer, ' ');
-  if (p)
-    *p = 0;
-  DPRINT("%s\n", ParamBuffer);
-
-  /* extract path */
-  p = strchr(ParamBuffer, '\\');
-  if (p)
-    {
-      DPRINT("Boot path: %s\n", p);
-      RtlCreateUnicodeStringFromAsciiz(&BootPath, p);
-      *p = 0;
-    }
-  else
-    {
-      DPRINT("Boot path: %s\n", "\\");
-      RtlCreateUnicodeStringFromAsciiz(&BootPath, "\\");
-    }
-  DPRINT("ARC name: %s\n", ParamBuffer);
+  /* Only ARC Name left - Build full ARC Name */
+  ParamBuffer = LoaderBlock->ArcBootDeviceName;
 
   p = strstr(ParamBuffer, "cdrom");
   if (p != NULL)
@@ -740,7 +721,7 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
       DPRINT("New ARC name: %s\n", ParamBuffer);
 
       /* Adjust original command line */
-      p = strstr(ParameterLine, "cdrom");
+      p = strstr(LoaderBlock->ArcBootDeviceName, "cdrom");
       if (p != NULL);
 	{
 	  char temp[256];
@@ -763,10 +744,6 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
   swprintf(ArcNameBuffer,
 	   L"\\ArcName\\%S", ParamBuffer);
   RtlInitUnicodeString(&ArcName, ArcNameBuffer);
-  DPRINT("Arc name: %wZ\n", &ArcName);
-
-  /* free ParamBuffer */
-  ExFreePool(ParamBuffer);
 
   /* allocate device name string */
   DeviceName.Length = 0;
@@ -808,13 +785,11 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
 
       return(Status);
     }
-  DPRINT("Length: %lu DeviceName: %wZ\n", Length, &DeviceName);
 
   RtlAppendUnicodeStringToString(&DeviceName,
 				 &BootPath);
 
   RtlFreeUnicodeString(&BootPath);
-  DPRINT("DeviceName: %wZ\n", &DeviceName);
 
   /* create the '\SystemRoot' link */
   Status = IoCreateSymbolicLink(&LinkName,

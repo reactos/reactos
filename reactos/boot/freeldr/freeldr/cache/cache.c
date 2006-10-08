@@ -284,7 +284,7 @@ BOOLEAN CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULON
 		//
 		// Lock the sectors into the cache
 		//
-		CacheBlock->LockedInCache = TRUE;
+		CacheBlock->LockedInCache = FALSE; //TRUE;
 	}
 
 	return TRUE;

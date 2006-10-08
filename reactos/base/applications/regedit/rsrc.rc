@@ -18,17 +18,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "windows.h"
+#include <windows.h>
 #include "resource.h"
 
-ID_ACCEL ACCELERATORS
-{
-    VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
-    "^F", ID_EDIT_FIND
-    VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
-    VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
-}
 
 /* define language neutral resources */
 
@@ -36,19 +28,19 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* include localised resources */
 
-#include "Cz.rc"
-#include "De.rc"
-#include "En.rc"
-#include "Es.rc"
-#include "Fr.rc"
-#include "It.rc"
-#include "Ja.rc"
-#include "Nl.rc"
-#include "Pl.rc"
-#include "Pt.rc"
-#include "Ru.rc"
-#include "Si.rc"
-#include "Sv.rc"
-#include "Hu.rc"
-#include "Uk.rc"
+#include "lang/Cz.rc"
+#include "lang/De.rc"
+#include "lang/En.rc"
+#include "lang/Es.rc"
+#include "lang/Fr.rc"
+#include "lang/It.rc"
+#include "lang/Ja.rc"
+#include "lang/Nl.rc"
+#include "lang/Pl.rc"
+#include "lang/Pt.rc"
+#include "lang/Ru.rc"
+#include "lang/Si.rc"
+#include "lang/Sv.rc"
+#include "lang/Hu.rc"
+#include "lang/Uk.rc"
 

@@ -21,7 +21,7 @@ HvpVerifyHiveHeader(
 {
    if (HiveHeader->Signature != HV_SIGNATURE ||
        HiveHeader->Major != HV_MAJOR_VER ||
-       HiveHeader->Minor > HV_MINOR_VER ||
+       HiveHeader->Minor < HV_MINOR_VER ||
        HiveHeader->Type != HV_TYPE_PRIMARY ||
        HiveHeader->Format != HV_FORMAT_MEMORY ||
        HiveHeader->Cluster != 1 ||
@@ -31,7 +31,7 @@ HvpVerifyHiveHeader(
       DPRINT1("Verify Hive Header failed: \n");
       DPRINT1("    Signature: 0x%x and not 0x%x, Major: 0x%x and not 0x%x\n",
           HiveHeader->Signature, HV_SIGNATURE, HiveHeader->Major, HV_MAJOR_VER);
-      DPRINT1("    Minor: 0x%x is not > 0x%x, Type: 0x%x and not 0x%x\n",
+      DPRINT1("    Minor: 0x%x is not >= 0x%x, Type: 0x%x and not 0x%x\n",
           HiveHeader->Minor, HV_MINOR_VER, HiveHeader->Type, HV_TYPE_PRIMARY);
       DPRINT1("    Format: 0x%x and not 0x%x, Cluster: 0x%x and not 1\n",
           HiveHeader->Format, HV_FORMAT_MEMORY, HiveHeader->Cluster);
@@ -151,7 +151,7 @@ HvpInitializeMemoryHive(
    //
    ChunkSize = ((PHBASE_BLOCK)ChunkBase)->Length;
    ((PHBASE_BLOCK)ChunkBase)->Length = HV_BLOCK_SIZE;
-   DPRINT1("ChunkSize: %lx\n", ChunkSize);
+   DPRINT("ChunkSize: %lx\n", ChunkSize);
 
    if (ChunkSize < sizeof(HBASE_BLOCK) ||
        !HvpVerifyHiveHeader((PHBASE_BLOCK)ChunkBase))
@@ -173,7 +173,7 @@ HvpInitializeMemoryHive(
     * we go.
     */
    
-   Hive->Storage[HvStable].Length = (ChunkSize / HV_BLOCK_SIZE) - 1;
+   Hive->Storage[HvStable].Length = (ULONG)(ChunkSize / HV_BLOCK_SIZE) - 1;
    Hive->Storage[HvStable].BlockList =
       Hive->Allocate(Hive->Storage[HvStable].Length *
                      sizeof(HMAP_ENTRY), FALSE);
@@ -306,6 +306,8 @@ NTSTATUS CMAPI
 HvInitialize(
    PHHIVE RegistryHive,
    ULONG Operation,
+   ULONG HiveType,
+   ULONG HiveFlags,
    ULONG_PTR HiveData OPTIONAL,
    ULONG Cluster OPTIONAL,
    PALLOCATE_ROUTINE Allocate,

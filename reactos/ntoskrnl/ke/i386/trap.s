@@ -14,6 +14,7 @@
 
 /* GLOBALS *******************************************************************/
 
+.data
 .globl _KiIdt
 _KiIdt:
 /* This is the Software Interrupt Table that we handle in this file:        */
@@ -87,6 +88,7 @@ _UnexpectedMsg:
     .asciz "\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n"
 
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
+.text
 
 _KiGetTickCount:
 _KiCallbackReturn:
@@ -109,9 +111,13 @@ _KiFastCallEntry:
     /* Set FS to PCR */
     mov ecx, KGDT_R0_PCR
     mov fs, cx
+    //push KGDT_R0_PCR
+    //pop fs
+
+    /* Set user selector */
+    mov ecx, KGDT_R3_DATA | RPL_MASK
 
     /* Set DS/ES to User Selector */
-    mov ecx, KGDT_R3_DATA | RPL_MASK
     mov ds, cx
     mov es, cx
 
@@ -128,7 +134,7 @@ _KiFastCallEntry:
     popf                                /* Set our EFLAGS */
     or dword ptr [esp], EFLAGS_INTERRUPT_MASK   /* Re-enable IRQs in EFLAGS, to fake INT */
     push KGDT_R3_CODE + RPL_MASK
-    push KUSER_SHARED_SYSCALL_RET
+    push dword ptr ds:KUSER_SHARED_SYSCALL_RET
 
     /* Setup the Trap Frame stack */
     push 0
@@ -966,18 +972,117 @@ V86Int5:
 
 .func KiTrap6
 _KiTrap6:
+
+    /* It this a V86 GPF? */
+    test dword ptr [esp+8], EFLAGS_V86_MASK
+    jz NotV86UD
+
+    /* Enter V86 Trap */
+    V86_TRAP_PROLOG kit6
+
+    /* Not yet supported (Invalid OPCODE from V86) */
+    int 3
+    jmp $
+
+NotV86UD:
     /* Push error code */
     push 0
 
     /* Enter trap */
     TRAP_PROLOG(6)
 
-    /* Not yet supported */
+    /* Check if this happened in kernel mode */
+    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz KmodeOpcode
+
+    /* Check for VDM */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jz UmodeOpcode
+
+    /* Check if the process is vDM */
+    mov ebx, fs:[KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jnz IsVdmOpcode
+
+UmodeOpcode:
+    /* Get EIP and enable interrupts at this point */
+    mov esi, [ebp+KTRAP_FRAME_EIP]
+    sti
+
+    /* Set intruction prefix length */
+    mov ecx, 4
+
+    /* Setup a SEH frame */
+    push ebp
+    push OpcodeSEH
+    push fs:[KPCR_EXCEPTION_LIST]
+    mov fs:[KPCR_EXCEPTION_LIST], esp
+
+OpcodeLoop:
+    /* Get the instruction and check if it's LOCK */
+    mov al, [esi]
+    cmp al, 0xF0
+    jz LockCrash
+
+    /* Keep moving */
+    add esi, 1
+    loop OpcodeLoop
+
+    /* Undo SEH frame */
+    pop fs:[KPCR_EXCEPTION_LIST]
+    add esp, 8
+
+KmodeOpcode:
+
+    /* Re-enable interrupts */
+    sti
+
+    /* Setup illegal instruction exception and dispatch it */
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    mov eax, STATUS_ILLEGAL_INSTRUCTION
+    jmp _DispatchNoParam
+
+LockCrash:
+
+    /* Undo SEH Frame */
+    pop fs:[KPCR_EXCEPTION_LIST]
+    add esp, 8
+
+    /* Setup invalid lock exception and dispatch it */
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    mov eax, STATUS_INVALID_LOCK_SEQUENCE
+    jmp _DispatchNoParam
+
+IsVdmOpcode:
+
+    /* Unhandled yet */
     int 3
     jmp $
 
     /* Return to caller */
     jmp _Kei386EoiHelper@0
+
+OpcodeSEH:
+
+    /* Get SEH frame */
+    mov esp, [esp+8]
+    pop fs:[KPCR_EXCEPTION_LIST]
+    add esp, 4
+    pop ebp
+
+    /* Check if this was user mode */
+    test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jnz KmodeOpcode
+
+    /* Do a bugcheck */
+    push ebp
+    push 0
+    push 0
+    push 0
+    push 0
+    push KMODE_EXCEPTION_NOT_HANDLED
+    call _KeBugCheckWithTf@24
 .endfunc
 
 .func KiTrap7
@@ -1071,13 +1176,196 @@ AfterRestore:
     cli
     jmp StartTrapHandle
 
+KernelNpx:
+
+    /* Set delayed error */
+    or dword ptr [ecx+FN_CR0_NPX_STATE], CR0_TS
+
+    /* Check if this happened during restore */
+    cmp dword ptr [ebp+KTRAP_FRAME_EIP], offset FrRestore
+    jnz UserNpx
+
+    /* Skip instruction and dispatch the exception */
+    add dword ptr [ebp+KTRAP_FRAME_EIP], 3
+    jmp _Kei386EoiHelper@0
+
 IsLoaded:
     /* Check if TS is set */
     test bl, CR0_TS
     jnz TsSetOnLoadedState
 
-    /* Check if the trap came from user-mode */
+HandleNpxFault:
+    /* Check if the trap came from V86 mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Npx
+
+    /* Check if it came from kernel mode */
+    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz KernelNpx
+
+    /* Check if it came from a VDM */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne V86Npx
+
+UserNpx:
+    /* Get the current thread */
+    mov eax, fs:[KPCR_CURRENT_THREAD]
+
+    /* Check NPX state */
+    cmp byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+
+    /* Get the NPX save area */
+    mov ecx, [eax+KTHREAD_INITIAL_STACK]
+    lea ecx, [ecx-NPX_FRAME_LENGTH]
+    jz NoSaveRestore
+
+HandleUserNpx:
+
+    /* Set new CR0 */
+    mov ebx, cr0
+    and ebx, ~(CR0_MP + CR0_EM + CR0_TS)
+    mov cr0, ebx
+
+    /* Check if we have FX support */
+    test byte ptr _KeI386FxsrPresent, 1
+    jz FnSave2
+
+    /* Save the state */
+    fxsave [ecx]
+    jmp MakeCr0Dirty
+FnSave2:
+    fnsave [ecx]
+    wait
+
+MakeCr0Dirty:
+    /* Make CR0 state not loaded */
+    or ebx, NPX_STATE_NOT_LOADED
+    or ebx, [ecx+FN_CR0_NPX_STATE]
+    mov cr0, ebx
+
+    /* Update NPX state */
+    mov byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+    mov dword ptr fs:[KPCR_NPX_THREAD], 0
+
+NoSaveRestore:
+    /* Clear the TS bit and re-enable interrupts */
+    and dword ptr [ecx+FN_CR0_NPX_STATE], ~CR0_TS
+    sti
+
+    /* Check if we have FX support */
+    test byte ptr _KeI386FxsrPresent, 1
+    jz FnError
+
+    /* Get error offset, control and status words */
+    mov ebx, [ecx+FX_ERROR_OFFSET]
+    movzx eax, word ptr [ecx+FX_CONTROL_WORD]
+    movzx edx, word ptr [ecx+FX_STATUS_WORD]
+
+    /* Get the faulting opcode */
+    mov esi, [ecx+FX_DATA_OFFSET]
+    jmp CheckError
+
+FnError:
+    /* Get error offset, control and status words */
+    mov ebx, [ecx+FP_ERROR_OFFSET]
+    movzx eax, word ptr [ecx+FP_CONTROL_WORD]
+    movzx edx, word ptr [ecx+FP_STATUS_WORD]
+
+    /* Get the faulting opcode */
+    mov esi, [ecx+FP_DATA_OFFSET]
+
+CheckError:
+    /* Mask exceptions */
+    and eax, 0x3F
+    not eax
+    and eax, edx
+
+    /* Check if what's left is invalid */
+    test al, 1
+    jz ValidNpxOpcode
+
+    /* Check if it was a stack fault */
+    test al, 64
+    jnz InvalidStack
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_INVALID_OPERATION
+    jmp _DispatchOneParam
+
+InvalidStack:
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_STACK_CHECK
+    jmp _DispatchTwoParam
+
+ValidNpxOpcode:
+
+    /* Check for divide by 0 */
+    test al, 4
+    jz 1f
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_DIVIDE_BY_ZERO
+    jmp _DispatchOneParam
+
+1:
+    /* Check for denormal */
+    test al, 2
+    jz 1f
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_INVALID_OPERATION
+    jmp _DispatchOneParam
+
+1:
+    /* Check for overflow */
+    test al, 8
+    jz 1f
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_OVERFLOW
+    jmp _DispatchOneParam
+
+1:
+    /* Check for underflow */
+    test al, 16
+    jz 1f
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_UNDERFLOW
+    jmp _DispatchOneParam
+
+1:
+    /* Check for precision fault */
+    test al, 32
+    jz UnexpectedNpx
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_INEXACT_RESULT
+    jmp _DispatchOneParam
+
+UnexpectedNpx:
+
+    /* Strange result, bugcheck the OS */
+    sti
+    push ebp
+    push 0
+    push 0
+    push eax
+    push 1
+    push TRAP_CAUSE_UNKNOWN
+    call _KeBugCheckWithTf@24
+
+V86Npx:
+    /* Check if this is a VDM */
+    mov eax, fs:[KPCR_CURRENT_THREAD]
+    mov ebx, [eax+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz HandleUserNpx
+
+    /* V86 NPX not handled */
     int 3
+    jmp $
 
 EmulationEnabled:
     /* Did this come from kernel-mode? */
@@ -1086,7 +1374,7 @@ EmulationEnabled:
 
     /* It came from user-mode, so this would only be valid inside a VDM */
     /* Since we don't actually have VDMs in ROS, bugcheck. */
-    jmp BogusTrap2
+    jmp UnexpectedNpx
 
 TsSetOnLoadedState:
     /* TS shouldn't be set, unless this we don't have a Math Processor */
@@ -1096,16 +1384,6 @@ TsSetOnLoadedState:
     /* Strange that we got a trap at all, but ignore and continue */
     clts
     jmp _Kei386EoiHelper@0
-
-BogusTrap2:
-    /* Cause a bugcheck */
-    sti
-    push 0
-    push 0
-    push eax
-    push 1
-    push TRAP_CAUSE_UNKNOWN
-    call _KeBugCheckEx@20
 
 BogusTrap:
     /* Cause a bugcheck */
@@ -1436,9 +1714,21 @@ _KiTrap16:
     /* Enter trap */
     TRAP_PROLOG(16)
 
-    /* FIXME: ROS Doesn't handle FPU faults yet */
-    mov eax, 16
-    jmp _KiSystemFatalException
+    /* Check if this is the NPX Thread */
+    mov eax, fs:[KPCR_CURRENT_THREAD]
+    cmp eax, fs:[KPCR_NPX_THREAD]
+
+    /* Get the initial stack and NPX frame */
+    mov ecx, [eax+KTHREAD_INITIAL_STACK]
+    lea ecx, [ecx-NPX_FRAME_LENGTH]
+
+    /* If this is a valid fault, handle it */
+    jz HandleNpxFault
+
+    /* Otherwise, re-enable interrupts and set delayed error */
+    sti
+    or dword ptr [ecx+FN_CR0_NPX_STATE], CR0_TS
+    jmp _Kei386EoiHelper@0
 .endfunc
 
 .func KiTrap17
@@ -1552,7 +1842,7 @@ Handled:
 _KiUnexpectedInterrupt:
 
     /* Bugcheck with invalid interrupt code */
-    push 0x12
+    push TRAP_CAUSE_UNKNOWN
     call _KeBugCheck@4
 
 /* INTERRUPT HANDLERS ********************************************************/

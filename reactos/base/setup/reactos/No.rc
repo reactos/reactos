@@ -1,0 +1,12 @@
+/* $Id: No.rc 21305 15:55 15.06.2006 LMH1 $ */
+
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+
+/* String Tables */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAPTION  "ReactOS Installering"
+    IDS_TEXT     "Du kan ikke installere ReactOS direkte fra denne CD!\n\nVennligst restart din datamaskin fra denne CD i anvisning for å installere ReactOS."
+END
+
+/* EOF */

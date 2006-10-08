@@ -1078,6 +1078,10 @@
 				RelativePath="utility\xmlstorage.h"
 				>
 			</File>
+			<File
+				RelativePath=".\utility\xs-native.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="resources"

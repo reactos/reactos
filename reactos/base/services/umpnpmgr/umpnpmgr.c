@@ -26,6 +26,7 @@
  */
 
 /* INCLUDES *****************************************************************/
+//#define HAVE_SLIST_ENTRY_IMPLEMENTED
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <cmtypes.h>
@@ -61,7 +62,24 @@ static HKEY hClassKey = NULL;
 
 static HANDLE hUserToken = NULL;
 static HANDLE hInstallEvent = NULL;
+static HANDLE hNoPendingInstalls = NULL;
 
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+static SLIST_HEADER DeviceInstallListHead;
+#else
+static LIST_ENTRY DeviceInstallListHead;
+#endif
+static HANDLE hDeviceInstallListNotEmpty;
+
+typedef struct
+{
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+    SLIST_ENTRY ListEntry;
+#else
+    LIST_ENTRY ListEntry;
+#endif
+    WCHAR DeviceIds[1];
+} DeviceInstallParams;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -69,6 +87,8 @@ static DWORD WINAPI
 RpcServerThread(LPVOID lpParameter)
 {
     RPC_STATUS Status;
+
+    UNREFERENCED_PARAMETER(lpParameter);
 
     DPRINT("RpcServerThread() called\n");
 
@@ -139,6 +159,8 @@ CONFIGRET
 PNP_GetVersion(handle_t BindingHandle,
                unsigned short *Version)
 {
+    UNREFERENCED_PARAMETER(BindingHandle);
+
     *Version = 0x0400;
     return CR_SUCCESS;
 }
@@ -150,6 +172,9 @@ PNP_GetGlobalState(handle_t BindingHandle,
                    unsigned long *State,
                    unsigned long Flags)
 {
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(Flags);
+
     *State = CM_GLOBAL_STATE_CAN_DO_UI | CM_GLOBAL_STATE_SERVICES_AVAILABLE;
     return CR_SUCCESS;
 }
@@ -159,6 +184,8 @@ PNP_GetGlobalState(handle_t BindingHandle,
 CONFIGRET
 PNP_InitDetection(handle_t BindingHandle)
 {
+    UNREFERENCED_PARAMETER(BindingHandle);
+
     DPRINT("PNP_InitDetection() called\n");
     return CR_SUCCESS;
 }
@@ -171,6 +198,8 @@ PNP_ReportLogOn(handle_t BindingHandle,
                 unsigned long ProcessId)
 {
     HANDLE hProcess;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
 
     DPRINT1("PNP_ReportLogOn(%lu, %lu) called\n", Admin, ProcessId);
 
@@ -207,22 +236,12 @@ PNP_ValidateDeviceInstance(handle_t BindingHandle,
                            unsigned long Flags)
 {
     CONFIGRET ret = CR_SUCCESS;
-    HKEY hEnumKey = NULL;
     HKEY hDeviceKey = NULL;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
 
     DPRINT("PNP_ValidateDeviceInstance(%S %lx) called\n",
            DeviceInstance, Flags);
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"System\\CurrentControlSet\\Enum",
-                      0,
-                      KEY_ALL_ACCESS,
-                      &hEnumKey))
-    {
-        DPRINT("Could not open the Enum Key!\n");
-        ret = CR_FAILURE;
-        goto Done;
-    }
 
     if (RegOpenKeyExW(hEnumKey,
                       DeviceInstance,
@@ -241,9 +260,6 @@ Done:
     if (hDeviceKey != NULL)
         RegCloseKey(hDeviceKey);
 
-    if (hEnumKey != NULL)
-        RegCloseKey(hEnumKey);
-
     DPRINT("PNP_ValidateDeviceInstance() done (returns %lx)\n", ret);
 
     return ret;
@@ -257,6 +273,8 @@ PNP_GetRootDeviceInstance(handle_t BindingHandle,
                           unsigned long Length)
 {
     CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
 
     DPRINT("PNP_GetRootDeviceInstance() called\n");
 
@@ -288,6 +306,9 @@ PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
     PLUGPLAY_CONTROL_RELATED_DEVICE_DATA PlugPlayData;
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(Flags);
 
     DPRINT("PNP_GetRelatedDeviceInstance() called\n");
     DPRINT("  Relationship %ld\n", Relationship);
@@ -332,6 +353,9 @@ PNP_EnumerateSubKeys(handle_t BindingHandle,
     CONFIGRET ret = CR_SUCCESS;
     HKEY hKey;
     DWORD dwError;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(Flags);
 
     DPRINT("PNP_EnumerateSubKeys() called\n");
 
@@ -380,6 +404,10 @@ PNP_GetDeviceListSize(handle_t BindingHandle,
                       unsigned long *Length,
                       DWORD Flags)
 {
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(Filter);
+    UNREFERENCED_PARAMETER(Flags);
+
     DPRINT("PNP_GetDeviceListSize() called\n");
 
     /* FIXME */
@@ -399,6 +427,9 @@ PNP_GetDepth(handle_t BindingHandle,
     PLUGPLAY_CONTROL_DEPTH_DATA PlugPlayData;
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(Flags);
 
     DPRINT("PNP_GetDepth() called\n");
 
@@ -439,6 +470,9 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
     LPWSTR lpValueName = NULL;
     HKEY hKey = 0;
     NTSTATUS Status;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(Flags);
 
     DPRINT("PNP_GetDeviceRegProp() called\n");
 
@@ -625,6 +659,9 @@ PNP_SetDeviceRegProp(handle_t BindingHandle,
     LPWSTR lpValueName = NULL;
     HKEY hKey = 0;
 
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(Flags);
+
     DPRINT("PNP_SetDeviceRegProp() called\n");
 
     DPRINT("DeviceId: %S\n", DeviceId);
@@ -733,6 +770,11 @@ PNP_GetClassInstance(handle_t BindingHandle,
 {
     CONFIGRET ret = CR_SUCCESS;
 
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(DeviceId);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(Length);
+
     DPRINT("PNP_Get_Class_Instance() called\n");
 
     DPRINT("PNP_Get_Class_Instance() done (returns %lx)\n", ret);
@@ -749,6 +791,11 @@ PNP_CreateKey(handle_t BindingHandle,
               unsigned long Flags)
 {
     CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(SubKey);
+    UNREFERENCED_PARAMETER(samDesired);
+    UNREFERENCED_PARAMETER(Flags);
 
     DPRINT("PNP_CreateKey() called\n");
 
@@ -768,6 +815,12 @@ PNP_DeleteRegistryKey(handle_t BindingHandle,
 {
     CONFIGRET ret = CR_SUCCESS;
 
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(DeviceId);
+    UNREFERENCED_PARAMETER(ParentKey);
+    UNREFERENCED_PARAMETER(ChildKey);
+    UNREFERENCED_PARAMETER(Flags);
+
     DPRINT("PNP_DeleteRegistryKey() called\n");
 
     DPRINT("PNP_DeleteRegistryKey() done (returns %lx)\n", ret);
@@ -785,6 +838,8 @@ PNP_GetClassCount(handle_t BindingHandle,
 {
     HANDLE hKey = NULL;
     DWORD dwError;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             pszRegPathClass,
@@ -827,6 +882,9 @@ PNP_GetClassName(handle_t BindingHandle,
     CONFIGRET ret = CR_SUCCESS;
     HKEY hKey = NULL;
     ULONG ulSize;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(Flags);
 
     DPRINT("PNP_GetClassName() called\n");
 
@@ -875,6 +933,8 @@ PNP_DeleteClassKey(handle_t BindingHandle,
 {
     CONFIGRET ret = CR_SUCCESS;
 
+    UNREFERENCED_PARAMETER(BindingHandle);
+
     DPRINT("PNP_GetClassName(%S, %lx) called\n", ClassGuid, Flags);
 
     if (Flags & CM_DELETE_CLASS_SUBKEYS)
@@ -904,6 +964,12 @@ PNP_CreateDevInst(handle_t BindingHandle,
 {
     CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
 
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(DeviceId);
+    UNREFERENCED_PARAMETER(ParentDeviceId);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(Flags);
+
     DPRINT1("PNP_CreateDevInst() called\n");
 
     DPRINT1("PNP_CreateDevInst() done (returns %lx)\n", ret);
@@ -921,6 +987,11 @@ PNP_DeviceInstanceAction(handle_t BindingHandle,
                          wchar_t *DeviceInstance2)
 {
     CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(MinorAction);
+    UNREFERENCED_PARAMETER(DeviceInstance1);
+    UNREFERENCED_PARAMETER(DeviceInstance2);
 
     DPRINT("PNP_DeviceInstanceAction() called\n");
 
@@ -979,6 +1050,9 @@ PNP_GetDeviceStatus(handle_t BindingHandle,
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(Flags);
+
     DPRINT("PNP_GetDeviceStatus() called\n");
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
@@ -1013,6 +1087,11 @@ PNP_SetDeviceProblem(handle_t BindingHandle,
 {
     CONFIGRET ret = CR_SUCCESS;
 
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(DeviceInstance);
+    UNREFERENCED_PARAMETER(Problem);
+    UNREFERENCED_PARAMETER(Flags);
+
     DPRINT1("PNP_SetDeviceProblem() called\n");
 
     /* FIXME */
@@ -1030,6 +1109,10 @@ PNP_UninstallDevInst(handle_t BindingHandle,
                      DWORD Flags)
 {
     CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(DeviceInstance);
+    UNREFERENCED_PARAMETER(Flags);
 
     DPRINT1("PNP_UninstallDevInst() called\n");
 
@@ -1052,7 +1135,7 @@ CheckForDeviceId(LPWSTR lpDeviceIdList,
     while (*lpPtr != 0)
     {
         dwLength = wcslen(lpPtr);
-        if (!_wcsicmp(lpPtr, lpDeviceId))
+        if (0 == _wcsicmp(lpPtr, lpDeviceId))
             return TRUE;
 
         lpPtr += (dwLength + 1);
@@ -1095,6 +1178,8 @@ PNP_AddID(handle_t BindingHandle,
     LPWSTR pszSubKey;
     DWORD dwDeviceIdListSize;
     WCHAR szDeviceIdList[512];
+
+    UNREFERENCED_PARAMETER(BindingHandle);
 
     DPRINT("PNP_AddID() called\n");
     DPRINT("  DeviceInstance: %S\n", DeviceInstance);
@@ -1168,6 +1253,8 @@ PNP_IsDockStationPresent(handle_t BindingHandle,
     DWORD dwSize;
     CONFIGRET ret = CR_SUCCESS;
 
+    UNREFERENCED_PARAMETER(BindingHandle);
+
     DPRINT1("PNP_IsDockStationPresent() called\n");
 
     *Present = FALSE;
@@ -1214,6 +1301,8 @@ PNP_RequestEjectPC(handle_t BindingHandle)
 {
     CONFIGRET ret = CR_SUCCESS;
 
+    UNREFERENCED_PARAMETER(BindingHandle);
+
     DPRINT1("PNP_RequestEjectPC() called\n");
 
     ret = CR_FAILURE; /* FIXME */
@@ -1235,6 +1324,13 @@ PNP_HwProfFlags(handle_t BindingHandle,
 {
     CONFIGRET ret = CR_SUCCESS;
 
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(Action);
+    UNREFERENCED_PARAMETER(DeviceId);
+    UNREFERENCED_PARAMETER(ProfileId);
+    UNREFERENCED_PARAMETER(Value);
+    UNREFERENCED_PARAMETER(Flags);
+
     DPRINT1("PNP_HwProfFlags() called\n");
 
     ret = CR_CALL_NOT_IMPLEMENTED; /* FIXME */
@@ -1245,11 +1341,143 @@ PNP_HwProfFlags(handle_t BindingHandle,
 }
 
 
+/* Function 42 */
+CONFIGRET
+PNP_AddEmptyLogConf(handle_t BindingHandle,
+                    wchar_t *DeviceInstance,
+                    ULONG ulPriority,
+                    ULONG *pulLogConfTag,
+                    ULONG ulFlags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(DeviceInstance);
+    UNREFERENCED_PARAMETER(ulPriority);
+    UNREFERENCED_PARAMETER(ulFlags);
+
+    DPRINT1("PNP_AddEmptyLogConf() called\n");
+
+    *pulLogConfTag = 0; /* FIXME */
+
+    DPRINT1("PNP_AddEmptyLogConf() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 43 */
+CONFIGRET
+PNP_FreeLogConf(handle_t BindingHandle,
+                wchar_t *DeviceInstance,
+                ULONG ulType,
+                ULONG ulLogConfTag,
+                ULONG ulFlags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(DeviceInstance);
+    UNREFERENCED_PARAMETER(ulType);
+    UNREFERENCED_PARAMETER(ulLogConfTag);
+    UNREFERENCED_PARAMETER(ulFlags);
+
+    DPRINT1("PNP_FreeLogConf() called\n");
+
+
+    DPRINT1("PNP_FreeLogConf() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 44 */
+CONFIGRET
+PNP_GetFirstLogConf(handle_t BindingHandle,
+                    wchar_t *DeviceInstance,
+                    ULONG ulPriority,
+                    ULONG *pulLogConfTag,
+                    ULONG ulFlags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(DeviceInstance);
+    UNREFERENCED_PARAMETER(ulPriority);
+    UNREFERENCED_PARAMETER(ulFlags);
+
+    DPRINT1("PNP_GetFirstLogConf() called\n");
+
+    *pulLogConfTag = 0; /* FIXME */
+
+    DPRINT1("PNP_GetFirstLogConf() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 45 */
+CONFIGRET
+PNP_GetNextLogConf(handle_t BindingHandle,
+                   wchar_t *DeviceInstance,
+                   ULONG ulLogConfType,
+                   ULONG ulCurrentTag,
+                   ULONG *pulNextTag,
+                   ULONG ulFlags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(DeviceInstance);
+    UNREFERENCED_PARAMETER(ulLogConfType);
+    UNREFERENCED_PARAMETER(ulCurrentTag);
+    UNREFERENCED_PARAMETER(ulFlags);
+
+    DPRINT1("PNP_GetNextLogConf() called\n");
+
+    *pulNextTag = 0; /* FIXME */
+
+    DPRINT1("PNP_GetNextLogConf() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 46 */
+CONFIGRET
+PNP_GetLogConfPriority(handle_t BindingHandle,
+                       wchar_t *DeviceInstance,
+                       ULONG ulLogConfType,
+                       ULONG ulCurrentTag,
+                       ULONG *pPriority,
+                       ULONG ulFlags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(DeviceInstance);
+    UNREFERENCED_PARAMETER(ulLogConfType);
+    UNREFERENCED_PARAMETER(ulCurrentTag);
+    UNREFERENCED_PARAMETER(ulFlags);
+
+    DPRINT1("PNP_GetLogConfPriority() called\n");
+
+    *pPriority = 0; /* FIXME */
+
+    DPRINT1("PNP_GetLogConfPriority() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
 /* Function 58 */
 CONFIGRET
 PNP_RunDetection(handle_t BindingHandle,
                  unsigned long Flags)
 {
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(Flags);
+
     DPRINT("PNP_RunDetection() called\n");
     return CR_CALL_NOT_IMPLEMENTED;
 }
@@ -1277,12 +1505,12 @@ InstallDevice(PCWSTR DeviceInstance, BOOL SetupIsActive)
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    if (PlugPlayData.DeviceStatus & DNF_STARTED || PlugPlayData.DeviceStatus & DNF_START_FAILED)
+    if ((PlugPlayData.DeviceStatus & (DNF_STARTED | DNF_START_FAILED)) != 0)
         /* Device is already started, or disabled due to some problem. Don't install it */
         return TRUE;
 
     /* Install device */
-    SetEnvironmentVariable(L"USERPROFILE", L"."); /* FIXME: why is it needed? */
+    SetEnvironmentVariableW(L"USERPROFILE", L"."); /* FIXME: why is it needed? */
 
     hNewDev = LoadLibraryW(L"newdev.dll");
     if (!hNewDev)
@@ -1336,6 +1564,51 @@ cleanup:
 }
 
 
+/* Loop to install all queued devices installations */
+static DWORD WINAPI
+DeviceInstallThread(LPVOID lpParameter)
+{
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+    PSLIST_ENTRY ListEntry;
+#else
+    PLIST_ENTRY ListEntry;
+#endif
+    DeviceInstallParams* Params;
+    BOOL setupActive;
+
+    UNREFERENCED_PARAMETER(lpParameter);
+
+    setupActive = SetupIsActive();
+
+    SetEnvironmentVariable(L"USERPROFILE", L"."); /* FIXME: why is it needed? */
+
+    while (TRUE)
+    {
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+        ListEntry = InterlockedPopEntrySList(&DeviceInstallListHead);
+#else
+        if ((BOOL)IsListEmpty(&DeviceInstallListHead))
+            ListEntry = NULL;
+        else
+            ListEntry = RemoveHeadList(&DeviceInstallListHead);
+#endif
+        if (ListEntry == NULL)
+        {
+            SetEvent(hNoPendingInstalls);
+            WaitForSingleObject(hDeviceInstallListNotEmpty, INFINITE);
+        }
+        else
+        {
+            ResetEvent(hNoPendingInstalls);
+            Params = CONTAINING_RECORD(ListEntry, DeviceInstallParams, ListEntry);
+            InstallDevice(Params->DeviceIds, setupActive);
+        }
+    }
+
+    return 0;
+}
+
+
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
 {
@@ -1343,14 +1616,13 @@ PnpEventThread(LPVOID lpParameter)
     ULONG PnpEventSize;
     NTSTATUS Status;
     RPC_STATUS RpcStatus;
-    BOOL setupActive;
+
+    UNREFERENCED_PARAMETER(lpParameter);
 
     PnpEventSize = 0x1000;
     PnpEvent = HeapAlloc(GetProcessHeap(), 0, PnpEventSize);
     if (PnpEvent == NULL)
         return ERROR_OUTOFMEMORY;
-
-    setupActive = SetupIsActive();
 
     for (;;)
     {
@@ -1375,18 +1647,34 @@ PnpEventThread(LPVOID lpParameter)
             break;
         }
 
+        /* Process the pnp event */
         DPRINT("Received PnP Event\n");
         if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
+            DeviceInstallParams* Params;
+            DWORD len;
+
             DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
-            InstallDevice(PnpEvent->TargetDevice.DeviceIds, setupActive);
+
+            /* Queue device install (will be dequeued by DeviceInstallThread */
+            len = FIELD_OFFSET(DeviceInstallParams, DeviceIds)
+                + wcslen(PnpEvent->TargetDevice.DeviceIds) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+            Params = HeapAlloc(GetProcessHeap(), 0, len);
+            if (Params)
+            {
+                wcscpy(Params->DeviceIds, PnpEvent->TargetDevice.DeviceIds);
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+                InterlockedPushEntrySList(&DeviceInstallListHead, &Params->ListEntry);
+#else
+                InsertTailList(&DeviceInstallListHead, &Params->ListEntry);
+#endif
+                SetEvent(hDeviceInstallListNotEmpty);
+            }
         }
         else
         {
             DPRINT1("Unknown event\n");
         }
-
-        /* FIXME: Process the pnp event */
 
         /* Dequeue the current pnp event and signal the next one */
         NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
@@ -1404,11 +1692,28 @@ ServiceMain(DWORD argc, LPTSTR *argv)
     HANDLE hThread;
     DWORD dwThreadId;
 
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
     DPRINT("ServiceMain() called\n");
+
+    hNoPendingInstalls = CreateEventW(NULL,
+                                      TRUE,
+                                      FALSE,
+                                      L"Global\\PnP_No_Pending_Install_Events");
 
     hThread = CreateThread(NULL,
                            0,
                            PnpEventThread,
+                           NULL,
+                           0,
+                           &dwThreadId);
+    if (hThread != NULL)
+        CloseHandle(hThread);
+
+    hThread = CreateThread(NULL,
+                           0,
+                           DeviceInstallThread,
                            NULL,
                            0,
                            &dwThreadId);
@@ -1433,6 +1738,9 @@ main(int argc, char *argv[])
 {
     DWORD dwError;
 
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
     DPRINT("Umpnpmgr: main() started\n");
 
     hInstallEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -1442,6 +1750,20 @@ main(int argc, char *argv[])
         DPRINT1("Could not create the Install Event! (Error %lu)\n", dwError);
         return dwError;
     }
+
+    hDeviceInstallListNotEmpty = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (hDeviceInstallListNotEmpty == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT1("Could not create the Event! (Error %lu)\n", dwError);
+        return dwError;
+    }
+
+#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
+    InitializeSListHead(&DeviceInstallListHead);
+#else
+    InitializeListHead(&DeviceInstallListHead);
+#endif
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"System\\CurrentControlSet\\Enum",

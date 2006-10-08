@@ -126,6 +126,18 @@ int check_arp( struct interface_info *ip, struct client_lease *lp ) {
     return 1;
 }
 
+static VOID CALLBACK
+DispatchMain(DWORD argc, LPTSTR *argv)
+{
+	dispatch();
+}
+
+static SERVICE_TABLE_ENTRY ServiceTable[2] =
+{
+    {TEXT("DHCP"), DispatchMain},
+    {NULL, NULL}
+};
+
 int
 main(int argc, char *argv[])
 {
@@ -177,7 +189,7 @@ main(int argc, char *argv[])
 
         DH_DbgPrint(MID_TRACE,("Going into dispatch()\n"));
 
-	dispatch();
+	StartServiceCtrlDispatcher(ServiceTable);
 
 	/* not reached */
 	return (0);

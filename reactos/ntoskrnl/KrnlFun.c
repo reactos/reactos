@@ -27,17 +27,17 @@
 // Ke:
 //
 //  - FIXES:
-//      * Implement invalid opcode handler (fixes some apps from crashing).
-//      * Get rid of KiRosPrintAddress and use KiDumpParameterImages instead.
 //      * Sanitize some context fields during conversions.
+//      * Figure out why the DPC stack doesn't really work.
+//      * Try to make MmInit1 NTLDR compatible.
 //      * Add DR macro/save and VM macro/save.
 //  - FEATURES:
-//      * Use Queued Spinlocks for scheduling and dispatching.
 //      * New optimized table-based tick-hashed timer implementation.
-//      * New Thread Scheduler based on XP.
+//      * New Thread Scheduler based on 2003.
 //      * Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
 //
 // Ex:
+//  - Implement Generic Callback mechanism.
 //  - Use pushlocks for handle implementation.
 //
 ///////////////////////////////////////////////////////////////////////////////

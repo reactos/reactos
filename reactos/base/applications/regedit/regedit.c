@@ -90,7 +90,7 @@ BOOL ProcessCmdLine(LPSTR lpCmdLine)
         s++;
         ch = *s;
         ch2 = *(s+1);
-        chu = toupper(ch);
+        chu = (CHAR) toupper(ch);
         if (!ch2 || isspace(ch2)) {
             if (chu == 'S' || chu == 'V') {
                 /* ignore these switches */

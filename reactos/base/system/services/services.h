@@ -88,6 +88,8 @@ DWORD ScmReadString(HKEY hServiceKey,
 DWORD ScmCreateServiceDatabase(VOID);
 VOID ScmGetBootAndSystemDriverState(VOID);
 VOID ScmAutoStartServices(VOID);
+DWORD ScmStartService(PSERVICE Service,
+                      LPWSTR lpArgs);
 
 PSERVICE ScmGetServiceEntryByName(LPWSTR lpServiceName);
 PSERVICE ScmGetServiceEntryByDisplayName(LPWSTR lpDisplayName);
@@ -99,7 +101,7 @@ DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
 /* driver.c */
 
-NTSTATUS ScmLoadDriver(PSERVICE lpService);
+DWORD ScmLoadDriver(PSERVICE lpService);
 DWORD ScmUnloadDriver(PSERVICE lpService);
 DWORD ScmControlDriver(PSERVICE lpService,
                        DWORD dwControl,
@@ -121,8 +123,6 @@ VOID ScmStartRpcServer(VOID);
 /* services.c */
 
 VOID PrintString(LPCSTR fmt, ...);
-NTSTATUS ScmStartService(PSERVICE Service);
-
 
 /* EOF */
 

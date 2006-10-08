@@ -13,6 +13,8 @@ typedef struct _KD_PORT_INFORMATION
 
 struct _KD_DISPATCH_TABLE;
 extern KD_PORT_INFORMATION GdbPortInfo;
+extern BOOLEAN _KdDebuggerEnabled;
+extern BOOLEAN _KdDebuggerNotPresent;
 
 BOOLEAN
 NTAPI
@@ -75,7 +77,7 @@ VOID
 KdbSymUnloadDriverSymbols(IN PLDR_DATA_TABLE_ENTRY ModuleObject);
 
 VOID
-KdbSymProcessBootSymbols(IN PCHAR FileName);
+KdbSymProcessBootSymbols(IN PUNICODE_STRING FileName);
 
 VOID
 KdbSymInit(
@@ -213,15 +215,12 @@ KdpGdbStubInit(
 
 /* KD ROUTINES ***************************************************************/
 
-KD_CONTINUE_TYPE
-STDCALL
-KdpEnterDebuggerException(
-    PEXCEPTION_RECORD ExceptionRecord,
-    KPROCESSOR_MODE PreviousMode,
-    PCONTEXT Context,
-    PKTRAP_FRAME TrapFrame,
-    BOOLEAN FirstChance,
-    BOOLEAN Gdb
+BOOLEAN
+NTAPI
+KdpCallGdb(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context
 );
 
 ULONG
@@ -242,6 +241,17 @@ KdpBochsDebugPrint(
 );
 
 /* KD GLOBALS  ***************************************************************/
+
+typedef
+BOOLEAN
+(NTAPI *PKDEBUG_ROUTINE)(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKEXCEPTION_FRAME ExceptionFrame,
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context,
+    IN KPROCESSOR_MODE PreviousMode,
+    IN BOOLEAN SecondChance
+);
 
 /* serial debug connection */
 #define DEFAULT_DEBUG_PORT      2 /* COM2 */
@@ -334,6 +344,8 @@ extern LIST_ENTRY KdProviders;
 
 /* Whether to enter KDB as early as possible or not */
 extern BOOLEAN KdpEarlyBreak;
+
+extern PKDEBUG_ROUTINE KiDebugRoutine;
 
 #endif
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */

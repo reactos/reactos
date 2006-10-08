@@ -279,7 +279,10 @@ CreateServiceListEntry(LPWSTR lpServiceName,
     }
 
     DPRINT("ServiceName: '%S'\n", lpService->lpServiceName);
-    DPRINT("Group: '%S'\n", lpService->lpGroup->lpGroupName);
+    if (lpService->lpGroup != NULL)
+    {
+        DPRINT("Group: '%S'\n", lpService->lpGroup->lpGroupName);
+    }
     DPRINT("Start %lx  Type %lx  Tag %lx  ErrorControl %lx\n",
            lpService->dwStartType,
            lpService->Status.dwServiceType,
@@ -470,12 +473,12 @@ ScmCheckDriver(PSERVICE Service)
         if (!NT_SUCCESS(Status))
             break;
 
-        DPRINT("Comparing: '%S'  '%wZ'\n", Service->lpServiceName, &DirInfo->ObjectName);
+        DPRINT("Comparing: '%S'  '%wZ'\n", Service->lpServiceName, &DirInfo->Name);
 
-        if (_wcsicmp(Service->lpServiceName, DirInfo->ObjectName.Buffer) == 0)
+        if (_wcsicmp(Service->lpServiceName, DirInfo->Name.Buffer) == 0)
         {
             DPRINT("Found: '%S'  '%wZ'\n",
-                   Service->lpServiceName, &DirInfo->ObjectName);
+                   Service->lpServiceName, &DirInfo->Name);
 
             /* Mark service as 'running' */
             Service->Status.dwCurrentState = SERVICE_RUNNING;
@@ -528,14 +531,14 @@ ScmGetBootAndSystemDriverState(VOID)
 }
 
 
-static NTSTATUS
-ScmSendStartCommand(PSERVICE Service, LPWSTR Arguments)
+static DWORD
+ScmSendStartCommand(PSERVICE Service,
+                    LPWSTR Arguments)
 {
     PSCM_START_PACKET StartPacket;
     DWORD TotalLength;
-#if 0
+    DWORD ArgsLength = 0;
     DWORD Length;
-#endif
     PWSTR Ptr;
     DWORD Count;
 
@@ -543,7 +546,6 @@ ScmSendStartCommand(PSERVICE Service, LPWSTR Arguments)
 
     /* Calculate the total length of the start command line */
     TotalLength = wcslen(Service->lpServiceName) + 1;
-#if 0
     if (Arguments != NULL)
     {
         Ptr = Arguments;
@@ -551,18 +553,20 @@ ScmSendStartCommand(PSERVICE Service, LPWSTR Arguments)
         {
             Length = wcslen(Ptr) + 1;
             TotalLength += Length;
+            ArgsLength += Length;
             Ptr += Length;
+            DPRINT("Arg: %S\n", Ptr);
         }
     }
-#endif
     TotalLength++;
+    DPRINT("ArgsLength: %ld\nTotalLength: %ld\n\n", ArgsLength, TotalLength);
 
     /* Allocate start command packet */
     StartPacket = HeapAlloc(GetProcessHeap(),
                             HEAP_ZERO_MEMORY,
                             sizeof(SCM_START_PACKET) + (TotalLength - 1) * sizeof(WCHAR));
     if (StartPacket == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
+        return ERROR_NOT_ENOUGH_MEMORY;
 
     StartPacket->Command = SCM_START_COMMAND;
     StartPacket->Size = TotalLength;
@@ -570,8 +574,14 @@ ScmSendStartCommand(PSERVICE Service, LPWSTR Arguments)
     wcscpy(Ptr, Service->lpServiceName);
     Ptr += (wcslen(Service->lpServiceName) + 1);
 
-    /* FIXME: Copy argument list */
+    /* Copy argument list */
+    if (Arguments != NULL)
+    {
+        memcpy(Ptr, Arguments, ArgsLength);
+        Ptr += ArgsLength;
+    }
 
+    /* Terminate the argument list */
     *Ptr = 0;
 
     /* Send the start command */
@@ -583,18 +593,20 @@ ScmSendStartCommand(PSERVICE Service, LPWSTR Arguments)
 
     /* FIXME: Read the reply */
 
+    /* Release the start command packet */
     HeapFree(GetProcessHeap(),
              0,
              StartPacket);
 
     DPRINT("ScmSendStartCommand() done\n");
 
-    return STATUS_SUCCESS;
+    return ERROR_SUCCESS;
 }
 
 
-static NTSTATUS
-ScmStartUserModeService(PSERVICE Service)
+static DWORD
+ScmStartUserModeService(PSERVICE Service,
+                        LPWSTR lpArgs)
 {
     RTL_QUERY_REGISTRY_TABLE QueryTable[3];
     PROCESS_INFORMATION ProcessInformation;
@@ -603,6 +615,7 @@ ScmStartUserModeService(PSERVICE Service)
     ULONG Type;
     BOOL Result;
     NTSTATUS Status;
+    DWORD dwError = ERROR_SUCCESS;
 
     RtlInitUnicodeString(&ImagePath, NULL);
 
@@ -626,7 +639,7 @@ ScmStartUserModeService(PSERVICE Service)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
-        return Status;
+        return RtlNtStatusToDosError(Status);
     }
     DPRINT("ImagePath: '%S'\n", ImagePath.Buffer);
     DPRINT("Type: %lx\n", Type);
@@ -644,7 +657,7 @@ ScmStartUserModeService(PSERVICE Service)
     if (Service->ControlPipeHandle == INVALID_HANDLE_VALUE)
     {
         DPRINT1("Failed to create control pipe!\n");
-        return STATUS_UNSUCCESSFUL;
+        return GetLastError();
     }
 
     StartupInfo.cb = sizeof(StartupInfo);
@@ -669,12 +682,13 @@ ScmStartUserModeService(PSERVICE Service)
 
     if (!Result)
     {
+        dwError = GetLastError();
         /* Close control pipe */
         CloseHandle(Service->ControlPipeHandle);
         Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
 
         DPRINT1("Starting '%S' failed!\n", Service->lpServiceName);
-        return STATUS_UNSUCCESSFUL;
+        return dwError;
     }
 
     DPRINT("Process Id: %lu  Handle %lx\n",
@@ -706,21 +720,21 @@ ScmStartUserModeService(PSERVICE Service)
                       &dwRead,
                       NULL))
         {
+            dwError = GetLastError();
             DPRINT1("Reading the service control pipe failed (Error %lu)\n",
-                    GetLastError());
-            Status = STATUS_UNSUCCESSFUL;
+                    dwError);
         }
         else
         {
             DPRINT("Received process id %lu\n", dwProcessId);
 
-            /* FIXME: Send start command */
-
-            Status = STATUS_SUCCESS;
+            /* Send start command */
+            dwError = ScmSendStartCommand(Service, lpArgs);
         }
     }
     else
     {
+        dwError = GetLastError();
         DPRINT("Connecting control pipe failed!\n");
 
         /* Close control pipe */
@@ -728,24 +742,21 @@ ScmStartUserModeService(PSERVICE Service)
         Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
         Service->ProcessId = 0;
         Service->ThreadId = 0;
-        Status = STATUS_UNSUCCESSFUL;
     }
-
-    ScmSendStartCommand(Service, NULL);
 
     /* Close process and thread handle */
     CloseHandle(ProcessInformation.hThread);
     CloseHandle(ProcessInformation.hProcess);
 
-    return Status;
+    return dwError;
 }
 
 
-NTSTATUS
-ScmStartService(PSERVICE Service)
+DWORD
+ScmStartService(PSERVICE Service, LPWSTR lpArgs)
 {
     PSERVICE_GROUP Group = Service->lpGroup;
-    NTSTATUS Status;
+    DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("ScmStartService() called\n");
 
@@ -755,19 +766,19 @@ ScmStartService(PSERVICE Service)
     if (Service->Status.dwServiceType & SERVICE_DRIVER)
     {
         /* Load driver */
-        Status = ScmLoadDriver(Service);
-        if (Status == STATUS_SUCCESS)
+        dwError = ScmLoadDriver(Service);
+        if (dwError == ERROR_SUCCESS)
             Service->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
     }
     else
     {
         /* Start user-mode service */
-        Status = ScmStartUserModeService(Service);
+        dwError = ScmStartUserModeService(Service, lpArgs);
     }
 
-    DPRINT("ScmStartService() done (Status %lx)\n", Status);
+    DPRINT("ScmStartService() done (Error %lu)\n", dwError);
 
-    if (NT_SUCCESS(Status))
+    if (dwError == ERROR_SUCCESS)
     {
         if (Group != NULL)
         {
@@ -805,7 +816,7 @@ ScmStartService(PSERVICE Service)
     }
 #endif
 
-    return Status;
+    return dwError;
 }
 
 
@@ -849,7 +860,7 @@ ScmAutoStartServices(VOID)
                     (CurrentService->dwTag == CurrentGroup->TagArray[i]))
                 {
                     CurrentService->ServiceVisited = TRUE;
-                    ScmStartService(CurrentService);
+                    ScmStartService(CurrentService, NULL);
                 }
 
                 ServiceEntry = ServiceEntry->Flink;
@@ -867,7 +878,7 @@ ScmAutoStartServices(VOID)
                 (CurrentService->ServiceVisited == FALSE))
             {
                 CurrentService->ServiceVisited = TRUE;
-                ScmStartService(CurrentService);
+                ScmStartService(CurrentService, NULL);
             }
 
             ServiceEntry = ServiceEntry->Flink;
@@ -887,7 +898,7 @@ ScmAutoStartServices(VOID)
             (CurrentService->ServiceVisited == FALSE))
         {
             CurrentService->ServiceVisited = TRUE;
-            ScmStartService(CurrentService);
+            ScmStartService(CurrentService, NULL);
         }
 
         ServiceEntry = ServiceEntry->Flink;
@@ -904,7 +915,7 @@ ScmAutoStartServices(VOID)
             (CurrentService->ServiceVisited == FALSE))
         {
             CurrentService->ServiceVisited = TRUE;
-            ScmStartService(CurrentService);
+            ScmStartService(CurrentService, NULL);
         }
 
         ServiceEntry = ServiceEntry->Flink;

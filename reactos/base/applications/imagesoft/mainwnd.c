@@ -528,6 +528,7 @@ static VOID
 MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
 {
     RECT rect;
+    HMENU hMenu;
     UINT Res;
     PFLT_WND WndArr[NUM_FLT_WND]; /* temp array for looping */
     INT i;
@@ -595,19 +596,45 @@ MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
 
     }
 
+    hMenu = GetMenu(Info->hSelf);
+
     if (Info->fltTools->hSelf != NULL)
     {
-        FloatToolbarCreateToolsGui(Info);
+        if (FloatToolbarCreateToolsGui(Info))
+        {
+            //CheckMenuItem(hMenu,
+            //              ID_TOOLS,
+            //              MF_CHECKED);
+
+            /* temp disable windows until they are useful */
+            ShowHideWindow(Info->fltTools);
+        }
     }
 
     if (Info->fltColors->hSelf != NULL)
     {
-        FloatToolbarCreateColorsGui(Info);
+        if (FloatToolbarCreateColorsGui(Info))
+        {
+            //CheckMenuItem(hMenu,
+            //              ID_COLOR,
+            //              MF_CHECKED);
+
+            /* temp disable windows until they are useful */
+            ShowHideWindow(Info->fltColors);
+        }
     }
 
     if (Info->fltHistory->hSelf != NULL)
     {
-        FloatToolbarCreateHistoryGui(Info);
+        if (FloatToolbarCreateHistoryGui(Info))
+        {
+            //CheckMenuItem(hMenu,
+            //              ID_HISTORY,
+            //              MF_CHECKED);
+
+            /* temp disable windows until they are useful */
+            ShowHideWindow(Info->fltHistory);
+        }
     }
 
 }

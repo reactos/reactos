@@ -4,7 +4,7 @@
  * FILE:            drivers/dd/serial/create.c
  * PURPOSE:         Serial IRP_MJ_READ/IRP_MJ_WRITE operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
@@ -44,10 +44,10 @@ ReadBytes(
 	Length = IoGetCurrentIrpStackLocation(Irp)->Parameters.Read.Length;
 	Buffer = SerialGetUserBuffer(Irp);
 
-	DPRINT("Serial: UseIntervalTimeout = %s, IntervalTimeout = %lu\n",
+	DPRINT("UseIntervalTimeout = %s, IntervalTimeout = %lu\n",
 		WorkItemData->UseIntervalTimeout ? "YES" : "NO",
 		WorkItemData->UseIntervalTimeout ? WorkItemData->IntervalTimeout.QuadPart : 0);
-	DPRINT("Serial: UseTotalTimeout = %s\n",
+	DPRINT("UseTotalTimeout = %s\n",
 		WorkItemData->UseTotalTimeout ? "YES" : "NO");
 
 	ObjectCount = 1;
@@ -69,7 +69,7 @@ ReadBytes(
 			&& Length > 0)
 		{
 			PopCircularBufferEntry(&DeviceExtension->InputBuffer, &ReceivedByte);
-			DPRINT("Serial: reading byte from buffer: 0x%02x\n", ReceivedByte);
+			DPRINT("Reading byte from buffer: 0x%02x\n", ReceivedByte);
 
 			Buffer[Information++] = ReceivedByte;
 			Length--;
@@ -80,7 +80,7 @@ ReadBytes(
 		if (WorkItemData->DontWait
 			&& !(WorkItemData->ReadAtLeastOneByte && Information == 0))
 		{
-			DPRINT("Serial: buffer empty. Don't wait more bytes\n");
+			DPRINT("Buffer empty. Don't wait more bytes\n");
 			break;
 		}
 
@@ -97,7 +97,7 @@ ReadBytes(
 		if (Status == STATUS_TIMEOUT /* interval timeout */
 			|| Status == STATUS_WAIT_1) /* total timeout */
 		{
-			DPRINT("Serial: timeout when reading bytes. Status = 0x%08lx\n", Status);
+			DPRINT("Timeout when reading bytes. Status = 0x%08lx\n", Status);
 			break;
 		}
 	}
@@ -113,7 +113,7 @@ ReadBytes(
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 }
 
-static VOID STDCALL
+static VOID NTAPI
 SerialReadWorkItem(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PVOID pWorkItemData /* real type PWORKITEM_DATA */)
@@ -121,7 +121,7 @@ SerialReadWorkItem(
 	PWORKITEM_DATA WorkItemData;
 	PIRP Irp;
 
-	DPRINT("Serial: SerialReadWorkItem() called\n");
+	DPRINT("SerialReadWorkItem() called\n");
 
 	WorkItemData = (PWORKITEM_DATA)pWorkItemData;
 	Irp = WorkItemData->Irp;
@@ -134,7 +134,7 @@ SerialReadWorkItem(
 	ExFreePoolWithTag(pWorkItemData, SERIAL_TAG);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialRead(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -147,7 +147,7 @@ SerialRead(
 	PIO_WORKITEM WorkItem;
 	NTSTATUS Status;
 
-	DPRINT("Serial: IRP_MJ_READ\n");
+	DPRINT("IRP_MJ_READ\n");
 
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	Length = Stack->Parameters.Read.Length;
@@ -245,7 +245,7 @@ ByeBye:
 	return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialWrite(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -259,7 +259,7 @@ SerialWrite(
 	KIRQL Irql;
 	NTSTATUS Status = STATUS_SUCCESS;
 
-	DPRINT("Serial: IRP_MJ_WRITE\n");
+	DPRINT("IRP_MJ_WRITE\n");
 
 	/* FIXME: pend operation if possible */
 	/* FIXME: use write timeouts */
@@ -296,7 +296,7 @@ SerialWrite(
 			}
 			else
 			{
-				DPRINT("Serial: buffer overrun on COM%lu\n", DeviceExtension->ComPort);
+				DPRINT("Buffer overrun on COM%lu\n", DeviceExtension->ComPort);
 				DeviceExtension->SerialPerfStats.BufferOverrunErrorCount++;
 				break;
 			}

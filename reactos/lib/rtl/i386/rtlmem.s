@@ -249,7 +249,7 @@ DoMove:
 
 ByteMove:
     /* Move what's left */
-    rep stosb
+    rep movsb
 
 DoneMove:
     /* Restore volatiles */

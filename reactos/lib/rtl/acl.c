@@ -612,7 +612,7 @@ RtlpDeleteData(PVOID Ace,
 {
    if (AceSize < Offset)
    {
-      RtlCopyMemory(Ace,
+      RtlMoveMemory(Ace,
                     (PVOID)((ULONG_PTR)Ace + AceSize),
                     Offset - AceSize);
    }

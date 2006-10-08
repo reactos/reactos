@@ -18,7 +18,7 @@
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 KeI386FlatToGdtSelector(IN ULONG Base,
                         IN USHORT Length,
                         IN USHORT Selector)

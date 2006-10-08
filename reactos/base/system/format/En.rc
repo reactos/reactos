@@ -9,7 +9,7 @@ STRINGTABLE DISCARDABLE
 {
 STRING_HELP,  "Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
   [drive:]         Specifies the drive to format.\n\
-  -FS:file-system  Specifies the type of file system (e.g. FAT).\n\
+  -FS:file-system  Specifies the type of file system (%s).\n\
   -V:label         Specifies volume label.\n\
   -Q               Performs a quick format.\n\
   -A:size          Overrides the default allocation unit size. Default settings\n\

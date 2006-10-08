@@ -103,6 +103,8 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
     HWND hwndValue;
     int len;
 
+    UNREFERENCED_PARAMETER(lParam);
+
     switch(uMsg) {
     case WM_INITDIALOG:
         if(editValueName && _tcscmp(editValueName, _T("")))
@@ -167,6 +169,8 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
     TCHAR* valueData;
     HWND hwndValue;
     int len;
+
+    UNREFERENCED_PARAMETER(lParam);
 
     switch(uMsg) {
     case WM_INITDIALOG:
@@ -238,7 +242,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     case WM_CHAR:
         if (dwordEditMode == EDIT_MODE_DEC)
         {
-            if (isdigit(wParam & 0xff))
+            if (isdigit((int) wParam & 0xff))
             {
                 break;
             }
@@ -249,7 +253,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
         }
         else if (dwordEditMode == EDIT_MODE_HEX)
         {
-            if (isxdigit(wParam & 0xff))
+            if (isxdigit((int) wParam & 0xff))
             {
                 break;
             }
@@ -277,6 +281,8 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
     LPTSTR Remainder;
     DWORD Base;
     DWORD Value = 0;
+
+    UNREFERENCED_PARAMETER(lParam);
 
     switch(uMsg) {
     case WM_INITDIALOG:
@@ -384,6 +390,8 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
     HWND hwndValue;
     UINT len;
 
+    UNREFERENCED_PARAMETER(lParam);
+
     switch(uMsg) {
     case WM_INITDIALOG:
         if(editValueName && _tcscmp(editValueName, _T("")))
@@ -408,7 +416,7 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         case IDOK:
             if ((hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA)))
             {
-                len = HexEdit_GetBufferSize(hwndValue);
+                len = (UINT) HexEdit_GetBufferSize(hwndValue);
                 if (len != valueDataLen && len > 0)
                 {
                     binValueData = HeapReAlloc(GetProcessHeap(), 0, binValueData, len);
@@ -482,7 +490,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
         {
             if (stringValueData)
             {
-                lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)stringValueData, (_tcslen(stringValueData) + 1) * sizeof(TCHAR));
+                lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)stringValueData, (DWORD) (_tcslen(stringValueData) + 1) * sizeof(TCHAR));
             }
             else
             {
@@ -496,7 +504,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
     {
         if (valueDataLen > 0)
         {
-            DWORD llen, listlen, nl_len;
+            size_t llen, listlen, nl_len;
             LPTSTR src, lines = NULL;
 
 	    if (!(stringValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
@@ -542,7 +550,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                 /* convert \r\n to \0 */
                 BOOL EmptyLines = FALSE;
                 LPTSTR src, lines, nl;
-                DWORD linechars, buflen, c_nl, dest;
+                size_t linechars, buflen, c_nl, dest;
 
                 src = stringValueData;
                 buflen = sizeof(TCHAR);
@@ -586,7 +594,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                     warning(hwnd, IDS_MULTI_SZ_EMPTY_STRING);
                 }
 
-		lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)lines, buflen);
+		lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)lines, (DWORD) buflen);
 		HeapFree(GetProcessHeap(), 0, lines);
             }
             else

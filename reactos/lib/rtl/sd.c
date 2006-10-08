@@ -929,7 +929,7 @@ RtlSelfRelativeToAbsoluteSD2(IN OUT PSECURITY_DESCRIPTOR SelfRelativeSD,
  * @implemented
  */
 BOOLEAN NTAPI
-RtlValidRelativeSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
+RtlValidRelativeSecurityDescriptor(IN PISECURITY_DESCRIPTOR SecurityDescriptorInput,
                                    IN ULONG SecurityDescriptorLength,
                                    IN SECURITY_INFORMATION RequiredInformation)
 {

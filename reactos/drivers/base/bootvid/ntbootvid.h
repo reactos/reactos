@@ -9,5 +9,5 @@
 
 typedef struct
 {
-  BOOL (STDCALL *ResetDisplay)(VOID);
+  BOOLEAN (NTAPI *ResetDisplay)(VOID);
 } NTBOOTVID_FUNCTION_TABLE;

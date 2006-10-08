@@ -229,7 +229,7 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
         /* Initialize the system registry location */
         RtlInitUnicodeString(&KeyName,
                              L"\\Registry\\Machine\\System\\CurrentControlSet"
-                              "\\Control\\Nls\\Language");
+                             L"\\Control\\Nls\\Language");
         RtlInitUnicodeString(&ValueName, L"Default");
     }
 

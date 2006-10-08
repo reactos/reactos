@@ -68,6 +68,18 @@ ObGetObjectPointerCount(
     IN PVOID Object
 );
 
+NTSTATUS
+NTAPI
+ObOpenObjectByName(
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN POBJECT_TYPE ObjectType,
+    IN KPROCESSOR_MODE AccessMode,
+    IN PACCESS_STATE PassedAccessState,
+    IN ACCESS_MASK DesiredAccess,
+    IN OUT PVOID ParseContext,
+    OUT PHANDLE Handle
+);
+
 NTKERNELAPI
 NTSTATUS
 NTAPI

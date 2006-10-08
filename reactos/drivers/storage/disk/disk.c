@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            services/storage/disk/disk.c
@@ -31,6 +30,8 @@
 #include <ntdddisk.h>
 #include <scsi.h>
 #include <ntddscsi.h>
+#include <mountdev.h>
+#include <mountmgr.h>
 #include <include/class2.h>
 #include <stdio.h>
 
@@ -849,6 +850,62 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      DiskData->HiddenSectors = PartitionEntry->HiddenSectors;
 	      DiskData->BootIndicator = PartitionEntry->BootIndicator;
 	      DiskData->DriveNotReady = FALSE;
+
+	      /* Tell mount manager that we have a new partition for him. This should be replaced
+	       * by the registration of MOUNTDEV_MOUNTED_DEVICE_GUID interface on partition PDO.
+	       */
+	      {
+	        UNICODE_STRING MountManagerU = RTL_CONSTANT_STRING(MOUNTMGR_DEVICE_NAME);
+	        IO_STATUS_BLOCK IoStatusBlock;
+	        ULONG Length = strlen(NameBuffer2) * sizeof(WCHAR);
+	        PMOUNTMGR_TARGET_NAME TargetName;
+	        HANDLE hMountManager;
+	        InitializeObjectAttributes(
+	          &ObjectAttributes,
+	          &MountManagerU,
+	          0,
+	          NULL,
+	          NULL);
+	        Status = NtOpenFile(&hMountManager, FILE_READ_ACCESS, &ObjectAttributes, &IoStatusBlock, FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN);
+	        if (!NT_SUCCESS(Status))
+	          {
+	            DPRINT("NtOpenFile(%wZ) failed with status 0x%08lx\n", &MountManagerU, Status);
+	          }
+	        else
+	          {
+	            TargetName = ExAllocatePool(PagedPool, FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + Length + sizeof(UNICODE_NULL));
+	            if (!TargetName)
+	              {
+	                DPRINT("ExAllocatePool() failed\n");
+	              }
+	            else
+	              {
+	                TargetName->DeviceNameLength = Length;
+	                swprintf(
+	                  TargetName->DeviceName,
+	                  L"\\Device\\Harddisk%lu\\Partition%lu",
+	                  DiskNumber,
+	                  PartitionNumber + 1);
+	                Status = NtDeviceIoControlFile(
+	                  hMountManager,
+	                  NULL,
+	                  NULL,
+	                  NULL,
+	                  &IoStatusBlock,
+	                  IOCTL_MOUNTMGR_VOLUME_ARRIVAL_NOTIFICATION,
+	                  TargetName, FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + Length,
+	                  NULL, 0);
+	                if (NT_SUCCESS(Status))
+	                  Status = NtWaitForSingleObject(hMountManager, FALSE, NULL);
+	                if (!NT_SUCCESS(Status))
+	                  {
+	                    DPRINT("NtDeviceIoControlFile() failed with status 0x%08lx\n", Status);
+	                  }
+	                ExFreePool(TargetName);
+	              }
+	            NtClose(hMountManager);
+	          }
+	      }
 	    }
 	  else
 	    {
@@ -1586,6 +1643,76 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             }
           memcpy(Irp->AssociatedIrp.SystemBuffer, InParams, Information);
           ExFreePool(SrbIoControl);
+          break;
+        }
+
+      case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
+        {
+          WCHAR NameBuffer[80];
+          PMOUNTDEV_NAME pMountDevName;
+          ULONG NameLength;
+          DPRINT("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME\n");
+          if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUNTDEV_NAME))
+            {
+              Status = STATUS_BUFFER_TOO_SMALL;
+              Information = 0;
+            }
+          else
+            {
+              pMountDevName = (PMOUNTDEV_NAME)Irp->AssociatedIrp.SystemBuffer;
+              swprintf(NameBuffer,
+                L"\\Device\\Harddisk%lu\\Partition%lu",
+                DeviceExtension->DeviceNumber,
+                ((PDISK_DATA)(DeviceExtension + 1))->PartitionNumber);
+              NameLength = wcslen(NameBuffer) * sizeof(WCHAR);
+              pMountDevName->NameLength = NameLength;
+              if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < FIELD_OFFSET(MOUNTDEV_NAME, Name) + NameLength)
+                {
+                  Information = sizeof(MOUNTDEV_NAME);
+                  Status = STATUS_BUFFER_OVERFLOW;
+                }
+              else
+                {
+                  RtlCopyMemory(pMountDevName->Name, NameBuffer, NameLength);
+                  Information = FIELD_OFFSET(MOUNTDEV_NAME, Name) + NameLength;
+                  Status = STATUS_SUCCESS;
+                }
+            }
+          break;
+        }
+
+      case IOCTL_MOUNTDEV_QUERY_UNIQUE_ID:
+        {
+          WCHAR NameBuffer[80];
+          PMOUNTDEV_UNIQUE_ID pMountDevUniqueId;
+          ULONG UniqueIdLength;
+          DPRINT("IOCTL_MOUNTDEV_QUERY_UNIQUE_ID\n");
+          if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUNTDEV_NAME))
+            {
+              Status = STATUS_BUFFER_TOO_SMALL;
+              Information = 0;
+            }
+          else
+            {
+              pMountDevUniqueId = (PMOUNTDEV_UNIQUE_ID)Irp->AssociatedIrp.SystemBuffer;
+              swprintf(NameBuffer,
+                L"\\Device\\Harddisk%lu\\Partition%lu",
+                DeviceExtension->DeviceNumber,
+                ((PDISK_DATA)(DeviceExtension + 1))->PartitionNumber);
+              UniqueIdLength = wcslen(NameBuffer) * sizeof(WCHAR);
+              pMountDevUniqueId->UniqueIdLength = UniqueIdLength;
+              if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + UniqueIdLength)
+                {
+                  Information = sizeof(MOUNTDEV_UNIQUE_ID);
+                  Status = STATUS_BUFFER_OVERFLOW;
+                }
+              else
+                {
+                  RtlCopyMemory(pMountDevUniqueId->UniqueId, NameBuffer, UniqueIdLength);
+                  Information = FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + UniqueIdLength;
+                  Status = STATUS_SUCCESS;
+                }
+            }
           break;
         }
 

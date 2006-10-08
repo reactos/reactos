@@ -4,18 +4,18 @@
  * FILE:            drivers/dd/serial/power.c
  * PURPOSE:         Serial IRP_MJ_POWER operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
 #include "serial.h"
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialPower(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	DPRINT("Serial: IRP_MJ_POWER dispatch\n");
+	DPRINT("IRP_MJ_POWER dispatch\n");
 	Irp->IoStatus.Information = 0;
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);

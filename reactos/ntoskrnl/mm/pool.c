@@ -22,7 +22,7 @@ extern MM_STATS MmStats;
 
 /* FUNCTIONS ***************************************************************/
 
-STATIC PVOID STDCALL
+static PVOID STDCALL
 EiAllocatePool(POOL_TYPE PoolType,
                ULONG NumberOfBytes,
                ULONG Tag,
@@ -213,6 +213,7 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
 /*
  * @implemented
  */
+#undef ExFreePool
 VOID STDCALL
 ExFreePool(IN PVOID Block)
 {

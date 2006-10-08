@@ -11,13 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#ifdef PPOOL_UMODE_TEST
-#include "ppool_umode.h"
-#else//PPOOL_UMODE_TEST
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-#endif//PPOOL_UMODE_TEST
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializePagedPool)
@@ -138,7 +134,7 @@ int main()
 	char* trash[COUNT];
 	int AllocSize[] = { 15, 31, 63, 127, 255, 511, 1023, 2047 };
 	const int ALLOCS = sizeof(AllocSize) / sizeof(0[AllocSize]);
-	DWORD dwStart;
+	ULONG dwStart;
 
 	MmPagedPoolSize = 1*1024*1024;
 	MmPagedPoolBase = malloc ( MmPagedPoolSize );

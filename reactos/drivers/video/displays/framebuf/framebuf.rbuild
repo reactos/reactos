@@ -9,5 +9,7 @@
 	<file>pointer.c</file>
 	<file>screen.c</file>
 	<file>surface.c</file>
+      <file>ddenable.c</file>
+      <file>dd.c</file>
 	<file>framebuf.rc</file>
 </module>

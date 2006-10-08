@@ -1,10 +1,10 @@
 /*
  * ReactOS regsvr32
- * Copyright (C) 2004 ReactOS Team
+ * Copyright (C) 2004-2006 ReactOS Team
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS regsvr32.exe
- * FILE:            apps/utils/regsvr32/regsvr32.c
+ * FILE:            base/system/regsvr32/regsvr32.c
  * PURPOSE:         Register a COM component in the registry
  * PROGRAMMER:      ShadowFlare (blakflare@hotmail.com)
  */
@@ -59,13 +59,13 @@ LPCWSTR tszDllInstall = L"DllInstall";
 LPCTSTR ModuleTitle = _T("RegSvr32");
 
 TCHAR UsageMessage[RC_STRING_MAX_SIZE];
-TCHAR NoDllSpecified[RC_STRING_MAX_SIZE]; 
-TCHAR InvalidFlag[RC_STRING_MAX_SIZE]; 
-TCHAR SwitchN_NoI[RC_STRING_MAX_SIZE]; 
+TCHAR NoDllSpecified[RC_STRING_MAX_SIZE];
+TCHAR InvalidFlag[RC_STRING_MAX_SIZE];
+TCHAR SwitchN_NoI[RC_STRING_MAX_SIZE];
 TCHAR DllNotLoaded[RC_STRING_MAX_SIZE];
 TCHAR MissingEntry[RC_STRING_MAX_SIZE];
-TCHAR FailureMessage[RC_STRING_MAX_SIZE]; 
-TCHAR SuccessMessage[RC_STRING_MAX_SIZE]; 
+TCHAR FailureMessage[RC_STRING_MAX_SIZE];
+TCHAR SuccessMessage[RC_STRING_MAX_SIZE];
 
 
 // The macro CommandLineToArgv maps to a function that converts
@@ -271,12 +271,12 @@ int WINAPI WinMain(
 
 	// Get Langues msg
 	LoadString( GetModuleHandle(NULL), IDS_UsageMessage, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);
-    LoadString( GetModuleHandle(NULL), IDS_NoDllSpecified, (LPTSTR) NoDllSpecified,RC_STRING_MAX_SIZE);    
+	LoadString( GetModuleHandle(NULL), IDS_NoDllSpecified, (LPTSTR) NoDllSpecified,RC_STRING_MAX_SIZE);
 	LoadString( GetModuleHandle(NULL), IDS_InvalidFlag, (LPTSTR) InvalidFlag,RC_STRING_MAX_SIZE);
 	LoadString( GetModuleHandle(NULL), IDS_SwitchN_NoI, (LPTSTR) SwitchN_NoI,RC_STRING_MAX_SIZE);
 
-    LoadString( GetModuleHandle(NULL), IDS_DllNotLoaded, (LPTSTR)   DllNotLoaded,RC_STRING_MAX_SIZE);
-    LoadString( GetModuleHandle(NULL), IDS_MissingEntry, (LPTSTR)   MissingEntry,RC_STRING_MAX_SIZE);    
+	LoadString( GetModuleHandle(NULL), IDS_DllNotLoaded, (LPTSTR)   DllNotLoaded,RC_STRING_MAX_SIZE);
+	LoadString( GetModuleHandle(NULL), IDS_MissingEntry, (LPTSTR)   MissingEntry,RC_STRING_MAX_SIZE);
 	LoadString( GetModuleHandle(NULL), IDS_FailureMessage, (LPTSTR) FailureMessage,RC_STRING_MAX_SIZE);
 	LoadString( GetModuleHandle(NULL), IDS_SuccessMessage, (LPTSTR) SuccessMessage,RC_STRING_MAX_SIZE);
 
@@ -384,7 +384,7 @@ int WINAPI WinMain(
 	OleInitialize(0);
 
 	// (Un)register every dll whose filename was passed in the command-line string
-	for (i = 1; i < argc; i++) {
+	for (i = 1; i < argc && nRetValue == EXITCODE_SUCCESS; i++) {
 		// Arguments that do not start with a slash (/) are filenames
 		if (*argv[i] != _T('/')) {
 			lptDllName = argv[i];
@@ -425,7 +425,7 @@ int WINAPI WinMain(
 					}
 				}
 
-				if (bInstall) {
+				if (bInstall && nRetValue == EXITCODE_SUCCESS) {
 					// Get the address of DllInstall
 					fnDllInstall = (DLLINSTALL)GetProcAddress(hDll,szDllInstall);
 					if (fnDllInstall) {

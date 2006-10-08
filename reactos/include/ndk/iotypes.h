@@ -27,7 +27,15 @@ Author:
 typedef PVOID PFS_FILTER_CALLBACKS;
 #endif
 
+//
+// I/O Completion Access Rights
+//
+#define IO_COMPLETION_QUERY_STATE               0x0001
 #ifndef NTOS_MODE_USER
+#define IO_COMPLETION_MODIFY_STATE              0x0002
+#define IO_COMPLETION_ALL_ACCESS                (STANDARD_RIGHTS_REQUIRED | \
+                                                 SYNCHRONIZE | \
+                                                 0x3)
 
 //
 // Kernel Exported Object Types
@@ -648,6 +656,14 @@ typedef struct _IO_ERROR_LOG_MESSAGE
 } IO_ERROR_LOG_MESSAGE, *PIO_ERROR_LOG_MESSAGE;
 
 #endif
+
+//
+// I/O Completion Information structures
+//
+typedef struct _IO_COMPLETION_BASIC_INFORMATION
+{
+    LONG Depth;
+} IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
 
 //
 // Parameters for NtCreateMailslotFile/NtCreateNamedPipeFile

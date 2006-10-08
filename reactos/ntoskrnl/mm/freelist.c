@@ -17,7 +17,6 @@
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializePageList)
-#pragma alloc_text(INIT, MmInitZeroPageThread)
 #endif
 
 
@@ -62,8 +61,6 @@ static LIST_ENTRY FreeZeroedPageListHead;
 static LIST_ENTRY FreeUnzeroedPageListHead;
 static LIST_ENTRY BiosPageListHead;
 
-static PETHREAD ZeroPageThread;
-static CLIENT_ID ZeroPageThreadId;
 static KEVENT ZeroPageThreadEvent;
 static BOOLEAN ZeroPageThreadShouldTerminate = FALSE;
 
@@ -455,7 +452,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
 	       MmStats.NrReservedPages++;
 	    }
         /* Protect the Page Directory. This will be changed in r3 */
-        else if (j >= (KeLoaderBlock.PageDirectoryStart / PAGE_SIZE) && j < (KeLoaderBlock.PageDirectoryEnd / PAGE_SIZE))
+        else if (j >= (MmFreeLdrPageDirectoryStart / PAGE_SIZE) && j < (MmFreeLdrPageDirectoryEnd / PAGE_SIZE))
 	    {
                MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
                MmPageArray[j].Flags.Zero = 0;
@@ -1139,7 +1136,8 @@ MmAllocPagesSpecifyRange(ULONG Consumer,
    return NumberOfPagesFound;
 }
 
-VOID STDCALL
+NTSTATUS
+NTAPI
 MmZeroPageThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
@@ -1148,6 +1146,13 @@ MmZeroPageThreadMain(PVOID Ignored)
    PPHYSICAL_PAGE PageDescriptor;
    PFN_TYPE Pfn;
    ULONG Count;
+
+   /* Free initial kernel memory */
+   MiFreeInitMemory();
+
+   /* Set our priority to 0 */
+   KeGetCurrentThread()->BasePriority = 0;
+   KeSetPriorityThread(KeGetCurrentThread(), 0);
 
    while(1)
    {
@@ -1160,13 +1165,12 @@ MmZeroPageThreadMain(PVOID Ignored)
       {
          DbgPrint("ZeroPageThread: Wait failed\n");
          KEBUGCHECK(0);
-         return;
       }
 
       if (ZeroPageThreadShouldTerminate)
       {
          DbgPrint("ZeroPageThread: Terminating\n");
-	 return;
+         return STATUS_SUCCESS;
       }
       Count = 0;
       KeAcquireSpinLock(&PageListLock, &oldIrql);
@@ -1201,46 +1205,11 @@ MmZeroPageThreadMain(PVOID Ignored)
          }
 
       }
-      DPRINT("Zeroed %d pages.\n", Count);
+      DPRINT1("Zeroed %d pages.\n", Count);
       KeResetEvent(&ZeroPageThreadEvent);
       KeReleaseSpinLock(&PageListLock, oldIrql);
    }
-}
 
-NTSTATUS
-INIT_FUNCTION
-NTAPI
-MmInitZeroPageThread(VOID)
-{
-   NTSTATUS Status;
-   HANDLE ThreadHandle;
-
-   ZeroPageThreadShouldTerminate = FALSE;
-   Status = PsCreateSystemThread(&ThreadHandle,
-                                 THREAD_ALL_ACCESS,
-                                 NULL,
-                                 NULL,
-                                 &ZeroPageThreadId,
-                                 MmZeroPageThreadMain,
-                                 NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      KEBUGCHECK(0);
-   }
-
-   Status = ObReferenceObjectByHandle(ThreadHandle,
-				      THREAD_ALL_ACCESS,
-				      PsThreadType,
-				      KernelMode,
-				      (PVOID*)&ZeroPageThread,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	KEBUGCHECK(0);
-     }
-
-   KeSetPriorityThread(&ZeroPageThread->Tcb, LOW_PRIORITY);
-   NtClose(ThreadHandle);
    return STATUS_SUCCESS;
 }
 

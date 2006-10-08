@@ -1,5 +1,5 @@
 /*
- * Copyright 2004 Martin Fuchs
+ * Copyright 2004, 2006 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -426,12 +426,10 @@ bool Favorites::read(LPCTSTR path)
 {
 	XMLDoc xbel;
 
-	if (!xbel.read(path))
-		if (xbel._last_error == XML_ERROR_NO_ELEMENTS)
-			return false;
-		else
-			MessageBox(g_Globals._hwndDesktop, String(xbel._last_error_msg.c_str()),
-						TEXT("ROS Explorer - reading bookmark file"), MB_OK);
+	if (!xbel.read(path)) {
+		MessageBox(g_Globals._hwndDesktop, xbel._errors.str(),
+					TEXT("ROS Explorer - reading bookmark file"), MB_OK);
+	}
 
 	const_XMLPos pos(&xbel);
 
@@ -455,9 +453,9 @@ void Favorites::write(LPCTSTR path) const
 	super::write(pos);
 	pos.back();
 
-	xbel._header._doctype = "<!DOCTYPE xbel"
-		" PUBLIC \"+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML\"\n"
-		" \"http://www.python.org/topics/xml/dtds/xbel-1.0.dtd\">";
+	xbel._format._doctype._name = "xbel";
+	xbel._format._doctype._public = "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML";
+	xbel._format._doctype._system = "http://www.python.org/topics/xml/dtds/xbel-1.0.dtd";
 
 	xbel.write(path);
 }

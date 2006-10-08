@@ -52,6 +52,7 @@ OBJECTS = \
 	webchild.o \
 	mainframe.o \
 	favorites.o \
+	xs-native.o \
 	xmlstorage.o
 
 LIBS = gdi32 comctl32 shell32 ole32 oleaut32 uuid
@@ -61,7 +62,7 @@ all: precomp.h.gch $(TARGET)
 precomp.h.gch: *.h utility/*.h
 	$(CXX) $(CFLAGS) precomp.h
 
-$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) libexpat.dll
+$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS)) $(addprefix -l,$(DELAYIMPORTS))
 
 ibrowser$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico

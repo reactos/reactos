@@ -35,10 +35,9 @@ LARGE_INTEGER SystemBootTime = (LARGE_INTEGER)0LL;
 LARGE_INTEGER SystemBootTime = { 0 };
 #endif
 
-CHAR KiTimerSystemAuditing = 0;
 KDPC KiExpireTimerDpc;
 BOOLEAN KiClockSetupComplete = FALSE;
-
+ULONG KiTimeLimitIsrMicroseconds;
 
 /*
  * Number of timer interrupts since initialisation
@@ -99,7 +98,7 @@ KiSetSystemTime(PLARGE_INTEGER NewSystemTime)
 
   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
-  OldIrql = KeAcquireDispatcherDatabaseLock();
+  OldIrql = KiAcquireDispatcherLock();
 
   do
     {
@@ -122,7 +121,7 @@ KiSetSystemTime(PLARGE_INTEGER NewSystemTime)
   /* Update absolute timers */
   DPRINT1("FIXME: TIMER UPDATE NOT DONE!!!\n");
 
-  KeReleaseDispatcherDatabaseLock(OldIrql);
+  KiReleaseDispatcherLock(OldIrql);
 
   /*
    * NOTE: Expired timers will be processed at the next clock tick!
@@ -147,6 +146,7 @@ KeQueryTimeIncrement(VOID)
 /*
  * @implemented
  */
+#undef KeQueryTickCount
 VOID
 STDCALL
 KeQueryTickCount(PLARGE_INTEGER TickCount)
@@ -205,18 +205,6 @@ KeSetTimeIncrement(
     /* FIXME: We use a harcoded CLOCK_INCREMENT. That *must* be changed */
     KeMaximumIncrement = MaxIncrement;
     KeMinimumIncrement = MinIncrement;
-}
-
-/*
- * @unimplemented
- */
-VOID
-FASTCALL
-KeSetTimeUpdateNotifyRoutine(
-    IN PTIME_UPDATE_NOTIFY_ROUTINE NotifyRoutine
-    )
-{
-    UNIMPLEMENTED;
 }
 
 /*

@@ -35,9 +35,9 @@
 /* PSDK/NDK */
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <fmifs/fmifs.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <fmifs/fmifs.h>
 
 /* VFAT */
 #include <fslib/vfatlib.h>
@@ -54,19 +54,19 @@
 /* ReactOS Version */
 #include <reactos/buildno.h>
 
-#include <infros.h>
-
 /* Internal Headers */
 #include "console.h"
 #include "partlist.h"
+#include "inffile.h"
 #include "inicache.h"
-#include "filequeue.h"
 #include "progress.h"
+#include "filequeue.h"
 #include "bootsup.h"
 #include "keytrans.h"
 #include "registry.h"
-#include "format.h"
 #include "fslist.h"
+#include "chkdsk.h"
+#include "format.h"
 #include "cabinet.h"
 #include "filesup.h"
 #include "drivesup.h"

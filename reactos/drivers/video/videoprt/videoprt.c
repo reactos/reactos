@@ -362,6 +362,8 @@ IntVideoPortCreateAdapterDeviceObject(
       DeviceExtension->NextDeviceObject = IoAttachDeviceToDeviceStack(
          *DeviceObject, PhysicalDeviceObject);
 
+   /* Remove the initailizing flag */
+   (*DeviceObject)->Flags &= ~DO_DEVICE_INITIALIZING;
    return STATUS_SUCCESS;
 }
 

@@ -28,44 +28,44 @@ Author:
 //
 // Maximum Atom Length
 //
-#define RTL_MAXIMUM_ATOM_LENGTH                              255
+#define RTL_MAXIMUM_ATOM_LENGTH                             255
 
 //
 // Process Parameters Flags
 //
-#define RTL_USER_PROCESS_PARAMETERS_NORMALIZED               0x01
-#define RTL_USER_PROCESS_PARAMETERS_PROFILE_USER             0x02
-#define RTL_USER_PROCESS_PARAMETERS_PROFILE_SERVER           0x04
-#define RTL_USER_PROCESS_PARAMETERS_PROFILE_KERNEL           0x08
-#define RTL_USER_PROCESS_PARAMETERS_UNKNOWN                  0x10
-#define RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB              0x20
-#define RTL_USER_PROCESS_PARAMETERS_DISABLE_HEAP_CHECKS      0x100
-#define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_1             0x200
-#define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_2             0x400
-#define RTL_USER_PROCESS_PARAMETERS_PRIVATE_DLL_PATH         0x1000
-#define RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH           0x2000
-#define RTL_USER_PROCESS_PARAMETERS_NX                       0x20000
+#define RTL_USER_PROCESS_PARAMETERS_NORMALIZED              0x01
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_USER            0x02
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_SERVER          0x04
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_KERNEL          0x08
+#define RTL_USER_PROCESS_PARAMETERS_UNKNOWN                 0x10
+#define RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB             0x20
+#define RTL_USER_PROCESS_PARAMETERS_DISABLE_HEAP_CHECKS     0x100
+#define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_1            0x200
+#define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_2            0x400
+#define RTL_USER_PROCESS_PARAMETERS_PRIVATE_DLL_PATH        0x1000
+#define RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH          0x2000
+#define RTL_USER_PROCESS_PARAMETERS_NX                      0x20000
 
 //
 // Exception Flags
 //
-#define EXCEPTION_CHAIN_END                                  ((PEXCEPTION_REGISTRATION_RECORD)-1)
-#define EXCEPTION_UNWINDING                                  0x02
-#define EXCEPTION_EXIT_UNWIND                                0x04
-#define EXCEPTION_STACK_INVALID                              0x08
-#define EXCEPTION_UNWIND                                     (EXCEPTION_UNWINDING + EXCEPTION_EXIT_UNWIND)
-#define EXCEPTION_NESTED_CALL                                0x10
-#define EXCEPTION_TARGET_UNWIND                              0x20
-#define EXCEPTION_COLLIDED_UNWIND                            0x20
+#define EXCEPTION_CHAIN_END                                 ((PEXCEPTION_REGISTRATION_RECORD)-1)
+#define EXCEPTION_UNWINDING                                 0x02
+#define EXCEPTION_EXIT_UNWIND                               0x04
+#define EXCEPTION_STACK_INVALID                             0x08
+#define EXCEPTION_UNWIND                                    (EXCEPTION_UNWINDING + EXCEPTION_EXIT_UNWIND)
+#define EXCEPTION_NESTED_CALL                               0x10
+#define EXCEPTION_TARGET_UNWIND                             0x20
+#define EXCEPTION_COLLIDED_UNWIND                           0x20
 
 //
 // Range and Range List Flags
 //
-#define RTL_RANGE_LIST_ADD_IF_CONFLICT                       0x00000001
-#define RTL_RANGE_LIST_ADD_SHARED                            0x00000002
+#define RTL_RANGE_LIST_ADD_IF_CONFLICT                      0x00000001
+#define RTL_RANGE_LIST_ADD_SHARED                           0x00000002
 
-#define RTL_RANGE_SHARED                                     0x01
-#define RTL_RANGE_CONFLICT                                   0x02
+#define RTL_RANGE_SHARED                                    0x01
+#define RTL_RANGE_CONFLICT                                  0x02
 
 //
 // Activation Context Frame Flags
@@ -145,53 +145,58 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 //
 // Registry Keys
 //
-#define RTL_REGISTRY_ABSOLUTE                                0
-#define RTL_REGISTRY_SERVICES                                1
-#define RTL_REGISTRY_CONTROL                                 2
-#define RTL_REGISTRY_WINDOWS_NT                              3
-#define RTL_REGISTRY_DEVICEMAP                               4
-#define RTL_REGISTRY_USER                                    5
-#define RTL_REGISTRY_MAXIMUM                                 6
-#define RTL_REGISTRY_HANDLE                                  0x40000000
-#define RTL_REGISTRY_OPTIONAL                                0x80000000
-#define RTL_QUERY_REGISTRY_SUBKEY                            0x00000001
-#define RTL_QUERY_REGISTRY_TOPKEY                            0x00000002
-#define RTL_QUERY_REGISTRY_REQUIRED                          0x00000004
-#define RTL_QUERY_REGISTRY_NOVALUE                           0x00000008
-#define RTL_QUERY_REGISTRY_NOEXPAND                          0x00000010
-#define RTL_QUERY_REGISTRY_DIRECT                            0x00000020
-#define RTL_QUERY_REGISTRY_DELETE                            0x00000040
+#define RTL_REGISTRY_ABSOLUTE                               0
+#define RTL_REGISTRY_SERVICES                               1
+#define RTL_REGISTRY_CONTROL                                2
+#define RTL_REGISTRY_WINDOWS_NT                             3
+#define RTL_REGISTRY_DEVICEMAP                              4
+#define RTL_REGISTRY_USER                                   5
+#define RTL_REGISTRY_MAXIMUM                                6
+#define RTL_REGISTRY_HANDLE                                 0x40000000
+#define RTL_REGISTRY_OPTIONAL                               0x80000000
+#define RTL_QUERY_REGISTRY_SUBKEY                           0x00000001
+#define RTL_QUERY_REGISTRY_TOPKEY                           0x00000002
+#define RTL_QUERY_REGISTRY_REQUIRED                         0x00000004
+#define RTL_QUERY_REGISTRY_NOVALUE                          0x00000008
+#define RTL_QUERY_REGISTRY_NOEXPAND                         0x00000010
+#define RTL_QUERY_REGISTRY_DIRECT                           0x00000020
+#define RTL_QUERY_REGISTRY_DELETE                           0x00000040
 
 //
 // Versioning
 //
-#define VER_MINORVERSION                                     0x0000001
-#define VER_MAJORVERSION                                     0x0000002
-#define VER_BUILDNUMBER                                      0x0000004
-#define VER_PLATFORMID                                       0x0000008
-#define VER_SERVICEPACKMINOR                                 0x0000010
-#define VER_SERVICEPACKMAJOR                                 0x0000020
-#define VER_SUITENAME                                        0x0000040
-#define VER_PRODUCT_TYPE                                     0x0000080
-#define VER_PLATFORM_WIN32s                                  0
-#define VER_PLATFORM_WIN32_WINDOWS                           1
-#define VER_PLATFORM_WIN32_NT                                2
-#define VER_EQUAL                                            1
-#define VER_GREATER                                          2
-#define VER_GREATER_EQUAL                                    3
-#define VER_LESS                                             4
-#define VER_LESS_EQUAL                                       5
-#define VER_AND                                              6
-#define VER_OR                                               7
-#define VER_CONDITION_MASK                                   7
-#define VER_NUM_BITS_PER_CONDITION_MASK                      3
+#define VER_MINORVERSION                                    0x0000001
+#define VER_MAJORVERSION                                    0x0000002
+#define VER_BUILDNUMBER                                     0x0000004
+#define VER_PLATFORMID                                      0x0000008
+#define VER_SERVICEPACKMINOR                                0x0000010
+#define VER_SERVICEPACKMAJOR                                0x0000020
+#define VER_SUITENAME                                       0x0000040
+#define VER_PRODUCT_TYPE                                    0x0000080
+#define VER_PLATFORM_WIN32s                                 0
+#define VER_PLATFORM_WIN32_WINDOWS                          1
+#define VER_PLATFORM_WIN32_NT                               2
+#define VER_EQUAL                                           1
+#define VER_GREATER                                         2
+#define VER_GREATER_EQUAL                                   3
+#define VER_LESS                                            4
+#define VER_LESS_EQUAL                                      5
+#define VER_AND                                             6
+#define VER_OR                                              7
+#define VER_CONDITION_MASK                                  7
+#define VER_NUM_BITS_PER_CONDITION_MASK                     3
 
 //
 // Timezone IDs
 //
-#define TIME_ZONE_ID_UNKNOWN                                 0
-#define TIME_ZONE_ID_STANDARD                                1
-#define TIME_ZONE_ID_DAYLIGHT                                2
+#define TIME_ZONE_ID_UNKNOWN                                0
+#define TIME_ZONE_ID_STANDARD                               1
+#define TIME_ZONE_ID_DAYLIGHT                               2
+
+//
+// Maximum Path Length
+//
+#define MAX_PATH                                            260
 
 //
 // RTL Lock Type (Critical Section or Resource)

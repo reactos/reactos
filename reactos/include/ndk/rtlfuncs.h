@@ -2593,6 +2593,18 @@ RtlImageRvaToSection(
     ULONG Rva
 );
 
+NTSYSAPI
+ULONG
+NTAPI
+LdrRelocateImageWithBias(
+    IN PVOID NewAddress,
+    IN LONGLONG AdditionalBias,
+    IN PCCH LoaderName,
+    IN ULONG Success,
+    IN ULONG Conflict,
+    IN ULONG Invalid
+);
+
 //
 // Activation Context Functions
 //

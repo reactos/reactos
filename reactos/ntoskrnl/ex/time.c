@@ -25,6 +25,7 @@
 TIME_ZONE_INFORMATION ExpTimeZoneInfo;
 LARGE_INTEGER ExpTimeZoneBias;
 ULONG ExpTimeZoneId;
+ULONG ExpTickCountMultiplier;
 
 /* FUNCTIONS ****************************************************************/
 

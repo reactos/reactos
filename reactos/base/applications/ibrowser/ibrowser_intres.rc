@@ -35,9 +35,8 @@ IDB_TOOLBAR             BITMAP  DISCARDABLE     "res/toolbar.bmp"
 
 IDA_IBROWSER ACCELERATORS DISCARDABLE 
 BEGIN
-    "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
-    "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
-                                                    NOINVERT
+    120,            ID_FILE_EXIT,           ASCII, ALT // "X"
+    115,            ID_VIEW_FULLSCREEN,     ASCII, SHIFT, CONTROL // "S"
 END
 
 
@@ -66,7 +65,8 @@ BEGIN
     "#include ""Sv.rc""\r\n"
     "#include ""Hu.rc""\r\n"
     "#include ""Ro.rc""\r\n"
-    "#include ""Nl.rc""\r\n"    
+    "#include ""Nl.rc""\r\n"  
+    "#include ""No.rc""\r\n"    
     "#include ""Ja.rc""\0"
 END
 
@@ -104,6 +104,7 @@ IDI_IBROWSER            ICON    DISCARDABLE     "res/ibrowser.ico"
 #include "Ro.rc"
 #include "Nl.rc"
 #include "Ja.rc"
+#include "No.rc"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

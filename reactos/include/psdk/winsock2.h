@@ -27,10 +27,12 @@ extern "C" {
 /*   Names common to Winsock1.1 and Winsock2  */
 #if !defined ( _BSDTYPES_DEFINED )
 /* also defined in gmon.h and in cygwin's sys/types */
+#if 0
 typedef unsigned char	u_char;
 typedef unsigned short	u_short;
 typedef unsigned int	u_int;
 typedef unsigned long	u_long;
+#endif
 #define _BSDTYPES_DEFINED
 #endif /* ! def _BSDTYPES_DEFINED  */
 typedef u_int	SOCKET;

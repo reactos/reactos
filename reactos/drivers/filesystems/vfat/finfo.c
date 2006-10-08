@@ -341,14 +341,13 @@ VfatGetNameInformation(PFILE_OBJECT FileObject,
   ASSERT(NameInfo != NULL);
   ASSERT(FCB != NULL);
 
-  if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + FCB->PathNameU.Length + sizeof(WCHAR))
+  NameInfo->FileNameLength = FCB->PathNameU.Length;
+  if (*BufferLength < FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + FCB->PathNameU.Length)
     return STATUS_BUFFER_OVERFLOW;
 
-  NameInfo->FileNameLength = FCB->PathNameU.Length;
   RtlCopyMemory(NameInfo->FileName, FCB->PathNameU.Buffer, FCB->PathNameU.Length);
-  NameInfo->FileName[FCB->PathNameU.Length / sizeof(WCHAR)] = 0;
 
-  *BufferLength -= (sizeof(FILE_NAME_INFORMATION) + FCB->PathNameU.Length + sizeof(WCHAR));
+  *BufferLength -= (FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + FCB->PathNameU.Length);
 
   return STATUS_SUCCESS;
 }

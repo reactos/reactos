@@ -25,7 +25,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <usetup.h>
+#include "usetup.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -121,7 +121,7 @@ CreateComputerTypeList(HINF InfFile)
 {
   CHAR Buffer[128];
   PGENERIC_LIST List;
-  PINFCONTEXT Context;
+  INFCONTEXT Context;
   PWCHAR KeyName;
   PWCHAR KeyValue;
   PWCHAR UserData;
@@ -137,7 +137,7 @@ CreateComputerTypeList(HINF InfFile)
   DPRINT("Computer identifier: '%S'\n", ComputerIdentifier);
 
   /* Search for matching device identifier */
-  if (!InfFindFirstLine(InfFile, L"Map.Computer", NULL, &Context))
+  if (!SetupFindFirstLineW(InfFile, L"Map.Computer", NULL, &Context))
     {
       /* FIXME: error message */
       return NULL;
@@ -145,20 +145,20 @@ CreateComputerTypeList(HINF InfFile)
 
   do
     {
-      if (!InfGetDataField(Context, 1, &KeyValue))
+      if (!INF_GetDataField(&Context, 1, &KeyValue))
         {
           /* FIXME: Handle error! */
-          DPRINT("InfGetDataField() failed\n");
+          DPRINT("INF_GetDataField() failed\n");
           return NULL;
         }
 
       DPRINT("KeyValue: %S\n", KeyValue);
       if (wcsstr(ComputerIdentifier, KeyValue))
         {
-          if (!InfGetDataField(Context, 0, &KeyName))
+          if (!INF_GetDataField(&Context, 0, &KeyName))
             {
               /* FIXME: Handle error! */
-              DPRINT("InfGetDataField() failed\n");
+              DPRINT("INF_GetDataField() failed\n");
               return NULL;
             }
 
@@ -166,14 +166,13 @@ CreateComputerTypeList(HINF InfFile)
           wcscpy(ComputerKey, KeyName);
         }
     }
-  while (InfFindNextLine(Context, Context));
-  InfFreeContext(Context);
+  while (SetupFindNextLine(&Context, &Context));
 
   List = CreateGenericList();
   if (List == NULL)
     return NULL;
 
-  if (!InfFindFirstLine (InfFile, L"Computer", NULL, &Context))
+  if (!SetupFindFirstLineW (InfFile, L"Computer", NULL, &Context))
     {
       DestroyGenericList(List, FALSE);
       return NULL;
@@ -181,10 +180,10 @@ CreateComputerTypeList(HINF InfFile)
 
   do
     {
-      if (!InfGetData (Context, &KeyName, &KeyValue))
+      if (!INF_GetData (&Context, &KeyName, &KeyValue))
 	{
 	  /* FIXME: Handle error! */
-	  DPRINT("InfGetData() failed\n");
+	  DPRINT("INF_GetData() failed\n");
 	  break;
 	}
 
@@ -202,8 +201,7 @@ CreateComputerTypeList(HINF InfFile)
       AppendGenericListEntry(List, Buffer, UserData,
                              _wcsicmp(KeyName, ComputerKey) ? FALSE : TRUE);
     }
-  while (InfFindNextLine(Context, Context));
-  InfFreeContext(Context);
+  while (SetupFindNextLine(&Context, &Context));
 
   return List;
 }
@@ -373,7 +371,7 @@ CreateDisplayDriverList(HINF InfFile)
 {
   CHAR Buffer[128];
   PGENERIC_LIST List;
-  PINFCONTEXT Context;
+  INFCONTEXT Context;
   PWCHAR KeyName;
   PWCHAR KeyValue;
   PWCHAR UserData;
@@ -389,7 +387,7 @@ CreateDisplayDriverList(HINF InfFile)
   DPRINT("Display identifier: '%S'\n", DisplayIdentifier);
 
   /* Search for matching device identifier */
-  if (!InfFindFirstLine(InfFile, L"Map.Display", NULL, &Context))
+  if (!SetupFindFirstLineW(InfFile, L"Map.Display", NULL, &Context))
     {
       /* FIXME: error message */
       return NULL;
@@ -397,20 +395,20 @@ CreateDisplayDriverList(HINF InfFile)
 
   do
     {
-      if (!InfGetDataField(Context, 1, &KeyValue))
+      if (!INF_GetDataField(&Context, 1, &KeyValue))
 	{
 	  /* FIXME: Handle error! */
-	  DPRINT("InfGetDataField() failed\n");
+	  DPRINT("INF_GetDataField() failed\n");
 	  return NULL;
 	}
 
       DPRINT("KeyValue: %S\n", KeyValue);
       if (wcsstr(DisplayIdentifier, KeyValue))
 	{
-	  if (!InfGetDataField(Context, 0, &KeyName))
+	  if (!INF_GetDataField(&Context, 0, &KeyName))
 	    {
 	      /* FIXME: Handle error! */
-	      DPRINT("InfGetDataField() failed\n");
+	      DPRINT("INF_GetDataField() failed\n");
 	      return NULL;
 	    }
 
@@ -418,15 +416,14 @@ CreateDisplayDriverList(HINF InfFile)
 	  wcscpy(DisplayKey, KeyName);
 	}
     }
-  while (InfFindNextLine(Context, Context));
-  InfFreeContext(Context);
+  while (SetupFindNextLine(&Context, &Context));
 
 
   List = CreateGenericList();
   if (List == NULL)
     return NULL;
 
-  if (!InfFindFirstLine (InfFile, L"Display", NULL, &Context))
+  if (!SetupFindFirstLineW (InfFile, L"Display", NULL, &Context))
     {
       DestroyGenericList(List, FALSE);
       return NULL;
@@ -434,15 +431,15 @@ CreateDisplayDriverList(HINF InfFile)
 
   do
     {
-      if (!InfGetDataField(Context, 0, &KeyName))
+      if (!INF_GetDataField(&Context, 0, &KeyName))
 	{
-	  DPRINT1("InfGetDataField() failed\n");
+	  DPRINT1("INF_GetDataField() failed\n");
 	  break;
 	}
 
-      if (!InfGetDataField(Context, 1, &KeyValue))
+      if (!INF_GetDataField(&Context, 1, &KeyValue))
 	{
-	  DPRINT1("InfGetDataField() failed\n");
+	  DPRINT1("INF_GetDataField() failed\n");
 	  break;
 	}
 
@@ -464,8 +461,7 @@ CreateDisplayDriverList(HINF InfFile)
 			     UserData,
 			     _wcsicmp(KeyName, DisplayKey) ? FALSE : TRUE);
     }
-  while (InfFindNextLine(Context, Context));
-  InfFreeContext(Context);
+  while (SetupFindNextLine(&Context, &Context));
 
 #if 0
   AppendGenericListEntry(List, "Other display driver", NULL, TRUE);
@@ -501,7 +497,7 @@ BOOLEAN
 ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
 {
   PGENERIC_LIST_ENTRY Entry;
-  PINFCONTEXT Context;
+  INFCONTEXT Context;
   PWCHAR ServiceName;
   ULONG StartValue;
   NTSTATUS Status;
@@ -518,16 +514,16 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
       return FALSE;
     }
 
-  if (!InfFindFirstLine(InfFile, L"Display", Entry->UserData, &Context))
+  if (!SetupFindFirstLineW(InfFile, L"Display", Entry->UserData, &Context))
     {
-      DPRINT("InfFindFirstLine() failed\n");
+      DPRINT("SetupFindFirstLineW() failed\n");
       return FALSE;
     }
 
   /* Enable the right driver */
-  if (!InfGetDataField(Context, 3, &ServiceName))
+  if (!INF_GetDataField(&Context, 3, &ServiceName))
     {
-      DPRINT("InfGetDataField() failed\n");
+      DPRINT("INF_GetDataField() failed\n");
       return FALSE;
     }
 
@@ -551,9 +547,9 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
   /* Set the resolution */
   swprintf(RegPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\%s\\Device0", ServiceName);
 
-  if (!InfGetDataField(Context, 4, &Buffer))
+  if (!INF_GetDataField(&Context, 4, &Buffer))
     {
-      DPRINT("InfGetDataField() failed\n");
+      DPRINT("INF_GetDataField() failed\n");
       return FALSE;
     }
   Width = wcstoul(Buffer, NULL, 10);
@@ -570,9 +566,9 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
     }
 
   
-  if (!InfGetDataField(Context, 5, &Buffer))
+  if (!INF_GetDataField(&Context, 5, &Buffer))
     {
-      DPRINT("InfGetDataField() failed\n");
+      DPRINT("INF_GetDataField() failed\n");
       return FALSE;
     }
   Hight = wcstoul(Buffer, 0, 0);
@@ -588,9 +584,9 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
       return FALSE;
     }
 
-  if (!InfGetDataField(Context, 6, &Buffer))
+  if (!INF_GetDataField(&Context, 6, &Buffer))
     {
-      DPRINT("InfGetDataField() failed\n");
+      DPRINT("INF_GetDataField() failed\n");
       return FALSE;
     }
   Bpp = wcstoul(Buffer, 0, 0);
@@ -606,8 +602,6 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
       return FALSE;
     }
 
-  InfFreeContext(Context);
-
   DPRINT("ProcessDisplayRegistry() done\n");
 
   return TRUE;
@@ -619,7 +613,7 @@ CreateKeyboardDriverList(HINF InfFile)
 {
   CHAR Buffer[128];
   PGENERIC_LIST List;
-  PINFCONTEXT Context;
+  INFCONTEXT Context;
   PWCHAR KeyName;
   PWCHAR KeyValue;
   PWCHAR UserData;
@@ -628,7 +622,7 @@ CreateKeyboardDriverList(HINF InfFile)
   if (List == NULL)
     return NULL;
 
-  if (!InfFindFirstLine (InfFile, L"Keyboard", NULL, &Context))
+  if (!SetupFindFirstLineW (InfFile, L"Keyboard", NULL, &Context))
     {
       DestroyGenericList(List, FALSE);
       return NULL;
@@ -636,10 +630,10 @@ CreateKeyboardDriverList(HINF InfFile)
 
   do
     {
-      if (!InfGetData (Context, &KeyName, &KeyValue))
+      if (!INF_GetData (&Context, &KeyName, &KeyValue))
 	{
 	  /* FIXME: Handle error! */
-	  DPRINT("InfGetData() failed\n");
+	  DPRINT("INF_GetData() failed\n");
 	  break;
 	}
 
@@ -656,8 +650,7 @@ CreateKeyboardDriverList(HINF InfFile)
       sprintf(Buffer, "%S", KeyValue);
       AppendGenericListEntry(List, Buffer, UserData, FALSE);
     }
-  while (InfFindNextLine(Context, Context));
-  InfFreeContext(Context);
+  while (SetupFindNextLine(&Context, &Context));
 
   return List;
 }
@@ -668,42 +661,37 @@ CreateKeyboardLayoutList(HINF InfFile)
 {
   CHAR Buffer[128];
   PGENERIC_LIST List;
-  PINFCONTEXT Context;
+  INFCONTEXT Context;
   PWCHAR KeyName;
   PWCHAR KeyValue;
   PWCHAR UserData;
   WCHAR DefaultLayout[20];
 
   /* Get default layout id */
-  if (!InfFindFirstLine (InfFile, L"NLS", L"DefaultLayout", &Context))
+  if (!SetupFindFirstLineW (InfFile, L"NLS", L"DefaultLayout", &Context))
     return NULL;
 
-  if (!InfGetData (Context, NULL, &KeyValue))
-    {
-      InfFreeContext(Context);
-      return NULL;
-    }
+  if (!INF_GetData (&Context, NULL, &KeyValue))
+    return NULL;
 
   wcscpy(DefaultLayout, KeyValue);
-  InfFreeContext(Context);
 
   List = CreateGenericList();
   if (List == NULL)
     return NULL;
 
-  if (!InfFindFirstLine (InfFile, L"KeyboardLayout", NULL, &Context))
+  if (!SetupFindFirstLineW (InfFile, L"KeyboardLayout", NULL, &Context))
     {
       DestroyGenericList(List, FALSE);
-      InfFreeContext(Context);
       return NULL;
     }
 
   do
     {
-      if (!InfGetData (Context, &KeyName, &KeyValue))
+      if (!INF_GetData (&Context, &KeyName, &KeyValue))
 	{
 	  /* FIXME: Handle error! */
-	  DPRINT("InfGetData() failed\n");
+	  DPRINT("INF_GetData() failed\n");
 	  break;
 	}
 
@@ -723,8 +711,7 @@ CreateKeyboardLayoutList(HINF InfFile)
 			     UserData,
 			     _wcsicmp(KeyName, DefaultLayout) ? FALSE : TRUE);
     }
-  while (InfFindNextLine(Context, Context));
-  InfFreeContext(Context);
+  while (SetupFindNextLine(&Context, &Context));
 
   return List;
 }

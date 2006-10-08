@@ -38,7 +38,8 @@ ULONG		DebugPrintMask = DPRINT_INIFILE;
 #elif defined (DEBUG_REACTOS)
 ULONG		DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
 #elif defined (DEBUG_CUSTOM)
-ULONG		DebugPrintMask = DPRINT_WARNING|DPRINT_FILESYSTEM|DPRINT_MEMORY|DPRINT_LINUX;
+ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY |
+		                 DPRINT_REACTOS | DPRINT_WINDOWS | DPRINT_HWDETECT;
 #else //#elif defined (DEBUG_NONE)
 ULONG		DebugPrintMask = 0;
 #endif
@@ -200,6 +201,16 @@ VOID DebugPrintHeader(ULONG Mask)
 		DebugPrintChar('N');
 		DebugPrintChar('U');
 		DebugPrintChar('X');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
+	case DPRINT_WINDOWS:
+		DebugPrintChar('W');
+		DebugPrintChar('I');
+		DebugPrintChar('N');
+		DebugPrintChar('L');
+		DebugPrintChar('D');
+		DebugPrintChar('R');
 		DebugPrintChar(':');
 		DebugPrintChar(' ');
 		break;

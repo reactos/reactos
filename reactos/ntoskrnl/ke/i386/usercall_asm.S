@@ -138,14 +138,14 @@ StackOk:
     cli
 
     /* Now copy the NPX State */
-    mov ecx, [esi+FN_CONTROL_WORD]
-    mov [esp+FN_CONTROL_WORD], ecx
-    mov ecx, [esi+FN_STATUS_WORD]
-    mov [esp+FN_STATUS_WORD], ecx
-    mov ecx, [esi+FN_TAG_WORD]
-    mov [esp+FN_TAG_WORD], ecx
-    mov ecx, [esi+FN_DATA_SELECTOR]
-    mov [esp+FN_DATA_SELECTOR], ecx
+    mov ecx, [esi+FP_CONTROL_WORD]
+    mov [esp+FP_CONTROL_WORD], ecx
+    mov ecx, [esi+FP_STATUS_WORD]
+    mov [esp+FP_STATUS_WORD], ecx
+    mov ecx, [esi+FP_TAG_WORD]
+    mov [esp+FP_TAG_WORD], ecx
+    mov ecx, [esi+FP_DATA_SELECTOR]
+    mov [esp+FP_DATA_SELECTOR], ecx
     mov ecx, [esi+FN_CR0_NPX_STATE]
     mov [esp+FN_CR0_NPX_STATE], ecx
 
@@ -293,14 +293,14 @@ _NtCallbackReturn@12:
     sub ebx, NPX_FRAME_LENGTH
 
     /* Copy NPX Data */
-    mov edx, [esi+FN_CONTROL_WORD]
-    mov [ebx+FN_CONTROL_WORD], edx
-    mov edx, [esi+FN_STATUS_WORD]
-    mov [ebx+FN_STATUS_WORD], edx
-    mov edx, [esi+FN_TAG_WORD]
-    mov [ebx+FN_TAG_WORD], edx
-    mov edx, [esi+FN_DATA_SELECTOR]
-    mov [ebx+FN_DATA_SELECTOR], edx
+    mov edx, [esi+FP_CONTROL_WORD]
+    mov [ebx+FP_CONTROL_WORD], edx
+    mov edx, [esi+FP_STATUS_WORD]
+    mov [ebx+FP_STATUS_WORD], edx
+    mov edx, [esi+FP_TAG_WORD]
+    mov [ebx+FP_TAG_WORD], edx
+    mov edx, [esi+FP_DATA_SELECTOR]
+    mov [ebx+FP_DATA_SELECTOR], edx
     mov edx, [esi+FN_CR0_NPX_STATE]
     mov [ebx+FN_CR0_NPX_STATE], edx
 

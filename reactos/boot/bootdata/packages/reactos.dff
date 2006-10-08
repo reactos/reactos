@@ -16,9 +16,10 @@ Signature = "$ReactOS$"
 1 = system32
 2 = system32\drivers
 3 = media\fonts
-4 =
+4 = 
 5 = system32\drivers\etc
 6 = inf
+7 = bin
 
 .InfEnd
 
@@ -33,6 +34,7 @@ base\applications\cacls\cacls.exe                   1
 base\applications\calc\calc.exe                     1
 base\applications\control\control.exe               1
 base\applications\devmgr\devmgrapp.exe              1
+base\applications\devmgmt\devmgmt.exe               1
 base\applications\games\solitaire\sol.exe           1
 base\applications\games\winemine\winemine.exe       1
 base\applications\getfirefox\getfirefox.exe         1
@@ -128,6 +130,8 @@ dll\keyboard\kbdfr\kbdfr.dll                        1
 dll\keyboard\kbdgr\kbdgr.dll                        1
 dll\keyboard\kbdhe\kbdhe.dll                        1
 dll\keyboard\kbdhu\kbdhu.dll                        1
+dll\keyboard\kbdja\kbdja.dll                        1
+dll\keyboard\kbdpo\kbdpo.dll                        1
 dll\keyboard\kbdru\kbdru.dll                        1
 dll\keyboard\kbdse\kbdse.dll                        1
 dll\keyboard\kbdsg\kbdsg.dll                        1
@@ -135,9 +139,8 @@ dll\keyboard\kbdsk\kbdsk.dll                        1
 dll\keyboard\kbduk\kbduk.dll                        1
 dll\keyboard\kbdur\kbdur.dll                        1
 dll\keyboard\kbdus\kbdus.dll                        1
-dll\keyboard\kbdpo\kbdpo.dll                        1
 
-dll\ntdll\ntdll.dll                                 1    
+dll\ntdll\ntdll.dll                                 1
 
 dll\win32\advapi32\advapi32.dll                     1
 dll\win32\advpack\advpack.dll                       1
@@ -146,6 +149,7 @@ dll\win32\avifil32\avifil32.dll                     1
 dll\win32\cabinet\cabinet.dll                       1
 dll\win32\cards\cards.dll                           1
 dll\win32\cfgmgr32\cfgmgr32.dll                     1
+dll\win32\console\console.dll                       1
 dll\win32\comctl32\comctl32.dll                     1
 dll\win32\comdlg32\comdlg32.dll                     1
 dll\win32\crtdll\crtdll.dll                         1
@@ -208,6 +212,8 @@ dll\win32\shlwapi\shlwapi.dll                       1
 dll\win32\smdll\smdll.dll                           1
 dll\win32\syssetup\syssetup.dll                     1
 dll\win32\twain\twain_32.dll                        1
+dll\win32\ufat\ufat.dll                             1
+dll\win32\ufatx\ufatx.dll                           1   optional
 dll\win32\urlmon\urlmon.dll                         1
 dll\win32\user32\user32.dll                         1
 dll\win32\userenv\userenv.dll                       1
@@ -255,10 +261,11 @@ drivers\network\dd\pcnet\pcnet.sys                  2
 drivers\storage\pciide\pciide.sys                   2
 drivers\storage\pciidex\pciidex.sys                 2
 
-drivers\usb\miniport\usbohci\usbohci.sys            2
-drivers\usb\miniport\usbuhci\usbuhci.sys            2
-drivers\usb\usbhub\usbhub.sys                       2
-drivers\usb\usbport\usbport.sys                     2
+;drivers\usb\miniport\usbohci\usbohci.sys            2
+;drivers\usb\miniport\usbuhci\usbuhci.sys            2
+;drivers\usb\usbhub\usbhub.sys                       2
+;drivers\usb\usbport\usbport.sys                     2
+drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
 
 drivers\video\displays\vga\vgaddi.dll               1
 drivers\video\displays\framebuf\framebuf.dll        1
@@ -267,6 +274,26 @@ drivers\video\miniport\vbe\vbemp.sys                2
 drivers\video\videoprt\videoprt.sys                 2
 
 ; Media
+media\fonts\DejaVuSans.ttf                          3
+media\fonts\DejaVuSans-Bold.ttf                     3
+media\fonts\DejaVuSans-BoldOblique.ttf              3
+media\fonts\DejaVuSansCondensed.ttf                 3
+media\fonts\DejaVuSansCondensed-Bold.ttf            3
+media\fonts\DejaVuSansCondensed-Oblique.ttf         3
+media\fonts\DejaVuSans-ExtraLight.ttf               3
+media\fonts\DejaVuSansMono.ttf                      3
+media\fonts\DejaVuSansMono-Bold.ttf                 3
+media\fonts\DejaVuSansMono-BoldOblique.ttf          3
+media\fonts\DejaVuSansMono-Oblique.ttf              3
+media\fonts\DejaVuSans-Oblique.ttf                  3
+media\fonts\DejaVuSerif.ttf                         3
+media\fonts\DejaVuSerif-Bold.ttf                    3
+media\fonts\DejaVuSerif-BoldOblique.ttf             3
+media\fonts\DejaVuSerifCondensed.ttf                3
+media\fonts\DejaVuSerifCondensed-Bold.ttf           3
+media\fonts\DejaVuSerifCondensed-BoldOblique.ttf    3
+media\fonts\DejaVuSerifCondensed-Oblique.ttf        3
+media\fonts\DejaVuSerif-Oblique.ttf                 3
 media\fonts\c0419bt_.ttf                            3
 media\fonts\c0582bt_.ttf                            3
 media\fonts\c0583bt_.ttf                            3
@@ -366,6 +393,7 @@ media\inf\usbport.inf                               6
 media\inf\usb.inf                                   6
 media\inf\usbstor.inf                               6
 media\inf\xboxdisp.inf                              6
+;boot\bootdata\unattend.inf                         6   optional
 
 
 ; Subsystems
@@ -378,6 +406,25 @@ subsystems\win\winsrv\winsrv.dll                    1   optional
 subsystems\ntvdm\ntvdm.exe                          1
 subsystems\win32\win32k\win32k.sys                  1
 
+
+; Winetests
+regtests\winetests\advapi32\advapi32_winetest.exe   7
+regtests\winetests\cabinet\cabinet_winetest.exe     7
+regtests\winetests\comctl32\comctl32_winetest.exe   7
+regtests\winetests\gdi32\gdi32_winetest.exe         7
+regtests\winetests\icmp\icmp_winetest.exe           7 
+regtests\winetests\kernel32\kernel32_winetest.exe   7
+regtests\winetests\lz32\lz32_winetest.exe           7
+regtests\winetests\msi\msi_winetest.exe             7
+regtests\winetests\msvcrt\msvcrt_winetest.exe       7
+regtests\winetests\ntdll\ntdll_winetest.exe         7
+regtests\winetests\powrprof\powrprof_winetest.exe   7
+regtests\winetests\psapi\psapi_winetest.exe         7
+regtests\winetests\setupapi\setupapi_winetest.exe   7
+regtests\winetests\shell32\shell32_winetest.exe     7
+regtests\winetests\shlwapi\shlwapi_winetest.exe     7
+regtests\winetests\user32\user32_winetest.exe       7
+regtests\winetests\version\version_winetest.exe     7
 
 ; Modules
 modules\os2\server\os2srv.dll                       1   optional
