@@ -15,136 +15,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* MACROS *******************************************************************/
-
-#define FS_VOLUME_BUFFER_SIZE (MAX_PATH + sizeof(FILE_FS_VOLUME_INFORMATION))
-
 /* FUNCTIONS ****************************************************************/
-
-static 
-NTSTATUS
-STDCALL
-INIT_FUNCTION
-DiskQueryRoutine(PWSTR ValueName,
-                 ULONG ValueType,
-                 PVOID ValueData,
-                 ULONG ValueLength,
-                 PVOID Context,
-                 PVOID EntryContext)
-{
-  PLIST_ENTRY ListHead = (PLIST_ENTRY)Context;
-  PULONG GlobalDiskCount = (PULONG)EntryContext;
-  PDISKENTRY DiskEntry;
-  UNICODE_STRING NameU;
-
-  if (ValueType == REG_SZ &&
-      ValueLength == 20 * sizeof(WCHAR))
-    {
-      DiskEntry = ExAllocatePool(PagedPool, sizeof(DISKENTRY));
-      if (DiskEntry == NULL)
-        {
-          return STATUS_NO_MEMORY;
-        }
-      DiskEntry->DiskNumber = (*GlobalDiskCount)++;
-
-      NameU.Buffer = (PWCHAR)ValueData;
-      NameU.Length = NameU.MaximumLength = 8 * sizeof(WCHAR);
-      RtlUnicodeStringToInteger(&NameU, 16, &DiskEntry->Checksum);
-
-      NameU.Buffer = (PWCHAR)ValueData + 9;
-      RtlUnicodeStringToInteger(&NameU, 16, &DiskEntry->Signature);
-
-      InsertTailList(ListHead, &DiskEntry->ListEntry);
-    }
-
-  return STATUS_SUCCESS;
-}
-
-#define ROOT_NAME   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter"
-
-static VOID INIT_FUNCTION
-IopEnumerateBiosDisks(PLIST_ENTRY ListHead)
-{
-  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-  WCHAR Name[255];
-  ULONG AdapterCount;
-  ULONG ControllerCount;
-  ULONG DiskCount;
-  NTSTATUS Status;
-  ULONG GlobalDiskCount=0;
-
- 
-  memset(QueryTable, 0, sizeof(QueryTable));
-  QueryTable[0].Name = L"Identifier";
-  QueryTable[0].QueryRoutine = DiskQueryRoutine;
-  QueryTable[0].EntryContext = (PVOID)&GlobalDiskCount;
-
-  AdapterCount = 0;
-  while (1)
-    {
-      swprintf(Name, L"%s\\%lu", ROOT_NAME, AdapterCount);
-      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-                                      Name,
-                                      &QueryTable[1],
-                                      NULL,
-                                      NULL);
-      if (!NT_SUCCESS(Status))
-        {
-            break;
-        }
-        
-      swprintf(Name, L"%s\\%lu\\DiskController", ROOT_NAME, AdapterCount);
-      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-                                      Name,
-                                      &QueryTable[1],
-                                      NULL,
-                                      NULL);
-      if (NT_SUCCESS(Status))
-        {
-          ControllerCount = 0;
-          while (1)
-            {
-              swprintf(Name, L"%s\\%lu\\DiskController\\%lu", ROOT_NAME, AdapterCount, ControllerCount);
-              Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-                                              Name,
-                                              &QueryTable[1],
-                                              NULL,
-                                              NULL);
-              if (!NT_SUCCESS(Status))
-                {
-                    break;
-                }
-                
-              swprintf(Name, L"%s\\%lu\\DiskController\\%lu\\DiskPeripheral", ROOT_NAME, AdapterCount, ControllerCount);
-              Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-                                              Name,
-                                              &QueryTable[1],
-                                              NULL,
-                                              NULL);
-              if (NT_SUCCESS(Status))
-                {
-                  DiskCount = 0;
-                  while (1)
-                    {
-                      swprintf(Name, L"%s\\%lu\\DiskController\\%lu\\DiskPeripheral\\%lu", ROOT_NAME, AdapterCount, ControllerCount, DiskCount);
-                      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-                                                      Name,
-                                                      QueryTable,
-                                                      (PVOID)ListHead,
-                                                      NULL);
-                      if (!NT_SUCCESS(Status))
-                        {
-                          break;
-                        }
-                      DiskCount++;
-                    }
-                }
-              ControllerCount++;
-            }
-        }
-      AdapterCount++;
-    }
-}
 
 BOOLEAN
 INIT_FUNCTION
@@ -363,7 +234,7 @@ NTSTATUS
 INIT_FUNCTION
 NTAPI
 IopAssignArcNamesToDisk(IN PDEVICE_OBJECT DeviceObject,
-                        IN ULONG RDisk,
+                        IN PCHAR BootArcName,
                         IN ULONG DiskNumber,
                         IN ULONG PartitionCount,
                         IN PBOOLEAN FoundHdBoot)
@@ -375,10 +246,6 @@ IopAssignArcNamesToDisk(IN PDEVICE_OBJECT DeviceObject,
     UNICODE_STRING DeviceName, ArcName, BootPath;
     ULONG i;
     NTSTATUS Status;
-
-    /* HACK: Build the ARC name that FreeLDR should've given us */
-    CHAR BootArcName[256]; // should come from FREELDR
-    sprintf(BootArcName, "multi(0)disk(0)rdisk(%lu)", RDisk);
 
     /* Set default */
     *FoundHdBoot = FALSE;
@@ -578,39 +445,39 @@ NTSTATUS INIT_FUNCTION
 IoCreateArcNames(VOID)
 {
     PCONFIGURATION_INFORMATION ConfigInfo;
-    ULONG i, RDiskNumber;
+    ULONG i;
     NTSTATUS Status;
-    LIST_ENTRY BiosDiskListHead;
+    PLIST_ENTRY BiosDiskListHead, Entry;
     LIST_ENTRY DiskListHead;
-    PLIST_ENTRY Entry;
-    PDISKENTRY BiosDiskEntry;
+    PARC_DISK_SIGNATURE ArcDiskEntry;
     PDISKENTRY DiskEntry;
-    BOOLEAN FoundBoot;
+    BOOLEAN FoundBoot = FALSE;
     PULONG Buffer;
 
     ConfigInfo = IoGetConfigurationInformation();
 
-    /* create ARC names for hard disk drives */
-    InitializeListHead(&BiosDiskListHead);
+    /* Get the boot ARC disk list */
+    BiosDiskListHead = &KeLoaderBlock->ArcDiskInformation->
+                        DiskSignatureListHead;
+
+    /* Enumerate system disks */
     InitializeListHead(&DiskListHead);
-    IopEnumerateBiosDisks(&BiosDiskListHead);
     IopEnumerateDisks(&DiskListHead);
 
-    RDiskNumber = 0;
-    while (!IsListEmpty(&BiosDiskListHead))
+    while (!IsListEmpty(BiosDiskListHead))
     {
-        Entry = RemoveHeadList(&BiosDiskListHead);
-        BiosDiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+        Entry = RemoveHeadList(BiosDiskListHead);
+        ArcDiskEntry = CONTAINING_RECORD(Entry, ARC_DISK_SIGNATURE, ListEntry);
         Entry = DiskListHead.Flink;
         while (Entry != &DiskListHead)
         {
             DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
-            if (DiskEntry->Checksum == BiosDiskEntry->Checksum &&
-                DiskEntry->Signature == BiosDiskEntry->Signature)
+            DPRINT1("Entry: %s\n", ArcDiskEntry->ArcName);
+            if (DiskEntry->Checksum == ArcDiskEntry->CheckSum &&
+                DiskEntry->Signature == ArcDiskEntry->Signature)
             {
-
                 Status = IopAssignArcNamesToDisk(DiskEntry->DeviceObject,
-                                                 RDiskNumber,
+                                                 ArcDiskEntry->ArcName,
                                                  DiskEntry->DiskNumber,
                                                  DiskEntry->PartitionCount,
                                                  &FoundBoot);
@@ -621,8 +488,6 @@ IoCreateArcNames(VOID)
             }
             Entry = Entry->Flink;
         }
-        RDiskNumber++;
-        ExFreePool(BiosDiskEntry);
     }
 
     while (!IsListEmpty(&DiskListHead))
