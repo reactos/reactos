@@ -52,6 +52,7 @@
 		<file>reactos.c</file>
 	</directory>
 	<directory name="rtl">
+		<file>libsupp.c</file>
 		<file>list.c</file>
 	</directory>
 	<directory name="ui">
