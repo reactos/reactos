@@ -8,12 +8,16 @@
  * PROGRAMMERS:     Eric Kohl (ekohl@rz-online.de)
  */
 
-
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
+
+/* GLOBALS *******************************************************************/
+
+UNICODE_STRING IoArcHalDeviceName, IoArcBootDeviceName;
+PCHAR IoLoaderArcBootDeviceName;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -78,12 +82,16 @@ IopApplyRosCdromArcHack(IN ULONG i)
     return FALSE;
 }
 
-VOID
+BOOLEAN
 INIT_FUNCTION
 NTAPI
-IopEnumerateDisks(IN PLIST_ENTRY ListHead)
+IopGetDiskInformation(IN ULONG i,
+                      OUT PULONG CheckSum,
+                      OUT PULONG Signature,
+                      OUT PULONG PartitionCount,
+                      OUT PDEVICE_OBJECT *DiskDeviceObject)
 {
-    ULONG i, j;
+    ULONG j, Checksum;
     ANSI_STRING TempString;
     CHAR Buffer[256];
     UNICODE_STRING DeviceName;
@@ -97,237 +105,126 @@ IopEnumerateDisks(IN PLIST_ENTRY ListHead)
     IO_STATUS_BLOCK StatusBlock;
     LARGE_INTEGER PartitionOffset;
     PPARTITION_SECTOR PartitionBuffer;
-    PDISKENTRY DiskEntry;
 
-    /* Loop every detected disk */
-    for (i = 0; i < IoGetConfigurationInformation()->DiskCount; i++)
-    {
-        /* Build the name */
-        sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", i);
-
-        /* Convert it to Unicode */
-        RtlInitAnsiString(&TempString, Buffer);
-        Status = RtlAnsiStringToUnicodeString(&DeviceName, &TempString, TRUE);
-        if (!NT_SUCCESS(Status)) continue;
-
-        /* Get the device pointer */
-        Status = IoGetDeviceObjectPointer(&DeviceName,
-                                          FILE_READ_DATA,
-                                          &FileObject,
-                                          &DeviceObject);
-
-        /* Free the string */
-        RtlFreeUnicodeString(&DeviceName);
-
-        /* Move on if we failed */
-        if (!NT_SUCCESS(Status)) continue;
-
-        /* Allocate the ROS disk Entry */
-        DiskEntry = ExAllocatePoolWithTag(PagedPool, sizeof(DISKENTRY), TAG_IO);
-        DiskEntry->DiskNumber = i;
-        DiskEntry->DeviceObject = DeviceObject;
-
-        /* Build an IRP to determine the sector size */
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
-        Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
-                                            DeviceObject,
-                                            NULL,
-                                            0,
-                                            &DiskGeometry,
-                                            sizeof(DISK_GEOMETRY),
-                                            FALSE,
-                                            &Event,
-                                            &StatusBlock);
-        if (!Irp)
-        {
-            /* Try again */
-            ObDereferenceObject(FileObject);
-            continue;
-        }
-
-        /* Call the driver and check if we have to wait on it */
-        Status = IoCallDriver(DeviceObject, Irp);
-        if (Status == STATUS_PENDING)
-        {
-            /* Wait on the driver */
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-            Status = StatusBlock.Status;
-        }
-
-        /* Check if we failed */
-        if (!NT_SUCCESS(Status))
-        {
-            /* Try again */
-            ObDereferenceObject(FileObject);
-            continue;
-        }
-
-        /* Read the partition table */
-        Status = IoReadPartitionTable(DeviceObject,
-                                      DiskGeometry.BytesPerSector,
-                                      TRUE,
-                                      &DriveLayout);
-
-        /* Dereference the file object */
-        ObDereferenceObject(FileObject);
-        if (!NT_SUCCESS(Status)) continue;
-
-        /* Set the offset to 0 */
-        PartitionOffset.QuadPart = 0;
-
-        /* Allocate a buffer for the partition */
-        PartitionBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                                DiskGeometry.BytesPerSector,
-                                                TAG_IO);
-        if (!PartitionBuffer) continue;
-
-        /* Build an IRP to read the partition sector */
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
-        Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-                                           DeviceObject,
-                                           PartitionBuffer,
-                                           DiskGeometry.BytesPerSector,
-                                           &PartitionOffset,
-                                           &Event,
-                                           &StatusBlock);
-
-        /* Call the driver and check if we have to wait */
-        Status = IoCallDriver(DeviceObject, Irp);
-        if (Status == STATUS_PENDING)
-        {
-            /* Wait for completion */
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-            Status = StatusBlock.Status;
-        }
-
-        /* Check if we failed */
-        if (!NT_SUCCESS(Status))
-        {
-            /* Try again */
-            ExFreePool(PartitionBuffer);
-            ExFreePool(DriveLayout);
-            continue;
-        }
-
-        /* Calculate the MBR checksum */
-        DiskEntry->Checksum = 0;
-        for (j = 0; j < 128; j++)
-        {
-            DiskEntry->Checksum += ((PULONG)PartitionBuffer)[j];
-        }
-
-        /* Save the signature and checksum */
-        DiskEntry->Checksum = ~DiskEntry->Checksum + 1;
-        DiskEntry->Signature = DriveLayout->Signature;
-        DiskEntry->PartitionCount = DriveLayout->PartitionCount;
-
-        /* Insert it into the list */
-        InsertTailList(ListHead, &DiskEntry->ListEntry);
-
-        /* Free the buffer */
-        ExFreePool(PartitionBuffer);
-        ExFreePool(DriveLayout);
-    }
-}
-
-NTSTATUS
-INIT_FUNCTION
-NTAPI
-IopAssignArcNamesToDisk(IN PDEVICE_OBJECT DeviceObject,
-                        IN PCHAR BootArcName,
-                        IN ULONG DiskNumber,
-                        IN ULONG PartitionCount,
-                        IN PBOOLEAN FoundHdBoot)
-{
-    CHAR Buffer[256];
-    CHAR ArcBuffer[256];
-    ANSI_STRING TempString, ArcNameString, BootString;
-    ANSI_STRING ArcBootString, ArcSystemString;
-    UNICODE_STRING DeviceName, ArcName, BootPath;
-    ULONG i;
-    NTSTATUS Status;
-
-    /* Set default */
-    *FoundHdBoot = FALSE;
-
-    /* Build the boot strings */
-    RtlInitAnsiString(&ArcBootString, KeLoaderBlock->ArcBootDeviceName);
-    RtlInitAnsiString(&ArcSystemString, KeLoaderBlock->ArcHalDeviceName);
-
-    /* Build the NT Device Name */
-    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", DiskNumber);
-
-    /* Convert it to unicode */
-    RtlInitAnsiString(&TempString, Buffer);
-    Status = RtlAnsiStringToUnicodeString(&DeviceName, &TempString, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    /* Build the ARC Device Name */
-    sprintf(ArcBuffer, "\\ArcName\\%s", BootArcName);
+    /* Build the name */
+    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", i);
 
     /* Convert it to Unicode */
-    RtlInitAnsiString(&ArcNameString, ArcBuffer);
-    Status = RtlAnsiStringToUnicodeString(&ArcName, &ArcNameString, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    RtlInitAnsiString(&TempString, Buffer);
+    Status = RtlAnsiStringToUnicodeString(&DeviceName, &TempString, TRUE);
+    if (!NT_SUCCESS(Status)) return FALSE;
 
-    /* Create the symbolic link and free the strings */
-    IoAssignArcName(&ArcName, &DeviceName);
-    RtlFreeUnicodeString(&ArcName);
+    /* Get the device pointer */
+    Status = IoGetDeviceObjectPointer(&DeviceName,
+                                      FILE_READ_DATA,
+                                      &FileObject,
+                                      &DeviceObject);
+    *DiskDeviceObject = DeviceObject;
+
+    /* Free the string */
     RtlFreeUnicodeString(&DeviceName);
 
-    /* Loop all the partitions */
-    for (i = 0; i < PartitionCount; i++)
+    /* Move on if we failed */
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Build an IRP to determine the sector size */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
+                                        DeviceObject,
+                                        NULL,
+                                        0,
+                                        &DiskGeometry,
+                                        sizeof(DISK_GEOMETRY),
+                                        FALSE,
+                                        &Event,
+                                        &StatusBlock);
+    if (!Irp)
     {
-        /* Build the partition device name */
-        sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu", DiskNumber, i+1);
-
-        /* Convert it to Unicode */
-        RtlInitAnsiString(&TempString, Buffer);
-        Status = RtlAnsiStringToUnicodeString(&DeviceName, &TempString, TRUE);
-        if (!NT_SUCCESS(Status)) continue;
-
-        /* Build the partial ARC name for this partition */
-        sprintf(ArcBuffer, "%spartition(%lu)", BootArcName, i + 1);
-        RtlInitAnsiString(&ArcNameString, ArcBuffer);
-
-        /* Check if this is the boot device */
-        if (RtlEqualString(&ArcNameString, &ArcBootString, TRUE))
-        {
-            /* Remember that we found a Hard Disk Boot Device */
-            *FoundHdBoot = TRUE;
-        }
-
-        /* Check if it's the system boot partition */
-        if (RtlEqualString(&ArcNameString, &ArcSystemString, TRUE))
-        {
-            /* It is, create a Unicode string for it */
-            RtlInitAnsiString(&BootString, KeLoaderBlock->NtHalPathName);
-            Status = RtlAnsiStringToUnicodeString(&BootPath, &BootString, TRUE);
-            if (NT_SUCCESS(Status))
-            {
-                /* FIXME: Save in registry */
-
-                /* Free the string now */
-                RtlFreeUnicodeString(&BootPath);
-            }
-        }
-
-        /* Build the full ARC name */
-        sprintf(Buffer, "\\ArcName\\%spartition(%lu)", BootArcName, i + 1);
-
-        /* Convert it to Unicode */
-        RtlInitAnsiString(&ArcNameString, Buffer);
-        Status = RtlAnsiStringToUnicodeString(&ArcName, &ArcNameString, TRUE);
-        if (!NT_SUCCESS(Status)) continue;
-
-        /* Create the symbolic link and free the strings */
-        IoAssignArcName(&ArcName, &DeviceName);
-        RtlFreeUnicodeString(&ArcName);
-        RtlFreeUnicodeString(&DeviceName);
+        /* Try again */
+        ObDereferenceObject(FileObject);
+        return FALSE;
     }
 
-    /* Return success */
-    return STATUS_SUCCESS;
+    /* Call the driver and check if we have to wait on it */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait on the driver */
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Status = StatusBlock.Status;
+    }
+
+    /* Check if we failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Try again */
+        ObDereferenceObject(FileObject);
+        return FALSE;
+    }
+
+    /* Read the partition table */
+    Status = IoReadPartitionTable(DeviceObject,
+                                  DiskGeometry.BytesPerSector,
+                                  TRUE,
+                                  &DriveLayout);
+
+    /* Dereference the file object */
+    ObDereferenceObject(FileObject);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Set the offset to 0 */
+    PartitionOffset.QuadPart = 0;
+
+    /* Allocate a buffer for the partition */
+    PartitionBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                            DiskGeometry.BytesPerSector,
+                                            TAG_IO);
+    if (!PartitionBuffer) return FALSE;
+
+    /* Build an IRP to read the partition sector */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+                                       DeviceObject,
+                                       PartitionBuffer,
+                                       DiskGeometry.BytesPerSector,
+                                       &PartitionOffset,
+                                       &Event,
+                                       &StatusBlock);
+
+    /* Call the driver and check if we have to wait */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait for completion */
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Status = StatusBlock.Status;
+    }
+
+    /* Check if we failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Try again */
+        ExFreePool(PartitionBuffer);
+        ExFreePool(DriveLayout);
+        return FALSE;
+    }
+
+    /* Calculate the MBR checksum */
+    Checksum = 0;
+    for (j = 0; j < 128; j++)
+    {
+        Checksum += ((PULONG)PartitionBuffer)[j];
+    }
+
+    /* Save the signature and checksum */
+    *CheckSum = ~Checksum + 1;
+    *Signature = DriveLayout->Signature;
+    *PartitionCount = DriveLayout->PartitionCount;
+
+    /* Free the buffer */
+    ExFreePool(PartitionBuffer);
+    ExFreePool(DriveLayout);
+    return TRUE;
 }
 
 BOOLEAN
@@ -441,78 +338,188 @@ IopAssignArcNamesToCdrom(IN PULONG Buffer,
     return FALSE;
 }
 
-NTSTATUS INIT_FUNCTION
+NTSTATUS
+INIT_FUNCTION
 IoCreateArcNames(VOID)
 {
-    PCONFIGURATION_INFORMATION ConfigInfo;
-    ULONG i;
-    NTSTATUS Status;
-    PLIST_ENTRY BiosDiskListHead, Entry;
-    LIST_ENTRY DiskListHead;
+    PLOADER_PARAMETER_BLOCK LoaderBlock = KeLoaderBlock;
+    PCONFIGURATION_INFORMATION ConfigInfo = IoGetConfigurationInformation();
+    PARC_DISK_INFORMATION ArcDiskInfo = LoaderBlock->ArcDiskInformation;
+    CHAR ArcBuffer[256], Buffer[256];
+    ANSI_STRING ArcBootString, ArcSystemString, ArcString, TempString, BootString;
+    UNICODE_STRING ArcName, BootPath, DeviceName;
+    BOOLEAN SingleDisk;
+    ULONG i, j, Length;
+    PDEVICE_OBJECT DeviceObject;
+    ULONG Signature, Checksum, PartitionCount;
+    PLIST_ENTRY NextEntry;
     PARC_DISK_SIGNATURE ArcDiskEntry;
-    PDISKENTRY DiskEntry;
+    NTSTATUS Status;
     BOOLEAN FoundBoot = FALSE;
-    PULONG Buffer;
+    PULONG PartitionBuffer;
 
-    ConfigInfo = IoGetConfigurationInformation();
+    /* Check if we only have one disk on the machine */
+    SingleDisk = ArcDiskInfo->DiskSignatureListHead.Flink->Flink ==
+                 (&ArcDiskInfo->DiskSignatureListHead);
 
-    /* Get the boot ARC disk list */
-    BiosDiskListHead = &KeLoaderBlock->ArcDiskInformation->
-                        DiskSignatureListHead;
+    /* Create the global HAL partition name */
+    sprintf(ArcBuffer, "\\ArcName\\%s", LoaderBlock->ArcHalDeviceName);
+    RtlInitAnsiString(&ArcString, ArcBuffer);
+    RtlAnsiStringToUnicodeString(&IoArcHalDeviceName, &ArcString, TRUE);
 
-    /* Enumerate system disks */
-    InitializeListHead(&DiskListHead);
-    IopEnumerateDisks(&DiskListHead);
+    /* Create the global system partition name */
+    sprintf(ArcBuffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+    RtlInitAnsiString(&ArcString, ArcBuffer);
+    RtlAnsiStringToUnicodeString(&IoArcBootDeviceName, &ArcString, TRUE);
 
-    while (!IsListEmpty(BiosDiskListHead))
+    /* Allocate memory for the string */
+    Length = strlen(LoaderBlock->ArcBootDeviceName) + sizeof(ANSI_NULL);
+    IoLoaderArcBootDeviceName = ExAllocatePoolWithTag(PagedPool,
+                                                      Length,
+                                                      TAG_IO);
+    if (IoLoaderArcBootDeviceName)
     {
-        Entry = RemoveHeadList(BiosDiskListHead);
-        ArcDiskEntry = CONTAINING_RECORD(Entry, ARC_DISK_SIGNATURE, ListEntry);
-        Entry = DiskListHead.Flink;
-        while (Entry != &DiskListHead)
-        {
-            DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
-            DPRINT1("Entry: %s\n", ArcDiskEntry->ArcName);
-            if (DiskEntry->Checksum == ArcDiskEntry->CheckSum &&
-                DiskEntry->Signature == ArcDiskEntry->Signature)
-            {
-                Status = IopAssignArcNamesToDisk(DiskEntry->DeviceObject,
-                                                 ArcDiskEntry->ArcName,
-                                                 DiskEntry->DiskNumber,
-                                                 DiskEntry->PartitionCount,
-                                                 &FoundBoot);
-
-                RemoveEntryList(&DiskEntry->ListEntry);
-                ExFreePool(DiskEntry);
-                break;
-            }
-            Entry = Entry->Flink;
-        }
+        /* Copy the name */
+        RtlMoveMemory(IoLoaderArcBootDeviceName,
+                      LoaderBlock->ArcBootDeviceName,
+                      Length);
     }
 
-    while (!IsListEmpty(&DiskListHead))
+    /* Check if we only found a disk, but we're booting from CD-ROM */
+    if ((SingleDisk) && strstr(LoaderBlock->ArcBootDeviceName, "cdrom"))
     {
-        Entry = RemoveHeadList(&DiskListHead);
-        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
-        ExFreePool(DiskEntry);
+        /* Then disable single-disk mode, since there's a CD drive out there */
+        SingleDisk = FALSE;
+    }
+
+    /* Build the boot strings */
+    RtlInitAnsiString(&ArcBootString, LoaderBlock->ArcBootDeviceName);
+    RtlInitAnsiString(&ArcSystemString, LoaderBlock->ArcHalDeviceName);
+
+    /* Loop every detected disk */
+    for (i = 0; i < ConfigInfo->DiskCount; i++)
+    {
+        /* Get information about the disk */
+        if (!IopGetDiskInformation(i,
+                                   &Checksum,
+                                   &Signature,
+                                   &PartitionCount,
+                                   &DeviceObject))
+        {
+            /* Skip this disk */
+            continue;
+        }
+
+        /* Loop ARC disks */
+        for (NextEntry = ArcDiskInfo->DiskSignatureListHead.Flink;
+             NextEntry != &ArcDiskInfo->DiskSignatureListHead;
+             NextEntry = NextEntry->Flink)
+        {
+            /* Get the current ARC disk signature entry */
+            ArcDiskEntry = CONTAINING_RECORD(NextEntry,
+                                             ARC_DISK_SIGNATURE,
+                                             ListEntry);
+
+            /*
+             * Now check if the signature and checksum match, unless this is
+             * the only disk that was in the ARC list, and also in the device
+             * tree, in which case the check is bypassed and we accept the disk
+             */
+            if (((SingleDisk) && (ConfigInfo->DiskCount == 1)) ||
+                ((Checksum == ArcDiskEntry->CheckSum) &&
+                 (Signature == ArcDiskEntry->Signature)))
+            {
+                /* Build the NT Device Name */
+                sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", i);
+
+                /* Convert it to Unicode */
+                RtlInitAnsiString(&TempString, Buffer);
+                Status = RtlAnsiStringToUnicodeString(&DeviceName, &TempString, TRUE);
+                if (!NT_SUCCESS(Status)) continue;
+
+                /* Build the ARC Device Name */
+                sprintf(ArcBuffer, "\\ArcName\\%s", ArcDiskEntry->ArcName);
+
+                /* Convert it to Unicode */
+                RtlInitAnsiString(&ArcString, ArcBuffer);
+                Status = RtlAnsiStringToUnicodeString(&ArcName, &ArcString, TRUE);
+                if (!NT_SUCCESS(Status)) continue;
+
+                /* Create the symbolic link and free the strings */
+                IoAssignArcName(&ArcName, &DeviceName);
+                RtlFreeUnicodeString(&ArcName);
+                RtlFreeUnicodeString(&DeviceName);
+
+                /* Loop all the partitions */
+                for (j = 0; j < PartitionCount; j++)
+                {
+                    /* Build the partition device name */
+                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu", i, j + 1);
+
+                    /* Convert it to Unicode */
+                    RtlInitAnsiString(&TempString, Buffer);
+                    Status = RtlAnsiStringToUnicodeString(&DeviceName, &TempString, TRUE);
+                    if (!NT_SUCCESS(Status)) continue;
+
+                    /* Build the partial ARC name for this partition */
+                    sprintf(ArcBuffer, "%spartition(%lu)", ArcDiskEntry->ArcName, j + 1);
+                    RtlInitAnsiString(&ArcString, ArcBuffer);
+
+                    /* Check if this is the boot device */
+                    if (RtlEqualString(&ArcString, &ArcBootString, TRUE))
+                    {
+                        /* Remember that we found a Hard Disk Boot Device */
+                        FoundBoot = TRUE;
+                    }
+
+                    /* Check if it's the system boot partition */
+                    if (RtlEqualString(&ArcString, &ArcSystemString, TRUE))
+                    {
+                        /* It is, create a Unicode string for it */
+                        RtlInitAnsiString(&BootString, LoaderBlock->NtHalPathName);
+                        Status = RtlAnsiStringToUnicodeString(&BootPath, &BootString, TRUE);
+                        if (NT_SUCCESS(Status))
+                        {
+                            /* FIXME: Save in registry */
+
+                            /* Free the string now */
+                            RtlFreeUnicodeString(&BootPath);
+                        }
+                    }
+
+                    /* Build the full ARC name */
+                    sprintf(Buffer, "\\ArcName\\%spartition(%lu)", ArcDiskEntry->ArcName, j + 1);
+
+                    /* Convert it to Unicode */
+                    RtlInitAnsiString(&ArcString, Buffer);
+                    Status = RtlAnsiStringToUnicodeString(&ArcName, &ArcString, TRUE);
+                    if (!NT_SUCCESS(Status)) continue;
+
+                    /* Create the symbolic link and free the strings */
+                    IoAssignArcName(&ArcName, &DeviceName);
+                    RtlFreeUnicodeString(&ArcName);
+                    RtlFreeUnicodeString(&DeviceName);
+                }
+            }
+        }
     }
 
     /* Check if we didn't find the boot disk */
     if (!FoundBoot)
     {
         /* Allocate a buffer for the CD-ROM MBR */
-        Buffer = ExAllocatePoolWithTag(NonPagedPool, 2048, TAG_IO);
-        if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
+        PartitionBuffer = ExAllocatePoolWithTag(NonPagedPool, 2048, TAG_IO);
+        if (!PartitionBuffer) return STATUS_INSUFFICIENT_RESOURCES;
 
         /* Loop every CD-ROM */
         for (i = 0; i < ConfigInfo->CdRomCount; i++)
         {
             /* Give it an ARC name */
-            if (IopAssignArcNamesToCdrom(Buffer, i)) break;
+            if (IopAssignArcNamesToCdrom(PartitionBuffer, i)) break;
         }
 
         /* Free the buffer */
-        ExFreePool(Buffer);
+        ExFreePool(PartitionBuffer);
     }
 
     /* Return success */
