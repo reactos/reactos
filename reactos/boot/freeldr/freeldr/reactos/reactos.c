@@ -30,6 +30,9 @@ LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded f
 char					reactos_module_strings[64][256];	// Array to hold module names
 unsigned long			reactos_memory_map_descriptor_size;
 memory_map_t			reactos_memory_map[32];		// Memory map
+ARC_DISK_SIGNATURE      reactos_arc_disk_info[32]; // ARC Disk Information
+char                    reactos_arc_strings[32][256];
+unsigned long           reactos_disk_count = 0;
 
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
 
@@ -605,6 +608,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	LoaderBlock.CommandLine = (unsigned long)reactos_kernel_cmdline;
 	LoaderBlock.ModsCount = 0;
 	LoaderBlock.ModsAddr = (unsigned long)reactos_modules;
+    LoaderBlock.DrivesAddr = (unsigned long)reactos_arc_disk_info;
 	LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&reactos_memory_map, 32) * sizeof(memory_map_t);
 	if (LoaderBlock.MmapLength)
 	{
@@ -692,6 +696,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     UiDrawProgressBarCenter(5, 100, szLoadingMsg);
 
 	if (AcpiPresent) LoaderBlock.Flags |= MB_FLAGS_ACPI_TABLE;
+    LoaderBlock.DrivesCount = reactos_disk_count;
 
 	UiDrawStatusText("Loading...");
 

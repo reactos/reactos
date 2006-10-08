@@ -120,6 +120,9 @@ typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
 static WCHAR Hex[] = L"0123456789ABCDEF";
 static unsigned int delay_count = 1;
 
+extern ULONG reactos_disk_count;
+extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
+extern char reactos_arc_strings[32][256];
 
 /* FUNCTIONS ****************************************************************/
 
@@ -512,6 +515,7 @@ SetHarddiskIdentifier(FRLDRHKEY DiskKey,
   ULONG Checksum;
   ULONG Signature;
   WCHAR Identifier[20];
+  CHAR ArcName[256];
   LONG Error;
 
   /* Read the MBR */
@@ -535,6 +539,15 @@ SetHarddiskIdentifier(FRLDRHKEY DiskKey,
     }
   Checksum = ~Checksum + 1;
   DbgPrint((DPRINT_HWDETECT, "Checksum: %x\n", Checksum));
+
+  /* Fill out the ARC disk block */
+  reactos_arc_disk_info[reactos_disk_count].Signature = Signature;
+  reactos_arc_disk_info[reactos_disk_count].CheckSum = Checksum;
+  sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)", reactos_disk_count);
+  strcpy(reactos_arc_strings[reactos_disk_count], ArcName);
+  reactos_arc_disk_info[reactos_disk_count].ArcName =
+      reactos_arc_strings[reactos_disk_count];
+  reactos_disk_count++;
 
   /* Convert checksum and signature to identifier string */
   Identifier[0] = Hex[(Checksum >> 28) & 0x0F];

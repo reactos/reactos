@@ -18,6 +18,7 @@
 LOADER_MODULE KeLoaderModules[64];
 ULONG KeLoaderModuleCount;
 static CHAR KeLoaderModuleStrings[64][256];
+static ARC_DISK_SIGNATURE KeArcDiskInfo[32];
 
 /* FreeLDR Memory Data */
 ADDRESS_RANGE KeMemoryMap[64];
@@ -48,6 +49,9 @@ MEMORY_ALLOCATION_DESCRIPTOR BldrMemoryDescriptors[64];
 WCHAR BldrModuleStrings[64][260];
 NLS_DATA_BLOCK BldrNlsDataBlock;
 SETUP_LOADER_BLOCK BldrSetupBlock;
+ARC_DISK_INFORMATION BldrArcDiskInfo;
+CHAR BldrArcNames[32][256];
+ARC_DISK_SIGNATURE BldrDiskInfo[32];
 
 /* FUNCTIONS *****************************************************************/
 
@@ -65,6 +69,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     PCHAR DriverName;
     PCHAR BootPath, HalPath;
     CHAR CommandLine[256];
+    PARC_DISK_SIGNATURE RosDiskInfo, ArcDiskInfo;
 
     /* First get some kernel-loader globals */
     AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
@@ -79,6 +84,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     /* Set the NLS Data block */
     LoaderBlock->NlsData = &BldrNlsDataBlock;
 
+    /* Set the ARC Data block */
+    LoaderBlock->ArcDiskInformation = &BldrArcDiskInfo;
+
     /* Assume this is from FreeLDR's SetupLdr */
     LoaderBlock->SetupLdrBlock = &BldrSetupBlock;
 
@@ -86,6 +94,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     InitializeListHead(&LoaderBlock->LoadOrderListHead);
     InitializeListHead(&LoaderBlock->MemoryDescriptorListHead);
     InitializeListHead(&LoaderBlock->BootDriverListHead);
+    InitializeListHead(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
 
     /* Loop boot driver list */
     for (i = 0; i < KeLoaderModuleCount; i++)
@@ -285,6 +294,28 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     /* Parse it and change every slash to a space */
     BootPath = LoaderBlock->LoadOptions;
     do {if (*BootPath == '/') *BootPath = ' ';} while (*BootPath++);
+
+    /* Now let's loop ARC disk information */
+    for (i = 0; i < RosLoaderBlock->DrivesCount; i++)
+    {
+        /* Get the ROS loader entry */
+        RosDiskInfo = &KeArcDiskInfo[i];
+
+        /* Get the ARC structure */
+        ArcDiskInfo = &BldrDiskInfo[i];
+
+        /* Copy the data over */
+        ArcDiskInfo->Signature = RosDiskInfo->Signature;
+        ArcDiskInfo->CheckSum = RosDiskInfo->CheckSum;
+
+        /* Copy the ARC Name */
+        strcpy(BldrArcNames[i], RosDiskInfo->ArcName);
+        ArcDiskInfo->ArcName = BldrArcNames[i];
+
+        /* Insert into the list */
+        InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
+                       &ArcDiskInfo->ListEntry);
+    }
 }
 
 VOID
@@ -322,6 +353,10 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
            (PVOID)KeRosLoaderBlock.ModsAddr,
            sizeof(LOADER_MODULE) * KeRosLoaderBlock.ModsCount);
     KeRosLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
+    memcpy(&KeArcDiskInfo[0],
+           (PVOID)KeRosLoaderBlock.DrivesAddr,
+           sizeof(ARC_DISK_SIGNATURE) * KeRosLoaderBlock.DrivesCount);
+    KeRosLoaderBlock.DrivesAddr = (ULONG)&KeArcDiskInfo;
 
     /* Check for BIOS memory map */
     KeMemoryMapRangeCount = 0;
