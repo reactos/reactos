@@ -563,8 +563,9 @@ IopInitializePnpServices(
 // Initialization Routines
 //
 NTSTATUS
-IoCreateArcNames(
-    VOID
+NTAPI
+IopCreateArcNames(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 NTSTATUS

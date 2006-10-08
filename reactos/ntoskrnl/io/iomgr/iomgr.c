@@ -472,14 +472,14 @@ IoInit2(BOOLEAN BootLog)
 }
 
 VOID
-STDCALL
+NTAPI
 INIT_FUNCTION
 IoInit3(VOID)
 {
     ANSI_STRING NtBootPath;
 
     /* Create ARC names for boot devices */
-    IoCreateArcNames();
+    IopCreateArcNames(KeLoaderBlock);
 
     /* Read KDB Data */
     KdbInit();

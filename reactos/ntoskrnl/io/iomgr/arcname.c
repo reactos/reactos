@@ -30,7 +30,7 @@ IopApplyRosCdromArcHack(IN ULONG i)
     OBJECT_ATTRIBUTES ObjectAttributes;
     ANSI_STRING InstallName;
     UNICODE_STRING DeviceName;
-    CHAR Buffer[MAX_PATH];
+    CHAR Buffer[128];
     FILE_BASIC_INFORMATION FileInfo;
     NTSTATUS Status;
     PCHAR p, q;
@@ -117,7 +117,7 @@ IopGetDiskInformation(IN ULONG i,
 {
     ULONG j, Checksum;
     ANSI_STRING TempString;
-    CHAR Buffer[256];
+    CHAR Buffer[128];
     UNICODE_STRING DeviceName;
     NTSTATUS Status;
     PDEVICE_OBJECT DeviceObject;
@@ -257,8 +257,8 @@ NTAPI
 IopAssignArcNamesToCdrom(IN PULONG Buffer,
                          IN ULONG DiskNumber)
 {
-    CHAR ArcBuffer[256];
-    ANSI_STRING TempString, ArcNameString;
+    CHAR ArcBuffer[128];
+    ANSI_STRING TempString;
     UNICODE_STRING DeviceName, ArcName;
     NTSTATUS Status;
     LARGE_INTEGER PartitionOffset;
@@ -345,8 +345,8 @@ IopAssignArcNamesToCdrom(IN PULONG Buffer,
         sprintf(ArcBuffer, "\\ArcName\\%s", KeLoaderBlock->ArcBootDeviceName);
 
         /* Convert it to Unicode */
-        RtlInitAnsiString(&ArcNameString, ArcBuffer);
-        Status = RtlAnsiStringToUnicodeString(&ArcName, &ArcNameString, TRUE);
+        RtlInitAnsiString(&TempString, ArcBuffer);
+        Status = RtlAnsiStringToUnicodeString(&ArcName, &TempString, TRUE);
         if (!NT_SUCCESS(Status)) return FALSE;
 
         /* Create the symbolic link and free the strings */
@@ -364,13 +364,13 @@ IopAssignArcNamesToCdrom(IN PULONG Buffer,
 
 NTSTATUS
 INIT_FUNCTION
-IoCreateArcNames(VOID)
+NTAPI
+IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PLOADER_PARAMETER_BLOCK LoaderBlock = KeLoaderBlock;
     PCONFIGURATION_INFORMATION ConfigInfo = IoGetConfigurationInformation();
     PARC_DISK_INFORMATION ArcDiskInfo = LoaderBlock->ArcDiskInformation;
-    CHAR ArcBuffer[256], Buffer[256];
-    ANSI_STRING ArcBootString, ArcSystemString, ArcString, TempString, BootString;
+    CHAR Buffer[128];
+    ANSI_STRING ArcBootString, ArcSystemString, ArcString;
     UNICODE_STRING ArcName, BootPath, DeviceName;
     BOOLEAN SingleDisk;
     ULONG i, j, Length;
@@ -387,13 +387,13 @@ IoCreateArcNames(VOID)
                  (&ArcDiskInfo->DiskSignatureListHead);
 
     /* Create the global HAL partition name */
-    sprintf(ArcBuffer, "\\ArcName\\%s", LoaderBlock->ArcHalDeviceName);
-    RtlInitAnsiString(&ArcString, ArcBuffer);
+    sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcHalDeviceName);
+    RtlInitAnsiString(&ArcString, Buffer);
     RtlAnsiStringToUnicodeString(&IoArcHalDeviceName, &ArcString, TRUE);
 
     /* Create the global system partition name */
-    sprintf(ArcBuffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
-    RtlInitAnsiString(&ArcString, ArcBuffer);
+    sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+    RtlInitAnsiString(&ArcString, Buffer);
     RtlAnsiStringToUnicodeString(&IoArcBootDeviceName, &ArcString, TRUE);
 
     /* Allocate memory for the string */
@@ -457,16 +457,20 @@ IoCreateArcNames(VOID)
                 sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", i);
 
                 /* Convert it to Unicode */
-                RtlInitAnsiString(&TempString, Buffer);
-                Status = RtlAnsiStringToUnicodeString(&DeviceName, &TempString, TRUE);
+                RtlInitAnsiString(&ArcString, Buffer);
+                Status = RtlAnsiStringToUnicodeString(&DeviceName,
+                                                      &ArcString,
+                                                      TRUE);
                 if (!NT_SUCCESS(Status)) continue;
 
                 /* Build the ARC Device Name */
-                sprintf(ArcBuffer, "\\ArcName\\%s", ArcDiskEntry->ArcName);
+                sprintf(Buffer, "\\ArcName\\%s", ArcDiskEntry->ArcName);
 
                 /* Convert it to Unicode */
-                RtlInitAnsiString(&ArcString, ArcBuffer);
-                Status = RtlAnsiStringToUnicodeString(&ArcName, &ArcString, TRUE);
+                RtlInitAnsiString(&ArcString, Buffer);
+                Status = RtlAnsiStringToUnicodeString(&ArcName,
+                                                      &ArcString,
+                                                      TRUE);
                 if (!NT_SUCCESS(Status)) continue;
 
                 /* Create the symbolic link and free the strings */
@@ -478,16 +482,24 @@ IoCreateArcNames(VOID)
                 for (j = 0; j < PartitionCount; j++)
                 {
                     /* Build the partition device name */
-                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu", i, j + 1);
+                    sprintf(Buffer,
+                            "\\Device\\Harddisk%lu\\Partition%lu",
+                            i,
+                            j + 1);
 
                     /* Convert it to Unicode */
-                    RtlInitAnsiString(&TempString, Buffer);
-                    Status = RtlAnsiStringToUnicodeString(&DeviceName, &TempString, TRUE);
+                    RtlInitAnsiString(&ArcString, Buffer);
+                    Status = RtlAnsiStringToUnicodeString(&DeviceName,
+                                                          &ArcString,
+                                                          TRUE);
                     if (!NT_SUCCESS(Status)) continue;
 
                     /* Build the partial ARC name for this partition */
-                    sprintf(ArcBuffer, "%spartition(%lu)", ArcDiskEntry->ArcName, j + 1);
-                    RtlInitAnsiString(&ArcString, ArcBuffer);
+                    sprintf(Buffer,
+                            "%spartition(%lu)",
+                            ArcDiskEntry->ArcName,
+                            j + 1);
+                    RtlInitAnsiString(&ArcString, Buffer);
 
                     /* Check if this is the boot device */
                     if (RtlEqualString(&ArcString, &ArcBootString, TRUE))
@@ -500,8 +512,11 @@ IoCreateArcNames(VOID)
                     if (RtlEqualString(&ArcString, &ArcSystemString, TRUE))
                     {
                         /* It is, create a Unicode string for it */
-                        RtlInitAnsiString(&BootString, LoaderBlock->NtHalPathName);
-                        Status = RtlAnsiStringToUnicodeString(&BootPath, &BootString, TRUE);
+                        RtlInitAnsiString(&ArcString,
+                                          LoaderBlock->NtHalPathName);
+                        Status = RtlAnsiStringToUnicodeString(&BootPath,
+                                                              &ArcString,
+                                                              TRUE);
                         if (NT_SUCCESS(Status))
                         {
                             /* FIXME: Save in registry */
@@ -512,11 +527,16 @@ IoCreateArcNames(VOID)
                     }
 
                     /* Build the full ARC name */
-                    sprintf(Buffer, "\\ArcName\\%spartition(%lu)", ArcDiskEntry->ArcName, j + 1);
+                    sprintf(Buffer,
+                            "\\ArcName\\%spartition(%lu)",
+                            ArcDiskEntry->ArcName,
+                            j + 1);
 
                     /* Convert it to Unicode */
                     RtlInitAnsiString(&ArcString, Buffer);
-                    Status = RtlAnsiStringToUnicodeString(&ArcName, &ArcString, TRUE);
+                    Status = RtlAnsiStringToUnicodeString(&ArcName,
+                                                          &ArcString,
+                                                          TRUE);
                     if (!NT_SUCCESS(Status)) continue;
 
                     /* Create the symbolic link and free the strings */
