@@ -1,0 +1,105 @@
+#ifndef _ARCH_POWERPC_FONT_H
+#define _ARCH_POWERPC_FONT_H
+
+font_char BootDigits[16] = {
+    " XXXXX  "
+    "X     X "
+    "X  x  X "
+    "X  X  X "
+    "X     X "
+    " XXXXX  "
+    "        ",
+    "   XX   "
+    "  XXX   "
+    "   XX   "
+    "   XX   "
+    "   XX   "
+    "   XX   "
+    "        ",
+    "  XXXX  "
+    " X    X "
+    "     XX "
+    "   XX   "
+    " XX     "
+    " XXXXXX "
+    "        ",
+    "  XXXX  "
+    " X    X "
+    "    XX  "
+    "      X "
+    " X    X "
+    "  XXXX  "
+    "        ",
+    " X   X  "
+    " X   X  "
+    " XXXXXX "
+    "     X  "
+    "     X  "
+    "     X  "
+    "        ",
+    " XXXXXX "
+    " X      "
+    " XXXXX  "
+    "      X "
+    "      X "
+    " XXXXX  "
+    "        ",
+    "  XXXXX "
+    " X      "
+    " XXXXX  "
+    " X    X "
+    " X    X "
+    "  XXXX  "
+    "        ",
+    " XXXXXX "
+    "     XX "
+    "    XX  "
+    "  XXXXX "
+    "   XX   "
+    "   XX   "
+    "        ",
+    "  XXXX  "
+    " X    X "
+    "  XXXX  "
+    " X    X "
+    " X    X "
+    "  XXXX  "
+    "        ",
+    "  XXXX  "
+    " X    X "
+    " XXXXXX "
+    " X    X "
+    " X    X "
+    " X    X "
+    "        ",
+    " XXXXX  "
+    " X    X "
+    " XXXXX  "
+    " X    X "
+    " X    X "
+    " XXXXX  "
+    "        ",
+    "  XXXX  "
+    " X    X "
+    " X      "
+    " X      "
+    " X    X "
+    "  XXXX  "
+    "        ",
+    " XXXXXX "
+    " X      "
+    " XXXX   "
+    " X      "
+    " X      "
+    " XXXXXX "
+    "        ",
+    " XXXXXX "
+    " X      "
+    " XXXX   "
+    " X      "
+    " X      "
+    " X      "
+    "        "
+};
+
+#endif/*_ARCH_POWERPC_FONT_H*/
