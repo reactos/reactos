@@ -73,6 +73,19 @@ typedef struct _BOOT_DRIVER_LIST_ENTRY
     struct _LDR_DATA_TABLE_ENTRY *DataTableEntry;
 } BOOT_DRIVER_LIST_ENTRY, *PBOOT_DRIVER_LIST_ENTRY;
 
+typedef struct _ARC_DISK_SIGNATURE
+{
+    LIST_ENTRY ListEntry;
+    ULONG Signature;
+    PCHAR ArcName;
+    ULONG CheckSum;
+    BOOLEAN ValidPartitionTable;
+    BOOLEAN xInt13;
+    BOOLEAN IsGpt;
+    BOOLEAN Reserved;
+    CHAR GptSignature[16];
+} ARC_DISK_SIGNATURE, *PARC_DISK_SIGNATURE;
+
 typedef struct _CONFIGURATION_COMPONENT
 {
     CONFIGURATION_CLASS Class;

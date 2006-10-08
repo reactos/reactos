@@ -423,6 +423,7 @@ typedef struct _DISKENTRY
     ULONG Signature;
     ULONG Checksum;
     PDEVICE_OBJECT DeviceObject;
+    ULONG PartitionCount;
 } DISKENTRY, *PDISKENTRY; 
 
 //
