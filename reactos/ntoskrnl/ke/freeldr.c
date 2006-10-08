@@ -216,6 +216,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         }
         else if (!(_stricmp(DriverName, "hal.dll")))
         {
+            /* The HAL actually gets loaded somewhere else */
+            ModStart = HalModuleObject.DllBase;
+
             /* Create an MD for the HAL */
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderHalCode;
@@ -294,8 +297,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     ULONG HalBase;
     ULONG DriverBase;
     ULONG DriverSize;
-    //PIMAGE_NT_HEADERS NtHeader;
-    //PIMAGE_OPTIONAL_HEADER OptHead;
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
     CHAR* s;
     PKTSS Tss;
@@ -320,7 +321,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     memcpy(&KeLoaderModules[0],
            (PVOID)KeRosLoaderBlock.ModsAddr,
            sizeof(LOADER_MODULE) * KeRosLoaderBlock.ModsCount);
-    //KeRosLoaderBlock.ModsCount++;
     KeRosLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
 
     /* Check for BIOS memory map */

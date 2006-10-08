@@ -300,6 +300,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    ULONG i;
    ULONG kernel_len;
    ULONG_PTR MappingAddress;
+   PLDR_DATA_TABLE_ENTRY LdrEntry;
 
    DPRINT("MmInit1(FirstKrnlPhysAddr, %p, LastKrnlPhysAddr %p, LastKernelAddress %p)\n",
           FirstKrnlPhysAddr,
@@ -328,8 +329,20 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    }
 
    /* NTLDR Hacks */
-   if (!MmFreeLdrMemHigher) MmFreeLdrMemHigher = 32768;
+   if (!MmFreeLdrMemHigher) MmFreeLdrMemHigher = 65536;
    if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
+   if (!FirstKrnlPhysAddr)
+   {
+       /* Get the kernel entry */
+       LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink,
+                                    LDR_DATA_TABLE_ENTRY,
+                                    InLoadOrderLinks);
+
+       /* Get the addresses */
+       FirstKrnlPhysAddr = (ULONG_PTR)LdrEntry->DllBase - KSEG0_BASE;
+
+       /* FIXME: How do we get the last address? */
+   }
 
    if (MmFreeLdrMemHigher >= (MaxMem - 1) * 1024)
    {
@@ -397,10 +410,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
                        BIOSMemoryMap,
                        AddressRangeCount);
    kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
-
-   //extern LOADER_MODULE KeLoaderModules[];
-   //DPRINT1("Module one: %p %p\n", KeLoaderModules[0].ModStart, KeLoaderModules[0].ModEnd);
-   //while (TRUE);
 
    /*
     * Unmap low memory

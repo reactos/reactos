@@ -334,7 +334,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
    PFN_TYPE FirstUninitializedPage;
    ULONG PdeStart = PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart;
 
-   DPRINT1("MmInitializePageList(FirstPhysKernelAddress %x, "
+   DPRINT("MmInitializePageList(FirstPhysKernelAddress %x, "
           "LastPhysKernelAddress %x, "
           "MemorySizeInPages %x, LastKernelAddress %x)\n",
           FirstPhysKernelAddress,
