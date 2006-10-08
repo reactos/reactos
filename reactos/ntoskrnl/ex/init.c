@@ -1,13 +1,13 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ex/init.c
- * PURPOSE:         Executive initalization
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) - Added ExpInitializeExecutive
- *                                                    and optimized/cleaned it.
- *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
- */
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/ex/init.c
+* PURPOSE:         Executive Initialization Code
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*                  Eric Kohl (ekohl@rz-online.de)
+*/
+
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
@@ -303,157 +303,6 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Copy the table into the system process and set this as the base */
     RtlMoveMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
     ExpNlsTableBase = SectionBase;
-}
-
-static
-VOID
-INIT_FUNCTION
-InitSystemSharedUserPage (IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    UNICODE_STRING ArcDeviceName;
-    UNICODE_STRING ArcName;
-    UNICODE_STRING BootPath;
-    UNICODE_STRING DriveDeviceName;
-    UNICODE_STRING DriveName;
-    WCHAR DriveNameBuffer[20];
-    PWCHAR ArcNameBuffer;
-    NTSTATUS Status;
-    ULONG Length;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE Handle;
-    ULONG i;
-    BOOLEAN BootDriveFound = FALSE;
-
-    /* Set the Product Type */
-    SharedUserData->NtProductType = NtProductWinNt;
-    SharedUserData->ProductTypeIsValid = TRUE;
-
-    /*
-     * Retrieve the current dos system path
-     * (e.g.: C:\reactos) from the given arc path
-     * (e.g.: multi(0)disk(0)rdisk(0)partititon(1)\reactos)
-     * Format: "<arc_name>\<path> [options...]"
-     */
-
-    RtlCreateUnicodeStringFromAsciiz(&BootPath, LoaderBlock->NtBootPathName);
-
-    /* Remove the trailing backslash */
-    BootPath.Length -= sizeof(WCHAR);
-    BootPath.MaximumLength -= sizeof(WCHAR);
-
-    /* Only ARC Name left - Build full ARC Name */
-    ArcNameBuffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
-    swprintf (ArcNameBuffer, L"\\ArcName\\%S", LoaderBlock->ArcBootDeviceName);
-    RtlInitUnicodeString (&ArcName, ArcNameBuffer);
-
-    /* Allocate ARC Device Name string */
-    ArcDeviceName.Length = 0;
-    ArcDeviceName.MaximumLength = 256 * sizeof(WCHAR);
-    ArcDeviceName.Buffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
-
-    /* Open the Symbolic Link */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &ArcName,
-                               OBJ_OPENLINK,
-                               NULL,
-                               NULL);
-    Status = NtOpenSymbolicLinkObject(&Handle,
-                                      SYMBOLIC_LINK_ALL_ACCESS,
-                                      &ObjectAttributes);
-
-    /* Free the String */
-    ExFreePool(ArcName.Buffer);
-
-    /* Check for Success */
-    if (!NT_SUCCESS(Status)) {
-
-        /* Free the Strings */
-        RtlFreeUnicodeString(&BootPath);
-        ExFreePool(ArcDeviceName.Buffer);
-        CPRINT("NtOpenSymbolicLinkObject() failed (Status %x)\n", Status);
-        KEBUGCHECK(0);
-    }
-
-    /* Query the Link */
-    Status = NtQuerySymbolicLinkObject(Handle,
-                                       &ArcDeviceName,
-                                       &Length);
-    NtClose (Handle);
-
-    /* Check for Success */
-    if (!NT_SUCCESS(Status)) {
-
-        /* Free the Strings */
-        RtlFreeUnicodeString(&BootPath);
-        ExFreePool(ArcDeviceName.Buffer);
-        CPRINT("NtQuerySymbolicLinkObject() failed (Status %x)\n", Status);
-        KEBUGCHECK(0);
-    }
-
-    /* Allocate Device Name string */
-    DriveDeviceName.Length = 0;
-    DriveDeviceName.MaximumLength = 256 * sizeof(WCHAR);
-    DriveDeviceName.Buffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
-
-    /* Loop Drives */
-    for (i = 0; i < 26; i++)  {
-
-        /* Setup the String */
-        swprintf (DriveNameBuffer, L"\\??\\%C:", 'A' + i);
-        RtlInitUnicodeString(&DriveName,
-                             DriveNameBuffer);
-
-        /* Open the Symbolic Link */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &DriveName,
-                                   OBJ_OPENLINK,
-                                   NULL,
-                                   NULL);
-        Status = NtOpenSymbolicLinkObject(&Handle,
-                                          SYMBOLIC_LINK_ALL_ACCESS,
-                                          &ObjectAttributes);
-
-        /* If it failed, skip to the next drive */
-        if (!NT_SUCCESS(Status)) {
-            DPRINT("Failed to open link %wZ\n", &DriveName);
-            continue;
-        }
-
-        /* Query it */
-        Status = NtQuerySymbolicLinkObject(Handle,
-                                           &DriveDeviceName,
-                                           &Length);
-
-        /* If it failed, skip to the next drive */
-        if (!NT_SUCCESS(Status)) {
-            DPRINT("Failed to query link %wZ\n", &DriveName);
-            continue;
-        }
-        DPRINT("Opened link: %wZ ==> %wZ\n", &DriveName, &DriveDeviceName);
-
-        /* See if we've found the boot drive */
-        if (!RtlCompareUnicodeString (&ArcDeviceName, &DriveDeviceName, FALSE)) {
-
-            DPRINT("DOS Boot path: %c:%wZ\n", 'A' + i, &BootPath);
-            swprintf(SharedUserData->NtSystemRoot, L"%C:%wZ", 'A' + i, &BootPath);
-            BootDriveFound = TRUE;
-        }
-
-        /* Close this Link */
-        NtClose (Handle);
-    }
-
-    /* Free all the Strings we have in memory */
-    RtlFreeUnicodeString (&BootPath);
-    ExFreePool(DriveDeviceName.Buffer);
-    ExFreePool(ArcDeviceName.Buffer);
-
-    /* Make sure we found the Boot Drive */
-    if (BootDriveFound == FALSE) {
-
-        DbgPrint("No system drive found!\n");
-        KEBUGCHECK (NO_BOOT_DEVICE);
-    }
 }
 
 VOID
@@ -770,7 +619,7 @@ ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Fail if this is XP */
     if (Extension->MinorVersion < 2) return FALSE;
 
-    /* This is 2003 or newer, aprove it */
+    /* This is 2003 or newer, approve it */
     return TRUE;
 }
 
@@ -1091,9 +940,6 @@ ExPhase2Init(PVOID Context)
 
     /* Load the System DLL and its Entrypoints */
     PsLocateSystemDll();
-
-    /* Initialize shared user page. Set dos system path, dos device map, etc. */
-    InitSystemSharedUserPage(KeLoaderBlock);
 
     /* Initialize VDM support */
     KeI386VdmInitialize();

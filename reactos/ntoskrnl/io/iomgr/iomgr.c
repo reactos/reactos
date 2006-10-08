@@ -29,6 +29,7 @@ IoSynchronousInvalidateDeviceRelations(
 POBJECT_TYPE IoDeviceObjectType = NULL;
 POBJECT_TYPE IoFileObjectType = NULL;
 extern POBJECT_TYPE IoControllerObjectType;
+extern UNICODE_STRING NtSystemRoot;
 BOOLEAN IoCountOperations;
 ULONG IoReadOperationCount = 0;
 LARGE_INTEGER IoReadTransferCount = {{0, 0}};
@@ -476,7 +477,8 @@ NTAPI
 INIT_FUNCTION
 IoInit3(VOID)
 {
-    ANSI_STRING NtBootPath;
+    NTSTATUS Status;
+    ANSI_STRING NtBootPath, RootString;
 
     /* Create ARC names for boot devices */
     IopCreateArcNames(KeLoaderBlock);
@@ -502,11 +504,26 @@ IoInit3(VOID)
     /* Convert SystemRoot from ARC to NT path */
     IopReassignSystemRoot(KeLoaderBlock, &NtBootPath);
 
+    /* Set the ANSI_STRING for the root path */
+    RootString.MaximumLength = NtSystemRoot.MaximumLength / sizeof(WCHAR);
+    RootString.Length = 0;
+    RootString.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                              RootString.MaximumLength,
+                                              TAG_IO);
+
+    /* Convert the path into the ANSI_STRING */
+    Status = RtlUnicodeStringToAnsiString(&RootString, &NtSystemRoot, FALSE);
+    if (!NT_SUCCESS(Status)) return;
+
     /* Assign drive letters */
     IoAssignDriveLetters(KeLoaderBlock,
-                         NULL,
-                         NULL,
-                         NULL);
+                         &NtBootPath,
+                         RootString.Buffer,
+                         &RootString);
+
+    /* Update system root */
+    Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &RootString, FALSE);
+    if (!NT_SUCCESS(Status)) return;
 }
 
 /* EOF */

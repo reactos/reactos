@@ -1,14 +1,13 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/arcname.c
- * PURPOSE:         Creates ARC names for boot devices
- *
- * PROGRAMMERS:     Eric Kohl (ekohl@rz-online.de)
- */
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/io/iomgr/arcname.c
+* PURPOSE:         ARC Path Initialization Functions
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*                  Eric Kohl (ekohl@rz-online.de)
+*/
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
@@ -19,7 +18,7 @@
 UNICODE_STRING IoArcHalDeviceName, IoArcBootDeviceName;
 PCHAR IoLoaderArcBootDeviceName;
 
-/* FUNCTIONS ****************************************************************/
+/* FUNCTIONS *****************************************************************/
 
 BOOLEAN
 INIT_FUNCTION
