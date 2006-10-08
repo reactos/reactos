@@ -476,19 +476,10 @@ STDCALL
 INIT_FUNCTION
 IoInit3(VOID)
 {
-    NTSTATUS Status;
     ANSI_STRING NtBootPath;
 
     /* Create ARC names for boot devices */
     IoCreateArcNames();
-
-    /* Create the SystemRoot symbolic link */
-    DPRINT("CommandLine: %s\n", KeLoaderBlock->LoadOptions);
-    Status = IopReassignSystemRoot(KeLoaderBlock, &NtBootPath);
-    if (!NT_SUCCESS(Status)) {
-        CPRINT("IoCreateSystemRootLink FAILED: (0x%x) - ", Status);
-        KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
-    }
 
     /* Read KDB Data */
     KdbInit();
@@ -509,7 +500,7 @@ IoInit3(VOID)
     IopReinitializeDrivers();
 
     /* Convert SystemRoot from ARC to NT path */
-    if (!IopReassignSystemRoot(KeLoaderBlock, &NtBootPath)) KEBUGCHECK(0);
+    IopReassignSystemRoot(KeLoaderBlock, &NtBootPath);
 
     /* Assign drive letters */
     IoAssignDriveLetters(KeLoaderBlock,
