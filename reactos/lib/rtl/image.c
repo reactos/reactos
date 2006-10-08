@@ -18,6 +18,16 @@
 
 /* FUNCTIONS *****************************************************************/
 
+BOOLEAN
+NTAPI
+LdrVerifyMappedImageMatchesChecksum(IN PVOID BaseAddress,
+                                    IN ULONG NumberOfBytes,
+                                    IN ULONG FileLength)
+{
+    /* FIXME: TODO */
+    return TRUE;
+}
+
 /*
  * @implemented
  */

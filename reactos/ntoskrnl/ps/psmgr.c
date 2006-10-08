@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+extern ULONG ExpInitializationPhase;
+
 GENERIC_MAPPING PspProcessMapping =
 {
     STANDARD_RIGHTS_READ    | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
@@ -76,11 +78,6 @@ NTAPI
 PspLookupKernelUserEntryPoints(VOID)
 {
     NTSTATUS Status;
-
-    /* Get user-mode startup thunk */
-    Status = PspLookupSystemDllEntryPoint(&ThunkName,
-                                          &PspSystemDllEntryPoint);
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Get user-mode APC trampoline */
     Status = PspLookupSystemDllEntryPoint(&ApcName,
@@ -178,10 +175,14 @@ PsLocateSystemDll(VOID)
                         &IoStatusBlock,
                         FILE_SHARE_READ,
                         0);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 2, 0, 0);
+    }
 
     /* FIXME: Check if the image is valid */
-    Status = STATUS_SUCCESS; //MmCheckSystemImage(FileHandle, TRUE);
+    Status = MmCheckSystemImage(FileHandle, TRUE);
     if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH)
     {
         /* Raise a hard error */
@@ -204,7 +205,11 @@ PsLocateSystemDll(VOID)
                              SEC_IMAGE,
                              FileHandle);
     ZwClose(FileHandle);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 3, 0, 0);
+    }
 
     /* Reference the Section */
     Status = ObReferenceObjectByHandle(SectionHandle,
@@ -214,14 +219,58 @@ PsLocateSystemDll(VOID)
                                        (PVOID*)&PspSystemDllSection,
                                        NULL);
     ZwClose(SectionHandle);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 4, 0, 0);
+    }
+
 
     /* Map it */
     Status = PspMapSystemDll(PsGetCurrentProcess(), &PspSystemDllBase);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 5, 0, 0);
+    }
 
-    /* Now get the Entrypoints */
-    PspLookupKernelUserEntryPoints();
-    return STATUS_SUCCESS;
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+PspInitializeSystemDll(VOID)
+{
+    NTSTATUS Status;
+
+    /* Get user-mode startup thunk */
+    Status = PspLookupSystemDllEntryPoint(&ThunkName, &PspSystemDllEntryPoint);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 7, 0, 0);
+    }
+
+    /* Get all the other entrypoints */
+    Status = PspLookupKernelUserEntryPoints();
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 8, 0, 0);
+    }
+
+    /* Return status */
+    return Status;
+}
+
+BOOLEAN
+NTAPI
+PspInitPhase1(VOID)
+{
+    /* Initialize the System DLL and return status of operation */
+    if (!NT_SUCCESS(PspInitializeSystemDll())) return FALSE;
+    return TRUE;
 }
 
 BOOLEAN
@@ -428,8 +477,25 @@ BOOLEAN
 NTAPI
 PsInitSystem(VOID)
 {
-    /* For now, do only Phase 0 */
-    return PspInitPhase0();
+    /* Check the initialization phase */
+    switch (ExpInitializationPhase)
+    {
+    case 0:
+
+        /* Do Phase 0 */
+        return PspInitPhase0();
+
+    case 1:
+
+        /* Do Phase 1 */
+        return PspInitPhase1();
+
+    default:
+
+        /* Don't know any other phase! Bugcheck! */
+        KeBugCheck(UNEXPECTED_INITIALIZATION_CALL);
+        return FALSE;
+    }
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

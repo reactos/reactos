@@ -335,6 +335,13 @@ typedef VOID
 
 /* FUNCTIONS */
 
+NTSTATUS
+NTAPI
+MmCheckSystemImage(
+    IN HANDLE ImageHandle,
+    IN BOOLEAN PurgeSection
+);
+
 /* aspace.c ******************************************************************/
 
 VOID 

@@ -953,9 +953,11 @@ ExPhase2Init(PVOID Context)
     /* Initialize shared user page. Set dos system path, dos device map, etc. */
     InitSystemSharedUserPage(KeLoaderBlock);
 
+    /* Initailize the Process Manager at Phase 1 */
+    if (!PsInitSystem()) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
+
     /* Launch initial process */
-    Status = ExpLoadInitialProcess(&ProcessHandle,
-                                   &ThreadHandle);
+    Status = ExpLoadInitialProcess(&ProcessHandle, &ThreadHandle);
 
     /* Wait 5 seconds for it to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);
