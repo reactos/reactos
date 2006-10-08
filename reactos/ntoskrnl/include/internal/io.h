@@ -567,8 +567,10 @@ IoCreateArcNames(
 );
 
 NTSTATUS
-IoCreateSystemRootLink(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+NTAPI
+IopReassignSystemRoot(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    OUT PANSI_STRING NtBootPath
 );
 
 //

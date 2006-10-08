@@ -49,6 +49,113 @@ PVOID ExpNlsSectionPointer;
 
 /* FUNCTIONS ****************************************************************/
 
+NTSTATUS
+NTAPI
+ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    UNICODE_STRING LinkName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE LinkHandle;
+    NTSTATUS Status;
+    ANSI_STRING AnsiName;
+    CHAR Buffer[256];
+    ANSI_STRING TargetString;
+    UNICODE_STRING TargetName;
+
+    /* Initialize the ArcName tree */
+    RtlInitUnicodeString(&LinkName, L"\\ArcName");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               SePublicDefaultSd);
+
+    /* Create it */
+    Status = NtCreateDirectoryObject(&LinkHandle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 1, 0, 0);
+    }
+
+    /* Close the LinkHandle */
+    NtClose(LinkHandle);
+
+    /* Initialize the Device tree */
+    RtlInitUnicodeString(&LinkName, L"\\Device");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               SePublicDefaultSd);
+
+    /* Create it */
+    Status = NtCreateDirectoryObject(&LinkHandle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 2, 0, 0);
+    }
+
+    /* Close the LinkHandle */
+    ObCloseHandle(LinkHandle, KernelMode);
+
+    /* Create the system root symlink name */
+    RtlInitAnsiString(&AnsiName, "\\SystemRoot");
+    Status = RtlAnsiStringToUnicodeString(&LinkName, &AnsiName, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 3, 0, 0);
+    }
+
+    /* Initialize the attributes for the link */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               SePublicDefaultSd);
+
+    /* Build the ARC name */
+    sprintf(Buffer,
+            "\\ArcName\\%s%s",
+            LoaderBlock->ArcBootDeviceName,
+            LoaderBlock->NtBootPathName);
+    Buffer[strlen(Buffer) - 1] = ANSI_NULL;
+
+    /* Convert it to Unicode */
+    RtlInitString(&TargetString, Buffer);
+    Status = RtlAnsiStringToUnicodeString(&TargetName,
+                                          &TargetString,
+                                          TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, bugcheck */
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 4, 0, 0);
+    }
+
+    /* Create it */
+    Status = NtCreateSymbolicLinkObject(&LinkHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &TargetName);
+
+    /* Free the strings */
+    RtlFreeUnicodeString(&LinkName);
+    RtlFreeUnicodeString(&TargetName);
+
+    /* Check if creating the link failed */
+    if (!NT_SUCCESS(Status))
+    {
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 5, 0, 0);
+    }
+
+    /* Close the handle and return success */
+    ObCloseHandle(LinkHandle, KernelMode);
+    return STATUS_SUCCESS;
+}
+
 VOID
 NTAPI
 ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -934,6 +1041,11 @@ ExPhase2Init(PVOID Context)
     }
 
     /* Create SystemRoot Link */
+    Status = ExpCreateSystemRootLink(KeLoaderBlock);
+    if (!NT_SUCCESS(Status))
+    {
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
 
     /* Create NLS section */
     ExpInitNls(KeLoaderBlock);

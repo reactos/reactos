@@ -33,16 +33,12 @@ IopEnumerateDisks(PLIST_ENTRY ListHead);
 static NTSTATUS INIT_FUNCTION
 IopAssignArcNamesToDisk(PDEVICE_OBJECT DeviceObject, ULONG RDisk, ULONG DiskNumber);
 
-static NTSTATUS INIT_FUNCTION
-IopCheckCdromDevices(PULONG DeviceNumber);
-
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, DiskQueryRoutine)
 #pragma alloc_text(INIT, IopEnumerateBiosDisks)
 #pragma alloc_text(INIT, IopEnumerateDisks)
 #pragma alloc_text(INIT, IopAssignArcNamesToDisk)
 #pragma alloc_text(INIT, IoCreateArcNames)
-#pragma alloc_text(INIT, IopCheckCdromDevices)
 #pragma alloc_text(INIT, IoCreateSystemRootLink)
 #endif
 
@@ -544,288 +540,179 @@ IoCreateArcNames(VOID)
   return(STATUS_SUCCESS);
 }
 
-
-static NTSTATUS INIT_FUNCTION
-IopCheckCdromDevices(PULONG DeviceNumber)
+VOID
+INIT_FUNCTION
+NTAPI
+IopApplyRosCdromArcHack(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-  PCONFIGURATION_INFORMATION ConfigInfo;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING DeviceName;
-  WCHAR DeviceNameBuffer[MAX_PATH];
-  HANDLE Handle;
-  ULONG i;
-  NTSTATUS Status;
-  IO_STATUS_BLOCK IoStatusBlock;
-#if 0
-  PFILE_FS_VOLUME_INFORMATION FileFsVolume;
-  USHORT Buffer[FS_VOLUME_BUFFER_SIZE];
+    ULONG DeviceNumber = -1;
+    PCONFIGURATION_INFORMATION ConfigInfo;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING DeviceName;
+    WCHAR Buffer[MAX_PATH];
+    CHAR AnsiBuffer[MAX_PATH];
+    ULONG i;
+    FILE_BASIC_INFORMATION FileInfo;
+    NTSTATUS Status;
+    PCHAR p, q;
 
-  FileFsVolume = (PFILE_FS_VOLUME_INFORMATION)Buffer;
-#endif
-
-  ConfigInfo = IoGetConfigurationInformation();
-  for (i = 0; i < ConfigInfo->CdRomCount; i++)
+    /* Only ARC Name left - Build full ARC Name */
+    p = strstr(LoaderBlock->ArcBootDeviceName, "cdrom");
+    if (p)
     {
-#if 0
-      swprintf(DeviceNameBuffer,
-	       L"\\Device\\CdRom%lu\\",
-	       i);
-      RtlInitUnicodeString(&DeviceName,
-			   DeviceNameBuffer);
+        /* Get configuration information */
+        ConfigInfo = IoGetConfigurationInformation();
+        for (i = 0; i < ConfigInfo->CdRomCount; i++)
+        {
+            /* Try to find the installer */
+            swprintf(Buffer, L"\\Device\\CdRom%lu\\reactos\\ntoskrnl.exe", i);
+            RtlInitUnicodeString(&DeviceName, Buffer);
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &DeviceName,
+                                       0,
+                                       NULL,
+                                       NULL);
+            Status = ZwQueryAttributesFile(&ObjectAttributes, &FileInfo);
+            if (NT_SUCCESS(Status)) DeviceNumber = i;
 
-      InitializeObjectAttributes(&ObjectAttributes,
-				 &DeviceName,
-				 0,
-				 NULL,
-				 NULL);
+            /* Try to find live CD boot */
+            swprintf(Buffer,
+                     L"\\Device\\CdRom%lu\\reactos\\system32\\ntoskrnl.exe",
+                     i);
+            RtlInitUnicodeString(&DeviceName, Buffer);
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &DeviceName,
+                                       0,
+                                       NULL,
+                                       NULL);
+            Status = ZwQueryAttributesFile(&ObjectAttributes, &FileInfo);
+            if (NT_SUCCESS(Status)) DeviceNumber = i;
+        }
 
-      Status = ZwOpenFile(&Handle,
-			  FILE_ALL_ACCESS,
-			  &ObjectAttributes,
-			  &IoStatusBlock,
-			  0,
-			  0);
-      DPRINT("ZwOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
-      if (NT_SUCCESS(Status))
-	{
-	  Status = ZwQueryVolumeInformationFile(Handle,
-						&IoStatusBlock,
-						FileFsVolume,
-						FS_VOLUME_BUFFER_SIZE,
-						FileFsVolumeInformation);
-	  DPRINT("ZwQueryVolumeInformationFile()  Status %lx\n", Status);
-	  if (NT_SUCCESS(Status))
-	    {
-	      DPRINT("VolumeLabel: '%S'\n", FileFsVolume->VolumeLabel);
-	      if (_wcsicmp(FileFsVolume->VolumeLabel, L"REACTOS") == 0)
-		{
-		  ZwClose(Handle);
-		  *DeviceNumber = i;
-		  return(STATUS_SUCCESS);
-		}
-	    }
-	  ZwClose(Handle);
-	}
-#endif
+        /* Build the name */
+        sprintf(p, "cdrom(%lu)", DeviceNumber);
 
-      /*
-       * Check for 'reactos/ntoskrnl.exe' first...
-       */
-
-      swprintf(DeviceNameBuffer,
-	       L"\\Device\\CdRom%lu\\reactos\\ntoskrnl.exe",
-	       i);
-      RtlInitUnicodeString(&DeviceName,
-			   DeviceNameBuffer);
-
-      InitializeObjectAttributes(&ObjectAttributes,
-				 &DeviceName,
-				 0,
-				 NULL,
-				 NULL);
-
-      Status = ZwOpenFile(&Handle,
-			  FILE_ALL_ACCESS,
-			  &ObjectAttributes,
-			  &IoStatusBlock,
-			  0,
-			  0);
-      DPRINT("ZwOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
-      if (NT_SUCCESS(Status))
-	{
-	  DPRINT("Found ntoskrnl.exe on Cdrom%lu\n", i);
-	  ZwClose(Handle);
-	  *DeviceNumber = i;
-	  return(STATUS_SUCCESS);
-	}
-
-      /*
-       * ...and for 'reactos/system32/ntoskrnl.exe' also.
-       */
-
-      swprintf(DeviceNameBuffer,
-	       L"\\Device\\CdRom%lu\\reactos\\system32\\ntoskrnl.exe",
-	       i);
-      RtlInitUnicodeString(&DeviceName,
-			   DeviceNameBuffer);
-
-      InitializeObjectAttributes(&ObjectAttributes,
-				 &DeviceName,
-				 0,
-				 NULL,
-				 NULL);
-
-      Status = ZwOpenFile(&Handle,
-			  FILE_ALL_ACCESS,
-			  &ObjectAttributes,
-			  &IoStatusBlock,
-			  0,
-			  0);
-      DPRINT("ZwOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
-      if (NT_SUCCESS(Status))
-	{
-	  DPRINT("Found ntoskrnl.exe on Cdrom%lu\n", i);
-	  ZwClose(Handle);
-	  *DeviceNumber = i;
-	  return(STATUS_SUCCESS);
-	}
+        /* Adjust original command line */
+        q = strchr(p, ')');
+        if (q)
+        {
+            q++;
+            strcpy(AnsiBuffer, q);
+            sprintf(p, "cdrom(%lu)", DeviceNumber);
+            strcat(p, AnsiBuffer);
+        }
     }
-
-  DPRINT("Could not find ntoskrnl.exe\n");
-  *DeviceNumber = (ULONG)-1;
-
-  return(STATUS_UNSUCCESSFUL);
 }
 
-
-NTSTATUS INIT_FUNCTION
-IoCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+NTSTATUS
+NTAPI
+IopReassignSystemRoot(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                      OUT PANSI_STRING NtBootPath)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatusBlock;
-  UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\SystemRoot");
-  UNICODE_STRING DeviceName;
-  UNICODE_STRING ArcName;
-  UNICODE_STRING BootPath;
-  PCHAR ParamBuffer;
-  PWCHAR ArcNameBuffer;
-  PCHAR p;
-  NTSTATUS Status;
-  ULONG Length;
-  HANDLE Handle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    CHAR Buffer[256], AnsiBuffer[256];
+    WCHAR ArcNameBuffer[64];
+    ANSI_STRING TargetString, ArcString, TempString;
+    UNICODE_STRING LinkName, TargetName, ArcName;
+    HANDLE LinkHandle;
 
-  RtlCreateUnicodeStringFromAsciiz(&BootPath, LoaderBlock->NtBootPathName);
+    /* Check if this is a CD-ROM boot */
+    IopApplyRosCdromArcHack(LoaderBlock);
 
-  /* Remove the trailing backslash */
-  BootPath.Length -= sizeof(WCHAR);
-  BootPath.MaximumLength -= sizeof(WCHAR);
+    /* Create the Unicode name for the current ARC boot device */
+    sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+    RtlInitAnsiString(&TargetString, Buffer);
+    Status = RtlAnsiStringToUnicodeString(&TargetName, &TargetString, TRUE);
+    if (!NT_SUCCESS(Status)) return FALSE;
 
-  /* Only ARC Name left - Build full ARC Name */
-  ParamBuffer = LoaderBlock->ArcBootDeviceName;
-
-  p = strstr(ParamBuffer, "cdrom");
-  if (p != NULL)
+    /* Initialize the attributes and open the link */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &TargetName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenSymbolicLinkObject(&LinkHandle,
+                                      SYMBOLIC_LINK_ALL_ACCESS,
+                                      &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
     {
-      ULONG DeviceNumber;
-
-      DPRINT("Booting from CD-ROM!\n");
-      Status = IopCheckCdromDevices(&DeviceNumber);
-      if (!NT_SUCCESS(Status))
-	{
-	  CPRINT("Failed to find setup disk!\n");
-	  return(Status);
-	}
-
-      sprintf(p, "cdrom(%lu)", DeviceNumber);
-
-      DPRINT("New ARC name: %s\n", ParamBuffer);
-
-      /* Adjust original command line */
-      p = strstr(LoaderBlock->ArcBootDeviceName, "cdrom");
-      if (p != NULL);
-	{
-	  char temp[256];
-	  char *q;
-
-	  q = strchr(p, ')');
-	  if (q != NULL)
-	    {
-
-	      q++;
-	      strcpy(temp, q);
-	      sprintf(p, "cdrom(%lu)", DeviceNumber);
-	      strcat(p, temp);
-	    }
-	}
+        /* We failed, free the string */
+        RtlFreeUnicodeString(&TargetName);
+        return FALSE;
     }
 
-  /* Only arc name left - build full arc name */
-  ArcNameBuffer = ExAllocatePool(PagedPool, 256 * sizeof(WCHAR));
-  swprintf(ArcNameBuffer,
-	   L"\\ArcName\\%S", ParamBuffer);
-  RtlInitUnicodeString(&ArcName, ArcNameBuffer);
-
-  /* allocate device name string */
-  DeviceName.Length = 0;
-  DeviceName.MaximumLength = 256 * sizeof(WCHAR);
-  DeviceName.Buffer = ExAllocatePool(PagedPool, 256 * sizeof(WCHAR));
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &ArcName,
-			     OBJ_OPENLINK,
-			     NULL,
-			     NULL);
-
-  Status = ZwOpenSymbolicLinkObject(&Handle,
-				    SYMBOLIC_LINK_ALL_ACCESS,
-				    &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
+    /* Query the current \\SystemRoot */
+    ArcName.Buffer = ArcNameBuffer;
+    ArcName.Length = 0;
+    ArcName.MaximumLength = sizeof(ArcNameBuffer);
+    Status = NtQuerySymbolicLinkObject(LinkHandle, &ArcName, NULL);
+    if (!NT_SUCCESS(Status))
     {
-      RtlFreeUnicodeString(&BootPath);
-      ExFreePool(DeviceName.Buffer);
-      CPRINT("ZwOpenSymbolicLinkObject() '%wZ' failed (Status %x)\n",
-	     &ArcName,
-	     Status);
-      ExFreePool(ArcName.Buffer);
-
-      return(Status);
-    }
-  ExFreePool(ArcName.Buffer);
-
-  Status = ZwQuerySymbolicLinkObject(Handle,
-				     &DeviceName,
-				     &Length);
-  ZwClose (Handle);
-  if (!NT_SUCCESS(Status))
-    {
-      RtlFreeUnicodeString(&BootPath);
-      ExFreePool(DeviceName.Buffer);
-      CPRINT("ZwQuerySymbolicObject() failed (Status %x)\n",
-	     Status);
-
-      return(Status);
+        /* We failed, free the string */
+        RtlFreeUnicodeString(&TargetName);
+        return FALSE;
     }
 
-  RtlAppendUnicodeStringToString(&DeviceName,
-				 &BootPath);
+    /* Convert it to Ansi */
+    ArcString.Buffer = AnsiBuffer;
+    ArcString.Length = 0;
+    ArcString.MaximumLength = sizeof(AnsiBuffer);
+    Status = RtlUnicodeStringToAnsiString(&ArcString, &ArcName, FALSE);
+    AnsiBuffer[ArcString.Length] = ANSI_NULL;
 
-  RtlFreeUnicodeString(&BootPath);
+    /* Close the link handle and free the name */
+    ObCloseHandle(LinkHandle, KernelMode);
+    RtlFreeUnicodeString(&TargetName);
 
-  /* create the '\SystemRoot' link */
-  Status = IoCreateSymbolicLink(&LinkName,
-				&DeviceName);
-  ExFreePool(DeviceName.Buffer);
-  if (!NT_SUCCESS(Status))
-    {
-      CPRINT("IoCreateSymbolicLink() failed (Status %x)\n",
-	     Status);
+    /* Setup the system root name again */
+    RtlInitAnsiString(&TempString, "\\SystemRoot");
+    Status = RtlAnsiStringToUnicodeString(&LinkName, &TempString, TRUE);
+    if (!NT_SUCCESS(Status)) return FALSE;
 
-      return(Status);
-    }
+    /* Open the symbolic link for it */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenSymbolicLinkObject(&LinkHandle,
+                                      SYMBOLIC_LINK_ALL_ACCESS,
+                                      &ObjectAttributes);
+    if (!NT_SUCCESS(Status)) return FALSE;
 
-  /* Check whether '\SystemRoot'(LinkName) can be opened */
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &LinkName,
-			     0,
-			     NULL,
-			     NULL);
+    /* Destroy it */
+    NtMakeTemporaryObject(LinkHandle);
+    ObCloseHandle(LinkHandle, KernelMode);
 
-  Status = ZwOpenFile(&Handle,
-		      FILE_ALL_ACCESS,
-		      &ObjectAttributes,
-		      &IoStatusBlock,
-		      0,
-		      0);
-  if (!NT_SUCCESS(Status))
-    {
-      CPRINT("ZwOpenFile() failed to open '\\SystemRoot' (Status %x)\n",
-	     Status);
-      return(Status);
-    }
+    /* Now create the new name for it */
+    sprintf(Buffer, "%s%s", ArcString.Buffer, LoaderBlock->NtBootPathName);
 
-  ZwClose(Handle);
+    /* Copy it into the passed parameter and null-terminate it */
+    RtlCopyString(NtBootPath, &ArcString);
+    Buffer[strlen(Buffer) - 1] = ANSI_NULL;
 
-  return(STATUS_SUCCESS);
+    /* Setup the Unicode-name for the new symbolic link value */
+    RtlInitAnsiString(&TargetString, Buffer);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    Status = RtlAnsiStringToUnicodeString(&ArcName, &TargetString, TRUE);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Create it */
+    Status = NtCreateSymbolicLinkObject(&LinkHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &ArcName);
+
+    /* Free all the strings and close the handle and return success */
+    RtlFreeUnicodeString(&ArcName);
+    RtlFreeUnicodeString(&LinkName);
+    ObCloseHandle(LinkHandle, KernelMode);
+    return TRUE;
 }
 
 /* EOF */
