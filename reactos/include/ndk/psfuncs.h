@@ -180,19 +180,7 @@ FORCEINLINE
 PTEB
 NtCurrentTeb(VOID)
 {
-#ifndef __GNUC__
     return (PTEB)(ULONG_PTR)__readfsdword(0x18);
-#else
-    struct _TEB *ret;
-
-    __asm__ __volatile__ (
-        "movl %%fs:0x18, %0\n"
-        : "=r" (ret)
-        : /* no inputs */
-    );
-
-    return ret;
-#endif
 }
 #endif
 
