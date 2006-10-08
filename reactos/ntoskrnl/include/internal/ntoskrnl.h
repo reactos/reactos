@@ -61,8 +61,6 @@ typedef struct __DESCRIPTOR
  */
 VOID MmInitSystem(ULONG Phase, PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
 VOID IoInit(VOID);
-VOID IoInit2(BOOLEAN BootLog);
-VOID NTAPI IoInit3(VOID);
 BOOLEAN NTAPI ObInit(VOID);
 VOID NTAPI CmInitSystem1(VOID);
 VOID NTAPI CmInitHives(BOOLEAN SetupBoot);

@@ -60,8 +60,6 @@ VOID INIT_FUNCTION IopInitLookasideLists(VOID);
 #pragma alloc_text(INIT, IoInitShutdownNotification)
 #pragma alloc_text(INIT, IopInitLookasideLists)
 #pragma alloc_text(INIT, IoInit)
-#pragma alloc_text(INIT, IoInit2)
-#pragma alloc_text(INIT, IoInit3)
 #endif
 
 /* INIT FUNCTIONS ************************************************************/
@@ -395,102 +393,95 @@ IoInit (VOID)
   PnpInit();
 }
 
-VOID
+BOOLEAN
 INIT_FUNCTION
-IoInit2(BOOLEAN BootLog)
+NTAPI
+IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-  PDEVICE_NODE DeviceNode;
-  PDRIVER_OBJECT DriverObject;
-  LDR_DATA_TABLE_ENTRY ModuleObject;
-  NTSTATUS Status;
+    PDEVICE_NODE DeviceNode;
+    PDRIVER_OBJECT DriverObject;
+    LDR_DATA_TABLE_ENTRY ModuleObject;
+    NTSTATUS Status;
+    CHAR Buffer[256];
+    ANSI_STRING NtBootPath, RootString;
 
-  PnpInit2();
+    RtlInitEmptyAnsiString(&NtBootPath, Buffer, sizeof(Buffer));
 
-  IoCreateDriverList();
+    PnpInit2();
 
-  KeInitializeSpinLock (&IoStatisticsLock);
+    IoCreateDriverList();
 
-  /* Initialize raw filesystem driver */
+    KeInitializeSpinLock (&IoStatisticsLock);
 
-  /* Use IopRootDeviceNode for now */
-  Status = IopCreateDeviceNode(IopRootDeviceNode,
-    NULL,
-    &DeviceNode);
-  if (!NT_SUCCESS(Status))
+    /* Initialize raw filesystem driver */
+
+    /* Use IopRootDeviceNode for now */
+    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
+    if (!NT_SUCCESS(Status))
     {
-      CPRINT("IopCreateDeviceNode() failed with status (%x)\n", Status);
-      return;
+        CPRINT("IopCreateDeviceNode() failed with status (%x)\n", Status);
+        return FALSE;
     }
 
-  ModuleObject.DllBase = NULL;
-  ModuleObject.SizeOfImage = 0;
-  ModuleObject.EntryPoint = RawFsDriverEntry;
+    ModuleObject.DllBase = NULL;
+    ModuleObject.SizeOfImage = 0;
+    ModuleObject.EntryPoint = RawFsDriverEntry;
 
-  Status = IopInitializeDriverModule(
-    DeviceNode,
-    &ModuleObject,
-    &DeviceNode->ServiceName,
-    TRUE,
-    &DriverObject);
-  if (!NT_SUCCESS(Status))
+    Status = IopInitializeDriverModule(DeviceNode,
+                                       &ModuleObject,
+                                       &DeviceNode->ServiceName,
+                                       TRUE,
+                                       &DriverObject);
+    if (!NT_SUCCESS(Status))
     {
-      IopFreeDeviceNode(DeviceNode);
-      CPRINT("IopInitializeDriver() failed with status (%x)\n", Status);
-      return;
+        IopFreeDeviceNode(DeviceNode);
+        CPRINT("IopInitializeDriver() failed with status (%x)\n", Status);
+        return FALSE;
     }
 
-  Status = IopInitializeDevice(DeviceNode, DriverObject);
-  if (!NT_SUCCESS(Status))
+    Status = IopInitializeDevice(DeviceNode, DriverObject);
+    if (!NT_SUCCESS(Status))
     {
-      IopFreeDeviceNode(DeviceNode);
-      CPRINT("IopInitializeDevice() failed with status (%x)\n", Status);
-      return;
+        IopFreeDeviceNode(DeviceNode);
+        CPRINT("IopInitializeDevice() failed with status (%x)\n", Status);
+        return FALSE;
     }
 
-  Status = IopStartDevice(DeviceNode);
-  if (!NT_SUCCESS(Status))
+    Status = IopStartDevice(DeviceNode);
+    if (!NT_SUCCESS(Status))
     {
-      IopFreeDeviceNode(DeviceNode);
-      CPRINT("IopInitializeDevice() failed with status (%x)\n", Status);
-      return;
+        IopFreeDeviceNode(DeviceNode);
+        CPRINT("IopInitializeDevice() failed with status (%x)\n", Status);
+        return FALSE;
     }
 
-  /*
-   * Initialize PnP root releations
-   */
-  IoSynchronousInvalidateDeviceRelations(
-    IopRootDeviceNode->PhysicalDeviceObject,
-    BusRelations);
-
-     /* Start boot logging */
-    IopInitBootLog(BootLog);
+    /*
+    * Initialize PnP root releations
+    */
+    IoSynchronousInvalidateDeviceRelations(IopRootDeviceNode->
+                                           PhysicalDeviceObject,
+                                           BusRelations);
 
     /* Load boot start drivers */
     IopInitializeBootDrivers();
 
     /* Call back drivers that asked for */
     IopReinitializeBootDrivers();
-}
-
-VOID
-NTAPI
-INIT_FUNCTION
-IoInit3(VOID)
-{
-    NTSTATUS Status;
-    ANSI_STRING NtBootPath, RootString;
 
     /* Create ARC names for boot devices */
-    IopCreateArcNames(KeLoaderBlock);
+    IopCreateArcNames(LoaderBlock);
 
     /* Read KDB Data */
     KdbInit();
 
     /* I/O is now setup for disk access, so phase 3 */
-    KdInitSystem(3, KeLoaderBlock);
+    KdInitSystem(3, LoaderBlock);
 
     /* Load services for devices found by PnP manager */
     IopInitializePnpServices(IopRootDeviceNode, FALSE);
+
+    /* Load the System DLL and its Entrypoints */
+    if (!NT_SUCCESS(PsLocateSystemDll())) return FALSE;
 
     /* Load system start drivers */
     IopInitializeSystemDrivers();
@@ -502,7 +493,8 @@ IoInit3(VOID)
     IopReinitializeDrivers();
 
     /* Convert SystemRoot from ARC to NT path */
-    IopReassignSystemRoot(KeLoaderBlock, &NtBootPath);
+    Status = IopReassignSystemRoot(LoaderBlock, &NtBootPath);
+    if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Set the ANSI_STRING for the root path */
     RootString.MaximumLength = NtSystemRoot.MaximumLength / sizeof(WCHAR);
@@ -513,17 +505,20 @@ IoInit3(VOID)
 
     /* Convert the path into the ANSI_STRING */
     Status = RtlUnicodeStringToAnsiString(&RootString, &NtSystemRoot, FALSE);
-    if (!NT_SUCCESS(Status)) return;
+    if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Assign drive letters */
-    IoAssignDriveLetters(KeLoaderBlock,
+    IoAssignDriveLetters(LoaderBlock,
                          &NtBootPath,
                          RootString.Buffer,
                          &RootString);
 
     /* Update system root */
     Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &RootString, FALSE);
-    if (!NT_SUCCESS(Status)) return;
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Return success */
+    return TRUE;
 }
 
 /* EOF */

@@ -929,17 +929,11 @@ ExPhase2Init(PVOID Context)
     /* Enter the kernel debugger before starting up the boot drivers */
     if (KdDebuggerEnabled && KdpEarlyBreak) DbgBreakPoint();
 
-    /* Setup Drivers and Root Device Node */
-    IoInit2(FALSE);
+    /* Initialize the I/O Subsystem */
+    if (!IoInitSystem(KeLoaderBlock)) KeBugCheck(IO1_INITIALIZATION_FAILED);
 
     /* Display the boot screen image if not disabled */
     if (!NoGuiBoot) InbvEnableBootDriver(TRUE);
-
-    /* Create ARC Names, SystemRoot SymLink, Load Drivers and Assign Letters */
-    IoInit3();
-
-    /* Load the System DLL and its Entrypoints */
-    PsLocateSystemDll();
 
     /* Initialize VDM support */
     KeI386VdmInitialize();

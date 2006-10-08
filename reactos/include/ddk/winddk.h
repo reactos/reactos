@@ -6275,6 +6275,17 @@ RtlInitEmptyUnicodeString(OUT PUNICODE_STRING UnicodeString,
     UnicodeString->Buffer = Buffer;
 }
 
+FORCEINLINE
+VOID
+RtlInitEmptyAnsiString(OUT PANSI_STRING AnsiString,
+                       IN PCHAR Buffer,
+                       IN USHORT BufferSize)
+{
+    AnsiString->Length = 0;
+    AnsiString->MaximumLength = BufferSize;
+    AnsiString->Buffer = Buffer;
+}
+
 NTSYSAPI
 NTSTATUS
 NTAPI

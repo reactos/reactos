@@ -575,6 +575,12 @@ IopReassignSystemRoot(
     OUT PANSI_STRING NtBootPath
 );
 
+BOOLEAN
+NTAPI
+IoInitSystem(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
 //
 // Device/Volume Routines
 //
