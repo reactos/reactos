@@ -1013,20 +1013,20 @@ VideoPortInt10(
 
 VPAPI
 LONG
-DDKFASTAPI
+FASTCALL
 VideoPortInterlockedDecrement(
   IN PLONG  Addend);
 
 VPAPI
 LONG
-DDKFASTAPI
+FASTCALL
 VideoPortInterlockedExchange(
   IN OUT PLONG  Target,
   IN LONG  Value);
 
 VPAPI
 LONG
-DDKFASTAPI
+FASTCALL
 VideoPortInterlockedIncrement(
   IN PLONG  Addend);
 

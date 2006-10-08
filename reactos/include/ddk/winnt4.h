@@ -52,9 +52,9 @@ ExAllocateFromZone(
   return (PVOID) Zone->FreeList.Next;
 }
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ExExtendZone(
   IN PZONE_HEADER  Zone,
   IN PVOID  Segment,
@@ -70,9 +70,9 @@ ExFreeToZone(
   return ((PSINGLE_LIST_ENTRY) Block)->Next;
 }
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ExInitializeZone(
   IN PZONE_HEADER  Zone,
   IN ULONG  BlockSize,
@@ -89,18 +89,18 @@ ExInitializeZone(
                               Lock) \
   ((PVOID) ExInterlockedPopEntryList(&Zone->FreeList, Lock))
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ExInterlockedExtendZone(
   IN PZONE_HEADER  Zone,
   IN PVOID  Segment,
   IN ULONG  SegmentSize,
   IN PKSPIN_LOCK  Lock);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 ExInterlockedFreeToZone(
   IN PZONE_HEADER  Zone,
   IN PVOID  Block,
@@ -130,23 +130,23 @@ ExInterlockedFreeToZone(
 #define ExIsFullZone(Zone) \
   ((Zone)->FreeList.Next == (PSINGLE_LIST_ENTRY) NULL)
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExQueueWorkItem(
   IN PWORK_QUEUE_ITEM  WorkItem,
   IN WORK_QUEUE_TYPE  QueueType);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 ExIsObjectInFirstZoneSegment(
   IN PZONE_HEADER  Zone,
   IN PVOID  Object);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExReleaseResource(
   IN PERESOURCE  Resource);
 
@@ -160,37 +160,37 @@ ExReleaseResource(
 #define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
 #define ExReleaseResourceForThread ExReleaseResourceForThreadLite
 
-NTOSAPI
+NTKERNELAPI
 INTERLOCKED_RESULT
-DDKAPI
+NTAPI
 ExInterlockedDecrementLong(
   IN PLONG  Addend,
   IN PKSPIN_LOCK  Lock);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 ExInterlockedExchangeUlong(
   IN PULONG  Target,
   IN ULONG  Value,
   IN PKSPIN_LOCK  Lock);
 
-NTOSAPI
+NTKERNELAPI
 INTERLOCKED_RESULT
-DDKAPI
+NTAPI
 ExInterlockedIncrementLong(
   IN PLONG  Addend,
   IN PKSPIN_LOCK  Lock);
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 HalAcquireDisplayOwnership(
   IN PHAL_RESET_DISPLAY_PARAMETERS  ResetDisplayParameters);
 
 NTHALAPI
 NTSTATUS
-DDKAPI
+NTAPI
 HalAllocateAdapterChannel(
   IN PADAPTER_OBJECT  AdapterObject,
   IN PWAIT_CONTEXT_BLOCK  Wcb,
@@ -199,7 +199,7 @@ HalAllocateAdapterChannel(
 
 NTHALAPI
 PVOID
-DDKAPI
+NTAPI
 HalAllocateCommonBuffer(
   IN PADAPTER_OBJECT  AdapterObject,
   IN ULONG  Length,
@@ -208,7 +208,7 @@ HalAllocateCommonBuffer(
 
 NTHALAPI
 NTSTATUS
-DDKAPI
+NTAPI
 HalAssignSlotResources(
   IN PUNICODE_STRING  RegistryPath,
   IN PUNICODE_STRING  DriverClassName,
@@ -221,7 +221,7 @@ HalAssignSlotResources(
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 HalFreeCommonBuffer(
   IN PADAPTER_OBJECT  AdapterObject,
   IN ULONG  Length,
@@ -231,14 +231,14 @@ HalFreeCommonBuffer(
 
 NTHALAPI
 PADAPTER_OBJECT
-DDKAPI
+NTAPI
 HalGetAdapter(
   IN PDEVICE_DESCRIPTION  DeviceDescription,
   IN OUT PULONG  NumberOfMapRegisters);
 
 NTHALAPI
 ULONG
-DDKAPI
+NTAPI
 HalGetBusData(
   IN BUS_DATA_TYPE  BusDataType,
   IN ULONG  BusNumber,
@@ -248,7 +248,7 @@ HalGetBusData(
 
 NTHALAPI
 ULONG
-DDKAPI
+NTAPI
 HalGetBusDataByOffset(
   IN BUS_DATA_TYPE  BusDataType,
   IN ULONG  BusNumber,
@@ -259,13 +259,13 @@ HalGetBusDataByOffset(
 
 NTHALAPI
 ULONG
-DDKAPI
+NTAPI
 HalGetDmaAlignmentRequirement(
   VOID);
 
 NTHALAPI
 ULONG
-DDKAPI
+NTAPI
 HalGetInterruptVector(
   IN INTERFACE_TYPE  InterfaceType,
   IN ULONG  BusNumber,
@@ -276,13 +276,13 @@ HalGetInterruptVector(
 
 NTHALAPI
 ULONG
-DDKAPI
+NTAPI
 HalReadDmaCounter(
   IN PADAPTER_OBJECT  AdapterObject);
 
 NTHALAPI
 ULONG
-DDKAPI
+NTAPI
 HalSetBusData(
   IN BUS_DATA_TYPE  BusDataType,
   IN ULONG  BusNumber,
@@ -292,7 +292,7 @@ HalSetBusData(
 
 NTHALAPI
 ULONG
-DDKAPI
+NTAPI
 HalSetBusDataByOffset(
   IN BUS_DATA_TYPE  BusDataType,
   IN ULONG  BusNumber,
@@ -303,7 +303,7 @@ HalSetBusDataByOffset(
 
 NTHALAPI
 BOOLEAN
-DDKAPI
+NTAPI
 HalTranslateBusAddress(
   IN INTERFACE_TYPE  InterfaceType,
   IN ULONG  BusNumber,
@@ -311,9 +311,9 @@ HalTranslateBusAddress(
   IN OUT PULONG  AddressSpace,
   OUT PPHYSICAL_ADDRESS  TranslatedAddress);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoAllocateAdapterChannel(
   IN PADAPTER_OBJECT  AdapterObject,
   IN PDEVICE_OBJECT  DeviceObject,
@@ -321,9 +321,9 @@ IoAllocateAdapterChannel(
   IN PDRIVER_CONTROL  ExecutionRoutine,
   IN PVOID  Context);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoAssignResources(
   IN PUNICODE_STRING  RegistryPath,
   IN PUNICODE_STRING  DriverClassName  OPTIONAL,
@@ -332,16 +332,16 @@ IoAssignResources(
   IN PIO_RESOURCE_REQUIREMENTS_LIST  RequestedResources,
   IN OUT PCM_RESOURCE_LIST  *AllocatedResources);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoAttachDeviceByPointer(
   IN PDEVICE_OBJECT  SourceDevice,
   IN PDEVICE_OBJECT  TargetDevice);
 
 NTHALAPI
 BOOLEAN
-DDKAPI
+NTAPI
 IoFlushAdapterBuffers(
   IN PADAPTER_OBJECT  AdapterObject,
   IN PMDL  Mdl,
@@ -352,13 +352,13 @@ IoFlushAdapterBuffers(
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 IoFreeAdapterChannel(
   IN PADAPTER_OBJECT  AdapterObject);
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 IoFreeMapRegisters(
   IN PADAPTER_OBJECT  AdapterObject,
   IN PVOID  MapRegisterBase,
@@ -366,7 +366,7 @@ IoFreeMapRegisters(
 
 NTHALAPI
 PHYSICAL_ADDRESS
-DDKAPI
+NTAPI
 IoMapTransfer(
   IN PADAPTER_OBJECT  AdapterObject,
   IN PMDL  Mdl,
@@ -375,196 +375,196 @@ IoMapTransfer(
   IN OUT PULONG  Length,
   IN BOOLEAN  WriteToDevice);
 
-NTOSAPI
+NTKERNELAPI
 PMDL
-DDKAPI
+NTAPI
 MmCreateMdl(
   IN PMDL  MemoryDescriptorList  OPTIONAL,
   IN PVOID  Base,
   IN SIZE_T  Length);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 MmIsNonPagedSystemAddressValid(
   IN PVOID  VirtualAddress);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlEnlargedIntegerMultiply(
   IN LONG  Multiplicand,
   IN LONG  Multiplier);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlEnlargedUnsignedDivide(
   IN ULARGE_INTEGER  Dividend,
   IN ULONG  Divisor,
   IN OUT PULONG  Remainder);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlEnlargedUnsignedMultiply(
   IN ULONG  Multiplicand,
   IN ULONG  Multiplier);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlExtendedIntegerMultiply(
   IN LARGE_INTEGER  Multiplicand,
   IN LONG  Multiplier);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlExtendedLargeIntegerDivide(
   IN LARGE_INTEGER  Dividend,
   IN ULONG  Divisor,
   IN OUT PULONG  Remainder);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlExtendedMagicDivide(
   IN LARGE_INTEGER  Dividend,
   IN LARGE_INTEGER  MagicDivisor,
   IN CCHAR  ShiftCount);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlLargeIntegerAdd(
   IN LARGE_INTEGER  Addend1,
   IN LARGE_INTEGER  Addend2);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlLargeIntegerAnd(
   IN OUT LARGE_INTEGER  Result,
   IN LARGE_INTEGER  Source,
   IN LARGE_INTEGER  Mask);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlLargeIntegerArithmeticShift(
   IN LARGE_INTEGER  LargeInteger,
   IN CCHAR  ShiftCount);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlLargeIntegerDivide(
   IN LARGE_INTEGER  Dividend,
   IN LARGE_INTEGER  Divisor,
   IN OUT PLARGE_INTEGER  Remainder);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerEqualTo(
   IN LARGE_INTEGER  Operand1,
   IN LARGE_INTEGER  Operand2);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerEqualToZero(
   IN LARGE_INTEGER  Operand);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerGreaterOrEqualToZero(
   IN LARGE_INTEGER  Operand);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerGreaterThan(
   IN LARGE_INTEGER  Operand1,
   IN LARGE_INTEGER  Operand2);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerGreaterThanOrEqualTo(
   IN LARGE_INTEGER  Operand1,
   IN LARGE_INTEGER  Operand2);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerGreaterThanZero(
   IN LARGE_INTEGER  Operand);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerLessOrEqualToZero(
   IN LARGE_INTEGER  Operand);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerLessThan(
   IN LARGE_INTEGER  Operand1,
   IN LARGE_INTEGER  Operand2);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerLessThanOrEqualTo(
   IN LARGE_INTEGER  Operand1,
   IN LARGE_INTEGER  Operand2);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerLessThanZero(
   IN LARGE_INTEGER  Operand);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlLargeIntegerNegate(
   IN LARGE_INTEGER  Subtrahend);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerNotEqualTo(
   IN LARGE_INTEGER  Operand1,
   IN LARGE_INTEGER  Operand2);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlLargeIntegerNotEqualToZero(
   IN LARGE_INTEGER  Operand);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlLargeIntegerShiftLeft(
   IN LARGE_INTEGER  LargeInteger,
   IN CCHAR  ShiftCount);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlLargeIntegerShiftRight(
   IN LARGE_INTEGER  LargeInteger,
   IN CCHAR  ShiftCount);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlLargeIntegerSubtract(
   IN LARGE_INTEGER  Minuend,
   IN LARGE_INTEGER  Subtrahend);
@@ -587,21 +587,21 @@ RtlLargeIntegerSubtract(
 
 #ifdef _X86_
 
-NTOSAPI
+NTKERNELAPI
 INTERLOCKED_RESULT
-DDKFASTAPI
+FASTCALL
 Exfi386InterlockedIncrementLong(
   IN PLONG  Addend);
 
-NTOSAPI
+NTKERNELAPI
 INTERLOCKED_RESULT
-DDKFASTAPI
+FASTCALL
 Exfi386InterlockedDecrementLong(
   IN PLONG  Addend);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKFASTAPI
+FASTCALL
 Exfi386InterlockedExchangeUlong(
   IN PULONG  Target,
   IN ULONG  Value);

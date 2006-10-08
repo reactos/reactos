@@ -43,6 +43,15 @@ KeInitializeApc(
     IN PVOID Context
 );
 
+BOOLEAN
+NTAPI
+KeInsertQueueApc(
+    IN PKAPC Apc,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2,
+    IN KPRIORITY PriorityBoost
+);
+
 VOID
 NTAPI
 KiDeliverApc(

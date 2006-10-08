@@ -52,6 +52,7 @@ ObCreateObject(
     OUT PVOID *Object
 );
 
+NTKERNELAPI
 NTSTATUS
 NTAPI
 ObCreateObjectType(
@@ -68,6 +69,7 @@ ObGetObjectPointerCount(
     IN PVOID Object
 );
 
+NTKERNELAPI
 NTSTATUS
 NTAPI
 ObOpenObjectByName(

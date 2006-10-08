@@ -37,23 +37,16 @@ extern "C" {
 ** Definitions specific to this Device Driver Kit
 */
 #define DDKAPI __stdcall
-#define DDKFASTAPI __fastcall
 #define FASTCALL __fastcall
 #define DDKCDECLAPI __cdecl
 
-/* FIXME: REMOVE THIS UNCOMPATIBLE CRUFT!!! */
-//#define NTKERNELAPI
-
 #ifdef _NTOSKRNL_
-#define NTKERNELAPI 
+/* HACKHACKHACK!!! We shouldn't include this header from ntoskrnl! */
+#define NTKERNELAPI
 #else
 #define NTKERNELAPI DECLSPEC_IMPORT
 #endif
 
-
-#ifndef NTOSAPI
-#define NTOSAPI NTKERNELAPI
-#endif
 #if defined(_NTOSKRNL_)
 #define DECLARE_INTERNAL_OBJECT(x) typedef struct _##x; typedef struct _##x *P##x;
 #define DECLARE_INTERNAL_OBJECT2(x,y) typedef struct _##x; typedef struct _##x *P##y;
@@ -2629,35 +2622,35 @@ typedef NTSTATUS
   IN PDEVICE_CONTROL_COMPLETION  CompletionRoutine);
 
 typedef VOID
-(DDKFASTAPI *pHalExamineMBR)(
+(FASTCALL *pHalExamineMBR)(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,
   IN ULONG  MBRTypeIdentifier,
   OUT PVOID  *Buffer);
 
 typedef VOID
-(DDKFASTAPI *pHalIoAssignDriveLetters)(
+(FASTCALL *pHalIoAssignDriveLetters)(
   IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
   IN PSTRING NtDeviceName,
   OUT PUCHAR NtSystemPath,
   OUT PSTRING NtSystemPathString);
 
 typedef NTSTATUS
-(DDKFASTAPI *pHalIoReadPartitionTable)(
+(FASTCALL *pHalIoReadPartitionTable)(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,
   IN BOOLEAN  ReturnRecognizedPartitions,
   OUT struct _DRIVE_LAYOUT_INFORMATION **PartitionBuffer);
 
 typedef NTSTATUS
-(DDKFASTAPI *pHalIoSetPartitionInformation)(
+(FASTCALL *pHalIoSetPartitionInformation)(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,
   IN ULONG  PartitionNumber,
   IN ULONG  PartitionType);
 
 typedef NTSTATUS
-(DDKFASTAPI *pHalIoWritePartitionTable)(
+(FASTCALL *pHalIoWritePartitionTable)(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,
   IN ULONG  SectorsPerTrack,
@@ -2665,12 +2658,12 @@ typedef NTSTATUS
   IN struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer);
 
 typedef PBUS_HANDLER
-(DDKFASTAPI *pHalHandlerForBus)(
+(FASTCALL *pHalHandlerForBus)(
   IN INTERFACE_TYPE  InterfaceType,
   IN ULONG  BusNumber);
 
 typedef VOID
-(DDKFASTAPI *pHalReferenceBusHandler)(
+(FASTCALL *pHalReferenceBusHandler)(
   IN PBUS_HANDLER  BusHandler);
 
 typedef NTSTATUS
@@ -4183,7 +4176,7 @@ typedef struct _RTL_OSVERSIONINFOEXW {
   UCHAR  wReserved;
 } RTL_OSVERSIONINFOEXW, *PRTL_OSVERSIONINFOEXW;
 
-NTOSAPI
+NTSYSAPI
 ULONGLONG
 DDKAPI
 VerSetConditionMask(
@@ -5080,7 +5073,7 @@ typedef struct _DISK_SIGNATURE {
 } DISK_SIGNATURE, *PDISK_SIGNATURE;
 
 typedef VOID
-(DDKFASTAPI*PTIME_UPDATE_NOTIFY_ROUTINE)(
+(FASTCALL*PTIME_UPDATE_NOTIFY_ROUTINE)(
   IN HANDLE  ThreadId,
   IN KPROCESSOR_MODE  Mode);
 
@@ -5218,9 +5211,9 @@ typedef struct _KFLOATING_SAVE {
 #define PAGE_SIZE                         0x1000
 #define PAGE_SHIFT                        12L
 
-extern NTOSAPI PVOID MmHighestUserAddress;
-extern NTOSAPI PVOID MmSystemRangeStart;
-extern NTOSAPI ULONG_PTR MmUserProbeAddress;
+extern NTKERNELAPI PVOID MmHighestUserAddress;
+extern NTKERNELAPI PVOID MmSystemRangeStart;
+extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
 
 #define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
 #define MM_SYSTEM_RANGE_START             MmSystemRangeStart
@@ -5278,36 +5271,36 @@ KeGetCurrentProcessorNumber(VOID)
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKFASTAPI
+FASTCALL
 InterlockedIncrement(
   IN OUT LONG volatile *Addend);
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKFASTAPI
+FASTCALL
 InterlockedDecrement(
   IN OUT LONG volatile *Addend);
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKFASTAPI
+FASTCALL
 InterlockedCompareExchange(
   IN OUT LONG volatile *Destination,
   IN LONG  Exchange,
   IN LONG  Comparand);
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKFASTAPI
+FASTCALL
 InterlockedExchange(
   IN OUT LONG volatile *Destination,
   IN LONG Value);
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKFASTAPI
+FASTCALL
 InterlockedExchangeAdd(
   IN OUT LONG volatile *Addend,
   IN LONG  Value);
@@ -5337,27 +5330,27 @@ InterlockedExchangeAdd(
 
 #endif /* !__INTERLOCKED_DECLARED */
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKFASTAPI
+FASTCALL
 KefAcquireSpinLockAtDpcLevel(
   IN PKSPIN_LOCK  SpinLock);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKFASTAPI
+FASTCALL
 KefReleaseSpinLockFromDpcLevel(
   IN PKSPIN_LOCK  SpinLock);
 
 NTHALAPI
 KIRQL
-DDKFASTAPI
+FASTCALL
 KfAcquireSpinLock(
   IN PKSPIN_LOCK SpinLock);
 
 NTHALAPI
 VOID
-DDKFASTAPI
+FASTCALL
 KfReleaseSpinLock(
   IN PKSPIN_LOCK SpinLock,
   IN KIRQL NewIrql);
@@ -5612,15 +5605,15 @@ RemoveTailList(
 
 #if !defined(_WINBASE_H) || _WIN32_WINNT < 0x0501
 
-NTOSAPI
+NTKERNELAPI
 PSLIST_ENTRY
-DDKFASTAPI
+FASTCALL
 InterlockedPopEntrySList(
   IN PSLIST_HEADER  ListHead);
 
-NTOSAPI
+NTKERNELAPI
 PSLIST_ENTRY
-DDKFASTAPI
+FASTCALL
 InterlockedPushEntrySList(
   IN PSLIST_HEADER  ListHead,
   IN PSLIST_ENTRY  ListEntry);
@@ -5637,9 +5630,9 @@ InterlockedPushEntrySList(
 
 #define InterlockedFlushSList(ListHead) ExInterlockedFlushSList(ListHead)
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlxAnsiStringToUnicodeSize(
   IN PCANSI_STRING  AnsiString);
 
@@ -5649,106 +5642,106 @@ RtlxAnsiStringToUnicodeSize(
   ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)   \
 )
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlAnsiStringToUnicodeString(
   IN OUT PUNICODE_STRING  DestinationString,
   IN PANSI_STRING  SourceString,
   IN BOOLEAN  AllocateDestinationString);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlAppendUnicodeStringToString(
   IN OUT PUNICODE_STRING  Destination,
   IN PCUNICODE_STRING  Source);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlAppendUnicodeToString(
   IN OUT PUNICODE_STRING  Destination,
   IN PCWSTR  Source);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlAreBitsClear(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  StartingIndex,
   IN ULONG  Length);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlAreBitsSet(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  StartingIndex,
   IN ULONG  Length);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlCharToInteger(
   IN PCSZ  String,
   IN ULONG  Base  OPTIONAL,
   IN OUT PULONG  Value);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlCheckBit(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  BitPosition);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlCheckRegistryKey(
   IN ULONG  RelativeTo,
   IN PWSTR  Path);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlClearAllBits(
   IN PRTL_BITMAP  BitMapHeader);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlClearBit(
   PRTL_BITMAP  BitMapHeader,
   ULONG  BitNumber);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlClearBits(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  StartingIndex,
   IN ULONG  NumberToClear);
 
-NTOSAPI
+NTSYSAPI
 SIZE_T
-DDKAPI
+NTAPI
 RtlCompareMemory(
   IN CONST VOID  *Source1,
   IN CONST VOID  *Source2,
   IN SIZE_T  Length);
 
-NTOSAPI
+NTSYSAPI
 LONG
-DDKAPI
+NTAPI
 RtlCompareString(
   IN PSTRING  String1,
   IN PSTRING  String2,
   BOOLEAN  CaseInSensitive);
 
-NTOSAPI
+NTSYSAPI
 LONG
-DDKAPI
+NTAPI
 RtlCompareUnicodeString(
   IN PCUNICODE_STRING  String1,
   IN PCUNICODE_STRING  String2,
@@ -5765,21 +5758,21 @@ RtlConvertLongToLargeInteger(LONG SignedInteger)
     return Result;
 }
 
-NTOSAPI
+NTSYSAPI
 LUID
-DDKAPI
+NTAPI
 RtlConvertLongToLuid(
   IN LONG  Long);
 
-NTOSAPI
+NTSYSAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 RtlConvertUlongToLargeInteger(
   IN ULONG  UnsignedInteger);
 
-NTOSAPI
+NTSYSAPI
 LUID
-DDKAPI
+NTAPI
 RtlConvertUlongToLuid(
   ULONG  Ulong);
 
@@ -5799,45 +5792,45 @@ RtlConvertUlongToLuid(
 #define RtlCopyBytes RtlCopyMemory
 #endif
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlCopyMemory32(
   IN VOID UNALIGNED  *Destination,
   IN CONST VOID UNALIGNED  *Source,
   IN ULONG  Length);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlCopyString(
   IN OUT PSTRING  DestinationString,
   IN PSTRING  SourceString  OPTIONAL);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlCopyUnicodeString(
   IN OUT PUNICODE_STRING  DestinationString,
   IN PCUNICODE_STRING  SourceString);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlCreateRegistryKey(
   IN ULONG  RelativeTo,
   IN PWSTR  Path);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlCreateSecurityDescriptor(
   IN OUT PSECURITY_DESCRIPTOR  SecurityDescriptor,
   IN ULONG  Revision);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlDeleteRegistryValue(
   IN ULONG  RelativeTo,
   IN PCWSTR  Path,
@@ -5862,17 +5855,17 @@ RtlDeleteRegistryValue(
  */
 #define RtlEqualMemory(Destination, Source, Length) (!memcmp(Destination, Source, Length))
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlEqualString(
   IN PSTRING  String1,
   IN PSTRING  String2,
   IN BOOLEAN  CaseInSensitive);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlEqualUnicodeString(
   IN CONST UNICODE_STRING  *String1,
   IN CONST UNICODE_STRING  *String2,
@@ -5894,178 +5887,178 @@ RtlEqualUnicodeString(
 #define RtlFillBytes RtlFillMemory
 #endif
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlFindClearBits(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  NumberToFind,
   IN ULONG  HintIndex);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlFindClearBitsAndSet(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  NumberToFind,
   IN ULONG  HintIndex);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlFindClearRuns(
   IN PRTL_BITMAP  BitMapHeader,
   OUT PRTL_BITMAP_RUN  RunArray,
   IN ULONG  SizeOfRunArray,
   IN BOOLEAN  LocateLongestRuns);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlFindFirstRunClear(
   IN PRTL_BITMAP  BitMapHeader,
   OUT PULONG  StartingIndex);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlFindLastBackwardRunClear(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  FromIndex,
   OUT PULONG  StartingRunIndex);
 
-NTOSAPI
+NTSYSAPI
 CCHAR
-DDKAPI
+NTAPI
 RtlFindLeastSignificantBit(
   IN ULONGLONG  Set);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlFindLongestRunClear(
   IN PRTL_BITMAP  BitMapHeader,
   OUT PULONG  StartingIndex);
 
-NTOSAPI
+NTSYSAPI
 CCHAR
-DDKAPI
+NTAPI
 RtlFindMostSignificantBit(
   IN ULONGLONG  Set);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlFindNextForwardRunClear(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  FromIndex,
   OUT PULONG  StartingRunIndex);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlFindSetBits(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  NumberToFind,
   IN ULONG  HintIndex);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlFindSetBitsAndClear(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  NumberToFind,
   IN ULONG  HintIndex);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlFreeAnsiString(
   IN PANSI_STRING  AnsiString);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlFreeUnicodeString(
   IN PUNICODE_STRING  UnicodeString);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlGetCallersAddress(
   OUT PVOID  *CallersAddress,
   OUT PVOID  *CallersCaller);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlGetVersion(
   IN OUT PRTL_OSVERSIONINFOW  lpVersionInformation);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlGUIDFromString(
   IN PUNICODE_STRING  GuidString,
   OUT GUID  *Guid);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlHashUnicodeString(
   IN CONST UNICODE_STRING  *String,
   IN BOOLEAN  CaseInSensitive,
   IN ULONG  HashAlgorithm,
   OUT PULONG  HashValue);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlInitAnsiString(
   IN OUT PANSI_STRING  DestinationString,
   IN PCSZ  SourceString);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlInitializeBitMap(
   IN PRTL_BITMAP  BitMapHeader,
   IN PULONG  BitMapBuffer,
   IN ULONG  SizeOfBitMap);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlInitString(
   IN OUT PSTRING  DestinationString,
   IN PCSZ  SourceString);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlInitUnicodeString(
   IN OUT PUNICODE_STRING  DestinationString,
   IN PCWSTR  SourceString);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlInt64ToUnicodeString(
   IN ULONGLONG  Value,
   IN ULONG  Base OPTIONAL,
   IN OUT PUNICODE_STRING  String);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlIntegerToUnicodeString(
   IN ULONG  Value,
   IN ULONG  Base  OPTIONAL,
   IN OUT PUNICODE_STRING  String);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlIntPtrToUnicodeString(
   PLONG  Value,
   ULONG  Base  OPTIONAL,
@@ -6079,15 +6072,15 @@ RtlIntPtrToUnicodeString(
 #define RtlIsZeroLuid(_L1) \
   ((BOOLEAN) ((!(_L1)->LowPart) && (!(_L1)->HighPart)))
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlLengthSecurityDescriptor(
   IN PSECURITY_DESCRIPTOR  SecurityDescriptor);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlMapGenericMask(
   IN OUT PACCESS_MASK  AccessMask,
   IN PGENERIC_MAPPING  GenericMapping);
@@ -6101,36 +6094,36 @@ RtlMapGenericMask(
  */
 #define RtlMoveMemory memmove
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlNumberOfClearBits(
   IN PRTL_BITMAP  BitMapHeader);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlNumberOfSetBits(
   IN PRTL_BITMAP  BitMapHeader);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKFASTAPI
+FASTCALL
 RtlPrefetchMemoryNonTemporal(
   IN PVOID  Source,
   IN SIZE_T  Length);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlPrefixUnicodeString(
   IN PCUNICODE_STRING  String1,
   IN PCUNICODE_STRING  String2,
   IN BOOLEAN  CaseInSensitive);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlQueryRegistryValues(
   IN ULONG  RelativeTo,
   IN PCWSTR  Path,
@@ -6162,95 +6155,95 @@ RtlQueryRegistryValues(
         *((PULONG)(DestAddress))=*((PULONG)(SrcAddress)); \
     }
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlRetrieveUshort(
   IN OUT PUSHORT  DestinationAddress,
   IN PUSHORT  SourceAddress);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlSetAllBits(
   IN PRTL_BITMAP  BitMapHeader);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlSetBit(
   PRTL_BITMAP  BitMapHeader,
   ULONG  BitNumber);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlSetBits(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  StartingIndex,
   IN ULONG  NumberToSet);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlSetDaclSecurityDescriptor(
   IN OUT PSECURITY_DESCRIPTOR  SecurityDescriptor,
   IN BOOLEAN  DaclPresent,
   IN PACL  Dacl  OPTIONAL,
   IN BOOLEAN  DaclDefaulted  OPTIONAL);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlStoreUlong(
   IN PULONG  Address,
   IN ULONG  Value);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlStoreUlonglong(
   IN OUT PULONGLONG  Address,
   ULONGLONG  Value);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlStoreUlongPtr(
   IN OUT PULONG_PTR  Address,
   IN ULONG_PTR  Value);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlStoreUshort(
   IN PUSHORT  Address,
   IN USHORT  Value);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlStringFromGUID(
   IN REFGUID  Guid,
   OUT PUNICODE_STRING  GuidString);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlTestBit(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  BitNumber);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlTimeFieldsToTime(
   IN PTIME_FIELDS  TimeFields,
   IN PLARGE_INTEGER  Time);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlTimeToTimeFields(
   IN PLARGE_INTEGER  Time,
   IN PTIME_FIELDS  TimeFields);
@@ -6282,45 +6275,45 @@ RtlInitEmptyUnicodeString(OUT PUNICODE_STRING UnicodeString,
     UnicodeString->Buffer = Buffer;
 }
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlUnicodeStringToAnsiString(
   IN OUT PANSI_STRING  DestinationString,
   IN PCUNICODE_STRING  SourceString,
   IN BOOLEAN  AllocateDestinationString);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlUnicodeStringToInteger(
   IN PCUNICODE_STRING  String,
   IN ULONG  Base  OPTIONAL,
   OUT PULONG  Value);
 
-NTOSAPI
+NTSYSAPI
 WCHAR
-DDKAPI
+NTAPI
 RtlUpcaseUnicodeChar(
   IN WCHAR  SourceCharacter);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlUpcaseUnicodeString(
   IN OUT PUNICODE_STRING  DestinationString  OPTIONAL,
   IN PCUNICODE_STRING  SourceString,
   IN BOOLEAN  AllocateDestinationString);
 
-NTOSAPI
+NTSYSAPI
 CHAR
-DDKAPI
+NTAPI
 RtlUpperChar(
   IN CHAR Character);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlUpperString(
   IN OUT PSTRING  DestinationString,
   IN PSTRING  SourceString);
@@ -6330,46 +6323,46 @@ FASTCALL
 RtlUshortByteSwap(
   IN USHORT  Source);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlValidRelativeSecurityDescriptor(
   IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
   IN ULONG  SecurityDescriptorLength,
   IN SECURITY_INFORMATION  RequiredInformation);
 
-NTOSAPI
+NTSYSAPI
 BOOLEAN
-DDKAPI
+NTAPI
 RtlValidSecurityDescriptor(
   IN PSECURITY_DESCRIPTOR  SecurityDescriptor);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlVerifyVersionInfo(
   IN PRTL_OSVERSIONINFOEXW  VersionInfo,
   IN ULONG  TypeMask,
   IN ULONGLONG  ConditionMask);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlVolumeDeviceToDosName(
   IN PVOID  VolumeDeviceObject,
   OUT PUNICODE_STRING  DosName);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlWalkFrameChain(
   OUT PVOID  *Callers,
   IN ULONG  Count,
   IN ULONG  Flags);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 RtlWriteRegistryValue(
   IN ULONG  RelativeTo,
   IN PCWSTR  Path,
@@ -6378,9 +6371,9 @@ RtlWriteRegistryValue(
   IN PVOID  ValueData,
   IN ULONG  ValueLength);
 
-NTOSAPI
+NTSYSAPI
 ULONG
-DDKAPI
+NTAPI
 RtlxUnicodeStringToAnsiSize(
   IN PCUNICODE_STRING  UnicodeString);
 
@@ -6402,48 +6395,56 @@ RtlxUnicodeStringToAnsiSize(
 
 /* Guarded Mutex routines */
 
+NTKERNELAPI
 VOID
 FASTCALL
 KeAcquireGuardedMutex(
     IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
+NTKERNELAPI
 VOID
 FASTCALL
 KeAcquireGuardedMutexUnsafe(
     IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
+NTKERNELAPI
 VOID
 NTAPI
 KeEnterGuardedRegion(
     VOID
 );
 
+NTKERNELAPI
 VOID
 NTAPI
 KeLeaveGuardedRegion(
     VOID
 );
 
+NTKERNELAPI
 VOID
 FASTCALL
 KeInitializeGuardedMutex(
     OUT PKGUARDED_MUTEX GuardedMutex
 );
 
+NTKERNELAPI
 VOID
 FASTCALL
 KeReleaseGuardedMutexUnsafe(
     IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
+NTKERNELAPI
 VOID
 FASTCALL
 KeReleaseGuardedMutex(
     IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
+NTKERNELAPI
 BOOLEAN
 FASTCALL
 KeTryToAcquireGuardedMutex(
@@ -6459,28 +6460,28 @@ KeTryToAcquireGuardedMutex(
     KeInitializeEvent(&(_FastMutex)->Gate, SynchronizationEvent, FALSE); \
 }
 
-NTOSAPI
+NTKERNELAPI
 VOID
 FASTCALL
 ExAcquireFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex);
 
-NTOSAPI
+NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex);
 
 #if defined(_NTHAL_) && defined(_X86_)
-NTOSAPI
+NTKERNELAPI
 VOID
 FASTCALL
 ExiAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
 
-NTOSAPI
+NTKERNELAPI
 VOID
 FASTCALL
 ExiReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
 FASTCALL
 ExiTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
@@ -6491,17 +6492,17 @@ ExiTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
 
 #else
 
-NTOSAPI
+NTKERNELAPI
 VOID
 FASTCALL
 ExAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
 
-NTOSAPI
+NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
 FASTCALL
 ExTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
@@ -6509,30 +6510,30 @@ ExTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
 
 /** Executive support routines **/
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 ExAcquireResourceExclusiveLite(
   IN PERESOURCE  Resource,
   IN BOOLEAN  Wait);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 ExAcquireResourceSharedLite(
   IN PERESOURCE  Resource,
   IN BOOLEAN  Wait);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 ExAcquireSharedStarveExclusive(
   IN PERESOURCE  Resource,
   IN BOOLEAN  Wait);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 ExAcquireSharedWaitForExclusive(
   IN PERESOURCE  Resource,
   IN BOOLEAN  Wait);
@@ -6567,17 +6568,17 @@ ExAllocateFromPagedLookasideList(
   return Entry;
 }
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 ExAllocatePoolWithQuotaTag(
   IN POOL_TYPE  PoolType,
   IN SIZE_T  NumberOfBytes,
   IN ULONG  Tag);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 ExAllocatePoolWithTag(
   IN POOL_TYPE  PoolType,
   IN SIZE_T  NumberOfBytes,
@@ -6590,67 +6591,67 @@ ExAllocatePoolWithTag(
 
 #else /* !POOL_TAGGING */
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 ExAllocatePool(
   IN POOL_TYPE  PoolType,
   IN SIZE_T  NumberOfBytes);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 ExAllocatePoolWithQuota(
   IN POOL_TYPE  PoolType,
   IN SIZE_T  NumberOfBytes);
 
 #endif /* POOL_TAGGING */
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 ExAllocatePoolWithTagPriority(
   IN POOL_TYPE  PoolType,
   IN SIZE_T  NumberOfBytes,
   IN ULONG  Tag,
   IN EX_POOL_PRIORITY  Priority);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExConvertExclusiveToSharedLite(
   IN PERESOURCE  Resource);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ExCreateCallback(
   OUT PCALLBACK_OBJECT  *CallbackObject,
   IN POBJECT_ATTRIBUTES  ObjectAttributes,
   IN BOOLEAN  Create,
   IN BOOLEAN  AllowMultipleCallbacks);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExDeleteNPagedLookasideList(
   IN PNPAGED_LOOKASIDE_LIST  Lookaside);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExDeletePagedLookasideList(
   IN PPAGED_LOOKASIDE_LIST  Lookaside);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ExDeleteResourceLite(
   IN PERESOURCE  Resource);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExFreePool(
   IN PVOID  P);
 
@@ -6660,9 +6661,9 @@ ExFreePool(
 #define ExFreePool(P) ExFreePoolWithTag(P, 0)
 #endif
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExFreePoolWithTag(
   IN PVOID  P,
   IN ULONG  Tag);
@@ -6704,35 +6705,35 @@ ExFreeToPagedLookasideList(
  */
 #define ExGetCurrentResourceThread() ((ERESOURCE_THREAD) PsGetCurrentThread())
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 ExGetExclusiveWaiterCount(
   IN PERESOURCE  Resource);
 
-NTOSAPI
+NTKERNELAPI
 KPROCESSOR_MODE
-DDKAPI
+NTAPI
 ExGetPreviousMode(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 ExGetSharedWaiterCount(
   IN PERESOURCE  Resource);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeInitializeEvent(
   IN PRKEVENT  Event,
   IN EVENT_TYPE  Type,
   IN BOOLEAN  State);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExInitializeNPagedLookasideList(
   IN PNPAGED_LOOKASIDE_LIST  Lookaside,
   IN PALLOCATE_FUNCTION  Allocate  OPTIONAL,
@@ -6742,9 +6743,9 @@ ExInitializeNPagedLookasideList(
   IN ULONG  Tag,
   IN USHORT  Depth);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExInitializePagedLookasideList(
   IN PPAGED_LOOKASIDE_LIST  Lookaside,
   IN PALLOCATE_FUNCTION  Allocate  OPTIONAL,
@@ -6754,9 +6755,9 @@ ExInitializePagedLookasideList(
   IN ULONG  Tag,
   IN USHORT  Depth);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ExInitializeResourceLite(
   IN PERESOURCE  Resource);
 
@@ -6770,71 +6771,71 @@ ExInitializeResourceLite(
 
 #define ExInitializeSListHead InitializeSListHead
 
-NTOSAPI
+NTKERNELAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 ExInterlockedAddLargeInteger(
   IN PLARGE_INTEGER  Addend,
   IN LARGE_INTEGER  Increment,
   IN PKSPIN_LOCK  Lock);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKFASTAPI
+FASTCALL
 ExInterlockedAddLargeStatistic(
   IN PLARGE_INTEGER  Addend,
   IN ULONG  Increment);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 ExInterlockedAddUlong(
   IN PULONG  Addend,
   IN ULONG  Increment,
   PKSPIN_LOCK  Lock);
 
-NTOSAPI
+NTKERNELAPI
 LONGLONG
-DDKFASTAPI
+FASTCALL
 ExInterlockedCompareExchange64(
   IN OUT PLONGLONG  Destination,
   IN PLONGLONG  Exchange,
   IN PLONGLONG  Comparand,
   IN PKSPIN_LOCK  Lock);
 
-NTOSAPI
+NTKERNELAPI
 LONGLONG
-DDKFASTAPI
+FASTCALL
 ExfInterlockedCompareExchange64(
   IN OUT LONGLONG volatile  *Destination,
   IN PLONGLONG  Exchange,
   IN PLONGLONG  Comperand);
 
-NTOSAPI
+NTKERNELAPI
 PSINGLE_LIST_ENTRY
-DDKFASTAPI
+FASTCALL
 ExInterlockedFlushSList(
   IN PSLIST_HEADER  ListHead);
 
-NTOSAPI
+NTKERNELAPI
 PLIST_ENTRY
-DDKAPI
+NTAPI
 ExInterlockedInsertHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  ListEntry,
   IN PKSPIN_LOCK  Lock);
 
-NTOSAPI
+NTKERNELAPI
 PLIST_ENTRY
-DDKAPI
+NTAPI
 ExInterlockedInsertTailList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  ListEntry,
   IN PKSPIN_LOCK  Lock);
 
-NTOSAPI
+NTKERNELAPI
 PSINGLE_LIST_ENTRY
-DDKAPI
+NTAPI
 ExInterlockedPopEntryList(
   IN PSINGLE_LIST_ENTRY  ListHead,
   IN PKSPIN_LOCK  Lock);
@@ -6849,9 +6850,9 @@ ExInterlockedPopEntryList(
                                    _Lock) \
   InterlockedPopEntrySList(_ListHead)
 
-NTOSAPI
+NTKERNELAPI
 PSINGLE_LIST_ENTRY
-DDKAPI
+NTAPI
 ExInterlockedPushEntryList(
   IN PSINGLE_LIST_ENTRY  ListHead,
   IN PSINGLE_LIST_ENTRY  ListEntry,
@@ -6869,139 +6870,139 @@ ExInterlockedPushEntryList(
                                     _Lock) \
   InterlockedPushEntrySList(_ListHead, _ListEntry)
 
-NTOSAPI
+NTKERNELAPI
 PLIST_ENTRY
-DDKAPI
+NTAPI
 ExInterlockedRemoveHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PKSPIN_LOCK  Lock);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 ExIsProcessorFeaturePresent(
   IN ULONG  ProcessorFeature);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 ExIsResourceAcquiredExclusiveLite(
   IN PERESOURCE  Resource);
 
-NTOSAPI
+NTKERNELAPI
 USHORT
-DDKAPI
+NTAPI
 ExIsResourceAcquiredLite(
   IN PERESOURCE  Resource);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 ExIsResourceAcquiredSharedLite(
   IN PERESOURCE  Resource);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExLocalTimeToSystemTime(
   IN PLARGE_INTEGER  LocalTime,
   OUT PLARGE_INTEGER  SystemTime);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExNotifyCallback(
   IN PCALLBACK_OBJECT  CallbackObject,
   IN PVOID  Argument1,
   IN PVOID  Argument2);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExRaiseAccessViolation(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExRaiseDatatypeMisalignment(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExRaiseStatus(
   IN NTSTATUS  Status);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 ExRegisterCallback(
   IN PCALLBACK_OBJECT  CallbackObject,
   IN PCALLBACK_FUNCTION  CallbackFunction,
   IN PVOID  CallbackContext);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ExReinitializeResourceLite(
   IN PERESOURCE  Resource);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExReleaseResourceForThreadLite(
   IN PERESOURCE  Resource,
   IN ERESOURCE_THREAD  ResourceThreadId);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKFASTAPI
+FASTCALL
 ExReleaseResourceLite(
   IN PERESOURCE  Resource);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExSetResourceOwnerPointer(
   IN PERESOURCE  Resource,
   IN PVOID  OwnerPointer);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 ExSetTimerResolution(
   IN ULONG  DesiredTime,
   IN BOOLEAN  SetResolution);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExSystemTimeToLocalTime(
   IN PLARGE_INTEGER  SystemTime,
   OUT PLARGE_INTEGER  LocalTime);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 ExTryToAcquireResourceExclusiveLite(
   IN PERESOURCE  Resource);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ExUnregisterCallback(
   IN PVOID  CbRegistration);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ExUuidCreate(
   OUT UUID  *Uuid);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 ExVerifySuite(
   IN SUITE_TYPE  SuiteType);
 
@@ -7020,17 +7021,17 @@ ExVerifySuite(
 
 #endif
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ProbeForRead(
   IN CONST VOID  *Address,
   IN ULONG  Length,
   IN ULONG  Alignment);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ProbeForWrite(
   IN PVOID  Address,
   IN ULONG  Length,
@@ -7040,17 +7041,17 @@ ProbeForWrite(
 
 /** Configuration manager routines **/
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 CmRegisterCallback(
   IN PEX_CALLBACK_FUNCTION  Function,
   IN PVOID  Context,
   IN OUT PLARGE_INTEGER  Cookie);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 CmUnRegisterCallback(
   IN LARGE_INTEGER  Cookie);
 
@@ -7058,9 +7059,9 @@ CmUnRegisterCallback(
 
 /** Filesystem runtime library routines **/
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 FsRtlIsTotalDeviceFailure(
   IN NTSTATUS  Status);
 
@@ -7070,13 +7071,13 @@ FsRtlIsTotalDeviceFailure(
 
 NTHALAPI
 BOOLEAN
-DDKAPI
+NTAPI
 HalMakeBeep(
   IN ULONG Frequency);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKFASTAPI
+FASTCALL
 HalExamineMBR(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,
@@ -7102,7 +7103,7 @@ IoAllocateAdapterChannel(
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 READ_PORT_BUFFER_UCHAR(
   IN PUCHAR  Port,
   IN PUCHAR  Buffer,
@@ -7110,7 +7111,7 @@ READ_PORT_BUFFER_UCHAR(
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 READ_PORT_BUFFER_ULONG(
   IN PULONG  Port,
   IN PULONG  Buffer,
@@ -7118,7 +7119,7 @@ READ_PORT_BUFFER_ULONG(
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 READ_PORT_BUFFER_USHORT(
   IN PUSHORT  Port,
   IN PUSHORT  Buffer,
@@ -7126,67 +7127,67 @@ READ_PORT_BUFFER_USHORT(
 
 NTHALAPI
 UCHAR
-DDKAPI
+NTAPI
 READ_PORT_UCHAR(
   IN PUCHAR  Port);
 
 NTHALAPI
 ULONG
-DDKAPI
+NTAPI
 READ_PORT_ULONG(
   IN PULONG  Port);
 
 NTHALAPI
 USHORT
-DDKAPI
+NTAPI
 READ_PORT_USHORT(
   IN PUSHORT  Port);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 READ_REGISTER_BUFFER_UCHAR(
   IN PUCHAR  Register,
   IN PUCHAR  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 READ_REGISTER_BUFFER_ULONG(
   IN PULONG  Register,
   IN PULONG  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 READ_REGISTER_BUFFER_USHORT(
   IN PUSHORT  Register,
   IN PUSHORT  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTKERNELAPI
 UCHAR
-DDKAPI
+NTAPI
 READ_REGISTER_UCHAR(
   IN PUCHAR  Register);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 READ_REGISTER_ULONG(
   IN PULONG  Register);
 
-NTOSAPI
+NTKERNELAPI
 USHORT
-DDKAPI
+NTAPI
 READ_REGISTER_USHORT(
   IN PUSHORT  Register);
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_PORT_BUFFER_UCHAR(
   IN PUCHAR  Port,
   IN PUCHAR  Buffer,
@@ -7194,7 +7195,7 @@ WRITE_PORT_BUFFER_UCHAR(
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_PORT_BUFFER_ULONG(
   IN PULONG  Port,
   IN PULONG  Buffer,
@@ -7202,7 +7203,7 @@ WRITE_PORT_BUFFER_ULONG(
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_PORT_BUFFER_USHORT(
   IN PUSHORT  Port,
   IN PUSHORT  Buffer,
@@ -7210,81 +7211,81 @@ WRITE_PORT_BUFFER_USHORT(
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_PORT_UCHAR(
   IN PUCHAR  Port,
   IN UCHAR  Value);
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_PORT_ULONG(
   IN PULONG  Port,
   IN ULONG  Value);
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_PORT_USHORT(
   IN PUSHORT  Port,
   IN USHORT  Value);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_REGISTER_BUFFER_UCHAR(
   IN PUCHAR  Register,
   IN PUCHAR  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_REGISTER_BUFFER_ULONG(
   IN PULONG  Register,
   IN PULONG  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_REGISTER_BUFFER_USHORT(
   IN PUSHORT  Register,
   IN PUSHORT  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_REGISTER_UCHAR(
   IN PUCHAR  Register,
   IN UCHAR  Value);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_REGISTER_ULONG(
   IN PULONG  Register,
   IN ULONG  Value);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 WRITE_REGISTER_USHORT(
   IN PUSHORT  Register,
   IN USHORT  Value);
 
 /** I/O manager routines **/
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoAcquireCancelSpinLock(
   OUT PKIRQL  Irql);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoAcquireRemoveLockEx(
   IN PIO_REMOVE_LOCK  RemoveLock,
   IN OPTIONAL PVOID  Tag  OPTIONAL,
@@ -7321,41 +7322,41 @@ IoAcquireRemoveLockEx(
     } \
 }
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoAllocateController(
   IN PCONTROLLER_OBJECT  ControllerObject,
   IN PDEVICE_OBJECT  DeviceObject,
   IN PDRIVER_CONTROL  ExecutionRoutine,
   IN PVOID  Context);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoAllocateDriverObjectExtension(
   IN PDRIVER_OBJECT  DriverObject,
   IN PVOID  ClientIdentificationAddress,
   IN ULONG  DriverObjectExtensionSize,
   OUT PVOID  *DriverObjectExtension);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 IoAllocateErrorLogEntry(
   IN PVOID  IoObject,
   IN UCHAR  EntrySize);
 
-NTOSAPI
+NTKERNELAPI
 PIRP
-DDKAPI
+NTAPI
 IoAllocateIrp(
   IN CCHAR  StackSize,
   IN BOOLEAN  ChargeQuota);
 
-NTOSAPI
+NTKERNELAPI
 PMDL
-DDKAPI
+NTAPI
 IoAllocateMdl(
   IN PVOID  VirtualAddress,
   IN ULONG  Length,
@@ -7363,9 +7364,9 @@ IoAllocateMdl(
   IN BOOLEAN  ChargeQuota,
   IN OUT PIRP  Irp  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 PIO_WORKITEM
-DDKAPI
+NTAPI
 IoAllocateWorkItem(
   IN PDEVICE_OBJECT  DeviceObject);
 
@@ -7377,24 +7378,24 @@ IoAllocateWorkItem(
 #define IoAssignArcName(_ArcName, _DeviceName) ( \
   IoCreateSymbolicLink((_ArcName), (_DeviceName)))
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoAttachDevice(
   IN PDEVICE_OBJECT  SourceDevice,
   IN PUNICODE_STRING  TargetDevice,
   OUT PDEVICE_OBJECT  *AttachedDevice);
 
-NTOSAPI
+NTKERNELAPI
 PDEVICE_OBJECT
-DDKAPI
+NTAPI
 IoAttachDeviceToDeviceStack(
   IN PDEVICE_OBJECT  SourceDevice,
   IN PDEVICE_OBJECT  TargetDevice);
 
-NTOSAPI
+NTKERNELAPI
 PIRP
-DDKAPI
+NTAPI
 IoBuildAsynchronousFsdRequest(
   IN ULONG  MajorFunction,
   IN PDEVICE_OBJECT  DeviceObject,
@@ -7403,9 +7404,9 @@ IoBuildAsynchronousFsdRequest(
   IN PLARGE_INTEGER  StartingOffset  OPTIONAL,
   IN PIO_STATUS_BLOCK  IoStatusBlock  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 PIRP
-DDKAPI
+NTAPI
 IoBuildDeviceIoControlRequest(
   IN ULONG  IoControlCode,
   IN PDEVICE_OBJECT  DeviceObject,
@@ -7417,18 +7418,18 @@ IoBuildDeviceIoControlRequest(
   IN PKEVENT  Event,
   OUT PIO_STATUS_BLOCK  IoStatusBlock);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoBuildPartialMdl(
   IN PMDL  SourceMdl,
   IN OUT PMDL  TargetMdl,
   IN PVOID  VirtualAddress,
   IN ULONG  Length);
 
-NTOSAPI
+NTKERNELAPI
 PIRP
-DDKAPI
+NTAPI
 IoBuildSynchronousFsdRequest(
   IN ULONG  MajorFunction,
   IN PDEVICE_OBJECT  DeviceObject,
@@ -7438,9 +7439,9 @@ IoBuildSynchronousFsdRequest(
   IN PKEVENT  Event,
   OUT PIO_STATUS_BLOCK  IoStatusBlock);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKFASTAPI
+FASTCALL
 IofCallDriver(
   IN PDEVICE_OBJECT  DeviceObject,
   IN OUT PIRP  Irp);
@@ -7453,22 +7454,22 @@ IofCallDriver(
  */
 #define IoCallDriver IofCallDriver
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoCancelFileOpen(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PFILE_OBJECT  FileObject);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 IoCancelIrp(
   IN PIRP  Irp);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoCheckShareAccess(
   IN ACCESS_MASK  DesiredAccess,
   IN ULONG  DesiredShareAccess,
@@ -7476,9 +7477,9 @@ IoCheckShareAccess(
   IN OUT PSHARE_ACCESS  ShareAccess,
   IN BOOLEAN  Update);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKFASTAPI
+FASTCALL
 IofCompleteRequest(
   IN PIRP  Irp,
   IN CCHAR  PriorityBoost);
@@ -7491,9 +7492,9 @@ IofCompleteRequest(
  */
 #define IoCompleteRequest IofCompleteRequest
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoConnectInterrupt(
   OUT PKINTERRUPT  *InterruptObject,
   IN PKSERVICE_ROUTINE  ServiceRoutine,
@@ -7539,15 +7540,15 @@ IoConnectInterrupt(
   _NextIrpSp->Control = 0; \
 }
 
-NTOSAPI
+NTKERNELAPI
 PCONTROLLER_OBJECT
-DDKAPI
+NTAPI
 IoCreateController(
   IN ULONG  Size);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoCreateDevice(
   IN PDRIVER_OBJECT  DriverObject,
   IN ULONG  DeviceExtensionSize,
@@ -7557,16 +7558,16 @@ IoCreateDevice(
   IN BOOLEAN  Exclusive,
   OUT PDEVICE_OBJECT  *DeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoCreateDisk(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PCREATE_DISK  Disk);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoCreateFile(
   OUT PHANDLE FileHandle,
   IN ACCESS_MASK DesiredAccess,
@@ -7583,37 +7584,37 @@ IoCreateFile(
   IN PVOID ExtraCreateParameters OPTIONAL,
   IN ULONG Options);
 
-NTOSAPI
+NTKERNELAPI
 PKEVENT
-DDKAPI
+NTAPI
 IoCreateNotificationEvent(
   IN PUNICODE_STRING  EventName,
   OUT PHANDLE  EventHandle);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoCreateSymbolicLink(
   IN PUNICODE_STRING  SymbolicLinkName,
   IN PUNICODE_STRING  DeviceName);
 
-NTOSAPI
+NTKERNELAPI
 PKEVENT
-DDKAPI
+NTAPI
 IoCreateSynchronizationEvent(
   IN PUNICODE_STRING  EventName,
   OUT PHANDLE  EventHandle);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoCreateUnprotectedSymbolicLink(
   IN PUNICODE_STRING  SymbolicLinkName,
   IN PUNICODE_STRING  DeviceName);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoCsqInitialize(
   PIO_CSQ  Csq,
   IN PIO_CSQ_INSERT_IRP  CsqInsertIrp,
@@ -7623,43 +7624,43 @@ IoCsqInitialize(
   IN PIO_CSQ_RELEASE_LOCK  CsqReleaseLock,
   IN PIO_CSQ_COMPLETE_CANCELED_IRP  CsqCompleteCanceledIrp);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoCsqInsertIrp(
   IN  PIO_CSQ  Csq,
   IN  PIRP  Irp,
   IN  PIO_CSQ_IRP_CONTEXT  Context);
 
-NTOSAPI
+NTKERNELAPI
 PIRP
-DDKAPI
+NTAPI
 IoCsqRemoveIrp(
   IN  PIO_CSQ  Csq,
   IN  PIO_CSQ_IRP_CONTEXT  Context);
 
-NTOSAPI
+NTKERNELAPI
 PIRP
-DDKAPI
+NTAPI
 IoCsqRemoveNextIrp(
   IN PIO_CSQ  Csq,
   IN PVOID  PeekContext);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoDeleteController(
   IN PCONTROLLER_OBJECT  ControllerObject);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoDeleteDevice(
   IN PDEVICE_OBJECT  DeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoDeleteSymbolicLink(
   IN PUNICODE_STRING  SymbolicLinkName);
 
@@ -7670,91 +7671,91 @@ IoDeleteSymbolicLink(
  */
 #define IoDeassignArcName IoDeleteSymbolicLink
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoDetachDevice(
   IN OUT PDEVICE_OBJECT  TargetDevice);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoDisconnectInterrupt(
   IN PKINTERRUPT  InterruptObject);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 IoForwardIrpSynchronously(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PIRP  Irp);
 
 #define IoForwardAndCatchIrp IoForwardIrpSynchronously
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoFreeController(
   IN PCONTROLLER_OBJECT  ControllerObject);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoFreeErrorLogEntry(
   PVOID  ElEntry);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoFreeIrp(
   IN PIRP  Irp);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoFreeMdl(
   IN PMDL  Mdl);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoFreeWorkItem(
   IN PIO_WORKITEM  pIOWorkItem);
 
-NTOSAPI
+NTKERNELAPI
 PDEVICE_OBJECT
-DDKAPI
+NTAPI
 IoGetAttachedDevice(
   IN PDEVICE_OBJECT  DeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 PDEVICE_OBJECT
-DDKAPI
+NTAPI
 IoGetAttachedDeviceReference(
   IN PDEVICE_OBJECT  DeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoGetBootDiskInformation(
   IN OUT PBOOTDISK_INFORMATION  BootDiskInformation,
   IN ULONG  Size);
 
-NTOSAPI
+NTKERNELAPI
 PCONFIGURATION_INFORMATION
-DDKAPI
+NTAPI
 IoGetConfigurationInformation(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 PEPROCESS
-DDKAPI
+NTAPI
 IoGetCurrentProcess(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoGetDeviceInterfaceAlias(
   IN PUNICODE_STRING  SymbolicLinkName,
   IN CONST GUID  *AliasInterfaceClassGuid,
@@ -7762,27 +7763,27 @@ IoGetDeviceInterfaceAlias(
 
 #define DEVICE_INTERFACE_INCLUDE_NONACTIVE 0x00000001
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoGetDeviceInterfaces(
   IN CONST GUID  *InterfaceClassGuid,
   IN PDEVICE_OBJECT  PhysicalDeviceObject  OPTIONAL,
   IN ULONG  Flags,
   OUT PWSTR  *SymbolicLinkList);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoGetDeviceObjectPointer(
   IN PUNICODE_STRING  ObjectName,
   IN ACCESS_MASK  DesiredAccess,
   OUT PFILE_OBJECT  *FileObject,
   OUT PDEVICE_OBJECT  *DeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoGetDeviceProperty(
   IN PDEVICE_OBJECT  DeviceObject,
   IN DEVICE_REGISTRY_PROPERTY  DeviceProperty,
@@ -7790,30 +7791,30 @@ IoGetDeviceProperty(
   OUT PVOID  PropertyBuffer,
   OUT PULONG  ResultLength);
 
-NTOSAPI
+NTKERNELAPI
 PDEVICE_OBJECT
-DDKAPI
+NTAPI
 IoGetDeviceToVerify(
   IN PETHREAD  Thread);
 
-NTOSAPI
+NTKERNELAPI
 PDMA_ADAPTER
-DDKAPI
+NTAPI
 IoGetDmaAdapter(
   IN PDEVICE_OBJECT  PhysicalDeviceObject,
   IN PDEVICE_DESCRIPTION  DeviceDescription,
   IN OUT PULONG  NumberOfMapRegisters);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 IoGetDriverObjectExtension(
   IN PDRIVER_OBJECT  DriverObject,
   IN PVOID  ClientIdentificationAddress);
 
-NTOSAPI
+NTKERNELAPI
 PGENERIC_MAPPING
-DDKAPI
+NTAPI
 IoGetFileObjectGenericMapping(
   VOID);
 
@@ -7825,34 +7826,34 @@ IoGetFileObjectGenericMapping(
 #define IoGetFunctionCodeFromCtlCode(_ControlCode) \
   (((_ControlCode) >> 2) & 0x00000FFF)
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 IoGetInitialStack(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 PDEVICE_OBJECT
-DDKAPI
+NTAPI
 IoGetRelatedDeviceObject(
   IN PFILE_OBJECT  FileObject);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 IoGetRemainingStackSize(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoGetStackLimits(
   OUT PULONG_PTR  LowLimit,
   OUT PULONG_PTR  HighLimit);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeInitializeDpc(
   IN PRKDPC  Dpc,
   IN PKDEFERRED_ROUTINE  DeferredRoutine,
@@ -7870,17 +7871,17 @@ KeInitializeDpc(
     (PKDEFERRED_ROUTINE) (_DpcRoutine), \
     _DeviceObject)
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoInitializeIrp(
   IN OUT PIRP  Irp,
   IN USHORT  PacketSize,
   IN CCHAR  StackSize);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoInitializeRemoveLockEx(
   IN  PIO_REMOVE_LOCK Lock,
   IN  ULONG   AllocateTag,
@@ -7900,30 +7901,30 @@ IoInitializeRemoveLockEx(
   IoInitializeRemoveLockEx(Lock, AllocateTag, MaxLockedMinutes, \
     HighWatermark, sizeof(IO_REMOVE_LOCK))
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoInitializeTimer(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PIO_TIMER_ROUTINE  TimerRoutine,
   IN PVOID  Context);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoInvalidateDeviceRelations(
   IN PDEVICE_OBJECT  DeviceObject,
   IN DEVICE_RELATION_TYPE  Type);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoInvalidateDeviceState(
   IN PDEVICE_OBJECT  PhysicalDeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 IoIs32bitProcess(
   IN PIRP  Irp  OPTIONAL);
 
@@ -7941,16 +7942,16 @@ IoIs32bitProcess(
    ((Status) == STATUS_UNRECOGNIZED_MEDIA) || \
    ((Status) == STATUS_WRONG_VOLUME)))
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 IoIsWdmVersionAvailable(
   IN UCHAR  MajorVersion,
   IN UCHAR  MinorVersion);
 
-NTOSAPI
+NTKERNELAPI
 PIRP
-DDKAPI
+NTAPI
 IoMakeAssociatedIrp(
   IN PIRP  Irp,
   IN CCHAR  StackSize);
@@ -7963,9 +7964,9 @@ IoMakeAssociatedIrp(
 #define IoMarkIrpPending(_Irp) \
   (IoGetCurrentIrpStackLocation(_Irp)->Control |= SL_PENDING_RETURNED)
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoOpenDeviceInterfaceRegistryKey(
   IN PUNICODE_STRING  SymbolicLinkName,
   IN ACCESS_MASK  DesiredAccess,
@@ -7975,18 +7976,18 @@ IoOpenDeviceInterfaceRegistryKey(
 #define PLUGPLAY_REGKEY_DRIVER                            2
 #define PLUGPLAY_REGKEY_CURRENT_HWPROFILE                 4
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoOpenDeviceRegistryKey(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  DevInstKeyType,
   IN ACCESS_MASK  DesiredAccess,
   OUT PHANDLE  DevInstRegKey);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoQueryDeviceDescription(
   IN PINTERFACE_TYPE  BusType  OPTIONAL,
   IN PULONG  BusNumber  OPTIONAL,
@@ -7997,82 +7998,82 @@ IoQueryDeviceDescription(
   IN PIO_QUERY_DEVICE_ROUTINE  CalloutRoutine,
   IN PVOID  Context);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoQueueWorkItem(
   IN PIO_WORKITEM  pIOWorkItem,
   IN PIO_WORKITEM_ROUTINE  Routine,
   IN WORK_QUEUE_TYPE  QueueType,
   IN PVOID  Context);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoRaiseHardError(
   IN PIRP  Irp,
   IN PVPB  Vpb  OPTIONAL,
   IN PDEVICE_OBJECT  RealDeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 IoRaiseInformationalHardError(
   IN NTSTATUS  ErrorStatus,
   IN PUNICODE_STRING  String  OPTIONAL,
   IN PKTHREAD  Thread  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoReadDiskSignature(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  BytesPerSector,
   OUT PDISK_SIGNATURE  Signature);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoReadPartitionTableEx(
   IN PDEVICE_OBJECT  DeviceObject,
   IN struct _DRIVE_LAYOUT_INFORMATION_EX  **PartitionBuffer);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoRegisterBootDriverReinitialization(
   IN PDRIVER_OBJECT  DriverObject,
   IN PDRIVER_REINITIALIZE  DriverReinitializationRoutine,
   IN PVOID  Context);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoRegisterBootDriverReinitialization(
   IN PDRIVER_OBJECT  DriverObject,
   IN PDRIVER_REINITIALIZE  DriverReinitializationRoutine,
   IN PVOID  Context);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoRegisterDeviceInterface(
   IN PDEVICE_OBJECT  PhysicalDeviceObject,
   IN CONST GUID  *InterfaceClassGuid,
   IN PUNICODE_STRING  ReferenceString  OPTIONAL,
   OUT PUNICODE_STRING  SymbolicLinkName);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoRegisterDriverReinitialization(
   IN PDRIVER_OBJECT  DriverObject,
   IN PDRIVER_REINITIALIZE  DriverReinitializationRoutine,
   IN PVOID  Context);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoRegisterPlugPlayNotification(
   IN IO_NOTIFICATION_EVENT_CATEGORY  EventCategory,
   IN ULONG  EventCategoryFlags,
@@ -8082,29 +8083,29 @@ IoRegisterPlugPlayNotification(
   IN PVOID  Context,
   OUT PVOID  *NotificationEntry);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoRegisterShutdownNotification(
   IN PDEVICE_OBJECT  DeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoReleaseCancelSpinLock(
   IN KIRQL  Irql);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoReleaseRemoveLockAndWaitEx(
   IN PIO_REMOVE_LOCK  RemoveLock,
   IN PVOID  Tag,
   IN ULONG  RemlockSize);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoReleaseRemoveLockEx(
   IN PIO_REMOVE_LOCK  RemoveLock,
   IN PVOID  Tag,
@@ -8130,16 +8131,16 @@ IoReleaseRemoveLockEx(
                                    _Tag) \
   IoReleaseRemoveLockAndWaitEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoRemoveShareAccess(
   IN PFILE_OBJECT  FileObject,
   IN OUT PSHARE_ACCESS  ShareAccess);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoReportDetectedDevice(
   IN PDRIVER_OBJECT  DriverObject,
   IN INTERFACE_TYPE  LegacyBusType,
@@ -8150,9 +8151,9 @@ IoReportDetectedDevice(
   IN BOOLEAN  ResourceAssigned,
   IN OUT PDEVICE_OBJECT  *DeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoReportResourceForDetection(
   IN PDRIVER_OBJECT  DriverObject,
   IN PCM_RESOURCE_LIST  DriverList  OPTIONAL,
@@ -8162,9 +8163,9 @@ IoReportResourceForDetection(
   IN ULONG  DeviceListSize  OPTIONAL,
   OUT PBOOLEAN  ConflictDetected);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoReportResourceUsage(
   IN PUNICODE_STRING  DriverClassName  OPTIONAL,
   IN PDRIVER_OBJECT  DriverObject,
@@ -8176,25 +8177,25 @@ IoReportResourceUsage(
   IN BOOLEAN  OverrideConflict,
   OUT PBOOLEAN  ConflictDetected);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoReportTargetDeviceChange(
   IN PDEVICE_OBJECT  PhysicalDeviceObject,
   IN PVOID  NotificationStructure);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoReportTargetDeviceChangeAsynchronous(
   IN PDEVICE_OBJECT  PhysicalDeviceObject,
   IN PVOID  NotificationStructure,
   IN PDEVICE_CHANGE_COMPLETE_CALLBACK  Callback  OPTIONAL,
   IN PVOID  Context  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoRequestDeviceEject(
   IN PDEVICE_OBJECT  PhysicalDeviceObject);
 
@@ -8208,9 +8209,9 @@ IoRequestDeviceEject(
 #define IoRequestDpc(DeviceObject, Irp, Context)( \
   KeInsertQueueDpc(&(DeviceObject)->Dpc, (Irp), (Context)))
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoReuseIrp(
   IN OUT PIRP  Irp,
   IN NTSTATUS  Status);
@@ -8255,9 +8256,9 @@ IoReuseIrp(
   if (_InvokeOnCancel) _IrpSp->Control |= SL_INVOKE_ON_CANCEL; \
 }
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoSetCompletionRoutineEx(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PIRP  Irp,
@@ -8267,16 +8268,16 @@ IoSetCompletionRoutineEx(
   IN BOOLEAN  InvokeOnError,
   IN BOOLEAN  InvokeOnCancel);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoSetDeviceInterfaceState(
   IN PUNICODE_STRING  SymbolicLinkName,
   IN BOOLEAN  Enable);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoSetHardErrorOrVerifyDevice(
   IN PIRP  Irp,
   IN PDEVICE_OBJECT  DeviceObject);
@@ -8292,40 +8293,40 @@ IoSetHardErrorOrVerifyDevice(
   (_Irp)->Tail.Overlay.CurrentStackLocation--; \
 }
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoSetPartitionInformationEx(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  PartitionNumber,
   IN struct _SET_PARTITION_INFORMATION_EX  *PartitionInfo);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoSetShareAccess(
   IN ACCESS_MASK  DesiredAccess,
   IN ULONG  DesiredShareAccess,
   IN OUT PFILE_OBJECT  FileObject,
   OUT PSHARE_ACCESS  ShareAccess);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoSetStartIoAttributes(
   IN PDEVICE_OBJECT  DeviceObject,
   IN BOOLEAN  DeferredStartIo,
   IN BOOLEAN  NonCancelable);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoSetSystemPartition(
   IN PUNICODE_STRING  VolumeNameString);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 IoSetThreadHardErrorMode(
   IN BOOLEAN  EnableHardErrors);
 
@@ -8348,100 +8349,100 @@ IoSetThreadHardErrorMode(
   (_Irp)->Tail.Overlay.CurrentStackLocation++; \
 }
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoStartNextPacket(
   IN PDEVICE_OBJECT  DeviceObject,
   IN BOOLEAN  Cancelable);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoStartNextPacketByKey(
   IN PDEVICE_OBJECT  DeviceObject,
   IN BOOLEAN  Cancelable,
   IN ULONG  Key);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoStartPacket(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PIRP  Irp,
   IN PULONG  Key  OPTIONAL,
   IN PDRIVER_CANCEL  CancelFunction  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoStartTimer(
   IN PDEVICE_OBJECT  DeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoStopTimer(
   IN PDEVICE_OBJECT  DeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoUnregisterPlugPlayNotification(
   IN PVOID  NotificationEntry);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoUnregisterShutdownNotification(
   IN PDEVICE_OBJECT  DeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoUpdateShareAccess(
   IN PFILE_OBJECT  FileObject,
   IN OUT PSHARE_ACCESS  ShareAccess);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoVerifyPartitionTable(
   IN PDEVICE_OBJECT  DeviceObject,
   IN BOOLEAN  FixErrors);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoVolumeDeviceToDosName(
   IN  PVOID  VolumeDeviceObject,
   OUT PUNICODE_STRING  DosName);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMIAllocateInstanceIds(
   IN GUID  *Guid,
   IN ULONG  InstanceCount,
   OUT ULONG  *FirstInstanceId);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 IoWMIDeviceObjectToProviderId(
   IN PDEVICE_OBJECT  DeviceObject);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMIDeviceObjectToInstanceName(
   IN PVOID  DataBlockObject,
   IN PDEVICE_OBJECT  DeviceObject,
   OUT PUNICODE_STRING  InstanceName);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMIExecuteMethod(
   IN PVOID  DataBlockObject,
   IN PUNICODE_STRING  InstanceName,
@@ -8450,51 +8451,51 @@ IoWMIExecuteMethod(
   IN OUT PULONG  OutBufferSize,
   IN OUT  PUCHAR  InOutBuffer);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMIHandleToInstanceName(
   IN PVOID  DataBlockObject,
   IN HANDLE  FileHandle,
   OUT PUNICODE_STRING  InstanceName);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMIOpenBlock(
   IN GUID  *DataBlockGuid,
   IN ULONG  DesiredAccess,
   OUT PVOID  *DataBlockObject);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMIQueryAllData(
   IN PVOID  DataBlockObject,
   IN OUT ULONG  *InOutBufferSize,
   OUT PVOID  OutBuffer);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMIQueryAllDataMultiple(
   IN PVOID  *DataBlockObjectList,
   IN ULONG  ObjectCount,
   IN OUT ULONG  *InOutBufferSize,
   OUT PVOID  OutBuffer);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMIQuerySingleInstance(
   IN PVOID  DataBlockObject,
   IN PUNICODE_STRING  InstanceName,
   IN OUT ULONG  *InOutBufferSize,
   OUT PVOID OutBuffer);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMIQuerySingleInstanceMultiple(
   IN PVOID  *DataBlockObjectList,
   IN PUNICODE_STRING  InstanceNames,
@@ -8502,24 +8503,24 @@ IoWMIQuerySingleInstanceMultiple(
   IN OUT ULONG  *InOutBufferSize,
   OUT PVOID  OutBuffer);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMIRegistrationControl(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  Action);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMISetNotificationCallback(
   IN PVOID  Object,
   IN WMI_NOTIFICATION_CALLBACK  Callback,
   IN PVOID  Context);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMISetSingleInstance(
   IN PVOID  DataBlockObject,
   IN PUNICODE_STRING  InstanceName,
@@ -8527,9 +8528,9 @@ IoWMISetSingleInstance(
   IN ULONG  ValueBufferSize,
   IN PVOID  ValueBuffer);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMISetSingleItem(
   IN PVOID  DataBlockObject,
   IN PUNICODE_STRING  InstanceName,
@@ -8538,30 +8539,30 @@ IoWMISetSingleItem(
   IN ULONG  ValueBufferSize,
   IN PVOID  ValueBuffer);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMISuggestInstanceName(
   IN PDEVICE_OBJECT  PhysicalDeviceObject OPTIONAL,
   IN PUNICODE_STRING  SymbolicLinkName OPTIONAL,
   IN BOOLEAN  CombineNames,
   OUT PUNICODE_STRING  SuggestedInstanceName);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWMIWriteEvent(
   IN PVOID  WnodeEventItem);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 IoWriteErrorLogEntry(
   IN PVOID  ElEntry);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 IoWritePartitionTableEx(
   IN PDEVICE_OBJECT  DeviceObject,
   IN struct _DRIVE_LAYOUT_INFORMATION_EX  *PartitionBuffer);
@@ -8572,39 +8573,39 @@ IoWritePartitionTableEx(
 
 NTHALAPI
 VOID
-DDKFASTAPI
+FASTCALL
 KeAcquireInStackQueuedSpinLock(
   IN PKSPIN_LOCK  SpinLock,
   IN PKLOCK_QUEUE_HANDLE  LockHandle);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKFASTAPI
+FASTCALL
 KeAcquireInStackQueuedSpinLockAtDpcLevel(
   IN PKSPIN_LOCK  SpinLock,
   IN PKLOCK_QUEUE_HANDLE  LockHandle);
 
-NTOSAPI
+NTKERNELAPI
 KIRQL
-DDKAPI
+NTAPI
 KeAcquireInterruptSpinLock(
   IN PKINTERRUPT  Interrupt);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeAreApcsDisabled(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeBugCheck(
   IN ULONG  BugCheckCode);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeBugCheckEx(
   IN ULONG  BugCheckCode,
   IN ULONG_PTR  BugCheckParameter1,
@@ -8612,35 +8613,35 @@ KeBugCheckEx(
   IN ULONG_PTR  BugCheckParameter3,
   IN ULONG_PTR  BugCheckParameter4);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeCancelTimer(
   IN PKTIMER  Timer);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeClearEvent(
   IN PRKEVENT  Event);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 KeDelayExecutionThread(
   IN KPROCESSOR_MODE  WaitMode,
   IN BOOLEAN  Alertable,
   IN PLARGE_INTEGER  Interval);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeDeregisterBugCheckCallback(
   IN PKBUGCHECK_CALLBACK_RECORD  CallbackRecord);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeEnterCriticalRegion(
   VOID);
 
@@ -8655,93 +8656,93 @@ KeEnterCriticalRegion(
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 KeFlushWriteBuffer(VOID);
 
-NTOSAPI
+NTKERNELAPI
 PRKTHREAD
-DDKAPI
+NTAPI
 KeGetCurrentThread(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 KPROCESSOR_MODE
-DDKAPI
+NTAPI
 KeGetPreviousMode(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 KeGetRecommendedSharedDataAlignment(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeInitializeDeviceQueue(
   IN PKDEVICE_QUEUE  DeviceQueue);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeInitializeMutex(
   IN PRKMUTEX  Mutex,
   IN ULONG  Level);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeInitializeSemaphore(
   IN PRKSEMAPHORE  Semaphore,
   IN LONG  Count,
   IN LONG  Limit);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeInitializeSpinLock(
   IN PKSPIN_LOCK  SpinLock);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeInitializeTimer(
   IN PKTIMER  Timer);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeInitializeTimerEx(
   IN PKTIMER  Timer,
   IN TIMER_TYPE  Type);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeInsertByKeyDeviceQueue(
   IN PKDEVICE_QUEUE  DeviceQueue,
   IN PKDEVICE_QUEUE_ENTRY  DeviceQueueEntry,
   IN ULONG  SortKey);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeInsertDeviceQueue(
   IN PKDEVICE_QUEUE  DeviceQueue,
   IN PKDEVICE_QUEUE_ENTRY  DeviceQueueEntry);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeInsertQueueDpc(
   IN PRKDPC  Dpc,
   IN PVOID  SystemArgument1,
   IN PVOID  SystemArgument2);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeLeaveCriticalRegion(
   VOID);
 
@@ -8762,78 +8763,78 @@ KeMemoryBarrier(
 
 #endif
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKAPI
+NTAPI
 KePulseEvent(
   IN PRKEVENT  Event,
   IN KPRIORITY  Increment,
   IN BOOLEAN  Wait);
 
-NTOSAPI
+NTKERNELAPI
 ULONGLONG
-DDKAPI
+NTAPI
 KeQueryInterruptTime(
   VOID);
 
 NTHALAPI
 LARGE_INTEGER
-DDKAPI
+NTAPI
 KeQueryPerformanceCounter(
   OUT PLARGE_INTEGER  PerformanceFrequency  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 KPRIORITY
-DDKAPI
+NTAPI
 KeQueryPriorityThread(
   IN PRKTHREAD  Thread);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeQuerySystemTime(
   OUT PLARGE_INTEGER  CurrentTime);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeQueryTickCount(
   OUT PLARGE_INTEGER  TickCount);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 KeQueryTimeIncrement(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKAPI
+NTAPI
 KeReadStateEvent(
   IN PRKEVENT  Event);
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKAPI
+NTAPI
 KeReadStateMutex(
   IN PRKMUTEX  Mutex);
 
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKAPI
+NTAPI
 KeReadStateSemaphore(
   IN PRKSEMAPHORE  Semaphore);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeReadStateTimer(
   IN PKTIMER  Timer);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeRegisterBugCheckCallback(
   IN PKBUGCHECK_CALLBACK_RECORD  CallbackRecord,
   IN PKBUGCHECK_CALLBACK_ROUTINE  CallbackRoutine,
@@ -8843,170 +8844,170 @@ KeRegisterBugCheckCallback(
 
 NTHALAPI
 VOID
-DDKFASTAPI
+FASTCALL
 KeReleaseInStackQueuedSpinLock(
   IN PKLOCK_QUEUE_HANDLE  LockHandle);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKFASTAPI
+FASTCALL
 KeReleaseInStackQueuedSpinLockFromDpcLevel(
   IN PKLOCK_QUEUE_HANDLE  LockHandle);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeReleaseInterruptSpinLock(
   IN PKINTERRUPT  Interrupt,
   IN KIRQL  OldIrql);
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKAPI
+NTAPI
 KeReleaseMutex(
   IN PRKMUTEX  Mutex,
   IN BOOLEAN  Wait);
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKAPI
+NTAPI
 KeReleaseSemaphore(
   IN PRKSEMAPHORE  Semaphore,
   IN KPRIORITY  Increment,
   IN LONG  Adjustment,
   IN BOOLEAN  Wait);
 
-NTOSAPI
+NTKERNELAPI
 PKDEVICE_QUEUE_ENTRY
-DDKAPI
+NTAPI
 KeRemoveByKeyDeviceQueue(
   IN PKDEVICE_QUEUE  DeviceQueue,
   IN ULONG  SortKey);
 
-NTOSAPI
+NTKERNELAPI
 PKDEVICE_QUEUE_ENTRY
-DDKAPI
+NTAPI
 KeRemoveDeviceQueue(
   IN PKDEVICE_QUEUE  DeviceQueue);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeRemoveEntryDeviceQueue(
   IN PKDEVICE_QUEUE  DeviceQueue,
   IN PKDEVICE_QUEUE_ENTRY  DeviceQueueEntry);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeRemoveQueueDpc(
   IN PRKDPC  Dpc);
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKAPI
+NTAPI
 KeResetEvent(
   IN PRKEVENT  Event);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 KeRestoreFloatingPointState(
   IN PKFLOATING_SAVE  FloatSave);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeRevertToUserAffinityThread(VOID);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 KeSaveFloatingPointState(
   OUT PKFLOATING_SAVE  FloatSave);
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKAPI
+NTAPI
 KeSetBasePriorityThread(
   IN PRKTHREAD  Thread,
   IN LONG  Increment);
 
-NTOSAPI
+NTKERNELAPI
 LONG
-DDKAPI
+NTAPI
 KeSetEvent(
   IN PRKEVENT  Event,
   IN KPRIORITY  Increment,
   IN BOOLEAN  Wait);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeSetImportanceDpc(
   IN PRKDPC  Dpc,
   IN KDPC_IMPORTANCE  Importance);
 
-NTOSAPI
+NTKERNELAPI
 KPRIORITY
-DDKAPI
+NTAPI
 KeSetPriorityThread(
   IN PKTHREAD  Thread,
   IN KPRIORITY  Priority);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeSetSystemAffinityThread(
     IN KAFFINITY Affinity);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeSetTargetProcessorDpc(
   IN PRKDPC  Dpc,
   IN CCHAR  Number);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeSetTimer(
   IN PKTIMER  Timer,
   IN LARGE_INTEGER  DueTime,
   IN PKDPC  Dpc  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeSetTimerEx(
   IN PKTIMER  Timer,
   IN LARGE_INTEGER  DueTime,
   IN LONG  Period  OPTIONAL,
   IN PKDPC  Dpc  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKFASTAPI
+FASTCALL
 KeSetTimeUpdateNotifyRoutine(
   IN PTIME_UPDATE_NOTIFY_ROUTINE  NotifyRoutine);
 
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 KeStallExecutionProcessor(
   IN ULONG  MicroSeconds);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 KeSynchronizeExecution(
   IN PKINTERRUPT    Interrupt,
   IN PKSYNCHRONIZE_ROUTINE  SynchronizeRoutine,
   IN PVOID  SynchronizeContext);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 KeWaitForMultipleObjects(
   IN ULONG  Count,
   IN PVOID  Object[],
@@ -9017,9 +9018,9 @@ KeWaitForMultipleObjects(
   IN PLARGE_INTEGER  Timeout  OPTIONAL,
   IN PKWAIT_BLOCK  WaitBlockArray  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 KeWaitForMutexObject(
   IN PRKMUTEX  Mutex,
   IN KWAIT_REASON  WaitReason,
@@ -9027,9 +9028,9 @@ KeWaitForMutexObject(
   IN BOOLEAN  Alertable,
   IN PLARGE_INTEGER  Timeout  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 KeWaitForSingleObject(
   IN PVOID  Object,
   IN KWAIT_REASON  WaitReason,
@@ -9082,21 +9083,21 @@ KeRaiseIrqlToSynchLevel(
 
 #else
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 KeLowerIrql(
   IN KIRQL  NewIrql);
 
-NTOSAPI
+NTKERNELAPI
 KIRQL
-DDKAPI
+NTAPI
 KeRaiseIrql(
   IN KIRQL  NewIrql);
 
-NTOSAPI
+NTKERNELAPI
 KIRQL
-DDKAPI
+NTAPI
 KeRaiseIrqlToDpcLevel(
   VOID);
 
@@ -9104,23 +9105,23 @@ KeRaiseIrqlToDpcLevel(
 
 /** Memory manager routines **/
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmAdvanceMdl(
   IN PMDL  Mdl,
   IN ULONG  NumberOfBytes);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmAllocateContiguousMemory(
   IN ULONG  NumberOfBytes,
   IN PHYSICAL_ADDRESS  HighestAcceptableAddress);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmAllocateContiguousMemorySpecifyCache(
   IN SIZE_T  NumberOfBytes,
   IN PHYSICAL_ADDRESS  LowestAcceptableAddress,
@@ -9128,37 +9129,37 @@ MmAllocateContiguousMemorySpecifyCache(
   IN PHYSICAL_ADDRESS  BoundaryAddressMultiple  OPTIONAL,
   IN MEMORY_CACHING_TYPE  CacheType);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmAllocateMappingAddress(
   IN SIZE_T  NumberOfBytes,
   IN ULONG  PoolTag);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmAllocateNonCachedMemory(
   IN ULONG  NumberOfBytes);
 
-NTOSAPI
+NTKERNELAPI
 PMDL
-DDKAPI
+NTAPI
 MmAllocatePagesForMdl(
   IN PHYSICAL_ADDRESS  LowAddress,
   IN PHYSICAL_ADDRESS  HighAddress,
   IN PHYSICAL_ADDRESS  SkipBytes,
   IN SIZE_T  TotalBytes);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmBuildMdlForNonPagedPool(
   IN OUT PMDL  MemoryDescriptorList);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmCreateSection(
   OUT PVOID *SectionObject,
   IN ACCESS_MASK  DesiredAccess,
@@ -9174,44 +9175,44 @@ typedef enum _MMFLUSH_TYPE {
   MmFlushForWrite
 } MMFLUSH_TYPE;
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 MmFlushImageSection(
   IN PSECTION_OBJECT_POINTERS  SectionObjectPointer,
   IN MMFLUSH_TYPE  FlushType);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmFreeContiguousMemory(
   IN PVOID  BaseAddress);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmFreeContiguousMemorySpecifyCache(
   IN PVOID  BaseAddress,
   IN SIZE_T  NumberOfBytes,
   IN MEMORY_CACHING_TYPE  CacheType);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmFreeMappingAddress(
   IN PVOID  BaseAddress,
   IN ULONG  PoolTag);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmFreeNonCachedMemory(
   IN PVOID  BaseAddress,
   IN SIZE_T  NumberOfBytes);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmFreePagesFromMdl(
   IN PMDL  MemoryDescriptorList);
 
@@ -9247,27 +9248,27 @@ MmFreePagesFromMdl(
 #define MmGetMdlVirtualAddress(_Mdl) \
   ((PVOID) ((PCHAR) ((_Mdl)->StartVa) + (_Mdl)->ByteOffset))
 
-NTOSAPI
+NTKERNELAPI
 PHYSICAL_ADDRESS
-DDKAPI
+NTAPI
 MmGetPhysicalAddress(
   IN PVOID  BaseAddress);
 
-NTOSAPI
+NTKERNELAPI
 PPHYSICAL_MEMORY_RANGE
-DDKAPI
+NTAPI
 MmGetPhysicalMemoryRanges(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmGetVirtualForPhysical(
   IN PHYSICAL_ADDRESS  PhysicalAddress);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmMapLockedPagesSpecifyCache(
   IN PMDL  MemoryDescriptorList,
   IN KPROCESSOR_MODE  AccessMode,
@@ -9276,57 +9277,57 @@ MmMapLockedPagesSpecifyCache(
   IN ULONG  BugCheckOnFailure,
   IN MM_PAGE_PRIORITY  Priority);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmMapLockedPagesWithReservedMapping(
   IN PVOID  MappingAddress,
   IN ULONG  PoolTag,
   IN PMDL  MemoryDescriptorList,
   IN MEMORY_CACHING_TYPE  CacheType);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmMapUserAddressesToPage(
   IN PVOID  BaseAddress,
   IN SIZE_T  NumberOfBytes,
   IN PVOID  PageAddress);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmMapVideoDisplay(
   IN PHYSICAL_ADDRESS  PhysicalAddress,
   IN SIZE_T  NumberOfBytes,
   IN MEMORY_CACHING_TYPE  CacheType);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmMapViewInSessionSpace(
   IN PVOID  Section,
   OUT PVOID  *MappedBase,
   IN OUT PSIZE_T  ViewSize);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmMapViewInSystemSpace(
   IN PVOID  Section,
   OUT PVOID  *MappedBase,
   IN PSIZE_T  ViewSize);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmMarkPhysicalMemoryAsBad(
   IN PPHYSICAL_ADDRESS  StartAddress,
   IN OUT PLARGE_INTEGER  NumberOfBytes);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmMarkPhysicalMemoryAsGood(
   IN PPHYSICAL_ADDRESS  StartAddress,
   IN OUT PLARGE_INTEGER  NumberOfBytes);
@@ -9344,9 +9345,9 @@ MmMarkPhysicalMemoryAsGood(
     (PVOID) MmMapLockedPagesSpecifyCache((_Mdl), \
       KernelMode, MmCached, NULL, FALSE, _Priority)
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmGetSystemRoutineAddress(
   IN PUNICODE_STRING  SystemRoutineName);
 
@@ -9381,39 +9382,39 @@ MmGetSystemRoutineAddress(
   (_MemoryDescriptorList)->ByteCount = (ULONG) _Length; \
 }
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 MmIsAddressValid(
   IN PVOID  VirtualAddress);
 
-NTOSAPI
+NTKERNELAPI
 LOGICAL
-DDKAPI
+NTAPI
 MmIsDriverVerifying(
   IN PDRIVER_OBJECT  DriverObject);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 MmIsThisAnNtAsSystem(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmIsVerifierEnabled(
   OUT PULONG  VerifierFlags);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmLockPagableDataSection(
   IN PVOID  AddressWithinSection);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmLockPagableImageSection(
   IN PVOID  AddressWithinSection);
 
@@ -9424,71 +9425,71 @@ MmLockPagableImageSection(
  */
 #define MmLockPagableCodeSection MmLockPagableDataSection
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmLockPagableSectionByHandle(
   IN PVOID  ImageSectionHandle);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmMapIoSpace(
   IN PHYSICAL_ADDRESS  PhysicalAddress,
   IN ULONG  NumberOfBytes,
   IN MEMORY_CACHING_TYPE  CacheEnable);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmMapLockedPages(
   IN PMDL  MemoryDescriptorList,
   IN KPROCESSOR_MODE  AccessMode);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 MmPageEntireDriver(
   IN PVOID  AddressWithinSection);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmProbeAndLockProcessPages(
   IN OUT PMDL  MemoryDescriptorList,
   IN PEPROCESS  Process,
   IN KPROCESSOR_MODE  AccessMode,
   IN LOCK_OPERATION  Operation);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmProtectMdlSystemAddress(
   IN PMDL  MemoryDescriptorList,
   IN ULONG  NewProtect);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmUnmapLockedPages(
   IN PVOID  BaseAddress,
   IN PMDL  MemoryDescriptorList);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmUnmapViewInSessionSpace(
   IN PVOID  MappedBase);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmUnmapViewInSystemSpace(
   IN PVOID MappedBase);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmUnsecureVirtualMemory(
   IN HANDLE  SecureHandle);
 
@@ -9507,78 +9508,78 @@ MmUnsecureVirtualMemory(
   } \
 }
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmProbeAndLockPages(
   IN OUT PMDL  MemoryDescriptorList,
   IN KPROCESSOR_MODE  AccessMode,
   IN LOCK_OPERATION  Operation);
 
-NTOSAPI
+NTKERNELAPI
 MM_SYSTEMSIZE
-DDKAPI
+NTAPI
 MmQuerySystemSize(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 MmRemovePhysicalMemory(
   IN PPHYSICAL_ADDRESS  StartAddress,
   IN OUT PLARGE_INTEGER  NumberOfBytes);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmResetDriverPaging(
   IN PVOID  AddressWithinSection);
 
-NTOSAPI
+NTKERNELAPI
 HANDLE
-DDKAPI
+NTAPI
 MmSecureVirtualMemory(
   IN PVOID  Address,
   IN SIZE_T  Size,
   IN ULONG  ProbeMode);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
-DDKAPI
+NTAPI
 MmSizeOfMdl(
   IN PVOID  Base,
   IN SIZE_T  Length);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmUnlockPagableImageSection(
   IN PVOID  ImageSectionHandle);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmUnlockPages(
   IN PMDL  MemoryDescriptorList);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmUnmapIoSpace(
   IN PVOID  BaseAddress,
   IN SIZE_T  NumberOfBytes);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmUnmapReservedMapping(
   IN PVOID  BaseAddress,
   IN ULONG  PoolTag,
   IN PMDL  MemoryDescriptorList);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 MmUnmapVideoDisplay(
   IN PVOID  BaseAddress,
   IN SIZE_T  NumberOfBytes);
@@ -9587,25 +9588,25 @@ MmUnmapVideoDisplay(
 
 /** Object manager routines **/
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ObAssignSecurity(
   IN PACCESS_STATE  AccessState,
   IN PSECURITY_DESCRIPTOR  SecurityDescriptor,
   IN PVOID  Object,
   IN POBJECT_TYPE  Type);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ObDereferenceSecurityDescriptor(
   PSECURITY_DESCRIPTOR  SecurityDescriptor,
   ULONG  Count);
 
-NTOSAPI
+NTKERNELAPI
 LONG_PTR
-DDKFASTAPI
+FASTCALL
 ObfDereferenceObject(
   IN PVOID  Object);
 
@@ -9616,17 +9617,17 @@ ObfDereferenceObject(
  */
 #define ObDereferenceObject ObfDereferenceObject
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ObGetObjectSecurity(
   IN PVOID  Object,
   OUT PSECURITY_DESCRIPTOR  *SecurityDescriptor,
   OUT PBOOLEAN  MemoryAllocated);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ObInsertObject(
   IN PVOID  Object,
   IN PACCESS_STATE  PassedAccessState  OPTIONAL,
@@ -9635,15 +9636,15 @@ ObInsertObject(
   OUT PVOID*  ReferencedObject  OPTIONAL,
   OUT PHANDLE  Handle);
 
-NTOSAPI
+NTKERNELAPI
 LONG_PTR
-DDKFASTAPI
+FASTCALL
 ObfReferenceObject(
   IN PVOID  Object);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ObLogSecurityDescriptor(
   IN PSECURITY_DESCRIPTOR  InputSecurityDescriptor,
   OUT PSECURITY_DESCRIPTOR  *OutputSecurityDescriptor,
@@ -9655,15 +9656,15 @@ ObLogSecurityDescriptor(
  */
 #define ObReferenceObject ObfReferenceObject
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ObMakeTemporaryObject(
   IN PVOID  Object);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ObOpenObjectByName(
   IN POBJECT_ATTRIBUTES  ObjectAttributes,
   IN POBJECT_TYPE  ObjectType,
@@ -9673,9 +9674,9 @@ ObOpenObjectByName(
   IN OUT PVOID  ParseContext  OPTIONAL,
   OUT PHANDLE  Handle);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ObOpenObjectByPointer(
   IN PVOID  Object,
   IN ULONG  HandleAttributes,
@@ -9685,16 +9686,16 @@ ObOpenObjectByPointer(
   IN KPROCESSOR_MODE  AccessMode,
   OUT PHANDLE  Handle);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ObQueryObjectAuditingByHandle(
   IN HANDLE  Handle,
   OUT PBOOLEAN  GenerateOnClose);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ObReferenceObjectByHandle(
   IN HANDLE  Handle,
   IN ACCESS_MASK  DesiredAccess,
@@ -9703,9 +9704,9 @@ ObReferenceObjectByHandle(
   OUT PVOID  *Object,
   OUT POBJECT_HANDLE_INFORMATION  HandleInformation  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ObReferenceObjectByName(
   IN PUNICODE_STRING  ObjectPath,
   IN ULONG  Attributes,
@@ -9716,25 +9717,25 @@ ObReferenceObjectByName(
   IN OUT PVOID  ParseContext  OPTIONAL,
   OUT PVOID  *Object);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ObReferenceObjectByPointer(
   IN PVOID  Object,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_TYPE  ObjectType,
   IN KPROCESSOR_MODE  AccessMode);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ObReferenceSecurityDescriptor(
   IN PSECURITY_DESCRIPTOR  SecurityDescriptor,
   IN ULONG  Count);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 ObReleaseObjectSecurity(
   IN PSECURITY_DESCRIPTOR  SecurityDescriptor,
   IN BOOLEAN  MemoryAllocated);
@@ -9743,17 +9744,17 @@ ObReleaseObjectSecurity(
 
 /** Process manager routines **/
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 PsCreateSystemProcess(
   IN PHANDLE  ProcessHandle,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_ATTRIBUTES  ObjectAttributes);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 PsCreateSystemThread(
   OUT PHANDLE  ThreadHandle,
   IN ULONG  DesiredAccess,
@@ -9769,9 +9770,9 @@ PsCreateSystemThread(
  */
 #define PsGetCurrentProcess IoGetCurrentProcess
 
-NTOSAPI
+NTKERNELAPI
 HANDLE
-DDKAPI
+NTAPI
 PsGetCurrentProcessId(
   VOID);
 
@@ -9782,55 +9783,55 @@ PsGetCurrentProcessId(
 #define PsGetCurrentThread() \
   ((PETHREAD) KeGetCurrentThread())
 
-NTOSAPI
+NTKERNELAPI
 HANDLE
-DDKAPI
+NTAPI
 PsGetCurrentThreadId(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 PsGetVersion(
   PULONG  MajorVersion  OPTIONAL,
   PULONG  MinorVersion  OPTIONAL,
   PULONG  BuildNumber  OPTIONAL,
   PUNICODE_STRING  CSDVersion  OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 PsRemoveCreateThreadNotifyRoutine(
   IN PCREATE_THREAD_NOTIFY_ROUTINE  NotifyRoutine);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 PsRemoveLoadImageNotifyRoutine(
   IN PLOAD_IMAGE_NOTIFY_ROUTINE  NotifyRoutine);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 PsSetCreateProcessNotifyRoutine(
   IN PCREATE_PROCESS_NOTIFY_ROUTINE  NotifyRoutine,
   IN BOOLEAN  Remove);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 PsSetCreateThreadNotifyRoutine(
   IN PCREATE_THREAD_NOTIFY_ROUTINE  NotifyRoutine);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 PsSetLoadImageNotifyRoutine(
   IN PLOAD_IMAGE_NOTIFY_ROUTINE  NotifyRoutine);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 PsTerminateSystemThread(
   IN NTSTATUS  ExitStatus);
 
@@ -9838,9 +9839,9 @@ PsTerminateSystemThread(
 
 /** Security reference monitor routines **/
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 SeAccessCheck(
   IN PSECURITY_DESCRIPTOR  SecurityDescriptor,
   IN PSECURITY_SUBJECT_CONTEXT  SubjectSecurityContext,
@@ -9853,9 +9854,9 @@ SeAccessCheck(
   OUT PACCESS_MASK  GrantedAccess,
   OUT PNTSTATUS  AccessStatus);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 SeAssignSecurity(
   IN PSECURITY_DESCRIPTOR  ParentDescriptor  OPTIONAL,
   IN PSECURITY_DESCRIPTOR  ExplicitDescriptor  OPTIONAL,
@@ -9865,9 +9866,9 @@ SeAssignSecurity(
   IN PGENERIC_MAPPING  GenericMapping,
   IN POOL_TYPE  PoolType);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 SeAssignSecurityEx(
   IN PSECURITY_DESCRIPTOR  ParentDescriptor  OPTIONAL,
   IN PSECURITY_DESCRIPTOR  ExplicitDescriptor  OPTIONAL,
@@ -9879,22 +9880,22 @@ SeAssignSecurityEx(
   IN PGENERIC_MAPPING  GenericMapping,
   IN POOL_TYPE  PoolType);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 SeDeassignSecurity(
   IN OUT PSECURITY_DESCRIPTOR  *SecurityDescriptor);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 SeSinglePrivilegeCheck(
   LUID  PrivilegeValue,
   KPROCESSOR_MODE  PreviousMode);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 SeValidSecurityDescriptor(
   IN ULONG  Length,
   IN PSECURITY_DESCRIPTOR  SecurityDescriptor);
@@ -9903,18 +9904,18 @@ SeValidSecurityDescriptor(
 
 /** NtXxx routines **/
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtOpenProcess(
   OUT PHANDLE  ProcessHandle,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_ATTRIBUTES  ObjectAttributes,
   IN PCLIENT_ID  ClientId  OPTIONAL);
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtQueryInformationProcess(
   IN HANDLE  ProcessHandle,
   IN PROCESSINFOCLASS  ProcessInformationClass,
@@ -9926,36 +9927,36 @@ NtQueryInformationProcess(
 
 /** NtXxx and ZwXxx routines **/
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwCancelTimer(
   IN HANDLE  TimerHandle,
   OUT PBOOLEAN  CurrentState  OPTIONAL);
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtClose(
   IN HANDLE  Handle);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwClose(
   IN HANDLE  Handle);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwCreateDirectoryObject(
   OUT PHANDLE  DirectoryHandle,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_ATTRIBUTES  ObjectAttributes);
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtCreateEvent(
   OUT PHANDLE  EventHandle,
   IN ACCESS_MASK  DesiredAccess,
@@ -9963,9 +9964,9 @@ NtCreateEvent(
   IN EVENT_TYPE  EventType,
   IN BOOLEAN  InitialState);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwCreateEvent(
   OUT PHANDLE  EventHandle,
   IN ACCESS_MASK  DesiredAccess,
@@ -9973,9 +9974,9 @@ ZwCreateEvent(
   IN EVENT_TYPE  EventType,
   IN BOOLEAN  InitialState);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwCreateFile(
   OUT PHANDLE  FileHandle,
   IN ACCESS_MASK  DesiredAccess,
@@ -9989,9 +9990,9 @@ ZwCreateFile(
   IN PVOID  EaBuffer  OPTIONAL,
   IN ULONG  EaLength);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwCreateKey(
   OUT PHANDLE  KeyHandle,
   IN ACCESS_MASK  DesiredAccess,
@@ -10001,31 +10002,31 @@ ZwCreateKey(
   IN ULONG  CreateOptions,
   OUT PULONG  Disposition  OPTIONAL);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwCreateTimer(
   OUT PHANDLE  TimerHandle,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
   IN TIMER_TYPE  TimerType);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwDeleteKey(
   IN HANDLE  KeyHandle);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwDeleteValueKey(
   IN HANDLE  KeyHandle,
   IN PUNICODE_STRING  ValueName);
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtDeviceIoControlFile(
   IN HANDLE  DeviceHandle,
   IN HANDLE  Event  OPTIONAL,
@@ -10038,9 +10039,9 @@ NtDeviceIoControlFile(
   OUT PVOID  OutputBuffer,
   IN ULONG  OutputBufferSize);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwDeviceIoControlFile(
   IN HANDLE  DeviceHandle,
   IN HANDLE  Event  OPTIONAL,
@@ -10053,9 +10054,9 @@ ZwDeviceIoControlFile(
   OUT PVOID  OutputBuffer,
   IN ULONG  OutputBufferSize);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwEnumerateKey(
   IN HANDLE  KeyHandle,
   IN ULONG  Index,
@@ -10064,9 +10065,9 @@ ZwEnumerateKey(
   IN ULONG  Length,
   OUT PULONG  ResultLength);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwEnumerateValueKey(
   IN HANDLE  KeyHandle,
   IN ULONG  Index,
@@ -10075,21 +10076,21 @@ ZwEnumerateValueKey(
   IN ULONG  Length,
   OUT PULONG  ResultLength);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwFlushKey(
   IN HANDLE  KeyHandle);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwMakeTemporaryObject(
   IN HANDLE  Handle);
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtMapViewOfSection(
   IN HANDLE  SectionHandle,
   IN HANDLE  ProcessHandle,
@@ -10102,9 +10103,9 @@ NtMapViewOfSection(
   IN ULONG  AllocationType,
   IN ULONG  Protect);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwMapViewOfSection(
   IN HANDLE  SectionHandle,
   IN HANDLE  ProcessHandle,
@@ -10117,9 +10118,9 @@ ZwMapViewOfSection(
   IN ULONG  AllocationType,
   IN ULONG  Protect);
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtOpenFile(
   OUT PHANDLE  FileHandle,
   IN ACCESS_MASK  DesiredAccess,
@@ -10128,9 +10129,9 @@ NtOpenFile(
   IN ULONG  ShareAccess,
   IN ULONG  OpenOptions);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwOpenFile(
   OUT PHANDLE  FileHandle,
   IN ACCESS_MASK  DesiredAccess,
@@ -10139,41 +10140,41 @@ ZwOpenFile(
   IN ULONG  ShareAccess,
   IN ULONG  OpenOptions);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwOpenKey(
   OUT PHANDLE  KeyHandle,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_ATTRIBUTES  ObjectAttributes);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwOpenSection(
   OUT PHANDLE  SectionHandle,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_ATTRIBUTES  ObjectAttributes);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwOpenSymbolicLinkObject(
   OUT PHANDLE  LinkHandle,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_ATTRIBUTES  ObjectAttributes);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwOpenTimer(
   OUT PHANDLE  TimerHandle,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_ATTRIBUTES  ObjectAttributes);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwQueryInformationFile(
   IN HANDLE  FileHandle,
   OUT PIO_STATUS_BLOCK  IoStatusBlock,
@@ -10181,9 +10182,9 @@ ZwQueryInformationFile(
   IN ULONG  Length,
   IN FILE_INFORMATION_CLASS  FileInformationClass);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwQueryKey(
   IN HANDLE  KeyHandle,
   IN KEY_INFORMATION_CLASS  KeyInformationClass,
@@ -10191,17 +10192,17 @@ ZwQueryKey(
   IN ULONG  Length,
   OUT PULONG  ResultLength);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwQuerySymbolicLinkObject(
   IN HANDLE  LinkHandle,
   IN OUT PUNICODE_STRING  LinkTarget,
   OUT PULONG  ReturnedLength  OPTIONAL);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwQueryValueKey(
   IN HANDLE  KeyHandle,
   IN PUNICODE_STRING  ValueName,
@@ -10210,9 +10211,9 @@ ZwQueryValueKey(
   IN ULONG  Length,
   OUT PULONG  ResultLength);
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtReadFile(
   IN HANDLE  FileHandle,
   IN HANDLE  Event  OPTIONAL,
@@ -10224,9 +10225,9 @@ NtReadFile(
   IN PLARGE_INTEGER  ByteOffset  OPTIONAL,
   IN PULONG  Key  OPTIONAL);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwReadFile(
   IN HANDLE  FileHandle,
   IN HANDLE  Event  OPTIONAL,
@@ -10238,23 +10239,23 @@ ZwReadFile(
   IN PLARGE_INTEGER  ByteOffset  OPTIONAL,
   IN PULONG  Key  OPTIONAL);
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtSetEvent(
   IN HANDLE  EventHandle,
   OUT PLONG  PreviousState  OPTIONAL);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwSetEvent(
   IN HANDLE  EventHandle,
   OUT PLONG  PreviousState  OPTIONAL);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwSetInformationFile(
   IN HANDLE  FileHandle,
   OUT PIO_STATUS_BLOCK  IoStatusBlock,
@@ -10262,18 +10263,18 @@ ZwSetInformationFile(
   IN ULONG  Length,
   IN FILE_INFORMATION_CLASS  FileInformationClass);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwSetInformationThread(
   IN HANDLE  ThreadHandle,
   IN THREADINFOCLASS  ThreadInformationClass,
   IN PVOID  ThreadInformation,
   IN ULONG  ThreadInformationLength);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwSetTimer(
   IN HANDLE  TimerHandle,
   IN PLARGE_INTEGER  DueTime,
@@ -10283,9 +10284,9 @@ ZwSetTimer(
   IN LONG  Period  OPTIONAL,
   OUT PBOOLEAN  PreviousState  OPTIONAL);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwSetValueKey(
   IN HANDLE  KeyHandle,
   IN PUNICODE_STRING  ValueName,
@@ -10299,39 +10300,39 @@ ZwSetValueKey(
 #define AT_RESERVED                       0x20000000
 #define AT_ROUND_TO_PAGE                  0x40000000
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtUnmapViewOfSection(
   IN HANDLE  ProcessHandle,
   IN PVOID  BaseAddress);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwUnmapViewOfSection(
   IN HANDLE  ProcessHandle,
   IN PVOID  BaseAddress);
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtWaitForSingleObject(
   IN HANDLE  ObjectHandle,
   IN BOOLEAN  Alertable,
   IN PLARGE_INTEGER  TimeOut  OPTIONAL);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwWaitForSingleObject(
   IN HANDLE  ObjectHandle,
   IN BOOLEAN  Alertable,
   IN PLARGE_INTEGER  TimeOut  OPTIONAL);
 
-NTOSAPI
+NTSYSCALLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NtWriteFile(
   IN HANDLE  FileHandle,
   IN HANDLE  Event  OPTIONAL,
@@ -10343,9 +10344,9 @@ NtWriteFile(
   IN PLARGE_INTEGER  ByteOffset  OPTIONAL,
   IN PULONG  Key  OPTIONAL);
 
-NTOSAPI
+NTSYSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 ZwWriteFile(
   IN HANDLE  FileHandle,
   IN HANDLE  Event  OPTIONAL,
@@ -10361,32 +10362,32 @@ ZwWriteFile(
 
 /** Power management support routines **/
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 PoCallDriver(
   IN PDEVICE_OBJECT  DeviceObject,
   IN OUT PIRP  Irp);
 
-NTOSAPI
+NTKERNELAPI
 PULONG
-DDKAPI
+NTAPI
 PoRegisterDeviceForIdleDetection(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  ConservationIdleTime,
   IN ULONG  PerformanceIdleTime,
   IN DEVICE_POWER_STATE  State);
 
-NTOSAPI
+NTKERNELAPI
 PVOID
-DDKAPI
+NTAPI
 PoRegisterSystemState(
   IN PVOID  StateHandle,
   IN EXECUTION_STATE  Flags);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 PoRequestPowerIrp(
   IN PDEVICE_OBJECT  DeviceObject,
   IN UCHAR  MinorFunction,
@@ -10395,41 +10396,41 @@ PoRequestPowerIrp(
   IN PVOID  Context,
   OUT PIRP  *Irp OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 PoRequestShutdownEvent(
   OUT PVOID  *Event);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 PoSetDeviceBusy(
   PULONG  IdlePointer);
 
-NTOSAPI
+NTKERNELAPI
 POWER_STATE
-DDKAPI
+NTAPI
 PoSetPowerState(
   IN PDEVICE_OBJECT  DeviceObject,
   IN POWER_STATE_TYPE  Type,
   IN POWER_STATE  State);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 PoSetSystemState(
   IN EXECUTION_STATE  Flags);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 PoStartNextPowerIrp(
   IN PIRP  Irp);
 
-NTOSAPI
+NTKERNELAPI
 VOID
-DDKAPI
+NTAPI
 PoUnregisterSystemState(
   IN PVOID  StateHandle);
 
@@ -10437,9 +10438,9 @@ PoUnregisterSystemState(
 
 /** WMI library support routines **/
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 WmiCompleteRequest(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PIRP  Irp,
@@ -10447,9 +10448,9 @@ WmiCompleteRequest(
   IN ULONG  BufferUsed,
   IN CCHAR  PriorityBoost);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 WmiFireEvent(
   IN PDEVICE_OBJECT  DeviceObject,
   IN LPGUID  Guid,
@@ -10457,9 +10458,9 @@ WmiFireEvent(
   IN ULONG  EventDataSize,
   IN PVOID  EventData);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 WmiQueryTraceInformation(
   IN TRACE_INFORMATION_CLASS  TraceInformationClass,
   OUT PVOID  TraceInformation,
@@ -10467,16 +10468,16 @@ WmiQueryTraceInformation(
   OUT PULONG  RequiredLength OPTIONAL,
   IN PVOID  Buffer OPTIONAL);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 WmiSystemControl(
   IN PWMILIB_CONTEXT  WmiLibInfo,
   IN PDEVICE_OBJECT  DeviceObject,
   IN PIRP  Irp,
   OUT PSYSCTL_IRP_DISPOSITION  IrpDisposition);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
 DDKCDECLAPI
 WmiTraceMessage(
@@ -10488,7 +10489,7 @@ WmiTraceMessage(
 
 #if 0
 /* FIXME: Get va_list from where? */
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
 DDKCDECLAPI
 WmiTraceMessageVa(
@@ -10502,15 +10503,15 @@ WmiTraceMessageVa(
 
 /** Kernel debugger routines **/
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 KdDisableDebugger(
   VOID);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 KdEnableDebugger(
   VOID);
 
@@ -10519,9 +10520,9 @@ NTAPI
 DbgBreakPoint(
   VOID);
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 DbgBreakPointWithStatus(
   IN ULONG  Status);
 
@@ -10539,23 +10540,23 @@ DbgPrintEx(
   IN PCCH  Format,
   IN ...);
 
-NTOSAPI
+NTKERNELAPI
 ULONG
 DDKCDECLAPI
 DbgPrintReturnControlC(
   IN PCH  Format,
   IN ...);
 
-NTOSAPI
+NTKERNELAPI
 BOOLEAN
-DDKAPI
+NTAPI
 DbgQueryDebugFilterState(
   IN ULONG  ComponentId,
   IN ULONG  Level);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKAPI
+NTAPI
 DbgSetDebugFilterState(
   IN ULONG  ComponentId,
   IN ULONG  Level,
@@ -10579,8 +10580,8 @@ DbgSetDebugFilterState(
 
 #if defined(_NTDDK_) || defined(_NTHAL_) || defined(_WDMDDK_) || defined(_NTOSP_)
 
-extern NTOSAPI PBOOLEAN KdDebuggerNotPresent;
-extern NTOSAPI PBOOLEAN KdDebuggerEnabled;
+extern NTKERNELAPI PBOOLEAN KdDebuggerNotPresent;
+extern NTKERNELAPI PBOOLEAN KdDebuggerEnabled;
 #define KD_DEBUGGER_ENABLED     *KdDebuggerEnabled
 #define KD_DEBUGGER_NOT_PRESENT *KdDebuggerNotPresent
 

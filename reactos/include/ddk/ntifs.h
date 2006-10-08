@@ -28,7 +28,12 @@
 #pragma GCC system_header
 #endif
 
+#ifdef _NTOSKRNL_
+/* HACKHACKHACK!!! We shouldn't include this header from ntoskrnl! */
 #define NTKERNELAPI
+#else
+#define NTKERNELAPI DECLSPEC_IMPORT
+#endif
 
 #include "ntddk.h"
 
@@ -2371,7 +2376,7 @@ FsRtlCopyWrite (
     IN PDEVICE_OBJECT       DeviceObject
 );
 
-NTKERNELAPI
+NTSYSAPI
 PVOID
 NTAPI
 RtlCreateHeap (
@@ -2412,7 +2417,7 @@ FsRtlDeregisterUncProvider (
     IN HANDLE Handle
 );
 
-NTKERNELAPI
+NTSYSAPI
 PVOID
 NTAPI
 RtlDestroyHeap(
@@ -3272,16 +3277,6 @@ NTAPI
 KeInsertQueue (
     IN PRKQUEUE     Queue,
     IN PLIST_ENTRY  Entry
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KeInsertQueueApc (
-    IN PKAPC      Apc,
-    IN PVOID      SystemArgument1,
-    IN PVOID      SystemArgument2,
-    IN KPRIORITY  PriorityBoost
 );
 
 NTKERNELAPI
