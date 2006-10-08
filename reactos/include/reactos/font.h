@@ -67,6 +67,13 @@ font_char BootDigits[16] = {
     "        ",
     "  XXXX  "
     " X    X "
+    " X    X "
+    "  XXXXX "
+    "      X "
+    "  XXXX  "
+    "        ",
+    "  XXXX  "
+    " X    X "
     " XXXXXX "
     " X    X "
     " X    X "
