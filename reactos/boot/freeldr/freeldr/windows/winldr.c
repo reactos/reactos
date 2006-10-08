@@ -26,8 +26,10 @@
 //#define NDEBUG
 #include <debug.h>
 
+// debug stuff
 VOID DumpMemoryAllocMap(VOID);
 VOID WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
+VOID WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 void InitializeHWConfig(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -338,8 +340,6 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	Status = WinLdrLoadAndScanSystemHive(LoaderBlock, BootPath);
 	DbgPrint((DPRINT_WINDOWS, "SYSTEM hive loaded and scanned with status %d\n", Status));
 
-	/* FIXME: Load OEM HAL font, should be moved to WinLdrLoadAndScanSystemHive() */
-
 	/* Load boot drivers */
 	//WinLdrLoadBootDrivers();
 
@@ -361,6 +361,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 		KiSystemStartup, LoaderBlockVA));
 
 	WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
+	WinLdrpDumpBootDriver(LoaderBlockVA);
 
 	//FIXME: If I substitute this debugging checkpoint, GCC will "optimize away" the code below
 	//while (1) {};
@@ -392,5 +393,24 @@ WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock)
 			MemoryDescriptor->PageCount, MemoryDescriptor->MemoryType));
 
 		NextMd = MemoryDescriptor->ListEntry.Flink;
+	}
+}
+
+VOID
+WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+	PLIST_ENTRY NextBd;
+	PBOOT_DRIVER_LIST_ENTRY BootDriver;
+
+	NextBd = LoaderBlock->BootDriverListHead.Flink;
+
+	while (NextBd != &LoaderBlock->BootDriverListHead)
+	{
+		BootDriver = CONTAINING_RECORD(NextBd, BOOT_DRIVER_LIST_ENTRY, ListEntry);
+
+		DbgPrint((DPRINT_WINDOWS, "BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
+			BootDriver->DataTableEntry, &BootDriver->RegistryPath));
+
+		NextBd = BootDriver->ListEntry.Flink;
 	}
 }
