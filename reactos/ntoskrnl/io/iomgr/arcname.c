@@ -28,9 +28,9 @@ IopApplyRosCdromArcHack(IN ULONG i)
 {
     ULONG DeviceNumber = -1;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    ANSI_STRING InstallName;
     UNICODE_STRING DeviceName;
-    WCHAR Buffer[MAX_PATH];
-    CHAR AnsiBuffer[MAX_PATH];
+    CHAR Buffer[MAX_PATH];
     FILE_BASIC_INFORMATION FileInfo;
     NTSTATUS Status;
     PCHAR p, q;
@@ -39,29 +39,53 @@ IopApplyRosCdromArcHack(IN ULONG i)
     p = strstr(KeLoaderBlock->ArcBootDeviceName, "cdrom");
     if (p)
     {
-        /* Try to find the installer */
-        swprintf(Buffer, L"\\Device\\CdRom%lu\\reactos\\ntoskrnl.exe", i);
-        RtlInitUnicodeString(&DeviceName, Buffer);
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &DeviceName,
-                                   0,
-                                   NULL,
-                                   NULL);
-        Status = ZwQueryAttributesFile(&ObjectAttributes, &FileInfo);
-        if (NT_SUCCESS(Status)) DeviceNumber = i;
+        /* Build installer name */
+        sprintf(Buffer, "\\Device\\CdRom%lu\\reactos\\ntoskrnl.exe", i);
+        RtlInitAnsiString(&InstallName, Buffer);
+        Status = RtlAnsiStringToUnicodeString(&DeviceName, &InstallName, TRUE);
+        if (!NT_SUCCESS(Status)) return FALSE;
 
-        /* Try to find live CD boot */
-        swprintf(Buffer,
-                 L"\\Device\\CdRom%lu\\reactos\\system32\\ntoskrnl.exe",
-                 i);
-        RtlInitUnicodeString(&DeviceName, Buffer);
+        /* Try to find the installer */
         InitializeObjectAttributes(&ObjectAttributes,
                                    &DeviceName,
                                    0,
                                    NULL,
                                    NULL);
         Status = ZwQueryAttributesFile(&ObjectAttributes, &FileInfo);
-        if (NT_SUCCESS(Status)) DeviceNumber = i;
+
+        /* Free the string */
+        RtlFreeUnicodeString(&DeviceName);
+
+        /* Check if we found the file */
+        if (NT_SUCCESS(Status))
+        {
+            /* We did, save the device number */
+            DeviceNumber = i;
+        }
+        else
+        {
+            /* Build live CD kernel name */
+            sprintf(Buffer,
+                    "\\Device\\CdRom%lu\\reactos\\system32\\ntoskrnl.exe",
+                    i);
+            RtlInitAnsiString(&InstallName, Buffer);
+            Status = RtlAnsiStringToUnicodeString(&DeviceName,
+                                                  &InstallName,
+                                                  TRUE);
+            if (!NT_SUCCESS(Status)) return FALSE;
+
+            /* Try to find it */
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &DeviceName,
+                                       0,
+                                       NULL,
+                                       NULL);
+            Status = ZwQueryAttributesFile(&ObjectAttributes, &FileInfo);
+            if (NT_SUCCESS(Status)) DeviceNumber = i;
+
+            /* Free the string */
+            RtlFreeUnicodeString(&DeviceName);
+        }
 
         /* Build the name */
         sprintf(p, "cdrom(%lu)", DeviceNumber);
@@ -71,9 +95,9 @@ IopApplyRosCdromArcHack(IN ULONG i)
         if (q)
         {
             q++;
-            strcpy(AnsiBuffer, q);
+            strcpy(Buffer, q);
             sprintf(p, "cdrom(%lu)", DeviceNumber);
-            strcat(p, AnsiBuffer);
+            strcat(p, Buffer);
         }
     }
 
