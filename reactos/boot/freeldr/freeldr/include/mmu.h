@@ -1,6 +1,8 @@
 #ifndef FREELDR_MMU_H
 #define FREELDR_MMU_H
 
+extern int mmu_handle;
+
 int GetDEC();
 int GetMSR();
 int GetPhys( int addr );
