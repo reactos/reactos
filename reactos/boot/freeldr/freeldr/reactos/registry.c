@@ -216,6 +216,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
   int subkeyLength;
   int stringLength;
   ULONG NameSize;
+  int CmpResult;
 
   DbgPrint((DPRINT_REGISTRY, "KeyName '%S'\n", KeyName));
 
@@ -261,6 +262,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
       NameSize = (subkeyLength + 1) * sizeof(WCHAR);
       
       Ptr = CurrentKey->SubKeyList.Flink;
+      CmpResult = 1;
       while (Ptr != &CurrentKey->SubKeyList)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "Ptr 0x%x\n", Ptr));
@@ -270,14 +272,16 @@ RegCreateKey(FRLDRHKEY ParentKey,
 					KeyList);
 	  DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
 	  DbgPrint((DPRINT_REGISTRY, "Searching '%S'\n", SearchKey->Name));
-	  if (SearchKey->NameSize == NameSize &&
-              _wcsnicmp(SearchKey->Name, name, subkeyLength) == 0)
+	  CmpResult = _wcsnicmp(SearchKey->Name, name, subkeyLength);
+	  if (CmpResult == 0 && SearchKey->NameSize == NameSize)	  
+	    break;
+	  else if (CmpResult == 1)
 	    break;
 
 	  Ptr = Ptr->Flink;
 	}
 
-      if (Ptr == &CurrentKey->SubKeyList)
+      if (CmpResult != 0)
 	{
 	  /* no key found -> create new subkey */
 	  NewKey = (FRLDRHKEY)MmAllocateMemory(sizeof(KEY));
@@ -294,7 +298,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
 	  NewKey->DataSize = 0;
 	  NewKey->Data = NULL;
 
-	  InsertTailList(&CurrentKey->SubKeyList, &NewKey->KeyList);
+	  InsertTailList(Ptr, &NewKey->KeyList);
 	  CurrentKey->SubKeyCount++;
 
 	  NewKey->NameSize = NameSize;

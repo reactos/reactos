@@ -145,16 +145,32 @@ CmiAddKeyToHashTable(
 	IN HCELL_INDEX NKBOffset)
 {
 	ULONG i = KeyCell->SubKeyCounts[StorageType];
+	ULONG HashValue;
 
-	HashCell->Table[i].KeyOffset = NKBOffset;
-	HashCell->Table[i].HashValue = 0;
 	if (NewKeyCell->Flags & REG_KEY_NAME_PACKED)
 	{
 		RtlCopyMemory(
-			&HashCell->Table[i].HashValue,
+			&HashValue,
 			NewKeyCell->Name,
 			min(NewKeyCell->NameSize, sizeof(ULONG)));
 	}
+
+	for (i = 0; i < KeyCell->SubKeyCounts[StorageType]; i++)
+	{
+		if (HashCell->Table[i].HashValue > HashValue)
+			break;
+	}
+	
+	if (i < KeyCell->SubKeyCounts[StorageType])
+	{
+		RtlMoveMemory(HashCell->Table + i + 1,
+		              HashCell->Table + i,
+		              (HashCell->HashTableSize - 1 - i) *
+		              sizeof(HashCell->Table[0]));	
+	}
+
+	HashCell->Table[i].KeyOffset = NKBOffset;
+	HashCell->Table[i].HashValue = HashValue;
 	HvMarkCellDirty(&RegistryHive->Hive, KeyCell->SubKeyLists[StorageType]);
 	return STATUS_SUCCESS;
 }
@@ -604,7 +620,7 @@ CmiAllocateValueCell(
 	if (*VBOffset == HCELL_NULL)
 	{
 		Status = STATUS_INSUFFICIENT_RESOURCES;
-    }
+	}
 	else
 	{
 		ASSERT(NameSize <= USHORT_MAX);
@@ -645,7 +661,7 @@ CmiAddValueKey(
 	OUT PCM_KEY_VALUE *pValueCell,
 	OUT HCELL_INDEX *pValueCellOffset)
 {
-	  PVALUE_LIST_CELL ValueListCell;
+	PVALUE_LIST_CELL ValueListCell;
 	PCM_KEY_VALUE NewValueCell;
 	HCELL_INDEX ValueListCellOffset;
 	HCELL_INDEX NewValueCellOffset;
