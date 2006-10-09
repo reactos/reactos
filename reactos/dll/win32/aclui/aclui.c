@@ -1047,7 +1047,8 @@ BuildDefaultPrincipalAce(IN PSECURITY_PAGE sp,
     WORD AceSize;
 
     SidLen = GetLengthSid(pSid);
-    AceSize = sizeof(ACCESS_ALLOWED_ACE) + (WORD)SidLen - sizeof(DWORD);
+    AceSize = FIELD_OFFSET(ACCESS_ALLOWED_ACE,
+                           SidStart) + (WORD)SidLen;
     Ace = HeapAlloc(GetProcessHeap(),
                     0,
                     AceSize);

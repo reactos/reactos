@@ -812,8 +812,6 @@ RtlSelfRelativeToAbsoluteSD2(IN OUT PSECURITY_DESCRIPTOR SelfRelativeSD,
                                 &pSacl,
                                 &SaclLength);
 
-    ASSERT(sizeof(SECURITY_DESCRIPTOR) > sizeof(SECURITY_DESCRIPTOR_RELATIVE));
-
     /* calculate the start and end of the data area, we simply just move the
        data by the difference between the size of the relative and absolute
        security descriptor structure */

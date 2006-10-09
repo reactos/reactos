@@ -246,7 +246,8 @@ SepCaptureSid(IN PSID InputSid,
     _SEH_TRY
     {
       ProbeForRead(Sid,
-                   sizeof(*Sid) - sizeof(Sid->SubAuthority),
+                   FIELD_OFFSET(SID,
+                                SubAuthority),
                    sizeof(UCHAR));
       SidSize = RtlLengthRequiredSid(Sid->SubAuthorityCount);
       ProbeForRead(Sid,

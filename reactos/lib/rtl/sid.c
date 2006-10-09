@@ -42,8 +42,8 @@ RtlLengthRequiredSid(IN ULONG SubAuthorityCount)
 {
   PAGED_CODE_RTL();
 
-  return (sizeof(SID) - (ANYSIZE_ARRAY * sizeof(ULONG)) +
-          (SubAuthorityCount * sizeof(ULONG)));
+  return (ULONG)FIELD_OFFSET(SID,
+                             SubAuthority[SubAuthorityCount]);
 }
 
 
@@ -132,8 +132,8 @@ RtlLengthSid(IN PSID Sid_)
 
   PAGED_CODE_RTL();
 
-  return (sizeof(SID) - sizeof(Sid->SubAuthority) +
-          (Sid->SubAuthorityCount * sizeof(ULONG)));
+  return (ULONG)FIELD_OFFSET(SID,
+                             SubAuthority[Sid->SubAuthorityCount]);
 }
 
 

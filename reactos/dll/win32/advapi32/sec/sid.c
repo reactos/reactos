@@ -184,7 +184,7 @@ static __inline BOOL set_ntstatus( NTSTATUS status )
     return !status;
 }
 
-#define	WINE_SIZE_OF_WORLD_ACCESS_ACL	(sizeof(ACL) + sizeof(ACCESS_ALLOWED_ACE) + sizeof(sidWorld) - sizeof(DWORD))
+#define	WINE_SIZE_OF_WORLD_ACCESS_ACL	(sizeof(ACL) + FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + sizeof(sidWorld))
 
 
 /* some helper functions - taken from winehq cvs 20050916 */
@@ -428,7 +428,7 @@ static BOOL ParseStringAclToAcl(LPCWSTR StringAcl, LPDWORD lpdwFlags,
             goto lerr;
         StringAcl++;
 
-	length += sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + sidlen;
+	length += FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + sidlen;
     }
 
     *cBytes = length;
