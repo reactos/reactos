@@ -326,8 +326,8 @@ _heapset
 _heapused=stub
 _heapwalk
 _hypot
-_i64toa=NTDLL._i64toa
-_i64tow=NTDLL._i64tow
+_i64toa
+_i64tow
 _initterm
 _inp=stub
 _inpd=stub
