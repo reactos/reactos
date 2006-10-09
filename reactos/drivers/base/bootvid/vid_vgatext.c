@@ -61,7 +61,7 @@ static ULONG SizeX, SizeY;
 static VOID NTAPI
 VidpVgaTextClearDisplay(VOID)
 {
-   WORD *ptr = (WORD*)VidpMemory;
+   volatile WORD *ptr = (volatile WORD*)VidpMemory;
    ULONG i;
 
    for (i = 0; i < SizeX * SizeY; i++, ptr++)
@@ -166,13 +166,12 @@ VidVgaTextSolidColorFill(
 static VOID NTAPI
 VidpVgaTextScrollDisplay(VOID)
 {
-   PUSHORT ptr;
+   volatile USHORT *ptr;
    int i;
 
-   ptr = (PUSHORT)VidpMemory + SizeX;
-   RtlMoveMemory(VidpMemory, ptr, SizeX * (SizeY - 1) * 2);
+   RtlMoveMemory(VidpMemory, (PUSHORT)VidpMemory + SizeX, SizeX * (SizeY - 1) * 2);
 
-   ptr = (PUSHORT)VidpMemory + (SizeX * (SizeY - 1));
+   ptr = (volatile USHORT *)VidpMemory + (SizeX * (SizeY - 1));
    for (i = 0; i < (int)SizeX; i++, ptr++)
       *ptr = (CHAR_ATTRIBUTE << 8) + ' ';
 }
@@ -210,9 +209,9 @@ VidVgaTextDisplayString(
       }
       else if (*pch != '\r')
       {
-         PUSHORT ptr;
+         volatile USHORT *ptr;
 
-         ptr = (PUSHORT)VidpMemory + ((CursorY * SizeX) + CursorX);
+         ptr = (volatile USHORT *)VidpMemory + ((CursorY * SizeX) + CursorX);
          *ptr = (CHAR_ATTRIBUTE << 8) + *pch;
          CursorX++;
 	  
