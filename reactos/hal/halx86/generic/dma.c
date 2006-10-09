@@ -1565,6 +1565,9 @@ IoFlushAdapterBuffers(
 {
    BOOLEAN SlaveDma = FALSE;
    PROS_MAP_REGISTER_ENTRY RealMapRegisterBase;
+   PHYSICAL_ADDRESS HighestAcceptableAddress;
+   PHYSICAL_ADDRESS PhysicalAddress;
+   PPFN_NUMBER MdlPagesPtr;
 
    ASSERT_IRQL(DISPATCH_LEVEL);  
 
@@ -1601,15 +1604,24 @@ IoFlushAdapterBuffers(
          {
             if (SlaveDma && !AdapterObject->IgnoreCount)
                Length -= HalReadDmaCounter(AdapterObject);
-         }
-
          HalpCopyBufferMap(Mdl, RealMapRegisterBase, CurrentVa, Length, FALSE);
+      }
       }
       else
       {
-         /* FIXME: Unimplemented case */
-         ASSERT(FALSE);
+         MdlPagesPtr = MmGetMdlPfnArray(Mdl);
+         MdlPagesPtr += ((ULONG_PTR)CurrentVa - (ULONG_PTR)Mdl->StartVa) >> PAGE_SHIFT;
+
+         PhysicalAddress.QuadPart = *MdlPagesPtr << PAGE_SHIFT;
+         PhysicalAddress.QuadPart += BYTE_OFFSET(CurrentVa);
+
+         HighestAcceptableAddress = HalpGetAdapterMaximumPhysicalAddress(AdapterObject);
+         if (PhysicalAddress.QuadPart + Length >
+             HighestAcceptableAddress.QuadPart)
+         {
+            HalpCopyBufferMap(Mdl, RealMapRegisterBase, CurrentVa, Length, FALSE);
       }
+   }
    }
 
    RealMapRegisterBase->Counter = 0;
@@ -1793,11 +1805,12 @@ IoMapTransfer(
           HighestAcceptableAddress.QuadPart)
       {
          UseMapRegisters = TRUE;
-         PhysicalAddress = RealMapRegisterBase->PhysicalAddress;
+         PhysicalAddress = RealMapRegisterBase[Counter].PhysicalAddress;
          PhysicalAddress.QuadPart += ByteOffset;
          if ((ULONG_PTR)MapRegisterBase & MAP_BASE_SW_SG)
          {
             RealMapRegisterBase->Counter = ~0;
+            Counter = 0;
          }
       }
    }

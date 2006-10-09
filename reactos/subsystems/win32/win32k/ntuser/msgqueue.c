@@ -479,12 +479,6 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
    
-   if( !IntGetScreenDC() ||
-         PsGetCurrentThreadWin32Thread()->MessageQueue == W32kGetPrimitiveMessageQueue() )
-   {
-      RETURN(FALSE);
-   }
-
    WaitObjects[1] = MessageQueue->NewMessages;
    WaitObjects[0] = &HardwareMessageQueueLock;
    do
@@ -719,16 +713,6 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    }
 
    FocusMessageQueue = IntGetFocusMessageQueue();
-   if( !IntGetScreenDC() )
-   {
-      /* FIXME: What to do about Msg.pt here? */
-      if( W32kGetPrimitiveMessageQueue() )
-      {
-         MsqPostMessage(W32kGetPrimitiveMessageQueue(), &Msg, FALSE, QS_KEY);
-      }
-   }
-   else
-   {
       if (FocusMessageQueue == NULL)
       {
          DPRINT("No focus message queue\n");
@@ -748,7 +732,6 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
          DPRINT("Invalid focus window handle\n");
       }
    }
-}
 
 VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -1510,10 +1493,6 @@ MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       InterlockedExchange((LONG*)&desk->ActiveMessageQueue, 0);
       IntDereferenceMessageQueue(MessageQueue);
    }
-
-   /* if this is the primitive message queue, deregister it */
-   if (MessageQueue == W32kGetPrimitiveMessageQueue())
-      W32kUnregisterPrimitiveMessageQueue();
 
    /* clean it up */
    MsqCleanupMessageQueue(MessageQueue);

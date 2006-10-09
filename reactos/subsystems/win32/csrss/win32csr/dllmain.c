@@ -170,20 +170,11 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRSS_EXPORTED_FUNCS Exports,
                        HANDLE CsrssApiHeap)
 {
-  HANDLE ThreadHandle;
-
   CsrExports = *Exports;
   Win32CsrApiHeap = CsrssApiHeap;
 
   PrivateCsrssManualGuiCheck(0);
   CsrInitConsoleSupport();
-  ThreadHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) Console_Api, NULL, 0, NULL);
-  if (NULL == ThreadHandle)
-    {
-      DPRINT1("CSR: Unable to create console thread\n");
-      return FALSE;
-    }
-  CloseHandle(ThreadHandle);
 
   *ApiDefinitions = Win32CsrApiDefinitions;
   *ObjectDefinitions = Win32CsrObjectDefinitions;

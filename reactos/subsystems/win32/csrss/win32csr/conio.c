@@ -16,10 +16,6 @@
 /* FIXME: Is there a way to create real aliasses with gcc? [CSH] */
 #define ALIAS(Name, Target) typeof(Target) Name = Target
 
-/* Private user32 routines for CSRSS, not defined in any header file */
-extern VOID STDCALL PrivateCsrssRegisterPrimitive(VOID);
-extern VOID STDCALL PrivateCsrssAcquireOrReleaseInputOwnership(BOOL Release);
-
 /* GLOBALS *******************************************************************/
 
 #define ConioInitRect(Rect, Top, Left, Bottom, Right) \
@@ -1420,37 +1416,6 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
     {
       HeapFree(Win32CsrApiHeap, 0, ConInRec);
     }
-}
-
-DWORD STDCALL
-Console_Api (PVOID unused)
-{
-  /* keep reading events from the keyboard and stuffing them into the current
-     console's input queue */
-  MSG msg;
-
-  /* This call establishes our message queue */
-  PeekMessageW(&msg, 0, 0, 0, PM_NOREMOVE);
-  /* This call registers our message queue */
-  PrivateCsrssRegisterPrimitive();
-  /* This call turns on the input system in win32k */
-  PrivateCsrssAcquireOrReleaseInputOwnership(FALSE);
-
-  while (TRUE)
-    {
-      GetMessageW(&msg, 0, 0, 0);
-      TranslateMessage(&msg);
-
-      if (msg.message == WM_CHAR || msg.message == WM_SYSCHAR ||
-          msg.message == WM_KEYDOWN || msg.message == WM_KEYUP ||
-          msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP)
-        {
-          ConioProcessKey(&msg, TuiGetFocusConsole(), TRUE);
-        }
-    }
-
-  PrivateCsrssAcquireOrReleaseInputOwnership(TRUE);
-  return 0;
 }
 
 CSR_API(CsrGetScreenBufferInfo)

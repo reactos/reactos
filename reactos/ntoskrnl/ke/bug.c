@@ -16,14 +16,6 @@
 #pragma alloc_text(INIT, KiInitializeBugCheck)
 #endif
 
-/* ROS Internal. Please deprecate */
-NTHALAPI
-VOID
-NTAPI
-HalReleaseDisplayOwnership(
-    VOID
-);
-
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY BugcheckCallbackListHead;
@@ -435,8 +427,6 @@ KiDisplayBlueScreen(IN ULONG MessageId,
 {
     CHAR AnsiName[75];
 
-    /* FIXMEs: Use inbv to clear, fill and write to screen. */
-
     /* Check if this is a hard error */
     if (IsHardError)
     {
@@ -847,8 +837,18 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         }
     }
 
-    /* Switching back to the blue screen so we print messages on it */
-    HalReleaseDisplayOwnership();
+    /* Use the boot video driver to clear, fill and write to screen. */
+    if (InbvIsBootDriverInstalled())
+    {
+        /* FIXME: This should happen in KiDisplayBlueScreen!!! */
+        InbvAcquireDisplayOwnership();
+        InbvResetDisplay();
+        InbvSolidColorFill(0, 0, 639, 479, 4);
+        InbvSetTextColor(15);
+        InbvInstallDisplayStringFilter(NULL);
+        InbvEnableDisplayString(TRUE);
+        InbvSetScrollRegion(0, 0, 639, 479);
+    }
 
     /* Raise IRQL to HIGH_LEVEL */
     Ke386DisableInterrupts();

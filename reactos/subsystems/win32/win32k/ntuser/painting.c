@@ -81,10 +81,13 @@ IntIntersectWithParents(PWINDOW_OBJECT Child, PRECT WindowRect)
    return TRUE;
 }
 
-VOID FASTCALL
-IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
+BOOL FASTCALL
+IntValidateParent(PWINDOW_OBJECT Child, BOOL Recurse)
 {
    PWINDOW_OBJECT ParentWindow = Child->Parent;
+
+   while (ParentWindow && ParentWindow->Style & WS_CHILD)
+      ParentWindow = ParentWindow->Parent;
 
    while (ParentWindow)
    {
@@ -93,13 +96,17 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
 
       if (ParentWindow->UpdateRegion != 0)
       {
-         NtGdiCombineRgn(ParentWindow->UpdateRegion, ParentWindow->UpdateRegion,
-            ValidRegion, RGN_DIFF);
-         /* FIXME: If the resulting region is empty, remove fake posted paint message */
+         if (Recurse)
+            return FALSE;
+
+         IntInvalidateWindows(ParentWindow, Child->UpdateRegion,
+                              RDW_VALIDATE | RDW_NOCHILDREN);
       }
 
       ParentWindow = ParentWindow->Parent;
    }
+
+   return TRUE;
 }
 
 /**
@@ -219,7 +226,7 @@ IntGetNCUpdateRgn(PWINDOW_OBJECT Window, BOOL Validate)
  */
 
 static VOID FASTCALL
-co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
+co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags, BOOL Recurse)
 {
    HDC hDC;
    HWND hWnd = Window->hSelf;
@@ -229,7 +236,8 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
    {
       if (Window->UpdateRegion)
       {
-         IntValidateParent(Window, Window->UpdateRegion);
+         if (!IntValidateParent(Window, Recurse))
+            return;
       }
 
       if (Flags & RDW_UPDATENOW)
@@ -290,6 +298,7 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
 
       if ((List = IntWinListChildren(Window)))
       {
+         /* FIXME: Handle WS_EX_TRANSPARENT */
          for (phWnd = List; *phWnd; ++phWnd)
          {
             Window = UserGetWindowObject(*phWnd);
@@ -297,7 +306,7 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
             {
                USER_REFERENCE_ENTRY Ref;
                UserRefObjectCo(Window, &Ref);
-               co_IntPaintWindows(Window, Flags);
+               co_IntPaintWindows(Window, Flags, TRUE);
                UserDerefObjectCo(Window);
             }
          }
@@ -578,7 +587,7 @@ co_UserRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRg
 
    if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
    {
-      co_IntPaintWindows(Window, Flags);
+      co_IntPaintWindows(Window, Flags, FALSE);
    }
 
    /*

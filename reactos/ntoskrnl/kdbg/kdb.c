@@ -1140,7 +1140,7 @@ KdbpInternalEnter()
    KbdDisableMouse();
    if (KdpDebugMode.Screen)
    {
-      HalReleaseDisplayOwnership();
+      InbvAcquireDisplayOwnership();
    }
 
    /* Call the interface's main loop on a different stack */

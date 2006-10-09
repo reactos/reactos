@@ -18,11 +18,28 @@ static PCSRSS_CONSOLE ActiveConsole;
 
 static BOOL ConsInitialized = FALSE;
 
+static LRESULT CALLBACK
+TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  if (msg == WM_ACTIVATE)
+    {
+      CHECKPOINT1;
+      if (LOWORD(wParam) != WA_INACTIVE)
+        {
+          CHECKPOINT1;
+          SetFocus(hWnd);
+          ConioDrawConsole(ActiveConsole);
+        }
+    }
+  return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
 static BOOL FASTCALL
 TuiInit(VOID)
 {
   CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
   DWORD BytesReturned;
+  WNDCLASSEXW wc;
 
   ConsoleDeviceHandle = CreateFileW(L"\\\\.\\BlueScreen", FILE_ALL_ACCESS, 0, NULL,
                                     OPEN_EXISTING, 0, NULL);
@@ -42,6 +59,17 @@ TuiInit(VOID)
     }
   PhysicalConsoleSize = ScrInfo.dwSize;
 
+  RtlZeroMemory(&wc, sizeof(WNDCLASSEXW));
+  wc.cbSize = sizeof(WNDCLASSEXW);
+  wc.lpszClassName = L"TuiConsoleWindowClass";
+  wc.lpfnWndProc = TuiConsoleWndProc;
+  wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
+  if (RegisterClassExW(&wc) == 0)
+    {
+      DPRINT1("Failed to register console wndproc\n");
+      return FALSE;
+    }
+  
   return TRUE;
 }
 
@@ -194,6 +222,8 @@ TuiChangeTitle(PCSRSS_CONSOLE Console)
 static VOID STDCALL
 TuiCleanupConsole(PCSRSS_CONSOLE Console)
 {
+  DestroyWindow(Console->hWindow);
+  
   EnterCriticalSection(&ActiveConsoleLock);
 
   /* Switch to next console */
@@ -215,6 +245,47 @@ TuiCleanupConsole(PCSRSS_CONSOLE Console)
     }
 }
 
+DWORD STDCALL
+TuiConsoleThread (PVOID Data)
+{
+  PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Data;
+  HWND NewWindow;
+  MSG msg;
+
+  NewWindow = CreateWindowW(L"TuiConsoleWindowClass",
+                            Console->Title.Buffer,
+                            0,
+                            -32000, -32000, 0, 0,
+                            NULL, NULL,
+                            (HINSTANCE) GetModuleHandleW(NULL),
+                            (PVOID) Console);
+  Console->hWindow = NewWindow;
+  if (NULL == NewWindow)
+    {
+      DPRINT1("CSR: Unable to create console window\n");
+      return 1;
+    }
+
+  SetForegroundWindow(Console->hWindow);
+
+  while (TRUE)
+    {
+      GetMessageW(&msg, 0, 0, 0);
+      DispatchMessage(&msg);
+      TranslateMessage(&msg);
+
+      if (msg.message == WM_CHAR || msg.message == WM_SYSCHAR ||
+          msg.message == WM_KEYDOWN || msg.message == WM_KEYUP ||
+          msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP)
+        {
+          CHECKPOINT1;
+          ConioProcessKey(&msg, Console, TRUE);
+        }
+    }
+
+  return 0;
+}
+
 static CSRSS_CONSOLE_VTBL TuiVtbl =
 {
   TuiInitScreenBuffer,
@@ -229,6 +300,8 @@ static CSRSS_CONSOLE_VTBL TuiVtbl =
 NTSTATUS FASTCALL
 TuiInitConsole(PCSRSS_CONSOLE Console)
 {
+  HANDLE ThreadHandle;
+
   if (! ConsInitialized)
     {
       ConsInitialized = TRUE;
@@ -240,10 +313,19 @@ TuiInitConsole(PCSRSS_CONSOLE Console)
     }
 
   Console->Vtbl = &TuiVtbl;
-  Console->hWindow = (HWND) NULL;
+  Console->hWindow = NULL;
   Console->Size = PhysicalConsoleSize;
   Console->ActiveBuffer->MaxX = PhysicalConsoleSize.X;
   Console->ActiveBuffer->MaxY = PhysicalConsoleSize.Y;
+
+  ThreadHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) TuiConsoleThread,
+                              Console, 0, NULL);
+  if (NULL == ThreadHandle)
+    {
+      DPRINT1("CSR: Unable to create console thread\n");
+      return STATUS_UNSUCCESSFUL;
+    }
+  CloseHandle(ThreadHandle);
 
   EnterCriticalSection(&ActiveConsoleLock);
   if (NULL != ActiveConsole)

@@ -22,8 +22,6 @@
 
 #include "videoprt.h"
 
-/* EXTERNAL FUNCTIONS *********************************************************/
-
 /* GLOBAL VARIABLES ***********************************************************/
 
 PVIDEO_PORT_DEVICE_EXTENSION ResetDisplayParametersDeviceExtension = NULL;
@@ -174,8 +172,10 @@ IntVideoPortDispatchClose(
    if (DeviceExtension->DeviceOpened >= 1 &&
        InterlockedDecrement((PLONG)&DeviceExtension->DeviceOpened) == 0)
    {
+      ResetDisplayParametersDeviceExtension = NULL;
+      InbvNotifyDisplayOwnershipLost(NULL);
       ResetDisplayParametersDeviceExtension = DeviceExtension;
-      HalReleaseDisplayOwnership();
+      IntVideoPortResetDisplayParameters(80, 50);
    }
 
    Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -290,15 +290,18 @@ IntVideoPortDispatchWrite(
 
    /*
     * Storing the device extension pointer in a static variable is an
-    * ugly hack. Unfortunately, we need it in VideoPortResetDisplayParameters
-    * and HalAcquireDisplayOwnership doesn't allow us to pass a userdata
+    * ugly hack. Unfortunately, we need it in IntVideoPortResetDisplayParameters
+    * and InbvNotifyDisplayOwnershipLost doesn't allow us to pass a userdata
     * parameter. On the bright side, the DISPLAY device is opened
     * exclusively, so there can be only one device extension active at
     * any point in time.
+    *
+    * FIXME: We should process all opened display devices in
+    * IntVideoPortResetDisplayParameters.
     */
 
    ResetDisplayParametersDeviceExtension = DeviceExtension;
-   HalAcquireDisplayOwnership(IntVideoPortResetDisplayParameters);
+   InbvNotifyDisplayOwnershipLost(IntVideoPortResetDisplayParameters);
 
    nErrCode = STATUS_SUCCESS;
    Irp->IoStatus.Information = piosStack->Parameters.Write.Length;

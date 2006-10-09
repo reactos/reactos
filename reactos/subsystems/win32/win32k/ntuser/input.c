@@ -48,7 +48,6 @@ static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
-PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue = 0;
 
 /* FUNCTIONS *****************************************************************/
 ULONG FASTCALL
@@ -733,9 +732,6 @@ KeyboardThreadMain(PVOID StartContext)
             }
 
             /* Find the target thread whose locale is in effect */
-            if (!IntGetScreenDC())
-               FocusQueue = W32kGetPrimitiveMessageQueue();
-            else
                FocusQueue = IntGetFocusMessageQueue();
 
             /* This might cause us to lose hot keys, which are important
@@ -793,42 +789,10 @@ KeyboardEscape:
 }
 
 
-NTSTATUS FASTCALL
-UserAcquireOrReleaseInputOwnership(BOOLEAN Release)
-{
-   if (Release && InputThreadsRunning && !pmPrimitiveMessageQueue)
-   {
-      DPRINT( "Releasing input: PM = %08x\n", pmPrimitiveMessageQueue );
-      KeClearEvent(&InputThreadsStart);
-      InputThreadsRunning = FALSE;
-
-      NtAlertThread(KeyboardThreadHandle);
-      NtAlertThread(MouseThreadHandle);
-   }
-   else if (!Release && !InputThreadsRunning)
-   {
-      InputThreadsRunning = TRUE;
-      KeSetEvent(&InputThreadsStart, IO_NO_INCREMENT, FALSE);
-   }
-
-   return(STATUS_SUCCESS);
-}
-
-
 NTSTATUS STDCALL
 NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
 {
-   DECLARE_RETURN(NTSTATUS);
-
-   DPRINT("Enter NtUserAcquireOrReleaseInputOwnership\n");
-   UserEnterExclusive();
-
-   RETURN(UserAcquireOrReleaseInputOwnership(Release));
-
-CLEANUP:
-   DPRINT("Leave NtUserAcquireOrReleaseInputOwnership, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
+   return STATUS_SUCCESS;
 }
 
 
@@ -867,6 +831,8 @@ InitInputImpl(VOID)
       DPRINT1("Win32K: Failed to create mouse thread.\n");
    }
 
+   InputThreadsRunning = TRUE;
+   KeSetEvent(&InputThreadsStart, IO_NO_INCREMENT, FALSE);
 
    return STATUS_SUCCESS;
 }

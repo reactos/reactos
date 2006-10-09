@@ -9,4 +9,6 @@
 #include <reactos/version.rc>
 
 IDB_BOOTIMAGE   BITMAP  DISCARDABLE   "bootimage.bmp"
+IDB_BAR         BITMAP  DISCARDABLE   "bar.bmp"
+
 

@@ -18,6 +18,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
 
 #include <wincon.h>
 #include <blue/ntddblue.h>
+#include <ndk/inbvfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -52,6 +53,18 @@ HalQueryDisplayOwnership(
 
 #define TAB_WIDTH          8
 
+#define MISC         (PUCHAR)0x3c2
+#define SEQ          (PUCHAR)0x3c4
+#define SEQDATA      (PUCHAR)0x3c5
+#define CRTC         (PUCHAR)0x3d4
+#define CRTCDATA     (PUCHAR)0x3d5
+#define GRAPHICS     (PUCHAR)0x3ce
+#define GRAPHICSDATA (PUCHAR)0x3cf
+#define ATTRIB       (PUCHAR)0x3c0
+#define STATUS       (PUCHAR)0x3da
+#define PELMASK      (PUCHAR)0x3c6
+#define PELINDEX     (PUCHAR)0x3c8
+#define PELDATA      (PUCHAR)0x3c9
 
 /* NOTES ******************************************************************/
 /*
@@ -73,26 +86,130 @@ typedef struct _DEVICE_EXTENSION
     USHORT  Columns;        /* Number of columns     */
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
+typedef struct _VGA_REGISTERS
+{
+   UCHAR CRT[24];
+   UCHAR Attribute[21];
+   UCHAR Graphics[9];
+   UCHAR Sequencer[5];
+   UCHAR Misc;
+} VGA_REGISTERS, *PVGA_REGISTERS;
+
+static const VGA_REGISTERS VidpMode3Regs =
+{
+   /* CRT Controller Registers */
+   {0x5F, 0x4F, 0x50, 0x82, 0x55, 0x81, 0xBF, 0x1F, 0x00, 0x47, 0x1E, 0x00,
+    0x00, 0x00, 0x05, 0xF0, 0x9C, 0x8E, 0x8F, 0x28, 0x1F, 0x96, 0xB9, 0xA3},
+   /* Attribute Controller Registers */
+   {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B,
+    0x3C, 0x3D, 0x3E, 0x3F, 0x0C, 0x00, 0x0F, 0x08, 0x00},
+   /* Graphics Controller Registers */
+   {0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF},
+   /* Sequencer Registers */
+   {0x03, 0x00, 0x03, 0x00, 0x02},
+   /* Misc Output Register */
+   0xE3
+};
+
+static const UCHAR DefaultPalette[] =
+{
+   0, 0, 0,
+   0, 0, 0xC0,
+   0, 0xC0, 0,
+   0, 0xC0, 0xC0,
+   0xC0, 0, 0,
+   0xC0, 0, 0xC0,
+   0xC0, 0xC0, 0,
+   0xC0, 0xC0, 0xC0,
+   0x80, 0x80, 0x80,
+   0, 0, 0xFF,
+   0, 0xFF, 0,
+   0, 0xFF, 0xFF,
+   0xFF, 0, 0,
+   0xFF, 0, 0xFF,
+   0xFF, 0xFF, 0,
+   0xFF, 0xFF, 0xFF
+};
 
 /* FUNCTIONS **************************************************************/
 
-NTSTATUS STDCALL
-DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
-
-static NTSTATUS STDCALL
-ScrCreate(PDEVICE_OBJECT DeviceObject,
-	  PIRP Irp)
+static VOID FASTCALL
+ScrSetRegisters(const VGA_REGISTERS *Registers)
 {
-    PDEVICE_EXTENSION DeviceExtension;
-    PHYSICAL_ADDRESS BaseAddress;
-    NTSTATUS Status;
+    UINT i;
+
+    /* Update misc output register */
+    WRITE_PORT_UCHAR(MISC, Registers->Misc);
+
+    /* Synchronous reset on */
+    WRITE_PORT_UCHAR(SEQ, 0x00);
+    WRITE_PORT_UCHAR(SEQDATA, 0x01);
+
+    /* Write sequencer registers */
+    for (i = 1; i < sizeof(Registers->Sequencer); i++)
+{
+        WRITE_PORT_UCHAR(SEQ, i);
+        WRITE_PORT_UCHAR(SEQDATA, Registers->Sequencer[i]);
+    }
+
+    /* Synchronous reset off */
+    WRITE_PORT_UCHAR(SEQ, 0x00);
+    WRITE_PORT_UCHAR(SEQDATA, 0x03);
+
+    /* Deprotect CRT registers 0-7 */
+    WRITE_PORT_UCHAR(CRTC, 0x11);
+    WRITE_PORT_UCHAR(CRTCDATA, Registers->CRT[0x11] & 0x7f);
+
+    /* Write CRT registers */
+    for (i = 0; i < sizeof(Registers->CRT); i++)
+    {
+        WRITE_PORT_UCHAR(CRTC, i);
+        WRITE_PORT_UCHAR(CRTCDATA, Registers->CRT[i]);
+    }
+
+    /* Write graphics controller registers */
+    for (i = 0; i < sizeof(Registers->Graphics); i++)
+    {
+        WRITE_PORT_UCHAR(GRAPHICS, i);
+        WRITE_PORT_UCHAR(GRAPHICSDATA, Registers->Graphics[i]);
+    }
+
+    /* Write attribute controller registers */
+    for (i = 0; i < sizeof(Registers->Attribute); i++)
+    {
+        READ_PORT_UCHAR(STATUS);
+        WRITE_PORT_UCHAR(ATTRIB, i);
+        WRITE_PORT_UCHAR(ATTRIB, Registers->Attribute[i]);
+    }
+
+    /* Set the PEL mask. */
+    WRITE_PORT_UCHAR(PELMASK, 0xff);
+}
+
+static VOID FASTCALL
+ScrAcquireOwnership(PDEVICE_EXTENSION DeviceExtension)
+{
     unsigned int offset;
     UCHAR data, value;
+    ULONG Index;
 
-    DeviceExtension = DeviceObject->DeviceExtension;
+    ScrSetRegisters(&VidpMode3Regs);
 
-    /* disable interrupts */
-    _disable();
+    /* Disable screen and enable palette access. */
+    READ_PORT_UCHAR(STATUS);
+    WRITE_PORT_UCHAR(ATTRIB, 0x00);
+
+    for (Index = 0; Index < sizeof(DefaultPalette) / 3; Index++)
+    {
+       WRITE_PORT_UCHAR(PELINDEX, Index);
+       WRITE_PORT_UCHAR(PELDATA, DefaultPalette[Index * 3] >> 2);
+       WRITE_PORT_UCHAR(PELDATA, DefaultPalette[Index * 3 + 1] >> 2);
+       WRITE_PORT_UCHAR(PELDATA, DefaultPalette[Index * 3 + 2] >> 2);
+    }
+
+    /* Enable screen and disable palette access. */
+    READ_PORT_UCHAR(STATUS);
+    WRITE_PORT_UCHAR(ATTRIB, 0x20);
 
     /* get current output position */
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
@@ -122,8 +239,13 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_SCANLINES);
     DeviceExtension->ScanLines = (READ_PORT_UCHAR (CRTC_DATA) & 0x1F) + 1;
 
-    /* enable interrupts */
-    _enable();
+    /* show blinking cursor */
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
+    WRITE_PORT_UCHAR (CRTC_DATA, (DeviceExtension->ScanLines - 1) & 0x1F);
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
+    data = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
+    WRITE_PORT_UCHAR (CRTC_DATA,
+                      data | ((DeviceExtension->ScanLines - 1) & 0x1F));
 
     /* calculate number of text rows */
     DeviceExtension->Rows =
@@ -132,10 +254,26 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
     DeviceExtension->Rows = 30;
 #endif
 
-    DPRINT ("%d Columns  %d Rows %d Scanlines\n",
+    DPRINT1 ("%d Columns  %d Rows %d Scanlines\n",
             DeviceExtension->Columns,
             DeviceExtension->Rows,
             DeviceExtension->ScanLines);
+}
+
+NTSTATUS STDCALL
+DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
+
+static NTSTATUS STDCALL
+ScrCreate(PDEVICE_OBJECT DeviceObject,
+	  PIRP Irp)
+{
+    PDEVICE_EXTENSION DeviceExtension;
+    PHYSICAL_ADDRESS BaseAddress;
+    NTSTATUS Status;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    
+    ScrAcquireOwnership(DeviceExtension);
 
     /* get pointer to video memory */
     BaseAddress.QuadPart = VIDMEM_BASE;
@@ -149,16 +287,6 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
     DeviceExtension->CharAttribute = 0x17;  /* light grey on blue */
     DeviceExtension->Mode = ENABLE_PROCESSED_OUTPUT |
                             ENABLE_WRAP_AT_EOL_OUTPUT;
-
-    /* show blinking cursor */
-    _disable();
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
-    WRITE_PORT_UCHAR (CRTC_DATA, (DeviceExtension->ScanLines - 1) & 0x1F);
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
-    data = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
-    WRITE_PORT_UCHAR (CRTC_DATA,
-                      data | ((DeviceExtension->ScanLines - 1) & 0x1F));
-    _enable();
 
     Status = STATUS_SUCCESS;
 
@@ -184,7 +312,7 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     int rows, columns;
     int processed = DeviceExtension->Mode & ENABLE_PROCESSED_OUTPUT;
 
-    if (HalQueryDisplayOwnership())
+    if (0 && InbvCheckDisplayOwnership())
        {
 	  /* Display is in graphics mode, we're not allowed to touch it */
 	  Status = STATUS_SUCCESS;

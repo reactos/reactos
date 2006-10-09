@@ -89,6 +89,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 
       /* FIXME: IntIsWindow */
 
+      CHECKPOINT1;
       co_IntPostOrSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == UserGetForegroundWindow()), 0);
       /* FIXME: WA_CLICKACTIVE */
       co_IntPostOrSendMessage(hWnd, WM_ACTIVATE,
@@ -158,7 +159,8 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
       return FALSE;
    }
 
-   if (0 == (Window->Style & WS_VISIBLE))
+   if (0 == (Window->Style & WS_VISIBLE) &&
+       Window->OwnerThread->ThreadsProcess != CsrProcess)
    {
       DPRINT("Failed - Invisible\n");
       return FALSE;
@@ -172,7 +174,7 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
 
    if (hWndPrev == hWnd)
    {
-      DPRINT("Failed - Same\n");
+      DPRINT1("Failed - Same\n");
       return TRUE;
    }
 
@@ -200,6 +202,7 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
       /* FIXME: Send WM_ACTIVATEAPP to all thread windows. */
    }
 
+   CHECKPOINT1;
    co_IntSendSetFocusMessages(hWndFocusPrev, hWndFocus);
    co_IntSendActivateMessages(hWndPrev, hWnd, MouseActivate);
 
@@ -272,8 +275,9 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
 
    if (Window != 0)
    {
-      if (!(Window->Style & WS_VISIBLE) ||
-            (Window->Style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
+      if ((!(Window->Style & WS_VISIBLE) &&
+           Window->OwnerThread->ThreadsProcess != CsrProcess) ||
+          (Window->Style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
       {
          return ThreadQueue ? 0 : ThreadQueue->ActiveWindow;
       }

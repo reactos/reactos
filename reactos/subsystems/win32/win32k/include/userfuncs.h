@@ -88,11 +88,6 @@ PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE 
 
 HWINSTA FASTCALL UserGetProcessWindowStation(VOID);
 
-/*************** INPUT.C ***************/
-
-NTSTATUS FASTCALL
-UserAcquireOrReleaseInputOwnership(BOOLEAN Release);
-
 /*************** WINPOS.C ***************/
 
 BOOL FASTCALL

@@ -17,39 +17,6 @@
 /* registered Logon process */
 PW32PROCESS LogonProcess = NULL;
 
-VOID W32kRegisterPrimitiveMessageQueue(VOID)
-{
-   extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
-   if( !pmPrimitiveMessageQueue )
-   {
-      PW32THREAD pThread;
-      pThread = PsGetCurrentThreadWin32Thread();
-      if( pThread && pThread->MessageQueue )
-      {
-         pmPrimitiveMessageQueue = pThread->MessageQueue;
-         IntReferenceMessageQueue(pmPrimitiveMessageQueue);
-         DPRINT( "Installed primitive input queue.\n" );
-      }
-   }
-   else
-   {
-      DPRINT1( "Alert! Someone is trying to steal the primitive queue.\n" );
-   }
-}
-
-VOID W32kUnregisterPrimitiveMessageQueue(VOID)
-{
-   extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
-   IntDereferenceMessageQueue(pmPrimitiveMessageQueue);
-   pmPrimitiveMessageQueue = NULL;
-}
-
-PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue()
-{
-   extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
-   return pmPrimitiveMessageQueue;
-}
-
 BOOL FASTCALL
 co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
 {
@@ -119,11 +86,6 @@ NtUserCallNoParam(DWORD Routine)
 
    switch(Routine)
    {
-      case NOPARAM_ROUTINE_REGISTER_PRIMITIVE:
-         W32kRegisterPrimitiveMessageQueue();
-         Result = (DWORD)TRUE;
-         break;
-
       case NOPARAM_ROUTINE_DESTROY_CARET:
          Result = (DWORD)co_IntDestroyCaret(PsGetCurrentThread()->Tcb.Win32Thread);
          break;

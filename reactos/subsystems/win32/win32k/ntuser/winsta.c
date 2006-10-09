@@ -294,8 +294,6 @@ co_IntInitializeDesktopGraphics(VOID)
    }
    DC_SetOwnership(ScreenDeviceContext, NULL);
 
-   UserAcquireOrReleaseInputOwnership(FALSE);
-
    /* Setup the cursor */
    co_IntLoadDefaultCursors();
 
@@ -305,7 +303,6 @@ co_IntInitializeDesktopGraphics(VOID)
 VOID FASTCALL
 IntEndDesktopGraphics(VOID)
 {
-   UserAcquireOrReleaseInputOwnership(TRUE);
    if (NULL != ScreenDeviceContext)
    {
       DC_SetOwnership(ScreenDeviceContext, PsGetCurrentProcess());

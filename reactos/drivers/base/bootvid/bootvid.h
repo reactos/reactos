@@ -2,7 +2,7 @@
  * ReactOS Boot video driver
  *
  * Copyright (C) 2003 Casper S. Hornstroup
- * Copyright (C) 2004 Filip Navara
+ * Copyright (C) 2004, 2005 Filip Navara
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,104 +24,42 @@
 #ifndef _BOOTVID_H
 #define _BOOTVID_H
 
-#define PALETTE_FADE_STEPS  20
+#include <ntddk.h>
+#include <windef.h>
+#include <wingdi.h>
+#include <ndk/ldrfuncs.h>
+
+#define PALETTE_FADE_STEPS  15
 #define PALETTE_FADE_TIME   20 * 10000 /* 20ms */
 
-/*
- * Windows Bitmap structures
- */
+BOOLEAN NTAPI VidInitialize(BOOLEAN);
+VOID NTAPI VidCleanUp(VOID);
+VOID NTAPI VidResetDisplay(VOID);
+VOID NTAPI VidBufferToScreenBlt(PUCHAR, ULONG, ULONG, ULONG, ULONG, ULONG);
+VOID NTAPI VidScreenToBufferBlt(PUCHAR, ULONG, ULONG, ULONG, ULONG, ULONG);
+VOID NTAPI VidBitBlt(PUCHAR, ULONG, ULONG);
+VOID NTAPI VidSolidColorFill(ULONG, ULONG, ULONG, ULONG, ULONG);
+VOID NTAPI VidDisplayString(PUCHAR);
 
-#define RT_BITMAP   2
+typedef BOOLEAN (NTAPI *PVID_INITIALIZE)(BOOLEAN);
+typedef VOID (NTAPI *PVID_CLEAN_UP)(VOID);
+typedef VOID (NTAPI *PVID_RESET_DISPLAY)(VOID);
+typedef VOID (NTAPI *PVID_BUFFER_TO_SCREEN_BLT)(PUCHAR, ULONG, ULONG, ULONG, ULONG, ULONG);
+typedef VOID (NTAPI *PVID_SCREEN_TO_BUFFER_BLT)(PUCHAR, ULONG, ULONG, ULONG, ULONG, ULONG);
+typedef VOID (NTAPI *PVID_BITBLT)(PUCHAR, ULONG, ULONG);
+typedef VOID (NTAPI *PVID_SOLID_COLOR_FILL)(ULONG, ULONG, ULONG, ULONG, ULONG);
+typedef VOID (NTAPI *PVID_DISPLAY_STRING)(PUCHAR);
 
-typedef struct tagRGBQUAD
+typedef struct _VID_FUNCTION_TABLE
 {
-   unsigned char rgbBlue;
-   unsigned char rgbGreen;
-   unsigned char rgbRed;
-   unsigned char rgbReserved;
-} RGBQUAD, *PRGBQUAD;
-
-typedef long FXPT2DOT30;
-
-typedef struct tagCIEXYZ
-{
-   FXPT2DOT30 ciexyzX;
-   FXPT2DOT30 ciexyzY;
-   FXPT2DOT30 ciexyzZ;
-} CIEXYZ, *LPCIEXYZ;
-
-typedef struct tagCIEXYZTRIPLE
-{
-   CIEXYZ ciexyzRed;
-   CIEXYZ ciexyzGreen;
-   CIEXYZ ciexyzBlue;
-} CIEXYZTRIPLE, *LPCIEXYZTRIPLE;
-
-typedef struct {
-   DWORD bV5Size;
-   LONG bV5Width;
-   LONG bV5Height;
-   WORD bV5Planes;
-   WORD bV5BitCount;
-   DWORD bV5Compression;
-   DWORD bV5SizeImage;
-   LONG bV5XPelsPerMeter;
-   LONG bV5YPelsPerMeter;
-   DWORD bV5ClrUsed;
-   DWORD bV5ClrImportant;
-   DWORD bV5RedMask;
-   DWORD bV5GreenMask;
-   DWORD bV5BlueMask;
-   DWORD bV5AlphaMask;
-   DWORD bV5CSType;
-   CIEXYZTRIPLE bV5Endpoints;
-   DWORD bV5GammaRed;
-   DWORD bV5GammaGreen;
-   DWORD bV5GammaBlue;
-   DWORD bV5Intent;
-   DWORD bV5ProfileData;
-   DWORD bV5ProfileSize;
-   DWORD bV5Reserved;
-} BITMAPV5HEADER, *PBITMAPV5HEADER;
-
-/*
- * Private driver structures
- */
-
-typedef struct {
-  ULONG r;
-  ULONG g;
-  ULONG b;
-} FADER_PALETTE_ENTRY;
-
-typedef struct _VGA_REGISTERS
-{
-   UCHAR CRT[24];
-   UCHAR Attribute[21];
-   UCHAR Graphics[9];
-   UCHAR Sequencer[5];
-   UCHAR Misc;
-} VGA_REGISTERS, *PVGA_REGISTERS;
-
-/* VGA registers */
-#define MISC         (PUCHAR)0x3c2
-#define SEQ          (PUCHAR)0x3c4
-#define SEQDATA      (PUCHAR)0x3c5
-#define CRTC         (PUCHAR)0x3d4
-#define CRTCDATA     (PUCHAR)0x3d5
-#define GRAPHICS     (PUCHAR)0x3ce
-#define GRAPHICSDATA (PUCHAR)0x3cf
-#define ATTRIB       (PUCHAR)0x3c0
-#define STATUS       (PUCHAR)0x3da
-#define PELMASK      (PUCHAR)0x3c6
-#define PELINDEX     (PUCHAR)0x3c8
-#define PELDATA      (PUCHAR)0x3c9
-
-/* In pixelsups.S */
-extern VOID
-InbvPutPixels(int x, int y, unsigned long c);
-
-NTSTATUS STDCALL
-DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
+   PVID_INITIALIZE Initialize;
+   PVID_CLEAN_UP CleanUp;
+   PVID_RESET_DISPLAY ResetDisplay;
+   PVID_BUFFER_TO_SCREEN_BLT BufferToScreenBlt;
+   PVID_SCREEN_TO_BUFFER_BLT ScreenToBufferBlt;
+   PVID_BITBLT BitBlt;
+   PVID_SOLID_COLOR_FILL SolidColorFill;
+   PVID_DISPLAY_STRING DisplayString;
+} VID_FUNCTION_TABLE, *PVID_FUNCTION_TABLE;
 
 #endif /* _BOOTVID_H */

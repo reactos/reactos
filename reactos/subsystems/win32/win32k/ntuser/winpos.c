@@ -133,7 +133,8 @@ BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd OPTIONAL)
 
     if (!Wnd) return FALSE;
     style = Wnd->Style;
-    if (!(style & WS_VISIBLE)) return FALSE;
+    if (!(style & WS_VISIBLE) && 
+        Wnd->OwnerThread->ThreadsProcess != CsrProcess) return FALSE;
     if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
     return !(style & WS_DISABLED);
 }
@@ -1194,7 +1195,6 @@ co_WinPosSetWindowPos(
                         CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
                         CopyRect.top + (OldWindowRect.top - NewWindowRect.top), SRCCOPY, 0, 0);
             UserReleaseDC(Window, Dc, FALSE);
-            IntValidateParent(Window, CopyRgn);
             NtGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
          }
          else if(VisRgn)

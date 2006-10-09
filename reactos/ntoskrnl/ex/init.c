@@ -786,6 +786,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Set up Region Maps, Sections and the Paging File */
     MmInit2();
 
+    /* Initialize the boot video. */
+    InbvDisplayInitialize();
+
     /* Initialize the Process Manager */
     if (!PsInitSystem()) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
 
@@ -831,6 +834,10 @@ ExPhase2Init(PVOID Context)
 
     /* Check if GUI Boot is enabled */
     if (strstr(KeLoaderBlock->LoadOptions, "NOGUIBOOT")) NoGuiBoot = TRUE;
+
+    /* Display the boot screen image if not disabled */
+    if (!ExpInTextModeSetup) InbvDisplayInitialize2(NoGuiBoot);
+    if (!NoGuiBoot) InbvDisplayBootLogo();
 
     /* Clear the screen to blue and display the boot notice and debug status */
     HalInitSystem(2, KeLoaderBlock);
@@ -923,9 +930,6 @@ ExPhase2Init(PVOID Context)
     /* Initialize the I/O Subsystem */
     if (!IoInitSystem(KeLoaderBlock)) KeBugCheck(IO1_INITIALIZATION_FAILED);
 
-    /* Display the boot screen image if not disabled */
-    if (!NoGuiBoot) InbvEnableBootDriver(TRUE);
-
     /* Unmap Low memory, and initialize the MPW and Balancer Thread */
     MmInit3();
 
@@ -954,12 +958,6 @@ ExPhase2Init(PVOID Context)
         /* Close process handles */
         ZwClose(ThreadHandle);
         ZwClose(ProcessHandle);
-
-        /*
-        * FIXME: FILIP!
-        * Disable the Boot Logo
-        */
-        if (!NoGuiBoot) InbvEnableBootDriver(FALSE);
 
         /* FIXME: We should free the initial process' memory!*/
 

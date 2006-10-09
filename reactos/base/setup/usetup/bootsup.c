@@ -140,21 +140,21 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
 		    NULL,
 		    INSERT_LAST,
 		    L"MenuTextColor",
-		    L"White");
+		    L"Gray");
 
   /* MenuColor=Blue */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
 		    L"MenuColor",
-		    L"Blue");
+		    L"Black");
 
   /* TextColor=Yellow */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
 		    L"TextColor",
-		    L"Yellow");
+		    L"Gray");
 
   /* SelectedTextColor=Black */
   IniCacheInsertKey(IniSection,
@@ -169,6 +169,41 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
 		    INSERT_LAST,
 		    L"SelectedColor",
 		    L"Gray");
+
+  /* SelectedColor=Gray */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"ShowTime",
+		    L"No");
+
+    /* SelectedColor=Gray */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"MenuBox",
+		    L"No");
+
+    /* SelectedColor=Gray */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"CenterMenu",
+		    L"No");
+
+    /* SelectedColor=Gray */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"MinimalUI",
+		    L"Yes");
+
+    /* SelectedColor=Gray */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"TimeText",
+		    L"Seconds until highlighted choice will be started automatically:   ");
 }
 
 

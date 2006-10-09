@@ -17,11 +17,6 @@ typedef struct _KD_PORT_INFORMATION
     ULONG BaudRate;
     ULONG BaseAddress;
 } KD_PORT_INFORMATION, *PKD_PORT_INFORMATION;
-
-/* display.c */
-VOID FASTCALL HalInitializeDisplay (struct _LOADER_PARAMETER_BLOCK *LoaderBlock);
-VOID FASTCALL HalClearDisplay (UCHAR CharAttribute);
-
 /* adapter.c */
 PADAPTER_OBJECT STDCALL HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN IsMaster, BOOLEAN Dma32BitAddresses);
   

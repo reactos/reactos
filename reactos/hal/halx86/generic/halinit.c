@@ -46,7 +46,6 @@ HalInitSystem (ULONG BootPhase,
       //HalpInitPhase1();
 
       /* Initialize display and make the screen black */
-      HalInitializeDisplay (LoaderBlock);
       HalpInitBusHandlers();
       HalpInitDma();
 
@@ -55,12 +54,7 @@ HalInitSystem (ULONG BootPhase,
    }
   else if (BootPhase == 2)
     {
-      PHYSICAL_ADDRESS Null = {{0}};
-
-      /* Go to blue screen */
-      HalClearDisplay (0x17); /* grey on blue */
-      
-      HalpZeroPageMapping = MmMapIoSpace(Null, PAGE_SIZE, MmNonCached);
+      HalpZeroPageMapping = MmMapIoSpace((LARGE_INTEGER)0LL, PAGE_SIZE, MmNonCached);
     }
 
   return TRUE;

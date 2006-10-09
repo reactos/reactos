@@ -7,9 +7,21 @@
 
 /* FUNCTIONS *****************************************************************/
 
-BOOLEAN
-NTAPI
-InbvDisplayString(IN PCHAR String);
+VOID NTAPI INIT_FUNCTION
+InbvDisplayInitialize(VOID);
+
+VOID NTAPI
+InbvDisplayInitialize2(BOOLEAN NoGuiBoot);
+
+VOID NTAPI
+InbvDisplayBootLogo(VOID);
+
+VOID NTAPI
+InbvUpdateProgressBar(ULONG Progress);
+
+VOID NTAPI
+InbvFinalizeBootLogo(VOID);
 
 #endif /* NTOSKRNL_INBV_H */
+
 

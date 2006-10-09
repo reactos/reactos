@@ -142,7 +142,16 @@ ShutdownThreadMain(PVOID Context)
    /* Run the thread on the boot processor */
    KeSetSystemAffinityThread(1);
 
-   HalReleaseDisplayOwnership();
+   if (InbvIsBootDriverInstalled())
+     {
+        InbvAcquireDisplayOwnership();
+        InbvResetDisplay();
+        InbvSolidColorFill(0, 0, 639, 479, 4);
+        InbvSetTextColor(15);
+        InbvInstallDisplayStringFilter(NULL);
+        InbvEnableDisplayString(TRUE);
+        InbvSetScrollRegion(0, 0, 639, 479);
+     }
 
    if (Action == ShutdownNoReboot)
      {

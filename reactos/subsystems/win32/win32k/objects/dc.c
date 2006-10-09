@@ -2528,7 +2528,6 @@ IntEnumDisplaySettings(
   {
     if (iModeNum == 0 || CachedDevModes == NULL) /* query modes from drivers */
     {
-      BOOL PrimarySurfaceCreated = FALSE;
       UNICODE_STRING DriverFileNames;
       LPWSTR CurrentName;
       DRVENABLEDATA DrvEnableData;
@@ -2541,11 +2540,7 @@ IntEnumDisplaySettings(
         return FALSE;
       }
 
-      if (!HalQueryDisplayOwnership())
-      {
-        IntCreatePrimarySurface();
-        PrimarySurfaceCreated = TRUE;
-      }
+      IntPrepareDriverIfNeeded();
 
       /*
        * DriverFileNames may be a list of drivers in REG_SZ_MULTI format,
@@ -2611,10 +2606,6 @@ IntEnumDisplaySettings(
               SizeOfCachedDevModes = 0;
               CachedDevModes = NULL;
               CachedDevModesEnd = NULL;
-              if (PrimarySurfaceCreated)
-              {
-                IntDestroyPrimarySurface();
-              }
               SetLastWin32Error(STATUS_NO_MEMORY);
               return FALSE;
             }
@@ -2641,11 +2632,6 @@ IntEnumDisplaySettings(
           }
           break;
         }
-      }
-
-      if (PrimarySurfaceCreated)
-      {
-        IntDestroyPrimarySurface();
       }
 
       RtlFreeUnicodeString(&DriverFileNames);
