@@ -37,44 +37,63 @@
 #define NDEBUG
 #include <debug.h>
 
+static VOID CALLBACK
+ServiceMain(DWORD argc, LPTSTR *argv);
 
-int STDCALL
-WinMain(HINSTANCE hInstance,
-        HINSTANCE hPrevInstance,
-        LPSTR lpCmdLine,
-        int nShowCmd)
+static SERVICE_TABLE_ENTRY ServiceTable[2] =
 {
-  NTSTATUS Status = STATUS_SUCCESS;
+	{TEXT("NetLogon"), ServiceMain},
+	{NULL, NULL}
+};
 
-  DPRINT("Local Security Authority Subsystem\n");
-  DPRINT("  Initializing...\n");
+static VOID CALLBACK
+ServiceMain(
+	IN DWORD argc,
+	IN LPWSTR *argv)
+{
+	DPRINT1("ServiceMain() called\n");
+}
 
-  /* Initialize the LSA server DLL. */
-  Status = LsapInitLsa();
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("LsapInitLsa() failed (Status 0x%08lX)\n", Status);
-    goto ByeBye;
-  }
+INT WINAPI
+WinMain(
+	IN HINSTANCE hInstance,
+	IN HINSTANCE hPrevInstance,
+	IN LPSTR lpCmdLine,
+	IN INT nShowCmd)
+{
+	NTSTATUS Status = STATUS_SUCCESS;
+
+	DPRINT("Local Security Authority Subsystem\n");
+	DPRINT("  Initializing...\n");
+
+	/* Initialize the LSA server DLL. */
+	Status = LsapInitLsa();
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("LsapInitLsa() failed (Status 0x%08lX)\n", Status);
+		goto ByeBye;
+	}
 
 #if 0
-  /* Initialize the SAM server DLL. */
-  Status = SamIInitialize();
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("SamIInitialize() failed (Status 0x%08lX)\n", Status);
-    goto ByeBye;
-  }
+	/* Initialize the SAM server DLL. */
+	Status = SamIInitialize();
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("SamIInitialize() failed (Status 0x%08lX)\n", Status);
+		goto ByeBye;
+	}
 #endif
 
-  /* FIXME: More initialization */
+	/* FIXME: More initialization */
 
-  DPRINT("  Done...\n");
+	StartServiceCtrlDispatcher(ServiceTable);
+
+	DPRINT("  Done...\n");
 
 ByeBye:
-  NtTerminateThread(NtCurrentThread(), Status);
+	NtTerminateThread(NtCurrentThread(), Status);
 
-  return 0;
+	return 0;
 }
 
 /* EOF */

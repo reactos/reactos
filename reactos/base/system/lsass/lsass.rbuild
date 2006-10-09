@@ -6,6 +6,7 @@
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__USE_W32API" />
+	<library>advapi32</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>lsasrv</library>
