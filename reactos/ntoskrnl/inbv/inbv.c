@@ -31,7 +31,7 @@ static VOID (NTAPI *VidBufferToScreenBlt)(PUCHAR, ULONG, ULONG, ULONG, ULONG, UL
 static VOID (NTAPI *VidScreenToBufferBlt)(PUCHAR, ULONG, ULONG, ULONG, ULONG, ULONG);
 static VOID (NTAPI *VidBitBlt)(PUCHAR, ULONG, ULONG);
 static VOID (NTAPI *VidSolidColorFill)(ULONG, ULONG, ULONG, ULONG, ULONG);
-static VOID (NTAPI *VidDisplayString)(PUCHAR);
+static VOID (NTAPI *VidDisplayString)(PCSTR);
 static NTSTATUS (NTAPI *BootVidDisplayBootLogo)(PVOID);
 static VOID (NTAPI *BootVidUpdateProgress)(ULONG Progress);
 static VOID (NTAPI *BootVidFinalizeBootLogo)(VOID);
