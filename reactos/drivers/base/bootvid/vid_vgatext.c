@@ -179,9 +179,9 @@ VidpVgaTextScrollDisplay(VOID)
 
 static VOID NTAPI
 VidVgaTextDisplayString(
-   IN PUCHAR String)
+   IN PCSTR String)
 {
-   PCH pch;
+   PCSTR pch;
    int offset;
    ULONG CursorX;
    ULONG CursorY;

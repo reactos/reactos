@@ -495,7 +495,7 @@ VidVgaSolidColorFill(
 
 static VOID NTAPI
 VidVgaDisplayString(
-   IN PUCHAR String)
+   IN PCSTR String)
 {
 }
 

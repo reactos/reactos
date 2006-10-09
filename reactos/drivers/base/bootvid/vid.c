@@ -113,7 +113,7 @@ VidSolidColorFill(
 
 VOID NTAPI
 VidDisplayString(
-   IN PUCHAR String)
+   IN PCSTR String)
 {
    VidTable->DisplayString(String);
 }

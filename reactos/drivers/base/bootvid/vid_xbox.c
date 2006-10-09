@@ -85,7 +85,7 @@ VidXboxSolidColorFill(
 
 static VOID NTAPI
 VidXboxDisplayString(
-   IN PUCHAR String)
+   IN PCSTR String)
 {
 }
 
