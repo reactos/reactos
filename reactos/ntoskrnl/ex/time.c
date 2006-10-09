@@ -15,10 +15,6 @@
 
 #define TICKSPERMINUTE  600000000
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitTimeZoneInfo)
-#endif
-
 /* GLOBALS ******************************************************************/
 
 /* Note: Bias[minutes] = UTC - local time */

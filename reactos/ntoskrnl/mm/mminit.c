@@ -19,6 +19,7 @@
 /*
  * Compiler defined symbols
  */
+extern unsigned int _image_base__;
 extern unsigned int _text_start__;
 extern unsigned int _text_end__;
 
@@ -158,7 +159,6 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
                       0,
                       BoundaryAddressMultiple);
 
-   extern unsigned int _image_base__;
    BaseAddress = (PVOID)&_image_base__;
    Length = PAGE_ROUND_UP(((ULONG_PTR)&_text_end__)) - (ULONG_PTR)&_image_base__;
    ParamLength = ParamLength - Length;

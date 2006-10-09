@@ -12,11 +12,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, FsRtlpInitFileLockingImplementation)
-#endif
-
-
 /*
 NOTE:
 I'm not using resource syncronization here, since FsRtlFastCheckLockForRead/Write

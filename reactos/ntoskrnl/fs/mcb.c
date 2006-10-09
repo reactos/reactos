@@ -312,9 +312,9 @@ FsRtlRemoveMcbEntry(IN PMCB     Mcb,
                     IN ULONG    SectorCount)
 {
     /* Call the large function */
-      return FsRtlRemoveLargeMcbEntry(&Mcb->DummyFieldThatSizesThisStructureCorrectly,
-                                      (LONGLONG)Vbn,
-                                      (LONGLONG)SectorCount);
+    FsRtlRemoveLargeMcbEntry(&Mcb->DummyFieldThatSizesThisStructureCorrectly,
+                             (LONGLONG)Vbn,
+                             (LONGLONG)SectorCount);
 }
 
 

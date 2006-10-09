@@ -99,11 +99,11 @@ ExCreateCallback@16
 ExDeleteNPagedLookasideList@4
 ExDeletePagedLookasideList@4
 ExDeleteResourceLite@4
-ExDesktopObjectType DATA
+ExDesktopObjectType
 ExDisableResourceBoostLite@4
 ExEnumHandleTable@16
 @ExEnterCriticalRegionAndAcquireFastMutexUnsafe@4
-ExEventObjectType DATA
+ExEventObjectType=_ExEventObjectType
 ExExtendZone@12
 ExFreePool@4
 ExFreePoolWithTag@8
@@ -152,7 +152,7 @@ ExReinitializeResourceLite@4
 @ExReleaseFastMutexUnsafeAndLeaveCriticalRegion@4
 ExReleaseResourceForThreadLite@8
 @ExReleaseResourceLite@4
-ExSemaphoreObjectType DATA
+ExSemaphoreObjectType=_ExSemaphoreObjectType
 ExSetResourceOwnerPointer@8
 ExSetTimerResolution@8
 ExSystemExceptionFilter@0

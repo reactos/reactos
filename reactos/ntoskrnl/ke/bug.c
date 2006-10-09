@@ -851,7 +851,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     }
 
     /* Raise IRQL to HIGH_LEVEL */
-    Ke386DisableInterrupts();
+    _disable();
     KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 
     /* Unlock the Kernel Adress Space if we own it */

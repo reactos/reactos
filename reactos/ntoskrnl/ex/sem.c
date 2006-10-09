@@ -14,12 +14,12 @@
 #include <internal/debug.h>
 
 #if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitializeSemaphoreImplementation()
+#pragma alloc_text(INIT, ExpInitializeSemaphoreImplementation)
 #endif
 
 /* GLOBALS ******************************************************************/
 
-POBJECT_TYPE ExSemaphoreObjectType;
+POBJECT_TYPE _ExSemaphoreObjectType;
 
 GENERIC_MAPPING ExSemaphoreMapping =
 {

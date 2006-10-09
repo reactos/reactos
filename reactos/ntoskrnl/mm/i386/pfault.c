@@ -43,7 +43,7 @@ ULONG KiPageFaultHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    /* it's safe to enable interrupts after cr2 has been saved */
    if (Tf->EFlags & (X86_EFLAGS_VM|X86_EFLAGS_IF))
    {
-      Ke386EnableInterrupts();
+      _enable();
    }
 
    if (cr2 >= (ULONG_PTR)MmSystemRangeStart)

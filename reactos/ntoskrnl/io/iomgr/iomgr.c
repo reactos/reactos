@@ -59,7 +59,7 @@ VOID INIT_FUNCTION IopInitLookasideLists(VOID);
 #pragma alloc_text(INIT, IoInitCancelHandling)
 #pragma alloc_text(INIT, IoInitShutdownNotification)
 #pragma alloc_text(INIT, IopInitLookasideLists)
-#pragma alloc_text(INIT, IoInit)
+#pragma alloc_text(INIT, IoInitSystem)
 #endif
 
 /* INIT FUNCTIONS ************************************************************/

@@ -19,7 +19,7 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE ExEventObjectType = NULL;
+POBJECT_TYPE _ExEventObjectType = NULL;
 
 GENERIC_MAPPING ExpEventMapping =
 {

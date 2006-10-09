@@ -9,6 +9,7 @@ extern ULONG ExpTimeZoneId;
 extern ULONG ExpTickCountMultiplier;
 extern ULONG ExpLastTimeZoneBias;
 extern POBJECT_TYPE ExEventPairObjectType;
+extern POBJECT_TYPE _ExEventObjectType, _ExSemaphoreObjectType;
 extern ULONG NtBuildNumber;
 extern ULONG NtMajorVersion;
 extern ULONG NtMinorVersion;

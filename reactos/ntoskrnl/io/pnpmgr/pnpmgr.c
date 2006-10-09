@@ -28,9 +28,6 @@ PIO_BUS_TYPE_GUID_LIST IopBusTypeGuidList = NULL;
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, PnpInit)
 #pragma alloc_text(INIT, PnpInit2)
-#pragma alloc_text(INIT, IopUpdateRootKey)
-#pragma alloc_text(INIT, IopEnumerateDetectedDevices)
-#pragma alloc_text(INIT, IopIsAcpiComputer)
 #endif
 
 typedef struct _INVALIDATE_DEVICE_RELATION_DATA
@@ -41,7 +38,7 @@ typedef struct _INVALIDATE_DEVICE_RELATION_DATA
     NTSTATUS Status;
 } INVALIDATE_DEVICE_RELATION_DATA, *PINVALIDATE_DEVICE_RELATION_DATA;
 
-static VOID CALLBACK
+static VOID NTAPI
 IopInvalidateDeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN PVOID InvalidateContext);
@@ -2456,7 +2453,7 @@ IopInitializePnpServices(IN PDEVICE_NODE DeviceNode,
  * The call can be make synchronous by defining the Event field
  * of the INVALIDATE_DEVICE_RELATION_DATA structure
  */
-static VOID CALLBACK
+static VOID NTAPI
 IopInvalidateDeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN PVOID InvalidateContext) /* PINVALIDATE_DEVICE_RELATION_DATA */
@@ -2476,7 +2473,7 @@ IopInvalidateDeviceRelations(
     NTSTATUS Status;
     ULONG i;
 
-    DPRINT("DeviceObject 0x%p, Type %d\n", DeviceObject, Type);
+    DPRINT("DeviceObject 0x%p\n", DeviceObject);
 
     DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 

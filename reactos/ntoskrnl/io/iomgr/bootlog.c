@@ -16,7 +16,7 @@
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, IopInitBootLog)
-#pragma alloc_text(INIT, IopStartBootLog()
+#pragma alloc_text(INIT, IopStartBootLog)
 #endif
 
 /* GLOBALS ******************************************************************/
