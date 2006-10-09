@@ -28,6 +28,8 @@
 
 /* GLOBALS ******************************************************************/
 
+extern BOOLEAN ExpInTextModeSetup;
+
 POBJECT_TYPE  CmiKeyType = NULL;
 PEREGISTRY_HIVE  CmiVolatileHive = NULL;
 
@@ -128,219 +130,6 @@ CmiWorkerThread(PVOID Param)
     }
   }
 }
-
-
-VOID
-INIT_FUNCTION
-STDCALL
-CmInitHives(BOOLEAN SetupBoot)
-{
-    PCHAR BaseAddress;
-    PLIST_ENTRY ListHead, NextEntry;
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock = NULL;
-
-    /* Load Registry Hives. This one can be missing. */
-    BaseAddress = KeLoaderBlock->RegistryBase;
-    if (BaseAddress)
-    {
-        CmImportSystemHive(BaseAddress,
-                           KeLoaderBlock->RegistryLength);
-    }
-
-    /* Loop the memory descriptors */
-    ListHead = &KeLoaderBlock->MemoryDescriptorListHead;
-    NextEntry = ListHead->Flink;
-    while (NextEntry != ListHead)
-    {
-        /* Get the current block */
-        MdBlock = CONTAINING_RECORD(NextEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
-
-        /* Check if this is an registry block */
-        if (MdBlock->MemoryType == LoaderRegistryData)
-        {
-            /* Check if it's not the SYSTEM hive that we already initialized */
-            if ((MdBlock->BasePage) != ((ULONG_PTR)BaseAddress >> PAGE_SHIFT))
-            {
-                /* Hardware hive break out */
-                break;
-            }
-        }
-
-        /* Go to the next block */
-        NextEntry = MdBlock->ListEntry.Flink;
-    }
-
-    /* We need a hardware hive */
-    ASSERT(MdBlock);
-
-    BaseAddress = (PCHAR)(MdBlock->BasePage << PAGE_SHIFT);
-    CmImportHardwareHive(BaseAddress,
-                         MdBlock->PageCount << PAGE_SHIFT);
-
-    /* Create dummy keys if no hardware hive was found */
-    CmImportHardwareHive (NULL, 0);
-
-    /* Initialize volatile registry settings */
-    if (SetupBoot == FALSE) CmInit2(KeLoaderBlock->LoadOptions);
-}
-
-VOID 
-INIT_FUNCTION
-NTAPI
-CmInitSystem1(VOID)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  PKEY_OBJECT RootKey;
-#if 0
-  PCM_KEY_SECURITY RootSecurityCell;
-#endif
-  HANDLE RootKeyHandle;
-  HANDLE KeyHandle;
-  NTSTATUS Status;
-  LARGE_INTEGER DueTime;
-  HANDLE ThreadHandle;
-  CLIENT_ID ThreadId;
-  OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
-  UNICODE_STRING Name;
-
-  DPRINT("Creating Registry Object Type\n");
-  
-  /*  Initialize the Key object type  */
-  RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
-  RtlInitUnicodeString(&Name, L"Key");
-  ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-  ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(KEY_OBJECT);
-  ObjectTypeInitializer.GenericMapping = CmiKeyMapping;
-  ObjectTypeInitializer.PoolType = PagedPool;
-  ObjectTypeInitializer.ValidAccessMask = KEY_ALL_ACCESS;
-  ObjectTypeInitializer.UseDefaultObject = TRUE;
-  ObjectTypeInitializer.DeleteProcedure = CmiObjectDelete;
-  ObjectTypeInitializer.ParseProcedure = CmiObjectParse;
-  ObjectTypeInitializer.SecurityProcedure = CmiObjectSecurity;
-  ObjectTypeInitializer.QueryNameProcedure = CmiObjectQueryName;
-
-  ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &CmiKeyType);
-
-  /* Initialize the hive list */
-  InitializeListHead(&CmiHiveListHead);
-
-  /* Initialize registry lock */
-  ExInitializeResourceLite(&CmiRegistryLock);
-
-  /* Initialize the key object list */
-  InitializeListHead(&CmiKeyObjectListHead);
-  InitializeListHead(&CmiConnectedHiveList);
-
-  /* Initialize the worker timer */
-  KeInitializeTimerEx(&CmiWorkerTimer, SynchronizationTimer);
-
-  /* Initialize the worker thread */
-  Status = PsCreateSystemThread(&ThreadHandle,
-				THREAD_ALL_ACCESS,
-				NULL,
-				NULL,
-				&ThreadId,
-				CmiWorkerThread,
-				NULL);
-  if (!NT_SUCCESS(Status))
-  {
-    KEBUGCHECK(0);
-  }
-
-  /* Start the timer */
-  DueTime.QuadPart = -1;
-  KeSetTimerEx(&CmiWorkerTimer, DueTime, 5000, NULL); /* 5sec */
-
-  /*  Build volatile registry store  */
-  Status = CmiCreateVolatileHive (&CmiVolatileHive);
-  ASSERT(NT_SUCCESS(Status));
-
-  InitializeListHead(&CmiCallbackHead);
-  ExInitializeFastMutex(&CmiCallbackLock);
-
-  /* Create '\Registry' key. */
-  RtlInitUnicodeString(&KeyName, REG_ROOT_KEY_NAME);
-  InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
-  Status = ObCreateObject(KernelMode,
-			  CmiKeyType,
-			  &ObjectAttributes,
-			  KernelMode,
-			  NULL,
-			  sizeof(KEY_OBJECT),
-			  0,
-			  0,
-			  (PVOID *) &RootKey);
-  ASSERT(NT_SUCCESS(Status));
-  Status = ObInsertObject(RootKey,
-			  NULL,
-			  KEY_ALL_ACCESS,
-			  0,
-			  NULL,
-			  &RootKeyHandle);
-  ASSERT(NT_SUCCESS(Status));
-  RootKey->RegistryHive = CmiVolatileHive;
-  RootKey->KeyCellOffset = CmiVolatileHive->Hive.HiveHeader->RootCell;
-  RootKey->KeyCell = HvGetCell (&CmiVolatileHive->Hive, RootKey->KeyCellOffset);
-  RootKey->ParentKey = RootKey;
-  RootKey->Flags = 0;
-  RootKey->SubKeyCounts = 0;
-  RootKey->SubKeys = NULL;
-  RootKey->SizeOfSubKeys = 0;
-  InsertTailList(&CmiKeyObjectListHead, &RootKey->ListEntry);
-  Status = RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
-  ASSERT(NT_SUCCESS(Status));
-
-#if 0
-  Status = CmiAllocateCell(CmiVolatileHive,
-			   0x10, //LONG CellSize,
-			   (PVOID *)&RootSecurityCell,
-			   &RootKey->KeyCell->SecurityKeyOffset);
-  ASSERT(NT_SUCCESS(Status));
-
-  /* Copy the security descriptor */
-
-  CmiVolatileHive->RootSecurityCell = RootSecurityCell;
-#endif
-
-
-  /* Create '\Registry\Machine' key. */
-  RtlInitUnicodeString(&KeyName,
-		       L"Machine");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     0,
-			     RootKeyHandle,
-			     NULL);
-  Status = ZwCreateKey(&KeyHandle,
-		       KEY_ALL_ACCESS,
-		       &ObjectAttributes,
-		       0,
-		       NULL,
-		       REG_OPTION_VOLATILE,
-		       NULL);
-  ASSERT(NT_SUCCESS(Status));
-
-  /* Create '\Registry\User' key. */
-  RtlInitUnicodeString(&KeyName,
-		       L"User");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     0,
-			     RootKeyHandle,
-			     NULL);
-  Status = ZwCreateKey(&KeyHandle,
-		       KEY_ALL_ACCESS,
-		       &ObjectAttributes,
-		       0,
-		       NULL,
-		       REG_OPTION_VOLATILE,
-		       NULL);
-  ASSERT(NT_SUCCESS(Status));
-}
-
 
 VOID INIT_FUNCTION
 CmInit2(PCHAR CommandLine)
@@ -450,6 +239,220 @@ CmInit2(PCHAR CommandLine)
 
   ExFreePool(SystemBootDevice);
 }
+
+
+VOID
+INIT_FUNCTION
+STDCALL
+CmInitHives(BOOLEAN SetupBoot)
+{
+    PCHAR BaseAddress;
+    PLIST_ENTRY ListHead, NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock = NULL;
+
+    /* Load Registry Hives. This one can be missing. */
+    BaseAddress = KeLoaderBlock->RegistryBase;
+    if (BaseAddress)
+    {
+        CmImportSystemHive(BaseAddress,
+                           KeLoaderBlock->RegistryLength);
+    }
+
+    /* Loop the memory descriptors */
+    ListHead = &KeLoaderBlock->MemoryDescriptorListHead;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the current block */
+        MdBlock = CONTAINING_RECORD(NextEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+
+        /* Check if this is an registry block */
+        if (MdBlock->MemoryType == LoaderRegistryData)
+        {
+            /* Check if it's not the SYSTEM hive that we already initialized */
+            if ((MdBlock->BasePage) != ((ULONG_PTR)BaseAddress >> PAGE_SHIFT))
+            {
+                /* Hardware hive break out */
+                break;
+            }
+        }
+
+        /* Go to the next block */
+        NextEntry = MdBlock->ListEntry.Flink;
+    }
+
+    /* We need a hardware hive */
+    ASSERT(MdBlock);
+
+    BaseAddress = (PCHAR)(MdBlock->BasePage << PAGE_SHIFT);
+    CmImportHardwareHive(BaseAddress,
+                         MdBlock->PageCount << PAGE_SHIFT);
+
+    /* Create dummy keys if no hardware hive was found */
+    CmImportHardwareHive (NULL, 0);
+
+    /* Initialize volatile registry settings */
+    if (SetupBoot == FALSE) CmInit2(KeLoaderBlock->LoadOptions);
+}
+
+BOOLEAN
+INIT_FUNCTION
+NTAPI
+CmInitSystem1(VOID)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  PKEY_OBJECT RootKey;
+#if 0
+  PCM_KEY_SECURITY RootSecurityCell;
+#endif
+  HANDLE RootKeyHandle;
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+  LARGE_INTEGER DueTime;
+  HANDLE ThreadHandle;
+  CLIENT_ID ThreadId;
+  OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+  UNICODE_STRING Name;
+
+  DPRINT("Creating Registry Object Type\n");
+  
+  /*  Initialize the Key object type  */
+  RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+  RtlInitUnicodeString(&Name, L"Key");
+  ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+  ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(KEY_OBJECT);
+  ObjectTypeInitializer.GenericMapping = CmiKeyMapping;
+  ObjectTypeInitializer.PoolType = PagedPool;
+  ObjectTypeInitializer.ValidAccessMask = KEY_ALL_ACCESS;
+  ObjectTypeInitializer.UseDefaultObject = TRUE;
+  ObjectTypeInitializer.DeleteProcedure = CmiObjectDelete;
+  ObjectTypeInitializer.ParseProcedure = CmiObjectParse;
+  ObjectTypeInitializer.SecurityProcedure = CmiObjectSecurity;
+  ObjectTypeInitializer.QueryNameProcedure = CmiObjectQueryName;
+
+  ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &CmiKeyType);
+
+  /* Initialize the hive list */
+  InitializeListHead(&CmiHiveListHead);
+
+  /* Initialize registry lock */
+  ExInitializeResourceLite(&CmiRegistryLock);
+
+  /* Initialize the key object list */
+  InitializeListHead(&CmiKeyObjectListHead);
+  InitializeListHead(&CmiConnectedHiveList);
+
+  /* Initialize the worker timer */
+  KeInitializeTimerEx(&CmiWorkerTimer, SynchronizationTimer);
+
+  /* Initialize the worker thread */
+  Status = PsCreateSystemThread(&ThreadHandle,
+				THREAD_ALL_ACCESS,
+				NULL,
+				NULL,
+				&ThreadId,
+				CmiWorkerThread,
+				NULL);
+  if (!NT_SUCCESS(Status)) return FALSE;
+
+  /* Start the timer */
+  DueTime.QuadPart = -1;
+  KeSetTimerEx(&CmiWorkerTimer, DueTime, 5000, NULL); /* 5sec */
+
+  /*  Build volatile registry store  */
+  Status = CmiCreateVolatileHive (&CmiVolatileHive);
+  ASSERT(NT_SUCCESS(Status));
+
+  InitializeListHead(&CmiCallbackHead);
+  ExInitializeFastMutex(&CmiCallbackLock);
+
+  /* Create '\Registry' key. */
+  RtlInitUnicodeString(&KeyName, REG_ROOT_KEY_NAME);
+  InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
+  Status = ObCreateObject(KernelMode,
+			  CmiKeyType,
+			  &ObjectAttributes,
+			  KernelMode,
+			  NULL,
+			  sizeof(KEY_OBJECT),
+			  0,
+			  0,
+			  (PVOID *) &RootKey);
+  ASSERT(NT_SUCCESS(Status));
+  Status = ObInsertObject(RootKey,
+			  NULL,
+			  KEY_ALL_ACCESS,
+			  0,
+			  NULL,
+			  &RootKeyHandle);
+  ASSERT(NT_SUCCESS(Status));
+  RootKey->RegistryHive = CmiVolatileHive;
+  RootKey->KeyCellOffset = CmiVolatileHive->Hive.HiveHeader->RootCell;
+  RootKey->KeyCell = HvGetCell (&CmiVolatileHive->Hive, RootKey->KeyCellOffset);
+  RootKey->ParentKey = RootKey;
+  RootKey->Flags = 0;
+  RootKey->SubKeyCounts = 0;
+  RootKey->SubKeys = NULL;
+  RootKey->SizeOfSubKeys = 0;
+  InsertTailList(&CmiKeyObjectListHead, &RootKey->ListEntry);
+  Status = RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
+  ASSERT(NT_SUCCESS(Status));
+
+#if 0
+  Status = CmiAllocateCell(CmiVolatileHive,
+			   0x10, //LONG CellSize,
+			   (PVOID *)&RootSecurityCell,
+			   &RootKey->KeyCell->SecurityKeyOffset);
+  ASSERT(NT_SUCCESS(Status));
+
+  /* Copy the security descriptor */
+
+  CmiVolatileHive->RootSecurityCell = RootSecurityCell;
+#endif
+
+
+  /* Create '\Registry\Machine' key. */
+  RtlInitUnicodeString(&KeyName,
+		       L"Machine");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     0,
+			     RootKeyHandle,
+			     NULL);
+  Status = ZwCreateKey(&KeyHandle,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE,
+		       NULL);
+  ASSERT(NT_SUCCESS(Status));
+
+  /* Create '\Registry\User' key. */
+  RtlInitUnicodeString(&KeyName,
+		       L"User");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     0,
+			     RootKeyHandle,
+			     NULL);
+  Status = ZwCreateKey(&KeyHandle,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE,
+		       NULL);
+  ASSERT(NT_SUCCESS(Status));
+
+  /* Import and Load Registry Hives */
+  CmInitHives(ExpInTextModeSetup);
+  return TRUE;
+}
+
 
 
 static NTSTATUS

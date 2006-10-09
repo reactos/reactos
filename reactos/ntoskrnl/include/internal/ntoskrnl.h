@@ -60,11 +60,8 @@ typedef struct __DESCRIPTOR
  * Initalization functions (called once by main())
  */
 VOID MmInitSystem(ULONG Phase, PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
-VOID IoInit(VOID);
 BOOLEAN NTAPI ObInit(VOID);
-VOID NTAPI CmInitSystem1(VOID);
-VOID NTAPI CmInitHives(BOOLEAN SetupBoot);
-VOID CmInit2(PCHAR CommandLine);
+BOOLEAN NTAPI CmInitSystem1(VOID);
 VOID CmShutdownRegistry(VOID);
 BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
 BOOLEAN CmImportHardwareHive(PCHAR ChunkBase, ULONG ChunkSize);

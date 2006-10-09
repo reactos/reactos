@@ -654,7 +654,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
         if (!HalInitSystem(ExpInitializationPhase, LoaderBlock))
         {
             /* Initialization failed */
-            KEBUGCHECK(HAL_INITIALIZATION_FAILED);
+            KeBugCheck(HAL_INITIALIZATION_FAILED);
         }
 
         /* We're done */
@@ -728,7 +728,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* Convert to ANSI_STRING and null-terminate it */
     RtlInitString(&AnsiPath, Buffer );
-    Buffer[--AnsiPath.Length] = UNICODE_NULL;
+    Buffer[--AnsiPath.Length] = ANSI_NULL;
 
     /* Get the string from KUSER_SHARED_DATA's buffer */
     NtSystemRoot.Buffer = SharedUserData->NtSystemRoot;
@@ -902,8 +902,8 @@ ExPhase2Init(PVOID Context)
     /* Initialize Cache Views */
     CcInitializeCacheManager();
 
-    /* Initialize the Registry (Hives are NOT yet loaded!) */
-    CmInitSystem1();
+    /* Initialize the Registry */
+    if (!CmInitSystem1()) KeBugCheck(CONFIG_INITIALIZATION_FAILED);
 
     /* Update timezone information */
     ExRefreshTimeZoneInformation(&SystemBootTime);
@@ -917,15 +917,6 @@ ExPhase2Init(PVOID Context)
     /* Initialize LPC */
     LpcpInitSystem();
 
-    /* Initialize I/O Objects, Filesystems, Error Logging and Shutdown */
-    IoInit();
-
-    /* Unmap Low memory, and initialize the MPW and Balancer Thread */
-    MmInit3();
-
-    /* Import and Load Registry Hives */
-    CmInitHives(ExpInTextModeSetup);
-
     /* Enter the kernel debugger before starting up the boot drivers */
     if (KdDebuggerEnabled && KdpEarlyBreak) DbgBreakPoint();
 
@@ -934,6 +925,9 @@ ExPhase2Init(PVOID Context)
 
     /* Display the boot screen image if not disabled */
     if (!NoGuiBoot) InbvEnableBootDriver(TRUE);
+
+    /* Unmap Low memory, and initialize the MPW and Balancer Thread */
+    MmInit3();
 
     /* Initialize VDM support */
     KeI386VdmInitialize();

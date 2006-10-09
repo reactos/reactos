@@ -229,10 +229,18 @@ IopInitLookasideLists(VOID)
     DPRINT("Done allocation\n");
 }
 
-VOID
+
+BOOLEAN
 INIT_FUNCTION
-IoInit (VOID)
+NTAPI
+IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    PDEVICE_NODE DeviceNode;
+    PDRIVER_OBJECT DriverObject;
+    LDR_DATA_TABLE_ENTRY ModuleObject;
+    NTSTATUS Status;
+    CHAR Buffer[256];
+    ANSI_STRING NtBootPath, RootString;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -297,113 +305,100 @@ IoInit (VOID)
     ObjectTypeInitializer.UseDefaultObject = FALSE;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoFileObjectType);
 
-  /*
-   * Create the '\Driver' object directory
-   */
-  RtlInitUnicodeString(&DirName, L"\\Driver");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &DirName,
-			     0,
-			     NULL,
-			     NULL);
-  ZwCreateDirectoryObject(&Handle,
-			  0,
-			  &ObjectAttributes);
+    /*
+    * Create the '\Driver' object directory
+    */
+    RtlInitUnicodeString(&DirName, L"\\Driver");
+    InitializeObjectAttributes(&ObjectAttributes,
+        &DirName,
+        0,
+        NULL,
+        NULL);
+    ZwCreateDirectoryObject(&Handle,
+        0,
+        &ObjectAttributes);
 
-  /*
-   * Create the '\FileSystem' object directory
-   */
-  RtlInitUnicodeString(&DirName,
-		       L"\\FileSystem");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &DirName,
-			     0,
-			     NULL,
-			     NULL);
-  ZwCreateDirectoryObject(&Handle,
-			  0,
-			  &ObjectAttributes);
+    /*
+    * Create the '\FileSystem' object directory
+    */
+    RtlInitUnicodeString(&DirName,
+        L"\\FileSystem");
+    InitializeObjectAttributes(&ObjectAttributes,
+        &DirName,
+        0,
+        NULL,
+        NULL);
+    ZwCreateDirectoryObject(&Handle,
+        0,
+        &ObjectAttributes);
 
-  /*
-   * Create the '\Device' directory
-   */
-  RtlInitUnicodeString(&DirName,
-		       L"\\Device");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &DirName,
-			     0,
-			     NULL,
-			     NULL);
-  ZwCreateDirectoryObject(&Handle,
-			  0,
-			  &ObjectAttributes);
+    /*
+    * Create the '\Device' directory
+    */
+    RtlInitUnicodeString(&DirName,
+        L"\\Device");
+    InitializeObjectAttributes(&ObjectAttributes,
+        &DirName,
+        0,
+        NULL,
+        NULL);
+    ZwCreateDirectoryObject(&Handle,
+        0,
+        &ObjectAttributes);
 
-  /*
-   * Create the '\??' directory
-   */
-  RtlInitUnicodeString(&DirName,
-		       L"\\??");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &DirName,
-			     0,
-			     NULL,
-			     NULL);
-  ZwCreateDirectoryObject(&Handle,
-			  0,
-			  &ObjectAttributes);
+    /*
+    * Create the '\??' directory
+    */
+    RtlInitUnicodeString(&DirName,
+        L"\\??");
+    InitializeObjectAttributes(&ObjectAttributes,
+        &DirName,
+        0,
+        NULL,
+        NULL);
+    ZwCreateDirectoryObject(&Handle,
+        0,
+        &ObjectAttributes);
 
-  /*
-   * Create the '\ArcName' directory
-   */
-  RtlInitUnicodeString(&DirName,
-		       L"\\ArcName");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &DirName,
-			     0,
-			     NULL,
-			     NULL);
-  ZwCreateDirectoryObject(&Handle,
-			  0,
-			  &ObjectAttributes);
+    /*
+    * Create the '\ArcName' directory
+    */
+    RtlInitUnicodeString(&DirName,
+        L"\\ArcName");
+    InitializeObjectAttributes(&ObjectAttributes,
+        &DirName,
+        0,
+        NULL,
+        NULL);
+    ZwCreateDirectoryObject(&Handle,
+        0,
+        &ObjectAttributes);
 
-  /*
-   * Initialize remaining subsubsystem
-   */
-  IopInitDriverImplementation();
-  IoInitCancelHandling();
-  IoInitFileSystemImplementation();
-  IoInitVpbImplementation();
-  IoInitShutdownNotification();
-  IopInitPnpNotificationImplementation();
-  IopInitErrorLog();
-  IopInitTimerImplementation();
-  IopInitLookasideLists();
+    /*
+    * Initialize remaining subsubsystem
+    */
+    IopInitDriverImplementation();
+    IoInitCancelHandling();
+    IoInitFileSystemImplementation();
+    IoInitVpbImplementation();
+    IoInitShutdownNotification();
+    IopInitPnpNotificationImplementation();
+    IopInitErrorLog();
+    IopInitTimerImplementation();
+    IopInitLookasideLists();
 
-  /*
-   * Create link from '\DosDevices' to '\??' directory
-   */
-  RtlInitUnicodeString(&DirName,
-		       L"\\??");
-  IoCreateSymbolicLink(&LinkName,
-		       &DirName);
+    /*
+    * Create link from '\DosDevices' to '\??' directory
+    */
+    RtlInitUnicodeString(&DirName,
+        L"\\??");
+    IoCreateSymbolicLink(&LinkName,
+        &DirName);
 
-  /*
-   * Initialize PnP manager
-   */
-  PnpInit();
-}
-
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    PDEVICE_NODE DeviceNode;
-    PDRIVER_OBJECT DriverObject;
-    LDR_DATA_TABLE_ENTRY ModuleObject;
-    NTSTATUS Status;
-    CHAR Buffer[256];
-    ANSI_STRING NtBootPath, RootString;
+    /*
+    * Initialize PnP manager
+    */
+    PnpInit();
 
     RtlInitEmptyAnsiString(&NtBootPath, Buffer, sizeof(Buffer));
 
@@ -480,9 +475,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Load services for devices found by PnP manager */
     IopInitializePnpServices(IopRootDeviceNode, FALSE);
 
-    /* Load the System DLL and its Entrypoints */
-    if (!NT_SUCCESS(PsLocateSystemDll())) return FALSE;
-
     /* Load system start drivers */
     IopInitializeSystemDrivers();
 
@@ -516,6 +508,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Update system root */
     Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &RootString, FALSE);
     if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Load the System DLL and its Entrypoints */
+    if (!NT_SUCCESS(PsLocateSystemDll())) return FALSE;
 
     /* Return success */
     return TRUE;
