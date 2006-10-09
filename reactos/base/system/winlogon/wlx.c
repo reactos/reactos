@@ -896,7 +896,10 @@ CreateWindowStationAndDesktops(
 	}
 
 	/* FIXME: big HACK */
-	Session->WinlogonDesktop = Session->ApplicationDesktop;
+	CloseDesktop(Session->WinlogonDesktop);
+	CloseDesktop(Session->ScreenSaverDesktop);
+	Session->WinlogonDesktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
+	Session->ScreenSaverDesktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
 
 	/*
 	 * Switch to winlogon desktop
@@ -914,13 +917,25 @@ cleanup:
 	if (!ret)
 	{
 		if (Session->ApplicationDesktop)
+		{
 			CloseDesktop(Session->ApplicationDesktop);
+			Session->ApplicationDesktop = NULL;
+		}
 		if (Session->WinlogonDesktop)
+		{
 			CloseDesktop(Session->WinlogonDesktop);
+			Session->WinlogonDesktop = NULL;
+		}
 		if (Session->ScreenSaverDesktop)
+		{
 			CloseDesktop(Session->ScreenSaverDesktop);
+			Session->ScreenSaverDesktop = NULL;
+		}
 		if (Session->InteractiveWindowStation)
+		{
 			CloseWindowStation(Session->InteractiveWindowStation);
+			Session->InteractiveWindowStation = NULL;
+		}
 	}
 	HeapFree(GetProcessHeap(), 0, pDefaultAcl);
 	HeapFree(GetProcessHeap(), 0, pUserDesktopAcl);

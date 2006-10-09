@@ -70,7 +70,7 @@ GetSetupType(VOID)
 }
 
 
-BOOL
+static BOOL
 SetSetupType (DWORD dwSetupType)
 {
   DWORD dwError;

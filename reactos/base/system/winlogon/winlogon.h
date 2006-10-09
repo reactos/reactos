@@ -89,7 +89,7 @@ typedef struct _GINAFUNCTIONS
 
 	/* Functions available if WlxVersion >= WLX_VERSION_1_1 (MS Windows 3.5.1) */
 	PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify; /* optional */
-	PFWLXSTARTAPPLICATION     WlxStartApplication; /* optional, not called ATM */
+	PFWLXSTARTAPPLICATION     WlxStartApplication; /* optional */
 
 	/* Functions available if WlxVersion >= WLX_VERSION_1_2 (MS Windows NT 4.0) */
 
@@ -179,7 +179,7 @@ UpdatePerUserSystemParameters(DWORD dwUnknown,
 /* sas.c */
 BOOL
 SetDefaultLanguage(
-	IN BOOLEAN UserProfile);
+	IN BOOL UserProfile);
 
 BOOL
 InitializeSAS(
@@ -213,7 +213,7 @@ BOOL
 CreateWindowStationAndDesktops(
 	IN OUT PWLSESSION Session);
 
-BOOL
+NTSTATUS
 HandleShutdown(
 	IN OUT PWLSESSION Session,
 	IN DWORD wlxAction);

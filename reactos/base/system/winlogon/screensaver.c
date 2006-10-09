@@ -244,7 +244,7 @@ StartScreenSaver(
 	PROCESS_INFORMATION ProcessInformation;
 	HANDLE HandleArray[2];
 	LONG rc;
-	NTSTATUS Status;
+	DWORD Status;
 	BOOL ret = FALSE;
 
 	if (!ImpersonateLoggedOnUser(Session->UserToken))

@@ -28,7 +28,6 @@
 #define __SETUP_H__
 
 DWORD GetSetupType (VOID);
-BOOL SetSetupType (DWORD dwSetupType);
 BOOL RunSetup (VOID);
 
 #endif /* __SETUP_H__ */

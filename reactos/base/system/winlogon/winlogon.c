@@ -102,10 +102,8 @@ StartCustomService(
 	hService = OpenServiceW(hSCManager, ServiceName, SERVICE_START);
 	if (!hService)
 		goto cleanup;
-#if 0
 	if (!StartServiceW(hService, 0, NULL))
 		goto cleanup;
-#endif
 
 	ret = TRUE;
 
@@ -140,9 +138,7 @@ StartLsass(VOID)
 		return FALSE;
 	}
 
-#if 0
 	WaitForSingleObject(LsassInitEvent, INFINITE);
-#endif
 	CloseHandle(LsassInitEvent);
 
 	return TRUE;
@@ -360,6 +356,7 @@ WinMain(
 	ULONG AuthenticationPackage;
 	NTSTATUS Status;
 #endif
+	ULONG HardErrorResponse;
 	MSG Msg;
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
@@ -377,19 +374,19 @@ WinMain(
 	}
 
 	WLSession = (PWLSESSION)HeapAlloc(GetProcessHeap(), 0, sizeof(WLSESSION));
-	ZeroMemory(WLSession, sizeof(WLSESSION));
 	if (!WLSession)
 	{
 		ERR("WL: Could not allocate memory for winlogon instance\n");
-		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
+		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
 		ExitProcess(1);
 	}
+	ZeroMemory(WLSession, sizeof(WLSESSION));
 	WLSession->DialogTimeout = 120; /* 2 minutes */
 
 	if (!CreateWindowStationAndDesktops(WLSession))
 	{
 		ERR("WL: Could not create window station and desktops\n");
-		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
+		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
 		ExitProcess(1);
 	}
 	LockWorkstation(WLSession);
@@ -397,7 +394,7 @@ WinMain(
 	if (!StartServicesManager())
 	{
 		ERR("WL: Could not start services.exe\n");
-		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
+		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
 		ExitProcess(1);
 	}
 
@@ -420,7 +417,7 @@ WinMain(
 	if (!StartLsass())
 	{
 		DPRINT1("WL: Failed to start lsass.exe service (error %lu)\n", GetLastError());
-		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
+		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, OptionOk, &HardErrorResponse);
 		ExitProcess(1);
 	}
 
@@ -428,7 +425,7 @@ WinMain(
 	if (!GinaInit(WLSession))
 	{
 		ERR("WL: Failed to initialize Gina\n");
-		DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), 0, GinaLoadFailedWindowProc, (LPARAM)L"");
+		DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), GetDesktopWindow(), GinaLoadFailedWindowProc, (LPARAM)L"");
 		HandleShutdown(WLSession, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
 		ExitProcess(1);
 	}

@@ -28,16 +28,29 @@ static BOOL
 StartTaskManager(
 	IN OUT PWLSESSION Session)
 {
+	LPVOID lpEnvironment;
+
+	if (!Session->Gina.Functions.WlxStartApplication)
+		return FALSE;
+
+	if (!CreateEnvironmentBlock(
+		&lpEnvironment,
+		Session->UserToken,
+		TRUE))
+	{
+		return FALSE;
+	}
+
 	return Session->Gina.Functions.WlxStartApplication(
 		Session->Gina.Context,
 		L"Default",
-		NULL,
+		lpEnvironment,
 		L"taskmgr.exe");
 }
 
 BOOL
 SetDefaultLanguage(
-	IN BOOLEAN UserProfile)
+	IN BOOL UserProfile)
 {
 	HKEY BaseKey;
 	LPCWSTR SubKey;
@@ -146,11 +159,11 @@ static BOOL
 HandleLogon(
 	IN OUT PWLSESSION Session)
 {
-	PROFILEINFOW ProfileInfo = { 0 };
+	PROFILEINFOW ProfileInfo = { 0, };
 	LPVOID lpEnvironment = NULL;
 	BOOLEAN Old;
 
-	if (!(Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+	if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
 	{
 		/* Load the user profile */
 		ProfileInfo.dwSize = sizeof(PROFILEINFOW);
@@ -165,7 +178,6 @@ HandleLogon(
 		if (!LoadUserProfileW(Session->UserToken, &ProfileInfo))
 		{
 			ERR("WL: LoadUserProfileW() failed\n");
-			CloseHandle(Session->UserToken);
 			return FALSE;
 		}
 	}
@@ -177,9 +189,12 @@ HandleLogon(
 		TRUE))
 	{
 		ERR("WL: CreateEnvironmentBlock() failed\n");
-		if (!(Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+		if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+		{
 			UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
-		CloseHandle(Session->UserToken);
+			CloseHandle(Session->UserToken);
+			Session->UserToken = NULL;
+		}
 		return FALSE;
 	}
 	/* FIXME: use Session->Profile.pszEnvironment */
@@ -195,7 +210,15 @@ HandleLogon(
 
 	/* Set default language */
 	if (!SetDefaultLanguage(TRUE))
+	{
+		if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+		{
+			UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
+			CloseHandle(Session->UserToken);
+			Session->UserToken = NULL;
+		}
 		return FALSE;
+	}
 
 	if (!Session->Gina.Functions.WlxActivateUserShell(
 		Session->Gina.Context,
@@ -203,6 +226,12 @@ HandleLogon(
 		NULL, /* FIXME */
 		lpEnvironment))
 	{
+		if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+		{
+			UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
+			CloseHandle(Session->UserToken);
+			Session->UserToken = NULL;
+		}
 		return FALSE;
 	}
 	   /*if(!GinaInst->Functions->WlxActivateUserShell(GinaInst->Context,
@@ -222,7 +251,7 @@ HandleLogon(
    */
 
 	if (!InitializeScreenSaver(Session))
-		ERR("WL: Failed to initialize screen saver\n");
+		WARN("WL: Failed to initialize screen saver\n");
 
 	return TRUE;
 }
@@ -241,7 +270,7 @@ LogoffShutdownThread(LPVOID Parameter)
 {
 	PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
 
-	if (LSData->Session->UserToken && !ImpersonateLoggedOnUser(LSData->Session->UserToken))
+	if (LSData->Session->UserToken != NULL && !ImpersonateLoggedOnUser(LSData->Session->UserToken))
 	{
 		ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
 		return 0;
@@ -363,7 +392,7 @@ UninitializeSAS(
 	UnregisterClassW(WINLOGON_SAS_CLASS, hAppInstance);
 }
 
-BOOL
+NTSTATUS
 HandleShutdown(
 	IN OUT PWLSESSION Session,
 	IN DWORD wlxAction)
@@ -423,11 +452,11 @@ HandleShutdown(
 		if (FALSE)
 		{
 			/* FIXME - only show this dialog if it's a shutdown and the computer doesn't support APM */
-			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER), 0, ShutdownComputerWindowProc);
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER), GetDesktopWindow(), ShutdownComputerWindowProc);
 		}
 		NtShutdownSystem(ShutdownNoReboot);
 	}
-	return TRUE;
+	return STATUS_SUCCESS;
 }
 
 static VOID
@@ -508,9 +537,9 @@ DispatchSAS(
 	DWORD wlxAction = WLX_SAS_ACTION_NONE;
 
 	if (Session->LogonStatus == WKSTA_IS_LOGGED_ON)
-		wlxAction = Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
+		wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
 	else if (Session->LogonStatus == WKSTA_IS_LOCKED)
-		wlxAction = Session->Gina.Functions.WlxWkstaLockedSAS(Session->Gina.Context, dwSasType);
+		wlxAction = (DWORD)Session->Gina.Functions.WlxWkstaLockedSAS(Session->Gina.Context, dwSasType);
 	else
 	{
 		/* Display a new dialog (if necessary) */
@@ -528,7 +557,7 @@ DispatchSAS(
 				ZeroMemory(&Session->Profile, sizeof(Session->Profile));
 				Session->Options = 0;
 
-				wlxAction = Session->Gina.Functions.WlxLoggedOutSAS(
+				wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOutSAS(
 					Session->Gina.Context,
 					Session->SASAction,
 					&Session->LogonId,
