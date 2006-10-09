@@ -502,7 +502,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Assign drive letters */
     IoAssignDriveLetters(LoaderBlock,
                          &NtBootPath,
-                         RootString.Buffer,
+                         (PUCHAR)RootString.Buffer,
                          &RootString);
 
     /* Update system root */
