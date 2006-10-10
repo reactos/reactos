@@ -13,6 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
+// The only global var here, used to mark mem pages as NLS in WinLdrTurnOnPaging()
+ULONG TotalNLSSize = 0;
+
 BOOLEAN WinLdrGetNLSNames(LPSTR AnsiName,
                           LPSTR OemName,
                           LPSTR LangName);
@@ -326,6 +329,9 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	TotalSize = MM_SIZE_TO_PAGES(AnsiFileSize) +
 		MM_SIZE_TO_PAGES(OemFileSize)  +
 		MM_SIZE_TO_PAGES(LanguageFileSize);
+
+	/* Store it for later marking the pages as NlsData type */
+	TotalNLSSize = TotalSize;
 
 	NlsDataBase = (ULONG_PTR)MmAllocateMemory(TotalSize*MM_PAGE_SIZE);
 

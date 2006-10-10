@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern ULONG TotalNLSSize;
+
 // This is needed because headers define wrong one for ReactOS
 #undef KIP0PCRADDRESS
 #define KIP0PCRADDRESS                      0xffdff000
@@ -294,7 +296,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	// Check if it's more than the allowed for OS loader
 	// if yes - don't map the pages, just add as FirmwareTemporary
 	//
-	if (BasePage + PageCount > LOADER_HIGH_ZONE)
+	if (BasePage + PageCount > LOADER_HIGH_ZONE && (Type != LoaderNlsData))
 	{
 		Mad[MadCount].MemoryType = LoaderFirmwareTemporary;
 
@@ -347,24 +349,9 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	else
 	{
 		//
-		// Now choose memory type as usual. FIXME!!!
+		// Set memory type
 		//
-		if (Type == 0)
-		{
-			Mad[MadCount].MemoryType = LoaderFree;
-		}
-		else if (Type != 0 && Type != 1)
-		{
-			Mad[MadCount].MemoryType = LoaderFirmwarePermanent;
-		}
-		else if (Type == 1)
-		{
-			Mad[MadCount].MemoryType = LoaderSystemCode;
-		}
-		else
-		{
-			Mad[MadCount].MemoryType = LoaderFirmwarePermanent;
-		}
+		Mad[MadCount].MemoryType = Type;
 
 		//
 		// Add descriptor
@@ -391,10 +378,12 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    PVOID GdtIdt)
 {
 	ULONG i, PagesCount;
-	ULONG LastPageIndex, LastPageType;
+	ULONG LastPageIndex, LastPageType, NtType;
 	PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
 	ULONG NoEntries;
 	PKTSS Tss;
+	PVOID NlsBase = VaToPa(((PNLS_DATA_BLOCK)VaToPa(LoaderBlock->NlsData))->AnsiCodePageData);
+	ULONG NlsBasePage = (ULONG_PTR)NlsBase >> PAGE_SHIFT;
 
 	//
 	// Creating a suitable memory map for the Windows can be tricky, so let's
@@ -431,7 +420,8 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return FALSE;
 	}
 
-	DbgPrint((DPRINT_WINDOWS, "Got memory map with %d entries\n"));
+	DbgPrint((DPRINT_WINDOWS, "Got memory map with %d entries, NlsBasePage 0x%X\n",
+		NoEntries, NlsBasePage));
 
 	// Construct a good memory map from what we've got
 	PagesCount = 1;
@@ -439,14 +429,67 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	LastPageType = MemoryMap[0].PageAllocated;
 	for(i=1;i<NoEntries;i++)
 	{
-		if (MemoryMap[i].PageAllocated == LastPageType)
+		if (MemoryMap[i].PageAllocated == LastPageType &&
+			(i < NlsBasePage || i > NlsBasePage+TotalNLSSize) && (i != NoEntries-1) )
 		{
 			PagesCount++;
 		}
+		else if (i == NlsBasePage)
+		{
+			// This is NLS data, map it accordingly
+			// It's VERY important for NT kernel - it calculates size of NLS
+			// tables based on NlsData memory type descriptors!
+
+			// Firstly map what we already have (if we have any)
+			// Convert mem types
+			if (LastPageType == 0)
+				NtType = LoaderFree;
+			else if (LastPageType != 0 && LastPageType != 1)
+				NtType = LoaderFirmwarePermanent;
+			else if (LastPageType == 1)
+				NtType = LoaderSystemCode;
+			else
+				NtType = LoaderFirmwarePermanent;
+
+			if (PagesCount > 0)
+				MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, NtType);
+
+			// Then map nls data
+			MempAddMemoryBlock(LoaderBlock, NlsBasePage, TotalNLSSize, LoaderNlsData);
+
+			// skip them
+			i += TotalNLSSize;
+
+			// Reset our counter vars
+			LastPageIndex = i;
+			LastPageType = MemoryMap[i].PageAllocated;
+			PagesCount = 1;
+
+			continue;
+		}
 		else
 		{
-			// Add the region
-			MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, LastPageType);
+			// Add the resulting region
+
+			// Convert mem types
+			if (LastPageType == 0)
+			{
+				NtType = LoaderFree;
+			}
+			else if (LastPageType != 0 && LastPageType != 1)
+			{
+				NtType = LoaderFirmwarePermanent;
+			}
+			else if (LastPageType == 1)
+			{
+				NtType = LoaderSystemCode;
+			}
+			else
+			{
+				NtType = LoaderFirmwarePermanent;
+			}
+
+			MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, NtType);
 
 			// Reset our counter vars
 			LastPageIndex = i;
