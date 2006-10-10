@@ -26,10 +26,25 @@
 //#define NDEBUG
 #include <debug.h>
 
+//FIXME: Do a better way to retrieve Arc disk information
+extern ULONG reactos_disk_count;
+extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
+extern char reactos_arc_strings[32][256];
+
+ARC_DISK_SIGNATURE BldrDiskInfo[32];
+CHAR BldrArcNames[32][256];
+
+BOOLEAN
+WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+                        IN PCH DllName,
+                        OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry);
+
 // debug stuff
 VOID DumpMemoryAllocMap(VOID);
 VOID WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock);
+VOID WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock);
+
 
 void InitializeHWConfig(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -87,6 +102,14 @@ AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
 	InitializeListHead(&LoaderBlock->MemoryDescriptorListHead);
 	InitializeListHead(&LoaderBlock->BootDriverListHead);
 
+	/* Alloc space for NLS (it will be converted to VA in WinLdrLoadNLS) */
+	LoaderBlock->NlsData = MmAllocateMemory(sizeof(NLS_DATA_BLOCK));
+	if (LoaderBlock->NlsData == NULL)
+	{
+		UiMessageBox("Failed to allocate memory for NLS table data!");
+		return;
+	}
+	RtlZeroMemory(LoaderBlock->NlsData, sizeof(NLS_DATA_BLOCK));
 
 	*OutLoaderBlock = LoaderBlock;
 }
@@ -97,11 +120,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
 	//CHAR	Options[] = "/CRASHDEBUG /DEBUGPORT=COM1 /BAUDRATE=115200";
 	CHAR	Options[] = "/NODEBUG";
-	CHAR	SystemRoot[] = "\\WINNT";
+	CHAR	SystemRoot[] = "\\WINNT\\";
 	CHAR	HalPath[] = "\\";
 	CHAR	ArcBoot[] = "multi(0)disk(0)rdisk(1)partition(1)";
 	CHAR	ArcHal[] = "multi(0)disk(0)rdisk(1)partition(1)";
 
+	ULONG i;
 	PLOADER_PARAMETER_EXTENSION Extension;
 
 	LoaderBlock->u.I386.CommonDataArea = NULL; // Force No ABIOS support
@@ -134,17 +158,31 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	/* Arc devices */
 	LoaderBlock->ArcDiskInformation = (PARC_DISK_INFORMATION)MmAllocateMemory(sizeof(ARC_DISK_INFORMATION));
 	InitializeListHead(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
+
+	/* Convert ARC disk information from freeldr to a correct format */
+	for (i = 0; i < reactos_disk_count; i++)
+	{
+		PARC_DISK_SIGNATURE ArcDiskInfo;
+
+		/* Get the ARC structure */
+		ArcDiskInfo = &BldrDiskInfo[i];
+
+		/* Copy the data over */
+		ArcDiskInfo->Signature = reactos_arc_disk_info[i].Signature;
+		ArcDiskInfo->CheckSum = reactos_arc_disk_info[i].CheckSum;
+
+		/* Copy the ARC Name */
+		strcpy(BldrArcNames[i], reactos_arc_disk_info[i].ArcName);
+		ArcDiskInfo->ArcName = BldrArcNames[i];
+
+		/* Insert into the list */
+		InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
+			&ArcDiskInfo->ListEntry);
+	}
+
+	/* Convert the list to virtual address */
 	List_PaToVa(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
 	LoaderBlock->ArcDiskInformation = PaToVa(LoaderBlock->ArcDiskInformation);
-
-	/* Alloc space for NLS (it will be converted to VA in WinLdrLoadNLS) */
-	LoaderBlock->NlsData = MmAllocateMemory(sizeof(NLS_DATA_BLOCK));
-	if (LoaderBlock->NlsData == NULL)
-	{
-		UiMessageBox("Failed to allocate memory for NLS table data!");
-		return;
-	}
-	RtlZeroMemory(LoaderBlock->NlsData, sizeof(NLS_DATA_BLOCK));
 
 	/* Create configuration entries */
 	InitializeHWConfig(LoaderBlock);
@@ -226,6 +264,111 @@ void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	RtlZeroMemory(*GdtIdt, NumPages << MM_PAGE_SHIFT);
 }
 
+BOOLEAN
+WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
+                       LPSTR BootPath,
+                       PUNICODE_STRING FilePath,
+                       ULONG Flags,
+                       PLDR_DATA_TABLE_ENTRY *DriverDTE)
+{
+	CHAR FullPath[1024];
+	CHAR DriverPath[1024];
+	CHAR DllName[1024];
+	PCHAR DriverNamePos;
+	BOOLEAN Status;
+	PVOID DriverBase;
+
+	// Separate the path to file name and directory path
+	sprintf(DriverPath, "%wZ", FilePath);
+	DriverNamePos = strrchr(DriverPath, '\\');
+	if (DriverNamePos != NULL)
+	{
+		// Copy the name
+		strcpy(DllName, DriverNamePos+1);
+
+		// Cut out the name from the path
+		*(DriverNamePos+1) = 0;
+	}
+
+	DbgPrint((DPRINT_WINDOWS, "DriverPath: %s, DllName: %s, LPB %p\n", DriverPath, DllName, LoaderBlock));
+
+
+	// Check if driver is already loaded
+	Status = WinLdrCheckForLoadedDll(LoaderBlock, DllName, DriverDTE);
+	if (Status)
+	{
+		// We've got the pointer to its DTE, just return success
+		return TRUE;
+	}
+
+	// It's not loaded, we have to load it
+	sprintf(FullPath,"%s%wZ", BootPath, FilePath);
+	Status = WinLdrLoadImage(FullPath, &DriverBase);
+	if (!Status)
+		return FALSE;
+
+	// Allocate a DTE for it
+	Status = WinLdrAllocateDataTableEntry(LoaderBlock, DllName, DllName, DriverBase, DriverDTE);
+	if (!Status)
+	{
+		DbgPrint((DPRINT_WINDOWS, "WinLdrAllocateDataTableEntry() failed\n"));
+		return FALSE;
+	}
+
+	// Modify any flags, if needed
+	(*DriverDTE)->Flags |= Flags;
+
+	// Look for any dependencies it may have, and load them too
+	sprintf(FullPath,"%s%s", BootPath, DriverPath);
+	Status = WinLdrScanImportDescriptorTable(LoaderBlock, FullPath, *DriverDTE);
+	if (!Status)
+	{
+		DbgPrint((DPRINT_WINDOWS, "WinLdrScanImportDescriptorTable() failed for %s\n",
+			FullPath));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+BOOLEAN
+WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
+                      LPSTR BootPath)
+{
+	PLIST_ENTRY NextBd;
+	PBOOT_DRIVER_LIST_ENTRY BootDriver;
+	BOOLEAN Status;
+
+	// Walk through the boot drivers list
+	NextBd = LoaderBlock->BootDriverListHead.Flink;
+
+	while (NextBd != &LoaderBlock->BootDriverListHead)
+	{
+		BootDriver = CONTAINING_RECORD(NextBd, BOOT_DRIVER_LIST_ENTRY, ListEntry);
+
+		//DbgPrint((DPRINT_WINDOWS, "BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
+		//	BootDriver->DataTableEntry, &BootDriver->RegistryPath));
+
+		// Paths are relative (FIXME: Are they always relative?)
+
+		// Load it
+		Status = WinLdrLoadDeviceDriver(LoaderBlock, BootPath, &BootDriver->FilePath,
+			0, &BootDriver->DataTableEntry);
+
+		// If loading failed - cry loudly
+		//FIXME: Maybe remove it from the list and try to continue?
+		if (!Status)
+		{
+			UiMessageBox("Can't load boot driver!");
+			return FALSE;
+		}
+
+		NextBd = BootDriver->ListEntry.Flink;
+	}
+
+	return TRUE;
+}
+
 VOID
 LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 {
@@ -245,8 +388,6 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	ULONG PcrBasePage=0;
 	ULONG TssBasePage=0;
 
-
-
 	//sprintf(MsgBuffer,"Booting Microsoft(R) Windows(R) OS version '%04x' is not implemented yet", OperatingSystemVersion);
 	//UiMessageBox(MsgBuffer);
 
@@ -258,6 +399,13 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 		UiMessageBox(MsgBuffer);
 		return;
 	}
+
+	UiDrawBackdrop();
+	UiDrawStatusText("Detecting Hardware...");
+	UiDrawProgressBarCenter(1, 100, "Loading Windows...");
+
+	//FIXME: This is needed only for MachHwDetect() which performs registry operations!
+	RegInitializeRegistry();
 
 	/* Make sure the system path is set in the .ini file */
 	if (!IniReadSettingByName(SectionId, "SystemPath", SystemPath, sizeof(SystemPath)))
@@ -272,6 +420,9 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 		UiMessageBox("Invalid system path");
 		return;
 	}
+
+	/* Detect hardware */
+	MachHwDetect();
 
 	UiDrawStatusText("Loading...");
 
@@ -333,15 +484,16 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	if (KdComDTE)
 		WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KdComDTE);
 
-	/* Initialize Phase 1 - before NLS */
-	WinLdrInitializePhase1(LoaderBlock);
-
 	/* Load Hive, and then NLS data, OEM font, and prepare boot drivers list */
 	Status = WinLdrLoadAndScanSystemHive(LoaderBlock, BootPath);
 	DbgPrint((DPRINT_WINDOWS, "SYSTEM hive loaded and scanned with status %d\n", Status));
 
 	/* Load boot drivers */
-	//WinLdrLoadBootDrivers();
+	Status = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
+	DbgPrint((DPRINT_WINDOWS, "Boot drivers loaded with status %d\n", Status));
+
+	/* Initialize Phase 1 - no drivers loading anymore */
+	WinLdrInitializePhase1(LoaderBlock);
 
 	/* Alloc PCR, TSS, do magic things with the GDT/IDT */
 	WinLdrSetupForNt(LoaderBlock, &GdtIdt, &PcrBasePage, &TssBasePage);
@@ -362,6 +514,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 
 	WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
 	WinLdrpDumpBootDriver(LoaderBlockVA);
+	WinLdrpDumpArcDisks(LoaderBlockVA);
 
 	//FIXME: If I substitute this debugging checkpoint, GCC will "optimize away" the code below
 	//while (1) {};
@@ -414,3 +567,23 @@ WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock)
 		NextBd = BootDriver->ListEntry.Flink;
 	}
 }
+
+VOID
+WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+	PLIST_ENTRY NextBd;
+	PARC_DISK_SIGNATURE ArcDisk;
+
+	NextBd = LoaderBlock->ArcDiskInformation->DiskSignatureListHead.Flink;
+
+	while (NextBd != &LoaderBlock->ArcDiskInformation->DiskSignatureListHead)
+	{
+		ArcDisk = CONTAINING_RECORD(NextBd, ARC_DISK_SIGNATURE, ListEntry);
+
+		DbgPrint((DPRINT_WINDOWS, "ArcDisk %s checksum: 0x%X, signature: 0x%X\n",
+			ArcDisk->ArcName, ArcDisk->CheckSum, ArcDisk->Signature));
+
+		NextBd = ArcDisk->ListEntry.Flink;
+	}
+}
+
