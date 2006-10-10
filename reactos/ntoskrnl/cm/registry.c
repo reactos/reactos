@@ -134,10 +134,8 @@ CmInit2(PCHAR CommandLine)
 {
   ULONG PiceStart = 4;
   BOOLEAN MiniNT = FALSE;
-  PWCHAR SystemBootDevice;
-  PWCHAR SystemStartOptions;
-  ULONG Position;
   NTSTATUS Status;
+  UNICODE_STRING TempString;
 
   /* Create the 'CurrentControlSet' link. */
   Status = CmiCreateCurrentControlSetLink();
@@ -145,29 +143,16 @@ CmInit2(PCHAR CommandLine)
     KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
 
   /*
-   * Parse the system boot device.
-   */
-  Position = 0;
-  SystemBootDevice = ExAllocatePool(PagedPool,
-				    (strlen(CommandLine) + 1) * sizeof(WCHAR));
-  if (SystemBootDevice == NULL)
-  {
-    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
-  }
-
-  while (*CommandLine != 0 && *CommandLine != ' ')
-    SystemBootDevice[Position++] = *(CommandLine++);
-  SystemBootDevice[Position++] = 0;
-
-  /*
    * Write the system boot device to registry.
    */
+  RtlCreateUnicodeStringFromAsciiz(&TempString, KeLoaderBlock->ArcBootDeviceName);
   Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
 				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
 				 L"SystemBootDevice",
 				 REG_SZ,
-				 SystemBootDevice,
-				 Position * sizeof(WCHAR));
+				 TempString.Buffer,
+				 TempString.MaximumLength);
+  RtlFreeUnicodeString(&TempString);
   if (!NT_SUCCESS(Status))
   {
     KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
@@ -176,38 +161,20 @@ CmInit2(PCHAR CommandLine)
   /*
    * Parse the system start options.
    */
-  Position = 0;
-  SystemStartOptions = SystemBootDevice;
-  while ((CommandLine = strchr(CommandLine, '/')) != NULL)
-    {
-      /* Skip over the slash */
-      CommandLine++;
-
-      /* Special options */
-      if (!_strnicmp(CommandLine, "MININT", 6))
-        MiniNT = TRUE;
-      else if (!_strnicmp(CommandLine, "DEBUGPORT=PICE", 14))
-        PiceStart = 1;
-
-      /* Add a space between the options */
-      if (Position != 0)
-        SystemStartOptions[Position++] = L' ';
-
-      /* Copy the command */
-      while (*CommandLine != 0 && *CommandLine != ' ')
-        SystemStartOptions[Position++] = *(CommandLine++);
-    }
-  SystemStartOptions[Position++] = 0;
+  PiceStart = strstr(KeLoaderBlock->LoadOptions, "DEBUGPORT=PICE") != NULL;
+  MiniNT = strstr(KeLoaderBlock->LoadOptions, "MININT") != NULL;
 
   /*
    * Write the system start options to registry.
    */
+  RtlCreateUnicodeStringFromAsciiz(&TempString, KeLoaderBlock->LoadOptions);
   Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
 				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
 				 L"SystemStartOptions",
 				 REG_SZ,
-				 SystemStartOptions,
-				 Position * sizeof(WCHAR));
+				 TempString.Buffer,
+				 TempString.MaximumLength);
+  RtlFreeUnicodeString(&TempString);
   if (!NT_SUCCESS(Status))
   {
     KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
@@ -234,8 +201,6 @@ CmInit2(PCHAR CommandLine)
     sizeof(ULONG));
   if (!NT_SUCCESS(Status))
     KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
-
-  ExFreePool(SystemBootDevice);
 }
 
 
