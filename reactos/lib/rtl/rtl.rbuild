@@ -40,6 +40,10 @@
 			<file>tan_asm.s</file>
 		</directory>
 	</if>
+	<directory name="austin">
+		<file>avl.c</file>
+		<file>tree.c</file>
+	</directory>
 
       <ifnot property="ARCH" value="i386">
              <file>memgen.c</file>

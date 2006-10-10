@@ -2,17 +2,100 @@
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Generic Table Implementation
  * FILE:            lib/rtl/genertictbl.c
- * PROGRAMMERS:     
+ * PROGRAMMERS:     arty
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <rtl.h>
+#include "austin/avl.h"
 
 #define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+/*
+* @unimplemented
+*/
+PVOID
+NTAPI
+RtlLookupElementGenericTable (
+	PRTL_GENERIC_TABLE Table,
+	PVOID Buffer
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+* @unimplemented
+*/
+PVOID
+NTAPI
+RtlLookupElementGenericTableFull (
+	PRTL_GENERIC_TABLE Table,
+	PVOID Buffer,
+	OUT PVOID *NodeOrParent,
+	OUT TABLE_SEARCH_RESULT *SearchResult
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+* @implemented
+*/
+PVOID
+NTAPI
+RtlLookupElementGenericTableFullAvl (
+	PRTL_AVL_TABLE Table,
+	PVOID Buffer,
+	OUT PVOID *NodeOrParent,
+	OUT TABLE_SEARCH_RESULT *SearchResult
+	)
+{
+	PRTL_BALANCED_LINKS OurNodeOrParent;
+	TABLE_SEARCH_RESULT OurSearchResult;
+
+	if( Table->NumberGenericTableElements )
+	{
+		*SearchResult = TableEmptyTree;
+		*NodeOrParent = NULL;
+		return NULL;
+	}
+
+	OurSearchResult = avl_search
+		(Table, Buffer, &Table->BalancedRoot, &OurNodeOrParent);
+
+	if(SearchResult) *SearchResult = OurSearchResult;
+	if(NodeOrParent) *NodeOrParent = OurNodeOrParent;
+
+	if(OurSearchResult == TableFoundNode)
+		return avl_data(OurNodeOrParent);
+	else
+		return NULL;
+}
+
+
+/*
+* @implemented
+*/
+PVOID
+NTAPI
+RtlLookupElementGenericTableAvl (
+	PRTL_AVL_TABLE Table,
+	PVOID Buffer
+	)
+{
+	PRTL_BALANCED_LINKS OurNodeOrParent;
+	TABLE_SEARCH_RESULT OurSearchResult;
+	return RtlLookupElementGenericTableFullAvl 
+	(Table, Buffer, (PVOID *)&OurNodeOrParent, &OurSearchResult);
+}
+
 
 /*
 * @unimplemented
@@ -29,7 +112,7 @@ RtlDeleteElementGenericTable (
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 BOOLEAN
 NTAPI
@@ -38,8 +121,22 @@ RtlDeleteElementGenericTableAvl (
 	PVOID Buffer
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+	TABLE_SEARCH_RESULT Result;
+	PRTL_BALANCED_LINKS Node;
+
+	RtlLookupElementGenericTableFullAvl
+		( Table, Buffer, (PVOID *)&Node, &Result );
+
+	if( Result == TableFoundNode ) 
+	{
+		avl_delete_node(Table, Buffer);
+		Table->FreeRoutine(Table, Node);
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
 }
 
 /*
@@ -57,7 +154,7 @@ RtlEnumerateGenericTable (
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 PVOID
 NTAPI
@@ -66,7 +163,23 @@ RtlEnumerateGenericTableAvl (
 	BOOLEAN Restart
 	)
 {
-	UNIMPLEMENTED;
+	if( Table->NumberGenericTableElements == 0 )
+		return NULL;
+
+	if( Restart )
+	{
+		Table->RestartKey = avl_first(Table);
+		return avl_data(Table->RestartKey);
+	}
+	else
+	{
+		Table->RestartKey = avl_next(Table, Table->RestartKey);
+		if( avl_is_nil(Table, Table->RestartKey) )
+			return NULL;
+		else
+			return avl_data(Table->RestartKey);
+	}
+
 	return 0;
 }
 
@@ -104,7 +217,7 @@ RtlEnumerateGenericTableWithoutSplaying (
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 PVOID
 NTAPI
@@ -113,8 +226,7 @@ RtlEnumerateGenericTableWithoutSplayingAvl (
 	PVOID *RestartKey
 	)
 {
-	UNIMPLEMENTED;
-	return 0;
+	return RtlEnumerateGenericTableWithoutSplayingAvl(Table, RestartKey);
 }
 
 /*
@@ -132,7 +244,7 @@ RtlGetElementGenericTable(
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 PVOID
 NTAPI
@@ -141,8 +253,15 @@ RtlGetElementGenericTableAvl (
 	ULONG I
 	)
 {
-	UNIMPLEMENTED;
-	return 0;
+	PRTL_BALANCED_LINKS Node;
+
+	if( I >= Table->NumberGenericTableElements ) return NULL;
+	else
+	{
+		Node = avl_first(Table);
+		while(I--) Node = avl_next(Table, Node);
+		return avl_data(Node);
+	}
 }
 
 /*
@@ -182,11 +301,11 @@ RtlInitializeGenericTableAvl(IN OUT PRTL_AVL_TABLE Table,
   RtlZeroMemory(Table,
                 sizeof(RTL_AVL_TABLE));
   Table->BalancedRoot.Parent = &Table->BalancedRoot;
-
   Table->CompareRoutine = CompareRoutine;
   Table->AllocateRoutine = AllocateRoutine;
   Table->FreeRoutine = FreeRoutine;
   Table->TableContext = TableContext;
+  avl_init(Table);
 }
 
 
@@ -202,24 +321,8 @@ RtlInsertElementGenericTable (
 	PBOOLEAN NewElement OPTIONAL
 	)
 {
-	UNIMPLEMENTED;
-	return 0;
-}
-
-/*
-* @unimplemented
-*/
-PVOID
-NTAPI
-RtlInsertElementGenericTableAvl (
-	PRTL_AVL_TABLE Table,
-	PVOID Buffer,
-	ULONG BufferSize,
-	PBOOLEAN NewElement OPTIONAL
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
+    UNIMPLEMENTED;
+    return 0;
 }
 
 /*
@@ -241,7 +344,7 @@ RtlInsertElementGenericTableFull (
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 PVOID
 NTAPI
@@ -250,12 +353,71 @@ RtlInsertElementGenericTableFullAvl (
 	PVOID Buffer,
 	ULONG BufferSize,
 	PBOOLEAN NewElement OPTIONAL,
-	PVOID NodeOrParent,
-	TABLE_SEARCH_RESULT SearchResult
+	PVOID *NodeOrParent,
+	TABLE_SEARCH_RESULT *SearchResult
 	)
 {
-	UNIMPLEMENTED;
-	return 0;
+	PRTL_BALANCED_LINKS OurNodeOrParent;
+	TABLE_SEARCH_RESULT OurSearchResult;
+
+	if(NewElement)
+		*NewElement = FALSE;
+
+	if( Table->NumberGenericTableElements )
+	{
+		OurSearchResult = TableEmptyTree;
+		OurNodeOrParent = NULL;
+		return NULL;
+	}
+
+	OurSearchResult = avl_search
+		(Table, Buffer, &Table->BalancedRoot, &OurNodeOrParent);
+
+	if(NodeOrParent) *NodeOrParent = OurNodeOrParent;
+	if(SearchResult) *SearchResult = OurSearchResult;
+
+	if(OurSearchResult == TableFoundNode) 
+	{
+		if(NewElement)
+			*NewElement = TRUE;
+		RtlCopyMemory(avl_data(OurNodeOrParent), Buffer, BufferSize);
+		return avl_data(OurNodeOrParent);
+	}
+	else
+	{
+		PRTL_BALANCED_LINKS NewNode = 
+			Table->AllocateRoutine
+			(Table, 
+			 BufferSize + sizeof(RTL_BALANCED_LINKS) + BufferSize);
+
+		if( !NewNode ) return NULL;
+
+		RtlCopyMemory(avl_data(NewNode), Buffer, BufferSize);
+
+		OurNodeOrParent = NewNode;
+
+		avl_insert_node(Table, NewNode);
+		return avl_data(NewNode);
+	}
+}
+
+/*
+* @implemented
+*/
+PVOID
+NTAPI
+RtlInsertElementGenericTableAvl (
+	PRTL_AVL_TABLE Table,
+	PVOID Buffer,
+	ULONG BufferSize,
+	PBOOLEAN NewElement OPTIONAL
+	)
+{
+	PVOID NodeOrParent;
+	TABLE_SEARCH_RESULT SearchResult;
+
+	return RtlInsertElementGenericTableFullAvl
+	(Table, Buffer, BufferSize, NewElement, &NodeOrParent, &SearchResult);
 }
 
 
@@ -281,69 +443,7 @@ RtlIsGenericTableEmptyAvl (
 	PRTL_AVL_TABLE Table
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
-}
-
-
-/*
-* @unimplemented
-*/
-PVOID
-NTAPI
-RtlLookupElementGenericTable (
-	PRTL_GENERIC_TABLE Table,
-	PVOID Buffer
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
-}
-
-/*
-* @unimplemented
-*/
-PVOID
-NTAPI
-RtlLookupElementGenericTableAvl (
-	PRTL_AVL_TABLE Table,
-	PVOID Buffer
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
-}
-
-/*
-* @unimplemented
-*/
-PVOID
-NTAPI
-RtlLookupElementGenericTableFull (
-	PRTL_GENERIC_TABLE Table,
-	PVOID Buffer,
-	OUT PVOID *NodeOrParent,
-	OUT TABLE_SEARCH_RESULT *SearchResult
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
-}
-
-/*
-* @unimplemented
-*/
-PVOID
-NTAPI
-RtlLookupElementGenericTableFullAvl (
-	PRTL_AVL_TABLE Table,
-	PVOID Buffer,
-	OUT PVOID *NodeOrParent,
-	OUT TABLE_SEARCH_RESULT *SearchResult
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
+	return Table->NumberGenericTableElements == 0;
 }
 
 
