@@ -22,6 +22,15 @@
 /* FUNCTIONS **************************************************************/
 
 BOOLEAN
+WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+                        IN PCH DllName,
+                        OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry)
+{
+	return FALSE;
+}
+
+
+BOOLEAN
 WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
                                 IN PCCH DirectoryPath,
                                 IN PLDR_DATA_TABLE_ENTRY ScanDTE)
