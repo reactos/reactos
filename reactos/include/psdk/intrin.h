@@ -265,7 +265,7 @@ static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePoin
 static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * const Addend, const long Value)
 {
 	long retval = Value;
-	__asm__("lock; xaddl %[retval], %[Addend]" : "=r" (retval) : "rm" (Addend));
+	__asm__("lock; xaddl %[retval], %[Addend]" : [retval] "=r" (retval) : [Addend] "rm" (Addend));
 	return retval;
 }
 
