@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/reg/reg.c
@@ -981,6 +980,9 @@ RegCreateKeyExA (HKEY hKey,
 
   TRACE("RegCreateKeyExA() called\n");
 
+  if (lpSecurityAttributes && lpSecurityAttributes->nLength != sizeof(SECURITY_ATTRIBUTES))
+    return ERROR_INVALID_USER_BUFFER;
+
   /* get the real parent key */
   Status = MapDefaultKey (&ParentKey,
                           hKey);
@@ -1002,7 +1004,7 @@ RegCreateKeyExA (HKEY hKey,
 			      &SubKeyString,
 			      OBJ_CASE_INSENSITIVE,
 			      (HANDLE)ParentKey,
-			      (PSECURITY_DESCRIPTOR)lpSecurityAttributes);
+			      lpSecurityAttributes ? (PSECURITY_DESCRIPTOR)lpSecurityAttributes->lpSecurityDescriptor : NULL);
   Status = CreateNestedKey(phkResult,
 			   &Attributes,
 			   (lpClass == NULL)? NULL : &ClassString,
@@ -1051,6 +1053,9 @@ RegCreateKeyExW (HKEY hKey,
 
   TRACE("RegCreateKeyExW() called\n");
 
+  if (lpSecurityAttributes && lpSecurityAttributes->nLength != sizeof(SECURITY_ATTRIBUTES))
+    return ERROR_INVALID_USER_BUFFER;
+
   /* get the real parent key */
   Status = MapDefaultKey (&ParentKey,
                           hKey);
@@ -1068,7 +1073,7 @@ RegCreateKeyExW (HKEY hKey,
 			      &SubKeyString,
 			      OBJ_CASE_INSENSITIVE,
 			      (HANDLE)ParentKey,
-			      (PSECURITY_DESCRIPTOR)lpSecurityAttributes);
+			      lpSecurityAttributes ? (PSECURITY_DESCRIPTOR)lpSecurityAttributes->lpSecurityDescriptor : NULL);
   Status = CreateNestedKey(phkResult,
 		           &Attributes,
                            (lpClass == NULL)? NULL : &ClassString,
