@@ -536,7 +536,7 @@ GetInheritanceSourceA (
 	PACL			pAcl,
 	PFN_OBJECT_MGR_FUNCTS	pfnArray  OPTIONAL,
 	PGENERIC_MAPPING	pGenericMapping,
-	PINHERITED_FROM		pInheritArray
+	PINHERITED_FROMA		pInheritArray
 	)
 {
     /* That's all this function does, at least up to w2k3... Even MS was too
@@ -609,14 +609,14 @@ InternalTrusteeAToW(IN PTRUSTEE_A pTrusteeA,
 
     //ASSERT(sizeof(TRUSTEE_W) == sizeof(TRUSTEE_A));
 
-    TrusteeForm = GetTrusteeForm(pTrusteeA);
+    TrusteeForm = GetTrusteeFormA(pTrusteeA);
     switch (TrusteeForm)
     {
         case TRUSTEE_IS_NAME:
         {
             /* directly copy the array, this works as the size of the EXPLICIT_ACCESS_A
                structure matches the size of the EXPLICIT_ACCESS_W version */
-            lpStr = GetTrusteeName(pTrusteeA);
+            lpStr = GetTrusteeNameA(pTrusteeA);
             if (lpStr != NULL)
                 BufferSize = strlen(lpStr) + 1;
 
@@ -800,7 +800,7 @@ InternalExplicitAccessAToW(IN ULONG cCountOfExplicitEntries,
         Size = cCountOfExplicitEntries * sizeof(EXPLICIT_ACCESS_W);
         for (i = 0; i != cCountOfExplicitEntries; i++)
         {
-            TrusteeForm = GetTrusteeForm(&pListOfExplicitEntriesA[i].Trustee);
+            TrusteeForm = GetTrusteeFormA(&pListOfExplicitEntriesA[i].Trustee);
 
             switch (TrusteeForm)
             {
@@ -852,7 +852,7 @@ InternalExplicitAccessAToW(IN ULONG cCountOfExplicitEntries,
                 peaw[i].grfInheritance = pListOfExplicitEntriesA[i].grfInheritance;
 
                 /* convert or copy the TRUSTEE structure */
-                TrusteeForm = GetTrusteeForm(&pListOfExplicitEntriesA[i].Trustee);
+                TrusteeForm = GetTrusteeFormA(&pListOfExplicitEntriesA[i].Trustee);
                 switch (TrusteeForm)
                 {
                     case TRUSTEE_IS_NAME:

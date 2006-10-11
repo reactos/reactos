@@ -916,7 +916,7 @@ LookupAccountSidW (
 			{
 				*pdwAccountName = dwSrcLen;
 				RtlCopyMemory ( pAccountName, TranslatedName->Name.Buffer, TranslatedName->Name.Length );
-                                pAccountName[TranslatedName->Name.Length / sizeof(WCHAR)] = L'\0';
+				                pAccountName[TranslatedName->Name.Length / sizeof(WCHAR)] = L'\0';
 			}
 			if ( peUse )
 				*peUse = TranslatedName->Use;
@@ -936,7 +936,7 @@ LookupAccountSidW (
 				{
 					*pdwDomainName = dwSrcLen;
 					RtlCopyMemory ( pDomainName, ReferencedDomain->Domains[0].Name.Buffer, ReferencedDomain->Domains[0].Name.Length );
-                                        pDomainName[ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR)] = L'\0';
+					                pDomainName[ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR)] = L'\0';
 				}
 			}
 		}
@@ -1960,7 +1960,7 @@ InternalfnProgressW(LPWSTR pObjectName,
                                 NULL,
                                 NULL);
 
-            pifnProgressData->fnProgress(pObjectNameA,
+            pifnProgressData->fnProgress((LPWSTR)pObjectNameA, /* FIXME: wrong cast!! */
                                          Status,
                                          pInvokeSetting,
                                          pifnProgressData->Args,
