@@ -123,11 +123,11 @@ extern "C" {
 #define TRUST_TYPE_MIT 3
 #define TRUST_TYPE_DCE 4
 
-#if !defined(_NTDEF_H) && !defined(_SUBAUTH_H)
+#if !defined(_NTDEF_)
 typedef LONG NTSTATUS, *PNTSTATUS;
 #endif
 
-#if defined (_NTDEF_H)
+#if defined (_NTDEF_)
 typedef UNICODE_STRING LSA_UNICODE_STRING, *PLSA_UNICODE_STRING;
 typedef STRING LSA_STRING, *PLSA_STRING;
 typedef OBJECT_ATTRIBUTES LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
@@ -157,6 +157,9 @@ typedef struct _LSA_OBJECT_ATTRIBUTES {
   PVOID SecurityDescriptor;
   PVOID SecurityQualityOfService;
 } LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
+
+typedef LSA_UNICODE_STRING UNICODE_STRING, *PUNICODE_STRING;
+typedef LSA_STRING STRING, *PSTRING ;
 
 #endif
 
@@ -373,13 +376,6 @@ typedef struct _LSA_TRANSLATED_NAME {
   LSA_UNICODE_STRING Name;
   LONG DomainIndex;
 } LSA_TRANSLATED_NAME, *PLSA_TRANSLATED_NAME;
-
-#if !defined(_NTDEF_) && !defined(UNICODE_STRING)
-typedef LSA_UNICODE_STRING UNICODE_STRING, *PUNICODE_STRING;
-#endif
-#if !defined(_NTDEF_) && !defined(STRING)
-typedef LSA_STRING STRING, *PSTRING ;
-#endif
 
 typedef struct _MSV1_0_INTERACTIVE_LOGON {
   MSV1_0_LOGON_SUBMIT_TYPE MessageType;

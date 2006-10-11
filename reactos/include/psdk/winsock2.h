@@ -380,6 +380,7 @@ struct sockproto {
 #define MSG_OOB	1
 #define MSG_PEEK	2
 #define MSG_DONTROUTE	4
+#define MSG_WAITALL	8
 #endif  /* ! (__INSIDE_CYGWIN__ || __INSIDE_MSYS__) */
 #define MSG_MAXIOVLEN	16
 #define MSG_PARTIAL	0x8000

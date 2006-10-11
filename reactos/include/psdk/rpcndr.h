@@ -12,6 +12,13 @@
 extern "C" {
 #endif
 #include <objfwd.h>
+
+#ifdef CONST_VTABLE
+#define CONST_VTBL const
+#else
+#define CONST_VTBL
+#endif
+
 #define TARGET_IS_NT50_OR_LATER 1
 #define TARGET_IS_NT40_OR_LATER 1
 #define TARGET_IS_NT351_OR_WIN95_OR_LATER 1

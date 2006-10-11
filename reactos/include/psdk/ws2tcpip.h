@@ -292,8 +292,42 @@ void WSAAPI freeaddrinfo (struct addrinfo*);
 int WSAAPI getaddrinfo (const char*,const char*,const struct addrinfo*,
 		        struct addrinfo**);
 
-char* WSAAPI gai_strerrorA(int);
-WCHAR* WSAAPI gai_strerrorW(int);
+#define GAI_STRERROR_BUFFER_SIZE    1024
+
+static __inline char*
+gai_strerrorA(int ecode)
+{
+    static char buff[GAI_STRERROR_BUFFER_SIZE + 1];
+
+    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+                   NULL,
+                   ecode,
+                   MAKELANGID(LANG_NEUTRAL,
+                              SUBLANG_DEFAULT),
+                   (LPSTR)buff,
+                   GAI_STRERROR_BUFFER_SIZE,
+                   NULL);
+
+    return buff;
+}
+
+static __inline WCHAR*
+gai_strerrorW(int ecode)
+{
+    static WCHAR buff[GAI_STRERROR_BUFFER_SIZE + 1];
+
+    FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+                   NULL,
+                   ecode,
+                   MAKELANGID(LANG_NEUTRAL,
+                              SUBLANG_DEFAULT),
+                   (LPWSTR)buff,
+                   GAI_STRERROR_BUFFER_SIZE,
+                   NULL);
+
+    return buff;
+}
+
 #ifdef UNICODE
 #define gai_strerror   gai_strerrorW
 #else
