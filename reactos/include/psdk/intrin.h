@@ -190,21 +190,21 @@ static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile l
 static __inline__ __attribute__((always_inline)) char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand)
 {
 	char retval = Comperand;
-	__asm__("lock; cmpxchgb %b[Exchange], %[Destination]" : "a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange) : "memory");
+	__asm__("lock; cmpxchgb %b[Exchange], %[Destination]" : "=a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange) : "memory");
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand)
 {
 	short retval = Comperand;
-	__asm__("lock; cmpxchgw %w[Exchange], %[Destination]" : "a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange): "memory");
+	__asm__("lock; cmpxchgw %w[Exchange], %[Destination]" : "=a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange): "memory");
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand)
 {
 	long retval = Comperand;
-	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : "a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange): "memory");
+	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : "=a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange): "memory");
 	return retval;
 }
 
@@ -219,7 +219,7 @@ static __inline__ __attribute__((always_inline)) long long _InterlockedCompareEx
 	__asm__
 	(
 		"cmpxchg8b %[Destination]" :
-		"a" (lo32Retval), "d" (hi32Retval) :
+		"=a" (lo32Retval), "=d" (hi32Retval) :
 		[Destination] "rm" (Destination), "b" (lo32Exchange), "c" (hi32Exchange) :
 		"memory"
 	);
@@ -244,28 +244,28 @@ static __inline__ __attribute__((always_inline)) long long _InterlockedCompareEx
 static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
 {
 	void * retval;
-	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : "a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange), "a" (Comperand) : "memory");
+	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : "=a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange), "a" (Comperand) : "memory");
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volatile long * const Target, const long Value)
 {
 	long retval = Value;
-	__asm__("lock; xchgl %[retval], %[Target]" : [retval] "r" (retval) : [Target] "rm" (Target) : "memory");
+	__asm__("lock; xchgl %[retval], %[Target]" : [retval] "=r" (retval) : [Target] "rm" (Target) : "memory");
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
 {
 	void * retval = Value;
-	__asm__("lock; xchgl %[retval], %[Target]" : [retval] "r" (retval) : [Target] "rm" (Target) : "memory");
+	__asm__("lock; xchgl %[retval], %[Target]" : [retval] "=r" (retval) : [Target] "rm" (Target) : "memory");
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * const Addend, const long Value)
 {
 	long retval = Value;
-	__asm__("lock; xaddl %[retval], %[Addend]" : "r" (retval) : "rm" (Addend));
+	__asm__("lock; xaddl %[retval], %[Addend]" : "=r" (retval) : "rm" (Addend));
 	return retval;
 }
 
