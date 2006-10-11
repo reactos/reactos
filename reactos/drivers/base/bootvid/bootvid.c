@@ -33,7 +33,7 @@
 
 /* GLOBALS *******************************************************************/
 
-static LONG ShutdownNotify;
+static volatile LONG ShutdownNotify;
 static KEVENT ShutdownCompleteEvent;
 
 /* DATA **********************************************************************/
