@@ -1163,6 +1163,7 @@ RPC_STATUS WINAPI RpcNetworkIsProtseqValidW(LPWSTR protseq) {
 RPC_STATUS WINAPI RpcImpersonateClient(RPC_BINDING_HANDLE BindingHandle)
 {
     FIXME("(%p): stub\n", BindingHandle);
+    ImpersonateSelf(SecurityImpersonation);
     return RPC_S_OK;
 }
 
@@ -1187,5 +1188,15 @@ RPC_STATUS WINAPI RpcImpersonateClient(RPC_BINDING_HANDLE BindingHandle)
 RPC_STATUS WINAPI RpcRevertToSelfEx(RPC_BINDING_HANDLE BindingHandle)
 {
     FIXME("(%p): stub\n", BindingHandle);
+    return RPC_S_OK;
+}
+
+/***********************************************************************
+ *             RpcRevertToSelf (RPCRT4.@)
+ */
+RPC_STATUS WINAPI RpcRevertToSelf(void)
+{
+    FIXME("stub\n");
+    RevertToSelf();
     return RPC_S_OK;
 }

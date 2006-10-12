@@ -458,7 +458,7 @@
 @ stub RpcProtseqVectorFreeW
 @ stdcall RpcRaiseException(long)
 @ stub RpcRegisterAsyncInfo
-@ stub RpcRevertToSelf
+@ stdcall RpcRevertToSelf()
 @ stdcall RpcRevertToSelfEx(ptr)
 @ stdcall RpcServerInqBindings(ptr)
 @ stub RpcServerInqCallAttributesA # wxp
