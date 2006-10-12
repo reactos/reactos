@@ -22,6 +22,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
+/* Unicode constants */
+static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
+
 /* context structure for the default queue callback */
 struct default_callback_context
 {
@@ -313,6 +316,7 @@ static void get_src_file_info( HINF hinf, struct file_op *op )
     }
     if (!op->src_path && !(op->style & SP_COPY_SOURCE_ABSOLUTE))
     {
+        len = len2 = 0;
         if (!(op->style & SP_COPY_SOURCEPATH_ABSOLUTE))
         {
             /* retrieve relative path for this disk */
@@ -331,7 +335,7 @@ static void get_src_file_info( HINF hinf, struct file_op *op )
                 ptr = op->src_path + strlenW(op->src_path);
                 if (len2 && ptr > op->src_path && ptr[-1] != '\\') *ptr++ = '\\';
             }
-            if (!SetupGetStringFieldW( &disk_ctx, 4, ptr, len2, NULL )) *ptr = 0;
+            if (!SetupGetStringFieldW( &file_ctx, 2, ptr, len2, NULL )) *ptr = 0;
         }
     }
     if (!op->src_root) op->src_root = PARSER_get_src_root(hinf);
@@ -486,6 +490,8 @@ BOOL WINAPI SetupQueueCopyIndirectW( PSP_FILE_COPY_PARAMS_W params )
     op->src_tag    = strdupW( params->SourceTagfile );
     op->dst_path   = strdupW( params->TargetDirectory );
     op->dst_file   = strdupW( params->TargetFilename );
+    if (params->SecurityDescriptor)
+        FIXME( "Need to apply %s to %s\n", debugstr_w( params->SecurityDescriptor ), debugstr_w( op->dst_file ));
 
     /* some defaults */
     if (!op->src_file) op->src_file = op->dst_file;
@@ -731,12 +737,43 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
                                     PCWSTR section, DWORD style )
 {
     SP_FILE_COPY_PARAMS_W params;
-    INFCONTEXT context;
+    LPWSTR security_key, security_descriptor = NULL;
+    INFCONTEXT context, security_context;
     WCHAR dest[MAX_PATH], src[MAX_PATH];
     INT flags;
+    DWORD required;
+    BOOL ret;
 
     TRACE( "hinf=%p/%p section=%s root=%s\n",
            hinf, hlist, debugstr_w(section), debugstr_w(src_root) );
+
+    /* Check for .Security section */
+    security_key = MyMalloc( (strlenW( section ) + strlenW( DotSecurity )) * sizeof(WCHAR) + sizeof(UNICODE_NULL) );
+    if (!security_key)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+    strcpyW( security_key, section );
+    strcatW( security_key, DotSecurity );
+    ret = SetupFindFirstLineW( hinf, security_key, NULL, &security_context );
+    MyFree(security_key);
+    if (ret)
+    {
+        if (!SetupGetLineText( &security_context, NULL, NULL, NULL, NULL, 0, &required ))
+            return FALSE;
+        security_descriptor = MyMalloc( required * sizeof(WCHAR) );
+        if (!security_descriptor)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+        if (!SetupGetLineText( &security_context, NULL, NULL, NULL, security_descriptor, required, NULL ))
+        {
+            MyFree( security_descriptor );
+            return FALSE;
+        }
+    }
 
     params.cbSize             = sizeof(params);
     params.QueueHandle        = queue;
@@ -747,23 +784,29 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     params.TargetFilename     = dest;
     params.CopyStyle          = style;
     params.LayoutInf          = hinf;
-    params.SecurityDescriptor = NULL;
+    params.SecurityDescriptor = security_descriptor;
 
+    ret = FALSE;
     if (!hlist) hlist = hinf;
     if (!hinf) hinf = hlist;
-    if (!SetupFindFirstLineW( hlist, section, NULL, &context )) return FALSE;
-    if (!(params.TargetDirectory = get_destination_dir( hinf, section ))) return FALSE;
+    if (!SetupFindFirstLineW( hlist, section, NULL, &context )) goto done;
+    if (!(params.TargetDirectory = get_destination_dir( hinf, section ))) goto done;
     do
     {
         if (!SetupGetStringFieldW( &context, 1, dest, sizeof(dest)/sizeof(WCHAR), NULL ))
-            return FALSE;
+            goto done;
         if (!SetupGetStringFieldW( &context, 2, src, sizeof(src)/sizeof(WCHAR), NULL )) *src = 0;
         if (!SetupGetIntField( &context, 4, &flags )) flags = 0;  /* FIXME */
 
         params.SourceFilename = *src ? src : NULL;
-        if (!SetupQueueCopyIndirectW( &params )) return FALSE;
+        if (!SetupQueueCopyIndirectW( &params )) goto done;
     } while (SetupFindNextLine( &context, &context ));
-    return TRUE;
+    ret = TRUE;
+
+done:
+    if (security_descriptor)
+        MyFree( security_descriptor );
+    return ret;
 }
 
 

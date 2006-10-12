@@ -89,6 +89,7 @@ static const WCHAR UnregisterDlls[]  = {'U','n','r','e','g','i','s','t','e','r',
 static const WCHAR ProfileItems[]    = {'P','r','o','f','i','l','e','I','t','e','m','s',0};
 static const WCHAR Include[]         = {'I','n','c','l','u','d','e',0};
 static const WCHAR Needs[]           = {'N','e','e','d','s',0};
+static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
 
 
 /***********************************************************************
@@ -386,12 +387,49 @@ static BOOL do_reg_operation( HKEY hkey, const WCHAR *value, INFCONTEXT *context
 static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
 {
     struct registry_callback_info *info = arg;
-    INFCONTEXT context;
+    LPWSTR security_key, security_descriptor;
+    INFCONTEXT context, security_context;
+    PSECURITY_DESCRIPTOR sd = NULL;
+    SECURITY_ATTRIBUTES security_attributes = { 0, };
     HKEY root_key, hkey;
+    DWORD required;
 
     BOOL ok = SetupFindFirstLineW( hinf, field, NULL, &context );
+    if (!ok)
+        return TRUE;
 
-    for (; ok; ok = SetupFindNextLine( &context, &context ))
+    /* Check for .Security section */
+    security_key = MyMalloc( (strlenW( field ) + strlenW( DotSecurity )) * sizeof(WCHAR) + sizeof(UNICODE_NULL) );
+    if (!security_key)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+    strcpyW( security_key, field );
+    strcatW( security_key, DotSecurity );
+    ok = SetupFindFirstLineW( hinf, security_key, NULL, &security_context );
+    MyFree(security_key);
+    if (ok)
+    {
+        if (!SetupGetLineText( &security_context, NULL, NULL, NULL, NULL, 0, &required ))
+            return FALSE;
+        security_descriptor = MyMalloc( required * sizeof(WCHAR) );
+        if (!security_descriptor)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+        if (!SetupGetLineText( &security_context, NULL, NULL, NULL, security_descriptor, required, NULL ))
+            return FALSE;
+        ok = ConvertStringSecurityDescriptorToSecurityDescriptorW( security_descriptor, SDDL_REVISION_1, &sd, NULL );
+        MyFree( security_descriptor );
+        if (!ok)
+            return FALSE;
+        security_attributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+        security_attributes.lpSecurityDescriptor = sd;
+    }
+
+    for (ok = TRUE; ok; ok = SetupFindNextLine( &context, &context ))
     {
         WCHAR buffer[MAX_INF_STRING_LENGTH];
         INT flags;
@@ -423,7 +461,8 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
         {
             if (RegOpenKeyW( root_key, buffer, &hkey )) continue;  /* ignore if it doesn't exist */
         }
-        else if (RegCreateKeyW( root_key, buffer, &hkey ))
+        else if (RegCreateKeyExW( root_key, buffer, 0, NULL, 0, MAXIMUM_ALLOWED,
+            sd ? &security_attributes : NULL, &hkey, NULL ))
         {
             ERR( "could not create key %p %s\n", root_key, debugstr_w(buffer) );
             continue;
@@ -438,10 +477,12 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
         if (!do_reg_operation( hkey, buffer, &context, flags ))
         {
             if (hkey != root_key) RegCloseKey( hkey );
+            if (sd) LocalFree( sd );
             return FALSE;
         }
         if (hkey != root_key) RegCloseKey( hkey );
     }
+    if (sd) LocalFree( sd );
     return TRUE;
 }
 
@@ -1274,6 +1315,8 @@ static BOOL InstallOneService(
     LPWSTR DisplayName = NULL;
     LPWSTR Description = NULL;
     LPWSTR Dependencies = NULL;
+    LPWSTR SecurityDescriptor = NULL;
+    PSECURITY_DESCRIPTOR sd = NULL;
     INT ServiceType, StartType, ErrorControl;
     DWORD dwRegType;
     DWORD tagId = (DWORD)-1;
@@ -1304,7 +1347,7 @@ static BOOL InstallOneService(
     hService = OpenServiceW(
         hSCManager,
         ServiceName,
-        GENERIC_READ | GENERIC_WRITE);
+        DELETE | SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG | WRITE_DAC);
     if (hService == NULL && GetLastError() != ERROR_SERVICE_DOES_NOT_EXIST)
         goto cleanup;
 
@@ -1322,7 +1365,7 @@ static BOOL InstallOneService(
             hSCManager,
             ServiceName,
             DisplayName,
-            0,
+            WRITE_DAC,
             ServiceType,
             StartType,
             ErrorControl,
@@ -1365,6 +1408,17 @@ static BOOL InstallOneService(
             (ServiceFlags & SPSVCINST_NOCLOBBER_DEPENDENCIES && ServiceConfig->lpDependencies) ? NULL : Dependencies,
             NULL, NULL,
             (ServiceFlags & SPSVCINST_NOCLOBBER_DISPLAYNAME && ServiceConfig->lpDisplayName) ? NULL : DisplayName);
+        if (!ret)
+            goto cleanup;
+    }
+
+    /* Set security */
+    if (GetLineText(hInf, ServiceSection, L"Security", &SecurityDescriptor))
+    {
+        ret = ConvertStringSecurityDescriptorToSecurityDescriptorW(SecurityDescriptor, SDDL_REVISION_1, &sd, NULL);
+        if (!ret)
+            goto cleanup;
+        ret = SetServiceObjectSecurity(hService, DACL_SECURITY_INFORMATION, sd);
         if (!ret)
             goto cleanup;
     }
@@ -1462,12 +1516,15 @@ cleanup:
         CloseServiceHandle(hService);
     if (hGroupOrderListKey != NULL)
         RegCloseKey(hGroupOrderListKey);
+    if (sd != NULL)
+        LocalFree(sd);
     MyFree(ServiceConfig);
     MyFree(ServiceBinary);
     MyFree(LoadOrderGroup);
     MyFree(DisplayName);
     MyFree(Description);
     MyFree(Dependencies);
+    MyFree(SecurityDescriptor);
     MyFree(GroupOrder);
 
     TRACE("Returning %d\n", ret);

@@ -2270,8 +2270,8 @@ SetupDiCreateDevRegKeyW(
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 goto cleanup;
             }
-            strcpyW(DriverKey, L"{");
-            strcatW(DriverKey, lpGuidString);
+            DriverKey[0] = '{';
+            strcpyW(&DriverKey[1], lpGuidString);
             strcatW(DriverKey, L"}\\");
             pDeviceInstance = &DriverKey[strlenW(DriverKey)];
             rc = RegOpenKeyExW(RootKey,
