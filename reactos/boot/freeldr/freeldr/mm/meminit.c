@@ -362,7 +362,7 @@ ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG Pa
 
 			if (AvailablePagesSoFar >= PagesNeeded)
 			{
-				return Index;
+				return Index - AvailablePagesSoFar + 1;
 			}
 		}
 	}
