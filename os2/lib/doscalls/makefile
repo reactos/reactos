@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2004/01/31 01:29:11 robertk Exp $
+# $Id$
 
 PATH_TO_TOP = ../../../reactos
 

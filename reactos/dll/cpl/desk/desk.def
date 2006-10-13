@@ -1,7 +1,0 @@
-LIBRARY desk.cpl
-
-EXPORTS
-CPlApplet@16
-DisplayClassInstaller@12
-
-; EOF

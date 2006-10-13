@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2004/02/06 08:21:54 fireball Exp $
+# $Id$
 #
 # ReactOS Operating System - .def converter for HAL and the kernel
 #

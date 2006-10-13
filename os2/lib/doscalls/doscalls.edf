@@ -1,4 +1,4 @@
-; $Id: doscalls.edf,v 1.4 2004/01/31 01:29:11 robertk Exp $
+; $Id$
 ;
 ; Def for doscalls.dll - part of the OS/2-sub system
 ; for ReactOS. Provides Access to OS/2 kernel services.

@@ -1,5 +1,0 @@
-#include "resource.h"
-
-#include "de.rc"
-#include "en.rc"
-#include "uk.rc"

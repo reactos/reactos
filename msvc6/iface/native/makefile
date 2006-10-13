@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2004/02/06 08:21:56 fireball Exp $
+# $Id$
 #
 # ReactOS Operating System - MSVC6 Zw functions stubs to call generator
 #

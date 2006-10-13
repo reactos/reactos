@@ -1,4 +1,4 @@
-/* $Id: mm_mminit_msvc.c,v 1.1 2004/02/06 08:22:01 fireball Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 

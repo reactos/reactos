@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2003/01/07 16:23:10 robd Exp $
+# $Id$
 #
 #
 
