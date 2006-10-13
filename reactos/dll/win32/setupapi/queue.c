@@ -35,15 +35,16 @@ struct default_callback_context
 
 struct file_op
 {
-    struct file_op *next;
-    UINT            style;
-    WCHAR          *src_root;
-    WCHAR          *src_path;
-    WCHAR          *src_file;
-    WCHAR          *src_descr;
-    WCHAR          *src_tag;
-    WCHAR          *dst_path;
-    WCHAR          *dst_file;
+    struct file_op       *next;
+    UINT                  style;
+    WCHAR                *src_root;
+    WCHAR                *src_path;
+    WCHAR                *src_file;
+    WCHAR                *src_descr;
+    WCHAR                *src_tag;
+    WCHAR                *dst_path;
+    WCHAR                *dst_file;
+    PSECURITY_DESCRIPTOR  dst_sd;
 };
 
 struct file_op_queue
@@ -121,6 +122,7 @@ static void free_file_op_queue( struct file_op_queue *queue )
         HeapFree( GetProcessHeap(), 0, op->src_descr );
         HeapFree( GetProcessHeap(), 0, op->src_tag );
         HeapFree( GetProcessHeap(), 0, op->dst_path );
+        if (op->dst_sd) LocalFree( op->dst_sd);
         if (op->dst_file != op->src_file) HeapFree( GetProcessHeap(), 0, op->dst_file );
         t = op;
         op = op->next;
@@ -490,8 +492,9 @@ BOOL WINAPI SetupQueueCopyIndirectW( PSP_FILE_COPY_PARAMS_W params )
     op->src_tag    = strdupW( params->SourceTagfile );
     op->dst_path   = strdupW( params->TargetDirectory );
     op->dst_file   = strdupW( params->TargetFilename );
+    op->dst_sd     = NULL;
     if (params->SecurityDescriptor)
-        FIXME( "Need to apply %s to %s\n", debugstr_w( params->SecurityDescriptor ), debugstr_w( op->dst_file ));
+        ConvertStringSecurityDescriptorToSecurityDescriptorW( params->SecurityDescriptor, SDDL_REVISION_1, &op->dst_sd, NULL );
 
     /* some defaults */
     if (!op->src_file) op->src_file = op->dst_file;
@@ -1209,6 +1212,25 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
                 op_result = handler( context, SPFILENOTIFY_COPYERROR,
                                      (UINT_PTR)&paths, (UINT_PTR)newpath );
                 if (op_result == FILEOP_ABORT) goto done;
+            }
+            if (op->dst_sd)
+            {
+                PSID psidOwner = NULL, psidGroup = NULL;
+                PACL pDacl = NULL, pSacl = NULL;
+                SECURITY_INFORMATION security_info = 0;
+                BOOL present, dummy;
+
+                if (GetSecurityDescriptorOwner( op->dst_sd, &psidOwner, &dummy ) && psidOwner)
+                    security_info |= OWNER_SECURITY_INFORMATION;
+                if (GetSecurityDescriptorGroup( op->dst_sd, &psidGroup, &dummy ) && psidGroup)
+                    security_info |= GROUP_SECURITY_INFORMATION;
+                if (GetSecurityDescriptorDacl( op->dst_sd, &present, &pDacl, &dummy ))
+                    security_info |= DACL_SECURITY_INFORMATION;
+                if (GetSecurityDescriptorSacl( op->dst_sd, &present, &pSacl, &dummy ))
+                    security_info |= DACL_SECURITY_INFORMATION;
+                SetNamedSecurityInfoW( (LPWSTR)paths.Target, SE_FILE_OBJECT, security_info,
+                    psidOwner, psidGroup, pDacl, pSacl );
+                /* Yes, ignore the return code... */
             }
             handler( context, SPFILENOTIFY_ENDCOPY, (UINT_PTR)&paths, 0 );
         }

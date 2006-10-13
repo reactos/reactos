@@ -29,6 +29,7 @@
 
 #define WIN32_NO_STATUS
 #include <windows.h>
+#include <aclapi.h>
 #include <cfgmgr32.h>
 #include <fdi.h>
 #include <regstr.h>
