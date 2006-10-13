@@ -823,7 +823,7 @@ FailOpenService:
     }
 
 Cleanup:
-    if (lpPath != NULL)
+    if (lpPath != NULL && lpPath != pObjectName)
     {
         LocalFree((HLOCAL)lpPath);
     }
