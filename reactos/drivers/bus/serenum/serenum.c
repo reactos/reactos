@@ -7,7 +7,7 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
-//#define NDEBUG
+#define NDEBUG
 #define INITGUID
 #include "serenum.h"
 
@@ -51,9 +51,7 @@ IrpStub(
 			{
 				DPRINT1("Serenum: FDO stub for major function 0x%lx\n",
 					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
-#ifndef NDEBUG
-				DbgBreakPoint();
-#endif
+				ASSERT(FALSE);
 				Status = Irp->IoStatus.Status;
 			}
 		}
@@ -74,9 +72,7 @@ IrpStub(
 			{
 				DPRINT1("Serenum: PDO stub for major function 0x%lx\n",
 					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
-#ifndef NDEBUG
-				DbgBreakPoint();
-#endif
+				ASSERT(FALSE);
 				Status = Irp->IoStatus.Status;
 			}
 		}
