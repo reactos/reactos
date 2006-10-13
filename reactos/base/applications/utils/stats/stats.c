@@ -443,13 +443,9 @@ IsOptionSet(TCHAR *Option)
 }
 
 
-int
-main (int argc, char * argv [])
+int _tmain(int argc, _TCHAR * argv[])
 {
   int a;
-#if UNICODE
-  TCHAR Path[MAX_PATH + 1];
-#endif
 
   _tprintf (_T("ReactOS Project Statistics\n"));
   _tprintf (_T("==========================\n\n"));
@@ -469,28 +465,13 @@ main (int argc, char * argv [])
 
   for(a = 1; a < argc - 1; a++)
   {
-#if UNICODE
-    int len = lstrlenA(argv[a]);
-    TCHAR *str = (TCHAR*)HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(TCHAR));
-    if(MultiByteToWideChar(CP_ACP, 0, argv[a], -1, str, len + 1) > 0)
-      Options[a - 1] = str;
-    else
-      Options[a - 1] = NULL;
-#else
     Options[a - 1] = argv[a];
-#endif
   }
 
   SkipEmptyLines = IsOptionSet(_T("-e"));
   BeSilent = IsOptionSet(_T("-s"));
 
-#if UNICODE
-  ZeroMemory(Path, sizeof(Path));
-  if(MultiByteToWideChar(CP_ACP, 0, argv[argc - 1], -1, Path, MAX_PATH) > 0)
-    Execute (Path);
-#else
   Execute (argv[argc - 1]);
-#endif
   Cleanup();
 
   return 0;
