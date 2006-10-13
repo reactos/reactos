@@ -46,7 +46,7 @@ static int m_argc = 0;
 static char **m_argv = NULL;
 
 /* patch buffer where we put the patch info into */
-static unsigned char m_patchBuffer[SIZEOF_PATCH_BUFFER_MAGIC + PATCH_BUFFER_SIZE] =
+static char m_patchBuffer[SIZEOF_PATCH_BUFFER_MAGIC + PATCH_BUFFER_SIZE] =
    PATCH_BUFFER_MAGIC;
 
 /** HELPER FUNCTIONS **********************************************************/
@@ -211,7 +211,7 @@ compareFiles(
 static int
 outputPatch(const char *outputFileName)
 {
-   unsigned char *patchExe, *patchBuffer = NULL;
+   char *patchExe, *patchBuffer = NULL;
    int i, size, patchExeSize, patchSize, stringSize, stringOffset, patchOffset;
    Patch *patch;
    PatchedFile *files;
