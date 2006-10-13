@@ -12,9 +12,10 @@
  * 2004-01-10 Emanuele Aliberti
  *
  */
+#define WIN32_NO_STATUS
 #include <windows.h>
-#include <ntddk.h>
-
+#include <stdlib.h>
+#include <ntndk.h>
 #include <stdio.h>
 
 int main (int argc, char * argv [])

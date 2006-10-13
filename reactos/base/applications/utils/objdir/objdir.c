@@ -17,11 +17,11 @@
  * 		Added -r option.
  */
 
-#include <ntddk.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#include <windows.h>
 #include <stdlib.h>
+#include <ntndk.h>
+#include <stdio.h>
 
 #define MAX_DIR_ENTRY 256
 

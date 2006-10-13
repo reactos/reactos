@@ -2,13 +2,11 @@
  * partinfo - partition info program
  */
 
+#define WIN32_NO_STATUS
 #include <windows.h>
-//#include <winioctl.h>
-#include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
-
-#include <ntddk.h>
+#include <ntndk.h>
+#include <stdio.h>
 
 //#define DUMP_DATA
 #define DUMP_SIZE_INFO
