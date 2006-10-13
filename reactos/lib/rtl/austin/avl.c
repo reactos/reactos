@@ -36,8 +36,11 @@
 
 void avl_init(udict_t *ud)
 {
-	ud->sentinel.left = ud->sentinel.right = ud->sentinel.parent = 
-		&ud->sentinel;
+	ud->BalancedRoot.left = ud->BalancedRoot.right = 
+	ud->BalancedRoot.parent = (udict_node_t*)
+		ud->AllocateRoutine(ud, sizeof(udict_node_t));
+	ud->BalancedRoot.parent->left = ud->BalancedRoot.parent->right =
+		ud->BalancedRoot.parent->parent = ud->BalancedRoot.parent;
 }
 
 void RotateLeft(udict_node_t **top)
@@ -197,7 +200,7 @@ void avl_insert_node(udict_t *ud, udict_node_t *node)
 	node->right = nil;
 	node->balance = BALANCED;
 
-	if (Insert(ud, node, &nil->left, nil)) {
+	if (Insert(ud, node, &ud->BalancedRoot.left, nil)) {
 		nil->balance = LEFTHEAVY;
 	}/*if*/
 
@@ -253,6 +256,7 @@ void avl_delete_node(udict_t *ud, udict_node_t *node)
 		/* root has been deleted */
 		if (child == nil) {
 			parent->balance = BALANCED;
+			ud->BalancedRoot.left = nil;
 		}/*if*/
 	}/*if*/
 
@@ -297,9 +301,16 @@ void avl_delete_node(udict_t *ud, udict_node_t *node)
 	}/*while*/
 }/*avl_delete*/
 
+void *avl_get_data(udict_node_t *here) {
+	return data(here);
+}
+
 int avl_search(udict_t *ud, void *_key, udict_node_t *here, udict_node_t **where)
 {
 	int result;
+
+	if (avl_is_nil(ud, here))
+		return TableInsertAsLeft;
 
 	result = ud->compare(ud, _key, key(here));	
 
@@ -309,14 +320,14 @@ int avl_search(udict_t *ud, void *_key, udict_node_t *here, udict_node_t **where
 	}
 
 	if (result == LESS) {
-		if( here->left == &ud->sentinel ) {
+		if( here->left == tree_null_priv(ud) ) {
 			*where = here;
 			return TableInsertAsLeft;
 		}
 		return avl_search(ud, _key, here->left, where);
 	}/*if*/
 	else {
-		if( here->right == &ud->sentinel ) {
+		if( here->right == tree_null_priv(ud) ) {
 			*where = here;
 			return TableInsertAsRight;
 		}
@@ -326,7 +337,7 @@ int avl_search(udict_t *ud, void *_key, udict_node_t *here, udict_node_t **where
 
 int avl_is_nil(udict_t *ud, udict_node_t *node)
 {
-	return &ud->sentinel == node;
+	return tree_null_priv(ud) == node;
 }
 
 udict_node_t *avl_first(udict_t *ud)

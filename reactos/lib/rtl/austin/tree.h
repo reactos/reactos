@@ -36,6 +36,6 @@ void udict_tree_convert_from_list(udict_t *);
 void udict_tree_rotate_left(udict_node_t *, udict_node_t *);
 void udict_tree_rotate_right(udict_node_t *, udict_node_t *);
 
-#define tree_root_priv(T) ((T)->sentinel.left)
-#define tree_null_priv(L) (&(L)->sentinel)
+#define tree_root_priv(T) ((T)->BalancedRoot.left)
+#define tree_null_priv(L) ((L)->BalancedRoot.parent)
 #define TREE_DEPTH_MAX 64

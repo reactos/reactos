@@ -60,7 +60,7 @@ RtlLookupElementGenericTableFullAvl (
 	PRTL_BALANCED_LINKS OurNodeOrParent;
 	TABLE_SEARCH_RESULT OurSearchResult;
 
-	if( Table->NumberGenericTableElements )
+	if( !Table->NumberGenericTableElements )
 	{
 		*SearchResult = TableEmptyTree;
 		*NodeOrParent = NULL;
@@ -68,7 +68,8 @@ RtlLookupElementGenericTableFullAvl (
 	}
 
 	OurSearchResult = avl_search
-		(Table, Buffer, &Table->BalancedRoot, &OurNodeOrParent);
+		(Table, Buffer, 
+		 Table->BalancedRoot.LeftChild, &OurNodeOrParent);
 
 	if(SearchResult) *SearchResult = OurSearchResult;
 	if(NodeOrParent) *NodeOrParent = OurNodeOrParent;
@@ -129,7 +130,7 @@ RtlDeleteElementGenericTableAvl (
 
 	if( Result == TableFoundNode ) 
 	{
-		avl_delete_node(Table, Buffer);
+		avl_delete_node(Table, Node);
 		Table->FreeRoutine(Table, Node);
 		return TRUE;
 	}
@@ -169,18 +170,15 @@ RtlEnumerateGenericTableAvl (
 	if( Restart )
 	{
 		Table->RestartKey = avl_first(Table);
-		return avl_data(Table->RestartKey);
 	}
 	else
 	{
 		Table->RestartKey = avl_next(Table, Table->RestartKey);
-		if( avl_is_nil(Table, Table->RestartKey) )
-			return NULL;
-		else
-			return avl_data(Table->RestartKey);
 	}
-
-	return 0;
+	if( !Table->RestartKey )
+		return NULL;
+	else
+		return avl_data(Table->RestartKey);
 }
 
 /*
@@ -363,25 +361,19 @@ RtlInsertElementGenericTableFullAvl (
 	if(NewElement)
 		*NewElement = FALSE;
 
-	if( Table->NumberGenericTableElements )
-	{
-		OurSearchResult = TableEmptyTree;
-		OurNodeOrParent = NULL;
-		return NULL;
-	}
-
 	OurSearchResult = avl_search
-		(Table, Buffer, &Table->BalancedRoot, &OurNodeOrParent);
+		(Table, Buffer, 
+		 Table->BalancedRoot.LeftChild, &OurNodeOrParent);
 
 	if(NodeOrParent) *NodeOrParent = OurNodeOrParent;
 	if(SearchResult) *SearchResult = OurSearchResult;
 
 	if(OurSearchResult == TableFoundNode) 
 	{
-		if(NewElement)
-			*NewElement = TRUE;
-		RtlCopyMemory(avl_data(OurNodeOrParent), Buffer, BufferSize);
-		return avl_data(OurNodeOrParent);
+		RtlDeleteElementGenericTableAvl(Table, Buffer);
+		return RtlInsertElementGenericTableFullAvl
+			(Table, Buffer, BufferSize, 
+			 NewElement, NodeOrParent, SearchResult);
 	}
 	else
 	{
@@ -392,6 +384,7 @@ RtlInsertElementGenericTableFullAvl (
 
 		if( !NewNode ) return NULL;
 
+		NewNode->Balance = 0;
 		RtlCopyMemory(avl_data(NewNode), Buffer, BufferSize);
 
 		OurNodeOrParent = NewNode;

@@ -47,5 +47,5 @@
 #define nodefree FreeRoutine
 #define context TableContext
 
-#define assert(x) { if(x) { RtlAssert(#x, __FILE__, __LINE__, NULL); } }
+#define assert(x) { if(!(x)) { RtlAssert(#x, __FILE__, __LINE__, NULL); } }
 

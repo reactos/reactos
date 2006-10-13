@@ -82,7 +82,7 @@ void udict_tree_delete(udict_t *ud, udict_node_t *node, udict_node_t **pswap, ud
 	if (node == delparent->left) {
 	    delparent->left = child;    
 	} else {
-	    assert (node == delparent->right);
+	    //assert (node == delparent->right);
 	    delparent->right = child;
 	}
     }

@@ -56,9 +56,9 @@ typedef enum {
 } udict_rb_color_t;
 
 typedef enum {
-    udict_balanced,
-    udict_leftheavy,
-    udict_rightheavy
+    udict_balanced = 0,
+    udict_leftheavy = -1,
+    udict_rightheavy = 1
 } udict_avl_balance_t;
 
 typedef union {
