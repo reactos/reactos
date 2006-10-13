@@ -544,7 +544,6 @@ ScmrSetServiceObjectSecurity(handle_t BindingHandle,
                              unsigned char *lpSecurityDescriptor,
                              unsigned long dwSecuityDescriptorSize)
 {
-#if 0
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
     ULONG DesiredAccess = 0;
@@ -563,28 +562,29 @@ ScmrSetServiceObjectSecurity(handle_t BindingHandle,
     }
 
     if (dwSecurityInformation == 0 ||
-        dwSecurityInformation & ~0xF)
-        return 0x57;
+        dwSecurityInformation & ~(OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION
+        | DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION))
+        return ERROR_INVALID_PARAMETER;
 
     if (!RtlValidSecurityDescriptor((PSECURITY_DESCRIPTOR)lpSecurityDescriptor))
-        return 0x57;
+        return ERROR_INVALID_PARAMETER;
 
     if (dwSecurityInformation & SACL_SECURITY_INFORMATION)
         DesiredAccess |= ACCESS_SYSTEM_SECURITY;
 
     if (dwSecurityInformation & DACL_SECURITY_INFORMATION)
-        DesiredAccess |= 0x40000;
+        DesiredAccess |= WRITE_DAC;
 
     if (dwSecurityInformation & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
-        DesiredAccess |= 0x80000;
+        DesiredAccess |= WRITE_OWNER;
 
     if ((dwSecurityInformation & OWNER_SECURITY_INFORMATION) &&
         (((PSECURITY_DESCRIPTOR)lpSecurityDescriptor)->Owner == NULL))
-        return 0x57;
+        return ERROR_INVALID_PARAMETER;
 
     if ((dwSecurityInformation & GROUP_SECURITY_INFORMATION) &&
         (((PSECURITY_DESCRIPTOR)lpSecurityDescriptor)->Group == NULL))
-        return 0x57;
+        return ERROR_INVALID_PARAMETER;
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   DesiredAccess))
@@ -601,21 +601,22 @@ ScmrSetServiceObjectSecurity(handle_t BindingHandle,
     }
 
     if (lpService->bDeleted)
-        return 0x430;
+        return ERROR_SERVICE_MARKED_FOR_DELETE;
 
-//    RpcImpersonateClient(NULL);
+    RpcImpersonateClient(NULL);
 
     Status = NtOpenThreadToken(NtCurrentThread(),
                                8,
-                               1,
+                               TRUE,
                                &hToken);
     if (!NT_SUCCESS(Status))
         return RtlNtStatusToDosError(Status);
 
-//    RpcRevertToSelf();
+    RpcRevertToSelf();
 
     /* FIXME: Lock service database */
 
+#if 0
     Status = RtlSetSecurityObject(dwSecurityInformation,
                                   (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
                                   &lpService->lpSecurityDescriptor,
@@ -626,33 +627,32 @@ ScmrSetServiceObjectSecurity(handle_t BindingHandle,
         dwError = RtlNtStatusToDosError(Status);
         goto Done;
     }
+#endif
 
     dwError = ScmOpenServiceKey(lpService->lpServiceName,
-                                0x20006,
+                                READ_CONTROL | KEY_CREATE_SUB_KEY | KEY_SET_VALUE,
                                 &hServiceKey);
     if (dwError != ERROR_SUCCESS)
         goto Done;
 
+    DPRINT1("Stub: ScmrSetServiceObjectSecurity() is unimplemented\n");
+    dwError = ERROR_SUCCESS;
 //    dwError = ScmWriteSecurityDescriptor(hServiceKey,
 //                                         lpService->lpSecurityDescriptor);
 
     RegFlushKey(hServiceKey);
     RegCloseKey(hServiceKey);
 
-Done:;
+Done:
 
     if (hToken != NULL)
         NtClose(hToken);
 
     /* FIXME: Unlock service database */
 
-    DPRINT1("ScmrSetServiceObjectSecurity() done (Error %lu)\n", dwError);
+    DPRINT("ScmrSetServiceObjectSecurity() done (Error %lu)\n", dwError);
 
     return dwError;
-#endif
-
-    DPRINT1("ScmrSetServiceObjectSecurity() is unimplemented\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
