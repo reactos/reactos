@@ -1,4 +1,4 @@
-/* $Id: gl.h 12852 2005-01-06 13:58:04Z mf $ */
+/* $Id: gl.h,v 1.3 2003/08/25 02:02:37 dannysmith Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -1452,7 +1452,7 @@ GLAPI void APIENTRY glSamplePass( GLenum pass );
 /* Include external definitions of OpenGL extensions */
 /* Removed, see this bug report for reference:
  * http://sourceforge.net/tracker/index.php?func=detail&aid=610178&group_id=2435&atid=102435
- *
+ * 
  * #include <GL/glext.h>
  */
 

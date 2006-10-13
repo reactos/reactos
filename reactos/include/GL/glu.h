@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-**
+** 
 ** http://oss.sgi.com/projects/FreeB
-**
+** 
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-**
+** 
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-**
+** 
 ** Additional Notice Provisions: This software was created using the
 ** OpenGL(R) version 1.2.1 Sample Implementation published by SGI, but has
 ** not been independently verified as being compliant with the OpenGL(R)
@@ -34,6 +34,7 @@
 #pragma GCC system_header
 #endif
 
+#include <stddef.h> /* for wchar_t */
 #include <GL/gl.h>
 
 #ifdef __cplusplus
@@ -104,6 +105,16 @@ extern "C" {
 #define GLU_NURBS_ERROR36                  100286
 #define GLU_NURBS_ERROR37                  100287
 
+/* NurbsProperty */
+#define GLU_AUTO_LOAD_MATRIX               100200
+#define GLU_CULLING                        100201
+#define GLU_SAMPLING_TOLERANCE             100203
+#define GLU_DISPLAY_MODE                   100204
+#define GLU_PARAMETRIC_TOLERANCE           100202
+#define GLU_SAMPLING_METHOD                100205
+#define GLU_U_STEP                         100206
+#define GLU_V_STEP                         100207
+
 /* NurbsSampling */
 #define GLU_PATH_LENGTH                    100215
 #define GLU_PARAMETRIC_ERROR               100216
@@ -120,7 +131,7 @@ extern "C" {
 #define GLU_SILHOUETTE                     100013
 
 /* QuadricCallback */
-/*      GLU_ERROR */
+#define GLU_ERROR                          100103
 
 /* QuadricNormal */
 #define GLU_SMOOTH                         100000
