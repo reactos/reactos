@@ -1,4 +1,7 @@
 <group>
+<directory name="binpatch">
+	<xi:include href="binpatch/binpatch.rbuild" />
+</directory>
 <directory name="ps">
 	<xi:include href="ps/ps.rbuild" />
 </directory>

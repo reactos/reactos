@@ -211,7 +211,7 @@ compareFiles(
 static int
 outputPatch(const char *outputFileName)
 {
-   unsigned char *patchExe, *patchBuffer;
+   unsigned char *patchExe, *patchBuffer = NULL;
    int i, size, patchExeSize, patchSize, stringSize, stringOffset, patchOffset;
    Patch *patch;
    PatchedFile *files;
