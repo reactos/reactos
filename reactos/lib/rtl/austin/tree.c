@@ -30,9 +30,15 @@ void udict_tree_delete(udict_t *ud, udict_node_t *node, udict_node_t **pswap, ud
     udict_node_t *nil = tree_null_priv(ud), *child, *delparent = node->parent;
     udict_node_t *next = node, *nextparent;
 
+    if( tree_root_priv(ud) == node )
+	delparent = &ud->BalancedRoot;
+
     if (node->left != nil && node->right != nil) {
 	next = udict_tree_next(ud, node);
 	nextparent = next->parent;
+
+	if( tree_root_priv(ud) == next )
+	    nextparent = &ud->BalancedRoot;
 
 	assert (next != nil);
 	assert (next->parent != nil);
@@ -76,20 +82,19 @@ void udict_tree_delete(udict_t *ud, udict_node_t *node, udict_node_t **pswap, ud
 	assert (node->left == nil || node->right == nil);
 
 	child = (node->left != nil) ? node->left : node->right;
-
 	child->parent = delparent = node->parent;	    
 
 	if (node == delparent->left) {
 	    delparent->left = child;    
 	} else {
-	    //assert (node == delparent->right);
+	    assert (node == delparent->right);
 	    delparent->right = child;
 	}
     }
 
-    node->parent = 0;
-    node->right = 0;
-    node->left = 0;
+    node->parent = nil;
+    node->right = nil;
+    node->left = nil;
 
     ud->nodecount--;
 

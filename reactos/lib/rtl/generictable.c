@@ -132,6 +132,8 @@ RtlDeleteElementGenericTableAvl (
 	{
 		avl_delete_node(Table, Node);
 		Table->FreeRoutine(Table, Node);
+		if( Table->NumberGenericTableElements == 0 ) 
+			avl_deinit(Table);
 		return TRUE;
 	}
 	else
@@ -303,7 +305,6 @@ RtlInitializeGenericTableAvl(IN OUT PRTL_AVL_TABLE Table,
   Table->AllocateRoutine = AllocateRoutine;
   Table->FreeRoutine = FreeRoutine;
   Table->TableContext = TableContext;
-  avl_init(Table);
 }
 
 
@@ -357,6 +358,10 @@ RtlInsertElementGenericTableFullAvl (
 {
 	PRTL_BALANCED_LINKS OurNodeOrParent;
 	TABLE_SEARCH_RESULT OurSearchResult;
+
+	if(Table->NumberGenericTableElements == 0) {
+		avl_init(Table);
+	}
 
 	if(NewElement)
 		*NewElement = FALSE;

@@ -34,6 +34,38 @@
 #define LESS GenericLessThan
 #define GREATER GenericGreaterThan
 
+void print_node(udict_t *ud, udict_node_t *node, int indent)
+{
+	int i;
+	char buf[100];
+	udict_node_t *nil = ud->BalancedRoot.Parent;
+
+	for( i = 0; i < indent; i++ ) buf[i] = ' ';
+	if( node == ud->BalancedRoot.Parent ) {
+		sprintf(buf+i, "Nil\n");
+		DbgPrint("%s", buf);
+	} else {
+		sprintf(buf+i, "Node %x (parent %x: balance %d)\n", (int)node, (int)node->parent, node->Balance);
+		DbgPrint("%s", buf);
+		if( node->LeftChild != nil ) {
+			sprintf(buf+i, "--> Left\n");
+			DbgPrint("%s", buf);
+			print_node(ud, node->LeftChild, indent+1);
+		}
+		if( node->RightChild != nil ) {
+			sprintf(buf+i, "--> Right\n");
+			DbgPrint("%s", buf);
+			print_node(ud, node->RightChild, indent+1);
+		}
+	}
+}
+
+void print_tree(udict_t *ud)
+{
+	DbgPrint("TREE %x (Nil %x)\n", ud, ud->BalancedRoot.Parent);
+	print_node(ud, &ud->BalancedRoot, 0);
+}
+
 void avl_init(udict_t *ud)
 {
 	ud->BalancedRoot.left = ud->BalancedRoot.right = 
@@ -43,7 +75,12 @@ void avl_init(udict_t *ud)
 		ud->BalancedRoot.parent->parent = ud->BalancedRoot.parent;
 }
 
-void RotateLeft(udict_node_t **top)
+void avl_deinit(udict_t *ud)
+{
+	ud->FreeRoutine(ud, ud->BalancedRoot.parent);
+}
+
+static void RotateLeft(udict_node_t **top)
 {
 	udict_node_t *parent = *top;
 	udict_node_t *child = parent->right;
@@ -56,7 +93,7 @@ void RotateLeft(udict_node_t **top)
 	*top = child;
 }/*RotateLeft*/
 
-void RotateRight(udict_node_t **top)
+static void RotateRight(udict_node_t **top)
 {
 	udict_node_t *parent = *top;
 	udict_node_t *child = parent->left;
@@ -69,7 +106,7 @@ void RotateRight(udict_node_t **top)
 	*top = child;
 }/*RotateRight*/
 
-void FixBalance(udict_node_t **pnode, udict_avl_balance_t bal)
+static void FixBalance(udict_node_t **pnode, udict_avl_balance_t bal)
 {
 	udict_node_t *node = *pnode;
 	udict_node_t *child;
@@ -157,7 +194,7 @@ void FixBalance(udict_node_t **pnode, udict_avl_balance_t bal)
 	}/*else*/
 }/*FixBalance*/
 
-int Insert(udict_t *ud, udict_node_t *what, udict_node_t **where, udict_node_t *parent)
+static int Insert(udict_t *ud, udict_node_t *what, udict_node_t **where, udict_node_t *parent)
 {
 	udict_node_t *here = *where;
 	int result;
@@ -169,6 +206,8 @@ int Insert(udict_t *ud, udict_node_t *what, udict_node_t **where, udict_node_t *
 	}/*if*/
 	else {
 		result = ud->compare(ud, key(what), key(here));	
+
+		assert (result != GenericEqual);
 
 		if (result == LESS) {
 			if (Insert(ud, what, &here->left, here)) {
@@ -203,6 +242,13 @@ void avl_insert_node(udict_t *ud, udict_node_t *node)
 	if (Insert(ud, node, &ud->BalancedRoot.left, nil)) {
 		nil->balance = LEFTHEAVY;
 	}/*if*/
+
+	if (ud->BalancedRoot.left == node) {
+		node->parent = &ud->BalancedRoot;
+		ud->BalancedRoot.balance = LEFTHEAVY;
+	}
+
+	print_tree(ud);
 
 	ud->nodecount++;
 }
@@ -263,7 +309,6 @@ void avl_delete_node(udict_t *ud, udict_node_t *node)
 	while (parent != nil) {
 		if ((parent->left == nil) && (parent->right == nil)) {
 			assert (child == nil);
-			assert (parent->balance != BALANCED);
 			parent->balance = BALANCED;
 			/* propagate height reduction to upper level */
 		}/*if*/
@@ -299,7 +344,7 @@ void avl_delete_node(udict_t *ud, udict_node_t *node)
 		else
 			break;
 	}/*while*/
-}/*avl_delete*/
+}/*avl_delete_node*/
 
 void *avl_get_data(udict_node_t *here) {
 	return data(here);
@@ -337,7 +382,8 @@ int avl_search(udict_t *ud, void *_key, udict_node_t *here, udict_node_t **where
 
 int avl_is_nil(udict_t *ud, udict_node_t *node)
 {
-	return tree_null_priv(ud) == node;
+	return  tree_null_priv(ud) == node || 
+		&ud->BalancedRoot == node;
 }
 
 udict_node_t *avl_first(udict_t *ud)
@@ -352,5 +398,9 @@ udict_node_t *avl_last(udict_t *ud)
 
 udict_node_t *avl_next(udict_t *ud, udict_node_t *prev)
 {
-	return udict_tree_next(ud, prev);
+	udict_node_t *node = udict_tree_next(ud, prev);
+	if( node == tree_null_priv(ud) || node == &ud->BalancedRoot ) 
+		return NULL;
+	else
+		return node;
 }

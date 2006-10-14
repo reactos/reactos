@@ -12,6 +12,7 @@
 #define avl_data(x) ((void*)(&(x)[1]))
 
 void avl_init(PRTL_AVL_TABLE table);
+void avl_deinit(PRTL_AVL_TABLE table);
 void avl_insert_node(PRTL_AVL_TABLE table, PRTL_BALANCED_LINKS node);
 void avl_delete_node(PRTL_AVL_TABLE table, PRTL_BALANCED_LINKS node);
 int  avl_is_nil(PRTL_AVL_TABLE table, PRTL_BALANCED_LINKS node);
