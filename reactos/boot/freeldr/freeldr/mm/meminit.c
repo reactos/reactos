@@ -77,6 +77,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 		MmFixupSystemMemoryMap(BiosMemoryMap, &BiosMemoryMapEntryCount);
 	}
 
+	// Find address for the page lookup table
 	TotalPagesInLookupTable = MmGetAddressablePageCountIncludingHoles(BiosMemoryMap, BiosMemoryMapEntryCount);
 	PageLookupTableAddress = MmFindLocationForPageLookupTable(BiosMemoryMap, BiosMemoryMapEntryCount);
 	LastFreePageHint = TotalPagesInLookupTable;
@@ -90,6 +91,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 		return FALSE;
 	}
 
+	// Initialize the page lookup table
 	MmInitPageLookupTable(PageLookupTableAddress, TotalPagesInLookupTable, BiosMemoryMap, BiosMemoryMapEntryCount);
 	MmUpdateLastFreePageHint(PageLookupTableAddress, TotalPagesInLookupTable);
 
@@ -248,23 +250,23 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_ME
 		MemoryMapStartPage = MmGetPageNumberFromAddress((PVOID)(ULONG)BiosMemoryMap[Index].BaseAddress);
 		MemoryMapEndPage = MmGetPageNumberFromAddress((PVOID)(ULONG)(BiosMemoryMap[Index].BaseAddress + BiosMemoryMap[Index].Length - 1));
 		MemoryMapPageCount = (MemoryMapEndPage - MemoryMapStartPage) + 1;
-		MemoryMapPageAllocated = (BiosMemoryMap[Index].Type == BiosMemoryUsable) ? 0 : BiosMemoryMap[Index].Type;
+		MemoryMapPageAllocated = (BiosMemoryMap[Index].Type == BiosMemoryUsable) ? LoaderFree : LoaderFirmwarePermanent;/*BiosMemoryMap[Index].Type*/;
 		DbgPrint((DPRINT_MEMORY, "Marking pages as type %d: StartPage: %d PageCount: %d\n", MemoryMapPageAllocated, MemoryMapStartPage, MemoryMapPageCount));
 		MmMarkPagesInLookupTable(PageLookupTable, MemoryMapStartPage, MemoryMapPageCount, MemoryMapPageAllocated);
 	}
 
 	// Mark the low memory region below 1MB as reserved (256 pages in region)
 	DbgPrint((DPRINT_MEMORY, "Marking the low 1MB region as reserved.\n"));
-	MmMarkPagesInLookupTable(PageLookupTable, 0, 256, BiosMemoryReserved);
+	MmMarkPagesInLookupTable(PageLookupTable, 0, 256, LoaderFirmwarePermanent);
 
-	// Mark the pages that the lookup tabel occupies as reserved
+	// Mark the pages that the lookup table occupies as reserved
 	PageLookupTableStartPage = MmGetPageNumberFromAddress(PageLookupTable);
 	PageLookupTablePageCount = MmGetPageNumberFromAddress((PVOID)((ULONG_PTR)PageLookupTable + ROUND_UP(TotalPageCount * sizeof(PAGE_LOOKUP_TABLE_ITEM), MM_PAGE_SIZE))) - PageLookupTableStartPage;
 	DbgPrint((DPRINT_MEMORY, "Marking the page lookup table pages as reserved StartPage: %d PageCount: %d\n", PageLookupTableStartPage, PageLookupTablePageCount));
-	MmMarkPagesInLookupTable(PageLookupTable, PageLookupTableStartPage, PageLookupTablePageCount, BiosMemoryReserved);
+	MmMarkPagesInLookupTable(PageLookupTable, PageLookupTableStartPage, PageLookupTablePageCount, LoaderFirmwareTemporary);
 }
 
-VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, ULONG PageAllocated)
+VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, TYPE_OF_MEMORY PageAllocated)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
 	ULONG							Index;
@@ -276,7 +278,7 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG Page
 			DbgPrint((DPRINT_MEMORY, "Index = %d StartPage = %d PageCount = %d\n", Index, StartPage, PageCount));
 		}
 		RealPageLookupTable[Index].PageAllocated = PageAllocated;
-		RealPageLookupTable[Index].PageAllocationLength = PageAllocated ? 1 : 0;
+		RealPageLookupTable[Index].PageAllocationLength = (PageAllocated != LoaderFree) ? 1 : 0;
 	}
 	DbgPrint((DPRINT_MEMORY, "MmMarkPagesInLookupTable() Done\n"));
 }
@@ -288,7 +290,7 @@ VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG 
 
 	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
 	{
-		RealPageLookupTable[Index].PageAllocated = 1;
+		RealPageLookupTable[Index].PageAllocated = LoaderSystemCode;
 		RealPageLookupTable[Index].PageAllocationLength = (Index == StartPage) ? PageCount : 0;
 	}
 }
@@ -302,7 +304,7 @@ ULONG MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
 	FreePageCount = 0;
 	for (Index=0; Index<TotalPageCount; Index++)
 	{
-		if (RealPageLookupTable[Index].PageAllocated == 0)
+		if (RealPageLookupTable[Index].PageAllocated == LoaderFree)
 		{
 			FreePageCount++;
 		}
@@ -328,7 +330,7 @@ ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG Pa
 		/* Allocate "high" (from end) pages */
 		for (Index=LastFreePageHint-1; Index>0; Index--)
 		{
-			if (RealPageLookupTable[Index].PageAllocated != 0)
+			if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
 			{
 				AvailablePagesSoFar = 0;
 				continue;
@@ -350,7 +352,7 @@ ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG Pa
 		/* Allocate "low" pages */
 		for (Index=1; Index < LastFreePageHint; Index++)
 		{
-			if (RealPageLookupTable[Index].PageAllocated != 0)
+			if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
 			{
 				AvailablePagesSoFar = 0;
 				continue;
@@ -384,7 +386,7 @@ ULONG MmFindAvailablePagesBeforePage(PVOID PageLookupTable, ULONG TotalPageCount
 	AvailablePagesSoFar = 0;
 	for (Index=LastPage-1; Index>0; Index--)
 	{
-		if (RealPageLookupTable[Index].PageAllocated != 0)
+		if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
 		{
 			AvailablePagesSoFar = 0;
 			continue;
@@ -434,7 +436,7 @@ VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount)
 
 	for (Index=TotalPageCount-1; Index>0; Index--)
 	{
-		if (RealPageLookupTable[Index].PageAllocated == 0)
+		if (RealPageLookupTable[Index].PageAllocated == LoaderFree)
 		{
 			LastFreePageHint = Index + 1;
 			break;
@@ -461,7 +463,7 @@ BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, P
 	{
 		// If this page is allocated then there obviously isn't
 		// memory availabe so return FALSE
-		if (RealPageLookupTable[Index].PageAllocated != 0)
+		if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
 		{
 			return FALSE;
 		}

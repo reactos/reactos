@@ -271,7 +271,7 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 	// to make sure they are allocated with a length of 0
 	for (Idx=PageNumber+1; Idx<(PageNumber + PageCount); Idx++)
 	{
-		if ((RealPageLookupTable[Idx].PageAllocated != 1) ||
+		if ((RealPageLookupTable[Idx].PageAllocated == LoaderFree) ||
 			(RealPageLookupTable[Idx].PageAllocationLength != 0))
 		{
 			BugCheck((DPRINT_MEMORY, "Invalid page entry in lookup table, PageAllocated should = 1 and PageAllocationLength should = 0 because this is not the first block in the run. PageLookupTable[%d].PageAllocated = %d PageLookupTable[%d].PageAllocationLength = %d\n", PageNumber, RealPageLookupTable[PageNumber].PageAllocated, PageNumber, RealPageLookupTable[PageNumber].PageAllocationLength));
@@ -291,7 +291,7 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 	// blocks as free
 	for (Idx=PageNumber; Idx<(PageNumber + PageCount); Idx++)
 	{
-		RealPageLookupTable[Idx].PageAllocated = 0;
+		RealPageLookupTable[Idx].PageAllocated = LoaderFree;
 		RealPageLookupTable[Idx].PageAllocationLength = 0;
 	}
 
@@ -322,7 +322,7 @@ VOID VerifyHeap(VOID)
 	for (Idx=0; Idx<TotalPagesInLookupTable; Idx++)
 	{
 		// Check if this block is allocated
-		if (RealPageLookupTable[Idx].PageAllocated != 0)
+		if (RealPageLookupTable[Idx].PageAllocated != LoaderFree)
 		{
 			// This is the first block in the run so it
 			// had better have a length that is within range
@@ -339,7 +339,7 @@ VOID VerifyHeap(VOID)
 			for (Idx2=1; Idx2<Count; Idx2++)
 			{
 				// Make sure it's allocated
-				if (RealPageLookupTable[Idx + Idx2].PageAllocated == 0)
+				if (RealPageLookupTable[Idx + Idx2].PageAllocated == LoaderFree)
 				{
 					BugCheck((DPRINT_MEMORY, "Lookup table indicates hole in memory allocation. RealPageLookupTable[Idx + Idx2].PageAllocated == 0\n"));
 				}
@@ -386,23 +386,53 @@ VOID DumpMemoryAllocMap(VOID)
 
 		switch (RealPageLookupTable[Idx].PageAllocated)
 		{
-		case 0:
+		case LoaderFree:
 			DbgPrint((DPRINT_MEMORY, "*"));
 			break;
-		case 1:
-			DbgPrint((DPRINT_MEMORY, "A"));
+		case LoaderBad:
+			DbgPrint((DPRINT_MEMORY, "-"));
 			break;
-		case BiosMemoryReserved:
+		case LoaderLoadedProgram:
+			DbgPrint((DPRINT_MEMORY, "O"));
+			break;
+		case LoaderFirmwareTemporary:
+			DbgPrint((DPRINT_MEMORY, "T"));
+			break;
+		case LoaderFirmwarePermanent:
+			DbgPrint((DPRINT_MEMORY, "P"));
+			break;
+		case LoaderOsloaderHeap:
+			DbgPrint((DPRINT_MEMORY, "H"));
+			break;
+		case LoaderOsloaderStack:
+			DbgPrint((DPRINT_MEMORY, "S"));
+			break;
+		case LoaderSystemCode:
+			DbgPrint((DPRINT_MEMORY, "K"));
+			break;
+		case LoaderHalCode:
+			DbgPrint((DPRINT_MEMORY, "L"));
+			break;
+		case LoaderBootDriver:
+			DbgPrint((DPRINT_MEMORY, "B"));
+			break;
+		case LoaderStartupPcrPage:
+			DbgPrint((DPRINT_MEMORY, "G"));
+			break;
+		case LoaderRegistryData:
 			DbgPrint((DPRINT_MEMORY, "R"));
 			break;
-		case BiosMemoryAcpiReclaim:
+		case LoaderMemoryData:
 			DbgPrint((DPRINT_MEMORY, "M"));
 			break;
-		case BiosMemoryAcpiNvs:
+		case LoaderNlsData:
 			DbgPrint((DPRINT_MEMORY, "N"));
 			break;
+		case LoaderSpecialMemory:
+			DbgPrint((DPRINT_MEMORY, "C"));
+			break;
 		default:
-			DbgPrint((DPRINT_MEMORY, "X"));
+			DbgPrint((DPRINT_MEMORY, "?"));
 			break;
 		}
 	}

@@ -50,8 +50,8 @@ typedef struct
 
 typedef struct
 {
-	ULONG		PageAllocated;					// Zero = free, non-zero = allocated
-	ULONG		PageAllocationLength;			// Number of pages allocated (or zero if this isn't the first page in the chain)
+	TYPE_OF_MEMORY	PageAllocated;					// Type of allocated memory (LoaderFree if this memory is free)
+	ULONG			PageAllocationLength;			// Number of pages allocated (or zero if this isn't the first page in the chain)
 } PACKED PAGE_LOOKUP_TABLE_ITEM, *PPAGE_LOOKUP_TABLE_ITEM;
 
 //
@@ -78,7 +78,7 @@ ULONG		MmGetAddressablePageCountIncludingHoles(PBIOS_MEMORY_MAP BiosMemoryMap, U
 PVOID	MmFindLocationForPageLookupTable(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Returns the address for a memory chunk big enough to hold the page lookup table (starts search from end of memory)
 VOID	MmSortBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Sorts the BIOS_MEMORY_MAP array so the first element corresponds to the first address in memory
 VOID	MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Inits the page lookup table according to the memory types in the memory map
-VOID	MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, ULONG PageAllocated);	// Marks the specified pages as allocated or free in the lookup table
+VOID	MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, TYPE_OF_MEMORY PageAllocated);	// Marks the specified pages as allocated or free in the lookup table
 VOID	MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount);	// Allocates the specified pages in the lookup table
 ULONG		MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount);	// Returns the number of free pages in the lookup table
 ULONG		MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded, BOOLEAN FromEnd);	// Returns the page number of the first available page range from the beginning or end of memory
