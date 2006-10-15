@@ -971,7 +971,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
       return FALSE;
    }
 
-  if (SepSidInToken(Token, Sid))
+  if (Sid && SepSidInToken(Token, Sid))
     {
       CurrentAccess |= (READ_CONTROL | WRITE_DAC);
       if (DesiredAccess == CurrentAccess)
