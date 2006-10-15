@@ -39,7 +39,6 @@ KeWaitForGate(IN PKGATE Gate,
     PKQUEUE Queue;
     ASSERT_GATE(Gate);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    ASSERT(FALSE);
 
     /* Start wait loop */
     do
