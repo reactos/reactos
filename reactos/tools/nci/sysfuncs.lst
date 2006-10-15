@@ -17,6 +17,7 @@ NtCancelTimer 2
 NtClearEvent 1
 NtClose 1
 NtCloseObjectAuditAlarm 3
+NtCompareTokens 3
 NtCompleteConnectPort 1
 NtConnectPort 8
 NtContinue 2

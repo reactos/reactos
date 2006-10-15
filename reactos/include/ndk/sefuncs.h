@@ -159,6 +159,14 @@ NtAllocateUuids(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtCompareTokens(
+    IN HANDLE FirstTokenHandle,
+    IN HANDLE SecondTokenHandle,
+    OUT PBOOLEAN Equal);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtCreateToken(
     OUT PHANDLE TokenHandle,
     IN ACCESS_MASK DesiredAccess,

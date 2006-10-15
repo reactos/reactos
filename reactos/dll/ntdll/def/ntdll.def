@@ -79,6 +79,7 @@ NtCancelTimer@8
 NtClearEvent@4
 NtClose@4
 NtCloseObjectAuditAlarm@12
+NtCompareTokens@12
 NtCompleteConnectPort@4
 NtConnectPort@32
 NtContinue@8
@@ -747,6 +748,7 @@ ZwCancelTimer@8
 ZwClearEvent@4
 ZwClose@4
 ZwCloseObjectAuditAlarm@12
+ZwCompareTokens@12
 ZwCompleteConnectPort@4
 ZwConnectPort@32
 ZwContinue@8

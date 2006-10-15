@@ -2406,7 +2406,7 @@ SeTokenType(IN PACCESS_TOKEN Token)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -2414,12 +2414,12 @@ SeTokenIsAdmin(
 	IN PACCESS_TOKEN Token
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    PAGED_CODE();
+    return (((PTOKEN)Token)->TokenFlags & TOKEN_HAS_ADMIN_GROUP) != 0;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -2427,12 +2427,12 @@ SeTokenIsRestricted(
 	IN PACCESS_TOKEN Token
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    PAGED_CODE();
+    return (((PTOKEN)Token)->TokenFlags & TOKEN_IS_RESTRICTED) != 0;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -2440,8 +2440,8 @@ SeTokenIsWriteRestricted(
 	IN PACCESS_TOKEN Token
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    PAGED_CODE();
+    return (((PTOKEN)Token)->TokenFlags & TOKEN_HAS_RESTORE_PRIVILEGE) != 0;
 }
 
 
@@ -2639,6 +2639,115 @@ NtOpenThreadToken(IN HANDLE ThreadHandle,
 {
   return NtOpenThreadTokenEx(ThreadHandle, DesiredAccess, OpenAsSelf, 0,
                              TokenHandle);
+}
+
+static NTSTATUS
+SepCompareTokens(IN PTOKEN FirstToken,
+                 IN PTOKEN SecondToken,
+                 OUT PBOOLEAN Equal)
+{
+    BOOLEAN Restricted, IsEqual = FALSE;
+
+    ASSERT(FirstToken != SecondToken);
+
+    /* FIXME: Check if every SID that is present in either token is also present in the other one */
+
+    Restricted = SeTokenIsRestricted(FirstToken);
+    if (Restricted == SeTokenIsRestricted(SecondToken))
+    {
+        if (Restricted)
+        {
+            /* FIXME: Check if every SID that is restricted in either token is also restricted in the other one */
+        }
+
+        /* FIXME: Check if every privilege that is present in either token is also present in the other one */
+    }
+
+    *Equal = IsEqual;
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+NtCompareTokens(IN HANDLE FirstTokenHandle,
+                IN HANDLE SecondTokenHandle,
+                OUT PBOOLEAN Equal)
+{
+    KPROCESSOR_MODE PreviousMode;
+    PTOKEN FirstToken, SecondToken;
+    BOOLEAN IsEqual;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    PAGED_CODE();
+
+    PreviousMode = ExGetPreviousMode();
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForWriteBoolean(Equal);
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+
+    Status = ObReferenceObjectByHandle(FirstTokenHandle,
+                                       TOKEN_QUERY,
+                                       SepTokenObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&FirstToken,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = ObReferenceObjectByHandle(SecondTokenHandle,
+                                       TOKEN_QUERY,
+                                       SepTokenObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&SecondToken,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(FirstToken);
+        return Status;
+    }
+
+    if (FirstToken != SecondToken)
+    {
+        Status = SepCompareTokens(FirstToken,
+                                  SecondToken,
+                                  &IsEqual);
+    }
+    else
+        IsEqual = TRUE;
+
+    ObDereferenceObject(FirstToken);
+    ObDereferenceObject(SecondToken);
+
+    if (NT_SUCCESS(Status))
+    {
+        _SEH_TRY
+        {
+            *Equal = IsEqual;
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
+
+    return Status;
 }
 
 /* EOF */
