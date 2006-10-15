@@ -115,8 +115,8 @@ ROSL1:
   __asm dec eax
   __asm jnz ROSL1
 #else
-   volatile unsigned int target = Loops;
-   unsigned int i;
+   unsigned int target = Loops;
+   volatile unsigned int i;
    for (i=0; i<target;i++);
 #endif
 }
