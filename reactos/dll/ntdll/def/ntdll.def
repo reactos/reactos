@@ -314,6 +314,7 @@ RtlAddAuditAccessAce@24
 RtlAddAuditAccessAceEx@28
 RtlAddAuditAccessObjectAce@36
 ;RtlAddCompoundAce
+RtlAddMandatoryAce@24
 RtlAddRange@36
 RtlAddVectoredExceptionHandler@8
 RtlAdjustPrivilege@16

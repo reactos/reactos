@@ -32,6 +32,7 @@ AddAce@20
 AddAuditAccessAce@24
 AddAuditAccessAceEx@28
 AddAuditAccessObjectAce@36
+AddMandatoryAce@20
 AddUsersToEncryptedFile@8
 AdjustTokenGroups@24
 AdjustTokenPrivileges@24

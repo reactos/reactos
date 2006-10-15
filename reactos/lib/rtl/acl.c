@@ -141,6 +141,20 @@ RtlpAddKnownAce (PACL Acl,
    {
       return(STATUS_INVALID_SID);
    }
+
+   if (Type == SYSTEM_MANDATORY_LABEL_ACE_TYPE)
+   {
+       static const SID_IDENTIFIER_AUTHORITY MandatoryLabelAuthority = {SECURITY_MANDATORY_LABEL_AUTHORITY};
+
+       /* The SID's identifier authority must be SECURITY_MANDATORY_LABEL_AUTHORITY! */
+       if (RtlCompareMemory(&((PISID)Sid)->IdentifierAuthority,
+                            &MandatoryLabelAuthority,
+                            sizeof(MandatoryLabelAuthority)) != sizeof(MandatoryLabelAuthority))
+       {
+           return STATUS_INVALID_PARAMETER;
+       }
+   }
+
    if (Acl->AclRevision > MAX_ACL_REVISION ||
        Revision > MAX_ACL_REVISION)
    {
@@ -602,6 +616,34 @@ RtlAddAuditAccessObjectAce(PACL Acl,
                            InheritedObjectTypeGuid,
                            Sid,
                            Type);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS NTAPI
+RtlAddMandatoryAce(IN OUT PACL Acl,
+                   IN ULONG Revision,
+                   IN ULONG Flags,
+                   IN ULONG MandatoryFlags,
+                   IN ULONG AceType,
+                   IN PSID LabelSid)
+{
+    if (MandatoryFlags & ~SYSTEM_MANDATORY_LABEL_VALID_MASK)
+        return STATUS_INVALID_PARAMETER;
+
+    if (AceType != SYSTEM_MANDATORY_LABEL_ACE_TYPE)
+        return STATUS_INVALID_PARAMETER;
+
+    return RtlpAddKnownAce (Acl,
+                            Revision,
+                            Flags,
+                            (ACCESS_MASK)MandatoryFlags,
+                            NULL,
+                            NULL,
+                            LabelSid,
+                            AceType);
 }
 
 

@@ -762,6 +762,17 @@ RtlAddAuditAccessObjectAce(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlAddMandatoryAce(
+    IN OUT PACL Acl,
+    IN ULONG Revision,
+    IN ULONG Flags,
+    IN ULONG MandatoryFlags,
+    IN ULONG AceType,
+    IN PSID LabelSid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlAdjustPrivilege(
     IN ULONG Privilege,
     IN BOOLEAN NewValue,
