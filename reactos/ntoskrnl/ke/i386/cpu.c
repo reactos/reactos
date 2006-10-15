@@ -200,7 +200,7 @@ KiGetCpuVendor(VOID)
 
     /* Copy it to the PRCB and null-terminate it again */
     RtlCopyMemory(Prcb->VendorString,
-                  &Vendor[0],
+                  &Vendor[1],
                   sizeof(Prcb->VendorString) - sizeof(CHAR));
     Prcb->VendorString[sizeof(Prcb->VendorString) - sizeof(CHAR)] = ANSI_NULL;
 
