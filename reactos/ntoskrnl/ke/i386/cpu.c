@@ -75,18 +75,18 @@ BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
 
 /* CPU Signatures */
-CHAR CmpIntelID[]       = "GenuineIntel";
-CHAR CmpAmdID[]         = "AuthenticAMD";
-CHAR CmpCyrixID[]       = "CyrixInstead";
-CHAR CmpTransmetaID[]   = "GenuineTMx86";
-CHAR CmpCentaurID[]     = "CentaurHauls";
-CHAR CmpRiseID[]        = "RiseRiseRise";
+static const CHAR CmpIntelID[]       = "GenuineIntel";
+static const CHAR CmpAmdID[]         = "AuthenticAMD";
+static const CHAR CmpCyrixID[]       = "CyrixInstead";
+static const CHAR CmpTransmetaID[]   = "GenuineTMx86";
+static const CHAR CmpCentaurID[]     = "CentaurHauls";
+static const CHAR CmpRiseID[]        = "RiseRiseRise";
 
 /* SUPPORT ROUTINES FOR MSVC COMPATIBILITY ***********************************/
 
 VOID
 NTAPI
-CPUID(IN ULONG CpuInfo[4],
+CPUID(OUT ULONG CpuInfo[4],
       IN ULONG InfoType)
 {
     Ki386Cpuid(InfoType, &CpuInfo[0], &CpuInfo[1], &CpuInfo[2], &CpuInfo[3]);
