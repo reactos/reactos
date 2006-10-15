@@ -1332,15 +1332,15 @@ UserGetKeyboardType(
 }
 
 
-DWORD
+HKL
 STDCALL
-NtUserLoadKeyboardLayoutEx(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3,
-   DWORD Unknown4,
-   DWORD Unknown5)
+NtUserLoadKeyboardLayoutEx( 
+   IN HANDLE Handle,
+   IN DWORD offTable,
+   IN HKL hKL,
+   IN PUNICODE_STRING puszKLID,
+   IN UINT KLayoutLangID,
+   IN UINT Flags)
 {
    UNIMPLEMENTED
 

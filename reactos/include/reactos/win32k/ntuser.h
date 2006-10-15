@@ -1216,15 +1216,15 @@ NtUserKillTimer
  UINT_PTR uIDEvent
 );
 
-DWORD
+HKL
 NTAPI
 NtUserLoadKeyboardLayoutEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5);
+  HANDLE Handle,
+  DWORD offTable,
+  HKL hKL,
+  PUNICODE_STRING puszKLID,
+  UINT KLayoutLangID,
+  UINT Flags);
 
 BOOL
 NTAPI
