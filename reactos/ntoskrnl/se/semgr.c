@@ -997,7 +997,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
       *GrantedAccess = 0;
       *AccessStatus = STATUS_ACCESS_DENIED;
-      return TRUE;
+      return FALSE;
     }
 
   /* RULE 4: Grant rights according to the DACL */
@@ -1016,17 +1016,20 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
 	      *GrantedAccess = 0;
 	      *AccessStatus = STATUS_ACCESS_DENIED;
-	      return TRUE;
+	      return FALSE;
 	    }
 	}
 
-      if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
+      else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
 	{
 	  if (SepSidInToken(Token, Sid))
 	    {
 	      CurrentAccess |= CurrentAce->AccessMask;
 	    }
 	}
+	else
+	  DPRINT1("Unknown Ace type 0x%lx\n", CurrentAce->Header.AceType);
+	CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
     }
 
   if (SubjectContextLocked == FALSE)
@@ -1039,10 +1042,18 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
   *GrantedAccess = CurrentAccess & DesiredAccess;
 
-  *AccessStatus =
-    (*GrantedAccess == DesiredAccess) ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
-
-  return TRUE;
+  if (*GrantedAccess == DesiredAccess)
+    {
+      *AccessStatus = STATUS_SUCCESS;
+      return TRUE;
+    }
+  else
+    {
+      *AccessStatus = STATUS_ACCESS_DENIED;
+      DPRINT1("FIX caller rights (granted 0x%lx, desired 0x%lx)!\n",
+        *GrantedAccess, DesiredAccess);
+      return TRUE; /* FIXME: should be FALSE */
+    }
 }
 
 
