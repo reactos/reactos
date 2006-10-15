@@ -31,7 +31,9 @@
 extern "C" {
 #endif
 
+#ifdef __GNUC__
 #include "intrin.h"
+#endif
 
 /*
 ** Definitions specific to this Device Driver Kit
