@@ -183,6 +183,7 @@ KiGetCpuVendor(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor[5];
+    ULONG Temp;
 
     /* Assume no Vendor ID and fail if no CPUID Support. */
     Prcb->VendorString[0] = 0;
@@ -193,13 +194,13 @@ KiGetCpuVendor(VOID)
     Vendor[4] = 0;
 
     /* Re-arrange vendor string */
-    Vendor[5] = Vendor[2];
+    Temp = Vendor[2];
     Vendor[2] = Vendor[3];
-    Vendor[3] = Vendor[5];
+    Vendor[3] = Temp;
 
     /* Copy it to the PRCB and null-terminate it again */
     RtlCopyMemory(Prcb->VendorString,
-                  &Vendor[1],
+                  &Vendor[0],
                   sizeof(Prcb->VendorString) - sizeof(CHAR));
     Prcb->VendorString[sizeof(Prcb->VendorString) - sizeof(CHAR)] = ANSI_NULL;
 
