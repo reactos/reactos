@@ -309,7 +309,7 @@ GetWindowsAccountDomainSid@12
 ;I_ScSetServiceBitsA@20
 ;I_ScSetServiceBitsW@20
 ;IdentifyCodeAuthzLevelW
-;ImpersonateAnonymousToken
+ImpersonateAnonymousToken@4
 ImpersonateLoggedOnUser@4
 ImpersonateNamedPipeClient@4
 ImpersonateSelf@4

@@ -443,6 +443,27 @@ SetKernelObjectSecurity(HANDLE Handle,
 /*
  * @implemented
  */
+BOOL
+WINAPI
+ImpersonateAnonymousToken(IN HANDLE ThreadHandle)
+{
+    NTSTATUS Status;
+
+    Status = NtImpersonateAnonymousToken(ThreadHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
 BOOL STDCALL
 ImpersonateLoggedOnUser(HANDLE hToken)
 {
