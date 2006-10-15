@@ -5,4 +5,6 @@
 	<define name="__USE_W32API" />
       <library>kernel32</library>
 	<file>roswebparser.c</file>	
+      <file>utf8.c</file>	
+
 </module>

@@ -18,27 +18,27 @@
 #define false 0
 
 
-int paraser1(char *buf, long buf_size, char * output_text, char * output_resid, char * output_format, char *iso_type);
+int paraser1(unsigned char *buf, long buf_size, unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format, unsigned char *iso_type);
 
-void find_str(char asc,char *buf, long *foundPos);
-void find_str2(char *asc,char *buf, long *foundPos, char * output_resid, char *output_text );
-void trim(char* buf);
-void stringbugs(char *buf, int shift2);
-void stringbugs2(char *buf, int shift2);
+void find_str(unsigned char asc, unsigned char *buf, long *foundPos);
+void find_str2(unsigned char *asc, unsigned char *buf, long *foundPos, unsigned char * output_resid, unsigned char *output_text );
+void trim(unsigned char* buf);
+void stringbugs(unsigned char *buf, int shift2);
+void stringbugs2(unsigned char *buf, int shift2);
 
-void ParserCMD1(char *text, char *output_resid, char *output_text, char *output_format);
-void ParserCMD2(char *text, char *output_resid, char *output_text, char *output_format);
-void ParserCMD3(char *text, char *output_resid, char *output_text, char *output_format);
+void ParserCMD1(unsigned char *text, unsigned char *output_resid, unsigned char *output_text, unsigned char *output_format);
+void ParserCMD2(unsigned char *text, unsigned char *output_resid, unsigned char *output_text, unsigned char *output_format);
+void ParserCMD3(unsigned char *text, unsigned char *output_resid, unsigned char *output_text, unsigned char *output_format);
 
-void ParserComment(long *pos, char *buf, long buf_size,	char * output_text, char * output_resid, char * output_format);
-void ParserLang(char *text, char *output_resid, char *output_text, char *output_format);
-void ParserString(long *pos, char *buf, long buf_size,	char * output_text, char * output_resid, char * output_format);
-void ParserDialog(char *text, long *pos, char *buf, long buf_size,	char * output_text, char * output_resid, char * output_format);
-void DialogCMDBuild1(char *output_resid, char *output_format, long pos, char * text);
-void DialogCMDBuild2(char *output_resid, char *output_format, long pos, char * text);
-void DialogCMDBuild3(char *output_resid, char *output_format, long pos, char * text);
-void ParserAccelerators(long *pos, char *buf, long buf_size,	char * output_text, char * output_resid, char * output_format);
-void ParserMenu(char *text, long *pos, char *buf, long buf_size,	char * output_text, char * output_resid, char * output_format);
+void ParserComment(long *pos, unsigned char *buf, long buf_size, unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format);
+void ParserLang(unsigned char *text, unsigned char *output_resid, unsigned char *output_text, unsigned char *output_format);
+void ParserString(long *pos, unsigned char *buf, long buf_size,	unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format);
+void ParserDialog(unsigned char *text, long *pos, unsigned char *buf, long buf_size, unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format);
+void DialogCMDBuild1(unsigned char *output_resid, unsigned char *output_format, long pos, unsigned char * text);
+void DialogCMDBuild2(unsigned char *output_resid, unsigned char *output_format, long pos, unsigned char * text);
+void DialogCMDBuild3(unsigned char *output_resid, unsigned char *output_format, long pos, unsigned char * text);
+void ParserAccelerators(long *pos, unsigned char *buf, long buf_size, unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format);
+void ParserMenu(unsigned char *text, long *pos, unsigned char *buf, long buf_size,	unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format);
 
 /*
   return -1 : No file found
@@ -47,29 +47,31 @@ void ParserMenu(char *text, long *pos, char *buf, long buf_size,	char * output_t
   return -4 : Fail get size
   return -5 : Fail size of the file is 0 bytes
   return -6 : Fail malloc memory
-  return -7 : Fail to read the file        
+  return -7 : Fail to read the file    
+  return -8 : Fail to write to the file   
+  return -9 : Fail to open write file   
 */
 
 int main(int argc, char * argv[])
 {
 	FILE * fp;
-	char * buffer;
-	char * output_text;
-    char * output_resid;
-	char * output_format;
+	FILE * Outfp;
+	unsigned char * buffer;
+	unsigned char * output_text;
+    unsigned char * output_resid;
+	unsigned char * output_format;
 	
 	long buf_size;
 	long buf_size_calc = 0;
     	
-	if (argc!=3)
+	if (argc!=4)
 	{
         printf("Help\n");
 		printf("%s inputfile iso-type\n\n",argv[0]);
-		printf("example %s en.rc UTF-8\n\n",argv[0]); 
-		printf("Contry table\n"); 
-		printf("en (English = \n"); 
-		printf("se (Swedish = \n"); 
-		printf("jp (Japanice = \n"); 
+		printf("example %s sv.rc 28591 sv.xml\n\n",argv[0]); 
+		printf("Contry table\n"); 		
+		printf("se (Swedish = Windows-28591 (Latin1 ISO-8859-1)\n"); 
+		 
 		return -1;
 	}
 	
@@ -96,6 +98,7 @@ int main(int argc, char * argv[])
         printf("Fail get size\n");
         return -4;
 	}
+
 
 	/* 
 	   We make sure it is least 4 times + 2K biger 
@@ -171,10 +174,22 @@ int main(int argc, char * argv[])
 
 	/* Now we can write our parser */
 	
-	paraser1(buffer, buf_size, output_text, output_resid, output_format,argv[2]);
-	printf ("%s",output_format);
-	 
+	paraser1(buffer, buf_size, output_text, output_resid, output_format,"UTF-8");
+	// printf ("%s",output_format);
+
+	/* Now we convert to utf-8 */
+	memset(output_resid,0,buf_size_calc);
+	buf_size_calc = ansiCodePage(atoi(argv[2]), output_format, output_resid, strlen(output_format));
+
+	if ((Outfp = fopen(argv[3],"wb"))  != NULL )
+	{
+         fwrite(output_resid,1,buf_size_calc,Outfp);
+	     fclose(Outfp);
+	}	
 	
+
+	
+	 	
 	if(buffer!=NULL)
      free(buffer);
     if(output_text!=NULL)
@@ -188,9 +203,9 @@ int main(int argc, char * argv[])
 	return 0;	
 }
 
-int paraser1(char *buf, long buf_size,	char * output_text, char * output_resid, char * output_format, char *iso_type)
+int paraser1(unsigned char *buf, long buf_size,	unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format, unsigned char *iso_type)
 {
-   char *row; 
+   unsigned char *row; 
    long foundPos=0;
    long foundNextPos=0;
    long row_size=0;
@@ -353,7 +368,7 @@ int paraser1(char *buf, long buf_size,	char * output_text, char * output_resid, 
   param : output_format  = xml data store buffer
 */
 
-void ParserCMD1(char *text, char *output_resid, char *output_text, char *output_format)
+void ParserCMD1(unsigned char *text, unsigned char *output_resid, unsigned char *output_text, unsigned char *output_format)
 {
   long le;  
   
@@ -395,7 +410,7 @@ void ParserCMD1(char *text, char *output_resid, char *output_text, char *output_
   
 */
 
-void ParserCMD2(char *text, char *output_resid, char *output_text, char *output_format)
+void ParserCMD2(unsigned char *text, unsigned char *output_resid, unsigned char *output_text, unsigned char *output_format)
 {
 	long le;
 	long flag = 0;
@@ -476,7 +491,7 @@ void ParserCMD2(char *text, char *output_resid, char *output_text, char *output_
   param : output_format  = xml data store buffer
   
 */
-void ParserCMD3(char *text, char *output_resid, char *output_text, char *output_format)
+void ParserCMD3(unsigned char *text, unsigned char *output_resid, unsigned char *output_text, unsigned char *output_format)
 {  
   long foundPos=0;
 
@@ -507,7 +522,7 @@ void ParserCMD3(char *text, char *output_resid, char *output_text, char *output_
   param : output_format  = xml data store buffer
 */
 
-void ParserLang(char *text, char *output_resid, char *output_text, char *output_format)
+void ParserLang(unsigned char *text, unsigned char *output_resid, unsigned char *output_text, unsigned char *output_format)
 {
   long foundPos=0;
     
@@ -547,12 +562,12 @@ void ParserLang(char *text, char *output_resid, char *output_text, char *output_
   param : output_format  = xml data store buffer
 */
 
-void ParserComment(long *pos, char *buf, long buf_size,	char * output_text, char * output_resid, char * output_format)
+void ParserComment(long *pos, unsigned char *buf, long buf_size, unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format)
 {
-   long foundPos=0;
+  long foundPos=0;
   long foundNextPos=0;
   long row_size=0;
-  char *row = output_text;
+  unsigned char *row = output_text;
   
 
   row_size = strlen(row);
@@ -648,7 +663,7 @@ void ParserComment(long *pos, char *buf, long buf_size,	char * output_text, char
   param : output_resid = using internal instead alloc more memory
   param : output_format  = xml data store buffer
 */
-void ParserAccelerators(long *pos, char *buf, long buf_size,	char * output_text, char * output_resid, char * output_format)
+void ParserAccelerators(long *pos, unsigned char *buf, long buf_size, unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format)
 {
   long foundPos=0;
   long foundNextPos=0;
@@ -751,11 +766,11 @@ void ParserAccelerators(long *pos, char *buf, long buf_size,	char * output_text,
   param : output_resid = using internal instead alloc more memory
   param : output_format  = xml data store buffer
 */
-void ParserString(long *pos, char *buf, long buf_size,	char * output_text, char * output_resid, char * output_format)
+void ParserString(long *pos, unsigned char *buf, long buf_size,	unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format)
 {
   long foundPos=0;  
   long row_size=0;
-  char *row = output_text;
+  unsigned char *row = output_text;
   int start=false;
 
   while(*pos < buf_size)
@@ -891,12 +906,12 @@ void ParserString(long *pos, char *buf, long buf_size,	char * output_text, char 
   param : output_resid = using internal instead alloc more memory
   param : output_format  = xml data store buffer
 */
-void ParserDialog(char *text, long *pos, char *buf, long buf_size,	char * output_text, char * output_resid, char * output_format)
+void ParserDialog(unsigned char *text, long *pos, unsigned char *buf, long buf_size,	unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format)
 {
   long foundPos=0;
   long foundNextPos=0;
   long row_size=0;
-  char *row = output_text; 
+  unsigned char *row = output_text; 
   long commandfound=0;
   long le;
 
@@ -1078,12 +1093,12 @@ void ParserDialog(char *text, long *pos, char *buf, long buf_size,	char * output
   param : output_resid = using internal instead alloc more memory
   param : output_format  = xml data store buffer
 */
-void ParserMenu(char *text, long *pos, char *buf, long buf_size,	char * output_text, char * output_resid, char * output_format)
+void ParserMenu(unsigned char *text, long *pos, unsigned char *buf, long buf_size, unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format)
 {
   long foundPos=0;
   long foundNextPos=0;
   long row_size=0;
-  char *row = output_text; 
+  unsigned char *row = output_text; 
   long commandfound=0;
   long le;
   long count=0;
@@ -1220,7 +1235,7 @@ void ParserMenu(char *text, long *pos, char *buf, long buf_size,	char * output_t
 
 }
 
-void stringbugs(char *buf, int shift2)
+void stringbugs(unsigned char *buf, int shift2)
 {
   long foundPos=0;
   long foundNextPos=0;
@@ -1319,7 +1334,7 @@ void stringbugs(char *buf, int shift2)
   /* have remove all wrong syntax */   
 }
 
-void stringbugs2(char *buf, int shift2)
+void stringbugs2(unsigned char *buf, int shift2)
 {
   long foundPos=0;
   long foundNextPos=0;
@@ -1412,7 +1427,7 @@ void stringbugs2(char *buf, int shift2)
 
 
 
-void trim(char* buf)
+void trim(unsigned char* buf)
 {
   size_t le;
   
@@ -1453,7 +1468,7 @@ void trim(char* buf)
 	}
   }
 }
-void find_str(char asc,char *buf, long *foundPos)
+void find_str(unsigned char asc,unsigned char *buf, long *foundPos)
 {
   int t;
   size_t le;  
@@ -1479,8 +1494,8 @@ void find_str(char asc,char *buf, long *foundPos)
 
 }
 
-void find_str2(char *asc,char *buf, long *foundPos, 
-			   char * output_resid, char *output_text)
+void find_str2(unsigned char *asc, unsigned char *buf, long *foundPos, 
+			   unsigned char * output_resid, unsigned char *output_text)
 {
   int t=0;
   size_t le;
@@ -1515,11 +1530,11 @@ void find_str2(char *asc,char *buf, long *foundPos,
 }
 
 
-void DialogCMDBuild1(char *output_resid, char *output_format, long pos, char * text)
+void DialogCMDBuild1(unsigned char *output_resid, unsigned char *output_format, long pos, unsigned char * text)
 {
  
   
-  char extra[1000];
+  unsigned char extra[1000];
   long foundPos=0;
   long foundNextPos=0;
   long le;
@@ -1614,7 +1629,7 @@ void DialogCMDBuild1(char *output_resid, char *output_format, long pos, char * t
 }
  
 
-void DialogCMDBuild2(char *output_resid, char *output_format, long pos, char * text)
+void DialogCMDBuild2(unsigned char *output_resid, unsigned char *output_format, long pos, unsigned char * text)
 {   
   long le;
 
@@ -1634,7 +1649,7 @@ void DialogCMDBuild2(char *output_resid, char *output_format, long pos, char * t
 }
 
 // input  : CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,150,10  
-void DialogCMDBuild3(char *output_resid, char *output_format, long pos, char * text)
+void DialogCMDBuild3(unsigned char *output_resid, unsigned char *output_format, long pos, unsigned char * text)
 {
   long foundPos=0;
   long foundNextPos=0;
