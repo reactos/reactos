@@ -2533,6 +2533,15 @@ RtlIsGenericTableEmpty(
     IN PRTL_GENERIC_TABLE Table
 );
 
+PVOID
+NTAPI
+RtlLookupElementGenericTableFull(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    OUT PVOID *NodeOrParent,
+    OUT TABLE_SEARCH_RESULT *SearchResult
+);
+
 //
 // Handle Table Functions
 //

@@ -115,7 +115,7 @@ RtlInitializeGenericTable(IN PRTL_GENERIC_TABLE Table,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 NTAPI
@@ -140,7 +140,7 @@ RtlInsertElementGenericTable(IN PRTL_GENERIC_TABLE Table,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 NTAPI
@@ -218,14 +218,14 @@ RtlInsertElementGenericTableFull(IN PRTL_GENERIC_TABLE Table,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
 RtlIsGenericTableEmpty(IN PRTL_GENERIC_TABLE Table)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    /* Check if the table root is empty */
+    return (Table->TableRoot) ? FALSE: TRUE;
 }
 
 /*
@@ -235,19 +235,26 @@ ULONG
 NTAPI
 RtlNumberGenericTableElements(IN PRTL_GENERIC_TABLE Table)
 {
+    /* Return the number of elements */
     return Table->NumberGenericTableElements;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 NTAPI
 RtlLookupElementGenericTable(IN PRTL_GENERIC_TABLE Table,
                              IN PVOID Buffer)
 {
-    UNIMPLEMENTED;
-    return 0;
+    PRTL_SPLAY_LINKS NodeOrParent;
+    TABLE_SEARCH_RESULT Result;
+
+    /* Call the full version */
+    return RtlLookupElementGenericTableFull(Table,
+                                            Buffer,
+                                            &NodeOrParent,
+                                            &Result);
 }
 
 /*
@@ -265,15 +272,36 @@ RtlLookupElementGenericTableFull(IN PRTL_GENERIC_TABLE Table,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
 RtlDeleteElementGenericTable(IN PRTL_GENERIC_TABLE Table,
                              IN PVOID Buffer)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PRTL_SPLAY_LINKS NodeOrParent;
+    TABLE_SEARCH_RESULT Result;
+
+    /* Get the splay links and table search result immediately */
+    Result = RtlpFindGenericTableNodeOrParent(Table, Buffer, &NodeOrParent);
+    if ((Result == TableEmptyTree) || (Result != TableFoundNode))
+    {
+        /* Nothing to delete */
+        return FALSE;
+    }
+
+    /* Delete the entry */
+    Table->TableRoot = RtlDelete(NodeOrParent);
+    RemoveEntryList(&((PTABLE_ENTRY_HEADER)NodeOrParent)->ListEntry);
+
+    /* Update accounting data */
+    Table->NumberGenericTableElements--;
+    Table->WhichOrderedElement = 0;
+    Table->OrderedPointer = &Table->InsertOrderList;
+
+    /* Free the entry */
+    Table->FreeRoutine(Table, NodeOrParent);
+    return TRUE;
 }
 
 /*
