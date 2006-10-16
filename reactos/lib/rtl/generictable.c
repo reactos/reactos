@@ -253,7 +253,7 @@ RtlLookupElementGenericTable(IN PRTL_GENERIC_TABLE Table,
     /* Call the full version */
     return RtlLookupElementGenericTableFull(Table,
                                             Buffer,
-                                            &NodeOrParent,
+                                            (PVOID)&NodeOrParent,
                                             &Result);
 }
 
