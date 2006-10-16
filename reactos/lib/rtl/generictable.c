@@ -1,61 +1,195 @@
-/* COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * PURPOSE:         Generic Table Implementation
- * FILE:            lib/rtl/genertictbl.c
- * PROGRAMMERS:     arty
- */
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            lib/rtl/generictable.c
+* PURPOSE:         Splay Tree and AVL Tree Generic Table Implementation
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*                  Art Yerks (ayerkes@speakeasy.net)
+*/
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <rtl.h>
 #include "austin/avl.h"
-
 #define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
 /*
-* @unimplemented
-*/
-PVOID
+ * @implemented
+ */
+VOID
 NTAPI
-RtlLookupElementGenericTable (
-	PRTL_GENERIC_TABLE Table,
-	PVOID Buffer
-	)
+RtlInitializeGenericTable(IN PRTL_GENERIC_TABLE Table,
+                          IN PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine,
+                          IN PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine,
+                          IN PRTL_GENERIC_FREE_ROUTINE FreeRoutine,
+                          IN PVOID TableContext)
 {
-	UNIMPLEMENTED;
-	return 0;
+    /* Initialize the table to default and passed values */
+    InitializeListHead(&Table->InsertOrderList);
+    Table->TableRoot = NULL;
+    Table->NumberGenericTableElements = 0;
+    Table->WhichOrderedElement = 0;
+    Table->OrderedPointer = &Table->InsertOrderList;
+    Table->CompareRoutine = CompareRoutine;
+    Table->AllocateRoutine = AllocateRoutine;
+    Table->FreeRoutine = FreeRoutine;
+    Table->TableContext = TableContext;
 }
 
 /*
-* @unimplemented
-*/
+ * @unimplemented
+ */
 PVOID
 NTAPI
-RtlLookupElementGenericTableFull (
-	PRTL_GENERIC_TABLE Table,
-	PVOID Buffer,
-	OUT PVOID *NodeOrParent,
-	OUT TABLE_SEARCH_RESULT *SearchResult
-	)
+RtlInsertElementGenericTable(IN PRTL_GENERIC_TABLE Table,
+                             IN PVOID Buffer,
+                             IN ULONG BufferSize,
+                             OUT PBOOLEAN NewElement OPTIONAL)
 {
-	UNIMPLEMENTED;
-	return 0;
+    UNIMPLEMENTED;
+    return 0;
 }
 
 /*
-* @implemented
-*/
+ * @unimplemented
+ */
 PVOID
 NTAPI
-RtlLookupElementGenericTableFullAvl (
-	PRTL_AVL_TABLE Table,
-	PVOID Buffer,
-	OUT PVOID *NodeOrParent,
-	OUT TABLE_SEARCH_RESULT *SearchResult
-	)
+RtlInsertElementGenericTableFull(IN PRTL_GENERIC_TABLE Table,
+                                 IN PVOID Buffer,
+                                 IN ULONG BufferSize,
+                                 OUT PBOOLEAN NewElement OPTIONAL,
+                                 IN PVOID NodeOrParent,
+                                 IN TABLE_SEARCH_RESULT SearchResult)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+RtlIsGenericTableEmpty(IN PRTL_GENERIC_TABLE Table)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+RtlNumberGenericTableElements(IN PRTL_GENERIC_TABLE Table)
+{
+    return Table->NumberGenericTableElements;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+NTAPI
+RtlLookupElementGenericTable(IN PRTL_GENERIC_TABLE Table,
+                             IN PVOID Buffer)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+NTAPI
+RtlLookupElementGenericTableFull(IN PRTL_GENERIC_TABLE Table,
+                                 IN PVOID Buffer,
+                                 OUT PVOID *NodeOrParent,
+                                 OUT TABLE_SEARCH_RESULT *SearchResult)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+RtlDeleteElementGenericTable(IN PRTL_GENERIC_TABLE Table,
+                             IN PVOID Buffer)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+NTAPI
+RtlEnumerateGenericTable(IN PRTL_GENERIC_TABLE Table,
+                         IN BOOLEAN Restart)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+NTAPI
+RtlEnumerateGenericTableLikeADirectory(IN PRTL_AVL_TABLE Table,
+                                       IN PRTL_AVL_MATCH_FUNCTION MatchFunction,
+                                       IN PVOID MatchData,
+                                       IN ULONG NextFlag,
+                                       IN OUT PVOID *RestartKey,
+                                       IN OUT PULONG DeleteCount,
+                                       IN OUT PVOID Buffer)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+NTAPI
+RtlEnumerateGenericTableWithoutSplaying(IN PRTL_GENERIC_TABLE Table,
+                                        IN OUT PVOID *RestartKey)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+NTAPI
+RtlGetElementGenericTable(IN PRTL_GENERIC_TABLE Table,
+                          IN ULONG I)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+RtlLookupElementGenericTableFullAvl(IN PRTL_AVL_TABLE Table,
+                                    IN PVOID Buffer,
+                                    IN OUT PVOID *NodeOrParent,
+                                    IN OUT TABLE_SEARCH_RESULT *SearchResult)
 {
 	PRTL_BALANCED_LINKS OurNodeOrParent;
 	TABLE_SEARCH_RESULT OurSearchResult;
@@ -80,16 +214,13 @@ RtlLookupElementGenericTableFullAvl (
 		return NULL;
 }
 
-
 /*
-* @implemented
-*/
+ * @implemented
+ */
 PVOID
 NTAPI
-RtlLookupElementGenericTableAvl (
-	PRTL_AVL_TABLE Table,
-	PVOID Buffer
-	)
+RtlLookupElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
+                                IN PVOID Buffer)
 {
 	PRTL_BALANCED_LINKS OurNodeOrParent;
 	TABLE_SEARCH_RESULT OurSearchResult;
@@ -97,30 +228,13 @@ RtlLookupElementGenericTableAvl (
 	(Table, Buffer, (PVOID *)&OurNodeOrParent, &OurSearchResult);
 }
 
-
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 BOOLEAN
 NTAPI
-RtlDeleteElementGenericTable (
-	PRTL_GENERIC_TABLE Table,
-	PVOID Buffer
-	)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
-
-/*
-* @implemented
-*/
-BOOLEAN
-NTAPI
-RtlDeleteElementGenericTableAvl (
-	PRTL_AVL_TABLE Table,
-	PVOID Buffer
-	)
+RtlDeleteElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
+                                IN PVOID Buffer)
 {
 	TABLE_SEARCH_RESULT Result;
 	PRTL_BALANCED_LINKS Node;
@@ -143,28 +257,12 @@ RtlDeleteElementGenericTableAvl (
 }
 
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 PVOID
 NTAPI
-RtlEnumerateGenericTable (
-	PRTL_GENERIC_TABLE Table,
-	BOOLEAN Restart
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
-}
-
-/*
-* @implemented
-*/
-PVOID
-NTAPI
-RtlEnumerateGenericTableAvl (
-	PRTL_AVL_TABLE Table,
-	BOOLEAN Restart
-	)
+RtlEnumerateGenericTableAvl(IN PRTL_AVL_TABLE Table,
+                            IN BOOLEAN Restart)
 {
 	if( Table->NumberGenericTableElements == 0 )
 		return NULL;
@@ -184,74 +282,23 @@ RtlEnumerateGenericTableAvl (
 }
 
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 PVOID
 NTAPI
-RtlEnumerateGenericTableLikeADirectory (
-	IN PRTL_AVL_TABLE Table,
-	IN PRTL_AVL_MATCH_FUNCTION MatchFunction,
-	IN PVOID MatchData,
-	IN ULONG NextFlag,
-	IN OUT PVOID *RestartKey,
-	IN OUT PULONG DeleteCount,
-	IN OUT PVOID Buffer
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
-}
-
-/*
-* @unimplemented
-*/
-PVOID
-NTAPI
-RtlEnumerateGenericTableWithoutSplaying (
-	PRTL_GENERIC_TABLE Table,
-	PVOID *RestartKey
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
-}
-
-/*
-* @implemented
-*/
-PVOID
-NTAPI
-RtlEnumerateGenericTableWithoutSplayingAvl (
-	PRTL_AVL_TABLE Table,
-	PVOID *RestartKey
-	)
+RtlEnumerateGenericTableWithoutSplayingAvl(IN PRTL_AVL_TABLE Table,
+                                           IN OUT PVOID *RestartKey)
 {
 	return RtlEnumerateGenericTableWithoutSplayingAvl(Table, RestartKey);
 }
 
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 PVOID
 NTAPI
-RtlGetElementGenericTable(
-	PRTL_GENERIC_TABLE Table,
-	ULONG I
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
-}
-
-/*
-* @implemented
-*/
-PVOID
-NTAPI
-RtlGetElementGenericTableAvl (
-	PRTL_AVL_TABLE Table,
-	ULONG I
-	)
+RtlGetElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
+                             IN ULONG I)
 {
 	PRTL_BALANCED_LINKS Node;
 
@@ -265,96 +312,35 @@ RtlGetElementGenericTableAvl (
 }
 
 /*
-* @implemented
-*/
-VOID
-NTAPI
-RtlInitializeGenericTable(PRTL_GENERIC_TABLE Table,
-                          PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine,
-                          PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine,
-                          PRTL_GENERIC_FREE_ROUTINE FreeRoutine,
-                          PVOID TableContext)
-{
-	/* Initialize the table to default and passed values */
-    InitializeListHead(&Table->InsertOrderList);
-    Table->TableRoot = NULL;
-    Table->NumberGenericTableElements = 0;
-    Table->WhichOrderedElement = 0;
-    Table->OrderedPointer = &Table->InsertOrderList;
-    Table->CompareRoutine = CompareRoutine;
-    Table->AllocateRoutine = AllocateRoutine;
-    Table->FreeRoutine = FreeRoutine;
-    Table->TableContext = TableContext;
-}
-
-
-/*
  * @implemented
  */
-VOID NTAPI
+VOID
+NTAPI
 RtlInitializeGenericTableAvl(IN OUT PRTL_AVL_TABLE Table,
                              IN PRTL_AVL_COMPARE_ROUTINE CompareRoutine,
                              IN PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine,
                              IN PRTL_AVL_FREE_ROUTINE FreeRoutine,
                              IN PVOID TableContext)
 {
-  RtlZeroMemory(Table,
-                sizeof(RTL_AVL_TABLE));
-  Table->BalancedRoot.Parent = &Table->BalancedRoot;
-  Table->CompareRoutine = CompareRoutine;
-  Table->AllocateRoutine = AllocateRoutine;
-  Table->FreeRoutine = FreeRoutine;
-  Table->TableContext = TableContext;
-}
-
-
-/*
-* @unimplemented
-*/
-PVOID
-NTAPI
-RtlInsertElementGenericTable (
-	PRTL_GENERIC_TABLE Table,
-	PVOID Buffer,
-	ULONG BufferSize,
-	PBOOLEAN NewElement OPTIONAL
-	)
-{
-    UNIMPLEMENTED;
-    return 0;
+    RtlZeroMemory(Table, sizeof(RTL_AVL_TABLE));
+    Table->BalancedRoot.Parent = &Table->BalancedRoot;
+    Table->CompareRoutine = CompareRoutine;
+    Table->AllocateRoutine = AllocateRoutine;
+    Table->FreeRoutine = FreeRoutine;
+    Table->TableContext = TableContext;
 }
 
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 PVOID
 NTAPI
-RtlInsertElementGenericTableFull (
-	PRTL_GENERIC_TABLE Table,
-	PVOID Buffer,
-	ULONG BufferSize,
-	PBOOLEAN NewElement OPTIONAL,
-	PVOID NodeOrParent,
-	TABLE_SEARCH_RESULT SearchResult
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
-}
-
-/*
-* @implemented
-*/
-PVOID
-NTAPI
-RtlInsertElementGenericTableFullAvl (
-	PRTL_AVL_TABLE Table,
-	PVOID Buffer,
-	ULONG BufferSize,
-	PBOOLEAN NewElement OPTIONAL,
-	PVOID *NodeOrParent,
-	TABLE_SEARCH_RESULT *SearchResult
-	)
+RtlInsertElementGenericTableFullAvl(IN PRTL_AVL_TABLE Table,
+                                    IN PVOID Buffer,
+                                    IN ULONG BufferSize,
+                                    OUT PBOOLEAN NewElement OPTIONAL,
+                                    IN OUT PVOID *NodeOrParent,
+                                    IN OUT TABLE_SEARCH_RESULT *SearchResult)
 {
 	PRTL_BALANCED_LINKS OurNodeOrParent;
 	TABLE_SEARCH_RESULT OurSearchResult;
@@ -400,16 +386,14 @@ RtlInsertElementGenericTableFullAvl (
 }
 
 /*
-* @implemented
-*/
+ * @implemented
+ */
 PVOID
 NTAPI
-RtlInsertElementGenericTableAvl (
-	PRTL_AVL_TABLE Table,
-	PVOID Buffer,
-	ULONG BufferSize,
-	PBOOLEAN NewElement OPTIONAL
-	)
+RtlInsertElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
+                                IN PVOID Buffer,
+                                IN ULONG BufferSize,
+                                OUT PBOOLEAN NewElement OPTIONAL)
 {
 	PVOID NodeOrParent;
 	TABLE_SEARCH_RESULT SearchResult;
@@ -418,50 +402,37 @@ RtlInsertElementGenericTableAvl (
 	(Table, Buffer, BufferSize, NewElement, &NodeOrParent, &SearchResult);
 }
 
-
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 BOOLEAN
 NTAPI
-RtlIsGenericTableEmpty (
-	PRTL_GENERIC_TABLE Table
-	)
+RtlIsGenericTableEmptyAvl(PRTL_AVL_TABLE Table)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    return Table->NumberGenericTableElements == 0;
 }
-
-/*
-* @unimplemented
-*/
-BOOLEAN
-NTAPI
-RtlIsGenericTableEmptyAvl (
-	PRTL_AVL_TABLE Table
-	)
-{
-	return Table->NumberGenericTableElements == 0;
-}
-
 
 /*
  * @implemented
  */
-ULONG NTAPI
-RtlNumberGenericTableElements(IN PRTL_GENERIC_TABLE Table)
-{
-  return Table->NumberGenericTableElements;
-}
-
-
-/*
- * @implemented
- */
-ULONG NTAPI
+ULONG
+NTAPI
 RtlNumberGenericTableElementsAvl(IN PRTL_AVL_TABLE Table)
 {
-  return Table->NumberGenericTableElements;
+    return Table->NumberGenericTableElements;
+}
+
+/*
+* @unimplemented
+*/
+PVOID
+NTAPI
+RtlLookupFirstMatchingElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
+                                             IN PVOID Buffer,
+                                             OUT PVOID *RestartKey)
+{
+    UNIMPLEMENTED;
+    return NULL;
 }
 
 /* EOF */
