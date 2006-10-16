@@ -34,7 +34,11 @@ RtlpFindGenericTableNodeOrParent(IN PRTL_GENERIC_TABLE Table,
     RTL_GENERIC_COMPARE_RESULTS Result;
 
     /* Quick check to see if the table is empty */
-    if (RtlIsGenericTableEmpty(Table)) return TableEmptyTree;
+    if (RtlIsGenericTableEmpty(Table))
+    {
+        *NodeOrParent = NULL;
+        return TableEmptyTree;
+    }
 
     /* Set the current node */
     CurrentNode = Table->TableRoot;
