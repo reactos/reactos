@@ -258,7 +258,7 @@ RtlLookupElementGenericTable(IN PRTL_GENERIC_TABLE Table,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 NTAPI
@@ -267,8 +267,22 @@ RtlLookupElementGenericTableFull(IN PRTL_GENERIC_TABLE Table,
                                  OUT PVOID *NodeOrParent,
                                  OUT TABLE_SEARCH_RESULT *SearchResult)
 {
-    UNIMPLEMENTED;
-    return 0;
+    /* Do the initial lookup */
+    *SearchResult = RtlpFindGenericTableNodeOrParent(Table,
+                                                     Buffer,
+                                                     (PRTL_SPLAY_LINKS *)
+                                                     NodeOrParent);
+
+    /* Check if we found anything */
+    if ((*SearchResult == TableEmptyTree) || (*SearchResult != TableFoundNode))
+    {
+        /* Nothing found */
+        return NULL;
+    }
+
+    /* Otherwise, splay the tree and return this entry */
+    Table->TableRoot = RtlSplay(*NodeOrParent);
+    return &((PTABLE_ENTRY_HEADER)*NodeOrParent)->UserData;
 }
 
 /*
@@ -305,15 +319,41 @@ RtlDeleteElementGenericTable(IN PRTL_GENERIC_TABLE Table,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 NTAPI
 RtlEnumerateGenericTable(IN PRTL_GENERIC_TABLE Table,
                          IN BOOLEAN Restart)
 {
-    UNIMPLEMENTED;
-    return 0;
+    PRTL_SPLAY_LINKS FoundNode;
+
+    /* Check if the table is empty */
+    if (RtlIsGenericTableEmpty(Table)) return NULL;
+
+    /* Check if we have to restart */
+    if (Restart)
+    {
+        /* Then find the leftmost element */
+        FoundNode = Table->TableRoot;
+        do
+        {
+            /* Get the left child */
+            FoundNode = RtlLeftChild(FoundNode);
+        } while(RtlLeftChild(FoundNode));
+
+        /* Splay it */
+        Table->TableRoot = RtlSplay(FoundNode);
+    }
+    else
+    {
+        /* Otherwise, try using the real successor */
+        FoundNode = RtlRealSuccessor(Table->TableRoot);
+        if (FoundNode) Table->TableRoot = RtlSplay(FoundNode);
+    }
+
+    /* Check if we found the node and return it */
+    return FoundNode ? &((PTABLE_ENTRY_HEADER)FoundNode)->UserData : NULL;
 }
 
 /*
