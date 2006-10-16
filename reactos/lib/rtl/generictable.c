@@ -357,6 +357,44 @@ RtlEnumerateGenericTable(IN PRTL_GENERIC_TABLE Table,
 }
 
 /*
+ * @implemented
+ */
+PVOID
+NTAPI
+RtlEnumerateGenericTableWithoutSplaying(IN PRTL_GENERIC_TABLE Table,
+                                        IN OUT PVOID *RestartKey)
+{
+    PRTL_SPLAY_LINKS FoundNode;
+
+    /* Check if the table is empty */
+    if (RtlIsGenericTableEmpty(Table)) return NULL;
+
+    /* Check if we have to restart */
+    if (!(*RestartKey))
+    {
+        /* Then find the leftmost element */
+        FoundNode = Table->TableRoot;
+        do
+        {
+            /* Get the left child */
+            FoundNode = RtlLeftChild(FoundNode);
+        } while(RtlLeftChild(FoundNode));
+
+        /* Splay it */
+        *RestartKey = FoundNode;
+    }
+    else
+    {
+        /* Otherwise, try using the real successor */
+        FoundNode = RtlRealSuccessor(Table->TableRoot);
+        if (FoundNode) *RestartKey = FoundNode;
+    }
+
+    /* Check if we found the node and return it */
+    return FoundNode ? &((PTABLE_ENTRY_HEADER)FoundNode)->UserData : NULL;
+}
+
+/*
  * @unimplemented
  */
 PVOID
@@ -378,24 +416,14 @@ RtlEnumerateGenericTableLikeADirectory(IN PRTL_AVL_TABLE Table,
  */
 PVOID
 NTAPI
-RtlEnumerateGenericTableWithoutSplaying(IN PRTL_GENERIC_TABLE Table,
-                                        IN OUT PVOID *RestartKey)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-PVOID
-NTAPI
 RtlGetElementGenericTable(IN PRTL_GENERIC_TABLE Table,
                           IN ULONG I)
 {
     UNIMPLEMENTED;
     return 0;
 }
+
+/* AVL FUNCTIONS *************************************************************/
 
 /*
  * @implemented
