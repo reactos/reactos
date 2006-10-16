@@ -333,6 +333,7 @@ HvInitialize(
    Hive->FileWrite = FileWrite;
    Hive->FileSetSize = FileSetSize;
    Hive->FileFlush = FileFlush;
+   Hive->StorageTypeCount = 2;
 
    switch (Operation)
    {

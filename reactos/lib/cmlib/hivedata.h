@@ -30,7 +30,6 @@
  * the other bits specify index into the hive file. The value HCELL_NULL
  * (-1) is reserved for marking invalid cells.
  */
-
 typedef ULONG HCELL_INDEX, *PHCELL_INDEX;
 
 #define HCELL_NULL                     ((HCELL_INDEX)-1)

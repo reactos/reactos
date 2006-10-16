@@ -275,7 +275,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
 	  CmpResult = _wcsnicmp(SearchKey->Name, name, subkeyLength);
 	  if (CmpResult == 0 && SearchKey->NameSize == NameSize)	  
 	    break;
-	  else if (CmpResult == 1)
+	  else if (CmpResult == -1)
 	    break;
 
 	  Ptr = Ptr->Flink;
