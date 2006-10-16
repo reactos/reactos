@@ -412,15 +412,96 @@ RtlEnumerateGenericTableLikeADirectory(IN PRTL_AVL_TABLE Table,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 NTAPI
 RtlGetElementGenericTable(IN PRTL_GENERIC_TABLE Table,
                           IN ULONG I)
 {
-    UNIMPLEMENTED;
-    return 0;
+    ULONG OrderedElement, ElementCount;
+    PLIST_ENTRY OrderedNode;
+    ULONG DeltaUp, DeltaDown;
+    ULONG NextI = I + 1;
+
+    /* Setup current accounting data */
+    OrderedNode = Table->OrderedPointer;
+    OrderedElement = Table->WhichOrderedElement;
+    ElementCount = Table->NumberGenericTableElements;
+
+    /* Sanity checks */
+    if ((I == MAXULONG) || (NextI > ElementCount)) return NULL;
+
+    /* Check if we already found the entry */
+    if (NextI == OrderedElement)
+    {
+        /* Return it */
+        return &((PTABLE_ENTRY_HEADER)CONTAINING_RECORD(OrderedNode,
+                                                        TABLE_ENTRY_HEADER,
+                                                        ListEntry))->UserData;
+    }
+
+    /* Now check if we're farther behind */
+    if (OrderedElement > NextI)
+    {
+        /* Find out if the distance is more then the half-way point */
+        if (NextI > (OrderedElement / 2))
+        {
+            /* Do the search backwards, since this takes less iterations */
+            DeltaDown = OrderedElement - NextI;
+            do
+            {
+                /* Get next node */
+                OrderedNode = OrderedNode->Blink;
+            } while (--DeltaDown);
+        }
+        else
+        {
+            /* Follow the list directly instead */
+            OrderedNode = &Table->InsertOrderList;
+            do
+            {
+                /* Get next node */
+                OrderedNode = OrderedNode->Flink;
+            } while (--NextI);
+        }
+    }
+    else
+    {
+        /* We are farther ahead, calculate distances */
+        DeltaUp = NextI - OrderedElement;
+        DeltaDown = (ElementCount - NextI) + 1;
+
+        /* Check if the up distance is smaller then the down distance */
+        if (DeltaUp <= DeltaDown)
+        {
+            /* Do the search forwards, since this takes less iterations */
+            do
+            {
+                /* Get next node */
+                OrderedNode = OrderedNode->Blink;
+            } while (--DeltaUp);
+        }
+        else
+        {
+            /* Do the search downwards, since this takes less iterations */
+            OrderedNode = &Table->InsertOrderList;
+            do
+            {
+                /* Get next node */
+                OrderedNode = OrderedNode->Blink;
+            } while (--DeltaDown);
+        }
+    }
+
+    /* Got the element, save it */
+    Table->OrderedPointer = OrderedNode;
+    Table->WhichOrderedElement = NextI;
+
+    /* Return the element */
+    return &((PTABLE_ENTRY_HEADER)CONTAINING_RECORD(OrderedNode,
+                                                    TABLE_ENTRY_HEADER,
+                                                    ListEntry))->UserData;
 }
 
 /* AVL FUNCTIONS *************************************************************/
