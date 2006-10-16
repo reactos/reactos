@@ -299,7 +299,7 @@ static BOOL do_reg_operation( HKEY hkey, const WCHAR *value, INFCONTEXT *context
     {
         BOOL exists = !RegQueryValueExW( hkey, value, NULL, NULL, NULL, NULL );
         if (exists && (flags & FLG_ADDREG_NOCLOBBER)) return TRUE;
-        if (!exists & (flags & FLG_ADDREG_OVERWRITEONLY)) return TRUE;
+        if (!exists && (flags & FLG_ADDREG_OVERWRITEONLY)) return TRUE;
     }
 
     switch(flags & FLG_ADDREG_TYPE_MASK)
