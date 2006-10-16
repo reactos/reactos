@@ -212,10 +212,22 @@ RtlConvertUlongToLuid(ULONG Ulong)
 #endif
 #endif
 
+#ifdef NTOS_KERNEL_RUNTIME
+
 //
-// This macro does nothing in kernel mode
+// Executing RTL functions at DISPATCH_LEVEL or higher will result in a
+// bugcheck.
+//
+#define RTL_PAGED_CODE PAGED_CODE
+
+#else
+
+//
+// This macro does nothing in user mode
 //
 #define RTL_PAGED_CODE NOP_FUNCTION
+
+#endif
 
 //
 // RTL Splay Tree Functions
@@ -223,40 +235,51 @@ RtlConvertUlongToLuid(ULONG Ulong)
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlSplay(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlDelete(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlDeleteNoSplay(
-    PRTL_SPLAY_LINKS Links,
-    PRTL_SPLAY_LINKS *Root
+RtlSplay(
+    IN PRTL_SPLAY_LINKS Links
 );
 
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlSubtreeSuccessor(PRTL_SPLAY_LINKS Links);
+RtlDelete(IN PRTL_SPLAY_LINKS Links
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlDeleteNoSplay(
+    IN PRTL_SPLAY_LINKS Links,
+    OUT PRTL_SPLAY_LINKS *Root
+);
 
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlSubtreePredecessor(PRTL_SPLAY_LINKS Links);
+RtlSubtreeSuccessor(
+    IN PRTL_SPLAY_LINKS Links
+);
 
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlRealSuccessor(PRTL_SPLAY_LINKS Links);
+RtlSubtreePredecessor(
+    IN PRTL_SPLAY_LINKS Links
+);
 
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
+RtlRealSuccessor(
+    IN PRTL_SPLAY_LINKS Links
+);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealPredecessor(
+    IN PRTL_SPLAY_LINKS Links
+);
 
 #define RtlIsLeftChild(Links) \
     (RtlLeftChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
@@ -304,16 +327,6 @@ RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
         _SplayParent->RightChild = _SplayChild;         \
         _SplayChild->Parent = _SplayParent;             \
     }
-#endif
-
-#ifdef NTOS_KERNEL_RUNTIME
-
-//
-// Executing RTL functions at DISPATCH_LEVEL or higher will result in a
-// bugcheck.
-//
-#define RTL_PAGED_CODE PAGED_CODE
-
 #endif
 
 //
@@ -2490,6 +2503,35 @@ DbgPrompt(
 VOID
 NTAPI
 DbgBreakPoint(VOID);
+
+//
+// Generic Table Functions
+//
+PVOID
+NTAPI
+RtlInsertElementGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    IN ULONG BufferSize,
+    OUT PBOOLEAN NewElement OPTIONAL
+);
+
+PVOID
+NTAPI
+RtlInsertElementGenericTableFull(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    IN ULONG BufferSize,
+    OUT PBOOLEAN NewElement OPTIONAL,
+    IN PVOID NodeOrParent,
+    IN TABLE_SEARCH_RESULT SearchResult
+);
+
+BOOLEAN
+NTAPI
+RtlIsGenericTableEmpty(
+    IN PRTL_GENERIC_TABLE Table
+);
 
 //
 // Handle Table Functions

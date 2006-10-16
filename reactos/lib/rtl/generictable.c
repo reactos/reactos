@@ -14,7 +14,82 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* Internal header for table entries */
+typedef struct _TABLE_ENTRY_HEADER
+{
+    RTL_SPLAY_LINKS SplayLinks;
+    LIST_ENTRY ListEntry;
+    LONGLONG UserData;
+} TABLE_ENTRY_HEADER, *PTABLE_ENTRY_HEADER;
+
+/* PRIVATE FUNCTIONS *********************************************************/
+
+TABLE_SEARCH_RESULT
+NTAPI
+RtlpFindGenericTableNodeOrParent(IN PRTL_GENERIC_TABLE Table,
+                                 IN PVOID Buffer,
+                                 OUT PRTL_SPLAY_LINKS *NodeOrParent)
+{
+    PRTL_SPLAY_LINKS CurrentNode, ChildNode;
+    RTL_GENERIC_COMPARE_RESULTS Result;
+
+    /* Quick check to see if the table is empty */
+    if (RtlIsGenericTableEmpty(Table)) return TableEmptyTree;
+
+    /* Set the current node */
+    CurrentNode = Table->TableRoot;
+
+    /* Start compare loop */
+    while (TRUE)
+    {
+        /* Do the compare */
+        Result = Table->CompareRoutine(Table,
+                                       Buffer,
+                                       &((PTABLE_ENTRY_HEADER)CurrentNode)->
+                                       UserData);
+        if (Result == GenericLessThan)
+        {
+            /* We're less, check if this is the left child */
+            if ((ChildNode = RtlLeftChild(CurrentNode)))
+            {
+                /* Continue searching from this node */
+                ChildNode = CurrentNode;
+            }
+            else
+            {
+                /* Otherwise, the element isn't in this tree */
+                *NodeOrParent = CurrentNode;
+                return TableInsertAsLeft;
+            }
+        }
+        else if (Result == GenericGreaterThan)
+        {
+            /* We're more, check if this is the right child */
+            if ((ChildNode = RtlRightChild(CurrentNode)))
+            {
+                /* Continue searching from this node */
+                ChildNode = CurrentNode;
+            }
+            else
+            {
+                /* Otherwise, the element isn't in this tree */
+                *NodeOrParent = CurrentNode;
+                return TableInsertAsRight;
+            }
+        }
+        else
+        {
+            /* We should've found the node */
+            ASSERT(Result == GenericEqual);
+
+            /* Return node found */
+            *NodeOrParent = CurrentNode;
+            return TableFoundNode;
+        }
+    }
+}
+
+/* SPLAY FUNCTIONS ***********************************************************/
 
 /*
  * @implemented
@@ -49,8 +124,19 @@ RtlInsertElementGenericTable(IN PRTL_GENERIC_TABLE Table,
                              IN ULONG BufferSize,
                              OUT PBOOLEAN NewElement OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return 0;
+    PRTL_SPLAY_LINKS NodeOrParent;
+    TABLE_SEARCH_RESULT Result;
+
+    /* Get the splay links and table search result immediately */
+    Result = RtlpFindGenericTableNodeOrParent(Table, Buffer, &NodeOrParent);
+
+    /* Now call the routine to do the full insert */
+    return RtlInsertElementGenericTableFull(Table,
+                                            Buffer,
+                                            BufferSize,
+                                            NewElement,
+                                            NodeOrParent,
+                                            Result);
 }
 
 /*
@@ -65,8 +151,70 @@ RtlInsertElementGenericTableFull(IN PRTL_GENERIC_TABLE Table,
                                  IN PVOID NodeOrParent,
                                  IN TABLE_SEARCH_RESULT SearchResult)
 {
-    UNIMPLEMENTED;
-    return 0;
+    PRTL_SPLAY_LINKS NewNode;
+
+    /* Check if the entry wasn't already found */
+    if (SearchResult != TableFoundNode)
+    {
+        /* We're doing an allocation, sanity check */
+        ASSERT(Table->NumberGenericTableElements != (MAXULONG - 1));
+
+        /* Allocate a node */
+        NewNode = Table->AllocateRoutine(Table,
+                                         BufferSize +
+                                         FIELD_OFFSET(TABLE_ENTRY_HEADER,
+                                                      UserData));
+        if (!NewNode)
+        {
+            /* No memory or other allocation error, fail */
+            if (NewElement) *NewElement = FALSE;
+            return NULL;
+        }
+
+        /* Initialize the new inserted element */
+        RtlInitializeSplayLinks(NewNode);
+        InsertTailList(&Table->InsertOrderList,
+                       &((PTABLE_ENTRY_HEADER)NewNode)->ListEntry);
+
+        /* Increase element count */
+        Table->NumberGenericTableElements++;
+
+        /* Check where we should insert the entry */
+        if (SearchResult == TableEmptyTree)
+        {
+            /* This is the new root node */
+            Table->TableRoot = NewNode;
+        }
+        else if (SearchResult == TableInsertAsLeft)
+        {
+            /* Insert it left */
+            RtlInsertAsLeftChild(NodeOrParent, NewNode);
+        }
+        else
+        {
+            /* Right node */
+            RtlInsertAsRightChild(NodeOrParent, NewNode);
+        }
+
+        /* Copy user buffer */
+        RtlCopyMemory(&((PTABLE_ENTRY_HEADER)NewNode)->UserData,
+                      Buffer,
+                      BufferSize);
+    }
+    else
+    {
+        /* Return the node we already found */
+        NewNode = NodeOrParent;
+    }
+
+    /* Splay the tree */
+    Table->TableRoot = RtlSplay(NewNode);
+
+    /* Return status */
+    if (NewElement) *NewElement = (SearchResult == TableFoundNode);
+
+    /* Return pointer to user data */
+    return &((PTABLE_ENTRY_HEADER)NewNode)->UserData;
 }
 
 /*
@@ -289,6 +437,7 @@ NTAPI
 RtlEnumerateGenericTableWithoutSplayingAvl(IN PRTL_AVL_TABLE Table,
                                            IN OUT PVOID *RestartKey)
 {
+    /* FIXME! */
 	return RtlEnumerateGenericTableWithoutSplayingAvl(Table, RestartKey);
 }
 
