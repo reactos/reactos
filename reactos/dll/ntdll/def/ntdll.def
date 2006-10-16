@@ -83,6 +83,7 @@ NtCompareTokens@12
 NtCompleteConnectPort@4
 NtConnectPort@32
 NtContinue@8
+NtCreateDebugObject@16
 NtCreateDirectoryObject@12
 NtCreateEvent@20
 NtCreateEventPair@12
@@ -105,6 +106,7 @@ NtCreateTimer@16
 NtCreateToken@52
 NtCreateWaitablePort@20
 NtCurrentTeb=_NtCurrentTeb@0
+NtDebugContinue@12
 NtDelayExecution@8
 NtDeleteAtom@4
 NtDeleteFile@4
@@ -217,9 +219,9 @@ NtReleaseSemaphore@12
 NtRemoveIoCompletion@20
 NtReplaceKey@12
 NtReplyPort@8
-NtReplyWaitReplyPort@8
 NtReplyWaitReceivePort@16
 NtReplyWaitReceivePortEx@20
+NtReplyWaitReplyPort@8
 NtRequestPort@8
 NtRequestWaitReplyPort@12
 NtResetEvent@8
@@ -228,8 +230,8 @@ NtResumeProcess@4
 NtResumeThread@8
 NtSaveKey@8
 NtSecureConnectPort@36
-NtSetDebugFilterState@12
 NtSetContextThread@8
+NtSetDebugFilterState@12
 NtSetDefaultHardErrorPort@4
 NtSetDefaultLocale@8
 NtSetDefaultUILanguage@4
@@ -742,6 +744,7 @@ ZwAlertThread@4
 ZwAllocateLocallyUniqueId@4
 ZwAllocateUuids@16
 ZwAllocateVirtualMemory@24
+ZwAssignProcessToJobObject@8
 ZwCallbackReturn@12
 ZwCancelIoFile@8
 ZwCancelTimer@8
@@ -758,6 +761,7 @@ ZwCreateEvent@20
 ZwCreateEventPair@12
 ZwCreateFile@44
 ZwCreateIoCompletion@16
+ZwCreateJobObject@12
 ZwCreateKey@28
 ZwCreateMailslotFile@32
 ZwCreateMutant@16
@@ -772,6 +776,7 @@ ZwCreateSymbolicLinkObject@16
 ZwCreateThread@32
 ZwCreateTimer@16
 ZwCreateToken@52
+ZwCreateWaitablePort@20
 ZwDebugContinue@12
 ZwDelayExecution@8
 ZwDeleteAtom@4
@@ -801,6 +806,7 @@ ZwImpersonateAnonymousToken@4
 ZwImpersonateClientOfPort@8
 ZwImpersonateThread@12
 ZwInitializeRegistry@4
+ZwIsProcessInJob@8
 ZwListenPort@8
 ZwLoadDriver@4
 ZwLoadKey@8
@@ -816,6 +822,7 @@ ZwOpenEvent@12
 ZwOpenEventPair@12
 ZwOpenFile@24
 ZwOpenIoCompletion@12
+ZwOpenJobObject@12
 ZwOpenKey@12
 ZwOpenMutant@12
 ZwOpenObjectAuditAlarm@48
@@ -828,14 +835,14 @@ ZwOpenThread@16
 ZwOpenThreadToken@16
 ZwOpenTimer@12
 ZwPlugPlayControl@12
+ZwPowerInformation@20
 ZwPrivilegeCheck@12
 ZwPrivilegedServiceAuditAlarm@20
 ZwPrivilegeObjectAuditAlarm@24
 ZwProtectVirtualMemory@20
 ZwPulseEvent@8
-ZwQueueApcThread@20
-ZwQueryInformationAtom@20
 ZwQueryAttributesFile@8
+ZwQueryDebugFilterState@8
 ZwQueryDefaultLocale@8
 ZwQueryDefaultUILanguage@4
 ZwQueryDirectoryFile@44
@@ -843,7 +850,9 @@ ZwQueryDirectoryObject@28
 ZwQueryEaFile@36
 ZwQueryEvent@20
 ZwQueryFullAttributesFile@8
+ZwQueryInformationAtom@20
 ZwQueryInformationFile@20
+ZwQueryInformationJobObject@20
 ZwQueryInformationPort@20
 ZwQueryInformationProcess@20
 ZwQueryInformationThread@20
@@ -868,6 +877,7 @@ ZwQueryTimerResolution@12
 ZwQueryValueKey@24
 ZwQueryVirtualMemory@24
 ZwQueryVolumeInformationFile@20
+ZwQueueApcThread@20
 ZwRaiseException@12
 ZwRaiseHardError@24
 ZwReadFile@36
@@ -892,6 +902,7 @@ ZwResumeThread@8
 ZwSaveKey@8
 ZwSecureConnectPort@36
 ZwSetContextThread@8
+ZwSetDebugFilterState@12
 ZwSetDefaultHardErrorPort@4
 ZwSetDefaultLocale@8
 ZwSetDefaultUILanguage@4
@@ -899,7 +910,9 @@ ZwSetEaFile@16
 ZwSetEvent@8
 ZwSetHighEventPair@4
 ZwSetHighWaitLowEventPair@4
+ZwSetInformationDebugObject@20
 ZwSetInformationFile@20
+ZwSetInformationJobObject@16
 ZwSetInformationKey@16
 ZwSetInformationObject@16
 ZwSetInformationProcess@16
@@ -927,6 +940,7 @@ ZwStopProfile@4
 ZwSuspendProcess@4
 ZwSuspendThread@8
 ZwSystemDebugControl@24
+ZwTerminateJobObject@8
 ZwTerminateProcess@8
 ZwTerminateThread@8
 ZwTestAlert@0
@@ -936,6 +950,7 @@ ZwUnlockFile@20
 ZwUnlockVirtualMemory@16
 ZwUnmapViewOfSection@8
 ZwVdmControl@8
+ZwWaitForDebugEvent@16
 ZwWaitForMultipleObjects@20
 ZwWaitForSingleObject@12
 ZwWaitHighEventPair@4
