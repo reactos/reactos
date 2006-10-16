@@ -222,7 +222,7 @@ typedef struct _CHILD_LIST
 {
     ULONG Count;
     HCELL_INDEX List;
-} CHILD_LIST, *PCM_CHILD_LIST;
+} CHILD_LIST, *PCHILD_LIST;
 
 //
 // Cached Child List
