@@ -30,6 +30,7 @@
 
 PGDI_TABLE_ENTRY GdiHandleTable = NULL;
 HANDLE CurrentProcessId = NULL;
+DWORD GDI_BatchLimit = 1;
 
 /*
  * @implemented
@@ -68,4 +69,30 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData)
     }
   }
   return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GdiSetBatchLimit(DWORD	Limit)
+{
+  DWORD OldLimit = GDI_BatchLimit;
+    if ((!Limit) || (Limit > GDI_BATCH_LIMIT)) return Limit;
+    GdiFlush();
+    GDI_BatchLimit = Limit;
+    return OldLimit;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GdiGetBatchLimit()
+{
+    return GDI_BatchLimit;
 }

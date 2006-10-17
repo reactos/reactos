@@ -874,34 +874,6 @@ GdiFlush()
 /*
  * @unimplemented
  */
-DWORD
-STDCALL
-GdiSetBatchLimit(
-	DWORD	a0
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GdiGetBatchLimit()
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
 int
 STDCALL
 SetICMMode(

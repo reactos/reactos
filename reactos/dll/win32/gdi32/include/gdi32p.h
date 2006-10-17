@@ -6,11 +6,14 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
+#define GDI_BATCH_LIMIT 20
+
 /* DATA **********************************************************************/
 
 extern PGDI_TABLE_ENTRY GdiHandleTable;
 extern HANDLE hProcessHeap;
 extern HANDLE CurrentProcessId;
+extern DWORD GDI_BatchLimit;
 
 typedef INT
 (CALLBACK* EMFPLAYPROC)(
