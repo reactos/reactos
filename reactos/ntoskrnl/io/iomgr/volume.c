@@ -30,30 +30,6 @@ KSPIN_LOCK IoVpbLock;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-VOID
-INIT_FUNCTION
-NTAPI
-IoInitVpbImplementation(VOID)
-{
-    /* Just initialize the VPB Lock */
-    KeInitializeSpinLock(&IoVpbLock);
-}
-
-VOID
-INIT_FUNCTION
-NTAPI
-IoInitFileSystemImplementation(VOID)
-{
-    /* Initialize the FS Lists and Locks */
-    InitializeListHead(&IopDiskFsListHead);
-    InitializeListHead(&IopNetworkFsListHead);
-    InitializeListHead(&IopCdRomFsListHead);
-    InitializeListHead(&IopTapeFsListHead);
-    ExInitializeResourceLite(&FileSystemListLock);
-    InitializeListHead(&FsChangeNotifyListHead);
-    KeInitializeGuardedMutex(&FsChangeNotifyListLock);
-}
-
 PVPB
 NTAPI
 IopCheckVpbMounted(IN POPEN_PACKET OpenPacket,

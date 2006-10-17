@@ -23,6 +23,14 @@ IoSynchronousInvalidateDeviceRelations(
     IN DEVICE_RELATION_TYPE Type
 );
 
+VOID
+NTAPI
+IopTimerDispatch(
+    IN PKDPC Dpc,
+    IN PVOID DeferredContext,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2
+);
 
 /* DATA ********************************************************************/
 
@@ -49,16 +57,38 @@ extern LIST_ENTRY ShutdownListHead;
 extern KSPIN_LOCK ShutdownListLock;
 extern NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;
 extern POBJECT_TYPE IoAdapterObjectType;
+ERESOURCE IopDatabaseResource;
+extern ERESOURCE FileSystemListLock;
+ERESOURCE IopSecurityResource;
+extern KGUARDED_MUTEX FsChangeNotifyListLock;
+extern KGUARDED_MUTEX PnpNotifyListLock;
+extern LIST_ENTRY IopDiskFsListHead;
+extern LIST_ENTRY IopCdRomFsListHead;
+extern LIST_ENTRY IopTapeFsListHead;
+extern LIST_ENTRY IopNetworkFsListHead;
+extern LIST_ENTRY DriverBootReinitListHead;
+extern LIST_ENTRY DriverReinitListHead;
+extern LIST_ENTRY PnpNotifyListHead;
+extern LIST_ENTRY FsChangeNotifyListHead;
+extern LIST_ENTRY IopLogListHead;
+extern LIST_ENTRY IopTimerQueueHead;
+extern KDPC IopTimerDpc;
+extern KTIMER IopTimer;
+extern KSPIN_LOCK CancelSpinLock;
+extern KSPIN_LOCK IoVpbLock;
+extern KSPIN_LOCK IoStatisticsLock;
+extern KSPIN_LOCK DriverReinitListLock;
+extern KSPIN_LOCK DriverBootReinitListLock;
+extern KSPIN_LOCK IopLogListLock;
+extern KSPIN_LOCK IopTimerLock;
+
+extern PDEVICE_OBJECT IopErrorLogObject;
+
 NPAGED_LOOKASIDE_LIST IoLargeIrpLookaside;
 NPAGED_LOOKASIDE_LIST IoSmallIrpLookaside;
 NPAGED_LOOKASIDE_LIST IopMdlLookasideList;
 
-VOID INIT_FUNCTION IopInitLookasideLists(VOID);
-
 #if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, IoInitCancelHandling)
-#pragma alloc_text(INIT, IoInitShutdownNotification)
-#pragma alloc_text(INIT, IopInitLookasideLists)
 #pragma alloc_text(INIT, IoInitSystem)
 #endif
 
@@ -66,22 +96,7 @@ VOID INIT_FUNCTION IopInitLookasideLists(VOID);
 
 VOID
 INIT_FUNCTION
-IoInitCancelHandling(VOID)
-{
-    extern KSPIN_LOCK CancelSpinLock;
-    KeInitializeSpinLock(&CancelSpinLock);
-}
-
-VOID
-INIT_FUNCTION
-IoInitShutdownNotification (VOID)
-{
-   InitializeListHead(&ShutdownListHead);
-   KeInitializeSpinLock(&ShutdownListLock);
-}
-
-VOID
-INIT_FUNCTION
+NTAPI
 IopInitLookasideLists(VOID)
 {
     ULONG LargeIrpSize, SmallIrpSize, MdlSize;
@@ -225,28 +240,15 @@ IopInitLookasideLists(VOID)
         }
         Prcb->PPLookasideList[LookasideMdlList].P = &CurrentList->L;
     }
-
-    DPRINT("Done allocation\n");
 }
-
 
 BOOLEAN
 INIT_FUNCTION
 NTAPI
-IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+IopCreateObjectTypes(VOID)
 {
-    PDEVICE_NODE DeviceNode;
-    PDRIVER_OBJECT DriverObject;
-    LDR_DATA_TABLE_ENTRY ModuleObject;
-    NTSTATUS Status;
-    CHAR Buffer[256];
-    ANSI_STRING NtBootPath, RootString;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING DirName;
-    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\DosDevices");
-    HANDLE Handle;
 
     /* Initialize default settings */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
@@ -259,19 +261,28 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Do the Adapter Type */
     RtlInitUnicodeString(&Name, L"Adapter");
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoAdapterObjectType);
+    if (!NT_SUCCESS(ObCreateObjectType(&Name,
+                                       &ObjectTypeInitializer,
+                                       NULL,
+                                       &IoAdapterObjectType))) return FALSE;
 
     /* Do the Controller Type */
     RtlInitUnicodeString(&Name, L"Controller");
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(CONTROLLER_OBJECT);
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoControllerObjectType);
+    if (!NT_SUCCESS(ObCreateObjectType(&Name,
+                                       &ObjectTypeInitializer,
+                                       NULL,
+                                       &IoControllerObjectType))) return FALSE;
 
-    /* Do the Device Type */
+    /* Do the Device Type. FIXME: Needs Delete Routine! */
     RtlInitUnicodeString(&Name, L"Device");
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DEVICE_OBJECT);
     ObjectTypeInitializer.ParseProcedure = IopParseDevice;
     ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoDeviceObjectType);
+    if (!NT_SUCCESS(ObCreateObjectType(&Name,
+                                       &ObjectTypeInitializer,
+                                       NULL,
+                                       &IoDeviceObjectType))) return FALSE;
 
     /* Initialize the Driver object type */
     RtlInitUnicodeString(&Name, L"Driver");
@@ -279,7 +290,10 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.DeleteProcedure = IopDeleteDriver;
     ObjectTypeInitializer.ParseProcedure = NULL;
     ObjectTypeInitializer.SecurityProcedure = NULL;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoDriverObjectType);
+    if (!NT_SUCCESS(ObCreateObjectType(&Name,
+                                       &ObjectTypeInitializer,
+                                       NULL,
+                                       &IoDriverObjectType))) return FALSE;
 
     /* Initialize the I/O Completion object type */
     RtlInitUnicodeString(&Name, L"IoCompletion");
@@ -288,7 +302,10 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.InvalidAttributes |= OBJ_PERMANENT;
     ObjectTypeInitializer.GenericMapping = IopCompletionMapping;
     ObjectTypeInitializer.DeleteProcedure = IopDeleteIoCompletion;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoCompletionType);
+    if (!NT_SUCCESS(ObCreateObjectType(&Name,
+                                       &ObjectTypeInitializer,
+                                       NULL,
+                                       &IoCompletionType))) return FALSE;
 
     /* Initialize the File object type  */
     RtlInitUnicodeString(&Name, L"File");
@@ -303,104 +320,187 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.QueryNameProcedure = IopQueryNameFile;
     ObjectTypeInitializer.ParseProcedure = IopParseFile;
     ObjectTypeInitializer.UseDefaultObject = FALSE;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoFileObjectType);
+    if (!NT_SUCCESS(ObCreateObjectType(&Name,
+                                       &ObjectTypeInitializer,
+                                       NULL,
+                                       &IoFileObjectType))) return FALSE;
 
-    /*
-    * Create the '\Driver' object directory
-    */
+    /* Success */
+    return TRUE;
+}
+
+BOOLEAN
+INIT_FUNCTION
+NTAPI
+IopCreateRootDirectories()
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING DirName;
+    HANDLE Handle;
+
+    /* Create the '\Driver' object directory */
     RtlInitUnicodeString(&DirName, L"\\Driver");
     InitializeObjectAttributes(&ObjectAttributes,
-        &DirName,
-        0,
-        NULL,
-        NULL);
-    ZwCreateDirectoryObject(&Handle,
-        0,
-        &ObjectAttributes);
+                               &DirName,
+                               OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    if (!NT_SUCCESS(NtCreateDirectoryObject(&Handle,
+                                            DIRECTORY_ALL_ACCESS,
+                                            &ObjectAttributes))) return FALSE;
+    NtClose(Handle);
 
-    /*
-    * Create the '\FileSystem' object directory
-    */
-    RtlInitUnicodeString(&DirName,
-        L"\\FileSystem");
+    /* Create the '\FileSystem' object directory */
+    RtlInitUnicodeString(&DirName, L"\\FileSystem");
     InitializeObjectAttributes(&ObjectAttributes,
-        &DirName,
-        0,
-        NULL,
-        NULL);
-    ZwCreateDirectoryObject(&Handle,
-        0,
-        &ObjectAttributes);
+                               &DirName,
+                               OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    if (!NT_SUCCESS(NtCreateDirectoryObject(&Handle,
+                                            DIRECTORY_ALL_ACCESS,
+                                            &ObjectAttributes))) return FALSE;
+    NtClose(Handle);
 
-    /*
-    * Create the '\Device' directory
-    */
-    RtlInitUnicodeString(&DirName,
-        L"\\Device");
+    /* Return success */
+    return TRUE;
+}
+
+BOOLEAN
+INIT_FUNCTION
+NTAPI
+IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    STRING DeviceString;
+    CHAR Buffer[256];
+    UNICODE_STRING DeviceName;
+    NTSTATUS Status;
+    HANDLE FileHandle;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PFILE_OBJECT FileObject;
+
+    /* Build the ARC device name */
+    sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+    RtlInitAnsiString(&DeviceString, Buffer);
+    Status = RtlAnsiStringToUnicodeString(&DeviceName, &DeviceString, TRUE);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Open it */
     InitializeObjectAttributes(&ObjectAttributes,
-        &DirName,
-        0,
-        NULL,
-        NULL);
-    ZwCreateDirectoryObject(&Handle,
-        0,
-        &ObjectAttributes);
+                               &DeviceName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenFile(&FileHandle,
+                        FILE_READ_ATTRIBUTES,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_NON_DIRECTORY_FILE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        KeBugCheckEx(INACCESSIBLE_BOOT_DEVICE,
+                     (ULONG_PTR)&DeviceName,
+                     Status,
+                     0,
+                     0);
+    }
 
-    /*
-    * Create the '\??' directory
-    */
-    RtlInitUnicodeString(&DirName,
-        L"\\??");
-    InitializeObjectAttributes(&ObjectAttributes,
-        &DirName,
-        0,
-        NULL,
-        NULL);
-    ZwCreateDirectoryObject(&Handle,
-        0,
-        &ObjectAttributes);
+    /* Get the DO */
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       0,
+                                       IoFileObjectType,
+                                       KernelMode,
+                                       (PVOID *)&FileObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        RtlFreeUnicodeString(&DeviceName);
+        return FALSE;
+    }
 
-    /*
-    * Create the '\ArcName' directory
-    */
-    RtlInitUnicodeString(&DirName,
-        L"\\ArcName");
-    InitializeObjectAttributes(&ObjectAttributes,
-        &DirName,
-        0,
-        NULL,
-        NULL);
-    ZwCreateDirectoryObject(&Handle,
-        0,
-        &ObjectAttributes);
+    /* Mark it as the boot partition */
+    FileObject->DeviceObject->Flags |= DO_SYSTEM_BOOT_PARTITION;
 
-    /*
-    * Initialize remaining subsubsystem
-    */
-    IopInitDriverImplementation();
-    IoInitCancelHandling();
-    IoInitFileSystemImplementation();
-    IoInitVpbImplementation();
-    IoInitShutdownNotification();
-    IopInitPnpNotificationImplementation();
-    IopInitErrorLog();
-    IopInitTimerImplementation();
+    /* Save a copy of the DO for the I/O Error Logger */
+    ObReferenceObject(FileObject->DeviceObject);
+    IopErrorLogObject = FileObject->DeviceObject;
+
+    /* Cleanup and return success */
+    RtlFreeUnicodeString(&DeviceName);
+    NtClose(FileHandle);
+    ObDereferenceObject(FileObject);
+    return TRUE;
+}
+
+BOOLEAN
+INIT_FUNCTION
+NTAPI
+IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    LARGE_INTEGER ExpireTime;
+    PDEVICE_NODE DeviceNode;
+    PDRIVER_OBJECT DriverObject;
+    LDR_DATA_TABLE_ENTRY ModuleObject;
+    NTSTATUS Status;
+    CHAR Buffer[256];
+    ANSI_STRING NtBootPath, RootString;
+
+    /* Initialize empty NT Boot Path */
+    RtlInitEmptyAnsiString(&NtBootPath, Buffer, sizeof(Buffer));
+
+    /* Initialize the lookaside lists */
     IopInitLookasideLists();
 
-    /*
-    * Create link from '\DosDevices' to '\??' directory
-    */
-    RtlInitUnicodeString(&DirName,
-        L"\\??");
-    IoCreateSymbolicLink(&LinkName,
-        &DirName);
+    /* Initialize all locks and lists */
+    ExInitializeResource(&IopDatabaseResource);
+    ExInitializeResource(&FileSystemListLock);
+    ExInitializeResource(&IopSecurityResource);
+    KeInitializeGuardedMutex(&FsChangeNotifyListLock);
+    KeInitializeGuardedMutex(&PnpNotifyListLock);
+    InitializeListHead(&IopDiskFsListHead);
+    InitializeListHead(&IopCdRomFsListHead);
+    InitializeListHead(&IopTapeFsListHead);
+    InitializeListHead(&IopNetworkFsListHead);
+    InitializeListHead(&DriverBootReinitListHead);
+    InitializeListHead(&DriverReinitListHead);
+    InitializeListHead(&PnpNotifyListHead);
+    InitializeListHead(&ShutdownListHead);
+    InitializeListHead(&FsChangeNotifyListHead);
+    InitializeListHead(&IopLogListHead);
+    KeInitializeSpinLock(&CancelSpinLock);
+    KeInitializeSpinLock(&IoVpbLock);
+    KeInitializeSpinLock(&IoStatisticsLock);
+    KeInitializeSpinLock(&DriverReinitListLock);
+    KeInitializeSpinLock(&DriverBootReinitListLock);
+    KeInitializeSpinLock(&ShutdownListLock);
+    KeInitializeSpinLock(&IopLogListLock);
+
+    /* Initialize Timer List Lock */
+    KeInitializeSpinLock(&IopTimerLock);
+
+    /* Initialize Timer List */
+    InitializeListHead(&IopTimerQueueHead);
+
+    /* Initialize the DPC/Timer which will call the other Timer Routines */
+    ExpireTime.QuadPart = -10000000;
+    KeInitializeDpc(&IopTimerDpc, IopTimerDispatch, NULL);
+    KeInitializeTimerEx(&IopTimer, SynchronizationTimer);
+    KeSetTimerEx(&IopTimer, ExpireTime, 1000, &IopTimerDpc);
+
+    /* Create Object Types */
+    if (!IopCreateObjectTypes()) return FALSE;
+
+    /* Create Object Directories */
+    if (!IopCreateRootDirectories()) return FALSE;
 
     /*
     * Initialize PnP manager
     */
     PnpInit();
-
-    RtlInitEmptyAnsiString(&NtBootPath, Buffer, sizeof(Buffer));
 
     PnpInit2();
 
@@ -465,6 +565,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Create ARC names for boot devices */
     IopCreateArcNames(LoaderBlock);
+
+    /* Mark the system boot partition */
+    if (!IopMarkBootPartition(LoaderBlock)) return FALSE;
 
     /* Read KDB Data */
     KdbInit();

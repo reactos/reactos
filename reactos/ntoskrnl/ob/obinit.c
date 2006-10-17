@@ -127,6 +127,8 @@ ObInit(VOID)
     SECURITY_DESCRIPTOR SecurityDescriptor;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     OBP_LOOKUP_CONTEXT Context;
+    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\DosDevices");
+    HANDLE Handle;
     PKPRCB Prcb = KeGetCurrentPrcb();
 
     /* Check if this is actually Phase 1 initialization */
@@ -286,6 +288,19 @@ ObPostPhase0:
 
     /* Create 'symbolic link' object type */
     ObInitSymbolicLinkImplementation();
+
+    /* Create the '\??' directory */
+    RtlInitUnicodeString(&Name, L"\\??");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               0,
+                               NULL,
+                               NULL);
+    ZwCreateDirectoryObject(&Handle, 0, &ObjectAttributes);
+
+    /* Create link from '\DosDevices' to '\??' directory */
+    RtlInitUnicodeString(&Name, L"\\??");
+    IoCreateSymbolicLink(&LinkName, &Name);
 
     /* FIXME: Hack Hack! */
     ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ObSystemDeviceMap), TAG('O', 'b', 'D', 'm'));

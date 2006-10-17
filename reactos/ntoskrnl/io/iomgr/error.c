@@ -31,16 +31,9 @@ BOOLEAN IopLogPortConnected;
 HANDLE IopLogPort;
 WORK_QUEUE_ITEM IopErrorLogWorkItem;
 
-/* PRIVATE FUNCTIONS *********************************************************/
+PDEVICE_OBJECT IopErrorLogObject;
 
-VOID
-NTAPI
-IopInitErrorLog(VOID)
-{
-    /* Initialize the locks and list head */
-    KeInitializeSpinLock(&IopLogListLock);
-    InitializeListHead(&IopLogListHead);
-}
+/* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
 NTAPI

@@ -82,25 +82,6 @@ IopRemoveTimerFromTimerList(IN PIO_TIMER Timer)
     KeReleaseSpinLock(&IopTimerLock, OldIrql);
 }
 
-VOID
-FASTCALL
-IopInitTimerImplementation(VOID)
-{
-    LARGE_INTEGER ExpireTime;
-
-    /* Initialize Timer List Lock */
-    KeInitializeSpinLock(&IopTimerLock);
-
-    /* Initialize Timer List */
-    InitializeListHead(&IopTimerQueueHead);
-
-    /* Initialize the DPC/Timer which will call the other Timer Routines */
-    ExpireTime.QuadPart = -10000000;
-    KeInitializeDpc(&IopTimerDpc, IopTimerDispatch, NULL);
-    KeInitializeTimerEx(&IopTimer, SynchronizationTimer);
-    KeSetTimerEx(&IopTimer, ExpireTime, 1000, &IopTimerDpc);
-}
-
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*

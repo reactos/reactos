@@ -41,25 +41,7 @@ LdrProcessModule(
     PLDR_DATA_TABLE_ENTRY *ModuleObject
 );
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, IopInitDriverImplementation)
-#endif
-
-
 /* PRIVATE FUNCTIONS **********************************************************/
-
-VOID 
-INIT_FUNCTION
-IopInitDriverImplementation(VOID)
-{
-   InitializeListHead(&DriverReinitListHead);
-   KeInitializeSpinLock(&DriverReinitListLock);
-   DriverReinitTailEntry = NULL;
-
-   InitializeListHead(&DriverBootReinitListHead);
-   KeInitializeSpinLock(&DriverBootReinitListLock);
-   DriverBootReinitTailEntry = NULL;
-}
 
 NTSTATUS STDCALL
 IopInvalidDeviceRequest(
