@@ -20,12 +20,12 @@ AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_INITDIALOG:
 
-        hIcon = LoadImage(hInstance,
-                          MAKEINTRESOURCE(IDI_MAIN_ICON),
-                          IMAGE_ICON,
-                          16,
-                          16,
-                          0);
+        hIcon = (HICON)LoadImage(hInstance,
+                                 MAKEINTRESOURCE(IDI_MAIN_ICON),
+                                 IMAGE_ICON,
+                                 16,
+                                 16,
+                                 0);
 
         SendMessage(hDlg,
                     WM_SETICON,

@@ -235,7 +235,7 @@ EnumDevices(INT index,
 {
     SP_DEVINFO_DATA DeviceInfoData;
     CONFIGRET cr;
-    LONG Status, ProblemNumber;
+    ULONG Status, ProblemNumber;
     DWORD DevIdSize;
 
     *DeviceName = _T('\0');

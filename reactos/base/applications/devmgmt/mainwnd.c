@@ -638,9 +638,9 @@ CreateMainWindow(LPCTSTR lpCaption,
     PMAIN_WND_INFO Info;
     HWND hMainWnd = NULL;
 
-    Info = HeapAlloc(ProcessHeap,
-                     HEAP_ZERO_MEMORY,
-                     sizeof(MAIN_WND_INFO));
+    Info = (PMAIN_WND_INFO)HeapAlloc(ProcessHeap,
+                                     HEAP_ZERO_MEMORY,
+                                     sizeof(MAIN_WND_INFO));
 
     if (Info != NULL)
     {

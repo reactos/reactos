@@ -28,7 +28,7 @@ LengthOfStrResource(IN HINSTANCE hInst,
     /* Find the string table block */
     if ((hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING)) &&
         (hRes = LoadResource(hInst, hrSrc)) &&
-        (lpStr = LockResource(hRes)))
+        (lpStr = (LPWSTR)LockResource(hRes)))
     {
         UINT x;
 
@@ -212,12 +212,12 @@ InitImageList(UINT StartResource,
     /* Add all icons to the image list */
     for (i = StartResource; i <= EndResource; i++)
     {
-        hBitmap = LoadImage(hInstance,
-                            MAKEINTRESOURCE(i),
-                            IMAGE_BITMAP,
-                            Width,
-                            Height,
-                            LR_LOADTRANSPARENT);
+        hBitmap = (HBITMAP)LoadImage(hInstance,
+                                     MAKEINTRESOURCE(i),
+                                     IMAGE_BITMAP,
+                                     Width,
+                                     Height,
+                                     LR_LOADTRANSPARENT);
         if (hBitmap == NULL)
             return NULL;
 
@@ -248,13 +248,13 @@ VOID GetError(VOID)
                   0,
                   NULL );
 
-    MessageBox(NULL, lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
+    MessageBox(NULL, (LPTSTR)lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
 
     LocalFree(lpMsgBuf);
 }
 
 
-VOID DisplayString(PTCHAR Msg)
+VOID DisplayString(LPTSTR Msg)
 {
     MessageBox(NULL, Msg, _T("Note!"), MB_ICONEXCLAMATION|MB_OK);
 }
