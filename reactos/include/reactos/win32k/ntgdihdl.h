@@ -95,6 +95,7 @@ typedef struct _GDI_USER_DATA
   INT  BackgroundMode;
   COLORREF  BackgroundColor;
   COLORREF  TextColor;
+  DWORD CodePage;
   HCOLORSPACE  ColorSpace;
   INT  TextAlign;         /* Text alignment from SetTextAlign() */
   INT  CharExtra;         /* Spacing from SetTextCharacterExtra() */
