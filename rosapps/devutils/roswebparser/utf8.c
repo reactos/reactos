@@ -7,9 +7,10 @@
  * All table lookup the ansi char to utf-16 then we calc the utf-8 format. 
  */
 
-#include "oem437.h"
-#include "oem850.h"
-#include "Windows28591.h"
+#include "oem437.h"       /* windows oem 437 */     
+#include "oem850.h"       /* windows oem 850 */  
+#include "Windows28591.h" /* windows 28591 aka ISO-2859-1 (Latin 1) */
+#include "Windows28592.h" /* windows 28592 aka ISO-2859-2 (Latin 2) */
 
 int ansiCodePage(int codepage, unsigned char *inBuffer, unsigned char *outBuffer, int Lenght)
 {
@@ -33,6 +34,10 @@ int ansiCodePage(int codepage, unsigned char *inBuffer, unsigned char *outBuffer
 	  if (codepage == 28591)
 	  {
 		  ch = (int) table_Windows28591[ ((unsigned char)inBuffer[t])]; 	     	  		  
+	  }
+	  if (codepage == 28592)
+	  {
+		  ch = (int) table_Windows28592[ ((unsigned char)inBuffer[t])]; 	     	  		  
 	  }
 
 	  
