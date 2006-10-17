@@ -258,21 +258,3 @@ VOID DisplayString(PTCHAR Msg)
 {
     MessageBox(NULL, Msg, _T("Note!"), MB_ICONEXCLAMATION|MB_OK);
 }
-
-
-VOID TimerInfo(LPTSTR text)
-{
-    static HANDLE hOut = NULL;
-    DWORD Count;
-    TCHAR buf[256];
-    static DWORD start = 0;
-
-    if (!start) start = GetTickCount();
-
-    if (!hOut) hOut = GetStdHandle(STD_ERROR_HANDLE);
-
-    if (text) _sntprintf(buf, 256, _T("%s\ttime : %d\n"), text, GetTickCount() - start);
-    else _sntprintf(buf, 256, _T("time : %d\n"), GetTickCount() - start);
-
-    WriteConsole(hOut, buf, lstrlen(buf)+1, &Count, NULL);
-}

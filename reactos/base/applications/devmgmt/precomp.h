@@ -74,10 +74,10 @@ DevicePropertiesExA(IN HWND hWndParent  OPTIONAL,
                     IN BOOL bShowDevMgr);
 #endif
 
-VOID FreeDeviceStrings(HWND hTV);
-VOID OpenPropSheet(HWND hTV, HTREEITEM hItem);
-HTREEITEM InitTreeView(PMAIN_WND_INFO Info);
-VOID ListDevicesByType(PMAIN_WND_INFO Info, HTREEITEM hRoot);
+VOID FreeDeviceStrings(HWND hTreeView);
+VOID OpenPropSheet(HWND hTreeView, HTREEITEM hItem);
+HTREEITEM InitTreeView(HWND hTreeView);
+VOID ListDevicesByType(HWND hTreeView, HTREEITEM hRoot);
 
 
 /* misc.c */

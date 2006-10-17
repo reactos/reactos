@@ -15,7 +15,7 @@ static const TCHAR szMainWndClass[] = TEXT("DevMgmtWndClass");
 /* Toolbar buttons */
 TBBUTTON Buttons [] =
 {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
-    {TBICON_PROP,    IDC_PROP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},   /* properties */
+    {TBICON_PROP,    IDC_PROP,    TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0},   /* properties */
     {TBICON_REFRESH, IDC_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},   /* refresh */
 
     /* Note: First item for a seperator is its width in pixels */
@@ -198,12 +198,30 @@ CreateStatusBar(PMAIN_WND_INFO Info)
 }
 
 
+static DWORD WINAPI
+DeviceEnumThread(LPVOID lpParameter)
+{
+    HTREEITEM hRoot;
+    HWND *hTreeView;
 
-static VOID
+    hTreeView = (HWND *)lpParameter;
+
+    hRoot = InitTreeView(*hTreeView);
+    if (hRoot)
+    {
+        ListDevicesByType(*hTreeView, hRoot);
+        return 0;
+    }
+
+    return -1;
+}
+
+
+static BOOL
 InitMainWnd(PMAIN_WND_INFO Info)
 {
+    HANDLE DevEnumThread;
     HMENU hMenu;
-    HTREEITEM hRoot;
 
     if (!CreateToolbar(Info))
         DisplayString(_T("error creating toolbar"));
@@ -211,7 +229,7 @@ InitMainWnd(PMAIN_WND_INFO Info)
     if (!CreateTreeView(Info))
     {
         DisplayString(_T("error creating list view"));
-        return;
+        return FALSE;
     }
 
     if (!CreateStatusBar(Info))
@@ -229,10 +247,21 @@ InitMainWnd(PMAIN_WND_INFO Info)
                                      0);
     SetMenuDefaultItem(Info->hShortcutMenu, IDC_PROP, FALSE);
 
-    /* emum all devices */
-    hRoot = InitTreeView(Info);
-    if (hRoot)
-        ListDevicesByType(Info, hRoot);
+    /* create seperate thread to emum devices */
+    DevEnumThread = CreateThread(NULL,
+                                 0,
+                                 DeviceEnumThread,
+                                 &Info->hTreeView,
+                                 0,
+                                 NULL);
+    if (!DevEnumThread)
+    {
+        DisplayString(_T("Failed to enumerate devices"));
+        return FALSE;
+    }
+
+    CloseHandle(DevEnumThread);
+    return TRUE;
 }
 
 
@@ -273,11 +302,38 @@ static VOID
 OnNotify(PMAIN_WND_INFO Info,
          LPARAM lParam)
 {
-
     LPNMHDR pnmhdr = (LPNMHDR)lParam;
 
     switch (pnmhdr->code)
     {
+        case TVN_SELCHANGED:
+        {
+            LPNM_TREEVIEW pnmtv = (LPNM_TREEVIEW)lParam;
+
+            if (!TreeView_GetChild(Info->hTreeView,
+                                   pnmtv->itemNew.hItem))
+            {
+                SendMessage(Info->hTool,
+                            TB_SETSTATE,
+                            IDC_PROP,
+                            (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+
+                EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_ENABLED);
+                EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_ENABLED);
+            }
+            else
+            {
+                SendMessage(Info->hTool,
+                            TB_SETSTATE,
+                            IDC_PROP,
+                            (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+
+                EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_GRAYED);
+                EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_GRAYED);
+            }
+        }
+        break;
+
         case NM_DBLCLK:
         {
             HTREEITEM hSelected = TreeView_GetSelection(Info->hTreeView);
@@ -299,7 +355,7 @@ OnNotify(PMAIN_WND_INFO Info,
                 ScreenToClient(Info->hTreeView, &HitTest.pt))
             {
                 if (TreeView_HitTest(Info->hTreeView, &HitTest))
-                    (void)TreeView_SelectItem(Info->hTreeView, HitTest.hItem);
+                    TreeView_SelectItem(Info->hTreeView, HitTest.hItem);
             }
         }
         break;
@@ -329,7 +385,6 @@ OnNotify(PMAIN_WND_INFO Info,
                 case IDC_EXIT:
                     lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_EXIT);
                 break;
-
             }
         }
         break;
@@ -360,9 +415,17 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
             FreeDeviceStrings(Info->hTreeView);
 
-            hRoot = InitTreeView(Info);
+            hRoot = InitTreeView(Info->hTreeView);
             if (hRoot)
-                ListDevicesByType(Info, hRoot);
+                ListDevicesByType(Info->hTreeView, hRoot);
+
+            SendMessage(Info->hTool,
+                        TB_SETSTATE,
+                        IDC_PROP,
+                        (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+
+            EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_GRAYED);
+            EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_GRAYED);
         }
         break;
 
@@ -458,7 +521,8 @@ MainWndProc(HWND hwnd,
                              GWLP_USERDATA,
                              (LONG_PTR)Info);
 
-            InitMainWnd(Info);
+            if (!InitMainWnd(Info))
+                SendMessage(hwnd, WM_CLOSE, 0, 0);
 
             /* Show the window */
             ShowWindow(hwnd,
@@ -638,4 +702,5 @@ UninitMainWindowImpl(VOID)
     UnregisterClass(szMainWndClass,
                     hInstance);
 }
+
 

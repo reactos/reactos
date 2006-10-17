@@ -38,9 +38,6 @@ WinMain(HINSTANCE hThisInstance,
         return 1;
     }
 
-//    FreeConsole();
-//    AllocConsole();
-
     if (InitMainWindowImpl())
     {
         hMainWnd = CreateMainWindow(lpAppName,

@@ -12,21 +12,22 @@
 static SP_CLASSIMAGELIST_DATA ImageListData;
 static HDEVINFO hDevInfo;
 
+
 VOID
-FreeDeviceStrings(HWND hTV)
+FreeDeviceStrings(HWND hTreeView)
 {
     HTREEITEM hItem;
 
-    hItem = TreeView_GetRoot(hTV);
+    hItem = TreeView_GetRoot(hTreeView);
 
     if (hItem)
     {
-        hItem = TreeView_GetChild(hTV,
+        hItem = TreeView_GetChild(hTreeView,
                                   hItem);
         /* loop the parent items */
         while (hItem)
         {
-            hItem = TreeView_GetChild(hTV,
+            hItem = TreeView_GetChild(hTreeView,
                                       hItem);
             if (hItem == NULL)
                 break;
@@ -43,7 +44,7 @@ FreeDeviceStrings(HWND hTV)
                 //tvItem.pszText = Buf;
                 //tvItem.cchTextMax = 99;
 
-                (void)TreeView_GetItem(hTV, &tvItem);
+                (void)TreeView_GetItem(hTreeView, &tvItem);
 
                 //MessageBox(NULL, Buf, NULL, 0);
 
@@ -53,7 +54,7 @@ FreeDeviceStrings(HWND hTV)
 
                 hOldItem = hItem;
 
-                hItem = TreeView_GetNextSibling(hTV,
+                hItem = TreeView_GetNextSibling(hTreeView,
                                                 hItem);
                 if (hItem == NULL)
                 {
@@ -62,9 +63,9 @@ FreeDeviceStrings(HWND hTV)
                 }
             }
 
-            hItem = TreeView_GetParent(hTV,
+            hItem = TreeView_GetParent(hTreeView,
                                        hItem);
-            hItem = TreeView_GetNextSibling(hTV,
+            hItem = TreeView_GetNextSibling(hTreeView,
                                             hItem);
         }
     }
@@ -72,7 +73,7 @@ FreeDeviceStrings(HWND hTV)
 
 
 VOID
-OpenPropSheet(HWND hTV,
+OpenPropSheet(HWND hTreeView,
               HTREEITEM hItem)
 {
     TV_ITEM tvItem;
@@ -80,10 +81,10 @@ OpenPropSheet(HWND hTV,
     tvItem.hItem = hItem;
     tvItem.mask = TVIF_PARAM;
 
-    if (TreeView_GetItem(hTV, &tvItem) &&
+    if (TreeView_GetItem(hTreeView, &tvItem) &&
         (LPTSTR)tvItem.lParam != NULL)
     {
-        DevicePropertiesExW(hTV,
+        DevicePropertiesExW(hTreeView,
                             NULL,
                             (LPTSTR)tvItem.lParam,
                             0,
@@ -94,11 +95,12 @@ OpenPropSheet(HWND hTV,
 
 
 static HTREEITEM
-InsertIntoTreeView(HWND hTV,
+InsertIntoTreeView(HWND hTreeView,
                    HTREEITEM hRoot,
                    LPTSTR lpLabel,
                    LPTSTR DeviceID,
-                   INT DevImage)
+                   INT DevImage,
+                   LONG DevProb)
 {
     TV_ITEM tvi;
     TV_INSERTSTRUCT tvins;
@@ -113,10 +115,21 @@ InsertIntoTreeView(HWND hTV,
     tvi.iImage = DevImage;
     tvi.iSelectedImage = DevImage;
 
+    if (DevProb != 0)
+    {
+        tvi.stateMask = TVIS_OVERLAYMASK;
+
+        if (DevProb == CM_PROB_DISABLED)
+        {
+            /* FIXME: set the overlay icon */
+        }
+
+    }
+
     tvins.item = tvi;
     tvins.hParent = hRoot;
 
-    return TreeView_InsertItem(hTV, &tvins);
+    return TreeView_InsertItem(hTreeView, &tvins);
 }
 
 
@@ -214,13 +227,15 @@ EnumDeviceClasses(INT ClassIndex,
 }
 
 
-static INT
+static LONG
 EnumDevices(INT index,
             LPTSTR DeviceClassName,
             LPTSTR DeviceName,
             LPTSTR *DeviceID)
 {
     SP_DEVINFO_DATA DeviceInfoData;
+    CONFIGRET cr;
+    LONG Status, ProblemNumber;
     DWORD DevIdSize;
 
     *DeviceName = _T('\0');
@@ -276,17 +291,23 @@ EnumDevices(INT index,
                                           NULL))
     {
         /* if the friendly name fails, try the description instead */
-        if (!SetupDiGetDeviceRegistryProperty(hDevInfo,
-                                              &DeviceInfoData,
-                                              SPDRP_DEVICEDESC,
-                                              0,
-                                              (BYTE*)DeviceName,
-                                              MAX_DEV_LEN,
-                                              NULL))
-        {
-            /* if the description fails, just give up! */
-            return -2;
-        }
+        SetupDiGetDeviceRegistryProperty(hDevInfo,
+                                         &DeviceInfoData,
+                                         SPDRP_DEVICEDESC,
+                                         0,
+                                         (BYTE*)DeviceName,
+                                         MAX_DEV_LEN,
+                                         NULL);
+    }
+
+    cr = CM_Get_DevNode_Status_Ex(&Status,
+                                  &ProblemNumber,
+                                  DeviceInfoData.DevInst,
+                                  0,
+                                  NULL);
+    if (cr == CR_SUCCESS && (Status & DN_HAS_PROBLEM))
+    {
+        return ProblemNumber;
     }
 
     return 0;
@@ -294,7 +315,7 @@ EnumDevices(INT index,
 
 
 VOID
-ListDevicesByType(PMAIN_WND_INFO Info,
+ListDevicesByType(HWND hTreeView,
                   HTREEITEM hRoot)
 {
     HTREEITEM hDevItem;
@@ -317,23 +338,26 @@ ListDevicesByType(PMAIN_WND_INFO Info,
         if ((ClassRet != -1) && (DevExist))
         {
             TCHAR DeviceName[MAX_DEV_LEN];
-            INT Ret, DevIndex = 0;
+            INT DevIndex = 0;
+            LONG Ret;
 
             if (DevDesc[0] != _T('\0'))
             {
-                hDevItem = InsertIntoTreeView(Info->hTreeView,
+                hDevItem = InsertIntoTreeView(hTreeView,
                                               hRoot,
                                               DevDesc,
                                               NULL,
-                                              DevImage);
+                                              DevImage,
+                                              0);
             }
             else
             {
-                hDevItem = InsertIntoTreeView(Info->hTreeView,
+                hDevItem = InsertIntoTreeView(hTreeView,
                                               hRoot,
                                               DevName,
                                               NULL,
-                                              DevImage);
+                                              DevImage,
+                                              0);
             }
 
             do
@@ -342,13 +366,14 @@ ListDevicesByType(PMAIN_WND_INFO Info,
                                   DevName,
                                   DeviceName,
                                   &DeviceID);
-                if (Ret == 0)
+                if (Ret >= 0)
                 {
-                    InsertIntoTreeView(Info->hTreeView,
+                    InsertIntoTreeView(hTreeView,
                                        hDevItem,
                                        DeviceName,
                                        DeviceID,
-                                       DevImage);
+                                       DevImage,
+                                       Ret);
                 }
 
                 DevIndex++;
@@ -363,15 +388,15 @@ ListDevicesByType(PMAIN_WND_INFO Info,
             }
 
             /* don't insert classes with no devices */
-            if (!TreeView_GetChild(Info->hTreeView,
+            if (!TreeView_GetChild(hTreeView,
                                    hDevItem))
             {
-                (void)TreeView_DeleteItem(Info->hTreeView,
+                (void)TreeView_DeleteItem(hTreeView,
                                           hDevItem);
             }
             else
             {
-                (void)TreeView_SortChildren(Info->hTreeView,
+                (void)TreeView_SortChildren(hTreeView,
                                             hDevItem,
                                             0);
             }
@@ -381,18 +406,18 @@ ListDevicesByType(PMAIN_WND_INFO Info,
 
     } while (ClassRet != -1);
 
-    (void)TreeView_Expand(Info->hTreeView,
+    (void)TreeView_Expand(hTreeView,
                           hRoot,
                           TVE_EXPAND);
 
-    (void)TreeView_SortChildren(Info->hTreeView,
+    (void)TreeView_SortChildren(hTreeView,
                                 hRoot,
                                 0);
 }
 
 
 HTREEITEM
-InitTreeView(PMAIN_WND_INFO Info)
+InitTreeView(HWND hTreeView)
 {
     HTREEITEM hRoot;
     HBITMAP hComp;
@@ -400,7 +425,7 @@ InitTreeView(PMAIN_WND_INFO Info)
     DWORD dwSize = MAX_PATH;
     INT RootImage;
 
-    (void)TreeView_DeleteAllItems(Info->hTreeView);
+    (void)TreeView_DeleteAllItems(hTreeView);
 
     /* get the device image List */
     ImageListData.cbSize = sizeof(ImageListData);
@@ -415,7 +440,7 @@ InitTreeView(PMAIN_WND_INFO Info)
 
     DeleteObject(hComp);
 
-    (void)TreeView_SetImageList(Info->hTreeView,
+    (void)TreeView_SetImageList(hTreeView,
                                 ImageListData.ImageList,
                                 TVSIL_NORMAL);
 
@@ -428,11 +453,12 @@ InitTreeView(PMAIN_WND_INFO Info)
     RootImage = ImageList_GetImageCount(ImageListData.ImageList) - 1;
 
     /* insert the root item into the tree */
-    hRoot = InsertIntoTreeView(Info->hTreeView,
+    hRoot = InsertIntoTreeView(hTreeView,
                                NULL,
                                ComputerName,
                                NULL,
-                               RootImage);
+                               RootImage,
+                               0);
 
     return hRoot;
 }
