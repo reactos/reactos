@@ -1,4 +1,4 @@
-<module name="cat" type="win32cui" installbase="system32" installname="cat.exe">
+<module name="tcat" type="win32cui" installbase="system32" installname="tcat.exe">
 	<define name="__USE_W32API" />
 	<library>ntdll</library>
 	<library>kernel32</library>
