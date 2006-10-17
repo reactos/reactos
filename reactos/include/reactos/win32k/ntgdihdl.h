@@ -43,10 +43,10 @@
 #define GDI_OBJECT_TYPE_PEN         0x00300000
 #define GDI_OBJECT_TYPE_EXTPEN      0x00500000
 #define GDI_OBJECT_TYPE_COLORSPACE  0x00090000
+#define GDI_OBJECT_TYPE_METADC      0x00660000
+#define GDI_OBJECT_TYPE_METAFILE    0x00260000
+#define GDI_OBJECT_TYPE_ENHMETAFILE 0x00460000
 /* Following object types made up for ROS */
-#define GDI_OBJECT_TYPE_METADC      0x00710000
-#define GDI_OBJECT_TYPE_METAFILE    0x00720000
-#define GDI_OBJECT_TYPE_ENHMETAFILE 0x00730000
 #define GDI_OBJECT_TYPE_ENHMETADC   0x00740000
 #define GDI_OBJECT_TYPE_MEMDC       0x00750000
 #define GDI_OBJECT_TYPE_DCE         0x00770000
@@ -83,5 +83,26 @@ typedef struct _GDI_TABLE_ENTRY
     LONG Type;        /* the first 16 bit is the object type including the stock obj flag, the last 16 bits is just the object type */
     PVOID UserData;   /* Points to the user mode structure, usually NULL though */
 } GDI_TABLE_ENTRY, *PGDI_TABLE_ENTRY;
+
+
+typedef struct _GDI_USER_DATA
+{
+  COLORREF  PenColor;
+  COLORREF  BrushColor;
+  INT  ROPmode;
+  INT  PolyFillMode;
+  INT  StretchBltMode;
+  INT  BackgroundMode;
+  COLORREF  BackgroundColor;
+  COLORREF  TextColor;
+  HCOLORSPACE  ColorSpace;
+  INT  TextAlign;         /* Text alignment from SetTextAlign() */
+  INT  CharExtra;         /* Spacing from SetTextCharacterExtra() */
+  INT  GraphicsMode;      /* Graphics mode */
+  INT  MapMode;
+  HFONT  hFont;
+  DWORD  Layout;
+} GDI_USER_DATA, *PGDI_USER_DATA;
+
 
 #endif

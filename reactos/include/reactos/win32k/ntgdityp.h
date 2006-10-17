@@ -45,6 +45,7 @@ typedef enum _GETDCDWORD
 {
     GdiGetRelAbs = 1,
     GdiGetArcDirection = 4,
+    GdiGetFontLanguageInfo = 6,
     GdiGetIsMemDc = 7,
 } GETDCDWORD, *PGETDCDWORD;
 

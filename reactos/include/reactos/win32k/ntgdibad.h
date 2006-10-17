@@ -422,7 +422,7 @@ NtGdiGdiComment (
 	CONST LPBYTE	Data
 	);
 
-/* Should be done in user-mode. */
+/* Should be NtGdiFlush. */
 BOOL STDCALL NtGdiGdiFlush (VOID);
 
 /* Should be done in user-mode. */
