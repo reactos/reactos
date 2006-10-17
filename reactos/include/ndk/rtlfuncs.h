@@ -2507,6 +2507,7 @@ DbgBreakPoint(VOID);
 //
 // Generic Table Functions
 //
+#if defined(NTOS_MODE_USER) || defined(_NTIFS_)
 PVOID
 NTAPI
 RtlInsertElementGenericTable(
@@ -2541,6 +2542,7 @@ RtlLookupElementGenericTableFull(
     OUT PVOID *NodeOrParent,
     OUT TABLE_SEARCH_RESULT *SearchResult
 );
+#endif
 
 //
 // Handle Table Functions

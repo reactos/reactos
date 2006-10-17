@@ -1363,6 +1363,66 @@ typedef struct _PRIVATE_CACHE_MAP {
 
 #endif
 
+typedef enum _RTL_GENERIC_COMPARE_RESULTS
+{
+    GenericLessThan,
+    GenericGreaterThan,
+    GenericEqual
+} RTL_GENERIC_COMPARE_RESULTS;
+
+typedef enum _TABLE_SEARCH_RESULT
+{
+    TableEmptyTree,
+    TableFoundNode,
+    TableInsertAsLeft,
+    TableInsertAsRight
+} TABLE_SEARCH_RESULT;
+
+typedef NTSTATUS
+(NTAPI *PRTL_AVL_MATCH_FUNCTION)(
+    struct _RTL_AVL_TABLE *Table,
+    PVOID UserData,
+    PVOID MatchData
+);
+
+typedef RTL_GENERIC_COMPARE_RESULTS
+(NTAPI *PRTL_AVL_COMPARE_ROUTINE) (
+    struct _RTL_AVL_TABLE *Table,
+    PVOID FirstStruct,
+    PVOID SecondStruct
+);
+
+typedef RTL_GENERIC_COMPARE_RESULTS
+(NTAPI *PRTL_GENERIC_COMPARE_ROUTINE) (
+    struct _RTL_GENERIC_TABLE *Table,
+    PVOID FirstStruct,
+    PVOID SecondStruct
+);
+
+typedef PVOID
+(NTAPI *PRTL_GENERIC_ALLOCATE_ROUTINE) (
+    struct _RTL_GENERIC_TABLE *Table,
+    CLONG ByteSize
+);
+
+typedef VOID
+(NTAPI *PRTL_GENERIC_FREE_ROUTINE) (
+    struct _RTL_GENERIC_TABLE *Table,
+    PVOID Buffer
+);
+
+typedef PVOID
+(NTAPI *PRTL_AVL_ALLOCATE_ROUTINE) (
+    struct _RTL_AVL_TABLE *Table,
+    CLONG ByteSize
+);
+
+typedef VOID
+(NTAPI *PRTL_AVL_FREE_ROUTINE) (
+    struct _RTL_AVL_TABLE *Table,
+    PVOID Buffer
+);
+
 typedef struct _PUBLIC_BCB {
     CSHORT          NodeTypeCode;
     CSHORT          NodeByteSize;
@@ -1395,12 +1455,43 @@ typedef struct _RTL_SPLAY_LINKS {
     struct _RTL_SPLAY_LINKS *RightChild;
 } RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
 
-typedef enum _RTL_GENERIC_COMPARE_RESULTS
+typedef struct _RTL_BALANCED_LINKS
 {
-    GenericLessThan,
-    GenericGreaterThan,
-    GenericEqual
-} RTL_GENERIC_COMPARE_RESULTS;
+    struct _RTL_BALANCED_LINKS *Parent;
+    struct _RTL_BALANCED_LINKS *LeftChild;
+    struct _RTL_BALANCED_LINKS *RightChild;
+    CHAR Balance;
+    UCHAR Reserved[3];
+} RTL_BALANCED_LINKS, *PRTL_BALANCED_LINKS;
+
+typedef struct _RTL_GENERIC_TABLE
+{
+    PRTL_SPLAY_LINKS TableRoot;
+    LIST_ENTRY InsertOrderList;
+    PLIST_ENTRY OrderedPointer;
+    ULONG WhichOrderedElement;
+    ULONG NumberGenericTableElements;
+    PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine;
+    PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine;
+    PRTL_GENERIC_FREE_ROUTINE FreeRoutine;
+    PVOID TableContext;
+} RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;
+
+typedef struct _RTL_AVL_TABLE
+{
+    RTL_BALANCED_LINKS BalancedRoot;
+    PVOID OrderedPointer;
+    ULONG WhichOrderedElement;
+    ULONG NumberGenericTableElements;
+    ULONG DepthOfTree;
+    PRTL_BALANCED_LINKS RestartKey;
+    ULONG DeleteCount;
+    PRTL_AVL_COMPARE_ROUTINE CompareRoutine;
+    PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine;
+    PRTL_AVL_FREE_ROUTINE FreeRoutine;
+    PVOID TableContext;
+} RTL_AVL_TABLE, *PRTL_AVL_TABLE;
+
 
 #if defined(USE_LPC6432)
 #define LPC_CLIENT_ID CLIENT_ID64
