@@ -1181,7 +1181,7 @@ void* MSVCRT___RTDynamicCast(type_info *cppobj, int unknown,
   {
     int count = 0;
     const rtti_object_hierachy *obj_bases = obj_locator->type_hierachy;
-    const rtti_base_descriptor **base_desc = obj_bases->base_classes->bases;
+    const rtti_base_descriptor* const *base_desc = obj_bases->base_classes->bases;
     int src_offset = obj_locator->base_class_offset, dst_offset = -1;
 
     while (count < obj_bases->array_len)
