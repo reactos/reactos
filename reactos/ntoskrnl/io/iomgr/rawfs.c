@@ -1,962 +1,1105 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/rawfs.c
- * PURPOSE:         Raw filesystem driver
- *
- * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- */
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/io/iomgr/rawfs.c
+* PURPOSE:         Raw File System Driver
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*/
 
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* TYPES *******************************************************************/
 
-typedef struct _RAWFS_GLOBAL_DATA
+typedef struct _VCB
 {
-  PDRIVER_OBJECT DriverObject;
-  PDEVICE_OBJECT DeviceObject;
-  ULONG Flags;
-  ERESOURCE VolumeListLock;
-  LIST_ENTRY VolumeListHead;
-  NPAGED_LOOKASIDE_LIST FcbLookasideList;
-  NPAGED_LOOKASIDE_LIST CcbLookasideList;
-} RAWFS_GLOBAL_DATA, *PRAWFS_GLOBAL_DATA, VCB, *PVCB;
+    USHORT NodeTypeCode;
+    USHORT NodeByteSize;
+    PDEVICE_OBJECT TargetDeviceObject;
+    PVPB Vpb;
+    ULONG VcbState;
+    KMUTEX Mutex;
+    CLONG OpenCount;
+    SHARE_ACCESS ShareAccess;
+    ULONG BytesPerSector;
+    LARGE_INTEGER SectorsOnDisk;
+} VCB, *PVCB;
 
-typedef struct _RAWFS_DEVICE_EXTENSION
+typedef struct _VOLUME_DEVICE_OBJECT
 {
-  KSPIN_LOCK FcbListLock;
-  LIST_ENTRY FcbListHead;
-  PDEVICE_OBJECT StorageDevice;
-  ULONG Flags;
-  struct _RAWFS_FCB *VolumeFcb;
-  LIST_ENTRY VolumeListEntry;
-} RAWFS_DEVICE_EXTENSION, *PRAWFS_DEVICE_EXTENSION;
+    DEVICE_OBJECT DeviceObject;
+    VCB Vcb;
+} VOLUME_DEVICE_OBJECT, *PVOLUME_DEVICE_OBJECT;
 
-typedef struct _RAWFS_IRP_CONTEXT
-{
-   PIRP Irp;
-   PDEVICE_OBJECT DeviceObject;
-   PRAWFS_DEVICE_EXTENSION DeviceExt;
-   ULONG Flags;
-   WORK_QUEUE_ITEM WorkQueueItem;
-   PIO_STACK_LOCATION Stack;
-   UCHAR MajorFunction;
-   UCHAR MinorFunction;
-   PFILE_OBJECT FileObject;
-} RAWFS_IRP_CONTEXT, *PRAWFS_IRP_CONTEXT;
+/* GLOBALS *******************************************************************/
 
-#define IRPCONTEXT_CANWAIT  0x0001
-
-#define FCB_CACHE_INITIALIZED   0x0001
-#define FCB_DELETE_PENDING      0x0002
-#define FCB_IS_FAT              0x0004
-#define FCB_IS_PAGE_FILE        0x0008
-#define FCB_IS_VOLUME           0x0010
-
-typedef struct _RAWFS_FCB
-{
-  /* Start FCB header required by ReactOS/Windows NT */
-  FSRTL_COMMON_FCB_HEADER RFCB;
-  SECTION_OBJECT_POINTERS SectionObjectPointers;
-  ERESOURCE MainResource;
-  ERESOURCE PagingIoResource;
-  /* End FCB header required by ReactOS/Windows NT */
-
-  /* Reference count */
-  LONG RefCount;
-
-  /* List of FCB's for this volume */
-  LIST_ENTRY FcbListEntry;
-
-  /* Pointer to the parent fcb */
-  struct _RAWFS_FCB* ParentFcb;
-
-  /* Flags for the FCB */
-  ULONG Flags;
-
-  /* Pointer to the file object which has initialized the fcb */
-  PFILE_OBJECT FileObject;
-} RAWFS_FCB, *PRAWFS_FCB;
-
-typedef struct _RAWFS_CCB
-{
-  LARGE_INTEGER CurrentByteOffset;
-} RAWFS_CCB, *PRAWFS_CCB;
-
-/* GLOBALS ******************************************************************/
-
-static PDRIVER_OBJECT RawFsDriverObject;
-static PDEVICE_OBJECT DiskDeviceObject;
-static PDEVICE_OBJECT CdromDeviceObject;
-static PDEVICE_OBJECT TapeDeviceObject;
-static NPAGED_LOOKASIDE_LIST IrpContextLookasideList;
-static LONG RawFsQueueCount = 0;
+PDEVICE_OBJECT RawDiskDeviceObject, RawCdromDeviceObject, RawTapeDeviceObject;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+NTAPI
+RawInitializeVcb(IN OUT PVCB Vcb,
+                 IN PDEVICE_OBJECT TargetDeviceObject,
+                 IN PVPB Vpb)
+{
+    PAGED_CODE();
+
+    /* Clear it */
+    RtlZeroMemory(Vcb, sizeof(VCB));
+
+    /* Associate to system objects */
+    Vcb->TargetDeviceObject = TargetDeviceObject;
+    Vcb->Vpb = Vpb;
+
+    /* Initialize the lock */
+    KeInitializeMutex(&Vcb->Mutex, 0);
+}
+
 BOOLEAN
-RawFsIsRawFileSystemDeviceObject(IN PDEVICE_OBJECT DeviceObject)
+NTAPI
+RawCheckForDismount(IN PVCB Vcb,
+                    IN BOOLEAN CreateOperation)
 {
-  DPRINT("RawFsIsRawFileSystemDeviceObject(DeviceObject 0x%p)\n", DeviceObject);
+    KIRQL OldIrql;
+    PVPB Vpb;
+    BOOLEAN Delete;
 
-  if (DeviceObject == DiskDeviceObject)
-    return TRUE;
-  if (DeviceObject == CdromDeviceObject)
-    return TRUE;
-  if (DeviceObject == TapeDeviceObject)
-    return TRUE;
-  return FALSE;
-}
+    /* Lock VPB */
+    IoAcquireVpbSpinLock(&OldIrql);
 
-static NTSTATUS
-RawFsDispatchRequest(IN PRAWFS_IRP_CONTEXT IrpContext);
-
-/*static */NTSTATUS
-RawFsReadDisk(IN PDEVICE_OBJECT pDeviceObject,
-  IN PLARGE_INTEGER ReadOffset,
-  IN ULONG ReadLength,
-  IN OUT PUCHAR Buffer)
-{
-  IO_STATUS_BLOCK IoStatus;
-  NTSTATUS Status;
-  KEVENT Event;
-  PIRP Irp;
-
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-  DPRINT("RawFsReadDisk(pDeviceObject 0x%p, Offset %I64x, Length %d, Buffer 0x%p)\n",
-	  pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
-
-  DPRINT ("Building synchronous FSD Request...\n");
-  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-    pDeviceObject,
-    Buffer,
-    ReadLength,
-    ReadOffset,
-    &Event,
-    &IoStatus);
-  if (Irp == NULL)
+    /* Reference it and check if a create is being done */
+    Vpb = Vcb->Vpb;
+    if (Vcb->Vpb->ReferenceCount != CreateOperation)
     {
-      DPRINT("IoBuildSynchronousFsdRequest() failed\n");
-      return STATUS_UNSUCCESSFUL;
+        /* Don't do anything */
+        Delete = FALSE;
     }
-
-  DPRINT("Calling IO Driver... with irp 0x%p\n", Irp);
-  Status = IoCallDriver(pDeviceObject, Irp);
-
-  DPRINT("Waiting for IO Operation for 0x%p\n", Irp);
-  if (Status == STATUS_PENDING)
+    else
     {
-      DPRINT("Operation pending\n");
-      KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
-      DPRINT("Getting IO Status... for 0x%p\n", Irp);
-      Status = IoStatus.Status;
-    }
+        /* Otherwise, delete the volume */
+        Delete = TRUE;
 
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("RawFsReadDisk() failed. Status %x\n", Status);
-      DPRINT("(pDeviceObject 0x%p, Offset %I64x, Size %d, Buffer 0x%p\n",
-	      pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
-      return Status;
-    }
-  DPRINT("Block request succeeded for 0x%p\n", Irp);
-  return STATUS_SUCCESS;
-}
-
-/*static */NTSTATUS
-RawFsWriteDisk(IN PDEVICE_OBJECT pDeviceObject,
-  IN PLARGE_INTEGER WriteOffset,
-  IN ULONG WriteLength,
-  IN PUCHAR Buffer)
-{
-  IO_STATUS_BLOCK IoStatus;
-  NTSTATUS Status;
-  KEVENT Event;
-  PIRP Irp;
-
-  DPRINT("RawFsWriteDisk(pDeviceObject 0x%p, Offset %I64x, Size %d, Buffer 0x%p)\n",
-	  pDeviceObject, WriteOffset->QuadPart, WriteLength, Buffer);
-
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-  DPRINT("Building synchronous FSD Request...\n");
-  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
-    pDeviceObject,
-    Buffer,
-    WriteLength,
-    WriteOffset,
-    &Event,
-    &IoStatus);
-  if (!Irp)
-    {
-      DPRINT("IoBuildSynchronousFsdRequest()\n");
-      return(STATUS_UNSUCCESSFUL);
-    }
-
-  DPRINT("Calling IO Driver...\n");
-  Status = IoCallDriver(pDeviceObject, Irp);
-
-  DPRINT("Waiting for IO Operation...\n");
-  if (Status == STATUS_PENDING)
-    {
-      KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-      DPRINT("Getting IO Status...\n");
-      Status = IoStatus.Status;
-    }
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("RawFsWriteDisk() failed. Status %x\n", Status);
-      DPRINT("(pDeviceObject 0x%p, Offset %I64x, Size %d, Buffer 0x%p\n",
-	      pDeviceObject, WriteOffset->QuadPart, WriteLength, Buffer);
-      return Status;
-    }
-
-  return STATUS_SUCCESS;
-}
-
-static NTSTATUS
-RawFsBlockDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG CtlCode,
-  IN PVOID InputBuffer,
-  IN ULONG InputBufferSize,
-  IN OUT PVOID OutputBuffer,
-  IN OUT PULONG pOutputBufferSize)
-{
-	ULONG OutputBufferSize = 0;
-	KEVENT Event;
-	PIRP Irp;
-	IO_STATUS_BLOCK IoStatus;
-	NTSTATUS Status;
-
-	DPRINT("RawFsBlockDeviceIoControl(DeviceObject 0x%p, CtlCode %x, "
-    "InputBuffer 0x%p, InputBufferSize %x, OutputBuffer 0x%p, "
-    "POutputBufferSize 0x%p (%x)\n", DeviceObject, CtlCode,
-    InputBuffer, InputBufferSize, OutputBuffer, pOutputBufferSize,
-    pOutputBufferSize ? *pOutputBufferSize : 0);
-
-	if (pOutputBufferSize)
-  	{
-  		OutputBufferSize = *pOutputBufferSize;
-  	}
-
-	KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-	DPRINT("Building device I/O control request ...\n");
-	Irp = IoBuildDeviceIoControlRequest(CtlCode,
-    DeviceObject,
-    InputBuffer,
-    InputBufferSize,
-    OutputBuffer,
-    OutputBufferSize,
-    FALSE,
-    &Event,
-    &IoStatus);
-	if (Irp == NULL)
-  	{
-  		DPRINT("IoBuildDeviceIoControlRequest failed\n");
-  		return STATUS_INSUFFICIENT_RESOURCES;
-  	}
-
-	DPRINT("Calling IO Driver... with irp 0x%p\n", Irp);
-	Status = IoCallDriver(DeviceObject, Irp);
-
-	DPRINT("Waiting for IO Operation for 0x%p\n", Irp);
-	if (Status == STATUS_PENDING)
-    {
-    	DPRINT("Operation pending\n");
-    	KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
-    	DPRINT("Getting IO Status... for 0x%p\n", Irp);
-    	Status = IoStatus.Status;
-    }
-	if (OutputBufferSize)
-  	{
-  		*pOutputBufferSize = OutputBufferSize;
-  	}
-	DPRINT("Returning Status %x\n", Status);
-	return Status;
-}
-
-static PRAWFS_FCB
-RawFsNewFCB(IN PRAWFS_GLOBAL_DATA pGlobalData)
-{
-  PRAWFS_FCB Fcb;
-
-  Fcb = ExAllocateFromNPagedLookasideList(&pGlobalData->FcbLookasideList);
-  memset(Fcb, 0, sizeof(RAWFS_FCB));
-  ExInitializeResourceLite(&Fcb->PagingIoResource);
-  ExInitializeResourceLite(&Fcb->MainResource);
-//  FsRtlInitializeFileLock(&Fcb->FileLock, NULL, NULL);
-  return Fcb;
-}
-
-static VOID
-RawFsDestroyFCB(IN PRAWFS_GLOBAL_DATA pGlobalData, IN PRAWFS_FCB pFcb)
-{
-  //FsRtlUninitializeFileLock(&pFcb->FileLock);
-  ExDeleteResourceLite(&pFcb->PagingIoResource);
-  ExDeleteResourceLite(&pFcb->MainResource);
-  ExFreeToNPagedLookasideList(&pGlobalData->FcbLookasideList, pFcb);
-}
-
-static PRAWFS_CCB
-RawFsNewCCB(PRAWFS_GLOBAL_DATA pGlobalData)
-{
-  PRAWFS_CCB Ccb;
-
-  Ccb = ExAllocateFromNPagedLookasideList(&pGlobalData->CcbLookasideList);
-  memset(Ccb, 0, sizeof(RAWFS_CCB));
-  return Ccb;
-}
-
-/*static */VOID
-RawFsDestroyCCB(PRAWFS_GLOBAL_DATA pGlobalData, PRAWFS_CCB pCcb)
-{
-  ExFreeToNPagedLookasideList(&pGlobalData->CcbLookasideList, pCcb);
-}
-
-static PRAWFS_IRP_CONTEXT
-RawFsAllocateIrpContext(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
-{
-  PRAWFS_GLOBAL_DATA GlobalData;
-  PRAWFS_IRP_CONTEXT IrpContext;
-  UCHAR MajorFunction;
-
-  DPRINT("RawFsAllocateIrpContext(DeviceObject 0x%p, Irp 0x%p)\n", DeviceObject, Irp);
-
-  ASSERT(DeviceObject);
-  ASSERT(Irp);
-
-  GlobalData = (PRAWFS_GLOBAL_DATA) DeviceObject->DeviceExtension;
-  IrpContext = ExAllocateFromNPagedLookasideList(&IrpContextLookasideList);
-  if (IrpContext)
-    {
-      RtlZeroMemory(IrpContext, sizeof(IrpContext));
-      IrpContext->Irp = Irp;
-      IrpContext->DeviceObject = DeviceObject;
-      IrpContext->DeviceExt = DeviceObject->DeviceExtension;
-      IrpContext->Stack = IoGetCurrentIrpStackLocation(Irp);
-      ASSERT(IrpContext->Stack);
-      MajorFunction = IrpContext->MajorFunction = IrpContext->Stack->MajorFunction;
-      IrpContext->MinorFunction = IrpContext->Stack->MinorFunction;
-      IrpContext->FileObject = IrpContext->Stack->FileObject;
-      if (MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL ||
-        MajorFunction == IRP_MJ_DEVICE_CONTROL ||
-        MajorFunction == IRP_MJ_SHUTDOWN)
+        /* Check if it has a VPB and unmount it */
+        if (Vpb->RealDevice->Vpb == Vpb)
         {
-          IrpContext->Flags |= IRPCONTEXT_CANWAIT;
-        }
-      else if (MajorFunction != IRP_MJ_CLEANUP &&
-        MajorFunction != IRP_MJ_CLOSE &&
-        IoIsOperationSynchronous(Irp))
-        {
-          IrpContext->Flags |= IRPCONTEXT_CANWAIT;
+            Vpb->DeviceObject = NULL;
+            Vpb->Flags &= ~VPB_MOUNTED;
         }
     }
-  return IrpContext;
+
+    /* Release lock and return status */
+    IoReleaseVpbSpinLock(OldIrql);
+    return Delete;
 }
 
-static VOID
-RawFsFreeIrpContext(IN PRAWFS_IRP_CONTEXT IrpContext)
+NTSTATUS
+NTAPI
+RawCompletionRoutine(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp,
+                     IN PVOID Context)
 {
-  DPRINT("RawFsFreeIrpContext(IrpContext 0x%p)\n", IrpContext);
+    PIO_STACK_LOCATION IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
-  ASSERT(IrpContext);
-
-  ExFreeToNPagedLookasideList(&IrpContextLookasideList, IrpContext);
-}
-
-static VOID
-STDCALL RawFsDoRequest(PVOID IrpContext)
-{
-  ULONG Count;
-
-  Count = InterlockedDecrement(&RawFsQueueCount);
-
-  DPRINT("RawFsDoRequest(IrpContext 0x%p), MajorFunction %x, %d\n",
-    IrpContext, ((PRAWFS_IRP_CONTEXT) IrpContext)->MajorFunction, Count);
-
-  RawFsDispatchRequest((PRAWFS_IRP_CONTEXT) IrpContext);
-}
-
-static NTSTATUS
-RawFsQueueRequest(PRAWFS_IRP_CONTEXT IrpContext)
-{
-  ULONG Count;
-
-  ASSERT(IrpContext != NULL);
-  ASSERT(IrpContext->Irp != NULL);
-
-  Count = InterlockedIncrement(&RawFsQueueCount);
-
-  DPRINT("RawFsQueueRequest (IrpContext 0x%p), %d\n", IrpContext, Count);
-
-  IrpContext->Flags |= IRPCONTEXT_CANWAIT;
-  IoMarkIrpPending (IrpContext->Irp);
-  ExInitializeWorkItem (&IrpContext->WorkQueueItem, RawFsDoRequest, IrpContext);
-  ExQueueWorkItem(&IrpContext->WorkQueueItem, CriticalWorkQueue);
-  return STATUS_PENDING;
-}
-
-static NTSTATUS
-RawFsClose(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  DPRINT("RawFsClose(IrpContext 0x%p)\n", IrpContext);
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-static NTSTATUS
-RawFsCreateFile(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  PRAWFS_DEVICE_EXTENSION DeviceExt;
-  PRAWFS_GLOBAL_DATA GlobalData;
-  PIO_STACK_LOCATION IoSp;
-  PFILE_OBJECT FileObject;
-  ULONG RequestedDisposition;
-  ULONG RequestedOptions;
-  PRAWFS_FCB pFcb;
-  PRAWFS_CCB pCcb;
-
-  GlobalData = (PRAWFS_GLOBAL_DATA) IrpContext->DeviceObject->DeviceExtension;
-  IoSp = IoGetCurrentIrpStackLocation(IrpContext->Irp);
-  RequestedDisposition = ((IoSp->Parameters.Create.Options >> 24) & 0xff);
-  RequestedOptions = IoSp->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;
-  FileObject = IoSp->FileObject;
-  DeviceExt = IrpContext->DeviceObject->DeviceExtension;
-
-  if (FileObject->FileName.Length == 0 &&
-      FileObject->RelatedFileObject == NULL)
+    /* Check if this was a valid sync R/W request */
+    if (((IoStackLocation->MajorFunction == IRP_MJ_READ) ||
+         (IoStackLocation->MajorFunction == IRP_MJ_WRITE)) &&
+        ((IoStackLocation->FileObject)) &&
+         (FlagOn(IoStackLocation->FileObject->Flags, FO_SYNCHRONOUS_IO)) &&
+         (NT_SUCCESS(Irp->IoStatus.Status)))
     {
-      /* This a open operation for the volume itself */
-      if (RequestedDisposition == FILE_CREATE
-    	    || RequestedDisposition == FILE_OVERWRITE_IF
-    	    || RequestedDisposition == FILE_SUPERSEDE)
-      	{
-      	  return STATUS_ACCESS_DENIED;
-      	}
-      if (RequestedOptions & FILE_DIRECTORY_FILE)
-      	{
-      	  return STATUS_NOT_A_DIRECTORY;
-      	}
-      pFcb = DeviceExt->VolumeFcb;
-      pCcb = RawFsNewCCB(GlobalData);
-      if (pCcb == NULL)
-      	{
-      	  return (STATUS_INSUFFICIENT_RESOURCES);
-      	}
-
-      FileObject->SectionObjectPointer = &pFcb->SectionObjectPointers;
-      FileObject->FsContext = pFcb;
-      FileObject->FsContext2 = pCcb;
-      pFcb->RefCount++;
-
-      IrpContext->Irp->IoStatus.Information = FILE_OPENED;
-      return(STATUS_SUCCESS);
+        /* Update byte offset */
+        IoStackLocation->FileObject->CurrentByteOffset.QuadPart +=
+            Irp->IoStatus.Information;
     }
 
-  /* This filesystem driver only supports volume access */
-  return(STATUS_INVALID_PARAMETER);
+    /* Mark the IRP Pending if it was */
+    if (Irp->PendingReturned) IoMarkIrpPending(Irp);
+    return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-RawFsCreate(IN PRAWFS_IRP_CONTEXT IrpContext)
+NTSTATUS
+NTAPI
+RawClose(IN PVCB Vcb,
+         IN PIRP Irp,
+         IN PIO_STACK_LOCATION IoStackLocation)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
+    BOOLEAN Deleted = FALSE;
+    PAGED_CODE();
 
-  DPRINT("RawFsCreate(IrpContext 0x%p)\n", IrpContext);
+    /* Make sure we can clean up */
+    Status = KeWaitForSingleObject(&Vcb->Mutex,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   NULL);
+    ASSERT(NT_SUCCESS(Status));
 
-  ASSERT(IrpContext);
+    /* Decrease the open count and check if this is a dismount */
+    Vcb->OpenCount--;
+    if (!Vcb->OpenCount) Deleted = RawCheckForDismount(Vcb, FALSE);
 
-  if (RawFsIsRawFileSystemDeviceObject(IrpContext->DeviceObject))
+    /* Check if we should delete the device */
+    KeReleaseMutex(&Vcb->Mutex, FALSE);
+    if (Deleted)
     {
-      /* DeviceObject represents FileSystem instead of logical volume */
-      DPRINT("RawFsCreate() called with file system\n");
-      IrpContext->Irp->IoStatus.Information = FILE_OPENED;
-      IrpContext->Irp->IoStatus.Status = STATUS_SUCCESS;
-      IoCompleteRequest(IrpContext->Irp, IO_DISK_INCREMENT);
-      RawFsFreeIrpContext(IrpContext);
-      return STATUS_SUCCESS;
+        /* Delete it */
+        IoDeleteDevice((PDEVICE_OBJECT)CONTAINING_RECORD(Vcb,
+                                                         VOLUME_DEVICE_OBJECT,
+                                                         Vcb));
     }
 
-  if (!(IrpContext->Flags & IRPCONTEXT_CANWAIT))
-    {
-      return RawFsQueueRequest(IrpContext);
-    }
-
-  IrpContext->Irp->IoStatus.Information = 0;
-
-  Status = RawFsCreateFile(IrpContext);
-
-  IrpContext->Irp->IoStatus.Status = Status;
-  IoCompleteRequest(IrpContext->Irp,
-    (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
-  RawFsFreeIrpContext(IrpContext);
-
-  return Status;
+    /* Complete the request */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-RawFsRead(IN PRAWFS_IRP_CONTEXT IrpContext)
+NTSTATUS
+NTAPI
+RawCreate(IN PVCB Vcb,
+          IN PIRP Irp,
+          IN PIO_STACK_LOCATION IoStackLocation)
 {
-  DPRINT("RawFsRead(IrpContext 0x%p)\n", IrpContext);
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
+    NTSTATUS Status;
+    BOOLEAN Deleted = FALSE;
+    USHORT ShareAccess;
+    ACCESS_MASK DesiredAccess;
+    PAGED_CODE();
 
-static NTSTATUS
-RawFsWrite(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  DPRINT("RawFsWrite(IrpContext 0x%p)\n", IrpContext);
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
+    /* Make sure we can clean up */
+    Status = KeWaitForSingleObject(&Vcb->Mutex,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   NULL);
+    ASSERT(NT_SUCCESS(Status));
 
-static NTSTATUS
-RawFsMount(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  PRAWFS_GLOBAL_DATA GlobalData = NULL;
-  PDEVICE_OBJECT DeviceObject = NULL;
-  PRAWFS_DEVICE_EXTENSION DeviceExt = NULL;
-  PRAWFS_FCB VolumeFcb = NULL;
-  PRAWFS_FCB Fcb = NULL;
-  PARTITION_INFORMATION PartitionInfo;
-  DISK_GEOMETRY DiskGeometry;
-  LARGE_INTEGER VolumeSize;
-  NTSTATUS Status;
-  ULONG Size;
-
-  DPRINT("RawFsMount(IrpContext 0x%p)\n", IrpContext);
-
-  ASSERT(IrpContext);
-
-  if (!RawFsIsRawFileSystemDeviceObject(IrpContext->DeviceObject))
+    /* Check if this is a valid non-directory file open */
+    if ((!(IoStackLocation->FileObject) ||
+         !(IoStackLocation->FileObject->FileName.Length)) &&
+        ((IoStackLocation->Parameters.Create.Options >> 24) == FILE_OPEN) &&
+         (!(IoStackLocation->Parameters.Create.Options & FILE_DIRECTORY_FILE)))
     {
-      Status = STATUS_INVALID_DEVICE_REQUEST;
-      DPRINT("Not for me\n");
-      goto ByeBye;
-    }
-
-  GlobalData = (PRAWFS_GLOBAL_DATA) IrpContext->DeviceObject->DeviceExtension;
-
-  Status = IoCreateDevice(GlobalData->DriverObject,
-    sizeof(RAWFS_DEVICE_EXTENSION),
-    NULL,
-    FILE_DEVICE_FILE_SYSTEM,
-    0,
-    FALSE,
-    &DeviceObject);
-  if (!NT_SUCCESS(Status))
-    {
-      goto ByeBye;
-    }
-
-  DeviceObject->Flags |= DO_DIRECT_IO;
-  DeviceExt = (PVOID) DeviceObject->DeviceExtension;
-  RtlZeroMemory(DeviceExt, sizeof(RAWFS_DEVICE_EXTENSION));
-
-  /* Use same vpb as device disk */
-  DeviceObject->Vpb = IrpContext->Stack->Parameters.MountVolume.DeviceObject->Vpb;
-  DeviceExt->StorageDevice = IrpContext->Stack->Parameters.MountVolume.DeviceObject;
-  DeviceExt->StorageDevice->Vpb->DeviceObject = DeviceObject;
-  DeviceExt->StorageDevice->Vpb->RealDevice = DeviceExt->StorageDevice;
-  DeviceExt->StorageDevice->Vpb->Flags |= VPB_MOUNTED;
-  DeviceObject->StackSize = DeviceExt->StorageDevice->StackSize + 1;
-  DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-
-  KeInitializeSpinLock(&DeviceExt->FcbListLock);
-  InitializeListHead(&DeviceExt->FcbListHead);
-
-  /* First try getting harddisk geometry then try getting CD-ROM geometry */
-  Size = sizeof(DISK_GEOMETRY);
-  Status = RawFsBlockDeviceIoControl(
-    IrpContext->Stack->Parameters.MountVolume.DeviceObject,
-    IOCTL_DISK_GET_DRIVE_GEOMETRY,
-    NULL,
-    0,
-    &DiskGeometry,
-    &Size);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("RawFsBlockDeviceIoControl failed with status 0x%.08x\n", Status);
-      goto ByeBye;
-    }
-  if (DiskGeometry.MediaType == FixedMedia)
-    {
-      // We have found a hard disk
-      Size = sizeof(PARTITION_INFORMATION);
-      Status = RawFsBlockDeviceIoControl(
-        IrpContext->Stack->Parameters.MountVolume.DeviceObject,
-        IOCTL_DISK_GET_PARTITION_INFO,
-        NULL,
-        0,
-        &PartitionInfo,
-        &Size);
-      if (!NT_SUCCESS(Status))
+        /* Make sure the VCB isn't locked */
+        if (Vcb->VcbState & 1)
         {
-          DPRINT("RawFsBlockDeviceIoControl() failed (%x)\n", Status);
-          goto ByeBye;
+            /* Refuse the operation */
+            Status = STATUS_ACCESS_DENIED;
+            Irp->IoStatus.Information = 0;
         }
-#ifndef NDEBUG
-      DbgPrint("Partition Information:\n");
-      DbgPrint("StartingOffset      %u\n", PartitionInfo.StartingOffset.QuadPart);
-      DbgPrint("PartitionLength     %u\n", PartitionInfo.PartitionLength.QuadPart);
-      DbgPrint("HiddenSectors       %u\n", PartitionInfo.HiddenSectors);
-      DbgPrint("PartitionNumber     %u\n", PartitionInfo.PartitionNumber);
-      DbgPrint("PartitionType       %u\n", PartitionInfo.PartitionType);
-      DbgPrint("BootIndicator       %u\n", PartitionInfo.BootIndicator);
-      DbgPrint("RecognizedPartition %u\n", PartitionInfo.RecognizedPartition);
-      DbgPrint("RewritePartition    %u\n", PartitionInfo.RewritePartition);
+        else
+        {
+            /* Setup share access */
+            ShareAccess = IoStackLocation->Parameters.Create.ShareAccess;
+            DesiredAccess = IoStackLocation->Parameters.Create.
+                            SecurityContext->DesiredAccess;
+
+            /* Check if this VCB was already opened */
+            if (Vcb->OpenCount > 0)
+            {
+                /* Try to see if we have access to it */
+                Status = IoCheckShareAccess(DesiredAccess,
+                                            ShareAccess,
+                                            IoStackLocation->FileObject,
+                                            &Vcb->ShareAccess,
+                                            TRUE);
+                if (!NT_SUCCESS(Status)) Irp->IoStatus.Information = 0;
+            }
+
+            /* Make sure we have access */
+            if (NT_SUCCESS(Status))
+            {
+                /* Check if this is the first open */
+                if (!Vcb->OpenCount)
+                {
+                    /* Set the share access */
+                    IoSetShareAccess(DesiredAccess,
+                                     ShareAccess,
+                                     IoStackLocation->FileObject,
+                                     &Vcb->ShareAccess);
+                }
+
+                /* Increase the open count and set the VPB */
+                Vcb->OpenCount += 1;
+                IoStackLocation->FileObject->Vpb = Vcb->Vpb;
+
+                /* Set IRP status and disable intermediate buffering */
+                Status = STATUS_SUCCESS;
+                Irp->IoStatus.Information = FILE_OPENED;
+                IoStackLocation->FileObject->Flags |=
+                    FO_NO_INTERMEDIATE_BUFFERING;
+            }
+        }
+    }
+    else
+    {
+        /* Invalid create request */
+        Status = STATUS_INVALID_PARAMETER;
+        Irp->IoStatus.Information = 0;
+    }
+
+    /* Check if the request failed */
+    if (!(NT_SUCCESS(Status)) && !(Vcb->OpenCount))
+    {
+        /* Check if we can dismount the device */
+        Deleted = RawCheckForDismount(Vcb, FALSE);
+    }
+
+    /* Check if we should delete the device */
+    KeReleaseMutex(&Vcb->Mutex, FALSE);
+    if (Deleted)
+    {
+        /* Delete it */
+        IoDeleteDevice((PDEVICE_OBJECT)CONTAINING_RECORD(Vcb,
+                                                         VOLUME_DEVICE_OBJECT,
+                                                         Vcb));
+    }
+
+    /* Complete the request */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RawReadWriteDeviceControl(IN PVCB Vcb,
+                          IN PIRP Irp,
+                          IN PIO_STACK_LOCATION IoStackLocation)
+{
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Don't do anything if the request was 0 bytes */
+    if (((IoStackLocation->MajorFunction == IRP_MJ_READ) ||
+         (IoStackLocation->MajorFunction == IRP_MJ_WRITE)) &&
+        !(IoStackLocation->Parameters.Read.Length))
+    {
+        /* Complete it */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    /* Copy the IRP stack location */
+    IoCopyCurrentIrpStackLocationToNext(Irp);
+
+    /* Disable verifies */
+    IoGetNextIrpStackLocation(Irp)->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+
+    /* Setup a completion routine */
+    IoSetCompletionRoutine(Irp,
+                           RawCompletionRoutine,
+                           NULL,
+                           TRUE,
+                           TRUE,
+                           TRUE);
+
+    /* Call the next driver and exit */
+    Status = IoCallDriver(Vcb->TargetDeviceObject, Irp);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RawMountVolume(IN PIO_STACK_LOCATION IoStackLocation)
+{
+    NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
+    PVOLUME_DEVICE_OBJECT Volume;
+    PAGED_CODE();
+
+    /* Remember our owner */
+    DeviceObject = IoStackLocation->Parameters.MountVolume.DeviceObject;
+
+    /* Create the volume */
+    Status = IoCreateDevice(RawDiskDeviceObject->DriverObject,
+                            sizeof(VOLUME_DEVICE_OBJECT) -
+                            sizeof(DEVICE_OBJECT),
+                            NULL,
+                            FILE_DEVICE_DISK_FILE_SYSTEM,
+                            0,
+                            FALSE,
+                            (PDEVICE_OBJECT*)&Volume);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Use highest alignment requirement */
+    Volume->DeviceObject.AlignmentRequirement = max(DeviceObject->
+                                                    AlignmentRequirement,
+                                                    Volume->DeviceObject.
+                                                    AlignmentRequirement);
+
+    /* Setup the VCB */
+    RawInitializeVcb(&Volume->Vcb,
+                     IoStackLocation->Parameters.MountVolume.DeviceObject,
+                     IoStackLocation->Parameters.MountVolume.Vpb);
+
+    /* Set dummy label and serial number */
+    Volume->Vcb.Vpb->SerialNumber = 0xFFFFFFFF;
+    Volume->Vcb.Vpb->VolumeLabelLength = 0;
+
+    /* Setup the DO */
+    Volume->Vcb.Vpb->DeviceObject = &Volume->DeviceObject;
+    Volume->DeviceObject.StackSize = DeviceObject->StackSize + 1;
+    Volume->DeviceObject.SectorSize = DeviceObject->SectorSize;
+    Volume->DeviceObject.Flags |= DO_DIRECT_IO;
+    Volume->DeviceObject.Flags &= ~DO_DEVICE_INITIALIZING;
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RawUserFsCtrl(IN PIO_STACK_LOCATION IoStackLocation,
+              IN PVCB Vcb)
+{
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Lock the device */
+    Status = KeWaitForSingleObject(&Vcb->Mutex,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   NULL);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Check what kind of request this is */
+    switch (IoStackLocation->Parameters.FileSystemControl.FsControlCode)
+    {
+        /* Oplock requests */
+        case FSCTL_REQUEST_OPLOCK_LEVEL_1:
+        case FSCTL_REQUEST_OPLOCK_LEVEL_2:
+        case FSCTL_OPLOCK_BREAK_ACKNOWLEDGE:
+        case FSCTL_OPLOCK_BREAK_NOTIFY:
+
+            /* We don't handle them */
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        /* Lock request */
+        case FSCTL_LOCK_VOLUME:
+
+            /* Make sure we're not locked, and that we're alone */
+            if (!(Vcb->VcbState & 1) && (Vcb->OpenCount == 1))
+            {
+                /* Lock the VCB */
+                Vcb->VcbState |= 1;
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                /* Otherwise, we can't do this */
+                Status = STATUS_ACCESS_DENIED;
+            }
+            break;
+
+        /* Unlock request */
+        case FSCTL_UNLOCK_VOLUME:
+
+            /* Make sure we're locked */
+            if (!(Vcb->VcbState & 1))
+            {
+                /* Let caller know we're not */
+                Status = STATUS_NOT_LOCKED;
+            }
+            else
+            {
+                /* Unlock the VCB */
+                Vcb->VcbState &= ~1;
+                Status = STATUS_SUCCESS;
+            }
+            break;
+
+        /* Dismount request */
+        case FSCTL_DISMOUNT_VOLUME:
+
+            /* Make sure we're locked */
+            if (Vcb->VcbState & 1)
+            {
+                /* Do nothing, just return success */
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                /* We can't dismount, device not locked */
+                Status = STATUS_ACCESS_DENIED;
+            }
+            break;
+
+        /* Unknown request */
+        default:
+
+            /* Fail */
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+    }
+
+    /* Unlock device and return */
+    KeReleaseMutex(&Vcb->Mutex, FALSE);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RawFileSystemControl(IN PVCB Vcb,
+                     IN PIRP Irp,
+                     IN PIO_STACK_LOCATION IoStackLocation)
+{
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Check the kinds of FSCTLs that we support */
+    switch (IoStackLocation->MinorFunction)
+    {
+        /* User-mode request */
+        case IRP_MN_USER_FS_REQUEST:
+
+            /* Handle it */
+            Status = RawUserFsCtrl(IoStackLocation, Vcb);
+            break;
+
+        /* Mount request */
+        case IRP_MN_MOUNT_VOLUME:
+
+            /* Mount the volume */
+            Status = RawMountVolume(IoStackLocation);
+            break;
+
+        case IRP_MN_VERIFY_VOLUME:
+
+            /* We don't do verifies */
+            Status = STATUS_WRONG_VOLUME;
+            Vcb->Vpb->RealDevice->Flags &= ~DO_VERIFY_VOLUME;
+
+            /* Check if we should delete the device */
+            if (RawCheckForDismount(Vcb, FALSE))
+            {
+                /* Do it */
+                IoDeleteDevice((PDEVICE_OBJECT)
+                               CONTAINING_RECORD(Vcb,
+                                                 VOLUME_DEVICE_OBJECT,
+                                                 Vcb));
+            }
+
+            /* We're done */
+            break;
+
+        /* Invalid request */
+        default:
+
+            /* Fail it */
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            break;
+    }
+
+    /* Complete the request */
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RawQueryInformation(IN PVCB Vcb,
+                    IN PIRP Irp,
+                    IN PIO_STACK_LOCATION IoStackLocation)
+{
+    NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
+    PULONG Length;
+    PFILE_POSITION_INFORMATION Buffer;
+    PAGED_CODE();
+
+    /* Get information from the IRP */
+    Length = &IoStackLocation->Parameters.QueryFile.Length;
+    Buffer = Irp->AssociatedIrp.SystemBuffer;
+
+    /* We only handle this request */
+    if (IoStackLocation->Parameters.QueryFile.FileInformationClass ==
+        FilePositionInformation)
+    {
+        /* Validate buffer size */
+        if (*Length < sizeof(FILE_POSITION_INFORMATION))
+        {
+            /* Invalid, fail */
+            Irp->IoStatus.Information = 0;
+            Status = STATUS_BUFFER_OVERFLOW;
+        }
+        else
+        {
+            /* Get offset and update length */
+            Buffer->CurrentByteOffset = IoStackLocation->FileObject->
+                                        CurrentByteOffset;
+            *Length -= sizeof(FILE_POSITION_INFORMATION);
+
+            /* Set IRP Status information */
+            Irp->IoStatus.Information = sizeof(FILE_POSITION_INFORMATION);
+            Status = STATUS_SUCCESS;
+        }
+    }
+
+    /* Complete it */
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RawSetInformation(IN PVCB Vcb,
+                  IN PIRP Irp,
+                  IN PIO_STACK_LOCATION IoStackLocation)
+{
+    NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
+    PULONG Length;
+    PFILE_POSITION_INFORMATION Buffer;
+    PDEVICE_OBJECT DeviceObject;
+    PAGED_CODE();
+
+    /* Get information from the IRP */
+    Length = &IoStackLocation->Parameters.QueryFile.Length;
+    Buffer = Irp->AssociatedIrp.SystemBuffer;
+
+    /* We only handle this request */
+    if (IoStackLocation->Parameters.QueryFile.FileInformationClass ==
+        FilePositionInformation)
+    {
+        /* Get the DO */
+        DeviceObject = IoGetRelatedDeviceObject(IoStackLocation->FileObject);
+
+        /* Make sure the offset is aligned */
+        if ((Buffer->CurrentByteOffset.LowPart &
+            DeviceObject->AlignmentRequirement))
+        {
+            /* It's not, fail */
+            Status = STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            /* Otherwise, set offset */
+            IoStackLocation->FileObject->CurrentByteOffset = Buffer->
+                                                             CurrentByteOffset;
+
+            /* Set IRP Status information */
+            Status = STATUS_SUCCESS;
+        }
+    }
+
+    /* Complete it */
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RawQueryFsVolumeInfo(IN PVCB Vcb,
+                     IN PFILE_FS_VOLUME_INFORMATION Buffer,
+                     IN OUT PULONG Length)
+{
+    PAGED_CODE();
+
+    /* Clear the buffer and stub it out */
+    RtlZeroMemory( Buffer, sizeof(FILE_FS_VOLUME_INFORMATION));
+    Buffer->VolumeSerialNumber = Vcb->Vpb->SerialNumber;
+    Buffer->SupportsObjects = FALSE;
+    Buffer->VolumeLabelLength = 0;
+
+    /* Return length and success */
+    *Length -= FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel[0]);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RawQueryFsSizeInfo(IN PVCB Vcb,
+                   IN PFILE_FS_SIZE_INFORMATION Buffer,
+                   IN OUT PULONG Length)
+{
+    PIRP Irp;
+    KEVENT Event;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PDEVICE_OBJECT RealDevice;
+    DISK_GEOMETRY DiskGeometry;
+    PARTITION_INFORMATION PartitionInformation;
+    BOOLEAN DiskHasPartitions;
+    PAGED_CODE();
+
+    /* Validate the buffer */
+    if (*Length < sizeof(FILE_FS_SIZE_INFORMATION))
+    {
+        /* Fail */
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* Clear the buffer, initialize the event and set the DO */
+    RtlZeroMemory(Buffer, sizeof(FILE_FS_SIZE_INFORMATION));
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    RealDevice = Vcb->Vpb->RealDevice;
+
+    /* Build query IRP */
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
+                                        RealDevice,
+                                        NULL,
+                                        0,
+                                        &DiskGeometry,
+                                        sizeof(DISK_GEOMETRY),
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+
+    /* Call driver and check if we're pending */
+    Status = IoCallDriver(RealDevice, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait on driver to finish */
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    /* Fail if we couldn't get CHS data */
+    if (!NT_SUCCESS(Status))
+    {
+        *Length = 0;
+        return Status;
+    }
+
+    /* Check if this is a floppy */
+    if (FlagOn(RealDevice->Characteristics, FILE_FLOPPY_DISKETTE))
+    {
+        /* Floppies don't have partitions */
+        DiskHasPartitions = FALSE;
+    }
+    else
+    {
+        /* Setup query IRP */
+        KeResetEvent(&Event);
+        Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_PARTITION_INFO,
+                                            RealDevice,
+                                            NULL,
+                                            0,
+                                            &PartitionInformation,
+                                            sizeof(PARTITION_INFORMATION),
+                                            FALSE,
+                                            &Event,
+                                            &IoStatusBlock);
+
+        /* Call driver and check if we're pending */
+        Status = IoCallDriver(RealDevice, Irp);
+        if (Status == STATUS_PENDING)
+        {
+            /* Wait on driver to finish */
+            KeWaitForSingleObject(&Event,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+            Status = IoStatusBlock.Status;
+        }
+
+        /* If this was an invalid request, then the disk is not partitioned */
+        if (Status == STATUS_INVALID_DEVICE_REQUEST)
+        {
+            DiskHasPartitions = FALSE;
+        }
+        else
+        {
+            /* Otherwise, it must be */
+            ASSERT(NT_SUCCESS(Status));
+            DiskHasPartitions = TRUE;
+        }
+    }
+
+    /* Set sector data */
+    Buffer->BytesPerSector = DiskGeometry.BytesPerSector;
+    Buffer->SectorsPerAllocationUnit = 1;
+
+    /* Calculate allocation units */
+    if (DiskHasPartitions)
+    {
+        /* Use partition data */
+        Buffer->TotalAllocationUnits =
+            RtlExtendedLargeIntegerDivide(PartitionInformation.PartitionLength,
+                                          DiskGeometry.BytesPerSector,
+                                          NULL);
+    }
+    else
+    {
+        /* Use CHS */
+        Buffer->TotalAllocationUnits =
+            RtlExtendedIntegerMultiply(DiskGeometry.Cylinders,
+                                       DiskGeometry.TracksPerCylinder *
+                                       DiskGeometry.SectorsPerTrack);
+    }
+
+    /* Set available units */
+    Buffer->AvailableAllocationUnits = Buffer->TotalAllocationUnits;
+
+    /* Return length and success */
+    *Length -= sizeof(FILE_FS_SIZE_INFORMATION);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RawQueryFsDeviceInfo(IN PVCB Vcb,
+                     IN PFILE_FS_DEVICE_INFORMATION Buffer,
+                     IN OUT PULONG Length)
+{
+    PAGED_CODE();
+
+    /* Validate buffer */
+    if (*Length < sizeof(FILE_FS_DEVICE_INFORMATION))
+    {
+        /* Fail */
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* Clear buffer and write information */
+    RtlZeroMemory(Buffer, sizeof(FILE_FS_DEVICE_INFORMATION));
+    Buffer->DeviceType = FILE_DEVICE_DISK;
+    Buffer->Characteristics = Vcb->TargetDeviceObject->Characteristics;
+
+    /* Return length and success */
+    *Length -= sizeof(FILE_FS_DEVICE_INFORMATION);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RawQueryFsAttributeInfo(IN PVCB Vcb,
+                        IN PFILE_FS_ATTRIBUTE_INFORMATION Buffer,
+                        IN OUT PULONG Length)
+{
+    ULONG ReturnLength;
+    PAGED_CODE();
+
+    /* Check if the buffer is large enough for our name ("RAW") */
+    ReturnLength = FIELD_OFFSET(FILE_FS_ATTRIBUTE_INFORMATION,
+                                FileSystemName[0]);
+    ReturnLength += sizeof(L"RAW");
+    if (*Length < ReturnLength) return STATUS_BUFFER_OVERFLOW;
+
+    /* Output the data */
+    Buffer->FileSystemAttributes = 0;
+    Buffer->MaximumComponentNameLength = 0;
+    Buffer->FileSystemNameLength = 6;
+    RtlMoveMemory(&Buffer->FileSystemName[0], L"RAW", 6);
+
+    /* Return length and success */
+    *Length -= ReturnLength;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RawQueryVolumeInformation(IN PVCB Vcb,
+                          IN PIRP Irp,
+                          IN PIO_STACK_LOCATION IoStackLocation)
+{
+    NTSTATUS Status;
+    ULONG Length;
+    PVOID Buffer;
+    PAGED_CODE();
+
+    /* Get IRP Data */
+    Length = IoStackLocation->Parameters.QueryVolume.Length;
+    Buffer = Irp->AssociatedIrp.SystemBuffer;
+
+    /* Check the kind of request */
+    switch (IoStackLocation->Parameters.QueryVolume.FsInformationClass)
+    {
+        /* Volume information request */
+        case FileFsVolumeInformation:
+
+            Status = RawQueryFsVolumeInfo(Vcb, Buffer, &Length);
+            break;
+
+        /* File system size invormation */
+        case FileFsSizeInformation:
+
+            Status = RawQueryFsSizeInfo(Vcb, Buffer, &Length);
+            break;
+
+        /* Device information */
+        case FileFsDeviceInformation:
+
+            Status = RawQueryFsDeviceInfo(Vcb, Buffer, &Length);
+            break;
+
+        /* Attribute information */
+        case FileFsAttributeInformation:
+
+            Status = RawQueryFsAttributeInfo(Vcb, Buffer, &Length);
+            break;
+
+        /* Invalid request */
+        default:
+
+            /* Fail it */
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+    }
+
+    /* Set status and complete the request */
+    Irp->IoStatus.Information = IoStackLocation->
+                                Parameters.QueryVolume.Length - Length;
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RawCleanup(IN PVCB Vcb,
+           IN PIRP Irp,
+           IN PIO_STACK_LOCATION IoStackLocation)
+{
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Make sure we can clean up */
+    Status = KeWaitForSingleObject(&Vcb->Mutex,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   NULL);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Remove shared access and complete the request */
+    IoRemoveShareAccess(IoStackLocation->FileObject, &Vcb->ShareAccess);
+    KeReleaseMutex(&Vcb->Mutex, FALSE);
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RawDispatch(IN PVOLUME_DEVICE_OBJECT DeviceObject,
+            IN PIRP Irp)
+{
+    NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
+    PIO_STACK_LOCATION IoStackLocation;
+    PVCB Vcb;
+    PAGED_CODE();
+
+    /* Get the stack location */
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+
+    /* Differentiate between Volume DO and FS DO */
+    if ((((PDEVICE_OBJECT)DeviceObject)->Size == sizeof(DEVICE_OBJECT)) &&
+        !((IoStackLocation->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL) &&
+          (IoStackLocation->MinorFunction == IRP_MN_MOUNT_VOLUME)))
+    {
+        /* This is an FS DO. Stub out the common calls */
+        if ((IoStackLocation->MajorFunction == IRP_MJ_CREATE) ||
+            (IoStackLocation->MajorFunction == IRP_MJ_CLEANUP) ||
+            (IoStackLocation->MajorFunction == IRP_MJ_CLOSE))
+        {
+            /* Return success for them */
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Anything else, we don't support */
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+        }
+
+        /* Complete the request */
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        return Status;
+    }
+
+    /* Otherwise, get our VCB and start handling the IRP */
+    FsRtlEnterFileSystem();
+    Vcb = &DeviceObject->Vcb;
+
+    /* Check what kind of IRP this is */
+    switch (IoStackLocation->MajorFunction)
+    {
+        /* Cleanup request */
+        case IRP_MJ_CLEANUP:
+
+            Status = RawCleanup(Vcb, Irp, IoStackLocation);
+            break;
+
+        /* Close request */
+        case IRP_MJ_CLOSE:
+
+            Status = RawClose(Vcb, Irp, IoStackLocation);
+            break;
+
+        /* Create request */
+        case IRP_MJ_CREATE:
+
+            Status = RawCreate(Vcb, Irp, IoStackLocation);
+            break;
+
+        /* FSCTL request */
+        case IRP_MJ_FILE_SYSTEM_CONTROL:
+
+            Status = RawFileSystemControl(Vcb, Irp, IoStackLocation);
+            break;
+
+        /* R/W or IOCTL request */
+        case IRP_MJ_READ:
+        case IRP_MJ_WRITE:
+        case IRP_MJ_DEVICE_CONTROL:
+
+            Status = RawReadWriteDeviceControl(Vcb, Irp, IoStackLocation);
+            break;
+
+        /* Information query request */
+        case IRP_MJ_QUERY_INFORMATION:
+
+            Status = RawQueryInformation(Vcb, Irp, IoStackLocation);
+            break;
+
+        /* Information set request */
+        case IRP_MJ_SET_INFORMATION:
+
+            Status = RawSetInformation(Vcb, Irp, IoStackLocation);
+            break;
+
+        /* Volume information request */
+        case IRP_MJ_QUERY_VOLUME_INFORMATION:
+
+            Status = RawQueryVolumeInformation(Vcb, Irp, IoStackLocation);
+            break;
+
+        /* Unexpected request */
+        default:
+
+            /* Anything else is pretty bad */
+            KeBugCheck(FILE_SYSTEM);
+    }
+
+    /* Return the status */
+    FsRtlExitFileSystem();
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RawShutdown(IN PDEVICE_OBJECT DeviceObject,
+            IN PIRP Irp)
+{
+    /* Unregister file systems */
+#if 0 // FIXME: This freezes ROS at shutdown. PnP Problem?
+    IoUnregisterFileSystem(RawDiskDeviceObject);
+    IoUnregisterFileSystem(RawCdromDeviceObject);
+    IoUnregisterFileSystem(RawTapeDeviceObject);
+
+    /* Delete the devices */
+    IoDeleteDevice(RawDiskDeviceObject);
+    IoDeleteDevice(RawCdromDeviceObject);
+    IoDeleteDevice(RawTapeDeviceObject);
 #endif
-      VolumeSize.QuadPart = PartitionInfo.PartitionLength.QuadPart;
-    }
-  else if (DiskGeometry.MediaType > Unknown && DiskGeometry.MediaType <= RemovableMedia)
-    {
-      Status = STATUS_UNRECOGNIZED_VOLUME;
-      goto ByeBye;
-    }
 
-  VolumeFcb = RawFsNewFCB(GlobalData);
-  if (VolumeFcb == NULL)
-    {
-      Status = STATUS_INSUFFICIENT_RESOURCES;
-      goto ByeBye;
-    }
-
-  VolumeFcb->Flags = FCB_IS_VOLUME;
-  VolumeFcb->RFCB.FileSize.QuadPart = VolumeSize.QuadPart;
-  VolumeFcb->RFCB.ValidDataLength.QuadPart = VolumeFcb->RFCB.FileSize.QuadPart;
-  VolumeFcb->RFCB.AllocationSize.QuadPart = VolumeFcb->RFCB.FileSize.QuadPart;
-  DeviceExt->VolumeFcb = VolumeFcb;
-
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&GlobalData->VolumeListLock, TRUE);
-  InsertHeadList(&GlobalData->VolumeListHead, &DeviceExt->VolumeListEntry);
-  ExReleaseResourceLite(&GlobalData->VolumeListLock);
-  KeLeaveCriticalRegion();
-
-  /* No serial number */
-  DeviceObject->Vpb->SerialNumber = 0;
-
-  /* Set volume label (no label) */
-  *(DeviceObject->Vpb->VolumeLabel) = 0;
-  DeviceObject->Vpb->VolumeLabelLength = 0;
-
-  Status = STATUS_SUCCESS;
-
-ByeBye:
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("RAWFS: RawFsMount() Status 0x%.08x\n", Status);
-
-      if (Fcb)
-        RawFsDestroyFCB(GlobalData, Fcb);
-      if (DeviceObject)
-        IoDeleteDevice(DeviceObject);
-      if (VolumeFcb)
-        RawFsDestroyFCB(GlobalData, VolumeFcb);
-    }
-  return Status;
+    /* Complete the request */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-RawFsFileSystemControl(IN PRAWFS_IRP_CONTEXT IrpContext)
+VOID
+NTAPI
+RawUnload(IN PDRIVER_OBJECT DriverObject)
 {
-  NTSTATUS Status;
-
-  DPRINT("RawFsFileSystemControl(IrpContext 0x%p)\n", IrpContext);
-
-  ASSERT(IrpContext);
-
-  switch (IrpContext->MinorFunction)
-    {
-      case IRP_MN_USER_FS_REQUEST:
-        DPRINT("RawFs FSC: IRP_MN_USER_FS_REQUEST\n");
-        Status = STATUS_INVALID_DEVICE_REQUEST;
-        break;
-
-      case IRP_MN_MOUNT_VOLUME:
-        DPRINT("RawFs FSC: IRP_MN_MOUNT_VOLUME\n");
-        Status = RawFsMount(IrpContext);
-        break;
-
-      case IRP_MN_VERIFY_VOLUME:
-        DPRINT("RawFs FSC: IRP_MN_VERIFY_VOLUME\n");
-        Status = STATUS_INVALID_DEVICE_REQUEST;
-        break;
-
-      default:
-        DPRINT("RawFs FSC: MinorFunction %d\n", IrpContext->MinorFunction);
-        Status = STATUS_INVALID_DEVICE_REQUEST;
-        break;
-    }
-
-  IrpContext->Irp->IoStatus.Status = Status;
-  IrpContext->Irp->IoStatus.Information = 0;
-
-  IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-  RawFsFreeIrpContext(IrpContext);
-  return Status;
+#if 0 // FIXME: DriverUnload is never called
+    /* Dereference device objects */
+    ObDereferenceObject(RawDiskDeviceObject);
+    ObDereferenceObject(RawCdromDeviceObject);
+    ObDereferenceObject(RawTapeDeviceObject);
+#endif
 }
 
-static NTSTATUS
-RawFsQueryInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  DPRINT("RawFsQueryInformation(IrpContext 0x%p)\n", IrpContext);
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-static NTSTATUS
-RawFsSetInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  DPRINT("RawFsSetInformation(IrpContext 0x%p)\n", IrpContext);
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-static NTSTATUS
-RawFsDirectoryControl(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  DPRINT("RawFsDirectoryControl(IrpContext 0x%p)\n", IrpContext);
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-static NTSTATUS
-RawFsQueryVolumeInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  DPRINT("RawFsQueryVolumeInformation(IrpContext 0x%p)\n", IrpContext);
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-static NTSTATUS
-RawFsSetVolumeInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  DPRINT("RawFsSetVolumeInformation(IrpContext 0x%p)\n", IrpContext);
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-static NTSTATUS
-RawFsLockControl(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  DPRINT("RawFsLockControl(IrpContext 0x%p)\n", IrpContext);
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-static NTSTATUS
-RawFsCleanup(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  DPRINT("RawFsCleanup(IrpContext 0x%p)\n", IrpContext);
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-static NTSTATUS
-RawFsFlush(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  DPRINT("RawFsFlush(IrpContext 0x%p)\n", IrpContext);
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-static NTSTATUS STDCALL
-RawFsShutdown(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
-{
-  DPRINT("RawFsShutdown(DeviceObject 0x%p, Irp 0x%p)\n", DeviceObject, Irp);
-
-  /*
-   * Note: Do NOT call UNIMPLEMENTED here!
-   * This function must finish in order to shutdown ReactOS properly!
-   */
-
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-static NTSTATUS
-RawFsDispatchRequest(IN PRAWFS_IRP_CONTEXT IrpContext)
-{
-  DPRINT("RawFsDispatchRequest(IrpContext 0x%p), MajorFunction %x\n",
-    IrpContext, IrpContext->MajorFunction);
-
-  ASSERT(IrpContext);
-
-  switch (IrpContext->MajorFunction)
-    {
-      case IRP_MJ_CLOSE:
-        return RawFsClose(IrpContext);
-      case IRP_MJ_CREATE:
-        return RawFsCreate (IrpContext);
-      case IRP_MJ_READ:
-        return RawFsRead (IrpContext);
-      case IRP_MJ_WRITE:
-        return RawFsWrite (IrpContext);
-      case IRP_MJ_FILE_SYSTEM_CONTROL:
-        return RawFsFileSystemControl(IrpContext);
-      case IRP_MJ_QUERY_INFORMATION:
-        return RawFsQueryInformation (IrpContext);
-      case IRP_MJ_SET_INFORMATION:
-        return RawFsSetInformation (IrpContext);
-      case IRP_MJ_DIRECTORY_CONTROL:
-        return RawFsDirectoryControl(IrpContext);
-      case IRP_MJ_QUERY_VOLUME_INFORMATION:
-        return RawFsQueryVolumeInformation(IrpContext);
-      case IRP_MJ_SET_VOLUME_INFORMATION:
-        return RawFsSetVolumeInformation(IrpContext);
-      case IRP_MJ_LOCK_CONTROL:
-        return RawFsLockControl(IrpContext);
-      case IRP_MJ_CLEANUP:
-        return RawFsCleanup(IrpContext);
-      case IRP_MJ_FLUSH_BUFFERS:
-        return RawFsFlush(IrpContext);
-      default:
-        DPRINT1("Unexpected major function %x\n", IrpContext->MajorFunction);
-        IrpContext->Irp->IoStatus.Status = STATUS_DRIVER_INTERNAL_ERROR;
-        IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-        RawFsFreeIrpContext(IrpContext);
-        return STATUS_DRIVER_INTERNAL_ERROR;
-    }
-}
-
-static NTSTATUS STDCALL
-RawFsBuildRequest(IN PDEVICE_OBJECT DeviceObject,
-  IN PIRP Irp)
-{
-  PRAWFS_IRP_CONTEXT IrpContext;
-  NTSTATUS Status;
-
-  DPRINT("RawFsBuildRequest(DeviceObject 0x%p, Irp 0x%p)\n", DeviceObject, Irp);
-
-  ASSERT(DeviceObject);
-  ASSERT(Irp);
-
-  IrpContext = RawFsAllocateIrpContext(DeviceObject, Irp);
-  if (IrpContext == NULL)
-    {
-      Status = STATUS_INSUFFICIENT_RESOURCES;
-      Irp->IoStatus.Status = Status;
-      IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
-  else
-    {
-      if (KeGetCurrentIrql() <= PASSIVE_LEVEL)
-        {
-          FsRtlEnterFileSystem();
-        }
-      else
-        {
-          DPRINT1("RawFs is entered at irql = %d\n", KeGetCurrentIrql());
-        }
-      Status = RawFsDispatchRequest(IrpContext);
-      if (KeGetCurrentIrql() <= PASSIVE_LEVEL)
-        {
-          FsRtlExitFileSystem();
-        }
-    }
-  return Status;
-}
-
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
-  IN PUNICODE_STRING RegistryPath)
+                 IN PUNICODE_STRING RegistryPath)
 {
-  PRAWFS_GLOBAL_DATA DeviceData;
-  NTSTATUS Status;
+    UNICODE_STRING DeviceName;
+    NTSTATUS Status;
 
-  RawFsDriverObject = DriverObject;
+    /* Create the raw disk device */
+    RtlInitUnicodeString(&DeviceName, L"\\Device\\RawDisk");
+    Status = IoCreateDevice(DriverObject,
+                            0,
+                            NULL,
+                            FILE_DEVICE_DISK_FILE_SYSTEM,
+                            0,
+                            FALSE,
+                            &RawDiskDeviceObject);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  Status = IoCreateDevice(DriverObject,
-    sizeof(RAWFS_GLOBAL_DATA),
-    NULL,
-    FILE_DEVICE_DISK_FILE_SYSTEM,
-    0,
-    FALSE,
-    &DiskDeviceObject);
-  if (!NT_SUCCESS(Status))
-    {
-      CPRINT("IoCreateDevice() failed with status 0x%.08x\n", Status);
-      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-      return(Status);
-    }
-  DeviceData = DiskDeviceObject->DeviceExtension;
-  RtlZeroMemory(DeviceData, sizeof(RAWFS_GLOBAL_DATA));
-  DeviceData->DriverObject = DriverObject;
-  DeviceData->DeviceObject = DiskDeviceObject;
-  DiskDeviceObject->Flags |= DO_DIRECT_IO;
+    /* Create the raw CDROM device */
+    RtlInitUnicodeString(&DeviceName, L"\\Device\\RawCdRom");
+    Status = IoCreateDevice(DriverObject,
+                            0,
+                            NULL,
+                            FILE_DEVICE_CD_ROM_FILE_SYSTEM,
+                            0,
+                            FALSE,
+                            &RawCdromDeviceObject);
+    if (!NT_SUCCESS(Status)) return Status;
 
+    /* Create the raw tape device */
+    RtlInitUnicodeString(&DeviceName, L"\\Device\\RawTape");
+    Status = IoCreateDevice(DriverObject,
+                            0,
+                            NULL,
+                            FILE_DEVICE_TAPE_FILE_SYSTEM,
+                            0,
+                            FALSE,
+                            &RawTapeDeviceObject);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  Status = IoCreateDevice(DriverObject,
-    sizeof(RAWFS_GLOBAL_DATA),
-    NULL,
-    FILE_DEVICE_CD_ROM_FILE_SYSTEM,
-    0,
-    FALSE,
-    &CdromDeviceObject);
-  if (!NT_SUCCESS(Status))
-    {
-      CPRINT("IoCreateDevice() failed with status 0x%.08x\n", Status);
-      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-      return(Status);
-    }
-  DeviceData = CdromDeviceObject->DeviceExtension;
-  RtlZeroMemory (DeviceData, sizeof(RAWFS_GLOBAL_DATA));
-  DeviceData->DriverObject = DriverObject;
-  DeviceData->DeviceObject = CdromDeviceObject;
-  CdromDeviceObject->Flags |= DO_DIRECT_IO;
+    /* Set Direct I/O for all devices */
+    RawDiskDeviceObject->Flags |= DO_DIRECT_IO;
+    RawCdromDeviceObject->Flags |= DO_DIRECT_IO;
+    RawTapeDeviceObject->Flags |= DO_DIRECT_IO;
 
+    /* Set generic stubs */
+    DriverObject->MajorFunction[IRP_MJ_CREATE] =
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] =
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] =
+    DriverObject->MajorFunction[IRP_MJ_READ] =
+    DriverObject->MajorFunction[IRP_MJ_WRITE] =
+    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
+    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
+    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] =
+    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)RawDispatch;
 
-  Status = IoCreateDevice(DriverObject,
-    sizeof(RAWFS_GLOBAL_DATA),
-    NULL,
-    FILE_DEVICE_TAPE_FILE_SYSTEM,
-    0,
-    FALSE,
-    &TapeDeviceObject);
-  if (!NT_SUCCESS(Status))
-    {
-      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-      return(Status);
-    }
-  DeviceData = TapeDeviceObject->DeviceExtension;
-  RtlZeroMemory (DeviceData, sizeof(RAWFS_GLOBAL_DATA));
-  DeviceData->DriverObject = DriverObject;
-  DeviceData->DeviceObject = TapeDeviceObject;
-  TapeDeviceObject->Flags |= DO_DIRECT_IO;
+    /* Shutdown and unload */
+    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = RawShutdown;
+    DriverObject->DriverUnload = RawUnload;
 
+    /* Register the file systems */
+    IoRegisterFileSystem(RawDiskDeviceObject);
+    IoRegisterFileSystem(RawCdromDeviceObject);
+    IoRegisterFileSystem(RawTapeDeviceObject);
 
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = (PDRIVER_DISPATCH) RawFsShutdown;
-  DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = (PDRIVER_DISPATCH) RawFsBuildRequest;
-  DriverObject->DriverUnload = NULL;
-
-  ExInitializeNPagedLookasideList(&IrpContextLookasideList,
-    NULL, NULL, 0, sizeof(RAWFS_IRP_CONTEXT), TAG_IRP, 0);
-
-
-  IoRegisterFileSystem(DiskDeviceObject);
-  IoRegisterFileSystem(CdromDeviceObject);
-  IoRegisterFileSystem(TapeDeviceObject);
-
-  return STATUS_SUCCESS;
+#if 0 // FIXME: DriverUnload is never called
+    /* Reference device objects */
+    ObReferenceObject(RawDiskDeviceObject);
+    ObReferenceObject(RawCdromDeviceObject);
+    ObReferenceObject(RawTapeDeviceObject);
+#endif
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
