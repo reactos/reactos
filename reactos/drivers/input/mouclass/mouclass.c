@@ -414,7 +414,7 @@ FillEntries(
 	return Status;
 }
 
-static BOOLEAN
+static BOOLEAN CALLBACK
 ClassCallback(
 	IN PDEVICE_OBJECT ClassDeviceObject,
 	IN OUT PMOUSE_INPUT_DATA DataStart,
