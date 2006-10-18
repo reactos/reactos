@@ -111,10 +111,6 @@ HIMAGELIST InitImageList(UINT NumButtons,
                          UINT Height);
 
 VOID GetError(VOID);
-
-VOID DisplayString(PTCHAR);
-
-VOID TimerInfo(LPTSTR);
-
+VOID DisplayString(LPTSTR);
 
 #endif /* __DEVMGMT_PRECOMP_H */

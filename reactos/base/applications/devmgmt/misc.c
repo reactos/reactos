@@ -248,7 +248,7 @@ VOID GetError(VOID)
                   0,
                   NULL );
 
-    MessageBox(NULL, (LPTSTR)lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
+    MessageBox(NULL, lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
 
     LocalFree(lpMsgBuf);
 }

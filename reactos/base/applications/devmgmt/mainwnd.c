@@ -206,6 +206,9 @@ DeviceEnumThread(LPVOID lpParameter)
 
     hTreeView = (HWND *)lpParameter;
 
+    if (*hTreeView)
+        FreeDeviceStrings(*hTreeView);
+
     hRoot = InitTreeView(*hTreeView);
     if (hRoot)
     {
@@ -411,13 +414,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
         case IDC_REFRESH:
         {
-            HTREEITEM hRoot;
-
-            FreeDeviceStrings(Info->hTreeView);
-
-            hRoot = InitTreeView(Info->hTreeView);
-            if (hRoot)
-                ListDevicesByType(Info->hTreeView, hRoot);
+            HANDLE DevEnumThread;
 
             SendMessage(Info->hTool,
                         TB_SETSTATE,
@@ -426,6 +423,21 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
             EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_GRAYED);
             EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_GRAYED);
+
+            /* create seperate thread to emum devices */
+            DevEnumThread = CreateThread(NULL,
+                                         0,
+                                         DeviceEnumThread,
+                                         &Info->hTreeView,
+                                         0,
+                                         NULL);
+            if (!DevEnumThread)
+            {
+                DisplayString(_T("Failed to enumerate devices"));
+                break;
+            }
+
+            CloseHandle(DevEnumThread);
         }
         break;
 
