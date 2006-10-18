@@ -34,6 +34,7 @@ GdiProcessSetup (VOID)
         /* map the gdi handle table to user space */
 	GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
 	CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
+	GDI_BatchLimit = NtCurrentTeb()->GdiBatchCount;
 }
 
 
