@@ -99,6 +99,8 @@ typedef struct _GDI_USER_DATA
   HCOLORSPACE  ColorSpace;
   INT  TextAlign;         /* Text alignment from SetTextAlign() */
   INT  CharExtra;         /* Spacing from SetTextCharacterExtra() */
+  INT  BreakExtral;       /* SetTextJustification */
+  INT  BreakCount;        /*         "            */
   INT  GraphicsMode;      /* Graphics mode */
   INT  MapMode;
   HFONT  hFont;

@@ -44,13 +44,19 @@ typedef enum _POLYFUNCTYPE
 typedef enum _GETDCDWORD
 {
     GdiGetRelAbs = 1,
-    GdiGetArcDirection = 4,
-    GdiGetFontLanguageInfo = 6,
-    GdiGetIsMemDc = 7,
+    GdiGetBreakExtra,
+    GdiGerCharBreak,
+    GdiGetArcDirection,
+    GdiGetEMFRestorDc,
+    GdiGetFontLanguageInfo,
+    GdiGetIsMemDc,
 } GETDCDWORD, *PGETDCDWORD;
 
 typedef enum _GETSETDCDWORD
 {
+    GdiGetSetRelAbs = 4,
+    GdiGetSetMapperFlagsInternal = 7,
+    GdiGetSetMapMode = 8,
     GdiGetSetArcDirection = 9,
 } GETSETDCDWORD, *PGETSETDCDWORD;
 
