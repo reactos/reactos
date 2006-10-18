@@ -2610,73 +2610,6 @@ cleanup:
         ExFreePool(Data);
 }
 
-VOID INIT_FUNCTION
-PnpInit(VOID)
-{
-   PDEVICE_OBJECT Pdo;
-   NTSTATUS Status;
-
-   DPRINT("PnpInit()\n");
-
-   KeInitializeSpinLock(&IopDeviceTreeLock);
-
-   /* Initialize the Bus Type GUID List */
-   IopBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
-   RtlZeroMemory(IopBusTypeGuidList, sizeof(IO_BUS_TYPE_GUID_LIST));
-   ExInitializeFastMutex(&IopBusTypeGuidList->Lock);
-
-   /* Initialize PnP-Event notification support */
-   Status = IopInitPlugPlayEvents();
-   if (!NT_SUCCESS(Status))
-   {
-      CPRINT("IopInitPlugPlayEvents() failed\n");
-      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-   }
-
-   /*
-    * Create root device node
-    */
-
-   Status = IopCreateDriverObject(&IopRootDriverObject, NULL, 0, FALSE, NULL, 0);
-   if (!NT_SUCCESS(Status))
-   {
-      CPRINT("IoCreateDriverObject() failed\n");
-      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-   }
-
-   Status = IoCreateDevice(IopRootDriverObject, 0, NULL, FILE_DEVICE_CONTROLLER,
-      0, FALSE, &Pdo);
-   if (!NT_SUCCESS(Status))
-   {
-      CPRINT("IoCreateDevice() failed\n");
-      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-   }
-
-   Status = IopCreateDeviceNode(NULL, Pdo, &IopRootDeviceNode);
-   if (!NT_SUCCESS(Status))
-   {
-      CPRINT("Insufficient resources\n");
-      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-   }
-
-   if (!RtlCreateUnicodeString(&IopRootDeviceNode->InstancePath,
-       L"HTREE\\ROOT\\0"))
-   {
-     CPRINT("Failed to create the instance path!\n");
-     KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
-   }
-
-   /* Report the device to the user-mode pnp manager */
-   IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
-                             &IopRootDeviceNode->InstancePath);
-
-   IopRootDeviceNode->PhysicalDeviceObject->Flags |= DO_BUS_ENUMERATED_DEVICE;
-   PnpRootDriverEntry(IopRootDriverObject, NULL);
-   IopRootDriverObject->DriverExtension->AddDevice(
-      IopRootDriverObject,
-      IopRootDeviceNode->PhysicalDeviceObject);
-}
-
 static NTSTATUS INIT_FUNCTION
 IopEnumerateDetectedDevices(
    IN HANDLE hBaseKey,
@@ -3297,17 +3230,79 @@ IopUpdateRootKey(VOID)
 }
 
 VOID INIT_FUNCTION
-PnpInit2(VOID)
+PnpInit(VOID)
 {
-   NTSTATUS Status;
+    PDEVICE_OBJECT Pdo;
+    NTSTATUS Status;
 
-   /* Move information about devices detected by Freeloader to SYSTEM\CurrentControlSet\Root\ */
-   Status = IopUpdateRootKey();
-   if (!NT_SUCCESS(Status))
-   {
-      CPRINT("IopUpdateRootKey() failed\n");
-      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-   }
+    DPRINT("PnpInit()\n");
+
+    KeInitializeSpinLock(&IopDeviceTreeLock);
+
+    /* Initialize the Bus Type GUID List */
+    IopBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
+    RtlZeroMemory(IopBusTypeGuidList, sizeof(IO_BUS_TYPE_GUID_LIST));
+    ExInitializeFastMutex(&IopBusTypeGuidList->Lock);
+
+    /* Initialize PnP-Event notification support */
+    Status = IopInitPlugPlayEvents();
+    if (!NT_SUCCESS(Status))
+    {
+        CPRINT("IopInitPlugPlayEvents() failed\n");
+        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
+
+    /*
+    * Create root device node
+    */
+
+    Status = IopCreateDriverObject(&IopRootDriverObject, NULL, 0, FALSE, NULL, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        CPRINT("IoCreateDriverObject() failed\n");
+        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
+
+    Status = IoCreateDevice(IopRootDriverObject, 0, NULL, FILE_DEVICE_CONTROLLER,
+        0, FALSE, &Pdo);
+    if (!NT_SUCCESS(Status))
+    {
+        CPRINT("IoCreateDevice() failed\n");
+        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
+
+    Status = IopCreateDeviceNode(NULL, Pdo, &IopRootDeviceNode);
+    if (!NT_SUCCESS(Status))
+    {
+        CPRINT("Insufficient resources\n");
+        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
+
+    if (!RtlCreateUnicodeString(&IopRootDeviceNode->InstancePath,
+        L"HTREE\\ROOT\\0"))
+    {
+        CPRINT("Failed to create the instance path!\n");
+        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
+    }
+
+    /* Report the device to the user-mode pnp manager */
+    IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
+        &IopRootDeviceNode->InstancePath);
+
+    IopRootDeviceNode->PhysicalDeviceObject->Flags |= DO_BUS_ENUMERATED_DEVICE;
+    PnpRootDriverEntry(IopRootDriverObject, NULL);
+    IopRootDriverObject->DriverExtension->AddDevice(
+        IopRootDriverObject,
+        IopRootDeviceNode->PhysicalDeviceObject);
+
+    /* Move information about devices detected by Freeloader to SYSTEM\CurrentControlSet\Root\ */
+    Status = IopUpdateRootKey();
+    if (!NT_SUCCESS(Status))
+    {
+        CPRINT("IopUpdateRootKey() failed\n");
+        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
 }
+
 
 /* EOF */

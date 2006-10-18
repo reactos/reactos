@@ -442,9 +442,6 @@ NTAPI
 IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     LARGE_INTEGER ExpireTime;
-    PDEVICE_NODE DeviceNode;
-    PDRIVER_OBJECT DriverObject;
-    LDR_DATA_TABLE_ENTRY ModuleObject;
     NTSTATUS Status;
     CHAR Buffer[256];
     ANSI_STRING NtBootPath, RootString;
@@ -497,65 +494,16 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Create Object Directories */
     if (!IopCreateRootDirectories()) return FALSE;
 
-    /*
-    * Initialize PnP manager
-    */
+    /* Initialize PnP manager */
     PnpInit();
 
-    PnpInit2();
-
-    IoCreateDriverList();
-
-    KeInitializeSpinLock (&IoStatisticsLock);
-
-    /* Initialize raw filesystem driver */
-
-    /* Use IopRootDeviceNode for now */
-    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
-    if (!NT_SUCCESS(Status))
-    {
-        CPRINT("IopCreateDeviceNode() failed with status (%x)\n", Status);
-        return FALSE;
-    }
-
-    ModuleObject.DllBase = NULL;
-    ModuleObject.SizeOfImage = 0;
-    ModuleObject.EntryPoint = RawFsDriverEntry;
-
-    Status = IopInitializeDriverModule(DeviceNode,
-                                       &ModuleObject,
-                                       &DeviceNode->ServiceName,
-                                       TRUE,
-                                       &DriverObject);
-    if (!NT_SUCCESS(Status))
-    {
-        IopFreeDeviceNode(DeviceNode);
-        CPRINT("IopInitializeDriver() failed with status (%x)\n", Status);
-        return FALSE;
-    }
-
-    Status = IopInitializeDevice(DeviceNode, DriverObject);
-    if (!NT_SUCCESS(Status))
-    {
-        IopFreeDeviceNode(DeviceNode);
-        CPRINT("IopInitializeDevice() failed with status (%x)\n", Status);
-        return FALSE;
-    }
-
-    Status = IopStartDevice(DeviceNode);
-    if (!NT_SUCCESS(Status))
-    {
-        IopFreeDeviceNode(DeviceNode);
-        CPRINT("IopInitializeDevice() failed with status (%x)\n", Status);
-        return FALSE;
-    }
-
-    /*
-    * Initialize PnP root releations
-    */
+    /* Initialize PnP root relations */
     IoSynchronousInvalidateDeviceRelations(IopRootDeviceNode->
                                            PhysicalDeviceObject,
                                            BusRelations);
+
+    /* Create the group driver list */
+    IoCreateDriverList();
 
     /* Load boot start drivers */
     IopInitializeBootDrivers();

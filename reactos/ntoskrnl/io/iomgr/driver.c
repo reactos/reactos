@@ -918,7 +918,6 @@ IopInitializeBuiltinDriver(
  * Return Value
  *    None
  */
-
 VOID
 FASTCALL
 IopInitializeBootDrivers(VOID)
@@ -926,6 +925,50 @@ IopInitializeBootDrivers(VOID)
     PLIST_ENTRY ListHead, NextEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     UNICODE_STRING NtosSymName = RTL_CONSTANT_STRING(L"ntoskrnl.sym");
+    PDEVICE_NODE DeviceNode;
+    PDRIVER_OBJECT DriverObject;
+    LDR_DATA_TABLE_ENTRY ModuleObject;
+    NTSTATUS Status;
+
+    /* Use IopRootDeviceNode for now */
+    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
+    if (!NT_SUCCESS(Status)) return;
+
+    /* Setup the module object for the RAW FS Driver */
+    ModuleObject.DllBase = NULL;
+    ModuleObject.SizeOfImage = 0;
+    ModuleObject.EntryPoint = RawFsDriverEntry;
+
+    /* Initialize it */
+    Status = IopInitializeDriverModule(DeviceNode,
+                                       &ModuleObject,
+                                       &DeviceNode->ServiceName,
+                                       TRUE,
+                                       &DriverObject);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        IopFreeDeviceNode(DeviceNode);
+        return;
+    }
+
+    /* Now initialize the associated device */
+    Status = IopInitializeDevice(DeviceNode, DriverObject);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        IopFreeDeviceNode(DeviceNode);
+        return;
+    }
+
+    /* Start it up */
+    Status = IopStartDevice(DeviceNode);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        IopFreeDeviceNode(DeviceNode);
+        return;
+    }
 
     /* Hack for NTOSKRNL.SYM */
     KDB_SYMBOLFILE_HOOK(&NtosSymName);
