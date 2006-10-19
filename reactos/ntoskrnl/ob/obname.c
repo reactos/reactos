@@ -21,6 +21,82 @@ POBJECT_DIRECTORY ObpTypeDirectoryObject = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+NTSTATUS
+NTAPI
+ObpCreateDosDevicesDirectory(VOID)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name, LinkName;
+    HANDLE Handle, SymHandle;
+    NTSTATUS Status;
+
+    /* Create the '\??' directory */
+    RtlInitUnicodeString(&Name, L"\\??");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    Status = NtCreateDirectoryObject(&Handle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Initialize the GLOBALROOT path */
+    RtlInitUnicodeString(&LinkName, L"GLOBALROOT");
+    RtlInitUnicodeString(&Name, L"");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_PERMANENT,
+                               Handle,
+                               NULL);
+    Status = NtCreateSymbolicLinkObject(&SymHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &Name);
+        if (NT_SUCCESS(Status)) NtClose(SymHandle);
+
+    /* Link \??\Global to \?? */
+    RtlInitUnicodeString(&LinkName, L"Global");
+    RtlInitUnicodeString(&Name, L"\\??");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_PERMANENT,
+                               Handle,
+                               NULL);
+    Status = NtCreateSymbolicLinkObject(&SymHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &Name);
+    if (NT_SUCCESS(Status)) NtClose(SymHandle);
+
+    /* Close the directory handle */
+    NtClose(Handle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Create link from '\DosDevices' to '\??' directory */
+    RtlCreateUnicodeString(&LinkName, L"\\DosDevices");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    Status = NtCreateSymbolicLinkObject(&SymHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &Name);
+    if (NT_SUCCESS(Status)) NtClose(SymHandle);
+
+    /* FIXME: Hack Hack! */
+    ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool,
+                                              sizeof(*ObSystemDeviceMap),
+                                              TAG('O', 'b', 'D', 'm'));
+    RtlZeroMemory(ObSystemDeviceMap, sizeof(*ObSystemDeviceMap));
+
+    /* Return status */
+    return Status;
+}
+
 VOID
 NTAPI
 ObDereferenceDeviceMap(IN PEPROCESS Process)

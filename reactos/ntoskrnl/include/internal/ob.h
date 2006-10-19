@@ -112,8 +112,8 @@ ObpLookupEntryDirectory(
 //
 VOID
 NTAPI
-ObInitSymbolicLinkImplementation(
-    VOID
+ObpDeleteSymbolicLink(
+    IN PVOID ObjectBody
 );
 
 NTSTATUS
@@ -220,17 +220,6 @@ ObpReapObject(
 );
 
 VOID
-NTAPI
-ObDereferenceDeviceMap(IN PEPROCESS Process);
-
-VOID
-NTAPI
-ObInheritDeviceMap(
-    IN PEPROCESS Parent,
-    IN PEPROCESS Process
-);
-
-VOID
 FASTCALL
 ObpSetPermanentObject(
     IN PVOID ObjectBody,
@@ -245,10 +234,35 @@ ObpDeleteNameCheck(
 
 VOID
 NTAPI
-ObClearProcessHandleTable(IN PEPROCESS Process);
+ObClearProcessHandleTable(
+    IN PEPROCESS Process
+);
 
-/* Security descriptor cache functions */
+//
+// DOS Devices Functions
+//
+VOID
+NTAPI
+ObDereferenceDeviceMap(
+    IN PEPROCESS Process
+);
 
+VOID
+NTAPI
+ObInheritDeviceMap(
+    IN PEPROCESS Parent,
+    IN PEPROCESS Process
+);
+
+NTSTATUS
+NTAPI
+ObpCreateDosDevicesDirectory(
+    VOID
+);
+
+//
+// Security descriptor cache functions
+//
 NTSTATUS
 NTAPI
 ObpInitSdCache(

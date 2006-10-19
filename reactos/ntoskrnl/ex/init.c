@@ -425,7 +425,7 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
     /* Create the environment string */
     RtlInitEmptyUnicodeString(&Environment,
                               ProcessParameters->Environment,
-                              Size);
+                              (USHORT)Size);
 
     /* Append the DLL path to it */
     RtlAppendUnicodeToString(&Environment, L"Path=" );

@@ -21,14 +21,6 @@
 
 POBJECT_TYPE ObSymbolicLinkType = NULL;
 
-static GENERIC_MAPPING ObpSymbolicLinkMapping =
-{
-    STANDARD_RIGHTS_READ    | SYMBOLIC_LINK_QUERY,
-    STANDARD_RIGHTS_WRITE,
-    STANDARD_RIGHTS_EXECUTE | SYMBOLIC_LINK_QUERY,
-    SYMBOLIC_LINK_ALL_ACCESS
-};
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 /*++
@@ -179,40 +171,6 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
 
     /* Tell the parse routine to start reparsing */
     return STATUS_REPARSE;
-}
-
-/*++
-* @name ObInitSymbolicLinkImplementation
-*
-*     The ObInitSymbolicLinkImplementation routine <FILLMEIN>
-*
-* @param None.
-*
-* @return None.
-*
-* @remarks None.
-*
-*--*/
-VOID
-INIT_FUNCTION
-NTAPI
-ObInitSymbolicLinkImplementation(VOID)
-{
-    UNICODE_STRING Name;
-    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
-
-    /* Initialize the Directory type  */
-    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
-    RtlInitUnicodeString(&Name, L"SymbolicLink");
-    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_SYMBOLIC_LINK);
-    ObjectTypeInitializer.GenericMapping = ObpSymbolicLinkMapping;
-    ObjectTypeInitializer.PoolType = NonPagedPool;
-    ObjectTypeInitializer.ValidAccessMask = SYMBOLIC_LINK_ALL_ACCESS;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
-    ObjectTypeInitializer.ParseProcedure = ObpParseSymbolicLink;
-    ObjectTypeInitializer.DeleteProcedure = ObpDeleteSymbolicLink;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObSymbolicLinkType);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
