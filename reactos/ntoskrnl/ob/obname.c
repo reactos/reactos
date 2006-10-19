@@ -191,6 +191,9 @@ ObpDeleteNameCheck(IN PVOID Object)
                                          &Context);
         if ((Object) && !(ObjectHeader->HandleCount))
         {
+            /* Lock the object type */
+            ObpEnterObjectTypeMutex(ObjectType);
+
             /* First delete it from the directory */
             ObpDeleteEntryDirectory(&Context);
 
@@ -209,6 +212,9 @@ ObpDeleteNameCheck(IN PVOID Object)
                                                        TypeInfo.PoolType,
                                                        NULL);
             }
+
+            /* Release the lock */
+            ObpLeaveObjectTypeMutex(ObjectType);
 
             /* Free the name */
             ExFreePool(ObjectNameInfo->Name.Buffer);

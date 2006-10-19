@@ -93,6 +93,8 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     POBJECT_HEADER ObjectHeader;
     POBJECT_TYPE ObjectType;
     LONG SystemHandleCount, ProcessHandleCount;
+    LONG NewCount;
+    POBJECT_HEADER_CREATOR_INFO CreatorInfo;
 
     /* Get the object type and header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
@@ -104,12 +106,31 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
 
+    /* Lock the object type */
+    ObpEnterObjectTypeMutex(ObjectType);
+
     /* FIXME: The process handle count should be in the Handle DB. Investigate */
     SystemHandleCount = ObjectHeader->HandleCount;
     ProcessHandleCount = 0;
 
     /* Decrement the handle count */
-    InterlockedDecrement(&ObjectHeader->HandleCount);
+    NewCount = InterlockedDecrement(&ObjectHeader->HandleCount);
+
+    /* Check if we're out of handles */
+    if (!NewCount)
+    {
+        /* Get the creator info */
+        CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(ObjectHeader);
+        if ((CreatorInfo) && !(IsListEmpty(&CreatorInfo->TypeList)))
+        {
+            /* Remove it from the list and re-initialize it */
+            RemoveEntryList(&CreatorInfo->TypeList);
+            InitializeListHead(&CreatorInfo->TypeList);
+        }
+    }
+
+    /* Release the lock */
+    ObpLeaveObjectTypeMutex(ObjectType);
 
     /* Check if we have a close procedure */
     if (ObjectType->TypeInfo.CloseProcedure)
@@ -126,7 +147,7 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     ObpDeleteNameCheck(ObjectBody);
 
     /* Decrease the total number of handles for this type */
-    ObjectType->TotalNumberOfHandles--;
+    InterlockedDecrement(&ObjectType->TotalNumberOfHandles);
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Decremented count for: %p. HC LC %lx %lx\n",
             __FUNCTION__,
@@ -306,6 +327,9 @@ ObpIncrementHandleCount(IN PVOID Object,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
 
+    /* Lock the object type */
+    ObpEnterObjectTypeMutex(ObjectType);
+
     /* Charge quota and remove the creator info flag */
     Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType);
     if (!NT_SUCCESS(Status)) return Status;
@@ -346,6 +370,9 @@ ObpIncrementHandleCount(IN PVOID Object,
     /* Increase the handle count */
     InterlockedIncrement(&ObjectHeader->HandleCount);
 
+    /* Release the lock */
+    ObpLeaveObjectTypeMutex(ObjectType);
+
     /* FIXME: Use the Handle Database */
     ProcessHandleCount = 0;
 
@@ -361,7 +388,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     }
 
     /* Increase total number of handles */
-    ObjectType->TotalNumberOfHandles++;
+    InterlockedIncrement(&ObjectType->TotalNumberOfHandles);
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Incremented count for: %p. Reason: %lx HC LC %lx %lx\n",
             __FUNCTION__,
@@ -423,6 +450,9 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
 
+    /* Lock the object type */
+    ObpEnterObjectTypeMutex(ObjectType);
+
     /* Charge quota and remove the creator info flag */
     Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType);
     if (!NT_SUCCESS(Status)) return Status;
@@ -446,6 +476,9 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     /* Increase the handle count */
     InterlockedIncrement(&ObjectHeader->HandleCount);
 
+    /* Release the object type */
+    ObpLeaveObjectTypeMutex(ObjectType);
+
     /* FIXME: Use the Handle Database */
     ProcessHandleCount = 0;
 
@@ -461,7 +494,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     }
 
     /* Increase total number of handles */
-    ObjectType->TotalNumberOfHandles++;
+    InterlockedIncrement(&ObjectType->TotalNumberOfHandles);
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Incremented count for: %p. UNNAMED HC LC %lx %lx\n",
             __FUNCTION__,
@@ -2000,9 +2033,7 @@ NTAPI
 ObCloseHandle(IN HANDLE Handle,
               IN KPROCESSOR_MODE AccessMode)
 {
-    //
-    // Call the internal API
-    //
+    /* Call the internal API */
     return ObpCloseHandle(Handle, AccessMode);
 }
 
@@ -2142,7 +2173,7 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
             hTarget,
             TargetProcessHandle,
             Status);
-    ObDereferenceObject(TargetProcess);
+    ObDereferenceObject(Target);
     ObDereferenceObject(SourceProcess);
     return Status;
 }

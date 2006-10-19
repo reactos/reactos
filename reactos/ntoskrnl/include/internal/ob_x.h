@@ -8,6 +8,30 @@
 
 VOID
 FORCEINLINE
+ObpEnterObjectTypeMutex(IN POBJECT_TYPE ObjectType)
+{
+    /* Sanity check */
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+
+    /* Enter a critical region and acquire the resource */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&ObjectType->Mutex, TRUE);
+}
+
+VOID
+FORCEINLINE
+ObpLeaveObjectTypeMutex(IN POBJECT_TYPE ObjectType)
+{
+    /* Enter a critical region and acquire the resource */
+    ExReleaseResourceLite(&ObjectType->Mutex);
+    KeLeaveCriticalRegion();
+
+    /* Sanity check */
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+}
+
+VOID
+FORCEINLINE
 ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 {
     /* Check if we have a security descriptor */

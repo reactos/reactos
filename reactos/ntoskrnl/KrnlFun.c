@@ -22,7 +22,6 @@
 // Ob:
 //  - Fix bug related to Deferred Loading (don't requeue active work item).
 //  - Add Directory Lock.
-//  - Use Object Type Mutex/Lock.
 //
 // Ke:
 //

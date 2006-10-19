@@ -151,12 +151,18 @@ ObpDeleteObject(IN PVOID Object)
     NameInfo = OBJECT_HEADER_TO_NAME_INFO(Header);
     CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(Header);
 
+    /* Lock the object type */
+    ObpEnterObjectTypeMutex(ObjectType);
+
     /* Check if the object is on a type list */
     if ((CreatorInfo) && !(IsListEmpty(&CreatorInfo->TypeList)))
     {
         /* Remove the object from the type list */
         RemoveEntryList(&CreatorInfo->TypeList);
     }
+
+    /* Release the lock */
+    ObpLeaveObjectTypeMutex(ObjectType);
 
     /* Check if we have a name */
     if ((NameInfo) && (NameInfo->Name.Buffer))
@@ -782,15 +788,14 @@ ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,
             if (!PagedPoolCharge)
             {
                 /* Save it */
-                PagedPoolCharge = ObjectType->TypeInfo.DefaultPagedPoolCharge;
+                PagedPoolCharge = Type->TypeInfo.DefaultPagedPoolCharge;
             }
 
             /* Check for nonpaged charge */
             if (!NonPagedPoolCharge)
             {
                 /* Save it */
-                NonPagedPoolCharge = ObjectType->
-                                     TypeInfo.DefaultNonPagedPoolCharge;
+                NonPagedPoolCharge = Type->TypeInfo.DefaultNonPagedPoolCharge;
             }
 
             /* Write the pool charges */
@@ -1019,6 +1024,9 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     ExInitializeResourceLite(&LocalObjectType->Mutex);
     InitializeListHead(&LocalObjectType->TypeList);
 
+    /* Lock the object type */
+    ObpEnterObjectTypeMutex(LocalObjectType);
+
     /* Get creator info and insert it into the type list */
     CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(Header);
     if (CreatorInfo) InsertTailList(&ObTypeObjectType->TypeList,
@@ -1031,6 +1039,9 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
         /* It fits, insert it */
         ObpObjectTypes[LocalObjectType->Index - 1] = LocalObjectType;
     }
+
+    /* Release the object type */
+    ObpLeaveObjectTypeMutex(LocalObjectType);
 
     /* Check if we're actually creating the directory object itself */
     if (!(ObpTypeDirectoryObject) ||
