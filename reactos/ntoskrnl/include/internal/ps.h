@@ -237,6 +237,13 @@ PspExitProcess(
     IN PEPROCESS Process
 );
 
+NTSTATUS
+NTAPI
+PsTerminateProcess(
+    IN PEPROCESS Process,
+    IN NTSTATUS ExitStatus
+);
+
 VOID
 NTAPI
 PspDeleteProcess(

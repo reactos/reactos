@@ -14,7 +14,7 @@
 #include <internal/debug.h>
 
 POBJECT_TYPE DbgkDebugObjectType;
-KGUARDED_MUTEX DbgkpProcessDebugPortMutex;
+FAST_MUTEX DbgkpProcessDebugPortMutex;
 
 GENERIC_MAPPING DbgkDebugObjectMapping =
 {
@@ -25,58 +25,6 @@ GENERIC_MAPPING DbgkDebugObjectMapping =
 };
 
 /* PRIVATE FUNCTIONS *********************************************************/
-
-VOID
-NTAPI
-DbgkpDeleteObject(IN PVOID Object)
-{
-    PDBGK_DEBUG_OBJECT DebugObject = Object;
-    PAGED_CODE();
-
-    /* Sanity check */
-    ASSERT(IsListEmpty(&DebugObject->StateEventListEntry));
-}
-
-VOID
-NTAPI
-DbgkpCloseObject(IN PEPROCESS Process OPTIONAL,
-                 IN PVOID ObjectBody,
-                 IN ACCESS_MASK GrantedAccess,
-                 IN ULONG HandleCount,
-                 IN ULONG SystemHandleCount)
-{
-    /* FIXME: Implement */
-    ASSERT(FALSE);
-}
-
-VOID
-INIT_FUNCTION
-NTAPI
-DbgkInitialize(VOID)
-{
-    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
-    UNICODE_STRING Name;
-    PAGED_CODE();
-
-    /* Initialize the process debug port mutex */
-    KeInitializeGuardedMutex(&DbgkpProcessDebugPortMutex);
-
-    /* Create the Event Pair Object Type */
-    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
-    RtlInitUnicodeString(&Name, L"DebugObject");
-    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DBGK_DEBUG_OBJECT);
-    ObjectTypeInitializer.GenericMapping = DbgkDebugObjectMapping;
-    ObjectTypeInitializer.PoolType = NonPagedPool;
-    ObjectTypeInitializer.ValidAccessMask = DEBUG_OBJECT_WAIT_STATE_CHANGE;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
-    ObjectTypeInitializer.CloseProcedure = DbgkpCloseObject;
-    ObjectTypeInitializer.DeleteProcedure = DbgkpDeleteObject;
-    ObCreateObjectType(&Name,
-                       &ObjectTypeInitializer,
-                       NULL,
-                       &DbgkDebugObjectType);
-}
 
 VOID
 NTAPI
@@ -107,7 +55,7 @@ DbgkpWakeTarget(IN PDEBUG_EVENT DebugEvent)
 NTSTATUS
 NTAPI
 DbgkpPostFakeProcessCreateMessages(IN PEPROCESS Process,
-                                   IN PDBGK_DEBUG_OBJECT DebugObject,
+                                   IN PDEBUG_OBJECT DebugObject,
                                    IN PETHREAD *LastThread)
 {
     /* FIXME: Implement */
@@ -118,7 +66,7 @@ DbgkpPostFakeProcessCreateMessages(IN PEPROCESS Process,
 NTSTATUS
 NTAPI
 DbgkpSetProcessDebugObject(IN PEPROCESS Process,
-                           IN PDBGK_DEBUG_OBJECT DebugObject,
+                           IN PDEBUG_OBJECT DebugObject,
                            IN NTSTATUS MsgStatus,
                            IN PETHREAD LastThread)
 {
@@ -129,7 +77,7 @@ DbgkpSetProcessDebugObject(IN PEPROCESS Process,
 NTSTATUS
 NTAPI
 DbgkClearProcessDebugObject(IN PEPROCESS Process,
-                            IN PDBGK_DEBUG_OBJECT SourceDebugObject)
+                            IN PDEBUG_OBJECT SourceDebugObject)
 {
     /* FIXME: TODO */
     return STATUS_UNSUCCESSFUL;
@@ -150,10 +98,232 @@ DbgkpOpenHandles(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
                  IN PEPROCESS Process,
                  IN PETHREAD Thread)
 {
+    NTSTATUS Status;
+    HANDLE Handle;
+    PHANDLE DupHandle;
+    PAGED_CODE();
+
+    /* Check which state this is */
+    switch (WaitStateChange->NewState)
+    {
+        /* New thread */
+        case DbgCreateThreadStateChange:
+
+            /* Get handle to thread */
+            Status = ObOpenObjectByPointer(Thread,
+                                           0,
+                                           NULL,
+                                           THREAD_ALL_ACCESS,
+                                           PsThreadType,
+                                           KernelMode,
+                                           &Handle);
+            if (NT_SUCCESS(Status))
+            {
+                /* Save the thread handle */
+                WaitStateChange->
+                    StateInfo.CreateThread.HandleToThread = Handle;
+            }
+            return;
+
+        /* New process */
+        case DbgCreateProcessStateChange:
+
+            /* Get handle to thread */
+            Status = ObOpenObjectByPointer(Thread,
+                                           0,
+                                           NULL,
+                                           THREAD_ALL_ACCESS,
+                                           PsThreadType,
+                                           KernelMode,
+                                           &Handle);
+            if (NT_SUCCESS(Status))
+            {
+                /* Save the thread handle */
+                WaitStateChange->
+                    StateInfo.CreateProcessInfo.HandleToThread = Handle;
+            }
+
+            /* Get handle to process */
+            Status = ObOpenObjectByPointer(Process,
+                                           0,
+                                           NULL,
+                                           PROCESS_ALL_ACCESS,
+                                           PsProcessType,
+                                           KernelMode,
+                                           &Handle);
+            if (NT_SUCCESS(Status))
+            {
+                /* Save the process handle */
+                WaitStateChange->
+                    StateInfo.CreateProcessInfo.HandleToProcess = Handle;
+            }
+
+            /* Fall through to duplicate file handle */
+            DupHandle = &WaitStateChange->
+                            StateInfo.CreateProcessInfo.NewProcess.FileHandle;
+            break;
+
+        /* DLL Load */
+        case DbgLoadDllStateChange:
+
+            /* Fall through to duplicate file handle */
+            DupHandle = &WaitStateChange->StateInfo.LoadDll.FileHandle;
+
+        /* Anything else has no handles */
+        default:
+            return;
+    }
+
+    /* If we got here, then we have to duplicate a handle, possibly */
+    Handle = *DupHandle;
+    if (Handle)
+    {
+        /* Duplicate it */
+        Status = ObDuplicateObject(PsGetCurrentProcess(),
+                                   Handle,
+                                   PsGetCurrentProcess(),
+                                   DupHandle,
+                                   0,
+                                   0,
+                                   DUPLICATE_SAME_ACCESS,
+                                   KernelMode);
+    }
+}
+
+VOID
+NTAPI
+DbgkpDeleteObject(IN PVOID Object)
+{
+    PDEBUG_OBJECT DebugObject = Object;
+    PAGED_CODE();
+
+    /* Sanity check */
+    ASSERT(IsListEmpty(&DebugObject->EventList));
+}
+
+VOID
+NTAPI
+DbgkpMarkProcessPeb(IN PEPROCESS Process)
+{
     /* FIXME: TODO */
     return;
 }
 
+VOID
+NTAPI
+DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
+                 IN PVOID ObjectBody,
+                 IN ACCESS_MASK GrantedAccess,
+                 IN ULONG HandleCount,
+                 IN ULONG SystemHandleCount)
+{
+    PDEBUG_OBJECT DebugObject = ObjectBody;
+    PEPROCESS Process = NULL;
+    BOOLEAN DebugPortCleared = FALSE;
+    PLIST_ENTRY DebugEventList;
+    PDEBUG_EVENT DebugEvent;
+
+    /* If this isn't the last handle, do nothing */
+    if (HandleCount > 1) return;
+
+    /* Otherwise, lock the debug object */
+    ExAcquireFastMutex(&DebugObject->Mutex);
+
+    /* Set it as inactive */
+    DebugObject->DebuggerInactive = TRUE;
+
+    /* Remove it from the debug event list */
+    DebugEventList = DebugObject->EventList.Flink;
+    InitializeListHead(&DebugObject->EventList);
+
+    /* Release the lock */
+    ExReleaseFastMutex(&DebugObject->Mutex);
+
+    /* Signal the wait event */
+    KeSetEvent(&DebugObject->EventsPresent, IO_NO_INCREMENT, FALSE);
+
+    /* Start looping each process */
+    while ((Process = PsGetNextProcess(Process)))
+    {
+        /* Check if the process has us as their debug port */
+        if (Process->DebugPort == DebugObject)
+        {
+            /* Acquire the process debug port lock */
+            ExAcquireFastMutex(&DbgkpProcessDebugPortMutex);
+
+            /* Check if it's still us */
+            if (Process->DebugPort == DebugObject)
+            {
+                /* Clear it and remember */
+                Process->DebugPort = NULL;
+                DebugPortCleared = TRUE;
+            }
+
+            /* Release the port lock */
+            ExReleaseFastMutex(&DbgkpProcessDebugPortMutex);
+
+            /* Check if we cleared the debug port */
+            if (DebugPortCleared)
+            {
+                /* Mark this in the PEB */
+                DbgkpMarkProcessPeb(OwnerProcess);
+
+                /* Check if we terminate on exit */
+                if (DebugObject->KillProcessOnExit)
+                {
+                    /* Terminate the process */
+                    PsTerminateProcess(OwnerProcess, STATUS_DEBUGGER_INACTIVE);
+                }
+
+                /* Dereference the debug object */
+                ObDereferenceObject(DebugObject);
+            }
+        }
+    }
+
+    /* Loop debug events */
+    while (DebugEventList != &DebugObject->EventList)
+    {
+        /* Get the debug event */
+        DebugEvent = CONTAINING_RECORD(DebugEventList, DEBUG_EVENT, EventList);
+
+        /* Go to the next entry */
+        DebugEventList = DebugEventList->Flink;
+
+        /* Wake it up */
+        DebugEvent->Status = STATUS_DEBUGGER_INACTIVE;
+        DbgkpWakeTarget(DebugEvent);
+    }
+}
+
+VOID
+INIT_FUNCTION
+NTAPI
+DbgkInitialize(VOID)
+{
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    UNICODE_STRING Name;
+    PAGED_CODE();
+
+    /* Initialize the process debug port mutex */
+    ExInitializeFastMutex(&DbgkpProcessDebugPortMutex);
+
+    /* Create the Debug Object Type */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"DebugObject");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DEBUG_OBJECT);
+    ObjectTypeInitializer.GenericMapping = DbgkDebugObjectMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = DEBUG_OBJECT_WAIT_STATE_CHANGE;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.CloseProcedure = DbgkpCloseObject;
+    ObjectTypeInitializer.DeleteProcedure = DbgkpDeleteObject;
+    ObCreateObjectType(&Name,
+                       &ObjectTypeInitializer,
+                       NULL,
+                       &DbgkDebugObjectType);
+}
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
@@ -165,7 +335,7 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
                     IN BOOLEAN KillProcessOnExit)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PDBGK_DEBUG_OBJECT DebugObject;
+    PDEBUG_OBJECT DebugObject;
     HANDLE hDebug;
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
@@ -193,7 +363,7 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
-                            sizeof(PDBGK_DEBUG_OBJECT),
+                            sizeof(PDEBUG_OBJECT),
                             0,
                             0,
                             (PVOID*)&DebugObject);
@@ -203,10 +373,10 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
         ExInitializeFastMutex(&DebugObject->Mutex);
 
         /* Initialize the State Event List */
-        InitializeListHead(&DebugObject->StateEventListEntry);
+        InitializeListHead(&DebugObject->EventList);
 
         /* Initialize the Debug Object's Wait Event */
-        KeInitializeEvent(&DebugObject->Event, NotificationEvent, 0);
+        KeInitializeEvent(&DebugObject->EventsPresent, NotificationEvent, 0);
 
         /* Set the Flags */
         DebugObject->KillProcessOnExit = KillProcessOnExit;
@@ -245,7 +415,7 @@ NtDebugContinue(IN HANDLE DebugHandle,
                 IN NTSTATUS ContinueStatus)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PDBGK_DEBUG_OBJECT DebugObject;
+    PDEBUG_OBJECT DebugObject;
     NTSTATUS Status = STATUS_SUCCESS;
     PDEBUG_EVENT DebugEvent = NULL, DebugEventToWake = NULL;
     PLIST_ENTRY ListHead, NextEntry;
@@ -296,7 +466,7 @@ NtDebugContinue(IN HANDLE DebugHandle,
             ExAcquireFastMutex(&DebugObject->Mutex);
 
             /* Loop the state list */
-            ListHead = &DebugObject->StateEventListEntry;
+            ListHead = &DebugObject->EventList;
             NextEntry = ListHead->Flink;
             while (ListHead != NextEntry)
             {
@@ -371,7 +541,7 @@ NtDebugActiveProcess(IN HANDLE ProcessHandle,
                      IN HANDLE DebugHandle)
 {
     PEPROCESS Process;
-    PDBGK_DEBUG_OBJECT DebugObject;
+    PDEBUG_OBJECT DebugObject;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PETHREAD LastThread;
     NTSTATUS Status;
@@ -435,7 +605,7 @@ NtRemoveProcessDebug(IN HANDLE ProcessHandle,
                      IN HANDLE DebugHandle)
 {
     PEPROCESS Process;
-    PDBGK_DEBUG_OBJECT DebugObject;
+    PDEBUG_OBJECT DebugObject;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     NTSTATUS Status;
 
@@ -487,7 +657,7 @@ NtSetInformationDebugObject(IN HANDLE DebugHandle,
                             IN ULONG DebugInformationLength,
                             OUT PULONG ReturnLength OPTIONAL)
 {
-    PDBGK_DEBUG_OBJECT DebugObject;
+    PDEBUG_OBJECT DebugObject;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
     PDEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION DebugInfo = DebugInformation;
@@ -522,12 +692,12 @@ NtSetInformationDebugObject(IN HANDLE DebugHandle,
         if (DebugInfo->KillProcessOnExit)
         {
             /* Enable killing the process */
-            DebugObject->Flags |= 2;
+            DebugObject->KillProcessOnExit = TRUE;
         }
         else
         {
             /* Disable */
-            DebugObject->Flags &= ~2;
+            DebugObject->KillProcessOnExit = FALSE;
         }
 
         /* Release the mutex */
@@ -555,7 +725,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     PETHREAD Thread;
     BOOLEAN GotEvent;
     LARGE_INTEGER NewTime;
-    PDBGK_DEBUG_OBJECT DebugObject;
+    PDEBUG_OBJECT DebugObject;
     DBGUI_WAIT_STATE_CHANGE WaitStateChange;
     NTSTATUS Status = STATUS_SUCCESS;
     PDEBUG_EVENT DebugEvent, DebugEvent2;
@@ -628,7 +798,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
         ExAcquireFastMutex(&DebugObject->Mutex);
 
         /* Check if a debugger is connected */
-        if (DebugObject->Flags & 1)
+        if (DebugObject->DebuggerInactive)
         {
             /* Not connected */
             Status = STATUS_DEBUGGER_INACTIVE;
@@ -636,7 +806,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
         else
         {
             /* Loop the events */
-            ListHead = &DebugObject->StateEventListEntry;
+            ListHead = &DebugObject->EventList;
             NextEntry =  ListHead->Flink;
             while (ListHead != NextEntry)
             {
@@ -702,7 +872,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
             else
             {
                 /* Unsignal the event */
-                DebugObject->Event.Header.SignalState = 0;
+                DebugObject->EventsPresent.Header.SignalState = 0;
                 Status = STATUS_SUCCESS;
             }
         }

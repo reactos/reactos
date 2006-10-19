@@ -3,15 +3,21 @@
 
 VOID
 NTAPI
-DbgkCreateThread(PVOID StartAddress);
+DbgkCreateThread(
+    IN PVOID StartAddress
+);
 
 VOID
 NTAPI
-DbgkExitProcess(IN NTSTATUS ExitStatus);
+DbgkExitProcess(
+    IN NTSTATUS ExitStatus
+);
 
 VOID
 NTAPI
-DbgkExitThread(IN NTSTATUS ExitStatus);
+DbgkExitThread(
+    IN NTSTATUS ExitStatus
+);
 
 VOID
 NTAPI
@@ -26,6 +32,13 @@ DbgkForwardException(
     IN PEXCEPTION_RECORD ExceptionRecord,
     IN BOOLEAN DebugPort,
     IN BOOLEAN SecondChance
+);
+
+NTSTATUS
+NTAPI
+DbgkClearProcessDebugObject(
+    IN PEPROCESS Process,
+    IN PDEBUG_OBJECT SourceDebugObject
 );
 
 extern POBJECT_TYPE DbgkDebugObjectType;

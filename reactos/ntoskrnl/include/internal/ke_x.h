@@ -57,15 +57,15 @@
 //
 #define KeEnterCriticalRegion()                                             \
 {                                                                           \
-    PKTHREAD Thread = KeGetCurrentThread();                                 \
+    PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
-    ASSERT(Thread == KeGetCurrentThread());                                 \
-    ASSERT((Thread->KernelApcDisable <= 0) &&                               \
-           (Thread->KernelApcDisable != -32768));                           \
+    ASSERT(_Thread == KeGetCurrentThread());                                \
+    ASSERT((_Thread->KernelApcDisable <= 0) &&                              \
+           (_Thread->KernelApcDisable != -32768));                          \
                                                                             \
     /* Disable Kernel APCs */                                               \
-    Thread->KernelApcDisable--;                                             \
+    _Thread->KernelApcDisable--;                                            \
 }
 
 //
@@ -73,21 +73,21 @@
 //
 #define KeLeaveCriticalRegion()                                             \
 {                                                                           \
-    PKTHREAD Thread = KeGetCurrentThread();                                 \
+    PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
-    ASSERT(Thread == KeGetCurrentThread());                                 \
-    ASSERT(Thread->KernelApcDisable < 0);                                   \
+    ASSERT(_Thread == KeGetCurrentThread());                                \
+    ASSERT(_Thread->KernelApcDisable < 0);                                  \
                                                                             \
     /* Enable Kernel APCs */                                                \
-    Thread->KernelApcDisable++;                                             \
+    _Thread->KernelApcDisable++;                                            \
                                                                             \
     /* Check if Kernel APCs are now enabled */                              \
-    if (!(Thread->KernelApcDisable))                                        \
+    if (!(_Thread->KernelApcDisable))                                       \
     {                                                                       \
         /* Check if we need to request an APC Delivery */                   \
-        if (!(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])) &&    \
-            !(Thread->KernelApcDisable))                                    \
+        if (!(IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode])) &&   \
+            !(_Thread->KernelApcDisable))                                   \
         {                                                                   \
             /* Check for the right environment */                           \
             KiCheckForKernelApcDelivery();                                  \

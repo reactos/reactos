@@ -55,11 +55,11 @@ typedef struct _DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION
 //
 // Debug Object
 //
-typedef struct _DBGK_DEBUG_OBJECT
+typedef struct _DEBUG_OBJECT
 {
-    KEVENT Event;
+    KEVENT EventsPresent;
     FAST_MUTEX Mutex;
-    LIST_ENTRY StateEventListEntry;
+    LIST_ENTRY EventList;
     union
     {
         ULONG Flags;
@@ -69,7 +69,7 @@ typedef struct _DBGK_DEBUG_OBJECT
             UCHAR KillProcessOnExit:1;
         };
     };
-} DBGK_DEBUG_OBJECT, *PDBGK_DEBUG_OBJECT;
+} DEBUG_OBJECT, *PDEBUG_OBJECT;
 
 #endif
 

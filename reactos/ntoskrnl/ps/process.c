@@ -362,7 +362,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     HANDLE hProcess;
     PEPROCESS Process, Parent;
     PEPORT ExceptionPortObject;
-    PDBGK_DEBUG_OBJECT DebugObject;
+    PDEBUG_OBJECT DebugObject;
     PSECTION_OBJECT SectionObject;
     NTSTATUS Status, AccessStatus;
     PHYSICAL_ADDRESS DirectoryTableBase = {{0}};

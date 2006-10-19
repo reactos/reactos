@@ -118,6 +118,15 @@ PspTerminateProcess(IN PEPROCESS Process,
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+PsTerminateProcess(IN PEPROCESS Process,
+                   IN NTSTATUS ExitStatus)
+{
+    /* Call the internal API */
+    return PspTerminateProcess(Process, ExitStatus);
+}
+
 VOID
 NTAPI
 PspShutdownProcessManager(VOID)
@@ -1116,7 +1125,8 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
         /* Check for the DBG_TERMINATE_PROCESS exit code */
         if (ExitStatus == DBG_TERMINATE_PROCESS)
         {
-            /* FIXME: Disable debugging on this process */
+            /* Disable debugging on this process */
+            DbgkClearProcessDebugObject(Process, NULL);
         }
     }
     /* Make sure that we got a handle */

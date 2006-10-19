@@ -238,6 +238,19 @@ ObClearProcessHandleTable(
     IN PEPROCESS Process
 );
 
+NTSTATUS
+NTAPI
+ObDuplicateObject(
+    IN PEPROCESS SourceProcess,
+    IN HANDLE SourceHandle,
+    IN PEPROCESS TargetProcess OPTIONAL,
+    IN PHANDLE TargetHandle OPTIONAL,
+    IN ACCESS_MASK DesiredAccess,
+    IN ULONG HandleAttributes,
+    IN ULONG Options,
+    IN KPROCESSOR_MODE PreviousMode
+);
+
 //
 // DOS Devices Functions
 //
