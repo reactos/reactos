@@ -112,6 +112,9 @@
 <directory name="icontest">
 	<xi:include href="icontest/icontest.rbuild" />
 </directory>
+<directory name="imagelistviewer">
+	<xi:include href="imagelistviewer/imagelistviewer.rbuild" />
+</directory>
 
 <!-- fixme: iptest -->
 
