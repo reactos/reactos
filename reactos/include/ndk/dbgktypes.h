@@ -30,6 +30,7 @@ Author:
 //
 #define DEBUG_OBJECT_WAIT_STATE_CHANGE      0x0001
 #define DEBUG_OBJECT_ADD_REMOVE_PROCESS     0x0002
+#define DEBUG_OBJECT_SET_INFORMATION        0x0004
 #define DEBUG_OBJECT_ALL_ACCESS             (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x0F)
 
 //
@@ -172,8 +173,8 @@ typedef struct _DBGUI_WAIT_STATE_CHANGE
 typedef struct _DBGKM_MSG
 {
     PORT_MESSAGE h;
-    ULONG Opcode;
-    ULONG Status;
+    ULONG ApiNumber;
+    ULONG ReturnedStatus;
     union
     {
         DBGKM_EXCEPTION Exception;
@@ -185,5 +186,26 @@ typedef struct _DBGKM_MSG
         DBGKM_UNLOAD_DLL UnloadDll;
     };
 } DBGKM_MSG, *PDBGKM_MSG;
+
+#ifndef NTOS_MODE_USER
+
+//
+// Debug Event
+//
+typedef struct _DEBUG_EVENT
+{
+    LIST_ENTRY EventList;
+    KEVENT ContinueEvent;
+    CLIENT_ID ClientId;
+    PEPROCESS Process;
+    PETHREAD Thread;
+    NTSTATUS Status;
+    ULONG Flags;
+    PETHREAD BackoutThread;
+    DBGKM_MSG ApiMsg;
+} DEBUG_EVENT, *PDEBUG_EVENT;
+
+
+#endif
 
 #endif
