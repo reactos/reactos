@@ -1559,8 +1559,9 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
         if (ObjectHeader->ObjectCreateInfo)
         {
             /* Free it */
-            //ObpFreeAndReleaseCapturedAttributes(&ObjectCreateInfo);
-            //ObjectHeader->ObjectCreateInfo = NULL;
+            ObpFreeAndReleaseCapturedAttributes(ObjectHeader->
+                                                ObjectCreateInfo);
+            ObjectHeader->ObjectCreateInfo = NULL;
         }
     }
     else

@@ -105,7 +105,7 @@ ObpDeallocateObject(IN PVOID Object)
                                      TypeInfo.DefaultNonPagedPoolCharge;
 
                 /* Add the SD charge too */
-                if (Header->Flags & OB_FLAG_SECURITY) PagedPoolCharge += 2000;
+                if (Header->Flags & OB_FLAG_SECURITY) PagedPoolCharge += 2048;
             }
 
             /* FIXME: Should be returning quota */
@@ -546,7 +546,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
              ObjectType->TypeInfo.DefaultPagedPoolCharge) ||
             (ObjectCreateInfo->NonPagedPoolCharge !=
              ObjectType->TypeInfo.DefaultNonPagedPoolCharge) ||
-            (ObjectCreateInfo->SecurityDescriptorCharge > 2000) ||
+            (ObjectCreateInfo->SecurityDescriptorCharge > 2048) ||
             (ObjectCreateInfo->Attributes & OBJ_EXCLUSIVE))
         {
             /* Set quota size */
