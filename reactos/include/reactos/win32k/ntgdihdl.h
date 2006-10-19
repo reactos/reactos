@@ -120,6 +120,10 @@ typedef struct _DC_ATTR
     ULONG ulBackgroundClr;
     COLORREF crForegroundClr;
     ULONG ulForegroundClr;
+    COLORREF crBrushClr;
+    ULONG ulBrushClr;
+    COLORREF crPenClr;
+    ULONG ulPenClr;
     DWORD iCS_CP;
     INT iGraphicsMode;
     BYTE jROP2;
