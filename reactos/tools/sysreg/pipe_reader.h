@@ -103,7 +103,7 @@ namespace System_
 /// Description: returns true if the pipe has reached end of file. The caller should call
 /// closePipe if this function returns true
 
-	bool isEof() const;
+	bool isEof();
 
 protected:
 	FILE * m_File;

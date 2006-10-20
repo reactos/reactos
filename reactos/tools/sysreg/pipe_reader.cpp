@@ -85,7 +85,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool PipeReader::isEof() const 
+	bool PipeReader::isEof()
 	{
 		return feof(m_File);
 	}

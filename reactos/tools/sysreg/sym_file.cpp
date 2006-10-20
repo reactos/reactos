@@ -114,7 +114,7 @@ namespace System_
 					path.insert (path.length () -1, _T("\\"));
 					path.insert (path.length () -1, filename);
 					
-					cerr << "Module Name " << modulename << endl << "File Name " << filename << endl;
+					cerr << "Module Name " << modulename << endl << "File Name " << path << endl;
 
 					m_Map.insert(std::make_pair<string, string>(modulename, path));
 

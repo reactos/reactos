@@ -30,6 +30,7 @@ namespace Sysreg_
 		static string CLASS_NAME;
 		static string DEBUG_PORT;
 		static string DEBUG_FILE;
+		static string TIME_OUT;
 
 //---------------------------------------------------------------------------------------
 ///
@@ -101,15 +102,20 @@ namespace Sysreg_
 
 	bool checkDebugData(string debug_data);
 
-	}; // end of class RosBootTest
-
 //---------------------------------------------------------------------------------------
 ///
 /// checkTimeOut
 ///
-/// Description: this function checks if the the application has already hung
+/// Description: this function checks if the ReactOS has run longer than the maximum available
+/// time
 
-	bool checkTimeOut(struct timeval * ts, unsigned max_timeout);
+	bool isTimeout(double max_timeout);
+
+protected:
+
+	double m_Timeout;
+
+	}; // end of class RosBootTest
 
 } // end of namespace Sysreg_
 

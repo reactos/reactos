@@ -13,6 +13,8 @@
 #include "pipe_reader.h"
 
 #include <iostream>
+#include <time.h>
+#include <float.h>
 
 namespace Sysreg_
 {
@@ -37,8 +39,10 @@ namespace Sysreg_
 	string RosBootTest::CLASS_NAME = _T("rosboot");
 	string RosBootTest::DEBUG_PORT = _T("ROSBOOT_DEBUG_PORT");
 	string RosBootTest::DEBUG_FILE = _T("ROSBOOT_DEBUG_FILE");
+	string RosBootTest::TIME_OUT = _T("ROSBOOT_TIME_OUT");
+
 //---------------------------------------------------------------------------------------
-	RosBootTest::RosBootTest() : RegressionTest(RosBootTest::CLASS_NAME)
+	RosBootTest::RosBootTest() : RegressionTest(RosBootTest::CLASS_NAME),  m_Timeout(60.0)
 	{
 
 	}
@@ -54,6 +58,7 @@ namespace Sysreg_
 	{
 		string boot_cmd;
 		string debug_port;
+		string timeout;
 		bool ret;
 
 		if (!conf_parser.getStringValue (RosBootTest::DEBUG_PORT, debug_port))
@@ -66,7 +71,18 @@ namespace Sysreg_
 			cerr << "Error: ROSBOOT_CMD is not set in configuration file" << endl;
 			return false;
 		}
-
+		
+		if (conf_parser.getStringValue(RosBootTest::TIME_OUT, timeout))
+		{
+			TCHAR * stop;
+			m_Timeout = _tcstod(timeout.c_str (), &stop);
+			if (_isnan(m_Timeout) || m_Timeout == 0.0)
+			{
+				cerr << "Warning: overriding timeout with default of 60 sec" << endl;
+				m_Timeout = 60.0;
+			}
+		}
+		
 		if (!_tcscmp(debug_port.c_str(), _T("pipe")))
 		{
 			ret = fetchDebugByPipe(boot_cmd);
@@ -102,8 +118,33 @@ namespace Sysreg_
 		/// TBD the information needs to be written into an provided log object
 		/// which writes the info into HTML/log / sends etc ....
 
-		cerr << debug_data << endl;
+//		cerr << debug_data << endl;
 		return true;
+
+	}
+//---------------------------------------------------------------------------------------
+	bool RosBootTest::isTimeout(double max_timeout)
+	{
+		static time_t start = 0;
+
+		if (!start)
+		{
+			time(&start);
+			return false;
+		}
+
+		time_t stop;
+		time(&stop);
+
+		double elapsed = difftime(stop, start);
+		if (elapsed > max_timeout)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 
 	}
 //---------------------------------------------------------------------------------------
@@ -120,26 +161,34 @@ namespace Sysreg_
 		string Buffer;
 		Buffer.reserve (10000);
 
-//		gettimeofday(&ts, NULL);
+		bool ret = true;
 
 		while(!pipe_reader.isEof ())
 		{
-			pipe_reader.readPipe (Buffer);
-			if (!checkDebugData(Buffer))
+			if (isTimeout(m_Timeout))
 			{
 				break;
 			}
-			//if (hasTimeout(&ts, 60000)
 
+			string::size_type size = pipe_reader.readPipe (Buffer);
+			cerr << "XXXsize_type " << size <<endl;
+
+
+			if (!checkDebugData(Buffer))
+			{
+				ret = false;
+				break;
+			}
 		}
 		pipe_reader.closePipe ();
-		return true;
+		return ret;
 	}
 //---------------------------------------------------------------------------------------
 	bool RosBootTest::fetchDebugByFile(Sysreg_::string boot_cmd, Sysreg_::string debug_log)
 	{
 		PipeReader pipe_reader;
 
+		_tremove(debug_log.c_str ());
 		if (!pipe_reader.openPipe(boot_cmd, string(_T("rt"))))
 		{
 			cerr << "Error: failed to open pipe with cmd: " << boot_cmd << endl;
@@ -154,21 +203,27 @@ namespace Sysreg_
 		}
 
 		TCHAR szBuffer[500];
+		bool ret = true;
 
-		do
+		while(!pipe_reader.isEof ())
 		{
 			if (_fgetts(szBuffer, sizeof(szBuffer) / sizeof(TCHAR), file))
 			{
 				string buffer = szBuffer;
 				if (!checkDebugData(buffer))
 				{
+					ret = false;
+					break;
+				}
+				if (isTimeout(m_Timeout))
+				{
 					break;
 				}
 			}
-		}while(!pipe_reader.isEof ());
+		}
 
 		pipe_reader.closePipe ();		
-		return true;
+		return ret;
 	}
 
 } // end of namespace Sysreg_
