@@ -117,7 +117,7 @@ namespace Sysreg_
 			{
 				break;
 			}
-			if (hasTimeout(&ts, 60000)
+			//if (hasTimeout(&ts, 60000)
 
 		}
 		pipe_reader.closePipe ();

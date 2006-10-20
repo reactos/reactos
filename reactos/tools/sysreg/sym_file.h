@@ -11,6 +11,8 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 
+#include "conf_parser.h"
+
 #include <string>
 #include <tchar.h>
 #include <map>
@@ -19,6 +21,7 @@ namespace System_
 {
 
 	typedef std::basic_string<TCHAR> string;
+	using Sysreg_::ConfigParser;
 
 //---------------------------------------------------------------------------------------
 ///
@@ -33,17 +36,10 @@ namespace System_
 
 	class SymbolFile
 	{
-		typedef std::map<string, string> SymbolMap;
 	public:
 		static string VAR_ROS_OUTPUT;
-//---------------------------------------------------------------------------------------
-///
-/// SymbolFile
-///
-/// Description: constructor of class SymbolFile
-
-		SymbolFile();
-
+		static string ROS_ADDR2LINE;
+		typedef std::map<string, string> SymbolMap;
 //---------------------------------------------------------------------------------------
 ///
 /// ~SymbolFile 
@@ -70,7 +66,7 @@ namespace System_
 /// @param Path path to ROS_OUTPUT containing symbol files
 /// @return bool
 
-		bool initialize(const string & Path = _T("output-i386"));
+		static bool initialize(ConfigParser & conf_parser, const string & Path);
 
 //---------------------------------------------------------------------------------------
 ///
@@ -85,7 +81,7 @@ namespace System_
 /// @param buffer receives information about the resolved location
 /// @return bool
 
-	bool resolveAddress(const string & module_name, const string & module_address, string & Buffer);
+	static bool resolveAddress(const string & module_name, const string & module_address, string & Buffer);
 
 //---------------------------------------------------------------------------------------
 ///
@@ -97,11 +93,21 @@ namespace System_
 /// @param ModuleName name of the module to lookup
 /// @param FilePath buffer receiving the address of symbol file
 
-	bool getSymbolFilePath(const string & ModuleName, string & FilePath);
+	static bool getSymbolFilePath(const string & ModuleName, string & FilePath);
 
 	protected:
-		SymbolMap m_Map;
 
+//---------------------------------------------------------------------------------------
+///
+/// SymbolFile
+///
+/// Description: constructor of class SymbolFile
+
+		SymbolFile();
+
+		static SymbolMap m_Map;
+		static string m_SymbolPath;
+		static string m_SymResolver;
 	};
 } // end of namespace System_
 

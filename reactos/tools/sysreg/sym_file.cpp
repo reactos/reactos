@@ -12,10 +12,13 @@
 #include "sym_file.h"
 #include "env_var.h"
 #include "pipe_reader.h"
+#include "conf_parser.h"
 
 #include <iostream>
+#include <vector>
 #include <stdio.h>
 #include <stdlib.h>
+#define _FINDDATA_T_DEFINED
 #include <io.h>
 #include <time.h>
 
@@ -25,8 +28,14 @@ namespace System_
 	using std::cout;
 	using std::endl;
 	using std::cerr;
+	using std::vector;
 
 	string SymbolFile::VAR_ROS_OUTPUT = _T("ROS_OUTPUT");
+	string SymbolFile::ROS_ADDR2LINE = _T("ROS_ADDR2LINE");
+	string SymbolFile::m_SymbolPath= _T("");
+	string SymbolFile::m_SymResolver= _T("");
+	SymbolFile::SymbolMap SymbolFile::m_Map;
+
 //---------------------------------------------------------------------------------------
 	SymbolFile::SymbolFile()
 	{
@@ -40,19 +49,35 @@ namespace System_
 	}
 
 //---------------------------------------------------------------------------------------
-	bool SymbolFile::initialize(const System_::string &Path) 
+	bool SymbolFile::initialize(ConfigParser & conf_parser, const System_::string &Path) 
 	{
-		char szBuffer[260];
-//		vector<string> vect;
+		vector<string> vect;
 		EnvironmentVariable envvar;
+		string current_dir;
 
-		string val = _T("output-i386");
+		if (Path == _T(""))
+		{
+			current_dir = _T("output-i386");
+			envvar.getValue(SymbolFile::VAR_ROS_OUTPUT, current_dir);
+		}
+		else
+		{
+			current_dir = Path;
+		}
 
-		envvar.getValue(SymbolFile::VAR_ROS_OUTPUT, val);
+		m_SymbolPath = current_dir;
 
-		struct _finddata_t c_file;
-		strcpy(szBuffer, "D:\\reactos\\output-i386\\*");
-		intptr_t hFile = _findfirst(szBuffer, &c_file);
+		if (!conf_parser.getStringValue (ROS_ADDR2LINE, m_SymResolver))
+		{
+			cerr << "Warning: ROS_ADDR2LINE is not set in configuration file -> symbol lookup will fail" <<endl;
+			return false;
+		}
+
+		string val = current_dir;
+		val.insert (val.length()-1, _T("\\*"));
+
+		struct _tfinddata64i32_t c_file;
+		intptr_t hFile = _tfindfirst64i32(val.c_str(), &c_file);
 
 		if (hFile == -1L)
 		{
@@ -62,49 +87,78 @@ namespace System_
 
 		do
 		{
-			if (strstr(c_file.name, ".nostrip."))
+
+			do
 			{
-				cerr << c_file.name << endl;
+				TCHAR * pos;
+				if ((pos = _tcsstr(c_file.name, _T(".nostrip."))))
+				{
+					size_t len = _tcslen(pos);
+					string modulename = c_file.name;
+					string filename = modulename;
+					modulename.erase(modulename.length() - len, len);
+
+					string path = current_dir;
+					path.insert (path.length () -1, _T("\\"));
+					path.insert (path.length () -1, filename);
+
+					m_Map.insert(std::make_pair<string, string>(modulename, path));
+
+				}
+				if (c_file.attrib & _A_SUBDIR)
+				{
+					if (c_file.name[0] != _T('.'))
+					{
+						string path = current_dir;
+						path.insert (path.length ()-1, _T("\\"));
+						path.insert (path.length ()-1, c_file.name);
+						vect.push_back (path);
+					}
+				}
+
+			}while(_tfindnext(hFile, &c_file) == 0);
+
+			_findclose(hFile);
+			hFile = -1L;
+
+			while(!vect.empty ())
+			{
+				current_dir = vect.front ();
+				vect.erase (vect.begin());
+				val = current_dir;
+				val.insert (val.length() -1, _T("\\*"));
+				hFile = _tfindfirst64i32(val.c_str(), &c_file);
+				if (hFile != -1L)
+				{
+					break;
+				}
 			}
 
-		}while(_findnext(hFile, &c_file) == 0);
+			if (hFile == -1L)
+			{
+				break;
+			}
+
+		}while(1);
 
 
-
-
-		return false;
+		return !m_Map.empty();
 	}
 
 //---------------------------------------------------------------------------------------
 	bool SymbolFile::resolveAddress(const string &module_name, const string &module_address, string &Buffer) 
 	{
 		SymbolMap::const_iterator it = m_Map.find (module_name);
-/*
-		if (it == m_Map.end ())
+
+		if (it == m_Map.end () || m_SymResolver == _T(""))
 		{
-#ifdef NDEBUG
-			cerr << "SymbolFile::resolveAddress> no symbol file found for module " << module_name << endl;
-#endif
+			cerr << "SymbolFile::resolveAddress> no symbol file or ROS_ADDR2LINE not set" << endl;
 			return false;
 		}
-*/
-		///
-		/// fetch environment path
-		///
-		EnvironmentVariable envvar;
-#if 1
-		string pipe_cmd = _T("");//D:\\reactos\\output-i386");
-#else
-		string path = _T("output-i386");
-		envvar.getValue(SymbolFile::VAR_ROS_OUTPUT, path);
-#endif
-		pipe_cmd += _T("addr2line.exe "); //FIXXME file extension
+
+		string pipe_cmd = m_SymResolver;
 		pipe_cmd += _T("--exe=");
-#if 1
-		pipe_cmd += _T("D:\\reactos\\output-i386\\dll\\win32\\kernel32\\kernel32.nostrip.dll");
-#else
-		path += it->second;
-#endif
+		pipe_cmd += it->second;
 
 		pipe_cmd += _T(" ");
 		pipe_cmd += module_address;
@@ -114,9 +168,7 @@ namespace System_
 
 		if (!pipe_reader.openPipe (pipe_cmd))
 		{
-#ifdef NDEBUG
 			_tprintf(_T("SymbolFile::resolveAddress> failed to open pipe %s"), pipe_cmd);
-#endif
 			return false;
 		}
 
@@ -125,20 +177,24 @@ namespace System_
 			Buffer.reserve (500);
 		}
 
-		return pipe_reader.readPipe (Buffer);
+		bool ret = pipe_reader.readPipe (Buffer);
+		pipe_reader.closePipe ();
+		return ret;
 	}
 
 //---------------------------------------------------------------------------------------
 	bool SymbolFile::getSymbolFilePath(const System_::string &ModuleName, System_::string &FilePath)
 	{
-		cerr << "SymbolFile::getSymbolFilePath is not yet implemented" <<endl;
-		return false;
+		SymbolMap::const_iterator it = m_Map.find (ModuleName);
 
+		if (it == m_Map.end ())
+		{
+			_tprintf(_T("SymbolFile::resolveAddress> no symbol file found for module %s"), ModuleName.c_str());
+			return false;
+		}
+
+		FilePath = it->second;
+		return true;
 	}
-
-
-
-
-
 
 } // end of namespace System_

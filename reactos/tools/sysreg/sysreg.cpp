@@ -28,8 +28,6 @@ using Sysreg_::ConfigParser;
 using Sysreg_::RegressionTest;
 using Sysreg_::RosBootTest;
 
-
-//test include
 using System_::SymbolFile;
 
 typedef ComponentFactoryTemplate<RegressionTest, string> ComponentFactory;
@@ -69,6 +67,12 @@ int _tmain(int argc, TCHAR * argv[])
 		return -1;
 	}
 	
+	string envvar;
+	string ros = _T("ROS_OUTPUT");
+	config.getStringValue (ros, envvar);
+
+	SymbolFile::initialize (config, envvar);
+
 	if (regtest->execute (config))
 	{
 		_tprintf(_T("The regression test %s completed successfully\n"), regtest->getName ().c_str ());
