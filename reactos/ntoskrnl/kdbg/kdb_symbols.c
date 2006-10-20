@@ -595,13 +595,13 @@ KdbSymProcessBootSymbols(IN PUNICODE_STRING FileName)
   BOOLEAN IsRaw;
   PLIST_ENTRY ListHead, NextEntry;
   PLDR_DATA_TABLE_ENTRY LdrEntry;
+  PUNICODE_STRING ModuleName = FileName;
   UNICODE_STRING NtosSymName = RTL_CONSTANT_STRING(L"ntoskrnl.sym");
   UNICODE_STRING NtosName = RTL_CONSTANT_STRING(L"ntoskrnl.exe");
-  DPRINT("KdbSymProcessBootSymbols(%wZ)\n", FileName);
 
   if (RtlEqualUnicodeString(FileName, &NtosSymName, TRUE))
     {
-      FileName = &NtosName;
+      ModuleName = &NtosName;
       IsRaw = TRUE;
     }
   else
@@ -609,7 +609,7 @@ KdbSymProcessBootSymbols(IN PUNICODE_STRING FileName)
       IsRaw = FALSE;
     }
 
-  ModuleObject = LdrGetModuleObject(FileName);
+  ModuleObject = LdrGetModuleObject(ModuleName);
 
   if (ModuleObject != NULL)
   {
@@ -647,6 +647,7 @@ KdbSymProcessBootSymbols(IN PUNICODE_STRING FileName)
 
         if (IsRaw)
         {
+            DPRINT1("Data: %p %p %wZ\n", LdrEntry->DllBase, LdrEntry->SizeOfImage, &LdrEntry->FullDllName);
            if (! RosSymCreateFromRaw(LdrEntry->DllBase,
                                      LdrEntry->SizeOfImage,
                                      (PROSSYM_INFO*)&ModuleObject->PatchInformation))
