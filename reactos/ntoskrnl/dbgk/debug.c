@@ -708,7 +708,7 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
         _SEH_TRY
         {
             /* Probe the handle */
-            ProbeForWrite(DebugHandle, sizeof(HANDLE), sizeof(ULONG));
+            ProbeForWriteHandle(DebugHandle);
         }
         _SEH_HANDLE
         {
