@@ -28,16 +28,8 @@ namespace System_
 
 	class EnvironmentVariable
 	{
-	typedef map<string, string> EnvironmentMap;
 	public:
-//---------------------------------------------------------------------------------------
-///
-/// EnvironmentVariable
-///
-/// Description: constructor of class EnvironmentVariable
-
-		EnvironmentVariable();
-
+		typedef map<string, string> EnvironmentMap;
 //---------------------------------------------------------------------------------------
 ///
 /// ~EnvironmentVariable
@@ -58,11 +50,20 @@ namespace System_
 /// @param EnvValue value of the environment variable
 /// @return bool
 
-		bool getValue(const string & EnvName, string & EnvValue);
+		static bool getValue(const string & EnvName, string & EnvValue);
 
 
 	protected:
-		EnvironmentMap m_Map;
+
+//---------------------------------------------------------------------------------------
+///
+/// EnvironmentVariable
+///
+/// Description: constructor of class EnvironmentVariable
+
+		EnvironmentVariable();
+
+		static EnvironmentMap m_Map;
 
 	}; // end of class EnvironmentVariable
 

@@ -18,6 +18,7 @@
 namespace Sysreg_
 {
 	using std::map;
+	using std::wstring;
 //---------------------------------------------------------------------------------------
 ///
 /// class ConfigParser
@@ -34,6 +35,7 @@ namespace Sysreg_
 	class ConfigParser
 	{
 	public:
+
 	typedef std::basic_string<TCHAR> string;
 	typedef std::basic_istringstream<TCHAR> istringstream;
 	typedef map<string, string> ConfigMap;

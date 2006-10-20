@@ -11,12 +11,24 @@
 
 #include "sysreg.h"
 
+#ifdef UNICODE
+
+	using std::wcerr;
+	using std::endl;
+	using std::wcout;
+
+#define cerr wcerr
+#define cout wcout
+
+#else
+
+	using std::cerr;
+	using std::endl;
+
+#endif
+
 
 typedef std::basic_string<TCHAR> string;
-
-using std::cout;
-using std::endl;
-using std::cerr;
 
 
 using System_::EnvironmentVariable;
@@ -63,7 +75,7 @@ int _tmain(int argc, TCHAR * argv[])
 	RegressionTest * regtest = comp_factory.createComponent (argv[2]);
 	if (!regtest)
 	{
-		_tprintf(_T("Error: the requested regression test does not exist"));
+		cerr << "Error: the requested regression test does not exist" << endl;
 		return -1;
 	}
 	
@@ -75,11 +87,11 @@ int _tmain(int argc, TCHAR * argv[])
 
 	if (regtest->execute (config))
 	{
-		_tprintf(_T("The regression test %s completed successfully\n"), regtest->getName ().c_str ());
+		cout << "The regression test " << regtest->getName () << " completed successfully" << endl;
 	}
 	else
 	{
-		_tprintf(_T("The regression test %s failed\n"), regtest->getName ().c_str ());
+		cout << "The regression test " << regtest->getName () << "failed" << endl;
 	}
 
 	return 0;

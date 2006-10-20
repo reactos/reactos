@@ -16,9 +16,20 @@
 
 namespace Sysreg_
 {
-	using std::cout;
+#ifdef UNICODE
+
+	using std::wcerr;
 	using std::endl;
+
+#define cerr wcerr
+
+#else
+
 	using std::cerr;
+	using std::endl;
+
+#endif
+
 
 	using System_::PipeReader;
 
@@ -72,7 +83,8 @@ namespace Sysreg_
 		}
 		else
 		{
-			_tprintf(_T("Error: unknown debug port %s Currently only file|pipe is supported\n"), debug_port);
+			cerr <<"Error: unknown debug port " << debug_port <<endl
+				<<" Currently only file|pipe is supported" <<endl;
 			return false;
 		}
 
@@ -90,7 +102,7 @@ namespace Sysreg_
 		/// TBD the information needs to be written into an provided log object
 		/// which writes the info into HTML/log / sends etc ....
 
-		_tprintf(debug_data.c_str ());
+		cerr << debug_data << endl;
 		return true;
 
 	}
@@ -102,7 +114,7 @@ namespace Sysreg_
 
 		if (!pipe_reader.openPipe(boot_cmd, string(_T("rt"))))
 		{
-			_tprintf(_T("Error: failed to open pipe with cmd: %s\n"), boot_cmd.c_str ());
+			cerr << "Error: failed to open pipe with cmd: " << boot_cmd <<endl;
 			return false;
 		}
 		string Buffer;
@@ -130,13 +142,13 @@ namespace Sysreg_
 
 		if (!pipe_reader.openPipe(boot_cmd, string(_T("rt"))))
 		{
-			_tprintf(_T("Error: failed to open pipe with cmd: %s\n"), boot_cmd.c_str ());
+			cerr << "Error: failed to open pipe with cmd: " << boot_cmd << endl;
 			return false;
 		}
 		FILE * file = _tfopen(debug_log.c_str (), _T("rt"));
 		if (!file)
 		{
-			_tprintf(_T("Error: failed to open debug log %s\n", debug_log.c_str ()));
+			cerr << "Error: failed to open debug log " << debug_log << endl;
 			pipe_reader.closePipe ();
 			return false;
 		}
@@ -156,6 +168,7 @@ namespace Sysreg_
 		}while(!pipe_reader.isEof ());
 
 		pipe_reader.closePipe ();		
+		return true;
 	}
 
 } // end of namespace Sysreg_

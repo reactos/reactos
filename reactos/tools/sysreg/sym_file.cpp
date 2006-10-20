@@ -25,9 +25,22 @@
 
 namespace System_
 {
-	using std::cout;
+
+#ifdef UNICODE
+
+	using std::wcerr;
 	using std::endl;
+
+#define cerr wcerr
+
+#else
+
 	using std::cerr;
+	using std::endl;
+
+#endif
+
+
 	using std::vector;
 
 	string SymbolFile::VAR_ROS_OUTPUT = _T("ROS_OUTPUT");
@@ -52,13 +65,12 @@ namespace System_
 	bool SymbolFile::initialize(ConfigParser & conf_parser, const System_::string &Path) 
 	{
 		vector<string> vect;
-		EnvironmentVariable envvar;
 		string current_dir;
 
 		if (Path == _T(""))
 		{
 			current_dir = _T("output-i386");
-			envvar.getValue(SymbolFile::VAR_ROS_OUTPUT, current_dir);
+			EnvironmentVariable::getValue(SymbolFile::VAR_ROS_OUTPUT, current_dir);
 		}
 		else
 		{
@@ -101,6 +113,8 @@ namespace System_
 					string path = current_dir;
 					path.insert (path.length () -1, _T("\\"));
 					path.insert (path.length () -1, filename);
+					
+					cerr << "Module Name " << modulename << endl << "File Name " << filename << endl;
 
 					m_Map.insert(std::make_pair<string, string>(modulename, path));
 
@@ -168,7 +182,7 @@ namespace System_
 
 		if (!pipe_reader.openPipe (pipe_cmd))
 		{
-			_tprintf(_T("SymbolFile::resolveAddress> failed to open pipe %s"), pipe_cmd);
+			cerr << "SymbolFile::resolveAddress> failed to open pipe" <<pipe_cmd <<endl;
 			return false;
 		}
 
@@ -189,7 +203,7 @@ namespace System_
 
 		if (it == m_Map.end ())
 		{
-			_tprintf(_T("SymbolFile::resolveAddress> no symbol file found for module %s"), ModuleName.c_str());
+			cerr << "SymbolFile::resolveAddress> no symbol file found for module " << ModuleName << endl;
 			return false;
 		}
 

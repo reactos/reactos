@@ -14,9 +14,20 @@
 
 namespace Sysreg_
 {
-	using std::cout;
+#ifdef UNICODE
+
+	using std::wcerr;
+	using std::endl;
+
+#define cerr wcerr
+
+#else
+
 	using std::cerr;
 	using std::endl;
+
+#endif
+
 	using std::ifstream;
 //---------------------------------------------------------------------------------------
 	ConfigParser::ConfigParser()
@@ -84,9 +95,7 @@ namespace Sysreg_
 		ConfigMap::iterator it = m_Map.find (ConfVariable);
 		if (it == m_Map.end ())
 		{
-#ifdef NDEBUG
 			cerr << "ConfigParser::getValue failed to find " << ConfVariable << endl;
-#endif
 			return false;
 		}
 		

@@ -13,9 +13,22 @@
 
 namespace System_
 {
-	using std::cout;
+#ifdef UNICODE
+
+	using std::wcerr;
 	using std::endl;
+
+#define cerr wcerr
+
+#else
+
 	using std::cerr;
+	using std::endl;
+
+#endif
+
+
+	EnvironmentVariable::EnvironmentMap EnvironmentVariable::m_Map;
 
 //---------------------------------------------------------------------------------------
 	EnvironmentVariable::EnvironmentVariable() 
@@ -44,17 +57,13 @@ namespace System_
 		
 		if (!value)
 		{
-#ifdef NDEBUG
 			cerr << "EnvironmentVariable::getValue found no value for " << EnvName << endl;
-#endif
 			return false;
 		}
 
 		if (!_tcslen(value))
 		{
-#ifdef NDEBUG
 			cerr << "EnvironmentVariable::getValue found no value for " << EnvName << endl;
-#endif
 			return false;
 		}
 

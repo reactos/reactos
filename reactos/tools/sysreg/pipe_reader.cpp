@@ -14,9 +14,19 @@
 
 namespace System_
 {
-	using std::cout;
+#ifdef UNICODE
+
+	using std::wcerr;
 	using std::endl;
+
+#define cerr wcerr
+
+#else
+
 	using std::cerr;
+	using std::endl;
+
+#endif
 
 //---------------------------------------------------------------------------------------
 	PipeReader::PipeReader() : m_File(NULL)
@@ -36,24 +46,18 @@ namespace System_
 	{
 		if (m_File != NULL)
 		{
-#ifdef NDEBUG			
 			cerr << "PipeReader::openPipe> pipe already open" << endl;
-#endif
 			return false;
 		}
 		// 
 		m_File = _tpopen(PipeCmd.c_str(), AccessMode.c_str());
 		if (m_File)
 		{
-#ifdef NDEBUG
 			cerr << "PipeReader::openPipe> successfully opened pipe" << endl;
-#endif
 			return true;
 		}
 
-#ifdef NDEBUG
 		cerr << "PipeReader::openPipe> failed to open pipe " << PipeCmd << endl;
-#endif
 		return false;
 	}
 
@@ -63,9 +67,7 @@ namespace System_
 	{
 		if (!m_File)
 		{
-#ifdef NDEBUG
 			cerr << "PipeReader::closePipe> pipe is not open" << endl;
-#endif
 			return false;
 		}
 
@@ -73,9 +75,7 @@ namespace System_
 		
 		if (res == UINT_MAX)
 		{
-#ifdef NDEBUG
 			cerr << "Error: _pclose failed " <<endl;
-#endif
 			return false;
 		}
 
@@ -105,16 +105,9 @@ namespace System_
 		TCHAR * res = _fgetts(buf, size, m_File);
 		if (!res)
 		{
-#ifdef NDEBUG
 			cerr << "Error: PipeReader::readPipe failed" << endl;
-#endif
 			return 0;
 		}
-
-#ifdef NDEBUG
-		cerr << "PipeReader::readPipe> res: " << Buffer << endl;
-#endif
-
 		return _tcslen(buf);
 	}
 
