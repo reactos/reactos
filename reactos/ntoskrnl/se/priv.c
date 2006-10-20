@@ -292,7 +292,7 @@ SeReleaseLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Privilege,
 NTSTATUS STDCALL
 NtPrivilegeCheck (IN HANDLE ClientToken,
 		  IN PPRIVILEGE_SET RequiredPrivileges,
-		  IN PBOOLEAN Result)
+		  OUT PBOOLEAN Result)
 {
   PLUID_AND_ATTRIBUTES Privileges;
   PTOKEN Token;
@@ -313,16 +313,26 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
     _SEH_TRY
     {
       ProbeForWrite(RequiredPrivileges,
-                    sizeof(PRIVILEGE_SET),
+                    FIELD_OFFSET(PRIVILEGE_SET,
+                                 Privilege),
                     sizeof(ULONG));
 
       PrivilegeCount = RequiredPrivileges->PrivilegeCount;
       PrivilegeControl = RequiredPrivileges->Control;
 
+      /* Check PrivilegeCount to avoid an integer overflow! */
+      if (FIELD_OFFSET(PRIVILEGE_SET,
+                       Privilege[PrivilegeCount]) /
+          sizeof(RequiredPrivileges->Privilege[0]) != PrivilegeCount)
+      {
+          Status = STATUS_INVALID_PARAMETER;
+          _SEH_LEAVE;
+      }
+
       /* probe all of the array */
       ProbeForWrite(RequiredPrivileges,
-                    sizeof(FIELD_OFFSET(PRIVILEGE_SET,
-                                        Privilege[PrivilegeCount])),
+                    FIELD_OFFSET(PRIVILEGE_SET,
+                                 Privilege[PrivilegeCount]),
                     sizeof(ULONG));
 
       ProbeForWriteBoolean(Result);
