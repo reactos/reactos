@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/dbgk/debug.c
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/dbgk/dbgkobj.c
  * PURPOSE:         User-Mode Debugging Support, Debug Object Management.
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -318,16 +317,144 @@ NTAPI
 DbgkpConvertKernelToUserStateChange(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
                                     IN PDEBUG_EVENT DebugEvent)
 {
-    /* FIXME: TODO */
-    return;
+    /* Start by copying the client ID */
+    WaitStateChange->AppClientId = DebugEvent->ClientId;
+
+    /* Now check which kind of event this was */
+    switch (DebugEvent->ApiMsg.ApiNumber)
+    {
+        /* New process */
+        case DbgKmCreateProcessApi:
+
+            /* Set the right native code */
+            WaitStateChange->NewState = DbgCreateProcessStateChange;
+
+            /* Copy the information */
+            WaitStateChange->StateInfo.CreateProcessInfo.NewProcess =
+                DebugEvent->ApiMsg.CreateProcess;
+
+            /* Clear the file handle for us */
+            DebugEvent->ApiMsg.CreateProcess.FileHandle = NULL;
+            break;
+
+        /* New thread */
+        case DbgKmCreateThreadApi:
+
+            /* Set the right native code */
+            WaitStateChange->NewState = DbgCreateThreadStateChange;
+
+            /* Copy information */
+            WaitStateChange->StateInfo.CreateThread.NewThread.StartAddress =
+                DebugEvent->ApiMsg.CreateThread.StartAddress;
+            WaitStateChange->StateInfo.CreateThread.NewThread.SubSystemKey =
+                DebugEvent->ApiMsg.CreateThread.SubSystemKey;
+            break;
+
+        /* Exception (or breakpoint/step) */
+        case DbgKmExceptionApi:
+
+            /* Look at the exception code */
+            if (DebugEvent->ApiMsg.Exception.ExceptionRecord.ExceptionCode ==
+                STATUS_BREAKPOINT)
+            {
+                /* Update this as a breakpoint exception */
+                WaitStateChange->NewState = DbgBreakpointStateChange;
+            }
+            else if (DebugEvent->ApiMsg.Exception.ExceptionRecord.ExceptionCode ==
+                     STATUS_SINGLE_STEP)
+            {
+                /* Update this as a single step exception */
+                WaitStateChange->NewState = DbgSingleStepStateChange;
+            }
+            else
+            {
+                /* Otherwise, set default exception */
+                WaitStateChange->NewState = DbgExceptionStateChange;
+            }
+
+            /* Copy the exception record */
+            WaitStateChange->StateInfo.Exception.ExceptionRecord =
+                DebugEvent->ApiMsg.Exception.ExceptionRecord;
+            break;
+
+        /* Process exited */
+        case DbgKmExitProcessApi:
+
+            /* Set the right native code and copy the exit code */
+            WaitStateChange->NewState = DbgExitProcessStateChange;
+            WaitStateChange->StateInfo.ExitProcess.ExitStatus =
+                DebugEvent->ApiMsg.ExitProcess.ExitStatus;
+            break;
+
+        /* Thread exited */
+        case DbgKmExitThreadApi:
+
+            /* Set the right native code */
+            WaitStateChange->NewState = DbgExitThreadStateChange;
+            WaitStateChange->StateInfo.ExitThread.ExitStatus =
+                DebugEvent->ApiMsg.ExitThread.ExitStatus;
+            break;
+
+        /* DLL Load */
+        case DbgKmLoadDllApi:
+
+            /* Set the native code */
+            WaitStateChange->NewState = DbgLoadDllStateChange;
+
+            /* Copy the data */
+            WaitStateChange->StateInfo.LoadDll = DebugEvent->ApiMsg.LoadDll;
+
+            /* Clear the file handle for us */
+            DebugEvent->ApiMsg.LoadDll.FileHandle = NULL;
+            break;
+
+        /* DLL Unload */
+        case DbgKmUnloadDllApi:
+
+            /* Set the native code and copy the address */
+            WaitStateChange->NewState = DbgUnloadDllStateChange;
+            WaitStateChange->StateInfo.UnloadDll.BaseAddress =
+                DebugEvent->ApiMsg.UnloadDll.BaseAddress;
+            break;
+
+        default:
+
+            /* Shouldn't happen */
+            ASSERT(FALSE);
+    }
 }
 
 VOID
 NTAPI
 DbgkpMarkProcessPeb(IN PEPROCESS Process)
 {
-    /* FIXME: TODO */
-    return;
+    KAPC_STATE ApcState;
+    PAGED_CODE();
+
+    /* Acquire process rundown */
+    if (!ExAcquireRundownProtection(&Process->RundownProtect)) return;
+
+    /* Make sure we have a PEB */
+    if (Process->Peb)
+    {
+        /* Attach to the process */
+        KeStackAttachProcess(&Process->Pcb, &ApcState);
+
+        /* Acquire the debug port mutex */
+        ExAcquireFastMutex(&DbgkpProcessDebugPortMutex);
+
+        /* Set the IsBeingDebugged member of the PEB */
+        Process->Peb->BeingDebugged = (Process->DebugPort) ? TRUE: FALSE;
+
+        /* Release lock */
+        ExReleaseFastMutex(&DbgkpProcessDebugPortMutex);
+
+        /* Detach from the process */
+        KeUnstackDetachProcess(&ApcState);
+    }
+
+    /* Release rundown protection */
+    ExReleaseRundownProtection(&Process->RundownProtect);
 }
 
 VOID
