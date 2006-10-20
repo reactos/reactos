@@ -411,9 +411,8 @@ SeCaptureSecurityDescriptor(
       {
         /* first only probe and copy until the control field of the descriptor
            to determine whether it's a self-relative descriptor */
-        DescriptorSize = (ULONG)((ULONG_PTR)&OriginalSecurityDescriptor->Control -
-                                 (ULONG_PTR)OriginalSecurityDescriptor) +
-                         sizeof(OriginalSecurityDescriptor->Control);
+        DescriptorSize = FIELD_OFFSET(SECURITY_DESCRIPTOR,
+                                      Owner);
         ProbeForRead(OriginalSecurityDescriptor,
                      DescriptorSize,
                      sizeof(ULONG));
