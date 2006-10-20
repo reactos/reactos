@@ -541,10 +541,7 @@ SeCaptureSecurityDescriptor(
         /* securely access the buffers! */                                     \
         _SEH_TRY                                                               \
         {                                                                      \
-          ProbeForRead(&SidType->SubAuthorityCount,                            \
-                       sizeof(SidType->SubAuthorityCount),                     \
-                       1);                                                     \
-          SidType##SAC = SidType->SubAuthorityCount;                           \
+          SidType##SAC = ProbeForReadUchar(&SidType->SubAuthorityCount);       \
           SidType##Size = RtlLengthRequiredSid(SidType##SAC);                  \
           DescriptorSize += ROUND_UP(SidType##Size, sizeof(ULONG));            \
           ProbeForRead(SidType,                                                \
@@ -574,6 +571,8 @@ SeCaptureSecurityDescriptor(
     DetermineSIDSize(Owner);
     DetermineSIDSize(Group);
 
+#undef DetermineSIDSize
+
     /* determine the size of the ACLs */
 #define DetermineACLSize(AclType, AclFlag)                                     \
     do {                                                                       \
@@ -587,10 +586,7 @@ SeCaptureSecurityDescriptor(
         /* securely access the buffers! */                                     \
         _SEH_TRY                                                               \
         {                                                                      \
-          ProbeForRead(&AclType->AclSize,                                      \
-                       sizeof(AclType->AclSize),                               \
-                       1);                                                     \
-          AclType##Size = AclType->AclSize;                                    \
+          AclType##Size = ProbeForReadUshort(&AclType->AclSize);               \
           DescriptorSize += ROUND_UP(AclType##Size, sizeof(ULONG));            \
           ProbeForRead(AclType,                                                \
                        AclType##Size,                                          \
@@ -621,6 +617,8 @@ SeCaptureSecurityDescriptor(
 
     DetermineACLSize(Sacl, SACL);
     DetermineACLSize(Dacl, DACL);
+
+#undef DetermineACLSize
 
     /* allocate enough memory to store a complete copy of a self-relative
        security descriptor */
@@ -663,6 +661,8 @@ SeCaptureSecurityDescriptor(
         CopySID(Owner);
         CopySID(Group);
 
+#undef CopySID
+
 #define CopyACL(Type)                                                          \
         do {                                                                   \
         if(DescriptorCopy.Type != NULL)                                        \
@@ -683,6 +683,8 @@ SeCaptureSecurityDescriptor(
 
         CopyACL(Sacl);
         CopyACL(Dacl);
+
+#undef CopyACL
       }
       _SEH_HANDLE
       {
