@@ -333,6 +333,16 @@ PspDeleteJob(
 );
 
 //
+// State routines
+//
+NTSTATUS
+NTAPI
+PsResumeThread(
+    IN PETHREAD Thread,
+    OUT PULONG PreviousCount OPTIONAL
+);
+
+//
 // Global data inside the Process Manager
 //
 extern ULONG PspTraceLevel;

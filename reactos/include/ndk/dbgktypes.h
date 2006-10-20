@@ -43,6 +43,22 @@ typedef enum _DEBUGOBJECTINFOCLASS
 } DEBUGOBJECTINFOCLASS, *PDEBUGOBJECTINFOCLASS;
 
 //
+// Debug Message API Number
+//
+typedef enum _DBGKM_APINUMBER
+{
+    DbgKmExceptionApi = 0,
+    DbgKmCreateThreadApi = 1,
+    DbgKmCreateProcessApi = 2,
+    DbgKmExitThreadApi = 3,
+    DbgKmExitProcessApi = 4,
+    DbgKmLoadDllApi = 5,
+    DbgKmUnloadDllApi = 6,
+    DbgKmErrorReportApi = 7,
+    DbgKmMaxApiNumber = 8,
+} DBGKM_APINUMBER;
+
+//
 // Debug Object Information Structures
 //
 typedef struct _DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION
@@ -173,7 +189,7 @@ typedef struct _DBGUI_WAIT_STATE_CHANGE
 typedef struct _DBGKM_MSG
 {
     PORT_MESSAGE h;
-    ULONG ApiNumber;
+    DBGKM_APINUMBER ApiNumber;
     ULONG ReturnedStatus;
     union
     {

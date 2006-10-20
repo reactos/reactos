@@ -26,12 +26,127 @@ GENERIC_MAPPING DbgkDebugObjectMapping =
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+NTSTATUS
+NTAPI
+DbgkpQueueMessage(IN PEPROCESS Process,
+                  IN PETHREAD Thread,
+                  IN PDBGKM_MSG Message,
+                  IN ULONG Flags,
+                  IN PDEBUG_OBJECT TargetObject OPTIONAL)
+{
+    /* FIXME: TODO */
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+DbgkpSendApiMessageLpc(IN OUT PDBGKM_MSG Message,
+                       IN PVOID Port,
+                       IN BOOLEAN SuspendProcess)
+{
+    NTSTATUS Status;
+    UCHAR Buffer[PORT_MAXIMUM_MESSAGE_LENGTH];
+    PAGED_CODE();
+
+    /* Suspend process if required */
+    if (SuspendProcess) DbgkpSuspendProcess();
+
+    /* Set return status */
+    Message->ReturnedStatus = STATUS_PENDING;
+
+    /* Set create process reported state */
+    PsGetCurrentProcess()->CreateReported = TRUE;
+
+    /* Send the LPC command */
+#if 0
+    Status = LpcRequestWaitReplyPort(Port,
+                                     (PPORT_MESSAGE)Message,
+                                     (PPORT_MESSAGE)&Buffer[0]);
+#else
+    Status = STATUS_UNSUCCESSFUL;
+#endif
+
+    /* Flush the instruction cache */
+    ZwFlushInstructionCache(NtCurrentProcess(), NULL, 0);
+
+    /* Copy the buffer back */
+    if (NT_SUCCESS(Status)) RtlMoveMemory(Message, Buffer, sizeof(DBGKM_MSG));
+
+    /* Resume the process if it was suspended */
+    if (SuspendProcess) DbgkpResumeProcess();
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+DbgkpSendApiMessage(IN OUT PDBGKM_MSG ApiMsg,
+                    IN ULONG Flags)
+{
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Suspend process if required */
+    if (Flags) DbgkpSuspendProcess();
+
+    /* Set return status */
+    ApiMsg->ReturnedStatus = STATUS_PENDING;
+
+    /* Set create process reported state */
+    PsGetCurrentProcess()->CreateReported = TRUE;
+
+    /* Send the LPC command */
+    Status = DbgkpQueueMessage(PsGetCurrentProcess(),
+                               PsGetCurrentThread(),
+                               ApiMsg,
+                               0,
+                               NULL);
+
+    /* Flush the instruction cache */
+    ZwFlushInstructionCache(NtCurrentProcess(), NULL, 0);
+
+    /* Resume the process if it was suspended */
+    if (Flags) DbgkpResumeProcess();
+    return Status;
+}
+
 VOID
 NTAPI
 DbgkCopyProcessDebugPort(IN PEPROCESS Process,
                          IN PEPROCESS Parent)
 {
-    /* FIXME: Implement */
+    PDEBUG_OBJECT DebugObject;
+    PAGED_CODE();
+
+    /* Clear this process's port */
+    Process->DebugPort = NULL;
+
+    /* Check if the parent has one */
+    if (!Parent->DebugPort) return;
+
+    /* It does, acquire the mutex */
+    ExAcquireFastMutex(&DbgkpProcessDebugPortMutex);
+
+    /* Make sure it still has one, and that we should inherit */
+    DebugObject = Parent->DebugPort;
+    if ((DebugObject) && !(Process->NoDebugInherit))
+    {
+        /* Acquire the debug object's lock */
+        ExAcquireFastMutex(&DebugObject->Mutex);
+
+        /* Make sure the debugger is active */
+        if (!DebugObject->DebuggerInactive)
+        {
+            /* Reference the object and set it */
+            ObReferenceObject(DebugObject);
+            Process->DebugPort = DebugObject;
+        }
+
+        /* Release the debug object */
+        ExReleaseFastMutex(&DebugObject->Mutex);
+    }
+
+    /* Release the port mutex */
+    ExReleaseFastMutex(&DbgkpProcessDebugPortMutex);
 }
 
 BOOLEAN
@@ -40,16 +155,131 @@ DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
                      IN BOOLEAN DebugPort,
                      IN BOOLEAN SecondChance)
 {
-    /* FIXME: Implement */
-    return FALSE;
+    DBGKM_MSG ApiMessage;
+    PDBGKM_EXCEPTION DbgKmException = &ApiMessage.Exception;
+    NTSTATUS Status;
+    PEPROCESS Process = PsGetCurrentProcess();
+    PVOID Port;
+    BOOLEAN UseLpc = FALSE;
+    PAGED_CODE();
+
+    /* Setup the API Message */
+    ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
+                             (8 + sizeof(DBGKM_EXCEPTION));
+    ApiMessage.h.u2.ZeroInit = LPC_DEBUG_EVENT;
+    ApiMessage.ApiNumber = DbgKmExceptionApi;
+
+    /* Check if this is to be sent on the debug port */
+    if (DebugPort)
+    {
+        /* Use the debug port, onless the thread is being hidden */
+        Port = PsGetCurrentThread()->HideFromDebugger ?
+               NULL : Process->DebugPort;
+    }
+    else
+    {
+        /* Otherwise, use the exception port */
+        Port = Process->ExceptionPort;
+        ApiMessage.h.u2.ZeroInit = LPC_EXCEPTION;
+        UseLpc = TRUE;
+    }
+
+    /* Break out if there's no port */
+    if (!Port) return FALSE;
+
+    /* Fill out the exception information */
+    DbgKmException->ExceptionRecord = *ExceptionRecord;
+    DbgKmException->FirstChance = !SecondChance;
+
+    /* Check if we should use LPC */
+    if (UseLpc)
+    {
+        /* Send the message on the LPC Port */
+        Status = DbgkpSendApiMessageLpc(&ApiMessage, Port, DebugPort);
+    }
+    else
+    {
+        /* Use native debug object */
+        Status = DbgkpSendApiMessage(&ApiMessage, DebugPort);
+    }
+
+    /* Check if we failed, and for a debug port, also check the return status */
+    if (!(NT_SUCCESS(Status)) ||
+        ((DebugPort) &&
+         (!(NT_SUCCESS(ApiMessage.ReturnedStatus)) ||
+           (ApiMessage.ReturnedStatus == DBG_EXCEPTION_NOT_HANDLED))))
+    {
+        /* Fail */
+        return FALSE;
+    }
+
+    /* Otherwise, we're ok */
+    return TRUE;
+}
+
+VOID
+NTAPI
+DbgkpFreeDebugEvent(IN PDEBUG_EVENT DebugEvent)
+{
+    PHANDLE Handle = NULL;
+    PAGED_CODE();
+
+    /* Check if this event had a file handle */
+    switch (DebugEvent->ApiMsg.ApiNumber)
+    {
+        /* Create process has a handle */
+        case DbgKmCreateProcessApi:
+
+            /* Get the pointer */
+            Handle = &DebugEvent->ApiMsg.CreateProcess.FileHandle;
+
+        /* As does DLL load */
+        case DbgKmLoadDllApi:
+
+            /* Get the pointer */
+            Handle = &DebugEvent->ApiMsg.LoadDll.FileHandle;
+
+        default:
+            break;
+    }
+
+    /* Close the handle if it exsts */
+    if ((Handle) && (*Handle)) ObCloseHandle(*Handle, KernelMode);
+
+    /* Dereference process and thread and free the event */
+    ObDereferenceObject(DebugEvent->Process);
+    ObDereferenceObject(DebugEvent->Thread);
+    ExFreePool(DebugEvent);
 }
 
 VOID
 NTAPI
 DbgkpWakeTarget(IN PDEBUG_EVENT DebugEvent)
 {
-    /* FIXME: TODO */
-    return;
+    PETHREAD Thread = DebugEvent->Thread;
+    PAGED_CODE();
+
+    /* Check if we have to wake the thread */
+    if (DebugEvent->Flags & 20) PsResumeThread(Thread, NULL);
+
+    /* Check if we had locked the thread */
+    if (DebugEvent->Flags & 8)
+    {
+        /* Unlock it */
+        ExReleaseRundownProtection(&Thread->RundownProtect);
+    }
+
+    /* Check if we have to wake up the event */
+    if (DebugEvent->Flags & 2)
+    {
+        /* Signal the continue event */
+        KeSetEvent(&DebugEvent->ContinueEvent, IO_NO_INCREMENT, FALSE);
+    }
+    else
+    {
+        /* Otherwise, free the debug event */
+        DbgkpFreeDebugEvent(DebugEvent);
+    }
 }
 
 NTSTATUS
@@ -87,6 +317,14 @@ VOID
 NTAPI
 DbgkpConvertKernelToUserStateChange(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
                                     IN PDEBUG_EVENT DebugEvent)
+{
+    /* FIXME: TODO */
+    return;
+}
+
+VOID
+NTAPI
+DbgkpMarkProcessPeb(IN PEPROCESS Process)
 {
     /* FIXME: TODO */
     return;
@@ -187,6 +425,10 @@ DbgkpOpenHandles(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
                                    0,
                                    DUPLICATE_SAME_ACCESS,
                                    KernelMode);
+        if (NT_SUCCESS(Status)) *DupHandle = NULL;
+
+        /* Close the original handle */
+        ObCloseHandle(Handle, KernelMode);
     }
 }
 
@@ -199,14 +441,6 @@ DbgkpDeleteObject(IN PVOID Object)
 
     /* Sanity check */
     ASSERT(IsListEmpty(&DebugObject->EventList));
-}
-
-VOID
-NTAPI
-DbgkpMarkProcessPeb(IN PEPROCESS Process)
-{
-    /* FIXME: TODO */
-    return;
 }
 
 VOID

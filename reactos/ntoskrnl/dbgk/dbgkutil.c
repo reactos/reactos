@@ -68,4 +68,18 @@ DbgkExitThread(IN NTSTATUS ExitStatus)
     /* FIXME */
 }
 
+VOID
+NTAPI
+DbgkpSuspendProcess(VOID)
+{
+
+}
+
+VOID
+NTAPI
+DbgkpResumeProcess(VOID)
+{
+
+}
+
 /* EOF */

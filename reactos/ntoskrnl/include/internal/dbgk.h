@@ -21,6 +21,18 @@ DbgkExitThread(
 
 VOID
 NTAPI
+DbgkpSuspendProcess(
+    VOID
+);
+
+VOID
+NTAPI
+DbgkpResumeProcess(
+    VOID
+);
+
+VOID
+NTAPI
 DbgkCopyProcessDebugPort(
     IN PEPROCESS Process,
     IN PEPROCESS Parent
