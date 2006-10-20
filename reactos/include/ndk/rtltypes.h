@@ -471,6 +471,7 @@ typedef struct _COMPRESSED_DATA_INFO COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INF
 //
 // Routines and callbacks for the RTL AVL/Generic Table package
 //
+#if defined(NTOS_MODE_USER) || (!defined(NTOS_MODE_USER) && !defined(_NTIFS_))
 typedef NTSTATUS
 (NTAPI *PRTL_AVL_MATCH_FUNCTION)(
     struct _RTL_AVL_TABLE *Table,
@@ -515,6 +516,7 @@ typedef VOID
     struct _RTL_AVL_TABLE *Table,
     PVOID Buffer
 );
+#endif
 
 //
 // RTL Query Registry callback

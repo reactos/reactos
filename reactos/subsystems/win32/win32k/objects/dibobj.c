@@ -724,7 +724,7 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
   {
     if (data->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
     {
-      RGBQUAD *rgb = data->bmiColors;
+      const RGBQUAD *rgb = data->bmiColors;
       DWORD col = RGB( rgb->rgbRed, rgb->rgbGreen, rgb->rgbBlue );
 
       // Check if the first color of the colormap is black

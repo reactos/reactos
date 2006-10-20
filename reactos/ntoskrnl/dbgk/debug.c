@@ -793,6 +793,7 @@ NtDebugContinue(IN HANDLE DebugHandle,
             /* Probe the handle */
             ProbeForRead(AppClientId, sizeof(CLIENT_ID), sizeof(ULONG));
             ClientId = *AppClientId;
+            AppClientId = &ClientId;
         }
         _SEH_HANDLE
         {
@@ -838,7 +839,7 @@ NtDebugContinue(IN HANDLE DebugHandle,
 
                 /* Compare process ID */
                 if (DebugEvent->ClientId.UniqueProcess ==
-                    ClientId.UniqueProcess)
+                    AppClientId->UniqueProcess)
                 {
                     /* Check if we already found a match */
                     if (NeedsWake)
@@ -853,7 +854,7 @@ NtDebugContinue(IN HANDLE DebugHandle,
 
                     /* Compare thread ID and flag */
                     if ((DebugEvent->ClientId.UniqueThread ==
-                        ClientId.UniqueThread) && (DebugEvent->Flags & 1))
+                        AppClientId->UniqueThread) && (DebugEvent->Flags & 1))
                     {
                         /* Remove the event from the list */
                         RemoveEntryList(NextEntry);
@@ -1034,7 +1035,19 @@ NtSetInformationDebugObject(IN HANDLE DebugHandle,
                                        PreviousMode);
 
     /* Return required length to user-mode */
-    if (ReturnLength) *ReturnLength = sizeof(*DebugInfo);
+    if (ReturnLength)
+    {
+        _SEH_TRY
+        {
+            ProbeForWriteUlong(ReturnLength);
+            *ReturnLength = sizeof(*DebugInfo);
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Open the Object */
@@ -1096,13 +1109,18 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     RtlZeroMemory(&WaitStateChange, sizeof(WaitStateChange));
 
     /* Check if we came with a timeout from user mode */
-    if ((Timeout) && (PreviousMode != KernelMode))
+    if (PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
-            /* Make a copy on the stack */
-            SafeTimeOut = ProbeForReadLargeInteger(Timeout);
-            Timeout = &SafeTimeOut;
+            if (Timeout)
+            {
+                /* Make a copy on the stack */
+                SafeTimeOut = ProbeForReadLargeInteger(Timeout);
+                Timeout = &SafeTimeOut;
+            }
+
+            ProbeForWrite(StateChange, sizeof(*StateChange), sizeof(ULONG));
         }
         _SEH_HANDLE
         {
@@ -1114,12 +1132,6 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
 
         /* Query the current time */
         KeQuerySystemTime(&StartTime);
-    }
-
-    /* Check if the call is from user mode */
-    if (PreviousMode == UserMode)
-    {
-        /* FIXME: Probe the state change structure */
     }
 
     /* Get the debug object */
@@ -1268,9 +1280,18 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     ObDereferenceObject(DebugObject);
 
     /* Return our wait state change structure */
-    RtlMoveMemory(StateChange,
-                  &WaitStateChange,
-                  sizeof(DBGUI_WAIT_STATE_CHANGE));
+    _SEH_TRY
+    {
+        RtlCopyMemory(StateChange,
+                      &WaitStateChange,
+                      sizeof(DBGUI_WAIT_STATE_CHANGE));
+    }
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
     return Status;
 }
 

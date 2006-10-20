@@ -71,7 +71,7 @@ ObpDeallocateObject(IN PVOID Object)
     }
 
     /* Decrease the total */
-    InterlockedDecrement(&ObjectType->TotalNumberOfObjects);
+    InterlockedDecrement((PLONG)&ObjectType->TotalNumberOfObjects);
 
     /* Check if we have create info */
     if (Header->Flags & OB_FLAG_CREATE_INFO)

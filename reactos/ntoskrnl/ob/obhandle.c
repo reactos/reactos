@@ -147,7 +147,7 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     ObpDeleteNameCheck(ObjectBody);
 
     /* Decrease the total number of handles for this type */
-    InterlockedDecrement(&ObjectType->TotalNumberOfHandles);
+    InterlockedDecrement((PLONG)&ObjectType->TotalNumberOfHandles);
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Decremented count for: %p. HC LC %lx %lx\n",
             __FUNCTION__,
@@ -388,7 +388,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     }
 
     /* Increase total number of handles */
-    InterlockedIncrement(&ObjectType->TotalNumberOfHandles);
+    InterlockedIncrement((PLONG)&ObjectType->TotalNumberOfHandles);
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Incremented count for: %p. Reason: %lx HC LC %lx %lx\n",
             __FUNCTION__,
@@ -494,7 +494,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     }
 
     /* Increase total number of handles */
-    InterlockedIncrement(&ObjectType->TotalNumberOfHandles);
+    InterlockedIncrement((PLONG)&ObjectType->TotalNumberOfHandles);
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Incremented count for: %p. UNNAMED HC LC %lx %lx\n",
             __FUNCTION__,
