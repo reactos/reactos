@@ -174,8 +174,7 @@ PsGetContextThread(IN PETHREAD Thread,
         Size = sizeof(CONTEXT);
 
         /* Read the flags */
-        ProbeForReadUlong(&ThreadContext->ContextFlags);
-        Flags = ThreadContext->ContextFlags;
+        Flags = ProbeForReadUlong(&ThreadContext->ContextFlags);
 
         /* Check if the caller wanted extended registers */
         if ((Flags & CONTEXT_EXTENDED_REGISTERS) !=
@@ -256,10 +255,18 @@ PsGetContextThread(IN PETHREAD Thread,
                                            FALSE,
                                            NULL);
         }
-
-        /* Copy the context */
-        RtlMoveMemory(ThreadContext, &GetSetContext.Context, Size);
     }
+
+    _SEH_TRY
+    {
+        /* Copy the context */
+        RtlCopyMemory(ThreadContext, &GetSetContext.Context, Size);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
 
     /* Return status */
     return Status;
@@ -285,8 +292,7 @@ PsSetContextThread(IN PETHREAD Thread,
         Size = sizeof(CONTEXT);
 
         /* Read the flags */
-        ProbeForReadUlong(&ThreadContext->ContextFlags);
-        Flags = ThreadContext->ContextFlags;
+        Flags = ProbeForReadUlong(&ThreadContext->ContextFlags);
 
         /* Check if the caller wanted extended registers */
         if ((Flags & CONTEXT_EXTENDED_REGISTERS) !=
@@ -304,7 +310,7 @@ PsSetContextThread(IN PETHREAD Thread,
         }
 
         /* Copy the context */
-        RtlMoveMemory(&GetSetContext.Context, ThreadContext, Size);
+        RtlCopyMemory(&GetSetContext.Context, ThreadContext, Size);
     }
     _SEH_HANDLE
     {
