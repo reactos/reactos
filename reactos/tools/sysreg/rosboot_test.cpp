@@ -11,10 +11,17 @@
 
 #include "rosboot_test.h"
 #include "pipe_reader.h"
+#include "sym_file.h"
 
 #include <iostream>
+#include <vector>
 #include <time.h>
 #include <float.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+ 
+
 
 namespace Sysreg_
 {
@@ -32,8 +39,9 @@ namespace Sysreg_
 
 #endif
 
-
+	using std::vector;
 	using System_::PipeReader;
+	using System_::SymbolFile;
 
 	string RosBootTest::VARIABLE_NAME = _T("ROSBOOT_CMD");
 	string RosBootTest::CLASS_NAME = _T("rosboot");
@@ -108,7 +116,7 @@ namespace Sysreg_
 		return ret;
 	}
 //---------------------------------------------------------------------------------------
-	bool RosBootTest::checkDebugData(string debug_data)
+	bool RosBootTest::checkDebugData(vector<string> & debug_data)
 	{
 		///
 		/// FIXME
@@ -118,9 +126,71 @@ namespace Sysreg_
 		/// TBD the information needs to be written into an provided log object
 		/// which writes the info into HTML/log / sends etc ....
 
-//		cerr << debug_data << endl;
-		return true;
+		bool clear = true;
 
+		for(size_t i = 0; i < debug_data.size();i++)
+		{
+			string line = debug_data[i];
+
+			if (line.find (_T("*** Fatal System Error")) != string::npos)
+			{
+				cerr << "BSOD detected" <<endl;
+				return false;
+			}
+			else if (line.find (_T("Unhandled exception")) != string::npos)
+			{
+				if (i + 3 >= debug_data.size ())
+				{
+					///
+					/// missing information is cut off -> try reconstruct at next call
+					///
+					clear = false;
+					break;
+				}
+
+				cerr << "UM detected" <<endl;
+
+				///
+				/// extract address from next line
+				/// 
+
+				string address = debug_data[i+2];
+				string::size_type pos = address.find_last_of (_T(" "));
+				address = address.substr (pos, address.length () - 1 - pos);
+
+				///
+				/// extract module name
+				///
+				string modulename = debug_data[i+3];
+				pos = modulename.find_last_of (_T("\\"));
+				modulename = modulename.substr (pos + 1, modulename.length () - pos);
+				pos = modulename.find_last_of (_T("."));
+				modulename = modulename.substr (0, pos);
+
+				///
+				/// resolve address
+				///
+				string result;
+				result.reserve (200);
+
+				SymbolFile::resolveAddress (modulename, address, result);
+				cerr << result << endl;
+				
+				///
+				/// TODO
+				///
+				/// resolve frame addresses 
+
+				return false;
+			}
+		
+		}
+
+		if (clear)
+		{
+			debug_data.clear ();
+		}
+		return true;
 	}
 //---------------------------------------------------------------------------------------
 	bool RosBootTest::isTimeout(double max_timeout)
@@ -150,7 +220,6 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
 	bool RosBootTest::fetchDebugByPipe(string boot_cmd)
 	{
-		struct timeval ts;
 		PipeReader pipe_reader;
 
 		if (!pipe_reader.openPipe(boot_cmd, string(_T("rt"))))
@@ -159,9 +228,10 @@ namespace Sysreg_
 			return false;
 		}
 		string Buffer;
-		Buffer.reserve (10000);
+		Buffer.reserve (500);
 
 		bool ret = true;
+		vector<string> vect;
 
 		while(!pipe_reader.isEof ())
 		{
@@ -170,11 +240,11 @@ namespace Sysreg_
 				break;
 			}
 
-			string::size_type size = pipe_reader.readPipe (Buffer);
-			cerr << "XXXsize_type " << size <<endl;
+			pipe_reader.readPipe (Buffer);
+			vect.push_back (Buffer);
 
 
-			if (!checkDebugData(Buffer))
+			if (!checkDebugData(vect))
 			{
 				ret = false;
 				break;
@@ -194,6 +264,12 @@ namespace Sysreg_
 			cerr << "Error: failed to open pipe with cmd: " << boot_cmd << endl;
 			return false;
 		}
+
+		// FIXXME
+		// give the emulator some time to load freeloadr
+		_sleep( (clock_t)4 * CLOCKS_PER_SEC );
+
+
 		FILE * file = _tfopen(debug_log.c_str (), _T("rt"));
 		if (!file)
 		{
@@ -202,15 +278,18 @@ namespace Sysreg_
 			return false;
 		}
 
-		TCHAR szBuffer[500];
+		TCHAR szBuffer[150];
 		bool ret = true;
+		vector<string> vect;
 
 		while(!pipe_reader.isEof ())
 		{
 			if (_fgetts(szBuffer, sizeof(szBuffer) / sizeof(TCHAR), file))
 			{
-				string buffer = szBuffer;
-				if (!checkDebugData(buffer))
+				string line = szBuffer;
+				vect.push_back (line);
+
+				if (!checkDebugData(vect))
 				{
 					ret = false;
 					break;

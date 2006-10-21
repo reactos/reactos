@@ -12,10 +12,12 @@
 
 
 #include "reg_test.h"
-#include <winsock2.h>
+#include <vector>
 
 namespace Sysreg_
 {
+	using std::vector;
+
 //---------------------------------------------------------------------------------------
 ///
 /// class RosBootTest
@@ -100,7 +102,7 @@ namespace Sysreg_
 /// Note: the received debug information should be written to an internal log object
 /// to facilate post-processing of the results
 
-	bool checkDebugData(string debug_data);
+	bool checkDebugData(vector<string> & debug_data);
 
 //---------------------------------------------------------------------------------------
 ///

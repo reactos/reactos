@@ -170,14 +170,11 @@ namespace System_
 			return false;
 		}
 
-		string pipe_cmd = m_SymResolver;
-		pipe_cmd += _T("--exe=");
-		pipe_cmd += it->second;
+		TCHAR szCmd[300];
 
-		pipe_cmd += _T(" ");
-		pipe_cmd += module_address;
+		_stprintf(szCmd, _T("%s --exe=%s %s"), m_SymResolver.c_str (), it->second.c_str (), module_address.c_str());	
+		string pipe_cmd(szCmd);
 
- 
 		PipeReader pipe_reader;
 
 		if (!pipe_reader.openPipe (pipe_cmd))
