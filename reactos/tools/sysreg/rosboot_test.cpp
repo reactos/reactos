@@ -137,6 +137,21 @@ namespace Sysreg_
 
 			cerr << line << endl;
 
+			if (line.find (_T("SYSREG_CHECKPOINT")) != string::npos)
+			{
+				line.erase (0, line.find (_T("SYSREG_CHECKPOINT")) + 19);
+				if (!_tcsncmp(line.c_str (), _T("USETUP_COMPLETE"), 15))
+				{
+					///
+					/// we need to stop the emulator to avoid
+					/// looping again into USETUP (at least with bootcdregtest)
+
+					return false;
+				}
+
+			}
+
+
 			if (line.find (_T("*** Fatal System Error")) != string::npos)
 			{
 				cerr << "BSOD detected" <<endl;
