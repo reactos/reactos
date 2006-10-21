@@ -23,7 +23,35 @@ GENERIC_MAPPING DbgkDebugObjectMapping =
     DEBUG_OBJECT_ALL_ACCESS
 };
 
+static const INFORMATION_CLASS_INFO DbgkpDebugObjectInfoClass[] =
+{
+    /* DebugObjectUnusedInformation */
+    ICI_SQ_SAME(sizeof(ULONG), sizeof(ULONG), 0),
+    /* DebugObjectKillProcessOnExitInformation */
+    ICI_SQ_SAME(sizeof(DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION), sizeof(ULONG), ICIF_SET),
+};
+
 /* PRIVATE FUNCTIONS *********************************************************/
+
+NTSTATUS
+NTAPI
+DbgkpSetProcessDebugObject(IN PEPROCESS Process,
+                           IN PDEBUG_OBJECT DebugObject,
+                           IN NTSTATUS MsgStatus,
+                           IN PETHREAD LastThread)
+{
+    /* FIXME: TODO */
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+DbgkClearProcessDebugObject(IN PEPROCESS Process,
+                            IN PDEBUG_OBJECT SourceDebugObject)
+{
+    /* FIXME: TODO */
+    return STATUS_UNSUCCESSFUL;
+}
 
 NTSTATUS
 NTAPI
@@ -33,8 +61,157 @@ DbgkpQueueMessage(IN PEPROCESS Process,
                   IN ULONG Flags,
                   IN PDEBUG_OBJECT TargetObject OPTIONAL)
 {
-    /* FIXME: TODO */
-    return STATUS_UNSUCCESSFUL;
+    PDEBUG_EVENT DebugEvent;
+    DEBUG_EVENT LocalDebugEvent;
+    PDEBUG_OBJECT DebugObject;
+    NTSTATUS Status;
+    BOOLEAN NewEvent;
+    PAGED_CODE();
+
+    /* Check if we have to allocate a debug event */
+    NewEvent = (Flags & 2) ? TRUE : FALSE;
+    if (NewEvent)
+    {
+        /* Allocate it */
+        DebugEvent = ExAllocatePoolWithTag(NonPagedPool,
+                                           sizeof(DEBUG_EVENT),
+                                           TAG('D', 'b', 'g', 'E'));
+        if (!DebugEvent) return STATUS_INSUFFICIENT_RESOURCES;
+
+        /* Set flags */
+        DebugEvent->Flags = Flags | 4;
+
+        /* Reference the thread and process */
+        ObReferenceObject(Thread);
+        ObReferenceObject(Process);
+
+        /* Set the current thread */
+        DebugEvent->BackoutThread = PsGetCurrentThread();
+
+        /* Set the debug object */
+        DebugObject = TargetObject;
+    }
+    else
+    {
+        /* Use the debug event on the stack */
+        DebugEvent = &LocalDebugEvent;
+        DebugEvent->Flags = Flags;
+
+        /* Acquire the port lock */
+        ExAcquireFastMutex(&DbgkpProcessDebugPortMutex);
+
+        /* Get the debug object */
+        DebugObject = Process->DebugPort;
+
+        /* Check what kind of API message this is */
+        switch (Message->ApiNumber)
+        {
+            /* Process or thread creation */
+            case DbgKmCreateThreadApi:
+            case DbgKmCreateProcessApi:
+
+                /* Make sure we're not skipping creation messages */
+                if (Thread->SkipCreationMsg) DebugObject = NULL;
+                break;
+
+            /* Process or thread exit */
+            case DbgKmExitThreadApi:
+            case DbgKmExitProcessApi:
+
+                /* Make sure we're not skipping exit messages */
+                if (Thread->SkipTerminationMsg) DebugObject = NULL;
+
+            /* No special handling for other messages */
+            default:
+                break;
+        }
+    }
+
+    /* Setup the Debug Event */
+    KeInitializeEvent(&DebugEvent->ContinueEvent, SynchronizationEvent, FALSE);
+    DebugEvent->Process = Process;
+    DebugEvent->Thread = Thread;
+    RtlMoveMemory(&DebugEvent->ApiMsg, Message, sizeof(DBGKM_MSG));
+    DebugEvent->ClientId = Thread->Cid;
+
+    /* Check if we have a port object */
+    if (!DebugObject)
+    {
+        /* Fail */
+        Status = STATUS_PORT_NOT_SET;
+    }
+    else
+    {
+        /* Acquire the debug object mutex */
+        ExAcquireFastMutex(&DebugObject->Mutex);
+
+        /* Check if a debugger is active */
+        if (!DebugObject->DebuggerInactive)
+        {
+            /* Add the event into the object's list */
+            InsertTailList(&DebugObject->EventList, &DebugEvent->EventList);
+
+            /* Check if we have to signal it */
+            if (!NewEvent)
+            {
+                /* Signal it */
+                KeSetEvent(&DebugObject->EventsPresent,
+                           IO_NO_INCREMENT,
+                           FALSE);
+            }
+
+            /* Set success */
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* No debugger */
+            Status = STATUS_DEBUGGER_INACTIVE;
+        }
+
+        /* Release the object lock */
+        ExReleaseFastMutex(&DebugObject->Mutex);
+    }
+
+    /* Check if we had acquired the port lock */
+    if (!NewEvent)
+    {
+        /* Release it */
+        ExReleaseFastMutex(&DbgkpProcessDebugPortMutex);
+
+        /* Check if we got here through success */
+        if (NT_SUCCESS(Status))
+        {
+            /* Wait on the continue event */
+            KeWaitForSingleObject(&DebugEvent->ContinueEvent,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+
+            /* Copy API Message back */
+            RtlMoveMemory(Message, &DebugEvent->ApiMsg, sizeof(DBGKM_MSG));
+
+            /* Set return status */
+            Status = DebugEvent->Status;
+        }
+    }
+    else
+    {
+        /* Check if we failed */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Dereference the process and thread */
+            ObDereferenceObject(Thread);
+            ObDereferenceObject(Process);
+
+            /* Free the debug event */
+            ExFreePool(DebugEvent);
+        }
+    }
+
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
@@ -283,33 +460,74 @@ DbgkpWakeTarget(IN PDEBUG_EVENT DebugEvent)
 
 NTSTATUS
 NTAPI
+DbgkpPostFakeModuleMessages(IN PEPROCESS Process,
+                            IN PETHREAD Thread,
+                            IN PDEBUG_OBJECT DebugObject)
+{
+    /* FIXME: TODO */
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
+                            IN PDEBUG_OBJECT DebugObject,
+                            IN PETHREAD StartThread,
+                            OUT PETHREAD *FirstThread,
+                            OUT PETHREAD *LastThread)
+{
+    /* FIXME: TODO */
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
 DbgkpPostFakeProcessCreateMessages(IN PEPROCESS Process,
                                    IN PDEBUG_OBJECT DebugObject,
-                                   IN PETHREAD *LastThread)
+                                   OUT PETHREAD *LastThread)
 {
-    /* FIXME: Implement */
-    *LastThread = NULL;
-    return STATUS_UNSUCCESSFUL;
-}
+    KAPC_STATE ApcState;
+    PETHREAD FirstThread, FinalThread;
+    PETHREAD ReturnThread = NULL;
+    NTSTATUS Status;
+    PAGED_CODE();
 
-NTSTATUS
-NTAPI
-DbgkpSetProcessDebugObject(IN PEPROCESS Process,
-                           IN PDEBUG_OBJECT DebugObject,
-                           IN NTSTATUS MsgStatus,
-                           IN PETHREAD LastThread)
-{
-    /* FIXME: TODO */
-    return STATUS_UNSUCCESSFUL;
-}
+    /* Attach to the process */
+    KeStackAttachProcess(&Process->Pcb, &ApcState);
 
-NTSTATUS
-NTAPI
-DbgkClearProcessDebugObject(IN PEPROCESS Process,
-                            IN PDEBUG_OBJECT SourceDebugObject)
-{
-    /* FIXME: TODO */
-    return STATUS_UNSUCCESSFUL;
+    /* Post the fake thread messages */
+    Status = DbgkpPostFakeThreadMessages(Process,
+                                         DebugObject,
+                                         NULL,
+                                         &FirstThread,
+                                         &FinalThread);
+    if (NT_SUCCESS(Status))
+    {
+        /* Send the fake module messages too */
+        Status = DbgkpPostFakeModuleMessages(Process,
+                                             FirstThread,
+                                             DebugObject);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed, dereference the final thread */
+            ObDereferenceObject(FinalThread);
+        }
+        else
+        {
+            /* Set the final thread */
+            ReturnThread = FinalThread;
+        }
+
+        /* Dereference the first thread */
+        ObDereferenceObject(FirstThread);
+    }
+
+    /* Detach from the process */
+    KeUnstackDetachProcess(&ApcState);
+
+    /* Return the last thread */
+    *LastThread = ReturnThread;
+    return Status;
 }
 
 VOID
@@ -1003,14 +1221,6 @@ NtRemoveProcessDebug(IN HANDLE ProcessHandle,
     return Status;
 }
 
-static const INFORMATION_CLASS_INFO DbgkpDebugObjectInfoClass[] =
-{
-    /* DebugObjectUnusedInformation */
-    ICI_SQ_SAME(sizeof(ULONG), sizeof(ULONG), 0),
-    /* DebugObjectKillProcessOnExitInformation */
-    ICI_SQ_SAME(sizeof(DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION), sizeof(ULONG), ICIF_SET),
-};
-
 NTSTATUS
 NTAPI
 NtSetInformationDebugObject(IN HANDLE DebugHandle,
@@ -1034,16 +1244,19 @@ NtSetInformationDebugObject(IN HANDLE DebugHandle,
                                        DebugInformationLength,
                                        PreviousMode);
 
-    /* Return required length to user-mode */
+    /* Check if the caller wanted the return length */
     if (ReturnLength)
     {
+        /* Enter SEH for probe */
         _SEH_TRY
         {
+            /* Return required length to user-mode */
             ProbeForWriteUlong(ReturnLength);
             *ReturnLength = sizeof(*DebugInfo);
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
+            /* Get SEH Exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
@@ -1108,11 +1321,13 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     /* Clear the initial wait state change structure */
     RtlZeroMemory(&WaitStateChange, sizeof(WaitStateChange));
 
-    /* Check if we came with a timeout from user mode */
+    /* Check if the call was from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Protect probe in SEH */
         _SEH_TRY
         {
+            /* Check if we came with a timeout */
             if (Timeout)
             {
                 /* Make a copy on the stack */
@@ -1120,6 +1335,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
                 Timeout = &SafeTimeOut;
             }
 
+            /* Probe the state change structure */
             ProbeForWrite(StateChange, sizeof(*StateChange), sizeof(ULONG));
         }
         _SEH_HANDLE
@@ -1279,19 +1495,22 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     /* We're, dereference the object */
     ObDereferenceObject(DebugObject);
 
-    /* Return our wait state change structure */
+    /* Protect write with SEH */
     _SEH_TRY
     {
-        RtlCopyMemory(StateChange,
+        /* Return our wait state change structure */
+        RtlMoveMemory(StateChange,
                       &WaitStateChange,
                       sizeof(DBGUI_WAIT_STATE_CHANGE));
     }
     _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
     {
+        /* Get SEH Exception code */
         Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
 
+    /* Return status */
     return Status;
 }
 
