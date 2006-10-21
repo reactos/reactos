@@ -33,6 +33,7 @@ namespace Sysreg_
 		static string DEBUG_PORT;
 		static string DEBUG_FILE;
 		static string TIME_OUT;
+		static string PID_FILE;
 
 //---------------------------------------------------------------------------------------
 ///
@@ -116,6 +117,7 @@ namespace Sysreg_
 protected:
 
 	double m_Timeout;
+	string m_PidFile;
 
 	}; // end of class RosBootTest
 

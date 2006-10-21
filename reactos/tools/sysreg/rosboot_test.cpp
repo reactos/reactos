@@ -22,6 +22,10 @@
 #include <assert.h>
  
 
+#ifndef __LINUX__
+#include <windows.h>
+#endif
+
 
 namespace Sysreg_
 {
@@ -48,6 +52,7 @@ namespace Sysreg_
 	string RosBootTest::DEBUG_PORT = _T("ROSBOOT_DEBUG_PORT");
 	string RosBootTest::DEBUG_FILE = _T("ROSBOOT_DEBUG_FILE");
 	string RosBootTest::TIME_OUT = _T("ROSBOOT_TIME_OUT");
+	string RosBootTest::PID_FILE= _T("ROSBOOT_PID_FILE");
 
 //---------------------------------------------------------------------------------------
 	RosBootTest::RosBootTest() : RegressionTest(RosBootTest::CLASS_NAME),  m_Timeout(60.0)
@@ -90,6 +95,9 @@ namespace Sysreg_
 				m_Timeout = 60.0;
 			}
 		}
+
+		conf_parser.getStringValue (RosBootTest::PID_FILE, m_PidFile);
+
 		
 		if (!_tcscmp(debug_port.c_str(), _T("pipe")))
 		{
@@ -118,11 +126,6 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
 	bool RosBootTest::checkDebugData(vector<string> & debug_data)
 	{
-		///
-		/// FIXME
-		///
-		/// parse debug_data and output STOP errors, UM exception
-		/// as well as important stages i.e. ntoskrnl loaded 
 		/// TBD the information needs to be written into an provided log object
 		/// which writes the info into HTML/log / sends etc ....
 
@@ -131,6 +134,8 @@ namespace Sysreg_
 		for(size_t i = 0; i < debug_data.size();i++)
 		{
 			string line = debug_data[i];
+
+			cerr << line << endl;
 
 			if (line.find (_T("*** Fatal System Error")) != string::npos)
 			{
@@ -186,7 +191,7 @@ namespace Sysreg_
 		
 		}
 
-		if (clear)
+		if (clear && debug_data.size () > 5)
 		{
 			debug_data.clear ();
 		}
@@ -258,18 +263,33 @@ namespace Sysreg_
 	{
 		PipeReader pipe_reader;
 
-#if 0
 		_tremove(debug_log.c_str ());
+		_tremove(m_PidFile.c_str ());
 		if (!pipe_reader.openPipe(boot_cmd, string(_T("rt"))))
 		{
 			cerr << "Error: failed to open pipe with cmd: " << boot_cmd << endl;
 			return false;
 		}
-#endif
 		// FIXXME
 		// give the emulator some time to load freeloadr
 		_sleep( (clock_t)4 * CLOCKS_PER_SEC );
 
+		int pid = 0;
+
+		if (m_PidFile != _T(""))
+		{
+			FILE * pidfile = _tfopen(m_PidFile.c_str (), _T("rt"));
+			if (pidfile)
+			{
+				TCHAR szBuffer[20];
+				if (_fgetts(szBuffer, sizeof(szBuffer) / sizeof(TCHAR), pidfile))
+				{
+					pid = _ttoi(szBuffer);
+				}
+
+			}
+			fclose(pidfile);
+		}
 
 		FILE * file = _tfopen(debug_log.c_str (), _T("rt"));
 		if (!file)
@@ -279,19 +299,34 @@ namespace Sysreg_
 			return false;
 		}
 
-		TCHAR szBuffer[150];
+		TCHAR szBuffer[1000];
 		bool ret = true;
 		vector<string> vect;
-#if 0
+
 		while(!pipe_reader.isEof ())
-#else
-		while(!feof(file))
-#endif
 		{
 			if (_fgetts(szBuffer, sizeof(szBuffer) / sizeof(TCHAR), file))
 			{
+
 				string line = szBuffer;
-				vect.push_back (line);
+				
+				while(line.find (_T("\x10")) != string::npos)
+				{
+					line.erase(line.find(_T("\x10")), 1);
+				}
+
+				if (line[0] != _T('(') && vect.size() >=1)
+				{
+					string prev = vect[vect.size () -1];
+					prev.insert (prev.length ()-1, line);
+					vect.pop_back ();
+					vect.push_back (prev);
+
+				}
+				else
+				{
+					vect.push_back (line);
+				}
 
 				if (!checkDebugData(vect))
 				{
@@ -304,9 +339,21 @@ namespace Sysreg_
 				}
 			}
 		}
-#if 0
-		pipe_reader.closePipe ();		
+		fclose(file);
+		if (pid)
+		{
+#ifdef __LINUX__
+
+#else
+			HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+			if (hProcess)
+			{
+				TerminateProcess(hProcess, 0);
+			}
+			CloseHandle(hProcess);
 #endif
+		}
+		pipe_reader.closePipe ();	
 		return ret;
 	}
 
