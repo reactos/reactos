@@ -28,9 +28,6 @@
 <directory name="intrlck">
 	<xi:include href="intrlck/intrlck.rbuild" />
 </directory>
-<directory name="kjs">
-	<xi:include href="kjs/kjs.rbuild" />
-</directory>
 <directory name="libwine">
 	<xi:include href="libwine/libwine.rbuild" />
 </directory>
