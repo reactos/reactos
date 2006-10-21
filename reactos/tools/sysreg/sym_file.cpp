@@ -172,7 +172,7 @@ namespace System_
 
 		TCHAR szCmd[300];
 
-		_stprintf(szCmd, _T("%s --exe=%s %s"), m_SymResolver.c_str (), it->second.c_str (), module_address.c_str());	
+		_stprintf(szCmd, _T("%s %s %s"), m_SymResolver.c_str (), it->second.c_str (), module_address.c_str());	
 		string pipe_cmd(szCmd);
 
 		PipeReader pipe_reader;
