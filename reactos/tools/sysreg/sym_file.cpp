@@ -88,8 +88,8 @@ namespace System_
 		string val = current_dir;
 		val.insert (val.length()-1, _T("\\*"));
 
-		struct _tfinddata64i32_t c_file;
-		intptr_t hFile = _tfindfirst64i32(val.c_str(), &c_file);
+		struct _tfinddatai64_t c_file;
+		intptr_t hFile = _tfindfirsti64(val.c_str(), &c_file);
 
 		if (hFile == -1L)
 		{
@@ -130,7 +130,7 @@ namespace System_
 					}
 				}
 
-			}while(_tfindnext(hFile, &c_file) == 0);
+			}while(_tfindnexti64(hFile, &c_file) == 0);
 
 			_findclose(hFile);
 			hFile = -1L;
@@ -141,7 +141,7 @@ namespace System_
 				vect.erase (vect.begin());
 				val = current_dir;
 				val.insert (val.length() -1, _T("\\*"));
-				hFile = _tfindfirst64i32(val.c_str(), &c_file);
+				hFile = _tfindfirsti64(val.c_str(), &c_file);
 				if (hFile != -1L)
 				{
 					break;

@@ -73,7 +73,7 @@ namespace System_
 
 		int res = _pclose(m_File);
 		
-		if (res == UINT_MAX)
+		if (res == INT_MAX)
 		{
 			cerr << "Error: _pclose failed " <<endl;
 			return false;

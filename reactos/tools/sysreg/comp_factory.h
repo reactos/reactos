@@ -18,7 +18,21 @@ namespace System_
 {
   using std::map;
   using std::vector;
-  using std::endl;
+
+#ifdef UNICODE
+
+	using std::wcout;
+	using std::endl;
+
+#define cout wcout;
+
+#else
+
+	using std::cout;
+	using std::endl;
+
+#endif
+
 //----------------------------------------------------------
 ///
 /// ComponentFactoryTemplate

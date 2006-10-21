@@ -258,13 +258,14 @@ namespace Sysreg_
 	{
 		PipeReader pipe_reader;
 
+#if 0
 		_tremove(debug_log.c_str ());
 		if (!pipe_reader.openPipe(boot_cmd, string(_T("rt"))))
 		{
 			cerr << "Error: failed to open pipe with cmd: " << boot_cmd << endl;
 			return false;
 		}
-
+#endif
 		// FIXXME
 		// give the emulator some time to load freeloadr
 		_sleep( (clock_t)4 * CLOCKS_PER_SEC );
@@ -281,8 +282,11 @@ namespace Sysreg_
 		TCHAR szBuffer[150];
 		bool ret = true;
 		vector<string> vect;
-
+#if 0
 		while(!pipe_reader.isEof ())
+#else
+		while(!feof(file))
+#endif
 		{
 			if (_fgetts(szBuffer, sizeof(szBuffer) / sizeof(TCHAR), file))
 			{
@@ -300,8 +304,9 @@ namespace Sysreg_
 				}
 			}
 		}
-
+#if 0
 		pipe_reader.closePipe ();		
+#endif
 		return ret;
 	}
 
