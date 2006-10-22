@@ -232,16 +232,13 @@ KeForceResumeThread(IN PKTHREAD Thread)
     return PreviousCount;
 }
 
-/*
- * Used by the debugging code to freeze all the process's threads
- * while the debugger is examining their state.
- */
 VOID
 NTAPI
-KeFreezeAllThreads(IN PKPROCESS Process)
+KeFreezeAllThreads(VOID)
 {
     KLOCK_QUEUE_HANDLE LockHandle, ApcLock;
     PKTHREAD Current, CurrentThread = KeGetCurrentThread();
+    PKPROCESS Process = CurrentThread->ApcState.Process;
     PLIST_ENTRY ListHead, NextEntry;
     LONG OldCount;
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
@@ -1062,7 +1059,7 @@ KeSetBasePriorityThread(IN PKTHREAD Thread,
     KPRIORITY OldBasePriority, Priority, BasePriority;
     LONG OldIncrement;
     PKPROCESS Process;
-    BOOLEAN Released;
+    BOOLEAN Released = FALSE;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -1218,7 +1215,7 @@ KeSetPriorityThread(IN PKTHREAD Thread,
 {
     KIRQL OldIrql;
     KPRIORITY OldPriority;
-    BOOLEAN Released;
+    BOOLEAN Released = FALSE;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
     ASSERT((Priority <= HIGH_PRIORITY) && (Priority >= LOW_PRIORITY));

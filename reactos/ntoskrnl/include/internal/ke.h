@@ -526,6 +526,12 @@ ULONG
 NTAPI
 KeForceResumeThread(IN PKTHREAD Thread);
 
+VOID
+NTAPI
+KeFreezeAllThreads(
+    VOID
+);
+
 BOOLEAN
 NTAPI
 KeDisableThreadApcQueueing(IN PKTHREAD Thread);
