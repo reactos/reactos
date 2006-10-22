@@ -1322,6 +1322,13 @@ MmGetFileNameForAddress(
     OUT PUNICODE_STRING ModuleName
 );
 
+NTSTATUS
+NTAPI
+MmGetFileNameForSection(
+    IN PROS_SECTION_OBJECT Section,
+    OUT PUNICODE_STRING ModuleName
+);
+
 PVOID 
 NTAPI
 MmAllocateSection(

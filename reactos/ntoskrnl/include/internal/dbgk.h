@@ -19,7 +19,7 @@ DbgkExitThread(
     IN NTSTATUS ExitStatus
 );
 
-VOID
+BOOLEAN
 NTAPI
 DbgkpSuspendProcess(
     VOID
@@ -29,6 +29,13 @@ VOID
 NTAPI
 DbgkpResumeProcess(
     VOID
+);
+
+NTSTATUS
+NTAPI
+DbgkpSendApiMessage(
+    IN OUT PDBGKM_MSG ApiMsg,
+    IN ULONG Flags
 );
 
 VOID

@@ -108,6 +108,16 @@ MmGetFileObjectForSection(IN PROS_SECTION_OBJECT Section)
 
 NTSTATUS
 NTAPI
+MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
+                        OUT PUNICODE_STRING ModuleName)
+{
+    /* FIXME: TODO. ObQueryNameString on the FileObject */
+    RtlCreateUnicodeString(ModuleName, L"C:\\ReactOS\\system32\\ntdll.dll");
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 MmGetFileNameForAddress(IN PVOID Address,
                         OUT PUNICODE_STRING ModuleName)
 {
@@ -118,10 +128,8 @@ MmGetFileNameForAddress(IN PVOID Address,
      * corresponds to the address. Then make sure it's a section
      * view type (MEMORY_AREA_SECTION_VIEW) and use the marea's
      * per-type union to get the .u.SectionView.Section pointer to
-     * the SECTION_OBJECT. Then we can use MmGetFileObjectForSection
-     * to get the FILE_OBJECT, from which we can then query the name
-     * to get the full filename (much like we do for creating the
-     * SeAuditName in EPROCESS.
+     * the SECTION_OBJECT. Then we can use MmGetFileNameForSection
+     * to get the full filename.
      */
     RtlCreateUnicodeString(ModuleName, L"C:\\ReactOS\\system32\\ntdll.dll");
     return STATUS_SUCCESS;
