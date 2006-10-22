@@ -24,12 +24,14 @@ DbgBreakPoint@0
 DbgPrint
 DbgPrintEx
 DbgPrompt@12
+DbgUiConvertStateChangeStructure@8
 DbgUiDebugActiveProcess@4
 DbgUiConnectToDbg@0
 DbgUiContinue@8
 DbgUiGetThreadDebugObject@0
 DbgUiIssueRemoteBreakin@4
 DbgUiRemoteBreakin@0
+DbgUiSetThreadDebugObject@4
 DbgUiStopDebugging@4
 DbgUiWaitStateChange@8
 DbgUserBreakPoint@0

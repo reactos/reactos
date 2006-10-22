@@ -142,7 +142,7 @@ NTSTATUS
 NTAPI
 DbgUiContinue(
     IN PCLIENT_ID ClientId,
-    IN ULONG ContinueStatus
+    IN NTSTATUS ContinueStatus
 );
 
 NTSTATUS
@@ -162,6 +162,13 @@ NTAPI
 DbgUiWaitStateChange(
     IN PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
     IN PLARGE_INTEGER TimeOut
+);
+
+NTSTATUS
+NTAPI
+DbgUiConvertStateChangeStructure(
+    IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
+    IN LPDEBUG_EVENT DebugEvent
 );
 
 VOID

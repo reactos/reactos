@@ -46,17 +46,13 @@ DbgUiConnectToDbg(VOID)
     OBJECT_ATTRIBUTES ObjectAttributes;
 
     /* Don't connect twice */
-    if (NtCurrentTeb()->DbgSsReserved[0]) return STATUS_SUCCESS;
+    if (NtCurrentTeb()->DbgSsReserved[1]) return STATUS_SUCCESS;
 
     /* Setup the Attributes */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               0,
-                               0,
-                               0,
-                               0);
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, 0);
 
     /* Create the object */
-    return ZwCreateDebugObject(&NtCurrentTeb()->DbgSsReserved[0],
+    return ZwCreateDebugObject(&NtCurrentTeb()->DbgSsReserved[1],
                                DEBUG_OBJECT_ALL_ACCESS,
                                &ObjectAttributes,
                                TRUE);
@@ -67,13 +63,25 @@ DbgUiConnectToDbg(VOID)
  */
 NTSTATUS
 NTAPI
-DbgUiContinue(PCLIENT_ID ClientId,
-              ULONG ContinueStatus)
+DbgUiContinue(IN PCLIENT_ID ClientId,
+              IN NTSTATUS ContinueStatus)
 {
     /* Tell the kernel object to continue */
-    return ZwDebugContinue(NtCurrentTeb()->DbgSsReserved[0],
+    return ZwDebugContinue(NtCurrentTeb()->DbgSsReserved[1],
                            ClientId,
                            ContinueStatus);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
+                                 IN LPDEBUG_EVENT DebugEvent)
+{
+    /* FIXME: UNIMPLEMENTED */
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
@@ -81,11 +89,11 @@ DbgUiContinue(PCLIENT_ID ClientId,
  */
 NTSTATUS
 NTAPI
-DbgUiWaitStateChange(PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
-                     PLARGE_INTEGER TimeOut)
+DbgUiWaitStateChange(OUT PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
+                     IN PLARGE_INTEGER TimeOut OPTIONAL)
 {
     /* Tell the kernel to wait */
-    return NtWaitForDebugEvent(NtCurrentTeb()->DbgSsReserved[0],
+    return NtWaitForDebugEvent(NtCurrentTeb()->DbgSsReserved[1],
                                TRUE,
                                TimeOut,
                                DbgUiWaitStateCange);
@@ -110,7 +118,7 @@ DbgUiRemoteBreakin(VOID)
  */
 NTSTATUS
 NTAPI
-DbgUiIssueRemoteBreakin(HANDLE Process)
+DbgUiIssueRemoteBreakin(IN HANDLE Process)
 {
     HANDLE hThread;
     CLIENT_ID ClientId;
@@ -143,7 +151,18 @@ NTAPI
 DbgUiGetThreadDebugObject(VOID)
 {
     /* Just return the handle from the TEB */
-    return NtCurrentTeb()->DbgSsReserved[0];
+    return NtCurrentTeb()->DbgSsReserved[1];
+}
+
+/*
+* @implemented
+*/
+VOID
+NTAPI
+DbgUiSetThreadDebugObject(HANDLE DebugObject)
+{
+    /* Just set the handle in the TEB */
+    NtCurrentTeb()->DbgSsReserved[1] = DebugObject;
 }
 
 /*
@@ -156,7 +175,7 @@ DbgUiDebugActiveProcess(IN HANDLE Process)
     NTSTATUS Status;
 
     /* Tell the kernel to start debugging */
-    Status = NtDebugActiveProcess(Process, NtCurrentTeb()->DbgSsReserved[0]);
+    Status = NtDebugActiveProcess(Process, NtCurrentTeb()->DbgSsReserved[1]);
     if (NT_SUCCESS(Status))
     {
         /* Now break-in the process */
@@ -180,7 +199,7 @@ NTAPI
 DbgUiStopDebugging(IN HANDLE Process)
 {
     /* Call the kernel to remove the debug object */
-    return NtRemoveProcessDebug(Process, NtCurrentTeb()->DbgSsReserved[0]);
+    return NtRemoveProcessDebug(Process, NtCurrentTeb()->DbgSsReserved[1]);
 }
 
 /* EOF */
