@@ -137,42 +137,51 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback,
 
 HRESULT 
 WINAPI 
-D3DParseUnknownCommand( LPVOID lpvCommands, 
-                        LPVOID *lplpvReturnedCommand)
+D3DParseUnknownCommand( LPVOID lpCmd, 
+                        LPVOID *lpRetCmd)
 {
-    LPD3DHAL_DP2COMMAND cmd = lpvCommands;
+    LPD3DHAL_DP2COMMAND dp2command = lpCmd;
 
     DWORD retCode = D3DERR_COMMAND_UNPARSED; 
-
-    *lplpvReturnedCommand = lpvCommands;
-     
-    if (cmd->bCommand > D3DDP2OP_TRIANGLESTRIP)
+    
+    /* prevent it crash if null pointer are being sent */
+    if (lpCmd == NULL) || (lpRetCmd == NULL) )
     {
-        retCode = DD_FALSE;
-
-        if (cmd->bCommand == D3DDP2OP_VIEWPORTINFO)
-        {
-            /* FIXME */
-            retCode = DD_OK; 
-        }
-
-        if (cmd->bCommand == D3DDP2OP_WINFO)
-        {
-            /* FIXME */
-            retCode = DD_OK; 
-        }     
+        return E_FAIL;
     }
-    else if (cmd->bCommand == D3DDP2OP_TRIANGLESTRIP)  
+    
+    *lpRetCmd = lpCmd;
+    
+    if (dp2command->bCommand == D3DDP2OP_VIEWPORTINFO) 
+    {    			
+        *(PBYTE)lpRetCmd += ((dp2command->wStateCount * sizeof(D3DHAL_DP2VIEWPORTINFO)) + sizeof(D3DHAL_DP2POINTS));
+        retCode = 0;
+    }                                                                                          
+    else if (dp2command->bCommand == D3DDP2OP_WINFO) 
+    {			        
+        *(PBYTE)lpRetCmd += (dp2command->wStateCount * sizeof(D3DHAL_DP2WINFO)) + sizeof(D3DHAL_DP2POINTS);                                                          
+        retCode = 0;
+    } 
+	else if (dp2command->bCommand == 0x0d) 
+    {	   
+		/* math  
+		     *lpRetCmd = lpCmd + (wStateCount * sizeof( ? ) + sizeof(D3DHAL_DP2POINTS) 
+		 */
+
+        *(PBYTE)lpRetCmd += ((dp2command->wStateCount * dp2command->bReserved) + sizeof(D3DHAL_DP2POINTS));               
+        retCode = 0;
+    }
+   
+
+	/* error code */
+    
+    else if ( (dp2command->bCommand <= D3DDP2OP_INDEXEDTRIANGLELIST) || // dp2command->bCommand  <= with 0 to 3
+              (dp2command->bCommand == D3DDP2OP_RENDERSTATE) ||  // dp2command->bCommand  == with 8
+              (dp2command->bCommand >= D3DDP2OP_LINELIST) )  // dp2command->bCommand  >= with 15 to 255
     {
-        /* FIXME */
-        retCode = DD_OK; 
+       retCode = E_FAIL; 
     }
-  
-    if ((cmd->bCommand <= D3DDP2OP_INDEXEDTRIANGLELIST) || (cmd->bCommand == D3DDP2OP_RENDERSTATE))
-    {
-        retCode = DD_FALSE;
-    }
-
+      
     return retCode;
 }
 
