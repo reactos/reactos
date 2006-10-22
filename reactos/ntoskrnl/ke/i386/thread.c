@@ -88,7 +88,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
         DPRINT("Setting up a user-mode thread. InitFrame at: %p\n", InitFrame);
 
         /* Copy over the context we got */
-        RtlMoveMemory(&LocalContext, ContextPointer, sizeof(CONTEXT));
+        RtlCopyMemory(&LocalContext, ContextPointer, sizeof(CONTEXT));
         Context = &LocalContext;
         ContextFlags = CONTEXT_CONTROL;
 

@@ -1325,7 +1325,7 @@ IoCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
     /* Fill out the key data and copy the buffer */
     ServiceKeyName.Length = LocalDriverName.Length;
     ServiceKeyName.MaximumLength = LocalDriverName.MaximumLength;
-    RtlMoveMemory(ServiceKeyName.Buffer,
+    RtlCopyMemory(ServiceKeyName.Buffer,
                   LocalDriverName.Buffer,
                   LocalDriverName.Length);
 
@@ -1334,7 +1334,7 @@ IoCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
     DriverObject->DriverExtension->ServiceKeyName =  ServiceKeyName;
 
     /* Also store it in the Driver Object. This is a bit of a hack. */
-    RtlMoveMemory(&DriverObject->DriverName,
+    RtlCopyMemory(&DriverObject->DriverName,
                   &ServiceKeyName,
                   sizeof(UNICODE_STRING));
 

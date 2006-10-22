@@ -152,13 +152,13 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     if (RemainingName->Length)
     {
         /* Copy the new path */
-        RtlMoveMemory((PVOID)((ULONG_PTR)NewTargetPath + TargetPath->Length),
+        RtlCopyMemory((PVOID)((ULONG_PTR)NewTargetPath + TargetPath->Length),
                       RemainingName->Buffer,
                       RemainingName->Length);
     }
 
     /* Copy the target path and null-terminate it */
-    RtlMoveMemory(NewTargetPath, TargetPath->Buffer, TargetPath->Length);
+    RtlCopyMemory(NewTargetPath, TargetPath->Buffer, TargetPath->Length);
     NewTargetPath[LengthUsed / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* If the optimization didn't work, free the old buffer */
@@ -287,7 +287,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
         if (!SymbolicLink->LinkTarget.Buffer) return STATUS_NO_MEMORY;
 
         /* Copy it */
-        RtlMoveMemory(SymbolicLink->LinkTarget.Buffer,
+        RtlCopyMemory(SymbolicLink->LinkTarget.Buffer,
                       CapturedLinkTarget.Buffer,
                       CapturedLinkTarget.MaximumLength);
 

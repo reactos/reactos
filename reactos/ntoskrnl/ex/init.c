@@ -206,7 +206,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (!ExpNlsTableBase) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
         /* Copy the codepage data in its new location. */
-        RtlMoveMemory(ExpNlsTableBase,
+        RtlCopyMemory(ExpNlsTableBase,
                       LoaderBlock->NlsData->AnsiCodePageData,
                       ExpNlsTableSize);
 
@@ -264,7 +264,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Copy the codepage data in its new location. */
-    RtlMoveMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
+    RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
 
     /* Free the previously allocated buffer and set the new location */
     ExFreePool(ExpNlsTableBase);
@@ -301,7 +301,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Copy the table into the system process and set this as the base */
-    RtlMoveMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
+    RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
     ExpNlsTableBase = SectionBase;
 }
 

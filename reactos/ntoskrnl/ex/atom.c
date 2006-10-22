@@ -134,7 +134,7 @@ NtAddAtom(IN PWSTR AtomName,
                 else
                 {
                     /* Copy the name and null-terminate it */
-                    RtlMoveMemory(CapturedName, AtomName, AtomNameLength);
+                    RtlCopyMemory(CapturedName, AtomName, AtomNameLength);
                     CapturedName[AtomNameLength / sizeof(WCHAR)] = UNICODE_NULL;
                 }
 
@@ -288,7 +288,7 @@ NtFindAtom(IN PWSTR AtomName,
                 else
                 {
                     /* Copy the name and null-terminate it */
-                    RtlMoveMemory(CapturedName, AtomName, AtomNameLength);
+                    RtlCopyMemory(CapturedName, AtomName, AtomNameLength);
                     CapturedName[AtomNameLength / sizeof(WCHAR)] = UNICODE_NULL;
                 }
 

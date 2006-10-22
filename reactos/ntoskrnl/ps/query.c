@@ -376,7 +376,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                     _SEH_TRY
                     {
                         /* Copy it */
-                        RtlMoveMemory(ProcessInformation,
+                        RtlCopyMemory(ProcessInformation,
                                       ImageName,
                                       Length);
 

@@ -251,7 +251,7 @@ VdmEndExecution(IN PKTRAP_FRAME TrapFrame,
     VdmTib->MonitorContext.Eax = STATUS_SUCCESS;
 
     /* Make a copy of the monitor context */
-    RtlMoveMemory(&Context, &VdmTib->MonitorContext, sizeof(CONTEXT));
+    RtlCopyMemory(&Context, &VdmTib->MonitorContext, sizeof(CONTEXT));
 
     /* Switch contexts */
     VdmSwapContext(TrapFrame, &VdmTib->VdmContext, &Context);

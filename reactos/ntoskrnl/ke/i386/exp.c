@@ -26,7 +26,7 @@ _SEH_FILTER(KiCopyInformation)
     _SEH_ACCESS_LOCALS(KiCopyInfo);
 
     /* Copy the exception records and return to the handler */
-    RtlMoveMemory((PVOID)&_SEH_VAR(SehExceptRecord),
+    RtlCopyMemory((PVOID)&_SEH_VAR(SehExceptRecord),
                   _SEH_GetExceptionPointers()->ExceptionRecord,
                   sizeof(EXCEPTION_RECORD));
     return EXCEPTION_EXECUTE_HANDLER;
@@ -776,7 +776,7 @@ DispatchToUser:
                     /* Copy the exception address and record */
                     _SEH_VAR(SehExceptRecord).ExceptionAddress =
                         ExceptionRecord->ExceptionAddress;
-                    RtlMoveMemory(ExceptionRecord,
+                    RtlCopyMemory(ExceptionRecord,
                                   (PVOID)&_SEH_VAR(SehExceptRecord),
                                   sizeof(EXCEPTION_RECORD));
 

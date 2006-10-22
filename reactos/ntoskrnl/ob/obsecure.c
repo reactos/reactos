@@ -620,7 +620,7 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
             InputSecurityDescriptor);
 
     SdCopy = ExAllocatePool(PagedPool, sizeof(*SdCopy));
-    RtlMoveMemory(SdCopy, InputSecurityDescriptor, sizeof(*SdCopy));
+    RtlCopyMemory(SdCopy, InputSecurityDescriptor, sizeof(*SdCopy));
     *OutputSecurityDescriptor = SdCopy;
     return STATUS_SUCCESS;
 }

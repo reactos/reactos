@@ -24,7 +24,7 @@ KiContinuePreviousModeUser(IN PCONTEXT Context,
 
     /* We'll have to make a copy and probe it */
     ProbeForRead(Context, sizeof(CONTEXT), sizeof(ULONG));
-    RtlMoveMemory(&LocalContext, Context, sizeof(CONTEXT));
+    RtlCopyMemory(&LocalContext, Context, sizeof(CONTEXT));
     Context = &LocalContext;
 
     /* Convert the context into Exception/Trap Frames */
@@ -128,8 +128,8 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
             ProbeForRead(ExceptionRecord, Size, sizeof(ULONG));
 
             /* Now make copies in the stack */
-            RtlMoveMemory(&LocalContext, Context, sizeof(CONTEXT));
-            RtlMoveMemory(&LocalExceptionRecord, ExceptionRecord, Size);
+            RtlCopyMemory(&LocalContext, Context, sizeof(CONTEXT));
+            RtlCopyMemory(&LocalExceptionRecord, ExceptionRecord, Size);
             Context = &LocalContext;
             ExceptionRecord = &LocalExceptionRecord;
 

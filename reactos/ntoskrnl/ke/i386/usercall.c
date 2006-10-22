@@ -24,7 +24,7 @@ _SEH_FILTER(KiCopyInformation2)
     _SEH_ACCESS_LOCALS(KiCopyInfo);
 
     /* Copy the exception records and return to the handler */
-    RtlMoveMemory((PVOID)&_SEH_VAR(SehExceptRecord),
+    RtlCopyMemory((PVOID)&_SEH_VAR(SehExceptRecord),
                   _SEH_GetExceptionPointers()->ExceptionRecord,
                   sizeof(EXCEPTION_RECORD));
     return EXCEPTION_EXECUTE_HANDLER;
@@ -93,7 +93,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
         ASSERT(!(Stack & 3));
 
         /* Copy data into it */
-        RtlMoveMemory((PVOID)(Stack + (4 * sizeof(ULONG_PTR))),
+        RtlCopyMemory((PVOID)(Stack + (4 * sizeof(ULONG_PTR))),
                       &Context,
                       sizeof(CONTEXT));
 

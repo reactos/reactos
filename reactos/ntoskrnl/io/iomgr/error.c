@@ -192,7 +192,7 @@ IopLogWorker(IN PVOID Parameter)
                         LogEntry->Size;
 
         /* Copy the packet */
-        RtlMoveMemory(&ErrorMessage->EntryData,
+        RtlCopyMemory(&ErrorMessage->EntryData,
                       Packet,
                       LogEntry->Size - sizeof(ERROR_LOG_ENTRY));
 
@@ -290,7 +290,7 @@ IopLogWorker(IN PVOID Parameter)
              */
             DriverNameLength = min(DriverNameLength,
                                    RemainingLength - 3 * sizeof(UNICODE_NULL));
-            RtlMoveMemory(StringBuffer, p, DriverNameLength);
+            RtlCopyMemory(StringBuffer, p, DriverNameLength);
         }
 
         /* Null-terminate the driver name */
@@ -358,7 +358,7 @@ IopLogWorker(IN PVOID Parameter)
          */
         DeviceNameLength = min(ObjectNameInfo->Name.Length,
                                RemainingLength - 2 * sizeof(UNICODE_NULL));
-        RtlMoveMemory(StringBuffer,
+        RtlCopyMemory(StringBuffer,
                       ObjectNameInfo->Name.Buffer,
                       DeviceNameLength);
 
@@ -391,7 +391,7 @@ IopLogWorker(IN PVOID Parameter)
             }
 
             /* Now copy the extra strings */
-            RtlMoveMemory(StringBuffer,
+            RtlCopyMemory(StringBuffer,
                           (PCHAR)Packet + Packet->StringOffset,
                           ExtraStringLength);
 

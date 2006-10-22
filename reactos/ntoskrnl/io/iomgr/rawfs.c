@@ -780,20 +780,20 @@ RawQueryFsAttributeInfo(IN PVCB Vcb,
                         IN PFILE_FS_ATTRIBUTE_INFORMATION Buffer,
                         IN OUT PULONG Length)
 {
+    const WCHAR szRawFSName[] = L"RAW";
     ULONG ReturnLength;
     PAGED_CODE();
 
     /* Check if the buffer is large enough for our name ("RAW") */
     ReturnLength = FIELD_OFFSET(FILE_FS_ATTRIBUTE_INFORMATION,
-                                FileSystemName[0]);
-    ReturnLength += sizeof(L"RAW");
+                                FileSystemName[sizeof(szRawFSName) / sizeof(szRawFSName[0])]);
     if (*Length < ReturnLength) return STATUS_BUFFER_OVERFLOW;
 
     /* Output the data */
     Buffer->FileSystemAttributes = 0;
     Buffer->MaximumComponentNameLength = 0;
     Buffer->FileSystemNameLength = 6;
-    RtlMoveMemory(&Buffer->FileSystemName[0], L"RAW", 6);
+    RtlCopyMemory(&Buffer->FileSystemName[0], szRawFSName, sizeof(szRawFSName));
 
     /* Return length and success */
     *Length -= ReturnLength;

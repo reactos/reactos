@@ -1251,143 +1251,142 @@ NtQueryObject(IN HANDLE ObjectHandle,
         ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     }
 
-    /* Check the information class */
-    switch (ObjectInformationClass)
+    _SEH_TRY
     {
-        /* Basic info */
-        case ObjectBasicInformation:
+        /* Check the information class */
+        switch (ObjectInformationClass)
+        {
+            /* Basic info */
+            case ObjectBasicInformation:
 
-            /* Validate length */
-            InfoLength = sizeof(OBJECT_BASIC_INFORMATION);
-            if (Length != sizeof(OBJECT_BASIC_INFORMATION))
-            {
-                /* Fail */
-                Status = STATUS_INFO_LENGTH_MISMATCH;
+                /* Validate length */
+                InfoLength = sizeof(OBJECT_BASIC_INFORMATION);
+                if (Length != sizeof(OBJECT_BASIC_INFORMATION))
+                {
+                    /* Fail */
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                    break;
+                }
+
+                /* Fill out the basic information */
+                BasicInfo = (POBJECT_BASIC_INFORMATION)ObjectInformation;
+                BasicInfo->Attributes = HandleInfo.HandleAttributes;
+                BasicInfo->GrantedAccess = HandleInfo.GrantedAccess;
+                BasicInfo->HandleCount = ObjectHeader->HandleCount;
+                BasicInfo->PointerCount = ObjectHeader->PointerCount;
+
+                /* Permanent/Exclusive Flags are NOT in Handle attributes! */
+                if (ObjectHeader->Flags & OB_FLAG_EXCLUSIVE)
+                {
+                    /* Set the flag */
+                    BasicInfo->Attributes |= OBJ_EXCLUSIVE;
+                }
+                if (ObjectHeader->Flags & OB_FLAG_PERMANENT)
+                {
+                    /* Set the flag */
+                    BasicInfo->Attributes |= OBJ_PERMANENT;
+                }
+
+                /* Copy quota information */
+                BasicInfo->PagedPoolUsage = 0; /* FIXME*/
+                BasicInfo->NonPagedPoolUsage = 0; /* FIXME*/
+
+                /* Copy name information */
+                BasicInfo->NameInformationLength = 0; /* FIXME*/
+                BasicInfo->TypeInformationLength = 0; /* FIXME*/
+
+                /* Copy security information */
+                BasicInfo->SecurityDescriptorLength = 0; /* FIXME*/
+
+                /* Check if this is a symlink */
+                if (ObjectHeader->Type == ObSymbolicLinkType)
+                {
+                    /* Return the creation time */
+                    BasicInfo->CreateTime.QuadPart =
+                        ((POBJECT_SYMBOLIC_LINK)Object)->CreationTime.QuadPart;
+                }
+                else
+                {
+                    /* Otherwise return 0 */
+                    BasicInfo->CreateTime.QuadPart = (ULONGLONG)0;
+                }
+
+                /* Break out with success */
+                Status = STATUS_SUCCESS;
                 break;
-            }
 
-            /* Fill out the basic information */
-            BasicInfo = (POBJECT_BASIC_INFORMATION)ObjectInformation;
-            BasicInfo->Attributes = HandleInfo.HandleAttributes;
-            BasicInfo->GrantedAccess = HandleInfo.GrantedAccess;
-            BasicInfo->HandleCount = ObjectHeader->HandleCount;
-            BasicInfo->PointerCount = ObjectHeader->PointerCount;
+            /* Name information */
+            case ObjectNameInformation:
 
-            /* Permanent/Exclusive Flags are NOT in Handle attributes! */
-            if (ObjectHeader->Flags & OB_FLAG_EXCLUSIVE)
-            {
-                /* Set the flag */
-                BasicInfo->Attributes |= OBJ_EXCLUSIVE;
-            }
-            if (ObjectHeader->Flags & OB_FLAG_PERMANENT)
-            {
-                /* Set the flag */
-                BasicInfo->Attributes |= OBJ_PERMANENT;
-            }
-
-            /* Copy quota information */
-            BasicInfo->PagedPoolUsage = 0; /* FIXME*/
-            BasicInfo->NonPagedPoolUsage = 0; /* FIXME*/
-
-            /* Copy name information */
-            BasicInfo->NameInformationLength = 0; /* FIXME*/
-            BasicInfo->TypeInformationLength = 0; /* FIXME*/
-
-            /* Copy security information */
-            BasicInfo->SecurityDescriptorLength = 0; /* FIXME*/
-
-            /* Check if this is a symlink */
-            if (ObjectHeader->Type == ObSymbolicLinkType)
-            {
-                /* Return the creation time */
-                BasicInfo->CreateTime.QuadPart =
-                    ((POBJECT_SYMBOLIC_LINK)Object)->CreationTime.QuadPart;
-            }
-            else
-            {
-                /* Otherwise return 0 */
-                BasicInfo->CreateTime.QuadPart = (ULONGLONG)0;
-            }
-
-            /* Break out with success */
-            Status = STATUS_SUCCESS;
-            break;
-
-        /* Name information */
-        case ObjectNameInformation:
-
-            /* Call the helper and break out */
-            Status = ObQueryNameString(Object,
-                                       (POBJECT_NAME_INFORMATION)
-                                       ObjectInformation,
-                                       Length,
-                                       &InfoLength);
-            break;
-
-        /* Information about this type */
-        case ObjectTypeInformation:
-            DPRINT1("NOT IMPLEMENTED!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-
-        /* Information about all types */
-        case ObjectAllTypesInformation:
-            DPRINT1("NOT IMPLEMENTED!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-
-        /* Information about the handle flags */
-        case ObjectHandleInformation:
-
-            /* Validate length */
-            InfoLength = sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION);
-            if (Length != sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
+                /* Call the helper and break out */
+                Status = ObQueryNameString(Object,
+                                           (POBJECT_NAME_INFORMATION)
+                                           ObjectInformation,
+                                           Length,
+                                           &InfoLength);
                 break;
-            }
 
-            /* Get the structure */
-            HandleFlags = (POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
-                           ObjectInformation;
+            /* Information about this type */
+            case ObjectTypeInformation:
+                DPRINT1("NOT IMPLEMENTED!\n");
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
 
-            /* Set the flags */
-            HandleFlags->Inherit = (HandleInfo.HandleAttributes &
-                                    EX_HANDLE_ENTRY_INHERITABLE) != 0;
-            HandleFlags->ProtectFromClose = (HandleInfo.HandleAttributes &
-                                             EX_HANDLE_ENTRY_PROTECTFROMCLOSE) != 0;
+            /* Information about all types */
+            case ObjectAllTypesInformation:
+                DPRINT1("NOT IMPLEMENTED!\n");
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
 
-            /* Break out with success */
-            Status = STATUS_SUCCESS;
-            break;
+            /* Information about the handle flags */
+            case ObjectHandleInformation:
 
-        /* Anything else */
-        default:
+                /* Validate length */
+                InfoLength = sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION);
+                if (Length != sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
+                {
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                    break;
+                }
 
-            /* Fail it */
-            Status = STATUS_INVALID_INFO_CLASS;
-            break;
-    }
+                /* Get the structure */
+                HandleFlags = (POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
+                               ObjectInformation;
 
-    /* Dereference the object if we had referenced it */
-    if (Object) ObDereferenceObject (Object);
+                /* Set the flags */
+                HandleFlags->Inherit = (HandleInfo.HandleAttributes &
+                                        EX_HANDLE_ENTRY_INHERITABLE) != 0;
+                HandleFlags->ProtectFromClose = (HandleInfo.HandleAttributes &
+                                                 EX_HANDLE_ENTRY_PROTECTFROMCLOSE) != 0;
 
-    /* Check if the caller wanted the return length */
-    if (ResultLength)
-    {
-        /* Protect the write to user mode */
-        _SEH_TRY
+                /* Break out with success */
+                Status = STATUS_SUCCESS;
+                break;
+
+            /* Anything else */
+            default:
+
+                /* Fail it */
+                Status = STATUS_INVALID_INFO_CLASS;
+                break;
+        }
+
+        /* Check if the caller wanted the return length */
+        if (ResultLength)
         {
             /* Write the length */
             *ResultLength = Length;
         }
-        _SEH_HANDLE
-        {
-            /* Otherwise, get the exception code */
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
     }
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
+        /* Otherwise, get the exception code */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    /* Dereference the object if we had referenced it */
+    if (Object) ObDereferenceObject (Object);
 
     /* Return status */
     return Status;
@@ -1446,8 +1445,28 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
 
     /* Save the previous mode and actual information */
     Context.PreviousMode = ExGetPreviousMode();
-    Context.Information = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
-                            ObjectInformation;
+
+    if (Context.PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForRead(ObjectInformation,
+                         sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
+                         sizeof(ULONG));
+            Context.Information = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
+                                    ObjectInformation;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+    else
+        Context.Information = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
+                                ObjectInformation;
 
     /* Check if this is a kernel handle */
     if (ObIsKernelHandle(ObjectHandle, Context.PreviousMode))

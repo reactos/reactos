@@ -131,7 +131,7 @@ IoBuildPartialMdl(IN PMDL SourceMdl,
     Offset = ((ULONG_PTR)TargetMdl->StartVa - (ULONG_PTR)SourceMdl->StartVa) >>
              PAGE_SHIFT;
     SourcePages += Offset;
-    RtlMoveMemory(TargetPages, SourcePages, Length * sizeof(PFN_TYPE));
+    RtlCopyMemory(TargetPages, SourcePages, Length * sizeof(PFN_TYPE));
 }
 
 /*

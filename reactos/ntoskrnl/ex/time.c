@@ -106,7 +106,7 @@ ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
     ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
 
     /* Copy the timezone information */
-    RtlMoveMemory(&ExpTimeZoneInfo,
+    RtlCopyMemory(&ExpTimeZoneInfo,
                   TimeZoneInformation,
                   sizeof(TIME_ZONE_INFORMATION));
 

@@ -932,7 +932,7 @@ IopInitiatePnpIrp(PDEVICE_OBJECT DeviceObject,
 
    if (Stack)
    {
-      RtlMoveMemory(&IrpSp->Parameters,
+      RtlCopyMemory(&IrpSp->Parameters,
                     &Stack->Parameters,
                     sizeof(Stack->Parameters));
    }

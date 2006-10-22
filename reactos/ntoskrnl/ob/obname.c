@@ -500,7 +500,7 @@ ReparseNewDir:
             ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(CurrentHeader);
 
             /* Copy the Name */
-            RtlMoveMemory(NewName, PartName.Buffer, PartName.MaximumLength);
+            RtlCopyMemory(NewName, PartName.Buffer, PartName.MaximumLength);
 
             /* Free old name */
             if (ObjectNameInfo->Name.Buffer) ExFreePool(ObjectNameInfo->Name.Buffer);
@@ -792,7 +792,7 @@ ObQueryNameString(IN  PVOID Object,
         /* Start by adding the Object's Name */
         ObjectName = (PWCH)((ULONG_PTR)ObjectName -
                             LocalInfo->Name.Length);
-        RtlMoveMemory(ObjectName,
+        RtlCopyMemory(ObjectName,
                       LocalInfo->Name.Buffer,
                       LocalInfo->Name.Length);
 
@@ -813,7 +813,7 @@ ObQueryNameString(IN  PVOID Object,
                 /* Add the name */
                 ObjectName = (PWCH)((ULONG_PTR)ObjectName -
                                     LocalInfo->Name.Length);
-                RtlMoveMemory(ObjectName,
+                RtlCopyMemory(ObjectName,
                               LocalInfo->Name.Buffer,
                               LocalInfo->Name.Length);
 
@@ -859,7 +859,7 @@ ObQueryDeviceMapInformation(IN PEPROCESS Process,
 
     /* Make a copy */
     DeviceMapInfo->Query.DriveMap = ObSystemDeviceMap->DriveMap;
-    RtlMoveMemory(DeviceMapInfo->Query.DriveType,
+    RtlCopyMemory(DeviceMapInfo->Query.DriveType,
                   ObSystemDeviceMap->DriveType,
                   sizeof(ObSystemDeviceMap->DriveType));
 

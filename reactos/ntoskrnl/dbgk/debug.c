@@ -131,7 +131,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
     KeInitializeEvent(&DebugEvent->ContinueEvent, SynchronizationEvent, FALSE);
     DebugEvent->Process = Process;
     DebugEvent->Thread = Thread;
-    RtlMoveMemory(&DebugEvent->ApiMsg, Message, sizeof(DBGKM_MSG));
+    RtlCopyMemory(&DebugEvent->ApiMsg, Message, sizeof(DBGKM_MSG));
     DebugEvent->ClientId = Thread->Cid;
 
     /* Check if we have a port object */
@@ -190,7 +190,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
                                   NULL);
 
             /* Copy API Message back */
-            RtlMoveMemory(Message, &DebugEvent->ApiMsg, sizeof(DBGKM_MSG));
+            RtlCopyMemory(Message, &DebugEvent->ApiMsg, sizeof(DBGKM_MSG));
 
             /* Set return status */
             Status = DebugEvent->Status;
@@ -246,7 +246,7 @@ DbgkpSendApiMessageLpc(IN OUT PDBGKM_MSG Message,
     ZwFlushInstructionCache(NtCurrentProcess(), NULL, 0);
 
     /* Copy the buffer back */
-    if (NT_SUCCESS(Status)) RtlMoveMemory(Message, Buffer, sizeof(DBGKM_MSG));
+    if (NT_SUCCESS(Status)) RtlCopyMemory(Message, Buffer, sizeof(DBGKM_MSG));
 
     /* Resume the process if it was suspended */
     if (SuspendProcess) DbgkpResumeProcess();
@@ -1499,7 +1499,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     _SEH_TRY
     {
         /* Return our wait state change structure */
-        RtlMoveMemory(StateChange,
+        RtlCopyMemory(StateChange,
                       &WaitStateChange,
                       sizeof(DBGUI_WAIT_STATE_CHANGE));
     }

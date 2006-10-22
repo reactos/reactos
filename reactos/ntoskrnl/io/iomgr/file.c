@@ -991,7 +991,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
                         LocalFileInfo->FileNameLength;
 
     /* Write the Name and null-terminate it */
-    RtlMoveMemory(p, LocalFileInfo->FileName, FileLength);
+    RtlCopyMemory(p, LocalFileInfo->FileName, FileLength);
     p += (FileLength / sizeof(WCHAR));
     *p = UNICODE_NULL;
     LocalReturnLength += sizeof(UNICODE_NULL);
@@ -1185,7 +1185,7 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
         _SEH_TRY
         {
             /* Copy the buffer back */
-            RtlMoveMemory(FileInformation,
+            RtlCopyMemory(FileInformation,
                           &NetworkOpenInfo,
                           FileInformationSize);
         }

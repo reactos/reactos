@@ -160,7 +160,7 @@ SeLocateProcessImageName(IN PEPROCESS Process,
     if (ImageName)
     {
         /* Make a copy of it */
-        RtlMoveMemory(ImageName,
+        RtlCopyMemory(ImageName,
                       &AuditName->Name,
                       AuditName->Name.MaximumLength + sizeof(UNICODE_STRING));
 

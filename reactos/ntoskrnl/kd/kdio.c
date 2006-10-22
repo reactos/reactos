@@ -64,7 +64,7 @@ KdpPrintToLog(PCH String,
     if ((CurrentPosition + StringLength) > BufferSize) return;
 
     /* Add the string to the buffer */
-    RtlMoveMemory(&DebugBuffer[CurrentPosition], String, StringLength);
+    RtlCopyMemory(&DebugBuffer[CurrentPosition], String, StringLength);
 
     /* Update the Current Position */
     CurrentPosition += StringLength;

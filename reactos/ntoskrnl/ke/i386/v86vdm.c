@@ -60,7 +60,7 @@ Ke386CallBios(IN ULONG Int,
     *VdmState = 0;
 
     /* Copy the context */
-    RtlMoveMemory(&VdmTib->VdmContext, Context, ContextSize);
+    RtlCopyMemory(&VdmTib->VdmContext, Context, ContextSize);
     VdmTib->VdmContext.SegCs = (ULONG_PTR)Trampoline >> 4;
     VdmTib->VdmContext.SegSs = (ULONG_PTR)Trampoline >> 4;
     VdmTib->VdmContext.Eip = 0;
@@ -88,7 +88,7 @@ Ke386CallBios(IN ULONG Int,
     /* Make sure there's space for two IOPMs, then copy & clear the current */
     //ASSERT(((PKGDTENTRY)&KeGetPcr()->GDT[KGDT_TSS / 8])->LimitLow >=
     //        (0x2000 + IOPM_OFFSET - 1));
-    RtlMoveMemory(Ki386IopmSaveArea, &Tss->IoMaps[0].IoMap, PAGE_SIZE * 2);
+    RtlCopyMemory(Ki386IopmSaveArea, &Tss->IoMaps[0].IoMap, PAGE_SIZE * 2);
     RtlZeroMemory(&Tss->IoMaps[0].IoMap, PAGE_SIZE * 2);
 
     /* Save the old offset and base, and set the new ones */
@@ -101,7 +101,7 @@ Ke386CallBios(IN ULONG Int,
     Ki386SetupAndExitToV86Mode(VdmTeb);
 
     /* Restore IOPM */
-    RtlMoveMemory(&Tss->IoMaps[0].IoMap, Ki386IopmSaveArea, PAGE_SIZE * 2);
+    RtlCopyMemory(&Tss->IoMaps[0].IoMap, Ki386IopmSaveArea, PAGE_SIZE * 2);
     Process->IopmOffset = OldOffset;
     Tss->IoMapBase = OldBase;
 
@@ -109,7 +109,7 @@ Ke386CallBios(IN ULONG Int,
     KeRevertToUserAffinityThread();
 
     /* Restore context */
-    RtlMoveMemory(Context, &VdmTib->VdmContext, ContextSize);
+    RtlCopyMemory(Context, &VdmTib->VdmContext, ContextSize);
     Context->ContextFlags = CONTEXT_FULL;
 
     /* Free VDM objects */

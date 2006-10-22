@@ -281,7 +281,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
                                                    TAG_ERR);
 
                 /* Copy them */
-                RtlMoveMemory(SafeParams, Parameters, ParamSize);
+                RtlCopyMemory(SafeParams, Parameters, ParamSize);
 
                 /* Nowo check if there's strings in it */
                 if (UnicodeStringParameterMask)
@@ -298,7 +298,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
                                          sizeof(ULONG_PTR));
 
                             /* Capture it */
-                            RtlMoveMemory(&SafeString,
+                            RtlCopyMemory(&SafeString,
                                           (PVOID)SafeParams[i],
                                           sizeof(UNICODE_STRING));
 

@@ -343,7 +343,7 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
             /* Write back the handle to the caller */
             *DirectoryHandle = hDirectory;
         }
-        _SEH_HANDLE
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
             /* Get the exception code */
             Status = _SEH_GetExceptionCode();
@@ -585,7 +585,7 @@ Quickie:
         while (Count--)
         {
             /* Copy the name buffer */
-            RtlMoveMemory(p,
+            RtlCopyMemory(p,
                           DirectoryInfo->Name.Buffer,
                           DirectoryInfo->Name.Length);
 
@@ -599,7 +599,7 @@ Quickie:
             *p++ = UNICODE_NULL;
 
             /* Now copy the type name buffer */
-            RtlMoveMemory(p,
+            RtlCopyMemory(p,
                           DirectoryInfo->TypeName.Buffer,
                           DirectoryInfo->TypeName.Length);
 
@@ -620,14 +620,22 @@ Quickie:
         *Context = CurrentEntry;
     }
 
-    /* Copy the buffer */
-    RtlMoveMemory(Buffer,
-                  LocalBuffer,
-                  (TotalLength <= BufferLength) ?
-                  TotalLength : BufferLength);
+    _SEH_TRY
+    {
+        /* Copy the buffer */
+        RtlCopyMemory(Buffer,
+                      LocalBuffer,
+                      (TotalLength <= BufferLength) ?
+                      TotalLength : BufferLength);
 
-    /* Check if the caller requested the return length and return it*/
-    if (ReturnLength) *ReturnLength = TotalLength;
+        /* Check if the caller requested the return length and return it*/
+        if (ReturnLength) *ReturnLength = TotalLength;
+    }
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
 
     /* Dereference the directory and free our buffer */
     ObDereferenceObject(Directory);
@@ -718,7 +726,7 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
                 /* Return the handle back to the caller */
                 *DirectoryHandle = hDirectory;
             }
-            _SEH_HANDLE
+            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
             {
                 /* Get the exception code */
                 Status = _SEH_GetExceptionCode();

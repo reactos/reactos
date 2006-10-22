@@ -403,7 +403,7 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (IoLoaderArcBootDeviceName)
     {
         /* Copy the name */
-        RtlMoveMemory(IoLoaderArcBootDeviceName,
+        RtlCopyMemory(IoLoaderArcBootDeviceName,
                       LoaderBlock->ArcBootDeviceName,
                       Length);
     }
