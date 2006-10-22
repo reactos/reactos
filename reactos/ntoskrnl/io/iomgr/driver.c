@@ -924,7 +924,9 @@ IopInitializeBootDrivers(VOID)
 {
     PLIST_ENTRY ListHead, NextEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
+#ifdef DBG
     UNICODE_STRING NtosSymName = RTL_CONSTANT_STRING(L"ntoskrnl.sym");
+#endif
     PDEVICE_NODE DeviceNode;
     PDRIVER_OBJECT DriverObject;
     LDR_DATA_TABLE_ENTRY ModuleObject;

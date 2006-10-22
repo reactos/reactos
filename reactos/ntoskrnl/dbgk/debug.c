@@ -876,11 +876,10 @@ VOID
 NTAPI
 DbgkpDeleteObject(IN PVOID Object)
 {
-    PDEBUG_OBJECT DebugObject = Object;
     PAGED_CODE();
 
     /* Sanity check */
-    ASSERT(IsListEmpty(&DebugObject->EventList));
+    ASSERT(IsListEmpty(&((PDEBUG_OBJECT)DebugObject)->EventList));
 }
 
 VOID
