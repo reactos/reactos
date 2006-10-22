@@ -3669,13 +3669,12 @@ RunUSetup(VOID)
 	}
     }
 
-  /* Reboot */
-  FreeConsole();
-
   /// THE FOLLOWING DPRINT IS FOR THE SYSTEM REGRESSION TOOL
   /// DO NOT REMOVE!!!
   DPRINT1("SYSREG_CHECKPOINT:USETUP_COMPLETE");
 
+  /* Reboot */
+  FreeConsole();
   NtShutdownSystem(ShutdownReboot);
   NtTerminateProcess(NtCurrentProcess(), 0);
 }
