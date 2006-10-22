@@ -78,7 +78,7 @@ DbgUiContinue(IN PCLIENT_ID ClientId,
 NTSTATUS
 NTAPI
 DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
-                                 IN LPDEBUG_EVENT DebugEvent)
+                                 OUT LPDEBUG_EVENT DebugEvent)
 {
     /* FIXME: UNIMPLEMENTED */
     return STATUS_NOT_IMPLEMENTED;

@@ -9,11 +9,250 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
-
 #define NDEBUG
 #include "debug.h"
 
-/* FUNCTIONS *****************************************************************/
+typedef struct _DBGSS_THREAD_DATA
+{
+    struct _DBGSS_THREAD_DATA *Next;
+    HANDLE ThreadHandle;
+    HANDLE ProcessHandle;
+    DWORD ProcessId;
+    DWORD ThreadId;
+    BOOLEAN HandleMarked;
+} DBGSS_THREAD_DATA, *PDBGSS_THREAD_DATA;
+
+#define DbgSsSetThreadData(d) \
+    NtCurrentTeb()->DbgSsReserved[0] = d
+
+#define DbgSsGetThreadData() \
+    ((PDBGSS_THREAD_DATA)NtCurrentTeb()->DbgSsReserved[0])
+
+/* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+WINAPI
+SaveThreadHandle(IN DWORD dwProcessId,
+                 IN DWORD dwThreadId,
+                 IN HANDLE hThread)
+{
+    PDBGSS_THREAD_DATA ThreadData;
+
+    /* Allocate a thread structure */
+    ThreadData = RtlAllocateHeap(RtlGetProcessHeap(),
+                                 0,
+                                 sizeof(DBGSS_THREAD_DATA));
+    if (!ThreadData) return;
+
+    /* Fill it out */
+    ThreadData->ThreadHandle = hThread;
+    ThreadData->ProcessId = dwProcessId;
+    ThreadData->ThreadId = dwThreadId;
+    ThreadData->ProcessHandle = NULL;
+    ThreadData->HandleMarked = FALSE;
+
+    /* Link it */
+    ThreadData->Next = DbgSsGetThreadData();
+    DbgSsSetThreadData(ThreadData);
+}
+
+VOID
+WINAPI
+SaveProcessHandle(IN DWORD dwProcessId,
+                  IN HANDLE hProcess)
+{
+    PDBGSS_THREAD_DATA ThreadData;
+
+    /* Allocate a thread structure */
+    ThreadData = RtlAllocateHeap(RtlGetProcessHeap(),
+                                 0,
+                                 sizeof(DBGSS_THREAD_DATA));
+    if (!ThreadData) return;
+
+    /* Fill it out */
+    ThreadData->ProcessHandle = hProcess;
+    ThreadData->ProcessId = dwProcessId;
+    ThreadData->ThreadId = 0;
+    ThreadData->ThreadHandle = NULL;
+    ThreadData->HandleMarked = FALSE;
+
+    /* Link it */
+    ThreadData->Next = DbgSsGetThreadData();
+    DbgSsSetThreadData(ThreadData);
+}
+
+VOID
+WINAPI
+MarkThreadHandle(IN DWORD dwThreadId)
+{
+    PDBGSS_THREAD_DATA ThreadData;
+
+    /* Loop all thread data events */
+    ThreadData = DbgSsGetThreadData();
+    while (ThreadData)
+    {
+        /* Check if this one matches */
+        if (ThreadData->ThreadId == dwThreadId)
+        {
+            /* Mark the structure and break out */
+            ThreadData->HandleMarked = TRUE;
+            break;
+        }
+
+        /* Move to the next one */
+        ThreadData = ThreadData->Next;
+    }
+}
+
+VOID
+WINAPI
+MarkProcessHandle(IN DWORD dwProcessId)
+{
+    PDBGSS_THREAD_DATA ThreadData;
+
+    /* Loop all thread data events */
+    ThreadData = DbgSsGetThreadData();
+    while (ThreadData)
+    {
+        /* Check if this one matches */
+        if (ThreadData->ProcessId == dwProcessId)
+        {
+            /* Make sure the thread ID is empty */
+            if (!ThreadData->ThreadId)
+            {
+                /* Mark the structure and break out */
+                ThreadData->HandleMarked = TRUE;
+                break;
+            }
+        }
+
+        /* Move to the next one */
+        ThreadData = ThreadData->Next;
+    }
+}
+
+VOID
+WINAPI
+RemoveHandles(IN DWORD dwProcessId,
+              IN DWORD dwThreadId)
+{
+    PDBGSS_THREAD_DATA ThreadData;
+
+    /* Loop all thread data events */
+    ThreadData = DbgSsGetThreadData();
+    while (ThreadData)
+    {
+        /* Check if this one matches */
+        if (ThreadData->ProcessId == dwProcessId)
+        {
+            /* Make sure the thread ID matches too */
+            if (ThreadData->ThreadId == dwThreadId)
+            {
+                /* Check if we have a thread handle */
+                if (ThreadData->ThreadHandle)
+                {
+                    /* Close it */
+                    CloseHandle(ThreadData->ThreadHandle);
+                }
+
+                /* Check if we have a process handle */
+                if (ThreadData->ProcessHandle)
+                {
+                    /* Close it */
+                    CloseHandle(ThreadData->ProcessHandle);
+                }
+
+                /* Unlink the thread data */
+                DbgSsSetThreadData(ThreadData->Next);
+
+                /* Free it*/
+                RtlFreeHeap(RtlGetProcessHeap(), 0, ThreadData);
+
+                /* Move to the next structure */
+                ThreadData = DbgSsGetThreadData();
+                continue;
+            }
+        }
+
+        /* Move to the next one */
+        ThreadData = ThreadData->Next;
+    }
+}
+
+VOID
+WINAPI
+CloseAllProcessHandles(IN DWORD dwProcessId)
+{
+    PDBGSS_THREAD_DATA ThreadData;
+
+    /* Loop all thread data events */
+    ThreadData = DbgSsGetThreadData();
+    while (ThreadData)
+    {
+        /* Check if this one matches */
+        if (ThreadData->ProcessId == dwProcessId)
+        {
+            /* Check if we have a thread handle */
+            if (ThreadData->ThreadHandle)
+            {
+                /* Close it */
+                CloseHandle(ThreadData->ThreadHandle);
+            }
+
+            /* Check if we have a process handle */
+            if (ThreadData->ProcessHandle)
+            {
+                /* Close it */
+                CloseHandle(ThreadData->ProcessHandle);
+            }
+
+            /* Unlink the thread data */
+            DbgSsSetThreadData(ThreadData->Next);
+
+            /* Free it*/
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ThreadData);
+
+            /* Move to the next structure */
+            ThreadData = DbgSsGetThreadData();
+            continue;
+        }
+
+        /* Move to the next one */
+        ThreadData = ThreadData->Next;
+    }
+}
+
+HANDLE
+WINAPI
+ProcessIdToHandle(IN DWORD dwProcessId)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE Handle;
+    CLIENT_ID ClientId;
+
+    /* If we don't have a PID, look it up */
+    if (dwProcessId == -1) dwProcessId = (DWORD)CsrGetProcessId();
+
+    /* Open a handle to the process */
+    ClientId.UniqueProcess = (HANDLE)dwProcessId;
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+    Status = NtOpenProcess(&Handle,
+                           PROCESS_ALL_ACCESS,
+                           &ObjectAttributes,
+                           &ClientId);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        SetLastErrorByStatus(Status);
+        return 0;
+    }
+
+    /* Return the handle */
+    return Handle;
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
@@ -77,37 +316,11 @@ ContinueDebugEvent(IN DWORD dwProcessId,
         return FALSE;
     }
 
-    /* Succes */
+    /* Remove the process/thread handles */
+    RemoveHandles(dwProcessId, dwThreadId);
+
+    /* Success */
     return TRUE;
-}
-
-HANDLE
-ProcessIdToHandle(IN DWORD dwProcessId)
-{
-    NTSTATUS Status;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE Handle;
-    CLIENT_ID ClientId;
-
-    /* If we don't have a PID, look it up */
-    if (dwProcessId == 0xFFFFFFFF) dwProcessId = (DWORD)CsrGetProcessId();
-
-    /* Open a handle to the process */
-    ClientId.UniqueProcess = (HANDLE)dwProcessId;
-    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
-    Status = NtOpenProcess(&Handle,
-                           PROCESS_ALL_ACCESS,
-                           &ObjectAttributes,
-                           &ClientId);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Fail */
-        SetLastErrorByStatus(Status);
-        return 0;
-    }
-
-    /* Return the handle */
-    return Handle;
 }
 
 /*
@@ -134,6 +347,9 @@ DebugActiveProcess(IN DWORD dwProcessId)
 
     /* Now debug the process */
     Status = DbgUiDebugActiveProcess(Handle);
+    NtClose(Handle);
+
+    /* Check if debugging worked */
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
@@ -158,6 +374,9 @@ DebugActiveProcessStop(IN DWORD dwProcessId)
     /* Get the process handle */
     Handle = ProcessIdToHandle(dwProcessId);
     if (!Handle) return FALSE;
+
+    /* Close all the process handles */
+    CloseAllProcessHandles(dwProcessId);
 
     /* Now stop debgging the process */
     Status = DbgUiStopDebugging(Handle);
@@ -240,7 +459,7 @@ DebugSetProcessKillOnExit(IN BOOL KillOnExit)
  */
 BOOL
 WINAPI
-IsDebuggerPresent (VOID)
+IsDebuggerPresent(VOID)
 {
     return (BOOL)NtCurrentPeb()->BeingDebugged;
 }
@@ -251,7 +470,7 @@ IsDebuggerPresent (VOID)
 BOOL
 WINAPI
 WaitForDebugEvent(IN LPDEBUG_EVENT lpDebugEvent,
-                  DWORD dwMilliseconds)
+                  IN DWORD dwMilliseconds)
 {
     /* FIXME: TODO */
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
