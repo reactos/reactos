@@ -229,6 +229,10 @@ inline int GetSDR1() {
     return res;
 }
 
+inline void SetSDR1( int sdr ) {
+    __asm__("mtsdr1 3");
+}
+
 inline int BatHit( int bath, int batl, int virt ) {
     int mask = 0xfffe0000 & ~((batl & 0x3f) << 17);
     return (batl & 0x40) && ((virt & mask) == (bath & mask));
@@ -293,9 +297,9 @@ int PpcVirt2phys( int virt, int inst ) {
 }
 
 /* Add a new page table entry for the indicated mapping */
-BOOLEAN InsertPageEntry( int virt, int phys, int slot ) {
+BOOLEAN InsertPageEntry( int virt, int phys, int slot, int _sdr1 ) {
     int i, ptehi, ptelo;
-    int sdr1 = GetSDR1();
+    int sdr1 = _sdr1 ? _sdr1 : GetSDR1();
     int sr = GetSR( (virt >> 28) & 0xf );
     int vsid = sr & 0xfffffff;
     int physbase = sdr1 & ~0xffff;
@@ -303,7 +307,7 @@ BOOLEAN InsertPageEntry( int virt, int phys, int slot ) {
     int valo = (vsid << 28) | (virt & 0xfffffff);
     int hash = (vsid & 0x7ffff) ^ ((valo >> 12) & 0xffff);
     int ptegaddr = ((hashmask & hash) * 64) + physbase;
-	
+
     for( i = 0; i < 8; i++ ) {
 	ptehi = GetPhys( ptegaddr + (i * 8) );
 	
@@ -314,6 +318,12 @@ BOOLEAN InsertPageEntry( int virt, int phys, int slot ) {
 
 	SetPhys( ptegaddr + (i * 8), ptehi );
 	SetPhys( ptegaddr + (i * 8) + 4, ptelo );
+
+	__asm__("ptesync");
+	__asm__("tlbie %0,0" : : "r" (virt));
+	__asm__("eieio");
+	__asm__("tlbsync");
+	__asm__("ptesync");
 
 	return TRUE;
     }
