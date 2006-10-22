@@ -67,6 +67,9 @@
 <directory name="dnsquery">
 	<xi:include href="dnsquery/dnsquery.rbuild" />
 </directory>
+<directory name="D3DParseUnknownCommand_show">
+	<xi:include href="D3DParseUnknownCommand_show/D3DParseUnknownCommand_show.rbuild" />
+</directory>
 <directory name="DxHalTest">
 	<xi:include href="DxHalTest/DxHalTest.rbuild" />
 </directory>
