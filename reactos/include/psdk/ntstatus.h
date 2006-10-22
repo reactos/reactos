@@ -58,6 +58,7 @@
 #define STATUS_WAIT_63                   ((NTSTATUS)0x0000003f)
 #define STATUS_ABANDONED                 ((NTSTATUS)0x00000080)
 #define STATUS_ABANDONED_WAIT_63         ((NTSTATUS)0x000000BF)
+#define STATUS_USER_APC                  ((NTSTATUS)0x000000C0)
 #define STATUS_KERNEL_APC                ((NTSTATUS)0x00000100)
 #define STATUS_ALERTED                   ((NTSTATUS)0x00000101)
 #define STATUS_TIMEOUT                   ((NTSTATUS)0x00000102)

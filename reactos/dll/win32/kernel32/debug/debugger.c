@@ -465,16 +465,109 @@ IsDebuggerPresent(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 WaitForDebugEvent(IN LPDEBUG_EVENT lpDebugEvent,
                   IN DWORD dwMilliseconds)
 {
-    /* FIXME: TODO */
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    LARGE_INTEGER WaitTime;
+    PLARGE_INTEGER Timeout;
+    DBGUI_WAIT_STATE_CHANGE WaitStateChange;
+    NTSTATUS Status;
+
+    /* Check if this is an infinite wait */
+    if (dwMilliseconds == INFINITE)
+    {
+        /* Under NT, this means no timer argument */
+        Timeout = NULL;
+    }
+    else
+    {
+        /* Otherwise, convert the time to NT Format */
+        WaitTime.QuadPart = UInt32x32To64(-10000, dwMilliseconds);
+        Timeout = &WaitTime;
+    }
+
+    /* Loop while we keep getting interrupted */
+    do 
+    {
+        /* Call the native API */
+        Status = DbgUiWaitStateChange(&WaitStateChange, Timeout);
+    } while ((Status == STATUS_ALERTED) || (Status == STATUS_USER_APC));
+
+    /* Check if the wait failed */
+    if (!(NT_SUCCESS(Status)) || (Status != DBG_UNABLE_TO_PROVIDE_HANDLE))
+    {
+        /* Set the error code and quit */
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    /* Check if we timed out */
+    if (Status == STATUS_TIMEOUT)
+    {
+        /* Fail with a timeout error */
+        SetLastError(ERROR_SEM_TIMEOUT);
+        return FALSE;
+    }
+
+    /* Convert the structure */
+    Status = DbgUiConvertStateChangeStructure(&WaitStateChange, lpDebugEvent);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Set the error code and quit */
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    /* Check what kind of event this was */
+    switch (lpDebugEvent->dwDebugEventCode)
+    {
+        /* New thread was created */
+        case CREATE_THREAD_DEBUG_EVENT:
+
+            /* Setup the thread data */
+            SaveThreadHandle(lpDebugEvent->dwProcessId,
+                             lpDebugEvent->dwThreadId,
+                             lpDebugEvent->u.CreateThread.hThread);
+            break;
+
+        /* New process was created */
+        case CREATE_PROCESS_DEBUG_EVENT:
+
+            /* Setup the process data */
+            SaveProcessHandle(lpDebugEvent->dwProcessId,
+                              lpDebugEvent->u.CreateProcessInfo.hProcess);
+
+            /* Setup the thread data */
+            SaveThreadHandle(lpDebugEvent->dwProcessId,
+                             lpDebugEvent->dwThreadId,
+                             lpDebugEvent->u.CreateThread.hThread);
+            break;
+
+        /* Process was exited */
+        case EXIT_PROCESS_DEBUG_EVENT:
+
+            /* Mark the thread data as such */
+            MarkProcessHandle(lpDebugEvent->dwProcessId);
+            break;
+
+        /* Thread was exited */
+        case EXIT_THREAD_DEBUG_EVENT:
+
+            /* Mark the thread data */
+            MarkThreadHandle(lpDebugEvent->dwThreadId);
+            break;
+
+        /* Nothing to do for anything else */
+        default:
+            break;
+    }
+
+    /* Return success */
+    return TRUE;
 }
 
 /* EOF */
