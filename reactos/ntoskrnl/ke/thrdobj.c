@@ -304,11 +304,17 @@ KeFreezeAllThreads(VOID)
 
         /* Release the APC lock */
         KiReleaseApcLockFromDpcLevel(&ApcLock);
+
+        /* Move to the next thread */
+        NextEntry = NextEntry->Flink;
     }
 
     /* Release the process lock and exit the dispatcher */
     KiReleaseProcessLock(&LockHandle);
     KiExitDispatcher(LockHandle.OldIrql);
+
+    /* Leave the critical region */
+    KeLeaveCriticalRegion();
 }
 
 ULONG
@@ -571,6 +577,71 @@ KeSuspendThread(PKTHREAD Thread)
     KiReleaseApcLockFromDpcLevel(&ApcLock);
     KiExitDispatcher(ApcLock.OldIrql);
     return PreviousCount;
+}
+
+VOID
+NTAPI
+KeThawAllThreads(VOID)
+{
+    KLOCK_QUEUE_HANDLE LockHandle, ApcLock;
+    PKTHREAD Current, CurrentThread = KeGetCurrentThread();
+    PKPROCESS Process = CurrentThread->ApcState.Process;
+    PLIST_ENTRY ListHead, NextEntry;
+    LONG OldCount;
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Lock the process */
+    KiAcquireProcessLock(Process, &LockHandle);
+
+    /* Enter a critical region */
+    KeEnterCriticalRegion();
+
+    /* Loop the Process's Threads */
+    ListHead = &Process->ThreadListHead;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the current thread */
+        Current = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+
+        /* Lock it */
+        KiAcquireApcLockAtDpcLevel(Current, &ApcLock);
+
+        /* Make sure we are frozen */
+        OldCount = Current->FreezeCount;
+        if (OldCount)
+        {
+            /* Decrease the freeze count */
+            Current->FreezeCount--;
+
+            /* Check if both counts are zero now */
+            if (!(Current->SuspendCount) && (!Current->FreezeCount))
+            {
+                /* Lock the dispatcher */
+                KiAcquireDispatcherLockAtDpcLevel();
+
+                /* Signal the suspend semaphore and wake it */
+                Current->SuspendSemaphore.Header.SignalState++;
+                KiWaitTest(&Current->SuspendSemaphore, 1);
+
+                /* Unlock the dispatcher */
+                KiReleaseDispatcherLockFromDpcLevel();
+            }
+        }
+
+        /* Release the APC lock */
+        KiReleaseApcLockFromDpcLevel(&ApcLock);
+
+        /* Go to the next one */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Release the process lock and exit the dispatcher */
+    KiReleaseProcessLock(&LockHandle);
+    KiExitDispatcher(LockHandle.OldIrql);
+
+    /* Leave the critical region */
+    KeLeaveCriticalRegion();
 }
 
 BOOLEAN

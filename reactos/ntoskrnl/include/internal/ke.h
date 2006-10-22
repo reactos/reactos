@@ -528,6 +528,12 @@ KeForceResumeThread(IN PKTHREAD Thread);
 
 VOID
 NTAPI
+KeThawAllThreads(
+    VOID
+);
+
+VOID
+NTAPI
 KeFreezeAllThreads(
     VOID
 );
