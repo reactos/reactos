@@ -29,3 +29,6 @@ TimeZoneIndex=85
 
 ; enable this setting to disable daylight saving changes
 ; DisableAutoDaylightTimeSet = 1
+
+; enable this setting to format the selected partition
+FormatPartition=1
