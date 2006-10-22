@@ -148,6 +148,7 @@ typedef struct _DBGKM_LOAD_DLL
     PVOID BaseOfDll;
     ULONG DebugInfoFileOffset;
     ULONG DebugInfoSize;
+    PVOID NamePointer;
 } DBGKM_LOAD_DLL, *PDBGKM_LOAD_DLL;
 
 typedef struct _DBGKM_UNLOAD_DLL
