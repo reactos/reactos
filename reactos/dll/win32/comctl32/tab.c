@@ -243,7 +243,7 @@ TAB_GetCurFocus (const TAB_INFO *infoPtr)
 {
     if (infoPtr->uFocus<0)
     {
-        FIXME("we have not to return negative value");
+        FIXME("we have not to return negative value\n");
         return 0;
     }
     return infoPtr->uFocus;
@@ -2875,7 +2875,7 @@ static LRESULT TAB_DeleteItem (TAB_INFO *infoPtr, INT iItem)
             if (iItem <= infoPtr->iHotTracked)
             {
                 /* When tabs move left/up, the hot track item may change */
-                FIXME("Recalc hot track");
+                FIXME("Recalc hot track\n");
             }
 	}
 	Free(oldItems);

@@ -602,7 +602,7 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
  *
  * Creates the actual property sheet.
  */
-INT_PTR PROPSHEET_CreateDialog(PropSheetInfo* psInfo)
+static INT_PTR PROPSHEET_CreateDialog(PropSheetInfo* psInfo)
 {
   LRESULT ret;
   LPCVOID template;

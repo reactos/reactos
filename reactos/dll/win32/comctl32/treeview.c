@@ -4245,7 +4245,7 @@ TREEVIEW_DoSelectItem(TREEVIEW_INFO *infoPtr, INT action, HTREEITEM newSelect,
 	if (TREEVIEW_SendTreeviewNotify(infoPtr,
 					TVN_SELCHANGINGW,
 					cause,
-					TVIF_HANDLE | TVIF_STATE | TVIF_PARAM,
+					TVIF_TEXT | TVIF_HANDLE | TVIF_STATE | TVIF_PARAM,
 					prevSelect,
 					newSelect))
 	    return FALSE;
@@ -4267,7 +4267,7 @@ TREEVIEW_DoSelectItem(TREEVIEW_INFO *infoPtr, INT action, HTREEITEM newSelect,
 	TREEVIEW_SendTreeviewNotify(infoPtr,
 				    TVN_SELCHANGEDW,
 				    cause,
-				    TVIF_HANDLE | TVIF_STATE | TVIF_PARAM,
+				    TVIF_TEXT | TVIF_HANDLE | TVIF_STATE | TVIF_PARAM,
 				    prevSelect,
 				    newSelect);
 	break;

@@ -5145,7 +5145,7 @@ static HIMAGELIST LISTVIEW_GetImageList(LISTVIEW_INFO *infoPtr, INT nImageList)
  * [I] hwnd : window handle
  * [IO] lpLVItem : item info
  * [I] isW : if TRUE, then lpLVItem is a LPLVITEMW,
- *           if FALSE, the lpLVItem is a LPLVITEMA.
+ *           if FALSE, then lpLVItem is a LPLVITEMA.
  *
  * NOTE:
  *   This is the internal 'GetItem' interface -- it tries to
@@ -5202,7 +5202,7 @@ static BOOL LISTVIEW_GetItemT(LISTVIEW_INFO *infoPtr, LPLVITEMW lpLVItem, BOOL i
     {
 	dispInfo.item.state = 0;
 
-	/* apprently, we should not callback for lParam in LVS_OWNERDATA */
+	/* apparently, we should not callback for lParam in LVS_OWNERDATA */
 	if ((lpLVItem->mask & ~(LVIF_STATE | LVIF_PARAM)) || infoPtr->uCallbackMask)
 	{
 	    /* NOTE: copy only fields which we _know_ are initialized, some apps
@@ -5363,7 +5363,7 @@ static BOOL LISTVIEW_GetItemT(LISTVIEW_INFO *infoPtr, LPLVITEMW lpLVItem, BOOL i
     /* ... the state field (this one is different due to uCallbackmask) */
     if (lpLVItem->mask & LVIF_STATE) 
     {
-	lpLVItem->state = lpItem->state;
+	lpLVItem->state = lpItem->state & lpLVItem->stateMask;
 	if (dispInfo.item.mask & LVIF_STATE)
 	{
 	    lpLVItem->state &= ~dispInfo.item.stateMask;
@@ -5398,7 +5398,7 @@ static BOOL LISTVIEW_GetItemT(LISTVIEW_INFO *infoPtr, LPLVITEMW lpLVItem, BOOL i
  * [I] hwnd : window handle
  * [IO] lpLVItem : item info
  * [I] isW : if TRUE, then lpLVItem is a LPLVITEMW,
- *           if FALSE, the lpLVItem is a LPLVITEMA.
+ *           if FALSE, then lpLVItem is a LPLVITEMA.
  *
  * NOTE:
  *   This is the external 'GetItem' interface -- it properly copies
@@ -6629,7 +6629,7 @@ fail:
  * [I] infoPtr : valid pointer to the listview structure
  * [I] nColumn : column index
  * [I] lpColumn : column attributes
- * [I] isW: if TRUE, the lpColumn is a LPLVCOLUMNW, else it is a LPLVCOLUMNA
+ * [I] isW: if TRUE, then lpColumn is a LPLVCOLUMNW, else it is a LPLVCOLUMNA
  *
  * RETURN:
  *   SUCCESS : TRUE
@@ -8581,7 +8581,8 @@ static LRESULT LISTVIEW_HeaderNotification(LISTVIEW_INFO *infoPtr, const NMHEADE
 	    if (dx != 0)
 	    {
 		lpColumnInfo->rcHeader.right += dx;
-		LISTVIEW_ScrollColumns(infoPtr, lpnmh->iItem + 1, dx);
+		if (lpnmh->iItem + 1 < DPA_GetPtrCount(infoPtr->hdpaColumns))
+		    LISTVIEW_ScrollColumns(infoPtr, lpnmh->iItem + 1, dx);
 		LISTVIEW_UpdateItemSize(infoPtr);
 		if (uView == LVS_REPORT && is_redrawing(infoPtr))
 		{
@@ -9920,7 +9921,7 @@ static LRESULT EditLblWndProcT(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
  *
  * RETURN:
  */
-LRESULT CALLBACK EditLblWndProcW(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK EditLblWndProcW(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     return EditLblWndProcT(hwnd, uMsg, wParam, lParam, TRUE);
 }
@@ -9937,7 +9938,7 @@ LRESULT CALLBACK EditLblWndProcW(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
  *
  * RETURN:
  */
-LRESULT CALLBACK EditLblWndProcA(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK EditLblWndProcA(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     return EditLblWndProcT(hwnd, uMsg, wParam, lParam, FALSE);
 }

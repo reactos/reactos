@@ -501,6 +501,32 @@ static inline BOOL COMBOEX_HasEdit(COMBOEX_INFO *infoPtr)
 
 /* ***  CBEM_xxx message support  *** */
 
+static UINT COMBOEX_GetListboxText(COMBOEX_INFO *infoPtr, int n, LPWSTR buf)
+{
+    CBE_ITEMDATA *item;
+    LPCWSTR str;
+
+    item = COMBOEX_FindItem(infoPtr, n);
+    if (!item)
+        return 0;
+
+    str = COMBOEX_GetText(infoPtr, item);
+
+    if (infoPtr->unicode)
+    {
+        if (buf)
+            lstrcpyW(buf, str);
+        return lstrlenW(str);
+    }
+    else
+    {
+        UINT r;
+        r = WideCharToMultiByte(CP_ACP, 0, str, -1, (LPSTR)buf, 0x40000000, NULL, NULL);
+        if (r) r--;
+        return r;
+    }
+}
+
 
 static INT COMBOEX_DeleteItem (COMBOEX_INFO *infoPtr, INT index)
 {
@@ -2193,11 +2219,15 @@ COMBOEX_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_GETTEXT:
             return SendMessageW(infoPtr->hwndEdit, uMsg, wParam, lParam);
 
+	case CB_GETLBTEXT:
+            return COMBOEX_GetListboxText(infoPtr, wParam, (LPWSTR)lParam);
+
+	case CB_GETLBTEXTLEN:
+            return COMBOEX_GetListboxText(infoPtr, wParam, NULL);
+
 /*   Combo messages we are not sure if we need to process or just forward */
 	case CB_GETDROPPEDCONTROLRECT:
 	case CB_GETITEMHEIGHT:
-	case CB_GETLBTEXT:
-	case CB_GETLBTEXTLEN:
 	case CB_GETEXTENDEDUI:
 	case CB_LIMITTEXT:
 	case CB_RESETCONTENT:
