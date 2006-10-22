@@ -106,9 +106,26 @@ MmGetFileObjectForSection(IN PROS_SECTION_OBJECT Section)
     return Section->FileObject; // Section->ControlArea->FileObject on NT
 }
 
-
-
-
+NTSTATUS
+NTAPI
+MmGetFileNameForAddress(IN PVOID Address,
+                        OUT PUNICODE_STRING ModuleName)
+{
+    /*
+     * FIXME: TODO.
+     * Filip says to get the MADDRESS_SPACE from EPROCESS,
+     * then use the MmMarea routines to locate the Marea that 
+     * corresponds to the address. Then make sure it's a section
+     * view type (MEMORY_AREA_SECTION_VIEW) and use the marea's
+     * per-type union to get the .u.SectionView.Section pointer to
+     * the SECTION_OBJECT. Then we can use MmGetFileObjectForSection
+     * to get the FILE_OBJECT, from which we can then query the name
+     * to get the full filename (much like we do for creating the
+     * SeAuditName in EPROCESS.
+     */
+    RtlCreateUnicodeString(ModuleName, L"C:\\ReactOS\\system32\\ntdll.dll");
+    return STATUS_SUCCESS;
+}
 
 /* Note: Mmsp prefix denotes "Memory Manager Section Private". */
 

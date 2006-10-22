@@ -464,8 +464,103 @@ DbgkpPostFakeModuleMessages(IN PEPROCESS Process,
                             IN PETHREAD Thread,
                             IN PDEBUG_OBJECT DebugObject)
 {
-    /* FIXME: TODO */
-    return STATUS_UNSUCCESSFUL;
+    PPEB Peb = Process->Peb;
+    PPEB_LDR_DATA LdrData;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PLIST_ENTRY ListHead, NextEntry;
+    DBGKM_MSG ApiMessage;
+    PDBGKM_LOAD_DLL LoadDll = &ApiMessage.LoadDll;
+    ULONG i;
+    PIMAGE_NT_HEADERS NtHeader;
+    UNICODE_STRING ModuleName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Quit if there's no PEB */
+    if (!Peb) return STATUS_SUCCESS;
+
+    /* Get the Loader Data List */
+    LdrData = Peb->Ldr;
+    ListHead = &LdrData->InLoadOrderModuleList;
+    NextEntry = ListHead->Flink;
+
+    /* Loop the modules */
+    i = 0;
+    while ((NextEntry != ListHead) && (i < 500))
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+
+        /* Setup the API Message */
+        RtlZeroMemory(&ApiMessage, sizeof(DBGKM_MSG));
+        ApiMessage.ApiNumber = DbgKmLoadDllApi;
+
+        /* Set base and clear the name */
+        LoadDll->BaseOfDll = LdrEntry->DllBase;
+        LoadDll->NamePointer = NULL;
+
+        /* Get the NT Headers */
+        NtHeader = RtlImageNtHeader(LoadDll->BaseOfDll);
+        if (NtHeader)
+        {
+            /* Save debug data */
+            LoadDll->DebugInfoFileOffset = NtHeader->FileHeader.
+                                           PointerToSymbolTable;
+            LoadDll->DebugInfoSize = NtHeader->FileHeader.NumberOfSymbols;
+        }
+
+        /* Get the name of the DLL */
+        Status = MmGetFileNameForAddress(NtHeader, &ModuleName);
+        if (NT_SUCCESS(Status))
+        {
+            /* Setup the object attributes */
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &ModuleName,
+                                       OBJ_FORCE_ACCESS_CHECK |
+                                       OBJ_KERNEL_HANDLE |
+                                       OBJ_CASE_INSENSITIVE,
+                                       NULL,
+                                       NULL);
+
+            /* Open the file to get a handle to it */
+            Status = ZwOpenFile(&LoadDll->FileHandle,
+                                GENERIC_READ | SYNCHRONIZE,
+                                &ObjectAttributes,
+                                &IoStatusBlock,
+                                FILE_SHARE_READ |
+                                FILE_SHARE_WRITE |
+                                FILE_SHARE_DELETE,
+                                FILE_SYNCHRONOUS_IO_NONALERT);
+            if (!NT_SUCCESS(Status)) LoadDll->FileHandle = NULL;
+
+            /* Free the name now */
+            ExFreePool(ModuleName.Buffer);
+        }
+
+        /* Send the fake module load message */
+        Status = DbgkpQueueMessage(Process,
+                                   Thread,
+                                   &ApiMessage,
+                                   2,
+                                   DebugObject);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Message send failed, close the file handle if we had one */
+            if (LoadDll->FileHandle) ObCloseHandle(LoadDll->FileHandle,
+                                                   KernelMode);
+        }
+
+        /* Go to the next module */
+        NextEntry = NextEntry->Flink;
+        i++;
+    }
+
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
