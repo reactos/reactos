@@ -42,8 +42,6 @@
 #include "wine/debug.h"
 #include "wine/unicode.h"
 
-#include "action.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 
@@ -82,6 +80,7 @@ typedef struct msi_font_tag
 struct msi_dialog_tag
 {
     MSIPACKAGE *package;
+    msi_dialog *parent;
     msi_dialog_event_handler event_handler;
     BOOL finished;
     INT scale;
@@ -144,6 +143,9 @@ static const WCHAR szListBox[] = { 'L','i','s','t','B','o','x',0 };
 static const WCHAR szDirectoryCombo[] = { 'D','i','r','e','c','t','o','r','y','C','o','m','b','o',0 };
 static const WCHAR szDirectoryList[] = { 'D','i','r','e','c','t','o','r','y','L','i','s','t',0 };
 static const WCHAR szVolumeCostList[] = { 'V','o','l','u','m','e','C','o','s','t','L','i','s','t',0 };
+static const WCHAR szSelectionDescription[] = {'S','e','l','e','c','t','i','o','n','D','e','s','c','r','i','p','t','i','o','n',0};
+static const WCHAR szSelectionPath[] = {'S','e','l','e','c','t','i','o','n','P','a','t','h',0};
+static const WCHAR szProperty[] = {'P','r','o','p','e','r','t','y',0};
 
 static UINT msi_dialog_checkbox_handler( msi_dialog *, msi_control *, WPARAM );
 static void msi_dialog_checkbox_sync_state( msi_dialog *, msi_control * );
@@ -152,7 +154,7 @@ static UINT msi_dialog_edit_handler( msi_dialog *, msi_control *, WPARAM );
 static UINT msi_dialog_radiogroup_handler( msi_dialog *, msi_control *, WPARAM param );
 static UINT msi_dialog_evaluate_control_conditions( msi_dialog *dialog );
 static LRESULT WINAPI MSIRadioGroup_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
+static MSIFEATURE *msi_seltree_get_selected_feature( msi_control *control );
 
 /* dialog sequencing */
 
@@ -213,43 +215,62 @@ static LPWSTR msi_get_deformatted_field( MSIPACKAGE *package, MSIRECORD *rec, in
 
 static LPWSTR msi_dialog_dup_property( msi_dialog *dialog, LPCWSTR property, BOOL indirect )
 {
+    LPWSTR prop = NULL;
+
     if (!property)
         return NULL;
 
     if (indirect)
-        return msi_dup_property( dialog->package, property );
+        prop = msi_dup_property( dialog->package, property );
 
-    return strdupW( property );
+    if (!prop)
+        prop = strdupW( property );
+
+    return prop;
+}
+
+msi_dialog *msi_dialog_get_parent( msi_dialog *dialog )
+{
+    return dialog->parent;
+}
+
+LPWSTR msi_dialog_get_name( msi_dialog *dialog )
+{
+    return dialog->name;
 }
 
 /*
  * msi_dialog_get_style
  *
  * Extract the {\style} string from the front of the text to display and
- *  update the pointer.
+ * update the pointer.  Only the last style in a list is applied.
  */
 static LPWSTR msi_dialog_get_style( LPCWSTR p, LPCWSTR *rest )
 {
-    LPWSTR ret = NULL;
-    LPCWSTR q, i;
+    LPWSTR ret;
+    LPCWSTR q, i, first;
     DWORD len;
 
+    q = NULL;
     *rest = p;
     if( !p )
-        return ret;
-    if( *p++ != '{' )
-        return ret;
-    q = strchrW( p, '}' );
-    if( !q )
-        return ret;
-    if( *p == '\\' || *p == '&' )
-        p++;
+        return NULL;
 
-    /* little bit of sanity checking to stop us getting confused with RTF */
-    for( i=p; i<q; i++ )
-        if( *i == '}' || *i == '\\' )
-            return ret;
-    
+    while ((first = strchrW( p, '{' )) && (q = strchrW( first + 1, '}' )))
+    {
+        p = first + 1;
+        if( *p == '\\' || *p == '&' )
+            p++;
+
+        /* little bit of sanity checking to stop us getting confused with RTF */
+        for( i=p; i<q; i++ )
+            if( *i == '}' || *i == '\\' )
+                return NULL;
+    }
+
+    if (!p || !q)
+        return NULL;
+
     *rest = ++q;
     len = q - p;
 
@@ -525,6 +546,8 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
     LPCWSTR font_text, text = NULL;
     LPWSTR font;
 
+    static const WCHAR empty[] = {0};
+
     ctrl = msi_dialog_find_control( dialog, control );
     if (!ctrl)
         return;
@@ -532,6 +555,7 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
     {
         font_text = MSI_RecordGetString( rec , 1 );
         font = msi_dialog_get_style( font_text, &text );
+        if (!text) text = empty;
         SetWindowTextW( ctrl->hwnd, text );
         msi_free( font );
         msi_dialog_check_messages( NULL );
@@ -558,9 +582,14 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
             SendMessageW(ctrl->hwnd, PBM_SETPOS, 100*(ctrl->progress_current/ctrl->progress_max), 0);
             break;
         default:
-            ERR("Unknown progress message %ld\n", func);
+            ERR("Unknown progress message %d\n", func);
             break;
         }
+    }
+    else if ( !lstrcmpW(attribute, szProperty) )
+    {
+        MSIFEATURE *feature = msi_seltree_get_selected_feature( ctrl );
+        MSI_SetPropertyW( dialog->package, ctrl->property, feature->Directory );
     }
     else
     {
@@ -588,7 +617,7 @@ static void msi_dialog_map_events(msi_dialog* dialog, LPCWSTR control)
 
     event = MSI_RecordGetString( row, 3 );
     attribute = MSI_RecordGetString( row, 4 );
-    ControlEvent_SubscribeToEvent( dialog->package, event, control, attribute );
+    ControlEvent_SubscribeToEvent( dialog->package, dialog, event, control, attribute );
     msiobj_release( &row->hdr );
 }
 
@@ -860,7 +889,7 @@ msi_richedit_stream_in( DWORD_PTR arg, LPBYTE buffer, LONG count, LONG *pcb )
     *pcb = count;
     info->offset += count;
 
-    TRACE("%ld/%ld\n", info->offset, info->length);
+    TRACE("%d/%d\n", info->offset, info->length);
 
     return 0;
 }
@@ -1078,7 +1107,7 @@ static UINT msi_dialog_edit_control( msi_dialog *dialog, MSIRECORD *rec )
 
 /******************** Masked Edit ********************************************/
 
-#define MASK_MAX_GROUPS 10
+#define MASK_MAX_GROUPS 20
 
 struct msi_mask_group
 {
@@ -1443,8 +1472,8 @@ static void msi_dialog_update_pathedit( msi_dialog *dialog, msi_control *control
 
     indirect = control->attributes & msidbControlAttributesIndirect;
     prop = msi_dialog_dup_property( dialog, control->property, indirect );
+    path = msi_dialog_dup_property( dialog, prop, TRUE );
 
-    path = msi_dup_property( dialog->package, prop );
     SetWindowTextW( control->hwnd, path );
     SendMessageW( control->hwnd, EM_SETSEL, 0, -1 );
 
@@ -1645,19 +1674,24 @@ struct msi_selection_tree_info
     msi_dialog *dialog;
     HWND hwnd;
     WNDPROC oldproc;
+    HTREEITEM selected;
 };
 
 static void
 msi_seltree_sync_item_state( HWND hwnd, MSIFEATURE *feature, HTREEITEM hItem )
 {
     TVITEMW tvi;
+    DWORD index = feature->Action;
 
     TRACE("Feature %s -> %d %d %d\n", debugstr_w(feature->Title),
         feature->Installed, feature->Action, feature->ActionRequest);
 
+    if (index == INSTALLSTATE_UNKNOWN)
+        index = INSTALLSTATE_ABSENT;
+
     tvi.mask = TVIF_STATE;
     tvi.hItem = hItem;
-    tvi.state = INDEXTOSTATEIMAGEMASK( feature->Action );
+    tvi.state = INDEXTOSTATEIMAGEMASK( index );
     tvi.stateMask = TVIS_STATEIMAGEMASK;
 
     SendMessageW( hwnd, TVM_SETITEMW, 0, (LPARAM) &tvi );
@@ -1700,14 +1734,18 @@ msi_seltree_feature_from_item( HWND hwnd, HTREEITEM hItem )
 static LRESULT
 msi_seltree_menu( HWND hwnd, HTREEITEM hItem )
 {
+    struct msi_selection_tree_info *info;
     MSIFEATURE *feature;
-    ComponentList *cl;
+    MSIPACKAGE *package;
     union {
         RECT rc;
         POINT pt[2];
         HTREEITEM hItem;
     } u;
     UINT r;
+
+    info = GetPropW(hwnd, szButtonData);
+    package = info->dialog->package;
 
     feature = msi_seltree_feature_from_item( hwnd, hItem );
     if (!feature)
@@ -1737,15 +1775,15 @@ msi_seltree_menu( HWND hwnd, HTREEITEM hItem )
 
     /* update */
     msi_seltree_sync_item_state( hwnd, feature, hItem );
-
-    /* update the feature's components */
-    LIST_FOR_EACH_ENTRY( cl, &feature->Components, ComponentList, entry )
-    {
-        cl->component->Action = feature->Action;
-        cl->component->ActionRequest = feature->ActionRequest;
-    }
+    ACTION_UpdateComponentStates( package, feature->Feature );
 
     return 0;
+}
+
+static MSIFEATURE *msi_seltree_get_selected_feature( msi_control *control )
+{
+    struct msi_selection_tree_info *info = GetPropW(control->hwnd, szButtonData);
+    return msi_seltree_feature_from_item( control->hwnd, info->selected );
 }
 
 static LRESULT WINAPI
@@ -1788,9 +1826,10 @@ static void
 msi_seltree_add_child_features( MSIPACKAGE *package, HWND hwnd,
                                 LPCWSTR parent, HTREEITEM hParent )
 {
+    struct msi_selection_tree_info *info = GetPropW( hwnd, szButtonData );
     MSIFEATURE *feature;
     TVINSERTSTRUCTW tvis;
-    HTREEITEM hitem;
+    HTREEITEM hitem, hfirst = NULL;
 
     LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
     {
@@ -1814,6 +1853,9 @@ msi_seltree_add_child_features( MSIPACKAGE *package, HWND hwnd,
         if (!hitem)
             continue;
 
+        if (!hfirst)
+            hfirst = hitem;
+
         msi_seltree_sync_item_state( hwnd, feature, hitem );
         msi_seltree_add_child_features( package, hwnd,
                                         feature->Feature, hitem );
@@ -1822,6 +1864,10 @@ msi_seltree_add_child_features( MSIPACKAGE *package, HWND hwnd,
         if ( feature->Display % 2 != 0 )
             SendMessageW( hwnd, TVM_EXPAND, TVE_EXPAND, (LPARAM) hitem );
     }
+
+    /* select the first item */
+    SendMessageW( hwnd, TVM_SELECTITEM, TVGN_CARET | TVGN_DROPHILITE, (LPARAM) hfirst );
+    info->selected = hfirst;
 }
 
 static void msi_seltree_create_imagelist( HWND hwnd )
@@ -1861,6 +1907,54 @@ static void msi_seltree_create_imagelist( HWND hwnd )
     SendMessageW( hwnd, TVM_SETIMAGELIST, TVSIL_STATE, (LPARAM)himl );
 }
 
+static UINT msi_dialog_seltree_handler( msi_dialog *dialog,
+                                        msi_control *control, WPARAM param )
+{
+    struct msi_selection_tree_info *info = GetPropW( control->hwnd, szButtonData );
+    LPNMTREEVIEWW tv = (LPNMTREEVIEWW)param;
+    MSIRECORD *row, *rec;
+    MSIFOLDER *folder;
+    LPCWSTR dir;
+    UINT r = ERROR_SUCCESS;
+
+    static const WCHAR select[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','F','e','a','t','u','r','e','`',' ','W','H','E','R','E',' ',
+        '`','T','i','t','l','e','`',' ','=',' ','\'','%','s','\'',0
+    };
+
+    if (tv->hdr.code != TVN_SELCHANGINGW)
+        return ERROR_SUCCESS;
+
+    info->selected = tv->itemNew.hItem;
+
+    row = MSI_QueryGetRecord( dialog->package->db, select, tv->itemNew.pszText );
+    if (!row)
+        return ERROR_FUNCTION_FAILED;
+
+    rec = MSI_CreateRecord( 1 );
+
+    MSI_RecordSetStringW( rec, 1, MSI_RecordGetString( row, 4 ) );
+    ControlEvent_FireSubscribedEvent( dialog->package, szSelectionDescription, rec );
+
+    dir = MSI_RecordGetString( row, 7 );
+    folder = get_loaded_folder( dialog->package, dir );
+    if (!folder)
+    {
+        r = ERROR_FUNCTION_FAILED;
+        goto done;
+    }
+
+    MSI_RecordSetStringW( rec, 1, folder->ResolvedTarget );
+    ControlEvent_FireSubscribedEvent( dialog->package, szSelectionPath, rec );
+
+done:
+    msiobj_release(&row->hdr);
+    msiobj_release(&rec->hdr);
+
+    return r;
+}
+
 static UINT msi_dialog_selection_tree( msi_dialog *dialog, MSIRECORD *rec )
 {
     msi_control *control;
@@ -1874,7 +1968,6 @@ static UINT msi_dialog_selection_tree( msi_dialog *dialog, MSIRECORD *rec )
         return ERROR_FUNCTION_FAILED;
 
     /* create the treeview control */
-    prop = MSI_RecordGetString( rec, 9 );
     style = TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT;
     style |= WS_GROUP | WS_VSCROLL;
     control = msi_dialog_add_control( dialog, rec, WC_TREEVIEWW, style );
@@ -1884,12 +1977,20 @@ static UINT msi_dialog_selection_tree( msi_dialog *dialog, MSIRECORD *rec )
         return ERROR_FUNCTION_FAILED;
     }
 
+    control->handler = msi_dialog_seltree_handler;
+    control->attributes = MSI_RecordGetInteger( rec, 8 );
+    prop = MSI_RecordGetString( rec, 9 );
+    control->property = msi_dialog_dup_property( dialog, prop, FALSE );
+
     /* subclass */
     info->dialog = dialog;
     info->hwnd = control->hwnd;
     info->oldproc = (WNDPROC) SetWindowLongPtrW( control->hwnd, GWLP_WNDPROC,
                                           (LONG_PTR)MSISelectionTree_WndProc );
     SetPropW( control->hwnd, szButtonData, info );
+
+    ControlEvent_SubscribeToEvent( dialog->package, dialog,
+                                   szSelectionPath, control->name, szProperty );
 
     /* initialize it */
     msi_seltree_create_imagelist( control->hwnd );
@@ -2070,7 +2171,7 @@ static void msi_dialog_update_directory_combo( msi_dialog *dialog, msi_control *
 
     indirect = control->attributes & msidbControlAttributesIndirect;
     prop = msi_dialog_dup_property( dialog, control->property, indirect );
-    path = msi_dup_property( dialog->package, prop );
+    path = msi_dialog_dup_property( dialog, prop, TRUE );
 
     PathStripPathW( path );
     PathRemoveBackslashW( path );
@@ -2127,7 +2228,7 @@ static void msi_dialog_update_directory_list( msi_dialog *dialog, msi_control *c
 
     indirect = control->attributes & msidbControlAttributesIndirect;
     prop = msi_dialog_dup_property( dialog, control->property, indirect );
-    path = msi_dup_property( dialog->package, prop );
+    path = msi_dialog_dup_property( dialog, prop, TRUE );
 
     lstrcpyW( dir_spec, path );
     lstrcatW( dir_spec, asterisk );
@@ -2167,8 +2268,7 @@ UINT msi_dialog_directorylist_up( msi_dialog *dialog )
     control = msi_dialog_find_control_by_type( dialog, szDirectoryList );
     indirect = control->attributes & msidbControlAttributesIndirect;
     prop = msi_dialog_dup_property( dialog, control->property, indirect );
-
-    path = msi_dup_property( dialog->package, prop );
+    path = msi_dialog_dup_property( dialog, prop, TRUE );
 
     /* strip off the last directory */
     ptr = PathFindFileNameW( path );
@@ -2217,7 +2317,7 @@ static UINT msi_dialog_dirlist_handler( msi_dialog *dialog,
 
     indirect = control->attributes & msidbControlAttributesIndirect;
     prop = msi_dialog_dup_property( dialog, control->property, indirect );
-    path = msi_dup_property( dialog->package, prop );
+    path = msi_dialog_dup_property( dialog, prop, TRUE );
 
     lstrcpyW( new_path, path );
     lstrcatW( new_path, text );
@@ -2290,7 +2390,6 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
     WCHAR num[10];
     LVCOLUMNW lvc;
     DWORD count = 0;
-    LRESULT r;
 
     static const WCHAR zero[] = {'0',0};
     static const WCHAR negative[] = {'-',0};
@@ -2316,20 +2415,20 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
         if ( !strncmpW( num, negative, 1 ) || !str_is_number( num ) )
             return;
 
-        lvc.mask = LVCF_FMT | LVCF_ORDER | LVCF_WIDTH | LVCF_TEXT;
-        lvc.iOrder = count; 
-        lvc.pszText = msi_dialog_get_uitext( dialog, column_keys[count++] );
+        ZeroMemory( &lvc, sizeof(lvc) );
+        lvc.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
         lvc.cx = atolW( num );
-        lvc.fmt = LVCFMT_LEFT;
+        lvc.pszText = msi_dialog_get_uitext( dialog, column_keys[count] );
 
-        r = SendMessageW( control->hwnd,  LVM_INSERTCOLUMNW, 0, (LPARAM)&lvc );
+        SendMessageW( control->hwnd,  LVM_INSERTCOLUMNW, count++, (LPARAM)&lvc );
         msi_free( lvc.pszText );
-        if ( r ) return;
     }
 }
 
 static void msi_dialog_vcl_add_drives( msi_dialog *dialog, msi_control *control )
 {
+    ULARGE_INTEGER total, free;
+    WCHAR size_text[MAX_PATH];
     LPWSTR drives, ptr;
     LVITEMW lvitem;
     DWORD size;
@@ -2352,6 +2451,20 @@ static void msi_dialog_vcl_add_drives( msi_dialog *dialog, msi_control *control 
         lvitem.pszText = ptr;
         lvitem.cchTextMax = lstrlenW(ptr) + 1;
         SendMessageW( control->hwnd, LVM_INSERTITEMW, 0, (LPARAM)&lvitem );
+
+        GetDiskFreeSpaceExW(ptr, &free, &total, NULL);
+
+        StrFormatByteSizeW(total.QuadPart, size_text, MAX_PATH);
+        lvitem.iSubItem = 1;
+        lvitem.pszText = size_text;
+        lvitem.cchTextMax = lstrlenW(size_text) + 1;
+        SendMessageW( control->hwnd, LVM_SETITEMW, 0, (LPARAM)&lvitem );
+
+        StrFormatByteSizeW(free.QuadPart, size_text, MAX_PATH);
+        lvitem.iSubItem = 2;
+        lvitem.pszText = size_text;
+        lvitem.cchTextMax = lstrlenW(size_text) + 1;
+        SendMessageW( control->hwnd, LVM_SETITEMW, 0, (LPARAM)&lvitem );
 
         ptr += lstrlenW(ptr) + 1;
         i++;
@@ -2503,10 +2616,7 @@ static UINT msi_dialog_evaluate_control_conditions( msi_dialog *dialog )
     /* query the Control table for all the elements of the control */
     r = MSI_OpenQuery( package->db, &view, query, dialog->name );
     if( r != ERROR_SUCCESS )
-    {
-        ERR("query failed for dialog %s\n", debugstr_w(dialog->name));
-        return ERROR_INVALID_PARAMETER;
-    }
+        return ERROR_SUCCESS;
 
     r = MSI_IterateRecords( view, 0, msi_dialog_set_control_condition, dialog );
     msiobj_release( &view->hdr );
@@ -2621,7 +2731,7 @@ static void msi_dialog_adjust_dialog_pos( msi_dialog *dialog, MSIRECORD *rec, LP
     dialog->size.cx = sz.cx;
     dialog->size.cy = sz.cy;
 
-    TRACE("%lu %lu %lu %lu\n", pos->left, pos->top, pos->right, pos->bottom);
+    TRACE("%u %u %u %u\n", pos->left, pos->top, pos->right, pos->bottom);
 
     style = GetWindowLongPtrW( dialog->hwnd, GWL_STYLE );
     AdjustWindowRect( pos, style, FALSE );
@@ -2776,6 +2886,38 @@ static UINT msi_dialog_control_event( MSIRECORD *rec, LPVOID param )
     return ERROR_SUCCESS;
 }
 
+struct rec_list
+{
+    struct list entry;
+    MSIRECORD *rec;
+};
+
+static UINT add_rec_to_list( MSIRECORD *rec, LPVOID param )
+{
+    struct rec_list *add_rec;
+    struct list *records = (struct list *)param;
+
+    msiobj_addref( &rec->hdr );
+
+    add_rec = msi_alloc( sizeof( *add_rec ) );
+    if (!add_rec)
+    {
+        msiobj_release( &rec->hdr );
+        return ERROR_OUTOFMEMORY;
+    }
+
+    add_rec->rec = rec;
+    list_add_tail( records, &add_rec->entry );
+    return ERROR_SUCCESS;
+}
+
+static inline void remove_rec_from_list( struct rec_list *rec_entry )
+{
+    msiobj_release( &rec_entry->rec->hdr );
+    list_remove( &rec_entry->entry );
+    msi_free( rec_entry );
+}
+
 static UINT msi_dialog_button_handler( msi_dialog *dialog,
                                        msi_control *control, WPARAM param )
 {
@@ -2789,10 +2931,14 @@ static UINT msi_dialog_button_handler( msi_dialog *dialog,
       'O','R','D','E','R',' ','B','Y',' ','`','O','r','d','e','r','i','n','g','`',0
     };
     MSIQUERY *view = NULL;
+    struct rec_list *rec_entry, *next;
+    struct list events;
     UINT r;
 
     if( HIWORD(param) != BN_CLICKED )
         return ERROR_SUCCESS;
+
+    list_init( &events );
 
     r = MSI_OpenQuery( dialog->package->db, &view, query,
                        dialog->name, control->name );
@@ -2802,8 +2948,41 @@ static UINT msi_dialog_button_handler( msi_dialog *dialog,
         return 0;
     }
 
-    r = MSI_IterateRecords( view, 0, msi_dialog_control_event, dialog );
+    r = MSI_IterateRecords( view, 0, add_rec_to_list, &events );
     msiobj_release( &view->hdr );
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    /* handle all SetProperty events first */
+    LIST_FOR_EACH_ENTRY_SAFE( rec_entry, next, &events, struct rec_list, entry )
+    {
+        LPCWSTR event = MSI_RecordGetString( rec_entry->rec, 3 );
+
+        if ( event[0] != '[' )
+            continue;
+
+        r = msi_dialog_control_event( rec_entry->rec, dialog );
+        remove_rec_from_list( rec_entry );
+
+        if ( r != ERROR_SUCCESS )
+            goto done;
+    }    
+
+    /* handle all other events */
+    LIST_FOR_EACH_ENTRY_SAFE( rec_entry, next, &events, struct rec_list, entry )
+    {
+        r = msi_dialog_control_event( rec_entry->rec, dialog );
+        remove_rec_from_list( rec_entry );
+
+        if ( r != ERROR_SUCCESS )
+            goto done;
+    }
+
+done:
+    LIST_FOR_EACH_ENTRY_SAFE( rec_entry, next, &events, struct rec_list, entry )
+    {
+        remove_rec_from_list( rec_entry );
+    }
 
     return r;
 }
@@ -2938,7 +3117,7 @@ static LRESULT msi_dialog_onnotify( msi_dialog *dialog, LPARAM param )
     LPNMHDR nmhdr = (LPNMHDR) param;
     msi_control *control = msi_dialog_find_control_by_hwnd( dialog, nmhdr->hwndFrom );
 
-    TRACE("%p %p", dialog, nmhdr->hwndFrom);
+    TRACE("%p %p\n", dialog, nmhdr->hwndFrom);
 
     if ( control && control->handler )
         control->handler( dialog, control, param );
@@ -3045,8 +3224,9 @@ static LRESULT WINAPI MSIHiddenWindowProc( HWND hwnd, UINT msg,
 
 /* functions that interface to other modules within MSI */
 
-msi_dialog *msi_dialog_create( MSIPACKAGE* package, LPCWSTR szDialogName,
-                                msi_dialog_event_handler event_handler )
+msi_dialog *msi_dialog_create( MSIPACKAGE* package,
+                               LPCWSTR szDialogName, msi_dialog *parent,
+                               msi_dialog_event_handler event_handler )
 {
     MSIRECORD *rec = NULL;
     msi_dialog *dialog;
@@ -3058,6 +3238,7 @@ msi_dialog *msi_dialog_create( MSIPACKAGE* package, LPCWSTR szDialogName,
     if( !dialog )
         return NULL;
     strcpyW( dialog->name, szDialogName );
+    dialog->parent = parent;
     msiobj_addref( &package->hdr );
     dialog->package = package;
     dialog->event_handler = event_handler;

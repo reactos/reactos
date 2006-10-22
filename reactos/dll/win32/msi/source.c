@@ -37,7 +37,6 @@
 #include "winver.h"
 #include "winuser.h"
 #include "wine/unicode.h"
-#include "action.h"
 #include "sddl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -300,7 +299,7 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
     HKEY sourcekey;
     UINT rc;
 
-    TRACE("%s %s %x %lx %s %s\n", debugstr_w(szProduct), debugstr_w(szUserSid), 
+    TRACE("%s %s %x %x %s %s\n", debugstr_w(szProduct), debugstr_w(szUserSid),
             dwContext, dwOptions, debugstr_w(szProperty), debugstr_w(szValue));
 
     if (!szProduct || lstrlenW(szProduct) > 39)
@@ -334,7 +333,7 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
         rc = OpenMediaSubkey(sourcekey, &key, FALSE);
         if (rc == ERROR_SUCCESS)
             rc = RegSetValueExW(key, INSTALLPROPERTY_MEDIAPACKAGEPATHW, 0,
-                    REG_SZ, (LPBYTE)szValue, size);
+                    REG_SZ, (const BYTE *)szValue, size);
         if (rc != ERROR_SUCCESS)
             rc = ERROR_UNKNOWN_PROPERTY;
         RegCloseKey(key);
@@ -346,7 +345,7 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
         rc = OpenMediaSubkey(sourcekey, &key, FALSE);
         if (rc == ERROR_SUCCESS)
             rc = RegSetValueExW(key, INSTALLPROPERTY_DISKPROMPTW, 0,
-                    REG_SZ, (LPBYTE)szValue, size);
+                    REG_SZ, (const BYTE *)szValue, size);
         if (rc != ERROR_SUCCESS)
             rc = ERROR_UNKNOWN_PROPERTY;
         RegCloseKey(key);
@@ -368,9 +367,9 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
             typechar = 'u';
         else if (dwOptions & MSISOURCETYPE_MEDIA)
             typechar = 'm';
-        else 
-            ERR("Unknown source type! 0x%lx\n",dwOptions);
-        
+        else
+            ERR("Unknown source type! %x\n", dwOptions);
+
         size = (lstrlenW(szValue)+5)*sizeof(WCHAR);
         buffer = msi_alloc(size);
         sprintfW(buffer, LastUsedSource_Fmt, typechar, 1, szValue);
@@ -384,7 +383,7 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
     {
         DWORD size = lstrlenW(szValue)*sizeof(WCHAR);
         rc = RegSetValueExW(sourcekey, INSTALLPROPERTY_PACKAGENAMEW, 0,
-                REG_SZ, (LPBYTE)szValue, size);
+                REG_SZ, (const BYTE *)szValue, size);
         if (rc != ERROR_SUCCESS)
             rc = ERROR_UNKNOWN_PROPERTY;
     }
@@ -466,11 +465,10 @@ UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
     HKEY typekey;
     UINT rc;
     media_info source_struct;
-   
-    TRACE("%s, %s, %x, %lx, %s, %li\n", debugstr_w(szProduct), 
-            debugstr_w(szUserSid), dwContext, dwOptions, debugstr_w(szSource), 
-            dwIndex);
-    
+
+    TRACE("%s %s %x %x %s %i\n", debugstr_w(szProduct), debugstr_w(szUserSid),
+          dwContext, dwOptions, debugstr_w(szSource), dwIndex);
+
     if (!szProduct)
         return ERROR_INVALID_PARAMETER;
 
@@ -505,7 +503,7 @@ UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
         rc = OpenMediaSubkey(sourcekey, &typekey, TRUE);
     else
     {
-        ERR("unknown media type: %08lx\n", dwOptions);
+        ERR("unknown media type: %08x\n", dwOptions);
         RegCloseKey(sourcekey);
         return ERROR_FUNCTION_FAILED;
     }
@@ -533,7 +531,7 @@ UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
         current_index ++;
         sprintfW(source_struct.szIndex,fmt,current_index);
         rc = RegSetValueExW(typekey, source_struct.szIndex, 0, REG_EXPAND_SZ, 
-                (LPBYTE)szSource, size);
+                (const BYTE *)szSource, size);
     }
 
     RegCloseKey(typekey);
@@ -559,9 +557,9 @@ UINT WINAPI MsiSourceListAddMediaDiskW(LPCWSTR szProduct, LPCWSTR szUserSid,
     LPWSTR buffer;
     DWORD size;
 
-    TRACE("%s %s %x %lx %li %s %s\n", debugstr_w(szProduct), 
-            debugstr_w(szUserSid), dwContext, dwOptions, dwDiskId, 
-            debugstr_w(szVolumeLabel), debugstr_w(szDiskPrompt)); 
+    TRACE("%s %s %x %x %i %s %s\n", debugstr_w(szProduct),
+            debugstr_w(szUserSid), dwContext, dwOptions, dwDiskId,
+            debugstr_w(szVolumeLabel), debugstr_w(szDiskPrompt));
 
     if (!szProduct || lstrlenW(szProduct) > 39)
         return ERROR_INVALID_PARAMETER;
@@ -625,7 +623,7 @@ UINT WINAPI MsiSourceListAddMediaDiskW(LPCWSTR szProduct, LPCWSTR szUserSid,
  */
 UINT WINAPI MsiSourceListClearAllA( LPCSTR szProduct, LPCSTR szUserName, DWORD dwReserved )
 {
-    FIXME("(%s %s %ld) stub\n", debugstr_a(szProduct), debugstr_a(szUserName), dwReserved);
+    FIXME("(%s %s %d)\n", debugstr_a(szProduct), debugstr_a(szUserName), dwReserved);
     return ERROR_SUCCESS;
 }
 
@@ -634,6 +632,6 @@ UINT WINAPI MsiSourceListClearAllA( LPCSTR szProduct, LPCSTR szUserName, DWORD d
  */
 UINT WINAPI MsiSourceListClearAllW( LPCWSTR szProduct, LPCWSTR szUserName, DWORD dwReserved )
 {
-    FIXME("(%s %s %ld) stub\n", debugstr_w(szProduct), debugstr_w(szUserName), dwReserved);
+    FIXME("(%s %s %d)\n", debugstr_w(szProduct), debugstr_w(szUserName), dwReserved);
     return ERROR_SUCCESS;
 }

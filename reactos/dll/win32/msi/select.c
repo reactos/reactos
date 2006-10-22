@@ -285,7 +285,7 @@ static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPCWSTR name )
     return ERROR_SUCCESS;
 }
 
-int select_count_columns( column_info *col )
+static int select_count_columns( column_info *col )
 {
     int n;
     for (n = 0; col; col = col->next)

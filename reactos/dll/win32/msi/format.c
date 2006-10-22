@@ -36,7 +36,6 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/msifo
 #include "msipriv.h"
 #include "winnls.h"
 #include "wine/unicode.h"
-#include "action.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -471,7 +470,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
             TRACE("after value %s\n", debugstr_wn((LPWSTR)newdata,
                                     size/sizeof(WCHAR)));
             chunk = (len - (progress - ptr)) * sizeof(WCHAR);
-            TRACE("after chunk is %li + %li\n",size,chunk);
+            TRACE("after chunk is %i + %i\n",size,chunk);
             if (size)
                 nd2 = msi_realloc(newdata,(size+chunk));
             else
@@ -583,7 +582,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
         if (value!=NULL)
         {
             LPBYTE nd2;
-            TRACE("value %s, chunk %li size %li\n",debugstr_w((LPWSTR)value),
+            TRACE("value %s, chunk %i size %i\n",debugstr_w((LPWSTR)value),
                     chunk, size);
             if (size)
                 nd2= msi_realloc(newdata,(size + chunk));
@@ -616,7 +615,7 @@ UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
     DWORD len;
     UINT rc = ERROR_INVALID_PARAMETER;
 
-    TRACE("%p %p %p %li\n",package, record ,buffer, *size);
+    TRACE("%p %p %p %i\n", package, record ,buffer, *size);
 
     rec = msi_dup_record_field(record,0);
     if (!rec)
@@ -663,7 +662,7 @@ UINT MSI_FormatRecordA( MSIPACKAGE* package, MSIRECORD* record, LPSTR buffer,
     DWORD len,lenA;
     UINT rc = ERROR_INVALID_PARAMETER;
 
-    TRACE("%p %p %p %li\n",package, record ,buffer, *size);
+    TRACE("%p %p %p %i\n", package, record ,buffer, *size);
 
     rec = msi_dup_record_field(record,0);
     if (!rec)

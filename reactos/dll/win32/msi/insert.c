@@ -78,7 +78,7 @@ static MSIRECORD *INSERT_merge_record( UINT fields, column_info *vl, MSIRECORD *
         switch( vl->val->type )
         {
         case EXPR_SVAL:
-            TRACE("field %ld -> %s\n", i, debugstr_w(vl->val->u.sval));
+            TRACE("field %d -> %s\n", i, debugstr_w(vl->val->u.sval));
             MSI_RecordSetStringW( merged, i, vl->val->u.sval );
             break;
         case EXPR_IVAL:

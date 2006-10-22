@@ -32,7 +32,6 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/contr
 #include "winreg.h"
 #include "msi.h"
 #include "msipriv.h"
-#include "action.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -48,6 +47,7 @@ struct _events {
 
 struct subscriber {
     struct list entry;
+    msi_dialog *dialog;
     LPWSTR event;
     LPWSTR control;
     LPWSTR attribute;
@@ -58,13 +58,13 @@ UINT ControlEvent_HandleControlEvent(MSIPACKAGE *, LPCWSTR, LPCWSTR, msi_dialog*
 /*
  * Create a dialog box and run it if it's modal
  */
-static UINT event_do_dialog( MSIPACKAGE *package, LPCWSTR name, BOOL destroy_modeless )
+static UINT event_do_dialog( MSIPACKAGE *package, LPCWSTR name, msi_dialog *parent, BOOL destroy_modeless )
 {
     msi_dialog *dialog;
     UINT r;
 
     /* create a new dialog */
-    dialog = msi_dialog_create( package, name,
+    dialog = msi_dialog_create( package, name, parent,
                                 ControlEvent_HandleControlEvent );
     if( dialog )
     {
@@ -111,7 +111,12 @@ static UINT ControlEvent_EndDialog(MSIPACKAGE* package, LPCWSTR argument,
     else if (lstrcmpW(argument, szIgnore) == 0)
         package->CurrentInstallState = -1;
     else if (lstrcmpW(argument, szReturn) == 0)
+    {
+        msi_dialog *parent = msi_dialog_get_parent(dialog);
+        msi_free(package->next_dialog);
+        package->next_dialog = (parent) ? strdupW(msi_dialog_get_name(parent)) : NULL;
         package->CurrentInstallState = ERROR_SUCCESS;
+    }
     else
     {
         ERR("Unknown argument string %s\n",debugstr_w(argument));
@@ -143,7 +148,7 @@ static UINT ControlEvent_SpawnDialog(MSIPACKAGE* package, LPCWSTR argument,
                               msi_dialog *dialog)
 {
     /* don't destroy a modeless dialogs that might be our parent */
-    event_do_dialog( package, argument, FALSE );
+    event_do_dialog( package, argument, dialog, FALSE );
     if( package->CurrentInstallState != ERROR_SUCCESS )
         msi_dialog_end_dialog( dialog );
     return ERROR_SUCCESS;
@@ -237,10 +242,18 @@ static UINT ControlEvent_SetTargetPath(MSIPACKAGE* package, LPCWSTR argument,
                                    msi_dialog* dialog)
 {
     LPWSTR path = msi_dup_property( package, argument );
+    MSIRECORD *rec = MSI_CreateRecord( 1 );
     UINT r;
+
+    static const WCHAR szSelectionPath[] = {'S','e','l','e','c','t','i','o','n','P','a','t','h',0};
+
+    MSI_RecordSetStringW( rec, 1, path );
+    ControlEvent_FireSubscribedEvent( package, szSelectionPath, rec );
+
     /* failure to set the path halts the executing of control events */
     r = MSI_SetTargetPathW(package, argument, path);
     msi_free(path);
+    msi_free(&rec->hdr);
     return r;
 }
 
@@ -262,14 +275,15 @@ static void free_subscriber( struct subscriber *sub )
     msi_free(sub);
 }
 
-VOID ControlEvent_SubscribeToEvent( MSIPACKAGE *package, LPCWSTR event,
-                                    LPCWSTR control, LPCWSTR attribute )
+VOID ControlEvent_SubscribeToEvent( MSIPACKAGE *package, msi_dialog *dialog,
+                                    LPCWSTR event, LPCWSTR control, LPCWSTR attribute )
 {
     struct subscriber *sub;
 
     sub = msi_alloc(sizeof (*sub));
     if( !sub )
         return;
+    sub->dialog = dialog;
     sub->event = strdupW(event);
     sub->control = strdupW(control);
     sub->attribute = strdupW(attribute);
@@ -304,14 +318,11 @@ VOID ControlEvent_FireSubscribedEvent( MSIPACKAGE *package, LPCWSTR event,
 
     TRACE("Firing Event %s\n",debugstr_w(event));
 
-    if (!package->dialog)
-        return;
-
     LIST_FOR_EACH_ENTRY( sub, &package->subscriptions, struct subscriber, entry )
     {
         if (lstrcmpiW(sub->event, event))
             continue;
-        msi_dialog_handle_event( package->dialog, sub->control,
+        msi_dialog_handle_event( sub->dialog, sub->control,
                                  sub->attribute, rec );
     }
 }
@@ -353,13 +364,13 @@ UINT ACTION_DialogBox( MSIPACKAGE* package, LPCWSTR szDialogName )
      *  dialog, as it returns ERROR_IO_PENDING when we try to run
      *  its message loop.
      */
-    r = event_do_dialog( package, szDialogName, TRUE );
+    r = event_do_dialog( package, szDialogName, NULL, TRUE );
     while( r == ERROR_SUCCESS && package->next_dialog )
     {
         LPWSTR name = package->next_dialog;
 
         package->next_dialog = NULL;
-        r = event_do_dialog( package, name, TRUE );
+        r = event_do_dialog( package, name, NULL, TRUE );
         msi_free( name );
     }
 
@@ -398,6 +409,7 @@ static const struct _events Events[] = {
     { "Reset",ControlEvent_Reset },
     { "SetInstallLevel",ControlEvent_SetInstallLevel },
     { "DirectoryListUp",ControlEvent_DirectoryListUp },
+    { "SelectionBrowse",ControlEvent_SpawnDialog },
     { NULL,NULL },
 };
 

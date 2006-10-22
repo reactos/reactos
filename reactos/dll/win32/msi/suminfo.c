@@ -163,7 +163,7 @@ static void read_properties_from_data( PROPVARIANT *prop, LPBYTE data, DWORD sz 
         type = get_type( idofs[i].propid );
         if( type == VT_EMPTY )
         {
-            ERR("propid %ld has unknown type\n", idofs[i].propid);
+            ERR("propid %d has unknown type\n", idofs[i].propid);
             break;
         }
 
@@ -172,7 +172,7 @@ static void read_properties_from_data( PROPVARIANT *prop, LPBYTE data, DWORD sz 
         /* check the type is the same as we expect */
         if( type != propdata->type )
         {
-            ERR("wrong type %d != %ld\n", type, propdata->type);
+            ERR("wrong type %d != %d\n", type, propdata->type);
             break;
         }
 
@@ -188,7 +188,7 @@ static void read_properties_from_data( PROPVARIANT *prop, LPBYTE data, DWORD sz 
 
         if( idofs[i].propid >= MSI_MAX_PROPS )
         {
-            ERR("Unknown property ID %ld\n", idofs[i].propid );
+            ERR("Unknown property ID %d\n", idofs[i].propid );
             break;
         }
 
@@ -259,7 +259,7 @@ static UINT load_summary_info( MSISUMMARYINFO *si, IStream *stm )
 
     if( section_hdr.cProperties > MSI_MAX_PROPS )
     {
-        ERR("too many properties %ld\n", section_hdr.cProperties);
+        ERR("too many properties %d\n", section_hdr.cProperties);
         return ret;
     }
 
@@ -275,7 +275,7 @@ static UINT load_summary_info( MSISUMMARYINFO *si, IStream *stm )
     if( SUCCEEDED(r) && count == sz )
         read_properties_from_data( si->property, data, sz + SECT_HDR_SIZE );
     else
-        ERR("failed to read properties %ld %ld\n", count, sz);
+        ERR("failed to read properties %d %d\n", count, sz);
 
     msi_free( data );
     return ret;
@@ -506,7 +506,7 @@ UINT WINAPI MsiSummaryInfoGetPropertyCount(MSIHANDLE hSummaryInfo, UINT *pCount)
 {
     MSISUMMARYINFO *si;
 
-    TRACE("%ld %p\n",hSummaryInfo, pCount);
+    TRACE("%ld %p\n", hSummaryInfo, pCount);
 
     si = msihandle2msiinfo( hSummaryInfo, MSIHANDLETYPE_SUMMARYINFO );
     if( !si )

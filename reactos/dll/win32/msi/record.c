@@ -641,7 +641,7 @@ static UINT RECORD_StreamFromFile(LPCWSTR szFile, IStream **pstm)
     ulSize.QuadPart = sz;
     IStream_SetSize(*pstm, ulSize);
 
-    TRACE("read %s, %ld bytes into IStream %p\n", debugstr_w(szFile), sz, *pstm);
+    TRACE("read %s, %d bytes into IStream %p\n", debugstr_w(szFile), sz, *pstm);
 
     return ERROR_SUCCESS;
 }

@@ -43,6 +43,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "msi_Ru.rc"
 #include "msi_Tr.rc"
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
 /* BINRES instadvert.bmp */
 0x1001 BITMAP instadvert.bmp
 /* {

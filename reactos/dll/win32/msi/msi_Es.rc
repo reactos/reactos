@@ -1,7 +1,7 @@
 /*
  * Spanish resources for MSI
  *
- * Copyright 2005 José Manuel Ferrer Ortiz
+ * Copyright 2005, 2006 José Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
-	4 "The specified installation package could not be opened.  Please check the file path and try again."
+	4 "No se ha podido abrir el paquete de instalación especificado. Por favor, compruebe la ruta del archivo y vuelva a intentarlo."
 	5 "ruta %s no encontrada"
 	9 "inserte el disco %s"
 	10 "parámetros incorrectos"

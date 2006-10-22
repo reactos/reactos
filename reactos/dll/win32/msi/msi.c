@@ -40,7 +40,6 @@
 #include "shobjidl.h"
 #include "objidl.h"
 #include "wine/unicode.h"
-#include "action.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -151,7 +150,7 @@ UINT WINAPI MsiAdvertiseProductW(LPCWSTR szPackagePath, LPCWSTR szScriptfilePath
 UINT WINAPI MsiAdvertiseProductExA(LPCSTR szPackagePath, LPCSTR szScriptfilePath,
       LPCSTR szTransforms, LANGID lgidLanguage, DWORD dwPlatform, DWORD dwOptions)
 {
-    FIXME("%s %s %s %08x %08lx %08lx\n", debugstr_a(szPackagePath),
+    FIXME("%s %s %s %08x %08x %08x\n", debugstr_a(szPackagePath),
           debugstr_a(szScriptfilePath), debugstr_a(szTransforms),
           lgidLanguage, dwPlatform, dwOptions);
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -160,7 +159,7 @@ UINT WINAPI MsiAdvertiseProductExA(LPCSTR szPackagePath, LPCSTR szScriptfilePath
 UINT WINAPI MsiAdvertiseProductExW( LPCWSTR szPackagePath, LPCWSTR szScriptfilePath,
       LPCWSTR szTransforms, LANGID lgidLanguage, DWORD dwPlatform, DWORD dwOptions)
 {
-    FIXME("%s %s %s %08x %08lx %08lx\n", debugstr_w(szPackagePath),
+    FIXME("%s %s %s %08x %08x %08x\n", debugstr_w(szPackagePath),
           debugstr_w(szScriptfilePath), debugstr_w(szTransforms),
           lgidLanguage, dwPlatform, dwOptions);
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -215,13 +214,13 @@ UINT WINAPI MsiInstallProductW(LPCWSTR szPackagePath, LPCWSTR szCommandLine)
 
 UINT WINAPI MsiReinstallProductA(LPCSTR szProduct, DWORD dwReinstallMode)
 {
-    FIXME("%s %08lx\n", debugstr_a(szProduct), dwReinstallMode);
+    FIXME("%s %08x\n", debugstr_a(szProduct), dwReinstallMode);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 UINT WINAPI MsiReinstallProductW(LPCWSTR szProduct, DWORD dwReinstallMode)
 {
-    FIXME("%s %08lx\n", debugstr_w(szProduct), dwReinstallMode);
+    FIXME("%s %08x\n", debugstr_w(szProduct), dwReinstallMode);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -432,8 +431,8 @@ UINT WINAPI MsiGetProductCodeW(LPCWSTR szComponent, LPWSTR szBuffer)
     return ERROR_SUCCESS;
 }
 
-UINT WINAPI MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
-                               awstring *szValue, DWORD *pcchValueBuf)
+static UINT WINAPI MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
+                                      awstring *szValue, DWORD *pcchValueBuf)
 {
     UINT r;
     HKEY hkey;
@@ -590,7 +589,7 @@ UINT WINAPI MsiEnableLogA(DWORD dwLogMode, LPCSTR szLogFile, DWORD attributes)
     LPWSTR szwLogFile = NULL;
     UINT r;
 
-    TRACE("%08lx %s %08lx\n", dwLogMode, debugstr_a(szLogFile), attributes);
+    TRACE("%08x %s %08x\n", dwLogMode, debugstr_a(szLogFile), attributes);
 
     if( szLogFile )
     {
@@ -607,7 +606,7 @@ UINT WINAPI MsiEnableLogW(DWORD dwLogMode, LPCWSTR szLogFile, DWORD attributes)
 {
     HANDLE file = INVALID_HANDLE_VALUE;
 
-    TRACE("%08lx %s %08lx\n", dwLogMode, debugstr_w(szLogFile), attributes);
+    TRACE("%08x %s %08x\n", dwLogMode, debugstr_w(szLogFile), attributes);
 
     if (szLogFile)
     {
@@ -709,7 +708,7 @@ INSTALLUI_HANDLERA WINAPI MsiSetExternalUIA(INSTALLUI_HANDLERA puiHandler,
 {
     INSTALLUI_HANDLERA prev = gUIHandlerA;
 
-    TRACE("%p %lx %p\n",puiHandler, dwMessageFilter,pvContext);
+    TRACE("%p %x %p\n",puiHandler, dwMessageFilter,pvContext);
     gUIHandlerA = puiHandler;
     gUIFilter = dwMessageFilter;
     gUIContext = pvContext;
@@ -722,7 +721,7 @@ INSTALLUI_HANDLERW WINAPI MsiSetExternalUIW(INSTALLUI_HANDLERW puiHandler,
 {
     INSTALLUI_HANDLERW prev = gUIHandlerW;
 
-    TRACE("%p %lx %p\n",puiHandler,dwMessageFilter,pvContext);
+    TRACE("%p %x %p\n",puiHandler,dwMessageFilter,pvContext);
     gUIHandlerW = puiHandler;
     gUIFilter = dwMessageFilter;
     gUIContext = pvContext;
@@ -848,16 +847,16 @@ INSTALLSTATE WINAPI MsiLocateComponentW(LPCWSTR szComponent, LPWSTR lpPathBuf,
 UINT WINAPI MsiMessageBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType,
                 WORD wLanguageId, DWORD f)
 {
-    FIXME("%p %s %s %u %08x %08lx\n",hWnd,debugstr_a(lpText),debugstr_a(lpCaption),
-          uType,wLanguageId,f);
+    FIXME("%p %s %s %u %08x %08x\n", hWnd, debugstr_a(lpText), debugstr_a(lpCaption),
+          uType, wLanguageId, f);
     return MessageBoxExA(hWnd,lpText,lpCaption,uType,wLanguageId); 
 }
 
 UINT WINAPI MsiMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType,
                 WORD wLanguageId, DWORD f)
 {
-    FIXME("%p %s %s %u %08x %08lx\n",hWnd,debugstr_w(lpText),debugstr_w(lpCaption),
-          uType,wLanguageId,f);
+    FIXME("%p %s %s %u %08x %08x\n", hWnd, debugstr_w(lpText), debugstr_w(lpCaption),
+          uType, wLanguageId, f);
     return MessageBoxExW(hWnd,lpText,lpCaption,uType,wLanguageId); 
 }
 
@@ -865,7 +864,7 @@ UINT WINAPI MsiProvideAssemblyA( LPCSTR szAssemblyName, LPCSTR szAppContext,
                 DWORD dwInstallMode, DWORD dwAssemblyInfo, LPSTR lpPathBuf,
                 DWORD* pcchPathBuf )
 {
-    FIXME("%s %s %08lx %08lx %p %p\n", debugstr_a(szAssemblyName),
+    FIXME("%s %s %08x %08x %p %p\n", debugstr_a(szAssemblyName),
           debugstr_a(szAppContext), dwInstallMode, dwAssemblyInfo, lpPathBuf,
           pcchPathBuf);
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -875,7 +874,7 @@ UINT WINAPI MsiProvideAssemblyW( LPCWSTR szAssemblyName, LPCWSTR szAppContext,
                 DWORD dwInstallMode, DWORD dwAssemblyInfo, LPWSTR lpPathBuf,
                 DWORD* pcchPathBuf )
 {
-    FIXME("%s %s %08lx %08lx %p %p\n", debugstr_w(szAssemblyName),
+    FIXME("%s %s %08x %08x %p %p\n", debugstr_w(szAssemblyName),
           debugstr_w(szAppContext), dwInstallMode, dwAssemblyInfo, lpPathBuf,
           pcchPathBuf);
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -899,7 +898,7 @@ HRESULT WINAPI MsiGetFileSignatureInformationA( LPCSTR szSignedObjectPath,
                 DWORD dwFlags, PCCERT_CONTEXT* ppcCertContext, BYTE* pbHashData,
                 DWORD* pcbHashData)
 {
-    FIXME("%s %08lx %p %p %p\n", debugstr_a(szSignedObjectPath), dwFlags,
+    FIXME("%s %08x %p %p %p\n", debugstr_a(szSignedObjectPath), dwFlags,
           ppcCertContext, pbHashData, pcbHashData);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
@@ -908,7 +907,7 @@ HRESULT WINAPI MsiGetFileSignatureInformationW( LPCWSTR szSignedObjectPath,
                 DWORD dwFlags, PCCERT_CONTEXT* ppcCertContext, BYTE* pbHashData,
                 DWORD* pcbHashData)
 {
-    FIXME("%s %08lx %p %p %p\n", debugstr_w(szSignedObjectPath), dwFlags,
+    FIXME("%s %08x %p %p %p\n", debugstr_w(szSignedObjectPath), dwFlags,
           ppcCertContext, pbHashData, pcbHashData);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
@@ -961,8 +960,8 @@ UINT WINAPI MsiVerifyPackageW( LPCWSTR szPackage )
     return r;
 }
 
-INSTALLSTATE WINAPI MSI_GetComponentPath(LPCWSTR szProduct, LPCWSTR szComponent,
-                                         awstring* lpPathBuf, DWORD* pcchBuf)
+static INSTALLSTATE WINAPI MSI_GetComponentPath(LPCWSTR szProduct, LPCWSTR szComponent,
+                                                awstring* lpPathBuf, DWORD* pcchBuf)
 {
     WCHAR squished_pc[GUID_SIZE], squished_comp[GUID_SIZE];
     UINT rc;
@@ -1244,7 +1243,7 @@ UINT WINAPI MsiGetFileVersionW(LPCWSTR szFilePath, LPWSTR lpVersionBuf,
     UINT puLen;
     WCHAR tmp[32];
 
-    TRACE("%s %p %ld %p %ld\n", debugstr_w(szFilePath),
+    TRACE("%s %p %d %p %d\n", debugstr_w(szFilePath),
           lpVersionBuf, pcchVersionBuf?*pcchVersionBuf:0,
           lpLangBuf, pcchLangBuf?*pcchLangBuf:0);
 
@@ -1345,7 +1344,7 @@ INSTALLSTATE WINAPI MsiUseFeatureExW( LPCWSTR szProduct, LPCWSTR szFeature,
 {
     INSTALLSTATE state;
 
-    TRACE("%s %s %li %li\n", debugstr_w(szProduct), debugstr_w(szFeature),
+    TRACE("%s %s %i %i\n", debugstr_w(szProduct), debugstr_w(szFeature),
           dwInstallMode, dwReserved);
 
     state = MsiQueryFeatureStateW( szProduct, szFeature );
@@ -1371,7 +1370,7 @@ INSTALLSTATE WINAPI MsiUseFeatureExA( LPCSTR szProduct, LPCSTR szFeature,
     INSTALLSTATE ret = INSTALLSTATE_UNKNOWN;
     LPWSTR prod = NULL, feat = NULL;
 
-    TRACE("%s %s %li %li\n", debugstr_a(szProduct), debugstr_a(szFeature),
+    TRACE("%s %s %i %i\n", debugstr_a(szProduct), debugstr_a(szFeature),
           dwInstallMode, dwReserved);
 
     prod = strdupAtoW( szProduct );
@@ -1410,7 +1409,7 @@ INSTALLSTATE WINAPI MsiUseFeatureA( LPCSTR szProduct, LPCSTR szFeature )
 /***********************************************************************
  * MSI_ProvideQualifiedComponentEx [internal]
  */
-UINT WINAPI MSI_ProvideQualifiedComponentEx(LPCWSTR szComponent,
+static UINT WINAPI MSI_ProvideQualifiedComponentEx(LPCWSTR szComponent,
                 LPCWSTR szQualifier, DWORD dwInstallMode, LPWSTR szProduct,
                 DWORD Unused1, DWORD Unused2, awstring *lpPathBuf,
                 DWORD* pcchPathBuf)
@@ -1422,7 +1421,7 @@ UINT WINAPI MSI_ProvideQualifiedComponentEx(LPCWSTR szComponent,
     DWORD sz;
     UINT rc;
 
-    TRACE("%s %s %li %s %li %li %p %p\n", debugstr_w(szComponent),
+    TRACE("%s %s %i %s %i %i %p %p\n", debugstr_w(szComponent),
           debugstr_w(szQualifier), dwInstallMode, debugstr_w(szProduct),
           Unused1, Unused2, lpPathBuf, pcchPathBuf);
 
@@ -1480,7 +1479,7 @@ UINT WINAPI MsiProvideQualifiedComponentExA(LPCSTR szComponent,
     UINT r = ERROR_OUTOFMEMORY;
     awstring path;
 
-    TRACE("%s %s %lu %s %lu %lu %p %p\n", debugstr_a(szComponent),
+    TRACE("%s %s %u %s %u %u %p %p\n", debugstr_a(szComponent),
           debugstr_a(szQualifier), dwInstallMode, debugstr_a(szProduct),
           Unused1, Unused2, lpPathBuf, pcchPathBuf);
 
@@ -1535,7 +1534,7 @@ UINT WINAPI MsiProvideQualifiedComponentA( LPCSTR szComponent,
 /***********************************************************************
  * MSI_GetUserInfo [internal]
  */
-USERINFOSTATE WINAPI MSI_GetUserInfo(LPCWSTR szProduct,
+static USERINFOSTATE WINAPI MSI_GetUserInfo(LPCWSTR szProduct,
                 awstring *lpUserNameBuf, DWORD* pcchUserNameBuf,
                 awstring *lpOrgNameBuf, DWORD* pcchOrgNameBuf,
                 awstring *lpSerialBuf, DWORD* pcchSerialBuf)
@@ -1775,11 +1774,11 @@ UINT WINAPI MsiCreateAndVerifyInstallerDirectory(DWORD dwReserved)
 {
     WCHAR path[MAX_PATH];
 
-    TRACE("%ld\n", dwReserved);
+    TRACE("%d\n", dwReserved);
 
     if (dwReserved)
     {
-        FIXME("dwReserved=%ld\n", dwReserved);
+        FIXME("dwReserved=%d\n", dwReserved);
         return ERROR_INVALID_PARAMETER;
     }
 
@@ -1896,7 +1895,7 @@ UINT WINAPI MsiReinstallFeatureW( LPCWSTR szProduct, LPCWSTR szFeature,
     LPWSTR ptr;
     DWORD sz;
 
-    FIXME("%s %s %li\n", debugstr_w(szProduct), debugstr_w(szFeature),
+    FIXME("%s %s %i\n", debugstr_w(szProduct), debugstr_w(szFeature),
                            dwReinstallMode);
 
     ptr = reinstallmode;
@@ -1960,7 +1959,7 @@ UINT WINAPI MsiReinstallFeatureA( LPCSTR szProduct, LPCSTR szFeature,
     LPWSTR wszFeature;
     UINT rc;
 
-    TRACE("%s %s %li\n", debugstr_a(szProduct), debugstr_a(szFeature),
+    TRACE("%s %s %i\n", debugstr_a(szProduct), debugstr_a(szFeature),
                            dwReinstallMode);
 
     wszProduct = strdupAtoW(szProduct);
@@ -1996,7 +1995,7 @@ UINT WINAPI MsiGetFileHashW( LPCWSTR szFilePath, DWORD dwOptions,
     DWORD length;
     UINT r = ERROR_FUNCTION_FAILED;
 
-    TRACE("%s %08lx %p\n", debugstr_w(szFilePath), dwOptions, pHash );
+    TRACE("%s %08x %p\n", debugstr_w(szFilePath), dwOptions, pHash );
 
     if (dwOptions)
         return ERROR_INVALID_PARAMETER;
@@ -2044,7 +2043,7 @@ UINT WINAPI MsiGetFileHashA( LPCSTR szFilePath, DWORD dwOptions,
     LPWSTR file;
     UINT r;
 
-    TRACE("%s %08lx %p\n", debugstr_a(szFilePath), dwOptions, pHash );
+    TRACE("%s %08x %p\n", debugstr_a(szFilePath), dwOptions, pHash );
 
     file = strdupAtoW( szFilePath );
     if (szFilePath && !file)
@@ -2061,7 +2060,7 @@ UINT WINAPI MsiGetFileHashA( LPCSTR szFilePath, DWORD dwOptions,
 UINT WINAPI MsiAdvertiseScriptW( LPCWSTR szScriptFile, DWORD dwFlags,
                                  PHKEY phRegData, BOOL fRemoveItems )
 {
-    FIXME("%s %08lx %p %d\n",
+    FIXME("%s %08x %p %d\n",
           debugstr_w( szScriptFile ), dwFlags, phRegData, fRemoveItems );
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
@@ -2072,7 +2071,7 @@ UINT WINAPI MsiAdvertiseScriptW( LPCWSTR szScriptFile, DWORD dwFlags,
 UINT WINAPI MsiAdvertiseScriptA( LPCSTR szScriptFile, DWORD dwFlags,
                                  PHKEY phRegData, BOOL fRemoveItems )
 {
-    FIXME("%s %08lx %p %d\n",
+    FIXME("%s %08x %p %d\n",
           debugstr_a( szScriptFile ), dwFlags, phRegData, fRemoveItems );
     return ERROR_CALL_NOT_IMPLEMENTED;
 }

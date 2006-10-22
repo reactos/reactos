@@ -36,7 +36,6 @@
 #include "msidefs.h"
 #include "msipriv.h"
 #include "winuser.h"
-#include "action.h"
 #include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -124,7 +123,7 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
     while (rc == ERROR_SUCCESS)
     {
         rc = RegEnumValueW(hkey, index, product, &sz, NULL, NULL, NULL, NULL);
-        TRACE("Looking at (%li) %s\n",index,debugstr_w(product));
+        TRACE("Looking at (%i) %s\n",index,debugstr_w(product));
         if (rc == ERROR_SUCCESS)
         {
             WCHAR productid[GUID_SIZE];
@@ -179,7 +178,7 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
                     (LPBYTE)&check, &sz);
             RegCloseKey(hukey);
             language = MSI_RecordGetString(rec,4);
-            TRACE("Checking languages 0x%lx and %s\n", check, 
+            TRACE("Checking languages %x and %s\n", check, 
                             debugstr_w(language));
             if (!check_language(check, language, attributes))
             {

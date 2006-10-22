@@ -37,6 +37,8 @@
 
 #include "query.h"
 
+#include "initguid.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 static void MSI_CloseView( MSIOBJECTHDR *arg )
@@ -314,11 +316,10 @@ UINT MSI_ViewFetch(MSIQUERY *query, MSIRECORD **prec)
 
             if( type & MSITYPE_STRING )
             {
-                LPWSTR sval;
+                LPCWSTR sval;
 
-                sval = MSI_makestring( query->db, ival );
+                sval = msi_string_lookup_id( query->db->strings, ival );
                 MSI_RecordSetStringW( rec, i, sval );
-                msi_free( sval );
             }
             else
             {
@@ -662,30 +663,40 @@ MSIHANDLE WINAPI MsiGetLastErrorRecord( void )
 
 DEFINE_GUID( CLSID_MsiTransform, 0x000c1082, 0x0000, 0x0000, 0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 
-UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db, 
+UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db,
                  LPCWSTR szTransformFile, int iErrorCond )
 {
-    UINT r;
+    HRESULT r;
+    UINT ret = ERROR_FUNCTION_FAILED;
     IStorage *stg = NULL;
- 
+    STATSTG stat;
+
     TRACE("%p %s %d\n", db, debugstr_w(szTransformFile), iErrorCond);
 
     r = StgOpenStorage( szTransformFile, NULL,
            STGM_DIRECT|STGM_READ|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
-    if( r )
-        return r;
+    if ( FAILED(r) )
+        return ret;
+
+    r = IStorage_Stat( stg, &stat, STATFLAG_NONAME );
+    if ( FAILED( r ) )
+        goto end;
+
+    if ( !IsEqualGUID( &stat.clsid, &CLSID_MsiTransform ) )
+        goto end;
 
     if( TRACE_ON( msi ) )
         enum_stream_names( stg );
 
-    r = msi_table_apply_transform( db, stg );
+    ret = msi_table_apply_transform( db, stg );
 
+end:
     IStorage_Release( stg );
 
-    return r;
+    return ret;
 }
 
-UINT WINAPI MsiDatabaseApplyTransformW( MSIHANDLE hdb, 
+UINT WINAPI MsiDatabaseApplyTransformW( MSIHANDLE hdb,
                  LPCWSTR szTransformFile, int iErrorCond)
 {
     MSIDATABASE *db;
@@ -814,7 +825,7 @@ UINT MSI_DatabaseGetPrimaryKeys( MSIDATABASE *db,
     r = MSI_IterateRecords( query, 0, msi_primary_key_iterator, &info );
     if( r == ERROR_SUCCESS )
     {
-        TRACE("Found %ld primary keys\n", info.n );
+        TRACE("Found %d primary keys\n", info.n );
 
         /* allocate a record and fill in the names of the tables */
         info.rec = MSI_CreateRecord( info.n );

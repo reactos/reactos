@@ -33,7 +33,7 @@
 #include "msipriv.h"
 #include "winuser.h"
 #include "wine/unicode.h"
-#include "action.h"
+#include "msidefs.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -41,6 +41,7 @@ static const WCHAR cszTargetDir[] = {'T','A','R','G','E','T','D','I','R',0};
 static const WCHAR cszDatabase[]={'D','A','T','A','B','A','S','E',0};
 
 const WCHAR cszSourceDir[] = {'S','o','u','r','c','e','D','i','r',0};
+const WCHAR cszSOURCEDIR[] = {'S','O','U','R','C','E','D','I','R',0};
 const WCHAR cszRootDrive[] = {'R','O','O','T','D','R','I','V','E',0};
 const WCHAR cszbs[]={'\\',0};
 
@@ -217,10 +218,14 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
     if (!name)
         return NULL;
 
+    f = get_loaded_folder( package, name );
+    if (!f)
+        return NULL;
+
     /* special resolving for Target and Source root dir */
     if (strcmpW(name,cszTargetDir)==0 || strcmpW(name,cszSourceDir)==0)
     {
-        if (!source)
+        if (!f->ResolvedTarget && !f->Property)
         {
             LPWSTR check_path;
             check_path = msi_dup_property( package, cszTargetDir );
@@ -237,17 +242,13 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
             if (strcmpiW(path,check_path)!=0)
                 MSI_SetPropertyW(package,cszTargetDir,path);
             msi_free(check_path);
-        }
-        else
-            path = get_source_root( package );
-        if (folder)
-            *folder = get_loaded_folder( package, name );
-        return path;
-    }
 
-    f = get_loaded_folder( package, name );
-    if (!f)
-        return NULL;
+            f->ResolvedTarget = path;
+        }
+
+        if (!f->ResolvedSource)
+            f->ResolvedSource = get_source_root( package );
+    }
 
     if (folder)
         *folder = f;
@@ -405,6 +406,13 @@ static void free_feature( MSIFEATURE *feature )
 {
     struct list *item, *cursor;
 
+    LIST_FOR_EACH_SAFE( item, cursor, &feature->Children )
+    {
+        FeatureList *fl = LIST_ENTRY( item, FeatureList, entry );
+        list_remove( &fl->entry );
+        msi_free( fl );
+    }
+
     LIST_FOR_EACH_SAFE( item, cursor, &feature->Components )
     {
         ComponentList *cl = LIST_ENTRY( item, ComponentList, entry );
@@ -419,7 +427,7 @@ static void free_feature( MSIFEATURE *feature )
     msi_free( feature );
 }
 
-void free_extension( MSIEXTENSION *ext )
+static void free_extension( MSIEXTENSION *ext )
 {
     struct list *item, *cursor;
 
@@ -843,6 +851,9 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
 
     newstate = feature->ActionRequest;
 
+    if (newstate == INSTALLSTATE_ABSENT)
+        newstate = INSTALLSTATE_UNKNOWN;
+
     LIST_FOR_EACH_ENTRY( cl, &feature->Components, ComponentList, entry )
     {
         MSICOMPONENT* component = cl->component;
@@ -870,20 +881,43 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
             /*if any other feature wants is local we need to set it local*/
             LIST_FOR_EACH_ENTRY( f, &package->features, MSIFEATURE, entry )
             {
-                if ( component->ActionRequest != INSTALLSTATE_LOCAL )
-                    break;
+                if ( f->ActionRequest != INSTALLSTATE_LOCAL &&
+                     f->ActionRequest != INSTALLSTATE_SOURCE )
+                {
+                    continue;
+                }
 
                 LIST_FOR_EACH_ENTRY( clist, &f->Components, ComponentList, entry )
                 {
-                    if ( clist->component == component )
+                    if ( clist->component == component &&
+                         (f->ActionRequest == INSTALLSTATE_LOCAL ||
+                          f->ActionRequest == INSTALLSTATE_SOURCE) )
                     {
-                        if (f->ActionRequest == INSTALLSTATE_LOCAL)
+                        TRACE("Saved by %s\n", debugstr_w(f->Feature));
+
+                        if (component->Attributes & msidbComponentAttributesOptional)
                         {
-                            TRACE("Saved by %s\n", debugstr_w(f->Feature));
-                            component->ActionRequest = INSTALLSTATE_LOCAL;
-                            component->Action = INSTALLSTATE_LOCAL;
+                            if (f->Attributes & msidbFeatureAttributesFavorSource)
+                            {
+                                component->Action = INSTALLSTATE_SOURCE;
+                                component->ActionRequest = INSTALLSTATE_SOURCE;
+                            }
+                            else
+                            {
+                                component->Action = INSTALLSTATE_LOCAL;
+                                component->ActionRequest = INSTALLSTATE_LOCAL;
+                            }
                         }
-                        break;
+                        else if (component->Attributes & msidbComponentAttributesSourceOnly)
+                        {
+                            component->Action = INSTALLSTATE_SOURCE;
+                            component->ActionRequest = INSTALLSTATE_SOURCE;
+                        }
+                        else
+                        {
+                            component->Action = INSTALLSTATE_LOCAL;
+                            component->ActionRequest = INSTALLSTATE_LOCAL;
+                        } 
                     }
                 }
             }

@@ -35,7 +35,6 @@
 #include "msi.h"
 #include "msiquery.h"
 #include "msipriv.h"
-#include "action.h"
 
 #define YYLEX_PARAM info
 #define YYPARSE_PARAM info

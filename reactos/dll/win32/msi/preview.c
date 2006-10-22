@@ -103,7 +103,7 @@ UINT MSI_PreviewDialogW( MSIPREVIEW *preview, LPCWSTR szDialogName )
     /* an empty name means we should just destroy the current preview dialog */
     if( szDialogName )
     {
-        dialog = msi_dialog_create( preview->package, szDialogName,
+        dialog = msi_dialog_create( preview->package, szDialogName, NULL,
                                     preview_event_handler );
         if( dialog )
             msi_dialog_do_preview( dialog );

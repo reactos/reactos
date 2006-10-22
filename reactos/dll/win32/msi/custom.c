@@ -47,7 +47,6 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/summa
 #include "shlobj.h"
 #include "wine/unicode.h"
 #include "winver.h"
-#include "action.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -120,7 +119,7 @@ static BOOL check_execution_scheduling_options(MSIPACKAGE *package, LPCWSTR acti
 /* stores the CustomActionData before the action:
  *     [CustomActionData]Action
  */
-LPWSTR msi_get_deferred_action(LPCWSTR action, LPWSTR actiondata)
+static LPWSTR msi_get_deferred_action(LPCWSTR action, LPWSTR actiondata)
 {
     LPWSTR deferred;
     DWORD len;
@@ -167,7 +166,10 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
 
     row = MSI_QueryGetRecord( package->db, ExecSeqQuery, action );
     if (!row)
+    {
+        msi_free(action_copy);
         return ERROR_CALL_NOT_IMPLEMENTED;
+    }
 
     type = MSI_RecordGetInteger(row,2);
 
@@ -382,7 +384,7 @@ static UINT process_action_return_value(UINT type, HANDLE ThreadHandle)
     case ERROR_NO_MORE_ITEMS:
         return ERROR_SUCCESS;
     default:
-        ERR("Invalid Return Code %ld\n",rc);
+        ERR("Invalid Return Code %d\n",rc);
         return ERROR_INSTALL_FAILURE;
     }
 }
@@ -502,14 +504,13 @@ static DWORD WINAPI DllThread(LPVOID info)
 {
     thread_struct *stuff;
     DWORD rc = 0;
-  
-    TRACE("MSI Thread (0x%lx) started for custom action\n",
-                        GetCurrentThreadId());
-    
+
+    TRACE("MSI Thread (%x) started for custom action\n", GetCurrentThreadId());
+
     stuff = (thread_struct*)info;
     rc = ACTION_CallDllFunction(stuff);
 
-    TRACE("MSI Thread (0x%lx) finished (rc %li)\n",GetCurrentThreadId(), rc);
+    TRACE("MSI Thread (%x) finished (rc %i)\n",GetCurrentThreadId(), rc);
     /* clse all handles for this thread */
     MsiCloseAllHandles();
     return rc;

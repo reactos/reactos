@@ -32,7 +32,6 @@
 #include "wine/unicode.h"
 #include "wine/debug.h"
 #include "msipriv.h"
-#include "action.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -155,7 +154,7 @@ static UINT ACTION_AppSearchGetSignature(MSIPACKAGE *package, MSISIGNATURE *sig,
         TRACE("MaxVersion is %d.%d.%d.%d\n", HIWORD(sig->MaxVersionMS),
          LOWORD(sig->MaxVersionMS), HIWORD(sig->MaxVersionLS),
          LOWORD(sig->MaxVersionLS));
-        TRACE("MinSize is %ld, MaxSize is %ld;\n", sig->MinSize, sig->MaxSize);
+        TRACE("MinSize is %d, MaxSize is %d;\n", sig->MinSize, sig->MaxSize);
         TRACE("Languages is %s\n", debugstr_w(sig->Languages));
 
 end:
@@ -255,7 +254,7 @@ static void ACTION_ConvertRegValue(DWORD regType, const BYTE *value, DWORD sz,
     switch (regType)
     {
         case REG_SZ:
-            if (*(LPWSTR)value == '#')
+            if (*(LPCWSTR)value == '#')
             {
                 /* escape leading pound with another */
                 *appValue = msi_alloc(sz + sizeof(WCHAR));
@@ -287,7 +286,7 @@ static void ACTION_ConvertRegValue(DWORD regType, const BYTE *value, DWORD sz,
                 sprintfW(*appValue + i * 3, binFmt, value[i]);
             break;
         default:
-            WARN("unimplemented for values of type %ld\n", regType);
+            WARN("unimplemented for values of type %d\n", regType);
             *appValue = NULL;
     }
 }
@@ -397,6 +396,9 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue,
         case msidbLocatorTypeDirectory:
             rc = ACTION_SearchDirectory(package, sig, (LPCWSTR)value, 0,
              appValue);
+            break;
+        case msidbLocatorTypeFileName:
+            *appValue = strdupW((LPCWSTR)value);
             break;
         case msidbLocatorTypeRawValue:
             ACTION_ConvertRegValue(regType, value, sz, appValue);
@@ -528,7 +530,10 @@ static void ACTION_ExpandAnyPath(MSIPACKAGE *package, WCHAR *src, WCHAR *dst,
     size_t copied = 0;
 
     if (!src || !dst || !len)
+    {
+        if (dst) *dst = '\0';
         return;
+    }
 
     /* Ignore the short portion of the path, don't think we can use it anyway */
     if ((ptr = strchrW(src, '|')))
@@ -913,7 +918,7 @@ static UINT ACTION_AppSearchDr(MSIPACKAGE *package, LPWSTR *appValue,
         msi_free(path);
         if (parent)
         {
-            path = msi_alloc(strlenW(parent) + strlenW(expanded) + 1);
+            path = msi_alloc((strlenW(parent) + strlenW(expanded) + 1) * sizeof(WCHAR));
             if (!path)
                 goto end;
             strcpyW(path, parent);
@@ -991,7 +996,7 @@ UINT ACTION_AppSearch(MSIPACKAGE *package)
         while (!rc)
         {
             MSISIGNATURE sig;
-            LPWSTR value;
+            LPWSTR value = NULL;
 
             rc = MSI_ViewFetch(view,&row);
             if (rc != ERROR_SUCCESS)

@@ -45,7 +45,6 @@
 #include "winreg.h"
 #include "shlwapi.h"
 #include "wine/unicode.h"
-#include "action.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -57,8 +56,6 @@ extern const WCHAR szRemoveDuplicateFiles[];
 extern const WCHAR szRemoveFiles[];
 
 static const WCHAR cszTempFolder[]= {'T','e','m','p','F','o','l','d','e','r',0};
-
-extern LPCWSTR msi_download_file( LPCWSTR szUrl, LPWSTR filename );
 
 /*
  * This is a helper function for handling embedded cabinet media
@@ -96,7 +93,7 @@ static UINT writeout_cabinet_stream(MSIPACKAGE *package, LPCWSTR stream_name,
 
     WriteFile(the_file,data,size,&write,NULL);
     CloseHandle(the_file);
-    TRACE("wrote %li bytes to %s\n",write,debugstr_w(source));
+    TRACE("wrote %i bytes to %s\n",write,debugstr_w(source));
 end:
     msi_free(data);
     return rc;
@@ -242,7 +239,7 @@ static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
                               NULL, CREATE_ALWAYS, attrs, NULL );
         if ( handle == INVALID_HANDLE_VALUE )
         {
-            ERR("failed to create %s (error %ld)\n",
+            ERR("failed to create %s (error %d)\n",
                 debugstr_w( f->TargetPath ), GetLastError() );
             return 0;
         }
@@ -793,7 +790,7 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
         rc = ERROR_SUCCESS;
 
     if (rc != ERROR_SUCCESS)
-        ERR("Failed to copy file %s -> %s, last error %ld\n",
+        ERR("Failed to copy file %s -> %s, last error %d\n",
             debugstr_w(file->TargetPath), debugstr_w(dest_path), GetLastError());
 
     FIXME("We should track these duplicate files as well\n");   

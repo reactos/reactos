@@ -43,11 +43,8 @@
 #include "msidefs.h"
 
 #include "msipriv.h"
-#include "action.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
-
-extern void msi_ui_error( DWORD msg_id, DWORD type );
 
 static void msi_free_properties( MSIPACKAGE *package );
 
@@ -144,6 +141,9 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     DWORD verval;
     WCHAR verstr[10], bufstr[20];
     HDC dc;
+    LPWSTR check;
+    HKEY hkey;
+    LONG res;
 
     static const WCHAR cszbs[]={'\\',0};
     static const WCHAR CFF[] = 
@@ -213,6 +213,18 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szScreenFormat[] = {'%','d',0};
     static const WCHAR szIntel[] = { 'I','n','t','e','l',0 };
     static const WCHAR szAllUsers[] = { 'A','L','L','U','S','E','R','S',0 };
+    static const WCHAR szCurrentVersion[] = {
+        'S','O','F','T','W','A','R','E','\\',
+        'M','i','c','r','o','s','o','f','t','\\',
+        'W','i','n','d','o','w','s',' ','N','T','\\',
+        'C','u','r','r','e','n','t','V','e','r','s','i','o','n',0
+    };
+    static const WCHAR szRegisteredUser[] = {'R','e','g','i','s','t','e','r','e','d','O','w','n','e','r',0};
+    static const WCHAR szRegisteredOrg[] = {
+        'R','e','g','i','s','t','e','r','e','d','O','r','g','a','n','i','z','a','t','i','o','n',0
+    };
+    static const WCHAR szUSERNAME[] = {'U','S','E','R','N','A','M','E',0};
+    static const WCHAR szCOMPANYNAME[] = {'C','O','M','P','A','N','Y','N','A','M','E',0};
     SYSTEM_INFO sys_info;
 
     /*
@@ -356,6 +368,32 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     sprintfW( bufstr, szScreenFormat, GetDeviceCaps( dc, BITSPIXEL ));
     MSI_SetPropertyW( package, szColorBits, bufstr );
     ReleaseDC(0, dc);
+
+    /* USERNAME and COMPANYNAME */
+    res = RegOpenKeyW( HKEY_LOCAL_MACHINE, szCurrentVersion, &hkey );
+    if (res != ERROR_SUCCESS)
+        return;
+
+    check = msi_dup_property( package, szUSERNAME );
+    if (!check)
+    {
+        LPWSTR user = msi_reg_get_val_str( hkey, szRegisteredUser );
+        MSI_SetPropertyW( package, szUSERNAME, user );
+        msi_free( user );
+    }
+
+    msi_free( check );
+
+    check = msi_dup_property( package, szCOMPANYNAME );
+    if (!check)
+    {
+        LPWSTR company = msi_reg_get_val_str( hkey, szRegisteredOrg );
+        MSI_SetPropertyW( package, szCOMPANYNAME, company );
+        msi_free( company );
+    }
+
+    msi_free( check );
+    CloseHandle( hkey );
 }
 
 static UINT msi_get_word_count( MSIPACKAGE *package )
@@ -427,6 +465,7 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
         list_init( &package->RunningActions );
 
         package->WordCount = msi_get_word_count( package );
+        package->PackagePath = strdupW( db->path );
 
         /* OK, here is where we do a slew of things to the database to 
          * prep for all that is to come as a package */
@@ -513,6 +552,10 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     MSIHANDLE handle;
     UINT r;
 
+    static const WCHAR OriginalDatabase[] =
+        {'O','r','i','g','i','n','a','l','D','a','t','a','b','a','s','e',0};
+    static const WCHAR Database[] = {'D','A','T','A','B','A','S','E',0};
+
     TRACE("%s %p\n", debugstr_w(szPackage), pPackage);
 
     if( szPackage[0] == '#' )
@@ -551,19 +594,15 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     if( !package )
         return ERROR_FUNCTION_FAILED;
 
-    /* 
-     * FIXME:  I don't think this is right.  Maybe we should be storing the
-     * name of the database in the MSIDATABASE structure and fetching this
-     * info from there, or maybe this is only relevant to cached databases.
-     */
     if( szPackage[0] != '#' )
     {
-        static const WCHAR OriginalDatabase[] =
-          {'O','r','i','g','i','n','a','l','D','a','t','a','b','a','s','e',0};
-        static const WCHAR Database[] = {'D','A','T','A','B','A','S','E',0};
-
         MSI_SetPropertyW( package, OriginalDatabase, szPackage );
         MSI_SetPropertyW( package, Database, szPackage );
+    }
+    else
+    {
+        MSI_SetPropertyW( package, OriginalDatabase, db->path );
+        MSI_SetPropertyW( package, Database, db->path );
     }
 
     *pPackage = package;
@@ -576,13 +615,13 @@ UINT WINAPI MsiOpenPackageExW(LPCWSTR szPackage, DWORD dwOptions, MSIHANDLE *phP
     MSIPACKAGE *package = NULL;
     UINT ret;
 
-    TRACE("%s %08lx %p\n", debugstr_w(szPackage), dwOptions, phPackage );
+    TRACE("%s %08x %p\n", debugstr_w(szPackage), dwOptions, phPackage );
 
     if( szPackage == NULL )
         return ERROR_INVALID_PARAMETER;
 
     if( dwOptions )
-        FIXME("dwOptions %08lx not supported\n", dwOptions);
+        FIXME("dwOptions %08x not supported\n", dwOptions);
 
     ret = MSI_OpenPackageW( szPackage, &package );
     if( ret == ERROR_SUCCESS )
@@ -744,7 +783,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
         }
     }
 
-    TRACE("(%p %lx %lx %s)\n",gUIHandlerA, gUIFilter, log_type,
+    TRACE("(%p %x %x %s)\n", gUIHandlerA, gUIFilter, log_type,
                              debugstr_w(message));
 
     /* convert it to ASCII */
@@ -1009,7 +1048,7 @@ UINT MSI_GetPropertyW( MSIPACKAGE *package, LPCWSTR szName,
 
     if ( *pchValueBuf <= len )
     {
-        TRACE("have %lu, need %u -> ERROR_MORE_DATA\n", *pchValueBuf, len);
+        TRACE("have %u, need %u -> ERROR_MORE_DATA\n", *pchValueBuf, len);
         r = ERROR_MORE_DATA;
     }
     else
