@@ -77,6 +77,7 @@ BOOLEAN IsUnattendedSetup = FALSE;
 LONG UnattendDestinationDiskNumber;
 LONG UnattendDestinationPartitionNumber;
 LONG UnattendMBRInstallType = -1;
+LONG UnattendFormatPartition = 0;
 WCHAR UnattendInstallationDirectory[MAX_PATH];
 
 /* LOCALS *******************************************************************/
@@ -501,7 +502,7 @@ CheckUnattendedSetup(VOID)
       SetupCloseInfFile(&UnattendInf);
       return;
     }
-  if (!SetupGetIntField(&Context, 0, &IntValue))
+  if (!SetupGetIntField(&Context, 1, &IntValue))
     {
       DPRINT("SetupGetIntField() failed for key 'DestinationDiskNumber'\n");
       SetupCloseInfFile(&UnattendInf);
@@ -516,7 +517,7 @@ CheckUnattendedSetup(VOID)
       SetupCloseInfFile(UnattendInf);
       return;
     }
-  if (!SetupGetIntField(&Context, 0, &IntValue))
+  if (!SetupGetIntField(&Context, 1, &IntValue))
     {
       DPRINT("SetupGetIntField() failed for key 'DestinationPartitionNumber'\n");
       SetupCloseInfFile(UnattendInf);
@@ -544,19 +545,21 @@ CheckUnattendedSetup(VOID)
   IsUnattendedSetup = TRUE;
 
   /* Search for 'MBRInstallType' in the 'Unattend' section */
-  if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
+  if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
     {
-      DPRINT("SetupFindFirstLine() failed for key 'MBRInstallType'\n");
-      SetupCloseInfFile(UnattendInf);
-      return;
+      if (SetupGetIntField(&Context, 1, &IntValue))
+        {
+          UnattendMBRInstallType = IntValue;
+        }
     }
-  if (!SetupGetIntField(&Context, 0, &IntValue))
+  /* Search for 'FormatPartition' in the 'Unattend' section */
+  if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"FormatPartition", &Context))
     {
-      DPRINT("SetupGetIntField() failed for key 'MBRInstallType'\n");
-      SetupCloseInfFile(UnattendInf);
-      return;
+      if (SetupGetIntField(&Context, 1, &IntValue))
+        {
+          UnattendFormatPartition = IntValue;
+        }
     }
-  UnattendMBRInstallType = IntValue;
 
   SetupCloseInfFile(UnattendInf);
 
@@ -2133,6 +2136,10 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 
   if (IsUnattendedSetup)
     {
+      if (UnattendFormatPartition)
+        {
+          return FORMAT_PARTITION_PAGE;
+        }
       return(CHECK_FILE_SYSTEM_PAGE);
     }
 
@@ -2216,7 +2223,10 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 
   while(TRUE)
     {
-      CONSOLE_ConInKey(Ir);
+      if (!IsUnattendedSetup)
+        {
+          CONSOLE_ConInKey(Ir);
+        }
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -2227,7 +2237,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	    }
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN || IsUnattendedSetup) /* ENTER */
 	{
 	  CONSOLE_SetStatusText ("   Please wait ...");
 
