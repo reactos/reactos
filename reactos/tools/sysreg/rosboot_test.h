@@ -34,6 +34,9 @@ namespace Sysreg_
 		static string DEBUG_FILE;
 		static string TIME_OUT;
 		static string PID_FILE;
+		static string CHECK_POINT;
+		static string SYSREG_CHECKPOINT;
+		static string DELAY_READ;
 
 //---------------------------------------------------------------------------------------
 ///
@@ -95,6 +98,22 @@ namespace Sysreg_
 
 //---------------------------------------------------------------------------------------
 ///
+/// dumpCheckpoints
+///
+/// Description: prints a list of all reached checkpoints so far
+
+	void dumpCheckpoints();
+
+typedef enum DebugState
+{
+	DebugStateContinue = 1, /* continue debugging */
+	DebugStateBSODDetected, /* bsod detected */
+	DebugStateUMEDetected, /* user-mode exception detected */
+	DebugStateCPReached /* check-point reached */
+};
+
+//---------------------------------------------------------------------------------------
+///
 /// checkDebugData
 ///
 /// Description: this function parses the given debug data for BSOD, UM exception etc
@@ -103,7 +122,7 @@ namespace Sysreg_
 /// Note: the received debug information should be written to an internal log object
 /// to facilate post-processing of the results
 
-	bool checkDebugData(vector<string> & debug_data);
+	DebugState checkDebugData(vector<string> & debug_data);
 
 //---------------------------------------------------------------------------------------
 ///
@@ -118,6 +137,9 @@ protected:
 
 	double m_Timeout;
 	string m_PidFile;
+	string m_Checkpoint;
+	vector <string> m_Checkpoints;
+	unsigned long m_Delayread;
 
 	}; // end of class RosBootTest
 

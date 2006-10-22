@@ -53,9 +53,12 @@ namespace Sysreg_
 	string RosBootTest::DEBUG_FILE = _T("ROSBOOT_DEBUG_FILE");
 	string RosBootTest::TIME_OUT = _T("ROSBOOT_TIME_OUT");
 	string RosBootTest::PID_FILE= _T("ROSBOOT_PID_FILE");
+	string RosBootTest::DELAY_READ = _T("ROSBOOT_DELAY_READ");
+	string RosBootTest::CHECK_POINT = _T("ROSBOOT_CHECK_POINT");
+	string RosBootTest::SYSREG_CHECKPOINT = _T("SYSREG_CHECKPOINT:");
 
 //---------------------------------------------------------------------------------------
-	RosBootTest::RosBootTest() : RegressionTest(RosBootTest::CLASS_NAME),  m_Timeout(60.0)
+	RosBootTest::RosBootTest() : RegressionTest(RosBootTest::CLASS_NAME),  m_Timeout(60.0), m_Delayread(0)
 	{
 
 	}
@@ -72,7 +75,12 @@ namespace Sysreg_
 		string boot_cmd;
 		string debug_port;
 		string timeout;
+		string delayread;
 		bool ret;
+
+		///
+		/// read required configuration arguments
+		///
 
 		if (!conf_parser.getStringValue (RosBootTest::DEBUG_PORT, debug_port))
 		{
@@ -96,6 +104,24 @@ namespace Sysreg_
 			}
 		}
 
+		if (conf_parser.getStringValue(RosBootTest::DELAY_READ, delayread))
+		{
+			TCHAR * stop;
+			m_Delayread = _tcstoul(delayread.c_str (), &stop, 10);
+			if (m_Delayread > 60 || m_Delayread < 0)
+			{
+				cerr << "Warning: disabling delay read" << endl;
+				m_Delayread = 0;
+			}
+		}
+		
+
+
+		///
+		/// read optional arguments
+		///
+
+		conf_parser.getStringValue (RosBootTest::CHECK_POINT, m_Checkpoint);
 		conf_parser.getStringValue (RosBootTest::PID_FILE, m_PidFile);
 
 		
@@ -124,12 +150,27 @@ namespace Sysreg_
 		return ret;
 	}
 //---------------------------------------------------------------------------------------
-	bool RosBootTest::checkDebugData(vector<string> & debug_data)
+	void RosBootTest::dumpCheckpoints()
+	{
+		if (m_Checkpoints.size ())
+		{
+			cerr << "Dumping list of checkpoints: "<< endl;
+			while(!m_Checkpoints.empty ())
+			{
+				cerr << m_Checkpoints[0] << endl;
+				m_Checkpoints.erase (m_Checkpoints.begin ());
+
+			}
+		}
+	}
+//---------------------------------------------------------------------------------------
+	RosBootTest::DebugState RosBootTest::checkDebugData(vector<string> & debug_data)
 	{
 		/// TBD the information needs to be written into an provided log object
 		/// which writes the info into HTML/log / sends etc ....
 
 		bool clear = true;
+		DebugState state = DebugStateContinue;
 
 		for(size_t i = 0; i < debug_data.size();i++)
 		{
@@ -137,25 +178,28 @@ namespace Sysreg_
 
 			cerr << line << endl;
 
-			if (line.find (_T("SYSREG_CHECKPOINT")) != string::npos)
+			if (line.find (RosBootTest::SYSREG_CHECKPOINT) != string::npos)
 			{
-				line.erase (0, line.find (_T("SYSREG_CHECKPOINT")) + 19);
-				if (!_tcsncmp(line.c_str (), _T("USETUP_COMPLETE"), 15))
+				line.erase (0, line.find (RosBootTest::SYSREG_CHECKPOINT) + RosBootTest::SYSREG_CHECKPOINT.length ());
+				if (!_tcsncmp(line.c_str (), m_Checkpoint.c_str (), m_Checkpoint.length ()))
 				{
-					///
-					/// we need to stop the emulator to avoid
-					/// looping again into USETUP (at least with bootcdregtest)
-
-					return false;
+					state = DebugStateCPReached;
+					break;
 				}
-
+				if (line.find (_T("|")) != string::npos)
+				{
+					string fline = debug_data[i];
+					m_Checkpoints.push_back (fline);
+				}
 			}
 
 
 			if (line.find (_T("*** Fatal System Error")) != string::npos)
 			{
 				cerr << "BSOD detected" <<endl;
-				return false;
+				dumpCheckpoints();
+				state = DebugStateBSODDetected;
+				break;
 			}
 			else if (line.find (_T("Unhandled exception")) != string::npos)
 			{
@@ -169,6 +213,7 @@ namespace Sysreg_
 				}
 
 				cerr << "UM detected" <<endl;
+				state = DebugStateUMEDetected;
 
 				///
 				/// extract address from next line
@@ -176,15 +221,38 @@ namespace Sysreg_
 
 				string address = debug_data[i+2];
 				string::size_type pos = address.find_last_of (_T(" "));
+				if (pos == string::npos)
+				{
+					cerr << "Error: trace is not available (corrupted debug info" << endl;
+					dumpCheckpoints();
+					break;
+				}
+
+
 				address = address.substr (pos, address.length () - 1 - pos);
 
 				///
 				/// extract module name
 				///
 				string modulename = debug_data[i+3];
+				
 				pos = modulename.find_last_of (_T("\\"));
+				if (pos == string::npos)
+				{
+					cerr << "Error: trace is not available (corrupted debug info" << endl;
+					dumpCheckpoints();
+					break;
+				}
+
 				modulename = modulename.substr (pos + 1, modulename.length () - pos);
 				pos = modulename.find_last_of (_T("."));
+				if (pos == string::npos)
+				{
+					cerr << "Error: trace is not available (corrupted debug info" << endl;
+					dumpCheckpoints();
+					break;
+				}
+
 				modulename = modulename.substr (0, pos);
 
 				///
@@ -201,16 +269,17 @@ namespace Sysreg_
 				///
 				/// resolve frame addresses 
 
-				return false;
+
+
+				break;
 			}
-		
 		}
 
 		if (clear && debug_data.size () > 5)
 		{
 			debug_data.clear ();
 		}
-		return true;
+		return state;
 	}
 //---------------------------------------------------------------------------------------
 	bool RosBootTest::isTimeout(double max_timeout)
@@ -253,6 +322,15 @@ namespace Sysreg_
 		bool ret = true;
 		vector<string> vect;
 
+		if (m_Delayread)
+		{
+			///
+			/// delay reading untill emulator is ready
+			///
+
+			_sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
+		}
+
 		while(!pipe_reader.isEof ())
 		{
 			if (isTimeout(m_Timeout))
@@ -263,10 +341,15 @@ namespace Sysreg_
 			pipe_reader.readPipe (Buffer);
 			vect.push_back (Buffer);
 
+			DebugState state = checkDebugData(vect);
 
-			if (!checkDebugData(vect))
+			if (state == DebugStateBSODDetected || state == DebugStateUMEDetected)
 			{
 				ret = false;
+				break;
+			}
+			else if (state == DebugStateCPReached)
+			{
 				break;
 			}
 		}
@@ -285,9 +368,15 @@ namespace Sysreg_
 			cerr << "Error: failed to open pipe with cmd: " << boot_cmd << endl;
 			return false;
 		}
-		// FIXXME
-		// give the emulator some time to load freeloadr
-		_sleep( (clock_t)4 * CLOCKS_PER_SEC );
+
+		if (m_Delayread)
+		{
+			///
+			/// delay reading untill emulator is ready
+			///
+
+			_sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
+		}
 
 		int pid = 0;
 
@@ -343,11 +432,18 @@ namespace Sysreg_
 					vect.push_back (line);
 				}
 
-				if (!checkDebugData(vect))
+				DebugState state = checkDebugData(vect);
+
+				if (state == DebugStateBSODDetected || state == DebugStateUMEDetected)
 				{
 					ret = false;
 					break;
 				}
+				else if (state == DebugStateCPReached)
+				{
+					break;
+				}
+
 				if (isTimeout(m_Timeout))
 				{
 					break;
