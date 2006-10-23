@@ -463,7 +463,7 @@ NtSetEvent(IN HANDLE EventHandle,
            EventHandle, PreviousState);
 
     /* Check if we were called from user-mode */
-    if((PreviousState) && (PreviousMode != KernelMode))
+    if ((PreviousState) && (PreviousMode != KernelMode))
     {
         /* Entry SEH Block */
         _SEH_TRY
@@ -488,16 +488,14 @@ NtSetEvent(IN HANDLE EventHandle,
                                        PreviousMode,
                                        (PVOID*)&Event,
                                        NULL);
-
-    /* Check for success */
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
         /* Set the Event */
         LONG Prev = KeSetEvent(Event, EVENT_INCREMENT, FALSE);
         ObDereferenceObject(Event);
 
         /* Check if caller wants the old state back */
-        if(PreviousState)
+        if (PreviousState)
         {
             /* Entry SEH Block for return */
             _SEH_TRY
@@ -511,10 +509,39 @@ NtSetEvent(IN HANDLE EventHandle,
             }
             _SEH_END;
         }
-   }
+    }
 
-   /* Return Status */
-   return Status;
+    /* Return Status */
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+NtSetEventBoostPriority(IN HANDLE EventHandle)
+{
+    PKEVENT Event;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Open the Object */
+    Status = ObReferenceObjectByHandle(EventHandle,
+                                       EVENT_MODIFY_STATE,
+                                       ExEventObjectType,
+                                       ExGetPreviousMode(),
+                                       (PVOID*)&Event,
+                                       NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* Set the Event */
+        KeSetEventBoostPriority(Event, NULL);
+        ObDereferenceObject(Event);
+    }
+
+    /* Return Status */
+    return Status;
 }
 
 /* EOF */

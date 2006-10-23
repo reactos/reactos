@@ -278,6 +278,48 @@ Quickie:
 }
 
 /*++
+* @name NtWaitForMultipleObjects32
+* @implemented NT5.1
+*
+*     The NtWaitForMultipleObjects32 routine <FILLMEIN>
+*
+* @param ObjectCount
+*        <FILLMEIN>
+*
+* @param HandleArray
+*        <FILLMEIN>
+*
+* @param WaitType
+*        <FILLMEIN>
+*
+* @param Alertable
+*        <FILLMEIN>
+*
+* @param TimeOut
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+NtWaitForMultipleObjects32(IN ULONG ObjectCount,
+                           IN PLONG Handles,
+                           IN WAIT_TYPE WaitType,
+                           IN BOOLEAN Alertable,
+                           IN PLARGE_INTEGER TimeOut OPTIONAL)
+{
+    /* FIXME WOW64 */
+    return NtWaitForMultipleObjects(ObjectCount,
+                                    (PHANDLE)Handles,
+                                    WaitType,
+                                    Alertable,
+                                    TimeOut);
+}
+
+/*++
 * @name NtWaitForSingleObject
 * @implemented NT4
 *

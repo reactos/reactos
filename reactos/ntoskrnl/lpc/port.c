@@ -133,4 +133,12 @@ NtImpersonateClientOfPort (HANDLE		PortHandle,
   return(STATUS_NOT_IMPLEMENTED);
 }
 
+NTSTATUS
+NTAPI
+NtQueryPortInformationProcess(VOID)
+{
+    /* This is all this function does */
+    return STATUS_UNSUCCESSFUL;
+}
+
 /* EOF */

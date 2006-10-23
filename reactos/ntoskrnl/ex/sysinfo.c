@@ -1692,5 +1692,12 @@ NtFlushInstructionCache (
 	return STATUS_SUCCESS;
 }
 
+ULONG
+NTAPI
+NtGetCurrentProcessorNumber(VOID)
+{
+    /* Just return the CPU */
+    return KeGetCurrentProcessorNumber();
+}
 
 /* EOF */
