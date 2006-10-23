@@ -882,18 +882,19 @@ NTAPI
 KeGetCurrentThread(VOID)
 {
     /* Return the current thread on this PCR */
-    return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
+    return _KeGetCurrentThread();
 }
 
 /*
  * @implemented
  */
-KPROCESSOR_MODE
+#undef KeGetPreviousMode
+UCHAR
 NTAPI
 KeGetPreviousMode(VOID)
 {
     /* Return the previous mode of this thread */
-    return KeGetCurrentThread()->PreviousMode;
+    return _KeGetPreviousMode();
 }
 
 /*

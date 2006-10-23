@@ -30,11 +30,12 @@ LIST_ENTRY ExpFirmwareTableProviderListHead;
 /*
  * @implemented
  */
+#undef ExGetPreviousMode
 KPROCESSOR_MODE
 NTAPI
 ExGetPreviousMode (VOID)
 {
-    return (KPROCESSOR_MODE)PsGetCurrentThread()->Tcb.PreviousMode;
+    return KeGetPreviousMode();
 }
 
 /*

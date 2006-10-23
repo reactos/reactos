@@ -47,6 +47,7 @@ PVOID ExpNlsSectionPointer;
 #define ExInitializeRundownProtection                   _ExInitializeRundownProtection
 #define ExWaitForRundownProtectionRelease               _ExWaitForRundownProtectionRelease
 #define ExRundownCompleted                              _ExRundownCompleted
+#define ExGetPreviousMode                               KeGetPreviousMode
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

@@ -8679,12 +8679,6 @@ KeGetCurrentThread(
   VOID);
 
 NTKERNELAPI
-KPROCESSOR_MODE
-NTAPI
-KeGetPreviousMode(
-  VOID);
-
-NTKERNELAPI
 ULONG
 NTAPI
 KeGetRecommendedSharedDataAlignment(

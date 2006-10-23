@@ -1263,3 +1263,18 @@ KiComputeNewPriority(IN PKTHREAD Thread)
     return Priority;
 }
 
+PRKTHREAD
+FORCEINLINE
+KeGetCurrentThread(VOID)
+{
+    /* Return the current thread */
+    return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
+}
+
+UCHAR
+FORCEINLINE
+KeGetPreviousMode(VOID)
+{
+    /* Return the current mode */
+    return KeGetCurrentThread()->PreviousMode;
+}

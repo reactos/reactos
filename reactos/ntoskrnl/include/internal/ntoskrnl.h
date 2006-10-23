@@ -17,6 +17,9 @@
 
 #ifdef _NTOSKRNL_
 
+#define KeGetCurrentThread _KeGetCurrentThread
+#define KeGetPreviousMode _KeGetPreviousMode
+
 #include "ke.h"
 #include "i386/mm.h"
 #include "i386/fpu.h"
