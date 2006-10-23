@@ -16,8 +16,8 @@
 
 NTSTATUS
 NTAPI
-NtAddBootEntry(IN PUNICODE_STRING EntryName,
-               IN PUNICODE_STRING EntryValue)
+NtAddBootEntry(IN PBOOT_ENTRY Entry,
+               IN ULONG Id)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -25,8 +25,7 @@ NtAddBootEntry(IN PUNICODE_STRING EntryName,
 
 NTSTATUS
 NTAPI
-NtDeleteBootEntry(IN PUNICODE_STRING EntryName,
-                  IN PUNICODE_STRING EntryValue)
+NtDeleteBootEntry(IN ULONG Id)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

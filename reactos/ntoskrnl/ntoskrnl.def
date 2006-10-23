@@ -1327,7 +1327,7 @@ ZwCreateKey@28
 ZwCreateSection@28
 ZwCreateSymbolicLinkObject@16
 ZwCreateTimer@16
-ZwDeleteBootEntry@8
+ZwDeleteBootEntry@4
 ZwDeleteFile@4
 ZwDeleteKey@4
 ZwDeleteValueKey@8

@@ -1102,6 +1102,21 @@ typedef struct _BOOT_OPTIONS
 } BOOT_OPTIONS, *PBOOT_OPTIONS;
 
 //
+// Firmware Boot Entry
+//
+typedef struct _BOOT_ENTRY
+{
+    ULONG Version;
+    ULONG Length;
+    ULONG Id;
+    ULONG Attributes;
+    ULONG FriendlyNameOffset;
+    ULONG BootFilePathOffset;
+    ULONG OsOptionsLength;
+    CHAR OsOptions[1];
+} BOOT_ENTRY, *PBOOT_ENTRY;
+
+//
 // APC Callback for NtCreateFile
 //
 typedef VOID

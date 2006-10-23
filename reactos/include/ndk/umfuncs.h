@@ -168,7 +168,7 @@ NTSTATUS
 NTAPI
 DbgUiConvertStateChangeStructure(
     IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
-    IN LPDEBUG_EVENT DebugEvent
+    IN PVOID DebugEvent
 );
 
 VOID
