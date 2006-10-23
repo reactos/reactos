@@ -874,7 +874,7 @@ DbgkpOpenHandles(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
 
 VOID
 NTAPI
-DbgkpDeleteObject(IN PVOID Object)
+DbgkpDeleteObject(IN PVOID DebugObject)
 {
     PAGED_CODE();
 
