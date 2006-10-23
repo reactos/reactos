@@ -1146,6 +1146,131 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   return Status;
 }
 
+NTSTATUS
+NTAPI
+NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
+                           IN HANDLE HandleId,
+                           IN PUNICODE_STRING ObjectTypeName,
+                           IN PUNICODE_STRING ObjectName,
+                           IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                           IN ACCESS_MASK DesiredAccess,
+                           IN PGENERIC_MAPPING GenericMapping,
+                           IN BOOLEAN ObjectCreation,
+                           OUT PACCESS_MASK GrantedAccess,
+                           OUT PNTSTATUS AccessStatus,
+                           OUT PBOOLEAN GenerateOnClose)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtAccessCheckByType(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                    IN PSID PrincipalSelfSid,
+                    IN PTOKEN ClientToken,
+                    IN ACCESS_MASK DesiredAccess,
+                    IN POBJECT_TYPE_LIST ObjectTypeList,
+                    IN ULONG ObjectTypeLength,
+                    IN PGENERIC_MAPPING GenericMapping,
+                    IN PPRIVILEGE_SET PrivilegeSet,
+                    IN ULONG PrivilegeSetLength,
+                    OUT PACCESS_MASK GrantedAccess,
+                    OUT PNTSTATUS AccessStatus)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+NTAPI
+NtAccessCheckByTypeAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
+                                 IN HANDLE HandleId,
+                                 IN PUNICODE_STRING ObjectTypeName,
+                                 IN PUNICODE_STRING ObjectName,
+                                 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                 IN PSID PrincipalSelfSid,
+                                 IN ACCESS_MASK DesiredAccess,
+                                 IN AUDIT_EVENT_TYPE AuditType,
+                                 IN ULONG Flags,
+                                 IN POBJECT_TYPE_LIST ObjectTypeList,
+                                 IN ULONG ObjectTypeLength,
+                                 IN PGENERIC_MAPPING GenericMapping,
+                                 IN BOOLEAN ObjectCreation,
+                                 OUT PACCESS_MASK GrantedAccess,
+                                 OUT PNTSTATUS AccessStatus,
+                                 OUT PBOOLEAN GenerateOnClose)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtAccessCheckByTypeResultList(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                              IN PSID PrincipalSelfSid,
+                              IN PTOKEN ClientToken,
+                              IN ACCESS_MASK DesiredAccess,
+                              IN POBJECT_TYPE_LIST ObjectTypeList,
+                              IN ULONG ObjectTypeLength,
+                              IN PGENERIC_MAPPING GenericMapping,
+                              IN PPRIVILEGE_SET PrivilegeSet,
+                              IN ULONG PrivilegeSetLength,
+                              OUT PACCESS_MASK GrantedAccess,
+                              OUT PNTSTATUS AccessStatus)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtAccessCheckByTypeResultListAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
+                                           IN HANDLE HandleId,
+                                           IN PUNICODE_STRING ObjectTypeName,
+                                           IN PUNICODE_STRING ObjectName,
+                                           IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                           IN PSID PrincipalSelfSid,
+                                           IN ACCESS_MASK DesiredAccess,
+                                           IN AUDIT_EVENT_TYPE AuditType,
+                                           IN ULONG Flags,
+                                           IN POBJECT_TYPE_LIST ObjectTypeList,
+                                           IN ULONG ObjectTypeLength,
+                                           IN PGENERIC_MAPPING GenericMapping,
+                                           IN BOOLEAN ObjectCreation,
+                                           OUT PACCESS_MASK GrantedAccess,
+                                           OUT PNTSTATUS AccessStatus,
+                                           OUT PBOOLEAN GenerateOnClose)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtAccessCheckByTypeResultListAndAuditAlarmByHandle(IN PUNICODE_STRING SubsystemName,
+                                                   IN HANDLE HandleId,
+                                                   IN PTOKEN ClientToken,
+                                                   IN PUNICODE_STRING ObjectTypeName,
+                                                   IN PUNICODE_STRING ObjectName,
+                                                   IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                                   IN PSID PrincipalSelfSid,
+                                                   IN ACCESS_MASK DesiredAccess,
+                                                   IN AUDIT_EVENT_TYPE AuditType,
+                                                   IN ULONG Flags,
+                                                   IN POBJECT_TYPE_LIST ObjectTypeList,
+                                                   IN ULONG ObjectTypeLength,
+                                                   IN PGENERIC_MAPPING GenericMapping,
+                                                   IN BOOLEAN ObjectCreation,
+                                                   OUT PACCESS_MASK GrantedAccess,
+                                                   OUT PNTSTATUS AccessStatus,
+                                                   OUT PBOOLEAN GenerateOnClose)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 VOID STDCALL
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                           OUT PACCESS_MASK DesiredAccess)
