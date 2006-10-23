@@ -336,6 +336,33 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   return Status;
 }
 
+NTSTATUS
+NTAPI
+NtEnumerateSystemEnvironmentValuesEx(IN ULONG InformationClass,
+                                     IN PVOID Buffer,
+                                     IN ULONG BufferLength)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtQuerySystemEnvironmentValueEx(IN PUNICODE_STRING VariableName,
+                                IN LPGUID VendorGuid)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtSetSystemEnvironmentValueEx(IN PUNICODE_STRING VariableName,
+                              IN LPGUID VendorGuid)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 /* --- Query/Set System Information --- */
 

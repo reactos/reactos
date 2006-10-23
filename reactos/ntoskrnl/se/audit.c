@@ -183,9 +183,9 @@ SeLocateProcessImageName(IN PEPROCESS Process,
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
-                           IN PVOID HandleId,
+                           IN HANDLE HandleId,
                            IN PUNICODE_STRING ObjectTypeName,
                            IN PUNICODE_STRING ObjectName,
                            IN PSECURITY_DESCRIPTOR SecurityDescriptor,
@@ -196,8 +196,8 @@ NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
                            OUT PNTSTATUS AccessStatus,
                            OUT PBOOLEAN GenerateOnClose)
 {
-  UNIMPLEMENTED;
-  return(STATUS_NOT_IMPLEMENTED);
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 

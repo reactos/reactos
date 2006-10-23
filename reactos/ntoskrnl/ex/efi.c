@@ -32,7 +32,6 @@ NtAddDriverEntry(IN PEFI_DRIVER_ENTRY Entry,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
 NTSTATUS
 NTAPI
 NtDeleteBootEntry(IN ULONG Id)
