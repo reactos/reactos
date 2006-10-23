@@ -4915,4 +4915,54 @@ MmCreateSection (OUT PVOID  * Section,
                                   AllocationAttributes));
 }
 
+NTSTATUS
+NTAPI
+NtAllocateUserPhysicalPages(IN HANDLE ProcessHandle,
+                            IN OUT PULONG NumberOfPages,
+                            IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtMapUserPhysicalPages(IN PVOID *VirtualAddresses,
+                       IN ULONG NumberOfPages,
+                       IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtMapUserPhysicalPagesScatter(IN PVOID *VirtualAddresses,
+                              IN ULONG NumberOfPages,
+                              IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtFreeUserPhysicalPages(IN HANDLE ProcessHandle,
+                        IN OUT PULONG NumberOfPages,
+                        IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
+                        IN PVOID File2MappedAsFile)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
 /* EOF */
