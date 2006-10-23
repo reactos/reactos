@@ -128,11 +128,26 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback,
 
    for more info about this command 
 
- */
+   summuer the msdn 
 
-/*
- * UNIMPLEMENT 
- * Status FIXME need be implement and this code is realy need be tested
+    The buffer start with D3DHAL_DP2COMMAND struct afer that it follow either one struct or no struct at at all
+    example for command D3DDP2OP_VIEWPORTINFO
+
+    then lpCmd will look like this 
+    ----------------------------------------
+    | struct                 | Pos         |
+    ----------------------------------------
+    | D3DHAL_DP2COMMAND      | 0x00 - 0x03 |
+    ---------------------------------------
+    | D3DHAL_DP2VIEWPORTINFO | 0x04 - xxxx |
+    ---------------------------------------
+
+    to calc end of the lpCmd buffer in this exmaple 
+    D3DHAL_DP2COMMAND->wStateCount * sizeof(D3DHAL_DP2VIEWPORTINFO);
+    now you got number of bytes but we need add the size of D3DHAL_DP2COMMAND 
+    to get this right. the end should be 
+    sizeof(D3DHAL_DP2COMMAND) + ( D3DHAL_DP2COMMAND->wStateCount * sizeof(D3DHAL_DP2VIEWPORTINFO));
+    to get the xxxx end positions. 
  */
 
 HRESULT 
@@ -140,10 +155,9 @@ WINAPI
 D3DParseUnknownCommand( LPVOID lpCmd, 
                         LPVOID *lpRetCmd)
 {
+    DWORD retCode = DD_OK;
     LPD3DHAL_DP2COMMAND dp2command = lpCmd;
-
-    DWORD retCode = D3DERR_COMMAND_UNPARSED; 
-    
+         
     /* prevent it crash if null pointer are being sent */
     if ( (lpCmd == NULL) || (lpRetCmd == NULL) )
     {
@@ -151,35 +165,40 @@ D3DParseUnknownCommand( LPVOID lpCmd,
     }
     
     *lpRetCmd = lpCmd;
-    
-    /* check for vaild command, only 3 command is vaild */
-    if (dp2command->bCommand == D3DDP2OP_VIEWPORTINFO) 
-    {    	
-        /* dp2command->wStateCount * sizeof D3DHAL_DP2VIEWPORTINFO + 4 bytes */
-        *(PBYTE)lpRetCmd += ((dp2command->wStateCount * sizeof(D3DHAL_DP2VIEWPORTINFO)) + sizeof(ULONG_PTR));
-        retCode = 0;
-    }                                                                                          
-    else if (dp2command->bCommand == D3DDP2OP_WINFO) 
-    {	
-        /* dp2command->wStateCount * sizeof D3DHAL_DP2WINFO + 4 bytes */
-        *(PBYTE)lpRetCmd += (dp2command->wStateCount * sizeof(D3DHAL_DP2WINFO)) + sizeof(ULONG_PTR);                                                          
-        retCode = 0;
-    } 
-	else if (dp2command->bCommand == 0x0d) 
-    {	
-        /* dp2command->wStateCount * how many wStateCount ? + 4 bytes */
-        *(PBYTE)lpRetCmd += ((dp2command->wStateCount * dp2command->bReserved) + sizeof(ULONG_PTR));               
-        retCode = 0;
-    }
-   
-	/* set error code for command 0 to 3, 8 and 15 to 255 */    
-    else if ( (dp2command->bCommand <= D3DDP2OP_INDEXEDTRIANGLELIST) || // dp2command->bCommand  <= with 0 to 3
+
+    switch (dp2command->bCommand)
+    {
+       /* check for vaild command, only 3 command is vaild */
+       case D3DDP2OP_VIEWPORTINFO:
+           *(PBYTE)lpRetCmd += ((dp2command->wStateCount * sizeof(D3DHAL_DP2VIEWPORTINFO)) + sizeof(D3DHAL_DP2COMMAND));
+           break;
+
+       case D3DDP2OP_WINFO:
+           *(PBYTE)lpRetCmd += (dp2command->wStateCount * sizeof(D3DHAL_DP2WINFO)) + sizeof(D3DHAL_DP2COMMAND);
+           break;
+
+       case 0x0d: /* Undocumented in MSDN */
+           *(PBYTE)lpRetCmd += ((dp2command->wStateCount * dp2command->bReserved) + sizeof(D3DHAL_DP2COMMAND));
+           break;
+
+       
+       /* set the error code */
+       default:
+               
+           if ( (dp2command->bCommand <= D3DDP2OP_INDEXEDTRIANGLELIST) || // dp2command->bCommand  <= with 0 to 3
               (dp2command->bCommand == D3DDP2OP_RENDERSTATE) ||  // dp2command->bCommand  == with 8
               (dp2command->bCommand >= D3DDP2OP_LINELIST) )  // dp2command->bCommand  >= with 15 to 255
-    {
-       retCode = E_FAIL; 
+           {
+               /* set error code for command 0 to 3, 8 and 15 to 255 */
+               retCode = E_FAIL; 
+           }
+           else
+           {   /* set error code for 4 - 7, 9 - 12, 14  */
+               retCode = D3DERR_COMMAND_UNPARSED; 
+           }
+            
     }
-      
+
     return retCode;
 }
 
