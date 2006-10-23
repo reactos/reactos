@@ -203,6 +203,15 @@ NtAssignProcessToJobObject (
     return Status;
 }
 
+NTSTATUS
+NTAPI
+NtCreateJobSet(IN ULONG NumJob,
+               IN PJOB_SET_ARRAY UserJobSet,
+               IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @unimplemented

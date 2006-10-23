@@ -404,4 +404,28 @@ MmGetSystemRoutineAddress (
   return (NT_SUCCESS(Status) ? ProcAddress : NULL);
 }
 
+NTSTATUS
+NTAPI
+NtGetWriteWatch(IN HANDLE ProcessHandle,
+                IN ULONG Flags,
+                IN PVOID BaseAddress,
+                IN ULONG RegionSize,
+                IN PVOID *UserAddressArray,
+                OUT PULONG EntriesInUserAddressArray,
+                OUT PULONG Granularity)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtResetWriteWatch(IN HANDLE ProcessHandle,
+                 IN PVOID BaseAddress,
+                 IN ULONG RegionSize)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

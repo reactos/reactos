@@ -3386,6 +3386,13 @@ typedef enum _JOBOBJECTINFOCLASS {
 } JOBOBJECTINFOCLASS;
 #endif
 
+typedef struct _JOB_SET_ARRAY
+{
+    HANDLE JobHandle;
+    DWORD MemberLevel;
+    DWORD Flags;
+} JOB_SET_ARRAY, *PJOB_SET_ARRAY;
+
 typedef struct _JOBOBJECT_BASIC_ACCOUNTING_INFORMATION {
 	LARGE_INTEGER TotalUserTime;
 	LARGE_INTEGER TotalKernelTime;
