@@ -25,7 +25,25 @@ NtAddBootEntry(IN PBOOT_ENTRY Entry,
 
 NTSTATUS
 NTAPI
+NtAddDriverEntry(IN PEFI_DRIVER_ENTRY Entry,
+                 IN ULONG Id)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+NTAPI
 NtDeleteBootEntry(IN ULONG Id)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtDeleteDriverEntry(IN ULONG Id)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -42,8 +60,42 @@ NtEnumerateBootEntries(IN PVOID Buffer,
 
 NTSTATUS
 NTAPI
+NtEnumerateDriverEntries(IN PVOID Buffer,
+                        IN PULONG BufferLength)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtModifyBootEntry(IN PBOOT_ENTRY BootEntry)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtModifyDriverEntry(IN PEFI_DRIVER_ENTRY DriverEntry)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
 NtQueryBootEntryOrder(IN PULONG Ids,
                       IN PULONG Count)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtQueryDriverEntryOrder(IN PULONG Ids,
+                        IN PULONG Count)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -62,6 +114,15 @@ NTSTATUS
 NTAPI
 NtSetBootEntryOrder(IN PULONG Ids,
                     IN PULONG Count)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtSetDriverEntryOrder(IN PULONG Ids,
+                      IN PULONG Count)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

@@ -1117,6 +1117,19 @@ typedef struct _BOOT_ENTRY
 } BOOT_ENTRY, *PBOOT_ENTRY;
 
 //
+// Firmware Driver Entry
+//
+typedef struct _EFI_DRIVER_ENTRY
+{
+    ULONG Version;
+    ULONG Length;
+    ULONG Id;
+    ULONG Attributes;
+    ULONG FriendlyNameOffset;
+    ULONG DriverFilePathOffset;
+} EFI_DRIVER_ENTRY, *PEFI_DRIVER_ENTRY;
+
+//
 // APC Callback for NtCreateFile
 //
 typedef VOID
