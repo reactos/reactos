@@ -530,11 +530,10 @@ PsGetVersion(IN PULONG MajorVersion OPTIONAL,
     return (NtBuildNumber >> 28) == 0xC;
 }
 
-typedef ULONG APPHELPCACHESERVICECLASS;
 NTSTATUS
 NTAPI
-NtApphelpCacheControl(APPHELPCACHESERVICECLASS Service,
-                      PVOID ServiceData)
+NtApphelpCacheControl(IN APPHELPCACHESERVICECLASS Service,
+                      IN PVOID ServiceData)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

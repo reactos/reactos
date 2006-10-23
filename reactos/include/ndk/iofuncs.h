@@ -40,7 +40,7 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAddDriverEntry(
-    IN PBOOT_ENTRY BootEntry,
+    IN PEFI_DRIVER_ENTRY BootEntry,
     IN ULONG Id
 );
 

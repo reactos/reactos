@@ -123,6 +123,14 @@ NtAlertResumeThread(
     OUT PULONG SuspendCount
 );
 
+typedef ULONG APPHELPCACHESERVICECLASS;
+NTSTATUS
+NTAPI
+NtApphelpCacheControl(
+    IN APPHELPCACHESERVICECLASS Service,
+    IN PVOID ServiceData
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
