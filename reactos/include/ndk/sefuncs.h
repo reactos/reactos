@@ -103,7 +103,7 @@ NTAPI
 NtAccessCheckByType(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN PSID PrincipalSelfSid,
-    IN PTOKEN ClientToken,
+    IN HANDLE ClientToken,
     IN ACCESS_MASK DesiredAccess,
     IN POBJECT_TYPE_LIST ObjectTypeList,
     IN ULONG ObjectTypeLength,
@@ -119,7 +119,7 @@ NTAPI
 NtAccessCheckByTypeResultList(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN PSID PrincipalSelfSid,
-    IN PTOKEN ClientToken,
+    IN HANDLE ClientToken,
     IN ACCESS_MASK DesiredAccess,
     IN POBJECT_TYPE_LIST ObjectTypeList,
     IN ULONG ObjectTypeLength,

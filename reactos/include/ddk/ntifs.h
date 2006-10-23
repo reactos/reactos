@@ -4513,6 +4513,70 @@ ZwAllocateVirtualMemory (
     IN ULONG        Protect
 );
 
+NTSTATUS
+NTAPI
+NtAccessCheckByTypeAndAuditAlarm(
+    IN PUNICODE_STRING SubsystemName,
+    IN HANDLE HandleId,
+    IN PUNICODE_STRING ObjectTypeName,
+    IN PUNICODE_STRING ObjectName,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN PSID PrincipalSelfSid,
+    IN ACCESS_MASK DesiredAccess,
+    IN AUDIT_EVENT_TYPE AuditType,
+    IN ULONG Flags,
+    IN POBJECT_TYPE_LIST ObjectTypeList,
+    IN ULONG ObjectTypeLength,
+    IN PGENERIC_MAPPING GenericMapping,
+    IN BOOLEAN ObjectCreation,
+    OUT PACCESS_MASK GrantedAccess,
+    OUT PNTSTATUS AccessStatus,
+    OUT PBOOLEAN GenerateOnClose
+);
+
+NTSTATUS
+NTAPI
+NtAccessCheckByTypeResultListAndAuditAlarm(
+    IN PUNICODE_STRING SubsystemName,
+    IN HANDLE HandleId,
+    IN PUNICODE_STRING ObjectTypeName,
+    IN PUNICODE_STRING ObjectName,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN PSID PrincipalSelfSid,
+    IN ACCESS_MASK DesiredAccess,
+    IN AUDIT_EVENT_TYPE AuditType,
+    IN ULONG Flags,
+    IN POBJECT_TYPE_LIST ObjectTypeList,
+    IN ULONG ObjectTypeLength,
+    IN PGENERIC_MAPPING GenericMapping,
+    IN BOOLEAN ObjectCreation,
+    OUT PACCESS_MASK GrantedAccess,
+    OUT PNTSTATUS AccessStatus,
+    OUT PBOOLEAN GenerateOnClose
+);
+
+NTSTATUS
+NTAPI
+NtAccessCheckByTypeResultListAndAuditAlarmByHandle(
+    IN PUNICODE_STRING SubsystemName,
+    IN HANDLE HandleId,
+    IN HANDLE ClientToken,
+    IN PUNICODE_STRING ObjectTypeName,
+    IN PUNICODE_STRING ObjectName,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN PSID PrincipalSelfSid,
+    IN ACCESS_MASK DesiredAccess,
+    IN AUDIT_EVENT_TYPE AuditType,
+    IN ULONG Flags,
+    IN POBJECT_TYPE_LIST ObjectTypeList,
+    IN ULONG ObjectTypeLength,
+    IN PGENERIC_MAPPING GenericMapping,
+    IN BOOLEAN ObjectCreation,
+    OUT PACCESS_MASK GrantedAccess,
+    OUT PNTSTATUS AccessStatus,
+    OUT PBOOLEAN GenerateOnClose
+);
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -4642,6 +4706,17 @@ ZwDuplicateToken (
     IN BOOLEAN              EffectiveOnly,
     IN TOKEN_TYPE           TokenType,
     OUT PHANDLE             NewTokenHandle
+);
+
+NTSTATUS
+NTAPI
+NtFilterToken(
+    IN HANDLE ExistingTokenHandle,
+    IN ULONG Flags,
+    IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
+    IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
+    IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
+    OUT PHANDLE NewTokenHandle
 );
 
 NTSYSAPI

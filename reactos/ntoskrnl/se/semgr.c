@@ -1150,7 +1150,7 @@ NTSTATUS
 NTAPI
 NtAccessCheckByType(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                     IN PSID PrincipalSelfSid,
-                    IN PTOKEN ClientToken,
+                    IN HANDLE ClientToken,
                     IN ACCESS_MASK DesiredAccess,
                     IN POBJECT_TYPE_LIST ObjectTypeList,
                     IN ULONG ObjectTypeLength,
@@ -1163,7 +1163,6 @@ NtAccessCheckByType(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-
 
 NTSTATUS
 NTAPI
@@ -1192,7 +1191,7 @@ NTSTATUS
 NTAPI
 NtAccessCheckByTypeResultList(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                               IN PSID PrincipalSelfSid,
-                              IN PTOKEN ClientToken,
+                              IN HANDLE ClientToken,
                               IN ACCESS_MASK DesiredAccess,
                               IN POBJECT_TYPE_LIST ObjectTypeList,
                               IN ULONG ObjectTypeLength,
@@ -1233,7 +1232,7 @@ NTSTATUS
 NTAPI
 NtAccessCheckByTypeResultListAndAuditAlarmByHandle(IN PUNICODE_STRING SubsystemName,
                                                    IN HANDLE HandleId,
-                                                   IN PTOKEN ClientToken,
+                                                   IN HANDLE ClientToken,
                                                    IN PUNICODE_STRING ObjectTypeName,
                                                    IN PUNICODE_STRING ObjectName,
                                                    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
