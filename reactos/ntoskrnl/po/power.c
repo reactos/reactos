@@ -473,5 +473,38 @@ PoQueueShutdownWorkItem(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+NTAPI
+NtGetDevicePowerState(IN HANDLE Device,
+                      IN PDEVICE_POWER_STATE PowerState)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+BOOLEAN
+NTAPI
+NtIsSystemResumeAutomatic(VOID)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+NTSTATUS
+NTAPI
+NtRequestWakeupLatency(IN LATENCY_TIME Latency)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtSetThreadExecutionState(IN EXECUTION_STATE esFlags,
+                          OUT EXECUTION_STATE *PreviousFlags)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 /* EOF */
