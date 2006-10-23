@@ -39,6 +39,14 @@ NtAddBootEntry(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtAddDriverEntry(
+    IN PBOOT_ENTRY BootEntry,
+    IN ULONG Id
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtCancelIoFile(
     IN HANDLE FileHandle,
     OUT PIO_STATUS_BLOCK IoStatusBlock
@@ -105,6 +113,14 @@ NtCreateNamedPipeFile(
     IN PLARGE_INTEGER DefaultTimeOut
 );
 
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtDeleteDriverEntry(
+    IN ULONG Id
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -139,6 +155,14 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtEnumerateBootEntries(
+    IN PVOID Buffer,
+    IN PULONG BufferLength
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtEnumerateDriverEntries(
     IN PVOID Buffer,
     IN PULONG BufferLength
 );
@@ -198,6 +222,20 @@ NtLockFile(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtModifyBootEntry(
+    IN PBOOT_ENTRY BootEntry
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtModifyDriverEntry(
+    IN PEFI_DRIVER_ENTRY DriverEntry
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtNotifyChangeDirectoryFile(
     IN HANDLE FileHandle,
     IN HANDLE Event OPTIONAL,
@@ -237,6 +275,13 @@ NTAPI
 NtQueryAttributesFile(
     IN POBJECT_ATTRIBUTES ObjectAttributes,
     OUT PFILE_BASIC_INFORMATION FileInformation
+);
+
+NTSTATUS
+NTAPI
+NtQueryDriverEntryOrder(
+    IN PULONG Ids,
+    IN PULONG Count
 );
 
 NTSYSCALLAPI
@@ -398,6 +443,13 @@ NTAPI
 NtSetBootOptions(
     IN PBOOT_OPTIONS BootOptions,
     IN ULONG FieldsToChange
+);
+
+NTSTATUS
+NTAPI
+NtSetDriverEntryOrder(
+    IN PULONG Ids,
+    IN PULONG Count
 );
 
 NTSYSCALLAPI

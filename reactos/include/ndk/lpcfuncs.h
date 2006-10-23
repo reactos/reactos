@@ -109,6 +109,12 @@ NtQueryInformationPort(
     PULONG ReturnLength
 );
 
+NTSTATUS
+NTAPI
+NtQueryPortInformationProcess(
+    VOID
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI

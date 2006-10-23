@@ -294,6 +294,16 @@ NtWaitForMultipleObjects(
     IN PLARGE_INTEGER Time
 );
 
+NTSTATUS
+NTAPI
+NtWaitForMultipleObjects32(
+    IN ULONG ObjectCount,
+    IN PLONG Handles,
+    IN WAIT_TYPE WaitType,
+    IN BOOLEAN Alertable,
+    IN PLARGE_INTEGER TimeOut OPTIONAL
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI

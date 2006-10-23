@@ -98,6 +98,38 @@ NtAccessCheck(
     OUT PNTSTATUS AccessStatus
 );
 
+NTSTATUS
+NTAPI
+NtAccessCheckByType(
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN PSID PrincipalSelfSid,
+    IN PTOKEN ClientToken,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_TYPE_LIST ObjectTypeList,
+    IN ULONG ObjectTypeLength,
+    IN PGENERIC_MAPPING GenericMapping,
+    IN PPRIVILEGE_SET PrivilegeSet,
+    IN ULONG PrivilegeSetLength,
+    OUT PACCESS_MASK GrantedAccess,
+    OUT PNTSTATUS AccessStatus
+);
+
+NTSTATUS
+NTAPI
+NtAccessCheckByTypeResultList(
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN PSID PrincipalSelfSid,
+    IN PTOKEN ClientToken,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_TYPE_LIST ObjectTypeList,
+    IN ULONG ObjectTypeLength,
+    IN PGENERIC_MAPPING GenericMapping,
+    IN PPRIVILEGE_SET PrivilegeSet,
+    IN ULONG PrivilegeSetLength,
+    OUT PACCESS_MASK GrantedAccess,
+    OUT PNTSTATUS AccessStatus
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI

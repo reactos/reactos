@@ -27,6 +27,20 @@ Author:
 //
 // Native calls
 //
+NTSTATUS
+NTAPI
+NtCompactKeys(
+    IN ULONG Count,
+    IN PHANDLE KeyArray
+);
+
+NTSTATUS
+NTAPI
+NtCompressKey(
+    IN HANDLE Key,
+    IN ULONG Mode
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -120,6 +134,31 @@ NtLoadKey2(
     IN ULONG Flags
 );
 
+NTSTATUS
+NTAPI
+NtLoadKeyEx(
+    IN POBJECT_ATTRIBUTES TargetKey,
+    IN POBJECT_ATTRIBUTES SourceFile,
+    IN ULONG Flags,
+    IN HANDLE TrustClassKey,
+    IN HANDLE Event,
+    IN ACCESS_MASK DesiredAccess,
+    OUT PHANDLE RootHandle
+);
+
+NTSTATUS
+NTAPI
+NtLockProductActivationKeys(
+    IN PULONG pPrivateVer,
+    IN PULONG pSafeMode
+);
+
+NTSTATUS
+NTAPI
+NtLockRegistryKey(
+    IN HANDLE KeyHandle
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -134,6 +173,23 @@ NtNotifyChangeKey(
     OUT PVOID ChangeBuffer,
     IN ULONG Length,
     IN BOOLEAN WatchSubtree
+);
+
+NTSTATUS
+NTAPI
+NtNotifyChangeMultipleKeys(
+    IN HANDLE MasterKeyHandle,
+    IN ULONG Count,
+    IN POBJECT_ATTRIBUTES SlaveObjects,
+    IN HANDLE Event,
+    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+    IN PVOID ApcContext OPTIONAL,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
+    IN ULONG CompletionFilter,
+    IN BOOLEAN WatchTree,
+    OUT PVOID Buffer,
+    IN ULONG Length,
+    IN BOOLEAN Asynchronous
 );
 
 NTSYSCALLAPI
@@ -175,6 +231,22 @@ NtQueryMultipleValueKey(
     OUT PVOID Buffer,
     IN OUT PULONG Length,
     OUT PULONG ReturnLength
+);
+
+NTSTATUS
+NTAPI
+NtQueryOpenSubKeys(
+    IN POBJECT_ATTRIBUTES TargetKey,
+    IN ULONG HandleCount
+);
+
+NTSTATUS
+NTAPI
+NtQueryOpenSubKeysEx(
+    IN POBJECT_ATTRIBUTES TargetKey,
+    IN ULONG BufferLength,
+    IN PVOID Buffer,
+    IN PULONG RequiredSize
 );
 
 NTSYSCALLAPI
@@ -224,6 +296,15 @@ NtSaveKeyEx(
     IN ULONG Flags
 );
 
+
+NTSTATUS
+NTAPI
+NtSaveMergedKeys(
+    IN HANDLE HighPrecedenceKeyHandle,
+    IN HANDLE LowPrecedenceKeyHandle,
+    IN HANDLE FileHandle
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -251,6 +332,20 @@ NTSTATUS
 NTAPI
 NtUnloadKey(
     IN POBJECT_ATTRIBUTES KeyObjectAttributes
+);
+
+NTSTATUS
+NTAPI
+NtUnloadKey2(
+    IN POBJECT_ATTRIBUTES TargetKey,
+    IN ULONG Flags
+);
+
+NTSTATUS
+NTAPI
+NtUnloadKeyEx(
+    IN POBJECT_ATTRIBUTES TargetKey,
+    IN HANDLE Event
 );
 
 #ifdef NTOS_MODE_USER

@@ -147,6 +147,14 @@ NtCreateJobObject(
     POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSTATUS
+NTAPI
+NtCreateJobSet(
+    IN ULONG NumJob,
+    IN PJOB_SET_ARRAY UserJobSet,
+    IN ULONG Flags
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -159,6 +167,21 @@ NtCreateProcess(
     IN HANDLE SectionHandle OPTIONAL,
     IN HANDLE DebugPort OPTIONAL,
     IN HANDLE ExceptionPort OPTIONAL
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCreateProcessEx(
+    OUT PHANDLE ProcessHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+    IN HANDLE ParentProcess,
+    IN ULONG Flags,
+    IN HANDLE SectionHandle OPTIONAL,
+    IN HANDLE DebugPort OPTIONAL,
+    IN HANDLE ExceptionPort OPTIONAL,
+    IN BOOLEAN InJob
 );
 
 NTSYSCALLAPI

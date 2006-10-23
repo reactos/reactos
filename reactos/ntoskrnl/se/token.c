@@ -2750,4 +2750,17 @@ NtCompareTokens(IN HANDLE FirstTokenHandle,
     return Status;
 }
 
+NTSTATUS
+NTAPI
+NtFilterToken(IN HANDLE ExistingTokenHandle,
+              IN ULONG Flags,
+              IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
+              IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
+              IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
+              OUT PHANDLE NewTokenHandle)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

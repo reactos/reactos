@@ -357,6 +357,12 @@ NtFlushInstructionCache(
     IN ULONG NumberOfBytesToFlush
 );
 
+ULONG
+NTAPI
+NtGetCurrentProcessorNumber(
+    VOID
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI

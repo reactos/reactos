@@ -142,6 +142,15 @@ NtCreateEventPair(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSTATUS
+NTAPI
+NtCreateKeyedEvent(
+    OUT PHANDLE KeyedEventHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN ULONG Flags
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -185,6 +194,15 @@ NTSTATUS
 NTAPI
 NtDisplayString(
     IN PUNICODE_STRING DisplayString
+);
+
+
+NTSTATUS
+NTAPI
+NtEnumerateSystemEnvironmentValuesEx(
+    IN ULONG InformationClass,
+    IN PVOID Buffer,
+    IN ULONG BufferLength
 );
 
 NTSYSCALLAPI
@@ -334,6 +352,13 @@ NtQuerySystemEnvironmentValue(
     PULONG ReturnLength
 );
 
+NTSTATUS
+NTAPI
+NtQuerySystemEnvironmentValueEx(
+    IN PUNICODE_STRING VariableName,
+    IN LPGUID VendorGuid
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -473,6 +498,13 @@ NTAPI
 NtSetSystemEnvironmentValue(
     IN PUNICODE_STRING VariableName,
     IN PUNICODE_STRING Value
+);
+
+NTSTATUS
+NTAPI
+NtSetSystemEnvironmentValueEx(
+    IN PUNICODE_STRING VariableName,
+    IN LPGUID VendorGuid
 );
 
 NTSYSCALLAPI
