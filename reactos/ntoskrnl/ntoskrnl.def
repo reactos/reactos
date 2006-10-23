@@ -777,7 +777,6 @@ NtOpenEvent@12
 NtCreateFile@44
 NtCreateSection@28
 NtDeleteAtom@4
-NtDeleteBootEntry@4
 NtDeleteFile@4
 NtDeviceIoControlFile@40
 NtDuplicateObject@28
@@ -1328,6 +1327,7 @@ ZwCreateKey@28
 ZwCreateSection@28
 ZwCreateSymbolicLinkObject@16
 ZwCreateTimer@16
+ZwDeleteBootEntry@4
 ZwDeleteFile@4
 ZwDeleteKey@4
 ZwDeleteValueKey@8
