@@ -134,6 +134,7 @@
             <file>fmutex.c</file>
             <file>handle.c</file>
             <file>init.c</file>
+            <file>keyedevt.c</file>
             <file>locale.c</file>
             <file>lookas.c</file>
             <file>mutant.c</file>
