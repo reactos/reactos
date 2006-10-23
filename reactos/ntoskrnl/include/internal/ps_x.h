@@ -179,3 +179,11 @@ PspUnlockThreadSecurityExclusive(IN PETHREAD Thread)
     /* Leave Critical Thread */
     KeLeaveCriticalRegion();
 }
+
+PEPROCESS
+FORCEINLINE
+_PsGetCurrentProcess(VOID)
+{
+    /* Get the current process */
+    return (PEPROCESS)KeGetCurrentThread()->ApcState.Process;
+}

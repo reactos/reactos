@@ -17,8 +17,10 @@
 
 #ifdef _NTOSKRNL_
 
-#define KeGetCurrentThread _KeGetCurrentThread
-#define KeGetPreviousMode _KeGetPreviousMode
+#define KeGetCurrentThread  _KeGetCurrentThread
+#define KeGetPreviousMode   _KeGetPreviousMode
+#undef  PsGetCurrentProcess
+#define PsGetCurrentProcess _PsGetCurrentProcess
 
 #include "ke.h"
 #include "i386/mm.h"
