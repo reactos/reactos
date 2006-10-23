@@ -132,7 +132,6 @@ NtFreeVirtualMemory@16
 NtFsControlFile@40
 NtGetContextThread@8
 NtGetPlugPlayEvent@16
-NtGetTickCount@0
 NtImpersonateAnonymousToken@4
 NtImpersonateClientOfPort@8
 NtImpersonateThread@12
@@ -290,7 +289,6 @@ NtWriteFile@36
 NtWriteFileGather@36
 NtWriteRequestData@24
 NtWriteVirtualMemory@20
-NtW32Call@20
 NtYieldExecution@0
 ;PfxFindPrefix
 ;PfxInitialize
@@ -803,7 +801,6 @@ ZwFreeVirtualMemory@16
 ZwFsControlFile@40
 ZwGetContextThread@8
 ZwGetPlugPlayEvent@16
-ZwGetTickCount@0
 ZwImpersonateAnonymousToken@4
 ZwImpersonateClientOfPort@8
 ZwImpersonateThread@12
@@ -961,7 +958,6 @@ ZwWriteFile@36
 ZwWriteFileGather@36
 ZwWriteRequestData@24
 ZwWriteVirtualMemory@20
-ZwW32Call@20
 ZwYieldExecution@0
 __isascii
 __iscsym

@@ -78,11 +78,12 @@ DbgUiContinue(IN PCLIENT_ID ClientId,
 NTSTATUS
 NTAPI
 DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
-                                 OUT LPDEBUG_EVENT DebugEvent)
+                                 OUT PVOID Win32DebugEvent)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     THREAD_BASIC_INFORMATION ThreadBasicInfo;
+    LPDEBUG_EVENT DebugEvent = Win32DebugEvent;
     HANDLE ThreadHandle;
 
     /* Write common data */
