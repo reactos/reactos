@@ -6,7 +6,7 @@
  * PROJECT:     System regression tool for ReactOS
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        tools/sysreg/conf_parser.h
- * PURPOSE:     pipe reader support
+ * PURPOSE:     file reading support
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 

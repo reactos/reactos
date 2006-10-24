@@ -65,7 +65,7 @@ namespace Sysreg_
 			buf = _fgetts(buffer, sizeof(buffer) / sizeof(TCHAR), file);
 			if (buf)
 			{
-				if (buffer[0] != ';')
+				if (buffer[0] != _T(';'))
 				{
 					string s_buffer = string(buffer);
 					string::size_type ws_pos = s_buffer.find_first_of (_T("="));

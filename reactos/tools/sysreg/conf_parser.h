@@ -10,7 +10,7 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 
-
+#include "user_types.h"
 #include <string>
 #include <map>
 #include <tchar.h>

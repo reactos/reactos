@@ -37,6 +37,7 @@ namespace Sysreg_
 		static string CHECK_POINT;
 		static string SYSREG_CHECKPOINT;
 		static string DELAY_READ;
+		static string CRITICAL_APP;
 
 //---------------------------------------------------------------------------------------
 ///
@@ -138,6 +139,7 @@ protected:
 	double m_Timeout;
 	string m_PidFile;
 	string m_Checkpoint;
+	string m_CriticalApp;
 	vector <string> m_Checkpoints;
 	unsigned long m_Delayread;
 

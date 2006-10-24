@@ -12,6 +12,7 @@
 #include "rosboot_test.h"
 #include "pipe_reader.h"
 #include "sym_file.h"
+#include "file_reader.h"
 
 #include <iostream>
 #include <vector>
@@ -46,6 +47,7 @@ namespace Sysreg_
 	using std::vector;
 	using System_::PipeReader;
 	using System_::SymbolFile;
+	using System_::FileReader;
 
 	string RosBootTest::VARIABLE_NAME = _T("ROSBOOT_CMD");
 	string RosBootTest::CLASS_NAME = _T("rosboot");
@@ -56,6 +58,7 @@ namespace Sysreg_
 	string RosBootTest::DELAY_READ = _T("ROSBOOT_DELAY_READ");
 	string RosBootTest::CHECK_POINT = _T("ROSBOOT_CHECK_POINT");
 	string RosBootTest::SYSREG_CHECKPOINT = _T("SYSREG_CHECKPOINT:");
+	string RosBootTest::CRITICAL_APP = _T("ROSBOOT_CRITICAL_APP");
 
 //---------------------------------------------------------------------------------------
 	RosBootTest::RosBootTest() : RegressionTest(RosBootTest::CLASS_NAME),  m_Timeout(60.0), m_Delayread(0)
@@ -123,6 +126,7 @@ namespace Sysreg_
 
 		conf_parser.getStringValue (RosBootTest::CHECK_POINT, m_Checkpoint);
 		conf_parser.getStringValue (RosBootTest::PID_FILE, m_PidFile);
+		conf_parser.getStringValue (RosBootTest::CRITICAL_APP, m_CriticalApp);
 
 		
 		if (!_tcscmp(debug_port.c_str(), _T("pipe")))
@@ -203,6 +207,15 @@ namespace Sysreg_
 			}
 			else if (line.find (_T("Unhandled exception")) != string::npos)
 			{
+				if (m_CriticalApp == _T("IGNORE"))
+				{
+					///
+					/// ignoring all user-mode exceptions
+					///
+					continue;
+				}
+
+
 				if (i + 3 >= debug_data.size ())
 				{
 					///
@@ -211,9 +224,6 @@ namespace Sysreg_
 					clear = false;
 					break;
 				}
-
-				cerr << "UM detected" <<endl;
-				state = DebugStateUMEDetected;
 
 				///
 				/// extract address from next line
@@ -224,8 +234,7 @@ namespace Sysreg_
 				if (pos == string::npos)
 				{
 					cerr << "Error: trace is not available (corrupted debug info" << endl;
-					dumpCheckpoints();
-					break;
+					continue;
 				}
 
 
@@ -240,20 +249,30 @@ namespace Sysreg_
 				if (pos == string::npos)
 				{
 					cerr << "Error: trace is not available (corrupted debug info" << endl;
-					dumpCheckpoints();
-					break;
+					continue;
 				}
 
-				modulename = modulename.substr (pos + 1, modulename.length () - pos);
-				pos = modulename.find_last_of (_T("."));
+				string appname = modulename.substr (pos + 1, modulename.length () - pos);
+				if (m_CriticalApp.find (appname) == string::npos && m_CriticalApp.length () > 1)
+				{
+					/// the application is not in the list of 
+					/// critical apps. Therefore we ignore the user-mode
+					/// exception
+
+					continue;
+				}
+
+				pos = appname.find_last_of (_T("."));
 				if (pos == string::npos)
 				{
 					cerr << "Error: trace is not available (corrupted debug info" << endl;
-					dumpCheckpoints();
-					break;
+					continue;
 				}
 
-				modulename = modulename.substr (0, pos);
+				modulename = appname.substr (0, pos);
+
+				cerr << "UM detected" <<endl;
+				state = DebugStateUMEDetected;
 
 				///
 				/// resolve address
@@ -382,57 +401,35 @@ namespace Sysreg_
 
 		if (m_PidFile != _T(""))
 		{
-			FILE * pidfile = _tfopen(m_PidFile.c_str (), _T("rt"));
-			if (pidfile)
+			FileReader file;
+			if (file.openFile(m_PidFile.c_str ()))
 			{
-				TCHAR szBuffer[20];
-				if (_fgetts(szBuffer, sizeof(szBuffer) / sizeof(TCHAR), pidfile))
+				vector<string> lines;
+				file.readFile(lines);
+				if (lines.size())
 				{
-					pid = _ttoi(szBuffer);
+					string line = lines[0];
+					pid = _ttoi(line.c_str ());
 				}
-
+				file.closeFile();
 			}
-			fclose(pidfile);
 		}
-
-		FILE * file = _tfopen(debug_log.c_str (), _T("rt"));
-		if (!file)
+		FileReader file;
+		if (!file.openFile (debug_log.c_str ()))
 		{
 			cerr << "Error: failed to open debug log " << debug_log << endl;
 			pipe_reader.closePipe ();
 			return false;
 		}
 
-		TCHAR szBuffer[1000];
+		vector<string> lines;
 		bool ret = true;
-		vector<string> vect;
 
 		while(!pipe_reader.isEof ())
 		{
-			if (_fgetts(szBuffer, sizeof(szBuffer) / sizeof(TCHAR), file))
+			if (file.readFile (lines))
 			{
-
-				string line = szBuffer;
-				
-				while(line.find (_T("\x10")) != string::npos)
-				{
-					line.erase(line.find(_T("\x10")), 1);
-				}
-
-				if (line[0] != _T('(') && vect.size() >=1)
-				{
-					string prev = vect[vect.size () -1];
-					prev.insert (prev.length ()-1, line);
-					vect.pop_back ();
-					vect.push_back (prev);
-
-				}
-				else
-				{
-					vect.push_back (line);
-				}
-
-				DebugState state = checkDebugData(vect);
+				DebugState state = checkDebugData(lines);
 
 				if (state == DebugStateBSODDetected || state == DebugStateUMEDetected)
 				{
@@ -443,14 +440,26 @@ namespace Sysreg_
 				{
 					break;
 				}
-
-				if (isTimeout(m_Timeout))
+			}
+			if (isTimeout(m_Timeout))
+			{
+				///
+				/// timeout has been reached
+				///
+				if (m_Checkpoint != _T(""))
 				{
-					break;
+					///
+					/// timeout was reached but
+					/// the checkpoint was not reached
+					/// we see this as a "hang"
+					///
+					ret = false;
 				}
+				break;
 			}
 		}
-		fclose(file);
+		file.closeFile ();
+
 		if (pid)
 		{
 #ifdef __LINUX__
