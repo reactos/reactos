@@ -668,6 +668,10 @@ InstallReactOS (HINSTANCE hInstance)
 
   SetupCloseInfFile(hSysSetupInf);
 
+  /// THE FOLLOWING DPRINT IS FOR THE SYSTEM REGRESSION TOOL
+  /// DO NOT REMOVE!!!
+  DebugPrint("SYSREG_CHECKPOINT:SYSSETUP_COMPLETE");
+
   return 0;
 }
 
