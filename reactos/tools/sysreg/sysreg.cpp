@@ -25,7 +25,7 @@ using System_::SymbolFile;
 typedef ComponentFactoryTemplate<RegressionTest, string> ComponentFactory;
 
 static const TCHAR USAGE[] = 
-_T("sysreg.exe <conf_file> <testname>\n\nconf_file           ... path to a configuration file\ntest_name           ... name of test to execute\n");
+_T("sysreg.exe -l | [conf_file] <testname>\n\n-l            - list available tests\nconf_file     - (optional) path to a configuration file (default: sysreg.cfg)\ntest_name     - name of test to execute\n");
 
 
 
@@ -34,19 +34,37 @@ int _tmain(int argc, TCHAR * argv[])
 {
 	ConfigParser config;
 	ComponentFactory comp_factory;
-	
-	if (argc != 3)
+	TCHAR DefaultConfig[] = _T("sysreg.cfg");
+	TCHAR *ConfigFile;
+
+	if ((argc != 3) && (argc != 2))
 	{
 		cerr << USAGE << endl;
 		return -1;
 	}
+
 //---------------------------------------------------------------------------------------
 	/// regression tests should be registered here
 	comp_factory.registerComponent<RosBootTest>(RosBootTest::CLASS_NAME);
 
 //---------------------------------------------------------------------------------------
 
-	if (!config.parseFile (argv[1]))
+	if (argc == 2)
+	{
+		if (_tcscmp(argv[1], _T("-l")) == 0)
+		{
+			comp_factory.listComponentIds();
+			return -1;
+		}
+	}
+
+	if (argc == 2)
+		_tcscpy(ConfigFile, DefaultConfig);
+	else
+		ConfigFile = argv[1];
+
+
+	if (!config.parseFile (ConfigFile))
 	{
 		cerr << USAGE << endl;
 		return -1;
