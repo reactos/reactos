@@ -25,6 +25,7 @@ SYSREGBUILD_SOURCES = $(addprefix $(SYSREGBUILD_BASE_),\
 	rosboot_test.cpp \
 	sym_file.cpp \
 	sysreg.cpp \
+	file_reader.cpp \
 	)
 
 SYSREGBUILD_OBJECTS = \
@@ -63,6 +64,10 @@ $(SYSREGBUILD_INT_)sym_file.o: $(SYSREGBUILD_BASE_)sym_file.cpp | $(SYSREGBUILD_
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
 
 $(SYSREGBUILD_INT_)sysreg.o: $(SYSREGBUILD_BASE_)sysreg.cpp | $(SYSREGBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
+
+$(SYSREGBUILD_INT_)file_reader.o: $(SYSREGBUILD_BASE_)file_reader.cpp | $(SYSREGBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
 

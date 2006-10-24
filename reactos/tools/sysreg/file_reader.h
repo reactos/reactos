@@ -1,7 +1,7 @@
 #ifndef FILE_READER_H__
 #define FILE_READER_H__
 
-/* $Id: pipe_reader.h 24587 2006-10-20 21:14:08Z janderwald $
+/* $Id$
  *
  * PROJECT:     System regression tool for ReactOS
  * LICENSE:     GPL - See COPYING in the top level directory

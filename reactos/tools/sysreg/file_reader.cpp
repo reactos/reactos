@@ -1,4 +1,4 @@
-/* $Id: pipe_reader.cpp 24589 2006-10-21 08:34:00Z janderwald $
+/* $Id$
  *
  * PROJECT:     System regression tool for ReactOS
  * LICENSE:     GPL - See COPYING in the top level directory

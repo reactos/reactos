@@ -1,7 +1,7 @@
 #ifndef USER_TYPES_H__
 #define USER_TYPES_H__
 
-/* $Id: rosboot_test.cpp 24585 2006-10-20 19:40:33Z janderwald $
+/* $Id$
  *
  * PROJECT:     System regression tool for ReactOS
  * LICENSE:     GPL - See COPYING in the top level directory
@@ -14,6 +14,5 @@
 #include <tchar.h>
 
 	typedef std::basic_string<TCHAR> string;
-
 
 #endif
