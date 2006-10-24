@@ -13,20 +13,6 @@
 
 namespace System_
 {
-#ifdef UNICODE
-
-	using std::wcerr;
-	using std::endl;
-
-#define cerr wcerr
-
-#else
-
-	using std::cerr;
-	using std::endl;
-
-#endif
-
 
 	EnvironmentVariable::EnvironmentMap EnvironmentVariable::m_Map;
 
@@ -44,7 +30,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool EnvironmentVariable::getValue(const System_::string &EnvName, System_::string &EnvValue) 
+	bool EnvironmentVariable::getValue( string const &EnvName, string &EnvValue) 
 	{
 		EnvironmentMap::const_iterator it = m_Map.find (EnvName);
 		if (it != m_Map.end())

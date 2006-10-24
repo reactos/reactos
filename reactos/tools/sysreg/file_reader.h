@@ -12,7 +12,6 @@
 
 
 #include "user_types.h"
-
 #include <vector>
 
 namespace System_

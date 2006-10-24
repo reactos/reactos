@@ -11,14 +11,11 @@
  */
 
 #include "user_types.h"
-#include <string>
 #include <map>
-#include <tchar.h>
 
 namespace Sysreg_
 {
 	using std::map;
-	using std::wstring;
 //---------------------------------------------------------------------------------------
 ///
 /// class ConfigParser
@@ -36,8 +33,6 @@ namespace Sysreg_
 	{
 	public:
 
-	typedef std::basic_string<TCHAR> string;
-	typedef std::basic_istringstream<TCHAR> istringstream;
 	typedef map<string, string> ConfigMap;
 //---------------------------------------------------------------------------------------
 ///

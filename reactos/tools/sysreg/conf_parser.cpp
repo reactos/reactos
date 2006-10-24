@@ -14,20 +14,6 @@
 
 namespace Sysreg_
 {
-#ifdef UNICODE
-
-	using std::wcerr;
-	using std::endl;
-
-#define cerr wcerr
-
-#else
-
-	using std::cerr;
-	using std::endl;
-
-#endif
-
 	using std::ifstream;
 //---------------------------------------------------------------------------------------
 	ConfigParser::ConfigParser()

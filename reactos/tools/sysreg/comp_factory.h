@@ -11,6 +11,7 @@
  */
 
 
+#include "user_types.h"
 #include <map>
 #include <vector>
 
@@ -18,20 +19,6 @@ namespace System_
 {
   using std::map;
   using std::vector;
-
-#ifdef UNICODE
-
-	using std::wcout;
-	using std::endl;
-
-#define cout wcout;
-
-#else
-
-	using std::cout;
-	using std::endl;
-
-#endif
 
 //----------------------------------------------------------
 ///

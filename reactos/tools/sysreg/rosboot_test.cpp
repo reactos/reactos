@@ -30,20 +30,6 @@
 
 namespace Sysreg_
 {
-#ifdef UNICODE
-
-	using std::wcerr;
-	using std::endl;
-
-#define cerr wcerr
-
-#else
-
-	using std::cerr;
-	using std::endl;
-
-#endif
-
 	using std::vector;
 	using System_::PipeReader;
 	using System_::SymbolFile;
@@ -376,7 +362,7 @@ namespace Sysreg_
 		return ret;
 	}
 //---------------------------------------------------------------------------------------
-	bool RosBootTest::fetchDebugByFile(Sysreg_::string boot_cmd, Sysreg_::string debug_log)
+	bool RosBootTest::fetchDebugByFile(string boot_cmd, string debug_log)
 	{
 		PipeReader pipe_reader;
 

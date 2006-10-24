@@ -11,27 +11,6 @@
 
 #include "sysreg.h"
 
-#ifdef UNICODE
-
-	using std::wcerr;
-	using std::endl;
-	using std::wcout;
-
-#define cerr wcerr
-#define cout wcout
-
-#else
-
-	using std::cerr;
-	using std::cout;
-	using std::endl;
-
-#endif
-
-
-typedef std::basic_string<TCHAR> string;
-
-
 using System_::EnvironmentVariable;
 using System_::ComponentFactoryTemplate;
 

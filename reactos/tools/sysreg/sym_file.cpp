@@ -26,23 +26,7 @@
 namespace System_
 {
 
-#ifdef UNICODE
-
-	using std::wcerr;
-	using std::endl;
-
-#define cerr wcerr
-
-#else
-
-	using std::cerr;
-	using std::endl;
-
-#endif
-
-
 	using std::vector;
-
 	string SymbolFile::VAR_ROS_OUTPUT = _T("ROS_OUTPUT");
 	string SymbolFile::ROS_ADDR2LINE = _T("ROS_ADDR2LINE");
 	string SymbolFile::m_SymbolPath= _T("");
@@ -62,7 +46,7 @@ namespace System_
 	}
 
 //---------------------------------------------------------------------------------------
-	bool SymbolFile::initialize(ConfigParser & conf_parser, const System_::string &Path) 
+	bool SymbolFile::initialize(ConfigParser & conf_parser, string const &Path) 
 	{
 		vector<string> vect;
 		string current_dir;
@@ -194,7 +178,7 @@ namespace System_
 	}
 
 //---------------------------------------------------------------------------------------
-	bool SymbolFile::getSymbolFilePath(const System_::string &ModuleName, System_::string &FilePath)
+	bool SymbolFile::getSymbolFilePath(string const &ModuleName, string &FilePath)
 	{
 		SymbolMap::const_iterator it = m_Map.find (ModuleName);
 

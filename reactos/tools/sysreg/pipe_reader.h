@@ -12,14 +12,12 @@
 
 
 
-#include <string>
-#include <tchar.h>
+#include "user_types.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 namespace System_
 {
-	typedef std::basic_string<TCHAR> string;
 //---------------------------------------------------------------------------------------
 ///
 /// class PipeReader

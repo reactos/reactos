@@ -12,7 +12,27 @@
 
 #include <string>
 #include <tchar.h>
+#include <iostream>
 
 	typedef std::basic_string<TCHAR> string;
+	typedef std::basic_istringstream<TCHAR> istringstream;
+
+#ifdef UNICODE
+
+	using std::wcout;
+	using std::wcerr;
+	using std::endl;
+
+#define cout wcout
+#define cerr wcerr
+
+#else
+
+	using std::cout;
+	using std::cerr;
+	using std::endl;
 
 #endif
+
+
+#endif // end of USER_TYPES_H__ 

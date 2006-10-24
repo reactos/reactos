@@ -10,15 +10,13 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 
-#include <string>
+#include "user_types.h"
 #include <map>
-#include <tchar.h>
+
 
 namespace System_
 {
-
 	using std::map;
-	typedef std::basic_string<TCHAR> string;
 //---------------------------------------------------------------------------------------
 ///
 /// class EnvironmentVariable

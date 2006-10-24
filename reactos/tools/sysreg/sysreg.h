@@ -10,24 +10,14 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 
-#include <tchar.h>
-#include <string>
-#include <iostream>
-
-
-
+#include "user_types.h"
 #include "env_var.h"
-#include "pipe_reader.h"
+#include "sym_file.h"
 #include "comp_factory.h"
 #include "conf_parser.h"
 
 // regression test classes
 #include "rosboot_test.h"
-
-//test include
-#include "sym_file.h"
-
-
 
 
 

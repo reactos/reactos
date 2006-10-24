@@ -10,16 +10,12 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 
+#include "user_types.h"
 #include "conf_parser.h"
-
-#include <string>
-#include <tchar.h>
 
 namespace Sysreg_
 {
 	using Sysreg_::ConfigParser;
-
-	typedef std::basic_string<TCHAR> string;
 //-------------------------------------------------------------------
 ///
 /// class RegressionTest

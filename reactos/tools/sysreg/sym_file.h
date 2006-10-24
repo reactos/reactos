@@ -12,15 +12,10 @@
  */
 
 #include "conf_parser.h"
-
-#include <string>
-#include <tchar.h>
 #include <map>
 
 namespace System_
 {
-
-	typedef std::basic_string<TCHAR> string;
 	using Sysreg_::ConfigParser;
 
 //---------------------------------------------------------------------------------------

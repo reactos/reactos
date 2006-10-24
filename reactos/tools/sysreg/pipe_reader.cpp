@@ -14,20 +14,6 @@
 
 namespace System_
 {
-#ifdef UNICODE
-
-	using std::wcerr;
-	using std::endl;
-
-#define cerr wcerr
-
-#else
-
-	using std::cerr;
-	using std::endl;
-
-#endif
-
 //---------------------------------------------------------------------------------------
 	PipeReader::PipeReader() : m_File(NULL)
 	{
@@ -42,7 +28,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool PipeReader::openPipe(const System_::string &PipeCmd, System_::string AccessMode)
+	bool PipeReader::openPipe(string const & PipeCmd, string AccessMode)
 	{
 		if (m_File != NULL)
 		{
@@ -92,11 +78,11 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	string::size_type PipeReader::readPipe(System_::string &Buffer)
+	string::size_type PipeReader::readPipe(string &Buffer)
 	{
 		
 		TCHAR * buf = (TCHAR *)Buffer.c_str();
-		System_::string::size_type size = Buffer.capacity();
+		string::size_type size = Buffer.capacity();
 
 //#ifdef NDEBUG
 		memset(buf, 0x0, sizeof(TCHAR) * size);
