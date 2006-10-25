@@ -3662,6 +3662,7 @@ typedef struct _SYSTEM_POWER_INFORMATION {
 #endif
 
 #if (_WIN32_WINNT >= 0x0500)
+#define _AUDIT_EVENT_TYPE_HACK 1
 typedef enum _AUDIT_EVENT_TYPE {
     AuditEventObjectAccess,
     AuditEventDirectoryServiceAccess

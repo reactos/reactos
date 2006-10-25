@@ -400,11 +400,18 @@ extern LARGE_INTEGER                IoOtherTransferCount;
 #define SE_RM_CONTROL_VALID             0x4000
 #define SE_SELF_RELATIVE                0x8000
 
+#ifndef _WINNT_H
+#define _AUDIT_EVENT_TYPE_HACK 0
+#endif
+#if (_AUDIT_EVENT_TYPE_HACK == 1)
+
+#else
 typedef enum _AUDIT_EVENT_TYPE
 {
     AuditEventObjectAccess,
     AuditEventDirectoryServiceAccess
 } AUDIT_EVENT_TYPE, *PAUDIT_EVENT_TYPE;
+#endif
 
 #define AUDIT_ALLOW_NO_PRIVILEGE 0x1
 
