@@ -1689,7 +1689,7 @@ NtFlushInstructionCache (
 {
     PAGED_CODE();
 
-    Ke386WbInvd();
+    __wbinvd();
     return STATUS_SUCCESS;
 }
 

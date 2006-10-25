@@ -37,7 +37,7 @@ ULONG KiPageFaultHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    ASSERT(ExceptionNr == 14);
    
    /* get the faulting address */
-   cr2 = Ke386GetCr2();
+   cr2 = __readcr2();
    Tf->DbgArgPointer = cr2;
 
    /* it's safe to enable interrupts after cr2 has been saved */

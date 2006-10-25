@@ -122,7 +122,7 @@ MiFlushTlb(PULONG Pt, PVOID Address)
 PULONG
 MmGetPageDirectory(VOID)
 {
-   return (PULONG)Ke386GetCr3();
+   return (PULONG)__readcr3();
 }
 
 static ULONG

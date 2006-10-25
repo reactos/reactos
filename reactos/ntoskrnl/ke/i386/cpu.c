@@ -511,13 +511,13 @@ KiSetCR0Bits(VOID)
     ULONG Cr0;
 
     /* Save current CR0 */
-    Cr0 = Ke386GetCr0();
+    Cr0 = __readcr0();
 
     /* If this is a 486, enable Write-Protection */
     if (KeGetCurrentPrcb()->CpuType > 3) Cr0 |= CR0_WP;
 
     /* Set new Cr0 */
-    Ke386SetCr0(Cr0);
+    __writecr0(Cr0);
 }
 
 VOID
@@ -601,7 +601,7 @@ Ki386InitializeTss(IN PKTSS Tss,
     /* Initialize the TSS used for handling double faults. */
     Tss = (PKTSS)KiDoubleFaultTSS;
     KiInitializeTSS(Tss);
-    Tss->CR3 = _Ke386GetCr(3);
+    Tss->CR3 = __readcr3();
     Tss->Esp0 = PtrToUlong(KiDoubleFaultStack);
     Tss->Eip = PtrToUlong(KiTrap8);
     Tss->Cs = KGDT_R0_CODE;
@@ -630,7 +630,7 @@ Ki386InitializeTss(IN PKTSS Tss,
     /* Initialize the actual TSS */
     Tss = (PKTSS)KiNMITSS;
     KiInitializeTSS(Tss);
-    Tss->CR3 = _Ke386GetCr(3);
+    Tss->CR3 = __readcr3();
     Tss->Esp0 = PtrToUlong(KiDoubleFaultStack);
     Tss->Eip = PtrToUlong(KiTrap2);
     Tss->Cs = KGDT_R0_CODE;
@@ -655,7 +655,7 @@ NTAPI
 KeFlushCurrentTb(VOID)
 {
     /* Flush the TLB by resetting CR3 */
-    _Ke386SetCr(3, _Ke386GetCr(3));
+    __writecr3((ULONGLONG)__readcr3);
 }
 
 VOID
@@ -663,19 +663,19 @@ NTAPI
 KiSaveProcessorControlState(IN PKPROCESSOR_STATE ProcessorState)
 {
     /* Save the CR registers */
-    ProcessorState->SpecialRegisters.Cr0 = _Ke386GetCr(0);
-    ProcessorState->SpecialRegisters.Cr2 = _Ke386GetCr(2);
-    ProcessorState->SpecialRegisters.Cr3 = _Ke386GetCr(3);
-    ProcessorState->SpecialRegisters.Cr4 = _Ke386GetCr(4);
+    ProcessorState->SpecialRegisters.Cr0 = __readcr0();
+    ProcessorState->SpecialRegisters.Cr2 = __readcr2();
+    ProcessorState->SpecialRegisters.Cr3 = __readcr3();
+    ProcessorState->SpecialRegisters.Cr4 = __readcr4();
 
     /* Save the DR registers */
-    ProcessorState->SpecialRegisters.KernelDr0 = _Ke386GetDr(0);
-    ProcessorState->SpecialRegisters.KernelDr1 = _Ke386GetDr(1);
-    ProcessorState->SpecialRegisters.KernelDr2 = _Ke386GetDr(2);
-    ProcessorState->SpecialRegisters.KernelDr3 = _Ke386GetDr(3);
-    ProcessorState->SpecialRegisters.KernelDr6 = _Ke386GetDr(6);
-    ProcessorState->SpecialRegisters.KernelDr7 = _Ke386GetDr(7);
-    _Ke386SetDr(7, 0);
+    ProcessorState->SpecialRegisters.KernelDr0 = Ke386GetDr0();
+    ProcessorState->SpecialRegisters.KernelDr1 = Ke386GetDr1();
+    ProcessorState->SpecialRegisters.KernelDr2 = Ke386GetDr2();
+    ProcessorState->SpecialRegisters.KernelDr3 = Ke386GetDr3();
+    ProcessorState->SpecialRegisters.KernelDr6 = Ke386GetDr6();
+    ProcessorState->SpecialRegisters.KernelDr7 = Ke386GetDr7();
+    Ke386SetDr7(0);
 
     /* Save GDT, IDT, LDT and TSS */
     Ke386GetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr);
@@ -724,7 +724,7 @@ NTAPI
 Ki386EnableDE(IN ULONG_PTR Context)
 {
     /* Enable DE */
-    Ke386SetCr4(Ke386GetCr4() | CR4_DE);
+    __writecr4(__readcr4() | CR4_DE);
     return 0;
 }
 
@@ -733,7 +733,7 @@ NTAPI
 Ki386EnableFxsr(IN ULONG_PTR Context)
 {
     /* Enable FXSR */
-    Ke386SetCr4(Ke386GetCr4() | CR4_FXSR);
+    __writecr4(__readcr4() | CR4_FXSR);
     return 0;
 }
 

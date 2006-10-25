@@ -198,14 +198,14 @@ FrLdrSetupPae(ULONG Magic)
         PageDirectoryBaseAddress = (ULONG_PTR)&startup_pagedirectorytable_pae;
 
         /* Enable PAE */
-        Ke386SetCr4(Ke386GetCr4() | X86_CR4_PAE);
+        __writecr4(__readcr4() | X86_CR4_PAE);
     }
 
     /* Set the PDBR */
-    Ke386SetCr3(PageDirectoryBaseAddress);
+    __writecr3(PageDirectoryBaseAddress);
 
     /* Enable Paging and Write Protect*/
-    Ke386SetCr0(Ke386GetCr0() | X86_CR0_PG | X86_CR0_WP);
+    __writecr0(__readcr0() | X86_CR0_PG | X86_CR0_WP);
 
     /* Jump to Kernel */
     PagedJump = (ASMCODE)(PVOID)(KernelEntryPoint);

@@ -38,15 +38,15 @@ Ki386EnableGlobalPage(IN volatile ULONG_PTR Context)
     }
 
     /* Now get CR4 and make sure PGE is masked out */
-    Cr4 = Ke386GetCr4();
-    Ke386SetCr4(Cr4 & ~CR4_PGE);
+    Cr4 = __readcr4();
+    __writecr4(Cr4 & ~CR4_PGE);
 
     /* Flush the TLB */
-    Cr3 = Ke386GetCr3();
-    Ke386SetCr3(Cr3);
+    Cr3 = __readcr3();
+    __writecr3(Cr3);
 
     /* Now enable PGE */
-    Ke386SetCr4(Cr4 | CR4_PGE);
+    __writecr4(Cr4 | CR4_PGE);
     Ke386GlobalPagesEnabled = TRUE;
 
     /* Restore interrupts */
