@@ -11,6 +11,7 @@
 
 #include "rosboot_test.h"
 #include "pipe_reader.h"
+#include "namedpipe_reader.h"
 #include "sym_file.h"
 #include "file_reader.h"
 
@@ -32,6 +33,7 @@ namespace Sysreg_
 {
 	using std::vector;
 	using System_::PipeReader;
+	using System_::NamedPipeReader;
 	using System_::SymbolFile;
 	using System_::FileReader;
 
@@ -314,18 +316,42 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
 	bool RosBootTest::fetchDebugByPipe(string boot_cmd)
 	{
-		PipeReader pipe_reader;
+		NamedPipeReader namedpipe_reader;
+		string pipecmd = _T("");
 
-		if (!pipe_reader.openPipe(boot_cmd, string(_T("rt"))))
+#ifdef __LINUX__
+
+#else
+		STARTUPINFO siStartInfo;
+		PROCESS_INFORMATION piProcInfo; 
+
+		ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+		ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+
+		siStartInfo.cb = sizeof(STARTUPINFO);
+		siStartInfo.wShowWindow = SW_SHOWNORMAL;
+		siStartInfo.dwFlags = STARTF_USESHOWWINDOW;
+
+		LPTSTR command = _tcsdup(boot_cmd.c_str());
+
+		if (!CreateProcess(NULL, command, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &siStartInfo, &piProcInfo))
 		{
-			cerr << "Error: failed to open pipe with cmd: " << boot_cmd <<endl;
+			cerr << "Error: CreateProcess failed " << boot_cmd <<endl;
 			return false;
 		}
-		string Buffer;
-		Buffer.reserve (500);
+#endif
 
-		bool ret = true;
-		vector<string> vect;
+		string::size_type pipe_pos = boot_cmd.find (_T("serial pipe:"));
+		pipe_pos += 12;
+		string::size_type pipe_pos_end = boot_cmd.find (_T(" "), pipe_pos);
+		if (pipe_pos != string::npos && pipe_pos > 0 && pipe_pos < boot_cmd.size())
+		{
+			pipecmd = "\\\\.\\pipe\\" + boot_cmd.substr (pipe_pos, pipe_pos_end - pipe_pos);
+		}
+		else
+		{
+			return false;
+		}
 
 		if (m_Delayread)
 		{
@@ -336,14 +362,26 @@ namespace Sysreg_
 			_sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
 		}
 
-		while(!pipe_reader.isEof ())
+		if (!namedpipe_reader.openPipe(pipecmd))
+		{
+			cerr << "Error: failed to open pipe with cmd: " << boot_cmd <<endl;
+			return false;
+		}
+		string Buffer;
+		Buffer.reserve (500);
+
+		bool ret = true;
+		vector<string> vect;
+
+		while(1)
 		{
 			if (isTimeout(m_Timeout))
 			{
 				break;
 			}
 
-			pipe_reader.readPipe (Buffer);
+			namedpipe_reader.readPipe (Buffer);
+			cout << Buffer.c_str() << endl;
 			vect.push_back (Buffer);
 
 			DebugState state = checkDebugData(vect);
@@ -358,14 +396,13 @@ namespace Sysreg_
 				break;
 			}
 		}
-		pipe_reader.closePipe ();
+		namedpipe_reader.closePipe ();
 		return ret;
 	}
 //---------------------------------------------------------------------------------------
 	bool RosBootTest::fetchDebugByFile(string boot_cmd, string debug_log)
 	{
 		PipeReader pipe_reader;
-
 		_tremove(debug_log.c_str ());
 		_tremove(m_PidFile.c_str ());
 		if (!pipe_reader.openPipe(boot_cmd, string(_T("rt"))))
@@ -377,7 +414,7 @@ namespace Sysreg_
 		if (m_Delayread)
 		{
 			///
-			/// delay reading untill emulator is ready
+			/// delay reading until emulator is ready
 			///
 
 			_sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
@@ -449,7 +486,7 @@ namespace Sysreg_
 		if (pid)
 		{
 #ifdef __LINUX__
-
+			kill(pid, SIGTERM);
 #else
 			HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
 			if (hProcess)

@@ -22,6 +22,7 @@ SYSREGBUILD_SOURCES = $(addprefix $(SYSREGBUILD_BASE_),\
 	conf_parser.cpp \
 	env_var.cpp \
 	pipe_reader.cpp \
+	namedpipe_reader.cpp \
 	rosboot_test.cpp \
 	sym_file.cpp \
 	sysreg.cpp \
@@ -52,6 +53,10 @@ $(SYSREGBUILD_INT_)env_var.o: $(SYSREGBUILD_BASE_)env_var.cpp | $(SYSREGBUILD_IN
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
 
 $(SYSREGBUILD_INT_)pipe_reader.o: $(SYSREGBUILD_BASE_)pipe_reader.cpp | $(SYSREGBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
+
+$(SYSREGBUILD_INT_)namedpipe_reader.o: $(SYSREGBUILD_BASE_)namedpipe_reader.cpp | $(SYSREGBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
 
