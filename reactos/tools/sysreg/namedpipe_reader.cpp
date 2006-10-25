@@ -97,6 +97,8 @@ namespace System_
 		string::size_type size = Buffer.capacity();
 		DWORD cbRead;
 		BOOL fSuccess;
+		TCHAR * localbuf;
+		DWORD localsize = 100;
 
 //#ifdef NDEBUG
 		memset(buf, 0x0, sizeof(TCHAR) * size);
@@ -105,25 +107,42 @@ namespace System_
 #ifdef __LINUX__
 
 #else
-		do 
-		{ 
-			fSuccess = ReadFile( 
-				h_Pipe,
-				buf,
-				size,
-				&cbRead,
-				NULL);
-		 
-			if (! fSuccess && GetLastError() != ERROR_MORE_DATA) 
-				break; 
-		 
-			_tprintf( TEXT("%s\n"), buf ); 
-		} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
+		localbuf = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, localsize * sizeof(TCHAR));
+		if (localbuf != NULL)
+		{
 
-		if (!fSuccess)
+			do
+			{
+				do 
+				{ 
+					ZeroMemory(localbuf, sizeof(localsize) * sizeof(TCHAR));
+
+					fSuccess = ReadFile( 
+						h_Pipe,
+						localbuf,
+						localsize * sizeof(TCHAR),
+						&cbRead,
+						NULL);
+				 
+					if (! fSuccess && GetLastError() != ERROR_MORE_DATA) 
+						break; 
+					
+					_tcscat(buf, localbuf);
+				
+				} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
+			} while (localbuf[_tcslen(localbuf)-1] != '\n');
+
+			if (!fSuccess)
+				return 0;
+
+			HeapFree(GetProcessHeap(), 0, localbuf);
+		}
+		else
+		{
 			return 0;
+		}
 #endif
-		
+		buf[_tcslen(buf)-_tcslen(_T("\n"))-1] = '\0';
 		return _tcslen(buf);
 	}
 

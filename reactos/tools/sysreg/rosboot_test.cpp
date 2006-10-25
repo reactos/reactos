@@ -320,10 +320,11 @@ namespace Sysreg_
 		string pipecmd = _T("");
 
 #ifdef __LINUX__
-
+		pid_t pid;
 #else
 		STARTUPINFO siStartInfo;
 		PROCESS_INFORMATION piProcInfo; 
+		DWORD pid;
 
 		ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
 		ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
@@ -338,6 +339,10 @@ namespace Sysreg_
 		{
 			cerr << "Error: CreateProcess failed " << boot_cmd <<endl;
 			return false;
+		}
+		else
+		{
+			pid = piProcInfo.dwProcessId;
 		}
 #endif
 
@@ -356,7 +361,7 @@ namespace Sysreg_
 		if (m_Delayread)
 		{
 			///
-			/// delay reading untill emulator is ready
+			/// delay reading until emulator is ready
 			///
 
 			_sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
@@ -380,23 +385,35 @@ namespace Sysreg_
 				break;
 			}
 
-			namedpipe_reader.readPipe (Buffer);
-			cout << Buffer.c_str() << endl;
-			vect.push_back (Buffer);
-
-			DebugState state = checkDebugData(vect);
-
-			if (state == DebugStateBSODDetected || state == DebugStateUMEDetected)
+			if (namedpipe_reader.readPipe (Buffer) != 0)
 			{
-				ret = false;
-				break;
-			}
-			else if (state == DebugStateCPReached)
-			{
-				break;
+				vect.push_back (Buffer.c_str());
+
+				DebugState state = checkDebugData(vect);
+				if (state == DebugStateBSODDetected || state == DebugStateUMEDetected)
+				{
+					ret = false;
+					break;
+				}
+				else if (state == DebugStateCPReached)
+				{
+					break;
+				}
 			}
 		}
 		namedpipe_reader.closePipe ();
+
+#ifdef __LINUX__
+		kill(pid, SIGTERM);
+#else
+		HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+		if (hProcess)
+		{
+			TerminateProcess(hProcess, 0);
+		}
+		CloseHandle(hProcess);
+#endif
+
 		return ret;
 	}
 //---------------------------------------------------------------------------------------
