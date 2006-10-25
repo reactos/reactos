@@ -138,7 +138,7 @@ namespace System_
 				int length = ((unsigned)ptr - (unsigned)offset);
 				length /= sizeof(TCHAR);
 
-				offset[length] = L'\0';
+				offset[length] = _T('\0');
 
 				string line = offset;
 				lines.push_back (line);
