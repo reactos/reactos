@@ -39,6 +39,13 @@
     : /* no outputs */ \
     : "q" (X));
 
+#define Ke386SetTr(X)                   __asm__ __volatile__("ltr %%ax" : :"a" (X));
+
+#define Ke386GetTr(X) \
+    __asm__("str %0\n\t" \
+    : /* no outputs */ \
+    : "m" (X));
+
 #define Ke386SaveFlags(x)        __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
 #define Ke386RestoreFlags(x)     __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
 
@@ -58,8 +65,6 @@
 
 #define _Ke386SetDr(N,X)         __asm__ __volatile__("movl %0,%%dr" #N : :"r" (X));
 
-#define Ke386SetTr(X)         __asm__ __volatile__("ltr %%ax" : :"a" (X));
-#define Ke386GetTr(X)         __asm__ __volatile__("str %%ax" : :"a" (X));
 
 static inline void Ki386Cpuid(ULONG Op, PULONG Eax, PULONG Ebx, PULONG Ecx, PULONG Edx)
 {
@@ -69,25 +74,11 @@ static inline void Ki386Cpuid(ULONG Op, PULONG Eax, PULONG Ebx, PULONG Ecx, PULO
 }
 
 #define Ke386Rdmsr(msr,val1,val2) __asm__ __volatile__("rdmsr" : "=a" (val1), "=d" (val2) : "c" (msr))
-
 #define Ke386Wrmsr(msr,val1,val2) __asm__ __volatile__("wrmsr" : /* no outputs */ : "c" (msr), "a" (val1), "d" (val2))
 
-#define FLUSH_TLB   {				\
-    unsigned int tmp;	\
-    __asm__ __volatile__(	\
-    "movl %%cr3,%0\n\t"	\
-    "movl %0,%%cr3\n\t"	\
-    : "=r" (tmp)	\
-    :: "memory");	\
-}
+#define Ke386HaltProcessor()        __asm__("hlt\n\t");
 
-#define FLUSH_TLB_ONE(addr) __asm__ __volatile__(		\
-    "invlpg %0"				\
-    :					\
-    : "m" (*(volatile long *) (addr)))
-
-#define Ke386HaltProcessor()     __asm__("hlt\n\t");
-#define Ke386FnInit()     __asm__("fninit\n\t");
+#define Ke386FnInit()               __asm__("fninit\n\t");
 
 //
 // DR Macros

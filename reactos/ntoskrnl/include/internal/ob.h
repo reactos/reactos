@@ -197,14 +197,14 @@ LONG
 FASTCALL
 ObDereferenceObjectEx(
     IN PVOID Object,
-    IN ULONG Count
+    IN LONG Count
 );
 
 LONG
 FASTCALL
 ObReferenceObjectEx(
     IN PVOID Object,
-    IN ULONG Count
+    IN LONG Count
 );
 
 BOOLEAN

@@ -1331,7 +1331,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
       DPRINT("Thread %p acquired mutex\n", PsGetCurrentThread());
 
       /* Disable hardware debugging while we are inside the stub */
-      _Ke386SetDr(7, 0);
+      Ke386SetDr7(0);
       GspUnloadBreakpoints(TrapFrame);
 
       /* Make sure we're debugging the current thread. */

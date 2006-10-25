@@ -514,10 +514,10 @@ _ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
  *--*/
 VOID
 FORCEINLINE
-ExInitializePushLock(IN PEX_PUSH_LOCK PushLock)
+ExInitializePushLock(IN PULONG_PTR PushLock)
 {
     /* Set the value to 0 */
-    PushLock->Value = 0;
+    *PushLock = 0;
 }
 
 /*++

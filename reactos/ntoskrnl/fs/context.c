@@ -62,7 +62,7 @@ FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
  */
 PFSRTL_PER_FILEOBJECT_CONTEXT
 NTAPI
-FsRtlRemovePerFileObjectContext(IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
+FsRtlRemovePerFileObjectContext(IN PFILE_OBJECT PerFileObjectContext,
                                 IN PVOID OwnerId OPTIONAL,
                                 IN PVOID InstanceId OPTIONAL)
 {

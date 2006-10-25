@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* LsaCallAuthenticationPackage@28 */
 /*
  * @unimplemented
  */
@@ -29,7 +28,6 @@ NTSTATUS STDCALL LsaCallAuthenticationPackage (
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* LsaDeregisterLogonProcess@8 */
 /*
  * @unimplemented
  */
@@ -41,7 +39,6 @@ NTSTATUS STDCALL LsaDeregisterLogonProcess (
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* LsaFreeReturnBuffer@4 */
 /*
  * @implemented
  */
@@ -57,31 +54,29 @@ NTSTATUS STDCALL LsaFreeReturnBuffer (PVOID Buffer)
                );
 }
 
-/* LsaLogonUser@56 */
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL LsaLogonUser (
-    ULONG Unknown0,
-    ULONG Unknown1,
-    ULONG Unknown2,
-    ULONG Unknown3,
-    ULONG Unknown4,
-    ULONG Unknown5,
-    ULONG Unknown6,
-    ULONG Unknown7,
-    ULONG Unknown8,
-    ULONG Unknown9,
-    ULONG Unknown10,
-    ULONG Unknown11,
-    ULONG Unknown12,
-    ULONG Unknown13
-    )
+NTSTATUS
+NTAPI
+LsaLogonUser(IN HANDLE LsaHandle,
+             IN PLSA_STRING OriginName,
+             IN SECURITY_LOGON_TYPE LogonType,
+             IN ULONG AuthenticationPackage,
+             IN PVOID AuthenticationInformation,
+             IN ULONG AuthenticationInformationLength,
+             IN PTOKEN_GROUPS LocalGroups OPTIONAL,
+             IN PTOKEN_SOURCE SourceContext,
+             OUT PVOID *ProfileBuffer,
+             OUT PULONG ProfileBufferLength,
+             OUT PLUID LogonId,
+             OUT PHANDLE Token,
+             OUT PQUOTA_LIMITS Quotas,
+             OUT PNTSTATUS SubStatus)
 {
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* LsaLookupAuthenticationPackage@12 */
 /*
  * @unimplemented
  */
@@ -94,15 +89,14 @@ NTSTATUS STDCALL LsaLookupAuthenticationPackage (
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* LsaRegisterLogonProcess@12 */
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL LsaRegisterLogonProcess (
-    ULONG	Unknown0,
-    ULONG	Unknown1,
-    ULONG	Unknown2
-    )
+NTSTATUS
+NTAPI
+LsaRegisterLogonProcess (IN PLSA_STRING LogonProcessName,
+                         OUT PHANDLE LsaHandle,
+                         OUT PLSA_OPERATIONAL_MODE SecurityMode)
 {
     return STATUS_NOT_IMPLEMENTED;
 }

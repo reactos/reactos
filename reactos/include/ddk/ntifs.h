@@ -71,6 +71,30 @@ extern LARGE_INTEGER                IoReadTransferCount;
 extern LARGE_INTEGER                IoWriteTransferCount;
 extern LARGE_INTEGER                IoOtherTransferCount;
 
+typedef STRING LSA_STRING, *PLSA_STRING;
+typedef ULONG  LSA_OPERATIONAL_MODE, *PLSA_OPERATIONAL_MODE;
+
+typedef enum _SECURITY_LOGON_TYPE
+{
+    UndefinedLogonType = 0,
+    Interactive = 2,
+    Network,
+    Batch,
+    Service,
+    Proxy,
+    Unlock,
+    NetworkCleartext,
+    NewCredentials,
+#if (_WIN32_WINNT >= 0x0501)
+    RemoteInteractive,
+    CachedInteractive,
+#endif
+#if (_WIN32_WINNT >= 0x0502)
+    CachedRemoteInteractive,
+    CachedUnlock
+#endif
+} SECURITY_LOGON_TYPE, *PSECURITY_LOGON_TYPE;
+
 #define ANSI_DOS_STAR                   ('<')
 #define ANSI_DOS_QM                     ('>')
 #define ANSI_DOS_DOT                    ('"')
@@ -378,6 +402,7 @@ extern LARGE_INTEGER                IoOtherTransferCount;
 #define TOKEN_HAS_BACKUP_PRIVILEGE      0x02
 #define TOKEN_HAS_RESTORE_PRIVILEGE     0x04
 #define TOKEN_HAS_ADMIN_GROUP           0x08
+#define TOKEN_WRITE_RESTRICTED          0x08
 #define TOKEN_IS_RESTRICTED             0x10
 
 #define VACB_MAPPING_GRANULARITY        (0x40000)
@@ -1993,7 +2018,7 @@ CcMapData (
     IN PFILE_OBJECT     FileObject,
     IN PLARGE_INTEGER   FileOffset,
     IN ULONG            Length,
-    IN BOOLEAN          Wait,
+    IN ULONG            Flags,
     OUT PVOID           *Bcb,
     OUT PVOID           *Buffer
 );
@@ -2026,6 +2051,8 @@ CcMdlWriteComplete (
     IN PMDL             MdlChain
 );
 
+#define MAP_WAIT        1
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -2033,11 +2060,7 @@ CcPinMappedData (
     IN PFILE_OBJECT     FileObject,
     IN PLARGE_INTEGER   FileOffset,
     IN ULONG            Length,
-#if (VER_PRODUCTBUILD >= 2195)
     IN ULONG            Flags,
-#else
-    IN BOOLEAN          Wait,
-#endif
     IN OUT PVOID        *Bcb
 );
 
@@ -2048,11 +2071,7 @@ CcPinRead (
     IN PFILE_OBJECT     FileObject,
     IN PLARGE_INTEGER   FileOffset,
     IN ULONG            Length,
-#if (VER_PRODUCTBUILD >= 2195)
     IN ULONG            Flags,
-#else
-    IN BOOLEAN          Wait,
-#endif
     OUT PVOID           *Bcb,
     OUT PVOID           *Buffer
 );
@@ -2076,11 +2095,7 @@ CcPreparePinWrite (
     IN PLARGE_INTEGER   FileOffset,
     IN ULONG            Length,
     IN BOOLEAN          Zero,
-#if (VER_PRODUCTBUILD >= 2195)
     IN ULONG            Flags,
-#else
-    IN BOOLEAN          Wait,
-#endif
     OUT PVOID           *Bcb,
     OUT PVOID           *Buffer
 );

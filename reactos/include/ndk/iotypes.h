@@ -187,12 +187,17 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define DNUF_NOT_DISABLEABLE                    0x0008
 
 //
+// Internal Option Flags
+//
+#define IO_ATTACH_DEVICE_API                    0x80000000
+
+//
 // Undocumented WMI Registration Flags
 //
-#define WMIREG_FLAG_TRACE_PROVIDER          0x00010000
-#define WMIREG_FLAG_TRACE_NOTIFY_MASK       0x00F00000
-#define WMIREG_NOTIFY_DISK_IO               0x00100000
-#define WMIREG_NOTIFY_TDI_IO                0x00200000
+#define WMIREG_FLAG_TRACE_PROVIDER              0x00010000
+#define WMIREG_FLAG_TRACE_NOTIFY_MASK           0x00F00000
+#define WMIREG_NOTIFY_DISK_IO                   0x00100000
+#define WMIREG_NOTIFY_TDI_IO                    0x00200000
 
 //
 // I/O Completion Information Class for NtQueryIoCompletionInformation

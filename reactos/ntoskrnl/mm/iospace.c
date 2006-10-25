@@ -140,7 +140,7 @@ VOID STDCALL
 MmUnmapIoSpace (IN PVOID BaseAddress,
                 IN ULONG NumberOfBytes)
 {
-   ULONG Offset;
+   LONG Offset;
    PVOID Address = BaseAddress;
 
    Offset = (ULONG_PTR)Address % PAGE_SIZE;

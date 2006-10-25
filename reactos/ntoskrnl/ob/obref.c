@@ -70,7 +70,7 @@ ObpDeferObjectDeletion(IN PVOID Object)
 LONG
 FASTCALL
 ObReferenceObjectEx(IN PVOID Object,
-                    IN ULONG Count)
+                    IN LONG Count)
 {
     /* Increment the reference count and return the count now */
     return InterlockedExchangeAdd(&OBJECT_TO_OBJECT_HEADER(Object)->
@@ -81,10 +81,10 @@ ObReferenceObjectEx(IN PVOID Object,
 LONG
 FASTCALL
 ObDereferenceObjectEx(IN PVOID Object,
-                      IN ULONG Count)
+                      IN LONG Count)
 {
     POBJECT_HEADER Header;
-    ULONG NewCount;
+    LONG NewCount;
 
     /* Extract the object header */
     Header = OBJECT_TO_OBJECT_HEADER(Object);

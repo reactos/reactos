@@ -33,7 +33,7 @@ KeSetBaseGdtSelector(ULONG Entry,
 
    KeAcquireSpinLock(&GdtLock, &oldIrql);
 
-   Gdt = KeGetPcr()->GDT;
+   Gdt = (PUSHORT)KeGetPcr()->GDT;
    Entry = (Entry & (~0x3)) / 2;
 
    Gdt[Entry + 1] = (USHORT)(((ULONG)Base) & 0xffff);

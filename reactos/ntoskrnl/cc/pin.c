@@ -27,7 +27,7 @@ BOOLEAN STDCALL
 CcMapData (IN PFILE_OBJECT FileObject,
 	   IN PLARGE_INTEGER FileOffset,
 	   IN ULONG Length,
-	   IN BOOLEAN Wait,
+	   IN ULONG Flags,
 	   OUT PVOID *pBcb,
 	   OUT PVOID *pBuffer)
 {
@@ -39,9 +39,9 @@ CcMapData (IN PFILE_OBJECT FileObject,
   PINTERNAL_BCB iBcb;
   ULONG ROffset;
 
-  DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d, Wait %d,"
+  DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d, Flags %d,"
 	 " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
-	 Length, Wait, pBcb, pBuffer);
+	 Length, Flags, pBcb, pBuffer);
 
   ReadOffset = (ULONG)FileOffset->QuadPart;
   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
@@ -67,7 +67,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
     }
   if (!Valid)
     {
-      if (!Wait)
+      if (!(Flags & MAP_WAIT))
 	{
           CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
 	  return(FALSE);

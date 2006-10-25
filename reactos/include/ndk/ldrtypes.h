@@ -68,6 +68,11 @@ Author:
 #define LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY      0x00000002
 
 //
+// FIXME: THIS SHOULD *NOT* BE USED!
+//
+#define IMAGE_SCN_TYPE_NOLOAD                   0x00000002
+
+//
 // Loader Data stored in the PEB
 //
 typedef struct _PEB_LDR_DATA

@@ -2415,7 +2415,7 @@ SeTokenIsAdmin(
 	)
 {
     PAGED_CODE();
-    return (((PTOKEN)Token)->TokenFlags & TOKEN_HAS_ADMIN_GROUP) != 0;
+    return (((PTOKEN)Token)->TokenFlags & TOKEN_WRITE_RESTRICTED) != 0;
 }
 
 /*

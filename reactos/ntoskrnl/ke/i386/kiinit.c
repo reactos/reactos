@@ -525,7 +525,7 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
     *Idt = (PKIDTENTRY)IdtDescriptor.Base;
 
     /* Get TSS and FS Selectors */
-    Ke386GetTr(&Tr);
+    Ke386GetTr(Tr);
     if (Tr != KGDT_TSS) Tr = KGDT_TSS; // FIXME: HACKHACK
     Fs = Ke386GetFs();
 
