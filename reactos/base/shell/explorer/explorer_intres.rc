@@ -125,9 +125,11 @@ BEGIN
     "#include ""explorer-sv.rc""\r\n"
     "#include ""explorer-uk.rc""\r\n"
     "\r\n"
-    "#ifndef __WINDRES__\r\n"
-    "#include ""explorer-bn.rc""\r\n"
+    "#ifdef __WINDRES__\r\n"
     "#include ""explorer-cn.rc""\r\n"
+    "#else\r\n"
+    "//#include ""explorer-cn-msvc.rc""\r\n"
+    "#include ""explorer-bn.rc""\r\n"
     "#endif\r\n"
     "\0"
 END
@@ -226,9 +228,11 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.ma
 #include "explorer-sv.rc"
 #include "explorer-uk.rc"
 
-#ifndef __WINDRES__
-#include "explorer-bn.rc"
+#ifdef __WINDRES__
 #include "explorer-cn.rc"
+#else
+//#include "explorer-cn-msvc.rc"
+#include "explorer-bn.rc"
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
