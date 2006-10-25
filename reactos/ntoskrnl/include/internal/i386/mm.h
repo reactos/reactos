@@ -22,31 +22,6 @@
 #define PA_SYSTEM          (0)
 #endif
 
-#if defined(__GNUC__)
-
-#define FLUSH_TLB   {				\
-			unsigned int tmp;	\
-			__asm__ __volatile__(	\
-			    "movl %%cr3,%0\n\t"	\
-			    "movl %0,%%cr3\n\t"	\
-			    : "=r" (tmp)	\
-			    :: "memory");	\
-		    }
-
-#define FLUSH_TLB_ONE(addr) __asm__ __volatile__(		\
-			    "invlpg %0"				\
-			    :					\
-			    : "m" (*(volatile long *) (addr)))
-
-
-
-#elif defined(_MSC_VER)
-/* TODO: Need some way to tell the compiler this is a memory barrier. */
-#define FLUSH_TLB __asm mov eax, cr3  __asm mov cr3, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
-
 struct _EPROCESS;
 PULONG MmGetPageDirectory(VOID);
 

@@ -786,6 +786,7 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
 	  Previous = CacheSegList[i];
 	}
     }
+  ASSERT(Previous);
   Previous->NextInChain = NULL;
 
   return(STATUS_SUCCESS);

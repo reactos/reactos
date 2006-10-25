@@ -122,9 +122,7 @@ MiFlushTlb(PULONG Pt, PVOID Address)
 PULONG
 MmGetPageDirectory(VOID)
 {
-   unsigned int page_dir=0;
-   Ke386GetPageTableDirectory(page_dir);
-   return((PULONG)page_dir);
+   return (PULONG)Ke386GetCr3();
 }
 
 static ULONG

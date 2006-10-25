@@ -65,6 +65,7 @@
 #include <arch/i386/i386.h>
 #include <arch/i386/machpc.h>
 #include <arch/i386/machxbox.h>
+#include <internal/i386/intrin_i.h>
 #include <internal/i386/ke.h>
 #endif
 /* misc files */

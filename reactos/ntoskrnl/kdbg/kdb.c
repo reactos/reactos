@@ -1502,7 +1502,7 @@ KdbEnterDebuggerException(
 
    /* Enter critical section */
    Ke386SaveFlags(OldEflags);
-   Ke386DisableInterrupts();
+   _disable();
 
    /* Exception inside the debugger? Game over. */
    if (InterlockedIncrement(&KdbEntryCount) > 1)

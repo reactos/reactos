@@ -480,7 +480,7 @@ KiInterruptDispatch3 (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     * Enable interrupts
     * NOTE: Only higher priority interrupts will get through
     */
-   Ke386EnableInterrupts();
+   _enable();
 
 #ifndef CONFIG_SMP
    if (VECTOR2IRQ(vector) == 0)
@@ -500,7 +500,7 @@ KiInterruptDispatch3 (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
    /*
     * End the system interrupt.
     */
-   Ke386DisableInterrupts();
+   _disable();
 
    if (old_level==PASSIVE_LEVEL && Trapframe->Cs != KGDT_R0_CODE)
      {
@@ -512,8 +512,8 @@ KiInterruptDispatch3 (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
            DPRINT("PID: %d, TID: %d CS %04x/%04x\n",
                   ((PETHREAD)CurrentThread)->ThreadsProcess->UniqueProcessId,
                   ((PETHREAD)CurrentThread)->Cid.UniqueThread,
-                  Trapframe->Cs,
-                  CurrentThread->TrapFrame ? CurrentThread->TrapFrame->Cs : 0);
+                  Trapframe->SegCs,
+                  CurrentThread->TrapFrame ? CurrentThread->TrapFrame->SegCs : 0);
            if (CurrentThread->TrapFrame == NULL)
              {
                OldTrapFrame = CurrentThread->TrapFrame;
@@ -521,9 +521,9 @@ KiInterruptDispatch3 (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
                CurrentThread->TrapFrame = &KernelTrapFrame;
              }
 
-           Ke386EnableInterrupts();
+           _enable();
            KiDeliverApc(UserMode, NULL, NULL);
-           Ke386DisableInterrupts();
+           _disable();
 
            ASSERT(KeGetCurrentThread() == CurrentThread);
            if (CurrentThread->TrapFrame == &KernelTrapFrame)

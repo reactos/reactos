@@ -11,16 +11,16 @@
 //
 #define KeEnterGuardedRegion()                                              \
 {                                                                           \
-    PKTHREAD Thread = KeGetCurrentThread();                                 \
+    PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
     ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);                                   \
-    ASSERT(Thread == KeGetCurrentThread());                                 \
-    ASSERT((Thread->SpecialApcDisable <= 0) &&                              \
-           (Thread->SpecialApcDisable != -32768));                          \
+    ASSERT(_Thread == KeGetCurrentThread());                                \
+    ASSERT((_Thread->SpecialApcDisable <= 0) &&                             \
+           (_Thread->SpecialApcDisable != -32768));                         \
                                                                             \
     /* Disable Special APCs */                                              \
-    Thread->SpecialApcDisable--;                                            \
+    _Thread->SpecialApcDisable--;                                           \
 }
 
 //
@@ -28,18 +28,18 @@
 //
 #define KeLeaveGuardedRegion()                                              \
 {                                                                           \
-    PKTHREAD Thread = KeGetCurrentThread();                                 \
+    PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
     ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);                                   \
-    ASSERT(Thread == KeGetCurrentThread());                                 \
-    ASSERT(Thread->SpecialApcDisable < 0);                                  \
+    ASSERT(_Thread == KeGetCurrentThread());                                \
+    ASSERT(_Thread->SpecialApcDisable < 0);                                 \
                                                                             \
     /* Leave region and check if APCs are OK now */                         \
-    if (!(++Thread->SpecialApcDisable))                                     \
+    if (!(++_Thread->SpecialApcDisable))                                    \
     {                                                                       \
         /* Check for Kernel APCs on the list */                             \
-        if (!IsListEmpty(&Thread->ApcState.                                 \
+        if (!IsListEmpty(&_Thread->ApcState.                                \
                          ApcListHead[KernelMode]))                          \
         {                                                                   \
             /* Check for APC Delivery */                                    \
@@ -684,11 +684,7 @@ KiRundownThread(IN PKTHREAD Thread)
     {
         /* Clear it */
         KeGetCurrentPrcb()->NpxThread = NULL;
-#ifdef __GNUC__
-        __asm__("fninit\n\t");
-#else
-        __asm fninit;
-#endif
+        Ke386FnInit();
     }
 }
 

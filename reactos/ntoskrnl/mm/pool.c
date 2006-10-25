@@ -185,26 +185,24 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
         Process = PsGetCurrentProcess();
 
         /* PsChargePoolQuota returns an exception, so this needs SEH */
-#if defined(__GNUC__)
-        _SEH_FILTER(FreeAndGoOn) {
+        _SEH_FILTER(FreeAndGoOn)
+        {
             /* Couldn't charge, so free the pool and let the caller SEH manage */
             ExFreePool(Block);
             return EXCEPTION_CONTINUE_SEARCH;
-        } _SEH_TRY {
+        }
+
+        _SEH_TRY
+        {
             //* FIXME: Is there a way to get the actual Pool size allocated from the pool header? */
             PsChargePoolQuota(Process, PoolType & PAGED_POOL_MASK, NumberOfBytes);
-        } _SEH_EXCEPT(FreeAndGoOn) {
+        }
+        _SEH_EXCEPT(FreeAndGoOn)
+        {
             /* Quota Exceeded and the caller had no SEH! */
             KeBugCheck(STATUS_QUOTA_EXCEEDED);
-        } _SEH_END;
-#else /* assuming all other Win32 compilers understand SEH */
-        __try {
-            PsChargePoolQuota(Process, PoolType & PAGED_POOL_MASK, NumberOfBytes);
         }
-        __except (ExFreePool(Block), EXCEPTION_CONTINUE_SEARCH) {
-            KeBugCheck(STATUS_QUOTA_EXCEEDED);
-        }
-#endif
+        _SEH_END;
     }
 
     return Block;

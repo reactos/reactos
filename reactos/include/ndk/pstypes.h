@@ -915,6 +915,16 @@ typedef struct _THREAD_BASIC_INFORMATION
 #ifndef NTOS_MODE_USER
 
 //
+// Job Set Array
+//
+typedef struct _JOB_SET_ARRAY
+{
+    HANDLE JobHandle;
+    ULONG MemberLevel;
+    ULONG Flags;
+} JOB_SET_ARRAY, *PJOB_SET_ARRAY;
+
+//
 // EPROCESS Quota Structures
 //
 typedef struct _EPROCESS_QUOTA_ENTRY

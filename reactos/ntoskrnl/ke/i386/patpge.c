@@ -42,8 +42,8 @@ Ki386EnableGlobalPage(IN volatile ULONG_PTR Context)
     Ke386SetCr4(Cr4 & ~CR4_PGE);
 
     /* Flush the TLB */
-    Ke386GetPageTableDirectory(Cr3);
-    Ke386SetPageTableDirectory(Cr3);
+    Cr3 = Ke386GetCr3();
+    Ke386SetCr3(Cr3);
 
     /* Now enable PGE */
     Ke386SetCr4(Cr4 | CR4_PGE);

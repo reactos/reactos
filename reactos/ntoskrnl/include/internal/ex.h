@@ -34,9 +34,9 @@ PVOID ExpNlsSectionPointer;
 #ifndef CONFIG_SMP
 #define ExAcquireResourceLock(l, i) { \
     (void)i; \
-    Ke386DisableInterrupts(); \
+    _disable(); \
 }
-#define ExReleaseResourceLock(l, i) Ke386EnableInterrupts();
+#define ExReleaseResourceLock(l, i) _enable();
 #else
 #define ExAcquireResourceLock(l, i) KeAcquireSpinLock(l, i);
 #define ExReleaseResourceLock(l, i) KeReleaseSpinLock(l, i);

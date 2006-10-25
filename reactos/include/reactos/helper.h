@@ -41,7 +41,7 @@
  */
 #define LIST_FOR_EACH(elem, list, type, field) \
     for ((elem) = CONTAINING_RECORD((list)->Flink, type, field); \
-         &(elem)->field != (list) || (elem = NULL); \
+         &(elem)->field != (list) || (elem == NULL); \
          (elem) = CONTAINING_RECORD((elem)->field.Flink, type, field))
          
 /* iterate through the list using a list entry, with safety against removal 
@@ -50,7 +50,7 @@
 #define LIST_FOR_EACH_SAFE(cursor, cursor2, list, type, field) \
     for ((cursor) = CONTAINING_RECORD((list)->Flink, type, field), \
          (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field); \
-         &(cursor)->field != (list) || (cursor = NULL); \
+         &(cursor)->field != (list) || (cursor == NULL); \
          (cursor) = (cursor2), \
          (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field))
          

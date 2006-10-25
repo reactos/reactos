@@ -2716,7 +2716,7 @@ IopEnumerateDetectedDevices(
       InitializeObjectAttributes(&ObjectAttributes, &DeviceName, OBJ_KERNEL_HANDLE, hDevicesKey, NULL);
       Status = ZwOpenKey(
          &hDeviceKey,
-         KEY_QUERY_VALUE + EnumerateSubKeys ? KEY_ENUMERATE_SUB_KEYS : 0,
+         KEY_QUERY_VALUE + (EnumerateSubKeys ? KEY_ENUMERATE_SUB_KEYS : 0),
          &ObjectAttributes);
       if (!NT_SUCCESS(Status))
       {

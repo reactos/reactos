@@ -39,7 +39,7 @@ KeInitExceptions(VOID)
 {
     ULONG i;
     USHORT FlippedSelector;
-    extern KIDTENTRY KiIdt[];
+    extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR];
 
     /* Loop the IDT */
     for (i = 0; i <= MAXIMUM_IDTVECTOR; i ++)

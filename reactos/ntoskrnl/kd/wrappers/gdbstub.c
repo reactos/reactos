@@ -1331,14 +1331,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
       DPRINT("Thread %p acquired mutex\n", PsGetCurrentThread());
 
       /* Disable hardware debugging while we are inside the stub */
-#if defined(__GNUC__)
-      __asm__("movl %0,%%db7" : /* no output */ : "r" (0));
-#elif defined(_MSC_VER)
-      __asm mov eax, 0  __asm mov dr7, eax
-#else
-#error Unknown compiler for inline assembler
-#endif
-
+      _Ke386SetDr(7, 0);
       GspUnloadBreakpoints(TrapFrame);
 
       /* Make sure we're debugging the current thread. */

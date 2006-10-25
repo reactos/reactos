@@ -686,8 +686,8 @@ QSI_DEF(SystemProcessInformation)
 			SpiCur->QuotaPagedPoolUsage = pr->QuotaUsage[0];
 			SpiCur->QuotaPeakNonPagedPoolUsage = pr->QuotaPeak[1];
 			SpiCur->QuotaNonPagedPoolUsage = pr->QuotaUsage[1];
-			SpiCur->PagefileUsage = pr->QuotaUsage[3];
-			SpiCur->PeakPagefileUsage = pr->QuotaPeak[3];
+			SpiCur->PagefileUsage = pr->QuotaUsage[2];
+			SpiCur->PeakPagefileUsage = pr->QuotaPeak[2];
 			SpiCur->PrivatePageCount = pr->CommitCharge;
             ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCur + 1);
 
@@ -1687,10 +1687,10 @@ NtFlushInstructionCache (
 	IN	ULONG	NumberOfBytesToFlush
 	)
 {
-        PAGED_CODE();
+    PAGED_CODE();
 
-	__asm__("wbinvd\n");
-	return STATUS_SUCCESS;
+    Ke386WbInvd();
+    return STATUS_SUCCESS;
 }
 
 ULONG

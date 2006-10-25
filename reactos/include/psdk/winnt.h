@@ -3384,7 +3384,6 @@ typedef enum _JOBOBJECTINFOCLASS {
 	JobObjectJobSetInformation,
 	MaxJobObjectInfoClass
 } JOBOBJECTINFOCLASS;
-#endif
 
 typedef struct _JOB_SET_ARRAY
 {
@@ -3392,6 +3391,7 @@ typedef struct _JOB_SET_ARRAY
     DWORD MemberLevel;
     DWORD Flags;
 } JOB_SET_ARRAY, *PJOB_SET_ARRAY;
+#endif
 
 typedef struct _JOBOBJECT_BASIC_ACCOUNTING_INFORMATION {
 	LARGE_INTEGER TotalUserTime;

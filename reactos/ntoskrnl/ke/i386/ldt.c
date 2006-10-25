@@ -33,7 +33,7 @@ KeSetBaseGdtSelector(ULONG Entry,
 
    KeAcquireSpinLock(&GdtLock, &oldIrql);
 
-   Gdt = KeGetCurrentKPCR()->GDT;
+   Gdt = KeGetPcr()->GDT;
    Entry = (Entry & (~0x3)) / 2;
 
    Gdt[Entry + 1] = (USHORT)(((ULONG)Base) & 0xffff);
@@ -68,7 +68,7 @@ KeSetGdtSelector(ULONG Entry,
 
    KeAcquireSpinLock(&GdtLock, &oldIrql);
 
-   Gdt = (PULONG) KeGetCurrentKPCR()->GDT;
+   Gdt = (PULONG) KeGetPcr()->GDT;
    Entry = (Entry & (~0x3)) / 4;
 
    Gdt[Entry] = Value1;
@@ -193,16 +193,7 @@ NtSetLdtEntries (ULONG Selector1,
                      ((PULONG) LdtDescriptor)[0],
                      ((PULONG) LdtDescriptor)[1]);
 
-#if defined(__GNUC__)
-    __asm__("lldtw %%ax"
-            : /* no output */
-            : "a" (KGDT_LDT));
-#elif defined(_MSC_VER)
-    __asm mov ax, KGDT_LDT
-    __asm lldt ax
-#else
-#error Unknown compiler for inline assembler
-#endif
+    Ke386SetLocalDescriptorTable(KGDT_LDT);
 
     if(LdtBase)
     {

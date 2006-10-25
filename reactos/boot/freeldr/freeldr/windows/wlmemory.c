@@ -560,13 +560,13 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	//BS->ExitBootServices(ImageHandle,MapKey);
 
 	// Disable Interrupts
-	Ke386DisableInterrupts();
+	_disable();
 
 	// Re-initalize EFLAGS
 	Ke386EraseFlags();
 
 	// Set the PDBR
-	Ke386SetPageTableDirectory((ULONG_PTR)PDE);
+	Ke386SetCr3((ULONG_PTR)PDE);
 
 	// Enable paging by modifying CR0
 	Ke386SetCr0(Ke386GetCr0() | CR0_PG);

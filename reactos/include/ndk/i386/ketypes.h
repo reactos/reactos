@@ -264,23 +264,15 @@ typedef struct _DESCRIPTOR
 #include <poppack.h>
 
 #ifndef NTOS_MODE_USER
-
 //
 // Macro to get current KPRCB
 //
-#ifndef __GNUC__ // fixme
 FORCEINLINE
 struct _KPRCB *
 KeGetCurrentPrcb(VOID)
 {
     return (struct _KPRCB *)(ULONG_PTR)__readfsdword(FIELD_OFFSET(KPCR, Prcb));
 }
-
-//
-// Macro to get current previous mode
-//
-#define KeGetPreviousMode       ExGetPreviousMode
-#endif
 
 //
 // FN/FX (FPU) Save Area Structures

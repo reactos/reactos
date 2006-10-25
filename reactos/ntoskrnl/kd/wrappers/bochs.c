@@ -27,19 +27,9 @@ KdpBochsDebugPrint(IN PCH Message,
     {
         if (*Message == '\n')
         {
-#if defined(_M_IX86) && defined(__GNUC__) 
-           /* Don't use WRITE_PORT_UCHAR because hal isn't initialized yet in the very early boot phase. */
-           __asm__("outb %b0, %w1\n\t" :: "a" ('\r'), "d" (BOCHS_LOGGER_PORT));
-#else
-           WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, '\r');
-#endif
+           __outbyte(BOCHS_LOGGER_PORT, '\r');
         }
-#if defined(_M_IX86) && defined(__GNUC__) 
-        /* Don't use WRITE_PORT_UCHAR because hal isn't initialized yet in the very early boot phase. */
-        __asm__("outb %b0, %w1\n\t" :: "a" (*Message), "d" (BOCHS_LOGGER_PORT));
-#else
-        WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, *Message);
-#endif
+        __outbyte(BOCHS_LOGGER_PORT, *Message);
         Message++;
     }
 }
@@ -54,11 +44,7 @@ KdpBochsInit(PKD_DISPATCH_TABLE DispatchTable,
 
     if (BootPhase == 0)
     {
-#if defined(_M_IX86) && defined(__GNUC__) 
-        __asm__("inb %w1, %b0\n\t" : "=a" (Value) : "d" (BOCHS_LOGGER_PORT));
-#else
-        Value = READ_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT);
-#endif
+        Value = __inbyte(BOCHS_LOGGER_PORT);
         if (Value != BOCHS_LOGGER_PORT)
         {
            KdpDebugMode.Bochs = FALSE;

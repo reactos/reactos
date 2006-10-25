@@ -183,7 +183,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
                 KefReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
 
                 /* Re-enable interrupts */
-                Ke386EnableInterrupts();
+                _enable();
 
                 /* Call the DPC */
                 DeferredRoutine(Dpc,
@@ -193,7 +193,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
                 ASSERT_IRQL(DISPATCH_LEVEL);
 
                 /* Disable interrupts and keep looping */
-                Ke386DisableInterrupts();
+                _disable();
             }
             else
             {
@@ -424,7 +424,7 @@ KeRemoveQueueDpc(IN PKDPC Dpc)
     ASSERT_DPC(Dpc);
 
     /* Disable interrupts */
-    Ke386DisableInterrupts();
+    _disable();
 
     /* Get DPC data and type */
     DpcType = Dpc->Type;
@@ -448,7 +448,7 @@ KeRemoveQueueDpc(IN PKDPC Dpc)
     }
 
     /* Re-enable interrupts */
-    Ke386EnableInterrupts();
+    _enable();
 
     /* Return if the DPC was in the queue or not */
     return DpcData ? TRUE : FALSE;

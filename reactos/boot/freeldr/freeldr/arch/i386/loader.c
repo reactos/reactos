@@ -154,7 +154,7 @@ NTAPI
 FrLdrStartup(ULONG Magic)
 {
     /* Disable Interrupts */
-    Ke386DisableInterrupts();
+    _disable();
 
     /* Re-initalize EFLAGS */
     Ke386EraseFlags();
@@ -202,7 +202,7 @@ FrLdrSetupPae(ULONG Magic)
     }
 
     /* Set the PDBR */
-    Ke386SetPageTableDirectory(PageDirectoryBaseAddress);
+    Ke386SetCr3(PageDirectoryBaseAddress);
 
     /* Enable Paging and Write Protect*/
     Ke386SetCr0(Ke386GetCr0() | X86_CR0_PG | X86_CR0_WP);

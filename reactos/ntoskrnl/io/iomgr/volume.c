@@ -46,7 +46,8 @@ IopCheckVpbMounted(IN POPEN_PACKET OpenPacket,
 
     /* Set VPB mount settings */
     Raw = !RemainingName->Length && !OpenPacket->RelatedFileObject;
-    Alertable = (OpenPacket->CreateOptions & FILE_SYNCHRONOUS_IO_ALERT);
+    Alertable = (OpenPacket->CreateOptions & FILE_SYNCHRONOUS_IO_ALERT) ?
+                TRUE: FALSE;
 
     /* Start looping until the VPB is mounted */
     while (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
@@ -193,7 +194,7 @@ IopInitializeVpbForMount(IN PDEVICE_OBJECT DeviceObject,
     Vpb = DeviceObject->Vpb;
 
     /* Set the VPB as mounted and possibly raw */
-    Vpb->Flags |= VPB_MOUNTED | Raw ? VPB_RAW_MOUNT : 0;
+    Vpb->Flags |= VPB_MOUNTED | (Raw ? VPB_RAW_MOUNT : 0);
 
     /* Set the stack size */
     Vpb->DeviceObject->StackSize = AttachedDeviceObject->StackSize;
@@ -477,7 +478,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
 
             /* Allocate the IRP */
             Irp = IoAllocateIrp(AttachedDeviceObject->StackSize +
-                                FsStackOverhead,
+                                (UCHAR)FsStackOverhead,
                                 TRUE);
             if (!Irp)
             {

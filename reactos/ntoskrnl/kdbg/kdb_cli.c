@@ -1493,7 +1493,7 @@ KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[])
 STATIC BOOLEAN
 KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
 {
-   PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
+   PKIPCR Pcr = (PKIPCR)KeGetPcr();
 
    KdbpPrint("Current PCR is at 0x%08x.\n", (INT)Pcr);
    KdbpPrint("  Tib.ExceptionList:         0x%08x\n"
@@ -1538,7 +1538,7 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
 STATIC BOOLEAN
 KdbpCmdTss(ULONG Argc, PCHAR Argv[])
 {
-   KTSS *Tss = KeGetCurrentKPCR()->TSS;
+   KTSS *Tss = KeGetPcr()->TSS;
 
    KdbpPrint("Current TSS is at 0x%08x.\n", (INT)Tss);
    KdbpPrint("  Eip:           0x%08x\n"
@@ -2440,7 +2440,7 @@ KdbpCliInit()
 
    /* Enter critical section */
    Ke386SaveFlags(OldEflags);
-   Ke386DisableInterrupts();
+   _disable();
 
    /* Interpret the init file... */
    KdbInitFileBuffer = FileBuffer;

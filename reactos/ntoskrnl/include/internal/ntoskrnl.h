@@ -22,6 +22,7 @@
 #undef  PsGetCurrentProcess
 #define PsGetCurrentProcess _PsGetCurrentProcess
 
+#include "i386/intrin_i.h"
 #include "ke.h"
 #include "i386/mm.h"
 #include "i386/fpu.h"

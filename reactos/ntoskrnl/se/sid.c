@@ -105,7 +105,7 @@ SepInitSecurityIDs(VOID)
   SeRestrictedSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
   SeAnonymousLogonSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
  
-  if (SeNullSid == NULL || SeNullSid == NULL || SeWorldSid == NULL ||
+  if (SeNullSid == NULL || SeWorldSid == NULL ||
       SeLocalSid == NULL || SeCreatorOwnerSid == NULL ||
       SeCreatorGroupSid == NULL || SeCreatorOwnerServerSid == NULL ||
       SeCreatorGroupServerSid == NULL || SeNtAuthoritySid == NULL ||
