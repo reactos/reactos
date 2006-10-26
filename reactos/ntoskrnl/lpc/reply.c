@@ -419,18 +419,36 @@ NtReplyWaitReplyPort (HANDLE		PortHandle,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
-STDCALL
-LpcRequestWaitReplyPort (
-	IN PEPORT		Port,
-	IN PPORT_MESSAGE	LpcMessageRequest,
-	OUT PPORT_MESSAGE	LpcMessageReply
-	)
+NTAPI
+LpcRequestWaitReplyPort(IN PVOID Port,
+                        IN PPORT_MESSAGE LpcMessageRequest,
+                        OUT PPORT_MESSAGE LpcMessageReply)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    HANDLE PortHandle;
+    NTSTATUS Status;
+
+    /* This is a SICK hack */
+    Status = ObOpenObjectByPointer(Port,
+                                   0,
+                                   NULL,
+                                   PORT_ALL_ACCESS,
+                                   LpcPortObjectType,
+                                   KernelMode,
+                                   &PortHandle);
+    DPRINT1("LPC Hack active: %lx %lx\n", Status, PortHandle);
+
+    /* Call the Nt function. Do a ring transition to get Kmode. */
+    Status = ZwRequestWaitReplyPort(PortHandle,
+                                    LpcMessageRequest,
+                                    LpcMessageReply);
+    DPRINT1("LPC Hack active: %lx %lx\n", Status, PortHandle);
+
+    /* Close the handle */
+    ObCloseHandle(PortHandle, KernelMode);
+    return Status;
 }
 
 /* EOF */

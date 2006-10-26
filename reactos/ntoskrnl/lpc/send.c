@@ -17,60 +17,6 @@
 
 /**********************************************************************
  * NAME
- *	LpcSendDebugMessagePort/3
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- */
-NTSTATUS STDCALL
-LpcSendDebugMessagePort (IN PEPORT Port,
-			 IN PDBGKM_MSG Message,
-			 OUT PDBGKM_MSG Reply)
-{
-   NTSTATUS Status;
-   KIRQL oldIrql;
-   PQUEUEDMESSAGE ReplyMessage;
-
-   Status = EiReplyOrRequestPort(Port,
-				 &Message->h,
-				 LPC_REQUEST,
-				 Port);
-   if (!NT_SUCCESS(Status))
-     {
-	ObDereferenceObject(Port);
-	return(Status);
-     }
-   KeReleaseSemaphore(&Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE);
-
-   /*
-    * Wait for a reply
-    */
-   KeWaitForSingleObject(&Port->Semaphore,
-			 UserRequest,
-			 UserMode,
-			 FALSE,
-			 NULL);
-
-   /*
-    * Dequeue the reply
-    */
-   KeAcquireSpinLock(&Port->Lock, &oldIrql);
-   ReplyMessage = EiDequeueMessagePort(Port);
-   KeReleaseSpinLock(&Port->Lock, oldIrql);
-   memcpy(Reply, &ReplyMessage->Message, ReplyMessage->Message.u1.s1.TotalLength);
-   ExFreePool(ReplyMessage);
-
-   return(STATUS_SUCCESS);
-}
-
-
-/**********************************************************************
- * NAME
  *	LpcRequestPort/2
  *
  * DESCRIPTION

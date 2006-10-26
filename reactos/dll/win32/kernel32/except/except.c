@@ -18,65 +18,89 @@
 LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = UnhandledExceptionFilter;
 
 UINT
-STDCALL
+WINAPI
 GetErrorMode(VOID)
 {
-  NTSTATUS Status;
-  UINT ErrMode;
+    NTSTATUS Status;
+    UINT ErrMode;
 
-  Status = NtQueryInformationProcess(NtCurrentProcess(),
-                                     ProcessDefaultHardErrorMode,
-                                     (PVOID)&ErrMode,
-                                     sizeof(ErrMode),
-                                     NULL);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return 0;
-  }
+    /* Query the current setting */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDefaultHardErrorMode,
+                                       (PVOID)&ErrMode,
+                                       sizeof(ErrMode),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail if we couldn't query */
+        SetLastErrorByStatus(Status);
+        return 0;
+    }
 
-  return ErrMode;
+    /* Check if NOT failing critical errors was requested */
+    if (ErrMode & SEM_FAILCRITICALERRORS)
+    {
+        /* Mask it out, since the native API works differently */
+        ErrMode &= ~SEM_FAILCRITICALERRORS;
+    }
+    else
+    {
+        /* OR it if the caller didn't, due to different native semantics */
+        ErrMode |= SEM_FAILCRITICALERRORS;
+    }
+
+    /* Return the mode */
+    return ErrMode;
 }
 
 /*
  * @implemented
  */
 UINT
-STDCALL
-SetErrorMode(UINT uMode)
+WINAPI
+SetErrorMode(IN UINT uMode)
 {
-   UINT PrevErrMode;
-   NTSTATUS Status;
+    UINT PrevErrMode, NewMode;
+    NTSTATUS Status;
 
-   PrevErrMode = GetErrorMode();
+    /* Get the previous mode */
+    PrevErrMode = GetErrorMode();
+    NewMode = uMode;
 
-   Status = NtSetInformationProcess(NtCurrentProcess(),
-                                    ProcessDefaultHardErrorMode,
-                                    (PVOID)&uMode,
-                                    sizeof(uMode));
-   if(!NT_SUCCESS(Status))
-   {
-     SetLastErrorByStatus(Status);
-     return 0;
-   }
+    /* Check if failing critical errors was requested */
+    if (NewMode & SEM_FAILCRITICALERRORS)
+    {
+        /* Mask it out, since the native API works differently */
+        NewMode &= ~SEM_FAILCRITICALERRORS;
+    }
+    else
+    {
+        /* OR it if the caller didn't, due to different native semantics */
+        NewMode |= SEM_FAILCRITICALERRORS;
+    }
 
-   return PrevErrMode;
+    /* Set the new mode */
+    Status = NtSetInformationProcess(NtCurrentProcess(),
+                                     ProcessDefaultHardErrorMode,
+                                     (PVOID)&NewMode,
+                                     sizeof(NewMode));
+    if(!NT_SUCCESS(Status)) SetLastErrorByStatus(Status);
+
+    /* Return the previous mode */
+    return PrevErrMode;
 }
-
 
 /*
  * @implemented
  */
 LPTOP_LEVEL_EXCEPTION_FILTER
-STDCALL
+WINAPI
 SetUnhandledExceptionFilter(
-    LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter
-    )
+    IN LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
 {
     return InterlockedExchangePointer(&GlobalTopLevelExceptionFilter,
                                       lpTopLevelExceptionFilter);
 }
-
 
 /*
  * Private helper function to lookup the module name from a given address.
@@ -268,59 +292,54 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    return EXCEPTION_EXECUTE_HANDLER;
 }
 
-
 /*
  * @implemented
  */
 VOID
-STDCALL
-RaiseException (
-	DWORD		dwExceptionCode,
-	DWORD		dwExceptionFlags,
-	DWORD		nNumberOfArguments,
-	CONST ULONG_PTR	* lpArguments		OPTIONAL
-	)
+WINAPI
+RaiseException(IN DWORD dwExceptionCode,
+               IN DWORD dwExceptionFlags,
+               IN DWORD nNumberOfArguments,
+               IN CONST ULONG_PTR *lpArguments OPTIONAL)
 {
-	EXCEPTION_RECORD ExceptionRecord;
+    EXCEPTION_RECORD ExceptionRecord;
 
-	/* Do NOT normalize dwExceptionCode: it will be done in
-	 * NTDLL.RtlRaiseException().
-	 */
-	ExceptionRecord.ExceptionCode = dwExceptionCode;
-	ExceptionRecord.ExceptionRecord = NULL;
-	ExceptionRecord.ExceptionAddress = (PVOID) RaiseException;
-	/*
-	 * Normalize dwExceptionFlags.
-	 */
-	ExceptionRecord.ExceptionFlags = (dwExceptionFlags & EXCEPTION_NONCONTINUABLE);
-	/*
-	 * Normalize nNumberOfArguments.
-	 */
-	if (EXCEPTION_MAXIMUM_PARAMETERS < nNumberOfArguments)
-	{
-		nNumberOfArguments = EXCEPTION_MAXIMUM_PARAMETERS;
-	}
-	/*
-	 * If the exception has no argument,
-	 * ignore nNumberOfArguments and lpArguments.
-	 */
-	if (NULL == lpArguments)
-	{
-		ExceptionRecord.NumberParameters = 0;
-	}
-	else
-	{
-		ExceptionRecord.NumberParameters = nNumberOfArguments;
-		for (	nNumberOfArguments = 0;
-			(nNumberOfArguments < ExceptionRecord.NumberParameters);
-			nNumberOfArguments ++
-			)
-		{
-			ExceptionRecord.ExceptionInformation [nNumberOfArguments]
-				= *lpArguments ++;
-		}
-	}
-	RtlRaiseException (& ExceptionRecord);
+    /* Setup the exception record */
+    ExceptionRecord.ExceptionCode = dwExceptionCode;
+    ExceptionRecord.ExceptionRecord = NULL;
+    ExceptionRecord.ExceptionAddress = (PVOID)RaiseException;
+    ExceptionRecord.ExceptionFlags = dwExceptionFlags & EXCEPTION_NONCONTINUABLE;
+
+    /* Check if we have arguments */
+    if (!lpArguments)
+    {
+        /* We don't */
+        ExceptionRecord.NumberParameters = 0;
+    }
+    else
+    {
+        /* We do, normalize the count */
+        if (nNumberOfArguments > EXCEPTION_MAXIMUM_PARAMETERS)
+        {
+            nNumberOfArguments = EXCEPTION_MAXIMUM_PARAMETERS;
+        }
+
+        /* Set the count of parameters */
+        ExceptionRecord.NumberParameters = nNumberOfArguments;
+
+        /* Loop each parameter */
+        for (nNumberOfArguments = 0;
+            (nNumberOfArguments < ExceptionRecord.NumberParameters);
+            nNumberOfArguments ++)
+        {
+            /* Copy the exception information */
+            ExceptionRecord.ExceptionInformation[nNumberOfArguments] =
+                *lpArguments++;
+        }
+    }
+
+    /* Raise the exception */
+    RtlRaiseException(&ExceptionRecord);
 }
 
 /* EOF */

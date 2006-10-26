@@ -555,7 +555,11 @@ CsrpRunWinlogon (int argc, char ** argv, char ** envp)
 	return Status;
 }
 
-
+static NTSTATUS
+CsrpCreateHardErrorPort (int argc, char ** argv, char ** envp)
+{
+    return NtSetDefaultHardErrorPort(hApiPort);
+}
 
 typedef NTSTATUS (* CSR_INIT_ROUTINE)(int,char**,char**);
 
@@ -568,6 +572,7 @@ struct {
 	{TRUE, CsrpRegisterSubsystem,    "register with SM"},
 	{TRUE, CsrpCreateHeap,           "create the CSR heap"},
 	{TRUE, CsrpCreateApiPort,        "create the api port \\Windows\\ApiPort"},
+    {TRUE, CsrpCreateHardErrorPort,  "create the hard error port"},
 	{TRUE, CsrpCreateObjectDirectory,"create the object directory \\Windows"},
 	{TRUE, CsrpLoadKernelModeDriver, "load Kmode driver"},
 	{TRUE, CsrpInitVideo,            "initialize video"},

@@ -23,6 +23,51 @@ PEPROCESS ExpDefaultErrorPortProcess = NULL;
 /* FUNCTIONS ****************************************************************/
 
 /*++
+* @name ExpRaiseHardError
+*
+* For now it's a stub
+*
+* @param ErrorStatus
+*        FILLME
+*
+* @param NumberOfParameters
+*        FILLME
+*
+* @param UnicodeStringParameterMask
+*        FILLME
+*
+* @param Parameters
+*        FILLME
+*
+* @param ValidResponseOptions
+*        FILLME
+*
+* @param Response
+*        FILLME
+*
+* @return None
+*
+* @remarks None
+*
+*--*/
+NTSTATUS
+NTAPI
+ExpSystemErrorHandler(IN NTSTATUS ErrorStatus,
+                      IN ULONG NumberOfParameters,
+                      IN ULONG UnicodeStringParameterMask,
+                      IN PULONG_PTR Parameters,
+                      IN BOOLEAN Shutdown)
+{
+    /* FIXME: STUB */
+    KeBugCheckEx(FATAL_UNHANDLED_HARD_ERROR,
+                 ErrorStatus,
+                 0,
+                 0,
+                 0);
+    return STATUS_SUCCESS;
+}
+
+/*++
  * @name ExpRaiseHardError
  *
  * For now it's a stub
@@ -50,7 +95,7 @@ PEPROCESS ExpDefaultErrorPortProcess = NULL;
  * @remarks None
  *
  *--*/
-VOID
+NTSTATUS
 NTAPI
 ExpRaiseHardError(IN NTSTATUS ErrorStatus,
                   IN ULONG NumberOfParameters,
@@ -59,7 +104,146 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
                   IN ULONG ValidResponseOptions,
                   OUT PULONG Response)
 {
+    PEPROCESS Process = PsGetCurrentProcess();
+    PETHREAD Thread = PsGetCurrentThread();
+    UCHAR Buffer[PORT_MAXIMUM_MESSAGE_LENGTH];
+    PHARDERROR_MSG Message = (PHARDERROR_MSG)Buffer;
+    NTSTATUS Status;
+    HANDLE PortHandle;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    PAGED_CODE();
+    DPRINT1("Hard error, baby!: %lx, %lx, %lx %p\n",
+            ErrorStatus,
+            NumberOfParameters,
+            UnicodeStringParameterMask,
+            Parameters);
+
+    /* Check if this error will shutdown the system */
+    if (ValidResponseOptions == OptionShutdownSystem)
+    {
+        /* Check for privilege */
+        if (!SeSinglePrivilegeCheck(SeShutdownPrivilege, PreviousMode))
+        {
+            /* No rights */
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+
+        /* Don't handle any new hard errors */
+        ExReadyForErrors = FALSE;
+    }
+
+    /* Check if hard errors are not disabled */
+    if (!Thread->HardErrorsAreDisabled)
+    {
+        /* Check if we can't do errors anymore, and this is serious */
+        if ((!ExReadyForErrors) && (NT_ERROR(ErrorStatus)))
+        {
+            /* Use the system handler */
+            ExpSystemErrorHandler(ErrorStatus,
+                                  NumberOfParameters,
+                                  UnicodeStringParameterMask,
+                                  Parameters,
+                                  (PreviousMode != KernelMode) ? TRUE: FALSE);
+        }
+    }
+
+    /* Check if we have an exception port */
+    if (Process->ExceptionPort)
+    {
+        /* Check if hard errors should be processed */
+        if (Process->DefaultHardErrorProcessing & 1)
+        {
+            /* Use the port */
+            PortHandle = Process->ExceptionPort;
+        }
+        else
+        {
+            /* It's disabled, check if the error overrides it */
+            if (ErrorStatus & 0x10000000)
+            {
+                /* Use the port anyway */
+                PortHandle = Process->ExceptionPort;
+            }
+            else
+            {
+                /* No such luck */
+                PortHandle = NULL;
+            }
+        }
+    }
+    else
+    {
+        /* Check if hard errors are enabled */
+        if (Process->DefaultHardErrorProcessing & 1)
+        {
+            /* Use our default system port */
+            PortHandle = ExpDefaultErrorPort;
+        }
+        else
+        {
+            /* It's disabled, check if the error overrides it */
+            if (ErrorStatus & 0x10000000)
+            {
+                /* Use the port anyway */
+                PortHandle = ExpDefaultErrorPort;
+            }
+            else
+            {
+                /* No such luck */
+                PortHandle = NULL;
+            }
+        }
+    }
+
+    /* If hard errors are disabled, do nothing */
+    if (Thread->HardErrorsAreDisabled) PortHandle = NULL;
+
+    /* Now check if we have a port */
+    if (PortHandle)
+    {
+        /* Check if this is the default process */
+        if (Process == ExpDefaultErrorPortProcess)
+        {
+            /* We can't handle the error, check if this is critical */
+            if (NT_ERROR(ErrorStatus))
+            {
+                /* It is, invoke the system handler */
+                ExpSystemErrorHandler(ErrorStatus,
+                                      NumberOfParameters,
+                                      UnicodeStringParameterMask,
+                                      Parameters,
+                                      (PreviousMode != KernelMode) ? TRUE: FALSE);
+
+                /* If we survived, return to caller */
+                *Response = ResponseReturnToCaller;
+                return STATUS_SUCCESS;
+            }
+        }
+
+        /* Setup the LPC Message */
+        Message->h.u1.Length = (sizeof(HARDERROR_MSG) << 16) |
+                               (sizeof(HARDERROR_MSG) - sizeof(PORT_MESSAGE));
+        Message->h.u2.ZeroInit = LPC_ERROR_EVENT;
+        Message->Status = ErrorStatus &~ 0x10000000;
+        Message->ValidResponseOptions = ValidResponseOptions;
+        Message->UnicodeStringParameterMask = UnicodeStringParameterMask;
+        Message->NumberOfParameters = NumberOfParameters;
+        KeQuerySystemTime(&Message->ErrorTime);
+
+        /* Copy the parameters */
+        if (Parameters) RtlMoveMemory(&Message->Parameters,
+                                      Parameters,
+                                      sizeof(ULONG_PTR) * NumberOfParameters);
+
+        /* Send the message */
+        Status = LpcRequestWaitReplyPort(PortHandle,
+                                         (PVOID)Message,
+                                         (PVOID)Message);
+        DPRINT1("Checkpoint 2: %lx\n", Status);
+    }
+
     UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*++
@@ -155,7 +339,7 @@ ExSystemExceptionFilter(VOID)
  * @remarks None
  *
  *--*/
-VOID
+NTSTATUS
 NTAPI
 ExRaiseHardError(IN NTSTATUS ErrorStatus,
                  IN ULONG NumberOfParameters,
@@ -164,15 +348,121 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                  IN ULONG ValidResponseOptions,
                  OUT PULONG Response)
 {
-    /* FIXME: Capture to user-mode! */
+    ULONG Size;
+    UNICODE_STRING CapturedParams[MAXIMUM_HARDERROR_PARAMETERS];
+    ULONG i;
+    PULONG_PTR UserData = NULL, ParameterBase;
+    PUNICODE_STRING StringBase;
+    PWSTR BufferBase;
+    ULONG SafeResponse;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Check if we have parameters */
+    if (Parameters)
+    {
+        /* Check if we have strings */
+        if (UnicodeStringParameterMask)
+        {
+            /* Add the maximum possible size */
+            Size = (sizeof(ULONG_PTR) + sizeof(UNICODE_STRING)) *
+                    MAXIMUM_HARDERROR_PARAMETERS + sizeof(UNICODE_STRING);
+
+            /* Loop each parameter */
+            for (i = 0; i < NumberOfParameters; i++)
+            {
+                /* Check if it's part of the mask */
+                if (UnicodeStringParameterMask & (1 << i))
+                {
+                    /* Copy it */
+                    RtlMoveMemory(&CapturedParams[i],
+                                  &Parameters[i],
+                                  sizeof(UNICODE_STRING));
+
+                    /* Increase the size */
+                    Size += CapturedParams[i].MaximumLength;
+                }
+            }
+
+            /* Allocate the user data region */
+            Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                             (PVOID*)&UserData,
+                                             0,
+                                             &Size,
+                                             MEM_COMMIT,
+                                             PAGE_READWRITE);
+            if (!NT_SUCCESS(Status)) return Status;
+
+            /* Set the pointers to our various data */
+            ParameterBase = UserData;
+            StringBase = (PVOID)((ULONG_PTR)UserData +
+                                 sizeof(ULONG_PTR) *
+                                 MAXIMUM_HARDERROR_PARAMETERS);
+            BufferBase = (PVOID)((ULONG_PTR)StringBase +
+                                 sizeof(UNICODE_STRING) *
+                                 MAXIMUM_HARDERROR_PARAMETERS);
+
+            /* Loop parameters again */
+            for (i = 0; i < NumberOfParameters; i++)
+            {
+                /* Check if we're in the mask */
+                if (UnicodeStringParameterMask & (1 << i))
+                {
+                    /* Update the base */
+                    ParameterBase[i] = (ULONG_PTR)&StringBase[i];
+
+                    /* Copy the string buffer */
+                    RtlMoveMemory(BufferBase,
+                                  CapturedParams[i].Buffer,
+                                  CapturedParams[i].MaximumLength);
+
+                    /* Set buffer */
+                    CapturedParams[i].Buffer = BufferBase;
+
+                    /* Copy the string structure */
+                    RtlMoveMemory(&StringBase[i],
+                                  &CapturedParams[i],
+                                  sizeof(UNICODE_STRING));
+
+                    /* Update the pointer */
+                    BufferBase += CapturedParams[i].MaximumLength;
+                }
+                else
+                {
+                    /* No need to copy any strings */
+                    ParameterBase[i] = Parameters[i];
+                }
+            }
+        }
+        else
+        {
+            /* Just keep the data as is */
+            UserData = Parameters;
+        }
+    }
 
     /* Now call the worker function */
-    ExpRaiseHardError(ErrorStatus,
-                      NumberOfParameters,
-                      UnicodeStringParameterMask,
-                      Parameters,
-                      ValidResponseOptions,
-                      Response);
+    Status = ExpRaiseHardError(ErrorStatus,
+                               NumberOfParameters,
+                               UnicodeStringParameterMask,
+                               UserData,
+                               ValidResponseOptions,
+                               &SafeResponse);
+
+    /* Check if we had done user-mode allocation */
+    if ((UserData) && (UserData != Parameters))
+    {
+        /* We did! Delete it */
+        Size = 0;
+        ZwFreeVirtualMemory(NtCurrentProcess(),
+                            (PVOID*)&UserData,
+                            &Size,
+                            MEM_RELEASE);
+    }
+
+    /* Return status and the response */
+    *Response = SafeResponse;
+    return Status;
 }
 
 /*++
@@ -223,13 +513,11 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
     ULONG i;
     ULONG ParamSize;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    DPRINT1("Hard error %x\n", ErrorStatus);
 
     /* Validate parameter count */
     if (NumberOfParameters > MAXIMUM_HARDERROR_PARAMETERS)
     {
         /* Fail */
-        DPRINT1("Invalid parameters\n");
         return STATUS_INVALID_PARAMETER_2;
     }
 
@@ -237,7 +525,6 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
     if ((Parameters) && !(NumberOfParameters))
     {
         /* Fail */
-        DPRINT1("Invalid parameters\n");
         return STATUS_INVALID_PARAMETER_2;
     }
 
@@ -401,7 +688,7 @@ NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     /* Check if we have the Privilege */
-    if(!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
+    if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
     {
         DPRINT1("NtSetDefaultHardErrorPort: Caller requires "
                 "the SeTcbPrivilege privilege!\n");
@@ -409,7 +696,7 @@ NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
     }
 
     /* Only called once during bootup, make sure we weren't called yet */
-    if(!ExReadyForErrors)
+    if (!ExReadyForErrors)
     {
         /* Reference the port */
         Status = ObReferenceObjectByHandle(PortHandle,
@@ -418,9 +705,7 @@ NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
                                            PreviousMode,
                                            (PVOID*)&ExpDefaultErrorPort,
                                            NULL);
-
-        /* Check for Success */
-        if(NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
             /* Save the data */
             ExpDefaultErrorPortProcess = PsGetCurrentProcess();
