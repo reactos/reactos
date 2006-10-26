@@ -297,13 +297,13 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
     }
 
     /* Now we have the First Part */
-    FirstPart->Length = (i-FirstLoop);
+    FirstPart->Length = (USHORT)(i - FirstLoop);
     FirstPart->MaximumLength = FirstPart->Length; /* +2?? */
     FirstPart->Buffer = &Name.Buffer[FirstLoop];
 
     /* Make the second part if something is still left */
     if (i<Name.Length) {
-        RemainingPart->Length = (Name.Length - (i+1));
+        RemainingPart->Length = (USHORT)(Name.Length - (i+1));
         RemainingPart->MaximumLength = RemainingPart->Length; /* +2?? */
         RemainingPart->Buffer = &Name.Buffer[i+1];
     }

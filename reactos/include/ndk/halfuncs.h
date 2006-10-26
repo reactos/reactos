@@ -31,8 +31,10 @@ Author:
 // The DDK steals these away from you.
 //
 #ifdef _MSC_VER
-//#pragma intrinsic(_enable)
-//#pragma intrinsic(_disable)
+void _enable(void);
+void _disable(void);
+#pragma intrinsic(_enable)
+#pragma intrinsic(_disable)
 #endif
 
 //
@@ -205,6 +207,13 @@ NTHALAPI
 BOOLEAN
 NTAPI
 HalQueryRealTimeClock(
+    IN PTIME_FIELDS RtcTime
+);
+
+NTHALAPI
+VOID
+NTAPI
+HalSetRealTimeClock(
     IN PTIME_FIELDS RtcTime
 );
 

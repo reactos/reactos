@@ -438,21 +438,21 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     LdrInit1();
 
     /* Set the NX Support policy */
-    SharedUserData->NXSupportPolicy = NXSupportPolicy;
+    SharedUserData->NXSupportPolicy = (UCHAR)NXSupportPolicy;
 
     /* Set basic CPU Features that user mode can read */
     SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
-        (KeFeatureBits & KF_MMX);
+        (KeFeatureBits & KF_MMX) ? TRUE: FALSE;
     SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
-        (KeFeatureBits & KF_CMPXCHG8B);
+        (KeFeatureBits & KF_CMPXCHG8B) ? TRUE: FALSE;
     SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] =
-        ((KeFeatureBits & KF_FXSR) && (KeFeatureBits & KF_XMMI));
+        ((KeFeatureBits & KF_FXSR) && (KeFeatureBits & KF_XMMI)) ? TRUE: FALSE;
     SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
-        ((KeFeatureBits & KF_FXSR) && (KeFeatureBits & KF_XMMI64));
+        ((KeFeatureBits & KF_FXSR) && (KeFeatureBits & KF_XMMI64)) ? TRUE: FALSE;
     SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
-        (KeFeatureBits & KF_3DNOW);
+        (KeFeatureBits & KF_3DNOW) ? TRUE: FALSE;
     SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
-        (KeFeatureBits & KF_RDTSC);
+        (KeFeatureBits & KF_RDTSC) ? TRUE: FALSE;
 
     /* Set up the thread-related fields in the PRCB */
     Prcb->CurrentThread = InitThread;
@@ -514,7 +514,7 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
 {
     KDESCRIPTOR GdtDescriptor, IdtDescriptor;
     KGDTENTRY TssSelector, PcrSelector;
-    ULONG Tr, Fs;
+    USHORT Tr, Fs;
 
     /* Get GDT and IDT descriptors */
     Ke386GetGlobalDescriptorTable(GdtDescriptor);
@@ -666,7 +666,7 @@ AppCpuInit:
                        InitialThread,
                        (PVOID)InitialStack,
                        (PKPRCB)__readfsdword(KPCR_PRCB),
-                       Cpu,
+                       (CCHAR)Cpu,
                        KeLoaderBlock);
 
     /* Set the priority of this thread to 0 */

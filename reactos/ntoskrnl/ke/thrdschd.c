@@ -281,7 +281,7 @@ KiAdjustQuantumThread(IN PKTHREAD Thread)
                  * due to the current ""scheduler"" in ROS, it can't be done
                  * cleanly since it actualyl dispatches threads instead.
                  */
-                Thread->Priority = Priority;
+                Thread->Priority = (SCHAR)Priority;
             }
             else
             {
@@ -310,7 +310,7 @@ KiSetPriorityThread(PKTHREAD Thread,
     if (OldPriority != Priority)
     {
         /* Set it */
-        Thread->Priority = Priority;
+        Thread->Priority = (SCHAR)Priority;
 
         /* Choose action based on thread's state */
         if (Thread->State == Ready)
@@ -383,7 +383,7 @@ KiSetAffinityThread(IN PKTHREAD Thread,
 {
     KAFFINITY OldAffinity;
     ULONG ProcessorMask;
-    ULONG i;
+    CCHAR i;
     PKPCR Pcr;
 
     /* Make sure that the affinity is valid */

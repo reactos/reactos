@@ -1145,7 +1145,7 @@ LdrPEGetOrLoadModule (
             RtlCopyMemory(NameBuffer, Module->FullDllName.Buffer, PathLength);
             RtlCopyMemory(NameBuffer + (PathLength / sizeof(WCHAR)), DriverName.Buffer, DriverName.Length);
             NameString.Buffer = NameBuffer;
-            NameString.MaximumLength = NameString.Length = PathLength + DriverName.Length;
+            NameString.MaximumLength = NameString.Length = (USHORT)PathLength + DriverName.Length;
 
             /* NULL-terminate */
             NameString.MaximumLength += sizeof(WCHAR);

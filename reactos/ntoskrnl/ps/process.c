@@ -658,9 +658,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (!NT_SUCCESS(Status)) goto Cleanup;
 
     /* Compute Quantum and Priority */
-    Process->Pcb.BasePriority = PspComputeQuantumAndPriority(Process,
-                                                             0,
-                                                             &Quantum);
+    Process->Pcb.BasePriority = (SCHAR)PspComputeQuantumAndPriority(Process,
+                                                                    0,
+                                                                    &Quantum);
     Process->Pcb.QuantumReset = Quantum;
 
     /* Check if we have a parent other then the initial system process */
@@ -912,7 +912,7 @@ BOOLEAN
 NTAPI
 PsGetProcessExitProcessCalled(PEPROCESS Process)
 {
-    return Process->ProcessExiting;
+    return (BOOLEAN)Process->ProcessExiting;
 }
 
 /*
@@ -1083,7 +1083,7 @@ NTAPI
 PsSetProcessPriorityClass(PEPROCESS Process,
                           ULONG PriorityClass)
 {
-    Process->PriorityClass = PriorityClass;
+    Process->PriorityClass = (UCHAR)PriorityClass;
 }
 
 /*

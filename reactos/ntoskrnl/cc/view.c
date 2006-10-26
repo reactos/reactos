@@ -358,7 +358,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 	     for (i = 0; i < current->Bcb->CacheSegmentSize / PAGE_SIZE; i++)
 	       {
 	         PFN_TYPE Page;
-		 Page = MmGetPhysicalAddress((char*)current->BaseAddress + i * PAGE_SIZE).QuadPart >> PAGE_SHIFT;
+		 Page = (PFN_TYPE)(MmGetPhysicalAddress((char*)current->BaseAddress + i * PAGE_SIZE).QuadPart >> PAGE_SHIFT);
                  Status = MmPageOutPhysicalAddress(Page);
 		 if (!NT_SUCCESS(Status))
 		   {

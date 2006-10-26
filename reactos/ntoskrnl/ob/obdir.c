@@ -163,7 +163,7 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
 
     /* Save the result */
     Context->HashValue = HashValue;
-    Context->HashIndex = HashIndex;
+    Context->HashIndex = (USHORT)HashIndex;
 
     /* Get the root entry and set it as our lookup bucket */
     AllocatedEntry = &Directory->HashBuckets[HashIndex];

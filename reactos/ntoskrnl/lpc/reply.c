@@ -65,7 +65,7 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
 
    MessageReply->Message.ClientId.UniqueProcess = PsGetCurrentProcessId();
    MessageReply->Message.ClientId.UniqueThread = PsGetCurrentThreadId();
-   MessageReply->Message.u2.s2.Type = MessageType;
+   MessageReply->Message.u2.s2.Type = (CSHORT)MessageType;
    MessageReply->Message.MessageId = InterlockedIncrementUL(&LpcpNextMessageId);
 
    KeAcquireSpinLock(&Port->Lock, &oldIrql);
@@ -276,7 +276,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
 
        CRequest = (PEPORT_CONNECT_REQUEST_MESSAGE)&Request->Message;
        memcpy(&Header, &Request->Message, sizeof(PORT_MESSAGE));
-       Header.u1.s1.DataLength = CRequest->ConnectDataLength;
+       Header.u1.s1.DataLength = (CSHORT)CRequest->ConnectDataLength;
        Header.u1.s1.TotalLength = Header.u1.s1.DataLength + sizeof(PORT_MESSAGE);
        
        if (PreviousMode != KernelMode)

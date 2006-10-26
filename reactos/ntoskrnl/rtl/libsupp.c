@@ -382,8 +382,8 @@ RtlpCreateUnicodeString(
                   Source,
                   Length);
 
-   UniDest->MaximumLength = Length;
-   UniDest->Length = Length - sizeof (WCHAR);
+   UniDest->MaximumLength = (USHORT)Length;
+   UniDest->Length = (USHORT)Length - sizeof (WCHAR);
 
    return TRUE;
 }

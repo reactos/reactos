@@ -71,7 +71,7 @@ ExGetCurrentProcessorCpuUsage (
 	ScaledIdle = Prcb->IdleThread->KernelTime * 100;
 	TotalTime = Prcb->KernelTime + Prcb->UserTime;
 	if (TotalTime != 0)
-		*CpuUsage = 100 - (ScaledIdle / TotalTime);
+		*CpuUsage = (ULONG)(100 - (ScaledIdle / TotalTime));
 	else
 		*CpuUsage = 0;
 }
@@ -211,7 +211,9 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
     /*
      * Get the environment variable
      */
-    Result = HalGetEnvironmentVariable(AName.Buffer, ValueBufferLength, Value);
+    Result = HalGetEnvironmentVariable(AName.Buffer,
+                                       (USHORT)ValueBufferLength,
+                                       Value);
     if(!Result)
     {
       RtlFreeAnsiString(&AName);

@@ -32,6 +32,16 @@ Author:
 NTKERNELAPI
 NTSTATUS
 NTAPI
+ObAssignSecurity(
+    IN PACCESS_STATE AccessState,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN PVOID Object,
+    IN POBJECT_TYPE Type
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
 ObCloseHandle(
     IN HANDLE Handle,
     IN KPROCESSOR_MODE AccessMode

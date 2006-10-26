@@ -593,7 +593,7 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
       return STATUS_INSUFFICIENT_RESOURCES;
 
    KeyName.Length = 0;
-   KeyName.MaximumLength = KeyNameLength;
+   KeyName.MaximumLength = (USHORT)KeyNameLength;
    KeyName.Buffer = KeyNameBuffer;
 
    /*
@@ -619,7 +619,7 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
          ExFreePool(KeyNameBuffer);
          return Status;
       }
-      KeyName.Length += DriverKeyLength - sizeof(UNICODE_NULL);
+      KeyName.Length += (USHORT)DriverKeyLength - sizeof(UNICODE_NULL);
    }
    else
    {
@@ -750,7 +750,7 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
                  sizeof(GUID));
 
    /* The new entry is the index */
-   FoundIndex = IopBusTypeGuidList->GuidCount;
+   FoundIndex = (USHORT)IopBusTypeGuidList->GuidCount;
    IopBusTypeGuidList->GuidCount++;
 
 Quickie:
@@ -928,7 +928,7 @@ IopInitiatePnpIrp(PDEVICE_OBJECT DeviceObject,
    Irp->IoStatus.Information = 0;
 
    IrpSp = IoGetNextIrpStackLocation(Irp);
-   IrpSp->MinorFunction = MinorFunction;
+   IrpSp->MinorFunction = (UCHAR)MinorFunction;
 
    if (Stack)
    {
@@ -1618,14 +1618,14 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
          Status = STATUS_UNSUCCESSFUL;
       else
       {
-         KeyValue.Length = KeyValue.MaximumLength = ParentIdPrefixInformation->DataLength;
+         KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
          KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
       }
       goto cleanup;
    }
    if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
    {
-      KeyValue.Length = KeyValue.MaximumLength = ParentIdPrefixInformation->DataLength;
+      KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
       KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
       goto cleanup;
    }
@@ -2711,7 +2711,7 @@ IopEnumerateDetectedDevices(
       IndexDevice++;
 
       /* Open device key */
-      DeviceName.Length = DeviceName.MaximumLength = pDeviceInformation->NameLength;
+      DeviceName.Length = DeviceName.MaximumLength = (USHORT)pDeviceInformation->NameLength;
       DeviceName.Buffer = pDeviceInformation->Name;
       InitializeObjectAttributes(&ObjectAttributes, &DeviceName, OBJ_KERNEL_HANDLE, hDevicesKey, NULL);
       Status = ZwOpenKey(
@@ -2832,7 +2832,7 @@ IopEnumerateDetectedDevices(
                goto cleanup;
             }
             IndexSubKey++;
-            DeviceName.Length = DeviceName.MaximumLength = pDeviceInformation->NameLength;
+            DeviceName.Length = DeviceName.MaximumLength = (USHORT)pDeviceInformation->NameLength;
             DeviceName.Buffer = pDeviceInformation->Name;
 
             Status = IopEnumerateDetectedDevices(
@@ -2878,7 +2878,7 @@ IopEnumerateDetectedDevices(
       else
       {
          /* Assign hardware id to this device */
-         ValueName.Length = ValueName.MaximumLength = pValueInformation->DataLength;
+         ValueName.Length = ValueName.MaximumLength = (USHORT)pValueInformation->DataLength;
          ValueName.Buffer = (PWCHAR)pValueInformation->Data;
          if (ValueName.Length >= sizeof(WCHAR) && ValueName.Buffer[ValueName.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
             ValueName.Length -= sizeof(WCHAR);

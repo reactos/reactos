@@ -671,7 +671,6 @@ ZwDeviceIoControlFile(
     IN ULONG OutputBufferSize
 );
 
-#ifdef NTOS_MODE_USER
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -679,7 +678,6 @@ ZwFlushBuffersFile(
     IN HANDLE FileHandle,
     OUT PIO_STATUS_BLOCK IoStatusBlock
 );
-#endif
 
 NTSYSAPI
 NTSTATUS

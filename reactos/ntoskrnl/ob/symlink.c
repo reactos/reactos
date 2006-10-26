@@ -13,10 +13,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ObInitSymbolicLinkImplementation)
-#endif
-
 /* GLOBALS ******************************************************************/
 
 POBJECT_TYPE ObSymbolicLinkType = NULL;
@@ -165,8 +161,8 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     if (NewTargetPath != FullPath->Buffer) ExFreePool(FullPath->Buffer);
 
     /* Update the path values */
-    FullPath->Length = LengthUsed;
-    FullPath->MaximumLength = MaximumLength;
+    FullPath->Length = (USHORT)LengthUsed;
+    FullPath->MaximumLength = (USHORT)MaximumLength;
     FullPath->Buffer = NewTargetPath;
 
     /* Tell the parse routine to start reparsing */
@@ -247,7 +243,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
     {
         /* Round it down */
         CapturedLinkTarget.MaximumLength =
-            ALIGN_DOWN(CapturedLinkTarget.MaximumLength, WCHAR);
+            (USHORT)ALIGN_DOWN(CapturedLinkTarget.MaximumLength, WCHAR);
     }
 
     /* Fail if the length is odd, or if the maximum is smaller or 0 */

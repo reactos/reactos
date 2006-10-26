@@ -586,7 +586,7 @@ MmDumpToPagingFile(ULONG BugCode,
    RetrievalPointers = PagingFileList[MmCoreDumpPageFile]->RetrievalPointers;
 
    /* Dump the header. */
-   MdlMap[0] = MmGetPhysicalAddress(MmCoreDumpPageFrame).QuadPart >> PAGE_SHIFT;
+   MdlMap[0] = (ULONG)(MmGetPhysicalAddress(MmCoreDumpPageFrame).QuadPart >> PAGE_SHIFT);
 #if defined(__GNUC__)
 
    DiskOffset = MmGetOffsetPageFile(RetrievalPointers, (LARGE_INTEGER)0LL);

@@ -332,8 +332,8 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
                 }
 
                 /* Setup the string */
-                CapturedName->Length = StringLength;
-                CapturedName->MaximumLength = MaximumLength;
+                CapturedName->Length = (USHORT)StringLength;
+                CapturedName->MaximumLength = (USHORT)MaximumLength;
                 CapturedName->Buffer = StringBuffer;
 
                 /* Make sure we have a buffer */

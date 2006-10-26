@@ -61,7 +61,7 @@ INIT_FUNCTION
 NTAPI
 ObInit2(VOID)
 {
-    ULONG i;
+    CCHAR i;
     PKPRCB Prcb;
     PNPAGED_LOOKASIDE_LIST CurrentList = NULL;
 

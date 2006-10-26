@@ -340,7 +340,7 @@ SeDefaultObjectMethod(PVOID Object,
       RtlCreateSecurityDescriptor(NewSd,
 				  SECURITY_DESCRIPTOR_REVISION1);
       /* We always build a self-relative descriptor */
-      NewSd->Control = Control | SE_SELF_RELATIVE;
+      NewSd->Control = (USHORT)Control | SE_SELF_RELATIVE;
 
       Current = (ULONG_PTR)NewSd + sizeof(SECURITY_DESCRIPTOR);
 
@@ -754,7 +754,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
   RtlCreateSecurityDescriptor(Descriptor,
 			      SECURITY_DESCRIPTOR_REVISION);
 
-  Descriptor->Control = Control | SE_SELF_RELATIVE;
+  Descriptor->Control = (USHORT)Control | SE_SELF_RELATIVE;
 
   Current = (ULONG_PTR)Descriptor + sizeof(SECURITY_DESCRIPTOR);
 

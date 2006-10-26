@@ -94,8 +94,8 @@ Ke386CallBios(IN ULONG Int,
     /* Save the old offset and base, and set the new ones */
     OldOffset = Process->IopmOffset;
     OldBase = Tss->IoMapBase;
-    Process->IopmOffset = IOPM_OFFSET;
-    Tss->IoMapBase = IOPM_OFFSET;
+    Process->IopmOffset = (USHORT)IOPM_OFFSET;
+    Tss->IoMapBase = (USHORT)IOPM_OFFSET;
 
     /* Switch stacks and work the magic */
     Ki386SetupAndExitToV86Mode(VdmTeb);

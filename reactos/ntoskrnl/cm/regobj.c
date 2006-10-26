@@ -276,8 +276,8 @@ CmiObjectParse(IN PVOID ParsedObject,
     Length = wcslen(StartPtr);
 
 
-  KeyName.Length = Length * sizeof(WCHAR);
-  KeyName.MaximumLength = KeyName.Length + sizeof(WCHAR);
+  KeyName.Length = (USHORT)Length * sizeof(WCHAR);
+  KeyName.MaximumLength = (USHORT)KeyName.Length + sizeof(WCHAR);
   KeyName.Buffer = ExAllocatePool(NonPagedPool,
 				  KeyName.MaximumLength);
   RtlCopyMemory(KeyName.Buffer,
@@ -751,7 +751,7 @@ CmiObjectQueryName (PVOID ObjectBody,
     {
       ObjectNameInfo->Name.Buffer = (PWCHAR)(ObjectNameInfo + 1);
       ObjectNameInfo->Name.Length = 0;
-      ObjectNameInfo->Name.MaximumLength = Length - sizeof(OBJECT_NAME_INFORMATION);
+      ObjectNameInfo->Name.MaximumLength = (USHORT)Length - sizeof(OBJECT_NAME_INFORMATION);
     }
 
 
@@ -931,13 +931,13 @@ CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
   if (TargetPath->Buffer == NULL && TargetPath->MaximumLength == 0)
     {
       TargetPath->Length = 0;
-      TargetPath->MaximumLength = ValueCell->DataSize + sizeof(WCHAR);
+      TargetPath->MaximumLength = (USHORT)ValueCell->DataSize + sizeof(WCHAR);
       TargetPath->Buffer = ExAllocatePool(NonPagedPool,
 					  TargetPath->MaximumLength);
     }
 
-  TargetPath->Length = min(TargetPath->MaximumLength - sizeof(WCHAR),
-			   (ULONG) ValueCell->DataSize);
+  TargetPath->Length = min((USHORT)TargetPath->MaximumLength - sizeof(WCHAR),
+			   (USHORT)ValueCell->DataSize);
 
   if (ValueCell->DataSize > 0)
     {

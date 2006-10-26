@@ -141,7 +141,7 @@ PspWriteTebImpersonationInfo(IN PETHREAD Thread,
         }
 
         /* Check if the thread is impersonating */
-        IsImpersonating = Thread->ActiveImpersonationInfo;
+        IsImpersonating = (BOOLEAN)Thread->ActiveImpersonationInfo;
         if (IsImpersonating)
         {
             /* Set TEB data */

@@ -93,6 +93,15 @@ ExfUnblockPushLock(
     PVOID CurrentWaitBlock
 );
 
+//
+// Resource Functions
+//
+BOOLEAN
+NTAPI
+ExTryToAcquireResourceExclusiveLite(
+    IN PERESOURCE Resource
+);
+
 #endif
 
 //

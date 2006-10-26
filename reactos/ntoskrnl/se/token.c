@@ -621,7 +621,7 @@ SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
   PsImpersonateClient(ServerThread,
 		      ClientContext->ClientToken,
 		      1,
-		      (ULONG)b,
+		      b,
 		      ClientContext->SecurityQos.ImpersonationLevel);
 }
 

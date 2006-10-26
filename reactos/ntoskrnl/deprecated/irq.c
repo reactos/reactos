@@ -512,7 +512,7 @@ KiInterruptDispatch3 (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
            DPRINT("PID: %d, TID: %d CS %04x/%04x\n",
                   ((PETHREAD)CurrentThread)->ThreadsProcess->UniqueProcessId,
                   ((PETHREAD)CurrentThread)->Cid.UniqueThread,
-                  Trapframe->SegCs,
+                  Trapframe->Cs,
                   CurrentThread->TrapFrame ? CurrentThread->TrapFrame->SegCs : 0);
            if (CurrentThread->TrapFrame == NULL)
              {

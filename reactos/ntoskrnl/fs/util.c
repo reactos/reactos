@@ -42,8 +42,10 @@ RtlpInitializeResources(VOID)
     ULONG i;
 
     /* Allocate the Resource Buffer */
-    FsRtlpResources = FsRtlAllocatePool(NonPagedPool,
-                                        FSRTL_MAX_RESOURCES*sizeof(ERESOURCE));
+    FsRtlpResources = FsRtlAllocatePoolWithTag(NonPagedPool,
+                                               FSRTL_MAX_RESOURCES *
+                                               sizeof(ERESOURCE),
+                                               TAG('F', 's', 'R', 'e'));
 
     /* Initialize the Resources */
     for (i = 0; i < FSRTL_MAX_RESOURCES; i++)

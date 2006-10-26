@@ -104,6 +104,13 @@ extern ULONG NtBuildNumber;
 #define MUTANT_ALL_ACCESS                   (STANDARD_RIGHTS_REQUIRED | \
                                              SYNCHRONIZE | \
                                              MUTANT_QUERY_STATE)
+
+#define TIMER_QUERY_STATE                   0x0001
+#define TIMER_MODIFY_STATE                  0x0002
+#define TIMER_ALL_ACCESS                    (STANDARD_RIGHTS_REQUIRED | \
+                                             SYNCHRONIZE | \
+                                             TIMER_QUERY_STATE | \
+                                             TIMER_MODIFY_STATE)
 #endif
 
 //

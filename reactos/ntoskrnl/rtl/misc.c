@@ -73,9 +73,9 @@ RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation)
       if (lpVersionInformation->dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXW))
       {
          RTL_OSVERSIONINFOEXW *InfoEx = (RTL_OSVERSIONINFOEXW *)lpVersionInformation;
-         InfoEx->wServicePackMajor = (NtOSCSDVersion >> 8) & 0xFF;
-         InfoEx->wServicePackMinor = NtOSCSDVersion & 0xFF;
-         InfoEx->wSuiteMask = SharedUserData->SuiteMask;
+         InfoEx->wServicePackMajor = (USHORT)(NtOSCSDVersion >> 8) & 0xFF;
+         InfoEx->wServicePackMinor = (USHORT)(NtOSCSDVersion & 0xFF);
+         InfoEx->wSuiteMask = (USHORT)SharedUserData->SuiteMask;
          InfoEx->wProductType = SharedUserData->NtProductType;
       }
 

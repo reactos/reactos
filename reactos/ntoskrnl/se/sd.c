@@ -810,7 +810,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
   /* Build the new security descrtiptor */
   RtlCreateSecurityDescriptorRelative(RelSD,
 			              SECURITY_DESCRIPTOR_REVISION);
-  RelSD->Control = Control;
+  RelSD->Control = (USHORT)Control;
 
   Current = (ULONG_PTR)(RelSD + 1);
 

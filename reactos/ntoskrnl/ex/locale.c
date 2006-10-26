@@ -80,7 +80,7 @@ ExpGetCurrentUserUILanguage(IN PWSTR MuiName,
                 if (NT_SUCCESS(Status))
                 {
                     /* Return the language */
-                    *LanguageId = Value;
+                    *LanguageId = (USHORT)Value;
                 }
             }
             else
