@@ -402,6 +402,12 @@ universe:
 		ROS_OUTPUT=output-$(ARCH)-r \
 		world
 
+
+regtest:
+	$(cp) boot\bootdata\unattend.inf.sample output-i386\cd\reactos\unattend.inf
+	$(MAKE) bootcdregtest
+	$(rm) output-i386\cd\reactos\unattend.inf
+
 .PHONY: msvc
 msvc: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)

@@ -398,7 +398,7 @@ media\inf\usbport.inf                               6
 media\inf\usb.inf                                   6
 media\inf\usbstor.inf                               6
 media\inf\xboxdisp.inf                              6
-;boot\bootdata\unattend.inf                         6   optional
+boot\bootdata\unattend.inf                          6   optional
 
 
 ; Subsystems
