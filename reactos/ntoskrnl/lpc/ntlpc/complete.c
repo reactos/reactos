@@ -51,10 +51,11 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     NTSTATUS Status;
     ULONG ConnectionInfoLength;
-    PLPCP_MESSAGE Msg;
-    PLPCP_CONNECTION_MESSAGE ConnectMsg;
+    PLPCP_MESSAGE Message;
+    PLPCP_CONNECTION_MESSAGE ConnectMessage;
     PEPROCESS ClientProcess;
     PETHREAD ClientThread;
+    LARGE_INTEGER SectionOffset;
     PAGED_CODE();
     LPCTRACE(LPC_COMPLETE_DEBUG,
              "Context: %p. Message: %p. Accept: %lx. Views: %p/%p\n",
@@ -100,11 +101,11 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     }
 
     /* Now get the message and connection message */
-    Msg = ClientThread->LpcReplyMessage;
-    ConnectMsg = (PLPCP_CONNECTION_MESSAGE)(Msg + 1);
+    Message = ClientThread->LpcReplyMessage;
+    ConnectMessage = (PLPCP_CONNECTION_MESSAGE)(Message + 1);
 
     /* Get the client and connection port as well */
-    ClientPort = ConnectMsg->ClientPort;
+    ClientPort = ConnectMessage->ClientPort;
     ConnectionPort = ClientPort->ConnectionPort;
 
     /* Make sure that the reply is being sent to the proper server process */
@@ -122,7 +123,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     ClientThread->LpcReplyMessageId = 0;
 
     /* Clear the client port for now as well, then release the lock */
-    ConnectMsg->ClientPort = NULL;
+    ConnectMessage->ClientPort = NULL;
     KeReleaseGuardedMutex(&LpcpLock);
 
     /* Get the connection information length */
@@ -134,18 +135,18 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     }
 
     /* Set the sizes of our reply message */
-    Msg->Request.u1.s1.DataLength = sizeof(LPCP_CONNECTION_MESSAGE) +
+    Message->Request.u1.s1.DataLength = sizeof(LPCP_CONNECTION_MESSAGE) +
                                     ConnectionInfoLength;
-    Msg->Request.u1.s1.TotalLength = sizeof(LPCP_MESSAGE) +
-                                     Msg->Request.u1.s1.DataLength;
+    Message->Request.u1.s1.TotalLength = sizeof(LPCP_MESSAGE) +
+                                     Message->Request.u1.s1.DataLength;
 
     /* Setup the reply message */
-    Msg->Request.u2.s2.Type = LPC_REPLY;
-    Msg->Request.u2.s2.DataInfoOffset = 0;
-    Msg->Request.ClientId = ReplyMessage->ClientId;
-    Msg->Request.MessageId = ReplyMessage->MessageId;
-    Msg->Request.ClientViewSize = 0;
-    RtlMoveMemory(ConnectMsg + 1, ReplyMessage + 1, ConnectionInfoLength);
+    Message->Request.u2.s2.Type = LPC_REPLY;
+    Message->Request.u2.s2.DataInfoOffset = 0;
+    Message->Request.ClientId = ReplyMessage->ClientId;
+    Message->Request.MessageId = ReplyMessage->MessageId;
+    Message->Request.ClientViewSize = 0;
+    RtlMoveMemory(ConnectMessage + 1, ReplyMessage + 1, ConnectionInfoLength);
 
     /* At this point, if the caller refused the connection, go to cleanup */
     if (!AcceptConnection) goto Cleanup;
@@ -180,19 +181,46 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
 
     /* Also set the creator CID */
     ServerPort->Creator = PsGetCurrentThread()->Cid;
-    ClientPort->Creator = Msg->Request.ClientId;
+    ClientPort->Creator = Message->Request.ClientId;
 
     /* Get the section associated and then clear it, while inside the lock */
     KeAcquireGuardedMutex(&LpcpLock);
-    ClientSectionToMap = ConnectMsg->SectionToMap;
-    ConnectMsg->SectionToMap = NULL;
+    ClientSectionToMap = ConnectMessage->SectionToMap;
+    ConnectMessage->SectionToMap = NULL;
     KeReleaseGuardedMutex(&LpcpLock);
 
     /* Now check if there's a client section */
     if (ClientSectionToMap)
     {
-        /* FIXME: TODO */
-        ASSERT(FALSE);
+        /* Setup the offset */
+        SectionOffset.QuadPart = ConnectMessage->ClientView.SectionOffset;
+
+        /* Map the section */
+        Status = MmMapViewOfSection(ClientSectionToMap,
+                                    PsGetCurrentProcess(),
+                                    &ServerPort->ClientSectionBase,
+                                    0,
+                                    0,
+                                    &SectionOffset,
+                                    &ConnectMessage->ClientView.ViewSize,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE);
+
+        /* Update the offset and check for mapping status */
+        ConnectMessage->ClientView.SectionOffset = SectionOffset.LowPart;
+        if (NT_SUCCESS(Status))
+        {
+            /* Set the view base */
+            ConnectMessage->ClientView.ViewRemoteBase = ServerPort->
+                                                        ClientSectionBase;
+        }
+        else
+        {
+            /* Otherwise, quit */
+            ObDereferenceObject(ServerPort);
+            goto Cleanup;
+        }
     }
 
     /* Check if there's a server section */
@@ -223,8 +251,8 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     if (ClientView)
     {
         /* Fill it out */
-        ClientView->ViewBase = ConnectMsg->ClientView.ViewRemoteBase;
-        ClientView->ViewSize = ConnectMsg->ClientView.ViewSize;
+        ClientView->ViewBase = ConnectMessage->ClientView.ViewRemoteBase;
+        ClientView->ViewSize = ConnectMessage->ClientView.ViewSize;
     }
 
     /* Return the handle to user mode */
@@ -232,8 +260,8 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     LPCTRACE(LPC_COMPLETE_DEBUG,
              "Handle: %lx. Messages: %p/%p. Ports: %p/%p/%p\n",
              Handle,
-             Msg,
-             ConnectMsg,
+             Message,
+             ConnectMessage,
              ServerPort,
              ClientPort,
              ConnectionPort);
@@ -244,7 +272,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
 
     /* Set this message as the LPC Reply message while holding the lock */
     KeAcquireGuardedMutex(&LpcpLock);
-    ClientThread->LpcReplyMessage = Msg;
+    ClientThread->LpcReplyMessage = Message;
     KeReleaseGuardedMutex(&LpcpLock);
 
     /* Clear the thread pointer so it doesn't get cleaned later */
