@@ -217,7 +217,7 @@ ServerApiPortThread (PVOID PortHandle)
 
    CsrInitProcessData();
 
-	DPRINT("CSR: %s called", __FUNCTION__);
+	DPRINT1("CSR: %s called", __FUNCTION__);
 
    for (;;)
      {
@@ -231,8 +231,13 @@ ServerApiPortThread (PVOID PortHandle)
 	     break;
 	  }
 	Status = NtAcceptConnectPort(& ServerPort,
+#ifdef NTLPC
+                     NULL,
+				     Request,
+#else
 				     hApiListenPort,
-				     NULL,
+                     NULL,
+#endif
 				     TRUE,
 				     0,
 				     & LpcRead);
@@ -307,7 +312,7 @@ ServerSbApiPortThread (PVOID PortHandle)
 	NTSTATUS        Status = STATUS_SUCCESS;
     PPORT_MESSAGE Reply = NULL;
 
-	DPRINT("CSR: %s called\n", __FUNCTION__);
+	DPRINT1("CSR: %s called\n", __FUNCTION__);
 
     RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
 	Status = NtListenPort (hSbApiPortListen, & Request);
@@ -318,8 +323,13 @@ ServerSbApiPortThread (PVOID PortHandle)
 	} else {
 DPRINT("-- 1\n");
 		Status = NtAcceptConnectPort (& hConnectedPort,
-						hSbApiPortListen,
-   						NULL,
+#ifdef NTLPC
+				     NULL,
+                     &Request,
+#else
+				     hSbApiPortListen,
+                     NULL,
+#endif
    						TRUE,
    						NULL,
 	   					NULL);
