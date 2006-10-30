@@ -15,6 +15,22 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+LpcpPrepareToWakeClient(IN PETHREAD Thread)
+{
+    PAGED_CODE();
+
+    /* Make sure the thread isn't dying and it has a valid chain */
+    if (!(Thread->LpcExitThreadCalled) &&
+        !(IsListEmpty(&Thread->LpcReplyChain)))
+    {
+        /* Remove it from the list and reinitialize it */
+        RemoveEntryList(&Thread->LpcReplyChain);
+        InitializeListHead(&Thread->LpcReplyChain);
+    }
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -266,8 +282,67 @@ NTSTATUS
 NTAPI
 NtCompleteConnectPort(IN HANDLE PortHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PLPCP_PORT_OBJECT Port;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    PETHREAD Thread;
+    PAGED_CODE();
+    LPCTRACE(LPC_COMPLETE_DEBUG, "Handle: %lx\n", PortHandle);
+
+    /* Get the Port Object */
+    Status = ObReferenceObjectByHandle(PortHandle,
+                                       PORT_ALL_ACCESS,
+                                       LpcPortObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&Port,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Make sure this is a connection port */
+    if ((Port->Flags & LPCP_PORT_TYPE_MASK) != LPCP_COMMUNICATION_PORT)
+    {
+        /* It isn't, fail */
+        ObDereferenceObject(Port);
+        return STATUS_INVALID_PORT_HANDLE;
+    }
+
+    /* Acquire the lock */
+    KeAcquireGuardedMutex(&LpcpLock);
+
+    /* Make sure we have a client thread */
+    if (!Port->ClientThread)
+    {
+        /* We don't, fail */
+        KeReleaseGuardedMutex(&LpcpLock);
+        ObDereferenceObject(Port);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get the thread */
+    Thread = Port->ClientThread;
+
+    /* Make sure it has a reply message */
+    if (!Thread->LpcReplyMessage)
+    {
+        /* It doesn't, fail */
+        KeReleaseGuardedMutex(&LpcpLock);
+        ObDereferenceObject(Port);
+        return STATUS_PORT_DISCONNECTED;
+    }
+
+    /* Clear the client thread and wake it up */
+    Port->ClientThread = NULL;
+    LpcpPrepareToWakeClient(Thread);
+
+    /* Release the lock and wait for an answer */
+    KeReleaseGuardedMutex(&LpcpLock);
+    LpcpCompleteWait(&Thread->LpcReplySemaphore);
+
+    /* Dereference the Thread and Port  and return */
+    ObDereferenceObject(Port);
+    ObDereferenceObject(Thread);
+    LPCTRACE(LPC_COMPLETE_DEBUG, "Port: %p. Thread: %p\n", Port, Thread);
+    return Status;
 }
 
 /* EOF */
