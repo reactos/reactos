@@ -32,8 +32,12 @@
 
 #include <wine/debug.h>
 
-/* GLOBALS *******************************************************************/
 
+/* Directory to load key layouts from */
+#define SYSTEMROOT_DIR L"\\SystemRoot\\System32\\"
+
+
+/* GLOBALS *******************************************************************/
 
 typedef struct __TRACKINGLIST {
     TRACKMOUSEEVENT tme;
@@ -44,6 +48,209 @@ typedef struct __TRACKINGLIST {
 static _TRACKINGLIST tracking_info;
 static UINT_PTR timer;
 static const INT iTimerInterval = 50; /* msec for timer interval */
+
+
+/* LOCALE FUNCTIONS **********************************************************/
+
+/*
+ * Utility function to read a value from the registry more easily.
+ *
+ * IN  PUNICODE_STRING KeyName       -> Name of key to open
+ * IN  PUNICODE_STRING ValueName     -> Name of value to open
+ * OUT PUNICODE_STRING ReturnedValue -> String contained in registry
+ *
+ * Returns NTSTATUS
+ */
+
+static 
+NTSTATUS FASTCALL
+ReadRegistryValue( PUNICODE_STRING KeyName,
+      PUNICODE_STRING ValueName,
+      PUNICODE_STRING ReturnedValue )
+{
+   NTSTATUS Status;
+   HANDLE KeyHandle;
+   OBJECT_ATTRIBUTES KeyAttributes;
+   PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
+   ULONG Length = 0;
+   ULONG ResLength = 0;
+   UNICODE_STRING Temp;
+
+   InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE,
+                              NULL, NULL);
+   Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
+   if( !NT_SUCCESS(Status) )
+   {
+      return Status;
+   }
+
+   Status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation,
+                            0,
+                            0,
+                            &ResLength);
+
+   if( Status != STATUS_BUFFER_TOO_SMALL )
+   {
+      NtClose(KeyHandle);
+      return Status;
+   }
+
+   ResLength += sizeof( *KeyValuePartialInfo );
+   KeyValuePartialInfo = LocalAlloc(LMEM_ZEROINIT, ResLength);
+   Length = ResLength;
+
+   if( !KeyValuePartialInfo )
+   {
+      NtClose(KeyHandle);
+      return STATUS_NO_MEMORY;
+   }
+
+   Status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation,
+                            (PVOID)KeyValuePartialInfo,
+                            Length,
+                            &ResLength);
+
+   if( !NT_SUCCESS(Status) )
+   {
+      NtClose(KeyHandle);
+      LocalFree(KeyValuePartialInfo);
+      return Status;
+   }
+
+   Temp.Length = Temp.MaximumLength = KeyValuePartialInfo->DataLength;
+   Temp.Buffer = (PWCHAR)KeyValuePartialInfo->Data;
+
+   /* At this point, KeyValuePartialInfo->Data contains the key data */
+   RtlInitUnicodeString(ReturnedValue,L"");
+   RtlAppendUnicodeStringToString(ReturnedValue,&Temp);
+
+   LocalFree(KeyValuePartialInfo);
+   NtClose(KeyHandle);
+
+   return Status;
+}
+
+
+static
+HKL FASTCALL
+IntLoadKeyboardLayout( LPCWSTR pwszKLID,
+                       UINT Flags)
+{
+  HANDLE Handle;
+  HINSTANCE KBModule = 0;
+  FARPROC pAddr = 0;
+  DWORD offTable = 0;
+  HKL hKL;
+  NTSTATUS Status;
+  WCHAR LocaleBuffer[16];
+  UNICODE_STRING LayoutKeyName;
+  UNICODE_STRING LayoutValueName;
+  UNICODE_STRING DefaultLocale;
+  UNICODE_STRING LayoutFile;
+  UNICODE_STRING FullLayoutPath;
+  LCID LocaleId;  
+  PWCHAR KeyboardLayoutWSTR;
+  ULONG_PTR layout;
+  LANGID langid;
+
+  layout = (ULONG_PTR) wcstoul(pwszKLID, NULL, 16);
+
+//  LocaleId = GetSystemDefaultLCID();
+
+  LocaleId = (LCID) layout;
+  
+  /* Create the HKL to be used by NtUserLoadKeyboardLayoutEx*/
+  /* 
+   * Microsoft Office expects this value to be something specific
+   * for Japanese and Korean Windows with an IME the value is 0xe001
+   * We should probably check to see if an IME exists and if so then
+   * set this word properly.
+   */
+  langid = PRIMARYLANGID(LANGIDFROMLCID(layout));
+  if (langid == LANG_CHINESE || langid == LANG_JAPANESE || langid == LANG_KOREAN)
+      layout |= 0xe001 << 16; /* FIXME */
+  else
+      layout |= layout << 16;
+
+  DPRINT("Input  = %S\n", pwszKLID );
+
+  DPRINT("DefaultLocale = %lx\n", LocaleId);
+
+  swprintf(LocaleBuffer, L"%08lx", LocaleId);
+
+  DPRINT("DefaultLocale = %S\n", LocaleBuffer);
+  RtlInitUnicodeString(&DefaultLocale, LocaleBuffer);
+
+  RtlInitUnicodeString(&LayoutKeyName,
+                       L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet"
+                       L"\\Control\\KeyboardLayouts\\");
+
+  RtlAppendUnicodeStringToString(&LayoutKeyName,&DefaultLocale);
+
+  RtlInitUnicodeString(&LayoutValueName,L"Layout File");
+
+  Status =  ReadRegistryValue(&LayoutKeyName,&LayoutValueName,&LayoutFile);
+
+  RtlFreeUnicodeString(&LayoutKeyName);
+  
+  DPRINT("Read registry and got %wZ\n", &LayoutFile);
+
+  RtlInitUnicodeString(&FullLayoutPath,SYSTEMROOT_DIR);
+  RtlAppendUnicodeStringToString(&FullLayoutPath,&LayoutFile);
+
+  DPRINT("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
+
+  RtlFreeUnicodeString(&LayoutFile);
+
+  KeyboardLayoutWSTR = LocalAlloc(LMEM_ZEROINIT, 
+                                    FullLayoutPath.Length + sizeof(WCHAR));
+
+  if( !KeyboardLayoutWSTR )
+  {
+     DPRINT1("Couldn't allocate a string for the keyboard layout name.\n");
+     RtlFreeUnicodeString(&FullLayoutPath);
+     return NULL;
+  }
+  memcpy(KeyboardLayoutWSTR,FullLayoutPath.Buffer, FullLayoutPath.Length);
+
+  KeyboardLayoutWSTR[FullLayoutPath.Length / sizeof(WCHAR)] = 0;
+
+  KBModule = LoadLibraryW(KeyboardLayoutWSTR);
+
+  DPRINT( "Load Keyboard Layout: %S\n", KeyboardLayoutWSTR );
+
+  if( !KBModule )
+     DPRINT1( "Load Keyboard Layout: No %wZ\n", &FullLayoutPath );
+
+  pAddr = GetProcAddress( KBModule, (LPCSTR) 1);
+  offTable = (DWORD) pAddr - (DWORD) KBModule; // Weeks to figure this out!
+
+  DPRINT( "Load Keyboard Module Offset: %x\n", offTable );
+
+  FreeLibrary(KBModule);
+
+  Handle = CreateFileW( KeyboardLayoutWSTR,
+                        GENERIC_READ,
+                        FILE_SHARE_READ,
+                        NULL,
+                        OPEN_EXISTING,
+                        0,
+                        NULL);
+
+  hKL = NtUserLoadKeyboardLayoutEx( Handle,
+                                    offTable,
+                                   (HKL) layout,
+                                   &DefaultLocale,
+                                   (UINT) layout,
+                                    Flags);
+
+  NtClose(Handle);
+
+  LocalFree(KeyboardLayoutWSTR);
+  RtlFreeUnicodeString(&FullLayoutPath);
+
+  return hKL;
+}
 
 
 /* FUNCTIONS *****************************************************************/
@@ -315,19 +522,17 @@ LoadKeyboardLayoutA(LPCSTR pwszKLID,
   ret = LoadKeyboardLayoutW(pwszKLIDW.Buffer, Flags);
   RtlFreeUnicodeString(&pwszKLIDW);
   return ret;
-
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HKL STDCALL
 LoadKeyboardLayoutW(LPCWSTR pwszKLID,
 		    UINT Flags)
 {
-  UNIMPLEMENTED;
-  return (HKL)0;
+  return IntLoadKeyboardLayout( pwszKLID, Flags);
 }
 
 
