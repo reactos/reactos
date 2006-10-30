@@ -89,6 +89,8 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     PETHREAD Thread = PsGetCurrentThread();
     ULONG PortMessageLength;
     LARGE_INTEGER SectionOffset;
+    PTOKEN Token;
+    PTOKEN_USER TokenUserInfo;
     PAGED_CODE();
     LPCTRACE(LPC_CONNECT_DEBUG,
              "Name: %wZ. Qos: %p. Views: %p/%p. Sid: %p\n",
@@ -141,9 +143,45 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     /* Check if we have a SID */
     if (ServerSid)
     {
-        /* FIXME: TODO */
-        UNIMPLEMENTED;
-        return STATUS_NOT_IMPLEMENTED;
+        /* Make sure that we have a server */
+        if (Port->ServerProcess)
+        {
+            /* Get its token and query user information */
+            Token = PsReferencePrimaryToken(Port->ServerProcess);
+            //Status = SeQueryInformationToken(Token, TokenUser, (PVOID*)&TokenUserInfo);
+            // FIXME: Need SeQueryInformationToken
+            Status = STATUS_SUCCESS;
+            TokenUserInfo = ExAllocatePool(PagedPool, sizeof(TOKEN_USER));
+            TokenUserInfo->User.Sid = ServerSid;
+            PsDereferencePrimaryToken(Token);
+
+            /* Check for success */
+            if (NT_SUCCESS(Status))
+            {
+                /* Compare the SIDs */
+                if (!RtlEqualSid(ServerSid, TokenUserInfo->User.Sid))
+                {
+                    /* Fail */
+                    Status = STATUS_SERVER_SID_MISMATCH;
+                }
+
+                /* Free token information */
+                ExFreePool(TokenUserInfo);
+            }
+        }
+        else
+        {
+            /* Invalid SID */
+            Status = STATUS_SERVER_SID_MISMATCH;
+        }
+
+        /* Check if SID failed */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Quit */
+            ObDereferenceObject(Port);
+            return Status;
+        }
     }
 
     /* Create the client port */
