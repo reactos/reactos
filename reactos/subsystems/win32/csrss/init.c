@@ -331,7 +331,7 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
                                0,
                                0,
                                (PTHREAD_START_ROUTINE) ListenThread,
-                               Port,
+                               *Port,
                                NULL,
                                NULL);
 	return Status;
@@ -528,9 +528,14 @@ CsrpCreateApiPort (int argc, char ** argv, char ** envp)
 {
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
+    CsrInitProcessData();
 	return CsrpCreateListenPort (L"\\Windows\\ApiPort",
 				     & hApiPort,
+#ifdef NTLPC
+                     (PTHREAD_START_ROUTINE)ClientConnectionThread);
+#else
 				     ServerApiPortThread);
+#endif
 }
 
 /**********************************************************************

@@ -104,6 +104,9 @@ VOID FASTCALL CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
 DWORD STDCALL ServerApiPortThread (PVOID PortHandle);
 DWORD STDCALL ServerSbApiPortThread (PVOID PortHandle);
 DWORD STDCALL Console_Api( PVOID unused );
+VOID
+NTAPI
+ClientConnectionThread(HANDLE ServerPort);
 
 extern HANDLE CsrssApiHeap;
 

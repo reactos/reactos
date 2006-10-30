@@ -118,7 +118,81 @@ CsrHandleHardError(IN PCSRSS_PROCESS_DATA ProcessData,
     CallHardError();
 }
 
-static
+NTSTATUS STDCALL
+CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
+                             IN HANDLE hApiListenPort)
+{
+    NTSTATUS Status;
+    HANDLE ServerPort = (HANDLE) 0;
+    PCSRSS_PROCESS_DATA ProcessData = NULL;
+    REMOTE_PORT_VIEW LpcRead;
+    LpcRead.Length = sizeof(LpcRead);
+    ServerPort = NULL;
+
+    DPRINT1("CSR: %s: Handling: %p\n", __FUNCTION__, Request);
+
+    Status = NtAcceptConnectPort(&ServerPort,
+#ifdef NTLPC
+                                 NULL,
+                                 Request,
+#else
+                                 hApiListenPort,
+                                 NULL,
+#endif
+                                 TRUE,
+                                 0,
+                                 & LpcRead);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSR: NtAcceptConnectPort() failed\n");
+        return Status;
+    }
+
+    ProcessData = CsrCreateProcessData(Request->ClientId.UniqueProcess);
+    if (ProcessData == NULL)
+    {
+        DPRINT1("Unable to allocate or find data for process 0x%x\n",
+                Request->ClientId.UniqueProcess);
+        Status = STATUS_UNSUCCESSFUL;
+        return Status;
+    }
+
+    ProcessData->CsrSectionViewBase = LpcRead.ViewBase;
+    ProcessData->CsrSectionViewSize = LpcRead.ViewSize;
+
+    Status = NtCompleteConnectPort(ServerPort);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSR: NtCompleteConnectPort() failed\n");
+        return Status;
+    }
+
+#if !defined(NTLPC) /* ReactOS LPC */
+    HANDLE ServerThread = (HANDLE) 0;
+    Status = RtlCreateUserThread(NtCurrentProcess(),
+                                 NULL,
+                                 FALSE,
+                                 0,
+                                 0,
+                                 0,
+                                 (PTHREAD_START_ROUTINE)ClientConnectionThread,
+                                 ServerPort,
+                                 & ServerThread,
+                                 NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSR: Unable to create server thread\n");
+        return Status;
+    }
+
+    NtClose(ServerThread);
+#endif
+
+    Status = STATUS_SUCCESS;
+    DPRINT1("CSR: %s done\n", __FUNCTION__);
+    return Status;
+}
+
 VOID
 STDCALL
 ClientConnectionThread(HANDLE ServerPort)
@@ -153,6 +227,13 @@ ClientConnectionThread(HANDLE ServerPort)
         {
             CsrFreeProcessData( Request->Header.ClientId.UniqueProcess );
             break;
+        }
+
+        if (Request->Header.u2.s2.Type == LPC_CONNECTION_REQUEST)
+        {
+            CsrpHandleConnectionRequest((PPORT_MESSAGE)Request, ServerPort);
+            Reply = NULL;
+            continue;
         }
 
         DPRINT("CSR: Got CSR API: %x [Message Origin: %x]\n", 
@@ -205,93 +286,38 @@ ClientConnectionThread(HANDLE ServerPort)
  * 	"\Windows\ApiPort".
  */
 DWORD STDCALL
-ServerApiPortThread (PVOID PortHandle)
+ServerApiPortThread (HANDLE hApiListenPort)
 {
-   NTSTATUS Status = STATUS_SUCCESS;
-   BYTE RawRequest[sizeof(PORT_MESSAGE) + sizeof(CSR_CONNECTION_INFO)];
-   PPORT_MESSAGE Request = (PPORT_MESSAGE)RawRequest;
-   HANDLE hApiListenPort = * (PHANDLE) PortHandle;
-   HANDLE ServerPort = (HANDLE) 0;
-   HANDLE ServerThread = (HANDLE) 0;
-   PCSRSS_PROCESS_DATA ProcessData = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+    BYTE RawRequest[sizeof(PORT_MESSAGE) + sizeof(CSR_CONNECTION_INFO)];
+    PPORT_MESSAGE Request = (PPORT_MESSAGE)RawRequest;
 
-   CsrInitProcessData();
+    DPRINT1("CSR: %s called", __FUNCTION__);
 
-	DPRINT1("CSR: %s called", __FUNCTION__);
+    for (;;)
+    {
+         REMOTE_PORT_VIEW LpcRead;
+         LpcRead.Length = sizeof(LpcRead);
 
-   for (;;)
-     {
-        REMOTE_PORT_VIEW LpcRead;
-        LpcRead.Length = sizeof(LpcRead);
-        ServerPort = NULL;
+         Status = NtListenPort (hApiListenPort, Request);
+         if (!NT_SUCCESS(Status))
+         {
+             DPRINT1("CSR: NtListenPort() failed, status=%x\n", Status);
+             break;
+         }
 
-	Status = NtListenPort (hApiListenPort, Request);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DPRINT1("CSR: NtListenPort() failed, status=%x\n", Status);
-	     break;
-	  }
-	Status = NtAcceptConnectPort(& ServerPort,
-#ifdef NTLPC
-                     NULL,
-				     Request,
-#else
-				     hApiListenPort,
-                     NULL,
-#endif
-				     TRUE,
-				     0,
-				     & LpcRead);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DPRINT1("CSR: NtAcceptConnectPort() failed\n");
-	     break;
-	  }
+         Status = CsrpHandleConnectionRequest(Request, hApiListenPort);
+         if(!NT_SUCCESS(Status))
+         {
+             DPRINT1("CSR: %s: SmpHandleConnectionRequest failed (Status=0x%08lx)\n",
+                     __FUNCTION__, Status);
+             break;
+         }
+    }
 
-	ProcessData = CsrCreateProcessData(Request->ClientId.UniqueProcess);
-	if (ProcessData == NULL)
-	  {
-	     DPRINT1("Unable to allocate or find data for process 0x%x\n",
-	             Request->ClientId.UniqueProcess);
-	     Status = STATUS_UNSUCCESSFUL;
-	     break;
-	  }
-
-
-	ProcessData->CsrSectionViewBase = LpcRead.ViewBase;
-	ProcessData->CsrSectionViewSize = LpcRead.ViewSize;
-
-	Status = NtCompleteConnectPort(ServerPort);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DPRINT1("CSR: NtCompleteConnectPort() failed\n");
-	     break;
-	  }
-
-	Status = RtlCreateUserThread(NtCurrentProcess(),
-				     NULL,
-				     FALSE,
-				     0,
-				     0,
-				     0,
-				     (PTHREAD_START_ROUTINE)ClientConnectionThread,
-				     ServerPort,
-				     & ServerThread,
-				     NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DPRINT1("CSR: Unable to create server thread\n");
-	     break;
-	  }
-	NtClose(ServerThread);
-     }
-   if (ServerPort)
-     {
-       NtClose(ServerPort);
-     }
-   NtClose(PortHandle);
-   NtTerminateThread(NtCurrentThread(), Status);
-   return 0;
+    NtClose(hApiListenPort);
+    NtTerminateThread(NtCurrentThread(), Status);
+    return 0;
 }
 
 /**********************************************************************
@@ -304,9 +330,8 @@ ServerApiPortThread (PVOID PortHandle)
  * 	connection request (from the SM).
  */
 DWORD STDCALL
-ServerSbApiPortThread (PVOID PortHandle)
+ServerSbApiPortThread (HANDLE hSbApiPortListen)
 {
-	HANDLE          hSbApiPortListen = * (PHANDLE) PortHandle;
 	HANDLE          hConnectedPort = (HANDLE) 0;
 	PORT_MESSAGE    Request;
 	PVOID           Context = NULL;
