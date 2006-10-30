@@ -429,22 +429,26 @@ LpcRequestWaitReplyPort(IN PVOID Port,
 {
     HANDLE PortHandle;
     NTSTATUS Status;
+    UNICODE_STRING PortName;
+    ULONG ConnectInfoLength;
 
-    /* This is a SICK hack */
-    Status = ObOpenObjectByPointer(Port,
-                                   0,
-                                   NULL,
-                                   PORT_ALL_ACCESS,
-                                   LpcPortObjectType,
-                                   KernelMode,
-                                   &PortHandle);
-    DPRINT1("LPC Hack active: %lx %lx\n", Status, PortHandle);
+    //
+    // OMG HAXX!
+    //
+    RtlInitUnicodeString(&PortName, L"\\Windows\\ApiPort");
+    ConnectInfoLength = 0;
+    Status = ZwConnectPort(&PortHandle,
+                           &PortName,
+                           NULL,
+                           NULL,
+                           NULL,
+                           NULL,
+                           NULL,
+                           &ConnectInfoLength);
 
-    /* Call the Nt function. Do a ring transition to get Kmode. */
     Status = ZwRequestWaitReplyPort(PortHandle,
                                     LpcMessageRequest,
                                     LpcMessageReply);
-    DPRINT1("LPC Hack active: %lx %lx\n", Status, PortHandle);
 
     /* Close the handle */
     ObCloseHandle(PortHandle, KernelMode);

@@ -43,9 +43,12 @@ typedef struct tagCSRSS_EXPORTED_FUNCS
 
 typedef BOOL (STDCALL *CSRPLUGIN_INIT_COMPLETE_PROC)(void);
 
+typedef BOOL (STDCALL *CSRPLUGIN_HARDERROR_PROC)(void);
+
 typedef BOOL (STDCALL *CSRPLUGIN_INITIALIZE_PROC)(PCSRSS_API_DEFINITION *ApiDefinitions,
                                                   PCSRSS_OBJECT_DEFINITION *ObjectDefinitions,
                                                   CSRPLUGIN_INIT_COMPLETE_PROC *InitCompleteProc,
+                                                  CSRPLUGIN_HARDERROR_PROC *HardErrorProc,
                                                   PCSRSS_EXPORTED_FUNCS Exports,
                                                   HANDLE CsrssApiHeap);
 

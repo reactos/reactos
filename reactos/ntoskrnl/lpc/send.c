@@ -288,7 +288,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 
    Status = EiReplyOrRequestPort(Port->OtherPort,
 				 LpcRequest,
-				 LPC_REQUEST,
+                 LpcRequest->u2.s2.Type == LPC_ERROR_EVENT ? LPC_ERROR_EVENT : LPC_REQUEST,
 				 Port);
    if (!NT_SUCCESS(Status))
      {

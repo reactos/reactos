@@ -28,6 +28,9 @@ extern HANDLE CsrssApiHeap;
 static unsigned InitCompleteProcCount;
 static CSRPLUGIN_INIT_COMPLETE_PROC *InitCompleteProcs = NULL;
 
+static unsigned HardErrorProcCount;
+static CSRPLUGIN_HARDERROR_PROC *HardErrorProcs = NULL;
+
 HANDLE hSbApiPort = (HANDLE) 0;
 
 HANDLE hBootstrapOk = (HANDLE) 0;
@@ -66,6 +69,34 @@ CsrpAddInitCompleteProc(CSRPLUGIN_INIT_COMPLETE_PROC Proc)
   return STATUS_SUCCESS;
 }
 
+static NTSTATUS FASTCALL
+CsrpAddHardErrorProc(CSRPLUGIN_HARDERROR_PROC Proc)
+{
+    CSRPLUGIN_HARDERROR_PROC *NewProcs;
+
+    DPRINT("CSR: %s called\n", __FUNCTION__);
+
+    NewProcs = RtlAllocateHeap(CsrssApiHeap, 0,
+                               (HardErrorProcCount + 1)
+                               * sizeof(CSRPLUGIN_HARDERROR_PROC));
+    if (NULL == NewProcs)
+    {
+        return STATUS_NO_MEMORY;
+    }
+    if (0 != HardErrorProcCount)
+    {
+        RtlCopyMemory(NewProcs, HardErrorProcs,
+            HardErrorProcCount * sizeof(CSRPLUGIN_HARDERROR_PROC));
+        RtlFreeHeap(CsrssApiHeap, 0, HardErrorProcs);
+    }
+
+    NewProcs[HardErrorProcCount] = Proc;
+    HardErrorProcs = NewProcs;
+    HardErrorProcCount++;
+
+    return STATUS_SUCCESS;
+}
+
 /**********************************************************************
  * CallInitComplete/0
  */
@@ -88,6 +119,27 @@ CallInitComplete(void)
     }
 
   return Ok;
+}
+
+BOOL
+FASTCALL
+CallHardError(void)
+{
+    BOOL Ok;
+    unsigned i;
+
+    DPRINT("CSR: %s called\n", __FUNCTION__);
+
+    Ok = TRUE;
+    if (0 != HardErrorProcCount)
+    {
+        for (i = 0; i < HardErrorProcCount && Ok; i++)
+        {
+            Ok = (*(HardErrorProcs[i]))();
+        }
+    }
+
+    return Ok;
 }
 
 ULONG
@@ -182,6 +234,7 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
   PCSRSS_API_DEFINITION ApiDefinitions;
   PCSRSS_OBJECT_DEFINITION ObjectDefinitions;
   CSRPLUGIN_INIT_COMPLETE_PROC InitCompleteProc;
+  CSRPLUGIN_HARDERROR_PROC HardErrorProc;
 
   DPRINT("CSR: %s called\n", __FUNCTION__);
 
@@ -202,7 +255,7 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
   Exports.CsrReleaseObjectProc = CsrReleaseObject;
   Exports.CsrEnumProcessesProc = CsrEnumProcesses;
   if (! (*InitProc)(&ApiDefinitions, &ObjectDefinitions, &InitCompleteProc,
-                    &Exports, CsrssApiHeap))
+                    &HardErrorProc, &Exports, CsrssApiHeap))
     {
       return STATUS_UNSUCCESSFUL;
     }
@@ -221,6 +274,7 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
     {
       Status = CsrpAddInitCompleteProc(InitCompleteProc);
     }
+  if (HardErrorProc) Status = CsrpAddHardErrorProc(HardErrorProc);
 
   return Status;
 }

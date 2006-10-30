@@ -104,6 +104,20 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
     }
 }
 
+BOOL FASTCALL CallHardError(void);
+
+static
+VOID
+NTAPI
+CsrHandleHardError(IN PCSRSS_PROCESS_DATA ProcessData,
+                   IN OUT PHARDERROR_MSG Message)
+{
+    DPRINT1("CSR: received hard error %lx\n", Message->Status);
+
+    /* Call the hard error handler in win32csr */
+    CallHardError();
+}
+
 static
 VOID
 STDCALL
@@ -133,7 +147,7 @@ ClientConnectionThread(HANDLE ServerPort)
           DPRINT1("NtReplyWaitReceivePort failed\n");
           break;
         }
-        
+
         /* If the connection was closed, handle that */
         if (Request->Header.u2.s2.Type == LPC_PORT_CLOSED)
         {
@@ -161,9 +175,18 @@ ClientConnectionThread(HANDLE ServerPort)
             continue;
         }
 
-        /* Call the Handler */
-        CsrApiCallHandler(ProcessData, Request);
-        
+        /* Check if we got a hard error */
+        if (Request->Header.u2.s2.Type == LPC_ERROR_EVENT)
+        {
+            /* Call the Handler */
+            CsrHandleHardError(ProcessData, (PHARDERROR_MSG)Request);
+        }
+        else
+        {
+            /* Call the Handler */
+            CsrApiCallHandler(ProcessData, Request);
+        }
+
         /* Send back the reply */
         Reply = Request;
     }

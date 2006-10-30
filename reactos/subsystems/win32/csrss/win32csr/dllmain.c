@@ -163,10 +163,19 @@ Win32CsrInitComplete(void)
   return TRUE;
 }
 
+static BOOL STDCALL
+Win32CsrHardError(void)
+{
+    MessageBox(0, "Hard Error", "TODO", 0);
+    return TRUE;
+}
+
+
 BOOL STDCALL
 Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRSS_OBJECT_DEFINITION *ObjectDefinitions,
                        CSRPLUGIN_INIT_COMPLETE_PROC *InitComplete,
+                       CSRPLUGIN_HARDERROR_PROC *HardError,
                        PCSRSS_EXPORTED_FUNCS Exports,
                        HANDLE CsrssApiHeap)
 {
@@ -179,6 +188,7 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
   *ApiDefinitions = Win32CsrApiDefinitions;
   *ObjectDefinitions = Win32CsrObjectDefinitions;
   *InitComplete = Win32CsrInitComplete;
+  *HardError = Win32CsrHardError;
 
   return TRUE;
 }

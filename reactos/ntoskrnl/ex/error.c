@@ -112,11 +112,6 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
     HANDLE PortHandle;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PAGED_CODE();
-    DPRINT1("Hard error, baby!: %lx, %lx, %lx %p\n",
-            ErrorStatus,
-            NumberOfParameters,
-            UnicodeStringParameterMask,
-            Parameters);
 
     /* Check if this error will shutdown the system */
     if (ValidResponseOptions == OptionShutdownSystem)
@@ -235,15 +230,42 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
                                       Parameters,
                                       sizeof(ULONG_PTR) * NumberOfParameters);
 
-        /* Send the message */
+        /* Send the LPC Message */
         Status = LpcRequestWaitReplyPort(PortHandle,
                                          (PVOID)Message,
                                          (PVOID)Message);
-        DPRINT1("Checkpoint 2: %lx\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            /* Check what kind of response we got */
+            if ((Message->Response != ResponseReturnToCaller) &&
+                (Message->Response != ResponseNotHandled) &&
+                (Message->Response != ResponseAbort) &&
+                (Message->Response != ResponseCancel) &&
+                (Message->Response != ResponseIgnore) &&
+                (Message->Response != ResponseNo) &&
+                (Message->Response != ResponseOk) &&
+                (Message->Response != ResponseRetry) &&
+                (Message->Response != ResponseYes) &&
+                (Message->Response != ResponseTryAgain) &&
+                (Message->Response != ResponseContinue))
+            {
+                /* Reset to a default one */
+                Message->Response = ResponseReturnToCaller;
+            }
+
+            /* Set the response */
+            *Response = Message->Response;
+        }
+    }
+    else
+    {
+        /* Set defaults */
+        *Response = ResponseReturnToCaller;
+        Status = STATUS_SUCCESS;
     }
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    /* Return status */
+    return Status;
 }
 
 /*++
