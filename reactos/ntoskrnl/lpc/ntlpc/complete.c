@@ -42,8 +42,8 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
                     IN PVOID PortContext OPTIONAL,
                     IN PPORT_MESSAGE ReplyMessage,
                     IN BOOLEAN AcceptConnection,
-                    IN PPORT_VIEW ClientView,
-                    IN PREMOTE_PORT_VIEW ServerView)
+                    IN PPORT_VIEW ServerView,
+                    IN PREMOTE_PORT_VIEW ClientView)
 {
     PLPCP_PORT_OBJECT ConnectionPort, ServerPort, ClientPort;
     PVOID ClientSectionToMap = NULL;
@@ -66,14 +66,14 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
              ServerView);
 
     /* Validate the size of the server view */
-    if ((ServerView) && (ServerView->Length != sizeof(REMOTE_PORT_VIEW)))
+    if ((ServerView) && (ServerView->Length != sizeof(PORT_VIEW)))
     {
         /* Invalid size */
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Validate the size of the client view */
-    if ((ClientView) && (ClientView->Length != sizeof(PORT_VIEW)))
+    if ((ClientView) && (ClientView->Length != sizeof(REMOTE_PORT_VIEW)))
     {
         /* Invalid size */
         return STATUS_INVALID_PARAMETER;
