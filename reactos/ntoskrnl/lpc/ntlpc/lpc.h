@@ -51,7 +51,7 @@
 // Gets the message type, removing the kernel-mode flag
 //
 #define LpcpGetMessageType(x)                               \
-    ((x)->u2.s2.MessageType &~ LPCP_KERNEL_MESSAGE)
+    ((x)->u2.s2.Type &~ LPCP_KERNEL_MESSAGE)
 
 //
 // Waits on an LPC semaphore for a receive operation
