@@ -88,13 +88,15 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     PLPCP_CONNECTION_MESSAGE ConnectMessage;
     PETHREAD Thread = PsGetCurrentThread();
     ULONG PortMessageLength;
+    LARGE_INTEGER SectionOffset;
     PAGED_CODE();
     LPCTRACE(LPC_CONNECT_DEBUG,
-             "Name: %wZ. Qos: %p. Views: %p/%p\n",
+             "Name: %wZ. Qos: %p. Views: %p/%p. Sid: %p\n",
              PortName,
              Qos,
              ClientView,
-             ServerView);
+             ServerView,
+             ServerSid);
 
     /* Validate client view */
     if ((ClientView) && (ClientView->Length != sizeof(PORT_VIEW)))
@@ -203,9 +205,50 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     /* Check if we have a client view */
     if (ClientView)
     {
-        /* FIXME: TODO */
-        UNIMPLEMENTED;
-        return STATUS_NOT_IMPLEMENTED;
+        /* Get the section handle */
+        Status = ObReferenceObjectByHandle(ClientView->SectionHandle,
+                                           SECTION_MAP_READ |
+                                           SECTION_MAP_WRITE,
+                                           MmSectionObjectType,
+                                           PreviousMode,
+                                           (PVOID*)&SectionToMap,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            ObDereferenceObject(Port);
+            return Status;
+        }
+
+        /* Set the section offset */
+        SectionOffset.QuadPart = ClientView->SectionOffset;
+
+        /* Map it */
+        Status = MmMapViewOfSection(SectionToMap,
+                                    PsGetCurrentProcess(),
+                                    &Port->ClientSectionBase,
+                                    0,
+                                    0,
+                                    &SectionOffset,
+                                    &ClientView->ViewSize,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE);
+
+        /* Update the offset */
+        ClientView->SectionOffset = SectionOffset.LowPart;
+
+        /* Check for failure */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            ObDereferenceObject(SectionToMap);
+            ObDereferenceObject(Port);
+            return Status;
+        }
+
+        /* Update the base */
+        ClientView->ViewBase = Port->ClientSectionBase;
     }
     else
     {
@@ -247,9 +290,14 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     /* Check if we have a client view */
     if (ClientView)
     {
-        /* FIXME: TODO */
-        UNIMPLEMENTED;
-        return STATUS_NOT_IMPLEMENTED;
+        /* Set the view size */
+        Message->Request.ClientViewSize = ClientView->ViewSize;
+
+        /* Copy the client view and clear the server view */
+        RtlMoveMemory(&ConnectMessage->ClientView,
+                      ClientView,
+                      sizeof(PORT_VIEW));
+        RtlZeroMemory(&ConnectMessage->ServerView, sizeof(REMOTE_PORT_VIEW));
     }
     else
     {
