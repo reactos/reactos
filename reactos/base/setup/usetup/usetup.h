@@ -75,6 +75,8 @@
 
 extern HANDLE ProcessHeap;
 extern UNICODE_STRING SourceRootPath;
+extern BOOLEAN IsUnattendedSetup;
+
 
 #endif /* __USETUP_H__*/
 

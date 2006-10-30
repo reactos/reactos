@@ -43,22 +43,48 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
   IniSection = IniCacheAppendSection(IniCache,
 				     L"FREELOADER");
 
-  /* DefaultOS=ReactOS */
-  IniCacheInsertKey(IniSection,
-		    NULL,
+#ifdef DBG
+  if (IsUnattendedSetup)
+  {
+    /* DefaultOS=ReactOS */
+    IniCacheInsertKey(IniSection,
+	  	    NULL,
+		    INSERT_LAST,
+		    L"DefaultOS",
+		    L"ReactOS_Debug");
+  }
+  else
+#endif
+  {
+    /* DefaultOS=ReactOS */
+    IniCacheInsertKey(IniSection,
+	  	    NULL,
 		    INSERT_LAST,
 		    L"DefaultOS",
 		    L"ReactOS");
+  }
 
-  /* Timeout=0 or 10 */
-  IniCacheInsertKey(IniSection,
+#ifdef DBG
+  if (IsUnattendedSetup)
+#endif
+  {
+    /* Timeout=0 for unattended or non debug*/
+    IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
 		    L"TimeOut",
-#ifndef DBG
 		    L"0");
-#else
+  }
+#ifdef DBG
+  else
+  {
+    /* Timeout=0 or 10 */
+    IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"TimeOut",
 		    L"10");
+  }
 #endif
 
   /* Create "Display" section */
