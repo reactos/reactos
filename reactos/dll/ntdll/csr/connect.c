@@ -59,6 +59,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
     DPRINT("CsrClientCallServer\n");
 
     /* Fill out the Port Message Header */
+    ApiMessage->Header.u2.ZeroInit = 0;
     ApiMessage->Header.u1.s1.DataLength = RequestLength - sizeof(PORT_MESSAGE);
     ApiMessage->Header.u1.s1.TotalLength = RequestLength;
 

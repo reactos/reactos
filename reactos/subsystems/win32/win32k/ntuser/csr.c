@@ -54,6 +54,7 @@ co_CsrNotify(PCSR_API_MESSAGE Request)
       return STATUS_INVALID_PORT_HANDLE;
    }
 
+   Request->Header.u2.ZeroInit = 0;
    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
 
