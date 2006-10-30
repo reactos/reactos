@@ -69,4 +69,12 @@
 -->
 <property name="NSWPAT" value="0" />
 
+<!--
+  Whether to compile with NT-compatible LPC Semantics. At the moment, this will
+  cause all LPC-related functionality to fail and should only be used if you're
+  working on the \ntlpc directory. Leave this disabled unless you really know
+  what you're doing.
+-->
+<property name="NTLPC" value="0" />
+
 </rbuild>
