@@ -34,8 +34,15 @@ NTAPI
 LpcRequestWaitReplyPort(
     IN PVOID Port,
     IN PPORT_MESSAGE LpcMessageRequest,
-    OUT PPORT_MESSAGE LpcMessageReply)
-;
+    OUT PPORT_MESSAGE LpcMessageReply
+);
+
+NTSTATUS
+NTAPI
+LpcRequestPort(
+    IN PVOID Port,
+    IN PPORT_MESSAGE LpcMessage
+);
 #endif
 
 //

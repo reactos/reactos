@@ -486,7 +486,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     HANDLE PortHandle = NULL;
     HANDLE TokenHandle = NULL;
     PROCESS_SESSION_INFORMATION SessionInfo = {0};
-    PEPORT ExceptionPort;
+    PVOID ExceptionPort;
     PAGED_CODE();
 
     /* Verify Information Class validity */

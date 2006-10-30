@@ -39,7 +39,21 @@ Author:
 //
 // Port Object Access Masks
 //
+#define PORT_CONNECT                    0x1
 #define PORT_ALL_ACCESS                 0x1
+
+//
+// Port Object Flags
+//
+#define LPCP_CONNECTION_PORT            0x00000001
+#define LPCP_UNCONNECTED_PORT           0x00000002
+#define LPCP_COMMUNICATION_PORT         0x00000003
+#define LPCP_CLIENT_PORT                0x00000004
+#define LPCP_PORT_TYPE_MASK             0x0000000F
+#define LPCP_PORT_DELETED               0x10000000
+#define LPCP_WAITABLE_PORT              0x20000000
+#define LPCP_NAME_DELETED               0x40000000
+#define LPCP_SECURITY_DYNAMIC           0x80000000
 
 //
 // LPC Message Types
@@ -170,7 +184,7 @@ typedef struct _LPCP_NONPAGED_PORT_QUEUE
 typedef struct _LPCP_PORT_QUEUE
 {
     PLPCP_NONPAGED_PORT_QUEUE NonPagedPortQueue;
-    KSEMAPHORE Semaphore;
+    PKSEMAPHORE Semaphore;
     LIST_ENTRY ReceiveHead;
 } LPCP_PORT_QUEUE, *PLPCP_PORT_QUEUE;
 
@@ -179,8 +193,6 @@ typedef struct _LPCP_PORT_QUEUE
 //
 typedef struct _LPCP_PORT_OBJECT
 {
-    ULONG Length;
-    ULONG Flags;
     struct _LPCP_PORT_OBJECT *ConnectionPort;
     struct _LPCP_PORT_OBJECT *ConnectedPort;
     LPCP_PORT_QUEUE MsgQueue;
@@ -188,13 +200,17 @@ typedef struct _LPCP_PORT_OBJECT
     PVOID ClientSectionBase;
     PVOID ServerSectionBase;
     PVOID PortContext;
-    ULONG MaxMessageLength;
-    ULONG MaxConnectionInfoLength;
     PETHREAD ClientThread;
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
     SECURITY_CLIENT_CONTEXT StaticSecurity;
     LIST_ENTRY LpcReplyChainHead;
     LIST_ENTRY LpcDataInfoChainHead;
+    PEPROCESS ServerProcess;
+    PEPROCESS MappingProcess;
+    ULONG MaxMessageLength;
+    ULONG MaxConnectionInfoLength;
+    ULONG Flags;
+    KEVENT WaitEvent;
 } LPCP_PORT_OBJECT, *PLPCP_PORT_OBJECT;
 
 //

@@ -110,6 +110,14 @@ HANDLE
 NTAPI
 PsGetProcessId(PEPROCESS Process);
 
+NTSTATUS
+NTAPI
+PsLookupProcessThreadByCid(
+    IN PCLIENT_ID Cid,
+    OUT PEPROCESS *Process OPTIONAL,
+    OUT PETHREAD *Thread
+);
+
 #endif
 
 //

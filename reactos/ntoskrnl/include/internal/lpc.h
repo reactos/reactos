@@ -20,7 +20,9 @@
 
 extern POBJECT_TYPE LpcPortObjectType;
 extern ULONG        LpcpNextMessageId;
+#ifndef NTLPC
 extern FAST_MUTEX   LpcpLock;
+#endif
 
 typedef struct _EPORT_LISTENER
 {
@@ -73,13 +75,6 @@ typedef struct _QUEUEDMESSAGE
     LIST_ENTRY QueueListEntry;
     PORT_MESSAGE Message;
 } QUEUEDMESSAGE, *PQUEUEDMESSAGE;
-
-NTSTATUS
-NTAPI
-LpcRequestPort(
-    PEPORT Port,
-    PPORT_MESSAGE LpcMessage
-);
 
 NTSTATUS
 NTAPI

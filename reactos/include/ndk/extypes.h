@@ -185,7 +185,9 @@ typedef enum _HARDERROR_RESPONSE
     ResponseNo,
     ResponseOk,
     ResponseRetry,
-    ResponseYes
+    ResponseYes,
+    ResponseTryAgain,
+    ResponseContinue
 } HARDERROR_RESPONSE, *PHARDERROR_RESPONSE;
 
 //

@@ -78,7 +78,7 @@ SmConnectApiPort (IN      PUNICODE_STRING  pSbApiPortName  OPTIONAL,
 
   SecurityQos.Length              = sizeof (SecurityQos);
   SecurityQos.ImpersonationLevel  = SecurityIdentification;
-  SecurityQos.ContextTrackingMode = TRUE;
+  SecurityQos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
   SecurityQos.EffectiveOnly       = TRUE;
 
   RtlInitUnicodeString (& SmApiPortName, SM_API_PORT_NAME);

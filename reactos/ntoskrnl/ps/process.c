@@ -361,7 +361,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 {
     HANDLE hProcess;
     PEPROCESS Process, Parent;
-    PEPORT ExceptionPortObject;
+    PVOID ExceptionPortObject;
     PDEBUG_OBJECT DebugObject;
     PSECTION_OBJECT SectionObject;
     NTSTATUS Status, AccessStatus;

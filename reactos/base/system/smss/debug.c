@@ -153,7 +153,7 @@ SmInitializeDbgSs (VOID)
 	Status = SmpCreatePT(& DbgSsApiPort,
 			     SM_DBGSS_PORT_NAME,
 			     0, /* MaxDataSize */
-			     0, /* MaxMessageSize */
+			     sizeof(PORT_MESSAGE), /* MaxMessageSize */
 			     0, /* PoolCharge */
 			     DbgSsApiPortThread,
 			     & hDbgSsApiPortThread);
@@ -166,7 +166,7 @@ SmInitializeDbgSs (VOID)
 	Status = SmpCreatePT(& DbgUiApiPort,
 			     SM_DBGUI_PORT_NAME,
 			     0, /* MaxDataSize */
-			     0, /* MaxMessageSize */
+			     sizeof(PORT_MESSAGE), /* MaxMessageSize */
 			     0, /* PoolCharge */
 			     DbgUiApiPortThread,
 			     NULL);

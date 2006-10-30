@@ -9,6 +9,9 @@
     <define name="__NO_CTYPE_INLINES" />
     <define name="__USE_W32API" />
     <define name="WIN9X_COMPAT_SPINLOCK" />
+    <if property="NTLPC" value="1">
+        <define name="NTLPC" />
+    </if>
     <include base="cmlib">.</include>
     <include base="ntoskrnl">include</include>
     <include base="ReactOS">include/reactos/drivers</include>
@@ -220,19 +223,35 @@
             <file>loader.c</file>
             <file>rtl.c</file>
     </directory>
-    <directory name="lpc">
-            <file>close.c</file>
-            <file>complete.c</file>
-            <file>connect.c</file>
-            <file>create.c</file>
-            <file>listen.c</file>
-            <file>port.c</file>
-            <file>query.c</file>
-            <file>queue.c</file>
-            <file>receive.c</file>
-            <file>reply.c</file>
-            <file>send.c</file>
-    </directory>
+    <if property="NTLPC" value="0">
+        <directory name="lpc">
+                <file>close.c</file>
+                <file>complete.c</file>
+                <file>connect.c</file>
+                <file>create.c</file>
+                <file>listen.c</file>
+                <file>port.c</file>
+                <file>query.c</file>
+                <file>queue.c</file>
+                <file>receive.c</file>
+                <file>reply.c</file>
+                <file>send.c</file>
+        </directory>
+    </if>
+    <if property="NTLPC" value="1">
+        <directory name="lpc">
+            <directory name="ntlpc">
+                <file>close.c</file>
+                <file>complete.c</file>
+                <file>connect.c</file>
+                <file>create.c</file>
+                <file>listen.c</file>
+                <file>port.c</file>
+                <file>reply.c</file>
+                <file>send.c</file>
+            </directory>
+        </directory>
+    </if>
     <directory name="mm">
         <if property="ARCH" value="i386">
             <directory name="i386">

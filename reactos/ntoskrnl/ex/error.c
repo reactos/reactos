@@ -17,7 +17,7 @@
 /* GLOBALS ****************************************************************/
 
 BOOLEAN ExReadyForErrors = FALSE;
-PEPORT ExpDefaultErrorPort = NULL;
+PVOID ExpDefaultErrorPort = NULL;
 PEPROCESS ExpDefaultErrorPortProcess = NULL;
 
 /* FUNCTIONS ****************************************************************/

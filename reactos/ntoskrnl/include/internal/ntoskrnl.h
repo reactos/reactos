@@ -175,7 +175,7 @@ DefaultSetInfoBufferCheck(ULONG Class,
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (Class >= 0 && Class < ClassListEntries)
+    if (Class < ClassListEntries)
     {
         if (!(ClassList[Class].Flags & ICIF_SET))
         {
@@ -226,7 +226,7 @@ DefaultQueryInfoBufferCheck(ULONG Class,
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (Class >= 0 && Class < ClassListEntries)
+    if (Class < ClassListEntries)
     {
         if (!(ClassList[Class].Flags & ICIF_QUERY))
         {

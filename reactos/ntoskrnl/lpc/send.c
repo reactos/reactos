@@ -34,10 +34,11 @@
  *
  * @implemented
  */
-NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
+NTSTATUS STDCALL LpcRequestPort (IN	PVOID		PortObject,
 				 IN	PPORT_MESSAGE	LpcMessage)
 {
    NTSTATUS Status;
+   PEPORT Port = (PEPORT)PortObject;
 
    DPRINT("LpcRequestPort(PortHandle %08x, LpcMessage %08x)\n", Port, LpcMessage);
 
