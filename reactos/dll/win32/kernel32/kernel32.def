@@ -519,6 +519,7 @@ GetThreadPriorityBoost@8
 GetThreadSelectorEntry@12
 GetThreadTimes@20
 GetTickCount@0
+GetTickCount64@0
 GetTimeFormatA@24
 GetTimeFormatW@24
 GetTimeZoneInformation@4

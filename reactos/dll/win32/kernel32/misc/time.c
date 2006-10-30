@@ -401,6 +401,16 @@ GetTickCount(VOID)
 /*
  * @implemented
  */
+ULONGLONG WINAPI
+GetTickCount64(VOID)
+{
+    return (ULONGLONG)SharedUserData->TickCountLowDeprecated * (ULONGLONG)SharedUserData->TickCountMultiplier / 16777216;
+}
+
+
+/*
+ * @implemented
+ */
 BOOL STDCALL
 SystemTimeToTzSpecificLocalTime(
                                 LPTIME_ZONE_INFORMATION lpTimeZoneInformation,
