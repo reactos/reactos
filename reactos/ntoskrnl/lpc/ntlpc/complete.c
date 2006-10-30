@@ -65,14 +65,14 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
              ServerView);
 
     /* Validate the size of the server view */
-    if ((ServerView) && (ServerView->Length != sizeof(PORT_VIEW)))
+    if ((ServerView) && (ServerView->Length != sizeof(REMOTE_PORT_VIEW)))
     {
         /* Invalid size */
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Validate the size of the client view */
-    if ((ClientView) && (ClientView->Length != sizeof(REMOTE_PORT_VIEW)))
+    if ((ClientView) && (ClientView->Length != sizeof(PORT_VIEW)))
     {
         /* Invalid size */
         return STATUS_INVALID_PARAMETER;

@@ -222,6 +222,7 @@ ServerApiPortThread (PVOID PortHandle)
    for (;;)
      {
         REMOTE_PORT_VIEW LpcRead;
+        LpcRead.Length = sizeof(LpcRead);
         ServerPort = NULL;
 
 	Status = NtListenPort (hApiListenPort, Request);
