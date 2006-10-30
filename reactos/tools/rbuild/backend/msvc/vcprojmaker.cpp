@@ -253,6 +253,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCCLCompilerTool\"\r\n" );
+		fprintf ( OUT, "\t\t\t\tForcedIncludeFiles=\"warning.h\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tOptimization=\"%d\"\r\n", release ? 2 : 0 );
 
 		fprintf ( OUT, "\t\t\t\tAdditionalIncludeDirectories=\"" );
@@ -299,9 +300,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			// this is a define in MinGW w32api, but not Microsoft's headers
 			defines.insert ( "STDCALL=__stdcall" );
-			// MinGW doesn't have a safe-string library yet
-			defines.insert ( "_CRT_SECURE_NO_DEPRECATE" );
-			defines.insert ( "_CRT_NON_CONFORMING_SWPRINTFS" );
 		}
 
 		if ( lib || exe )
@@ -358,12 +356,11 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\tStringPooling=\"true\"\r\n" );
 		}
 
-		fprintf ( OUT, "\t\t\t\tDisableSpecificWarnings=\"4201;4127;4214\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tWarningLevel=\"%s\"\r\n", speed ? "0" : "4" );
+		fprintf ( OUT, "\t\t\t\tWarningLevel=\"%s\"\r\n", speed ? "0" : "3" );
 		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", speed ? "FALSE" : "TRUE");
 		if ( !module.cplusplus )
 			fprintf ( OUT, "\t\t\t\tCompileAs=\"1\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", (sys || (exe && module.type == Kernel)) ? 2: 0);	// 2=__stdcall 0=__cdecl
+		fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 2 );	// 2=__stdcall 0=__cdecl
 		fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"%s\"/>\r\n", speed ? "0" : release ? "3": "4");	// 3=/Zi 4=ZI
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
@@ -583,7 +580,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 					else if ((source_file.find(".asm") != string::npos || tolower(source_file.at(source_file.size() - 1)) == 's'))
 					{
 						fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
-						fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"cl /E &quot;$(InputPath)&quot; %s /D__ASM__ | as -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n",include_string.c_str() );
+						fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"nasmw $(InputPath) -f coff -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n");
 						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"/>\r\n" );
 					}
 					fprintf ( OUT, "\t\t\t\t</FileConfiguration>\r\n" );
