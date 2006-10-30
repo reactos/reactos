@@ -15,6 +15,8 @@
 
 namespace System_
 {
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+
 //---------------------------------------------------------------------------------------
 	NamedPipeReader::NamedPipeReader() : h_Pipe(NULL)
 	{
@@ -94,14 +96,15 @@ namespace System_
 	string::size_type NamedPipeReader::readPipe(string &Buffer)
 	{
 		TCHAR * buf = (TCHAR *)Buffer.c_str();
-		string::size_type size = Buffer.capacity();
+		string::size_type buffer_size = Buffer.capacity();
+		string::size_type bytes_read = 0;
 		DWORD cbRead;
 		BOOL fSuccess;
 		TCHAR * localbuf;
-		DWORD localsize = 100;
+		DWORD localsize = MIN(100, buffer_size);
 
 //#ifdef NDEBUG
-		memset(buf, 0x0, sizeof(TCHAR) * size);
+		memset(buf, 0x0, sizeof(TCHAR) * buffer_size);
 //#endif
 
 #ifdef __LINUX__
@@ -115,7 +118,7 @@ namespace System_
 			{
 				do 
 				{ 
-					ZeroMemory(localbuf, sizeof(localsize) * sizeof(TCHAR));
+					ZeroMemory(localbuf, localsize * sizeof(TCHAR));
 
 					fSuccess = ReadFile( 
 						h_Pipe,
@@ -127,8 +130,16 @@ namespace System_
 					if (! fSuccess && GetLastError() != ERROR_MORE_DATA) 
 						break; 
 					
-					_tcscat(buf, localbuf);
-				
+					if(bytes_read + cbRead > buffer_size)
+					{
+						Buffer.reserve(bytes_read + localsize * 3);
+						buf = (TCHAR *)Buffer.c_str();
+						buffer_size = Buffer.capacity();
+					}
+
+					memcpy(&buf[bytes_read], localbuf, cbRead);
+					bytes_read += cbRead;
+
 				} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
 			} while (localbuf[_tcslen(localbuf)-1] != '\n');
 
