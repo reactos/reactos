@@ -189,7 +189,7 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
                 OutputString->Length = i + 1;
                 OutputString->MaximumLength = i + 1;
             }
-            else 
+            else
             {
                 /* Direct Output to Screen */
                 InbvDisplayString(BugCode);
@@ -521,6 +521,9 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PULONG_PTR HardErrorParameters;
     KIRQL OldIrql;
+#ifdef CONFIG_SMP
+    LONG i = 0;
+#endif
 
     /* Set active bugcheck */
     KeBugCheckActive = TRUE;
@@ -868,7 +871,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 
 #ifdef CONFIG_SMP
         /* Freeze the other CPUs */
-        for (i = 0; i < KeNumberProcessors; i++) 
+        for (i = 0; i < KeNumberProcessors; i++)
         {
             if (i != (LONG)KeGetCurrentProcessorNumber())
             {
