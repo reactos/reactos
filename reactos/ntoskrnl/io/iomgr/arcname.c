@@ -134,7 +134,7 @@ IopGetDiskInformation(IN ULONG i,
     PIRP Irp;
     IO_STATUS_BLOCK StatusBlock;
     LARGE_INTEGER PartitionOffset;
-    PPARTITION_SECTOR PartitionBuffer;
+    PULONG PartitionBuffer;
 
     /* Build the name */
     sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", i);
@@ -241,10 +241,7 @@ IopGetDiskInformation(IN ULONG i,
 
     /* Calculate the MBR checksum */
     Checksum = 0;
-    for (j = 0; j < 128; j++)
-    {
-        Checksum += ((PULONG)PartitionBuffer)[j];
-    }
+    for (j = 0; j < 128; j++) Checksum += PartitionBuffer[j];
 
     /* Save the signature and checksum */
     *CheckSum = ~Checksum + 1;

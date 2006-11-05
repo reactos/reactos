@@ -1129,10 +1129,10 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	  {
 	    Status = STATUS_INFO_LENGTH_MISMATCH;
 	  }
-	else if (DiskData->PartitionNumber == 0)
-	  {
-	    Status = STATUS_INVALID_DEVICE_REQUEST;
-	  }
+	//else if (DiskData->PartitionNumber == 0)
+//	  {
+//	    Status = STATUS_INVALID_DEVICE_REQUEST;
+	  //}
 	else
 	{
 	    PPARTITION_INFORMATION PartitionInfo;

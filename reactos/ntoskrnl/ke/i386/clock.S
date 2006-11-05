@@ -207,12 +207,12 @@ _KeUpdateSystemTime@0:
     mov [_KeTickCount+4], edx
 
     /* Store in in shared data too */
-    mov [USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT+8], edx
-    mov [USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT], ecx
-    mov [USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT+4], edx
+    mov ds:[USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT+8], edx
+    mov ds:[USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT], ecx
+    mov ds:[USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT+4], edx
 
     /* FIXME: HACK */
-    mov [USER_SHARED_DATA], ecx
+    mov ds:[USER_SHARED_DATA], ecx
 
 IncompleteTick:
 
