@@ -8,6 +8,7 @@
 #include <lm.h>
 #include <cpl.h>
 #include <shellapi.h>
+#include <shlwapi.h>
 #include "resource.h"
 
 #define NUM_APPLETS (1)

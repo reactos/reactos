@@ -16,6 +16,7 @@
 	<library>ntdll</library>
 	<library>msimg32</library>
 	<library>shell32</library>
+	<library>shlwapi</library>
 	<file>advanced.c</file>
 	<file>computer.c</file>
 	<file>custclicklink.c</file>
