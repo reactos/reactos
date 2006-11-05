@@ -3,6 +3,7 @@
  * Copyright (C) 2005 Casper S. Hornstrup
  * Copyright (C) 2005 Steven Edwards
  * Copyright (C) 2005 Royce Mitchell
+ * Copyright (C) 2006 Christoph von Wittich
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
