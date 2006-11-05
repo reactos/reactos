@@ -12,12 +12,12 @@
 
 ULONG WINAPI
 DirectDrawGammaControl_AddRef( LPDIRECTDRAWGAMMACONTROL iface)
-{
-   DX_WINDBG_trace();
-      
+{         
    IDirectDrawGammaImpl * This = (IDirectDrawGammaImpl*)iface;
    
    ULONG ref=0;
+
+   DX_WINDBG_trace();
     
    if (iface!=NULL)
    {
@@ -28,11 +28,10 @@ DirectDrawGammaControl_AddRef( LPDIRECTDRAWGAMMACONTROL iface)
 
 ULONG WINAPI
 DirectDrawGammaControl_Release( LPDIRECTDRAWGAMMACONTROL iface)
-{
-    DX_WINDBG_trace();
-
+{    
     IDirectDrawGammaImpl* This = (IDirectDrawGammaImpl*)iface;
 	ULONG ref=0;
+	DX_WINDBG_trace();
 
 	if (iface!=NULL)
 	{	  	

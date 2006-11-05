@@ -22,7 +22,7 @@
  *
  */
 
-#include "winedraw.h"
+#include "../winedraw.h"
 
 #define CONVERT(pdds) COM_INTERFACE_CAST(IDirectDrawSurfaceImpl,	\
 					 IDirectDrawSurface3,		\

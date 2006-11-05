@@ -15,12 +15,13 @@
 
 ULONG WINAPI 
 DirectDrawKernel_AddRef ( LPDIRECTDRAWKERNEL iface)
-{
-   DX_WINDBG_trace();
+{   
       
    IDirectDrawKernelImpl * This = (IDirectDrawKernelImpl*)iface;
    
    ULONG ref=0;
+
+   DX_WINDBG_trace();
     
    if (iface!=NULL)
    {
@@ -31,11 +32,11 @@ DirectDrawKernel_AddRef ( LPDIRECTDRAWKERNEL iface)
 
 ULONG WINAPI 
 DirectDrawKernel_Release ( LPDIRECTDRAWKERNEL iface)
-{
-    DX_WINDBG_trace();
-
+{    
     IDirectDrawKernelImpl* This = (IDirectDrawKernelImpl*)iface;
 	ULONG ref=0;
+
+	DX_WINDBG_trace();
 
 	if (iface!=NULL)
 	{	  	
@@ -83,12 +84,11 @@ DirectDrawKernel_ReleaseKernelHandle ( LPDIRECTDRAWKERNEL iface)
 
 ULONG WINAPI 
 DDSurfaceKernel_AddRef ( LPDIRECTDRAWSURFACEKERNEL iface)
-{
-   DX_WINDBG_trace();
-      
+{         
    IDirectDrawSurfaceKernelImpl * This = (IDirectDrawSurfaceKernelImpl*)iface;
    
    ULONG ref=0;
+   DX_WINDBG_trace();
     
    if (iface!=NULL)
    {
@@ -99,11 +99,11 @@ DDSurfaceKernel_AddRef ( LPDIRECTDRAWSURFACEKERNEL iface)
 
 ULONG WINAPI 
 DDSurfaceKernel_Release ( LPDIRECTDRAWSURFACEKERNEL iface)
-{
-    DX_WINDBG_trace();
-
+{    
     IDirectDrawSurfaceKernelImpl* This = (IDirectDrawSurfaceKernelImpl*)iface;
 	ULONG ref=0;
+
+	DX_WINDBG_trace();
 
 	if (iface!=NULL)
 	{	  	

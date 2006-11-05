@@ -8,7 +8,7 @@
  *
  */
 
-#include "rosdraw.h"
+#include "../rosdraw.h"
 
 
 extern  DDPIXELFORMAT pixelformats[];

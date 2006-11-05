@@ -1,7 +1,9 @@
 EXPORTS
-;AcquireDDThreadLock
-;CompleteCreateSysmemSurface
+AcquireDDThreadLock@0
 D3DParseUnknownCommand@8
+ReleaseDDThreadLock@0
+
+;CompleteCreateSysmemSurface
 ;DDGetAttachedSurfaceLcl
 ;DDInternalLock
 ;DDInternalUnlock
@@ -19,4 +21,4 @@ DirectDrawEnumerateW@8
 ;GetOLEThunkData
 ;GetSurfaceFromDC
 ;RegisterSpecialCase
-;ReleaseDDThreadLock
+

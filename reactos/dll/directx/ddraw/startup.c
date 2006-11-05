@@ -53,7 +53,19 @@ StartDirectDraw(LPDIRECTDRAW* iface)
     This->mpModeInfos[0].lPitch       = (devmode.dmPelsWidth*devmode.dmBitsPerPel)/8;
     This->mpModeInfos[0].wRefreshRate = (WORD)devmode.dmDisplayFrequency;
    
-    This->hdc = CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
+	if ( This->devicetype <3 )
+	{   
+		 /* Create HDC for default, hal and hel driver */
+         This->hdc = CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
+	}
+	else
+	{
+		/* FIXME : need getting driver from the GUID that have been pass in from
+		           the register. we do not support that yet 
+	    */
+		This->hdc = NULL ;
+	}
+
 
     if (This->hdc == NULL)
     {
@@ -222,6 +234,7 @@ HRESULT WINAPI
 StartDirectDrawHal(LPDIRECTDRAW* iface)
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+	DDHAL_GETDRIVERINFODATA DriverInfo;
 
 	/* HAL Startup process */
     BOOL newmode = FALSE;	
@@ -354,7 +367,7 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
   
   //DeleteDC(This->hdc);
 
-   DDHAL_GETDRIVERINFODATA DriverInfo;
+   
    memset(&DriverInfo,0, sizeof(DDHAL_GETDRIVERINFODATA));
    DriverInfo.dwSize = sizeof(DDHAL_GETDRIVERINFODATA);
    DriverInfo.dwContext = This->mDDrawGlobal.hDD; 
@@ -425,14 +438,21 @@ Create_DirectDraw (LPGUID pGUID,
 				   REFIID id, 
 				   BOOL ex)
 {   
-    IDirectDrawImpl* This = (IDirectDrawImpl*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirectDrawImpl));
+    IDirectDrawImpl* This;
 
 	DX_WINDBG_trace();
+		
+	//AcquireDDThreadLock();
+
+	This = (IDirectDrawImpl*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirectDrawImpl));
+
 
 	if (This == NULL) 
 	{
+		ReleaseDDThreadLock();
 		return E_OUTOFMEMORY;
 	}
+
 
 	ZeroMemory(This,sizeof(IDirectDrawImpl));
 
@@ -442,29 +462,39 @@ Create_DirectDraw (LPGUID pGUID,
 	This->lpVtbl_v4 = &DDRAW_IDirectDraw4_VTable;
 	
 	*pIface = (LPDIRECTDRAW)This;
-
-	This->devicetype = 0;
-
-	if (pGUID == (LPGUID) DDCREATE_HARDWAREONLY)
+			
+	if (pGUID == 0)
 	{
-		This->devicetype = 1; /* hal only */
+		This->devicetype = 0; /* both hal and hel default driver "DISPLAY" */
+	}
+	else if (pGUID == (LPGUID) DDCREATE_HARDWAREONLY)
+	{
+		This->devicetype = 1; /* hal only default driver "DISPLAY" */
 	}
 
-	if (pGUID == (LPGUID) DDCREATE_EMULATIONONLY)
+	else if (pGUID == (LPGUID) DDCREATE_EMULATIONONLY)
 	{
-	    This->devicetype = 2; /* hel only */
+	    This->devicetype = 2; /* hel only default driver "DISPLAY" */
 	}
+	else
+	{
+		This->devicetype = 3; /* Read from the register which driver it should be */
+	}
+	
 	 
 	if(This->lpVtbl->QueryInterface ((LPDIRECTDRAW7)This, id, (void**)&pIface) != S_OK)
 	{
+		ReleaseDDThreadLock();
 		return DDERR_INVALIDPARAMS;
 	}
 
 	if (StartDirectDraw((LPDIRECTDRAW*)This) == DD_OK);
     {
+		//ReleaseDDThreadLock();
 		return This->lpVtbl->Initialize ((LPDIRECTDRAW7)This, pGUID);
 	}
 
+	//ReleaseDDThreadLock();
 	return DDERR_INVALIDPARAMS;
 }
 

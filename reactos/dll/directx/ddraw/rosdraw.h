@@ -25,6 +25,9 @@ VOID Cleanup(LPDIRECTDRAW7 iface);
 /******** Main Object ********/
 
 /* Public interface */
+VOID WINAPI AcquireDDThreadLock();
+VOID WINAPI ReleaseDDThreadLock();
+
 HRESULT WINAPI  Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface, REFIID id, LPVOID *obj);
 ULONG   WINAPI  Main_DirectDraw_AddRef        (LPDIRECTDRAW7 iface);
 ULONG   WINAPI  Main_DirectDraw_Release       (LPDIRECTDRAW7 iface);
@@ -317,6 +320,7 @@ DWORD CALLBACK  HelDdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA lpFlipToGDISu
 /*********** Macros ***********/
 
 #define DX_STUB \
+{ \
 	static BOOL firstcall = TRUE; \
 	if (firstcall) \
 	{ \
@@ -325,9 +329,11 @@ DWORD CALLBACK  HelDdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA lpFlipToGDISu
 		OutputDebugStringA(buffer); \
 		firstcall = FALSE; \
 	} \
+} \
 	return DDERR_UNSUPPORTED; 
 	
 #define DX_STUB_DD_OK \
+{ \
 	static BOOL firstcall = TRUE; \
 	if (firstcall) \
 	{ \
@@ -336,6 +342,7 @@ DWORD CALLBACK  HelDdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA lpFlipToGDISu
 		OutputDebugStringA(buffer); \
 		firstcall = FALSE; \
 	} \
+} \
 	return DD_OK; 	
 	
 

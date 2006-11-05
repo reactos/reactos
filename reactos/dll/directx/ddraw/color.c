@@ -12,12 +12,11 @@
 
 ULONG WINAPI
 DirectDrawColorControl_AddRef( LPDIRECTDRAWCOLORCONTROL iface)
-{   
-   DX_WINDBG_trace();
-      
-   IDirectDrawColorImpl * This = (IDirectDrawColorImpl*)iface;
-   
+{           
+   IDirectDrawColorImpl * This = (IDirectDrawColorImpl*)iface;   
    ULONG ref=0;
+
+   DX_WINDBG_trace();
     
    if (iface!=NULL)
    {
@@ -28,11 +27,11 @@ DirectDrawColorControl_AddRef( LPDIRECTDRAWCOLORCONTROL iface)
 
 ULONG WINAPI
 DirectDrawColorControl_Release( LPDIRECTDRAWCOLORCONTROL iface)
-{
-    DX_WINDBG_trace();
-
+{    
     IDirectDrawColorImpl* This = (IDirectDrawColorImpl*)iface;
 	ULONG ref=0;
+
+	DX_WINDBG_trace();
 
 	if (iface!=NULL)
 	{	  	

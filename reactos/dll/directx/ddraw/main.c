@@ -13,6 +13,7 @@
 #include "rosdraw.h"
 #include "d3dhal.h"
 
+CRITICAL_SECTION ddcs;
 
 // This function is exported by the dll
 HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags, 
@@ -34,6 +35,13 @@ DirectDrawCreate (LPGUID lpGUID,
 				  LPDIRECTDRAW* lplpDD, 
 				  LPUNKNOWN pUnkOuter) 
 {   
+	DX_WINDBG_trace();
+
+	if (IsBadWritePtr( lplpDD, sizeof( LPVOID )) )
+	{
+		return DDERR_INVALIDPARAMS;
+	}
+
 	/* check see if pUnkOuter is null or not */
 	if (pUnkOuter)
 	{
@@ -55,7 +63,14 @@ DirectDrawCreateEx(LPGUID lpGUID,
 				   LPVOID* lplpDD, 
 				   REFIID id, 
 				   LPUNKNOWN pUnkOuter)
-{    	
+{   
+	DX_WINDBG_trace();
+
+	if (IsBadWritePtr( lplpDD, sizeof( LPVOID )) )
+	{
+		return DDERR_INVALIDPARAMS;
+	}
+
 	/* check see if pUnkOuter is null or not */
 	if (pUnkOuter)
 	{
@@ -202,5 +217,44 @@ D3DParseUnknownCommand( LPVOID lpCmd,
     return retCode;
 }
 
- 
 
+VOID 
+WINAPI 
+AcquireDDThreadLock()
+{   
+   EnterCriticalSection(&ddcs);   
+}
+
+VOID 
+WINAPI  
+ReleaseDDThreadLock()
+{
+   LeaveCriticalSection(&ddcs);      
+}
+
+BOOL APIENTRY 
+DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved )
+{
+  BOOL retStatus;
+  switch(ul_reason_for_call)
+  {
+     case DLL_PROCESS_DETACH:									                       
+           DeleteCriticalSection( &ddcs );           
+           retStatus = TRUE;                                              
+           break;
+
+     case DLL_PROCESS_ATTACH:
+		  DisableThreadLibraryCalls( hModule );
+		  InitializeCriticalSection( &ddcs );
+          EnterCriticalSection( &ddcs );
+		  LeaveCriticalSection( &ddcs );     
+		  retStatus = FALSE;
+		  break;
+
+	 default:
+		 retStatus = TRUE;                                              
+         break;
+  }
+  return retStatus;
+
+}

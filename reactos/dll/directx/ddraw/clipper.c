@@ -13,11 +13,12 @@
 
 ULONG WINAPI 
 DirectDrawClipper_Release(LPDIRECTDRAWCLIPPER iface) 
-{    
-    DX_WINDBG_trace();
+{   
 
     IDirectDrawClipperImpl* This = (IDirectDrawClipperImpl*)iface;
 	ULONG ref=0;
+	 
+    DX_WINDBG_trace();
 
 	if (iface!=NULL)
 	{	  	
@@ -40,12 +41,11 @@ DirectDrawClipper_Release(LPDIRECTDRAWCLIPPER iface)
 
 ULONG WINAPI 
 DirectDrawClipper_AddRef (LPDIRECTDRAWCLIPPER iface)
-{    
-   DX_WINDBG_trace();
-      
-   IDirectDrawClipperImpl * This = (IDirectDrawClipperImpl*)iface;
-   
+{            
+   IDirectDrawClipperImpl * This = (IDirectDrawClipperImpl*)iface;   
    ULONG ref=0;
+
+   DX_WINDBG_trace();
     
    if (iface!=NULL)
    {

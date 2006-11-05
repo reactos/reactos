@@ -22,7 +22,7 @@
  *
  */
 
-#include "winedraw.h"
+#include "../winedraw.h"
 
 
 static HRESULT WINAPI

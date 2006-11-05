@@ -12,11 +12,11 @@
 
 ULONG WINAPI
 DirectDrawPalette_Release( LPDIRECTDRAWPALETTE iface)
-{
-    DX_WINDBG_trace();
-
+{    
     IDirectDrawPaletteImpl* This = (IDirectDrawPaletteImpl*)iface;
 	ULONG ref=0;
+
+	DX_WINDBG_trace();
 
 	if (iface!=NULL)
 	{	  	
@@ -39,12 +39,11 @@ DirectDrawPalette_Release( LPDIRECTDRAWPALETTE iface)
 
 ULONG WINAPI 
 DirectDrawPalette_AddRef( LPDIRECTDRAWPALETTE iface) 
-{
-   DX_WINDBG_trace();
-      
-   IDirectDrawPaletteImpl * This = (IDirectDrawPaletteImpl*)iface;
-   
+{         
+   IDirectDrawPaletteImpl * This = (IDirectDrawPaletteImpl*)iface;   
    ULONG ref=0;
+
+   DX_WINDBG_trace();
     
    if (iface!=NULL)
    {
