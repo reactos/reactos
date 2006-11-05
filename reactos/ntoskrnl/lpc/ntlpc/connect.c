@@ -301,25 +301,15 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         ConnectionInfoLength = Port->MaxConnectionInfoLength;
     }
 
-    /* Allocate a message from the port zone while holding the lock */
-    KeAcquireGuardedMutex(&LpcpLock);
-    Message = ExAllocateFromPagedLookasideList(&LpcpMessagesLookaside);
+    /* Allocate a message from the port zone */
+    Message = LpcpAllocateFromPortZone();
     if (!Message)
     {
         /* Fail if we couldn't allocate a message */
-        KeReleaseGuardedMutex(&LpcpLock);
         if (SectionToMap) ObDereferenceObject(SectionToMap);
         ObDereferenceObject(ClientPort);
         return STATUS_NO_MEMORY;
     }
-
-    /* Initialize it */
-    InitializeListHead(&Message->Entry);
-    Message->RepliedToThread = NULL;
-    Message->Request.u2.ZeroInit = 0;
-
-    /* Release the lock */
-    KeReleaseGuardedMutex(&LpcpLock);
 
     /* Set pointer to the connection message and fill in the CID */
     ConnectMessage = (PLPCP_CONNECTION_MESSAGE)(Message + 1);

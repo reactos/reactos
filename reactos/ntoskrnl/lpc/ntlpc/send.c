@@ -16,15 +16,136 @@
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
-LpcRequestPort(IN PVOID Port,
+LpcRequestPort(IN PVOID PortObject,
                IN PPORT_MESSAGE LpcMessage)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLPCP_PORT_OBJECT Port = (PLPCP_PORT_OBJECT)PortObject, QueuePort;
+    ULONG MessageType;
+    PLPCP_MESSAGE Message;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    PAGED_CODE();
+    LPCTRACE(LPC_SEND_DEBUG, "Port: %p. Message: %p\n", Port, LpcMessage);
+
+    /* Check if this is a non-datagram message */
+    if (LpcMessage->u2.s2.Type)
+    {
+        /* Get the message type */
+        MessageType = LpcpGetMessageType(LpcMessage);
+
+        /* Validate it */
+        if ((MessageType < LPC_DATAGRAM) || (MessageType > LPC_CLIENT_DIED))
+        {
+            /* Fail */
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Mark this as a kernel-mode message only if we really came from there */
+        if ((PreviousMode == KernelMode) &&
+            (LpcMessage->u2.s2.Type & LPC_KERNELMODE_MESSAGE))
+        {
+            /* We did, this is a kernel mode message */
+            MessageType |= LPC_KERNELMODE_MESSAGE;
+        }
+    }
+    else
+    {
+        /* This is a datagram */
+        MessageType = LPC_DATAGRAM;
+    }
+
+    /* Can't have data information on this type of call */
+    if (LpcMessage->u2.s2.DataInfoOffset) return STATUS_INVALID_PARAMETER;
+
+    /* Validate message sizes */
+    if ((LpcMessage->u1.s1.TotalLength > Port->MaxMessageLength) ||
+        (LpcMessage->u1.s1.TotalLength <= LpcMessage->u1.s1.DataLength))
+    {
+        /* Fail */
+        return STATUS_PORT_MESSAGE_TOO_LONG;
+    }
+
+    /* Allocate a new message */
+    Message = LpcpAllocateFromPortZone();
+    if (!Message) return STATUS_NO_MEMORY;
+
+    /* Clear the context */
+    Message->PortContext = NULL;
+
+    /* Copy the message */
+    LpcpMoveMessage(&Message->Request,
+                    LpcMessage,
+                    LpcMessage + 1,
+                    MessageType,
+                    &PsGetCurrentThread()->Cid);
+
+    /* Acquire the LPC lock */
+    KeAcquireGuardedMutex(&LpcpLock);
+
+    /* Check if this is anything but a connection port */
+    if ((Port->Flags & LPCP_PORT_TYPE_MASK) != LPCP_CONNECTION_PORT)
+    {
+        /* The queue port is the connected port */
+        QueuePort = Port->ConnectedPort;
+        if (QueuePort)
+        {
+            /* Check if this is a client port */
+            if ((Port->Flags & LPCP_PORT_TYPE_MASK) == LPCP_CLIENT_PORT)
+            {
+                /* Then copy the context */
+                Message->PortContext = QueuePort->PortContext;
+                QueuePort = Port->ConnectionPort;
+            }
+            else if ((Port->Flags & LPCP_PORT_TYPE_MASK) != LPCP_COMMUNICATION_PORT)
+            {
+                /* Any other kind of port, use the connection port */
+                QueuePort = Port->ConnectionPort;
+            }
+        }
+    }
+    else
+    {
+        /* For connection ports, use the port itself */
+        QueuePort = PortObject;
+    }
+
+    /* Make sure we have a port */
+    if (QueuePort)
+    {
+        /* Generate the Message ID and set it */
+        Message->Request.MessageId =  LpcpNextMessageId++;
+        if (!LpcpNextMessageId) LpcpNextMessageId = 1;
+        Message->Request.CallbackId = 0;
+
+        /* No Message ID for the thread */
+        PsGetCurrentThread()->LpcReplyMessageId = 0;
+
+        /* Insert the message in our chain */
+        InsertTailList(&QueuePort->MsgQueue.ReceiveHead, &Message->Entry);
+
+        /* Release the lock and release the semaphore */
+        KeReleaseGuardedMutex(&LpcpLock);
+        LpcpCompleteWait(QueuePort->MsgQueue.Semaphore);
+
+        /* If this is a waitable port, wake it up */
+        if (QueuePort->Flags & LPCP_WAITABLE_PORT)
+        {
+            /* Wake it */
+            KeSetEvent(&QueuePort->WaitEvent, IO_NO_INCREMENT, FALSE);
+        }
+
+        /* We're done */
+        LPCTRACE(LPC_SEND_DEBUG, "Port: %p. Message: %p\n", QueuePort, Message);
+        return STATUS_SUCCESS;
+    }
+
+    /* If we got here, then free the message and fail */
+    LpcpFreeToPortZone(Message, TRUE);
+    KeReleaseGuardedMutex(&LpcpLock);
+    return STATUS_PORT_DISCONNECTED;
 }
 
 /*
@@ -127,17 +248,11 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
         return STATUS_PORT_MESSAGE_TOO_LONG;
     }
 
-    /* Acquire the lock */
-    KeAcquireGuardedMutex(&LpcpLock);
-
-    /* Allocate a message */
-    Message = ExAllocateFromPagedLookasideList(&LpcpMessagesLookaside);
-    KeReleaseGuardedMutex(&LpcpLock);
-
-    /* Check if allocation worked */
+    /* Allocate a message from the port zone */
+    Message = LpcpAllocateFromPortZone();
     if (!Message)
     {
-        /* Fail */
+        /* Fail if we couldn't allocate a message */
         ObDereferenceObject(Port);
         return STATUS_NO_MEMORY;
     }

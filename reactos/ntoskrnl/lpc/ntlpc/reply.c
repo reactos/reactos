@@ -230,24 +230,18 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
             return Status;
         }
 
-        /* Acquire the LPC Lock */
-        KeAcquireGuardedMutex(&LpcpLock);
-
-        /* Allocate a new message */
-        Message = ExAllocateFromPagedLookasideList(&LpcpMessagesLookaside);
+        /* Allocate a message from the port zone */
+        Message = LpcpAllocateFromPortZone();
         if (!Message)
         {
-            /* Out of memory, fail */
-            KeReleaseGuardedMutex(&LpcpLock);
+            /* Fail if we couldn't allocate a message */
             ObDereferenceObject(WakeupThread);
             ObDereferenceObject(Port);
             return STATUS_NO_MEMORY;
         }
 
-        /* Initialize the header */
-        InitializeListHead(&Message->Entry);
-        Message->RepliedToThread = NULL;
-        Message->Request.u2.ZeroInit = 0;
+        /* Keep the lock acquired */
+        KeAcquireGuardedMutex(&LpcpLock);
 
         /* Make sure this is the reply the thread is waiting for */
         if (WakeupThread->LpcReplyMessageId != ReplyMessage->MessageId)
@@ -284,7 +278,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         if (!(WakeupThread->LpcExitThreadCalled) &&
             !(IsListEmpty(&WakeupThread->LpcReplyChain)))
         {
-            /* Remove us from it and reinitiailize it */
+            /* Remove us from it and reinitialize it */
             RemoveEntryList(&WakeupThread->LpcReplyChain);
             InitializeListHead(&WakeupThread->LpcReplyChain);
         }

@@ -72,9 +72,9 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
   unsigned DefIndex;
   ULONG Type;
   
-  DPRINT("CSR: Calling handler for type: %x.\n", Request->Type);
+  DPRINT1("CSR: Calling handler for type: %x.\n", Request->Type);
   Type = Request->Type & 0xFFFF; /* FIXME: USE MACRO */
-  DPRINT("CSR: API Number: %x ServerID: %x\n",Type, Request->Type >> 16);
+  DPRINT1("CSR: API Number: %x ServerID: %x\n",Type, Request->Type >> 16);
 
   /* FIXME: Extract DefIndex instead of looping */
   for (DefIndex = 0; ! Found && DefIndex < ApiDefinitionsCount; DefIndex++)
@@ -218,13 +218,14 @@ ClientConnectionThread(HANDLE ServerPort)
                                         &Request->Header);
         if (!NT_SUCCESS(Status))
         {
-          DPRINT1("NtReplyWaitReceivePort failed\n");
-          break;
+            DPRINT1("NtReplyWaitReceivePort failed: %lx\n", Status);
+            break;
         }
 
         /* If the connection was closed, handle that */
         if (Request->Header.u2.s2.Type == LPC_PORT_CLOSED)
         {
+            DPRINT1("Port died, oh well\n");
             CsrFreeProcessData( Request->Header.ClientId.UniqueProcess );
             break;
         }
@@ -236,9 +237,16 @@ ClientConnectionThread(HANDLE ServerPort)
             continue;
         }
 
+        if (Request->Header.u2.s2.Type == LPC_CLIENT_DIED)
+        {
+            DPRINT1("Clietn died, oh well\n");
+            Reply = NULL;
+            continue;
+        }
+
         DPRINT("CSR: Got CSR API: %x [Message Origin: %x]\n", 
-               Request->Type, 
-               Request->Header.ClientId.UniqueProcess);
+                Request->Type,
+                Request->Header.ClientId.UniqueThread);
 
         /* Get the Process Data */
         ProcessData = CsrGetProcessData(Request->Header.ClientId.UniqueProcess);
@@ -252,7 +260,7 @@ ClientConnectionThread(HANDLE ServerPort)
         if (ProcessData->Terminated)
         {
             DPRINT1("Message %d: process %d already terminated\n",
-	            Request->Type, (ULONG)Request->Header.ClientId.UniqueProcess);
+                    Request->Type, (ULONG)Request->Header.ClientId.UniqueProcess);
             continue;
         }
 
@@ -271,7 +279,7 @@ ClientConnectionThread(HANDLE ServerPort)
         /* Send back the reply */
         Reply = Request;
     }
-    
+
     /* Close the port and exit the thread */
     NtClose(ServerPort);
     RtlExitUserThread(STATUS_SUCCESS);

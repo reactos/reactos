@@ -48,97 +48,6 @@
 #endif
 
 //
-// Gets the message type, removing the kernel-mode flag
-//
-#define LpcpGetMessageType(x)                               \
-    ((x)->u2.s2.Type &~ LPCP_KERNEL_MESSAGE)
-
-//
-// Waits on an LPC semaphore for a receive operation
-//
-#define LpcpReceiveWait(s, w)                               \
-{                                                           \
-    LPCTRACE(LPC_REPLY_DEBUG, "Wait: %p\n", s);             \
-    Status = KeWaitForSingleObject(s,                       \
-                                   WrLpcReceive,            \
-                                   w,                       \
-                                   FALSE,                   \
-                                   NULL);                   \
-    LPCTRACE(LPC_REPLY_DEBUG, "Wait done: %lx\n", Status);  \
-}
-
-//
-// Waits on an LPC semaphore for a reply operation
-//
-#define LpcpReplyWait(s, w)                                 \
-{                                                           \
-    LPCTRACE(LPC_SEND_DEBUG, "Wait: %p\n", s);              \
-    Status = KeWaitForSingleObject(s,                       \
-                                   WrLpcReply,              \
-                                   w,                       \
-                                   FALSE,                   \
-                                   NULL);                   \
-    LPCTRACE(LPC_SEND_DEBUG, "Wait done: %lx\n", Status);   \
-    if (Status == STATUS_USER_APC)                          \
-    {                                                       \
-        /* We were preempted by an APC */                   \
-        if (KeReadStateSemaphore(s))                        \
-        {                                                   \
-            /* It's still signaled, so wait on it */        \
-            KeWaitForSingleObject(s,                        \
-                                  Executive,                \
-                                  KernelMode,               \
-                                  FALSE,                    \
-                                  NULL);                    \
-            Status = STATUS_SUCCESS;                        \
-        }                                                   \
-    }                                                       \
-}
-
-//
-// Waits on an LPC semaphore for a connect operation
-//
-#define LpcpConnectWait(s, w)                               \
-{                                                           \
-    LPCTRACE(LPC_CONNECT_DEBUG, "Wait: %p\n", s);           \
-    Status = KeWaitForSingleObject(s,                       \
-                                   Executive,               \
-                                   w,                       \
-                                   FALSE,                   \
-                                   NULL);                   \
-    LPCTRACE(LPC_CONNECT_DEBUG, "Wait done: %lx\n", Status);\
-    if (Status == STATUS_USER_APC)                          \
-    {                                                       \
-        /* We were preempted by an APC */                   \
-        if (KeReadStateSemaphore(s))                        \
-        {                                                   \
-            /* It's still signaled, so wait on it */        \
-            KeWaitForSingleObject(s,                        \
-                                  Executive,                \
-                                  KernelMode,               \
-                                  FALSE,                    \
-                                  NULL);                    \
-            Status = STATUS_SUCCESS;                        \
-        }                                                   \
-    }                                                       \
-}
-
-//
-// Releases an LPC Semaphore to complete a wait
-//
-#define LpcpCompleteWait(s)                                 \
-{                                                           \
-    /* Release the semaphore */                             \
-    LPCTRACE(LPC_SEND_DEBUG, "Release: %p\n", s);           \
-    KeReleaseSemaphore(s, 1, 1, FALSE);                     \
-}
-
-//
-// Internal flag used for Kernel LPC Messages
-//
-#define LPCP_KERNEL_MESSAGE                                 0x8000
-
-//
 // Internal Port Management
 //
 VOID
@@ -214,3 +123,8 @@ extern KGUARDED_MUTEX LpcpLock;
 extern PAGED_LOOKASIDE_LIST LpcpMessagesLookaside;
 extern ULONG LpcpMaxMessageSize;
 extern ULONG LpcpTraceLevel;
+
+//
+// Inlined Functions
+//
+#include "lpc_x.h"

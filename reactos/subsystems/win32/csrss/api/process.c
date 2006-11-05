@@ -260,8 +260,8 @@ CSR_API(CsrCreateProcess)
 
 CSR_API(CsrTerminateProcess)
 {
-   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE);
+   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
    if (ProcessData == NULL)
    {
