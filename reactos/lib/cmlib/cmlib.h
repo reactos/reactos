@@ -148,10 +148,10 @@ NTSTATUS CMAPI
 HvInitialize(
    PHHIVE RegistryHive,
    ULONG Operation,
+   ULONG HiveType,
+   ULONG HiveFlags,
    ULONG_PTR HiveData OPTIONAL,
    ULONG Cluster OPTIONAL,
-   ULONG Flags,
-   ULONG FileType,
    PALLOCATE_ROUTINE Allocate,
    PFREE_ROUTINE Free,
    PFILE_READ_ROUTINE FileRead,

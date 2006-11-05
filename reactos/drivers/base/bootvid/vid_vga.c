@@ -282,7 +282,7 @@ VidVgaScreenToBufferBlt(
    IN ULONG Top,
    IN ULONG Width,
    IN ULONG Height,
-   IN ULONG Delta)
+   IN LONG Delta)
 {
    UCHAR Plane;
    UCHAR b;
@@ -321,7 +321,7 @@ VidVgaBitBlt(
    ULONG bfOffBits;
    UCHAR ClrUsed;
    ULONG Index;
-   ULONG Delta;
+   LONG Delta;
 
    BitmapInfoHeader = (PBITMAPINFOHEADER)Buffer;
    Palette = (LPRGBQUAD)(Buffer + BitmapInfoHeader->biSize);
@@ -364,7 +364,7 @@ VidVgaBitBlt(
       Buffer += bfOffBits;
 
       while (InputPos < BitmapInfoHeader->biSizeImage &&
-             OutputPos < Delta * BitmapInfoHeader->biHeight * 2)
+             OutputPos < (ULONG)Delta * BitmapInfoHeader->biHeight * 2)
       {
          Length = Buffer[InputPos++];
          if (Length > 0)

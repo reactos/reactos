@@ -948,6 +948,7 @@ ExPhase2Init(PVOID Context)
     /* Wait 5 seconds for it to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);
     Status = ZwWaitForSingleObject(ProcessHandle, FALSE, &Timeout);
+    if (!NoGuiBoot) InbvFinalizeBootLogo();
     if (Status == STATUS_SUCCESS)
     {
         /* Bugcheck the system if SMSS couldn't initialize */

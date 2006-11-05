@@ -1578,6 +1578,8 @@ typedef struct _PORT_MESSAGE
     };
 } PORT_MESSAGE, *PPORT_MESSAGE;
 
+#define LPC_KERNELMODE_MESSAGE      (CSHORT)((USHORT)0x8000)
+
 typedef struct _PORT_VIEW
 {
     ULONG Length;

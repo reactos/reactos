@@ -101,7 +101,14 @@ IopApplyRosCdromArcHack(IN ULONG i)
     }
 
     /* Return whether this is the CD or not */
-    if (DeviceNumber != 1) return TRUE;
+    if (DeviceNumber != 1)
+    {
+        /* Hack until IoAssignDriveLetters is fixed */
+        swprintf(SharedUserData->NtSystemRoot, L"D:\\reactos");
+        return TRUE;
+    }
+
+    /* Failed */
     return FALSE;
 }
 

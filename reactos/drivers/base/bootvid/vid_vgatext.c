@@ -141,7 +141,7 @@ VidVgaTextScreenToBufferBlt(
    IN ULONG Top,
    IN ULONG Width,
    IN ULONG Height,
-   IN ULONG Delta)
+   IN LONG Delta)
 {
 }
 

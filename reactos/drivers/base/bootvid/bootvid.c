@@ -94,6 +94,8 @@ BootVidAnimationThread(PVOID Ignored)
 
       Interval.QuadPart = -PALETTE_FADE_TIME;
 #else
+
+#if 0
       if (AnimBarPos == 0)
       {
          VidSolidColorFill(0x173, 354, 0x178, 354 + 9, 0);
@@ -104,14 +106,21 @@ BootVidAnimationThread(PVOID Ignored)
                            0xe8 + AnimBarPos * 8, 354 + 9,
                            0);
       }
-      
+
       if (AnimBarPos >= 3)
+      {
          VidBufferToScreenBlt(_Square1, 0xeb + AnimBarPos * 8, 354, 6, 9, 4);
+      }
       if (AnimBarPos >= 2 && AnimBarPos <= 16)
+      {
          VidBufferToScreenBlt(_Square2, 0xf3 + AnimBarPos * 8, 354, 6, 9, 4);
+      }
       if (AnimBarPos >= 1 && AnimBarPos <= 15)
+      {
          VidBufferToScreenBlt(_Square3, 0xfb + AnimBarPos * 8, 354, 6, 9, 4);
-      
+      }
+#endif
+
       if (Iteration <= PALETTE_FADE_STEPS)
       {
          Interval.QuadPart = -PALETTE_FADE_TIME;
@@ -270,7 +279,7 @@ BootVidFinalizeBootLogo(VOID)
    KeWaitForSingleObject(&ShutdownCompleteEvent, Executive, KernelMode,
                          FALSE, NULL);
    DPRINT1("Bootvid thread to finish.\n");
-   VidResetDisplay();
+   //VidResetDisplay();
 }
 
 
