@@ -36,6 +36,7 @@ int _tmain(int argc, TCHAR * argv[])
 	ComponentFactory comp_factory;
 	TCHAR DefaultConfig[] = _T("sysreg.cfg");
 	TCHAR *ConfigFile;
+	TCHAR * TestName;
 
 	if ((argc != 3) && (argc != 2))
 	{
@@ -59,9 +60,15 @@ int _tmain(int argc, TCHAR * argv[])
 	}
 
 	if (argc == 2)
-		_tcscpy(ConfigFile, DefaultConfig);
+	{
+		ConfigFile = DefaultConfig;
+		TestName = argv[1];
+	}
 	else
+	{
 		ConfigFile = argv[1];
+		TestName = argv[2];
+	}
 
 
 	if (!config.parseFile (ConfigFile))
@@ -70,7 +77,7 @@ int _tmain(int argc, TCHAR * argv[])
 		return -1;
 	}
 
-	RegressionTest * regtest = comp_factory.createComponent (argv[2]);
+	RegressionTest * regtest = comp_factory.createComponent (TestName);
 	if (!regtest)
 	{
 		cerr << "Error: the requested regression test does not exist" << endl;
@@ -82,7 +89,7 @@ int _tmain(int argc, TCHAR * argv[])
 	config.getStringValue (ros, envvar);
 
 	SymbolFile::initialize (config, envvar);
-
+	
 	if (regtest->execute (config))
 	{
 		cout << "The regression test " << regtest->getName () << " completed successfully" << endl;

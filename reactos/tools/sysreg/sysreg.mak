@@ -27,6 +27,8 @@ SYSREGBUILD_SOURCES = $(addprefix $(SYSREGBUILD_BASE_),\
 	sym_file.cpp \
 	sysreg.cpp \
 	file_reader.cpp \
+	os_support.cpp \
+	unicode.cpp \
 	)
 
 SYSREGBUILD_OBJECTS = \
@@ -73,6 +75,14 @@ $(SYSREGBUILD_INT_)sysreg.o: $(SYSREGBUILD_BASE_)sysreg.cpp | $(SYSREGBUILD_INT)
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
 
 $(SYSREGBUILD_INT_)file_reader.o: $(SYSREGBUILD_BASE_)file_reader.cpp | $(SYSREGBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
+
+$(SYSREGBUILD_INT_)os_support.o: $(SYSREGBUILD_BASE_)os_support.cpp | $(SYSREGBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
+
+$(SYSREGBUILD_INT_)unicode.o: $(SYSREGBUILD_BASE_)unicode.cpp | $(SYSREGBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
 

@@ -38,7 +38,7 @@ namespace Sysreg_
 #endif
 		if (!file)
 		{
-			cerr << " Error: ConfigParser::parseFile failed to open configuration file " <<endl;
+			cerr << "Error: ConfigParser::parseFile failed to open configuration file " << FileName << endl;
 			return false;
 		}
 

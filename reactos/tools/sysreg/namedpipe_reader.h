@@ -14,12 +14,13 @@
 
 
 #include "user_types.h"
+#include <vector>
 #include <stdio.h>
 #include <stdlib.h>
 
 #ifdef __LINUX__
 
-#else
+#elif defined(WIN32)
 	#include <windows.h>
 #endif
 
@@ -82,9 +83,9 @@ namespace System_
 /// false, call PipeReader::isEoF() to determine if the pipe should be closed
 ///
 /// @param Buffer to be written to
-/// @return string::size_type
+/// @return size_t
 
-		string::size_type readPipe(string & Buffer);
+		size_t readPipe(std::vector<string> & vect);
 
 //---------------------------------------------------------------------------------------
 ///
@@ -96,6 +97,21 @@ namespace System_
 	bool isEof();
 
 protected:
+//---------------------------------------------------------------------------------------
+///
+/// extractLines
+///
+/// Description: this functions extract lines from a buffer and pushes them into the supplied vector
+///
+/// @param buffer from which the lines are extracted from
+/// @param vect vector storing the extracted lines
+/// @param append_line if the line isnt fully read, the line is appended
+
+	void extractLines(TCHAR * buffer, std::vector<string> & vect, bool & append_line, unsigned long cbRead);
+
+
+
+
 	HANDLE h_Pipe;
 
 	}; // end of class NamedPipeReader

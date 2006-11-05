@@ -14,6 +14,7 @@
 #include "namedpipe_reader.h"
 #include "sym_file.h"
 #include "file_reader.h"
+#include "os_support.h"
 
 #include <iostream>
 #include <vector>
@@ -24,11 +25,6 @@
 #include <assert.h>
  
 
-#ifndef __LINUX__
-#include <windows.h>
-#endif
-
-
 namespace Sysreg_
 {
 	using std::vector;
@@ -36,6 +32,7 @@ namespace Sysreg_
 	using System_::NamedPipeReader;
 	using System_::SymbolFile;
 	using System_::FileReader;
+	using System_::OsSupport;
 
 	string RosBootTest::VARIABLE_NAME = _T("ROSBOOT_CMD");
 	string RosBootTest::CLASS_NAME = _T("rosboot");
@@ -113,9 +110,11 @@ namespace Sysreg_
 		///
 
 		conf_parser.getStringValue (RosBootTest::CHECK_POINT, m_Checkpoint);
-		conf_parser.getStringValue (RosBootTest::PID_FILE, m_PidFile);
 		conf_parser.getStringValue (RosBootTest::CRITICAL_APP, m_CriticalApp);
-
+		if (conf_parser.getStringValue (RosBootTest::PID_FILE, m_PidFile))
+		{
+			_tremove(m_PidFile.c_str ());
+		}
 		
 		if (!_tcscmp(debug_port.c_str(), _T("pipe")))
 		{
@@ -318,40 +317,19 @@ namespace Sysreg_
 	{
 		NamedPipeReader namedpipe_reader;
 		string pipecmd = _T("");
+		
+		///
+		/// FIXME
+		/// split up arguments
 
-#ifdef __LINUX__
-		pid_t pid;
-#else
-		STARTUPINFO siStartInfo;
-		PROCESS_INFORMATION piProcInfo; 
-		DWORD pid;
-
-		ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
-		ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
-
-		siStartInfo.cb = sizeof(STARTUPINFO);
-		siStartInfo.wShowWindow = SW_SHOWNORMAL;
-		siStartInfo.dwFlags = STARTF_USESHOWWINDOW;
-
-		LPTSTR command = _tcsdup(boot_cmd.c_str());
-
-		if (!CreateProcess(NULL, command, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &siStartInfo, &piProcInfo))
-		{
-			cerr << "Error: CreateProcess failed " << boot_cmd <<endl;
-			return false;
-		}
-		else
-		{
-			pid = piProcInfo.dwProcessId;
-		}
-#endif
+		OsSupport::ProcessID pid = OsSupport::createProcess ((TCHAR*)boot_cmd.c_str (), 0, NULL); 
 
 		string::size_type pipe_pos = boot_cmd.find (_T("serial pipe:"));
 		pipe_pos += 12;
 		string::size_type pipe_pos_end = boot_cmd.find (_T(" "), pipe_pos);
 		if (pipe_pos != string::npos && pipe_pos > 0 && pipe_pos < boot_cmd.size())
 		{
-			pipecmd = "\\\\.\\pipe\\" + boot_cmd.substr (pipe_pos, pipe_pos_end - pipe_pos);
+			pipecmd = _T("\\\\.\\pipe\\") + boot_cmd.substr (pipe_pos, pipe_pos_end - pipe_pos);
 		}
 		else
 		{
@@ -385,10 +363,8 @@ namespace Sysreg_
 				break;
 			}
 
-			if (namedpipe_reader.readPipe (Buffer) != 0)
+			if (namedpipe_reader.readPipe (vect) != 0)
 			{
-				vect.push_back (Buffer.c_str());
-
 				DebugState state = checkDebugData(vect);
 				if (state == DebugStateBSODDetected || state == DebugStateUMEDetected)
 				{
@@ -402,17 +378,8 @@ namespace Sysreg_
 			}
 		}
 		namedpipe_reader.closePipe ();
-
-#ifdef __LINUX__
-		kill(pid, SIGTERM);
-#else
-		HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-		if (hProcess)
-		{
-			TerminateProcess(hProcess, 0);
-		}
-		CloseHandle(hProcess);
-#endif
+		_sleep(3* CLOCKS_PER_SEC);
+		OsSupport::terminateProcess (pid);
 
 		return ret;
 	}
@@ -421,7 +388,7 @@ namespace Sysreg_
 	{
 		PipeReader pipe_reader;
 		_tremove(debug_log.c_str ());
-		_tremove(m_PidFile.c_str ());
+
 		if (!pipe_reader.openPipe(boot_cmd, string(_T("rt"))))
 		{
 			cerr << "Error: failed to open pipe with cmd: " << boot_cmd << endl;
@@ -437,7 +404,7 @@ namespace Sysreg_
 			_sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
 		}
 
-		int pid = 0;
+		OsSupport::ProcessID pid = 0;
 
 		if (m_PidFile != _T(""))
 		{
@@ -502,17 +469,9 @@ namespace Sysreg_
 
 		if (pid)
 		{
-#ifdef __LINUX__
-			kill(pid, SIGTERM);
-#else
-			HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-			if (hProcess)
-			{
-				TerminateProcess(hProcess, 0);
-			}
-			CloseHandle(hProcess);
-#endif
+			OsSupport::terminateProcess (pid);
 		}
+
 		pipe_reader.closePipe ();	
 		return ret;
 	}

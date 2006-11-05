@@ -9,6 +9,7 @@
  */
 
 #include "namedpipe_reader.h"
+#include "unicode.h"
 
 #include <iostream>
 #include <assert.h>
@@ -17,6 +18,7 @@ namespace System_
 {
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 
+	using std::vector;
 //---------------------------------------------------------------------------------------
 	NamedPipeReader::NamedPipeReader() : h_Pipe(NULL)
 	{
@@ -90,71 +92,126 @@ namespace System_
 		h_Pipe = NULL;
 		return true;
 	}
+//---------------------------------------------------------------------------------------
+	void NamedPipeReader::extractLines(TCHAR * buffer, std::vector<string> & vect, bool & append_line, unsigned long cbRead)
+	{
+		TCHAR * offset = _tcsstr(buffer, _T("\x0D"));
+		DWORD buf_offset = 0;
+		while(offset)
+		{
+			offset[0] = _T('\0');
+			string line = buffer;
+			if (append_line)
+			{
+				assert(vect.empty () == false);
+				string prev_line = vect[vect.size () -1];
+				prev_line += line;
+				vect.pop_back ();
+				vect.push_back (prev_line);
+				append_line = false;
+			}
+			else
+			{
+				vect.push_back (line);
+			}
+
+			offset += 2;
+						
+			buf_offset += line.length () + 2;
+			if (buf_offset >= cbRead)
+			{
+				break;
+			}
+			buffer = offset;
+			offset = _tcsstr(buffer, _T("\n"));
+		}
+		if (buf_offset < cbRead)
+		{
+			string line = buffer;
+			if (append_line)
+			{
+				assert(vect.empty () == false);
+				string prev_line = vect[vect.size () -1];
+				vect.pop_back ();
+				prev_line += line;
+				vect.push_back (prev_line);
+			}
+			else
+			{
+				vect.push_back (line);
+				append_line = true;
+			}
+		}
+		else
+		{
+			append_line = false;
+		}
+	}
 
 //---------------------------------------------------------------------------------------
 
-	string::size_type NamedPipeReader::readPipe(string &Buffer)
+	size_t NamedPipeReader::readPipe(vector<string> & vect)
 	{
-		TCHAR * buf = (TCHAR *)Buffer.c_str();
-		string::size_type buffer_size = Buffer.capacity();
-		string::size_type bytes_read = 0;
-		DWORD cbRead;
+		char * localbuf;
+		DWORD localsize = 100;
+		size_t lines = vect.size ();
+
+#ifdef WIN32
 		BOOL fSuccess;
-		TCHAR * localbuf;
-		DWORD localsize = MIN(100, buffer_size);
-
-//#ifdef NDEBUG
-		memset(buf, 0x0, sizeof(TCHAR) * buffer_size);
-//#endif
-
-#ifdef __LINUX__
-
-#else
-		localbuf = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, localsize * sizeof(TCHAR));
+		localbuf = (char*) HeapAlloc(GetProcessHeap(), 0, localsize * sizeof(char));
+#ifdef UNICODE
+		wchar_t * wbuf = (WCHAR*) HeapAlloc(GetProcessHeap(), 0, localsize * sizeof(wchar_t));
+#endif
 		if (localbuf != NULL)
 		{
-
+			bool append_line = false;
 			do
 			{
+				DWORD cbRead;
 				do 
 				{ 
-					ZeroMemory(localbuf, localsize * sizeof(TCHAR));
+					ZeroMemory(localbuf, localsize * sizeof(char));
+#ifdef UNICODE
+					ZeroMemory(wbuf, localsize * sizeof(wchar_t));
+#endif
 
 					fSuccess = ReadFile( 
 						h_Pipe,
 						localbuf,
-						localsize * sizeof(TCHAR),
+						(localsize-1) * sizeof(char),
 						&cbRead,
 						NULL);
 				 
 					if (! fSuccess && GetLastError() != ERROR_MORE_DATA) 
 						break; 
-					
-					if(bytes_read + cbRead > buffer_size)
-					{
-						Buffer.reserve(bytes_read + localsize * 3);
-						buf = (TCHAR *)Buffer.c_str();
-						buffer_size = Buffer.capacity();
-					}
 
-					memcpy(&buf[bytes_read], localbuf, cbRead);
-					bytes_read += cbRead;
+#ifdef UNICODE
+					if (UnicodeConverter::ansi2Unicode(localbuf, wbuf, cbRead))
+					{
+						extractLines(wbuf, vect, append_line, cbRead);
+					}
+#else
+					extractLines(localbuf, vect, append_line, cbRead);
+#endif
 
 				} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
-			} while (localbuf[_tcslen(localbuf)-1] != '\n');
+			} while (localbuf[strlen(localbuf)-1] != '\n');
 
 			if (!fSuccess)
 				return 0;
 
 			HeapFree(GetProcessHeap(), 0, localbuf);
+#ifdef UNICODE
+			HeapFree(GetProcessHeap(), 0, wbuf);
+#endif
 		}
 		else
 		{
 			return 0;
 		}
 #endif
-		buf[_tcslen(buf)-_tcslen(_T("\n"))-1] = '\0';
-		return _tcslen(buf);
+
+	return (vect.size () - lines);
 	}
 
 
