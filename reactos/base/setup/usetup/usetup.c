@@ -553,7 +553,7 @@ CheckUnattendedSetup(VOID)
         }
     }
   /* Search for 'FormatPartition' in the 'Unattend' section */
-  if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"FormatPartition", &Context))
+  if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"FormatPartition", &Context))
     {
       if (SetupGetIntField(&Context, 1, &IntValue))
         {
