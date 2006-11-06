@@ -735,7 +735,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          return HTBORDER;
    }
 
-   if (Style & WS_CAPTION)
+   if ((Style & WS_CAPTION) == WS_CAPTION)
    {
       if (ExStyle & WS_EX_TOOLWINDOW)
          WindowRect.top += GetSystemMetrics(SM_CYSMCAPTION);
@@ -751,15 +751,11 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
             }
             else
             {
+               WindowRect.left += GetSystemMetrics(SM_CXSIZE);
                WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
             }
-            
-            // On windows with WS_EX_DLGMODALFRAME and  
-            // WS_EX_TOOLWINDOW there is no system menu button.
-            if (!(ExStyle & WS_EX_DLGMODALFRAME) && !(ExStyle & WS_EX_TOOLWINDOW))
-                WindowRect.left += GetSystemMetrics(SM_CXSIZE);
          }
-         if (Point.x < WindowRect.left)
+         if (Point.x <= WindowRect.left)
             return HTSYSMENU;
          if (WindowRect.right <= Point.x)
             return HTCLOSE;
