@@ -95,11 +95,43 @@ namespace System_
 //---------------------------------------------------------------------------------------
 	void NamedPipeReader::extractLines(TCHAR * buffer, std::vector<string> & vect, bool & append_line, unsigned long cbRead)
 	{
-		TCHAR * offset = _tcsstr(buffer, _T("\x0D"));
+		TCHAR * offset = _tcschr(buffer, _T('\x0D'));
 		DWORD buf_offset = 0;
 		while(offset)
 		{
-			offset[0] = _T('\0');
+			///
+			/// HACKHACK
+			/// due to some mysterious reason, _tcschr / _tcsstr sometimes returns
+			/// not always the offset to the CR character but to the next LF
+			/// in MSVC 2005 (Debug Modus)
+
+			if (offset[0] == _T('\x0A'))
+			{
+				if (buf_offset)
+				{
+					offset--;
+				}
+				else
+				{
+					//TODO
+					// implement me special case
+				}
+			}
+
+			if (offset[0] == _T('\x0D'))
+			{
+				buf_offset += 2;
+				offset[0] = _T('\0');
+				offset +=2;
+			}
+			else
+			{
+				///
+				/// BUG detected in parsing code
+				///
+				abort();
+			}
+
 			string line = buffer;
 			if (append_line)
 			{
@@ -115,18 +147,18 @@ namespace System_
 				vect.push_back (line);
 			}
 
-			offset += 2;
-						
-			buf_offset += line.length () + 2;
+			buf_offset += line.length();
 			if (buf_offset >= cbRead)
 			{
 				break;
 			}
 			buffer = offset;
+
 			offset = _tcsstr(buffer, _T("\n"));
 		}
 		if (buf_offset < cbRead)
 		{
+			buffer[cbRead - buf_offset] = _T('\0');
 			string line = buffer;
 			if (append_line)
 			{
@@ -195,7 +227,7 @@ namespace System_
 #endif
 
 				} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
-			} while (localbuf[strlen(localbuf)-1] != '\n');
+			} while (append_line);
 
 			if (!fSuccess)
 				return 0;
