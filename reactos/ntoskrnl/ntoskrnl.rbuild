@@ -125,6 +125,7 @@
             <directory name="i386">
                 <file>interlck_asm.S</file>
                 <file>fastinterlck_asm.S</file>
+                <file>ioport.S</file>
             </directory>
         </if>
             <file>atom.c</file>
@@ -333,7 +334,6 @@
         </if>
             <file>libsupp.c</file>
             <file>misc.c</file>
-            <file>regio.c</file>
             <file>strtok.c</file>
     </directory>
     <directory name="se">
