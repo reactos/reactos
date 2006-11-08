@@ -333,6 +333,8 @@ ImageEditWndProc(HWND hwnd,
 
             hPenOld = SelectObject(hDC,
                                    hPen);
+            SelectObject(Info->hDCMem,
+                         hPen);
 
             MoveToEx(hDC,
                      xMouse,
@@ -355,7 +357,9 @@ ImageEditWndProc(HWND hwnd,
                    xMouse,
                    yMouse);
 
-            DeleteObject(SelectObject(hDC,
+            SelectObject(hDC,
+                         hPenOld);
+            DeleteObject(SelectObject(Info->hDCMem,
                                       hPenOld));
 
             ReleaseDC(Info->hSelf,
@@ -532,3 +536,4 @@ UninitImageEditWindowImpl(VOID)
     UnregisterClass(szImageEditWndClass,
                     hInstance);
 }
+
