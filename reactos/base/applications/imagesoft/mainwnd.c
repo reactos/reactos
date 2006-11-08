@@ -123,7 +123,6 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
 
     UNREFERENCED_PARAMETER(Context);
 
-    /* Standard toolbar */
     switch (Dockbar->BarId)
     {
         case ID_TOOLBAR_STANDARD:
@@ -143,7 +142,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
         }
 
         case ID_TOOLBAR_TEST:
-        {
+        {/*
             hWndClient = CreateWindowEx(WS_EX_TOOLWINDOW,
                                         TEXT("BUTTON"),
                                         TEXT("Test Button"),
@@ -155,7 +154,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                                         hParent,
                                         NULL,
                                         hInstance,
-                                        NULL);
+                                        NULL);*/
             break;
         }
     }
@@ -185,7 +184,6 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                         0,
                         TBSTYLE_EX_HIDECLIPPEDBUTTONS);
 
-            /* Send the TB_BUTTONSTRUCTSIZE message, which is required for backward compatibility */
             SendMessage(hWndClient,
                         TB_BUTTONSTRUCTSIZE,
                         sizeof(Buttons[0]),
@@ -209,8 +207,6 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                         NumButtons,
                         (LPARAM)Buttons);
 
-
-
         }
     }
 
@@ -221,19 +217,21 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
             HWND hFontType;
             HWND hFontSize;
 
-            /* drop combo box into container window */
+            /* font selection combo */
             hFontType = CreateWindowEx(0,
                                        WC_COMBOBOX,
                                        NULL,
                                        WS_CHILD | WS_VISIBLE | CBS_DROPDOWN,
-                                       0, 0, 120, 25,
+                                       0, 0, 120, 0,
                                        hParent,
                                        NULL,
                                        hInstance,
                                        NULL);
-            //MakeFlatCombo(hFontType);
+
             if (hFontType != NULL)
             {
+                MakeFlatCombo(hFontType);
+
                 SetParent(hFontType,
                           hWndClient);
 
@@ -247,24 +245,26 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                 }
             }
 
-            /* drop combo box into container window */
+            /* font size combo */
             hFontSize = CreateWindowEx(0,
                                        WC_COMBOBOX,
                                        NULL,
                                        WS_CHILD | WS_VISIBLE | CBS_DROPDOWN,
-                                       0, 0, 40, 25,
+                                       0, 0, 50, 0,
                                        hParent,
                                        NULL,
                                        hInstance,
                                        NULL);
             if (hFontSize != NULL)
             {
+                MakeFlatCombo(hFontSize);
+
                 SetParent(hFontSize,
                           hWndClient);
 
                 if (!ToolbarInsertSpaceForControl(hWndClient,
                                                   hFontSize,
-                                                  0,
+                                                  1,
                                                   ID_TXTFONTSIZE,
                                                   TRUE))
                 {
@@ -593,7 +593,7 @@ MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
                                           NULL,
                                           hInstance,
                                           WndArr[i]);
-
+        ShowWindow(WndArr[i]->hSelf, SW_HIDE);
     }
 
     hMenu = GetMenu(Info->hSelf);
@@ -602,11 +602,10 @@ MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
     {
         if (FloatToolbarCreateToolsGui(Info))
         {
-            //CheckMenuItem(hMenu,
-            //              ID_TOOLS,
-            //              MF_CHECKED);
+            CheckMenuItem(hMenu,
+                          ID_TOOLS,
+                          MF_CHECKED);
 
-            /* temp disable windows until they are useful */
             ShowHideWindow(Info->fltTools);
         }
     }
@@ -615,12 +614,7 @@ MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
     {
         if (FloatToolbarCreateColorsGui(Info))
         {
-            //CheckMenuItem(hMenu,
-            //              ID_COLOR,
-            //              MF_CHECKED);
 
-            /* temp disable windows until they are useful */
-            ShowHideWindow(Info->fltColors);
         }
     }
 
@@ -628,12 +622,7 @@ MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
     {
         if (FloatToolbarCreateHistoryGui(Info))
         {
-            //CheckMenuItem(hMenu,
-            //              ID_HISTORY,
-            //              MF_CHECKED);
 
-            /* temp disable windows until they are useful */
-            ShowHideWindow(Info->fltHistory);
         }
     }
 
@@ -895,11 +884,11 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
             if (hMenu != NULL)
             {
-                UINT uCheck;
+                UINT uCheck = MF_CHECKED;
 
-                ShowHideWindow(Info->fltTools);
+                if (ShowHideWindow(Info->fltTools))
+                    uCheck = MF_UNCHECKED;
 
-                uCheck = Info->fltTools->bShow ? MF_CHECKED : MF_UNCHECKED;
                 CheckMenuItem(hMenu,
                               ID_TOOLS,
                               uCheck);
@@ -913,11 +902,11 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
             if (hMenu != NULL)
             {
-                UINT uCheck;
+                UINT uCheck = MF_CHECKED;
 
-                ShowHideWindow(Info->fltColors);
+                if (ShowHideWindow(Info->fltColors))
+                    uCheck = MF_UNCHECKED;
 
-                uCheck = Info->fltColors->bShow ? MF_CHECKED : MF_UNCHECKED;
                 CheckMenuItem(hMenu,
                               ID_COLOR,
                               uCheck);
@@ -931,11 +920,11 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
             if (hMenu != NULL)
             {
-                UINT uCheck;
+                UINT uCheck = MF_CHECKED;
 
-                ShowHideWindow(Info->fltHistory);
+                if (ShowHideWindow(Info->fltHistory))
+                    uCheck = MF_UNCHECKED;
 
-                uCheck = Info->fltHistory->bShow ? MF_CHECKED : MF_UNCHECKED;
                 CheckMenuItem(hMenu,
                               ID_HISTORY,
                               uCheck);

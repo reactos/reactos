@@ -2,7 +2,7 @@
 
 /* Main Windows */
 #define IDC_TOOLBAR             10
-#define IDC_STATUSBAR	        11
+#define IDC_STATUSBAR           11
 #define IDC_MAIN_MDI            12
 /* these need to be kept consecutive */
 #define IDS_FLT_TOOLS           20
@@ -271,8 +271,8 @@
 #define IDS_APPNAME             4202
 #define IDS_VERSION             4203
 #define IDS_LICENSE             4204
-#define IDS_READY               4205
+#define IDS_READY               42050
 #define IDS_TOOLBAR_STANDARD    4206
 #define IDS_TOOLBAR_TEST        4207
-#define IDS_TOOLBAR_TEXT        4208
+#define IDS_TOOLBAR_TEXT        4205
 #define IDS_IMAGE_NAME          4209

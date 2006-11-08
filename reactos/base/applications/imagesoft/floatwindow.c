@@ -42,10 +42,10 @@ TBBUTTON HistoryButtons[] = {
 BOOL
 ShowHideWindow(PFLT_WND FltInfo)
 {
-    ShowWindow(FltInfo->hSelf, FltInfo->bShow ? SW_HIDE : SW_SHOW);
-    FltInfo->bShow = ~FltInfo->bShow;
-
-    return FltInfo->bShow;
+    if (IsWindowVisible(FltInfo->hSelf))
+        return ShowWindow(FltInfo->hSelf, SW_HIDE);
+    else
+        return ShowWindow(FltInfo->hSelf, SW_SHOW);
 }
 
 
@@ -219,7 +219,7 @@ FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info)
     if (hMouseButton == NULL)
         return FALSE;
 
-    //MakeFlatCombo(hMouseButton);
+    MakeFlatCombo(hMouseButton);
 
     /* temp, just testing */
     SendMessage(hMouseButton, CB_ADDSTRING, 0, (LPARAM)_T("Primary"));
@@ -361,7 +361,7 @@ FloatToolbarWndProc(HWND hwnd,
             FltInfo = (PFLT_WND)(((LPCREATESTRUCT)lParam)->lpCreateParams);
 
             /*FIXME: read this from registry */
-            FltInfo->bShow = TRUE;
+//            FltInfo->bShow = TRUE;
 
             FltInfo->bOpaque = FALSE;
 

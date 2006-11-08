@@ -380,7 +380,6 @@ typedef struct _FLT_WND
     INT y;
     INT Width;
     INT Height;
-    BOOL bShow : 1;
     BOOL bOpaque;
 } FLT_WND, *PFLT_WND;
 

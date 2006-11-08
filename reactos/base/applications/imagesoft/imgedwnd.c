@@ -262,14 +262,14 @@ ImageEditWndProc(HWND hwnd,
             }
             break;
         }
-
+/*
         case WM_ERASEBKGND:
             if (Info->Width != 0 && Info->Height != 0)
             {
                 Ret = TRUE;
             }
             break;
-
+*/
         case WM_LBUTTONDOWN:
             if (! bRightButtonDown)
                 SetCapture(Info->hSelf);
@@ -536,4 +536,3 @@ UninitImageEditWindowImpl(VOID)
     UnregisterClass(szImageEditWndClass,
                     hInstance);
 }
-

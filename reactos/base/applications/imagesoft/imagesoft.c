@@ -95,8 +95,8 @@ WinMain(HINSTANCE hThisInstance,
         TbdUninitImpl();
     }
 
-    HeapFree(GetProcessHeap(), 
-             0, 
+    HeapFree(GetProcessHeap(),
+             0,
              lpTitle);
 
     return Ret;
