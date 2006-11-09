@@ -99,6 +99,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   DriverObject->DriverUnload = NULL;
 
   IoRegisterFileSystem(DeviceObject);
+  DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
   return(STATUS_SUCCESS);
 }

@@ -358,8 +358,8 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   DeviceExt->StorageDevice->Vpb->DeviceObject = NewDeviceObject;
   DeviceExt->StorageDevice->Vpb->RealDevice = DeviceExt->StorageDevice;
   DeviceExt->StorageDevice->Vpb->Flags |= VPB_MOUNTED;
-  DeviceObject->StackSize = DeviceExt->StorageDevice->StackSize + 1;
-  DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+  NewDeviceObject->StackSize = DeviceExt->StorageDevice->StackSize + 1;
+  NewDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
   DeviceExt->StreamFileObject = IoCreateStreamFileObject(NULL,
 							 DeviceExt->StorageDevice);
