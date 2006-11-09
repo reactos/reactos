@@ -35,9 +35,9 @@ TBBUTTON StdButtons[] = {
 TBBUTTON TextButtons[] = {
     {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
 
-    {TBICON_BOLD,     ID_BOLD,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* bold */
-    {TBICON_ITALIC,   ID_ITALIC,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* italic */
-    {TBICON_ULINE,    ID_ULINE,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* underline */
+    {TBICON_BOLD,     ID_BOLD,     TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_CHECK, {0}, 0, 0},    /* bold */
+    {TBICON_ITALIC,   ID_ITALIC,   TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_CHECK, {0}, 0, 0},    /* italic */
+    {TBICON_ULINE,    ID_ULINE,    TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_CHECK, {0}, 0, 0},    /* underline */
 
     {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
 
@@ -221,7 +221,8 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
             hFontType = CreateWindowEx(0,
                                        WC_COMBOBOX,
                                        NULL,
-                                       WS_CHILD | WS_VISIBLE | CBS_DROPDOWN,
+                                       WS_CHILD | WS_VISIBLE | WS_VSCROLL |
+                                        CBS_DROPDOWN | CBS_SORT | CBS_HASSTRINGS, //| CBS_OWNERDRAWFIXED,
                                        0, 0, 120, 0,
                                        hParent,
                                        NULL,
@@ -243,6 +244,9 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                 {
                     DestroyWindow(hFontType);
                 }
+
+                    /* Create the list of fonts */
+                    FillFontStyleComboList(hFontType);
             }
 
             /* font size combo */
@@ -270,6 +274,9 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                 {
                     DestroyWindow(hFontSize);
                 }
+
+                /* Update the font-size-list */
+                FillFontSizeComboList(hFontSize);
             }
             break;
         }

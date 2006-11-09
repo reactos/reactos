@@ -357,7 +357,7 @@ FloatToolbarWndProc(HWND hwnd,
     switch(Message)
     {
         case WM_CREATE:
-
+        {
             FltInfo = (PFLT_WND)(((LPCREATESTRUCT)lParam)->lpCreateParams);
 
             /*FIXME: read this from registry */
@@ -375,7 +375,7 @@ FloatToolbarWndProc(HWND hwnd,
                                        0,
                                        (255 * 60) / 100,
                                        LWA_ALPHA);
-
+        }
         break;
 
         case WM_TIMER:
@@ -423,6 +423,7 @@ FloatToolbarWndProc(HWND hwnd,
 
         case WM_NCMOUSEMOVE:
         case WM_MOUSEMOVE:
+        {
             if (FltInfo->bOpaque == FALSE)
             {
                 SetWindowLong(hwnd,
@@ -442,6 +443,7 @@ FloatToolbarWndProc(HWND hwnd,
                          200,
                          NULL);
             }
+        }
         break;
 
         case WM_CLOSE:
@@ -449,6 +451,7 @@ FloatToolbarWndProc(HWND hwnd,
         break;
 
         case WM_COMMAND:
+        {
             if (LOWORD(wParam) == IDCANCEL)
                 ShowHideWindow(FltInfo);
 
@@ -483,6 +486,7 @@ FloatToolbarWndProc(HWND hwnd,
                                 lParam);*/
                 break;
             }
+        }
         break;
 
         case WM_NCACTIVATE:

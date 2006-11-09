@@ -390,6 +390,11 @@ BOOL InitFloatWndClass(VOID);
 VOID UninitFloatWndImpl(VOID);
 BOOL ShowHideWindow(PFLT_WND FltInfo);
 
+/* font.c */
+VOID FillFontStyleComboList(HWND hwndCombo);
+VOID FillFontSizeComboList(HWND hwndCombo);
+
+/* custcombo.c */
 VOID MakeFlatCombo(HWND hwndCombo);
 
 #endif /* __IMAGESOFT_PRECOMP_H */

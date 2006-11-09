@@ -19,6 +19,7 @@
 			<file>about.c</file>
 			<file>custcombo.c</file>
 			<file>floatwindow.c</file>
+			<file>font.c</file>
 			<file>imageprop.c</file>
 			<file>imagesoft.c</file>
 			<file>imgedwnd.c</file>
