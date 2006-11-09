@@ -182,6 +182,7 @@ NtGdiOffsetClipRgn			3
 NtGdiOffsetRgn				3
 NtGdiOffsetViewportOrgEx		4
 NtGdiOffsetWindowOrgEx			4
+NtGdiOpenDCW				7
 NtGdiPaintRgn				2
 NtGdiPatBlt				6
 NtGdiPathToRegion			1

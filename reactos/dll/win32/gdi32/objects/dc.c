@@ -3,6 +3,74 @@
 #define NDEBUG
 #include <debug.h>
 
+HDC
+FASTCALL
+IntCreateDICW ( LPCWSTR   lpwszDriver,
+                LPCWSTR   lpwszDevice,
+                LPCWSTR   lpwszOutput,
+                PDEVMODEW lpInitData,
+                ULONG     iType )
+{
+ UNICODE_STRING Device, Output;
+ HDC hDC = NULL;
+ BOOL Display = FALSE;
+ ULONG UMdhpdev = 0;
+ 
+ HANDLE hspool = NULL;
+                
+ if ((!lpwszDevice) && (!lpwszDriver)) return hDC;
+ else
+ {
+    if (lpwszDevice) // First
+    {
+      if (!_wcsnicmp(lpwszDevice, L"\\\\.\\DISPLAY",11)) Display = TRUE;
+      RtlInitUnicodeString(&Device, lpwszDevice);
+    }
+    else
+    {
+      if (lpwszDriver) // Second
+      {
+        if ((!_wcsnicmp(lpwszDriver, L"DISPLAY",7)) || 
+              (!_wcsnicmp(lpwszDriver, L"\\\\.\\DISPLAY",11))) Display = TRUE;
+        RtlInitUnicodeString(&Device, lpwszDriver);
+      }
+    }
+ }
+ 
+ if (lpwszOutput) RtlInitUnicodeString(&Output, lpwszOutput);
+
+ if (!Display)
+ {
+    //Handle Print device or something else.
+    DPRINT1("Not a DISPLAY device! %wZ\n", &Device);
+ }
+        
+ hDC = NtGdiOpenDCW( &Device,
+                     (PDEVMODEW) lpInitData,
+                     (lpwszOutput ? &Output : NULL),
+                      iType,             // DCW 0 and ICW 1.
+                      hspool,
+                     (PVOID) NULL,       // NULL for now.
+                     (PVOID) &UMdhpdev );
+
+// Handle something other than a normal dc object.
+ if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+ {
+    PDC_ATTR Dc_Attr;
+    PLDC pLDC;
+
+    GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr);
+
+    pLDC = LocalAlloc(LMEM_ZEROINIT, sizeof(LDC));
+
+    Dc_Attr->pvLDC = pLDC;
+    pLDC->hDC = hDC;
+    pLDC->iType = LDC_LDC; // 1 (init) local DC, 2 EMF LDC
+ }
+
+ return hDC;     
+}
+
 
 /*
  * @implemented
@@ -187,6 +255,39 @@ CreateICA(
 
 
 /*
+ * @implemented
+ */
+BOOL
+STDCALL
+NEWDeleteDC(HDC hDC)
+{
+  BOOL Ret = TRUE;
+  PDC_ATTR Dc_Attr;
+  PLDC pLDC;
+
+  Ret = GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr);
+
+  if ( !Ret ) return FALSE;
+  
+  if ( Dc_Attr )
+    {
+      pLDC = Dc_Attr->pvLDC;
+
+      if ( pLDC )
+        {
+          DPRINT1("Delete the Local DC structure\n");
+          LocalFree( pLDC );
+        }
+    }
+
+  Ret = NtGdiDeleteObjectApp(hDC);
+  
+  return Ret;
+}
+
+
+/*
+
  * @implemented
  */
 BOOL

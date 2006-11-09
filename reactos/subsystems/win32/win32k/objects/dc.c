@@ -1038,6 +1038,19 @@ NtGdiCreateIC(PUNICODE_STRING Driver,
   return Ret;
 }
 
+HDC STDCALL
+NtGdiOpenDCW( PUNICODE_STRING pustrDevice,
+              DEVMODEW *pdm,
+              PUNICODE_STRING pustrLogAddr,
+              ULONG iType,
+              HANDLE hspool,
+              VOID *pDriverInfo2,
+              VOID *pUMdhpdev )
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+
 BOOL STDCALL
 NtGdiDeleteObjectApp(HANDLE  DCHandle)
 {

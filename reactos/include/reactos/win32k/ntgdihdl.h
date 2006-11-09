@@ -93,6 +93,9 @@
 #define DC_LAST_CLIPRGN_VALID               0x00008000
 #define DC_PRIMARY_DISPLAY                  0x00010000
 
+#define LDC_LDC     0x01    // (init) local DC other than a normal DC
+#define LDC_EMFLDC  0x02    // Enhance Meta File local DC
+
 /* TYPES *********************************************************************/
 
 typedef struct _GDI_TABLE_ENTRY
@@ -109,6 +112,15 @@ typedef struct _RGNATTR
     ULONG Flags;
     RECTL Rect;
 } RGNATTR,*PRGNATTR;
+
+// Local DC structure (_DC_ATTR) PVOID pvLDC;
+typedef struct _LDC
+{
+    HDC hDC;
+    ULONG Flags;
+    INT iType;
+    ABORTPROC pAbortProc; /* AbortProc for Printing */
+} LDC, *PLDC;
 
 typedef struct _DC_ATTR
 {
