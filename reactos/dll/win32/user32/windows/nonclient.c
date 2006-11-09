@@ -751,11 +751,12 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
             }
             else
             {
-               WindowRect.left += GetSystemMetrics(SM_CXSIZE);
+               if(!(ExStyle & WS_EX_DLGMODALFRAME))
+                  WindowRect.left += GetSystemMetrics(SM_CXSIZE);
                WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
             }
          }
-         if (Point.x <= WindowRect.left)
+         if (Point.x < WindowRect.left)
             return HTSYSMENU;
          if (WindowRect.right <= Point.x)
             return HTCLOSE;
