@@ -254,7 +254,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCCLCompilerTool\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tForcedIncludeFiles=\"warning.h\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tOptimization=\"%d\"\r\n", release ? 2 : 0 );
 
 		fprintf ( OUT, "\t\t\t\tAdditionalIncludeDirectories=\"" );
@@ -301,6 +300,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			// this is a define in MinGW w32api, but not Microsoft's headers
 			defines.insert ( "STDCALL=__stdcall" );
+			// MinGW doesn't have a safe-string library yet
+			defines.insert ( "_CRT_SECURE_NO_DEPRECATE" );
+			defines.insert ( "_CRT_NON_CONFORMING_SWPRINTFS" );
 		}
 
 		if ( lib || exe )
