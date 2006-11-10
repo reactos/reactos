@@ -32,3 +32,9 @@ TimeZoneIndex=85
 
 ; enable this setting to format the selected partition
 FormatPartition=1
+
+; enable this section to automatically launch programs
+; after 3rd boot
+;
+; [GuiRunOnce]
+; %SystemRoot%\system32\cmd.exe
