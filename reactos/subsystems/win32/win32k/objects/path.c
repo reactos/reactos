@@ -720,24 +720,29 @@ PATH_Ellipse ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
 {
   /* TODO: This should probably be revised to call PATH_AngleArc */
   /* (once it exists) */
-  return PATH_Arc ( dc, x1, y1, x2, y2, x1, (y1+y2)/2, x1, (y1+y2)/2 );
+  BOOL Ret = PATH_Arc ( dc, x1, y1, x2, y2, x1, (y1+y2)/2, x1, (y1+y2)/2, GdiTypeArc );
+  if (Ret) IntGdiCloseFigure(dc);
+  return Ret;
 }
 
 /* PATH_Arc
  *
  * Should be called when a call to Arc is performed on a DC that has
  * an open path. This adds up to five Bezier splines representing the arc
- * to the path. Returns TRUE if successful, else FALSE.
+ * to the path. When 'lines' is 1, we add 1 extra line to get a chord,
+ * and when 'lines' is 2, we add 2 extra lines to get a pie.
+ * Returns TRUE if successful, else FALSE.
  */
 BOOL
 FASTCALL
 PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
-   INT xStart, INT yStart, INT xEnd, INT yEnd)
+   INT xStart, INT yStart, INT xEnd, INT yEnd, INT lines)
 {
   double  angleStart, angleEnd, angleStartQuadrant, angleEndQuadrant=0.0;
           /* Initialize angleEndQuadrant to silence gcc's warning */
   double  x, y;
   FLOAT_POINT corners[2], pointStart, pointEnd;
+  POINT   centre;
   BOOL    start, end;
   INT     temp;
   BOOL    clockwise;
@@ -857,6 +862,19 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
     PATH_DoArcPart ( &dc->w.path, corners, angleStartQuadrant, angleEndQuadrant, start );
     start = FALSE;
   } while(!end);
+
+  /* chord: close figure. pie: add line and close figure */
+  if(lines==GdiTypeChord) // 1
+   {
+      IntGdiCloseFigure(dc);
+   }
+  else if(lines==GdiTypePie) // 2
+   {
+      centre.x = (corners[0].x+corners[1].x)/2;
+      centre.y = (corners[0].y+corners[1].y)/2;
+      if(!PATH_AddEntry(&dc->w.path, &centre, PT_LINETO | PT_CLOSEFIGURE))
+         return FALSE;
+   }
 
   return TRUE;
 }

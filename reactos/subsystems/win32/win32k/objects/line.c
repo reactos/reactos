@@ -299,7 +299,7 @@ IntGdiArc(DC  *dc,
   if(PATH_IsPathOpen(dc->w.path))
   {
     return PATH_Arc(dc, LeftRect, TopRect, RightRect, BottomRect,
-                    XStartArc, YStartArc, XEndArc, YEndArc);
+                    XStartArc, YStartArc, XEndArc, YEndArc, GdiTypeArc );
   }
 
   // FIXME
