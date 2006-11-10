@@ -23,6 +23,7 @@
  * PURPOSE:         Text-mode setup
  * PROGRAMMER:      Eric Kohl
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include "usetup.h"
@@ -73,6 +74,7 @@ typedef enum _PAGE_NUMBER
 
 HANDLE ProcessHeap;
 UNICODE_STRING SourceRootPath;
+UNICODE_STRING SourcePath;
 BOOLEAN IsUnattendedSetup = FALSE;
 LONG UnattendDestinationDiskNumber;
 LONG UnattendDestinationPartitionNumber;
@@ -85,9 +87,6 @@ WCHAR UnattendInstallationDirectory[MAX_PATH];
 static PPARTLIST PartitionList = NULL;
 
 static PFILE_SYSTEM_LIST FileSystemList = NULL;
-
-
-static UNICODE_STRING SourcePath;
 
 static UNICODE_STRING InstallPath;
 
@@ -139,13 +138,110 @@ PrintString(char* fmt,...)
 #define POPUP_WAIT_ENTER   2
 
 static VOID
+DrawBox(
+	IN SHORT xLeft,
+	IN SHORT yTop,
+	IN SHORT Width,
+	IN SHORT Height)
+{
+	COORD coPos;
+	ULONG Written;
+
+	/* draw upper left corner */
+	coPos.X = xLeft;
+	coPos.Y = yTop;
+	FillConsoleOutputCharacterA(
+		StdOutput,
+		0xDA, // '+',
+		1,
+		coPos,
+		&Written);
+
+	/* draw upper edge */
+	coPos.X = xLeft + 1;
+	coPos.Y = yTop;
+	FillConsoleOutputCharacterA(
+		StdOutput,
+		0xC4, // '-',
+		Width - 2,
+		coPos,
+		&Written);
+
+	/* draw upper right corner */
+	coPos.X = xLeft + Width - 1;
+	coPos.Y = yTop;
+	FillConsoleOutputCharacterA(
+		StdOutput,
+		0xBF, // '+',
+		1,
+		coPos,
+		&Written);
+
+	/* Draw right edge, inner space and left edge */
+	for (coPos.Y = yTop + 1; coPos.Y < yTop + Height - 1; coPos.Y++)
+	{
+		coPos.X = xLeft;
+		FillConsoleOutputCharacterA(
+		StdOutput,
+		0xB3, // '|',
+		1,
+		coPos,
+		&Written);
+
+		coPos.X = xLeft + 1;
+		FillConsoleOutputCharacterA(
+			StdOutput,
+			' ',
+			Width - 2,
+			coPos,
+			&Written);
+
+		coPos.X = xLeft + Width - 1;
+		FillConsoleOutputCharacterA(
+			StdOutput,
+			0xB3, // '|',
+			1,
+			coPos,
+			&Written);
+	}
+
+	/* draw lower left corner */
+	coPos.X = xLeft;
+	coPos.Y = yTop + Height - 1;
+	FillConsoleOutputCharacterA(
+		StdOutput,
+		0xC0, // '+',
+		1,
+		coPos,
+		&Written);
+
+	/* draw lower edge */
+	coPos.X = xLeft + 1;
+	coPos.Y = yTop + Height - 1;
+	FillConsoleOutputCharacterA(
+		StdOutput,
+		0xC4, // '-',
+		Width - 2,
+		coPos,
+		&Written);
+
+	/* draw lower right corner */
+	coPos.X = xLeft + Width - 1;
+	coPos.Y = yTop + Height - 1;
+	FillConsoleOutputCharacterA(
+		StdOutput,
+		0xD9, // '+',
+		1,
+		coPos,
+		&Written);
+}
+
+static VOID
 PopupError(PCHAR Text,
 	   PCHAR Status,
 	   PINPUT_RECORD Ir,
 	   ULONG WaitEvent)
 {
-  SHORT xScreen;
-  SHORT yScreen;
   SHORT yTop;
   SHORT xLeft;
   COORD coPos;
@@ -195,8 +291,6 @@ PopupError(PCHAR Text,
 	MaxLength = Length;
     }
 
-  CONSOLE_GetScreenSize(&xScreen, &yScreen);
-
   Width = MaxLength + 4;
   Height = Lines + 2;
   if (Status != NULL)
@@ -217,84 +311,7 @@ PopupError(PCHAR Text,
 				 &Written);
     }
 
-  /* draw upper left corner */
-  coPos.X = xLeft;
-  coPos.Y = yTop;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xDA, // '+',
-			     1,
-			     coPos,
-			     &Written);
-
-  /* draw upper edge */
-  coPos.X = xLeft + 1;
-  coPos.Y = yTop;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xC4, // '-',
-			     Width - 2,
-			     coPos,
-			     &Written);
-
-  /* draw upper right corner */
-  coPos.X = xLeft + Width - 1;
-  coPos.Y = yTop;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xBF, // '+',
-			     1,
-			     coPos,
-			     &Written);
-
-  /* Draw right edge, inner space and left edge */
-  for (coPos.Y = yTop + 1; coPos.Y < yTop + Height - 1; coPos.Y++)
-    {
-      coPos.X = xLeft;
-      FillConsoleOutputCharacterA(StdOutput,
-				 0xB3, // '|',
-				 1,
-				 coPos,
-				 &Written);
-
-      coPos.X = xLeft + 1;
-      FillConsoleOutputCharacterA(StdOutput,
-				 ' ',
-				 Width - 2,
-				 coPos,
-				 &Written);
-
-      coPos.X = xLeft + Width - 1;
-      FillConsoleOutputCharacterA(StdOutput,
-				 0xB3, // '|',
-				 1,
-				 coPos,
-				 &Written);
-    }
-
-  /* draw lower left corner */
-  coPos.X = xLeft;
-  coPos.Y = yTop + Height - 1;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xC0, // '+',
-			     1,
-			     coPos,
-			     &Written);
-
-  /* draw lower edge */
-  coPos.X = xLeft + 1;
-  coPos.Y = yTop + Height - 1;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xC4, // '-',
-			     Width - 2,
-			     coPos,
-			     &Written);
-
-  /* draw lower right corner */
-  coPos.X = xLeft + Width - 1;
-  coPos.Y = yTop + Height - 1;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xD9, // '+',
-			     1,
-			     coPos,
-			     &Written);
+  DrawBox(xLeft, yTop, Width, Height);
 
   /* Print message text */
   coPos.Y = yTop + 1;
@@ -628,8 +645,8 @@ SetupStartPage(PINPUT_RECORD Ir)
 #endif
 
   /* Load txtsetup.sif from install media. */
-  wcscpy(FileNameBuffer, SourceRootPath.Buffer);
-  wcscat(FileNameBuffer, L"\\reactos\\txtsetup.sif");
+  wcscpy(FileNameBuffer, SourcePath.Buffer);
+  wcscat(FileNameBuffer, L"\\txtsetup.sif");
 
   SetupInf = SetupOpenInfFileW(FileNameBuffer,
 		       NULL,
@@ -927,7 +944,10 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
       ComputerList = CreateComputerTypeList(SetupInf);
       if (ComputerList == NULL)
 	{
-	  /* FIXME: report error */
+	  PopupError("Setup failed to load the computer type list.\n",
+		     "ENTER = Reboot computer",
+		     Ir, POPUP_WAIT_ENTER);
+	  return QUIT_PAGE;
 	}
     }
 
@@ -937,7 +957,10 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
       DisplayList = CreateDisplayDriverList(SetupInf);
       if (DisplayList == NULL)
 	{
-	  /* FIXME: report error */
+	  PopupError("Setup failed to load the display settings list.\n",
+		     "ENTER = Reboot computer",
+		     Ir, POPUP_WAIT_ENTER);
+	  return QUIT_PAGE;
 	}
     }
 
@@ -947,7 +970,10 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
       KeyboardList = CreateKeyboardDriverList(SetupInf);
       if (KeyboardList == NULL)
 	{
-	  /* FIXME: report error */
+	  PopupError("Setup failed to load the keyboard type list.\n",
+		     "ENTER = Reboot computer",
+		     Ir, POPUP_WAIT_ENTER);
+	  return QUIT_PAGE;
 	}
     }
 
@@ -1049,9 +1075,6 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 ComputerSettingsPage(PINPUT_RECORD Ir)
 {
-  SHORT xScreen;
-  SHORT yScreen;
-
   CONSOLE_SetTextXY(6, 8, "You want to change the type of computer to be installed.");
 
   CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired computer type.");
@@ -1059,8 +1082,6 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
 
   CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
   CONSOLE_SetTextXY(8, 14, "   the computer type.");
-
-  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   DrawGenericList(ComputerList,
 		  2,
@@ -1112,9 +1133,6 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 DisplaySettingsPage(PINPUT_RECORD Ir)
 {
-  SHORT xScreen;
-  SHORT yScreen;
-
   CONSOLE_SetTextXY(6, 8, "You want to change the type of display to be installed.");
 
   CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired display type.");
@@ -1122,8 +1140,6 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
 
   CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
   CONSOLE_SetTextXY(8, 14, "   the display type.");
-
-  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   DrawGenericList(DisplayList,
 		  2,
@@ -1177,9 +1193,6 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 KeyboardSettingsPage(PINPUT_RECORD Ir)
 {
-  SHORT xScreen;
-  SHORT yScreen;
-
   CONSOLE_SetTextXY(6, 8, "You want to change the type of keyboard to be installed.");
 
   CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired keyboard type.");
@@ -1187,8 +1200,6 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
 
   CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
   CONSOLE_SetTextXY(8, 14, "   the keyboard type.");
-
-  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   DrawGenericList(KeyboardList,
 		  2,
@@ -1240,9 +1251,6 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 LayoutSettingsPage(PINPUT_RECORD Ir)
 {
-  SHORT xScreen;
-  SHORT yScreen;
-
   CONSOLE_SetTextXY(6, 8, "You want to change the keyboard layout to be installed.");
 
   CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired keyboard");
@@ -1250,8 +1258,6 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 
   CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
   CONSOLE_SetTextXY(8, 14, "   the keyboard layout.");
-
-  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   DrawGenericList(LayoutList,
 		  2,
@@ -1303,9 +1309,6 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 SelectPartitionPage(PINPUT_RECORD Ir)
 {
-  SHORT xScreen;
-  SHORT yScreen;
-
   CONSOLE_SetTextXY(6, 8, "The list below shows existing partitions and unused disk");
   CONSOLE_SetTextXY(6, 9, "space for new partitions.");
 
@@ -1315,8 +1318,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
   CONSOLE_SetTextXY(8, 17, "\x07  Press D to delete an existing partition.");
 
   CONSOLE_SetStatusText("   Please wait...");
-
-  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   if (PartitionList == NULL)
     {
@@ -1497,7 +1498,6 @@ ShowPartitionSizeInputBox(SHORT Left,
   INPUT_RECORD Ir;
   COORD coPos;
   ULONG Written;
-  SHORT i;
   CHAR Buffer[100];
   ULONG Index;
   CHAR ch;
@@ -1510,78 +1510,7 @@ ShowPartitionSizeInputBox(SHORT Left,
   if (Cancel != NULL)
     *Cancel = FALSE;
 
-  /* draw upper left corner */
-  coPos.X = Left;
-  coPos.Y = Top;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xDA, // '+',
-			     1,
-			     coPos,
-			     &Written);
-
-  /* draw upper edge */
-  coPos.X = Left + 1;
-  coPos.Y = Top;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xC4, // '-',
-			     Right - Left - 1,
-			     coPos,
-			     &Written);
-
-  /* draw upper right corner */
-  coPos.X = Right;
-  coPos.Y = Top;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xBF, // '+',
-			     1,
-			     coPos,
-			     &Written);
-
-  /* draw left and right edge */
-  for (i = Top + 1; i < Bottom; i++)
-    {
-      coPos.X = Left;
-      coPos.Y = i;
-      FillConsoleOutputCharacterA(StdOutput,
-				 0xB3, // '|',
-				 1,
-				 coPos,
-				 &Written);
-
-      coPos.X = Right;
-      FillConsoleOutputCharacterA(StdOutput,
-				 0xB3, //'|',
-				 1,
-				 coPos,
-				 &Written);
-    }
-
-  /* draw lower left corner */
-  coPos.X = Left;
-  coPos.Y = Bottom;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xC0, // '+',
-			     1,
-			     coPos,
-			     &Written);
-
-  /* draw lower edge */
-  coPos.X = Left + 1;
-  coPos.Y = Bottom;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xC4, // '-',
-			     Right - Left - 1,
-			     coPos,
-			     &Written);
-
-  /* draw lower right corner */
-  coPos.X = Right;
-  coPos.Y = Bottom;
-  FillConsoleOutputCharacterA(StdOutput,
-			     0xD9, // '+',
-			     1,
-			     coPos,
-			     &Written);
+  DrawBox(Left, Top, Right - Left + 1, Bottom - Top + 1);
 
   /* Print message */
   coPos.X = Left + 2;
@@ -1671,8 +1600,6 @@ CreatePartitionPage (PINPUT_RECORD Ir)
 {
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
-  SHORT xScreen;
-  SHORT yScreen;
   BOOLEAN Quit;
   BOOLEAN Cancel;
   CHAR InputBuffer[50];
@@ -1693,8 +1620,6 @@ CreatePartitionPage (PINPUT_RECORD Ir)
   PartEntry = PartitionList->CurrentPartition;
 
   CONSOLE_SetStatusText ("   Please wait...");
-
-  CONSOLE_GetScreenSize (&xScreen, &yScreen);
 
   CONSOLE_SetTextXY (6, 8, "You have chosen to create a new partition on");
 
@@ -2121,7 +2046,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 
   if (FileSystemList == NULL)
     {
-      FileSystemList = CreateFileSystemList (6, 26, PartEntry->New, "FAT");
+      FileSystemList = CreateFileSystemList (6, 26, PartEntry->New, L"FAT");
       if (FileSystemList == NULL)
 	{
 	  /* FIXME: show an error dialog */
@@ -2243,7 +2168,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 
         if (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
         {
-            if (strcmp(FileSystemList->Selected->FileSystem, "FAT") == 0)
+            if (wcscmp(FileSystemList->Selected->FileSystem, L"FAT") == 0)
             {
                 if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (4200LL * 1024LL))
                 {
@@ -2287,7 +2212,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
                 }
                 break;
             }
-            else if (FileSystemList->Selected->FormatFunc)
+            else if (!FileSystemList->Selected->FormatFunc)
                 return QUIT_PAGE;
         }
 
@@ -2382,7 +2307,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
                 CheckActiveBootPartition(PartitionList);
             }
 
-            if (strcmp(FileSystemList->Selected->FileSystem, "FAT") == 0)
+            if (wcscmp(FileSystemList->Selected->FileSystem, L"FAT") == 0)
             {
                 /* FIXME: Install boot code. This is a hack! */
                 if ((PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13)
@@ -2482,7 +2407,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
   if (!CurrentFileSystem->ChkdskFunc)
   {
     sprintf(Buffer,
-      "Setup is currently unable to check a partition formatted in %s.\n"
+      "Setup is currently unable to check a partition formatted in %S.\n"
       "\n"
       "  \x07  Press ENTER to continue Setup.\n"
       "  \x07  Press F3 to quit Setup.",
@@ -2664,11 +2589,11 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
   return(INSTALL_DIRECTORY_PAGE);
 }
 
-
 static BOOLEAN
 AddSectionToCopyQueue(HINF InfFile,
 		       PWCHAR SectionName,
 		       PWCHAR SourceCabinet,
+			   PCUNICODE_STRING DestinationPath,
 		       PINPUT_RECORD Ir)
 {
   INFCONTEXT FilesContext;
@@ -2752,7 +2677,7 @@ PrepareCopyPageInfFile(HINF InfFile,
   NTSTATUS Status;
 
   /* Add common files */
-  if (!AddSectionToCopyQueue(InfFile, L"SourceFiles", SourceCabinet, Ir))
+  if (!AddSectionToCopyQueue(InfFile, L"SourceFiles", SourceCabinet, &DestinationPath, Ir))
     return FALSE;
 
   /* Add specific files depending of computer type */
@@ -2762,7 +2687,7 @@ PrepareCopyPageInfFile(HINF InfFile,
       return FALSE;
     if (AdditionalSectionName)
     {
-      if (!AddSectionToCopyQueue(InfFile, AdditionalSectionName, SourceCabinet, Ir))
+      if (!AddSectionToCopyQueue(InfFile, AdditionalSectionName, SourceCabinet, &DestinationPath, Ir))
         return FALSE;
     }
   }
@@ -2857,7 +2782,6 @@ PrepareCopyPageInfFile(HINF InfFile,
   return(TRUE);
 }
 
-
 static PAGE_NUMBER
 PrepareCopyPage(PINPUT_RECORD Ir)
 {
@@ -2882,7 +2806,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 		 Ir, POPUP_WAIT_ENTER);
       return(QUIT_PAGE);
     }
-
+ 
   if (!PrepareCopyPageInfFile(SetupInf, NULL, Ir))
     {
       return QUIT_PAGE;
@@ -2907,6 +2831,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
       wcscat(PathBuffer, L"\\");
       wcscat(PathBuffer, KeyValue);
 
+#ifdef __REACTOS__
       CabinetInitialize();
       CabinetSetEventHandlers(NULL, NULL, NULL);
       CabinetSetCabinetName(PathBuffer);
@@ -2953,6 +2878,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
         {
           return QUIT_PAGE;
         }
+#endif
     }
   while (SetupFindNextLine (&CabinetsContext, &CabinetsContext));
 
@@ -2997,8 +2923,6 @@ static PAGE_NUMBER
 FileCopyPage(PINPUT_RECORD Ir)
 {
   COPYCONTEXT CopyContext;
-  SHORT xScreen;
-  SHORT yScreen;
 
   CONSOLE_SetStatusText("                                                           \xB3 Please wait...    ");
 
@@ -3006,7 +2930,6 @@ FileCopyPage(PINPUT_RECORD Ir)
   CONSOLE_SetTextXY(30, 13, "installation folder.");
   CONSOLE_SetTextXY(20, 14, "This may take several minutes to complete.");
 
-  CONSOLE_GetScreenSize(&xScreen, &yScreen);  
   CopyContext.DestinationRootPath = DestinationRootPath.Buffer;
   CopyContext.InstallPath = InstallPath.Buffer;
   CopyContext.TotalOperations = 0;
@@ -3054,6 +2977,7 @@ RegistryPage(PINPUT_RECORD Ir)
     }
 
   /* Create the default hives */
+#ifdef __REACTOS__
   Status = NtInitializeRegistry(TRUE);
   if (!NT_SUCCESS(Status))
     {
@@ -3063,6 +2987,9 @@ RegistryPage(PINPUT_RECORD Ir)
 		 Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
+#else
+  RegInitializeRegistry();
+#endif
 
   /* Update registry */
   CONSOLE_SetStatusText("   Updating registry hives...");
@@ -3484,22 +3411,13 @@ FlushPage(PINPUT_RECORD Ir)
 }
 
 
-static VOID
+VOID
 RunUSetup(VOID)
 {
   INPUT_RECORD Ir;
   PAGE_NUMBER Page;
-  BOOL ret;
 
-  ret = AllocConsole();
-  if (!ret)
-    ret = AttachConsole(ATTACH_PARENT_PROCESS);
-
-  if (!ret
-#ifdef WIN32_USETUP
-   && GetLastError() != ERROR_ACCESS_DENIED
-#endif
-     )
+  if (!CONSOLE_Init())
     {
       PrintString("Unable to open the console\n\n");
       PrintString("The most common cause of this is using an USB keyboard\n");
@@ -3509,17 +3427,6 @@ RunUSetup(VOID)
       NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
 		       0,0,0,0,0);
     }
-  else
-    {
-      CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-      StdInput = GetStdHandle(STD_INPUT_HANDLE);
-      StdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-      GetConsoleScreenBufferInfo(StdOutput, &csbi);
-      xScreen = csbi.dwSize.X;
-      yScreen = csbi.dwSize.Y;
-    }
-
 
   /* Initialize global unicode strings */
   RtlInitUnicodeString(&SourcePath, NULL);
@@ -3680,16 +3587,7 @@ RunUSetup(VOID)
 }
 
 
-#ifdef WIN32_USETUP
-int
-main(void)
-{
-  ProcessHeap = GetProcessHeap();
-  RunUSetup();
-  return 0;
-}
-
-#else
+#ifdef __REACTOS__
 
 VOID NTAPI
 NtProcessStartup(PPEB Peb)
@@ -3700,6 +3598,6 @@ NtProcessStartup(PPEB Peb)
   INF_SetHeap(ProcessHeap);
   RunUSetup();
 }
-#endif /* !WIN32_USETUP */
+#endif /* __REACTOS__ */
 
 /* EOF */

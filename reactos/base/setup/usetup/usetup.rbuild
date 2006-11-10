@@ -8,38 +8,38 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_WIN32_WINNT">0x0502</define>
 	<define name="__NO_CTYPE_INLINES" />
+	<define name="__REACTOS__" />
 	<linkerflag>-lgcc</linkerflag>
 	<library>zlib</library>
 	<library>inflib</library>
 	<library>vfatlib</library>
 	<library>ntdll</library>
-	<pch>usetup.h</pch>
-	<compilationunit name="unit.c">
-		<directory name="interface">
-			<file>consup.c</file>
-			<file>usetup.c</file>
+	<directory name="interface">
+		<file>consup.c</file>
+		<file>usetup.c</file>
+	</directory>
+	<directory name="native">
+		<directory name="utils">
+			<file>console.c</file>
+			<file>keytrans.c</file>
 		</directory>
-		<directory name="native">
-			<directory name="utils">
-				<file>console.c</file>
-				<file>keytrans.c</file>
-			</directory>
-		</directory>
-		<file>bootsup.c</file>
-		<file>cabinet.c</file>
-		<file>chkdsk.c</file>
-		<file>drivesup.c</file>
-		<file>filequeue.c</file>
-		<file>filesup.c</file>
-		<file>format.c</file>
+		<file>console.c</file>
 		<file>fslist.c</file>
-		<file>genlist.c</file>
-		<file>inffile.c</file>
-		<file>inicache.c</file>
-		<file>partlist.c</file>
-		<file>progress.c</file>
-		<file>registry.c</file>
-		<file>settings.c</file>
-	</compilationunit>
+	</directory>
+	<file>bootsup.c</file>
+	<file>cabinet.c</file>
+	<file>chkdsk.c</file>
+	<file>drivesup.c</file>
+	<file>filequeue.c</file>
+	<file>filesup.c</file>
+	<file>format.c</file>
+	<file>fslist.c</file>
+	<file>genlist.c</file>
+	<file>inffile.c</file>
+	<file>inicache.c</file>
+	<file>partlist.c</file>
+	<file>progress.c</file>
+	<file>registry.c</file>
+	<file>settings.c</file>
 	<file>usetup.rc</file>
 </module>

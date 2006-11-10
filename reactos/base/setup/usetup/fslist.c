@@ -32,10 +32,10 @@
 
 /* FUNCTIONS ****************************************************************/
 
-static VOID
-AddProvider(
+VOID
+FS_AddProvider(
     IN OUT PFILE_SYSTEM_LIST List,
-    IN LPCSTR FileSystem,
+    IN LPCWSTR FileSystem,
     IN FORMATEX FormatFunc,
     IN CHKDSKEX ChkdskFunc)
 {
@@ -70,7 +70,7 @@ CreateFileSystemList(
     IN SHORT Left,
     IN SHORT Top,
     IN BOOLEAN ForceFormat,
-    IN LPCSTR ForceFileSystem)
+    IN LPCWSTR ForceFileSystem)
 {
     PFILE_SYSTEM_LIST List;
     PFILE_SYSTEM_ITEM Item;
@@ -85,11 +85,12 @@ CreateFileSystemList(
     List->Selected = NULL;
     InitializeListHead(&List->ListHead);
 
-    AddProvider(List, "FAT", VfatFormat, VfatChkdsk);
+    HOST_CreateFileSystemList(List);
+
     if (!ForceFormat)
     {
         /* Add 'Keep' provider */
-       AddProvider(List, NULL, NULL, NULL);
+       FS_AddProvider(List, NULL, NULL, NULL);
     }
 
     /* Search for ForceFileSystem in list */
@@ -97,7 +98,7 @@ CreateFileSystemList(
     while (ListEntry != &List->ListHead)
     {
         Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
-        if (Item->FileSystem && strcmp(ForceFileSystem, Item->FileSystem) == 0)
+        if (Item->FileSystem && wcscmp(ForceFileSystem, Item->FileSystem) == 0)
         {
             List->Selected = Item;
             break;
@@ -147,7 +148,7 @@ DrawFileSystemList(
         Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
 
         coPos.X = List->Left;
-        coPos.Y = List->Top + Index;
+        coPos.Y = List->Top + (SHORT)Index;
         FillConsoleOutputAttribute(StdOutput,
                                    FOREGROUND_WHITE | BACKGROUND_BLUE,
                                    sizeof(Buffer),
@@ -162,9 +163,9 @@ DrawFileSystemList(
         if (Item->FileSystem)
         {
             if (Item->QuickFormat)
-                sprintf(Buffer, " Format partition as %s file system (quick format) ", Item->FileSystem);
+                sprintf(Buffer, " Format partition as %S file system (quick format) ", Item->FileSystem);
             else
-                sprintf(Buffer, " Format partition as %s file system ", Item->FileSystem);
+                sprintf(Buffer, " Format partition as %S file system ", Item->FileSystem);
         }
         else
             sprintf(Buffer, " Keep current file system (no changes) ");

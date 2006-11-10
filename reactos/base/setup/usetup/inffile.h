@@ -27,6 +27,12 @@
 #ifndef __INFFILE_H__
 #define __INFFILE_H__
 
+#ifndef __REACTOS__
+
+#include <setupapi.h>
+
+#else /* __REACTOS__ */
+
 #include <infcommon.h>
 
 #define SetupCloseInfFile InfpCloseInfFile
@@ -106,6 +112,8 @@ InfpOpenInfFileW(
 	IN PCWSTR InfClass,
 	IN DWORD InfStyle,
 	OUT PUINT ErrorLine);
+
+#endif /* __REACTOS__ */
 
 BOOLEAN
 INF_GetData(

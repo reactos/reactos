@@ -24,51 +24,18 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __CONSOLE_H__
-#define __CONSOLE_H__
-
-#define FOREGROUND_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
-#define FOREGROUND_YELLOW (FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN)
-#define BACKGROUND_WHITE (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE)
-
-extern HANDLE StdInput, StdOutput;
-extern SHORT xScreen, yScreen;
-
-#ifdef WIN32_USETUP
-
-#define NtDisplayString(str) printf("%S", (str)->Buffer)
-#define NtRaiseHardError(status, a, b, c, d, e) exit(1)
-
-#else /* WIN32_USETUP */
-
-#undef WriteConsole
-#undef ReadConsoleInput
-#undef FillConsoleOutputCharacter
-
-#define AllocConsole ConAllocConsole
-#define AttachConsole ConAttachConsole
-#define FillConsoleOutputAttribute ConFillConsoleOutputAttribute
-#define FillConsoleOutputCharacterA ConFillConsoleOutputCharacterA
-#define FreeConsole ConFreeConsole
-#define GetConsoleScreenBufferInfo ConGetConsoleScreenBufferInfo
-#define GetStdHandle ConGetStdHandle
-#define ReadConsoleInput ConReadConsoleInput
-#define SetConsoleCursorInfo ConSetConsoleCursorInfo
-#define SetConsoleCursorPosition ConSetConsoleCursorPosition
-#define SetConsoleTextAttribute ConSetConsoleTextAttribute
-#define WriteConsole ConWriteConsole
-#define WriteConsoleOutputCharacterA ConWriteConsoleOutputCharacterA
-#define WriteConsoleOutputCharacterW ConWriteConsoleOutputCharacterW
+#ifndef _UTILS_CONSOLE_H_
+#define _UTILS_CONSOLE_H_
 
 BOOL WINAPI
-ConAllocConsole(VOID);
+AllocConsole(VOID);
 
 BOOL WINAPI
-ConAttachConsole(
+AttachConsole(
 	IN DWORD dwProcessId);
 
 BOOL WINAPI
-ConFillConsoleOutputAttribute(
+FillConsoleOutputAttribute(
 	IN HANDLE hConsoleOutput,
 	IN WORD wAttribute,
 	IN DWORD nLength,
@@ -76,7 +43,7 @@ ConFillConsoleOutputAttribute(
 	OUT LPDWORD lpNumberOfAttrsWritten);
 
 BOOL WINAPI
-ConFillConsoleOutputCharacterA(
+FillConsoleOutputCharacterA(
 	IN HANDLE hConsoleOutput,
 	IN CHAR cCharacter,
 	IN DWORD nLength,
@@ -84,41 +51,41 @@ ConFillConsoleOutputCharacterA(
 	OUT LPDWORD lpNumberOfCharsWritten);
 
 BOOL WINAPI
-ConFreeConsole(VOID);
+FreeConsole(VOID);
 
 BOOL WINAPI
-ConGetConsoleScreenBufferInfo(
+GetConsoleScreenBufferInfo(
 	IN HANDLE hConsoleOutput,
 	OUT PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo);
 
 HANDLE WINAPI
-ConGetStdHandle(
+GetStdHandle(
 	IN DWORD nStdHandle);
 
 BOOL WINAPI
-ConReadConsoleInput(
+ReadConsoleInput(
 	IN HANDLE hConsoleInput,
 	OUT PINPUT_RECORD lpBuffer,
 	IN DWORD nLength,
 	OUT LPDWORD lpNumberOfEventsRead);
 
 BOOL WINAPI
-ConSetConsoleCursorInfo(
+SetConsoleCursorInfo(
 	IN HANDLE hConsoleOutput,
 	IN const CONSOLE_CURSOR_INFO* lpConsoleCursorInfo);
 
 BOOL WINAPI
-ConSetConsoleCursorPosition(
+SetConsoleCursorPosition(
 	IN HANDLE hConsoleOutput,
 	IN COORD dwCursorPosition);
 
 BOOL WINAPI
-ConSetConsoleTextAttribute(
+SetConsoleTextAttribute(
 	IN HANDLE hConsoleOutput,
 	IN WORD wAttributes);
 
 BOOL WINAPI
-ConWriteConsole(
+WriteConsole(
 	IN HANDLE hConsoleOutput,
 	IN const VOID* lpBuffer,
 	IN DWORD nNumberOfCharsToWrite,
@@ -126,7 +93,7 @@ ConWriteConsole(
 	IN LPVOID lpReserved);
 
 BOOL WINAPI
-ConWriteConsoleOutputCharacterA(
+WriteConsoleOutputCharacterA(
 	HANDLE hConsoleOutput,
 	IN LPCSTR lpCharacter,
 	IN DWORD nLength,
@@ -134,23 +101,13 @@ ConWriteConsoleOutputCharacterA(
 	OUT LPDWORD lpNumberOfCharsWritten);
 
 BOOL WINAPI
-ConWriteConsoleOutputCharacterA(
+WriteConsoleOutputCharacterA(
 	HANDLE hConsoleOutput,
 	IN LPCSTR lpCharacter,
 	IN DWORD nLength,
 	IN COORD dwWriteCoord,
 	OUT LPDWORD lpNumberOfCharsWritten);
 
-BOOL WINAPI
-ConWriteConsoleOutputCharacterW(
-	HANDLE hConsoleOutput,
-	IN LPCWSTR lpCharacter,
-	IN DWORD nLength,
-	IN COORD dwWriteCoord,
-	OUT LPDWORD lpNumberOfCharsWritten);
-
-#endif /* !WIN32_USETUP */
-
-#endif /* __CONSOLE_H__*/
+#endif /* _UTILS_CONSOLE_H_ */
 
 /* EOF */

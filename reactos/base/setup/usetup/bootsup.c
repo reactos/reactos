@@ -1787,10 +1787,10 @@ UpdateBootIni(PWSTR BootIniPath,
   return(Status);
 }
 
-
 BOOLEAN
 CheckInstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath)
 {
+#ifdef __REACTOS__
   if (DoesFileExist(SystemRootPath->Buffer, L"ntldr") ||
       DoesFileExist(SystemRootPath->Buffer, L"boot.ini"))
     {
@@ -1801,6 +1801,7 @@ CheckInstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath)
     {
       return TRUE;
     }
+#endif
 
   return FALSE;
 }
@@ -1812,6 +1813,7 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 			      PUNICODE_STRING DestinationArcPath,
 			      UCHAR PartitionType)
 {
+#ifdef __REACTOS__
 	WCHAR SrcPath[MAX_PATH];
 	WCHAR DstPath[MAX_PATH];
 	NTSTATUS Status;
@@ -2117,6 +2119,9 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 	}
 
 	return STATUS_SUCCESS;
+#else
+	return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 
@@ -2124,6 +2129,7 @@ NTSTATUS
 InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
 			   PUNICODE_STRING DestinationArcPath)
 {
+#ifdef __REACTOS__
   WCHAR SrcPath[MAX_PATH];
   WCHAR DstPath[MAX_PATH];
   NTSTATUS Status;
@@ -2170,6 +2176,9 @@ InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
     }
 
   return STATUS_SUCCESS;
+#else
+  return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 /* EOF */

@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/filesup.c
  * PURPOSE:         File support functions
@@ -33,7 +32,6 @@
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
-
 
 static BOOLEAN HasCurrentCabinet = FALSE;
 static WCHAR CurrentCabinetName[MAX_PATH];
@@ -76,9 +74,9 @@ SetupCreateDirectory(PWCHAR DirectoryName)
 			&IoStatusBlock,
 			NULL,
 			FILE_ATTRIBUTE_DIRECTORY,
-			0,
-			FILE_CREATE,
-			FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE,
+			FILE_SHARE_READ | FILE_SHARE_WRITE,
+			FILE_OPEN_IF,
+			FILE_DIRECTORY_FILE,
 			NULL,
 			0);
   if (NT_SUCCESS(Status))
@@ -108,10 +106,12 @@ SetupCopyFile(PWCHAR SourceFileName,
   NTSTATUS Status;
   PVOID SourceFileMap = 0;
   HANDLE SourceFileSection;
-  ULONG SourceSectionSize = 0;
+  SIZE_T SourceSectionSize = 0;
+  LARGE_INTEGER ByteOffset;
 
   Buffer = NULL;
 
+#ifdef __REACTOS__
   RtlInitUnicodeString(&FileName,
 		       SourceFileName);
 
@@ -126,12 +126,20 @@ SetupCopyFile(PWCHAR SourceFileName,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      FILE_SHARE_READ,
-		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
+		      FILE_SEQUENTIAL_ONLY);
   if(!NT_SUCCESS(Status))
     {
       DPRINT1("NtOpenFile failed: %x\n", Status);
       goto done;
     }
+#else
+  FileHandleSource = CreateFileW(SourceFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+  if (FileHandleSource == INVALID_HANDLE_VALUE)
+  {
+    Status = STATUS_UNSUCCESSFUL;
+    goto done;
+  }
+#endif
 
   Status = NtQueryInformationFile(FileHandleSource,
 				  &IoStatusBlock,
@@ -155,10 +163,10 @@ SetupCopyFile(PWCHAR SourceFileName,
 
   Status = NtCreateSection( &SourceFileSection,
 			    SECTION_MAP_READ,
-			    0,
-			    0,
+			    NULL,
+			    NULL,
 			    PAGE_READONLY,
-			    0,
+			    SEC_COMMIT,
 			    FileHandleSource);
   if(!NT_SUCCESS(Status))
     {
@@ -171,10 +179,10 @@ SetupCopyFile(PWCHAR SourceFileName,
 			       &SourceFileMap,
 			       0,
 			       0,
-			       0,
+			       NULL,
 			       &SourceSectionSize,
+			       ViewUnmap,
 			       0,
-			       SEC_COMMIT,
 			       PAGE_READONLY );
   if(!NT_SUCCESS(Status))
     {
@@ -199,7 +207,7 @@ SetupCopyFile(PWCHAR SourceFileName,
 			FILE_ATTRIBUTE_NORMAL,
 			0,
 			FILE_OVERWRITE_IF,
-			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
+			FILE_NO_INTERMEDIATE_BUFFERING | FILE_SEQUENTIAL_ONLY,
 			NULL,
 			0);
   if(!NT_SUCCESS(Status))
@@ -208,17 +216,18 @@ SetupCopyFile(PWCHAR SourceFileName,
       goto unmapsrcsec;
     }
 
-  RegionSize = PAGE_ROUND_UP(FileStandard.EndOfFile.u.LowPart);
+  RegionSize = (ULONG)PAGE_ROUND_UP(FileStandard.EndOfFile.u.LowPart);
   IoStatusBlock.Status = 0;
+  ByteOffset.QuadPart = 0;
   Status = NtWriteFile(FileHandleDest,
-		       0,
-		       0,
-		       0,
+		       NULL,
+		       NULL,
+		       NULL,
 		       &IoStatusBlock,
 		       SourceFileMap,
 		       RegionSize,
-		       0,
-		       0);
+		       &ByteOffset,
+		       NULL);
   if(!NT_SUCCESS(Status))
     {
       DPRINT1("NtWriteFile failed: %x:%x, iosb: %p src: %p, size: %x\n", Status, IoStatusBlock.Status, &IoStatusBlock, SourceFileMap, RegionSize);
@@ -254,7 +263,7 @@ SetupCopyFile(PWCHAR SourceFileName,
   return(Status);
 }
 
-
+#ifdef __REACTOS__
 NTSTATUS
 SetupExtractFile(PWCHAR CabinetFileName,
         PWCHAR SourceFileName,
@@ -314,7 +323,7 @@ SetupExtractFile(PWCHAR CabinetFileName,
 
   return STATUS_SUCCESS;
 }
-
+#endif
 
 BOOLEAN
 DoesFileExist(PWSTR PathName,

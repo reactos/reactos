@@ -27,24 +27,17 @@
 /* INCLUDES ******************************************************************/
 
 #include "usetup.h"
+/* Blue Driver Header */
+#include <blue/ntddblue.h>
+#include "keytrans.h"
 
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ******************************************************************/
-
-HANDLE StdInput  = INVALID_HANDLE_VALUE;
-HANDLE StdOutput = INVALID_HANDLE_VALUE;
-
-SHORT xScreen = 0;
-SHORT yScreen = 0;
-
 /* FUNCTIONS *****************************************************************/
 
-#ifndef WIN32_USETUP
-
 BOOL WINAPI
-ConAllocConsole(VOID)
+AllocConsole(VOID)
 {
 	UNICODE_STRING ScreenName = RTL_CONSTANT_STRING(L"\\??\\BlueScreen");
 	UNICODE_STRING KeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
@@ -90,14 +83,14 @@ ConAllocConsole(VOID)
 }
 
 BOOL WINAPI
-ConAttachConsole(
+AttachConsole(
 	IN DWORD dwProcessId)
 {
 	return FALSE;
 }
 
 BOOL WINAPI
-ConFreeConsole(VOID)
+FreeConsole(VOID)
 {
 	DPRINT("FreeConsole() called\n");
 
@@ -112,7 +105,7 @@ ConFreeConsole(VOID)
 }
 
 BOOL WINAPI
-ConWriteConsole(
+WriteConsole(
 	IN HANDLE hConsoleOutput,
 	IN const VOID* lpBuffer,
 	IN DWORD nNumberOfCharsToWrite,
@@ -140,7 +133,7 @@ ConWriteConsole(
 }
 
 HANDLE WINAPI
-ConGetStdHandle(
+GetStdHandle(
 	IN DWORD nStdHandle)
 {
 	switch (nStdHandle)
@@ -155,7 +148,7 @@ ConGetStdHandle(
 }
 
 BOOL WINAPI
-ConReadConsoleInput(
+ReadConsoleInput(
 	IN HANDLE hConsoleInput,
 	OUT PINPUT_RECORD lpBuffer,
 	IN DWORD nLength,
@@ -188,7 +181,7 @@ ConReadConsoleInput(
 }
 
 BOOL WINAPI
-ConWriteConsoleOutputCharacterA(
+WriteConsoleOutputCharacterA(
 	HANDLE hConsoleOutput,
 	IN LPCSTR lpCharacter,
 	IN DWORD nLength,
@@ -235,7 +228,7 @@ ConWriteConsoleOutputCharacterA(
 }
 
 BOOL WINAPI
-ConWriteConsoleOutputCharacterW(
+WriteConsoleOutputCharacterW(
 	HANDLE hConsoleOutput,
 	IN LPCWSTR lpCharacter,
 	IN DWORD nLength,
@@ -287,7 +280,7 @@ ConWriteConsoleOutputCharacterW(
 }
 
 BOOL WINAPI
-ConFillConsoleOutputAttribute(
+FillConsoleOutputAttribute(
 	IN HANDLE hConsoleOutput,
 	IN WORD wAttribute,
 	IN DWORD nLength,
@@ -322,7 +315,7 @@ ConFillConsoleOutputAttribute(
 }
 
 BOOL WINAPI
-ConFillConsoleOutputCharacterA(
+FillConsoleOutputCharacterA(
 	IN HANDLE hConsoleOutput,
 	IN CHAR cCharacter,
 	IN DWORD nLength,
@@ -356,7 +349,7 @@ ConFillConsoleOutputCharacterA(
 }
 
 BOOL WINAPI
-ConGetConsoleScreenBufferInfo(
+GetConsoleScreenBufferInfo(
 	IN HANDLE hConsoleOutput,
 	OUT PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo)
 {
@@ -378,7 +371,7 @@ ConGetConsoleScreenBufferInfo(
 }
 
 BOOL WINAPI
-ConSetConsoleCursorInfo(
+SetConsoleCursorInfo(
 	IN HANDLE hConsoleOutput,
 	IN const CONSOLE_CURSOR_INFO* lpConsoleCursorInfo)
 {
@@ -400,7 +393,7 @@ ConSetConsoleCursorInfo(
 }
 
 BOOL WINAPI
-ConSetConsoleCursorPosition(
+SetConsoleCursorPosition(
 	IN HANDLE hConsoleOutput,
 	IN COORD dwCursorPosition)
 {
@@ -431,7 +424,7 @@ ConSetConsoleCursorPosition(
 }
 
 BOOL WINAPI
-ConSetConsoleTextAttribute(
+SetConsoleTextAttribute(
 	IN HANDLE hConsoleOutput,
 	IN WORD wAttributes)
 {
@@ -451,7 +444,5 @@ ConSetConsoleTextAttribute(
 		0);
 	return NT_SUCCESS(Status);
 }
-
-#endif /* !WIN32_USETUP */
 
 /* EOF */

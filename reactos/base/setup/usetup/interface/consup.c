@@ -31,7 +31,32 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ******************************************************************/
+
+HANDLE StdInput  = INVALID_HANDLE_VALUE;
+HANDLE StdOutput = INVALID_HANDLE_VALUE;
+
+SHORT xScreen = 0;
+SHORT yScreen = 0;
+
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+CONSOLE_Init(
+	VOID)
+{
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	if (!HOST_InitConsole())
+		return FALSE;
+
+	StdInput = GetStdHandle(STD_INPUT_HANDLE);
+	StdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (!GetConsoleScreenBufferInfo(StdOutput, &csbi))
+		return FALSE;
+	xScreen = csbi.dwSize.X;
+	yScreen = 50;//csbi.dwSize.Y;
+	return TRUE;
+}
 
 VOID
 CONSOLE_ConInKey(
@@ -72,7 +97,7 @@ CONSOLE_ConOutPuts(
 	WriteConsole(
 		StdOutput,
 		szText,
-		strlen(szText),
+		(ULONG)strlen(szText),
 		&Written,
 		NULL);
 	WriteConsole(
@@ -88,7 +113,7 @@ CONSOLE_ConOutPrintf(
 	IN LPCSTR szFormat, ...)
 {
 	CHAR szOut[256];
-	DWORD dwWritten;
+	ULONG dwWritten;
 	va_list arg_ptr;
 
 	va_start(arg_ptr, szFormat);
@@ -98,7 +123,7 @@ CONSOLE_ConOutPrintf(
 	WriteConsole(
 		StdOutput,
 		szOut,
-		strlen(szOut),
+		(ULONG)strlen(szOut),
 		&dwWritten,
 		NULL);
 }
@@ -121,20 +146,6 @@ CONSOLE_GetCursorY(VOID)
 	GetConsoleScreenBufferInfo(StdOutput, &csbi);
 
 	return csbi.dwCursorPosition.Y;
-}
-
-VOID
-CONSOLE_GetScreenSize(
-	OUT SHORT *maxx,
-	OUT SHORT *maxy)
-{
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-	GetConsoleScreenBufferInfo(StdOutput, &csbi);
-
-	*maxx = csbi.dwSize.X;
-
-	*maxy = csbi.dwSize.Y;
 }
 
 VOID
@@ -219,7 +230,7 @@ CONSOLE_SetStatusText(
 	WriteConsoleOutputCharacterA(
 		StdOutput,
 		Buffer,
-		strlen(Buffer),
+		(ULONG)strlen(Buffer),
 		coPos,
 		&Written);
 }
@@ -285,7 +296,7 @@ CONSOLE_SetTextXY(
 	WriteConsoleOutputCharacterA(
 		StdOutput,
 		Text,
-		strlen(Text),
+		(ULONG)strlen(Text),
 		coPos,
 		&Written);
 }
@@ -298,14 +309,14 @@ CONSOLE_SetInputTextXY(
 	IN LPCWSTR Text)
 {
 	COORD coPos;
-	ULONG Length;
+	SHORT Length;
 	ULONG Written;
 
 	coPos.X = x;
 	coPos.Y = y;
 
-	Length = wcslen(Text);
-	if (Length > (ULONG)len - 1)
+	Length = (SHORT)wcslen(Text);
+	if (Length > len - 1)
 		Length = len - 1;
 
 	FillConsoleOutputAttribute(
@@ -318,7 +329,7 @@ CONSOLE_SetInputTextXY(
 	WriteConsoleOutputCharacterW(
 		StdOutput,
 		Text,
-		Length,
+		(ULONG)Length,
 		coPos,
 		&Written);
 
@@ -330,7 +341,7 @@ CONSOLE_SetInputTextXY(
 		coPos,
 		&Written);
 
-	if ((ULONG)len > Length + 1)
+	if (len > Length + 1)
 	{
 		coPos.X++;
 		FillConsoleOutputCharacterA(
@@ -355,7 +366,7 @@ CONSOLE_SetUnderlinedTextXY(
 	coPos.X = x;
 	coPos.Y = y;
 
-	Length = strlen(Text);
+	Length = (ULONG)strlen(Text);
 
 	WriteConsoleOutputCharacterA(
 		StdOutput,
@@ -386,7 +397,7 @@ CONSOLE_SetInvertedTextXY(
 	coPos.X = x;
 	coPos.Y = y;
 
-	Length = strlen(Text);
+	Length = (ULONG)strlen(Text);
 
 	FillConsoleOutputAttribute(
 		StdOutput,
@@ -416,7 +427,7 @@ CONSOLE_SetHighlightedTextXY(
 	coPos.X = x;
 	coPos.Y = y;
 
-	Length = strlen(Text);
+	Length = (ULONG)strlen(Text);
 
 	FillConsoleOutputAttribute(
 		StdOutput,
@@ -454,7 +465,7 @@ CONSOLE_PrintTextXY(
 	WriteConsoleOutputCharacterA(
 		StdOutput,
 		buffer,
-		strlen(buffer),
+		(ULONG)strlen(buffer),
 		coPos,
 		&Written);
 }
@@ -469,7 +480,7 @@ CONSOLE_PrintTextXYN(
 	CHAR buffer[512];
 	va_list ap;
 	COORD coPos;
-	ULONG Length;
+	SHORT Length;
 	ULONG Written;
 
 	va_start(ap, fmt);
@@ -479,8 +490,8 @@ CONSOLE_PrintTextXYN(
 	coPos.X = x;
 	coPos.Y = y;
 
-	Length = strlen(buffer);
-	if (Length > (ULONG)len - 1)
+	Length = (SHORT)strlen(buffer);
+	if (Length > len - 1)
 		Length = len - 1;
 
 	WriteConsoleOutputCharacterA(
@@ -492,7 +503,7 @@ CONSOLE_PrintTextXYN(
 
 	coPos.X += Length;
 
-	if ((ULONG)len > Length)
+	if (len > Length)
 	{
 		FillConsoleOutputCharacterA(
 			StdOutput,

@@ -45,9 +45,6 @@
 /* DDK Disk Headers */
 #include <ntddscsi.h>
 
-/* Blue Driver Header */
-#include <blue/ntddblue.h>
-
 /* Helper Header */
 #include <reactos/helper.h>
 
@@ -56,13 +53,13 @@
 
 /* Internal Headers */
 #include "interface/consup.h"
-#include "native/utils/console.h"
-#include "native/utils/keytrans.h"
 #include "partlist.h"
 #include "inffile.h"
 #include "inicache.h"
 #include "progress.h"
+#ifdef __REACTOS__
 #include "filequeue.h"
+#endif
 #include "bootsup.h"
 #include "registry.h"
 #include "fslist.h"
@@ -73,11 +70,12 @@
 #include "drivesup.h"
 #include "genlist.h"
 #include "settings.h"
+#include "host.h"
 
 extern HANDLE ProcessHeap;
 extern UNICODE_STRING SourceRootPath;
+extern UNICODE_STRING SourcePath;
 extern BOOLEAN IsUnattendedSetup;
-
 
 #endif /* __USETUP_H__*/
 

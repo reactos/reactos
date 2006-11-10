@@ -34,7 +34,9 @@
 extern HANDLE StdInput, StdOutput;
 extern SHORT xScreen, yScreen;
 
-#include "../native/utils/console.h"
+BOOLEAN
+CONSOLE_Init(
+	VOID);
 
 VOID
 CONSOLE_ClearScreen(VOID);
@@ -60,11 +62,6 @@ CONSOLE_GetCursorX(VOID);
 
 SHORT
 CONSOLE_GetCursorY(VOID);
-
-VOID
-CONSOLE_GetScreenSize(
-	OUT SHORT *maxx,
-	OUT SHORT *maxy);
 
 VOID
 CONSOLE_InvertTextXY(

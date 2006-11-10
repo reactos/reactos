@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/fslist.h
  * PURPOSE:         Filesystem list functions
@@ -28,30 +27,38 @@
 #ifndef __FSLIST_H__
 #define __FSLIST_H__
 
+#include <fmifs/fmifs.h>
+
 typedef struct _FILE_SYSTEM_ITEM
 {
-  LIST_ENTRY ListEntry;
-  LPCSTR FileSystem; /* Not owned by the item */
-  FORMATEX FormatFunc;
-  CHKDSKEX ChkdskFunc;
-  BOOLEAN QuickFormat;
+	LIST_ENTRY ListEntry;
+	LPCWSTR FileSystem; /* Not owned by the item */
+	FORMATEX FormatFunc;
+	CHKDSKEX ChkdskFunc;
+	BOOLEAN QuickFormat;
 } FILE_SYSTEM_ITEM, *PFILE_SYSTEM_ITEM;
 
 typedef struct _FILE_SYSTEM_LIST
 {
-  SHORT Left;
-  SHORT Top;
-  PFILE_SYSTEM_ITEM Selected;
-  LIST_ENTRY ListHead; /* List of FILE_SYSTEM_ITEM */
+	SHORT Left;
+	SHORT Top;
+	PFILE_SYSTEM_ITEM Selected;
+	LIST_ENTRY ListHead; /* List of FILE_SYSTEM_ITEM */
 } FILE_SYSTEM_LIST, *PFILE_SYSTEM_LIST;
 
+VOID
+FS_AddProvider(
+	IN OUT PFILE_SYSTEM_LIST List,
+	IN LPCWSTR FileSystem,
+	IN FORMATEX FormatFunc,
+	IN CHKDSKEX ChkdskFunc);
 
 PFILE_SYSTEM_LIST
 CreateFileSystemList(
-    IN SHORT Left,
-    IN SHORT Top,
-    IN BOOLEAN ForceFormat,
-    IN LPCSTR ForceFileSystem);
+	IN SHORT Left,
+	IN SHORT Top,
+	IN BOOLEAN ForceFormat,
+	IN LPCWSTR ForceFileSystem);
 
 VOID
 DestroyFileSystemList(

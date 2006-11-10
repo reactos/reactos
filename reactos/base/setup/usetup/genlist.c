@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/genlist.c
  * PURPOSE:         Generic list functions
@@ -72,7 +71,7 @@ DestroyGenericList(PGENERIC_LIST List,
 
       /* Release user data */
       if (FreeUserData && ListEntry->UserData != NULL)
-	RtlFreeHeap (ProcessHeap, 0, &ListEntry->UserData);
+      RtlFreeHeap (ProcessHeap, 0, ListEntry->UserData);
 
       /* Release list entry */
       RtlFreeHeap (ProcessHeap, 0, ListEntry);

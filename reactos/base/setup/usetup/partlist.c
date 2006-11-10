@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
  * PURPOSE:         Partition list functions
@@ -457,31 +456,33 @@ DiskConfigurationDataQueryRoutine(PWSTR ValueName,
                                   PVOID Context,
                                   PVOID EntryContext)
 {
-  PBIOSDISKENTRY BiosDiskEntry = (PBIOSDISKENTRY)Context;
-  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
-  PCM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
+	PBIOSDISKENTRY BiosDiskEntry = (PBIOSDISKENTRY)Context;
+	PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+	PCM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
+	ULONG i;
 
-  if (ValueType == REG_FULL_RESOURCE_DESCRIPTOR &&
-      ValueLength == sizeof(CM_FULL_RESOURCE_DESCRIPTOR) + sizeof(CM_DISK_GEOMETRY_DEVICE_DATA))
-    {
-      FullResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)ValueData;
-      /* FIXME:
-       *   Is this 'paranoia' check correct ?
-       */
-      if (FullResourceDescriptor->InterfaceType != InterfaceTypeUndefined ||
-          FullResourceDescriptor->BusNumber != 0 ||
-          FullResourceDescriptor->PartialResourceList.Count != 1 ||
-          FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type != CmResourceTypeDeviceSpecific ||
-          FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.DeviceSpecificData.DataSize != sizeof(CM_DISK_GEOMETRY_DEVICE_DATA))
-        {
-          return STATUS_UNSUCCESSFUL;
-        }
-      DiskGeometry = (PCM_DISK_GEOMETRY_DEVICE_DATA)(FullResourceDescriptor + 1);
-      BiosDiskEntry->DiskGeometry = *DiskGeometry;
+	if (ValueType != REG_FULL_RESOURCE_DESCRIPTOR ||
+		ValueLength < sizeof(CM_FULL_RESOURCE_DESCRIPTOR))
+		return STATUS_UNSUCCESSFUL;
 
-      return STATUS_SUCCESS;
-    }
-  return STATUS_UNSUCCESSFUL;
+	FullResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)ValueData;
+	/* Hm. Version and Revision are not set on Microsoft Windows XP... */
+	/*if (FullResourceDescriptor->PartialResourceList.Version != 1 ||
+		FullResourceDescriptor->PartialResourceList.Revision != 1)
+		return STATUS_UNSUCCESSFUL;*/
+
+	for (i = 0; i < FullResourceDescriptor->PartialResourceList.Count; i++)
+	{
+		if (FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].Type != CmResourceTypeDeviceSpecific ||
+			FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize != sizeof(CM_DISK_GEOMETRY_DEVICE_DATA))
+			continue;
+
+		DiskGeometry = (PCM_DISK_GEOMETRY_DEVICE_DATA)&FullResourceDescriptor->PartialResourceList.PartialDescriptors[i + 1];
+		BiosDiskEntry->DiskGeometry = *DiskGeometry;
+
+		return STATUS_SUCCESS;
+	}
+	return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -493,31 +494,36 @@ SystemConfigurationDataQueryRoutine(PWSTR ValueName,
                                     PVOID Context,
                                     PVOID EntryContext)
 {
-  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
-  PCM_INT13_DRIVE_PARAMETER* Int13Drives = (PCM_INT13_DRIVE_PARAMETER*)Context;
+	PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+	PCM_INT13_DRIVE_PARAMETER* Int13Drives = (PCM_INT13_DRIVE_PARAMETER*)Context;
+	ULONG i;
 
-  if (ValueType == REG_FULL_RESOURCE_DESCRIPTOR &&
-      ValueLength >= sizeof (CM_FULL_RESOURCE_DESCRIPTOR) &&
-      (ValueLength - sizeof(CM_FULL_RESOURCE_DESCRIPTOR)) % sizeof(CM_INT13_DRIVE_PARAMETER) == 0)
-    {
-      FullResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)ValueData;
-      if (FullResourceDescriptor->InterfaceType != InterfaceTypeUndefined ||
-          FullResourceDescriptor->BusNumber != -1 ||
-          FullResourceDescriptor->PartialResourceList.Count != 1 ||
-          FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type != CmResourceTypeDeviceSpecific)
-        {
-          return STATUS_UNSUCCESSFUL;
-        }
-      *Int13Drives = RtlAllocateHeap(ProcessHeap, 0, ValueLength - sizeof (CM_FULL_RESOURCE_DESCRIPTOR));
-      if (*Int13Drives == NULL)
-        {
-          return STATUS_NO_MEMORY;
-        }
-      memcpy(*Int13Drives, FullResourceDescriptor + 1, ValueLength - sizeof (CM_FULL_RESOURCE_DESCRIPTOR));
-      return STATUS_SUCCESS;
-    }
-  return STATUS_UNSUCCESSFUL;
+	if (ValueType != REG_FULL_RESOURCE_DESCRIPTOR ||
+		ValueLength < sizeof (CM_FULL_RESOURCE_DESCRIPTOR))
+		return STATUS_UNSUCCESSFUL;
 
+	FullResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)ValueData;
+	/* Hm. Version and Revision are not set on Microsoft Windows XP... */
+	/*if (FullResourceDescriptor->PartialResourceList.Version != 1 ||
+		FullResourceDescriptor->PartialResourceList.Revision != 1)
+		return STATUS_UNSUCCESSFUL;*/
+
+	for (i = 0; i < FullResourceDescriptor->PartialResourceList.Count; i++)
+	{
+		if (FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].Type != CmResourceTypeDeviceSpecific ||
+			FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize != sizeof(CM_INT13_DRIVE_PARAMETER))
+			continue;
+
+		*Int13Drives = RtlAllocateHeap(ProcessHeap, 0, sizeof(CM_INT13_DRIVE_PARAMETER));
+		if (*Int13Drives == NULL)
+			return STATUS_NO_MEMORY;
+		memcpy(
+			*Int13Drives,
+			&FullResourceDescriptor->PartialResourceList.PartialDescriptors[i + 1],
+			sizeof(CM_INT13_DRIVE_PARAMETER));
+		return STATUS_SUCCESS;
+	}
+	return STATUS_UNSUCCESSFUL;
 }
 #define ROOT_NAME   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter"
 
@@ -948,7 +954,7 @@ CreatePartitionList (SHORT Left,
 			   &Iosb,
 			   FILE_SHARE_READ,
 			   FILE_SYNCHRONOUS_IO_NONALERT);
-      if (NT_SUCCESS(Status))
+	  if (NT_SUCCESS(Status))
 	{
 	  AddDiskToList (FileHandle,
 			 DiskNumber,
