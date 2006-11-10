@@ -1907,7 +1907,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
 {
   INFCONTEXT InfContext;
   TCHAR szName[256];
-  TCHAR szValue[256];
+  TCHAR szValue[MAX_PATH];
   DWORD LineLength;
 
   if (!SetupFindFirstLine(hUnattendedInf,
@@ -2006,6 +2006,57 @@ ProcessUnattendInf(HINF hUnattendedInf)
   }
   while (SetupFindNextLine(&InfContext, &InfContext));
 
+
+  if (SetupFindFirstLine(hUnattendedInf,
+                         _T("GuiRunOnce"),
+                         NULL,
+                         &InfContext))
+    {
+      HKEY hKey;
+      int i;
+
+      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                        _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce"),
+                        0,
+                        KEY_SET_VALUE,
+                        &hKey) != ERROR_SUCCESS)
+        {
+          DPRINT1("Error: failed to open HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce\n");
+          return TRUE;
+        }
+
+      i = 0;
+
+      do
+      {
+        if(SetupGetStringField(&InfContext, 
+                               0,
+                               szValue,
+                               sizeof(szValue) / sizeof(TCHAR),
+                               NULL))
+          {
+            TCHAR szPath[MAX_PATH];
+            _stprintf(szName, _T("%d"), i);
+            DPRINT("szName %S szValue %S\n", szName, szValue);
+
+           if (ExpandEnvironmentStrings(szValue, szPath, MAX_PATH))
+             {
+               DPRINT("value %S\n", szPath);
+               if (RegSetValueEx(hKey,
+                                 szName, 
+                                 0,
+                                 REG_SZ,
+                                 (const BYTE*)szPath,
+                                 _tcslen(szPath) * sizeof(TCHAR)) == ERROR_SUCCESS)
+                 {
+                   i++;
+                 }
+             }
+          }
+      }while(SetupFindNextLine(&InfContext, &InfContext));
+
+    RegCloseKey(hKey);
+  }
   return TRUE;
 }
 
