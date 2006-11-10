@@ -141,121 +141,15 @@ ConWriteConsoleOutputCharacterA(
 	IN COORD dwWriteCoord,
 	OUT LPDWORD lpNumberOfCharsWritten);
 
+BOOL WINAPI
+ConWriteConsoleOutputCharacterW(
+	HANDLE hConsoleOutput,
+	IN LPCWSTR lpCharacter,
+	IN DWORD nLength,
+	IN COORD dwWriteCoord,
+	OUT LPDWORD lpNumberOfCharsWritten);
+
 #endif /* !WIN32_USETUP */
-
-VOID
-CONSOLE_ClearScreen(VOID);
-
-VOID
-CONSOLE_ConInKey(
-	OUT PINPUT_RECORD Buffer);
-
-VOID
-CONSOLE_ConOutChar(
-	IN CHAR c);
-
-VOID
-CONSOLE_ConOutPrintf(
-	IN LPCSTR szFormat, ...);
-
-VOID
-CONSOLE_ConOutPuts(
-	IN LPCSTR szText);
-
-SHORT
-CONSOLE_GetCursorX(VOID);
-
-SHORT
-CONSOLE_GetCursorY(VOID);
-
-VOID
-CONSOLE_GetScreenSize(
-	OUT SHORT *maxx,
-	OUT SHORT *maxy);
-
-VOID
-CONSOLE_InvertTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN SHORT col,
-	IN SHORT row);
-
-VOID
-CONSOLE_NormalTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN SHORT col,
-	IN SHORT row);
-
-VOID
-CONSOLE_PrintTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN LPCSTR fmt, ...);
-
-VOID
-CONSOLE_PrintTextXYN(
-	IN SHORT x,
-	IN SHORT y,
-	IN SHORT len,
-	IN LPCSTR fmt, ...);
-
-VOID
-CONSOLE_SetCursorType(
-	IN BOOL bInsert,
-	IN BOOL bVisible);
-
-VOID
-CONSOLE_SetCursorXY(
-	IN SHORT x,
-	IN SHORT y);
-
-VOID
-CONSOLE_SetCursorXY(
-	IN SHORT x,
-	IN SHORT y);
-
-VOID
-CONSOLE_SetHighlightedTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN LPCSTR Text);
-
-VOID
-CONSOLE_SetInputTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN SHORT len,
-	IN LPCWSTR Text);
-
-VOID
-CONSOLE_SetInputTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN SHORT len,
-	IN LPCWSTR Text);
-
-VOID
-CONSOLE_SetInvertedTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN LPCSTR Text);
-
-VOID
-CONSOLE_SetStatusText(
-	IN LPCSTR fmt, ...);
-
-VOID
-CONSOLE_SetTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN LPCSTR Text);
-
-VOID
-CONSOLE_SetUnderlinedTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN LPCSTR Text);
 
 #endif /* __CONSOLE_H__*/
 

@@ -15,10 +15,19 @@
 	<library>ntdll</library>
 	<pch>usetup.h</pch>
 	<compilationunit name="unit.c">
+		<directory name="interface">
+			<file>consup.c</file>
+			<file>usetup.c</file>
+		</directory>
+		<directory name="native">
+			<directory name="utils">
+				<file>console.c</file>
+				<file>keytrans.c</file>
+			</directory>
+		</directory>
 		<file>bootsup.c</file>
 		<file>cabinet.c</file>
 		<file>chkdsk.c</file>
-		<file>console.c</file>
 		<file>drivesup.c</file>
 		<file>filequeue.c</file>
 		<file>filesup.c</file>
@@ -27,12 +36,10 @@
 		<file>genlist.c</file>
 		<file>inffile.c</file>
 		<file>inicache.c</file>
-		<file>keytrans.c</file>
 		<file>partlist.c</file>
 		<file>progress.c</file>
 		<file>registry.c</file>
 		<file>settings.c</file>
-		<file>usetup.c</file>
 	</compilationunit>
 	<file>usetup.rc</file>
 </module>

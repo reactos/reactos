@@ -55,14 +55,15 @@
 #include <reactos/buildno.h>
 
 /* Internal Headers */
-#include "console.h"
+#include "interface/consup.h"
+#include "native/utils/console.h"
+#include "native/utils/keytrans.h"
 #include "partlist.h"
 #include "inffile.h"
 #include "inicache.h"
 #include "progress.h"
 #include "filequeue.h"
 #include "bootsup.h"
-#include "keytrans.h"
 #include "registry.h"
 #include "fslist.h"
 #include "chkdsk.h"
