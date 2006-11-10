@@ -1,0 +1,12 @@
+@echo off
+ECHO 
+ECHO Launching Programms...
+ECHO
+REM START /WAIT abiword.exe
+REM START /WAIT openoffice.msi /Q 
+
+ECHO
+ECHO Shutting down ReactOS
+ECHO
+START shutdown.exe shutdown
+
