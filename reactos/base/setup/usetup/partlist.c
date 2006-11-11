@@ -511,16 +511,16 @@ SystemConfigurationDataQueryRoutine(PWSTR ValueName,
 	for (i = 0; i < FullResourceDescriptor->PartialResourceList.Count; i++)
 	{
 		if (FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].Type != CmResourceTypeDeviceSpecific ||
-			FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize != sizeof(CM_INT13_DRIVE_PARAMETER))
+			FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize % sizeof(CM_INT13_DRIVE_PARAMETER) != 0)
 			continue;
 
-		*Int13Drives = RtlAllocateHeap(ProcessHeap, 0, sizeof(CM_INT13_DRIVE_PARAMETER));
+		*Int13Drives = RtlAllocateHeap(ProcessHeap, 0, FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize);
 		if (*Int13Drives == NULL)
 			return STATUS_NO_MEMORY;
 		memcpy(
 			*Int13Drives,
 			&FullResourceDescriptor->PartialResourceList.PartialDescriptors[i + 1],
-			sizeof(CM_INT13_DRIVE_PARAMETER));
+			FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize);
 		return STATUS_SUCCESS;
 	}
 	return STATUS_UNSUCCESSFUL;
