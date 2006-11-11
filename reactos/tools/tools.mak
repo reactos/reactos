@@ -59,3 +59,4 @@ include tools/wmc/wmc.mak
 include tools/wpp/wpp.mak
 include tools/wrc/wrc.mak
 include tools/sysreg/sysreg.mak
+include tools/dbgprint/dbgprint.mak
