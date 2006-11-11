@@ -4,5 +4,5 @@
 LIBRARY kbdus.dll
 
 EXPORTS
-KbdLayerDescriptor
+KbdLayerDescriptor@0
 ;EOF

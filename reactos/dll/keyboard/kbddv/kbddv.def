@@ -1,8 +1,8 @@
 ;
 ; ReactOS Operating System
 ;
-LIBRARY kbddvorak.dll
+LIBRARY kbdv.dll
 
 EXPORTS
-KbdLayerDescriptor
+KbdLayerDescriptor@0
 ;EOF
