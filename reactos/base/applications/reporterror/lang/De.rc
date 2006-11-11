@@ -41,13 +41,13 @@ END
 STRINGTABLE
 BEGIN
   IDS_WIZARD_NAME "Fehlerbericht an die ReactOS Foundation senden"
-  IDS_FAILED_TO_CONTACT_SERVER "Das System war nicht in der Lage den ReactOS Fehlerbericht Server zu kontaktieren.\nBitte vergewissern Sie sich das ihr System mit dem Internet verbunden ist."
+  IDS_FAILED_TO_CONTACT_SERVER "Das System war nicht in der Lage den ReactOS Fehlerbericht Server zu kontaktieren.\nBitte vergewissern Sie sich, dass ihr System mit dem Internet verbunden ist."
   IDS_FAILED_TO_DELIVER_ERROR_REPORT "Das System konnte den Fehlerbericht nicht versenden."
 END
 
 STRINGTABLE
 BEGIN
   IDS_CONTACTING_SERVER "Verbindung mit dem ReactOS Fehlerbericht Server wird hergestellt ..."
-  IDS_FAILED_TO_INITIALIZE_WINSOCK "Fehler beim initialisieren von winsock (windows/ReactOS Fehlercode %d)"
+  IDS_FAILED_TO_INITIALIZE_WINSOCK "Fehler beim Initialisieren von winsock (windows/ReactOS Fehlercode %d)"
   IDS_FAILED_TO_LOCATE_SERVER "Verbindung mit dem ReactOS Fehlerbericht Server konnte nicht hergestellt werden."
 END

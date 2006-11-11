@@ -49,13 +49,13 @@ BEGIN
         MENUITEM "K&leine Symbole",               ID_VIEW_SMALL
         MENUITEM "&Details",                      ID_VIEW_DETAILS, CHECKED
         MENUITEM "&Spalten auswählen...",      ID_VIEW_SELECTCOLUMNS
-        POPUP "&CPU-verlauf"
+        POPUP "&CPU-Verlauf"
         BEGIN
             MENUITEM "&Alle CPUs in einem Diagramm",  ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
             MENUITEM "&Ein Diagramm pro CPU",         ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "K&ernel-Zeiten anziegen",           ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "K&ernel-Zeiten anzeigen",           ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "F&enster"
     BEGIN
@@ -621,7 +621,7 @@ BEGIN
     ID_VIEW_SHOWKERNELTIMES "Zeigt die Kernel-Zeiten in den Systemmonitordiagrammen an."
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
                             "Zeigt für jede CPU-Auslastung ein Verlaufsdiagramm an."
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Zeigt die gesamte CPU-Auslastung in einem Verlaufdiagramm an."
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Zeigt die gesamte CPU-Auslastung in einem Verlaufsdiagramm an."
     ID_APPLICATION_PAGE_SWITCHTO
                             "Zeigt das Fenster im Vordergrund an und wechselt zu diesem Task."
 END
@@ -700,10 +700,10 @@ BEGIN
     IDS_MSG_UNABLEDEBUGPROCESS    "Kann Prozess nicht debuggen"
     IDS_MSG_WARNINGDEBUG          "WARNUNG: Das Debuggen dieses Prozesses kann zu Datenverlust führen.\nSind Sie sicher, dass Sie diesen Prozess debuggen möchten?"
     IDS_MSG_TASKMGRWARNING        "Warnung vom Task-Manager"
-    IDS_MSG_WARNINGTERMINATING    "WARNUNG: Das Abbrechen eines Prozesses kann zu\nunerwünschten Ergebnissen, einschließlich Datenverlust und\nSysteminstabilität, führen. Zustand und Daten des Prozesses\nwerden nicht mher gespeichert. Sind Sie sicher, dass Sie\nden Prozess abbrechen möchten?"
+    IDS_MSG_WARNINGTERMINATING    "WARNUNG: Das Abbrechen eines Prozesses kann zu\nunerwünschten Ergebnissen, einschließlich Datenverlust und\nSysteminstabilität, führen. Zustand und Daten des Prozesses\nwerden nicht mehr gespeichert. Sind Sie sicher, dass Sie\nden Prozess abbrechen möchten?"
     IDS_MSG_UNABLETERMINATEPRO    "Kann den Prozess nicht beenden"
-    IDS_MSG_UNABLECHANGEPRIORITY  "Kann die Priorität nicht ¤ndern"
-    IDS_MSG_WARNINGCHANGEPRIORITY "WARNUNG: Das Ändern der Prioritätsklasse dieses Prozesses\nkann zu unerwünschten Ergebnissen, einschl. Systeminstabilität, führen.\nSind Sie sicher, dass Sie ändern möchten?"
+    IDS_MSG_UNABLECHANGEPRIORITY  "Kann die Priorität nicht ändern"
+    IDS_MSG_WARNINGCHANGEPRIORITY "WARNUNG: Das Ändern der Prioritätsklasse dieses Prozesses\nkann zu unerwünschten Ergebnissen, einschl. Systeminstabilität, führen.\nSind Sie sicher, dass Sie sie ändern möchten?"
     IDS_MSG_TRAYICONCPUUSAGE      "CPU-Auslastung: %d%%"
     IDS_STATUS_MEMUSAGE           "zugesicherter Speicher: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "CPU-Auslastung: %3d%%"

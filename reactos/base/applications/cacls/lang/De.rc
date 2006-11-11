@@ -16,7 +16,7 @@ CACLS Dateiname [/T] [/E] [/C] [/G Benutzer:Zugriff] [/R Benutzer [...]]\n\
   /E                   ACL bearbeiten anstatt sie zu ersetzen.\n\
   /C                   Ändern der ACLs bei Zugriffsverletzung fortsetzen.\n\
   /G Benutzer:Zugriff  Angegebene Zugriffsarten zulassen.\n\
-                       Zugriff kann sein: R Lesen\n\
+                       Zugriff kann sein: R  Lesen\n\
                                           W  Schreiben\n\
                                           C  Ändern (Schreiben)\n\
                                           F  Vollzugriff\n\

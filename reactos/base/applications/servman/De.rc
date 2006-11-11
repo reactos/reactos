@@ -6,7 +6,7 @@ BEGIN
   BEGIN
     MENUITEM "B&eenden",ID_FILE_EXIT
   END
-  POPUP "Action"
+  POPUP "Aktion"
   BEGIN
     MENUITEM "Start",ID_START
     MENUITEM "Stopp",ID_STOP
@@ -53,7 +53,7 @@ BEGIN
   CONTROL "",IDC_SERV_NAME,"Static",0x50000000,70,11,176,11
   CONTROL "",IDC_DISP_NAME,"Static",0x50001000,70,29,176,12
   CONTROL "",IDC_DESCRIPTION,"Static",0x50201000,70,46,176,22
-  CONTROL "Pfad zum ausführbarem Programm:",IDC_STATIC,"Static",0x50000000,6,73,150,9
+  CONTROL "Pfad zum ausführbaren Programm:",IDC_STATIC,"Static",0x50000000,6,73,150,9
   CONTROL "",IDC_STATIC,"Static",0x50001000,6,86,238,12
   CONTROL "Starttyp:",IDC_STATIC,"Static",0x50000000,6,108,53,11
   CONTROL "",IDC_START_TYPE,"ComboBox",0x50010003,70,107,176,11
@@ -116,6 +116,6 @@ BEGIN
     IDS_TOOLTIP_EXPORT  "Liste exportieren"
     IDS_TOOLTIP_START   "Dienst starten"
     IDS_TOOLTIP_STOP    "Dienst beenden"
-    IDS_TOOLTIP_PAUSE   "Diest pausieren"
-    IDS_TOOLTIP_RESTART "Diest neustarten"
+    IDS_TOOLTIP_PAUSE   "Dienst pausieren"
+    IDS_TOOLTIP_RESTART "Dienst neustarten"
 END
