@@ -1,15 +1,12 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            hal/x86/drive.c
- * PURPOSE:         Drive letter assignment
- * PROGRAMMER:      
- * UPDATE HISTORY:
- *	2000-03-25
+/*
+ * PROJECT:         ReactOS HA:
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/hal/halx86/drive.c
+ * PURPOSE:         I/O HAL Routines for Disk Access
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <hal.h>
 #define NDEBUG
@@ -17,17 +14,61 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
-IoAssignDriveLetters(IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
-		     IN PSTRING NtDeviceName,
-		     OUT PUCHAR NtSystemPath,
-		     OUT PSTRING NtSystemPathString)
+VOID
+NTAPI
+HalpAssignDriveLetters(IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+                       IN PSTRING NtDeviceName,
+                       OUT PUCHAR NtSystemPath,
+                       OUT PSTRING NtSystemPathString)
 {
-  /* FIXME FIXME FIXME FUCK SOMEONE FIXME*/
-  HalIoAssignDriveLetters(NULL,
-			  NtDeviceName,
-			  NtSystemPath,
-			  NtSystemPathString);
+    /* Call the kernel */
+    return IoAssignDriveLetters(LoaderBlock,
+                                NtDeviceName,
+                                NtSystemPath,
+                                NtSystemPathString);
 }
 
+NTSTATUS
+NTAPI
+HalpReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                       IN ULONG SectorSize,
+                       IN BOOLEAN ReturnRecognizedPartitions,
+                       IN OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
+{
+    /* Call the kernel */
+    return IoReadPartitionTable(DeviceObject,
+                                SectorSize,
+                                ReturnRecognizedPartitions,
+                                PartitionBuffer);
+}
+
+NTSTATUS
+NTAPI
+HalpWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                        IN ULONG SectorSize,
+                        IN ULONG SectorsPerTrack,
+                        IN ULONG NumberOfHeads,
+                        IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
+{
+    /* Call the kernel */
+    return IoWritePartitionTable(DeviceObject,
+                                 SectorSize,
+                                 SectorsPerTrack,
+                                 NumberOfHeads,
+                                 PartitionBuffer);
+}
+
+NTSTATUS
+NTAPI
+HalpSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
+                            IN ULONG SectorSize,
+                            IN ULONG PartitionNumber,
+                            IN ULONG PartitionType)
+{
+    /* Call the kernel */
+    return IoSetPartitionInformation(DeviceObject,
+                                     SectorSize,
+                                     PartitionNumber,
+                                     PartitionType);
+}
 /* EOF */

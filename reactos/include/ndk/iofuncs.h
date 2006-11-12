@@ -26,6 +26,20 @@ Author:
 #include <iotypes.h>
 
 //
+// I/O Functions
+//
+#ifndef NTOS_MODE_USER
+VOID
+FASTCALL
+IoAssignDriveLetters(
+    IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+    IN PSTRING NtDeviceName,
+    OUT PUCHAR NtSystemPath,
+    OUT PSTRING NtSystemPathString
+);
+#endif
+
+//
 // Native calls
 //
 NTSYSCALLAPI
@@ -1004,4 +1018,5 @@ ZwWriteFileGather(
 );
 
 #endif
+
 

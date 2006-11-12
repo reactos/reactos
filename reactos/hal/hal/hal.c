@@ -12,9 +12,11 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntddk.h>
+#include <ntdddisk.h>
+#include <arc/arc.h>
 #include <ndk/halfuncs.h>
+#include <ndk/iofuncs.h>
 #include <ndk/kdfuncs.h>
-#include <rosldr.h>
 #include <internal/kd.h>
 
 #define NDEBUG
@@ -335,7 +337,7 @@ BOOLEAN
 NTAPI
 HalInitSystem(
   ULONG BootPhase,
-  PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+  PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   UNIMPLEMENTED;
 
@@ -346,7 +348,7 @@ HalInitSystem(
 VOID
 NTAPI
 HalInitializeProcessor(ULONG ProcessorNumber,
-                       PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+                       PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   UNIMPLEMENTED;
 }
@@ -567,13 +569,60 @@ HalTranslateBusAddress(
 
 VOID
 NTAPI
-IoAssignDriveLetters(
-  PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
-  PSTRING NtDeviceName,
-  PUCHAR NtSystemPath,
-  PSTRING NtSystemPathString)
+HalpAssignDriveLetters(IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+                       IN PSTRING NtDeviceName,
+                       OUT PUCHAR NtSystemPath,
+                       OUT PSTRING NtSystemPathString)
 {
-  UNIMPLEMENTED;
+    /* Call the kernel */
+    return IoAssignDriveLetters(LoaderBlock,
+                                NtDeviceName,
+                                NtSystemPath,
+                                NtSystemPathString);
+}
+
+NTSTATUS
+NTAPI
+HalpReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                       IN ULONG SectorSize,
+                       IN BOOLEAN ReturnRecognizedPartitions,
+                       IN OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
+{
+    /* Call the kernel */
+    return IoReadPartitionTable(DeviceObject,
+                                SectorSize,
+                                ReturnRecognizedPartitions,
+                                PartitionBuffer);
+}
+
+NTSTATUS
+NTAPI
+HalpWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                        IN ULONG SectorSize,
+                        IN ULONG SectorsPerTrack,
+                        IN ULONG NumberOfHeads,
+                        IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
+{
+    /* Call the kernel */
+    return IoWritePartitionTable(DeviceObject,
+                                 SectorSize,
+                                 SectorsPerTrack,
+                                 NumberOfHeads,
+                                 PartitionBuffer);
+}
+
+NTSTATUS
+NTAPI
+HalpSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
+                            IN ULONG SectorSize,
+                            IN ULONG PartitionNumber,
+                            IN ULONG PartitionType)
+{
+    /* Call the kernel */
+    return IoSetPartitionInformation(DeviceObject,
+                                     SectorSize,
+                                     PartitionNumber,
+                                     PartitionType);
 }
 
 

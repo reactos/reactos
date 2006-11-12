@@ -51,11 +51,14 @@ HalStartNextProcessor@8
 ;HalStopProfileInterrupt@4
 @HalSystemVectorDispatchEntry@12
 HalTranslateBusAddress@24
-IoAssignDriveLetters@16
 IoFlushAdapterBuffers@24
+IoAssignDriveLetters@16=HalpAssignDriveLetters@16
 IoFreeAdapterChannel@4
 IoFreeMapRegisters@12
 IoMapTransfer@24
+IoReadPartitionTable@16=HalpReadPartitionTable@16
+IoSetPartitionInformation@16=HalpSetPartitionInformation@16
+IoWritePartitionTable@20=HalpWritePartitionTable@20
 KdComPortInUse DATA
 KdPortGetByte@4
 KdPortGetByteEx@8

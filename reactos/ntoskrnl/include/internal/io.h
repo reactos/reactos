@@ -43,11 +43,6 @@
 #define IrpMiniCompletionPacket                         0x2
 
 //
-// Number of partition tables in the Boot Record
-//
-#define PARTITION_TBL_SIZE                              4
-
-//
 // We can call the Ob Inlined API, it's the same thing
 //
 #define IopAllocateMdlFromLookaside                     \
@@ -422,50 +417,6 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
     //
     PVOID Context;
 } DEVICETREE_TRAVERSE_CONTEXT, *PDEVICETREE_TRAVERSE_CONTEXT;
-
-//
-// Internal Representation of a Disk
-//
-typedef struct _DISKENTRY
-{
-    LIST_ENTRY ListEntry;
-    ULONG DiskNumber;
-    ULONG Signature;
-    ULONG Checksum;
-    PDEVICE_OBJECT DeviceObject;
-    ULONG PartitionCount;
-} DISKENTRY, *PDISKENTRY; 
-
-//
-// Partition Table Entry
-//
-#include <pshpack1.h>
-typedef struct _PARTITION
-{
-    UCHAR BootFlags;
-    UCHAR StartingHead;
-    UCHAR StartingSector;
-    UCHAR StartingCylinder;
-    UCHAR PartitionType;
-    UCHAR EndingHead;
-    UCHAR EndingSector;
-    UCHAR EndingCylinder;
-    ULONG StartingBlock;
-    ULONG SectorCount;
-} PARTITION, *PPARTITION;
-
-//
-// Boot Record Structure
-//
-typedef struct _PARTITION_SECTOR
-{
-  UCHAR BootCode[440];
-  ULONG Signature;
-  UCHAR Reserved[2];
-  PARTITION Partition[PARTITION_TBL_SIZE];
-  USHORT Magic;
-} PARTITION_SECTOR, *PPARTITION_SECTOR;
-#include <poppack.h>
 
 //
 // PNP Routines
@@ -983,53 +934,6 @@ VOID
 NTAPI
 IopDeleteIoCompletion(
     PVOID ObjectBody
-);
-
-//
-// I/O HAL Entrypoints
-//
-NTSTATUS
-FASTCALL
-xHalQueryDriveLayout(
-    IN PUNICODE_STRING DeviceName,
-    OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo
-);
-
-VOID
-FASTCALL
-xHalIoAssignDriveLetters(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN PSTRING NtDeviceName,
-    OUT PUCHAR NtSystemPath,
-    OUT PSTRING NtSystemPathString
-);
-
-NTSTATUS
-FASTCALL
-xHalIoReadPartitionTable(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG SectorSize,
-    IN BOOLEAN ReturnRecognizedPartitions,
-    OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer
-);
-
-NTSTATUS
-FASTCALL
-xHalIoSetPartitionInformation(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG SectorSize,
-    IN ULONG PartitionNumber,
-    IN ULONG PartitionType
-);
-
-NTSTATUS
-FASTCALL
-xHalIoWritePartitionTable(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG SectorSize,
-    IN ULONG SectorsPerTrack,
-    IN ULONG NumberOfHeads,
-    IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer
 );
 
 //

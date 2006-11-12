@@ -48,6 +48,7 @@
 #include "test.h"
 #include "inbv.h"
 #include "vdm.h"
+#include "hal.h"
 
 #include <pshpack1.h>
 /*

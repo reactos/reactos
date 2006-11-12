@@ -924,4 +924,27 @@ IoReleaseVpbSpinLock(IN KIRQL Irql)
     KeReleaseSpinLock(&IoVpbLock, Irql);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+IoSetSystemPartition(IN PUNICODE_STRING VolumeNameString)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
+                        OUT PUNICODE_STRING DosName)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

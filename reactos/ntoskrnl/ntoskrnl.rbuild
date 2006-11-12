@@ -170,6 +170,11 @@
             <file>unc.c</file>
             <file>util.c</file>
     </directory>
+    <directory name="fstub">
+        <file>disksup.c</file>
+        <file>fstubex.c</file>
+        <file>halstub.c</file>
+    </directory>
     <directory name="inbv">
         <file>inbv.c</file>
     </directory>
@@ -181,7 +186,6 @@
             <file>controller.c</file>
             <file>device.c</file>
             <file>deviface.c</file>
-            <file>disk.c</file>
             <file>driver.c</file>
             <file>drvrlist.c</file>
             <file>error.c</file>

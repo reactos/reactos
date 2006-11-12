@@ -175,21 +175,6 @@ HalHandleNMI(
 );
 
 //
-// I/O Functions
-//
-#ifdef _ARC_
-NTHALAPI
-VOID
-NTAPI
-IoAssignDriveLetters(
-    struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
-    PSTRING NtDeviceName,
-    PUCHAR NtSystemPath,
-    PSTRING NtSystemPathString
-);
-#endif
-
-//
 // Environment Functions
 //
 NTHALAPI

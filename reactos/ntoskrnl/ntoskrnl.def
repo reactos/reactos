@@ -314,7 +314,7 @@ IoAllocateController@16
 IoAllocateDriverObjectExtension@16
 IoAllocateErrorLogEntry@8
 IoAllocateWorkItem@4
-IoAssignDriveLetters@16
+@IoAssignDriveLetters@16
 IoAssignResources@24
 IoAttachDevice@12
 IoAttachDeviceByPointer@8
