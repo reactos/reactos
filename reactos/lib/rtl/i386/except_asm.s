@@ -1,10 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS NT Library
- * FILE:            lib/rtl/i386/except.S
+ * PROJECT:         ReactOS Runtime Library (RTL)
+ * FILE:            lib/rtl/i386/except_asm.S
  * PURPOSE:         User-mode exception support for IA-32
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES ******************************************************************/
@@ -16,7 +15,7 @@
 #define ExceptionNestedException    2
 #define ExceptionCollidedUnwind     3
 
-/* FUNCTIONS ****************************************************************/
+/* FUNCTIONS *****************************************************************/
 
 .func RtlpGetExceptionList@0
 .globl _RtlpGetExceptionList@0

@@ -35,6 +35,7 @@
 			<file>rtlmem.s</file>
 			<file>pow_asm.s</file>
 			<file>res_asm.s</file>
+            <file>seh.s</file>
 			<file>sin_asm.s</file>
 			<file>sqrt_asm.s</file>
 			<file>tan_asm.s</file>

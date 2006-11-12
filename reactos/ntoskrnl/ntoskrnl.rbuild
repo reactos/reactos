@@ -326,12 +326,6 @@
             <file>win32.c</file>
     </directory>
     <directory name="rtl">
-        <if property="ARCH" value="i386">
-            <directory name="i386">
-                <file>exception.c</file>
-                <file>seh.s</file>
-            </directory>
-        </if>
             <file>libsupp.c</file>
             <file>misc.c</file>
             <file>strtok.c</file>
