@@ -11,10 +11,11 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
+BOOLEAN PsImageNotifyEnabled = TRUE;
 ULONG PspThreadNotifyRoutineCount;
 PCREATE_THREAD_NOTIFY_ROUTINE
 PspThreadNotifyRoutine[PSP_MAX_CREATE_THREAD_NOTIFY];

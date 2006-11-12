@@ -47,6 +47,9 @@ ANSI_STRING FastName = RTL_CONSTANT_STRING("KiFastSystemCall");
 ANSI_STRING FastReturnName = RTL_CONSTANT_STRING("KiFastSystemCallRet");
 ANSI_STRING InterruptName = RTL_CONSTANT_STRING("KiIntSystemCall");
 
+UNICODE_STRING PsNtDllPathName =
+    RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
+
 PHANDLE_TABLE PspCidTable;
 
 PEPROCESS PsInitialSystemProcess = NULL;
@@ -159,7 +162,6 @@ NTSTATUS
 NTAPI
 PsLocateSystemDll(VOID)
 {
-    UNICODE_STRING DllName = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     HANDLE FileHandle, SectionHandle;
@@ -168,7 +170,11 @@ PsLocateSystemDll(VOID)
     ULONG HardErrorResponse;
 
     /* Locate and open NTDLL to determine ImageBase and LdrStartup */
-    InitializeObjectAttributes(&ObjectAttributes, &DllName, 0, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &PsNtDllPathName,
+                               0,
+                               NULL,
+                               NULL);
     Status = ZwOpenFile(&FileHandle,
                         FILE_READ_ACCESS,
                         &ObjectAttributes,
@@ -186,7 +192,7 @@ PsLocateSystemDll(VOID)
     if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH)
     {
         /* Raise a hard error */
-        HardErrorParameters = (ULONG_PTR)&DllName;
+        HardErrorParameters = (ULONG_PTR)&PsNtDllPathName;
         NtRaiseHardError(Status,
                          1,
                          1,
