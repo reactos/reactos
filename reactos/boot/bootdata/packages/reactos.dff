@@ -431,6 +431,7 @@ regtests\winetests\shlwapi\shlwapi_winetest.exe     7
 regtests\winetests\user32\user32_winetest.exe       7
 regtests\winetests\version\version_winetest.exe     7
 boot\bootdata\bootcdregtest\testboot.bat            7   optional
+tools\dbgprint\dbgprint.exe                         7   optional
 
 ; Modules
 modules\os2\server\os2srv.dll                       1   optional
