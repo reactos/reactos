@@ -366,6 +366,7 @@ extern PLOAD_IMAGE_NOTIFY_ROUTINE
 PspLoadImageNotifyRoutine[PSP_MAX_LOAD_IMAGE_NOTIFY];
 extern PLEGO_NOTIFY_ROUTINE PspLegoNotifyRoutine;
 extern ULONG PspThreadNotifyRoutineCount;
+extern BOOLEAN PsImageNotifyEnabled;
 extern PKWIN32_PROCESS_CALLOUT PspW32ProcessCallout;
 extern PKWIN32_THREAD_CALLOUT PspW32ThreadCallout;
 extern PVOID PspSystemDllEntryPoint;
@@ -378,6 +379,7 @@ extern PTOKEN PspBootAccessToken;
 extern GENERIC_MAPPING PspJobMapping;
 extern POBJECT_TYPE PsJobType;
 extern LARGE_INTEGER ShortPsLockDelay;
+extern UNICODE_STRING PsNtDllPathName;
 extern LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 
 //
