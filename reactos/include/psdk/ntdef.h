@@ -105,7 +105,7 @@ typedef struct _OBJECT_ATTRIBUTES {
 #define MAXUCHAR  0xff
 #define MAXUSHORT 0xffff
 #define MAXULONG  0xffffffff
-
+#define MAXLONGLONG (0x7fffffffffffffffLL)
 #define C_ASSERT(e) extern char __C_ASSERT__[(e)?1:-1]
 
 #endif /* _NTDEF_H */

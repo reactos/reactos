@@ -49,6 +49,7 @@ Author:
 #define LDRP_IMAGE_NOT_AT_BASE                  0x00200000
 #define LDRP_COR_IMAGE                          0x00400000
 #define LDR_COR_OWNS_UNMAP                      0x00800000
+#define LDRP_DRIVER_VERIFYING                   0x02000000
 #define LDRP_REDIRECTED                         0x10000000
 
 //

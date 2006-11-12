@@ -607,6 +607,50 @@ typedef struct _MEMORY_BASIC_INFORMATION
 } MEMORY_BASIC_INFORMATION,*PMEMORY_BASIC_INFORMATION;
 
 //
+// Driver Verifier Data
+//
+typedef struct _MM_DRIVER_VERIFIER_DATA
+{
+    ULONG Level;
+    ULONG RaiseIrqls;
+    ULONG AcquireSpinLocks;
+    ULONG SynchronizeExecutions;
+    ULONG AllocationsAttempted;
+    ULONG AllocationsSucceeded;
+    ULONG AllocationsSucceededSpecialPool;
+    ULONG AllocationsWithNoTag;
+    ULONG TrimRequests;
+    ULONG Trims;
+    ULONG AllocationsFailed;
+    ULONG AllocationsFailedDeliberately;
+    ULONG Loads;
+    ULONG Unloads;
+    ULONG UnTrackedPool;
+    ULONG UserTrims;
+    ULONG CurrentPagedPoolAllocations;
+    ULONG CurrentNonPagedPoolAllocations;
+    ULONG PeakPagedPoolAllocations;
+    ULONG PeakNonPagedPoolAllocations;
+    ULONG PagedBytes;
+    ULONG NonPagedBytes;
+    ULONG PeakPagedBytes;
+    ULONG PeakNonPagedBytes;
+    ULONG BurstAllocationsFailedDeliberately;
+    ULONG SessionTrims;
+    ULONG Reserved[2];
+} MM_DRIVER_VERIFIER_DATA, *PMM_DRIVER_VERIFIER_DATA;
+
+//
+// Internal Driver Verifier Table Data
+//
+typedef struct _DRIVER_SPECIFIED_VERIFIER_THUNKS
+{
+    LIST_ENTRY ListEntry;
+    PLDR_DATA_TABLE_ENTRY DataTableEntry;
+    ULONG NumberOfThunks;
+} DRIVER_SPECIFIED_VERIFIER_THUNKS, *PDRIVER_SPECIFIED_VERIFIER_THUNKS;
+
+//
 // Default heap size values.  For user mode, these values are copied to a new
 // process's PEB by the kernel in MmCreatePeb.  In kernel mode, RtlCreateHeap
 // reads these variables directly.

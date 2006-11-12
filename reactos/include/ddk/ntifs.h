@@ -2006,6 +2006,8 @@ CcInitializeCacheMap (
     (((PSECTION_OBJECT_POINTERS)(FO)->SectionObjectPointer)->SharedCacheMap != NULL) \
 )
 
+extern ULONG CcFastMdlReadWait;
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -2578,6 +2580,11 @@ NTAPI
 FsRtlDoesNameContainWildCards (
     IN PUNICODE_STRING Name
 );
+
+#define FsRtlCompleteRequest(IRP,STATUS) {         \
+    (IRP)->IoStatus.Status = (STATUS);             \
+    IoCompleteRequest( (IRP), IO_DISK_INCREMENT ); \
+}
 
 #define FsRtlEnterFileSystem    KeEnterCriticalRegion
 
