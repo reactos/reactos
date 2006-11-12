@@ -796,6 +796,9 @@ NTSTATUS DispTdiReceive(
   TI_DbgPrint(MID_TRACE,("TCPIP<<< Got an MDL: %x\n", Irp->MdlAddress));
   if (NT_SUCCESS(Status))
     {
+      /* Lock here so we're sure we've got the following 'mark pending' */
+      TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+
       Status = TCPReceiveData(
 	  TranContext->Handle.ConnectionContext,
 	  (PNDIS_BUFFER)Irp->MdlAddress,
@@ -807,8 +810,11 @@ NTSTATUS DispTdiReceive(
       if (Status != STATUS_PENDING)
       {
           DispDataRequestComplete(Irp, Status, BytesReceived);
-      } else
+      } else {
 	  IoMarkIrpPending(Irp);
+      }
+
+      TcpipRecursiveMutexLeave( &TCPLock );
     }
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
