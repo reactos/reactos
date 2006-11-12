@@ -378,10 +378,10 @@ MainWndToolbarDockBand(struct _TOOLBAR_DOCKS *TbDocks,
             {
                 SIZE Size;
                 BOOL Vert;
-                DWORD dwStyle = SendMessage(rbi->hwndChild,
-                                            TB_GETSTYLE,
-                                            0,
-                                            0);
+                DWORD dwStyle = (DWORD)SendMessage(rbi->hwndChild,
+                                                   TB_GETSTYLE,
+                                                   0,
+                                                   0);
                 switch (DockTo)
                 {
                     case LEFT_DOCK:
@@ -613,7 +613,7 @@ MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
                           ID_TOOLS,
                           MF_CHECKED);
 
-            ShowHideWindow(Info->fltTools);
+            ShowHideWindow(Info->fltTools->hSelf);
         }
     }
 
@@ -642,10 +642,10 @@ MainWndDestroyFloatWindows(PMAIN_WND_INFO Info)
         HeapFree(ProcessHeap, 0, Info->fltTools);
 
     if (Info->fltColors != NULL)
-        HeapFree(ProcessHeap, 0, Info->fltTools);
+        HeapFree(ProcessHeap, 0, Info->fltColors);
 
     if (Info->fltHistory != NULL)
-        HeapFree(ProcessHeap, 0, Info->fltTools);
+        HeapFree(ProcessHeap, 0, Info->fltHistory);
 }
 
 
@@ -893,7 +893,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             {
                 UINT uCheck = MF_CHECKED;
 
-                if (ShowHideWindow(Info->fltTools))
+                if (ShowHideWindow(Info->fltTools->hSelf))
                     uCheck = MF_UNCHECKED;
 
                 CheckMenuItem(hMenu,
@@ -911,7 +911,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             {
                 UINT uCheck = MF_CHECKED;
 
-                if (ShowHideWindow(Info->fltColors))
+                if (ShowHideWindow(Info->fltColors->hSelf))
                     uCheck = MF_UNCHECKED;
 
                 CheckMenuItem(hMenu,
@@ -929,7 +929,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             {
                 UINT uCheck = MF_CHECKED;
 
-                if (ShowHideWindow(Info->fltHistory))
+                if (ShowHideWindow(Info->fltHistory->hSelf))
                     uCheck = MF_UNCHECKED;
 
                 CheckMenuItem(hMenu,

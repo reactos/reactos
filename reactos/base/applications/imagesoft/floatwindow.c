@@ -40,12 +40,12 @@ TBBUTTON HistoryButtons[] = {
 
 
 BOOL
-ShowHideWindow(PFLT_WND FltInfo)
+ShowHideWindow(HWND hwnd)
 {
-    if (IsWindowVisible(FltInfo->hSelf))
-        return ShowWindow(FltInfo->hSelf, SW_HIDE);
+    if (IsWindowVisible(hwnd))
+        return ShowWindow(hwnd, SW_HIDE);
     else
-        return ShowWindow(FltInfo->hSelf, SW_SHOW);
+        return ShowWindow(hwnd, SW_SHOW);
 }
 
 
@@ -447,13 +447,13 @@ FloatToolbarWndProc(HWND hwnd,
         break;
 
         case WM_CLOSE:
-            ShowHideWindow(FltInfo);
+			ShowHideWindow(FltInfo->hSelf);
         break;
 
         case WM_COMMAND:
         {
             if (LOWORD(wParam) == IDCANCEL)
-                ShowHideWindow(FltInfo);
+                ShowHideWindow(FltInfo->hSelf);
 
             switch(LOWORD(wParam))
             {

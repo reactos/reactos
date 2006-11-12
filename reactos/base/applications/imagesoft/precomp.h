@@ -388,7 +388,7 @@ BOOL FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info);
 BOOL FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info);
 BOOL InitFloatWndClass(VOID);
 VOID UninitFloatWndImpl(VOID);
-BOOL ShowHideWindow(PFLT_WND FltInfo);
+BOOL ShowHideWindow(HWND hwnd);
 
 /* font.c */
 VOID FillFontStyleComboList(HWND hwndCombo);
