@@ -1,13 +1,12 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/fs/fastio.c
  * PURPOSE:         File System Routines which support Fast I/O or Cc Access.
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- */
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*/
 
-/* INCLUDES ****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
@@ -19,6 +18,7 @@ extern ULONG CcFastReadNotPossible;
 extern ULONG CcFastReadResourceMiss;
 extern ULONG CcFastReadWait;
 extern ULONG CcFastReadNoWait;
+ULONG CcFastMdlReadNotPossible;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -26,8 +26,8 @@ extern ULONG CcFastReadNoWait;
  * @implemented
  */
 VOID
-STDCALL
-FsRtlIncrementCcFastReadResourceMiss( VOID )
+NTAPI
+FsRtlIncrementCcFastReadResourceMiss(VOID)
 {
     CcFastReadResourceMiss++;
 }
@@ -36,8 +36,8 @@ FsRtlIncrementCcFastReadResourceMiss( VOID )
  * @implemented
  */
 VOID
-STDCALL
-FsRtlIncrementCcFastReadNotPossible( VOID )
+NTAPI
+FsRtlIncrementCcFastReadNotPossible(VOID)
 {
     CcFastReadNotPossible++;
 }
@@ -46,8 +46,8 @@ FsRtlIncrementCcFastReadNotPossible( VOID )
  * @implemented
  */
 VOID
-STDCALL
-FsRtlIncrementCcFastReadWait( VOID )
+NTAPI
+FsRtlIncrementCcFastReadWait(VOID)
 {
     CcFastReadWait++;
 }
@@ -56,86 +56,53 @@ FsRtlIncrementCcFastReadWait( VOID )
  * @implemented
  */
 VOID
-STDCALL
-FsRtlIncrementCcFastReadNoWait( VOID )
+NTAPI
+FsRtlIncrementCcFastReadNoWait(VOID)
 {
     CcFastReadNoWait++;
 }
 
 /*
- * NAME    EXPORTED
- * FsRtlCopyRead@32
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- *  From Bo Branten's ntifs.h v12.
- *
  * @unimplemented
  */
 BOOLEAN
-STDCALL
-FsRtlCopyRead(IN  PFILE_OBJECT FileObject,
-              IN  PLARGE_INTEGER FileOffset,
-              IN  ULONG Length,
-              IN  BOOLEAN Wait,
-              IN  ULONG LockKey,
+NTAPI
+FsRtlCopyRead(IN PFILE_OBJECT FileObject,
+              IN PLARGE_INTEGER FileOffset,
+              IN ULONG Length,
+              IN BOOLEAN Wait,
+              IN ULONG LockKey,
               OUT PVOID Buffer,
               OUT PIO_STATUS_BLOCK IoStatus,
-              IN  PDEVICE_OBJECT DeviceObject)
+              IN PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
 /*
- * NAME    EXPORTED
- * FsRtlCopyWrite@32
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- *  From Bo Branten's ntifs.h v12.
- *
  * @unimplemented
  */
 BOOLEAN
-STDCALL
-FsRtlCopyWrite(IN  PFILE_OBJECT FileObject,
-               IN  PLARGE_INTEGER FileOffset,
-               IN  ULONG Length,
-               IN  BOOLEAN Wait,
-               IN  ULONG LockKey,
+NTAPI
+FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
+               IN PLARGE_INTEGER FileOffset,
+               IN ULONG Length,
+               IN BOOLEAN Wait,
+               IN ULONG LockKey,
                OUT PVOID Buffer,
                OUT PIO_STATUS_BLOCK IoStatus,
-               IN  PDEVICE_OBJECT DeviceObject)
+               IN PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
 /*
- * NAME    EXPORTED
- * FsRtlGetFileSize@8
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 FsRtlGetFileSize(IN PFILE_OBJECT  FileObject,
                  IN OUT PLARGE_INTEGER FileSize)
 {
@@ -182,19 +149,10 @@ FsRtlGetFileSize(IN PFILE_OBJECT  FileObject,
 }
 
 /*
- * NAME    EXPORTED
- * FsRtlMdlRead@24
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlMdlRead(IN PFILE_OBJECT FileObject,
              IN PLARGE_INTEGER FileOffset,
              IN ULONG Length,
@@ -244,19 +202,10 @@ FsRtlMdlRead(IN PFILE_OBJECT FileObject,
 }
 
 /*
- * NAME    EXPORTED
- * FsRtlMdlReadComplete@8
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,
                      IN OUT PMDL MdlChain)
 {
@@ -291,25 +240,11 @@ FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,
     return FsRtlMdlReadCompleteDev(FileObject, MdlChain, DeviceObject);
 }
 
-
 /*
- * NAME    EXPORTED
- * FsRtlMdlReadCompleteDev@12
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- * From Bo Branten's ntifs.h v13.
- * (CcMdlReadCompleteDev declared in internal/cc.h)
- *
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlMdlReadCompleteDev(IN PFILE_OBJECT FileObject,
                         IN PMDL MdlChain,
                         IN PDEVICE_OBJECT DeviceObject)
@@ -320,19 +255,10 @@ FsRtlMdlReadCompleteDev(IN PFILE_OBJECT FileObject,
 }
 
 /*
- * NAME    EXPORTED
- * FsRtlMdlReadDev@28
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlMdlReadDev(IN PFILE_OBJECT FileObject,
                 IN PLARGE_INTEGER FileOffset,
                 IN ULONG Length,
@@ -341,25 +267,115 @@ FsRtlMdlReadDev(IN PFILE_OBJECT FileObject,
                 OUT PIO_STATUS_BLOCK IoStatus,
                 IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
+    BOOLEAN Result = TRUE;
+    LARGE_INTEGER Offset;
+    PFAST_IO_DISPATCH FastIoDispatch;
+    PDEVICE_OBJECT Device;
+    PAGED_CODE();
+
+    /* No actual read */
+    if (!Length)
+    {
+        /* Return success */
+        IoStatus->Status = STATUS_SUCCESS;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    /* Sanity check */
+    ASSERT(MAXLONGLONG - FileOffset->QuadPart >= (LONGLONG)Length);
+
+    /* Get the offset and FCB header */
+    Offset.QuadPart = FileOffset->QuadPart + Length;
+    FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext;
+
+    /* Enter the FS */
+    FsRtlEnterFileSystem();
+    CcFastMdlReadWait++;
+
+    /* Lock the FCB */
+    ExAcquireResourceShared(FcbHeader->Resource, TRUE);
+
+    /* Check if this is a fast I/O cached file */
+    if (!(FileObject->PrivateCacheMap) ||
+        (FcbHeader->IsFastIoPossible == FastIoIsNotPossible))
+    {
+        /* It's not, so fail */
+        CcFastMdlReadNotPossible += 1;
+        Result = FALSE;
+        goto Cleanup;
+    }
+
+    /* Check if we need to find out if fast I/O is available */
+    if (FcbHeader->IsFastIoPossible == FastIoIsQuestionable)
+    {
+        /* Sanity check */
+        ASSERT(!KeIsExecutingDpc());
+
+        /* Get the Fast I/O table */
+        Device = IoGetRelatedDeviceObject(FileObject);
+        FastIoDispatch = Device->DriverObject->FastIoDispatch;
+
+        /* Sanity check */
+        ASSERT(FastIoDispatch != NULL);
+        ASSERT(FastIoDispatch->FastIoCheckIfPossible != NULL);
+
+        /* Ask the driver if we can do it */
+        if (!FastIoDispatch->FastIoCheckIfPossible(FileObject,
+                                                   FileOffset,
+                                                   Length,
+                                                   TRUE,
+                                                   LockKey,
+                                                   TRUE,
+                                                   IoStatus,
+                                                   Device))
+        {
+            /* It's not, fail */
+            CcFastMdlReadNotPossible += 1;
+            Result = FALSE;
+            goto Cleanup;
+        }
+    }
+
+    /* Check if we read too much */
+    if (Offset.QuadPart > FcbHeader->FileSize.QuadPart)
+    {
+        /* We did, check if the file offset is past the end */
+        if (FileOffset->QuadPart >= FcbHeader->FileSize.QuadPart)
+        {
+            /* Set end of file */
+            IoStatus->Status = STATUS_END_OF_FILE;
+            IoStatus->Information = 0;
+            goto Cleanup;
+        }
+
+        /* Otherwise, just normalize the length */
+        Length = (ULONG)(FcbHeader->FileSize.QuadPart - FileOffset->QuadPart);
+    }
+
+    /* Set this as top-level IRP */
+    PsGetCurrentThread()->TopLevelIrp = FSRTL_FAST_IO_TOP_LEVEL_IRP;
+
+    /* Attempt a read */
+    CcMdlRead(FileObject, FileOffset, Length, MdlChain, IoStatus);
+    FileObject->Flags |= FO_FILE_FAST_IO_READ;
+
+    /* Remove the top-level IRP flag */
+    PsGetCurrentThread()->TopLevelIrp = 0;
+
+    /* Return to caller */
+Cleanup:
+    ExReleaseResourceLite(FcbHeader->Resource);
+    FsRtlExitFileSystem();
+    return Result;
 }
 
-
 /*
- * NAME    EXPORTED
- * FsRtlMdlWriteComplete@12
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlMdlWriteComplete(IN PFILE_OBJECT FileObject,
                       IN PLARGE_INTEGER FileOffset,
                       IN PMDL MdlChain)
@@ -400,19 +416,10 @@ FsRtlMdlWriteComplete(IN PFILE_OBJECT FileObject,
 }
 
 /*
- * NAME EXPORTED
- * FsRtlMdlWriteCompleteDev@16
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlMdlWriteCompleteDev(IN PFILE_OBJECT FileObject,
                          IN PLARGE_INTEGER FileOffset,
                          IN PMDL MdlChain,
@@ -423,25 +430,15 @@ FsRtlMdlWriteCompleteDev(IN PFILE_OBJECT FileObject,
     return TRUE;
 }
 
-
 /*
- * NAME    EXPORTED
- * FsRtlPrepareMdlWrite@24
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
  * @implemented
  */
 BOOLEAN
-STDCALL
-FsRtlPrepareMdlWrite(IN  PFILE_OBJECT FileObject,
-                     IN  PLARGE_INTEGER FileOffset,
-                     IN  ULONG Length,
-                     IN  ULONG LockKey,
+NTAPI
+FsRtlPrepareMdlWrite(IN PFILE_OBJECT FileObject,
+                     IN PLARGE_INTEGER FileOffset,
+                     IN ULONG Length,
+                     IN ULONG LockKey,
                      OUT PMDL *MdlChain,
                      OUT PIO_STATUS_BLOCK IoStatus)
 {
@@ -487,29 +484,95 @@ FsRtlPrepareMdlWrite(IN  PFILE_OBJECT FileObject,
 }
 
 /*
- * NAME EXPORTED
- * FsRtlPrepareMdlWriteDev@28
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
  * @unimplemented
  */
 BOOLEAN
-STDCALL
-FsRtlPrepareMdlWriteDev(IN  PFILE_OBJECT FileObject,
-                        IN  PLARGE_INTEGER FileOffset,
-                        IN  ULONG Length,
-                        IN  ULONG LockKey,
+NTAPI
+FsRtlPrepareMdlWriteDev(IN PFILE_OBJECT FileObject,
+                        IN PLARGE_INTEGER FileOffset,
+                        IN ULONG Length,
+                        IN ULONG LockKey,
                         OUT PMDL *MdlChain,
                         OUT PIO_STATUS_BLOCK IoStatus,
                         IN PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED;
     return FALSE;
+}
+
+/*
+* @implemented
+*/
+VOID
+NTAPI
+FsRtlAcquireFileExclusive(IN PFILE_OBJECT FileObject)
+{
+    PFAST_IO_DISPATCH FastDispatch;
+    PDEVICE_OBJECT DeviceObject;
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
+
+    /* Get the Device Object and fast dispatch */
+    DeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+    /* Check if we have to do a Fast I/O Dispatch */
+    if ((FastDispatch) && (FastDispatch->AcquireFileForNtCreateSection))
+    {
+        /* Enter the file system and call it */
+        FsRtlEnterFileSystem();
+        FastDispatch->AcquireFileForNtCreateSection(FileObject);
+        return;
+    }
+
+    /* Get the FCB Header */
+    FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext;
+    if (FcbHeader->Resource)
+    {
+        /* Use a Resource Acquire */
+        FsRtlEnterFileSystem();
+        ExAcquireResourceExclusive(FcbHeader->Resource, TRUE);
+    }
+
+    /* All done, return */
+    return;
+}
+
+/*
+* @implemented
+*/
+VOID
+NTAPI
+FsRtlReleaseFile(IN PFILE_OBJECT FileObject)
+{
+    PFAST_IO_DISPATCH FastDispatch;
+    PDEVICE_OBJECT DeviceObject;
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
+
+    /* Get the Device Object */
+    DeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+    /* Check if we have to do a Fast I/O Dispatch */
+    if ((FastDispatch) && (FastDispatch->ReleaseFileForNtCreateSection))
+    {
+        /* Call the release function and exit the file system */
+        FastDispatch->ReleaseFileForNtCreateSection(FileObject);
+        FsRtlExitFileSystem();
+        return;
+    }
+
+    /* Get the FCB Header */
+    FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext;
+    if (FcbHeader->Resource)
+    {
+        /* Use a Resource release */
+        ExReleaseResourceLite(FcbHeader->Resource);
+        FsRtlExitFileSystem();
+    }
+
+    /* All done, return */
+    return;
 }
 
 /* EOF */
