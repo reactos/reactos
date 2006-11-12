@@ -35,26 +35,6 @@ static const INFORMATION_CLASS_INFO DbgkpDebugObjectInfoClass[] =
 
 NTSTATUS
 NTAPI
-DbgkpSetProcessDebugObject(IN PEPROCESS Process,
-                           IN PDEBUG_OBJECT DebugObject,
-                           IN NTSTATUS MsgStatus,
-                           IN PETHREAD LastThread)
-{
-    /* FIXME: TODO */
-    return STATUS_UNSUCCESSFUL;
-}
-
-NTSTATUS
-NTAPI
-DbgkClearProcessDebugObject(IN PEPROCESS Process,
-                            IN PDEBUG_OBJECT SourceDebugObject)
-{
-    /* FIXME: TODO */
-    return STATUS_UNSUCCESSFUL;
-}
-
-NTSTATUS
-NTAPI
 DbgkpQueueMessage(IN PEPROCESS Process,
                   IN PETHREAD Thread,
                   IN PDBGKM_MSG Message,
@@ -967,6 +947,159 @@ DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
         DebugEvent->Status = STATUS_DEBUGGER_INACTIVE;
         DbgkpWakeTarget(DebugEvent);
     }
+}
+
+NTSTATUS
+NTAPI
+DbgkpSetProcessDebugObject(IN PEPROCESS Process,
+                           IN PDEBUG_OBJECT DebugObject,
+                           IN NTSTATUS MsgStatus,
+                           IN PETHREAD LastThread)
+{
+    NTSTATUS Status;
+    LIST_ENTRY TempList;
+    BOOLEAN GlobalHeld = FALSE;
+    PETHREAD ThisThread, FirstThread;
+    PLIST_ENTRY NextEntry;
+    PAGED_CODE();
+
+    /* Initialize the temporary list */
+    InitializeListHead(&TempList);
+
+    /* Check if we have a success message */
+    if (NT_SUCCESS(MsgStatus))
+    {
+        /* Then default to STATUS_SUCCESS */
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* No last thread, and set the failure code */
+        LastThread = NULL;
+        Status = MsgStatus;
+    }
+
+    /* Now check what status we have here */
+    if (NT_SUCCESS(Status))
+    {
+        /* Acquire the global lock */
+        GlobalHeld = TRUE;
+        ExAcquireFastMutex(&DbgkpProcessDebugPortMutex);
+
+        /* Check if we already have a port */
+        if (Process->DebugPort)
+        {
+            /* Set failure */
+            Status = STATUS_PORT_ALREADY_SET;
+        }
+        else
+        {
+ThreadScan:
+            /* Otherwise, set the port and reference the thread */
+            Process->DebugPort = DebugObject;
+            ObReferenceObject(LastThread);
+
+            /* Get the next thread */
+            ThisThread  = PsGetNextProcessThread(Process, LastThread);
+            if (ThisThread)
+            {
+                /* Clear the debug port and release the lock */
+                Process->DebugPort = NULL;
+                ExReleaseFastMutex(&DbgkpProcessDebugPortMutex);
+                GlobalHeld = FALSE;
+
+                /* Dereference the thread */
+                ObDereferenceObject(LastThread);
+
+                /* Post fake messages */
+                Status = DbgkpPostFakeThreadMessages(Process,
+                                                     DebugObject,
+                                                     ThisThread,
+                                                     &FirstThread,
+                                                     &LastThread);
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Clear the last thread */
+                    LastThread = NULL;
+                }
+                else
+                {
+                    /* Dereference the first thread and re-acquire the lock */
+                    ObDereferenceObject(FirstThread);
+                    GlobalHeld = TRUE;
+                    ExAcquireFastMutex(&DbgkpProcessDebugPortMutex);
+
+                    /* Check if we should loop again */
+                    if (!Process->DebugPort) goto ThreadScan;
+
+                    /* Otherwise, we already have a port */
+                    Status = STATUS_PORT_ALREADY_SET;
+                }
+            }
+        }
+    }
+
+    /* Acquire the debug object's lock */
+    ExAcquireFastMutex(&DebugObject->Mutex);
+
+    /* Check our status here */
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if we're disconnected */
+        if (DebugObject->DebuggerInactive)
+        {
+            /* Set status */
+            Process->DebugPort = NULL;
+            Status = STATUS_DEBUGGER_INACTIVE;
+        }
+        else
+        {
+            /* Set the process flags */
+            InterlockedOr(&Process->Flags, PSF_NO_DEBUG_INHERIT_BIT |
+                                           PSF_CREATE_REPORTED_BIT);
+
+            /* Reference the debug object */
+            ObDereferenceObject(DebugObject);
+        }
+    }
+
+    /* Loop the events list */
+    NextEntry = DebugObject->EventList.Flink;
+    while (NextEntry != &DebugObject->EventList)
+    {
+        /* FIXME: TODO */
+        KEBUGCHECK(0);
+    }
+
+    /* Release the debug object */
+    ExReleaseFastMutex(&DebugObject->Mutex);
+
+    /* Release the global lock if acquired */
+    if (GlobalHeld) ExReleaseFastMutex(&DbgkpProcessDebugPortMutex);
+
+    /* Check if there's a thread to dereference */
+    if (LastThread) ObDereferenceObject(LastThread);
+
+    /* Loop our temporary list */
+    NextEntry = TempList.Flink;
+    while (NextEntry != &TempList)
+    {
+        /* FIXME: TODO */
+        KEBUGCHECK(0);
+    }
+
+    /* Check if we got here through success and mark the PEB, then return */
+    if (NT_SUCCESS(Status)) DbgkpMarkProcessPeb(Process);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+DbgkClearProcessDebugObject(IN PEPROCESS Process,
+                            IN PDEBUG_OBJECT SourceDebugObject)
+{
+    /* FIXME: TODO */
+    return STATUS_UNSUCCESSFUL;
 }
 
 VOID
