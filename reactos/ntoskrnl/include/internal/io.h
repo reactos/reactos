@@ -230,6 +230,16 @@ typedef struct _IO_COMPLETION_PACKET
 } IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
 
 //
+// I/O Completion Context for IoSetIoCompletionRoutineEx
+//
+typedef struct _IO_UNLOAD_SAFE_COMPLETION_CONTEXT
+{
+    PDEVICE_OBJECT DeviceObject;
+    PVOID Context;
+    PIO_COMPLETION_ROUTINE CompletionRoutine;
+} IO_UNLOAD_SAFE_COMPLETION_CONTEXT, *PIO_UNLOAD_SAFE_COMPLETION_CONTEXT;
+
+//
 // I/O Wrapper around the Executive Work Item
 //
 typedef struct _IO_WORKITEM

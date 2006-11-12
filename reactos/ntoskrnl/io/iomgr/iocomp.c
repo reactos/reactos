@@ -33,6 +33,32 @@ static const INFORMATION_CLASS_INFO IoCompletionInfoClass[] =
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+NTSTATUS
+NTAPI
+IopUnloadSafeCompletion(IN PDEVICE_OBJECT DeviceObject,
+                        IN PIRP Irp,
+                        IN PVOID Context)
+{
+    NTSTATUS Status;
+    PIO_UNLOAD_SAFE_COMPLETION_CONTEXT UnsafeContext =
+        (PIO_UNLOAD_SAFE_COMPLETION_CONTEXT)Context;
+
+    /* Reference the device object */
+    ObReferenceObject(UnsafeContext->DeviceObject);
+
+    /* Call the completion routine */
+    Status= UnsafeContext->CompletionRoutine(DeviceObject,
+                                             Irp,
+                                             UnsafeContext->Context);
+
+    /* Dereference the device object */
+    ObDereferenceObject(UnsafeContext->DeviceObject);
+
+    /* Free our context */
+    ExFreePool(UnsafeContext);
+    return Status;
+}
+
 VOID
 NTAPI
 IopFreeIoCompletionPacket(PIO_COMPLETION_PACKET Packet)
@@ -187,7 +213,7 @@ IoSetIoCompletion(IN PVOID IoCompletion,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -199,8 +225,27 @@ IoSetCompletionRoutineEx(IN PDEVICE_OBJECT DeviceObject,
                          IN BOOLEAN InvokeOnError,
                          IN BOOLEAN InvokeOnCancel)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_UNLOAD_SAFE_COMPLETION_CONTEXT UnloadContext;
+
+    /* Allocate the context */
+    UnloadContext = ExAllocatePoolWithTag(NonPagedPool,
+                                          sizeof(*UnloadContext),
+                                          TAG('I', 'o', 'U', 's'));
+    if (!UnloadContext) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Set up the context */
+    UnloadContext->DeviceObject = DeviceObject;
+    UnloadContext->Context = Context;
+    UnloadContext->CompletionRoutine = CompletionRoutine;
+
+    /* Now set the completion routine */
+    IoSetCompletionRoutine(Irp,
+                           IopUnloadSafeCompletion,
+                           UnloadContext,
+                           InvokeOnSuccess,
+                           InvokeOnError,
+                           InvokeOnCancel);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
