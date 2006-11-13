@@ -169,7 +169,7 @@ DbgkCreateThread(PVOID StartAddress)
 
     /* Fail if we have no port */
     DebugPort = Process->DebugPort;
-    if (DebugPort) return;
+    if (!DebugPort) return;
 
     /* Check if create was not already reported */
     if (!(ProcessFlags & PSF_CREATE_REPORTED_BIT))
