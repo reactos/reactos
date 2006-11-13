@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COM_NO_WINDOWS_H
 #include <assert.h>
 #include <stdarg.h>
 
@@ -187,7 +186,7 @@ static LPVOID  WINAPI IGetFrame_fnGetFrame(IGetFrame *iface, LONG lPos)
   LONG readBytes;
   LONG readSamples;
 
-  TRACE("(%p,%ld)\n", iface, lPos);
+  TRACE("(%p,%d)\n", iface, lPos);
 
   /* We don't want negative start values! -- marks invalid buffer content */
   if (lPos < 0)
@@ -303,7 +302,7 @@ static HRESULT WINAPI IGetFrame_fnBegin(IGetFrame *iface, LONG lStart,
 {
   IGetFrameImpl *This = (IGetFrameImpl *)iface;
 
-  TRACE("(%p,%ld,%ld,%ld)\n", iface, lStart, lEnd, lRate);
+  TRACE("(%p,%d,%d,%d)\n", iface, lStart, lEnd, lRate);
 
   This->bFixedStream = TRUE;
 

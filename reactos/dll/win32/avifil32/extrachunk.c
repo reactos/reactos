@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COM_NO_WINDOWS_H
 #include <assert.h>
 
 #include "extrachunk.h"
@@ -155,7 +154,7 @@ HRESULT FindChunkAndKeepExtras(LPEXTRACHUNKS extra,HMMIO hmmio,MMCKINFO *lpck,
   assert(hmmio != NULL);
   assert(lpck  != NULL);
 
-  TRACE("({%p,%lu},%p,%p,%p,0x%X)\n", extra->lp, extra->cb, hmmio, lpck,
+  TRACE("({%p,%u},%p,%p,%p,0x%X)\n", extra->lp, extra->cb, hmmio, lpck,
 	lpckParent, flags);
 
   /* what chunk id and form/list type should we search? */
@@ -171,7 +170,7 @@ HRESULT FindChunkAndKeepExtras(LPEXTRACHUNKS extra,HMMIO hmmio,MMCKINFO *lpck,
   } else
     ckid = fccType = (FOURCC)-1; /* collect everything into extra! */
 
-  TRACE(": find ckid=0x%08lX fccType=0x%08lX\n", ckid, fccType);
+  TRACE(": find ckid=0x%08X fccType=0x%08X\n", ckid, fccType);
 
   for (;;) {
     hr = mmioDescend(hmmio, lpck, lpckParent, 0);

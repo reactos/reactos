@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COM_NO_WINDOWS_H
 #include <assert.h>
 #include <stdarg.h>
 
@@ -164,7 +163,7 @@ static ULONG WINAPI ICMStream_fnAddRef(IAVIStream *iface)
   IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
   ULONG ref = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p) -> %ld\n", iface, ref);
+  TRACE("(%p) -> %d\n", iface, ref);
 
   /* also add reference to the nested stream */
   if (This->pStream != NULL)
@@ -178,7 +177,7 @@ static ULONG WINAPI ICMStream_fnRelease(IAVIStream* iface)
   IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
   ULONG ref = InterlockedDecrement(&This->ref);
 
-  TRACE("(%p) -> %ld\n", iface, ref);
+  TRACE("(%p) -> %d\n", iface, ref);
 
   if (ref == 0) {
     /* destruct */
@@ -325,7 +324,7 @@ static HRESULT WINAPI ICMStream_fnInfo(IAVIStream *iface,LPAVISTREAMINFOW psi,
 {
   IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
 
-  TRACE("(%p,%p,%ld)\n", iface, psi, size);
+  TRACE("(%p,%p,%d)\n", iface, psi, size);
 
   if (psi == NULL)
     return AVIERR_BADPARAM;
@@ -344,7 +343,7 @@ static LONG WINAPI ICMStream_fnFindSample(IAVIStream *iface, LONG pos,
 {
   IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
 
-  TRACE("(%p,%ld,0x%08lX)\n",iface,pos,flags);
+  TRACE("(%p,%d,0x%08X)\n",iface,pos,flags);
 
   if (flags & FIND_FROM_START) {
     pos = This->sInfo.dwStart;
@@ -384,7 +383,7 @@ static HRESULT WINAPI ICMStream_fnReadFormat(IAVIStream *iface, LONG pos,
   LPBITMAPINFOHEADER lpbi;
   HRESULT            hr;
 
-  TRACE("(%p,%ld,%p,%p)\n", iface, pos, format, formatsize);
+  TRACE("(%p,%d,%p,%p)\n", iface, pos, format, formatsize);
 
   if (formatsize == NULL)
     return AVIERR_BADPARAM;
@@ -432,7 +431,7 @@ static HRESULT WINAPI ICMStream_fnSetFormat(IAVIStream *iface, LONG pos,
 {
   IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
 
-  TRACE("(%p,%ld,%p,%ld)\n", iface, pos, format, formatsize);
+  TRACE("(%p,%d,%p,%d)\n", iface, pos, format, formatsize);
 
   /* check parameters */
   if (format == NULL || formatsize <= 0)
@@ -586,7 +585,7 @@ static HRESULT WINAPI ICMStream_fnRead(IAVIStream *iface, LONG start,
 
   LPBITMAPINFOHEADER lpbi;
 
-  TRACE("(%p,%ld,%ld,%p,%ld,%p,%p)\n", iface, start, samples, buffer,
+  TRACE("(%p,%d,%d,%p,%d,%p,%p)\n", iface, start, samples, buffer,
  	buffersize, bytesread, samplesread);
 
   /* clear return parameters if given */
@@ -680,7 +679,7 @@ static HRESULT WINAPI ICMStream_fnWrite(IAVIStream *iface, LONG start,
 
   HRESULT hr;
 
-  TRACE("(%p,%ld,%ld,%p,%ld,0x%08lX,%p,%p)\n", iface, start, samples,
+  TRACE("(%p,%d,%d,%p,%d,0x%08X,%p,%p)\n", iface, start, samples,
 	buffer, buffersize, flags, sampwritten, byteswritten);
 
   /* clear return parameters if given */
@@ -723,7 +722,7 @@ static HRESULT WINAPI ICMStream_fnDelete(IAVIStream *iface, LONG start,
 {
   IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
 
-  TRACE("(%p,%ld,%ld)\n", iface, start, samples);
+  TRACE("(%p,%d,%d)\n", iface, start, samples);
 
   return IAVIStream_Delete(This->pStream, start, samples);
 }
@@ -733,7 +732,7 @@ static HRESULT WINAPI ICMStream_fnReadData(IAVIStream *iface, DWORD fcc,
 {
   IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
 
-  TRACE("(%p,0x%08lX,%p,%p)\n", iface, fcc, lp, lpread);
+  TRACE("(%p,0x%08X,%p,%p)\n", iface, fcc, lp, lpread);
 
   assert(This->pStream != NULL);
 
@@ -745,7 +744,7 @@ static HRESULT WINAPI ICMStream_fnWriteData(IAVIStream *iface, DWORD fcc,
 {
   IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
 
-  TRACE("(%p,0x%08lx,%p,%ld)\n", iface, fcc, lp, size);
+  TRACE("(%p,0x%08x,%p,%d)\n", iface, fcc, lp, size);
 
   assert(This->pStream != NULL);
 
@@ -755,7 +754,7 @@ static HRESULT WINAPI ICMStream_fnWriteData(IAVIStream *iface, DWORD fcc,
 static HRESULT WINAPI ICMStream_fnSetInfo(IAVIStream *iface,
 					   LPAVISTREAMINFOW info, LONG infolen)
 {
-  FIXME("(%p,%p,%ld): stub\n", iface, info, infolen);
+  FIXME("(%p,%p,%d): stub\n", iface, info, infolen);
 
   return E_FAIL;
 }
@@ -862,7 +861,7 @@ static HRESULT AVIFILE_EncodeFrame(IAVIStreamImpl *This,
       if (bDecreasedQual || dwCurQual == This->dwLastQuality)
 	dwCurQual = (dwMinQual + dwMaxQual) / 2;
       else
-	FIXME(": no new quality computed min=%lu cur=%lu max=%lu last=%lu\n",
+	FIXME(": no new quality computed min=%u cur=%u max=%u last=%u\n",
 	      dwMinQual, dwCurQual, dwMaxQual, This->dwLastQuality);
 
       bDecreasedQual = TRUE;

@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COM_NO_WINDOWS_H
 #include <assert.h>
 #include <stdarg.h>
 
@@ -153,7 +152,7 @@ static ULONG   WINAPI ITmpFile_fnAddRef(IAVIFile *iface)
   ITmpFileImpl *This = (ITmpFileImpl *)iface;
   ULONG ref = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p) -> %ld\n", iface, ref);
+  TRACE("(%p) -> %d\n", iface, ref);
 
   return ref;
 }
@@ -163,7 +162,7 @@ static ULONG   WINAPI ITmpFile_fnRelease(IAVIFile *iface)
   ITmpFileImpl *This = (ITmpFileImpl *)iface;
   ULONG ref = InterlockedDecrement(&This->ref);
 
-  TRACE("(%p) -> %ld\n", iface, ref);
+  TRACE("(%p) -> %d\n", iface, ref);
 
   if (!ref) {
     unsigned int i;
@@ -188,7 +187,7 @@ static HRESULT WINAPI ITmpFile_fnInfo(IAVIFile *iface,
 {
   ITmpFileImpl *This = (ITmpFileImpl *)iface;
 
-  TRACE("(%p,%p,%ld)\n",iface,afi,size);
+  TRACE("(%p,%p,%d)\n",iface,afi,size);
 
   if (afi == NULL)
     return AVIERR_BADPARAM;
@@ -209,7 +208,7 @@ static HRESULT WINAPI ITmpFile_fnGetStream(IAVIFile *iface, PAVISTREAM *avis,
 
   ULONG nStream = (ULONG)-1;
 
-  TRACE("(%p,%p,0x%08lX,%ld)\n", iface, avis, fccType, lParam);
+  TRACE("(%p,%p,0x%08X,%d)\n", iface, avis, fccType, lParam);
 
   if (avis == NULL || lParam < 0)
     return AVIERR_BADPARAM;
@@ -260,7 +259,7 @@ static HRESULT WINAPI ITmpFile_fnCreateStream(IAVIFile *iface,PAVISTREAM *avis,
 static HRESULT WINAPI ITmpFile_fnWriteData(IAVIFile *iface, DWORD ckid,
 					   LPVOID lpData, LONG size)
 {
-  TRACE("(%p,0x%08lX,%p,%ld)\n", iface, ckid, lpData, size);
+  TRACE("(%p,0x%08X,%p,%d)\n", iface, ckid, lpData, size);
 
   return AVIERR_UNSUPPORTED;
 }
@@ -268,7 +267,7 @@ static HRESULT WINAPI ITmpFile_fnWriteData(IAVIFile *iface, DWORD ckid,
 static HRESULT WINAPI ITmpFile_fnReadData(IAVIFile *iface, DWORD ckid,
 					  LPVOID lpData, LONG *size)
 {
-  TRACE("(%p,0x%08lX,%p,%p)\n", iface, ckid, lpData, size);
+  TRACE("(%p,0x%08X,%p,%p)\n", iface, ckid, lpData, size);
 
   return AVIERR_UNSUPPORTED;
 }
@@ -283,7 +282,7 @@ static HRESULT WINAPI ITmpFile_fnEndRecord(IAVIFile *iface)
 static HRESULT WINAPI ITmpFile_fnDeleteStream(IAVIFile *iface, DWORD fccType,
 					      LONG lParam)
 {
-  TRACE("(%p,0x%08lX,%ld)\n", iface, fccType, lParam);
+  TRACE("(%p,0x%08X,%d)\n", iface, fccType, lParam);
 
   return AVIERR_UNSUPPORTED;
 }
