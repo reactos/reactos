@@ -219,7 +219,7 @@ static INT_PTR fdi_notify_extract(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pf
             if ((pDestination->flags & EXTRACT_EXTRACTFILES) ||
                 file_in_list(pDestination->filterlist, pfdin->psz1))
             {
-                /* skip this file it it's not in the file list */
+                /* skip this file if it is not in the file list */
                 if (!file_in_list(pDestination->filelist, pfdin->psz1))
                     return 0;
 

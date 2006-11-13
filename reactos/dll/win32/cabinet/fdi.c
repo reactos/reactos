@@ -945,7 +945,7 @@ static void fdi_Ziphuft_free(HFDI hfdi, struct Ziphuft *t)
 /*********************************************************
  * fdi_Ziphuft_build (internal)
  */
-static cab_LONG fdi_Ziphuft_build(cab_ULONG *b, cab_ULONG n, cab_ULONG s, cab_UWORD *d, cab_UWORD *e,
+static cab_LONG fdi_Ziphuft_build(cab_ULONG *b, cab_ULONG n, cab_ULONG s, const cab_UWORD *d, const cab_UWORD *e,
 struct Ziphuft **t, cab_LONG *m, fdi_decomp_state *decomp_state)
 {
   cab_ULONG a;                   	/* counter for codes of length k */
@@ -1125,7 +1125,7 @@ struct Ziphuft **t, cab_LONG *m, fdi_decomp_state *decomp_state)
 /*********************************************************
  * fdi_Zipinflate_codes (internal)
  */
-cab_LONG fdi_Zipinflate_codes(struct Ziphuft *tl, struct Ziphuft *td,
+static cab_LONG fdi_Zipinflate_codes(struct Ziphuft *tl, struct Ziphuft *td,
   cab_LONG bl, cab_LONG bd, fdi_decomp_state *decomp_state)
 {
   register cab_ULONG e;  /* table entry flag/number of extra bits */
@@ -1272,16 +1272,14 @@ static cab_LONG fdi_Zipinflate_fixed(fdi_decomp_state *decomp_state)
   for(; i < 288; i++)          /* make a complete, but wrong code set */
     l[i] = 8;
   fixed_bl = 7;
-  if((i = fdi_Ziphuft_build(l, 288, 257, (cab_UWORD *) Zipcplens,
-  (cab_UWORD *) Zipcplext, &fixed_tl, &fixed_bl, decomp_state)))
+  if((i = fdi_Ziphuft_build(l, 288, 257, Zipcplens, Zipcplext, &fixed_tl, &fixed_bl, decomp_state)))
     return i;
 
   /* distance table */
   for(i = 0; i < 30; i++)      /* make an incomplete code set */
     l[i] = 5;
   fixed_bd = 5;
-  if((i = fdi_Ziphuft_build(l, 30, 0, (cab_UWORD *) Zipcpdist, (cab_UWORD *) Zipcpdext,
-  &fixed_td, &fixed_bd, decomp_state)) > 1)
+  if((i = fdi_Ziphuft_build(l, 30, 0, Zipcpdist, Zipcpdext, &fixed_td, &fixed_bd, decomp_state)) > 1)
   {
     fdi_Ziphuft_free(CAB(hfdi), fixed_tl);
     return i;
@@ -1409,16 +1407,14 @@ static cab_LONG fdi_Zipinflate_dynamic(fdi_decomp_state *decomp_state)
 
   /* build the decoding tables for literal/length and distance codes */
   bl = ZIPLBITS;
-  if((i = fdi_Ziphuft_build(ll, nl, 257, (cab_UWORD *) Zipcplens, (cab_UWORD *) Zipcplext,
-                        &tl, &bl, decomp_state)) != 0)
+  if((i = fdi_Ziphuft_build(ll, nl, 257, Zipcplens, Zipcplext, &tl, &bl, decomp_state)) != 0)
   {
     if(i == 1)
       fdi_Ziphuft_free(CAB(hfdi), tl);
     return i;                   /* incomplete code set */
   }
   bd = ZIPDBITS;
-  fdi_Ziphuft_build(ll + nl, nd, 0, (cab_UWORD *) Zipcpdist, (cab_UWORD *) Zipcpdext,
-                &td, &bd, decomp_state);
+  fdi_Ziphuft_build(ll + nl, nd, 0, Zipcpdist, Zipcpdext, &td, &bd, decomp_state);
 
   /* decompress until an end-of-block code */
   if(fdi_Zipinflate_codes(tl, td, bl, bd, decomp_state))
