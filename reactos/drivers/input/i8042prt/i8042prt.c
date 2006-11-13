@@ -599,6 +599,7 @@ static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 static NTSTATUS STDCALL I8042Initialize(PDEVICE_EXTENSION DevExt)
 {
 	NTSTATUS Status;
+	UCHAR Value = 0;
 
 	Status = I8042BasicDetect(DevExt);
 	if (!NT_SUCCESS(Status)) {
@@ -630,6 +631,32 @@ static NTSTATUS STDCALL I8042Initialize(PDEVICE_EXTENSION DevExt)
 	if (DevExt->MouseExists) {
 		DPRINT("Mouse detected\n");
 		I8042MouseEnable(DevExt);
+	}
+
+	/*
+	 * Some machines do not reboot if SF is not set.
+	 */
+	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_READ_MODE)) {
+		DPRINT1("Can't read i8042 mode\n");
+		return Status;
+	}
+
+	Status = I8042ReadDataWait(DevExt, &Value);
+	if (!NT_SUCCESS(Status)) {
+		DPRINT1("No response after read i8042 mode\n");
+		return Status;
+	}
+
+	Value |= CCB_SYSTEM_FLAG;
+
+	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_WRITE_MODE)) {
+		DPRINT1("Can't set i8042 mode\n");
+		return Status;
+	}
+
+	if (!I8042Write(DevExt, I8042_DATA_PORT, Value)) {
+		DPRINT1("Can't send i8042 mode\n");
+		return Status;
 	}
 
 	return STATUS_SUCCESS;
