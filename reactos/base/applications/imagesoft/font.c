@@ -1,6 +1,5 @@
 #include <precomp.h>
 
-
 int CALLBACK
 EnumFontSizes(ENUMLOGFONTEX *lpelfe,
               NEWTEXTMETRICEX *lpntme,
@@ -20,8 +19,16 @@ EnumFontSizes(ENUMLOGFONTEX *lpelfe,
         for (i = 0; i < (sizeof(ttsizes) / sizeof(ttsizes[0])); i++)
         {
             wsprintf(ach, _T("%d"), ttsizes[i]);
-            idx = (INT)SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)ach);
-            SendMessage(hwndCombo, CB_SETITEMDATA, idx, ttsizes[i]);
+
+            idx = (INT)SendMessage(hwndCombo,
+                                   CB_ADDSTRING,
+                                   0,
+                                   (LPARAM)ach);
+
+            SendMessage(hwndCombo,
+                        CB_SETITEMDATA,
+                        idx,
+                        ttsizes[i]);
         }
         return 0;
     }
@@ -92,25 +99,42 @@ FillFontSizeComboList(HWND hwndCombo)
     lf.lfPitchAndFamily = 0;
 
     /* empty the list */
-    SendMessage(hwndCombo, CB_RESETCONTENT, 0, 0);
+    SendMessage(hwndCombo,
+                CB_RESETCONTENT,
+                0,
+                0);
 
     /* enumerate font sizes */
-    EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontSizes, (LONG)hwndCombo, 0);
+    EnumFontFamiliesEx(hdc,
+                       &lf,
+                       (FONTENUMPROC)EnumFontSizes,
+                       (LPARAM)hwndCombo,
+                       0);
 
     /* set selection to first item */
-    count = (INT)SendMessage(hwndCombo, CB_GETCOUNT, 0, 0);
+    count = (INT)SendMessage(hwndCombo,
+                             CB_GETCOUNT,
+                             0,
+                             0);
 
     for(i = 0; i < count; i++)
     {
-        INT n = (INT)SendMessage(hwndCombo, CB_GETITEMDATA, i, 0);
+        INT n = (INT)SendMessage(hwndCombo,
+                                 CB_GETITEMDATA,
+                                 i,
+                                 0);
 
         if (n <= cursize)
             nearest = i;
     }
 
-    SendMessage(hwndCombo, CB_SETCURSEL, nearest, 0);
+    SendMessage(hwndCombo,
+                CB_SETCURSEL,
+                nearest,
+                0);
 
-    ReleaseDC(hwndCombo, hdc);
+    ReleaseDC(hwndCombo,
+              hdc);
 }
 
 
@@ -144,8 +168,11 @@ FillFontStyleComboList(HWND hwndCombo)
     ReleaseDC(hwndCombo,
               hdc);
 
+    /* set default to Arial */
     SendMessage(hwndCombo,
-                CB_SETCURSEL,
-                0,
-                0);
+                CB_SELECTSTRING,
+                -1,
+                (LPARAM)_T("Arial"));
+
+
 }

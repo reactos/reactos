@@ -201,13 +201,13 @@ VOID MakeFlatCombo(HWND hwndCombo)
     LONG OldComboProc;
 
     /* Remember old window procedure */
-    OldComboProc = GetWindowLong(hwndCombo, GWL_WNDPROC);
-    SetWindowLong(hwndCombo,
-                  GWL_USERDATA,
-                  OldComboProc);
+    OldComboProc = GetWindowLongPtr(hwndCombo, GWL_WNDPROC);
+    SetWindowLongPtr(hwndCombo,
+                     GWL_USERDATA,
+                     OldComboProc);
 
     /* Perform the subclass */
-    OldComboProc = SetWindowLong(hwndCombo,
-                                 GWL_WNDPROC,
-                                 (LONG)FlatComboProc);
+    SetWindowLongPtr(hwndCombo,
+                     GWL_WNDPROC,
+                     (LONG_PTR)FlatComboProc);
 }

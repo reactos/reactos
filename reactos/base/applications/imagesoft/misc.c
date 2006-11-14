@@ -249,10 +249,10 @@ ToolbarUpdateControlSpaces(HWND hWndToolbar,
                          0,
                          0) & CCS_VERT) != 0);
 
-    nButtons = SendMessage(hWndToolbar,
-                           TB_BUTTONCOUNT,
-                           0,
-                           0);
+    nButtons = (DWORD)SendMessage(hWndToolbar,
+                                  TB_BUTTONCOUNT,
+                                  0,
+                                  0);
 
     for (i = 0;
          i != nButtons;
@@ -376,7 +376,8 @@ InitImageList(UINT NumImages, UINT StartResource)
 {
     HBITMAP hBitmap;
     HIMAGELIST hImageList;
-    INT i, k, Ret;
+    UINT i, k;
+    INT Ret;
 
 
     /* Create the toolbar icon image list */

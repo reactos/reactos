@@ -78,7 +78,10 @@
 #define ID_TEXT                 2068
 #define ID_ZOOM                 2069
 
-#define ID_ABOUT                2100
+/* Adjust */
+#define ID_BRIGHTNESS           2100
+
+#define ID_ABOUT                2400
 
 #define ID_REFRESH              3000
 #define ID_HELP                 3001
@@ -240,6 +243,17 @@
 
 
 /* DIALOGS */
+#define IDC_PICPREVIEW          2999
+
+/* brightness dialog */
+#define IDD_BRIGHTNESS          3000
+#define IDC_BRI_GROUP           3001
+#define IDC_BRI_FULL            3002
+#define IDC_BRI_RED             3003
+#define IDC_BRI_GREEN           3004
+#define IDC_BRI_BLUE            3005
+#define IDC_BRI_EDIT            3006
+#define IDC_BRI_TRACKBAR        3007
 
 /* image property dialog */
 #define IDD_IMAGE_PROP          4000

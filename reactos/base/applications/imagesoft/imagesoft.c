@@ -3,9 +3,6 @@
 HINSTANCE hInstance;
 HANDLE ProcessHeap;
 
-#ifdef _MSC_VER
-#pragma warning(disable : 4100)
-#endif
 int WINAPI
 WinMain(HINSTANCE hThisInstance,
         HINSTANCE hPrevInstance,

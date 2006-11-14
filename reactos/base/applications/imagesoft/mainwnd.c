@@ -817,49 +817,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
     {
         case ID_NEW:
         {
-            OPEN_IMAGE_EDIT_INFO OpenInfo;
-            PIMAGE_PROP ImageProp = NULL;
-
-            ImageProp = HeapAlloc(ProcessHeap,
-                                  0,
-                                  sizeof(IMAGE_PROP));
-            if (ImageProp == NULL)
-                break;
-
-            /* load the properties dialog */
-            if (DialogBoxParam(hInstance,
-                               MAKEINTRESOURCE(IDD_IMAGE_PROP),
-                               Info->hSelf,
-                               ImagePropDialogProc,
-                               (LPARAM)ImageProp))
-            {
-                /* if an image name isn't provided, load a default name */
-                if (! ImageProp->lpImageName)
-                    LoadAndFormatString(hInstance,
-                                        IDS_IMAGE_NAME,
-                                        &OpenInfo.lpImageName,
-                                        ++Info->ImagesCreated);
-                else
-                    OpenInfo.lpImageName = ImageProp->lpImageName;
-
-                OpenInfo.CreateNew = TRUE;
-                OpenInfo.Type = ImageProp->Type;
-                OpenInfo.Resolution = ImageProp->Resolution;
-                OpenInfo.New.Width = ImageProp->Width;
-                OpenInfo.New.Height = ImageProp->Height;
-
-                HeapFree(ProcessHeap,
-                         0,
-                         ImageProp);
-
-                CreateImageEditWindow(Info,
-                                      &OpenInfo);
-            }
+            MessageBox(NULL, _T("Not yet implemented"), NULL, 0);
         }
-        break;
-
-        case ID_BOLD:
-            MessageBox(NULL, _T("Bingo"), NULL, 0);
         break;
 
         case ID_OPEN:
@@ -938,6 +897,14 @@ MainWndCommand(PMAIN_WND_INFO Info,
             }
         }
         break;
+
+        case ID_BRIGHTNESS:
+            DialogBoxParam(hInstance,
+                           MAKEINTRESOURCE(IDD_BRIGHTNESS),
+                           Info->hSelf,
+                           BrightnessProc,
+                           (LPARAM)Info);
+            break;
 
         case ID_EXIT:
             SendMessage(Info->hSelf,

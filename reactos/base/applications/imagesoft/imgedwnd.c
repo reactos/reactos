@@ -4,7 +4,6 @@ static const TCHAR szImageEditWndClass[] = TEXT("ImageSoftEditWndClass");
 
 #define IMAGE_FRAME_SIZE    1
 
-
 static VOID
 EditWndUpdateScrollInfo(PEDIT_WND_INFO Info)
 {
@@ -33,119 +32,136 @@ EditWndUpdateScrollInfo(PEDIT_WND_INFO Info)
                   TRUE);
 }
 
+
+static VOID
+LoadBlankCanvas(PEDIT_WND_INFO Info)
+{
+    /* FIXME: convert this to a DIB Section */
+    /* set bitmap dimensions */
+    Info->Width = Info->OpenInfo->New.Width;
+    Info->Height = Info->OpenInfo->New.Height;
+}
+
 static BOOL
-InitEditWnd(PEDIT_WND_INFO Info)
+LoadDIBImage(PEDIT_WND_INFO Info)
 {
     BITMAPFILEHEADER bmfh;
-    PBITMAPINFO pbmi = NULL;
-    PBYTE pBits;
     HANDLE hFile;
     BITMAP bitmap;
+    DWORD BytesRead;
+    BOOL bSuccess, bRet = FALSE;
 
-    Info->Zoom = 100;
+    hFile = CreateFile(Info->OpenInfo->Open.lpImagePath,
+                       GENERIC_READ,
+                       FILE_SHARE_READ,
+                       NULL,
+                       OPEN_EXISTING,
+                       FILE_FLAG_SEQUENTIAL_SCAN,
+                       NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return bRet;
 
-    if (Info->OpenInfo != NULL)
+    bSuccess = ReadFile(hFile,
+                        &bmfh,
+                        sizeof(BITMAPFILEHEADER),
+                        &BytesRead,
+                        NULL);
+
+    if (bSuccess && (BytesRead == sizeof(BITMAPFILEHEADER))
+                 && (bmfh.bfType == *(WORD *)"BM"))
     {
-        HDC hDC = GetDC(Info->hSelf);
-        Info->hDCMem = CreateCompatibleDC(hDC);
-        ReleaseDC(Info->hSelf, hDC);
+        PBITMAPINFO pbmi;
+        DWORD InfoSize;
 
-        if (Info->OpenInfo->CreateNew)
+        InfoSize = bmfh.bfOffBits - sizeof(BITMAPFILEHEADER);
+
+        pbmi = HeapAlloc(ProcessHeap,
+                         0,
+                         InfoSize);
+        if (pbmi)
         {
-            /* FIXME: convert this to a DIB Section */
-            /* set bitmap dimensions */
-            Info->Width = Info->OpenInfo->New.Width;
-            Info->Height = Info->OpenInfo->New.Height;
-
-        }
-        else
-        {
-            DWORD InfoSize, BytesRead;
-            BOOL bSuccess;
-
-            hFile = CreateFile(Info->OpenInfo->Open.lpImagePath,
-                               GENERIC_READ,
-                               FILE_SHARE_READ,
-                               NULL,
-                               OPEN_EXISTING,
-                               FILE_FLAG_SEQUENTIAL_SCAN,
-                               NULL);
-            if (hFile == INVALID_HANDLE_VALUE)
-                return FALSE;
-
             bSuccess = ReadFile(hFile,
-                                &bmfh,
-                                sizeof(BITMAPFILEHEADER),
+                                pbmi,
+                                InfoSize,
                                 &BytesRead,
                                 NULL);
 
-            if ( bSuccess && (BytesRead == sizeof(BITMAPFILEHEADER))
-                            /* FIXME: Why is this failing?? */
-                          /*&& (bmfh.bfType == *(WORD *)_T("BM"))*/)
+            if (bSuccess && (BytesRead == InfoSize))
             {
-                InfoSize = bmfh.bfOffBits - sizeof(BITMAPFILEHEADER);
+                PBYTE pBits;
 
-                pbmi = HeapAlloc(ProcessHeap,
-                                 0,
-                                 InfoSize);
-
-                bSuccess = ReadFile(hFile,
-                                    pbmi,
-                                    InfoSize,
-                                    &BytesRead,
-                                    NULL);
-
-                if (bSuccess && (BytesRead == InfoSize))
+                Info->hBitmap = CreateDIBSection(NULL,
+                                                 pbmi,
+                                                 DIB_RGB_COLORS,
+                                                 (VOID *)&pBits,
+                                                 NULL,
+                                                 0);
+                if (Info->hBitmap != NULL)
                 {
-                    Info->hBitmap = CreateDIBSection(NULL,
-                                                     pbmi,
-                                                     DIB_RGB_COLORS,
-                                                     (VOID *)&pBits,
-                                                     NULL,
-                                                     0);
-                    if (Info->hBitmap != NULL)
-                    {
-                        ReadFile(hFile,
-                                 pBits,
-                                 bmfh.bfSize - bmfh.bfOffBits,
-                                 &BytesRead,
-                                 NULL);
-                    }
-                    else
-                    {
-                        goto fail;
-                    }
-                }
-                else
-                {
-                    goto fail;
+                    ReadFile(hFile,
+                             pBits,
+                             bmfh.bfSize - bmfh.bfOffBits,
+                             &BytesRead,
+                             NULL);
+
+                    /* get bitmap dimensions */
+                    GetObject(Info->hBitmap,
+                              sizeof(BITMAP),
+                              &bitmap);
+
+                    Info->Width = bitmap.bmWidth;
+                    Info->Height = bitmap.bmHeight;
+
+                    bRet = TRUE;
                 }
             }
-            else
-            {
-                if (! bSuccess)
-                    GetError(0);
-
-                goto fail;
-            }
-
-            CloseHandle(hFile);
 
             HeapFree(ProcessHeap,
                      0,
                      pbmi);
         }
+    }
+    else if (!bSuccess)
+    {
+        GetError(0);
+    }
+
+    CloseHandle(hFile);
+
+    return bRet;
+}
+
+
+static BOOL
+InitEditWnd(PEDIT_WND_INFO Info)
+{
+    Info->Zoom = 100;
+
+    if (Info->OpenInfo != NULL)
+    {
+        HDC hDC;
+
+        if (Info->hDCMem)
+        {
+            DeleteObject(Info->hDCMem);
+            Info->hDCMem = NULL;
+        }
+
+        hDC = GetDC(Info->hSelf);
+        Info->hDCMem = CreateCompatibleDC(hDC);
+        ReleaseDC(Info->hSelf, hDC);
+
+        if (Info->OpenInfo->CreateNew)
+        {
+            LoadBlankCanvas(Info);
+        }
+        else
+        {
+            LoadDIBImage(Info);
+        }
 
         Info->OpenInfo = NULL;
     }
-
-    /* get bitmap dimensions */
-    GetObject(Info->hBitmap,
-                  sizeof(BITMAP),
-                  &bitmap);
-
-    Info->Width = bitmap.bmWidth;
-    Info->Height = bitmap.bmHeight;
 
     EditWndUpdateScrollInfo(Info);
 
@@ -159,18 +175,6 @@ InitEditWnd(PEDIT_WND_INFO Info)
 
     /* FIXME - if returning FALSE, remove the image editor from the list! */
     return TRUE;
-
-
-fail:
-    if (! hFile)
-        CloseHandle(hFile);
-
-    if (! pbmi)
-        HeapFree(ProcessHeap,
-                 0,
-                 pbmi);
-
-    return FALSE;
 }
 
 static VOID
@@ -452,7 +456,7 @@ SetImageEditorEnvironment(PEDIT_WND_INFO Info,
 }
 
 BOOL
-CreateImageEditWindow(struct _MAIN_WND_INFO *MainWnd,
+CreateImageEditWindow(PMAIN_WND_INFO MainWnd,
                       POPEN_IMAGE_EDIT_INFO OpenInfo)
 {
     PEDIT_WND_INFO Info;

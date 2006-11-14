@@ -365,10 +365,10 @@ FloatToolbarWndProc(HWND hwnd,
 
             FltInfo->bOpaque = FALSE;
 
-            SetWindowLong(hwnd,
-                          GWL_EXSTYLE,
-                          GetWindowLong(hwnd,
-                                        GWL_EXSTYLE) | WS_EX_LAYERED);
+            SetWindowLongPtr(hwnd,
+                             GWL_EXSTYLE,
+                             GetWindowLongPtr(hwnd,
+                                              GWL_EXSTYLE) | WS_EX_LAYERED);
 
             /* set the tranclucency to 60% */
             SetLayeredWindowAttributes(hwnd,
@@ -404,10 +404,10 @@ FloatToolbarWndProc(HWND hwnd,
 
                         FltInfo->bOpaque = FALSE;
 
-                        SetWindowLong(hwnd,
-                                      GWL_EXSTYLE,
-                                      GetWindowLong(hwnd,
-                                                    GWL_EXSTYLE) | WS_EX_LAYERED);
+                        SetWindowLongPtr(hwnd,
+                                         GWL_EXSTYLE,
+                                         GetWindowLongPtr(hwnd,
+                                                          GWL_EXSTYLE) | WS_EX_LAYERED);
 
                         /* set the tranclucency to 60% */
                         SetLayeredWindowAttributes(hwnd,
@@ -426,10 +426,10 @@ FloatToolbarWndProc(HWND hwnd,
         {
             if (FltInfo->bOpaque == FALSE)
             {
-                SetWindowLong(hwnd,
-                          GWL_EXSTYLE,
-                          GetWindowLong(hwnd,
-                                        GWL_EXSTYLE) & ~WS_EX_LAYERED);
+                SetWindowLongPtr(hwnd,
+                                 GWL_EXSTYLE,
+                                 GetWindowLongPtr(hwnd,
+                                                  GWL_EXSTYLE) & ~WS_EX_LAYERED);
 
                 RedrawWindow(hwnd,
                              NULL,
