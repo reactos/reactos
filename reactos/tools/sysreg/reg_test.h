@@ -72,6 +72,16 @@ namespace Sysreg_
 
 	virtual bool execute(ConfigParser & conf_parser) = 0;
 
+//---------------------------------------------------------------------------------------
+///
+/// checkForHang
+///
+///
+///
+
+
+
+
 	protected:
 		string m_Name;
 

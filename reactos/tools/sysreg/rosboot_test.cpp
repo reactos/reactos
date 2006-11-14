@@ -173,7 +173,7 @@ namespace Sysreg_
 		{
 			string line = debug_data[i];
 
-			//cerr << line << endl;
+			cout << line << endl;
 
 			if (line.find (RosBootTest::SYSREG_CHECKPOINT) != string::npos)
 			{
