@@ -92,10 +92,9 @@ namespace Sysreg_
 /// Note: if an error occurs, this function returns false
 ///
 /// @param BootCmd the command which is passed to PipeReader class
-/// @param debug_log path pointing to debug log
 /// @return bool
 
-	bool fetchDebugByFile(string BootCmd, string debug_log);
+	bool fetchDebugByFile(string BootCmd);
 
 //---------------------------------------------------------------------------------------
 ///
@@ -140,6 +139,7 @@ protected:
 	string m_PidFile;
 	string m_Checkpoint;
 	string m_CriticalApp;
+	string m_DebugFile;
 	vector <string> m_Checkpoints;
 	unsigned long m_Delayread;
 

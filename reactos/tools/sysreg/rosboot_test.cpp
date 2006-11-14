@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <vector>
+#include <fstream>
 #include <time.h>
 #include <float.h>
 #include <stdio.h>
@@ -33,6 +34,13 @@ namespace Sysreg_
 	using System_::SymbolFile;
 	using System_::FileReader;
 	using System_::OsSupport;
+
+#ifdef UNICODE
+	using std::wofstream;
+	typedef wofstream ofstream;
+#else
+	using std::ofstream;
+#endif
 
 	string RosBootTest::VARIABLE_NAME = _T("ROSBOOT_CMD");
 	string RosBootTest::CLASS_NAME = _T("rosboot");
@@ -102,8 +110,6 @@ namespace Sysreg_
 				m_Delayread = 0;
 			}
 		}
-		
-
 
 		///
 		/// read optional arguments
@@ -111,6 +117,8 @@ namespace Sysreg_
 
 		conf_parser.getStringValue (RosBootTest::CHECK_POINT, m_Checkpoint);
 		conf_parser.getStringValue (RosBootTest::CRITICAL_APP, m_CriticalApp);
+		conf_parser.getStringValue (RosBootTest::DEBUG_FILE, m_DebugFile);
+
 		if (conf_parser.getStringValue (RosBootTest::PID_FILE, m_PidFile))
 		{
 			_tremove(m_PidFile.c_str ());
@@ -122,13 +130,12 @@ namespace Sysreg_
 		}
 		else if (!_tcscmp(debug_port.c_str(),  _T("file")))
 		{
-			string debug_file;
-			if (!conf_parser.getStringValue (RosBootTest::DEBUG_FILE, debug_file))
+			if (!m_DebugFile.length())
 			{
 				cerr << "Error: ROSBOOT_DEBUG_FILE is not set in configuration file" << endl;
 				return false;
 			}
-			ret = fetchDebugByFile(boot_cmd, debug_file);
+			ret = fetchDebugByFile(boot_cmd);
 		}
 		else
 		{
@@ -136,7 +143,6 @@ namespace Sysreg_
 				<<" Currently only file|pipe is supported" <<endl;
 			return false;
 		}
-
 
 		return ret;
 	}
@@ -167,7 +173,7 @@ namespace Sysreg_
 		{
 			string line = debug_data[i];
 
-			cerr << line << endl;
+			//cerr << line << endl;
 
 			if (line.find (RosBootTest::SYSREG_CHECKPOINT) != string::npos)
 			{
@@ -177,18 +183,35 @@ namespace Sysreg_
 					state = DebugStateCPReached;
 					break;
 				}
-				if (line.find (_T("|")) != string::npos)
-				{
-					string fline = debug_data[i];
-					m_Checkpoints.push_back (fline);
-				}
+				m_Checkpoints.push_back (line);
 			}
 
 
 			if (line.find (_T("*** Fatal System Error")) != string::npos)
 			{
-				cerr << "BSOD detected" <<endl;
-				dumpCheckpoints();
+				cerr << "Blue Screen of Death detected" <<endl;
+				if (m_Checkpoints.size ())
+				{
+					cerr << "dumping list of reached checkpoints:" << endl;
+					do
+					{
+						string cp = m_Checkpoints[0];
+						m_Checkpoints.erase (m_Checkpoints.begin ());
+						cerr << cp << endl;
+					}while(m_Checkpoints.size ());
+					cerr << _T("----------------------------------") << endl;
+				}
+				if (i + 1 < debug_data.size () )
+				{
+					cerr << "dumping rest of debug log" << endl;
+					while(i < debug_data.size ())
+					{
+						string data = debug_data[i];
+						cerr << data << endl;
+						i++;
+					}
+					cerr << _T("----------------------------------") << endl;
+				}
 				state = DebugStateBSODDetected;
 				break;
 			}
@@ -362,17 +385,36 @@ namespace Sysreg_
 		bool ret = true;
 		vector<string> vect;
 		size_t lines = 0;
+		bool write_log;
+		ofstream file;
+		if (m_DebugFile.length ())
+		{
+			_tremove(m_DebugFile.c_str ());
+			file.open (m_DebugFile.c_str ());
+		}
+
+		write_log = file.is_open ();
+
 		while(1)
 		{
 			if (isTimeout(m_Timeout))
 			{
 				break;
 			}
+			size_t prev_count = vect.size ();
 			size_t line_count = namedpipe_reader.readPipe (vect);
 			if (!line_count)
 			{
 				cerr << "No data read" << endl;
 				continue;				
+			}
+			if (write_log)
+			{
+				for (size_t i = prev_count; i < vect.size (); i++)
+				{
+					string & line = vect[i];
+					file << line;
+				}
 			}
 
 			DebugState state = checkDebugData(vect);
@@ -388,16 +430,20 @@ namespace Sysreg_
 			lines += line_count;
 		}
 		namedpipe_reader.closePipe ();
+		if (write_log)
+		{
+			file.close();
+		}
 		_sleep(3* CLOCKS_PER_SEC);
 		OsSupport::terminateProcess (pid);
 
 		return ret;
 	}
 //---------------------------------------------------------------------------------------
-	bool RosBootTest::fetchDebugByFile(string boot_cmd, string debug_log)
+	bool RosBootTest::fetchDebugByFile(string boot_cmd)
 	{
 		PipeReader pipe_reader;
-		_tremove(debug_log.c_str ());
+		_tremove(m_DebugFile.c_str ());
 
 		if (!pipe_reader.openPipe(boot_cmd, string(_T("rt"))))
 		{
@@ -432,9 +478,9 @@ namespace Sysreg_
 			}
 		}
 		FileReader file;
-		if (!file.openFile (debug_log.c_str ()))
+		if (!file.openFile (m_DebugFile.c_str ()))
 		{
-			cerr << "Error: failed to open debug log " << debug_log << endl;
+			cerr << "Error: failed to open debug log " << m_DebugFile<< endl;
 			pipe_reader.closePipe ();
 			return false;
 		}

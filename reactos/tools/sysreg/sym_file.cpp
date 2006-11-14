@@ -97,8 +97,9 @@ namespace System_
 					string path = current_dir;
 					path.insert (path.length () -1, _T("\\"));
 					path.insert (path.length () -1, filename);
-					
+#ifdef NDEBUG				
 					cerr << "Module Name " << modulename << endl << "File Name " << path << endl;
+#endif
 
 					m_Map.insert(std::make_pair<string, string>(modulename, path));
 
