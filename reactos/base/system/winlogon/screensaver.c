@@ -262,7 +262,6 @@ StartScreenSaver(
 	if (rc != ERROR_SUCCESS)
 		goto cleanup;
 
-	szApplicationName[bufferSize] = 0; /* Terminate the string */
 	rc = RegQueryValueExW(
 		hKey,
 		L"SCRNSAVE.EXE",
@@ -272,9 +271,10 @@ StartScreenSaver(
 		&bufferSize);
 	if (rc != ERROR_SUCCESS || dwType != REG_SZ)
 		goto cleanup;
-    
-    if (bufferSize <=4)
-         goto cleanup;
+
+	if (bufferSize == 0)
+		goto cleanup;
+	szApplicationName[bufferSize] = 0; /* Terminate the string */
 
 	wsprintfW(szCommandLine, L"%s /s", szApplicationName);
 	TRACE("WL: Executing %S\n", szCommandLine);
