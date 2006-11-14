@@ -325,15 +325,21 @@ namespace Sysreg_
 		OsSupport::ProcessID pid = OsSupport::createProcess ((TCHAR*)boot_cmd.c_str (), 0, NULL); 
 
 		string::size_type pipe_pos = boot_cmd.find (_T("serial pipe:"));
-		pipe_pos += 12;
-		string::size_type pipe_pos_end = boot_cmd.find (_T(" "), pipe_pos);
-		if (pipe_pos != string::npos && pipe_pos > 0 && pipe_pos < boot_cmd.size())
+
+		if (pipe_pos != string::npos)
 		{
-			pipecmd = _T("\\\\.\\pipe\\") + boot_cmd.substr (pipe_pos, pipe_pos_end - pipe_pos);
+			pipe_pos += 12;
+			string::size_type pipe_pos_end = boot_cmd.find (_T(" "), pipe_pos);
+			if (pipe_pos != string::npos && pipe_pos > 0 && pipe_pos < boot_cmd.size())
+			{
+				pipecmd = _T("\\\\.\\pipe\\") + boot_cmd.substr (pipe_pos, pipe_pos_end - pipe_pos);
+			}
 		}
-		else
+
+		if (!pipecmd.length ())
 		{
-			return false;
+			//FIXME
+			pipecmd = _T("\\\\.\\pipe\\vmwaredebug");
 		}
 
 		if (m_Delayread)
@@ -355,27 +361,31 @@ namespace Sysreg_
 
 		bool ret = true;
 		vector<string> vect;
-
+		size_t lines = 0;
 		while(1)
 		{
 			if (isTimeout(m_Timeout))
 			{
 				break;
 			}
-
-			if (namedpipe_reader.readPipe (vect) != 0)
+			size_t line_count = namedpipe_reader.readPipe (vect);
+			if (!line_count)
 			{
-				DebugState state = checkDebugData(vect);
-				if (state == DebugStateBSODDetected || state == DebugStateUMEDetected)
-				{
-					ret = false;
-					break;
-				}
-				else if (state == DebugStateCPReached)
-				{
-					break;
-				}
+				cerr << "No data read" << endl;
+				continue;				
 			}
+
+			DebugState state = checkDebugData(vect);
+			if (state == DebugStateBSODDetected || state == DebugStateUMEDetected)
+			{
+				ret = false;
+				break;
+			}
+			else if (state == DebugStateCPReached)
+			{
+				break;
+			}
+			lines += line_count;
 		}
 		namedpipe_reader.closePipe ();
 		_sleep(3* CLOCKS_PER_SEC);

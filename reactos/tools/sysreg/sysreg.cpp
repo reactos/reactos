@@ -97,6 +97,7 @@ int _tmain(int argc, TCHAR * argv[])
 	else
 	{
 		cout << "The regression test " << regtest->getName () << " failed" << endl;
+		return -2;
 	}
 
 	return 0;
