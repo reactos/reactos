@@ -28,6 +28,29 @@ Author:
 #ifndef NTOS_MODE_USER
 
 //
+// Private HAL Callbacks
+//
+#define HalHandlerForBus                HALPRIVATEDISPATCH->HalHandlerForBus
+#define HalHandlerForConfigSpace        HALPRIVATEDISPATCH->HalHandlerForConfigSpace
+#define HalLocateHiberRanges            HALPRIVATEDISPATCH->HalLocateHiberRanges
+#define HalRegisterBusHandler           HALPRIVATEDISPATCH->HalRegisterBusHandler
+#define HalSetWakeEnable                HALPRIVATEDISPATCH->HalSetWakeEnable
+#define HalSetWakeAlarm                 HALPRIVATEDISPATCH->HalSetWakeAlarm
+#define HalPciTranslateBusAddress       HALPRIVATEDISPATCH->HalPciTranslateBusAddress
+#define HalPciAssignSlotResources       HALPRIVATEDISPATCH->HalPciAssignSlotResources
+#define HalHaltSystem                   HALPRIVATEDISPATCH->HalHaltSystem
+#define HalFindBusAddressTranslation    HALPRIVATEDISPATCH->HalFindBusAddressTranslation
+#define HalResetDisplay                 HALPRIVATEDISPATCH->HalResetDisplay
+#define HalAllocateMapRegisters         HALPRIVATEDISPATCH->HalAllocateMapRegisters
+#define KdSetupPciDeviceForDebugging    HALPRIVATEDISPATCH->KdSetupPciDeviceForDebugging
+#define KdReleasePciDeviceforDebugging  HALPRIVATEDISPATCH->KdReleasePciDeviceforDebugging
+#define KdGetAcpiTablePhase0            HALPRIVATEDISPATCH->KdGetAcpiTablePhase0
+#define KdCheckPowerButton              HALPRIVATEDISPATCH->KdCheckPowerButton
+#define HalVectorToIDTEntry             HALPRIVATEDISPATCH->HalVectorToIDTEntry
+#define KdMapPhysicalMemory64           HALPRIVATEDISPATCH->KdMapPhysicalMemory64
+#define KdUnmapVirtualAddress           HALPRIVATEDISPATCH->KdUnmapVirtualAddress
+
+//
 // The DDK steals these away from you.
 //
 #ifdef _MSC_VER

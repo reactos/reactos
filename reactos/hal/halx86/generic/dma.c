@@ -1948,16 +1948,77 @@ IoMapTransfer(
  *
  * @implemented
  */
-
-BOOLEAN STDCALL
-HalFlushCommonBuffer(
-   ULONG Unknown1,
-   ULONG Unknown2,
-   ULONG Unknown3,
-   ULONG Unknown4,
-   ULONG Unknown5)
+BOOLEAN
+NTAPI
+HalFlushCommonBuffer(IN PADAPTER_OBJECT AdapterObject,
+                     IN ULONG Length,
+                     IN PHYSICAL_ADDRESS LogicalAddress,
+                     IN PVOID VirtualAddress)
 {
-   return TRUE;
+    /* Function always returns true */
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+HalAllocateCrashDumpRegisters(IN PADAPTER_OBJECT AdapterObject,
+                              IN OUT PULONG NumberOfMapRegisters)
+{
+    PADAPTER_OBJECT MasterAdapter = AdapterObject->MasterAdapter;
+    ULONG MapRegisterNumber;
+
+    /* Check if it needs map registers */
+    if (AdapterObject->NeedsMapRegisters)
+    {
+        /* Check if we have enough */
+        if (*NumberOfMapRegisters > AdapterObject->MapRegistersPerChannel)
+        {
+            /* We don't, fail */
+            AdapterObject->NumberOfMapRegisters = 0;
+            return NULL;
+        }
+
+        /* Try to find free map registers */
+        MapRegisterNumber = -1;
+        MapRegisterNumber = RtlFindClearBitsAndSet(MasterAdapter->MapRegisters,
+                                                   *NumberOfMapRegisters,
+                                                   0);
+
+        /* Check if nothing was found */
+        if (MapRegisterNumber == -1)
+        {
+            /* No free registers found, so use the base registers */
+            RtlSetBits(MasterAdapter->MapRegisters,
+                       0,
+                       *NumberOfMapRegisters);
+            MapRegisterNumber = 0;
+        }
+
+        /* Calculate the new base */
+        AdapterObject->MapRegisterBase =
+            (PROS_MAP_REGISTER_ENTRY)(MasterAdapter->MapRegisterBase +
+                                      MapRegisterNumber);
+
+        /* Check if scatter gather isn't supported */
+        if (!AdapterObject->ScatterGather)
+        {
+            /* Set the flag */
+            AdapterObject->MapRegisterBase =
+                (PROS_MAP_REGISTER_ENTRY)
+                ((ULONG_PTR)AdapterObject->MapRegisterBase | MAP_BASE_SW_SG);
+        }
+    }
+    else
+    {
+        AdapterObject->MapRegisterBase = NULL;
+        AdapterObject->NumberOfMapRegisters = 0;
+    }
+
+    /* Return the base */
+    return AdapterObject->MapRegisterBase;
 }
 
 /* EOF */

@@ -11,9 +11,17 @@
 /* C Headers */
 #include <stdio.h>
 
+/* WDK HAL Complation hack */
+#ifdef _MSC_VER
+#include <excpt.h>
+#include <ntdef.h>
+#undef _NTHAL_
+#undef DECLSPEC_IMPORT
+#define DECLSPEC_IMPORT
+#endif
+
 /* IFS/DDK/NDK Headers */
 #include <ntifs.h>
-#include <ntddk.h>
 #include <ntdddisk.h>
 #include <arc/arc.h>
 #include <iotypes.h>
@@ -25,6 +33,7 @@
 #define KPCR_BASE 0xFF000000 // HACK!
 
 /* Internal HAL Headers */
+#include "internal/pci.h"
 #include "apic.h"
 #include "bus.h"
 #include "halirq.h"

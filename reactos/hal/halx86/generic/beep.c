@@ -1,11 +1,11 @@
 /*
-* PROJECT:         ReactOS HAL
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/hal/x86/beep.c
-* PURPOSE:         Speak support (beeping)
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
-*/
+ * PROJECT:         ReactOS HAL
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/hal/x86/beep.c
+ * PURPOSE:         Speak support (beeping)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ */
 
 /* INCLUDES ******************************************************************/
 
