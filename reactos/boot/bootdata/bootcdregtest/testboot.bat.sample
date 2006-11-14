@@ -19,7 +19,7 @@ REM start /WAIT dbgprint.exe SYSREG_CHECKPOINT:OPENOFFICE_INSTALL_COMPLETE
 ECHO 
 ECHO Informing Sysreg that we are done
 ECHO
-start /WAIT dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE
+START C:\ReactOS\bin\dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE  
 
 ECHO
 ECHO Shutting down ReactOS
