@@ -1,20 +1,9 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * PROJECT:         ReactOS HA:
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/hal/halx86/generic/display.c
+ * PURPOSE:         Screen Display Routines, now useless since NT 5.1+
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 #include <hal.h>
@@ -24,45 +13,52 @@
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
-VOID STDCALL
+/*
+ * @implemented
+ */
+VOID
+NTAPI
 HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters)
-/*
- * FUNCTION: 
- * ARGUMENTS:
- *         ResetDisplayParameters = Pointer to a driver specific
- *         reset routine.
- */
 {
+    /* Stub since Windows XP implemented Inbv */
+    return;
 }
 
-VOID STDCALL
-HalDisplayString(
-   IN PCH String)
 /*
- * FUNCTION: Switches the screen to HAL console mode (BSOD) if not there
- * already and displays a string
- * ARGUMENT:
- *        string = ASCII string to display
- * NOTE: Use with care because there is no support for returning from BSOD
- * mode
+ * @implemented
  */
+VOID
+NTAPI
+HalDisplayString(IN PCH String)
 {
-   InbvDisplayString(String);
+    /* Call the Inbv driver */
+    InbvDisplayString(String);
 }
 
-VOID STDCALL
+/*
+ * @implemented
+ */
+VOID
+NTAPI
 HalQueryDisplayParameters(OUT PULONG DispSizeX,
-			  OUT PULONG DispSizeY,
-			  OUT PULONG CursorPosX,
-			  OUT PULONG CursorPosY)
+                          OUT PULONG DispSizeY,
+                          OUT PULONG CursorPosX,
+                          OUT PULONG CursorPosY)
 {
+    /* Stub since Windows XP implemented Inbv */
+    return;
 }
 
-
-VOID STDCALL
+/*
+ * @implemented
+ */
+VOID
+NTAPI
 HalSetDisplayParameters(IN ULONG CursorPosX,
-			IN ULONG CursorPosY)
+                        IN ULONG CursorPosY)
 {
+    /* Stub since Windows XP implemented Inbv */
+    return;
 }
 
 /* EOF */

@@ -22,10 +22,10 @@ HalpAssignDriveLetters(IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
                        OUT PSTRING NtSystemPathString)
 {
     /* Call the kernel */
-    return IoAssignDriveLetters(LoaderBlock,
-                                NtDeviceName,
-                                NtSystemPath,
-                                NtSystemPathString);
+    IoAssignDriveLetters(LoaderBlock,
+                         NtDeviceName,
+                         NtSystemPath,
+                         NtSystemPathString);
 }
 
 NTSTATUS

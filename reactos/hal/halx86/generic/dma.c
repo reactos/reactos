@@ -440,7 +440,7 @@ HalpDmaAllocateChildAdapter(
 
    ZwClose(Handle);
 
-   AdapterObject->DmaHeader.Version = DeviceDescription->Version;
+   AdapterObject->DmaHeader.Version = (USHORT)DeviceDescription->Version;
    AdapterObject->DmaHeader.Size = sizeof(ADAPTER_OBJECT);
    AdapterObject->DmaHeader.DmaOperations = &HalpDmaOperations;
    AdapterObject->MapRegistersPerChannel = 1;
@@ -476,7 +476,7 @@ HalpDmaInitializeEisaAdapter(
       AdapterBaseVa = (PVOID)FIELD_OFFSET(EISA_CONTROL, DmaController2);
 
    AdapterObject->AdapterNumber = Controller;
-   AdapterObject->ChannelNumber = DeviceDescription->DmaChannel & 3;
+   AdapterObject->ChannelNumber = (UCHAR)(DeviceDescription->DmaChannel & 3);
    AdapterObject->PagePort = (PUCHAR)HalpEisaPortPage[DeviceDescription->DmaChannel];
    AdapterObject->Width16Bits = FALSE;
    AdapterObject->AdapterBaseVa = AdapterBaseVa;

@@ -20,6 +20,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID
 NTAPI
 HalInitializeProcessor(IN ULONG ProcessorNumber,
@@ -30,29 +33,49 @@ HalInitializeProcessor(IN ULONG ProcessorNumber,
     KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 }
 
-BOOLEAN STDCALL
-HalAllProcessorsStarted (VOID)
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+HalAllProcessorsStarted(VOID)
 {
-  DPRINT("HalAllProcessorsStarted()\n");
-
-  return TRUE;
+    /* Do nothing */
+    return TRUE;
 }
 
-BOOLEAN STDCALL 
-HalStartNextProcessor(ULONG Unknown1,
-		      ULONG ProcessorStack)
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+HalStartNextProcessor(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                      IN PKPROCESSOR_STATE ProcessorState)
 {
-  DPRINT("HalStartNextProcessor(0x%lx 0x%lx)\n", Unknown1, ProcessorStack);
-
-  return TRUE;
+    /* Ready to start */
+    return FALSE;
 }
 
+/*
+ * @implemented
+ */
 VOID
 NTAPI
 HalProcessorIdle(VOID)
 {
-    Ki386EnableInterrupts();
+    _enable();
     Ki386HaltProcessor();
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+HalRequestIpi(ULONG Reserved)
+{
+    /* Not implemented on NT */
+    __debugbreak();
 }
 
 /* EOF */

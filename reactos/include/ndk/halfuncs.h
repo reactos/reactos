@@ -96,6 +96,15 @@ HalInitSystem(
     ULONG BootPhase,
     struct _LOADER_PARAMETER_BLOCK *LoaderBlock
 );
+
+NTHALAPI
+BOOLEAN
+NTAPI
+HalStartNextProcessor(
+    struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+    IN PKPROCESSOR_STATE ProcessorState
+);
+
 #endif
 
 NTHALAPI
@@ -103,14 +112,6 @@ VOID
 NTAPI
 HalReturnToFirmware(
     FIRMWARE_REENTRY Action
-);
-
-NTHALAPI
-BOOLEAN
-NTAPI
-HalStartNextProcessor(
-    ULONG Unknown1,
-    ULONG Unknown2
 );
 
 //

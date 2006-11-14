@@ -45,12 +45,9 @@ HalInitSystem (ULONG BootPhase,
       /* Initialize the clock interrupt */
       //HalpInitPhase1();
 
-      /* Initialize display and make the screen black */
+      /* Initialize BUS handlers and DMA */
       HalpInitBusHandlers();
       HalpInitDma();
-
-      /* Enumerate the devices on the motherboard */
-      HalpStartEnumerator();
    }
   else if (BootPhase == 2)
     {
