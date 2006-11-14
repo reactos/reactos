@@ -529,9 +529,8 @@ HalSetRealTimeClock(
 
 BOOLEAN
 NTAPI
-HalStartNextProcessor(
-  ULONG Unknown1,
-  ULONG Unknown2)
+HalStartNextProcessor(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                      IN PKPROCESSOR_STATE ProcessorState)
 {
   UNIMPLEMENTED;
 

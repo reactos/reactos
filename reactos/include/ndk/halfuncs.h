@@ -24,6 +24,7 @@ Author:
 //
 #include <umtypes.h>
 #include <haltypes.h>
+#include <ketypes.h>
 
 #ifndef NTOS_MODE_USER
 
@@ -101,7 +102,7 @@ NTHALAPI
 BOOLEAN
 NTAPI
 HalStartNextProcessor(
-    struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+    IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
     IN PKPROCESSOR_STATE ProcessorState
 );
 
