@@ -402,11 +402,27 @@ universe:
 		ROS_OUTPUT=output-$(ARCH)-r \
 		world
 
+sysregtest:
+	mkdir $(OUTPUT_)cd$(SEP)reactos
+	$(cp) boot$(SEP)bootdata$(SEP)unattend.inf.sample boot$(SEP)bootdata$(SEP)unattend.inf
+	$(cp) boot$(SEP)bootdata$(SEP)unattend.inf.sample $(OUTPUT_)cd$(SEP)reactos$(SEP)unattend.inf
+	$(cp) boot$(SEP)bootdata$(SEP)bootcdregtest$(SEP)testboot.bat.sample boot$(SEP)bootdata$(SEP)bootcdregtest$(SEP)testboot.bat
+	$(MAKE) dbgprint
+	$(MAKE) bootcdregtest
+	$(MAKE) sysreg
+	$(OUTPUT_)tools$(SEP)sysreg$(SEP)sysreg$(EXEPOSTFIX) tools$(SEP)sysreg$(SEP)txtmode.cfg rosboot
+	$(OUTPUT_)tools$(SEP)sysreg$(SEP)sysreg$(EXEPOSTFIX) tools$(SEP)sysreg$(SEP)secstage.cfg rosboot
+	$(OUTPUT_)tools$(SEP)sysreg$(SEP)sysreg$(EXEPOSTFIX) tools$(SEP)sysreg$(SEP)runonce.cfg rosboot
+
+sysregtest_clean:
+	$(rm) boot$(SEP)bootdata$(SEP)unattend.inf
+	$(rm) boot$(SEP)bootdata$(SEP)bootcdregtest$(SEP)testboot.bat
+	$(rm) $(OUTPUT_)cd$(SEP)reactos$(SEP)unattend.inf
 
 regtest:
-	$(cp) boot\bootdata\unattend.inf.sample output-i386\cd\reactos\unattend.inf
+	$(cp) boot$(SEP)bootdata$(SEP)unattend.inf.sample $(OUTPUT_)cd$(SEP)reactos$(SEP)unattend.inf
 	$(MAKE) bootcdregtest
-	$(rm) output-i386\cd\reactos\unattend.inf
+	$(rm) $(OUTPUT_)cd$(SEP)reactos$(SEP)unattend.inf
 
 .PHONY: msvc
 msvc: $(RBUILD_TARGET)
