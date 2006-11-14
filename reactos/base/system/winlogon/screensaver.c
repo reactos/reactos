@@ -272,6 +272,9 @@ StartScreenSaver(
 		&bufferSize);
 	if (rc != ERROR_SUCCESS || dwType != REG_SZ)
 		goto cleanup;
+    
+    if (bufferSize <=4)
+         goto cleanup;
 
 	wsprintfW(szCommandLine, L"%s /s", szApplicationName);
 	TRACE("WL: Executing %S\n", szCommandLine);
