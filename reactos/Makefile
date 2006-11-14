@@ -403,7 +403,7 @@ universe:
 		world
 
 sysregtest:
-	mkdir $(OUTPUT_)cd$(SEP)reactos
+	-mkdir $(OUTPUT_)cd$(SEP)reactos
 	$(cp) boot$(SEP)bootdata$(SEP)unattend.inf.sample boot$(SEP)bootdata$(SEP)unattend.inf
 	$(cp) boot$(SEP)bootdata$(SEP)unattend.inf.sample $(OUTPUT_)cd$(SEP)reactos$(SEP)unattend.inf
 	$(cp) boot$(SEP)bootdata$(SEP)bootcdregtest$(SEP)testboot.bat.sample boot$(SEP)bootdata$(SEP)bootcdregtest$(SEP)testboot.bat
