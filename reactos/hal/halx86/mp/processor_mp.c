@@ -113,8 +113,7 @@ HalStartNextProcessor(
 
    DPRINT1("Attempting to boot CPU %d\n", CPU);
 
-   //FIXME: ProcessorStack?
-   //HaliStartApplicationProcessor(CPU, ProcessorStack);
+   HaliStartApplicationProcessor(CPU, (ULONG)ProcessorState);
 
    return TRUE;
 }
