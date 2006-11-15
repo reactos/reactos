@@ -1,60 +1,69 @@
-/* $Id$
- *
- * COPYRIGHT:     See COPYING in the top level directory
- * PROJECT:       ReactOS kernel
- * FILE:          ntoskrnl/hal/x86/halinit.c
- * PURPOSE:       Initalize the x86 hal
- * PROGRAMMER:    David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *              11/06/98: Created
+/*
+ * PROJECT:         ReactOS HAL
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/hal/halx86/generic/processor.c
+ * PURPOSE:         HAL Processor Routines
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *****************************************************************/
+/* GLOBALS *******************************************************************/
 
 PVOID HalpZeroPageMapping = NULL;
 HALP_HOOKS HalpHooks;
 
-/* FUNCTIONS ***************************************************************/
+/* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-STDCALL
-DriverEntry(
-    PDRIVER_OBJECT DriverObject,
-    PUNICODE_STRING RegistryPath)
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+HalInitSystem(IN ULONG BootPhase,
+              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-	return STATUS_SUCCESS;
-}
+    PHYSICAL_ADDRESS Null = {{0}};
 
-BOOLEAN STDCALL
-HalInitSystem (ULONG BootPhase,
-               PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-  if (BootPhase == 0)
+    if (BootPhase == 0)
     {
-      RtlZeroMemory(&HalpHooks, sizeof(HALP_HOOKS));
-      HalpInitPhase0(LoaderBlock);      
+        RtlZeroMemory(&HalpHooks, sizeof(HALP_HOOKS));
+        HalpInitPhase0(LoaderBlock);
     }
-  else if (BootPhase == 1)
+    else if (BootPhase == 1)
     {
-      /* Initialize the clock interrupt */
-      //HalpInitPhase1();
+        /* Initialize the clock interrupt */
+        //HalpInitPhase1();
 
-      /* Initialize BUS handlers and DMA */
-      HalpInitBusHandlers();
-      HalpInitDma();
-   }
-  else if (BootPhase == 2)
+        /* Initialize BUS handlers and DMA */
+        HalpInitBusHandlers();
+        HalpInitDma();
+    }
+    else if (BootPhase == 2)
     {
-      HalpZeroPageMapping = MmMapIoSpace((LARGE_INTEGER)0LL, PAGE_SIZE, MmNonCached);
+        HalpZeroPageMapping = MmMapIoSpace(Null, PAGE_SIZE, MmNonCached);
     }
 
-  return TRUE;
+    /* All done, return */
+    return TRUE;
 }
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+HalReportResourceUsage(VOID)
+{
+    /* Initialize PCI bus. */
+    HalpInitPciBus();
+
+    /* FIXME: Report HAL Usage to kernel */
+}
+
 
 /* EOF */

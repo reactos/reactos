@@ -157,6 +157,7 @@ ExSetResourceOwnerPointer@8
 ExSetTimerResolution@8
 ExSystemExceptionFilter@0
 ExSystemTimeToLocalTime@8
+@ExiTryToAcquireFastMutex@4=@ExTryToAcquireFastMutex@4
 ExTryToAcquireResourceExclusiveLite@4
 ExUnregisterCallback@4
 ExUuidCreate@4

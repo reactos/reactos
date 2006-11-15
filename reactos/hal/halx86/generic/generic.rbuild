@@ -8,7 +8,6 @@
 	<file>bus.c</file>
 	<file>dma.c</file>
 	<file>drive.c</file>
-	<file>fmutex.c</file>
 	<file>halinit.c</file>
 	<file>isa.c</file>
 	<file>kdbg.c</file>
@@ -31,7 +30,6 @@
 	<define name="__USE_W32API" />
 	<file>irql.c</file>
 	<file>processor.c</file>
-	<file>resource.c</file>
 	<file>spinlock.c</file>
 	<file>systimer.S</file>
 </module>

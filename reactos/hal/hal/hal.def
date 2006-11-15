@@ -3,9 +3,9 @@
 LIBRARY hal.dll
 
 EXPORTS
-@ExAcquireFastMutex@4
-@ExReleaseFastMutex@4
-@ExTryToAcquireFastMutex@4
+@ExAcquireFastMutex@4=@ExiAcquireFastMutex@4
+@ExReleaseFastMutex@4=@ExiReleaseFastMutex@4
+@ExTryToAcquireFastMutex@4=@ExiTryToAcquireFastMutex@4
 HalAcquireDisplayOwnership@4
 HalAdjustResourceList@4
 HalAllProcessorsStarted@0
