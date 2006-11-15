@@ -19,7 +19,6 @@
 	<file>mpsboot.asm</file>
 	<file>mpsirql.c</file>
 	<file>processor_mp.c</file>
-	<file>resource_mp.c</file>
 	<file>spinlock.c</file>
 	<file>halmp.rc</file>
 </module>

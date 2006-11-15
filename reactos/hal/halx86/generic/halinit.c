@@ -62,6 +62,9 @@ HalReportResourceUsage(VOID)
     /* Initialize PCI bus. */
     HalpInitPciBus();
 
+    /* FIXME: This is done in ReactOS MP HAL only*/
+    //HaliReconfigurePciInterrupts();
+
     /* FIXME: Report HAL Usage to kernel */
 }
 

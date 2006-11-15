@@ -88,19 +88,21 @@ HalAllProcessorsStarted (VOID)
     return FALSE;
 }
 
-BOOLEAN STDCALL 
-HalStartNextProcessor(ULONG Unknown1,
-		      ULONG ProcessorStack)
+BOOLEAN
+NTAPI
+HalStartNextProcessor(
+    IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+    IN PKPROCESSOR_STATE ProcessorState)
 {
    ULONG CPU;
 
-   DPRINT("HalStartNextProcessor(%x %x)\n", Unknown1, ProcessorStack);
+   DPRINT("HalStartNextProcessor(%x %x)\n", LoaderBlock, ProcessorState);
 
    for (CPU = 0; CPU < CPUCount; CPU++)
    {
       if (!(OnlineCPUs & (1<<CPU)))
       {
-	 break;
+         break;
       }
    }
 
@@ -111,7 +113,8 @@ HalStartNextProcessor(ULONG Unknown1,
 
    DPRINT1("Attempting to boot CPU %d\n", CPU);
 
-   HaliStartApplicationProcessor(CPU, ProcessorStack);
+   //FIXME: ProcessorStack?
+   //HaliStartApplicationProcessor(CPU, ProcessorStack);
 
    return TRUE;
 }
