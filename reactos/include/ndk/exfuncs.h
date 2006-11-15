@@ -96,6 +96,7 @@ ExfUnblockPushLock(
 //
 // Resource Functions
 //
+NTKERNELAPI
 BOOLEAN
 NTAPI
 ExTryToAcquireResourceExclusiveLite(
@@ -151,6 +152,7 @@ NtCreateEventPair(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateKeyedEvent(
@@ -205,7 +207,7 @@ NtDisplayString(
     IN PUNICODE_STRING DisplayString
 );
 
-
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtEnumerateSystemEnvironmentValuesEx(
@@ -361,6 +363,7 @@ NtQuerySystemEnvironmentValue(
     PULONG ReturnLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySystemEnvironmentValueEx(
@@ -509,6 +512,7 @@ NtSetSystemEnvironmentValue(
     IN PUNICODE_STRING Value
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSystemEnvironmentValueEx(

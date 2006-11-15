@@ -30,24 +30,28 @@ Author:
 //
 // Win32K Process/Thread Functions
 //
+NTKERNELAPI
 struct _W32THREAD*
 NTAPI
 PsGetCurrentThreadWin32Thread(
     VOID
 );
 
+NTKERNELAPI
 struct _W32PROCESS*
 NTAPI
 PsGetCurrentProcessWin32Process(
     VOID
 );
 
+NTKERNELAPI
 PVOID
 NTAPI
 PsGetProcessWin32Process(
     PEPROCESS Process
 );
 
+NTKERNELAPI
 VOID
 NTAPI
 PsSetProcessWin32Process(
@@ -55,6 +59,7 @@ PsSetProcessWin32Process(
     PVOID Win32Process
 );
 
+NTKERNELAPI
 VOID
 NTAPI
 PsSetThreadWin32Thread(
@@ -62,18 +67,21 @@ PsSetThreadWin32Thread(
     PVOID Win32Thread
 );
 
+NTKERNELAPI
 PVOID
 NTAPI
 PsGetThreadWin32Thread(
     PETHREAD Thread
 );
 
+NTKERNELAPI
 BOOLEAN
 NTAPI
 PsGetThreadHardErrorsAreDisabled(
     PETHREAD Thread
 );
 
+NTKERNELAPI
 VOID 
 NTAPI
 PsSetThreadHardErrorsAreDisabled(
@@ -81,12 +89,14 @@ PsSetThreadHardErrorsAreDisabled(
     IN BOOLEAN Disabled
 );
 
+NTKERNELAPI
 VOID 
 NTAPI
 PsEstablishWin32Callouts(
     PWIN32_CALLOUTS_FPNS CalloutData
 );
 
+NTKERNELAPI
 VOID
 NTAPI
 PsReturnProcessNonPagedPoolQuota(
@@ -97,6 +107,7 @@ PsReturnProcessNonPagedPoolQuota(
 //
 // Process Impersonation Functions
 //
+NTKERNELAPI
 VOID
 NTAPI
 PsRevertThreadToSelf(
@@ -106,10 +117,12 @@ PsRevertThreadToSelf(
 //
 // Misc. Functions
 //
+NTKERNELAPI
 HANDLE
 NTAPI
 PsGetProcessId(PEPROCESS Process);
 
+NTKERNELAPI
 NTSTATUS
 NTAPI
 PsLookupProcessThreadByCid(
@@ -132,6 +145,7 @@ NtAlertResumeThread(
 );
 
 typedef ULONG APPHELPCACHESERVICECLASS;
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtApphelpCacheControl(

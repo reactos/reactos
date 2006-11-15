@@ -1055,8 +1055,9 @@ ThreadScan:
         else
         {
             /* Set the process flags */
-            InterlockedOr(&Process->Flags, PSF_NO_DEBUG_INHERIT_BIT |
-                                           PSF_CREATE_REPORTED_BIT);
+            InterlockedOr((PLONG)&Process->Flags,
+                          PSF_NO_DEBUG_INHERIT_BIT |
+                          PSF_CREATE_REPORTED_BIT);
 
             /* Reference the debug object */
             ObDereferenceObject(DebugObject);

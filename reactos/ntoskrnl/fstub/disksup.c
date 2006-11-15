@@ -1329,7 +1329,8 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     PDRIVE_LAYOUT_INFORMATION DriveLayoutInfo = NULL;
     LONG j = -1, i = -1, k;
     DISK_GEOMETRY DiskGeometry;
-    LONGLONG EndSector, MaxSector, StartOffset, MaxOffset;
+    LONGLONG EndSector, MaxSector, StartOffset;
+    ULONGLONG MaxOffset;
     LARGE_INTEGER Offset, VolumeOffset;
     BOOLEAN IsPrimary = TRUE, IsEzDrive = FALSE, MbrFound = FALSE;
     BOOLEAN IsValid, IsEmpty = TRUE;

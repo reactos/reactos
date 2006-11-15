@@ -104,7 +104,7 @@ DbgkCreateThread(PVOID StartAddress)
     PAGED_CODE();
 
     /* Check if this process has already been notified */
-    ProcessFlags = InterlockedAnd(&Process->Flags,
+    ProcessFlags = InterlockedAnd((PLONG)&Process->Flags,
                                   PSF_CREATE_REPORTED_BIT |
                                   PSF_IMAGE_NOTIFY_DONE_BIT);
     if (!(ProcessFlags & PSF_IMAGE_NOTIFY_DONE_BIT) && (PsImageNotifyEnabled))

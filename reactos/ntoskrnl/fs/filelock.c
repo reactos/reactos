@@ -1068,7 +1068,7 @@ FsRtlUninitializeFileLock(IN PFILE_LOCK FileLock)
 
         /* Acquire cancel spinlock and clear the cancel routine */
         IoAcquireCancelSpinLock(&Irp->CancelIrql);
-        IoSetCancelRoutine(Irp, NULL);
+        (void)IoSetCancelRoutine(Irp, NULL);
         IoReleaseCancelSpinLock(Irp->CancelIrql);
 
         /* Complete the IRP */

@@ -31,7 +31,7 @@ HalInitializeProcessor(IN ULONG ProcessorNumber,
 
     /* Update the interrupt affinity and processor mask */
     InterlockedBitTestAndSet(&HalpActiveProcessors, ProcessorNumber);
-    InterlockedBitTestAndSet(&HalpDefaultInterruptAffinity, ProcessorNumber);
+    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity, ProcessorNumber);
 
     /* FIXME: Register routines for KDCOM */
 }

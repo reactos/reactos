@@ -7037,12 +7037,6 @@ ExSystemTimeToLocalTime(
   OUT PLARGE_INTEGER  LocalTime);
 
 NTKERNELAPI
-BOOLEAN
-NTAPI
-ExTryToAcquireResourceExclusiveLite(
-  IN PERESOURCE  Resource);
-
-NTKERNELAPI
 VOID
 NTAPI
 ExUnregisterCallback(
