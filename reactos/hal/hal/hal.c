@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             hal/hal.c
@@ -295,7 +294,7 @@ HalGetBusDataByOffset(
 }
 
 
-BOOLEAN
+ARC_STATUS
 NTAPI
 HalGetEnvironmentVariable(
   PCH Name,
@@ -304,7 +303,7 @@ HalGetEnvironmentVariable(
 {
   UNIMPLEMENTED;
 
-  return FALSE;
+  return ENOENT;
 }
 
 
@@ -506,7 +505,7 @@ HalSetDisplayParameters(
 }
 
 
-BOOLEAN
+ARC_STATUS
 NTAPI
 HalSetEnvironmentVariable(
   PCH Name,
@@ -514,16 +513,29 @@ HalSetEnvironmentVariable(
 {
   UNIMPLEMENTED;
 
-  return TRUE;
+  return ESUCCESS;
 }
 
 
-VOID
+BOOLEAN
 NTAPI
 HalSetRealTimeClock(
   PTIME_FIELDS Time)
 {
   UNIMPLEMENTED;
+
+  return TRUE;
+}
+
+
+ULONG
+NTAPI
+HalSetTimeIncrement(
+  ULONG Increment)
+{
+  UNIMPLEMENTED;
+
+  return Increment;
 }
 
 
@@ -946,6 +958,30 @@ KeStallExecutionProcessor(
   ULONG Microseconds)
 {
   UNIMPLEMENTED;
+}
+
+
+LOGICAL
+FASTCALL
+KeTryToAcquireQueuedSpinLock(
+  KSPIN_LOCK_QUEUE_NUMBER LockNumber,
+  PKIRQL OldIrql)
+{
+  UNIMPLEMENTED;
+
+  return FALSE;
+}
+
+
+BOOLEAN
+FASTCALL
+KeTryToAcquireQueuedSpinLockRaiseToSynch(
+  KSPIN_LOCK_QUEUE_NUMBER LockNumber,
+  PKIRQL OldIrql)
+{
+  UNIMPLEMENTED;
+
+  return FALSE;
 }
 
 

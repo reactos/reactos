@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/spinlock.c
@@ -69,6 +68,29 @@ KeReleaseSpinLock (
  */
 {
    KfReleaseSpinLock(SpinLock, NewIrql);
+}
+
+LOGICAL
+FASTCALL
+KeTryToAcquireQueuedSpinLock(
+  KSPIN_LOCK_QUEUE_NUMBER LockNumber,
+  PKIRQL OldIrql)
+{
+  UNIMPLEMENTED;
+
+  return FALSE;
+}
+
+
+BOOLEAN
+FASTCALL
+KeTryToAcquireQueuedSpinLockRaiseToSynch(
+  KSPIN_LOCK_QUEUE_NUMBER LockNumber,
+  PKIRQL OldIrql)
+{
+  UNIMPLEMENTED;
+
+  return FALSE;
 }
 
 KIRQL FASTCALL
