@@ -1583,7 +1583,8 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 /* Get the starting offset */
                 PartitionInfo->StartingOffset.QuadPart =
                     StartOffset +
-                    GET_STARTING_SECTOR(PartitionDescriptor) * SectorSize;
+                    UInt32x32To64(GET_STARTING_SECTOR(PartitionDescriptor),
+                    SectorSize);
 
                 /* Calculate the number of hidden sectors */
                 PartitionInfo->HiddenSectors = (PartitionInfo->
@@ -1593,7 +1594,8 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
 
                 /* Get the partition length */
                 PartitionInfo->PartitionLength.QuadPart =
-                    GET_PARTITION_LENGTH(PartitionDescriptor) * SectorSize;
+                    UInt32x32To64(GET_PARTITION_LENGTH(PartitionDescriptor),
+                    SectorSize);
 
                 /* FIXME: REACTOS HACK */
                 PartitionInfo->PartitionNumber = i + 1;
@@ -1637,8 +1639,9 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             {
                 /* Get its offset */
                 Offset.QuadPart = VolumeOffset.QuadPart +
-                                  GET_STARTING_SECTOR(PartitionDescriptor) *
-                                  SectorSize;
+                                  UInt32x32To64(
+                                     GET_STARTING_SECTOR(PartitionDescriptor),
+                                     SectorSize);
 
                 /* If this is a primary partition, this is the volume offset */
                 if (IsPrimary) VolumeOffset = Offset;
