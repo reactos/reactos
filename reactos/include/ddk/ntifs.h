@@ -3061,13 +3061,6 @@ HalDisplayString (
     IN PCHAR String
 );
 
-NTHALAPI
-VOID
-NTAPI
-HalSetRealTimeClock (
-    IN PTIME_FIELDS TimeFields
-);
-
 NTKERNELAPI
 NTSTATUS
 NTAPI

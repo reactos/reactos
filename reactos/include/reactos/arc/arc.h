@@ -1,6 +1,35 @@
 #ifndef _ARC_
 #define _ARC_
 
+typedef ULONG ARC_STATUS;
+
+typedef enum _ARC_CODES
+{
+    ESUCCESS,
+    E2BIG,
+    EACCES,
+    EAGAIN,
+    EBADF,
+    EBUSY,
+    EFAULT,
+    EINVAL,
+    EIO,
+    EISDIR,
+    EMFILE,
+    EMLINK,
+    ENAMETOOLONG,
+    ENODEV,
+    ENOENT,
+    ENOEXEC,
+    ENOMEM,
+    ENOSPC,
+    ENOTDIR,
+    ENOTTY,
+    ENXIO,
+    EROFS,
+    EMAXIMUM
+} ARC_CODES;
+
 typedef enum _IDENTIFIER_FLAG
 {
     Failed = 0x01,
