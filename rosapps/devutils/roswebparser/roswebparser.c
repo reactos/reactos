@@ -18,6 +18,8 @@
 #define false 0
 
 
+int ansiCodePage(int codepage, unsigned char *inBuffer, unsigned char *outBuffer, int Lenght);
+
 int paraser1(unsigned char *buf, long buf_size, unsigned char * output_text, unsigned char * output_resid, unsigned char * output_format, unsigned char *iso_type);
 
 void find_str(unsigned char asc, unsigned char *buf, long *foundPos);
