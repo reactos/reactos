@@ -94,6 +94,11 @@ RtlpGetRegistryHandle(IN ULONG RelativeTo,
     }
 
     /* And now append the path */
+    DPRINT1("I'm about to crash due to an overwrite problem, Alex thinks\n");
+    DPRINT1("I'm about to crash due to a overwrite problem, Alex thinks\n");
+    DPRINT1("I'm about to crash due to a overwrite problem, Alex thinks\n");
+    DPRINT1("I'm about to crash due to a overwrite problem, Alex thinks\n");
+    DPRINT1("I'm about to crash due to a overwrite problem, Alex thinks\n");
     if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE) Path++; // HACK!
     Status = RtlAppendUnicodeToString(&KeyName, Path);
     if (!NT_SUCCESS(Status)) return Status;
