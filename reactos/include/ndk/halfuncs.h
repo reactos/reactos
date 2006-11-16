@@ -163,15 +163,6 @@ HalEndSystemInterrupt(
 );
 
 NTHALAPI
-BOOLEAN
-NTAPI
-HalGetEnvironmentVariable(
-    PCH Variable,
-    USHORT Length,
-    PCH Buffer
-);
-
-NTHALAPI
 VOID
 NTAPI
 HalReportResourceUsage(
@@ -202,13 +193,24 @@ HalHandleNMI(
 //
 // Environment Functions
 //
+#ifdef _ARC_
 NTHALAPI
-BOOLEAN
+ARC_STATUS
 NTAPI
 HalSetEnvironmentVariable(
     IN PCH Name,
     IN PCH Value
 );
+
+NTHALAPI
+ARC_STATUS
+NTAPI
+HalGetEnvironmentVariable(
+    IN PCH Variable,
+    IN USHORT Length,
+    OUT PCH Buffer
+);
+#endif
 
 //
 // Time Functions
@@ -221,7 +223,7 @@ HalQueryRealTimeClock(
 );
 
 NTHALAPI
-VOID
+BOOLEAN
 NTAPI
 HalSetRealTimeClock(
     IN PTIME_FIELDS RtcTime

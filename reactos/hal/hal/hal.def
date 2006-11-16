@@ -6,6 +6,22 @@ EXPORTS
 @ExAcquireFastMutex@4=@ExiAcquireFastMutex@4
 @ExReleaseFastMutex@4=@ExiReleaseFastMutex@4
 @ExTryToAcquireFastMutex@4=@ExiTryToAcquireFastMutex@4
+@HalClearSoftwareInterrupt@4
+@HalRequestSoftwareInterrupt@4
+@HalSystemVectorDispatchEntry@12
+@KeAcquireInStackQueuedSpinLock@8
+@KeAcquireInStackQueuedSpinLockRaiseToSynch@8
+@KeAcquireSpinLockRaiseToSynch@4
+@KeAcquireQueuedSpinLock@4
+@KeReleaseInStackQueuedSpinLock@4
+@KeReleaseQueuedSpinLock@8
+@KeTryToAcquireQueuedSpinLock@8
+@KeTryToAcquireQueuedSpinLockRaiseToSynch@8
+@KfAcquireSpinLock@4
+@KfLowerIrql@4
+@KfRaiseIrql@4
+@KfReleaseSpinLock@8
+
 HalAcquireDisplayOwnership@4
 HalAdjustResourceList@4
 HalAllProcessorsStarted@0
@@ -15,7 +31,6 @@ HalAllocateCrashDumpRegisters@8
 HalAssignSlotResources@32
 HalBeginSystemInterrupt@12
 HalCalibratePerformanceCounter@4
-@HalClearSoftwareInterrupt@4
 HalDisableSystemInterrupt@8
 HalDisplayString@4
 HalEnableSystemInterrupt@12
@@ -37,7 +52,6 @@ HalQueryRealTimeClock@4
 HalReadDmaCounter@4
 HalReportResourceUsage@0
 HalRequestIpi@4
-@HalRequestSoftwareInterrupt@4
 HalReturnToFirmware@4
 HalSetBusData@20
 HalSetBusDataByOffset@24
@@ -45,14 +59,13 @@ HalSetDisplayParameters@8
 HalSetEnvironmentVariable@8
 ;HalSetProfileInterval@4
 HalSetRealTimeClock@4
-;HalSetTimeIncrement@4
+HalSetTimeIncrement@4
 HalStartNextProcessor@8
 ;HalStartProfileInterrupt@4
 ;HalStopProfileInterrupt@4
-@HalSystemVectorDispatchEntry@12
 HalTranslateBusAddress@24
-IoFlushAdapterBuffers@24
 IoAssignDriveLetters@16=HalpAssignDriveLetters@16
+IoFlushAdapterBuffers@24
 IoFreeAdapterChannel@4
 IoFreeMapRegisters@12
 IoMapTransfer@24
@@ -60,6 +73,7 @@ IoReadPartitionTable@16=HalpReadPartitionTable@16
 IoSetPartitionInformation@16=HalpSetPartitionInformation@16
 IoWritePartitionTable@20=HalpWritePartitionTable@20
 KdComPortInUse DATA
+; FIXME: DEPRECATED
 KdPortGetByte@4
 KdPortGetByteEx@8
 KdPortInitialize@12
@@ -72,26 +86,17 @@ KdPortRestore@0
 KdPortSave@0
 KdPortDisableInterrupts@0
 KdPortEnableInterrupts@0
+; FIXME: END DEPRECATED BLOCK
 KeAcquireSpinLock@8
-@KeAcquireInStackQueuedSpinLock@8
-@KeAcquireInStackQueuedSpinLockRaiseToSynch@8
-@KeAcquireSpinLockRaiseToSynch@4
-@KeAcquireQueuedSpinLock@4
-KeGetCurrentIrql@0
 KeFlushWriteBuffer@0
+KeGetCurrentIrql@0
 KeLowerIrql@4
 KeQueryPerformanceCounter@4
 KeRaiseIrql@8
 KeRaiseIrqlToDpcLevel@0
 KeRaiseIrqlToSynchLevel@0
-@KeReleaseInStackQueuedSpinLock@4
 KeReleaseSpinLock@8
-@KeReleaseQueuedSpinLock@8
 KeStallExecutionProcessor@4
-@KfAcquireSpinLock@4
-@KfLowerIrql@4
-@KfRaiseIrql@4
-@KfReleaseSpinLock@8
 READ_PORT_BUFFER_UCHAR@12
 READ_PORT_BUFFER_ULONG@12
 READ_PORT_BUFFER_USHORT@12

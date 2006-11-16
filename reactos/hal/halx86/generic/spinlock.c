@@ -105,7 +105,7 @@ KfReleaseSpinLock(PKSPIN_LOCK SpinLock,
  */
 KIRQL
 FASTCALL
-KeAcquireQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
+KeAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber)
 {
     /* Simply raise to dispatch */
     return KfRaiseIrql(DISPATCH_LEVEL);
@@ -151,7 +151,7 @@ KeAcquireInStackQueuedSpinLockRaiseToSynch(IN PKSPIN_LOCK SpinLock,
  */
 VOID
 FASTCALL
-KeReleaseQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle,
+KeReleaseQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
                         IN KIRQL OldIrql)
 {
     /* Simply lower IRQL back */
@@ -174,7 +174,7 @@ KeReleaseInStackQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
  */
 BOOLEAN
 FASTCALL
-KeTryToAcquireQueuedSpinLockRaiseToSynch(IN PKLOCK_QUEUE_HANDLE LockHandle,
+KeTryToAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
                                          IN PKIRQL OldIrql)
 {
     /* Simply raise to dispatch */
@@ -187,10 +187,10 @@ KeTryToAcquireQueuedSpinLockRaiseToSynch(IN PKLOCK_QUEUE_HANDLE LockHandle,
 /*
  * @implemented
  */
-BOOLEAN
+LOGICAL
 FASTCALL
-KeTryToAcquireQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle,
-                             IN PKIRQL OldIrql)
+KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
+                             OUT PKIRQL OldIrql)
 {
     /* Simply raise to dispatch */
     *OldIrql = KfRaiseIrql(DISPATCH_LEVEL);

@@ -130,11 +130,11 @@ KeStallExecutionProcessor(ULONG Microseconds)
    if (Pcr->PrcbData.FeatureBits & KF_RDTSC)
    {
       LARGE_INTEGER EndCount, CurrentCount;
-      Ki386RdTSC(EndCount);
+      EndCount.QuadPart = (LONGLONG)__rdtsc;
       EndCount.QuadPart += Microseconds * (ULONGLONG)Pcr->PrcbData.MHz;
       do
       {
-         Ki386RdTSC(CurrentCount);
+         CurrentCount.QuadPart = (LONGLONG)__rdtsc;
       }
       while (CurrentCount.QuadPart < EndCount.QuadPart);
    }
@@ -212,10 +212,10 @@ VOID HalpCalibrateStallExecution(VOID)
   {
       
      WaitFor8254Wraparound();
-     Ki386RdTSC(StartCount);
+     StartCount.QuadPart = (LONGLONG)__rdtsc;
 
      WaitFor8254Wraparound();
-     Ki386RdTSC(EndCount);
+     EndCount.QuadPart = (LONGLONG)__rdtsc;
 
      Pcr->PrcbData.MHz = (ULONG)(EndCount.QuadPart - StartCount.QuadPart) / 10000;
      DPRINT("%luMHz\n", Pcr->PrcbData.MHz);
@@ -334,7 +334,7 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
      {
         PerformanceFreq->QuadPart = Pcr->PrcbData.MHz * (ULONGLONG)1000000;   
      }
-     Ki386RdTSC(Value);
+     Value.QuadPart = (LONGLONG)__rdtsc;
   }
   else
   {
@@ -359,6 +359,14 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
      while (TicksOld.QuadPart != TicksNew.QuadPart);
   }
   return Value;
+}
+
+ULONG
+NTAPI
+HalSetTimeIncrement(IN ULONG Increment)
+{
+    /* FIXME: TODO */
+    return Increment;
 }
 
 /* EOF */

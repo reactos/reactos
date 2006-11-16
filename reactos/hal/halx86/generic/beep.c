@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/hal/x86/beep.c
- * PURPOSE:         Speak support (beeping)
+ * PURPOSE:         Speaker support (beeping)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
@@ -22,6 +22,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
 HalMakeBeep(IN ULONG Frequency)
@@ -65,4 +68,5 @@ Cleanup:
     /* Return result */
     return Result;
 }
+
 

@@ -24,8 +24,8 @@ typedef union
    USHORT both;
    struct
    {
-      BYTE master;
-      BYTE slave;
+      UCHAR master;
+      UCHAR slave;
    };
 }
 PIC_MASK;
@@ -121,7 +121,7 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
   Ki386RestoreFlags(flags);
 }
 
-VOID STATIC
+VOID
 HalpExecuteIrqs(KIRQL NewIrql)
 {
   ULONG IrqLimit, i;
@@ -153,7 +153,7 @@ HalpExecuteIrqs(KIRQL NewIrql)
 
 }
 
-VOID STATIC
+VOID
 HalpLowerIrql(KIRQL NewIrql)
 {
   if (NewIrql >= PROFILE_LEVEL)

@@ -6,7 +6,8 @@
 	<define name="_NTHAL_" />
 	<file>beep.c</file>
 	<file>bus.c</file>
-	<file>dma.c</file>
+    <file>cmos.c</file>
+    <file>dma.c</file>
 	<file>drive.c</file>
 	<file>halinit.c</file>
 	<file>isa.c</file>
@@ -18,7 +19,6 @@
 	<file>reboot.c</file>
 	<file>sysbus.c</file>
 	<file>sysinfo.c</file>
-	<file>time.c</file>
 	<file>timer.c</file>
 	<pch>../include/hal.h</pch>
 </module>

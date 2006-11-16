@@ -29,6 +29,7 @@
 #include <halfuncs.h>
 #include <iofuncs.h>
 #include <ldrtypes.h>
+#include <obfuncs.h>
 
 #define KPCR_BASE 0xFF000000 // HACK!
 
