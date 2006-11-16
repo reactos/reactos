@@ -17,6 +17,7 @@
 		<library>comdlg32</library>
 		<compilationunit name="unit.c">
 			<file>about.c</file>
+			<file>adjust.c</file>
 			<file>custcombo.c</file>
 			<file>floatwindow.c</file>
 			<file>font.c</file>

@@ -66,6 +66,8 @@ typedef struct _EDIT_WND_INFO
     HWND hSelf;
     HBITMAP hBitmap;
     HDC hDCMem;
+    PBITMAPINFO pbmi;
+    PBYTE pBits;
     struct _MAIN_WND_INFO *MainWnd;
     struct _EDIT_WND_INFO *Next;
     POINT ScrollPos;

@@ -12,6 +12,7 @@
 #include "tooldock.h"
 #include "imgedwnd.h"
 #include "mainwnd.h"
+#include "imageprop.h"
 #include "misc.h"
 
 #define MAX_KEY_LENGTH 256
@@ -31,16 +32,6 @@ INT_PTR CALLBACK AboutDialogProc(HWND hDlg,
                                  UINT message,
                                  WPARAM wParam,
                                  LPARAM lParam);
-
-/* imageprop.c */
-INT_PTR CALLBACK ImagePropDialogProc(HWND hDlg,
-                                     UINT message,
-                                     WPARAM wParam,
-                                     LPARAM lParam);
-INT_PTR CALLBACK BrightnessProc(HWND hDlg,
-                                UINT message,
-                                WPARAM wParam,
-                                LPARAM lParam);
 
 /* opensave.c */
 VOID FileInitialize(HWND hwnd);

@@ -70,41 +70,35 @@ LoadDIBImage(PEDIT_WND_INFO Info)
     if (bSuccess && (BytesRead == sizeof(BITMAPFILEHEADER))
                  && (bmfh.bfType == *(WORD *)"BM"))
     {
-        PBITMAPINFO pbmi;
-        DWORD InfoSize;
+        DWORD InfoSize = bmfh.bfOffBits - sizeof(BITMAPFILEHEADER);
 
-        InfoSize = bmfh.bfOffBits - sizeof(BITMAPFILEHEADER);
-
-        pbmi = HeapAlloc(ProcessHeap,
-                         0,
-                         InfoSize);
-        if (pbmi)
+        Info->pbmi = HeapAlloc(ProcessHeap,
+                               0,
+                               InfoSize);
+        if (Info->pbmi)
         {
             bSuccess = ReadFile(hFile,
-                                pbmi,
+                                Info->pbmi,
                                 InfoSize,
                                 &BytesRead,
                                 NULL);
 
             if (bSuccess && (BytesRead == InfoSize))
             {
-                PBYTE pBits;
-
                 Info->hBitmap = CreateDIBSection(NULL,
-                                                 pbmi,
+                                                 Info->pbmi,
                                                  DIB_RGB_COLORS,
-                                                 (VOID *)&pBits,
+                                                 (VOID *)&Info->pBits,
                                                  NULL,
                                                  0);
                 if (Info->hBitmap != NULL)
                 {
                     ReadFile(hFile,
-                             pBits,
+                             Info->pBits,
                              bmfh.bfSize - bmfh.bfOffBits,
                              &BytesRead,
                              NULL);
 
-                    /* get bitmap dimensions */
                     GetObject(Info->hBitmap,
                               sizeof(BITMAP),
                               &bitmap);
@@ -115,10 +109,6 @@ LoadDIBImage(PEDIT_WND_INFO Info)
                     bRet = TRUE;
                 }
             }
-
-            HeapFree(ProcessHeap,
-                     0,
-                     pbmi);
         }
     }
     else if (!bSuccess)
@@ -186,6 +176,12 @@ DestroyEditWnd(PEDIT_WND_INFO Info)
     DeleteDC(Info->hDCMem);
 
     /* FIXME - free resources and run down editor */
+    HeapFree(ProcessHeap,
+             0,
+             Info->pbmi);
+    HeapFree(ProcessHeap,
+             0,
+             Info->pBits);
 
     /* Remove the image editor from the list */
     PrevEditor = &Info->MainWnd->ImageEditors;
