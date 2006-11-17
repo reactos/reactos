@@ -465,14 +465,14 @@ BOOLEAN VerifyLocalAPIC(VOID)
       return FALSE;
    }
 
-   Ki386Rdmsr(0x1b /*MSR_IA32_APICBASE*/, l, h);
+   Ke386Rdmsr(0x1b /*MSR_IA32_APICBASE*/, l, h);
 
    if (!(l & /*MSR_IA32_APICBASE_ENABLE*/(1<<11))) 
    {
       DPRINT1("Local APIC disabled by BIOS -- reenabling.\n");
       l &= ~/*MSR_IA32_APICBASE_BASE*/(1<<11);
       l |= /*MSR_IA32_APICBASE_ENABLE | APIC_DEFAULT_PHYS_BASE*/(1<<11)|0xfee00000;
-      Ki386Wrmsr(0x1b/*MSR_IA32_APICBASE*/, l, h);
+      Ke386Wrmsr(0x1b/*MSR_IA32_APICBASE*/, l, h);
    }
 
     
@@ -486,8 +486,8 @@ VOID APICSendIPI(ULONG Target, ULONG Mode)
    ULONG tmp, i, flags;
 
    /* save flags and disable interrupts */
-   Ki386SaveFlags(flags);
-   Ki386DisableInterrupts();
+   Ke386SaveFlags(flags);
+   _disable();
 
    /* Wait up to 100ms for the APIC to become ready */
    for (i = 0; i < 10000; i++) 
@@ -542,7 +542,7 @@ VOID APICSendIPI(ULONG Target, ULONG Mode)
    {
       DPRINT1("CPU(%d) Current IPI was not delivered after 100ms.\n", ThisCPU());
    }
-   Ki386RestoreFlags(flags);
+   Ke386RestoreFlags(flags);
 }
 #endif
 
@@ -754,7 +754,7 @@ VOID MpsIpiHandler(VOID)
    HalBeginSystemInterrupt(IPI_LEVEL,
                            IPI_VECTOR, 
 			   &oldIrql);
-   Ki386EnableInterrupts();
+   _enable();
 #if 0
    DbgPrint("(%s:%d) MpsIpiHandler on CPU%d, current irql is %d\n", 
             __FILE__,__LINE__, KeGetCurrentProcessorNumber(), KeGetCurrentIrql());
@@ -766,7 +766,7 @@ VOID MpsIpiHandler(VOID)
    DbgPrint("(%s:%d) MpsIpiHandler on CPU%d done\n", __FILE__,__LINE__, KeGetCurrentProcessorNumber());
 #endif
 
-   Ki386DisableInterrupts();
+   _disable();
    HalEndSystemInterrupt(oldIrql, 0);
 }
 #endif
@@ -804,7 +804,7 @@ MpsTimerHandler(ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
    HalBeginSystemInterrupt(LOCAL_TIMER_VECTOR, 
                            PROFILE_LEVEL, 
 			   &oldIrql);
-   Ki386EnableInterrupts();
+   _enable();
 
 #if 0
    CPU = ThisCPU();
@@ -826,7 +826,7 @@ MpsTimerHandler(ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
       //KeUpdateRunTime(&KernelTrapFrame, oldIrql);
    }
 
-   Ki386DisableInterrupts();
+   _disable();
    HalEndSystemInterrupt (oldIrql, 0);
 }
 
@@ -878,7 +878,7 @@ APICCalibrateTimer(ULONG CPU)
     */
    if (TSCPresent)
    {
-      Ki386RdTSC(t1);
+      t1.QuadPart = (LONGLONG)__rdtsc();
    }
    tt1 = APICRead(APIC_CCRT);
 
@@ -888,7 +888,7 @@ APICCalibrateTimer(ULONG CPU)
    tt2 = APICRead(APIC_CCRT);
    if (TSCPresent)
    {
-      Ki386RdTSC(t2);
+      t2.QuadPart = (LONGLONG)__rdtsc();
       CPUMap[CPU].CoreSpeed = (HZ * (t2.QuadPart - t1.QuadPart));
       DPRINT("CPU clock speed is %ld.%04ld MHz.\n",
 	     CPUMap[CPU].CoreSpeed/1000000,

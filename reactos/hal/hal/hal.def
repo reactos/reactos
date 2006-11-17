@@ -72,7 +72,7 @@ IoMapTransfer@24
 IoReadPartitionTable@16=HalpReadPartitionTable@16
 IoSetPartitionInformation@16=HalpSetPartitionInformation@16
 IoWritePartitionTable@20=HalpWritePartitionTable@20
-KdComPortInUse DATA
+KdComPortInUse=_KdComPortInUse
 ; FIXME: DEPRECATED
 KdPortGetByte@4
 KdPortGetByteEx@8

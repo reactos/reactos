@@ -130,11 +130,11 @@ KeStallExecutionProcessor(ULONG Microseconds)
    if (Pcr->PrcbData.FeatureBits & KF_RDTSC)
    {
       LARGE_INTEGER EndCount, CurrentCount;
-      EndCount.QuadPart = (LONGLONG)__rdtsc;
+      EndCount.QuadPart = (LONGLONG)__rdtsc();
       EndCount.QuadPart += Microseconds * (ULONGLONG)Pcr->PrcbData.MHz;
       do
       {
-         CurrentCount.QuadPart = (LONGLONG)__rdtsc;
+         CurrentCount.QuadPart = (LONGLONG)__rdtsc();
       }
       while (CurrentCount.QuadPart < EndCount.QuadPart);
    }
@@ -147,19 +147,15 @@ KeStallExecutionProcessor(ULONG Microseconds)
 static ULONG Read8254Timer(VOID)
 {
   ULONG Count;
-  ULONG flags;
 
-  /* save flags and disable interrupts */
-  Ki386SaveFlags(flags);
-  Ki386DisableInterrupts();
+  /* Disable interrupts */
+  _disable();
 
   WRITE_PORT_UCHAR((PUCHAR) TMR_CTRL, TMR_SC0 | TMR_LATCH);
   Count = READ_PORT_UCHAR((PUCHAR) TMR_CNT0);
   Count |= READ_PORT_UCHAR((PUCHAR) TMR_CNT0) << 8;
 
-  /* restore flags */
-  Ki386RestoreFlags(flags);
-
+  _enable();
   return Count;
 }
 
@@ -212,10 +208,10 @@ VOID HalpCalibrateStallExecution(VOID)
   {
       
      WaitFor8254Wraparound();
-     StartCount.QuadPart = (LONGLONG)__rdtsc;
+     StartCount.QuadPart = (LONGLONG)__rdtsc();
 
      WaitFor8254Wraparound();
-     EndCount.QuadPart = (LONGLONG)__rdtsc;
+     EndCount.QuadPart = (LONGLONG)__rdtsc();
 
      Pcr->PrcbData.MHz = (ULONG)(EndCount.QuadPart - StartCount.QuadPart) / 10000;
      DPRINT("%luMHz\n", Pcr->PrcbData.MHz);
@@ -294,16 +290,12 @@ VOID HalpCalibrateStallExecution(VOID)
 VOID STDCALL
 HalCalibratePerformanceCounter(ULONG Count)
 {
-   ULONG flags;
-
-   /* save flags and disable interrupts */
-   Ki386SaveFlags(flags);
-   Ki386DisableInterrupts();
+   /* Disable interrupts */
+   _disable();
 
    __KeStallExecutionProcessor(Count);
 
-   /* restore flags */
-   Ki386RestoreFlags(flags);
+   _enable();
 }
 
 
@@ -320,21 +312,19 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
 {
   PKIPCR Pcr;
   LARGE_INTEGER Value;
-  ULONG Flags;
 
-  Ki386SaveFlags(Flags);
-  Ki386DisableInterrupts();
+  _disable();
 
   Pcr = (PKIPCR)KeGetPcr();
 
   if (Pcr->PrcbData.FeatureBits & KF_RDTSC)
   {
-     Ki386RestoreFlags(Flags);
+     _enable();
      if (NULL != PerformanceFreq)
      {
         PerformanceFreq->QuadPart = Pcr->PrcbData.MHz * (ULONGLONG)1000000;   
      }
-     Value.QuadPart = (LONGLONG)__rdtsc;
+     Value.QuadPart = (LONGLONG)__rdtsc();
   }
   else
   {
@@ -342,7 +332,7 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
      LARGE_INTEGER TicksNew;
      ULONG CountsLeft;
 
-     Ki386RestoreFlags(Flags);
+     _enable();
 
      if (NULL != PerformanceFreq)
      {

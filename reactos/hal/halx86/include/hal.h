@@ -11,13 +11,14 @@
 /* C Headers */
 #include <stdio.h>
 
-/* WDK HAL Complation hack */
+/* WDK HAL Compilation hack */
 #ifdef _MSC_VER
 #include <excpt.h>
 #include <ntdef.h>
 #undef _NTHAL_
 #undef DECLSPEC_IMPORT
 #define DECLSPEC_IMPORT
+#define __declspec(dllimport)
 #endif
 
 /* IFS/DDK/NDK Headers */
@@ -31,10 +32,11 @@
 #include <ldrtypes.h>
 #include <obfuncs.h>
 
-#define KPCR_BASE 0xFF000000 // HACK!
+/* Internal kernel headers */
+#include "internal/pci.h"
+#include "internal/i386/intrin_i.h"
 
 /* Internal HAL Headers */
-#include "internal/pci.h"
 #include "apic.h"
 #include "bus.h"
 #include "halirq.h"

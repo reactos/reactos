@@ -4,6 +4,7 @@
 	<library>ntoskrnl</library>
 	<define name="_NTHAL_" />
 	<define name="__USE_W32API" />
+    <linkerflag>-enable-stdcall-fixup</linkerflag>
 	<file>hal.c</file>
 	<file>hal.rc</file>
 </module>

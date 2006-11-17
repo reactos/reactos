@@ -6,6 +6,7 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__USE_W32API" />
 	<define name="_NTHAL_" />
+    <linkerflag>-enable-stdcall-fixup</linkerflag>
 	<library>hal_generic</library>
 	<library>hal_generic_up</library>
 	<library>hal_generic_pc</library>

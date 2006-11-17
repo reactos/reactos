@@ -92,7 +92,7 @@ VOID NTAPI HalpInitPICs(VOID)
   WRITE_PORT_UCHAR((PUCHAR)0xa1, pic_mask.slave);
   
   /* We can now enable interrupts */
-  Ki386EnableInterrupts();
+  _enable();
 }
 
 VOID HalpEndSystemInterrupt(KIRQL Irql)
@@ -100,7 +100,6 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
  * FUNCTION: Enable all irqs with higher priority.
  */
 {
-  ULONG flags;
   const USHORT mask[] = 
   {
      0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -110,15 +109,14 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
   };     
 
   /* Interrupts should be disable while enabling irqs of both pics */
-  Ki386SaveFlags(flags);
-  Ki386DisableInterrupts();
+  _disable();
 
   pic_mask_intr.both &= mask[Irql];
   WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.master));
   WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
 
-  /* restore flags */
-  Ki386RestoreFlags(flags);
+  /* restore ints */
+  _enable();
 }
 
 VOID

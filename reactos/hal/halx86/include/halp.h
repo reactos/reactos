@@ -5,6 +5,12 @@
 #ifndef __INTERNAL_HAL_HAL_H
 #define __INTERNAL_HAL_HAL_H
 
+/* Temporary hack */
+#define KPCR_BASE   0xFF000000
+
+/* WDK Hack */
+#define KdComPortInUse _KdComPortInUse
+
 #define HAL_APC_REQUEST	    0
 #define HAL_DPC_REQUEST	    1
 
@@ -52,35 +58,6 @@ HalpQuerySystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
 			   IN ULONG BufferSize,
 			   IN OUT PVOID Buffer,
 			   OUT PULONG ReturnedLength);
-
-/* Non-standard functions */
-VOID STDCALL
-HalReleaseDisplayOwnership();
-
-BOOLEAN STDCALL
-HalQueryDisplayOwnership();
-
-#if defined(__GNUC__)
-#define Ki386SaveFlags(x)	    __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
-#define Ki386RestoreFlags(x)	    __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
-#define Ki386DisableInterrupts()    __asm__ __volatile__("cli\n\t")
-#define Ki386EnableInterrupts()	    __asm__ __volatile__("sti\n\t")
-#define Ki386HaltProcessor()	    __asm__ __volatile__("hlt\n\t")
-#define Ki386RdTSC(x)		    __asm__ __volatile__("rdtsc\n\t" : "=A" (x.u.LowPart), "=d" (x.u.HighPart))
-#define Ki386Rdmsr(msr,val1,val2)   __asm__ __volatile__("rdmsr" : "=a" (val1), "=d" (val2) : "c" (msr))
-#define Ki386Wrmsr(msr,val1,val2)   __asm__ __volatile__("wrmsr" : /* no outputs */ : "c" (msr), "a" (val1), "d" (val2))
-#define Ki386ReadFsByte(offset,x)   __asm__ __volatile__("movb %%fs:%c1,%0" : "=q" (x) : "i" (offset))
-#define Ki386WriteFsByte(offset,x)  __asm__ __volatile__("movb %0,%%fs:%c1" : : "q" ((UCHAR)x), "i" (offset))
-
-#elif defined(_MSC_VER)
-#define Ki386SaveFlags(x)	    __asm pushfd  __asm pop x;
-#define Ki386RestoreFlags(x)	    __asm push x  __asm popfd;
-#define Ki386DisableInterrupts()    __asm cli
-#define Ki386EnableInterrupts()	    __asm sti
-#define Ki386HaltProcessor()	    __asm hlt
-#else
-#error Unknown compiler for inline assembler
-#endif
 
 typedef struct tagHALP_HOOKS
 {
