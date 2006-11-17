@@ -10,6 +10,9 @@
 <directory name="bootvid">
 	<xi:include href="bootvid/bootvid.rbuild" />
 </directory>
+<directory name="kdcom">
+    <xi:include href="kdcom/kdcom.rbuild" />
+</directory>
 <directory name="debugout">
 	<xi:include href="debugout/debugout.rbuild" />
 </directory>

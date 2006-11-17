@@ -444,8 +444,8 @@ HalDisplayString(IN PCH String)
   OldIrql = KfRaiseIrql(HIGH_LEVEL);
   KiAcquireSpinLock(&Lock);
 
-  Ki386SaveFlags(Flags);
-  Ki386DisableInterrupts();
+  Ke386SaveFlags(Flags);
+  _disable();
 
   while (*pch != 0)
     {
@@ -482,7 +482,7 @@ HalDisplayString(IN PCH String)
       pch++;
     }
   
-  Ki386RestoreFlags(Flags);
+  Ke386RestoreFlags(Flags);
 
   KiReleaseSpinLock(&Lock);
   KfLowerIrql(OldIrql);

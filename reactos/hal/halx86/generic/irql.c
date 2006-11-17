@@ -55,8 +55,16 @@ static ULONG HalpPendingInterruptCount[NR_IRQS];
 #define DIRQL_TO_IRQ(x)  (PROFILE_LEVEL - x)
 #define IRQ_TO_DIRQL(x)  (PROFILE_LEVEL - x)
 
+#ifdef _MSC_VER
+
+#define KiInterruptDispatch2(x, y)
+
+#else
+
 VOID STDCALL
 KiInterruptDispatch2 (ULONG Irq, KIRQL old_level);
+
+#endif
 
 /* FUNCTIONS ****************************************************************/
 
