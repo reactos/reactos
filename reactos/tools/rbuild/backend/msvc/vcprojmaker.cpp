@@ -291,18 +291,11 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			defines.insert ( "_DEBUG" );
 		}
-		else
-		{
-			defines.insert ( "NDEBUG" );
-		}
 
 		if ( cfg.headers == MSVCHeaders )
 		{
 			// this is a define in MinGW w32api, but not Microsoft's headers
 			defines.insert ( "STDCALL=__stdcall" );
-			// MinGW doesn't have a safe-string library yet
-			defines.insert ( "_CRT_SECURE_NO_DEPRECATE" );
-			defines.insert ( "_CRT_NON_CONFORMING_SWPRINTFS" );
 		}
 
 		if ( lib || exe )
@@ -329,7 +322,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			fprintf ( OUT, "%s", escaped.c_str() );
 		}
 		fprintf ( OUT, "\"\r\n" );
-
+        fprintf ( OUT, "\t\t\t\tForcedIncludeFiles=\"%s\"\r\n", "warning.h");
 		fprintf ( OUT, "\t\t\t\tMinimalRebuild=\"%s\"\r\n", speed ? "FALSE" : "TRUE" );
 		fprintf ( OUT, "\t\t\t\tBasicRuntimeChecks=\"%s\"\r\n", sys ? 0 : (debug ? "3" : "0") );
 		fprintf ( OUT, "\t\t\t\tRuntimeLibrary=\"%d\"\r\n", debug ? 1 : 5 );	// 1=/MTd 5=/MT
@@ -352,7 +345,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\tUsePrecompiledHeader=\"0\"\r\n" );
 		}
 
-		fprintf ( OUT, "\t\t\t\tWholeProgramOptimization=\"%s\"\r\n", release ? "TRUE" : "FALSE");
+		fprintf ( OUT, "\t\t\t\tWholeProgramOptimization=\"%s\"\r\n", release ? "FALSE" : "FALSE");
 		if ( release )
 		{
 			fprintf ( OUT, "\t\t\t\tFavorSizeOrSpeed=\"1\"\r\n" );
@@ -360,7 +353,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		}
 
 		fprintf ( OUT, "\t\t\t\tWarningLevel=\"%s\"\r\n", speed ? "0" : "3" );
-		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", speed ? "FALSE" : "TRUE");
+		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", "FALSE");
 		if ( !module.cplusplus )
 			fprintf ( OUT, "\t\t\t\tCompileAs=\"1\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 2 );	// 2=__stdcall 0=__cdecl
@@ -411,7 +404,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s%s\"\r\n", module.name.c_str(), module_type.c_str() );
 			fprintf ( OUT, "\t\t\t\tLinkIncremental=\"%d\"\r\n", debug ? 2 : 1 );
 			fprintf ( OUT, "\t\t\t\tGenerateDebugInformation=\"%s\"\r\n", speed ? "FALSE" : "TRUE" );
-			fprintf ( OUT, "\t\t\t\tLinkTimeCodeGeneration=\"%d\"\r\n", release? 1: 0);	// whole program optimization
+			fprintf ( OUT, "\t\t\t\tLinkTimeCodeGeneration=\"%d\"\r\n", release? 0 : 0);	// whole program optimization
 
 			if ( debug )
 				fprintf ( OUT, "\t\t\t\tProgramDatabaseFile=\"$(OutDir)/%s.pdb\"\r\n", module.name.c_str() );
@@ -580,12 +573,18 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 						fprintf ( OUT, "lib.exe /OUT:&quot;$(OutDir)\\%s.lib&quot; &quot;$(IntDir)\\%s.obj&quot;&#x0D;&#x0A;\"\r\n", module.name.c_str (), src.c_str () );
 						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(IntDir)\\$(InputName).obj\"/>\r\n" );
 					}
-					else if ((source_file.find(".asm") != string::npos || tolower(source_file.at(source_file.size() - 1)) == 's'))
+					else if ((source_file.find(".asm") != string::npos))
 					{
 						fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
 						fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"nasmw $(InputPath) -f coff -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n");
 						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"/>\r\n" );
 					}
+                    else if ((tolower(source_file.at(source_file.size() - 1)) == 's'))
+                    {
+                        fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
+                        fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"cl /E &quot;$(InputPath)&quot; %s /D__ASM__ | as -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n",include_string.c_str() );
+                        fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"/>\r\n" );
+                    }
 					fprintf ( OUT, "\t\t\t\t</FileConfiguration>\r\n" );
 				}
 			//}
