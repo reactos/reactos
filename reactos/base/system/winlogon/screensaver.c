@@ -274,7 +274,11 @@ StartScreenSaver(
 
 	if (bufferSize == 0)
 		goto cleanup;
-	szApplicationName[bufferSize] = 0; /* Terminate the string */
+	
+    szApplicationName[bufferSize] = 0; /* Terminate the string */
+
+    if (wcslen(szApplicationName) == 0)
+		goto cleanup;
 
 	wsprintfW(szCommandLine, L"%s /s", szApplicationName);
 	TRACE("WL: Executing %S\n", szCommandLine);
