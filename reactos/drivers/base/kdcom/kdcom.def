@@ -1,4 +1,4 @@
-LIBRARY kdcom.sys
+LIBRARY kdcom.dll
 EXPORTS
 
 KdComPortInUse=_KdComPortInUse

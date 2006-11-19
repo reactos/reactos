@@ -132,14 +132,10 @@ extern ULONG_PTR pagedirtable_pae;
 extern PAGE_DIRECTORY_X64 apic_pagetable_pae;
 extern PAGE_DIRECTORY_X64 kpcr_pagetable_pae;
 
-extern CHAR szHalName[1024];
-
-PIMAGE_BASE_RELOCATION
+BOOLEAN
 NTAPI
-LdrProcessRelocationBlockLongLong(IN ULONG_PTR Address,
-                                  IN ULONG Count,
-                                  IN PUSHORT TypeOffset,
-                                  IN LONGLONG Delta);
+FrLdrLoadImage(IN PCHAR szFileName,
+               IN INT nPos);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -733,9 +729,9 @@ FrLdrLoadHal(PCHAR szFileName, INT nPos);
 
 NTSTATUS
 NTAPI
-LdrPEGetOrLoadModule(PCHAR ModuleName,
-                     PCHAR ImportedName,
-                     PLOADER_MODULE* ImportedModule)
+LdrPEGetOrLoadModule(IN PCHAR ModuleName,
+                     IN PCHAR ImportedName,
+                     IN PLOADER_MODULE* ImportedModule)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -747,10 +743,11 @@ LdrPEGetOrLoadModule(PCHAR ModuleName,
          * Later, FrLdrLoadDriver should be made to share the same
          * code, and we'll just call it instead.
          */
-        if (!_stricmp(ImportedName, "hal.dll"))
+        if (!_stricmp(ImportedName, "hal.dll") ||
+            !_stricmp(ImportedName, "kdcom.dll"))
         {
             /* Load the HAL */
-            FrLdrLoadHal(szHalName, 10);
+            FrLdrLoadImage(ImportedName, 10);
 
             /* Return the new module */
             *ImportedModule = LdrGetModuleObject(ImportedName);
@@ -809,8 +806,8 @@ LdrPEFixupImports(IN PVOID DllBase,
 
 VOID
 NTAPI
-FrLdrMapImage(IN PIMAGE_NT_HEADERS NtHeader,
-              IN PVOID Base)
+FrLdrReMapImage(IN PIMAGE_NT_HEADERS NtHeader,
+                IN PVOID Base)
 {
     PIMAGE_SECTION_HEADER Section;
     ULONG SectionCount, SectionSize;
@@ -900,7 +897,7 @@ FrLdrMapKernel(FILE *KernelImage)
     FsReadFile(KernelImage, ImageSize, NULL, LoadBase);
 
     /* Map it */
-    FrLdrMapImage(NtHeader, LoadBase);
+    FrLdrReMapImage(NtHeader, LoadBase);
 
     /* Calculate Difference between Real Base and Compiled Base*/
     LdrRelocateImageWithBias(LoadBase,
@@ -920,7 +917,10 @@ FrLdrMapKernel(FILE *KernelImage)
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP(LoadBase + ImageSize, PAGE_SIZE);
 
-    /*  Perform import fixups  */
+    /* Load the HAL now (name will be changed internally if needed) */
+    FrLdrLoadImage("hal.dll", 10);
+
+    /*  Perform import fixups */
     LdrPEFixupImports(LoadBase, "ntoskrnl.exe");
 
     /* Return Success */
@@ -929,11 +929,13 @@ FrLdrMapKernel(FILE *KernelImage)
 
 BOOLEAN
 NTAPI
-FrLdrMapHal(FILE *HalImage)
+FrLdrMapImage(IN FILE *HalImage,
+              IN PCHAR Name)
 {
     PIMAGE_NT_HEADERS NtHeader;
     PVOID ImageBase, LoadBase;
     ULONG ImageSize;
+    ULONG ImageId = LoaderBlock.ModsCount;
 
     /* Set the virtual (image) and physical (load) addresses */
     LoadBase = (PVOID)NextModuleBase;
@@ -955,7 +957,7 @@ FrLdrMapHal(FILE *HalImage)
     FsReadFile(HalImage, ImageSize, NULL, LoadBase);
 
     /* Map it into virtual memory */
-    FrLdrMapImage(NtHeader, LoadBase);
+    FrLdrReMapImage(NtHeader, LoadBase);
 
     /* Calculate Difference between Real Base and Compiled Base*/
     LdrRelocateImageWithBias(LoadBase,
@@ -966,17 +968,18 @@ FrLdrMapHal(FILE *HalImage)
                              STATUS_UNSUCCESSFUL);
 
     /* Fill out Module Data Structure */
-    reactos_modules[1].ModStart = (ULONG_PTR)ImageBase;
-    reactos_modules[1].ModEnd = (ULONG_PTR)ImageBase + ImageSize;
-    strcpy(reactos_module_strings[1], "hal.dll");
-    reactos_modules[1].String = (ULONG_PTR)reactos_module_strings[1];
+    reactos_modules[ImageId].ModStart = (ULONG_PTR)ImageBase;
+    reactos_modules[ImageId].ModEnd = (ULONG_PTR)ImageBase + ImageSize;
+    strcpy(reactos_module_strings[ImageId], Name);
+    reactos_modules[ImageId].String = (ULONG_PTR)reactos_module_strings[ImageId];
     LoaderBlock.ModsCount++;
-
-    /*  Perform import fixups  */
-    LdrPEFixupImports(LoadBase, "hal.dll");
 
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP(NextModuleBase + ImageSize, PAGE_SIZE);
+
+    /*  Perform import fixups  */
+    //DbgPrint("Fixing up: %s loaded at: %p\n", Name, ImageBase);
+    LdrPEFixupImports(LoadBase, Name);
 
     /* Return Success */
     return TRUE;

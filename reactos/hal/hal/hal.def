@@ -72,21 +72,6 @@ IoMapTransfer@24
 IoReadPartitionTable@16=HalpReadPartitionTable@16
 IoSetPartitionInformation@16=HalpSetPartitionInformation@16
 IoWritePartitionTable@20=HalpWritePartitionTable@20
-KdComPortInUse=_KdComPortInUse
-; FIXME: DEPRECATED
-KdPortGetByte@4
-KdPortGetByteEx@8
-KdPortInitialize@12
-KdPortInitializeEx@12
-KdPortPollByte@4
-KdPortPollByteEx@8
-KdPortPutByte@4
-KdPortPutByteEx@8
-KdPortRestore@0
-KdPortSave@0
-KdPortDisableInterrupts@0
-KdPortEnableInterrupts@0
-; FIXME: END DEPRECATED BLOCK
 KeAcquireSpinLock@8
 KeFlushWriteBuffer@0
 KeGetCurrentIrql@0

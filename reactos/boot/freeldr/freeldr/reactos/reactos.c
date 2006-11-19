@@ -33,7 +33,8 @@ memory_map_t			reactos_memory_map[32];		// Memory map
 ARC_DISK_SIGNATURE      reactos_arc_disk_info[32]; // ARC Disk Information
 char                    reactos_arc_strings[32][256];
 unsigned long           reactos_disk_count = 0;
-	CHAR  szHalName[1024];
+CHAR szHalName[255];
+CHAR szBootPath[255];
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
 
 static BOOLEAN
@@ -86,41 +87,56 @@ FrLdrLoadKernel(PCHAR szFileName,
 
 BOOLEAN
 NTAPI
-FrLdrMapHal(FILE *KernelImage);
+FrLdrMapImage(
+    IN FILE *Image,
+    IN PCHAR ShortName
+);
 
 BOOLEAN
 NTAPI
-FrLdrLoadHal(PCHAR szFileName,
-             INT nPos)
+FrLdrLoadImage(IN PCHAR szFileName,
+               IN INT nPos)
 {
     PFILE FilePointer;
     PCHAR szShortName;
-    CHAR szBuffer[256];
+    CHAR szBuffer[256], szFullPath[256];
 
-    /* Extract Kernel filename without path */
+    /* Check if this the HAL being loaded */
+    if (!_stricmp(szFileName, "hal.dll"))
+    {
+        /* Use the boot.ini name instead */
+        szFileName = szHalName;
+    }
+
+    /* Extract filename without path */
     szShortName = strrchr(szFileName, '\\');
-    if (szShortName == NULL) {
-
+    if (!szShortName)
+    {
         /* No path, leave it alone */
         szShortName = szFileName;
 
-    } else {
-
+        /* Which means we need to build a path now */
+        strcpy(szBuffer, szFileName);
+        strcpy(szFullPath, szBootPath);
+        strcat(szFullPath, "SYSTEM32\\DRIVERS\\");
+        strcat(szFullPath, szBuffer);
+        szFileName = szFullPath;
+    }
+    else
+    {
         /* Skip the path */
         szShortName = szShortName + 1;
     }
 
-    /* Open the Kernel */
+    /* Open the image */
     FilePointer = FsOpenFile(szFileName);
-
-    /* Make sure it worked */
-    if (FilePointer == NULL) {
-
+    if (!FilePointer)
+    {
         /* Return failure on the short name */
         strcpy(szBuffer, szShortName);
         strcat(szBuffer, " not found.");
         UiMessageBox(szBuffer);
-        return(FALSE);
+        return FALSE;
     }
 
     /* Update the status bar with the current file */
@@ -129,11 +145,11 @@ FrLdrLoadHal(PCHAR szFileName,
     UiDrawStatusText(szBuffer);
 
     /* Do the actual loading */
-    FrLdrMapHal(FilePointer);
+    FrLdrMapImage(FilePointer, szShortName);
 
     /* Update Processbar and return success */
     UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);
-    return(TRUE);
+    return TRUE;
 }
 
 static VOID
@@ -618,13 +634,12 @@ VOID
 LoadAndBootReactOS(PCSTR OperatingSystemName)
 {
 	PFILE FilePointer;
-	CHAR  name[1024];
-	CHAR  value[1024];
-	CHAR  SystemPath[1024];
-	CHAR  szKernelName[1024];
-	CHAR  szFileName[1024];
-	CHAR  szBootPath[256];
-	UINT   i;
+	CHAR name[255];
+	CHAR value[255];
+	CHAR SystemPath[255];
+	CHAR szKernelName[255];
+	CHAR szFileName[255];
+	UINT i;
 	CHAR  MsgBuffer[256];
 	ULONG SectionId;
 
@@ -657,10 +672,10 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
 	LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
 	LoaderBlock.BootDevice = 0xffffffff;
-	LoaderBlock.CommandLine = (unsigned long)reactos_kernel_cmdline;
+	LoaderBlock.CommandLine = reactos_kernel_cmdline;
 	LoaderBlock.ModsCount = 0;
-	LoaderBlock.ModsAddr = (unsigned long)reactos_modules;
-    LoaderBlock.DrivesAddr = (unsigned long)reactos_arc_disk_info;
+	LoaderBlock.ModsAddr = reactos_modules;
+    LoaderBlock.DrivesAddr = reactos_arc_disk_info;
 	LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&reactos_memory_map, 32) * sizeof(memory_map_t);
 	if (LoaderBlock.MmapLength)
 	{

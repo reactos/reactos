@@ -314,9 +314,9 @@ VOID RunLoader(VOID)
   LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
   LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
   LoaderBlock.BootDevice = 0xffffffff;
-  LoaderBlock.CommandLine = (unsigned long)reactos_kernel_cmdline;
+  LoaderBlock.CommandLine = reactos_kernel_cmdline;
   LoaderBlock.ModsCount = 0;
-  LoaderBlock.ModsAddr = (unsigned long)reactos_modules;
+  LoaderBlock.ModsAddr = reactos_modules;
   LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&reactos_memory_map, 32) * sizeof(memory_map_t);
   if (LoaderBlock.MmapLength)
     {
