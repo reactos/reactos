@@ -283,7 +283,7 @@ DbgPrompt(PCCH OutputString,
 
     /* Setup the output string */
     Output.Length = strlen (OutputString);
-    Output.Buffer = OutputString;
+    Output.Buffer = (PCHAR)OutputString;
 
     /* Call the system service */
     return DebugPrompt(&Output, &Input);
