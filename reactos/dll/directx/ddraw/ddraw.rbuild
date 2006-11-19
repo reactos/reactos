@@ -1,12 +1,12 @@
-<module name="ddraw" type="win32dll" entrypoint="0" installbase="system32" installname="ddraw.dll">
+<module name="ddraw" type="win32dll" entrypoint="0" installbase="system32" installname="ddraw.dll" allowwarnings ="true">
   <importlibrary definition="ddraw.def" />
 	<include base="ddraw">.</include>	
 	<define name="UNICODE" />
 	<define name="__USE_W32API" />
 	<define name="WINVER">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
-           
-	<library>ntdll</library>
+
+	<library>ntdll</library>          
 	<library>kernel32</library>
 	<library>gdi32</library>
 	<library>d3d8thk</library>
@@ -17,30 +17,22 @@
 
 	<file>ddraw.rc</file>
 	<file>main.c</file>
-	<file>regsvr.c</file>
 	<file>startup.c</file>
 	<file>cleanup.c</file>
 
-	<file>clipper.c</file>
-	<file>color.c</file>
-	<file>gamma.c</file>
-	<file>palette.c</file>
-	<file>videoport.c</file>
-	<file>kernel.c</file>
+	<file>iface_clipper.c</file>
+	<file>iface_color.c</file>
+	<file>iface_gamma.c</file>
+	<file>iface_palette.c</file>
+	<file>iface_videoport.c</file>
+	<file>iface_kernel.c</file>
 
-	<directory name="hal">		
-		<file>surface_hal.c</file>
-	</directory>
+      <file>callbacks_hel.c</file>
 
 	<directory name="main">
 		<file>ddraw_main.c</file>
 		<file>surface_main.c</file>				
-	</directory>
-
-	<directory name="soft">		
-		<file>surface_hel.c</file>
-            <file>surface_callbacks_hel.c</file>
-	</directory>
+	</directory>	
 
 	<directory name="thunks">
 		<file>ddraw_thunk.c</file>

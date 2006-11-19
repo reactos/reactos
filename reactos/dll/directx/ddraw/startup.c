@@ -12,11 +12,14 @@
 #include "rosdraw.h"
 #include "d3dhal.h"
 
+DDRAWI_DIRECTDRAW_GBL ddgbl;
+DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;
+
 
 HRESULT WINAPI 
-StartDirectDraw(LPDIRECTDRAW* iface)
+StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 {
-	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     DWORD hal_ret;
     DWORD hel_ret;
     DEVMODE devmode;
@@ -24,22 +27,27 @@ StartDirectDraw(LPDIRECTDRAW* iface)
     const UINT bmiSize = sizeof(BITMAPINFOHEADER) + 0x10;
     UCHAR *pbmiData;
     BITMAPINFO *pbmi;    
-    DWORD *pMasks;
-	DWORD Flags;
+    DWORD *pMasks;	
+	INT devicetypes = 0;
     
     DX_WINDBG_trace();
 	  
-	RtlZeroMemory(&This->mDDrawGlobal, sizeof(DDRAWI_DIRECTDRAW_GBL));
+	RtlZeroMemory(&ddgbl, sizeof(DDRAWI_DIRECTDRAW_GBL));
+    
+	ddgbl.lpDDCBtmp = (LPDDHAL_CALLBACKS) DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));  
+	if (ddgbl.lpDDCBtmp == NULL)
+	{
+	   DX_STUB_str("Out of memmory");
+       return DD_FALSE;
+	}
+
+	This->lpLcl->lpDDCB = ddgbl.lpDDCBtmp;
 	
-	/* cObsolete is undoc in msdn it being use in CreateDCA */
-	RtlCopyMemory(&This->mDDrawGlobal.cObsolete,&"DISPLAY",7);
-	RtlCopyMemory(&This->mDDrawGlobal.cDriverName,&"DISPLAY",7);
 	
     /* Same for HEL and HAL */
-    This->mcModeInfos = 1;
-    This->mpModeInfos = (DDHALMODEINFO*) DxHeapMemAlloc(This->mcModeInfos * sizeof(DDHALMODEINFO));  
-   
-    if (This->mpModeInfos == NULL)
+    This->lpLcl->lpGbl->lpModeInfo = (DDHALMODEINFO*) DxHeapMemAlloc(1 * sizeof(DDHALMODEINFO));  
+	
+    if (This->lpLcl->lpGbl->lpModeInfo == NULL)
     {
 	   DX_STUB_str("DD_FALSE");
        return DD_FALSE;
@@ -47,37 +55,68 @@ StartDirectDraw(LPDIRECTDRAW* iface)
 
     EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devmode);
 
-    This->mpModeInfos[0].dwWidth      = devmode.dmPelsWidth;
-    This->mpModeInfos[0].dwHeight     = devmode.dmPelsHeight;
-    This->mpModeInfos[0].dwBPP        = devmode.dmBitsPerPel;
-    This->mpModeInfos[0].lPitch       = (devmode.dmPelsWidth*devmode.dmBitsPerPel)/8;
-    This->mpModeInfos[0].wRefreshRate = (WORD)devmode.dmDisplayFrequency;
+    This->lpLcl->lpGbl->lpModeInfo[0].dwWidth      = devmode.dmPelsWidth;
+    This->lpLcl->lpGbl->lpModeInfo[0].dwHeight     = devmode.dmPelsHeight;
+    This->lpLcl->lpGbl->lpModeInfo[0].dwBPP        = devmode.dmBitsPerPel;
+    This->lpLcl->lpGbl->lpModeInfo[0].lPitch       = (devmode.dmPelsWidth*devmode.dmBitsPerPel)/8;
+    This->lpLcl->lpGbl->lpModeInfo[0].wRefreshRate = (WORD)devmode.dmDisplayFrequency;
    
-	if ( This->devicetype <3 )
-	{   
-		 /* Create HDC for default, hal and hel driver */
-         This->hdc = CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
+
+	if (lpGuid == NULL) 
+	{
+		devicetypes = 1;
+
+		/* Create HDC for default, hal and hel driver */
+		This->lpLcl->hDC =  (ULONG_PTR) CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
+
+		/* cObsolete is undoc in msdn it being use in CreateDCA */
+	    RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
+	    RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
+	}
+
+	else if (lpGuid == (LPGUID) DDCREATE_HARDWAREONLY) 
+	{
+		devicetypes = 2;
+
+		/* Create HDC for default, hal and hel driver */
+		This->lpLcl->hDC = (ULONG_PTR)CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
+
+		/* cObsolete is undoc in msdn it being use in CreateDCA */
+	    RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
+	    RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
+	}
+
+	else if (lpGuid == (LPGUID) DDCREATE_EMULATIONONLY) 
+	{
+		devicetypes = 3;
+
+		/* Create HDC for default, hal and hel driver */
+		This->lpLcl->hDC = (ULONG_PTR) CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
+
+		/* cObsolete is undoc in msdn it being use in CreateDCA */
+	    RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
+	    RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
 	}
 	else
 	{
 		/* FIXME : need getting driver from the GUID that have been pass in from
 		           the register. we do not support that yet 
 	    */
-		This->hdc = NULL ;
+		devicetypes = 4;
+		This->lpLcl->hDC = (ULONG_PTR) NULL ;
 	}
 
-
-    if (This->hdc == NULL)
+    if ( (HDC)This->lpLcl->hDC == NULL)
     {
 	   DX_STUB_str("DDERR_OUTOFMEMORY");
        return DDERR_OUTOFMEMORY ;
     }
 
-    hbmp = CreateCompatibleBitmap(This->hdc, 1, 1);  
+    hbmp = CreateCompatibleBitmap((HDC) This->lpLcl->hDC, 1, 1);  
     if (hbmp==NULL)
     {
-       DxHeapMemFree(This->mpModeInfos);
-       DeleteDC(This->hdc);
+       DxHeapMemFree(This->lpLcl->lpGbl->lpModeInfo);
+       DeleteDC((HDC) This->lpLcl->hDC);
 	   DX_STUB_str("DDERR_OUTOFMEMORY");
        return DDERR_OUTOFMEMORY;
     }
@@ -87,8 +126,8 @@ StartDirectDraw(LPDIRECTDRAW* iface)
 
     if (pbmiData==NULL)
     {
-       DxHeapMemFree(This->mpModeInfos);       
-       DeleteDC(This->hdc);
+       DxHeapMemFree(This->lpLcl->lpGbl->lpModeInfo);       
+       DeleteDC((HDC) This->lpLcl->hDC);
        DeleteObject(hbmp);
 	   DX_STUB_str("DDERR_OUTOFMEMORY");
        return DDERR_OUTOFMEMORY;
@@ -100,28 +139,24 @@ StartDirectDraw(LPDIRECTDRAW* iface)
     pbmi->bmiHeader.biWidth = 1;
     pbmi->bmiHeader.biHeight = 1;
 
-    GetDIBits(This->hdc, hbmp, 0, 0, NULL, pbmi, 0);
+    GetDIBits((HDC) This->lpLcl->hDC, hbmp, 0, 0, NULL, pbmi, 0);
     DeleteObject(hbmp);
 
     pMasks = (DWORD*)(pbmiData + sizeof(BITMAPINFOHEADER));
-    This->mpModeInfos[0].dwRBitMask = pMasks[0];
-    This->mpModeInfos[0].dwGBitMask = pMasks[1];
-    This->mpModeInfos[0].dwBBitMask = pMasks[2];
-    This->mpModeInfos[0].dwAlphaBitMask = pMasks[3];
+    This->lpLcl->lpGbl->lpModeInfo[0].dwRBitMask = pMasks[0];
+    This->lpLcl->lpGbl->lpModeInfo[0].dwGBitMask = pMasks[1];
+    This->lpLcl->lpGbl->lpModeInfo[0].dwBBitMask = pMasks[2];
+    This->lpLcl->lpGbl->lpModeInfo[0].dwAlphaBitMask = pMasks[3];
 
 	DxHeapMemFree(pbmiData);
 
     /* Startup HEL and HAL */
-    RtlZeroMemory(&This->mDDrawGlobal, sizeof(DDRAWI_DIRECTDRAW_GBL));
-    RtlZeroMemory(&This->mHALInfo, sizeof(DDHALINFO));
-    RtlZeroMemory(&This->mCallbacks, sizeof(DDHAL_CALLBACKS));
+   // RtlZeroMemory(&ddgbl, sizeof(DDRAWI_DIRECTDRAW_GBL));
+	
+	This->lpLcl->lpDDCB = This->lpLcl->lpGbl->lpDDCBtmp;	  
+	This->lpLcl->dwProcessId = GetCurrentProcessId();
 
-    This->mDDrawLocal.lpDDCB = &This->mCallbacks;
-    This->mDDrawLocal.lpGbl = &This->mDDrawGlobal;
-    This->mDDrawLocal.dwProcessId = GetCurrentProcessId();
-
-    This->mDDrawGlobal.lpDDCBtmp = &This->mCallbacks;
-    This->mDDrawGlobal.lpExclusiveOwner = &This->mDDrawLocal;
+    
 
     hal_ret = StartDirectDrawHal(iface);
 	hel_ret = StartDirectDrawHel(iface);    
@@ -131,101 +166,16 @@ StartDirectDraw(LPDIRECTDRAW* iface)
         return DDERR_NODIRECTDRAWSUPPORT; 
     }
 
-    /* 
-       Setup HEL or HAL for DD_CALLBACKS 
-    */ 
-            
-    This->mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;
-	This->mDdCreatePalette.lpDD = &This->mDDrawGlobal;
-	This->mDdCreateSurface.lpDD = &This->mDDrawGlobal;
-	This->mDdFlipToGDISurface.lpDD = &This->mDDrawGlobal;
-	This->mDdDestroyDriver.lpDD = &This->mDDrawGlobal;
-	This->mDdGetScanLine.lpDD = &This->mDDrawGlobal;
-    This->mDdSetExclusiveMode.lpDD = &This->mDDrawGlobal;
-	This->mDdSetMode.lpDD = &This->mDDrawGlobal;
-	This->mDdWaitForVerticalBlank.lpDD = &This->mDDrawGlobal;
-	This->mDdSetColorKey.lpDD = &This->mDDrawGlobal;
-	
-	if (This->devicetype!=1)
-	{
-		/* both or only hel */
-		This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HELDD.CanCreateSurface;  	
-		This->mDdCreatePalette.CreatePalette = This->mCallbacks.HELDD.CreatePalette;  	
-		This->mDdCreateSurface.CreateSurface = This->mCallbacks.HELDD.CreateSurface;  	
-		This->mDdDestroyDriver.DestroyDriver = This->mCallbacks.HELDD.DestroyDriver;  	
-		This->mDdFlipToGDISurface.FlipToGDISurface = This->mCallbacks.HELDD.FlipToGDISurface; 		
-		This->mDdGetScanLine.GetScanLine = This->mCallbacks.HELDD.GetScanLine; 
-		This->mDdSetExclusiveMode.SetExclusiveMode = This->mCallbacks.HELDD.SetExclusiveMode; 			
-		This->mDdSetMode.SetMode = This->mCallbacks.HELDD.SetMode; 		
-		This->mDdWaitForVerticalBlank.WaitForVerticalBlank = This->mCallbacks.HELDD.WaitForVerticalBlank;  	
-		// This->mDdSetColorKey.SetColorKey = This->mCallbacks.HELDD.SetColorKey;  
-	}
-	
-    if (This->devicetype!=2)
-	{
-		Flags = This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags;    
-		if (Flags & DDHAL_CB32_CANCREATESURFACE) 
-		{
-			This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;  
-		}
-	
-		if (Flags & DDHAL_CB32_CREATEPALETTE) 
-		{
-			This->mDdCreatePalette.CreatePalette = This->mCallbacks.HALDD.CreatePalette;  
-		}
-	
-		if (Flags & DDHAL_CB32_CREATESURFACE) 
-		{
-			This->mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
-		}
-	
-		if (Flags & DDHAL_CB32_DESTROYDRIVER) 
-		{
-			This->mDdDestroyDriver.DestroyDriver = This->mCallbacks.HALDD.DestroyDriver;  
-		}
-	
-		if (Flags & DDHAL_CB32_FLIPTOGDISURFACE) 
-		{
-			This->mDdFlipToGDISurface.FlipToGDISurface = This->mCallbacks.HALDD.FlipToGDISurface; 
-		}
-	
-		if (Flags & DDHAL_CB32_GETSCANLINE) 
-		{
-			This->mDdGetScanLine.GetScanLine = This->mCallbacks.HALDD.GetScanLine; 
-		}
-	
-		if (Flags & DDHAL_CB32_SETEXCLUSIVEMODE) 
-		{
-			This->mDdSetExclusiveMode.SetExclusiveMode = This->mCallbacks.HALDD.SetExclusiveMode; 
-		}
-	
-		if (Flags & DDHAL_CB32_SETMODE) 
-		{
-			This->mDdSetMode.SetMode = This->mCallbacks.HALDD.SetMode; 
-		}
-	
-		if (Flags & DDHAL_CB32_WAITFORVERTICALBLANK) 
-		{
-			This->mDdWaitForVerticalBlank.WaitForVerticalBlank = This->mCallbacks.HALDD.WaitForVerticalBlank;  
-		}
+	This->lpLcl->hDD = This->lpLcl->lpGbl->hDD;
 
-		if (Flags & DDHAL_CB32_SETCOLORKEY) 
-		{
-			// This->mDdSetColorKey.SetColorKey = This->mCallbacks.HALDD.SetColorKey;  
-		}
-	}
 
-	/* 
-       Setup HEL or HAL for SURFACE CALLBACK 
-    */ 
+	/* Fixme the mix betwin hel and hal */
 
-	// FIXME
-    
-    /* Setup calback struct so we do not need refill same info again */
-    This->mDdCreateSurface.lpDD = &This->mDDrawGlobal;    
-    This->mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;  
-       
-	This->mDDrawLocal.lpGbl = &This->mDDrawGlobal;
+	
+	/* Fill some basic info for Surface */
+	ddSurfGbl.lpDD = &ddgbl;
+
+		    	   	
     return DD_OK;
 }
 
@@ -233,30 +183,46 @@ StartDirectDraw(LPDIRECTDRAW* iface)
 HRESULT WINAPI 
 StartDirectDrawHal(LPDIRECTDRAW* iface)
 {
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 	DDHAL_GETDRIVERINFODATA DriverInfo;
+
+    DDHALINFO mHALInfo;
+    DDHAL_CALLBACKS mCallbacks;
+    DDHAL_DDEXEBUFCALLBACKS mD3dBufferCallbacks;
+    D3DHAL_CALLBACKS mD3dCallbacks;
+    D3DHAL_GLOBALDRIVERDATA mD3dDriverData;
+    UINT mcvmList;
+    VIDMEM *mpvmList;
+
+    UINT mcFourCC;
+    DWORD *mpFourCC;
+        UINT mcTextures;
+    DDSURFACEDESC *mpTextures;
 
 	/* HAL Startup process */
     BOOL newmode = FALSE;	
 	    	
 
+    RtlZeroMemory(&mHALInfo, sizeof(DDHALINFO));
+    RtlZeroMemory(&mCallbacks, sizeof(DDHAL_CALLBACKS));
+
     /* 
       Startup DX HAL step one of three 
     */
-    if (!DdCreateDirectDrawObject(&This->mDDrawGlobal, This->hdc))
+	if (!DdCreateDirectDrawObject(This->lpLcl->lpGbl, (HDC)This->lpLcl->hDC))
     {
-       DxHeapMemFree(This->mpModeInfos);	   
-       DeleteDC(This->hdc);       
+       DxHeapMemFree(This->lpLcl->lpGbl->lpModeInfo);	   
+       DeleteDC((HDC)This->lpLcl->hDC);       
        return DD_FALSE;
     }
 	
     // Do not relase HDC it have been map in kernel mode 
     // DeleteDC(hdc);
       
-    if (!DdReenableDirectDrawObject(&This->mDDrawGlobal, &newmode))
+    if (!DdReenableDirectDrawObject(This->lpLcl->lpGbl, &newmode))
     {
-      DxHeapMemFree(This->mpModeInfos);
-      DeleteDC(This->hdc);      
+      DxHeapMemFree(This->lpLcl->lpGbl->lpModeInfo);
+      DeleteDC((HDC)This->lpLcl->hDC);      
       return DD_FALSE;
     }
            
@@ -265,80 +231,80 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
        Startup DX HAL step two of three 
     */
 
-    if (!DdQueryDirectDrawObject(&This->mDDrawGlobal,
-                                 &This->mHALInfo,
-                                 &This->mCallbacks.HALDD,
-                                 &This->mCallbacks.HALDDSurface,
-                                 &This->mCallbacks.HALDDPalette, 
-                                 &This->mD3dCallbacks,
-                                 &This->mD3dDriverData,
-                                 &This->mD3dBufferCallbacks,
+    if (!DdQueryDirectDrawObject(This->lpLcl->lpGbl,
+                                 &mHALInfo,
+                                 &mCallbacks.HALDD,
+                                 &mCallbacks.HALDDSurface,
+                                 &mCallbacks.HALDDPalette, 
+                                 &mD3dCallbacks,
+                                 &mD3dDriverData,
+                                 &mD3dBufferCallbacks,
                                  NULL,
                                  NULL,
                                  NULL))
     {
-      DxHeapMemFree(This->mpModeInfos);
-      DeleteDC(This->hdc);      
+      DxHeapMemFree(This->lpLcl->lpGbl->lpModeInfo);
+      DeleteDC((HDC)This->lpLcl->hDC);      
       // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
 
-    This->mcvmList = This->mHALInfo.vmiData.dwNumHeaps;
-    This->mpvmList = (VIDMEM*) DxHeapMemAlloc(sizeof(VIDMEM) * This->mcvmList);
-    if (This->mpvmList == NULL)
+    mcvmList = mHALInfo.vmiData.dwNumHeaps;
+    mpvmList = (VIDMEM*) DxHeapMemAlloc(sizeof(VIDMEM) * mcvmList);
+    if (mpvmList == NULL)
     {      
-      DxHeapMemFree(This->mpModeInfos);
-      DeleteDC(This->hdc);      
+      DxHeapMemFree(This->lpLcl->lpGbl->lpModeInfo);
+      DeleteDC((HDC)This->lpLcl->hDC);     
       // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
 
-    This->mcFourCC = This->mHALInfo.ddCaps.dwNumFourCCCodes;
-    This->mpFourCC = (DWORD *) DxHeapMemAlloc(sizeof(DWORD) * This->mcFourCC);
-    if (This->mpFourCC == NULL)
+    mcFourCC = mHALInfo.ddCaps.dwNumFourCCCodes;
+    mpFourCC = (DWORD *) DxHeapMemAlloc(sizeof(DWORD) * mcFourCC);
+    if (mpFourCC == NULL)
     {
-      DxHeapMemFree(This->mpvmList);
-      DxHeapMemFree(This->mpModeInfos);
-      DeleteDC(This->hdc);      
+      DxHeapMemFree(mpvmList);
+      DxHeapMemFree(This->lpLcl->lpGbl->lpModeInfo);
+      DeleteDC((HDC)This->lpLcl->hDC);      
       // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
 
-    This->mcTextures = This->mD3dDriverData.dwNumTextureFormats;
-    This->mpTextures = (DDSURFACEDESC*) DxHeapMemAlloc(sizeof(DDSURFACEDESC) * This->mcTextures);
-    if (This->mpTextures == NULL)
+    mcTextures = mD3dDriverData.dwNumTextureFormats;
+    mpTextures = (DDSURFACEDESC*) DxHeapMemAlloc(sizeof(DDSURFACEDESC) * mcTextures);
+    if (mpTextures == NULL)
     {      
-      DxHeapMemFree( This->mpFourCC);
-      DxHeapMemFree( This->mpvmList);
-      DxHeapMemFree( This->mpModeInfos);
-      DeleteDC(This->hdc);      
+      DxHeapMemFree( mpFourCC);
+      DxHeapMemFree( mpvmList);
+      DxHeapMemFree( This->lpLcl->lpGbl->lpModeInfo);
+      DeleteDC((HDC)This->lpLcl->hDC);     
       // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
 
-    This->mHALInfo.vmiData.pvmList = This->mpvmList;
-    This->mHALInfo.lpdwFourCC = This->mpFourCC;
-    This->mD3dDriverData.lpTextureFormats = (DDSURFACEDESC*) This->mpTextures;
+    mHALInfo.vmiData.pvmList = mpvmList;
+    mHALInfo.lpdwFourCC = mpFourCC;
+    mD3dDriverData.lpTextureFormats = (DDSURFACEDESC*) mpTextures;
 
     if (!DdQueryDirectDrawObject(
-                                    &This->mDDrawGlobal,
-                                    &This->mHALInfo,
-                                    &This->mCallbacks.HALDD,
-                                    &This->mCallbacks.HALDDSurface,
-                                    &This->mCallbacks.HALDDPalette, 
-                                    &This->mD3dCallbacks,
-                                    &This->mD3dDriverData,
-                                    &This->mCallbacks.HALDDExeBuf,
-                                    (DDSURFACEDESC*)This->mpTextures,
-                                    This->mpFourCC,
-                                    This->mpvmList))
+                                    This->lpLcl->lpGbl,
+                                    &mHALInfo,
+                                    &mCallbacks.HALDD,
+                                    &mCallbacks.HALDDSurface,
+                                    &mCallbacks.HALDDPalette, 
+                                    &mD3dCallbacks,
+                                    &mD3dDriverData,
+                                    &mCallbacks.HALDDExeBuf,
+                                    (DDSURFACEDESC*)mpTextures,
+                                    mpFourCC,
+                                    mpvmList))
   
     {
-      DxHeapMemFree(This->mpTextures);
-      DxHeapMemFree(This->mpFourCC);
-      DxHeapMemFree(This->mpvmList);
-      DxHeapMemFree(This->mpModeInfos);
-      DeleteDC(This->hdc);      
+      DxHeapMemFree(mpTextures);
+      DxHeapMemFree(mpFourCC);
+      DxHeapMemFree(mpvmList);
+      DxHeapMemFree(This->lpLcl->lpGbl->lpModeInfo);
+      DeleteDC((HDC)This->lpLcl->hDC);      
 	  // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
@@ -350,84 +316,69 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
   // this is wrong, cDriverName need be in ASC code not UNICODE 
   //memcpy(mDDrawGlobal.cDriverName, mDisplayAdapter, sizeof(wchar)*MAX_DRIVER_NAME);
 
-  memcpy(&This->mDDrawGlobal.vmiData, &This->mHALInfo.vmiData,sizeof(VIDMEMINFO));
-  memcpy(&This->mDDrawGlobal.ddCaps,  &This->mHALInfo.ddCaps,sizeof(DDCORECAPS));
-
-  This->mHALInfo.dwNumModes = This->mcModeInfos;
-  This->mHALInfo.lpModeInfo = This->mpModeInfos;
-  This->mHALInfo.dwMonitorFrequency = This->mpModeInfos[0].wRefreshRate;
-
-  This->mDDrawGlobal.dwMonitorFrequency = This->mHALInfo.dwMonitorFrequency;
-  This->mDDrawGlobal.dwModeIndex        = This->mHALInfo.dwModeIndex;
-  This->mDDrawGlobal.dwNumModes         = This->mHALInfo.dwNumModes;
-  This->mDDrawGlobal.lpModeInfo         = This->mHALInfo.lpModeInfo;
-  This->mDDrawGlobal.hInstance          = This->mHALInfo.hInstance;    
+  memcpy(&ddgbl.vmiData, &mHALInfo.vmiData,sizeof(VIDMEMINFO));
+  memcpy(&ddgbl.ddCaps,  &mHALInfo.ddCaps,sizeof(DDCORECAPS));
   
-  This->mDDrawGlobal.lp16DD = &This->mDDrawGlobal;
-  
-  //DeleteDC(This->hdc);
+  mHALInfo.dwNumModes = 1;
+  mHALInfo.lpModeInfo = This->lpLcl->lpGbl->lpModeInfo;
+  mHALInfo.dwMonitorFrequency = This->lpLcl->lpGbl->lpModeInfo[0].wRefreshRate;
 
+  This->lpLcl->lpGbl->dwMonitorFrequency = mHALInfo.dwMonitorFrequency;
+  This->lpLcl->lpGbl->dwModeIndex        = mHALInfo.dwModeIndex;
+  This->lpLcl->lpGbl->dwNumModes         = mHALInfo.dwNumModes;
+  This->lpLcl->lpGbl->lpModeInfo         = mHALInfo.lpModeInfo;
+  This->lpLcl->lpGbl->hInstance          = mHALInfo.hInstance;    
+  
+  This->lpLcl->lpGbl->lp16DD = This->lpLcl->lpGbl;
+  
    
    memset(&DriverInfo,0, sizeof(DDHAL_GETDRIVERINFODATA));
    DriverInfo.dwSize = sizeof(DDHAL_GETDRIVERINFODATA);
-   DriverInfo.dwContext = This->mDDrawGlobal.hDD; 
+   DriverInfo.dwContext = This->lpLcl->lpGbl->hDD; 
 
   /* Get the MiscellaneousCallbacks  */    
   DriverInfo.guidInfo = GUID_MiscellaneousCallbacks;
-  DriverInfo.lpvData = &This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous;
+  DriverInfo.lpvData = &ddgbl.lpDDCBtmp->HALDDMiscellaneous;
   DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
-  This->mHALInfo.GetDriverInfo(&DriverInfo);
+  mHALInfo.GetDriverInfo(&DriverInfo);
 
-  /* Setup global surface */   
-  /*This->mPrimaryGlobal.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
-  This->mPrimaryGlobal.lpDD       = &This->mDDrawGlobal;
-  This->mPrimaryGlobal.lpDDHandle = &This->mDDrawGlobal;
-  This->mPrimaryGlobal.wWidth  = (WORD)This->mpModeInfos[0].dwWidth;
-  This->mPrimaryGlobal.wHeight = (WORD)This->mpModeInfos[0].dwHeight;
-  This->mPrimaryGlobal.lPitch  = This->mpModeInfos[0].lPitch;*/
-
-  /* FIXME free it in cleanup */
-  // This->mDDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT)); 
+  
   return DD_OK;
 }
 
 HRESULT WINAPI 
 StartDirectDrawHel(LPDIRECTDRAW* iface)
 {
-	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+	
+    /*
+     FIXME :
+             FlipToGDISurface
+             SetColorKey
+             Hel api
+     */
+	This->lpLcl->lpDDCB->HELDD.CanCreateSurface     = HelDdCanCreateSurface;	
+	This->lpLcl->lpDDCB->HELDD.CreateSurface        = HelDdCreateSurface;		
+	This->lpLcl->lpDDCB->HELDD.CreatePalette        = HelDdCreatePalette;
+	This->lpLcl->lpDDCB->HELDD.DestroyDriver        = HelDdDestroyDriver;
+	//This->lpLcl->lpDDCB->HELDD.FlipToGDISurface     = HelDdFlipToGDISurface
+	This->lpLcl->lpDDCB->HELDD.GetScanLine          = HelDdGetScanLine;
+	// This->lpLcl->lpDDCB->HELDD.SetColorKey          = HelDdSetColorKey;
+	This->lpLcl->lpDDCB->HELDD.SetExclusiveMode     = HelDdSetExclusiveMode;
+	This->lpLcl->lpDDCB->HELDD.SetMode              = HelDdSetMode;
+	This->lpLcl->lpDDCB->HELDD.WaitForVerticalBlank = HelDdWaitForVerticalBlank;
 
-	This->HELMemoryAvilable = HEL_GRAPHIC_MEMORY_MAX;
-
-    This->mCallbacks.HELDD.dwFlags = DDHAL_CB32_DESTROYDRIVER;
-    This->mCallbacks.HELDD.DestroyDriver = HelDdDestroyDriver;
-    
-    This->mCallbacks.HELDD.dwFlags += DDHAL_CB32_CREATESURFACE; 
-    This->mCallbacks.HELDD.CreateSurface = HelDdCreateSurface;
-    
-    // DDHAL_CB32_
-    //This->mCallbacks.HELDD.SetColorKey = HelDdSetColorKey;
-   
-    This->mCallbacks.HELDD.dwFlags += DDHAL_CB32_SETMODE;
-    This->mCallbacks.HELDD.SetMode = HelDdSetMode;
-    
-    This->mCallbacks.HELDD.dwFlags += DDHAL_CB32_WAITFORVERTICALBLANK;     
-    This->mCallbacks.HELDD.WaitForVerticalBlank = HelDdWaitForVerticalBlank;
-        
-    This->mCallbacks.HELDD.dwFlags += DDHAL_CB32_CANCREATESURFACE;
-    This->mCallbacks.HELDD.CanCreateSurface = HelDdCanCreateSurface;
-    
-    This->mCallbacks.HELDD.dwFlags += DDHAL_CB32_CREATEPALETTE;
-    This->mCallbacks.HELDD.CreatePalette = HelDdCreatePalette;
-    
-    This->mCallbacks.HELDD.dwFlags += DDHAL_CB32_GETSCANLINE;
-    This->mCallbacks.HELDD.GetScanLine = HelDdGetScanLine;
-    
-    This->mCallbacks.HELDD.dwFlags += DDHAL_CB32_SETEXCLUSIVEMODE;
-    This->mCallbacks.HELDD.SetExclusiveMode = HelDdSetExclusiveMode;
-
-    This->mCallbacks.HELDD.dwFlags += DDHAL_CB32_FLIPTOGDISURFACE;
-    This->mCallbacks.HELDD.FlipToGDISurface = HelDdFlipToGDISurface;
-	   
+	This->lpLcl->lpDDCB->HELDD.dwFlags =  DDHAL_CB32_CANCREATESURFACE     |
+		                                  DDHAL_CB32_CREATESURFACE        |
+										  DDHAL_CB32_CREATEPALETTE        |
+		                                  DDHAL_CB32_DESTROYDRIVER        | 
+										  // DDHAL_CB32_FLIPTOGDISURFACE     |
+										  DDHAL_CB32_GETSCANLINE          |
+										  // DDHAL_CB32_SETCOLORKEY          |
+										  DDHAL_CB32_SETEXCLUSIVEMODE     | 
+										  DDHAL_CB32_SETMODE              |                                                   
+										  DDHAL_CB32_WAITFORVERTICALBLANK ;
+										  										  	   
 	return DD_OK;
 }
 
@@ -437,64 +388,43 @@ Create_DirectDraw (LPGUID pGUID,
 				   LPDIRECTDRAW* pIface, 
 				   REFIID id, 
 				   BOOL ex)
-{   
-    IDirectDrawImpl* This;
+{   	
+    LPDDRAWI_DIRECTDRAW_INT This;
 
+	
 	DX_WINDBG_trace();
 		
-	//AcquireDDThreadLock();
-
-	This = (IDirectDrawImpl*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirectDrawImpl));
-
-
+	This = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
 	if (This == NULL) 
 	{
-		ReleaseDDThreadLock();
 		return E_OUTOFMEMORY;
 	}
 
+	This->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
 
-	ZeroMemory(This,sizeof(IDirectDrawImpl));
+	if (This->lpLcl == NULL)
+	{
+		/* FIXME cleanup */
+		return DDERR_OUTOFMEMORY;
+	}
 
-	This->lpVtbl = &DirectDraw7_Vtable;
-	This->lpVtbl_v1 = &DDRAW_IDirectDraw_VTable;
-	This->lpVtbl_v2 = &DDRAW_IDirectDraw2_VTable;
-	This->lpVtbl_v4 = &DDRAW_IDirectDraw4_VTable;
-	
+	This->lpLcl->lpGbl = &ddgbl;
+			 
 	*pIface = (LPDIRECTDRAW)This;
-			
-	if (pGUID == 0)
-	{
-		This->devicetype = 0; /* both hal and hel default driver "DISPLAY" */
-	}
-	else if (pGUID == (LPGUID) DDCREATE_HARDWAREONLY)
-	{
-		This->devicetype = 1; /* hal only default driver "DISPLAY" */
-	}
 
-	else if (pGUID == (LPGUID) DDCREATE_EMULATIONONLY)
-	{
-	    This->devicetype = 2; /* hel only default driver "DISPLAY" */
-	}
-	else
-	{
-		This->devicetype = 3; /* Read from the register which driver it should be */
-	}
-	
-	 
-	if(This->lpVtbl->QueryInterface ((LPDIRECTDRAW7)This, id, (void**)&pIface) != S_OK)
-	{
-		ReleaseDDThreadLock();
+	if(Main_DirectDraw_QueryInterface((LPDIRECTDRAW7)This, id, (void**)&pIface) != S_OK)
+	{		
 		return DDERR_INVALIDPARAMS;
 	}
 
-	if (StartDirectDraw((LPDIRECTDRAW*)This) == DD_OK);
+	if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID) == DD_OK);
     {
-		//ReleaseDDThreadLock();
-		return This->lpVtbl->Initialize ((LPDIRECTDRAW7)This, pGUID);
-	}
 
-	//ReleaseDDThreadLock();
+		return ((LPDIRECTDRAW7)This)->lpVtbl->Initialize ((LPDIRECTDRAW7)This, pGUID);
+	}
+	
 	return DDERR_INVALIDPARAMS;
 }
+
+
 

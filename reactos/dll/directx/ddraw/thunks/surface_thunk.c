@@ -1,430 +1,522 @@
-/* IDirectDrawSurface3 -> IDirectDrawSurface7 thunks
- * Copyright 2000 TransGaming Technologies Inc.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
 
-/*
- * Taken form wine (wine/dlls/ddraw/surface_thunks.c rev 1.2)
- * with some little changes
- *
- */
 
-#include "../winedraw.h"
+#include "../rosdraw.h"
 
-#define CONVERT(pdds) COM_INTERFACE_CAST(IDirectDrawSurfaceImpl,	\
-					 IDirectDrawSurface3,		\
-					 IDirectDrawSurface7,		\
-					 (pdds))
 
-#define CONVERT_REV(pdds) COM_INTERFACE_CAST(IDirectDrawSurfaceImpl,	\
-					     IDirectDrawSurface7,	\
-					     IDirectDrawSurface3,	\
-					     (pdds))
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_QueryInterface(LPDIRECTDRAWSURFACE3 This, REFIID iid,
+HRESULT WINAPI
+Thunk_DDrawSurface3_QueryInterface(LPDIRECTDRAWSURFACE3 iface, REFIID iid,
 				       LPVOID *ppObj)
 {
-    return IDirectDrawSurface7_QueryInterface(CONVERT(This), iid, ppObj);
+	DX_WINDBG_trace();
+
+	return Main_DDrawSurface_QueryInterface((LPDIRECTDRAWSURFACE7) iface,  iid, ppObj);    
 }
 
-static ULONG WINAPI
-IDirectDrawSurface3Impl_AddRef(LPDIRECTDRAWSURFACE3 This)
+ULONG WINAPI
+Thunk_DDrawSurface3_AddRef(LPDIRECTDRAWSURFACE3 iface)
 {
-    return IDirectDrawSurface7_AddRef(CONVERT(This));
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_AddRef((LPDIRECTDRAWSURFACE7) iface);    
 }
 
-static ULONG WINAPI
-IDirectDrawSurface3Impl_Release(LPDIRECTDRAWSURFACE3 This)
+ULONG WINAPI
+Thunk_DDrawSurface3_Release(LPDIRECTDRAWSURFACE3 iface)
 {
-    return IDirectDrawSurface7_Release(CONVERT(This));
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_Release((LPDIRECTDRAWSURFACE7) iface); 
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_AddAttachedSurface(LPDIRECTDRAWSURFACE3 This,
-					   LPDIRECTDRAWSURFACE3 pAttach)
+HRESULT WINAPI
+Thunk_DDrawSurface3_AddAttachedSurface(LPDIRECTDRAWSURFACE3 iface, LPDIRECTDRAWSURFACE3 pAttach)
 {
-    return IDirectDrawSurface7_AddAttachedSurface(CONVERT(This),
-						  CONVERT(pAttach));
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_AddAttachedSurface((LPDIRECTDRAWSURFACE7) iface, (LPDIRECTDRAWSURFACE7) pAttach);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_AddOverlayDirtyRect(LPDIRECTDRAWSURFACE3 This,
-					    LPRECT pRect)
+HRESULT WINAPI
+Thunk_DDrawSurface3_AddOverlayDirtyRect(LPDIRECTDRAWSURFACE3 iface, LPRECT pRect)
 {
-    return IDirectDrawSurface7_AddOverlayDirtyRect(CONVERT(This), pRect);
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_AddOverlayDirtyRect((LPDIRECTDRAWSURFACE7) iface, pRect);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_Blt(LPDIRECTDRAWSURFACE3 This, LPRECT prcDst,
-			    LPDIRECTDRAWSURFACE3 pSrcSurf, LPRECT prcSrc,
+HRESULT WINAPI
+Thunk_DDrawSurface3_Blt(LPDIRECTDRAWSURFACE3 iface, LPRECT rdst,
+			    LPDIRECTDRAWSURFACE3 src, LPRECT rsrc,
 			    DWORD dwFlags, LPDDBLTFX pFX)
 {
-    return IDirectDrawSurface7_Blt(CONVERT(This), prcDst, CONVERT(pSrcSurf),
-				   prcSrc, dwFlags, pFX);
+    DX_WINDBG_trace();
+
+	return Main_DDrawSurface_Blt((LPDIRECTDRAWSURFACE7) iface, rdst,(LPDIRECTDRAWSURFACE7) src, rsrc, dwFlags, pFX);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_BltBatch(LPDIRECTDRAWSURFACE3 This,
-				 LPDDBLTBATCH pBatch, DWORD dwCount,
-				 DWORD dwFlags)
+HRESULT WINAPI
+Thunk_DDrawSurface3_BltBatch(LPDIRECTDRAWSURFACE3 iface, LPDDBLTBATCH pBatch, DWORD dwCount, DWORD dwFlags)
 {
-    return IDirectDrawSurface7_BltBatch(CONVERT(This), pBatch, dwCount,
-					dwFlags);
+	DX_WINDBG_trace();
+
+	return Main_DDrawSurface_BltBatch((LPDIRECTDRAWSURFACE7) iface, pBatch, dwCount, dwFlags);    
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_BltFast(LPDIRECTDRAWSURFACE3 This, DWORD x, DWORD y,
-				LPDIRECTDRAWSURFACE3 pSrcSurf, LPRECT prcSrc,
-				DWORD dwTrans)
+HRESULT WINAPI
+Thunk_DDrawSurface3_BltFast(LPDIRECTDRAWSURFACE3 iface, DWORD dstx, DWORD dsty, 
+							LPDIRECTDRAWSURFACE3 src, LPRECT rsrc, DWORD dwTrans)
 {
-    return IDirectDrawSurface7_BltFast(CONVERT(This), x, y, CONVERT(pSrcSurf),
-				       prcSrc, dwTrans);
+	DX_WINDBG_trace();
+
+   	return Main_DDrawSurface_BltFast((LPDIRECTDRAWSURFACE7) iface, dstx, dsty, 
+		                             (LPDIRECTDRAWSURFACE7)src, rsrc, dwTrans);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_DeleteAttachedSurface(LPDIRECTDRAWSURFACE3 This,
-					      DWORD dwFlags,
-					      LPDIRECTDRAWSURFACE3 pAttached)
+HRESULT WINAPI
+Thunk_DDrawSurface3_DeleteAttachedSurface(LPDIRECTDRAWSURFACE3 iface, DWORD dwFlags, LPDIRECTDRAWSURFACE3 pAttached)
 {
-    return IDirectDrawSurface7_DeleteAttachedSurface(CONVERT(This), dwFlags,
-						     CONVERT(pAttached));
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_DeleteAttachedSurface((LPDIRECTDRAWSURFACE7) iface, dwFlags, 
+		                                           (LPDIRECTDRAWSURFACE7) pAttached);
 }
 
-struct callback_info
-{
-    LPDDENUMSURFACESCALLBACK callback;
-    LPVOID context;
-};
 
-static HRESULT CALLBACK
-EnumCallback(LPDIRECTDRAWSURFACE7 iface, LPDDSURFACEDESC2 pDDSD,
-	     LPVOID context)
-{
-    const struct callback_info* info = context;
 
-#if 0
-    /* This is an outgoing conversion so we have to do it. */
-    DDSURFACEDESC ddsd;
-    memset(&ddsd, 0, sizeof(ddsd));
-    ddsd.dwSize = sizeof(ddsd);
-    DDRAW_Convert_DDSURFACEDESC_2_To_1(pDDSD, &ddsd);
-#endif
-
-    /* the LPDDSURFACEDESC2 -> LPDDSURFACEDESC coercion is safe, since
-     * the data format is compatible with older enum procs */
-    return info->callback((LPDIRECTDRAWSURFACE)CONVERT_REV(iface), (LPDDSURFACEDESC)pDDSD,
-			  info->context);
-}
-
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_EnumAttachedSurfaces(LPDIRECTDRAWSURFACE3 This,
+HRESULT WINAPI
+Thunk_DDrawSurface3_EnumAttachedSurfaces(LPDIRECTDRAWSURFACE3 iface,
 					     LPVOID context,
-					     LPDDENUMSURFACESCALLBACK callback)
-{
-    struct callback_info info;
+					     LPDDENUMSURFACESCALLBACK cb)
+{   
+    DX_WINDBG_trace();
 
-    info.callback = callback;
-    info.context  = context;
-
-    return IDirectDrawSurface7_EnumAttachedSurfaces(CONVERT(This), &info,
-						    EnumCallback);
+    return Main_DDrawSurface_EnumAttachedSurfaces((LPDIRECTDRAWSURFACE7) iface, 
+		                                           context, (LPDDENUMSURFACESCALLBACK7)cb);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_EnumOverlayZOrders(LPDIRECTDRAWSURFACE3 This,
+HRESULT WINAPI
+Thunk_DDrawSurface3_EnumOverlayZOrders(LPDIRECTDRAWSURFACE3 iface,
 					   DWORD dwFlags, LPVOID context,
-					   LPDDENUMSURFACESCALLBACK callback)
+					   LPDDENUMSURFACESCALLBACK cb)
 {
-    struct callback_info info;
+    DX_WINDBG_trace();
 
-    info.callback = callback;
-    info.context  = context;
-
-    return IDirectDrawSurface7_EnumOverlayZOrders(CONVERT(This), dwFlags,
-						  &info, EnumCallback);
+	return Main_DDrawSurface_EnumOverlayZOrders( (LPDIRECTDRAWSURFACE7) iface, dwFlags, context, 
+		                                         (LPDDENUMSURFACESCALLBACK7) cb);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_Flip(LPDIRECTDRAWSURFACE3 This,
-			     LPDIRECTDRAWSURFACE3 pOverride, DWORD dwFlags)
+HRESULT WINAPI
+Thunk_DDrawSurface3_Flip(LPDIRECTDRAWSURFACE3 iface,
+			     LPDIRECTDRAWSURFACE3 lpDDSurfaceTargetOverride, DWORD dwFlags)
 {
-    return IDirectDrawSurface7_Flip(CONVERT(This), CONVERT(pOverride),
-				    dwFlags);
+	DX_WINDBG_trace();
+
+	return Main_DDrawSurface_Flip( (LPDIRECTDRAWSURFACE7)iface, (LPDIRECTDRAWSURFACE7) lpDDSurfaceTargetOverride,
+		                            dwFlags);  
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetAttachedSurface(LPDIRECTDRAWSURFACE3 This,
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetAttachedSurface(LPDIRECTDRAWSURFACE3 iface,
 					   LPDDSCAPS pCaps,
 					   LPDIRECTDRAWSURFACE3* ppAttached)
 {
-    DDSCAPS2 caps;
-    LPDIRECTDRAWSURFACE7 pAttached7;
-    HRESULT hr;
+    DDSCAPS2 caps;    
+	HRESULT hr = DDERR_GENERIC;
 
-    caps.dwCaps  = pCaps->dwCaps;
-    caps.dwCaps2 = 0;
-    caps.dwCaps3 = 0;
-    caps.dwCaps4 = 0;
+	DX_WINDBG_trace();
 
-    hr = IDirectDrawSurface7_GetAttachedSurface(CONVERT(This), &caps,
-						&pAttached7);
-    if (FAILED(hr)) return hr;
+	ZeroMemory(&caps,sizeof(DDSCAPS2));
 
-    *ppAttached = CONVERT_REV(pAttached7);
+	if (pCaps != NULL)
+	{
+        caps.dwCaps  = pCaps->dwCaps;
+    
+	    hr = Main_DDrawSurface_GetAttachedSurface( (LPDIRECTDRAWSURFACE7) iface, 
+		                                       &caps, (LPDIRECTDRAWSURFACE7 *) ppAttached);
+	    pCaps->dwCaps = caps.dwCaps;
+	}
+	else
+	{
+		hr = Main_DDrawSurface_GetAttachedSurface( (LPDIRECTDRAWSURFACE7) iface, 
+		                                       NULL, (LPDIRECTDRAWSURFACE7 *) ppAttached);
+	}
+
     return hr;
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetBltStatus(LPDIRECTDRAWSURFACE3 This, DWORD dwFlags)
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetBltStatus(LPDIRECTDRAWSURFACE3 iface, DWORD dwFlags)
 {
-    return IDirectDrawSurface7_GetBltStatus(CONVERT(This), dwFlags);
+    DX_WINDBG_trace();
+
+	return Main_DDrawSurface_GetBltStatus((LPDIRECTDRAWSURFACE7) iface, dwFlags);    
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetCaps(LPDIRECTDRAWSURFACE3 This, LPDDSCAPS pCaps)
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetCaps(LPDIRECTDRAWSURFACE3 iface, LPDDSCAPS pCaps)
 {
     DDSCAPS2 caps;
-    HRESULT hr;
+    HRESULT hr = DDERR_GENERIC;
 
-    hr = IDirectDrawSurface7_GetCaps(CONVERT(This), &caps);
-    if (FAILED(hr)) return hr;
+	DX_WINDBG_trace();
 
-    pCaps->dwCaps = caps.dwCaps;
+	ZeroMemory(&caps,sizeof(DDSCAPS2));
+	
+	if (pCaps != NULL)
+	{
+        hr = Main_DDrawSurface_GetCaps((LPDIRECTDRAWSURFACE7) iface, &caps);    
+        pCaps->dwCaps = caps.dwCaps;
+	}
+	else
+	{
+		hr = Main_DDrawSurface_GetCaps((LPDIRECTDRAWSURFACE7) iface, NULL);
+	}
+
     return hr;
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetClipper(LPDIRECTDRAWSURFACE3 This,
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetClipper(LPDIRECTDRAWSURFACE3 iface,
 				   LPDIRECTDRAWCLIPPER* ppClipper)
 {
-    return IDirectDrawSurface7_GetClipper(CONVERT(This), ppClipper);
+	DX_WINDBG_trace();
+
+	return Main_DDrawSurface_GetClipper((LPDIRECTDRAWSURFACE7) iface, ppClipper);    
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetColorKey(LPDIRECTDRAWSURFACE3 This, DWORD dwFlags,
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetColorKey(LPDIRECTDRAWSURFACE3 iface, DWORD dwFlags,
 				    LPDDCOLORKEY pCKey)
 {
-    return IDirectDrawSurface7_GetColorKey(CONVERT(This), dwFlags, pCKey);
+	DX_WINDBG_trace();
+
+	return Main_DDrawSurface_GetColorKey( (LPDIRECTDRAWSURFACE7) iface, dwFlags, pCKey);    
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetDC(LPDIRECTDRAWSURFACE3 This, HDC* phDC)
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetDC(LPDIRECTDRAWSURFACE3 iface, HDC* phDC)
 {
-    return IDirectDrawSurface7_GetDC(CONVERT(This), phDC);
+	DX_WINDBG_trace();
+
+	return Main_DDrawSurface_GetDC((LPDIRECTDRAWSURFACE7) iface, phDC);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetFlipStatus(LPDIRECTDRAWSURFACE3 This, DWORD dwFlags)
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetFlipStatus(LPDIRECTDRAWSURFACE3 iface, DWORD dwFlags)
 {
-    return IDirectDrawSurface7_GetFlipStatus(CONVERT(This), dwFlags);
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_GetFlipStatus((LPDIRECTDRAWSURFACE7) iface, dwFlags);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetOverlayPosition(LPDIRECTDRAWSURFACE3 This, LPLONG pX,
-				       LPLONG pY)
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetOverlayPosition(LPDIRECTDRAWSURFACE3 iface, LPLONG pX, LPLONG pY)
 {
-    return IDirectDrawSurface7_GetOverlayPosition(CONVERT(This), pX, pY);
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_GetOverlayPosition((LPDIRECTDRAWSURFACE7) iface,  pX, pY);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetPalette(LPDIRECTDRAWSURFACE3 This,
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetPalette(LPDIRECTDRAWSURFACE3 iface,
 				   LPDIRECTDRAWPALETTE* ppPalette)
 {
-    return IDirectDrawSurface7_GetPalette(CONVERT(This), ppPalette);
+	DX_WINDBG_trace();
+
+	return Main_DDrawSurface_GetPalette((LPDIRECTDRAWSURFACE7) iface, ppPalette);    
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetPixelFormat(LPDIRECTDRAWSURFACE3 This,
-				       LPDDPIXELFORMAT pPixelFormat)
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetPixelFormat(LPDIRECTDRAWSURFACE3 iface,
+				       LPDDPIXELFORMAT pDDPixelFormat)
 {
-    return IDirectDrawSurface7_GetPixelFormat(CONVERT(This), pPixelFormat);
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_GetPixelFormat((LPDIRECTDRAWSURFACE7) iface, pDDPixelFormat);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetSurfaceDesc(LPDIRECTDRAWSURFACE3 This,
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetSurfaceDesc(LPDIRECTDRAWSURFACE3 iface,
 				       LPDDSURFACEDESC pDDSD)
 {
-    return IDirectDrawSurface7_GetSurfaceDesc(CONVERT(This),
-					      (LPDDSURFACEDESC2)pDDSD);
+    HRESULT retValue = DDERR_GENERIC;
+
+    DX_WINDBG_trace();		
+
+	if (pDDSD != NULL)
+	{
+	   DDSURFACEDESC2 pDDSD2;
+	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
+	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
+	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
+	   retValue = Main_DDrawSurface_GetSurfaceDesc((LPDIRECTDRAWSURFACE7) iface, &pDDSD2);
+       memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
+	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
+	}
+	else
+	{
+		retValue = Main_DDrawSurface_GetSurfaceDesc((LPDIRECTDRAWSURFACE7) iface, NULL);
+	}
+
+    return retValue;
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_Initialize(LPDIRECTDRAWSURFACE3 This, LPDIRECTDRAW pDD,
+HRESULT WINAPI
+Thunk_DDrawSurface3_Initialize(LPDIRECTDRAWSURFACE3 iface, LPDIRECTDRAW pDD,
 				   LPDDSURFACEDESC pDDSD)
 {
-    return IDirectDrawSurface7_Initialize(CONVERT(This), pDD,
-					  (LPDDSURFACEDESC2)pDDSD);
+	HRESULT retValue = DDERR_GENERIC;
+	DDSURFACEDESC2 pDDSD2;
+
+	DX_WINDBG_trace();
+
+	ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
+
+	if (pDDSD != NULL)
+	{
+	   DDSURFACEDESC2 pDDSD2;
+	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
+	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
+	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
+	   retValue = Main_DDrawSurface_Initialize((LPDIRECTDRAWSURFACE7) iface, pDD, &pDDSD2);
+       memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
+	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
+	}
+	else
+	{
+		retValue = Main_DDrawSurface_Initialize ((LPDIRECTDRAWSURFACE7) iface, pDD, NULL);
+
+	}
+
+    return retValue;
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_IsLost(LPDIRECTDRAWSURFACE3 This)
+HRESULT WINAPI
+Thunk_DDrawSurface3_IsLost(LPDIRECTDRAWSURFACE3 iface)
 {
-    return IDirectDrawSurface7_IsLost(CONVERT(This));
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_IsLost((LPDIRECTDRAWSURFACE7) iface);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_Lock(LPDIRECTDRAWSURFACE3 This, LPRECT pRect,
-			     LPDDSURFACEDESC pDDSD, DWORD dwFlags, HANDLE h)
+HRESULT WINAPI
+Thunk_DDrawSurface3_Lock(LPDIRECTDRAWSURFACE3 iface, LPRECT pRect,
+			     LPDDSURFACEDESC pDDSD, DWORD dwFlags, HANDLE events)
 {
-    return IDirectDrawSurface7_Lock(CONVERT(This), pRect,
-				    (LPDDSURFACEDESC2)pDDSD, dwFlags, h);
+	
+	HRESULT retValue = DDERR_GENERIC;
+	DDSURFACEDESC2 pDDSD2;
+
+	DX_WINDBG_trace();
+
+	ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
+
+	if (pDDSD != NULL)
+	{
+	   DDSURFACEDESC2 pDDSD2;
+	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
+	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
+	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
+	   retValue = Main_DDrawSurface_Lock ( (LPDIRECTDRAWSURFACE7) iface, pRect, &pDDSD2, dwFlags, events);
+       memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
+	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
+	}
+	else
+	{
+		retValue = Main_DDrawSurface_Lock ( (LPDIRECTDRAWSURFACE7) iface, pRect, NULL, dwFlags, events);
+	}
+
+    return retValue;
+
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_ReleaseDC(LPDIRECTDRAWSURFACE3 This, HDC hDC)
+HRESULT WINAPI
+Thunk_DDrawSurface3_ReleaseDC(LPDIRECTDRAWSURFACE3 iface, HDC hDC)
 {
-    return IDirectDrawSurface7_ReleaseDC(CONVERT(This), hDC);
+	DX_WINDBG_trace();
+
+	return Main_DDrawSurface_ReleaseDC((LPDIRECTDRAWSURFACE7) iface, hDC);    
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_Restore(LPDIRECTDRAWSURFACE3 This)
+HRESULT WINAPI
+Thunk_DDrawSurface3_Restore(LPDIRECTDRAWSURFACE3 iface)
 {
-    return IDirectDrawSurface7_Restore(CONVERT(This));
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_Restore((LPDIRECTDRAWSURFACE7) iface);    
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_SetClipper(LPDIRECTDRAWSURFACE3 This,
-				   LPDIRECTDRAWCLIPPER pClipper)
+HRESULT WINAPI
+Thunk_DDrawSurface3_SetClipper(LPDIRECTDRAWSURFACE3 iface, LPDIRECTDRAWCLIPPER pDDClipper)
 {
-    return IDirectDrawSurface7_SetClipper(CONVERT(This), pClipper);
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_SetClipper ((LPDIRECTDRAWSURFACE7) iface, pDDClipper);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_SetColorKey(LPDIRECTDRAWSURFACE3 This, DWORD dwFlags,
+HRESULT WINAPI
+Thunk_DDrawSurface3_SetColorKey(LPDIRECTDRAWSURFACE3 iface, DWORD dwFlags,
 				    LPDDCOLORKEY pCKey)
 {
-    return IDirectDrawSurface7_SetColorKey(CONVERT(This), dwFlags, pCKey);
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_SetColorKey ((LPDIRECTDRAWSURFACE7) iface, dwFlags, pCKey);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_SetOverlayPosition(LPDIRECTDRAWSURFACE3 This, LONG x,
-				       LONG y)
+HRESULT WINAPI
+Thunk_DDrawSurface3_SetOverlayPosition(LPDIRECTDRAWSURFACE3 iface, LONG X,LONG Y)
 {
-    return IDirectDrawSurface7_SetOverlayPosition(CONVERT(This), x, y);
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_SetOverlayPosition ((LPDIRECTDRAWSURFACE7) iface, X, Y);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_SetPalette(LPDIRECTDRAWSURFACE3 This,
+HRESULT WINAPI
+Thunk_DDrawSurface3_SetPalette(LPDIRECTDRAWSURFACE3 iface,
 				   LPDIRECTDRAWPALETTE pPalette)
 {
-    return IDirectDrawSurface7_SetPalette(CONVERT(This), pPalette);
+	DX_WINDBG_trace();
+
+	return Main_DDrawSurface_SetPalette ((LPDIRECTDRAWSURFACE7) iface, pPalette);    
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_Unlock(LPDIRECTDRAWSURFACE3 This, LPVOID data)
+/*
+HRESULT WINAPI
+Thunk_DDrawSurface3_Unlock(LPDIRECTDRAWSURFACE3 iface, LPRECT pRect)
 {
-    /* data might not be the LPRECT of later versions, so drop it. */
-    return IDirectDrawSurface7_Unlock(CONVERT(This), NULL);
-}
+	DX_WINDBG_trace();
+   
+	return Main_DDrawSurface_Unlock ((LPDIRECTDRAWSURFACE7) iface, pRect);    
+} */
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_UpdateOverlay(LPDIRECTDRAWSURFACE3 This, LPRECT prcSrc,
-				      LPDIRECTDRAWSURFACE3 pDstSurf,
-				      LPRECT prcDst, DWORD dwFlags,
-				      LPDDOVERLAYFX pFX)
+HRESULT WINAPI
+Thunk_DDrawSurface3_Unlock(LPVOID iface, LPVOID pRect)
 {
-    return IDirectDrawSurface7_UpdateOverlay(CONVERT(This), prcSrc,
-					     CONVERT(pDstSurf), prcDst,
-					     dwFlags, pFX);
+	DX_WINDBG_trace();
+	DX_STUB;
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_UpdateOverlayDisplay(LPDIRECTDRAWSURFACE3 This,
-					     DWORD dwFlags)
+HRESULT WINAPI
+Thunk_DDrawSurface3_UpdateOverlay(LPDIRECTDRAWSURFACE3 iface, LPRECT pSrcRect, LPDIRECTDRAWSURFACE3 pDstSurface,
+				                  LPRECT pDstRect, DWORD dwFlags, LPDDOVERLAYFX pFX)
 {
-    return IDirectDrawSurface7_UpdateOverlayDisplay(CONVERT(This), dwFlags);
+    
+	DX_WINDBG_trace();
+
+	return Main_DDrawSurface_UpdateOverlay ( (LPDIRECTDRAWSURFACE7) iface, pSrcRect, 
+		                                     (LPDIRECTDRAWSURFACE7) pDstSurface, pDstRect, dwFlags, pFX);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_UpdateOverlayZOrder(LPDIRECTDRAWSURFACE3 This,
+HRESULT WINAPI
+Thunk_DDrawSurface3_UpdateOverlayDisplay(LPDIRECTDRAWSURFACE3 iface, DWORD dwFlags)
+{
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_UpdateOverlayDisplay((LPDIRECTDRAWSURFACE7) iface, dwFlags);
+}
+
+HRESULT WINAPI
+Thunk_DDrawSurface3_UpdateOverlayZOrder(LPDIRECTDRAWSURFACE3 iface,
 					    DWORD dwFlags,
 					    LPDIRECTDRAWSURFACE3 pSurfReference)
 {
-    return IDirectDrawSurface7_UpdateOverlayZOrder(CONVERT(This), dwFlags,
-						   CONVERT(pSurfReference));
+	DX_WINDBG_trace();
+    return Main_DDrawSurface_UpdateOverlayZOrder((LPDIRECTDRAWSURFACE7) iface, dwFlags,
+						                         (LPDIRECTDRAWSURFACE7) pSurfReference);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_GetDDInterface(LPDIRECTDRAWSURFACE3 This, LPVOID* ppDD)
+HRESULT WINAPI
+Thunk_DDrawSurface3_GetDDInterface(LPDIRECTDRAWSURFACE3 iface, LPVOID* ppDD)
 {
-    return IDirectDrawSurface7_GetDDInterface(CONVERT(This), ppDD);
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_GetDDInterface((LPDIRECTDRAWSURFACE7) iface, ppDD);   
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_PageLock(LPDIRECTDRAWSURFACE3 This, DWORD dwFlags)
+HRESULT WINAPI
+Thunk_DDrawSurface3_PageLock(LPDIRECTDRAWSURFACE3 iface, DWORD dwFlags)
 {
-    return IDirectDrawSurface7_PageLock(CONVERT(This), dwFlags);
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_PageLock((LPDIRECTDRAWSURFACE7) iface, dwFlags);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_PageUnlock(LPDIRECTDRAWSURFACE3 This, DWORD dwFlags)
+HRESULT WINAPI
+Thunk_DDrawSurface3_PageUnlock(LPDIRECTDRAWSURFACE3 iface, DWORD dwFlags)
 {
-    return IDirectDrawSurface7_PageUnlock(CONVERT(This), dwFlags);
+	DX_WINDBG_trace();
+
+    return Main_DDrawSurface_PageUnlock((LPDIRECTDRAWSURFACE7) iface, dwFlags);
 }
 
-static HRESULT WINAPI
-IDirectDrawSurface3Impl_SetSurfaceDesc(LPDIRECTDRAWSURFACE3 This,
+HRESULT WINAPI
+Thunk_DDrawSurface3_SetSurfaceDesc(LPDIRECTDRAWSURFACE3 iface,
 				       LPDDSURFACEDESC pDDSD, DWORD dwFlags)
 {
-    return IDirectDrawSurface7_SetSurfaceDesc(CONVERT(This),
-					      (LPDDSURFACEDESC2)pDDSD,
-					      dwFlags);
+	HRESULT retValue = DDERR_GENERIC;
+
+    DX_WINDBG_trace();		
+
+	if (pDDSD != NULL)
+	{
+	   DDSURFACEDESC2 pDDSD2;
+	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
+	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
+	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
+	   retValue = Main_DDrawSurface_SetSurfaceDesc((LPDIRECTDRAWSURFACE7) iface, &pDDSD2, dwFlags);
+       memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
+	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
+	}
+	else
+	{		
+		retValue = Main_DDrawSurface_SetSurfaceDesc((LPDIRECTDRAWSURFACE7) iface, NULL, dwFlags);
+	}
+	 
+
+    return retValue;
 }
 
-IDirectDrawSurface3Vtbl DDRAW_IDDS3_Thunk_VTable =
+IDirectDrawSurface3Vtbl DirectDrawSurface3_VTable =
 {
-    IDirectDrawSurface3Impl_QueryInterface,
-    IDirectDrawSurface3Impl_AddRef,
-    IDirectDrawSurface3Impl_Release,
-    IDirectDrawSurface3Impl_AddAttachedSurface,
-    IDirectDrawSurface3Impl_AddOverlayDirtyRect,
-    IDirectDrawSurface3Impl_Blt,
-    IDirectDrawSurface3Impl_BltBatch,
-    IDirectDrawSurface3Impl_BltFast,
-    IDirectDrawSurface3Impl_DeleteAttachedSurface,
-    IDirectDrawSurface3Impl_EnumAttachedSurfaces,
-    IDirectDrawSurface3Impl_EnumOverlayZOrders,
-    IDirectDrawSurface3Impl_Flip,
-    IDirectDrawSurface3Impl_GetAttachedSurface,
-    IDirectDrawSurface3Impl_GetBltStatus,
-    IDirectDrawSurface3Impl_GetCaps,
-    IDirectDrawSurface3Impl_GetClipper,
-    IDirectDrawSurface3Impl_GetColorKey,
-    IDirectDrawSurface3Impl_GetDC,
-    IDirectDrawSurface3Impl_GetFlipStatus,
-    IDirectDrawSurface3Impl_GetOverlayPosition,
-    IDirectDrawSurface3Impl_GetPalette,
-    IDirectDrawSurface3Impl_GetPixelFormat,
-    IDirectDrawSurface3Impl_GetSurfaceDesc,
-    IDirectDrawSurface3Impl_Initialize,
-    IDirectDrawSurface3Impl_IsLost,
-    IDirectDrawSurface3Impl_Lock,
-    IDirectDrawSurface3Impl_ReleaseDC,
-    IDirectDrawSurface3Impl_Restore,
-    IDirectDrawSurface3Impl_SetClipper,
-    IDirectDrawSurface3Impl_SetColorKey,
-    IDirectDrawSurface3Impl_SetOverlayPosition,
-    IDirectDrawSurface3Impl_SetPalette,
-    IDirectDrawSurface3Impl_Unlock,
-    IDirectDrawSurface3Impl_UpdateOverlay,
-    IDirectDrawSurface3Impl_UpdateOverlayDisplay,
-    IDirectDrawSurface3Impl_UpdateOverlayZOrder,
-    IDirectDrawSurface3Impl_GetDDInterface,
-    IDirectDrawSurface3Impl_PageLock,
-    IDirectDrawSurface3Impl_PageUnlock,
-    IDirectDrawSurface3Impl_SetSurfaceDesc
+    Thunk_DDrawSurface3_QueryInterface,
+    Thunk_DDrawSurface3_AddRef,
+    Thunk_DDrawSurface3_Release,
+    Thunk_DDrawSurface3_AddAttachedSurface,
+    Thunk_DDrawSurface3_AddOverlayDirtyRect,
+    Thunk_DDrawSurface3_Blt,
+    Thunk_DDrawSurface3_BltBatch,
+    Thunk_DDrawSurface3_BltFast,
+    Thunk_DDrawSurface3_DeleteAttachedSurface,
+    Thunk_DDrawSurface3_EnumAttachedSurfaces,
+    Thunk_DDrawSurface3_EnumOverlayZOrders,
+    Thunk_DDrawSurface3_Flip,
+    Thunk_DDrawSurface3_GetAttachedSurface,
+    Thunk_DDrawSurface3_GetBltStatus,
+    Thunk_DDrawSurface3_GetCaps,
+    Thunk_DDrawSurface3_GetClipper,
+    Thunk_DDrawSurface3_GetColorKey,
+    Thunk_DDrawSurface3_GetDC,
+    Thunk_DDrawSurface3_GetFlipStatus,
+    Thunk_DDrawSurface3_GetOverlayPosition,
+    Thunk_DDrawSurface3_GetPalette,
+    Thunk_DDrawSurface3_GetPixelFormat,
+    Thunk_DDrawSurface3_GetSurfaceDesc,
+    Thunk_DDrawSurface3_Initialize,
+    Thunk_DDrawSurface3_IsLost,
+    Thunk_DDrawSurface3_Lock,
+    Thunk_DDrawSurface3_ReleaseDC,
+    Thunk_DDrawSurface3_Restore,
+    Thunk_DDrawSurface3_SetClipper,
+    Thunk_DDrawSurface3_SetColorKey,
+    Thunk_DDrawSurface3_SetOverlayPosition,
+    Thunk_DDrawSurface3_SetPalette,
+    Thunk_DDrawSurface3_Unlock,
+    Thunk_DDrawSurface3_UpdateOverlay,
+    Thunk_DDrawSurface3_UpdateOverlayDisplay,
+    Thunk_DDrawSurface3_UpdateOverlayZOrder,
+    Thunk_DDrawSurface3_GetDDInterface,
+    Thunk_DDrawSurface3_PageLock,
+    Thunk_DDrawSurface3_PageUnlock,
+    Thunk_DDrawSurface3_SetSurfaceDesc
 };

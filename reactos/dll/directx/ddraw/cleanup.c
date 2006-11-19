@@ -15,37 +15,11 @@
 VOID 
 Cleanup(LPDIRECTDRAW7 iface) 
 {
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-
-	if (This->mDDrawGlobal.hDD != 0)
-	{
-     DdDeleteDirectDrawObject (&This->mDDrawGlobal);
-	}
-
-	if (This->mpTextures != NULL)
-	{
-	  DxHeapMemFree(This->mpTextures);
-	}
-
-	if (This->mpFourCC != NULL)
-	{
-	  DxHeapMemFree(This->mpFourCC);
-	}
-
-	if (This->mpvmList != NULL)
-	{
-	  DxHeapMemFree(This->mpvmList);
-	}
-
-	if (This->mpModeInfos != NULL)
-	{
-	  DxHeapMemFree(This->mpModeInfos);
-	}
-
-	if (This->hdc != NULL)
-	{
-	  DeleteDC(This->hdc);
-	}
+   /* FIXME 
+      free all memory and delete all dx stuff
+   */
         
 }
+
+
 

@@ -9,9 +9,10 @@
  *
  */
 
-#include <windows.h>
+
 #include "rosdraw.h"
-#include "d3dhal.h"
+
+#undef DirectDrawCreate
 
 CRITICAL_SECTION ddcs;
 
@@ -165,8 +166,7 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback,
     to get the xxxx end positions. 
  */
 
-HRESULT 
-WINAPI 
+HRESULT WINAPI 
 D3DParseUnknownCommand( LPVOID lpCmd, 
                         LPVOID *lpRetCmd)
 {
