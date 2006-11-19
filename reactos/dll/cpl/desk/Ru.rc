@@ -28,7 +28,7 @@ BEGIN
     LTEXT           "Список заставок:",IDC_STATIC,13,24,150,9
     CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER | 
-                    WS_BORDER | WS_TABSTOP,13,34,170,69
+                    LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,13,34,170,69
     PUSHBUTTON      "&Настройка...",IDC_SCREENS_SETTINGS,188,34,50,15,
                     WS_GROUP
     PUSHBUTTON      "Про&смотр",IDC_SCREENS_TESTSC,188,52,50,15

@@ -21,11 +21,11 @@ CAPTION "Screensaver"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "&Screensaver",IDC_SCREENS_DUMMY, 5, 7, 238, 136
-    
+
     LTEXT           "Installed screensavers:",IDC_STATIC,13, 24, 150, 9
     CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,13, 34, 170, 69
+                    LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,13, 34, 170, 69
 
     PUSHBUTTON      "Se&ttings",IDC_SCREENS_SETTINGS,188, 34, 50, 15,WS_GROUP
     PUSHBUTTON      "Pre&view",IDC_SCREENS_TESTSC,188, 52, 50, 15
