@@ -391,6 +391,10 @@ IopLoadServiceModule(
 
    DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
 
+   /* FIXME: This check may be removed once the bug is fixed */
+   if (ServiceName->Buffer == NULL)
+      return STATUS_UNSUCCESSFUL;
+
    /*
     * Get information about the service.
     */

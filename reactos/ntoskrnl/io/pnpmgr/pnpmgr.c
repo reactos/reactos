@@ -2321,6 +2321,10 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       PLDR_DATA_TABLE_ENTRY ModuleObject;
       PDRIVER_OBJECT DriverObject;
 
+      /* FIXME: Remove this once the bug is fixed */
+      if (DeviceNode->ServiceName.Buffer == NULL)
+          DPRINT1("Weird DeviceNode %p having ServiceName->Buffer==NULL. Probable stack corruption or memory overwrite.\n", DeviceNode);
+
       Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
       if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
       {
