@@ -813,7 +813,7 @@ FrLdrMapImage(IN PIMAGE_NT_HEADERS NtHeader,
               IN PVOID Base)
 {
     PIMAGE_SECTION_HEADER Section;
-    ULONG SectionCount, SectionSize, i;
+    ULONG SectionCount, SectionSize;
     PVOID SourceSection, TargetSection;
     INT i;
 
