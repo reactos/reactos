@@ -61,16 +61,16 @@ DisplayBlackAndWhite(HWND hwnd,
             g = GetGValue(Val);
             r = GetBValue(Val);
 
-			// get the average color value
-			Val = (r+g+b)/3;
+            // get the average color value
+            Val = (r+g+b)/3;
 
-			// assign to RGB color			
-			Val = RGB(Val, Val, Val);
-			CopyMemory(&pBits[Count], 
+            // assign to RGB color            
+            Val = RGB(Val, Val, Val);
+            CopyMemory(&pBits[Count], 
                        &Val, 
                        4);
 
-			Count+=4;
+            Count+=4;
         }
     }
 
@@ -153,17 +153,17 @@ DisplayInvertedColors(HWND hwnd,
                        &pBits[Count],
                        4);
 
-			b = 255 - GetRValue(Val);
-			g = 255 - GetGValue(Val);
-			r = 255 - GetBValue(Val);
-			
-			Val = RGB(b, g, r);
+            b = 255 - GetRValue(Val);
+            g = 255 - GetGValue(Val);
+            r = 255 - GetBValue(Val);
+            
+            Val = RGB(b, g, r);
 
-			CopyMemory(&pBits[Count], 
+            CopyMemory(&pBits[Count], 
                        &Val, 
                        4);
 
-			Count+=4;
+            Count+=4;
         }
     }
 

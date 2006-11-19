@@ -447,7 +447,7 @@ FloatToolbarWndProc(HWND hwnd,
         break;
 
         case WM_CLOSE:
-			ShowHideWindow(FltInfo->hSelf);
+            ShowHideWindow(FltInfo->hSelf);
         break;
 
         case WM_COMMAND:
