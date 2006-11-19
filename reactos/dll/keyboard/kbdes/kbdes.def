@@ -1,4 +1,4 @@
 LIBRARY kbdes.dll
 
 EXPORTS
-KbdLayerDescriptor@0
+KbdLayerDescriptor

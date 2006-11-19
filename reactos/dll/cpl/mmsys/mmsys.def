@@ -1,6 +1,6 @@
 LIBRARY mmsys.cpl
 
 EXPORTS
-CPlApplet@16
+CPlApplet
 
 ; EOF
