@@ -74,7 +74,12 @@ EXTERN(_Int386)
 	movl	0x0c(%esp),%eax
 	movl	%eax,Int386_regsout
 
+	/* Save all registers + segment registers */
 	pushal
+	pushw	%ds
+	pushw	%es
+	pushw	%fs
+	pushw	%gs
 
 	/* Copy the input regs to our variables */
 	movl	$Int386_REGS,%edi
@@ -147,6 +152,11 @@ Int386_vector_opcode:
 	rep
 	movsb
 
+	/* Restore segment and all other registers */
+	popw	%gs
+	popw	%fs
+	popw	%es
+	popw	%ds
 	popal
 
 	/* Get return value */

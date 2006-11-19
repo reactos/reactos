@@ -84,7 +84,7 @@ EXTERN(switch_to_prot)
 	/* Of course CS has to already be valid. */
 	/* We are currently in real-mode so we */
 	/* need real-mode segment values. */
-	movw	$0x0000,%ax
+	xorw	%ax,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%fs
