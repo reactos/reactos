@@ -9878,6 +9878,7 @@ NTAPI
 PsTerminateSystemThread(
   IN NTSTATUS  ExitStatus);
 
+extern NTSYSAPI PEPROCESS PsInitialSystemProcess;
 
 
 /** Security reference monitor routines **/
