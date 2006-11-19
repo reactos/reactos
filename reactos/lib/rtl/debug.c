@@ -270,7 +270,7 @@ DbgPrintReturnControlC(PCH Format,
  */
 ULONG
 NTAPI
-DbgPrompt(PCH OutputString,
+DbgPrompt(PCCH OutputString,
           PCH InputString,
           ULONG InputSize)
 {
