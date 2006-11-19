@@ -395,6 +395,7 @@ extern POBJECT_TYPE NTSYSAPI IoFileObjectType;
 extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI LpcPortObjectType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
+extern POBJECT_TYPE NTSYSAPI PsProcessType;
 
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
 extern volatile CCHAR NTSYSAPI KeNumberProcessors;

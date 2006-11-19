@@ -17,11 +17,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
+#define _NTSYSTEM_
 #include <freeldr.h>
 
 #define NDEBUG
 #include <debug.h>
+#undef DbgPrint
 
 /* Base Addres of Kernel in Physical Memory */
 #define KERNEL_BASE_PHYS 0x200000
@@ -130,6 +131,15 @@ extern ULONG_PTR hyperspace_pagetable_pae;
 extern ULONG_PTR pagedirtable_pae;
 extern PAGE_DIRECTORY_X64 apic_pagetable_pae;
 extern PAGE_DIRECTORY_X64 kpcr_pagetable_pae;
+
+extern CHAR szHalName[1024];
+
+PIMAGE_BASE_RELOCATION
+NTAPI
+LdrProcessRelocationBlockLongLong(IN ULONG_PTR Address,
+                                  IN ULONG Count,
+                                  IN PUSHORT TypeOffset,
+                                  IN LONGLONG Delta);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -526,6 +536,319 @@ FrLdrSetupPageDirectory(VOID)
     return;
 }
 
+PVOID
+NTAPI
+LdrPEGetExportByName(PVOID BaseAddress,
+                     PUCHAR SymbolName,
+                     USHORT Hint)
+{
+    PIMAGE_EXPORT_DIRECTORY ExportDir;
+    PULONG * ExFunctions;
+    PULONG * ExNames;
+    USHORT * ExOrdinals;
+    PVOID ExName;
+    ULONG Ordinal;
+    PVOID Function;
+    LONG minn, maxn, mid, res;
+    ULONG ExportDirSize;
+
+    /* HAL and NTOS use a virtual address, switch it to physical mode */
+    if ((ULONG_PTR)BaseAddress & 0x80000000)
+    {
+        BaseAddress = (PVOID)((ULONG_PTR)BaseAddress - KSEG0_BASE + 0x200000);
+    }
+
+    ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+        RtlImageDirectoryEntryToData(BaseAddress,
+                                     TRUE,
+                                     IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                     &ExportDirSize);
+    if (!ExportDir)
+    {
+        DbgPrint("LdrPEGetExportByName(): no export directory!\n");
+        return NULL;
+    }
+
+    /* The symbol names may be missing entirely */
+    if (!ExportDir->AddressOfNames)
+    {
+        DbgPrint("LdrPEGetExportByName(): symbol names missing entirely\n");
+        return NULL;
+    }
+
+    /*
+    * Get header pointers
+    */
+    ExNames = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfNames);
+    ExOrdinals = (USHORT *)RVA(BaseAddress, ExportDir->AddressOfNameOrdinals);
+    ExFunctions = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfFunctions);
+
+    /*
+    * Check the hint first
+    */
+    if (Hint < ExportDir->NumberOfNames)
+    {
+        ExName = RVA(BaseAddress, ExNames[Hint]);
+        if (strcmp(ExName, (PCHAR)SymbolName) == 0)
+        {
+            Ordinal = ExOrdinals[Hint];
+            Function = RVA(BaseAddress, ExFunctions[Ordinal]);
+            if ((ULONG_PTR)Function >= (ULONG_PTR)ExportDir &&
+                (ULONG_PTR)Function < (ULONG_PTR)ExportDir + ExportDirSize)
+            {
+                Function = NULL;
+                if (Function == NULL)
+                {
+                    DbgPrint("LdrPEGetExportByName(): failed to find %s\n",SymbolName);
+                }
+                return Function;
+            }
+
+            if (Function != NULL) return Function;
+        }
+    }
+
+    /*
+    * Binary search
+    */
+    minn = 0;
+    maxn = ExportDir->NumberOfNames - 1;
+    while (minn <= maxn)
+    {
+        mid = (minn + maxn) / 2;
+
+        ExName = RVA(BaseAddress, ExNames[mid]);
+        res = strcmp(ExName, (PCHAR)SymbolName);
+        if (res == 0)
+        {
+            Ordinal = ExOrdinals[mid];
+            Function = RVA(BaseAddress, ExFunctions[Ordinal]);
+            if ((ULONG_PTR)Function >= (ULONG_PTR)ExportDir &&
+                (ULONG_PTR)Function < (ULONG_PTR)ExportDir + ExportDirSize)
+            {
+                Function = NULL;
+                if (Function == NULL)
+                {
+                    DbgPrint("LdrPEGetExportByName(): failed to find %s\n",SymbolName);
+                }
+                return Function;
+            }
+            if (Function != NULL)
+            {
+                return Function;
+            }
+        }
+        else if (res > 0)
+        {
+            maxn = mid - 1;
+        }
+        else
+        {
+            minn = mid + 1;
+        }
+    }
+
+    ExName = RVA(BaseAddress, ExNames[mid]);
+    DbgPrint("LdrPEGetExportByName(): failed to find %s\n",SymbolName);
+    return (PVOID)NULL;
+}
+
+NTSTATUS
+NTAPI
+LdrPEProcessImportDirectoryEntry(PVOID DriverBase,
+                                 PLOADER_MODULE LoaderModule,
+                                 PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory)
+{
+    PVOID* ImportAddressList;
+    PULONG FunctionNameList;
+
+    if (ImportModuleDirectory == NULL || ImportModuleDirectory->Name == 0)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Get the import address list. */
+    ImportAddressList = (PVOID*)RVA(DriverBase, ImportModuleDirectory->FirstThunk);
+
+    /* Get the list of functions to import. */
+    if (ImportModuleDirectory->OriginalFirstThunk != 0)
+    {
+        FunctionNameList = (PULONG)RVA(DriverBase, ImportModuleDirectory->OriginalFirstThunk);
+    }
+    else
+    {
+        FunctionNameList = (PULONG)RVA(DriverBase, ImportModuleDirectory->FirstThunk);
+    }
+
+    /* Walk through function list and fixup addresses. */
+    while (*FunctionNameList != 0L)
+    {
+        if ((*FunctionNameList) & 0x80000000)
+        {
+            DbgPrint("Failed to import ordinal from %s\n", LoaderModule->String);
+            return STATUS_UNSUCCESSFUL;
+        }
+        else
+        {
+            IMAGE_IMPORT_BY_NAME *pe_name;
+            pe_name = RVA(DriverBase, *FunctionNameList);
+            *ImportAddressList = LdrPEGetExportByName((PVOID)LoaderModule->ModStart, pe_name->Name, pe_name->Hint);
+
+            /* Fixup the address to be virtual */
+            *ImportAddressList = (PVOID)((ULONG_PTR)*ImportAddressList + (KSEG0_BASE - 0x200000));
+
+            //DbgPrint("Looked for: %s and found: %p\n", pe_name->Name, *ImportAddressList);
+            if ((*ImportAddressList) == NULL)
+            {
+                DbgPrint("Failed to import %s from %s\n", pe_name->Name, LoaderModule->String);
+                return STATUS_UNSUCCESSFUL;
+            }
+        }
+        ImportAddressList++;
+        FunctionNameList++;
+    }
+    return STATUS_SUCCESS;
+}
+
+PLOADER_MODULE
+NTAPI
+LdrGetModuleObject(PCHAR ModuleName)
+{
+    ULONG i;
+
+    for (i = 0; i < LoaderBlock.ModsCount; i++)
+    {
+        if (!_stricmp((PCHAR)reactos_modules[i].String, ModuleName))
+        {
+            return &reactos_modules[i];
+        }
+    }
+
+    return NULL;
+}
+
+BOOLEAN
+NTAPI
+FrLdrLoadHal(PCHAR szFileName, INT nPos);
+
+NTSTATUS
+NTAPI
+LdrPEGetOrLoadModule(PCHAR ModuleName,
+                     PCHAR ImportedName,
+                     PLOADER_MODULE* ImportedModule)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    *ImportedModule = LdrGetModuleObject(ImportedName);
+    if (*ImportedModule == NULL)
+    {
+        /*
+         * For now, we only support import-loading the HAL.
+         * Later, FrLdrLoadDriver should be made to share the same
+         * code, and we'll just call it instead.
+         */
+        if (!_stricmp(ImportedName, "hal.dll"))
+        {
+            /* Load the HAL */
+            FrLdrLoadHal(szHalName, 10);
+
+            /* Return the new module */
+            *ImportedModule = LdrGetModuleObject(ImportedName);
+            if (*ImportedModule == NULL)
+            {
+                DbgPrint("Error loading import: %s\n", ImportedName);
+                return STATUS_UNSUCCESSFUL;
+            }
+        }
+        else
+        {
+            DbgPrint("Don't yet support loading new modules from imports\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+        }
+    }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+LdrPEFixupImports(IN PVOID DllBase,
+                  IN PCHAR DllName)
+{
+    PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory;
+    PCHAR ImportedName;
+    NTSTATUS Status;
+    PLOADER_MODULE ImportedModule;
+    ULONG Size;
+
+    /*  Process each import module  */
+    ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
+        RtlImageDirectoryEntryToData(DllBase,
+                                     TRUE,
+                                     IMAGE_DIRECTORY_ENTRY_IMPORT,
+                                     &Size);
+    while (ImportModuleDirectory->Name)
+    {
+        /*  Check to make sure that import lib is kernel  */
+        ImportedName = (PCHAR) DllBase + ImportModuleDirectory->Name;
+        //DbgPrint("Processing imports for file: %s into file: %s\n", DllName, ImportedName);
+
+        Status = LdrPEGetOrLoadModule(DllName, ImportedName, &ImportedModule);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        //DbgPrint("Import Base: %p\n", ImportedModule->ModStart);
+        Status = LdrPEProcessImportDirectoryEntry(DllBase, ImportedModule, ImportModuleDirectory);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        //DbgPrint("Imports for file: %s into file: %s complete\n", DllName, ImportedName);
+        ImportModuleDirectory++;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+FrLdrMapImage(IN PIMAGE_NT_HEADERS NtHeader,
+              IN PVOID Base)
+{
+    PIMAGE_SECTION_HEADER Section;
+    ULONG SectionCount, SectionSize, i;
+    PVOID SourceSection, TargetSection;
+    INT i;
+
+    /* Load the first section */
+    Section = IMAGE_FIRST_SECTION(NtHeader);
+    SectionCount = NtHeader->FileHeader.NumberOfSections - 1;
+
+    /* Now go to the last section */
+    Section += SectionCount;
+
+    /* Walk each section backwards */
+    for (i = SectionCount; i >= 0; i--, Section--)
+    {
+        /* Get the disk location and the memory location, and the size */
+        SourceSection = RVA(Base, Section->PointerToRawData);
+        TargetSection = RVA(Base, Section->VirtualAddress);
+        SectionSize = Section->SizeOfRawData;
+
+        /* If the section is already mapped correctly, go to the next */
+        if (SourceSection == TargetSection) continue;
+
+        /* Load it into memory */
+        RtlMoveMemory(TargetSection, SourceSection, SectionSize);
+
+        /* Check for uninitialized data */
+        if (Section->SizeOfRawData < Section->Misc.VirtualSize)
+        {
+            /* Zero it out */
+            RtlZeroMemory(RVA(Base, Section->VirtualAddress +
+                                    Section->SizeOfRawData),
+                          Section->Misc.VirtualSize - Section->SizeOfRawData);
+        }
+    }
+}
+
 /*++
  * FrLdrMapKernel
  * INTERNAL
@@ -547,43 +870,18 @@ BOOLEAN
 NTAPI
 FrLdrMapKernel(FILE *KernelImage)
 {
-    PIMAGE_DOS_HEADER ImageHeader;
     PIMAGE_NT_HEADERS NtHeader;
-    PIMAGE_SECTION_HEADER Section;
-    ULONG SectionCount;
     ULONG ImageSize;
-    ULONG_PTR SourceSection;
-    ULONG_PTR TargetSection;
-    ULONG SectionSize;
-    INT i;
-    PIMAGE_DATA_DIRECTORY RelocationDDir;
-    PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
-    ULONG Count;
-    ULONG_PTR Address, MaxAddress;
-    PUSHORT TypeOffset;
-    ULONG_PTR Delta;
-    PUSHORT ShortPtr;
-    PULONG LongPtr;
+    PVOID LoadBase;
 
-    /* Allocate 1024 bytes for PE Header */
-    ImageHeader = (PIMAGE_DOS_HEADER)MmAllocateMemory(1024);
-
-    /* Make sure it was succesful */
-    if (ImageHeader == NULL) {
-
-        return FALSE;
-    }
+    /* Set the virtual (image) and physical (load) addresses */
+    LoadBase = (PVOID)KERNEL_BASE_PHYS;
 
     /* Load the first 1024 bytes of the kernel image so we can read the PE header */
-    if (!FsReadFile(KernelImage, 1024, NULL, ImageHeader)) {
-
-        /* Fail if we couldn't read */
-        MmFreeMemory(ImageHeader);
-        return FALSE;
-    }
+    if (!FsReadFile(KernelImage, 1024, NULL, LoadBase)) return FALSE;
 
     /* Now read the MZ header to get the offset to the PE Header */
-    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)ImageHeader + ImageHeader->e_lfanew);
+    NtHeader = RtlImageNtHeader(LoadBase);
 
     /* Get Kernel Base */
     KernelBase = NtHeader->OptionalHeader.ImageBase;
@@ -595,103 +893,22 @@ FrLdrMapKernel(FILE *KernelImage)
     /* Save the Image Size */
     ImageSize = NtHeader->OptionalHeader.SizeOfImage;
 
-    /* Free the Header */
-    MmFreeMemory(ImageHeader);
-
     /* Set the file pointer to zero */
     FsSetFilePointer(KernelImage, 0);
 
     /* Load the file image */
-    FsReadFile(KernelImage, ImageSize, NULL, (PVOID)KERNEL_BASE_PHYS);
+    FsReadFile(KernelImage, ImageSize, NULL, LoadBase);
 
-    /* Reload the NT Header */
-    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)KERNEL_BASE_PHYS + ImageHeader->e_lfanew);
-
-    /* Load the first section */
-    Section = IMAGE_FIRST_SECTION(NtHeader);
-    SectionCount = NtHeader->FileHeader.NumberOfSections - 1;
-
-    /* Now go to the last section */
-    Section += SectionCount;
-
-    /* Walk each section backwards */
-    for (i=(INT)SectionCount; i >= 0; i--, Section--) {
-
-        /* Get the disk location and the memory location, and the size */
-        SourceSection = RaToPa(Section->PointerToRawData);
-        TargetSection = RaToPa(Section->VirtualAddress);
-        SectionSize = Section->SizeOfRawData;
-
-        /* If the section is already mapped correctly, go to the next */
-        if (SourceSection == TargetSection) continue;
-
-        /* Load it into memory */
-        memmove((PVOID)TargetSection, (PVOID)SourceSection, SectionSize);
-
-        /* Check for unitilizated data */
-        if (Section->SizeOfRawData < Section->Misc.VirtualSize) {
-
-            /* Zero it out */
-            memset((PVOID)RaToPa(Section->VirtualAddress + Section->SizeOfRawData),
-                   0,
-                   Section->Misc.VirtualSize - Section->SizeOfRawData);
-        }
-    }
-
-    /* Get the Relocation Data Directory */
-    RelocationDDir = &NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
-
-    /* Get the Relocation Section Start and End*/
-    RelocationDir = (PIMAGE_BASE_RELOCATION)(KERNEL_BASE_PHYS + RelocationDDir->VirtualAddress);
-    RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDDir->Size);
+    /* Map it */
+    FrLdrMapImage(NtHeader, LoadBase);
 
     /* Calculate Difference between Real Base and Compiled Base*/
-    Delta = KernelBase - NtHeader->OptionalHeader.ImageBase;
-
-    /* Determine how far we shoudl relocate */
-    MaxAddress = KERNEL_BASE_PHYS + ImageSize;
-
-    /* Relocate until we've processed all the blocks */
-    while (RelocationDir < RelocationEnd && RelocationDir->SizeOfBlock > 0) {
-
-        /* See how many Relocation Blocks we have */
-        Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(USHORT);
-
-        /* Calculate the Address of this Directory */
-        Address = KERNEL_BASE_PHYS + RelocationDir->VirtualAddress;
-
-        /* Calculate the Offset of the Type */
-        TypeOffset = (PUSHORT)(RelocationDir + 1);
-
-        for (i = 0; i < (INT)Count; i++) {
-
-            ShortPtr = (PUSHORT)(Address + (*TypeOffset & 0xFFF));
-
-            switch (*TypeOffset >> 12) {
-
-                case IMAGE_REL_BASED_ABSOLUTE:
-                    break;
-
-                case IMAGE_REL_BASED_HIGH:
-                    *ShortPtr += HIWORD(Delta);
-                    break;
-
-                case IMAGE_REL_BASED_LOW:
-                    *ShortPtr += LOWORD(Delta);
-                    break;
-
-                case IMAGE_REL_BASED_HIGHLOW:
-                    LongPtr = (PULONG)ShortPtr;
-                    *LongPtr += Delta;
-                    break;
-            }
-
-            TypeOffset++;
-        }
-
-        /* Move to the next Relocation Table */
-        RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDir->SizeOfBlock);
-    }
+    LdrRelocateImageWithBias(LoadBase,
+                             KernelBase - (ULONG_PTR)LoadBase,
+                             "FreeLdr",
+                             STATUS_SUCCESS,
+                             STATUS_UNSUCCESSFUL,
+                             STATUS_UNSUCCESSFUL);
 
     /* Fill out Module Data Structure */
     reactos_modules[0].ModStart = KernelBase;
@@ -701,7 +918,65 @@ FrLdrMapKernel(FILE *KernelImage)
     LoaderBlock.ModsCount++;
 
     /* Increase the next Load Base */
-    NextModuleBase = ROUND_UP(KERNEL_BASE_PHYS + ImageSize, PAGE_SIZE);
+    NextModuleBase = ROUND_UP(LoadBase + ImageSize, PAGE_SIZE);
+
+    /*  Perform import fixups  */
+    LdrPEFixupImports(LoadBase, "ntoskrnl.exe");
+
+    /* Return Success */
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+FrLdrMapHal(FILE *HalImage)
+{
+    PIMAGE_NT_HEADERS NtHeader;
+    PVOID ImageBase, LoadBase;
+    ULONG ImageSize;
+
+    /* Set the virtual (image) and physical (load) addresses */
+    LoadBase = (PVOID)NextModuleBase;
+    ImageBase  = RVA(LoadBase , -KERNEL_BASE_PHYS + KSEG0_BASE);
+
+    /* Load the first 1024 bytes of the HAL image so we can read the PE header */
+    if (!FsReadFile(HalImage, 1024, NULL, LoadBase)) return FALSE;
+
+    /* Now read the MZ header to get the offset to the PE Header */
+    NtHeader = RtlImageNtHeader(LoadBase);
+
+    /* Save the Image Size */
+    ImageSize = NtHeader->OptionalHeader.SizeOfImage;
+
+    /* Set the file pointer to zero */
+    FsSetFilePointer(HalImage, 0);
+
+    /* Load the file image */
+    FsReadFile(HalImage, ImageSize, NULL, LoadBase);
+
+    /* Map it into virtual memory */
+    FrLdrMapImage(NtHeader, LoadBase);
+
+    /* Calculate Difference between Real Base and Compiled Base*/
+    LdrRelocateImageWithBias(LoadBase,
+                             (ULONG_PTR)ImageBase - (ULONG_PTR)LoadBase,
+                             "FreeLdr",
+                             STATUS_SUCCESS,
+                             STATUS_UNSUCCESSFUL,
+                             STATUS_UNSUCCESSFUL);
+
+    /* Fill out Module Data Structure */
+    reactos_modules[1].ModStart = (ULONG_PTR)ImageBase;
+    reactos_modules[1].ModEnd = (ULONG_PTR)ImageBase + ImageSize;
+    strcpy(reactos_module_strings[1], "hal.dll");
+    reactos_modules[1].String = (ULONG_PTR)reactos_module_strings[1];
+    LoaderBlock.ModsCount++;
+
+    /*  Perform import fixups  */
+    LdrPEFixupImports(LoadBase, "hal.dll");
+
+    /* Increase the next Load Base */
+    NextModuleBase = ROUND_UP(NextModuleBase + ImageSize, PAGE_SIZE);
 
     /* Return Success */
     return TRUE;
@@ -750,6 +1025,8 @@ FrLdrLoadModule(FILE *ModuleImage,
     /* Move to next memory block and increase Module Count */
     NextModuleBase = ROUND_UP(ModuleData->ModEnd, PAGE_SIZE);
     LoaderBlock.ModsCount++;
+//    DbgPrint("NextBase, ImageSize, ModStart, ModEnd %p %p %p %p\n",
+  //           NextModuleBase, LocalModuleSize, ModuleData->ModStart, ModuleData->ModEnd);
 
     /* Return Module Size if required */
     if (ModuleSize != NULL) {

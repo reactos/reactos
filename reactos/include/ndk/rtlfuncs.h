@@ -2495,7 +2495,7 @@ DbgPrintEx(
 ULONG
 NTAPI
 DbgPrompt(
-    IN PCH PromptString,
+    IN PCCH PromptString,
     OUT PCH OutputString,
     IN ULONG OutputSize
 );

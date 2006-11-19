@@ -15,9 +15,6 @@
 
 /* GLOBALS *****************************************************************/
 
-extern LDR_DATA_TABLE_ENTRY NtoskrnlModuleObject;
-extern LDR_DATA_TABLE_ENTRY HalModuleObject;
-
 ULONG MmUserProbeAddress = 0;
 PVOID MmHighestUserAddress = NULL;
 PBOOLEAN Mm64BitPhysicalAddress = FALSE;
@@ -370,38 +367,64 @@ MmSetAddressRangeModified (
  * @implemented
  */
 PVOID
-STDCALL
-MmGetSystemRoutineAddress (
-    IN PUNICODE_STRING SystemRoutineName
-    )
+NTAPI
+MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
 {
-  PVOID ProcAddress;
-  ANSI_STRING AnsiRoutineName;
-  NTSTATUS Status;
+    PVOID ProcAddress;
+    ANSI_STRING AnsiRoutineName;
+    NTSTATUS Status;
+    PLIST_ENTRY NextEntry;
+    extern LIST_ENTRY ModuleListHead;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    BOOLEAN Found = FALSE;
+    UNICODE_STRING KernelName = RTL_CONSTANT_STRING(L"ntoskrnl.exe");
+    UNICODE_STRING HalName = RTL_CONSTANT_STRING(L"hal.dll");
 
-  if(!NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiRoutineName,
-                                              SystemRoutineName,
-                                              TRUE)))
-  {
-    return NULL;
-  }
+    /* Convert routine to ansi name */
+    Status = RtlUnicodeStringToAnsiString(&AnsiRoutineName,
+                                          SystemRoutineName,
+                                          TRUE);
+    if (!NT_SUCCESS(Status)) return NULL;
 
-  Status = LdrGetProcedureAddress(NtoskrnlModuleObject.DllBase,
-                                  &AnsiRoutineName,
-                                  0,
-                                  &ProcAddress);
+    /* Loop the loaded module list */
+    NextEntry = ModuleListHead.Flink;
+    while (NextEntry != &ModuleListHead)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
 
-  if(!NT_SUCCESS(Status))
-  {
-    Status = LdrGetProcedureAddress(HalModuleObject.DllBase,
-                                    &AnsiRoutineName,
-                                    0,
-                                    &ProcAddress);
-  }
+        /* Check if it's the kernel or HAL */
+        if (RtlEqualUnicodeString(&KernelName, &LdrEntry->BaseDllName, TRUE))
+        {
+            /* Found it */
+            Found = TRUE;
+        }
+        else if (RtlEqualUnicodeString(&HalName, &LdrEntry->BaseDllName, TRUE))
+        {
+            /* Found it */
+            Found = TRUE;
+        }
 
-  RtlFreeAnsiString(&AnsiRoutineName);
+        /* Check if we found a valid binary */
+        if (Found)
+        {
+            /* Find the procedure name */
+            Status = LdrGetProcedureAddress(LdrEntry->DllBase,
+                                            &AnsiRoutineName,
+                                            0,
+                                            &ProcAddress);
+            break;
+        }
 
-  return (NT_SUCCESS(Status) ? ProcAddress : NULL);
+        /* Keep looping */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Free the string and return */
+    RtlFreeAnsiString(&AnsiRoutineName);
+    return (NT_SUCCESS(Status) ? ProcAddress : NULL);
 }
 
 NTSTATUS

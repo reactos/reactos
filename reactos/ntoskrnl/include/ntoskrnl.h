@@ -13,6 +13,8 @@
 
 /* DDK/IFS/NDK Headers */
 #include <ntifs.h>
+#undef _KPROCESS
+#undef _EPROCESS
 #include <wdmguid.h>
 #include <arc/arc.h>
 #include <ntndk.h>

@@ -932,6 +932,8 @@ ExPhase2Init(PVOID Context)
 
     /* Unmap Low memory, and initialize the MPW and Balancer Thread */
     MmInit3();
+    extern ULONG Guard;
+    ASSERT(Guard == 0xCACA1234);
 
     /* Initialize VDM support */
     KeI386VdmInitialize();

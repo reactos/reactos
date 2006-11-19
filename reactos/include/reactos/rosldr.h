@@ -29,14 +29,14 @@ typedef struct _ROS_LOADER_PARAMETER_BLOCK
     ULONG MemLower;
     ULONG MemHigher;
     ULONG BootDevice;
-    ULONG CommandLine;
+    PCHAR CommandLine;
     ULONG ModsCount;
-    ULONG ModsAddr;
+    PLOADER_MODULE ModsAddr;
     UCHAR Syms[12];
     ULONG MmapLength;
     ULONG MmapAddr;
     ULONG DrivesCount;
-    ULONG DrivesAddr;
+    PARC_DISK_SIGNATURE DrivesAddr;
     ULONG ConfigTable;
     ULONG BootLoaderName;
     ULONG PageDirectoryStart;

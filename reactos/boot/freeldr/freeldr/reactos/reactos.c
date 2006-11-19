@@ -33,7 +33,7 @@ memory_map_t			reactos_memory_map[32];		// Memory map
 ARC_DISK_SIGNATURE      reactos_arc_disk_info[32]; // ARC Disk Information
 char                    reactos_arc_strings[32][256];
 unsigned long           reactos_disk_count = 0;
-
+	CHAR  szHalName[1024];
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
 
 static BOOLEAN
@@ -84,6 +84,58 @@ FrLdrLoadKernel(PCHAR szFileName,
     return(TRUE);
 }
 
+BOOLEAN
+NTAPI
+FrLdrMapHal(FILE *KernelImage);
+
+BOOLEAN
+NTAPI
+FrLdrLoadHal(PCHAR szFileName,
+             INT nPos)
+{
+    PFILE FilePointer;
+    PCHAR szShortName;
+    CHAR szBuffer[256];
+
+    /* Extract Kernel filename without path */
+    szShortName = strrchr(szFileName, '\\');
+    if (szShortName == NULL) {
+
+        /* No path, leave it alone */
+        szShortName = szFileName;
+
+    } else {
+
+        /* Skip the path */
+        szShortName = szShortName + 1;
+    }
+
+    /* Open the Kernel */
+    FilePointer = FsOpenFile(szFileName);
+
+    /* Make sure it worked */
+    if (FilePointer == NULL) {
+
+        /* Return failure on the short name */
+        strcpy(szBuffer, szShortName);
+        strcat(szBuffer, " not found.");
+        UiMessageBox(szBuffer);
+        return(FALSE);
+    }
+
+    /* Update the status bar with the current file */
+    strcpy(szBuffer, "Reading ");
+    strcat(szBuffer, szShortName);
+    UiDrawStatusText(szBuffer);
+
+    /* Do the actual loading */
+    FrLdrMapHal(FilePointer);
+
+    /* Update Processbar and return success */
+    UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);
+    return(TRUE);
+}
+
 static VOID
 FreeldrFreeMem(PVOID Area)
 {
@@ -126,6 +178,7 @@ LoadKernelSymbols(PCHAR szKernelName, int nPos)
   PROSSYM_INFO RosSymInfo;
   ULONG Size;
   ULONG_PTR Base;
+  //return TRUE;
 
   RosSymInit(&FreeldrCallbacks);
 
@@ -569,7 +622,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	CHAR  value[1024];
 	CHAR  SystemPath[1024];
 	CHAR  szKernelName[1024];
-	CHAR  szHalName[1024];
 	CHAR  szFileName[1024];
 	CHAR  szBootPath[256];
 	UINT   i;
@@ -744,8 +796,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		strcat(szKernelName, value);
 	}
 
-    if (!FrLdrLoadKernel(szKernelName, 5)) return;
-
 	/*
 	 * Find the HAL image name
 	 * and try to load the kernel off the disk
@@ -774,19 +824,9 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		strcat(szHalName, value);
 	}
 
-	if (!FrLdrLoadDriver(szHalName, 10))
-		return;
+    /* Load the kernel */
+    if (!FrLdrLoadKernel(szKernelName, 5)) return;
 
-#if 0
-    /* Load bootvid */
-		strcpy(value, "INBV.DLL");
-		strcpy(szHalName, szBootPath);
-		strcat(szHalName, "SYSTEM32\\");
-		strcat(szHalName, value);
-
-	if (!FrLdrLoadDriver(szHalName, 10))
-		return;
-#endif
 	/*
 	 * Load the System hive from disk
 	 */

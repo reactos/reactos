@@ -1011,7 +1011,7 @@ IopInitializeBootDrivers(VOID)
     }
 
     /* Loop modules again */
-    NextEntry = ListHead->Flink->Flink;
+    NextEntry = ListHead->Flink->Flink->Flink;
     while (ListHead != NextEntry)
     {
         /* Get the entry */
@@ -1020,6 +1020,10 @@ IopInitializeBootDrivers(VOID)
                                      InLoadOrderLinks);
 
         /* Free memory */
+        DPRINT("Freeing memory at: %p of size: %lx for module: %wZ\n",
+                LdrEntry->DllBase,
+                LdrEntry->SizeOfImage,
+                &LdrEntry->FullDllName);
         MiFreeBootDriverMemory(LdrEntry->DllBase, LdrEntry->SizeOfImage);
 
         /* Go to the next driver */

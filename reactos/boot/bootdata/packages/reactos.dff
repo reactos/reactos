@@ -235,6 +235,7 @@ dll\win32\wsock32\wsock32.dll                       1
 
 
 ; Drivers
+drivers\base\bootvid\kdcom.sys                      2
 drivers\base\beep\beep.sys                          2
 drivers\base\bootvid\bootvid.sys                    2
 drivers\base\null\null.sys                          2

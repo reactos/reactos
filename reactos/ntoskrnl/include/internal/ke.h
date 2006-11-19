@@ -55,9 +55,6 @@ struct _KPCR;
 struct _KPRCB;
 struct _KEXCEPTION_FRAME;
 
-extern ADDRESS_RANGE KeMemoryMap[64];
-extern ULONG KeMemoryMapRangeCount;
-
 extern ULONG_PTR MmFreeLdrFirstKrnlPhysAddr;
 extern ULONG_PTR MmFreeLdrLastKrnlPhysAddr;
 extern ULONG_PTR MmFreeLdrLastKernelAddress;

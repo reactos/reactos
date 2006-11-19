@@ -19,12 +19,6 @@ VOID
 NTAPI
 LdrLoadAutoConfigDrivers(VOID);
 
-VOID
-NTAPI
-LdrInitModuleManagement(
-    IN PVOID KernelBase
-);
-
 NTSTATUS
 NTAPI
 LdrpMapImage(
@@ -68,15 +62,6 @@ NTAPI
 LdrInitDebug(
     PLOADER_MODULE Module,
     PWCH Name
-);
-
-PVOID 
-NTAPI
-LdrSafePEProcessModule(
-    PVOID ModuleLoadBase,
-    PVOID DriverBase,
-    PVOID ImportModuleBase,
-    PULONG DriverSize
 );
 
 NTSTATUS

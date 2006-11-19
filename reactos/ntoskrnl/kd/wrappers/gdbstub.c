@@ -1759,7 +1759,6 @@ KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
       GspEnumThread = NULL;
 
       HalDisplayString("Waiting for GDB to attach\n");
-      DbgPrint("Module 'hal.dll' loaded at 0x%.08x.\n", LdrHalBase);
       DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     }
   else if (BootPhase == 2)

@@ -41,8 +41,8 @@ Author:
 //
 #ifndef NTOS_MODE_USER
 
-extern NTSYSAPI struct _EPROCESS* PsInitialSystemProcess;
-extern NTSYSAPI POBJECT_TYPE PsProcessType;
+//extern NTSYSAPI struct _EPROCESS* PsInitialSystemProcess;
+//extern NTSYSAPI POBJECT_TYPE PsProcessType;
 
 #endif
 

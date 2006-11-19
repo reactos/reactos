@@ -430,8 +430,8 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     MmInit1(MmFreeLdrFirstKrnlPhysAddr,
             MmFreeLdrLastKrnlPhysAddr,
             MmFreeLdrLastKernelAddress,
-            (PADDRESS_RANGE)&KeMemoryMap,
-            KeMemoryMapRangeCount,
+            NULL,
+            0,
             4096);
 
     /* Sets up the Text Sections of the Kernel and HAL for debugging */
