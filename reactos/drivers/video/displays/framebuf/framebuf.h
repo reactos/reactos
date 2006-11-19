@@ -69,42 +69,13 @@ typedef struct _PDEV
    DWORD dwHeap;
    VIDEOMEMORY* pvmList; 
    BOOL bDDInitialized;   
-   DDPIXELFORMAT ddpfDisplay;
-   DDHALINFO   dxHalInfo;    
+   DDPIXELFORMAT ddpfDisplay;   
 } PDEV, *PPDEV;
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 #define DEVICE_NAME	L"framebuf"
 #define ALLOC_TAG	TAG('F','B','U','F')
-
-DWORD CALLBACK 
-DdCanCreateSurface( LPDDHAL_CANCREATESURFACEDATA pccsd );
-
-DWORD CALLBACK 
-DdCreateSurface(PDD_CREATESURFACEDATA pcsd);
-
-VOID STDCALL
-DrvDisableDirectDraw(
-  IN DHPDEV  dhpdev);
-
-
-BOOL STDCALL
-DrvEnableDirectDraw(
-  IN DHPDEV  dhpdev,
-  OUT DD_CALLBACKS  *pCallBacks,
-  OUT DD_SURFACECALLBACKS  *pSurfaceCallBacks,
-  OUT DD_PALETTECALLBACKS  *pPaletteCallBacks);
-
-
-BOOL STDCALL
-DrvGetDirectDrawInfo(
-  IN DHPDEV  dhpdev,
-  OUT DD_HALINFO  *pHalInfo,
-  OUT DWORD  *pdwNumHeaps,
-  OUT VIDEOMEMORY  *pvmList,
-  OUT DWORD  *pdwNumFourCCCodes,
-  OUT DWORD  *pdwFourCC);
 
 
 DHPDEV STDCALL
