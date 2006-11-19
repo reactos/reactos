@@ -1,4 +1,4 @@
-#include <precomp.h>
+#include "precomp.h"
 
 static const TCHAR szImageEditWndClass[] = TEXT("ImageSoftEditWndClass");
 
@@ -33,13 +33,15 @@ EditWndUpdateScrollInfo(PEDIT_WND_INFO Info)
 }
 
 
-static VOID
+static BOOL
 LoadBlankCanvas(PEDIT_WND_INFO Info)
 {
     /* FIXME: convert this to a DIB Section */
     /* set bitmap dimensions */
     Info->Width = Info->OpenInfo->New.Width;
     Info->Height = Info->OpenInfo->New.Height;
+
+    return TRUE;
 }
 
 static BOOL
@@ -125,6 +127,8 @@ LoadDIBImage(PEDIT_WND_INFO Info)
 static BOOL
 InitEditWnd(PEDIT_WND_INFO Info)
 {
+    //BOOL bRet = FALSE;
+
     Info->Zoom = 100;
 
     if (Info->OpenInfo != NULL)

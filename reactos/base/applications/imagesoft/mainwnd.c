@@ -906,6 +906,28 @@ MainWndCommand(PMAIN_WND_INFO Info,
                            (LPARAM)Info);
             break;
 
+        case ID_BLACKANDWHITE:
+        {
+            if (Info->ImageEditors)
+            {
+                DisplayBlackAndWhite(Info->ImageEditors->hSelf,
+                                     Info->ImageEditors->hDCMem,
+                                     Info->ImageEditors->hBitmap);
+            }
+        }
+        break;
+
+        case ID_INVERTCOLORS:
+        {
+            if (Info->ImageEditors)
+            {
+                DisplayInvertedColors(Info->ImageEditors->hSelf,
+                                      Info->ImageEditors->hDCMem,
+                                      Info->ImageEditors->hBitmap);
+            }
+        }        
+        break;
+
         case ID_EXIT:
             SendMessage(Info->hSelf,
                         WM_CLOSE,

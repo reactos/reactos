@@ -1,9 +1,10 @@
-#include "precomp.h"
+#include <precomp.h>
 
 
-VOID
-AdjustBrightness(PIMAGEADJUST pImgAdj,
-                 HDC hdcMem)
+BOOL
+DisplayBlackAndWhite(HWND hwnd,
+                     HDC hdcMem,
+                     HBITMAP hBitmap)
 {
     BITMAPINFO bi;
     BITMAP bitmap;
@@ -11,34 +12,38 @@ AdjustBrightness(PIMAGEADJUST pImgAdj,
     DWORD Count = 0;
     INT i, j;
     PBYTE pBits;
+    RECT rc;
+
+    GetObject(hBitmap,
+              sizeof(BITMAP),
+              &bitmap);
 
     /* Bitmap header */
     bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
-    bi.bmiHeader.biWidth = pImgAdj->ImageRect.right;
-    bi.bmiHeader.biHeight = pImgAdj->ImageRect.bottom;
+    bi.bmiHeader.biWidth = bitmap.bmWidth;
+    bi.bmiHeader.biHeight = bitmap.bmHeight;
     bi.bmiHeader.biPlanes = 1;
     bi.bmiHeader.biBitCount = 32;
     bi.bmiHeader.biCompression = BI_RGB;
-    bi.bmiHeader.biSizeImage = pImgAdj->ImageRect.right * 4 * pImgAdj->ImageRect.bottom;
+    bi.bmiHeader.biSizeImage = bitmap.bmWidth * bitmap.bmHeight * 4;
     bi.bmiHeader.biClrUsed = 0;
     bi.bmiHeader.biClrImportant = 0;
 
     /* Buffer */
     pBits = (PBYTE)HeapAlloc(ProcessHeap,
                              0,
-                             pImgAdj->ImageRect.right * 4 * pImgAdj->ImageRect.bottom);
+                             bitmap.bmWidth * bitmap.bmHeight * 4);
+    if (!pBits)
+        return FALSE;
 
+    /* get the bits from the original bitmap */
     bRes = GetDIBits(hdcMem,
-                     pImgAdj->hBitmap,
+                     hBitmap,
                      0,
-                     pImgAdj->ImageRect.bottom,
+                     bitmap.bmHeight,
                      pBits,
                      &bi,
                      DIB_RGB_COLORS);
-
-    GetObject(pImgAdj->hBitmap,
-              sizeof(BITMAP),
-              &bitmap);
 
     for (i = 0; i < bitmap.bmHeight; i++)
     {
@@ -56,35 +61,22 @@ AdjustBrightness(PIMAGEADJUST pImgAdj,
             g = GetGValue(Val);
             r = GetBValue(Val);
 
-            /* Red */
-            r += pImgAdj->RedVal;
-            if (r > 255) r = 255;
-            else if (r < 0) r = 0;
+			// get the average color value
+			Val = (r+g+b)/3;
 
-            /* Green */
-            g += pImgAdj->GreenVal;
-            if (g > 255) g = 255;
-            else if (g < 0) g = 0;
-
-            /* Blue */
-            b += pImgAdj->BlueVal;
-            if (b > 255) b = 255;
-            else if (b < 0) b = 0;
-
-            /* Store in reverse order */
-            Val = RGB(b, g, r);
-            CopyMemory(&pBits[Count],
-                       &Val,
+			// assign to RGB color			
+			Val = RGB(Val, Val, Val);
+			CopyMemory(&pBits[Count], 
+                       &Val, 
                        4);
 
-            /* RGB color take 4 bytes.The high-order byte must be zero */
-            Count += 4;
+			Count+=4;
         }
     }
 
     /* Set the new pixel bits */
     SetDIBits(hdcMem,
-              pImgAdj->hBitmap,
+              hBitmap,
               0,
               bRes,
               pBits,
@@ -95,7 +87,105 @@ AdjustBrightness(PIMAGEADJUST pImgAdj,
              0,
              pBits);
 
-    InvalidateRect(pImgAdj->hPicPrev,
-                   &pImgAdj->ImageRect,
+    GetClientRect(hwnd,
+                  &rc);
+
+    InvalidateRect(hwnd,
+                   &rc,
                    FALSE);
+
+    return TRUE;
+}
+
+
+BOOL
+DisplayInvertedColors(HWND hwnd,
+                      HDC hdcMem,
+                      HBITMAP hBitmap)
+{
+    BITMAPINFO bi;
+    BITMAP bitmap;
+    BOOL bRes;
+    DWORD Count = 0;
+    INT i, j;
+    PBYTE pBits;
+    RECT rc;
+
+    GetObject(hBitmap,
+              sizeof(BITMAP),
+              &bitmap);
+
+    /* Bitmap header */
+    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
+    bi.bmiHeader.biWidth = bitmap.bmWidth;
+    bi.bmiHeader.biHeight = bitmap.bmHeight;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    bi.bmiHeader.biSizeImage = bitmap.bmWidth * bitmap.bmHeight * 4;
+    bi.bmiHeader.biClrUsed = 0;
+    bi.bmiHeader.biClrImportant = 0;
+
+    /* Buffer */
+    pBits = (PBYTE)HeapAlloc(ProcessHeap,
+                             0,
+                             bitmap.bmWidth * bitmap.bmHeight * 4);
+    if (!pBits)
+        return FALSE;
+
+    /* get the bits from the original bitmap */
+    bRes = GetDIBits(hdcMem,
+                     hBitmap,
+                     0,
+                     bitmap.bmHeight,
+                     pBits,
+                     &bi,
+                     DIB_RGB_COLORS);
+
+    for (i = 0; i < bitmap.bmHeight; i++)
+    {
+        for (j = 0; j < bitmap.bmWidth; j++)
+        {
+            DWORD Val = 0;
+            INT b, g, r;
+
+            CopyMemory(&Val,
+                       &pBits[Count],
+                       4);
+
+			b = 255 - GetRValue(Val);
+			g = 255 - GetGValue(Val);
+			r = 255 - GetBValue(Val);
+			
+			Val = RGB(b, g, r);
+
+			CopyMemory(&pBits[Count], 
+                       &Val, 
+                       4);
+
+			Count+=4;
+        }
+    }
+
+    /* Set the new pixel bits */
+    SetDIBits(hdcMem,
+              hBitmap,
+              0,
+              bRes,
+              pBits,
+              &bi,
+              DIB_RGB_COLORS);
+
+    HeapFree(ProcessHeap,
+             0,
+             pBits);
+
+    GetClientRect(hwnd,
+                  &rc);
+
+    InvalidateRect(hwnd,
+                   &rc,
+                   FALSE);
+
+    return TRUE;
 }

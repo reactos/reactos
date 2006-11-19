@@ -80,6 +80,8 @@
 
 /* Adjust */
 #define ID_BRIGHTNESS           2100
+#define ID_BLACKANDWHITE        2101
+#define ID_INVERTCOLORS         2102
 
 #define ID_ABOUT                2400
 
