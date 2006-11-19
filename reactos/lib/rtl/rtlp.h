@@ -112,7 +112,7 @@ RtlpCaptureContext(OUT PCONTEXT ContextRecord);
 NTSTATUS
 NTAPI
 DebugService(IN ULONG Service,
-             IN PVOID Buffer,
+             IN PCVOID Buffer,
              IN ULONG Length,
              IN PVOID Argument1,
              IN PVOID Argument2);

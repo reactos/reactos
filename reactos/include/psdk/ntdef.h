@@ -53,6 +53,11 @@ typedef struct _STRING {
   USHORT MaximumLength;
   PCHAR  Buffer;
 } STRING, *PSTRING;
+typedef struct _CSTRING {
+  USHORT Length;
+  USHORT MaximumLength;
+  CONST CHAR *Buffer;
+} CSTRING, *PCSTRING;
 #endif
 typedef STRING ANSI_STRING;
 typedef PSTRING PANSI_STRING;

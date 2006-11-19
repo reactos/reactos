@@ -40,8 +40,8 @@ DebugPrint(IN PANSI_STRING DebugString,
 
 NTSTATUS
 NTAPI
-DebugPrompt(IN PANSI_STRING Output,
-            IN PANSI_STRING Input)
+DebugPrompt(IN PCSTRING Output,
+            IN PSTRING Input)
 {
     /* Call the INT2D Service */
     return DebugService(BREAKPOINT_PROMPT,
@@ -270,20 +270,20 @@ DbgPrintReturnControlC(PCH Format,
  */
 ULONG
 NTAPI
-DbgPrompt(PCCH OutputString,
-          PCH InputString,
-          ULONG InputSize)
+DbgPrompt(IN PCCH Prompt,
+          OUT PCH Response,
+          IN ULONG MaximumResponseLength)
 {
-    ANSI_STRING Output;
-    ANSI_STRING Input;
+    CSTRING Output;
+    STRING Input;
 
     /* Setup the input string */
-    Input.MaximumLength = InputSize;
-    Input.Buffer = InputString;
+    Input.MaximumLength = MaximumResponseLength;
+    Input.Buffer = Response;
 
     /* Setup the output string */
-    Output.Length = strlen (OutputString);
-    Output.Buffer = (PCHAR)OutputString;
+    Output.Length = strlen (Prompt);
+    Output.Buffer = Prompt;
 
     /* Call the system service */
     return DebugPrompt(&Output, &Input);

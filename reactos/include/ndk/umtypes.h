@@ -141,6 +141,13 @@ typedef struct _STRING
     PCHAR Buffer;
 } STRING, *PSTRING;
 
+typedef struct _CSTRING
+{
+    USHORT Length;
+    USHORT MaximumLength;
+    CONST CHAR *Buffer;
+} CSTRING, *PCSTRING;
+
 #endif
 
 typedef struct _OBJECT_ATTRIBUTES
