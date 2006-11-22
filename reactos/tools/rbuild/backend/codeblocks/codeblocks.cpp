@@ -326,10 +326,10 @@ CBBackend::_generate_cbproj ( const Module& module )
 	string cbproj_path = module.GetBasePath();	
 	string CompilerVar;
 
-	//bool lib = (module.type == ObjectLibrary) || (module.type == RpcClient) ||(module.type == RpcServer) || (module_type == ".lib") || (module_type == ".a");
-	//bool dll = (module_type == ".dll") || (module_type == ".cpl");
+	bool lib = (module.type == ObjectLibrary) || (module.type == RpcClient) ||(module.type == RpcServer) || (module_type == ".lib") || (module_type == ".a");
+	bool dll = (module_type == ".dll") || (module_type == ".cpl");
 	bool exe = (module_type == ".exe") || (module_type == ".scr");
-	//bool sys = (module_type == ".sys");
+	bool sys = (module_type == ".sys");
 
 	vector<string> source_files, resource_files, includes, libraries, libpaths;
 	vector<string> header_files, common_defines, compiler_flags;
@@ -448,11 +448,27 @@ CBBackend::_generate_cbproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\t<Option object_output=\"%s\\%s\" />\r\n", intdir.c_str(), module.GetBasePath ().c_str () );
 		}
 
-		if ( console )
-			fprintf ( OUT, "\t\t\t\t<Option type=\"1\" />\r\n" );
-		else /* Win32 GUI */
-			fprintf ( OUT, "\t\t\t\t<Option type=\"0\" />\r\n" );
-		/* TODO: other subsystems */
+		if ( lib )
+			fprintf ( OUT, "\t\t\t\t<Option type=\"2\" />\r\n" );
+		else if ( dll )		
+			fprintf ( OUT, "\t\t\t\t<Option type=\"3\" />\r\n" );
+		else if ( sys )
+			fprintf ( OUT, "\t\t\t\t<Option type=\"?\" />\r\n" ); /*FIXME*/
+		else if ( exe )
+		{
+			if ( module.type == Kernel )
+				fprintf ( OUT, "\t\t\t\t<Option type=\"?\" />\r\n" ); /*FIXME*/
+			else if ( module.type == NativeCUI )
+				fprintf ( OUT, "\t\t\t\t<Option type=\"?\" />\r\n" ); /*FIXME*/
+			else if ( module.type == Win32CUI || module.type == Win32GUI || module.type == Win32SCR)
+			{
+				if ( console )
+					fprintf ( OUT, "\t\t\t\t<Option type=\"1\" />\r\n" );
+				else
+					fprintf ( OUT, "\t\t\t\t<Option type=\"0\" />\r\n" );
+			}
+		}
+		
 			
 		fprintf ( OUT, "\t\t\t\t<Option compiler=\"gcc\" />\r\n" );
 		fprintf ( OUT, "\t\t\t\t<Compiler>\r\n" );
