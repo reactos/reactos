@@ -43,6 +43,13 @@ IopInvalidateDeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN PVOID InvalidateContext);
 
+VOID
+NTAPI
+IoSynchronousInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN DEVICE_RELATION_TYPE Type);
+
+
 /* FUNCTIONS *****************************************************************/
 
 PDEVICE_NODE
@@ -144,7 +151,9 @@ IopStartDevice(
 	  if (IopDeviceNodeHasFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY))
       {
          DPRINT("Device needs enumeration, invalidating bus relations\n");
-         IoInvalidateDeviceRelations(DeviceNode->PhysicalDeviceObject, BusRelations);
+         /* Invalidate device relations synchronously
+            (otherwise there will be dirty read of DeviceNode) */
+         IoSynchronousInvalidateDeviceRelations(DeviceNode->PhysicalDeviceObject, BusRelations);
          IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
       }
    }
