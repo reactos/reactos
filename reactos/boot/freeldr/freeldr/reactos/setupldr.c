@@ -26,6 +26,8 @@ LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded f
 char					reactos_module_strings[64][256];	// Array to hold module names
 unsigned long			reactos_memory_map_descriptor_size;
 memory_map_t			reactos_memory_map[32];		// Memory map
+char szBootPath[256];
+char szHalName[256];
 
 #define USE_UI
 
@@ -45,69 +47,49 @@ FreeldrSeekFile(PVOID FileContext, ULONG_PTR Position)
     return TRUE;
 }
 
-static BOOLEAN
-LoadKernel(PCSTR szSourcePath, PCSTR szFileName)
+BOOLEAN
+NTAPI
+static FrLdrLoadKernel(IN PCHAR szFileName,
+                       IN INT nPos)
 {
-  CHAR szFullName[256];
-#ifdef USE_UI
-  CHAR szBuffer[80];
-#endif
-  PFILE FilePointer;
-  PCSTR szShortName;
+    PFILE FilePointer;
+    PCHAR szShortName;
+    CHAR szBuffer[256];
 
-  if (szSourcePath[0] != '\\')
+    /* Extract Kernel filename without path */
+    szShortName = strrchr(szFileName, '\\');
+    if (!szShortName)
     {
-      strcpy(szFullName, "\\");
-      strcat(szFullName, szSourcePath);
+        /* No path, leave it alone */
+        szShortName = szFileName;
     }
-  else
+    else
     {
-      strcpy(szFullName, szSourcePath);
-    }
-
-  if (szFullName[strlen(szFullName)] != '\\')
-    {
-      strcat(szFullName, "\\");
+        /* Skip the path */
+        szShortName = szShortName + 1;
     }
 
-  if (szFileName[0] != '\\')
+    /* Open the Kernel */
+    FilePointer = FsOpenFile(szFileName);
+    if (!FilePointer)
     {
-      strcat(szFullName, szFileName);
-    }
-  else
-    {
-      strcat(szFullName, szFileName + 1);
-    }
-
-  szShortName = strrchr(szFileName, '\\');
-  if (szShortName == NULL)
-    szShortName = szFileName;
-  else
-    szShortName = szShortName + 1;
-
-  FilePointer = FsOpenFile(szFullName);
-  if (FilePointer == NULL)
-    {
-      printf("Could not find %s\n", szShortName);
-      return(FALSE);
+        /* Return failure on the short name */
+        strcpy(szBuffer, szShortName);
+        strcat(szBuffer, " not found.");
+        UiMessageBox(szBuffer);
+        return FALSE;
     }
 
-  /*
-   * Update the status bar with the current file
-   */
-#ifdef USE_UI
-  sprintf(szBuffer, "Setup is loading files (%s)", szShortName);
-  UiDrawStatusText(szBuffer);
-#else
-  printf("Reading %s\n", szShortName);
-#endif
+    /* Update the status bar with the current file */
+    strcpy(szBuffer, "Reading ");
+    strcat(szBuffer, szShortName);
+    UiDrawStatusText(szBuffer);
 
-  /*
-   * Load the kernel
-   */
-  FrLdrMapKernel(FilePointer);
+    /* Do the actual loading */
+    FrLdrMapKernel(FilePointer);
 
-  return(TRUE);
+    /* Update Processbar and return success */
+    return TRUE;
 }
 
 static BOOLEAN
@@ -301,6 +283,7 @@ VOID RunLoader(VOID)
   const char *SourcePath;
   const char *LoadOptions;
   UINT i;
+  char szKernelName[256];
 
   HINF InfHandle;
   ULONG ErrorLine;
@@ -358,6 +341,9 @@ VOID RunLoader(VOID)
   SetupUiInitialize();
   UiDrawStatusText("");
 #endif
+
+    extern BOOLEAN FrLdrBootType;
+    FrLdrBootType = TRUE;
 
   /* Initialize registry */
   RegInitializeRegistry();
@@ -433,14 +419,17 @@ VOID RunLoader(VOID)
   strcat(strcat(strcat(reactos_kernel_cmdline, SourcePath), " "),
          LoadOptions);
 
-  /* Load ntoskrnl.exe */
-  if (!LoadKernel(SourcePath, "ntoskrnl.exe"))
-    return;
+    /* Setup the boot path and kernel path */
+    strcpy(szBootPath, SourcePath);
+    strcpy(szKernelName, szBootPath);
+    strcat(szKernelName, "\\ntoskrnl.exe");
 
+    /* Setup the HAL path */
+    strcpy(szHalName, szBootPath);
+    strcat(szHalName, "\\hal.dll");
 
-  /* Load hal.dll */
-  if (!LoadDriver(SourcePath, "hal.dll"))
-    return;
+    /* Load the kernel */
+    if (!FrLdrLoadKernel(szKernelName, 5)) return;
 
   /* Create ntoskrnl.sym */
   LoadKernelSymbols(SourcePath, "ntoskrnl.exe");

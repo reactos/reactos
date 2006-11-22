@@ -36,6 +36,7 @@ unsigned long           reactos_disk_count = 0;
 CHAR szHalName[255];
 CHAR szBootPath[255];
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
+BOOLEAN FrLdrBootType;
 
 static BOOLEAN
 NTAPI
@@ -118,7 +119,14 @@ FrLdrLoadImage(IN PCHAR szFileName,
         /* Which means we need to build a path now */
         strcpy(szBuffer, szFileName);
         strcpy(szFullPath, szBootPath);
-        strcat(szFullPath, "SYSTEM32\\DRIVERS\\");
+        if (!FrLdrBootType)
+        {
+            strcat(szFullPath, "SYSTEM32\\DRIVERS\\");
+        }
+        else
+        {
+            strcat(szFullPath, "\\");
+        }
         strcat(szFullPath, szBuffer);
         szFileName = szFullPath;
     }
