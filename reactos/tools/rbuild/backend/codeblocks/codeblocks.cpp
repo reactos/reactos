@@ -324,6 +324,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 	string outenv = Environment::GetOutputPath ();
 	string module_type = GetExtension(module.GetTargetName());
 	string cbproj_path = module.GetBasePath();	
+	string CompilerVar;
 
 	//bool lib = (module.type == ObjectLibrary) || (module.type == RpcClient) ||(module.type == RpcServer) || (module_type == ".lib") || (module_type == ".a");
 	//bool dll = (module_type == ".dll") || (module_type == ".cpl");
@@ -331,8 +332,15 @@ CBBackend::_generate_cbproj ( const Module& module )
 	//bool sys = (module_type == ".sys");
 
 	vector<string> source_files, resource_files, includes, libraries, libpaths;
-	vector<string> header_files, common_defines;
+	vector<string> header_files, common_defines, compiler_flags;
+	vector<string> vars, values;
 	
+	compiler_flags.push_back ( "-Wall" );
+
+	// Always force disabling of sibling calls optimisation for GCC
+	// (TODO: Move to version-specific once this bug is fixed in GCC)
+	compiler_flags.push_back ( "-fno-optimize-sibling-calls" );
+
 	if ( module.pch != NULL )
 	{
 		string pch_path = Path::RelativeFromDirectory (
@@ -385,6 +393,11 @@ CBBackend::_generate_cbproj ( const Module& module )
 			libraries.push_back ( libs[i]->name );
 			libpaths.push_back ( libpath );
 		}
+		const vector<CompilerFlag*>& cflags = data.compilerFlags;
+		for ( i = 0; i < cflags.size(); i++ )
+		{
+			compiler_flags.push_back ( cflags[i]->flag );
+		}
 		const vector<Define*>& defs = data.defines;
 		for ( i = 0; i < defs.size(); i++ )
 		{
@@ -393,7 +406,16 @@ CBBackend::_generate_cbproj ( const Module& module )
 			else
 				common_defines.push_back( defs[i]->name );
 		}
+		/*const vector<Property*>& variables = data.properties;
+		for ( i = 0; i < variables.size(); i++ )
+		{
+			vars.push_back( variables[i]->name );
+			values.push_back( variables[i]->value );
+		}*/
 	}
+
+	if ( !module.allowWarnings )
+		compiler_flags.push_back ( "-Werror" );
 
 	FILE* OUT = fopen ( cbproj_file.c_str(), "wb" );
 
@@ -407,6 +429,8 @@ CBBackend::_generate_cbproj ( const Module& module )
 	fprintf ( OUT, "\t\t<Option compiler=\"gcc\" />\r\n" );
 	fprintf ( OUT, "\t\t<Option virtualFolders=\"\" />\r\n" );
 	fprintf ( OUT, "\t\t<Build>\r\n" );
+
+	bool console = exe && (module.type == Win32CUI);
 
 	for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
 	{
@@ -424,8 +448,6 @@ CBBackend::_generate_cbproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\t<Option object_output=\"%s\\%s\" />\r\n", intdir.c_str(), module.GetBasePath ().c_str () );
 		}
 
-		bool console = exe && (module.type == Win32CUI);
-
 		if ( console )
 			fprintf ( OUT, "\t\t\t\t<Option type=\"1\" />\r\n" );
 		else /* Win32 GUI */
@@ -434,6 +456,19 @@ CBBackend::_generate_cbproj ( const Module& module )
 			
 		fprintf ( OUT, "\t\t\t\t<Option compiler=\"gcc\" />\r\n" );
 		fprintf ( OUT, "\t\t\t\t<Compiler>\r\n" );
+		
+		bool debug = ( cfg.optimization == Debug );
+
+		if ( debug )
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-g\" />\r\n" );
+
+		/* compiler flags */
+		for ( i = 0; i < compiler_flags.size(); i++ )
+		{
+			const string& cflag = compiler_flags[i];
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", cflag.c_str() );
+		}
+
 		/* defines */
 		for ( i = 0; i < common_defines.size(); i++ )
 		{
@@ -474,14 +509,30 @@ CBBackend::_generate_cbproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t</Target>\r\n" );
 
 	}
+
+	/* vars
+	fprintf ( OUT, "\t\t\t<Environment>\r\n" );
+	for ( i = 0; i < vars.size(); i++ )
+	{
+		const string& var = vars[i];
+		const string& value = values[i];
+		fprintf ( OUT, "\t\t\t\t<Variable name=\"%s\" value=\"%s\" />\r\n", var.c_str(), value.c_str()  );
+	}
+	fprintf ( OUT, "\t\t\t</Environment>\r\n" ); */
+
 	fprintf ( OUT, "\t\t</Build>\r\n" );
+
+	if ( module.cplusplus )
+		CompilerVar = "CPP";
+	else
+		CompilerVar = "CC";
 
 	/* header files */
 	for ( i = 0; i < header_files.size(); i++ )
 	{
 		const string& header_file = header_files[i];
 		fprintf ( OUT, "\t\t<Unit filename=\"%s\">\r\n", header_file.c_str() );
-		fprintf ( OUT, "\t\t\t<Option compilerVar=\"CPP\" />\r\n" );
+		fprintf ( OUT, "\t\t\t<Option compilerVar=\"%s\" />\r\n", CompilerVar.c_str() );
 		fprintf ( OUT, "\t\t\t<Option compile=\"0\" />\r\n" );
 		fprintf ( OUT, "\t\t\t<Option link=\"0\" />\r\n" );
 		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
@@ -497,6 +548,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 	{
 		string source_file = DosSeparator(source_files[isrcfile]);
 		fprintf ( OUT, "\t\t<Unit filename=\"%s\">\r\n", source_file.c_str() );
+		fprintf ( OUT, "\t\t\t<Option compilerVar=\"%s\" />\r\n", CompilerVar.c_str() );
 		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
 		{
 			const CBConfiguration& cfg = *m_configurations[icfg];
