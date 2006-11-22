@@ -310,7 +310,7 @@ MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) cons
 
 	vector<string> cfgs;
 
-	if ( configuration.UseVSConfigurationInPath )
+	if ( configuration.UseConfigurationInPath )
 	{
 		cfgs.push_back ( intenv + "Debug" );
 		cfgs.push_back ( intenv + "Release" );

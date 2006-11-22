@@ -122,7 +122,7 @@ ParseVCProjectSwitch (
 			}
 			temp = string (&switchStart[3]);
 			if ( temp.find ("configuration") != string::npos )
-				configuration.UseVSConfigurationInPath = true;
+				configuration.UseConfigurationInPath = true;
 			
 			if ( temp.find ("version") != string::npos )
 				configuration.UseVSVersionInPath = true;

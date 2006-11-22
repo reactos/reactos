@@ -143,7 +143,7 @@ public:
 	std::string VSProjectVersion;
 	std::string VSConfigurationType;
 	bool UseVSVersionInPath;
-	bool UseVSConfigurationInPath;
+	bool UseConfigurationInPath;
 	bool MakeHandlesInstallDirectories;
 	bool GenerateProxyMakefilesInSourceTree;
 	bool InstallFiles;

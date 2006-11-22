@@ -424,6 +424,12 @@ regtest:
 	$(MAKE) bootcdregtest
 	$(rm) $(OUTPUT_)cd$(SEP)reactos$(SEP)unattend.inf
 
+.PHONY: cb
+cb: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) cb
+
+
 .PHONY: msvc
 msvc: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)

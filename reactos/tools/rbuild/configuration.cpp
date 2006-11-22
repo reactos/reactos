@@ -30,7 +30,7 @@ Configuration::Configuration ()
 	MakeHandlesInstallDirectories = false;
 	GenerateProxyMakefilesInSourceTree = false;
 	InstallFiles = false;
-	UseVSConfigurationInPath = false;
+	UseConfigurationInPath = false;
 	UseVSVersionInPath = false;
 }
 
