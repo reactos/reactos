@@ -23,20 +23,44 @@
 //  - Fix bug related to Deferred Loading (don't requeue active work item).
 //  - Add Directory Lock.
 //
-// Ke:
+// Fstub:
+//  - Implement IoAssignDriveLetters using mount manager support.
 //
-//  - FIXES:
-//      * Sanitize some context fields during conversions.
-//      * Figure out why the DPC stack doesn't really work.
-//      * Add DR macro/save and VM macro/save.
-//  - FEATURES:
-//      * New optimized table-based tick-hashed timer implementation.
-//      * New Thread Scheduler based on 2003.
-//      * Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
+// Ke:
+//  - Figure out why the DPC stack doesn't really work.
+//  - Add DR macro/save and VM macro/save.
+//  - New interrupt implementation.
+//  - New optimized table-based tick-hashed timer implementation.
+//  - New Thread Scheduler based on 2003.
+//  - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
+//
+// Hal:
+//  - New IRQL Implementation.
+//  - New PCI/Bus Handler Implementation.
+//  - CMOS Initialization and CMOS Spinlock.
+//  - Timer/StallExecution Cleanup.
+//  - Report resource usage to kernel (HalReportResourceUsage).
+//
+// Lpc:
+//  - Activate new NTLPC and delete old implementation.
+//  - Figure out why LPC-processes won't die anymore.
+//
+// Dbgk:
+//  - Implement remaining Dbgk routines.
+//  - Add Dbgk callbacks to image map/unmap routines.
+//  - Implement helper Mm APIs.
 //
 // Ex:
 //  - Implement Generic Callback mechanism.
 //  - Use pushlocks for handle implementation.
+//
+// Kd:
+//  - Implement new KDCOM with KD support.
+//  - Implement KD Kernel Debugging and WinDBG support.
+//
+// Native:
+//  - Rewrite loader.
+//  - Make smss NT-compatible.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
