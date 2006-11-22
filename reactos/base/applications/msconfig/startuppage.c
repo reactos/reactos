@@ -14,7 +14,7 @@ HWND hStartupListCtrl;
 HWND hStartupDialog;
 
 void GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName );
-void GetDisabledAutostartEntriesFromRegistry ();
+void GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath);
 
 INT_PTR CALLBACK
 StartupPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -78,7 +78,7 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
 {
     HKEY hKey, hSubKey;
     DWORD Index, SubIndex, dwValues, dwSubValues, retVal;
-    DWORD dwValueLength, dwDataLength = MAX_VALUE_NAME; 
+    DWORD dwValueLength, dwDataLength = MAX_VALUE_NAME;
     LV_ITEM item;
     TCHAR* Data;
     TCHAR szValueName[MAX_KEY_LENGTH];
@@ -89,7 +89,7 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
     {
         if (RegQueryInfoKey(hKey, NULL, NULL, NULL, &dwValues, NULL, NULL, NULL, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
         {
-            for (Index = 0, retVal = ERROR_SUCCESS; Index < dwValues; Index++) 
+            for (Index = 0, retVal = ERROR_SUCCESS; Index < dwValues; Index++)
             {
                 dwValueLength = MAX_KEY_LENGTH;
                 dwDataLength = MAX_VALUE_NAME;
@@ -105,7 +105,7 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
                 item.pszText = szValueName;
                 item.iItem = ListView_GetItemCount(hStartupListCtrl);
                 item.lParam = 0;
-                (void)ListView_InsertItem(hStartupListCtrl, &item);                
+                (void)ListView_InsertItem(hStartupListCtrl, &item);
                 if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, szSubPath, 0, KEY_READ | KEY_ENUMERATE_SUB_KEYS, &hSubKey) == ERROR_SUCCESS)
                 {
                     if (RegQueryInfoKey(hSubKey, NULL, NULL, NULL, NULL, NULL, NULL, &dwSubValues, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
@@ -121,7 +121,7 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
                                     GetLongPathName(Data, Data, (DWORD) _tcsclen(Data));
                                     item.pszText = Data;
                                     item.iSubItem = 1;
-                                    SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);	
+                                    SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
                                 }
                                 else if (!_tcscmp(szSubValueName, _T("key")) || !_tcscmp(szSubValueName, _T("location")))
                                 {
@@ -154,7 +154,7 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
 {
     HKEY hKey;
     DWORD Index, dwValues, retVal, dwType;
-    DWORD dwValueLength, dwDataLength = MAX_VALUE_NAME; 
+    DWORD dwValueLength, dwDataLength = MAX_VALUE_NAME;
     TCHAR* Data;
     TCHAR lpValueName[MAX_KEY_LENGTH];
     TCHAR Path[MAX_KEY_LENGTH + 5];
@@ -164,7 +164,7 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
     {
         if (RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &dwValues, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
         {
-            for (Index = 0, retVal = ERROR_SUCCESS; Index < dwValues; Index++) 
+            for (Index = 0, retVal = ERROR_SUCCESS; Index < dwValues; Index++)
             {
                 dwValueLength = MAX_KEY_LENGTH;
                 dwDataLength = MAX_VALUE_NAME;
@@ -172,7 +172,7 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
                 if (Data == NULL)
                     break;
                 retVal = RegEnumValue(hKey, Index, lpValueName, &dwValueLength, NULL, &dwType, (LPBYTE)Data, &dwDataLength);
-                if (retVal == ERROR_SUCCESS) 
+                if (retVal == ERROR_SUCCESS)
                 {
                     memset(&item, 0, sizeof(LV_ITEM));
                     item.mask = LVIF_TEXT;
@@ -190,7 +190,7 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
                         item.iSubItem = 1;
                         SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
                     }
-                    
+
                     switch (PtrToLong(hRootKey))
                     {
                     case PtrToLong(HKEY_LOCAL_MACHINE):

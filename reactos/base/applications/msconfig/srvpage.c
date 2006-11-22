@@ -80,7 +80,7 @@ GetServices ( void )
     SC_HANDLE hService;
     DWORD BytesNeeded = 0;
     DWORD ResumeHandle = 0;
-    DWORD NumServices = 0; 
+    DWORD NumServices = 0;
     DWORD dwHandle, dwLen;
     size_t Index;
     UINT BufLen;
@@ -105,7 +105,7 @@ GetServices ( void )
             {
                 /* reserve memory for service info array */
                 pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
-                if (!pServiceStatus) 
+                if (!pServiceStatus)
                     return;
 
                 /* fill array with service info */
@@ -137,7 +137,7 @@ GetServices ( void )
 
                 BytesNeeded = 0;
                 hService = OpenService(ScHandle, pServiceStatus[Index].lpServiceName, SC_MANAGER_CONNECT);
-                if (hService != INVALID_HANDLE_VALUE) 
+                if (hService != INVALID_HANDLE_VALUE)
                 {
                     /* check if service is required by the system*/
                     if (!QueryServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, (LPBYTE)pServiceFailureActions, 0, &BytesNeeded))
@@ -145,7 +145,7 @@ GetServices ( void )
                         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
                         {
                             pServiceFailureActions = (LPSERVICE_FAILURE_ACTIONS) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
-                            if (pServiceFailureActions == NULL) 
+                            if (pServiceFailureActions == NULL)
                                 return;
 
                             if (!QueryServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, (LPBYTE)pServiceFailureActions, BytesNeeded, &BytesNeeded))
@@ -183,7 +183,7 @@ GetServices ( void )
                         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
                         {
                             pServiceConfig = (LPQUERY_SERVICE_CONFIG) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
-                            if (pServiceConfig == NULL) 
+                            if (pServiceConfig == NULL)
                                 return;
 
                             if (!QueryServiceConfig(hService, pServiceConfig, BytesNeeded, &BytesNeeded))
@@ -215,7 +215,7 @@ GetServices ( void )
                     if (dwLen)
                     {
                         lpData = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, dwLen);
-                        if (lpData == NULL) 
+                        if (lpData == NULL)
                             return;
 
                         if (!GetFileVersionInfo (FileName, dwHandle, dwLen, lpData))
@@ -231,12 +231,12 @@ GetServices ( void )
                             wsprintf(szStrFileInfo, _T("StringFileInfo\\%04X%04X\\CompanyName"), wCodePage, wLangID);
                         }
 
-                        if (VerQueryValue (lpData, szStrFileInfo, (LPVOID) &lpBuffer, (PUINT) &BufLen)) 
+                        if (VerQueryValue (lpData, szStrFileInfo, (void**) &lpBuffer, (PUINT) &BufLen))
                         {
                             item.pszText = lpBuffer;
                             item.iSubItem = 2;
                             SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-                        }  
+                        }
                         HeapFree(GetProcessHeap(), 0, lpData);
                     }
                     else
@@ -259,6 +259,6 @@ GetServices ( void )
 
         HeapFree(GetProcessHeap(), 0, pServiceStatus);
         CloseServiceHandle(ScHandle);
-    }        
+    }
 
 }
