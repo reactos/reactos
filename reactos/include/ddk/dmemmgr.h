@@ -25,16 +25,16 @@ typedef struct _VIDEOMEMORY *LPVIDMEM;
 #endif
 
 #define SURFACEALIGN_DISCARDABLE 0x00000001
-#define VMEMHEAP_LINEAR			 0x00000001 
-#define VMEMHEAP_RECTANGULAR	 0x00000002
-#define VMEMHEAP_ALIGNMENT  	 0x00000004
+#define VMEMHEAP_LINEAR 0x00000001 
+#define VMEMHEAP_RECTANGULAR 0x00000002
+#define VMEMHEAP_ALIGNMENT 0x00000004
 
 typedef struct _VMEML
 {
   struct _VMEML *next;
   FLATPTR ptr;
   DWORD size;
-  BOOL  bDiscardable;
+  BOOL bDiscardable;
 } VMEML, *LPVMEML, *LPLPVMEML;
 
 typedef struct _VMEMR
@@ -47,16 +47,15 @@ typedef struct _VMEMR
   struct _VMEMR *pLeft;
   struct _VMEMR *pRight;
   FLATPTR  ptr;
-  DWORD		size;
-  DWORD     x;
-  DWORD     y;
-  DWORD     cx;
-  DWORD     cy;
-  DWORD		flags;
-  FLATPTR    pBits;
-  BOOL  bDiscardable;
+  DWORD size;
+  DWORD x;
+  DWORD y;
+  DWORD cx;
+  DWORD cy;
+  DWORD flags;
+  FLATPTR pBits;
+  BOOL bDiscardable;
 } VMEMR,  *LPVMEMR,  *LPLPVMEMR;
-
 
 typedef struct _SURFACEALIGNMENT
 {
@@ -64,10 +63,10 @@ typedef struct _SURFACEALIGNMENT
   {
     struct
     {
-      DWORD       dwStartAlignment;
-      DWORD       dwPitchAlignment;
-      DWORD       dwFlags;
-      DWORD       dwReserved2;
+      DWORD dwStartAlignment;
+      DWORD dwPitchAlignment;
+      DWORD dwFlags;
+      DWORD dwReserved2;
     } Linear;
     struct
     {
@@ -81,9 +80,9 @@ typedef struct _SURFACEALIGNMENT
 
 typedef struct _HEAPALIGNMENT
 {
-    DWORD            dwSize;
-    DDSCAPS          ddsCaps;
-    DWORD            dwReserved;
+    DWORD dwSize;
+    DDSCAPS ddsCaps;
+    DWORD dwReserved;
     SURFACEALIGNMENT ExecuteBuffer;
     SURFACEALIGNMENT Overlay;
     SURFACEALIGNMENT Texture;
@@ -93,42 +92,40 @@ typedef struct _HEAPALIGNMENT
     SURFACEALIGNMENT FlipTarget;
 } HEAPALIGNMENT, *LPHEAPALIGNMENT;
 
-
 typedef struct _VMEMHEAP
 {
-    DWORD   dwFlags;
-    DWORD   stride;
-    LPVOID  freeList;
-    LPVOID  allocList;
-    DWORD   dwTotalSize;
+    DWORD dwFlags;
+    DWORD stride;
+    LPVOID freeList;
+    LPVOID allocList;
+    DWORD dwTotalSize;
     FLATPTR fpGARTLin;
     FLATPTR fpGARTDev;
-    DWORD   dwCommitedSize;     
-    DWORD   dwCoalesceCount;
+    DWORD dwCommitedSize;     
+    DWORD dwCoalesceCount;
     HEAPALIGNMENT Alignment;
-    DDSCAPSEX   ddsCapsEx;
-    DDSCAPSEX   ddsCapsExAlt;
+    DDSCAPSEX ddsCapsEx;
+    DDSCAPSEX ddsCapsExAlt;
 #ifndef IS_16
     LARGE_INTEGER liPhysAGPBase;
 #endif
-    HANDLE        hdevAGP;
-    LPVOID        pvPhysRsrv;
-    BYTE*         pAgpCommitMask;
-    DWORD         dwAgpCommitMaskSize;
-} VMEMHEAP;
-
-typedef VMEMHEAP FAR *LPVMEMHEAP;
+    HANDLE hdevAGP;
+    LPVOID pvPhysRsrv;
+    BYTE* pAgpCommitMask;
+    DWORD dwAgpCommitMaskSize;
+} VMEMHEAP, *LPVMEMHEAP;
 
 typedef struct _DD_GETHEAPALIGNMENTDATA
 {
-    ULONG_PTR     dwInstance; 
-    DWORD         dwHeap;
-    HRESULT       ddRVal;
-    VOID*         GetHeapAlignment;
+    ULONG_PTR dwInstance; 
+    DWORD dwHeap;
+    HRESULT ddRVal;
+    VOID* GetHeapAlignment;
     HEAPALIGNMENT Alignment;
 } DD_GETHEAPALIGNMENTDATA, *PDD_GETHEAPALIGNMENTDATA;
 
 extern void WINAPI VidMemFree( LPVMEMHEAP pvmh, FLATPTR ptr);
+extern FLATPTR WINAPI VidMemAlloc( LPVMEMHEAP pvmh, DWORD width, DWORD height);
 
 extern FLATPTR WINAPI 
        HeapVidMemAllocAligned(
@@ -139,9 +136,9 @@ extern FLATPTR WINAPI
                                LPLONG lpNewPitch );
 
 
-#ifndef __NTDDKCOMP__
-extern FLATPTR WINAPI VidMemAlloc( LPVMEMHEAP pvmh, DWORD width, DWORD height);
-#endif
+
+
+
 
 #ifdef __cplusplus
 };
