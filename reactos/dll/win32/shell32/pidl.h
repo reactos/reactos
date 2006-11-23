@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES:
  *
@@ -209,6 +209,14 @@ BOOL	_ILIsValue		(LPCITEMIDLIST pidl);
 BOOL	_ILIsSpecialFolder	(LPCITEMIDLIST pidl);
 BOOL	_ILIsPidlSimple		(LPCITEMIDLIST pidl);
 BOOL	_ILIsCPanelStruct	(LPCITEMIDLIST pidl);
+static inline 
+BOOL    _ILIsEqualSimple        (LPCITEMIDLIST pidlA, LPCITEMIDLIST pidlB)
+{
+    return (pidlA->mkid.cb > 0 && !memcmp(pidlA, pidlB, pidlA->mkid.cb)) ||
+            (!pidlA->mkid.cb && !pidlB->mkid.cb);
+}
+static inline
+BOOL    _ILIsEmpty              (LPCITEMIDLIST pidl) { return _ILIsDesktop(pidl); }
 
 /*
  * simple pidls
@@ -240,6 +248,7 @@ HRESULT		_ILCreateFromPathW	(LPCWSTR szPath, LPITEMIDLIST* ppidl);
 
 /* Other helpers */
 LPITEMIDLIST	_ILCreateMyComputer	(void);
+LPITEMIDLIST	_ILCreateMyDocuments	(void);
 LPITEMIDLIST	_ILCreateIExplore	(void);
 LPITEMIDLIST	_ILCreateControlPanel	(void);
 LPITEMIDLIST	_ILCreatePrinters	(void);

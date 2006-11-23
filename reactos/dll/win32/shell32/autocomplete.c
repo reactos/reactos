@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /*
@@ -174,7 +174,7 @@ static ULONG WINAPI IAutoComplete_fnAddRef(
     IAutoCompleteImpl *This = (IAutoCompleteImpl *)iface;
     ULONG refCount = InterlockedIncrement(&This->ref);
     
-    TRACE("(%p)->(%lu)\n", This, refCount - 1);
+    TRACE("(%p)->(%u)\n", This, refCount - 1);
 
     return refCount;
 }
@@ -188,7 +188,7 @@ static ULONG WINAPI IAutoComplete_fnRelease(
     IAutoCompleteImpl *This = (IAutoCompleteImpl *)iface;
     ULONG refCount = InterlockedDecrement(&This->ref);
     
-    TRACE("(%p)->(%lu)\n", This, refCount + 1);
+    TRACE("(%p)->(%u)\n", This, refCount + 1);
 
     if (!refCount) {
 	TRACE(" destroying IAutoComplete(%p)\n",This);
@@ -347,7 +347,7 @@ static ULONG WINAPI IAutoComplete2_fnAddRef(
 {
     IAutoCompleteImpl *This = impl_from_IAutoComplete2(iface);
 
-    TRACE ("(%p)->(count=%lu)\n", This, This->ref);
+    TRACE ("(%p)->(count=%u)\n", This, This->ref);
 
     return IAutoComplete2_AddRef((IAutoComplete*)This);
 }
@@ -360,7 +360,7 @@ static ULONG WINAPI IAutoComplete2_fnRelease(
 {
     IAutoCompleteImpl *This = impl_from_IAutoComplete2(iface);
 
-    TRACE ("(%p)->(count=%lu)\n", This, This->ref);
+    TRACE ("(%p)->(count=%u)\n", This, This->ref);
 
     return IAutoComplete_Release((IAutoComplete*)This);
 }
@@ -425,7 +425,7 @@ static HRESULT WINAPI IAutoComplete2_fnSetOptions(
 
     IAutoCompleteImpl *This = impl_from_IAutoComplete2(iface);
 
-    TRACE("(%p) -> (0x%lx)\n", This, dwFlag);
+    TRACE("(%p) -> (0x%x)\n", This, dwFlag);
 
     This->options = dwFlag;
 

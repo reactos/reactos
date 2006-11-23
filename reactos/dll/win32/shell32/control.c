@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <assert.h>
@@ -163,7 +163,7 @@ static void 	 Control_WndProc_Create(HWND hWnd, const CREATESTRUCTA* cs)
 #define	YICON	32
 #define YSTEP	64
 
-static BOOL	Control_Localize(const CPanel* panel, unsigned cx, unsigned cy,
+static BOOL	Control_Localize(const CPanel* panel, int cx, int cy,
 				 CPlApplet** papplet, unsigned* psp)
 {
     unsigned	i, x = (XSTEP-XICON)/2, y = 0;
@@ -228,7 +228,7 @@ static LRESULT Control_WndProc_LButton(CPanel* panel, LPARAM lParam, BOOL up)
     unsigned	i;
     CPlApplet*	applet;
 
-    if (Control_Localize(panel, LOWORD(lParam), HIWORD(lParam), &applet, &i)) {
+    if (Control_Localize(panel, (short)LOWORD(lParam), (short)HIWORD(lParam), &applet, &i)) {
        if (up) {
 	   if (panel->clkApplet == applet && panel->clkSP == i) {
 	       applet->proc(applet->hWnd, CPL_DBLCLK, i, applet->info[i].lData);
@@ -352,7 +352,6 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     unsigned 	sp = 0;
     LPWSTR	extraPmts = NULL;
     int        quoted = 0;
-    BOOL	spSet = FALSE;
 
     buffer = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(wszCmd) + 1) * sizeof(*wszCmd));
     if (!buffer) return;
@@ -367,10 +366,8 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 	    if (beg) {
 	        if (*beg == '@') {
 		    sp = atoiW(beg + 1);
-                    spSet = TRUE;
 		} else if (*beg == '\0') {
 		    sp = 0;
-                    spSet = TRUE;
 		} else {
 		    extraPmts = beg;
 		}
@@ -382,9 +379,6 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 	end++;
     }
     while ((ptr = StrChrW(buffer, '"')))
-	memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
-
-    while ((ptr = StrChrW(extraPmts, '"')))
 	memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
 
     TRACE("cmd %s, extra %s, sp %d\n", debugstr_w(buffer), debugstr_w(extraPmts), sp);
@@ -399,13 +393,6 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 	  WARN("Out of bounds (%u >= %u), setting to 0\n", sp, applet->count);
 	  sp = 0;
        }
-
-       if ((extraPmts)&&(!spSet))
-       {
-          while ((lstrcmpiW(extraPmts, applet->info[sp].szName)) && (sp < applet->count))
-            sp++;
-       }
-
        if (applet->info[sp].dwSize) {
 	  if (!applet->proc(applet->hWnd, CPL_STARTWPARMSA, sp, (LPARAM)extraPmts))
 	     applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].lData);
@@ -423,7 +410,7 @@ void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdS
 {
     CPanel	panel;
 
-    TRACE("(%p, %p, %s, 0x%08lx)\n",
+    TRACE("(%p, %p, %s, 0x%08x)\n",
 	  hWnd, hInst, debugstr_w(cmd), nCmdShow);
 
     memset(&panel, 0, sizeof(panel));
@@ -456,7 +443,7 @@ void WINAPI Control_RunDLLA(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdSh
  */
 HRESULT WINAPI Control_FillCache_RunDLLW(HWND hWnd, HANDLE hModule, DWORD w, DWORD x)
 {
-    FIXME("%p %p 0x%08lx 0x%08lx stub\n", hWnd, hModule, w, x);
+    FIXME("%p %p 0x%08x 0x%08x stub\n", hWnd, hModule, w, x);
     return 0;
 }
 
@@ -481,7 +468,7 @@ void WINAPI RunDLL_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
     WORD args[5];
     SEGPTR cmdline_seg;
 
-    TRACE( "proc %lx hwnd %p inst %p cmdline %s cmdshow %d\n",
+    TRACE( "proc %x hwnd %p inst %p cmdline %s cmdshow %d\n",
            proc, hwnd, inst, debugstr_a(cmdline), cmdshow );
 
     cmdline_seg = MapLS( cmdline );
@@ -507,6 +494,6 @@ void WINAPI RunDLL_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
  */
 DWORD WINAPI CallCPLEntry16(HMODULE hMod, FARPROC pFunc, DWORD dw3, DWORD dw4, DWORD dw5, DWORD dw6)
 {
-    FIXME("(%p, %p, %08lx, %08lx, %08lx, %08lx): stub.\n", hMod, pFunc, dw3, dw4, dw5, dw6);
+    FIXME("(%p, %p, %08x, %08x, %08x, %08x): stub.\n", hMod, pFunc, dw3, dw4, dw5, dw6);
     return 0x0deadbee;
 }
