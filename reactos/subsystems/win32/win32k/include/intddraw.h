@@ -1,6 +1,7 @@
 #ifndef _INT_W32k_DDRAW
 #define _INT_W32k_DDRAW
 
+#include <ddrawint.h>
 #include <ddkernel.h>
 
 #define GDI_OBJECT_TYPE_DIRECTDRAW    0x00600000
