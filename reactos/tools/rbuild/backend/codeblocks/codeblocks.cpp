@@ -402,9 +402,14 @@ CBBackend::_generate_cbproj ( const Module& module )
 		for ( i = 0; i < defs.size(); i++ )
 		{
 			if ( defs[i]->value[0] )
-				common_defines.push_back( defs[i]->name + "=" + defs[i]->value );
+			{
+				const string& escaped = _replace_str(defs[i]->value, "\"","&quot;");
+				common_defines.push_back( defs[i]->name + "=" + escaped );
+			}
 			else
+			{
 				common_defines.push_back( defs[i]->name );
+			}
 		}
 		/*const vector<Property*>& variables = data.properties;
 		for ( i = 0; i < variables.size(); i++ )
@@ -439,12 +444,12 @@ CBBackend::_generate_cbproj ( const Module& module )
 
 		if ( configuration.UseConfigurationInPath )
 		{
-			fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s%s\\%s%s\" prefix_auto=\"1\" extension_auto=\"1\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), cfg.name.c_str(), module.name.c_str(), module_type.c_str());
+			fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), cfg.name.c_str(), module.name.c_str(), module_type.c_str());
 			fprintf ( OUT, "\t\t\t\t<Option object_output=\"%s\\%s%s\" />\r\n", intdir.c_str(), module.GetBasePath ().c_str (), cfg.name.c_str() );
 		}
 		else
 		{
-			fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s\\%s%s\" prefix_auto=\"1\" extension_auto=\"1\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), module.name.c_str(), module_type.c_str() );
+			fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), module.name.c_str(), module_type.c_str() );
 			fprintf ( OUT, "\t\t\t\t<Option object_output=\"%s\\%s\" />\r\n", intdir.c_str(), module.GetBasePath ().c_str () );
 		}
 
@@ -610,3 +615,19 @@ CBConfiguration::CBConfiguration ( const OptimizationType optimization, const st
 			this->name = "Unknown";
 	}
 }
+
+std::string
+CBBackend::_replace_str(std::string string1, const std::string &find_str, const std::string &replace_str)
+{
+	std::string::size_type pos = string1.find(find_str, 0);
+	int intLen = find_str.length();
+
+	while(std::string::npos != pos)
+	{
+		string1.replace(pos, intLen, replace_str);
+		pos = string1.find(find_str, intLen + pos);
+	}
+
+	return string1;
+}
+
