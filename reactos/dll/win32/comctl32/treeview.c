@@ -627,7 +627,7 @@ TREEVIEW_SendCustomDrawNotify(TREEVIEW_INFO *infoPtr, DWORD dwDrawStage,
     NMTVCUSTOMDRAW nmcdhdr;
     LPNMCUSTOMDRAW nmcd;
 
-    TRACE("drawstage:%lx hdc:%p\n", dwDrawStage, hdc);
+    TRACE("drawstage:%x hdc:%p\n", dwDrawStage, hdc);
 
     nmcd = &nmcdhdr.nmcd;
     nmcd->hdr.hwndFrom = hwnd;
@@ -686,7 +686,7 @@ TREEVIEW_SendCustomDrawItemNotify(TREEVIEW_INFO *infoPtr, HDC hdc,
     nmcd->lItemlParam = wineItem->lParam;
     nmcdhdr->iLevel = wineItem->iLevel;
 
-    TRACE("drawstage:%lx hdc:%p item:%lx, itemstate:%x, lItemlParam:%lx\n",
+    TRACE("drawstage:%x hdc:%p item:%lx, itemstate:%x, lItemlParam:%lx\n",
 	  nmcd->dwDrawStage, nmcd->hdc, nmcd->dwItemSpec,
 	  nmcd->uItemState, nmcd->lItemlParam);
 
@@ -1966,7 +1966,7 @@ TREEVIEW_SetInsertMarkColor(TREEVIEW_INFO *infoPtr, COLORREF color)
 {
     COLORREF prevColor = infoPtr->clrInsertMark;
 
-    TRACE("%lx\n", color);
+    TRACE("%x\n", color);
     infoPtr->clrInsertMark = color;
 
     return (LRESULT)prevColor;
@@ -2030,7 +2030,7 @@ TREEVIEW_GetItemRect(TREEVIEW_INFO *infoPtr, BOOL fTextRect, LPRECT lpRect)
 	*lpRect = wineItem->rect;
     }
 
-    TRACE("%s [L:%ld R:%ld T:%ld B:%ld]\n", fTextRect ? "text" : "item",
+    TRACE("%s [L:%d R:%d T:%d B:%d]\n", fTextRect ? "text" : "item",
 	  lpRect->left, lpRect->right, lpRect->top, lpRect->bottom);
 
     return TRUE;
@@ -2575,7 +2575,7 @@ TREEVIEW_DrawItem(TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *wineItem)
 	    rcText.left = wineItem->textOffset;
 	    rcText.right = rcText.left + wineItem->textWidth + 4;
 
-	    TRACE("drawing text %s at (%ld,%ld)-(%ld,%ld)\n",
+            TRACE("drawing text %s at (%d,%d)-(%d,%d)\n",
 		  debugstr_w(wineItem->pszText),
 		  rcText.left, rcText.top, rcText.right, rcText.bottom);
 
@@ -3494,7 +3494,7 @@ TREEVIEW_HitTest(TREEVIEW_INFO *infoPtr, LPTVHITTESTINFO lpht)
     }
 
     lpht->hItem = wineItem;
-    TRACE("(%ld,%ld):result %x\n", lpht->pt.x, lpht->pt.y, lpht->flags);
+    TRACE("(%d,%d):result %x\n", lpht->pt.x, lpht->pt.y, lpht->flags);
 
     return (LRESULT)wineItem;
 }
@@ -4172,7 +4172,7 @@ TREEVIEW_CreateDragImage(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     hOldFont = SelectObject(hdc, infoPtr->hFont);
     GetTextExtentPoint32W(hdc, dragItem->pszText, strlenW(dragItem->pszText),
 			  &size);
-    TRACE("%ld %ld %s %d\n", size.cx, size.cy, debugstr_w(dragItem->pszText),
+    TRACE("%d %d %s %d\n", size.cx, size.cy, debugstr_w(dragItem->pszText),
 	  strlenW(dragItem->pszText));
     hbmp = CreateCompatibleBitmap(htopdc, size.cx, size.cy);
     hOldbmp = SelectObject(hdc, hbmp);
@@ -4509,7 +4509,7 @@ TREEVIEW_EnsureVisible(TREEVIEW_INFO *infoPtr, HTREEITEM item, BOOL bHScroll)
 
     viscount = TREEVIEW_GetVisibleCount(infoPtr);
 
-    TRACE("%p (%s) %ld - %ld viscount(%d)\n", item, TREEVIEW_ItemName(item), item->visibleOrder,
+    TRACE("%p (%s) %d - %d viscount(%d)\n", item, TREEVIEW_ItemName(item), item->visibleOrder,
         hasFirstVisible ? infoPtr->firstVisible->visibleOrder : -1, viscount);
 
     if (hasFirstVisible)
@@ -4828,7 +4828,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     TREEVIEW_INFO *infoPtr;
     LOGFONTW lf;
 
-    TRACE("wnd %p, style %lx\n", hwnd, GetWindowLongW(hwnd, GWL_STYLE));
+    TRACE("wnd %p, style %x\n", hwnd, GetWindowLongW(hwnd, GWL_STYLE));
 
     infoPtr = (TREEVIEW_INFO *)Alloc(sizeof(TREEVIEW_INFO));
 
@@ -5203,8 +5203,8 @@ TREEVIEW_MouseMove (TREEVIEW_INFO * infoPtr, WPARAM wParam, LPARAM lParam)
         _TrackMouseEvent(&trackinfo);
     }
 
-    pt.x = (INT)LOWORD(lParam);
-    pt.y = (INT)HIWORD(lParam);
+    pt.x = (short)LOWORD(lParam);
+    pt.y = (short)HIWORD(lParam);
 
     item = TREEVIEW_HitTestPoint(infoPtr, pt);
 
@@ -5266,12 +5266,12 @@ TREEVIEW_Notify(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 	if (lppgc->dwFlag == PGF_CALCWIDTH) {
 	    lppgc->iWidth = infoPtr->treeWidth;
-	    TRACE("got PGN_CALCSIZE, returning horz size = %ld, client=%ld\n",
+            TRACE("got PGN_CALCSIZE, returning horz size = %d, client=%d\n",
 		  infoPtr->treeWidth, infoPtr->clientWidth);
 	}
 	else {
 	    lppgc->iHeight = infoPtr->treeHeight;
-	    TRACE("got PGN_CALCSIZE, returning vert size = %ld, client=%ld\n",
+            TRACE("got PGN_CALCSIZE, returning vert size = %d, client=%d\n",
 		  infoPtr->treeHeight, infoPtr->clientHeight);
 	}
 	return 0;

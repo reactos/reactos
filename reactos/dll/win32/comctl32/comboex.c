@@ -352,7 +352,7 @@ static void COMBOEX_GetComboFontSize (COMBOEX_INFO *infoPtr, SIZE *size)
     GetTextExtentPointW (mydc, strA, 1, size);
     SelectObject (mydc, ofont);
     ReleaseDC (0, mydc);
-    TRACE("selected font hwnd=%p, height=%ld\n", nfont, size->cy);
+    TRACE("selected font hwnd=%p, height=%d\n", nfont, size->cy);
 }
 
 
@@ -406,13 +406,13 @@ static void COMBOEX_AdjustEditPos (COMBOEX_INFO *infoPtr)
 
     /* reposition the Edit control based on whether icon exists */
     COMBOEX_GetComboFontSize (infoPtr, &mysize);
-    TRACE("Combo font x=%ld, y=%ld\n", mysize.cx, mysize.cy);
+    TRACE("Combo font x=%d, y=%d\n", mysize.cx, mysize.cy);
     x = xioff + CBE_STARTOFFSET + 1;
     w = rect.right-rect.left - x - GetSystemMetrics(SM_CXVSCROLL) - 1;
     h = mysize.cy + 1;
     y = rect.bottom - h - 1;
 
-    TRACE("Combo client (%ld,%ld)-(%ld,%ld), setting Edit to (%d,%d)-(%d,%d)\n",
+    TRACE("Combo client (%d,%d)-(%d,%d), setting Edit to (%d,%d)-(%d,%d)\n",
 	  rect.left, rect.top, rect.right, rect.bottom, x, y, x + w, y + h);
     SetWindowPos(infoPtr->hwndEdit, HWND_TOP, x, y, w, h,
 		 SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_NOZORDER);
@@ -429,7 +429,7 @@ static void COMBOEX_ReSize (COMBOEX_INFO *infoPtr)
     cy = mysize.cy + CBE_EXTRA;
     if (infoPtr->himl && ImageList_GetImageInfo(infoPtr->himl, 0, &iinfo)) {
 	cy = max (iinfo.rcImage.bottom - iinfo.rcImage.top, cy);
-	TRACE("upgraded height due to image:  height=%ld\n", cy);
+	TRACE("upgraded height due to image:  height=%d\n", cy);
     }
     SendMessageW (infoPtr->hwndSelf, CB_SETITEMHEIGHT, (WPARAM)-1, (LPARAM)cy);
     if (infoPtr->hwndCombo) {
@@ -712,7 +712,7 @@ COMBOEX_SetExtendedStyle (COMBOEX_INFO *infoPtr, DWORD mask, DWORD style)
 {
     DWORD dwTemp;
 
-    TRACE("(mask=x%08lx, style=0x%08lx)\n", mask, style);
+    TRACE("(mask=x%08x, style=0x%08x)\n", mask, style);
 
     dwTemp = infoPtr->dwExtStyle;
 
@@ -730,7 +730,7 @@ COMBOEX_SetExtendedStyle (COMBOEX_INFO *infoPtr, DWORD mask, DWORD style)
     mask = CBES_EX_NOEDITIMAGE | CBES_EX_NOEDITIMAGEINDENT;
     if ((infoPtr->dwExtStyle & mask) != (dwTemp & mask)) {
 	/* if state of EX_NOEDITIMAGE changes, invalidate all */
-	TRACE("EX_NOEDITIMAGE state changed to %ld\n",
+	TRACE("EX_NOEDITIMAGE state changed to %d\n",
 	      infoPtr->dwExtStyle & CBES_EX_NOEDITIMAGE);
 	InvalidateRect (infoPtr->hwndSelf, NULL, TRUE);
 	COMBOEX_AdjustEditPos (infoPtr);
@@ -942,10 +942,10 @@ static INT COMBOEX_SetItemHeight (COMBOEX_INFO *infoPtr, INT index, UINT height)
     height = cb_wrect.bottom-cb_wrect.top
              + cbx_wrect.bottom-cbx_wrect.top
              - (cbx_crect.bottom-cbx_crect.top);
-    TRACE("EX window=(%ld,%ld)-(%ld,%ld), client=(%ld,%ld)-(%ld,%ld)\n",
+    TRACE("EX window=(%d,%d)-(%d,%d), client=(%d,%d)-(%d,%d)\n",
 	  cbx_wrect.left, cbx_wrect.top, cbx_wrect.right, cbx_wrect.bottom,
 	  cbx_crect.left, cbx_crect.top, cbx_crect.right, cbx_crect.bottom);
-    TRACE("CB window=(%ld,%ld)-(%ld,%ld), EX setting=(0,0)-(%ld,%d)\n",
+    TRACE("CB window=(%d,%d)-(%d,%d), EX setting=(0,0)-(%d,%d)\n",
 	  cb_wrect.left, cb_wrect.top, cb_wrect.right, cb_wrect.bottom,
 	  cbx_wrect.right-cbx_wrect.left, height);
     SetWindowPos (infoPtr->hwndSelf, HWND_TOP, 0, 0,
@@ -994,7 +994,7 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
     /* create combo box */
     GetWindowRect(hwnd, &wnrc1);
     GetClientRect(hwnd, &clrc1);
-    TRACE("EX window=(%ld,%ld)-(%ld,%ld) client=(%ld,%ld)-(%ld,%ld)\n",
+    TRACE("EX window=(%d,%d)-(%d,%d) client=(%d,%d)-(%d,%d)\n",
 	  wnrc1.left, wnrc1.top, wnrc1.right, wnrc1.bottom,
 	  clrc1.left, clrc1.top, clrc1.right, clrc1.bottom);
 
@@ -1085,7 +1085,7 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
     GetWindowRect(hwnd, &wnrc1);
     GetClientRect(hwnd, &clrc1);
     GetWindowRect(infoPtr->hwndCombo, &cmbwrc);
-    TRACE("EX window=(%ld,%ld)-(%ld,%ld) client=(%ld,%ld)-(%ld,%ld) CB wnd=(%ld,%ld)-(%ld,%ld)\n",
+    TRACE("EX window=(%d,%d)-(%d,%d) client=(%d,%d)-(%d,%d) CB wnd=(%d,%d)-(%d,%d)\n",
 	  wnrc1.left, wnrc1.top, wnrc1.right, wnrc1.bottom,
 	  clrc1.left, clrc1.top, clrc1.right, clrc1.bottom,
 	  cmbwrc.left, cmbwrc.top, cmbwrc.right, cmbwrc.bottom);
@@ -1094,7 +1094,7 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
 		 SWP_NOACTIVATE | SWP_NOREDRAW);
 
     GetWindowRect(infoPtr->hwndCombo, &cmbwrc);
-    TRACE("CB window=(%ld,%ld)-(%ld,%ld)\n",
+    TRACE("CB window=(%d,%d)-(%d,%d)\n",
 	  cmbwrc.left, cmbwrc.top, cmbwrc.right, cmbwrc.bottom);
     SetWindowPos(hwnd, HWND_TOP,
 		 0, 0, cmbwrc.right-cmbwrc.left, cmbwrc.bottom-cmbwrc.top,
@@ -1343,7 +1343,7 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT *dis)
 	  dis->CtlType, dis->CtlID);
     TRACE("itemID=0x%08x itemAction=0x%08x itemState=0x%08x\n",
 	  dis->itemID, dis->itemAction, dis->itemState);
-    TRACE("hWnd=%p hDC=%p (%ld,%ld)-(%ld,%ld) itemData=0x%08lx\n",
+    TRACE("hWnd=%p hDC=%p (%d,%d)-(%d,%d) itemData=0x%08lx\n",
 	  dis->hwndItem, dis->hDC, dis->rcItem.left,
 	  dis->rcItem.top, dis->rcItem.right, dis->rcItem.bottom,
 	  dis->itemData);
@@ -1363,7 +1363,7 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT *dis)
 	if ( ( (dis->itemAction & ODA_FOCUS) && (dis->itemState & ODS_SELECTED)) ||
 	     ( (dis->itemAction & (ODA_SELECT | ODA_DRAWENTIRE)) && (dis->itemState & ODS_FOCUS) ) ) {
 
-	    TRACE("drawing item -1 special focus, rect=(%ld,%ld)-(%ld,%ld)\n",
+            TRACE("drawing item -1 special focus, rect=(%d,%d)-(%d,%d)\n",
 		  dis->rcItem.left, dis->rcItem.top,
 		  dis->rcItem.right, dis->rcItem.bottom);
 	}
@@ -1379,14 +1379,14 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT *dis)
 		edrc.left=edrc.top=edrc.right=edrc.bottom=-1;
 		if (infoPtr->hwndEdit)
 		    GetWindowRect (infoPtr->hwndEdit, &edrc);
-		TRACE("window rects ex=(%ld,%ld)-(%ld,%ld), cb=(%ld,%ld)-(%ld,%ld), ed=(%ld,%ld)-(%ld,%ld)\n",
+		TRACE("window rects ex=(%d,%d)-(%d,%d), cb=(%d,%d)-(%d,%d), ed=(%d,%d)-(%d,%d)\n",
 		      exrc.left, exrc.top, exrc.right, exrc.bottom,
 		      cbrc.left, cbrc.top, cbrc.right, cbrc.bottom,
 		      edrc.left, edrc.top, edrc.right, edrc.bottom);
 	    }
 	}
 	else {
-	    ERR("NOT drawing item  -1 special focus, rect=(%ld,%ld)-(%ld,%ld), action=%08x, state=%08x\n",
+            ERR("NOT drawing item  -1 special focus, rect=(%d,%d)-(%d,%d), action=%08x, state=%08x\n",
 		dis->rcItem.left, dis->rcItem.top,
 		dis->rcItem.right, dis->rcItem.bottom,
 		dis->itemAction, dis->itemState);
@@ -1546,7 +1546,7 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT *dis)
 	    rect.right = x + txtsize.cx;
 	    rect.top = dis->rcItem.top + 1;
 	    rect.bottom = dis->rcItem.bottom - 1;
-	    TRACE("drawing item %d text, rect=(%ld,%ld)-(%ld,%ld)\n",
+            TRACE("drawing item %d text, rect=(%d,%d)-(%d,%d)\n",
 	          dis->itemID, rect.left, rect.top, rect.right, rect.bottom);
 	    ExtTextOutW (dis->hDC, x, y, ETO_OPAQUE | ETO_CLIPPED,
 		         &rect, str, len, 0);
@@ -1626,7 +1626,7 @@ static LRESULT COMBOEX_NCCreate (HWND hwnd)
     oldstyle = (DWORD)GetWindowLongW (hwnd, GWL_STYLE);
     newstyle = oldstyle & ~(WS_VSCROLL | WS_HSCROLL | WS_BORDER);
     if (newstyle != oldstyle) {
-	TRACE("req style %08lx, reseting style %08lx\n",
+	TRACE("req style %08x, reseting style %08x\n",
 	      oldstyle, newstyle);
 	SetWindowLongW (hwnd, GWL_STYLE, newstyle);
     }
@@ -1673,10 +1673,10 @@ static LRESULT COMBOEX_WindowPosChanging (COMBOEX_INFO *infoPtr, WINDOWPOS *wp)
 
     TRACE("winpos=(%d,%d %dx%d) flags=0x%08x\n",
 	  wp->x, wp->y, wp->cx, wp->cy, wp->flags);
-    TRACE("EX window=(%ld,%ld)-(%ld,%ld), client=(%ld,%ld)-(%ld,%ld)\n",
+    TRACE("EX window=(%d,%d)-(%d,%d), client=(%d,%d)-(%d,%d)\n",
 	  cbx_wrect.left, cbx_wrect.top, cbx_wrect.right, cbx_wrect.bottom,
 	  cbx_crect.left, cbx_crect.top, cbx_crect.right, cbx_crect.bottom);
-    TRACE("CB window=(%ld,%ld)-(%ld,%ld), EX setting=(0,0)-(%d,%ld)\n",
+    TRACE("CB window=(%d,%d)-(%d,%d), EX setting=(0,0)-(%d,%d)\n",
 	  cb_wrect.left, cb_wrect.top, cb_wrect.right, cb_wrect.bottom,
 	  width, cb_wrect.bottom-cb_wrect.top);
 
@@ -1734,7 +1734,7 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             hDC = (HDC) wParam;
 	    obkc = SetBkColor (hDC, GetSysColor (COLOR_WINDOW));
             GetClientRect (hwnd, &rect);
-	    TRACE("erasing (%ld,%ld)-(%ld,%ld)\n",
+            TRACE("erasing (%d,%d)-(%d,%d)\n",
 		  rect.left, rect.top, rect.right, rect.bottom);
 	    ExtTextOutW (hDC, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
             SetBkColor (hDC, obkc);
@@ -1938,7 +1938,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             hDC = (HDC) wParam;
 	    obkc = SetBkColor (hDC, GetSysColor (COLOR_WINDOW));
             GetClientRect (hwnd, &rect);
-	    TRACE("erasing (%ld,%ld)-(%ld,%ld)\n",
+            TRACE("erasing (%d,%d)-(%d,%d)\n",
 		  rect.left, rect.top, rect.right, rect.bottom);
 	    ExtTextOutW (hDC, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
             SetBkColor (hDC, obkc);

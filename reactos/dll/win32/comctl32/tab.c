@@ -193,8 +193,8 @@ TAB_RelayEvent (HWND hwndTip, HWND hwndMsg, UINT uMsg,
     msg.wParam = wParam;
     msg.lParam = lParam;
     msg.time = GetMessageTime ();
-    msg.pt.x = LOWORD(GetMessagePos ());
-    msg.pt.y = HIWORD(GetMessagePos ());
+    msg.pt.x = (short)LOWORD(GetMessagePos ());
+    msg.pt.y = (short)HIWORD(GetMessagePos ());
 
     SendMessageW (hwndTip, TTM_RELAYEVENT, 0, (LPARAM)&msg);
 }
@@ -203,7 +203,7 @@ static void
 TAB_DumpItemExternalT(TCITEMW *pti, UINT iItem, BOOL isW)
 {
     if (TRACE_ON(tab)) {
-	TRACE("external tab %d, mask=0x%08x, dwState=0x%08lx, dwStateMask=0x%08lx, cchTextMax=0x%08x\n",
+	TRACE("external tab %d, mask=0x%08x, dwState=0x%08x, dwStateMask=0x%08x, cchTextMax=0x%08x\n",
 	      iItem, pti->mask, pti->dwState, pti->dwStateMask, pti->cchTextMax);
 	TRACE("external tab %d,   iImage=%d, lParam=0x%08lx, pszTextW=%s\n",
 	      iItem, pti->iImage, pti->lParam, isW ? debugstr_w(pti->pszText) : debugstr_a((LPSTR)pti->pszText));
@@ -217,10 +217,10 @@ TAB_DumpItemInternal(TAB_INFO *infoPtr, UINT iItem)
 	TAB_ITEM *ti;
 
 	ti = TAB_GetItem(infoPtr, iItem);
-	TRACE("tab %d, mask=0x%08x, dwState=0x%08lx, pszText=%s, iImage=%d\n",
+	TRACE("tab %d, mask=0x%08x, dwState=0x%08x, pszText=%s, iImage=%d\n",
 	      iItem, ti->mask, ti->dwState, debugstr_w(ti->pszText),
 	      ti->iImage);
-	TRACE("tab %d, rect.left=%ld, rect.top(row)=%ld\n",
+	TRACE("tab %d, rect.left=%d, rect.top(row)=%d\n",
 	      iItem, ti->rect.left, ti->rect.top);
     }
 }
@@ -419,7 +419,7 @@ static BOOL TAB_InternalGetItemRect(
 	     SELECTED_TAB_OFFSET,
 	     0);
   }
-  TRACE("item %d tab h=%d, rect=(%ld,%ld)-(%ld,%ld)\n",
+  TRACE("item %d tab h=%d, rect=(%d,%d)-(%d,%d)\n",
 	itemIndex, infoPtr->tabHeight,
 	itemRect->left, itemRect->top, itemRect->right, itemRect->bottom);
 
@@ -534,7 +534,7 @@ static void TAB_FocusChanging(const TAB_INFO *infoPtr)
    */
   if (isVisible)
   {
-      TRACE("invalidate (%ld,%ld)-(%ld,%ld)\n",
+      TRACE("invalidate (%d,%d)-(%d,%d)\n",
 	    selectedRect.left,selectedRect.top,
 	    selectedRect.right,selectedRect.bottom);
     InvalidateRect(infoPtr->hwnd, &selectedRect, TRUE);
@@ -589,8 +589,8 @@ TAB_NCHitTest (TAB_INFO *infoPtr, LPARAM lParam)
   POINT pt;
   UINT dummyflag;
 
-  pt.x = LOWORD(lParam);
-  pt.y = HIWORD(lParam);
+  pt.x = (short)LOWORD(lParam);
+  pt.y = (short)HIWORD(lParam);
   ScreenToClient(infoPtr->hwnd, &pt);
 
   if (TAB_InternalHitTest(infoPtr, pt, &dummyflag) == -1)
@@ -618,8 +618,8 @@ TAB_LButtonDown (TAB_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     TAB_RelayEvent (infoPtr->hwndToolTip, infoPtr->hwnd,
 		    WM_LBUTTONDOWN, wParam, lParam);
 
-  pt.x = (INT)LOWORD(lParam);
-  pt.y = (INT)HIWORD(lParam);
+  pt.x = (short)LOWORD(lParam);
+  pt.y = (short)HIWORD(lParam);
 
   newItem = TAB_InternalHitTest (infoPtr, pt, &dummy);
 
@@ -790,8 +790,8 @@ TAB_RecalcHotTrack
     }
     else
     {
-      pt.x = LOWORD(*pos);
-      pt.y = HIWORD(*pos);
+      pt.x = (short)LOWORD(*pos);
+      pt.y = (short)HIWORD(*pos);
     }
 
     item = TAB_InternalHitTest(infoPtr, pt, &flags);
@@ -876,7 +876,7 @@ static LRESULT TAB_AdjustRect(
     DWORD lStyle = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
     LONG *iRightBottom, *iLeftTop;
 
-    TRACE ("hwnd=%p fLarger=%d (%ld,%ld)-(%ld,%ld)\n", infoPtr->hwnd, fLarger, prc->left, prc->top, prc->right, prc->bottom);
+    TRACE ("hwnd=%p fLarger=%d (%d,%d)-(%d,%d)\n", infoPtr->hwnd, fLarger, prc->left, prc->top, prc->right, prc->bottom);
 
     if(lStyle & TCS_VERTICAL)
     {
@@ -1145,11 +1145,11 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
 	                 ((lStyle & TCS_BUTTONS) ? 2 : 1) *
                           infoPtr->uVItemPadding;
 
-    TRACE("tabH=%d, tmH=%ld, iconh=%d\n",
+    TRACE("tabH=%d, tmH=%d, iconh=%d\n",
 	  infoPtr->tabHeight, fontMetrics.tmHeight, icon_height);
   }
 
-  TRACE("client right=%ld\n", clientRect.right);
+  TRACE("client right=%d\n", clientRect.right);
 
   /* Get the icon width */
   if (infoPtr->himl)
@@ -1206,7 +1206,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
         tabwidth = max(tabwidth, infoPtr->tabMinWidth);
 
       curr->rect.right = curr->rect.left + tabwidth;
-      TRACE("for <%s>, l,r=%ld,%ld\n",
+      TRACE("for <%s>, l,r=%d,%d\n",
 	  debugstr_w(curr->pszText), curr->rect.left, curr->rect.right);
     }
 
@@ -1226,14 +1226,14 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
 
 	curr->rect.left = 0;
         curItemRowCount++;
-	TRACE("wrapping <%s>, l,r=%ld,%ld\n", debugstr_w(curr->pszText),
+	TRACE("wrapping <%s>, l,r=%d,%d\n", debugstr_w(curr->pszText),
 	    curr->rect.left, curr->rect.right);
     }
 
     curr->rect.bottom = 0;
     curr->rect.top = curItemRowCount - 1;
 
-    TRACE("Rect: T %li, L %li, B %li, R %li\n", curr->rect.top,
+    TRACE("Rect: T %i, L %i, B %i, R %i\n", curr->rect.top,
 	  curr->rect.left, curr->rect.bottom, curr->rect.right);
 
     /*
@@ -1304,7 +1304,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
           curr->rect.right -= curr->rect.left;
           curr->rect.left = 0;
 
-	  TRACE("r=%ld, cl=%d, cl.r=%ld, iCount=%d, iRow=%d, uNumRows=%d, remTab=%d, tabPerRow=%d\n",
+          TRACE("r=%d, cl=%d, cl.r=%d, iCount=%d, iRow=%d, uNumRows=%d, remTab=%d, tabPerRow=%d\n",
 	      curr->rect.right, curItemLeftPos, clientRect.right,
 	      iCount, iRow, infoPtr->uNumRows, remTab, tabPerRow);
 
@@ -1341,7 +1341,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
           else
             curItemLeftPos = curr->rect.right;
 
-	  TRACE("arranging <%s>, l,r=%ld,%ld, row=%ld\n",
+          TRACE("arranging <%s>, l,r=%d,%d, row=%d\n",
 	      debugstr_w(curr->pszText), curr->rect.left,
 	      curr->rect.right, curr->rect.top);
       }
@@ -1393,7 +1393,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
 	      item->rect.left += iCount * widthDiff;
 	      item->rect.right += (iCount + 1) * widthDiff;
 
-	      TRACE("adjusting 1 <%s>, l,r=%ld,%ld\n",
+              TRACE("adjusting 1 <%s>, l,r=%d,%d\n",
 		  debugstr_w(item->pszText),
 		  item->rect.left, item->rect.right);
 
@@ -1405,7 +1405,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
 	    start->rect.left = clientRect.left;
 	    start->rect.right = clientRect.right - 4;
 
-	    TRACE("adjusting 2 <%s>, l,r=%ld,%ld\n",
+            TRACE("adjusting 2 <%s>, l,r=%d,%d\n",
 		debugstr_w(start->pszText),
 		start->rect.left, start->rect.right);
 
@@ -1626,7 +1626,7 @@ TAB_DrawItemInterior
       }
     }
   }
-  TRACE("drawRect=(%ld,%ld)-(%ld,%ld)\n",
+  TRACE("drawRect=(%d,%d)-(%d,%d)\n",
 	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom);
 
   /* Clear interior */
@@ -1770,7 +1770,7 @@ TAB_DrawItemInterior
       if (center_offset_v < 0)
         center_offset_v = 0;
 	
-      TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%ld,%ld)-(%ld,%ld), textlen=%ld\n",
+      TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%d,%d)-(%d,%d), textlen=%d\n",
 	  debugstr_w(item->pszText), center_offset_h, center_offset_v,
 	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom,
 	  (rcText.right-rcText.left));
@@ -1797,7 +1797,7 @@ TAB_DrawItemInterior
         drawRect->left += cx + infoPtr->uHItemPadding;
       }
 
-      TRACE("drawing image=%d, left=%ld, top=%ld\n",
+      TRACE("drawing image=%d, left=%d, top=%d\n",
 	    item->iImage, rcImage.left, rcImage.top-1);
       ImageList_Draw
         (
@@ -1901,7 +1901,7 @@ TAB_DrawItemInterior
     }
     else
     {
-      TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%ld,%ld)-(%ld,%ld), textlen=%ld\n",
+      TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%d,%d)-(%d,%d), textlen=%d\n",
 	  debugstr_w(item->pszText), center_offset_h, center_offset_v,
 	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom,
 	  (rcText.right-rcText.left));
@@ -2092,7 +2092,7 @@ static void TAB_DrawItem(
 	  /* Adjust both rectangles to match native */
 	  r.left += (1-ZZ);
 
-	  TRACE("<right> item=%d, fill=(%ld,%ld)-(%ld,%ld), edge=(%ld,%ld)-(%ld,%ld)\n",
+          TRACE("<right> item=%d, fill=(%d,%d)-(%d,%d), edge=(%d,%d)-(%d,%d)\n",
 		iItem,
 		fillRect.left,fillRect.top,fillRect.right,fillRect.bottom,
 		r.left,r.top,r.right,r.bottom);
@@ -2133,7 +2133,7 @@ static void TAB_DrawItem(
         }
         else
         {
-	  TRACE("<left> item=%d, fill=(%ld,%ld)-(%ld,%ld), edge=(%ld,%ld)-(%ld,%ld)\n",
+          TRACE("<left> item=%d, fill=(%d,%d)-(%d,%d), edge=(%d,%d)-(%d,%d)\n",
 		iItem,
 		fillRect.left,fillRect.top,fillRect.right,fillRect.bottom,
 		r.left,r.top,r.right,r.bottom);
@@ -2187,7 +2187,7 @@ static void TAB_DrawItem(
 	    r.top -= 1;
 	  }
 
-	  TRACE("<bottom> item=%d, fill=(%ld,%ld)-(%ld,%ld), edge=(%ld,%ld)-(%ld,%ld)\n",
+          TRACE("<bottom> item=%d, fill=(%d,%d)-(%d,%d), edge=(%d,%d)-(%d,%d)\n",
 		iItem,
 		fillRect.left,fillRect.top,fillRect.right,fillRect.bottom,
 		r.left,r.top,r.right,r.bottom);
@@ -2241,7 +2241,7 @@ static void TAB_DrawItem(
 	    r.bottom += 2;
 	  }
 
-	  TRACE("<top> item=%d, fill=(%ld,%ld)-(%ld,%ld), edge=(%ld,%ld)-(%ld,%ld)\n",
+          TRACE("<top> item=%d, fill=(%d,%d)-(%d,%d), edge=(%d,%d)-(%d,%d)\n",
 		iItem,
 		fillRect.left,fillRect.top,fillRect.right,fillRect.bottom,
 		r.left,r.top,r.right,r.bottom);
@@ -2312,7 +2312,7 @@ static void TAB_DrawBorder (TAB_INFO *infoPtr, HDC hdc)
       rect.top    += infoPtr->tabHeight * infoPtr->uNumRows + CONTROL_BORDER_SIZEX;
   }
 
-  TRACE("border=(%ld,%ld)-(%ld,%ld)\n",
+  TRACE("border=(%d,%d)-(%d,%d)\n",
 	rect.left, rect.top, rect.right, rect.bottom);
 
   if (theme)
@@ -2554,7 +2554,7 @@ static void TAB_InvalidateTabArea(TAB_INFO* infoPtr)
       rInvalidate.right = clientRect.right - r.left;
   }
   
-  TRACE("invalidate (%ld,%ld)-(%ld,%ld)\n",
+  TRACE("invalidate (%d,%d)-(%d,%d)\n",
 	rInvalidate.left,  rInvalidate.top,
 	rInvalidate.right, rInvalidate.bottom);
  
@@ -2571,7 +2571,7 @@ static inline LRESULT TAB_Paint (TAB_INFO *infoPtr, HDC hdcPaint)
   else
   {
     hdc = BeginPaint (infoPtr->hwnd, &ps);
-    TRACE("erase %d, rect=(%ld,%ld)-(%ld,%ld)\n",
+    TRACE("erase %d, rect=(%d,%d)-(%d,%d)\n",
          ps.fErase,
          ps.rcPaint.left,ps.rcPaint.top,ps.rcPaint.right,ps.rcPaint.bottom);
   }
@@ -2593,7 +2593,7 @@ TAB_InsertItemT (TAB_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL bUnicode)
   RECT rect;
 
   GetClientRect (infoPtr->hwnd, &rect);
-  TRACE("Rect: %p T %li, L %li, B %li, R %li\n", infoPtr->hwnd,
+  TRACE("Rect: %p T %i, L %i, B %i, R %i\n", infoPtr->hwnd,
         rect.top, rect.left, rect.bottom, rect.right);
 
   pti = (TCITEMW *)lParam;
@@ -3038,7 +3038,7 @@ static LRESULT TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
   if (dwStyle & TCS_TOOLTIPS) {
     /* Create tooltip control */
     infoPtr->hwndToolTip =
-      CreateWindowExW (0, TOOLTIPS_CLASSW, NULL, 0,
+      CreateWindowExW (0, TOOLTIPS_CLASSW, NULL, WS_POPUP,
 		       CW_USEDEFAULT, CW_USEDEFAULT,
 		       CW_USEDEFAULT, CW_USEDEFAULT,
 		       hwnd, 0, 0, 0);

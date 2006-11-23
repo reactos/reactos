@@ -77,8 +77,8 @@ static LRESULT CALLBACK subclass_proc ## N (HWND wnd, UINT msg,             \
 {                                                                           \
     LRESULT result;                                                         \
     ULONG_PTR refData;                                                      \
-    SetPropW (wnd, MAKEINTATOMW (atSubclassProp), (HANDLE)N);               \
-    refData = (ULONG_PTR)GetPropW (wnd, MAKEINTATOMW (atRefDataProp));      \
+    SetPropW (wnd, (LPCWSTR)MAKEINTATOM(atSubclassProp), (HANDLE)N);        \
+    refData = (ULONG_PTR)GetPropW (wnd, (LPCWSTR)MAKEINTATOM(atRefDataProp)); \
     TRACE ("%d; (%p, %x, %x, %lx, %lx)\n", N, wnd, msg, wParam, lParam,     \
         refData);                                                           \
     result = subclasses[N].subclassProc (wnd, msg, wParam, lParam, refData);\
@@ -138,7 +138,7 @@ void THEMING_Initialize (void)
 
         if (!RegisterClassExW (&class))
         {
-            ERR("Could not re-register class %s: %lx\n", 
+            ERR("Could not re-register class %s: %x\n",
                 debugstr_w (subclasses[i].className), GetLastError ());
         }
         else
@@ -173,7 +173,7 @@ void THEMING_Uninitialize (void)
  */
 LRESULT THEMING_CallOriginalClass (HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    INT_PTR subclass = (INT_PTR)GetPropW (wnd, MAKEINTATOMW (atSubclassProp));
+    INT_PTR subclass = (INT_PTR)GetPropW (wnd, (LPCWSTR)MAKEINTATOM(atSubclassProp));
     WNDPROC oldProc = originalProcs[subclass];
     return CallWindowProcW (oldProc, wnd, msg, wParam, lParam);
 }
@@ -185,5 +185,5 @@ LRESULT THEMING_CallOriginalClass (HWND wnd, UINT msg, WPARAM wParam, LPARAM lPa
  */
 void THEMING_SetSubclassData (HWND wnd, ULONG_PTR refData)
 {
-    SetPropW (wnd, MAKEINTATOMW (atRefDataProp), (HANDLE)refData);
+    SetPropW (wnd, (LPCWSTR)MAKEINTATOM(atRefDataProp), (HANDLE)refData);
 }

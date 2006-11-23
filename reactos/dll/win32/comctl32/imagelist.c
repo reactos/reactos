@@ -22,14 +22,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTE
- * 
+ *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Sep. 12, 2002, by Dimitrie O. Paun.
- * 
+ *
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
- * 
+ *
  *  TODO:
  *    - Add support for ILD_PRESERVEALPHA, ILD_SCALE, ILD_DPISCALE
  *    - Add support for ILS_GLOW, ILS_SHADOW, ILS_SATURATE, ILS_ALPHA
@@ -77,13 +77,67 @@ typedef struct
 
 static INTERNALDRAG InternalDrag = { 0, 0, 0, 0, 0, 0, FALSE, 0 };
 
-static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT width, UINT height);
+static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count, UINT height);
 
 static inline BOOL is_valid(HIMAGELIST himl)
 {
     return himl && himl->magic == IMAGELIST_MAGIC;
 }
 
+/*
+ * An imagelist with N images is tiled like this:
+ *
+ *   N/4 ->
+ *
+ * 4 048C..
+ *   159D..
+ * | 26AE.N
+ * V 37BF.
+ */
+
+#define TILE_COUNT 4
+
+static inline UINT imagelist_width( UINT count )
+{
+    return ((count + TILE_COUNT - 1)/TILE_COUNT);
+}
+
+static inline void imagelist_point_from_index( HIMAGELIST himl, UINT index, LPPOINT pt )
+{
+    pt->x = (index/TILE_COUNT) * himl->cx;
+    pt->y = (index%TILE_COUNT) * himl->cy;
+}
+
+static inline void imagelist_get_bitmap_size( HIMAGELIST himl, UINT count, UINT cy, SIZE *sz )
+{
+    sz->cx = imagelist_width( count ) * himl->cx;
+    sz->cy = cy*TILE_COUNT;
+}
+
+/*
+ * imagelist_copy_images()
+ *
+ * Copies a block of count images from offset src in the list to offset dest.
+ * Images are copied a row at at time. Assumes hdcSrc and hdcDest are different.
+ */
+static inline void imagelist_copy_images( HIMAGELIST himl, HDC hdcSrc, HDC hdcDest,
+                                          UINT src, UINT count, UINT dest )
+{
+    POINT ptSrc, ptDest;
+    SIZE sz;
+    UINT i;
+
+    for ( i=0; i<TILE_COUNT; i++ )
+    {
+        imagelist_point_from_index( himl, src+i, &ptSrc );
+        imagelist_point_from_index( himl, dest+i, &ptDest );
+        sz.cx = himl->cx * imagelist_width( count - i );
+        sz.cy = himl->cy;
+
+        BitBlt( hdcDest, ptDest.x, ptDest.y, sz.cx, sz.cy,
+                hdcSrc, ptSrc.x, ptSrc.y, SRCCOPY );
+    }
+}
 
 /*************************************************************************
  * IMAGELIST_InternalExpandBitmaps [Internal]
@@ -105,7 +159,8 @@ IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cx, INT c
 {
     HDC     hdcBitmap;
     HBITMAP hbmNewBitmap, hbmNull;
-    INT     nNewWidth, nNewCount;
+    INT     nNewCount;
+    SIZE    sz;
 
     if ((himl->cCurImage + nImageCount <= himl->cMaxImage)
         && (himl->cy >= cy))
@@ -113,20 +168,21 @@ IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cx, INT c
 
     if (cy == 0) cy = himl->cy;
     nNewCount = himl->cCurImage + nImageCount + himl->cGrow;
-    nNewWidth = nNewCount * himl->cx;
 
-    TRACE("Create expanded bitmaps : himl=%p x=%d y=%d count=%d\n", himl, nNewWidth, cy, nNewCount);
+    imagelist_get_bitmap_size(himl, nNewCount, cy, &sz);
+
+    TRACE("Create expanded bitmaps : himl=%p x=%d y=%d count=%d\n", himl, sz.cx, cy, nNewCount);
     hdcBitmap = CreateCompatibleDC (0);
 
-    hbmNewBitmap = ImageList_CreateImage(hdcBitmap, himl, nNewWidth, cy);
+    hbmNewBitmap = ImageList_CreateImage(hdcBitmap, himl, nNewCount, cy);
 
     if (hbmNewBitmap == 0)
-        ERR("creating new image bitmap (x=%d y=%d)!\n", nNewWidth, cy);
+        ERR("creating new image bitmap (x=%d y=%d)!\n", sz.cx, cy);
 
-    if(himl->cCurImage)
+    if (himl->cCurImage)
     {
         hbmNull = SelectObject (hdcBitmap, hbmNewBitmap);
-        BitBlt (hdcBitmap, 0, 0, himl->cCurImage * himl->cx, cy,
+        BitBlt (hdcBitmap, 0, 0, sz.cx, sz.cy,
                 himl->hdcImage, 0, 0, SRCCOPY);
         SelectObject (hdcBitmap, hbmNull);
     }
@@ -136,7 +192,7 @@ IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cx, INT c
 
     if (himl->flags & ILC_MASK)
     {
-        hbmNewBitmap = CreateBitmap (nNewWidth, cy, 1, 1, NULL);
+        hbmNewBitmap = CreateBitmap (sz.cx, sz.cy, 1, 1, NULL);
 
         if (hbmNewBitmap == 0)
             ERR("creating new mask bitmap!\n");
@@ -144,7 +200,7 @@ IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cx, INT c
 	if(himl->cCurImage)
 	{
 	    hbmNull = SelectObject (hdcBitmap, hbmNewBitmap);
-	    BitBlt (hdcBitmap, 0, 0, himl->cCurImage * himl->cx, cy,
+	    BitBlt (hdcBitmap, 0, 0, sz.cx, sz.cy,
 		    himl->hdcMask, 0, 0, SRCCOPY);
 	    SelectObject (hdcBitmap, hbmNull);
 	}
@@ -177,56 +233,52 @@ IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cx, INT c
 INT WINAPI
 ImageList_Add (HIMAGELIST himl,	HBITMAP hbmImage, HBITMAP hbmMask)
 {
-    HDC     hdcBitmap;
-    INT     nFirstIndex, nImageCount;
-    INT     nStartX;
+    HDC     hdcBitmap, hdcTemp;
+    INT     nFirstIndex, nImageCount, i;
     BITMAP  bmp;
-    HBITMAP hOldBitmap;
+    HBITMAP hOldBitmap, hOldBitmapTemp;
+    POINT   pt;
 
     TRACE("himl=%p hbmimage=%p hbmmask=%p\n", himl, hbmImage, hbmMask);
     if (!is_valid(himl))
         return -1;
 
-    GetObjectA (hbmImage, sizeof(BITMAP), (LPVOID)&bmp);
+    if (!GetObjectW(hbmImage, sizeof(BITMAP), (LPVOID)&bmp))
+        return -1;
+
     nImageCount = bmp.bmWidth / himl->cx;
 
     IMAGELIST_InternalExpandBitmaps (himl, nImageCount, bmp.bmWidth, bmp.bmHeight);
-
-    nStartX = himl->cCurImage * himl->cx;
 
     hdcBitmap = CreateCompatibleDC(0);
 
     hOldBitmap = SelectObject(hdcBitmap, hbmImage);
 
-    /* Copy result to the imagelist
-    */
-    BitBlt (himl->hdcImage, nStartX, 0, bmp.bmWidth, bmp.bmHeight,
-        hdcBitmap, 0, 0, SRCCOPY);
-
-    if(himl->hbmMask)
+    for (i=0; i<nImageCount; i++)
     {
-	HDC hdcTemp;
-	HBITMAP hOldBitmapTemp;
+        imagelist_point_from_index( himl, himl->cCurImage + i, &pt );
+
+        /* Copy result to the imagelist
+        */
+        BitBlt( himl->hdcImage, pt.x, pt.y, himl->cx, bmp.bmHeight,
+                hdcBitmap, i*himl->cx, 0, SRCCOPY );
+
+        if (!himl->hbmMask)
+             continue;
 
         hdcTemp   = CreateCompatibleDC(0);
         hOldBitmapTemp = SelectObject(hdcTemp, hbmMask);
 
-        BitBlt (himl->hdcMask,
-            nStartX, 0, bmp.bmWidth, bmp.bmHeight,
-            hdcTemp,
-            0, 0,
-            SRCCOPY);
+        BitBlt( himl->hdcMask, pt.x, pt.y, himl->cx, bmp.bmHeight,
+                hdcTemp, i*himl->cx, 0, SRCCOPY );
 
         SelectObject(hdcTemp, hOldBitmapTemp);
         DeleteDC(hdcTemp);
 
         /* Remove the background from the image
         */
-        BitBlt (himl->hdcImage,
-            nStartX, 0, bmp.bmWidth, bmp.bmHeight,
-            himl->hdcMask,
-            nStartX, 0,
-            0x220326); /* NOTSRCAND */
+        BitBlt( himl->hdcImage, pt.x, pt.y, himl->cx, bmp.bmHeight,
+                himl->hdcMask, pt.x, pt.y, 0x220326 ); /* NOTSRCAND */
     }
 
     SelectObject(hdcBitmap, hOldBitmap);
@@ -279,17 +331,18 @@ INT WINAPI
 ImageList_AddMasked (HIMAGELIST himl, HBITMAP hBitmap, COLORREF clrMask)
 {
     HDC    hdcMask, hdcBitmap;
-    INT    nIndex, nImageCount, nMaskXOffset=0;
+    INT    i, nIndex, nImageCount;
     BITMAP bmp;
     HBITMAP hOldBitmap;
     HBITMAP hMaskBitmap=0;
     COLORREF bkColor;
+    POINT  pt;
 
-    TRACE("himl=%p hbitmap=%p clrmask=%lx\n", himl, hBitmap, clrMask);
+    TRACE("himl=%p hbitmap=%p clrmask=%x\n", himl, hBitmap, clrMask);
     if (!is_valid(himl))
         return -1;
 
-    if (!GetObjectA (hBitmap, sizeof(BITMAP), &bmp))
+    if (!GetObjectW(hBitmap, sizeof(BITMAP), &bmp))
         return -1;
 
     if (himl->cx > 0)
@@ -303,67 +356,50 @@ ImageList_AddMasked (HIMAGELIST himl, HBITMAP hBitmap, COLORREF clrMask)
     himl->cCurImage += nImageCount;
 
     hdcBitmap = CreateCompatibleDC(0);
-
-
     hOldBitmap = SelectObject(hdcBitmap, hBitmap);
-    if(himl->hbmMask)
-    {
-        hdcMask = himl->hdcMask;
-        nMaskXOffset = nIndex * himl->cx;
-    }
-    else
-    {
-        /*
-            Create a temp Mask so we can remove the background of
-            the Image (Windows does this even if there is no mask)
-        */
-        hdcMask = CreateCompatibleDC(0);
-        hMaskBitmap = CreateBitmap(bmp.bmWidth, bmp.bmHeight, 1, 1, NULL);
-        SelectObject(hdcMask, hMaskBitmap);
-        nMaskXOffset = 0;
-    }
+
+    /* Create a temp Mask so we can remove the background of the Image */
+    hdcMask = CreateCompatibleDC(0);
+    hMaskBitmap = CreateBitmap(bmp.bmWidth, bmp.bmHeight, 1, 1, NULL);
+    SelectObject(hdcMask, hMaskBitmap);
+
     /* create monochrome image to the mask bitmap */
-    bkColor = (clrMask != CLR_DEFAULT) ? clrMask :
-        GetPixel (hdcBitmap, 0, 0);
+    bkColor = (clrMask != CLR_DEFAULT) ? clrMask : GetPixel (hdcBitmap, 0, 0);
     SetBkColor (hdcBitmap, bkColor);
-    BitBlt (hdcMask,
-        nMaskXOffset, 0, bmp.bmWidth, bmp.bmHeight,
-        hdcBitmap, 0, 0,
-        SRCCOPY);
+    BitBlt (hdcMask, 0, 0, bmp.bmWidth, bmp.bmHeight, hdcBitmap, 0, 0, SRCCOPY);
 
     SetBkColor(hdcBitmap, RGB(255,255,255));
-    /*Remove the background from the image
-    */
+
     /*
-        WINDOWS BUG ALERT!!!!!!
-        The statement below should not be done in common practice
-        but this is how ImageList_AddMasked works in Windows.
-        It overwrites the original bitmap passed, this was discovered
-        by using the same bitmap to iterate the different styles
-        on windows where it failed (BUT ImageList_Add is OK)
-        This is here in case some apps rely on this bug
-    */
-    BitBlt(hdcBitmap,
-        0, 0, bmp.bmWidth, bmp.bmHeight,
-        hdcMask,
-        nMaskXOffset, 0,
-        0x220326); /* NOTSRCAND */
-    /* Copy result to the imagelist
-    */
-    BitBlt (himl->hdcImage,
-        nIndex * himl->cx, 0, bmp.bmWidth, bmp.bmHeight,
-        hdcBitmap,
-        0, 0,
-        SRCCOPY);
-    /* Clean up
-    */
+     * Remove the background from the image
+     *
+     * WINDOWS BUG ALERT!!!!!!
+     *  The statement below should not be done in common practice
+     *  but this is how ImageList_AddMasked works in Windows.
+     *  It overwrites the original bitmap passed, this was discovered
+     *  by using the same bitmap to iterate the different styles
+     *  on windows where it failed (BUT ImageList_Add is OK)
+     *  This is here in case some apps rely on this bug
+     *
+     *  Blt mode 0x220326 is NOTSRCAND
+     */
+    BitBlt(hdcBitmap, 0, 0, bmp.bmWidth, bmp.bmHeight, hdcMask, 0, 0, 0x220326);
+
+    /* Copy result to the imagelist */
+    for (i=0; i<nImageCount; i++)
+    {
+        imagelist_point_from_index( himl, nIndex + i, &pt );
+        BitBlt(himl->hdcImage, pt.x, pt.y, himl->cx, bmp.bmHeight,
+                hdcBitmap, i*himl->cx, 0, SRCCOPY);
+        BitBlt(himl->hdcMask, pt.x, pt.y, himl->cx, bmp.bmHeight,
+                hdcMask, i*himl->cx, 0, SRCCOPY);
+    }
+
+    /* Clean up */
     SelectObject(hdcBitmap, hOldBitmap);
     DeleteDC(hdcBitmap);
-    if(!himl->hbmMask)
-    {
-        DeleteObject(hMaskBitmap);
-        DeleteDC(hdcMask);
-    }
+    DeleteObject(hMaskBitmap);
+    DeleteDC(hdcMask);
 
     return nIndex;
 }
@@ -452,6 +488,8 @@ BOOL WINAPI
 ImageList_Copy (HIMAGELIST himlDst, INT iDst,	HIMAGELIST himlSrc,
 		INT iSrc, UINT uFlags)
 {
+    POINT ptSrc, ptDst;
+
     TRACE("himlDst=%p iDst=%d himlSrc=%p iSrc=%d\n", himlDst, iDst, himlSrc, iSrc);
 
     if (!is_valid(himlSrc) || !is_valid(himlDst))
@@ -461,13 +499,16 @@ ImageList_Copy (HIMAGELIST himlDst, INT iDst,	HIMAGELIST himlSrc,
     if ((iSrc < 0) || (iSrc >= himlSrc->cCurImage))
 	return FALSE;
 
+    imagelist_point_from_index( himlDst, iDst, &ptDst );
+    imagelist_point_from_index( himlSrc, iSrc, &ptSrc );
+
     if (uFlags & ILCF_SWAP) {
         /* swap */
         HDC     hdcBmp;
         HBITMAP hbmTempImage, hbmTempMask;
 
         hdcBmp = CreateCompatibleDC (0);
-        
+
         /* create temporary bitmaps */
         hbmTempImage = CreateBitmap (himlSrc->cx, himlSrc->cy, 1,
                                        himlSrc->uBitsPixel, NULL);
@@ -478,31 +519,31 @@ ImageList_Copy (HIMAGELIST himlDst, INT iDst,	HIMAGELIST himlSrc,
         /* image */
         SelectObject (hdcBmp, hbmTempImage);
         StretchBlt   (hdcBmp, 0, 0, himlSrc->cx, himlSrc->cy,
-                      himlDst->hdcImage, iDst * himlDst->cx, 0, himlDst->cx, himlDst->cy,
+                      himlDst->hdcImage, ptDst.x, ptDst.y, himlDst->cx, himlDst->cy,
                       SRCCOPY);
         /* mask */
         SelectObject (hdcBmp, hbmTempMask);
         StretchBlt   (hdcBmp, 0, 0, himlSrc->cx, himlSrc->cy,
-                      himlDst->hdcMask, iDst * himlDst->cx, 0, himlDst->cx, himlDst->cy,
+                      himlDst->hdcMask, ptDst.x, ptDst.y, himlDst->cx, himlDst->cy,
                       SRCCOPY);
 
         /* copy (and stretch) source to destination */
         /* image */
-        StretchBlt   (himlDst->hdcImage, iDst * himlDst->cx, 0, himlDst->cx, himlDst->cy,
-                      himlSrc->hdcImage, iSrc * himlSrc->cx, 0, himlSrc->cx, himlSrc->cy,
+        StretchBlt   (himlDst->hdcImage, ptDst.x, ptDst.y, himlDst->cx, himlDst->cy,
+                      himlSrc->hdcImage, ptSrc.x, ptSrc.y, himlSrc->cx, himlSrc->cy,
                       SRCCOPY);
         /* mask */
-        StretchBlt   (himlDst->hdcMask, iDst * himlDst->cx, 0, himlDst->cx, himlDst->cy,
-                      himlSrc->hdcMask, iSrc * himlSrc->cx, 0, himlSrc->cx, himlSrc->cy,
+        StretchBlt   (himlDst->hdcMask, ptDst.x, ptDst.y, himlDst->cx, himlDst->cy,
+                      himlSrc->hdcMask, ptSrc.x, ptSrc.y, himlSrc->cx, himlSrc->cy,
                       SRCCOPY);
 
         /* copy (without stretching) temporary bitmaps to source (restore) */
         /* mask */
-        BitBlt       (himlSrc->hdcMask, iSrc * himlSrc->cx, 0, himlSrc->cx, himlSrc->cy,
+        BitBlt       (himlSrc->hdcMask, ptSrc.x, ptSrc.y, himlSrc->cx, himlSrc->cy,
                       hdcBmp, 0, 0, SRCCOPY);
 
         /* image */
-        BitBlt       (himlSrc->hdcImage, iSrc * himlSrc->cx, 0, himlSrc->cx, himlSrc->cy,
+        BitBlt       (himlSrc->hdcImage, ptSrc.x, ptSrc.y, himlSrc->cx, himlSrc->cy,
                       hdcBmp, 0, 0, SRCCOPY);
         /* delete temporary bitmaps */
         DeleteObject (hbmTempMask);
@@ -511,13 +552,13 @@ ImageList_Copy (HIMAGELIST himlDst, INT iDst,	HIMAGELIST himlSrc,
     }
     else {
         /* copy image */
-        StretchBlt   (himlDst->hdcImage, iDst * himlDst->cx, 0, himlDst->cx, himlDst->cy,
-                      himlSrc->hdcImage, iSrc * himlSrc->cx, 0, himlSrc->cx, himlSrc->cy,
+        StretchBlt   (himlDst->hdcImage, ptDst.x, ptDst.y, himlDst->cx, himlDst->cy,
+                      himlSrc->hdcImage, ptSrc.x, ptSrc.y, himlSrc->cx, himlSrc->cy,
                       SRCCOPY);
 
         /* copy mask */
-        StretchBlt   (himlDst->hdcMask, iDst * himlDst->cx, 0, himlDst->cx, himlDst->cy,
-                      himlSrc->hdcMask, iSrc * himlSrc->cx, 0, himlSrc->cx, himlSrc->cy,
+        StretchBlt   (himlDst->hdcMask, ptDst.x, ptDst.y, himlDst->cx, himlDst->cy,
+                      himlSrc->hdcMask, ptSrc.x, ptSrc.y, himlSrc->cx, himlSrc->cy,
                       SRCCOPY);
     }
 
@@ -597,15 +638,16 @@ ImageList_Create (INT cx, INT cy, UINT flags,
         himl->uBitsPixel = (UINT)GetDeviceCaps (himl->hdcImage, BITSPIXEL);
 
     if (himl->cMaxImage > 0) {
-        himl->hbmImage = ImageList_CreateImage(himl->hdcImage, himl, cx * himl->cMaxImage, cy);
+        himl->hbmImage = ImageList_CreateImage(himl->hdcImage, himl, himl->cMaxImage, cy);
 	SelectObject(himl->hdcImage, himl->hbmImage);
     } else
         himl->hbmImage = 0;
 
     if ((himl->cMaxImage > 0) && (himl->flags & ILC_MASK)) {
-        himl->hbmMask =
-          CreateBitmap (himl->cx * himl->cMaxImage, himl->cy,
-			1, 1, NULL);
+        SIZE sz;
+
+        imagelist_get_bitmap_size(himl, himl->cMaxImage, himl->cy, &sz);
+        himl->hbmMask = CreateBitmap (sz.cx, sz.cy, 1, 1, NULL);
         if (himl->hbmMask == 0) {
             ERR("Error creating mask bitmap!\n");
             goto cleanup;
@@ -1055,7 +1097,7 @@ ImageList_DrawEx (HIMAGELIST himl, INT i, HDC hdc, INT x, INT y,
 BOOL WINAPI
 ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
 {
-    INT cx, cy, lx, ly, nOvlIdx;
+    INT cx, cy, nOvlIdx;
     DWORD fState, dwRop;
     UINT fStyle;
     COLORREF oldImageBk, oldImageFg;
@@ -1063,13 +1105,15 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     HBITMAP hImageBmp, hOldImageBmp, hBlendMaskBmp;
     BOOL bIsTransparent, bBlend, bResult = FALSE, bMask;
     HIMAGELIST himl;
+    POINT pt;
 
     if (!pimldp || !(himl = pimldp->himl)) return FALSE;
     if (!is_valid(himl)) return FALSE;
     if ((pimldp->i < 0) || (pimldp->i >= himl->cCurImage)) return FALSE;
 
-    lx = himl->cx * pimldp->i + pimldp->xBitmap;
-    ly = pimldp->yBitmap;
+    imagelist_point_from_index( himl, pimldp->i, &pt );
+    pt.x += pimldp->xBitmap;
+    pt.y += pimldp->yBitmap;
 
     fState = pimldp->cbSize < sizeof(IMAGELISTDRAWPARAMS) ? ILS_NORMAL : pimldp->fState;
     fStyle = pimldp->fStyle & ~ILD_OVERLAYMASK;
@@ -1119,7 +1163,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
             HBRUSH hOldBrush;
             hOldBrush = SelectObject (hImageDC, CreateSolidBrush (GetTextColor(pimldp->hdcDst)));
             PatBlt( hImageDC, 0, 0, cx, cy, PATCOPY );
-            BitBlt(hImageDC, 0, 0, cx, cy, hMaskListDC, lx, ly, SRCPAINT);
+            BitBlt(hImageDC, 0, 0, cx, cy, hMaskListDC, pt.x, pt.y, SRCPAINT);
             DeleteObject (SelectObject (hImageDC, hOldBrush));
             if( bIsTransparent )
             {
@@ -1148,11 +1192,11 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
 
         hOldBrush = SelectObject (hImageDC, CreateSolidBrush (colour));
         PatBlt( hImageDC, 0, 0, cx, cy, PATCOPY );
-        BitBlt( hImageDC, 0, 0, cx, cy, hMaskListDC, lx, ly, SRCAND );
-        BitBlt( hImageDC, 0, 0, cx, cy, hImageListDC, lx, ly, SRCPAINT );
+        BitBlt( hImageDC, 0, 0, cx, cy, hMaskListDC, pt.x, pt.y, SRCAND );
+        BitBlt( hImageDC, 0, 0, cx, cy, hImageListDC, pt.x, pt.y, SRCPAINT );
         DeleteObject (SelectObject (hImageDC, hOldBrush));
     }
-  
+
     /* Time for blending, if required */
     if (bBlend) {
 	HBRUSH hBlendBrush, hOldBrush;
@@ -1169,10 +1213,10 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
 
     	/* Modify the blend mask if an Image Mask exist */
     	if(himl->hbmMask) {
-	    BitBlt(hBlendMaskDC, 0, 0, cx, cy, hMaskListDC, lx, ly, 0x220326); /* NOTSRCAND */
+	    BitBlt(hBlendMaskDC, 0, 0, cx, cy, hMaskListDC, pt.x, pt.y, 0x220326); /* NOTSRCAND */
 	    BitBlt(hBlendMaskDC, 0, 0, cx, cy, hBlendMaskDC, 0, 0, NOTSRCCOPY);
 	}
-	
+
 	/* now apply blend to the current image given the BlendMask */
         if (clrBlend == CLR_DEFAULT) clrBlend = GetSysColor (COLOR_HIGHLIGHT);
         else if (clrBlend == CLR_NONE) clrBlend = GetTextColor (pimldp->hdcDst);
@@ -1181,16 +1225,18 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
 	DeleteObject(SelectObject(hImageDC, hOldBrush));
 	SelectObject(hBlendMaskDC, hOldBitmap);
     }
-    
-    /* Now do the overlay image, if any */ 
+
+    /* Now do the overlay image, if any */
     nOvlIdx = (pimldp->fStyle & ILD_OVERLAYMASK) >> 8;
     if ( (nOvlIdx >= 1) && (nOvlIdx <= MAX_OVERLAYIMAGE)) {
-    	nOvlIdx = himl->nOvlIdx[nOvlIdx - 1];
-    	if ((nOvlIdx >= 0) && (nOvlIdx < himl->cCurImage)) {
-    	    const INT ox = himl->cx * nOvlIdx + pimldp->xBitmap;
+	nOvlIdx = himl->nOvlIdx[nOvlIdx - 1];
+	if ((nOvlIdx >= 0) && (nOvlIdx < himl->cCurImage)) {
+            POINT ptOvl;
+            imagelist_point_from_index( himl, nOvlIdx, &ptOvl );
+            ptOvl.x += pimldp->xBitmap;
 	    if (himl->hbmMask && !(fStyle & ILD_IMAGE))
-		BitBlt (hImageDC, 0, 0, cx, cy, hMaskListDC, ox, ly, SRCAND);
-	    BitBlt (hImageDC, 0, 0, cx, cy, hImageListDC, ox, ly, SRCPAINT);
+		BitBlt (hImageDC, 0, 0, cx, cy, hMaskListDC, ptOvl.x, ptOvl.y, SRCAND);
+	    BitBlt (hImageDC, 0, 0, cx, cy, hImageListDC, ptOvl.x, ptOvl.y, SRCPAINT);
 	}
     }
 
@@ -1202,13 +1248,13 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     if (fStyle & ILD_PRESERVEALPHA) FIXME("ILD_PRESERVEALPHA: unimplemented!\n");
     if (fStyle & ILD_SCALE) FIXME("ILD_SCALE: unimplemented!\n");
     if (fStyle & ILD_DPISCALE) FIXME("ILD_DPISCALE: unimplemented!\n");
-    
+
     /* now copy the image to the screen */
     dwRop = SRCCOPY;
     if (himl->hbmMask && bIsTransparent ) {
 	COLORREF oldDstFg = SetTextColor(pimldp->hdcDst, RGB( 0, 0, 0 ) );
 	COLORREF oldDstBk = SetBkColor(pimldp->hdcDst, RGB( 0xff, 0xff, 0xff ));
-        BitBlt (pimldp->hdcDst, pimldp->x,  pimldp->y, cx, cy, hMaskListDC, lx, ly, SRCAND);
+        BitBlt (pimldp->hdcDst, pimldp->x,  pimldp->y, cx, cy, hMaskListDC, pt.x, pt.y, SRCAND);
 	SetBkColor(pimldp->hdcDst, oldDstBk);
 	SetTextColor(pimldp->hdcDst, oldDstFg);
 	dwRop = SRCPAINT;
@@ -1217,7 +1263,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     BitBlt (pimldp->hdcDst, pimldp->x,  pimldp->y, cx, cy, hImageDC, 0, 0, dwRop);
 
     bResult = TRUE;
-end: 
+end:
     /* cleanup the mess */
     SetBkColor(hImageDC, oldImageBk);
     SetTextColor(hImageDC, oldImageFg);
@@ -1259,11 +1305,14 @@ ImageList_Duplicate (HIMAGELIST himlSrc)
 
     if (himlDst)
     {
-        BitBlt (himlDst->hdcImage, 0, 0, himlSrc->cCurImage * himlSrc->cx, himlSrc->cy,
+        SIZE sz;
+
+        imagelist_get_bitmap_size(himlSrc, himlSrc->cCurImage, himlSrc->cy, &sz);
+        BitBlt (himlDst->hdcImage, 0, 0, sz.cx, sz.cy,
                 himlSrc->hdcImage, 0, 0, SRCCOPY);
 
         if (himlDst->hbmMask)
-            BitBlt (himlDst->hdcMask, 0, 0, himlSrc->cCurImage * himlSrc->cx, himlSrc->cy,
+            BitBlt (himlDst->hdcMask, 0, 0, sz.cx, sz.cy,
                     himlSrc->hdcMask, 0, 0, SRCCOPY);
 
 	himlDst->cCurImage = himlSrc->cCurImage;
@@ -1401,6 +1450,7 @@ ImageList_GetIcon (HIMAGELIST himl, INT i, UINT fStyle)
     HICON hIcon;
     HBITMAP hOldDstBitmap;
     HDC hdcDst;
+    POINT pt;
 
     TRACE("%p %d %d\n", himl, i, fStyle);
     if (!is_valid(himl) || (i < 0) || (i >= himl->cCurImage)) return NULL;
@@ -1416,12 +1466,14 @@ ImageList_GetIcon (HIMAGELIST himl, INT i, UINT fStyle)
 
     hdcDst = CreateCompatibleDC(0);
 
+    imagelist_point_from_index( himl, i, &pt );
+
     /* draw mask*/
     ii.hbmMask  = CreateBitmap (himl->cx, himl->cy, 1, 1, NULL);
     hOldDstBitmap = SelectObject (hdcDst, ii.hbmMask);
     if (himl->hbmMask) {
         BitBlt (hdcDst, 0, 0, himl->cx, himl->cy,
-                himl->hdcMask, i * himl->cx, 0, SRCCOPY);
+                himl->hdcMask, pt.x, pt.y, SRCCOPY);
     }
     else
         PatBlt (hdcDst, 0, 0, himl->cx, himl->cy, BLACKNESS);
@@ -1429,7 +1481,7 @@ ImageList_GetIcon (HIMAGELIST himl, INT i, UINT fStyle)
     /* draw image*/
     SelectObject (hdcDst, ii.hbmColor);
     BitBlt (hdcDst, 0, 0, himl->cx, himl->cy,
-            himl->hdcImage, i * himl->cx, 0, SRCCOPY);
+            himl->hdcImage, pt.x, pt.y, SRCCOPY);
 
     /*
      * CreateIconIndirect requires us to deselect the bitmaps from
@@ -1523,6 +1575,8 @@ ImageList_GetImageCount (HIMAGELIST himl)
 BOOL WINAPI
 ImageList_GetImageInfo (HIMAGELIST himl, INT i, IMAGEINFO *pImageInfo)
 {
+    POINT pt;
+
     if (!is_valid(himl) || (pImageInfo == NULL))
 	return FALSE;
     if ((i < 0) || (i >= himl->cCurImage))
@@ -1531,10 +1585,11 @@ ImageList_GetImageInfo (HIMAGELIST himl, INT i, IMAGEINFO *pImageInfo)
     pImageInfo->hbmImage = himl->hbmImage;
     pImageInfo->hbmMask  = himl->hbmMask;
 
-    pImageInfo->rcImage.top    = 0;
-    pImageInfo->rcImage.bottom = himl->cy;
-    pImageInfo->rcImage.left   = i * himl->cx;
-    pImageInfo->rcImage.right  = (i+1) * himl->cx;
+    imagelist_point_from_index( himl, i, &pt );
+    pImageInfo->rcImage.top    = pt.y;
+    pImageInfo->rcImage.bottom = pt.y + himl->cy;
+    pImageInfo->rcImage.left   = pt.x;
+    pImageInfo->rcImage.right  = pt.x + himl->cx;
 
     return TRUE;
 }
@@ -1561,15 +1616,18 @@ ImageList_GetImageInfo (HIMAGELIST himl, INT i, IMAGEINFO *pImageInfo)
 BOOL WINAPI
 ImageList_GetImageRect (HIMAGELIST himl, INT i, LPRECT lpRect)
 {
+    POINT pt;
+
     if (!is_valid(himl) || (lpRect == NULL))
 	return FALSE;
     if ((i < 0) || (i >= himl->cCurImage))
 	return FALSE;
 
-    lpRect->left   = i * himl->cx;
-    lpRect->top    = 0;
-    lpRect->right  = lpRect->left + himl->cx;
-    lpRect->bottom = himl->cy;
+    imagelist_point_from_index( himl, i, &pt );
+    lpRect->left   = pt.x;
+    lpRect->top    = pt.y;
+    lpRect->right  = pt.x + himl->cx;
+    lpRect->bottom = pt.y + himl->cy;
 
     return TRUE;
 }
@@ -1724,7 +1782,7 @@ ImageList_Merge (HIMAGELIST himl1, INT i1, HIMAGELIST himl2, INT i2,
     HIMAGELIST himlDst = NULL;
     INT      cxDst, cyDst;
     INT      xOff1, yOff1, xOff2, yOff2;
-    INT      nX1, nX2;
+    POINT    pt1, pt2;
 
     TRACE("(himl1=%p i1=%d himl2=%p i2=%d dx=%d dy=%d)\n", himl1, i1, himl2,
 	   i2, dx, dy);
@@ -1768,25 +1826,25 @@ ImageList_Merge (HIMAGELIST himl1, INT i1, HIMAGELIST himl2, INT i2,
 
     if (himlDst)
     {
-        nX1 = i1 * himl1->cx;
-        nX2 = i2 * himl2->cx;
+        imagelist_point_from_index( himl1, i1, &pt1 );
+        imagelist_point_from_index( himl1, i2, &pt2 );
 
         /* copy image */
         BitBlt (himlDst->hdcImage, 0, 0, cxDst, cyDst, himl1->hdcImage, 0, 0, BLACKNESS);
         if (i1 >= 0 && i1 < himl1->cCurImage)
-            BitBlt (himlDst->hdcImage, xOff1, yOff1, himl1->cx, himl1->cy, himl1->hdcImage, nX1, 0, SRCCOPY);
+            BitBlt (himlDst->hdcImage, xOff1, yOff1, himl1->cx, himl1->cy, himl1->hdcImage, pt1.x, pt1.y, SRCCOPY);
         if (i2 >= 0 && i2 < himl2->cCurImage)
         {
-            BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcMask , nX2, 0, SRCAND);
-            BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcImage, nX2, 0, SRCPAINT);
+            BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcMask , pt2.x, pt2.y, SRCAND);
+            BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcImage, pt2.x, pt2.y, SRCPAINT);
         }
 
         /* copy mask */
         BitBlt (himlDst->hdcMask, 0, 0, cxDst, cyDst, himl1->hdcMask, 0, 0, WHITENESS);
         if (i1 >= 0 && i1 < himl1->cCurImage)
-            BitBlt (himlDst->hdcMask,  xOff1, yOff1, himl1->cx, himl1->cy, himl1->hdcMask,  nX1, 0, SRCCOPY);
+            BitBlt (himlDst->hdcMask,  xOff1, yOff1, himl1->cx, himl1->cy, himl1->hdcMask,  pt1.x, pt1.y, SRCCOPY);
         if (i2 >= 0 && i2 < himl2->cCurImage)
-            BitBlt (himlDst->hdcMask,  xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcMask,  nX2, 0, SRCAND);
+            BitBlt (himlDst->hdcMask,  xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcMask,  pt2.x, pt2.y, SRCAND);
 
 	himlDst->cCurImage = 1;
     }
@@ -1808,97 +1866,80 @@ static int may_use_dibsection(HDC hdc) {
 #endif
 
 /* helper for ImageList_Read, see comments below */
-static HBITMAP _read_bitmap(LPSTREAM pstm,int ilcFlag,int cx,int cy) {
-    HDC                        xdc = 0, hBitmapDC =0;
+static BOOL _read_bitmap(HIMAGELIST himl, HDC hdcIml, LPSTREAM pstm, int ilcFlag)
+{
+    HDC                 xdc = 0;
     BITMAPFILEHEADER	bmfh;
     BITMAPINFOHEADER	bmih;
     int			bitsperpixel,palspace,longsperline,width,height;
-    LPBITMAPINFOHEADER	bmihc = NULL;
-    int			result = 0;
-    HBITMAP            hbitmap = 0, hDIB = 0;
+    LPBITMAPINFO       bmi = NULL;
+    int                result = FALSE;
+    HBITMAP            hDIB = 0;
     LPBYTE             bits = NULL;
+    int i, j, nheight, nRows, nCols;
+    POINT pt;
+    int cy = himl->cy;
 
-    if (!SUCCEEDED(IStream_Read ( pstm, &bmfh, sizeof(bmfh), NULL))	||
-    	(bmfh.bfType != (('M'<<8)|'B'))					||
-    	!SUCCEEDED(IStream_Read ( pstm, &bmih, sizeof(bmih), NULL))	||
-    	(bmih.biSize != sizeof(bmih))
-    )
+    if (!SUCCEEDED(IStream_Read ( pstm, &bmfh, sizeof(bmfh), NULL)))
+        return result;
+
+    if (bmfh.bfType != (('M'<<8)|'B'))
+        return result;
+
+    if (!SUCCEEDED(IStream_Read ( pstm, &bmih, sizeof(bmih), NULL)))
+        return result;
+
+    if ((bmih.biSize != sizeof(bmih)))
 	return 0;
 
     bitsperpixel = bmih.biPlanes * bmih.biBitCount;
     if (bitsperpixel<=8)
-    	palspace = (1<<bitsperpixel)*sizeof(RGBQUAD);
+        palspace = (1<<bitsperpixel)*sizeof(RGBQUAD);
     else
-    	palspace = 0;
+        palspace = 0;
     width = bmih.biWidth;
     height = bmih.biHeight;
-    bmihc = (LPBITMAPINFOHEADER)LocalAlloc(LMEM_ZEROINIT,sizeof(bmih)+palspace);
-    if (!bmihc) goto ret1;
-    memcpy(bmihc,&bmih,sizeof(bmih));
-    longsperline	= ((width*bitsperpixel+31)&~0x1f)>>5;
-    bmihc->biSizeImage	= (longsperline*height)<<2;
+    bmi = Alloc(sizeof(bmih)+palspace);
+    if (!bmi)
+        return result;
+
+    memcpy(bmi, &bmih, sizeof(bmih));
+    longsperline = ((width*bitsperpixel+31)&~0x1f)>>5;
+    bmi->bmiHeader.biSizeImage = (longsperline*height)<<2;
 
     /* read the palette right after the end of the bitmapinfoheader */
-    if (palspace)
-	if (!SUCCEEDED(IStream_Read ( pstm, bmihc+1, palspace, NULL)))
-	    goto ret1;
+    if (palspace && !SUCCEEDED(IStream_Read(pstm, bmi->bmiColors, palspace, NULL)))
+	goto error;
 
     xdc = GetDC(0);
-#if 0 /* Magic for NxM -> 1x(N*M) not implemented for DIB Sections */
-    if ((bitsperpixel>1) &&
-	((ilcFlag!=ILC_COLORDDB) && (!ilcFlag || may_use_dibsection(xdc)))
-     ) {
-	hbitmap = CreateDIBSection(xdc,(BITMAPINFO*)bmihc,0,(LPVOID*)&bits,0,0);
-	if (!hbitmap)
-	    goto ret1;
-	if (!SUCCEEDED(IStream_Read( pstm, bits, bmihc->biSizeImage, NULL)))
-	    goto ret1;
-	result = 1;
-    } else
-#endif
-    {
-       int i,nwidth,nheight,nRows;
 
-	nwidth	= width*(height/cy);
-	nheight	= cy;
-        nRows   = (height/cy);
+    nheight = cy;
+    nRows = height/cy;
+    nCols = width/himl->cx;
 
-	if (bitsperpixel==1)
-	    hbitmap = CreateBitmap(nwidth,nheight,1,1,NULL);
-	else
-	    hbitmap = CreateCompatibleBitmap(xdc,nwidth,nheight);
+    hDIB = CreateDIBSection(xdc, bmi, 0, (LPVOID*) &bits, 0, 0);
+    if (!hDIB)
+        goto error;
+    if (!SUCCEEDED(IStream_Read(pstm, bits, bmi->bmiHeader.biSizeImage, NULL)))
+        goto error;
 
-       hDIB = CreateDIBSection(xdc,(BITMAPINFO*)bmihc,0,(LPVOID*)&bits,0,0);
-       if (!hDIB)
-           goto ret1;
-       if (!SUCCEEDED(IStream_Read( pstm, bits, bmihc->biSizeImage, NULL)))
-           goto ret1;
-
-        hBitmapDC = CreateCompatibleDC(0);
-        SelectObject(hBitmapDC, hbitmap);
-
-	/* Copy the NxM bitmap into a 1x(N*M) bitmap we need, linewise */
-	/* Do not forget that windows bitmaps are bottom->top */
-        TRACE("nRows=%d\n", nRows);
-        for (i=0; i < nRows; i++){
-            StretchDIBits(hBitmapDC, width*i, 0, width, cy, 0, cy*(nRows-1-i), width, cy, bits,
-                (BITMAPINFO*)bmihc, DIB_RGB_COLORS, SRCCOPY);
+    /* Copy the NxM bitmap into a 1x(N*M) bitmap we need, linewise */
+    /* Do not forget that windows bitmaps are bottom->top */
+    for (i=0; i < nRows; i++) {
+        for (j=0; j < nCols; j++) {
+            imagelist_point_from_index(himl, i*nCols + j, &pt);
+            StretchDIBits(hdcIml, pt.x, pt.y, himl->cx, cy,
+                      j*himl->cx, (nRows - 1 - i)*himl->cy, himl->cx, cy, bits,
+                      bmi, DIB_RGB_COLORS, SRCCOPY);
         }
-        
-	result = 1;
     }
-ret1:
+
+    result = TRUE;
+error:
     if (xdc)	ReleaseDC(0,xdc);
-    if (bmihc)	LocalFree((HLOCAL)bmihc);
+    Free(bmi);
     if (hDIB)   DeleteObject(hDIB);
-    if (hBitmapDC)   DeleteDC(hBitmapDC);
-    if (!result) {
-	if (hbitmap) {
-	    DeleteObject(hbitmap);
-	    hbitmap = 0;
-	}
-    }
-    return hbitmap;
+    return result;
 }
 
 /*************************************************************************
@@ -1914,11 +1955,11 @@ ret1:
  *     Failure: NULL
  *
  * The format is like this:
- * 	ILHEAD 			ilheadstruct;
+ *	ILHEAD			ilheadstruct;
  *
  * for the color image part:
- * 	BITMAPFILEHEADER	bmfh;
- * 	BITMAPINFOHEADER	bmih;
+ *	BITMAPFILEHEADER	bmfh;
+ *	BITMAPINFOHEADER	bmih;
  * only if it has a palette:
  *	RGBQUAD		rgbs[nr_of_paletted_colors];
  *
@@ -1942,51 +1983,32 @@ HIMAGELIST WINAPI ImageList_Read (LPSTREAM pstm)
     HBITMAP	hbmColor=0,hbmMask=0;
     int		i;
 
+    TRACE("%p\n", pstm);
+
     if (!SUCCEEDED(IStream_Read (pstm, &ilHead, sizeof(ILHEAD), NULL)))
-    	return NULL;
+	return NULL;
     if (ilHead.usMagic != (('L' << 8) | 'I'))
 	return NULL;
     if (ilHead.usVersion != 0x101) /* probably version? */
 	return NULL;
 
-#if 0
-    FIXME("	ilHead.cCurImage = %d\n",ilHead.cCurImage);
-    FIXME("	ilHead.cMaxImage = %d\n",ilHead.cMaxImage);
-    FIXME("	ilHead.cGrow = %d\n",ilHead.cGrow);
-    FIXME("	ilHead.cx = %d\n",ilHead.cx);
-    FIXME("	ilHead.cy = %d\n",ilHead.cy);
-    FIXME("	ilHead.flags = %x\n",ilHead.flags);
-    FIXME("	ilHead.ovls[0] = %d\n",ilHead.ovls[0]);
-    FIXME("	ilHead.ovls[1] = %d\n",ilHead.ovls[1]);
-    FIXME("	ilHead.ovls[2] = %d\n",ilHead.ovls[2]);
-    FIXME("	ilHead.ovls[3] = %d\n",ilHead.ovls[3]);
-#endif
-
-    hbmColor = _read_bitmap(pstm,ilHead.flags & ~ILC_MASK,ilHead.cx,ilHead.cy);
-    if (!hbmColor) {
-	WARN("failed to read bitmap from stream\n");
-	return NULL;
-    }
-    if (ilHead.flags & ILC_MASK) {
-	hbmMask = _read_bitmap(pstm,0,ilHead.cx,ilHead.cy);
-	if (!hbmMask) {
-	    DeleteObject(hbmColor);
-	    return NULL;
-	}
-    }
-
-    himl = ImageList_Create (
-		    ilHead.cx,
-		    ilHead.cy,
-		    ilHead.flags,
-		    1,		/* initial */
-		    ilHead.cGrow
-    );
+    himl = ImageList_Create(ilHead.cx, ilHead.cy, ilHead.flags, ilHead.cCurImage, ilHead.cMaxImage);
     if (!himl) {
 	DeleteObject(hbmColor);
 	DeleteObject(hbmMask);
 	return NULL;
     }
+    if (!_read_bitmap(himl, himl->hdcImage, pstm, ilHead.flags & ~ILC_MASK)) {
+	WARN("failed to read bitmap from stream\n");
+	return NULL;
+    }
+    if (ilHead.flags & ILC_MASK) {
+	if (!_read_bitmap(himl, himl->hdcMask, pstm, 0)) {
+	    DeleteObject(hbmColor);
+	    return NULL;
+	}
+    }
+
     SelectObject(himl->hdcImage, hbmColor);
     DeleteObject(himl->hbmImage);
     himl->hbmImage = hbmColor;
@@ -2000,7 +2022,7 @@ HIMAGELIST WINAPI ImageList_Read (LPSTREAM pstm)
 
     ImageList_SetBkColor(himl,ilHead.bkcolor);
     for (i=0;i<4;i++)
-    	ImageList_SetOverlayImage(himl,ilHead.ovls[i],i+1);
+	ImageList_SetOverlayImage(himl,ilHead.ovls[i],i+1);
     return himl;
 }
 
@@ -2024,7 +2046,8 @@ ImageList_Remove (HIMAGELIST himl, INT i)
 {
     HBITMAP hbmNewImage, hbmNewMask;
     HDC     hdcBmp;
-    INT     cxNew, nCount;
+    INT     nCount;
+    SIZE    sz;
 
     TRACE("(himl=%p i=%d)\n", himl, i);
 
@@ -2051,14 +2074,15 @@ ImageList_Remove (HIMAGELIST himl, INT i)
         for (nCount = 0; nCount < MAX_OVERLAYIMAGE; nCount++)
              himl->nOvlIdx[nCount] = -1;
 
-        hbmNewImage = ImageList_CreateImage(himl->hdcImage, himl, himl->cMaxImage * himl->cx, himl->cy);
+        hbmNewImage = ImageList_CreateImage(himl->hdcImage, himl, himl->cMaxImage, himl->cy);
         SelectObject (himl->hdcImage, hbmNewImage);
         DeleteObject (himl->hbmImage);
         himl->hbmImage = hbmNewImage;
 
         if (himl->hbmMask) {
-            hbmNewMask = CreateBitmap (himl->cMaxImage * himl->cx, himl->cy,
-                                1, 1, NULL);
+
+            imagelist_get_bitmap_size(himl, himl->cMaxImage, himl->cy, &sz);
+            hbmNewMask = CreateBitmap (sz.cx, sz.cy, 1, 1, NULL);
             SelectObject (himl->hdcMask, hbmNewMask);
             DeleteObject (himl->hbmMask);
             himl->hbmMask = hbmNewMask;
@@ -2070,17 +2094,17 @@ ImageList_Remove (HIMAGELIST himl, INT i)
 
         /* create new bitmap(s) */
         nCount = (himl->cCurImage + himl->cGrow - 1);
-	cxNew = nCount * himl->cx;
 
         TRACE(" - Number of images: %d / %d (Old/New)\n",
                  himl->cCurImage, himl->cCurImage - 1);
         TRACE(" - Max. number of images: %d / %d (Old/New)\n",
                  himl->cMaxImage, himl->cCurImage + himl->cGrow - 1);
 
-        hbmNewImage = ImageList_CreateImage(himl->hdcImage, himl, cxNew, himl->cy);
+        hbmNewImage = ImageList_CreateImage(himl->hdcImage, himl, nCount, himl->cy);
 
+        imagelist_get_bitmap_size(himl, nCount, himl->cy, &sz );
         if (himl->hbmMask)
-            hbmNewMask = CreateBitmap (cxNew, himl->cy, 1, 1, NULL);
+            hbmNewMask = CreateBitmap (sz.cx, sz.cy, 1, 1, NULL);
         else
             hbmNewMask = 0;  /* Just to keep compiler happy! */
 
@@ -2091,28 +2115,26 @@ ImageList_Remove (HIMAGELIST himl, INT i)
             TRACE("Pre image copy: Copy %d images\n", i);
 
             SelectObject (hdcBmp, hbmNewImage);
-            BitBlt (hdcBmp, 0, 0, i * himl->cx, himl->cy,
-                    himl->hdcImage, 0, 0, SRCCOPY);
+            imagelist_copy_images( himl, himl->hdcImage, hdcBmp, 0, i, 0 );
 
             if (himl->hbmMask) {
                 SelectObject (hdcBmp, hbmNewMask);
-                BitBlt (hdcBmp, 0, 0, i * himl->cx, himl->cy,
-                        himl->hdcMask, 0, 0, SRCCOPY);
+                imagelist_copy_images( himl, himl->hdcMask, hdcBmp, 0, i, 0 );
             }
         }
 
         /* copy all images and masks behind the removed image */
         if (i < himl->cCurImage - 1) {
             TRACE("Post image copy!\n");
+
             SelectObject (hdcBmp, hbmNewImage);
-            BitBlt (hdcBmp, i * himl->cx, 0, (himl->cCurImage - i - 1) * himl->cx,
-                      himl->cy, himl->hdcImage, (i + 1) * himl->cx, 0, SRCCOPY);
+            imagelist_copy_images( himl, himl->hdcImage, hdcBmp, i,
+                                   (himl->cCurImage - i - 1), i + 1 );
 
             if (himl->hbmMask) {
                 SelectObject (hdcBmp, hbmNewMask);
-                BitBlt (hdcBmp, i * himl->cx, 0,
-                          (himl->cCurImage - i - 1) * himl->cx,
-                          himl->cy, himl->hdcMask, (i + 1) * himl->cx, 0, SRCCOPY);
+                imagelist_copy_images( himl, himl->hdcMask, hdcBmp, i,
+                                       (himl->cCurImage - i - 1), i + 1 );
             }
         }
 
@@ -2159,6 +2181,7 @@ ImageList_Replace (HIMAGELIST himl, INT i, HBITMAP hbmImage,
     HDC hdcImage;
     BITMAP bmp;
     HBITMAP hOldBitmap;
+    POINT pt;
 
     TRACE("%p %d %p %p\n", himl, i, hbmImage, hbmMask);
 
@@ -2172,13 +2195,16 @@ ImageList_Replace (HIMAGELIST himl, INT i, HBITMAP hbmImage,
         return FALSE;
     }
 
+    if (!GetObjectW(hbmImage, sizeof(BITMAP), (LPVOID)&bmp))
+        return FALSE;
+
     hdcImage = CreateCompatibleDC (0);
-    GetObjectA (hbmImage, sizeof(BITMAP), (LPVOID)&bmp);
 
     /* Replace Image */
     hOldBitmap = SelectObject (hdcImage, hbmImage);
 
-    StretchBlt (himl->hdcImage, i * himl->cx, 0, himl->cx, himl->cy,
+    imagelist_point_from_index(himl, i, &pt);
+    StretchBlt (himl->hdcImage, pt.x, pt.y, himl->cx, himl->cy,
                   hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
 
     if (himl->hbmMask)
@@ -2189,18 +2215,15 @@ ImageList_Replace (HIMAGELIST himl, INT i, HBITMAP hbmImage,
         hdcTemp   = CreateCompatibleDC(0);
         hOldBitmapTemp = SelectObject(hdcTemp, hbmMask);
 
-        StretchBlt (himl->hdcMask, i * himl->cx, 0, himl->cx, himl->cy,
+        StretchBlt (himl->hdcMask, pt.x, pt.y, himl->cx, himl->cy,
                       hdcTemp, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
         SelectObject(hdcTemp, hOldBitmapTemp);
         DeleteDC(hdcTemp);
 
         /* Remove the background from the image
         */
-        BitBlt (himl->hdcImage,
-            i*himl->cx, 0, bmp.bmWidth, bmp.bmHeight,
-            himl->hdcMask,
-            i*himl->cx, 0,
-            0x220326); /* NOTSRCAND */
+        BitBlt (himl->hdcImage, pt.x, pt.y, bmp.bmWidth, bmp.bmHeight,
+                himl->hdcMask, pt.x, pt.y, 0x220326); /* NOTSRCAND */
     }
 
     SelectObject (hdcImage, hOldBitmap);
@@ -2235,6 +2258,7 @@ ImageList_ReplaceIcon (HIMAGELIST himl, INT i, HICON hIcon)
     ICONINFO  ii;
     BITMAP  bmp;
     BOOL    ret;
+    POINT   pt;
 
     TRACE("(%p %d %p)\n", himl, i, hIcon);
 
@@ -2299,12 +2323,13 @@ ImageList_ReplaceIcon (HIMAGELIST himl, INT i, HICON hIcon)
     SetBkColor  (himl->hdcImage, RGB(255,255,255));
     hbmOldSrc = SelectObject (hdcImage, ii.hbmColor);
 
-    StretchBlt (himl->hdcImage, nIndex * himl->cx, 0, himl->cx, himl->cy,
+    imagelist_point_from_index(himl, nIndex, &pt);
+    StretchBlt (himl->hdcImage, pt.x, pt.y, himl->cx, himl->cy,
                   hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
 
     if (himl->hbmMask) {
         SelectObject (hdcImage, ii.hbmMask);
-        StretchBlt   (himl->hdcMask, nIndex * himl->cx, 0, himl->cx, himl->cy,
+        StretchBlt   (himl->hdcMask, pt.x, pt.y, himl->cx, himl->cy,
                       hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
     }
 
@@ -2440,7 +2465,7 @@ ImageList_SetDragCursorImage (HIMAGELIST himlDrag, INT iDrag,
 BOOL WINAPI
 ImageList_SetFilter (HIMAGELIST himl, INT i, DWORD dwFilter)
 {
-    FIXME("(%p 0x%x 0x%lx):empty stub!\n", himl, i, dwFilter);
+    FIXME("(%p 0x%x 0x%x):empty stub!\n", himl, i, dwFilter);
 
     return FALSE;
 }
@@ -2465,7 +2490,7 @@ ImageList_SetFilter (HIMAGELIST himl, INT i, DWORD dwFilter)
 DWORD WINAPI
 ImageList_SetFlags(HIMAGELIST himl, DWORD flags)
 {
-    FIXME("(%p %08lx):empty stub\n", himl, flags);
+    FIXME("(%p %08x):empty stub\n", himl, flags);
     return 0;
 }
 
@@ -2504,14 +2529,15 @@ ImageList_SetIconSize (HIMAGELIST himl, INT cx, INT cy)
     for (nCount = 0; nCount < MAX_OVERLAYIMAGE; nCount++)
         himl->nOvlIdx[nCount] = -1;
 
-    hbmNew = ImageList_CreateImage(himl->hdcImage, himl, himl->cMaxImage * himl->cx, himl->cy);
+    hbmNew = ImageList_CreateImage(himl->hdcImage, himl, himl->cMaxImage, himl->cy);
     SelectObject (himl->hdcImage, hbmNew);
     DeleteObject (himl->hbmImage);
     himl->hbmImage = hbmNew;
 
     if (himl->hbmMask) {
-        hbmNew = CreateBitmap (himl->cMaxImage * himl->cx, himl->cy,
-                            1, 1, NULL);
+        SIZE sz;
+        imagelist_get_bitmap_size(himl, himl->cMaxImage, himl->cy, &sz);
+        hbmNew = CreateBitmap (sz.cx, sz.cy, 1, 1, NULL);
         SelectObject (himl->hdcMask, hbmNew);
         DeleteObject (himl->hbmMask);
         himl->hbmMask = hbmNew;
@@ -2560,22 +2586,15 @@ ImageList_SetImageCount (HIMAGELIST himl, UINT iImageCount)
 
     hdcBitmap = CreateCompatibleDC (0);
 
-    hbmNewBitmap = ImageList_CreateImage(hdcBitmap, himl, nNewCount * himl->cx, himl->cy);
+    hbmNewBitmap = ImageList_CreateImage(hdcBitmap, himl, nNewCount, himl->cy);
 
     if (hbmNewBitmap != 0)
     {
         SelectObject (hdcBitmap, hbmNewBitmap);
+        imagelist_copy_images( himl, himl->hdcImage, hdcBitmap, 0, nCopyCount, 0 );
 
-	/* copy images */
-        BitBlt (hdcBitmap, 0, 0, nCopyCount * himl->cx, himl->cy,
-                himl->hdcImage, 0, 0, SRCCOPY);
-#if 0
-	/* delete 'empty' image space */
-	SetBkColor (hdcBitmap, RGB(255, 255, 255));
-	SetTextColor (hdcBitmap, RGB(0, 0, 0));
-	PatBlt (hdcBitmap,  nCopyCount * himl->cx, 0,
-		  (nNewCount - nCopyCount) * himl->cx, himl->cy, BLACKNESS);
-#endif
+	/* FIXME: delete 'empty' image space? */
+
         SelectObject (himl->hdcImage, hbmNewBitmap);
 	DeleteObject (himl->hbmImage);
 	himl->hbmImage = hbmNewBitmap;
@@ -2585,22 +2604,16 @@ ImageList_SetImageCount (HIMAGELIST himl, UINT iImageCount)
 
     if (himl->hbmMask)
     {
-        hbmNewBitmap = CreateBitmap (nNewCount * himl->cx, himl->cy,
-                                       1, 1, NULL);
+        SIZE sz;
+        imagelist_get_bitmap_size( himl, nNewCount, himl->cy, &sz );
+        hbmNewBitmap = CreateBitmap (sz.cx, sz.cy, 1, 1, NULL);
         if (hbmNewBitmap != 0)
         {
             SelectObject (hdcBitmap, hbmNewBitmap);
+            imagelist_copy_images( himl, himl->hdcMask, hdcBitmap, 0, nCopyCount, 0 );
 
-	    /* copy images */
-            BitBlt (hdcBitmap, 0, 0, nCopyCount * himl->cx, himl->cy,
-                    himl->hdcMask, 0, 0, SRCCOPY);
-#if 0
-	    /* delete 'empty' image space */
-	    SetBkColor (hdcBitmap, RGB(255, 255, 255));
-	    SetTextColor (hdcBitmap, RGB(0, 0, 0));
-            PatBlt (hdcBitmap,  nCopyCount * himl->cx, 0,
-		      (nNewCount - nCopyCount) * himl->cx, himl->cy, BLACKNESS);
-#endif
+	    /* FIXME: delete 'empty' image space? */
+
             SelectObject (himl->hdcMask, hbmNewBitmap);
             DeleteObject (himl->hbmMask);
             himl->hbmMask = hbmNewBitmap;
@@ -2657,7 +2670,7 @@ _write_bitmap(HBITMAP hBitmap, LPSTREAM pstm, int cx, int cy)
 {
     LPBITMAPFILEHEADER bmfh;
     LPBITMAPINFOHEADER bmih;
-    LPBYTE data, lpBits, lpBitsOrg;
+    LPBYTE data = NULL, lpBits = NULL, lpBitsOrg = NULL;
     BITMAP bm;
     INT bitCount, sizeImage, offBits, totalSize;
     INT nwidth, nheight, nsizeImage, icount;
@@ -2666,7 +2679,8 @@ _write_bitmap(HBITMAP hBitmap, LPSTREAM pstm, int cx, int cy)
 
 
     xdc = GetDC(0);
-    GetObjectA(hBitmap, sizeof(BITMAP), (LPVOID)&bm);
+    if (!GetObjectW(hBitmap, sizeof(BITMAP), (LPVOID)&bm))
+        goto failed;
 
     /* XXX is this always correct? */
     icount = bm.bmWidth / cx;
@@ -2805,10 +2819,13 @@ ImageList_Write (HIMAGELIST himl, LPSTREAM pstm)
 }
 
 
-static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT width, UINT height)
+static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count, UINT height)
 {
     HBITMAP hbmNewBitmap;
     UINT ilc = (himl->flags & 0xFE);
+    SIZE sz;
+
+    imagelist_get_bitmap_size( himl, count, height, &sz );
 
     if ((ilc >= ILC_COLOR4 && ilc <= ILC_COLOR32) || ilc == ILC_COLOR)
     {
@@ -2845,8 +2862,8 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT width, UINT 
 	}
 
 	bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi->bmiHeader.biWidth = width;
-	bmi->bmiHeader.biHeight = height;
+	bmi->bmiHeader.biWidth = sz.cx;
+	bmi->bmiHeader.biHeight = sz.cy;
 	bmi->bmiHeader.biPlanes = 1;
 	bmi->bmiHeader.biBitCount = himl->uBitsPixel;
 	bmi->bmiHeader.biCompression = BI_RGB;
@@ -2864,7 +2881,7 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT width, UINT 
     {
         TRACE("Creating Bitmap: %d Bits per Pixel\n", himl->uBitsPixel);
 
-        hbmNewBitmap = CreateBitmap (width, height, 1, himl->uBitsPixel, NULL);
+        hbmNewBitmap = CreateBitmap (sz.cx, sz.cy, 1, himl->uBitsPixel, NULL);
     }
     TRACE("returning %p\n", hbmNewBitmap);
     return hbmNewBitmap;

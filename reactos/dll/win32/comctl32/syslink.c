@@ -1580,15 +1580,15 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
     case WM_LBUTTONDOWN:
     {
         POINT pt;
-        pt.x = LOWORD(lParam);
-        pt.y = HIWORD(lParam);
+        pt.x = (short)LOWORD(lParam);
+        pt.y = (short)HIWORD(lParam);
         return SYSLINK_LButtonDown(infoPtr, wParam, &pt);
     }
     case WM_LBUTTONUP:
     {
         POINT pt;
-        pt.x = LOWORD(lParam);
-        pt.y = HIWORD(lParam);
+        pt.x = (short)LOWORD(lParam);
+        pt.y = (short)HIWORD(lParam);
         return SYSLINK_LButtonUp(infoPtr, wParam, &pt);
     }
     
@@ -1639,8 +1639,8 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
     {
         POINT pt;
         RECT rc;
-        pt.x = LOWORD(lParam);
-        pt.y = HIWORD(lParam);
+        pt.x = (short)LOWORD(lParam);
+        pt.y = (short)HIWORD(lParam);
         
         GetClientRect(infoPtr->Self, &rc);
         ScreenToClient(infoPtr->Self, &pt);

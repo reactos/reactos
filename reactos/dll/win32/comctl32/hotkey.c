@@ -289,7 +289,7 @@ HOTKEY_KeyDown (HOTKEY_INFO *infoPtr, DWORD key, DWORD flags)
     if (GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & WS_DISABLED)
         return 0;
 
-    TRACE("() Key: %ld\n", key);
+    TRACE("() Key: %d\n", key);
 
     wOldHotKey = infoPtr->HotKey;
     bOldMod = infoPtr->CurrMod;
@@ -349,7 +349,7 @@ HOTKEY_KeyUp (HOTKEY_INFO *infoPtr, DWORD key, DWORD flags)
     if (GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & WS_DISABLED)
         return 0;
 
-    TRACE("() Key: %ld\n", key);
+    TRACE("() Key: %d\n", key);
 
     bOldMod = infoPtr->CurrMod;
 

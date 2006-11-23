@@ -280,8 +280,10 @@ LRESULT CALLBACK THEMING_ComboSubclassProc (HWND hwnd, UINT msg,
         {
             /* Dropdown button hot-tracking */
             COMBOBOXINFO cbi;
-            POINT pt = {LOWORD(lParam), HIWORD(lParam)};
-        
+            POINT pt;
+
+            pt.x = (short)LOWORD(lParam);
+            pt.y = (short)HIWORD(lParam);
             cbi.cbSize = sizeof (cbi);
             SendMessageW (hwnd, CB_GETCOMBOBOXINFO, 0, (LPARAM)&cbi);
             

@@ -343,7 +343,7 @@ static void MONTHCAL_DrawDay(MONTHCAL_INFO *infoPtr, HDC hdc, int day, int month
     RECT r2;
 
     TRACE("%d %d %d\n",day, infoPtr->minSel.wDay, infoPtr->maxSel.wDay);
-    TRACE("%ld %ld %ld %ld\n", r.left, r.top, r.right, r.bottom);
+    TRACE("%d %d %d %d\n", r.left, r.top, r.right, r.bottom);
     oldCol = SetTextColor(hdc, infoPtr->monthbk);
     oldBk = SetBkColor(hdc, infoPtr->trailingtxt);
     hbr = GetSysColorBrush(COLOR_GRAYTEXT);
@@ -1342,8 +1342,8 @@ MONTHCAL_RButtonDown(MONTHCAL_INFO *infoPtr, LPARAM lParam)
       strcpyW(buf, todayW);
     }
   AppendMenuW(hMenu, MF_STRING|MF_ENABLED,1, buf);
-  menupoint.x=(INT)LOWORD(lParam);
-  menupoint.y=(INT)HIWORD(lParam);
+  menupoint.x=(short)LOWORD(lParam);
+  menupoint.y=(short)HIWORD(lParam);
   ClientToScreen(infoPtr->hwndSelf, &menupoint);
   if( TrackPopupMenu(hMenu,TPM_RIGHTBUTTON| TPM_NONOTIFY|TPM_RETURNCMD,
 		     menupoint.x, menupoint.y, 0, infoPtr->hwndSelf, NULL))
@@ -1387,8 +1387,8 @@ MONTHCAL_LButtonDown(MONTHCAL_INFO *infoPtr, LPARAM lParam)
       InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
     }
 
-  ht.pt.x = (INT)LOWORD(lParam);
-  ht.pt.y = (INT)HIWORD(lParam);
+  ht.pt.x = (short)LOWORD(lParam);
+  ht.pt.y = (short)HIWORD(lParam);
   hit = MONTHCAL_HitTest(infoPtr, (LPARAM)&ht);
 
   /* FIXME: these flags should be checked by */
@@ -1524,8 +1524,8 @@ MONTHCAL_LButtonUp(MONTHCAL_INFO *infoPtr, LPARAM lParam)
     redraw = TRUE;
   }
 
-  ht.pt.x = (INT)LOWORD(lParam);
-  ht.pt.y = (INT)HIWORD(lParam);
+  ht.pt.x = (short)LOWORD(lParam);
+  ht.pt.y = (short)HIWORD(lParam);
   hit = MONTHCAL_HitTest(infoPtr, (LPARAM)&ht);
 
   infoPtr->status = MC_SEL_LBUTUP;
@@ -1602,8 +1602,8 @@ MONTHCAL_MouseMove(MONTHCAL_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
   if(!(infoPtr->status & MC_SEL_LBUTDOWN)) return 0;
 
-  ht.pt.x = LOWORD(lParam);
-  ht.pt.y = HIWORD(lParam);
+  ht.pt.x = (short)LOWORD(lParam);
+  ht.pt.y = (short)HIWORD(lParam);
 
   hit = MONTHCAL_HitTest(infoPtr, (LPARAM)&ht);
 

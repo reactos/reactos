@@ -441,7 +441,7 @@ TRACKBAR_CalcSelection (TRACKBAR_INFO *infoPtr)
         }
     }
 
-    TRACE("selection[left=%ld, top=%ld, right=%ld, bottom=%ld]\n",
+    TRACE("selection[left=%d, top=%d, right=%d, bottom=%d]\n",
 	   selection->left, selection->top, selection->right, selection->bottom);
 }
 
@@ -451,7 +451,7 @@ TRACKBAR_AutoPage (TRACKBAR_INFO *infoPtr, POINT clickPoint)
     LONG dir = TRACKBAR_GetAutoPageDirection(infoPtr, clickPoint);
     LONG prevPos = infoPtr->lPos;
 
-    TRACE("x=%ld, y=%ld, dir=%ld\n", clickPoint.x, clickPoint.y, dir);
+    TRACE("x=%d, y=%d, dir=%d\n", clickPoint.x, clickPoint.y, dir);
 
     if (dir > 0 && (infoPtr->flags & TB_AUTO_PAGE_RIGHT))
 	TRACKBAR_PageDown(infoPtr);
@@ -1051,7 +1051,7 @@ static int comp_tics(const void *ap, const void *bp)
     const DWORD a = *(const DWORD *)ap;
     const DWORD b = *(const DWORD *)bp;
 
-    TRACE("(a=%ld, b=%ld)\n", a, b);
+    TRACE("(a=%d, b=%d)\n", a, b);
     if (a < b) return -1;
     if (a > b) return 1;
     return 0;
@@ -1292,7 +1292,7 @@ TRACKBAR_SetTic (TRACKBAR_INFO *infoPtr, LONG lPos)
     if ((lPos < infoPtr->lRangeMin) || (lPos> infoPtr->lRangeMax))
         return FALSE;
 
-    TRACE("lPos=%ld\n", lPos);
+    TRACE("lPos=%d\n", lPos);
 
     infoPtr->uNumTics++;
     infoPtr->tics=ReAlloc( infoPtr->tics,
@@ -1415,7 +1415,7 @@ TRACKBAR_Create (HWND hwnd, LPCREATESTRUCTW lpcs)
     if (dwStyle & TBS_TOOLTIPS) {
 
     	infoPtr->hwndToolTip =
-            CreateWindowExW (0, TOOLTIPS_CLASSW, NULL, 0,
+            CreateWindowExW (0, TOOLTIPS_CLASSW, NULL, WS_POPUP,
                              CW_USEDEFAULT, CW_USEDEFAULT,
                              CW_USEDEFAULT, CW_USEDEFAULT,
                              hwnd, 0, 0, 0);

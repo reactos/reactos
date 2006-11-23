@@ -123,7 +123,7 @@ HRESULT WINAPI DPA_LoadStream (HDPA *phDpa, DPALOADPROC loadProc,
     if (errCode != S_OK)
         return errCode;
 
-    FIXME ("dwSize=%lu dwData2=%lu dwItems=%lu\n",
+    FIXME ("dwSize=%u dwData2=%u dwItems=%u\n",
            streamData.dwSize, streamData.dwData2, streamData.dwItems);
 
     if ( ulRead < sizeof(STREAMDATA) ||
@@ -162,7 +162,7 @@ HRESULT WINAPI DPA_LoadStream (HDPA *phDpa, DPALOADPROC loadProc,
 
     /* store the handle to the dpa */
     *phDpa = hDpa;
-    FIXME ("new hDpa=%p, errorcode=%lx\n", hDpa, errCode);
+    FIXME ("new hDpa=%p, errorcode=%x\n", hDpa, errCode);
 
     return errCode;
 }
@@ -226,7 +226,7 @@ BOOL WINAPI DPA_Merge (const HDPA hdpa1, const HDPA hdpa2, DWORD dwFlags,
     INT nResult, i;
     INT nIndex;
 
-    TRACE("%p %p %08lx %p %p %08lx)\n",
+    TRACE("%p %p %08x %p %p %08lx)\n",
            hdpa1, hdpa2, dwFlags, pfnCompare, pfnMerge, lParam);
 
     if (IsBadWritePtr (hdpa1, sizeof(*hdpa1)))

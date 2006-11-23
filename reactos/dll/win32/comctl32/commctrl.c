@@ -110,7 +110,7 @@ static const WCHAR strCC32SubclassInfo[] = {
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    TRACE("%p,%lx,%p\n", hinstDLL, fdwReason, lpvReserved);
+    TRACE("%p,%x,%p\n", hinstDLL, fdwReason, lpvReserved);
 
     switch (fdwReason) {
 	case DLL_PROCESS_ATTACH:
@@ -637,7 +637,7 @@ InitCommonControlsEx (LPINITCOMMONCONTROLSEX lpInitCtrls)
     if (lpInitCtrls->dwSize != sizeof(INITCOMMONCONTROLSEX))
 	return FALSE;
 
-    TRACE("(0x%08lx)\n", lpInitCtrls->dwICC);
+    TRACE("(0x%08x)\n", lpInitCtrls->dwICC);
 
     for (cCount = 0; cCount < 32; cCount++) {
 	dwMask = 1 << cCount;
@@ -687,7 +687,7 @@ InitCommonControlsEx (LPINITCOMMONCONTROLSEX lpInitCtrls)
 		break;
 
 	    default:
-		FIXME("Unknown class! dwICC=0x%lX\n", dwMask);
+		FIXME("Unknown class! dwICC=0x%X\n", dwMask);
 		break;
 	}
     }
@@ -949,7 +949,7 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
     pdvi->dwBuildNumber = 2919;
     pdvi->dwPlatformID = 6304;
 
-    TRACE("%lu.%lu.%lu.%lu\n",
+    TRACE("%u.%u.%u.%u\n",
 	   pdvi->dwMajorVersion, pdvi->dwMinorVersion,
 	   pdvi->dwBuildNumber, pdvi->dwPlatformID);
 
@@ -1336,7 +1336,7 @@ COMCTL32_CreateToolTip(HWND hwndOwner)
 {
     HWND hwndToolTip;
 
-    hwndToolTip = CreateWindowExW(0, TOOLTIPS_CLASSW, NULL, 0,
+    hwndToolTip = CreateWindowExW(0, TOOLTIPS_CLASSW, NULL, WS_POPUP,
 				  CW_USEDEFAULT, CW_USEDEFAULT,
 				  CW_USEDEFAULT, CW_USEDEFAULT, hwndOwner,
 				  0, 0, 0);

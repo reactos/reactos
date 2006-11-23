@@ -32,7 +32,6 @@
  *   - Wizard 97 header resizing
  *   - Enforcing of minimal wizard size
  *   - Messages:
- *     o PSM_GETRESULT
  *     o PSM_INSERTPAGE
  *     o PSM_RECALCPAGESIZES
  *     o PSM_SETHEADERSUBTITLE
@@ -122,8 +121,6 @@ typedef struct tagPropSheetInfo
   BOOL hasApply;
   BOOL hasFinish;
   BOOL useCallback;
-  BOOL restartWindows;
-  BOOL rebootSystem;
   BOOL activeValid;
   PropPageInfo* proppage;
   HFONT hFont;
@@ -132,6 +129,7 @@ typedef struct tagPropSheetInfo
   int height;
   HIMAGELIST hImageList;
   BOOL ended;
+  INT result;
 } PropSheetInfo;
 
 typedef struct
@@ -303,7 +301,7 @@ static BOOL PROPSHEET_CollectSheetInfoA(LPCPROPSHEETHEADERA lppsh,
   psInfo->isModeless = dwFlags & PSH_MODELESS;
 
   memcpy(&psInfo->ppshheader,lppsh,dwSize);
-  TRACE("\n** PROPSHEETHEADER **\ndwSize\t\t%ld\ndwFlags\t\t%08lx\nhwndParent\t%p\nhInstance\t%p\npszCaption\t'%s'\nnPages\t\t%d\npfnCallback\t%p\n",
+  TRACE("\n** PROPSHEETHEADER **\ndwSize\t\t%d\ndwFlags\t\t%08x\nhwndParent\t%p\nhInstance\t%p\npszCaption\t'%s'\nnPages\t\t%d\npfnCallback\t%p\n",
 	lppsh->dwSize, lppsh->dwFlags, lppsh->hwndParent, lppsh->hInstance,
 	debugstr_a(lppsh->pszCaption), lppsh->nPages, lppsh->pfnCallback);
 
@@ -333,8 +331,7 @@ static BOOL PROPSHEET_CollectSheetInfoA(LPCPROPSHEETHEADERA lppsh,
   if (psInfo->active_page < 0 || psInfo->active_page >= psInfo->nPages)
      psInfo->active_page = 0;
 
-  psInfo->restartWindows = FALSE;
-  psInfo->rebootSystem = FALSE;
+  psInfo->result = 0;
   psInfo->hImageList = 0;
   psInfo->activeValid = FALSE;
 
@@ -359,7 +356,7 @@ static BOOL PROPSHEET_CollectSheetInfoW(LPCPROPSHEETHEADERW lppsh,
   psInfo->isModeless = dwFlags & PSH_MODELESS;
 
   memcpy(&psInfo->ppshheader,lppsh,dwSize);
-  TRACE("\n** PROPSHEETHEADER **\ndwSize\t\t%ld\ndwFlags\t\t%08lx\nhwndParent\t%p\nhInstance\t%p\npszCaption\t'%s'\nnPages\t\t%d\npfnCallback\t%p\n",
+  TRACE("\n** PROPSHEETHEADER **\ndwSize\t\t%d\ndwFlags\t\t%08x\nhwndParent\t%p\nhInstance\t%p\npszCaption\t'%s'\nnPages\t\t%d\npfnCallback\t%p\n",
       lppsh->dwSize, lppsh->dwFlags, lppsh->hwndParent, lppsh->hInstance, debugstr_w(lppsh->pszCaption), lppsh->nPages, lppsh->pfnCallback);
 
   PROPSHEET_UnImplementedFlags(lppsh->dwFlags);
@@ -388,8 +385,7 @@ static BOOL PROPSHEET_CollectSheetInfoW(LPCPROPSHEETHEADERW lppsh,
   if (psInfo->active_page < 0 || psInfo->active_page >= psInfo->nPages)
      psInfo->active_page = 0;
 
-  psInfo->restartWindows = FALSE;
-  psInfo->rebootSystem = FALSE;
+  psInfo->result = 0;
   psInfo->hImageList = 0;
   psInfo->activeValid = FALSE;
 
@@ -707,7 +703,7 @@ static BOOL PROPSHEET_SizeMismatch(HWND hwndDlg, PropSheetInfo* psInfo)
    * Original tab size.
    */
   GetClientRect(hwndTabCtrl, &rcOrigTab);
-  TRACE("orig tab %ld %ld %ld %ld\n", rcOrigTab.left, rcOrigTab.top,
+  TRACE("orig tab %d %d %d %d\n", rcOrigTab.left, rcOrigTab.top,
         rcOrigTab.right, rcOrigTab.bottom);
 
   /*
@@ -719,7 +715,7 @@ static BOOL PROPSHEET_SizeMismatch(HWND hwndDlg, PropSheetInfo* psInfo)
   rcPage.bottom = psInfo->height;
 
   MapDialogRect(hwndDlg, &rcPage);
-  TRACE("biggest page %ld %ld %ld %ld\n", rcPage.left, rcPage.top,
+  TRACE("biggest page %d %d %d %d\n", rcPage.left, rcPage.top,
         rcPage.right, rcPage.bottom);
 
   if ( (rcPage.right - rcPage.left) != (rcOrigTab.right - rcOrigTab.left) )
@@ -789,14 +785,14 @@ static BOOL PROPSHEET_AdjustSize(HWND hwndDlg, PropSheetInfo* psInfo)
 
   rc.right -= rc.left;
   rc.bottom -= rc.top;
-  TRACE("setting tab %p, rc (0,0)-(%ld,%ld)\n",
+  TRACE("setting tab %p, rc (0,0)-(%d,%d)\n",
         hwndTabCtrl, rc.right, rc.bottom);
   SetWindowPos(hwndTabCtrl, 0, 0, 0, rc.right, rc.bottom,
                SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
   GetClientRect(hwndTabCtrl, &rc);
 
-  TRACE("tab client rc %ld %ld %ld %ld\n",
+  TRACE("tab client rc %d %d %d %d\n",
         rc.left, rc.top, rc.right, rc.bottom);
 
   rc.right += ((padding.x * 2) + tabOffsetX);
@@ -805,7 +801,7 @@ static BOOL PROPSHEET_AdjustSize(HWND hwndDlg, PropSheetInfo* psInfo)
   /*
    * Resize the property sheet.
    */
-  TRACE("setting dialog %p, rc (0,0)-(%ld,%ld)\n",
+  TRACE("setting dialog %p, rc (0,0)-(%d,%d)\n",
         hwndDlg, rc.right, rc.bottom);
   SetWindowPos(hwndDlg, 0, 0, 0, rc.right, rc.bottom,
                SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
@@ -829,7 +825,7 @@ static BOOL PROPSHEET_AdjustSizeWizard(HWND hwndDlg, PropSheetInfo* psInfo)
   rc.bottom = psInfo->height;
   MapDialogRect(hwndDlg, &rc);
 
-  TRACE("Biggest page %ld %ld %ld %ld\n", rc.left, rc.top, rc.right, rc.bottom);
+  TRACE("Biggest page %d %d %d %d\n", rc.left, rc.top, rc.right, rc.bottom);
 
   /* Add space for the buttons row */
   GetWindowRect(hwndLine, &lineRect);
@@ -841,7 +837,7 @@ static BOOL PROPSHEET_AdjustSizeWizard(HWND hwndDlg, PropSheetInfo* psInfo)
   AdjustWindowRect(&rc, GetWindowLongW(hwndDlg, GWL_STYLE), FALSE);
 
   /* Resize the property sheet */
-  TRACE("setting dialog %p, rc (0,0)-(%ld,%ld)\n",
+  TRACE("setting dialog %p, rc (0,0)-(%d,%d)\n",
         hwndDlg, rc.right, rc.bottom);
   SetWindowPos(hwndDlg, 0, 0, 0, rc.right - rc.left, rc.bottom - rc.top,
                SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
@@ -1336,7 +1332,7 @@ static UINT GetTemplateSize(DLGTEMPLATE* pTemplate)
 	  p++;
 	  break;
 	case 0xffff:
-	  TRACE("class ordinal 0x%08lx\n",*(DWORD*)p);
+          TRACE("class ordinal 0x%08x\n",*(DWORD*)p);
 	  p += 2;
 	  break;
 	default:
@@ -1352,7 +1348,7 @@ static UINT GetTemplateSize(DLGTEMPLATE* pTemplate)
 	  p++;
 	  break;
 	case 0xffff:
-	  TRACE("text ordinal 0x%08lx\n",*(DWORD*)p);
+          TRACE("text ordinal 0x%08x\n",*(DWORD*)p);
 	  p += 2;
 	  break;
 	default:
@@ -1444,7 +1440,7 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
   if (!temp)
     return FALSE;
   
-  TRACE("copying pTemplate %p into temp %p (%ld)\n", pTemplate, temp, resSize);
+  TRACE("copying pTemplate %p into temp %p (%d)\n", pTemplate, temp, resSize);
   memcpy(temp, pTemplate, resSize);
   pTemplate = temp;
 
@@ -2044,7 +2040,7 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
      * NOTE: The resizing happens every time the page is selected and
      * not only when it's created (some applications depend on it). */
     PROPSHEET_GetPageRect(psInfo, hwndDlg, &rc, ppshpage);
-    TRACE("setting page %p, rc (%ld,%ld)-(%ld,%ld) w=%ld, h=%ld\n",
+    TRACE("setting page %p, rc (%d,%d)-(%d,%d) w=%d, h=%d\n",
           psInfo->proppage[index].hwndPage, rc.left, rc.top, rc.right, rc.bottom,
           rc.right - rc.left, rc.bottom - rc.top);
     SetWindowPos(psInfo->proppage[index].hwndPage, HWND_TOP,
@@ -2152,7 +2148,7 @@ static void PROPSHEET_SetTitleW(HWND hwndDlg, DWORD dwStyle, LPCWSTR lpszText)
   PropSheetInfo*	psInfo = (PropSheetInfo*) GetPropW(hwndDlg, PropSheetInfoStr);
   WCHAR			szTitle[256];
 
-  TRACE("'%s' (style %08lx)\n", debugstr_w(lpszText), dwStyle);
+  TRACE("'%s' (style %08x)\n", debugstr_w(lpszText), dwStyle);
   if (HIWORD(lpszText) == 0) {
     if (!LoadStringW(psInfo->ppshheader.hInstance,
                      LOWORD(lpszText), szTitle, sizeof(szTitle)-sizeof(WCHAR)))
@@ -2442,7 +2438,7 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   HWND hwndNext   = GetDlgItem(hwndDlg, IDC_NEXT_BUTTON);
   HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
 
-  TRACE("%ld\n", dwFlags);
+  TRACE("%d\n", dwFlags);
 
   EnableWindow(hwndBack, FALSE);
   EnableWindow(hwndNext, FALSE);
@@ -2644,8 +2640,9 @@ static LRESULT PROPSHEET_IndexToId(HWND hwndDlg, int iPageIndex)
  */
 static LRESULT PROPSHEET_GetResult(HWND hwndDlg)
 {
-    FIXME("(%p): stub\n", hwndDlg);
-    return -1;
+    PropSheetInfo * psInfo = (PropSheetInfo*) GetPropW(hwndDlg,
+                                                       PropSheetInfoStr);
+    return psInfo->result;
 }
 
 /******************************************************************************
@@ -2762,6 +2759,9 @@ static INT do_loop(PropSheetInfo *psInfo)
         PostQuitMessage(msg.wParam);
         ret = -1;
     }
+
+    if(ret != -1)
+        ret = psInfo->result;
 
     DestroyWindow(hwnd);
     return ret;
@@ -3147,14 +3147,10 @@ static BOOL PROPSHEET_DoCommand(HWND hwnd, WORD wID)
 		{
 		    PropSheetInfo* psInfo = (PropSheetInfo*) GetPropW(hwnd,
 								      PropSheetInfoStr);
-		    int result = TRUE;
 
-		    if (psInfo->restartWindows)
-			result = ID_PSRESTARTWINDOWS;
-
-		    /* reboot system takes precedence over restart windows */
-		    if (psInfo->rebootSystem)
-			result = ID_PSREBOOTSYSTEM;
+                    /* don't overwrite ID_PSRESTARTWINDOWS or ID_PSREBOOTSYSTEM */
+                    if (psInfo->result == 0)
+                        psInfo->result = IDOK;
 
 		    if (psInfo->isModeless)
 			psInfo->activeValid = FALSE;
@@ -3630,7 +3626,10 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       if (!psInfo)
         return FALSE;
 
-      psInfo->restartWindows = TRUE;
+      /* reboot system takes precedence over restart windows */
+      if (psInfo->result != ID_PSREBOOTSYSTEM)
+          psInfo->result = ID_PSRESTARTWINDOWS;
+
       return TRUE;
     }
 
@@ -3642,7 +3641,8 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       if (!psInfo)
         return FALSE;
 
-      psInfo->rebootSystem = TRUE;
+      psInfo->result = ID_PSREBOOTSYSTEM;
+
       return TRUE;
     }
 

@@ -395,13 +395,13 @@ typedef struct tagLISTVIEW_INFO
 
 /* Dump the LISTVIEW_INFO structure to the debug channel */
 #define LISTVIEW_DUMP(iP) do { \
-  TRACE("hwndSelf=%p, clrBk=0x%06lx, clrText=0x%06lx, clrTextBk=0x%06lx, ItemHeight=%d, ItemWidth=%d, Style=0x%08lx\n", \
+  TRACE("hwndSelf=%p, clrBk=0x%06x, clrText=0x%06x, clrTextBk=0x%06x, ItemHeight=%d, ItemWidth=%d, Style=0x%08x\n", \
         iP->hwndSelf, iP->clrBk, iP->clrText, iP->clrTextBk, \
         iP->nItemHeight, iP->nItemWidth, iP->dwStyle); \
-  TRACE("hwndSelf=%p, himlNor=%p, himlSml=%p, himlState=%p, Focused=%d, Hot=%d, exStyle=0x%08lx, Focus=%d\n", \
+  TRACE("hwndSelf=%p, himlNor=%p, himlSml=%p, himlState=%p, Focused=%d, Hot=%d, exStyle=0x%08x, Focus=%d\n", \
         iP->hwndSelf, iP->himlNormal, iP->himlSmall, iP->himlState, \
         iP->nFocusedItem, iP->nHotItem, iP->dwLvExStyle, iP->bFocus ); \
-  TRACE("hwndSelf=%p, ntmH=%d, icSz.cx=%ld, icSz.cy=%ld, icSp.cx=%ld, icSp.cy=%ld, notifyFmt=%d\n", \
+  TRACE("hwndSelf=%p, ntmH=%d, icSz.cx=%d, icSz.cy=%d, icSp.cx=%d, icSp.cy=%d, notifyFmt=%d\n", \
         iP->hwndSelf, iP->ntmHeight, iP->iconSize.cx, iP->iconSize.cy, \
         iP->iconSpacing.cx, iP->iconSpacing.cy, iP->notifyFormat); \
   TRACE("hwndSelf=%p, rcList=%s\n", iP->hwndSelf, wine_dbgstr_rect(&iP->rcList)); \
@@ -5591,7 +5591,7 @@ static BOOL LISTVIEW_GetItemRect(LISTVIEW_INFO *infoPtr, INT nItem, LPRECT lprc)
         break;
 
     default:
-	WARN("Unknown value: %ld\n", lprc->left);
+	WARN("Unknown value: %d\n", lprc->left);
 	return FALSE;
     }
 
@@ -5630,7 +5630,7 @@ static BOOL LISTVIEW_GetSubItemRect(LISTVIEW_INFO *infoPtr, INT nItem, LPRECT lp
 
     nColumn = lprc->top;
 
-    TRACE("(nItem=%d, nSubItem=%ld)\n", nItem, lprc->top);
+    TRACE("(nItem=%d, nSubItem=%d)\n", nItem, lprc->top);
     /* On WinNT, a subitem of '0' calls LISTVIEW_GetItemRect */
     if (lprc->top == 0)
         return LISTVIEW_GetItemRect(infoPtr, nItem, lprc);
@@ -5658,7 +5658,7 @@ static BOOL LISTVIEW_GetSubItemRect(LISTVIEW_INFO *infoPtr, INT nItem, LPRECT lp
         break;
 
     default:
-	ERR("Unknown bounds=%ld\n", lprc->left);
+	ERR("Unknown bounds=%d\n", lprc->left);
 	return FALSE;
     }
 
@@ -6443,7 +6443,7 @@ static BOOL LISTVIEW_Scroll(LISTVIEW_INFO *infoPtr, INT dx, INT dy)
  */
 static BOOL LISTVIEW_SetBkColor(LISTVIEW_INFO *infoPtr, COLORREF clrBk)
 {
-    TRACE("(clrBk=%lx)\n", clrBk);
+    TRACE("(clrBk=%x)\n", clrBk);
 
     if(infoPtr->clrBk != clrBk) {
 	if (infoPtr->clrBk != CLR_NONE) DeleteObject(infoPtr->hBkBrush);
@@ -7016,7 +7016,7 @@ static DWORD LISTVIEW_SetIconSpacing(LISTVIEW_INFO *infoPtr, INT cx, INT cy)
     infoPtr->iconSpacing.cx = cx;
     infoPtr->iconSpacing.cy = cy;
 
-    TRACE("old=(%d,%d), new=(%d,%d), iconSize=(%ld,%ld), ntmH=%d\n",
+    TRACE("old=(%d,%d), new=(%d,%d), iconSize=(%d,%d), ntmH=%d\n",
 	  LOWORD(oldspacing), HIWORD(oldspacing), cx, cy, 
 	  infoPtr->iconSize.cx, infoPtr->iconSize.cy,
 	  infoPtr->ntmHeight);
@@ -7113,7 +7113,7 @@ static HIMAGELIST LISTVIEW_SetImageList(LISTVIEW_INFO *infoPtr, INT nType, HIMAG
  */
 static BOOL LISTVIEW_SetItemCount(LISTVIEW_INFO *infoPtr, INT nItems, DWORD dwFlags)
 {
-    TRACE("(nItems=%d, dwFlags=%lx)\n", nItems, dwFlags);
+    TRACE("(nItems=%d, dwFlags=%x)\n", nItems, dwFlags);
 
     if (infoPtr->dwStyle & LVS_OWNERDATA)
     {
@@ -7380,7 +7380,7 @@ static INT LISTVIEW_SetSelectionMark(LISTVIEW_INFO *infoPtr, INT nIndex)
  */
 static BOOL LISTVIEW_SetTextBkColor(LISTVIEW_INFO *infoPtr, COLORREF clrTextBk)
 {
-    TRACE("(clrTextBk=%lx)\n", clrTextBk);
+    TRACE("(clrTextBk=%x)\n", clrTextBk);
 
     if (infoPtr->clrTextBk != clrTextBk)
     {
@@ -7405,7 +7405,7 @@ static BOOL LISTVIEW_SetTextBkColor(LISTVIEW_INFO *infoPtr, COLORREF clrTextBk)
  */
 static BOOL LISTVIEW_SetTextColor (LISTVIEW_INFO *infoPtr, COLORREF clrText)
 {
-    TRACE("(clrText=%lx)\n", clrText);
+    TRACE("(clrText=%x)\n", clrText);
 
     if (infoPtr->clrText != clrText)
     {
@@ -8116,7 +8116,7 @@ static LRESULT LISTVIEW_KeyDown(LISTVIEW_INFO *infoPtr, INT nVirtualKey, LONG lK
   INT nItem = -1;
   NMLVKEYDOWN nmKeyDown;
 
-  TRACE("(nVirtualKey=%d, lKeyData=%ld)\n", nVirtualKey, lKeyData);
+  TRACE("(nVirtualKey=%d, lKeyData=%d)\n", nVirtualKey, lKeyData);
 
   /* send LVN_KEYDOWN notification */
   nmKeyDown.wVKey = nVirtualKey;
@@ -8583,6 +8583,12 @@ static LRESULT LISTVIEW_HeaderNotification(LISTVIEW_INFO *infoPtr, const NMHEADE
 		lpColumnInfo->rcHeader.right += dx;
 		if (lpnmh->iItem + 1 < DPA_GetPtrCount(infoPtr->hdpaColumns))
 		    LISTVIEW_ScrollColumns(infoPtr, lpnmh->iItem + 1, dx);
+		else
+		{
+		    /* only needs to update the scrolls */
+		    infoPtr->nItemWidth += dx;
+		    LISTVIEW_UpdateScroll(infoPtr);
+		}
 		LISTVIEW_UpdateItemSize(infoPtr);
 		if (uView == LVS_REPORT && is_redrawing(infoPtr))
 		{
@@ -8754,7 +8760,7 @@ static LRESULT LISTVIEW_Paint(LISTVIEW_INFO *infoPtr, HDC hdc)
  */
 static LRESULT LISTVIEW_PrintClient(LISTVIEW_INFO *infoPtr, HDC hdc, DWORD options)
 {
-    FIXME("Partial Stub: (hdc=%p options=0x%08lx)\n", hdc, options);
+    FIXME("Partial Stub: (hdc=%p options=0x%08x)\n", hdc, options);
 
     if ((options & PRF_CHECKVISIBLE) && !IsWindowVisible(infoPtr->hwndSelf))
         return 0;
@@ -9122,7 +9128,7 @@ static INT LISTVIEW_StyleChanged(LISTVIEW_INFO *infoPtr, WPARAM wStyleType,
     UINT uNewView = lpss->styleNew & LVS_TYPEMASK;
     UINT uOldView = lpss->styleOld & LVS_TYPEMASK;
 
-    TRACE("(styletype=%x, styleOld=0x%08lx, styleNew=0x%08lx)\n",
+    TRACE("(styletype=%x, styleOld=0x%08x, styleNew=0x%08x)\n",
           wStyleType, lpss->styleOld, lpss->styleNew);
 
     if (wStyleType != GWL_STYLE) return 0;
@@ -9160,7 +9166,7 @@ static INT LISTVIEW_StyleChanged(LISTVIEW_INFO *infoPtr, WPARAM wStyleType,
         {
             if ((infoPtr->iconSize.cx != oldIconSize.cx) || (infoPtr->iconSize.cy != oldIconSize.cy))
             {
-	  	TRACE("icon old size=(%ld,%ld), new size=(%ld,%ld)\n",
+                TRACE("icon old size=(%d,%d), new size=(%d,%d)\n",
 		      oldIconSize.cx, oldIconSize.cy, infoPtr->iconSize.cx, infoPtr->iconSize.cy);
 	        LISTVIEW_SetIconSpacing(infoPtr, 0, 0);
             }

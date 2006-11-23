@@ -292,7 +292,7 @@ INT WINAPI LBItemFromPt (HWND hwndLB, POINT pt, BOOL bAutoScroll)
     INT nIndex;
     DWORD dwScrollTime;
 
-    TRACE("(%p %ld x %ld %s)\n",
+    TRACE("(%p %d x %d %s)\n",
            hwndLB, pt.x, pt.y, bAutoScroll ? "TRUE" : "FALSE");
 
     ScreenToClient (hwndLB, &pt);

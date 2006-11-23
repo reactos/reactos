@@ -34,6 +34,8 @@
 #include "winuser.h"
 #include "winnls.h"
 
+#include "comctl32.h"
+
 #include "wine/unicode.h"
 
 #include "wine/debug.h"
@@ -142,6 +144,143 @@ static BOOL COMCTL32_ChrCmpW(WCHAR ch1, WCHAR ch2)
 static BOOL COMCTL32_ChrCmpIW(WCHAR ch1, WCHAR ch2)
 {
   return COMCTL32_ChrCmpHelperW(ch1, ch2, NORM_IGNORECASE);
+}
+
+/**************************************************************************
+ * Str_GetPtrA [COMCTL32.233]
+ *
+ * Copies a string into a destination buffer.
+ *
+ * PARAMS
+ *     lpSrc   [I] Source string
+ *     lpDest  [O] Destination buffer
+ *     nMaxLen [I] Size of buffer in characters
+ *
+ * RETURNS
+ *     The number of characters copied.
+ */
+INT WINAPI Str_GetPtrA (LPCSTR lpSrc, LPSTR lpDest, INT nMaxLen)
+{
+    INT len;
+
+    TRACE("(%p %p %d)\n", lpSrc, lpDest, nMaxLen);
+
+    if ((!lpDest || nMaxLen == 0) && lpSrc)
+        return (strlen(lpSrc) + 1);
+
+    if (nMaxLen == 0)
+        return 0;
+
+    if (lpSrc == NULL) {
+        lpDest[0] = '\0';
+        return 0;
+    }
+
+    len = strlen(lpSrc) + 1;
+    if (len >= nMaxLen)
+        len = nMaxLen;
+
+    RtlMoveMemory (lpDest, lpSrc, len - 1);
+    lpDest[len - 1] = '\0';
+
+    return len;
+}
+
+/**************************************************************************
+ * Str_SetPtrA [COMCTL32.234]
+ *
+ * Makes a copy of a string, allocating memory if necessary.
+ *
+ * PARAMS
+ *     lppDest [O] Pointer to destination string
+ *     lpSrc   [I] Source string
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+ *
+ * NOTES
+ *     Set lpSrc to NULL to free the memory allocated by a previous call
+ *     to this function.
+ */
+BOOL WINAPI Str_SetPtrA (LPSTR *lppDest, LPCSTR lpSrc)
+{
+    TRACE("(%p %p)\n", lppDest, lpSrc);
+
+    if (lpSrc) {
+        LPSTR ptr = ReAlloc (*lppDest, strlen (lpSrc) + 1);
+        if (!ptr)
+            return FALSE;
+        strcpy (ptr, lpSrc);
+        *lppDest = ptr;
+    }
+    else {
+        if (*lppDest) {
+            Free (*lppDest);
+            *lppDest = NULL;
+        }
+    }
+
+    return TRUE;
+}
+
+/**************************************************************************
+ * Str_GetPtrW [COMCTL32.235]
+ *
+ * See Str_GetPtrA.
+ */
+INT WINAPI Str_GetPtrW (LPCWSTR lpSrc, LPWSTR lpDest, INT nMaxLen)
+{
+    INT len;
+
+    TRACE("(%p %p %d)\n", lpSrc, lpDest, nMaxLen);
+
+    if (!lpDest && lpSrc)
+        return strlenW (lpSrc);
+
+    if (nMaxLen == 0)
+        return 0;
+
+    if (lpSrc == NULL) {
+        lpDest[0] = L'\0';
+        return 0;
+    }
+
+    len = strlenW (lpSrc);
+    if (len >= nMaxLen)
+        len = nMaxLen - 1;
+
+    RtlMoveMemory (lpDest, lpSrc, len*sizeof(WCHAR));
+    lpDest[len] = L'\0';
+
+    return len;
+}
+
+/**************************************************************************
+ * Str_SetPtrW [COMCTL32.236]
+ *
+ * See Str_SetPtrA.
+ */
+BOOL WINAPI Str_SetPtrW (LPWSTR *lppDest, LPCWSTR lpSrc)
+{
+    TRACE("(%p %p)\n", lppDest, lpSrc);
+
+    if (lpSrc) {
+        INT len = strlenW (lpSrc) + 1;
+        LPWSTR ptr = ReAlloc (*lppDest, len * sizeof(WCHAR));
+        if (!ptr)
+            return FALSE;
+        strcpyW (ptr, lpSrc);
+        *lppDest = ptr;
+    }
+    else {
+        if (*lppDest) {
+            Free (*lppDest);
+            *lppDest = NULL;
+        }
+    }
+
+    return TRUE;
 }
 
 /**************************************************************************

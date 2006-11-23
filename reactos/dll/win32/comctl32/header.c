@@ -23,7 +23,6 @@
  *  TODO:
  *   - Imagelist support (completed?)
  *   - Hottrack support (completed?)
- *   - Custom draw support (completed?)
  *   - Filters support (HDS_FILTER, HDI_FILTER, HDM_*FILTER*, HDN_*FILTER*)
  *   - New Windows Vista features
  */
@@ -108,6 +107,8 @@ typedef struct
 
 static BOOL HEADER_PrepareCallbackItems(HWND hwnd, INT iItem, INT reqMask);
 static void HEADER_FreeCallbackItems(HEADER_ITEM *lpItem);
+static LRESULT HEADER_SendNotify(HWND hwnd, UINT code, NMHDR *hdr);
+static LRESULT HEADER_SendCtrlCustomDraw(HWND hwnd, DWORD dwDrawStage, HDC hdc, RECT *rect);
 
 static const WCHAR themeClass[] = {'H','e','a','d','e','r',0};
 static WCHAR emptyString[] = {0};
@@ -300,23 +301,40 @@ static void HEADER_GetHotDividerRect(HWND hwnd, HEADER_INFO *infoPtr, RECT *r)
 
 
 static INT
-HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
+HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack, LRESULT lCDFlags)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     HEADER_ITEM *phdi = &infoPtr->items[iItem];
     RECT r;
-    INT  oldBkMode, cxEdge = GetSystemMetrics(SM_CXEDGE);
+    INT  oldBkMode;
     HTHEME theme = GetWindowTheme (hwnd);
     NMCUSTOMDRAW nmcd;
 
     TRACE("DrawItem(iItem %d bHotTrack %d unicode flag %d)\n", iItem, bHotTrack, (infoPtr->nNotifyFormat == NFR_UNICODE));
 
-    if (!infoPtr->bRectsValid)
-    	HEADER_SetItemBounds(hwnd);
-
     r = phdi->rect;
     if (r.right - r.left == 0)
 	return phdi->rect.right;
+
+    /* Set the colors before sending NM_CUSTOMDRAW so that it can change them */
+    SetTextColor(hdc, (bHotTrack && !theme) ? COLOR_HIGHLIGHT : COLOR_BTNTEXT);
+    SetBkColor(hdc, GetSysColor(COLOR_3DFACE));
+
+    if (lCDFlags & CDRF_NOTIFYITEMDRAW && !(phdi->fmt & HDF_OWNERDRAW))
+    {
+        LRESULT lCDItemFlags;
+
+        nmcd.dwDrawStage  = CDDS_PREPAINT | CDDS_ITEM;
+        nmcd.hdc          = hdc;
+        nmcd.dwItemSpec   = iItem;
+        nmcd.rc           = r;
+        nmcd.uItemState   = phdi->bDown ? CDIS_SELECTED : 0;
+        nmcd.lItemlParam  = phdi->lParam;
+
+        lCDItemFlags = HEADER_SendNotify(hwnd, NM_CUSTOMDRAW, (NMHDR *)&nmcd);
+        if (lCDItemFlags & CDRF_SKIPDEFAULT)
+            return phdi->rect.right;
+    }
 
     if (theme != NULL) {
         int state = (phdi->bDown) ? HIS_PRESSED :
@@ -327,6 +345,8 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
             &r, &r);
     }
     else {
+        HBRUSH hbr;
+    
         if (GetWindowLongW (hwnd, GWL_STYLE) & HDS_BUTTONS) {
             if (phdi->bDown) {
                 DrawEdge (hdc, &r, BDR_RAISEDOUTER,
@@ -338,30 +358,15 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
         }
         else
             DrawEdge (hdc, &r, EDGE_ETCHED, BF_BOTTOM | BF_RIGHT | BF_ADJUST);
+
+        hbr = CreateSolidBrush(GetBkColor(hdc));
+        FillRect(hdc, &r, hbr);
+        DeleteObject(hbr);
     }
     if (phdi->bDown) {
         r.left += 2;
         r.top  += 2;
     }
-
-    r.left  -= cxEdge;
-    r.right += cxEdge;
-
-    /* Set the colors before sending NM_CUSTOMDRAW so that it can change them */
-    SetTextColor (hdc, (bHotTrack && !theme) ? COLOR_HIGHLIGHT : COLOR_BTNTEXT);
-    SetBkColor(hdc, GetSysColor(COLOR_3DFACE));
-
-    nmcd.hdr.hwndFrom = hwnd;
-    nmcd.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
-    nmcd.hdr.code     = NM_CUSTOMDRAW;
-    nmcd.dwDrawStage  = CDDS_PREPAINT | CDDS_ITEM | CDDS_ITEMPOSTERASE;
-    nmcd.hdc          = hdc;
-    nmcd.dwItemSpec   = iItem;
-    nmcd.rc           = r;
-    nmcd.uItemState   = phdi->bDown ? CDIS_SELECTED : 0;
-    nmcd.lItemlParam  = phdi->lParam;
-
-    SendMessageW (infoPtr->hwndNotify, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
 
     if (phdi->fmt & HDF_OWNERDRAW) {
 	DRAWITEMSTRUCT dis;
@@ -373,7 +378,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 	dis.itemState  = phdi->bDown ? ODS_SELECTED : 0;
 	dis.hwndItem   = hwnd;
 	dis.hDC        = hdc;
-	dis.rcItem     = r;
+	dis.rcItem     = phdi->rect;
 	dis.itemData   = phdi->lParam;
         oldBkMode = SetBkMode(hdc, TRANSPARENT);
 	SendMessageW (infoPtr->hwndNotify, WM_DRAWITEM,
@@ -394,18 +399,10 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 	rw = r.right - r.left;
 	rh = r.bottom - r.top;
 
-        if (theme == NULL) {
-            HBRUSH hbr = CreateSolidBrush(GetBkColor(hdc));
-            RECT rcBackground = r;
-
-            rcBackground.right -= cxEdge;
-            rcBackground.left += cxEdge;
-            FillRect(hdc, &rcBackground, hbr);
-            DeleteObject(hbr);
-        }
 	if (phdi->fmt & HDF_STRING) {
 	    RECT textRect;
 
+            SetRectEmpty(&textRect);
 	    DrawTextW (hdc, phdi->pszText, -1,
 	               &textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_CALCRECT);
 	    cw = textRect.right - textRect.left + 2 * infoPtr->iMargin;
@@ -529,10 +526,11 @@ HEADER_Refresh (HWND hwnd, HDC hdc)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     HFONT hFont, hOldFont;
-    RECT rect;
+    RECT rect, rcRest;
     HBRUSH hbrBk;
     UINT i;
     INT x;
+    LRESULT lCDFlags;
     HTHEME theme = GetWindowTheme (hwnd);
 
     if (!infoPtr->bRectsValid)
@@ -540,6 +538,7 @@ HEADER_Refresh (HWND hwnd, HDC hdc)
 
     /* get rect for the bar, adjusted for the border */
     GetClientRect (hwnd, &rect);
+    lCDFlags = HEADER_SendCtrlCustomDraw(hwnd, CDDS_PREPAINT, hdc, &rect);
     
     if (infoPtr->bDragging)
 	ImageList_DragShowNolock(FALSE);
@@ -557,21 +556,21 @@ HEADER_Refresh (HWND hwnd, HDC hdc)
     for (i = 0; x <= rect.right && i < infoPtr->uNumItem; i++) {
         int idx = HEADER_OrderToIndex(hwnd,i);
         if (RectVisible(hdc, &infoPtr->items[idx].rect))
-            HEADER_DrawItem (hwnd, hdc, idx, infoPtr->iHotItem == i);
+            HEADER_DrawItem(hwnd, hdc, idx, infoPtr->iHotItem == idx, lCDFlags);
         x = infoPtr->items[idx].rect.right;
     }
 
-    if ((x <= rect.right) && (infoPtr->uNumItem > 0)) {
-        rect.left = x;
+    rcRest = rect;
+    rcRest.left = x;
+    if ((x <= rect.right) && RectVisible(hdc, &rcRest) && (infoPtr->uNumItem > 0)) {
         if (theme != NULL) {
-            DrawThemeBackground (theme, hdc, HP_HEADERITEM, HIS_NORMAL, &rect,
-                NULL);
+            DrawThemeBackground(theme, hdc, HP_HEADERITEM, HIS_NORMAL, &rcRest, NULL);
         }
         else {
             if (GetWindowLongW (hwnd, GWL_STYLE) & HDS_BUTTONS)
-                DrawEdge (hdc, &rect, EDGE_RAISED, BF_TOP|BF_LEFT|BF_BOTTOM|BF_SOFT|BF_MIDDLE);
+                DrawEdge (hdc, &rcRest, EDGE_RAISED, BF_TOP|BF_LEFT|BF_BOTTOM|BF_SOFT|BF_MIDDLE);
             else
-                DrawEdge (hdc, &rect, EDGE_ETCHED, BF_BOTTOM|BF_MIDDLE);
+                DrawEdge (hdc, &rcRest, EDGE_ETCHED, BF_BOTTOM|BF_MIDDLE);
         }
     }
     
@@ -581,6 +580,9 @@ HEADER_Refresh (HWND hwnd, HDC hdc)
     if (infoPtr->bDragging)
 	ImageList_DragShowNolock(TRUE);
     SelectObject (hdc, hOldFont);
+    
+    if (lCDFlags & CDRF_NOTIFYPOSTPAINT)
+        HEADER_SendCtrlCustomDraw(hwnd, CDDS_POSTPAINT, hdc, &rect);
 }
 
 
@@ -588,12 +590,11 @@ static void
 HEADER_RefreshItem (HWND hwnd, HDC hdc, INT iItem)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
-    HFONT hFont, hOldFont;
 
-    hFont = infoPtr->hFont ? infoPtr->hFont : GetStockObject (SYSTEM_FONT);
-    hOldFont = SelectObject (hdc, hFont);
-    HEADER_DrawItem (hwnd, hdc, iItem, infoPtr->iHotItem == iItem);
-    SelectObject (hdc, hOldFont);
+    if (!infoPtr->bRectsValid)
+        HEADER_SetItemBounds(hwnd);
+
+    InvalidateRect(hwnd, &infoPtr->items[iItem].rect, FALSE);
 }
 
 
@@ -783,18 +784,38 @@ static UINT HEADER_NotifyCodeWtoA(UINT code)
         return code;
 }
 
+static LRESULT
+HEADER_SendNotify(HWND hwnd, UINT code, NMHDR *nmhdr)
+{
+    HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
+
+    nmhdr->hwndFrom = hwnd;
+    nmhdr->idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
+    nmhdr->code     = code;
+
+    return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY,
+				   (WPARAM)nmhdr->idFrom, (LPARAM)nmhdr);
+}
+
 static BOOL
 HEADER_SendSimpleNotify (HWND hwnd, UINT code)
 {
-    HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     NMHDR nmhdr;
+    return (BOOL)HEADER_SendNotify(hwnd, code, &nmhdr);
+}
 
-    nmhdr.hwndFrom = hwnd;
-    nmhdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
-    nmhdr.code     = code;
+static LRESULT
+HEADER_SendCtrlCustomDraw(HWND hwnd, DWORD dwDrawStage, HDC hdc, RECT *rect)
+{
+    NMCUSTOMDRAW nm;
+    nm.dwDrawStage = dwDrawStage;
+    nm.hdc = hdc;
+    nm.rc = *rect;
+    nm.dwItemSpec = 0;
+    nm.uItemState = 0;
+    nm.lItemlParam = 0;
 
-    return (BOOL)SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
-				   (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
+    return HEADER_SendNotify(hwnd, NM_CUSTOMDRAW, (NMHDR *)&nm);
 }
 
 static BOOL
@@ -803,15 +824,13 @@ HEADER_SendNotifyWithHDItemT(HWND hwnd, UINT code, INT iItem, HDITEMW *lpItem)
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     NMHEADERW nmhdr;
     
-    nmhdr.hdr.hwndFrom = hwnd;
-    nmhdr.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
-    nmhdr.hdr.code = (infoPtr->nNotifyFormat == NFR_UNICODE ? code : HEADER_NotifyCodeWtoA(code));
+    if (infoPtr->nNotifyFormat != NFR_UNICODE)
+        code = HEADER_NotifyCodeWtoA(code);
     nmhdr.iItem = iItem;
     nmhdr.iButton = 0;
     nmhdr.pitem = lpItem;
 
-    return (BOOL)SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
-                               (WPARAM)nmhdr.hdr.idFrom, (LPARAM)&nmhdr);
+    return (BOOL)HEADER_SendNotify(hwnd, code, (NMHDR *)&nmhdr);
 }
 
 static BOOL
@@ -966,12 +985,18 @@ HEADER_CreateDragImage (HWND hwnd, WPARAM wParam)
     HEADER_ITEM *lpItem;
     HIMAGELIST himl;
     HBITMAP hMemory, hOldBitmap;
+    LRESULT lCDFlags;
+    RECT rc;
     HDC hMemoryDC;
     HDC hDeviceDC;
     int height, width;
     
     if (wParam < 0 || wParam >= infoPtr->uNumItem)
         return FALSE;
+
+    if (!infoPtr->bRectsValid)
+    	HEADER_SetItemBounds(hwnd);
+
     lpItem = &infoPtr->items[wParam];
     width = lpItem->rect.right - lpItem->rect.left;
     height = lpItem->rect.bottom - lpItem->rect.top;
@@ -982,7 +1007,13 @@ HEADER_CreateDragImage (HWND hwnd, WPARAM wParam)
     ReleaseDC(NULL, hDeviceDC);
     hOldBitmap = SelectObject(hMemoryDC, hMemory);
     SetViewportOrgEx(hMemoryDC, -lpItem->rect.left, -lpItem->rect.top, NULL);
-    HEADER_DrawItem(hwnd, hMemoryDC, wParam, FALSE);
+
+    GetClientRect(hwnd, &rc);
+    lCDFlags = HEADER_SendCtrlCustomDraw(hwnd, CDDS_PREPAINT, hMemoryDC, &rc);
+    HEADER_DrawItem(hwnd, hMemoryDC, wParam, FALSE, lCDFlags);
+    if (lCDFlags & CDRF_NOTIFYPOSTPAINT)
+        HEADER_SendCtrlCustomDraw(hwnd, CDDS_POSTPAINT, hMemoryDC, &rc);
+    
     hMemory = SelectObject(hMemoryDC, hOldBitmap);
     DeleteDC(hMemoryDC);
     
@@ -1525,8 +1556,8 @@ HEADER_LButtonDblClk (HWND hwnd, WPARAM wParam, LPARAM lParam)
     UINT  flags;
     INT   nItem;
 
-    pt.x = (INT)LOWORD(lParam);
-    pt.y = (INT)HIWORD(lParam);
+    pt.x = (short)LOWORD(lParam);
+    pt.y = (short)HIWORD(lParam);
     HEADER_InternalHitTest (hwnd, &pt, &flags, &nItem);
 
     if ((GetWindowLongW (hwnd, GWL_STYLE) & HDS_BUTTONS) && (flags == HHT_ONHEADER))
@@ -1548,8 +1579,8 @@ HEADER_LButtonDown (HWND hwnd, WPARAM wParam, LPARAM lParam)
     INT   nItem;
     HDC   hdc;
 
-    pt.x = (INT)LOWORD(lParam);
-    pt.y = (INT)HIWORD(lParam);
+    pt.x = (short)LOWORD(lParam);
+    pt.y = (short)HIWORD(lParam);
     HEADER_InternalHitTest (hwnd, &pt, &flags, &nItem);
 
     if ((dwStyle & HDS_BUTTONS) && (flags == HHT_ONHEADER)) {
@@ -1875,8 +1906,8 @@ HEADER_RButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
     BOOL bRet;
     POINT pt;
 
-    pt.x = LOWORD(lParam);
-    pt.y = HIWORD(lParam);
+    pt.x = (short)LOWORD(lParam);
+    pt.y = (short)HIWORD(lParam);
 
     /* Send a Notify message */
     bRet = HEADER_SendSimpleNotify (hwnd, NM_RCLICK);

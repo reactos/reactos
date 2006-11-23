@@ -496,7 +496,9 @@ static void
 TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr)
 {
     TTTOOL_INFO *toolPtr;
-    RECT rect, wndrect;
+    HMONITOR monitor;
+    MONITORINFO mon_info;
+    RECT rect;
     SIZE size;
     NMHDR  hdr;
     int ptfx = 0;
@@ -530,7 +532,7 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr)
     TRACE("%s\n", debugstr_w(infoPtr->szTipText));
 
     TOOLTIPS_CalcTipSize (hwnd, infoPtr, &size);
-    TRACE("size %ld x %ld\n", size.cx, size.cy);
+    TRACE("size %d x %d\n", size.cx, size.cy);
 
     if (toolPtr->uFlags & TTF_CENTERTIP) {
 	RECT rc;
@@ -587,19 +589,24 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr)
         }
     }
 
-    TRACE("pos %ld - %ld\n", rect.left, rect.top);
+    TRACE("pos %d - %d\n", rect.left, rect.top);
 
     rect.right = rect.left + size.cx;
     rect.bottom = rect.top + size.cy;
 
     /* check position */
-    wndrect.right = GetSystemMetrics( SM_CXSCREEN );
-    if( rect.right > wndrect.right ) {
-	   rect.left -= rect.right - wndrect.right + 2;
-	   rect.right = wndrect.right - 2;
+
+    monitor = MonitorFromRect( &rect, MONITOR_DEFAULTTOPRIMARY );
+    mon_info.cbSize = sizeof(mon_info);
+    GetMonitorInfoW( monitor, &mon_info );
+
+    if( rect.right > mon_info.rcWork.right ) {
+        rect.left -= rect.right - mon_info.rcWork.right + 2;
+        rect.right = mon_info.rcWork.right - 2;
     }
-    wndrect.bottom = GetSystemMetrics( SM_CYSCREEN );
-    if( rect.bottom > wndrect.bottom ) {
+    if (rect.left < mon_info.rcWork.left) rect.left = mon_info.rcWork.left;
+
+    if( rect.bottom > mon_info.rcWork.bottom ) {
         RECT rc;
 
 	if (toolPtr->uFlags & TTF_IDISHWND)
@@ -744,7 +751,7 @@ TOOLTIPS_TrackShow (HWND hwnd, TOOLTIPS_INFO *infoPtr)
     TRACE("%s\n", debugstr_w(infoPtr->szTipText));
 
     TOOLTIPS_CalcTipSize (hwnd, infoPtr, &size);
-    TRACE("size %ld x %ld\n", size.cx, size.cy);
+    TRACE("size %d x %d\n", size.cx, size.cy);
 
     if (toolPtr->uFlags & TTF_ABSOLUTE) {
 	rect.left = infoPtr->xTrackPos;
@@ -779,7 +786,7 @@ TOOLTIPS_TrackShow (HWND hwnd, TOOLTIPS_INFO *infoPtr)
 	    rect.left = rcTool.right;
     }
 
-    TRACE("pos %ld - %ld\n", rect.left, rect.top);
+    TRACE("pos %d - %d\n", rect.left, rect.top);
 
     rect.right = rect.left + size.cx;
     rect.bottom = rect.top + size.cy;
@@ -1364,7 +1371,7 @@ TOOLTIPS_GetBubbleSize (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TRACE("tool %d\n", nTool);
 
     TOOLTIPS_CalcTipSize (hwnd, infoPtr, &size);
-    TRACE("size %ld x %ld\n", size.cx, size.cy);
+    TRACE("size %d x %d\n", size.cx, size.cy);
 
     return MAKELRESULT(size.cx, size.cy);
 }
@@ -1787,14 +1794,14 @@ TOOLTIPS_RelayEvent (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    break;
 
 	case WM_MOUSEMOVE:
-	    pt.x = LOWORD(lpMsg->lParam);
-	    pt.y = HIWORD(lpMsg->lParam);
+	    pt.x = (short)LOWORD(lpMsg->lParam);
+	    pt.y = (short)HIWORD(lpMsg->lParam);
 	    nOldTool = infoPtr->nTool;
 	    infoPtr->nTool = TOOLTIPS_GetToolFromPoint(infoPtr, lpMsg->hwnd,
 						       &pt);
 	    TRACE("tool (%p) %d %d %d\n", hwnd, nOldTool,
 		  infoPtr->nTool, infoPtr->nCurrentTool);
-	    TRACE("WM_MOUSEMOVE (%p %ld %ld)\n", hwnd, pt.x, pt.y);
+            TRACE("WM_MOUSEMOVE (%p %d %d)\n", hwnd, pt.x, pt.y);
 
 	    if (infoPtr->nTool != nOldTool) {
 	        if(infoPtr->nTool == -1) { /* Moved out of all tools */

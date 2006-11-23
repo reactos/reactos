@@ -114,7 +114,7 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
     POINT pt;
     INT i;
 
-    TRACE("draw size grip %ld,%ld - %ld,%ld\n", lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
+    TRACE("draw size grip %d,%d - %d,%d\n", lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
     
     if (theme)
     {
@@ -175,7 +175,7 @@ STATUSBAR_DrawPart (STATUS_INFO *infoPtr, HDC hdc, STATUSWINDOWPART *part, int i
     HTHEME theme = GetWindowTheme (infoPtr->Self);
     int themePart = SP_PANE;
 
-    TRACE("part bound %ld,%ld - %ld,%ld\n", r.left, r.top, r.right, r.bottom);
+    TRACE("part bound %d,%d - %d,%d\n", r.left, r.top, r.right, r.bottom);
     if (part->style & SBT_POPOUT)
         border = BDR_RAISEDOUTER;
     else if (part->style & SBT_NOBORDERS)
@@ -319,7 +319,7 @@ STATUSBAR_SetPartBounds (STATUS_INFO *infoPtr)
 
     /* get our window size */
     GetClientRect (infoPtr->Self, &rect);
-    TRACE("client wnd size is %ld,%ld - %ld,%ld\n", rect.left, rect.top, rect.right, rect.bottom);
+    TRACE("client wnd size is %d,%d - %d,%d\n", rect.left, rect.top, rect.right, rect.bottom);
 
     rect.left += infoPtr->horizontalBorder;
     rect.top += infoPtr->verticalBorder;
@@ -367,8 +367,8 @@ STATUSBAR_Relay2Tip (STATUS_INFO *infoPtr, UINT uMsg,
     msg.wParam = wParam;
     msg.lParam = lParam;
     msg.time = GetMessageTime ();
-    msg.pt.x = LOWORD(GetMessagePos ());
-    msg.pt.y = HIWORD(GetMessagePos ());
+    msg.pt.x = (short)LOWORD(GetMessagePos ());
+    msg.pt.y = (short)HIWORD(GetMessagePos ());
 
     return SendMessageW (infoPtr->hwndToolTip, TTM_RELAYEVENT, 0, (LPARAM)&msg);
 }
@@ -575,7 +575,7 @@ STATUSBAR_SetBkColor (STATUS_INFO *infoPtr, COLORREF color)
     infoPtr->clrBk = color;
     InvalidateRect(infoPtr->Self, NULL, FALSE);
 
-    TRACE("CREF: %08lx -> %08lx\n", oldBkColor, infoPtr->clrBk);
+    TRACE("CREF: %08x -> %08x\n", oldBkColor, infoPtr->clrBk);
     return oldBkColor;
 }
 
@@ -992,7 +992,7 @@ STATUSBAR_WMCreate (HWND hwnd, LPCREATESTRUCTA lpCreate)
 
     if (dwStyle & SBT_TOOLTIPS) {
 	infoPtr->hwndToolTip =
-	    CreateWindowExW (0, TOOLTIPS_CLASSW, NULL, 0,
+	    CreateWindowExW (0, TOOLTIPS_CLASSW, NULL, WS_POPUP | TTS_ALWAYSTIP,
 			     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 			     CW_USEDEFAULT, hwnd, 0,
 			     (HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE), NULL);
@@ -1330,8 +1330,8 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    return STATUSBAR_Relay2Tip (infoPtr, msg, wParam, lParam);
 
 	case WM_NCHITTEST:
-	    res = STATUSBAR_WMNCHitTest(infoPtr, (INT)LOWORD(lParam),
-			                (INT)HIWORD(lParam));
+	    res = STATUSBAR_WMNCHitTest(infoPtr, (short)LOWORD(lParam),
+                                        (short)HIWORD(lParam));
 	    if (res != HTERROR) return res;
 	    return DefWindowProcW (hwnd, msg, wParam, lParam);
 
