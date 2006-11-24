@@ -73,6 +73,7 @@ class CBBackend : public Backend
 		std::string LayoutFileName ( const Module& module ) const;
 		std::string DependFileName ( const Module& module ) const;
 		std::string GenerateProjectLinkerFlags () const;
+		void MingwAddImplicitLibraries( Module &module );
 		std::vector<CBConfiguration*> m_configurations;
 
 		std::vector<FileUnit> m_fileUnits;
@@ -96,6 +97,7 @@ class CBBackend : public Backend
 		bool _copy_file ( const std::string& inputname, const std::string& targetname ) const;
 		const Property* _lookup_property ( const Module& module, const std::string& name ) const;
 };
+
 
 #endif // __MSVC_H__
 

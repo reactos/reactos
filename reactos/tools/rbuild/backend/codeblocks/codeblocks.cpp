@@ -96,6 +96,7 @@ void CBBackend::ProcessModules()
 	for(size_t i = 0; i < ProjectNode.modules.size(); i++)
 	{
 		Module &module = *ProjectNode.modules[i];
+		MingwAddImplicitLibraries( module );
 		_generate_cbproj ( module );
 	}
 }
@@ -431,6 +432,22 @@ CBBackend::_generate_cbproj ( const Module& module )
 	if ( !module.allowWarnings )
 		compiler_flags.push_back ( "-Werror" );
 
+	///* implicit libraries */
+	//libraries.push_back ( "mingw_common" );
+	//libpaths.push_back ( module.project.LocateModule("mingw_common") );
+
+	//if ( !Module.IsDll )
+	//{
+	//	libraries.push_back ( "%s", module.isUnicode ? "mingw_wmain" : "mingw_main" );
+	//	libpaths.push_back ( module.project.LocateModule("%s"), module.isUnicode ? "mingw_wmain" : "mingw_main" );
+	//}
+
+	//if ( module.name != "msvcrt" )
+	//{
+	//	libraries.push_back ( "msvcrt" );
+	//	libpaths.push_back ( module.project.LocateModule("msvcrt") );
+	//}
+
 	FILE* OUT = fopen ( cbproj_file.c_str(), "wb" );
 
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>\r\n" );
@@ -569,7 +586,6 @@ CBBackend::_generate_cbproj ( const Module& module )
 
 		if ( dll )
 			fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s.temp.exp\" />\r\n", module.name.c_str() );
-			
 
 		/* libraries */
 		for ( i = 0; i < libraries.size(); i++ )
@@ -587,7 +603,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		if ( dll )
 		{
 			fprintf ( OUT, "\t\t\t\t<ExtraCommands>\r\n" );
-			fprintf ( OUT, "<Add before=\"dlltool --dllname %s.%s --def %s.def --output-exp %s.temp.exp --kill-at\" />\r\n", module.name.c_str(), module_type.c_str(), module.name.c_str(), module.name.c_str() );
+			fprintf ( OUT, "<Add before=\"dlltool --dllname %s%s --def %s.def --output-exp %s.temp.exp --kill-at\" />\r\n", module.name.c_str(), module_type.c_str(), module.name.c_str(), module.name.c_str() );
 #ifdef WIN32
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"cmd /c del %s.temp.exp 2&gt;NUL\" />\r\n", module.name.c_str() );
 #else
@@ -714,4 +730,34 @@ CBBackend::GenerateProjectLinkerFlags() const
 		lflags += linkerFlag.flag;
 	}
 	return lflags;
+}
+
+void
+CBBackend::MingwAddImplicitLibraries( Module &module )
+{
+	Library* pLibrary;
+
+	if ( !module.isDefaultEntryPoint )
+		return;
+
+	if ( module.IsDLL () )
+	{
+		//pLibrary = new Library ( module, "__mingw_dllmain" );
+		//module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
+	}
+	else
+	{
+		pLibrary = new Library ( module, module.isUnicode ? "mingw_wmain" : "mingw_main" );
+		module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
+	}
+
+	pLibrary = new Library ( module, "mingw_common" );
+	module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin() + 1, pLibrary );
+
+	if ( module.name != "msvcrt" )
+	{
+		// always link in msvcrt to get the basic routines
+		pLibrary = new Library ( module, "msvcrt" );
+		module.non_if_data.libraries.push_back ( pLibrary );
+	}
 }
