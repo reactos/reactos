@@ -325,6 +325,9 @@ CBBackend::_generate_cbproj ( const Module& module )
 	string module_type = GetExtension(module.GetTargetName());
 	string cbproj_path = module.GetBasePath();	
 	string CompilerVar;
+	string baseaddr;
+	string project_linker_flags = "-Wl,--enable-stdcall-fixup ";
+	project_linker_flags += GenerateProjectLinkerFlags();
 
 	bool lib = (module.type == ObjectLibrary) || (module.type == RpcClient) ||(module.type == RpcServer) || (module_type == ".lib") || (module_type == ".a");
 	bool dll = (module_type == ".dll") || (module_type == ".cpl");
@@ -417,6 +420,12 @@ CBBackend::_generate_cbproj ( const Module& module )
 			vars.push_back( variables[i]->name );
 			values.push_back( variables[i]->value );
 		}*/
+		for ( i = 0; i < data.properties.size(); i++ )
+		{
+			Property& prop = *data.properties[i];
+			if ( strstr ( module.baseaddress.c_str(), prop.name.c_str() ) )
+				baseaddr = prop.value;
+		}
 	}
 
 	if ( !module.allowWarnings )
@@ -458,13 +467,13 @@ CBBackend::_generate_cbproj ( const Module& module )
 		else if ( dll )		
 			fprintf ( OUT, "\t\t\t\t<Option type=\"3\" />\r\n" );
 		else if ( sys )
-			fprintf ( OUT, "\t\t\t\t<Option type=\"?\" />\r\n" ); /*FIXME*/
+			fprintf ( OUT, "\t\t\t\t<Option type=\"4\" />\r\n" );
 		else if ( exe )
 		{
 			if ( module.type == Kernel )
-				fprintf ( OUT, "\t\t\t\t<Option type=\"?\" />\r\n" ); /*FIXME*/
+				fprintf ( OUT, "\t\t\t\t<Option type=\"4\" />\r\n" );
 			else if ( module.type == NativeCUI )
-				fprintf ( OUT, "\t\t\t\t<Option type=\"?\" />\r\n" ); /*FIXME*/
+				fprintf ( OUT, "\t\t\t\t<Option type=\"4\" />\r\n" );
 			else if ( module.type == Win32CUI || module.type == Win32GUI || module.type == Win32SCR)
 			{
 				if ( console )
@@ -474,8 +483,16 @@ CBBackend::_generate_cbproj ( const Module& module )
 			}
 		}
 		
-			
 		fprintf ( OUT, "\t\t\t\t<Option compiler=\"gcc\" />\r\n" );
+		if ( module_type == ".cpl" )
+		{
+			if ( configuration.UseConfigurationInPath )
+				fprintf ( OUT, "\t\t\t\t<Option parameters=\"shell32,Control_RunDLL &quot;%s\\%s%s\\%s%s&quot;,@\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), cfg.name.c_str(), module.name.c_str(), module_type.c_str() );
+			else
+				fprintf ( OUT, "\t\t\t\t<Option parameters=\"shell32,Control_RunDLL &quot;%s\\%s\\%s%s&quot;,@\" />\r\n",  outdir.c_str (), module.GetBasePath ().c_str (), module.name.c_str(), module_type.c_str() );
+
+			fprintf ( OUT, "\t\t\t\t<Option host_application=\"rundll32.exe\" />\r\n" );
+		}
 		fprintf ( OUT, "\t\t\t\t<Compiler>\r\n" );
 		
 		bool debug = ( cfg.optimization == Debug );
@@ -512,9 +529,49 @@ CBBackend::_generate_cbproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\t\t<Add directory=\"%s\" />\r\n", include.c_str() );
 		}
 		fprintf ( OUT, "\t\t\t\t</ResourceCompiler>\r\n" );
+		
+		fprintf ( OUT, "\t\t\t\t<Linker>\r\n" );
+		fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", project_linker_flags.c_str() );
+
+		if ( sys )
+		{
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,%s%s\" />\r\n", "_", module.GetEntryPoint(false) == "" ? "DriverEntry@8" : module.GetEntryPoint(false).c_str ());
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--image-base,%s\" />\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str () );
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-nostartfiles -nostdlib\" />\r\n" );
+		}
+		else if ( exe )
+		{
+			if ( module.type == Kernel )
+			{
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,_KiSystemStartup\" />\r\n" );
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--image-base,%s\" />\r\n", baseaddr.c_str () );
+			}
+			else if ( module.type == NativeCUI )
+			{
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,_NtProcessStartup@4\" />\r\n" );
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--image-base,%s\" />\r\n", baseaddr.c_str () );
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-nostartfiles -nostdlib\" />\r\n" );
+			}
+			else
+			{
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", module.useHostStdlib ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc" );
+			}
+		}
+		else if ( dll )
+		{
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,%s%s\" />\r\n", "_", module.GetEntryPoint(false).c_str () );
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--image-base,%s\" />\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str () );
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", module.useHostStdlib ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc" );
+		}
+
+		fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--file-alignment,0x1000\" />\r\n" );
+		fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--section-alignment,0x1000\" />\r\n" );
+
+		if ( dll )
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s.temp.exp\" />\r\n", module.name.c_str() );
+			
 
 		/* libraries */
-		fprintf ( OUT, "\t\t\t\t<Linker>\r\n" );
 		for ( i = 0; i < libraries.size(); i++ )
 		{
 			const string& lib = libraries[i];
@@ -526,6 +583,20 @@ CBBackend::_generate_cbproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\t\t<Add directory=\"%s\" />\r\n", lib.c_str() );
 		}
 		fprintf ( OUT, "\t\t\t\t</Linker>\r\n" );
+
+		if ( dll )
+		{
+			fprintf ( OUT, "\t\t\t\t<ExtraCommands>\r\n" );
+			fprintf ( OUT, "<Add before=\"dlltool --dllname %s.%s --def %s.def --output-exp %s.temp.exp --kill-at\" />\r\n", module.name.c_str(), module_type.c_str(), module.name.c_str(), module.name.c_str() );
+#ifdef WIN32
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"cmd /c del %s.temp.exp 2&gt;NUL\" />\r\n", module.name.c_str() );
+#else
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"rm %s.temp.exp 2&gt;/dev/null\" />\r\n", module.name.c_str() );
+#endif
+			fprintf ( OUT, "\t\t\t\t\t<Mode after=\"always\" />\r\n" );
+
+			fprintf ( OUT, "\t\t\t\t</ExtraCommands>\r\n" );
+		}
 
 		fprintf ( OUT, "\t\t\t</Target>\r\n" );
 
@@ -631,3 +702,16 @@ CBBackend::_replace_str(std::string string1, const std::string &find_str, const 
 	return string1;
 }
 
+std::string
+CBBackend::GenerateProjectLinkerFlags() const
+{
+	std::string lflags;
+	for ( size_t i = 0; i < ProjectNode.linkerFlags.size (); i++ )
+	{
+		LinkerFlag& linkerFlag = *ProjectNode.linkerFlags[i];
+		if ( lflags.length () > 0 )
+			lflags += " ";
+		lflags += linkerFlag.flag;
+	}
+	return lflags;
+}

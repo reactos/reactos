@@ -72,7 +72,7 @@ class CBBackend : public Backend
 		std::string CbpFileName ( const Module& module ) const;
 		std::string LayoutFileName ( const Module& module ) const;
 		std::string DependFileName ( const Module& module ) const;
-
+		std::string GenerateProjectLinkerFlags () const;
 		std::vector<CBConfiguration*> m_configurations;
 
 		std::vector<FileUnit> m_fileUnits;
