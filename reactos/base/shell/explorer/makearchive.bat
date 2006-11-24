@@ -1,5 +1,5 @@
 set MAKE=mingw32-make.exe
-set TARGET=D:\html\newhome\explorer
+set TARGET=E:\html\newhome\explorer
 
 rm explorer-ansi.exe
 %MAKE% -f Makefile-precomp clean all UNICODE=0

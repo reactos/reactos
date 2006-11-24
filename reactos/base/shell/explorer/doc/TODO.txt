@@ -1,3 +1,4 @@
+- Combobox to switch the second input field between "Filter" and "Command"
 - rewrite autostart code and include all possible autostart locations
 - read "DESCRIPT.ION" files to display file descriptions
 - detect display mode changes and adjust desktop bar size
@@ -31,4 +32,18 @@
 <tinus_> Nonvo: shell extension
 <m-fuchs> tinus: we should think about installing some default shell extensions
 <tinus_> m-fuchs: perhaps, but it'd be nice if they actually were shell extensions
+
+- ShellBrowser: Probleme mit TVIF_CHILDREN (in der dritten Ebene?)
+
+
+> The nits:
+> * the MDI file manager top window does not seem to be aware of the scroll-wheel
+> * the task bar clock color seems to be hard-coded, and so does not show
+>   with the High Contrast color. Several other places have similar issues
+> * there's no quick launch
+> * the desktop lacks much functionality, including the ability to arrange icons
+> * there are no startmenu settings/it does not heed the MS explorer ones
+
+> Is there some means of transferring applications across desktops?
+> What about (configurable) key combos to cycle/change desktops?
 
