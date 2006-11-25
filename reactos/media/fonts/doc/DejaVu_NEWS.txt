@@ -1,4 +1,69 @@
+Changes from 2.11 to 2.12
+
+- added U+0180 to Serif (by Denis Jacquerye)
+- improved and/or hinted Armenian letters U+0542, U+0546, U+0562,
+  U+0563, U+0564, U+0577, U+0582 in Sans (by Ben Laenen)
+- added U+4FE-U+4FF, U+512-U+513, U+2114, U+214E, U+26B2 to Sans
+  (by Gee Fung Sit)
+- adjusted U+0496-U+0497, U+049A-U+04A1 in Sans to match U+0416,
+  U+041A, U+0436 and U+043A (by Gee Fung Sit)
+- Mathematical Operators in Sans: changed U+22C0-U+22C1 to match
+  other n-ary operators, adjusted U+2203-U+2204, changed U+2220 in
+  Sans to match the style of U+2221 (by Gee Fung Sit)
+- added U+1401, U+1403-U+1406, U+140A, U+140B, U+1426, U+142F,
+  U+1431-U+1434, U+1438, U+1439, U+1449, U+144A, U+144C,
+  U+144E-U+1451, U+1455, U+1456, U+1466, U+146B, U+146D-U+1470,
+  U+1472, U+1473, U+1483, U+1489, U+148B-U+148E, U+1490, U+1491,
+  U+14A1, U+14A3, U+14A5-U+14A8, U+14AA, U+14AB, U+14BB, U+14C0,
+  U+14C2-U+14C5, U+14C7, U+14C8, U+14D0, U+14D3, U+14D5-U+14D8,
+  U+14DA, U+14DB, U+14EA, U+14ED, U+14EF-U+14F2, U+14F4, U+14F5,
+  U+1405, U+1526, U+1528-U+152B, U+152D, U+152E, U+153E,
+  U+1542-U+1544, U+1546-U+154D, U+1550, U+1553, U+1555-U+155A,
+  U+1567, U+156A, U+157C, U+157F-U+1585, U+158A-U+158D,
+  U+158F-U+1596, U+15A0-U+15A6, U+15DE, U+15E1, U+166E-U+1676 to
+  Sans (by Eugeniy Meshcheryakov)
+- re-enabled Latin ligatures fi, ffi, fl, ffl and ff in Sans
+  (by Ben Laenen)
+- made italic shape for U+436, U+44A, U+44B, U+44C, U+44E, U+45F,
+  U+463 in SerifOblique and SerifBoldOblique (by Andrey V. Panov)
+- fixed sub- and superscript metrics in Condensed Sans (bug #8848)
+  (by Ben Laenen)
+- added U+474, U+475 in Serif (by Andrey V. Panov)
+- hinted Greek glyphs U+03B7, U+30B8, U+03B9, U+03C1, U+03C3,
+  U+03C6 in Mono Book (by Ben Laenen)
+
+Changes from 2.10 to 2.11
+
+- added instructions for Hebrew glyphs (Sans Book, by Eugeniy
+  Meshcheryakov)
+- changed U+01A6 (Latin Yr) after bug #8212, in Sans, Serif and
+  Sans Mono fonts (by Denis Jacquerye).
+- removed instruction for U+2600-U+26A1 (by Mederic Boquien)
+- added U+202F and set width of U+00A0 (nobreakingspace) to the
+  same as U+0020, space (by Denis Jacquerye).
+- added and improved instructions for various Cyrillic letters
+  (by Eugeniy Meshcheryakov)
+- Changed U+416, U+42F, U+427 (non-Bold), U+436, U+447 (non-Bold),
+  U+44F, U+437 (Bold), corrected U+40F, U+414, U+424, U+426, U+429,
+  U+434, U+438 (Bold), U+446, U+449, U+44D (non-Bold), U+45F in
+  Sans Mono (by Andrey V. Panov)
+- made small corrections to Cyrillic, most appreciable to U+409,
+  U+413, U+41B, U+427 and U+433, U+434, U+43B, U+447, U+459
+  (upright fonts) to Serif (by Andrey V. Panov)
+- adjusted bearings of U+410, U+416, U+41A, U+42F, U+436, U+43A,
+  U+443, U+44F in Serif (by Andrey V. Panov)
+- enlarged width of U+44A, U+44B, U+44C, U+463 in Serif
+  (by Andrey V. Panov)
+- added ligature "iacute" as "afii10103" (U+456) "acutecomb" in
+  Serif (by Andrey V. Panov)
+- made italic shape to U+446, U+448, U+449 in Serif (by Andrey V.
+  Panov)
+- added "afii10831" (U+F6C7), "afii10832" (U+F6C8) in Serif (by
+  Andrey V. Panov)
+- new minimum version of fontforge is 20061014 (by Ben Laenen)
+
 Changes from 2.9 to 2.10:
+
 - added U+0242, U+024A-U+024B, U+024E-U+024F, U+037C-U+037D, U+0E3F, 
   U+1D2C-U+1D2E, U+1D30-U+1D42, U+1D5D-U+1D6A, U+1D78, U+1DB8, 
   U+2090-U+2094, U+20D0-U+20D1, U+2C60-U+2C66, U+2C6B-U+2C6C, U+2C74 and 
@@ -605,4 +670,4 @@ Changes from 0.9 to 0.9.1:
 - proper caron shape for dcaron and tcaron
 - minor visual changes
 
-$Id: NEWS 1072 2006-08-13 12:10:14Z ben_laenen $
+$Id: NEWS 1288 2006-11-19 14:22:52Z ben_laenen $
