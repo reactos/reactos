@@ -556,7 +556,7 @@ SamGetUserSid (PWSTR UserName,
     }
 
   /* Open the user key */
-  if (RegOpenKeyExW (hUserKey,
+  if (RegOpenKeyExW (hUsersKey,
 		     UserName,
 		     0,
 		     KEY_READ,
