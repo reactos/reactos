@@ -430,6 +430,7 @@ DECLARE_INTERFACE_(ISequentialStream,IUnknown)
 	STDMETHOD(Read)(THIS_ void*,ULONG,ULONG*) PURE;
 	STDMETHOD(Write)(THIS_ void const*,ULONG,ULONG*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IStream;
 #define INTERFACE IStream
@@ -466,6 +467,7 @@ DECLARE_INTERFACE_(IMarshal,IUnknown)
 	STDMETHOD(ReleaseMarshalData) (THIS_ IStream*) PURE;
 	STDMETHOD(DisconnectObject) (THIS_ DWORD) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IStdMarshalInfo;
 #define INTERFACE IStdMarshalInfo
