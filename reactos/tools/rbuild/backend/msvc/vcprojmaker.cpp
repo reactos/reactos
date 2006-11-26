@@ -70,7 +70,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 {
 	size_t i;
 
-	string vcproj_file = VcprojFileName(module);
+ 	string vcproj_file = VcprojFileName(module);
 
 	string username = getenv ( "USERNAME" );
 	string computername = getenv ( "COMPUTERNAME" );
@@ -133,7 +133,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			const Property* property = _lookup_property( module, data.ifs[i]->property );
 			if ( property != NULL )
 			{
-				if ( data.ifs[i]->value == property->value || data.ifs[i]->negated )
+				if ( data.ifs[i]->value == property->value && data.ifs[i]->negated == false ||
+					data.ifs[i]->value != property->value && data.ifs[i]->negated)
 					ifs_list.push_back ( &data.ifs[i]->data );
 			}
 		}
