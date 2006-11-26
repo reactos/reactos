@@ -11,31 +11,27 @@
 
 #include "resource.h"
 
-typedef struct
+typedef struct _APPLET
 {
     int idIcon;
     int idName;
     int idDescription;
-    
     APPLET_PROC AppletProc;
-    
 } APPLET, *PAPPLET;
 
-extern HINSTANCE hApplet;
-
-typedef struct
+typedef struct _DIBITMAP
 {
     BITMAPFILEHEADER *header;
     BITMAPINFO       *info;
     BYTE             *bits;
-    
     int               width;
     int               height;
+} DIBITMAP, *PDIBITMAP;
 
-} DIBitmap;
+extern HINSTANCE hApplet;
 
-extern DIBitmap *DibLoadImage(TCHAR *filename);
-extern void DibFreeImage(DIBitmap *bitmap);
+PDIBITMAP DibLoadImage(LPTSTR lpFilename);
+VOID DibFreeImage(PDIBITMAP lpBitmap);
 
 DWORD DbgPrint(PCH Format,...);
 

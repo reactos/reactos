@@ -10,83 +10,85 @@
 
 #include "desk.h"
 
-DIBitmap *DibLoadImage(TCHAR *filename)
+PDIBITMAP
+DibLoadImage(LPTSTR lpFilename)
 {
-    BOOL               bSuccess;
-    DWORD              dwFileSize, dwHighSize, dwBytesRead;
-    HANDLE             hFile;
-    DIBitmap           *bitmap;
-    
-    hFile = CreateFile(filename,
+    BOOL     bSuccess;
+    DWORD    dwFileSize, dwHighSize, dwBytesRead;
+    HANDLE   hFile;
+    PDIBITMAP lpBitmap;
+
+    hFile = CreateFile(lpFilename,
                        GENERIC_READ,
                        FILE_SHARE_READ,
                        NULL,
                        OPEN_EXISTING,
                        FILE_FLAG_SEQUENTIAL_SCAN,
                        NULL);
-    
-    if(hFile == INVALID_HANDLE_VALUE)
+    if (hFile == INVALID_HANDLE_VALUE)
         return NULL;
-    
+
     dwFileSize = GetFileSize(hFile, &dwHighSize);
-    
-    if(dwHighSize)
+
+    if (dwHighSize)
     {
         CloseHandle(hFile);
         return NULL;
     }
 
-    bitmap = malloc(sizeof(DIBitmap));
-    if(!bitmap)
+    lpBitmap = HeapAlloc(GetProcessHeap(), 0, sizeof(DIBITMAP));
+    if (lpBitmap == NULL)
         return NULL;
-    
-    bitmap->header = malloc(dwFileSize);
-    if(!bitmap->header)
+
+    lpBitmap->header = HeapAlloc(GetProcessHeap(), 0, dwFileSize);
+    if (lpBitmap->header == NULL)
     {
         CloseHandle(hFile);
         return NULL;
     }
-    
-    bSuccess = ReadFile(hFile, bitmap->header, dwFileSize, &dwBytesRead, NULL);
+
+    bSuccess = ReadFile(hFile, lpBitmap->header, dwFileSize, &dwBytesRead, NULL);
     CloseHandle(hFile);
-    
-    if(!bSuccess || (dwBytesRead != dwFileSize)         
-                 || (bitmap->header->bfType != * (WORD *) "BM") 
-                 || (bitmap->header->bfSize != dwFileSize))
+
+    if (!bSuccess ||
+        (dwBytesRead != dwFileSize) ||
+        (lpBitmap->header->bfType != * (WORD *) "BM") ||
+        (lpBitmap->header->bfSize != dwFileSize))
     {
-        free(bitmap->header);
+        HeapFree(GetProcessHeap(), 0, lpBitmap->header);
         return NULL;
     }
-    
-    bitmap->info = (BITMAPINFO *)(bitmap->header + 1);
-    bitmap->bits = (BYTE *)bitmap->header + bitmap->header->bfOffBits;
-    
+
+    lpBitmap->info = (BITMAPINFO *)(lpBitmap->header + 1);
+    lpBitmap->bits = (BYTE *)lpBitmap->header + lpBitmap->header->bfOffBits;
+
     /* Get the DIB width and height */
-    if(bitmap->info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    if (lpBitmap->info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
-        bitmap->width  = ((BITMAPCOREHEADER *)bitmap->info)->bcWidth;
-        bitmap->height = ((BITMAPCOREHEADER *)bitmap->info)->bcHeight;
+        lpBitmap->width  = ((BITMAPCOREHEADER *)lpBitmap->info)->bcWidth;
+        lpBitmap->height = ((BITMAPCOREHEADER *)lpBitmap->info)->bcHeight;
     }
     else
     {
-        bitmap->width   =     bitmap->info->bmiHeader.biWidth;
-        bitmap->height  = abs(bitmap->info->bmiHeader.biHeight);
+        lpBitmap->width   =     lpBitmap->info->bmiHeader.biWidth;
+        lpBitmap->height  = abs(lpBitmap->info->bmiHeader.biHeight);
     }
-    
-    return bitmap;
+
+    return lpBitmap;
 }
 
-void DibFreeImage(DIBitmap *bitmap)
+
+VOID
+DibFreeImage(PDIBITMAP lpBitmap)
 {
-    if(bitmap == NULL)
+    if (lpBitmap == NULL)
         return;
 
     /* Free the header */
-    if(bitmap->header != NULL)
-        free(bitmap->header);
+    if (lpBitmap->header != NULL)
+        HeapFree(GetProcessHeap(), 0, lpBitmap->header);
 
     /* Free the bitmap structure */
-    if(bitmap != NULL)
-        free(bitmap);
+    if (lpBitmap != NULL)
+        HeapFree(GetProcessHeap(), 0, lpBitmap);
 }
-

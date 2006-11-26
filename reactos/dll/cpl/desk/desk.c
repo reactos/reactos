@@ -32,7 +32,9 @@ APPLET Applets[NUM_APPLETS] =
     }
 };
 
-static VOID InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+
+static VOID
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 {
     ZeroMemory(psp, sizeof(PROPSHEETPAGE));
     psp->dwSize = sizeof(PROPSHEETPAGE);
@@ -42,20 +44,22 @@ static VOID InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
     psp->pfnDlgProc = DlgProc;
 }
 
+
 /* Display Applet */
-LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
+LONG APIENTRY
+DisplayApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 {
     PROPSHEETPAGE psp[4];
     PROPSHEETHEADER psh;
     TCHAR Caption[1024];
-    
+
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(uMsg);
     UNREFERENCED_PARAMETER(hwnd);
 
     LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
-    
+
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK | PSH_PROPTITLE;
@@ -66,33 +70,30 @@ LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = psp;
-    
+
     InitPropSheetPage(&psp[0], IDD_BACKGROUND, (DLGPROC) BackgroundPageProc);
     InitPropSheetPage(&psp[1], IDD_SCREENSAVER, (DLGPROC) ScreenSaverPageProc);
     InitPropSheetPage(&psp[2], IDD_APPEARANCE, (DLGPROC) AppearancePageProc);
     InitPropSheetPage(&psp[3], IDD_SETTINGS, (DLGPROC) SettingsPageProc);
-    
+
     return (LONG)(PropertySheet(&psh) != -1);
 }
 
 
 /* Control Panel Callback */
-LONG CALLBACK CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
+LONG CALLBACK
+CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     int i = (int)lParam1;
-    
-    switch(uMsg)
+
+    switch (uMsg)
     {
         case CPL_INIT:
-            {
-                return TRUE;
-            }
-        
+            return TRUE;
+
         case CPL_GETCOUNT:
-            {
-                return NUM_APPLETS;
-            }
-        
+            return NUM_APPLETS;
+
         case CPL_INQUIRE:
             {
                 CPLINFO *CPlInfo = (CPLINFO*)lParam2;
@@ -100,30 +101,30 @@ LONG CALLBACK CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
                 CPlInfo->idIcon = Applets[i].idIcon;
                 CPlInfo->idName = Applets[i].idName;
                 CPlInfo->idInfo = Applets[i].idDescription;
-            } break;
-        
+            }
+            break;
+
         case CPL_DBLCLK:
-            {
-                Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
-            } break;
+            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            break;
     }
-    
+
     return FALSE;
 }
 
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
+BOOL WINAPI
+DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 {
     UNREFERENCED_PARAMETER(lpvReserved);
-    switch(dwReason)
+
+    switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
         case DLL_THREAD_ATTACH:
-            {
-                hApplet = hinstDLL;
-            } break;
+            hApplet = hinstDLL;
+            break;
     }
-    
+
     return TRUE;
 }
-

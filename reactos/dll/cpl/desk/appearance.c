@@ -10,26 +10,25 @@
 
 #include "desk.h"
 
-INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg,
-                                    UINT uMsg,
-                                    WPARAM wParam,
-                                    LPARAM lParam)
+INT_PTR CALLBACK
+AppearancePageProc(HWND hwndDlg,
+                   UINT uMsg,
+                   WPARAM wParam,
+                   LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(hwndDlg);
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-            {
-            } break;
-        
+            break;
+
         case WM_COMMAND:
-            {
-            } break;
+            break;
     }
-    
+
     return FALSE;
 }
 

@@ -20,40 +20,36 @@
 typedef struct
 {
     BOOL bWallpaper; /* Is this background a wallpaper */
-    
+
     TCHAR szFilename[MAX_PATH];
     TCHAR szDisplayName[256];
-    
+
 } BackgroundItem;
 
-BackgroundItem g_backgroundItems[MAX_BACKGROUNDS];
+typedef struct _GLOBAL_DATA
+{
+    BackgroundItem backgroundItems[MAX_BACKGROUNDS];
 
-DIBitmap *g_pWallpaperBitmap    = NULL;
+    PDIBITMAP pWallpaperBitmap;
 
-int g_placementSelection        = 0;
-int g_backgroundSelection       = 0;
+    int placementSelection;
+    int backgroundSelection;
 
-/* this holds current selection of background color */
-COLORREF g_backgroundDesktopColor = 0;
-/* this holds selection of custom colors in dialog box */
-COLORREF custom_colors[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
+    COLORREF backgroundDesktopColor;
+    COLORREF custom_colors[16];
 
-int g_listViewItemCount         = 0;
+    int listViewItemCount;
 
-HWND g_hBackgroundPage          = NULL;
-HWND g_hBackgroundList          = NULL;
-HWND g_hBackgroundPreview       = NULL;
+    HBITMAP hBitmap;
+    int cxSource;
+    int cySource;
+} GLOBAL_DATA, *PGLOBAL_DATA;
 
-HWND g_hPlacementCombo          = NULL;
-HWND g_hColorButton             = NULL;
 
-HIMAGELIST g_hShellImageList    = NULL;
-
-static HBITMAP hBitmap = NULL;
-static int cxSource, cySource;
 
 /* Add the images in the C:\ReactOS directory and the current wallpaper if any */
-void AddListViewItems()
+static VOID
+AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {
     WIN32_FIND_DATA fd;
     HANDLE hFind;
@@ -73,42 +69,45 @@ void AddListViewItems()
     BackgroundItem *backgroundItem = NULL;
     TCHAR separators[] = TEXT(";");
     TCHAR *token;
+    HWND hwndBackgroundList;
 
-    GetClientRect(g_hBackgroundList, &clientRect);
-    
+    hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
+
+    GetClientRect(hwndBackgroundList, &clientRect);
+
+    /* Add a new column to the list */
     ZeroMemory(&dummy, sizeof(LV_COLUMN));
     dummy.mask      = LVCF_SUBITEM | LVCF_WIDTH;
     dummy.iSubItem  = 0;
     dummy.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
-    
-    (void)ListView_InsertColumn(g_hBackgroundList, 0, &dummy);
-    
+    ListView_InsertColumn(hwndBackgroundList, 0, &dummy);
+
     /* Add the "None" item */
-    backgroundItem = &g_backgroundItems[g_listViewItemCount];   
+    backgroundItem = &pGlobalData->backgroundItems[pGlobalData->listViewItemCount];
     backgroundItem->bWallpaper = FALSE;
     LoadString(hApplet,
                IDS_NONE,
                backgroundItem->szDisplayName,
                sizeof(backgroundItem->szDisplayName) / sizeof(TCHAR));
-    
+
     ZeroMemory(&listItem, sizeof(LV_ITEM));
     listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
     listItem.state      = LVIS_SELECTED;
     listItem.pszText    = backgroundItem->szDisplayName;
     listItem.iImage     = -1;
-    listItem.iItem      = g_listViewItemCount;
-    listItem.lParam     = g_listViewItemCount;
-    
-    (void)ListView_InsertItem(g_hBackgroundList, &listItem);
-    ListView_SetItemState(g_hBackgroundList, g_listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
+    listItem.iItem      = pGlobalData->listViewItemCount;
+    listItem.lParam     = pGlobalData->listViewItemCount;
 
-    g_listViewItemCount++;
+    ListView_InsertItem(hwndBackgroundList, &listItem);
+    ListView_SetItemState(hwndBackgroundList, pGlobalData->listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
+
+    pGlobalData->listViewItemCount++;
 
     /* Add current wallpaper if any */
     RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_ALL_ACCESS, &regKey);
+
     result = RegQueryValueEx(regKey, TEXT("Wallpaper"), 0, &varType, (LPBYTE)wallpaperFilename, &bufferSize);
-    
-    if((result == ERROR_SUCCESS) && (_tcslen(wallpaperFilename) > 0))
+    if ((result == ERROR_SUCCESS) && (_tcslen(wallpaperFilename) > 0))
     {
         himl = (HIMAGELIST)SHGetFileInfo(wallpaperFilename,
                                          0,
@@ -117,16 +116,15 @@ void AddListViewItems()
                                          SHGFI_SYSICONINDEX | SHGFI_SMALLICON |
                                          SHGFI_DISPLAYNAME);
 
-        if(himl != NULL)
+        if (himl != NULL)
         {
-            if(i++ == 0)
+            if (i++ == 0)
             {
-                g_hShellImageList = himl;
-                (void)ListView_SetImageList(g_hBackgroundList, himl, LVSIL_SMALL);
+                ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
             }
 
-            backgroundItem = &g_backgroundItems[g_listViewItemCount];
-            
+            backgroundItem = &pGlobalData->backgroundItems[pGlobalData->listViewItemCount];
+
             backgroundItem->bWallpaper = TRUE;
 
             _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
@@ -137,43 +135,42 @@ void AddListViewItems()
             listItem.state      = LVIS_SELECTED;
             listItem.pszText    = backgroundItem->szDisplayName;
             listItem.iImage     = sfi.iIcon;
-            listItem.iItem      = g_listViewItemCount;
-            listItem.lParam     = g_listViewItemCount;
+            listItem.iItem      = pGlobalData->listViewItemCount;
+            listItem.lParam     = pGlobalData->listViewItemCount;
 
-            (void)ListView_InsertItem(g_hBackgroundList, &listItem);
-            ListView_SetItemState(g_hBackgroundList, g_listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
+            ListView_InsertItem(hwndBackgroundList, &listItem);
+            ListView_SetItemState(hwndBackgroundList, pGlobalData->listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
 
-            g_listViewItemCount++;
+            pGlobalData->listViewItemCount++;
         }
     }
-    
+
     RegCloseKey(regKey);
 
     /* Add all the images in the C:\ReactOS directory. */
 
     LoadString(hApplet, IDS_SUPPORTED_EXT, szFileTypes, sizeof(szFileTypes) / sizeof(TCHAR));
-	
 
-    token = _tcstok ( szFileTypes, separators );
-    while ( token != NULL )
+    token = _tcstok(szFileTypes, separators);
+    while (token != NULL)
     {
         GetWindowsDirectory(szSearchPath, MAX_PATH);
         _tcscat(szSearchPath, TEXT("\\"));
         _tcscat(szSearchPath, token);
-	    
+
         hFind = FindFirstFile(szSearchPath, &fd);
-        while(hFind != INVALID_HANDLE_VALUE)
+        while (hFind != INVALID_HANDLE_VALUE)
         {
             /* Don't add any hidden bitmaps */
-            if((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0)
+            if ((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0)
             {
                 TCHAR filename[MAX_PATH];
-	            
+
                 GetWindowsDirectory(filename, MAX_PATH);
 
                 _tcscat(filename, TEXT("\\"));
                 _tcscat(filename, fd.cFileName);
-	            
+
                 himl = (HIMAGELIST)SHGetFileInfo(filename,
                                                 0,
                                                 &sfi,
@@ -181,18 +178,18 @@ void AddListViewItems()
                                                 SHGFI_SYSICONINDEX | SHGFI_SMALLICON |
                                                 SHGFI_DISPLAYNAME);
 
-                if(himl == NULL) break;
-	            
-                if(i++ == 0)
+                if (himl == NULL)
+                    break;
+
+                if (i++ == 0)
                 {
-                    g_hShellImageList = himl;
-                    (void)ListView_SetImageList(g_hBackgroundList, himl, LVSIL_SMALL);
+                    ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
                 }
 
-                backgroundItem = &g_backgroundItems[g_listViewItemCount];
+                backgroundItem = &pGlobalData->backgroundItems[pGlobalData->listViewItemCount];
 
                 backgroundItem->bWallpaper = TRUE;
-	            
+
                 _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
                 _tcscpy(backgroundItem->szFilename, filename);
 
@@ -201,23 +198,25 @@ void AddListViewItems()
                 listItem.pszText    = backgroundItem->szDisplayName;
                 listItem.state      = 0;
                 listItem.iImage     = sfi.iIcon;
-                listItem.iItem      = g_listViewItemCount;
-                listItem.lParam     = g_listViewItemCount;
-	            
-                (void)ListView_InsertItem(g_hBackgroundList, &listItem);
-	            
-                g_listViewItemCount++;
+                listItem.iItem      = pGlobalData->listViewItemCount;
+                listItem.lParam     = pGlobalData->listViewItemCount;
+
+                ListView_InsertItem(hwndBackgroundList, &listItem);
+
+                pGlobalData->listViewItemCount++;
             }
-	        
+
             if(!FindNextFile(hFind, &fd))
                 hFind = INVALID_HANDLE_VALUE;
         }
 
-        token = _tcstok ( NULL, separators );
+        token = _tcstok(NULL, separators);
     }
 }
 
-void InitBackgroundDialog()
+
+static VOID
+InitBackgroundDialog(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {
     TCHAR szString[256];
     HKEY regKey;
@@ -226,27 +225,23 @@ void InitBackgroundDialog()
     DWORD varType = REG_SZ;
     LONG result;
     BITMAP bitmap;
-    
-    g_backgroundDesktopColor = GetSysColor( COLOR_BACKGROUND );
-	g_hBackgroundList       = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_LIST);
-    g_hBackgroundPreview    = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_PREVIEW);
-    g_hPlacementCombo       = GetDlgItem(g_hBackgroundPage, IDC_PLACEMENT_COMBO);
-    g_hColorButton          = GetDlgItem(g_hBackgroundPage, IDC_COLOR_BUTTON);
 
-    AddListViewItems();
-    
+    pGlobalData->backgroundDesktopColor = GetSysColor(COLOR_BACKGROUND);
+
+    AddListViewItems(hwndDlg, pGlobalData);
+
     LoadString(hApplet, IDS_CENTER, szString, sizeof(szString) / sizeof(TCHAR));
-    SendMessage(g_hPlacementCombo, CB_INSERTSTRING, PLACEMENT_CENTER, (LPARAM)szString);
+    SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_INSERTSTRING, PLACEMENT_CENTER, (LPARAM)szString);
 
     LoadString(hApplet, IDS_STRETCH, szString, sizeof(szString) / sizeof(TCHAR));
-    SendMessage(g_hPlacementCombo, CB_INSERTSTRING, PLACEMENT_STRETCH, (LPARAM)szString);
+    SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_INSERTSTRING, PLACEMENT_STRETCH, (LPARAM)szString);
 
     LoadString(hApplet, IDS_TILE, szString, sizeof(szString) / sizeof(TCHAR));
-    SendMessage(g_hPlacementCombo, CB_INSERTSTRING, PLACEMENT_TILE, (LPARAM)szString);
+    SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_INSERTSTRING, PLACEMENT_TILE, (LPARAM)szString);
 
     /* Load the default settings from the registry */
     result = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_ALL_ACCESS, &regKey);
-	if( result != ERROR_SUCCESS )
+    if (result != ERROR_SUCCESS)
     {
         /* reg key open failed; maybe it does not exist? create it! */
         DWORD dwDisposition = 0;
@@ -256,122 +251,136 @@ void InitBackgroundDialog()
         /* On error result will not contain ERROR_SUCCESS. I don't know how to handle */
         /* this case :( */
     }
-    
-    result = RegQueryValueEx(regKey, TEXT("WallpaperStyle"), 0, &varType, (LPBYTE)szBuffer, &bufferSize);
 
-    if(result == ERROR_SUCCESS)
+    result = RegQueryValueEx(regKey, TEXT("WallpaperStyle"), 0, &varType, (LPBYTE)szBuffer, &bufferSize);
+    if (result == ERROR_SUCCESS)
     {
-        if(_ttoi(szBuffer) == 0)
+        if (_ttoi(szBuffer) == 0)
         {
-            SendMessage(g_hPlacementCombo, CB_SETCURSEL, PLACEMENT_CENTER, 0);
-            g_placementSelection = PLACEMENT_CENTER;
+            SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_CENTER, 0);
+            pGlobalData->placementSelection = PLACEMENT_CENTER;
         }
         
-        if(_ttoi(szBuffer) == 2)
+        if (_ttoi(szBuffer) == 2)
         {
-            SendMessage(g_hPlacementCombo, CB_SETCURSEL, PLACEMENT_STRETCH, 0);
-            g_placementSelection = PLACEMENT_STRETCH;
+            SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_STRETCH, 0);
+            pGlobalData->placementSelection = PLACEMENT_STRETCH;
         }
     }
     else
     {
-        SendMessage(g_hPlacementCombo, CB_SETCURSEL, PLACEMENT_CENTER, 0);
-        g_placementSelection = PLACEMENT_CENTER;
+        SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_CENTER, 0);
+        pGlobalData->placementSelection = PLACEMENT_CENTER;
     }
-    
-    result = RegQueryValueEx(regKey, TEXT("TileWallpaper"), 0, &varType, (LPBYTE)szBuffer, &bufferSize);
 
-    if(result == ERROR_SUCCESS)
+    result = RegQueryValueEx(regKey, TEXT("TileWallpaper"), 0, &varType, (LPBYTE)szBuffer, &bufferSize);
+    if (result == ERROR_SUCCESS)
     {
-        if(_ttoi(szBuffer) == 1)
+        if (_ttoi(szBuffer) == 1)
         {
-            SendMessage(g_hPlacementCombo, CB_SETCURSEL, PLACEMENT_TILE, 0);
-            g_placementSelection = PLACEMENT_TILE;
+            SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_TILE, 0);
+            pGlobalData->placementSelection = PLACEMENT_TILE;
         }
     }
 
     RegCloseKey(regKey);
 
-    hBitmap = LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
-    if (hBitmap != NULL)
+    pGlobalData->hBitmap = LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
+    if (pGlobalData->hBitmap != NULL)
     {
-        GetObject(hBitmap, sizeof(BITMAP), &bitmap);
+        GetObject(pGlobalData->hBitmap, sizeof(BITMAP), &bitmap);
 
-        cxSource = bitmap.bmWidth;
-        cySource = bitmap.bmHeight;
+        pGlobalData->cxSource = bitmap.bmWidth;
+        pGlobalData->cySource = bitmap.bmHeight;
     }
 }
 
-void OnColorButton()
+
+static VOID
+OnColorButton(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {
     /* Load custom colors from Registry */
     HKEY hKey = NULL;
     LONG res = ERROR_SUCCESS;
     CHOOSECOLOR cc;
-    res = RegCreateKeyEx( HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance"), 0, NULL, 0,
-        KEY_ALL_ACCESS, NULL, &hKey, NULL );
+
+    res = RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance"), 0, NULL, 0,
+        KEY_ALL_ACCESS, NULL, &hKey, NULL);
     /* Now the key is either created or opened existing, if res == ERROR_SUCCESS */
-    if( res == ERROR_SUCCESS )
+    if (res == ERROR_SUCCESS)
     {
         /* Key opened */
         DWORD dwType = REG_BINARY;
-        DWORD cbData = sizeof(custom_colors);
-        res = RegQueryValueEx( hKey, TEXT("CustomColors"), NULL, &dwType, 
-            (LPBYTE)custom_colors, &cbData );
-        RegCloseKey( hKey );
+        DWORD cbData = sizeof(pGlobalData->custom_colors);
+        res = RegQueryValueEx(hKey, TEXT("CustomColors"), NULL, &dwType,
+            (LPBYTE)pGlobalData->custom_colors, &cbData);
+        RegCloseKey(hKey);
         hKey = NULL;
     }
-	
+
     /* Launch ChooseColor() dialog */
 
     cc.lStructSize = sizeof(CHOOSECOLOR);
-    cc.hwndOwner = g_hBackgroundPage;
+    cc.hwndOwner = hwndDlg;
     cc.hInstance = NULL;
-    cc.rgbResult = g_backgroundDesktopColor;
-    cc.lpCustColors = custom_colors;
+    cc.rgbResult = pGlobalData->backgroundDesktopColor;
+    cc.lpCustColors = pGlobalData->custom_colors;
     cc.Flags = CC_ANYCOLOR | /* Causes the dialog box to display all available colors in the set of basic colors.  */
                CC_FULLOPEN | /* opens dialog in full size */
                CC_RGBINIT ;  /* init chosen color by rgbResult value */
     cc.lCustData = 0;
     cc.lpfnHook = NULL;
     cc.lpTemplateName = NULL;
-    if( ChooseColor( &cc ) )
+    if (ChooseColor(&cc))
     {
         /* Save selected color to var */
-        g_backgroundDesktopColor = cc.rgbResult;
+        pGlobalData->backgroundDesktopColor = cc.rgbResult;
+
         /* Allpy buuton will be activated */
-        PropSheet_Changed( GetParent( g_hBackgroundPage ), g_hBackgroundPage );
+        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+
         /* Window will be updated :) */
-        InvalidateRect(g_hBackgroundPreview, NULL, TRUE);
+        InvalidateRect(GetDlgItem(hwndDlg, IDC_BACKGROUND_PREVIEW), NULL, TRUE);
+
         /* Save custom colors to reg. To this moment key must be ceated already. See above */
-        res = RegOpenKeyEx( HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance"), 0,
-            KEY_WRITE, &hKey );
-        if( res == ERROR_SUCCESS )
+        res = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance"), 0,
+            KEY_WRITE, &hKey);
+        if (res == ERROR_SUCCESS)
         {
             /* Key opened */
-            RegSetValueEx( hKey, TEXT("CustomColors"), 0, REG_BINARY, 
-                (const BYTE *)custom_colors, sizeof(custom_colors) );
-            RegCloseKey( hKey );
+            RegSetValueEx(hKey, TEXT("CustomColors"), 0, REG_BINARY,
+                (const BYTE *)pGlobalData->custom_colors, sizeof(pGlobalData->custom_colors));
+            RegCloseKey(hKey);
             hKey = NULL;
         }
     }
 }
 
-BOOL CheckListViewFilenameExists(HWND hWndList, LPCTSTR tszFileName)
+
+/*
+ * ListView_FindItem() Macro: Searches for a list-view item with the specified
+ * characteristics. Returns the index of the item if successful, or -1 otherwise
+ */
+static BOOL
+CheckListViewFilenameExists(HWND hwndList, LPCTSTR tszFileName)
 {
-    /* ListView_FindItem() Macro: Searches for a list-view item with the specified   *
-     * characteristics. Returns the index of the item if successful, or -1 otherwise */
     LVFINDINFO lvfi;
     int retVal;
+
     lvfi.flags = LVFI_STRING; /* search item by EXACT string */
     lvfi.psz   = tszFileName; /* string to search */
+
     /* other items of this structure are not valid, besacuse flags are not set. */
-    retVal = ListView_FindItem( hWndList, -1, &lvfi );
-    if( retVal != -1 ) return TRUE; /* item found! */
+    retVal = ListView_FindItem(hwndList, -1, &lvfi);
+    if (retVal != -1)
+        return TRUE; /* item found! */
+
     return FALSE; /* item not found. */
 }
 
-void OnBrowseButton()
+
+static VOID
+OnBrowseButton(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {
     OPENFILENAME ofn;
     TCHAR filename[MAX_PATH];
@@ -380,11 +389,14 @@ void OnBrowseButton()
     BackgroundItem *backgroundItem = NULL;
     SHFILEINFO sfi;
     LV_ITEM listItem;
+    HWND hwndBackgroundList;
+
+    hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
 
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
 
     ofn.lStructSize = sizeof(OPENFILENAME);
-    ofn.hwndOwner = g_hBackgroundPage;
+    ofn.hwndOwner = hwndDlg;
     ofn.lpstrFile = filename;
 
     LoadString(hApplet, IDS_BACKGROUND_COMDLG_FILTER, filter, sizeof(filter) / sizeof(TCHAR));
@@ -400,74 +412,79 @@ void OnBrowseButton()
     ofn.lpstrInitialDir = NULL;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
-    if(GetOpenFileName(&ofn) == TRUE)
+    if (GetOpenFileName(&ofn) == TRUE)
     {
         /* Check if there is already a entry that holds this filename */
-        if(CheckListViewFilenameExists(g_hBackgroundList, ofn.lpstrFileTitle) == TRUE)
+        if (CheckListViewFilenameExists(hwndBackgroundList, ofn.lpstrFileTitle) == TRUE)
             return;
-        
-        if(g_listViewItemCount > (MAX_BACKGROUNDS - 1))
+
+        if (pGlobalData->listViewItemCount > (MAX_BACKGROUNDS - 1))
             return;
-        
+
         SHGetFileInfo(filename,
                       0,
                       &sfi,
                       sizeof(sfi),
                       SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_DISPLAYNAME);
-        
-        backgroundItem = &g_backgroundItems[g_listViewItemCount];
-        
+
+        backgroundItem = &pGlobalData->backgroundItems[pGlobalData->listViewItemCount];
+
         backgroundItem->bWallpaper = TRUE;
-        
+
         _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
         _tcscpy(backgroundItem->szFilename, filename);
-        
+
         ZeroMemory(&listItem, sizeof(LV_ITEM));
         listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
         listItem.state      = 0;
         listItem.pszText    = backgroundItem->szDisplayName;
         listItem.iImage     = sfi.iIcon;
-        listItem.iItem      = g_listViewItemCount;
-        listItem.lParam     = g_listViewItemCount;
-        
-        (void)ListView_InsertItem(g_hBackgroundList, &listItem);
-        
-        g_listViewItemCount++;
+        listItem.iItem      = pGlobalData->listViewItemCount;
+        listItem.lParam     = pGlobalData->listViewItemCount;
+
+        ListView_InsertItem(hwndBackgroundList, &listItem);
+
+        pGlobalData->listViewItemCount++;
     }
 }
 
-void ListViewItemChanged(int itemIndex)
+
+static VOID
+ListViewItemChanged(HWND hwndDlg, PGLOBAL_DATA pGlobalData, int itemIndex)
 {
     BackgroundItem *backgroundItem = NULL;
-    
-    g_backgroundSelection = itemIndex;
-    backgroundItem = &g_backgroundItems[g_backgroundSelection];
-    
-    if(g_pWallpaperBitmap != NULL)
+
+    pGlobalData->backgroundSelection = itemIndex;
+    backgroundItem = &pGlobalData->backgroundItems[pGlobalData->backgroundSelection];
+
+    if (pGlobalData->pWallpaperBitmap != NULL)
     {
-        DibFreeImage(g_pWallpaperBitmap);
-        g_pWallpaperBitmap = NULL;
+        DibFreeImage(pGlobalData->pWallpaperBitmap);
+        pGlobalData->pWallpaperBitmap = NULL;
     }
-    
-    if(backgroundItem->bWallpaper == TRUE)
-    {   
-        g_pWallpaperBitmap = DibLoadImage(backgroundItem->szFilename);
-        
-        if(g_pWallpaperBitmap == NULL)
-        {
+
+    if (backgroundItem->bWallpaper == TRUE)
+    {
+        pGlobalData->pWallpaperBitmap = DibLoadImage(backgroundItem->szFilename);
+
+        if (pGlobalData->pWallpaperBitmap == NULL)
             return;
-        }
     }
-    
-    InvalidateRect(g_hBackgroundPreview, NULL, TRUE);
-    
-    EnableWindow(g_hColorButton,    (backgroundItem->bWallpaper == FALSE ? TRUE : FALSE));
-    EnableWindow(g_hPlacementCombo, backgroundItem->bWallpaper);
-    
-    PropSheet_Changed(GetParent(g_hBackgroundPage), g_hBackgroundPage);
+
+    InvalidateRect(GetDlgItem(hwndDlg, IDC_BACKGROUND_PREVIEW),
+                   NULL, TRUE);
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_COLOR_BUTTON),
+                 (backgroundItem->bWallpaper == FALSE ? TRUE : FALSE));
+    EnableWindow(GetDlgItem(hwndDlg, IDC_PLACEMENT_COMBO),
+                 backgroundItem->bWallpaper);
+
+    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 }
 
-void DrawBackgroundPreview(LPDRAWITEMSTRUCT draw)
+
+static VOID
+DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PGLOBAL_DATA pGlobalData)
 {
     float scaleX;
     float scaleY;
@@ -475,143 +492,147 @@ void DrawBackgroundPreview(LPDRAWITEMSTRUCT draw)
     int scaledHeight;
     int posX;
     int posY;
+    HBRUSH hBrush;
+    int x;
+    int y;
 
-    if(g_backgroundItems[g_backgroundSelection].bWallpaper == FALSE)
+    if (pGlobalData->backgroundItems[pGlobalData->backgroundSelection].bWallpaper == FALSE)
     {
         /* update desktop background color image */
-    	HBRUSH hBrush = CreateSolidBrush( g_backgroundDesktopColor );
-        FillRect(draw->hDC, &draw->rcItem, hBrush );
-        DeleteObject( hBrush );
+        hBrush = CreateSolidBrush(pGlobalData->backgroundDesktopColor);
+        FillRect(draw->hDC, &draw->rcItem, hBrush);
+        DeleteObject(hBrush);
         return;
     }
-    
-    if(g_pWallpaperBitmap == NULL)
+
+    if (pGlobalData->pWallpaperBitmap == NULL)
         return;
 
     scaleX = ((float)GetSystemMetrics(SM_CXSCREEN) - 1) / (float)draw->rcItem.right;
     scaleY = ((float)GetSystemMetrics(SM_CYSCREEN) - 1) / (float)draw->rcItem.bottom;
 
-    scaledWidth = g_pWallpaperBitmap->width / scaleX;
-    scaledHeight = g_pWallpaperBitmap->height / scaleY;
-    
+    scaledWidth = pGlobalData->pWallpaperBitmap->width / scaleX;
+    scaledHeight = pGlobalData->pWallpaperBitmap->height / scaleY;
+
     posX = (draw->rcItem.right / 2) - (scaledWidth / 2);
     posY = (draw->rcItem.bottom / 2) - (scaledHeight / 2);
-    
-    FillRect(draw->hDC, &draw->rcItem, GetSysColorBrush(COLOR_BACKGROUND));
-    
-    SetStretchBltMode(draw->hDC, COLORONCOLOR);
-    
-    if(g_placementSelection == PLACEMENT_CENTER)
-    {
-        StretchDIBits(draw->hDC,
-                      posX,
-                      posY,
-                      scaledWidth,
-                      scaledHeight,
-                      0,
-                      0,
-                      g_pWallpaperBitmap->width,
-                      g_pWallpaperBitmap->height,
-                      g_pWallpaperBitmap->bits,
-                      g_pWallpaperBitmap->info,
-                      DIB_RGB_COLORS,
-                      SRCCOPY);
-    }
-    
-    if(g_placementSelection == PLACEMENT_STRETCH)
-    {
-        StretchDIBits(draw->hDC,
-                      0,
-                      0,
-                      draw->rcItem.right,
-                      draw->rcItem.bottom,
-                      0,
-                      0,
-                      g_pWallpaperBitmap->width,
-                      g_pWallpaperBitmap->height,
-                      g_pWallpaperBitmap->bits,
-                      g_pWallpaperBitmap->info,
-                      DIB_RGB_COLORS,
-                      SRCCOPY);
-    }
 
-    if(g_placementSelection == PLACEMENT_TILE)
+    FillRect(draw->hDC, &draw->rcItem, GetSysColorBrush(COLOR_BACKGROUND));
+
+    SetStretchBltMode(draw->hDC, COLORONCOLOR);
+
+    switch (pGlobalData->placementSelection)
     {
-        int x;
-        int y;
-        
-        for(y = 0; y < draw->rcItem.bottom; y += scaledHeight)
-        {
-            for(x = 0; x < draw->rcItem.right; x += scaledWidth)
+        case PLACEMENT_CENTER:
+            StretchDIBits(draw->hDC,
+                          posX,
+                          posY,
+                          scaledWidth,
+                          scaledHeight,
+                          0,
+                          0,
+                          pGlobalData->pWallpaperBitmap->width,
+                          pGlobalData->pWallpaperBitmap->height,
+                          pGlobalData->pWallpaperBitmap->bits,
+                          pGlobalData->pWallpaperBitmap->info,
+                          DIB_RGB_COLORS,
+                          SRCCOPY);
+            break;
+
+        case PLACEMENT_STRETCH:
+            StretchDIBits(draw->hDC,
+                          0,
+                          0,
+                          draw->rcItem.right,
+                          draw->rcItem.bottom,
+                          0,
+                          0,
+                          pGlobalData->pWallpaperBitmap->width,
+                          pGlobalData->pWallpaperBitmap->height,
+                          pGlobalData->pWallpaperBitmap->bits,
+                          pGlobalData->pWallpaperBitmap->info,
+                          DIB_RGB_COLORS,
+                          SRCCOPY);
+            break;
+
+        case PLACEMENT_TILE:
+            for (y = 0; y < draw->rcItem.bottom; y += scaledHeight)
             {
-                StretchDIBits(draw->hDC,
-                              x,
-                              y,
-                              scaledWidth,
-                              scaledHeight,
-                              0,
-                              0,
-                              g_pWallpaperBitmap->width,
-                              g_pWallpaperBitmap->height,
-                              g_pWallpaperBitmap->bits,
-                              g_pWallpaperBitmap->info,
-                              DIB_RGB_COLORS,
-                              SRCCOPY);
+                for (x = 0; x < draw->rcItem.right; x += scaledWidth)
+                {
+                    StretchDIBits(draw->hDC,
+                                  x,
+                                  y,
+                                  scaledWidth,
+                                  scaledHeight,
+                                  0,
+                                  0,
+                                  pGlobalData->pWallpaperBitmap->width,
+                                  pGlobalData->pWallpaperBitmap->height,
+                                  pGlobalData->pWallpaperBitmap->bits,
+                                  pGlobalData->pWallpaperBitmap->info,
+                                  DIB_RGB_COLORS,
+                                  SRCCOPY);
+                }
             }
-        }
+            break;
     }
 }
 
-void SetWallpaper()
+
+static VOID
+SetWallpaper(PGLOBAL_DATA pGlobalData)
 {
     HKEY regKey;
-    
+
     RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_ALL_ACCESS, &regKey);
 
-    if(g_placementSelection == PLACEMENT_TILE)
+    if (pGlobalData->placementSelection == PLACEMENT_TILE)
     {
         RegSetValueEx(regKey, TEXT("TileWallpaper"), 0, REG_SZ, (BYTE *)TEXT("1"), sizeof(TCHAR) * 2);
         RegSetValueEx(regKey, TEXT("WallpaperStyle"), 0, REG_SZ, (BYTE *)TEXT("0"), sizeof(TCHAR) * 2);
     }
-    
-    if(g_placementSelection == PLACEMENT_CENTER)
+
+    if (pGlobalData->placementSelection == PLACEMENT_CENTER)
     {
         RegSetValueEx(regKey, TEXT("TileWallpaper"), 0, REG_SZ, (BYTE *)TEXT("0"), sizeof(TCHAR) * 2);
         RegSetValueEx(regKey, TEXT("WallpaperStyle"), 0, REG_SZ, (BYTE *)TEXT("0"), sizeof(TCHAR) * 2);
     }
 
-    if(g_placementSelection == PLACEMENT_STRETCH)
+    if (pGlobalData->placementSelection == PLACEMENT_STRETCH)
     {
         RegSetValueEx(regKey, TEXT("TileWallpaper"), 0, REG_SZ, (BYTE *)TEXT("0"), sizeof(TCHAR) * 2);
         RegSetValueEx(regKey, TEXT("WallpaperStyle"), 0, REG_SZ, (BYTE *)TEXT("2"), sizeof(TCHAR) * 2);
     }
-    
+
     RegCloseKey(regKey);
-    
-    if(g_backgroundItems[g_backgroundSelection].bWallpaper == TRUE)
+
+    if (pGlobalData->backgroundItems[pGlobalData->backgroundSelection].bWallpaper == TRUE)
     {
         SystemParametersInfo(SPI_SETDESKWALLPAPER,
                              0,
-                             g_backgroundItems[g_backgroundSelection].szFilename,
+                             pGlobalData->backgroundItems[pGlobalData->backgroundSelection].szFilename,
                              SPIF_UPDATEINIFILE);
     }
     else
-    {   
+    {
         SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, TEXT(""), SPIF_UPDATEINIFILE);
     }
 }
 
-void SetDesktopBackColor()
-{
-    /* Change system color */
-    INT iElement = COLOR_BACKGROUND;
-	HKEY hKey;
-	LONG result;
-    TCHAR clText[16];
-	DWORD red, green, blue;
 
-    if( !SetSysColors( 1, &iElement, &g_backgroundDesktopColor ) )
-        MessageBox( g_hBackgroundPage, TEXT("SetSysColor() failed!"), /* these error texts can need internationalization? */
+/* Change system color */
+static VOID
+SetDesktopBackColor(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
+{
+    INT iElement = COLOR_BACKGROUND;
+    HKEY hKey;
+    LONG result;
+    TCHAR clText[16];
+    DWORD red, green, blue;
+
+    if( !SetSysColors( 1, &iElement, &pGlobalData->backgroundDesktopColor ) )
+        MessageBox(hwndDlg, TEXT("SetSysColor() failed!"), /* these error texts can need internationalization? */
             TEXT("Error!"), MB_ICONSTOP );
     /* Write color to registry key: HKEY_CURRENT_USER\Control Panel\Colors\Background */
     hKey = NULL;
@@ -626,61 +647,60 @@ void SetDesktopBackColor()
         /* On error result will not contain ERROR_SUCCESS. I don't know how to handle */
         /* this case :( */
     }
-    red   = GetRValue( g_backgroundDesktopColor );
-    green = GetGValue( g_backgroundDesktopColor );
-    blue  = GetBValue( g_backgroundDesktopColor );
-    _stprintf( clText, TEXT("%d %d %d"), red, green, blue ); /* format string to be set to registry */
-    RegSetValueEx( hKey, TEXT("Background"), 0, REG_SZ, (BYTE *)clText, lstrlen( clText )*sizeof(TCHAR) + sizeof(TCHAR) );
-    RegCloseKey( hKey );
+    red   = GetRValue(pGlobalData->backgroundDesktopColor);
+    green = GetGValue(pGlobalData->backgroundDesktopColor);
+    blue  = GetBValue(pGlobalData->backgroundDesktopColor);
+    _stprintf(clText, TEXT("%d %d %d"), red, green, blue ); /* format string to be set to registry */
+    RegSetValueEx(hKey, TEXT("Background"), 0, REG_SZ, (BYTE *)clText, lstrlen( clText )*sizeof(TCHAR) + sizeof(TCHAR) );
+    RegCloseKey(hKey);
 }
 
-INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
-                                    UINT uMsg,
-                                    WPARAM wParam,
-                                    LPARAM lParam)
-{
-    g_hBackgroundPage = hwndDlg;
 
-    switch(uMsg)
+INT_PTR CALLBACK
+BackgroundPageProc(HWND hwndDlg,
+                   UINT uMsg,
+                   WPARAM wParam,
+                   LPARAM lParam)
+{
+    PGLOBAL_DATA pGlobalData;
+
+    pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-            {
-                InitBackgroundDialog();
-            } break;
-        
+            pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+            InitBackgroundDialog(hwndDlg, pGlobalData);
+            break;
+
         case WM_COMMAND:
-            {              
+            {
                 DWORD controlId = LOWORD(wParam);
                 DWORD command   = HIWORD(wParam);
-                
-                switch(controlId)
+
+                switch (controlId)
                 {
                     case IDC_COLOR_BUTTON:
-                        {
-                            if(command == BN_CLICKED)
-                                OnColorButton();
-                            
-                        } break;
-                    
+                        if (command == BN_CLICKED)
+                            OnColorButton(hwndDlg, pGlobalData);
+                        break;
+
                     case IDC_BROWSE_BUTTON:
-                        {
-                            if(command == BN_CLICKED)
-                                OnBrowseButton();
-                            
-                        } break;
-                    
+                        if (command == BN_CLICKED)
+                            OnBrowseButton(hwndDlg, pGlobalData);
+                        break;
+
                     case IDC_PLACEMENT_COMBO:
+                        if (command == CBN_SELCHANGE)
                         {
-                            if(command == CBN_SELCHANGE)
-                            {
-                                g_placementSelection = (int)SendMessage(g_hPlacementCombo, CB_GETCURSEL, 0, 0);
-                                
-                                InvalidateRect(g_hBackgroundPreview, NULL, TRUE);
-                                
-                                PropSheet_Changed(GetParent(g_hBackgroundPage), g_hBackgroundPage);
-                            }
-                            
-                        } break;
+                            pGlobalData->placementSelection = (int)SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_GETCURSEL, 0, 0);
+
+                            InvalidateRect(GetDlgItem(hwndDlg, IDC_BACKGROUND_PREVIEW), NULL, TRUE);
+
+                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        }
+                        break;
                 }
             } break;
 
@@ -688,71 +708,68 @@ INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
             {
                 PAINTSTRUCT ps;
                 HDC hdc, hdcMem;
-       
-                hdc = BeginPaint(hwndDlg, &ps);
- 
-                hdcMem = CreateCompatibleDC(hdc);
-                SelectObject(hdcMem, hBitmap);
 
-                TransparentBlt(hdc, 98, 0, cxSource, cySource, hdcMem, 0, 0, cxSource, cySource, 0xFF80FF);
+                hdc = BeginPaint(hwndDlg, &ps);
+
+                hdcMem = CreateCompatibleDC(hdc);
+                SelectObject(hdcMem, pGlobalData->hBitmap);
+
+                TransparentBlt(hdc, 98, 0,
+                               pGlobalData->cxSource, pGlobalData->cySource, hdcMem, 0, 0,
+                               pGlobalData->cxSource, pGlobalData->cySource, 0xFF80FF);
 
                 DeleteDC(hdcMem);
                 EndPaint(hwndDlg, &ps);
-
-            } break;
+            }
+            break;
 
         case WM_DRAWITEM:
             {
                 LPDRAWITEMSTRUCT drawItem;
                 drawItem = (LPDRAWITEMSTRUCT)lParam;
 
-                if(drawItem->CtlID == IDC_BACKGROUND_PREVIEW)
+                if (drawItem->CtlID == IDC_BACKGROUND_PREVIEW)
                 {
-                    DrawBackgroundPreview(drawItem);
+                    DrawBackgroundPreview(drawItem, pGlobalData);
                 }
 
-            } break;
-        
+            }
+            break;
+
         case WM_NOTIFY:
             {
                 LPNMHDR lpnm = (LPNMHDR)lParam;
-                
+
                 switch(lpnm->code)
-                {   
+                {
                     case PSN_APPLY:
-                        {
-                            SetWallpaper();
-                            SetDesktopBackColor();
-                            return TRUE;
-                        } break;
+                        SetWallpaper(pGlobalData);
+                        SetDesktopBackColor(hwndDlg, pGlobalData);
+                        return TRUE;
 
                     case LVN_ITEMCHANGED:
                         {
                             LPNMLISTVIEW nm = (LPNMLISTVIEW)lParam;
-                            
-                            if((nm->uNewState & LVIS_SELECTED) == 0)
+
+                            if ((nm->uNewState & LVIS_SELECTED) == 0)
                                 return FALSE;
-                            
-                            ListViewItemChanged(nm->iItem);
+
+                            ListViewItemChanged(hwndDlg, pGlobalData, nm->iItem);
 
                         } break;
-                    
-                    default:
-                        break;
                 }
-                
-            } break;
+            }
+            break;
 
         case WM_DESTROY:
-            {
-                if(g_pWallpaperBitmap != NULL)
-                    DibFreeImage(g_pWallpaperBitmap);
+            if (pGlobalData->pWallpaperBitmap != NULL)
+                DibFreeImage(pGlobalData->pWallpaperBitmap);
 
-                DeleteObject(hBitmap);
-
-            } break;
+            DeleteObject(pGlobalData->hBitmap);
+            HeapFree(GetProcessHeap(), 0, pGlobalData);
+            break;
     }
-    
+
     return FALSE;
 }
 
