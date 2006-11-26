@@ -166,7 +166,7 @@ static void _tryLoadProvider(PCWSTR provider)
                         provider->getCaps = getCaps;
                         provider->dwSpecVersion = getCaps(WNNC_SPEC_VERSION);
                         provider->dwNetType = getCaps(WNNC_NET_TYPE);
-                        TRACE("net type is 0x%08lx\n", provider->dwNetType);
+                        TRACE("net type is 0x%08x\n", provider->dwNetType);
                         provider->dwEnumScopes = getCaps(WNNC_ENUMERATION);
                         if (provider->dwEnumScopes)
                         {
@@ -520,7 +520,7 @@ static DWORD _thunkNetResourceArrayWToA(const LPNETRESOURCEW lpNetArrayIn,
         }
     }
     ret = numToThunk < *lpcCount ? WN_MORE_DATA : WN_SUCCESS;
-    TRACE("numToThunk is %ld, *lpcCount is %ld, returning %ld\n", numToThunk,
+    TRACE("numToThunk is %d, *lpcCount is %d, returning %d\n", numToThunk,
      *lpcCount, ret);
     return ret;
 }
@@ -605,7 +605,7 @@ static DWORD _thunkNetResourceArrayAToW(const LPNETRESOURCEA lpNetArrayIn,
         }
     }
     ret = numToThunk < *lpcCount ? WN_MORE_DATA : WN_SUCCESS;
-    TRACE("numToThunk is %ld, *lpcCount is %ld, returning %ld\n", numToThunk,
+    TRACE("numToThunk is %d, *lpcCount is %d, returning %d\n", numToThunk,
      *lpcCount, ret);
     return ret;
 }
@@ -620,7 +620,7 @@ DWORD WINAPI WNetOpenEnumA( DWORD dwScope, DWORD dwType, DWORD dwUsage,
 {
     DWORD ret;
 
-    TRACE( "(%08lX, %08lX, %08lX, %p, %p)\n",
+    TRACE( "(%08X, %08X, %08X, %p, %p)\n",
 	    dwScope, dwType, dwUsage, lpNet, lphEnum );
 
     if (!lphEnum)
@@ -663,7 +663,7 @@ DWORD WINAPI WNetOpenEnumA( DWORD dwScope, DWORD dwType, DWORD dwUsage,
     }
     if (ret)
         SetLastError(ret);
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -709,7 +709,7 @@ DWORD WINAPI WNetOpenEnumW( DWORD dwScope, DWORD dwType, DWORD dwUsage,
 {
     DWORD ret;
 
-    TRACE( "(%08lX, %08lX, %08lX, %p, %p)\n",
+    TRACE( "(%08X, %08X, %08X, %p, %p)\n",
           dwScope, dwType, dwUsage, lpNet, lphEnum );
 
     if (!lphEnum)
@@ -795,13 +795,13 @@ DWORD WINAPI WNetOpenEnumW( DWORD dwScope, DWORD dwType, DWORD dwUsage,
                 ret = *lphEnum ? WN_SUCCESS : WN_OUT_OF_MEMORY;
                 break;
             default:
-                WARN("unknown scope 0x%08lx\n", dwScope);
+                WARN("unknown scope 0x%08x\n", dwScope);
                 ret = WN_BAD_VALUE;
         }
     }
     if (ret)
         SetLastError(ret);
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -856,7 +856,7 @@ DWORD WINAPI WNetEnumResourceA( HANDLE hEnum, LPDWORD lpcCount,
     }
     if (ret)
         SetLastError(ret);
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -938,7 +938,7 @@ static DWORD _enumerateProvidersW(PWNetEnumerator enumerator, LPDWORD lpcCount,
         *lpcCount = count;
         ret = count > 0 ? WN_SUCCESS : WN_MORE_DATA;
     }
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1023,7 +1023,7 @@ static DWORD _enumerateGlobalPassthroughW(PWNetEnumerator enumerator,
                 enumerator->providerDone = TRUE;
         }
     }
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1062,10 +1062,10 @@ static DWORD _enumerateGlobalW(PWNetEnumerator enumerator, LPDWORD lpcCount,
              lpBufferSize);
             break;
         default:
-            WARN("unexpected scope 0x%08lx\n", enumerator->dwScope);
+            WARN("unexpected scope 0x%08x\n", enumerator->dwScope);
             ret = WN_NO_MORE_ENTRIES;
     }
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1167,7 +1167,7 @@ static DWORD _enumerateContextW(PWNetEnumerator enumerator, LPDWORD lpcCount,
             *lpBufferSize = bytesNeeded;
         }
     }
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1222,7 +1222,7 @@ DWORD WINAPI WNetEnumResourceW( HANDLE hEnum, LPDWORD lpcCount,
     }
     if (ret)
         SetLastError(ret);
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1268,7 +1268,7 @@ DWORD WINAPI WNetCloseEnum( HANDLE hEnum )
         ret = WN_BAD_HANDLE;
     if (ret)
         SetLastError(ret);
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1365,7 +1365,7 @@ DWORD WINAPI WNetAddConnection2A( LPNETRESOURCEA lpNetResource,
                                   LPCSTR lpPassword, LPCSTR lpUserID,
                                   DWORD dwFlags )
 {
-    FIXME( "(%p, %p, %s, 0x%08lX): stub\n",
+    FIXME( "(%p, %p, %s, 0x%08X): stub\n",
            lpNetResource, lpPassword, debugstr_a(lpUserID), dwFlags );
 
     SetLastError(WN_NO_NETWORK);
@@ -1379,7 +1379,7 @@ DWORD WINAPI WNetAddConnection2W( LPNETRESOURCEW lpNetResource,
                                   LPCWSTR lpPassword, LPCWSTR lpUserID,
                                   DWORD dwFlags )
 {
-    FIXME( "(%p, %p, %s, 0x%08lX): stub\n",
+    FIXME( "(%p, %p, %s, 0x%08X): stub\n",
            lpNetResource, lpPassword, debugstr_w(lpUserID), dwFlags );
 
     SetLastError(WN_NO_NETWORK);
@@ -1393,7 +1393,7 @@ DWORD WINAPI WNetAddConnection3A( HWND hwndOwner, LPNETRESOURCEA lpNetResource,
                                   LPCSTR lpPassword, LPCSTR lpUserID,
                                   DWORD dwFlags )
 {
-    FIXME( "(%p, %p, %p, %s, 0x%08lX), stub\n",
+    FIXME( "(%p, %p, %p, %s, 0x%08X), stub\n",
            hwndOwner, lpNetResource, lpPassword, debugstr_a(lpUserID), dwFlags );
 
     SetLastError(WN_NO_NETWORK);
@@ -1407,7 +1407,7 @@ DWORD WINAPI WNetAddConnection3W( HWND hwndOwner, LPNETRESOURCEW lpNetResource,
                                   LPCWSTR lpPassword, LPCWSTR lpUserID,
                                   DWORD dwFlags )
 {
-    FIXME( "(%p, %p, %p, %s, 0x%08lX), stub\n",
+    FIXME( "(%p, %p, %p, %s, 0x%08X), stub\n",
            hwndOwner, lpNetResource, lpPassword, debugstr_w(lpUserID), dwFlags );
 
     SetLastError(WN_NO_NETWORK);
@@ -1422,7 +1422,7 @@ DWORD WINAPI WNetUseConnectionA( HWND hwndOwner, LPNETRESOURCEA lpNetResource,
                                  LPSTR lpAccessName, LPDWORD lpBufferSize,
                                  LPDWORD lpResult )
 {
-    FIXME( "(%p, %p, %p, %s, 0x%08lX, %s, %p, %p), stub\n",
+    FIXME( "(%p, %p, %p, %s, 0x%08X, %s, %p, %p), stub\n",
            hwndOwner, lpNetResource, lpPassword, debugstr_a(lpUserID), dwFlags,
            debugstr_a(lpAccessName), lpBufferSize, lpResult );
 
@@ -1438,7 +1438,7 @@ DWORD WINAPI WNetUseConnectionW( HWND hwndOwner, LPNETRESOURCEW lpNetResource,
                                  LPWSTR lpAccessName, LPDWORD lpBufferSize,
                                  LPDWORD lpResult )
 {
-    FIXME( "(%p, %p, %p, %s, 0x%08lX, %s, %p, %p), stub\n",
+    FIXME( "(%p, %p, %p, %s, 0x%08X, %s, %p, %p), stub\n",
            hwndOwner, lpNetResource, lpPassword, debugstr_w(lpUserID), dwFlags,
            debugstr_w(lpAccessName), lpBufferSize, lpResult );
 
@@ -1471,7 +1471,7 @@ DWORD WINAPI WNetCancelConnectionW( LPCWSTR lpName, BOOL fForce )
  */
 DWORD WINAPI WNetCancelConnection2A( LPCSTR lpName, DWORD dwFlags, BOOL fForce )
 {
-    FIXME( "(%s, %08lX, %d), stub\n", debugstr_a(lpName), dwFlags, fForce );
+    FIXME( "(%s, %08X, %d), stub\n", debugstr_a(lpName), dwFlags, fForce );
 
     return WN_SUCCESS;
 }
@@ -1481,7 +1481,7 @@ DWORD WINAPI WNetCancelConnection2A( LPCSTR lpName, DWORD dwFlags, BOOL fForce )
  */
 DWORD WINAPI WNetCancelConnection2W( LPCWSTR lpName, DWORD dwFlags, BOOL fForce )
 {
-    FIXME( "(%s, %08lX, %d), stub\n", debugstr_w(lpName), dwFlags, fForce );
+    FIXME( "(%s, %08X, %d), stub\n", debugstr_w(lpName), dwFlags, fForce );
 
     return WN_SUCCESS;
 }
@@ -1603,7 +1603,7 @@ DWORD WINAPI WNetGetConnectionA( LPCSTR lpLocalName,
     }
     if (ret)
         SetLastError(ret);
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1666,7 +1666,7 @@ DWORD WINAPI WNetGetConnectionW( LPCWSTR lpLocalName,
     }
     if (ret)
         SetLastError(ret);
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1676,7 +1676,7 @@ DWORD WINAPI WNetGetConnectionW( LPCWSTR lpLocalName,
 DWORD WINAPI WNetSetConnectionA( LPCSTR lpName, DWORD dwProperty,
                                  LPVOID pvValue )
 {
-    FIXME( "(%s, %08lX, %p): stub\n", debugstr_a(lpName), dwProperty, pvValue );
+    FIXME( "(%s, %08X, %p): stub\n", debugstr_a(lpName), dwProperty, pvValue );
 
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
@@ -1688,7 +1688,7 @@ DWORD WINAPI WNetSetConnectionA( LPCSTR lpName, DWORD dwProperty,
 DWORD WINAPI WNetSetConnectionW( LPCWSTR lpName, DWORD dwProperty,
                                  LPVOID pvValue )
 {
-    FIXME( "(%s, %08lX, %p): stub\n", debugstr_w(lpName), dwProperty, pvValue );
+    FIXME( "(%s, %08X, %p): stub\n", debugstr_w(lpName), dwProperty, pvValue );
 
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
@@ -1700,7 +1700,7 @@ DWORD WINAPI WNetSetConnectionW( LPCWSTR lpName, DWORD dwProperty,
 DWORD WINAPI WNetGetUniversalNameA ( LPCSTR lpLocalPath, DWORD dwInfoLevel,
                                      LPVOID lpBuffer, LPDWORD lpBufferSize )
 {
-    FIXME( "(%s, 0x%08lX, %p, %p): stub\n",
+    FIXME( "(%s, 0x%08X, %p, %p): stub\n",
            debugstr_a(lpLocalPath), dwInfoLevel, lpBuffer, lpBufferSize);
 
     SetLastError(WN_NO_NETWORK);
@@ -1716,7 +1716,7 @@ DWORD WINAPI WNetGetUniversalNameW ( LPCWSTR lpLocalPath, DWORD dwInfoLevel,
     LPUNIVERSAL_NAME_INFOW uniw;
     DWORD err, len;
 
-    FIXME( "(%s, 0x%08lX, %p, %p): stub\n",
+    FIXME( "(%s, 0x%08X, %p, %p): stub\n",
            debugstr_w(lpLocalPath), dwInfoLevel, lpBuffer, lpBufferSize);
 
     switch (dwInfoLevel)
@@ -1778,7 +1778,7 @@ DWORD WINAPI WNetGetUserW( LPCWSTR lpName, LPWSTR lpUserID, LPDWORD lpBufferSize
  */
 DWORD WINAPI WNetConnectionDialog( HWND hwnd, DWORD dwType )
 {
-    FIXME( "(%p, %08lX): stub\n", hwnd, dwType );
+    FIXME( "(%p, %08X): stub\n", hwnd, dwType );
 
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
@@ -1811,7 +1811,7 @@ DWORD WINAPI WNetConnectionDialog1W( LPCONNECTDLGSTRUCTW lpConnDlgStruct )
  */
 DWORD WINAPI WNetDisconnectDialog( HWND hwnd, DWORD dwType )
 {
-    FIXME( "(%p, %08lX): stub\n", hwnd, dwType );
+    FIXME( "(%p, %08X): stub\n", hwnd, dwType );
 
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
@@ -1846,7 +1846,7 @@ DWORD WINAPI WNetGetLastErrorA( LPDWORD lpError,
                                 LPSTR lpErrorBuf, DWORD nErrorBufSize,
                                 LPSTR lpNameBuf, DWORD nNameBufSize )
 {
-    FIXME( "(%p, %p, %ld, %p, %ld): stub\n",
+    FIXME( "(%p, %p, %d, %p, %d): stub\n",
            lpError, lpErrorBuf, nErrorBufSize, lpNameBuf, nNameBufSize );
 
     SetLastError(WN_NO_NETWORK);
@@ -1860,7 +1860,7 @@ DWORD WINAPI WNetGetLastErrorW( LPDWORD lpError,
                                 LPWSTR lpErrorBuf, DWORD nErrorBufSize,
                          LPWSTR lpNameBuf, DWORD nNameBufSize )
 {
-    FIXME( "(%p, %p, %ld, %p, %ld): stub\n",
+    FIXME( "(%p, %p, %d, %p, %d): stub\n",
            lpError, lpErrorBuf, nErrorBufSize, lpNameBuf, nNameBufSize );
 
     SetLastError(WN_NO_NETWORK);
@@ -1903,7 +1903,7 @@ DWORD WINAPI WNetGetNetworkInformationA( LPCSTR lpProvider,
     }
     if (ret)
         SetLastError(ret);
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1951,7 +1951,7 @@ DWORD WINAPI WNetGetNetworkInformationW( LPCWSTR lpProvider,
     }
     if (ret)
         SetLastError(ret);
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1963,7 +1963,7 @@ DWORD WINAPI WNetGetProviderNameA( DWORD dwNetType,
 {
     DWORD ret;
 
-    TRACE("(0x%08lx, %s, %p)\n", dwNetType, debugstr_a(lpProvider),
+    TRACE("(0x%08x, %s, %p)\n", dwNetType, debugstr_a(lpProvider),
      lpBufferSize);
 
     if (!lpProvider)
@@ -2006,7 +2006,7 @@ DWORD WINAPI WNetGetProviderNameA( DWORD dwNetType,
     }
     if (ret)
         SetLastError(ret);
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -2018,7 +2018,7 @@ DWORD WINAPI WNetGetProviderNameW( DWORD dwNetType,
 {
     DWORD ret;
 
-    TRACE("(0x%08lx, %s, %p)\n", dwNetType, debugstr_w(lpProvider),
+    TRACE("(0x%08x, %s, %p)\n", dwNetType, debugstr_w(lpProvider),
      lpBufferSize);
 
     if (!lpProvider)
@@ -2059,6 +2059,6 @@ DWORD WINAPI WNetGetProviderNameW( DWORD dwNetType,
     }
     if (ret)
         SetLastError(ret);
-    TRACE("Returning %ld\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }

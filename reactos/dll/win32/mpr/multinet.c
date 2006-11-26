@@ -66,7 +66,7 @@ DWORD WINAPI MultinetGetConnectionPerformanceW(
  */
 DWORD WINAPI MultinetGetErrorTextA( DWORD x, DWORD y, DWORD z )
 {
-    FIXME( "(%lx, %lx, %lx): stub\n", x, y, z );
+    FIXME( "(%x, %x, %x): stub\n", x, y, z );
     return 0;
 }
 
@@ -75,7 +75,6 @@ DWORD WINAPI MultinetGetErrorTextA( DWORD x, DWORD y, DWORD z )
  */
 DWORD WINAPI MultinetGetErrorTextW( DWORD x, DWORD y, DWORD z )
 {
-    FIXME( "(%lx, %lx, %lx ): stub\n", x, y, z );
+    FIXME( "(%x, %x, %x ): stub\n", x, y, z );
     return 0;
 }
-
