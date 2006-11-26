@@ -407,7 +407,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		const vector<Library*>& libs = data.libraries;
 		for ( i = 0; i < libs.size(); i++ )
 		{
-			string libpath = outdir + "\\" + libs[i]->importedModule->GetBasePath() + "\\" + libs[i]->name;
+			string libpath = outdir + "\\" + libs[i]->importedModule->GetBasePath();
 			libraries.push_back ( libs[i]->name );
 			libpaths.push_back ( libpath );
 		}
