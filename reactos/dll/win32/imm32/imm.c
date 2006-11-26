@@ -133,7 +133,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
     HMODULE x11drv;
 
-    TRACE("%p, %lx, %p\n",hInstDLL,fdwReason,lpReserved);
+    TRACE("%p, %x, %p\n",hInstDLL,fdwReason,lpReserved);
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
@@ -259,7 +259,7 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
  */
 BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 {
-    FIXME("(%p, %p, %ld): stub\n", hWnd, hIMC, dwFlags);
+    FIXME("(%p, %p, %d): stub\n", hWnd, hIMC, dwFlags);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -270,7 +270,7 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 BOOL WINAPI ImmConfigureIMEA(
   HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 {
-  FIXME("(%p, %p, %ld, %p): stub\n",
+  FIXME("(%p, %p, %d, %p): stub\n",
     hKL, hWnd, dwMode, lpData
   );
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -283,7 +283,7 @@ BOOL WINAPI ImmConfigureIMEA(
 BOOL WINAPI ImmConfigureIMEW(
   HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 {
-  FIXME("(%p, %p, %ld, %p): stub\n",
+  FIXME("(%p, %p, %d, %p): stub\n",
     hKL, hWnd, dwMode, lpData
   );
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -339,7 +339,7 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
  */
 BOOL WINAPI ImmDisableIME(DWORD idThread)
 {
-    FIXME("(%ld): stub\n", idThread);
+    FIXME("(%d): stub\n", idThread);
     return TRUE;
 }
 
@@ -351,7 +351,7 @@ UINT WINAPI ImmEnumRegisterWordA(
   LPCSTR lpszReading, DWORD dwStyle,
   LPCSTR lpszRegister, LPVOID lpData)
 {
-  FIXME("(%p, %p, %s, %ld, %s, %p): stub\n",
+  FIXME("(%p, %p, %s, %d, %s, %p): stub\n",
     hKL, lpfnEnumProc,
     debugstr_a(lpszReading), dwStyle,
     debugstr_a(lpszRegister), lpData
@@ -368,7 +368,7 @@ UINT WINAPI ImmEnumRegisterWordW(
   LPCWSTR lpszReading, DWORD dwStyle,
   LPCWSTR lpszRegister, LPVOID lpData)
 {
-  FIXME("(%p, %p, %s, %ld, %s, %p): stub\n",
+  FIXME("(%p, %p, %s, %d, %s, %p): stub\n",
     hKL, lpfnEnumProc,
     debugstr_w(lpszReading), dwStyle,
     debugstr_w(lpszRegister), lpData
@@ -412,7 +412,7 @@ DWORD WINAPI ImmGetCandidateListA(
   HIMC hIMC, DWORD deIndex,
   LPCANDIDATELIST lpCandList, DWORD dwBufLen)
 {
-  FIXME("(%p, %ld, %p, %ld): stub\n",
+  FIXME("(%p, %d, %p, %d): stub\n",
     hIMC, deIndex,
     lpCandList, dwBufLen
   );
@@ -449,7 +449,7 @@ DWORD WINAPI ImmGetCandidateListW(
   HIMC hIMC, DWORD deIndex,
   LPCANDIDATELIST lpCandList, DWORD dwBufLen)
 {
-  FIXME("(%p, %ld, %p, %ld): stub\n",
+  FIXME("(%p, %d, %p, %d): stub\n",
     hIMC, deIndex,
     lpCandList, dwBufLen
   );
@@ -463,7 +463,7 @@ DWORD WINAPI ImmGetCandidateListW(
 BOOL WINAPI ImmGetCandidateWindow(
   HIMC hIMC, DWORD dwBufLen, LPCANDIDATEFORM lpCandidate)
 {
-  FIXME("(%p, %ld, %p): stub\n", hIMC, dwBufLen, lpCandidate);
+  FIXME("(%p, %d, %p): stub\n", hIMC, dwBufLen, lpCandidate);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
@@ -498,14 +498,14 @@ LONG WINAPI ImmGetCompositionStringA(
     LONG rc = 0;
     InputContextData *data = (InputContextData*)hIMC;
 
-    TRACE("(%p, 0x%lx, %p, %ld)\n", hIMC, dwIndex, lpBuf, dwBufLen);
+    TRACE("(%p, 0x%x, %p, %d)\n", hIMC, dwIndex, lpBuf, dwBufLen);
 
     if (!data)
        return FALSE;
 
     if (dwIndex == GCS_RESULTSTR)
     {
-        TRACE("GSC_RESULTSTR %p %li\n",data->ResultString,
+        TRACE("GSC_RESULTSTR %p %i\n",data->ResultString,
                                     data->dwResultStringSize);
 
         buf = HeapAlloc( GetProcessHeap(), 0, data->dwResultStringSize * 3 );
@@ -520,8 +520,7 @@ LONG WINAPI ImmGetCompositionStringA(
     }
     else if (dwIndex == GCS_COMPSTR)
     {
-         TRACE("GSC_COMPSTR %p %li\n",data->CompositionString,
-                                     data->dwCompStringLength/ sizeof(WCHAR));
+         TRACE("GSC_COMPSTR %p %i\n", data->CompositionString, data->dwCompStringLength);
 
         buf = HeapAlloc( GetProcessHeap(), 0, data->dwCompStringLength * 3 );
         rc = WideCharToMultiByte(CP_ACP, 0,(LPWSTR)data->CompositionString,
@@ -533,8 +532,7 @@ LONG WINAPI ImmGetCompositionStringA(
     }
     else if (dwIndex == GCS_COMPATTR)
     {
-        TRACE("GSC_COMPATTR %p %li\n",data->CompositionString,
-                                    data->dwCompStringLength/ sizeof(WCHAR));
+        TRACE("GSC_COMPATTR %p %i\n", data->CompositionString, data->dwCompStringLength);
 
         rc = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)data->CompositionString,
                                  data->dwCompStringLength/ sizeof(WCHAR), NULL,
@@ -549,8 +547,7 @@ LONG WINAPI ImmGetCompositionStringA(
     }
     else if (dwIndex == GCS_COMPCLAUSE)
     {
-        TRACE("GSC_COMPCLAUSE %p %li\n",data->CompositionString,
-                                    data->dwCompStringLength/ sizeof(WCHAR));
+        TRACE("GSC_COMPCLAUSE %p %i\n", data->CompositionString, data->dwCompStringLength);
  
         rc = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)data->CompositionString,
                                  data->dwCompStringLength/ sizeof(WCHAR), NULL,
@@ -565,7 +562,7 @@ LONG WINAPI ImmGetCompositionStringA(
     }
     else
     {
-        FIXME("Unhandled index 0x%lx\n",dwIndex);
+        FIXME("Unhandled index 0x%x\n",dwIndex);
     }
 
     return rc;
@@ -581,7 +578,7 @@ LONG WINAPI ImmGetCompositionStringW(
     LONG rc = 0;
     InputContextData *data = (InputContextData*)hIMC;
 
-    TRACE("(%p, 0x%lx, %p, %ld)\n", hIMC, dwIndex, lpBuf, dwBufLen);
+    TRACE("(%p, 0x%x, %p, %d)\n", hIMC, dwIndex, lpBuf, dwBufLen);
 
     if (!data)
        return FALSE;
@@ -642,7 +639,7 @@ LONG WINAPI ImmGetCompositionStringW(
     }   
     else
     {
-        FIXME("Unhandled index 0x%lx\n",dwIndex);
+        FIXME("Unhandled index 0x%x\n",dwIndex);
     }   
 
     return rc;
@@ -687,7 +684,7 @@ DWORD WINAPI ImmGetConversionListA(
   LPCSTR pSrc, LPCANDIDATELIST lpDst,
   DWORD dwBufLen, UINT uFlag)
 {
-  FIXME("(%p, %p, %s, %p, %ld, %d): stub\n",
+  FIXME("(%p, %p, %s, %p, %d, %d): stub\n",
     hKL, hIMC, debugstr_a(pSrc), lpDst, dwBufLen, uFlag
   );
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -702,7 +699,7 @@ DWORD WINAPI ImmGetConversionListW(
   LPCWSTR pSrc, LPCANDIDATELIST lpDst,
   DWORD dwBufLen, UINT uFlag)
 {
-  FIXME("(%p, %p, %s, %p, %ld, %d): stub\n",
+  FIXME("(%p, %p, %s, %p, %d, %d): stub\n",
     hKL, hIMC, debugstr_w(pSrc), lpDst, dwBufLen, uFlag
   );
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -796,7 +793,7 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 DWORD WINAPI ImmGetGuideLineA(
   HIMC hIMC, DWORD dwIndex, LPSTR lpBuf, DWORD dwBufLen)
 {
-  FIXME("(%p, %ld, %s, %ld): stub\n",
+  FIXME("(%p, %d, %s, %d): stub\n",
     hIMC, dwIndex, debugstr_a(lpBuf), dwBufLen
   );
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -808,7 +805,7 @@ DWORD WINAPI ImmGetGuideLineA(
  */
 DWORD WINAPI ImmGetGuideLineW(HIMC hIMC, DWORD dwIndex, LPWSTR lpBuf, DWORD dwBufLen)
 {
-  FIXME("(%p, %ld, %s, %ld): stub\n",
+  FIXME("(%p, %d, %s, %d): stub\n",
     hIMC, dwIndex, debugstr_w(lpBuf), dwBufLen
   );
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -857,7 +854,7 @@ BOOL WINAPI ImmGetOpenStatus(HIMC hIMC)
 DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
 {
     DWORD rc = 0;
-    TRACE("(%p, %ld)\n", hKL, fdwIndex);
+    TRACE("(%p, %d)\n", hKL, fdwIndex);
 
     switch (fdwIndex)
     {
@@ -942,7 +939,7 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
   case VER_PLATFORM_WIN32_NT:
       return 0;
   default:
-      FIXME("%ld not supported\n",version.dwPlatformId);
+      FIXME("%d not supported\n",version.dwPlatformId);
       return VK_PROCESSKEY;
   }
 }
@@ -1046,7 +1043,7 @@ BOOL WINAPI ImmNotifyIME(
 {
     BOOL rc = FALSE;
 
-    TRACE("(%p, %ld, %ld, %ld)\n",
+    TRACE("(%p, %d, %d, %d)\n",
         hIMC, dwAction, dwIndex, dwValue);
 
     if (!root_context)
@@ -1124,7 +1121,7 @@ BOOL WINAPI ImmNotifyIME(
                     FIXME("%s - %s\n","NI_COMPOSITIONSTR","CPS_REVERT");
                     break;
                 default:
-                    ERR("%s - %s (%li)\n","NI_COMPOSITIONSTR","UNKNOWN",dwIndex);
+                    ERR("%s - %s (%i)\n","NI_COMPOSITIONSTR","UNKNOWN",dwIndex);
                     break;
             }
             break;
@@ -1156,7 +1153,7 @@ BOOL WINAPI ImmNotifyIME(
 BOOL WINAPI ImmRegisterWordA(
   HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszRegister)
 {
-  FIXME("(%p, %s, %ld, %s): stub\n",
+  FIXME("(%p, %s, %d, %s): stub\n",
     hKL, debugstr_a(lpszReading), dwStyle, debugstr_a(lpszRegister)
   );
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1169,7 +1166,7 @@ BOOL WINAPI ImmRegisterWordA(
 BOOL WINAPI ImmRegisterWordW(
   HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszRegister)
 {
-  FIXME("(%p, %s, %ld, %s): stub\n",
+  FIXME("(%p, %s, %d, %s): stub\n",
     hKL, debugstr_w(lpszReading), dwStyle, debugstr_w(lpszRegister)
   );
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1261,7 +1258,7 @@ BOOL WINAPI ImmSetCompositionStringA(
     WCHAR *ReadBuffer = NULL;
     BOOL rc;
 
-    TRACE("(%p, %ld, %p, %ld, %p, %ld): stub\n",
+    TRACE("(%p, %d, %p, %d, %p, %d): stub\n",
             hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
 
     comp_len = MultiByteToWideChar(CP_ACP, 0, lpComp, dwCompLen, NULL, 0);
@@ -1298,7 +1295,7 @@ BOOL WINAPI ImmSetCompositionStringW(
      DWORD flags = 0;
      WCHAR wParam  = 0;
 
-     TRACE("(%p, %ld, %p, %ld, %p, %ld): stub\n",
+     TRACE("(%p, %d, %p, %d, %p, %d): stub\n",
              hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
 
 
@@ -1361,7 +1358,7 @@ BOOL WINAPI ImmSetCompositionWindow(
     InputContextData *data = (InputContextData*)hIMC;
 
     TRACE("(%p, %p)\n", hIMC, lpCompForm);
-    TRACE("\t%lx, (%li,%li), (%li,%li - %li,%li)\n",lpCompForm->dwStyle,
+    TRACE("\t%x, (%i,%i), (%i,%i - %i,%i)\n",lpCompForm->dwStyle,
           lpCompForm->ptCurrentPos.x, lpCompForm->ptCurrentPos.y, lpCompForm->rcArea.top,
           lpCompForm->rcArea.left, lpCompForm->rcArea.bottom, lpCompForm->rcArea.right);
 
@@ -1391,7 +1388,7 @@ BOOL WINAPI ImmSetCompositionWindow(
 BOOL WINAPI ImmSetConversionStatus(
   HIMC hIMC, DWORD fdwConversion, DWORD fdwSentence)
 {
-  FIXME("(%p, %ld, %ld): stub\n",
+  FIXME("(%p, %d, %d): stub\n",
     hIMC, fdwConversion, fdwSentence
   );
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1461,7 +1458,7 @@ BOOL WINAPI ImmSetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
  */
 BOOL WINAPI ImmSimulateHotKey(HWND hWnd, DWORD dwHotKeyID)
 {
-  FIXME("(%p, %ld): stub\n", hWnd, dwHotKeyID);
+  FIXME("(%p, %d): stub\n", hWnd, dwHotKeyID);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
@@ -1472,7 +1469,7 @@ BOOL WINAPI ImmSimulateHotKey(HWND hWnd, DWORD dwHotKeyID)
 BOOL WINAPI ImmUnregisterWordA(
   HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszUnregister)
 {
-  FIXME("(%p, %s, %ld, %s): stub\n",
+  FIXME("(%p, %s, %d, %s): stub\n",
     hKL, debugstr_a(lpszReading), dwStyle, debugstr_a(lpszUnregister)
   );
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1485,7 +1482,7 @@ BOOL WINAPI ImmUnregisterWordA(
 BOOL WINAPI ImmUnregisterWordW(
   HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszUnregister)
 {
-  FIXME("(%p, %s, %ld, %s): stub\n",
+  FIXME("(%p, %s, %d, %s): stub\n",
     hKL, debugstr_w(lpszReading), dwStyle, debugstr_w(lpszUnregister)
   );
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
