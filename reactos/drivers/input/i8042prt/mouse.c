@@ -903,6 +903,9 @@ BOOLEAN STDCALL I8042DetectMouse(PDEVICE_EXTENSION DevExt)
 	UCHAR Value;
 	UCHAR ExpectedReply[] = { 0xFA, 0xAA, 0x00 };
 	unsigned ReplyByte;
+	ULONG Counter;
+
+	I8042Flush();
 
 	if (! I8042Write(DevExt, I8042_CTRL_PORT, 0xD4) ||
 	    ! I8042Write(DevExt, I8042_DATA_PORT, 0xFF))
@@ -915,7 +918,12 @@ BOOLEAN STDCALL I8042DetectMouse(PDEVICE_EXTENSION DevExt)
 	     ReplyByte < sizeof(ExpectedReply) / sizeof(ExpectedReply[0]) && Ok;
 	     ReplyByte++)
 	{
-		Status = I8042ReadDataWait(DevExt, &Value);
+		Counter = 200;
+
+		do {
+			Status = I8042ReadDataWait(DevExt, &Value);
+		} while (Status == STATUS_IO_TIMEOUT && Counter--);
+
 		if (! NT_SUCCESS(Status))
 		{
 			DPRINT1("No ACK after mouse reset, status 0x%08x\n",

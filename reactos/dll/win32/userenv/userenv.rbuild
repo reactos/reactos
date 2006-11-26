@@ -5,7 +5,6 @@
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x0600</define>
 	<define name="WINVER">0x0600</define>
-	<define name="_USERENV_" />
 	<library>uuid</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
