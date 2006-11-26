@@ -385,6 +385,16 @@ CBBackend::_generate_cbproj ( const Module& module )
 	{
 		const IfableData& data = *ifs_list.back();
 		ifs_list.pop_back();
+		for ( i = 0; i < data.ifs.size(); i++ )
+		{
+			const Property* property = _lookup_property( module, data.ifs[i]->property );
+			if ( property != NULL )
+			{
+				if ( data.ifs[i]->value == property->value && data.ifs[i]->negated == false ||
+					data.ifs[i]->value != property->value && data.ifs[i]->negated)
+					ifs_list.push_back ( &data.ifs[i]->data );
+			}
+		}
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{
@@ -769,4 +779,25 @@ CBBackend::MingwAddImplicitLibraries( Module &module )
 		pLibrary = new Library ( module, "msvcrt" );
 		module.non_if_data.libraries.push_back ( pLibrary );
 	}
+}
+
+const Property* 
+CBBackend::_lookup_property ( const Module& module, const std::string& name ) const
+{
+	/* Check local values */
+	for ( size_t i = 0; i < module.non_if_data.properties.size(); i++ )
+	{
+		const Property& property = *module.non_if_data.properties[i];
+		if ( property.name == name )
+			return &property;
+	}
+	// TODO FIXME - should we check local if-ed properties?
+	for ( size_t i = 0; i < module.project.non_if_data.properties.size(); i++ )
+	{
+		const Property& property = *module.project.non_if_data.properties[i];
+		if ( property.name == name )
+			return &property;
+	}
+	// TODO FIXME - should we check global if-ed properties?
+	return NULL;
 }
