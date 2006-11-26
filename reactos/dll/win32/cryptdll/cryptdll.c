@@ -29,7 +29,7 @@ HMODULE CRYPTDLL_hModule = 0;
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    TRACE("%p,%lx,%p\n", hinstDLL, fdwReason, lpvReserved);
+    TRACE("%p,%x,%p\n", hinstDLL, fdwReason, lpvReserved);
 
     switch (fdwReason) {
         case DLL_WINE_PREATTACH:
