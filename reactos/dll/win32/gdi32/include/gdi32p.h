@@ -50,6 +50,7 @@ typedef struct tagENHMETAFILE {
   PVOID      pvMetaBuffer;
   HANDLE     hFile;      /* Handle for disk based MetaFile */
   DWORD      Size;
+  INT        iType;
   PENHMETAHEADER emf;
   UINT       handles_size, cur_handles;
   HGDIOBJ   *handles;

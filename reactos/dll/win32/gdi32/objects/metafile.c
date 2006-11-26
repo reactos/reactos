@@ -254,10 +254,10 @@ HDC WINAPI CreateEnhMetaFileW(
             return NULL;
 	}
 	EmfDC.hFile = hFile;
-	EmfDC->emf.iType = 2;
+	EmfDC.iType = 2;
     }
     else
-        EmfDC->emf.iType = 1;
+        EmfDC.iType = 1;
 
     return mDC;
 }
