@@ -304,8 +304,22 @@ CBBackend::_generate_workspace ( FILE* OUT )
 		Module& module = *ProjectNode.modules[i];
 		
 		std::string Cbp_file = CbpFileName ( module );
-		fprintf ( OUT, "\t\t<Project filename=\"%s\" />\r\n", Cbp_file.c_str());
+		fprintf ( OUT, "\t\t<Project filename=\"%s\">\r\n", Cbp_file.c_str());
 		
+		/* dependencies */
+		vector<const IfableData*> ifs_list;
+		ifs_list.push_back ( &module.project.non_if_data );
+		ifs_list.push_back ( &module.non_if_data );
+		while ( ifs_list.size() )
+		{
+			const IfableData& data = *ifs_list.back();
+			ifs_list.pop_back();
+			const vector<Library*>& libs = data.libraries;
+			for ( size_t j = 0; j < libs.size(); j++ )
+				fprintf ( OUT, "\t\t\t<Depends filename=\"%s\\%s_auto.cbp\" />\r\n", libs[j]->importedModule->GetBasePath().c_str(), libs[j]->name.c_str() );
+		}
+		fprintf ( OUT, "\t\t</Project>\r\n" );
+	
 	}
 	fprintf ( OUT, "\t</Workspace>\r\n" );
 	fprintf ( OUT, "</CodeBlocks_workspace_file>\r\n" );
@@ -432,21 +446,9 @@ CBBackend::_generate_cbproj ( const Module& module )
 	if ( !module.allowWarnings )
 		compiler_flags.push_back ( "-Werror" );
 
-	///* implicit libraries */
-	//libraries.push_back ( "mingw_common" );
-	//libpaths.push_back ( module.project.LocateModule("mingw_common") );
+	if ( module.type == StaticLibrary && module.isStartupLib )
+		compiler_flags.push_back ( "-Wno-main" );
 
-	//if ( !Module.IsDll )
-	//{
-	//	libraries.push_back ( "%s", module.isUnicode ? "mingw_wmain" : "mingw_main" );
-	//	libpaths.push_back ( module.project.LocateModule("%s"), module.isUnicode ? "mingw_wmain" : "mingw_main" );
-	//}
-
-	//if ( module.name != "msvcrt" )
-	//{
-	//	libraries.push_back ( "msvcrt" );
-	//	libpaths.push_back ( module.project.LocateModule("msvcrt") );
-	//}
 
 	FILE* OUT = fopen ( cbproj_file.c_str(), "wb" );
 
@@ -603,7 +605,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		if ( dll )
 		{
 			fprintf ( OUT, "\t\t\t\t<ExtraCommands>\r\n" );
-			fprintf ( OUT, "<Add before=\"dlltool --dllname %s%s --def %s.def --output-exp %s.temp.exp --kill-at\" />\r\n", module.name.c_str(), module_type.c_str(), module.name.c_str(), module.name.c_str() );
+			fprintf ( OUT, "\t\t\t\t\t<Add before=\"dlltool --dllname %s%s --def %s --output-exp %s.temp.exp --kill-at\" />\r\n", module.name.c_str(), module_type.c_str(), module.importLibrary->definition.c_str(), module.name.c_str() );
 #ifdef WIN32
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"cmd /c del %s.temp.exp 2&gt;NUL\" />\r\n", module.name.c_str() );
 #else
