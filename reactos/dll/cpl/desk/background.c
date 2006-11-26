@@ -80,7 +80,7 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     dummy.mask      = LVCF_SUBITEM | LVCF_WIDTH;
     dummy.iSubItem  = 0;
     dummy.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
-    ListView_InsertColumn(hwndBackgroundList, 0, &dummy);
+    (void)ListView_InsertColumn(hwndBackgroundList, 0, &dummy);
 
     /* Add the "None" item */
     backgroundItem = &pGlobalData->backgroundItems[pGlobalData->listViewItemCount];
@@ -98,7 +98,7 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     listItem.iItem      = pGlobalData->listViewItemCount;
     listItem.lParam     = pGlobalData->listViewItemCount;
 
-    ListView_InsertItem(hwndBackgroundList, &listItem);
+    (void)ListView_InsertItem(hwndBackgroundList, &listItem);
     ListView_SetItemState(hwndBackgroundList, pGlobalData->listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
 
     pGlobalData->listViewItemCount++;
@@ -120,7 +120,7 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         {
             if (i++ == 0)
             {
-                ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
+                (void)ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
             }
 
             backgroundItem = &pGlobalData->backgroundItems[pGlobalData->listViewItemCount];
@@ -138,7 +138,7 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
             listItem.iItem      = pGlobalData->listViewItemCount;
             listItem.lParam     = pGlobalData->listViewItemCount;
 
-            ListView_InsertItem(hwndBackgroundList, &listItem);
+            (void)ListView_InsertItem(hwndBackgroundList, &listItem);
             ListView_SetItemState(hwndBackgroundList, pGlobalData->listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
 
             pGlobalData->listViewItemCount++;
@@ -183,7 +183,7 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 
                 if (i++ == 0)
                 {
-                    ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
+                    (void)ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
                 }
 
                 backgroundItem = &pGlobalData->backgroundItems[pGlobalData->listViewItemCount];
@@ -201,7 +201,7 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
                 listItem.iItem      = pGlobalData->listViewItemCount;
                 listItem.lParam     = pGlobalData->listViewItemCount;
 
-                ListView_InsertItem(hwndBackgroundList, &listItem);
+                (void)ListView_InsertItem(hwndBackgroundList, &listItem);
 
                 pGlobalData->listViewItemCount++;
             }
@@ -442,7 +442,7 @@ OnBrowseButton(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         listItem.iItem      = pGlobalData->listViewItemCount;
         listItem.lParam     = pGlobalData->listViewItemCount;
 
-        ListView_InsertItem(hwndBackgroundList, &listItem);
+        (void)ListView_InsertItem(hwndBackgroundList, &listItem);
 
         pGlobalData->listViewItemCount++;
     }
