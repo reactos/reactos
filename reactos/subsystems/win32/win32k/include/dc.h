@@ -91,6 +91,7 @@ typedef struct _DC
 {
   HDC  hSelf;
   HDC  hNext;
+  PDC_ATTR pDc_Attr;
   DHPDEV  PDev;
   HSURF  FillPatternSurfaces[HS_DDI_MAX];
   PGDIINFO  GDIInfo;
