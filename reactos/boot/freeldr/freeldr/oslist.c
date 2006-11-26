@@ -58,7 +58,7 @@ BOOLEAN InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayName
 	CurrentOperatingSystemIndex = 0;
 	for (Idx=0; Idx<SectionSettingCount; Idx++)
 	{
-		IniReadSettingByNumber(SectionId, Idx, SettingName, 260, SettingValue, 260);
+		IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
 
 		if (IniOpenSection(SettingName, &OperatingSystemSectionId))
 		{
@@ -94,7 +94,7 @@ ULONG CountOperatingSystems(ULONG SectionId)
 	SectionSettingCount = IniGetNumSectionItems(SectionId);
 	for (Idx=0; Idx<SectionSettingCount; Idx++)
 	{
-		IniReadSettingByNumber(SectionId, Idx, SettingName, 260, SettingValue, 260);
+		IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
 
 		if (IniOpenSection(SettingName, NULL))
 		{

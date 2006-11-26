@@ -111,7 +111,7 @@ NoGui:
 		}
 
 		// Try to read the boot type
-		if (!IniReadSettingByName(SectionId, "BootType", SettingValue, 80))
+		if (!IniReadSettingByName(SectionId, "BootType", SettingValue, sizeof(SettingValue)))
 		{
 			sprintf(SettingName, "BootType= line not found in section [%s] in freeldr.ini.\n", OperatingSystemSectionNames[SelectedOperatingSystem]);
 			UiMessageBox(SettingName);
@@ -180,7 +180,7 @@ ULONG	 GetDefaultOperatingSystem(PCSTR OperatingSystemList[], ULONG	 OperatingSy
 	DefaultOSName = CmdLineGetDefaultOS();
 	if (NULL == DefaultOSName)
 	{
-		if (IniReadSettingByName(SectionId, "DefaultOS", DefaultOSText, 80))
+		if (IniReadSettingByName(SectionId, "DefaultOS", DefaultOSText, sizeof(DefaultOSText)))
 		{
 			DefaultOSName = DefaultOSText;
 		}
@@ -218,7 +218,7 @@ LONG GetTimeOut(VOID)
 		return -1;
 	}
 
-	if (IniReadSettingByName(SectionId, "TimeOut", TimeOutText, 20))
+	if (IniReadSettingByName(SectionId, "TimeOut", TimeOutText, sizeof(TimeOutText)))
 	{
 		TimeOut = atoi(TimeOutText);
 	}

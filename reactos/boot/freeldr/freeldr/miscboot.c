@@ -38,7 +38,7 @@ VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
 		return;
 	}
 
-	if (!IniReadSettingByName(SectionId, "BootSectorFile", FileName, 260))
+	if (!IniReadSettingByName(SectionId, "BootSectorFile", FileName, sizeof(FileName)))
 	{
 		UiMessageBox("Boot sector file not specified for selected OS!");
 		return;
@@ -111,7 +111,7 @@ VOID LoadAndBootPartition(PCSTR OperatingSystemName)
 	}
 
 	// Read the boot drive
-	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, 80))
+	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, sizeof(SettingValue)))
 	{
 		UiMessageBox("Boot drive not specified for selected OS!");
 		return;
@@ -120,7 +120,7 @@ VOID LoadAndBootPartition(PCSTR OperatingSystemName)
 	DriveNumber = DriveMapGetBiosDriveNumber(SettingValue);
 
 	// Read the boot partition
-	if (!IniReadSettingByName(SectionId, "BootPartition", SettingValue, 80))
+	if (!IniReadSettingByName(SectionId, "BootPartition", SettingValue, sizeof(SettingValue)))
 	{
 		UiMessageBox("Boot partition not specified for selected OS!");
 		return;
@@ -179,7 +179,7 @@ VOID LoadAndBootDrive(PCSTR OperatingSystemName)
 		return;
 	}
 
-	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, 80))
+	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, sizeof(SettingValue)))
 	{
 		UiMessageBox("Boot drive not specified for selected OS!");
 		return;

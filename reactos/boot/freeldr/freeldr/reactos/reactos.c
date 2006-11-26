@@ -758,7 +758,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	/*
 	 * Read the optional kernel parameters (if any)
 	 */
-	if (IniReadSettingByName(SectionId, "Options", value, 1024))
+	if (IniReadSettingByName(SectionId, "Options", value, sizeof(value)))
 	{
 		strcat(reactos_kernel_cmdline, " ");
 		strcat(reactos_kernel_cmdline, value);
@@ -795,7 +795,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	 * Find the kernel image name
 	 * and try to load the kernel off the disk
 	 */
-	if(IniReadSettingByName(SectionId, "Kernel", value, 1024))
+	if(IniReadSettingByName(SectionId, "Kernel", value, sizeof(value)))
 	{
 		/*
 		 * Set the name and
@@ -823,7 +823,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	 * Find the HAL image name
 	 * and try to load the kernel off the disk
 	 */
-	if(IniReadSettingByName(SectionId, "Hal", value, 1024))
+	if(IniReadSettingByName(SectionId, "Hal", value, sizeof(value)))
 	{
 		/*
 		 * Set the name and

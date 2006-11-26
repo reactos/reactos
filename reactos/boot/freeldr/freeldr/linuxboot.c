@@ -233,27 +233,27 @@ BOOLEAN LinuxParseIniSection(PCSTR OperatingSystemName)
 		return FALSE;
 	}
 
-	if (!IniReadSettingByName(SectionId, "BootPath", LinuxBootPath, 260))
+	if (!IniReadSettingByName(SectionId, "BootPath", LinuxBootPath, sizeof(LinuxBootPath)))
 	{
 		UiMessageBox("Boot path not specified for selected OS!");
 		return FALSE;
 	}
 
 	// Get the kernel name
-	if (!IniReadSettingByName(SectionId, "Kernel", LinuxKernelName, 260))
+	if (!IniReadSettingByName(SectionId, "Kernel", LinuxKernelName, sizeof(LinuxKernelName)))
 	{
 		UiMessageBox("Linux kernel filename not specified for selected OS!");
 		return FALSE;
 	}
 
 	// Get the initrd name
-	if (IniReadSettingByName(SectionId, "Initrd", LinuxInitrdName, 260))
+	if (IniReadSettingByName(SectionId, "Initrd", LinuxInitrdName, sizeof(LinuxInitrdName)))
 	{
 		LinuxHasInitrd = TRUE;
 	}
 
 	// Get the command line
-	if (IniReadSettingByName(SectionId, "CommandLine", LinuxCommandLine, 260))
+	if (IniReadSettingByName(SectionId, "CommandLine", LinuxCommandLine, sizeof(LinuxCommandLine)))
 	{
 		RemoveQuotes(LinuxCommandLine);
 		LinuxCommandLineSize = strlen(LinuxCommandLine) + 1;

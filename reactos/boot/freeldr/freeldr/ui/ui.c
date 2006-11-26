@@ -83,84 +83,84 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	DisplayModeText[0] = '\0';
 	if (IniOpenSection("Display", &SectionId))
 	{
-		if (! IniReadSettingByName(SectionId, "DisplayMode", DisplayModeText, 260))
+		if (! IniReadSettingByName(SectionId, "DisplayMode", DisplayModeText, sizeof(DisplayModeText)))
 		{
 			DisplayModeText[0] = '\0';
 		}
 
-		if (IniReadSettingByName(SectionId, "TitleText", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "TitleText", SettingText, sizeof(SettingText)))
 		{
 			strcpy(UiTitleBoxTitleText, SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "TimeText", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "TimeText", SettingText, sizeof(SettingText)))
 		{
 			strcpy(UiTimeText, SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "StatusBarColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "StatusBarColor", SettingText, sizeof(SettingText)))
 		{
 			UiStatusBarBgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "StatusBarTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "StatusBarTextColor", SettingText, sizeof(SettingText)))
 		{
 			UiStatusBarFgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "BackdropTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "BackdropTextColor", SettingText, sizeof(SettingText)))
 		{
 			UiBackdropFgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "BackdropColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "BackdropColor", SettingText, sizeof(SettingText)))
 		{
 			UiBackdropBgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "BackdropFillStyle", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "BackdropFillStyle", SettingText, sizeof(SettingText)))
 		{
 			UiBackdropFillStyle = UiTextToFillStyle(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "TitleBoxTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "TitleBoxTextColor", SettingText, sizeof(SettingText)))
 		{
 			UiTitleBoxFgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "TitleBoxColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "TitleBoxColor", SettingText, sizeof(SettingText)))
 		{
 			UiTitleBoxBgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "MessageBoxTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "MessageBoxTextColor", SettingText, sizeof(SettingText)))
 		{
 			UiMessageBoxFgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "MessageBoxColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "MessageBoxColor", SettingText, sizeof(SettingText)))
 		{
 			UiMessageBoxBgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "MenuTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "MenuTextColor", SettingText, sizeof(SettingText)))
 		{
 			UiMenuFgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "MenuColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "MenuColor", SettingText, sizeof(SettingText)))
 		{
 			UiMenuBgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "TextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "TextColor", SettingText, sizeof(SettingText)))
 		{
 			UiTextColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "SelectedTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "SelectedTextColor", SettingText, sizeof(SettingText)))
 		{
 			UiSelectedTextColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "SelectedColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "SelectedColor", SettingText, sizeof(SettingText)))
 		{
 			UiSelectedTextBgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "EditBoxTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "EditBoxTextColor", SettingText, sizeof(SettingText)))
 		{
 			UiEditBoxTextColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "EditBoxColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "EditBoxColor", SettingText, sizeof(SettingText)))
 		{
 			UiEditBoxBgColor = UiTextToColor(SettingText);
 		}
-		if (IniReadSettingByName(SectionId, "SpecialEffects", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "SpecialEffects", SettingText, sizeof(SettingText)))
 		{
 			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
 			{
@@ -171,7 +171,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 				UiUseSpecialEffects = FALSE;
 			}
 		}
-		if (IniReadSettingByName(SectionId, "ShowTime", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "ShowTime", SettingText, sizeof(SettingText)))
 		{
 			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
 			{
@@ -182,7 +182,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 				UiDrawTime = FALSE;
 			}
 		}
-		if (IniReadSettingByName(SectionId, "MinimalUI", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "MinimalUI", SettingText, sizeof(SettingText)))
 		{
 			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
 			{
@@ -193,7 +193,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 				UiMinimal = FALSE;
 			}
 		}
-		if (IniReadSettingByName(SectionId, "MenuBox", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "MenuBox", SettingText, sizeof(SettingText)))
 		{
 			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
 			{
@@ -204,7 +204,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 				UiMenuBox = FALSE;
 			}
 		}
-		if (IniReadSettingByName(SectionId, "CenterMenu", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "CenterMenu", SettingText, sizeof(SettingText)))
 		{
 			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
 			{
@@ -595,7 +595,7 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 	//
 	for (Idx=0; Idx<IniGetNumSectionItems(SectionId); Idx++)
 	{
-		IniReadSettingByNumber(SectionId, Idx, SettingName, 79, SettingValue, 79);
+		IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
 
 		if (_stricmp(SettingName, "MessageBox") == 0)
 		{
@@ -610,7 +610,7 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 				if (MessageBoxText)
 				{
 					// Get the MessageBox text
-					IniReadSettingByNumber(SectionId, Idx, SettingName, 80, MessageBoxText, MessageBoxTextSize);
+					IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), MessageBoxText, MessageBoxTextSize);
 
 					// Fix it up
 					UiEscapeString(MessageBoxText);
