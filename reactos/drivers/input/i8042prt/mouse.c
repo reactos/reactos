@@ -918,7 +918,7 @@ BOOLEAN STDCALL I8042DetectMouse(PDEVICE_EXTENSION DevExt)
 	     ReplyByte < sizeof(ExpectedReply) / sizeof(ExpectedReply[0]) && Ok;
 	     ReplyByte++)
 	{
-		Counter = 200;
+		Counter = 500;
 
 		do {
 			Status = I8042ReadDataWait(DevExt, &Value);
