@@ -64,7 +64,7 @@ static const BYTE digitsToHex[] = {
  */
 SCODE WINAPI ScInitMapiUtil(ULONG ulReserved)
 {
-    FIXME("(0x%08lx)stub!\n", ulReserved);
+    FIXME("(0x%08x)stub!\n", ulReserved);
     if (ulReserved)
         return MAPI_E_INVALID_PARAMETER;
     return S_OK;
@@ -118,7 +118,7 @@ SCODE WINAPI MAPIAllocateBuffer(ULONG cbSize, LPVOID *lppBuffer)
 {
     LPMAPIALLOCBUFFER lpBuff;
 
-    TRACE("(%ld,%p)\n", cbSize, lppBuffer);
+    TRACE("(%d,%p)\n", cbSize, lppBuffer);
 
     if (!lppBuffer)
         return E_INVALIDARG;
@@ -158,7 +158,7 @@ SCODE WINAPI MAPIAllocateMore(ULONG cbSize, LPVOID lpOrig, LPVOID *lppBuffer)
 {
     LPMAPIALLOCBUFFER lpBuff = lpOrig;
 
-    TRACE("(%ld,%p,%p)\n", cbSize, lpOrig, lppBuffer);
+    TRACE("(%d,%p,%p)\n", cbSize, lpOrig, lppBuffer);
 
     if (!lppBuffer || !lpBuff || !--lpBuff)
         return E_INVALIDARG;
@@ -436,7 +436,7 @@ INT WINAPI MNLS_CompareStringW(DWORD dwCp, LPCWSTR lpszLeft, LPCWSTR lpszRight)
 {
     INT ret;
 
-    TRACE("0x%08lx,%s,%s\n", dwCp, debugstr_w(lpszLeft), debugstr_w(lpszRight));
+    TRACE("0x%08x,%s,%s\n", dwCp, debugstr_w(lpszLeft), debugstr_w(lpszRight));
     ret = MNLS_lstrcmpW(lpszLeft, lpszRight);
     return ret < 0 ? CSTR_LESS_THAN : ret ? CSTR_GREATER_THAN : CSTR_EQUAL;
 }
@@ -688,7 +688,7 @@ HRESULT WINAPI OpenStreamOnFile(LPALLOCATEBUFFER lpAlloc, LPFREEBUFFER lpFree,
     DWORD dwMode = STGM_READWRITE, dwAttributes = 0;
     HRESULT hRet;
 
-    TRACE("(%p,%p,0x%08lx,%s,%s,%p)\n", lpAlloc, lpFree, ulFlags,
+    TRACE("(%p,%p,0x%08x,%s,%s,%p)\n", lpAlloc, lpFree, ulFlags,
           debugstr_a((LPSTR)lpszPath), debugstr_a((LPSTR)lpszPrefix), lppStream);
 
     if (lppStream)
@@ -732,7 +732,7 @@ HRESULT WINAPI OpenStreamOnFile(LPALLOCATEBUFFER lpAlloc, LPFREEBUFFER lpFree,
  */
 ULONG WINAPI UlFromSzHex(LPCWSTR lpszHex)
 {
-    LPSTR lpStr = (LPSTR)lpszHex;
+    LPCSTR lpStr = (LPCSTR)lpszHex;
     ULONG ulRet = 0;
 
     TRACE("(%s)\n", debugstr_a(lpStr));
@@ -820,7 +820,7 @@ CMC_return_code WINAPI cmc_query_configuration(
   CMC_buffer reference,
   CMC_extension  *config_extensions)
 {
-	FIXME("stub");
+	FIXME("stub\n");
 	return CMC_E_NOT_SUPPORTED;
 }
 
@@ -851,7 +851,7 @@ BOOL WINAPI FGetComponentPath(LPCSTR component, LPCSTR qualifier, LPSTR dll_path
     BOOL ret = FALSE;
     HMODULE hmsi;
 
-    TRACE("%s %s %p %lu %d\n", component, qualifier, dll_path, dll_path_length, install);
+    TRACE("%s %s %p %u %d\n", component, qualifier, dll_path, dll_path_length, install);
 
     dll_path[0] = 0;
 

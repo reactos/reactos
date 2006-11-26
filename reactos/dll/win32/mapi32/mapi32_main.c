@@ -37,7 +37,7 @@ LONG MAPI_ObjectCount = 0;
  */
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 {
-    TRACE("(%p,%ld,%p)\n", hinstDLL, fdwReason, fImpLoad);
+    TRACE("(%p,%d,%p)\n", hinstDLL, fdwReason, fImpLoad);
 
     switch (fdwReason)
     {
@@ -45,7 +45,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         DisableThreadLibraryCalls(hinstDLL);
         break;
     case DLL_PROCESS_DETACH:
-	TRACE("DLL_PROCESS_DETACH: %ld objects remaining\n", MAPI_ObjectCount);
+	TRACE("DLL_PROCESS_DETACH: %d objects remaining\n", MAPI_ObjectCount);
 	break;
     }
     return TRUE;
@@ -77,7 +77,7 @@ HRESULT WINAPI MAPIInitialize(LPVOID init)
 ULONG WINAPI MAPILogon(ULONG_PTR uiparam, LPSTR profile, LPSTR password,
     FLAGS flags, ULONG reserved, LPLHANDLE session)
 {
-    FIXME("(0x%08lx %s %p 0x%08lx 0x%08lx %p) Stub\n", uiparam,
+    FIXME("(0x%08lx %s %p 0x%08lx 0x%08x %p) Stub\n", uiparam,
           debugstr_a(profile), password, flags, reserved, session);
 
     if (session) *session = 1;
@@ -87,7 +87,7 @@ ULONG WINAPI MAPILogon(ULONG_PTR uiparam, LPSTR profile, LPSTR password,
 ULONG WINAPI MAPILogoff(LHANDLE session, ULONG_PTR uiparam, FLAGS flags,
     ULONG reserved )
 {
-    FIXME("(0x%08lx 0x%08lx 0x%08lx 0x%08lx) Stub\n", session,
+    FIXME("(0x%08lx 0x%08lx 0x%08lx 0x%08x) Stub\n", session,
           uiparam, flags, reserved);
     return SUCCESS_SUCCESS;
 }
@@ -95,7 +95,7 @@ ULONG WINAPI MAPILogoff(LHANDLE session, ULONG_PTR uiparam, FLAGS flags,
 HRESULT WINAPI MAPILogonEx(ULONG_PTR uiparam, LPWSTR profile,
     LPWSTR password, ULONG flags, LPMAPISESSION *session)
 {
-    FIXME("(0x%08lx %s %p 0x%08lx %p) Stub\n", uiparam,
+    FIXME("(0x%08lx %s %p 0x%08x %p) Stub\n", uiparam,
           debugstr_w(profile), password, flags, session);
     return SUCCESS_SUCCESS;
 }

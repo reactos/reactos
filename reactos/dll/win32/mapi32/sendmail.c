@@ -71,7 +71,7 @@ ULONG WINAPI MAPISendMail( LHANDLE session, ULONG_PTR uiparam,
     HRESULT res;
     DWORD size;
 
-    TRACE( "(0x%08lx 0x%08lx %p 0x%08lx 0x%08lx)\n", session, uiparam,
+    TRACE( "(0x%08lx 0x%08lx %p 0x%08lx 0x%08x)\n", session, uiparam,
            message, flags, reserved );
 
     if (!message) return MAPI_E_FAILURE;
@@ -90,22 +90,22 @@ ULONG WINAPI MAPISendMail( LHANDLE session, ULONG_PTR uiparam,
             switch (message->lpRecips[i].ulRecipClass)
             {
             case MAPI_ORIG:
-                TRACE( "From: %s", debugstr_a(address) );
+                TRACE( "From: %s\n", debugstr_a(address) );
                 break;
             case MAPI_TO:
-                TRACE( "To: %s", debugstr_a(address) );
+                TRACE( "To: %s\n", debugstr_a(address) );
                 to_size += lstrlenA( address ) + 1;
                 break;
             case MAPI_CC:
-                TRACE( "Cc: %s", debugstr_a(address) );
+                TRACE( "Cc: %s\n", debugstr_a(address) );
                 cc_size += lstrlenA( address ) + 1;
                 break;
             case MAPI_BCC:
-                TRACE( "Bcc: %s", debugstr_a(address) );
+                TRACE( "Bcc: %s\n", debugstr_a(address) );
                 bcc_size += lstrlenA( address ) + 1;
                 break;
             default:
-                TRACE( "Unknown recipient class: %ld\n",
+                TRACE( "Unknown recipient class: %d\n",
                        message->lpRecips[i].ulRecipClass );
             }
         }
