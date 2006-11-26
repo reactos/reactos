@@ -1,6 +1,7 @@
 <module name="syssetup" type="win32dll" baseaddress="${BASEADDRESS_SYSSETUP}" installbase="system32" installname="syssetup.dll">
 	<importlibrary definition="syssetup.def" />
 	<include base="syssetup">.</include>
+	<include base="userenv">.</include>
 	<define name="__USE_W32API" />
 	<define name="UNICODE" />
 	<define name="_UNICODE" />

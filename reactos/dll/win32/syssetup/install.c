@@ -40,6 +40,8 @@
 #include <samlib/samlib.h>
 #include <syssetup/syssetup.h>
 #include <userenv.h>
+#include "userenv-priv.h"
+
 #include <setupapi.h>
 
 #include <shlobj.h>
