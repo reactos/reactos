@@ -46,6 +46,11 @@ EXTERN(RealEntryPoint)
 
 	.code32
 
+	/* Zero i386BootDrive and i386BootPartition */
+	xorl	%eax,%eax
+	movl	%eax,(_i386BootDrive)
+	movl	%eax,(_i386BootPartition)
+
 	/* Store the boot drive */
 	movb	%dl,(_i386BootDrive)
 
@@ -53,7 +58,6 @@ EXTERN(RealEntryPoint)
 	movb	%dh,(_i386BootPartition)
 
 	/* GO! */
-	xorl	%eax,%eax
 	pushl	%eax
 	call	_BootMain
 
