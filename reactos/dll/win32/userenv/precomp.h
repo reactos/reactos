@@ -9,3 +9,4 @@
 
 #include "internal.h"
 #include "resources.h"
+#include "userenv-priv.h"
