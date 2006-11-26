@@ -22,6 +22,47 @@ typedef INT
     HANDLE hPageQuery
 );
 
+/* DEFINES *******************************************************************/
+
+#define HANDLE_LIST_INC 20
+
+/* TYPES *********************************************************************/
+
+// Based on wmfapi.h and Wine. This is the DC_ATTR for a MetaDC file.
+typedef struct tagMETAFILEDC {
+  PVOID      pvMetaBuffer;
+  HANDLE     hFile;
+  DWORD      Size;
+  PMETAHEADER mf;
+  UINT       handles_size, cur_handles;
+  HGDIOBJ   *handles;
+
+  // more DC object stuff.
+  HGDIOBJ    Pen;
+  HGDIOBJ    Brush;
+  HGDIOBJ    Palette;
+  HGDIOBJ    Font;
+  // Add more later.
+} METAFILEDC,*PMETAFILEDC;
+
+
+typedef struct tagENHMETAFILE {
+  PVOID      pvMetaBuffer;
+  HANDLE     hFile;      /* Handle for disk based MetaFile */
+  DWORD      Size;
+  PENHMETAHEADER emf;
+  UINT       handles_size, cur_handles;
+  HGDIOBJ   *handles;
+  INT        horzres, vertres;
+  INT        horzsize, vertsize;
+  INT        logpixelsx, logpixelsy;
+  INT        bitspixel;
+  INT        textcaps;
+  INT        rastercaps;
+  INT        technology;
+  INT        planes;
+} ENHMETAFILE,*PENHMETAFILE;
+
 /* FUNCTIONS *****************************************************************/
 
 PVOID
@@ -107,3 +148,4 @@ WINAPI
 UserRealizePalette(HDC hDC);
 
 /* EOF */
+
