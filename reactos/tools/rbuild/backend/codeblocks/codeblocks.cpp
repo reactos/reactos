@@ -659,6 +659,13 @@ CBBackend::_generate_cbproj ( const Module& module )
 		string source_file = DosSeparator(source_files[isrcfile]);
 		fprintf ( OUT, "\t\t<Unit filename=\"%s\">\r\n", source_file.c_str() );
 		fprintf ( OUT, "\t\t\t<Option compilerVar=\"%s\" />\r\n", CompilerVar.c_str() );
+
+		string extension = GetExtension ( source_file );
+		if ( extension == ".s" || extension == ".S" )
+			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"gcc -x assembler-with-cpp -c $file -o $link_objects $includes -D__ASM__ $options\" />\r\n" );
+		if ( extension == ".asm" || extension == ".ASM" )		
+			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"nasm -f win32 $file -o $link_objects\" />\r\n" );
+
 		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
 		{
 			const CBConfiguration& cfg = *m_configurations[icfg];
