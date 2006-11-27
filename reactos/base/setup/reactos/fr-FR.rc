@@ -1,7 +1,7 @@
 /* $Id: En.rc 18526 2005-10-17 18:04:11Z cwittich $ */
 // FRENCH translation by G. Maton (mustang9@gmail.com)
 
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 
 /* String Tables */
 STRINGTABLE DISCARDABLE 
