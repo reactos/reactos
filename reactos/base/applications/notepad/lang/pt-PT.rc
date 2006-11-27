@@ -1,10 +1,10 @@
 /*
- *  Notepad (Swedish resources)
+ * Notepad
+ * Portuguese Language Support
  *
- *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
- *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
- *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- *  Fixed by Anders Bergh <anders@anders1.org> 2005
+ * Copyright 1999 Marcel Baur <alves@correionet.com.br>
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2003 Marcelo Duarte
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 ID_ACCEL ACCELERATORS
 {
@@ -41,43 +41,45 @@ ID_ACCEL ACCELERATORS
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Arkiv"
+	POPUP "&Arquivo" 
 	BEGIN
-		MENUITEM "&Ny...",            CMD_NEW
-		MENUITEM "&Öppna",            CMD_OPEN
-		MENUITEM "&Spara",            CMD_SAVE
-		MENUITEM "Spara so&m...",     CMD_SAVE_AS
-		MENUITEM "Skriv &ut...",         CMD_PRINT
-		MENUITEM "Utskrifts&format...",    CMD_PAGE_SETUP
-		MENUITEM "Skrivar&inställningar...", CMD_PRINTER_SETUP
+		MENUITEM "&Novo...",		CMD_NEW
+		MENUITEM "A&brir",		CMD_OPEN
+		MENUITEM "&Salvar",		CMD_SAVE
+		MENUITEM "Salvar &como...",	CMD_SAVE_AS
 		MENUITEM SEPARATOR
-		MENUITEM "&Avsluta",          CMD_EXIT
+		MENUITEM "&Imprimir",		CMD_PRINT
+		MENUITEM "C&onfigurar página...",	CMD_PAGE_SETUP
+		MENUITEM "Configurar i&mpressora...", CMD_PRINTER_SETUP
+		MENUITEM SEPARATOR
+		MENUITEM "Sai&r",		CMD_EXIT
 	END
-	POPUP "&Redigera"
+	POPUP "&Editar"
 	BEGIN
-		MENUITEM "&Ångra\tCtrl+Z",     CMD_UNDO
+		MENUITEM "&Desfazer\tCtrl+Z", CMD_UNDO
 		MENUITEM SEPARATOR
-		MENUITEM "&Klipp ut\tCtrl+X",    CMD_CUT
-		MENUITEM "K&opiera\tCtrl+C",  CMD_COPY
-		MENUITEM "K&listra in\tCtrl+V",       CMD_PASTE
-		MENUITEM "&Ta bort\tDel",     CMD_DELETE
+		MENUITEM "&Recortar\tCtrl+X",	CMD_CUT
+		MENUITEM "&Copiar\tCtrl+C",	CMD_COPY
+		MENUITEM "C&olar\tCtrl+V",	CMD_PASTE
+		MENUITEM "E&xcluir\tDel",	CMD_DELETE
 		MENUITEM SEPARATOR
-		MENUITEM "Sök...",            CMD_SEARCH
-		MENUITEM "&Sök nästa\tF3",    CMD_SEARCH_NEXT
+		MENUITEM "&Localizar...",	CMD_SEARCH
+		MENUITEM "Localizar &próxima\tF3",	CMD_SEARCH_NEXT
 		MENUITEM SEPARATOR
-		MENUITEM "Markera &allt",     CMD_SELECT_ALL
-		MENUITEM "&Tid/datum\tF5",    CMD_TIME_DATE
+		MENUITEM "Selecionar &tudo",	CMD_SELECT_ALL
+		MENUITEM "&Data/Hora\tF5",	CMD_TIME_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "&Automatiskt radbyte",      CMD_WRAP
-	END	
-	POPUP "&Hjälp"
+		MENUITEM "&Quebrar automática de linha",	CMD_WRAP
+		MENUITEM "&Fonte...",          CMD_FONT
+	END
+	POPUP "&Ajuda"
 	BEGIN
-		MENUITEM "&Innehåll",         CMD_HELP_CONTENTS
-		MENUITEM "&Sök...",           CMD_HELP_SEARCH
-		MENUITEM "Anvisningar för hjälpen",    CMD_HELP_ON_HELP
+		MENUITEM "&Conteúdo",		CMD_HELP_CONTENTS
+		MENUITEM "&Procurar...",	CMD_HELP_SEARCH
+		MENUITEM "&Ajuda na ajuda",	CMD_HELP_ON_HELP
 		MENUITEM SEPARATOR
 		MENUITEM "&About"             CMD_ABOUT
-		MENUITEM "Inf&ormation...",         CMD_ABOUT_WINE
+		MENUITEM "&Informações...",	CMD_ABOUT_WINE
 	END
 END
 
@@ -86,27 +88,28 @@ END
 DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Skrivarinställningar"
+CAPTION "Configurar página"
 {
-LTEXT    "&Huvudnot:",  0x140,   10, 07, 40, 15
+LTEXT    "&Cabeçalho:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Fotnot:",  0x142,   10, 24, 40, 15
+LTEXT    "&Rodapé:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
-GROUPBOX "Marginaler:",      0x144,     10, 43,160, 45
-LTEXT    "&Vänsterkant:",        0x145,   20, 55, 30, 10, WS_CHILD
+GROUPBOX "&Margens:",      0x144,     10, 43,160, 45
+LTEXT    "&Esquerda:",        0x145,   20, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Överkant:",         0x148,    20, 73, 30, 10, WS_CHILD
+LTEXT    "&Superior:",         0x148,    20, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Högerkant:",       0x14B, 100, 55, 30, 10, WS_CHILD
+LTEXT    "&Direita:",       0x14B, 100, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Nederkant:",      0x14E,100, 73, 30, 10, WS_CHILD
+LTEXT    "&Inferior:",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
 DEFPUSHBUTTON "OK",         0x151,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "Avbryt",     0x152,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&Hjälp",       0x153,                180, 39, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Cancelar",     0x152,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Ajuda",       0x153,                180, 39, 40, 15, WS_TABSTOP
 }
+
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
@@ -127,36 +130,35 @@ STRINGTABLE DISCARDABLE
 BEGIN
   STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
-
 STRINGTABLE DISCARDABLE
 {
-STRING_PAGESETUP_HEADERVALUE,   "&n"
-STRING_PAGESETUP_FOOTERVALUE,   "Sida &s"
-STRING_PAGESETUP_LEFTVALUE,             "20 mm"
-STRING_PAGESETUP_RIGHTVALUE,    "20 mm"
-STRING_PAGESETUP_TOPVALUE,              "25 mm"
-STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"
+STRING_PAGESETUP_HEADERVALUE,	"&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,	"Página &s"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,		"20 mm"     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,	"20 mm"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,		"25 mm"     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,	"25 mm"     /* FIXME */
 
-STRING_NOTEPAD,                                 "Anteckningar"
-STRING_ERROR,                                   "FEL"
-STRING_WARNING,                                 "VARNING"
-STRING_INFO,                                    "Information"
+STRING_NOTEPAD,					"Notepad"
+STRING_ERROR,					"ERRO"
+STRING_WARNING,					"AVISO"
+STRING_INFO,					"Informação"
 
-STRING_UNTITLED,                                "(namnlös)"
+STRING_UNTITLED,				"(sem nome)"
 
-STRING_ALL_FILES,                               "Alla filer (*.*)"
-STRING_TEXT_FILES_TXT,                  "Textfiler (*.txt)"
+STRING_ALL_FILES,				"Todos os arquivos (*.*)"
+STRING_TEXT_FILES_TXT,			"Arquivos texto (*.txt)"
 
-STRING_TOOLARGE,                                "Filen '%s' är för stor för Anteckningar.\n \
-Använd en annan editor."
-STRING_NOTEXT,                                  "Du skrev inte in någon text. \
-\nSkriv något och försök sedan igen."
-STRING_DOESNOTEXIST,                            "Filen '%s'\nexisterar inte.\n\n \
-Vill du skapa en ny fil?"
-STRING_NOTSAVED,                                "Filen '%s'\nhar ändrats.\n\n \
-Vill du spara ändringarna?"
-STRING_NOTFOUND,                                        "'%s' hittades inte."
-STRING_OUT_OF_MEMORY,			"Det finns inte tillräckligt med minne för att kunna slutföra \
-den här åtgärden. \nAvsluta ett eller flera program för att frigöra mer minne."
+STRING_TOOLARGE,				"Arquivo '%s' é muito longo para o notepad.\n \
+Por favor use um editor diferente."
+STRING_NOTEXT,					"Você não digitou nenhum texto. \
+\nPor favor digite alguma coisa e tente novamente"
+STRING_DOESNOTEXIST,				"Arquivo '%s'\nnão existe\n\n \
+Você deseja criar um novo arquivo?"
+STRING_NOTSAVED,				"Arquivo '%s'\nfoi modificado\n\n \
+Gostaria de salvar as alteraçÕes?"
+STRING_NOTFOUND,					"'%s' não pode ser encontrado."
+STRING_OUT_OF_MEMORY,			"Não há memória suficiente para completar essa \
+tarefa. \nFeche uma ou mais aplicações para aumentar a quantidade de memória livre."
 
 }
