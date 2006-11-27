@@ -4,7 +4,7 @@
  * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
  */
 
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 STRINGTABLE DISCARDABLE
 {
 IDS_DllNotLoaded,   "LoadLibrary mislykket å laste '%s'"

@@ -4,7 +4,7 @@
  * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
  */
 
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 STRINGTABLE DISCARDABLE
 {
 IDS_DllNotLoaded,   "LoadLibrary a échoué lors du chargement de '%s'"
