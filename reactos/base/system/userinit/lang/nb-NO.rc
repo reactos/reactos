@@ -3,10 +3,10 @@
  * By Magnus Olsen  2005
  */
 
-LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 STRINGTABLE DISCARDABLE
 {
 
-STRING_USERINIT_FAIL, "Userinit falló al empezar la capa(shell)!\n"
+STRING_USERINIT_FAIL, "Userinit mislykket å starte skall!\n"
 
 }
