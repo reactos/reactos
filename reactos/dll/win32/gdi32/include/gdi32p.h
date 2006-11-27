@@ -108,6 +108,9 @@ GdiGetHandleUserData(
     PVOID *UserData
 );
 
+PLDC
+GdiGetLDC(HDC hDC);
+
 BOOL
 WINAPI
 CalculateColorTableSize(
