@@ -1,5 +1,5 @@
 /*
- * FILE:            hal/halx86/generic/irql.S
+ * FILE:            hal/halx86/generic/irq.S
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         Software, System and Hardware IRQ Management
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
@@ -77,6 +77,8 @@ HalpSysIntHandler:
     .long IRQ15                         /* IRQ 15 */
 .rept 20
     .long GenericIRQ                    /* IRQ 16-35 */
+.rept 172
+    .long InvalidIRQ                    /* IRQ 36-207 */
 .endr
 
 SoftIntByteTable:
@@ -140,7 +142,6 @@ InitLoop:
     jnz InitLoop
 
     /* Restore interrupts and return */
-    or dword ptr [esp], EFLAGS_INTERRUPT_MASK
     popf
     pop esi
     ret
@@ -161,7 +162,7 @@ _@HalRequestSoftwareInterrupt@4:
 
     /* Set IRR and get IRQL */
     or [fs:KPCR_IRR], eax
-    mov cl, [fs:KPCR_IRQL]
+    mov ecx, [fs:KPCR_IRQL]
 
     /* Get software IRR mask */
     mov eax, [fs:KPCR_IRR]
@@ -265,7 +266,7 @@ AfterMask:
     and [fs:KPCR_IDR], eax
 
     /* Get the current IRQL and mask the IRQs in the PIC */
-    movzx eax, byte ptr [fs:KPCR_IRQL]
+    mov eax, [fs:KPCR_IRQL]
     mov eax, KiI8259MaskTable[eax*4]
     or eax, [fs:KPCR_IDR]
     out 0x21, al
@@ -280,6 +281,7 @@ AfterMask:
 Invalid:
 
     /* Fail, invalid IRQ */
+    int 3
     xor eax, eax
     ret 12
 .endfunc
@@ -297,6 +299,7 @@ IRQ15:
     /* This is IRQ 15, check if it's spurious */
     mov al, 0xB
     out 0xA0, al
+    jmp $+2
     in al, 0xA0
     test al, 0x80
     jnz GenericIRQ
@@ -311,6 +314,7 @@ IRQ7:
     /* This is IRQ 7, check if it's spurious */
     mov al, 0xB
     out 0x20, al
+    jmp $+2
     in al, 0x20
     test al, 0x80
     jnz GenericIRQ
@@ -322,12 +326,12 @@ IRQ7:
 GenericIRQ:
     /* Return the current IRQL */
     mov eax, [esp+12]
-    movzx ecx, byte ptr [fs:KPCR_IRQL]
+    mov ecx, [fs:KPCR_IRQL]
     mov [eax], cl
 
     /* Set the new IRQL */
     movzx eax, byte ptr [esp+4]
-    mov [fs:KPCR_IRQL], al
+    mov [fs:KPCR_IRQL], eax
 
     /* Set IRQ mask in the PIC */
     mov eax, KiI8259MaskTable[eax*4]
@@ -337,7 +341,7 @@ GenericIRQ:
     out 0xA1, al
 
     /* Check to which PIC the EOI was sent */
-    mov eax, edx
+    mov eax, ebx
     cmp eax, 8
     jnb Pic1
 
@@ -359,6 +363,11 @@ DoneBegin:
     sti
     mov eax, 1
     ret 12
+    
+InvalidIRQ:
+    /* Dismiss it */
+    mov eax, 0
+    ret 12
 .endfunc
 
 .globl _HalEndSystemInterrupt@8
@@ -367,7 +376,7 @@ _HalEndSystemInterrupt@8:
 
     /* Get the IRQL and check if it's a software interrupt */
     movzx ecx, byte ptr [esp+4]
-    cmp byte ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
+    cmp dword ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
     jbe SkipMask2
 
     /* Hardware interrupt, mask the appropriate IRQs in the PIC */
@@ -380,7 +389,7 @@ _HalEndSystemInterrupt@8:
 SkipMask2:
 
     /* Set IRQL and check if there are pending software interrupts */
-    mov [fs:KPCR_IRQL], cl
+    mov [fs:KPCR_IRQL], ecx
     mov eax, [fs:KPCR_IRR]
     mov al, SoftIntByteTable[eax]
     cmp al, cl
@@ -404,7 +413,7 @@ _@KfLowerIrql@4:
 
     /* Disable interrupts and check if IRQL is below DISPATCH_LEVEL */
     movzx ecx, cl
-    cmp byte ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
+    cmp dword ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
     cli
     jbe SkipMask
 
@@ -418,16 +427,18 @@ _@KfLowerIrql@4:
 SkipMask:
 
     /* Set the new IRQL and check if there's a pending software interrupt */
-    mov [fs:KPCR_IRQL], cl
+    mov [fs:KPCR_IRQL], ecx
     mov eax, [fs:KPCR_IRR]
     mov al, SoftIntByteTable[eax]
     cmp al, cl
-    jbe DoCall3
+    ja DoCall3
 
+    /* Restore interrupts and return */
+    popf
+    ret
+DoCall3:
     /* There is, call it */
     call SoftIntHandlerTable[eax*4]
-
-DoCall3:
 
     /* Restore interrupts and return */
     popf
@@ -440,10 +451,9 @@ _@KfRaiseIrql@4:
 @KfRaiseIrql@4:
 
     /* Get the IRQL and check if it's Software level only */
-    xor eax, eax
-    mov al, [fs:KPCR_IRQL]
+    mov eax, [fs:KPCR_IRQL]
     movzx ecx, cl
-    cmp cl, DISPATCH_LEVEL
+    cmp ecx, DISPATCH_LEVEL
     jbe SetIrql
 
     /* Save the current IRQL */
@@ -471,7 +481,7 @@ _@KfRaiseIrql@4:
 SetIrql:
 
     /* Set the IRQL and return */
-    mov [fs:KPCR_IRQL], cl
+    mov [fs:KPCR_IRQL], ecx
     ret
 .endfunc
 
@@ -480,7 +490,7 @@ SetIrql:
 _KeGetCurrentIrql@0:
 
     /* Return the IRQL */
-    movzx eax, word ptr [fs:KPCR_IRQL]
+    mov eax, [fs:KPCR_IRQL]
     ret
 .endfunc
 
@@ -489,11 +499,10 @@ _KeGetCurrentIrql@0:
 _KeRaiseIrqlToDpcLevel@0:
 
     /* Get the current IRQL */
-    xor eax, eax
-    mov al, [fs:KPCR_IRQL]
+    mov eax, [fs:KPCR_IRQL]
 
     /* Set DISPATCH_LEVEL */
-    mov byte ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
+    mov dword ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
     ret
 .endfunc
 
@@ -513,8 +522,8 @@ _KeRaiseIrqlToSynchLevel@0:
     out 0xA1, al
 
     /* Return the old IRQL, enable interrupts and set to DISPATCH */
-    mov al, [fs:KPCR_IRQL]
-    mov byte ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
+    mov eax, [fs:KPCR_IRQL]
+    mov dword ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
     popf
     ret
 .endfunc
@@ -539,7 +548,7 @@ _HalpApcInterrupt2ndEntry:
 
     /* Save current IRQL and set to APC level */
     push [fs:KPCR_IRQL]
-    mov byte ptr [fs:KPCR_IRQL], APC_LEVEL
+    mov dword ptr [fs:KPCR_IRQL], APC_LEVEL
     and dword ptr [fs:KPCR_IRR], ~(1 << APC_LEVEL)
 
     /* Enable interrupts and check if we came from User/V86 mode */
@@ -586,7 +595,7 @@ _HalpDispatchInterrupt2ndEntry:
 
     /* Save current IRQL and set to DPC level */
     push [fs:KPCR_IRQL]
-    mov byte ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
+    mov dword ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
     and dword ptr [fs:KPCR_IRR], ~(1 << DISPATCH_LEVEL)
 
     /* Enable interrupts and let the kernel handle this */
@@ -605,7 +614,7 @@ _HalpEndSoftwareInterrupt@4:
 
     /* Get the IRQL and check if we're in the software region */
     movzx ecx, byte ptr [esp+4]
-    cmp byte ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
+    cmp dword ptr [fs:KPCR_IRQL], DISPATCH_LEVEL
     jbe SoftwareInt
 
     /* Set the right mask in the PIC for the hardware IRQ */
@@ -617,7 +626,7 @@ _HalpEndSoftwareInterrupt@4:
 
 SoftwareInt:
     /* Check if there are pending software interrupts */
-    mov [fs:KPCR_IRQL], cl
+    mov [fs:KPCR_IRQL], ecx
     mov eax, [fs:KPCR_IRR]
     mov al, SoftIntByteTable[eax]
     cmp al, cl
