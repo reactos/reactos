@@ -1,23 +1,25 @@
-LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+/* $Id$ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH_MODERN
 
 /* String Tables */
 
 /* Default settings */
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_APPTITLE            "ReactOS - Welkom"
+    IDS_APPTITLE            "ReactOS - Bienvenido"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
-    IDS_DEFAULTTOPICDESC    "Welkom bij het React Operation System.\n\nKlik links op een onderwerp."
-//    IDS_CHECKTEXT           "Gaat terug naar dit scherm"
-//    IDS_CLOSETEXT           "Afsluiten"
+    IDS_DEFAULTTOPICDESC    "Bienvenido al Sistema Operativo React.\n\nHaz Click en una opcion a la izquierda."
+//    IDS_CHECKTEXT           "Mostrar este dialogo otra vez"
+//    IDS_CLOSETEXT           "Salir"
 END
 
 /* Topic buttons */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICBUTTON0        "Installeer ReactOS"
-    IDS_TOPICBUTTON1        "Deze CD Verkennen"
-    IDS_TOPICBUTTON2        "Afsluiten"
+    IDS_TOPICBUTTON0        "Instalar ReactOS"
+    IDS_TOPICBUTTON1        "Explorar este CD"
+    IDS_TOPICBUTTON2        "Salir"
 //    IDS_TOPICBUTTON3        "Empty Topic 3"
 //    IDS_TOPICBUTTON4        "Empty Topic 4"
 //    IDS_TOPICBUTTON5        "Empty Topic 5"
@@ -30,9 +32,9 @@ END
 /* Topic titles */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICTITLE0         "Installeer ReactOS"
-    IDS_TOPICTITLE1         "Deze CD Verkennen"
-    IDS_TOPICTITLE2         "Afsluiten"
+    IDS_TOPICTITLE0         "Instalar ReactOS"
+    IDS_TOPICTITLE1         "Explorar este CD"
+    IDS_TOPICTITLE2         "Salir"
 //    IDS_TOPICTITLE3         "Empty Topic Title 3"
 //    IDS_TOPICTITLE4         "Empty Topic Title 4"
 //    IDS_TOPICTITLE5         "Empty Topic Title 5"
@@ -45,9 +47,9 @@ END
 /* Topic descriptions */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICDESC0          "Maak een nieuwe ReactOS installatie of upgrade een bestaande installatie."
-    IDS_TOPICDESC1          "Deze CD Verkennen."
-    IDS_TOPICDESC2          "Klik om dit programma af te sluiten."
+    IDS_TOPICDESC0          "Crear una nueva instalacion de ReactOS en su PC o actualizar una instalacion existente."
+    IDS_TOPICDESC1          "Explorar este CD."
+    IDS_TOPICDESC2          "Haz Click para salir de esta aplicacion."
 //    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
 //    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
 //    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."
@@ -58,3 +60,4 @@ BEGIN
 END
 
 /* EOF */
+
