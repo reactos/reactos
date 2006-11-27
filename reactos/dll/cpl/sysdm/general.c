@@ -110,6 +110,46 @@ SetRegTextData(HWND hwnd,
     }
 }
 
+static VOID
+SetProcName(HWND hwnd,
+               HKEY hKey,
+               LPTSTR Value,
+               UINT uID)
+{
+    LPTSTR lpBuf = NULL;
+    DWORD BufSize = 0;
+    DWORD Type;
+
+    if (RegQueryValueEx(hKey,
+                        Value,
+                        NULL,
+                        &Type,
+                        NULL,
+                        &BufSize) == ERROR_SUCCESS)
+    {
+        lpBuf = HeapAlloc(GetProcessHeap(),
+                          0,
+                          BufSize);
+        if (!lpBuf) return;
+
+        if (RegQueryValueEx(hKey,
+                            Value,
+                            NULL,
+                            &Type,
+                            (PBYTE)lpBuf,
+                            &BufSize) == ERROR_SUCCESS)
+        {
+	    SetDlgItemText(hwnd,
+                           uID,
+                           lpBuf + _tcsspn(lpBuf, _T(" ")));
+        }
+
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpBuf);
+    }
+}
+
 static  VOID
 SetProcSpeed(HWND hwnd,
              HKEY hKey,
@@ -171,10 +211,10 @@ GetSystemInformation(HWND hwnd)
                        _T("VendorIdentifier"), 
                        IDC_PROCESSORMANUFACTURER);
 
-        SetRegTextData(hwnd, 
-                       hKey, 
-                       _T("ProcessorNameString"), 
-                       IDC_PROCESSOR);
+        SetProcName(hwnd, 
+                    hKey, 
+                    _T("ProcessorNameString"), 
+                    IDC_PROCESSOR);
 
         SetProcSpeed(hwnd, 
                      hKey, 
@@ -321,4 +361,5 @@ GeneralPageProc(HWND hwndDlg,
 
     return FALSE;
 }
+
 
