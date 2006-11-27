@@ -50,10 +50,10 @@ BEGIN
     MENUITEM "Brightness...",       ID_BRIGHTNESS
     MENUITEM "Contrast...",         -1, GRAYED
     MENUITEM "Hue/Saturation...",   -1, GRAYED
-    POPUP "Colour"
+    POPUP "Color"
     BEGIN
       MENUITEM "Black and White"    ID_BLACKANDWHITE
-      MENUITEM "Invert Colours"     ID_INVERTCOLORS
+      MENUITEM "Invert Colors"      ID_INVERTCOLORS
     END
     MENUITEM SEPARATOR
     MENUITEM "Blur",                -1, GRAYED
