@@ -2,6 +2,7 @@
  *  FreeLoader
  *
  *  Copyright (C) 2003  Eric Kohl
+ *  Copyright (C) 2006  Colin Finck <mail@colinfinck.de>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -106,7 +107,9 @@ DetectCPU(FRLDRHKEY CpuKey,
 	  FRLDRHKEY FpuKey)
 {
   WCHAR VendorIdentifier[13];
+  WCHAR ProcessorNameString[49];
   CHAR tmpVendorIdentifier[13];
+  CHAR tmpProcessorNameString[49];
   WCHAR Identifier[64];
   ULONG FeatureSet;
   FRLDRHKEY CpuInstKey;
@@ -115,6 +118,7 @@ DetectCPU(FRLDRHKEY CpuKey,
   ULONG ebx = 0;
   ULONG ecx = 0;
   ULONG edx = 0;
+  ULONG i;
   ULONG *Ptr;
   LONG Error;
   BOOLEAN SupportTSC = FALSE;
@@ -167,6 +171,44 @@ DetectCPU(FRLDRHKEY CpuKey,
       FeatureSet = edx;
       if (((eax >> 8) & 0x0F) >= 5)
         SupportTSC = TRUE;
+
+      /* Check if Extended CPUID information is supported */
+      GetCpuid(0x80000000, &eax, &ebx, &ecx, &edx);
+
+      if(eax >= 0x80000004)
+      {
+        /* Get Processor Name String */
+        tmpProcessorNameString[48] = 0;
+        Ptr = (ULONG*)&tmpProcessorNameString[0];
+
+        for (i = 0x80000002; i <= 0x80000004; i++)
+        {
+          GetCpuid(i, &eax, &ebx, &ecx, &edx);
+          *Ptr = eax;
+          Ptr++;
+          *Ptr = ebx;
+          Ptr++;
+          *Ptr = ecx;
+          Ptr++;
+          *Ptr = edx;
+          Ptr++;
+        }
+
+        swprintf(ProcessorNameString, L"%S", tmpProcessorNameString);
+
+
+        /* Set 'ProcessorNameString' value (CPU only) */
+        DbgPrint((DPRINT_HWDETECT, "Processor Name String: %S\n", ProcessorNameString));
+
+        Error = RegSetValue(CpuInstKey,
+		            L"ProcessorNameString",
+		            REG_SZ,
+		            (PCHAR)ProcessorNameString,
+		            (wcslen(ProcessorNameString) + 1) * sizeof(WCHAR));
+		    
+        if (Error != ERROR_SUCCESS)
+          DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+      }
     }
   else
     {
@@ -205,7 +247,7 @@ DetectCPU(FRLDRHKEY CpuKey,
 		      L"Identifier",
 		      REG_SZ,
 		      (PCHAR)Identifier,
-		      (wcslen(Identifier) + 1)* sizeof(WCHAR));
+		      (wcslen(Identifier) + 1) * sizeof(WCHAR));
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
@@ -261,7 +303,9 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
 		FRLDRHKEY FpuKey,
 		PMP_PROCESSOR_ENTRY CpuEntry)
 {
+  WCHAR ProcessorNameString[49];
   WCHAR VendorIdentifier[13];
+  CHAR tmpProcessorNameString[49];
   CHAR tmpVendorIdentifier[13];
   WCHAR Identifier[64];
   WCHAR Buffer[8];
@@ -272,6 +316,7 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
   ULONG ebx = 0;
   ULONG ecx = 0;
   ULONG edx = 0;
+  ULONG i;
   ULONG *Ptr;
   LONG Error;
   ULONG CpuSpeed;
@@ -319,6 +364,43 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
 
   /* Get FeatureSet */
   FeatureSet = CpuEntry->FeatureFlags;
+
+  /* Check if Extended CPUID information is supported */
+  GetCpuid(0x80000000, &eax, &ebx, &ecx, &edx);
+
+  if(eax >= 0x80000004)
+  {
+    /* Get 'ProcessorNameString' */
+    tmpProcessorNameString[48] = 0;
+    Ptr = (ULONG*)&tmpProcessorNameString[0];
+
+    for (i = 0x80000002; i <= 0x80000004; i++)
+    {
+      GetCpuid(i, &eax, &ebx, &ecx, &edx);
+      *Ptr = eax;
+      Ptr++;
+      *Ptr = ebx;
+      Ptr++;
+      *Ptr = ecx;
+      Ptr++;
+      *Ptr = edx;
+      Ptr++;
+    }
+
+    swprintf(ProcessorNameString, L"%S", tmpProcessorNameString);
+
+
+    /* Set 'ProcessorNameString' value (CPU only) */
+    DbgPrint((DPRINT_HWDETECT, "Processor Name String: %S\n", ProcessorNameString));
+
+    Error = RegSetValue(CpuInstKey,
+                        L"ProcessorNameString",
+	                      REG_SZ,
+		                    (PCHAR)ProcessorNameString,
+		                    (wcslen(ProcessorNameString) + 1) * sizeof(WCHAR));
+    if (Error != ERROR_SUCCESS)
+      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+  }
 
   /* Set 'Configuration Data' value (CPU and FPU) */
   SetComponentInformation(CpuInstKey,
