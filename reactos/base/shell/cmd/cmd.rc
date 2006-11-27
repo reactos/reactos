@@ -8,15 +8,15 @@
 #define REACTOS_STR_LEGAL_COPYRIGHT     "Copyright (C) 1998-2006 Eric Kohl and others\0"
 
 #include <reactos/version.rc>
-#include "En.rc"
-#include "Fr.rc"
-#include "De.rc"
-#include "Es.rc"
-#include "Ru.rc"
-#include "Ja.rc"
-#include "Hu.rc"
-#include "No.rc"
-#include "Uk.rc"
+#include "en-US.rc"
+#include "fr-FR.rc"
+#include "de-DE.rc"
+#include "es-ES.rc"
+#include "ru-RU.rc"
+#include "ja-JP.rc"
+#include "hu-HU.rc"
+#include "nb-NO.rc"
+#include "uk-UA.rc"
 
 STRINGTABLE DISCARDABLE
 {
