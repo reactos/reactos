@@ -4,8 +4,8 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"format.exe\0"
 #include <reactos/version.rc>
 
-#include "En.rc"
-#include "De.rc"
-#include "Fr.rc"
-#include "Hu.rc"
-#include "No.rc"
+#include "en-US.rc"
+#include "de-DE.rc"
+#include "fr-FR.rc"
+#include "hu-HU.rc"
+#include "nb-NO.rc"
