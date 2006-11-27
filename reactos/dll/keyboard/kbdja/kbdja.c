@@ -63,7 +63,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* Third letters row */
   'Z',          'X',          'C',          'V',
   'B',          'N',          'M',          VK_OEM_COMMA,
-  VK_OEM_PERIOD,VK_OEM_2,VK_OEM_5,    VK_RSHIFT,
+  VK_OEM_PERIOD,VK_OEM_2,/*VK_OEM_5,*/    VK_RSHIFT,
   /* - 37 - */
   /* Bottom Row */
   VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
@@ -368,4 +368,5 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 PKBDTABLES STDCALL KbdLayerDescriptor() {
   return &keyboard_layout_table;
 }
+
 
