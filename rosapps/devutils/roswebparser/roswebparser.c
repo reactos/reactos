@@ -1167,7 +1167,7 @@ void ParserMenu(unsigned char *text, long *pos, unsigned char *buf, long buf_siz
 			  trim(output_resid);
 			  if (strcmp(output_resid,"SEPARATOR")==0)
 			  {
-				 sprintf(output_format,"%s<obj type=\"MENUSEPARATOR\"></obj>\n",output_format);   
+				 sprintf(output_format,"%s<obj type=\"MENUITEMSEPERATOR\"></obj>\n",output_format);   
 				 *output_resid='\0';
 			  }
 			  else
@@ -1620,12 +1620,23 @@ void DialogCMDBuild1(unsigned char *output_resid, unsigned char *output_format, 
 	 output_format[size]='\0';
 	 foundPos=0;  
      find_str(' ',extra,&foundPos);
-  }
-  
-  if (*output_resid!='\0')
-      sprintf(output_format,"%s\"><![CDATA[%s]]></obj>\n",output_format,output_resid);   
+
+    if (*output_resid!='\0')
+    {
+        sprintf(output_format,"%s\"><![CDATA[%s]]></obj>\n",output_format,output_resid);   
+    }
+    else
+    {
+	   sprintf(output_format,"%s\"></obj>\n",output_format);   
+    }
+  } 
   else
-	  sprintf(output_format,"%s\"></obj>\n",output_format);   
+  {
+    if (*output_resid!='\0')
+        sprintf(output_format,"%s\" style=\"\"><![CDATA[%s]]></obj>\n",output_format,output_resid);   
+    else
+	    sprintf(output_format,"%s\" style=\"\"></obj>\n",output_format);   
+  }
 
   *output_resid='\0';
 }
