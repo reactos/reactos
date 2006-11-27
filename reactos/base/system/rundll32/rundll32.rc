@@ -8,6 +8,7 @@
 
 #include "En.rc"
 #include "De.rc"
+#include "Fr.rc"
 #include "Hu.rc"
 #include "Ru.rc"
 #include "Gr.rc"
