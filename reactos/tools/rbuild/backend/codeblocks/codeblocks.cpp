@@ -496,13 +496,13 @@ CBBackend::_generate_cbproj ( const Module& module )
 		else if ( dll )		
 			fprintf ( OUT, "\t\t\t\t<Option type=\"3\" />\r\n" );
 		else if ( sys )
-			fprintf ( OUT, "\t\t\t\t<Option type=\"4\" />\r\n" );
+			fprintf ( OUT, "\t\t\t\t<Option type=\"5\" />\r\n" );
 		else if ( exe )
 		{
 			if ( module.type == Kernel )
-				fprintf ( OUT, "\t\t\t\t<Option type=\"4\" />\r\n" );
+				fprintf ( OUT, "\t\t\t\t<Option type=\"5\" />\r\n" );
 			else if ( module.type == NativeCUI )
-				fprintf ( OUT, "\t\t\t\t<Option type=\"4\" />\r\n" );
+				fprintf ( OUT, "\t\t\t\t<Option type=\"5\" />\r\n" );
 			else if ( module.type == Win32CUI || module.type == Win32GUI || module.type == Win32SCR)
 			{
 				if ( console )
@@ -515,11 +515,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t\t<Option compiler=\"gcc\" />\r\n" );
 		if ( module_type == ".cpl" )
 		{
-			if ( configuration.UseConfigurationInPath )
-				fprintf ( OUT, "\t\t\t\t<Option parameters=\"shell32,Control_RunDLL &quot;%s\\%s%s\\%s%s&quot;,@\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), cfg.name.c_str(), module.name.c_str(), module_type.c_str() );
-			else
-				fprintf ( OUT, "\t\t\t\t<Option parameters=\"shell32,Control_RunDLL &quot;%s\\%s\\%s%s&quot;,@\" />\r\n",  outdir.c_str (), module.GetBasePath ().c_str (), module.name.c_str(), module_type.c_str() );
-
+			fprintf ( OUT, "\t\t\t\t<Option parameters=\"shell32,Control_RunDLL &quot;$exe_output&quot;,@\" />\r\n" );
 			fprintf ( OUT, "\t\t\t\t<Option host_application=\"rundll32.exe\" />\r\n" );
 		}
 		fprintf ( OUT, "\t\t\t\t<Compiler>\r\n" );
@@ -612,19 +608,24 @@ CBBackend::_generate_cbproj ( const Module& module )
 		}
 		fprintf ( OUT, "\t\t\t\t</Linker>\r\n" );
 
+		fprintf ( OUT, "\t\t\t\t<ExtraCommands>\r\n" );
+
+		if ( module.type == StaticLibrary && module.importLibrary )
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib &quot;$(TARGET_OUTPUT_DIR)lib$(TARGET_OUTPUT_BASENAME).a&quot; %s -U\" />\r\n", module.importLibrary->dllname.c_str (), module.importLibrary->definition.c_str(), module.mangledSymbols ? "" : "--kill-at" );
+
 		if ( dll )
 		{
-			fprintf ( OUT, "\t\t\t\t<ExtraCommands>\r\n" );
-			fprintf ( OUT, "\t\t\t\t\t<Add before=\"dlltool --dllname %s%s --def %s --output-exp %s.temp.exp --kill-at\" />\r\n", module.name.c_str(), module_type.c_str(), module.importLibrary->definition.c_str(), module.name.c_str() );
+			
+			fprintf ( OUT, "\t\t\t\t\t<Add before=\"dlltool --dllname %s --def %s --output-exp %s.temp.exp %s\" />\r\n", module.importLibrary->dllname.c_str (), module.importLibrary->definition.c_str(), module.name.c_str(), module.mangledSymbols ? "" : "--kill-at" );
 #ifdef WIN32
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"cmd /c del %s.temp.exp 2&gt;NUL\" />\r\n", module.name.c_str() );
 #else
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"rm %s.temp.exp 2&gt;/dev/null\" />\r\n", module.name.c_str() );
 #endif
 			fprintf ( OUT, "\t\t\t\t\t<Mode after=\"always\" />\r\n" );
-
-			fprintf ( OUT, "\t\t\t\t</ExtraCommands>\r\n" );
 		}
+
+		fprintf ( OUT, "\t\t\t\t</ExtraCommands>\r\n" );
 
 		fprintf ( OUT, "\t\t\t</Target>\r\n" );
 
