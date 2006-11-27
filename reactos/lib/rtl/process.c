@@ -195,6 +195,7 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
     HANDLE hSection;
     PROCESS_BASIC_INFORMATION ProcessBasicInfo;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING DebugString = RTL_CONSTANT_STRING(L"\\WindowsSS");;
     DPRINT("RtlCreateUserProcess: %wZ\n", ImageFileName);
 
     /* Map and Load the File */
@@ -227,12 +228,7 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
     if ((RtlGetNtGlobalFlags() & FLG_ENABLE_CSRDEBUG) &&
         (wcsstr(ImageFileName->Buffer, L"csrss")))
     {
-        UNICODE_STRING DebugString = RTL_CONSTANT_STRING(L"\\WindowsSS");
-        InitializeObjectAttributes(&ObjectAttributes, 
-                                   &DebugString, 
-                                   0, 
-                                   NULL,
-                                   ProcessSecurityDescriptor);
+        ObjectAttributes.ObjectName = &DebugString;
     }
 
     /* Create Kernel Process Object */
