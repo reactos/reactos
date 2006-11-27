@@ -59,15 +59,15 @@ END
 
 3 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "#include ""En.rc""\r\n"
-    "#include ""Es.rc""\r\n"
-    "#include ""Fr.rc""\r\n"
-    "#include ""Sv.rc""\r\n"
-    "#include ""Hu.rc""\r\n"
-    "#include ""Ro.rc""\r\n"
-    "#include ""Nl.rc""\r\n"  
-    "#include ""No.rc""\r\n"    
-    "#include ""Ja.rc""\0"
+    "#include ""en-US.rc""\r\n"
+    "#include ""es-ES.rc""\r\n"
+    "#include ""fr-FR.rc""\r\n"
+    "#include ""sv-SE.rc""\r\n"
+    "#include ""hu-HU.rc""\r\n"
+    "#include ""ro-RO.rc""\r\n"
+    "#include ""nl-NL.rc""\r\n"
+    "#include ""nb-NO.rc""\r\n"
+    "#include ""ja-JP.rc""\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -96,15 +96,15 @@ IDI_IBROWSER            ICON    DISCARDABLE     "res/ibrowser.ico"
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-#include "En.rc"
-#include "Es.rc"
-#include "Fr.rc"
-#include "Sv.rc"
-#include "Hu.rc"
-#include "Ro.rc"
-#include "Nl.rc"
-#include "Ja.rc"
-#include "No.rc"
+#include "en-US.rc"
+#include "es-ES.rc"
+#include "fr-FR.rc"
+#include "sv-SE.rc"
+#include "hu-HU.rc"
+#include "ro-RO.rc"
+#include "nl-NL.rc"
+#include "ja-JP.rc"
+#include "nb-NO.rc"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

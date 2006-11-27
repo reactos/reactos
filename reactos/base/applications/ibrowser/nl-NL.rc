@@ -39,7 +39,7 @@ END
 3 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "#ifndef _ROS_\r\n"
-    "LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_NO\r\n"
+    "LANGUAGE LANG_DUTCH, SUBLANG_DUTCH\r\n"
     "STRINGTABLE DISCARDABLE \r\n"
     "BEGIN\r\n"
     "#ifdef UNICODE\r\n"
@@ -59,11 +59,11 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Norwegian (N.O.) resources
+// Dutch resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
 #pragma code_page(1252)
 #endif //_WIN32
 
@@ -74,25 +74,25 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
 BEGIN
-    POPUP "&Fil"
+    POPUP "&Bestand"
     BEGIN
-        MENUITEM "&Åpne",                       ID_FILE_OPEN
-        MENUITEM "A&vslutt",                       ID_FILE_EXIT
+        MENUITEM "&Openen",                      ID_FILE_OPEN
+        MENUITEM "&Afsluiten",                   ID_FILE_EXIT
     END
-    POPUP "&Vis"
+    POPUP "&Beeld"
     BEGIN
-        MENUITEM "&Verktøylinje",                    ID_VIEW_TOOL_BAR
-        MENUITEM "S&idelinje",                   ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "&Statuslinje",                 ID_VIEW_STATUSBAR
+        MENUITEM "&Werkbalk",                       ID_VIEW_TOOL_BAR
+        MENUITEM "&ZijBalk",                        ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Statusbalk",                     ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Oppdater\tF5",                ID_REFRESH
-        MENUITEM "&Fullskjerm\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "&Vernieuwen\tF5",                  ID_REFRESH
+        MENUITEM "V&olledig Scherm\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
     END
-    POPUP "&Hjelp"
+    POPUP "&Help"
     BEGIN
         MENUITEM "IBrowser &FAQ...",            ID_IBROWSER_FAQ
-        MENUITEM "&Om IBrowser...",          ID_ABOUT_IBROWSER
-        MENUITEM "Om &OS...",                ID_ABOUT_WINDOWS
+        MENUITEM "Info...",                     ID_ABOUT_IBROWSER
+        MENUITEM "Info over het &OS...",        ID_ABOUT_WINDOWS
     END
 END
 
@@ -104,10 +104,10 @@ END
 
 IDD_ABOUT_IBROWSER DIALOG DISCARDABLE  0, 0, 199, 106
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Om ReactOS Internett nettleser"
+CAPTION "Info"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT           "ReactOS Internett nettleser",IDC_ROS_IBROWSER,91,13,104,11
+    LTEXT           "ReactOS Web Browser",IDC_ROS_IBROWSER,91,13,104,11
     LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,104,8
     LTEXT           "(c) 2005 Martin Fuchs",IDC_STATIC,91,42,104,8
     LTEXT           "",IDC_WIN_VERSION,91,58,98,22
@@ -125,16 +125,16 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_TITLE               "Reactos Internett nettleser"
-    IDS_EMPTY               "(TOM)"
+    IDS_TITLE               "Reactos Internet Web Browser"
+    IDS_EMPTY               "(Leeg)"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ABOUT_IBROWSER      "&Om..."
+    IDS_ABOUT_IBROWSER      "&Info..."
 END
 
-#endif    // NORWEGIAN (N.O.) resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -145,7 +145,7 @@ END
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #ifndef _ROS_
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
+LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
 STRINGTABLE DISCARDABLE 
 BEGIN
 #ifdef UNICODE
