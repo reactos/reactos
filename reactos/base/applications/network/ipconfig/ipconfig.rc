@@ -8,4 +8,4 @@
 #define REACTOS_STR_ORIGINAL_COPYRIGHT "Ged Murphy <gedmurphy@gmail.com>\0"
 #include <reactos/version.rc>
 
-#include "En.rc"
+#include "en-US.rc"
