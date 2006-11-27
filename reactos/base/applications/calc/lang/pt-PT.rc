@@ -1,5 +1,5 @@
 /*
- * WineCalc (Fr.rc)
+ * WineCalc (Pt.rc)
  *
  * Copyright 2003 James Briggs
  *
@@ -17,18 +17,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/*
- * Translation made by Jerome Signouret, 2005.
- */
+
 #include "windows.h"
 #include "resource.h"
 #include "winecalc.h"
 
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 STRINGTABLE DISCARDABLE
 {
-   IDS_APPNAME,            "Calculatrice"
+   IDS_APPNAME,            "Calculator"
 
    IDS_COPYRIGHT1,         "Calculator 5.0. Licensed under LGPL 2"
    IDS_COPYRIGHT2          "Copyright 2003, James Briggs"
@@ -36,7 +34,7 @@ STRINGTABLE DISCARDABLE
    IDS_COPYRIGHT4          "james@ActionMessage.com"
    IDS_COPYRIGHT5          "http://www.ActionMessage.com/winecalc/"
 
-   IDS_BTN_BACKSPACE,      "Effacer"
+   IDS_BTN_BACKSPACE,      "Backspace"
    IDS_BTN_CLEAR_ENTRY,    "CE"
    IDS_BTN_CLEAR_ALL,      "C"
    IDS_BTN_MEM_CLEAR,      "MC"
@@ -45,84 +43,84 @@ STRINGTABLE DISCARDABLE
    IDS_BTN_MEM_PLUS,       "M+"
    IDS_BTN_MEM_STATUS_M,   "M"
    IDS_BTN_SQRT,           "sqrt"
-   IDS_ERR_INVALID_INPUT,  "Entrée incorrecte pour l'opération."
-   IDS_ERR_DIVIDE_BY_ZERO, "Division par zéro impossble."
-   IDS_ERR_UNDEFINED,      "Résultat non défini."
+   IDS_ERR_INVALID_INPUT,  "Invalid input for function."
+   IDS_ERR_DIVIDE_BY_ZERO, "Cannot divide by zero."
+   IDS_ERR_UNDEFINED,      "Result of function is undefined."
 }
 
 MAIN_MENU MENU DISCARDABLE
 {
-   POPUP "&Edition" {
-      MENUITEM "Co&pier Ctrl+C",     IDM_COPY
-      MENUITEM "C&oller Ctrl+V",    IDM_PASTE
+   POPUP "&Edit" {
+      MENUITEM "&Copy Ctrl+C",     IDM_COPY
+      MENUITEM "&Paste Ctrl+V",    IDM_PASTE
    }
-   POPUP "&Affichage" {
+   POPUP "&View" {
       MENUITEM "Standard",         IDM_MODE_STANDARD
-      MENUITEM "Scientifique",       IDM_MODE_SCIENTIFIC
+      MENUITEM "Scientific",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
-      MENUITEM "Séparateur",   IDM_DIGIT_GROUPING
+      MENUITEM "Digit Grouping",   IDM_DIGIT_GROUPING
    }
-   POPUP "Ai&de" {
-      MENUITEM "Somaire",      IDM_HELP_TOPICS
+   POPUP "&Help" {
+      MENUITEM "Help Topics",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
-      MENUITEM "A propos", IDM_ABOUT
+      MENUITEM "About Calculator", IDM_ABOUT
    }
 }
 
 SCIMS_MENU MENU DISCARDABLE
 {
-   POPUP "&Edition" {
-      MENUITEM "Co&pier Ctrl+C",     IDM_COPY
-      MENUITEM "C&oller Ctrl+V",    IDM_PASTE
+   POPUP "&Edit" {
+      MENUITEM "&Copy Ctrl+C",     IDM_COPY
+      MENUITEM "&Paste Ctrl+V",    IDM_PASTE
    }
-   POPUP "&Affichage" {
+   POPUP "&View" {
       MENUITEM "Standard",         IDM_MODE_STANDARD
-      MENUITEM "Scientifique",       IDM_MODE_SCIENTIFIC
+      MENUITEM "Scientific",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
 	  MENUITEM "Hex\tF5",          ID_CALC_NS_HEX
 	  MENUITEM "Decimal\tF6",      ID_CALC_NS_DEC
 	  MENUITEM "Octal\tF7",        ID_CALC_NS_OCT
-	  MENUITEM "Binaire\tF8",       ID_CALC_NS_BIN
+	  MENUITEM "Binary\tF8",       ID_CALC_NS_BIN
       MENUITEM SEPARATOR
-      MENUITEM "Degrés\tF2",      ID_CALC_MS_DEGREES
+      MENUITEM "Degrees\tF2",      ID_CALC_MS_DEGREES
       MENUITEM "Radians\tF3",      ID_CALC_MS_RADIANS
-	  MENUITEM "Gradians\tF4",        ID_CALC_MS_GRADS
+	  MENUITEM "Grads\tF4",        ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
-      MENUITEM "Séparateur",   IDM_DIGIT_GROUPING
+      MENUITEM "Digit Grouping",   IDM_DIGIT_GROUPING
    }
-   POPUP "Ai&de" {
-      MENUITEM "Sommaire",      IDM_HELP_TOPICS
+   POPUP "&Help" {
+      MENUITEM "Help Topics",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
-      MENUITEM "A propos", IDM_ABOUT
+      MENUITEM "About Calculator", IDM_ABOUT
    }
 }
 
 SCIWS_MENU MENU DISCARDABLE
 {
    POPUP "&Edit" {
-      MENUITEM "Co&pier Ctrl+C",     IDM_COPY
-      MENUITEM "C&oller Ctrl+V",    IDM_PASTE
+      MENUITEM "&Copy Ctrl+C",     IDM_COPY
+      MENUITEM "&Paste Ctrl+V",    IDM_PASTE
    }
    POPUP "&View" {
       MENUITEM "Standard",         IDM_MODE_STANDARD
-      MENUITEM "Scientifique",       IDM_MODE_SCIENTIFIC
+      MENUITEM "Scientific",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
 	  MENUITEM "Hex\tF5",          ID_CALC_NS_HEX
 	  MENUITEM "Decimal\tF6",      ID_CALC_NS_DEC
 	  MENUITEM "Octal\tF7",        ID_CALC_NS_OCT
-	  MENUITEM "Binaire\tF8",       ID_CALC_NS_BIN
+	  MENUITEM "Binary\tF8",       ID_CALC_NS_BIN
       MENUITEM SEPARATOR
 	  MENUITEM "Qword\tF12",       ID_CALC_WS_QWORD
 	  MENUITEM "Dword\tF2",        ID_CALC_WS_DWORD
 	  MENUITEM "Word\tF3",         ID_CALC_WS_WORD
 	  MENUITEM "Byte\tF4",         ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
-      MENUITEM "Séparateur",   IDM_DIGIT_GROUPING
+      MENUITEM "Digit Grouping",   IDM_DIGIT_GROUPING
    }
-   POPUP "Ai&de" {
-      MENUITEM "Sommaire",      IDM_HELP_TOPICS
+   POPUP "&Help" {
+      MENUITEM "Help Topics",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
-      MENUITEM "A propos", IDM_ABOUT
+      MENUITEM "About Calculator", IDM_ABOUT
    }
 }
 
@@ -134,19 +132,19 @@ END
 WHATS_THIS_MENU MENU DISCARDABLE
 {
    POPUP "" {
-      MENUITEM "Qu'est-ce ?",     IDM_WHATS_THIS
+      MENUITEM "What's This?",     IDM_WHATS_THIS
   }
 }
 
 DLG_ABOUT DIALOG 12,0,120,82
-CAPTION "A propos de GNU winecalc"
+CAPTION "About GNU winecalc"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
    DEFPUSHBUTTON "OK", IDOK,       42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 DLG_STATS DIALOG 12,0,125,78
-CAPTION "Outils Statistiques Box"
+CAPTION "Statistics Box"
 FONT 9, "Tahoma"
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN

@@ -1,7 +1,7 @@
 /*
- * WineCalc (En.rc)
+ * WineCalc (It.rc)
  *
- * Copyright 2003 James Briggs
+ * Copyright 2006 Gabriel ilardi
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,19 +22,19 @@
 #include "resource.h"
 #include "winecalc.h"
 
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
 
 STRINGTABLE DISCARDABLE
 {
-   IDS_APPNAME,            "Kalkulator"
+   IDS_APPNAME,            "Calcolatrice"
 
-   IDS_COPYRIGHT1,         "Kalkulator 5.0. Lisensert under LGPL 2"
+   IDS_COPYRIGHT1,         "Calcolatrice 5.0. sotto licenza LGPL 2"
    IDS_COPYRIGHT2          "Copyright 2003, James Briggs"
    IDS_COPYRIGHT3          "San Jose, California, USA"
    IDS_COPYRIGHT4          "james@ActionMessage.com"
    IDS_COPYRIGHT5          "http://www.ActionMessage.com/winecalc/"
 
-   IDS_BTN_BACKSPACE,      "Tilbake"
+   IDS_BTN_BACKSPACE,      "Backspace"
    IDS_BTN_CLEAR_ENTRY,    "CE"
    IDS_BTN_CLEAR_ALL,      "C"
    IDS_BTN_MEM_CLEAR,      "MC"
@@ -43,84 +43,84 @@ STRINGTABLE DISCARDABLE
    IDS_BTN_MEM_PLUS,       "M+"
    IDS_BTN_MEM_STATUS_M,   "M"
    IDS_BTN_SQRT,           "sqrt"
-   IDS_ERR_INVALID_INPUT,  "Ugyldig informasjon for funksjon."
-   IDS_ERR_DIVIDE_BY_ZERO, "Kan ikke dividere på null."
-   IDS_ERR_UNDEFINED,      "Resultatet av funksjoner er ubestemt."
+   IDS_ERR_INVALID_INPUT,  "Input invalido per la funzione."
+   IDS_ERR_DIVIDE_BY_ZERO, "Non si può dividere per zero."
+   IDS_ERR_UNDEFINED,      "Il risultato della funzione è indefinito."
 }
 
 MAIN_MENU MENU DISCARDABLE
 {
-   POPUP "&Rediger" {
-      MENUITEM "&Kopier Ctrl+C",     IDM_COPY
-      MENUITEM "&Lim inn Ctrl+V",    IDM_PASTE
+   POPUP "&Modifica" {
+      MENUITEM "&Copia Ctrl+C",     IDM_COPY
+      MENUITEM "I&ncolla Ctrl+V",    IDM_PASTE
    }
-   POPUP "&Vis" {
+   POPUP "&Visualizza" {
       MENUITEM "Standard",         IDM_MODE_STANDARD
-      MENUITEM "Vitenskapelig",       IDM_MODE_SCIENTIFIC
+      MENUITEM "Scientifica",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
-      MENUITEM "Siffergruppering",   IDM_DIGIT_GROUPING
+      MENUITEM "Raggruppamento cifre",   IDM_DIGIT_GROUPING
    }
-   POPUP "&Hjelp" {
-      MENUITEM "Emner i hjelp",      IDM_HELP_TOPICS
+   POPUP "&?" {
+      MENUITEM "Guida in linea",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
-      MENUITEM "Om kalkulator", IDM_ABOUT
+      MENUITEM "Informazioni su Calcolatrice", IDM_ABOUT
    }
 }
 
 SCIMS_MENU MENU DISCARDABLE
 {
-   POPUP "&Rediger" {
-      MENUITEM "&Kopiere Ctrl+C",     IDM_COPY
-      MENUITEM "&Lim inn Ctrl+V",    IDM_PASTE
+   POPUP "&Modifica" {
+      MENUITEM "&Copia Ctrl+C",     IDM_COPY
+      MENUITEM "I&ncolla Ctrl+V",    IDM_PASTE
    }
-   POPUP "&Vis" {
+   POPUP "&Visualizza" {
       MENUITEM "Standard",         IDM_MODE_STANDARD
-      MENUITEM "Vitenskapelig",       IDM_MODE_SCIENTIFIC
+      MENUITEM "Scientifica",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
-	  MENUITEM "Heksadesimalt\tF5",          ID_CALC_NS_HEX
-	  MENUITEM "Desimalt\tF6",      ID_CALC_NS_DEC
-	  MENUITEM "Oktalt\tF7",        ID_CALC_NS_OCT
-	  MENUITEM "Binært\tF8",       ID_CALC_NS_BIN
+	  MENUITEM "Hex\tF5",          ID_CALC_NS_HEX
+	  MENUITEM "Dec\tF6",      ID_CALC_NS_DEC
+	  MENUITEM "Oct\tF7",        ID_CALC_NS_OCT
+	  MENUITEM "Bin\tF8",       ID_CALC_NS_BIN
       MENUITEM SEPARATOR
-      MENUITEM "Grader\tF2",      ID_CALC_MS_DEGREES
-      MENUITEM "Radianer\tF3",      ID_CALC_MS_RADIANS
-	  MENUITEM "Gradienter\tF4",        ID_CALC_MS_GRADS
+      MENUITEM "Gradi\tF2",      ID_CALC_MS_DEGREES
+      MENUITEM "Radianti\tF3",      ID_CALC_MS_RADIANS
+	  MENUITEM "Gradienti\tF4",        ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
-      MENUITEM "Siffergruppering",   IDM_DIGIT_GROUPING
+      MENUITEM "Raggruppamento cifre",   IDM_DIGIT_GROUPING
    }
-   POPUP "&Hjelp" {
-      MENUITEM "Emner i hjelp",      IDM_HELP_TOPICS
+   POPUP "&?" {
+      MENUITEM "Guida in linea",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
-      MENUITEM "Om Kalkulator", IDM_ABOUT
+      MENUITEM "Informazioni su calcolatrice", IDM_ABOUT
    }
 }
 
 SCIWS_MENU MENU DISCARDABLE
 {
-   POPUP "&Rediger" {
-      MENUITEM "&Kopier Ctrl+C",     IDM_COPY
-      MENUITEM "&Lim inn Ctrl+V",    IDM_PASTE
+   POPUP "&Modifica" {
+      MENUITEM "&Copia Ctrl+C",     IDM_COPY
+      MENUITEM "I&ncolla Ctrl+V",    IDM_PASTE
    }
-   POPUP "&Vis" {
+   POPUP "&Visualizza" {
       MENUITEM "Standard",         IDM_MODE_STANDARD
-      MENUITEM "Vitenskapelig",       IDM_MODE_SCIENTIFIC
+      MENUITEM "Scientifica",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
-	  MENUITEM "Heksadesimalt\tF5",          ID_CALC_NS_HEX
-	  MENUITEM "Desimal\tF6",      ID_CALC_NS_DEC
-	  MENUITEM "Oktalt\tF7",        ID_CALC_NS_OCT
-	  MENUITEM "Binært\tF8",       ID_CALC_NS_BIN
+	  MENUITEM "Hex\tF5",          ID_CALC_NS_HEX
+	  MENUITEM "Dec\tF6",      ID_CALC_NS_DEC
+	  MENUITEM "Oct\tF7",        ID_CALC_NS_OCT
+	  MENUITEM "Bin\tF8",       ID_CALC_NS_BIN
       MENUITEM SEPARATOR
 	  MENUITEM "Qword\tF12",       ID_CALC_WS_QWORD
 	  MENUITEM "Dword\tF2",        ID_CALC_WS_DWORD
 	  MENUITEM "Word\tF3",         ID_CALC_WS_WORD
 	  MENUITEM "Byte\tF4",         ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
-      MENUITEM "Siffergruppering",   IDM_DIGIT_GROUPING
+      MENUITEM "Raggruppamento cifre",   IDM_DIGIT_GROUPING
    }
-   POPUP "&Help" {
-      MENUITEM "Emner i hjelp",      IDM_HELP_TOPICS
+   POPUP "&?" {
+      MENUITEM "Guida in linea",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
-      MENUITEM "Om Kalkulator", IDM_ABOUT
+      MENUITEM "Informazioni su calcolatrice", IDM_ABOUT
    }
 }
 
@@ -129,22 +129,22 @@ BEGIN
    VK_F1, IDV_HELP,     VIRTKEY
 END
 
+WHATS_THIS_MENU MENU DISCARDABLE
+{
+   POPUP "" {
+      MENUITEM "?",     IDM_WHATS_THIS
+  }
+}
+
 DLG_ABOUT DIALOG 12,0,120,82
-CAPTION "Om GNU winecalc"
+CAPTION "Informazioni su GNU winecalc"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
    DEFPUSHBUTTON "OK", IDOK,       42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
-WHATS_THIS_MENU MENU DISCARDABLE
-{
-    POPUP "" {
-      MENUITEM "Hva er dette?",     IDM_WHATS_THIS
-   }
-}
-
 DLG_STATS DIALOG 12,0,125,78
-CAPTION "Statistics Box"
+CAPTION "Statistiche"
 FONT 9, "Tahoma"
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN
