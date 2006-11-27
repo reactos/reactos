@@ -3,15 +3,15 @@
 #include "resource.h"
 
 
-#include "lang/De.rc"
-#include "lang/En.rc"
-#include "lang/Ja.rc"
-#include "lang/Sv.rc"
-#include "lang/Hu.rc"
-#include "lang/Es.rc"
-#include "lang/Ru.rc"
-#include "lang/Gr.rc"
-#include "lang/Uk.rc"
-#include "lang/No.rc"
+#include "lang/de-DE.rc"
+#include "lang/en-US.rc"
+#include "lang/ja-JP.rc"
+#include "lang/sv-SE.rc"
+#include "lang/hu-HU.rc"
+#include "lang/es-ES.rc"
+#include "lang/ru-RU.rc"
+#include "lang/el-GR.rc"
+#include "lang/uk-UA.rc"
+#include "lang/nb-NO.rc"
 LANGUAGE LANG_NEUTRAL,SUBLANG_NEUTRAL
 
