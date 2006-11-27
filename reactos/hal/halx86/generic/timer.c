@@ -183,6 +183,20 @@ VOID WaitFor8254Wraparound(VOID)
    while (Delta < 300);
 }
 
+VOID
+NTAPI
+HalpInitializeClock(VOID)
+{
+    /* FIXME: Make dynamic */
+
+    /* Initialize the clock */
+    WRITE_PORT_UCHAR((PUCHAR) TMR_CTRL, TMR_SC0 | TMR_BOTH | TMR_MD2);  /* binary, mode 2, LSB/MSB, ch 0 */
+
+    /* Set the increment */
+    WRITE_PORT_UCHAR((PUCHAR) TMR_CNT0, LATCH & 0xff); /* LSB */
+    WRITE_PORT_UCHAR((PUCHAR) TMR_CNT0, LATCH >> 8); /* MSB */
+}
+
 VOID HalpCalibrateStallExecution(VOID)
 {
   ULONG i;
@@ -198,11 +212,6 @@ VOID HalpCalibrateStallExecution(VOID)
 
   UdelayCalibrated = TRUE;
   Pcr = (PKIPCR)KeGetPcr();
-
-  /* Initialise timer interrupt with MILLISEC ms interval        */
-  WRITE_PORT_UCHAR((PUCHAR) TMR_CTRL, TMR_SC0 | TMR_BOTH | TMR_MD2);  /* binary, mode 2, LSB/MSB, ch 0 */
-  WRITE_PORT_UCHAR((PUCHAR) TMR_CNT0, LATCH & 0xff); /* LSB */
-  WRITE_PORT_UCHAR((PUCHAR) TMR_CNT0, LATCH >> 8); /* MSB */
 
   if (Pcr->PrcbData.FeatureBits & KF_RDTSC)
   {

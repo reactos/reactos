@@ -16,6 +16,29 @@
 
 PVOID HalpZeroPageMapping = NULL;
 HALP_HOOKS HalpHooks;
+BOOLEAN HalpPciLockSettings;
+
+/* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PCHAR CommandLine;
+
+    /* Make sure we have a loader block and command line */
+    if ((LoaderBlock) && (LoaderBlock->LoadOptions))
+    {
+        /* Read the command line */
+        CommandLine = LoaderBlock->LoadOptions;
+
+        /* Check if PCI is locked */
+        if (strstr(CommandLine, "PCILOCK")) HalpPciLockSettings = TRUE;
+
+        /* Check for initial breakpoint */
+        if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
+    }
+}
 
 /* FUNCTIONS *****************************************************************/
 
@@ -28,19 +51,71 @@ HalInitSystem(IN ULONG BootPhase,
               IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PHYSICAL_ADDRESS Null = {{0}};
+    PKPRCB Prcb = KeGetCurrentPrcb();
 
-    if (BootPhase == 0)
+    /* Check the boot phase */
+    if (!BootPhase)
     {
-        RtlZeroMemory(&HalpHooks, sizeof(HALP_HOOKS));
+        /* Phase 0... save bus type */
+        HalpBusType = LoaderBlock->u.I386.MachineType & 0xFF;
+
+        /* Get command-line parameters */
+        HalpGetParameters(LoaderBlock);
+
+        /* Checked HAL requires checked kernel */
+#if DBG
+        if (!(Prcb->BuildType & PRCB_BUILD_DEBUG))
+        {
+            /* No match, bugcheck */
+            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 1, 0);
+        }
+#else
+        /* Release build requires release HAL */
+        if (Prcb->BuildType & PRCB_BUILD_DEBUG)
+        {
+            /* No match, bugcheck */
+            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 0, 0);
+        }
+#endif
+
+#ifdef CONFIG_SMP
+        /* SMP HAL requires SMP kernel */
+        if (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR)
+        {
+            /* No match, bugcheck */
+            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 0, 0);
+        }
+#endif
+
+        /* Validate the PRCB */
+        if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)
+        {
+            /* Validation failed, bugcheck */
+            KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, 1, 0);
+        }
+
+        /* Continue with HAL-specific initialization */
         HalpInitPhase0(LoaderBlock);
+
+        /* Fill out the dispatch tables */
+        HalQuerySystemInformation = HaliQuerySystemInformation;
+        HalSetSystemInformation = HaliSetSystemInformation;
+        HalInitPnpDriver = NULL; // FIXME: TODO
+        HalGetDmaAdapter = HalpGetDmaAdapter;
+        HalGetInterruptTranslator = NULL;  // FIXME: TODO
+
+        /* Initialize the hardware lock (CMOS) */
+        KeInitializeSpinLock(&HalpSystemHardwareLock);
     }
     else if (BootPhase == 1)
     {
+        /* Initialize the default HAL stubs for bus handling functions */
+        HalpInitNonBusHandler();
+
         /* Initialize the clock interrupt */
         //HalpInitPhase1();
 
-        /* Initialize BUS handlers and DMA */
-        HalpInitBusHandlers();
+        /* Initialize DMA. NT does this in Phase 0 */
         HalpInitDma();
     }
     else if (BootPhase == 2)
@@ -60,7 +135,7 @@ NTAPI
 HalReportResourceUsage(VOID)
 {
     /* Initialize PCI bus. */
-    HalpInitPciBus();
+    HalpInitializePciBus();
 
     /* FIXME: This is done in ReactOS MP HAL only*/
     //HaliReconfigurePciInterrupts();

@@ -29,7 +29,7 @@ KiInitMachineDependent(VOID)
     ULONG CpuCount;
     BOOLEAN FbCaching = FALSE;
     NTSTATUS Status;
-    //ULONG ReturnLength;
+    ULONG ReturnLength;
     ULONG i, Affinity;
     PFX_SAVE_AREA FxSaveArea;
     ULONG MXCsrMask = 0xFFBF, NewMask;
@@ -52,16 +52,11 @@ KiInitMachineDependent(VOID)
     /* Check for PAT and/or MTRR support */
     if (KeFeatureBits & (KF_PAT | KF_MTRR))
     {
-        /* FIXME: ROS HAL Doesn't initialize this! */
-#if 1
-        Status = STATUS_UNSUCCESSFUL;
-#else
         /* Query the HAL to make sure we can use it */
         Status = HalQuerySystemInformation(HalFrameBufferCachingInformation,
                                            sizeof(BOOLEAN),
                                            &FbCaching,
                                            &ReturnLength);
-#endif
         if ((NT_SUCCESS(Status)) && (FbCaching))
         {
             /* We can't, disable it */
@@ -266,6 +261,12 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 
     /* Set the Build Type */
     Pcr->PrcbData.BuildType = 0;
+#ifndef CONFIG_SMP
+    Pcr->PrcbData.BuildType |= PRCB_BUILD_UNIPROCESSOR;
+#endif
+#ifdef DBG
+    Pcr->PrcbData.BuildType |= PRCB_BUILD_DEBUG;
+#endif
 
     /* Set the Processor Number and current Processor Mask */
     Pcr->PrcbData.Number = (UCHAR)ProcessorNumber;

@@ -97,6 +97,13 @@ Author:
 #define IPI_SYNCH_REQUEST       16
 
 //
+// PRCB Flags
+//
+#define PRCB_MAJOR_VERSION      1
+#define PRCB_BUILD_DEBUG        1
+#define PRCB_BUILD_UNIPROCESSOR 2
+
+//
 // HAL Variables
 //
 #define INITIAL_STALL_COUNT     0x64

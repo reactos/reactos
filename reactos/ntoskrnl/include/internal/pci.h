@@ -9,6 +9,19 @@
 #define _PCI_
 
 //
+// PCI Type 1 Ports
+//
+#define PCI_TYPE1_ADDRESS_PORT      (PULONG)0xCF8
+#define PCI_TYPE1_DATA_PORT         0xCFC
+
+//
+// PCI Type 2 Ports
+//
+#define PCI_TYPE2_CSE_PORT          (PUCHAR)0xCF8
+#define PCI_TYPE2_FORWARD_PORT      (PUCHAR)0xCFA
+#define PCI_TYPE2_ADDRESS_BASE      0xC
+
+//
 // PCI Type 1 Configuration Register
 //
 typedef struct _PCI_TYPE1_CFG_BITS

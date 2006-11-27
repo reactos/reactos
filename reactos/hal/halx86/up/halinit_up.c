@@ -18,12 +18,19 @@
 /* FUNCTIONS ***************************************************************/
 
 VOID
-HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-  HalpInitPICs();
+    /* Initialize the PICs */
+    HalpInitPICs();
 
-  /* Setup busy waiting */
-  HalpCalibrateStallExecution();
+    /* Force initial PIC state */
+    KfRaiseIrql(KeGetCurrentIrql());
+
+    /* Initialize the clock */
+    HalpInitializeClock();
+
+    /* Setup busy waiting */
+    HalpCalibrateStallExecution();
 }
 
 VOID

@@ -12,19 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
-/* CMOS Registers and Ports */
-#define CMOS_CONTROL_PORT       (PUCHAR)0x70
-#define CMOS_DATA_PORT          (PUCHAR)0x71
-#define RTC_REGISTER_A          0x0A
-#define RTC_REGISTER_B          0x0B
-#define RTC_REG_A_UIP           0x80
-#define RTC_REGISTER_CENTURY    0x32
+/* GLOBALS *******************************************************************/
 
-/* Conversion functions */
-#define BCD_INT(bcd)            \
-    (((bcd & 0xF0) >> 4) * 10 + (bcd & 0x0F))
-#define INT_BCD(int)            \
-    (UCHAR)(((int / 10) << 4) + (int % 10))
+KSPIN_LOCK HalpSystemHardwareLock;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -53,11 +43,9 @@ HalpWriteCmos(IN UCHAR Reg,
 
 ULONG
 NTAPI
-HalpGetCmosData(IN PBUS_HANDLER BusHandler,
-                IN ULONG BusNumber,
+HalpGetCmosData(IN ULONG BusNumber,
                 IN ULONG SlotNumber,
-                OUT PVOID Buffer,
-                IN ULONG Offset,
+                IN PVOID Buffer,
                 IN ULONG Length)
 {
     PUCHAR Ptr = (PUCHAR)Buffer;
@@ -107,11 +95,9 @@ HalpGetCmosData(IN PBUS_HANDLER BusHandler,
 
 ULONG
 NTAPI
-HalpSetCmosData(IN PBUS_HANDLER BusHandler,
-                IN ULONG BusNumber,
+HalpSetCmosData(IN ULONG BusNumber,
                 IN ULONG SlotNumber,
                 IN PVOID Buffer,
-                IN ULONG Offset,
                 IN ULONG Length)
 {
     PUCHAR Ptr = (PUCHAR)Buffer;

@@ -10,8 +10,6 @@
     <file>dma.c</file>
 	<file>drive.c</file>
 	<file>halinit.c</file>
-	<file>isa.c</file>
-	<file>mca.c</file>
 	<file>misc.c</file>
 	<file>pci.c</file>
 	<file>portio.c</file>

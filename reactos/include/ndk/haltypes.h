@@ -44,20 +44,20 @@ typedef enum _FIRMWARE_REENTRY
 //
 typedef
 PBUS_HANDLER
-(*pHalHandlerForConfigSpace)(
-    IN BUS_DATA_TYPE  ConfigSpace,
+(NTAPI *pHalHandlerForConfigSpace)(
+    IN BUS_DATA_TYPE ConfigSpace,
     IN ULONG BusNumber
 );
 
 typedef
 NTSTATUS
-(*PINSTALL_BUS_HANDLER)(
+(NTAPI *PINSTALL_BUS_HANDLER)(
     IN PBUS_HANDLER Bus
 );
 
 typedef
 NTSTATUS
-(*pHalRegisterBusHandler)(
+(NTAPI *pHalRegisterBusHandler)(
     IN INTERFACE_TYPE InterfaceType,
     IN BUS_DATA_TYPE ConfigSpace,
     IN ULONG BusNumber,
@@ -70,31 +70,86 @@ NTSTATUS
 
 typedef
 VOID
-(*pHalSetWakeEnable)(
+(NTAPI *pHalSetWakeEnable)(
     IN BOOLEAN Enable
 );
 
-
 typedef
 VOID
-(*pHalSetWakeAlarm)(
+(NTAPI *pHalSetWakeAlarm)(
     IN ULONGLONG AlartTime,
     IN PTIME_FIELDS TimeFields
 );
 
 typedef
 VOID
-(*pHalLocateHiberRanges)(
+(NTAPI *pHalLocateHiberRanges)(
     IN PVOID MemoryMap
 );
 
 typedef
 BOOLEAN
-(*pHalAllocateMapRegisters)(
+(NTAPI *pHalAllocateMapRegisters)(
     IN PADAPTER_OBJECT AdapterObject,
     IN ULONG Unknown,
     IN ULONG Unknown2,
     PMAP_REGISTER_ENTRY Registers
+);
+
+//
+// HAL Bus Handler Callback Types
+//
+typedef
+NTSTATUS
+(NTAPI *pAdjustResourceList)(
+    IN PBUS_HANDLER BusHandler,
+    IN ULONG BusNumber,
+    IN OUT PCM_RESOURCE_LIST Resources
+);
+
+typedef
+NTSTATUS
+(NTAPI *pAssignSlotResources)(
+    IN PBUS_HANDLER BusHandler,
+    IN PBUS_HANDLER RootHandler,
+    IN PUNICODE_STRING RegistryPath,
+    IN PUNICODE_STRING DriverClassName,
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG SlotNumber,
+    IN OUT PCM_RESOURCE_LIST *AllocatedResources
+);
+
+typedef
+ULONG
+(NTAPI *pGetSetBusData)(
+    IN PBUS_HANDLER BusHandler,
+    IN PBUS_HANDLER RootHandler,
+    IN PCI_SLOT_NUMBER SlotNumber,
+    OUT PUCHAR Buffer,
+    IN ULONG Offset,
+    IN ULONG Length
+);
+
+typedef
+ULONG
+(NTAPI *pGetInterruptVector)(
+    IN PBUS_HANDLER BusHandler,
+    IN ULONG BusNumber,
+    IN ULONG BusInterruptLevel,
+    IN ULONG BusInterruptVector,
+    OUT PKIRQL Irql,
+    OUT PKAFFINITY Affinity
+);
+
+typedef
+ULONG
+(NTAPI *pTranslateBusAddress)(
+    IN PBUS_HANDLER BusHandler,
+    IN ULONG BusNumber,
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress
 );
 
 //
@@ -132,12 +187,37 @@ typedef struct _HAL_PRIVATE_DISPATCH
 } HAL_PRIVATE_DISPATCH, *PHAL_PRIVATE_DISPATCH;
 
 //
+// HAL Bus Handler
+//
+typedef struct _BUS_HANDLER
+{
+    ULONG Version;
+    INTERFACE_TYPE InterfaceType;
+    BUS_DATA_TYPE ConfigurationType;
+    ULONG BusNumber;
+    PDEVICE_OBJECT DeviceObject;
+    struct _BUS_HANDLER *ParentHandler;
+    PVOID BusData;
+    ULONG DeviceControlExtensionSize;
+    //PSUPPORTED_RANGES BusAddresses;
+    ULONG Reserved[4];
+    pGetSetBusData GetBusData;
+    pGetSetBusData SetBusData;
+    pAdjustResourceList AdjustResourceList;
+    pAssignSlotResources AssignSlotResources;
+    pGetInterruptVector GetInterruptVector;
+    pTranslateBusAddress TranslateBusAddress;
+} BUS_HANDLER;
+
+//
 // Kernel Exports
 //
-#ifndef _NTOSKRNL_
-extern PHAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
+#if defined(_NTDRIVER_) || defined(_NTHAL_)
+extern NTSYSAPI PHAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
+#define HALPRIVATEDISPATCH ((PHAL_PRIVATE_DISPATCH)&HalPrivateDispatchTable)
 #else
-extern HAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
+extern NTSYSAPI HAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
+#define HALPRIVATEDISPATCH (&HalPrivateDispatchTable)
 #endif
 
 //
@@ -149,4 +229,5 @@ extern PUCHAR NTSYSAPI *KdComPortInUse;
 
 #endif
 #endif
+
 

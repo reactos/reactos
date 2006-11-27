@@ -16,7 +16,7 @@
 
 NTSTATUS
 NTAPI
-HalpQuerySystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
+HaliQuerySystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
                            IN ULONG BufferSize,
                            IN OUT PVOID Buffer,
                            OUT PULONG ReturnedLength)
@@ -27,7 +27,7 @@ HalpQuerySystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
 
 NTSTATUS
 NTAPI
-HalpSetSystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
+HaliSetSystemInformation(IN HAL_SET_INFORMATION_CLASS InformationClass,
                          IN ULONG BufferSize,
                          IN OUT PVOID Buffer)
 {
