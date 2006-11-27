@@ -2,5 +2,5 @@
 #include <commctrl.h>
 #include "resource.h"
 
-#include "lang/En.rc"
-#include "lang/No.rc"
+#include "lang/en-US.rc"
+#include "lang/nb-NO.rc"
