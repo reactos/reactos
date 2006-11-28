@@ -6,25 +6,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"vmwinst.exe\0"
 #include <reactos/version.rc>
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-
-1 24 DISCARDABLE "manifest.xml"
-
-/* Bitmaps */
-IDB_WATERMARK BITMAP "resources/watermark.bmp"
-IDB_HEADER    BITMAP "resources/header.bmp"
-
-/*
- * Everything specific to any language goes in one of the specific
- * files. Note that you can and may override resources which also have
- * a neutral version. This is to get localized bitmaps for example.
- */
-#include "cs-CZ.rc"
-#include "en-US.rc"
-#include "de-DE.rc"
-#include "da-DK.rc"
-#include "es-ES.rc"
-#include "ja-JP.rc"
-#include "hu-HU.rc"
-#include "ru-RU.rc"
-#include "uk-UA.rc"
+#include "rsrc.rc"
