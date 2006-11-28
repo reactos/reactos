@@ -57,15 +57,12 @@ DEFINE_GUID( CLSID_MsiPatch, 0x000c1086, 0x0000, 0x0000,
 static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
 {
     MSIDATABASE *db = (MSIDATABASE *) arg;
-    DWORD r;
 
     msi_free(db->path);
     free_cached_tables( db );
     msi_free_transforms( db );
     msi_destroy_stringtable( db->strings );
-    r = IStorage_Release( db->storage );
-    if( r )
-        ERR("database reference count was not zero (%d)\n", r);
+    IStorage_Release( db->storage );
     if (db->deletefile)
     {
         DeleteFileW( db->deletefile );
@@ -354,7 +351,7 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
     LPCWSTR type;
     DWORD sql_size = 1, i, len;
     WCHAR expanded[128], *ptr;
-    WCHAR size[10], comma[2], extra[10];
+    WCHAR size[10], comma[2], extra[30];
 
     static const WCHAR column_fmt[] = {'`','%','s','`',' ','%','s','%','s','%','s','%','s',' ',0};
     static const WCHAR size_fmt[] = {'(','%','s',')',0};
@@ -362,6 +359,7 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
     static const WCHAR type_int[] = {'I','N','T',0};
     static const WCHAR type_long[] = {'L','O','N','G',0};
     static const WCHAR type_notnull[] = {' ','N','O','T',' ','N','U','L','L',0};
+    static const WCHAR localizable[] = {' ','L','O','C','A','L','I','Z','A','B','L','E',0};
 
     columns = msi_alloc_zero(sql_size * sizeof(WCHAR));
     if (!columns)
@@ -379,12 +377,20 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
 
         ptr = &types[i][1];
         len = atolW(ptr);
+        extra[0] = '\0';
 
         switch (types[i][0])
         {
-            case 'l': case 's':
+            case 'l':
                 lstrcpyW(extra, type_notnull);
-            case 'L': case 'S':
+            case 'L':
+                lstrcatW(extra, localizable);
+                type = type_char;
+                sprintfW(size, size_fmt, ptr);
+                break;
+            case 's':
+                lstrcpyW(extra, type_notnull);
+            case 'S':
                 type = type_char;
                 sprintfW(size, size_fmt, ptr);
                 break;

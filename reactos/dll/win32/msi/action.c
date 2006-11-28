@@ -399,6 +399,28 @@ static LPWSTR* msi_split_string( LPCWSTR str, WCHAR sep )
     return ret;
 }
 
+static UINT msi_check_transform_applicable( MSIPACKAGE *package, IStorage *patch )
+{
+    WCHAR szProductCode[] = { 'P','r','o','d','u','c','t','C','o','d','e',0 };
+    LPWSTR prod_code, patch_product;
+    UINT ret;
+
+    prod_code = msi_dup_property( package, szProductCode );
+    patch_product = msi_get_suminfo_product( patch );
+
+    TRACE("db = %s patch = %s\n", debugstr_w(prod_code), debugstr_w(patch_product));
+
+    if ( strstrW( patch_product, prod_code ) )
+        ret = ERROR_SUCCESS;
+    else
+        ret = ERROR_FUNCTION_FAILED;
+
+    msi_free( patch_product );
+    msi_free( prod_code );
+
+    return ret;
+}
+
 static UINT msi_apply_substorage_transform( MSIPACKAGE *package,
                                  MSIDATABASE *patch_db, LPCWSTR name )
 {
@@ -417,14 +439,17 @@ static UINT msi_apply_substorage_transform( MSIPACKAGE *package,
     r = IStorage_OpenStorage( patch_db->storage, name, NULL, STGM_SHARE_EXCLUSIVE, NULL, 0, &stg );
     if (SUCCEEDED(r))
     {
-        ret = msi_table_apply_transform( package->db, stg );
+        ret = msi_check_transform_applicable( package, stg );
+        if (ret == ERROR_SUCCESS)
+            msi_table_apply_transform( package->db, stg );
+        else
+            TRACE("substorage transform %s wasn't applicable\n", debugstr_w(name));
         IStorage_Release( stg );
-        ret = ERROR_SUCCESS;
     }
     else
         ERR("failed to open substorage %s\n", debugstr_w(name));
 
-    return ret;
+    return ERROR_SUCCESS;
 }
 
 static UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si )
@@ -461,7 +486,7 @@ static UINT msi_parse_patch_summary( MSIPACKAGE *package, MSIDATABASE *patch_db 
     LPWSTR str, *substorage;
     UINT i, r = ERROR_SUCCESS;
 
-    si = MSI_GetSummaryInformationW( patch_db, 0 );
+    si = MSI_GetSummaryInformationW( patch_db->storage, 0 );
     if (!si)
         return ERROR_FUNCTION_FAILED;
 
@@ -502,6 +527,13 @@ static UINT msi_apply_patch_package( MSIPACKAGE *package, LPCWSTR file )
     }
 
     msi_parse_patch_summary( package, patch_db );
+
+    /*
+     * There might be a CAB file in the patch package,
+     * so append it to the list of storage to search for streams.
+     */
+    append_storage_to_db( package->db, patch_db->storage );
+
     msiobj_release( &patch_db->hdr );
 
     return ERROR_SUCCESS;
@@ -593,6 +625,7 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
         check = msi_dup_property( package, cszSourceDir );
         if (!check)
             MSI_SetPropertyW(package, cszSourceDir, path);
+        msi_free(check);
 
         check = msi_dup_property( package, cszSOURCEDIR );
         if (!check)
@@ -676,12 +709,10 @@ static UINT ACTION_PerformActionSequence(MSIPACKAGE *package, UINT seq, BOOL UI)
 
         /* check conditions */
         cond = MSI_RecordGetString(row,2);
-        if (cond)
-        {
-            /* this is a hack to skip errors in the condition code */
-            if (MSI_EvaluateConditionW(package, cond) == MSICONDITION_FALSE)
-                goto end;
-        }
+
+        /* this is a hack to skip errors in the condition code */
+        if (MSI_EvaluateConditionW(package, cond) == MSICONDITION_FALSE)
+            goto end;
 
         action = MSI_RecordGetString(row,1);
         if (!action)
@@ -719,20 +750,17 @@ static UINT ITERATE_Actions(MSIRECORD *row, LPVOID param)
     if (!action)
     {
         ERR("Error is retrieving action name\n");
-        return  ERROR_FUNCTION_FAILED;
+        return ERROR_FUNCTION_FAILED;
     }
 
     /* check conditions */
     cond = MSI_RecordGetString(row,2);
-    if (cond)
+
+    /* this is a hack to skip errors in the condition code */
+    if (MSI_EvaluateConditionW(iap->package, cond) == MSICONDITION_FALSE)
     {
-        /* this is a hack to skip errors in the condition code */
-        if (MSI_EvaluateConditionW(iap->package, cond) == MSICONDITION_FALSE)
-        {
-            TRACE("Skipping action: %s (condition is false)\n",
-                            debugstr_w(action));
-            return ERROR_SUCCESS;
-        }
+        TRACE("Skipping action: %s (condition is false)\n", debugstr_w(action));
+        return ERROR_SUCCESS;
     }
 
     if (iap->UI)
@@ -1126,8 +1154,7 @@ static UINT load_component( MSIRECORD *row, LPVOID param )
     comp->KeyPath = msi_dup_record_field( row, 6 );
 
     comp->Installed = INSTALLSTATE_UNKNOWN;
-    comp->Action = INSTALLSTATE_UNKNOWN;
-    comp->ActionRequest = INSTALLSTATE_UNKNOWN;
+    msi_component_set_state( comp, INSTALLSTATE_UNKNOWN );
 
     return ERROR_SUCCESS;
 }
@@ -1258,8 +1285,7 @@ static UINT load_feature(MSIRECORD * row, LPVOID param)
     feature->Attributes = MSI_RecordGetInteger(row,8);
 
     feature->Installed = INSTALLSTATE_UNKNOWN;
-    feature->Action = INSTALLSTATE_UNKNOWN;
-    feature->ActionRequest = INSTALLSTATE_UNKNOWN;
+    msi_feature_set_state( feature, INSTALLSTATE_UNKNOWN );
 
     list_add_tail( &package->features, &feature->entry );
 
@@ -1467,14 +1493,10 @@ static UINT execute_script(MSIPACKAGE *package, UINT script )
         ui_actionstart(package, action);
         TRACE("Executing Action (%s)\n",debugstr_w(action));
         rc = ACTION_PerformAction(package, action, TRUE);
-        msi_free(package->script->Actions[script][i]);
         if (rc != ERROR_SUCCESS)
             break;
     }
-    msi_free(package->script->Actions[script]);
-
-    package->script->ActionCount[script] = 0;
-    package->script->Actions[script] = NULL;
+    msi_free_action_script(package, script);
     return rc;
 }
 
@@ -1575,15 +1597,10 @@ static MSIFOLDER *load_folder( MSIPACKAGE *package, LPCWSTR dir )
     return folder;
 }
 
-/* scan for and update current install states */
-static void ACTION_UpdateInstallStates(MSIPACKAGE *package)
+static void ACTION_GetComponentInstallStates(MSIPACKAGE *package)
 {
     MSICOMPONENT *comp;
-    MSIFEATURE *feature;
 
-    /* FIXME: component's installed state should be determined
-     * by the component's registration
-     */
     LIST_FOR_EACH_ENTRY( comp, &package->components, MSICOMPONENT, entry )
     {
         INSTALLSTATE res;
@@ -1591,12 +1608,19 @@ static void ACTION_UpdateInstallStates(MSIPACKAGE *package)
         if (!comp->ComponentId)
             continue;
 
-        res = MsiGetComponentPathW( package->ProductCode, 
+        res = MsiGetComponentPathW( package->ProductCode,
                                     comp->ComponentId, NULL, NULL);
         if (res < 0)
             res = INSTALLSTATE_ABSENT;
         comp->Installed = res;
     }
+}
+
+/* scan for and update current install states */
+static void ACTION_UpdateFeatureInstallStates(MSIPACKAGE *package)
+{
+    MSICOMPONENT *comp;
+    MSIFEATURE *feature;
 
     LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
     {
@@ -1641,14 +1665,11 @@ static BOOL process_state_property (MSIPACKAGE* package, LPCWSTR property,
     override = msi_dup_property( package, property );
     if (!override)
         return FALSE;
- 
+
     LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
     {
         if (strcmpiW(override,all)==0)
-        {
-            feature->ActionRequest= state;
-            feature->Action = state;
-        }
+            msi_feature_set_state( feature, state );
         else
         {
             LPWSTR ptr = override;
@@ -1659,8 +1680,7 @@ static BOOL process_state_property (MSIPACKAGE* package, LPCWSTR property,
                 if ((ptr2 && strncmpW(ptr,feature->Feature, ptr2-ptr)==0)
                     || (!ptr2 && strcmpW(ptr,feature->Feature)==0))
                 {
-                    feature->ActionRequest= state;
-                    feature->Action = state;
+                    msi_feature_set_state( feature, state );
                     break;
                 }
                 if (ptr2)
@@ -1672,7 +1692,7 @@ static BOOL process_state_property (MSIPACKAGE* package, LPCWSTR property,
                     break;
             }
         }
-    } 
+    }
     msi_free(override);
 
     return TRUE;
@@ -1716,7 +1736,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
      * 11) FILEADDDEFAULT
      * I have confirmed that if ADDLOCAL is stated then the INSTALLLEVEL is
      * ignored for all the features. seems strange, especially since it is not
-     * documented anywhere, but it is how it works. 
+     * documented anywhere, but it is how it works.
      *
      * I am still ignoring a lot of these. But that is ok for now, ADDLOCAL and
      * REMOVE are the big ones, since we don't handle administrative installs
@@ -1736,20 +1756,11 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
             if ((feature_state) && (feature->Action == INSTALLSTATE_UNKNOWN))
             {
                 if (feature->Attributes & msidbFeatureAttributesFavorSource)
-                {
-                    feature->ActionRequest = INSTALLSTATE_SOURCE;
-                    feature->Action = INSTALLSTATE_SOURCE;
-                }
+                    msi_feature_set_state( feature, INSTALLSTATE_SOURCE );
                 else if (feature->Attributes & msidbFeatureAttributesFavorAdvertise)
-                {
-                    feature->ActionRequest = INSTALLSTATE_ADVERTISED;
-                    feature->Action = INSTALLSTATE_ADVERTISED;
-                }
+                    msi_feature_set_state( feature, INSTALLSTATE_ADVERTISED );
                 else
-                {
-                    feature->ActionRequest = INSTALLSTATE_LOCAL;
-                    feature->Action = INSTALLSTATE_LOCAL;
-                }
+                    msi_feature_set_state( feature, INSTALLSTATE_LOCAL );
             }
         }
 
@@ -1762,10 +1773,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
                 continue;
 
             LIST_FOR_EACH_ENTRY( fl, &feature->Children, FeatureList, entry )
-            {
-                fl->feature->ActionRequest = INSTALLSTATE_UNKNOWN;
-                fl->feature->Action = INSTALLSTATE_UNKNOWN;
-            }
+                msi_feature_set_state( fl->feature, INSTALLSTATE_UNKNOWN );
         }
     }
     else
@@ -1778,111 +1786,78 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
     }
 
     /*
-     * now we want to enable or disable components base on feature 
-    */
+     * now we want to enable or disable components base on feature
+     */
 
     LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
     {
         ComponentList *cl;
 
-        TRACE("Examining Feature %s (Installed %i, Action %i, Request %i)\n",
-            debugstr_w(feature->Feature), feature->Installed, feature->Action,
-            feature->ActionRequest);
+        TRACE("Examining Feature %s (Installed %i, Action %i)\n",
+            debugstr_w(feature->Feature), feature->Installed, feature->Action);
 
         LIST_FOR_EACH_ENTRY( cl, &feature->Components, ComponentList, entry )
         {
             component = cl->component;
 
-            switch (component->Attributes)
+            if (!component->Enabled)
+                continue;
+
+            if (component->Attributes & msidbComponentAttributesOptional)
+                msi_component_set_state( component, INSTALLSTATE_DEFAULT );
+            else
             {
-            case msidbComponentAttributesLocalOnly:
-                component->Action = INSTALLSTATE_LOCAL;
-                component->ActionRequest = INSTALLSTATE_LOCAL;
-                break;
-            case msidbComponentAttributesSourceOnly:
-                component->Action = INSTALLSTATE_SOURCE;
-                component->ActionRequest = INSTALLSTATE_SOURCE;
-                break;
-            case msidbComponentAttributesOptional:
-                component->Action = INSTALLSTATE_DEFAULT;
-                component->ActionRequest = INSTALLSTATE_DEFAULT;
-                break;
-            default:
-                component->Action = INSTALLSTATE_LOCAL;
-                component->ActionRequest = INSTALLSTATE_LOCAL;
+                if (component->Attributes & msidbComponentAttributesSourceOnly)
+                    msi_component_set_state( component, INSTALLSTATE_SOURCE );
+                else
+                    msi_component_set_state( component, INSTALLSTATE_LOCAL );
             }
 
             if (component->ForceLocalState)
-            {
-                component->Action = INSTALLSTATE_LOCAL;
-                component->ActionRequest = INSTALLSTATE_LOCAL;
-            }
+                msi_component_set_state( component, INSTALLSTATE_LOCAL );
 
-            if (!component->Enabled)
+            if (feature->Attributes == msidbFeatureAttributesFavorLocal)
             {
-                component->Action = INSTALLSTATE_UNKNOWN;
-                component->ActionRequest = INSTALLSTATE_UNKNOWN;
+                if (!(component->Attributes & msidbComponentAttributesSourceOnly))
+                    msi_component_set_state( component, INSTALLSTATE_LOCAL );
             }
-            else
+            else if (feature->Attributes == msidbFeatureAttributesFavorSource)
             {
-                if (feature->Attributes == msidbFeatureAttributesFavorLocal)
-                {
-                    if (!(component->Attributes & msidbComponentAttributesSourceOnly))
-                    {
-                        component->Action = INSTALLSTATE_LOCAL;
-                        component->ActionRequest = INSTALLSTATE_LOCAL;
-                    }
-                }
-                else if (feature->Attributes == msidbFeatureAttributesFavorSource)
-                {
-                    if ((component->Action == INSTALLSTATE_UNKNOWN) ||
-                        (component->Action == INSTALLSTATE_ABSENT) ||
-                        (component->Action == INSTALLSTATE_ADVERTISED) ||
-                        (component->Action == INSTALLSTATE_DEFAULT))
-                           
-                    {
-                        component->Action = INSTALLSTATE_SOURCE;
-                        component->ActionRequest = INSTALLSTATE_SOURCE;
-                    }
-                }
-                else if (feature->ActionRequest == INSTALLSTATE_ADVERTISED)
-                {
-                    if ((component->Action == INSTALLSTATE_UNKNOWN) ||
-                        (component->Action == INSTALLSTATE_ABSENT))
-                           
-                    {
-                        component->Action = INSTALLSTATE_ADVERTISED;
-                        component->ActionRequest = INSTALLSTATE_ADVERTISED;
-                    }
-                }
-                else if (feature->ActionRequest == INSTALLSTATE_ABSENT)
-                {
-                    if (component->Action == INSTALLSTATE_UNKNOWN)
-                    {
-                        component->Action = INSTALLSTATE_ABSENT;
-                        component->ActionRequest = INSTALLSTATE_ABSENT;
-                    }
-                }
-                else if (feature->ActionRequest == INSTALLSTATE_UNKNOWN)
-                {
-                    component->Action = INSTALLSTATE_UNKNOWN;
-                    component->ActionRequest = INSTALLSTATE_UNKNOWN;
-                }
+                if ((component->Action == INSTALLSTATE_UNKNOWN) ||
+                    (component->Action == INSTALLSTATE_ABSENT) ||
+                    (component->Action == INSTALLSTATE_ADVERTISED) ||
+                    (component->Action == INSTALLSTATE_DEFAULT))
+                    msi_component_set_state( component, INSTALLSTATE_SOURCE );
             }
+            else if (feature->ActionRequest == INSTALLSTATE_ADVERTISED)
+            {
+                if ((component->Action == INSTALLSTATE_UNKNOWN) ||
+                    (component->Action == INSTALLSTATE_ABSENT))
+                    msi_component_set_state( component, INSTALLSTATE_ADVERTISED );
+            }
+            else if (feature->ActionRequest == INSTALLSTATE_ABSENT)
+            {
+                if (component->Action == INSTALLSTATE_UNKNOWN)
+                    msi_component_set_state( component, INSTALLSTATE_ABSENT );
+            }
+            else if (feature->ActionRequest == INSTALLSTATE_UNKNOWN)
+                msi_component_set_state( component, INSTALLSTATE_UNKNOWN );
 
             if (component->ForceLocalState && feature->Action == INSTALLSTATE_SOURCE)
-            {
-                feature->Action = INSTALLSTATE_LOCAL;
-                feature->ActionRequest = INSTALLSTATE_LOCAL;
-            }
+                msi_feature_set_state( feature, INSTALLSTATE_LOCAL );
         }
-    } 
+    }
 
     LIST_FOR_EACH_ENTRY( component, &package->components, MSICOMPONENT, entry )
     {
-        TRACE("Result: Component %s (Installed %i, Action %i, Request %i)\n",
-            debugstr_w(component->Component), component->Installed, 
-            component->Action, component->ActionRequest);
+        if (component->Action == INSTALLSTATE_DEFAULT)
+        {
+            TRACE("%s was default, setting to local\n", debugstr_w(component->Component));
+            msi_component_set_state( component, INSTALLSTATE_LOCAL );
+        }
+
+        TRACE("Result: Component %s (Installed %i, Action %i)\n",
+            debugstr_w(component->Component), component->Installed, component->Action);
     }
 
 
@@ -1933,7 +1908,110 @@ static UINT ITERATE_CostFinalizeConditions(MSIRECORD *row, LPVOID param)
     return ERROR_SUCCESS;
 }
 
-/* 
+LPWSTR msi_get_disk_file_version( LPCWSTR filename )
+{
+    static const WCHAR name_fmt[] =
+        {'%','u','.','%','u','.','%','u','.','%','u',0};
+    static WCHAR name[] = {'\\',0};
+    VS_FIXEDFILEINFO *lpVer;
+    WCHAR filever[0x100];
+    LPVOID version;
+    DWORD versize;
+    DWORD handle;
+    UINT sz;
+
+    TRACE("%s\n", debugstr_w(filename));
+
+    versize = GetFileVersionInfoSizeW( filename, &handle );
+    if (!versize)
+        return NULL;
+
+    version = msi_alloc( versize );
+    GetFileVersionInfoW( filename, 0, versize, version );
+
+    VerQueryValueW( version, name, (LPVOID*)&lpVer, &sz );
+    msi_free( version );
+
+    sprintfW( filever, name_fmt,
+        HIWORD(lpVer->dwFileVersionMS),
+        LOWORD(lpVer->dwFileVersionMS),
+        HIWORD(lpVer->dwFileVersionLS),
+        LOWORD(lpVer->dwFileVersionLS));
+
+    return strdupW( filever );
+}
+
+static UINT msi_check_file_install_states( MSIPACKAGE *package )
+{
+    LPWSTR file_version;
+    MSIFILE *file;
+
+    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
+    {
+        MSICOMPONENT* comp = file->Component;
+        LPWSTR p;
+
+        if (!comp)
+            continue;
+
+        if (file->IsCompressed)
+            comp->ForceLocalState = TRUE;
+
+        /* calculate target */
+        p = resolve_folder(package, comp->Directory, FALSE, FALSE, NULL);
+
+        msi_free(file->TargetPath);
+
+        TRACE("file %s is named %s\n",
+               debugstr_w(file->File), debugstr_w(file->FileName));
+
+        file->TargetPath = build_directory_name(2, p, file->FileName);
+
+        msi_free(p);
+
+        TRACE("file %s resolves to %s\n",
+               debugstr_w(file->File), debugstr_w(file->TargetPath));
+
+        /* don't check files of components that aren't installed */
+        if (comp->Installed == INSTALLSTATE_UNKNOWN ||
+            comp->Installed == INSTALLSTATE_ABSENT)
+        {
+            file->state = msifs_missing;  /* assume files are missing */
+            continue;
+        }
+
+        if (GetFileAttributesW(file->TargetPath) == INVALID_FILE_ATTRIBUTES)
+        {
+            file->state = msifs_missing;
+            comp->Cost += file->FileSize;
+            comp->Installed = INSTALLSTATE_INCOMPLETE;
+            continue;
+        }
+
+        if (file->Version &&
+            (file_version = msi_get_disk_file_version( file->TargetPath )))
+        {
+            TRACE("new %s old %s\n", debugstr_w(file->Version),
+                  debugstr_w(file_version));
+            /* FIXME: seems like a bad way to compare version numbers */
+            if (lstrcmpiW(file_version, file->Version)<0)
+            {
+                file->state = msifs_overwrite;
+                comp->Cost += file->FileSize;
+                comp->Installed = INSTALLSTATE_INCOMPLETE;
+            }
+            else
+                file->state = msifs_present;
+            msi_free( file_version );
+        }
+        else
+            file->state = msifs_present;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+/*
  * A lot is done in this function aside from just the costing.
  * The costing needs to be implemented at some point but for now I am going
  * to focus on the directory building
@@ -1953,14 +2031,13 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
         {'I','N','S','T','A','L','L','L','E','V','E','L',0};
     static const WCHAR szOne[] = { '1', 0 };
     MSICOMPONENT *comp;
-    MSIFILE *file;
     UINT rc;
     MSIQUERY * view;
     LPWSTR level;
 
     if ( 1 == msi_get_property_int( package, szCosting, 0 ) )
         return ERROR_SUCCESS;
-    
+
     TRACE("Building Directory properties\n");
 
     rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
@@ -1971,81 +2048,11 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
         msiobj_release(&view->hdr);
     }
 
+    /* read components states from the registry */
+    ACTION_GetComponentInstallStates(package);
+
     TRACE("File calculations\n");
-
-    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
-    {
-        MSICOMPONENT* comp = file->Component;
-        LPWSTR p;
-
-        if (!comp)
-            continue;
-
-        if (file->IsCompressed)
-            comp->ForceLocalState = TRUE;
-
-        /* calculate target */
-        p = resolve_folder(package, comp->Directory, FALSE, FALSE, NULL);
-
-        msi_free(file->TargetPath);
-
-        TRACE("file %s is named %s\n",
-               debugstr_w(file->File),debugstr_w(file->FileName));       
-
-        file->TargetPath = build_directory_name(2, p, file->FileName);
-
-        msi_free(p);
-
-        TRACE("file %s resolves to %s\n",
-               debugstr_w(file->File),debugstr_w(file->TargetPath));       
-
-        if (GetFileAttributesW(file->TargetPath) == INVALID_FILE_ATTRIBUTES)
-        {
-            file->state = msifs_missing;
-            comp->Cost += file->FileSize;
-            continue;
-        }
-
-        if (file->Version)
-        {
-            DWORD handle;
-            DWORD versize;
-            UINT sz;
-            LPVOID version;
-            static WCHAR name[] = {'\\',0};
-            static const WCHAR name_fmt[] = 
-                {'%','u','.','%','u','.','%','u','.','%','u',0};
-            WCHAR filever[0x100];
-            VS_FIXEDFILEINFO *lpVer;
-
-            TRACE("Version comparison..\n");
-            versize = GetFileVersionInfoSizeW(file->TargetPath,&handle);
-            version = msi_alloc(versize);
-            GetFileVersionInfoW(file->TargetPath, 0, versize, version);
-
-            VerQueryValueW(version, name, (LPVOID*)&lpVer, &sz);
-
-            sprintfW(filever,name_fmt,
-                HIWORD(lpVer->dwFileVersionMS),
-                LOWORD(lpVer->dwFileVersionMS),
-                HIWORD(lpVer->dwFileVersionLS),
-                LOWORD(lpVer->dwFileVersionLS));
-
-            TRACE("new %s old %s\n", debugstr_w(file->Version),
-                  debugstr_w(filever));
-            if (strcmpiW(filever,file->Version)<0)
-            {
-                file->state = msifs_overwrite;
-                /* FIXME: cost should be diff in size */
-                comp->Cost += file->FileSize;
-            }
-            else
-                file->state = msifs_present;
-            msi_free(version);
-        }
-        else
-            file->state = msifs_present;
-    }
+    msi_check_file_install_states( package );
 
     TRACE("Evaluating Condition Table\n");
 
@@ -2060,14 +2067,10 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
     TRACE("Enabling or Disabling Components\n");
     LIST_FOR_EACH_ENTRY( comp, &package->components, MSICOMPONENT, entry )
     {
-        if (comp->Condition)
+        if (MSI_EvaluateConditionW(package, comp->Condition) == MSICONDITION_FALSE)
         {
-            if (MSI_EvaluateConditionW(package,
-                comp->Condition) == MSICONDITION_FALSE)
-            {
-                TRACE("Disabling component %s\n", debugstr_w(comp->Component));
-                comp->Enabled = FALSE;
-            }
+            TRACE("Disabling component %s\n", debugstr_w(comp->Component));
+            comp->Enabled = FALSE;
         }
     }
 
@@ -2078,7 +2081,7 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
         MSI_SetPropertyW(package,szlevel, szOne);
     msi_free(level);
 
-    ACTION_UpdateInstallStates(package);
+    ACTION_UpdateFeatureInstallStates(package);
 
     return MSI_SetFeatureStates(package);
 }

@@ -540,8 +540,7 @@ UINT WINAPI MSI_SetFeatureStateW(MSIPACKAGE* package, LPCWSTR szFeature,
         feature->Attributes & msidbFeatureAttributesDisallowAdvertise)
         return ERROR_FUNCTION_FAILED;
 
-    feature->ActionRequest = iState;
-    feature->Action = iState;
+    msi_feature_set_state( feature, iState );
 
     ACTION_UpdateComponentStates(package,szFeature);
 
@@ -828,4 +827,33 @@ UINT WINAPI MsiSetInstallLevel(MSIHANDLE hInstall, int iInstallLevel)
     msiobj_release( &package->hdr );
 
     return r;
+}
+
+/***********************************************************************
+ * MsiGetFeatureValidStatesW (MSI.@)
+ */
+UINT WINAPI MsiGetFeatureValidStatesW(MSIHANDLE hInstall, LPCWSTR szFeature,
+                  DWORD* pInstallState)
+{
+    if(pInstallState) *pInstallState = 1<<INSTALLSTATE_LOCAL;
+    FIXME("%ld %s %p stub returning %d\n",
+        hInstall, debugstr_w(szFeature), pInstallState, pInstallState ? *pInstallState : 0);
+
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
+ * MsiGetFeatureValidStatesA (MSI.@)
+ */
+UINT WINAPI MsiGetFeatureValidStatesA(MSIHANDLE hInstall, LPCSTR szFeature,
+                  DWORD* pInstallState)
+{
+    UINT ret;
+    LPWSTR szwFeature = strdupAtoW(szFeature);
+
+    ret = MsiGetFeatureValidStatesW(hInstall, szwFeature, pInstallState);
+
+    msi_free(szwFeature);
+
+    return ret;
 }

@@ -920,6 +920,7 @@ static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
     struct msi_scrolltext_info *info;
     msi_control *control;
     HMODULE hRichedit;
+    LPCWSTR text;
     DWORD style;
 
     info = msi_alloc( sizeof *info );
@@ -949,7 +950,9 @@ static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
     SetPropW( control->hwnd, szButtonData, info );
 
     /* add the text into the richedit */
-    msi_scrolltext_add_text( control, MSI_RecordGetString( rec, 10 ) );
+    text = MSI_RecordGetString( rec, 10 );
+    if (text)
+        msi_scrolltext_add_text( control, text );
 
     return ERROR_SUCCESS;
 }
@@ -1766,8 +1769,7 @@ msi_seltree_menu( HWND hwnd, HTREEITEM hItem )
     case INSTALLSTATE_LOCAL:
     case INSTALLSTATE_ADVERTISED:
     case INSTALLSTATE_ABSENT:
-        feature->ActionRequest = r;
-        feature->Action = r;
+        msi_feature_set_state( feature, r );
         break;
     default:
         FIXME("select feature and all children\n");
@@ -1800,8 +1802,8 @@ MSISelectionTree_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     switch( msg )
     {
     case WM_LBUTTONDOWN:
-        tvhti.pt.x = LOWORD( lParam );
-        tvhti.pt.y = HIWORD( lParam );
+        tvhti.pt.x = (short)LOWORD( lParam );
+        tvhti.pt.y = (short)HIWORD( lParam );
         tvhti.flags = 0;
         tvhti.hItem = 0;
         r = CallWindowProcW(info->oldproc, hWnd, TVM_HITTEST, 0, (LPARAM) &tvhti );
@@ -3448,4 +3450,107 @@ void msi_dialog_unregister_class( void )
     UnregisterClassW( szMsiDialogClass, NULL );
     UnregisterClassW( szMsiHiddenWindow, NULL );
     uiThreadId = 0;
+}
+
+static UINT error_dialog_handler(MSIPACKAGE *package, LPCWSTR event,
+                                 LPCWSTR argument, msi_dialog* dialog)
+{
+    static const WCHAR end_dialog[] = {'E','n','d','D','i','a','l','o','g',0};
+    static const WCHAR error_abort[] = {'E','r','r','o','r','A','b','o','r','t',0};
+    static const WCHAR error_cancel[] = {'E','r','r','o','r','C','a','n','c','e','l',0};
+    static const WCHAR error_no[] = {'E','r','r','o','r','N','o',0};
+    static const WCHAR result_prop[] = {
+        'M','S','I','E','r','r','o','r','D','i','a','l','o','g','R','e','s','u','l','t',0
+    };
+
+    if ( lstrcmpW( event, end_dialog ) )
+        return ERROR_SUCCESS;
+
+    if ( !lstrcmpW( argument, error_abort ) || !lstrcmpW( argument, error_cancel ) ||
+         !lstrcmpW( argument, error_no ) )
+    {
+         MSI_SetPropertyW( package, result_prop, error_abort );
+    }
+
+    ControlEvent_CleanupSubscriptions(package);
+    msi_dialog_end_dialog( dialog );
+
+    return ERROR_SUCCESS;
+}
+
+static UINT msi_error_dialog_set_error( MSIPACKAGE *package, LPWSTR error_dialog, LPWSTR error )
+{
+    MSIRECORD * row;
+
+    static const WCHAR update[] = 
+        {'U','P','D','A','T','E',' ','`','C','o','n','t','r','o','l','`',' ',
+         'S','E','T',' ','`','T','e','x','t','`',' ','=',' ','\'','%','s','\'',' ',
+         'W','H','E','R','E', ' ','`','D','i','a','l','o','g','_','`',' ','=',' ','\'','%','s','\'',' ',
+         'A','N','D',' ','`','C','o','n','t','r','o','l','`',' ','=',' ',
+         '\'','E','r','r','o','r','T','e','x','t','\'',0};
+
+    row = MSI_QueryGetRecord( package->db, update, error, error_dialog );
+    if (!row)
+        return ERROR_FUNCTION_FAILED;
+
+    msiobj_release(&row->hdr);
+    return ERROR_SUCCESS;
+}
+
+UINT msi_spawn_error_dialog( MSIPACKAGE *package, LPWSTR error_dialog, LPWSTR error )
+{
+    msi_dialog *dialog;
+    WCHAR result[MAX_PATH];
+    UINT r = ERROR_SUCCESS;
+    DWORD size = MAX_PATH;
+    int res;
+
+    static const WCHAR pn_prop[] = {'P','r','o','d','u','c','t','N','a','m','e',0};
+    static const WCHAR title_fmt[] = {'%','s',' ','W','a','r','n','i','n','g',0};
+    static const WCHAR error_abort[] = {'E','r','r','o','r','A','b','o','r','t',0};
+    static const WCHAR result_prop[] = {
+        'M','S','I','E','r','r','o','r','D','i','a','l','o','g','R','e','s','u','l','t',0
+    };
+
+    if ( !error_dialog )
+    {
+        LPWSTR product_name = msi_dup_property( package, pn_prop );
+        WCHAR title[MAX_PATH];
+
+        sprintfW( title, title_fmt, product_name );
+        res = MessageBoxW( NULL, error, title, MB_OKCANCEL | MB_ICONWARNING );
+
+        msi_free( product_name );
+
+        if ( res == IDOK )
+            return ERROR_SUCCESS;
+        else
+            return ERROR_FUNCTION_FAILED;
+    }
+
+    r = msi_error_dialog_set_error( package, error_dialog, error );
+    if ( r != ERROR_SUCCESS )
+        return r;
+
+    dialog = msi_dialog_create( package, error_dialog, package->dialog,
+                                error_dialog_handler );
+    if ( !dialog )
+        return ERROR_FUNCTION_FAILED;
+
+    dialog->finished = FALSE;
+    r = msi_dialog_run_message_loop( dialog );
+    if ( r != ERROR_SUCCESS )
+        goto done;
+
+    r = MSI_GetPropertyW( package, result_prop, result, &size );
+    if ( r != ERROR_SUCCESS)
+        r = ERROR_SUCCESS;
+
+    if ( !lstrcmpW( result, error_abort ) )
+        r = ERROR_FUNCTION_FAILED;
+
+done:
+    msi_dialog_destroy( dialog );
+
+    return r;
 }

@@ -428,7 +428,7 @@ static UINT msi_get_word_count( MSIPACKAGE *package )
     return word_count;
 }
 
-MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
+MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPWSTR base_url )
 {
     static const WCHAR szLevel[] = { 'U','I','L','e','v','e','l',0 };
     static const WCHAR szpi[] = {'%','i',0};
@@ -466,6 +466,7 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
 
         package->WordCount = msi_get_word_count( package );
         package->PackagePath = strdupW( db->path );
+        package->BaseURL = strdupW( base_url );
 
         /* OK, here is where we do a slew of things to the database to 
          * prep for all that is to come as a package */
@@ -550,6 +551,7 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     MSIDATABASE *db = NULL;
     MSIPACKAGE *package;
     MSIHANDLE handle;
+    LPWSTR ptr, base_url = NULL;
     UINT r;
 
     static const WCHAR OriginalDatabase[] =
@@ -571,7 +573,16 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
         LPCWSTR file;
 
         if ( UrlIsW( szPackage, URLIS_URL ) )
+        {
             file = msi_download_file( szPackage, temppath );
+
+            base_url = strdupW( szPackage );
+            if ( !base_url )
+                return ERROR_OUTOFMEMORY;
+
+            ptr = strrchrW( base_url, '/' );
+            if (ptr) *(ptr + 1) = '\0';
+        }
         else
             file = copy_package_to_temp( szPackage, temppath );
 
@@ -589,7 +600,8 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
         }
     }
 
-    package = MSI_CreatePackage( db );
+    package = MSI_CreatePackage( db, base_url );
+    msi_free( base_url );
     msiobj_release( &db->hdr );
     if( !package )
         return ERROR_FUNCTION_FAILED;

@@ -128,7 +128,7 @@ void *msihandle2msiinfo(MSIHANDLE handle, UINT type)
         goto out;
     ret = msihandletable[handle].obj;
     msiobj_addref( ret );
-    
+
 out:
     LeaveCriticalSection( &MSI_handle_cs );
 
@@ -153,8 +153,6 @@ void *alloc_msiobject(UINT type, UINT size, msihandledestructor destroy )
 
 void msiobj_addref( MSIOBJECTHDR *info )
 {
-    TRACE("%p\n", info);
-
     if( !info )
         return;
 
@@ -180,8 +178,6 @@ void msiobj_unlock( MSIOBJECTHDR *info )
 int msiobj_release( MSIOBJECTHDR *info )
 {
     int ret;
-
-    TRACE("%p\n",info);
 
     if( !info )
         return -1;
