@@ -1,0 +1,18 @@
+#include <windows.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+1 24 DISCARDABLE "manifest.xml"
+
+IDI_MAIN_ICON   ICON    "res/computer.ico"
+IDB_ROOT_IMAGE  BITMAP  "res/root.bmp"
+
+/* main toolbar icons */
+IDB_PROP    BITMAP DISCARDABLE "res/properties.bmp"
+IDB_REFRESH BITMAP DISCARDABLE "res/refresh.bmp"
+IDB_HELP    BITMAP DISCARDABLE "res/help.bmp"
+IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
+
+#include "lang/de-DE.rc"
+#include "lang/en-US.rc"

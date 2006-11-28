@@ -65,6 +65,7 @@ END
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
+  IDS_APPNAME "ReactOS Device Manager"
   IDS_HINT_BLANK        " "
   IDS_HINT_EXIT         " Exits the program."
   IDS_HINT_REFRESH      " Refresh the service list."
