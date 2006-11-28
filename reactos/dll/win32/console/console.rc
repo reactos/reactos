@@ -17,4 +17,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"console.dll\0"
 #include <reactos/version.rc>
 
-#include "en.rc"
+#include "rsrc.rc"
