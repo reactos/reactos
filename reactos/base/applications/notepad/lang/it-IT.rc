@@ -129,10 +129,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "Questo programma è software libero; può redistribuirlo e/o modificarlo sotto
-i termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma è distribuito
-nella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita
-di NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se così non fosse, scriva alla Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  STRING_LICENSE, "Questo programma è software libero; può redistribuirlo e/o modificarlo sotto\ni termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma è distribuito\nnella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita\ndi NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se così non fosse, scriva alla Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -158,12 +155,9 @@ STRING_TOOLARGE,                                "Il file '%s' è troppo grande pe
 Per favore usare un altro editore."
 STRING_NOTEXT,                                  "Non è stato inserito alcun testo. \
 \nPer favore digitare qualcosa e riprovare"
-STRING_DOESNOTEXIST,                            "Il file '%s'\nnon esiste\n\n \
-Creare un nuovo file ?"
-STRING_NOTSAVED,                                "Il file '%s'\nè stato modificato\n\n \
-Salvare le modifiche ?"
+STRING_DOESNOTEXIST,                            "Il file '%s'\nnon esiste\nCreare un nuovo file ?"
+STRING_NOTSAVED,                                "Il file '%s'\nè stato modificato\nSalvare le modifiche ?"
 STRING_NOTFOUND,                                        "'%s' non è stato trovato."
-STRING_OUT_OF_MEMORY,                   "Memoria insufficente per completare questa operazione. \
-\nChiudere una o più applicazioni per aumentare la quantità\n di memoria libera."
+STRING_OUT_OF_MEMORY,                   "Memoria insufficente per completare questa operazione.\nChiudere una o più applicazioni per aumentare la quantità\n di memoria libera."
 
 }
