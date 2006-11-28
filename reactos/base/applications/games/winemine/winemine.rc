@@ -21,20 +21,4 @@
 #include <windows.h>
 #include "resource.h"
 
-#include "de-DE.rc"
-#include "en-US.rc"
-#include "fr-FR.rc"
-#include "gr-GR.rc"
-#include "pl-PL.rc"
-#include "nl-NL.rc"
-#include "uk-UA.rc"
-#include "nb-NO.rc"
-
-IDI_WINEMINE ICON MOVEABLE "rc/winemine.ico"
-
-IDB_FACES BITMAP MOVEABLE "rc/faces.bmp"
-
-IDB_LEDS BITMAP MOVEABLE "rc/leds.bmp"
-
-IDB_MINES BITMAP MOVEABLE "rc/mines.bmp"
-
+#include "rsrc.rc"
