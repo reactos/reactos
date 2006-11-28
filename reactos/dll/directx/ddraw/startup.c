@@ -175,113 +175,193 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 
 	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
 	{		
-		This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_CANCREATESURFACE;
+		This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CANCREATESURFACE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.CanCreateSurface = This->lpLcl->lpDDCB->HALDD.CanCreateSurface;
 	}
 	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
 	{		    
-             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_CANCREATESURFACE;
+             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CANCREATESURFACE;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.CanCreateSurface = This->lpLcl->lpDDCB->HELDD.CanCreateSurface;
 	}
 	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE)
 	{
-        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_CREATESURFACE;
+        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CREATESURFACE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.CreateSurface = This->lpLcl->lpDDCB->HALDD.CreateSurface;
 	}
 	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_CREATESURFACE)
 	{
-             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_CREATESURFACE;
+             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CREATESURFACE;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.CreateSurface = This->lpLcl->lpDDCB->HELDD.CreateSurface;
 	}
 	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_CREATEPALETTE)
 	{
-        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_CREATEPALETTE;
+        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CREATEPALETTE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.CreatePalette = This->lpLcl->lpDDCB->HALDD.CreatePalette;
 	}
 	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_CREATEPALETTE)
 	{
-             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_CREATEPALETTE;
+             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CREATEPALETTE;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.CreatePalette = This->lpLcl->lpDDCB->HELDD.CreatePalette;
 	}
 	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_DESTROYDRIVER)
 	{
-        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_DESTROYDRIVER;
+        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_DESTROYDRIVER;
 		This->lpLcl->lpDDCB->cbDDCallbacks.DestroyDriver = This->lpLcl->lpDDCB->HALDD.DestroyDriver;
 	}
 	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_DESTROYDRIVER)
 	{
-             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_DESTROYDRIVER;
+             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_DESTROYDRIVER;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.DestroyDriver = This->lpLcl->lpDDCB->HELDD.DestroyDriver;
 	}
 	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE)
 	{
-        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_FLIPTOGDISURFACE;
+        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_FLIPTOGDISURFACE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.FlipToGDISurface = This->lpLcl->lpDDCB->HALDD.FlipToGDISurface;
 	}
 	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE)
 	{
-             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_FLIPTOGDISURFACE;
+             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_FLIPTOGDISURFACE;
 			 This->lpLcl->lpDDCB->cbDDCallbacks.FlipToGDISurface = This->lpLcl->lpDDCB->HELDD.FlipToGDISurface;
 	}
 	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_GETSCANLINE)
 	{
-        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_GETSCANLINE;
+        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_GETSCANLINE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.GetScanLine = This->lpLcl->lpDDCB->HALDD.GetScanLine;
 	}
 	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_GETSCANLINE)
 	{
-             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_GETSCANLINE;
+             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_GETSCANLINE;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.GetScanLine = This->lpLcl->lpDDCB->HELDD.GetScanLine;
 	}
 	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_SETCOLORKEY)
 	{
-        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_SETCOLORKEY;
+        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETCOLORKEY;
 		This->lpLcl->lpDDCB->cbDDCallbacks.SetColorKey = This->lpLcl->lpDDCB->HALDD.SetColorKey;
 	}
 	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_SETCOLORKEY)
 	{
-             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_SETCOLORKEY;
+             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETCOLORKEY;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.SetColorKey = This->lpLcl->lpDDCB->HELDD.SetColorKey;
 	}
 	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE)
 	{
-        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_SETEXCLUSIVEMODE;
+        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETEXCLUSIVEMODE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.SetExclusiveMode = This->lpLcl->lpDDCB->HALDD.SetExclusiveMode;
 	}
 	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE)
 	{
-             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_SETEXCLUSIVEMODE;
+             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETEXCLUSIVEMODE;
 			 This->lpLcl->lpDDCB->cbDDCallbacks.SetExclusiveMode = This->lpLcl->lpDDCB->HELDD.SetExclusiveMode;
 	}
 	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_SETMODE)
 	{
-        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_SETMODE;
+        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETMODE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.SetMode = This->lpLcl->lpDDCB->HALDD.SetMode;
 	}
 	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_SETMODE)
 	{
-             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_SETMODE;
+             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETMODE;
 			 This->lpLcl->lpDDCB->cbDDCallbacks.SetMode = This->lpLcl->lpDDCB->HELDD.SetMode;
 	}
 	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)
 	{
-        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_WAITFORVERTICALBLANK;
+        This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_WAITFORVERTICALBLANK;
 		This->lpLcl->lpDDCB->cbDDCallbacks.WaitForVerticalBlank = This->lpLcl->lpDDCB->HALDD.WaitForVerticalBlank;
 	}
 	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)
 	{
-             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags = DDHAL_CB32_WAITFORVERTICALBLANK;
+             This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_WAITFORVERTICALBLANK;
 		 	 This->lpLcl->lpDDCB->cbDDCallbacks.WaitForVerticalBlank = This->lpLcl->lpDDCB->HELDD.WaitForVerticalBlank;
 	}
 
-
-
-		
-		                                 
-								
-								
 	
+	/*
+	This->lpLcl->lpDDCB->HELDDSurface.AddAttachedSurface = HelDdSurfAddAttachedSurface;
+	This->lpLcl->lpDDCB->HELDDSurface.Blt = HelDdSurfBlt;
+	This->lpLcl->lpDDCB->HELDDSurface.DestroySurface = HelDdSurfDestroySurface;
+	This->lpLcl->lpDDCB->HELDDSurface.Flip = HelDdSurfFlip;
+	This->lpLcl->lpDDCB->HELDDSurface.GetBltStatus = HelDdSurfGetBltStatus;
+	This->lpLcl->lpDDCB->HELDDSurface.GetFlipStatus = HelDdSurfGetFlipStatus;
+	This->lpLcl->lpDDCB->HELDDSurface.Lock = HelDdSurfLock;
+	This->lpLcl->lpDDCB->HELDDSurface.reserved4 = HelDdSurfreserved4;
+	This->lpLcl->lpDDCB->HELDDSurface.SetClipList = HelDdSurfSetClipList;
+	This->lpLcl->lpDDCB->HELDDSurface.SetColorKey = HelDdSurfSetColorKey;
+	This->lpLcl->lpDDCB->HELDDSurface.SetOverlayPosition = HelDdSurfSetOverlayPosition;
+	This->lpLcl->lpDDCB->HELDDSurface.SetPalette = HelDdSurfSetPalette;
+	This->lpLcl->lpDDCB->HELDDSurface.Unlock = HelDdSurfUnlock;
+	This->lpLcl->lpDDCB->HELDDSurface.UpdateOverlay = HelDdSurfUpdateOverlay;
+    */
 
+	/*
+	This->lpLcl->lpDDCB->HELDDPalette.DestroyPalette  = HelDdPalDestroyPalette; 
+	This->lpLcl->lpDDCB->HELDDPalette.SetEntries = HelDdPalSetEntries;
+	This->lpLcl->lpDDCB->HELDDPalette.dwSize = sizeof(This->lpLcl->lpDDCB->HELDDPalette);
+	*/
+
+	if (This->lpLcl->lpDDCB->HALDDSurface.dwFlags & DDHAL_EXEBUFCB32_CANCREATEEXEBUF)
+	{
+		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.CanCreateExecuteBuffer =
+			   This->lpLcl->lpDDCB->HALDDExeBuf.CanCreateExecuteBuffer;
+		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_CANCREATEEXEBUF;
+	}
+	else if (This->lpLcl->lpDDCB->HELDDSurface.dwFlags & DDHAL_EXEBUFCB32_CANCREATEEXEBUF)
+	{		     
+		     This->lpLcl->lpDDCB->cbDDExeBufCallbacks.CanCreateExecuteBuffer = 
+		         This->lpLcl->lpDDCB->HELDDExeBuf.CanCreateExecuteBuffer;
+			 This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_CANCREATEEXEBUF;
+	}
+
+	if (This->lpLcl->lpDDCB->HALDDSurface.dwFlags & DDHAL_EXEBUFCB32_CREATEEXEBUF)
+	{
+		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.CreateExecuteBuffer =
+			   This->lpLcl->lpDDCB->HALDDExeBuf.CreateExecuteBuffer;
+		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_CREATEEXEBUF;
+	}
+	else if (This->lpLcl->lpDDCB->HELDDSurface.dwFlags & DDHAL_EXEBUFCB32_CREATEEXEBUF)
+	{		     
+		     This->lpLcl->lpDDCB->cbDDExeBufCallbacks.CreateExecuteBuffer = 
+		         This->lpLcl->lpDDCB->HELDDExeBuf.CreateExecuteBuffer;
+			 This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_CREATEEXEBUF;
+	}
+
+	if (This->lpLcl->lpDDCB->HALDDSurface.dwFlags & DDHAL_EXEBUFCB32_DESTROYEXEBUF)
+	{
+		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.DestroyExecuteBuffer =
+			   This->lpLcl->lpDDCB->HALDDExeBuf.DestroyExecuteBuffer;
+		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_DESTROYEXEBUF;
+	}
+	else if (This->lpLcl->lpDDCB->HELDDSurface.dwFlags & DDHAL_EXEBUFCB32_DESTROYEXEBUF)
+	{		     
+		     This->lpLcl->lpDDCB->cbDDExeBufCallbacks.DestroyExecuteBuffer = 
+		         This->lpLcl->lpDDCB->HELDDExeBuf.DestroyExecuteBuffer;
+			 This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_DESTROYEXEBUF;
+	}
+
+	if (This->lpLcl->lpDDCB->HALDDSurface.dwFlags & DDHAL_EXEBUFCB32_LOCKEXEBUF)
+	{
+		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.LockExecuteBuffer =
+			   This->lpLcl->lpDDCB->HALDDExeBuf.LockExecuteBuffer;
+		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_LOCKEXEBUF;
+	}
+	else if (This->lpLcl->lpDDCB->HELDDSurface.dwFlags & DDHAL_EXEBUFCB32_LOCKEXEBUF)
+	{		     
+		     This->lpLcl->lpDDCB->cbDDExeBufCallbacks.LockExecuteBuffer = 
+		         This->lpLcl->lpDDCB->HELDDExeBuf.LockExecuteBuffer;
+			 This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_LOCKEXEBUF;
+	}
+
+	if (This->lpLcl->lpDDCB->HALDDSurface.dwFlags & DDHAL_EXEBUFCB32_UNLOCKEXEBUF)
+	{
+		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.UnlockExecuteBuffer =
+			   This->lpLcl->lpDDCB->HALDDExeBuf.UnlockExecuteBuffer;
+		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_UNLOCKEXEBUF;
+	}
+	else if (This->lpLcl->lpDDCB->HELDDSurface.dwFlags & DDHAL_EXEBUFCB32_UNLOCKEXEBUF)
+	{		     
+		     This->lpLcl->lpDDCB->cbDDExeBufCallbacks.UnlockExecuteBuffer = 
+		         This->lpLcl->lpDDCB->HELDDExeBuf.UnlockExecuteBuffer;
+			 This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_UNLOCKEXEBUF;
+	}
 	
 	/* Fill some basic info for Surface */
 	ddSurfGbl.lpDD = &ddgbl;
