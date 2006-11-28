@@ -254,10 +254,10 @@ HDC WINAPI CreateEnhMetaFileW(
             return NULL;
 	}
 	EmfDC.hFile = hFile;
-	EmfDC.iType = 2;
+	EmfDC.iType = METAFILE_DISK;
     }
     else
-        EmfDC.iType = 1;
+        EmfDC.iType = METAFILE_MEMORY;
 
     return mDC;
 }
