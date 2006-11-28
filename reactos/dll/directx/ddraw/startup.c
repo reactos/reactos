@@ -461,13 +461,7 @@ HRESULT WINAPI
 StartDirectDrawHel(LPDIRECTDRAW* iface)
 {
 	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
-	
-    /*
-     FIXME :
-             FlipToGDISurface
-             SetColorKey
-             Hel api
-     */
+	    
 	This->lpLcl->lpDDCB->HELDD.CanCreateSurface     = HelDdCanCreateSurface;	
 	This->lpLcl->lpDDCB->HELDD.CreateSurface        = HelDdCreateSurface;		
 	This->lpLcl->lpDDCB->HELDD.CreatePalette        = HelDdCreatePalette;
@@ -489,6 +483,40 @@ StartDirectDrawHel(LPDIRECTDRAW* iface)
 										  DDHAL_CB32_SETEXCLUSIVEMODE     | 
 										  DDHAL_CB32_SETMODE              |                                                   
 										  DDHAL_CB32_WAITFORVERTICALBLANK ;
+
+
+	This->lpLcl->lpDDCB->HELDD.dwSize = sizeof(This->lpLcl->lpDDCB->HELDD);
+
+	/*
+	This->lpLcl->lpDDCB->HELDDSurface.AddAttachedSurface = HelDdSurfAddAttachedSurface;
+	This->lpLcl->lpDDCB->HELDDSurface.Blt = HelDdSurfBlt;
+	This->lpLcl->lpDDCB->HELDDSurface.DestroySurface = HelDdSurfDestroySurface;
+	This->lpLcl->lpDDCB->HELDDSurface.Flip = HelDdSurfFlip;
+	This->lpLcl->lpDDCB->HELDDSurface.GetBltStatus = HelDdSurfGetBltStatus;
+	This->lpLcl->lpDDCB->HELDDSurface.GetFlipStatus = HelDdSurfGetFlipStatus;
+	This->lpLcl->lpDDCB->HELDDSurface.Lock = HelDdSurfLock;
+	This->lpLcl->lpDDCB->HELDDSurface.reserved4 = HelDdSurfreserved4;
+	This->lpLcl->lpDDCB->HELDDSurface.SetClipList = HelDdSurfSetClipList;
+	This->lpLcl->lpDDCB->HELDDSurface.SetColorKey = HelDdSurfSetColorKey;
+	This->lpLcl->lpDDCB->HELDDSurface.SetOverlayPosition = HelDdSurfSetOverlayPosition;
+	This->lpLcl->lpDDCB->HELDDSurface.SetPalette = HelDdSurfSetPalette;
+	This->lpLcl->lpDDCB->HELDDSurface.Unlock = HelDdSurfUnlock;
+	This->lpLcl->lpDDCB->HELDDSurface.UpdateOverlay = HelDdSurfUpdateOverlay;
+    */
+
+	/*
+	This->lpLcl->lpDDCB->HELDDPalette.DestroyPalette  = HelDdPalDestroyPalette; 
+	This->lpLcl->lpDDCB->HELDDPalette.SetEntries = HelDdPalSetEntries;
+	This->lpLcl->lpDDCB->HELDDPalette.dwSize = sizeof(This->lpLcl->lpDDCB->HELDDPalette);
+	*/
+
+	/*
+	This->lpLcl->lpDDCB->HELDDExeBuf.CanCreateExecuteBuffer = HelDdExeCanCreateExecuteBuffer;
+	This->lpLcl->lpDDCB->HELDDExeBuf.CreateExecuteBuffer = HelDdExeCreateExecuteBuffer;
+	This->lpLcl->lpDDCB->HELDDExeBuf.DestroyExecuteBuffer = HelDdExeDestroyExecuteBuffer;
+	This->lpLcl->lpDDCB->HELDDExeBuf.LockExecuteBuffer = HelDdExeLockExecuteBuffer;
+	This->lpLcl->lpDDCB->HELDDExeBuf.UnlockExecuteBuffer = HelDdExeUnlockExecuteBuffer;
+	*/
 										  										  	   
 	return DD_OK;
 }
