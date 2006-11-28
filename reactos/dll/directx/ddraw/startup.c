@@ -531,7 +531,7 @@ Create_DirectDraw (LPGUID pGUID,
 	if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID) == DD_OK);
     {
 
-		return ((LPDIRECTDRAW7)This)->lpVtbl->Initialize ((LPDIRECTDRAW7)This, pGUID);
+		return DD_OK;
 	}
 	
 	return DDERR_INVALIDPARAMS;
