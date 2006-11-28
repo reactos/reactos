@@ -6,6 +6,7 @@
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *  Copyright 2003 Marcelo Duarte
  *  Copyright 2003-2004 Ivan Leo Puoti
+ *  September 2006 Gabriel ilardi / some grammar corrections, corrected menu letter shortcut
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -47,13 +48,13 @@ BEGIN
 		MENUITEM "&Nuovo",           CMD_NEW
 		MENUITEM "&Apri...\tCtrl+O",     CMD_OPEN
 		MENUITEM "&Salva\tCtrl+S",     CMD_SAVE
-		MENUITEM "Salva &con nome...",       CMD_SAVE_AS
+		MENUITEM "Sal&va con nome...",       CMD_SAVE_AS
 		MENUITEM SEPARATOR
-		MENUITEM "&Stampa",            CMD_PRINT
-		MENUITEM "&Imposta pagina...",    CMD_PAGE_SETUP
+		MENUITEM "S&tampa",            CMD_PRINT
+		MENUITEM "I&mposta pagina...",    CMD_PAGE_SETUP
 		MENUITEM "&Configurazione stampante...", CMD_PRINTER_SETUP
 		MENUITEM SEPARATOR
-		MENUITEM "E&sci",             CMD_EXIT
+		MENUITEM "&Esci",             CMD_EXIT
 	END
 	POPUP "&Modifica" 
 	BEGIN
@@ -61,25 +62,25 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Taglia\tCtrl+X",      CMD_CUT
 		MENUITEM "&Copia\tCtrl+C",     CMD_COPY
-		MENUITEM "&Incolla\tCtrl+V",    CMD_PASTE
-		MENUITEM "&Elimina\tDel",      CMD_DELETE
+		MENUITEM "I&ncolla\tCtrl+V",    CMD_PASTE
+		MENUITEM "E&limina\tDel",      CMD_DELETE
 		MENUITEM SEPARATOR
-		MENUITEM "&Trova\tCtrl+F",   CMD_SEARCH
-		MENUITEM "&Trova successivo\tF3",  CMD_SEARCH_NEXT
+		MENUITEM "Tr&ova\tCtrl+F",   CMD_SEARCH
+		MENUITEM "T&rova successivo\tF3",  CMD_SEARCH_NEXT
 		MENUITEM SEPARATOR
-		MENUITEM "Seleziona &tutto\tCtrl+A",       CMD_SELECT_ALL
-		MENUITEM "&Ora/Data\tF5",    CMD_TIME_DATE
+		MENUITEM "Sele&ziona tutto\tCtrl+A",       CMD_SELECT_ALL
+		MENUITEM "Ora/&Data\tF5",    CMD_TIME_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "&A campo automatico",  CMD_WRAP
 		MENUITEM "&Imposta carattere...",          CMD_FONT
 	END
-	POPUP "&Aiuto" 
+	POPUP "&?" 
 	BEGIN
-		MENUITEM "&Contenuti",         CMD_HELP_CONTENTS
+		MENUITEM "&Guida in linea",         CMD_HELP_CONTENTS
 		MENUITEM "&Trova...",        CMD_HELP_SEARCH
 		MENUITEM "&Aiuto sulla Guida",     CMD_HELP_ON_HELP
 		MENUITEM SEPARATOR
-		MENUITEM "&About"             CMD_ABOUT
+		MENUITEM "Informazioni &su blocco note"             CMD_ABOUT
 		MENUITEM "Inf&o...",      CMD_ABOUT_WINE
 	END
 END
@@ -89,38 +90,38 @@ END
 DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Setup di pagina"
+CAPTION "Imposta pagina"
 {
-LTEXT    "&Note a inizio pagina:",  0x140,   10, 07, 40, 15
+LTEXT    "&Intestazione:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Note a piè di pagina:",  0x142,   10, 24, 40, 15
+LTEXT    "&Piè di pagina:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
 GROUPBOX "&Margini:",      0x144,     10, 43,160, 45
-LTEXT    "&Sinistro:",        0x145,   20, 55, 30, 10, WS_CHILD
+LTEXT    "Si&nistro:",        0x145,   20, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Superiore:",         0x148,    20, 73, 30, 10, WS_CHILD
+LTEXT    "S&uperiore:",         0x148,    20, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Destro:",       0x14B, 100, 55, 30, 10, WS_CHILD
+LTEXT    "D&estro:",       0x14B, 100, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Inferiore:",      0x14E,100, 73, 30, 10, WS_CHILD
+LTEXT    "In&feriore:",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
 DEFPUSHBUTTON "OK",         0x151,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "Cancella",     0x152,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Annulla",     0x152,               180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "&Aiuto",       0x153,                180, 39, 40, 15, WS_TABSTOP
 }
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "About ReactOS Notepad"
+CAPTION "Informazioni su blocco note ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n ",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Close",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "Chiudi",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
@@ -128,13 +129,16 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  STRING_LICENSE, "Questo programma è software libero; può redistribuirlo e/o modificarlo sotto
+i termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma è distribuito
+nella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita
+di NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se così non fosse, scriva alla Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 STRINGTABLE DISCARDABLE
 {
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,   "Page &s"   /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "Pagina &s"   /* FIXME */
 STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
 STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
 STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
@@ -151,15 +155,15 @@ STRING_ALL_FILES,                               "Tutti i file (*.*)"
 STRING_TEXT_FILES_TXT,                  "File di testo (*.txt)"
 
 STRING_TOOLARGE,                                "Il file '%s' è troppo grande per il blocco note.\n \
-Per favore usare un altro editor."
+Per favore usare un altro editore."
 STRING_NOTEXT,                                  "Non è stato inserito alcun testo. \
 \nPer favore digitare qualcosa e riprovare"
 STRING_DOESNOTEXIST,                            "Il file '%s'\nnon esiste\n\n \
 Creare un nuovo file ?"
-STRING_NOTSAVED,                                "Il file '%s'\ne' stato modificato\n\n \
+STRING_NOTSAVED,                                "Il file '%s'\nè stato modificato\n\n \
 Salvare le modifiche ?"
 STRING_NOTFOUND,                                        "'%s' non è stato trovato."
-STRING_OUT_OF_MEMORY,                   "Memoria insufficente per completare questa operazione \
-task. \nChiudere una o più applicazioni per aumentare la quantita'\n di memoria libera."
+STRING_OUT_OF_MEMORY,                   "Memoria insufficente per completare questa operazione. \
+\nChiudere una o più applicazioni per aumentare la quantità\n di memoria libera."
 
 }
