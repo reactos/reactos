@@ -173,105 +173,108 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 	/* Fixme the mix betwin hel and hal */
 	This->lpLcl->lpDDCB->cbDDCallbacks.dwSize = sizeof(This->lpLcl->lpDDCB->cbDDCallbacks);
 
-	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
+
+	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE) && (devicetypes !=3))
 	{		
 		This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CANCREATESURFACE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.CanCreateSurface = This->lpLcl->lpDDCB->HALDD.CanCreateSurface;
 	}
-	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
+	else if ((This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_CANCREATESURFACE) && (devicetypes !=2))
 	{		    
              This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CANCREATESURFACE;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.CanCreateSurface = This->lpLcl->lpDDCB->HELDD.CanCreateSurface;
 	}
-	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE)
+	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE) && (devicetypes !=3))
 	{
         This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CREATESURFACE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.CreateSurface = This->lpLcl->lpDDCB->HALDD.CreateSurface;
 	}
-	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_CREATESURFACE)
+	else if ((This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_CREATESURFACE) && (devicetypes !=2))
 	{
              This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CREATESURFACE;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.CreateSurface = This->lpLcl->lpDDCB->HELDD.CreateSurface;
 	}
-	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_CREATEPALETTE)
+	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_CREATEPALETTE) && (devicetypes !=3))
 	{
         This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CREATEPALETTE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.CreatePalette = This->lpLcl->lpDDCB->HALDD.CreatePalette;
 	}
-	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_CREATEPALETTE)
+	else if ((This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_CREATEPALETTE) && (devicetypes !=2))
 	{
              This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_CREATEPALETTE;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.CreatePalette = This->lpLcl->lpDDCB->HELDD.CreatePalette;
 	}
-	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_DESTROYDRIVER)
+	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_DESTROYDRIVER) && (devicetypes !=3))
 	{
         This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_DESTROYDRIVER;
 		This->lpLcl->lpDDCB->cbDDCallbacks.DestroyDriver = This->lpLcl->lpDDCB->HALDD.DestroyDriver;
 	}
-	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_DESTROYDRIVER)
+	else if ((This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_DESTROYDRIVER) && (devicetypes !=2))
 	{
              This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_DESTROYDRIVER;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.DestroyDriver = This->lpLcl->lpDDCB->HELDD.DestroyDriver;
 	}
-	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE)
+	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE) && (devicetypes !=3))
 	{
         This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_FLIPTOGDISURFACE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.FlipToGDISurface = This->lpLcl->lpDDCB->HALDD.FlipToGDISurface;
 	}
-	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE)
+	else if ((This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE) && (devicetypes !=2))
 	{
              This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_FLIPTOGDISURFACE;
 			 This->lpLcl->lpDDCB->cbDDCallbacks.FlipToGDISurface = This->lpLcl->lpDDCB->HELDD.FlipToGDISurface;
 	}
-	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_GETSCANLINE)
+	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_GETSCANLINE) && (devicetypes !=3))
 	{
         This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_GETSCANLINE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.GetScanLine = This->lpLcl->lpDDCB->HALDD.GetScanLine;
 	}
-	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_GETSCANLINE)
+	else if ((This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_GETSCANLINE) && (devicetypes !=2))
 	{
              This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_GETSCANLINE;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.GetScanLine = This->lpLcl->lpDDCB->HELDD.GetScanLine;
 	}
-	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_SETCOLORKEY)
+	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_SETCOLORKEY) && (devicetypes !=3))
 	{
         This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETCOLORKEY;
 		This->lpLcl->lpDDCB->cbDDCallbacks.SetColorKey = This->lpLcl->lpDDCB->HALDD.SetColorKey;
 	}
-	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_SETCOLORKEY)
+	else if ((This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_SETCOLORKEY) && (devicetypes !=2))
 	{
              This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETCOLORKEY;
 		     This->lpLcl->lpDDCB->cbDDCallbacks.SetColorKey = This->lpLcl->lpDDCB->HELDD.SetColorKey;
 	}
-	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE)
+	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE) && (devicetypes !=3))
 	{
         This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETEXCLUSIVEMODE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.SetExclusiveMode = This->lpLcl->lpDDCB->HALDD.SetExclusiveMode;
 	}
-	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE)
+	else if ((This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE) && (devicetypes !=2))
 	{
              This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETEXCLUSIVEMODE;
 			 This->lpLcl->lpDDCB->cbDDCallbacks.SetExclusiveMode = This->lpLcl->lpDDCB->HELDD.SetExclusiveMode;
 	}
-	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_SETMODE)
+	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_SETMODE) && (devicetypes !=3))
 	{
         This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETMODE;
 		This->lpLcl->lpDDCB->cbDDCallbacks.SetMode = This->lpLcl->lpDDCB->HALDD.SetMode;
 	}
-	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_SETMODE)
+	else if ((This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_SETMODE) && (devicetypes !=2))
 	{
              This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_SETMODE;
 			 This->lpLcl->lpDDCB->cbDDCallbacks.SetMode = This->lpLcl->lpDDCB->HELDD.SetMode;
 	}
-	if (This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)
+	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK) && (devicetypes !=3))
 	{
         This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_WAITFORVERTICALBLANK;
-		This->lpLcl->lpDDCB->cbDDCallbacks.WaitForVerticalBlank = This->lpLcl->lpDDCB->HALDD.WaitForVerticalBlank;
+		This->lpLcl->lpDDCB->cbDDCallbacks.WaitForVerticalBlank = 
+			This->lpLcl->lpDDCB->HALDD.WaitForVerticalBlank;
 	}
-	else if (This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)
+	else if ((This->lpLcl->lpDDCB->HELDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK) && (devicetypes !=2))
 	{
              This->lpLcl->lpDDCB->cbDDCallbacks.dwFlags |= DDHAL_CB32_WAITFORVERTICALBLANK;
-		 	 This->lpLcl->lpDDCB->cbDDCallbacks.WaitForVerticalBlank = This->lpLcl->lpDDCB->HELDD.WaitForVerticalBlank;
+		 	 This->lpLcl->lpDDCB->cbDDCallbacks.WaitForVerticalBlank = 
+				 This->lpLcl->lpDDCB->HELDD.WaitForVerticalBlank;
 	}
 
 	
