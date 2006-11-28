@@ -8,21 +8,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"winlogon.exe\0"
 #include <reactos/version.rc>
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-
-/* IDI_WINLOGON ICON "resources/winlogon.ico" */
-
-#include "cs-CZ.rc"
-#include "de-DE.rc"
-#include "en-US.rc"
-#include "es-ES.rc"
-#include "fr-FR.rc"
-#include "hu-HU.rc"
-#include "ja-JP.rc"
-#include "nl-NL.rc"
-#include "nb-NO.rc"
-#include "pl-PL.rc"
-#include "ru-RU.rc"
-#include "sv-SE.rc"
-#include "uk-UA.rc"
-
+#include "rsrc.rc"
