@@ -341,6 +341,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 	string cbproj_path = module.GetBasePath();	
 	string CompilerVar;
 	string baseaddr;
+	string windres_defines;
 	string project_linker_flags = "-Wl,--enable-stdcall-fixup ";
 	project_linker_flags += GenerateProjectLinkerFlags();
 
@@ -433,10 +434,12 @@ CBBackend::_generate_cbproj ( const Module& module )
 			{
 				const string& escaped = _replace_str(defs[i]->value, "\"","&quot;");
 				common_defines.push_back( defs[i]->name + "=" + escaped );
+				windres_defines += "-D" + defs[i]->name + "=" + escaped + " ";
 			}
 			else
 			{
 				common_defines.push_back( defs[i]->name );
+				windres_defines += "-D" + defs[i]->name + " ";
 			}
 		}
 		/*const vector<Property*>& variables = data.properties;
@@ -482,7 +485,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 
 		if ( configuration.UseConfigurationInPath )
 		{
-			if ( module.type == StaticLibrary )
+			if ( module.type == StaticLibrary ||module.type == ObjectLibrary )
 				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", intdir.c_str (), module.GetBasePath ().c_str (), cfg.name.c_str(), module.name.c_str(), module_type.c_str());
 			else
 				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), cfg.name.c_str(), module.name.c_str(), module_type.c_str());
@@ -490,7 +493,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		}
 		else
 		{
-			if ( module.type == StaticLibrary )
+			if ( module.type == StaticLibrary || module.type == ObjectLibrary )
 				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", intdir.c_str (), module.GetBasePath ().c_str (), module.name.c_str(), module_type.c_str() );
 			else
 				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), module.name.c_str(), module_type.c_str() );
@@ -711,6 +714,8 @@ CBBackend::_generate_cbproj ( const Module& module )
 		const string& resource_file = resource_files[i];
 		fprintf ( OUT, "\t\t<Unit filename=\"%s\">\r\n", resource_file.c_str() );
 		fprintf ( OUT, "\t\t\t<Option compilerVar=\"WINDRES\" />\r\n" );
+		string extension = GetExtension ( resource_file );
+		fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"gcc -xc -E -DRC_INVOKED $includes %s $file -o kernel32.kernel32.rci.tmp\\n%s\\tools\\wrc\\wrc.exe $includes %s kernel32.kernel32.rci.tmp kernel32.kernel32.res.tmp\\n$rescomp --output-format=coff kernel32.kernel32.res.tmp -o $resource_output\" />\r\n" , windres_defines.c_str(), outdir.c_str(),  windres_defines.c_str() );
 		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
 		{
 			const CBConfiguration& cfg = *m_configurations[icfg];
