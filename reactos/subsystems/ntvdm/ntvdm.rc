@@ -6,10 +6,11 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"ntvdm.exe\0"
 #include <reactos/version.rc>
 
-#include "En.rc"
-#include "De.rc"
-#include "Ja.rc"
-#include "Hu.rc"
-#include "Es.rc"
-#include "No.rc"
-#include "Uk.rc"
+#include "de-DE.rc"
+#include "es-ES.rc"
+#include "en-US.rc"
+#include "fr-FR.rc"
+#include "hu-HU.rc"
+#include "ja-JA.rc"
+#include "no-NO.rc"
+#include "uk-UK.rc"
