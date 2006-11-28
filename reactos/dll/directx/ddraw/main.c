@@ -12,8 +12,6 @@
 
 #include "rosdraw.h"
 
-#undef DirectDrawCreate
-
 CRITICAL_SECTION ddcs;
 
 // This function is exported by the dll
