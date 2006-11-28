@@ -45,8 +45,8 @@ BEGIN
 	BEGIN
 		MENUITEM "&Nový...",               CMD_NEW
 		MENUITEM "&Otevøít\tCtrl+O",       CMD_OPEN
-		MENUITEM "&Ulo¾it\tCtrl+S",        CMD_SAVE
-		MENUITEM "Ulo¾it j&ako...",        CMD_SAVE_AS
+		MENUITEM "&Uložit\tCtrl+S",        CMD_SAVE
+		MENUITEM "Uložit j&ako...",        CMD_SAVE_AS
 		MENUITEM SEPARATOR
 		MENUITEM "&Tisk",                  CMD_PRINT
 		MENUITEM "Nas&tavení stránky...",  CMD_PAGE_SETUP
@@ -60,13 +60,13 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Vyjmou&t\tCtrl+X",       CMD_CUT
 		MENUITEM "&Kopírovat\tCtrl+C",     CMD_COPY
-		MENUITEM "&Vlo¾it\tCtrl+V",        CMD_PASTE
+		MENUITEM "&Vložit\tCtrl+V",        CMD_PASTE
 		MENUITEM "&Smazat\tDel",           CMD_DELETE
 		MENUITEM SEPARATOR
 		MENUITEM "&Hledej\tCtrl+F",        CMD_SEARCH
-		MENUITEM "&Najdi dal¹í\tF3",       CMD_SEARCH_NEXT
+		MENUITEM "&Najdi další\tF3",       CMD_SEARCH_NEXT
 		MENUITEM SEPARATOR
-		MENUITEM "Vybrat v¹&e\tCtrl+A",    CMD_SELECT_ALL
+		MENUITEM "Vybrat vš&e\tCtrl+A",    CMD_SELECT_ALL
 		MENUITEM "È&as/Datum\tF5",         CMD_TIME_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Zalo&mit dlouhé øádky",  CMD_WRAP
@@ -78,7 +78,7 @@ BEGIN
 		MENUITEM "&Najít...",              CMD_HELP_SEARCH
 		MENUITEM "&Pomoc k nápovìdì",      CMD_HELP_ON_HELP
 		MENUITEM SEPARATOR
-		MENUITEM "&About"                  CMD_ABOUT
+		MENUITEM "&O programu"                  CMD_ABOUT
 		MENUITEM "Inf&o...",               CMD_ABOUT_WINE
 	END
 END
@@ -112,7 +112,7 @@ PUSHBUTTON    "&Nápovìda",       0x153,                180, 39, 40, 15, WS_TABST
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "About ReactOS Notepad"
+CAPTION "O aplikaci ReactOS Notepad"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n",
@@ -146,20 +146,20 @@ STRING_INFO,                                    "Informace"
 
 STRING_UNTITLED,                                "(bez názvu)"
 
-STRING_ALL_FILES,                               "V¹echny soubory (*.*)"
+STRING_ALL_FILES,                               "Všechny soubory (*.*)"
 STRING_TEXT_FILES_TXT,                  "Textové soubory (*.txt)"
 
-STRING_TOOLARGE,                                "Soubor '%s' je pro notepad pøíli¹ velký.\n \
-Pou¾ijte jiný editor, prosím."
-STRING_NOTEXT,                                  "Nebyl zadán ¾ádný text. \
-\nPlease type something and try again"
+STRING_TOOLARGE,                                "Soubor '%s' je pro notepad pøíliž velký.\n \
+Použijte jiný editor, prosím."
+STRING_NOTEXT,                                  "Nebyl zadán žádný text. \
+\nVložte nìjaký text a zkuste to znovu."
 STRING_DOESNOTEXIST,                            "Soubor '%s'\nneexistuje.\n\n \
 Chcete ho vytvoøit ?"
 STRING_NOTSAVED,                                "Soubor '%s'\nbyl zmìnìn.\n\n \
-Chcete ulo¾it zmìny ?"
+Chcete uložit zmìny ?"
 STRING_NOTFOUND,                                        "'%s' nebyl nalezen."
 STRING_OUT_OF_MEMORY,                   "Není dost pamìti na dokonèení této úlohy. \
-\nUzavøete jednu èi více aplikací abyste získali více  \nvolné \
+\nUzavøete jednu èi více aplikací, abyste získali více  \nvolné \
 pamìti."
 
 }
