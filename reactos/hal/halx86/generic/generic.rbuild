@@ -17,6 +17,7 @@
 	<file>sysbus.c</file>
 	<file>sysinfo.c</file>
 	<file>timer.c</file>
+	<file>systimer.S</file>
 	<pch>../include/hal.h</pch>
 </module>
 <module name="hal_generic_up" type="objectlibrary">
@@ -28,7 +29,6 @@
 	<file>irql.c</file>
 	<file>processor.c</file>
 	<file>spinlock.c</file>
-	<file>systimer.S</file>
 </module>
 <module name="hal_generic_pc" type="objectlibrary">
 	<include base="hal_generic_pc">../include</include>

@@ -177,231 +177,6 @@ KeInitInterrupts (VOID)
      }
 }
 
-static VOID
-KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
-                          PKTRAP_FRAME TrapFrame)
-{
-   TrapFrame->SegGs     = (USHORT)IrqTrapFrame->Gs;
-   TrapFrame->SegFs     = (USHORT)IrqTrapFrame->Fs;
-   TrapFrame->SegEs     = (USHORT)IrqTrapFrame->Es;
-   TrapFrame->SegDs     = (USHORT)IrqTrapFrame->Ds;
-   TrapFrame->Eax    = IrqTrapFrame->Eax;
-   TrapFrame->Ecx    = IrqTrapFrame->Ecx;
-   TrapFrame->Edx    = IrqTrapFrame->Edx;
-   TrapFrame->Ebx    = IrqTrapFrame->Ebx;
-   TrapFrame->HardwareEsp    = IrqTrapFrame->Esp;
-   TrapFrame->Ebp    = IrqTrapFrame->Ebp;
-   TrapFrame->Esi    = IrqTrapFrame->Esi;
-   TrapFrame->Edi    = IrqTrapFrame->Edi;
-   TrapFrame->Eip    = IrqTrapFrame->Eip;
-   TrapFrame->SegCs     = IrqTrapFrame->Cs;
-   TrapFrame->EFlags = IrqTrapFrame->Eflags;
-}
-
-static VOID
-KeTrapFrameToIRQTrapFrame(PKTRAP_FRAME TrapFrame,
-                          PKIRQ_TRAPFRAME IrqTrapFrame)
-{
-   IrqTrapFrame->Gs     = TrapFrame->SegGs;
-   IrqTrapFrame->Fs     = TrapFrame->SegFs;
-   IrqTrapFrame->Es     = TrapFrame->SegEs;
-   IrqTrapFrame->Ds     = TrapFrame->SegDs;
-   IrqTrapFrame->Eax    = TrapFrame->Eax;
-   IrqTrapFrame->Ecx    = TrapFrame->Ecx;
-   IrqTrapFrame->Edx    = TrapFrame->Edx;
-   IrqTrapFrame->Ebx    = TrapFrame->Ebx;
-   IrqTrapFrame->Esp    = TrapFrame->HardwareEsp;
-   IrqTrapFrame->Ebp    = TrapFrame->Ebp;
-   IrqTrapFrame->Esi    = TrapFrame->Esi;
-   IrqTrapFrame->Edi    = TrapFrame->Edi;
-   IrqTrapFrame->Eip    = TrapFrame->Eip;
-   IrqTrapFrame->Cs     = TrapFrame->SegCs;
-   IrqTrapFrame->Eflags = TrapFrame->EFlags;
-}
-
-/*
- * NOTE: On Windows this function takes exactly one parameter and EBP is
- *       guaranteed to point to KTRAP_FRAME. The function is used only
- *       by HAL, so there's no point in keeping that prototype.
- *
- * @implemented
- */
-VOID
-STDCALL
-KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
-                IN KIRQL  Irql)
-{
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    PKTHREAD CurrentThread;
-    PKPROCESS CurrentProcess;
-
-    /* Make sure we don't go further if we're in early boot phase. */
-    if (!(Prcb) || !(Prcb->CurrentThread)) return;
-
-    /* Get the current thread and process */
-    CurrentThread = Prcb->CurrentThread;
-    CurrentProcess = CurrentThread->ApcState.Process;
-
-    /* Check if we came from user mode */
-    if (TrapFrame->PreviousPreviousMode != KernelMode)
-    {
-        /* Update user times */
-        CurrentThread->UserTime++;
-        InterlockedIncrement((PLONG)&CurrentProcess->UserTime);
-        Prcb->UserTime++;
-    }
-    else
-    {
-        /* Check IRQ */
-        if (Irql > DISPATCH_LEVEL)
-        {
-            /* This was an interrupt */
-            Prcb->InterruptTime++;
-        }
-        else if ((Irql < DISPATCH_LEVEL) || !(Prcb->DpcRoutineActive))
-        {
-            /* This was normal kernel time */
-            CurrentThread->KernelTime++;
-            InterlockedIncrement((PLONG)&CurrentProcess->KernelTime);
-        }
-        else if (Irql == DISPATCH_LEVEL)
-        {
-            /* This was DPC time */
-            Prcb->DpcTime++;
-        }
-
-        /* Update CPU kernel time in all cases */
-        Prcb->KernelTime++;
-   }
-
-    /* Set the last DPC Count and request rate */
-    Prcb->DpcLastCount = Prcb->DpcData[0].DpcCount;
-    Prcb->DpcRequestRate = ((Prcb->DpcData[0].DpcCount - Prcb->DpcLastCount) +
-                             Prcb->DpcRequestRate) / 2;
-
-    /* Check if we should request a DPC */
-    if ((Prcb->DpcData[0].DpcQueueDepth) && !(Prcb->DpcRoutineActive))
-    {
-        /* Request one */
-        HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-
-        /* Update the depth if needed */
-        if ((Prcb->DpcRequestRate < KiIdealDpcRate) &&
-            (Prcb->MaximumDpcQueueDepth > 1))
-        {
-            /* Decrease the maximum depth by one */
-            Prcb->MaximumDpcQueueDepth--;
-        }
-    }
-    else
-    {
-        /* Decrease the adjustment threshold */
-        if (!(--Prcb->AdjustDpcThreshold))
-        {
-            /* We've hit 0, reset it */
-            Prcb->AdjustDpcThreshold = KiAdjustDpcThreshold;
-
-            /* Check if we've hit queue maximum */
-            if (KiMaximumDpcQueueDepth != Prcb->MaximumDpcQueueDepth)
-            {
-                /* Increase maximum by one */
-                Prcb->MaximumDpcQueueDepth++;
-            }
-        }
-    }
-
-   /*
-    * If we're at end of quantum request software interrupt. The rest
-    * is handled in KiDispatchInterrupt.
-    *
-    * NOTE: If one stays at DISPATCH_LEVEL for a long time the DPC routine
-    * which checks for quantum end will not be executed and decrementing
-    * the quantum here can result in overflow. This is not a problem since
-    * we don't care about the quantum value anymore after the QuantumEnd
-    * flag is set.
-    */
-    if ((CurrentThread->Quantum -= 3) <= 0)
-    {
-        Prcb->QuantumEnd = TRUE;
-        HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-    }
-}
-
-
-/*
- * NOTE: On Windows this function takes exactly zero parameters and EBP is
- *       guaranteed to point to KTRAP_FRAME. Also [esp+0] contains an IRQL.
- *       The function is used only by HAL, so there's no point in keeping
- *       that prototype.
- *
- * @implemented
- */
-VOID
-STDCALL
-KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
-                   IN KIRQL Irql,
-                   IN ULONG Increment)
-{
-    LONG OldOffset;
-    LARGE_INTEGER Time;
-    ASSERT(KeGetCurrentIrql() == PROFILE_LEVEL);
-    if (!KiClockSetupComplete) return;
-
-    /* Update interrupt time */
-    Time.LowPart = SharedUserData->InterruptTime.LowPart;
-    Time.HighPart = SharedUserData->InterruptTime.High1Time;
-    Time.QuadPart += Increment;
-    SharedUserData->InterruptTime.High2Time = Time.u.HighPart;
-    SharedUserData->InterruptTime.LowPart = Time.u.LowPart;
-    SharedUserData->InterruptTime.High1Time = Time.u.HighPart;
-
-    /* Increase the tick offset */
-    KiTickOffset -= Increment;
-    OldOffset = KiTickOffset;
-
-    /* Check if this isn't a tick yet */
-    if (KiTickOffset > 0)
-    {
-        /* Expire timers */
-        KeInsertQueueDpc(&KiExpireTimerDpc, (PVOID)TrapFrame->Eip, 0);
-    }
-    else
-    {
-        /* Setup time structure for system time */
-        Time.LowPart = SharedUserData->SystemTime.LowPart;
-        Time.HighPart = SharedUserData->SystemTime.High1Time;
-        Time.QuadPart += KeTimeAdjustment;
-        SharedUserData->SystemTime.High2Time = Time.HighPart;
-        SharedUserData->SystemTime.LowPart = Time.LowPart;
-        SharedUserData->SystemTime.High1Time = Time.HighPart;
-
-        /* Setup time structure for tick time */
-        Time.LowPart = KeTickCount.LowPart;
-        Time.HighPart = KeTickCount.High1Time;
-        Time.QuadPart += 1;
-        KeTickCount.High2Time = Time.HighPart;
-        KeTickCount.LowPart = Time.LowPart;
-        KeTickCount.High1Time = Time.HighPart;
-        SharedUserData->TickCount.High2Time = Time.HighPart;
-        SharedUserData->TickCount.LowPart = Time.LowPart;
-        SharedUserData->TickCount.High1Time = Time.HighPart;
-
-        /* Update tick count in shared user data as well */
-        SharedUserData->TickCountLowDeprecated++;
-
-        /* Queue a DPC that will expire timers */
-        KeInsertQueueDpc(&KiExpireTimerDpc, (PVOID)TrapFrame->Eip, 0);
-    }
-
-    /* Update process and thread times */
-    if (OldOffset <= 0)
-    {
-        /* This was a tick, calculate the next one */
-        KiTickOffset += KeMaximumIncrement;
-        KeUpdateRunTime(TrapFrame, Irql);
-    }
-}
-
 VOID STDCALL
 KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
 /*
@@ -453,9 +228,7 @@ KiInterruptDispatch3 (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
  */
 {
    KIRQL old_level;
-   KTRAP_FRAME KernelTrapFrame;
    PKTHREAD CurrentThread;
-   PKTRAP_FRAME OldTrapFrame=NULL;
 
    /*
     * At this point we have interrupts disabled, nothing has been done to
@@ -482,20 +255,12 @@ KiInterruptDispatch3 (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     */
    _enable();
 
-#ifndef CONFIG_SMP
-   if (VECTOR2IRQ(vector) == 0)
-   {
-      KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-      KeUpdateSystemTime(&KernelTrapFrame, old_level, 100000);
-   }
-   else
-#endif
-   {
+   ASSERT (VECTOR2IRQ(vector) != 0);
+
      /*
       * Actually call the ISR.
       */
      KiInterruptDispatch2(vector, old_level);
-   }
 
    /*
     * End the system interrupt.
@@ -514,23 +279,14 @@ KiInterruptDispatch3 (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
                   ((PETHREAD)CurrentThread)->Cid.UniqueThread,
                   Trapframe->Cs,
                   CurrentThread->TrapFrame ? CurrentThread->TrapFrame->SegCs : 0);
-           if (CurrentThread->TrapFrame == NULL)
-             {
-               OldTrapFrame = CurrentThread->TrapFrame;
-               KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-               CurrentThread->TrapFrame = &KernelTrapFrame;
-             }
+           ASSERT (CurrentThread->TrapFrame);
 
            _enable();
            KiDeliverApc(UserMode, NULL, NULL);
            _disable();
 
            ASSERT(KeGetCurrentThread() == CurrentThread);
-           if (CurrentThread->TrapFrame == &KernelTrapFrame)
-             {
-               KeTrapFrameToIRQTrapFrame(&KernelTrapFrame, Trapframe);
-               CurrentThread->TrapFrame = OldTrapFrame;
-             }
+           ASSERT (CurrentThread->TrapFrame);
          }
        KeLowerIrql(PASSIVE_LEVEL);
      }

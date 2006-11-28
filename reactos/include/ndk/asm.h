@@ -21,6 +21,17 @@ Author:
 #define _ASM_H
 
 //
+// PCR Access
+//
+#ifdef __ASM__
+#ifdef CONFIG_SMP
+#define PCR                                     fs:
+#else
+#define PCR                                     ds:[0xFF000000]
+#endif
+#endif
+
+//
 // CPU Modes
 //
 #define KernelMode                              0x0
@@ -145,6 +156,7 @@ Author:
 #define KPCR_IDT                                0x38
 #define KPCR_GDT                                0x3C
 #define KPCR_TSS                                0x40
+#define KPCR_STALL_SCALE_FACTOR                 0x4C
 #define KPCR_SET_MEMBER                         0x48
 #define KPCR_NUMBER                             0x51
 #define KPCR_PRCB_DATA                          0x120
@@ -489,6 +501,8 @@ Author:
 #define STATUS_FLOAT_MULTIPLE_FAULTS            0xC00002B4
 #define STATUS_FLOAT_MULTIPLE_TRAPS             0xC00002B5
 #define APC_INDEX_MISMATCH                      0x01
+#define IRQL_NOT_GREATER_OR_EQUAL               0x09
+#define IRQL_NOT_LESS_OR_EQUAL                  0x0A
 #define TRAP_CAUSE_UNKNOWN                      0x12
 #define KMODE_EXCEPTION_NOT_HANDLED             0x13
 #define IRQL_GT_ZERO_AT_SYSTEM_SERVICE          0x4A

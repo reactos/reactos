@@ -96,8 +96,8 @@ VOID NTAPI HalpInitPICs(VOID)
   WRITE_PORT_UCHAR((PUCHAR)0x21, 0x1);
   WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x1);   
   /* Enable interrupts */
-  WRITE_PORT_UCHAR((PUCHAR)0x21, pic_mask.master);
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, pic_mask.slave);
+  WRITE_PORT_UCHAR((PUCHAR)0x21, 0xFF);
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0xFF);
   
   /* We can now enable interrupts */
   _enable();
@@ -305,7 +305,7 @@ KeRaiseIrqlToDpcLevel (VOID)
 KIRQL STDCALL
 KeRaiseIrqlToSynchLevel (VOID)
 {
-  return KfRaiseIrql (CLOCK2_LEVEL);
+  return KfRaiseIrql (DISPATCH_LEVEL);
 }
 
 

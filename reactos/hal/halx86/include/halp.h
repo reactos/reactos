@@ -22,6 +22,13 @@
 #define RTC_REG_A_UIP           0x80
 #define RTC_REGISTER_CENTURY    0x32
 
+/* Timer Registers and Ports */
+#define TIMER_CONTROL_PORT      0x43
+#define TIMER_DATA_PORT0        0x40
+#define TIMER_SC0               0
+#define TIMER_BOTH              0x30
+#define TIMER_MD2               0x4
+
 /* Conversion functions */
 #define BCD_INT(bcd)            \
     (((bcd & 0xF0) >> 4) * 10 + (bcd & 0x0F))

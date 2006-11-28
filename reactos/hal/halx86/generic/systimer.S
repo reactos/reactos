@@ -10,8 +10,40 @@
 #include <asm.h>
 #include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
+.extern _HalpCurrentTimeIncrement
 
 /* FUNCTIONS *****************************************************************/
+
+.globl _KeStallExecutionProcessor@4
+.func KeStallExecutionProcessor@4
+_KeStallExecutionProcessor@4:
+
+    /* Get the number of microseconds required */
+    mov ecx, [esp+4]
+    jecxz Done
+
+    /* Multiply by the stall factor */
+    mov eax, fs:[KPCR_STALL_SCALE_FACTOR]
+    mul ecx
+
+    /* Align to 16 bytes */
+    .align 16
+
+    /* Jump to subtraction loop */
+    jmp SubtractLoop
+
+    /* Align to 16 bytes */
+    .align 16
+
+    /* Subtract one count */
+SubtractLoop:
+    sub eax, 1
+    jnz SubtractLoop
+
+Done:
+    /* Return */
+    ret 4
+.endfunc
 
 .globl _HalpClockInterrupt@0
 .func HalpClockInterrupt@0
@@ -35,7 +67,8 @@ _HalpClockInterrupt@0:
     jz Spurious
 
     /* Do a tick */
-    mov eax, 100000
+    mov eax, _HalpCurrentTimeIncrement
+    xor ebx, ebx
     jmp _KeUpdateSystemTime@0
 
 Spurious:

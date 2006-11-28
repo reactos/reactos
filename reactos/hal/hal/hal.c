@@ -173,7 +173,8 @@ HalBeginSystemInterrupt (KIRQL Irql,
 VOID
 NTAPI
 HalCalibratePerformanceCounter(
-  ULONG Count)
+  volatile LONG *Count,
+  ULONGLONG NewCount)
 {
   UNIMPLEMENTED;
 }

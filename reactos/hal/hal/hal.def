@@ -30,7 +30,7 @@ HalAllocateCommonBuffer@16
 HalAllocateCrashDumpRegisters@8
 HalAssignSlotResources@32
 HalBeginSystemInterrupt@12
-HalCalibratePerformanceCounter@4
+HalCalibratePerformanceCounter@12
 HalDisableSystemInterrupt@8
 HalDisplayString@4
 HalEnableSystemInterrupt@12

@@ -113,7 +113,7 @@ HalInitSystem(IN ULONG BootPhase,
         HalpInitNonBusHandler();
 
         /* Initialize the clock interrupt */
-        //HalpInitPhase1();
+        HalpInitPhase1();
 
         /* Initialize DMA. NT does this in Phase 0 */
         HalpInitDma();

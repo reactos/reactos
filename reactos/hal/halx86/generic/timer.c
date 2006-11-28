@@ -38,127 +38,146 @@
 
 /* GLOBALS ******************************************************************/
 
-#define 	TMR_CTRL	0x43	/*	I/O for control		*/
-#define		TMR_CNT0	0x40	/*	I/O for counter 0	*/
-#define		TMR_CNT1	0x41	/*	I/O for counter 1	*/
-#define		TMR_CNT2	0x42	/*	I/O for counter 2	*/
-
-#define		TMR_SC0		0	/*	Select channel 0 	*/
-#define		TMR_SC1		0x40	/*	Select channel 1 	*/
-#define		TMR_SC2		0x80	/*	Select channel 2 	*/
-
-#define		TMR_LOW		0x10	/*	RW low byte only 	*/
-#define		TMR_HIGH	0x20	/*	RW high byte only 	*/
-#define		TMR_BOTH	0x30	/*	RW both bytes 		*/
-
-#define		TMR_MD0		0	/*	Mode 0 			*/
-#define		TMR_MD1		0x2	/*	Mode 1 			*/
-#define		TMR_MD2		0x4	/*	Mode 2 			*/
-#define		TMR_MD3		0x6	/*	Mode 3 			*/
-#define		TMR_MD4		0x8	/*	Mode 4 			*/
-#define		TMR_MD5		0xA	/*	Mode 5 			*/
-
-#define		TMR_BCD		1	/*	BCD mode 		*/
-
-#define		TMR_LATCH	0	/*	Latch command 		*/
-
-#define		TMR_READ	0xF0	/*    Read command 		*/
-#define		TMR_CNT		0x20	/*    CNT bit  (Active low, subtract it) */
-#define		TMR_STAT	0x10	/*    Status bit  (Active low, subtract it) */
-#define		TMR_CH2		0x8	/*    Channel 2 bit 		*/
-#define		TMR_CH1		0x4	/*    Channel 1 bit 		*/
-#define		TMR_CH0		0x2	/*    Channel 0 bit 		*/
-
 #define MILLISEC        10                     /* Number of millisec between interrupts */
 #define HZ              (1000 / MILLISEC)      /* Number of interrupts per second */
 #define CLOCK_TICK_RATE 1193182                /* Clock frequency of the timer chip */
 #define LATCH           (CLOCK_TICK_RATE / HZ) /* Count to program into the timer chip */
 #define PRECISION       8                      /* Number of bits to calibrate for delay loop */
 
-static BOOLEAN UdelayCalibrated = FALSE;
+/* GLOBALS *******************************************************************/
 
-/* FUNCTIONS **************************************************************/
+BOOLEAN HalpClockSetMSRate;
+ULONG HalpCurrentTimeIncrement;
+ULONG HalpCurrentRollOver;
+ULONG HalpNextMSRate = 14;
+ULONG HalpLargestClockMS = 15;
 
-/*
- * NOTE: This function MUST NOT be optimized by the compiler!
- * If it is, it obviously will not delay AT ALL, and the system
- * will appear completely frozen at boot since
- * HalpCalibrateStallExecution will never return.
- * There are three options to stop optimization:
- * 1. Use a volatile automatic variable. Making it delay quite a bit
- *    due to memory accesses, and keeping the code portable. However,
- *    as this involves memory access it depends on both the CPU cache,
- *    e.g. if the stack used is already in a cache line or not, and
- *    whether or not we're MP. If MP, another CPU could (probably would)
- *    also access RAM at the same time - making the delay imprecise.
- * 2. Use compiler-specific #pragma's to disable optimization.
- * 3. Use inline assembly, making it equally unportable as #2.
- * For supported compilers we use inline assembler. For the others,
- * portable plain C.
- */
-DECLSPEC_NOINLINE VOID STDCALL
-__KeStallExecutionProcessor(ULONG Loops)
+LARGE_INTEGER HalpRolloverTable[15] =
 {
-  if (!Loops)
-  {
-    return;
-  }
-#if defined(__GNUC__)
-  __asm__ __volatile__ (
-    "mov %0, %%eax\n"
-    "ROSL1: dec %%eax\n"
-    "jnz ROSL1" : : "d" (Loops));
+    {{1197, 10032}},
+    {{2394, 20064}},
+    {{3591, 30096}},
+    {{4767, 39952}},
+    {{5964, 49984}},
+    {{7161, 60016}},
+    {{8358, 70048}},
+    {{9555, 80080}},
+    {{10731, 89936}},
+    {{11949, 100144}},
+    {{13125, 110000}},
+    {{14322, 120032}},
+    {{15519, 130064}},
+    {{16695, 139920}},
+    {{17892, 149952}}
+};
 
-#elif defined(_MSC_VER)
-  __asm mov eax, Loops
-ROSL1:
-  __asm dec eax
-  __asm jnz ROSL1
-#else
-   unsigned int target = Loops;
-   volatile unsigned int i;
-   for (i=0; i<target;i++);
-#endif
-}
+/* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
-STDCALL
-KeStallExecutionProcessor(ULONG Microseconds)
+NTAPI
+HalpInitializeClock(VOID)
 {
-   PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    ULONG Increment;
+    USHORT RollOver;
 
-   if (Pcr->PrcbData.FeatureBits & KF_RDTSC)
-   {
-      LARGE_INTEGER EndCount, CurrentCount;
-      EndCount.QuadPart = (LONGLONG)__rdtsc();
-      EndCount.QuadPart += Microseconds * (ULONGLONG)Pcr->PrcbData.MHz;
-      do
-      {
-         CurrentCount.QuadPart = (LONGLONG)__rdtsc();
-      }
-      while (CurrentCount.QuadPart < EndCount.QuadPart);
-   }
-   else
-   {
-      __KeStallExecutionProcessor((Pcr->StallScaleFactor*Microseconds)/1000);
-   }
+    /* Check the CPU Type */
+    if (Prcb->CpuType <= 4)
+    {
+        /* 486's or equal can't go higher then 10ms */
+        HalpLargestClockMS = 10;
+        HalpNextMSRate = 9;
+    }
+
+    /* Get increment and rollover for the largest time clock ms possible */
+    Increment= HalpRolloverTable[HalpLargestClockMS - 1].HighPart;
+    RollOver = (USHORT)HalpRolloverTable[HalpLargestClockMS - 1].LowPart;
+
+    /* Set the maximum and minimum increment with the kernel */
+    HalpCurrentTimeIncrement = Increment;
+    KeSetTimeIncrement(Increment, HalpRolloverTable[0].HighPart);
+
+    /* Disable interrupts */
+    _disable();
+
+    /* Set the rollover */
+    __outbyte(TIMER_CONTROL_PORT, TIMER_SC0 | TIMER_BOTH | TIMER_MD2);
+    __outbyte(TIMER_DATA_PORT0, RollOver & 0xFF);
+    __outbyte(TIMER_DATA_PORT0, RollOver >> 8);
+
+    /* Restore interrupts */
+    _enable();
+
+    /* Save rollover and return */
+    HalpCurrentRollOver = RollOver;
 }
 
-static ULONG Read8254Timer(VOID)
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+HalCalibratePerformanceCounter(IN volatile PLONG Count,
+                               IN ULONGLONG NewCount)
 {
-  ULONG Count;
+    /* Disable interrupts */
+    _disable();
 
-  /* Disable interrupts */
-  _disable();
+    /* Do a decrement for this CPU */
+    //_InterlockedDecrement(Count);
+    InterlockedDecrement(Count);
 
-  WRITE_PORT_UCHAR((PUCHAR) TMR_CTRL, TMR_SC0 | TMR_LATCH);
-  Count = READ_PORT_UCHAR((PUCHAR) TMR_CNT0);
-  Count |= READ_PORT_UCHAR((PUCHAR) TMR_CNT0) << 8;
+    /* Wait for other CPUs */
+    while (*Count);
 
-  _enable();
-  return Count;
+    /* Bring interrupts back */
+    _enable();
 }
 
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+HalSetTimeIncrement(IN ULONG Increment)
+{
+    /* Round increment to ms */
+    Increment /= 10000;
+
+    /* Normalize between our minimum (1 ms) and maximum (variable) setting */
+    if (Increment > HalpLargestClockMS) Increment = HalpLargestClockMS;
+    if (Increment < 0) Increment = 1;
+
+    /* Set the rate and tell HAL we want to change it */
+    HalpNextMSRate = Increment;
+    HalpClockSetMSRate = TRUE;
+
+    /* Return the increment */
+    return HalpRolloverTable[Increment - 1].HighPart;
+}
+
+/* STUFF *********************************************************************/
+
+ULONG
+FORCEINLINE
+Read8254Timer(VOID)
+{
+    ULONG Count;
+
+    /* Disable interrupts */
+    _disable();
+
+    /* Set the rollover */
+    __outbyte(TIMER_CONTROL_PORT, TIMER_SC0);
+    Count = __inbyte(TIMER_DATA_PORT0);
+    Count |= __inbyte(TIMER_DATA_PORT0) << 8;
+
+    /* Restore interrupts and return count*/
+    _enable();
+    return Count;
+}
 
 VOID WaitFor8254Wraparound(VOID)
 {
@@ -183,20 +202,6 @@ VOID WaitFor8254Wraparound(VOID)
    while (Delta < 300);
 }
 
-VOID
-NTAPI
-HalpInitializeClock(VOID)
-{
-    /* FIXME: Make dynamic */
-
-    /* Initialize the clock */
-    WRITE_PORT_UCHAR((PUCHAR) TMR_CTRL, TMR_SC0 | TMR_BOTH | TMR_MD2);  /* binary, mode 2, LSB/MSB, ch 0 */
-
-    /* Set the increment */
-    WRITE_PORT_UCHAR((PUCHAR) TMR_CNT0, LATCH & 0xff); /* LSB */
-    WRITE_PORT_UCHAR((PUCHAR) TMR_CNT0, LATCH >> 8); /* MSB */
-}
-
 VOID HalpCalibrateStallExecution(VOID)
 {
   ULONG i;
@@ -205,12 +210,6 @@ VOID HalpCalibrateStallExecution(VOID)
   PKIPCR Pcr;
   LARGE_INTEGER StartCount, EndCount;
 
-  if (UdelayCalibrated)
-    {
-      return;
-    }
-
-  UdelayCalibrated = TRUE;
   Pcr = (PKIPCR)KeGetPcr();
 
   if (Pcr->PrcbData.FeatureBits & KF_RDTSC)
@@ -242,7 +241,7 @@ VOID HalpCalibrateStallExecution(VOID)
 
       WaitFor8254Wraparound();
 
-      __KeStallExecutionProcessor(Pcr->StallScaleFactor);   /* Do the delay */
+      KeStallExecutionProcessor(Pcr->StallScaleFactor);   /* Do the delay */
 
       CurCount = Read8254Timer();
     }
@@ -267,7 +266,7 @@ VOID HalpCalibrateStallExecution(VOID)
 
       WaitFor8254Wraparound();
 
-      __KeStallExecutionProcessor(Pcr->StallScaleFactor);   /* Do the delay */
+      KeStallExecutionProcessor(Pcr->StallScaleFactor);   /* Do the delay */
 
       CurCount = Read8254Timer();
       if (CurCount <= LATCH / 2)	/* If a tick has passed, turn the   */
@@ -294,19 +293,6 @@ VOID HalpCalibrateStallExecution(VOID)
   for(;;);
 #endif
 }
-
-
-VOID STDCALL
-HalCalibratePerformanceCounter(ULONG Count)
-{
-   /* Disable interrupts */
-   _disable();
-
-   __KeStallExecutionProcessor(Count);
-
-   _enable();
-}
-
 
 LARGE_INTEGER
 STDCALL
@@ -358,14 +344,6 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
      while (TicksOld.QuadPart != TicksNew.QuadPart);
   }
   return Value;
-}
-
-ULONG
-NTAPI
-HalSetTimeIncrement(IN ULONG Increment)
-{
-    /* FIXME: TODO */
-    return Increment;
 }
 
 /* EOF */
