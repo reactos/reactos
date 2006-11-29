@@ -10,7 +10,13 @@
 #include <asm.h>
 #include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
-.extern _HalpCurrentTimeIncrement
+
+/* GLOBALS *******************************************************************/
+
+_HalpLastPerfCounterLow:    .long 0
+_HalpLastPerfCounterHigh:   .long 0
+_HalpPerfCounterLow:        .long 0
+_HalpPerfCounterHigh:       .long 0
 
 /* FUNCTIONS *****************************************************************/
 
@@ -45,6 +51,152 @@ Done:
     ret 4
 .endfunc
 
+.global _KeQueryPerformanceCounter@4
+.func KeQueryPerformanceCounter@4
+_KeQueryPerformanceCounter@4:
+
+    /* Check if we were called too early */
+    cmp dword ptr _HalpCurrentRollOver, 0
+    je NoCount
+
+    /* Save volatiles */
+    push ebx
+    push esi
+
+LoopPreInt:
+
+    /* Disable interrupts */
+    pushf
+    cli
+
+LoopPostInt:
+
+    /* Get the current value */
+    mov ebx, _HalpPerfCounterLow
+    mov esi, _HalpPerfCounterHigh
+
+    /* Read 8254 timer */
+    mov al, 0
+    out 0x43, al
+    jmp $+2
+    in al, 0x40
+    jmp $+2
+    movzx ecx, al
+    in al, 0x40
+    mov ch, al
+
+    /* Enable interrupts and do a short wait */
+    popf
+    nop
+    jmp $+2
+
+    /* Disable them again */
+    pushf
+    cli
+
+    /* Get the counter value again */
+    mov eax, _HalpPerfCounterLow
+    mov edx, _HalpPerfCounterHigh
+
+    /* Check if someone updated the counter */
+    cmp eax, ebx
+    jne LoopPostInt
+    cmp edx, esi
+    jne LoopPostInt
+
+    /* Check if the current 8254 value causes rollover */
+    neg ecx
+    add ecx, _HalpCurrentRollOver
+    jnb DoRollOver
+
+SetSum:
+
+    /* Calculate the sum */
+    add eax, ecx
+    adc edx, 0
+
+    /* Check if we're above or below the last high value */
+    cmp edx, _HalpLastPerfCounterHigh
+    jb short BelowHigh
+    jnz short BelowLow
+
+    /* Check if we're above or below the last low value */
+    cmp eax, _HalpLastPerfCounterLow
+    jb BelowHigh
+
+BelowLow:
+
+    /* Update the last value and bring back interrupts */
+    mov _HalpLastPerfCounterLow, eax
+    mov _HalpLastPerfCounterHigh, edx
+    popf
+
+    /* Check if caller wants frequency */
+    cmp dword ptr [esp+12], 0
+    jz ReturnNoFreq
+
+    /* Save hard-coded frequency */
+    mov ecx, dword ptr [esp+12]
+    mov dword ptr [ecx], 1193182
+    mov dword ptr [ecx+4], 0
+
+ReturnNoFreq:
+
+    /* Restore volatiles */
+    pop esi
+    pop ebx
+    ret 4
+
+NoCount:
+
+    /* Return empty, called too soon */
+    mov eax, 0
+    mov edx, 0
+    ret 4
+
+DoRollOver:
+
+    /* We might have an incoming interrupt, save EFLAGS and reset rollover */
+    mov esi, [esp]
+    mov ecx, _HalpCurrentRollOver
+    popf
+
+    /* Check if interrupts were enabled and try again */
+    test esi, EFLAGS_INTERRUPT_MASK
+    jnz LoopPreInt
+
+    /* They're not, continue where we left */
+    pushf
+    jmp SetSum
+
+BelowHigh:
+
+    /* Get the last counter values */
+    mov ebx, _HalpLastPerfCounterLow
+    mov esi, _HalpLastPerfCounterHigh
+
+    /* Check if the previous value was 0 and go back if yes */
+    mov ecx, ebx
+    or ecx, esi
+    jz BelowLow
+
+    /* Fixup the count with the last known value */
+    sub eax, ebx
+    sbb edx, esi
+
+    /* We might have an incoming interrupt, save EFLAGS */
+    mov esi, [esp]
+    popf
+
+    /* Check if interrupts were enabled and try again */
+    test esi, EFLAGS_INTERRUPT_MASK
+    jnz LoopPreInt
+
+    /* They're not, continue where we left */
+    pushf
+    jmp BelowLow
+.endfunc
+
 .globl _HalpClockInterrupt@0
 .func HalpClockInterrupt@0
 _HalpClockInterrupt@0:
@@ -66,10 +218,19 @@ _HalpClockInterrupt@0:
     or al, al
     jz Spurious
 
-    /* Do a tick */
-    mov eax, _HalpCurrentTimeIncrement
+    /* Update the performance counter */
     xor ebx, ebx
-    jmp _KeUpdateSystemTime@0
+    mov eax, _HalpCurrentRollOver
+    add _HalpPerfCounterLow, eax
+    adc _HalpPerfCounterHigh, ebx
+
+    /* Get the time increment and check if someone changed the clock rate */
+    mov eax, _HalpCurrentTimeIncrement
+    cmp _HalpClockSetMSRate, ebx
+    jz _KeUpdateSystemTime@0
+
+    /* FIXME: Someone did! */
+    int 3
 
 Spurious:
 
