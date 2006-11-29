@@ -2010,15 +2010,14 @@ GetIntLock:
     RELEASE_SPINLOCK(esi)
 
     /* Exit the interrupt */
-    mov esi, $
     cli
     call _HalEndSystemInterrupt@8
     jmp _Kei386EoiHelper@0
 
 SpuriousInt:
     /* Exit the interrupt */
+    jmp $
     add esp, 8
-    mov esi, $
     jmp _Kei386EoiHelper@0
 
 #ifdef CONFIG_SMP

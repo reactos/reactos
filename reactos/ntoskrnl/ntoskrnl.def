@@ -660,7 +660,6 @@ KiCoprocessorError@0
 KiCheckForKernelApcDelivery@0
 KiDeliverApc@12
 KiDispatchInterrupt@0
-KiInterruptDispatch2@8
 KiEnableTimerWatchdog
 KiIpiServiceRoutine@8
 @KiReleaseSpinLock@4

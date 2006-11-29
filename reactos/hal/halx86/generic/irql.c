@@ -128,10 +128,129 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
 }
 
 VOID
+HalpHardwareInt30(VOID)
+{
+    __asm__ __volatile__ ("int $0x30");
+}
+
+VOID
+HalpHardwareInt31(VOID)
+{
+    __asm__ __volatile__ ("int $0x31");
+}
+
+VOID
+HalpHardwareInt32(VOID)
+{
+    __asm__ __volatile__ ("int $0x32");
+}
+
+VOID
+HalpHardwareInt33(VOID)
+{
+    __asm__ __volatile__ ("int $0x33");
+}
+
+VOID
+HalpHardwareInt34(VOID)
+{
+    __asm__ __volatile__ ("int $0x34");
+}
+
+VOID
+HalpHardwareInt35(VOID)
+{
+    __asm__ __volatile__ ("int $0x35");
+}
+
+VOID
+HalpHardwareInt36(VOID)
+{
+    __asm__ __volatile__ ("int $0x36");
+}
+
+VOID
+HalpHardwareInt37(VOID)
+{
+    __asm__ __volatile__ ("int $0x37");
+}
+
+VOID
+HalpHardwareInt38(VOID)
+{
+    __asm__ __volatile__ ("int $0x38");
+}
+
+VOID
+HalpHardwareInt39(VOID)
+{
+    __asm__ __volatile__ ("int $0x39");
+}
+
+VOID
+HalpHardwareInt3A(VOID)
+{
+    __asm__ __volatile__ ("int $0x3A");
+}
+
+VOID
+HalpHardwareInt3B(VOID)
+{
+    __asm__ __volatile__ ("int $0x3B");
+}
+
+VOID
+HalpHardwareInt3C(VOID)
+{
+    __asm__ __volatile__ ("int $0x3C");
+}
+
+VOID
+HalpHardwareInt3D(VOID)
+{
+    __asm__ __volatile__ ("int $0x3D");
+}
+
+VOID
+HalpHardwareInt3E(VOID)
+{
+    __asm__ __volatile__ ("int $0x3E");
+    while (TRUE);
+}
+
+VOID
+HalpHardwareInt3F(VOID)
+{
+    __asm__ __volatile__ ("int $0x3F");
+}
+
+
+typedef VOID (*PHARDWARE_INT)(VOID);
+
+PHARDWARE_INT HalpHardwareInt[NR_IRQS] =
+{
+    HalpHardwareInt30,
+    HalpHardwareInt31,
+    HalpHardwareInt32,
+    HalpHardwareInt33,
+    HalpHardwareInt34,
+    HalpHardwareInt35,
+    HalpHardwareInt36,
+    HalpHardwareInt37,
+    HalpHardwareInt38,
+    HalpHardwareInt39,
+    HalpHardwareInt3A,
+    HalpHardwareInt3B,
+    HalpHardwareInt3C,
+    HalpHardwareInt3D,
+    HalpHardwareInt3E,
+    HalpHardwareInt3F
+};
+
+VOID
 HalpExecuteIrqs(KIRQL NewIrql)
 {
   ULONG IrqLimit, i;
-  
   IrqLimit = min(PROFILE_LEVEL - NewIrql, NR_IRQS);
 
   /*
@@ -150,10 +269,10 @@ HalpExecuteIrqs(KIRQL NewIrql)
 	        * For each deferred interrupt execute all the handlers at DIRQL.
 	        */
 	       HalpPendingInterruptCount[i]--;
-	       KiInterruptDispatch2(i + IRQ_BASE, NewIrql);
+           HalpHardwareInt[i]();
 	     }
-	   KeGetPcr()->Irql--;
-	   HalpEndSystemInterrupt(KeGetPcr()->Irql);
+	   //KeGetPcr()->Irql--;
+	   //HalpEndSystemInterrupt(KeGetPcr()->Irql);
 	}
     }
 
@@ -334,12 +453,13 @@ HalBeginSystemInterrupt (KIRQL Irql,
      WRITE_PORT_UCHAR((PUCHAR)0x20,0x20);
      WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
   }
-  
+#if 0
   if (KeGetPcr()->Irql >= Irql)
     {
       HalpPendingInterruptCount[irq]++;
       return(FALSE);
     }
+#endif
   *OldIrql = KeGetPcr()->Irql;
   KeGetPcr()->Irql = Irql;
 

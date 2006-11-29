@@ -29,16 +29,13 @@
 // Ke:
 //  - Figure out why the DPC stack doesn't really work.
 //  - Add DR macro/save and VM macro/save.
-//  - New interrupt implementation.
 //  - New optimized table-based tick-hashed timer implementation.
 //  - New Thread Scheduler based on 2003.
 //  - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
 //
 // Hal:
 //  - New IRQL Implementation.
-//  - New PCI/Bus Handler Implementation.
 //  - CMOS Initialization and CMOS Spinlock.
-//  - Timer/StallExecution Cleanup.
 //  - Report resource usage to kernel (HalReportResourceUsage).
 //
 // Lpc:

@@ -369,7 +369,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 
     /* Setup the IDT */
     KeInitExceptions(); // ONCE HACK BELOW IS GONE, MOVE TO KISYSTEMSTARTUP!
-    KeInitInterrupts(); // ROS HACK DEPRECATED SOON BY NEW HAL
 
     /* Set up the VDM Data */
     NtEarlyInitVdm();
