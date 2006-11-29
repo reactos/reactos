@@ -499,65 +499,65 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 
 	/* Mix the DDExeBuf CALLBACKS */
 	
-	if (This->lpLcl->lpDDCB->HALDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_CANCREATEEXEBUF)
+	if ((This->lpLcl->lpDDCB->HALDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_CANCREATEEXEBUF) && (devicetypes !=3))
 	{
 		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.CanCreateExecuteBuffer =
 			   This->lpLcl->lpDDCB->HALDDExeBuf.CanCreateExecuteBuffer;
 		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_CANCREATEEXEBUF;
 	}
-	else if (This->lpLcl->lpDDCB->HELDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_CANCREATEEXEBUF)
+	else if ((This->lpLcl->lpDDCB->HELDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_CANCREATEEXEBUF) && (devicetypes !=2))
 	{		     
 		     This->lpLcl->lpDDCB->cbDDExeBufCallbacks.CanCreateExecuteBuffer = 
 		         This->lpLcl->lpDDCB->HELDDExeBuf.CanCreateExecuteBuffer;
 			 This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_CANCREATEEXEBUF;
 	}
 
-	if (This->lpLcl->lpDDCB->HALDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_CREATEEXEBUF)
+	if ((This->lpLcl->lpDDCB->HALDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_CREATEEXEBUF) && (devicetypes !=3))
 	{
 		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.CreateExecuteBuffer =
 			   This->lpLcl->lpDDCB->HALDDExeBuf.CreateExecuteBuffer;
 		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_CREATEEXEBUF;
 	}
-	else if (This->lpLcl->lpDDCB->HELDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_CREATEEXEBUF)
+	else if ((This->lpLcl->lpDDCB->HELDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_CREATEEXEBUF) && (devicetypes !=2))
 	{		     
 		     This->lpLcl->lpDDCB->cbDDExeBufCallbacks.CreateExecuteBuffer = 
 		         This->lpLcl->lpDDCB->HELDDExeBuf.CreateExecuteBuffer;
 			 This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_CREATEEXEBUF;
 	}
 
-	if (This->lpLcl->lpDDCB->HALDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_DESTROYEXEBUF)
+	if ((This->lpLcl->lpDDCB->HALDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_DESTROYEXEBUF) && (devicetypes !=3))
 	{
 		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.DestroyExecuteBuffer =
 			   This->lpLcl->lpDDCB->HALDDExeBuf.DestroyExecuteBuffer;
 		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_DESTROYEXEBUF;
 	}
-	else if (This->lpLcl->lpDDCB->HELDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_DESTROYEXEBUF)
+	else if ((This->lpLcl->lpDDCB->HELDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_DESTROYEXEBUF) && (devicetypes !=2))
 	{		     
 		     This->lpLcl->lpDDCB->cbDDExeBufCallbacks.DestroyExecuteBuffer = 
 		         This->lpLcl->lpDDCB->HELDDExeBuf.DestroyExecuteBuffer;
 			 This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_DESTROYEXEBUF;
 	}
 
-	if (This->lpLcl->lpDDCB->HALDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_LOCKEXEBUF)
+	if ((This->lpLcl->lpDDCB->HALDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_LOCKEXEBUF) && (devicetypes !=3))
 	{
 		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.LockExecuteBuffer =
 			   This->lpLcl->lpDDCB->HALDDExeBuf.LockExecuteBuffer;
 		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_LOCKEXEBUF;
 	}
-	else if (This->lpLcl->lpDDCB->HELDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_LOCKEXEBUF)
+	else if ((This->lpLcl->lpDDCB->HELDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_LOCKEXEBUF) && (devicetypes !=2))
 	{		     
 		     This->lpLcl->lpDDCB->cbDDExeBufCallbacks.LockExecuteBuffer = 
 		         This->lpLcl->lpDDCB->HELDDExeBuf.LockExecuteBuffer;
 			 This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_LOCKEXEBUF;
 	}
 
-	if (This->lpLcl->lpDDCB->HALDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_UNLOCKEXEBUF)
+	if ((This->lpLcl->lpDDCB->HALDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_UNLOCKEXEBUF) && (devicetypes !=3))
 	{
 		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.UnlockExecuteBuffer =
 			   This->lpLcl->lpDDCB->HALDDExeBuf.UnlockExecuteBuffer;
 		This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwFlags |= DDHAL_EXEBUFCB32_UNLOCKEXEBUF;
 	}
-	else if (This->lpLcl->lpDDCB->HELDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_UNLOCKEXEBUF)
+	else if ((This->lpLcl->lpDDCB->HELDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_UNLOCKEXEBUF) && (devicetypes !=2))
 	{		     
 		     This->lpLcl->lpDDCB->cbDDExeBufCallbacks.UnlockExecuteBuffer = 
 		         This->lpLcl->lpDDCB->HELDDExeBuf.UnlockExecuteBuffer;
