@@ -170,8 +170,7 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 	This->lpLcl->hDD = This->lpLcl->lpGbl->hDD;
 
 
-	/* Mix the DDCALLBACKS */
-	
+	/* Mix the DDCALLBACKS */	
 	This->lpLcl->lpDDCB->cbDDCallbacks.dwSize = sizeof(This->lpLcl->lpDDCB->cbDDCallbacks);
 
 	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE) && (devicetypes !=3))
@@ -490,14 +489,41 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 			  This->lpLcl->lpDDCB->HELDDSurface.UpdateOverlay;
 	}
 
+	/*  Mix the DDPALETTE CALLBACKS */	
+	This->lpLcl->lpDDCB->HALDDPalette.dwSize = sizeof(This->lpLcl->lpDDCB->HALDDPalette);
 
-	/*  Mix the DDPALETTE CALLBACKS 
-	This->lpLcl->lpDDCB->HELDDPalette.DestroyPalette  = HelDdPalDestroyPalette; 
-	This->lpLcl->lpDDCB->HELDDPalette.SetEntries = HelDdPalSetEntries;
-	This->lpLcl->lpDDCB->HELDDPalette.dwSize = sizeof(This->lpLcl->lpDDCB->HELDDPalette);
-	*/
+	if ((This->lpLcl->lpDDCB->HALDDPalette.dwFlags & DDHAL_PALCB32_DESTROYPALETTE) && (devicetypes !=3))
+	{
+		This->lpLcl->lpDDCB->cbDDPaletteCallbacks.dwFlags |= DDHAL_PALCB32_SETENTRIES;
+
+		This->lpLcl->lpDDCB->cbDDPaletteCallbacks.DestroyPalette =  
+			  This->lpLcl->lpDDCB->HALDDPalette.DestroyPalette;
+	}
+	else if ((This->lpLcl->lpDDCB->HELDDPalette.dwFlags & DDHAL_PALCB32_DESTROYPALETTE) && (devicetypes !=2))
+	{
+		This->lpLcl->lpDDCB->cbDDPaletteCallbacks.dwFlags |= DDHAL_PALCB32_DESTROYPALETTE;
+
+		This->lpLcl->lpDDCB->cbDDPaletteCallbacks.DestroyPalette =  
+			This->lpLcl->lpDDCB->HELDDPalette.DestroyPalette;
+	}
+
+	if ((This->lpLcl->lpDDCB->HALDDPalette.dwFlags & DDHAL_PALCB32_SETENTRIES) && (devicetypes !=3))
+	{
+		This->lpLcl->lpDDCB->cbDDPaletteCallbacks.dwFlags |= DDHAL_PALCB32_SETENTRIES;
+
+		This->lpLcl->lpDDCB->cbDDPaletteCallbacks.SetEntries =  
+			  This->lpLcl->lpDDCB->HALDDPalette.SetEntries;
+	}
+	else if ((This->lpLcl->lpDDCB->HELDDPalette.dwFlags & DDHAL_PALCB32_SETENTRIES) && (devicetypes !=2))
+	{
+		This->lpLcl->lpDDCB->cbDDPaletteCallbacks.dwFlags |= DDHAL_PALCB32_SETENTRIES;
+
+		This->lpLcl->lpDDCB->cbDDPaletteCallbacks.SetEntries =  
+			  This->lpLcl->lpDDCB->HELDDPalette.SetEntries;
+	}
 
 	/* Mix the DDExeBuf CALLBACKS */
+	This->lpLcl->lpDDCB->cbDDExeBufCallbacks.dwSize = sizeof(This->lpLcl->lpDDCB->cbDDExeBufCallbacks);
 	
 	if ((This->lpLcl->lpDDCB->HALDDExeBuf.dwFlags & DDHAL_EXEBUFCB32_CANCREATEEXEBUF) && (devicetypes !=3))
 	{
@@ -770,9 +796,9 @@ StartDirectDrawHel(LPDIRECTDRAW* iface)
 	This->lpLcl->lpDDCB->HELDD.CreateSurface        = HelDdCreateSurface;		
 	This->lpLcl->lpDDCB->HELDD.CreatePalette        = HelDdCreatePalette;
 	This->lpLcl->lpDDCB->HELDD.DestroyDriver        = HelDdDestroyDriver;
-	//This->lpLcl->lpDDCB->HELDD.FlipToGDISurface     = HelDdFlipToGDISurface
+	This->lpLcl->lpDDCB->HELDD.FlipToGDISurface     = HelDdFlipToGDISurface;
 	This->lpLcl->lpDDCB->HELDD.GetScanLine          = HelDdGetScanLine;
-	// This->lpLcl->lpDDCB->HELDD.SetColorKey          = HelDdSetColorKey;
+	//This->lpLcl->lpDDCB->HELDD.SetColorKey          = HelDdSetColorKey;
 	This->lpLcl->lpDDCB->HELDD.SetExclusiveMode     = HelDdSetExclusiveMode;
 	This->lpLcl->lpDDCB->HELDD.SetMode              = HelDdSetMode;
 	This->lpLcl->lpDDCB->HELDD.WaitForVerticalBlank = HelDdWaitForVerticalBlank;
@@ -781,17 +807,15 @@ StartDirectDrawHel(LPDIRECTDRAW* iface)
 		                                  DDHAL_CB32_CREATESURFACE        |
 										  DDHAL_CB32_CREATEPALETTE        |
 		                                  DDHAL_CB32_DESTROYDRIVER        | 
-										  // DDHAL_CB32_FLIPTOGDISURFACE     |
+										  DDHAL_CB32_FLIPTOGDISURFACE     |
 										  DDHAL_CB32_GETSCANLINE          |
-										  // DDHAL_CB32_SETCOLORKEY          |
+										  //DDHAL_CB32_SETCOLORKEY          |
 										  DDHAL_CB32_SETEXCLUSIVEMODE     | 
 										  DDHAL_CB32_SETMODE              |                                                   
 										  DDHAL_CB32_WAITFORVERTICALBLANK ;
 
-
 	This->lpLcl->lpDDCB->HELDD.dwSize = sizeof(This->lpLcl->lpDDCB->HELDD);
-
-	/*
+	
 	This->lpLcl->lpDDCB->HELDDSurface.AddAttachedSurface = HelDdSurfAddAttachedSurface;
 	This->lpLcl->lpDDCB->HELDDSurface.Blt = HelDdSurfBlt;
 	This->lpLcl->lpDDCB->HELDDSurface.DestroySurface = HelDdSurfDestroySurface;
@@ -806,8 +830,24 @@ StartDirectDrawHel(LPDIRECTDRAW* iface)
 	This->lpLcl->lpDDCB->HELDDSurface.SetPalette = HelDdSurfSetPalette;
 	This->lpLcl->lpDDCB->HELDDSurface.Unlock = HelDdSurfUnlock;
 	This->lpLcl->lpDDCB->HELDDSurface.UpdateOverlay = HelDdSurfUpdateOverlay;
-    */
+    
+	This->lpLcl->lpDDCB->HELDDSurface.dwFlags = DDHAL_SURFCB32_ADDATTACHEDSURFACE |
+		                                        DDHAL_SURFCB32_BLT                | 
+												DDHAL_SURFCB32_DESTROYSURFACE     | 
+												DDHAL_SURFCB32_FLIP               | 
+												DDHAL_SURFCB32_GETBLTSTATUS       | 
+												DDHAL_SURFCB32_GETFLIPSTATUS      | 
+												DDHAL_SURFCB32_LOCK               | 
+												DDHAL_SURFCB32_RESERVED4          | 
+												DDHAL_SURFCB32_SETCLIPLIST        | 
+												DDHAL_SURFCB32_SETCOLORKEY        | 
+												DDHAL_SURFCB32_SETOVERLAYPOSITION | 
+												DDHAL_SURFCB32_SETPALETTE         | 
+												DDHAL_SURFCB32_UNLOCK             |
+												DDHAL_SURFCB32_UPDATEOVERLAY;
 
+    This->lpLcl->lpDDCB->HELDDSurface.dwSize = sizeof(This->lpLcl->lpDDCB->HELDDSurface);
+		                                      
 	/*
 	This->lpLcl->lpDDCB->HELDDPalette.DestroyPalette  = HelDdPalDestroyPalette; 
 	This->lpLcl->lpDDCB->HELDDPalette.SetEntries = HelDdPalSetEntries;

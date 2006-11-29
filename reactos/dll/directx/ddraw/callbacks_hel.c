@@ -28,12 +28,12 @@ DWORD CALLBACK  HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA lpCreateSurface)
    	DX_STUB;
 }
 
-/*
+
 DWORD CALLBACK  HelDdSetColorKey(LPDDHAL_SETCOLORKEYDATA lpSetColorKey)
 {
    	DX_STUB;
 }
-*/
+
 
 DWORD CALLBACK  HelDdSetMode(LPDDHAL_SETMODEDATA SetMode)
 {   			

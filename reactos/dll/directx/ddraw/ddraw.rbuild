@@ -29,6 +29,7 @@
 	<file>iface_kernel.c</file>
 
       <file>callbacks_hel.c</file>
+      <file>callbacks_surf_hel.c</file>
 
 	<directory name="main">
 		<file>ddraw_main.c</file>
