@@ -1,12 +1,12 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/halx86/up/spinlock.c
- * PURPOSE:         Implements spinlocks
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ * PROJECT:         ReactOS HAL
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            hal/halx86/up/spinlock.c
+ * PURPOSE:         Spinlock and Queued Spinlock Support
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES ****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <hal.h>
 #define NDEBUG
@@ -17,7 +17,7 @@
 #undef KeLowerIrql
 #undef KeRaiseIrql
 
-/* FUNCTIONS ***************************************************************/
+/* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
@@ -198,6 +198,5 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
     /* Always return true on UP Machines */
     return TRUE;
 }
-
 
 /* EOF */

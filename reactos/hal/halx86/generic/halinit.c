@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/hal/halx86/generic/processor.c
- * PURPOSE:         HAL Processor Routines
+ * FILE:            hal/halx86/generic/halinit.c
+ * PURPOSE:         HAL Entrypoint and Initialization
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
@@ -92,8 +92,17 @@ HalInitSystem(IN ULONG BootPhase,
             KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, 1, 0);
         }
 
-        /* Continue with HAL-specific initialization */
-        HalpInitPhase0(LoaderBlock);
+        /* Initialize the PICs */
+        HalpInitPICs();
+
+        /* Force initial PIC state */
+        KfRaiseIrql(KeGetCurrentIrql());
+
+        /* Initialize the clock */
+        HalpInitializeClock();
+
+        /* Setup busy waiting */
+        //HalpCalibrateStallExecution();
 
         /* Fill out the dispatch tables */
         HalQuerySystemInformation = HaliQuerySystemInformation;
@@ -110,8 +119,12 @@ HalInitSystem(IN ULONG BootPhase,
         /* Initialize the default HAL stubs for bus handling functions */
         HalpInitNonBusHandler();
 
-        /* Initialize the clock interrupt */
-        HalpInitPhase1();
+        /* Enable the clock interrupt */
+        ((PKIPCR)KeGetPcr())->IDT[0x30].ExtendedOffset =
+            (USHORT)(((ULONG_PTR)HalpClockInterrupt >> 16) & 0xFFFF);
+        ((PKIPCR)KeGetPcr())->IDT[0x30].Offset =
+            (USHORT)HalpClockInterrupt;
+        HalEnableSystemInterrupt(0x30, CLOCK2_LEVEL, Latched);
 
         /* Initialize DMA. NT does this in Phase 0 */
         HalpInitDma();
@@ -122,7 +135,7 @@ HalInitSystem(IN ULONG BootPhase,
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 VOID
 NTAPI
@@ -136,6 +149,5 @@ HalReportResourceUsage(VOID)
 
     /* FIXME: Report HAL Usage to kernel */
 }
-
 
 /* EOF */

@@ -14,7 +14,6 @@
 	<file>pci.c</file>
 	<file>portio.c</file>
 	<file>reboot.c</file>
-	<file>sysbus.c</file>
 	<file>sysinfo.c</file>
 	<file>timer.c</file>
 	<file>systimer.S</file>

@@ -1,9 +1,10 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/hal/halx86/generic/cmos.c
+ * FILE:            hal/halx86/generic/cmos.c
  * PURPOSE:         CMOS Access Routines (Real Time Clock and LastKnownGood)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
 /* INCLUDES ******************************************************************/

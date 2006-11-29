@@ -1,7 +1,7 @@
 /*
- * PROJECT:         ReactOS HA:
+ * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/hal/halx86/drive.c
+ * FILE:            hal/halx86/generic/drive.c
  * PURPOSE:         I/O HAL Routines for Disk Access
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

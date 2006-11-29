@@ -236,7 +236,6 @@ Spurious:
 
     /* Exit the interrupt */
     add esp, 8
-    mov esi, $
     jmp _Kei386EoiHelper@0
 .endfunc
 

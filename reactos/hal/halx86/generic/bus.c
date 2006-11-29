@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/hal/halx86/generic/bus.c
+ * FILE:            hal/halx86/generic/bus.c
  * PURPOSE:         Bus Support Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -61,6 +61,20 @@ HalpTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
     /* Translation is easy */
     TranslatedAddress->QuadPart = BusAddress.QuadPart;
     return TRUE;
+}
+
+ULONG
+NTAPI
+HalpGetSystemInterruptVector(IN ULONG BusNumber,
+                             IN ULONG BusInterruptLevel,
+                             IN ULONG BusInterruptVector,
+                             OUT PKIRQL Irql,
+                             OUT PKAFFINITY Affinity)
+{
+    ULONG Vector = IRQ2VECTOR(BusInterruptVector);
+    *Irql = (KIRQL)VECTOR2IRQL(Vector);
+    *Affinity = 0xFFFFFFFF;
+    return Vector;
 }
 
 VOID
