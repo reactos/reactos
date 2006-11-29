@@ -14,7 +14,6 @@
 
 /* GLOBALS *******************************************************************/
 
-PVOID HalpZeroPageMapping = NULL;
 HALP_HOOKS HalpHooks;
 BOOLEAN HalpPciLockSettings;
 
@@ -50,7 +49,6 @@ NTAPI
 HalInitSystem(IN ULONG BootPhase,
               IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PHYSICAL_ADDRESS Null = {{0}};
     PKPRCB Prcb = KeGetCurrentPrcb();
 
     /* Check the boot phase */
@@ -117,10 +115,6 @@ HalInitSystem(IN ULONG BootPhase,
 
         /* Initialize DMA. NT does this in Phase 0 */
         HalpInitDma();
-    }
-    else if (BootPhase == 2)
-    {
-        HalpZeroPageMapping = MmMapIoSpace(Null, PAGE_SIZE, MmNonCached);
     }
 
     /* All done, return */

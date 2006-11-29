@@ -28,10 +28,12 @@ NTAPI
 HalpReboot(VOID)
 {
     UCHAR Data;
-    extern PVOID HalpZeroPageMapping;
+    PVOID HalpZeroPageMapping;
+    PHYSICAL_ADDRESS Null = {{0}};
 
     /* Enable warm reboot */
-    ((PUSHORT)HalpZeroPageMapping)[0x472] = 0x1234;
+    HalpZeroPageMapping = MmMapIoSpace(Null, PAGE_SIZE, MmNonCached);
+    ((PUSHORT)HalpZeroPageMapping)[0x239] = 0x1234;
 
     /* FIXME: Lock CMOS Access */
 
