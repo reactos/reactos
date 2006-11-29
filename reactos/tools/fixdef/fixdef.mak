@@ -1,0 +1,46 @@
+FIXDEF_BASE = $(TOOLS_BASE)$(SEP)fixdef
+FIXDEF_BASE_ = $(FIXDEF_BASE)$(SEP)
+FIXDEF_INT = $(INTERMEDIATE_)$(FIXDEF_BASE)
+FIXDEF_INT_ = $(FIXDEF_INT)$(SEP)
+FIXDEF_OUT = $(OUTPUT_)$(FIXDEF_BASE)
+FIXDEF_OUT_ = $(FIXDEF_OUT)$(SEP)
+
+$(FIXDEF_INT): | $(TOOLS_INT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(FIXDEF_OUT): | $(TOOLS_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
+
+FIXDEF_TARGET = \
+	$(EXEPREFIX)$(FIXDEF_OUT_)FIXDEF$(EXEPOSTFIX)
+
+FIXDEF_SOURCES = $(addprefix $(FIXDEF_BASE_), \
+	fixdef.cpp \
+	)
+
+FIXDEF_OBJECTS = \
+  $(addprefix $(INTERMEDIATE_), $(FIXDEF_SOURCES:.cpp=.o))
+
+FIXDEF_HOST_CFLAGS = $(TOOLS_CFLAGS) -D__USE_W32API -Iinclude -Iinclude/reactos -Iinclude/psdk
+
+FIXDEF_HOST_LFLAGS = $(TOOLS_LFLAGS) -lntdll
+
+.PHONY: FIXDEF
+FIXDEF: $(FIXDEF_TARGET)
+
+$(FIXDEF_TARGET): $(FIXDEF_OBJECTS) | $(FIXDEF_OUT)
+	$(ECHO_LD)
+	${host_gpp} $(FIXDEF_OBJECTS) $(FIXDEF_HOST_LFLAGS) -o $@
+
+$(FIXDEF_INT_)fixdef.o: $(FIXDEF_BASE_)fixdef.cpp | $(FIXDEF_INT)
+	$(ECHO_CC)
+	${host_gpp} $(FIXDEF_HOST_CFLAGS) -c $< -o $@
+
+.PHONY: FIXDEF_clean
+FIXDEF_clean:
+	-@$(rm) $(FIXDEF_TARGET) $(FIXDEF_OBJECTS) 2>$(NUL)
+clean: FIXDEF_clean
