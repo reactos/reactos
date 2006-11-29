@@ -8,7 +8,6 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include <windows.h>
-
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -34,30 +33,8 @@ END
 
 2 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "#include <windows.h>\r\n"
-    "\0"
+    "#include <windows.h>\0"
 END
-
-#endif    // APSTUDIO_INVOKED
-
-#endif    // German (Germany) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// French (France) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
-#ifdef _WIN32
-LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
-#pragma code_page(1252)
-#endif //_WIN32
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
 
 3 TEXTINCLUDE DISCARDABLE 
 BEGIN
@@ -77,6 +54,18 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
+#endif    // German (Germany) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+#pragma code_page(1252)
+#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -87,24 +76,45 @@ IDM_SDIFRAME MENU PRELOAD DISCARDABLE
 BEGIN
     POPUP "&Fichier"
     BEGIN
-        MENUITEM "&Ouvrir",                     ID_FILE_OPEN
-        MENUITEM "&Quitter",                    ID_FILE_EXIT
+        MENUITEM "&Ouvrir",                       ID_FILE_OPEN
+        MENUITEM "&Quitter",                       ID_FILE_EXIT
     END
     POPUP "&Affichage"
     BEGIN
-        MENUITEM "Barre d'ou&tils",             ID_VIEW_TOOL_BAR
-        MENUITEM "Pann&eau lat?al",             ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "&Barre d'?at",                ID_VIEW_STATUSBAR
+        MENUITEM "Barre d'ou&tils",                    ID_VIEW_TOOL_BAR
+        MENUITEM "Pann&eau latéral",                   ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Barre d'état",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "Actualise&r",                 ID_REFRESH
-        MENUITEM "&Plein ?ran",                 ID_VIEW_FULLSCREEN
+        MENUITEM "Actualise&r\tF5",                ID_REFRESH
+        MENUITEM "&Plein éran\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
     END
     POPUP "&Aide"
     BEGIN
-        MENUITEM "&Rubriques d'aide de iBrowser", ID_IBROWSER_FAQ
-        MENUITEM "? propos de iBrowser...",     ID_ABOUT_IBROWSER
-        MENUITEM "? propos de ReactOS...",      ID_ABOUT_WINDOWS
+        MENUITEM "&FAQ de IBrowser...",            ID_IBROWSER_FAQ
+        MENUITEM "À propos de IBrowser...",          ID_ABOUT_IBROWSER
+        MENUITEM "À propos de React&OS...",                ID_ABOUT_WINDOWS
     END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT_IBROWSER DIALOG DISCARDABLE  0, 0, 199, 106
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About ReactOS Web Browser"
+FONT 10, "MS Sans Serif"
+BEGIN
+    LTEXT           "Navigateur internet de Reactos",IDC_ROS_IBROWSER,91,13,104,11
+    LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,104,8
+    LTEXT           "(c) 2005 Martin Fuchs",IDC_STATIC,91,42,104,8
+    LTEXT           "",IDC_WIN_VERSION,91,58,98,22
+    LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,17,84,129,
+                    8
+    CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
+                    154,90,38,12
 END
 
 
@@ -121,10 +131,10 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ABOUT_IBROWSER      "? propos de iBrowser..."
+    IDS_ABOUT_IBROWSER      "&À propos..."
 END
 
-#endif    // French (France) resources
+#endif    // French resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -135,7 +145,7 @@ END
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #ifndef _ROS_
-LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE DISCARDABLE 
 BEGIN
 #ifdef UNICODE
