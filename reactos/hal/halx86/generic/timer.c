@@ -116,7 +116,7 @@ HalSetTimeIncrement(IN ULONG Increment)
 
     /* Normalize between our minimum (1 ms) and maximum (variable) setting */
     if (Increment > HalpLargestClockMS) Increment = HalpLargestClockMS;
-    if (Increment < 0) Increment = 1;
+    if (Increment <= 0) Increment = 1;
 
     /* Set the rate and tell HAL we want to change it */
     HalpNextMSRate = Increment;

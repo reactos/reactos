@@ -9,7 +9,6 @@
     <file>cmos.c</file>
     <file>dma.c</file>
 	<file>drive.c</file>
-	<file>halinit.c</file>
 	<file>misc.c</file>
 	<file>pci.c</file>
 	<file>portio.c</file>
@@ -26,6 +25,7 @@
 	<define name="_NTHAL_" />
 	<define name="__USE_W32API" />
 	<file>irql.c</file>
+    <file>halinit.c</file>
 	<file>processor.c</file>
 	<file>spinlock.c</file>
 </module>

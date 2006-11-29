@@ -93,7 +93,7 @@ HalInitSystem(IN ULONG BootPhase,
         }
 
         /* Initialize the PICs */
-        //HalpInitPICs();
+        HalpInitPICs();
 
         /* Force initial PIC state */
         KfRaiseIrql(KeGetCurrentIrql());
