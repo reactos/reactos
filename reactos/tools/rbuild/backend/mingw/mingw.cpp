@@ -760,6 +760,14 @@ bool
 MingwBackend::IsSupportedBinutilsVersion ( const string& binutilsVersion )
 {
 	if ( manualBinutilsSetting ) return true;
+	
+	/* linux */
+	if ( binutilsVersion.find('.') != std::string::npos )
+	{
+		/* TODO: blacklist versions on version number instead of date */		
+		return true;
+	}
+
 	if ( ( ( strcmp ( binutilsVersion.c_str (), "20040902") >= 0 ) &&
 	       ( strcmp ( binutilsVersion.c_str (), "20041008") <= 0 ) ) ||
     	       ( strcmp ( binutilsVersion.c_str (), "20031001") < 0 ) )
