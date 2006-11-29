@@ -2016,7 +2016,6 @@ GetIntLock:
 
 SpuriousInt:
     /* Exit the interrupt */
-    jmp $
     add esp, 8
     jmp _Kei386EoiHelper@0
 
