@@ -5,6 +5,7 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #define _FINDDATA_T_DEFINED
 #include <io.h>
 #include <time.h>
@@ -141,10 +142,80 @@ bool readFile(string filename, vector<string> & file)
 	return true;
 }
 
+bool has_cdecl_convention(string & line)
+{
+	if (line[0] == _T('_'))
+	{
+		return true;
+	}
+	return false;
+}
+
+bool has_fastcall_convention(string & line)
+{
+	if (line[0] == _T('@'))
+	{
+		return true;
+	}
+	return false;
+}
+
+bool has_stdcall_convention(string & line)
+{
+	if (!has_cdecl_convention(line) && !has_fastcall_convention(line))
+	{
+		size_t pos = line.find (_T("@"));
+		if (pos == string::npos)
+		{
+			///
+			/// the stdcall decorate is removed
+			///
+			return false;
+		}
+		assert(pos > 1);
+		if (line[pos-1] == _T(' '))
+		{
+			///
+			/// its an export ordinal 
+			///
+			return false;
+		}
+
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+
+bool has_export_ordinal(string & line)
+{
+	if (line.find_last_of (_T(" @")) != string::npos)
+	{
+		return true;
+	}
+	return false;
+}
+
+void remove_stdcall_convention(string & line)
+{
+	size_t pos = line.find (_T("@"));
+	assert(pos != string::npos);
+	line.erase (pos, 1);
+	
+	while(_istdigit(line[pos]))
+		line.erase (pos, 1);
+}
+
+
+
 
 bool convertFile(string filename, vector<string> & file)
 {
 	bool modified = false;
+	cerr << "entered with: "<< filename << " size: " << file.size () << endl;
 
 	for(size_t i = 0; i < file.size(); i++)
 	{
@@ -156,19 +227,33 @@ bool convertFile(string filename, vector<string> & file)
 			///
 			continue;
 		}
-		if (line.find(_T("@")) == string::npos)
+		size_t pos = line.find (_T("="));
+		if (pos != string::npos)
 		{
-			// file has no @
-			continue;
+			string part1 = line.substr (0, pos);
+			string part2 = line.substr (pos+1, line.length () - pos - 1);
+			if (has_stdcall_convention(part1))
+			{
+				modified = true;
+				remove_stdcall_convention(part1);
+			}
+			if (has_stdcall_convention(part2))
+			{
+				modified = true;
+				remove_stdcall_convention(part2);
+			}
+			line = part1;
+			line.insert (line.length (), _T("="));
+			line.insert (line.length (), part2);
 		}
-
-		///
-		/// TODO implement algorithm
-		///
-
-		//cout << ">" << line;
+		else if (has_stdcall_convention(line))
+		{
+			modified = true;
+			remove_stdcall_convention(line);
+		}
+		cout << line;
 	}
-
+	exit(0);
 	return modified;
 }
 
@@ -186,8 +271,6 @@ bool writeFile(string filename, vector<string> & file)
 		string & line = file[i];
 		_fputts(line.c_str (), fd);
 	}
-
-	fclose(fd);
 	return true;
 }
 
