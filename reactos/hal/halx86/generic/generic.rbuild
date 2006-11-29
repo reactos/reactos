@@ -12,6 +12,7 @@
 	<file>misc.c</file>
 	<file>pci.c</file>
 	<file>portio.c</file>
+    <file>profil.c</file>
 	<file>reboot.c</file>
 	<file>sysinfo.c</file>
 	<file>timer.c</file>

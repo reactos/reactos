@@ -1,7 +1,6 @@
 LIBRARY kdcom.dll
 EXPORTS
 
-KdComPortInUse=_KdComPortInUse
 KdPortGetByte@4
 KdPortGetByteEx@8
 KdPortInitialize@12

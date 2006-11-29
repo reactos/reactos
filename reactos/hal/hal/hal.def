@@ -13,6 +13,7 @@ EXPORTS
 @KeAcquireInStackQueuedSpinLockRaiseToSynch@8
 @KeAcquireSpinLockRaiseToSynch@4
 @KeAcquireQueuedSpinLock@4
+@KeAcquireQueuedSpinLockRaiseToSynch@4
 @KeReleaseInStackQueuedSpinLock@4
 @KeReleaseQueuedSpinLock@8
 @KeTryToAcquireQueuedSpinLock@8
@@ -57,12 +58,12 @@ HalSetBusData@20
 HalSetBusDataByOffset@24
 HalSetDisplayParameters@8
 HalSetEnvironmentVariable@8
-;HalSetProfileInterval@4
+HalSetProfileInterval@4
 HalSetRealTimeClock@4
 HalSetTimeIncrement@4
 HalStartNextProcessor@8
-;HalStartProfileInterrupt@4
-;HalStopProfileInterrupt@4
+HalStartProfileInterrupt@4
+HalStopProfileInterrupt@4
 HalTranslateBusAddress@24
 IoAssignDriveLetters@16=HalpAssignDriveLetters@16
 IoFlushAdapterBuffers@24
@@ -73,6 +74,7 @@ IoReadPartitionTable@16=HalpReadPartitionTable@16
 IoSetPartitionInformation@16=HalpSetPartitionInformation@16
 IoWritePartitionTable@20=HalpWritePartitionTable@20
 KeAcquireSpinLock@8
+KdComPortInUse=_KdComPortInUse
 KeFlushWriteBuffer@0
 KeGetCurrentIrql@0
 KeLowerIrql@4

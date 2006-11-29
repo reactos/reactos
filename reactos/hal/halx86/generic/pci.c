@@ -470,6 +470,23 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
 
 NTSTATUS
 NTAPI
+HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
+                               IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
+{
+    DPRINT1("Unimplemented!\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
+{
+    DPRINT1("Unimplemented!\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
 HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
                            IN PBUS_HANDLER RootHandler,
                            IN PUNICODE_STRING RegistryPath,

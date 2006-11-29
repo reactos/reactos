@@ -9,10 +9,10 @@
 #define KPCR_BASE   0xFF000000
 
 /* WDK Hack */
-#define KdComPortInUse _KdComPortInUse
+#define KdComPortInUse          _KdComPortInUse
 
-#define HAL_APC_REQUEST	    0
-#define HAL_DPC_REQUEST	    1
+#define HAL_APC_REQUEST         0
+#define HAL_DPC_REQUEST         1
 
 /* CMOS Registers and Ports */
 #define CMOS_CONTROL_PORT       (PUCHAR)0x70
@@ -35,15 +35,6 @@
 #define INT_BCD(int)            \
     (UCHAR)(((int / 10) << 4) + (int % 10))
 
-//
-// Kernel Debugger Port Definition
-//
-typedef struct _KD_PORT_INFORMATION
-{
-    ULONG ComPort;
-    ULONG BaudRate;
-    ULONG BaseAddress;
-} KD_PORT_INFORMATION, *PKD_PORT_INFORMATION;
 /* adapter.c */
 PADAPTER_OBJECT STDCALL HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN IsMaster, BOOLEAN Dma32BitAddresses);
   
@@ -54,26 +45,63 @@ VOID NTAPI HalpInitNonBusHandler (VOID);
 VOID NTAPI HalpInitPICs(VOID);
 
 /* udelay.c */
-VOID HalpCalibrateStallExecution(VOID);
-
 VOID NTAPI HalpInitializeClock(VOID);
 
 /* pci.c */
 VOID HalpInitPciBus (VOID);
 
-/* enum.c */
-VOID HalpStartEnumerator (VOID);
-
 /* dma.c */
 VOID HalpInitDma (VOID);
-
-/* mem.c */
-PVOID HalpMapPhysMemory(ULONG PhysAddr, ULONG Size);
 
 /* Non-generic initialization */
 VOID HalpInitPhase0 (PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID HalpInitPhase1(VOID);
 VOID NTAPI HalpClockInterrupt(VOID);
+
+//
+// KD Support
+//
+VOID
+NTAPI
+HalpCheckPowerButton(
+    VOID
+);
+
+VOID
+NTAPI
+HalpRegisterKdSupportFunctions(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+HalpSetupPciDeviceForDebugging(
+    IN PVOID LoaderBlock,
+    IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice
+);
+
+NTSTATUS
+NTAPI
+HalpReleasePciDeviceForDebugging(
+    IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice
+);
+
+//
+// Memory routines
+//
+PVOID
+NTAPI
+HalpMapPhysicalMemory64(
+    IN PHYSICAL_ADDRESS PhysicalAddress,
+    IN ULONG NumberPage
+);
+
+VOID
+NTAPI
+HalpUnmapVirtualAddress(
+    IN PVOID VirtualAddress,
+    IN ULONG NumberPages
+);
 
 /* sysinfo.c */
 NTSTATUS

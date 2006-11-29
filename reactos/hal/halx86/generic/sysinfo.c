@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+ULONG KdComPortInUse = 0;
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS

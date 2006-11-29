@@ -18,6 +18,22 @@ ULONG HalpBusType;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+HalpRegisterKdSupportFunctions(VOID)
+{
+    /* Register PCI Device Functions */
+    KdSetupPciDeviceForDebugging = HalpSetupPciDeviceForDebugging;
+    KdReleasePciDeviceforDebugging = HalpReleasePciDeviceForDebugging;
+
+    /* Register memory functions */
+    KdMapPhysicalMemory64 = HalpMapPhysicalMemory64;
+    KdUnmapVirtualAddress = HalpUnmapVirtualAddress;
+
+    /* Register ACPI stub */
+    KdCheckPowerButton = HalpCheckPowerButton;
+}
+
 NTSTATUS
 NTAPI
 HalpAssignSlotResources(IN PUNICODE_STRING RegistryPath,
