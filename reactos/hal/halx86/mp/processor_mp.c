@@ -52,7 +52,7 @@ HalInitializeProcessor(ULONG ProcessorNumber,
    OnlineCPUs |= (1 << CPU);
 
    /* Setup busy waiting */
-   HalpCalibrateStallExecution();
+   //HalpCalibrateStallExecution();
 }
 
 BOOLEAN STDCALL
