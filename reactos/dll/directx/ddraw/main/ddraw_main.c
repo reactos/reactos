@@ -198,24 +198,16 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     LPDDRAWI_DDRAWSURFACE_INT That; 
 	
-	
-
-	DX_WINDBG_trace();
-
     if (pUnkOuter!=NULL) 
 	{
         return CLASS_E_NOAGGREGATION; 
 	}
-
-	DX_STUB_str("ok pUnkOuter == NULL");
 
     if (sizeof(DDSURFACEDESC2)!=pDDSD->dwSize && sizeof(DDSURFACEDESC)!=pDDSD->dwSize)
 	{
         return DDERR_UNSUPPORTED;
 	}
     
-	DX_STUB_str("ok pDDSD->dwSize ok");
-
     That = (LPDDRAWI_DDRAWSURFACE_INT)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT));
     
     if (That == NULL) 
@@ -223,22 +215,18 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
         return E_OUTOFMEMORY;
 	}
 
-	DX_STUB_str("That got memory");
+	That->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));
+    
+    if (That == NULL) 
+	{
+        return E_OUTOFMEMORY;
+	}
 
-    	
     That->lpVtbl = &DirectDrawSurface7_Vtable;
-
-	DX_STUB_str("That->lpVtbl ok");
-
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
-	DX_STUB_str("*ppSurf ok");
-	
 	That->lpLcl->lpGbl = &ddSurfGbl;
-	DX_STUB_str("ddSurfGbl ok");
-
 	That->lpLcl->lpGbl->lpDD = &ddgbl;
-	DX_STUB_str("crash one line below : why ? to tried figout lpDD ok");
 
 	Main_DDrawSurface_AddRef((LPDIRECTDRAWSURFACE7)That);
 	
