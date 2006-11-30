@@ -85,6 +85,8 @@ private:
 	bool IncludeDirectoryTarget ( const std::string& directory ) const;
 	bool TryToDetectThisCompiler ( const std::string& compiler );
 	void DetectCompiler ();
+	std::string GetCompilerVersion ( const std::string& compilerCommand );
+	bool IsSupportedCompilerVersion ( const std::string& compilerVersion );
 	bool TryToDetectThisNetwideAssembler ( const std::string& assembler );
 	bool TryToDetectThisBinutils ( const std::string& binutils );
 	std::string GetBinutilsVersion ( const std::string& binutilsCommand );

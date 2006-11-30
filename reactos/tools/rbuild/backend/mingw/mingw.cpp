@@ -685,10 +685,23 @@ MingwBackend::DetectCompiler ()
 		compilerCommand = compilerPrefix + "-gcc";
 		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
 	}
+
 	if ( detectedCompiler )
-		printf ( "detected (%s)\n", compilerCommand.c_str () );
+	{
+		string compilerVersion = GetCompilerVersion ( compilerCommand );
+		if ( IsSupportedCompilerVersion ( compilerVersion ) )
+			printf ( "detected (%s %s)\n", compilerCommand.c_str (), compilerVersion.c_str() );
+		else
+		{
+			printf ( "detected (%s), but with unsupported version (%s)\n",
+			         compilerCommand.c_str (),
+			         compilerVersion.c_str () );
+			throw UnsupportedBuildToolException ( compilerCommand, compilerVersion );
+		}
+	}
 	else
 		printf ( "not detected\n" );
+
 }
 
 bool
@@ -701,6 +714,56 @@ MingwBackend::TryToDetectThisNetwideAssembler ( const string& assembler )
 		NUL );
 	int exitcode = system ( command.c_str () );
 	return (exitcode == 0);
+}
+
+string
+MingwBackend::GetCompilerVersion ( const string& compilerCommand )
+{
+	FILE *fp;
+	int ch, i;
+	char buffer[81];
+
+	string versionCommand = ssprintf ( "%s --version gcc",
+	                                   compilerCommand.c_str (),
+	                                   NUL,
+	                                   NUL );
+	fp = popen ( versionCommand.c_str () , "r" );
+	for( i = 0; 
+             ( i < 80 ) && 
+                 ( feof ( fp ) == 0 && 
+                   ( ( ch = fgetc( fp ) ) != -1 ) ); 
+             i++ )
+	{
+		buffer[i] = (char) ch;
+	}
+	buffer[i] = '\0';
+	pclose ( fp );
+
+	char separators[] = " ";
+	char *token;
+	char *prevtoken = NULL;
+	
+	string version;
+
+	token = strtok ( buffer, separators );
+	while ( token != NULL )
+	{
+		prevtoken = token;
+		version = string( prevtoken );
+		if ( version.find('.') != std::string::npos )
+			break;
+		token = strtok ( NULL, separators );
+	}
+	return version;
+}
+
+bool
+MingwBackend::IsSupportedCompilerVersion ( const string& compilerVersion )
+{
+	if ( strcmp ( compilerVersion.c_str (), "3.4.5") < 0 )
+		return false;
+	else
+		return true;
 }
 
 bool
