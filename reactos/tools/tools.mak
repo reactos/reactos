@@ -60,4 +60,3 @@ include tools/wpp/wpp.mak
 include tools/wrc/wrc.mak
 include tools/sysreg/sysreg.mak
 include tools/dbgprint/dbgprint.mak
-include tools/fixdef/fixdef.mak
