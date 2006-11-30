@@ -42,11 +42,6 @@
 //  - Activate new NTLPC and delete old implementation.
 //  - Figure out why LPC-processes won't die anymore.
 //
-// Dbgk:
-//  - Implement remaining Dbgk routines.
-//  - Add Dbgk callbacks to image map/unmap routines.
-//  - Implement helper Mm APIs.
-//
 // Ex:
 //  - Implement Generic Callback mechanism.
 //  - Use pushlocks for handle implementation.
