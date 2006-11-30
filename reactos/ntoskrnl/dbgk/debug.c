@@ -1039,7 +1039,7 @@ DbgkpOpenHandles(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
                                    0,
                                    DUPLICATE_SAME_ACCESS,
                                    KernelMode);
-        if (NT_SUCCESS(Status)) *DupHandle = NULL;
+        if (!NT_SUCCESS(Status)) *DupHandle = NULL;
 
         /* Close the original handle */
         ObCloseHandle(Handle, KernelMode);
