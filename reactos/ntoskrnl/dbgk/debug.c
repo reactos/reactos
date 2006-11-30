@@ -329,6 +329,7 @@ DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
     PAGED_CODE();
     DBGKTRACE(DBGK_EXCEPTION_DEBUG,
               "ExceptionRecord: %p Port: %p\n", ExceptionRecord, DebugPort);
+    KEBUGCHECK(0);
 
     /* Setup the API Message */
     ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
@@ -339,7 +340,7 @@ DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Check if this is to be sent on the debug port */
     if (DebugPort)
     {
-        /* Use the debug port, onless the thread is being hidden */
+        /* Use the debug port, unless the thread is being hidden */
         Port = PsGetCurrentThread()->HideFromDebugger ?
                NULL : Process->DebugPort;
     }

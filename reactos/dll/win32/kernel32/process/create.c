@@ -642,7 +642,7 @@ CreateProcessInternalW(HANDLE hToken,
     UNICODE_STRING ApplicationName = {0};
     OBJECT_ATTRIBUTES LocalObjectAttributes;
     POBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE hSection = NULL, hProcess = NULL, hThread = NULL;
+    HANDLE hSection = NULL, hProcess = NULL, hThread = NULL, hDebug = NULL;
     SECTION_IMAGE_INFORMATION SectionImageInfo;
     LPWSTR CurrentDirectory = NULL;
     LPWSTR CurrentDirectoryPart;
@@ -1101,7 +1101,7 @@ GetAppName:
     }
     
     /* FIXME: Check for Debugger */
-    
+
     /* FIXME: Check if Machine Type and SubSys Version Match */
 
     /* We don't support POSIX or anything else for now */
@@ -1124,7 +1124,35 @@ GetAppName:
     ObjectAttributes = BasepConvertObjectAttributes(&LocalObjectAttributes, 
                                                     lpProcessAttributes,
                                                     NULL);
-   
+
+    /* Check if we're going to be debugged */
+    if (dwCreationFlags & DEBUG_PROCESS)
+    {
+        /* FIXME: Set process flag */
+    }
+
+    /* Check if we're going to be debugged */
+    if (dwCreationFlags & (DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS))
+    {
+        /* Connect to DbgUi */
+        Status = DbgUiConnectToDbg();
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to connect to DbgUI!\n");
+            SetLastErrorByStatus(Status);
+            goto Cleanup;
+        }
+
+        /* Get the debug object */
+        hDebug = DbgUiGetThreadDebugObject();
+
+        /* Check if only this process will be debugged */
+        if (dwCreationFlags & DEBUG_ONLY_THIS_PROCESS)
+        {
+            /* FIXME: Set process flag */
+        }
+    }
+
     /* Create the Process */
     Status = NtCreateProcess(&hProcess,
                              PROCESS_ALL_ACCESS,
@@ -1132,7 +1160,7 @@ GetAppName:
                              NtCurrentProcess(),
                              bInheritHandles,
                              hSection,
-                             NULL,
+                             hDebug,
                              NULL);
     if(!NT_SUCCESS(Status))
     {
