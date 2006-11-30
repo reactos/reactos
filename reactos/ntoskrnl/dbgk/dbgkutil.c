@@ -19,7 +19,7 @@ NTAPI
 DbgkpSectionToFileHandle(IN PVOID Section)
 {
     NTSTATUS Status;
-    UNICODE_STRING FileName;
+    POBJECT_NAME_INFORMATION FileName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     HANDLE Handle;
@@ -31,7 +31,7 @@ DbgkpSectionToFileHandle(IN PVOID Section)
 
     /* Initialize object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
-                               &FileName,
+                               &FileName->Name,
                                OBJ_CASE_INSENSITIVE |
                                OBJ_FORCE_ACCESS_CHECK |
                                OBJ_KERNEL_HANDLE,
@@ -39,15 +39,17 @@ DbgkpSectionToFileHandle(IN PVOID Section)
                                NULL);
 
     /* Open the file */
+    DPRINT1("Trying to open: %wZ\n", &FileName->Name);
     Status = ZwOpenFile(&Handle,
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
+    DPRINT1("Status: %lx\n", Status);
 
     /* Free the name and return the handle if we succeeded */
-    ExFreePool(FileName.Buffer);
+    ExFreePool(FileName);
     if (!NT_SUCCESS(Status)) return NULL;
     return Handle;
 }
@@ -91,7 +93,8 @@ DbgkCreateThread(PVOID StartAddress)
     ULONG ProcessFlags;
     IMAGE_INFO ImageInfo;
     PIMAGE_NT_HEADERS NtHeader;
-    UNICODE_STRING ModuleName;
+    POBJECT_NAME_INFORMATION ModuleName;
+    UNICODE_STRING NtDllName;
     NTSTATUS Status;
     PVOID DebugPort;
     DBGKM_MSG ApiMessage;
@@ -130,10 +133,10 @@ DbgkCreateThread(PVOID StartAddress)
         if (NT_SUCCESS(Status))
         {
             /* Call the notify routines and free the name */
-            PspRunLoadImageNotifyRoutines(&ModuleName,
+            PspRunLoadImageNotifyRoutines(&ModuleName->Name,
                                           Process->UniqueProcessId,
                                           &ImageInfo);
-            ExFreePool(ModuleName.Buffer);
+            ExFreePool(ModuleName);
         }
         else
         {
@@ -160,9 +163,9 @@ DbgkCreateThread(PVOID StartAddress)
         }
 
         /* Call the notify routines */
-        RtlInitUnicodeString(&ModuleName,
+        RtlInitUnicodeString(&NtDllName,
                              L"\\SystemRoot\\System32\\ntdll.dll");
-        PspRunLoadImageNotifyRoutines(&ModuleName,
+        PspRunLoadImageNotifyRoutines(&NtDllName,
                                       Process->UniqueProcessId,
                                       &ImageInfo);
     }

@@ -653,14 +653,17 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
         if (First)
         {
             /* So we'll start with the create process message */
+            DPRINT1("new proces!\n");
             ApiMessage.ApiNumber = DbgKmCreateProcessApi;
 
             /* Get the file handle */
+            DPRINT1("section object: %p\n", Process->SectionObject);
             if (Process->SectionObject)
             {
                 /* Use the section object */
                 CreateProcess->FileHandle =
                     DbgkpSectionToFileHandle(Process->SectionObject);
+                DPRINT1("FileHandle: %p\n", CreateProcess->FileHandle);
             }
             else
             {
@@ -669,7 +672,9 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
             }
 
             /* Set the base address */
+            DPRINT1("SectionBaseAddress: %p\n", Process->SectionBaseAddress);
             CreateProcess->BaseOfImage = Process->SectionBaseAddress;
+            KEBUGCHECK(0);
 
             /* Get the NT Header */
             NtHeader = RtlImageNtHeader(Process->SectionBaseAddress);

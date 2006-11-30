@@ -109,10 +109,40 @@ MmGetFileObjectForSection(IN PROS_SECTION_OBJECT Section)
 NTSTATUS
 NTAPI
 MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
-                        OUT PUNICODE_STRING ModuleName)
+                        OUT POBJECT_NAME_INFORMATION *ModuleName)
 {
-    /* FIXME: TODO. ObQueryNameString on the FileObject */
-    RtlCreateUnicodeString(ModuleName, L"C:\\ReactOS\\system32\\ntdll.dll");
+    POBJECT_NAME_INFORMATION ObjectNameInfo;
+    NTSTATUS Status;
+    ULONG ReturnLength;
+
+    /* Make sure it's an image section */
+    *ModuleName = NULL;
+    if (!(Section->AllocationAttributes & SEC_IMAGE))
+    {
+        /* It's not, fail */
+        return STATUS_SECTION_NOT_IMAGE;
+    }
+
+    /* Allocate memory for our structure */
+    ObjectNameInfo = ExAllocatePoolWithTag(PagedPool,
+                                           1024,
+                                           TAG('M', 'm', ' ', ' '));
+    if (!ObjectNameInfo) return STATUS_NO_MEMORY;
+
+    /* Query the name */
+    Status = ObQueryNameString(Section->FileObject,
+                               ObjectNameInfo,
+                               1024,
+                               &ReturnLength);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, free memory */
+        ExFreePool(ObjectNameInfo);
+        return Status;
+    }
+
+    /* Success */
+    *ModuleName = ObjectNameInfo;
     return STATUS_SUCCESS;
 }
 
