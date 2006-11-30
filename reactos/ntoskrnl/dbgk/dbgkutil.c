@@ -104,10 +104,12 @@ DbgkCreateThread(PVOID StartAddress)
     PTEB Teb;
     PAGED_CODE();
 
-    /* Check if this process has already been notified */
-    ProcessFlags = InterlockedAnd((PLONG)&Process->Flags,
-                                  PSF_CREATE_REPORTED_BIT |
-                                  PSF_IMAGE_NOTIFY_DONE_BIT);
+    /* Try ORing in the create reported and image notify flags */
+    ProcessFlags = InterlockedOr((PLONG)&Process->Flags,
+                                 PSF_CREATE_REPORTED_BIT |
+                                 PSF_IMAGE_NOTIFY_DONE_BIT);
+
+    /* Check if we were the first to set them or if another thread raced us */
     if (!(ProcessFlags & PSF_IMAGE_NOTIFY_DONE_BIT) && (PsImageNotifyEnabled))
     {
         /* It hasn't.. set up the image info for the process */

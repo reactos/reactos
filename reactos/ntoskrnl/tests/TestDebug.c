@@ -49,7 +49,7 @@ Main(VOID)
                            &ClientId);
     Status = DbgUiDebugActiveProcess(hProcess);
 #else
-    Error = DebugActiveProcess(2648);
+    Error = DebugActiveProcess(168);
 #endif
 
 #if NATIVE
