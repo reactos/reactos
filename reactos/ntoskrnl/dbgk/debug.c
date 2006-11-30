@@ -551,8 +551,168 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
                             OUT PETHREAD *FirstThread,
                             OUT PETHREAD *LastThread)
 {
-    /* FIXME: TODO */
-    return STATUS_UNSUCCESSFUL;
+    PETHREAD pFirstThread = NULL, ThisThread, OldThread = NULL, pLastThread;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    BOOLEAN IsFirstThread;
+    ULONG Flags;
+    DBGKM_MSG ApiMessage;
+    PDBGKM_CREATE_THREAD CreateThread = &ApiMessage.CreateThread;
+    PDBGKM_CREATE_PROCESS CreateProcess = &ApiMessage.CreateProcess;
+    BOOLEAN First;
+    PIMAGE_NT_HEADERS NtHeader;
+    PAGED_CODE();
+
+    /* Check if we have a start thread */
+    if (StartThread)
+    {
+        /* Then the one we'll find won't be the first one */
+        IsFirstThread = FALSE;
+        pFirstThread = StartThread;
+        ThisThread = StartThread;
+
+        /* Reference it */
+        ObReferenceObject(StartThread);
+    }
+    else
+    {
+        /* Get the first thread ourselves */
+        ThisThread = PsGetNextProcessThread(Process, OldThread);
+        IsFirstThread = TRUE;
+    }
+
+    /* Start thread loop */
+    do
+    {
+        /* Dereference the previous thread if we had one */
+        if (OldThread) ObDereferenceObject(OldThread);
+
+        /* Set this as the last thread and lock it */
+        pLastThread = ThisThread;
+        ObReferenceObject(ThisThread);
+        if (ExAcquireRundownProtection(&ThisThread->RundownProtect))
+        {
+            /* Acquire worked, set flags */
+            Flags = 0x8 | 0x2;
+
+            /* Check if this is a user thread */
+            if (!ThisThread->SystemThread)
+            {
+                /* Suspend it */
+                if (NT_SUCCESS(PsSuspendThread(ThisThread, NULL)))
+                {
+                    /* Remember this */
+                    Flags = 0x8 | 0x2 | 0x20;
+                }
+            }
+        }
+        else
+        {
+            /* Couldn't acquire rundown */
+            Flags = 0x10 | 0x2;
+        }
+
+        /* Clear the API Message */
+        RtlZeroMemory(&ApiMessage, sizeof(ApiMessage));
+
+        /* Check if this is the first thread */
+        if ((IsFirstThread) &&
+            !(Flags & 0x10) &&
+            !(ThisThread->SystemThread) &&
+            (ThisThread->GrantedAccess))
+        {
+            /* It is, save the flag */
+            First = TRUE;
+        }
+        else
+        {
+            /* It isn't, save the flag */
+            First = FALSE;
+        }
+
+        /* Check if this is the first */
+        if (First)
+        {
+            /* So we'll start with the create process message */
+            ApiMessage.ApiNumber = DbgKmCreateProcessApi;
+
+            /* Get the file handle */
+            if (Process->SectionObject)
+            {
+                /* Use the section object */
+                CreateProcess->FileHandle =
+                    DbgkpSectionToFileHandle(Process->SectionObject);
+            }
+            else
+            {
+                /* Don't return any handle */
+                CreateProcess->FileHandle = NULL;
+            }
+
+            /* Set the base address */
+            CreateProcess->BaseOfImage = Process->SectionBaseAddress;
+
+            /* Get the NT Header */
+            NtHeader = RtlImageNtHeader(Process->SectionBaseAddress);
+            if (NtHeader)
+            {
+                /* Fill out data from the header */
+                CreateProcess->DebugInfoFileOffset = NtHeader->FileHeader.
+                                                     PointerToSymbolTable;
+                CreateProcess->DebugInfoSize = NtHeader->FileHeader.
+                                               NumberOfSymbols;
+            }
+        }
+        else
+        {
+            /* Otherwise it's a thread message */
+            ApiMessage.ApiNumber = DbgKmCreateThreadApi;
+            CreateThread->StartAddress = ThisThread->StartAddress;
+        }
+
+        /* Queue the message */
+        Status = DbgkpQueueMessage(Process,
+                                   ThisThread,
+                                   &ApiMessage,
+                                   Flags,
+                                   DebugObject);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed. FIXME: Handle this */
+            DPRINT1("Unhandled Dbgk codepath!\n");
+            KEBUGCHECK(0);
+        }
+
+        /* Check if this was the first message */
+        if (First)
+        {
+            /* It isn't the first thread anymore */
+            IsFirstThread = FALSE;
+
+            /* Reference this thread and set it as first */
+            ObDereferenceObject(ThisThread);
+            pFirstThread = ThisThread;
+        }
+
+        /* Get the next thread */
+        ThisThread = PsGetNextProcessThread(Process, ThisThread);
+        OldThread = pLastThread;
+    } while(ThisThread);
+
+    /* Check the API status */
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed. FIXME: Handle this */
+        DPRINT1("Unhandled Dbgk codepath!\n");
+        KEBUGCHECK(0);
+    }
+
+    /* Make sure we have a first thread */
+    if (!pFirstThread) return STATUS_UNSUCCESSFUL;
+
+    /* Return thread pointers */
+    *FirstThread = pFirstThread;
+    *LastThread = pLastThread;
+    return Status;
 }
 
 NTSTATUS

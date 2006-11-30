@@ -19,6 +19,21 @@ DbgkExitThread(
     IN NTSTATUS ExitStatus
 );
 
+VOID
+NTAPI
+DbgkMapViewOfSection(
+    IN HANDLE SectionHandle,
+    IN PVOID BaseAddress,
+    IN ULONG SectionOffset,
+    IN ULONG_PTR ViewSize
+);
+
+VOID
+NTAPI
+DbgkUnMapViewOfSection(
+    IN PVOID BaseAddress
+);
+
 BOOLEAN
 NTAPI
 DbgkpSuspendProcess(
@@ -36,6 +51,12 @@ NTAPI
 DbgkpSendApiMessage(
     IN OUT PDBGKM_MSG ApiMsg,
     IN ULONG Flags
+);
+
+HANDLE
+NTAPI
+DbgkpSectionToFileHandle(
+    IN PVOID Section
 );
 
 VOID

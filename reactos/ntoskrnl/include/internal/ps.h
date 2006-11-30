@@ -342,6 +342,13 @@ PsResumeThread(
     OUT PULONG PreviousCount OPTIONAL
 );
 
+NTSTATUS
+NTAPI
+PsSuspendThread(
+    IN PETHREAD Thread,
+    OUT PULONG PreviousCount OPTIONAL
+);
+
 //
 // Global data inside the Process Manager
 //

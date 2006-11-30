@@ -3742,6 +3742,18 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
                                AllocationType,
                                Protect);
 
+   /* Check if this is an image for the current process */
+   if ((Section->AllocationAttributes & SEC_IMAGE) &&
+       (Process == PsGetCurrentProcess()) &&
+       (Status != STATUS_IMAGE_NOT_AT_BASE))
+   {
+        /* Notify the debugger */
+       DbgkMapViewOfSection(SectionHandle,
+                            SafeBaseAddress,
+                            SafeSectionOffset.LowPart,
+                            SafeViewSize);
+   }
+
    ObDereferenceObject(Section);
    ObDereferenceObject(Process);
 
@@ -3945,6 +3957,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
    PROS_SECTION_OBJECT Section;
    PMM_PAGEOP PageOp;
    ULONG_PTR Offset;
+    PVOID ImageBaseAddress = 0;
 
    DPRINT("Opening memory area Process %x BaseAddress %x\n",
           Process, BaseAddress);
@@ -4007,7 +4020,6 @@ MmUnmapViewOfSection(PEPROCESS Process,
       ULONG NrSegments;
       PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
       PMM_SECTION_SEGMENT SectionSegments;
-      PVOID ImageBaseAddress = 0;
       PMM_SECTION_SEGMENT Segment;
 
       Segment = MemoryArea->Data.SectionData.Segment;
@@ -4048,6 +4060,10 @@ MmUnmapViewOfSection(PEPROCESS Process,
    {
       Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
    }
+
+   /* Notify debugger */
+   if (ImageBaseAddress) DbgkUnMapViewOfSection(ImageBaseAddress);
+
    MmUnlockAddressSpace(AddressSpace);
    return(STATUS_SUCCESS);
 }
