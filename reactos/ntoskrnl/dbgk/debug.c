@@ -1868,8 +1868,6 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
                                    PreviousMode,
                                    Alertable,
                                    Timeout);
-
-    /* Start the wait loop */
     while (TRUE)
     {
         if (!NT_SUCCESS(Status) ||
@@ -1988,10 +1986,11 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
             DbgkpOpenHandles(&WaitStateChange, Process, Thread);
             ObDereferenceObject(Process);
             ObDereferenceObject(Thread);
+            break;
         }
     }
 
-    /* We're, dereference the object */
+    /* We're done, dereference the object */
     ObDereferenceObject(DebugObject);
 
     /* Protect write with SEH */
