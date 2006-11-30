@@ -49,6 +49,7 @@ typedef struct _FLT_WND
     INT y;
     INT Width;
     INT Height;
+    INT Transparancy;
     BOOL bOpaque;
 } FLT_WND, *PFLT_WND;
 

@@ -1,8 +1,10 @@
-#include <precomp.h>
+#include "precomp.h"
 
 static const TCHAR szFloatWndClass[] = TEXT("ImageSoftFloatWndClass");
 
-#define ID_TIMER 1
+#define ID_TIMER1 1
+#define ID_TIMER2 2
+#define ID_TIMER3 3
 
 TBBUTTON ToolsButtons[] = {
 /*   iBitmap,            idCommand,      fsState,         fsStyle,                                     bReserved[2], dwData, iString */
@@ -338,6 +340,116 @@ FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info)
     return FALSE;
 }
 
+
+static VOID
+DoTimer(PFLT_WND FltInfo,
+        UINT idTimer)
+{
+    switch (idTimer)
+    {
+        /* timer to check if cursor is in toolbar coords */
+        case ID_TIMER1:
+        {
+            POINT pt;
+
+            /* kill timer if toobar is not opaque */
+            if (FltInfo->bOpaque != TRUE)
+            {
+                KillTimer(FltInfo->hSelf,
+                          ID_TIMER1);
+                break;
+            }
+
+            if (GetCursorPos(&pt))
+            {
+                RECT rect;
+
+                if (GetWindowRect(FltInfo->hSelf,
+                                  &rect))
+                {
+                    if (!PtInRect(&rect,
+                                  pt))
+                    {
+                        KillTimer(FltInfo->hSelf,
+                                  ID_TIMER1);
+                        KillTimer(FltInfo->hSelf,
+                                  ID_TIMER2);
+
+                        /* timer to fade out toolbar */
+                        SetTimer(FltInfo->hSelf,
+                                 ID_TIMER3,
+                                 50,
+                                 NULL);
+                    }
+                }
+            }
+        }
+        break;
+
+        /* timer to fade in toolbar */
+        case ID_TIMER2:
+        {
+            SetLayeredWindowAttributes(FltInfo->hSelf,
+                                       0,
+                                       (255 * FltInfo->Transparancy) / 100,
+                                       LWA_ALPHA);
+
+            /* increment transparancy until it is opaque (100) */
+            FltInfo->Transparancy += 5;
+
+            if (FltInfo->Transparancy == 100)
+            {
+                SetWindowLongPtr(FltInfo->hSelf,
+                                 GWL_EXSTYLE,
+                                 GetWindowLongPtr(FltInfo->hSelf,
+                                                  GWL_EXSTYLE) & ~WS_EX_LAYERED);
+
+                FltInfo->bOpaque = TRUE;
+
+                KillTimer(FltInfo->hSelf,
+                          ID_TIMER2);
+            }
+        }
+        break;
+
+        case ID_TIMER3:
+        {
+            LONG Style;
+
+            Style = GetWindowLongPtr(FltInfo->hSelf,
+                                     GWL_EXSTYLE);
+
+            if (Style & ~WS_EX_LAYERED)
+            {
+                SetWindowLongPtr(FltInfo->hSelf,
+                                 GWL_EXSTYLE,
+                                 Style | WS_EX_LAYERED);
+            }
+
+            FltInfo->Transparancy -= 5;
+
+            if (FltInfo->Transparancy >= 60)
+            {
+                /* set the tranclucency to 60% */
+                SetLayeredWindowAttributes(FltInfo->hSelf,
+                                           0,
+                                           (255 * FltInfo->Transparancy) / 100,
+                                           LWA_ALPHA);
+
+                if (FltInfo->Transparancy == 60)
+                {
+                    FltInfo->bOpaque = FALSE;
+
+                    KillTimer(FltInfo->hSelf,
+                              ID_TIMER3);
+                }
+
+            }
+        }
+        break;
+    }
+}
+
 LRESULT CALLBACK
 FloatToolbarWndProc(HWND hwnd,
                     UINT Message,
@@ -363,6 +475,10 @@ FloatToolbarWndProc(HWND hwnd,
             /*FIXME: read this from registry */
 //            FltInfo->bShow = TRUE;
 
+            SetWindowLongPtr(hwnd,
+                             GWLP_USERDATA,
+                             (LONG_PTR)FltInfo);
+
             FltInfo->bOpaque = FALSE;
 
             SetWindowLongPtr(hwnd,
@@ -371,53 +487,18 @@ FloatToolbarWndProc(HWND hwnd,
                                               GWL_EXSTYLE) | WS_EX_LAYERED);
 
             /* set the tranclucency to 60% */
+            FltInfo->Transparancy = 60;
             SetLayeredWindowAttributes(hwnd,
                                        0,
-                                       (255 * 60) / 100,
+                                       (255 * FltInfo->Transparancy) / 100,
                                        LWA_ALPHA);
         }
         break;
 
         case WM_TIMER:
         {
-            POINT pt;
-
-            if (FltInfo->bOpaque != TRUE)
-            {
-                KillTimer(hwnd,
-                          ID_TIMER);
-                break;
-            }
-
-            if (GetCursorPos(&pt))
-            {
-                RECT rect;
-
-                if (GetWindowRect(hwnd,
-                                  &rect))
-                {
-                    if (! PtInRect(&rect,
-                                   pt))
-                    {
-                        KillTimer(hwnd,
-                                  ID_TIMER);
-
-                        FltInfo->bOpaque = FALSE;
-
-                        SetWindowLongPtr(hwnd,
-                                         GWL_EXSTYLE,
-                                         GetWindowLongPtr(hwnd,
-                                                          GWL_EXSTYLE) | WS_EX_LAYERED);
-
-                        /* set the tranclucency to 60% */
-                        SetLayeredWindowAttributes(hwnd,
-                                                   0,
-                                                   (255 * 60) / 100,
-                                                   LWA_ALPHA);
-
-                    }
-                }
-            }
+            DoTimer(FltInfo,
+                    wParam);
         }
         break;
 
@@ -426,10 +507,6 @@ FloatToolbarWndProc(HWND hwnd,
         {
             if (FltInfo->bOpaque == FALSE)
             {
-                SetWindowLongPtr(hwnd,
-                                 GWL_EXSTYLE,
-                                 GetWindowLongPtr(hwnd,
-                                                  GWL_EXSTYLE) & ~WS_EX_LAYERED);
 
                 RedrawWindow(hwnd,
                              NULL,
@@ -437,10 +514,18 @@ FloatToolbarWndProc(HWND hwnd,
                              RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
 
                 FltInfo->bOpaque = TRUE;
-                MessageBox(NULL, _T("in"), _T("Hit test"), MB_OK | MB_ICONEXCLAMATION);
+                //MessageBox(NULL, _T("in"), _T("Hit test"), MB_OK | MB_ICONEXCLAMATION);
+
+                /* timer to check if cursor is in toolbar coords */
                 SetTimer(hwnd,
-                         ID_TIMER,
+                         ID_TIMER1,
                          200,
+                         NULL);
+
+                /* timer to fade in the toolbars */
+                SetTimer(hwnd,
+                         ID_TIMER2,
+                         50,
                          NULL);
             }
         }
@@ -540,4 +625,5 @@ UninitFloatWndImpl(VOID)
     UnregisterClass(szFloatWndClass,
                     hInstance);
 }
+
 

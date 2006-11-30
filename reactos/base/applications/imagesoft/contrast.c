@@ -4,13 +4,13 @@
 
 
 VOID
-AdjustBrightness(HBITMAP hOrigBitmap,
-                 HBITMAP hNewBitmap,
-                 HWND hwnd,
-                 HDC hdcMem,
-                 INT RedVal,
-                 INT GreenVal,
-                 INT BlueVal)
+AdjustContrast(HBITMAP hOrigBitmap,
+               HBITMAP hNewBitmap,
+               HWND hwnd,
+               HDC hdcMem,
+               INT RedVal,
+               INT GreenVal,
+               INT BlueVal)
 {
     BITMAPINFO bi;
     BITMAP bitmap;
@@ -67,18 +67,19 @@ AdjustBrightness(HBITMAP hOrigBitmap,
             g = GetGValue(Val);
             r = GetBValue(Val);
 
+            r = ((r - 128) * RedVal) / 100 + 128;
+            g = ((g - 128) * GreenVal) / 100 + 128;
+            b = ((b - 128) * BlueVal) / 100 + 128;
+
             /* Red */
-            r += RedVal;
             if (r > 255) r = 255;
             else if (r < 0) r = 0;
 
             /* Green */
-            g += GreenVal;
             if (g > 255) g = 255;
             else if (g < 0) g = 0;
 
             /* Blue */
-            b += BlueVal;
             if (b > 255) b = 255;
             else if (b < 0) b = 0;
 
@@ -116,7 +117,7 @@ AdjustBrightness(HBITMAP hOrigBitmap,
 
 
 static PIMAGEADJUST
-Bri_OnInitDialog(PIMAGEADJUST pImgAdj,
+Cont_OnInitDialog(PIMAGEADJUST pImgAdj,
              HWND hDlg,
              LPARAM lParam)
 {
@@ -155,7 +156,7 @@ Bri_OnInitDialog(PIMAGEADJUST pImgAdj,
         goto fail;
 
 
-    pImgAdj->RedVal = pImgAdj->BlueVal = pImgAdj->GreenVal = 0;
+    pImgAdj->RedVal = pImgAdj->BlueVal = pImgAdj->GreenVal = 100;
 
     /* setup dialog */
     SendDlgItemMessage(hDlg,
@@ -188,7 +189,7 @@ fail:
 
 
 static VOID
-Bri_OnDrawItem(PIMAGEADJUST pImgAdj,
+Cont_OnDrawItem(PIMAGEADJUST pImgAdj,
            LPARAM lParam)
 {
     LPDRAWITEMSTRUCT lpDrawItem;
@@ -219,7 +220,7 @@ Bri_OnDrawItem(PIMAGEADJUST pImgAdj,
 
 
 static VOID
-Bri_OnTrackBar(PIMAGEADJUST pImgAdj,
+Cont_OnTrackBar(PIMAGEADJUST pImgAdj,
            HWND hDlg)
 {
     HDC hdcMem;
@@ -238,24 +239,24 @@ Bri_OnTrackBar(PIMAGEADJUST pImgAdj,
 
     if (IsDlgButtonChecked(hDlg, IDC_BRI_FULL) == BST_CHECKED)
     {
-        pImgAdj->RedVal = pImgAdj->GreenVal = pImgAdj->BlueVal = TrackPos - BASECOLOUR;
+        pImgAdj->RedVal = pImgAdj->GreenVal = pImgAdj->BlueVal = TrackPos - BASECOLOUR + 100;
     }
     else if (IsDlgButtonChecked(hDlg, IDC_BRI_RED) == BST_CHECKED)
     {
-        pImgAdj->RedVal = TrackPos - BASECOLOUR;
+        pImgAdj->RedVal = TrackPos - BASECOLOUR + 100;
     }
     else if (IsDlgButtonChecked(hDlg, IDC_BRI_GREEN) == BST_CHECKED)
     {
-        pImgAdj->GreenVal = TrackPos - BASECOLOUR;
+        pImgAdj->GreenVal = TrackPos - BASECOLOUR + 100;
     }
     else if (IsDlgButtonChecked(hDlg, IDC_BRI_BLUE) == BST_CHECKED)
     {
-        pImgAdj->BlueVal = TrackPos - BASECOLOUR;
+        pImgAdj->BlueVal = TrackPos - BASECOLOUR + 100;
     }
 
     hdcMem = GetDC(pImgAdj->hPicPrev);
 
-    AdjustBrightness(pImgAdj->hBitmap,
+    AdjustContrast(pImgAdj->hBitmap,
                      pImgAdj->hPreviewBitmap,
                      pImgAdj->hPicPrev,
                      hdcMem,
@@ -268,7 +269,7 @@ Bri_OnTrackBar(PIMAGEADJUST pImgAdj,
 
 
 static BOOL
-Bri_OnCommand(PIMAGEADJUST pImgAdj,
+Cont_OnCommand(PIMAGEADJUST pImgAdj,
           HWND hDlg,
           UINT uID)
 {
@@ -280,7 +281,7 @@ Bri_OnCommand(PIMAGEADJUST pImgAdj,
 
             hdcMem = GetDC(pImgAdj->Info->ImageEditors->hSelf);
 
-            AdjustBrightness(pImgAdj->Info->ImageEditors->hBitmap,
+            AdjustContrast(pImgAdj->Info->ImageEditors->hBitmap,
                              pImgAdj->Info->ImageEditors->hBitmap,
                              pImgAdj->Info->ImageEditors->hSelf,
                              hdcMem,
@@ -310,10 +311,10 @@ Bri_OnCommand(PIMAGEADJUST pImgAdj,
 
 
 INT_PTR CALLBACK
-BrightnessProc(HWND hDlg,
-               UINT message,
-               WPARAM wParam,
-               LPARAM lParam)
+ContrastProc(HWND hDlg,
+             UINT message,
+             WPARAM wParam,
+             LPARAM lParam)
 {
     static PIMAGEADJUST pImgAdj = NULL;
 
@@ -321,9 +322,9 @@ BrightnessProc(HWND hDlg,
     {
         case WM_INITDIALOG:
         {
-            pImgAdj = Bri_OnInitDialog(pImgAdj,
-                                       hDlg,
-                                       lParam);
+            pImgAdj = Cont_OnInitDialog(pImgAdj,
+                                        hDlg,
+                                        lParam);
             if (!pImgAdj)
             {
                 EndDialog(hDlg, -1);
@@ -335,8 +336,8 @@ BrightnessProc(HWND hDlg,
 
         case WM_DRAWITEM:
         {
-            Bri_OnDrawItem(pImgAdj,
-                           lParam);
+            Cont_OnDrawItem(pImgAdj,
+                            lParam);
             return TRUE;
         }
 
@@ -345,8 +346,8 @@ BrightnessProc(HWND hDlg,
             if (LOWORD(wParam) == TB_THUMBTRACK ||
                 LOWORD(wParam) == TB_ENDTRACK)
             {
-                Bri_OnTrackBar(pImgAdj,
-                               hDlg);
+                Cont_OnTrackBar(pImgAdj,
+                                hDlg);
             }
 
             return TRUE;
@@ -354,9 +355,9 @@ BrightnessProc(HWND hDlg,
 
         case WM_COMMAND:
         {
-            return Bri_OnCommand(pImgAdj,
-                                 hDlg,
-                                 LOWORD(wParam));
+            return Cont_OnCommand(pImgAdj,
+                                  hDlg,
+                                  LOWORD(wParam));
         }
 
         case WM_DESTROY:

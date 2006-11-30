@@ -904,7 +904,15 @@ MainWndCommand(PMAIN_WND_INFO Info,
                            Info->hSelf,
                            BrightnessProc,
                            (LPARAM)Info);
-            break;
+        break;
+
+        case ID_CONTRAST:
+            DialogBoxParam(hInstance,
+                           MAKEINTRESOURCE(IDD_BRIGHTNESS),
+                           Info->hSelf,
+                           ContrastProc,
+                           (LPARAM)Info);
+        break;
 
         case ID_BLACKANDWHITE:
         {
@@ -925,7 +933,29 @@ MainWndCommand(PMAIN_WND_INFO Info,
                                       Info->ImageEditors->hDCMem,
                                       Info->ImageEditors->hBitmap);
             }
-        }        
+        }
+        break;
+
+        case ID_BLUR:
+        {
+            if (Info->ImageEditors)
+            {
+                DisplayBlur(Info->ImageEditors->hSelf,
+                            Info->ImageEditors->hDCMem,
+                            Info->ImageEditors->hBitmap);
+            }
+        }
+        break;
+
+        case ID_SHARPEN:
+        {
+            if (Info->ImageEditors)
+            {
+                DisplaySharpness(Info->ImageEditors->hSelf,
+                                 Info->ImageEditors->hDCMem,
+                                 Info->ImageEditors->hBitmap);
+            }
+        }
         break;
 
         case ID_EXIT:
