@@ -215,7 +215,7 @@ void remove_stdcall_convention(string & line)
 bool convertFile(string filename, vector<string> & file)
 {
 	bool modified = false;
-	cerr << "entered with: "<< filename << " size: " << file.size () << endl;
+	//cerr << "entered with: "<< filename << " size: " << file.size () << endl;
 
 	for(size_t i = 0; i < file.size(); i++)
 	{
@@ -251,9 +251,8 @@ bool convertFile(string filename, vector<string> & file)
 			modified = true;
 			remove_stdcall_convention(line);
 		}
-		cout << line;
+		//cout << line;
 	}
-	exit(0);
 	return modified;
 }
 
@@ -296,12 +295,15 @@ int _tmain(int argc, TCHAR ** argv)
 	{
 		vector<string> file;
 		file.clear ();
-		if (readFile(def_files[i], file))
+		string filename = def_files[i];
+		
+
+		if (readFile(filename, file))
 		{
-			if (convertFile(def_files[i], file))
-			{
-				writeFile(def_files[i], file);
-			}
+			convertFile(filename, file);
+			filename.insert (filename.find(_T(".")), _T("_msvc"));
+			cout << "Writing file: " << filename << endl;
+			writeFile(filename, file);
 		}
 	}
 
