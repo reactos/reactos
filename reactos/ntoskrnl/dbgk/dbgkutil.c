@@ -178,8 +178,8 @@ DbgkCreateThread(PVOID StartAddress)
     if (!(ProcessFlags & PSF_CREATE_REPORTED_BIT))
     {
         /* Setup the information structure for the new thread */
-        CreateThread->SubSystemKey = 0;
-        CreateThread->StartAddress = NULL;
+        CreateProcess->InitialThread.SubSystemKey = 0;
+        CreateProcess->InitialThread.StartAddress = NULL;
 
         /* And for the new process */
         CreateProcess->SubSystemKey = 0;
@@ -194,10 +194,9 @@ DbgkCreateThread(PVOID StartAddress)
         if (NtHeader)
         {
             /* Fill out data from the header */
-            CreateThread->StartAddress = (PVOID)((ULONG_PTR)NtHeader->
-                                                 OptionalHeader.ImageBase +
-                                                 NtHeader->OptionalHeader.
-                                                 AddressOfEntryPoint);
+            CreateProcess->InitialThread.StartAddress =
+                (PVOID)((ULONG_PTR)NtHeader->OptionalHeader.ImageBase +
+                        NtHeader->OptionalHeader.AddressOfEntryPoint);
             CreateProcess->DebugInfoFileOffset = NtHeader->FileHeader.
                                                  PointerToSymbolTable;
             CreateProcess->DebugInfoSize = NtHeader->FileHeader.
