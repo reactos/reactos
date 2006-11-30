@@ -344,26 +344,43 @@ MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) cons
 			else
 				file = ReplaceExtension ( file, ".obj" );
 			for ( size_t j = 0; j < cfgs.size () / 2; j++ )
-				out.push_back ( cfgs[j] + "\\" + file );
+				out.push_back ( cfgs[j] + file );
 		}
 
 	}
 	//common files in intermediate dir
 	for ( i = 0; i < cfgs.size () / 2; i++)
 	{
-		out.push_back ( cfgs[i] + "\\" + "BuildLog.htm" );
-		out.push_back ( cfgs[i] + "\\" + dbg + "0.pdb" );
-		out.push_back ( cfgs[i] + "\\" + dbg + "0.idb" );
-		out.push_back ( cfgs[i] + "\\" + module.name + ".pch" );
+		out.push_back ( cfgs[i] + "BuildLog.htm" );
+		out.push_back ( cfgs[i] + dbg + "0.pdb" );
+		out.push_back ( cfgs[i] + dbg + "0.idb" );
+		out.push_back ( cfgs[i] + module.name + ".pch" );
 	}
 	//files in the output dir
 	for ( i = cfgs.size () / 2; i < cfgs.size (); i++ )
 	{
-		out.push_back ( cfgs[i] + "\\" + module.GetTargetName () );
-		out.push_back ( cfgs[i] + "\\" + module.name + ".pdb" );
-		out.push_back ( cfgs[i] + "\\" + module.name + ".lib" );
-		out.push_back ( cfgs[i] + "\\" + module.name + ".exp" );
-		out.push_back ( cfgs[i] + "\\" + module.name + ".ilk" );
+		out.push_back ( cfgs[i] + module.GetTargetName () );
+		out.push_back ( cfgs[i] + module.name + ".pdb" );
+		out.push_back ( cfgs[i] + module.name + ".lib" );
+		out.push_back ( cfgs[i] + module.name + ".exp" );
+		out.push_back ( cfgs[i] + module.name + ".ilk" );
+	}
+}
+
+void
+MSVCBackend::_get_def_files ( const Module& module, vector<string>& out) const
+{
+	if (module.HasImportLibrary ())
+	{
+		string modulename = module.GetBasePath ();
+		string file = module.importLibrary->definition;
+		size_t pos = file.find (".def");
+		if (pos != string::npos)
+		{
+			file.insert (pos, "_msvc");
+		}
+		modulename += "\\" + file;
+		out.push_back (modulename);
 	}
 }
 
@@ -395,9 +412,10 @@ MSVCBackend::_clean_project_files ( void )
 		remove ( vcproj_file_user.c_str () );	
 
 		_get_object_files ( module, out );
+		_get_def_files ( module, out );
 		for ( size_t j = 0; j < out.size (); j++)
 		{
-			//printf("Cleaning file %s\n", out[j].c_str () );
+			printf("Cleaning file %s\n", out[j].c_str () );
 			remove ( out[j].c_str () );
 		}
 	}
