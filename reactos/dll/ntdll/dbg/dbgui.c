@@ -163,12 +163,12 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
             if (!NT_SUCCESS(Status))
             {
                 /* Failed to get PEB address */
-                DebugEvent->u.CreateThread.lpThreadLocalBase = NULL;
+                DebugEvent->u.CreateProcessInfo.lpThreadLocalBase = NULL;
             }
             else
             {
                 /* Write PEB Address */
-                DebugEvent->u.CreateThread.lpThreadLocalBase =
+                DebugEvent->u.CreateProcessInfo.lpThreadLocalBase =
                     ThreadBasicInfo.TebBaseAddress;
             }
 
