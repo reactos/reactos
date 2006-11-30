@@ -929,6 +929,10 @@ IopQueryNameFile(IN PVOID ObjectBody,
     if (!LocalInfo) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Query the name */
+    DPRINT("Do. Drv, DrvName: %p %p %wZ\n",
+           FileObject->DeviceObject,
+           FileObject->DeviceObject->DriverObject,
+           &FileObject->DeviceObject->DriverObject->DriverName);
     Status = ObQueryNameString(FileObject->DeviceObject,
                                LocalInfo,
                                Length,
@@ -943,7 +947,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     /* Copy the information */
     RtlCopyMemory(ObjectNameInfo,
                   LocalInfo,
-                  LocalReturnLength > Length ?
+                  (LocalReturnLength > Length) ?
                   Length : LocalReturnLength);
 
     /* Set buffer pointer */

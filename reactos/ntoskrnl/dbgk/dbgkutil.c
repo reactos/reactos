@@ -39,14 +39,12 @@ DbgkpSectionToFileHandle(IN PVOID Section)
                                NULL);
 
     /* Open the file */
-    DPRINT1("Trying to open: %wZ\n", &FileName->Name);
     Status = ZwOpenFile(&Handle,
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
-    DPRINT1("Status: %lx\n", Status);
 
     /* Free the name and return the handle if we succeeded */
     ExFreePool(FileName);

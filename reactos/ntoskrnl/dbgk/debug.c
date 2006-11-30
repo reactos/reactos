@@ -51,7 +51,6 @@ DbgkpQueueMessage(IN PEPROCESS Process,
     DBGKTRACE(DBGK_MESSAGE_DEBUG,
               "Process: %p Thread: %p Message: %p Flags: %lx\n",
               Process, Thread, Message, Flags);
-    DBGKTRACE(DBGK_MESSAGE_DEBUG, "MessageType: %lx\n", Message->ApiNumber);
 
     /* Check if we have to allocate a debug event */
     NewEvent = (Flags & 2) ? TRUE : FALSE;
@@ -134,6 +133,8 @@ DbgkpQueueMessage(IN PEPROCESS Process,
         if (!DebugObject->DebuggerInactive)
         {
             /* Add the event into the object's list */
+            DBGKTRACE(DBGK_MESSAGE_DEBUG, "Inserting: %lx %p\n",
+                      DebugEvent, Message->ApiNumber);
             InsertTailList(&DebugObject->EventList, &DebugEvent->EventList);
 
             /* Check if we have to signal it */
@@ -653,17 +654,14 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
         if (First)
         {
             /* So we'll start with the create process message */
-            DPRINT1("new proces!\n");
             ApiMessage.ApiNumber = DbgKmCreateProcessApi;
 
             /* Get the file handle */
-            DPRINT1("section object: %p\n", Process->SectionObject);
             if (Process->SectionObject)
             {
                 /* Use the section object */
                 CreateProcess->FileHandle =
                     DbgkpSectionToFileHandle(Process->SectionObject);
-                DPRINT1("FileHandle: %p\n", CreateProcess->FileHandle);
             }
             else
             {
@@ -672,9 +670,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
             }
 
             /* Set the base address */
-            DPRINT1("SectionBaseAddress: %p\n", Process->SectionBaseAddress);
             CreateProcess->BaseOfImage = Process->SectionBaseAddress;
-            KEBUGCHECK(0);
 
             /* Get the NT Header */
             NtHeader = RtlImageNtHeader(Process->SectionBaseAddress);
@@ -803,6 +799,8 @@ NTAPI
 DbgkpConvertKernelToUserStateChange(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
                                     IN PDEBUG_EVENT DebugEvent)
 {
+    DBGKTRACE(DBGK_OBJECT_DEBUG, "DebugEvent: %p\n", DebugEvent);
+
     /* Start by copying the client ID */
     WaitStateChange->AppClientId = DebugEvent->ClientId;
 
@@ -954,8 +952,8 @@ DbgkpOpenHandles(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
     HANDLE Handle;
     PHANDLE DupHandle;
     PAGED_CODE();
-    DBGKTRACE(DBGK_OBJECT_DEBUG, "Process: %p Thread: %p\n",
-              Process, Thread);
+    DBGKTRACE(DBGK_OBJECT_DEBUG, "Process: %p Thread: %p State: %lx\n",
+              Process, Thread, WaitStateChange->NewState);
 
     /* Check which state this is */
     switch (WaitStateChange->NewState)
@@ -1272,11 +1270,12 @@ ThreadScan:
     {
         /* Get the debug event */
         DebugEvent = CONTAINING_RECORD(NextEntry, DEBUG_EVENT, EventList);
-        DBGKTRACE(DBGK_PROCESS_DEBUG, "DebugEvent: %p Flags: %lx\n",
-                  DebugEvent, DebugEvent->Flags);
+        DBGKTRACE(DBGK_PROCESS_DEBUG, "DebugEvent: %p Flags: %lx TH: %p/%p\n",
+                  DebugEvent, DebugEvent->Flags,
+                  DebugEvent->BackoutThread, PsGetCurrentThread());
 
         /* Check for if the debug event queue needs flushing */
-        if ((DebugEvent->Flags & 4) &
+        if ((DebugEvent->Flags & 4) &&
             (DebugEvent->BackoutThread == PsGetCurrentThread()))
         {
             /* Get the event's thread */
@@ -1905,6 +1904,8 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
                 DebugEvent = CONTAINING_RECORD(NextEntry,
                                                DEBUG_EVENT,
                                                EventList);
+                DBGKTRACE(DBGK_PROCESS_DEBUG, "DebugEvent: %p Flags: %lx\n",
+                          DebugEvent, DebugEvent->Flags);
 
                 /* Check flags */
                 if (!(DebugEvent->Flags & (4 | 1)))
@@ -1973,7 +1974,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
         if (!NT_SUCCESS(Status)) break;
 
         /* Check if we got an event */
-        if (GotEvent)
+        if (!GotEvent)
         {
             /* Check if we can wait again */
             if (!SafeTimeOut.QuadPart)

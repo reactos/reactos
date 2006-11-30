@@ -243,7 +243,7 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
             break;
 
         /* DLL Load */
-        case DbgLoadDllStateChange :
+        case DbgLoadDllStateChange:
 
             /* Set the Win32 debug code */
             DebugEvent->dwDebugEventCode = LOAD_DLL_DEBUG_EVENT;
@@ -261,9 +261,9 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
             /* Open the thread */
             InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
             Status = NtOpenThread(&ThreadHandle,
-                                 THREAD_QUERY_INFORMATION,
-                                 &ObjectAttributes,
-                                 &WaitStateChange->AppClientId);
+                                  THREAD_QUERY_INFORMATION,
+                                  &ObjectAttributes,
+                                  &WaitStateChange->AppClientId);
             if (NT_SUCCESS(Status))
             {
                 /* Query thread information */
