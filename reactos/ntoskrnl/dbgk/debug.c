@@ -1517,7 +1517,8 @@ NtDebugContinue(IN HANDLE DebugHandle,
     }
 
     /* Make sure that the status is valid */
-    if ((ContinueStatus != DBG_EXCEPTION_NOT_HANDLED) &&
+    if ((ContinueStatus != DBG_CONTINUE) &&
+        (ContinueStatus != DBG_EXCEPTION_NOT_HANDLED) &&
         (ContinueStatus != DBG_REPLY_LATER) &&
         (ContinueStatus != DBG_UNABLE_TO_PROVIDE_HANDLE) &&
         (ContinueStatus != DBG_TERMINATE_THREAD) &&
