@@ -798,10 +798,12 @@ StartDirectDrawHel(LPDIRECTDRAW* iface)
 	This->lpLcl->lpDDCB->HELDD.DestroyDriver        = HelDdDestroyDriver;
 	This->lpLcl->lpDDCB->HELDD.FlipToGDISurface     = HelDdFlipToGDISurface;
 	This->lpLcl->lpDDCB->HELDD.GetScanLine          = HelDdGetScanLine;
-	//This->lpLcl->lpDDCB->HELDD.SetColorKey          = HelDdSetColorKey;
+	This->lpLcl->lpDDCB->HELDD.SetColorKey          = HelDdSetColorKey;
 	This->lpLcl->lpDDCB->HELDD.SetExclusiveMode     = HelDdSetExclusiveMode;
 	This->lpLcl->lpDDCB->HELDD.SetMode              = HelDdSetMode;
 	This->lpLcl->lpDDCB->HELDD.WaitForVerticalBlank = HelDdWaitForVerticalBlank;
+
+	
 
 	This->lpLcl->lpDDCB->HELDD.dwFlags =  DDHAL_CB32_CANCREATESURFACE     |
 		                                  DDHAL_CB32_CREATESURFACE        |
@@ -809,7 +811,7 @@ StartDirectDrawHel(LPDIRECTDRAW* iface)
 		                                  DDHAL_CB32_DESTROYDRIVER        | 
 										  DDHAL_CB32_FLIPTOGDISURFACE     |
 										  DDHAL_CB32_GETSCANLINE          |
-										  //DDHAL_CB32_SETCOLORKEY          |
+										  DDHAL_CB32_SETCOLORKEY          |
 										  DDHAL_CB32_SETEXCLUSIVEMODE     | 
 										  DDHAL_CB32_SETMODE              |                                                   
 										  DDHAL_CB32_WAITFORVERTICALBLANK ;
