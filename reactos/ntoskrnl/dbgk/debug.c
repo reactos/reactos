@@ -14,6 +14,7 @@
 
 POBJECT_TYPE DbgkDebugObjectType;
 FAST_MUTEX DbgkpProcessDebugPortMutex;
+ULONG DbgkpTraceLevel = -1;
 
 GENERIC_MAPPING DbgkDebugObjectMapping =
 {
@@ -47,6 +48,10 @@ DbgkpQueueMessage(IN PEPROCESS Process,
     NTSTATUS Status;
     BOOLEAN NewEvent;
     PAGED_CODE();
+    DBGKTRACE(DBGK_MESSAGE_DEBUG,
+              "Process: %p Thread: %p Message: %p Flags: %lx\n",
+              Process, Thread, Message, Flags);
+    DBGKTRACE(DBGK_MESSAGE_DEBUG, "MessageType: %lx\n", Message->ApiNumber);
 
     /* Check if we have to allocate a debug event */
     NewEvent = (Flags & 2) ? TRUE : FALSE;
@@ -191,6 +196,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
     }
 
     /* Return status */
+    DBGKTRACE(DBGK_MESSAGE_DEBUG, "Status: %lx\n", Status);
     return Status;
 }
 
@@ -240,6 +246,7 @@ DbgkpSendApiMessage(IN OUT PDBGKM_MSG ApiMsg,
 {
     NTSTATUS Status;
     PAGED_CODE();
+    DBGKTRACE(DBGK_MESSAGE_DEBUG, "ApiMsg: %p Flags: %lx\n", ApiMsg, Flags);
 
     /* Suspend process if required */
     if (Flags) DbgkpSuspendProcess();
@@ -272,6 +279,7 @@ DbgkCopyProcessDebugPort(IN PEPROCESS Process,
 {
     PDEBUG_OBJECT DebugObject;
     PAGED_CODE();
+    DBGKTRACE(DBGK_PROCESS_DEBUG, "Process: %p Parent: %p\n", Process, Parent);
 
     /* Clear this process's port */
     Process->DebugPort = NULL;
@@ -318,6 +326,8 @@ DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
     PVOID Port;
     BOOLEAN UseLpc = FALSE;
     PAGED_CODE();
+    DBGKTRACE(DBGK_EXCEPTION_DEBUG,
+              "ExceptionRecord: %p Port: %p\n", ExceptionRecord, DebugPort);
 
     /* Setup the API Message */
     ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
@@ -379,6 +389,7 @@ DbgkpFreeDebugEvent(IN PDEBUG_EVENT DebugEvent)
 {
     PHANDLE Handle = NULL;
     PAGED_CODE();
+    DBGKTRACE(DBGK_OBJECT_DEBUG, "DebugEvent: %p\n", DebugEvent);
 
     /* Check if this event had a file handle */
     switch (DebugEvent->ApiMsg.ApiNumber)
@@ -414,6 +425,7 @@ DbgkpWakeTarget(IN PDEBUG_EVENT DebugEvent)
 {
     PETHREAD Thread = DebugEvent->Thread;
     PAGED_CODE();
+    DBGKTRACE(DBGK_OBJECT_DEBUG, "DebugEvent: %p\n", DebugEvent);
 
     /* Check if we have to wake the thread */
     if (DebugEvent->Flags & 20) PsResumeThread(Thread, NULL);
@@ -457,6 +469,8 @@ DbgkpPostFakeModuleMessages(IN PEPROCESS Process,
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
     PAGED_CODE();
+    DBGKTRACE(DBGK_PROCESS_DEBUG, "Process: %p Thread: %p DebugObject: %p\n",
+              Process, Thread, DebugObject);
 
     /* Quit if there's no PEB */
     if (!Peb) return STATUS_SUCCESS;
@@ -492,6 +506,10 @@ DbgkpPostFakeModuleMessages(IN PEPROCESS Process,
                                            PointerToSymbolTable;
             LoadDll->DebugInfoSize = NtHeader->FileHeader.NumberOfSymbols;
         }
+
+        /* Trace */
+        DBGKTRACE(DBGK_PROCESS_DEBUG, "Name: %wZ. Base: %p\n",
+                  &LdrEntry->FullDllName, LdrEntry->DllBase);
 
         /* Get the name of the DLL */
         Status = MmGetFileNameForAddress(NtHeader, &ModuleName);
@@ -561,6 +579,8 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
     BOOLEAN First;
     PIMAGE_NT_HEADERS NtHeader;
     PAGED_CODE();
+    DBGKTRACE(DBGK_THREAD_DEBUG, "Process: %p StartThread: %p Object: %p\n",
+              Process, StartThread, DebugObject);
 
     /* Check if we have a start thread */
     if (StartThread)
@@ -669,6 +689,12 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
             CreateThread->StartAddress = ThisThread->StartAddress;
         }
 
+        /* Trace */
+        DBGKTRACE(DBGK_THREAD_DEBUG, "Thread: %p. First: %lx, OldThread: %p\n",
+                  ThisThread, First, OldThread);
+        DBGKTRACE(DBGK_THREAD_DEBUG, "Start Address: %p\n",
+                  ThisThread->StartAddress);
+
         /* Queue the message */
         Status = DbgkpQueueMessage(Process,
                                    ThisThread,
@@ -726,6 +752,8 @@ DbgkpPostFakeProcessCreateMessages(IN PEPROCESS Process,
     PETHREAD ReturnThread = NULL;
     NTSTATUS Status;
     PAGED_CODE();
+    DBGKTRACE(DBGK_PROCESS_DEBUG, "Process: %p DebugObject: %p\n",
+              Process, DebugObject);
 
     /* Attach to the process */
     KeStackAttachProcess(&Process->Pcb, &ApcState);
@@ -883,6 +911,7 @@ DbgkpMarkProcessPeb(IN PEPROCESS Process)
 {
     KAPC_STATE ApcState;
     PAGED_CODE();
+    DBGKTRACE(DBGK_PROCESS_DEBUG, "Process: %p\n", Process);
 
     /* Acquire process rundown */
     if (!ExAcquireRundownProtection(&Process->RundownProtect)) return;
@@ -920,6 +949,8 @@ DbgkpOpenHandles(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
     HANDLE Handle;
     PHANDLE DupHandle;
     PAGED_CODE();
+    DBGKTRACE(DBGK_OBJECT_DEBUG, "Process: %p Thread: %p\n",
+              Process, Thread);
 
     /* Check which state this is */
     switch (WaitStateChange->NewState)
@@ -1035,6 +1066,8 @@ DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
     BOOLEAN DebugPortCleared = FALSE;
     PLIST_ENTRY DebugEventList;
     PDEBUG_EVENT DebugEvent;
+    DBGKTRACE(DBGK_OBJECT_DEBUG, "OwnerProcess: %p DebugObject: %p\n",
+              OwnerProcess, DebugObject);
 
     /* If this isn't the last handle, do nothing */
     if (HandleCount > 1) return;
@@ -1122,6 +1155,8 @@ DbgkpSetProcessDebugObject(IN PEPROCESS Process,
     PETHREAD ThisThread, FirstThread;
     PLIST_ENTRY NextEntry;
     PAGED_CODE();
+    DBGKTRACE(DBGK_PROCESS_DEBUG, "Process: %p DebugObject: %p\n",
+              Process, DebugObject);
 
     /* Initialize the temporary list */
     InitializeListHead(&TempList);
@@ -1228,6 +1263,8 @@ ThreadScan:
     NextEntry = DebugObject->EventList.Flink;
     while (NextEntry != &DebugObject->EventList)
     {
+        DPRINT1("Next Entry: %p\n", NextEntry);
+        DPRINT1("List: %p\n", &DebugObject->EventList);
         /* FIXME: TODO */
         KEBUGCHECK(0);
     }
@@ -1260,6 +1297,8 @@ DbgkClearProcessDebugObject(IN PEPROCESS Process,
                             IN PDEBUG_OBJECT SourceDebugObject)
 {
     /* FIXME: TODO */
+    DBGKTRACE(DBGK_PROCESS_DEBUG, "Process: %p DebugObject: %p\n",
+              Process, SourceDebugObject);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -1330,7 +1369,7 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
-                            sizeof(PDEBUG_OBJECT),
+                            sizeof(DEBUG_OBJECT),
                             0,
                             0,
                             (PVOID*)&DebugObject);
@@ -1343,7 +1382,9 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
         InitializeListHead(&DebugObject->EventList);
 
         /* Initialize the Debug Object's Wait Event */
-        KeInitializeEvent(&DebugObject->EventsPresent, NotificationEvent, 0);
+        KeInitializeEvent(&DebugObject->EventsPresent,
+                          NotificationEvent,
+                          FALSE);
 
         /* Set the Flags */
         DebugObject->KillProcessOnExit = KillProcessOnExit;
@@ -1355,9 +1396,6 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
                                  0,
                                  NULL,
                                  &hDebug);
-        ObDereferenceObject(DebugObject);
-
-        /* Check for success and return handle */
         if (NT_SUCCESS(Status))
         {
             _SEH_TRY
@@ -1372,6 +1410,8 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
     }
 
     /* Return Status */
+    DBGKTRACE(DBGK_OBJECT_DEBUG, "Handle: %p DebugObject: %p\n",
+              hDebug, DebugObject);
     return Status;
 }
 
@@ -1389,6 +1429,8 @@ NtDebugContinue(IN HANDLE DebugHandle,
     BOOLEAN NeedsWake = FALSE;
     CLIENT_ID ClientId;
     PAGED_CODE();
+    DBGKTRACE(DBGK_OBJECT_DEBUG, "Handle: %p Status: %p\n",
+              DebugHandle, ContinueStatus);
 
     /* Check if we were called from user mode*/
     if (PreviousMode != KernelMode)
@@ -1513,6 +1555,9 @@ NtDebugActiveProcess(IN HANDLE ProcessHandle,
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PETHREAD LastThread;
     NTSTATUS Status;
+    PAGED_CODE();
+    DBGKTRACE(DBGK_PROCESS_DEBUG, "Process: %p Handle: %p\n",
+              ProcessHandle, DebugHandle);
 
     /* Reference the process */
     Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -1576,6 +1621,9 @@ NtRemoveProcessDebug(IN HANDLE ProcessHandle,
     PDEBUG_OBJECT DebugObject;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     NTSTATUS Status;
+    PAGED_CODE();
+    DBGKTRACE(DBGK_PROCESS_DEBUG, "Process: %p Handle: %p\n",
+              ProcessHandle, DebugHandle);
 
     /* Reference the process */
     Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -1705,6 +1753,8 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     PDEBUG_EVENT DebugEvent, DebugEvent2;
     PLIST_ENTRY ListHead, NextEntry;
+    PAGED_CODE();
+    DBGKTRACE(DBGK_OBJECT_DEBUG, "Handle: %p\n", DebugHandle);
 
     /* Clear the initial wait state change structure */
     RtlZeroMemory(&WaitStateChange, sizeof(WaitStateChange));

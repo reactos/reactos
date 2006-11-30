@@ -1,5 +1,57 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_DBGK_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_DBGK_H
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/include/dbgk.h
+ * PURPOSE:         Internal header for the User-Mode Debugging Backend
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ */
+
+//
+// Define this if you want debugging support
+//
+#define _DBGK_DEBUG_                                    0x01
+
+//
+// These define the Debug Masks Supported
+//
+#define DBGK_THREAD_DEBUG                               0x01
+#define DBGK_PROCESS_DEBUG                              0x02
+#define DBGK_OBJECT_DEBUG                               0x04
+#define DBGK_MESSAGE_DEBUG                              0x08
+#define DBGK_EXCEPTION_DEBUG                            0x10
+
+//
+// Debug/Tracing support
+//
+#if _DBGK_DEBUG_
+#ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
+#define DBGKTRACE(x, ...)                                   \
+    {                                                       \
+        DbgPrintEx("%s [%.16s] - ",                         \
+                   __FUNCTION__,                            \
+                   PsGetCurrentProcess()->ImageFileName);   \
+        DbgPrintEx(__VA_ARGS__);                            \
+    }
+#else
+#define DBGKTRACE(x, ...)                                   \
+    if (x & DbgkpTraceLevel)                                \
+    {                                                       \
+        DbgPrint("%s [%.16s] - ",                           \
+                 __FUNCTION__,                              \
+                 PsGetCurrentProcess()->ImageFileName);     \
+        DbgPrint(__VA_ARGS__);                              \
+    }
+#endif
+#else
+#define DBGKTRACE(x, ...) DPRINT(__VA_ARGS__);
+#endif
+
+VOID
+INIT_FUNCTION
+NTAPI
+DbgkInitialize(
+    VOID
+);
 
 VOID
 NTAPI
@@ -82,6 +134,5 @@ DbgkClearProcessDebugObject(
 );
 
 extern POBJECT_TYPE DbgkDebugObjectType;
-#endif
 
 /* EOF */

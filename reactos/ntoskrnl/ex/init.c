@@ -792,6 +792,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Initialize the Process Manager */
     if (!PsInitSystem()) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
 
+    /* Initialize the User-Mode Debugging Subsystem */
+    DbgkInitialize();
+
     /* Calculate the tick count multiplier */
     ExpTickCountMultiplier = ExComputeTickCountMultiplier(KeMaximumIncrement);
     SharedUserData->TickCountMultiplier = ExpTickCountMultiplier;

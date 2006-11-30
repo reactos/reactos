@@ -1,10 +1,10 @@
 /*
-* PROJECT:         ReactOS Kernel
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/ps.h
-* PURPOSE:         Internal header for the Process Manager
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*/
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/include/ps.h
+ * PURPOSE:         Internal header for the Process Manager
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ */
 
 //
 // Define this if you want debugging support
