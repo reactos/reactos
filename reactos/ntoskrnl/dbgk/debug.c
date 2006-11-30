@@ -1151,9 +1151,11 @@ DbgkpSetProcessDebugObject(IN PEPROCESS Process,
 {
     NTSTATUS Status;
     LIST_ENTRY TempList;
-    BOOLEAN GlobalHeld = FALSE;
+    BOOLEAN GlobalHeld = FALSE, DoSetEvent = TRUE;
     PETHREAD ThisThread, FirstThread;
     PLIST_ENTRY NextEntry;
+    PDEBUG_EVENT DebugEvent;
+    PETHREAD EventThread;
     PAGED_CODE();
     DBGKTRACE(DBGK_PROCESS_DEBUG, "Process: %p DebugObject: %p\n",
               Process, DebugObject);
@@ -1263,10 +1265,69 @@ ThreadScan:
     NextEntry = DebugObject->EventList.Flink;
     while (NextEntry != &DebugObject->EventList)
     {
-        DPRINT1("Next Entry: %p\n", NextEntry);
-        DPRINT1("List: %p\n", &DebugObject->EventList);
-        /* FIXME: TODO */
-        KEBUGCHECK(0);
+        /* Get the debug event */
+        DebugEvent = CONTAINING_RECORD(NextEntry, DEBUG_EVENT, EventList);
+        DBGKTRACE(DBGK_PROCESS_DEBUG, "DebugEvent: %p Flags: %lx\n",
+                  DebugEvent, DebugEvent->Flags);
+
+        /* Check for if the debug event queue needs flushing */
+        if ((DebugEvent->Flags & 4) &
+            (DebugEvent->BackoutThread == PsGetCurrentThread()))
+        {
+            /* Get the event's thread */
+            EventThread = DebugEvent->Thread;
+            DBGKTRACE(DBGK_PROCESS_DEBUG, "EventThread: %p MsgStatus: %lx\n",
+                      EventThread, MsgStatus);
+
+            /* Check if the status is success */
+            if ((MsgStatus == STATUS_SUCCESS) &&
+                (EventThread->GrantedAccess) &&
+                (!EventThread->SystemThread))
+            {
+                /* Check if we couldn't acquire rundown for it */
+                if (DebugEvent->Flags & 0x10)
+                {
+                    /* Set busy flag */
+                    InterlockedOr(&DebugEvent->Flags, 0x100);
+                }
+                else
+                {
+                    /* Do we need to signal the event */
+                    if (DoSetEvent)
+                    {
+                        /* Do it */
+                        DebugEvent->Flags &= ~4;
+                        KeSetEvent(&DebugObject->EventsPresent,
+                                   IO_NO_INCREMENT,
+                                   FALSE);
+                        DoSetEvent = FALSE;
+                    }
+
+                    /* Clear the backout thread */
+                    DebugEvent->BackoutThread = NULL;
+
+                    /* Set flag */
+                    InterlockedOr(&DebugEvent->Flags, 0x80);
+                }
+            }
+            else
+            {
+                /* FIXME: TODO */
+                DPRINT1("Unhandled dbgk path!\n");
+                KEBUGCHECK(0);
+            }
+
+            /* Check if the lock is held */
+            if (DebugEvent->Flags & 8)
+            {
+                /* Release it */
+                DebugEvent->Flags &= ~8;
+                ExReleaseRundownProtection(&EventThread->RundownProtect);
+            }
+        }
+
+        /* Go to the next entry */
+        NextEntry = NextEntry->Flink;
     }
 
     /* Release the debug object */
