@@ -101,7 +101,7 @@ IopParseDevice(IN PVOID ParseObject,
         !(OpenPacket->RelatedFileObject->Flags & FO_DIRECT_DEVICE_OPEN))
     {
         /* The device object is the one we were given */
-        DeviceObject = OriginalDeviceObject;
+        DeviceObject = ParseObject;
 
         /* Check if the related FO had a VPB */
         if (OpenPacket->RelatedFileObject->Vpb)
@@ -119,11 +119,11 @@ IopParseDevice(IN PVOID ParseObject,
         DeviceObject = OriginalDeviceObject;
 
         /* Check if it has a VPB */
-        if ((DeviceObject->Vpb) && !(DirectOpen))
+        if ((OriginalDeviceObject->Vpb) && !(DirectOpen))
         {
             /* Check if the VPB is mounted, and mount it */
             Vpb = IopCheckVpbMounted(OpenPacket,
-                                     DeviceObject,
+                                     OriginalDeviceObject,
                                      RemainingName,
                                      &Status);
             if (!Vpb) return Status;
@@ -145,7 +145,7 @@ IopParseDevice(IN PVOID ParseObject,
     if (!Irp)
     {
         /* Dereference the device and VPB, then fail */
-        IopDereferenceDeviceObject(DeviceObject, FALSE);
+        IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
         if (Vpb) IopDereferenceVpb(Vpb);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -243,7 +243,7 @@ IopParseDevice(IN PVOID ParseObject,
             IoFreeIrp(Irp);
 
             /* Dereference the device and VPB */
-            IopDereferenceDeviceObject(DeviceObject, FALSE);
+            IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
             if (Vpb) IopDereferenceVpb(Vpb);
 
             /* We failed, return status */
@@ -320,7 +320,7 @@ IopParseDevice(IN PVOID ParseObject,
     FileObject->Type = IO_TYPE_FILE;
     FileObject->Size = sizeof(FILE_OBJECT);
     FileObject->RelatedFileObject = OpenPacket->RelatedFileObject;
-    FileObject->DeviceObject = DeviceObject;
+    FileObject->DeviceObject = OriginalDeviceObject;
 
     /* Check if this is a direct device open */
     if (DirectOpen) FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
@@ -353,7 +353,7 @@ IopParseDevice(IN PVOID ParseObject,
             IoFreeIrp(Irp);
 
             /* Dereference the device object and VPB */
-            IopDereferenceDeviceObject(DeviceObject, FALSE);
+            IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
             if (Vpb) IopDereferenceVpb(Vpb);
 
             /* Clear the FO and dereference it */
@@ -391,7 +391,7 @@ IopParseDevice(IN PVOID ParseObject,
     {
         /* We'll have to complete it ourselves */
         ASSERT(!Irp->PendingReturned);
-        ASSERT(!Irp->MdlAddress );
+        ASSERT(!Irp->MdlAddress);
 
         /* Completion happens at APC_LEVEL */
         KeRaiseIrql(APC_LEVEL, &OldIrql);
@@ -445,7 +445,10 @@ IopParseDevice(IN PVOID ParseObject,
         /* Dereference the file object */
         if (!UseDummyFile) ObDereferenceObject(FileObject);
 
-        /* Unless the driver canelled the open, dereference the VPB */
+        /* Dereference the device object */
+        IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
+
+        /* Unless the driver cancelled the open, dereference the VPB */
         if (!(OpenCancelled) && (Vpb)) IopDereferenceVpb(Vpb);
 
         /* Set the status and return */
@@ -929,10 +932,6 @@ IopQueryNameFile(IN PVOID ObjectBody,
     if (!LocalInfo) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Query the name */
-    DPRINT("Do. Drv, DrvName: %p %p %wZ\n",
-           FileObject->DeviceObject,
-           FileObject->DeviceObject->DriverObject,
-           &FileObject->DeviceObject->DriverObject->DriverName);
     Status = ObQueryNameString(FileObject->DeviceObject,
                                LocalInfo,
                                Length,
@@ -1416,7 +1415,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
         else if ((OpenPacket.FileObject) && (OpenPacket.ParseCheck != 1))
         {
             /*
-             * This can happen in the very bizare case where the parse routine
+             * This can happen in the very bizarre case where the parse routine
              * actually executed more then once (due to a reparse) and ended
              * up failing after already having created the File Object.
              */

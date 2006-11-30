@@ -3470,7 +3470,6 @@ NtCreateSection (OUT PHANDLE SectionHandle,
                             AllocationAttributes,
                             FileHandle,
                             NULL);
-
    if (NT_SUCCESS(Status))
    {
       Status = ObInsertObject ((PVOID)SectionObject,
