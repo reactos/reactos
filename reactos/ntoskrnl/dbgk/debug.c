@@ -329,7 +329,7 @@ DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
     PAGED_CODE();
     DBGKTRACE(DBGK_EXCEPTION_DEBUG,
               "ExceptionRecord: %p Port: %p\n", ExceptionRecord, DebugPort);
-    KEBUGCHECK(0);
+    while (TRUE);
 
     /* Setup the API Message */
     ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
@@ -442,13 +442,13 @@ DbgkpWakeTarget(IN PDEBUG_EVENT DebugEvent)
     /* Check if we have to wake up the event */
     if (DebugEvent->Flags & 2)
     {
-        /* Signal the continue event */
-        KeSetEvent(&DebugEvent->ContinueEvent, IO_NO_INCREMENT, FALSE);
+        /* Otherwise, free the debug event */
+        DbgkpFreeDebugEvent(DebugEvent);
     }
     else
     {
-        /* Otherwise, free the debug event */
-        DbgkpFreeDebugEvent(DebugEvent);
+        /* Signal the continue event */
+        KeSetEvent(&DebugEvent->ContinueEvent, IO_NO_INCREMENT, FALSE);
     }
 }
 

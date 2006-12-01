@@ -1986,6 +1986,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
     PVOID ImageBase;
     PIMAGE_NT_HEADERS NtHeaders;
     BOOLEAN MappedAsDataFile;
+    PVOID ArbitraryUserPointer;
 
     if (Module == NULL)
       {
@@ -2027,6 +2028,9 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
         /* Map the dll into the process */
         ViewSize = 0;
         ImageBase = 0;
+        ArbitraryUserPointer = NtCurrentTeb()->Tib.ArbitraryUserPointer;
+        NtCurrentTeb()->Tib.ArbitraryUserPointer = FullDosName.Buffer;
+        DPRINT1("POI. DAT: %p %S\n", NtCurrentTeb()->Tib.ArbitraryUserPointer, FullDosName.Buffer);
         Status = NtMapViewOfSection(SectionHandle,
                                     NtCurrentProcess(),
                                     &ImageBase,
@@ -2037,6 +2041,8 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                     0,
                                     MEM_COMMIT,
                                     PAGE_READONLY);
+        NtCurrentTeb()->Tib.ArbitraryUserPointer = ArbitraryUserPointer;
+        DPRINT1("Poi gone!\n");
         if (!NT_SUCCESS(Status))
           {
             DPRINT1("map view of section failed (Status 0x%08lx)\n", Status);

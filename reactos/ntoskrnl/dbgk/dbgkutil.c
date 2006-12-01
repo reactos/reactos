@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern ULONG DbgkpTraceLevel;
+
 /* FUNCTIONS *****************************************************************/
 
 HANDLE
@@ -236,9 +238,11 @@ DbgkCreateThread(PVOID StartAddress)
         if (Teb)
         {
             /* Copy the system library name and link to it */
+#if 0
             wcsncpy(Teb->StaticUnicodeBuffer,
                     L"ntdll.dll",
-                    sizeof(Teb->StaticUnicodeBuffer));
+                    sizeof(Teb->StaticUnicodeBuffer) / sizeof(WCHAR));
+#endif
             Teb->Tib.ArbitraryUserPointer = Teb->StaticUnicodeBuffer;
 
             /* Return it in the debug event as well */
@@ -369,7 +373,7 @@ DbgkExitThread(IN NTSTATUS ExitStatus)
 
 VOID
 NTAPI
-DbgkMapViewOfSection(IN HANDLE SectionHandle,
+DbgkMapViewOfSection(IN PVOID Section,
                      IN PVOID BaseAddress,
                      IN ULONG SectionOffset,
                      IN ULONG_PTR ViewSize)
@@ -380,6 +384,8 @@ DbgkMapViewOfSection(IN HANDLE SectionHandle,
     PETHREAD Thread = PsGetCurrentThread();
     PIMAGE_NT_HEADERS NtHeader;
     PAGED_CODE();
+    DBGKTRACE(DBGK_PROCESS_DEBUG,
+              "Section: %p. Base: %p\n", Section, BaseAddress);
 
     /* Check if this thread is hidden, doesn't have a debug port, or died */
     if ((Thread->HideFromDebugger) ||
@@ -392,7 +398,7 @@ DbgkMapViewOfSection(IN HANDLE SectionHandle,
     }
 
     /* Setup the parameters */
-    LoadDll->FileHandle = DbgkpSectionToFileHandle(SectionHandle);
+    LoadDll->FileHandle = DbgkpSectionToFileHandle(Section);
     LoadDll->BaseOfDll = BaseAddress;
     LoadDll->DebugInfoFileOffset = 0;
     LoadDll->DebugInfoSize = 0;

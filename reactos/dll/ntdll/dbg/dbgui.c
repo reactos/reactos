@@ -280,8 +280,9 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
             {
                 /* Save the image name from the TIB */
                 DebugEvent->u.LoadDll.lpImageName =
-                    &((PTEB)ThreadBasicInfo.TebBaseAddress)->
+                    ((PTEB)ThreadBasicInfo.TebBaseAddress)->
                     Tib.ArbitraryUserPointer;
+                DPRINT1("Image name: %p\n", DebugEvent->u.LoadDll.lpImageName);
             }
             else
             {

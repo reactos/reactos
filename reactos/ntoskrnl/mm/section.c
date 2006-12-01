@@ -3777,7 +3777,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
        (Status != STATUS_IMAGE_NOT_AT_BASE))
    {
         /* Notify the debugger */
-       DbgkMapViewOfSection(SectionHandle,
+       DbgkMapViewOfSection(Section,
                             SafeBaseAddress,
                             SafeSectionOffset.LowPart,
                             SafeViewSize);

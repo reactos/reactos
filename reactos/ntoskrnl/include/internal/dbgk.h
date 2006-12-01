@@ -74,7 +74,7 @@ DbgkExitThread(
 VOID
 NTAPI
 DbgkMapViewOfSection(
-    IN HANDLE SectionHandle,
+    IN PVOID Section,
     IN PVOID BaseAddress,
     IN ULONG SectionOffset,
     IN ULONG_PTR ViewSize
