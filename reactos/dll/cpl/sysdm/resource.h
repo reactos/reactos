@@ -22,13 +22,14 @@
 
 /* propsheet - general */
 #define IDD_PROPPAGEGENERAL             100
-#define IDC_PROCESSORMANUFACTURER       101
-#define IDC_PROCESSOR                   102
-#define IDC_PROCESSORSPEED              103
-#define IDC_SYSTEMMEMORY                104
-#define IDC_LICENCE                     105
-#define IDC_ROSIMG                      106
-#define IDC_ROSHOMEPAGE_LINK            107
+#define IDC_MACHINELINE1                101
+#define IDC_MACHINELINE2                102
+#define IDC_MACHINELINE3                103
+#define IDC_MACHINELINE4                104
+#define IDC_MACHINELINE5                105
+#define IDC_LICENCE                     106
+#define IDC_ROSIMG                      107
+#define IDC_ROSHOMEPAGE_LINK            108
 
 
 /* propsheet - computer name */
