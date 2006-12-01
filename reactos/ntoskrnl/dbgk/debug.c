@@ -329,7 +329,6 @@ DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
     PAGED_CODE();
     DBGKTRACE(DBGK_EXCEPTION_DEBUG,
               "ExceptionRecord: %p Port: %p\n", ExceptionRecord, DebugPort);
-    while (TRUE);
 
     /* Setup the API Message */
     ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
@@ -401,6 +400,7 @@ DbgkpFreeDebugEvent(IN PDEBUG_EVENT DebugEvent)
 
             /* Get the pointer */
             Handle = &DebugEvent->ApiMsg.CreateProcess.FileHandle;
+            break;
 
         /* As does DLL load */
         case DbgKmLoadDllApi:
@@ -1021,6 +1021,7 @@ DbgkpOpenHandles(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
 
             /* Fall through to duplicate file handle */
             DupHandle = &WaitStateChange->StateInfo.LoadDll.FileHandle;
+            break;
 
         /* Anything else has no handles */
         default:
