@@ -881,14 +881,18 @@ Create_DirectDraw (LPGUID pGUID,
 				   BOOL ex)
 {   	
     LPDDRAWI_DIRECTDRAW_INT This;
-
 	
 	DX_WINDBG_trace();
+
+	if (!IsEqualGUID(&IID_IDirectDraw7, id))
+    {
+		return DDERR_INVALIDDIRECTDRAWGUID;
+    }
 		
 	This = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
 	if (This == NULL) 
 	{
-		return E_OUTOFMEMORY;
+		return DDERR_OUTOFMEMORY;
 	}
 
 	This->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));

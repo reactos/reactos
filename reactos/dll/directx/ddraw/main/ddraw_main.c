@@ -28,6 +28,10 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
 
 	DX_WINDBG_trace();
     
+	/* fixme 
+	   the D3D object cab be optain from here 
+	   Direct3D7 
+	*/
     if (IsEqualGUID(&IID_IDirectDraw7, id))
     {
 		/* DirectDraw7 Vtable */
