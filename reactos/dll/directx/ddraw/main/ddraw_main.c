@@ -34,24 +34,6 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
 		This->lpVtbl = &DirectDraw7_Vtable;
         *obj = &This->lpVtbl;
     }
-    else if (IsEqualGUID(&IID_IDirectDraw, id))
-    {
-		/* DirectDraw1 Vtable */
-		This->lpVtbl = &DirectDraw_Vtable; 
-        *obj = &This->lpVtbl;        
-    }
-    else if (IsEqualGUID(&IID_IDirectDraw2, id))
-    {   
-		/* DirectDraw2 Vtable */
-		This->lpVtbl = &DirectDraw2_Vtable;
-        *obj = &This->lpVtbl;
-    }
-    else if (IsEqualGUID(&IID_IDirectDraw4, id))
-    {
-		/* DirectDraw4 Vtable */
-        This->lpVtbl = &DirectDraw4_Vtable;
-        *obj = &This->lpVtbl;
-    }
     else
     {
         *obj = NULL;

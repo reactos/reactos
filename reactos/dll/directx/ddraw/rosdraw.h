@@ -620,11 +620,11 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 */
 
 
-//#define DX_WINDBG_trace()  
-//#define DX_STUB
-//#define DX_STUB_DD_OK return DD_OK; 	
-//#define DX_STUB_str(x) printf("%s",x);
-//#define DX_WINDBG_trace_res
+#define DX_WINDBG_trace()  
+#define DX_STUB
+#define DX_STUB_DD_OK return DD_OK; 	
+#define DX_STUB_str(x) printf("%s",x);
+#define DX_WINDBG_trace_res
 
 /* 
    use this if want doing a trace from a program
@@ -635,58 +635,58 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
    This marco does not create warings when you compile
 */
 
-#define DX_STUB \
-{ \
-	static BOOL firstcall = TRUE; \
-	if (firstcall) \
-	{ \
-		char buffer[1024]; \
-		sprintf ( buffer, "Function %s is not implemented yet (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
-		OutputDebugStringA(buffer); \
-		firstcall = FALSE; \
-	} \
-} \
-	return DDERR_UNSUPPORTED; 
-	
-#define DX_STUB_DD_OK \
-{ \
-	static BOOL firstcall = TRUE; \
-	if (firstcall) \
-	{ \
-		char buffer[1024]; \
-		sprintf ( buffer, "Function %s is not implemented yet (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
-		OutputDebugStringA(buffer); \
-		firstcall = FALSE; \
-	} \
-} \
-	return DD_OK; 	
-	
-
-#define DX_STUB_str(x) \
-		{ \
-        char buffer[1024]; \
-		sprintf ( buffer, "Function %s %s (%s:%d)\n", __FUNCTION__,x,__FILE__,__LINE__ ); \
-		OutputDebugStringA(buffer); \
-        }
-
-#define DX_WINDBG_trace() \
-	static BOOL firstcallx = TRUE; \
-	if (firstcallx) \
-	{ \
-		char buffer[1024]; \
-		sprintf ( buffer, "Enter Function %s (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
-		OutputDebugStringA(buffer); \
-		firstcallx = TRUE; \
-	}
-
-#define DX_WINDBG_trace_res(width,height,bpp) \
-	static BOOL firstcallxx = TRUE; \
-	if (firstcallxx) \
-	{ \
-		char buffer[1024]; \
-		sprintf ( buffer, "Setmode have been req width=%d, height=%d bpp=%d\n",width,height,bpp); \
-		OutputDebugStringA(buffer); \
-		firstcallxx = FALSE; \
-	}
+//#define DX_STUB \
+//{ \
+//	static BOOL firstcall = TRUE; \
+//	if (firstcall) \
+//	{ \
+//		char buffer[1024]; \
+//		sprintf ( buffer, "Function %s is not implemented yet (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
+//		OutputDebugStringA(buffer); \
+//		firstcall = FALSE; \
+//	} \
+//} \
+//	return DDERR_UNSUPPORTED; 
+//	
+//#define DX_STUB_DD_OK \
+//{ \
+//	static BOOL firstcall = TRUE; \
+//	if (firstcall) \
+//	{ \
+//		char buffer[1024]; \
+//		sprintf ( buffer, "Function %s is not implemented yet (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
+//		OutputDebugStringA(buffer); \
+//		firstcall = FALSE; \
+//	} \
+//} \
+//	return DD_OK; 	
+//	
+//
+//#define DX_STUB_str(x) \
+//		{ \
+//        char buffer[1024]; \
+//		sprintf ( buffer, "Function %s %s (%s:%d)\n", __FUNCTION__,x,__FILE__,__LINE__ ); \
+//		OutputDebugStringA(buffer); \
+//        }
+//
+//#define DX_WINDBG_trace() \
+//	static BOOL firstcallx = TRUE; \
+//	if (firstcallx) \
+//	{ \
+//		char buffer[1024]; \
+//		sprintf ( buffer, "Enter Function %s (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
+//		OutputDebugStringA(buffer); \
+//		firstcallx = TRUE; \
+//	}
+//
+//#define DX_WINDBG_trace_res(width,height,bpp) \
+//	static BOOL firstcallxx = TRUE; \
+//	if (firstcallxx) \
+//	{ \
+//		char buffer[1024]; \
+//		sprintf ( buffer, "Setmode have been req width=%d, height=%d bpp=%d\n",width,height,bpp); \
+//		OutputDebugStringA(buffer); \
+//		firstcallxx = FALSE; \
+//	}
 
 #endif /* __DDRAW_PRIVATE */

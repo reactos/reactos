@@ -48,7 +48,7 @@ DirectDrawCreate (LPGUID lpGUID,
 		return CLASS_E_NOAGGREGATION; 
 	}
 	
-	return Create_DirectDraw (lpGUID, lplpDD, &IID_IDirectDraw, FALSE);
+	return Create_DirectDraw (lpGUID, lplpDD, &IID_IDirectDraw7, FALSE);
 }
 
 /*
