@@ -33,27 +33,45 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
     
     DX_WINDBG_trace();
 	  
-	RtlZeroMemory(&ddgbl, sizeof(DDRAWI_DIRECTDRAW_GBL));
-    
-	ddgbl.lpDDCBtmp = (LPDDHAL_CALLBACKS) DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));  
-	if (ddgbl.lpDDCBtmp == NULL)
+
+	if (This->lpLink == NULL)
 	{
-	   DX_STUB_str("Out of memmory");
-       return DD_FALSE;
-	}	
+		RtlZeroMemory(&ddgbl, sizeof(DDRAWI_DIRECTDRAW_GBL));
+	    
+		if (ddgbl.lpDDCBtmp == NULL)
+		{
+			ddgbl.lpDDCBtmp = (LPDDHAL_CALLBACKS) DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));  
+			if (ddgbl.lpDDCBtmp == NULL)
+			{
+				DX_STUB_str("Out of memmory");
+				return DD_FALSE;
+			}
+		}
+		
+		
+	}
+
+	/* 
+	   Visual studio think this code is a break point if we call 
+	   second time to this function, press on continue in visual
+	   studio the program will work. No real bug. gcc 3.4.5 genreate 
+	   code that look like MS visual studio break point. 
+     */
 
 	This->lpLcl->lpDDCB = ddgbl.lpDDCBtmp;
-	
-	
-    /* Same for HEL and HAL */
-    This->lpLcl->lpGbl->lpModeInfo = (DDHALMODEINFO*) DxHeapMemAlloc(1 * sizeof(DDHALMODEINFO));  
-	
-    if (This->lpLcl->lpGbl->lpModeInfo == NULL)
-    {
-	   DX_STUB_str("DD_FALSE");
-       return DD_FALSE;
-    }
 
+    /* Same for HEL and HAL */
+
+	if (ddgbl.lpModeInfo == NULL)
+	{
+		ddgbl.lpModeInfo = (DDHALMODEINFO*) DxHeapMemAlloc(1 * sizeof(DDHALMODEINFO));  
+		if (ddgbl.lpModeInfo == NULL)
+		{
+			DX_STUB_str("DD_FALSE");
+			return DD_FALSE;
+		}		   
+	}
+    
     EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devmode);
 
     This->lpLcl->lpGbl->lpModeInfo[0].dwWidth      = devmode.dmPelsWidth;
@@ -62,7 +80,6 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
     This->lpLcl->lpGbl->lpModeInfo[0].lPitch       = (devmode.dmPelsWidth*devmode.dmBitsPerPel)/8;
     This->lpLcl->lpGbl->lpModeInfo[0].wRefreshRate = (WORD)devmode.dmDisplayFrequency;
    
-
 	if (lpGuid == NULL) 
 	{
 		devicetypes = 1;
@@ -156,14 +173,9 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 	
 	This->lpLcl->lpDDCB = This->lpLcl->lpGbl->lpDDCBtmp;	  
 	This->lpLcl->dwProcessId = GetCurrentProcessId();
-
-    
-    
     
     hel_ret = StartDirectDrawHel(iface);
 	hal_ret = StartDirectDrawHal(iface);
-
-	
 
     if ((hal_ret!=DD_OK) &&  (hel_ret!=DD_OK))
     {
@@ -172,7 +184,6 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
     }
 
 	This->lpLcl->hDD = This->lpLcl->lpGbl->hDD;
-
 
 	/* Mix the DDCALLBACKS */	
 	This->lpLcl->lpDDCB->cbDDCallbacks.dwSize = sizeof(This->lpLcl->lpDDCB->cbDDCallbacks);
@@ -929,7 +940,7 @@ Create_DirectDraw (LPGUID pGUID,
 	{		
 		return DDERR_INVALIDPARAMS;
 	}
-		
+	
 	if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID) == DD_OK);
     {
 
