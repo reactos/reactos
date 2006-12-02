@@ -596,6 +596,45 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 
 /*********** Macros ***********/
 
+/* 
+   use this macro to close 
+   down the debuger text complete 
+   no debuging at all, it will
+   crash ms debuger in VS 
+*/
+
+//#define DX_WINDBG_trace()  
+//#define DX_STUB
+//#define DX_STUB_DD_OK return DD_OK; 	
+//#define DX_STUB_str(x) 
+//#define DX_WINDBG_trace_res
+
+
+/* 
+   Use this macro if you want deboug in visual studio or 
+   if you have a program to look at the _INT struct from
+   ReactOS ddraw.dll or ms ddraw.dll, so you can see what
+   value ms are being setup.
+
+   This macro will create allot warings and can not be help when you compile
+*/
+
+
+//#define DX_WINDBG_trace()  
+//#define DX_STUB
+//#define DX_STUB_DD_OK return DD_OK; 	
+//#define DX_STUB_str(x) printf("%s",x);
+//#define DX_WINDBG_trace_res
+
+/* 
+   use this if want doing a trace from a program
+   like a game and ReactOS ddraw.dll in windows
+   so you can figout what going wrong and what 
+   api are being call or if it hel or is it hal
+
+   This marco does not create warings when you compile
+*/
+
 #define DX_STUB \
 { \
 	static BOOL firstcall = TRUE; \
@@ -630,10 +669,6 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 		OutputDebugStringA(buffer); \
         }
 
-
-//#define DX_WINDBG_trace()  
-
-
 #define DX_WINDBG_trace() \
 	static BOOL firstcallx = TRUE; \
 	if (firstcallx) \
@@ -643,7 +678,6 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 		OutputDebugStringA(buffer); \
 		firstcallx = TRUE; \
 	}
-
 
 #define DX_WINDBG_trace_res(width,height,bpp) \
 	static BOOL firstcallxx = TRUE; \

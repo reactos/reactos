@@ -40,7 +40,7 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 	{
 	   DX_STUB_str("Out of memmory");
        return DD_FALSE;
-	}
+	}	
 
 	This->lpLcl->lpDDCB = ddgbl.lpDDCBtmp;
 	
@@ -158,9 +158,13 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 	This->lpLcl->dwProcessId = GetCurrentProcessId();
 
     
+    
+    
+    hel_ret = StartDirectDrawHel(iface);
+	hal_ret = StartDirectDrawHal(iface);
 
-    hal_ret = StartDirectDrawHal(iface);
-	hel_ret = StartDirectDrawHel(iface);    
+	
+
     if ((hal_ret!=DD_OK) &&  (hel_ret!=DD_OK))
     {
 		DX_STUB_str("DDERR_NODIRECTDRAWSUPPORT");
@@ -641,6 +645,8 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
        DeleteDC((HDC)This->lpLcl->hDC);       
        return DD_FALSE;
     }
+
+	return DD_OK;
 	
     // Do not relase HDC it have been map in kernel mode 
     // DeleteDC(hdc);
@@ -901,7 +907,7 @@ Create_DirectDraw (LPGUID pGUID,
 	{		
 		return DDERR_INVALIDPARAMS;
 	}
-
+	
 	if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID) == DD_OK);
     {
 
