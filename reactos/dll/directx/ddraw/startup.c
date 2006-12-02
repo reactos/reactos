@@ -912,12 +912,24 @@ Create_DirectDraw (LPGUID pGUID,
 	else
 	{
 		/* We got the DirectDraw interface alloc and we need create the link */
-		LPDDRAWI_DIRECTDRAW_INT  newThis;
+
+		LPDDRAWI_DIRECTDRAW_INT  newThis;	
 		newThis = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
 		if (newThis == NULL) 
 	    {
 		    return DDERR_OUTOFMEMORY;
 	    }
+        
+		/* we need check the GUID lpGUID what type it is */
+		if (pGUID != DDCREATE_HARDWAREONLY)
+		{
+			if (pGUID !=NULL)
+			{
+				This = newThis;
+				return DDERR_INVALIDDIRECTDRAWGUID;		
+			}
+		}
+
 		newThis->lpLink = This;
 		This = newThis;		
 	}
