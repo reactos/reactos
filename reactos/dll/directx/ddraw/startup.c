@@ -942,9 +942,43 @@ Create_DirectDraw (LPGUID pGUID,
 		return DDERR_OUTOFMEMORY;
 	}
 	
-	This->lpLcl->lpGbl = &ddgbl;
-	This->lpLcl->dwLocalRefCnt = 0;
+
+    /* 
+	   We need manual fill this struct member we can not trust on 
+	   the heap zero the struct if you play to much with directdraw 
+	   in Windows 2000. This is a small workaround of one of directdraw
+	   bugs
+     */
+
+	/*
+	   FIXME 
+	   read dwAppHackFlags flag from the system register instead for hard code it
+	 */
+	This->lpLcl->dwAppHackFlags = 0; 
+	This->lpLcl->dwErrorMode = 0;
+	This->lpLcl->dwHotTracking = 0;
+	This->lpLcl->dwIMEState = 0;
 	This->lpLcl->dwLocalFlags = DDRAWILCL_DIRECTDRAW7;
+	This->lpLcl->dwLocalRefCnt = 0;
+	This->lpLcl->dwObsolete1 = 0;
+	This->lpLcl->dwPreferredMode = 0;
+	This->lpLcl->dwProcessId = 0;
+	This->lpLcl->dwUnused0 = 0;
+	This->lpLcl->hD3DInstance = NULL;
+	This->lpLcl->hDC = 0;	
+	This->lpLcl->hDDVxd = 0;
+	This->lpLcl->hFocusWnd = 0;
+	This->lpLcl->hGammaCalibrator = 0;
+	This->lpLcl->hWnd = 0;
+	This->lpLcl->hWndPopup = 0;	
+	This->lpLcl->lpCB = NULL;
+	This->lpLcl->lpDDCB = NULL;
+	This->lpLcl->lpDDMore = 0;
+	This->lpLcl->lpGammaCalibrator = 0;
+	This->lpLcl->lpGbl = &ddgbl;
+	This->lpLcl->lpPrimary = NULL;
+	This->lpLcl->pD3DIUnknown = NULL;
+	This->lpLcl->pUnkOuter = NULL;
 			 
 	*pIface = (LPDIRECTDRAW)This;
 
@@ -955,7 +989,7 @@ Create_DirectDraw (LPGUID pGUID,
 	
 	if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID) == DD_OK);
     {
-
+        This->lpLcl->hDD = ddgbl.hDD;
 		return DD_OK;
 	}
 	
