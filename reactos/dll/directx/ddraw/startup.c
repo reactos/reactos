@@ -889,7 +889,6 @@ Create_DirectDraw (LPGUID pGUID,
 		return DDERR_INVALIDDIRECTDRAWGUID;
     }
 
-	
 	if (This == NULL)
 	{
 		/* We do not have any DirectDraw interface alloc */
@@ -919,8 +918,10 @@ Create_DirectDraw (LPGUID pGUID,
 		/* FIXME cleanup */
 		return DDERR_OUTOFMEMORY;
 	}
-
+	
 	This->lpLcl->lpGbl = &ddgbl;
+	This->lpLcl->dwLocalRefCnt = 0;
+	This->lpLcl->dwLocalFlags = DDRAWILCL_DIRECTDRAW7;
 			 
 	*pIface = (LPDIRECTDRAW)This;
 
@@ -928,7 +929,7 @@ Create_DirectDraw (LPGUID pGUID,
 	{		
 		return DDERR_INVALIDPARAMS;
 	}
-	
+		
 	if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID) == DD_OK);
     {
 
