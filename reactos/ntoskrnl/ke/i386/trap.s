@@ -96,100 +96,22 @@ _KiRaiseAssertion:
     int 3
 
 .func KiSystemService
+Dr_kss: DR_TRAP_FIXUP
 _KiSystemService:
 
     /* Enter the shared system call prolog */
-    SYSCALL_PROLOG
+    SYSCALL_PROLOG kss
 
     /* Jump to the actual handler */
     jmp SharedCode
 .endfunc
 
 .func KiFastCallEntry
+Dr_FastCallDrSave: DR_TRAP_FIXUP
 _KiFastCallEntry:
 
-    /* Set FS to PCR */
-    mov ecx, KGDT_R0_PCR
-    mov fs, cx
-    //push KGDT_R0_PCR
-    //pop fs
-
-    /* Set user selector */
-    mov ecx, KGDT_R3_DATA | RPL_MASK
-
-    /* Set DS/ES to User Selector */
-    mov ds, cx
-    mov es, cx
-
-    /* Set the current stack to Kernel Stack */
-    mov ecx, [fs:KPCR_TSS]
-    mov esp, ss:[ecx+KTSS_ESP0]
-
-    /* Set up a fake INT Stack. */
-    push KGDT_R3_DATA + RPL_MASK
-    push edx                            /* Ring 3 SS:ESP */
-    pushf                               /* Ring 3 EFLAGS */
-    push 2                              /* Ring 0 EFLAGS */
-    add edx, 8                          /* Skip user parameter list */
-    popf                                /* Set our EFLAGS */
-    or dword ptr [esp], EFLAGS_INTERRUPT_MASK   /* Re-enable IRQs in EFLAGS, to fake INT */
-    push KGDT_R3_CODE + RPL_MASK
-    push dword ptr ds:KUSER_SHARED_SYSCALL_RET
-
-    /* Setup the Trap Frame stack */
-    push 0
-    push ebp
-    push ebx
-    push esi
-    push edi
-    push KGDT_R3_TEB + RPL_MASK
-
-    /* Save pointer to our PCR */
-    mov ebx, [fs:KPCR_SELF]
-
-    /* Get a pointer to the current thread */
-    mov esi, [ebx+KPCR_CURRENT_THREAD]
-
-    /* Set the exception handler chain terminator */
-    push [ebx+KPCR_EXCEPTION_LIST]
-    mov dword ptr [ebx+KPCR_EXCEPTION_LIST], -1
-
-    /* Use the thread's stack */
-    mov ebp, [esi+KTHREAD_INITIAL_STACK]
-
-    /* Push previous mode */
-    push UserMode
-
-    /* Skip the other registers */
-    sub esp, 0x48
-
-    /* Make space for us on the stack */
-    sub ebp, 0x29C
-
-    /* Write the previous mode */
-    mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], UserMode
-
-    /* Sanity check */
-    cmp ebp, esp
-    jnz BadStack
-
-    /* Flush DR7 */
-    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
-
-    /* Check if the thread was being debugged */
-    test byte ptr [esi+KTHREAD_DEBUG_ACTIVE], 0xFF
-
-    /* Set the thread's trap frame */
-    mov [esi+KTHREAD_TRAP_FRAME], ebp
-
-    /* Save DR registers if needed */
-    //jnz Dr_FastCallDrSave
-
-    /* Set the trap frame debug header */
-    SET_TF_DEBUG_HEADER
-
-    /* Enable interrupts */
-    sti
+    /* Enter the fast system call prolog */
+    FASTCALL_PROLOG FastCallDrSave
 
 SharedCode:
 
@@ -514,13 +436,15 @@ AbiosExit:
     int 3
 
 .func KiDebugService
+Dr_kids:    DR_TRAP_FIXUP
+V86_kids:   V86_TRAP_FIXUP
 _KiDebugService:
 
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(kids)
+    TRAP_PROLOG kids
 
     /* Increase EIP so we skip the INT3 */
     //inc dword ptr [ebp+KTRAP_FRAME_EIP]
@@ -749,12 +673,14 @@ _DispatchTwoParam:
 /* HARDWARE TRAP HANDLERS ****************************************************/
 
 .func KiTrap0
+Dr_kit0:    DR_TRAP_FIXUP
+V86_kit0:   V86_TRAP_FIXUP
 _KiTrap0:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(0)
+    TRAP_PROLOG kit0
 
     /* Check for V86 */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -788,12 +714,14 @@ V86Int0:
 .endfunc
 
 .func KiTrap1
+Dr_kit1:    DR_TRAP_FIXUP
+V86_kit1:   V86_TRAP_FIXUP
 _KiTrap1:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(1)
+    TRAP_PROLOG kit1
 
     /* Check for V86 */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -839,12 +767,14 @@ _KiTrap2:
 .endfunc
 
 .func KiTrap3
+Dr_kit3:    DR_TRAP_FIXUP
+V86_kit3:   V86_TRAP_FIXUP
 _KiTrap3:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(3)
+    TRAP_PROLOG kit3
 
     /* Check for V86 */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -887,12 +817,14 @@ V86Int3:
 .endfunc
 
 .func KiTrap4
+Dr_kit4:    DR_TRAP_FIXUP
+V86_kit4:   V86_TRAP_FIXUP
 _KiTrap4:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(4)
+    TRAP_PROLOG kit4
 
     /* Check for V86 */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -927,12 +859,14 @@ V86Int4:
 .endfunc
 
 .func KiTrap5
+Dr_kit5:    DR_TRAP_FIXUP
+V86_kit5:   V86_TRAP_FIXUP
 _KiTrap5:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(5)
+    TRAP_PROLOG kit5
 
     /* Check for V86 */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -971,6 +905,8 @@ V86Int5:
 .endfunc
 
 .func KiTrap6
+Dr_kit6:    DR_TRAP_FIXUP
+V86_kit6:   V86_TRAP_FIXUP
 _KiTrap6:
 
     /* It this a V86 GPF? */
@@ -989,7 +925,7 @@ NotV86UD:
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(6)
+    TRAP_PROLOG kit6
 
     /* Check if this happened in kernel mode */
     test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
@@ -1086,12 +1022,14 @@ OpcodeSEH:
 .endfunc
 
 .func KiTrap7
+Dr_kit7:    DR_TRAP_FIXUP
+V86_kit7:   V86_TRAP_FIXUP
 _KiTrap7:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(7)
+    TRAP_PROLOG kit7
 
     /* Get the current thread and stack */
 StartTrapHandle:
@@ -1405,12 +1343,14 @@ _KiTrap8:
 .endfunc
 
 .func KiTrap9
+Dr_kit9:    DR_TRAP_FIXUP
+V86_kit9:   V86_TRAP_FIXUP
 _KiTrap9:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(9)
+    TRAP_PROLOG kit9
 
     /* Enable interrupts and bugcheck */
     sti
@@ -1419,9 +1359,11 @@ _KiTrap9:
 .endfunc
 
 .func KiTrap10
+Dr_kit10:   DR_TRAP_FIXUP
+V86_kit10:  V86_TRAP_FIXUP
 _KiTrap10:
     /* Enter trap */
-    TRAP_PROLOG(10)
+    TRAP_PROLOG kit10
 
     /* Check for V86 */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -1448,9 +1390,11 @@ Fatal:
 .endfunc
 
 .func KiTrap11
+Dr_kit11:   DR_TRAP_FIXUP
+V86_kit11:  V86_TRAP_FIXUP
 _KiTrap11:
     /* Enter trap */
-    TRAP_PROLOG(11)
+    TRAP_PROLOG kit11
 
     /* FIXME: ROS Doesn't handle segment faults yet */
     mov eax, 11
@@ -1458,9 +1402,11 @@ _KiTrap11:
 .endfunc
 
 .func KiTrap12
+Dr_kit12:   DR_TRAP_FIXUP
+V86_kit12:  V86_TRAP_FIXUP
 _KiTrap12:
     /* Enter trap */
-    TRAP_PROLOG(12)
+    TRAP_PROLOG kit12
 
     /* FIXME: ROS Doesn't handle stack faults yet */
     mov eax, 12
@@ -1468,6 +1414,8 @@ _KiTrap12:
 .endfunc
 
 .func KiTrap13
+Dr_kitd:    DR_TRAP_FIXUP
+V86_kitd:   V86_TRAP_FIXUP
 _KiTrap13:
 
     /* It this a V86 GPF? */
@@ -1531,7 +1479,7 @@ NotV86Trap:
 
 NotV86:
     /* Enter trap */
-    TRAP_PROLOG(13)
+    TRAP_PROLOG kitd
 
     /* Check if this was from kernel-mode */
     test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
@@ -1678,9 +1626,11 @@ UserModeGpf:
 .endfunc
 
 .func KiTrap14
+Dr_kit14:   DR_TRAP_FIXUP
+V86_kit14:  V86_TRAP_FIXUP
 _KiTrap14:
     /* Enter trap */
-    TRAP_PROLOG(14)
+    TRAP_PROLOG kit14
 
     /* Call the C exception handler */
     push 14
@@ -1693,12 +1643,14 @@ _KiTrap14:
 .endfunc
 
 .func KiTrap0F
+Dr_kit15:   DR_TRAP_FIXUP
+V86_kit15:  V86_TRAP_FIXUP
 _KiTrap0F:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(15)
+    TRAP_PROLOG kit15
     sti
 
     /* Raise a fatal exception */
@@ -1707,12 +1659,14 @@ _KiTrap0F:
 .endfunc
 
 .func KiTrap16
+Dr_kit16:   DR_TRAP_FIXUP
+V86_kit16:  V86_TRAP_FIXUP
 _KiTrap16:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(16)
+    TRAP_PROLOG kit16
 
     /* Check if this is the NPX Thread */
     mov eax, fs:[KPCR_CURRENT_THREAD]
@@ -1732,12 +1686,14 @@ _KiTrap16:
 .endfunc
 
 .func KiTrap17
+Dr_kit17:   DR_TRAP_FIXUP
+V86_kit17:  V86_TRAP_FIXUP
 _KiTrap17:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(17)
+    TRAP_PROLOG kit17
 
     /* FIXME: ROS Doesn't handle alignment faults yet */
     mov eax, 17
@@ -1784,6 +1740,22 @@ _KiCoprocessorError@0:
     ret
 .endfunc
 
+.func Ki16BitStackException
+_Ki16BitStackException:
+
+    /* Save stack */
+    push ss
+    push esp
+
+    /* Go to kernel mode thread stack */
+    mov eax, fs:[KPCR_CURRENT_THREAD]
+    add esp, [eax+KTHREAD_INITIAL_STACK]
+
+    /* Switch to good stack segment */
+    /* TODO */
+    int 3
+.endfunc
+
 /* UNEXPECTED INTERRUPT HANDLERS **********************************************/
 
 .globl _KiStartUnexpectedRange@0
@@ -1796,6 +1768,8 @@ _KiEndUnexpectedRange@0:
     jmp _KiUnexpectedInterruptTail
 
 .func KiUnexpectedInterruptTail
+V86_kui: V86_TRAP_FIXUP
+Dr_kui:  DR_TRAP_FIXUP
 _KiUnexpectedInterruptTail:
 
     /* Enter interrupt trap */
@@ -1907,6 +1881,8 @@ QuantumEnd:
 .endfunc
 
 .func KiInterruptTemplate
+V86_kit: V86_TRAP_FIXUP
+Dr_kit:  DR_TRAP_FIXUP
 _KiInterruptTemplate:
 
     /* Enter interrupt trap */

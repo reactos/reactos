@@ -28,7 +28,6 @@
 //
 // Ke:
 //  - Figure out why the DPC stack doesn't really work.
-//  - Add DR macro/save and VM macro/save.
 //  - New optimized table-based tick-hashed timer implementation.
 //  - New Thread Scheduler based on 2003.
 //  - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.

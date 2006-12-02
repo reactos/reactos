@@ -137,6 +137,16 @@ Author:
 #define EPROCESS_VDM_OBJECTS                    0x144
 
 //
+// KPRCB Offsets
+//
+#define KPRCB_DR0                               0x2F8
+#define KPRCB_DR1                               0x2FC
+#define KPRCB_DR2                               0x300
+#define KPRCB_DR3                               0x304
+#define KPRCB_DR6                               0x308
+#define KPRCB_DR7                               0x20C
+
+//
 // KPCR Offsets
 //
 #define KPCR_EXCEPTION_LIST                     0x0

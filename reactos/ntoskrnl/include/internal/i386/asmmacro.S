@@ -187,6 +187,104 @@ _KiUnexpectedInterrupt&Number:
 .endm
 
 //
+// @name V86_TRAP_FIXUP
+//
+// This macro sets up the debug header in the trap frame.
+//
+// @param None.
+//
+// @remark ebp = PKTRAP_FRAME
+//
+.macro V86_TRAP_FIXUP
+    /* Get V86 segment registers */
+    mov eax, [ebp+KTRAP_FRAME_V86_FS]
+    mov ebx, [ebp+KTRAP_FRAME_V86_GS]
+    mov ecx, [ebp+KTRAP_FRAME_V86_ES]
+    mov edx, [ebp+KTRAP_FRAME_V86_DS]
+
+    /* Restore them into Protected Mode trap frame */
+    mov [ebp+KTRAP_FRAME_FS], ax
+    mov [ebp+KTRAP_FRAME_GS], bx
+    mov [ebp+KTRAP_FRAME_ES], cx
+    mov [ebp+KTRAP_FRAME_DS], dx
+
+    /* Go back to mainline code */
+    jmp 1f
+.endm
+
+//
+// @name DR_TRAP_FIXUP
+//
+// This macro sets up the debug header in the trap frame.
+//
+// @param None.
+//
+// @remark ebp = PKTRAP_FRAME
+//
+.macro DR_TRAP_FIXUP
+    /* Check if this was V86 mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz 2f
+
+    /* Check if it was user mode */
+    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz 3f
+
+2:
+    /* Get DR0, 1, 2 */
+    mov ebx, dr0
+    mov ecx, dr1
+    mov edi, dr2
+
+    /* Save them */
+    mov [ebp+KTRAP_FRAME_DR0], ebx
+    mov [ebp+KTRAP_FRAME_DR1], ecx
+    mov [ebp+KTRAP_FRAME_DR2], edi
+
+    /* Get DR3, 6, 7 */
+    mov ebx, dr0
+    mov ecx, dr1
+    mov edi, dr2
+
+    /* Save them */
+    mov [ebp+KTRAP_FRAME_DR3], ebx
+    mov [ebp+KTRAP_FRAME_DR6], ecx
+    mov [ebp+KTRAP_FRAME_DR7], edi
+
+    /* Clear DR7 */
+    xor ebx, ebx
+    mov dr7, ebx
+
+    /* Get the PRCB */
+    mov edi, PCR[KPCR_PRCB]
+
+    /* Get DR0, 1 */
+    mov ebx, [edi+KPRCB_DR0]
+    mov ecx, [edi+KPRCB_DR1]
+
+    /* Set them */
+    mov dr0, ebx
+    mov dr1, ecx
+
+    /* Get DR2, 3 */
+    mov ebx, [edi+KPRCB_DR2]
+    mov ecx, [edi+KPRCB_DR3]
+
+    /* Set them */
+    mov dr2, ebx
+    mov dr3, ecx
+
+    /* Get DR6, 7 */
+    mov ebx, [edi+KPRCB_DR6]
+    mov ecx, [edi+KPRCB_DR7]
+
+    /* Set them */
+    mov dr6, ebx
+    mov dr7, ecx
+    jz 3f
+.endm
+
+//
 // @name SET_TF_DEBUG_HEADER
 //
 // This macro sets up the debug header in the trap frame.
@@ -315,6 +413,7 @@ _KiUnexpectedInterrupt&Number:
     /* Save FS and set it to PCR */
     push fs
     mov ebx, KGDT_R0_PCR
+    .byte 0x66
     mov fs, bx
 
     /* Save exception list and bogus previous mode */
@@ -336,16 +435,23 @@ _KiUnexpectedInterrupt&Number:
     sub esp, 0x30
 
     /* Load the segment registers */
+    .byte 0x66
     mov ds, ax
+    .byte 0x66
     mov es, ax
+
+    /* Check if this interrupt happened in 16-bit mode */
+    cmp esp, 0x10000
+    jb _Ki16BitStackException
 
     /* Set up frame */
     mov ebp, esp
 
     /* Check if this was from V86 Mode */
-    /* test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK; */
-    /* jnz V86_Label; */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86_&Label
 
+1:
     /* Get current thread */
     mov ecx, [fs:KPCR_CURRENT_THREAD]
     cld
@@ -353,9 +459,10 @@ _KiUnexpectedInterrupt&Number:
     /* Flush DR7 */
     and dword ptr [ebp+KTRAP_FRAME_DR7], 0
 
+3:
     /* Check if the thread was being debugged */
-    /* test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF; */
-    /* jnz Dr_Label; */
+    test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF
+    jnz Dr_&Label
 
     /* Set the Trap Frame Debug Header */
     SET_TF_DEBUG_HEADER
@@ -399,10 +506,11 @@ _KiUnexpectedInterrupt&Number:
     mov dword ptr [esp+KTRAP_FRAME_PREVIOUS_MODE], -1
 
     /* Check if this was from V86 Mode */
-    /* test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK */
-    /* jnz V86_&Label*/
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86_&Label
 
     /* Check if this was kernel mode */
+1:
     cmp dword ptr [esp+KTRAP_FRAME_CS], KGDT_R0_CODE
     jz 1f
 
@@ -463,9 +571,10 @@ _KiUnexpectedInterrupt&Number:
 .endif
 
     /* Save DR registers if needed */
-    //jnz Dr_&Label
+    jnz Dr_&Label
 
     /* Set the trap frame debug header */
+3:
     SET_TF_DEBUG_HEADER
 .endm
 
@@ -484,7 +593,7 @@ _KiUnexpectedInterrupt&Number:
 //
 // @remark None.
 //
-.macro SYSCALL_PROLOG
+.macro SYSCALL_PROLOG Label
     /* Create a trap frame */
     push 0
     push ebp
@@ -495,6 +604,7 @@ _KiUnexpectedInterrupt&Number:
 
     /* Load PCR Selector into fs */
     mov ebx, KGDT_R0_PCR
+    .byte 0x66
     mov fs, bx
 
     /* Get a pointer to the current thread */
@@ -507,19 +617,15 @@ _KiUnexpectedInterrupt&Number:
     mov dword ptr [fs:KPCR_EXCEPTION_LIST], -1
 
     /* Save the old previous mode */
-    push ss:[esi+KTHREAD_PREVIOUS_MODE]
+    push [esi+KTHREAD_PREVIOUS_MODE]
 
     /* Skip the other registers */
     sub esp, 0x48
 
-    /* Hack: it seems that on VMWare someone damages ES/DS on exit. Investigate! */
-    mov [esp+KTRAP_FRAME_DS], ds
-    mov [esp+KTRAP_FRAME_ES], es
-
     /* Set the new previous mode based on the saved CS selector */
     mov ebx, [esp+0x6C]
     and ebx, 1
-    mov byte ptr ss:[esi+KTHREAD_PREVIOUS_MODE], bl
+    mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], bl
 
     /* Go on the Kernel stack frame */
     mov ebp, esp
@@ -539,9 +645,108 @@ _KiUnexpectedInterrupt&Number:
     cld
 
     /* Save DR registers if needed */
-    //jnz Dr_kss_&Label
+    jnz Dr_&Label
 
     /* Set the trap frame debug header */
+3:
+    SET_TF_DEBUG_HEADER
+
+    /* Enable interrupts */
+    sti
+.endm
+
+//
+// @name FASTCALL_PROLOG
+// 
+// TODO
+//
+// @param Label
+//        Unique label identifying the name of the caller function; will be
+//        used to append to the name of the DR helper function, which must
+//        already exist.
+//
+// @remark None.
+//
+.macro FASTCALL_PROLOG Label
+    /* Set FS to PCR */
+    mov ecx, KGDT_R0_PCR
+    mov fs, cx
+    //push KGDT_R0_PCR
+    //pop fs
+
+    /* Set user selector */
+    mov ecx, KGDT_R3_DATA | RPL_MASK
+
+    /* Set DS/ES to User Selector */
+    mov ds, cx
+    mov es, cx
+
+    /* Set the current stack to Kernel Stack */
+    mov ecx, [fs:KPCR_TSS]
+    mov esp, [ecx+KTSS_ESP0]
+
+    /* Set up a fake INT Stack. */
+    push KGDT_R3_DATA + RPL_MASK
+    push edx                            /* Ring 3 SS:ESP */
+    pushf                               /* Ring 3 EFLAGS */
+    push 2                              /* Ring 0 EFLAGS */
+    add edx, 8                          /* Skip user parameter list */
+    popf                                /* Set our EFLAGS */
+    or dword ptr [esp], EFLAGS_INTERRUPT_MASK   /* Re-enable IRQs in EFLAGS, to fake INT */
+    push KGDT_R3_CODE + RPL_MASK
+    push dword ptr ds:KUSER_SHARED_SYSCALL_RET
+
+    /* Setup the Trap Frame stack */
+    push 0
+    push ebp
+    push ebx
+    push esi
+    push edi
+    push KGDT_R3_TEB + RPL_MASK
+
+    /* Save pointer to our PCR */
+    mov ebx, [fs:KPCR_SELF]
+
+    /* Get a pointer to the current thread */
+    mov esi, [ebx+KPCR_CURRENT_THREAD]
+
+    /* Set the exception handler chain terminator */
+    push [ebx+KPCR_EXCEPTION_LIST]
+    mov dword ptr [ebx+KPCR_EXCEPTION_LIST], -1
+
+    /* Use the thread's stack */
+    mov ebp, [esi+KTHREAD_INITIAL_STACK]
+
+    /* Push previous mode */
+    push UserMode
+
+    /* Skip the other registers */
+    sub esp, 0x48
+
+    /* Make space for us on the stack */
+    sub ebp, 0x29C
+
+    /* Write the previous mode */
+    mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], UserMode
+
+    /* Sanity check */
+    cmp ebp, esp
+    jnz BadStack
+
+    /* Flush DR7 */
+    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
+
+    /* Check if the thread was being debugged */
+    test byte ptr [esi+KTHREAD_DEBUG_ACTIVE], 0xFF
+
+    /* Set the thread's trap frame */
+    mov [esi+KTHREAD_TRAP_FRAME], ebp
+
+    /* Save DR registers if needed */
+    jnz Dr_&Label
+
+    /* Set the trap frame debug header */
+3:
     SET_TF_DEBUG_HEADER
 
     /* Enable interrupts */
@@ -965,6 +1170,13 @@ FastExit:
     mov [ebx+4], esi
     mov esi, [esp+KTRAP_FRAME_EIP]
     mov [ebx], esi
+
+.if \RestoreVolatiles
+    /* Restore volatiles */
+    mov eax, [esp+KTRAP_FRAME_EAX]
+    mov edx, [esp+KTRAP_FRAME_EDX]
+    mov ecx, [esp+KTRAP_FRAME_ECX]
+.endif
 
     /* Return */
     add esp, KTRAP_FRAME_EDI
