@@ -879,20 +879,37 @@ Create_DirectDraw (LPGUID pGUID,
 				   LPDIRECTDRAW* pIface, 
 				   REFIID id, 
 				   BOOL ex)
-{   	
-    LPDDRAWI_DIRECTDRAW_INT This;
-	
+{   
+	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)*pIface;
+    
 	DX_WINDBG_trace();
 
 	if (!IsEqualGUID(&IID_IDirectDraw7, id))
     {
 		return DDERR_INVALIDDIRECTDRAWGUID;
     }
-		
-	This = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
-	if (This == NULL) 
+
+	
+	if (This == NULL)
 	{
-		return DDERR_OUTOFMEMORY;
+		/* We do not have any DirectDraw interface alloc */
+	    This = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+	    if (This == NULL) 
+	    {
+		    return DDERR_OUTOFMEMORY;
+	    }
+	} 
+	else
+	{
+		/* We got the DirectDraw interface alloc and we need create the link */
+		LPDDRAWI_DIRECTDRAW_INT  newThis;
+		newThis = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+		if (newThis == NULL) 
+	    {
+		    return DDERR_OUTOFMEMORY;
+	    }
+		newThis->lpLink = This;
+		This = newThis;		
 	}
 
 	This->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
