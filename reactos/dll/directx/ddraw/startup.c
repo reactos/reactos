@@ -668,8 +668,7 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 	DDHAL_GETDRIVERINFODATA DriverInfo;
 
-    DDHALINFO mHALInfo;
-    DDHAL_CALLBACKS mCallbacks;
+    DDHALINFO mHALInfo;    
     DDHAL_DDEXEBUFCALLBACKS mD3dBufferCallbacks;
     D3DHAL_CALLBACKS mD3dCallbacks;
     D3DHAL_GLOBALDRIVERDATA mD3dDriverData;
@@ -684,9 +683,13 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
 	/* HAL Startup process */
     BOOL newmode = FALSE;	
 	    	
-
     RtlZeroMemory(&mHALInfo, sizeof(DDHALINFO));
-    RtlZeroMemory(&mCallbacks, sizeof(DDHAL_CALLBACKS));
+		
+	ddgbl.lpDDCBtmp = DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));
+    if ( ddgbl.lpDDCBtmp == NULL)
+	{
+		return DD_FALSE;
+	}
 
     /* 
       Startup DX HAL step one of three 
@@ -715,9 +718,9 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
 
     if (!DdQueryDirectDrawObject(This->lpLcl->lpGbl,
                                  &mHALInfo,
-                                 &mCallbacks.HALDD,
-                                 &mCallbacks.HALDDSurface,
-                                 &mCallbacks.HALDDPalette, 
+								 &ddgbl.lpDDCBtmp->HALDD,
+                                 &ddgbl.lpDDCBtmp->HALDDSurface,
+                                 &ddgbl.lpDDCBtmp->HALDDPalette, 
                                  &mD3dCallbacks,
                                  &mD3dDriverData,
                                  &mD3dBufferCallbacks,
@@ -771,12 +774,12 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
     if (!DdQueryDirectDrawObject(
                                     This->lpLcl->lpGbl,
                                     &mHALInfo,
-                                    &mCallbacks.HALDD,
-                                    &mCallbacks.HALDDSurface,
-                                    &mCallbacks.HALDDPalette, 
+                                    &ddgbl.lpDDCBtmp->HALDD,
+                                    &ddgbl.lpDDCBtmp->HALDDSurface,
+                                    &ddgbl.lpDDCBtmp->HALDDPalette, 
                                     &mD3dCallbacks,
                                     &mD3dDriverData,
-                                    &mCallbacks.HALDDExeBuf,
+                                    &ddgbl.lpDDCBtmp->HALDDExeBuf,
                                     (DDSURFACEDESC*)mpTextures,
                                     mpFourCC,
                                     mpvmList))
@@ -791,6 +794,7 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
       return DD_FALSE;
     }
 
+		
    /*
       Copy over from HalInfo to DirectDrawGlobal
    */
