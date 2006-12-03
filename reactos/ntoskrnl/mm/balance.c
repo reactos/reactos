@@ -102,7 +102,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
    }
 
    KeAcquireSpinLock(&AllocationListLock, &oldIrql);
-   if (MmGetReferenceCountPage(Page) == 1)
+   if (MmGetReferenceCountPage(Page) > 0)
    {
       (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
       if (IsListEmpty(&AllocationListHead) || MmStats.NrFreePages < MiMinimumAvailablePages)
@@ -139,7 +139,7 @@ MiTrimMemoryConsumer(ULONG Consumer)
             MiMemoryConsumers[Consumer].PagesTarget;
    if (Target < 1)
    {
-      Target = 1;
+       return;
    }
 
    if (MiMemoryConsumers[Consumer].Trim != NULL)

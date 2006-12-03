@@ -314,13 +314,11 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
   ULONG PagesPerSegment;
   ULONG PagesFreed;
   KIRQL oldIrql;
-  LIST_ENTRY FreeList;
+  BOOLEAN Locked;
 
   DPRINT("CcRosTrimCache(Target %d)\n", Target);
 
   *NrFreed = 0;
-
-  InitializeListHead(&FreeList);
 
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&ViewLock);
   current_entry = CacheSegmentLRUListHead.Flink;
@@ -331,13 +329,15 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
       current_entry = current_entry->Flink;
 
       KeAcquireSpinLock(&current->Bcb->BcbLock, &oldIrql);
+      Locked = CcTryToAcquireBrokenMutex(&current->Lock);
+      if (!Locked) continue;
+
       if (current->ReferenceCount == 0)
       {
          RemoveEntryList(&current->BcbSegmentListEntry);
          KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
          RemoveEntryList(&current->CacheSegmentListEntry);
          RemoveEntryList(&current->CacheSegmentLRUListEntry);
-	 InsertHeadList(&FreeList, &current->BcbSegmentListEntry);
          PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
          PagesFreed = min(PagesPerSegment, Target);
          Target -= PagesFreed;
@@ -350,9 +350,10 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 	     ULONG i;
 	     NTSTATUS Status;
 
-         CcRosCacheSegmentIncRefCount(current);
+	     CcRosCacheSegmentIncRefCount(current);
 	     last = current;
 	     current->PageOut = TRUE;
+	     ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&current->Lock);
              KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
 	     ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ViewLock);
 	     for (i = 0; i < current->Bcb->CacheSegmentSize / PAGE_SIZE; i++)
@@ -375,16 +376,9 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 	   }
 	 KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
       }
+      ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&current->Lock);
   }
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ViewLock);
-
-  while (!IsListEmpty(&FreeList))
-  {
-     current_entry = RemoveHeadList(&FreeList);
-     current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
-				 BcbSegmentListEntry);
-     CcRosInternalFreeCacheSegment(current);
-  }
 
   DPRINT("CcRosTrimCache() finished\n");
   return(STATUS_SUCCESS);
@@ -680,7 +674,8 @@ CcRosCreateCacheSegment(PBCB Bcb,
      KEBUGCHECKCC;
   }
 
-  current->BaseAddress = CiCacheSegMappingRegionBase + StartingOffset * PAGE_SIZE;
+  char *mapbase = CiCacheSegMappingRegionBase;
+  current->BaseAddress = mapbase + StartingOffset * PAGE_SIZE;
 
   if (CiCacheSegMappingRegionHint == StartingOffset)
   {
@@ -899,10 +894,12 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
   RegionSize = CacheSeg->Bcb->CacheSegmentSize / PAGE_SIZE;
 
   /* Unmap all the pages. */
+  char *csbase = CacheSeg->BaseAddress, *mapbase = CiCacheSegMappingRegionBase;
+
   for (i = 0; i < RegionSize; i++)
     {
       MmDeleteVirtualMapping(NULL,
-			     CacheSeg->BaseAddress + (i * PAGE_SIZE),
+			     csbase + (i * PAGE_SIZE),
 			     FALSE,
 			     NULL,
 			     &Page);
@@ -911,7 +908,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
 
   KeAcquireSpinLock(&CiCacheSegMappingRegionLock, &oldIrql);
   /* Deallocate all the pages used. */
-  Base = (ULONG)(CacheSeg->BaseAddress - CiCacheSegMappingRegionBase) / PAGE_SIZE;
+  Base = (ULONG)(csbase - mapbase) / PAGE_SIZE;
 
   RtlClearBits(&CiCacheSegMappingRegionAllocMap, Base, RegionSize);
 

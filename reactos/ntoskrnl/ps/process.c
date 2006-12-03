@@ -560,6 +560,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Create or Clone the Handle Table */
     ObpCreateHandleTable(Parent, Process);
 
+    memset(&Process->VadRoot, 0, sizeof(Process->VadRoot));
+
     /* Set Process's Directory Base */
     MmCopyMmInfo(Parent ? Parent : PsInitialSystemProcess,
                  Process,
