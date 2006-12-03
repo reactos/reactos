@@ -6,6 +6,8 @@
 #define CSR_NATIVE     0x0000
 #define CSR_CONSOLE    0x0001
 #define CSR_GUI        0x0002
+#define CONSOLE_INPUT_MODE_VALID  (0x0f)
+#define CONSOLE_OUTPUT_MODE_VALID (0x03)
 
 /*
 typedef union _CSR_API_NUMBER
