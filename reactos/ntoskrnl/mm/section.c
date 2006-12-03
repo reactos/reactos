@@ -1381,6 +1381,10 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
    {
       MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
    }
+   else
+   {
+       MmLockAddressSpace(MmGetKernelAddressSpace());
+   }
 
    MmDeleteVirtualMapping(Process,
                           Address,
@@ -1404,6 +1408,10 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
    if (Process)
    {
       MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+   }
+   else
+   {
+      MmUnlockAddressSpace(MmGetKernelAddressSpace());
    }
    
    if (PageOutContext->Private)
