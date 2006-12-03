@@ -21,8 +21,8 @@ HRESULT WINAPI
 StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 {
 	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
-    DWORD hal_ret;
-    DWORD hel_ret;
+    DWORD hal_ret = DD_FALSE;
+    DWORD hel_ret = DD_FALSE;
     DEVMODE devmode;
     HBITMAP hbmp;
     const UINT bmiSize = sizeof(BITMAPINFOHEADER) + 0x10;
@@ -30,6 +30,7 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
     BITMAPINFO *pbmi;    
     DWORD *pMasks;	
 	INT devicetypes = 0;
+	DWORD dwFlags = 0;
     
     DX_WINDBG_trace();
 	  
@@ -93,6 +94,8 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 		/* cObsolete is undoc in msdn it being use in CreateDCA */
 	    RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
 	    RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
+
+		 dwFlags |= DDRAWI_DISPLAYDRV | DDRAWI_GDIDRV;
 	}
 
 	else if (lpGuid == (LPGUID) DDCREATE_HARDWAREONLY) 
@@ -105,6 +108,8 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 		/* cObsolete is undoc in msdn it being use in CreateDCA */
 	    RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
 	    RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
+
+		dwFlags |= DDRAWI_DISPLAYDRV | DDRAWI_GDIDRV;
 	}
 
 	else if (lpGuid == (LPGUID) DDCREATE_EMULATIONONLY) 
@@ -117,6 +122,8 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 		/* cObsolete is undoc in msdn it being use in CreateDCA */
 	    RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
 	    RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
+
+		dwFlags |= DDRAWI_DISPLAYDRV | DDRAWI_GDIDRV;
 	}
 	else
 	{
@@ -180,27 +187,42 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 	switch (devicetypes)
 	{
 			case 2:
-			  hal_ret = StartDirectDrawHal(iface);
-		      hel_ret = DD_OK;
-			  This->lpLcl->lpDDCB->HELDD.dwFlags = 0;
+			  hal_ret = StartDirectDrawHal(iface);		      
+			  This->lpLcl->lpDDCB->HELDD.dwFlags = 0;			  
 			  break;
 
 			case 3:
-			  hel_ret = StartDirectDrawHel(iface);
-		      hal_ret = DD_OK;
+			  hel_ret = StartDirectDrawHel(iface);		      
 			  This->lpLcl->lpDDCB->HALDD.dwFlags = 0;
 			  break;
 
 			default:
 			  hal_ret = StartDirectDrawHal(iface);
 			  hel_ret = StartDirectDrawHel(iface);
+			   
 	}
 	
-    if ((hal_ret!=DD_OK) &&  (hel_ret!=DD_OK))
-    {
-		DX_STUB_str("DDERR_NODIRECTDRAWSUPPORT");
-        return DDERR_NODIRECTDRAWSUPPORT; 
-    }
+    if (hal_ret!=DD_OK) 
+	{
+		if (hel_ret!=DD_OK)
+		{
+			DX_STUB_str("DDERR_NODIRECTDRAWSUPPORT");
+			return DDERR_NODIRECTDRAWSUPPORT; 
+		}
+		dwFlags |= DDRAWI_NOHARDWARE;
+	}
+
+	if (hel_ret!=DD_OK)
+	{
+		dwFlags |= DDRAWI_NOEMULATION;
+		
+	}
+	else
+	{
+		dwFlags |= DDRAWI_EMULATIONINITIALIZED;
+	}
+	
+	This->lpLcl->lpGbl->dwFlags = dwFlags | DDRAWI_ATTACHEDTODESKTOP;
 
 	This->lpLcl->hDD = This->lpLcl->lpGbl->hDD;
 
