@@ -179,7 +179,7 @@ static ULONG GetULONG(LPSTR String)
 {
     UINT i, Length;
     ULONG Value;
-
+    LPSTR StopString;
     i = 0;
     Length = (UINT)_tcslen(String);
     while ((i < Length) && ((String[i] < '0') || (String[i] > '9'))) i++;
@@ -187,7 +187,7 @@ static ULONG GetULONG(LPSTR String)
         InvalidOption = TRUE;
         return 0;
     }
-    Value = (ULONG)atol(&String[i]);
+    Value = strtoul(&String[i], &StopString, 10);
 
     return Value;
 }
@@ -237,7 +237,7 @@ static BOOL ParseCmdline(int argc, char* argv[])
             case 'n': PingCount = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
             case 'l':
                 DataSize = GetULONG2(&argv[i][2], argv[i + 1], &i);
-                if ((DataSize < 0) || (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET))) {
+                if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET)) {
                     printf("Bad value for option -l, valid range is from 0 to %d.\n",
                         ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET));
                     return FALSE;
