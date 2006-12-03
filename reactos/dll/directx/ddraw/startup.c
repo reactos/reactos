@@ -36,7 +36,9 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 
 	if (This->lpLink == NULL)
 	{
+		
 		RtlZeroMemory(&ddgbl, sizeof(DDRAWI_DIRECTDRAW_GBL));
+		This->lpLcl->lpGbl->dwRefCnt++;
 	    
 		if (ddgbl.lpDDCBtmp == NULL)
 		{
