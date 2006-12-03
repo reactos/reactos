@@ -960,7 +960,12 @@ Create_DirectDraw (LPGUID pGUID,
 	This->lpLcl->dwIMEState = 0;
 	This->lpLcl->dwLocalFlags = DDRAWILCL_DIRECTDRAW7;
 	This->lpLcl->dwLocalRefCnt = 0;
-	This->lpLcl->dwObsolete1 = 0;
+	/* 
+       do not rest this flag to NULL it need be unistae for some reason other wise 
+       somet thing will crash dwObsolete1 seam being use for something this was a 
+       supriese for me
+    */
+    //This->lpLcl->dwObsolete1 = 0;
 	This->lpLcl->dwPreferredMode = 0;
 	This->lpLcl->dwProcessId = 0;
 	This->lpLcl->dwUnused0 = 0;
