@@ -243,8 +243,10 @@ typedef struct _MADDRESS_SPACE
     PMEMORY_AREA MemoryAreaRoot;
     PVOID LowestAddress;
     struct _EPROCESS* Process;
+    HANDLE OwningThread;
     PUSHORT PageTableRefCountTable;
     ULONG PageTableRefCountTableSize;
+    USHORT LockCount;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
 
 typedef struct

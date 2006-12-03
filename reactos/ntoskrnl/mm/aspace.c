@@ -11,12 +11,12 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <internal/debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializeKernelAddressSpace)
 #endif
-
 
 /* GLOBALS ******************************************************************/
 
@@ -37,14 +37,32 @@ MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
       return;
    }
 
+   DPRINT("LockAddressSpace(%x)\n", AddressSpace);
+
+   /* No need to lock the address space if we own it */
+   if (AddressSpace->OwningThread == PsGetCurrentThread())
+   {
+      DPRINT("LockAddressSpace: We own it: %d\n", AddressSpace->LockCount);
+      AddressSpace->LockCount++;
+      return;
+   }
+
    if (AddressSpace->Process)
    {
+       DPRINT("LockAddressSpace: First owner (P): %x\n", PsGetCurrentThread());
        ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&AddressSpace->Process->AddressCreationLock);
+       AddressSpace->OwningThread = PsGetCurrentThread();
+       AddressSpace->LockCount = 1;
    }
    else
    {
+       DPRINT("LockAddressSpace: First owner: %x\n", PsGetCurrentThread());
        ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&KernelAddressSpaceLock);
+       AddressSpace->OwningThread = PsGetCurrentThread();
+       AddressSpace->LockCount = 1;
    }
+
+   DPRINT("LockAddressSpace: Done\n");
 }
 
 VOID
@@ -58,14 +76,28 @@ MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
    {
       return;
    }
+
+   DPRINT("UnlockAddressSpace(%x) -> count %d\n", AddressSpace, AddressSpace->LockCount);
+
    if (AddressSpace->Process)
    {
-        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&AddressSpace->Process->AddressCreationLock);
+        if(--AddressSpace->LockCount == 0)
+	{
+	    DPRINT("UnlockAddressSpace (P): Really unlock (0)\n", AddressSpace, AddressSpace->LockCount);
+	    AddressSpace->OwningThread = 0;
+	    ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&AddressSpace->Process->AddressCreationLock);
+	}
    }
    else
    {
-        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&KernelAddressSpaceLock);
+        if(--AddressSpace->LockCount == 0)
+	{
+	    DPRINT("UnlockAddressSpace: Really unlock (0)\n", AddressSpace, AddressSpace->LockCount);
+	    AddressSpace->OwningThread = 0;
+	    ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&KernelAddressSpaceLock);
+	}
    }
+   DPRINT("UnlockAddressSpace: Done\n");
 }
 
 VOID
@@ -113,6 +145,8 @@ MmInitializeAddressSpace(PEPROCESS Process,
       AddressSpace->LowestAddress = MmSystemRangeStart;
    }
    AddressSpace->Process = Process;
+   AddressSpace->OwningThread = NULL;
+   AddressSpace->LockCount = 0;
    if (Process != NULL)
    {
       ULONG Count;

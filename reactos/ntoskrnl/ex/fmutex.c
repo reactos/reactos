@@ -39,6 +39,7 @@ ExEnterCriticalRegionAndAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
            (Thread == NULL) ||
            (Thread->CombinedApcDisable != 0));
            
+    ASSERT(FastMutex);
     ASSERT((Thread == NULL) || (FastMutex->Owner != Thread));
 
     /* Decrease the count */

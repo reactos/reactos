@@ -271,7 +271,7 @@ void avl_insert (PNODE * root, PNODE n, int (*compare)(PNODE, PNODE))
       return;
    }
 
-   for (p = n; p != y; p = q)
+   for (p = n; p && p != y; p = q)
    {
       q = p->parent;
       dir = q->link[0] != p;
