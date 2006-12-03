@@ -175,9 +175,25 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 	This->lpLcl->lpDDCB = This->lpLcl->lpGbl->lpDDCBtmp;	  
 	This->lpLcl->dwProcessId = GetCurrentProcessId();
     
-    hel_ret = StartDirectDrawHel(iface);
-	hal_ret = StartDirectDrawHal(iface);
+	switch (devicetypes)
+	{
+			case 2:
+			  hal_ret = StartDirectDrawHal(iface);
+		      hel_ret = DD_OK;
+			  This->lpLcl->lpDDCB->HELDD.dwFlags = 0;
+			  break;
 
+			case 3:
+			  hel_ret = StartDirectDrawHel(iface);
+		      hal_ret = DD_OK;
+			  This->lpLcl->lpDDCB->HALDD.dwFlags = 0;
+			  break;
+
+			default:
+			  hal_ret = StartDirectDrawHal(iface);
+			  hel_ret = StartDirectDrawHel(iface);
+	}
+	
     if ((hal_ret!=DD_OK) &&  (hel_ret!=DD_OK))
     {
 		DX_STUB_str("DDERR_NODIRECTDRAWSUPPORT");
@@ -946,8 +962,6 @@ Create_DirectDraw (LPGUID pGUID,
 	   read dwAppHackFlags flag from the system register instead for hard code it
 	 */
 	This->lpLcl->dwAppHackFlags = 0; 
-	/* Do mot inistate this value if we do we can not open the HAL interface */
-	//This->lpLcl->dwErrorMode = 0;
 	This->lpLcl->dwHotTracking = 0;
 	This->lpLcl->dwIMEState = 0;
 	This->lpLcl->dwLocalFlags = DDRAWILCL_DIRECTDRAW7;
@@ -988,6 +1002,7 @@ Create_DirectDraw (LPGUID pGUID,
 	
 	if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID) == DD_OK);
     {
+
         This->lpLcl->hDD = ddgbl.hDD;
 		return DD_OK;
 	}
