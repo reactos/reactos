@@ -697,7 +697,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     //IopQueueIrpToThread(Irp);
 
     /* Call the Driver */
-    Status = IoCallDriver(FileObject->DeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
 
     /* Check if this was synch I/O */
     if (!LocalEvent)

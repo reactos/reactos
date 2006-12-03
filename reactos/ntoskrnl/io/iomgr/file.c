@@ -655,7 +655,6 @@ IopDeleteFile(IN PVOID ObjectBody)
         /* Set up Stack Pointer Data */
         StackPtr = IoGetNextIrpStackLocation(Irp);
         StackPtr->MajorFunction = IRP_MJ_CLOSE;
-        StackPtr->DeviceObject = DeviceObject;
         StackPtr->FileObject = FileObject;
 
         /* Queue the IRP */
@@ -686,6 +685,8 @@ IopDeleteFile(IN PVOID ObjectBody)
             ObDereferenceObject(FileObject->CompletionContext->Port);
             ExFreePool(FileObject->CompletionContext);
         }
+
+        /* FIXME: Dereference device object */
     }
 }
 
@@ -839,7 +840,7 @@ IopSecurityFile(IN PVOID ObjectBody,
     IopUpdateOperationCount(IopOtherTransfer);
 
     /* Call the Driver */
-    Status = IoCallDriver(FileObject->DeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
 
     /* Check if this was async I/O */
     if (LocalEvent)
@@ -1536,6 +1537,8 @@ IoCreateStreamFileObject(IN PFILE_OBJECT FileObject,
                             (PVOID*)&CreatedFileObject,
                             &FileHandle);
     CreatedFileObject->Flags |= FO_HANDLE_CREATED;
+
+    /* FIXME: Reference VPB */
 
     /* Close the extra handle and return file */
     NtClose(FileHandle);
