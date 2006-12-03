@@ -12,7 +12,7 @@
  *              - Implement more entity-header entries
  */
 #include <debug.h>
-#include <iostream.h>
+#include <iostream>
 #include <string.h>
 #include <http.h>
 
@@ -191,9 +191,6 @@ BOOL CHttpParser::ExpectCRLF()
 BOOL CHttpParser::Parse()
 {
     BOOL bStatus;
-
-
-    CHAR ch;
 
     if (RequestLine()) {
         do {

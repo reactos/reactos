@@ -6,8 +6,8 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#include <list.h>
 #include <httpd.h>
+#include <list.h>
 
 // General constants
 #define APP_DESCRIPTION _T("ReactOS HTTP Daemon")
@@ -15,8 +15,8 @@
 // Default configuration
 #define dcfgDescription     _T("Default configuration")
 #define dcfgMainBase        _T("C:\\roshttpd\\")
-#define dcfgHttpBase        "C:\\roshttpd\\HttpBase\\"
-#define dcfgDefaultResource "index.html"
+#define dcfgHttpBase        _T("C:\\roshttpd\\HttpBase\\")
+#define dcfgDefaultResource _T("index.html")
 #define dcfgDefaultPort     80
 
 class CConfig {

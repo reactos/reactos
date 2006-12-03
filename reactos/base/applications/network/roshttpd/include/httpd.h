@@ -6,8 +6,8 @@
 #ifndef __HTTPD_H
 #define __HTTPD_H
 
-#include <thread.h>
 #include <socket.h>
+#include <thread.h>
 #include <http.h>
 
 #define HTTPD_START     WM_USER + 1
