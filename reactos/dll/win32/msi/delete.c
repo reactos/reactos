@@ -73,11 +73,28 @@ static UINT DELETE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IS
     return ERROR_FUNCTION_FAILED;
 }
 
+static UINT DELETE_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT val )
+{
+    MSIDELETEVIEW *dv = (MSIDELETEVIEW*)view;
+
+    TRACE("%p %d %d %04x\n", dv, row, col, val );
+
+    return ERROR_FUNCTION_FAILED;
+}
+
+static UINT DELETE_insert_row( struct tagMSIVIEW *view, MSIRECORD *record )
+{
+    MSIDELETEVIEW *dv = (MSIDELETEVIEW*)view;
+
+    TRACE("%p %p\n", dv, record );
+
+    return ERROR_FUNCTION_FAILED;
+}
+
 static UINT DELETE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSIDELETEVIEW *dv = (MSIDELETEVIEW*)view;
-    UINT r, i, rows = 0, cols = 0;
-    MSIRECORD *empty;
+    UINT r, i, j, rows = 0, cols = 0;
 
     TRACE("%p %p\n", dv, record);
 
@@ -92,17 +109,12 @@ static UINT DELETE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if( r != ERROR_SUCCESS )
         return r;
 
-    TRACE("blanking %d rows\n", rows);
-
-    empty = MSI_CreateRecord( cols );
-    if (!empty)
-        return ERROR_FUNCTION_FAILED;
+    TRACE("blanking %d rows\n", rows); 
 
     /* blank out all the rows that match */
-    for ( i=0; i<rows; i++ )
-        dv->table->ops->set_row( dv->table, i, empty, (1<<cols)-1 );
-
-    msiobj_release( &empty->hdr );
+    for( i=0; i<rows; i++ )
+        for( j=1; j<=cols; j++ )
+            dv->table->ops->set_int( dv->table, i, j, 0 );
 
     return ERROR_SUCCESS;
 }
@@ -183,8 +195,8 @@ static const MSIVIEWOPS delete_ops =
 {
     DELETE_fetch_int,
     DELETE_fetch_stream,
-    NULL,
-    NULL,
+    DELETE_set_int,
+    DELETE_insert_row,
     DELETE_execute,
     DELETE_close,
     DELETE_get_dimensions,

@@ -9,14 +9,14 @@
     <file>cmos.c</file>
     <file>dma.c</file>
 	<file>drive.c</file>
+	<file>halinit.c</file>
 	<file>misc.c</file>
 	<file>pci.c</file>
 	<file>portio.c</file>
-    <file>profil.c</file>
 	<file>reboot.c</file>
+	<file>sysbus.c</file>
 	<file>sysinfo.c</file>
 	<file>timer.c</file>
-	<file>systimer.S</file>
 	<pch>../include/hal.h</pch>
 </module>
 <module name="hal_generic_up" type="objectlibrary">
@@ -26,9 +26,9 @@
 	<define name="_NTHAL_" />
 	<define name="__USE_W32API" />
 	<file>irql.c</file>
-    <file>halinit.c</file>
 	<file>processor.c</file>
 	<file>spinlock.c</file>
+	<file>systimer.S</file>
 </module>
 <module name="hal_generic_pc" type="objectlibrary">
 	<include base="hal_generic_pc">../include</include>

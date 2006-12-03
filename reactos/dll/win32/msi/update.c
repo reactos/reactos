@@ -58,11 +58,13 @@ static UINT UPDATE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT 
 static UINT UPDATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSIUPDATEVIEW *uv = (MSIUPDATEVIEW*)view;
-    UINT i, r, col_count = 0, row_count = 0;
-    MSIRECORD *values = NULL;
+    UINT n, type, val, r, row, col_count = 0, row_count = 0;
     MSIVIEW *wv;
 
     TRACE("%p %p\n", uv, record );
+
+    if( !record )
+        return ERROR_FUNCTION_FAILED;
 
     wv = uv->wv;
     if( !wv )
@@ -75,22 +77,34 @@ static UINT UPDATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 
     r = wv->ops->get_dimensions( wv, &row_count, &col_count );
     if( r )
-        return r;
+        goto err;
 
-    values = msi_query_merge_record( col_count, uv->vals, record );
-    if (!values)
-        return ERROR_FUNCTION_FAILED;
-
-    for ( i=0; i<row_count; i++ )
+    for( row = 0; row < row_count; row++ )
     {
-        r = wv->ops->set_row( wv, i, values, (1 << col_count) - 1 );
-        if (r != ERROR_SUCCESS)
-            break;
+        for( n = 1; n <= col_count; n++ )
+        {
+            r = wv->ops->get_column_info( wv, n, NULL, &type );
+            if( r )
+                break;
+
+            if( type & MSITYPE_STRING )
+            {
+                const WCHAR *str = MSI_RecordGetString( record, n );
+                val = msi_addstringW( uv->db->strings, 0, str, -1, 1 );
+            }
+            else
+            {
+                val = MSI_RecordGetInteger( record, n );
+                val |= 0x8000;
+            }
+            r = wv->ops->set_int( wv, row, n, val );
+            if( r )
+                break;
+        }
     }
 
-    msiobj_release( &values->hdr );
-
-    return r;
+err:
+    return ERROR_SUCCESS;
 }
 
 
@@ -199,19 +213,14 @@ UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
     if( r != ERROR_SUCCESS )
         return r;
 
-    if (expr)
+    /* add conditions first */
+    r = WHERE_CreateView( db, &wv, tv, expr );
+    if( r != ERROR_SUCCESS )
     {
-        /* add conditions first */
-        r = WHERE_CreateView( db, &wv, tv, expr );
-        if( r != ERROR_SUCCESS )
-        {
-            tv->ops->delete( tv );
-            return r;
-        }
+        tv->ops->delete( tv );
+        return r;
     }
-    else
-       wv = tv;
-
+    
     /* then select the columns we want */
     r = SELECT_CreateView( db, &sv, wv, columns );
     if( r != ERROR_SUCCESS )

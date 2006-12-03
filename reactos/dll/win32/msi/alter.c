@@ -58,6 +58,24 @@ static UINT ALTER_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
     return ERROR_FUNCTION_FAILED;
 }
 
+static UINT ALTER_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT val )
+{
+    MSIALTERVIEW *av = (MSIALTERVIEW*)view;
+
+    TRACE("%p %d %d %04x\n", av, row, col, val );
+
+    return ERROR_FUNCTION_FAILED;
+}
+
+static UINT ALTER_insert_row( struct tagMSIVIEW *view, MSIRECORD *record )
+{
+    MSIALTERVIEW *av = (MSIALTERVIEW*)view;
+
+    TRACE("%p %p\n", av, record );
+
+    return ERROR_FUNCTION_FAILED;
+}
+
 static UINT ALTER_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSIALTERVIEW *av = (MSIALTERVIEW*)view;
@@ -128,8 +146,8 @@ static const MSIVIEWOPS alter_ops =
 {
     ALTER_fetch_int,
     ALTER_fetch_stream,
-    NULL,
-    NULL,
+    ALTER_set_int,
+    ALTER_insert_row,
     ALTER_execute,
     ALTER_close,
     ALTER_get_dimensions,
@@ -141,9 +159,9 @@ static const MSIVIEWOPS alter_ops =
 
 UINT ALTER_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR name, int hold )
 {
-    MSIALTERVIEW *av;
+    MSIALTERVIEW *av = NULL;
 
-    TRACE("%p\n", view );
+    TRACE("%p\n", av );
 
     av = msi_alloc_zero( sizeof *av );
     if( !av )

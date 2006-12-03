@@ -693,7 +693,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             if (PsGetCurrentProcess()->DebugPort)
             {
                 /* FIXME : TODO */
-                //KEBUGCHECK(0);
+                ASSERT(FALSE);
             }
             else if (KiDebugRoutine(TrapFrame,
                                     ExceptionFrame,

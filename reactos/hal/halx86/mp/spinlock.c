@@ -179,17 +179,6 @@ KeAcquireQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
 /*
  * @unimplemented
  */
-KIRQL
-FASTCALL
-KeAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 VOID
 FASTCALL
 KeReleaseQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle,

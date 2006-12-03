@@ -562,7 +562,7 @@ HRESULT Hel_DDrawSurface_UpdateOverlayDisplay (LPDIRECTDRAWSURFACE7 iface, DWORD
 /* HEL CALLBACK */
 DWORD CALLBACK  HelDdDestroyDriver(LPDDHAL_DESTROYDRIVERDATA lpDestroyDriver);
 DWORD CALLBACK  HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA lpCreateSurface);
-DWORD CALLBACK  HelDdSetColorKey(LPDDHAL_DRVSETCOLORKEYDATA lpSetColorKey);
+DWORD CALLBACK  HelDdSetColorKey(LPDDHAL_SETCOLORKEYDATA lpSetColorKey);
 DWORD CALLBACK  HelDdSetMode(LPDDHAL_SETMODEDATA SetMode);
 DWORD CALLBACK  HelDdWaitForVerticalBlank(LPDDHAL_WAITFORVERTICALBLANKDATA lpWaitForVerticalBlank);
 DWORD CALLBACK  HelDdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA lpCanCreateSurface);
@@ -571,23 +571,6 @@ DWORD CALLBACK  HelDdGetScanLine(LPDDHAL_GETSCANLINEDATA lpGetScanLine);
 DWORD CALLBACK  HelDdSetExclusiveMode(LPDDHAL_SETEXCLUSIVEMODEDATA lpSetExclusiveMode);
 DWORD CALLBACK  HelDdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA lpFlipToGDISurface);
 
-DWORD CALLBACK HelDdSurfAddAttachedSurface(LPDDHAL_ADDATTACHEDSURFACEDATA lpDestroySurface);
-DWORD CALLBACK HelDdSurfBlt(LPDDHAL_BLTDATA lpBltData);
-DWORD CALLBACK HelDdSurfDestroySurface(LPDDHAL_DESTROYSURFACEDATA lpDestroySurfaceData);
-DWORD CALLBACK HelDdSurfFlip(LPDDHAL_FLIPDATA lpFlipData);
-DWORD CALLBACK HelDdSurfGetBltStatus(LPDDHAL_GETBLTSTATUSDATA lpGetBltStatusData);
-DWORD CALLBACK HelDdSurfGetFlipStatus(LPDDHAL_GETFLIPSTATUSDATA lpGetFlipStatusData);
-DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData);
-DWORD CALLBACK HelDdSurfreserved4(DWORD *lpPtr);
-DWORD CALLBACK HelDdSurfSetClipList(LPDDHAL_SETCLIPLISTDATA lpSetClipListData);
-DWORD CALLBACK HelDdSurfSetColorKey(LPDDHAL_SETCOLORKEYDATA lpSetColorKeyData);
-DWORD CALLBACK HelDdSurfSetOverlayPosition(LPDDHAL_SETOVERLAYPOSITIONDATA lpSetOverlayPositionData);
-DWORD CALLBACK HelDdSurfSetPalette(LPDDHAL_SETPALETTEDATA lpSetPaletteData);
-DWORD CALLBACK HelDdSurfUnlock(LPDDHAL_UNLOCKDATA lpUnLockData);
-DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLayData);
-
-
-
 
 /* Setting for HEL should be move to ros special reg key ? */
 
@@ -595,45 +578,6 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 #define HEL_GRAPHIC_MEMORY_MAX 67108864
 
 /*********** Macros ***********/
-
-/* 
-   use this macro to close 
-   down the debuger text complete 
-   no debuging at all, it will
-   crash ms debuger in VS 
-*/
-
-//#define DX_WINDBG_trace()  
-//#define DX_STUB
-//#define DX_STUB_DD_OK return DD_OK; 	
-//#define DX_STUB_str(x) 
-//#define DX_WINDBG_trace_res
-
-
-/* 
-   Use this macro if you want deboug in visual studio or 
-   if you have a program to look at the _INT struct from
-   ReactOS ddraw.dll or ms ddraw.dll, so you can see what
-   value ms are being setup.
-
-   This macro will create allot warings and can not be help when you compile
-*/
-
-
-//#define DX_WINDBG_trace()  
-//#define DX_STUB
-//#define DX_STUB_DD_OK return DD_OK; 	
-//#define DX_STUB_str(x) printf("%s",x);
-//#define DX_WINDBG_trace_res
-
-/* 
-   use this if want doing a trace from a program
-   like a game and ReactOS ddraw.dll in windows
-   so you can figout what going wrong and what 
-   api are being call or if it hel or is it hal
-
-   This marco does not create warings when you compile
-*/
 
 #define DX_STUB \
 { \
@@ -669,6 +613,10 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 		OutputDebugStringA(buffer); \
         }
 
+
+//#define DX_WINDBG_trace()  
+
+
 #define DX_WINDBG_trace() \
 	static BOOL firstcallx = TRUE; \
 	if (firstcallx) \
@@ -678,6 +626,7 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 		OutputDebugStringA(buffer); \
 		firstcallx = TRUE; \
 	}
+
 
 #define DX_WINDBG_trace_res(width,height,bpp) \
 	static BOOL firstcallxx = TRUE; \

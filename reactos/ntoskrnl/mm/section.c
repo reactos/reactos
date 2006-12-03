@@ -109,40 +109,10 @@ MmGetFileObjectForSection(IN PROS_SECTION_OBJECT Section)
 NTSTATUS
 NTAPI
 MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
-                        OUT POBJECT_NAME_INFORMATION *ModuleName)
+                        OUT PUNICODE_STRING ModuleName)
 {
-    POBJECT_NAME_INFORMATION ObjectNameInfo;
-    NTSTATUS Status;
-    ULONG ReturnLength;
-
-    /* Make sure it's an image section */
-    *ModuleName = NULL;
-    if (!(Section->AllocationAttributes & SEC_IMAGE))
-    {
-        /* It's not, fail */
-        return STATUS_SECTION_NOT_IMAGE;
-    }
-
-    /* Allocate memory for our structure */
-    ObjectNameInfo = ExAllocatePoolWithTag(PagedPool,
-                                           1024,
-                                           TAG('M', 'm', ' ', ' '));
-    if (!ObjectNameInfo) return STATUS_NO_MEMORY;
-
-    /* Query the name */
-    Status = ObQueryNameString(Section->FileObject,
-                               ObjectNameInfo,
-                               1024,
-                               &ReturnLength);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failed, free memory */
-        ExFreePool(ObjectNameInfo);
-        return Status;
-    }
-
-    /* Success */
-    *ModuleName = ObjectNameInfo;
+    /* FIXME: TODO. ObQueryNameString on the FileObject */
+    RtlCreateUnicodeString(ModuleName, L"C:\\ReactOS\\system32\\ntdll.dll");
     return STATUS_SUCCESS;
 }
 
@@ -3470,6 +3440,7 @@ NtCreateSection (OUT PHANDLE SectionHandle,
                             AllocationAttributes,
                             FileHandle,
                             NULL);
+
    if (NT_SUCCESS(Status))
    {
       Status = ObInsertObject ((PVOID)SectionObject,
@@ -3771,18 +3742,6 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
                                AllocationType,
                                Protect);
 
-   /* Check if this is an image for the current process */
-   if ((Section->AllocationAttributes & SEC_IMAGE) &&
-       (Process == PsGetCurrentProcess()) &&
-       (Status != STATUS_IMAGE_NOT_AT_BASE))
-   {
-        /* Notify the debugger */
-       DbgkMapViewOfSection(Section,
-                            SafeBaseAddress,
-                            SafeSectionOffset.LowPart,
-                            SafeViewSize);
-   }
-
    ObDereferenceObject(Section);
    ObDereferenceObject(Process);
 
@@ -3986,7 +3945,6 @@ MmUnmapViewOfSection(PEPROCESS Process,
    PROS_SECTION_OBJECT Section;
    PMM_PAGEOP PageOp;
    ULONG_PTR Offset;
-    PVOID ImageBaseAddress = 0;
 
    DPRINT("Opening memory area Process %x BaseAddress %x\n",
           Process, BaseAddress);
@@ -4049,6 +4007,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
       ULONG NrSegments;
       PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
       PMM_SECTION_SEGMENT SectionSegments;
+      PVOID ImageBaseAddress = 0;
       PMM_SECTION_SEGMENT Segment;
 
       Segment = MemoryArea->Data.SectionData.Segment;
@@ -4089,10 +4048,6 @@ MmUnmapViewOfSection(PEPROCESS Process,
    {
       Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
    }
-
-   /* Notify debugger */
-   if (ImageBaseAddress) DbgkUnMapViewOfSection(ImageBaseAddress);
-
    MmUnlockAddressSpace(AddressSpace);
    return(STATUS_SUCCESS);
 }

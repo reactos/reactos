@@ -1,49 +1,19 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/misc.c
+ * FILE:            ntoskrnl/hal/halx86/misc.c
  * PURPOSE:         Miscellanous Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *****************************************************************/
 
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
 
-/* PRIVATE FUNCTIONS *********************************************************/
-
-VOID
-NTAPI
-HalpCheckPowerButton(VOID)
-{
-    /* Nothing to do on non-ACPI */
-    return;
-}
-
-PVOID
-NTAPI
-HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
-                        IN ULONG NumberPage)
-{
-    /* Use kernel memory manager I/O map facilities */
-    return MmMapIoSpace(PhysicalAddress,
-                        NumberPage << PAGE_SHIFT,
-                        MmNonCached);
-}
-
-VOID
-NTAPI
-HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
-                        IN ULONG NumberPages)
-{
-    /* Use kernel memory manager I/O map facilities */
-    return MmUnmapIoSpace(VirtualAddress, NumberPages << PAGE_SHIFT);
-}
-
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ****************************************************************/
 
 /*
  * @implemented

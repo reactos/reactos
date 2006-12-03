@@ -71,13 +71,6 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData)
   return FALSE;
 }
 
-PLDC GdiGetLDC(HDC hDC)
-{
-    PDC_ATTR Dc_Attr;
-    if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr))
-      return NULL;
-    return Dc_Attr->pvLDC;  
-}
 
 /*
  * @implemented

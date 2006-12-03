@@ -12,6 +12,8 @@
 
 #include "rosdraw.h"
 
+#undef DirectDrawCreate
+
 CRITICAL_SECTION ddcs;
 
 // This function is exported by the dll
@@ -33,14 +35,9 @@ WINAPI
 DirectDrawCreate (LPGUID lpGUID, 
 				  LPDIRECTDRAW* lplpDD, 
 				  LPUNKNOWN pUnkOuter) 
-{   	
-	/* 
-	   remove this when UML digram are in place 
-	   this api is finish and is working as it should
-	*/
+{   
 	DX_WINDBG_trace();
 
-	/* check the pointer if it vaild to read from */
 	if (IsBadWritePtr( lplpDD, sizeof( LPVOID )) )
 	{
 		return DDERR_INVALIDPARAMS;
@@ -49,12 +46,11 @@ DirectDrawCreate (LPGUID lpGUID,
 	/* check see if pUnkOuter is null or not */
 	if (pUnkOuter)
 	{
-		/* we are using same error code as MS*/
-		return  CLASS_E_NOAGGREGATION; 
+		/* we do not use same error code as MS, ms use CLASS_E_NOAGGREGATION  */
+		return CLASS_E_NOAGGREGATION; 
 	}
 	
-	/* Create our DirectDraw interface */
-	return Create_DirectDraw (lpGUID, lplpDD, &IID_IDirectDraw7, FALSE);
+	return Create_DirectDraw (lpGUID, lplpDD, &IID_IDirectDraw, FALSE);
 }
 
 /*
@@ -69,13 +65,8 @@ DirectDrawCreateEx(LPGUID lpGUID,
 				   REFIID id, 
 				   LPUNKNOWN pUnkOuter)
 {   
-	/* 
-	   remove this when UML digram are in place 
-	   this api is finish and is working as it should
-	*/
 	DX_WINDBG_trace();
 
-	/* check the pointer if it vaild to read from */
 	if (IsBadWritePtr( lplpDD, sizeof( LPVOID )) )
 	{
 		return DDERR_INVALIDPARAMS;
@@ -84,7 +75,7 @@ DirectDrawCreateEx(LPGUID lpGUID,
 	/* check see if pUnkOuter is null or not */
 	if (pUnkOuter)
 	{
-		/* we are using same error code as MS*/
+		/* we do not use same error code as MS, ms use CLASS_E_NOAGGREGATION */
 		return CLASS_E_NOAGGREGATION; 
 	}
 	
@@ -94,7 +85,6 @@ DirectDrawCreateEx(LPGUID lpGUID,
 	  return DDERR_INVALIDPARAMS;
 	}
 
-	/* Create our DirectDraw interface */
     return Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, id, TRUE);
 }
 

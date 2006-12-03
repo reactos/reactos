@@ -367,6 +367,10 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress -
                                 KSEG0_BASE + 0x200000;
 
+    /* Setup the IDT */
+    KeInitExceptions(); // ONCE HACK BELOW IS GONE, MOVE TO KISYSTEMSTARTUP!
+    KeInitInterrupts(); // ROS HACK DEPRECATED SOON BY NEW HAL
+
     /* Set up the VDM Data */
     NtEarlyInitVdm();
 

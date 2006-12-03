@@ -13,6 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
+/* FIXME: Is there a way to create real aliasses with gcc? [CSH] */
+#define ALIAS(Name, Target) typeof(Target) Name = Target
+
 /* GLOBALS *******************************************************************/
 
 #define ConioInitRect(Rect, Top, Left, Bottom, Right) \
@@ -107,7 +110,7 @@ CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
   Buffer->Header.ReferenceCount = 0;
   Buffer->ShowX = 0;
   Buffer->ShowY = 0;
-  Buffer->Buffer = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, Buffer->MaxX * Buffer->MaxY * 2);
+  Buffer->Buffer = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, Buffer->MaxX * Buffer->MaxY * sizeof(WCHAR));
   if (NULL == Buffer->Buffer)
     {
       return STATUS_INSUFFICIENT_RESOURCES;
@@ -718,7 +721,7 @@ ConioPhysicalToLogical(PCSRSS_SCREEN_BUFFER Buff,
      }
 }
 
-BOOLEAN __inline ConioIsEqualRect(
+inline BOOLEAN ConioIsEqualRect(
   RECT *Rect1,
   RECT *Rect2)
 {
@@ -726,7 +729,7 @@ BOOLEAN __inline ConioIsEqualRect(
     (Rect1->top == Rect2->top) && (Rect1->bottom == Rect2->bottom));
 }
 
-BOOLEAN __inline ConioGetIntersection(
+inline BOOLEAN ConioGetIntersection(
   RECT *Intersection,
   RECT *Rect1,
   RECT *Rect2)
@@ -752,7 +755,7 @@ BOOLEAN __inline ConioGetIntersection(
   return TRUE;
 }
 
-BOOLEAN __inline ConioGetUnion(
+inline BOOLEAN ConioGetUnion(
   RECT *Union,
   RECT *Rect1,
   RECT *Rect2)
@@ -785,7 +788,7 @@ BOOLEAN __inline ConioGetUnion(
   return TRUE;
 }
 
-BOOLEAN __inline ConioSubtractRect(
+inline BOOLEAN ConioSubtractRect(
   RECT *Subtraction,
   RECT *Rect1,
   RECT *Rect2)
@@ -1516,7 +1519,7 @@ CSR_API(CsrSetCursor)
   return Request->Status = STATUS_SUCCESS;
 }
 
-static VOID FASTCALL
+static FASTCALL VOID
 ConioComputeUpdateRect(PCSRSS_SCREEN_BUFFER Buff, RECT *UpdateRect, COORD *Start, UINT Length)
 {
   if (Buff->MaxX <= Start->X + Length)
@@ -2524,17 +2527,13 @@ CSR_API(CsrScrollConsoleScreenBuffer)
   RECT ClipRectangle;
   NTSTATUS Status;
   BOOLEAN DoFill;
-  HANDLE ConsoleHandle;
-  BOOLEAN UseClipRectangle;
-  COORD DestinationOrigin;
-  CHAR_INFO Fill;
 
   DPRINT("CsrScrollConsoleScreenBuffer\n");
 
-  ConsoleHandle = Request->Data.ScrollConsoleScreenBufferRequest.ConsoleHandle;
-  UseClipRectangle = Request->Data.ScrollConsoleScreenBufferRequest.UseClipRectangle;
-  DestinationOrigin = Request->Data.ScrollConsoleScreenBufferRequest.DestinationOrigin;
-  Fill = Request->Data.ScrollConsoleScreenBufferRequest.Fill;
+  ALIAS(ConsoleHandle,Request->Data.ScrollConsoleScreenBufferRequest.ConsoleHandle);
+  ALIAS(UseClipRectangle,Request->Data.ScrollConsoleScreenBufferRequest.UseClipRectangle);
+  ALIAS(DestinationOrigin,Request->Data.ScrollConsoleScreenBufferRequest.DestinationOrigin);
+  ALIAS(Fill,Request->Data.ScrollConsoleScreenBufferRequest.Fill);
 
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))

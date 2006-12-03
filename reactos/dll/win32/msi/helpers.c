@@ -385,17 +385,6 @@ UINT schedule_action(MSIPACKAGE *package, UINT script, LPCWSTR action)
    return ERROR_SUCCESS;
 }
 
-void msi_free_action_script(MSIPACKAGE *package, UINT script)
-{
-    int i;
-    for (i = 0; i < package->script->ActionCount[script]; i++)
-        msi_free(package->script->Actions[script][i]);
-
-    msi_free(package->script->Actions[script]);
-    package->script->Actions[script] = NULL;
-    package->script->ActionCount[script] = 0;
-}
-
 static void remove_tracked_tempfiles(MSIPACKAGE* package)
 {
     struct list *item, *cursor;
@@ -583,7 +572,13 @@ void ACTION_free_package_structures( MSIPACKAGE* package)
     if (package->script)
     {
         for (i = 0; i < TOTAL_SCRIPTS; i++)
-            msi_free_action_script(package, i);
+        {
+            int j;
+            for (j = 0; j < package->script->ActionCount[i]; j++)
+                msi_free(package->script->Actions[i][j]);
+        
+            msi_free(package->script->Actions[i]);
+        }
 
         for (i = 0; i < package->script->UniqueActionsCount; i++)
             msi_free(package->script->UniqueActions[i]);
@@ -592,7 +587,6 @@ void ACTION_free_package_structures( MSIPACKAGE* package)
         msi_free(package->script);
     }
 
-    msi_free(package->BaseURL);
     msi_free(package->PackagePath);
     msi_free(package->ProductCode);
     msi_free(package->ActionFormat);
@@ -872,13 +866,17 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
             continue;
  
         if (newstate == INSTALLSTATE_LOCAL)
-            msi_component_set_state( component, INSTALLSTATE_LOCAL );
+        {
+            component->ActionRequest = INSTALLSTATE_LOCAL;
+            component->Action = INSTALLSTATE_LOCAL;
+        }
         else 
         {
             ComponentList *clist;
             MSIFEATURE *f;
 
-            msi_component_set_state( component, newstate );
+            component->ActionRequest = newstate;
+            component->Action = newstate;
 
             /*if any other feature wants is local we need to set it local*/
             LIST_FOR_EACH_ENTRY( f, &package->features, MSIFEATURE, entry )
@@ -900,14 +898,26 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
                         if (component->Attributes & msidbComponentAttributesOptional)
                         {
                             if (f->Attributes & msidbFeatureAttributesFavorSource)
-                                msi_component_set_state( component, INSTALLSTATE_SOURCE );
+                            {
+                                component->Action = INSTALLSTATE_SOURCE;
+                                component->ActionRequest = INSTALLSTATE_SOURCE;
+                            }
                             else
-                                msi_component_set_state( component, INSTALLSTATE_LOCAL );
+                            {
+                                component->Action = INSTALLSTATE_LOCAL;
+                                component->ActionRequest = INSTALLSTATE_LOCAL;
+                            }
                         }
                         else if (component->Attributes & msidbComponentAttributesSourceOnly)
-                            msi_component_set_state( component, INSTALLSTATE_SOURCE );
+                        {
+                            component->Action = INSTALLSTATE_SOURCE;
+                            component->ActionRequest = INSTALLSTATE_SOURCE;
+                        }
                         else
-                            msi_component_set_state( component, INSTALLSTATE_LOCAL );
+                        {
+                            component->Action = INSTALLSTATE_LOCAL;
+                            component->ActionRequest = INSTALLSTATE_LOCAL;
+                        } 
                     }
                 }
             }

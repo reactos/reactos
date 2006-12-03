@@ -42,38 +42,6 @@ DriverEntry(
   return STATUS_SUCCESS;
 }
 
-/*
-* @unimplemented
-*/
-VOID
-NTAPI
-HalStopProfileInterrupt(IN KPROFILE_SOURCE ProfileSource)
-{
-    KEBUGCHECK(0);
-    return;
-}
-
-/*
-* @unimplemented
-*/
-VOID
-NTAPI
-HalStartProfileInterrupt(IN KPROFILE_SOURCE ProfileSource)
-{
-    KEBUGCHECK(0);
-    return;
-}
-
-/*
-* @unimplemented
-*/
-ULONG_PTR
-NTAPI
-HalSetProfileInterval(IN ULONG_PTR Interval)
-{
-    KEBUGCHECK(0);
-    return Interval;
-}
 
 VOID
 FASTCALL
@@ -205,8 +173,7 @@ HalBeginSystemInterrupt (KIRQL Irql,
 VOID
 NTAPI
 HalCalibratePerformanceCounter(
-  volatile LONG *Count,
-  ULONGLONG NewCount)
+  ULONG Count)
 {
   UNIMPLEMENTED;
 }
@@ -1191,14 +1158,6 @@ KeAcquireQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
   UNIMPLEMENTED;
   return (KIRQL)0;
-}
-
-KIRQL
-FASTCALL
-KeAcquireQueuedSpinLockRaiseToSynch(IN PKLOCK_QUEUE_HANDLE LockHandle)
-{
-    UNIMPLEMENTED;
-    return (KIRQL)0;
 }
 
 VOID

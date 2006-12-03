@@ -82,46 +82,21 @@ static UINT SELECT_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IS
     return sv->table->ops->fetch_stream( sv->table, row, col, stm );
 }
 
-static UINT SELECT_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
+static UINT SELECT_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT val )
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
-    UINT i, expanded_mask = 0, r = ERROR_SUCCESS, col_count = 0;
-    MSIRECORD *expanded;
 
-    TRACE("%p %d %p %08x\n", sv, row, rec, mask );
+    TRACE("%p %d %d %04x\n", sv, row, col, val );
 
-    if ( !sv->table )
+    if( !sv->table )
          return ERROR_FUNCTION_FAILED;
 
-    /* test if any of the mask bits are invalid */
-    if ( mask >= (1<<sv->num_cols) )
-        return ERROR_INVALID_PARAMETER;
+    if( (col==0) || (col>sv->num_cols) )
+         return ERROR_FUNCTION_FAILED;
 
-    /* find the number of columns in the table below */
-    r = sv->table->ops->get_dimensions( sv->table, NULL, &col_count );
-    if( r )
-        return r;
+    col = sv->cols[ col - 1 ];
 
-    /* expand the record to the right size for the underlying table */
-    expanded = MSI_CreateRecord( col_count );
-    if ( !expanded )
-        return ERROR_FUNCTION_FAILED;
-
-    /* move the right fields across */
-    for ( i=0; i<sv->num_cols; i++ )
-    {
-        r = MSI_RecordCopyField( rec, i+1, expanded, sv->cols[ i ] );
-        if (r != ERROR_SUCCESS)
-            break;
-        expanded_mask |= (1<<(sv->cols[i]-1));
-    }
-
-    /* set the row in the underlying table */
-    if (r == ERROR_SUCCESS)
-        r = sv->table->ops->set_row( sv->table, row, expanded, expanded_mask );
-
-    msiobj_release( &expanded->hdr );
-    return r;
+    return sv->table->ops->set_int( sv->table, row, col, val );
 }
 
 static UINT SELECT_insert_row( struct tagMSIVIEW *view, MSIRECORD *record )
@@ -265,7 +240,7 @@ static const MSIVIEWOPS select_ops =
 {
     SELECT_fetch_int,
     SELECT_fetch_stream,
-    SELECT_set_row,
+    SELECT_set_int,
     SELECT_insert_row,
     SELECT_execute,
     SELECT_close,

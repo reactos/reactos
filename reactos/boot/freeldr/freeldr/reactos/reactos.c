@@ -156,7 +156,7 @@ FrLdrLoadImage(IN PCHAR szFileName,
     FrLdrMapImage(FilePointer, szShortName);
 
     /* Update Processbar and return success */
-    if (!FrLdrBootType) UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);
+    UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);
     return TRUE;
 }
 

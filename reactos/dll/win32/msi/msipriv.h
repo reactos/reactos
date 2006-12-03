@@ -109,7 +109,7 @@ typedef struct tagMSIRECORD
     MSIFIELD fields[1]; /* nb. array size is count+1 */
 } MSIRECORD;
 
-typedef const struct tagMSICOLUMNHASHENTRY *MSIITERHANDLE;
+typedef void *MSIITERHANDLE;
 
 typedef struct tagMSIVIEWOPS
 {
@@ -133,11 +133,11 @@ typedef struct tagMSIVIEWOPS
     UINT (*fetch_stream)( struct tagMSIVIEW *, UINT row, UINT col, IStream **stm );
 
     /*
-     * set_row - sets values in a row as specified by mask
+     * get_int - sets one integer at {row,col} in the table
      *
      *  Similar semantics to fetch_int
      */
-    UINT (*set_row)( struct tagMSIVIEW *, UINT row, MSIRECORD *rec, UINT mask );
+    UINT (*set_int)( struct tagMSIVIEW *, UINT row, UINT col, UINT val );
 
     /*
      * Inserts a new row into the database from the records contents
@@ -228,7 +228,6 @@ typedef struct tagMSIPACKAGE
 
     struct list RunningActions;
 
-    LPWSTR BaseURL;
     LPWSTR PackagePath;
     LPWSTR ProductCode;
 
@@ -257,7 +256,7 @@ typedef struct tagMSIPREVIEW
 typedef struct tagMSISUMMARYINFO
 {
     MSIOBJECTHDR hdr;
-    IStorage *storage;
+    MSIDATABASE *db;
     DWORD update_count;
     PROPVARIANT property[MSI_MAX_PROPS];
 } MSISUMMARYINFO;
@@ -564,7 +563,6 @@ extern UINT read_raw_stream_data( MSIDATABASE*, LPCWSTR stname,
 extern UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg );
 extern UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db,
                  LPCWSTR szTransformFile, int iErrorCond );
-extern void append_storage_to_db( MSIDATABASE *db, IStorage *stg );
 
 /* action internals */
 extern UINT MSI_InstallPackage( MSIPACKAGE *, LPCWSTR, LPCWSTR );
@@ -621,7 +619,7 @@ extern UINT VIEW_find_column( MSIVIEW *, LPCWSTR, UINT * );
 extern UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel );
 
 /* package internals */
-extern MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *, LPWSTR );
+extern MSIPACKAGE *MSI_CreatePackage( MSIDATABASE * );
 extern UINT MSI_OpenPackageW( LPCWSTR szPackage, MSIPACKAGE ** );
 extern UINT MSI_SetTargetPathW( MSIPACKAGE *, LPCWSTR, LPCWSTR );
 extern UINT MSI_SetPropertyW( MSIPACKAGE *, LPCWSTR, LPCWSTR );
@@ -682,16 +680,14 @@ extern UINT msi_dialog_reset( msi_dialog *dialog );
 extern UINT msi_dialog_directorylist_up( msi_dialog *dialog );
 extern msi_dialog *msi_dialog_get_parent( msi_dialog *dialog );
 extern LPWSTR msi_dialog_get_name( msi_dialog *dialog );
-extern UINT msi_spawn_error_dialog( MSIPACKAGE*, LPWSTR, LPWSTR );
 
 /* preview */
 extern MSIPREVIEW *MSI_EnableUIPreview( MSIDATABASE * );
 extern UINT MSI_PreviewDialogW( MSIPREVIEW *, LPCWSTR );
 
 /* summary information */
-extern MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount );
+extern MSISUMMARYINFO *MSI_GetSummaryInformationW( MSIDATABASE *db, UINT uiUpdateCount );
 extern LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty );
-extern LPWSTR msi_get_suminfo_product( IStorage *stg );
 
 /* undocumented functions */
 UINT WINAPI MsiCreateAndVerifyInstallerDirectory( DWORD );
@@ -715,18 +711,6 @@ extern UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, BOOL 
 extern UINT ACTION_PerformUIAction(MSIPACKAGE *package, const WCHAR *action);
 extern void ACTION_FinishCustomActions( MSIPACKAGE* package);
 extern UINT ACTION_CustomAction(MSIPACKAGE *package,const WCHAR *action, BOOL execute);
-
-static inline void msi_feature_set_state( MSIFEATURE *feature, INSTALLSTATE state )
-{
-    feature->ActionRequest = state;
-    feature->Action = state;
-}
-
-static inline void msi_component_set_state( MSICOMPONENT *comp, INSTALLSTATE state )
-{
-    comp->ActionRequest = state;
-    comp->Action = state;
-}
 
 /* actions in other modules */
 extern UINT ACTION_AppSearch(MSIPACKAGE *package);
@@ -753,7 +737,6 @@ extern MSIFILE *get_loaded_file( MSIPACKAGE* package, LPCWSTR file );
 extern MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir );
 extern int track_tempfile(MSIPACKAGE *package, LPCWSTR name, LPCWSTR path);
 extern UINT schedule_action(MSIPACKAGE *package, UINT script, LPCWSTR action);
-extern void msi_free_action_script(MSIPACKAGE *package, UINT script);
 extern LPWSTR build_icon_path(MSIPACKAGE *, LPCWSTR);
 extern LPWSTR build_directory_name(DWORD , ...);
 extern BOOL create_full_pathW(const WCHAR *path);

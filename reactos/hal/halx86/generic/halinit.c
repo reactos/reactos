@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/halinit.c
- * PURPOSE:         HAL Entrypoint and Initialization
+ * FILE:            ntoskrnl/hal/halx86/generic/processor.c
+ * PURPOSE:         HAL Processor Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
@@ -14,6 +14,7 @@
 
 /* GLOBALS *******************************************************************/
 
+PVOID HalpZeroPageMapping = NULL;
 HALP_HOOKS HalpHooks;
 BOOLEAN HalpPciLockSettings;
 
@@ -49,6 +50,7 @@ NTAPI
 HalInitSystem(IN ULONG BootPhase,
               IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    PHYSICAL_ADDRESS Null = {{0}};
     PKPRCB Prcb = KeGetCurrentPrcb();
 
     /* Check the boot phase */
@@ -92,17 +94,8 @@ HalInitSystem(IN ULONG BootPhase,
             KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, 1, 0);
         }
 
-        /* Initialize the PICs */
-        HalpInitPICs();
-
-        /* Force initial PIC state */
-        KfRaiseIrql(KeGetCurrentIrql());
-
-        /* Initialize the clock */
-        HalpInitializeClock();
-
-        /* Setup busy waiting */
-        //HalpCalibrateStallExecution();
+        /* Continue with HAL-specific initialization */
+        HalpInitPhase0(LoaderBlock);
 
         /* Fill out the dispatch tables */
         HalQuerySystemInformation = HaliQuerySystemInformation;
@@ -119,15 +112,15 @@ HalInitSystem(IN ULONG BootPhase,
         /* Initialize the default HAL stubs for bus handling functions */
         HalpInitNonBusHandler();
 
-        /* Enable the clock interrupt */
-        ((PKIPCR)KeGetPcr())->IDT[0x30].ExtendedOffset =
-            (USHORT)(((ULONG_PTR)HalpClockInterrupt >> 16) & 0xFFFF);
-        ((PKIPCR)KeGetPcr())->IDT[0x30].Offset =
-            (USHORT)HalpClockInterrupt;
-        HalEnableSystemInterrupt(0x30, CLOCK2_LEVEL, Latched);
+        /* Initialize the clock interrupt */
+        //HalpInitPhase1();
 
         /* Initialize DMA. NT does this in Phase 0 */
         HalpInitDma();
+    }
+    else if (BootPhase == 2)
+    {
+        HalpZeroPageMapping = MmMapIoSpace(Null, PAGE_SIZE, MmNonCached);
     }
 
     /* All done, return */
@@ -135,7 +128,7 @@ HalInitSystem(IN ULONG BootPhase,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
@@ -149,5 +142,6 @@ HalReportResourceUsage(VOID)
 
     /* FIXME: Report HAL Usage to kernel */
 }
+
 
 /* EOF */

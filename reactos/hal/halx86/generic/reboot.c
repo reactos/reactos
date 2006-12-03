@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/reboot.c
+ * FILE:            ntoskrnl/hal/x86/reboot.c
  * PURPOSE:         Reboot functions
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
@@ -28,12 +28,10 @@ NTAPI
 HalpReboot(VOID)
 {
     UCHAR Data;
-    PVOID HalpZeroPageMapping;
-    PHYSICAL_ADDRESS Null = {{0}};
+    extern PVOID HalpZeroPageMapping;
 
     /* Enable warm reboot */
-    HalpZeroPageMapping = MmMapIoSpace(Null, PAGE_SIZE, MmNonCached);
-    ((PUSHORT)HalpZeroPageMapping)[0x239] = 0x1234;
+    ((PUSHORT)HalpZeroPageMapping)[0x472] = 0x1234;
 
     /* FIXME: Lock CMOS Access */
 

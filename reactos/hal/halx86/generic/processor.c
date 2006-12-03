@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/up/processor.c
+ * FILE:            ntoskrnl/hal/halx86/generic/processor.c
  * PURPOSE:         HAL Processor Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -31,11 +31,9 @@ HalInitializeProcessor(IN ULONG ProcessorNumber,
 
     /* Update the interrupt affinity and processor mask */
     InterlockedBitTestAndSet(&HalpActiveProcessors, ProcessorNumber);
-    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
-                             ProcessorNumber);
+    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity, ProcessorNumber);
 
-    /* Register routines for KDCOM */
-    HalpRegisterKdSupportFunctions();
+    /* FIXME: Register routines for KDCOM */
 }
 
 /*

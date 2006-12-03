@@ -5,7 +5,6 @@
  * PURPOSE:     General System Information
  * COPYRIGHT:   Copyright Thomas Weidenmueller <w3seek@reactos.org>
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
- *              Copyright 2006 Colin Finck <mail@colinfinck.de>
  *
  */
 
@@ -111,21 +110,16 @@ SetRegTextData(HWND hwnd,
     }
 }
 
-static INT
-SetProcNameString(HWND hwnd,
-                  HKEY hKey,
-                  LPTSTR Value,
-                  UINT uID1,
-                  UINT uID2)
+static VOID
+SetProcName(HWND hwnd,
+               HKEY hKey,
+               LPTSTR Value,
+               UINT uID)
 {
     LPTSTR lpBuf = NULL;
     DWORD BufSize = 0;
     DWORD Type;
-    INT Ret = 0;
-    TCHAR szBuf[31];
-    TCHAR* szLastSpace;
-    INT LastSpace = 0;
-    
+
     if (RegQueryValueEx(hKey,
                         Value,
                         NULL,
@@ -135,8 +129,8 @@ SetProcNameString(HWND hwnd,
     {
         lpBuf = HeapAlloc(GetProcessHeap(),
                           0,
-                          BufSize);   
-        if (!lpBuf) return 0;
+                          BufSize);
+        if (!lpBuf) return;
 
         if (RegQueryValueEx(hKey,
                             Value,
@@ -145,56 +139,15 @@ SetProcNameString(HWND hwnd,
                             (PBYTE)lpBuf,
                             &BufSize) == ERROR_SUCCESS)
         {
-        	  if(BufSize > ((30 + 1) * sizeof(TCHAR)))
-        	  {
-              /* Wrap the Processor Name String like XP does:                           *
-               *   - Take the first 30 characters and look for the last space.          *
-               *     Then wrap the string after this space.                             *
-               *   - If no space is found, wrap the string after character 30.          *
-               *                                                                        *
-               * For example the Processor Name String of a Pentium 4 is right-aligned. *
-               * With this wrapping the first line looks centered.                      */
-
-              _tcsncpy(szBuf, lpBuf, 30);
-              szLastSpace = _tcsrchr(szBuf, ' ');
-              
-              if(szLastSpace == 0)
-                LastSpace = 30;
-              else
-                LastSpace = (szLastSpace - szBuf);
-              
-              _tcsncpy(szBuf, lpBuf, LastSpace);
-              szBuf[LastSpace] = 0;
-              
-              SetDlgItemText(hwnd,
-                             uID1,
-                             szBuf);
-        	  	
-              SetDlgItemText(hwnd,
-                             uID2,
-                             lpBuf+LastSpace+1);
-        	  	
-              /* Return the number of used lines */
-              Ret = 2;
-            }
-            else
-            {
-              SetDlgItemText(hwnd,
-                             uID1,
-                             lpBuf);
-              
-              Ret = 1;
-            }
+	    SetDlgItemText(hwnd,
+                           uID,
+                           lpBuf + _tcsspn(lpBuf, _T(" ")));
         }
 
         HeapFree(GetProcessHeap(),
                  0,
                  lpBuf);
-        
-        return Ret;
     }
-    
-    return 0;
 }
 
 static  VOID
@@ -240,7 +193,6 @@ GetSystemInformation(HWND hwnd)
     MEMORYSTATUSEX MemStat;
     TCHAR Buf[32];
     INT Ret = 0;
-    INT CurMachineLine = IDC_MACHINELINE1;
 
 
     /* Get Processor information *
@@ -257,21 +209,17 @@ GetSystemInformation(HWND hwnd)
         SetRegTextData(hwnd, 
                        hKey, 
                        _T("VendorIdentifier"), 
-                       CurMachineLine);
-        CurMachineLine++;
-        
-        Ret = SetProcNameString(hwnd, 
-                                hKey, 
-                                _T("ProcessorNameString"), 
-                                CurMachineLine,
-                                CurMachineLine+1);
-        CurMachineLine += Ret;
-        
+                       IDC_PROCESSORMANUFACTURER);
+
+        SetProcName(hwnd, 
+                    hKey, 
+                    _T("ProcessorNameString"), 
+                    IDC_PROCESSOR);
+
         SetProcSpeed(hwnd, 
                      hKey, 
                      _T("~MHz"), 
-                     CurMachineLine);
-        CurMachineLine++;
+                     IDC_PROCESSORSPEED);
     }
 
 
@@ -331,7 +279,7 @@ GetSystemInformation(HWND hwnd)
     if (Ret)
     {
         SetDlgItemText(hwnd,
-                       CurMachineLine,
+                       IDC_SYSTEMMEMORY,
                        Buf);
     }
 }
@@ -413,8 +361,5 @@ GeneralPageProc(HWND hwndDlg,
 
     return FALSE;
 }
-
-
-
 
 

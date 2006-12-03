@@ -54,7 +54,6 @@
 #define EXPR_WILDCARD 9
 #define EXPR_COL_NUMBER_STRING 10
 #define EXPR_COL_NUMBER32 11
-#define EXPR_UNARY    12
 
 struct sql_str {
     LPCWSTR data;
@@ -119,12 +118,11 @@ UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **, LPWSTR table,
 UINT DELETE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table );
 
 UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view,
-                      LPCWSTR left, LPCWSTR right );
+                      LPCWSTR left, LPCWSTR right,
+                      struct expr *cond );
 
 UINT ALTER_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR name, int hold );
 
 int sqliteGetToken(const WCHAR *z, int *tokenType);
-
-MSIRECORD *msi_query_merge_record( UINT fields, column_info *vl, MSIRECORD *rec );
 
 #endif /* __WINE_MSI_QUERY_H */

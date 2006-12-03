@@ -39,7 +39,9 @@ typedef struct tagMSIJOINVIEW
     MSIDATABASE   *db;
     MSIVIEW       *left, *right;
     UINT           left_count, right_count;
-    UINT           left_rows, right_rows;
+    UINT           left_key, right_key;
+    UINT          *pairs;
+    UINT           pair_count;
 } MSIJOINVIEW;
 
 static UINT JOIN_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *val )
@@ -55,18 +57,18 @@ static UINT JOIN_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *v
     if( (col==0) || (col>(jv->left_count + jv->right_count)) )
          return ERROR_FUNCTION_FAILED;
 
-    if( row >= (jv->left_rows * jv->right_rows) )
+    if( row >= jv->pair_count )
          return ERROR_FUNCTION_FAILED;
 
     if( col <= jv->left_count )
     {
         table = jv->left;
-        row = (row/jv->right_rows);
+        row = jv->pairs[ row*2 ];
     }
     else
     {
         table = jv->right;
-        row = (row % jv->right_rows);
+        row = jv->pairs[ row*2 + 1 ];
         col -= jv->left_count;
     }
 
@@ -86,28 +88,130 @@ static UINT JOIN_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IStr
     if( (col==0) || (col>(jv->left_count + jv->right_count)) )
          return ERROR_FUNCTION_FAILED;
 
-    if( row >= jv->left_rows * jv->right_rows )
-         return ERROR_FUNCTION_FAILED;
-
     if( row <= jv->left_count )
     {
         table = jv->left;
-        row = (row/jv->right_rows);
+        row = jv->pairs[ row*2 ];
     }
     else
     {
         table = jv->right;
-        row = (row % jv->right_rows);
+        row = jv->pairs[ row*2 + 1 ];
         col -= jv->left_count;
     }
 
     return table->ops->fetch_stream( table, row, col, stm );
 }
 
+static UINT JOIN_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT val )
+{
+    MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
+
+    TRACE("%p %d %d %04x\n", jv, row, col, val );
+
+    return ERROR_FUNCTION_FAILED;
+}
+
+static UINT JOIN_insert_row( struct tagMSIVIEW *view, MSIRECORD *record )
+{
+    MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
+
+    TRACE("%p %p\n", jv, record );
+
+    return ERROR_FUNCTION_FAILED;
+}
+
+static int join_key_compare(const void *l, const void *r)
+{
+    const UINT *left = l, *right = r;
+    if (left[1] < right[1])
+        return -1;
+    if (left[1] == right[1])
+        return 0;
+    return 1;
+}
+
+static UINT join_load_key_column( MSIJOINVIEW *jv, MSIVIEW *table, UINT column,
+                                  UINT **pdata, UINT *pcount )
+{
+    UINT r, i, count = 0, *data = NULL;
+
+    r = table->ops->get_dimensions( table, &count, NULL );
+    if( r != ERROR_SUCCESS )
+        return r;
+
+    if (!count)
+        goto end;
+
+    data = msi_alloc( count * 2 * sizeof (UINT) );
+    if (!data)
+        return ERROR_SUCCESS;
+
+    for (i=0; i<count; i++)
+    {
+        data[i*2] = i;
+        r = table->ops->fetch_int( table, i, column, &data[i*2+1] );
+        if (r != ERROR_SUCCESS)
+            ERR("fetch data (%u,%u) failed\n", i, column);
+    }
+
+    qsort( data, count, 2 * sizeof (UINT), join_key_compare );
+
+end:
+    *pdata = data;
+    *pcount = count;
+
+    return ERROR_SUCCESS;
+}
+
+static UINT join_match( UINT *ldata, UINT lcount,
+                        UINT *rdata, UINT rcount,
+                        UINT **ppairs, UINT *ppair_count )
+{
+    UINT *pairs;
+    UINT n, i, j;
+
+    TRACE("left %u right %u\n", rcount, lcount);
+
+    /* there can be at most max(lcount, rcount) matches */
+    if (lcount > rcount)
+        n = lcount;
+    else
+        n = rcount;
+
+    pairs = msi_alloc( n * 2 * sizeof(UINT) );
+    if (!pairs)
+        return ERROR_OUTOFMEMORY;
+
+    for (n=0, i=0, j=0; i<lcount && j<rcount; )
+    {
+        /* values match... store the row numbers */
+        if (ldata[i*2+1] == rdata[j*2+1])
+        {
+            pairs[n*2] = ldata[i*2];
+            pairs[n*2+1] = rdata[j*2];
+            i++;  /* FIXME: assumes primary key on the right */
+            n++;
+            continue;
+        }
+
+        /* values differ... move along */
+        if (ldata[i*2+1] < rdata[j*2+1])
+            i++;
+        else
+            j++;
+    }
+
+    *ppairs = pairs;
+    *ppair_count = n;
+
+    return ERROR_SUCCESS;
+}
+
 static UINT JOIN_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
-    UINT r, *ldata = NULL, *rdata = NULL;
+    UINT r, *ldata = NULL, *rdata = NULL, lcount = 0, rcount = 0;
 
     TRACE("%p %p\n", jv, record);
 
@@ -122,20 +226,15 @@ static UINT JOIN_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if (r != ERROR_SUCCESS)
         return r;
 
-    /* get the number of rows in each table */
-    r = jv->left->ops->get_dimensions( jv->left, &jv->left_rows, NULL );
-    if( r != ERROR_SUCCESS )
-    {
-        ERR("can't get left table dimensions\n");
-        goto end;
-    }
+    r = join_load_key_column( jv, jv->left, jv->left_key, &ldata, &lcount );
+    if (r != ERROR_SUCCESS)
+        return r;
 
-    r = jv->right->ops->get_dimensions( jv->right, &jv->right_rows, NULL );
-    if( r != ERROR_SUCCESS )
-    {
-        ERR("can't get right table dimensions\n");
+    r = join_load_key_column( jv, jv->right, jv->right_key, &rdata, &rcount );
+    if (r != ERROR_SUCCESS)
         goto end;
-    }
+
+    r = join_match( ldata, lcount, rdata, rcount, &jv->pairs, &jv->pair_count );
 
 end:
     msi_free( ldata );
@@ -173,7 +272,7 @@ static UINT JOIN_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *cols
         if( !jv->left || !jv->right )
             return ERROR_FUNCTION_FAILED;
 
-        *rows = jv->left_rows * jv->right_rows;
+        *rows = jv->pair_count;
     }
 
     return ERROR_SUCCESS;
@@ -224,6 +323,9 @@ static UINT JOIN_delete( struct tagMSIVIEW *view )
         jv->right->ops->delete( jv->right );
     jv->right = NULL;
 
+    msi_free( jv->pairs );
+    jv->pairs = NULL;
+
     msi_free( jv );
 
     return ERROR_SUCCESS;
@@ -243,8 +345,8 @@ static const MSIVIEWOPS join_ops =
 {
     JOIN_fetch_int,
     JOIN_fetch_stream,
-    NULL,
-    NULL,
+    JOIN_set_int,
+    JOIN_insert_row,
     JOIN_execute,
     JOIN_close,
     JOIN_get_dimensions,
@@ -254,8 +356,48 @@ static const MSIVIEWOPS join_ops =
     JOIN_find_matching_rows
 };
 
+/*
+ * join_check_condition
+ *
+ * This is probably overly strict about what kind of condition we need
+ *  for a join query.
+ */
+static UINT join_check_condition(MSIJOINVIEW *jv, struct expr *cond)
+{
+    UINT r;
+
+    /* assume that we have  `KeyColumn` = `SubkeyColumn` */
+    if ( cond->type != EXPR_COMPLEX )
+        return ERROR_FUNCTION_FAILED;
+
+    if ( cond->u.expr.op != OP_EQ )
+        return ERROR_FUNCTION_FAILED;
+
+    if ( cond->u.expr.left->type != EXPR_COLUMN )
+        return ERROR_FUNCTION_FAILED;
+
+    if ( cond->u.expr.right->type != EXPR_COLUMN )
+        return ERROR_FUNCTION_FAILED;
+
+    /* make sure both columns exist */
+    r = VIEW_find_column( jv->left, cond->u.expr.left->u.column, &jv->left_key );
+    if (r != ERROR_SUCCESS)
+        return ERROR_FUNCTION_FAILED;
+
+    r = VIEW_find_column( jv->right, cond->u.expr.right->u.column, &jv->right_key );
+    if (r != ERROR_SUCCESS)
+        return ERROR_FUNCTION_FAILED;
+
+    TRACE("left %s (%u) right %s (%u)\n",
+        debugstr_w(cond->u.expr.left->u.column), jv->left_key,
+        debugstr_w(cond->u.expr.right->u.column), jv->right_key);
+
+    return ERROR_SUCCESS;
+}
+
 UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view,
-                      LPCWSTR left, LPCWSTR right )
+                      LPCWSTR left, LPCWSTR right,
+                      struct expr *cond )
 {
     MSIJOINVIEW *jv = NULL;
     UINT r = ERROR_SUCCESS;
@@ -297,6 +439,13 @@ UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view,
     if( r != ERROR_SUCCESS )
     {
         ERR("can't get right table dimensions\n");
+        goto end;
+    }
+
+    r = join_check_condition( jv, cond );
+    if( r != ERROR_SUCCESS )
+    {
+        ERR("can't get join condition\n");
         goto end;
     }
 

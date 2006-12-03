@@ -26,9 +26,6 @@ typedef INT
 
 #define HANDLE_LIST_INC 20
 
-#define METAFILE_MEMORY 1
-#define METAFILE_DISK   2
-
 /* TYPES *********************************************************************/
 
 // Based on wmfapi.h and Wine. This is the DC_ATTR for a MetaDC file.
@@ -110,9 +107,6 @@ GdiGetHandleUserData(
     HGDIOBJ hGdiObj,
     PVOID *UserData
 );
-
-PLDC
-GdiGetLDC(HDC hDC);
 
 BOOL
 WINAPI

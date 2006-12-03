@@ -56,8 +56,8 @@ BEGIN
       MENUITEM "Invert Colors"      ID_INVERTCOLORS
     END
     MENUITEM SEPARATOR
-    MENUITEM "Blur",                ID_BLUR
-    MENUITEM "Sharpen",             ID_SHARPEN
+    MENUITEM "Blur",                -1, GRAYED
+    MENUITEM "Sharpen",             -1, GRAYED
     MENUITEM "Smooth Edges",        -1, GRAYED
     MENUITEM "Add Shadow",          -1, GRAYED
     MENUITEM SEPARATOR
