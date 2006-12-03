@@ -148,7 +148,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* Specials */
   /* Ctrl-_ generates GR */
   { VK_OEM_PLUS    ,NOCAPS, {'=', '+'} },
-  { VK_OEM_1       ,NOCAPS, {';', ':'} },
+  //{ VK_OEM_1       ,NOCAPS, {';', ':'} },
   { VK_OEM_7       ,NOCAPS, {'\'','\"'} },
   { VK_OEM_3       ,NOCAPS, {'`', '~'} },
   { VK_OEM_COMMA   ,NOCAPS, {',', '<'} },
@@ -168,6 +168,10 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
   /* Legacy (telnet-style) ascii escapes */
+  { VK_OEM_1,   NOCAPS, {WCH_DEAD, WCH_DEAD,    WCH_NONE} }, 
+  { VK_EMPTY,   NOCAPS, {';',      0x00A8,      WCH_NONE} },
+  { 'W',        NOCAPS, {0x3C2,    WCH_DEAD,    WCH_NONE} }, 
+  { VK_EMPTY,   NOCAPS, {0x3C2,    0x385,       WCH_NONE} },
   { VK_OEM_4, 0, {'[', '{', 0x1b /* ESC */} },
   { VK_OEM_6, 0, {']', '}', 0x1d /* GS */} },
   { VK_OEM_5, 0, {'\\','|', 0x1c /* FS */} },
@@ -185,26 +189,26 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { 'D',         CAPS,   {0x3B4, 0x394}  },
   { 'E',         CAPS,   {0x3B5, 0x395}  },
   { 'F',         CAPS,   {0x3C6, 0x3A6}  },
-  { 'G',         CAPS,   {0x3B3, 0x393} },
+  { 'G',         CAPS,   {0x3B3, 0x393}  },
   { 'H',         CAPS,   {0x3B7, 0x397}  },
   { 'I',         CAPS,   {0x3B9, 0x399}  },
   { 'J',         CAPS,   {0x3BE, 0x39E}  },
-  { 'K',         CAPS,   {0x3BA, 0x39A} },
-  { 'L',         CAPS,   {0x3BB, 0x39B} },
+  { 'K',         CAPS,   {0x3BA, 0x39A}  },
+  { 'L',         CAPS,   {0x3BB, 0x39B}  },
   { 'M',         CAPS,   {0x3BC, 0x39C}  },
   { 'N',         CAPS,   {0x3BD, 0x39D}  },
   { 'O',         CAPS,   {0x3BF, 0x39F}  },
-  { 'P',         CAPS,   {0x3C0, 0x3A0} },
-  { 'Q',         CAPS,   {';',';'} },
+  { 'P',         CAPS,   {0x3C0, 0x3A0}  },
+  { 'Q',         CAPS,   { ';' ,  ';' }  },
   { 'R',         CAPS,   {0x3C1, 0x3A1}  },
   { 'S',         CAPS,   {0x3C3, 0x3A3}  },
   { 'T',         CAPS,   {0x3C4, 0x3A4}  },
-  { 'U',         CAPS,   {0x3B8, 0x398} },
+  { 'U',         CAPS,   {0x3B8, 0x398}  },
   { 'V',         CAPS,   {0x3C9, 0x3A9}  },
-  { 'W',         CAPS,   {0x3C2, 0x3C2} },
+  { 'W',         CAPS,   {0x3C2, 0x385}  },
   { 'X',         CAPS,   {0x3C7, 0x3A7}  },
   { 'Y',         CAPS,   {0x3C5, 0x3A5}  },
-  { 'Z',         CAPS,   {0x3B6, 0x396} },
+  { 'Z',         CAPS,   {0x3B6, 0x396}  },
 
   /* Legacy Ascii generators */
   { '2', NOCAPS, {'2', '@', WCH_NONE, 0} },
@@ -242,9 +246,27 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
 #define DEADTRANS(ch, accent, comp, flags) MAKELONG(ch, accent), comp, flags
 ROSDATA DEADKEY  deadkey[] =
 {
-	{ DEADTRANS(0x03B1, 0x037E, 0x03AC, 0x0000) },
-	{ DEADTRANS(0x037E, 0x03B5, 0x03AD, 0x0000) },
-	{ 0, 0, 0}
+  { DEADTRANS(0x3B1, L';', 0x3AC, 0x000) }, //MIKRO  A
+  { DEADTRANS(0x391, L';', 0x386, 0x000) }, //MEGALO A
+  { DEADTRANS(0x3B5, L';', 0x3AD, 0x000) }, //MIKRO  E
+  { DEADTRANS(0x395, L';', 0x388, 0x000) }, //MEGALO E
+  { DEADTRANS(0x3B7, L';', 0x3AE, 0x000) }, //MIKRO  H
+  { DEADTRANS(0x397, L';', 0x389, 0x000) }, //MEGALO H
+  { DEADTRANS(0x3B9, L';', 0x3AF, 0x000) }, //MIKRO  I
+  { DEADTRANS(0x399, L';', 0x38A, 0x000) }, //MEGALO I
+  { DEADTRANS(0x3BF, L';', 0x3CC, 0x000) }, //MIKRO  O
+  { DEADTRANS(0x39F, L';', 0x38C, 0x000) }, //MEGALO O
+  { DEADTRANS(0x3C5, L';', 0x3CD, 0x000) }, //MIKRO  Y
+  { DEADTRANS(0x3A5, L';', 0x38E, 0x000) }, //MEGALO Y
+  { DEADTRANS(0x3C9, L';', 0x3CE, 0x000) }, //MIKRO  W
+  { DEADTRANS(0x3A9, L';', 0x38F, 0x000) }, //MEGALO W
+  { DEADTRANS(0x3C5, 0x00A8, 0x3CB, 0x000) }, //MIKRO  Y ME DIALYTIKA
+  { DEADTRANS(0x3A5, 0x00A8, 0x3AB, 0x000) }, //MEGALO Y ME DIALYTIKA	
+  { DEADTRANS(0x3B9, 0x00A8, 0x3CA, 0x000) }, //MIKRO  I ME DIALYTIKA
+  { DEADTRANS(0x399, 0x00A8, 0x3AA, 0x000) }, //MEGALO I ME DIALYTIKA	
+  { DEADTRANS(0x3C5, 0x385, 0x3B0, 0x000) }, //MIKRO  Y ME DIALYTIKA
+  { DEADTRANS(0x3B9, 0x385, 0x390, 0x000) }, //MIKRO  I ME DIALYTIKA
+  { 0, 0, 0}
 };
 
 
