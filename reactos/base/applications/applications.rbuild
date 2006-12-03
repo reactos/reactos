@@ -22,6 +22,9 @@
 <directory name="getfirefox">
 	<xi:include href="getfirefox/getfirefox.rbuild" />
 </directory>
+<directory name="gettype">
+	<xi:include href="gettype/gettype.rbuild" />
+</directory>
 <directory name="hostname">
 	<xi:include href="hostname/hostname.rbuild" />
 </directory>
