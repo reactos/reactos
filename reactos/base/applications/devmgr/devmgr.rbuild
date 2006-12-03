@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<module name="devmgrapp" type="win32cui" installbase="system32" installname="devmgr.exe">
+<module name="devmgrapp" type="win32gui" installbase="system32" installname="devmgr.exe">
 	<define name="__USE_W32API" />
 	<define name="DEFINE_GUID" />
 	<library>ntdll</library>
