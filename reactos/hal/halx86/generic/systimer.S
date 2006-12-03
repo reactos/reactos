@@ -199,10 +199,12 @@ BelowHigh:
 
 .globl _HalpClockInterrupt@0
 .func HalpClockInterrupt@0
+V86_hci: V86_TRAP_FIXUP
+Dr_hci:  DR_TRAP_FIXUP
 _HalpClockInterrupt@0:
 
     /* Enter trap */
-    INT_PROLOG Hci, DoPushFakeErrorCode
+    INT_PROLOG hci, DoPushFakeErrorCode
 
     /* Push vector and make stack for IRQL */
     push 0x30
