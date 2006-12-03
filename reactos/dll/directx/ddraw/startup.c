@@ -80,6 +80,7 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
     This->lpLcl->lpGbl->lpModeInfo[0].lPitch       = (devmode.dmPelsWidth*devmode.dmBitsPerPel)/8;
     This->lpLcl->lpGbl->lpModeInfo[0].wRefreshRate = (WORD)devmode.dmDisplayFrequency;
    
+
 	if (lpGuid == NULL) 
 	{
 		devicetypes = 1;
@@ -656,8 +657,6 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
        DeleteDC((HDC)This->lpLcl->hDC);       
        return DD_FALSE;
     }
-
-	return DD_OK;
 	
     // Do not relase HDC it have been map in kernel mode 
     // DeleteDC(hdc);
@@ -941,21 +940,14 @@ Create_DirectDraw (LPGUID pGUID,
 		/* FIXME cleanup */
 		return DDERR_OUTOFMEMORY;
 	}
-	
-
-    /* 
-	   We need manual fill this struct member we can not trust on 
-	   the heap zero the struct if you play to much with directdraw 
-	   in Windows 2000. This is a small workaround of one of directdraw
-	   bugs
-     */
 
 	/*
 	   FIXME 
 	   read dwAppHackFlags flag from the system register instead for hard code it
 	 */
 	This->lpLcl->dwAppHackFlags = 0; 
-	This->lpLcl->dwErrorMode = 0;
+	/* Do mot inistate this value if we do we can not open the HAL interface */
+	//This->lpLcl->dwErrorMode = 0;
 	This->lpLcl->dwHotTracking = 0;
 	This->lpLcl->dwIMEState = 0;
 	This->lpLcl->dwLocalFlags = DDRAWILCL_DIRECTDRAW7;
@@ -966,7 +958,6 @@ Create_DirectDraw (LPGUID pGUID,
        supriese for me
     */
     //This->lpLcl->dwObsolete1 = 0;
-	This->lpLcl->dwPreferredMode = 0;
 	This->lpLcl->dwProcessId = 0;
 	This->lpLcl->dwUnused0 = 0;
 	This->lpLcl->hD3DInstance = NULL;
@@ -974,14 +965,17 @@ Create_DirectDraw (LPGUID pGUID,
 	This->lpLcl->hDDVxd = 0;
 	This->lpLcl->hFocusWnd = 0;
 	This->lpLcl->hGammaCalibrator = 0;
-	This->lpLcl->hWnd = 0;
+	/* Do mot inistate this value if we do we can not open the HAL interface */
+	//This->lpLcl->hWnd = 0;
 	This->lpLcl->hWndPopup = 0;	
 	This->lpLcl->lpCB = NULL;
 	This->lpLcl->lpDDCB = NULL;
 	This->lpLcl->lpDDMore = 0;
 	This->lpLcl->lpGammaCalibrator = 0;
 	This->lpLcl->lpGbl = &ddgbl;
-	This->lpLcl->lpPrimary = NULL;
+
+	/* Do mot inistate this value if we do we can not open the HAL interface */
+	//This->lpLcl->lpPrimary = NULL;
 	This->lpLcl->pD3DIUnknown = NULL;
 	This->lpLcl->pUnkOuter = NULL;
 			 
