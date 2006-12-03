@@ -38,10 +38,10 @@ STYLE  DS_MODALFRAME | DS_3DLOOK |
     WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Temps accéléré"
 {
-    GROUPBOX        "Temps accéléré", IDIGNORE,  10,  10, 140,  45
-    LTEXT           "Débutant",      IDIGNORE,  20,  20,  40,   8
-    LTEXT           "Amateur",      IDIGNORE,  20,  30,  40,   8
-    LTEXT           "Expert",        IDIGNORE,  20,  40,  40,   8
+    GROUPBOX        "Temps accéléré", IDNONE,  10,  10, 140,  45
+    LTEXT           "Débutant",      IDNONE,  20,  20,  40,   8
+    LTEXT           "Amateur",      IDNONE,  20,  30,  40,   8
+    LTEXT           "Expert",        IDNONE,  20,  40,  40,   8
     LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
     LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
     LTEXT           "999",          IDC_TIME3,  70,  40,  15,   8
@@ -56,7 +56,7 @@ STYLE  DS_MODALFRAME | DS_3DLOOK |
     WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Félicitations!"
 {
-    LTEXT           "Veuillez entrer votre nom :", IDIGNORE,  10,  10, 150,  10
+    LTEXT           "Veuillez entrer votre nom :", IDNONE,  10,  10, 150,  10
     EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
     DEFPUSHBUTTON   "Ok",                         IDOK,  60,  40,  40,  15
 }
@@ -66,9 +66,9 @@ STYLE  DS_MODALFRAME | DS_3DLOOK |
     WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Sur mesure"
 {
-    LTEXT           "Lignes",   IDIGNORE,   5,   5,  30,  10
-    LTEXT           "Colonnes",   IDIGNORE,   5,  35,  30,  10
-    LTEXT           "Mines",  IDIGNORE,   5,  65,  30,  10
+    LTEXT           "Lignes",   IDNONE,   5,   5,  30,  10
+    LTEXT           "Colonnes",   IDNONE,   5,  35,  30,  10
+    LTEXT           "Mines",  IDNONE,   5,  65,  30,  10
     EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
     EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
     EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
@@ -81,10 +81,10 @@ STYLE  DS_MODALFRAME | DS_3DLOOK |
     WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "A propos"
 {
-    LTEXT                               "Winemine", IDIGNORE,  10,  10,  35,  10
-    LTEXT         "Copyright 2000, Joshua Thielen", IDIGNORE,  35,  25, 100,  10
-    LTEXT                 "Sous licence Wine", IDIGNORE,  35,  35, 100,  10
-    ICON                                "WINEMINE", IDIGNORE,  10,  25,  20,  20
+    LTEXT                               "Winemine", IDNONE,  10,  10,  35,  10
+    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
+    LTEXT                 "Sous licence Wine", IDNONE,  35,  35, 100,  10
+    ICON                                "WINEMINE", IDNONE,  10,  25,  20,  20
     DEFPUSHBUTTON                             "Ok", IDOK,      50,  60,  55,  15
 }
 
