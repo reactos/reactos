@@ -101,7 +101,7 @@ NtListenPort 2
 NtLoadDriver 1
 NtLoadKey 2
 NtLoadKey2 3
-NtLoadKeyEx 3
+NtLoadKeyEx 7
 NtLockFile 10
 NtLockProductActivationKeys 2
 NtLockRegistryKey 1
@@ -169,7 +169,7 @@ NtQueryMultipleValueKey 6
 NtQueryMutant 5
 NtQueryObject 5
 NtQueryOpenSubKeys 2
-NtQueryOpenSubKeysEx 2
+NtQueryOpenSubKeysEx 4
 NtQueryPerformanceCounter 2
 NtQueryQuotaInformationFile 9
 NtQuerySection 5
@@ -265,7 +265,7 @@ NtTerminateProcess 2
 NtTerminateThread 2
 NtTestAlert 0
 NtTraceEvent 4
-NtTranslateFilePath 3
+NtTranslateFilePath 4
 NtUnloadDriver 1
 NtUnloadKey 1
 NtUnloadKey2 2

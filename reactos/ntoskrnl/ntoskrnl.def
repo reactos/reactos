@@ -1415,7 +1415,7 @@ ZwSetValueKey@24
 ZwSetVolumeInformationFile@20
 ZwTerminateJobObject@8
 ZwTerminateProcess@8
-ZwTranslateFilePath@12
+ZwTranslateFilePath@16
 ZwUnloadDriver@4
 ZwUnloadKey@4
 ZwUnmapViewOfSection@8
