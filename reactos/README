@@ -1,6 +1,6 @@
 ========================
 ReactOS Version 0.3.x
-Updated Aug 21rd, 2005
+Updated Nov 30, 2006
 ========================
 
 1. What is ReactOS?
@@ -10,8 +10,8 @@ that is compatible with Windows NT applications and drivers.
 
    The ReactOS project, although currently focused on Windows NT 4.0
 compatibility, is always keeping an eye toward compatibility with
-future Windows NT releases, that is, Windows 2000 (NT 5.0) and
-Windows XP (NT 5.1).
+Windows 2000 (NT 5.0), Windows XP (NT 5.1), Windows Vista and future
+Windows NT releases.
 
 More information is available at http://www.reactos.org/.
 
@@ -21,8 +21,8 @@ See the INSTALL file for more details.
 
 3. More information
 
-See the doc subdirectory for some sparse notes
+See the media\doc subdirectory for some sparse notes.
 
 4. Who is responsible
 
-See the CREDITS file
+See the CREDITS file.
