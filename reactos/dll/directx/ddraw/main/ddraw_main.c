@@ -713,14 +713,23 @@ Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 HRESULT WINAPI 
 Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD cooplevel)
 {
+	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+
+	DX_WINDBG_trace();
+
+	/* This code should be a callback */
+	This->lpLcl->hWnd = hwnd;
+	This->lpLcl->hFocusWnd = hwnd;	
+	ReCreateDirectDraw(iface);
+
     // TODO:                                                            
     // - create a scaner that check which driver we should get the HDC from    
     //   for now we always asume it is the active dirver that should be use.
     // - allow more Flags
 
-    
+  
 
- //   LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+ //   
  //   DDHAL_SETEXCLUSIVEMODEDATA SetExclusiveMode;
 
 	//DX_WINDBG_trace();

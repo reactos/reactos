@@ -21,10 +21,12 @@
 extern DDRAWI_DIRECTDRAW_GBL ddgbl;
 extern DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;
 
-HRESULT WINAPI StartDirectDraw(LPDIRECTDRAW* iface, LPGUID pGUID);
-HRESULT WINAPI StartDirectDrawHal(LPDIRECTDRAW* iface);
-HRESULT WINAPI StartDirectDrawHel(LPDIRECTDRAW* iface);
+HRESULT WINAPI StartDirectDraw(LPDIRECTDRAW* iface, LPGUID pGUID, BOOL reenable);
+HRESULT WINAPI StartDirectDrawHal(LPDIRECTDRAW* iface, BOOL reenable);
+HRESULT WINAPI StartDirectDrawHel(LPDIRECTDRAW* iface, BOOL reenable);
 HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex);
+
+HRESULT WINAPI ReCreateDirectDraw(LPDIRECTDRAW* iface);
 
 /* DirectDraw Cleanup code only internal use */
 VOID Cleanup(LPDIRECTDRAW7 iface);

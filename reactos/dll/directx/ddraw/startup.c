@@ -18,7 +18,7 @@ DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;
 
 
 HRESULT WINAPI 
-StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
+StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
 {
 	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     DWORD hal_ret = DD_FALSE;
@@ -34,26 +34,25 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
     
     DX_WINDBG_trace();
 	  
-
-	if (This->lpLink == NULL)
+    if (reenable == FALSE)
 	{
-		
-		RtlZeroMemory(&ddgbl, sizeof(DDRAWI_DIRECTDRAW_GBL));
-		This->lpLcl->lpGbl->dwRefCnt++;
+		if (This->lpLink == NULL)
+		{		
+			RtlZeroMemory(&ddgbl, sizeof(DDRAWI_DIRECTDRAW_GBL));
+			This->lpLcl->lpGbl->dwRefCnt++;
 	    
-		if (ddgbl.lpDDCBtmp == NULL)
-		{
-			ddgbl.lpDDCBtmp = (LPDDHAL_CALLBACKS) DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));  
 			if (ddgbl.lpDDCBtmp == NULL)
 			{
-				DX_STUB_str("Out of memmory");
-				return DD_FALSE;
-			}
+				ddgbl.lpDDCBtmp = (LPDDHAL_CALLBACKS) DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));  
+				if (ddgbl.lpDDCBtmp == NULL)
+				{
+					DX_STUB_str("Out of memmory");
+					return DD_FALSE;
+				}
+			}				
 		}
-		
-		
 	}
-
+	
 	/* 
 	   Visual studio think this code is a break point if we call 
 	   second time to this function, press on continue in visual
@@ -84,61 +83,64 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
     This->lpLcl->lpGbl->lpModeInfo[0].wRefreshRate = (WORD)devmode.dmDisplayFrequency;
    
 
-	if (lpGuid == NULL) 
+	if (reenable == FALSE)
 	{
-		devicetypes = 1;
+		if (lpGuid == NULL) 
+		{
+			devicetypes = 1;
 
-		/* Create HDC for default, hal and hel driver */
-		This->lpLcl->hDC =  (ULONG_PTR) CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
+			/* Create HDC for default, hal and hel driver */
+			This->lpLcl->hDC =  (ULONG_PTR) CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
 
-		/* cObsolete is undoc in msdn it being use in CreateDCA */
-	    RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
-	    RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
+			/* cObsolete is undoc in msdn it being use in CreateDCA */
+			RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
+			RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
 
-		 dwFlags |= DDRAWI_DISPLAYDRV | DDRAWI_GDIDRV;
-	}
+			dwFlags |= DDRAWI_DISPLAYDRV | DDRAWI_GDIDRV;
+		}
 
-	else if (lpGuid == (LPGUID) DDCREATE_HARDWAREONLY) 
-	{
-		devicetypes = 2;
+		else if (lpGuid == (LPGUID) DDCREATE_HARDWAREONLY) 
+		{
+			devicetypes = 2;
 
-		/* Create HDC for default, hal and hel driver */
-		This->lpLcl->hDC = (ULONG_PTR)CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
+			/* Create HDC for default, hal and hel driver */
+			This->lpLcl->hDC = (ULONG_PTR)CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
 
-		/* cObsolete is undoc in msdn it being use in CreateDCA */
-	    RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
-	    RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
+			/* cObsolete is undoc in msdn it being use in CreateDCA */
+			RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
+			RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
 
-		dwFlags |= DDRAWI_DISPLAYDRV | DDRAWI_GDIDRV;
-	}
+			dwFlags |= DDRAWI_DISPLAYDRV | DDRAWI_GDIDRV;
+		}
 
-	else if (lpGuid == (LPGUID) DDCREATE_EMULATIONONLY) 
-	{
-		devicetypes = 3;
+		else if (lpGuid == (LPGUID) DDCREATE_EMULATIONONLY) 
+		{
+			devicetypes = 3;
 
-		/* Create HDC for default, hal and hel driver */
-		This->lpLcl->hDC = (ULONG_PTR) CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
+			/* Create HDC for default, hal and hel driver */
+			This->lpLcl->hDC = (ULONG_PTR) CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
 
-		/* cObsolete is undoc in msdn it being use in CreateDCA */
-	    RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
-	    RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
+			/* cObsolete is undoc in msdn it being use in CreateDCA */
+			RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
+			RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
 
-		dwFlags |= DDRAWI_DISPLAYDRV | DDRAWI_GDIDRV;
-	}
-	else
-	{
-		/* FIXME : need getting driver from the GUID that have been pass in from
+			dwFlags |= DDRAWI_DISPLAYDRV | DDRAWI_GDIDRV;
+		}
+		else
+		{
+			/* FIXME : need getting driver from the GUID that have been pass in from
 		           the register. we do not support that yet 
-	    */
-		devicetypes = 4;
-		This->lpLcl->hDC = (ULONG_PTR) NULL ;
-	}
+			*/
+			devicetypes = 4;
+			This->lpLcl->hDC = (ULONG_PTR) NULL ;
+		}
 
-    if ( (HDC)This->lpLcl->hDC == NULL)
-    {
-	   DX_STUB_str("DDERR_OUTOFMEMORY");
-       return DDERR_OUTOFMEMORY ;
-    }
+		if ( (HDC)This->lpLcl->hDC == NULL)
+		{
+			DX_STUB_str("DDERR_OUTOFMEMORY");
+			return DDERR_OUTOFMEMORY ;
+		}
+	}
 
     hbmp = CreateCompatibleBitmap((HDC) This->lpLcl->hDC, 1, 1);  
     if (hbmp==NULL)
@@ -187,18 +189,18 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 	switch (devicetypes)
 	{
 			case 2:
-			  hal_ret = StartDirectDrawHal(iface);		      
+			  hal_ret = StartDirectDrawHal(iface, reenable);		      
 			  This->lpLcl->lpDDCB->HELDD.dwFlags = 0;			  
 			  break;
 
 			case 3:
-			  hel_ret = StartDirectDrawHel(iface);		      
+			  hel_ret = StartDirectDrawHel(iface, reenable);		      
 			  This->lpLcl->lpDDCB->HALDD.dwFlags = 0;
 			  break;
 
 			default:
-			  hal_ret = StartDirectDrawHal(iface);
-			  hel_ret = StartDirectDrawHel(iface);
+			  hal_ret = StartDirectDrawHal(iface, reenable);	
+			  hel_ret = StartDirectDrawHel(iface, reenable);	
 			   
 	}
 	
@@ -658,12 +660,14 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid)
 	   This->lpLcl->lpDDCB->cbDDVideoPortCallbacks
 	*/
 
+	This->lpLcl->hDD = ddgbl.hDD;
+
     return DD_OK;
 }
 
 
 HRESULT WINAPI 
-StartDirectDrawHal(LPDIRECTDRAW* iface)
+StartDirectDrawHal(LPDIRECTDRAW* iface, BOOL reenable)
 {
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 	DDHAL_GETDRIVERINFODATA DriverInfo;
@@ -685,10 +689,17 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
 	    	
     RtlZeroMemory(&mHALInfo, sizeof(DDHALINFO));
 		
-	ddgbl.lpDDCBtmp = DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));
-    if ( ddgbl.lpDDCBtmp == NULL)
+	if (reenable == FALSE)
 	{
-		return DD_FALSE;
+		ddgbl.lpDDCBtmp = DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));
+		if ( ddgbl.lpDDCBtmp == NULL)
+		{
+			return DD_FALSE;
+		}
+	}
+	else
+	{
+		RtlZeroMemory(ddgbl.lpDDCBtmp,sizeof(DDHAL_CALLBACKS));
 	}
 
     /* 
@@ -848,7 +859,7 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
 }
 
 HRESULT WINAPI 
-StartDirectDrawHel(LPDIRECTDRAW* iface)
+StartDirectDrawHel(LPDIRECTDRAW* iface, BOOL reenable)
 {
 	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 	    
@@ -1028,15 +1039,40 @@ Create_DirectDraw (LPGUID pGUID,
 		return DDERR_INVALIDPARAMS;
 	}
 	
-	if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID) == DD_OK);
-    {
-
-        This->lpLcl->hDD = ddgbl.hDD;
+	if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID, FALSE) == DD_OK);
+    {        
 		return DD_OK;
 	}
 	
 	return DDERR_INVALIDPARAMS;
 }
 
+
+
+HRESULT WINAPI 
+ReCreateDirectDraw(LPDIRECTDRAW* iface)
+{
+	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+	
+	DdDeleteDirectDrawObject(This->lpLcl->lpGbl);
+	
+	if ((This->lpLcl->lpGbl->dwFlags & DDRAWI_NOHARDWARE) != DDRAWI_NOHARDWARE)
+	{
+       if (This->lpLcl->lpGbl->dwFlags & DDRAWI_EMULATIONINITIALIZED) 
+	   {
+			return StartDirectDraw(iface,NULL, TRUE);
+	   }
+	   else
+	   {
+		   return StartDirectDraw(iface,(LPGUID)DDCREATE_HARDWAREONLY, TRUE);
+	   }
+	}
+	else
+	{
+		return StartDirectDraw(iface,(LPGUID)DDCREATE_EMULATIONONLY, TRUE);
+	}
+
+	return DD_FALSE;
+}
 
 
