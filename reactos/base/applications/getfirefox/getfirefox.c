@@ -123,7 +123,7 @@ dlOnProgress(IBindStatusCallback* iface, ULONG ulProgress,
     }
 
   Item = GetDlgItem(This->hDialog, IDC_STATUS);
-  if (NULL != Item)
+  if (NULL != Item && NULL != szStatusText)
     {
       SendMessageW(Item, WM_GETTEXT, sizeof(OldText) / sizeof(OldText[0]),
                    (LPARAM) OldText);
@@ -371,13 +371,17 @@ dlProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 /***********************************************************************
  *              Main program
  */
-int
-main(int argc, char *argv[])
+
+int WINAPI
+WinMain(HINSTANCE hThisInstance,
+        HINSTANCE hPrevInstance,
+        LPSTR lpCmdLine,
+        int nCmdShow)
 {
   InitCommonControls();
 
-  DialogBoxW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_GETFIREFOX), 0,
+  DialogBoxW(hThisInstance, MAKEINTRESOURCEW(IDD_GETFIREFOX), 0,
              dlProc);
-
   return 0;
+
 }
