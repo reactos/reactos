@@ -4,7 +4,7 @@
  * PROJECT  : ReactOS user mode libraries
  * MODULE   : kernel32.dll
  * FILE     : reactos/lib/kernel32/misc/ldr.c
- * AUTHOR   : Boudewijn Dekker
+ * AUTHOR   : Ariadne
  */
 
 #include <k32.h>

@@ -7,7 +7,7 @@
  * PROGRAMER:
  * UPDATE HISTORY:
  *              1995: Created
- *              1998: Added ltoa Boudewijn Dekker
+ *              1998: Added ltoa by Ariadne
  *              2000: derived from ./itoa.c by ea
  */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */

@@ -4,7 +4,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/stdio/putchar.c
  * PURPOSE:     Writes a character to stdout
- * PROGRAMER:   Boudewijn Dekker
+ * PROGRAMER:   Ariadne
  * UPDATE HISTORY:
  *              28/12/98: Created
  */

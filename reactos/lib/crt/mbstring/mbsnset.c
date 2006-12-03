@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/mbstring/mbsnset.c
  * PURPOSE:     Fills a string with a multibyte character
- * PROGRAMER:   Boudewijn Dekker
+ * PROGRAMER:   Ariadne
  * UPDATE HISTORY:
  *              12/04/99: Created
  */

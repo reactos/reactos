@@ -5,7 +5,7 @@
  * FILE:        lib/msvcrt/conio/getche.c
  * PURPOSE:     Reads a character from stdin
  * PROGRAMER:   DJ Delorie
-				Boudewijn Dekker
+				Ariadne
  * UPDATE HISTORY:
  *              28/12/98: Created
  */

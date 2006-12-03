@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/time/strtime.c
  * PURPOSE:     Fills a buffer with a formatted date representation
- * PROGRAMER:   Boudewijn Dekker
+ * PROGRAMER:   Ariadne
  * UPDATE HISTORY:
  *              28/12/98: Created
  */

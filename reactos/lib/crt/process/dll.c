@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/process/dll.c
  * PURPOSE:     Dll support routines
- * PROGRAMER:   Boudewijn Dekker
+ * PROGRAMER:   Ariadne
  * UPDATE HISTORY:
  *              04/03/99: Created
  */

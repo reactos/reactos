@@ -4,7 +4,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/process/system.c
  * PURPOSE:     Excutes a shell command
- * PROGRAMER:   Boudewijn Dekker
+ * PROGRAMER:   Ariadne
  * UPDATE HISTORY:
  *              04/03/99: Created
  */

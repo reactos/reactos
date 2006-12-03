@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/mbstring/hanzen.c
  * PURPOSE:     Multibyte conversion routines formerly called hantozen and zentohan
- * PROGRAMER:   Boudewijn Dekker, Taiji Yamada
+ * PROGRAMER:   Ariadne, Taiji Yamada
  * UPDATE HISTORY:
 		Modified from Taiji Yamada japanese code system utilities
  *              12/04/99: Created

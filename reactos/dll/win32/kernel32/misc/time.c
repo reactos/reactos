@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/time.c
  * PURPOSE:         Time conversion functions
- * PROGRAMMER:      Boudewijn Dekker ( ariadne@xs4all.nl)
+ * PROGRAMMER:      Ariadne
  *                  DOSDATE and DOSTIME structures from Onno Hovers
  * UPDATE HISTORY:
  *                  Created 19/01/99

@@ -4,7 +4,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/io/setmode.c
  * PURPOSE:     Sets the file translation mode
- * PROGRAMER:   Boudewijn Dekker
+ * PROGRAMER:   Ariadne
  * UPDATE HISTORY:
  *              28/12/98: Created
  */

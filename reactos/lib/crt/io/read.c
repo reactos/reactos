@@ -4,7 +4,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/io/read.c
  * PURPOSE:     Reads a file
- * PROGRAMER:   Boudewijn Dekker
+ * PROGRAMER:   Ariadne
  * UPDATE HISTORY:
  *              28/12/1998: Created
  *              03/05/2002: made _read() non-greedy - it now returns as soon as
