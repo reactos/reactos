@@ -987,7 +987,7 @@ DetectSerialMouse(ULONG Port)
 {
   CHAR Buffer[4];
   ULONG i;
-  ULONG TimeOut = 200;
+  ULONG TimeOut;
   UCHAR LineControl;
 
   /* Shutdown mouse or something like that */
@@ -995,9 +995,19 @@ DetectSerialMouse(ULONG Port)
   WRITE_PORT_UCHAR((PUCHAR)Port + 4, (LineControl & ~0x02) | 0x01);
   StallExecutionProcessor(100000);
 
-  /* Clear buffer */
+  /*
+   * Clear buffer
+   * Maybe there is no serial port although BIOS reported one (this
+   * is the case on Apple hardware), or the serial port is misbehaving,
+   * therefore we must give up after some time.
+   */
+  TimeOut = 200;
   while (READ_PORT_UCHAR((PUCHAR)Port + 5) & 0x01)
-    READ_PORT_UCHAR((PUCHAR)Port);
+    {
+      if (--TimeOut == 0)
+        return MOUSE_TYPE_NONE;
+      READ_PORT_UCHAR((PUCHAR)Port);
+    }
 
   /*
    * Send modem control with 'Data Terminal Ready', 'Request To Send' and
@@ -1009,6 +1019,7 @@ DetectSerialMouse(ULONG Port)
   StallExecutionProcessor(10000);
 
   /* Read first four bytes, which contains Microsoft Mouse signs */
+  TimeOut = 200;
   for (i = 0; i < 4; i++)
     {
       while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
