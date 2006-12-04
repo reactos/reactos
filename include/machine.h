@@ -69,7 +69,7 @@ typedef struct tagMACHVTBL
 
   VOID (*RTCGetCurrentDateTime)(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
-  VOID (*HwDetect)(VOID);
+  VOID (*HwDetect)(PCONFIGURATION_COMPONENT_DATA *ComponentRoot);
 } MACHVTBL, *PMACHVTBL;
 
 VOID MachInit(const char *CmdLine);
@@ -111,7 +111,7 @@ BOOLEAN MachDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPAR
 BOOLEAN MachDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
 ULONG MachDiskGetCacheableBlockCount(ULONG DriveNumber);
 VOID MachRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
-VOID MachHwDetect(VOID);
+VOID MachHwDetect(PCONFIGURATION_COMPONENT_DATA *ComponentRoot);
 
 #define MachConsPutChar(Ch)			MachVtbl.ConsPutChar(Ch)
 #define MachConsKbHit()				MachVtbl.ConsKbHit()
@@ -141,7 +141,7 @@ VOID MachHwDetect(VOID);
 #define MachDiskGetDriveGeometry(Drive, Geom)	MachVtbl.DiskGetDriveGeometry((Drive), (Geom))
 #define MachDiskGetCacheableBlockCount(Drive)	MachVtbl.DiskGetCacheableBlockCount(Drive)
 #define MachRTCGetCurrentDateTime(Y, Mo, D, H, Mi, S)	MachVtbl.RTCGetCurrentDateTime((Y), (Mo), (D), (H), (Mi), (S));
-#define MachHwDetect()				MachVtbl.HwDetect()
+#define MachHwDetect(ConfigRoot)			MachVtbl.HwDetect((ConfigRoot))
 
 #endif /* __MACHINE_H_ */
 

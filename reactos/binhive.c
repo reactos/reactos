@@ -680,6 +680,7 @@ RegImportSubKey(PHHIVE Hive,
     {
       HashCell = (PHASH_TABLE_CELL) HvGetCell (Hive, KeyCell->SubKeyLists[HvStable]);
       DbgPrint((DPRINT_REGISTRY, "HashCell: %x\n", HashCell));
+      DbgPrint((DPRINT_REGISTRY, "HashCell->Id: %x\n", HashCell->Id));
       DbgPrint((DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts));
 
       for (i = 0; i < KeyCell->SubKeyCounts[HvStable]; i++)

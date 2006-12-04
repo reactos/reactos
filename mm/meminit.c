@@ -95,6 +95,27 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	MmInitPageLookupTable(PageLookupTableAddress, TotalPagesInLookupTable, BiosMemoryMap, BiosMemoryMapEntryCount);
 	MmUpdateLastFreePageHint(PageLookupTableAddress, TotalPagesInLookupTable);
 
+	// Add machine-dependent stuff
+	// FIXME: this is only for i386
+#if 0
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x00, 1, LoaderFirmwarePermanent); // realmode int vectors
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x01, 7, LoaderFirmwareTemporary); // freeldr stack + cmdline
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x08, 0x70, LoaderLoadedProgram); // freeldr image (roughly max. 0x64 pages)
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x78, 8, LoaderOsloaderStack); // prot mode stack
+
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x80, 0x10, LoaderOsloaderHeap); // File system read buffer
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x90, 0x10, LoaderOsloaderHeap); // Disk read buffer for int 13h
+
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0xA0, 0x60, LoaderFirmwarePermanent); // ROM / Video
+#endif
+	//HACK: Temporary, for test, remove soon
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x00, 0x100, LoaderFirmwarePermanent);
+
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0xFFF, 1, LoaderSpecialMemory); // unusable memory
+
+	//HACK: Needed for ReactOS only! (KERNEL_BASE_PHYS >> MM_PAGE_SHIFT)
+	//MmMarkPagesInLookupTable(PageLookupTableAddress, 0x200, 0x300, LoaderFirmwareTemporary); // ReactOS kernel sits here
+
 	FreePagesInLookupTable = MmCountFreePagesInLookupTable(PageLookupTableAddress, TotalPagesInLookupTable);
 
 	DbgPrint((DPRINT_MEMORY, "Memory Manager initialized. %d pages available.\n", FreePagesInLookupTable));
@@ -190,14 +211,47 @@ PVOID MmFindLocationForPageLookupTable(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG Map
 	RtlCopyMemory(TempBiosMemoryMap, BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
 	MmSortBiosMemoryMap(TempBiosMemoryMap, MapCount);
 
-	for (Index=(MapCount-1); Index>=0; Index--)
+	for (Index=0; Index<MapCount; Index++)
 	{
 		// If this is usable memory with a big enough length
 		// then we'll put our page lookup table here
-		if (TempBiosMemoryMap[Index].Type == BiosMemoryUsable && TempBiosMemoryMap[Index].Length >= PageLookupTableSize)
+
+		// place it somewhere @ 10Mb if possible
+		// (afaik no bad things are placed at 10Mb, if there are
+		//  - we just fallback to the usual algo)
+
+		// skip if this is not usable region
+		if (TempBiosMemoryMap[Index].Type != BiosMemoryUsable)
+			continue;
+
+		if (TempBiosMemoryMap[Index].BaseAddress <= 10 * 0x100000 &&
+		    TempBiosMemoryMap[Index].BaseAddress + TempBiosMemoryMap[Index].Length >=
+		        10 * 0x100000 + PageLookupTableSize)
 		{
-			PageLookupTableMemAddress = (PVOID)(ULONG)(TempBiosMemoryMap[Index].BaseAddress + (TempBiosMemoryMap[Index].Length - PageLookupTableSize));
+			PageLookupTableMemAddress = (PVOID)(10 * 0x100000);
 			break;
+		}
+	}
+
+	// Check if we found a suitable place
+	if (PageLookupTableMemAddress == 0)
+	{
+		// no, let's do a traditional algorithm instead
+		for (Index=(MapCount-1); Index>=0; Index--)
+		{
+			// If this is usable memory with a big enough length
+			// then we'll put our page lookup table here
+
+			// skip if this is not usable region
+			if (TempBiosMemoryMap[Index].Type != BiosMemoryUsable)
+				continue;
+
+			if (TempBiosMemoryMap[Index].Length >= PageLookupTableSize)
+			{
+				PageLookupTableMemAddress = (PVOID)(ULONG)
+					(TempBiosMemoryMap[Index].BaseAddress + (TempBiosMemoryMap[Index].Length - PageLookupTableSize));
+				break;
+			}
 		}
 	}
 
@@ -243,7 +297,7 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_ME
 	// Mark every page as allocated initially
 	// We will go through and mark pages again according to the memory map
 	// But this will mark any holes not described in the map as allocated
-	MmMarkPagesInLookupTable(PageLookupTable, 0, TotalPageCount, 1);
+	MmMarkPagesInLookupTable(PageLookupTable, 0, TotalPageCount, LoaderFirmwarePermanent);
 
 	for (Index=0; Index<MapCount; Index++)
 	{
@@ -256,8 +310,9 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_ME
 	}
 
 	// Mark the low memory region below 1MB as reserved (256 pages in region)
-	DbgPrint((DPRINT_MEMORY, "Marking the low 1MB region as reserved.\n"));
-	MmMarkPagesInLookupTable(PageLookupTable, 0, 256, LoaderFirmwarePermanent);
+	//FIXME: Not needed now since we mark low 1Mb with really used and free areas
+	//DbgPrint((DPRINT_MEMORY, "Marking the low 1MB region as reserved.\n"));
+	//MmMarkPagesInLookupTable(PageLookupTable, 0, 256, LoaderFirmwarePermanent);
 
 	// Mark the pages that the lookup table occupies as reserved
 	PageLookupTableStartPage = MmGetPageNumberFromAddress(PageLookupTable);
@@ -283,14 +338,14 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG Page
 	DbgPrint((DPRINT_MEMORY, "MmMarkPagesInLookupTable() Done\n"));
 }
 
-VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount)
+VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, TYPE_OF_MEMORY MemoryType)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
 	ULONG							Index;
 
 	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
 	{
-		RealPageLookupTable[Index].PageAllocated = LoaderSystemCode;
+		RealPageLookupTable[Index].PageAllocated = MemoryType;
 		RealPageLookupTable[Index].PageAllocationLength = (Index == StartPage) ? PageCount : 0;
 	}
 }
@@ -328,7 +383,8 @@ ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG Pa
 	if (FromEnd)
 	{
 		/* Allocate "high" (from end) pages */
-		for (Index=LastFreePageHint-1; Index>0; Index--)
+		for (Index=/*LastFreePageHint-1*/(16*1024*1024>>12)-1; Index>0; Index--)
+		//for (Index=LastFreePageHint-1; Index>0; Index--)
 		{
 			if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
 			{

@@ -76,7 +76,11 @@ VOID DetectApmBios(FRLDRHKEY SystemKey, ULONG *BusNumber);
 VOID DetectCPUs(FRLDRHKEY SystemKey);
 
 /* hwpci.c */
-VOID DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber);
+PCONFIGURATION_COMPONENT_DATA DetectPciBios(FRLDRHKEY SystemKey,
+                                            ULONG *BusNumber,
+                                            PCONFIGURATION_COMPONENT_DATA ComponentRoot,
+                                            PCONFIGURATION_COMPONENT_DATA PreviousComponent,
+                                            BOOLEAN NextChild);
 
 /* i386cpu.S */
 ULONG CpuidSupported(VOID);

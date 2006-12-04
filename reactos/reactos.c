@@ -650,6 +650,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	UINT i;
 	CHAR  MsgBuffer[256];
 	ULONG SectionId;
+	PCONFIGURATION_COMPONENT_DATA ConfigRoot;
 
 	ULONG_PTR Base;
 	ULONG Size;
@@ -767,7 +768,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	/*
 	 * Detect hardware
 	 */
-	MachHwDetect();
+	MachHwDetect(&ConfigRoot);
     UiDrawProgressBarCenter(5, 100, szLoadingMsg);
 
 	if (AcpiPresent) LoaderBlock.Flags |= MB_FLAGS_ACPI_TABLE;

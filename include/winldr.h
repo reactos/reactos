@@ -40,8 +40,8 @@ NTAPI
 #define SECTOR_SIZE 512
 
 // Descriptors
-#define NUM_GDT 28 //15. The kernel wants 0xD8 as a last GDT entry offset
-#define NUM_IDT 0x100 // only 16 are used though
+#define NUM_GDT 128 // Must be 128
+#define NUM_IDT 0x100 // only 16 are used though. Must be 0x100
 
 // conversion.c
 PVOID VaToPa(PVOID Va);
@@ -52,6 +52,7 @@ VOID ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start);
 // peloader.c
 BOOLEAN
 WinLdrLoadImage(IN PCHAR FileName,
+                TYPE_OF_MEMORY MemoryType,
                 OUT PVOID *ImageBasePA);
 
 

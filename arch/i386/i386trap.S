@@ -591,63 +591,63 @@ i386PrintHexByte1:
 	ret
 
 /************************************************************************/
-EXTERN(i386DivideByZero)
+EXTERN(_i386DivideByZero)
 	.code32
 
 	movl	$i386DivideByZeroText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386DebugException)
+EXTERN(_i386DebugException)
 	.code32
 
 	movl	$i386DebugExceptionText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386NMIException)
+EXTERN(_i386NMIException)
 	.code32
 
 	movl	$i386NMIExceptionText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386Breakpoint)
+EXTERN(_i386Breakpoint)
 	.code32
 
 	movl	$i386BreakpointText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386Overflow)
+EXTERN(_i386Overflow)
 	.code32
 
 	movl	$i386OverflowText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386BoundException)
+EXTERN(_i386BoundException)
 	.code32
 
 	movl	$i386BoundExceptionText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386InvalidOpcode)
+EXTERN(_i386InvalidOpcode)
 	.code32
 
 	movl	$i386InvalidOpcodeText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386FPUNotAvailable)
+EXTERN(_i386FPUNotAvailable)
 	.code32
 
 	movl	$i386FPUNotAvailableText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386DoubleFault)
+EXTERN(_i386DoubleFault)
 	.code32
 
 	popl	%eax
@@ -657,14 +657,14 @@ EXTERN(i386DoubleFault)
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386CoprocessorSegment)
+EXTERN(_i386CoprocessorSegment)
 	.code32
 
 	movl	$i386CoprocessorSegmentText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386InvalidTSS)
+EXTERN(_i386InvalidTSS)
 	.code32
 
 	popl	%eax
@@ -674,7 +674,7 @@ EXTERN(i386InvalidTSS)
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386SegmentNotPresent)
+EXTERN(_i386SegmentNotPresent)
 	.code32
 
 	popl	%eax
@@ -684,7 +684,7 @@ EXTERN(i386SegmentNotPresent)
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386StackException)
+EXTERN(_i386StackException)
 	.code32
 
 	popl	%eax
@@ -694,7 +694,7 @@ EXTERN(i386StackException)
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386GeneralProtectionFault)
+EXTERN(_i386GeneralProtectionFault)
 	.code32
 
 	popl	%eax
@@ -704,7 +704,7 @@ EXTERN(i386GeneralProtectionFault)
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386PageFault)
+EXTERN(_i386PageFault)
 	.code32
 
 	popl	%eax
@@ -714,21 +714,21 @@ EXTERN(i386PageFault)
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386CoprocessorError)
+EXTERN(_i386CoprocessorError)
 	.code32
 
 	movl	$i386CoprocessorErrorText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386AlignmentCheck)
+EXTERN(_i386AlignmentCheck)
 	.code32
 
 	movl	$i386AlignmentCheckText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
-EXTERN(i386MachineCheck)
+EXTERN(_i386MachineCheck)
 	.code32
 
 	movl	$i386MachineCheckText,i386ExceptionDescriptionText

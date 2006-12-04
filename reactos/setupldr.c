@@ -284,6 +284,7 @@ VOID RunLoader(VOID)
   const char *LoadOptions;
   UINT i;
   char szKernelName[256];
+  PCONFIGURATION_COMPONENT_DATA ConfigRoot;
 
   HINF InfHandle;
   ULONG ErrorLine;
@@ -354,7 +355,7 @@ VOID RunLoader(VOID)
 #else
   printf("Detecting hardware...\n\n");
 #endif
-  MachHwDetect();
+  MachHwDetect(&ConfigRoot);
 #ifdef USE_UI
   UiDrawStatusText("");
 #endif

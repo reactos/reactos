@@ -20,7 +20,7 @@
 #include <freeldr.h>
 
 VOID
-XboxHwDetect(VOID)
+XboxHwDetect(PCONFIGURATION_COMPONENT_DATA *ComponentRoot)
 {
 }
 

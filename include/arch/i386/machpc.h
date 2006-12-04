@@ -55,7 +55,7 @@ ULONG PcDiskGetCacheableBlockCount(ULONG DriveNumber);
 
 VOID PcRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
-VOID PcHwDetect(VOID);
+VOID PcHwDetect(PCONFIGURATION_COMPONENT_DATA *ComponentRoot);
 
 #endif /* __I386_MACHPC_H_ */
 

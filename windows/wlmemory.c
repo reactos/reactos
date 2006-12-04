@@ -28,33 +28,31 @@ extern ULONG TotalNLSSize;
 
 #define HYPER_SPACE_ENTRY       0x300
 
-//TODO: Check if this is correct
 PCHAR  MemTypeDesc[]  = {
-    "ExceptionBlock    ",
-    "SystemBlock       ",
+    "ExceptionBlock    ", // ?
+    "SystemBlock       ", // ?
     "Free              ",
-    "Bad               ",
-    "LoadedProgram     ",
-    "FirmwareTemporary ",
-    "FirmwarePermanent ",
-    "OsloaderHeap      ",
-    "OsloaderStack     ",
+    "Bad               ", // used
+    "LoadedProgram     ", // == Free
+    "FirmwareTemporary ", // == Free
+    "FirmwarePermanent ", // == Bad
+    "OsloaderHeap      ", // used
+    "OsloaderStack     ", // == Free
     "SystemCode        ",
     "HalCode           ",
-    "BootDriver        ",
-    "ConsoleInDriver   ",
-    "ConsoleOutDriver  ",
-    "StartupDpcStack   ",
-    "StartupKernelStack",
-    "StartupPanicStack ",
-    "StartupPcrPage    ",
-    "StartupPdrPage    ",
-    "RegistryData      ",
-    "MemoryData        ",
-    "NlsData           ",
-    "SpecialMemory     ",
-    "BBTMemory         ",
-    "Maximum           "
+    "BootDriver        ", // not used
+    "ConsoleInDriver   ", // ?
+    "ConsoleOutDriver  ", // ?
+    "StartupDpcStack   ", // ?
+    "StartupKernelStack", // ?
+    "StartupPanicStack ", // ?
+    "StartupPcrPage    ", // ?
+    "StartupPdrPage    ", // ?
+    "RegistryData      ", // used
+    "MemoryData        ", // not used
+    "NlsData           ", // used
+    "SpecialMemory     ", // == Bad
+    "BBTMemory         " // == Bad
     };
 
 VOID
@@ -63,8 +61,8 @@ WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 VOID
 MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   UINT64 BasePage,
-                   UINT64 PageCount,
+                   ULONG BasePage,
+                   ULONG PageCount,
                    ULONG Type);
 VOID
 WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
@@ -138,8 +136,9 @@ MempAllocatePageTables()
 
 	// Allocate memory block for all these things:
 	// PDE, HAL mapping page table, physical mapping, kernel mapping
+	// FIXME: PDE+HAL+KernelPTEs == FirmwarePermanent, Physical PTEs = FirmwareTemporary
 	TotalSize = (1+1+NumPageTables*2)*MM_PAGE_SIZE;
-	Buffer = MmAllocateMemory(TotalSize);
+	Buffer = MmAllocateMemoryWithType(TotalSize, LoaderFirmwarePermanent);
 
 	if (Buffer == NULL)
 	{
@@ -269,8 +268,8 @@ MempSetupPaging(IN ULONG StartPage,
 
 VOID
 MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   UINT64 BasePage,
-                   UINT64 PageCount,
+                   ULONG BasePage,
+                   ULONG PageCount,
                    ULONG Type)
 {
 	BOOLEAN Status;
@@ -296,72 +295,32 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	// Check if it's more than the allowed for OS loader
 	// if yes - don't map the pages, just add as FirmwareTemporary
 	//
-	if (BasePage + PageCount > LOADER_HIGH_ZONE && (Type != LoaderNlsData))
+	if (BasePage + PageCount > LOADER_HIGH_ZONE)
 	{
 		Mad[MadCount].MemoryType = LoaderFirmwareTemporary;
 
 		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
 		MadCount++;
 
-		Status = MempSetupPaging(BasePage, PageCount);
-		if (!Status)
-		{
-			DbgPrint((DPRINT_WINDOWS, "Error during WinLdrpSetupPaging\n"));
-			return;
-		}
 		return;
 	}
 	
-	if (BasePage == 0xFFF && PageCount == 1)
+	//
+	// Set memory type
+	//
+	Mad[MadCount].MemoryType = Type;
+
+	//
+	// Add descriptor
+	//
+	WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
+	MadCount++;
+
+	//
+	// Map it
+	//
+	if (BasePage >= 0x100)
 	{
-		Mad[MadCount].MemoryType = LoaderSpecialMemory;
-
-		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-		MadCount++;
-
-		//
-		// Map it
-		//
-		Status = MempSetupPaging(BasePage, PageCount);
-		if (!Status)
-		{
-			DbgPrint((DPRINT_WINDOWS, "Error during MempSetupPaging\n"));
-			return;
-		}
-	}
-	else if (BasePage == 0 && PageCount == 1)
-	{
-		Mad[MadCount].MemoryType = LoaderFirmwarePermanent;
-
-		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-		MadCount++;
-
-		//
-		// Map it
-		//
-		Status = MempSetupPaging(BasePage, PageCount);
-		if (!Status)
-		{
-			DbgPrint((DPRINT_WINDOWS, "Error during MempSetupPaging\n"));
-			return;
-		}
-	}
-	else
-	{
-		//
-		// Set memory type
-		//
-		Mad[MadCount].MemoryType = Type;
-
-		//
-		// Add descriptor
-		//
-		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-		MadCount++;
-
-		//
-		// Map it
-		//
 		Status = MempSetupPaging(BasePage, PageCount);
 		if (!Status)
 		{
@@ -378,12 +337,11 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    PVOID GdtIdt)
 {
 	ULONG i, PagesCount;
-	ULONG LastPageIndex, LastPageType, NtType;
+	ULONG LastPageIndex, LastPageType;
 	PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
 	ULONG NoEntries;
 	PKTSS Tss;
-	PVOID NlsBase = VaToPa(((PNLS_DATA_BLOCK)VaToPa(LoaderBlock->NlsData))->AnsiCodePageData);
-	ULONG NlsBasePage = (ULONG_PTR)NlsBase >> PAGE_SHIFT;
+	BOOLEAN Status;
 
 	//
 	// Creating a suitable memory map for the Windows can be tricky, so let's
@@ -420,8 +378,15 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return FALSE;
 	}
 
-	DbgPrint((DPRINT_WINDOWS, "Got memory map with %d entries, NlsBasePage 0x%X\n",
-		NoEntries, NlsBasePage));
+	DbgPrint((DPRINT_WINDOWS, "Got memory map with %d entries\n", NoEntries));
+
+	// Always contigiously map low 1Mb of memory
+	Status = MempSetupPaging(0, 0x100);
+	if (!Status)
+	{
+		DbgPrint((DPRINT_WINDOWS, "Error during MempSetupPaging of low 1Mb\n"));
+		return FALSE;
+	}
 
 	// Construct a good memory map from what we've got
 	PagesCount = 1;
@@ -430,66 +395,14 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	for(i=1;i<NoEntries;i++)
 	{
 		if (MemoryMap[i].PageAllocated == LastPageType &&
-			(i < NlsBasePage || i > NlsBasePage+TotalNLSSize) && (i != NoEntries-1) )
+			(i != NoEntries-1) )
 		{
 			PagesCount++;
-		}
-		else if (i == NlsBasePage)
-		{
-			// This is NLS data, map it accordingly
-			// It's VERY important for NT kernel - it calculates size of NLS
-			// tables based on NlsData memory type descriptors!
-
-			// Firstly map what we already have (if we have any)
-			// Convert mem types
-			if (LastPageType == 0)
-				NtType = LoaderFree;
-			else if (LastPageType != 0 && LastPageType != 1)
-				NtType = LoaderFirmwarePermanent;
-			else if (LastPageType == 1)
-				NtType = LoaderSystemCode;
-			else
-				NtType = LoaderFirmwarePermanent;
-
-			if (PagesCount > 0)
-				MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, NtType);
-
-			// Then map nls data
-			MempAddMemoryBlock(LoaderBlock, NlsBasePage, TotalNLSSize, LoaderNlsData);
-
-			// skip them
-			i += TotalNLSSize;
-
-			// Reset our counter vars
-			LastPageIndex = i;
-			LastPageType = MemoryMap[i].PageAllocated;
-			PagesCount = 1;
-
-			continue;
 		}
 		else
 		{
 			// Add the resulting region
-
-			// Convert mem types
-			if (LastPageType == 0)
-			{
-				NtType = LoaderFree;
-			}
-			else if (LastPageType != 0 && LastPageType != 1)
-			{
-				NtType = LoaderFirmwarePermanent;
-			}
-			else if (LastPageType == 1)
-			{
-				NtType = LoaderSystemCode;
-			}
-			else
-			{
-				NtType = LoaderFirmwarePermanent;
-			}
-
-			MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, NtType);
+			MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, LastPageType);
 
 			// Reset our counter vars
 			LastPageIndex = i;

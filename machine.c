@@ -228,9 +228,9 @@ MachRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PU
 }
 
 VOID
-MachHwDetect(VOID)
+MachHwDetect(PCONFIGURATION_COMPONENT_DATA *ComponentRoot)
 {
-  MachVtbl.HwDetect();
+  MachVtbl.HwDetect(ComponentRoot);
 }
 
 /* EOF */
