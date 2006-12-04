@@ -1,4 +1,4 @@
-<module name="ks" type="exportdriver" installbase="system32/drivers" installname="ks.sys" warnings="true">
+<module name="ks" type="exportdriver" installbase="system32/drivers" installname="ks.sys" allowwarnings="true">
 	<include base="ks">.</include>
 	<include base="ks">..</include>
 	<include base="ks">../include</include>
