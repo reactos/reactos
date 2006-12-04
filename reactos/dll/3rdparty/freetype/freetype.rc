@@ -1,8 +1,0 @@
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"FreeType font handling library\0"
-#define REACTOS_STR_INTERNAL_NAME	"freetype\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"freetype.dll\0"
-#define REACTOS_STR_COMPANY_NAME	"ReactOS Development Team/FreeType Team\0"
-#define REACTOS_STR_LEGAL_COPYRIGHT	"Copyright 1998-2006 ReactOS Team\0"
-#define REACTOS_STR_ORIGINAL_COPYRIGHT	"Copyright 1996-2006 FreeType Team\0"
-#include <reactos/version.rc>
