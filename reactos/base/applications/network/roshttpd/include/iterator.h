@@ -11,6 +11,8 @@
 template <class Item>
 class CIterator {
 public:
+	virtual ~CIterator()
+	{}
 	virtual VOID First() = 0;
 	virtual VOID Next() = 0;
 	virtual BOOL IsDone() const = 0;
