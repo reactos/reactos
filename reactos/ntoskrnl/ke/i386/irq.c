@@ -226,7 +226,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
 
     /* Set the system affinity and acquire the dispatcher lock */
     KeSetSystemAffinityThread(1 << Number);
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Check if it's already been connected */
     if (!Interrupt->Connected)
@@ -272,7 +272,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     }
 
     /* Unlock the dispatcher and revert affinity */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
     KeRevertToUserAffinityThread();
 
     /* Return to caller */
@@ -296,7 +296,7 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
     KeSetSystemAffinityThread(1 << Interrupt->Number);
 
     /* Lock the dispatcher */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Check if it's actually connected */
     State = Interrupt->Connected;
@@ -354,7 +354,7 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
     }
 
     /* Unlock the dispatcher and revert affinity */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
     KeRevertToUserAffinityThread();
 
     /* Return to caller */

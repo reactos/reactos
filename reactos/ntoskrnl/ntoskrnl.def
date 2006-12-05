@@ -660,7 +660,6 @@ KiCoprocessorError@0
 KiCheckForKernelApcDelivery@0
 KiDeliverApc@12
 KiDispatchInterrupt@0
-KiInterruptDispatch2@8
 KiEnableTimerWatchdog
 KiIpiServiceRoutine@8
 @KiReleaseSpinLock@4
@@ -1416,7 +1415,7 @@ ZwSetValueKey@24
 ZwSetVolumeInformationFile@20
 ZwTerminateJobObject@8
 ZwTerminateProcess@8
-ZwTranslateFilePath@12
+ZwTranslateFilePath@16
 ZwUnloadDriver@4
 ZwUnloadKey@4
 ZwUnmapViewOfSection@8

@@ -8,20 +8,5 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"sndvol32.exe\0"
 #include <reactos/version.rc>
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-
-1 24 DISCARDABLE "manifest.xml"
-
-IDI_MAINAPP ICON DISCARDABLE resources/sndvol32.ico
-
-#include "cs-CZ.rc"
-#include "de-DE.rc"
-#include "en-US.rc"
-#include "fr-FR.rc"
-#include "hu-HU.rc"
-#include "ja-JP.rc"
-#include "nl-NL.rc"
-#include "sv-SE.rc"
-#include "uk-UA.rc"
-
+#include "rsrc.rc"
 

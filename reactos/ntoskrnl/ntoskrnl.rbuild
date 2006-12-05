@@ -36,7 +36,7 @@
                 <file>ctxswitch.S</file>
                 <file>clock.S</file>
                 <file>exp.c</file>
-                <!-- <file>irq.c</file> -->
+                <file>irq.c</file>
                 <file>kiinit.c</file>
                 <file>ldt.c</file>
                 <file>mtrr.c</file>
@@ -72,10 +72,6 @@
             <file>thrdobj.c</file>
             <file>timer.c</file>
             <file>wait.c</file>
-    </directory>
-    <directory name="deprecated">
-        <file>irqhand.S</file>
-        <file>irq.c</file>
     </directory>
     <directory name="cc">
             <file>cacheman.c</file>

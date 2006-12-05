@@ -8,12 +8,14 @@
 
 	<library>ntdll</library>          
 	<library>kernel32</library>
+	<library>user32</library>
 	<library>gdi32</library>
 	<library>d3d8thk</library>
 	<library>dxguid</library>
 	<library>ole32</library>
 	<library>user32</library>
 	<library>advapi32</library>
+	<library>msvcrt</library>
 
 	<file>ddraw.rc</file>
 	<file>main.c</file>
@@ -28,14 +30,10 @@
 	<file>iface_kernel.c</file>
 
       <file>callbacks_hel.c</file>
+      <file>callbacks_surf_hel.c</file>
 
 	<directory name="main">
 		<file>ddraw_main.c</file>
 		<file>surface_main.c</file>				
 	</directory>	
-
-	<directory name="thunks">
-		<file>ddraw_thunk.c</file>
-		<file>surface_thunk.c</file>
-	</directory>
 </module>

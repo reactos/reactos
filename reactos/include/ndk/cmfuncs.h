@@ -37,8 +37,7 @@ NtCompactKeys(
 NTSTATUS
 NTAPI
 NtCompressKey(
-    IN HANDLE Key,
-    IN ULONG Mode
+    IN HANDLE Key
 );
 
 NTSYSCALLAPI

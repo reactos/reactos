@@ -1772,6 +1772,7 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
     }
 
   RtlZeroMemory(&Srb, sizeof(SCSI_REQUEST_BLOCK));
+  RtlZeroMemory(CapacityBuffer, sizeof(READ_CAPACITY_DATA));
 
   Srb.CdbLength = 10;
   Srb.TimeOutValue = DeviceExtension->TimeOutValue;
@@ -1787,6 +1788,7 @@ TryAgain:
 				       FALSE);
   DPRINT("Status: %lx\n", Status);
   DPRINT("Srb: %p\n", &Srb);
+  if (CapacityBuffer->BytesPerBlock == 0) Status = STATUS_NOT_SUPPORTED;
   if (NT_SUCCESS(Status))
     {
       SectorSize = (((PUCHAR)&CapacityBuffer->BytesPerBlock)[0] << 24) |

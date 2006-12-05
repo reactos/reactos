@@ -341,6 +341,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 	string cbproj_path = module.GetBasePath();	
 	string CompilerVar;
 	string baseaddr;
+	string windres_defines;
 	string project_linker_flags = "-Wl,--enable-stdcall-fixup ";
 	project_linker_flags += GenerateProjectLinkerFlags();
 
@@ -417,7 +418,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		const vector<Library*>& libs = data.libraries;
 		for ( i = 0; i < libs.size(); i++ )
 		{
-			string libpath = outdir + "\\" + libs[i]->importedModule->GetBasePath();
+			string libpath = intdir + "\\" + libs[i]->importedModule->GetBasePath();
 			libraries.push_back ( libs[i]->name );
 			libpaths.push_back ( libpath );
 		}
@@ -433,10 +434,12 @@ CBBackend::_generate_cbproj ( const Module& module )
 			{
 				const string& escaped = _replace_str(defs[i]->value, "\"","&quot;");
 				common_defines.push_back( defs[i]->name + "=" + escaped );
+				windres_defines += "-D" + defs[i]->name + "=" + escaped + " ";
 			}
 			else
 			{
 				common_defines.push_back( defs[i]->name );
+				windres_defines += "-D" + defs[i]->name + " ";
 			}
 		}
 		/*const vector<Property*>& variables = data.properties;
@@ -482,12 +485,18 @@ CBBackend::_generate_cbproj ( const Module& module )
 
 		if ( configuration.UseConfigurationInPath )
 		{
-			fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), cfg.name.c_str(), module.name.c_str(), module_type.c_str());
+			if ( module.type == StaticLibrary ||module.type == ObjectLibrary )
+				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", intdir.c_str (), module.GetBasePath ().c_str (), cfg.name.c_str(), module.name.c_str(), module_type.c_str());
+			else
+				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), cfg.name.c_str(), module.name.c_str(), module_type.c_str());
 			fprintf ( OUT, "\t\t\t\t<Option object_output=\"%s\\%s%s\" />\r\n", intdir.c_str(), module.GetBasePath ().c_str (), cfg.name.c_str() );
 		}
 		else
 		{
-			fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), module.name.c_str(), module_type.c_str() );
+			if ( module.type == StaticLibrary || module.type == ObjectLibrary )
+				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", intdir.c_str (), module.GetBasePath ().c_str (), module.name.c_str(), module_type.c_str() );
+			else
+				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", outdir.c_str (), module.GetBasePath ().c_str (), module.name.c_str(), module_type.c_str() );
 			fprintf ( OUT, "\t\t\t\t<Option object_output=\"%s\\%s\" />\r\n", intdir.c_str(), module.GetBasePath ().c_str () );
 		}
 
@@ -562,7 +571,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		{
 			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,%s%s\" />\r\n", "_", module.GetEntryPoint(false) == "" ? "DriverEntry@8" : module.GetEntryPoint(false).c_str ());
 			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--image-base,%s\" />\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str () );
-			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-nostartfiles -nostdlib\" />\r\n" );
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-nostartfiles -Wl,--nostdlib\" />\r\n" );
 		}
 		else if ( exe )
 		{
@@ -575,18 +584,28 @@ CBBackend::_generate_cbproj ( const Module& module )
 			{
 				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,_NtProcessStartup@4\" />\r\n" );
 				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--image-base,%s\" />\r\n", baseaddr.c_str () );
-				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-nostartfiles -nostdlib\" />\r\n" );
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-nostartfiles -Wl,--nostdlib\" />\r\n" );
 			}
 			else
 			{
-				fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", module.useHostStdlib ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc" );
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", module.useHostStdlib ? "-nostartfiles" : "-nostartfiles -Wl,--nostdlib" );
+				fprintf ( OUT, "\t\t\t\t\t<Add library=\"gcc\" />\r\n" );
 			}
 		}
 		else if ( dll )
 		{
 			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,%s%s\" />\r\n", "_", module.GetEntryPoint(false).c_str () );
 			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--image-base,%s\" />\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str () );
-			fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", module.useHostStdlib ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc" );
+
+			if ( module.type == Win32DLL )
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--shared\" />\r\n" );
+			else if ( module.type == NativeDLL)
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--shared\" />\r\n" );
+			else if ( module.type == NativeDLL)
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-nostartfiles -Wl,--shared\" />\r\n" );
+
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", module.useHostStdlib ? "-nostartfiles" : "-nostartfiles -Wl,--nostdlib" );
+			fprintf ( OUT, "\t\t\t\t\t<Add library=\"gcc\" />\r\n" );
 		}
 
 		fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--file-alignment,0x1000\" />\r\n" );
@@ -611,12 +630,16 @@ CBBackend::_generate_cbproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t\t<ExtraCommands>\r\n" );
 
 		if ( module.type == StaticLibrary && module.importLibrary )
-			fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib &quot;$(TARGET_OUTPUT_DIR)lib$(TARGET_OUTPUT_BASENAME).a&quot; %s -U\" />\r\n", module.importLibrary->dllname.c_str (), module.importLibrary->definition.c_str(), module.mangledSymbols ? "" : "--kill-at" );
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib $exe_output; %s -U\" />\r\n", module.importLibrary->dllname.c_str (), module.importLibrary->definition.c_str(), module.mangledSymbols ? "" : "--kill-at" );
+		else if ( module.importLibrary != NULL )
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib &quot;%s\\%s\\lib$(TARGET_OUTPUT_BASENAME).a&quot; %s\" />\r\n", module.GetTargetName ().c_str(), module.importLibrary->definition.c_str(), intdir.c_str(), module.GetBasePath().c_str(), module.mangledSymbols ? "" : "--kill-at" );
+			//fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib &quot;$(TARGET_OBJECT_DIR)lib$(TARGET_OUTPUT_BASENAME).a&quot; %s\" />\r\n", module.GetTargetName ().c_str(), module.importLibrary->definition.c_str(), module.mangledSymbols ? "" : "--kill-at" );
 
 		if ( dll )
 		{
 			
-			fprintf ( OUT, "\t\t\t\t\t<Add before=\"dlltool --dllname %s --def %s --output-exp %s.temp.exp %s\" />\r\n", module.importLibrary->dllname.c_str (), module.importLibrary->definition.c_str(), module.name.c_str(), module.mangledSymbols ? "" : "--kill-at" );
+			fprintf ( OUT, "\t\t\t\t\t<Add before=\"dlltool --dllname %s --def %s --output-exp %s.temp.exp %s\" />\r\n", module.GetTargetName ().c_str(), module.importLibrary->definition.c_str(), module.name.c_str(), module.mangledSymbols ? "" : "--kill-at" );
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"%s\\tools\\pefixup $exe_output -exports\" />\r\n", outdir.c_str() );
 #ifdef WIN32
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"cmd /c del %s.temp.exp 2&gt;NUL\" />\r\n", module.name.c_str() );
 #else
@@ -691,6 +714,8 @@ CBBackend::_generate_cbproj ( const Module& module )
 		const string& resource_file = resource_files[i];
 		fprintf ( OUT, "\t\t<Unit filename=\"%s\">\r\n", resource_file.c_str() );
 		fprintf ( OUT, "\t\t\t<Option compilerVar=\"WINDRES\" />\r\n" );
+		string extension = GetExtension ( resource_file );
+		fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"gcc -xc -E -DRC_INVOKED $includes %s $file -o kernel32.kernel32.rci.tmp\\n%s\\tools\\wrc\\wrc.exe $includes %s kernel32.kernel32.rci.tmp kernel32.kernel32.res.tmp\\n$rescomp --output-format=coff kernel32.kernel32.res.tmp -o $resource_output\" />\r\n" , windres_defines.c_str(), outdir.c_str(),  windres_defines.c_str() );
 		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
 		{
 			const CBConfiguration& cfg = *m_configurations[icfg];

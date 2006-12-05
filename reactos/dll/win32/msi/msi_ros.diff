@@ -5335,21 +5335,21 @@ Index: tokenize.c
 ===================================================================
 --- tokenize.c	(revision 23808)
 +++ tokenize.c	(working copy)
-@@ -156,7 +156,7 @@
+@@ -87,7 +87,7 @@
+ ** These are the keywords
+ */
  static const Keyword aKeywordTable[] = {
-   { ABORT_W, TK_ABORT },
-   { AFTER_W, TK_AFTER },
 +  /*{ ALTER_W, TK_ALTER },*/
 -  { ALTER_W, TK_ALTER },
-   { ALL_W, TK_ALL },
    { AND_W, TK_AND },
-   { AS_W, TK_AS },
-@@ -247,7 +247,7 @@
+   { BY_W, TK_BY },
+   { CHAR_W, TK_CHAR },
+@@ -118,7 +118,7 @@
+   { SET_W, TK_SET },
    { SHORT_W, TK_SHORT },
-   { STATEMENT_W, TK_STATEMENT },
    { TABLE_W, TK_TABLE },
 +  /*{ TEMPORARY_W, TK_TEMPORARY },*/
 -  { TEMPORARY_W, TK_TEMPORARY },
-   { THEN_W, TK_THEN },
-   { TRANSACTION_W, TK_TRANSACTION },
-   { TRIGGER_W, TK_TRIGGER },
+   { UPDATE_W, TK_UPDATE },
+   { VALUES_W, TK_VALUES },
+   { WHERE_W, TK_WHERE },

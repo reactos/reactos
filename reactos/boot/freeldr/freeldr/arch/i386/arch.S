@@ -219,8 +219,11 @@ inrmode:
 empty_8042:
 	.word	0x00eb,0x00eb            // jmp $+2, jmp $+2
 	inb	$0x64,%al
+	cmp	$0xff, %al               // legacy-free machine without keyboard
+	jz	empty_8042_ret           // controllers on Intel Macs read back 0xFF
 	testb	$0x02,%al
 	jnz	empty_8042
+empty_8042_ret:
 	ret
 
 	/*

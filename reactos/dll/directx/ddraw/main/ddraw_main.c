@@ -28,28 +28,14 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
 
 	DX_WINDBG_trace();
     
+	/* fixme 
+	   the D3D object cab be optain from here 
+	   Direct3D7 
+	*/
     if (IsEqualGUID(&IID_IDirectDraw7, id))
     {
 		/* DirectDraw7 Vtable */
 		This->lpVtbl = &DirectDraw7_Vtable;
-        *obj = &This->lpVtbl;
-    }
-    else if (IsEqualGUID(&IID_IDirectDraw, id))
-    {
-		/* DirectDraw1 Vtable */
-		This->lpVtbl = &DirectDraw_Vtable; 
-        *obj = &This->lpVtbl;        
-    }
-    else if (IsEqualGUID(&IID_IDirectDraw2, id))
-    {   
-		/* DirectDraw2 Vtable */
-		This->lpVtbl = &DirectDraw2_Vtable;
-        *obj = &This->lpVtbl;
-    }
-    else if (IsEqualGUID(&IID_IDirectDraw4, id))
-    {
-		/* DirectDraw4 Vtable */
-        This->lpVtbl = &DirectDraw4_Vtable;
         *obj = &This->lpVtbl;
     }
     else
@@ -198,10 +184,6 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     LPDDRAWI_DDRAWSURFACE_INT That; 
 	
-	
-
-	DX_WINDBG_trace();
-
     if (pUnkOuter!=NULL) 
 	{
         return CLASS_E_NOAGGREGATION; 
@@ -219,10 +201,16 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
         return E_OUTOFMEMORY;
 	}
 
-    	
+	That->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));
+    
+    if (That == NULL) 
+	{
+        return E_OUTOFMEMORY;
+	}
+
     That->lpVtbl = &DirectDrawSurface7_Vtable;
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
-	
+
 	That->lpLcl->lpGbl = &ddSurfGbl;
 	That->lpLcl->lpGbl->lpDD = &ddgbl;
 
@@ -248,17 +236,22 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
         pDDSD->ddsCaps.dwCaps = DDSCAPS_LOCALVIDMEM | DDSCAPS_VIDEOMEMORY;
     }
 
+	
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_ALLOCONLOAD)
     {
         /* If the surface is of the 'alloconload' type, ignore the LPSURFACE field */
         pDDSD->dwFlags &= ~DDSD_LPSURFACE;
     }
 
+	DX_STUB_str("pDDSD->ddsCaps.dwCaps ok");
+
     if ((pDDSD->dwFlags & DDSD_LPSURFACE) && (pDDSD->lpSurface == NULL))
     {
         /* Frank Herbert's Dune specifies a null pointer for the surface, ignore the LPSURFACE field */       
         pDDSD->dwFlags &= ~DDSD_LPSURFACE;
     }
+
+	DX_STUB_str("pDDSD->dwFlags ok");
 
 	/* own code now */
 
@@ -292,6 +285,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
              DX_STUB_str( "Can not create offscreenplain surface");
     }
   
+	DX_STUB_str("DDERR_INVALIDSURFACETYPE");
     return DDERR_INVALIDSURFACETYPE;  
    
 }
@@ -719,55 +713,65 @@ Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 HRESULT WINAPI 
 Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD cooplevel)
 {
+	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+
+	DX_WINDBG_trace();
+
+	/* This code should be a callback */
+	This->lpLcl->hWnd = hwnd;
+	This->lpLcl->hFocusWnd = hwnd;	
+	ReCreateDirectDraw(iface);
+
     // TODO:                                                            
     // - create a scaner that check which driver we should get the HDC from    
     //   for now we always asume it is the active dirver that should be use.
     // - allow more Flags
 
-    
+  
 
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
-    DDHAL_SETEXCLUSIVEMODEDATA SetExclusiveMode;
+ //   
+ //   DDHAL_SETEXCLUSIVEMODEDATA SetExclusiveMode;
 
-	DX_WINDBG_trace();
-    
-	
-    // check the parameters
-    if ((HWND)This->lpLcl->lpGbl->lpExclusiveOwner->hWnd  == hwnd)
-        return DD_OK;
-    
-   
+	//DX_WINDBG_trace();
+ //   
+	//
+ //   // check the parameters
+ //   if ((HWND)This->lpLcl->lpGbl->lpExclusiveOwner->hWnd  == hwnd)
+ //       return DD_OK;
+ //   
+ //  
 
-    if ((cooplevel&DDSCL_EXCLUSIVE) && !(cooplevel&DDSCL_FULLSCREEN))
-        return DDERR_INVALIDPARAMS;
+ //   if ((cooplevel&DDSCL_EXCLUSIVE) && !(cooplevel&DDSCL_FULLSCREEN))
+ //       return DDERR_INVALIDPARAMS;
 
-    if (cooplevel&DDSCL_NORMAL && cooplevel&DDSCL_FULLSCREEN)
-        return DDERR_INVALIDPARAMS;
+ //   if (cooplevel&DDSCL_NORMAL && cooplevel&DDSCL_FULLSCREEN)
+ //       return DDERR_INVALIDPARAMS;
 
-    // set the data
-    This->lpLcl->lpGbl->lpExclusiveOwner->hWnd = (ULONG_PTR) hwnd;
-    This->lpLcl->lpGbl->lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC(hwnd);
+ //   // set the data
+ //   This->lpLcl->lpGbl->lpExclusiveOwner->hWnd = (ULONG_PTR) hwnd;
+ //   This->lpLcl->lpGbl->lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC(hwnd);
 
-	
-	/* FIXME : fill the  mDDrawGlobal.lpExclusiveOwner->dwLocalFlags right */
-	//mDDrawGlobal.lpExclusiveOwner->dwLocalFlags
+	//
+	///* FIXME : fill the  mDDrawGlobal.lpExclusiveOwner->dwLocalFlags right */
+	////mDDrawGlobal.lpExclusiveOwner->dwLocalFlags
 
 
-    SetExclusiveMode.ddRVal = DDERR_NOTPALETTIZED;
-	if ((This->lpLcl->lpGbl->lpDDCBtmp->cbDDCallbacks.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE)) 
-    {       
-       
-        SetExclusiveMode.SetExclusiveMode = This->lpLcl->lpGbl->lpDDCBtmp->cbDDCallbacks.SetExclusiveMode;   
-		SetExclusiveMode.lpDD = This->lpLcl->lpGbl;       
-        SetExclusiveMode.dwEnterExcl = cooplevel;
+ //   SetExclusiveMode.ddRVal = DDERR_NOTPALETTIZED;
+	//if ((This->lpLcl->lpGbl->lpDDCBtmp->cbDDCallbacks.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE)) 
+ //   {       
+ //      
+ //       SetExclusiveMode.SetExclusiveMode = This->lpLcl->lpGbl->lpDDCBtmp->cbDDCallbacks.SetExclusiveMode;   
+	//	SetExclusiveMode.lpDD = This->lpLcl->lpGbl;       
+ //       SetExclusiveMode.dwEnterExcl = cooplevel;
 
-		if (SetExclusiveMode.SetExclusiveMode(&SetExclusiveMode) != DDHAL_DRIVER_HANDLED)
-        {
-            return DDERR_NODRIVERSUPPORT;
-        }
-    }
-                   
-    return SetExclusiveMode.ddRVal;               
+	//	if (SetExclusiveMode.SetExclusiveMode(&SetExclusiveMode) != DDHAL_DRIVER_HANDLED)
+ //       {
+ //           return DDERR_NODRIVERSUPPORT;
+ //       }
+ //   }
+ //                  
+ //   return SetExclusiveMode.ddRVal;  
+	DX_STUB_DD_OK;
 }
 
 /*

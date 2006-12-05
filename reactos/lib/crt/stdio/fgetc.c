@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/stdio/fgetc.c
  * PURPOSE:     Get a character string from stdin
- * PROGRAMER:   Boudewijn Dekker
+ * PROGRAMER:   Ariadne
  * UPDATE HISTORY:
  *              28/12/98: Appropriated for Reactos
 		25/02/99: Added fgetwc

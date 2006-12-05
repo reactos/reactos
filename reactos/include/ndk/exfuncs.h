@@ -368,7 +368,10 @@ NTSTATUS
 NTAPI
 NtQuerySystemEnvironmentValueEx(
     IN PUNICODE_STRING VariableName,
-    IN LPGUID VendorGuid
+    IN LPGUID VendorGuid,
+    IN PVOID Value,
+    IN OUT PULONG ReturnLength,
+    IN OUT PULONG Attributes
 );
 
 NTSYSCALLAPI

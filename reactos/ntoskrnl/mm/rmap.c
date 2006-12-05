@@ -424,7 +424,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
           DbgPrint("\n    previous caller ");
           KeRosPrintAddress(current_entry->Caller);
           DbgPrint("\n");
-          KeBugCheck(0);
+          //KeBugCheck(0);
       }
       current_entry = current_entry->Next;
    }

@@ -54,8 +54,8 @@
 58 stdcall MsiGetFeatureStateW(long wstr ptr ptr)
 59 stdcall MsiGetFeatureUsageA(str str ptr ptr)
 60 stdcall MsiGetFeatureUsageW(wstr wstr ptr ptr)
-61 stub MsiGetFeatureValidStatesA
-62 stub MsiGetFeatureValidStatesW
+61 stdcall MsiGetFeatureValidStatesA(long str ptr)
+62 stdcall MsiGetFeatureValidStatesW(long wstr ptr)
 63 stdcall MsiGetLanguage(long)
 64 stdcall MsiGetMode(long long)
 65 stdcall MsiGetProductCodeA(str str)

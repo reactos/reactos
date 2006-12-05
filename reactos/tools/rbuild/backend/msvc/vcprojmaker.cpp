@@ -357,7 +357,16 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", "FALSE");
 		if ( !module.cplusplus )
 			fprintf ( OUT, "\t\t\t\tCompileAs=\"1\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 2 );	// 2=__stdcall 0=__cdecl
+
+		if ( module.type == Win32CUI || module.type == Win32GUI )
+		{
+			fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 0 );	// 0=__cdecl
+		}
+		else
+		{
+			fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 2 );	// 2=__stdcall
+		}
+
 		fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"%s\"/>\r\n", speed ? "0" : release ? "3": "4");	// 3=/Zi 4=ZI
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );

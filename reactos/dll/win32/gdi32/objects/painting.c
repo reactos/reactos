@@ -26,13 +26,10 @@ NewArc(
       return MFDRV_MetaParam8( hDC, META_ARC, a1, a2, a3, a4, a5, a6, a7, a8)
     else
     { 
-      PDC_ATTR Dc_Attr;
-      PLDC pLDC;
-      GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr);
-      pLDC = Dc_Attr->pvLDC;
+      PLDC pLDC = GdiGetLDC(HDC hDC);      
       if ( !pLDC )
       {
-         SetLastError(ERROR_INVALID_HANDLE)
+         SetLastError(ERROR_INVALID_HANDLE);
          return FALSE;
       }
       if (pLDC->iType == LDC_EMFLDC)
@@ -72,13 +69,10 @@ NewArcTo(
       return FALSE; //No meta support for ArcTo
     else
     { 
-      PDC_ATTR Dc_Attr;
-      PLDC pLDC;
-      GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr);
-      pLDC = Dc_Attr->pvLDC;
+      PLDC pLDC = GdiGetLDC(HDC hDC);
       if ( !pLDC )
       {
-         SetLastError(ERROR_INVALID_HANDLE)
+         SetLastError(ERROR_INVALID_HANDLE);
          return FALSE;
       }
       if (pLDC->iType == LDC_EMFLDC)
@@ -117,13 +111,10 @@ Chord(
       return MFDRV_MetaParam8( hDC, META_CHORD, a1, a2, a3, a4, a5, a6, a7, a8)
     else
     { 
-      PDC_ATTR Dc_Attr;
-      PLDC pLDC;
-      GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr);
-      pLDC = Dc_Attr->pvLDC;
+      PLDC pLDC = GdiGetLDC(HDC hDC);
       if ( !pLDC )
       {
-         SetLastError(ERROR_INVALID_HANDLE)
+         SetLastError(ERROR_INVALID_HANDLE);
          return FALSE;
       }
       if (pLDC->iType == LDC_EMFLDC)
@@ -162,13 +153,10 @@ NewPie(
       return MFDRV_MetaParam8( hDC, META_PIE, a1, a2, a3, a4, a5, a6, a7, a8)
     else
     { 
-      PDC_ATTR Dc_Attr;
-      PLDC pLDC;
-      GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr);
-      pLDC = Dc_Attr->pvLDC;
+      PLDC pLDC = GdiGetLDC(HDC hDC);
       if ( !pLDC )
       {
-         SetLastError(ERROR_INVALID_HANDLE)
+         SetLastError(ERROR_INVALID_HANDLE);
          return FALSE;
       }
       if (pLDC->iType == LDC_EMFLDC)

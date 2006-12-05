@@ -6,10 +6,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"regsvr32.exe\0"
 #include <reactos/version.rc>
 
-#include "de-DE.rc"
-#include "en-US.rc"
-#include "fr-FR.rc"
-#include "hu-HU.rc"
-#include "ru-RU.rc"
-#include "ja-JP.rc"
-#include "nb-NO.rc"
+#include "rsrc.rc"

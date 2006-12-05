@@ -7,7 +7,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"win32csr.dll\0"
 #include <reactos/version.rc>
 
-1	ICON	DISCARDABLE	res/terminal.ico
-
-
-#include "en.rc"
+#include "rsrc.rc"

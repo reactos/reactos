@@ -96,7 +96,7 @@ static void MSI_CloseSummaryInfo( MSIOBJECTHDR *arg )
 
     for( i = 0; i < MSI_MAX_PROPS; i++ )
         free_prop( &si->property[i] );
-    msiobj_release( &si->db->hdr );
+    IStorage_Release( si->storage );
 }
 
 static UINT get_type( UINT uiProperty )
@@ -105,7 +105,7 @@ static UINT get_type( UINT uiProperty )
     {
     case PID_CODEPAGE:
          return VT_I2;
-    
+
     case PID_SUBJECT:
     case PID_AUTHOR:
     case PID_KEYWORDS:
@@ -405,28 +405,28 @@ static UINT save_summary_info( MSISUMMARYINFO * si, IStream *stm )
     return ERROR_SUCCESS;
 }
 
-MSISUMMARYINFO *MSI_GetSummaryInformationW( MSIDATABASE *db, UINT uiUpdateCount )
+MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount )
 {
     IStream *stm = NULL;
     MSISUMMARYINFO *si;
     DWORD grfMode;
     HRESULT r;
 
-    TRACE("%p %d\n", db, uiUpdateCount );
+    TRACE("%p %d\n", stg, uiUpdateCount );
 
     si = alloc_msiobject( MSIHANDLETYPE_SUMMARYINFO, 
                   sizeof (MSISUMMARYINFO), MSI_CloseSummaryInfo );
     if( !si )
         return si;
 
-    msiobj_addref( &db->hdr );
-    si->db = db;
     memset( &si->property, 0, sizeof si->property );
     si->update_count = uiUpdateCount;
+    IStorage_AddRef( stg );
+    si->storage = stg;
 
     /* read the stream... if we fail, we'll start with an empty property set */
     grfMode = STGM_READ | STGM_SHARE_EXCLUSIVE;
-    r = IStorage_OpenStream( si->db->storage, szSumInfo, 0, grfMode, 0, &stm );
+    r = IStorage_OpenStream( si->storage, szSumInfo, 0, grfMode, 0, &stm );
     if( SUCCEEDED(r) )
     {
         load_summary_info( si, stm );
@@ -462,7 +462,7 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
             return ERROR_INVALID_PARAMETER;
     }
 
-    si = MSI_GetSummaryInformationW( db, uiUpdateCount );
+    si = MSI_GetSummaryInformationW( db->storage, uiUpdateCount );
     if (si)
     {
         *pHandle = alloc_msihandle( &si->hdr );
@@ -600,6 +600,22 @@ LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty )
     if( prop->vt != VT_LPSTR )
         return NULL;
     return strdupAtoW( prop->u.pszVal );
+}
+
+LPWSTR msi_get_suminfo_product( IStorage *stg )
+{
+    MSISUMMARYINFO *si;
+    LPWSTR prod;
+
+    si = MSI_GetSummaryInformationW( stg, 0 );
+    if (!si)
+    {
+        ERR("no summary information!\n");
+        return NULL;
+    }
+    prod = msi_suminfo_dup_string( si, PID_REVNUMBER );
+    msiobj_release( &si->hdr );
+    return prod;
 }
 
 UINT WINAPI MsiSummaryInfoGetPropertyA(
@@ -749,7 +765,7 @@ UINT WINAPI MsiSummaryInfoPersist( MSIHANDLE handle )
         return ERROR_INVALID_HANDLE;
 
     grfMode = STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE;
-    r = IStorage_CreateStream( si->db->storage, szSumInfo, grfMode, 0, 0, &stm );
+    r = IStorage_CreateStream( si->storage, szSumInfo, grfMode, 0, 0, &stm );
     if( SUCCEEDED(r) )
     {
         ret = save_summary_info( si, stm );

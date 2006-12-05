@@ -241,7 +241,6 @@ IncompleteTick2:
 
 Done:
     /* Exit the interrupt */
-    mov esi, $
     cli
     call _HalEndSystemInterrupt@8
     jmp _Kei386EoiHelper@0

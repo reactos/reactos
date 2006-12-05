@@ -6,7 +6,7 @@
  * PROGRAMER:
  * UPDATE HISTORY:
  *              1995: Created
- *              1998: Added ltoa Boudewijn Dekker
+ *              1998: Added ltoa by Ariadne
  */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 

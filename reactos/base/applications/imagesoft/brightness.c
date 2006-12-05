@@ -116,7 +116,7 @@ AdjustBrightness(HBITMAP hOrigBitmap,
 
 
 static PIMAGEADJUST
-OnInitDialog(PIMAGEADJUST pImgAdj,
+Bri_OnInitDialog(PIMAGEADJUST pImgAdj,
              HWND hDlg,
              LPARAM lParam)
 {
@@ -188,7 +188,7 @@ fail:
 
 
 static VOID
-OnDrawItem(PIMAGEADJUST pImgAdj,
+Bri_OnDrawItem(PIMAGEADJUST pImgAdj,
            LPARAM lParam)
 {
     LPDRAWITEMSTRUCT lpDrawItem;
@@ -219,7 +219,7 @@ OnDrawItem(PIMAGEADJUST pImgAdj,
 
 
 static VOID
-OnTrackBar(PIMAGEADJUST pImgAdj,
+Bri_OnTrackBar(PIMAGEADJUST pImgAdj,
            HWND hDlg)
 {
     HDC hdcMem;
@@ -268,7 +268,7 @@ OnTrackBar(PIMAGEADJUST pImgAdj,
 
 
 static BOOL
-OnCommand(PIMAGEADJUST pImgAdj,
+Bri_OnCommand(PIMAGEADJUST pImgAdj,
           HWND hDlg,
           UINT uID)
 {
@@ -321,9 +321,9 @@ BrightnessProc(HWND hDlg,
     {
         case WM_INITDIALOG:
         {
-            pImgAdj = OnInitDialog(pImgAdj,
-                                   hDlg,
-                                   lParam);
+            pImgAdj = Bri_OnInitDialog(pImgAdj,
+                                       hDlg,
+                                       lParam);
             if (!pImgAdj)
             {
                 EndDialog(hDlg, -1);
@@ -335,8 +335,8 @@ BrightnessProc(HWND hDlg,
 
         case WM_DRAWITEM:
         {
-            OnDrawItem(pImgAdj,
-                       lParam);
+            Bri_OnDrawItem(pImgAdj,
+                           lParam);
             return TRUE;
         }
 
@@ -345,8 +345,8 @@ BrightnessProc(HWND hDlg,
             if (LOWORD(wParam) == TB_THUMBTRACK ||
                 LOWORD(wParam) == TB_ENDTRACK)
             {
-                OnTrackBar(pImgAdj,
-                           hDlg);
+                Bri_OnTrackBar(pImgAdj,
+                               hDlg);
             }
 
             return TRUE;
@@ -354,9 +354,9 @@ BrightnessProc(HWND hDlg,
 
         case WM_COMMAND:
         {
-            return OnCommand(pImgAdj,
-                             hDlg,
-                             LOWORD(wParam));
+            return Bri_OnCommand(pImgAdj,
+                                 hDlg,
+                                 LOWORD(wParam));
         }
 
         case WM_DESTROY:

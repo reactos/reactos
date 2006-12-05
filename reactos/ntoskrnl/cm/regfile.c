@@ -1379,6 +1379,7 @@ CmiRemoveSubKey(PEREGISTRY_HIVE RegistryHive,
     }
 
   /* Destroy key cell */
+  ASSERT(SubKey->KeyCellOffset != (HCELL_INDEX)-1);
   HvFreeCell (&RegistryHive->Hive, SubKey->KeyCellOffset);
   SubKey->KeyCell = NULL;
   SubKey->KeyCellOffset = (HCELL_INDEX)-1;

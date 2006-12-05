@@ -515,6 +515,7 @@ UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
         /* found the source */
         if (dwIndex > 0 && current_index != dwIndex)
             FIXME("Need to reorder the sources!\n");
+        msi_free( source_struct.path );
     }
     else
     {

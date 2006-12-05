@@ -6,7 +6,7 @@
  * PROGRAMER:
  * UPDATE HISTORY:
  *              1995: Created
- *              1998: Added ltoa Boudewijn Dekker
+ *              1998: Added ltoa by Ariadne
  *              2006 : replace all api in this file to wine cvs 2006-05-21
  */
 /*  */

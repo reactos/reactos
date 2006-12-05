@@ -42,7 +42,7 @@ void CConfig::Reset()
 void CConfig::Default()
 {
 	Clear();
-	MainBase = (LPWSTR)_wcsdup(dcfgMainBase);
+	MainBase = _wcsdup((LPWSTR)dcfgMainBase);
 	HttpBase = _strdup(dcfgHttpBase);
 
 	LPSTR lpsStr;

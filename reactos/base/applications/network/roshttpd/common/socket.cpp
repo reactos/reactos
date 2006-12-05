@@ -7,9 +7,9 @@
  * REVISIONS:
  *   CSH  01/09/2000 Created
  */
+#include <socket.h>
 #include <string.h>
 #include <error.h>
-#include <socket.h>
 #include <iterator.h>
 
 // ***************************** CSocket *****************************

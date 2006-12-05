@@ -57,12 +57,12 @@ static UINT INSERT_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT 
 }
 
 /*
- * INSERT_merge_record
+ * msi_query_merge_record
  *
  * Merge a value_list and a record to create a second record.
  * Replace wildcard entries in the valuelist with values from the record
  */
-static MSIRECORD *INSERT_merge_record( UINT fields, column_info *vl, MSIRECORD *rec )
+MSIRECORD *msi_query_merge_record( UINT fields, column_info *vl, MSIRECORD *rec )
 {
     MSIRECORD *merged;
     DWORD wildcard_count = 1, i;
@@ -128,7 +128,7 @@ static UINT INSERT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
      * Merge the wildcard values into the list of values provided
      * in the query, and create a record containing both.
      */
-    values = INSERT_merge_record( col_count, iv->vals, record );
+    values = msi_query_merge_record( col_count, iv->vals, record );
     if( !values )
         goto err;
 

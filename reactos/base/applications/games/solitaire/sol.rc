@@ -1,5 +1,1 @@
-#include "resource.h"
-
-#include "de-DE.rc"
-#include "en-US.rc"
-#include "uk-UA.rc"
+#include "rsrc.rc"

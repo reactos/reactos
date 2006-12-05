@@ -792,6 +792,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Initialize the Process Manager */
     if (!PsInitSystem()) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
 
+    /* Initialize the User-Mode Debugging Subsystem */
+    DbgkInitialize();
+
     /* Calculate the tick count multiplier */
     ExpTickCountMultiplier = ExComputeTickCountMultiplier(KeMaximumIncrement);
     SharedUserData->TickCountMultiplier = ExpTickCountMultiplier;
@@ -840,7 +843,6 @@ ExPhase2Init(PVOID Context)
     if (!NoGuiBoot) InbvDisplayBootLogo();
 
     /* Clear the screen to blue and display the boot notice and debug status */
-    HalInitSystem(2, KeLoaderBlock);
     if (NoGuiBoot) ExpDisplayNotice();
     KdInitSystem(2, KeLoaderBlock);
 

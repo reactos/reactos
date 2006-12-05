@@ -1101,7 +1101,7 @@ static UINT TABLE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *
     {
     case 4:
         offset = tv->columns[col-1].offset/2;
-        *val = tv->table->data[row][offset] + 
+        *val = tv->table->data[row][offset] +
                (tv->table->data[row][offset + 1] << 16);
         break;
     case 2:
@@ -1186,9 +1186,8 @@ static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
     return r;
 }
 
-static UINT TABLE_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT val )
+static UINT TABLE_set_int( MSITABLEVIEW *tv, UINT row, UINT col, UINT val )
 {
-    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
     UINT offset, n;
 
     if( !tv->table )
@@ -1221,6 +1220,61 @@ static UINT TABLE_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT val
         return ERROR_FUNCTION_FAILED;
     }
     return ERROR_SUCCESS;
+}
+
+static UINT TABLE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
+{
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+    UINT i, val, r = ERROR_SUCCESS;
+
+    if ( !tv->table )
+        return ERROR_INVALID_PARAMETER;
+
+    /* test if any of the mask bits are invalid */
+    if ( mask >= (1<<tv->num_cols) )
+        return ERROR_INVALID_PARAMETER;
+
+    for ( i = 0; i < tv->num_cols; i++ )
+    {
+        /* only update the fields specified in the mask */
+        if ( !(mask&(1<<i)) )
+            continue;
+
+        /* FIXME: should we allow updating keys? */
+
+        val = 0;
+        if ( !MSI_RecordIsNull( rec, i + 1 ) )
+        {
+            if ( MSITYPE_IS_BINARY(tv->columns[ i ].type) )
+            {
+                val = 1; /* refers to the first key column */
+            }
+            else if ( tv->columns[i].type & MSITYPE_STRING )
+            {
+                LPCWSTR sval = MSI_RecordGetString( rec, i + 1 );
+                val = msi_addstringW( tv->db->strings, 0, sval, -1, 1 );
+            }
+            else if ( 2 == bytes_per_column( &tv->columns[ i ] ) )
+            {
+                val = 0x8000 + MSI_RecordGetInteger( rec, i + 1 );
+                if ( val & 0xffff0000 )
+                {
+                    ERR("field %u value %d out of range\n", i+1, val - 0x8000 );
+                    return ERROR_FUNCTION_FAILED;
+                }
+            }
+            else
+            {
+                INT ival = MSI_RecordGetInteger( rec, i + 1 );
+                val = ival ^ 0x80000000;
+            }
+        }
+
+        r = TABLE_set_int( tv, row, i+1, val );
+        if ( r != ERROR_SUCCESS )
+            break;
+    }
+    return r;
 }
 
 static UINT table_create_new_row( struct tagMSIVIEW *view, UINT *num )
@@ -1365,41 +1419,6 @@ static UINT table_validate_new( MSITABLEVIEW *tv, MSIRECORD *rec )
     return ERROR_SUCCESS;
 }
 
-static UINT msi_table_modify_row( MSITABLEVIEW *tv, MSIRECORD *rec,
-                                  UINT row, UINT mask )
-{
-    UINT i, val, r = ERROR_SUCCESS;
-
-    TRACE("%p %p %u %08x\n", tv, rec, row, mask );
-
-    for( i = 0; i < tv->num_cols; i++ )
-    {
-        /* set keys or values specified in the mask */
-        if( (~tv->columns[i].type & MSITYPE_KEY) && (~mask & (1<<i)) )
-            continue;
-
-        if( (tv->columns[i].type & MSITYPE_STRING) &&
-            ! MSITYPE_IS_BINARY(tv->columns[i].type) )
-        {
-            const WCHAR *str = MSI_RecordGetString( rec, i+1 );
-            val = msi_addstringW( tv->db->strings, 0, str, -1, 1 );
-        }
-        else
-        {
-            val = MSI_RecordGetInteger( rec, i+1 );
-            if ( 2 == bytes_per_column( &tv->columns[i] ) )
-                val ^= 0x8000;
-            else
-                val ^= 0x80000000;
-        }
-        r = TABLE_set_int( &tv->view, row, i+1, val );
-        if( r )
-            break;
-    }
-
-    return r;
-}
-
 static UINT TABLE_insert_row( struct tagMSIVIEW *view, MSIRECORD *rec )
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
@@ -1417,7 +1436,7 @@ static UINT TABLE_insert_row( struct tagMSIVIEW *view, MSIRECORD *rec )
     if( r != ERROR_SUCCESS )
         return r;
 
-    return msi_table_modify_row( tv, rec, row, ~0 );
+    return TABLE_set_row( view, row, rec, (1<<tv->num_cols) - 1 );
 }
 
 static UINT TABLE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
@@ -1568,12 +1587,12 @@ static UINT TABLE_find_matching_rows( struct tagMSIVIEW *view, UINT col,
     if( !*handle )
         entry = tv->columns[col-1].hash_table[val % MSITABLE_HASH_TABLE_SIZE];
     else
-        entry = ((const MSICOLUMNHASHENTRY *)*handle)->next;
+        entry = (*handle)->next;
 
     while (entry && entry->value != val)
         entry = entry->next;
 
-    *handle = (MSIITERHANDLE)entry;
+    *handle = entry;
     if (!entry)
         return ERROR_NO_MORE_ITEMS;
 
@@ -1586,7 +1605,7 @@ static const MSIVIEWOPS table_ops =
 {
     TABLE_fetch_int,
     TABLE_fetch_stream,
-    TABLE_set_int,
+    TABLE_set_row,
     TABLE_insert_row,
     TABLE_execute,
     TABLE_close,
@@ -1872,8 +1891,9 @@ static UINT msi_table_find_row( MSITABLEVIEW *tv, MSIRECORD *rec, UINT *row )
 static UINT msi_delete_row( MSITABLEVIEW *tv, UINT row )
 {
     UINT i;
+
     for( i=1; i<=tv->num_cols; i++ )
-        tv->view.ops->set_int( &tv->view, row, i, 0 );
+        TABLE_set_int( tv, row, i, 0 );
     return ERROR_SUCCESS;
 }
 
@@ -1995,7 +2015,7 @@ static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
                 else if ( mask )
                 {
                     TRACE("modifying row [%d]:\n", row);
-                    msi_table_modify_row( tv, rec, row, mask );
+                    TABLE_set_row( &tv->view, row, rec, mask );
                 }
                 else
                 {
@@ -2045,7 +2065,7 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg )
         goto end;
 
     /*
-     * Apply _Tables and _Coluimns transforms first so that
+     * Apply _Tables and _Columns transforms first so that
      * the table metadata is correct, and empty tables exist.
      */
     ret = msi_table_load_transform( db, stg, strings, szTables );
@@ -2081,14 +2101,7 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg )
     }
 
     if ( ret == ERROR_SUCCESS )
-    {
-        MSITRANSFORM *t;
-
-        t = msi_alloc( sizeof *t );
-        t->stg = stg;
-        IStorage_AddRef( stg );
-        list_add_tail( &db->transforms, &t->entry );
-    }
+        append_storage_to_db( db, stg );
 
 end:
     if ( stgenum )
@@ -2097,6 +2110,16 @@ end:
         msi_destroy_stringtable( strings );
 
     return ret;
+}
+
+void append_storage_to_db( MSIDATABASE *db, IStorage *stg )
+{
+    MSITRANSFORM *t;
+
+    t = msi_alloc( sizeof *t );
+    t->stg = stg;
+    IStorage_AddRef( stg );
+    list_add_tail( &db->transforms, &t->entry );
 }
 
 void msi_free_transforms( MSIDATABASE *db )

@@ -43,7 +43,7 @@ MSIPREVIEW *MSI_EnableUIPreview( MSIDATABASE *db )
     MSIPREVIEW *preview = NULL;
     MSIPACKAGE *package;
 
-    package = MSI_CreatePackage( db );
+    package = MSI_CreatePackage( db, NULL );
     if( package )
     {
         preview = alloc_msiobject( MSIHANDLETYPE_PREVIEW, sizeof (MSIPREVIEW),

@@ -1,4 +1,5 @@
-/*
+/* $Id$
+ * 
  * MORE.C - external command.
  *
  * clone from 4nt more command
@@ -84,7 +85,7 @@ int main (int argc, char **argv)
 {
 	SHORT maxx,maxy;
 	SHORT line_count=0,ch_count=0;
-	INT i, last;
+	DWORD i, last;
 	HANDLE hFile = INVALID_HANDLE_VALUE;
 	TCHAR szFullPath[MAX_PATH];
 

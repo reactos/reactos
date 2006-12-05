@@ -1,6 +1,6 @@
 ========================
-ReactOS Version 0.2.x
-Updated March 11th, 2004
+ReactOS Version 0.3.x
+Updated November 30, 2006
 ========================
 
 1. What is ReactOS?
@@ -8,9 +8,9 @@ Updated March 11th, 2004
 
 ReactOS is an Open Source effort to develop a quality operating system that is
 compatible with applications and drivers written for the Microsoft Windows NT
-family of operating systems (NT4, 2000, XP, 2003).
+family of operating systems (NT4, 2000, XP, 2003, Vista).
 
-Website: http://www.reactos.com
+Website: http://www.reactos.org/
 
 
 2. Relationship with the WINE project
@@ -27,8 +27,9 @@ applications and testing suites.
 -----------------------
 
 The ReactOS project, although currently focused on Windows NT 4.0
-compatibility, is always keeping an eye towards compatibility with future
-Windows NT releases, that is, Windows 2000 (NT 5.0) and Windows XP (NT 5.1).
+compatibility, is always keeping an eye toward compatibility with
+Windows 2000 (NT 5.0), Windows XP (NT 5.1), Windows Vista and future
+Windows NT releases.
 
 
 4. Supporting other System Applications
@@ -44,7 +45,7 @@ in the future.
 5. Tutorials
 ------------
 
-Developer and User Tutorials: http://reactos.com/index.php?tab=documents
+Developer and User Tutorials: http://www.reactos.org/wiki/index.php/Main_Page
 
 The tutorials contain more information on the project, compiling and testing
 ReactOS - among other topics. Contributors to the project are always welcome.

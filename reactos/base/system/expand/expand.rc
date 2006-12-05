@@ -4,13 +4,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"expand.exe\0"
 #include <reactos/version.rc>
 
-#include "en-US.rc"
-#include "de-DE.rc"
-#include "fr-FR.rc"
-#include "ja-JP.rc"
-#include "ru-RU.rc"
-#include "sv-SE.rc"
-#include "hu-HU.rc"
-#include "el-GR.rc"
-#include "nb-NO.rc"
-
+#include "rsrc.rc"

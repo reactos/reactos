@@ -619,13 +619,8 @@ UINT WINAPI MsiDecomposeDescriptorW( LPCWSTR szDescriptor, LPWSTR szProduct,
     len = (p - &szDescriptor[20]);
     if( len > MAX_FEATURE_CHARS )
         return ERROR_INVALID_PARAMETER;
-    if (szFeature)
-    {
-        memcpy( szFeature, &szDescriptor[20], len*sizeof(WCHAR) );
-        szFeature[len] = 0;
-    }
 
-    TRACE("feature %s\n", debugstr_w( &szDescriptor[20] ));
+    TRACE("feature %s\n", debugstr_wn( &szDescriptor[20], len ));
 
     r = decode_base85_guid( p+1, &component );
     if( !r )
@@ -637,6 +632,11 @@ UINT WINAPI MsiDecomposeDescriptorW( LPCWSTR szDescriptor, LPWSTR szProduct,
         StringFromGUID2( &product, szProduct, MAX_FEATURE_CHARS+1 );
     if (szComponent)
         StringFromGUID2( &component, szComponent, MAX_FEATURE_CHARS+1 );
+    if (szFeature)
+    {
+        memcpy( szFeature, &szDescriptor[20], len*sizeof(WCHAR) );
+        szFeature[len] = 0;
+    }
     len = ( &p[21] - szDescriptor );
 
     TRACE("length = %d\n", len);
@@ -670,12 +670,15 @@ UINT WINAPI MsiDecomposeDescriptorA( LPCSTR szDescriptor, LPSTR szProduct,
 
     r = MsiDecomposeDescriptorW( str, p, f, c, pUsed );
 
-    WideCharToMultiByte( CP_ACP, 0, p, MAX_FEATURE_CHARS+1,
-                         szProduct, MAX_FEATURE_CHARS+1, NULL, NULL );
-    WideCharToMultiByte( CP_ACP, 0, f, MAX_FEATURE_CHARS+1,
-                         szFeature, MAX_FEATURE_CHARS+1, NULL, NULL );
-    WideCharToMultiByte( CP_ACP, 0, c, MAX_FEATURE_CHARS+1,
-                         szComponent, MAX_FEATURE_CHARS+1, NULL, NULL );
+    if (r == ERROR_SUCCESS)
+    {
+        WideCharToMultiByte( CP_ACP, 0, p, -1,
+                             szProduct, MAX_FEATURE_CHARS+1, NULL, NULL );
+        WideCharToMultiByte( CP_ACP, 0, f, -1,
+                             szFeature, MAX_FEATURE_CHARS+1, NULL, NULL );
+        WideCharToMultiByte( CP_ACP, 0, c, -1,
+                             szComponent, MAX_FEATURE_CHARS+1, NULL, NULL );
+    }
 
     msi_free( str );
 

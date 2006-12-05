@@ -5,7 +5,7 @@
  * FILE:        lib/msvcrt/io/mktemp.c
  * PURPOSE:     Makes a temp file based on a template
  * PROGRAMER:   DJ Delorie
-                Boudewijn Dekker
+                Ariadne
  * UPDATE HISTORY:
  *              28/12/98: Appropriated for the Reactos Kernel
  */

@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/mbstring/mbsdup.c
  * PURPOSE:     Duplicates a multi byte string
- * PROGRAMER:   Boudewijn Dekker
+ * PROGRAMER:   Ariadne
  * UPDATE HISTORY:
 		Modified from DJGPP strdup
  *              12/04/99: Created

@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/msvcrt/stdio/rmtmp.c
  * PURPOSE:         remove temporary files in current directory
- * PROGRAMMER:      Boudewijn ( ariadne@xs4all.nl)
+ * PROGRAMMER:      Ariadne
  * UPDATE HISTORY:
  *                  Created 19/01/99
  * NOTE		    Not tested.

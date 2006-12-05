@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern ULONG DbgkpTraceLevel;
+
 /* FUNCTIONS *****************************************************************/
 
 HANDLE
@@ -19,7 +21,7 @@ NTAPI
 DbgkpSectionToFileHandle(IN PVOID Section)
 {
     NTSTATUS Status;
-    UNICODE_STRING FileName;
+    POBJECT_NAME_INFORMATION FileName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     HANDLE Handle;
@@ -31,7 +33,7 @@ DbgkpSectionToFileHandle(IN PVOID Section)
 
     /* Initialize object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
-                               &FileName,
+                               &FileName->Name,
                                OBJ_CASE_INSENSITIVE |
                                OBJ_FORCE_ACCESS_CHECK |
                                OBJ_KERNEL_HANDLE,
@@ -47,7 +49,7 @@ DbgkpSectionToFileHandle(IN PVOID Section)
                         FILE_SYNCHRONOUS_IO_NONALERT);
 
     /* Free the name and return the handle if we succeeded */
-    ExFreePool(FileName.Buffer);
+    ExFreePool(FileName);
     if (!NT_SUCCESS(Status)) return NULL;
     return Handle;
 }
@@ -91,7 +93,8 @@ DbgkCreateThread(PVOID StartAddress)
     ULONG ProcessFlags;
     IMAGE_INFO ImageInfo;
     PIMAGE_NT_HEADERS NtHeader;
-    UNICODE_STRING ModuleName;
+    POBJECT_NAME_INFORMATION ModuleName;
+    UNICODE_STRING NtDllName;
     NTSTATUS Status;
     PVOID DebugPort;
     DBGKM_MSG ApiMessage;
@@ -103,10 +106,12 @@ DbgkCreateThread(PVOID StartAddress)
     PTEB Teb;
     PAGED_CODE();
 
-    /* Check if this process has already been notified */
-    ProcessFlags = InterlockedAnd((PLONG)&Process->Flags,
-                                  PSF_CREATE_REPORTED_BIT |
-                                  PSF_IMAGE_NOTIFY_DONE_BIT);
+    /* Try ORing in the create reported and image notify flags */
+    ProcessFlags = InterlockedOr((PLONG)&Process->Flags,
+                                 PSF_CREATE_REPORTED_BIT |
+                                 PSF_IMAGE_NOTIFY_DONE_BIT);
+
+    /* Check if we were the first to set them or if another thread raced us */
     if (!(ProcessFlags & PSF_IMAGE_NOTIFY_DONE_BIT) && (PsImageNotifyEnabled))
     {
         /* It hasn't.. set up the image info for the process */
@@ -130,10 +135,10 @@ DbgkCreateThread(PVOID StartAddress)
         if (NT_SUCCESS(Status))
         {
             /* Call the notify routines and free the name */
-            PspRunLoadImageNotifyRoutines(&ModuleName,
+            PspRunLoadImageNotifyRoutines(&ModuleName->Name,
                                           Process->UniqueProcessId,
                                           &ImageInfo);
-            ExFreePool(ModuleName.Buffer);
+            ExFreePool(ModuleName);
         }
         else
         {
@@ -160,9 +165,9 @@ DbgkCreateThread(PVOID StartAddress)
         }
 
         /* Call the notify routines */
-        RtlInitUnicodeString(&ModuleName,
+        RtlInitUnicodeString(&NtDllName,
                              L"\\SystemRoot\\System32\\ntdll.dll");
-        PspRunLoadImageNotifyRoutines(&ModuleName,
+        PspRunLoadImageNotifyRoutines(&NtDllName,
                                       Process->UniqueProcessId,
                                       &ImageInfo);
     }
@@ -175,8 +180,8 @@ DbgkCreateThread(PVOID StartAddress)
     if (!(ProcessFlags & PSF_CREATE_REPORTED_BIT))
     {
         /* Setup the information structure for the new thread */
-        CreateThread->SubSystemKey = 0;
-        CreateThread->StartAddress = NULL;
+        CreateProcess->InitialThread.SubSystemKey = 0;
+        CreateProcess->InitialThread.StartAddress = NULL;
 
         /* And for the new process */
         CreateProcess->SubSystemKey = 0;
@@ -191,10 +196,9 @@ DbgkCreateThread(PVOID StartAddress)
         if (NtHeader)
         {
             /* Fill out data from the header */
-            CreateThread->StartAddress = (PVOID)((ULONG_PTR)NtHeader->
-                                                 OptionalHeader.ImageBase +
-                                                 NtHeader->OptionalHeader.
-                                                 AddressOfEntryPoint);
+            CreateProcess->InitialThread.StartAddress =
+                (PVOID)((ULONG_PTR)NtHeader->OptionalHeader.ImageBase +
+                        NtHeader->OptionalHeader.AddressOfEntryPoint);
             CreateProcess->DebugInfoFileOffset = NtHeader->FileHeader.
                                                  PointerToSymbolTable;
             CreateProcess->DebugInfoSize = NtHeader->FileHeader.
@@ -234,9 +238,11 @@ DbgkCreateThread(PVOID StartAddress)
         if (Teb)
         {
             /* Copy the system library name and link to it */
+#if 0
             wcsncpy(Teb->StaticUnicodeBuffer,
                     L"ntdll.dll",
-                    sizeof(Teb->StaticUnicodeBuffer));
+                    sizeof(Teb->StaticUnicodeBuffer) / sizeof(WCHAR));
+#endif
             Teb->Tib.ArbitraryUserPointer = Teb->StaticUnicodeBuffer;
 
             /* Return it in the debug event as well */
@@ -367,7 +373,7 @@ DbgkExitThread(IN NTSTATUS ExitStatus)
 
 VOID
 NTAPI
-DbgkMapViewOfSection(IN HANDLE SectionHandle,
+DbgkMapViewOfSection(IN PVOID Section,
                      IN PVOID BaseAddress,
                      IN ULONG SectionOffset,
                      IN ULONG_PTR ViewSize)
@@ -378,6 +384,8 @@ DbgkMapViewOfSection(IN HANDLE SectionHandle,
     PETHREAD Thread = PsGetCurrentThread();
     PIMAGE_NT_HEADERS NtHeader;
     PAGED_CODE();
+    DBGKTRACE(DBGK_PROCESS_DEBUG,
+              "Section: %p. Base: %p\n", Section, BaseAddress);
 
     /* Check if this thread is hidden, doesn't have a debug port, or died */
     if ((Thread->HideFromDebugger) ||
@@ -390,7 +398,7 @@ DbgkMapViewOfSection(IN HANDLE SectionHandle,
     }
 
     /* Setup the parameters */
-    LoadDll->FileHandle = DbgkpSectionToFileHandle(SectionHandle);
+    LoadDll->FileHandle = DbgkpSectionToFileHandle(Section);
     LoadDll->BaseOfDll = BaseAddress;
     LoadDll->DebugInfoFileOffset = 0;
     LoadDll->DebugInfoSize = 0;

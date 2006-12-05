@@ -5,7 +5,7 @@
  * FILE:        lib/msvcrt/conio/ungetch.c
  * PURPOSE:     Ungets a character from stdin
  * PROGRAMER:   DJ Delorie
-		Boudewijn Dekker [ Adapted from djgpp libc ]
+		Ariadne [ Adapted from djgpp libc ]
  * UPDATE HISTORY:
  *              28/12/98: Created
  */

@@ -185,10 +185,8 @@ static UINT ControlEvent_AddLocal(MSIPACKAGE* package, LPCWSTR argument,
     else
     {
         LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
-        {
-            feature->ActionRequest = INSTALLSTATE_LOCAL;
-            feature->Action = INSTALLSTATE_LOCAL;
-        }
+            msi_feature_set_state( feature, INSTALLSTATE_LOCAL );
+
         ACTION_UpdateComponentStates(package,argument);
     }
     return ERROR_SUCCESS;
@@ -207,10 +205,8 @@ static UINT ControlEvent_Remove(MSIPACKAGE* package, LPCWSTR argument,
     else
     {
         LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
-        {
-            feature->ActionRequest = INSTALLSTATE_ABSENT;
-            feature->Action= INSTALLSTATE_ABSENT;
-        }
+            msi_feature_set_state( feature, INSTALLSTATE_ABSENT );
+
         ACTION_UpdateComponentStates(package,argument);
     }
     return ERROR_SUCCESS;
@@ -229,10 +225,7 @@ static UINT ControlEvent_AddSource(MSIPACKAGE* package, LPCWSTR argument,
     else
     {
         LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
-        {
-            feature->ActionRequest = INSTALLSTATE_SOURCE;
-            feature->Action = INSTALLSTATE_SOURCE;
-        }
+            msi_feature_set_state( feature, INSTALLSTATE_SOURCE );
         ACTION_UpdateComponentStates(package,argument);
     }
     return ERROR_SUCCESS;

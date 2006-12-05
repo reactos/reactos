@@ -871,7 +871,7 @@ APICCalibrateTimer(ULONG CPU)
     * for a wraparound to start exact measurement:
     * (the current tick might have been already half done)
     */
-   WaitFor8254Wraparound();
+   //WaitFor8254Wraparound();
 
    /*
     * We wrapped around just now. Let's start
@@ -882,7 +882,7 @@ APICCalibrateTimer(ULONG CPU)
    }
    tt1 = APICRead(APIC_CCRT);
 
-   WaitFor8254Wraparound();
+   //WaitFor8254Wraparound();
 
 
    tt2 = APICRead(APIC_CCRT);

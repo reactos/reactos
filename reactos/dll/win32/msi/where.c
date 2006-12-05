@@ -82,24 +82,24 @@ static UINT WHERE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
     return wv->table->ops->fetch_stream( wv->table, row, col, stm );
 }
 
-static UINT WHERE_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT val )
+static UINT WHERE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
 
-    TRACE("%p %d %d %04x\n", wv, row, col, val );
+    TRACE("%p %d %p %08x\n", wv, row, rec, mask );
 
     if( !wv->table )
          return ERROR_FUNCTION_FAILED;
-    
+
     if( row > wv->row_count )
         return ERROR_NO_MORE_ITEMS;
-    
+
     row = wv->reorder[ row ];
-    
-    return wv->table->ops->set_int( wv->table, row, col, val );
+
+    return wv->table->ops->set_row( wv->table, row, rec, mask );
 }
 
-static INT INT_evaluate( INT lval, UINT op, INT rval )
+static INT INT_evaluate_binary( INT lval, UINT op, INT rval )
 {
     switch( op )
     {
@@ -119,6 +119,16 @@ static INT INT_evaluate( INT lval, UINT op, INT rval )
         return ( lval >= rval );
     case OP_NE:
         return ( lval != rval );
+    default:
+        ERR("Unknown operator %d\n", op );
+    }
+    return 0;
+}
+
+static INT INT_evaluate_unary( INT lval, UINT op )
+{
+    switch( op )
+    {
     case OP_ISNULL:
         return ( !lval );
     case OP_NOTNULL:
@@ -211,7 +221,14 @@ static UINT WHERE_evaluate( MSIDATABASE *db, MSIVIEW *table, UINT row,
         r = WHERE_evaluate( db, table, row, cond->u.expr.right, &rval, record );
         if( r != ERROR_SUCCESS )
             return r;
-        *val = INT_evaluate( lval, cond->u.expr.op, rval );
+        *val = INT_evaluate_binary( lval, cond->u.expr.op, rval );
+        return ERROR_SUCCESS;
+
+    case EXPR_UNARY:
+        r = table->ops->fetch_int( table, row, cond->u.expr.left->u.col_number, &tval );
+        if( r != ERROR_SUCCESS )
+            return r;
+        *val = INT_evaluate_unary( tval, cond->u.expr.op );
         return ERROR_SUCCESS;
 
     case EXPR_STRCMP:
@@ -224,7 +241,7 @@ static UINT WHERE_evaluate( MSIDATABASE *db, MSIVIEW *table, UINT row,
     default:
         ERR("Invalid expression type\n");
         break;
-    } 
+    }
 
     return ERROR_SUCCESS;
 
@@ -420,7 +437,7 @@ static const MSIVIEWOPS where_ops =
 {
     WHERE_fetch_int,
     WHERE_fetch_stream,
-    WHERE_set_int,
+    WHERE_set_row,
     NULL,
     WHERE_execute,
     WHERE_close,
@@ -497,6 +514,16 @@ static UINT WHERE_VerifyCondition( MSIDATABASE *db, MSIVIEW *table, struct expr 
         }
 
         break;
+    case EXPR_UNARY:
+        if ( cond->u.expr.left->type != EXPR_COLUMN )
+        {
+            *valid = FALSE;
+            return ERROR_INVALID_PARAMETER;
+        }
+        r = WHERE_VerifyCondition( db, table, cond->u.expr.left, valid );
+        if( r != ERROR_SUCCESS )
+            return r;
+        break;
     case EXPR_IVAL:
         *valid = 1;
         cond->type = EXPR_UVAL;
@@ -512,7 +539,7 @@ static UINT WHERE_VerifyCondition( MSIDATABASE *db, MSIVIEW *table, struct expr 
         ERR("Invalid expression type\n");
         *valid = 0;
         break;
-    } 
+    }
 
     return ERROR_SUCCESS;
 }

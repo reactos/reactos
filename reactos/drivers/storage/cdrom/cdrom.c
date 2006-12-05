@@ -1409,6 +1409,7 @@ CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
 	    MmBuildMdlForNonPagedPool (SubIrp->MdlAddress);
 	    Srb->DataBuffer = DataBuffer;
 
+        RtlZeroMemory(DataBuffer, sizeof(READ_CAPACITY_DATA));
 	    IoCallDriver (DeviceExtension->PortDeviceObject,
 			  SubIrp);
 	    return;

@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/mbstring/ismblead.c
  * PURPOSE:     Checks for a lead byte
- * PROGRAMER:   Boudewijn Dekker
+ * PROGRAMER:   Ariadne
  * UPDATE HISTORY:
  *		Modified from Taiji Yamada japanese code system utilities
  *              12/04/99: Created

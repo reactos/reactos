@@ -30,8 +30,10 @@ typedef struct
 	USHORT		TransferBufferOffset;	// 04h - Transfer buffer offset (seg:off)
 	USHORT		TransferBufferSegment;	//       Transfer buffer segment (seg:off)
 	ULONGLONG		LBAStartBlock;			// 08h - Starting absolute block number
-	ULONGLONG		TransferBuffer64;		// 10h - (EDD-3.0, optional) 64-bit flat address of transfer buffer
+	//ULONGLONG		TransferBuffer64;		// 10h - (EDD-3.0, optional) 64-bit flat address of transfer buffer
 									//       used if DWORD at 04h is FFFFh:FFFFh
+									//       Commented since some earlier BIOSes refuse to work with
+									//       such extended structure
 } PACKED I386_DISK_ADDRESS_PACKET, *PI386_DISK_ADDRESS_PACKET;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +86,6 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNu
 	Packet->TransferBufferOffset = ((ULONG)Buffer) & 0x0F;
 	Packet->TransferBufferSegment = ((ULONG)Buffer) >> 4;
 	Packet->LBAStartBlock = SectorNumber;
-	Packet->TransferBuffer64 = 0;
 
 	// BIOS int 0x13, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
 	// Return:
@@ -276,6 +277,18 @@ static BOOLEAN PcDiskInt13ExtensionsSupported(ULONG DriveNumber)
 		return LastSupported;
 	}
 
+	// Some BIOSes report that extended disk access functions are not supported
+	// when booting from a CD (e.g. Phoenix BIOS v6.00PG and Insyde BIOS shipping
+	// with Intel Macs). Therefore we just return TRUE if we're booting from a CD -
+	// we can assume that all El Torito capable BIOSes support INT 13 extensions.
+	// We simply detect whether we're booting from CD by checking whether the drive
+	// number is >= 0x90. It's 0x90 on the Insyde BIOS, and 0x9F on most other BIOSes.
+	if (DriveNumber >= 0x90)
+	{
+		LastSupported = TRUE;
+		return TRUE;
+	}
+
 	LastDriveNumber = DriveNumber;
 
 	// IBM/MS INT 13 Extensions - INSTALLATION CHECK
@@ -323,27 +336,13 @@ static BOOLEAN PcDiskInt13ExtensionsSupported(ULONG DriveNumber)
 		return FALSE;
 	}
 
-	// Note:
-	// The original check is too strict because some BIOSes report that
-	// extended disk access functions are not suported when booting
-	// from a CD (e.g. Phoenix BIOS v6.00PG). Argh!
-#if 0
 	if (!(RegsOut.w.cx & 0x0001))
 	{
 		// CX = API subset support bitmap
 		// Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported
-		LastSupported = FALSE;
-		return FALSE;
-	}
-#endif
-
-	// Use this relaxed check instead (most BIOSes seem to use 0x9f as CD-Rom)
-	if (RegsOut.w.cx == 0x0000 && DriveNumber != 0x9f)
-	{
-		// CX = API subset support bitmap
 		printf("Suspicious API subset support bitmap 0x%x on device 0x%lx\n", RegsOut.w.cx, DriveNumber);
 		LastSupported = FALSE;
-		return LastSupported;
+		return FALSE;
 	}
 
 	LastSupported = TRUE;

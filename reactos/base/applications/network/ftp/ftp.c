@@ -159,7 +159,7 @@ char *hookup(char *host, int port)
 			(void) fflush(stdout);
 			(void) close(s);
 			s = socket(hisctladdr.sin_family, SOCK_STREAM, 0);
-			if (s < 0) {
+			if (s == INVALID_SOCKET) {
 				perror("ftp: socket");
 				code = -1;
 				return (0);
@@ -781,7 +781,7 @@ null();//			(void) signal(SIGINT, oldintr);
 	}
 null();//	oldintr = signal(SIGINT, abortrecv);
 	if (strcmp(local, "-") && *local != '|') {
-#ifndef __WIN32__
+#ifndef _WIN32
 // This whole thing is a problem... access Won't work on non-existent files
            if (access(local, 2) < 0) {
               char *dir = rindex(local, '/');

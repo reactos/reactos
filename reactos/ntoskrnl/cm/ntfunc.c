@@ -2838,8 +2838,7 @@ NtCompactKeys(IN ULONG Count,
 
 NTSTATUS
 NTAPI
-NtCompressKey(IN HANDLE Key,
-              IN ULONG Mode)
+NtCompressKey(IN HANDLE Key)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

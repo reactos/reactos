@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HA:
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/hal/halx86/generic/sysinfo.c
+ * FILE:            hal/halx86/generic/sysinfo.c
  * PURPOSE:         HAL Information Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -11,6 +11,8 @@
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
+
+ULONG KdComPortInUse = 0;
 
 /* FUNCTIONS *****************************************************************/
 

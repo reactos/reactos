@@ -1,7 +1,7 @@
 /*
- * PROJECT:         ReactOS HA:
+ * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/hal/halx86/generic/display.c
+ * FILE:            hal/halx86/generic/display.c
  * PURPOSE:         Screen Display Routines, now useless since NT 5.1+
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -11,7 +11,7 @@
 #include <debug.h>
 #include <ndk/inbvfuncs.h>
 
-/* PUBLIC FUNCTIONS *********************************************************/
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented

@@ -4,7 +4,7 @@
  * PROJECT  : ReactOS user mode libraries
  * MODULE   : kernel32.dll
  * FILE     : reactos/lib/kernel32/misc/res.c
- * AUTHOR   : Boudewijn Dekker (Ariadne)
+ * AUTHOR   : Ariadne
  *            Eric Kohl
  *            Ge van Geldorp
  *            Gunnar Dalsnes

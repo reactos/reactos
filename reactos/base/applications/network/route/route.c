@@ -12,9 +12,9 @@
  */
 
 #include <stdio.h>
+#include <winsock2.h>
 #include <windows.h>
 #include <iphlpapi.h>
-#include <winsock2.h>
 #include <tchar.h>
 
 #define IPBUF 17
@@ -23,13 +23,13 @@
 static int Usage()
 {
     _ftprintf( stderr,
-               _T("route usage:\n"
-                  "route print\n"
-                  "  prints the route table\n"
-                  "route add <target> [mask <mask>] <gw> [metric <m>]\n"
-                  "  adds a route\n"
-                  "route delete <target> <gw>\n"
-                  "  deletes a route\n") );
+               _T("route usage:\n")
+               _T("route print\n")
+               _T("  prints the route table\n")
+               _T("route add <target> [mask <mask>] <gw> [metric <m>]\n")
+               _T("  adds a route\n")
+               _T("route delete <target> <gw>\n")
+               _T("  deletes a route\n") );
     return 1;
 }
 
@@ -87,11 +87,10 @@ static int PrintRoutes()
         /* FIXME - sort by the index! */
         while (pAdapterInfo)
         {
-            _tprintf(_T("0x%lu ........................... "
 #ifdef UNICODE
-                        "%hs\n"),
+            _tprintf(_T("0x%lu ........................... %hs\n"),
 #else
-                        "%s\n"),
+            _tprintf(_T("0x%lu ........................... %s\n"),
 #endif
                      pAdapterInfo->Index, pAdapterInfo->Description);
             pAdapterInfo = pAdapterInfo->Next;
@@ -212,13 +211,13 @@ static int add_route( int argc, TCHAR **argv ) {
     if( argc < 2 || !convert_add_cmd_line( &RowToAdd, argc, argv ) )
     {
         _ftprintf( stderr,
-                   _T("route add usage:\n"
-                      "route add <target> [mask <mask>] <gw> [metric <m>]\n"
-                      "  Adds a route to the IP route table.\n"
-                      "  <target> is the network or host to add a route to.\n"
-                      "  <mask>   is the netmask to use (autodetected if unspecified)\n"
-                      "  <gw>     is the gateway to use to access the network\n"
-                      "  <m>      is the metric to use (lower is preferred)\n") );
+                   _T("route add usage:\n")
+                   _T("route add <target> [mask <mask>] <gw> [metric <m>]\n")
+                   _T("  Adds a route to the IP route table.\n")
+                   _T("  <target> is the network or host to add a route to.\n")
+                   _T("  <mask>   is the netmask to use (autodetected if unspecified)\n")
+                   _T("  <gw>     is the gateway to use to access the network\n")
+                   _T("  <m>      is the metric to use (lower is preferred)\n") );
         return 1;
     }
 
@@ -237,11 +236,11 @@ static int del_route( int argc, TCHAR **argv )
     if( argc < 2 || !convert_add_cmd_line( &RowToDel, argc, argv ) )
     {
         _ftprintf( stderr,
-                    _T("route delete usage:\n"
-                       "route delete <target> <gw>\n"
-                       "  Removes a route from the IP route table.\n"
-                       "  <target> is the network or host to add a route to.\n"
-                       "  <gw>     is the gateway to remove the route from.\n") );
+                    _T("route delete usage:\n")
+                    _T("route delete <target> <gw>\n")
+                    _T("  Removes a route from the IP route table.\n")
+                    _T("  <target> is the network or host to add a route to.\n")
+                    _T("  <gw>     is the gateway to remove the route from.\n") );
         return 1;
     }
 

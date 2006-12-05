@@ -26,7 +26,7 @@ HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
   HalpInitPICs();
 
   /* Setup busy waiting */
-  HalpCalibrateStallExecution();
+  //HalpCalibrateStallExecution();
 
   HalpXboxInitPartIo();
 }

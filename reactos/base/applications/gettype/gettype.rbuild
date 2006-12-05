@@ -5,6 +5,7 @@
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<library>kernel32</library>
+	<library>shell32</library>
 	<library>mpr</library>
 	<library>netapi32</library>
 	<file>gettype.c</file>

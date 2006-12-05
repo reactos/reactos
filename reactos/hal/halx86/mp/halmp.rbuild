@@ -11,6 +11,7 @@
 	<library>hal_generic_pc</library>
 	<library>ntoskrnl</library>
 	<file>apic.c</file>
+    <file>halinit.c</file>
 	<file>halinit_mp.c</file>
 	<file>ioapic.c</file>
 	<file>ipi_mp.c</file>

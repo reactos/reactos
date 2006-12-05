@@ -235,6 +235,7 @@ ProcessIdToHandle(IN DWORD dwProcessId)
     if (dwProcessId == -1) dwProcessId = (DWORD)CsrGetProcessId();
 
     /* Open a handle to the process */
+    ClientId.UniqueThread = NULL;
     ClientId.UniqueProcess = (HANDLE)dwProcessId;
     InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
     Status = NtOpenProcess(&Handle,
@@ -498,7 +499,7 @@ WaitForDebugEvent(IN LPDEBUG_EVENT lpDebugEvent,
     } while ((Status == STATUS_ALERTED) || (Status == STATUS_USER_APC));
 
     /* Check if the wait failed */
-    if (!(NT_SUCCESS(Status)) || (Status != DBG_UNABLE_TO_PROVIDE_HANDLE))
+    if (!(NT_SUCCESS(Status)) || (Status == DBG_UNABLE_TO_PROVIDE_HANDLE))
     {
         /* Set the error code and quit */
         SetLastErrorByStatus(Status);

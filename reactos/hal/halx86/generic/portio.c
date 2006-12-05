@@ -1,10 +1,10 @@
 /*
-* PROJECT:         ReactOS HAL
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/hal/x86/portio.c
-* PURPOSE:         I/O Functions for access to ports
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*/
+ * PROJECT:         ReactOS HAL
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            hal/halx86/generic/portio.c
+ * PURPOSE:         I/O Functions for access to ports
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ */
 
 /* INCLUDES ******************************************************************/
 

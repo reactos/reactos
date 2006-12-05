@@ -64,12 +64,21 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Rechercher\tCtrl+F", CMD_SEARCH
 		MENUITEM "&Suivant\tF3",      CMD_SEARCH_NEXT
+		MENUITEM "Remplacer\tCtrl+H",   CMD_REPLACE
+		MENUITEM "Atteindre...\tCtrl+G",  CMD_GOTO
 		MENUITEM SEPARATOR
 		MENUITEM "Tout &sélectionner\tCtrl+A", CMD_SELECT_ALL
 		MENUITEM "&Heure/Date\tF5",   CMD_TIME_DATE
+	END
+	POPUP "&Format"
+	BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Retour à la ligne", CMD_WRAP
 		MENUITEM "&Police...",        CMD_FONT
+	END
+	POPUP "Affichage"
+	BEGIN
+		MENUITEM "Barre d'état",    CMD_STATUSBAR
 	END
 	POPUP "&Aide" 
 	BEGIN
@@ -77,7 +86,7 @@ BEGIN
 		MENUITEM "&Rechercher...",    CMD_HELP_SEARCH
 		MENUITEM "&Utiliser l'aide",  CMD_HELP_ON_HELP
 		MENUITEM SEPARATOR
-		MENUITEM "&About"             CMD_ABOUT
+		MENUITEM "&À propos"             CMD_ABOUT
 		MENUITEM "Inf&o...",        CMD_ABOUT_WINE
 	END
 END
@@ -109,6 +118,31 @@ PUSHBUTTON    "Annuler",     0x152,               180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "&Aide",       0x153,                180, 39, 40, 15, WS_TABSTOP
 }
 
+/* Dialog `Encoding' */
+DIALOG_ENCODING DIALOG 0, 0, 256, 44
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Encodage"
+{
+COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Encodage:",0x155,5,2,41,12
+COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Fin de lignes:",0x156,5,20,41,12
+}
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOG 0,0,165,50
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Atteindre..."
+{
+EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Numéro de ligne:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Annuler", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+}
+
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "About ReactOS Notepad"
@@ -118,7 +152,7 @@ BEGIN
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Close",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "Fermer",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
@@ -160,5 +194,12 @@ STRING_NOTFOUND,                                "'%s' non trouvé."
 STRING_OUT_OF_MEMORY,                           "Pas assez de mémoire pour compléter cette \
 tâche. \nFermez une ou plusieurs applications pour libérer\n\
 de la mémoire."
-
+STRING_CANNOTFIND                               "Impossible de trouver '%s'"
+STRING_ANSI,                                    "ANSI"
+STRING_UNICODE,                                 "Unicode"
+STRING_UNICODE_BE,                              "Unicode (big endian)"
+STRING_UTF8,                                    "UTF-8"
+STRING_CRLF,                                    "Windows"
+STRING_LF,                                      "Unix"
+STRING_CR,                                      "Mac"
 }
