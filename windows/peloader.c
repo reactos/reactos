@@ -418,10 +418,10 @@ WinLdrLoadImage(IN PCHAR FileName,
 		DbgPrint((DPRINT_WINDOWS, "Relocating %p -> %p\n",
 			NtHeaders->OptionalHeader.ImageBase, VirtualBase));
 		Status = (BOOLEAN)LdrRelocateImageWithBias(PhysicalBase,
-			0,
-			"FLx86",
+			(ULONG_PTR)VirtualBase - (ULONG_PTR)PhysicalBase,
+			"FreeLdr",
 			TRUE,
-			3,
+			TRUE, /* in case of conflict still return success */
 			FALSE);
 	}
 
