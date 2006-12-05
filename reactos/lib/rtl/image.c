@@ -226,10 +226,6 @@ LdrProcessRelocationBlockLongLong(
     return (PIMAGE_BASE_RELOCATION)TypeOffset;
 }
 
-/* NOTE: When this function is called with LoaderName == "FLx86"
-         it's going to behave differently: it will perform all
-         relocations as needed, but will access only valid physical
-         addresses (not virtual addresses) */
 ULONG
 NTAPI
 LdrRelocateImageWithBias(
@@ -254,10 +250,10 @@ LdrRelocateImageWithBias(
     if (NtHeaders == NULL)
         return Invalid;
 
-    /*if (NtHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
+    if (NtHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
     {
         return Conflict;
-    }*/
+    }
 
     RelocationDDir = &NtHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
 
@@ -266,19 +262,7 @@ LdrRelocateImageWithBias(
         return Success;
     }
 
-    /* ROS/FreeLoader/arch-specific stuff, for relocating while being in PA mode */
-    if ((LoaderName != NULL) && (!strncmp(LoaderName, "FLx86", 5)))
-    {
-        /* Calculate it, converting BaseAddress to a virtual address */
-        Delta = ((ULONG_PTR)BaseAddress | 0x80000000) -
-            NtHeaders->OptionalHeader.ImageBase + AdditionalBias;
-    }
-    else
-    {
-        /* Calculate it as usual */
-        Delta = (ULONG_PTR)BaseAddress - NtHeaders->OptionalHeader.ImageBase + AdditionalBias;
-    }
-
+    Delta = (ULONG_PTR)BaseAddress - NtHeaders->OptionalHeader.ImageBase + AdditionalBias;
     RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)BaseAddress + RelocationDDir->VirtualAddress);
     RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDDir->Size);
 
