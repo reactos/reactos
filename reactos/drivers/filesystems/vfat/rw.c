@@ -689,7 +689,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
                       (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT), Buffer,
                       &IrpContext->Irp->IoStatus))
       {
-         Status = STATUS_PENDING;
+         Status = IrpContext->Irp->IoStatus.Status;//STATUS_PENDING;
          goto ByeBye;
       }
       CHECKPOINT;
