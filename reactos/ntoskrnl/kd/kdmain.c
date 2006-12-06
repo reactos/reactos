@@ -241,6 +241,22 @@ KdPowerTransition(ULONG PowerState)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+KdChangeOption(IN KD_OPTION Option,
+               IN ULONG InBufferLength OPTIONAL,
+               IN PVOID InBuffer,
+               IN ULONG OutBufferLength OPTIONAL,
+               OUT PVOID OutBuffer,
+               OUT PULONG OutBufferRequiredLength OPTIONAL)
+{
+    UNIMPLEMENTED;
+}
+
+
 NTSTATUS
 STDCALL
 NtQueryDebugFilterState(IN ULONG ComponentId,

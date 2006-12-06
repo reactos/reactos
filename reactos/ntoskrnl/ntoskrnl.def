@@ -504,6 +504,7 @@ IoWriteTransferCount DATA
 @IofCallDriver@8
 @IofCompleteRequest@8
 IoIsWdmVersionAvailable@8
+KdChangeOption@24
 KdComPortInUse DATA
 KdDebuggerEnabled=_KdDebuggerEnabled
 KdDebuggerNotPresent=_KdDebuggerNotPresent

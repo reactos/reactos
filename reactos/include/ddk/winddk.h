@@ -2559,6 +2559,10 @@ typedef struct
     DEBUG_MEMORY_REQUIREMENTS Memory;
 } DEBUG_DEVICE_DESCRIPTOR, *PDEBUG_DEVICE_DESCRIPTOR;
 
+typedef enum _KD_OPTION {
+    KD_OPTION_SET_BLOCK_ENABLE,
+} KD_OPTION;
+
 /* Function Type Defintions for Dispatch Functions */
 
 typedef VOID
