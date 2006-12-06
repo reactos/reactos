@@ -36,8 +36,5 @@
 		<file>surface_main.c</file>				
 	</directory>	
 
-	<directory name="thunks">
-		<file>ddraw_thunk.c</file>
-		<file>surface_thunk.c</file>
-	</directory>
+	
 </module>
