@@ -15,7 +15,6 @@
 	<library>ole32</library>
 	<library>user32</library>
 	<library>advapi32</library>
-	<library>msvcrt</library>
 
 	<file>ddraw.rc</file>
 	<file>main.c</file>
@@ -36,4 +35,9 @@
 		<file>ddraw_main.c</file>
 		<file>surface_main.c</file>				
 	</directory>	
+
+	<directory name="thunks">
+		<file>ddraw_thunk.c</file>
+		<file>surface_thunk.c</file>
+	</directory>
 </module>

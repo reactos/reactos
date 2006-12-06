@@ -229,6 +229,8 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
 	This->lpLcl->hDD = This->lpLcl->lpGbl->hDD;
 
 	/* Mix the DDCALLBACKS */	
+	This->lpLcl->lpDDCB = This->lpLcl->lpGbl->lpDDCBtmp;
+
 	This->lpLcl->lpDDCB->cbDDCallbacks.dwSize = sizeof(This->lpLcl->lpDDCB->cbDDCallbacks);
 
 	if ((This->lpLcl->lpDDCB->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE) && (devicetypes !=3))
@@ -862,21 +864,21 @@ HRESULT WINAPI
 StartDirectDrawHel(LPDIRECTDRAW* iface, BOOL reenable)
 {
 	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
-	    
-	This->lpLcl->lpDDCB->HELDD.CanCreateSurface     = HelDdCanCreateSurface;	
-	This->lpLcl->lpDDCB->HELDD.CreateSurface        = HelDdCreateSurface;		
-	This->lpLcl->lpDDCB->HELDD.CreatePalette        = HelDdCreatePalette;
-	This->lpLcl->lpDDCB->HELDD.DestroyDriver        = HelDdDestroyDriver;
-	This->lpLcl->lpDDCB->HELDD.FlipToGDISurface     = HelDdFlipToGDISurface;
-	This->lpLcl->lpDDCB->HELDD.GetScanLine          = HelDdGetScanLine;
-	This->lpLcl->lpDDCB->HELDD.SetColorKey          = HelDdSetColorKey;
-	This->lpLcl->lpDDCB->HELDD.SetExclusiveMode     = HelDdSetExclusiveMode;
-	This->lpLcl->lpDDCB->HELDD.SetMode              = HelDdSetMode;
-	This->lpLcl->lpDDCB->HELDD.WaitForVerticalBlank = HelDdWaitForVerticalBlank;
+	
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.CanCreateSurface     = HelDdCanCreateSurface;	
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.CreateSurface        = HelDdCreateSurface;		
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.CreatePalette        = HelDdCreatePalette;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.DestroyDriver        = HelDdDestroyDriver;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.FlipToGDISurface     = HelDdFlipToGDISurface;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.GetScanLine          = HelDdGetScanLine;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.SetColorKey          = HelDdSetColorKey;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.SetExclusiveMode     = HelDdSetExclusiveMode;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.SetMode              = HelDdSetMode;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.WaitForVerticalBlank = HelDdWaitForVerticalBlank;
 
 	
 
-	This->lpLcl->lpDDCB->HELDD.dwFlags =  DDHAL_CB32_CANCREATESURFACE     |
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.dwFlags =  DDHAL_CB32_CANCREATESURFACE     |
 		                                  DDHAL_CB32_CREATESURFACE        |
 										  DDHAL_CB32_CREATEPALETTE        |
 		                                  DDHAL_CB32_DESTROYDRIVER        | 
@@ -887,24 +889,24 @@ StartDirectDrawHel(LPDIRECTDRAW* iface, BOOL reenable)
 										  DDHAL_CB32_SETMODE              |                                                   
 										  DDHAL_CB32_WAITFORVERTICALBLANK ;
 
-	This->lpLcl->lpDDCB->HELDD.dwSize = sizeof(This->lpLcl->lpDDCB->HELDD);
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDD.dwSize = sizeof(This->lpLcl->lpDDCB->HELDD);
 	
-	This->lpLcl->lpDDCB->HELDDSurface.AddAttachedSurface = HelDdSurfAddAttachedSurface;
-	This->lpLcl->lpDDCB->HELDDSurface.Blt = HelDdSurfBlt;
-	This->lpLcl->lpDDCB->HELDDSurface.DestroySurface = HelDdSurfDestroySurface;
-	This->lpLcl->lpDDCB->HELDDSurface.Flip = HelDdSurfFlip;
-	This->lpLcl->lpDDCB->HELDDSurface.GetBltStatus = HelDdSurfGetBltStatus;
-	This->lpLcl->lpDDCB->HELDDSurface.GetFlipStatus = HelDdSurfGetFlipStatus;
-	This->lpLcl->lpDDCB->HELDDSurface.Lock = HelDdSurfLock;
-	This->lpLcl->lpDDCB->HELDDSurface.reserved4 = HelDdSurfreserved4;
-	This->lpLcl->lpDDCB->HELDDSurface.SetClipList = HelDdSurfSetClipList;
-	This->lpLcl->lpDDCB->HELDDSurface.SetColorKey = HelDdSurfSetColorKey;
-	This->lpLcl->lpDDCB->HELDDSurface.SetOverlayPosition = HelDdSurfSetOverlayPosition;
-	This->lpLcl->lpDDCB->HELDDSurface.SetPalette = HelDdSurfSetPalette;
-	This->lpLcl->lpDDCB->HELDDSurface.Unlock = HelDdSurfUnlock;
-	This->lpLcl->lpDDCB->HELDDSurface.UpdateOverlay = HelDdSurfUpdateOverlay;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.AddAttachedSurface = HelDdSurfAddAttachedSurface;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.Blt = HelDdSurfBlt;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.DestroySurface = HelDdSurfDestroySurface;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.Flip = HelDdSurfFlip;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.GetBltStatus = HelDdSurfGetBltStatus;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.GetFlipStatus = HelDdSurfGetFlipStatus;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.Lock = HelDdSurfLock;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.reserved4 = HelDdSurfreserved4;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.SetClipList = HelDdSurfSetClipList;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.SetColorKey = HelDdSurfSetColorKey;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.SetOverlayPosition = HelDdSurfSetOverlayPosition;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.SetPalette = HelDdSurfSetPalette;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.Unlock = HelDdSurfUnlock;
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.UpdateOverlay = HelDdSurfUpdateOverlay;
     
-	This->lpLcl->lpDDCB->HELDDSurface.dwFlags = DDHAL_SURFCB32_ADDATTACHEDSURFACE |
+	This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.dwFlags = DDHAL_SURFCB32_ADDATTACHEDSURFACE |
 		                                        DDHAL_SURFCB32_BLT                | 
 												DDHAL_SURFCB32_DESTROYSURFACE     | 
 												DDHAL_SURFCB32_FLIP               | 
@@ -919,7 +921,7 @@ StartDirectDrawHel(LPDIRECTDRAW* iface, BOOL reenable)
 												DDHAL_SURFCB32_UNLOCK             |
 												DDHAL_SURFCB32_UPDATEOVERLAY;
 
-    This->lpLcl->lpDDCB->HELDDSurface.dwSize = sizeof(This->lpLcl->lpDDCB->HELDDSurface);
+    This->lpLcl->lpGbl->lpDDCBtmp->HELDDSurface.dwSize = sizeof(This->lpLcl->lpDDCB->HELDDSurface);
 		                                      
 	/*
 	This->lpLcl->lpDDCB->HELDDPalette.DestroyPalette  = HelDdPalDestroyPalette; 
