@@ -183,6 +183,8 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     
 	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     LPDDRAWI_DDRAWSURFACE_INT That; 
+	DDHAL_CANCREATESURFACEDATA mDdCanCreateSurface;
+	DDHAL_CREATESURFACEDATA mDdCreateSurface;
 	
     if (pUnkOuter!=NULL) 
 	{
@@ -246,26 +248,55 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
 	DX_STUB_str("pDDSD->dwFlags ok");
 
-	/* own code now */   
-          
+	/* own code now */  
+	
+	mDdCanCreateSurface.lpDD = This->lpLcl->lpGbl;
+	mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE;
+	mDdCanCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
+	mDdCanCreateSurface.CanCreateSurface = This->lpLcl->lpDDCB->cbDDCallbacks.CanCreateSurface;
+	mDdCanCreateSurface.ddRVal = DDERR_GENERIC;
+
+	mDdCreateSurface.CreateSurface = This->lpLcl->lpDDCB->cbDDCallbacks.CreateSurface;
+	mDdCreateSurface.ddRVal =  DDERR_GENERIC;
+	mDdCreateSurface.dwSCnt = That->dwIntRefCnt + 1; // is this correct 
+	mDdCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
+	//mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
+	mDdCreateSurface.lplpSList = &That->lpLcl;
+    
+
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
 	{        
+		     
 		    /* we only create one surface it is primary */
 		    //LPDDRAWI_DDRAWSURFACE_LCL surf;
 
 		    DX_STUB_str( "Can not create primary surface well yet");
 
-			
-			if (That == NULL) 
-			{
-				return E_OUTOFMEMORY;
+			if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
+			{				   
+				DX_STUB_str( "Can not create surface ");
+                return DDERR_NOTINITIALIZED;
 			}
 
-			// This->lpLcl->lpDDCB->cbDDCallbacks.CanCreateSurface();
-            // This->lpLcl->lpDDCB->cbDDCallbacks.CreateSurface();
+			if (mDdCanCreateSurface.ddRVal != DD_OK)
+			{
+				 DX_STUB_str( "Fail");
+				 return mDdCanCreateSurface.ddRVal;
+			}
+
+			 DX_STUB_str( "Can not create primary surface well yet");
+
+			if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
+			{				   
+				DX_STUB_str( "Can not create surface fail");
+                return DDERR_NOTINITIALIZED;
+			}
+
+			 DX_STUB_str( "Can not create primary surface well yet");
+			
 			Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
 			Main_DDrawSurface_AddRef((LPDIRECTDRAWSURFACE7)That);
-			return DD_OK;
+			return mDdCreateSurface.ddRVal;
 			
     }
     else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OVERLAY)
