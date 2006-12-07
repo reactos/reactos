@@ -9,6 +9,7 @@
 #include <iphlpapi.h>
 #include <dhcpcsdk.h>
 #include <stdio.h>
+#include <io.h>
 #include <setjmp.h>
 #include "stdint.h"
 #include "predec.h"

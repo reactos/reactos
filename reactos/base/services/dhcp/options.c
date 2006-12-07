@@ -566,7 +566,7 @@ pretty_print_option(unsigned int code, unsigned char *data, int len,
 					    !isprint(*dp)) {
 						if (dp + 1 != data + len ||
 						    *dp != 0) {
-							snprintf(op, opleft,
+							_snprintf(op, opleft,
 							    "\\%03o", *dp);
 							op += 4;
 							opleft -= 4;
@@ -602,7 +602,7 @@ pretty_print_option(unsigned int code, unsigned char *data, int len,
 				dp += 4;
 				break;
 			case 'l':
-				opcount = snprintf(op, opleft, "%ld",
+				opcount = _snprintf(op, opleft, "%ld",
 				    (long)getLong(dp));
 				if (opcount >= opleft || opcount == -1)
 					goto toobig;
@@ -610,7 +610,7 @@ pretty_print_option(unsigned int code, unsigned char *data, int len,
 				dp += 4;
 				break;
 			case 'L':
-				opcount = snprintf(op, opleft, "%ld",
+				opcount = _snprintf(op, opleft, "%ld",
 				    (unsigned long)getULong(dp));
 				if (opcount >= opleft || opcount == -1)
 					goto toobig;
@@ -618,7 +618,7 @@ pretty_print_option(unsigned int code, unsigned char *data, int len,
 				dp += 4;
 				break;
 			case 's':
-				opcount = snprintf(op, opleft, "%d",
+				opcount = _snprintf(op, opleft, "%d",
 				    getShort(dp));
 				if (opcount >= opleft || opcount == -1)
 					goto toobig;
@@ -626,7 +626,7 @@ pretty_print_option(unsigned int code, unsigned char *data, int len,
 				dp += 2;
 				break;
 			case 'S':
-				opcount = snprintf(op, opleft, "%d",
+				opcount = _snprintf(op, opleft, "%d",
 				    getUShort(dp));
 				if (opcount >= opleft || opcount == -1)
 					goto toobig;
@@ -634,20 +634,20 @@ pretty_print_option(unsigned int code, unsigned char *data, int len,
 				dp += 2;
 				break;
 			case 'b':
-				opcount = snprintf(op, opleft, "%d",
+				opcount = _snprintf(op, opleft, "%d",
 				    *(char *)dp++);
 				if (opcount >= opleft || opcount == -1)
 					goto toobig;
 				opleft -= opcount;
 				break;
 			case 'B':
-				opcount = snprintf(op, opleft, "%d", *dp++);
+				opcount = _snprintf(op, opleft, "%d", *dp++);
 				if (opcount >= opleft || opcount == -1)
 					goto toobig;
 				opleft -= opcount;
 				break;
 			case 'x':
-				opcount = snprintf(op, opleft, "%x", *dp++);
+				opcount = _snprintf(op, opleft, "%x", *dp++);
 				if (opcount >= opleft || opcount == -1)
 					goto toobig;
 				opleft -= opcount;

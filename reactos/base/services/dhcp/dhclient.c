@@ -2044,7 +2044,7 @@ option_as_string(unsigned int code, unsigned char *data, int len)
 	for (; dp < data + len; dp++) {
 		if (!isascii(*dp) || !isprint(*dp)) {
 			if (dp + 1 != data + len || *dp != 0) {
-				snprintf(op, opleft, "\\%03o", *dp);
+				_snprintf(op, opleft, "\\%03o", *dp);
 				op += 4;
 				opleft -= 4;
 			}

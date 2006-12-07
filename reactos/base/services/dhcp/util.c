@@ -100,6 +100,7 @@ int read_client_conf(void) {
        /* What a strage dance */
        struct client_config *config;
        char ComputerName [MAX_COMPUTERNAME_LENGTH + 1];
+       LPSTR lpCompName;
        DWORD ComputerNameSize = sizeof ComputerName / sizeof ComputerName[0];
 
        if ((ifi!= NULL) && (ifi->client->config != NULL))
@@ -113,12 +114,12 @@ int read_client_conf(void) {
            
        GetComputerName(ComputerName, & ComputerNameSize);
        /* This never gets freed since it's only called once */
-       LPSTR lpCompName =
+       lpCompName =
        HeapAlloc(GetProcessHeap(), 0, strlen(ComputerName) + 1);
        if (lpCompName !=NULL) {
            GetComputerName(lpCompName, & ComputerNameSize);
            /* Send our hostname, some dhcpds use this to update DNS */
-           config->send_options[DHO_HOST_NAME].data = strlwr(lpCompName);
+           config->send_options[DHO_HOST_NAME].data = (u_int8_t*)strlwr(lpCompName);
            config->send_options[DHO_HOST_NAME].len = strlen(ComputerName);
            debug("Hostname: %s, length: %d",
                  config->send_options[DHO_HOST_NAME].data,

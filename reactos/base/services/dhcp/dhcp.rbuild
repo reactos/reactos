@@ -1,4 +1,4 @@
-<module name="dhcp" type="win32gui" installbase="system32" installname="dhcp.exe" allowwarnings="true">
+<module name="dhcp" type="win32cui" installbase="system32" installname="dhcp.exe" allowwarnings="true">
 	<include base="dhcp">.</include>
 	<include base="dhcp">include</include>
 	<define name="__USE_W32API" />
