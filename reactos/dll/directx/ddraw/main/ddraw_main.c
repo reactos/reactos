@@ -202,7 +202,8 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	}
 
 	That->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));
-    
+    This->lpLcl->lpPrimary = That;
+
     if (That == NULL) 
 	{
         return E_OUTOFMEMORY;
@@ -214,15 +215,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	That->lpLcl->lpGbl = &ddSurfGbl;
 	That->lpLcl->lpGbl->lpDD = &ddgbl;
 
-	Main_DDrawSurface_AddRef((LPDIRECTDRAWSURFACE7)That);
-	
-	if (This->lpLcl->lpGbl->dsList == NULL)
-	{	
-		This->lpLcl->lpGbl->dsList = That;
 		
-	}
-      
-  
 	/* Code from wine cvs 24/7-2006 */
 
 	if (!(pDDSD->dwFlags & DDSD_CAPS))
@@ -253,16 +246,27 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
 	DX_STUB_str("pDDSD->dwFlags ok");
 
-	/* own code now */
-
-    /* FIXME 	
-	   remove all old code for create a surface 
-	   for we need rewrite it 
-     */
+	/* own code now */   
           
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
-	{                         
-            DX_STUB_str( "Can not create primary surface");
+	{        
+		    /* we only create one surface it is primary */
+		    //LPDDRAWI_DDRAWSURFACE_LCL surf;
+
+		    DX_STUB_str( "Can not create primary surface well yet");
+
+			
+			if (That == NULL) 
+			{
+				return E_OUTOFMEMORY;
+			}
+
+			// This->lpLcl->lpDDCB->cbDDCallbacks.CanCreateSurface();
+            // This->lpLcl->lpDDCB->cbDDCallbacks.CreateSurface();
+			Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+			Main_DDrawSurface_AddRef((LPDIRECTDRAWSURFACE7)That);
+			return DD_OK;
+			
     }
     else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OVERLAY)
     {       
@@ -720,7 +724,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD coopl
 	/* This code should be a callback */
 	This->lpLcl->hWnd = hwnd;
 	This->lpLcl->hFocusWnd = hwnd;	
-	ReCreateDirectDraw(iface);
+	ReCreateDirectDraw((LPDIRECTDRAW*)iface);
 
     // TODO:                                                            
     // - create a scaner that check which driver we should get the HDC from    
