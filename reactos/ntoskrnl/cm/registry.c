@@ -161,7 +161,8 @@ CmInit2(PCHAR CommandLine)
   /*
    * Parse the system start options.
    */
-  PiceStart = strstr(KeLoaderBlock->LoadOptions, "DEBUGPORT=PICE") != NULL;
+  if (strstr(KeLoaderBlock->LoadOptions, "DEBUGPORT=PICE") != NULL)
+	PiceStart = 1;
   MiniNT = strstr(KeLoaderBlock->LoadOptions, "MININT") != NULL;
 
   /*
