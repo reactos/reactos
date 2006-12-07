@@ -217,6 +217,10 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	That->lpLcl->lpGbl = &ddSurfGbl;
 	That->lpLcl->lpGbl->lpDD = &ddgbl;
 
+	That->lpLcl->lpSurfMore = (LPDDRAWI_DDRAWSURFACE_MORE)DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_MORE));
+	That->lpLcl->lpSurfMore->lpDD_int = This;
+	That->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
+	
 		
 	/* Code from wine cvs 24/7-2006 */
 
@@ -250,6 +254,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
 	/* own code now */  
 	
+
 	mDdCanCreateSurface.lpDD = This->lpLcl->lpGbl;
 	mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE;
 	mDdCanCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
