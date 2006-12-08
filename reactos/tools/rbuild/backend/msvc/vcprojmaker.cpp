@@ -158,7 +158,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				module.GetBasePath() );
 			if ( module.type != RpcServer && module.type != RpcClient )
 			{
-				printf("path %s\n", path.c_str ());
 				if ( path.find ("/include/reactos/idl") != string::npos)
 				{
 					include_idl = true;
