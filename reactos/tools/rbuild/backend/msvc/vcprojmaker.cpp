@@ -114,6 +114,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	// TODO FIXME - need more checks here for 'sys' and possibly 'drv'?
 
 	bool console = exe && (module.type == Win32CUI);
+	bool include_idl = false;
 
 	string vcproj_path = module.GetBasePath();
 	vector<string> source_files, resource_files, includes, includes_wine, libraries;
@@ -155,7 +156,15 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			string path = Path::RelativeFromDirectory (
 				incs[i]->directory,
 				module.GetBasePath() );
-
+			if ( module.type != RpcServer && module.type != RpcClient )
+			{
+				printf("path %s\n", path.c_str ());
+				if ( path.find ("/include/reactos/idl") != string::npos)
+				{
+					include_idl = true;
+					continue;
+				}
+			}
 			// add to another list win32api and include/wine directories
 			if ( !strncmp(incs[i]->directory.c_str(), "include\\ddk", 11 ) ||
 			     !strncmp(incs[i]->directory.c_str(), "include\\crt", 11 ) ||
@@ -270,6 +279,20 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				fprintf ( OUT, "%s", include.c_str() );
 				include_string += " /I " + include;
 				multiple_includes = true;
+			}
+		}
+		if ( include_idl )
+		{
+			if ( multiple_includes )
+				fprintf ( OUT, ";" );
+
+			if ( configuration.UseConfigurationInPath )
+			{
+				fprintf ( OUT, "%s\\include\\reactos\\idl%s\\%s\r\n", intdir.c_str (), vcdir.c_str (), cfg.name.c_str() );
+			}
+			else
+			{
+				fprintf ( OUT, "%s\\include\\reactos\\idl\r\n", intdir.c_str () );
 			}
 		}
 		if ( cfg.headers == WineHeaders )
