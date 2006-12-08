@@ -596,10 +596,10 @@ DetectBiosDisks(FRLDRHKEY SystemKey,
 
 	/* Fill DiskController resources descriptor, which consists of:
 	   Partial Resource List + 3 Partial Resource Descriptors (Dma, Irq and Port) */
-	DiskComponentData->ConfigurationData = MmAllocateMemory(sizeof(CM_PARTIAL_RESOURCE_LIST) +
-		2*sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-	RtlZeroMemory(DiskComponentData->ConfigurationData, sizeof(CM_PARTIAL_RESOURCE_LIST) +
-		2*sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+	Size = sizeof(CM_PARTIAL_RESOURCE_LIST) + 2*sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+	DiskComponentData->ConfigurationData = MmAllocateMemory(Size);
+	RtlZeroMemory(DiskComponentData->ConfigurationData, Size);
+	DiskComponent->ConfigurationDataLength = Size;
 	ResourceList = (PCM_PARTIAL_RESOURCE_LIST)DiskComponentData->ConfigurationData;
 	ResourceList->Count = 3; // DMA + Interrupt + Port
 
@@ -693,6 +693,7 @@ DetectBiosDisks(FRLDRHKEY SystemKey,
 		Size = sizeof(CM_PARTIAL_RESOURCE_LIST) + sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
 		DiskPeripheralData->ConfigurationData = MmAllocateMemory(Size);
 		RtlZeroMemory(DiskPeripheralData->ConfigurationData, Size);
+		DiskPeripheralEntry->ConfigurationDataLength = Size;
 		ResourceList = (PCM_PARTIAL_RESOURCE_LIST)DiskPeripheralData->ConfigurationData;
 		ResourceList->Count = 1;
 
@@ -722,7 +723,7 @@ DetectBiosDisks(FRLDRHKEY SystemKey,
 		DiskPrevious = DiskPeripheralData;
 	}
 
-	/* Create configuration data for disks */
+	/* Create configuration data for disks (in the root System node ) */
 	/* Size is 1 resource list containing 2 resource descriptors, each one containing its own device data */
 	ConfigurationData = MmAllocateMemory(sizeof(CM_PARTIAL_RESOURCE_LIST) +
 		sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + DiskCount*sizeof(CM_INT13_DRIVE_PARAMETER) + 0);
