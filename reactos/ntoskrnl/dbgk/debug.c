@@ -1294,7 +1294,7 @@ ThreadScan:
                 if (DebugEvent->Flags & 0x10)
                 {
                     /* Set busy flag */
-                    InterlockedOr(&DebugEvent->Flags, 0x100);
+                    InterlockedOr((PLONG)&DebugEvent->Flags, 0x100);
                 }
                 else
                 {
@@ -1313,7 +1313,7 @@ ThreadScan:
                     DebugEvent->BackoutThread = NULL;
 
                     /* Set flag */
-                    InterlockedOr(&DebugEvent->Flags, 0x80);
+                    InterlockedOr((PLONG)&DebugEvent->Flags, 0x80);
                 }
             }
             else
