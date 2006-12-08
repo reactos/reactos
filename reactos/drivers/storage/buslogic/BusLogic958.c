@@ -557,8 +557,7 @@ BusLogic_HardwareResetHostAdapter(BusLogic_HostAdapter_T  *HostAdapter,
       
       if (StatusRegister.Bits.DataInRegisterReady)
       {
-        UCHAR ErrorCode = BusLogic_ReadDataInRegister(HostAdapter);
-        DebugPrint((ERROR, "HOST ADAPTER ERROR CODE = %d\n", ErrorCode));
+        DebugPrint((ERROR, "HOST ADAPTER ERROR CODE = %d\n", BusLogic_ReadDataInRegister(HostAdapter)));
       }
       return FALSE;
   } 
