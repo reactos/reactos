@@ -1822,6 +1822,7 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA ParentComponent,
 	PCONFIGURATION_COMPONENT_DATA ControllerComponent;
 	PCONFIGURATION_COMPONENT ControllerEntry;
 	PCM_PARTIAL_RESOURCE_LIST ResourceList;
+	ULONG Size;
 
 	/* Create controller key */
 	ControllerComponent = (PCONFIGURATION_COMPONENT_DATA)MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
@@ -1837,12 +1838,12 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA ParentComponent,
 
 	/* Fill keyboard controller resources descriptor, which consists of:
 	   Partial Resource List + 2 Partial Resource Descriptors (Irq and 2 Ports) */
-	ControllerComponent->ConfigurationData = MmAllocateMemory(sizeof(CM_PARTIAL_RESOURCE_LIST) +
-		sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-	RtlZeroMemory(ControllerComponent->ConfigurationData, sizeof(CM_PARTIAL_RESOURCE_LIST) +
-		sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+	Size = sizeof(CM_PARTIAL_RESOURCE_LIST) + 2*sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+	ControllerComponent->ConfigurationData = MmAllocateMemory(Size);
+	ControllerEntry->ConfigurationDataLength = Size;
+	RtlZeroMemory(ControllerComponent->ConfigurationData, Size);
 	ResourceList = (PCM_PARTIAL_RESOURCE_LIST)ControllerComponent->ConfigurationData;
-	ResourceList->Count = 2; // Interrupt + Port + Port
+	ResourceList->Count = 3; // Interrupt + Port + Port
 
 	/* Interrupt */
 	ResourceList->PartialDescriptors[0].Type = CmResourceTypeInterrupt;
@@ -2045,6 +2046,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA ParentComponent,
 	PCONFIGURATION_COMPONENT_DATA ControllerComponent;
 	PCONFIGURATION_COMPONENT ControllerEntry;
 	PCM_PARTIAL_RESOURCE_LIST ResourceList;
+	ULONG Size;
 
 	/* If there is no PS2 aux port - return */
 	if (!DetectPS2AuxPort())
@@ -2066,10 +2068,10 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA ParentComponent,
 
 	/* Fill mouse controller resources descriptor, which consists of:
 	   Partial Resource List */
-	ControllerComponent->ConfigurationData = MmAllocateMemory(sizeof(CM_PARTIAL_RESOURCE_LIST) +
-		sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-	RtlZeroMemory(ControllerComponent->ConfigurationData, sizeof(CM_PARTIAL_RESOURCE_LIST) +
-		sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+	Size = sizeof(CM_PARTIAL_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+	ControllerComponent->ConfigurationData = MmAllocateMemory(Size);
+	ControllerEntry->ConfigurationDataLength = Size;
+	RtlZeroMemory(ControllerComponent->ConfigurationData, Size);
 	ResourceList = (PCM_PARTIAL_RESOURCE_LIST)ControllerComponent->ConfigurationData;
 	ResourceList->Count = 1; // Interrupt
 
