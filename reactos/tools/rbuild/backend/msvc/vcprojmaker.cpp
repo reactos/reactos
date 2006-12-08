@@ -595,12 +595,18 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 						fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
 
 						if ( module.type == RpcClient )
-							fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"midl.exe /cstub %s.c /header %s.h &quot;$(InputPath)&quot; /out &quot;$(IntDir)&quot;", src.c_str (), src.c_str () );
+						{
+							fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"midl.exe /cstub %s_c.c /header %s_c.h /server none &quot;$(InputPath)&quot; /out &quot;$(IntDir)&quot;", src.c_str (), src.c_str () );
+							fprintf ( OUT, "&#x0D;&#x0A;");
+							fprintf ( OUT, "cl.exe /Od /D &quot;WIN32&quot; /D &quot;_DEBUG&quot; /D &quot;_WINDOWS&quot; /D &quot;_WIN32_WINNT=0x502&quot; /D &quot;_UNICODE&quot; /D &quot;UNICODE&quot; /Gm /EHsc /RTC1 /MDd /Fo&quot;$(IntDir)\\%s.obj&quot; /W3 /c /Wp64 /ZI /TC &quot;$(IntDir)\\%s_c.c&quot; /nologo /errorReport:prompt", src.c_str (), src.c_str () ); 
+						}
 						else
-							fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"midl.exe /sstub %s.c /header %s.h &quot;$(InputPath)&quot; /out &quot;$(IntDir)&quot;", src.c_str (), src.c_str () );
+						{
+							fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"midl.exe /sstub %s_s.c /header %s_s.h /client none &quot;$(InputPath)&quot; /out &quot;$(IntDir)&quot;", src.c_str (), src.c_str () );
+							fprintf ( OUT, "&#x0D;&#x0A;");
+							fprintf ( OUT, "cl.exe /Od /D &quot;WIN32&quot; /D &quot;_DEBUG&quot; /D &quot;_WINDOWS&quot; /D &quot;_WIN32_WINNT=0x502&quot; /D &quot;_UNICODE&quot; /D &quot;UNICODE&quot; /Gm /EHsc /RTC1 /MDd /Fo&quot;$(IntDir)\\%s.obj&quot; /W3 /c /Wp64 /ZI /TC &quot;$(IntDir)\\%s_s.c&quot; /nologo /errorReport:prompt", src.c_str (), src.c_str () ); 
 
-						fprintf ( OUT, "&#x0D;&#x0A;");
-						fprintf ( OUT, "cl.exe /Od /D &quot;WIN32&quot; /D &quot;_DEBUG&quot; /D &quot;_WINDOWS&quot; /D &quot;_WIN32_WINNT=0x502&quot; /D &quot;_UNICODE&quot; /D &quot;UNICODE&quot; /Gm /EHsc /RTC1 /MDd /Fo&quot;$(IntDir)\\%s.obj&quot; /W3 /c /Wp64 /ZI /TC &quot;$(IntDir)\\%s.c&quot; /nologo /errorReport:prompt", src.c_str (), src.c_str () ); 
+						}
 						fprintf ( OUT, "&#x0D;&#x0A;");
 						fprintf ( OUT, "lib.exe /OUT:&quot;$(OutDir)\\%s.lib&quot; &quot;$(IntDir)\\%s.obj&quot;&#x0D;&#x0A;\"\r\n", module.name.c_str (), src.c_str () );
 						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(IntDir)\\$(InputName).obj\"/>\r\n" );
