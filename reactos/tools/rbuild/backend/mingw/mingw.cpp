@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2005 Casper S. Hornstrup
+ *               2006 Christoph von Wittich
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -717,16 +718,12 @@ MingwBackend::TryToDetectThisNetwideAssembler ( const string& assembler )
 }
 
 string
-MingwBackend::GetCompilerVersion ( const string& compilerCommand )
+MingwBackend::GetVersionString ( const string& versionCommand )
 {
 	FILE *fp;
 	int ch, i;
 	char buffer[81];
 
-	string versionCommand = ssprintf ( "%s --version gcc",
-	                                   compilerCommand.c_str (),
-	                                   NUL,
-	                                   NUL );
 	fp = popen ( versionCommand.c_str () , "r" );
 	for( i = 0; 
              ( i < 80 ) && 
@@ -757,6 +754,36 @@ MingwBackend::GetCompilerVersion ( const string& compilerCommand )
 	return version;
 }
 
+string
+MingwBackend::GetNetwideAssemblerVersion ( const string& nasmCommand )
+{
+	string versionCommand = ssprintf ( "%s -v",
+	                                   nasmCommand.c_str (),
+	                                   NUL,
+	                                   NUL );
+	return GetVersionString( versionCommand );
+}
+
+string
+MingwBackend::GetCompilerVersion ( const string& compilerCommand )
+{
+	string versionCommand = ssprintf ( "%s --version gcc",
+	                                   compilerCommand.c_str (),
+	                                   NUL,
+	                                   NUL );
+	return GetVersionString( versionCommand );
+}
+
+string
+MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
+{
+	string versionCommand = ssprintf ( "%s -v",
+	                                   binutilsCommand.c_str (),
+	                                   NUL,
+	                                   NUL );
+	return GetVersionString( versionCommand );
+}
+
 bool
 MingwBackend::IsSupportedCompilerVersion ( const string& compilerVersion )
 {
@@ -779,7 +806,7 @@ MingwBackend::TryToDetectThisBinutils ( const string& binutils )
 }
 
 string
-MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
+MingwBackend::GetBinutilsVersionDate ( const string& binutilsCommand )
 {
 	FILE *fp;
 	int ch, i;
@@ -870,9 +897,9 @@ MingwBackend::DetectBinutils ()
 	}
 	if ( detectedBinutils )
 	{
-		string binutilsVersion = GetBinutilsVersion ( binutilsCommand );
+		string binutilsVersion = GetBinutilsVersionDate ( binutilsCommand );
 		if ( IsSupportedBinutilsVersion ( binutilsVersion ) )
-			printf ( "detected (%s)\n", binutilsCommand.c_str () );
+			printf ( "detected (%s %s)\n", binutilsCommand.c_str (), GetBinutilsVersion( binutilsCommand ).c_str() );
 		else
 		{
 			printf ( "detected (%s), but with unsupported version (%s)\n",
@@ -906,7 +933,7 @@ MingwBackend::DetectNetwideAssembler ()
 		detectedNasm = TryToDetectThisNetwideAssembler ( nasmCommand );
 	}
 	if ( detectedNasm )
-		printf ( "detected (%s)\n", nasmCommand.c_str () );
+		printf ( "detected (%s %s)\n", nasmCommand.c_str (), GetNetwideAssemblerVersion( nasmCommand ).c_str() );
 	else
 		printf ( "not detected\n" );
 }

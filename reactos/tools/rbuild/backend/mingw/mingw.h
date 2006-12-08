@@ -90,7 +90,10 @@ private:
 	bool TryToDetectThisNetwideAssembler ( const std::string& assembler );
 	bool TryToDetectThisBinutils ( const std::string& binutils );
 	std::string GetBinutilsVersion ( const std::string& binutilsCommand );
+	std::string GetBinutilsVersionDate ( const std::string& binutilsCommand );
 	bool IsSupportedBinutilsVersion ( const std::string& binutilsVersion );
+	std::string GetVersionString ( const std::string& versionCommand );
+	std::string GetNetwideAssemblerVersion ( const std::string& nasmCommand );
 	void DetectBinutils ();
 	void DetectNetwideAssembler ();
 	void DetectPipeSupport ();
