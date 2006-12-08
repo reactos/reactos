@@ -17,7 +17,7 @@ BEGIN
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
     LTEXT       "Visit the ReactOS Homepage", IDC_ROSHOMEPAGE_LINK, 20, 200, 93, 8
-    PUSHBUTTON  "View licence...", IDC_LICENCE, 170, 199, 78, 13
+    PUSHBUTTON  "View &licence...", IDC_LICENCE, 170, 199, 78, 13
 END
 
 
@@ -34,11 +34,11 @@ BEGIN
     LTEXT       "(Default)", IDC_COMPUTERNAME, 98, 68, 144, 11
     LTEXT       "Workgroup:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     LTEXT       "(empty)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
-    LTEXT       "To use the Network Identfication Wizard to join a domain and create a local user, click Network ID.", IDC_STATIC, 6, 108, 172, 24
+    LTEXT       "To use the Network Identfication Wizard to join a domain and create a local user, click ""Network ID"".", IDC_STATIC, 6, 108, 172, 24
     PUSHBUTTON  "&Network ID...", IDC_NETWORK_ID, 190, 114, 58, 15
-    LTEXT       "To rename this computer or join a domain, click Properties.", IDC_STATIC, 6, 149, 170, 17
+    LTEXT       "To rename this computer or join a domain, click ""Change"".", IDC_STATIC, 6, 149, 170, 17
     PUSHBUTTON  "&Change...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
-    LTEXT       "Note: Only Administrators can change the identification of this computer", IDC_STATIC, 6, 179, 300, 9
+    LTEXT       "Note: Only Administrators can change the identification of this computer.", IDC_STATIC, 6, 179, 300, 9
 END
 
 
@@ -69,7 +69,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Advanced"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "You must be logged on as an administrator to make most of these changes.", IDC_STATIC, 12, 5, 236, 8
+    LTEXT       "Administrator privileges are required for most of these settings.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX    "Performance", IDC_STATIC, 6, 18, 244, 50
     LTEXT       "Performance options control how applications use memory, which affects the speed of your computer.", IDC_STATIC, 16, 29, 210, 17
     PUSHBUTTON  "Settings", IDC_PERFOR, 194, 48, 50, 15
@@ -93,7 +93,7 @@ CAPTION "Hardware Profiles"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT       "You can set up hardware profiles for different hardware configurations.  At startup, you can choose the profile you want to use.", IDC_STATIC, 46, 11, 188, 25
+    LTEXT       "You can set up hardware profiles for different hardware configurations. At startup, you can choose the profile you want to use.", IDC_STATIC, 46, 11, 188, 25
     LTEXT       "Available hardware profiles:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 15
@@ -104,7 +104,7 @@ BEGIN
     PUSHBUTTON  "&Delete", IDC_HRDPROFDEL, 173, 106, 50, 14
 
     GROUPBOX    "Hardware profiles selection", IDC_STATIC, 7, 130, 240, 75
-    LTEXT       "When Windows starts:", IDC_STATIC, 14, 142, 210, 8
+    LTEXT       "When ReactOS starts:", IDC_STATIC, 14, 142, 210, 8
     //RADIOBUTTON "&Wait until I select a hardware profile", IDC_HRDPROFWAIT, 14, 158, 133, 8
     //RADIOBUTTON "&Select the first profile listed if I don't select a profile in", IDC_HRDPROFSELECT, 14, 173, 190, 8
     CONTROL     "&Wait until I select a hardware profile", IDC_HRDPROFWAIT, "button", BS_AUTORADIOBUTTON, 14, 158, 133, 8
@@ -207,7 +207,7 @@ BEGIN
     LTEXT       "Drive:", IDC_STATIC, 20, 80, 20, 8
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
     LTEXT       "Space available:", IDC_STATIC, 20, 92, 56, 9
-    LTEXT       "", IDC_SPACEAVAIL, 84, 92, 104, 9
+    LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT       "&Initial size (MB):", -1, 22, 118, 54, 9
     LTEXT       "Ma&ximum size (MB):", -1, 22, 131, 64, 9
     CONTROL     "&Custom size", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 54, 9
@@ -219,7 +219,7 @@ BEGIN
 
     GROUPBOX    "Total paging file size for all drives", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT       "Minimum allowed:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT       "", IDC_MINIMUM, 86, 186, 100, 9
+    LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT       "Recommended:", IDC_STATIC, 18, 199, 52, 9
     LTEXT       "", IDC_RECOMMENDED, 88, 197, 100, 9
     LTEXT       "Currently allocated:", IDC_STATIC, 18, 210, 66, 9
