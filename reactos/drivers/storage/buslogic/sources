@@ -1,17 +1,26 @@
 TARGETNAME=vmscsi
-TARGETPATH=obj
 TARGETTYPE=MINIPORT
+NT_UP=0
+
+!if ("$(DDK_TARGET_OS)" == "Win2K")
+TARGETPATH=win2k
+!elseif ("$(DDK_TARGET_OS)" == "WinNET")
+TARGETPATH=wnet
+!endif
 
 TARGETLIBS=$(DDK_LIB_PATH)\scsiport.lib \
-           $(DDK_LIB_PATH)\scsiwmi.lib  \
+	   $(DDK_LIB_PATH)\scsiwmi.lib \
 	   $(SDK_LIB_PATH)\ntoskrnl.lib
 
+INCLUDES = $(INCLUDES) $(O)
 MSC_WARNING_LEVEL=/W3 /WX
 
-SOURCES=BT958.mof      \
-        BusLogic958.c  \
-        BusLogic958.rc \
-        wmi.c          \
-        Log.c
+LINKER_FLAGS=$(LINKER_FLAGS) -debugtype:cv,fixup
+USER_C_FLAGS=-Zi $(USER_C_FLAGS)
 
-NTTARGETFILE0=BT958dt.h
+SOURCES=BusLogic958.c  \
+	BusLogic958.rc \
+	wmi.c          \
+	Log.c
+
+NTTARGETFILE0=$(O)\BT958dt.h $(O)\BT958.bmf

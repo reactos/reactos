@@ -232,7 +232,7 @@ Return Value:
 --*/
 {
     PHW_DEVICE_EXTENSION HwDeviceExtension = (PHW_DEVICE_EXTENSION)Context;
-    ULONG size;
+    ULONG size = 0;
     UCHAR status;
 
     //
@@ -391,21 +391,21 @@ Return Value:
      Result = FALSE;
    }
   
-   WmiExtendedSetupInfo.BusType      =            ExtendedSetupInformation.BusType;				           
-   WmiExtendedSetupInfo.BIOS_Address =            ExtendedSetupInformation.BIOS_Address;				       
-   WmiExtendedSetupInfo.ScatterGatherLimit =      ExtendedSetupInformation.ScatterGatherLimit;	
-   WmiExtendedSetupInfo.MailboxCount       =      ExtendedSetupInformation.MailboxCount;				       
-   WmiExtendedSetupInfo.BaseMailboxAddress =      ExtendedSetupInformation.BaseMailboxAddress;
-   WmiExtendedSetupInfo.FastOnEISA         =      ExtendedSetupInformation.Misc.FastOnEISA;		  			
+   WmiExtendedSetupInfo.BusType      =        ExtendedSetupInformation.BusType;				           
+   WmiExtendedSetupInfo.BIOS_Address =        ExtendedSetupInformation.BIOS_Address;				       
+   WmiExtendedSetupInfo.ScatterGatherLimit =  ExtendedSetupInformation.ScatterGatherLimit;	
+   WmiExtendedSetupInfo.MailboxCount       =  ExtendedSetupInformation.MailboxCount;				       
+   WmiExtendedSetupInfo.BaseMailboxAddress =  ExtendedSetupInformation.BaseMailboxAddress;
+   WmiExtendedSetupInfo.FastOnEISA         =  ExtendedSetupInformation.Misc.FastOnEISA;		  			
    WmiExtendedSetupInfo.LevelSensitiveInterrupt = ExtendedSetupInformation.Misc.LevelSensitiveInterrupt;	    
-   WmiExtendedSetupInfo.FirmwareRevision[3] =     ExtendedSetupInformation.FirmwareRevision[3];		    
-   WmiExtendedSetupInfo.FirmwareRevision[3] =     ExtendedSetupInformation.FirmwareRevision[3];		    
-   WmiExtendedSetupInfo.FirmwareRevision[3] =     ExtendedSetupInformation.FirmwareRevision[3];		    
-   WmiExtendedSetupInfo.HostWideSCSI        =     ExtendedSetupInformation.HostWideSCSI;				    
-   WmiExtendedSetupInfo.HostDifferentialSCSI=     ExtendedSetupInformation.HostDifferentialSCSI;			
-   WmiExtendedSetupInfo.HostSupportsSCAM    =     ExtendedSetupInformation.HostSupportsSCAM;				
-   WmiExtendedSetupInfo.HostUltraSCSI       =     ExtendedSetupInformation.HostUltraSCSI;				
-   WmiExtendedSetupInfo.HostSmartTermination=     ExtendedSetupInformation.HostSmartTermination;			
+   WmiExtendedSetupInfo.FirmwareRevision[0] = ExtendedSetupInformation.FirmwareRevision[0];		    
+   WmiExtendedSetupInfo.FirmwareRevision[1] = ExtendedSetupInformation.FirmwareRevision[1];		    
+   WmiExtendedSetupInfo.FirmwareRevision[2] = ExtendedSetupInformation.FirmwareRevision[2];		    
+   WmiExtendedSetupInfo.HostWideSCSI        = ExtendedSetupInformation.HostWideSCSI;				    
+   WmiExtendedSetupInfo.HostDifferentialSCSI= ExtendedSetupInformation.HostDifferentialSCSI;			
+   WmiExtendedSetupInfo.HostSupportsSCAM    = ExtendedSetupInformation.HostSupportsSCAM;				
+   WmiExtendedSetupInfo.HostUltraSCSI       = ExtendedSetupInformation.HostUltraSCSI;				
+   WmiExtendedSetupInfo.HostSmartTermination= ExtendedSetupInformation.HostSmartTermination;			
    
    for (; numberOfBytes; numberOfBytes--)
    {
