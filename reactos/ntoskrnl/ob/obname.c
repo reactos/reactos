@@ -246,7 +246,7 @@ ObFindObject(IN HANDLE RootHandle,
              IN POBP_LOOKUP_CONTEXT Context,
              IN PACCESS_STATE AccessState,
              IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-             IN PVOID ParseContext,
+             IN OUT PVOID ParseContext,
              OUT PVOID ExpectedObject)
 {
     PVOID RootDirectory;
