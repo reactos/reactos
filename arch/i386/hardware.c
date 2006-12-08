@@ -24,10 +24,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* Parts of hardware detection specific to ReactOS */
-/* They should go away once kernel is able to use configuration lists */
-#define ROS_SPECIFIC 1
-
 #define MILLISEC     (10)
 #define PRECISION    (8)
 
@@ -1793,14 +1789,16 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA KeyboardController)
 		   Partial resource list + 1 resource descriptor having device data
 		   in CM_KEYBOARD_DEVICE_DATA format */
 		Size = sizeof(CM_PARTIAL_RESOURCE_LIST) + sizeof(CM_KEYBOARD_DEVICE_DATA);
+		KeyboardEntry->ConfigurationDataLength = Size;
 		KeyboardComponentData->ConfigurationData = MmAllocateMemory(Size);
 		RtlZeroMemory(KeyboardComponentData->ConfigurationData, Size);
 		ResourceList = (PCM_PARTIAL_RESOURCE_LIST)KeyboardComponentData->ConfigurationData;
+		//ResourceList->Version = 1;
 		ResourceList->Count = 1;
 
 		/* Device specific data */
 		ResourceList->PartialDescriptors[0].Type = CmResourceTypeDeviceSpecific;
-		ResourceList->PartialDescriptors[0].u.DeviceSpecificData.DataSize = sizeof(PCM_KEYBOARD_DEVICE_DATA);
+		ResourceList->PartialDescriptors[0].u.DeviceSpecificData.DataSize = sizeof(CM_KEYBOARD_DEVICE_DATA);
 
 		KeyboardData = (PCM_KEYBOARD_DEVICE_DATA)((ULONG_PTR)KeyboardComponentData->ConfigurationData + sizeof(CM_PARTIAL_RESOURCE_LIST));
 
@@ -1824,8 +1822,6 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA ParentComponent,
 	PCONFIGURATION_COMPONENT_DATA ControllerComponent;
 	PCONFIGURATION_COMPONENT ControllerEntry;
 	PCM_PARTIAL_RESOURCE_LIST ResourceList;
-
-	return ParentComponent;
 
 	/* Create controller key */
 	ControllerComponent = (PCONFIGURATION_COMPONENT_DATA)MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
@@ -1852,7 +1848,7 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA ParentComponent,
 	ResourceList->PartialDescriptors[0].Type = CmResourceTypeInterrupt;
 	ResourceList->PartialDescriptors[0].ShareDisposition = CmResourceShareUndetermined;
 	ResourceList->PartialDescriptors[0].Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-	ResourceList->PartialDescriptors[0].u.Interrupt.Level = 0;
+	ResourceList->PartialDescriptors[0].u.Interrupt.Level = 1;
 	ResourceList->PartialDescriptors[0].u.Interrupt.Vector = 1;
 	ResourceList->PartialDescriptors[0].u.Interrupt.Affinity = 0xFFFFFFFF;
 
@@ -1996,10 +1992,114 @@ DetectPS2AuxDevice(VOID)
   return TRUE;
 }
 
-
 static VOID
-DetectPS2Mouse(FRLDRHKEY BusKey)
+DetectPointerPeripheral(PCONFIGURATION_COMPONENT_DATA PointerController)
 {
+	PCM_PARTIAL_RESOURCE_LIST ResourceList;
+
+	/* Check if we really have a PS2 Aux device connected */
+	if (DetectPS2AuxDevice())
+	{
+		PCONFIGURATION_COMPONENT_DATA PointerComponentData;
+		PCONFIGURATION_COMPONENT PointerEntry;
+
+		DbgPrint((DPRINT_HWDETECT, "Detected PS2 mouse\n"));
+
+		/* Create Pointer Peripheral */
+		PointerComponentData = (PCONFIGURATION_COMPONENT_DATA)
+			MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
+		RtlZeroMemory(PointerComponentData, sizeof(CONFIGURATION_COMPONENT_DATA));
+
+		PointerEntry = &PointerComponentData->ComponentEntry;
+		RtlZeroMemory(PointerEntry, sizeof(CONFIGURATION_COMPONENT));
+
+		PointerEntry->Class = PeripheralClass;
+		PointerEntry->Type = PointerPeripheral;
+		PointerEntry->AffinityMask = 0xFFFFFFFF;
+		PointerEntry->Flags = 0x20;
+		PointerEntry->Identifier = MmAllocateMemory(20);
+		strcpy(PointerEntry->Identifier, "MICROSOFT PS2 MOUSE");
+		PointerEntry->IdentifierLength = strlen(PointerEntry->Identifier);
+		PointerEntry->Identifier = PaToVa(PointerEntry->Identifier);
+
+		/* Fill pointer peripheral resources descriptor, which consists of:
+		   Partial Resource List only */
+		PointerComponentData->ConfigurationData = MmAllocateMemory(sizeof(CM_PARTIAL_RESOURCE_LIST));
+		RtlZeroMemory(PointerComponentData->ConfigurationData, sizeof(CM_PARTIAL_RESOURCE_LIST));
+		PointerEntry->ConfigurationDataLength = sizeof(CM_PARTIAL_RESOURCE_LIST);
+		ResourceList = (PCM_PARTIAL_RESOURCE_LIST)PointerComponentData->ConfigurationData;
+		ResourceList->Count = 0; // No resource descriptors
+		//ResourceList->Version = 1;
+
+		/* Add pointer peripheral to the parent */
+		PointerController->Child = PointerComponentData;
+		PointerComponentData->Parent = PointerController;
+	}
+}
+
+static
+PCONFIGURATION_COMPONENT_DATA
+DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA ParentComponent,
+               BOOLEAN NextChild)
+{
+	PCONFIGURATION_COMPONENT_DATA ControllerComponent;
+	PCONFIGURATION_COMPONENT ControllerEntry;
+	PCM_PARTIAL_RESOURCE_LIST ResourceList;
+
+	/* If there is no PS2 aux port - return */
+	if (!DetectPS2AuxPort())
+		return ParentComponent;
+
+	DbgPrint((DPRINT_HWDETECT, "Detected PS2 port\n"));
+
+	/* Create controller key */
+	ControllerComponent = (PCONFIGURATION_COMPONENT_DATA)MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
+	RtlZeroMemory(ControllerComponent, sizeof(CONFIGURATION_COMPONENT_DATA));
+
+	ControllerEntry = &ControllerComponent->ComponentEntry;
+	RtlZeroMemory(ControllerEntry, sizeof(CONFIGURATION_COMPONENT));
+
+	ControllerEntry->Class = ControllerClass;
+	ControllerEntry->Type = PointerController;
+	ControllerEntry->AffinityMask = 0xFFFFFFFF;
+	ControllerEntry->Flags = 0x20;
+
+	/* Fill mouse controller resources descriptor, which consists of:
+	   Partial Resource List */
+	ControllerComponent->ConfigurationData = MmAllocateMemory(sizeof(CM_PARTIAL_RESOURCE_LIST) +
+		sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+	RtlZeroMemory(ControllerComponent->ConfigurationData, sizeof(CM_PARTIAL_RESOURCE_LIST) +
+		sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+	ResourceList = (PCM_PARTIAL_RESOURCE_LIST)ControllerComponent->ConfigurationData;
+	ResourceList->Count = 1; // Interrupt
+
+	/* Interrupt */
+	ResourceList->PartialDescriptors[0].Type = CmResourceTypeInterrupt;
+	ResourceList->PartialDescriptors[0].ShareDisposition = CmResourceShareUndetermined;
+	ResourceList->PartialDescriptors[0].Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+	ResourceList->PartialDescriptors[0].u.Interrupt.Level = 12;
+	ResourceList->PartialDescriptors[0].u.Interrupt.Vector = 12;
+	ResourceList->PartialDescriptors[0].u.Interrupt.Affinity = 0xFFFFFFFF;
+
+	/* Add this mouse controller to the parent/sibling */
+	if (NextChild)
+	{
+		ParentComponent->Child = ControllerComponent;
+		ControllerComponent->Parent = ParentComponent;
+	}
+	else
+	{
+		ParentComponent->Sibling = ControllerComponent;
+		ControllerComponent->Parent = ParentComponent->Parent;
+	}
+
+	/* Detect any mouse attached to this controller */
+	DetectPointerPeripheral(ControllerComponent);
+
+	/* Return pointer to the mouse controller */
+	return ControllerComponent;
+
+#if 0
   CM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   FRLDRHKEY ControllerKey;
   FRLDRHKEY PeripheralKey;
@@ -2117,6 +2217,7 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
 	    }
 	}
     }
+#endif
 }
 
 
@@ -2196,132 +2297,133 @@ DetectIsaBios(FRLDRHKEY SystemKey,
               PCONFIGURATION_COMPONENT_DATA PreviousComponent,
               BOOLEAN NextChild)
 {
-  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
-  PCONFIGURATION_COMPONENT_DATA IsaAdapter, LastComponent;
-  PCONFIGURATION_COMPONENT IsaComponent;
-  PVOID Identifier;
-  WCHAR Buffer[80];
-  FRLDRHKEY BusKey;
-  ULONG Size;
-  LONG Error;
+	PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+	PCONFIGURATION_COMPONENT_DATA IsaAdapter, LastComponent;
+	PCONFIGURATION_COMPONENT IsaComponent;
+	PVOID Identifier;
+	WCHAR Buffer[80];
+	FRLDRHKEY BusKey;
+	ULONG Size;
+	LONG Error;
 
-  /* Create new bus key */
-  swprintf(Buffer,
-	  L"MultifunctionAdapter\\%u", *BusNumber);
-  Error = RegCreateKey(SystemKey,
-		       Buffer,
-		       &BusKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
+	/* Create new bus key */
+	swprintf(Buffer,
+		L"MultifunctionAdapter\\%u", *BusNumber);
+	Error = RegCreateKey(SystemKey,
+		Buffer,
+		&BusKey);
+	if (Error != ERROR_SUCCESS)
+	{
+		DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
+		return;
+	}
 
-  /* Set 'Component Information' value similar to my NT4 box */
-  SetComponentInformation(BusKey,
-                          0x0,
-                          0x0,
-                          0xFFFFFFFF);
+	/* Set 'Component Information' value similar to my NT4 box */
+	SetComponentInformation(BusKey,
+		0x0,
+		0x0,
+		0xFFFFFFFF);
 
-  /* Increment bus number */
-  (*BusNumber)++;
+	/* Increment bus number */
+	(*BusNumber)++;
 
-  /* Set 'Identifier' value */
-  Error = RegSetValue(BusKey,
-		      L"Identifier",
-		      REG_SZ,
-		      (PCHAR)L"ISA",
-		      4 * sizeof(WCHAR));
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-      return;
-    }
+	/* Set 'Identifier' value */
+	Error = RegSetValue(BusKey,
+		L"Identifier",
+		REG_SZ,
+		(PCHAR)L"ISA",
+		4 * sizeof(WCHAR));
+	if (Error != ERROR_SUCCESS)
+	{
+		DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+		return;
+	}
 
-  /* Set 'Configuration Data' value */
-  Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
-	 sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-  FullResourceDescriptor = MmAllocateMemory(Size);
-  if (FullResourceDescriptor == NULL)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"Failed to allocate resource descriptor\n"));
-      return;
-    }
+	/* Set 'Configuration Data' value */
+	Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
+		sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+	FullResourceDescriptor = MmAllocateMemory(Size);
+	if (FullResourceDescriptor == NULL)
+	{
+		DbgPrint((DPRINT_HWDETECT,
+			"Failed to allocate resource descriptor\n"));
+		return;
+	}
 
-  /* Initialize resource descriptor */
-  memset(FullResourceDescriptor, 0, Size);
-  FullResourceDescriptor->InterfaceType = Isa;
-  FullResourceDescriptor->BusNumber = 0;
-  FullResourceDescriptor->PartialResourceList.Version = 1;
-  FullResourceDescriptor->PartialResourceList.Revision = 1;
-  FullResourceDescriptor->PartialResourceList.Count = 0;
+	/* Initialize resource descriptor */
+	memset(FullResourceDescriptor, 0, Size);
+	FullResourceDescriptor->InterfaceType = Isa;
+	FullResourceDescriptor->BusNumber = 0;
+	FullResourceDescriptor->PartialResourceList.Version = 1;
+	FullResourceDescriptor->PartialResourceList.Revision = 1;
+	FullResourceDescriptor->PartialResourceList.Count = 0;
 
-  /* Set 'Configuration Data' value */
-  Error = RegSetValue(BusKey,
-		      L"Configuration Data",
-		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PCHAR) FullResourceDescriptor,
-		      Size);
-  MmFreeMemory(FullResourceDescriptor);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue(Configuration Data) failed (Error %u)\n",
-		(int)Error));
-      return;
-    }
-
-
-  /* Create adapter component */
-  IsaAdapter = MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
-  RtlZeroMemory(IsaAdapter, sizeof(CONFIGURATION_COMPONENT_DATA));
-
-  IsaComponent = &IsaAdapter->ComponentEntry;
-  RtlZeroMemory(IsaComponent, sizeof(CONFIGURATION_COMPONENT));
-
-  IsaComponent->Class = AdapterClass;
-  IsaComponent->Type = MultiFunctionAdapter;
-  IsaComponent->AffinityMask = 0xFFFFFFFF;
-  Identifier = MmAllocateMemory(sizeof("ISA")+1);
-  sprintf(Identifier, "ISA");
-  IsaComponent->Identifier = PaToVa(Identifier);
-  IsaComponent->IdentifierLength = strlen(Identifier)+1;
-
-  if (NextChild)
-  {
-      PreviousComponent->Child = IsaAdapter;
-      IsaAdapter->Parent = PreviousComponent;
-  }
-  else
-  {
-      PreviousComponent->Sibling = IsaAdapter;
-      IsaAdapter->Parent = PreviousComponent->Parent;
-  }
+	/* Set 'Configuration Data' value */
+	Error = RegSetValue(BusKey,
+		L"Configuration Data",
+		REG_FULL_RESOURCE_DESCRIPTOR,
+		(PCHAR) FullResourceDescriptor,
+		Size);
+	MmFreeMemory(FullResourceDescriptor);
+	if (Error != ERROR_SUCCESS)
+	{
+		DbgPrint((DPRINT_HWDETECT,
+			"RegSetValue(Configuration Data) failed (Error %u)\n",
+			(int)Error));
+		return;
+	}
 
 
-  /* Detect ISA/BIOS devices */
+	/* Create adapter component */
+	IsaAdapter = MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
+	RtlZeroMemory(IsaAdapter, sizeof(CONFIGURATION_COMPONENT_DATA));
 
-  /* DetectBiosDisks writes information both to the root entry and to 
-     its own entries */
-  LastComponent = DetectBiosDisks(SystemKey, BusKey, ComponentRoot, IsaAdapter, TRUE);
+	IsaComponent = &IsaAdapter->ComponentEntry;
+	RtlZeroMemory(IsaComponent, sizeof(CONFIGURATION_COMPONENT));
 
-  DetectBiosFloppyController(SystemKey, BusKey);
+	IsaComponent->Class = AdapterClass;
+	IsaComponent->Type = MultiFunctionAdapter;
+	IsaComponent->AffinityMask = 0xFFFFFFFF;
+	Identifier = MmAllocateMemory(sizeof("ISA")+1);
+	sprintf(Identifier, "ISA");
+	IsaComponent->Identifier = PaToVa(Identifier);
+	IsaComponent->IdentifierLength = strlen(Identifier)+1;
 
-  DetectSerialPorts(BusKey);
+	if (NextChild)
+	{
+		PreviousComponent->Child = IsaAdapter;
+		IsaAdapter->Parent = PreviousComponent;
+	}
+	else
+	{
+		PreviousComponent->Sibling = IsaAdapter;
+		IsaAdapter->Parent = PreviousComponent->Parent;
+	}
 
-  DetectParallelPorts(BusKey);
 
-  /* Detect keyboard and mouse */
-  LastComponent =
-	  DetectKeyboardController(LastComponent,
-	  (IsaAdapter == LastComponent) ? TRUE : FALSE);
+	/* Detect ISA/BIOS devices */
 
-  DetectPS2Mouse(BusKey);
+	/* DetectBiosDisks writes information both to the root entry and to 
+	its own entries */
+	LastComponent = DetectBiosDisks(SystemKey, BusKey, ComponentRoot, IsaAdapter, TRUE);
 
-  DetectDisplayController(BusKey);
+	DetectBiosFloppyController(SystemKey, BusKey);
 
-  /* FIXME: Detect more ISA devices */
+	DetectSerialPorts(BusKey);
+
+	DetectParallelPorts(BusKey);
+
+	/* Detect keyboard and mouse */
+	LastComponent =
+		DetectKeyboardController(LastComponent,
+		(IsaAdapter == LastComponent) ? TRUE : FALSE);
+
+	LastComponent = DetectPS2Mouse(LastComponent,
+		(IsaAdapter == LastComponent) ? TRUE : FALSE);
+
+	DetectDisplayController(BusKey);
+
+	/* FIXME: Detect more ISA devices */
 }
 
 
@@ -2337,7 +2439,6 @@ PcHwDetect(PCONFIGURATION_COMPONENT_DATA *ComponentRoot)
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware()\n"));
 
-#if ROS_SPECIFIC
   /* Create the 'System' key */
   Error = RegCreateKey(NULL,
 		       L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System",
@@ -2347,7 +2448,6 @@ PcHwDetect(PCONFIGURATION_COMPONENT_DATA *ComponentRoot)
       DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
       return;
     }
-#endif
 
   /* Allocate root configuration component */
   *ComponentRoot = MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
