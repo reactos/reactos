@@ -859,7 +859,7 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 	return Buffer;
 }
 
-inline void LogfFreeRecord(LPVOID Rec)
+void __inline LogfFreeRecord(LPVOID Rec)
 {
 	HeapFree(MyHeap, 0, Rec);
 }

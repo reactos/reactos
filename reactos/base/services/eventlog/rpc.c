@@ -22,8 +22,11 @@ DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter)
         DPRINT("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
         return 0;
     }
-
+#ifdef _MSC_VER
+    Status = RpcServerRegisterIf(eventlog_v0_0_s_ifspec, NULL, NULL);
+#else
     Status = RpcServerRegisterIf(eventlog_ServerIfHandle, NULL, NULL);
+#endif
     
     if(Status != RPC_S_OK)
     {
@@ -121,10 +124,10 @@ NTSTATUS ElfrOpenELW(
 
 		
 /* Function 8 */
-NTSTATUS ElfrRegisterEventSourceA( 
-    /* [unique][in] */ LPSTR ServerName,
-    /* [in] */ PANSI_STRING LogName,
-    /* [in] */ PANSI_STRING NullStr,
+NTSTATUS ElfrRegisterEventSourceW( 
+    /* [unique][in] */ LPWSTR ServerName,
+    /* [in] */ PUNICODE_STRING LogName,
+    /* [in] */ PUNICODE_STRING NullStr,
     /* [in] */ long MajorVer,
     /* [in] */ long MinorVer,
     /* [out] */ PLOGHANDLE Handle)
@@ -224,7 +227,7 @@ NTSTATUS ElfrOpenELA(
 	if(ServerName && 
 		!RtlCreateUnicodeStringFromAsciiz(&servername, ServerName))
 	{
-		RtlFreeUnicodeString(&servername);
+        RtlFreeUnicodeString(&logname);
 		return STATUS_NO_MEMORY;
 	}
 
