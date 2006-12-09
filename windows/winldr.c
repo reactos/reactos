@@ -77,7 +77,8 @@ AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
 VOID
 WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
                        PCHAR Options,
-                       PCHAR SystemPath)
+                       PCHAR SystemPath,
+                       WORD VersionToBoot)
 {
 	/* Examples of correct options and paths */
 	//CHAR	Options[] = "/DEBUGPORT=COM1 /BAUDRATE=115200";
@@ -187,9 +188,10 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 	RtlZeroMemory(Extension, sizeof(LOADER_PARAMETER_EXTENSION));
 
+	/* Save size and version information */
 	Extension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
-	Extension->MajorVersion = 4;
-	Extension->MinorVersion = 0;
+	Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
+	Extension->MinorVersion = VersionToBoot & 0xFF;
 
 
 	LoaderBlock->Extension = PaToVa(Extension);
@@ -449,7 +451,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	DbgPrint((DPRINT_WINDOWS, "HAL loaded with status %d at %p\n", Status, HalBase));
 
 	/* Load kernel-debugger support dll */
-	if (OperatingSystemVersion > _WIN32_WINNT_NT4)
+	if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
 	{
 		strcpy(FileName, BootPath);
 		strcat(FileName, "SYSTEM32\\KDCOM.DLL");
@@ -462,7 +464,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 		"WINNT\\SYSTEM32\\NTOSKRNL.EXE", NtosBase, &KernelDTE);
 	WinLdrAllocateDataTableEntry(LoaderBlock, "hal.dll",
 		"WINNT\\SYSTEM32\\HAL.DLL", HalBase, &HalDTE);
-	if (OperatingSystemVersion > _WIN32_WINNT_NT4)
+	if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
 	{
 		WinLdrAllocateDataTableEntry(LoaderBlock, "kdcom.dll",
 			"WINNT\\SYSTEM32\\KDCOM.DLL", KdComBase, &KdComDTE);
@@ -485,7 +487,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	DbgPrint((DPRINT_WINDOWS, "Boot drivers loaded with status %d\n", Status));
 
 	/* Initialize Phase 1 - no drivers loading anymore */
-	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemPath);
+	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemPath, OperatingSystemVersion);
 
 	/* Alloc PCR, TSS, do magic things with the GDT/IDT */
 	WinLdrSetupForNt(LoaderBlock, &GdtIdt, &PcrBasePage, &TssBasePage);
@@ -507,9 +509,9 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	DbgPrint((DPRINT_WINDOWS, "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA));
 
-	//WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
-	//WinLdrpDumpBootDriver(LoaderBlockVA);
-	//WinLdrpDumpArcDisks(LoaderBlockVA);
+	WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
+	WinLdrpDumpBootDriver(LoaderBlockVA);
+	WinLdrpDumpArcDisks(LoaderBlockVA);
 
 	//FIXME: If I substitute this debugging checkpoint, GCC will "optimize away" the code below
 	//while (1) {};

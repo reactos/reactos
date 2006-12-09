@@ -1,6 +1,7 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer    <brianp@sginet.com>
+ *  Copyright (C) 2006       Aleksey Bragin  <aleksey@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -211,47 +212,22 @@ PVOID MmFindLocationForPageLookupTable(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG Map
 	RtlCopyMemory(TempBiosMemoryMap, BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
 	MmSortBiosMemoryMap(TempBiosMemoryMap, MapCount);
 
-	for (Index=0; Index<MapCount; Index++)
+	// Find a place, starting from the highest memory
+	// (thus leaving low memory for kernel/drivers)
+	for (Index=(MapCount-1); Index>=0; Index--)
 	{
 		// If this is usable memory with a big enough length
 		// then we'll put our page lookup table here
-
-		// place it somewhere @ 10Mb if possible
-		// (afaik no bad things are placed at 10Mb, if there are
-		//  - we just fallback to the usual algo)
 
 		// skip if this is not usable region
 		if (TempBiosMemoryMap[Index].Type != BiosMemoryUsable)
 			continue;
 
-		if (TempBiosMemoryMap[Index].BaseAddress <= 10 * 0x100000 &&
-		    TempBiosMemoryMap[Index].BaseAddress + TempBiosMemoryMap[Index].Length >=
-		        10 * 0x100000 + PageLookupTableSize)
+		if (TempBiosMemoryMap[Index].Length >= PageLookupTableSize)
 		{
-			PageLookupTableMemAddress = (PVOID)(10 * 0x100000);
+			PageLookupTableMemAddress = (PVOID)(ULONG)
+				(TempBiosMemoryMap[Index].BaseAddress + (TempBiosMemoryMap[Index].Length - PageLookupTableSize));
 			break;
-		}
-	}
-
-	// Check if we found a suitable place
-	if (PageLookupTableMemAddress == 0)
-	{
-		// no, let's do a traditional algorithm instead
-		for (Index=(MapCount-1); Index>=0; Index--)
-		{
-			// If this is usable memory with a big enough length
-			// then we'll put our page lookup table here
-
-			// skip if this is not usable region
-			if (TempBiosMemoryMap[Index].Type != BiosMemoryUsable)
-				continue;
-
-			if (TempBiosMemoryMap[Index].Length >= PageLookupTableSize)
-			{
-				PageLookupTableMemAddress = (PVOID)(ULONG)
-					(TempBiosMemoryMap[Index].BaseAddress + (TempBiosMemoryMap[Index].Length - PageLookupTableSize));
-				break;
-			}
 		}
 	}
 

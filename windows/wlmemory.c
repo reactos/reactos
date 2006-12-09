@@ -336,8 +336,8 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    ULONG TssBasePage,
                    PVOID GdtIdt)
 {
-	ULONG i, PagesCount;
-	ULONG LastPageIndex, LastPageType;
+	ULONG i, PagesCount, MemoryMapSizeInPages;
+	ULONG LastPageIndex, LastPageType, MemoryMapStartPage;
 	PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
 	ULONG NoEntries;
 	PKTSS Tss;
@@ -378,6 +378,10 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return FALSE;
 	}
 
+	// Calculate parameters of the memory map
+	MemoryMapStartPage = (ULONG_PTR)MemoryMap >> MM_PAGE_SHIFT;
+	MemoryMapSizeInPages = NoEntries * sizeof(PAGE_LOOKUP_TABLE_ITEM);
+
 	DbgPrint((DPRINT_WINDOWS, "Got memory map with %d entries\n", NoEntries));
 
 	// Always contigiously map low 1Mb of memory
@@ -388,12 +392,24 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return FALSE;
 	}
 
-	// Construct a good memory map from what we've got
+	// Construct a good memory map from what we've got,
+	// but mark entries which the memory allocation bitmap takes
+	// as free entries (this is done in order to have the ability
+	// to place mem alloc bitmap outside lower 16Mb zone)
 	PagesCount = 1;
 	LastPageIndex = 0;
 	LastPageType = MemoryMap[0].PageAllocated;
 	for(i=1;i<NoEntries;i++)
 	{
+		// Check if its memory map itself
+		if (i >= MemoryMapStartPage &&
+			i < (MemoryMapStartPage+MemoryMapSizeInPages))
+		{
+			// Exclude it if current page belongs to the memory map
+			MemoryMap[i].PageAllocated = LoaderFree;
+		}
+
+		// Process entry
 		if (MemoryMap[i].PageAllocated == LastPageType &&
 			(i != NoEntries-1) )
 		{
