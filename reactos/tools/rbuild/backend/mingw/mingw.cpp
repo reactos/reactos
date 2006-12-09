@@ -656,7 +656,7 @@ MingwBackend::TryToDetectThisCompiler ( const string& compiler )
 		NUL,
 		NUL );
 	int exitcode = system ( command.c_str () );
-	return (exitcode == 0);
+	return (bool) (exitcode == 0);
 }
 
 void
@@ -714,7 +714,7 @@ MingwBackend::TryToDetectThisNetwideAssembler ( const string& assembler )
 		NUL,
 		NUL );
 	int exitcode = system ( command.c_str () );
-	return (exitcode == 0);
+	return (bool) (exitcode == 0);
 }
 
 string
@@ -757,10 +757,21 @@ MingwBackend::GetVersionString ( const string& versionCommand )
 string
 MingwBackend::GetNetwideAssemblerVersion ( const string& nasmCommand )
 {
-	string versionCommand = ssprintf ( "%s -v",
-	                                   nasmCommand.c_str (),
-	                                   NUL,
-	                                   NUL );
+	string versionCommand;
+	if ( nasmCommand.find("yasm") != std::string::npos )
+	{
+		versionCommand = ssprintf ( "%s --version",
+										   nasmCommand.c_str (),
+										   NUL,
+										   NUL );
+	}
+	else
+	{
+		versionCommand = ssprintf ( "%s -v",
+										   nasmCommand.c_str (),
+										   NUL,
+										   NUL );
+	}
 	return GetVersionString( versionCommand );
 }
 
