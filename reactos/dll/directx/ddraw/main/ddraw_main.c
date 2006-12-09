@@ -205,59 +205,41 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	}
 
 	That->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));
-    This->lpLcl->lpPrimary = That;
-
+   
     if (That == NULL) 
 	{
         return E_OUTOFMEMORY;
 	}
 
+	SurfaceMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
+	if (SurfaceMore == NULL)
+	{
+		return DDERR_OUTOFMEMORY;
+	}
+	
     That->lpVtbl = &DirectDrawSurface7_Vtable;
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
+	
 	That->lpLcl->lpGbl = &ddSurfGbl;
 	That->lpLcl->lpGbl->lpDD = &ddgbl;
+	That->lpLcl->lpSurfMore = SurfaceMore;
+	That->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
+	That->lpLcl->lpSurfMore->lpDD_int = This;
+	That->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
+	That->lpLcl->dwProcessId = GetCurrentProcessId();
 
-		
-	/* Code from wine cvs 24/7-2006 */
-
-	if (!(pDDSD->dwFlags & DDSD_CAPS))
-    {
-        /* DVIDEO.DLL does forget the DDSD_CAPS flag ... *sigh* */
-        pDDSD->dwFlags |= DDSD_CAPS;
-    }
-    if (pDDSD->ddsCaps.dwCaps == 0)
-    {
-        /* This has been checked on real Windows */
-        pDDSD->ddsCaps.dwCaps = DDSCAPS_LOCALVIDMEM | DDSCAPS_VIDEOMEMORY;
-    }
-
-	
-    if (pDDSD->ddsCaps.dwCaps & DDSCAPS_ALLOCONLOAD)
-    {
-        /* If the surface is of the 'alloconload' type, ignore the LPSURFACE field */
-        pDDSD->dwFlags &= ~DDSD_LPSURFACE;
-    }
-
-	DX_STUB_str("pDDSD->ddsCaps.dwCaps ok");
-
-    if ((pDDSD->dwFlags & DDSD_LPSURFACE) && (pDDSD->lpSurface == NULL))
-    {
-        /* Frank Herbert's Dune specifies a null pointer for the surface, ignore the LPSURFACE field */       
-        pDDSD->dwFlags &= ~DDSD_LPSURFACE;
-    }
-
-	DX_STUB_str("pDDSD->dwFlags ok");
-
-	/* own code now */  
-	
+	/* this two line should be move to startup code */
+    That->lpLcl->lpGbl->lpDD       =  This->lpLcl->lpGbl;
+    That->lpLcl->lpGbl->lpDDHandle = This->lpLcl->lpGbl;
 
 	mDdCanCreateSurface.lpDD = This->lpLcl->lpGbl;
-	mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE;
+	mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
 	mDdCanCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
 	mDdCanCreateSurface.CanCreateSurface = This->lpLcl->lpDDCB->cbDDCallbacks.CanCreateSurface;
 	mDdCanCreateSurface.ddRVal = DDERR_GENERIC;
 
+	mDdCreateSurface.lpDD = This->lpLcl->lpGbl;
 	mDdCreateSurface.CreateSurface = This->lpLcl->lpDDCB->cbDDCallbacks.CreateSurface;
 	mDdCreateSurface.ddRVal =  DDERR_GENERIC;
 	mDdCreateSurface.dwSCnt = That->dwIntRefCnt + 1; // is this correct 
@@ -265,30 +247,13 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	//mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
 	//mDdCreateSurface.lplpSList = &That->lpLcl;
 		
-	SurfaceMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
-	if (SurfaceMore == NULL)
-	{
-		return DDERR_OUTOFMEMORY;
-	}
-
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
 	{  
 	   DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
-       DDSURFACEDESC mddsdPrimary;
-
-	   This->lpLcl->lpGbl->lp16DD = This->lpLcl->lpGbl;   
-       That->lpLcl->lpSurfMore = SurfaceMore;
-
-       ZeroMemory(&mddsdPrimary, sizeof(DDSURFACEDESC));
-       mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC);
-       mddsdPrimary.dwFlags     = DDSD_CAPS;
-       mddsdPrimary.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_VIDEOMEMORY | DDSCAPS_VISIBLE;
        
-       mDdCanCreateSurface.lpDD = This->lpLcl->lpGbl;
-       mDdCanCreateSurface.CanCreateSurface = This->lpLcl->lpDDCB->HALDD.CanCreateSurface;
-       mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
-       mDdCanCreateSurface.lpDDSurfaceDesc = &mddsdPrimary; // pDDSD;
-      
+	   This->lpLcl->lpPrimary = That;
+	   That->lpLcl->lpSurfMore->slist = mpPrimaryLocals;
+                                                         
        if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
        {   
            return DDERR_NOTINITIALIZED;
@@ -298,31 +263,21 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
        {
            return DDERR_NOTINITIALIZED;
        }
-    
-       That->lpLcl->lpGbl->dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
-       That->lpLcl->lpGbl->lpDD       =  This->lpLcl->lpGbl;
-       That->lpLcl->lpGbl->lpDDHandle = This->lpLcl->lpGbl;
+          
+       /* FIXME :
+	    * This tree line is hack 
+		*/ 
        That->lpLcl->lpGbl->wWidth  = 1024; //(WORD)mpModeInfos[0].dwWidth;
        That->lpLcl->lpGbl->wHeight = 768; //(WORD)mpModeInfos[0].dwHeight;
        That->lpLcl->lpGbl->lPitch  = 32; //mpModeInfos[0].lPitch;
-
-       memset(SurfaceMore,   0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
-       SurfaceMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
-  
-       That->lpLcl->lpGbl = That->lpLcl->lpGbl;
-       That->lpLcl->lpSurfMore = SurfaceMore;
-       That->lpLcl->dwProcessId = GetCurrentProcessId();
+                   
        That->lpLcl->dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
-       That->lpLcl->ddsCaps.dwCaps = mddsdPrimary.ddsCaps.dwCaps;
+       That->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
 
        mpPrimaryLocals[0] = That->lpLcl;
-  
-       mDdCreateSurface.lpDD = This->lpLcl->lpGbl;
-       mDdCreateSurface.CreateSurface = This->lpLcl->lpDDCB->HALDD.CreateSurface;  
-       mDdCreateSurface.lpDDSurfaceDesc = &mddsdPrimary;//pDDSD;
-       mDdCreateSurface.lplpSList = mpPrimaryLocals; //cSurfaces;
-       mDdCreateSurface.dwSCnt = 1 ;  //ppSurfaces;
-
+                       
+       mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
+     
        if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
        {
 	       return DDERR_NOTINITIALIZED;
