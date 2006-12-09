@@ -70,6 +70,7 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     TCHAR separators[] = TEXT(";");
     TCHAR *token;
     HWND hwndBackgroundList;
+    TCHAR *p;
 
     hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
 
@@ -128,6 +129,9 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
             backgroundItem->bWallpaper = TRUE;
 
             _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
+            p = _tcsrchr(backgroundItem->szDisplayName, _T('.'));
+            if (p)
+                *p = (TCHAR)0;
             _tcscpy(backgroundItem->szFilename, wallpaperFilename);
 
             ZeroMemory(&listItem, sizeof(LV_ITEM));
@@ -191,6 +195,9 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
                 backgroundItem->bWallpaper = TRUE;
 
                 _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
+                p = _tcsrchr(backgroundItem->szDisplayName, _T('.'));
+                if (p)
+                    *p = (TCHAR)0;
                 _tcscpy(backgroundItem->szFilename, filename);
 
                 ZeroMemory(&listItem, sizeof(LV_ITEM));
