@@ -682,8 +682,16 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.name.c_str() );
 			fprintf ( OUT, "\t\t\t>\r\n" );
 			fprintf ( OUT, "\t\t\t<DebugSettings\r\n" );
-			fprintf ( OUT, "\t\t\t\tCommand=\"rundll32.exe\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tCommandArguments=\" shell32,Control_RunDLL &quot;$(TargetPath)&quot;,@\"\r\n" );
+			if ( module_type == ".cpl" )
+			{
+				fprintf ( OUT, "\t\t\t\tCommand=\"rundll32.exe\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tCommandArguments=\" shell32,Control_RunDLL &quot;$(TargetPath)&quot;,@\"\r\n" );
+			}
+			else
+			{
+				fprintf ( OUT, "\t\t\t\tCommand=\"$(TargetPath)\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tCommandArguments=\"\"\r\n" );
+			}
 			fprintf ( OUT, "\t\t\t\tAttach=\"false\"\r\n" );
 			fprintf ( OUT, "\t\t\t\tDebuggerType=\"3\"\r\n" );
 			fprintf ( OUT, "\t\t\t\tRemote=\"1\"\r\n" );
