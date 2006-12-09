@@ -45,62 +45,6 @@ VOID WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
-//TODO: Move to arch-independent hardware.c file
-PVOID
-HwCreateComponentResources(PCONFIGURATION_COMPONENT Component,
-                           ULONG DeviceDataLength,
-                           PVOID DeviceData)
-{
-	return NULL;
-}
-
-//TODO: Move to arch-independent hardware.c file
-VOID
-InitializeHWConfig(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-	//PCONFIGURATION_COMPONENT_DATA ConfigurationRoot;
-	//PCONFIGURATION_COMPONENT Component;
-	//PCONFIGURATION_COMPONENT_DATA /*CurrentEntry,*/ PreviousEntry, AdapterEntry;
-	//BOOLEAN IsNextEntryChild;
-
-	DbgPrint((DPRINT_WINDOWS, "InitializeHWConfig()\n"));
-
-	//LoaderBlock->ConfigurationRoot = MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
-	//RtlZeroMemory(LoaderBlock->ConfigurationRoot, sizeof(CONFIGURATION_COMPONENT_DATA));
-
-	/* Fill root == SystemClass */
-	//ConfigurationRoot = LoaderBlock->ConfigurationRoot;
-	//Component = &LoaderBlock->ConfigurationRoot->ComponentEntry;
-
-	//Component->Class = SystemClass;
-	//Component->Type = MaximumType;
-	//Component->Version = 0; // FIXME: ?
-	//Component->ConfigurationDataLength = 0;
-	//Component->Key = 0;
-	//Component->AffinityMask = 0;
-
-	//Component->Identifier = 0;
-	//Component->IdentifierLength = 0;
-
-
-	//IsNextEntryChild = TRUE;
-	//PreviousEntry = ConfigurationRoot;
-
-	/* Enumerate all PCI buses */
-	//AdapterEntry = ConfigurationRoot;
-
-	/* TODO: Disk Geometry */
-	/* TODO: Keyboard */
-
-	/* TODO: Serial port */
-
-	//Config->ConfigurationData = alloc(sizeof(CONFIGURATION_COMPONENT_DATA), EfiLoaderData);
-
-	/* Convert everything to VA */
-	ConvertConfigToVA(LoaderBlock->ConfigurationRoot);
-	LoaderBlock->ConfigurationRoot = PaToVa(LoaderBlock->ConfigurationRoot);
-}
-
 
 // Init "phase 0"
 VOID
@@ -131,28 +75,42 @@ AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
 
 // Init "phase 1"
 VOID
-WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock)
+WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
+                       PCHAR Options,
+                       PCHAR SystemPath)
 {
-	CHAR	Options[] = "/DEBUGPORT=COM1 /BAUDRATE=115200";
+	/* Examples of correct options and paths */
+	//CHAR	Options[] = "/DEBUGPORT=COM1 /BAUDRATE=115200";
 	//CHAR	Options[] = "/NODEBUG";
-	CHAR	SystemRoot[] = "\\WINNT\\";
-	CHAR	HalPath[] = "\\";
-	CHAR	ArcBoot[] = "multi(0)disk(0)rdisk(0)partition(1)";
-	CHAR	ArcHal[] = "multi(0)disk(0)rdisk(0)partition(1)";
+	//CHAR	SystemRoot[] = "\\WINNT\\";
+	//CHAR	ArcBoot[] = "multi(0)disk(0)rdisk(0)partition(1)";
 
-	ULONG i;
+	CHAR	HalPath[] = "\\";
+	CHAR	SystemRoot[256];
+	CHAR	ArcBoot[256];
+	ULONG i, PathSeparator;
 	PLOADER_PARAMETER_EXTENSION Extension;
 
 	LoaderBlock->u.I386.CommonDataArea = NULL; // Force No ABIOS support
-	
+
+	/* Construct SystemRoot and ArcBoot from SystemPath */
+	PathSeparator = strstr(SystemPath, "\\") - SystemPath;
+	strncpy(ArcBoot, SystemPath, PathSeparator);
+	strcpy(SystemRoot, &SystemPath[PathSeparator]);
+	strcat(SystemRoot, "\\");
+
+	DbgPrint((DPRINT_WINDOWS, "ArcBoot: %s\n", ArcBoot));
+	DbgPrint((DPRINT_WINDOWS, "SystemRoot: %s\n", SystemRoot));
+	DbgPrint((DPRINT_WINDOWS, "Options: %s\n", Options));
+
 	/* Fill Arc BootDevice */
 	LoaderBlock->ArcBootDeviceName = MmAllocateMemory(strlen(ArcBoot)+1);
 	strcpy(LoaderBlock->ArcBootDeviceName, ArcBoot);
 	LoaderBlock->ArcBootDeviceName = PaToVa(LoaderBlock->ArcBootDeviceName);
 
-	/* Fill Arc HalDevice */
-	LoaderBlock->ArcHalDeviceName = MmAllocateMemory(strlen(ArcHal)+1);
-	strcpy(LoaderBlock->ArcHalDeviceName, ArcHal);
+	/* Fill Arc HalDevice, it matches ArcBoot path */
+	LoaderBlock->ArcHalDeviceName = MmAllocateMemory(strlen(ArcBoot)+1);
+	strcpy(LoaderBlock->ArcHalDeviceName, ArcBoot);
 	LoaderBlock->ArcHalDeviceName = PaToVa(LoaderBlock->ArcHalDeviceName);
 
 	/* Fill SystemRoot */
@@ -200,15 +158,15 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock)
 			&ArcDiskInfo->ListEntry);
 	}
 
-	/* Convert the list to virtual address */
+	/* Convert all list's to Virtual address */
+
+	/* Convert the ArcDisks list to virtual address */
 	List_PaToVa(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
 	LoaderBlock->ArcDiskInformation = PaToVa(LoaderBlock->ArcDiskInformation);
 
-	/* Create configuration entries */
-	InitializeHWConfig(LoaderBlock);
-
-	
-	/* Convert all list's to Virtual address */
+	/* Convert configuration entries to VA */
+	ConvertConfigToVA(LoaderBlock->ConfigurationRoot);
+	LoaderBlock->ConfigurationRoot = PaToVa(LoaderBlock->ConfigurationRoot);
 
 	/* Convert all DTE into virtual addresses */
 	List_PaToVa(&LoaderBlock->LoadOrderListHead);
@@ -398,9 +356,10 @@ VOID
 LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 {
 	CHAR  MsgBuffer[256];
-	CHAR  SystemPath[1024], SearchPath[1024];
-	CHAR  FileName[1024];
-	CHAR  BootPath[256];
+	CHAR  SystemPath[512], SearchPath[512];
+	CHAR  FileName[512];
+	CHAR  BootPath[512];
+	CHAR  BootOptions[256];
 	PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
 	BOOLEAN Status;
 	ULONG SectionId;
@@ -439,13 +398,21 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 		return;
 	}
 
-	if (!MachDiskNormalizeSystemPath(SystemPath,
-	                                 sizeof(SystemPath)))
+	/* Read booting options */
+	if (!IniReadSettingByName(SectionId, "Options", BootOptions, sizeof(BootOptions)))
+	{
+		/* Nothing read, make the string empty */
+		strcpy(BootOptions, "");
+	}
+
+	/* Normalize system path */
+	if (!MachDiskNormalizeSystemPath(SystemPath, sizeof(SystemPath)))
 	{
 		UiMessageBox("Invalid system path");
 		return;
 	}
 
+	/* Let user know we started loading */
 	UiDrawStatusText("Loading...");
 
 	/* Try to open system drive */
@@ -463,25 +430,25 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 
 	DbgPrint((DPRINT_WINDOWS,"SystemRoot: '%s'\n", BootPath));
 
-	// Allocate and minimalistic-initialize LPB
+	/* Allocate and minimalistic-initialize LPB */
 	AllocateAndInitLPB(&LoaderBlock);
 
-	// Detect hardware
+	/* Detect hardware */
 	MachHwDetect(&LoaderBlock->ConfigurationRoot);
 
-	// Load kernel
+	/* Load kernel */
 	strcpy(FileName, BootPath);
 	strcat(FileName, "SYSTEM32\\NTOSKRNL.EXE");
 	Status = WinLdrLoadImage(FileName, LoaderSystemCode, &NtosBase);
 	DbgPrint((DPRINT_WINDOWS, "Ntos loaded with status %d at %p\n", Status, NtosBase));
 
-	// Load HAL
+	/* Load HAL */
 	strcpy(FileName, BootPath);
 	strcat(FileName, "SYSTEM32\\HAL.DLL");
 	Status = WinLdrLoadImage(FileName, LoaderHalCode, &HalBase);
 	DbgPrint((DPRINT_WINDOWS, "HAL loaded with status %d at %p\n", Status, HalBase));
 
-	// Load kernel-debugger support dll
+	/* Load kernel-debugger support dll */
 	if (OperatingSystemVersion > _WIN32_WINNT_NT4)
 	{
 		strcpy(FileName, BootPath);
@@ -490,7 +457,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 		DbgPrint((DPRINT_WINDOWS, "KdCom loaded with status %d at %p\n", Status, KdComBase));
 	}
 
-	// Allocate data table entries for above-loaded modules
+	/* Allocate data table entries for above-loaded modules */
 	WinLdrAllocateDataTableEntry(LoaderBlock, "ntoskrnl.exe",
 		"WINNT\\SYSTEM32\\NTOSKRNL.EXE", NtosBase, &KernelDTE);
 	WinLdrAllocateDataTableEntry(LoaderBlock, "hal.dll",
@@ -518,14 +485,13 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	DbgPrint((DPRINT_WINDOWS, "Boot drivers loaded with status %d\n", Status));
 
 	/* Initialize Phase 1 - no drivers loading anymore */
-	WinLdrInitializePhase1(LoaderBlock);
+	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemPath);
 
 	/* Alloc PCR, TSS, do magic things with the GDT/IDT */
 	WinLdrSetupForNt(LoaderBlock, &GdtIdt, &PcrBasePage, &TssBasePage);
 
-	/* Save entry-point pointer (VA) */
+	/* Save entry-point pointer and Loader block VAs */
 	KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;
-
 	LoaderBlockVA = PaToVa(LoaderBlock);
 
 	/* "Stop all motors", change videomode */
@@ -541,9 +507,9 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	DbgPrint((DPRINT_WINDOWS, "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA));
 
-	WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
-	WinLdrpDumpBootDriver(LoaderBlockVA);
-	WinLdrpDumpArcDisks(LoaderBlockVA);
+	//WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
+	//WinLdrpDumpBootDriver(LoaderBlockVA);
+	//WinLdrpDumpArcDisks(LoaderBlockVA);
 
 	//FIXME: If I substitute this debugging checkpoint, GCC will "optimize away" the code below
 	//while (1) {};
