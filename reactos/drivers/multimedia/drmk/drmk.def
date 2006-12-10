@@ -1,0 +1,12 @@
+;
+; Exports definition file for drmk.sys
+;
+
+EXPORTS
+DrmAddContentHandlers@12
+DrmCreateContentMixed@12
+DrmDestroyContent@4
+DrmForwardContentToDeviceObject@12
+DrmForwardContentToFileObject@8
+DrmForwardContentToInterface@12
+DrmGetContentRights@8
