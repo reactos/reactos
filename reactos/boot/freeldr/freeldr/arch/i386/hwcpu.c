@@ -24,6 +24,12 @@
 #define NDEBUG
 #include <debug.h>
 
+#define HZ (100)
+#define CLOCK_TICK_RATE (1193182)
+#define LATCH (CLOCK_TICK_RATE / HZ)
+#define CALIBRATE_LATCH (5 * LATCH)
+#define CALIBRATE_TIME  (5 * 1000020/HZ)
+
 #define MP_FP_SIGNATURE 0x5F504D5F	/* "_MP_" */
 #define MP_CT_SIGNATURE 0x504D4350	/* "PCMP" */
 
@@ -73,17 +79,44 @@ typedef struct _MP_PROCESSOR_ENTRY
 /* FUNCTIONS ****************************************************************/
 
 static ULONG
-GetCpuSpeed(VOID)
+GetCpuSpeed(BOOLEAN DualCoreSpeedMesure)
 {
   ULONGLONG Timestamp1;
   ULONGLONG Timestamp2;
   ULONGLONG Diff;
+  ULONG     Count = 0;
+
+   /* 
+      FIXME 
+      if the DualCoreSpeedMesure is true we need 
+      use the wrmsr and rdmsr to mesure the speed
+
+      The rdtc are outdate to use if cpu support 
+      the wrmsr and rdmsr, see intel doc AP-485
+      for more informations and how to use it. 
+
+      Follow code is good on cpu that does not
+      support dual core or have a mmx unit or
+      more. 
+    */
+
+
+  /* Initialise timer channel 2 */
+  /* Set the Gate high, disable speaker */
+  WRITE_PORT_UCHAR((PUCHAR)0x61, (READ_PORT_UCHAR((PUCHAR)0x61) & ~0x02) | 0x01);
+  WRITE_PORT_UCHAR((PUCHAR)0x43, 0xB0);  /* binary, mode 0, LSB/MSB, ch 2 */
+  WRITE_PORT_UCHAR((PUCHAR)0x42, CALIBRATE_LATCH & 0xff); /* LSB */
+  WRITE_PORT_UCHAR((PUCHAR)0x42, CALIBRATE_LATCH >> 8); /* MSB */
 
   /* Read TSC (Time Stamp Counter) */
   Timestamp1 = RDTSC();
 
-  /* Wait for 0.1 seconds (= 100 milliseconds = 100000 microseconds)*/
-  StallExecutionProcessor(100000);
+  /* Wait */
+  do
+    {
+      Count++;
+    }
+  while ((READ_PORT_UCHAR((PUCHAR)0x61) & 0x20) == 0);
 
   /* Read TSC (Time Stamp Counter) again */
   Timestamp2 = RDTSC();
@@ -98,7 +131,7 @@ GetCpuSpeed(VOID)
       Diff = Timestamp2 + (((ULONGLONG)-1) - Timestamp1);
     }
 
-  return (ULONG)(Diff / 100000);
+  return (ULONG)(Diff / CALIBRATE_TIME);
 }
 
 
@@ -123,7 +156,7 @@ DetectCPU(FRLDRHKEY CpuKey,
   LONG Error;
   BOOLEAN SupportTSC = FALSE;
   ULONG CpuSpeed;
-
+  BOOLEAN DualCoreSpeedMesure = FALSE;
 
   /* Create the CPU instance key */
   Error = RegCreateKey(CpuKey,
@@ -169,8 +202,12 @@ DetectCPU(FRLDRHKEY CpuKey,
 	       (unsigned int)((eax >> 4) & 0x0F),
 	       (unsigned int)(eax & 0x0F));
       FeatureSet = edx;
-      if (((eax >> 8) & 0x0F) >= 5)
+      
+      if ((FeatureSet & 0x10) == 0x10)
         SupportTSC = TRUE;
+
+      if ((FeatureSet & 0x20) == 0x20)
+          DualCoreSpeedMesure = TRUE;
 
       /* Check if Extended CPUID information is supported */
       GetCpuid(0x80000000, &eax, &ebx, &ecx, &edx);
@@ -283,7 +320,7 @@ DetectCPU(FRLDRHKEY CpuKey,
   /* Set '~MHz' value (CPU only) */
   if (SupportTSC)
     {
-      CpuSpeed = GetCpuSpeed();
+      CpuSpeed = GetCpuSpeed(DualCoreSpeedMesure);
 
       Error = RegSetValue(CpuInstKey,
 			  L"~MHz",
@@ -467,9 +504,19 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
   /* FIXME: Set 'Update Status' value (CPU only) */
 
   /* Set '~MHz' value (CPU only) */
-  if (((CpuEntry->CpuSignature >> 8) & 0x0F) >= 5)
-    {
-      CpuSpeed = GetCpuSpeed();
+
+     
+  if ((CpuEntry->FeatureFlags  & 0x10) == 0x10)
+  {
+      if ((CpuEntry->FeatureFlags  & 0x20) == 0x20)
+      {
+           CpuSpeed = GetCpuSpeed(TRUE);
+      }
+      else
+      {
+          DbgPrint((DPRINT_HWDETECT, "Does not support MSR that are need for mesure the speed correct\n", (int)Error));
+          CpuSpeed = GetCpuSpeed(FALSE);
+      }
 
       Error = RegSetValue(CpuInstKey,
 			  L"~MHz",
@@ -477,10 +524,11 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
 			  (PCHAR)&CpuSpeed,
 			  sizeof(ULONG));
       if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-	}
-    }
+      {
+
+	     DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+	  }
+  }
 }
 
 
