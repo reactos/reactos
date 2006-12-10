@@ -13,7 +13,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include "internal\io_i.h"
+#include "internal/io_i.h"
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
