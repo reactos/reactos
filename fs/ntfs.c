@@ -52,6 +52,8 @@ static PUCHAR NtfsDecodeRun(PUCHAR DataRun, LONGLONG *DataRunOffset, ULONGLONG *
     UCHAR DataRunLengthSize;
     CHAR i;
 
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsDecodeRun() - DataRun = %d\n", DataRun));
+
     DataRunOffsetSize = (*DataRun >> 4) & 0xF;
     DataRunLengthSize = *DataRun & 0xF;
     *DataRunOffset = 0;
@@ -91,6 +93,8 @@ static PNTFS_ATTR_CONTEXT NtfsPrepareAttributeContext(PNTFS_ATTR_RECORD AttrReco
 {
     PNTFS_ATTR_CONTEXT Context;
 
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsPrepareAttributeContext() - AttrRecord = %p\n", AttrRecord));
+
     Context = MmAllocateMemory(FIELD_OFFSET(NTFS_ATTR_CONTEXT, Record) + AttrRecord->Length);
     RtlCopyMemory(&Context->Record, AttrRecord, AttrRecord->Length);
     if (AttrRecord->IsNonResident)
@@ -117,11 +121,15 @@ static PNTFS_ATTR_CONTEXT NtfsPrepareAttributeContext(PNTFS_ATTR_RECORD AttrReco
         Context->CacheRunCurrentOffset = 0;
     }
 
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsPrepareAttributeContext() prepared Context = %p\n", Context));
+
     return Context;
 }
 
 static VOID NtfsReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context)
 {
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsReleaseAttributeContext() - Context = %p\n", Context));
+
     MmFreeMemory(Context);
 }
 
@@ -130,7 +138,7 @@ static BOOLEAN NtfsDiskRead(ULONGLONG Offset, ULONGLONG Length, PCHAR Buffer)
 {
     USHORT ReadLength;
 
-    DbgPrint((DPRINT_FILESYSTEM, "NtfsDiskRead - Offset: %I64d Length: %I64d\n", Offset, Length));
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsDiskRead() - Offset: %I64d Length: %I64d\n", Offset, Length));
     RtlZeroMemory((PCHAR)DISKREADBUFFER, 0x1000);
 
     /* I. Read partial first sector if needed */
@@ -178,6 +186,9 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
     ULONGLONG CurrentOffset;
     ULONGLONG ReadLength;
     ULONGLONG AlreadyRead;
+
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsReadAttribute() - Context: %p Offset: %I64d Length %I64d\n",
+        Context, Offset, Length));
 
     if (!Context->Record.IsNonResident)
     {
@@ -371,6 +382,8 @@ static BOOLEAN NtfsFixupRecord(PNTFS_RECORD Record)
     USHORT USACount;
     USHORT *Block;
 
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsFixupRecord() - Record: %p\n", Record));
+
     USA = (USHORT*)((PCHAR)Record + Record->USAOffset);
     USANumber = *(USA++);
     USACount = Record->USACount - 1; /* Exclude the USA Number. */
@@ -391,6 +404,8 @@ static BOOLEAN NtfsFixupRecord(PNTFS_RECORD Record)
 static BOOLEAN NtfsReadMftRecord(ULONG MFTIndex, PNTFS_MFT_RECORD Buffer)
 {
     ULONGLONG BytesRead;
+
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsReadMftRecord() - MFTIndex: %x Buffer: %p\n", MFTIndex, Buffer));
 
     BytesRead = NtfsReadAttribute(NtfsMFTContext, MFTIndex * NtfsMftRecordSize, (PCHAR)Buffer, NtfsMftRecordSize);
     if (BytesRead != NtfsMftRecordSize)
@@ -467,6 +482,9 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
     PNTFS_INDEX_ENTRY IndexEntry, IndexEntryEnd;
     ULONG RecordOffset;
     ULONG IndexBlockSize;
+
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsFindMftRecord() - MFTIndex: %x Filename: %s\n",
+        MFTIndex, FileName));
 
     MftRecord = MmAllocateMemory(NtfsMftRecordSize);
     if (MftRecord == NULL)
@@ -621,7 +639,7 @@ static BOOLEAN NtfsLookupFile(PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_
     ULONG CurrentMFTIndex;
     UCHAR i;
 
-    DbgPrint((DPRINT_FILESYSTEM, "NtfsLookupFile() FileName = %s\n", FileName));
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsLookupFile() - FileName = %s\n", FileName));
 
     CurrentMFTIndex = NTFS_FILE_ROOT;
     NumberOfPathParts = FsGetNumPathParts(FileName);
@@ -662,7 +680,7 @@ BOOLEAN NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 {
     NtfsBootSector = (PNTFS_BOOTSECTOR)DISKREADBUFFER;
 
-    DbgPrint((DPRINT_FILESYSTEM, "NtfsOpenVolume() DriveNumber = 0x%x VolumeStartSector = 0x%x\n", DriveNumber, VolumeStartSector));
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsOpenVolume() - DriveNumber = 0x%x VolumeStartSector = 0x%x\n", DriveNumber, VolumeStartSector));
 
     if (!MachDiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, (PCHAR)DISKREADBUFFER))
     {
