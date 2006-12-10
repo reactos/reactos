@@ -12,6 +12,10 @@
 	<xi:include href="ks/ks.rbuild" />
 </directory>
 
+<directory name="drmk">
+	<xi:include href="drmk/drmk.rbuild" />
+</directory>
+
 <directory name="portcls">
 	<xi:include href="portcls/portcls.rbuild" />
 </directory>
