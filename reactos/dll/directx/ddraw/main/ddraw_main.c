@@ -263,13 +263,10 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
        {
            return DDERR_NOTINITIALIZED;
        }
-          
-       /* FIXME :
-	    * This tree line is hack 
-		*/ 
-       That->lpLcl->lpGbl->wWidth  = 1024; //(WORD)mpModeInfos[0].dwWidth;
-       That->lpLcl->lpGbl->wHeight = 768; //(WORD)mpModeInfos[0].dwHeight;
-       That->lpLcl->lpGbl->lPitch  = 32; //mpModeInfos[0].lPitch;
+                 
+	   That->lpLcl->lpGbl->wWidth  = This->lpLcl->lpGbl->vmiData.dwDisplayWidth;
+       That->lpLcl->lpGbl->wHeight = This->lpLcl->lpGbl->vmiData.dwDisplayHeight;
+       That->lpLcl->lpGbl->lPitch  = This->lpLcl->lpGbl->vmiData.lDisplayPitch;
                    
        That->lpLcl->dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
        That->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
