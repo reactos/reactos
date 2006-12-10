@@ -187,16 +187,57 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	DDHAL_CREATESURFACEDATA mDdCreateSurface;
 	LPDDRAWI_DDRAWSURFACE_MORE SurfaceMore;
 	
+	/* 
+	 * check if pUnkOuter is NULL if it is not fail 
+	 * for accrdiong msdn and own test this member is not 
+	 * set. 
+	 */
+
     if (pUnkOuter!=NULL) 
 	{
         return CLASS_E_NOAGGREGATION; 
 	}
 
-    if (sizeof(DDSURFACEDESC2)!=pDDSD->dwSize && sizeof(DDSURFACEDESC)!=pDDSD->dwSize)
+	/* Check so it is vaild pointer we got of ppSurf */	 
+	if (IsBadWritePtr( ppSurf, sizeof( LPDIRECTDRAWSURFACE7 )) )
+	{
+		return DDERR_INVALIDPARAMS;
+	}
+
+	/* Check so it is vaild pointer we got of pDDSD 
+	 */	 
+	if (IsBadWritePtr( pDDSD, sizeof( LPDDSURFACEDESC2 )) )
+	{
+		return DDERR_INVALIDPARAMS;
+	}
+
+	if (IsBadReadPtr(pDDSD, sizeof( LPDDSURFACEDESC2 )) )
+	{
+		return DDERR_INVALIDPARAMS;
+	}
+
+	/* Check if it version 1 or version 2 of the DDSURFACEDESC struct
+	 *  both struct are vaild. 
+	 */
+    if (sizeof(DDSURFACEDESC2)!=pDDSD->dwSize)
 	{
         return DDERR_UNSUPPORTED;
 	}
+
+
+    /* here we need start fixing bugs
+	 * the code above is 100% correct behovir
+	 * checked how ms ddraw behivor
+	 */
+	
     
+	/* FIXME 
+	 * Alloc memory for the ppSurf pointer 
+	 * we expect it is NULL, But we maybe should add a NULL check 
+	 * for it, so we do not over write it, and also add a pointer vaildate
+	 * for it. 
+	 */
+
     That = (LPDDRAWI_DDRAWSURFACE_INT)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT));
     
     if (That == NULL) 
@@ -204,26 +245,34 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
         return E_OUTOFMEMORY;
 	}
 
-	That->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));
-   
-    if (That == NULL) 
+	/* FIXME 
+	   Alloc memory for the local surface struct we need 
+	   we should check if NULL or not see comment above
+	 */	 
+	That->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));   
+	if (That->lpLcl == NULL) 
 	{
+		/* shall we free it if it fail ?? */
+		DxHeapMemFree(That);
         return E_OUTOFMEMORY;
 	}
 
-	SurfaceMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
-	if (SurfaceMore == NULL)
+	/* Alloc memory for DDRAWI_DDRAWSURFACE_MORE */
+	That->lpLcl->lpSurfMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
+	if (That->lpLcl->lpSurfMore == NULL)
 	{
+		/* shall we free it if it fail ?? */
+		DxHeapMemFree(That->lpLcl);
+		DxHeapMemFree(That);
 		return DDERR_OUTOFMEMORY;
 	}
 	
-    That->lpVtbl = &DirectDrawSurface7_Vtable;
+	/* setup some value */
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
-	
+	That->lpVtbl = &DirectDrawSurface7_Vtable;
 	That->lpLcl->lpGbl = &ddSurfGbl;
-	That->lpLcl->lpGbl->lpDD = &ddgbl;
-	That->lpLcl->lpSurfMore = SurfaceMore;
+	That->lpLcl->lpGbl->lpDD = &ddgbl;	
 	That->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
 	That->lpLcl->lpSurfMore->lpDD_int = This;
 	That->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
@@ -232,6 +281,14 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	/* this two line should be move to startup code */
     That->lpLcl->lpGbl->lpDD       =  This->lpLcl->lpGbl;
     That->lpLcl->lpGbl->lpDDHandle = This->lpLcl->lpGbl;
+
+
+	/* setup the callback struct right 
+	 * maybe we should fill in 
+	 * xx.lpDD, xx.function, xx.ddRVal
+	 * in startup and do a cache of it
+	 * to save time ??
+	 */
 
 	mDdCanCreateSurface.lpDD = This->lpLcl->lpGbl;
 	mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
