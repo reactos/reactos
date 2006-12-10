@@ -1000,7 +1000,7 @@ IopDeleteFile(IN PVOID ObjectBody)
         if ((Vpb) && !(FileObject->Flags & FO_DIRECT_DEVICE_OPEN))
         {
             /* Dereference the VPB before the close */
-            InterlockedDecrement(&Vpb->ReferenceCount);
+            InterlockedDecrement((PLONG)&Vpb->ReferenceCount);
         }
 
         /* Check if the FS will never disappear by itself */
@@ -1956,7 +1956,7 @@ IoCreateStreamFileObjectEx(IN PFILE_OBJECT FileObject OPTIONAL,
     if (DeviceObject->Vpb)
     {
         /* Reference it */
-         InterlockedIncrement(&DeviceObject->Vpb->ReferenceCount);
+         InterlockedIncrement((PLONG)&DeviceObject->Vpb->ReferenceCount);
     }
 
     /* Check if the caller wants the handle */
@@ -2049,7 +2049,7 @@ IoCreateStreamFileObjectLite(IN PFILE_OBJECT FileObject OPTIONAL,
     if (DeviceObject->Vpb)
     {
         /* Reference it */
-         InterlockedIncrement(&DeviceObject->Vpb->ReferenceCount);
+         InterlockedIncrement((PLONG)&DeviceObject->Vpb->ReferenceCount);
     }
 
     /* Return the file object */
