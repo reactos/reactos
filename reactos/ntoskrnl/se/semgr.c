@@ -38,6 +38,9 @@ INIT_FUNCTION
 NTAPI
 SeInit(VOID)
 {
+    DPRINT1("FIXME: SeAccessCheck has been HACKED to always grant access!\n");
+    DPRINT1("FIXME: Please fix all the code that doesn't get proper rights!\n");
+
   SepInitLuid();
 
   if (!SepInitSecurityIDs())
@@ -1050,7 +1053,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   else
     {
       *AccessStatus = STATUS_ACCESS_DENIED;
-      DPRINT1("FIX caller rights (granted 0x%lx, desired 0x%lx)!\n",
+      DPRINT("FIX caller rights (granted 0x%lx, desired 0x%lx)!\n",
         *GrantedAccess, DesiredAccess);
       return TRUE; /* FIXME: should be FALSE */
     }

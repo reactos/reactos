@@ -8,16 +8,6 @@
 //                     Do NOT ask when it will be fixed.
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
-// Io:
-//  - See why queueing IRPs and cancelling them causes crashes.
-//  - Add Access Checks in IopParseDevice.
-//  - Add validation checks in IoCreateFile.
-//  - Add probe/alignment checks for Query/Set routines.
-//  - Add tracing to iofunc.c
-//  - Add tracing to file.c
-//  - Add support for some fast-paths when querying/setting data.
-//  - Verify ShareAccess APIs, XP added some new semantics.
-//  - Add support for Fast Dispatch I/O.
 //
 // Ob:
 //  - Fix bug related to Deferred Loading (don't requeue active work item).
@@ -28,6 +18,7 @@
 //
 // Ke:
 //  - Figure out why the DPC stack doesn't really work.
+//  - Fix SEH/Page Fault + Exceptions!? Weird exception bugs!
 //  - New optimized table-based tick-hashed timer implementation.
 //  - New Thread Scheduler based on 2003.
 //  - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
@@ -46,7 +37,6 @@
 //  - Use pushlocks for handle implementation.
 //
 // Kd:
-//  - Implement new KDCOM with KD support.
 //  - Implement KD Kernel Debugging and WinDBG support.
 //
 // Native:

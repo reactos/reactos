@@ -10,25 +10,40 @@
 //
 // Define this if you want debugging support
 //
-#define _IO_DEBUG_                                      0x00
+#define _IO_DEBUG_                                      0x01
 
 //
 // These define the Debug Masks Supported
 //
 #define IO_IRP_DEBUG                                    0x01
+#define IO_FILE_DEBUG                                   0x02
+#define IO_API_DEBUG                                    0x04
+#define IO_CTL_DEBUG                                    0x08
 
 //
 // Debug/Tracing support
 //
 #if _IO_DEBUG_
 #ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
-#define IOTRACE DbgPrintEx
+#define IOTRACE(x, ...)                                     \
+    {                                                       \
+        DbgPrintEx("%s [%.16s] - ",                         \
+                   __FUNCTION__,                            \
+                   PsGetCurrentProcess()->ImageFileName);   \
+        DbgPrintEx(__VA_ARGS__);                            \
+    }
 #else
-#define IOTRACE(x, ...)                                 \
-    if (x & IopTraceLevel) DbgPrint(__VA_ARGS__)
+#define IOTRACE(x, ...)                                     \
+    if (x & IopTraceLevel)                                  \
+    {                                                       \
+        DbgPrint("%s [%.16s] - ",                           \
+                 __FUNCTION__,                              \
+                 PsGetCurrentProcess()->ImageFileName);     \
+        DbgPrint(__VA_ARGS__);                              \
+    }
 #endif
 #else
-#define IOTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define IOTRACE(x, ...) DPRINT(__VA_ARGS__);
 #endif
 
 //

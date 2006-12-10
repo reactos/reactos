@@ -206,7 +206,8 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
     if ((*StackBegin > Ebp) || (Ebp > *StackEnd))
     {
         /* FIXME: TODO */
-        ASSERT(FALSE);
+        //ASSERT(FALSE);
+        DPRINT1("Stacks: %p %p %p\n", Ebp, *StackBegin, *StackEnd);
     }
 
     /* Return success */

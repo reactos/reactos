@@ -1206,7 +1206,7 @@ MmZeroPageThreadMain(PVOID Ignored)
          }
 
       }
-      DPRINT1("Zeroed %d pages.\n", Count);
+      DPRINT("Zeroed %d pages.\n", Count);
       KeResetEvent(&ZeroPageThreadEvent);
       KeReleaseSpinLock(&PageListLock, oldIrql);
    }

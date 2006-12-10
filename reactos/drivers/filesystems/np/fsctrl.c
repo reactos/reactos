@@ -24,7 +24,7 @@ NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
 
   Waiter = (PNPFS_WAITER_ENTRY)&Irp->Tail.Overlay.DriverContext;
 
-  DPRINT1("NpfsListeningCancelRoutine() called for <%wZ>\n",
+  DPRINT("NpfsListeningCancelRoutine() called for <%wZ>\n",
          &Waiter->Ccb->Fcb->PipeName);
 
   IoReleaseCancelSpinLock(Irp->CancelIrql);

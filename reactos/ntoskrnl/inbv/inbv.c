@@ -118,7 +118,7 @@ InbvDisplayInitialize(VOID)
             return;
       }
 
-      DPRINT1("Done!\n");
+      DPRINT("Done!\n");
       KeInitializeSpinLock(&InbvLock);
       BootVidBase = ModuleObject->DllBase;
       BootVidDriverInstalled = TRUE;

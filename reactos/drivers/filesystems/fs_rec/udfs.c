@@ -232,7 +232,6 @@ FsRecIsUdfsVolume(IN PDEVICE_OBJECT DeviceObject)
       DPRINT ("FsRecDeviceIoControl() failed (Status %lx)\n", Status);
       return(Status);
     }
-  DPRINT1 ("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
 
   /* Check the volume recognition sequence */
   Status = FsRecCheckVolumeRecognitionSequence(DeviceObject,

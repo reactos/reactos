@@ -14,7 +14,7 @@
 
 POBJECT_TYPE DbgkDebugObjectType;
 FAST_MUTEX DbgkpProcessDebugPortMutex;
-ULONG DbgkpTraceLevel = -1;
+ULONG DbgkpTraceLevel = 0; //-1;
 
 GENERIC_MAPPING DbgkDebugObjectMapping =
 {

@@ -329,32 +329,6 @@ IopDereferenceDeviceObject(IN PDEVICE_OBJECT DeviceObject,
     }
 }
 
-NTSTATUS
-NTAPI
-IopReferenceDeviceObject(IN PDEVICE_OBJECT DeviceObject)
-{
-    /* Make sure the object is valid */
-    if ((IoGetDevObjExtension(DeviceObject)->ExtensionFlags &
-        (DOE_UNLOAD_PENDING |
-         DOE_DELETE_PENDING |
-         DOE_REMOVE_PENDING |
-         DOE_REMOVE_PROCESSED)) ||
-        (DeviceObject->Flags & DO_DEVICE_INITIALIZING))
-    {
-        /* It's unloading or initializing, so fail */
-        DPRINT1("You are seeing this because the following ROS driver: %wZ\n"
-                " sucks. Please fix it's AddDevice Routine\n",
-                &DeviceObject->DriverObject->DriverName);
-        return STATUS_NO_SUCH_DEVICE;
-    }
-    else
-    {
-        /* Increase reference count */
-        DeviceObject->ReferenceCount++;
-        return STATUS_SUCCESS;
-    }
-}
-
 VOID
 NTAPI
 IopStartNextPacketByKey(IN PDEVICE_OBJECT DeviceObject,
@@ -921,8 +895,14 @@ VOID
 NTAPI
 IoDetachDevice(IN PDEVICE_OBJECT TargetDevice)
 {
+    PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
+
+    /* Sanity check */
+    DeviceExtension = IoGetDevObjExtension(TargetDevice->AttachedDevice);
+    ASSERT(DeviceExtension->AttachedTo == TargetDevice);
+
     /* Remove the attachment */
-    IoGetDevObjExtension(TargetDevice->AttachedDevice)->AttachedTo = NULL;
+    DeviceExtension->AttachedTo = NULL;
     TargetDevice->AttachedDevice = NULL;
 
     /* Check if it's ok to delete this device */
@@ -1173,9 +1153,27 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
         DeviceObject = FileObject->DeviceObject;
     }
 
+    /* Sanity check */
+    ASSERT(DeviceObject != NULL);
+
     /* Check if we were attached */
     if (DeviceObject->AttachedDevice)
     {
+        /* Check if the file object has an extension present */
+        if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
+        {
+            /* Sanity check, direct open files can't have this */
+            ASSERT(!(FileObject->Flags & FO_DIRECT_DEVICE_OPEN));
+
+            /* Check if the extension is really present */
+            if (FileObject->FileObjectExtension)
+            {
+                /* FIXME: Unhandled yet */
+                DPRINT1("FOEs not supported\n");
+                KEBUGCHECK(0);
+            }
+        }
+
         /* Return the highest attached device */
         DeviceObject = IoGetAttachedDevice(DeviceObject);
     }
@@ -1216,6 +1214,7 @@ IoGetBaseFileSystemDeviceObject(IN PFILE_OBJECT FileObject)
     }
 
     /* Return the device object we found */
+    ASSERT(DeviceObject != NULL);
     return DeviceObject;
 }
 

@@ -214,12 +214,16 @@ IopCleanupIrp(IN PIRP Irp,
         !(Irp->Flags & IRP_SYNCHRONOUS_API) &&
         (FileObject))
     {
-        /* Derefernce the User Event */
+        /* Dereference the User Event */
         ObDereferenceObject(Irp->UserEvent);
     }
 
-    /* Dereference the File Object */
-    if (FileObject) ObDereferenceObject(FileObject);
+    /* Check if we have a file object and this isn't a create operation */
+    if ((FileObject) && !(Irp->Flags & IRP_CREATE_OPERATION))
+    {
+        /* Dereference the file object */
+        ObDereferenceObject(FileObject);
+    }
 
     /* Free the IRP */
     IoFreeIrp(Irp);
@@ -1099,22 +1103,24 @@ IofCompleteRequest(IN PIRP Irp,
     PMDL Mdl;
     ULONG MasterIrpCount;
     PIRP MasterIrp;
+    ULONG Flags;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Completing IRP %p\n",
             __FUNCTION__,
             Irp);
 
-    /* Make sure this IRP isn't getting completed more then once */
-    if ((Irp->CurrentLocation) > (Irp->StackCount + 1))
+    /* Make sure this IRP isn't getting completed twice or is invalid */
+    if (((Irp->CurrentLocation) > (Irp->StackCount + 1)) ||
+        (Irp->Type != IO_TYPE_IRP))
     {
         /* Bugcheck */
         KeBugCheckEx(MULTIPLE_IRP_COMPLETE_REQUESTS, (ULONG_PTR)Irp, 0, 0, 0);
     }
 
     /* Some sanity checks */
-    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
     ASSERT(!Irp->CancelRoutine);
     ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
+    ASSERT(Irp->IoStatus.Status != 0xFFFFFFFF);
 
     /* Get the Current Stack and skip it */
     StackPtr = IoGetCurrentIrpStackLocation(Irp);
@@ -1172,9 +1178,6 @@ IofCompleteRequest(IN PIRP Irp,
     /* Check if the IRP is an associated IRP */
     if (Irp->Flags & IRP_ASSOCIATED_IRP)
     {
-        /* This should never happen! */
-        ASSERT(IsListEmpty(&Irp->ThreadListEntry));
-
         /* Get the master IRP and count */
         MasterIrp = Irp->AssociatedIrp.MasterIrp;
         MasterIrpCount = InterlockedDecrement(&MasterIrp->
@@ -1199,6 +1202,9 @@ IofCompleteRequest(IN PIRP Irp,
         return;
     }
 
+    /* We don't support this yet */
+    ASSERT(Irp->IoStatus.Status != STATUS_REPARSE);
+
     /* Check if we have an auxiliary buffer */
     if (Irp->Tail.Overlay.AuxiliaryBuffer)
     {
@@ -1210,18 +1216,16 @@ IofCompleteRequest(IN PIRP Irp,
     /* Check if this is a Paging I/O or Close Operation */
     if (Irp->Flags & (IRP_PAGING_IO | IRP_CLOSE_OPERATION))
     {
-        /* This should never happen! */
-        ASSERT(IsListEmpty(&Irp->ThreadListEntry));
-
         /* Handle a Close Operation or Sync Paging I/O (see page 165) */
         if (Irp->Flags & (IRP_SYNCHRONOUS_PAGING_IO | IRP_CLOSE_OPERATION))
         {
             /* Set the I/O Status and Signal the Event */
+            Flags = Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO;
             *Irp->UserIosb = Irp->IoStatus;
             KeSetEvent(Irp->UserEvent, PriorityBoost, FALSE);
 
             /* Free the IRP for a Paging I/O Only, Close is handled by us */
-            if (Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO) IoFreeIrp(Irp);
+            if (Flags) IoFreeIrp(Irp);
         }
         else
         {
@@ -1271,7 +1275,7 @@ IofCompleteRequest(IN PIRP Irp,
     Thread = Irp->Tail.Overlay.Thread;
     FileObject = Irp->Tail.Overlay.OriginalFileObject;
 
-    /* Make sure the IRP isn't cancelled */
+    /* Make sure the IRP isn't canceled */
     if (!Irp->Cancel)
     {
         /* Initialize the APC */
@@ -1292,7 +1296,7 @@ IofCompleteRequest(IN PIRP Irp,
     }
     else
     {
-        /* The IRP just got cancelled... does a thread still own it? */
+        /* The IRP just got canceled... does a thread still own it? */
         Thread = Irp->Tail.Overlay.Thread;
         if (Thread)
         {
@@ -1315,6 +1319,7 @@ IofCompleteRequest(IN PIRP Irp,
         else
         {
             /* Nothing left for us to do, kill it */
+            ASSERT(Irp->Cancel);
             IopCleanupIrp(Irp, FileObject);
         }
     }
@@ -1348,6 +1353,7 @@ IoFreeIrp(IN PIRP Irp)
             Irp);
 
     /* Make sure the Thread IRP list is empty and that it OK to free it */
+    ASSERT(Irp->Type == IO_TYPE_IRP);
     ASSERT(IsListEmpty(&Irp->ThreadListEntry));
     ASSERT(Irp->CurrentLocation >= Irp->StackCount);
 

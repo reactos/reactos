@@ -100,6 +100,7 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                               sizeof(*RegistrationFrame));
 
         /* Call the handler */
+        DPRINT1("Calling handler: %p\n", RegistrationFrame->Handler);
         Disposition = RtlpExecuteHandlerForException(ExceptionRecord,
                                                      RegistrationFrame,
                                                      Context,

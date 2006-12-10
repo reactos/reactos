@@ -2026,7 +2026,7 @@ StartServiceW(SC_HANDLE hService,
         dwBufSize += ((wcslen(lpServiceArgVectors[i]) + 1) * sizeof(WCHAR));
     }
     dwBufSize += sizeof(WCHAR);
-    DPRINT1("dwBufSize: %lu\n", dwBufSize);
+    DPRINT("dwBufSize: %lu\n", dwBufSize);
 
     lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwBufSize);
     if (lpBuffer == NULL)

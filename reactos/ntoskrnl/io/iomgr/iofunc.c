@@ -12,14 +12,8 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
-
-#if 0
-    IOTRACE(IO_IRP_DEBUG,
-            "%s - Queueing IRP %p\n",
-            __FUNCTION__,
-            Irp);
-#endif
+#include <debug.h>
+#include "internal\io_i.h"
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -31,6 +25,7 @@ IopCleanupAfterException(IN PFILE_OBJECT FileObject,
                          IN PKEVENT LocalEvent OPTIONAL)
 {
     PAGED_CODE();
+    IOTRACE(IO_API_DEBUG, "IRP: %p. FO: %p \n", Irp, FileObject);
 
     /* Check if we had a buffer */
     if (Irp->AssociatedIrp.SystemBuffer)
@@ -73,6 +68,7 @@ IopFinalizeAsynchronousIo(IN NTSTATUS SynchStatus,
 {
     NTSTATUS FinalStatus = SynchStatus;
     PAGED_CODE();
+    IOTRACE(IO_API_DEBUG, "IRP: %p. Status: %lx \n", Irp, SynchStatus);
 
     /* Make sure the IRP was completed, but returned pending */
     if (FinalStatus == STATUS_PENDING)
@@ -125,9 +121,11 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
     PVOID NormalContext;
     KIRQL OldIrql;
     PAGED_CODE();
+    IOTRACE(IO_API_DEBUG, "IRP: %p. DO: %p. FO: %p \n",
+            Irp, DeviceObject, FileObject);
 
     /* Queue the IRP */
-    //IopQueueIrpToThread(Irp);
+    IopQueueIrpToThread(Irp);
 
     /* Update operation counts */
     IopUpdateOperationCount(TransferType);
@@ -163,7 +161,8 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
             Status = KeWaitForSingleObject(&FileObject->Event,
                                            Executive,
                                            PreviousMode,
-                                           (FileObject->Flags & FO_ALERTABLE_IO),
+                                           (FileObject->Flags &
+                                            FO_ALERTABLE_IO),
                                            NULL);
             if ((Status == STATUS_ALERTED) || (Status == STATUS_USER_APC))
             {
@@ -208,6 +207,9 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     OBJECT_HANDLE_INFORMATION HandleInformation;
     ACCESS_MASK DesiredAccess;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    ULONG BufferLength;
+    IOTRACE(IO_CTL_DEBUG, "Handle: %lx. CTL: %lx. Type: %lx \n",
+            DeviceHandle, IoControlCode, IsDevIoCtl);
 
     /* Get the access type */
     AccessType = IO_METHOD_FROM_CTL_CODE(IoControlCode);
@@ -227,7 +229,9 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 if (OutputBuffer)
                 {
                     /* Probe the output buffer */
-                    ProbeForWrite(OutputBuffer, OutputBufferLength, 1);
+                    ProbeForWrite(OutputBuffer,
+                                  OutputBufferLength,
+                                  sizeof(CHAR));
                 }
                 else
                 {
@@ -243,7 +247,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 if (InputBuffer)
                 {
                     /* Probe the input buffer */
-                    ProbeForRead(InputBuffer, InputBufferLength, 1);
+                    ProbeForRead(InputBuffer, InputBufferLength, sizeof(CHAR));
                 }
                 else
                 {
@@ -258,8 +262,6 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* Fail if we got an access violation */
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -268,9 +270,17 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                                        0,
                                        IoFileObjectType,
                                        PreviousMode,
-                                       (PVOID *) &FileObject,
+                                       (PVOID*)&FileObject,
                                        &HandleInformation);
     if (!NT_SUCCESS(Status)) return Status;
+
+    /* Can't use an I/O completion port and an APC in the same time */
+    if ((FileObject->CompletionContext) && (UserApcRoutine))
+    {
+        /* Fail */
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /* Check if we from user mode */
     if (PreviousMode != KernelMode)
@@ -334,29 +344,160 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     /* Clear the event */
     KeClearEvent(&FileObject->Event);
 
-    /* Build the IRP */
-    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
-                                        DeviceObject,
-                                        InputBuffer,
-                                        InputBufferLength,
-                                        OutputBuffer,
-                                        OutputBufferLength,
-                                        FALSE,
-                                        EventObject,
-                                        IoStatusBlock);
+    /* Allocate IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
     if (!Irp) return IopCleanupFailedIrp(FileObject, Event, NULL);
 
-    /* Set some extra settings */
-    Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID) NULL;
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->RequestorMode = PreviousMode;
+    /* Setup the IRP */
+    Irp->UserIosb = IoStatusBlock;
+    Irp->UserEvent = EventObject;
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = UserApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = UserApcContext;
+    Irp->Cancel = FALSE;
+    Irp->CancelRoutine = NULL;
+    Irp->PendingReturned = FALSE;
+    Irp->RequestorMode = PreviousMode;
+    Irp->MdlAddress = NULL;
+    Irp->AssociatedIrp.SystemBuffer = NULL;
+    Irp->Flags = 0;
+    Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+    /* Set stack location settings */
     StackPtr = IoGetNextIrpStackLocation(Irp);
     StackPtr->FileObject = FileObject;
     StackPtr->MajorFunction = IsDevIoCtl ?
                               IRP_MJ_DEVICE_CONTROL :
                               IRP_MJ_FILE_SYSTEM_CONTROL;
+    StackPtr->MinorFunction = 0;
+    StackPtr->Control = 0;
+    StackPtr->Flags = 0;
+    StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = NULL;
+
+    /* Set the IOCTL Data */
+    StackPtr->Parameters.DeviceIoControl.IoControlCode = IoControlCode;
+    StackPtr->Parameters.DeviceIoControl.InputBufferLength = InputBufferLength;
+    StackPtr->Parameters.DeviceIoControl.OutputBufferLength =
+        OutputBufferLength;
+
+    /* Handle the Methods */
+    switch (AccessType)
+    {
+        /* Buffered I/O */
+        case METHOD_BUFFERED:
+
+            /* Enter SEH for allocations */
+            _SEH_TRY
+            {
+                /* Select the right Buffer Length */
+                BufferLength = (InputBufferLength > OutputBufferLength) ?
+                                InputBufferLength : OutputBufferLength;
+
+                /* Make sure there is one */
+                if (BufferLength)
+                {
+                    /* Allocate the System Buffer */
+                    Irp->AssociatedIrp.SystemBuffer =
+                        ExAllocatePoolWithTag(NonPagedPool,
+                                              BufferLength,
+                                              TAG_SYS_BUF);
+
+                    /* Check if we got a buffer */
+                    if (InputBuffer)
+                    {
+                        /* Copy into the System Buffer */
+                        RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                                      InputBuffer,
+                                      InputBufferLength);
+                    }
+
+                    /* Write the flags */
+                    Irp->Flags = IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER;
+                    if (OutputBuffer) Irp->Flags |= IRP_INPUT_OPERATION;
+
+                    /* Save the Buffer */
+                    Irp->UserBuffer = OutputBuffer;
+                }
+                else
+                {
+                    /* Clear the Flags and Buffer */
+                    Irp->UserBuffer = NULL;
+                }
+            }
+            _SEH_HANDLE
+            {
+                /* Cleanup after exception */
+                IopCleanupAfterException(FileObject, Irp, Event, NULL);
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) return Status;
+            break;
+
+        /* Direct I/O */
+        case METHOD_IN_DIRECT:
+        case METHOD_OUT_DIRECT:
+
+            /* Enter SEH */
+            _SEH_TRY
+            {
+                /* Check if we got an input buffer */
+                if ((InputBufferLength) && (InputBuffer))
+                {
+                    /* Allocate the System Buffer */
+                    Irp->AssociatedIrp.SystemBuffer =
+                        ExAllocatePoolWithTag(NonPagedPool,
+                                              InputBufferLength,
+                                              TAG_SYS_BUF);
+
+                    /* Copy into the System Buffer */
+                    RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                                  InputBuffer,
+                                  InputBufferLength);
+
+                    /* Write the flags */
+                    Irp->Flags = IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER;
+                }
+
+                /* Check if we got an output buffer */
+                if (OutputBuffer)
+                {
+                    /* Allocate the System Buffer */
+                    Irp->MdlAddress = IoAllocateMdl(OutputBuffer,
+                                                    OutputBufferLength,
+                                                    FALSE,
+                                                    FALSE,
+                                                    Irp);
+                    if (!Irp->MdlAddress)
+                    {
+                        /* Raise exception we'll catch */
+                        ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+                    }
+
+                    /* Do the probe */
+                    MmProbeAndLockPages(Irp->MdlAddress,
+                                        PreviousMode,
+                                        (AccessType == METHOD_IN_DIRECT) ?
+                                        IoReadAccess : IoWriteAccess);
+                }
+            }
+            _SEH_HANDLE
+            {
+                /* Cleanup after exception */
+                IopCleanupAfterException(FileObject, Irp, Event, NULL);
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) return Status;
+            break;
+
+        case METHOD_NEITHER:
+
+            /* Just save the Buffer */
+            Irp->UserBuffer = OutputBuffer;
+            StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = InputBuffer;
+    }
 
     /* Use deferred completion for FS I/O */
     Irp->Flags |= (!IsDevIoCtl) ? IRP_DEFER_IO_COMPLETION : 0;
@@ -388,6 +529,8 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     KEVENT Event;
     NTSTATUS Status;
     PAGED_CODE();
+    IOTRACE(IO_API_DEBUG, "Handle: %p. CTL: %lx. Type: %lx \n",
+            FileObject, InformationClass, File);
 
     /* Reference the object */
     ObReferenceObject(FileObject);
@@ -447,7 +590,7 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     }
 
     /* Queue the IRP */
-    //IopQueueIrpToThread(Irp);
+    IopQueueIrpToThread(Irp);
 
     /* Call the Driver */
     Status = IoCallDriver(DeviceObject, Irp);
@@ -509,6 +652,8 @@ IoSynchronousPageWrite(IN PFILE_OBJECT FileObject,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p \n",
+            FileObject, Mdl, Offset);
 
     /* Get the Device Object */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
@@ -554,6 +699,8 @@ IoPageRead(IN PFILE_OBJECT FileObject,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p \n",
+            FileObject, Mdl, Offset);
 
     /* Get the Device Object */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
@@ -646,6 +793,8 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     KEVENT Event;
     NTSTATUS Status;
     PAGED_CODE();
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Class: %lx. Length: %lx \n",
+            FileObject, FileInformationClass, Length);
 
     /* Reference the object */
     ObReferenceObject(FileObject);
@@ -694,7 +843,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     StackPtr->Parameters.SetFile.Length = Length;
 
     /* Queue the IRP */
-    //IopQueueIrpToThread(Irp);
+    IopQueueIrpToThread(Irp);
 
     /* Call the Driver */
     Status = IoCallDriver(DeviceObject, Irp);
@@ -817,6 +966,7 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     IO_STATUS_BLOCK KernelIosb;
     PAGED_CODE();
+    IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     if (PreviousMode != KernelMode)
     {
@@ -948,6 +1098,7 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN LockedForSync = FALSE;
     PAGED_CODE();
+    IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
@@ -1073,6 +1224,7 @@ NtLockFile(IN HANDLE FileHandle,
     PAGED_CODE();
     CapturedByteOffset.QuadPart = 0;
     CapturedLength.QuadPart = 0;
+    IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Get File Object */
     Status = ObReferenceObjectByHandle(FileHandle,
@@ -1247,9 +1399,10 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     UNICODE_STRING CapturedFileName;
     PUNICODE_STRING SearchPattern;
     PAGED_CODE();
+    IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Check if we came from user mode */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
         _SEH_TRY
@@ -1484,10 +1637,26 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     PVOID NormalContext;
     KIRQL OldIrql;
     IO_STATUS_BLOCK KernelIosb;
+    IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Validate the information class */
+        if ((FileInformationClass >= FileMaximumInformation) ||
+            !(IopQueryOperationLength[FileInformationClass]))
+        {
+            /* Invalid class */
+            return STATUS_INVALID_INFO_CLASS;
+        }
+
+        /* Validate the length */
+        if (Length < IopQueryOperationLength[FileInformationClass])
+        {
+            /* Invalid length */
+            return STATUS_INFO_LENGTH_MISMATCH;
+        }
+
         /* Enter SEH for probing */
         _SEH_TRY
         {
@@ -1495,7 +1664,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
             ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the information */
-            if (Length) ProbeForWrite(FileInformation, Length, 1);
+            ProbeForWrite(FileInformation, Length, sizeof(ULONG));
         }
         _SEH_HANDLE
         {
@@ -1503,14 +1672,30 @@ NtQueryInformationFile(IN HANDLE FileHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* Check if probing failed */
         if (!NT_SUCCESS(Status)) return Status;
+    }
+    else
+    {
+        /* Validate the information class */
+        if ((FileInformationClass >= FileMaximumInformation) ||
+            !(IopQueryOperationLength[FileInformationClass]))
+        {
+            /* Invalid class */
+            return STATUS_INVALID_INFO_CLASS;
+        }
+
+        /* Validate the length */
+        if (Length < IopQueryOperationLength[FileInformationClass])
+        {
+            /* Invalid length */
+            return STATUS_INFO_LENGTH_MISMATCH;
+        }
     }
 
     /* Reference the Handle */
     Status = ObReferenceObjectByHandle(FileHandle,
-                                       0, // FIXME
+                                       IopQueryOperationAccess
+                                       [FileInformationClass],
                                        IoFileObjectType,
                                        PreviousMode,
                                        (PVOID *)&FileObject,
@@ -1623,7 +1808,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     StackPtr->Parameters.QueryFile.Length = Length;
 
     /* Queue the IRP */
-    //IopQueueIrpToThread(Irp);
+    IopQueueIrpToThread(Irp);
 
     /* Update operation counts */
     IopUpdateOperationCount(IopOtherTransfer);
@@ -1764,6 +1949,7 @@ NtReadFile(IN HANDLE FileHandle,
     PMDL Mdl;
     PAGED_CODE();
     CapturedByteOffset.QuadPart = 0;
+    IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Validate User-Mode Buffers */
     if(PreviousMode != KernelMode)
@@ -2024,10 +2210,26 @@ NtSetInformationFile(IN HANDLE FileHandle,
     PVOID Queue;
     PFILE_COMPLETION_INFORMATION CompletionInfo = FileInformation;
     PIO_COMPLETION_CONTEXT Context;
+    IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Validate the information class */
+        if ((FileInformationClass >= FileMaximumInformation) ||
+            !(IopSetOperationLength[FileInformationClass]))
+        {
+            /* Invalid class */
+            return STATUS_INVALID_INFO_CLASS;
+        }
+
+        /* Validate the length */
+        if (Length < IopSetOperationLength[FileInformationClass])
+        {
+            /* Invalid length */
+            return STATUS_INFO_LENGTH_MISMATCH;
+        }
+
         /* Enter SEH for probing */
         _SEH_TRY
         {
@@ -2035,7 +2237,10 @@ NtSetInformationFile(IN HANDLE FileHandle,
             ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the information */
-            if (Length) ProbeForRead(FileInformation, Length, 1);
+            ProbeForRead(FileInformation,
+                         Length,
+                         (Length == sizeof(BOOLEAN)) ?
+                         sizeof(BOOLEAN) : sizeof(ULONG));
         }
         _SEH_HANDLE
         {
@@ -2047,10 +2252,28 @@ NtSetInformationFile(IN HANDLE FileHandle,
         /* Check if probing failed */
         if (!NT_SUCCESS(Status)) return Status;
     }
+    else
+    {
+        /* Validate the information class */
+        if ((FileInformationClass >= FileMaximumInformation) ||
+            !(IopSetOperationLength[FileInformationClass]))
+        {
+            /* Invalid class */
+            return STATUS_INVALID_INFO_CLASS;
+        }
+
+        /* Validate the length */
+        if (Length < IopSetOperationLength[FileInformationClass])
+        {
+            /* Invalid length */
+            return STATUS_INFO_LENGTH_MISMATCH;
+        }
+    }
 
     /* Reference the Handle */
     Status = ObReferenceObjectByHandle(FileHandle,
-                                       0, // FIXME
+                                       IopSetOperationAccess
+                                       [FileInformationClass],
                                        IoFileObjectType,
                                        PreviousMode,
                                        (PVOID *)&FileObject,
@@ -2168,7 +2391,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
     StackPtr->Parameters.SetFile.Length = Length;
 
     /* Queue the IRP */
-    //IopQueueIrpToThread(Irp);
+    IopQueueIrpToThread(Irp);
 
     /* Update operation counts */
     IopUpdateOperationCount(IopOtherTransfer);
@@ -2366,6 +2589,7 @@ NtUnlockFile(IN HANDLE FileHandle,
     PAGED_CODE();
     CapturedByteOffset.QuadPart = 0;
     CapturedLength.QuadPart = 0;
+    IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Get File Object */
     Status = ObReferenceObjectByHandle(FileHandle,
@@ -2548,6 +2772,7 @@ NtWriteFile(IN HANDLE FileHandle,
     OBJECT_HANDLE_INFORMATION ObjectHandleInfo;
     PAGED_CODE();
     CapturedByteOffset.QuadPart = 0;
+    IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Get File Object */
     Status = ObReferenceObjectByHandle(FileHandle,
@@ -2811,10 +3036,26 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     IO_STATUS_BLOCK KernelIosb;
     PAGED_CODE();
+    IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Validate the information class */
+        if ((FsInformationClass >= FileFsMaximumInformation) ||
+            !(IopQueryFsOperationLength[FsInformationClass]))
+        {
+            /* Invalid class */
+            return STATUS_INVALID_INFO_CLASS;
+        }
+
+        /* Validate the length */
+        if (Length < IopQueryFsOperationLength[FsInformationClass])
+        {
+            /* Invalid length */
+            return STATUS_INFO_LENGTH_MISMATCH;
+        }
+
         /* Enter SEH for probing */
         _SEH_TRY
         {
@@ -2822,7 +3063,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
             ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the information */
-            if (Length) ProbeForWrite(FsInformation, Length, 1);
+            ProbeForWrite(FsInformation, Length, sizeof(ULONG));
         }
         _SEH_HANDLE
         {
@@ -2830,14 +3071,13 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* Check if probing failed */
         if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get File Object */
     Status = ObReferenceObjectByHandle(FileHandle,
-                                       0, // FIXME
+                                       IopQueryFsOperationAccess
+                                       [FsInformationClass],
                                        IoFileObjectType,
                                        PreviousMode,
                                        (PVOID*)&FileObject,
@@ -2959,10 +3199,26 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     IO_STATUS_BLOCK KernelIosb;
     PAGED_CODE();
+    IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Validate the information class */
+        if ((FsInformationClass >= FileFsMaximumInformation) ||
+            !(IopSetFsOperationLength[FsInformationClass]))
+        {
+            /* Invalid class */
+            return STATUS_INVALID_INFO_CLASS;
+        }
+
+        /* Validate the length */
+        if (Length < IopSetFsOperationLength[FsInformationClass])
+        {
+            /* Invalid length */
+            return STATUS_INFO_LENGTH_MISMATCH;
+        }
+
         /* Enter SEH for probing */
         _SEH_TRY
         {
@@ -2970,7 +3226,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
             ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the information */
-            if (Length) ProbeForRead(FsInformation, Length, 1);
+            ProbeForRead(FsInformation, Length, sizeof(ULONG));
         }
         _SEH_HANDLE
         {
@@ -2978,14 +3234,13 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* Check if probing failed */
         if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get File Object */
     Status = ObReferenceObjectByHandle(FileHandle,
-                                       0, // FIXME
+                                       IopSetFsOperationAccess
+                                       [FsInformationClass],
                                        IoFileObjectType,
                                        PreviousMode,
                                        (PVOID*)&FileObject,

@@ -1756,7 +1756,7 @@ ScmrStartServiceW(handle_t BindingHandle,
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
 
-    DPRINT1("ScmrStartServiceW() called\n");
+    DPRINT("ScmrStartServiceW() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;

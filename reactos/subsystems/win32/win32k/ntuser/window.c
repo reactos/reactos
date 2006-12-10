@@ -645,7 +645,7 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
       Current = WThread->WindowListHead.Flink;
       Wnd = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
 
-      DPRINT1("thread cleanup: while destroy wnds, wnd=0x%x\n",Wnd);
+      DPRINT("thread cleanup: while destroy wnds, wnd=0x%x\n",Wnd);
 
       /* window removes itself from the list */
       

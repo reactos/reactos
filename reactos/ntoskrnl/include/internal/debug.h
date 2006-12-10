@@ -46,7 +46,7 @@
 /* TODO: Verify which version the MS compiler learned the __FUNCTION__ macro */
 #define __FUNCTION__ "<unknown>"
 #endif
-#define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0)
+#define UNIMPLEMENTED DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__);
 
 
 #ifdef assert

@@ -1756,7 +1756,7 @@ ObInsertObject(IN PVOID Object,
     POBJECT_CREATE_INFORMATION ObjectCreateInfo;
     POBJECT_HEADER Header;
     POBJECT_TYPE ObjectType;
-    PVOID FoundObject = NULL;
+    PVOID FoundObject = Object;
     POBJECT_HEADER FoundHeader = NULL;
     NTSTATUS Status = STATUS_SUCCESS, RealStatus;
     PSECURITY_DESCRIPTOR DirectorySd = NULL;
@@ -1841,7 +1841,8 @@ ObInsertObject(IN PVOID Object,
         Status = ObFindObject(ObjectCreateInfo->RootDirectory,
                               &ObjectNameInfo->Name,
                               ObjectCreateInfo->Attributes,
-                              KernelMode,
+                              (Header->Flags & OB_FLAG_KERNEL_MODE) ?
+                              KernelMode : UserMode,
                               &FoundObject,
                               ObjectType,
                               &Context,

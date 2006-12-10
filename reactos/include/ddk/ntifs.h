@@ -404,6 +404,7 @@ typedef enum _SECURITY_LOGON_TYPE
 #define TOKEN_HAS_ADMIN_GROUP           0x08
 #define TOKEN_WRITE_RESTRICTED          0x08
 #define TOKEN_IS_RESTRICTED             0x10
+#define SE_BACKUP_PRIVILEGES_CHECKED    0x0100
 
 #define VACB_MAPPING_GRANULARITY        (0x40000)
 #define VACB_OFFSET_SHIFT               (18)
@@ -903,6 +904,19 @@ typedef struct _FILE_FS_VOLUME_INFORMATION {
     WCHAR           VolumeLabel[1];
 } FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
 
+typedef struct _FILE_FS_OBJECTID_INFORMATION
+{
+    UCHAR ObjectId[16];
+    UCHAR ExtendedInfo[48];
+} FILE_FS_OBJECTID_INFORMATION, *PFILE_FS_OBJECTID_INFORMATION;
+
+typedef struct _FILE_FS_DRIVER_PATH_INFORMATION
+{
+    BOOLEAN DriverInPath;
+    ULONG DriverNameLength;
+    WCHAR DriverName[1];
+} FILE_FS_DRIVER_PATH_INFORMATION, *PFILE_FS_DRIVER_PATH_INFORMATION;
+
 typedef struct _FILE_FULL_DIR_INFORMATION {
     ULONG           NextEntryOffset;
     ULONG           FileIndex;
@@ -962,6 +976,20 @@ typedef struct _FILE_LOCK_INFO
     PVOID ProcessId;
     LARGE_INTEGER EndingByte;
 } FILE_LOCK_INFO, *PFILE_LOCK_INFO;
+
+typedef struct _FILE_REPARSE_POINT_INFORMATION
+{
+    LONGLONG FileReference;
+    ULONG Tag;
+} FILE_REPARSE_POINT_INFORMATION, *PFILE_REPARSE_POINT_INFORMATION;
+
+typedef struct _FILE_MOVE_CLUSTER_INFORMATION
+{
+    ULONG ClusterCount;
+    HANDLE RootDirectory;
+    ULONG FileNameLength;
+    WCHAR FileName[1];
+} FILE_MOVE_CLUSTER_INFORMATION, *PFILE_MOVE_CLUSTER_INFORMATION;
 
 /* raw internal file lock struct returned from FsRtlGetNextFileLock */
 typedef struct _FILE_SHARED_LOCK_ENTRY {

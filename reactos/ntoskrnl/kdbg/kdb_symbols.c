@@ -647,7 +647,7 @@ KdbSymProcessBootSymbols(IN PUNICODE_STRING FileName)
 
         if (IsRaw)
         {
-            DPRINT1("Data: %p %p %wZ\n", LdrEntry->DllBase, LdrEntry->SizeOfImage, &LdrEntry->FullDllName);
+            DPRINT("Data: %p %p %wZ\n", LdrEntry->DllBase, LdrEntry->SizeOfImage, &LdrEntry->FullDllName);
            if (! RosSymCreateFromRaw(LdrEntry->DllBase,
                                      LdrEntry->SizeOfImage,
                                      (PROSSYM_INFO*)&ModuleObject->PatchInformation))

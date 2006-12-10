@@ -11,7 +11,7 @@
 
 #include "winlogon.h"
 
-#define YDEBUG
+//#define YDEBUG
 #include <wine/debug.h>
 
 #define WINLOGON_SAS_CLASS L"SAS Window class"

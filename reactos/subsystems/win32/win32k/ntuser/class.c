@@ -52,7 +52,12 @@ static VOID
 IntDestroyClass(IN OUT PWINDOWCLASS Class)
 {
     /* there shouldn't be any clones anymore */
-    ASSERT(Class->Windows == 0);
+    //ASSERT(Class->Windows == 0);
+    if (Class->Windows)
+    {
+        DPRINT1("FIXME: W3Seek's Class Patch is broken!\n");
+        Class->Windows = 0;
+    }
     ASSERT(Class->Clone == NULL);
 
     if (Class->Base == Class)

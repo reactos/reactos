@@ -864,13 +864,10 @@ SleepEx(DWORD dwMilliseconds,
       Interval.QuadPart = -0x7FFFFFFFFFFFFFFFLL;
     }
 
-  errCode = NtDelayExecution ((bAlertable ? TRUE : FALSE), &Interval);
-  if (!NT_SUCCESS(errCode))
-    {
-      SetLastErrorByStatus (errCode);
-      return -1;
-    }
-  return 0;
+dowait:
+  errCode = NtDelayExecution (bAlertable, &Interval);
+  if ((bAlertable) && (errCode == STATUS_ALERTED)) goto dowait;
+  return (errCode == STATUS_USER_APC) ? WAIT_IO_COMPLETION : 0;
 }
 
 

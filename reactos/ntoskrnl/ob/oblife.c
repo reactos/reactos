@@ -494,6 +494,14 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
     return Status;
 }
 
+VOID
+NTAPI
+ObFreeObjectCreateInfoBuffer(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
+{
+    /* Call the macro. We use this function to isolate Ob internals from Io */
+    ObpFreeCapturedAttributes(ObjectCreateInfo, LookasideCreateInfoList);
+}
+
 NTSTATUS
 NTAPI
 ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,

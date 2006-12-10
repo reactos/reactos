@@ -43,7 +43,7 @@ VidInitialize(
     * Check for Xbox by identifying device at PCI 0:0:0, if it's
     * 0x10de/0x02a5 then we're running on an Xbox.
     */
-   CHECKPOINT1;
+   CHECKPOINT;
    WRITE_PORT_ULONG((PULONG)0xcf8, 0x80000000);
    PciId = READ_PORT_ULONG((PULONG)0xcfc);
    if (0x02a510de == PciId)

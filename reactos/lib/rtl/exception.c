@@ -27,8 +27,9 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
     CONTEXT Context;
     NTSTATUS Status;
 
-    /* Capture the context */
+    /* Capture the context and fixup ESP */
     RtlCaptureContext(&Context);
+    Context.Esp += sizeof(ULONG);
 
     /* Save the exception address */
     ExceptionRecord->ExceptionAddress = RtlpGetExceptionAddress();
@@ -57,8 +58,8 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
         }
     }
 
-    /* If we returned, raise a status  */
-    RtlRaiseStatus(Status);
+    /* We should never return */
+    while (TRUE);
 }
 
 /*

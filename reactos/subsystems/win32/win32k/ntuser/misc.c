@@ -1475,7 +1475,7 @@ UserSystemParametersInfo(
          }
       default :
 		  {
-			  DPRINT1("UserSystemParametersInfo : uiAction = %x \n",uiAction );
+              DPRINT1("FIXME: UNIMPLEMENTED SPI Code: %lx \n",uiAction );
 			  break;
 		  }
    }

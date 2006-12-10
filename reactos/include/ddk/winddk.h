@@ -1202,8 +1202,8 @@ typedef struct _EX_RUNDOWN_REF
 {
     union
     {
-        ULONG_PTR Count;
-        PVOID Ptr;
+        __volatile ULONG_PTR Count;
+        __volatile PVOID Ptr;
     };
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
@@ -1298,7 +1298,7 @@ typedef struct _IRP {
   ULONG  Flags;
   union {
     struct _IRP  *MasterIrp;
-    LONG  IrpCount;
+    __volatile LONG  IrpCount;
     PVOID  SystemBuffer;
   } AssociatedIrp;
   LIST_ENTRY  ThreadListEntry;
@@ -1320,7 +1320,7 @@ typedef struct _IRP {
     } AsynchronousParameters;
     LARGE_INTEGER  AllocationSize;
   } Overlay;
-  PDRIVER_CANCEL  CancelRoutine;
+  __volatile PDRIVER_CANCEL  CancelRoutine;
   PVOID  UserBuffer;
   union {
     struct {
@@ -2123,7 +2123,7 @@ typedef struct _DEVICE_OBJECT {
   PIO_TIMER  Timer;
   ULONG  Flags;
   ULONG  Characteristics;
-  PVPB  Vpb;
+  __volatile PVPB  Vpb;
   PVOID  DeviceExtension;
   DEVICE_TYPE  DeviceType;
   CCHAR  StackSize;
@@ -3083,8 +3083,8 @@ typedef struct _ERESOURCE {
   POWNER_ENTRY  OwnerTable;
   SHORT  ActiveCount;
   USHORT  Flag;
-  PKSEMAPHORE  SharedWaiters;
-  PKEVENT  ExclusiveWaiters;
+  __volatile PKSEMAPHORE  SharedWaiters;
+  __volatile PKEVENT  ExclusiveWaiters;
   OWNER_ENTRY  OwnerThreads[2];
   ULONG  ContentionCount;
   USHORT  NumberOfSharedWaiters;
@@ -3393,34 +3393,38 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define FO_FILE_OBJECT_HAS_EXTENSION      0x00800000
 #define FO_REMOTE_ORIGIN                  0x01000000
 
-typedef struct _FILE_OBJECT {
-  CSHORT  Type;
-  CSHORT  Size;
-  PDEVICE_OBJECT  DeviceObject;
-  PVPB  Vpb;
-  PVOID  FsContext;
-  PVOID  FsContext2;
-  PSECTION_OBJECT_POINTERS  SectionObjectPointer;
-  PVOID  PrivateCacheMap;
-  NTSTATUS  FinalStatus;
-  struct _FILE_OBJECT  *RelatedFileObject;
-  BOOLEAN  LockOperation;
-  BOOLEAN  DeletePending;
-  BOOLEAN  ReadAccess;
-  BOOLEAN  WriteAccess;
-  BOOLEAN  DeleteAccess;
-  BOOLEAN  SharedRead;
-  BOOLEAN  SharedWrite;
-  BOOLEAN  SharedDelete;
-  ULONG  Flags;
-  UNICODE_STRING  FileName;
-  LARGE_INTEGER  CurrentByteOffset;
-  ULONG  Waiters;
-  ULONG  Busy;
-  PVOID  LastLock;
-  KEVENT  Lock;
-  KEVENT  Event;
-  PIO_COMPLETION_CONTEXT  CompletionContext;
+typedef struct _FILE_OBJECT
+{
+    CSHORT Type;
+    CSHORT Size;
+    PDEVICE_OBJECT DeviceObject;
+    PVPB Vpb;
+    PVOID FsContext;
+    PVOID FsContext2;
+    PSECTION_OBJECT_POINTERS SectionObjectPointer;
+    PVOID PrivateCacheMap;
+    NTSTATUS FinalStatus;
+    struct _FILE_OBJECT *RelatedFileObject;
+    BOOLEAN LockOperation;
+    BOOLEAN DeletePending;
+    BOOLEAN ReadAccess;
+    BOOLEAN WriteAccess;
+    BOOLEAN DeleteAccess;
+    BOOLEAN SharedRead;
+    BOOLEAN SharedWrite;
+    BOOLEAN SharedDelete;
+    ULONG Flags;
+    UNICODE_STRING FileName;
+    LARGE_INTEGER CurrentByteOffset;
+    __volatile ULONG Waiters;
+    __volatile ULONG Busy;
+    PVOID LastLock;
+    KEVENT Lock;
+    KEVENT Event;
+    __volatile PIO_COMPLETION_CONTEXT CompletionContext;
+    KSPIN_LOCK IrpListLock;
+    LIST_ENTRY IrpList;
+    __volatile PVOID FileObjectExtension;
 } FILE_OBJECT;
 typedef struct _FILE_OBJECT *PFILE_OBJECT;
 
@@ -4397,7 +4401,7 @@ typedef struct _IO_REMOVE_LOCK_TRACKING_BLOCK * PIO_REMOVE_LOCK_TRACKING_BLOCK;
 typedef struct _IO_REMOVE_LOCK_COMMON_BLOCK {
   BOOLEAN  Removed;
   BOOLEAN  Reserved[3];
-  LONG  IoCount;
+  __volatile LONG  IoCount;
   KEVENT  RemoveEvent;
 } IO_REMOVE_LOCK_COMMON_BLOCK;
 
@@ -4408,7 +4412,7 @@ typedef struct _IO_REMOVE_LOCK_DBG_BLOCK {
   LONG  AllocateTag;
   LIST_ENTRY  LockList;
   KSPIN_LOCK  Spin;
-  LONG  LowMemoryCount;
+  __volatile LONG  LowMemoryCount;
   ULONG  Reserved1[4];
   PVOID  Reserved2;
   PIO_REMOVE_LOCK_TRACKING_BLOCK  Blocks;
@@ -4579,7 +4583,7 @@ typedef VOID
 typedef struct _WORK_QUEUE_ITEM {
   LIST_ENTRY  List;
   PWORKER_THREAD_ROUTINE  WorkerRoutine;
-  PVOID  Parameter;
+  __volatile PVOID  Parameter;
 } WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;
 
 typedef enum _KBUGCHECK_CALLBACK_REASON {

@@ -1372,7 +1372,7 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     /* Get the end and maximum sector */
     EndSector = MaxOffset;
     MaxSector = MaxOffset << 1;
-    DPRINT1("FSTUB: MaxOffset = %#I64x, MaxSector = %#I64x\n",
+    DPRINT("FSTUB: MaxOffset = %#I64x, MaxSector = %#I64x\n",
             MaxOffset, MaxSector);
 
     /* Allocate our buffer */
@@ -1458,19 +1458,19 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
 
         /* Start looping partitions */
         j++;
-        DPRINT1("FSTUB: Partition Table %d:\n", j);
+        DPRINT("FSTUB: Partition Table %d:\n", j);
         for (Entry = 1, k = 0; Entry <= 4; Entry++, PartitionDescriptor++)
         {
             /* Get the partition type */
             PartitionType = PartitionDescriptor->PartitionType;
 
             /* Print debug messages */
-            DPRINT1("Partition Entry %d,%d: type %#x %s\n", 
+            DPRINT("Partition Entry %d,%d: type %#x %s\n", 
                     j,
                     Entry,
                     PartitionType,
                     (PartitionDescriptor->ActiveFlag) ? "Active" : "");
-            DPRINT1("\tOffset %#08lx for %#08lx Sectors\n", 
+            DPRINT("\tOffset %#08lx for %#08lx Sectors\n", 
                     GET_STARTING_SECTOR(PartitionDescriptor),
                     GET_PARTITION_LENGTH(PartitionDescriptor));
 
@@ -1615,7 +1615,7 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* Finish debug log, and check for failure */
-        DPRINT1("\n");
+        DPRINT("\n");
         if (!NT_SUCCESS(Status)) break;
 
         /* Also check if we hit an invalid entry here */

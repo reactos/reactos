@@ -251,6 +251,12 @@ ObDuplicateObject(
     IN KPROCESSOR_MODE PreviousMode
 );
 
+VOID
+NTAPI
+ObFreeObjectCreateInfoBuffer(
+    IN POBJECT_CREATE_INFORMATION ObjectCreateInfo
+);
+
 //
 // DOS Devices Functions
 //

@@ -72,9 +72,9 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
   unsigned DefIndex;
   ULONG Type;
   
-  DPRINT1("CSR: Calling handler for type: %x.\n", Request->Type);
+  DPRINT("CSR: Calling handler for type: %x.\n", Request->Type);
   Type = Request->Type & 0xFFFF; /* FIXME: USE MACRO */
-  DPRINT1("CSR: API Number: %x ServerID: %x\n",Type, Request->Type >> 16);
+  DPRINT("CSR: API Number: %x ServerID: %x\n",Type, Request->Type >> 16);
 
   /* FIXME: Extract DefIndex instead of looping */
   for (DefIndex = 0; ! Found && DefIndex < ApiDefinitionsCount; DefIndex++)
@@ -129,7 +129,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
     LpcRead.Length = sizeof(LpcRead);
     ServerPort = NULL;
 
-    DPRINT1("CSR: %s: Handling: %p\n", __FUNCTION__, Request);
+    DPRINT("CSR: %s: Handling: %p\n", __FUNCTION__, Request);
 
     Status = NtAcceptConnectPort(&ServerPort,
 #ifdef NTLPC
@@ -189,7 +189,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
 #endif
 
     Status = STATUS_SUCCESS;
-    DPRINT1("CSR: %s done\n", __FUNCTION__);
+    DPRINT("CSR: %s done\n", __FUNCTION__);
     return Status;
 }
 
@@ -300,7 +300,7 @@ ServerApiPortThread (HANDLE hApiListenPort)
     BYTE RawRequest[sizeof(PORT_MESSAGE) + sizeof(CSR_CONNECTION_INFO)];
     PPORT_MESSAGE Request = (PPORT_MESSAGE)RawRequest;
 
-    DPRINT1("CSR: %s called", __FUNCTION__);
+    DPRINT("CSR: %s called", __FUNCTION__);
 
     for (;;)
     {
@@ -346,7 +346,7 @@ ServerSbApiPortThread (HANDLE hSbApiPortListen)
 	NTSTATUS        Status = STATUS_SUCCESS;
     PPORT_MESSAGE Reply = NULL;
 
-	DPRINT1("CSR: %s called\n", __FUNCTION__);
+	DPRINT("CSR: %s called\n", __FUNCTION__);
 
     RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
 	Status = NtListenPort (hSbApiPortListen, & Request);
@@ -417,7 +417,7 @@ DPRINT("-- 5\n");
 			}
 		}
 	}
-	DPRINT1("CSR: %s: terminating!\n", __FUNCTION__);
+	DPRINT("CSR: %s: terminating!\n", __FUNCTION__);
 	if(hConnectedPort) NtClose (hConnectedPort);
 	NtClose (hSbApiPortListen);
 	NtTerminateThread (NtCurrentThread(), Status);

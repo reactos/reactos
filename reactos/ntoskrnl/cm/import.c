@@ -70,7 +70,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
-  DPRINT1("Adding new hive\n");
+  DPRINT("Adding new hive\n");
 
   /* Add the new hive to the hive list */
   InsertTailList(&CmiHiveListHead, &Hive->HiveList);

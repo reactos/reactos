@@ -51,7 +51,7 @@ ServiceMain(
 	IN DWORD argc,
 	IN LPWSTR *argv)
 {
-	DPRINT1("ServiceMain() called\n");
+	DPRINT("ServiceMain() called\n");
 }
 
 INT WINAPI
