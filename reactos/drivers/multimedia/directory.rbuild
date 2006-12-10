@@ -8,9 +8,6 @@
     This is mostly incomplete at the moment.
 -->
 
-<!--directory name="wdmaud">
-    <xi:include href="wdmaud/wdmaud.rbuild" />
-</directory-->
 <directory name="ks">
 	<xi:include href="ks/ks.rbuild" />
 </directory>

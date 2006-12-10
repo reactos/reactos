@@ -2,21 +2,14 @@
 ; Exports definition file for portcls.sys
 ;
 EXPORTS
+DllInitialize@4
+DllUnload@0
+
+; Adapters (adapter.c)
 PcAddAdapterDevice@20
-PcAddContentHandlers@12
-PcCompleteIrp@12
-PcCompletePendingPropertyRequest@8
-PcCreateContentMixed@12
-PcDestroyContent@4
-PcDispatchIrp@8
-PcForwardContentToDeviceObject@12
-PcForwardContentToFileObject@8
-PcForwardContentToInterface@12
-PcForwardIrpSynchronous@8
-PcGetContentRights@8
-PcGetDeviceProperty@20
-PcGetTimeInterval@8
 PcInitializeAdapterDriver@12
+
+; Factories
 PcNewDmaChannel@20
 PcNewInterruptSync@20
 PcNewMiniport@8
@@ -25,12 +18,38 @@ PcNewRegistryKey@36
 PcNewResourceList@20
 PcNewResourceSublist@20
 PcNewServiceGroup@8
-PcRegisterAdapterPowerManagement@8
-PcRegisterIoTimeout@12
+
+; Digital Rights Management (drm.c)
+PcAddContentHandlers@12
+PcCreateContentMixed@12
+PcDestroyContent@4
+PcForwardContentToDeviceObject@12
+PcForwardContentToFileObject@8
+PcForwardContentToInterface@12
+PcGetContentRights@8
+
+; IRP Helpers
+PcCompleteIrp@12
+PcDispatchIrp@8
+PcForwardIrpSynchronous@8
+
+; Misc
+PcGetTimeInterval@8
+PcRegisterSubdevice@12
+
+; Physical Connections
 PcRegisterPhysicalConnection@20
 PcRegisterPhysicalConnectionFromExternal@20
 PcRegisterPhysicalConnectionToExternal@20
-PcRegisterSubdevice@12
-PcRequestNewPowerState@8
-PcUnregisterIoTimeout@12
 
+; Power Management
+PcRegisterAdapterPowerManagement@8
+PcRequestNewPowerState@8
+
+; Properties
+PcCompletePendingPropertyRequest@8
+PcGetDeviceProperty@20
+
+; Timeouts
+PcRegisterIoTimeout@12
+PcUnregisterIoTimeout@12
