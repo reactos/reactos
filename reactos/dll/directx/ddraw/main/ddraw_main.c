@@ -184,8 +184,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     LPDDRAWI_DDRAWSURFACE_INT That; 
 	DDHAL_CANCREATESURFACEDATA mDdCanCreateSurface;
-	DDHAL_CREATESURFACEDATA mDdCreateSurface;
-	LPDDRAWI_DDRAWSURFACE_MORE SurfaceMore;
+	DDHAL_CREATESURFACEDATA mDdCreateSurface;	
 	
 	/* 
 	 * check if pUnkOuter is NULL if it is not fail 
@@ -266,6 +265,17 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 		DxHeapMemFree(That);
 		return DDERR_OUTOFMEMORY;
 	}
+
+	That->lpLcl->lpSurfMore->slist = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_LCL)<<1);
+	if (That->lpLcl->lpSurfMore->slist == NULL)
+	{
+		/* shall we free it if it fail ?? */
+		DxHeapMemFree(That->lpLcl->lpSurfMore);
+		DxHeapMemFree(That->lpLcl);
+		DxHeapMemFree(That);
+		return DDERR_OUTOFMEMORY;
+	}
+
 	
 	/* setup some value */
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
@@ -276,6 +286,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	That->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
 	That->lpLcl->lpSurfMore->lpDD_int = This;
 	That->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
+	That->lpLcl->lpSurfMore->slist[0] = That->lpLcl;
 	That->lpLcl->dwProcessId = GetCurrentProcessId();
 
 	/* this two line should be move to startup code */
@@ -301,16 +312,14 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	mDdCreateSurface.ddRVal =  DDERR_GENERIC;
 	mDdCreateSurface.dwSCnt = That->dwIntRefCnt + 1; // is this correct 
 	mDdCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
-	//mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
-	//mDdCreateSurface.lplpSList = &That->lpLcl;
+		
+	mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
 		
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
 	{  
-	   DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
        
 	   This->lpLcl->lpPrimary = That;
-	   That->lpLcl->lpSurfMore->slist = mpPrimaryLocals;
-                                                         
+
        if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
        {   
            return DDERR_NOTINITIALIZED;
@@ -320,16 +329,33 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
        {
            return DDERR_NOTINITIALIZED;
        }
-                 
-	   That->lpLcl->lpGbl->wWidth  = This->lpLcl->lpGbl->vmiData.dwDisplayWidth;
-       That->lpLcl->lpGbl->wHeight = This->lpLcl->lpGbl->vmiData.dwDisplayHeight;
-       That->lpLcl->lpGbl->lPitch  = This->lpLcl->lpGbl->vmiData.lDisplayPitch;
-                   
-       That->lpLcl->dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
-       That->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
+       
+	   /* FIXME 
+	    * check the value from pDDSD and use it as size 
+		*/
 
-       mpPrimaryLocals[0] = That->lpLcl;
-                       
+	   if (This->lpLcl->dwLocalFlags & DDRAWILCL_ISFULLSCREEN)
+	   {
+			That->lpLcl->lpGbl->wWidth  = This->lpLcl->lpGbl->vmiData.dwDisplayWidth;
+			That->lpLcl->lpGbl->wHeight = This->lpLcl->lpGbl->vmiData.dwDisplayHeight;
+			That->lpLcl->lpGbl->lPitch  = This->lpLcl->lpGbl->vmiData.lDisplayPitch;
+	   }
+	   else
+	   {
+		    RECT rect;
+			
+			if(GetWindowRect((HWND)This->lpLcl->hWnd, &rect))
+			{			   
+			   That->lpLcl->lpGbl->wWidth  = rect.right - rect.left;
+			   That->lpLcl->lpGbl->wHeight = rect.bottom - rect.top;
+			   That->lpLcl->lpGbl->lPitch  = This->lpLcl->lpGbl->vmiData.lDisplayPitch;
+			}
+	   }
+
+                   
+       // That->lpLcl->dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
+       That->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
+                             
        mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
      
        if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
