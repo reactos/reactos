@@ -9,3 +9,4 @@
 #include <reactos/version.rc>
 
 #include "en-US.rc"
+#include "fr-FR.rc"
