@@ -238,7 +238,7 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 {
 	INT len;
-	PCHAR pBuf;
+	PTCHAR pBuf;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	DWORD dwWritten;
@@ -284,12 +284,7 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
         }
  
 	len = _vstprintf (szOut, szFormat, arg_ptr);
-#ifdef _UNICODE
-	pBuf = malloc(len + 1);
-	len = WideCharToMultiByte( OutputCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
-#else
 	pBuf = szOut;
-#endif
  
 	for(i = 0; i < len; i++)
 	{ 

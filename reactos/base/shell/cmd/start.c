@@ -50,27 +50,27 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			ConOutResPaging(TRUE,STRING_START_HELP1);
 			return 0;
 		}
-		else if(!_tcsicmp(arg[i], "/LOW"))
+		else if(!_tcsicmp(arg[i], _T("/LOW")))
 		{
 			Priority = IDLE_PRIORITY_CLASS;		
 		}
-		else if(!_tcsicmp(arg[i], "/NORMAL"))
+		else if(!_tcsicmp(arg[i], _T("/NORMAL")))
 		{
 			Priority = NORMAL_PRIORITY_CLASS;
 		}
-		else if(!_tcsicmp(arg[i], "/HIGH"))
+		else if(!_tcsicmp(arg[i], _T("/HIGH")))
 		{
 			Priority = HIGH_PRIORITY_CLASS;		
 		}
-		else if(!_tcsicmp(arg[i], "/REALTIME"))
+		else if(!_tcsicmp(arg[i], _T("/REALTIME")))
 		{
 			Priority = REALTIME_PRIORITY_CLASS;
 		}
-		else if(!_tcsicmp(arg[i], "/ABOVENORMAL"))
+		else if(!_tcsicmp(arg[i], _T("/ABOVENORMAL")))
 		{
 			Priority = ABOVE_NORMAL_PRIORITY_CLASS;		
 		}
-		else if(!_tcsicmp(arg[i], "/BELOWNORMAL"))
+		else if(!_tcsicmp(arg[i], _T("/BELOWNORMAL")))
 		{
 			Priority = BELOW_NORMAL_PRIORITY_CLASS;
 		}
