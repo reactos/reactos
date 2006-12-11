@@ -705,7 +705,7 @@ PdoQueryResources(
 
   RtlZeroMemory(ResourceList, ListSize);
   ResourceList->Count = 1;
-  ResourceList->List[0].InterfaceType = PCIConfiguration;
+  ResourceList->List[0].InterfaceType = PCIBus;
   ResourceList->List[0].BusNumber = DeviceExtension->PciDevice->BusNumber;
 
   PartialList = &ResourceList->List[0].PartialResourceList;
