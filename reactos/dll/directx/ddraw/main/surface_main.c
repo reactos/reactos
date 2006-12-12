@@ -77,43 +77,137 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 
 	 DX_WINDBG_trace();
 
-	 mDdBlt.lpDDDestSurface = ThisDest->lpLcl->lpSurfMore->slist[0];	   
+     if (( ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.dwFlags 
+		   & DDHAL_SURFCB32_BLT) != DDHAL_SURFCB32_BLT)
+	 {
+		 return DDERR_GENERIC;
+	 }
+
+	 ZeroMemory(&mDdBlt, sizeof(DDHAL_BLTDATA));
+     ZeroMemory(&mDdBlt.bltFX, sizeof(DDBLTFX));
+	 
      if (!DdResetVisrgn( ThisDest->lpLcl->lpSurfMore->slist[0], NULL)) 
      {
-         // derr(L"DirectDrawImpl[%08x]::_clear DdResetVisrgn failed", this);
+		 DX_STUB_str("DdResetVisrgn failed");         
      }   
 
-     ZeroMemory(&mDdBlt, sizeof(DDHAL_BLTDATA));
-     ZeroMemory(&mDdBlt.bltFX, sizeof(DDBLTFX));
-     mDdBlt.bltFX.dwSize = sizeof(DDBLTFX);
-
-	 mDdBlt.lpDD =  ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
+	 mDdBlt.lpDD = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
 	 mDdBlt.Blt = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->cbDDSurfaceCallbacks.Blt;
      mDdBlt.lpDDDestSurface = ThisDest->lpLcl->lpSurfMore->slist[0];
-	
-	 ThisDest->lpLcl->lpSurfMore->slist[0]->hDC = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->hDC; // This->lpLcl->hWnd;
-     mDdBlt.rDest.top = 50;
-     mDdBlt.rDest.bottom = 100;
-     mDdBlt.rDest.left = 0;
-     mDdBlt.rDest.right = 100;
-     mDdBlt.lpDDSrcSurface = NULL;
-     mDdBlt.IsClipped = FALSE;    
-     mDdBlt.bltFX.dwFillColor = 0xFFFF00;
-     mDdBlt.dwFlags = DDBLT_COLORFILL | DDBLT_WAIT;
-    
+
+	 ThisDest->lpLcl->lpSurfMore->slist[0]->hDC = 
+		       ThisDest->lpLcl->lpSurfMore->lpDD_lcl->hDC;
+
+     /* Setup Src */
+	 if (ThisSrc != NULL)
+	 {
+		 mDdBlt.lpDDSrcSurface = ThisSrc->lpLcl->lpSurfMore->slist[0];
+
+		 ThisSrc->lpLcl->lpSurfMore->slist[0]->hDC = 
+			      ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->hDC;
+
+		 if (rsrc != NULL)
+		 {
+			 memmove(&mDdBlt.rSrc, rsrc, sizeof (RECTL));
+		 }
+		 else
+		 {
+			 if ( ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->dwLocalFlags &
+				  DDRAWILCL_ISFULLSCREEN)
+			 {
+				  mDdBlt.rSrc.top = 0;
+				  mDdBlt.rSrc.left = 0;
+				  mDdBlt.rSrc.right = ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->
+				                       vmiData.dwDisplayWidth;
+
+			      mDdBlt.rSrc.bottom = ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->
+				                        vmiData.lDisplayPitch;
+	         }
+	         else
+			 {		    			 
+				 if(!GetWindowRect((HWND)ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->hWnd, 
+				     (RECT *)&mDdBlt.rSrc))
+				 {			   
+					  DX_STUB_str("GetWindowRect failed");      
+				 }			
+			 }
+		 }
+
+	 /* FIXME 
+	  *  compare so we do not write to far 
+	  *  ThisDest->lpLcl->lpGbl->wWidth; <- surface max width
+	  *  ThisDest->lpLcl->lpGbl->wHeight <- surface max heght
+	  *  ThisDest->lpLcl->lpGbl->lPitch  <- surface bpp
+	  */
+		 
+	 }
+     
+	 /* Setup dest */
+	 if (rdst != NULL)
+	 {
+         memmove(&mDdBlt.rDest, rdst, sizeof (RECTL));
+	 }
+	 else
+	 {
+		 if ( ThisDest->lpLcl->lpSurfMore->lpDD_lcl->dwLocalFlags &
+			  DDRAWILCL_ISFULLSCREEN)
+	     {
+			 mDdBlt.rDest.top = 0;
+             mDdBlt.rDest.left = 0;
+			 mDdBlt.rDest.right = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->
+				                  vmiData.dwDisplayWidth;
+
+			 mDdBlt.rDest.bottom = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->
+				                   vmiData.lDisplayPitch;
+	     }
+	     else
+	     {		    
+			 
+			if(!GetWindowRect((HWND)ThisDest->lpLcl->lpSurfMore->lpDD_lcl->hWnd, 
+				(RECT *)&mDdBlt.rDest))
+			{			   
+               DX_STUB_str("GetWindowRect failed");      
+			}			
+	     }
+	 }
+
+	 /* FIXME 
+	  *  compare so we do not write to far 
+	  *  ThisDest->lpLcl->lpGbl->wWidth; <- surface max width
+	  *  ThisDest->lpLcl->lpGbl->wHeight <- surface max heght
+	  *  ThisDest->lpLcl->lpGbl->lPitch  <- surface bpp
+	  */
+
+	 
+	 /* setup bltFX */
+	 if (lpbltfx != NULL)
+	 {
+		 memmove(&mDdBlt.bltFX, lpbltfx, sizeof (DDBLTFX));
+	 }
+
+	 /* setup value that are not config yet */
+	 mDdBlt.dwFlags = dwFlags;
+	 mDdBlt.IsClipped = FALSE;
+	 mDdBlt.bltFX.dwSize = sizeof(DDBLTFX);   
+
+
+     /* FIXME 
+		BltData.dwRectCnt
+	    BltData.dwROPFlags
+	    BltData.IsClipped	 	 
+	    BltData.prDestRects	 
+	    BltData.rOrigDest
+	    BltData.rOrigSrc			
+		BltData.ddRVal		
+	*/
+              
      if (mDdBlt.Blt(&mDdBlt) != DDHAL_DRIVER_HANDLED)
 	 {
-        //printf("Fail to mDdBlt = DDHAL_DRIVER_HANDLED\n");
-	    return DDHAL_DRIVER_HANDLED;
+        DX_STUB_str("mDdBlt DDHAL_DRIVER_HANDLED");      
+		return DDERR_NOBLTHW;
      }
 
-     if (mDdBlt.ddRVal!=DD_OK) 
-	 {      
-		  //printf("Fail to mDdBlt mDdBlt.ddRVal = %d:%s\n",(int)mDdBlt.ddRVal,DDErrorString(mDdBlt.ddRVal)); 
-	    return mDdBlt.ddRVal;
-     }
-
-     return DDERR_GENERIC;	 	
+	 return mDdBlt.ddRVal;	 	
 }
 
 
