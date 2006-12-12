@@ -109,7 +109,7 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
             }
 		}
     }
-    return This->dwIntRefCnt;
+	return This ? This->dwIntRefCnt : 0;
 }
 
 /*

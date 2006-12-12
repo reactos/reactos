@@ -86,7 +86,7 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 	     BltData.Blt = ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.Blt;
 	    
 		 BltData.lpDDDestSurface = ThisDest->lpLcl;
-		 BltData.lpDDSrcSurface = ThisSrc->lpLcl;
+		 BltData.lpDDSrcSurface = ThisSrc ? ThisSrc->lpLcl : 0;
 		 BltData.dwFlags = dwFlags;
 
 		 if (rdst != NULL)
