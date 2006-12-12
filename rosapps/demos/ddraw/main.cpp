@@ -1,15 +1,15 @@
 #include <windows.h>
 #include <ddraw.h>
 
-LPDIRECTDRAW7 DirectDraw;
-LPDIRECTDRAWSURFACE7 FrontBuffer;
-LPDIRECTDRAWCLIPPER Clipper;
+LPDIRECTDRAW7 DirectDraw = NULL;
+LPDIRECTDRAWSURFACE7 FrontBuffer = NULL;
+LPDIRECTDRAWCLIPPER Clipper = NULL;
 
 PCHAR DDErrorString (HRESULT hResult);
 LONG WINAPI WndProc (HWND hwnd, UINT message, UINT wParam, LONG lParam);
 
 bool Fullscreen, Running;
-
+//#define USE_CLIPPER
 
 bool Init (HWND hwnd)
 {
@@ -69,6 +69,7 @@ bool Init (HWND hwnd)
 		return 0;
 	}
 
+#ifdef USE_CLIPPER
 	// Set up the clipper
 	OutputDebugString("=> DDraw->CreateClipper\n");
 
@@ -94,13 +95,16 @@ bool Init (HWND hwnd)
 		MessageBox(0,DDErrorString(hResult), "FrontBuffer->SetClipper", 0);
         return 0;
     }
+#endif
 
 	return true;
 }
 
-void Draw (void)
+void Draw (HWND hwnd)
 {
-	// Make the fronbuffer pink
+	// Make the frontbuffer pink
+	RECT rect;
+	GetWindowRect(hwnd, &rect); // this is not necessary when clippper is used
 
 	DDBLTFX	 ddbltfx;
 	ddbltfx.dwSize = sizeof(DDBLTFX);
@@ -108,8 +112,8 @@ void Draw (void)
 
 	OutputDebugString("=> Surface->Blt (DDBLT_COLORFILL)\n");
 	
-	FrontBuffer->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
-}
+	FrontBuffer->Blt(&rect, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
+}		
 
 void CleanUp (void)
 {
@@ -158,7 +162,11 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 
 	HWND hwnd = CreateWindow("DDrawDemo", 
                          "ReactOS DirectDraw Demo", 
-						 Fullscreen ? WS_POPUP :WS_OVERLAPPEDWINDOW,
+#ifdef USE_CLIPPER
+						 Fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,
+#else
+						 WS_POPUP,
+#endif 
 			             CW_USEDEFAULT, 
 						 CW_USEDEFAULT,
                          800, 
@@ -179,7 +187,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 	while (Running)
 	{
 		if(Fullscreen)
-			Draw();
+			Draw(hwnd);
 
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))
 		{ 
@@ -203,7 +211,7 @@ LONG WINAPI WndProc (HWND hwnd, UINT message,
 		case WM_PAINT:
 		{
 			if(!Fullscreen)
-				Draw();
+				Draw(hwnd);
 		} break;
 
 		case WM_KEYDOWN:
