@@ -73,59 +73,45 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 	 LPDDRAWI_DDRAWSURFACE_INT ThisDest = (LPDDRAWI_DDRAWSURFACE_INT)iface;
 	 LPDDRAWI_DDRAWSURFACE_INT ThisSrc = (LPDDRAWI_DDRAWSURFACE_INT)src;
 
-	 DDHAL_BLTDATA BltData;
+	 DDHAL_BLTDATA mDdBlt;
 
 	 DX_WINDBG_trace();
-	 	
-	 RtlZeroMemory(&BltData,sizeof(DDHAL_BLTDATA));
-	 BltData.ddRVal = DDERR_GENERIC;
-	 
-	 if (ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_BLT)
-	 {	    
-		 BltData.lpDD = ThisDest->lpLcl->lpGbl->lpDD;
-	     BltData.Blt = ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.Blt;
-	    
-		 BltData.lpDDDestSurface = ThisDest->lpLcl;
-		 BltData.lpDDSrcSurface = ThisSrc ? ThisSrc->lpLcl : 0;
-		 BltData.dwFlags = dwFlags;
 
-		 if (rdst != NULL)
-		 {
-			 memmove (&BltData.rSrc, rdst, sizeof (RECTL));
-		 }
+	 mDdBlt.lpDDDestSurface = ThisDest->lpLcl->lpSurfMore->slist[0];	   
+     if (!DdResetVisrgn( ThisDest->lpLcl->lpSurfMore->slist[0], NULL)) 
+     {
+         // derr(L"DirectDrawImpl[%08x]::_clear DdResetVisrgn failed", this);
+     }   
 
-		 if (rsrc != NULL)
-		 {
-			 memmove (&BltData.rDest, rsrc, sizeof (RECTL));
-		 }
+     ZeroMemory(&mDdBlt, sizeof(DDHAL_BLTDATA));
+     ZeroMemory(&mDdBlt.bltFX, sizeof(DDBLTFX));
+     mDdBlt.bltFX.dwSize = sizeof(DDBLTFX);
 
-	     if (lpbltfx != NULL)
-	     {
-	         memmove (&BltData.bltFX, lpbltfx, sizeof (DDBLTFX));
-	     }
+	 mDdBlt.lpDD =  ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
+	 mDdBlt.Blt = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->cbDDSurfaceCallbacks.Blt;
+     mDdBlt.lpDDDestSurface = ThisDest->lpLcl->lpSurfMore->slist[0];
+	
+	 ThisDest->lpLcl->lpSurfMore->slist[0]->hDC = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->hDC; // This->lpLcl->hWnd;
+     mDdBlt.rDest.top = 50;
+     mDdBlt.rDest.bottom = 100;
+     mDdBlt.rDest.left = 0;
+     mDdBlt.rDest.right = 100;
+     mDdBlt.lpDDSrcSurface = NULL;
+     mDdBlt.IsClipped = FALSE;    
+     mDdBlt.bltFX.dwFillColor = 0xFFFF00;
+     mDdBlt.dwFlags = DDBLT_COLORFILL | DDBLT_WAIT;
+    
+     if (mDdBlt.Blt(&mDdBlt) != DDHAL_DRIVER_HANDLED)
+	 {
+        //printf("Fail to mDdBlt = DDHAL_DRIVER_HANDLED\n");
+	    return DDHAL_DRIVER_HANDLED;
+     }
 
-		 DX_STUB_str("FIXME : Fill the  BltData member dwRectCnt, dwROPFlags, IsClipped, prDestRects, rOrigDest, rOrigSrc before calling Blt\n");
-
-		 /* FIXME 
-		    
-	        // BltData.dwRectCnt
-	        // BltData.dwROPFlags
-	        // BltData.IsClipped	 	 
-	        // BltData.prDestRects	 
-	        // BltData.rOrigDest
-	        // BltData.rOrigSrc	 
-		 */
-		 
-		 if (!DdResetVisrgn( ThisDest->lpLcl, NULL)) 
-         {      
-             return DDERR_NOGDI;
-         }
-
-		 if (BltData.Blt(&BltData) == DDHAL_DRIVER_HANDLED)
-		 {
-			 return BltData.ddRVal;
-		 }
-	 }
+     if (mDdBlt.ddRVal!=DD_OK) 
+	 {      
+		  //printf("Fail to mDdBlt mDdBlt.ddRVal = %d:%s\n",(int)mDdBlt.ddRVal,DDErrorString(mDdBlt.ddRVal)); 
+	    return mDdBlt.ddRVal;
+     }
 
      return DDERR_GENERIC;	 	
 }
