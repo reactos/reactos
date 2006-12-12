@@ -413,8 +413,8 @@ GetTickCount64(VOID)
  */
 BOOL STDCALL
 SystemTimeToTzSpecificLocalTime(
-                                LPTIME_ZONE_INFORMATION lpTimeZoneInformation,
-                                LPSYSTEMTIME lpUniversalTime,
+                                CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation,
+                                CONST SYSTEMTIME *lpUniversalTime,
                                 LPSYSTEMTIME lpLocalTime
                                )
 {
@@ -428,7 +428,7 @@ SystemTimeToTzSpecificLocalTime(
     lpTzInfo = &TimeZoneInformation;
   }
   else
-    lpTzInfo = lpTimeZoneInformation;
+    lpTzInfo = (LPTIME_ZONE_INFORMATION)lpTimeZoneInformation;
 
   if (!lpUniversalTime)
     return FALSE;

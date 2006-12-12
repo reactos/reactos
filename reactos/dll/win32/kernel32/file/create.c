@@ -370,7 +370,8 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOLEAN
+STDCALL
 CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
                     IN LPCWSTR lpTargetFileName,
                     IN DWORD dwFlags)
@@ -572,7 +573,8 @@ Cleanup:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOLEAN
+STDCALL
 CreateSymbolicLinkA(IN LPCSTR lpSymlinkFileName,
                     IN LPCSTR lpTargetFileName,
                     IN DWORD dwFlags)

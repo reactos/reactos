@@ -294,7 +294,7 @@ FreeUserPhysicalPages@12
 FreeVirtualBuffer@4
 GenerateConsoleCtrlEvent@8
 GetACP@0
-GetApplicationRecoveryCallback@12
+GetApplicationRecoveryCallback@20
 GetApplicationRestart@16
 GetAtomNameA@12
 GetAtomNameW@12
@@ -741,7 +741,7 @@ ReadFileScatter@20
 ReadProcessMemory@20
 RecoveryFinished@4
 RecoveryInProgress@4
-RegisterApplicationRecoveryCallback@8
+RegisterApplicationRecoveryCallback@16
 RegisterApplicationRestart@8
 ;RegisterConsoleIME
 ;RegisterConsoleOS2

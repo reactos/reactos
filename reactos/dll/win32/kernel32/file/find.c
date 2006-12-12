@@ -705,7 +705,7 @@ InternalCopyStreamInfo(IN OUT PKERNEL32_FIND_STREAM_DATA IData,
         case FindStreamInfoStandard:
         {
             ULONG StreamNameLen;
-            WIN32_FIND_STREAM_DATAW *StreamData = (WIN32_FIND_STREAM_DATAW*)lpFindStreamData;
+            WIN32_FIND_STREAM_DATA *StreamData = (WIN32_FIND_STREAM_DATA*)lpFindStreamData;
 
             StreamNameLen = IData->pCurrent->StreamNameLength;
             if (StreamNameLen > sizeof(StreamData->cStreamName) - sizeof(WCHAR))

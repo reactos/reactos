@@ -357,14 +357,14 @@ GetConsoleAliasExesLengthW (VOID)
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasesW (DWORD	Unknown0,
-		    DWORD	Unknown1,
-		    DWORD	Unknown2)
+GetConsoleAliasesW (LPWSTR AliasBuffer,
+		    DWORD	AliasBufferLength,
+		    LPWSTR	ExeName)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasesW(0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2);
+  DPRINT1("GetConsoleAliasesW(0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", AliasBuffer, AliasBufferLength, ExeName);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -374,14 +374,14 @@ GetConsoleAliasesW (DWORD	Unknown0,
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasesA (DWORD	Unknown0,
-		    DWORD	Unknown1,
-		    DWORD	Unknown2)
+GetConsoleAliasesA (LPSTR AliasBuffer,
+		    DWORD	AliasBufferLength,
+		    LPSTR	ExeName)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasesA(0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2);
+  DPRINT1("GetConsoleAliasesA(0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", AliasBuffer, AliasBufferLength, ExeName);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -726,7 +726,7 @@ SetConsoleCursor (DWORD	Unknown0,
 BOOL STDCALL
 SetConsoleDisplayMode (HANDLE hOut,
 		       DWORD dwNewMode,
-		       LPDWORD lpdwOldMode)
+		       PCOORD lpdwOldMode)
      /*
       * FUNCTION: Set the console display mode.
       * ARGUMENTS:
@@ -735,7 +735,7 @@ SetConsoleDisplayMode (HANDLE hOut,
       *       lpdwOldMode - Address of a variable that receives the old mode.
       */
 {
-  DPRINT1("SetConsoleDisplayMode(0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", hOut, dwNewMode, lpdwOldMode);
+  DPRINT1("SetConsoleDisplayMode(0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n", hOut, dwNewMode, lpdwOldMode);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
@@ -1209,7 +1209,7 @@ IntReadConsole(HANDLE hConsoleInput,
                PVOID lpBuffer,
                DWORD nNumberOfCharsToRead,
                LPDWORD lpNumberOfCharsRead,
-               LPVOID lpReserved,
+               PCONSOLE_READCONSOLE_CONTROL lpReserved,
                BOOL bUnicode)
 {
   PCSR_API_MESSAGE Request; 
@@ -1300,13 +1300,13 @@ ReadConsoleA(HANDLE hConsoleInput,
              LPVOID lpBuffer,
              DWORD nNumberOfCharsToRead,
              LPDWORD lpNumberOfCharsRead,
-             LPVOID lpReserved)
+             PCONSOLE_READCONSOLE_CONTROL pInputControl)
 {
   return IntReadConsole(hConsoleInput,
                         lpBuffer,
                         nNumberOfCharsToRead,
                         lpNumberOfCharsRead,
-                        lpReserved,
+                        pInputControl,
                         FALSE);
 }
 
@@ -1321,13 +1321,13 @@ ReadConsoleW(HANDLE hConsoleInput,
              LPVOID lpBuffer,
              DWORD nNumberOfCharsToRead,
              LPDWORD lpNumberOfCharsRead,
-             LPVOID lpReserved)
+             PCONSOLE_READCONSOLE_CONTROL pInputControl)
 {
   return IntReadConsole(hConsoleInput,
                         lpBuffer,
                         nNumberOfCharsToRead,
                         lpNumberOfCharsRead,
-                        lpReserved,
+                        pInputControl,
                         TRUE);
 }
 

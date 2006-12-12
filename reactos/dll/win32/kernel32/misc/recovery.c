@@ -28,7 +28,9 @@ HRESULT
 WINAPI
 GetApplicationRecoveryCallback(IN HANDLE hProcess,
                                OUT APPLICATION_RECOVERY_CALLBACK* pRecoveryCallback,
-                               OUT PVOID* ppvParameter)
+                               OUT PVOID* ppvParameter,
+                               PDWORD dwPingInterval,
+                               PDWORD dwFlags)
 {
     UNIMPLEMENTED;
     return E_FAIL;
@@ -79,7 +81,9 @@ RecoveryInProgress(OUT PBOOL pbCancelled)
 HRESULT
 WINAPI
 RegisterApplicationRecoveryCallback(IN APPLICATION_RECOVERY_CALLBACK pRecoveyCallback,
-                                    IN PVOID pvParameter  OPTIONAL)
+                                    IN PVOID pvParameter  OPTIONAL,
+                                    DWORD dwPingInterval,
+                                    DWORD dwFlags)
 {
     UNIMPLEMENTED;
     return E_FAIL;

@@ -770,8 +770,8 @@ SetThreadExecutionState(
 BOOL
 STDCALL
 TzSpecificLocalTimeToSystemTime(
-    LPTIME_ZONE_INFORMATION lpTimeZoneInformation,
-    LPSYSTEMTIME lpLocalTime,
+    CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation,
+    CONST SYSTEMTIME *lpLocalTime,
     LPSYSTEMTIME lpUniversalTime
     )
 {
@@ -857,7 +857,7 @@ DnsHostnameToComputerNameW (
 HANDLE
 STDCALL
 FindFirstVolumeW(
-    LPCWSTR lpszVolumeName,
+    LPWSTR lpszVolumeName,
     DWORD cchBufferLength
     )
 {
@@ -871,7 +871,7 @@ FindFirstVolumeW(
 HANDLE
 STDCALL
 FindFirstVolumeMountPointW(
-    LPWSTR lpszRootPathName,
+    LPCWSTR lpszRootPathName,
     LPWSTR lpszVolumeMountPoint,
     DWORD cchBufferLength
     )
@@ -1039,7 +1039,7 @@ DnsHostnameToComputerNameA (
 HANDLE
 STDCALL
 FindFirstVolumeA(
-    LPCSTR lpszVolumeName,
+    LPSTR lpszVolumeName,
     DWORD cchBufferLength
     )
 {
@@ -1053,7 +1053,7 @@ FindFirstVolumeA(
 HANDLE
 STDCALL
 FindFirstVolumeMountPointA(
-    LPSTR lpszRootPathName,
+    LPCSTR lpszRootPathName,
     LPSTR lpszVolumeMountPoint,
     DWORD cchBufferLength
     )
@@ -1069,7 +1069,7 @@ BOOL
 STDCALL
 FindNextVolumeA(
     HANDLE hFindVolume,
-    LPCSTR lpszVolumeName,
+    LPSTR lpszVolumeName,
     DWORD cchBufferLength
     )
 {
