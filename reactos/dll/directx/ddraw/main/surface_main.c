@@ -215,43 +215,73 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 				LPDDSURFACEDESC2 pDDSD, DWORD flags, HANDLE events)
 {      
 	LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
-	DDHAL_LOCKDATA LockData;
+	DDHAL_LOCKDATA mdLock;
 
 	DX_WINDBG_trace();
 
-    if (events != NULL)
+	/* FIXME add a check see if lock suport or not */
+
+	if (prect!=NULL)
     {
-        return DDERR_INVALIDPARAMS; 
+        mdLock.bHasRect = TRUE;
+        memcpy(&mdLock.rArea,prect,sizeof(RECTL));
+    }
+    else
+    {
+      mdLock.bHasRect = FALSE;
     }
 
-	RtlZeroMemory(&LockData,sizeof(DDHAL_LOCKDATA));
-	LockData.ddRVal = DDERR_GENERIC;
+    mdLock.ddRVal = DDERR_NOTPALETTIZED;
+	mdLock.Lock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->cbDDSurfaceCallbacks.Lock;
+    mdLock.dwFlags = flags;
+	mdLock.lpDDSurface = This->lpLcl->lpSurfMore->slist[0];
+	mdLock.lpDD = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;   
+    mdLock.lpSurfData = NULL;
+     
+	if (!DdResetVisrgn(This->lpLcl->lpSurfMore->slist[0], NULL)) 
+    {
+      DX_STUB_str("Here DdResetVisrgn lock");
+      return DDERR_UNSUPPORTED;
+    }
+   
+    if (mdLock.Lock(&mdLock)!= DDHAL_DRIVER_HANDLED)
+    {
+      DX_STUB_str("Here DDHAL_DRIVER_HANDLED lock");
+      return DDERR_UNSUPPORTED;
+    }
+   
+    if (mdLock.ddRVal!= DD_OK)
+    {      
+      DX_STUB_str("Here ddRVal lock");
+      return mdLock.ddRVal;
+    }
+   
+    // FIXME ??? is this right ?? 
+    if (pDDSD != NULL)
+    {
+		ZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
+		pDDSD->dwSize = sizeof(DDSURFACEDESC2);
 
-	
+        //if (pDDSD->dwSize == sizeof(DDSURFACEDESC2))
+        //{
+        //    ZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
+        //    // FIXME the interanl mddsdPrimary shall be DDSURFACEDESC2
+        //    memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC));
+        //    pDDSD->dwSize = sizeof(DDSURFACEDESC2);
+        //}
+        //if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
+        //{
+        //    RtlZeroMemory(pDDSD,sizeof(DDSURFACEDESC));
+        //    memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC));
+        //    pDDSD->dwSize = sizeof(DDSURFACEDESC);
+        //}
 
-	if (This->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_LOCK)
-	{
-	    LockData.lpDD = This->lpLcl->lpGbl->lpDD;
-		LockData.Lock = This->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.Lock;
-
-
-		
-       //LockData.lpDDSurface;
-       //LockData.bHasRect;
-       //LockData.rArea;
-       //LockData.lpSurfData;    
-
-       LockData.dwFlags = flags;
-
-	   if (LockData.Lock(&LockData) == DDHAL_DRIVER_HANDLED)
-	   {
-	       return LockData.ddRVal;
-	   }
-	}
-
-	
-    return DDERR_GENERIC;
+        pDDSD->lpSurface = (LPVOID)  mdLock.lpSurfData;	
+    }
+      
+   return DD_OK;   
 }
+
 
 HRESULT WINAPI Main_DDrawSurface_Unlock (LPDIRECTDRAWSURFACE7 iface, LPRECT pRect)
 {    
@@ -260,30 +290,34 @@ HRESULT WINAPI Main_DDrawSurface_Unlock (LPDIRECTDRAWSURFACE7 iface, LPRECT pRec
 
 	DX_WINDBG_trace();
           	
-	if (!This->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_UNLOCK)
+	if (!This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->cbDDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_UNLOCK)
 	{
+	   DX_STUB_str("DDERR_UNSUPPORTED");
 	   return DDERR_UNSUPPORTED;
 	}
 
     unLock.ddRVal = DDERR_NOTPALETTIZED;
-    unLock.lpDD = This->lpLcl->lpGbl->lpDD;   
-    unLock.lpDDSurface =  This->lpLcl;
-	unLock.Unlock = This->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.Unlock;
+    unLock.lpDD = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
+	unLock.lpDDSurface =  This->lpLcl->lpSurfMore->slist[0];
+	unLock.Unlock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->cbDDSurfaceCallbacks.Unlock;
 
 
 
     if (!DdResetVisrgn( unLock.lpDDSurface, NULL)) 
     {   
-        return DDERR_UNSUPPORTED;
+        DX_STUB_str("DDERR_UNSUPPORTED");
+		return DDERR_UNSUPPORTED;
     }
 
     if (unLock.Unlock(&unLock)!= DDHAL_DRIVER_HANDLED)
     {
+		DX_STUB_str("unLock fail");
         return DDERR_UNSUPPORTED;
     }
 
     if (unLock.ddRVal!= DD_OK)
     {     
+		DX_STUB_str("ddRVal errror");
         return unLock.ddRVal;
     } 
    
