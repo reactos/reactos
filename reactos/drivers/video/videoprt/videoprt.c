@@ -854,7 +854,11 @@ VideoPortGetRegistryParameters(
       QueryTable,
       &Context,
       NULL)))
+   {
+      DPRINT("VideoPortGetRegistryParameters could not find the "
+        "requested parameter\n");
       return ERROR_INVALID_PARAMETER;
+   }
 
    if (IsParameterFileName)
    {
@@ -876,15 +880,22 @@ VideoPortSetRegistryParameters(
    IN PVOID ValueData,
    IN ULONG ValueLength)
 {
-   DPRINT("VideoPortSetRegistryParameters\n");
+   VP_STATUS Status;
+
+   DPRINT("VideoPortSetRegistryParameters ParameterName %S\n", ValueName);
    ASSERT_IRQL(PASSIVE_LEVEL);
-   return RtlWriteRegistryValue(
+   Status = RtlWriteRegistryValue(
       RTL_REGISTRY_ABSOLUTE,
       VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->RegistryPath.Buffer,
       ValueName,
       REG_BINARY,
       ValueData,
       ValueLength);
+
+   if (Status != ERROR_SUCCESS)
+     DPRINT("VideoPortSetRegistryParameters error 0x%x\n", Status);
+
+   return Status;
 }
 
 /*
