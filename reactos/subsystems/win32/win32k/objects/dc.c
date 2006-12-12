@@ -2925,9 +2925,30 @@ IntChangeDisplaySettings(
 
     /* Check if pDeviceName is NULL, we need to retrieve it */
     if (pDeviceName == NULL)
-    {
-      /* FIXME: It is a hack, but there is no proper way right now */
-      RtlInitUnicodeString(&InDeviceName, L"\\\\.\\DISPLAY1");
+    {     
+      WCHAR szBuffer[MAX_DRIVER_NAME];
+      PDC DC;
+      PWINDOW_OBJECT Wnd=NULL;
+      HWND hWnd; 
+      HDC hDC;
+      
+      hWnd = IntGetDesktopWindow();
+      if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
+      {
+          return FALSE;
+      }
+      
+      hDC = (HDC)UserGetWindowDC(Wnd);
+
+      DC = DC_LockDc(hDC);
+      if (NULL == DC)
+      {
+         return FALSE;
+      }
+      swprintf (szBuffer, L"\\\\.\\DISPLAY%lu", ((GDIDEVICE *)DC->GDIDevice)->DisplayNumber);
+      DC_UnlockDc(DC);
+
+      RtlInitUnicodeString(&InDeviceName, szBuffer);
       pDeviceName = &InDeviceName;
     }
 
