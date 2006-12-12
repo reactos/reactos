@@ -2914,6 +2914,7 @@ IntChangeDisplaySettings(
 
     UNICODE_STRING DeviceName;
     UNICODE_STRING RegistryKey;
+    UNICODE_STRING InDeviceName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE DevInstRegKey;
     ULONG NewValue;
@@ -2921,6 +2922,14 @@ IntChangeDisplaySettings(
     DPRINT1("set CDS_UPDATEREGISTRY \n");
 
     dwflags &= ~CDS_UPDATEREGISTRY;
+
+    /* Check if pDeviceName is NULL, we need to retrieve it */
+    if (pDeviceName == NULL)
+    {
+      /* FIXME: It is a hack, but there is no proper way right now */
+      RtlInitUnicodeString(&InDeviceName, L"\\\\.\\DISPLAY1");
+      pDeviceName = &InDeviceName;
+    }
 
     Status = GetVideoDeviceName(&DeviceName, pDeviceName);
     if (!NT_SUCCESS(Status))
