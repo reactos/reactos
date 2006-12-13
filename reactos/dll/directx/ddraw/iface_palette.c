@@ -14,42 +14,33 @@ ULONG WINAPI
 DirectDrawPalette_Release( LPDIRECTDRAWPALETTE iface)
 {    
     LPDDRAWI_DDRAWPALETTE_INT This = (LPDDRAWI_DDRAWPALETTE_INT)iface;
-	ULONG ref=0;
 
-	DX_WINDBG_trace();
-
-	if (iface!=NULL)
-	{	  	
-		ref = InterlockedDecrement( (PLONG) &This->dwIntRefCnt);
-            
-		if (ref == 0)
-		{		
-		    /* Add here if we need releae some memory pointer before 
-             * exists
-             */   
-		      			
-            if (This!=NULL)
-            {              
-			    DxHeapMemFree(This);
-            }
-		}
-    }
-    return ref;
+    DX_WINDBG_trace();
+    /* FIXME 
+       This is not right exiame how it should be done 
+     */
+    DX_STUB_str("FIXME This is not right exiame how it should be done\n");
+    return This->dwIntRefCnt;
 }
 
 ULONG WINAPI 
 DirectDrawPalette_AddRef( LPDIRECTDRAWPALETTE iface) 
 {         
    LPDDRAWI_DDRAWPALETTE_INT This = (LPDDRAWI_DDRAWPALETTE_INT)iface;   
-   ULONG ref=0;
 
    DX_WINDBG_trace();
-    
-   if (iface!=NULL)
-   {
-       ref = InterlockedIncrement( (PLONG) &This->dwIntRefCnt);       
-   }    
-   return ref;    
+
+    if (iface!=NULL)
+    {
+        This->dwIntRefCnt++;
+        This->lpLcl->dwLocalRefCnt++;
+
+        if (This->lpLcl->lpGbl != NULL)
+        {
+            This->lpLcl->lpGbl->dwRefCnt++;
+        }
+    }
+    return This->dwIntRefCnt;
 }
 
 HRESULT WINAPI

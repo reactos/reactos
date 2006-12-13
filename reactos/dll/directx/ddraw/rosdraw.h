@@ -650,6 +650,8 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 } \
 	return DDERR_UNSUPPORTED; 
 	
+
+
 #define DX_STUB_DD_OK \
 { \
 	static BOOL firstcall = TRUE; \

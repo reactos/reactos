@@ -89,44 +89,32 @@ DDSurfaceKernel_AddRef ( LPDIRECTDRAWSURFACEKERNEL iface)
 {         
    LPDDRAWI_DDKERNELSURFACE_INT This = (LPDDRAWI_DDKERNELSURFACE_INT)iface;
    
-   ULONG ref=0;
    DX_WINDBG_trace();
-    
-   if (iface!=NULL)
-   {
-       This->dwIntRefCnt++;   
-	   ref =  This->dwIntRefCnt;
-   }    
-   return ref; 
+
+    if (iface!=NULL)
+    {
+        This->dwIntRefCnt++;
+        //This->lpLcl->dwLocalRefCnt++;
+
+        //if (This->lpLcl->lpGbl != NULL)
+        //{
+        //    This->lpLcl->lpGbl->dwRefCnt++;
+        //}
+    }
+    return This->dwIntRefCnt;
 }
 
 ULONG WINAPI 
 DDSurfaceKernel_Release ( LPDIRECTDRAWSURFACEKERNEL iface)
 {    
     LPDDRAWI_DDKERNELSURFACE_INT This = (LPDDRAWI_DDKERNELSURFACE_INT)iface;
-	ULONG ref=0;
 
-	DX_WINDBG_trace();
-
-	if (iface!=NULL)
-	{	  	
-		This->dwIntRefCnt--;
-            
-		if (This->dwIntRefCnt == 0)
-		{		
-		    /* Add here if we need releae some memory pointer before 
-             * exists
-             */   
-		      			
-            if (This!=NULL)
-            {              
-			    HeapFree(GetProcessHeap(), 0, This);
-            }
-		}
-
-		ref = This->dwIntRefCnt;
-    }
-    return ref;
+    DX_WINDBG_trace();
+    /* FIXME 
+       This is not right exiame how it should be done 
+     */
+    DX_STUB_str("FIXME This is not right exiame how it should be done\n");
+    return This->dwIntRefCnt;
 }
 
 HRESULT WINAPI 

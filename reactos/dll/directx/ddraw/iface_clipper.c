@@ -13,45 +13,35 @@
 
 ULONG WINAPI 
 DirectDrawClipper_Release(LPDIRECTDRAWCLIPPER iface) 
-{   
-
+{
     LPDDRAWI_DDRAWCLIPPER_INT This = (LPDDRAWI_DDRAWCLIPPER_INT)iface;
-	ULONG ref=0;
-	 
+ 
     DX_WINDBG_trace();
-
-	if (iface!=NULL)
-	{	  	
-		ref = InterlockedDecrement( (PLONG) &This->dwIntRefCnt);
-            
-		if (ref == 0)
-		{		
-		    /* Add here if we need releae some memory pointer before 
-             * exists
-             */   
-		      			
-            if (This!=NULL)
-            {              
-			    HeapFree(GetProcessHeap(), 0, This);
-            }
-		}
-    }
-    return ref;
+    /* FIXME 
+       This is not right exiame how it should be done 
+     */
+    DX_STUB_str("FIXME This is not right exiame how it should be done\n");
+    return This->dwIntRefCnt;
 }
 
 ULONG WINAPI 
 DirectDrawClipper_AddRef (LPDIRECTDRAWCLIPPER iface)
-{            
-   LPDDRAWI_DDRAWCLIPPER_INT This = (LPDDRAWI_DDRAWCLIPPER_INT)iface;   
-   ULONG ref=0;
+{
+    LPDDRAWI_DDRAWCLIPPER_INT This = (LPDDRAWI_DDRAWCLIPPER_INT)iface;
 
-   DX_WINDBG_trace();
-    
-   if (iface!=NULL)
-   {
-       ref = InterlockedIncrement( (PLONG) &This->dwIntRefCnt);       
-   }    
-   return ref;       
+    DX_WINDBG_trace();
+
+    if (iface!=NULL)
+    {
+        This->dwIntRefCnt++;
+        This->lpLcl->dwLocalRefCnt++;
+
+        if (This->lpLcl->lpGbl != NULL)
+        {
+            This->lpLcl->lpGbl->dwRefCnt++;
+        }
+    }
+    return This->dwIntRefCnt;
 }
 
 HRESULT WINAPI 

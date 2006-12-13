@@ -15,53 +15,41 @@ DirectDrawGammaControl_AddRef( LPDIRECTDRAWGAMMACONTROL iface)
 {         
    LPDDRAWI_DDGAMMACONTROL_INT This = (LPDDRAWI_DDGAMMACONTROL_INT)iface;
     
-   ULONG ref=0;
-   DX_WINDBG_trace();
-    
-   if (iface!=NULL)
-   {
-       This->dwIntRefCnt++;   
-	   ref =  This->dwIntRefCnt;
-   }    
-   return ref;    
+    DX_WINDBG_trace();
+
+    if (iface!=NULL)
+    {
+        This->dwIntRefCnt++;
+        //This->lpLcl->dwLocalRefCnt++;
+
+        //if (This->lpLcl->lpGbl != NULL)
+        //{
+        //    This->lpLcl->lpGbl->dwRefCnt++;
+        //}
+    }
+    return This->dwIntRefCnt;
 }
 
 ULONG WINAPI
 DirectDrawGammaControl_Release( LPDIRECTDRAWGAMMACONTROL iface)
 {    
     LPDDRAWI_DDGAMMACONTROL_INT This = (LPDDRAWI_DDGAMMACONTROL_INT)iface;
-	ULONG ref=0;
 
-	DX_WINDBG_trace();
-
-	if (iface!=NULL)
-	{	  	
-		This->dwIntRefCnt--;
-            
-		if (This->dwIntRefCnt == 0)
-		{		
-		    /* Add here if we need releae some memory pointer before 
-             * exists
-             */   
-		      			
-            if (This!=NULL)
-            {              
-			    HeapFree(GetProcessHeap(), 0, This);
-            }
-		}
-
-		ref = This->dwIntRefCnt;
-    }
-    return ref;
+    DX_WINDBG_trace();
+    /* FIXME 
+       This is not right exiame how it should be done 
+     */
+    DX_STUB_str("FIXME This is not right exiame how it should be done\n");
+    return This->dwIntRefCnt;
 }
 
 HRESULT WINAPI
 DirectDrawGammaControl_QueryInterface( LPDIRECTDRAWGAMMACONTROL iface, 
                                        REFIID riid,
-				                       LPVOID *ppObj)
+                                       LPVOID *ppObj)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
 HRESULT WINAPI

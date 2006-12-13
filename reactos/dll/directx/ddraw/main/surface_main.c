@@ -22,37 +22,38 @@
 
 
 HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pDD, LPDDSURFACEDESC2 pDDSD2)
-{    
-	return DDERR_ALREADYINITIALIZED;
+{
+    return DDERR_ALREADYINITIALIZED;
 }
 
 ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
 {
-	LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
+    LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
 
-	DX_WINDBG_trace();
-	   
-	if (iface!=NULL)
-	{
-		This->dwIntRefCnt++;
-		This->lpLcl->dwLocalRefCnt++;
-		
-		if (This->lpLcl->lpGbl != NULL)
-		{
-			This->lpLcl->lpGbl->dwRefCnt++;			
-		}
-	}    
+    DX_WINDBG_trace();
+
+    if (iface!=NULL)
+    {
+        This->dwIntRefCnt++;
+        This->lpLcl->dwLocalRefCnt++;
+
+        if (This->lpLcl->lpGbl != NULL)
+        {
+            This->lpLcl->lpGbl->dwRefCnt++;
+        }
+    }
     return This->dwIntRefCnt;
 }
+
 
 ULONG WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7 iface)
 {
     LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
 
-	/* FIXME 
-	   This is not right exiame how it should be done 
+    /* FIXME 
+       This is not right exiame how it should be done 
      */
-	DX_STUB_str("FIXME This is not right exiame how it should be done\n");
+    DX_STUB_str("FIXME This is not right exiame how it should be done\n");
     return This->dwIntRefCnt;
 }
 
