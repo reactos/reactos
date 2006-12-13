@@ -290,7 +290,7 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 HRESULT WINAPI Main_DDrawSurface_Unlock (LPDIRECTDRAWSURFACE7 iface, LPRECT pRect)
 {    
 	LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
-	DDHAL_UNLOCKDATA unLock;   
+	DDHAL_UNLOCKDATA mdUnLock;   
 
 	DX_WINDBG_trace();
           	
@@ -300,32 +300,24 @@ HRESULT WINAPI Main_DDrawSurface_Unlock (LPDIRECTDRAWSURFACE7 iface, LPRECT pRec
 	   return DDERR_UNSUPPORTED;
 	}
 
-    unLock.ddRVal = DDERR_NOTPALETTIZED;
-    unLock.lpDD = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
-	unLock.lpDDSurface =  This->lpLcl->lpSurfMore->slist[0];
-	unLock.Unlock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->cbDDSurfaceCallbacks.Unlock;
+    mdUnLock.ddRVal = DDERR_NOTPALETTIZED;
+    mdUnLock.lpDD = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
+	mdUnLock.lpDDSurface =  This->lpLcl->lpSurfMore->slist[0];
+	mdUnLock.Unlock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->cbDDSurfaceCallbacks.Unlock;
 
-
-
-    if (!DdResetVisrgn( unLock.lpDDSurface, NULL)) 
+    if (!DdResetVisrgn( mdUnLock.lpDDSurface, NULL)) 
     {   
         DX_STUB_str("DDERR_UNSUPPORTED");
 		return DDERR_UNSUPPORTED;
     }
 
-    if (unLock.Unlock(&unLock)!= DDHAL_DRIVER_HANDLED)
+    if (mdUnLock.Unlock(&mdUnLock)!= DDHAL_DRIVER_HANDLED)
     {
 		DX_STUB_str("unLock fail");
         return DDERR_UNSUPPORTED;
     }
 
-    if (unLock.ddRVal!= DD_OK)
-    {     
-		DX_STUB_str("ddRVal errror");
-        return unLock.ddRVal;
-    } 
-   
-    return DD_OK;
+    return mdUnLock.ddRVal;
 }
 
 HRESULT WINAPI
