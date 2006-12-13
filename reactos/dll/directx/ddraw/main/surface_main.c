@@ -112,25 +112,11 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 		 }
 		 else
 		 {
-			 if ( ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->dwLocalFlags &
-				  DDRAWILCL_ISFULLSCREEN)
-			 {
-				  mDdBlt.rSrc.top = 0;
-				  mDdBlt.rSrc.left = 0;
-				  mDdBlt.rSrc.right = ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->
-				                       vmiData.dwDisplayWidth;
-
-			      mDdBlt.rSrc.bottom = ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->
-				                        vmiData.lDisplayPitch;
-	         }
-	         else
-			 {		    			 
-				 if(!GetWindowRect((HWND)ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->hWnd, 
+			 if(!GetWindowRect((HWND)ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->hWnd, 
 				     (RECT *)&mDdBlt.rSrc))
-				 {			   
-					  DX_STUB_str("GetWindowRect failed");      
-				 }			
-			 }
+			 {			   
+				DX_STUB_str("GetWindowRect failed");      
+			 }						 
 		 }
 
 	 /* FIXME 
@@ -149,26 +135,12 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 	 }
 	 else
 	 {
-		 if ( ThisDest->lpLcl->lpSurfMore->lpDD_lcl->dwLocalFlags &
-			  DDRAWILCL_ISFULLSCREEN)
-	     {
-			 mDdBlt.rDest.top = 0;
-             mDdBlt.rDest.left = 0;
-			 mDdBlt.rDest.right = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->
-				                  vmiData.dwDisplayWidth;
-
-			 mDdBlt.rDest.bottom = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->
-				                   vmiData.lDisplayPitch;
-	     }
-	     else
-	     {		    
-			 
-			if(!GetWindowRect((HWND)ThisDest->lpLcl->lpSurfMore->lpDD_lcl->hWnd, 
+		if(!GetWindowRect((HWND)ThisDest->lpLcl->lpSurfMore->lpDD_lcl->hWnd, 
 				(RECT *)&mDdBlt.rDest))
-			{			   
-               DX_STUB_str("GetWindowRect failed");      
-			}			
-	     }
+		{			   
+            DX_STUB_str("GetWindowRect failed");      
+		}			
+	    
 	 }
 
 	 /* FIXME 

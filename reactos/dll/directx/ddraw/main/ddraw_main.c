@@ -823,6 +823,11 @@ Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD coopl
 
 	DX_WINDBG_trace();
 
+	if (cooplevel & DDSCL_FULLSCREEN)
+	{
+	   This->lpLcl->dwLocalFlags |= DDRAWILCL_ISFULLSCREEN;
+	}
+
 	/* This code should be a callback */
 	This->lpLcl->hWnd = hwnd;
 	This->lpLcl->hFocusWnd = hwnd;	
