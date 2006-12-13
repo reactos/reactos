@@ -1099,7 +1099,8 @@ LdrGetExportByName(PVOID BaseAddress,
                                   &ExportDirSize);
    if (ExportDir == NULL)
      {
-        DPRINT1("LdrGetExportByName(): no export directory!\n");
+        DPRINT1("LdrGetExportByName(): no export directory, "
+                "can't lookup %s/%hu!\n", SymbolName, Hint);
         return NULL;
      }
 
