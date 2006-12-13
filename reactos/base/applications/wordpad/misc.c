@@ -47,7 +47,7 @@ AllocAndLoadString(OUT LPTSTR *lpTarget,
                              uID);
     if (ln++ > 0)
     {
-        (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED,
+        (*lpTarget) = (LPTSTR)LocalAlloc(LMEM_FIXED,
                                          ln * sizeof(TCHAR));
         if ((*lpTarget) != NULL)
         {

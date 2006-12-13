@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-	<module name="wordpad" type="win32gui" installbase="system32" installname="wordpad.exe">
+	<module name="wordpad" type="win32gui" installbase="system32" installname="wordpad.exe" unicode="yes">
 		<include base="wordpad">.</include>
-		<define name="UNICODE" />
-		<define name="_UNICODE" />		
 		<define name="__USE_W32API" />
 		<define name="_WIN32_IE">0x0600</define>
 		<define name="_WIN32_WINNT">0x0501</define>
