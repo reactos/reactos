@@ -43,6 +43,7 @@ ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
         }
     }
     return This->dwIntRefCnt;
+    
 }
 
 
@@ -554,9 +555,20 @@ HRESULT WINAPI
 Main_DDrawSurface_GetPixelFormat(LPDIRECTDRAWSURFACE7 iface,
 				      LPDDPIXELFORMAT pDDPixelFormat)
 {
-    DX_WINDBG_trace();
+    LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
+    HRESULT retVale = DDERR_INVALIDPARAMS;
 
-    DX_STUB;
+    DX_WINDBG_trace();
+    
+    /* FIXME is this right ?? */
+    if (pDDPixelFormat != NULL)
+    {
+        memcpy(pDDPixelFormat,&This->lpLcl->lpSurfMore->
+                              lpDD_lcl->lpGbl->vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
+
+        retVale = DD_OK;
+    }
+  return retVale;
 }
 
 HRESULT WINAPI
