@@ -18,8 +18,6 @@ Cleanup(LPDIRECTDRAW7 iface)
    /* FIXME 
       free all memory and delete all dx stuff
    */
-        
+
 }
-
-
 

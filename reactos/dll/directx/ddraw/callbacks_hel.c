@@ -20,82 +20,82 @@ extern DWORD pixelformatsCount;
  
 DWORD CALLBACK  HelDdDestroyDriver(LPDDHAL_DESTROYDRIVERDATA lpDestroyDriver)
 {
-   	DX_STUB;
+    DX_STUB;
 }
 
 DWORD CALLBACK  HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA lpCreateSurface)
 {
-   	DX_STUB;
+    DX_STUB;
 }
 
 
 DWORD CALLBACK  HelDdSetColorKey(LPDDHAL_DRVSETCOLORKEYDATA lpDrvSetColorKey)
 {
-   	DX_STUB;
+    DX_STUB;
 }
 
 
 DWORD CALLBACK  HelDdSetMode(LPDDHAL_SETMODEDATA SetMode)
-{   			
-	DEVMODE DevMode;
+{
+    DEVMODE DevMode;
 
-	DX_STUB_str("in hel");
+    DX_STUB_str("in hel");
 
-	DevMode.dmSize = (WORD)sizeof(DEVMODE);
-	DevMode.dmDriverExtra = 0;
+    DevMode.dmSize = (WORD)sizeof(DEVMODE);
+    DevMode.dmDriverExtra = 0;
 
     SetMode->ddRVal = DDERR_UNSUPPORTEDMODE;	
 
     if (EnumDisplaySettingsEx(NULL, SetMode->dwModeIndex, &DevMode, 0 ) != 0)
-	{
-		DX_WINDBG_trace_res((int)DevMode.dmPelsWidth, (int)DevMode.dmPelsHeight, (int)DevMode.dmBitsPerPel );
+    {
+        DX_WINDBG_trace_res((int)DevMode.dmPelsWidth, (int)DevMode.dmPelsHeight, (int)DevMode.dmBitsPerPel );
 
-       if (ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL)
-	   {
-		   DX_STUB_str("FAIL");
-		   SetMode->ddRVal = DDERR_UNSUPPORTEDMODE;		
-	   }
-	   else
-	   {
-		   DX_STUB_str("OK");
-		   SetMode->ddRVal = DD_OK;
-	   }
-	}
-								
-	return DDHAL_DRIVER_HANDLED;
+        if (ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL)
+        {
+            DX_STUB_str("FAIL");
+            SetMode->ddRVal = DDERR_UNSUPPORTEDMODE;		
+        }
+        else
+        {
+            DX_STUB_str("OK");
+            SetMode->ddRVal = DD_OK;
+        }
+    }
+
+    return DDHAL_DRIVER_HANDLED;
 }
 
 DWORD CALLBACK  HelDdWaitForVerticalBlank(LPDDHAL_WAITFORVERTICALBLANKDATA lpWaitForVerticalBlank)
 {
-   	DX_STUB;
+    DX_STUB;
 }
 
 DWORD CALLBACK  HelDdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA lpCanCreateSurface)
 {
-   	DX_STUB;
+    DX_STUB;
 }
 
 DWORD CALLBACK  HelDdCreatePalette(LPDDHAL_CREATEPALETTEDATA lpCreatePalette)
 {
-   	DX_STUB;
+    DX_STUB;
 }
 
 DWORD CALLBACK  HelDdGetScanLine(LPDDHAL_GETSCANLINEDATA lpGetScanLine)
 {
-   	DX_STUB;
+    DX_STUB;
 }
 
 DWORD CALLBACK  HelDdSetExclusiveMode(LPDDHAL_SETEXCLUSIVEMODEDATA lpSetExclusiveMode)
 {
-	 DX_WINDBG_trace();
-	 DX_STUB_str("Not implement yet, return DD_OK for not bsod\n");
-	 lpSetExclusiveMode->ddRVal = DD_OK;
-	 
-	 return DDHAL_DRIVER_HANDLED;
+    DX_WINDBG_trace();
+    DX_STUB_str("Not implement yet, return DD_OK for not bsod\n");
+    lpSetExclusiveMode->ddRVal = DD_OK;
+    
+    return DDHAL_DRIVER_HANDLED;
 }
 
 DWORD CALLBACK  HelDdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA lpFlipToGDISurface)
 {
-   	DX_STUB;
+    DX_STUB;
 }
 
