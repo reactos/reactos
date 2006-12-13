@@ -185,7 +185,7 @@ FindActCtxSectionGuid(
     PACTCTX_SECTION_KEYED_DATA ReturnedData
     )
 {
-    DPRINT("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
+    DPRINT("%s() is UNIMPLEMENTED!\n", __FUNCTION__);
     return FALSE;
 }
 
@@ -202,7 +202,7 @@ FindActCtxSectionStringW(
     PACTCTX_SECTION_KEYED_DATA ReturnedData
     )
 {
-    DPRINT("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
+    DPRINT("%s() is UNIMPLEMENTED!\n", __FUNCTION__);
     return FALSE;
 }
 
@@ -234,7 +234,7 @@ QueryActCtxW(
     SIZE_T *pcbWrittenOrRequired OPTIONAL
     )
 {
-    DPRINT("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
+    DPRINT("%s() is UNIMPLEMENTED!\n", __FUNCTION__);
     /* this makes Adobe Photoshop 7.0 happy */
     SetLastError( ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;

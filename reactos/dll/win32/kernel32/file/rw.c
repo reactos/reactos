@@ -149,7 +149,7 @@ ReadFile(IN HANDLE hFile,
                             lpBuffer,
                             nNumberOfBytesToRead,
                             lpNumberOfBytesRead,
-                            lpOverlapped);
+                            NULL);
      }
 
    if (lpOverlapped != NULL)
