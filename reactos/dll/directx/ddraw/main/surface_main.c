@@ -493,20 +493,7 @@ Main_DDrawSurface_GetDC(LPDIRECTDRAWSURFACE7 iface, HDC *phDC)
 
     This = (LPDDRAWI_DDRAWSURFACE_INT)iface;        
 
-    /*
-      FIXME check if the surface exists or not
-      for now we aussme the surface exits and create the hDC for it
-    */
-     
-	if ((HDC)This->lpLcl->hDC == NULL)
-    {
-		This->lpLcl->hDC = (ULONG_PTR)GetDC((HWND)This->lpLcl->lpGbl->lpDD->lpExclusiveOwner->hWnd);
-        *phDC = (HDC)This->lpLcl->hDC;
-    }
-    else
-    {
-       *phDC =  (HDC)This->lpLcl->hDC;
-    }
+    *phDC = This->lpLcl->lpSurfMore->lpDD_lcl->hDC;
 
     return DD_OK;
 }
