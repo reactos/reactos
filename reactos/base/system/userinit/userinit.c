@@ -25,6 +25,7 @@
  */
 #include <windows.h>
 #include <cfgmgr32.h>
+#include <regstr.h>
 #include <shlobj.h>
 #include "resource.h"
 
@@ -77,7 +78,7 @@ BOOL IsConsoleShell(void)
 
 	rc = RegOpenKeyEx(
 		HKEY_LOCAL_MACHINE,
-		L"SYSTEM\\CurrentControlSet\\Control",
+		REGSTR_PATH_CURRENT_CONTROL_SET,
 		0,
 		KEY_QUERY_VALUE,
 		&ControlKey);
@@ -109,7 +110,7 @@ cleanup:
 }
 
 static
-BOOL GetShell(WCHAR *CommandLine)
+BOOL GetShell(WCHAR *CommandLine, HKEY hRootKey)
 {
   HKEY hKey;
   DWORD Type, Size;
@@ -117,8 +118,8 @@ BOOL GetShell(WCHAR *CommandLine)
   BOOL Ret = FALSE;
   BOOL ConsoleShell = IsConsoleShell();
 
-  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+  if(RegOpenKeyEx(hRootKey,
+                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", /* FIXME: should be REGSTR_PATH_WINLOGON */
                   0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
   {
     Size = MAX_PATH * sizeof(WCHAR);
@@ -136,24 +137,6 @@ BOOL GetShell(WCHAR *CommandLine)
       }
     }
     RegCloseKey(hKey);
-  }
-
-  if(!Ret)
-  {
-    if (ConsoleShell)
-    {
-      if(GetSystemDirectory(CommandLine, MAX_PATH - 8))
-        wcscat(CommandLine, L"\\cmd.exe");
-      else
-        wcscpy(CommandLine, L"cmd.exe");
-    }
-    else
-    {
-      if(GetWindowsDirectory(CommandLine, MAX_PATH - 13))
-        wcscat(CommandLine, L"\\explorer.exe");
-      else
-        wcscpy(CommandLine, L"explorer.exe");
-    }
   }
 
   return Ret;
@@ -200,17 +183,12 @@ StartAutoApplications(int clsid)
 }
 
 
-
-static
-void StartShell(void)
+static BOOL
+TryToStartShell(LPCWSTR Shell)
 {
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
-  WCHAR Shell[MAX_PATH];
   WCHAR ExpandedShell[MAX_PATH];
-  TCHAR szMsg[RC_STRING_MAX_SIZE];
-
-  GetShell(Shell);
 
   ZeroMemory(&si, sizeof(STARTUPINFO));
   si.cb = sizeof(STARTUPINFO);
@@ -218,7 +196,7 @@ void StartShell(void)
 
   ExpandEnvironmentStrings(Shell, ExpandedShell, MAX_PATH);
 
-  if(CreateProcess(NULL,
+  if(!CreateProcess(NULL,
                    ExpandedShell,
                    NULL,
                    NULL,
@@ -228,14 +206,46 @@ void StartShell(void)
                    NULL,
                    &si,
                    &pi))
-  {
-    StartAutoApplications(CSIDL_STARTUP);
-    StartAutoApplications(CSIDL_COMMON_STARTUP);
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-  }
-  else
+    return FALSE;
+
+  StartAutoApplications(CSIDL_STARTUP);
+  StartAutoApplications(CSIDL_COMMON_STARTUP);
+  WaitForSingleObject(pi.hProcess, INFINITE);
+  CloseHandle(pi.hProcess);
+  CloseHandle(pi.hThread);
+  return TRUE;
+}
+
+static
+void StartShell(void)
+{
+  WCHAR Shell[MAX_PATH];
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
+
+  /* Try to run shell in user key */
+  if (GetShell(Shell, HKEY_CURRENT_USER) && TryToStartShell(Shell))
+    return;
+
+  /* Try to run shell in local machine key */
+  if (GetShell(Shell, HKEY_LOCAL_MACHINE) && TryToStartShell(Shell))
+    return;
+
+  /* Try default shell */
+  if (IsConsoleShell())
+    {
+      if(GetSystemDirectory(Shell, MAX_PATH - 8))
+        wcscat(Shell, L"\\cmd.exe");
+      else
+        wcscpy(Shell, L"cmd.exe");
+    }
+    else
+    {
+      if(GetWindowsDirectory(Shell, MAX_PATH - 13))
+        wcscat(Shell, L"\\explorer.exe");
+      else
+        wcscpy(Shell, L"explorer.exe");
+    }
+  if (!TryToStartShell(Shell))
   {
     LoadString( GetModuleHandle(NULL), STRING_USERINIT_FAIL, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
     MessageBox(0, szMsg, NULL, 0);
@@ -250,7 +260,7 @@ void SetUserSettings(void)
   WCHAR szWallpaper[MAX_PATH + 1];
 
   if(RegOpenKeyEx(HKEY_CURRENT_USER,
-                  L"Control Panel\\Desktop",
+                  REGSTR_PATH_DESKTOP,
                   0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
   {
     Size = sizeof(szWallpaper);
