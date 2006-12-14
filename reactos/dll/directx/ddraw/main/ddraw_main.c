@@ -288,15 +288,11 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
     That->lpVtbl = &DirectDrawSurface7_Vtable;
     That->lpLcl->lpGbl = &ddSurfGbl;
-    That->lpLcl->lpGbl->lpDD = &ddgbl;
     That->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
     That->lpLcl->lpSurfMore->lpDD_int = This;
     That->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
     That->lpLcl->lpSurfMore->slist[0] = That->lpLcl;
     That->lpLcl->dwProcessId = GetCurrentProcessId();
-
-
-   
 
     /* setup the callback struct right 
      * maybe we should fill in 
@@ -332,7 +328,8 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     /* Create the surface */
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
     {
-       
+       That->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
+
        This->lpLcl->lpPrimary = That;
        if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
        {   
@@ -343,16 +340,6 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
        {
            return DDERR_NOTINITIALIZED;
        }
-       
-       /* FIXME 
-        * check the value from pDDSD and use it as size 
-        */
-
-
-
-
-       // That->lpLcl->dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
-       That->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
 
        mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
 

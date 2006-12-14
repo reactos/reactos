@@ -36,7 +36,7 @@ Cleanup(LPDIRECTDRAW7 iface)
     */
 
     /* release the linked interface */
-    while (!IsBadWritePtr( This->lpVtbl, sizeof( LPDDRAWI_DIRECTDRAW_INT )) )
+    while (IsBadWritePtr( This->lpVtbl, sizeof( LPDDRAWI_DIRECTDRAW_INT )) )
     {
         LPDDRAWI_DIRECTDRAW_INT newThis = This->lpVtbl;
         if (This->lpLcl != NULL)
