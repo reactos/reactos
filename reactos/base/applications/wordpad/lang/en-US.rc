@@ -60,7 +60,7 @@ BEGIN
   BEGIN
     MENUITEM "&Cascade",           ID_WINDOW_CASCADE
     MENUITEM "Tile &Horizontally", ID_WINDOW_TILE_HORZ
-    MENUITEM "Tile &Vertiacally",  ID_WINDOW_TILE_VERT
+    MENUITEM "Tile &Vertically",   ID_WINDOW_TILE_VERT
     MENUITEM "&Arrange Icons",     ID_WINDOW_ARRANGE
     MENUITEM SEPARATOR
     MENUITEM "Nex&t\tCtrl+F6",     ID_WINDOW_NEXT
