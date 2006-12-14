@@ -2933,7 +2933,7 @@ IntChangeDisplaySettings(
       HDC hDC;
       
       hWnd = IntGetDesktopWindow();
-      if (!hWnd || !(Wnd = UserGetWindowObject(hWnd)))
+      if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
       {
           return FALSE;
       }
