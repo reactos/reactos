@@ -388,7 +388,7 @@ RunControlPanel(LPCTSTR lpName, UINT uIndex)
 
 
 int WINAPI
-WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+_tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
   LPTSTR lpCommandLine;
   LPTSTR lpParam;
