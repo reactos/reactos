@@ -171,42 +171,27 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     DDHAL_CANCREATESURFACEDATA mDdCanCreateSurface;
     DDHAL_CREATESURFACEDATA mDdCreateSurface;	
 
-    /* 
-     * check if pUnkOuter is NULL if it is not fail 
-     * for accrdiong msdn and own test this member is not 
-     * set. 
-     */
-
     if (pUnkOuter!=NULL) 
     {
         return CLASS_E_NOAGGREGATION; 
     }
-
-    /* Check so it is vaild pointer we got of ppSurf */	 
     if (IsBadWritePtr( ppSurf, sizeof( LPDIRECTDRAWSURFACE7 )) )
     {
         return DDERR_INVALIDPARAMS;
     }
-
-    /* Check so it is vaild pointer we got of pDDSD 
-     */
     if (IsBadWritePtr( pDDSD, sizeof( LPDDSURFACEDESC2 )) )
     {
         return DDERR_INVALIDPARAMS;
     }
-
     if (IsBadReadPtr(pDDSD, sizeof( LPDDSURFACEDESC2 )) )
     {
         return DDERR_INVALIDPARAMS;
     }
-
-    /* Check if it version 1 or version 2 of the DDSURFACEDESC struct
-     *  both struct are vaild. 
-     */
     if (sizeof(DDSURFACEDESC2)!=pDDSD->dwSize)
     {
         return DDERR_UNSUPPORTED;
     }
+
 
 
    /* here we need start fixing bugs
@@ -214,37 +199,76 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     * checked how ms ddraw behivor
     */
 
-    /* FIXME 
-     * Alloc memory for the ppSurf pointer 
-     * we expect it is NULL, But we maybe should add a NULL check 
-     * for it, so we do not over write it, and also add a pointer vaildate
-     * for it. 
-     */
+    /* this two line should be move to startup code */
+    ddSurfGbl.lpDD       = &ddgbl;
+    ddSurfGbl.lpDDHandle = &ddgbl;
 
-    That = (LPDDRAWI_DDRAWSURFACE_INT)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT));
-    
-    if (That == NULL) 
+    /* Detecte if we are in fullscreen or not and extract thuse data */
+    if (This->lpLcl->dwLocalFlags & DDRAWILCL_ISFULLSCREEN)
     {
-        return E_OUTOFMEMORY;
+        ddSurfGbl.wWidth  = This->lpLcl->lpGbl->vmiData.dwDisplayWidth;
+        ddSurfGbl.wHeight = This->lpLcl->lpGbl->vmiData.dwDisplayHeight;
+        ddSurfGbl.lPitch  = This->lpLcl->lpGbl->vmiData.lDisplayPitch;
+    }
+    else
+    {
+        RECT rect;
+        if(GetWindowRect((HWND)This->lpLcl->hWnd, &rect))
+        {
+            ddSurfGbl.wWidth  = rect.right - rect.left;
+            ddSurfGbl.wHeight = rect.bottom - rect.top;
+            ddSurfGbl.lPitch  = This->lpLcl->lpGbl->vmiData.lDisplayPitch;
+        }
     }
 
-    /* FIXME 
-       Alloc memory for the local surface struct we need 
-       we should check if NULL or not see comment above
-     */
+    /* setup diffent pixel format */
+    if  (pDDSD->dwFlags & DDSD_PIXELFORMAT)
+    {
+        if (pDDSD->ddpfPixelFormat.dwSize != sizeof(DDPIXELFORMAT))
+        {
+            return DDERR_INVALIDPIXELFORMAT;
+        }
+        memcpy(&ddSurfGbl.ddpfSurface,&pDDSD->ddpfPixelFormat, sizeof(DDPIXELFORMAT));
+    }
+
+    /* setup Backup buffer */
+    This->lpLcl->lpGbl->dsList = NULL;
+
+    if (pDDSD->dwFlags & DDSD_BACKBUFFERCOUNT)
+    {
+        if (! pDDSD->ddsCaps.dwCaps & (DDSCAPS_FLIP | DDSCAPS_COMPLEX))
+        {
+            return DDERR_INVALIDPARAMS;
+        }
+
+        if (pDDSD->dwBackBufferCount != 0)
+        {
+            This->lpLcl->lpGbl->dsList = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT) * 
+                                                        pDDSD->dwBackBufferCount);
+        }
+
+        // CreateBackBufferSurface(This,That,pDDSD);
+    }
+
+
+    /* setup rest now */
+
+    That = (LPDDRAWI_DDRAWSURFACE_INT)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT));
+    if (That == NULL) 
+    {
+        return DDERR_OUTOFMEMORY;
+    }
+
     That->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));   
     if (That->lpLcl == NULL) 
     {
-        /* shall we free it if it fail ?? */
         DxHeapMemFree(That);
-        return E_OUTOFMEMORY;
+        return DDERR_OUTOFMEMORY;
     }
 
-    /* Alloc memory for DDRAWI_DDRAWSURFACE_MORE */
     That->lpLcl->lpSurfMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
     if (That->lpLcl->lpSurfMore == NULL)
     {
-        /* shall we free it if it fail ?? */
         DxHeapMemFree(That->lpLcl);
         DxHeapMemFree(That);
         return DDERR_OUTOFMEMORY;
@@ -253,7 +277,6 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     That->lpLcl->lpSurfMore->slist = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_LCL)<<1);
     if (That->lpLcl->lpSurfMore->slist == NULL)
     {
-        /* shall we free it if it fail ?? */
         DxHeapMemFree(That->lpLcl->lpSurfMore);
         DxHeapMemFree(That->lpLcl);
         DxHeapMemFree(That);
@@ -265,17 +288,15 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
     That->lpVtbl = &DirectDrawSurface7_Vtable;
     That->lpLcl->lpGbl = &ddSurfGbl;
-    That->lpLcl->lpGbl->lpDD = &ddgbl;	
+    That->lpLcl->lpGbl->lpDD = &ddgbl;
     That->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
     That->lpLcl->lpSurfMore->lpDD_int = This;
     That->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
     That->lpLcl->lpSurfMore->slist[0] = That->lpLcl;
     That->lpLcl->dwProcessId = GetCurrentProcessId();
 
-    /* this two line should be move to startup code */
-    That->lpLcl->lpGbl->lpDD       =  This->lpLcl->lpGbl;
-    That->lpLcl->lpGbl->lpDDHandle = This->lpLcl->lpGbl;
 
+   
 
     /* setup the callback struct right 
      * maybe we should fill in 
@@ -286,7 +307,15 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     
 
     mDdCanCreateSurface.lpDD = This->lpLcl->lpGbl;
-    mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
+    if  (pDDSD->dwFlags & DDSD_PIXELFORMAT)
+    {
+        That->lpLcl->dwFlags |= DDRAWISURF_HASPIXELFORMAT;
+        mDdCanCreateSurface.bIsDifferentPixelFormat = TRUE; //isDifferentPixelFormat;
+    }
+    else
+    {
+        mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
+    }
     mDdCanCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
     mDdCanCreateSurface.CanCreateSurface = This->lpLcl->lpDDCB->cbDDCallbacks.CanCreateSurface;
     mDdCanCreateSurface.ddRVal = DDERR_GENERIC;
@@ -299,17 +328,6 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
     mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
 
-    /* setup DDSD */
-    if  (pDDSD->dwFlags & DDSD_PIXELFORMAT)
-    {
-        if (pDDSD->ddpfPixelFormat.dwSize != sizeof(DDPIXELFORMAT))
-        {
-            /* FIXME relase the memory that we have alloc */
-            return DDERR_INVALIDPIXELFORMAT;
-        }
-        That->lpLcl->dwFlags |= DDRAWISURF_HASPIXELFORMAT;
-        memcpy(&That->lpLcl->lpGbl->ddpfSurface,&pDDSD->ddpfPixelFormat, sizeof(DDPIXELFORMAT));
-    }
 
     /* Create the surface */
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
@@ -330,22 +348,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
         * check the value from pDDSD and use it as size 
         */
 
-       if (This->lpLcl->dwLocalFlags & DDRAWILCL_ISFULLSCREEN)
-       {
-            That->lpLcl->lpGbl->wWidth  = This->lpLcl->lpGbl->vmiData.dwDisplayWidth;
-            That->lpLcl->lpGbl->wHeight = This->lpLcl->lpGbl->vmiData.dwDisplayHeight;
-            That->lpLcl->lpGbl->lPitch  = This->lpLcl->lpGbl->vmiData.lDisplayPitch;
-      }
-      else
-      {
-            RECT rect;
-            if(GetWindowRect((HWND)This->lpLcl->hWnd, &rect))
-            {
-               That->lpLcl->lpGbl->wWidth  = rect.right - rect.left;
-               That->lpLcl->lpGbl->wHeight = rect.bottom - rect.top;
-               That->lpLcl->lpGbl->lPitch  = This->lpLcl->lpGbl->vmiData.lDisplayPitch;
-            }
-       }
+
 
 
        // That->lpLcl->dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
@@ -363,7 +366,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
            return mDdCreateSurface.ddRVal;
        }
 
-       return DD_OK;			
+       return DD_OK;
     }
     else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OVERLAY)
     {       
