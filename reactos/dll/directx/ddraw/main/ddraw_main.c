@@ -305,6 +305,11 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     /* setup DDSD */
     if  (pDDSD->dwFlags & DDSD_PIXELFORMAT)
     {
+        if (pDDSD->ddpfPixelFormat.dwSize != sizeof(DDPIXELFORMAT))
+        {
+            /* FIXME relase the memory that we have alloc */
+            return DDERR_INVALIDPIXELFORMAT;
+        }
         That->lpLcl->dwFlags |= DDRAWISURF_HASPIXELFORMAT;
         memcpy(&That->lpLcl->lpGbl->ddpfSurface,&pDDSD->ddpfPixelFormat, sizeof(DDPIXELFORMAT));
     }
