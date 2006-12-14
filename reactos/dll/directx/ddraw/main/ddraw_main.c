@@ -167,9 +167,9 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 {
     
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
-    LPDDRAWI_DDRAWSURFACE_INT That; 
+    LPDDRAWI_DDRAWSURFACE_INT That = NULL;
     DDHAL_CANCREATESURFACEDATA mDdCanCreateSurface;
-    DDHAL_CREATESURFACEDATA mDdCreateSurface;	
+    DDHAL_CREATESURFACEDATA mDdCreateSurface;
 
     if (pUnkOuter!=NULL) 
     {
@@ -236,6 +236,8 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
     if (pDDSD->dwFlags & DDSD_BACKBUFFERCOUNT)
     {
+        HRESULT retValue;
+
         if (! pDDSD->ddsCaps.dwCaps & (DDSCAPS_FLIP | DDSCAPS_COMPLEX))
         {
             return DDERR_INVALIDPARAMS;
@@ -243,11 +245,20 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
         if (pDDSD->dwBackBufferCount != 0)
         {
-            This->lpLcl->lpGbl->dsList = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT) * 
-                                                        pDDSD->dwBackBufferCount);
+            This->lpLcl->lpGbl->dsList = NULL;
+            //DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        }
+        else
+        {
+            return DDERR_INVALIDSURFACETYPE;
         }
 
-        // CreateBackBufferSurface(This,That,pDDSD);
+        retValue = CreateBackBufferSurface(This,That,pDDSD);
+        if (retValue != DD_OK)
+        {
+            DX_STUB_str( "Fail to create backbuffer surface");
+            return retValue;
+        }
     }
 
 
@@ -819,7 +830,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD coopl
 
     /* This code should be a callback */
     This->lpLcl->hWnd = hwnd;
-    This->lpLcl->hFocusWnd = hwnd;	
+    This->lpLcl->hFocusWnd = hwnd;
     ReCreateDirectDraw((LPDIRECTDRAW*)iface);
 
     // TODO:                                                            

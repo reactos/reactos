@@ -6,7 +6,10 @@ CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This,
               LPDDRAWI_DDRAWSURFACE_INT That,
               LPDDSURFACEDESC2 pDDSD)
 {
+    DDHAL_CANCREATESURFACEDATA mDdCanCreateSurface;
+    DDHAL_CREATESURFACEDATA mDdCreateSurface;
     DWORD t;
+
 
     /* we are building the backbuffersurface pointer list 
      * and create the backbuffer surface and set it up 
@@ -44,7 +47,7 @@ CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This,
             return DDERR_OUTOFMEMORY;
         }
 
-        memcpy(That->lpLcl->lpGbl, &ddSurfGbl,sizeof(DDRAWI_DDRAWSURFACE_GBL);
+        memcpy(That->lpLcl->lpGbl, &ddSurfGbl,sizeof(DDRAWI_DDRAWSURFACE_GBL));
         That->lpVtbl = &DirectDrawSurface7_Vtable;
         That->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
         That->lpLcl->lpSurfMore->lpDD_int = This;
@@ -112,7 +115,13 @@ CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This,
             return mDdCreateSurface.ddRVal;
         }
 
-        This->lpLcl->lpGbl->dsList[t] = That;
-    }
+        /* Build the linking buffer */
+        if (This->lpLcl->lpGbl->dsList != NULL)
+        {
+            This->lpLink = This->lpLcl->lpGbl->dsList;
+        }
+        This->lpLcl->lpGbl->dsList = That;
 
+    }
+   return DD_OK;
 }

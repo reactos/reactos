@@ -20,6 +20,7 @@
 	<file>main.c</file>
 	<file>startup.c</file>
 	<file>cleanup.c</file>
+	<file>createsurface.c</file>
 
 	<file>iface_clipper.c</file>
 	<file>iface_color.c</file>
