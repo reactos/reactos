@@ -236,7 +236,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     }
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OVERLAY)
     {       
-        DX_STUB_str( "Can not create overlay surface");
+        CreateOverlaySurface(This, That, pDDSD);
     }
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_BACKBUFFER)
     {

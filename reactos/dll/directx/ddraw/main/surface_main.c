@@ -413,10 +413,7 @@ Main_DDrawSurface_GetAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
     DX_WINDBG_trace();
 
     *ppSurface = (LPDIRECTDRAWSURFACE7) This->lpLcl->lpGbl->lpDD->dsList;
-    if (This->lpLcl->lpGbl->lpDD->dsList == NULL)
-    {
-        return DDERR_NOTFOUND;
-    }
+   
 
     return DD_OK;
 }
