@@ -85,7 +85,7 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
             This->lpLcl->lpGbl->dwRefCnt--;
         }
 
-        if ( This->dwIntRefCnt == 0)
+        if ( This->lpLcl->lpGbl->dwRefCnt == 0)
         {
             // set resoltion back to the one in registry
             /*if(This->cooperative_level & DDSCL_EXCLUSIVE)
@@ -94,13 +94,10 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
             }*/
             
             Cleanup(iface);
-            if (This!=NULL)
-            {
-                HeapFree(GetProcessHeap(), 0, This);
-            }
+            return 0;
         }
     }
-    return This ? This->dwIntRefCnt : 0;
+    return This->dwIntRefCnt;
 }
 
 /*

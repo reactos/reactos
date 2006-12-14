@@ -17,6 +17,8 @@ Cleanup(LPDIRECTDRAW7 iface)
 {
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
+    DX_WINDBG_trace();
+
     if (ddgbl.lpDDCBtmp != NULL)
     {
         DxHeapMemFree(ddgbl.lpDDCBtmp);
@@ -34,7 +36,7 @@ Cleanup(LPDIRECTDRAW7 iface)
     */
 
     /* release the linked interface */
-    while (This->lpVtbl != NULL)
+    while (!IsBadWritePtr( This->lpVtbl, sizeof( LPDDRAWI_DIRECTDRAW_INT )) )
     {
         LPDDRAWI_DIRECTDRAW_INT newThis = This->lpVtbl;
         if (This->lpLcl != NULL)
@@ -42,7 +44,8 @@ Cleanup(LPDIRECTDRAW7 iface)
             DeleteDC(This->lpLcl->hDC);
             DxHeapMemFree(This->lpLcl);
         }
-        
+
+        DxHeapMemFree(This);
         This = newThis;
     }
 
@@ -51,6 +54,10 @@ Cleanup(LPDIRECTDRAW7 iface)
     {
         DeleteDC(This->lpLcl->hDC);
         DxHeapMemFree(This->lpLcl);
+    }
+    if (This != NULL)
+    {
+        DxHeapMemFree(This);
     }
 
 }
