@@ -540,21 +540,27 @@ Main_DDrawSurface_GetPalette(LPDIRECTDRAWSURFACE7 iface,
 
 HRESULT WINAPI
 Main_DDrawSurface_GetPixelFormat(LPDIRECTDRAWSURFACE7 iface,
-				      LPDDPIXELFORMAT pDDPixelFormat)
+                                 LPDDPIXELFORMAT pDDPixelFormat)
 {
     LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
     HRESULT retVale = DDERR_INVALIDPARAMS;
 
     DX_WINDBG_trace();
     
-    /* FIXME is this right ?? */
     if (pDDPixelFormat != NULL)
     {
-        memcpy(pDDPixelFormat,&This->lpLcl->lpSurfMore->
+        if (This->lpLcl->dwFlags & DDRAWISURF_HASPIXELFORMAT)
+        {        
+            memcpy(pDDPixelFormat,&This->lpLcl->lpGbl->ddpfSurface,sizeof(DDPIXELFORMAT));
+        }
+        else
+        {
+            memcpy(pDDPixelFormat,&This->lpLcl->lpSurfMore->
                               lpDD_lcl->lpGbl->vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
-
+        }
         retVale = DD_OK;
     }
+
   return retVale;
 }
 

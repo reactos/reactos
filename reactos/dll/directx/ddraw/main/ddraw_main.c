@@ -286,6 +286,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
      * in startup and do a cache of it
      * to save time ??
      */
+    
 
     mDdCanCreateSurface.lpDD = This->lpLcl->lpGbl;
     mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
@@ -301,11 +302,18 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
     mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
 
+    /* setup DDSD */
+    if  (pDDSD->dwFlags & DDSD_PIXELFORMAT)
+    {
+        That->lpLcl->dwFlags |= DDRAWISURF_HASPIXELFORMAT;
+        memcpy(&That->lpLcl->lpGbl->ddpfSurface,&pDDSD->ddpfPixelFormat, sizeof(DDPIXELFORMAT));
+    }
+
+    /* Create the surface */
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
     {
        
        This->lpLcl->lpPrimary = That;
-
        if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
        {   
            return DDERR_NOTINITIALIZED;
