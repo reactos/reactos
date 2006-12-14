@@ -15,9 +15,41 @@
 VOID 
 Cleanup(LPDIRECTDRAW7 iface) 
 {
-   /* FIXME 
-      free all memory and delete all dx stuff
-   */
+    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+
+    if (ddgbl.lpDDCBtmp != NULL)
+    {
+        DxHeapMemFree(ddgbl.lpDDCBtmp);
+    }
+
+    if (ddgbl.lpModeInfo != NULL)
+    {
+        DxHeapMemFree(ddgbl.lpModeInfo);
+    }
+
+    /* FIXME 
+       delete the DC we create 
+       delete the dx handler we got from hal
+       any more I forget ?
+    */
+
+    /* release the linked interface */
+    while (This->lpVtbl != NULL)
+    {
+        LPDDRAWI_DIRECTDRAW_INT newThis = This->lpVtbl;
+        if (This->lpLcl != NULL)
+        {
+            DxHeapMemFree(This->lpLcl);
+        }
+
+        This = newThis;
+    }
+
+    /* release unlinked interface */
+    if (This->lpLcl != NULL)
+    {
+        DxHeapMemFree(This->lpLcl);
+    }
 
 }
 

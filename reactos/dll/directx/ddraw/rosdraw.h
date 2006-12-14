@@ -33,7 +33,9 @@ VOID Cleanup(LPDIRECTDRAW7 iface);
 
 /* own macro to alloc memmory */
 #define DxHeapMemAlloc(m)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, m) 
-#define DxHeapMemFree(p)   HeapFree(GetProcessHeap(), 0, p);
+#define DxHeapMemFree(p)   HeapFree(GetProcessHeap(), 0, p); \
+                           p = NULL;
+
 /******** Main Object ********/
 
 /* Public interface */
