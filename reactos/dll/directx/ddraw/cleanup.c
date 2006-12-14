@@ -36,18 +36,18 @@ Cleanup(LPDIRECTDRAW7 iface)
     */
 
     /* release the linked interface */
-    while (IsBadWritePtr( This->lpVtbl, sizeof( LPDDRAWI_DIRECTDRAW_INT )) )
-    {
-        LPDDRAWI_DIRECTDRAW_INT newThis = This->lpVtbl;
-        if (This->lpLcl != NULL)
-        {
-            DeleteDC(This->lpLcl->hDC);
-            DxHeapMemFree(This->lpLcl);
-        }
+    //while (IsBadWritePtr( This->lpVtbl, sizeof( LPDDRAWI_DIRECTDRAW_INT )) )
+    //{
+    //    LPDDRAWI_DIRECTDRAW_INT newThis = This->lpVtbl;
+    //    if (This->lpLcl != NULL)
+    //    {
+    //        DeleteDC(This->lpLcl->hDC);
+    //        DxHeapMemFree(This->lpLcl);
+    //    }
 
-        DxHeapMemFree(This);
-        This = newThis;
-    }
+    //    DxHeapMemFree(This);
+    //    This = newThis;
+    //}
 
     /* release unlinked interface */
     if (This->lpLcl != NULL)

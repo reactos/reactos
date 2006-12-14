@@ -168,8 +168,6 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     LPDDRAWI_DDRAWSURFACE_INT That = NULL;
-    DDHAL_CANCREATESURFACEDATA mDdCanCreateSurface;
-    DDHAL_CREATESURFACEDATA mDdCreateSurface;
 
     if (pUnkOuter!=NULL) 
     {
@@ -231,164 +229,63 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
         memcpy(&ddSurfGbl.ddpfSurface,&pDDSD->ddpfPixelFormat, sizeof(DDPIXELFORMAT));
     }
 
-    /* setup Backup buffer */
-    This->lpLcl->lpGbl->dsList = NULL;
-
-    if (pDDSD->dwFlags & DDSD_BACKBUFFERCOUNT)
-    {
-        HRESULT retValue;
-
-        if (! pDDSD->ddsCaps.dwCaps & (DDSCAPS_FLIP | DDSCAPS_COMPLEX))
-        {
-            return DDERR_INVALIDPARAMS;
-        }
-
-        if (pDDSD->dwBackBufferCount != 0)
-        {
-            This->lpLcl->lpGbl->dsList = NULL;
-            //DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
-        }
-        else
-        {
-            return DDERR_INVALIDSURFACETYPE;
-        }
-
-        retValue = CreateBackBufferSurface(This,That,pDDSD);
-        if (retValue != DD_OK)
-        {
-            DX_STUB_str( "Fail to create backbuffer surface");
-            return retValue;
-        }
-    }
-
-
-    /* setup rest now */
-
-    That = (LPDDRAWI_DDRAWSURFACE_INT)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT));
-    if (That == NULL) 
-    {
-        return DDERR_OUTOFMEMORY;
-    }
-
-    That->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));   
-    if (That->lpLcl == NULL) 
-    {
-        DxHeapMemFree(That);
-        return DDERR_OUTOFMEMORY;
-    }
-
-    That->lpLcl->lpSurfMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
-    if (That->lpLcl->lpSurfMore == NULL)
-    {
-        DxHeapMemFree(That->lpLcl);
-        DxHeapMemFree(That);
-        return DDERR_OUTOFMEMORY;
-    }
-
-    That->lpLcl->lpSurfMore->slist = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_LCL)<<1);
-    if (That->lpLcl->lpSurfMore->slist == NULL)
-    {
-        DxHeapMemFree(That->lpLcl->lpSurfMore);
-        DxHeapMemFree(That->lpLcl);
-        DxHeapMemFree(That);
-        return DDERR_OUTOFMEMORY;
-    }
-
-    /* setup some value */
-    *ppSurf = (LPDIRECTDRAWSURFACE7)That;
-
-    That->lpVtbl = &DirectDrawSurface7_Vtable;
-    That->lpLcl->lpGbl = &ddSurfGbl;
-    That->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
-    That->lpLcl->lpSurfMore->lpDD_int = This;
-    That->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
-    That->lpLcl->lpSurfMore->slist[0] = That->lpLcl;
-    That->lpLcl->dwProcessId = GetCurrentProcessId();
-
-    /* setup the callback struct right 
-     * maybe we should fill in 
-     * xx.lpDD, xx.function, xx.ddRVal
-     * in startup and do a cache of it
-     * to save time ??
-     */
-    
-
-    mDdCanCreateSurface.lpDD = This->lpLcl->lpGbl;
-    if  (pDDSD->dwFlags & DDSD_PIXELFORMAT)
-    {
-        That->lpLcl->dwFlags |= DDRAWISURF_HASPIXELFORMAT;
-        mDdCanCreateSurface.bIsDifferentPixelFormat = TRUE; //isDifferentPixelFormat;
-    }
-    else
-    {
-        mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
-    }
-    mDdCanCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
-    mDdCanCreateSurface.CanCreateSurface = This->lpLcl->lpDDCB->cbDDCallbacks.CanCreateSurface;
-    mDdCanCreateSurface.ddRVal = DDERR_GENERIC;
-
-    mDdCreateSurface.lpDD = This->lpLcl->lpGbl;
-    mDdCreateSurface.CreateSurface = This->lpLcl->lpDDCB->cbDDCallbacks.CreateSurface;
-    mDdCreateSurface.ddRVal =  DDERR_GENERIC;
-    mDdCreateSurface.dwSCnt = That->dwIntRefCnt + 1; // is this correct 
-    mDdCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
-
-    mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
-
-
     /* Create the surface */
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
     {
-       That->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
-
-       This->lpLcl->lpPrimary = That;
-       if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
-       {   
-           return DDERR_NOTINITIALIZED;
-       }
-
-       if (mDdCanCreateSurface.ddRVal != DD_OK)
-       {
-           return DDERR_NOTINITIALIZED;
-       }
-
-       mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
-
-       if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
-       {
-           return DDERR_NOTINITIALIZED;
-       }
-
-       if (mDdCreateSurface.ddRVal != DD_OK) 
-       {   
-           return mDdCreateSurface.ddRVal;
-       }
-
-       return DD_OK;
+        CreatePrimarySurface(This,That,pDDSD);
     }
-    else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OVERLAY)
+    if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OVERLAY)
     {       
-             DX_STUB_str( "Can not create overlay surface");
-    }	
-    else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_BACKBUFFER)
-	{
-             DX_STUB_str( "Can not create backbuffer surface");
+        DX_STUB_str( "Can not create overlay surface");
     }
-    else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_TEXTURE)
+    if (pDDSD->ddsCaps.dwCaps & DDSCAPS_BACKBUFFER)
     {
-             DX_STUB_str( "Can not create texture surface");
-    }
-    else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
-    {
-             DX_STUB_str( "Can not create zbuffer surface");
-    }
-    else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OFFSCREENPLAIN) 
-    {
-             DX_STUB_str( "Can not create offscreenplain surface");
+        This->lpLcl->lpGbl->dsList = NULL;
+        DX_STUB_str( "ok");
+
+        if (pDDSD->dwFlags & DDSD_BACKBUFFERCOUNT)
+        {
+            HRESULT retValue;
+            DX_STUB_str( "ok");
+
+            if (! pDDSD->ddsCaps.dwCaps & (DDSCAPS_FLIP | DDSCAPS_COMPLEX))
+            {
+                return DDERR_INVALIDPARAMS;
+            }
+
+            if (pDDSD->dwBackBufferCount != 0)
+            {
+                This->lpLcl->lpGbl->dsList = This->lpLcl->lpPrimary;
+            }
+            else
+            {
+                return DDERR_INVALIDSURFACETYPE;
+            }
+            retValue = CreateBackBufferSurface(This,That,pDDSD);
+            if (retValue != DD_OK)
+            {
+                DX_STUB_str( "Fail to create backbuffer surface");
+                return retValue;
+            }
+        }
     }
 
-    DX_STUB_str("DDERR_INVALIDSURFACETYPE");
-    return DDERR_INVALIDSURFACETYPE;  
+    if (pDDSD->ddsCaps.dwCaps & DDSCAPS_TEXTURE)
+    {
+        DX_STUB_str( "Can not create texture surface");
+    }
+    if (pDDSD->ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
+    {
+        DX_STUB_str( "Can not create zbuffer surface");
+    }
+    if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OFFSCREENPLAIN) 
+    {
+        DX_STUB_str( "Can not create offscreenplain surface");
+    }
+
+
+    *ppSurf = (LPDIRECTDRAWSURFACE7)This->lpLcl->lpPrimary;
+    return DD_OK;
    
 }
 

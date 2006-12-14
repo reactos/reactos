@@ -403,15 +403,22 @@ Main_DDrawSurface_FreePrivateData(LPDIRECTDRAWSURFACE7 iface, REFGUID tag)
 
 HRESULT WINAPI
 Main_DDrawSurface_GetAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
-					  LPDDSCAPS2 pCaps,
-					  LPDIRECTDRAWSURFACE7* ppSurface)
+                                     LPDDSCAPS2 pCaps,
+                                     LPDIRECTDRAWSURFACE7* ppSurface)
 {
-	//LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
-	//LPDDRAWI_DDRAWSURFACE_INT surf;	
-	    
+    /* FIXME hacked */
+
+    LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
+
     DX_WINDBG_trace();
 
-	DX_STUB;    
+    *ppSurface = (LPDIRECTDRAWSURFACE7) This->lpLcl->lpGbl->lpDD->dsList;
+    if (This->lpLcl->lpGbl->lpDD->dsList == NULL)
+    {
+        return DDERR_NOTFOUND;
+    }
+
+    return DD_OK;
 }
 
 HRESULT WINAPI
