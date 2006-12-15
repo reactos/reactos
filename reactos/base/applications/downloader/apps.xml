@@ -1,23 +1,46 @@
 <tree Version="1"> <!-- Application version this tree is made for -->
 	<category name="Internet &amp; Network" icon="1">
-		<category name="Browsers">
-			<application name="Firefox">
-				<description>The most popular free webbrowser out there.</description>
-				<location>http://links.reactos.org/getfirefox</location>
-			</application>
-		</category>
+		<application name="Firefox">
+			<description>The most popular free webbrowser out there.</description>
+			<location>http://links.reactos.org/getfirefox</location>
+		</application>
+		<application name="Putty">
+			<description>A free SSH, Telnet, rlogin, and raw TCP client.</description>
+			<location>http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.58-installer.exe</location>
+		</application>
+
 	</category>
 	<category name="Office" icon="2">
+		<application name="Abiword">
+			<description>Word processor.</description>
+			<location>http://www.abiword.org/downloads/abiword/2.4.1/Windows/abiword-setup-2.4.1.exe</location>
+		</application>
 	</category>
 	<category name="Graphics" icon="3">
+		<application name="IrfanView">
+			<description>Viewer for all kinds of graphics.</description>
+			<location>http://www.aeicomputertech.com/_downloadz/iview398.exe</location>
+		</application>
+		<application name="TuxPaint">
+			<description>An open source bitmap graphics editor geared towards young children.</description>
+			<location>http://switch.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.15-2-win32-installer.exe</location>
+		</application>
 	</category>
 	<category name="Multimedia" icon="4">
 	</category>
 	<category name="Development" icon="5">
+		<application name="ReactOS Build Envirement">
+			<description>Allows you to build the ReactOS Source. For more instructions see our wiki.</description>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/RosBE-0.3.3.exe</location>
+		</application>
 	</category>
 	<category name="Games &amp; Fun" icon="6">
 	</category>
 	<category name="Tools" icon="7">
+		<application name="7-Zip">
+			<description>Utility to create and open zip, tar, rar and other archive files.</description>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/sevenzip/7z432.exe</location>
+		</application>
 	</category>
 	<category name="Others" icon="8">
 	</category>
