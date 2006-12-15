@@ -50,15 +50,15 @@ Cleanup(LPDIRECTDRAW7 iface)
     //}
 
     /* release unlinked interface */
-    if (This->lpLcl != NULL)
-    {
-        DeleteDC(This->lpLcl->hDC);
-        DxHeapMemFree(This->lpLcl);
-    }
-    if (This != NULL)
-    {
-        DxHeapMemFree(This);
-    }
+    //if (This->lpLcl != NULL)
+    //{
+    //    DeleteDC(This->lpLcl->hDC);
+    //    DxHeapMemFree(This->lpLcl);
+    //}
+    //if (This != NULL)
+    //{
+    //    DxHeapMemFree(This);
+    //}
 
 }
 

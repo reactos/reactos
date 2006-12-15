@@ -415,7 +415,7 @@ Main_DDrawSurface_GetAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
     *ppSurface = (LPDIRECTDRAWSURFACE7) This->lpLcl->lpGbl->lpDD->dsList;
    
 
-    return DD_OK;
+    return DDERR_ALREADYINITIALIZED;
 }
 
 HRESULT WINAPI

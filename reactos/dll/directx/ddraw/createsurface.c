@@ -4,54 +4,35 @@
 
 HRESULT 
 CreatePrimarySurface(LPDDRAWI_DIRECTDRAW_INT This, 
-              LPDDRAWI_DDRAWSURFACE_INT That,
+              LPDDRAWI_DDRAWSURFACE_INT *That,
+              LPDDRAWI_DDRAWSURFACE_LCL *lpLcl,
               LPDDSURFACEDESC2 pDDSD)
 {
     DDHAL_CANCREATESURFACEDATA mDdCanCreateSurface;
     DDHAL_CREATESURFACEDATA mDdCreateSurface;
 
-    That = (LPDDRAWI_DDRAWSURFACE_INT)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT));
-    if (That == NULL) 
-    {
-        return DDERR_OUTOFMEMORY;
-    }
 
-    That->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));   
-    if (That->lpLcl == NULL) 
+    That[0]->lpLcl->lpSurfMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
+    if (That[0]->lpLcl->lpSurfMore == NULL)
     {
         DxHeapMemFree(That);
         return DDERR_OUTOFMEMORY;
     }
 
-    That->lpLcl->lpSurfMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
-    if (That->lpLcl->lpSurfMore == NULL)
-    {
-        DxHeapMemFree(That->lpLcl);
-        DxHeapMemFree(That);
-        return DDERR_OUTOFMEMORY;
-    }
+    That[0]->lpLcl->lpSurfMore->slist = lpLcl;
 
-    That->lpLcl->lpSurfMore->slist = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_LCL)<<1);
-    if (That->lpLcl->lpSurfMore->slist == NULL)
-    {
-        DxHeapMemFree(That->lpLcl->lpSurfMore);
-        DxHeapMemFree(That->lpLcl);
-        DxHeapMemFree(That);
-        return DDERR_OUTOFMEMORY;
-    }
-
-    That->lpVtbl = &DirectDrawSurface7_Vtable;
-    That->lpLcl->lpGbl = &ddSurfGbl;
-    That->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
-    That->lpLcl->lpSurfMore->lpDD_int = This;
-    That->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
-    That->lpLcl->lpSurfMore->slist[0] = That->lpLcl;
-    That->lpLcl->dwProcessId = GetCurrentProcessId();
+    That[0]->lpVtbl = &DirectDrawSurface7_Vtable;
+    That[0]->lpLcl->lpGbl = &ddSurfGbl;
+    That[0]->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
+    That[0]->lpLcl->lpSurfMore->lpDD_int = This;
+    That[0]->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
+    That[0]->lpLcl->lpSurfMore->slist[0] = That[0]->lpLcl;
+    That[0]->lpLcl->dwProcessId = GetCurrentProcessId();
 
     mDdCanCreateSurface.lpDD = This->lpLcl->lpGbl;
     if  (pDDSD->dwFlags & DDSD_PIXELFORMAT)
     {
-        That->lpLcl->dwFlags |= DDRAWISURF_HASPIXELFORMAT;
+        That[0]->lpLcl->dwFlags |= DDRAWISURF_HASPIXELFORMAT;
         mDdCanCreateSurface.bIsDifferentPixelFormat = TRUE; //isDifferentPixelFormat;
     }
     else
@@ -65,14 +46,14 @@ CreatePrimarySurface(LPDDRAWI_DIRECTDRAW_INT This,
     mDdCreateSurface.lpDD = This->lpLcl->lpGbl;
     mDdCreateSurface.CreateSurface = This->lpLcl->lpDDCB->cbDDCallbacks.CreateSurface;
     mDdCreateSurface.ddRVal =  DDERR_GENERIC;
-    mDdCreateSurface.dwSCnt = That->dwIntRefCnt + 1; // is this correct 
+    mDdCreateSurface.dwSCnt = That[0]->dwIntRefCnt + 1; // is this correct 
     mDdCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
 
-    mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
+    mDdCreateSurface.lplpSList = That[0]->lpLcl->lpSurfMore->slist;
 
-           That->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
+           That[0]->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
 
-       This->lpLcl->lpPrimary = That;
+       This->lpLcl->lpPrimary = That[0];
        if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
        {   
            return DDERR_NOTINITIALIZED;
@@ -83,7 +64,7 @@ CreatePrimarySurface(LPDDRAWI_DIRECTDRAW_INT This,
            return DDERR_NOTINITIALIZED;
        }
 
-       mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
+       mDdCreateSurface.lplpSList = That[0]->lpLcl->lpSurfMore->slist;
 
        if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
        {
@@ -95,12 +76,14 @@ CreatePrimarySurface(LPDDRAWI_DIRECTDRAW_INT This,
            return mDdCreateSurface.ddRVal;
        }
 
+      That[0]->lpLcl->lpSurfMore->slist = mDdCreateSurface.lplpSList ;
+
        return DD_OK;
 }
 
 HRESULT 
 CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This, 
-              LPDDRAWI_DDRAWSURFACE_INT That,
+              LPDDRAWI_DDRAWSURFACE_INT *That,
               LPDDSURFACEDESC2 pDDSD)
 {
     DDHAL_CANCREATESURFACEDATA mDdCanCreateSurface;
@@ -112,63 +95,53 @@ CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This,
      * and create the backbuffer surface and set it up 
      */
 
-    for (t=0;t<pDDSD->dwBackBufferCount;t++)
+    for (t=1;t<pDDSD->dwBackBufferCount+1;t++)
     {
-        That = (LPDDRAWI_DDRAWSURFACE_INT)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT));
-        if (That == NULL) 
+        
+
+        That[t]->lpLcl->lpSurfMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
+        if (That[t]->lpLcl->lpSurfMore == NULL)
         {
             return DDERR_OUTOFMEMORY;
         }
 
-        That->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));   
-        if (That->lpLcl == NULL) 
+        That[t]->lpLcl->lpSurfMore->slist = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_LCL)<<1);
+        if (That[t]->lpLcl->lpSurfMore->slist == NULL)
         {
             return DDERR_OUTOFMEMORY;
         }
 
-        That->lpLcl->lpSurfMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
-        if (That->lpLcl->lpSurfMore == NULL)
+        That[t]->lpLcl->lpGbl = DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_GBL));
+        if (That[t]->lpLcl->lpGbl == NULL)
         {
             return DDERR_OUTOFMEMORY;
         }
 
-        That->lpLcl->lpSurfMore->slist = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_LCL)<<1);
-        if (That->lpLcl->lpSurfMore->slist == NULL)
-        {
-            return DDERR_OUTOFMEMORY;
-        }
+        memcpy(That[t]->lpLcl->lpGbl, &ddSurfGbl,sizeof(DDRAWI_DDRAWSURFACE_GBL));
+        That[t]->lpVtbl = &DirectDrawSurface7_Vtable;
+        That[t]->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
+        That[t]->lpLcl->lpSurfMore->lpDD_int = This;
+        That[t]->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
+        That[t]->lpLcl->lpSurfMore->slist[0] = That[t]->lpLcl;
+        That[t]->lpLcl->dwProcessId = GetCurrentProcessId();
 
-        That->lpLcl->lpGbl = DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_GBL));
-        if (That->lpLcl->lpGbl == NULL)
-        {
-            return DDERR_OUTOFMEMORY;
-        }
-
-        memcpy(That->lpLcl->lpGbl, &ddSurfGbl,sizeof(DDRAWI_DDRAWSURFACE_GBL));
-        That->lpVtbl = &DirectDrawSurface7_Vtable;
-        That->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
-        That->lpLcl->lpSurfMore->lpDD_int = This;
-        That->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
-        That->lpLcl->lpSurfMore->slist[0] = That->lpLcl;
-        That->lpLcl->dwProcessId = GetCurrentProcessId();
-
-        That->lpVtbl = &DirectDrawSurface7_Vtable;
-        That->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
-        That->lpLcl->lpSurfMore->lpDD_int = This;
-        That->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
-        That->lpLcl->lpSurfMore->slist[0] = That->lpLcl;
-        That->lpLcl->dwProcessId = GetCurrentProcessId();
+        That[t]->lpVtbl = &DirectDrawSurface7_Vtable;
+        That[t]->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
+        That[t]->lpLcl->lpSurfMore->lpDD_int = This;
+        That[t]->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
+        That[t]->lpLcl->lpSurfMore->slist[0] = That[t]->lpLcl;
+        That[t]->lpLcl->dwProcessId = GetCurrentProcessId();
 
         if  (pDDSD->dwFlags & DDSD_PIXELFORMAT)
         {
-            That->lpLcl->dwFlags |= DDRAWISURF_HASPIXELFORMAT;
+            That[t]->lpLcl->dwFlags |= DDRAWISURF_HASPIXELFORMAT;
         }
 
         mDdCanCreateSurface.lpDD = This->lpLcl->lpGbl;
 
         if (pDDSD->dwFlags & DDSD_PIXELFORMAT)
         {
-            That->lpLcl->dwFlags |= DDRAWISURF_HASPIXELFORMAT;
+            That[t]->lpLcl->dwFlags |= DDRAWISURF_HASPIXELFORMAT;
             mDdCanCreateSurface.bIsDifferentPixelFormat = TRUE; //isDifferentPixelFormat;
         }
         else
@@ -176,7 +149,7 @@ CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This,
             mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
         }
 
-        That->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
+        That[t]->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
 
         mDdCanCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
         mDdCanCreateSurface.CanCreateSurface = This->lpLcl->lpDDCB->cbDDCallbacks.CanCreateSurface;
@@ -185,10 +158,10 @@ CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This,
         mDdCreateSurface.lpDD = This->lpLcl->lpGbl;
         mDdCreateSurface.CreateSurface = This->lpLcl->lpDDCB->cbDDCallbacks.CreateSurface;
         mDdCreateSurface.ddRVal =  DDERR_GENERIC;
-        mDdCreateSurface.dwSCnt = That->dwIntRefCnt + 1; // is this correct 
+        mDdCreateSurface.dwSCnt = That[t]->dwIntRefCnt + 1; // is this correct 
         mDdCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
 
-        mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
+        mDdCreateSurface.lplpSList = That[t]->lpLcl->lpSurfMore->slist;
 
         if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
         {
@@ -200,7 +173,7 @@ CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This,
             return DDERR_NOTINITIALIZED;
         }
 
-        mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
+        mDdCreateSurface.lplpSList = That[t]->lpLcl->lpSurfMore->slist;
 
         if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
         {
@@ -213,8 +186,8 @@ CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This,
         }
 
         /* Build the linking buffer */
-        That->lpLink = This->lpLcl->lpGbl->dsList;
-        This->lpLcl->lpGbl->dsList = That;
+        That[t]->lpLink = This->lpLcl->lpGbl->dsList;
+        This->lpLcl->lpGbl->dsList = That[t];
 DX_STUB_str( "ok");
     }
    return DD_OK;
@@ -224,7 +197,7 @@ DX_STUB_str( "ok");
 
 HRESULT 
 CreateOverlaySurface(LPDDRAWI_DIRECTDRAW_INT This, 
-              LPDDRAWI_DDRAWSURFACE_INT That,
+              LPDDRAWI_DDRAWSURFACE_INT *That,
               LPDDSURFACEDESC2 pDDSD)
 {
 
