@@ -16,6 +16,9 @@
 <directory name="devmgr">
 	<xi:include href="devmgr/devmgr.rbuild" />
 </directory>
+<directory name="downloader">
+	<xi:include href="downloader/downloader.rbuild" />
+</directory>
 <directory name="games">
 	<xi:include href="games/games.rbuild" />
 </directory>

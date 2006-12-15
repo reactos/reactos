@@ -1,0 +1,24 @@
+<tree Version="1"> <!-- Application version this tree is made for -->
+	<category name="Internet &amp; Network" icon="1">
+		<category name="Browsers">
+			<application name="Firefox">
+				<description>The most popular free webbrowser out there.</description>
+				<location>http://links.reactos.org/getfirefox</location>
+			</application>
+		</category>
+	</category>
+	<category name="Office" icon="2">
+	</category>
+	<category name="Graphics" icon="3">
+	</category>
+	<category name="Multimedia" icon="4">
+	</category>
+	<category name="Development" icon="5">
+	</category>
+	<category name="Games &amp; Fun" icon="6">
+	</category>
+	<category name="Tools" icon="7">
+	</category>
+	<category name="Others" icon="8">
+	</category>
+</tree>
