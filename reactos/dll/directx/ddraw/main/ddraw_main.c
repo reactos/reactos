@@ -167,7 +167,10 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 {
     
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
-    LPDDRAWI_DDRAWSURFACE_INT That = NULL;
+    LPDDRAWI_DDRAWSURFACE_INT *That = NULL;
+    LPDDRAWI_DDRAWSURFACE_LCL *lpLcl;
+    DWORD dwHowManySurface = 1;
+    DWORD i;
 
     if (pUnkOuter!=NULL) 
     {
@@ -188,6 +191,43 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     if (sizeof(DDSURFACEDESC2)!=pDDSD->dwSize)
     {
         return DDERR_UNSUPPORTED;
+    }
+     if( (pDDSD->ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY) && 
+        (pDDSD->ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY ) )
+    {
+        return DDERR_INVALIDCAPS;
+    }
+
+    /* Calc how many surface we need setup */
+    if (pDDSD->ddsCaps.dwCaps &DDSD_BACKBUFFERCOUNT)
+    {
+       /* One primary + xx backbuffer */
+       dwHowManySurface |= pDDSD->dwBackBufferCount;
+    }
+
+    /* Alloc all memory we need for all createsurface here */
+    lpLcl = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_LCL) * dwHowManySurface);
+    if (lpLcl == NULL)
+    {
+        return DDERR_OUTOFMEMORY;
+    }
+
+    That = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_INT) * dwHowManySurface);
+    if (That == NULL)
+    {
+        return DDERR_OUTOFMEMORY;
+    }
+
+    for (i=0;i<dwHowManySurface;i++)
+    {
+        That[i] = (LPDDRAWI_DDRAWSURFACE_INT) DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT));
+        lpLcl[i] = (LPDDRAWI_DDRAWSURFACE_LCL) DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));
+        if ( (lpLcl[i] == NULL) ||
+             (That[i] == NULL))
+        {
+            return DDERR_OUTOFMEMORY;
+        }
+        That[i]->lpLcl = lpLcl[i];
     }
 
 
@@ -232,7 +272,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     /* Create the surface */
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
     {
-        CreatePrimarySurface(This,That,pDDSD);
+        CreatePrimarySurface(This,That,lpLcl,pDDSD);
     }
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OVERLAY)
     {       
@@ -283,8 +323,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
         DX_STUB_str( "Can not create offscreenplain surface");
     }
 
-
-    *ppSurf = (LPDIRECTDRAWSURFACE7)This->lpLcl->lpPrimary;
+    *ppSurf = (LPDIRECTDRAWSURFACE7)That[0];
     return DD_OK;
    
 }
