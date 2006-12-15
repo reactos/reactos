@@ -117,7 +117,6 @@ void text (void* usrdata, const char* data, int len)
 	{
 		int currentlengt = lstrlen(CurrentApplication->Location);
 		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Location[currentlengt], 0x100-currentlengt);
-		MessageBox(0,CurrentApplication->Location,0,0);
 	}
 }
 
