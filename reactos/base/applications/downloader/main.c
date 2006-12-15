@@ -39,18 +39,13 @@ void AddItems (HWND hwnd, struct Category* Category, struct Category* Parent)
 	TV_INSERTSTRUCT Insert; 
 
 	Insert.item.lParam = (UINT)Category;
-	Insert.item.mask = TVIF_TEXT|TVIF_PARAM;
+	Insert.item.mask = TVIF_TEXT|TVIF_PARAM|TVIF_IMAGE|TVIF_SELECTEDIMAGE;;
 	Insert.item.pszText = Category->Name; //that is okay
 	Insert.item.cchTextMax = lstrlen(Category->Name); 
+	Insert.item.iImage = Category->Icon;
+	Insert.item.iSelectedImage = Category->Icon;
 	Insert.hInsertAfter = TVI_LAST;
 	Insert.hParent = Category->Parent ? Category->Parent->TreeviewItem : TVI_ROOT;
-
-	if(Category->Icon)
-	{
-		Insert.item.iImage = Category->Icon;
-		Insert.item.iSelectedImage = Category->Icon;
-		Insert.item.mask |= TVIF_IMAGE | TVIF_SELECTEDIMAGE;
-	}
 
 	Category->TreeviewItem = (HTREEITEM)SendMessage(hwnd, TVM_INSERTITEM, 0, (LPARAM)&Insert);
 
