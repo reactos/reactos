@@ -122,7 +122,7 @@ void SetupControls (HWND hwnd)
 	ImageList_Add(hImageList, LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_8)), NULL); 
 
 	// Fill the TreeViews
-	ProcessXML ("C:\\reactos\\base\\applications\\downloader\\apps.xml", &Root);
+	ProcessXML ("apps.xml", &Root);
 	AddItems (hCategories, Root.Children, NULL);
 }
 
