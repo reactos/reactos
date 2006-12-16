@@ -11,7 +11,7 @@ ReactOS from http://www.reactos.org/.
 
 To build ReactOS run 'make' (without the quotes) if you are building on Linux
 or 'mingw32-make' if you are building on Windows (or ReactOS) from the top
-directory.
+directory. If you are using RosBE, follow on-screen instructions.
 
 
 2.2 Building a bootable CD image
