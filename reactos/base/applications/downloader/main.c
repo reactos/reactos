@@ -77,7 +77,7 @@ void DisplayApps (HWND hwnd, struct Category* Category)
 	}
 } 
 
-BOOLEAN SetupControls (HWND hwnd)
+BOOL SetupControls (HWND hwnd)
 {
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 
@@ -155,7 +155,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_CREATE:
 		{
-			SetupControls(hwnd);
+			if(!SetupControls(hwnd))
+				return -1;
 			ShowMessage(L"ReactOS Downloader", L"Welcome to ReactOS's Downloader\nPlease choose a category on the right. This is version 0.8.");
 		} 
 		break;
@@ -229,7 +230,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		case WM_DESTROY:
 		{
 			DeleteObject(hLogo);
-			FreeTree(Root.Children);
+			if(Root.Children)
+				FreeTree(Root.Children);
 			PostQuitMessage(0);
 			return 0;
 		}
