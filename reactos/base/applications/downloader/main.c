@@ -155,12 +155,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_CREATE:
 		{
-			if(SetupControls(hwnd) == TRUE)
-				ShowMessage(L"ReactOS Downloader", L"Welcome to ReactOS's Downloader\nPlease choose a category on the right. This is version 0.5.");
-			else {
-				PostQuitMessage(0);
-				return 0;
-			}
+			SetupControls(hwnd);
+			ShowMessage(L"ReactOS Downloader", L"Welcome to ReactOS's Downloader\nPlease choose a category on the right. This is version 0.8.");
 		} 
 		break;
 
@@ -176,7 +172,11 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			{
 				if (lParam == (LPARAM)hBtnDownload)
 				{
-					DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
+					if(SelectedApplication)
+						DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
+					else
+						ShowMessage (L"No application selected", L"Please select a Application before you click the download button, if you need assistance please click on the question mark button on the top right corner.");
+
 				}
 				else if (lParam == (LPARAM)hBtnUpdate)
 				{
@@ -184,7 +184,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				}
 				else if (lParam == (LPARAM)hBtnHelp)
 				{
-					ShowMessage (L"Help", L"Choose a category on the right, then choose a application and click the download button.To update the application information click the button next to the help button.");
+					ShowMessage (L"Help", L"Choose a category on the right, then choose a application and click the download button. To update the application information click the button next to the help button.");
 				}
 			}
 		}
@@ -197,7 +197,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			{
 				if(data->hwndFrom == hCategories) 
 				{
-					DisplayApps (hApps, (struct Category*) ((LPNMTREEVIEW)lParam)->itemNew.lParam);
+					SelectedApplication = NULL;
+					struct Category* Category = (struct Category*) ((LPNMTREEVIEW)lParam)->itemNew.lParam;
+					DisplayApps (hApps, Category);
+					ShowMessage(Category->Name, Category->Children ? L"Please selcect a subcategory" : L"Please selcet a application");
 				}
 				else if(data->hwndFrom == hApps) 
 				{
