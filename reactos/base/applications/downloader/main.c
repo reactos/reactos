@@ -77,9 +77,13 @@ void DisplayApps (HWND hwnd, struct Category* Category)
 	}
 } 
 
-void SetupControls (HWND hwnd)
+BOOLEAN SetupControls (HWND hwnd)
 {
 	HINSTANCE hInstance = GetModuleHandle(NULL);
+
+	// Parse the XML file
+	if (ProcessXML ("apps.xml", &Root) == FALSE)
+		return FALSE;
 
 	// Set up the controls
 	hCategories = CreateWindowEx(0, WC_TREEVIEW, L"Categories", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
@@ -117,8 +121,8 @@ void SetupControls (HWND hwnd)
 	ImageList_Add(hImageList, LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_8)), NULL); 
 
 	// Fill the TreeViews
-	ProcessXML ("apps.xml", &Root);
 	AddItems (hCategories, Root.Children, NULL);
+	return TRUE;
 }
 
 static void ResizeControl (HWND hwnd, int x1, int y1, int x2, int y2)
@@ -151,8 +155,12 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_CREATE:
 		{
-			SetupControls(hwnd);
-			ShowMessage(L"ReactOS Downloader", L"Welcome to ReactOS's Downloader\nPlease choose a category on the right. This is version 0.5.");
+			if(SetupControls(hwnd) == TRUE)
+				ShowMessage(L"ReactOS Downloader", L"Welcome to ReactOS's Downloader\nPlease choose a category on the right. This is version 0.5.");
+			else {
+				PostQuitMessage(0);
+				return 0;
+			}
 		} 
 		break;
 
