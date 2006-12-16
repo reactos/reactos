@@ -201,7 +201,15 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					SelectedApplication = NULL;
 					struct Category* Category = (struct Category*) ((LPNMTREEVIEW)lParam)->itemNew.lParam;
 					DisplayApps (hApps, Category);
-					ShowMessage(Category->Name, Category->Children ? L"Please selcect a subcategory" : L"Please selcet a application");
+
+					if(Category->Children && !Category->Apps)
+						ShowMessage(Category->Name, L"Please choose a subcategory");
+					else if(!Category->Children && Category->Apps)
+						ShowMessage(Category->Name, L"Please choose a applcations");
+					else if(Category->Children && Category->Apps)
+						ShowMessage(Category->Name, L"Please choose a application or a subcategory");
+					else
+						ShowMessage(Category->Name, L"Sorry, there no applications in this category yet. You can help and add more applications.");
 				}
 				else if(data->hwndFrom == hApps) 
 				{
