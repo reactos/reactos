@@ -11,12 +11,13 @@
 #include <stdio.h>
 #include <windows.h>
 #include "structures.h"
+#include "resources.h"
 
 BOOL TagOpen;
 struct Category* Current;
 struct Application* CurrentApplication;
 char CurrentTag [0x100];
-extern WCHAR* Strings [STRING_COUNT];
+extern WCHAR Strings [STRING_COUNT][MAX_STRING_LENGHT];
 
 void tag_opened (void* usrdata, const char* tag, const char** arg)
 {

@@ -22,7 +22,7 @@ struct Application* SelectedApplication;
 INT_PTR CALLBACK DownloadProc (HWND, UINT, WPARAM, LPARAM);
 BOOL ProcessXML (const char* filename, struct Category* Root);
 void FreeTree (struct Category* Node);
-WCHAR* Strings [STRING_COUNT];
+WCHAR Strings [STRING_COUNT][MAX_STRING_LENGHT];
 
 
 void ShowMessage (WCHAR* title, WCHAR* message)
@@ -260,12 +260,7 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 
 	// Load strings
 	for(i=0; i<STRING_COUNT; i++)
-	{
-		int StringLenght = 255;
-		Strings[i] = malloc(StringLenght*sizeof(WCHAR));
-		LoadString(hInstance, i, Strings[i], StringLenght);
-		Strings[StringLenght]=0;
-	}
+		LoadString(hInstance, i, Strings[i], MAX_STRING_LENGHT);
 
 	// Create the window
 	WNDCLASSEX WndClass = {0};
@@ -301,10 +296,6 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-	
-	// Free strings
-	for(i=0; i<STRING_COUNT; i++)
-			free(Strings[i]);
 
 	return 0;
 }

@@ -36,3 +36,4 @@
 #define IDS_XMLERROR_2		0xE
 
 #define STRING_COUNT		0xE
+#define	MAX_STRING_LENGHT	0x100
