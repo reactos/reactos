@@ -19,4 +19,20 @@
 #define IDC_STATUS			0x1001
 #define IDC_REMOVE			0x1002
 
+#define IDS_WINDOW_TITLE 	0x0
+#define IDS_WELCOME_TITLE	0x1
+#define IDS_WELCOME 		0x2
+#define IDS_NO_APP_TITLE	0x3
+#define IDS_NO_APP	  		0x4
+#define IDS_UPDATE_TITLE 	0x5
+#define IDS_UPDATE			0x6
+#define IDS_HELP_TITLE 		0x7
+#define IDS_HELP			0x8
+#define IDS_NO_APPS			0x9
+#define IDS_APPS			0xA
+#define IDS_SUBS			0xB
+#define IDS_BOTH			0xC
+#define IDS_XMLERROR_1		0xD
+#define IDS_XMLERROR_2		0xE
 
+#define STRING_COUNT		0xE

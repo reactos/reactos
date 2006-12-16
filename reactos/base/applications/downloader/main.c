@@ -22,6 +22,7 @@ struct Application* SelectedApplication;
 INT_PTR CALLBACK DownloadProc (HWND, UINT, WPARAM, LPARAM);
 BOOL ProcessXML (const char* filename, struct Category* Root);
 void FreeTree (struct Category* Node);
+WCHAR* Strings [STRING_COUNT];
 
 
 void ShowMessage (WCHAR* title, WCHAR* message)
@@ -122,6 +123,7 @@ BOOL SetupControls (HWND hwnd)
 
 	// Fill the TreeViews
 	AddItems (hCategories, Root.Children, NULL);
+
 	return TRUE;
 }
 
@@ -142,7 +144,6 @@ static void DrawBitmap (HWND hwnd, int x, int y, HBITMAP hBmp)
 	SelectObject(hdcMem, hBmp);
 	GetObject(hBmp, sizeof(bm), &bm);
 	
-	//BitBlt(hdc, x, y, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
 	TransparentBlt(hdc, x, y, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, 0xFFFFFF);
 
 	DeleteDC(hdcMem);
@@ -157,7 +158,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 			if(!SetupControls(hwnd))
 				return -1;
-			ShowMessage(L"ReactOS Downloader", L"Welcome to ReactOS's Downloader\nPlease choose a category on the right. This is version 0.8.");
+			ShowMessage(Strings[IDS_WELCOME_TITLE], Strings[IDS_WELCOME]);
 		} 
 		break;
 
@@ -176,16 +177,15 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					if(SelectedApplication)
 						DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
 					else
-						ShowMessage (L"No application selected", L"Please select a Application before you click the download button, if you need assistance please click on the question mark button on the top right corner.");
-
+						ShowMessage(Strings[IDS_NO_APP_TITLE], Strings[IDS_NO_APP]);
 				}
 				else if (lParam == (LPARAM)hBtnUpdate)
 				{
-					ShowMessage (L"Update", L"Feature not implemented yet.");
+					ShowMessage(Strings[IDS_UPDATE_TITLE], Strings[IDS_UPDATE]);
 				}
 				else if (lParam == (LPARAM)hBtnHelp)
 				{
-					ShowMessage (L"Help", L"Choose a category on the right, then choose a application and click the download button. To update the application information click the button next to the help button.");
+					ShowMessage(Strings[IDS_HELP_TITLE], Strings[IDS_HELP]);
 				}
 			}
 		}
@@ -203,13 +203,13 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					DisplayApps (hApps, Category);
 
 					if(Category->Children && !Category->Apps)
-						ShowMessage(Category->Name, L"Please choose a subcategory");
+						ShowMessage(Category->Name, Strings[IDS_SUBS]);
 					else if(!Category->Children && Category->Apps)
-						ShowMessage(Category->Name, L"Please choose a applcations");
+						ShowMessage(Category->Name, Strings[IDS_APPS]);
 					else if(Category->Children && Category->Apps)
-						ShowMessage(Category->Name, L"Please choose a application or a subcategory");
+						ShowMessage(Category->Name, Strings[IDS_BOTH]);
 					else
-						ShowMessage(Category->Name, L"Sorry, there no applications in this category yet. You can help and add more applications.");
+						ShowMessage(Category->Name, Strings[IDS_NO_APPS]);
 				}
 				else if(data->hwndFrom == hApps) 
 				{
@@ -253,9 +253,19 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 					LPSTR lpCmdLine, INT nCmdShow)
 {
 	HWND hwnd;
+	int i;
 
 	LoadLibrary(L"riched20.dll");
 	InitCommonControls();
+
+	// Load strings
+	for(i=0; i<STRING_COUNT; i++)
+	{
+		int StringLenght = 255;
+		Strings[i] = malloc(StringLenght*sizeof(WCHAR));
+		LoadString(hInstance, i, Strings[i], StringLenght);
+		Strings[StringLenght]=0;
+	}
 
 	// Create the window
 	WNDCLASSEX WndClass = {0};
@@ -271,7 +281,7 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 	RegisterClassEx(&WndClass);
 
 	hwnd = CreateWindow(L"Downloader", 
-						L"Download ! - ReactOS Downloader",
+						Strings[IDS_WINDOW_TITLE],
 						WS_OVERLAPPEDWINDOW,
 						CW_USEDEFAULT,  
 						CW_USEDEFAULT,   
@@ -291,6 +301,10 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+	
+	// Free strings
+	for(i=0; i<STRING_COUNT; i++)
+			free(Strings[i]);
 
 	return 0;
 }

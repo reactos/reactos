@@ -16,6 +16,7 @@ BOOL TagOpen;
 struct Category* Current;
 struct Application* CurrentApplication;
 char CurrentTag [0x100];
+extern WCHAR* Strings [STRING_COUNT];
 
 void tag_opened (void* usrdata, const char* tag, const char** arg)
 {
@@ -93,7 +94,7 @@ void tag_opened (void* usrdata, const char* tag, const char** arg)
 		strncpy(CurrentTag, tag, 0x100);
 	}
 	else
-		MessageBox(0,L"Invaild XML File1",0,0);
+		MessageBox(0,Strings[IDS_XMLERROR_2],0,0);
 }
 
 
@@ -155,7 +156,7 @@ BOOL ProcessXML (const char* filename, struct Category* Root)
 	FILE* file = fopen(filename, "r");
 	if(!file) 
 	{
-		MessageBox(0,L"Could not find the xml file !",0,0);
+		MessageBox(0,Strings[IDS_XMLERROR_1],0,0);
 		return FALSE;
 	}
 
@@ -171,7 +172,7 @@ BOOL ProcessXML (const char* filename, struct Category* Root)
 		buffer[len] = 0;
 		if(!XML_Parse(parser, buffer, len, done)) 
 		{
-			MessageBox(0,L"Could not parse the xml file !",0,0);
+			MessageBox(0,Strings[IDS_XMLERROR_2],0,0);
 			return FALSE;
 		}
 	}
