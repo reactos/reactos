@@ -13,8 +13,10 @@
 #include "resources.h"
 #include "structures.h"
 
-HWND hCategories, hApps, hDescription, hBtnDownload, hBtnUpdate, hBtnHelp;
-HBITMAP hLogo;
+HWND hCategories, hApps, hBtnDownload, hBtnUpdate, hBtnHelp;
+HBITMAP hLogo, hUnderline;
+WCHAR* DescriptionHeadline = L"";
+WCHAR* DescriptionText = L"";
 
 struct Category Root;
 struct Application* SelectedApplication;
@@ -24,16 +26,6 @@ BOOL ProcessXML (const char* filename, struct Category* Root);
 void FreeTree (struct Category* Node);
 WCHAR Strings [STRING_COUNT][MAX_STRING_LENGHT];
 
-
-void ShowMessage (WCHAR* title, WCHAR* message)
-{
-	SETTEXTEX Text = {ST_SELECTION, 1200};
-
-	SendMessage(hDescription, WM_SETTEXT, 0, 0);
-	SendMessage(hDescription, EM_SETTEXTEX, (WPARAM)&Text, (LPARAM)title);
-	SendMessage(hDescription, EM_SETTEXTEX, (WPARAM)&Text, (LPARAM)L"\n----------------------------------------\n");
-	SendMessage(hDescription, EM_SETTEXTEX, (WPARAM)&Text, (LPARAM)message);
-}
 
 void AddItems (HWND hwnd, struct Category* Category, struct Category* Parent)
 { 
@@ -93,10 +85,8 @@ BOOL SetupControls (HWND hwnd)
 	hApps = CreateWindowEx(0, WC_TREEVIEW, L"Applications", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
 							0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
-	hDescription = CreateWindowEx(WS_EX_WINDOWEDGE, RICHEDIT_CLASS, L"", WS_CHILD|WS_VISIBLE|ES_MULTILINE|ES_READONLY, //|ES_AUTOHSCROLL
-							0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
-
 	hLogo = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_LOGO));
+	hUnderline = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_UNDERLINE));
 
 	hBtnHelp = CreateWindow (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 550, 10, 40, 40, hwnd, 0, hInstance, NULL);
 	hBtnUpdate = CreateWindow (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 500, 10, 40, 40, hwnd, 0, hInstance, NULL);
@@ -133,25 +123,72 @@ static void ResizeControl (HWND hwnd, int x1, int y1, int x2, int y2)
 	MoveWindow(hwnd, x1, y1, x2-x1, y2-y1, TRUE);
 }
 
-static void DrawBitmap (HWND hwnd, int x, int y, HBITMAP hBmp)
+static void DrawBitmap (HDC hdc, int x, int y, HBITMAP hBmp)
 {
 	BITMAP bm;
-	PAINTSTRUCT ps;
-
-	HDC hdc = BeginPaint(hwnd, &ps);
 	HDC hdcMem = CreateCompatibleDC(hdc);
 
 	SelectObject(hdcMem, hBmp);
 	GetObject(hBmp, sizeof(bm), &bm);
-	
 	TransparentBlt(hdc, x, y, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, 0xFFFFFF);
 
 	DeleteDC(hdcMem);
-	EndPaint(hwnd, &ps);
+}
+void ShowMessage (WCHAR* title, WCHAR* message)
+{
+	DescriptionHeadline = title;
+	DescriptionText = message;
+
+	HWND hwnd = GetParent(hCategories);
+	InvalidateRect(hwnd,NULL,TRUE); 
+	UpdateWindow(hwnd);
+}
+
+HFONT GetFont (BOOL Title)
+{
+    LOGFONT Font;
+    GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), &Font);
+
+	int Height = Title ? 20 : 19;
+	int Scale = Font.lfWidth/Font.lfHeight;
+ 
+	return CreateFont(Height, Height*Scale, Font.lfEscapement, Font.lfOrientation, Title ? FW_EXTRABOLD : FW_NORMAL, Font.lfItalic, 
+		Font.lfUnderline, Font.lfStrikeOut, Font.lfCharSet, Font.lfOutPrecision, Font.lfClipPrecision, Font.lfQuality, 
+		Font.lfPitchAndFamily, Font.lfFaceName); 
+}
+
+static void DrawDescription (HDC hdc, RECT DescriptionRect)
+{
+	int i;
+
+	// Backgroud
+	Rectangle(hdc, DescriptionRect.left, DescriptionRect.top, DescriptionRect.right, DescriptionRect.bottom);
+
+	// Underline
+	for (i=DescriptionRect.left+1;i<DescriptionRect.right-1;i++)
+		DrawBitmap(hdc, i, DescriptionRect.top+22, hUnderline); // less code then stretching ;)
+
+	// Headline
+	HFONT Font = GetFont(TRUE);
+	SelectObject(hdc, Font);
+	RECT Rect = {DescriptionRect.left+5, DescriptionRect.top+3, DescriptionRect.right-2, DescriptionRect.top+22};
+	DrawText(hdc, DescriptionHeadline, lstrlen(DescriptionHeadline), &Rect, DT_SINGLELINE|DT_NOPREFIX);
+	DeleteObject(Font);
+
+	// Description
+	Font = GetFont(FALSE);
+	SelectObject(hdc, Font);
+	Rect.top += 40;
+	Rect.bottom = DescriptionRect.bottom-2;
+	DrawText(hdc, DescriptionText, lstrlen(DescriptionText), &Rect, DT_WORDBREAK|DT_NOPREFIX); // ToDo: Call TabbedTextOut to draw a nice table
+	DeleteObject(Font);
+
 }
 
 LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	static RECT DescriptionRect;
+
 	switch (Message)
 	{
 		case WM_CREATE:
@@ -164,7 +201,11 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 		case WM_PAINT:
 		{
-			DrawBitmap(hwnd, 10, 12, hLogo);
+			PAINTSTRUCT ps;
+			HDC hdc = BeginPaint(hwnd, &ps);
+			DrawBitmap(hdc, 10, 12, hLogo);
+			DrawDescription(hdc, DescriptionRect);
+			EndPaint(hwnd, &ps);
 		}
 		break;
 
@@ -227,7 +268,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 			ResizeControl(hCategories, 10, 60, Split_Vertical, HIWORD(lParam)-10);
 			ResizeControl(hApps, Split_Vertical+5, 60, LOWORD(lParam)-10, Split_Hozizontal);
-			ResizeControl(hDescription, Split_Vertical+5, Split_Hozizontal+5, LOWORD(lParam)-10, HIWORD(lParam)-50);
+			RECT Rect = {Split_Vertical+5, Split_Hozizontal+5, LOWORD(lParam)-10, HIWORD(lParam)-50};
+			DescriptionRect = Rect;
 
 			MoveWindow(hBtnHelp, LOWORD(lParam)-50, 10, 40, 40, 0);
 			MoveWindow(hBtnUpdate, LOWORD(lParam)-100, 10, 40, 40, 0);
@@ -260,7 +302,7 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 
 	// Load strings
 	for(i=0; i<STRING_COUNT; i++)
-		LoadString(hInstance, i, Strings[i], MAX_STRING_LENGHT);
+		LoadString(hInstance, i, Strings[i], MAX_STRING_LENGHT); // if you know a better method please tell me. 
 
 	// Create the window
 	WNDCLASSEX WndClass = {0};
