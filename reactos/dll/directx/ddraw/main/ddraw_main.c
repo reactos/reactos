@@ -171,7 +171,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     LPDDRAWI_DDRAWSURFACE_LCL *lpLcl;
     DWORD dwHowManySurface = 1;
     DWORD i;
-
+    LPDDRAWI_DDRAWSURFACE_LCL *xlpLcl;
     if (pUnkOuter!=NULL) 
     {
         return CLASS_E_NOAGGREGATION; 
@@ -198,44 +198,6 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
         return DDERR_INVALIDCAPS;
     }
 
-    /* Calc how many surface we need setup */
-    if (pDDSD->ddsCaps.dwCaps &DDSD_BACKBUFFERCOUNT)
-    {
-       /* One primary + xx backbuffer */
-       dwHowManySurface |= pDDSD->dwBackBufferCount;
-    }
-
-    /* Alloc all memory we need for all createsurface here */
-    lpLcl = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_LCL) * dwHowManySurface);
-    if (lpLcl == NULL)
-    {
-        return DDERR_OUTOFMEMORY;
-    }
-
-    That = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_INT) * dwHowManySurface);
-    if (That == NULL)
-    {
-        return DDERR_OUTOFMEMORY;
-    }
-
-    for (i=0;i<dwHowManySurface;i++)
-    {
-        That[i] = (LPDDRAWI_DDRAWSURFACE_INT) DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT));
-        lpLcl[i] = (LPDDRAWI_DDRAWSURFACE_LCL) DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));
-        if ( (lpLcl[i] == NULL) ||
-             (That[i] == NULL))
-        {
-            return DDERR_OUTOFMEMORY;
-        }
-        That[i]->lpLcl = lpLcl[i];
-    }
-
-
-
-   /* here we need start fixing bugs
-    * the code above is 100% correct behovir
-    * checked how ms ddraw behivor
-    */
 
     /* this two line should be move to startup code */
     ddSurfGbl.lpDD       = &ddgbl;
@@ -269,8 +231,61 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
         memcpy(&ddSurfGbl.ddpfSurface,&pDDSD->ddpfPixelFormat, sizeof(DDPIXELFORMAT));
     }
 
+    /* Calc how many surface we need setup */
+    if (pDDSD->ddsCaps.dwCaps &DDSD_BACKBUFFERCOUNT)
+    {
+       /* One primary + xx backbuffer */
+       dwHowManySurface |= pDDSD->dwBackBufferCount;
+    }
+
+    /* Alloc all memory we need for all createsurface here */
+    lpLcl = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_LCL) * dwHowManySurface);
+    if (lpLcl == NULL)
+    {
+        return DDERR_OUTOFMEMORY;
+    }
+
+    That = DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_INT) * dwHowManySurface);
+    if (That == NULL)
+    {
+        return DDERR_OUTOFMEMORY;
+    }
+
+    for (i=0;i<dwHowManySurface+1;i++)
+    {
+        That[i] = (LPDDRAWI_DDRAWSURFACE_INT) DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT));
+        lpLcl[i] = (LPDDRAWI_DDRAWSURFACE_LCL) DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL));
+        if ( (lpLcl[i] == NULL) ||
+             (That[i] == NULL))
+        {
+            return DDERR_OUTOFMEMORY;
+        }
+        That[i]->lpLcl = lpLcl[i];
+
+        That[i]->lpLcl->lpGbl = &ddSurfGbl;
+        //That[i]->lpLcl->lpGbl = (LPDDRAWI_DDRAWSURFACE_GBL) DxHeapMemAlloc(sizeof(LPDDRAWI_DDRAWSURFACE_GBL));
+        //if (That[i]->lpLcl->lpGbl == NULL)
+        //{
+        //    return DDERR_OUTOFMEMORY;
+        //}
+
+        //That[i]->lpLcl->lpGbl->lpDD = &ddgbl;
+        //That[i]->lpLcl->lpGbl->lpDDHandle =  This->lpLcl->lpGbl;
+        //memmove(That[i]->lpLcl->lpGbl,&ddSurfGbl,sizeof(LPDDRAWI_DDRAWSURFACE_GBL));
+    }
+
+
+
+   /* here we need start fixing bugs
+    * the code above is 100% correct behovir
+    * checked how ms ddraw behivor
+    */
+
+
+
     /* Create the surface */
-    if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
+    if (((pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE))
+        && (!(pDDSD->ddsCaps.dwCaps & DDSCAPS_BACKBUFFER)))
     {
         CreatePrimarySurface(This,That,lpLcl,pDDSD);
     }
@@ -301,7 +316,8 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
             {
                 return DDERR_INVALIDSURFACETYPE;
             }
-            retValue = CreateBackBufferSurface(This,That,pDDSD);
+            retValue = CreateBackBufferSurface(This,That,lpLcl,pDDSD);
+            //CreatePrimarySurface(This,That,lpLcl,pDDSD);
             if (retValue != DD_OK)
             {
                 DX_STUB_str( "Fail to create backbuffer surface");

@@ -593,7 +593,6 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
     }
 
     /* Fill some basic info for Surface */
-    ddSurfGbl.lpDD = &ddgbl;
 
     /* FIXME 
        We need setup this also 
