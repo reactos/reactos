@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<module name="downloader" type="win32gui" installbase="system32" installname="downloader.exe" allowwarnings="true" stdlib="host">
+<module name="downloader" type="win32gui" installbase="system32" installname="downloader.exe">
 	<include base="downloader">.</include>
 	<include base="expat">.</include>
 

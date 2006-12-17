@@ -6,6 +6,10 @@
  * PROGRAMMERS:     Maarten Bosma
  */
 
+#ifndef _UNICODE
+#define _UNICODE
+#endif
+
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>
@@ -13,7 +17,7 @@
 #include "resources.h"
 #include "structures.h"
 
-HWND hCategories, hApps, hBtnDownload, hBtnUpdate, hBtnHelp;
+HWND hCategories, hApps, hDownloadButton, hUpdateButton, hHelpButton;
 HBITMAP hLogo, hUnderline;
 WCHAR* DescriptionHeadline = L"";
 WCHAR* DescriptionText = L"";
@@ -23,7 +27,7 @@ struct Application* SelectedApplication;
 
 INT_PTR CALLBACK DownloadProc (HWND, UINT, WPARAM, LPARAM);
 BOOL ProcessXML (const char* filename, struct Category* Root);
-void FreeTree (struct Category* Node);
+VOID FreeTree (struct Category* Node);
 WCHAR Strings [STRING_COUNT][MAX_STRING_LENGHT];
 
 
@@ -88,13 +92,13 @@ BOOL SetupControls (HWND hwnd)
 	hLogo = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_LOGO));
 	hUnderline = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_UNDERLINE));
 
-	hBtnHelp = CreateWindow (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 550, 10, 40, 40, hwnd, 0, hInstance, NULL);
-	hBtnUpdate = CreateWindow (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 500, 10, 40, 40, hwnd, 0, hInstance, NULL);
-	hBtnDownload = CreateWindow (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 330, 505, 140, 33, hwnd, 0, hInstance, NULL);
+	hHelpButton = CreateWindow (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 550, 10, 40, 40, hwnd, 0, hInstance, NULL);
+	hUpdateButton = CreateWindow (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 500, 10, 40, 40, hwnd, 0, hInstance, NULL);
+	hDownloadButton = CreateWindow (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 330, 505, 140, 33, hwnd, 0, hInstance, NULL);
 
-	SendMessage (hBtnHelp, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_HELP)));
-	SendMessage (hBtnUpdate, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_UPDATE)));
-	SendMessage (hBtnDownload, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_DOWNLOAD)));
+	SendMessage (hHelpButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_HELP)));
+	SendMessage (hUpdateButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_UPDATE)));
+	SendMessage (hDownloadButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_DOWNLOAD)));
 
 	// Create Tree Icons
 	HIMAGELIST hImageList = ImageList_Create(16, 16, ILC_COLORDDB, 1, 1);
@@ -213,18 +217,18 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 			if(HIWORD(wParam) == BN_CLICKED)
 			{
-				if (lParam == (LPARAM)hBtnDownload)
+				if (lParam == (LPARAM)hDownloadButton)
 				{
 					if(SelectedApplication)
 						DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
 					else
 						ShowMessage(Strings[IDS_NO_APP_TITLE], Strings[IDS_NO_APP]);
 				}
-				else if (lParam == (LPARAM)hBtnUpdate)
+				else if (lParam == (LPARAM)hUpdateButton)
 				{
 					ShowMessage(Strings[IDS_UPDATE_TITLE], Strings[IDS_UPDATE]);
 				}
-				else if (lParam == (LPARAM)hBtnHelp)
+				else if (lParam == (LPARAM)hHelpButton)
 				{
 					ShowMessage(Strings[IDS_HELP_TITLE], Strings[IDS_HELP]);
 				}
@@ -271,9 +275,9 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			RECT Rect = {Split_Vertical+5, Split_Hozizontal+5, LOWORD(lParam)-10, HIWORD(lParam)-50};
 			DescriptionRect = Rect;
 
-			MoveWindow(hBtnHelp, LOWORD(lParam)-50, 10, 40, 40, 0);
-			MoveWindow(hBtnUpdate, LOWORD(lParam)-100, 10, 40, 40, 0);
-			MoveWindow(hBtnDownload, (Split_Vertical+LOWORD(lParam))/2-70, HIWORD(lParam)-45, 140, 35, 0);
+			MoveWindow(hHelpButton, LOWORD(lParam)-50, 10, 40, 40, 0);
+			MoveWindow(hUpdateButton, LOWORD(lParam)-100, 10, 40, 40, 0);
+			MoveWindow(hDownloadButton, (Split_Vertical+LOWORD(lParam))/2-70, HIWORD(lParam)-45, 140, 35, 0);
 		}
 		break;
 
