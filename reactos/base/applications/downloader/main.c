@@ -26,6 +26,15 @@ BOOL ProcessXML (const char* filename, struct Category* Root);
 VOID FreeTree (struct Category* Node);
 WCHAR Strings [STRING_COUNT][MAX_STRING_LENGHT];
 
+void ShowMessage (WCHAR* title, WCHAR* message)
+{
+	DescriptionHeadline = title;
+	DescriptionText = message;
+
+	HWND hwnd = GetParent(hCategories);
+	InvalidateRect(hwnd,NULL,TRUE); 
+	UpdateWindow(hwnd);
+}
 
 void AddItems (HWND hwnd, struct Category* Category, struct Category* Parent)
 { 
@@ -49,9 +58,19 @@ void AddItems (HWND hwnd, struct Category* Category, struct Category* Parent)
 		AddItems (hwnd,Category->Children,Category);
 }
 
-void DisplayApps (HWND hwnd, struct Category* Category)
+void CategoryChoosen (HWND hwnd, struct Category* Category)
 {
-	struct Application* CurrentApplication = Category->Apps;
+	struct Application* CurrentApplication;
+	SelectedApplication = NULL;
+	
+	if(Category->Children && !Category->Apps)
+		ShowMessage(Category->Name, Strings[IDS_CHOOSE_SUB]);
+	else if(!Category->Children && Category->Apps)
+		ShowMessage(Category->Name, Strings[IDS_CHOOSE_APP]);
+	else if(Category->Children && Category->Apps)
+		ShowMessage(Category->Name, Strings[IDS_CHOOSE_BOTH]);
+	else
+		ShowMessage(Category->Name, Strings[IDS_NO_APPS]);
 
 	TreeView_DeleteItem(hwnd, TVI_ROOT);
 
@@ -59,6 +78,8 @@ void DisplayApps (HWND hwnd, struct Category* Category)
 	Insert.item.mask = TVIF_TEXT|TVIF_PARAM;
 	Insert.hInsertAfter = TVI_LAST;
 	Insert.hParent = TVI_ROOT;
+
+	CurrentApplication = Category->Apps;
 
 	while(CurrentApplication)
 	{
@@ -68,7 +89,7 @@ void DisplayApps (HWND hwnd, struct Category* Category)
 		SendMessage(hwnd, TVM_INSERTITEM, 0, (LPARAM)&Insert);
 		CurrentApplication = CurrentApplication->Next;
 	}
-} 
+}
 
 BOOL SetupControls (HWND hwnd)
 {
@@ -95,6 +116,13 @@ BOOL SetupControls (HWND hwnd)
 	SendMessageW(hHelpButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_HELP)));
 	SendMessageW(hUpdateButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_UPDATE)));
 	SendMessageW(hDownloadButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_DOWNLOAD)));
+
+	// Set deflaut entry for hApps
+	TV_INSERTSTRUCT Insert = {0}; 
+	Insert.item.mask = TVIF_TEXT;
+	Insert.item.pszText = Strings[IDS_CHOOSE_CATEGORY];
+	Insert.item.cchTextMax = lstrlen(Strings[IDS_CHOOSE_CATEGORY]); 
+	SendMessage(hApps, TVM_INSERTITEM, 0, (LPARAM)&Insert); 
 
 	// Create Tree Icons
 	HIMAGELIST hImageList = ImageList_Create(16, 16, ILC_COLORDDB, 1, 1);
@@ -133,15 +161,6 @@ static void DrawBitmap (HDC hdc, int x, int y, HBITMAP hBmp)
 	TransparentBlt(hdc, x, y, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, 0xFFFFFF);
 
 	DeleteDC(hdcMem);
-}
-void ShowMessage (WCHAR* title, WCHAR* message)
-{
-	DescriptionHeadline = title;
-	DescriptionText = message;
-
-	HWND hwnd = GetParent(hCategories);
-	InvalidateRect(hwnd,NULL,TRUE); 
-	UpdateWindow(hwnd);
 }
 
 HFONT GetFont (BOOL Title)
@@ -239,18 +258,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			{
 				if(data->hwndFrom == hCategories) 
 				{
-					SelectedApplication = NULL;
 					struct Category* Category = (struct Category*) ((LPNMTREEVIEW)lParam)->itemNew.lParam;
-					DisplayApps (hApps, Category);
-
-					if(Category->Children && !Category->Apps)
-						ShowMessage(Category->Name, Strings[IDS_SUBS]);
-					else if(!Category->Children && Category->Apps)
-						ShowMessage(Category->Name, Strings[IDS_APPS]);
-					else if(Category->Children && Category->Apps)
-						ShowMessage(Category->Name, Strings[IDS_BOTH]);
-					else
-						ShowMessage(Category->Name, Strings[IDS_NO_APPS]);
+					CategoryChoosen (hApps, Category);
 				}
 				else if(data->hwndFrom == hApps) 
 				{
