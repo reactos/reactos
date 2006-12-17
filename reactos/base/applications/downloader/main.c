@@ -6,10 +6,6 @@
  * PROGRAMMERS:     Maarten Bosma
  */
 
-#ifndef _UNICODE
-#define _UNICODE
-#endif
-
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>
@@ -83,27 +79,27 @@ BOOL SetupControls (HWND hwnd)
 		return FALSE;
 
 	// Set up the controls
-	hCategories = CreateWindowEx(0, WC_TREEVIEW, L"Categories", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
+	hCategories = CreateWindowExW(0, WC_TREEVIEW, L"Categories", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
 							0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
-	hApps = CreateWindowEx(0, WC_TREEVIEW, L"Applications", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
+	hApps = CreateWindowExW(0, WC_TREEVIEW, L"Applications", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
 							0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
 	hLogo = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_LOGO));
 	hUnderline = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_UNDERLINE));
 
-	hHelpButton = CreateWindow (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 550, 10, 40, 40, hwnd, 0, hInstance, NULL);
-	hUpdateButton = CreateWindow (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 500, 10, 40, 40, hwnd, 0, hInstance, NULL);
-	hDownloadButton = CreateWindow (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 330, 505, 140, 33, hwnd, 0, hInstance, NULL);
+	hHelpButton = CreateWindowW (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 550, 10, 40, 40, hwnd, 0, hInstance, NULL);
+	hUpdateButton = CreateWindowW (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 500, 10, 40, 40, hwnd, 0, hInstance, NULL);
+	hDownloadButton = CreateWindowW (L"Button", L"", WS_CHILD|WS_VISIBLE|BS_BITMAP, 330, 505, 140, 33, hwnd, 0, hInstance, NULL);
 
-	SendMessage (hHelpButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_HELP)));
-	SendMessage (hUpdateButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_UPDATE)));
-	SendMessage (hDownloadButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_DOWNLOAD)));
+	SendMessageW(hHelpButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_HELP)));
+	SendMessageW(hUpdateButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_UPDATE)));
+	SendMessageW(hDownloadButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_DOWNLOAD)));
 
 	// Create Tree Icons
 	HIMAGELIST hImageList = ImageList_Create(16, 16, ILC_COLORDDB, 1, 1);
-	SendMessage(hCategories, TVM_SETIMAGELIST, TVSIL_NORMAL, (LPARAM)(HIMAGELIST)hImageList);
-	SendMessage(hApps, TVM_SETIMAGELIST, TVSIL_NORMAL, (LPARAM)(HIMAGELIST)hImageList);
+	SendMessageW(hCategories, TVM_SETIMAGELIST, TVSIL_NORMAL, (LPARAM)(HIMAGELIST)hImageList);
+	SendMessageW(hApps, TVM_SETIMAGELIST, TVSIL_NORMAL, (LPARAM)(HIMAGELIST)hImageList);
 
 	ImageList_Add(hImageList, LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_0)), NULL); 
 	ImageList_Add(hImageList, LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_1)), NULL); 
@@ -176,7 +172,7 @@ static void DrawDescription (HDC hdc, RECT DescriptionRect)
 	HFONT Font = GetFont(TRUE);
 	SelectObject(hdc, Font);
 	RECT Rect = {DescriptionRect.left+5, DescriptionRect.top+3, DescriptionRect.right-2, DescriptionRect.top+22};
-	DrawText(hdc, DescriptionHeadline, lstrlen(DescriptionHeadline), &Rect, DT_SINGLELINE|DT_NOPREFIX);
+	DrawTextW(hdc, DescriptionHeadline, lstrlen(DescriptionHeadline), &Rect, DT_SINGLELINE|DT_NOPREFIX);
 	DeleteObject(Font);
 
 	// Description
@@ -184,7 +180,7 @@ static void DrawDescription (HDC hdc, RECT DescriptionRect)
 	SelectObject(hdc, Font);
 	Rect.top += 40;
 	Rect.bottom = DescriptionRect.bottom-2;
-	DrawText(hdc, DescriptionText, lstrlen(DescriptionText), &Rect, DT_WORDBREAK|DT_NOPREFIX); // ToDo: Call TabbedTextOut to draw a nice table
+	DrawTextW(hdc, DescriptionText, lstrlen(DescriptionText), &Rect, DT_WORDBREAK|DT_NOPREFIX); // ToDo: Call TabbedTextOut to draw a nice table
 	DeleteObject(Font);
 
 }
@@ -306,10 +302,10 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 
 	// Load strings
 	for(i=0; i<STRING_COUNT; i++)
-		LoadString(hInstance, i, Strings[i], MAX_STRING_LENGHT); // if you know a better method please tell me. 
+		LoadStringW(hInstance, i, Strings[i], MAX_STRING_LENGHT); // if you know a better method please tell me. 
 
 	// Create the window
-	WNDCLASSEX WndClass = {0};
+	WNDCLASSEXW WndClass = {0};
 	WndClass.cbSize			= sizeof(WNDCLASSEX); 
 	WndClass.lpszClassName	= L"Downloader";
 	WndClass.style			= CS_HREDRAW | CS_VREDRAW;
@@ -321,7 +317,7 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 
 	RegisterClassEx(&WndClass);
 
-	hwnd = CreateWindow(L"Downloader", 
+	hwnd = CreateWindowW(L"Downloader", 
 						Strings[IDS_WINDOW_TITLE],
 						WS_OVERLAPPEDWINDOW,
 						CW_USEDEFAULT,  
