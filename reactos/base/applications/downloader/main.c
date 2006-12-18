@@ -264,7 +264,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				else if(data->hwndFrom == hApps) 
 				{
 					SelectedApplication = (struct Application*) ((LPNMTREEVIEW)lParam)->itemNew.lParam;
-					ShowMessage(SelectedApplication->Name, SelectedApplication->Description);
+					if(SelectedApplication)
+						ShowMessage(SelectedApplication->Name, SelectedApplication->Description);
 				}
 			}
 		}
@@ -328,7 +329,7 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 
 	hwnd = CreateWindowW(L"Downloader", 
 						Strings[IDS_WINDOW_TITLE],
-						WS_OVERLAPPEDWINDOW,
+						WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN,
 						CW_USEDEFAULT,  
 						CW_USEDEFAULT,   
 						600, 550, 
