@@ -176,7 +176,7 @@ GetNTPServerAddress(LPSTR* lpAddress)
                            &dwSize);
     if (Ret == ERROR_MORE_DATA)
     {
-        buf = HeapAlloc(GetProcessHeap(),
+        buf = (LPWSTR) HeapAlloc(GetProcessHeap(),
                         0,
                         dwSize);
         if (buf == NULL)
@@ -200,7 +200,7 @@ GetNTPServerAddress(LPSTR* lpAddress)
 
     /* We still allocate same amount of space for ASCII storage,
      * as some chars may use several bytes */
-    *lpAddress = HeapAlloc(GetProcessHeap(),
+    *lpAddress = (LPSTR) HeapAlloc(GetProcessHeap(),
                           0,
                           sizeof(dwSize));
     if (*lpAddress == NULL)

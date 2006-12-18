@@ -133,15 +133,15 @@ POWER_ACTION GetPowerActionFromPolicy(POWER_ACTION_POLICY * Policy)
 	/*
 
 	TCHAR szBuffer[MAX_PATH];
-	
+
 	// Note: Windows XP SP2+ does not return the PowerAction code
 	// for PowerActionWarmEject + PowerActionShutdown but sets it
-	// to PowerActionNone and sets the Flags & EventCode 
-	
-	
+	// to PowerActionNone and sets the Flags & EventCode
+
+
 	 _stprintf(szBuffer, L"Action: %x EventCode %x Flags %x",Policy->Action, Policy->EventCode, Policy->Flags);
 	 MessageBoxW(NULL, szBuffer, NULL, MB_OK);
-	
+
 	*/
 
 	if (Policy->Action == PowerActionNone)
@@ -166,13 +166,13 @@ POWER_ACTION GetPowerActionFromPolicy(POWER_ACTION_POLICY * Policy)
 	{
 		poAction = Policy->Action;
 	}
-	
+
 	return poAction;
 }
 
-void ShowCurrentPowerActionPolicy(HWND hDlgCtrl, 
-									POWER_ACTION * lpAction, 
-									DWORD dwActionSize, 
+void ShowCurrentPowerActionPolicy(HWND hDlgCtrl,
+									POWER_ACTION * lpAction,
+									DWORD dwActionSize,
 									POWER_ACTION_POLICY * Policy)
 {
 	int poActionIndex;
@@ -243,9 +243,9 @@ void ShowCurrentPowerActionPolicies(HWND hwndDlg)
 	{
 #if 0
 		/* expiremental code */
-//		ShowCurrentPowerButtonAcAction(hList2, 
-		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_POWERBUTTON), 
-									   g_SystemBatteries, 
+//		ShowCurrentPowerButtonAcAction(hList2,
+		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_POWERBUTTON),
+									   g_SystemBatteries,
 									   sizeof(g_SystemBatteries) / sizeof(POWER_ACTION),
 									   &gGPP.user.LidCloseAc);
 #else
@@ -257,15 +257,15 @@ void ShowCurrentPowerActionPolicies(HWND hwndDlg)
 						 (LPARAM)szAction);
 		}
 #endif
-		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_POWERBUTTON), 
-									   g_PowerButton, 
+		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_POWERBUTTON),
+									   g_PowerButton,
 									   sizeof(g_PowerButton) / sizeof(POWER_ACTION),
 									   &gGPP.user.PowerButtonAc);
 
 #if 0
 			/* expiremental code */
-		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_SLEEPBUTTON), 
-									   g_SleepButton, 
+		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_SLEEPBUTTON),
+									   g_SleepButton,
 									   sizeof(g_SleepButton) / sizeof(POWER_ACTION),
 									   &gGPP.user.SleepButtonAc);
 #else
@@ -282,18 +282,18 @@ void ShowCurrentPowerActionPolicies(HWND hwndDlg)
 	{
 #if 0
 
-		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_LIDCLOSE), 
-									   g_SleepButton, 
+		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_LIDCLOSE),
+									   g_SleepButton,
 									   sizeof(g_SleepButton) / sizeof(POWER_ACTION),
 									   &gGPP.user.LidCloseDc);
 
-		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_POWERBUTTON), 
-									   g_SleepButton, 
+		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_POWERBUTTON),
+									   g_SleepButton,
 									   sizeof(g_SleepButton) / sizeof(POWER_ACTION),
 									   &gGPP.user.PowerButtonDc);
 
-		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_SLEEPBUTTON), 
-									   g_SleepButton, 
+		ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_SLEEPBUTTON),
+									   g_SleepButton,
 									   sizeof(g_SleepButton) / sizeof(POWER_ACTION),
 									   &gGPP.user.SleepButtonDc);
 #else
@@ -318,7 +318,7 @@ void ShowCurrentPowerActionPolicies(HWND hwndDlg)
 						 TRUE,
 						 (LPARAM)szAction);
 		}
-#endif	
+#endif
 	}
 }
 
@@ -358,7 +358,7 @@ void Adv_InitDialog()
 	hList1 = GetDlgItem(hAdv, IDC_LIDCLOSE);
 	SendMessage(hList1, CB_RESETCONTENT, 0, 0);
 
-	memset(g_SystemBatteries, 0x0, sizeof(g_SystemBatteries)); 
+	memset(g_SystemBatteries, 0x0, sizeof(g_SystemBatteries));
 	if (spc.SystemBatteriesPresent)
 	{
 		AddItem(hList1, IDS_PowerActionNone1, (LPARAM)PowerActionNone, g_SystemBatteries);
@@ -417,7 +417,7 @@ void Adv_InitDialog()
 	{
 		AddItem(hList3, IDS_PowerActionNone1, (LPARAM)PowerActionNone, g_SleepButton);
 		AddItem(hList3, IDS_PowerActionWarmEject, (LPARAM)PowerActionWarmEject, g_SleepButton);
-		
+
 		if (bSuspend)
 		{
 			AddItem(hList3, IDS_PowerActionSleep, (LPARAM)PowerActionSleep, g_SleepButton);
@@ -464,7 +464,7 @@ void Adv_SaveData(HWND hwndDlg)
 		BM_GETCHECK,
 		(WPARAM)0,
 		(LPARAM)0);
-    
+
 	if (bSystrayBatteryMeter)
 	{
 		if (!(gGPP.user.GlobalFlags & EnableSysTrayBatteryMeter))
@@ -529,5 +529,5 @@ void Adv_SaveData(HWND hwndDlg)
 		MessageBox(hwndDlg, L"WriteGlobalPwrPolicy failed", NULL, MB_OK);
 	}
 
-	Adv_InitDialog(hwndDlg);
+	Adv_InitDialog();
 }

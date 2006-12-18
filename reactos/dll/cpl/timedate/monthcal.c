@@ -1006,7 +1006,7 @@ MonthCalWndProc(IN HWND hwnd,
 
         case WM_CREATE:
         {
-            infoPtr = HeapAlloc(GetProcessHeap(),
+            infoPtr = (MONTHCALWND*) HeapAlloc(GetProcessHeap(),
                                 0,
                                 sizeof(MONTHCALWND));
             if (infoPtr == NULL)

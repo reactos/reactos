@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            lib/cpl/desk/background.c
  * PURPOSE:         Background property page
- * 
+ *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  *                  Alexey Minnekhanov (minlexx@rambler.ru)
  */
@@ -267,7 +267,7 @@ InitBackgroundDialog(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
             SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_CENTER, 0);
             pGlobalData->placementSelection = PLACEMENT_CENTER;
         }
-        
+
         if (_ttoi(szBuffer) == 2)
         {
             SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_STRETCH, 0);
@@ -292,7 +292,7 @@ InitBackgroundDialog(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 
     RegCloseKey(regKey);
 
-    pGlobalData->hBitmap = LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
+    pGlobalData->hBitmap = (HBITMAP) LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
     if (pGlobalData->hBitmap != NULL)
     {
         GetObject(pGlobalData->hBitmap, sizeof(BITMAP), &bitmap);
@@ -408,7 +408,7 @@ OnBrowseButton(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 
     LoadString(hApplet, IDS_BACKGROUND_COMDLG_FILTER, filter, sizeof(filter) / sizeof(TCHAR));
 
-    /* Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
+    /* Set lpstrFile[0] to '\0' so that GetOpenFileName does not
      * use the contents of szFile to initialize itself */
     ofn.lpstrFile[0] = TEXT('\0');
     ofn.nMaxFile = MAX_PATH;
@@ -623,7 +623,7 @@ SetWallpaper(PGLOBAL_DATA pGlobalData)
     }
     else
     {
-        SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, TEXT(""), SPIF_UPDATEINIFILE);
+        SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (void*) TEXT(""), SPIF_UPDATEINIFILE);
     }
 }
 
@@ -648,7 +648,7 @@ SetDesktopBackColor(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     if( result != ERROR_SUCCESS )
     {
         /* Key open failed; maybe it does not exist? create it! */
-        result = RegCreateKeyEx( HKEY_CURRENT_USER, TEXT("Control Panel\\Colors"), 0, NULL, 0, 
+        result = RegCreateKeyEx( HKEY_CURRENT_USER, TEXT("Control Panel\\Colors"), 0, NULL, 0,
             KEY_ALL_ACCESS, NULL, &hKey, NULL );
         /* Now key must be created and opened and hKey must point at newly created key */
         /* On error result will not contain ERROR_SUCCESS. I don't know how to handle */
@@ -676,7 +676,7 @@ BackgroundPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+            pGlobalData = (GLOBAL_DATA*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
             InitBackgroundDialog(hwndDlg, pGlobalData);
             break;
