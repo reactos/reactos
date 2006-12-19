@@ -895,10 +895,22 @@ Create_DirectDraw (LPGUID pGUID,
 
     if (This == NULL)
     {
-        /* We do not have any DirectDraw interface alloc */
-        This = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        LPDDRAWI_DIRECTDRAW_INT memThis;
+        
+       /* We do not have any DirectDraw interface alloc 
+        * or a idot send in pIface as NULL
+        */
+        memThis = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        This = memThis;
         if (This == NULL) 
         {
+            if (memThis != NULL)
+            {
+                /* do not create memmory leak if some 
+                 * idot send in pIface as NULL
+                 */
+                DxHeapMemFree(memThis);
+            }
             return DDERR_OUTOFMEMORY;
         }
     }
