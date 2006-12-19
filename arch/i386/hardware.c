@@ -261,7 +261,7 @@ SetComponentInformation(FRLDRHKEY ComponentKey,
     }
 }
 
-
+#if 0
 static VOID
 DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
@@ -420,7 +420,7 @@ DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 		(int)Error));
     }
 }
-
+#endif
 
 
 static VOID
@@ -530,9 +530,7 @@ SetHarddiskIdentifier(PCHAR Identifier,
 
 
 static PCONFIGURATION_COMPONENT_DATA
-DetectBiosDisks(FRLDRHKEY SystemKey,
-                FRLDRHKEY BusKey,
-                PCONFIGURATION_COMPONENT_DATA ComponentRoot,
+DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA ComponentRoot,
                 PCONFIGURATION_COMPONENT_DATA PreviousComponent,
                 BOOLEAN NextChild)
 {
@@ -774,7 +772,7 @@ DetectBiosDisks(FRLDRHKEY SystemKey,
 	return DiskComponentData;
 }
 
-
+#if 0
 static ULONG
 GetFloppyCount(VOID)
 {
@@ -1670,7 +1668,7 @@ DetectParallelPorts(FRLDRHKEY BusKey)
 
   DbgPrint((DPRINT_HWDETECT, "DetectParallelPorts() done\n"));
 }
-
+#endif
 
 static BOOLEAN
 DetectKeyboardDevice(VOID)
@@ -2101,129 +2099,9 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA ParentComponent,
 
 	/* Return pointer to the mouse controller */
 	return ControllerComponent;
-
-#if 0
-  CM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
-  FRLDRHKEY ControllerKey;
-  FRLDRHKEY PeripheralKey;
-  LONG Error;
-
-  if (DetectPS2AuxPort())
-    {
-      DbgPrint((DPRINT_HWDETECT, "Detected PS2 port\n"));
-
-      /* Create controller key */
-      Error = RegCreateKey(BusKey,
-			   L"PointerController\\0",
-			   &ControllerKey);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
-	  return;
-	}
-      DbgPrint((DPRINT_HWDETECT, "Created key: PointerController\\0\n"));
-
-      /* Set 'ComponentInformation' value */
-      SetComponentInformation(ControllerKey,
-			      0x20,
-			      0,
-			      0xFFFFFFFF);
-
-      memset(&FullResourceDescriptor, 0, sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
-
-      /* Initialize resource descriptor */
-      FullResourceDescriptor.InterfaceType = Isa;
-      FullResourceDescriptor.BusNumber = 0;
-      FullResourceDescriptor.PartialResourceList.Version = 1;
-      FullResourceDescriptor.PartialResourceList.Revision = 1;
-      FullResourceDescriptor.PartialResourceList.Count = 1;
-
-      /* Set Interrupt */
-      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].Type = CmResourceTypeInterrupt;
-      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].ShareDisposition = CmResourceShareUndetermined;
-      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].u.Interrupt.Level = 0;
-      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].u.Interrupt.Vector = 12;
-      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].u.Interrupt.Affinity = 0xFFFFFFFF;
-
-      /* Set 'Configuration Data' value */
-      Error = RegSetValue(ControllerKey,
-			  L"Configuration Data",
-			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PCHAR)&FullResourceDescriptor,
-			  sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "RegSetValue(Configuration Data) failed (Error %u)\n",
-		    (int)Error));
-	  return;
-	}
-
-
-      if (DetectPS2AuxDevice())
-	{
-	  DbgPrint((DPRINT_HWDETECT, "Detected PS2 mouse\n"));
-
-	  /* Create peripheral key */
-	  Error = RegCreateKey(ControllerKey,
-			       L"PointerPeripheral\\0",
-			       &PeripheralKey);
-	  if (Error != ERROR_SUCCESS)
-	    {
-	      DbgPrint((DPRINT_HWDETECT, "Failed to create peripheral key\n"));
-	      return;
-	    }
-	  DbgPrint((DPRINT_HWDETECT, "Created key: PointerPeripheral\\0\n"));
-
-	  /* Set 'ComponentInformation' value */
-	  SetComponentInformation(PeripheralKey,
-				  0x20,
-				  0,
-				  0xFFFFFFFF);
-
-	  /* Initialize resource descriptor */
-	  memset(&FullResourceDescriptor, 0, sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
-	  FullResourceDescriptor.InterfaceType = Isa;
-	  FullResourceDescriptor.BusNumber = 0;
-	  FullResourceDescriptor.PartialResourceList.Version = 1;
-	  FullResourceDescriptor.PartialResourceList.Revision = 1;
-	  FullResourceDescriptor.PartialResourceList.Count = 0;
-
-	  /* Set 'Configuration Data' value */
-	  Error = RegSetValue(PeripheralKey,
-			      L"Configuration Data",
-			      REG_FULL_RESOURCE_DESCRIPTOR,
-			      (PCHAR)&FullResourceDescriptor,
-			      sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
-			      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-	  if (Error != ERROR_SUCCESS)
-	    {
-	      DbgPrint((DPRINT_HWDETECT,
-			"RegSetValue(Configuration Data) failed (Error %u)\n",
-			(int)Error));
-	      return;
-	    }
-
-	  /* Set 'Identifier' value */
-	  Error = RegSetValue(PeripheralKey,
-			      L"Identifier",
-			      REG_SZ,
-			      (PCHAR)L"MICROSOFT PS2 MOUSE",
-			      20 * sizeof(WCHAR));
-	  if (Error != ERROR_SUCCESS)
-	    {
-	      DbgPrint((DPRINT_HWDETECT,
-			"RegSetValue() failed (Error %u)\n",
-			(int)Error));
-	      return;
-	    }
-	}
-    }
-#endif
 }
 
-
+#if 0
 static VOID
 DetectDisplayController(FRLDRHKEY BusKey)
 {
@@ -2291,91 +2169,20 @@ DetectDisplayController(FRLDRHKEY BusKey)
 
   /* FIXME: Add display peripheral (monitor) data */
 }
-
+#endif
 
 static VOID
-DetectIsaBios(FRLDRHKEY SystemKey,
-              ULONG *BusNumber,
+DetectIsaBios(ULONG *BusNumber,
               PCONFIGURATION_COMPONENT_DATA ComponentRoot,
               PCONFIGURATION_COMPONENT_DATA PreviousComponent,
               BOOLEAN NextChild)
 {
-	PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
 	PCONFIGURATION_COMPONENT_DATA IsaAdapter, LastComponent;
 	PCONFIGURATION_COMPONENT IsaComponent;
 	PVOID Identifier;
-	WCHAR Buffer[80];
-	FRLDRHKEY BusKey;
-	ULONG Size;
-	LONG Error;
-
-	/* Create new bus key */
-	swprintf(Buffer,
-		L"MultifunctionAdapter\\%u", *BusNumber);
-	Error = RegCreateKey(SystemKey,
-		Buffer,
-		&BusKey);
-	if (Error != ERROR_SUCCESS)
-	{
-		DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-		return;
-	}
-
-	/* Set 'Component Information' value similar to my NT4 box */
-	SetComponentInformation(BusKey,
-		0x0,
-		0x0,
-		0xFFFFFFFF);
 
 	/* Increment bus number */
 	(*BusNumber)++;
-
-	/* Set 'Identifier' value */
-	Error = RegSetValue(BusKey,
-		L"Identifier",
-		REG_SZ,
-		(PCHAR)L"ISA",
-		4 * sizeof(WCHAR));
-	if (Error != ERROR_SUCCESS)
-	{
-		DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-		return;
-	}
-
-	/* Set 'Configuration Data' value */
-	Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
-		sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-	FullResourceDescriptor = MmAllocateMemory(Size);
-	if (FullResourceDescriptor == NULL)
-	{
-		DbgPrint((DPRINT_HWDETECT,
-			"Failed to allocate resource descriptor\n"));
-		return;
-	}
-
-	/* Initialize resource descriptor */
-	memset(FullResourceDescriptor, 0, Size);
-	FullResourceDescriptor->InterfaceType = Isa;
-	FullResourceDescriptor->BusNumber = 0;
-	FullResourceDescriptor->PartialResourceList.Version = 1;
-	FullResourceDescriptor->PartialResourceList.Revision = 1;
-	FullResourceDescriptor->PartialResourceList.Count = 0;
-
-	/* Set 'Configuration Data' value */
-	Error = RegSetValue(BusKey,
-		L"Configuration Data",
-		REG_FULL_RESOURCE_DESCRIPTOR,
-		(PCHAR) FullResourceDescriptor,
-		Size);
-	MmFreeMemory(FullResourceDescriptor);
-	if (Error != ERROR_SUCCESS)
-	{
-		DbgPrint((DPRINT_HWDETECT,
-			"RegSetValue(Configuration Data) failed (Error %u)\n",
-			(int)Error));
-		return;
-	}
-
 
 	/* Create adapter component */
 	IsaAdapter = MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
@@ -2408,13 +2215,13 @@ DetectIsaBios(FRLDRHKEY SystemKey,
 
 	/* DetectBiosDisks writes information both to the root entry and to 
 	its own entries */
-	LastComponent = DetectBiosDisks(SystemKey, BusKey, ComponentRoot, IsaAdapter, TRUE);
+	LastComponent = DetectBiosDisks(ComponentRoot, IsaAdapter, TRUE);
 
-	DetectBiosFloppyController(SystemKey, BusKey);
+	//DetectBiosFloppyController(SystemKey, BusKey);
 
-	DetectSerialPorts(BusKey);
+	//DetectSerialPorts(BusKey);
 
-	DetectParallelPorts(BusKey);
+	//DetectParallelPorts(BusKey);
 
 	/* Detect keyboard and mouse */
 	LastComponent =
@@ -2424,7 +2231,7 @@ DetectIsaBios(FRLDRHKEY SystemKey,
 	LastComponent = DetectPS2Mouse(LastComponent,
 		(IsaAdapter == LastComponent) ? TRUE : FALSE);
 
-	DetectDisplayController(BusKey);
+	//DetectDisplayController(BusKey);
 
 	/* FIXME: Detect more ISA devices */
 }
@@ -2433,24 +2240,12 @@ DetectIsaBios(FRLDRHKEY SystemKey,
 VOID
 PcHwDetect(PCONFIGURATION_COMPONENT_DATA *ComponentRoot)
 {
-  FRLDRHKEY SystemKey;
   ULONG BusNumber = 0;
-  LONG Error;
   PCONFIGURATION_COMPONENT Component;
   PCONFIGURATION_COMPONENT_DATA LastComponentData;
 
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware()\n"));
-
-  /* Create the 'System' key */
-  Error = RegCreateKey(NULL,
-		       L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System",
-		       &SystemKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
 
   /* Allocate root configuration component */
   *ComponentRoot = MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
@@ -2464,16 +2259,16 @@ PcHwDetect(PCONFIGURATION_COMPONENT_DATA *ComponentRoot)
 #if 0
   DetectSystemData();
 #endif
-  DetectCPUs(SystemKey);
+  //DetectCPUs(SystemKey);
 
   /* Detect buses */
   /* FIXME: Don't forget situation when some buses may be absent! (NextChild = TRUE then) */
-  LastComponentData = DetectPciBios(SystemKey, &BusNumber, *ComponentRoot, *ComponentRoot, TRUE);
-  DetectApmBios(SystemKey, &BusNumber);
-  DetectPnpBios(SystemKey, &BusNumber);
-  DetectIsaBios(SystemKey, &BusNumber, *ComponentRoot, LastComponentData,
+  LastComponentData = DetectPciBios(&BusNumber, *ComponentRoot, *ComponentRoot, TRUE);
+  //DetectApmBios(SystemKey, &BusNumber);
+  //DetectPnpBios(SystemKey, &BusNumber);
+  DetectIsaBios(&BusNumber, *ComponentRoot, LastComponentData,
 	  (LastComponentData == *ComponentRoot) ? TRUE : FALSE);
-  DetectAcpiBios(SystemKey, &BusNumber);
+  //DetectAcpiBios(SystemKey, &BusNumber);
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware() Done\n"));
 

@@ -98,24 +98,17 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 
 	// Add machine-dependent stuff
 	// FIXME: this is only for i386
-#if 0
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x00, 1, LoaderFirmwarePermanent); // realmode int vectors
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x01, 7, LoaderFirmwareTemporary); // freeldr stack + cmdline
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x08, 0x70, LoaderLoadedProgram); // freeldr image (roughly max. 0x64 pages)
-	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x78, 8, LoaderOsloaderStack); // prot mode stack
-
-	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x80, 0x10, LoaderOsloaderHeap); // File system read buffer
-	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x90, 0x10, LoaderOsloaderHeap); // Disk read buffer for int 13h
-
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x78, 8, LoaderOsloaderStack); // prot mode stack. BIOSCALLBUFFER
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x80, 0x10, LoaderOsloaderHeap); // File system read buffer. FILESYSBUFFER
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x90, 0x10, LoaderOsloaderHeap); // Disk read buffer for int 13h. DISKREADBUFFER
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0xA0, 0x60, LoaderFirmwarePermanent); // ROM / Video
-#endif
-	//HACK: Temporary, for test, remove soon
-	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x00, 0x100, LoaderFirmwarePermanent);
-
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0xFFF, 1, LoaderSpecialMemory); // unusable memory
 
-	//HACK: Needed for ReactOS only! (KERNEL_BASE_PHYS >> MM_PAGE_SHIFT)
-	//MmMarkPagesInLookupTable(PageLookupTableAddress, 0x200, 0x300, LoaderFirmwareTemporary); // ReactOS kernel sits here
+	// This one is strange, without it WinNT crashes with PHASE0_EXCEPTION
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x59, 0x5, LoaderFirmwarePermanent);
 
 	FreePagesInLookupTable = MmCountFreePagesInLookupTable(PageLookupTableAddress, TotalPagesInLookupTable);
 

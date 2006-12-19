@@ -390,9 +390,6 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	UiDrawStatusText("Detecting Hardware...");
 	UiDrawProgressBarCenter(1, 100, "Loading Windows...");
 
-	//FIXME: This is needed only for MachHwDetect() which performs registry operations!
-	RegInitializeRegistry();
-
 	/* Make sure the system path is set in the .ini file */
 	if (!IniReadSettingByName(SectionId, "SystemPath", SystemPath, sizeof(SystemPath)))
 	{

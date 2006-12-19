@@ -76,8 +76,7 @@ VOID DetectApmBios(FRLDRHKEY SystemKey, ULONG *BusNumber);
 VOID DetectCPUs(FRLDRHKEY SystemKey);
 
 /* hwpci.c */
-PCONFIGURATION_COMPONENT_DATA DetectPciBios(FRLDRHKEY SystemKey,
-                                            ULONG *BusNumber,
+PCONFIGURATION_COMPONENT_DATA DetectPciBios(ULONG *BusNumber,
                                             PCONFIGURATION_COMPONENT_DATA ComponentRoot,
                                             PCONFIGURATION_COMPONENT_DATA PreviousComponent,
                                             BOOLEAN NextChild);

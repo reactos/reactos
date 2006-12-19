@@ -307,8 +307,8 @@ WinLdrLoadImage(IN PCHAR FileName,
 
 	/* Try to allocate this memory, if fails - allocate somewhere else */
 	PhysicalBase = MmAllocateMemoryAtAddress(NtHeaders->OptionalHeader.SizeOfImage,
-	                                       (PVOID)((ULONG)NtHeaders->OptionalHeader.ImageBase & (KSEG0_BASE - 1)),
-	                                       MemoryType);
+	                   (PVOID)((ULONG)NtHeaders->OptionalHeader.ImageBase & (KSEG0_BASE - 1)),
+	                   MemoryType);
 
 	if (PhysicalBase == NULL)
 	{

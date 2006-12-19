@@ -62,7 +62,7 @@ typedef struct _CM_PCI_BUS_DATA
   UCHAR  HardwareMechanism;
 } __attribute__((packed)) CM_PCI_BUS_DATA, *PCM_PCI_BUS_DATA;
 
-
+#if 0
 static PPCI_IRQ_ROUTING_TABLE
 GetPciIrqRoutingTable(VOID)
 {
@@ -104,7 +104,7 @@ GetPciIrqRoutingTable(VOID)
 
   return NULL;
 }
-
+#endif
 
 static BOOLEAN
 FindPciBios(PCM_PCI_BUS_DATA BusData)
@@ -140,7 +140,7 @@ FindPciBios(PCM_PCI_BUS_DATA BusData)
   return FALSE;
 }
 
-
+#if 0
 static VOID
 DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
 {
@@ -225,11 +225,10 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
 	}
     }
 }
-
+#endif
 
 PCONFIGURATION_COMPONENT_DATA
-DetectPciBios(FRLDRHKEY SystemKey,
-              ULONG *BusNumber,
+DetectPciBios(ULONG *BusNumber,
               PCONFIGURATION_COMPONENT_DATA ComponentRoot,
               PCONFIGURATION_COMPONENT_DATA PreviousComponent,
               BOOLEAN NextChild)
@@ -237,12 +236,8 @@ DetectPciBios(FRLDRHKEY SystemKey,
 	PCONFIGURATION_COMPONENT_DATA PciBusComponentData, PreviousBusData;
 	PCONFIGURATION_COMPONENT PciBusComponent;
 	PVOID Identifier;
-	PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
 	CM_PCI_BUS_DATA BusData;
-	WCHAR Buffer[80];
-	FRLDRHKEY BiosKey;
 	ULONG Size;
-	LONG Error;
 	ULONG i;
 	BOOLEAN NextComponentChild;
 
@@ -253,77 +248,11 @@ DetectPciBios(FRLDRHKEY SystemKey,
 	/* Report the PCI BIOS */
 	if (FindPciBios(&BusData))
 	{
-		/* Create new bus key */
-		swprintf(Buffer,
-			L"MultifunctionAdapter\\%u", *BusNumber);
-		Error = RegCreateKey(SystemKey,
-			Buffer,
-			&BiosKey);
-		if (Error != ERROR_SUCCESS)
-		{
-			DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-			//return NULL;
-		}
-
-		/* Set 'Component Information' */
-		SetComponentInformation(BiosKey,
-			0x0,
-			0x0,
-			0xFFFFFFFF);
-
 		/* Increment bus number */
 		(*BusNumber)++;
 
-		/* Set 'Identifier' value */
-		Error = RegSetValue(BiosKey,
-			L"Identifier",
-			REG_SZ,
-			(PCHAR)L"PCI BIOS",
-			9 * sizeof(WCHAR));
-		if (Error != ERROR_SUCCESS)
-		{
-			DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-			//return NULL;
-		}
-
-		/* Set 'Configuration Data' value */
-		Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
-		FullResourceDescriptor = MmAllocateMemory(Size);
-		if (FullResourceDescriptor == NULL)
-		{
-			DbgPrint((DPRINT_HWDETECT,
-				"Failed to allocate resource descriptor\n"));
-			//return NULL;
-		}
-
-		/* Initialize resource descriptor */
-		memset(FullResourceDescriptor, 0, Size);
-		FullResourceDescriptor->InterfaceType = PCIBus;
-		FullResourceDescriptor->BusNumber = 0;
-		FullResourceDescriptor->PartialResourceList.Version = 1;
-		FullResourceDescriptor->PartialResourceList.Revision = 1;
-		FullResourceDescriptor->PartialResourceList.Count = 1;
-		FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type = CmResourceTypeBusNumber;
-		FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].ShareDisposition = CmResourceShareDeviceExclusive;
-		FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.BusNumber.Start = 0;
-		FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.BusNumber.Length = 1;
-
-		/* Set 'Configuration Data' value */
-		Error = RegSetValue(BiosKey,
-			L"Configuration Data",
-			REG_FULL_RESOURCE_DESCRIPTOR,
-			(PCHAR) FullResourceDescriptor,
-			Size);
-		MmFreeMemory(FullResourceDescriptor);
-		if (Error != ERROR_SUCCESS)
-		{
-			DbgPrint((DPRINT_HWDETECT,
-				"RegSetValue(Configuration Data) failed (Error %u)\n",
-				(int)Error));
-			//return NULL;
-		}
-
-		DetectPciIrqRoutingTable(BiosKey);
+		/* Detect PCI IRQ routing table and store it */
+		//DetectPciIrqRoutingTable(BiosKey);
 
 		/* Attach to the component we've got -- as child */
 		PreviousBusData = PreviousComponent;
