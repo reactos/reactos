@@ -222,6 +222,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hwnd, &ps);
+			FillRect(hdc, &ps.rcPaint, CreateSolidBrush(RGB(235,233,237)));
 			DrawBitmap(hdc, 10, 12, hLogo);
 			DrawDescription(hdc, DescriptionRect);
 			EndPaint(hwnd, &ps);
@@ -281,9 +282,14 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			RECT Rect = {Split_Vertical+5, Split_Hozizontal+5, LOWORD(lParam)-10, HIWORD(lParam)-50};
 			DescriptionRect = Rect;
 
-			MoveWindow(hHelpButton, LOWORD(lParam)-50, 10, 40, 40, 0);
-			MoveWindow(hUpdateButton, LOWORD(lParam)-100, 10, 40, 40, 0);
-			MoveWindow(hDownloadButton, (Split_Vertical+LOWORD(lParam))/2-70, HIWORD(lParam)-45, 140, 35, 0);
+			MoveWindow(hHelpButton, LOWORD(lParam)-50, 10, 40, 40, FALSE);
+			MoveWindow(hUpdateButton, LOWORD(lParam)-100, 10, 40, 40, FALSE);
+			MoveWindow(hDownloadButton, (Split_Vertical+LOWORD(lParam))/2-70, HIWORD(lParam)-45, 140, 35, FALSE);
+
+			RECT Top = {0,0,LOWORD(lParam),60};
+			InvalidateRect(hwnd, &Top, TRUE);
+			RECT Description = {Split_Vertical, Split_Hozizontal, LOWORD(lParam), HIWORD(lParam)};
+			InvalidateRect(hwnd, &Description, TRUE);
 		}
 		break;
 
@@ -318,12 +324,10 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 	WNDCLASSEXW WndClass = {0};
 	WndClass.cbSize			= sizeof(WNDCLASSEX); 
 	WndClass.lpszClassName	= L"Downloader";
-	WndClass.style			= CS_HREDRAW | CS_VREDRAW;
 	WndClass.lpfnWndProc	= WndProc;
 	WndClass.hInstance		= hInstance;
 	WndClass.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
 	WndClass.hCursor		= LoadCursor(NULL, IDC_ARROW);
-	WndClass.hbrBackground	= (HBRUSH)CreateSolidBrush(RGB(235,233,237));
 
 	RegisterClassEx(&WndClass);
 
