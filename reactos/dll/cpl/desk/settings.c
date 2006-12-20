@@ -51,7 +51,7 @@ typedef struct _GLOBAL_DATA
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 static VOID
-UpdateDisplay(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData)
+UpdateDisplay(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData, IN BOOL bUpdateThumb)
 {
 	TCHAR Buffer[64];
 	TCHAR Pixel[64];
@@ -67,7 +67,8 @@ UpdateDisplay(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 		if (pGlobalData->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth &&
 		    pGlobalData->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight)
 		{
-			SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_SETPOS, TRUE, index);
+			if (bUpdateThumb)
+				SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_SETPOS, TRUE, index);
 			break;
 		}
 	}
@@ -260,7 +261,7 @@ OnDisplayDeviceChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN PDISPLAY
 	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_CLEARTICS, TRUE, 0);
 	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_SETRANGE, TRUE, MAKELONG(0, pDeviceEntry->ResolutionsCount - 1));
 
-	UpdateDisplay(hwndDlg, pGlobalData);
+	UpdateDisplay(hwndDlg, pGlobalData, TRUE);
 }
 
 static VOID
@@ -355,7 +356,7 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 			 && Current->dmPelsWidth == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth)
 			{
 				pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-				UpdateDisplay(hwndDlg, pGlobalData);
+				UpdateDisplay(hwndDlg, pGlobalData, TRUE);
 				return;
 			}
 			Current = Current->Blink;
@@ -371,7 +372,7 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 			 && Current->dmPelsWidth == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth)
 			{
 				pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-				UpdateDisplay(hwndDlg, pGlobalData);
+				UpdateDisplay(hwndDlg, pGlobalData, TRUE);
 				return;
 			}
 			Current = Current->Flink;
@@ -385,7 +386,7 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 		if (Current->dmBitsPerPel == dmNewBitsPerPel)
 		{
 			pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-			UpdateDisplay(hwndDlg, pGlobalData);
+			UpdateDisplay(hwndDlg, pGlobalData, TRUE);
 			return;
 		}
 		Current = Current->Blink;
@@ -398,7 +399,7 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 		if (Current->dmBitsPerPel == dmNewBitsPerPel)
 		{
 			pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-			UpdateDisplay(hwndDlg, pGlobalData);
+			UpdateDisplay(hwndDlg, pGlobalData, TRUE);
 			return;
 		}
 		Current = Current->Flink;
@@ -408,7 +409,8 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 }
 
 static VOID
-OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPosition)
+OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPosition,
+                    IN BOOL bUpdateThumb)
 {
 	/* if new resolution is not compatible with color depth:
 	 * 1) try to find the nearest bigger matching color depth
@@ -438,7 +440,7 @@ OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPo
 			 && Current->dmBitsPerPel == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel)
 			{
 				pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-				UpdateDisplay(hwndDlg, pGlobalData);
+				UpdateDisplay(hwndDlg, pGlobalData, bUpdateThumb);
 				return;
 			}
 			Current = Current->Blink;
@@ -454,7 +456,7 @@ OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPo
 			 && Current->dmBitsPerPel == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel)
 			{
 				pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-				UpdateDisplay(hwndDlg, pGlobalData);
+				UpdateDisplay(hwndDlg, pGlobalData, bUpdateThumb);
 				return;
 			}
 			Current = Current->Flink;
@@ -468,7 +470,7 @@ OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPo
 		if (dmNewPelsHeight == Current->dmPelsHeight && dmNewPelsWidth == Current->dmPelsWidth)
 		{
 			pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-			UpdateDisplay(hwndDlg, pGlobalData);
+			UpdateDisplay(hwndDlg, pGlobalData, bUpdateThumb);
 			return;
 		}
 		Current = Current->Flink;
@@ -481,7 +483,7 @@ OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPo
 		if (dmNewPelsHeight == Current->dmPelsHeight && dmNewPelsWidth == Current->dmPelsWidth)
 		{
 			pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-			UpdateDisplay(hwndDlg, pGlobalData);
+			UpdateDisplay(hwndDlg, pGlobalData, bUpdateThumb);
 			return;
 		}
 		Current = Current->Blink;
@@ -533,8 +535,13 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 				case TB_ENDTRACK:
 				{
 					DWORD newPosition = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_GETPOS, 0, 0);
-					OnResolutionChanged(hwndDlg, pGlobalData, newPosition);
+					OnResolutionChanged(hwndDlg, pGlobalData, newPosition, TRUE);
+					break;
 				}
+
+				case TB_THUMBTRACK:
+					OnResolutionChanged(hwndDlg, pGlobalData, HIWORD(wParam), FALSE);
+					break;
 			}
 			break;
 		}
