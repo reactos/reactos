@@ -286,10 +286,11 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 
 	//
-	// Base page and page count are always set
+	// Set Base page, page count and type
 	//
 	Mad[MadCount].BasePage = BasePage;
 	Mad[MadCount].PageCount = PageCount;
+	Mad[MadCount].MemoryType = Type;
 
 	//
 	// Check if it's more than the allowed for OS loader
@@ -297,7 +298,11 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	//
 	if (BasePage + PageCount > LOADER_HIGH_ZONE)
 	{
-		Mad[MadCount].MemoryType = LoaderFirmwareTemporary;
+		if (Mad[MadCount].MemoryType != LoaderSpecialMemory ||
+			Mad[MadCount].MemoryType != LoaderFirmwarePermanent)
+		{
+			Mad[MadCount].MemoryType = LoaderFirmwareTemporary;
+		}
 
 		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
 		MadCount++;
@@ -306,18 +311,14 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 	
 	//
-	// Set memory type
-	//
-	Mad[MadCount].MemoryType = Type;
-
-	//
 	// Add descriptor
 	//
 	WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
 	MadCount++;
 
 	//
-	// Map it
+	// Map it (don't map low 1Mb because it was already contigiously
+	// mapped in WinLdrTurnOnPaging)
 	//
 	if (BasePage >= 0x100)
 	{
