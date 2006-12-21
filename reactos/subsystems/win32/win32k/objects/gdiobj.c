@@ -27,6 +27,14 @@
 #define NDEBUG
 #include <debug.h>
 
+/* FIXME include right header for KeRosDumpStackFrames */
+VOID
+NTAPI
+KeRosDumpStackFrames(
+    PULONG Frame,
+    ULONG FrameCount
+);
+
 #define GDI_ENTRY_TO_INDEX(ht, e)                                              \
   (((ULONG_PTR)(e) - (ULONG_PTR)&((ht)->Entries[0])) / sizeof(GDI_TABLE_ENTRY))
 #define GDI_HANDLE_GET_ENTRY(HandleTable, h)                                   \
@@ -512,7 +520,9 @@ LockHandle:
   if(PrevProcId == ProcessId)
   {
     if(Entry->Type != 0 && Entry->KernelData != NULL &&
-       (ExpectedType == 0 || ((Entry->Type << 16) == ExpectedType)))
+       (ExpectedType == 0 || ((Entry->Type << 16) == ExpectedType)) &&
+       (Entry->Type & (GDI_HANDLE_TYPE_MASK | GDI_HANDLE_REUSE_MASK)) ==
+       ((ULONG_PTR)hObj & (GDI_HANDLE_TYPE_MASK | GDI_HANDLE_REUSE_MASK)))
     {
       PGDIOBJHDR GdiHdr;
 
@@ -569,10 +579,12 @@ LockHandle:
       if((Entry->Type & ~GDI_HANDLE_REUSE_MASK) != 0)
       {
         DPRINT1("Attempted to delete object 0x%x, type mismatch (0x%x : 0x%x)\n", hObj, ObjectType, ExpectedType);
+        KeRosDumpStackFrames(NULL, 20);
       }
       else
       {
         DPRINT1("Attempted to delete object 0x%x which was already deleted!\n", hObj);
+         KeRosDumpStackFrames(NULL, 20);
       }
       (void)InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
     }
@@ -598,10 +610,12 @@ LockHandle:
       if(((ULONG_PTR)PrevProcId & ~0x1) == 0)
       {
         DPRINT1("Attempted to free global gdi handle 0x%x, caller needs to get ownership first!!!\n", hObj);
+        KeRosDumpStackFrames(NULL, 20);
       }
       else
       {
         DPRINT1("Attempted to free foreign handle: 0x%x Owner: 0x%x from Caller: 0x%x\n", hObj, (ULONG_PTR)PrevProcId & ~0x1, (ULONG_PTR)ProcessId & ~0x1);
+        KeRosDumpStackFrames(NULL, 20);
       }
 #ifdef GDI_DEBUG
       DPRINT1("-> called from %s:%i\n", file, line);
@@ -803,17 +817,14 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType)
             if ((HandleType & ~GDI_HANDLE_REUSE_MASK) == 0)
             {
                DPRINT1("Attempted to lock object 0x%x that is deleted!\n", hObj);
-#ifdef GDI_DEBUG
                KeRosDumpStackFrames(NULL, 20);
-#endif
             }
             else
             {
                DPRINT1("Attempted to lock object 0x%x, type mismatch (0x%x : 0x%x)\n",
                   hObj, HandleType & ~GDI_HANDLE_REUSE_MASK, ObjectType & ~GDI_HANDLE_REUSE_MASK);
-#ifdef GDI_DEBUG
+
                KeRosDumpStackFrames(NULL, 20);
-#endif
             }
 #ifdef GDI_DEBUG
             DPRINT1("-> called from %s:%i\n", file, line);
@@ -940,17 +951,14 @@ GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectTy
             if ((HandleType & ~GDI_HANDLE_REUSE_MASK) == 0)
             {
                DPRINT1("Attempted to lock object 0x%x that is deleted!\n", hObj);
-#ifdef GDI_DEBUG
                KeRosDumpStackFrames(NULL, 20);
-#endif
             }
             else
             {
                DPRINT1("Attempted to lock object 0x%x, type mismatch (0x%x : 0x%x)\n",
                   hObj, HandleType & ~GDI_HANDLE_REUSE_MASK, ObjectType & ~GDI_HANDLE_REUSE_MASK);
-#ifdef GDI_DEBUG
+
                KeRosDumpStackFrames(NULL, 20);
-#endif
             }
 #ifdef GDI_DEBUG
             DPRINT1("-> called from %s:%i\n", file, line);
@@ -999,7 +1007,6 @@ GDIOBJ_UnlockObjByPtr(PGDI_HANDLE_TABLE HandleTable, PGDIOBJ Object)
    InterlockedDecrement((PLONG)&GdiHdr->Locks);
 #endif
 }
-
 
 BOOL INTERNAL_CALL
 GDIOBJ_OwnedByCurrentProcess(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle)
