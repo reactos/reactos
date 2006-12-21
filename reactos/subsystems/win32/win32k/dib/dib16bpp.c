@@ -624,15 +624,14 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
    LONG SrcZoomXHight;
    LONG SrcZoomXLow;
-   LONG DstZoomXHight;
-   LONG DstZoomXLow;
    LONG SrcZoomYHight;
    LONG SrcZoomYLow;
-   LONG DstZoomYHight;
-   LONG DstZoomYLow;
 
    LONG sy_dec = 0;
    LONG sy_max;
+
+   LONG sx_dec = 0;
+   LONG sx_max;
 
   DPRINT("DIB_16BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
      BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
@@ -650,14 +649,6 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     /* Calc the Zoom width of Destions */
     DesSizeX = DestRect->right - DestRect->left;
 
-    /* Calc the zoom factor of destions height */
-    DstZoomYHight = DesSizeY / SrcSizeY;
-    DstZoomYLow = DesSizeY - (DstZoomXHight * SrcSizeY);
-
-    /* Calc the zoom factor of destions width */
-    DstZoomXHight = DesSizeX / SrcSizeX;
-    DstZoomXLow = DesSizeX - (DstZoomXHight * SrcSizeX);
-
     /* Calc the zoom factor of soruce height */
     SrcZoomYHight = SrcSizeY / DesSizeY;
     SrcZoomYLow = SrcSizeY - (SrcZoomYHight * SrcSizeY);
@@ -665,9 +656,11 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     /* Calc the zoom factor of soruce width */
     SrcZoomXHight = SrcSizeX / DesSizeX;
     SrcZoomXLow = SrcSizeX - (SrcZoomXHight * DesSizeX);
-    
-    sy_max = DesSizeX;
+
+    sx_max = DesSizeX;
+    sy_max = DesSizeY;
     sy = SourceRect->top;
+
 
     switch(SourceSurf->iBitmapFormat)
     {
@@ -682,9 +675,11 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
        for (DesY=0; DesY<DesSizeY; DesY++)
        {
+            sx = SourceRect->left;
+            sx_dec = 0;
+
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;
                 if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
                 {
                     *DestBits = XLATEOBJ_iXlate(ColorTranslation, 0);
@@ -695,12 +690,20 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                     *DestBits = XLATEOBJ_iXlate(ColorTranslation, 1);
                     DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
                 }
+                
+                sx += SrcZoomXHight;
+                sx_dec += SrcZoomXLow;
+                if (sx_dec >= sx_max)
+                {
+                    sx++;
+                    sx_dec -= sx_max;
+                }
             }
 
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
 
             sy += SrcZoomYHight;
-            sy_dec += SrcZoomXLow;
+            sy_dec += SrcZoomYLow;
             if (sy_dec >= sy_max)
             {
                 sy++;
@@ -720,19 +723,29 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
         for (DesY=0; DesY<DesSizeY; DesY++)
         {
+            sx = SourceRect->left;
+            sx_dec = 0;
+
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                  sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;
                   color = DIB_4BPP_GetPixel(SourceSurf, sx, sy);
                   color = XLATEOBJ_iXlate(ColorTranslation, color);
                   *DestBits = color;
                   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
+
+                  sx += SrcZoomXHight;
+                  sx_dec += SrcZoomXLow;
+                  if (sx_dec >= sx_max)
+                  {
+                        sx++;
+                        sx_dec -= sx_max;
+                  }
             }
 
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
 
             sy += SrcZoomYHight;
-            sy_dec += SrcZoomXLow;
+            sy_dec += SrcZoomYLow;
             if (sy_dec >= sy_max)
             {
                 sy++;
@@ -751,19 +764,29 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
         for (DesY=0; DesY<DesSizeY; DesY++)
         {
+            sx = SourceRect->left;
+            sx_dec = 0;
+
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                  sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;  		
                   color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
-                  color = XLATEOBJ_iXlate(ColorTranslation, color);            
+                  color = XLATEOBJ_iXlate(ColorTranslation, color);
                   *DestBits = color;
                    DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
+
+                   sx += SrcZoomXHight;
+                   sx_dec += SrcZoomXLow;
+                   if (sx_dec >= sx_max)
+                   {
+                        sx++;
+                        sx_dec -= sx_max;
+                   }
             }
 
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
 
             sy += SrcZoomYHight;
-            sy_dec += SrcZoomXLow;
+            sy_dec += SrcZoomYLow;
             if (sy_dec >= sy_max)
             {
                 sy++;
@@ -784,19 +807,29 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
         for (DesY=0; DesY<DesSizeY; DesY++)
         {
+            sx = SourceRect->left;
+            sx_dec = 0;
+
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;
                 color = DIB_24BPP_GetPixel(SourceSurf, sx, sy);
                 color = XLATEOBJ_iXlate(ColorTranslation, color);
                 *DestBits = color;
                 DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
+
+                sx += SrcZoomXHight;
+                sx_dec += SrcZoomXLow;
+                if (sx_dec >= sx_max)
+                {
+                    sx++;
+                    sx_dec -= sx_max;
+                }
             }
 
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
 
             sy += SrcZoomYHight;
-            sy_dec += SrcZoomXLow;
+            sy_dec += SrcZoomYLow;
             if (sy_dec >= sy_max)
             {
                 sy++;
@@ -815,18 +848,28 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
         for (DesY=0; DesY<DesSizeY; DesY++)
         {
+            sx = SourceRect->left;
+            sx_dec = 0;
+
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;
                 color = DIB_32BPP_GetPixel(SourceSurf, sx, sy);
                 color = XLATEOBJ_iXlate(ColorTranslation, color);
                 *DestBits = color;
                 DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
+
+                sx += SrcZoomXHight;
+                sx_dec += SrcZoomXLow;
+                if (sx_dec >= sx_max)
+                {
+                    sx++;
+                    sx_dec -= sx_max;
+                }
             }
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
 
             sy += SrcZoomYHight;
-            sy_dec += SrcZoomXLow;
+            sy_dec += SrcZoomYLow;
             if (sy_dec >= sy_max)
             {
                 sy++;
