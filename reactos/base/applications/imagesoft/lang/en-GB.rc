@@ -48,7 +48,7 @@ BEGIN
   POPUP "&Adjust"
   BEGIN
     MENUITEM "Brightness...",       ID_BRIGHTNESS
-    MENUITEM "Contrast...",         -1, GRAYED
+    MENUITEM "Contrast...",         ID_CONTRAST
     MENUITEM "Hue/Saturation...",   -1, GRAYED
     POPUP "Colour"
     BEGIN
