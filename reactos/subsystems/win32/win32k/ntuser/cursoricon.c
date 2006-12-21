@@ -1400,7 +1400,7 @@ UserDrawIconEx(
       IconSize.cy = bmpMask.bmHeight / 2;
    }
 
-   if (bmpColor.bmPlanes == 32)
+   if (bmpColor.bmBitsPixel == 32)
    {
       bAlpha = TRUE;
    }
