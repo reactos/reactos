@@ -1371,6 +1371,7 @@ UserDrawIconEx(
    HBITMAP hbmOff = 0;
    HDC hdcMem = 0;
    HGDIOBJ hOldMem;
+   BOOL bAlpha = FALSE;
    
    hbmMask = pIcon->IconInfo.hbmMask;
    hbmColor = pIcon->IconInfo.hbmColor;
@@ -1397,6 +1398,11 @@ UserDrawIconEx(
    {
       IconSize.cx = bmpMask.bmWidth;
       IconSize.cy = bmpMask.bmHeight / 2;
+   }
+
+   if (bmpColor.bmPlanes == 32)
+   {
+      bAlpha = TRUE;
    }
 
    if(!diFlags)
@@ -1506,8 +1512,21 @@ UserDrawIconEx(
 
    if(DoFlickerFree)
    {
-      NtGdiBitBlt(hDc, xLeft, yTop, cxWidth, 
-         cyHeight, hdcOff, 0, 0, SRCCOPY, 0, 0);
+        if (bAlpha)
+        {
+            BLENDFUNCTION  BlendFunc;
+            BlendFunc.BlendOp = AC_SRC_OVER; /* right ? */
+            BlendFunc.BlendFlags = 0;
+            BlendFunc.SourceConstantAlpha = 255;
+            BlendFunc.AlphaFormat = AC_SRC_ALPHA;
+            NtGdiAlphaBlend(hDc, xLeft, yTop, cxWidth, cyHeight, 
+                            hdcOff, 0, 0, 0, 0, BlendFunc);
+        }
+        else
+        {
+            NtGdiBitBlt(hDc, xLeft, yTop, cxWidth, 
+                        cyHeight, hdcOff, 0, 0, SRCCOPY, 0, 0);
+        }
    }
    
    NtGdiSetTextColor(hdcOff, oldFg);
