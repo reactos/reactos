@@ -613,169 +613,227 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    LONG SrcSizeY;
    LONG SrcSizeX;
    LONG DesSizeY;
-   LONG DesSizeX;      
-   LONG sx;
-   LONG sy;
+   LONG DesSizeX;
+   LONG sx = 0;
+   LONG sy = 0;
    LONG DesX;
    LONG DesY;
    LONG color;
    PULONG DestBits;
    LONG DifflDelta;
 
-  
+   LONG SrcZoomXHight;
+   LONG SrcZoomXLow;
+   LONG DstZoomXHight;
+   LONG DstZoomXLow;
+   LONG SrcZoomYHight;
+   LONG SrcZoomYLow;
+   LONG DstZoomYHight;
+   LONG DstZoomYLow;
+
+   LONG sy_dec = 0;
+   LONG sy_max;
+
   DPRINT("DIB_16BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
      BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
      DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
+    /* Calc the Zoom height of Source */
     SrcSizeY = SourceRect->bottom - SourceRect->top;
+
+    /* Calc the Zoom Width of Source */
     SrcSizeX = SourceRect->right - SourceRect->left;
   
+    /* Calc the Zoom height of Destions */
     DesSizeY = DestRect->bottom - DestRect->top;
+
+    /* Calc the Zoom width of Destions */
     DesSizeX = DestRect->right - DestRect->left;
-      
+
+    /* Calc the zoom factor of destions height */
+    DstZoomYHight = DesSizeY / SrcSizeY;
+    DstZoomYLow = DesSizeY - (DstZoomXHight * SrcSizeY);
+
+    /* Calc the zoom factor of destions width */
+    DstZoomXHight = DesSizeX / SrcSizeX;
+    DstZoomXLow = DesSizeX - (DstZoomXHight * SrcSizeX);
+
+    /* Calc the zoom factor of soruce height */
+    SrcZoomYHight = SrcSizeY / DesSizeY;
+    SrcZoomYLow = SrcSizeY - (SrcZoomYHight * SrcSizeY);
+
+    /* Calc the zoom factor of soruce width */
+    SrcZoomXHight = SrcSizeX / DesSizeX;
+    SrcZoomXLow = SrcSizeX - (SrcZoomXHight * DesSizeX);
+    
+    sy_max = DesSizeX;
+    sy = SourceRect->top;
+
     switch(SourceSurf->iBitmapFormat)
     {
       
-      case BMF_1BPP:		
-      /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
-      /* This is a reference implementation, it hasn't been optimized for speed */
-      
+      case BMF_1BPP:
+        /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+        /* This is a reference implementation, it hasn't been optimized for speed */
+
       DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
                    DestRect->top * DestSurf->lDelta);
-      
-	  DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
-	                  
+      DifflDelta = DestSurf->lDelta -  (DesSizeX << 1);
+
        for (DesY=0; DesY<DesSizeY; DesY++)
-       {	 
-            sy = ((DesY  * SrcSizeY) / DesSizeY) + SourceRect->top;
-                                 
+       {
             for (DesX=0; DesX<DesSizeX; DesX++)
-            {	
-									
-                  sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;  		
-                   		
-                  if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
-				  {					
-					*DestBits = XLATEOBJ_iXlate(ColorTranslation, 0);				  				  
-				     DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
-                  } 
-				  else 
-				  {                    
-                    *DestBits = XLATEOBJ_iXlate(ColorTranslation, 1);				  				  
-				     DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
-                  }
+            {
+                sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;
+                if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
+                {
+                    *DestBits = XLATEOBJ_iXlate(ColorTranslation, 0);
+                    DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
+                }
+                else
+                {
+                    *DestBits = XLATEOBJ_iXlate(ColorTranslation, 1);
+                    DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
+                }
             }
+
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
+
+            sy += SrcZoomYHight;
+            sy_dec += SrcZoomXLow;
+            if (sy_dec >= sy_max)
+            {
+                sy++;
+                sy_dec -= sy_max;
+            }
        }
        break;
 
-      case BMF_4BPP:		
-      /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
-      /* This is a reference implementation, it hasn't been optimized for speed */
+      case BMF_4BPP:
+        /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+        /* This is a reference implementation, it hasn't been optimized for speed */
 
-      DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
+        DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
                    DestRect->top * DestSurf->lDelta);
-      
-	  DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
-	                  
-       for (DesY=0; DesY<DesSizeY; DesY++)
-       {	 
-            sy = ((DesY  * SrcSizeY) / DesSizeY) + SourceRect->top;
-                                 
+
+        DifflDelta = DestSurf->lDelta -  (DesSizeX << 1);
+
+        for (DesY=0; DesY<DesSizeY; DesY++)
+        {
             for (DesX=0; DesX<DesSizeX; DesX++)
-            {	
-									
-                  sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;  		
+            {
+                  sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;
                   color = DIB_4BPP_GetPixel(SourceSurf, sx, sy);
                   color = XLATEOBJ_iXlate(ColorTranslation, color);
-                              
-				  *DestBits = color;				  				  
-				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
+                  *DestBits = color;
+                  DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
+
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
+
+            sy += SrcZoomYHight;
+            sy_dec += SrcZoomXLow;
+            if (sy_dec >= sy_max)
+            {
+                sy++;
+                sy_dec -= sy_max;
+            }
        }
        break;
        
-      case BMF_8BPP:		
-      /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
-      /* This is a reference implementation, it hasn't been optimized for speed */
-            
-      DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
+      case BMF_8BPP:
+        /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+        /* This is a reference implementation, it hasn't been optimized for speed */
+
+        DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
                    DestRect->top * DestSurf->lDelta);
-                   
-      DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
-                      
-       for (DesY=0; DesY<DesSizeY; DesY++)
-       {	 
-            sy = ((DesY  * SrcSizeY) / DesSizeY) + SourceRect->top;
-                                 
+        DifflDelta = DestSurf->lDelta -  (DesSizeX << 1);
+
+        for (DesY=0; DesY<DesSizeY; DesY++)
+        {
             for (DesX=0; DesX<DesSizeX; DesX++)
-            {	
-									
+            {
                   sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;  		
                   color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
                   color = XLATEOBJ_iXlate(ColorTranslation, color);            
-				  *DestBits = color;				  				  
-				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
+                  *DestBits = color;
+                   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
+
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
+
+            sy += SrcZoomYHight;
+            sy_dec += SrcZoomXLow;
+            if (sy_dec >= sy_max)
+            {
+                sy++;
+                sy_dec -= sy_max;
+            }
        }
        break;
        
 
-      case BMF_24BPP:		
-      /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
-      /* This is a reference implementation, it hasn't been optimized for speed */
-                      
-      DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
-                   DestRect->top * DestSurf->lDelta);
-      
-	  DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
-	                  
-       for (DesY=0; DesY<DesSizeY; DesY++)
-       {	 
-            sy = ((DesY  * SrcSizeY) / DesSizeY) + SourceRect->top;
-                                 
-            for (DesX=0; DesX<DesSizeX; DesX++)
-            {	
-									
-                  sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;  		
-                  color = DIB_24BPP_GetPixel(SourceSurf, sx, sy);
-                  color = XLATEOBJ_iXlate(ColorTranslation, color);
-                              
-				  *DestBits = color;				  				  
-				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
-            }
-            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
-       }       
-	   break;
+      case BMF_24BPP:
+        /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+        /* This is a reference implementation, it hasn't been optimized for speed */
 
-      case BMF_32BPP:		
-      /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
-      /* This is a reference implementation, it hasn't been optimized for speed */
-                      
-      DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
+        DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
                    DestRect->top * DestSurf->lDelta);
-      
-	  DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
-	                  
-       for (DesY=0; DesY<DesSizeY; DesY++)
-       {	 
-            sy = ((DesY  * SrcSizeY) / DesSizeY) + SourceRect->top;
-                                 
+
+        DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
+
+        for (DesY=0; DesY<DesSizeY; DesY++)
+        {
             for (DesX=0; DesX<DesSizeX; DesX++)
-            {	
-									
-                  sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;  		
-                  color = DIB_32BPP_GetPixel(SourceSurf, sx, sy);
-                  color = XLATEOBJ_iXlate(ColorTranslation, color);
-                              
-				  *DestBits = color;				  				  
-				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
+            {
+                sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;
+                color = DIB_24BPP_GetPixel(SourceSurf, sx, sy);
+                color = XLATEOBJ_iXlate(ColorTranslation, color);
+                *DestBits = color;
+                DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
+
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
+
+            sy += SrcZoomYHight;
+            sy_dec += SrcZoomXLow;
+            if (sy_dec >= sy_max)
+            {
+                sy++;
+                sy_dec -= sy_max;
+            }
        }
        break;
+
+      case BMF_32BPP:
+        /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+        /* This is a reference implementation, it hasn't been optimized for speed */
+
+        DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
+                   DestRect->top * DestSurf->lDelta);
+        DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
+
+        for (DesY=0; DesY<DesSizeY; DesY++)
+        {
+            for (DesX=0; DesX<DesSizeX; DesX++)
+            {
+                sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;
+                color = DIB_32BPP_GetPixel(SourceSurf, sx, sy);
+                color = XLATEOBJ_iXlate(ColorTranslation, color);
+                *DestBits = color;
+                DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
+            }
+            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
+
+            sy += SrcZoomYHight;
+            sy_dec += SrcZoomXLow;
+            if (sy_dec >= sy_max)
+            {
+                sy++;
+                sy_dec -= sy_max;
+            }
+        }
+        break;
 
       case BMF_16BPP:
         return ScaleRectAvg16(DestSurf, SourceSurf, DestRect, SourceRect, MaskOrigin, BrushOrigin,
