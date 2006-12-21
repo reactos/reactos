@@ -13,11 +13,11 @@
 #define _NO_COM
 
 /* DDK/NDK/SDK Headers */
-#include <ntifs.h>
-#include <ntddk.h>
-#include <ntddmou.h>
-#include <ntndk.h>
-//#include <rtltypes.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntddmou.h>
+#include <ddk/ntifs.h>
+#include <ddk/tvout.h>
+#include <ndk/ntndk.h>
 
 /* Win32 Headers */
 /* FIXME: Defines in winbase.h that we need... */
