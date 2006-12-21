@@ -651,7 +651,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
     /* Calc the zoom factor of soruce height */
     SrcZoomYHight = SrcSizeY / DesSizeY;
-    SrcZoomYLow = SrcSizeY - (SrcZoomYHight * SrcSizeY);
+    SrcZoomYLow = SrcSizeY - (SrcZoomYHight * DesSizeY);
 
     /* Calc the zoom factor of soruce width */
     SrcZoomXHight = SrcSizeX / DesSizeX;
