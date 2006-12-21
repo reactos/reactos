@@ -72,7 +72,7 @@ void CategoryChoosen (HWND hwnd, struct Category* Category)
 	else
 		ShowMessage(Category->Name, Strings[IDS_NO_APPS]);
 
-	TreeView_DeleteItem(hwnd, TVI_ROOT);
+	(void)TreeView_DeleteItem(hwnd, TVI_ROOT);
 
 	TV_INSERTSTRUCT Insert;
 	Insert.item.mask = TVIF_TEXT|TVIF_PARAM;
