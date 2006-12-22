@@ -68,7 +68,7 @@ ClearMixerCache(PSND_MIXER Mixer)
 PSND_MIXER
 SndMixerCreate(HWND hWndNotification)
 {
-    PSND_MIXER Mixer = HeapAlloc(GetProcessHeap(),
+    PSND_MIXER Mixer = (PSND_MIXER) HeapAlloc(GetProcessHeap(),
                                  HEAP_ZERO_MEMORY,
                                  sizeof(SND_MIXER));
     if (Mixer != NULL)
@@ -115,7 +115,7 @@ SndMixerQueryControls(PSND_MIXER Mixer,
 {
     if (LineInfo->cControls > 0)
     {
-        *Controls = HeapAlloc(GetProcessHeap(),
+        *Controls = (MIXERCONTROL*) HeapAlloc(GetProcessHeap(),
                               0,
                               LineInfo->cControls * sizeof(MIXERCONTROL));
         if (*Controls != NULL)
@@ -128,7 +128,7 @@ SndMixerQueryControls(PSND_MIXER Mixer,
             LineControls.dwLineID = LineInfo->dwLineID;
             LineControls.cControls = LineInfo->cControls;
             LineControls.cbmxctrl = sizeof(MIXERCONTROL);
-            LineControls.pamxctrl = (PVOID)(*Controls);
+            LineControls.pamxctrl = (MIXERCONTROL*)(*Controls);
 
             Result = mixerGetLineControls((HMIXEROBJ)Mixer->hmx,
                                           &LineControls,
@@ -191,9 +191,9 @@ SndMixerQueryConnections(PSND_MIXER Mixer,
         {
             LPMIXERCONTROL Controls;
             PSND_MIXER_CONNECTION Con;
-            
+
             DPRINT("++ Source: %ws\n", LineInfo.szName);
-            
+
             DispControls = 0;
 
             if (!SndMixerQueryControls(Mixer,
@@ -206,7 +206,7 @@ SndMixerQueryConnections(PSND_MIXER Mixer,
                 break;
             }
 
-            Con = HeapAlloc(GetProcessHeap(),
+            Con = (SND_MIXER_CONNECTION*) HeapAlloc(GetProcessHeap(),
                             0,
                             sizeof(SND_MIXER_CONNECTION));
             if (Con != NULL)
@@ -245,7 +245,7 @@ SndMixerQueryDestinations(PSND_MIXER Mixer)
     {
         PSND_MIXER_DESTINATION Line;
 
-        Line = HeapAlloc(GetProcessHeap(),
+        Line = (SND_MIXER_DESTINATION*) HeapAlloc(GetProcessHeap(),
                          HEAP_ZERO_MEMORY,
                          sizeof(SND_MIXER_DESTINATION));
         if (Line != NULL)
@@ -257,7 +257,7 @@ SndMixerQueryDestinations(PSND_MIXER Mixer)
                                  MIXER_GETLINEINFOF_DESTINATION) == MMSYSERR_NOERROR)
             {
                 DPRINT("+ Destination: %ws (0x%x, %d)\n", Line->Info.szName, Line->Info.dwLineID, Line->Info.dwComponentType);
-                
+
                 if (!SndMixerQueryControls(Mixer,
                                            &Line->DisplayControls,
                                            &Line->Info,
@@ -516,7 +516,7 @@ SndMixerEnumConnections(PSND_MIXER Mixer,
             if (Line->Info.dwLineID == LineID)
             {
                 PSND_MIXER_CONNECTION Connection;
-                
+
                 if (Line->DisplayControls != 0)
                 {
                     if (!EnumProc(Mixer,
@@ -538,7 +538,7 @@ SndMixerEnumConnections(PSND_MIXER Mixer,
                         return FALSE;
                     }
                 }
-                
+
                 return TRUE;
             }
         }
@@ -560,7 +560,7 @@ SndMixerIsDisplayControl(PSND_MIXER Mixer,
                 return TRUE;
         }
     }
-    
+
     return FALSE;
 }
 

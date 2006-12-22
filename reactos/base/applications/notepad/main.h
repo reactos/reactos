@@ -41,30 +41,30 @@
 
 typedef struct
 {
-  HANDLE  hInstance;
-  HWND    hMainWnd;
-  HWND    hFindReplaceDlg;
-  HWND    hEdit;
-  HWND    hStatusBar;
-  HFONT   hFont; /* Font used by the edit control */
-  LOGFONT lfFont;
-  BOOL    bWrapLongLines;
-  BOOL    bShowStatusBar;
-  WCHAR   szFindText[MAX_PATH];
-  WCHAR   szReplaceText[MAX_PATH];
-  WCHAR   szFileName[MAX_PATH];
-  WCHAR   szFileTitle[MAX_PATH];
-  WCHAR   szFilter[2 * MAX_STRING_LEN + 100];
-  WCHAR   szMarginTop[MAX_PATH];
-  WCHAR   szMarginBottom[MAX_PATH];
-  WCHAR   szMarginLeft[MAX_PATH];
-  WCHAR   szMarginRight[MAX_PATH];
-  WCHAR   szHeader[MAX_PATH];
-  WCHAR   szFooter[MAX_PATH];
-  WCHAR   szStatusBarLine[MAX_PATH];
-  WCHAR   szStatusBarCol[MAX_PATH];
-  int     iEncoding;
-  int     iEoln;
+  HINSTANCE  hInstance;
+  HWND       hMainWnd;
+  HWND       hFindReplaceDlg;
+  HWND       hEdit;
+  HWND       hStatusBar;
+  HFONT      hFont; /* Font used by the edit control */
+  LOGFONT    lfFont;
+  BOOL       bWrapLongLines;
+  BOOL       bShowStatusBar;
+  WCHAR      szFindText[MAX_PATH];
+  WCHAR      szReplaceText[MAX_PATH];
+  WCHAR      szFileName[MAX_PATH];
+  WCHAR      szFileTitle[MAX_PATH];
+  WCHAR      szFilter[2 * MAX_STRING_LEN + 100];
+  WCHAR      szMarginTop[MAX_PATH];
+  WCHAR      szMarginBottom[MAX_PATH];
+  WCHAR      szMarginLeft[MAX_PATH];
+  WCHAR      szMarginRight[MAX_PATH];
+  WCHAR      szHeader[MAX_PATH];
+  WCHAR      szFooter[MAX_PATH];
+  WCHAR      szStatusBarLine[MAX_PATH];
+  WCHAR      szStatusBarCol[MAX_PATH];
+  int        iEncoding;
+  int        iEoln;
 
   FINDREPLACE find;
 } NOTEPAD_GLOBALS;

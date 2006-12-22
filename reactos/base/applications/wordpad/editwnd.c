@@ -36,7 +36,7 @@ InitEditWnd(PEDIT_WND_INFO Info)
         return FALSE;
     }
 
-    hfDefault = GetStockObject(DEFAULT_GUI_FONT);
+    hfDefault = (HFONT) GetStockObject(DEFAULT_GUI_FONT);
     SendMessage(Info->hEdit,
                 WM_SETFONT,
                 (WPARAM)hfDefault,
@@ -135,7 +135,7 @@ CreateEditWindow(struct _MAIN_WND_INFO *MainWnd,
     PEDIT_WND_INFO Info;
     HWND hWndEditor;
 
-    Info = HeapAlloc(ProcessHeap,
+    Info = (EDIT_WND_INFO*) HeapAlloc(ProcessHeap,
                      0,
                      sizeof(EDIT_WND_INFO));
     if (Info != NULL)

@@ -92,7 +92,7 @@ GetDataFromDialog(PCREATE_DATA Data)
     iLen = GetWindowTextLength(hwnd);
     if (iLen != 0)
     {
-        Data->ServiceName = HeapAlloc(ProcessHeap,
+        Data->ServiceName = (TCHAR*) HeapAlloc(ProcessHeap,
                                       0,
                                       (iLen+1) * sizeof(TCHAR));
         if (Data->ServiceName != NULL)
@@ -122,7 +122,7 @@ GetDataFromDialog(PCREATE_DATA Data)
     iLen = GetWindowTextLength(hwnd);
     if (iLen != 0)
     {
-        Data->DisplayName = HeapAlloc(ProcessHeap,
+        Data->DisplayName = (TCHAR*) HeapAlloc(ProcessHeap,
                                       0,
                                       (iLen+1) * sizeof(TCHAR));
         if (Data->DisplayName != NULL)
@@ -152,7 +152,7 @@ GetDataFromDialog(PCREATE_DATA Data)
     iLen = GetWindowTextLength(hwnd);
     if (iLen != 0)
     {
-        Data->BinPath = HeapAlloc(ProcessHeap,
+        Data->BinPath = (TCHAR*) HeapAlloc(ProcessHeap,
                                   0,
                                   (iLen+1) * sizeof(TCHAR));
         if (Data->BinPath != NULL)
@@ -182,7 +182,7 @@ GetDataFromDialog(PCREATE_DATA Data)
     iLen = GetWindowTextLength(hwnd);
     if (iLen != 0)
     {
-        Data->Description = HeapAlloc(ProcessHeap,
+        Data->Description = (TCHAR*) HeapAlloc(ProcessHeap,
                                       0,
                                       (iLen+1) * sizeof(TCHAR));
         if (Data->Description != NULL)
@@ -203,7 +203,7 @@ GetDataFromDialog(PCREATE_DATA Data)
     iLen = GetWindowTextLength(hwnd);
     if (iLen != 0)
     {
-        Data->Options = HeapAlloc(ProcessHeap,
+        Data->Options = (TCHAR*) HeapAlloc(ProcessHeap,
                                   0,
                                   (iLen+1) * sizeof(TCHAR));
         if (Data->Options != NULL)
@@ -263,7 +263,7 @@ CreateHelpDialogProc(HWND hDlg,
     {
         case WM_INITDIALOG:
         {
-            hIcon = LoadImage(hInstance,
+            hIcon = (HICON) LoadImage(hInstance,
                               MAKEINTRESOURCE(IDI_SM_ICON),
                               IMAGE_ICON,
                               16,
@@ -318,7 +318,7 @@ CreateDialogProc(HWND hDlg,
     {
         case WM_INITDIALOG:
         {
-            hIcon = LoadImage(hInstance,
+            hIcon = (HICON) LoadImage(hInstance,
                               MAKEINTRESOURCE(IDI_SM_ICON),
                               IMAGE_ICON,
                               16,
@@ -340,7 +340,7 @@ CreateDialogProc(HWND hDlg,
                 {
                     PCREATE_DATA Data;
 
-                    Data = HeapAlloc(ProcessHeap,
+                    Data = (PCREATE_DATA) HeapAlloc(ProcessHeap,
                                      HEAP_ZERO_MEMORY,
                                      sizeof(CREATE_DATA));
                     if (Data != NULL)

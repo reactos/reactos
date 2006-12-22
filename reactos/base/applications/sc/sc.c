@@ -245,12 +245,12 @@ int main( int argc, char **argv )
     WCHAR **argvW;
     int i, j, Ret = 1;
 
-    if ((argvW = malloc(argc * sizeof(WCHAR*))))
+    if ((argvW = (WCHAR**) malloc(argc * sizeof(WCHAR*))))
     {
         /* convert the arguments */
         for (i = 0, j = 0; i < argc; i++)
         {
-            if (!(argvW[i] = malloc((strlen(argv[i]) + 1) * sizeof(WCHAR))))
+            if (!(argvW[i] = (WCHAR*) malloc((strlen(argv[i]) + 1) * sizeof(WCHAR))))
             {
                 j++;
             }

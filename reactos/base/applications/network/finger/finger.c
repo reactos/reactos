@@ -129,8 +129,8 @@ userlist(int argc, char **argv)
 	int iErr;
 
 
-	if ((nargv = malloc((argc+1) * sizeof(char *))) == NULL ||
-	    (used = calloc(argc, sizeof(int))) == NULL)
+	if ((nargv = (char**) malloc((argc+1) * sizeof(char *))) == NULL ||
+	    (used = (int*) calloc(argc, sizeof(int))) == NULL)
 		err(1, NULL);
 
 	/* Pull out all network requests into nargv. */

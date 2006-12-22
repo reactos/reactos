@@ -88,8 +88,8 @@ FlatComboProc(HWND hwnd,
                 pt[2].x = pt[1].x - 2;
                 pt[2].y = pt[1].y + 2;
 
-                oldPen = SelectObject(hdc, GetStockPen(WHITE_PEN));
-                oldBrush = SelectObject(hdc, GetStockBrush(WHITE_BRUSH));
+                oldPen = (HPEN) SelectObject(hdc, GetStockPen(WHITE_PEN));
+                oldBrush = (HBRUSH) SelectObject(hdc, GetStockBrush(WHITE_BRUSH));
                 Polygon(hdc, pt, 3);
 
                 SelectObject(hdc, oldPen);
@@ -112,7 +112,7 @@ FlatComboProc(HWND hwnd,
                 pt[2].x = pt[1].x - 2;
                 pt[2].y = pt[1].y + 2;
 
-                oldBrush = SelectObject(hdc, GetStockBrush(BLACK_BRUSH));
+                oldBrush = (HBRUSH) SelectObject(hdc, GetStockBrush(BLACK_BRUSH));
                 Polygon(hdc, pt, 3);
 
                 SelectObject(hdc, oldBrush);

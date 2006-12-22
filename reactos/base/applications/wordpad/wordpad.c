@@ -35,7 +35,7 @@ _tWinMain(HINSTANCE hThisInstance,
     }
 
     len = _tcslen(lpAppName) + _tcslen(lpVersion);
-    lpTitle = HeapAlloc(ProcessHeap,
+    lpTitle = (TCHAR*) HeapAlloc(ProcessHeap,
                         0,
                         (len + 2) * sizeof(TCHAR));
 

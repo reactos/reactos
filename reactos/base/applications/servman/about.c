@@ -20,7 +20,7 @@ AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_INITDIALOG:
 
-        hIcon = LoadImage(hInstance,
+        hIcon = (HICON) LoadImage(hInstance,
                           MAKEINTRESOURCE(IDI_SM_ICON),
                           IMAGE_ICON,
                           16,

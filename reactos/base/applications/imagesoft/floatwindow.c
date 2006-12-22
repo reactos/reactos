@@ -185,7 +185,7 @@ FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info)
                                   WS_CHILD | WS_VISIBLE | CBS_DROPDOWN,
                                   2,
                                   2,
-                                  rect.right * 0.65,
+                                  (int) (rect.right * 0.65),
                                   rect.bottom - 2,
                                   Info->fltColors->hSelf,
                                   NULL,

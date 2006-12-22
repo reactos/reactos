@@ -120,7 +120,7 @@ Bri_OnInitDialog(PIMAGEADJUST pImgAdj,
              HWND hDlg,
              LPARAM lParam)
 {
-    pImgAdj = HeapAlloc(ProcessHeap,
+    pImgAdj = (IMAGEADJUST*) HeapAlloc(ProcessHeap,
                         0,
                         sizeof(IMAGEADJUST));
     if (!pImgAdj)
@@ -137,7 +137,7 @@ Bri_OnInitDialog(PIMAGEADJUST pImgAdj,
                   &pImgAdj->ImageRect);
 
     /* Make a static copy of the main image */
-    pImgAdj->hBitmap = CopyImage(pImgAdj->Info->ImageEditors->hBitmap,
+    pImgAdj->hBitmap = (HBITMAP) CopyImage(pImgAdj->Info->ImageEditors->hBitmap,
                                  IMAGE_BITMAP,
                                  pImgAdj->ImageRect.right,
                                  pImgAdj->ImageRect.bottom,
@@ -146,7 +146,7 @@ Bri_OnInitDialog(PIMAGEADJUST pImgAdj,
         goto fail;
 
     /* Make a copy which will be updated */
-    pImgAdj->hPreviewBitmap = CopyImage(pImgAdj->Info->ImageEditors->hBitmap,
+    pImgAdj->hPreviewBitmap = (HBITMAP) CopyImage(pImgAdj->Info->ImageEditors->hBitmap,
                                         IMAGE_BITMAP,
                                         pImgAdj->ImageRect.right,
                                         pImgAdj->ImageRect.bottom,

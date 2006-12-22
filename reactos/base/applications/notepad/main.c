@@ -378,7 +378,7 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
     case WM_DROPFILES:
     {
         WCHAR szFileName[MAX_PATH];
-        HANDLE hDrop = (HANDLE) wParam;
+        HDROP hDrop = (HDROP) wParam;
 
         DragQueryFile(hDrop, 0, szFileName, SIZEOF(szFileName));
         DragFinish(hDrop);
@@ -529,8 +529,8 @@ static void HandleCommandLine(LPWSTR cmdline)
 int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
 {
     MSG        msg;
-    HACCEL      hAccel;
-    WNDCLASSEX class;
+    HACCEL     hAccel;
+    WNDCLASSEX wndclass;
     static const WCHAR className[] = {'N','P','C','l','a','s','s',0};
     static const WCHAR winName[]   = {'N','o','t','e','p','a','d',0};
 
@@ -543,19 +543,19 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
     Globals.hInstance       = hInstance;
     LoadSettings();
 
-    ZeroMemory(&class, sizeof(class));
-    class.cbSize        = sizeof(class);
-    class.lpfnWndProc   = NOTEPAD_WndProc;
-    class.hInstance     = Globals.hInstance;
-    class.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_NPICON));
-    class.hCursor       = LoadCursor(0, IDC_ARROW);
-    class.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    class.lpszMenuName  = MAKEINTRESOURCE(MAIN_MENU);
-    class.lpszClassName = className;
-    class.hIconSm       = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_NPICON),
+    ZeroMemory(&wndclass, sizeof(wndclass));
+    wndclass.cbSize        = sizeof(wndclass);
+    wndclass.lpfnWndProc   = NOTEPAD_WndProc;
+    wndclass.hInstance     = Globals.hInstance;
+    wndclass.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_NPICON));
+    wndclass.hCursor       = LoadCursor(0, IDC_ARROW);
+    wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wndclass.lpszMenuName  = MAKEINTRESOURCE(MAIN_MENU);
+    wndclass.lpszClassName = className;
+    wndclass.hIconSm       = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_NPICON),
                             IMAGE_ICON, 16, 16, 0);
 
-    if (!RegisterClassEx(&class)) return FALSE;
+    if (!RegisterClassEx(&wndclass)) return FALSE;
 
     /* Setup windows */
 

@@ -88,7 +88,7 @@ FillFontSizeComboList(HWND hwndCombo)
     INT cursize = 12;
     INT i, count, nearest = 0;
 
-    HFONT hFont = GetStockObject(DEFAULT_GUI_FONT);
+    HFONT hFont = (HFONT) GetStockObject(DEFAULT_GUI_FONT);
 
     SendMessage(hwndCombo,
                 WM_SETFONT,
@@ -146,7 +146,7 @@ FillFontStyleComboList(HWND hwndCombo)
     LOGFONT lf;
 
     /* FIXME: draw each font in its own style */
-    HFONT hFont = GetStockObject(DEFAULT_GUI_FONT);
+    HFONT hFont = (HFONT) GetStockObject(DEFAULT_GUI_FONT);
     SendMessage(hwndCombo,
                 WM_SETFONT,
                 (WPARAM)hFont,

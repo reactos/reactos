@@ -71,7 +71,7 @@ DeleteDialogProc(HWND hDlg,
         {
             Info = (PMAIN_WND_INFO)lParam;
 
-            hIcon = LoadImage(hInstance,
+            hIcon = (HICON) LoadImage(hInstance,
                               MAKEINTRESOURCE(IDI_SM_ICON),
                               IMAGE_ICON,
                               16,

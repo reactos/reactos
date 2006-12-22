@@ -28,7 +28,7 @@ LengthOfStrResource(IN HINSTANCE hInst,
     /* Find the string table block */
     if ((hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING)) &&
         (hRes = LoadResource(hInst, hrSrc)) &&
-        (lpStr = LockResource(hRes)))
+        (lpStr = (WCHAR*) LockResource(hRes)))
     {
         UINT x;
 
@@ -86,7 +86,7 @@ LoadAndFormatString(IN HINSTANCE hInstance,
                            uID) > 0)
     {
         va_start(lArgs, lpTarget);
-        /* let's use FormatMessage to format it because it has the ability to allocate
+        /* let's use Format to format it because it has the ability to allocate
            memory automatically */
         Ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
                             lpFormat,
@@ -203,7 +203,7 @@ VOID GetError(VOID)
                   0,
                   NULL );
 
-    MessageBox(NULL, lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
+    MessageBox(NULL, (LPCTSTR) lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
 
     LocalFree(lpMsgBuf);
 }
@@ -237,7 +237,7 @@ InitImageList(UINT StartResource,
     /* Add all icons to the image list */
     for (i = StartResource; i <= EndResource; i++)
     {
-        hBitmap = LoadImage(hInstance,
+        hBitmap = (HBITMAP) LoadImage(hInstance,
                             MAKEINTRESOURCE(i),
                             IMAGE_BITMAP,
                             Width,

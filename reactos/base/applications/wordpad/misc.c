@@ -19,7 +19,7 @@ LengthOfStrResource(IN HINSTANCE hInst,
     /* Find the string table block */
     if ((hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING)) &&
         (hRes = LoadResource(hInst, hrSrc)) &&
-        (lpStr = LockResource(hRes)))
+        (lpStr = (WCHAR*) LockResource(hRes)))
     {
         UINT x;
 
@@ -197,7 +197,7 @@ VOID GetError(DWORD err)
                   0,
                   NULL );
 
-    MessageBox(NULL, lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
+    MessageBox(NULL, (LPCTSTR) lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
 
     LocalFree(lpMsgBuf);
 }

@@ -523,7 +523,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             {
                 PPROP_DLG_INFO PropSheet;
 
-                PropSheet = HeapAlloc(ProcessHeap,
+                PropSheet = (PROP_DLG_INFO*) HeapAlloc(ProcessHeap,
                                       HEAP_ZERO_MEMORY,
                                       sizeof(PROP_DLG_INFO));
                 if (PropSheet != NULL)
@@ -998,7 +998,7 @@ CreateMainWindow(LPCTSTR lpCaption,
     PMAIN_WND_INFO Info;
     HWND hMainWnd = NULL;
 
-    Info = HeapAlloc(ProcessHeap,
+    Info = (MAIN_WND_INFO*) HeapAlloc(ProcessHeap,
                      HEAP_ZERO_MEMORY,
                      sizeof(MAIN_WND_INFO));
 

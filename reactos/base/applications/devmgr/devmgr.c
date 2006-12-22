@@ -63,7 +63,7 @@ void UpdateMenu(HWND, HMENU);
 BOOL InsertListViewItems();
 void PositionHeader();
 
-void CreateButtons();
+void CreateButtons(HINSTANCE hInstance, HWND hwndParent);
 void ListByClass();
 
 /**************************************************************************
@@ -654,7 +654,7 @@ void InsertIntoListView(int typ, LPTSTR name, LPTSTR intern_name)
     item.iSubItem = 0;
     item.state = 0;
     //item.statemask = 0;
-    item.pszText=malloc(10);
+    item.pszText = (char*) malloc(10);
     if (typ>=1)
     {
     	sprintf(temp,"%i",typ);
