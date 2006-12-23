@@ -38,12 +38,12 @@ void ShowMessage (WCHAR* title, WCHAR* message)
 
 void AddItems (HWND hwnd, struct Category* Category, struct Category* Parent)
 { 
-	TV_INSERTSTRUCT Insert; 
+	TV_INSERTSTRUCTW Insert; 
 
 	Insert.item.lParam = (UINT)Category;
 	Insert.item.mask = TVIF_TEXT|TVIF_PARAM|TVIF_IMAGE|TVIF_SELECTEDIMAGE;;
-	Insert.item.pszText = Category->Name; //that is okay
-	Insert.item.cchTextMax = lstrlen(Category->Name); 
+	Insert.item.pszText = Category->Name;
+	Insert.item.cchTextMax = lstrlenW(Category->Name); 
 	Insert.item.iImage = Category->Icon;
 	Insert.item.iSelectedImage = Category->Icon;
 	Insert.hInsertAfter = TVI_LAST;
@@ -74,7 +74,7 @@ void CategoryChoosen (HWND hwnd, struct Category* Category)
 
 	(void)TreeView_DeleteItem(hwnd, TVI_ROOT);
 
-	TV_INSERTSTRUCT Insert;
+	TV_INSERTSTRUCTW Insert;
 	Insert.item.mask = TVIF_TEXT|TVIF_PARAM;
 	Insert.hInsertAfter = TVI_LAST;
 	Insert.hParent = TVI_ROOT;
@@ -85,7 +85,7 @@ void CategoryChoosen (HWND hwnd, struct Category* Category)
 	{
 		Insert.item.lParam = (UINT)CurrentApplication;
 		Insert.item.pszText = CurrentApplication->Name;
-		Insert.item.cchTextMax = lstrlen(CurrentApplication->Name); 
+		Insert.item.cchTextMax = lstrlenW(CurrentApplication->Name); 
 		SendMessage(hwnd, TVM_INSERTITEM, 0, (LPARAM)&Insert);
 		CurrentApplication = CurrentApplication->Next;
 	}
@@ -100,10 +100,10 @@ BOOL SetupControls (HWND hwnd)
 		return FALSE;
 
 	// Set up the controls
-	hCategories = CreateWindowExW(0, WC_TREEVIEW, L"Categories", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
+	hCategories = CreateWindowExW(0, WC_TREEVIEWW, L"Categories", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
 							0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
-	hApps = CreateWindowExW(0, WC_TREEVIEW, L"Applications", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
+	hApps = CreateWindowExW(0, WC_TREEVIEWW, L"Applications", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
 							0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
 	hLogo = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_LOGO));
@@ -118,10 +118,10 @@ BOOL SetupControls (HWND hwnd)
 	SendMessageW(hDownloadButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_DOWNLOAD)));
 
 	// Set deflaut entry for hApps
-	TV_INSERTSTRUCT Insert = {0}; 
+	TV_INSERTSTRUCTW Insert = {0}; 
 	Insert.item.mask = TVIF_TEXT;
 	Insert.item.pszText = Strings[IDS_CHOOSE_CATEGORY];
-	Insert.item.cchTextMax = lstrlen(Strings[IDS_CHOOSE_CATEGORY]); 
+	Insert.item.cchTextMax = lstrlenW(Strings[IDS_CHOOSE_CATEGORY]); 
 	SendMessage(hApps, TVM_INSERTITEM, 0, (LPARAM)&Insert); 
 
 	// Create Tree Icons
@@ -191,7 +191,7 @@ static void DrawDescription (HDC hdc, RECT DescriptionRect)
 	HFONT Font = GetFont(TRUE);
 	SelectObject(hdc, Font);
 	RECT Rect = {DescriptionRect.left+5, DescriptionRect.top+3, DescriptionRect.right-2, DescriptionRect.top+22};
-	DrawTextW(hdc, DescriptionHeadline, lstrlen(DescriptionHeadline), &Rect, DT_SINGLELINE|DT_NOPREFIX);
+	DrawTextW(hdc, DescriptionHeadline, lstrlenW(DescriptionHeadline), &Rect, DT_SINGLELINE|DT_NOPREFIX);
 	DeleteObject(Font);
 
 	// Description
@@ -199,7 +199,7 @@ static void DrawDescription (HDC hdc, RECT DescriptionRect)
 	SelectObject(hdc, Font);
 	Rect.top += 40;
 	Rect.bottom = DescriptionRect.bottom-2;
-	DrawTextW(hdc, DescriptionText, lstrlen(DescriptionText), &Rect, DT_WORDBREAK|DT_NOPREFIX); // ToDo: Call TabbedTextOut to draw a nice table
+	DrawTextW(hdc, DescriptionText, lstrlenW(DescriptionText), &Rect, DT_WORDBREAK|DT_NOPREFIX); // ToDo: Call TabbedTextOut to draw a nice table
 	DeleteObject(Font);
 
 }
@@ -244,7 +244,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				if (lParam == (LPARAM)hDownloadButton)
 				{
 					if(SelectedApplication)
-						DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
+						DialogBoxW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
 					else
 						ShowMessage(Strings[IDS_NO_APP_TITLE], Strings[IDS_NO_APP]);
 				}
@@ -332,7 +332,6 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 	HWND hwnd;
 	int i;
 
-	LoadLibrary(L"riched20.dll");
 	InitCommonControls();
 
 	// Load strings
@@ -348,7 +347,7 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 	WndClass.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
 	WndClass.hCursor		= LoadCursor(NULL, IDC_ARROW);
 
-	RegisterClassEx(&WndClass);
+	RegisterClassExW(&WndClass);
 
 	hwnd = CreateWindowW(L"Downloader", 
 						Strings[IDS_WINDOW_TITLE],

@@ -95,7 +95,7 @@ void tag_opened (void* usrdata, const char* tag, const char** arg)
 		strncpy(CurrentTag, tag, 0x100);
 	}
 	else
-		MessageBox(0,Strings[IDS_XMLERROR_2],0,0);
+		MessageBoxW(0,Strings[IDS_XMLERROR_2],0,0);
 }
 
 
@@ -107,17 +107,17 @@ void text (void* usrdata, const char* data, int len)
 	// FIXME: handle newlines e.g. in Description
 	if(!strcmp(CurrentTag, "maintainer"))
 	{
-		int currentlengt = lstrlen(CurrentApplication->Location);
+		int currentlengt = lstrlenW(CurrentApplication->Location);
 		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Maintainer[currentlengt], 0x100-currentlengt);
 	}
 	else if(!strcmp(CurrentTag, "description"))
 	{
-		int currentlengt = lstrlen(CurrentApplication->Description);
+		int currentlengt = lstrlenW(CurrentApplication->Description);
 		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Description[currentlengt], 0x400-currentlengt);
 	}
 	else if(!strcmp(CurrentTag, "location"))
 	{
-		int currentlengt = lstrlen(CurrentApplication->Location);
+		int currentlengt = lstrlenW(CurrentApplication->Location);
 		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Location[currentlengt], 0x100-currentlengt);
 	}
 }
@@ -157,7 +157,7 @@ BOOL ProcessXML (const char* filename, struct Category* Root)
 	FILE* file = fopen(filename, "r");
 	if(!file) 
 	{
-		MessageBox(0,Strings[IDS_XMLERROR_1],0,0);
+		MessageBoxW(0,Strings[IDS_XMLERROR_1],0,0);
 		return FALSE;
 	}
 
@@ -173,7 +173,7 @@ BOOL ProcessXML (const char* filename, struct Category* Root)
 		buffer[len] = 0;
 		if(!XML_Parse(parser, buffer, len, done)) 
 		{
-			MessageBox(0,Strings[IDS_XMLERROR_2],0,0);
+			MessageBoxW(0,Strings[IDS_XMLERROR_2],0,0);
 			return FALSE;
 		}
 	}
