@@ -272,6 +272,17 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
+		case WM_SIZING:
+		{
+			LPRECT pRect = (LPRECT)lParam;
+			if (pRect->right-pRect->left < 400)
+				pRect->right = pRect->left + 400;
+
+			if (pRect->bottom-pRect->top < 300)
+				pRect->bottom = pRect->top + 300;
+		}
+		break;
+
 		case WM_SIZE:
 		{
 			int Split_Hozizontal = (HIWORD(lParam)-(45+60))/2 + 60;
