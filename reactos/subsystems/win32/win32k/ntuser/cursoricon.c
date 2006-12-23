@@ -1400,10 +1400,14 @@ UserDrawIconEx(
       IconSize.cy = bmpMask.bmHeight / 2;
    }
 
-   if (bmpColor.bmBitsPixel == 32)
+   /* A hack to get alpha-blending support for icons.
+      Disabled now because of a bug in alpha blending function
+      (which blends with white background instead of the background).
+    */
+   /*if (bmpColor.bmBitsPixel == 32)
    {
       bAlpha = TRUE;
-   }
+   }*/
 
    if(!diFlags)
       diFlags = DI_NORMAL;
@@ -1520,7 +1524,7 @@ UserDrawIconEx(
             BlendFunc.SourceConstantAlpha = 255;
             BlendFunc.AlphaFormat = AC_SRC_ALPHA;
             NtGdiAlphaBlend(hDc, xLeft, yTop, cxWidth, cyHeight, 
-                            hdcOff, 0, 0, 0, 0, BlendFunc);
+                            hdcOff, 0, 0, cxWidth, cyHeight, BlendFunc);
         }
         else
         {
