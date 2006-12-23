@@ -222,9 +222,17 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hwnd, &ps);
-			FillRect(hdc, &ps.rcPaint, CreateSolidBrush(RGB(235,233,237)));
-			DrawBitmap(hdc, 10, 12, hLogo);
-			DrawDescription(hdc, DescriptionRect);
+			HDC BackbufferHdc = CreateCompatibleDC(hdc);
+			HBITMAP BackbufferBmp = CreateCompatibleBitmap(hdc, ps.rcPaint.right, ps.rcPaint.bottom);
+			SelectObject(BackbufferHdc, BackbufferBmp);
+			
+			FillRect(BackbufferHdc, &ps.rcPaint, CreateSolidBrush(RGB(235,235,235)));
+			DrawBitmap(BackbufferHdc, 10, 12, hLogo);
+			DrawDescription(BackbufferHdc, DescriptionRect);
+			
+			BitBlt(hdc, 0, 0, ps.rcPaint.right, ps.rcPaint.bottom, BackbufferHdc, 0, 0, SRCCOPY);
+			DeleteObject(BackbufferBmp);
+			DeleteDC(BackbufferHdc);
 			EndPaint(hwnd, &ps);
 		}
 		break;
@@ -299,8 +307,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 			RECT Top = {0,0,LOWORD(lParam),60};
 			InvalidateRect(hwnd, &Top, TRUE);
-			RECT Description = {Split_Vertical, Split_Hozizontal, LOWORD(lParam), HIWORD(lParam)};
-			InvalidateRect(hwnd, &Description, TRUE);
+			RECT Bottom = {Split_Vertical, Split_Hozizontal, LOWORD(lParam), HIWORD(lParam)};
+			InvalidateRect(hwnd, &Bottom, FALSE);
 		}
 		break;
 
