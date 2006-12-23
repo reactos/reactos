@@ -742,6 +742,10 @@ DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
     {
         /* Free it */
         Return = NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD);
+        if (Return == TRUE)
+        {
+            pDirectDrawGlobal->hDD = 0;
+        }
     }
     else if (ghDirectDraw)
     {
@@ -753,7 +757,10 @@ DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
         {
             /* Delete the object */
             Return = NtGdiDdDeleteDirectDrawObject(ghDirectDraw);
-            ghDirectDraw = 0;
+            if (Return == TRUE)
+            {
+                ghDirectDraw = 0;
+            }
         }
     }
 
