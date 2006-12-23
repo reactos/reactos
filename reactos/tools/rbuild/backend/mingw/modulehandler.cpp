@@ -3139,7 +3139,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	OutputCdfileCopyCommands ( bootcdDirectory );
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(CDMAKE_TARGET) -v -m -b -j %s %s REACTOS %s\n",
+	          "\t$(Q)$(CDMAKE_TARGET) -v -j -m -b %s %s REACTOS %s\n",
 	          isoboot.c_str (),
 	          bootcd.c_str (),
 			  IsoName.c_str() );
