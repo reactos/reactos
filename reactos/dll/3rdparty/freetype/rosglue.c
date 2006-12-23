@@ -26,50 +26,7 @@
  * First some generic routines
  */
 
-void *
-memcpy(void *Dest, const void *Source, size_t Size)
-{
-  RtlMoveMemory(Dest, Source, Size);
 
-  return Dest;
-}
-
-
-int
-memcmp(const void *p1, const void *p2, size_t Size)
-{
-   unsigned int i;
-   const char* s1;
-   const char* s2;
-   
-   s1 = (const char *) p1;
-   s2 = (const char *) p2;
-   for (i = 0; i < Size; i++)
-     {
-	if ((*s1) != (*s2))
-	  {
-	     return((*s1) - (*s2));
-	  }
-	s1++;
-	s2++;
-     }
-   return(0);
-}
-
-/* Hopefully we're only passed ASCII characters.... */
-int
-isalnum(int c)
-{
-  assert(0x20 <= c && c <= 0x7f);
-
-  return (('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'));
-}
-
-long
-labs(long j)
-{
-  return (j < 0 ? -j : j);
-}
 
 /*
  * Memory allocation

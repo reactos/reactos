@@ -10,6 +10,7 @@
 		<define name="TT_CONFIG_OPTION_BYTECODE_INTERPRETER" />
 	</if>
 	<library>ntoskrnl</library>
+	<library>ntdll</library>
 	<library>hal</library>
 	<directory name="i386">
 		<file>setjmplongjmp.s</file>
