@@ -10,7 +10,7 @@
 
 #include <w32k.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 GDIDEVICE IntGetPrimarySurface(VOID);
 
@@ -28,127 +28,172 @@ GDIDEVICE IntGetPrimarySurface(VOID);
 
 BOOL INTERNAL_CALL
 DD_Cleanup(PVOID ObjectBody)
-{       
-	PDD_DIRECTDRAW pDirectDraw = (PDD_DIRECTDRAW) ObjectBody;
+{
+    PDD_DIRECTDRAW pDirectDraw = (PDD_DIRECTDRAW) ObjectBody;
 
-	DPRINT1("DD_Cleanup\n");
-	
-	if (!pDirectDraw)
-		return FALSE;
-    
+    DPRINT1("DD_Cleanup\n");
+
+    if (!pDirectDraw)
+    {
+        return FALSE;
+    }
+
     if (pDirectDraw->Global.dhpdev == NULL)
+    {
         return FALSE;
-        
+    }
+
     if (pDirectDraw->DrvDisableDirectDraw == NULL)
+    {
         return FALSE;
-        
-	pDirectDraw->DrvDisableDirectDraw(pDirectDraw->Global.dhpdev);
-	return TRUE;
+    }
+
+    pDirectDraw->DrvDisableDirectDraw(pDirectDraw->Global.dhpdev);
+    return TRUE;
 }
 
 HANDLE STDCALL 
 NtGdiDdCreateDirectDrawObject(HDC hdc)
 {
-	DD_CALLBACKS callbacks;
-	DD_SURFACECALLBACKS surface_callbacks;
-	DD_PALETTECALLBACKS palette_callbacks;
+    DD_CALLBACKS callbacks;
+    DD_SURFACECALLBACKS surface_callbacks;
+    DD_PALETTECALLBACKS palette_callbacks;
     DC *pDC;
     BOOL success;
     HANDLE hDirectDraw;
     PDD_DIRECTDRAW pDirectDraw;
-	
-	DPRINT1("NtGdiDdCreateDirectDrawObject\n");
 
-	RtlZeroMemory(&callbacks, sizeof(DD_CALLBACKS));
-	callbacks.dwSize = sizeof(DD_CALLBACKS);
-	RtlZeroMemory(&surface_callbacks, sizeof(DD_SURFACECALLBACKS));
-	surface_callbacks.dwSize = sizeof(DD_SURFACECALLBACKS);
-	RtlZeroMemory(&palette_callbacks, sizeof(DD_PALETTECALLBACKS));
-	palette_callbacks.dwSize = sizeof(DD_PALETTECALLBACKS);
+    DPRINT1("NtGdiDdCreateDirectDrawObject\n");
 
-	/* FIXME hdc can be zero for d3d9 */
-    /* we need create it, if in that case */
-	if (hdc == NULL)
-	{
-        DPRINT1("FIXME hdc is NULL \n"); 
-	    return NULL;
+    RtlZeroMemory(&callbacks, sizeof(DD_CALLBACKS));
+    callbacks.dwSize = sizeof(DD_CALLBACKS);
+    RtlZeroMemory(&surface_callbacks, sizeof(DD_SURFACECALLBACKS));
+    surface_callbacks.dwSize = sizeof(DD_SURFACECALLBACKS);
+    RtlZeroMemory(&palette_callbacks, sizeof(DD_PALETTECALLBACKS));
+    palette_callbacks.dwSize = sizeof(DD_PALETTECALLBACKS);
+
+    /* Create a hdc if we do not have one */
+    if (hdc == NULL)
+    {
+        HDC newHdc = IntGdiCreateDC(NULL,NULL,NULL,NULL,FALSE);
+        hdc = newHdc;
+
+        if (hdc == NULL)
+        {
+            DPRINT1("FIXME hdc is NULL \n"); 
+            return NULL;
+        }
     }
     
-	pDC = DC_LockDc(hdc);
-	if (!pDC)
-	{
-		return NULL;
-	}
+    /* Look the hdc to gain the internal struct */
 
-	if (pDC->DriverFunctions.EnableDirectDraw == NULL)
-	{
-		/* Driver doesn't support DirectDraw */
+    pDC = DC_LockDc(hdc);
+    if (!pDC)
+    {
+        /* We did fail look here so return NULL */
+        return NULL;
+    }
 
-		/*
-		   Warring ReactOS complain that pDC are not right owner 
-		   when DC_UnlockDc(pDC) hit, why ? 
-		*/
-		DC_UnlockDc(pDC);
-		return NULL;
-	}
-	
-	success = pDC->DriverFunctions.EnableDirectDraw(
-		      pDC->PDev, &callbacks, &surface_callbacks, &palette_callbacks);
+    if (pDC->DriverFunctions.EnableDirectDraw == NULL)
+    {
+        /* Driver doesn't support DirectDraw */
 
-	if (!success)
-	{
+        /*
+           Warring ReactOS complain that pDC are not right owner 
+           when DC_UnlockDc(pDC) hit, why ? 
+         */
+        DC_UnlockDc(pDC);
+        return NULL;
+    }
+
+   /* test see if driver support DirectDraw interface */
+    success = pDC->DriverFunctions.EnableDirectDraw(
+              pDC->PDev, &callbacks, &surface_callbacks, &palette_callbacks);
+
+    if (!success)
+    {
+        /* DirectDraw creation failed */
         DPRINT1("DirectDraw creation failed\n"); 
-		/* DirectDraw creation failed */
-		DC_UnlockDc(pDC);
-		return NULL;
-	}
+        DC_UnlockDc(pDC);
+        return NULL;
+    }
 
-	hDirectDraw = GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DIRECTDRAW);
-	if (!hDirectDraw)
-	{
-		/* No more memmory */
-		DC_UnlockDc(pDC);
-		return NULL;
-	}
+    /* We found a DirectDraw interface 
+     * Alloc a handler for it
+     */
+    hDirectDraw = GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DIRECTDRAW);
+    if (!hDirectDraw)
+    {
+        /* No more memmory */
+        DC_UnlockDc(pDC);
+        return NULL;
+    }
 
-	pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
-	if (!pDirectDraw)
-	{
-		/* invalid handle */
-		DC_UnlockDc(pDC);
-		return NULL;
-	}
-	
-	pDirectDraw->Global.dhpdev = pDC->PDev;
-	pDirectDraw->Local.lpGbl = &pDirectDraw->Global;
+    /* try look the DirectDraw handler and setup some data later */
 
-	pDirectDraw->DrvGetDirectDrawInfo = pDC->DriverFunctions.GetDirectDrawInfo;
-	pDirectDraw->DrvDisableDirectDraw = pDC->DriverFunctions.DisableDirectDraw;
+    pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
+    if (!pDirectDraw)
+    {
+        /* invalid handle */
+        DC_UnlockDc(pDC);
+        return NULL;
+    }
+
+    /* 
+     * We are caching all callbacks and some data
+     * reason for it, is we do not trust on the kernel/usermode 
+     * pointer for the callbacks comes back from user mode.
+     * I perfer more safer way todo it, only safe way is 
+     * to cache the callbacks pointer, and send back the true 
+     * kernel pointer to user mode of the driver api we get back
+     * Windows is sending back kernel pointer of the driver we 
+     * are doing same, differnt is we also cache it. and only
+     * use the cached one.
+     */
+
+    /* 
+       Getting the PDev bad idea we need the hdc instead 
+       if we are doing a dymatic resultions change the 
+       Pdev will get lost, we should cache the HDC instead
+       in windows, after a resultions change the HAL interface
+       need be rebuild from scrach, thanks to this.small problem
+       maybe we in ReactOS can found a solvtions on this later
+     */
+
+    pDirectDraw->Global.dhpdev = pDC->PDev;
+    pDirectDraw->Local.lpGbl = &pDirectDraw->Global;
+
+    pDirectDraw->DrvGetDirectDrawInfo = pDC->DriverFunctions.GetDirectDrawInfo;
+    pDirectDraw->DrvDisableDirectDraw = pDC->DriverFunctions.DisableDirectDraw;
+    pDirectDraw->EnableDirectDraw = pDC->DriverFunctions.EnableDirectDraw;
+
 
     /* DD_CALLBACKS setup */	
-	RtlMoveMemory(&pDirectDraw->DD, &callbacks, sizeof(DD_CALLBACKS));
-	     	
-   	/* DD_SURFACECALLBACKS  setup*/		
-	RtlMoveMemory(&pDirectDraw->Surf, &surface_callbacks, sizeof(DD_SURFACECALLBACKS));
-		
-	/* DD_PALETTECALLBACKS setup*/	
-	RtlMoveMemory(&pDirectDraw->Pal, &palette_callbacks, sizeof(DD_PALETTECALLBACKS));
-		
-	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-	DC_UnlockDc(pDC);
+    RtlMoveMemory(&pDirectDraw->DD, &callbacks, sizeof(DD_CALLBACKS));
+
+    /* DD_SURFACECALLBACKS  setup*/
+    RtlMoveMemory(&pDirectDraw->Surf, &surface_callbacks, sizeof(DD_SURFACECALLBACKS));
+
+    /* DD_PALETTECALLBACKS setup*/	
+    RtlMoveMemory(&pDirectDraw->Pal, &palette_callbacks, sizeof(DD_PALETTECALLBACKS));
+
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+    DC_UnlockDc(pDC);
 
     DPRINT1("DirectDraw return handler 0x%x\n",hDirectDraw); 
-	return hDirectDraw;
+    return hDirectDraw;
 }
 
 BOOL STDCALL 
 NtGdiDdDeleteDirectDrawObject( HANDLE hDirectDrawLocal)
 {
+    
     DPRINT1("NtGdiDdDeleteDirectDrawObject\n");
-	return GDIOBJ_FreeObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+    return GDIOBJ_FreeObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 }
 
-BOOL STDCALL NtGdiDdQueryDirectDrawObject(
+BOOL STDCALL 
+NtGdiDdQueryDirectDrawObject(
     HANDLE hDirectDrawLocal,
     DD_HALINFO  *pHalInfo,
     DWORD *pCallBackFlags,
@@ -162,7 +207,7 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
     DWORD *puFourCC
 )
 {
-	DD_HALINFO HalInfo;
+    DD_HALINFO HalInfo;
     PDD_DIRECTDRAW pDirectDraw;
     BOOL success;
 
@@ -184,95 +229,118 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
     {
        return FALSE;
     }
-       
-	pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-		
-	if (!pDirectDraw)
-	{
+    
+    /* Look the DirectDraw interface */
+    pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal,
+                                 GDI_OBJECT_TYPE_DIRECTDRAW);
+
+    if (!pDirectDraw)
+    {
         /* Fail to Lock DirectDraw handle */
-		return FALSE;
+        return FALSE;
     }
 
-	pHalInfo->dwSize = 0;
+    /* lock susseces 
+     * rest the pHalInfo size we do not known
+     * if we got a NT4 driver or windows 2000/XP/2003 driver yet
+     */
+    pHalInfo->dwSize = 0;
 
-	success = pDirectDraw->DrvGetDirectDrawInfo(
-		pDirectDraw->Global.dhpdev,
-		&HalInfo,
-		puNumHeaps,
-		puvmList,
-		puNumFourCC,
-		puFourCC);
+    /* Getting the request size of all struct at frist call
+     * Secound call we getting data back 
+     */
 
-	if (!success)
-	{
+    success = pDirectDraw->DrvGetDirectDrawInfo( pDirectDraw->Global.dhpdev,
+                                                 &HalInfo, 
+                                                 puNumHeaps, puvmList,
+                                                 puNumFourCC, puFourCC);
+
+    if (!success)
+    {
+        /* fail we did not get any DrvGetDirectDrawInfo 
+         * so we assume it is simple 2d DirectDraw interface 
+         */
         DPRINT1("Driver does not fill the  Fail to get DirectDraw driver info \n");
 
-		GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-		return FALSE;
-	}
-      		
-	if (HalInfo.dwSize == 0)
-	{
-		DPRINT1(" Fail for driver does not fill the DD_HALINFO struct \n");
         GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-		return FALSE;
-	}
+        return FALSE;
+    }
 
-	if (HalInfo.dwSize != sizeof(DD_HALINFO))
-	{		
-		if (HalInfo.dwSize == sizeof(DD_HALINFO_V4))
-		{        
-           /* NT4 Compatible */
-           DPRINT1("Got DD_HALINFO_V4 sturct we convert it to DD_HALINFO \n");
-		   HalInfo.dwSize = sizeof(DD_HALINFO);
-           HalInfo.lpD3DGlobalDriverData = NULL;
-           HalInfo.lpD3DHALCallbacks = NULL;
-           HalInfo.lpD3DBufCallbacks = NULL;		   
-		}
-		else
-		{
-           DPRINT1(" Fail : did not get DD_HALINFO size \n");
-		   GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-		   return FALSE;
-		}	
-	}
+    if (HalInfo.dwSize == 0)
+    {
+        /* some driver does not fill it, they only implement the DrvGetDirectDrawInfo
+         * so they work on Windows 2000/XP/2003
+         */
 
-	RtlMoveMemory(pHalInfo, &HalInfo, sizeof(DD_HALINFO));       
-	
+        DPRINT1(" Fail for driver does not fill the DD_HALINFO struct \n");
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+        return FALSE;
+    }
+
+    /* check see if DD_HALINFO is NT4 version or not
+     * if it NT4 version we convert it to NT5 version
+     */
+    if (HalInfo.dwSize != sizeof(DD_HALINFO))
+    {
+        if (HalInfo.dwSize == sizeof(DD_HALINFO_V4))
+        {
+            /* NT4 Compatible */
+            DPRINT1("Got DD_HALINFO_V4 sturct we convert it to DD_HALINFO \n");
+            HalInfo.dwSize = sizeof(DD_HALINFO);
+            HalInfo.lpD3DGlobalDriverData = NULL;
+            HalInfo.lpD3DHALCallbacks = NULL;
+            HalInfo.lpD3DBufCallbacks = NULL;
+        }
+        else
+        {
+            /* Unknown version found */
+            DPRINT1(" Fail : did not get DD_HALINFO size \n");
+            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+            return FALSE;
+        }
+    }
+
+    /* Copy it to user mode pointer the data */
+    RtlMoveMemory(pHalInfo, &HalInfo, sizeof(DD_HALINFO));
+
     /* rest the flag so we do not need do it later */
     pCallBackFlags[0]=pDirectDraw->DD.dwFlags;
     pCallBackFlags[1]=pDirectDraw->Surf.dwFlags;
     pCallBackFlags[2]=pDirectDraw->Pal.dwFlags;
 
-	DPRINT1("Found DirectDraw CallBack for 2D and 3D Hal\n");
+    DPRINT1("Found DirectDraw CallBack for 2D and 3D Hal\n");
 
-	RtlMoveMemory(&pDirectDraw->Hal, pHalInfo, sizeof(DD_HALINFO));
+    /* Copy it to the cache */
+    RtlMoveMemory(&pDirectDraw->Hal, pHalInfo, sizeof(DD_HALINFO));
 
     if (pHalInfo->lpD3DGlobalDriverData)
-	{
-	   /* 
-	       msdn say D3DHAL_GLOBALDRIVERDATA and D3DNTHAL_GLOBALDRIVERDATA are not same 
-           but if u compare these in msdn it is exacly same 
-       */
-       DPRINT1("Found DirectDraw Global DriverData \n");                                             
-       RtlMoveMemory(puD3dDriverData, pHalInfo->lpD3DGlobalDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
-    }
-
-	if (pHalInfo->lpD3DHALCallbacks )
-	{    
-       DPRINT1("Found DirectDraw CallBack for 3D Hal\n");
-	   RtlMoveMemory(puD3dCallbacks, pHalInfo->lpD3DHALCallbacks, sizeof( D3DNTHAL_CALLBACKS ) );		
-	}
-
-	if (pHalInfo->lpD3DBufCallbacks)
     {
-       DPRINT1("Found DirectDraw CallBack for 3D Hal Bufffer  \n");                                
-       /* msdn DDHAL_D3DBUFCALLBACKS = DD_D3DBUFCALLBACKS */
-       RtlMoveMemory(puD3dBufferCallbacks, pHalInfo->lpD3DBufCallbacks, sizeof(DD_D3DBUFCALLBACKS));
+        /* 
+             msdn say D3DHAL_GLOBALDRIVERDATA and D3DNTHAL_GLOBALDRIVERDATA 
+             are not same but if u compare these in msdn it is exacly same 
+         */
+       DPRINT1("Found DirectDraw Global DriverData \n");
+       RtlMoveMemory(puD3dDriverData, pHalInfo->lpD3DGlobalDriverData,
+                     sizeof(D3DNTHAL_GLOBALDRIVERDATA));
     }
-	        
-	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-	return TRUE;
+
+    if (pHalInfo->lpD3DHALCallbacks )
+    {
+        DPRINT1("Found DirectDraw CallBack for 3D Hal\n");
+        RtlMoveMemory(puD3dCallbacks, pHalInfo->lpD3DHALCallbacks,
+                      sizeof( D3DNTHAL_CALLBACKS ) );
+    }
+
+    if (pHalInfo->lpD3DBufCallbacks)
+    {
+       DPRINT1("Found DirectDraw CallBack for 3D Hal Bufffer  \n");
+       /* msdn DDHAL_D3DBUFCALLBACKS = DD_D3DBUFCALLBACKS */
+       RtlMoveMemory(puD3dBufferCallbacks, pHalInfo->lpD3DBufCallbacks,
+                     sizeof(DD_D3DBUFCALLBACKS));
+    }
+
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+    return TRUE;
 }
 
 
@@ -281,39 +349,38 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
     PDD_GETDRIVERINFODATA puGetDriverInfoData)
 
 {
-	DWORD  ddRVal = 0;
+    DWORD  ddRVal = 0;
+    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal,
+                                                GDI_OBJECT_TYPE_DIRECTDRAW);
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+    DPRINT1("NtGdiDdGetDriverInfo\n");
 
-	DPRINT1("NtGdiDdGetDriverInfo\n");
-	
-	if (pDirectDraw == NULL) 
-	{     
-		return DDHAL_DRIVER_NOTHANDLED;
+    if (pDirectDraw == NULL) 
+    {
+        return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    
     /* it exsist two version of NtGdiDdGetDriverInfo we need check for both flags */
     if (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFOSET))
          ddRVal++;
-         
+
     if (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFO2))
          ddRVal++;
-                    
-    
+
     /* Now we are doing the call to drv DrvGetDriverInfo */
-	if   (ddRVal == 2)
-	{
-         DPRINT1("NtGdiDdGetDriverInfo DDHAL_DRIVER_NOTHANDLED");         
-	     ddRVal = DDHAL_DRIVER_NOTHANDLED;
+    if   (ddRVal == 2)
+    {
+        DPRINT1("NtGdiDdGetDriverInfo DDHAL_DRIVER_NOTHANDLED");         
+        ddRVal = DDHAL_DRIVER_NOTHANDLED;
     }
-	else
-	{
-	     ddRVal = pDirectDraw->Hal.GetDriverInfo(puGetDriverInfoData);
-	}
+    else
+    {
+        ddRVal = pDirectDraw->Hal.GetDriverInfo(puGetDriverInfoData);
+    }
+
     GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 
-	return ddRVal;
+    return ddRVal;
 }
 
 
