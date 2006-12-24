@@ -206,7 +206,7 @@ void InitSaver(HWND hwndParent)
 	wc.style            = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc      = WndProc;
 	wc.lpszClassName    = APPNAME;
-  	RegisterClass(&wc);
+	RegisterClass(&wc);
 
 	if (hwndParent != 0)
 	{
@@ -268,7 +268,8 @@ int WINAPI WinMain (HINSTANCE hInst,
                     int iCmdShow)
 {
 	HWND	hwndParent;
-	int		chOption;
+	int	chOption;
+	MSG	Message;
 
 	hInstance = hInst;
 
@@ -276,18 +277,22 @@ int WINAPI WinMain (HINSTANCE hInst,
 
 	switch(chOption)
 	{
-		case 's': InitSaver(0);	break;
-		case 'p': InitSaver(hwndParent); break;
+		case 's':
+			InitSaver(0);
+			break;
+
+		case 'p':
+			InitSaver(hwndParent);
+			break;
+
 		case 'c':
+		default:
 			MessageBox(0,
 			           _T("Cylinders fractal by unC0Rr.\nSpecial for ReactOS.\n"),
 			           _T("About"),
 			           MB_OK | MB_ICONINFORMATION);
 			return 0;
-		default: InitSaver(0);
 	}
-
-	MSG Message;
 
 	while (GetMessage(&Message, 0, 0, 0))
 		DispatchMessage(&Message);
