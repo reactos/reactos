@@ -9,6 +9,7 @@
 
 #include "resources/generic.rc"
 #include "resources/en.rc"
+#include "resources/de.rc"
 
 
 

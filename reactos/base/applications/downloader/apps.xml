@@ -2,7 +2,15 @@
 	<category name="Internet &amp; Network" icon="1">
 		<application name="Firefox">
 			<description>The most popular free webbrowser out there.</description>
-			<location>http://links.reactos.org/getfirefox</location>
+			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/firefox/releases/latest/win32/en-US/Firefox%20Setup%202.0.0.1.exe</location>
+		</application>
+		<application name="Thunderbird">
+			<description>The most popular free Mail Client out there.</description>
+			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/thunderbird/releases/latest/win32/en-US/Thunderbird%20Setup%201.5.0.9.exe</location>
+		</application>
+		<application name="SeaMonkey">
+			<description>Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, Composer bundle you will ever need.</description>
+			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/seamonkey/releases/1.0.7/seamonkey-1.0.7.en-US.win32.installer.exe</location>
 		</application>
 		<application name="Putty">
 			<description>A free SSH, Telnet, rlogin, and raw TCP client.</description>
@@ -15,15 +23,19 @@
 			<description>Word processor.</description>
 			<location>http://www.abiword.org/downloads/abiword/2.4.1/Windows/abiword-setup-2.4.1.exe</location>
 		</application>
+		<application name="OpenOffice">
+			<description>THE Open Source Office Suite.</description>
+			<location>http://ftp.tu-chemnitz.de/pub/openoffice-extended//stable/2.1.0/OOo_2.1.0_Win32Intel_install_en-US.exe</location>
+		</application>
 	</category>
 	<category name="Graphics" icon="3">
 		<application name="IrfanView">
 			<description>Viewer for all kinds of graphics.</description>
-			<location>http://www.aeicomputertech.com/_downloadz/iview398.exe</location>
+			<location>http://gd.tuwien.ac.at/graphics/irfanview/iview399.exe</location>
 		</application>
 		<application name="TuxPaint">
 			<description>An open source bitmap graphics editor geared towards young children.</description>
-			<location>http://switch.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.15-2-win32-installer.exe</location>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.16-win32-installer.exe</location>
 		</application>
 	</category>
 	<category name="Multimedia" icon="4">
@@ -39,7 +51,7 @@
 	<category name="Tools" icon="7">
 		<application name="7-Zip">
 			<description>Utility to create and open zip, tar, rar and other archive files.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/sevenzip/7z432.exe</location>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/sevenzip/7z442.exe</location>
 		</application>
 	</category>
 	<category name="Others" icon="8">
