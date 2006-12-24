@@ -11,23 +11,20 @@
 	<define name="_UNICODE" />
 
 	<library>kernel32</library>
-	<library>user32</library> 
-	<library>gdi32</library> 
-	<library>winspool</library> 
-	<library>comctl32</library> 
-	<library>comdlg32</library> 
+	<library>user32</library>
+	<library>gdi32</library>
+	<library>winspool</library>
+	<library>comctl32</library>
+	<library>comdlg32</library>
 	<library>advapi32</library>
-	<library>shell32</library> 
-	<library>uuid</library> 
-	
+	<library>shell32</library>
+	<library>uuid</library>
+
 	<file>config.c</file>
 	<file>matrix.c</file>
-      <file>message.c</file>
+	<file>message.c</file>
 	<file>password.c</file>
 	<file>screensave.c</file>
-      <file>settings.c</file>
-      <file>matrix.rc</file>
-
-
-
+	<file>settings.c</file>
+	<file>matrix.rc</file>
 </module>
