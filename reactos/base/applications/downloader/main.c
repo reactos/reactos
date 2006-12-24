@@ -73,6 +73,7 @@ void CategoryChoosen (HWND hwnd, struct Category* Category)
 		ShowMessage(Category->Name, Strings[IDS_NO_APPS]);
 
 	(void)TreeView_DeleteItem(hwnd, TVI_ROOT);
+	(void)TreeView_DeleteItem(hwnd, TVI_ROOT); // Delete twice to bypass bug in windows 
 
 	TV_INSERTSTRUCTW Insert;
 	Insert.item.mask = TVIF_TEXT|TVIF_PARAM;
