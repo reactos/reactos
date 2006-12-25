@@ -1,4 +1,4 @@
-DejaVu fonts 2.12 (c)2004-2006 DejaVu fonts team
+DejaVu fonts 2.13 (c)2004-2006 DejaVu fonts team
 -----------------------------------------------
 
 The DejaVu fonts are a font family based on the Bitstream Vera Fonts
@@ -56,4 +56,4 @@ U+213C-U+2140, U+2295-2298, U+2308-230b, U+26A2-U+26B1, U+2701-2704,
 U+2706-2709, U+270c-274b, U+2758-275a, U+2761-2775, U+2780-2794,
 U+2798-27af, U+27b1-27be, U+fb05-fb06
 
-$Id: README 1288 2006-11-19 14:22:52Z ben_laenen $
+$Id: README 1388 2006-12-17 11:20:45Z moyogo $

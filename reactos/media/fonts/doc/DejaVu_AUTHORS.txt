@@ -17,11 +17,13 @@ Keenan Pepper
 Lars Naesbye Christensen
 Mashrab Kuvatov
 Mederic Boquien
+Michael Everson
 Misu Moldovan
 Ognyan Kulev
 Ondrej Koala Vacha
 Peter Cernak
 Remy Oudompheng
+Roozbeh Pournader
 Sander Vesik
 Stepan Roh
 Tavmjong Bah
@@ -29,4 +31,4 @@ Tim May
 Valentin Stoykov
 Vasek Stodulka
 
-$Id: AUTHORS 942 2006-06-13 14:26:37Z ben_laenen $
+$Id: AUTHORS 1318 2006-11-22 16:11:55Z roozbeh $
