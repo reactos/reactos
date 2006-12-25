@@ -28,4 +28,5 @@ BEGIN
   IDS_CHOOSE_BOTH		"Bitte wählen Sie eine Unterkategorie oder eine Anwendung."
   IDS_XMLERROR_1		"XML Datei nicht gefunden!"
   IDS_XMLERROR_2		"XML Datei kann nicht verarbeitet werden!"
+  IDS_DOWNLOAD_ERROR		"Die Datei konnte nicht runtergeladen werden.\nBitte prüfen sie, ob eine Verbindung zum Internet besteht."
 END

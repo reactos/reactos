@@ -40,6 +40,7 @@
 #include <debug.h>
 
 extern struct Application* SelectedApplication;
+extern WCHAR Strings [STRING_COUNT][MAX_STRING_LENGHT];
 
 typedef struct _IBindStatusCallbackImpl
   {
@@ -250,7 +251,12 @@ ThreadFunc(LPVOID Context)
     {
       IBindStatusCallback_Release(dl);
     }
-  if (S_OK != r || bCancelled )
+  if (S_OK != r)
+    {
+	  MessageBoxW(0,Strings[IDS_DOWNLOAD_ERROR],0,0);
+      goto end;
+    }
+  else if (bCancelled)
     {
       goto end;
     }
