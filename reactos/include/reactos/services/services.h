@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
  * FILE:        include/services/services.h
@@ -10,14 +9,14 @@
 #ifndef __SERVICES_SERVICES_H__
 #define __SERVICES_SERVICES_H__
 
-#define SCM_START_COMMAND 1
+#define SERVICE_CONTROL_START 0
 
-typedef struct _SCM_START_PACKET
+typedef struct _SCM_CONTROL_PACKET
 {
-  ULONG Command;
-  ULONG Size;
-  WCHAR Arguments[1];
-} SCM_START_PACKET, *PSCM_START_PACKET;
+    DWORD dwControl;
+    DWORD dwSize;
+    WCHAR szArguments[1];
+} SCM_CONTROL_PACKET, *PSCM_CONTROL_PACKET;
 
 #endif /* __SERVICES_SERVICES_H__ */
 

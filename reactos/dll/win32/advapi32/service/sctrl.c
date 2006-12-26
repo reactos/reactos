@@ -243,28 +243,28 @@ ScConnectControlPipe(HANDLE *hPipe)
 
 
 static DWORD
-ScStartService(PSCM_START_PACKET StartPacket)
+ScStartService(PSCM_CONTROL_PACKET ControlPacket)
 {
     PACTIVE_SERVICE lpService;
     HANDLE ThreadHandle;
 
     DPRINT("ScStartService() called\n");
-    DPRINT("Size: %lu\n", StartPacket->Size);
-    DPRINT("Service: %S\n", &StartPacket->Arguments[0]);
+    DPRINT("Size: %lu\n", ControlPacket->dwSize);
+    DPRINT("Service: %S\n", &ControlPacket->szArguments[0]);
 
-    lpService = ScLookupServiceByServiceName(&StartPacket->Arguments[0]);
+    lpService = ScLookupServiceByServiceName(&ControlPacket->szArguments[0]);
     if (lpService == NULL)
         return ERROR_SERVICE_DOES_NOT_EXIST;
 
     lpService->Arguments = HeapAlloc(GetProcessHeap(),
                                      HEAP_ZERO_MEMORY,
-                                     StartPacket->Size * sizeof(WCHAR));
+                                     ControlPacket->dwSize * sizeof(WCHAR));
     if (lpService->Arguments == NULL)
         return ERROR_OUTOFMEMORY;
 
     memcpy(lpService->Arguments,
-           StartPacket->Arguments,
-           StartPacket->Size * sizeof(WCHAR));
+           ControlPacket->szArguments,
+           ControlPacket->dwSize * sizeof(WCHAR));
 
     ThreadHandle = CreateThread(NULL,
                                 0,
@@ -287,23 +287,24 @@ ScServiceDispatcher(HANDLE hPipe,
                     PUCHAR lpBuffer,
                     DWORD dwBufferSize)
 {
-    LPDWORD Buffer;
+    PSCM_CONTROL_PACKET ControlPacket;
     DWORD Count;
     BOOL bResult;
+    DWORD dwRunningServices = 0;
 
     DPRINT("ScDispatcherLoop() called\n");
 
-    Buffer = HeapAlloc(GetProcessHeap(),
+    ControlPacket = HeapAlloc(GetProcessHeap(),
                        HEAP_ZERO_MEMORY,
                        1024);
-    if (Buffer == NULL)
+    if (ControlPacket == NULL)
         return FALSE;
 
     while (TRUE)
     {
         /* Read command from the control pipe */
         bResult = ReadFile(hPipe,
-                           Buffer,
+                           ControlPacket,
                            1024,
                            &Count,
                            NULL);
@@ -314,22 +315,31 @@ ScServiceDispatcher(HANDLE hPipe,
         }
 
         /* Execute command */
-        switch (Buffer[0])
+        switch (ControlPacket->dwControl)
         {
-            case SCM_START_COMMAND:
+            case SERVICE_CONTROL_START:
                 DPRINT("Start command\n");
-                ScStartService((PSCM_START_PACKET)Buffer);
+                if (ScStartService(ControlPacket) == ERROR_SUCCESS)
+                    dwRunningServices++;
+                break;
+
+            case SERVICE_CONTROL_STOP:
+                DPRINT("Stop command\n");
+                dwRunningServices--;
                 break;
 
             default:
-                DPRINT1("Unknown command %lu", Buffer[0]);
+                DPRINT1("Unknown command %lu", ControlPacket->dwControl);
                 break;
         }
+
+        if (dwRunningServices == 0)
+            break;
     }
 
     HeapFree(GetProcessHeap(),
              0,
-             Buffer);
+             ControlPacket);
 
     return TRUE;
 }

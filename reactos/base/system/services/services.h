@@ -24,12 +24,20 @@ typedef struct _SERVICE_GROUP
 } SERVICE_GROUP, *PSERVICE_GROUP;
 
 
+typedef struct _SERVICE_IMAGE
+{
+    DWORD dwServiceRefCount;  // Number of running services of this image
+    DWORD Dummy;
+} SERVICE_IMAGE, *PSERVICE_IMAGE;
+
+
 typedef struct _SERVICE
 {
     LIST_ENTRY ServiceListEntry;
     LPWSTR lpServiceName;
     LPWSTR lpDisplayName;
     PSERVICE_GROUP lpGroup;
+    PSERVICE_IMAGE lpImage;
     BOOL bDeleted;
     DWORD dwResumeCount;
 
@@ -98,6 +106,9 @@ DWORD ScmCreateNewServiceRecord(LPWSTR lpServiceName,
                                 PSERVICE *lpServiceRecord);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
+DWORD ScmControlService(PSERVICE Service,
+                        DWORD dwControl,
+                        LPSERVICE_STATUS lpServiceStatus);
 
 /* driver.c */
 

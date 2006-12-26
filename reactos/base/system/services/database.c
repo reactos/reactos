@@ -531,11 +531,49 @@ ScmGetBootAndSystemDriverState(VOID)
 }
 
 
+DWORD
+ScmControlService(PSERVICE Service,
+                  DWORD dwControl,
+                  LPSERVICE_STATUS lpServiceStatus)
+{
+    PSCM_CONTROL_PACKET ControlPacket;
+    DWORD Count;
+
+    DPRINT("ScmControlService() called\n");
+
+    ControlPacket = HeapAlloc(GetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              sizeof(SCM_CONTROL_PACKET));
+    if (ControlPacket == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    ControlPacket->dwControl = dwControl;
+
+    /* Send the start command */
+    WriteFile(Service->ControlPipeHandle,
+              ControlPacket,
+              sizeof(SCM_CONTROL_PACKET),
+              &Count,
+              NULL);
+
+    /* FIXME: Read the reply */
+
+    /* Release the contol packet */
+    HeapFree(GetProcessHeap(),
+             0,
+             ControlPacket);
+
+    DPRINT("ScmControlService) done\n");
+
+    return ERROR_SUCCESS;
+}
+
+
 static DWORD
 ScmSendStartCommand(PSERVICE Service,
                     LPWSTR Arguments)
 {
-    PSCM_START_PACKET StartPacket;
+    PSCM_CONTROL_PACKET ControlPacket;
     DWORD TotalLength;
     DWORD ArgsLength = 0;
     DWORD Length;
@@ -561,16 +599,16 @@ ScmSendStartCommand(PSERVICE Service,
     TotalLength++;
     DPRINT("ArgsLength: %ld\nTotalLength: %ld\n\n", ArgsLength, TotalLength);
 
-    /* Allocate start command packet */
-    StartPacket = HeapAlloc(GetProcessHeap(),
-                            HEAP_ZERO_MEMORY,
-                            sizeof(SCM_START_PACKET) + (TotalLength - 1) * sizeof(WCHAR));
-    if (StartPacket == NULL)
+    /* Allocate a control packet */
+    ControlPacket = HeapAlloc(GetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              sizeof(SCM_CONTROL_PACKET) + (TotalLength - 1) * sizeof(WCHAR));
+    if (ControlPacket == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
-    StartPacket->Command = SCM_START_COMMAND;
-    StartPacket->Size = TotalLength;
-    Ptr = &StartPacket->Arguments[0];
+    ControlPacket->dwControl = SERVICE_CONTROL_START;
+    ControlPacket->dwSize = TotalLength;
+    Ptr = &ControlPacket->szArguments[0];
     wcscpy(Ptr, Service->lpServiceName);
     Ptr += (wcslen(Service->lpServiceName) + 1);
 
@@ -586,17 +624,17 @@ ScmSendStartCommand(PSERVICE Service,
 
     /* Send the start command */
     WriteFile(Service->ControlPipeHandle,
-              StartPacket,
-              sizeof(SCM_START_PACKET) + (TotalLength - 1) * sizeof(WCHAR),
+              ControlPacket,
+              sizeof(SCM_CONTROL_PACKET) + (TotalLength - 1) * sizeof(WCHAR),
               &Count,
               NULL);
 
     /* FIXME: Read the reply */
 
-    /* Release the start command packet */
+    /* Release the contol packet */
     HeapFree(GetProcessHeap(),
              0,
-             StartPacket);
+             ControlPacket);
 
     DPRINT("ScmSendStartCommand() done\n");
 

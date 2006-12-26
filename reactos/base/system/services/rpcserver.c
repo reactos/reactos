@@ -355,13 +355,10 @@ ScmrControlService(handle_t BindingHandle,
     }
     else
     {
-        /* FIXME: Send control code to the service */
-#if 0
+        /* Send control code to the service */
         dwError = ScmControlService(lpService,
                                     dwControl,
                                     lpServiceStatus);
-#endif
-        dwError = ERROR_INVALID_SERVICE_CONTROL;
     }
 
     /* Return service status information */
@@ -1325,7 +1322,7 @@ ScmrEnumServicesStatusW(handle_t BindingHandle,
 
     dwLastResumeCount = *lpResumeHandle;
 
-    /* Lock the service list shared */
+    /* FIXME: Lock the service list shared */
 
     lpService = ScmGetServiceEntryByResumeCount(dwLastResumeCount);
     if (lpService == NULL)
@@ -1465,7 +1462,7 @@ ScmrEnumServicesStatusW(handle_t BindingHandle,
     }
 
 Done:;
-    /* Unlock the service list */
+    /* FIXME: Unlock the service list */
 
     DPRINT("ScmrEnumServicesStatusW() done (Error %lu)\n", dwError);
 
