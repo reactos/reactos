@@ -12,11 +12,14 @@
 			<description>Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, Composer bundle you will ever need.</description>
 			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/seamonkey/releases/1.0.7/seamonkey-1.0.7.en-US.win32.installer.exe</location>
 		</application>
+		<application name="Mozilla ActiveX Control">
+			<description>Essential Component to get ReactOS Explorer's and other applications Internet Browsing feature running.</description>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/MozillaControl1712-ReactOS.exe</location>
+		</application>
 		<application name="Putty">
 			<description>A free SSH, Telnet, rlogin, and raw TCP client.</description>
 			<location>http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.58-installer.exe</location>
 		</application>
-
 	</category>
 	<category name="Office" icon="2">
 		<application name="Abiword">
@@ -30,8 +33,12 @@
 	</category>
 	<category name="Graphics" icon="3">
 		<application name="IrfanView">
-			<description>Viewer for all kinds of graphics.</description>
+			<description>Viewer for all kinds of graphics/audio files/video files.</description>
 			<location>http://gd.tuwien.ac.at/graphics/irfanview/iview399.exe</location>
+		</application>
+		<application name="IrfanView Plugins">
+			<description>Additional Plugins for supporting more File types.</description>
+			<location>http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_399.exe</location>
 		</application>
 		<application name="TuxPaint">
 			<description>An open source bitmap graphics editor geared towards young children.</description>
@@ -47,11 +54,23 @@
 		</application>
 	</category>
 	<category name="Games &amp; Fun" icon="6">
+		<application name="ScummVM">
+			<description>SamNMax, Day of Tentacle, etc on ReactOS</description>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/scummvm/scummvm-0.9.1-win32.exe</location>
+		</application>
 	</category>
 	<category name="Tools" icon="7">
 		<application name="7-Zip">
 			<description>Utility to create and open zip, tar, rar and other archive files.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/sevenzip/7z442.exe</location>
+		</application>
+		<application name="uTorrent">
+			<description>Small and fast Torrent Client.</description>
+			<location>http://download.utorrent.com/1.6/uTorrent-1.6-install.exe</location>
+		</application>
+		<application name="Audio Grabber">
+			<description>A very good CD Ripper/File Converter.</description>
+			<location>http://www.audiograbber.de/files/342677432/agsetup183se.exe</location>
 		</application>
 	</category>
 	<category name="Others" icon="8">
