@@ -39,8 +39,7 @@ MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
 VOID STDCALL
 MmLockPagableSectionByHandle(IN PVOID ImageSectionHandle)
 {
-   //  MmLockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
-   DPRINT1("MmLockPagableSectionByHandle is unimplemented\n");
+    UNIMPLEMENTED;
 }
 
 
@@ -75,15 +74,19 @@ MmLockPagableDataSection(IN PVOID AddressWithinSection)
  */
 VOID STDCALL
 MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
-{}
-
+{
+    UNIMPLEMENTED;
+}
 
 /*
  * @unimplemented
  */
-VOID STDCALL
+PVOID STDCALL
 MmPageEntireDriver(IN PVOID AddressWithinSection)
-{}
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
 
 
 /*
@@ -91,6 +94,8 @@ MmPageEntireDriver(IN PVOID AddressWithinSection)
  */
 VOID STDCALL
 MmResetDriverPaging(IN PVOID AddressWithinSection)
-{}
+{
+    UNIMPLEMENTED;
+}
 
 /* EOF */

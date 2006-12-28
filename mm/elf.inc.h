@@ -172,12 +172,12 @@ static __inline ULONG64 ElfFmtpReadULong64
  IN ULONG DataType
 )
 {
- PBYTE p;
+ PUCHAR p;
 
  if(DataType == ELF_TARG_DATA)
   return Input;
 
- p = (PBYTE)&Input;
+ p = (PUCHAR)&Input;
 
  switch(DataType)
  {
@@ -195,12 +195,12 @@ static __inline ULONG ElfFmtpReadULong
  IN ULONG DataType
 )
 {
- PBYTE p;
+ PUCHAR p;
 
  if(DataType == ELF_TARG_DATA)
   return Input;
 
- p = (PBYTE)&Input;
+ p = (PUCHAR)&Input;
 
  switch(DataType)
  {
@@ -218,12 +218,12 @@ static __inline USHORT ElfFmtpReadUShort
  IN ULONG DataType
 )
 {
- PBYTE p;
+ PUCHAR p;
 
  if(DataType == ELF_TARG_DATA)
   return Input;
 
- p = (PBYTE)&Input;
+ p = (PUCHAR)&Input;
 
  switch(DataType)
  {
@@ -241,12 +241,12 @@ static __inline ULONG64 ElfFmtpSafeReadULong64
  IN ULONG DataType
 )
 {
- PBYTE p;
+ PUCHAR p;
  ULONG64 nSafeInput;
 
  RtlRetrieveUlonglong(&nSafeInput, Input);
 
- p = (PBYTE)&nSafeInput;
+ p = (PUCHAR)&nSafeInput;
 
  switch(DataType)
  {
@@ -264,7 +264,7 @@ static __inline ULONG ElfFmtpSafeReadULong
  IN ULONG DataType
 )
 {
- PBYTE p;
+ PUCHAR p;
  ULONG nSafeInput;
  union
  {
@@ -277,7 +277,7 @@ static __inline ULONG ElfFmtpSafeReadULong
  if(DataType == ELF_TARG_DATA)
   return nSafeInput;
 
- p = (PBYTE)&nSafeInput;
+ p = (PUCHAR)&nSafeInput;
 
  switch(DataType)
  {
@@ -294,10 +294,7 @@ static __inline BOOLEAN ElfFmtpIsPowerOf2(IN Elf_Addr Number)
  if(Number == 0)
   return FALSE;
 
- while((Number % 2) == 0)
-  Number /= 2;
-
- return Number == 1;
+ return (Number & (Number - 1)) == 0;
 }
 
 static __inline Elf_Addr ElfFmtpModPow2

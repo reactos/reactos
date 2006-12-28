@@ -68,7 +68,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   {
     vfatDestroyCCB(pCcb);
   }
-  CHECKPOINT;
+
   return  Status;
 }
 

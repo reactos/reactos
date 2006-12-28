@@ -110,6 +110,7 @@ MmAccessFault(KPROCESSOR_MODE Mode,
        */
       if (Mode != KernelMode)
       {
+         DPRINT1("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
          DbgPrint("%s:%d\n",__FILE__,__LINE__);
          return(STATUS_UNSUCCESSFUL);
       }
@@ -331,21 +332,21 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
 /*
  * @unimplemented
  */
-DWORD STDCALL
-MmAdjustWorkingSetSize (DWORD Unknown0,
-                        DWORD Unknown1,
-                        DWORD Unknown2)
+ULONG STDCALL
+MmAdjustWorkingSetSize (ULONG Unknown0,
+                        ULONG Unknown1,
+                        ULONG Unknown2)
 {
    UNIMPLEMENTED;
    return (0);
 }
 
 
-DWORD
+ULONG
 STDCALL
 MmDbgTranslatePhysicalAddress (
-   DWORD Unknown0,
-   DWORD Unknown1
+   ULONG Unknown0,
+   ULONG Unknown1
 )
 {
    UNIMPLEMENTED;

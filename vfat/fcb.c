@@ -5,7 +5,6 @@
 * PROJECT:          ReactOS kernel
 * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
 *                   Rex Jolliff (rex@lvcablemodem.com)
-*                   Hartmut Birr
 *                   Herve Poussineau (reactos@poussine.freesurf.fr)
 */
 
@@ -605,13 +604,6 @@ vfatDirFindFile (
 	
 	while (TRUE)
 	{
-       DPRINT ("loop : vfatDirFindFile(File:%wZ)\n", FileToFindU);
-       DPRINT ("loop : Dir Path:%wZ\n", &pDirectoryFCB->PathNameU);
-       
-       if (pDirectoryFCB->FileObject == NULL)
-       {          
-      	  return STATUS_OBJECT_NAME_NOT_FOUND;
-       }
 		status = pDeviceExt->GetNextDirEntry(&Context,
 			&Page,
 			pDirectoryFCB,

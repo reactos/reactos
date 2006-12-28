@@ -17,7 +17,7 @@ extern ULONG NtMajorVersion;
 extern ULONG NtMinorVersion;
 extern ULONG NtOSCSDVersion;
 extern ULONG NtGlobalFlag;
-extern MM_SYSTEM_SIZE MmSystemSize;
+extern MM_SYSTEMSIZE MmSystemSize;
 
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))

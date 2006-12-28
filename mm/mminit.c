@@ -29,16 +29,12 @@ extern unsigned int _bss_end__;
 
 
 static BOOLEAN IsThisAnNtAsSystem = FALSE;
-MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
+MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
 
 PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 
 PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
-
-extern ULONG init_stack;
-extern ULONG init_stack_top;
-extern ULONG trap_stack;
 
 VOID INIT_FUNCTION NTAPI MmInitVirtualMemory(ULONG_PTR LastKernelAddress, ULONG KernelLength);
 
@@ -62,7 +58,7 @@ BOOLEAN STDCALL MmIsThisAnNtAsSystem(VOID)
 /*
  * @implemented
  */
-MM_SYSTEM_SIZE STDCALL MmQuerySystemSize(VOID)
+MM_SYSTEMSIZE STDCALL MmQuerySystemSize(VOID)
 {
    return(MmSystemSize);
 }
@@ -384,7 +380,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    MmInitGlobalKernelPageDirectory();
 
    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
-   DPRINT1("Kernel Stack Limits. InitTop = 0x%x, Init = 0x%x\n", init_stack_top, init_stack);
 
    LastKernelAddress = (ULONG_PTR)MmInitializePageList(
                        FirstKrnlPhysAddr,
@@ -394,10 +389,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
                        BIOSMemoryMap,
                        AddressRangeCount);
    kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
-
-   /* Unmap the guard pages from the initial stacks */
-   MmDeleteVirtualMapping(NULL, (PVOID)(init_stack - PAGE_SIZE), FALSE, NULL, NULL);
-   MmDeleteVirtualMapping(NULL, (PVOID)(trap_stack - PAGE_SIZE), FALSE, NULL, NULL);
 
    /*
     * Unmap low memory
@@ -482,7 +473,7 @@ MmInit3(VOID)
 
 }
 
-VOID STATIC
+VOID static
 MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                      PFN_TYPE Page, SWAPENTRY SwapEntry,
                      BOOLEAN Dirty)

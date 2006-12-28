@@ -5,7 +5,6 @@
  * PROJECT:          ReactOS kernel
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  *                   Rex Jolliff (rex@lvcablemodem.com)
- *                   Hartmut Birr
  *                   Herve Poussineau (reactos@poussine.freesurf.fr)
  */
 
@@ -23,7 +22,7 @@ vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
   if (pDeviceExt->FatInfo.FatType == FAT32)
   {
     cluster = pFatDirEntry->Fat.FirstCluster |
-                  (pFatDirEntry->Fat.FirstClusterHigh << 16);
+              (pFatDirEntry->Fat.FirstClusterHigh << 16);
   }
   else if (pDeviceExt->Flags & VCB_IS_FATX)
   {

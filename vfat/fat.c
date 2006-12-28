@@ -4,7 +4,6 @@
  * FILE:             drivers/fs/vfat/fat.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
- *                   Hartmut Birr
  *
  */
 
