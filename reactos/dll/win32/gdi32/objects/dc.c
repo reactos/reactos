@@ -322,6 +322,17 @@ GetRelAbs(
   return NtGdiGetRelAbs(hdc);
 }
 
+
+DWORD
+STDCALL
+GetDCDWord( HDC hDC, INT u, DWORD Result )
+{
+BOOL Ret = TRUE; //NtGdiGetDCDword( hDC, u, (DWORD*) &u );
+  if (!Ret) return Result;
+  else return u;
+}
+
+
 /*
  * @implemented
 */
@@ -528,10 +539,15 @@ GetObjectType(
         Ret = OBJ_REGION;
         break;
       case GDI_OBJECT_TYPE_DC:
-        Ret = OBJ_DC;
+        if ( GetDCDWord( h, GdiGetIsMemDc, 0))
+        {
+           Ret = OBJ_MEMDC;
+        }
+        else
+           Ret = OBJ_DC;
         break;
-      case GDI_OBJECT_TYPE_METADC:
-        Ret = OBJ_METADC;
+      case GDI_OBJECT_TYPE_COLORSPACE:
+        Ret = OBJ_COLORSPACE;
         break;
       case GDI_OBJECT_TYPE_METAFILE:
         Ret = OBJ_METAFILE;
@@ -559,3 +575,5 @@ GetObjectType(
     SetLastError(ERROR_INVALID_HANDLE);
   return Ret;
 }
+
+

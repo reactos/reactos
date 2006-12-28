@@ -139,8 +139,7 @@ MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-//      return MFDRV_MetaParam2( hDC, META_MOVETO, x, y);
-         return FALSE;
+      return MFDRV_MetaParam2( hDC, META_MOVETO, x, y);
     else
     {
       PLDC pLDC = Dc_Attr->pvLDC;
@@ -151,8 +150,7 @@ MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
       }
       if (pLDC->iType == LDC_EMFLDC)
       {
-        //if (!EMFDRV_MoveTo( hDC, x, y))
-          return FALSE;
+        if (!EMFDRV_MoveTo( hDC, x, y)) return FALSE;
       }
     }
  }
@@ -441,12 +439,8 @@ COLORREF
 STDCALL
 GetPixel( HDC hDC, INT x, INT y )
 {
- PDC_ATTR Dc_Attr;
- 
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC) return CLR_INVALID;
-
- if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return CLR_INVALID;
- 
+ if (!GdiIsHandleValid((HGDIOBJ) hDC)) return CLR_INVALID;
  return NtGdiGetPixel( hDC, x, y);
 }
 
