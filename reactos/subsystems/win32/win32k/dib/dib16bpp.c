@@ -741,7 +741,6 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    LONG sy = 0;
    LONG DesX;
    LONG DesY;
-   LONG color;
    PULONG DestBits;
    LONG DifflDelta;
 
@@ -784,6 +783,10 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     sy_max = DesSizeY;
     sy = SourceRect->top;
 
+    DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
+                               DestRect->top * DestSurf->lDelta);
+
+    DifflDelta = DestSurf->lDelta -  (DesSizeX << 1);
 
     switch(SourceSurf->iBitmapFormat)
     {
@@ -792,10 +795,6 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
         /* This is a reference implementation, it hasn't been optimized for speed */
 
-      DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
-                   DestRect->top * DestSurf->lDelta);
-      DifflDelta = DestSurf->lDelta -  (DesSizeX << 1);
-
        for (DesY=0; DesY<DesSizeY; DesY++)
        {
             sx = SourceRect->left;
@@ -803,17 +802,11 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
-                {
-                    *DestBits = XLATEOBJ_iXlate(ColorTranslation, 0);
-                    DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
-                }
-                else
-                {
-                    *DestBits = XLATEOBJ_iXlate(ColorTranslation, 1);
-                    DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
-                }
-                
+                *DestBits = XLATEOBJ_iXlate(ColorTranslation, 
+                                            DIB_1BPP_GetPixel(SourceSurf, sx, sy));
+
+                DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
+
                 sx += SrcZoomXHight;
                 sx_dec += SrcZoomXLow;
                 if (sx_dec >= sx_max)
@@ -839,11 +832,6 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
         /* This is a reference implementation, it hasn't been optimized for speed */
 
-        DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
-                   DestRect->top * DestSurf->lDelta);
-
-        DifflDelta = DestSurf->lDelta -  (DesSizeX << 1);
-
         for (DesY=0; DesY<DesSizeY; DesY++)
         {
             sx = SourceRect->left;
@@ -851,9 +839,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                  color = DIB_4BPP_GetPixel(SourceSurf, sx, sy);
-                  color = XLATEOBJ_iXlate(ColorTranslation, color);
-                  *DestBits = color;
+                  *DestBits = XLATEOBJ_iXlate(ColorTranslation,
+                                          DIB_4BPP_GetPixel(SourceSurf, sx, sy));
+
                   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
 
                   sx += SrcZoomXHight;
@@ -881,10 +869,6 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
         /* This is a reference implementation, it hasn't been optimized for speed */
 
-        DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
-                   DestRect->top * DestSurf->lDelta);
-        DifflDelta = DestSurf->lDelta -  (DesSizeX << 1);
-
         for (DesY=0; DesY<DesSizeY; DesY++)
         {
             sx = SourceRect->left;
@@ -892,9 +876,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                  color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
-                  color = XLATEOBJ_iXlate(ColorTranslation, color);
-                  *DestBits = color;
+                  *DestBits = XLATEOBJ_iXlate(ColorTranslation,
+                                          DIB_8BPP_GetPixel(SourceSurf, sx, sy));
+
                    DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
 
                    sx += SrcZoomXHight;
@@ -935,9 +919,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                color = DIB_24BPP_GetPixel(SourceSurf, sx, sy);
-                color = XLATEOBJ_iXlate(ColorTranslation, color);
-                *DestBits = color;
+                *DestBits = XLATEOBJ_iXlate(ColorTranslation,
+                                        DIB_24BPP_GetPixel(SourceSurf, sx, sy));
+
                 DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
 
                 sx += SrcZoomXHight;
@@ -965,10 +949,6 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
         /* This is a reference implementation, it hasn't been optimized for speed */
 
-        DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
-                   DestRect->top * DestSurf->lDelta);
-        DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
-
         for (DesY=0; DesY<DesSizeY; DesY++)
         {
             sx = SourceRect->left;
@@ -976,9 +956,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                color = DIB_32BPP_GetPixel(SourceSurf, sx, sy);
-                color = XLATEOBJ_iXlate(ColorTranslation, color);
-                *DestBits = color;
+                *DestBits = XLATEOBJ_iXlate(ColorTranslation, 
+                                        DIB_32BPP_GetPixel(SourceSurf, sx, sy));
+
                 DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
 
                 sx += SrcZoomXHight;
