@@ -130,6 +130,8 @@ extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
+extern UCHAR KiDebugRegisterTrapOffsets[9];
+extern UCHAR KiDebugRegisterContextOffsets[9];
 
 /* MACROS *************************************************************************/
 

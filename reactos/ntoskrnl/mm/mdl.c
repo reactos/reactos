@@ -433,7 +433,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 
       if (!MmIsPagePresent(NULL, Address))
       {
-         Status = MmNotPresentFault(Mode, (ULONG_PTR)Address, TRUE);
+         Status = MmAccessFault(FALSE, Address, Mode, NULL);
          if (!NT_SUCCESS(Status))
          {
             for (j = 0; j < i; j++)
@@ -457,7 +457,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       if ((Operation == IoWriteAccess || Operation == IoModifyAccess) &&
           (!(MmGetPageProtect(NULL, (PVOID)Address) & PAGE_READWRITE)))
       {
-         Status = MmAccessFault(Mode, (ULONG_PTR)Address, TRUE);
+         Status = MmAccessFault(TRUE, Address, Mode, NULL);
          if (!NT_SUCCESS(Status))
          {
             for (j = 0; j < i; j++)

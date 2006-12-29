@@ -7,6 +7,86 @@
 */
 
 //
+// Thread Dispatcher Header DebugActive Mask 
+//
+#define DR_MASK(x)                              1 << x
+#define DR_ACTIVE_MASK                          0x10
+#define DR_REG_MASK                             0x4F
+
+//
+// Sanitizes a selector
+//
+FORCEINLINE
+ULONG
+Ke386SanitizeSeg(IN ULONG Cs,
+                IN KPROCESSOR_MODE Mode)
+{
+    //
+    // Check if we're in kernel-mode, and force CPL 0 if so.
+    // Otherwise, force CPL 3.
+    //
+    return ((Mode == KernelMode) ?
+            (Cs & (0xFFFF & ~RPL_MASK)) :
+            (RPL_MASK | (Cs & 0xFFFF)));
+}
+
+//
+// Sanitizes EFLAGS
+//
+FORCEINLINE
+ULONG
+Ke386SanitizeFlags(IN ULONG Eflags,
+                   IN KPROCESSOR_MODE Mode)
+{
+    //
+    // Check if we're in kernel-mode, and sanitize EFLAGS if so.
+    // Otherwise, also force interrupt mask on.
+    //
+    return ((Mode == KernelMode) ?
+            (Eflags & (EFLAGS_USER_SANITIZE | EFLAGS_INTERRUPT_MASK)) :
+            (EFLAGS_INTERRUPT_MASK | (Eflags & EFLAGS_USER_SANITIZE)));
+}
+
+//
+// Gets a DR register from a CONTEXT structure
+//
+FORCEINLINE
+PVOID
+KiDrFromContext(IN ULONG Dr,
+                IN PCONTEXT Context)
+{
+    return *(PVOID*)((ULONG_PTR)Context + KiDebugRegisterContextOffsets[Dr]);
+}
+
+//
+// Gets a DR register from a KTRAP_FRAME structure
+//
+FORCEINLINE
+PVOID*
+KiDrFromTrapFrame(IN ULONG Dr,
+                  IN PKTRAP_FRAME TrapFrame)
+{
+    return (PVOID*)((ULONG_PTR)TrapFrame + KiDebugRegisterTrapOffsets[Dr]);
+}
+
+//
+//
+//
+FORCEINLINE
+PVOID
+Ke386SanitizeDr(IN PVOID DrAddress,
+                IN KPROCESSOR_MODE Mode)
+{
+    //
+    // Check if we're in kernel-mode, and return the address directly if so.
+    // Otherwise, make sure it's not inside the kernel-mode address space.
+    // If it is, then clear the address.
+    //
+    return ((Mode == KernelMode) ? DrAddress :
+            (DrAddress <= MM_HIGHEST_USER_ADDRESS) ? DrAddress : 0);
+}
+
+//
 // Enters a Guarded Region
 //
 #define KeEnterGuardedRegion()                                              \

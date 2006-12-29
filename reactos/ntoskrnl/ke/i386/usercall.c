@@ -71,7 +71,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
     _SEH_DECLARE_LOCALS(KiCopyInfo);
 
     /* Don't deliver APCs in V86 mode */
-    if (TrapFrame->EFlags & X86_EFLAGS_VM) return;
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK) return;
 
     /* Save the full context */
     Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
@@ -102,22 +102,19 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
         TrapFrame->HardwareEsp = Stack;
 
         /* Setup Ring 3 state */
-        TrapFrame->SegCs = KGDT_R3_CODE | RPL_MASK;
-        TrapFrame->HardwareSegSs = KGDT_R3_DATA | RPL_MASK;
-        TrapFrame->SegDs = KGDT_R3_DATA | RPL_MASK;
-        TrapFrame->SegEs = KGDT_R3_DATA | RPL_MASK;
+        TrapFrame->SegCs = Ke386SanitizeSeg(KGDT_R3_CODE, UserMode);
+        TrapFrame->HardwareSegSs = Ke386SanitizeSeg(KGDT_R3_DATA, UserMode);
+        TrapFrame->SegDs = Ke386SanitizeSeg(KGDT_R3_DATA, UserMode);
+        TrapFrame->SegEs = Ke386SanitizeSeg(KGDT_R3_DATA, UserMode);
+        TrapFrame->SegFs = Ke386SanitizeSeg(KGDT_R3_TEB, UserMode);
         TrapFrame->SegGs = 0;
+        TrapFrame->ErrCode = 0;
 
         /* Sanitize EFLAGS */
-        TrapFrame->EFlags = Context.EFlags & EFLAGS_USER_SANITIZE;
-        TrapFrame->EFlags |= EFLAGS_INTERRUPT_MASK;
+        TrapFrame->EFlags = Ke386SanitizeFlags(Context.EFlags, UserMode);
 
-        /* Check if user-mode has IO privileges */
-        if (KeGetCurrentThread()->Iopl)
-        {
-            /* Enable them*/
-            TrapFrame->EFlags |= (0x3000);
-        }
+        /* Check if thread has IOPL and force it enabled if so */
+        if (KeGetCurrentThread()->Iopl) TrapFrame->EFlags |= 0x3000;
 
         /* Setup the stack */
         *(PULONG_PTR)(Stack + 0 * sizeof(ULONG_PTR)) = (ULONG_PTR)NormalRoutine;

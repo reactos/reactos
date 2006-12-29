@@ -134,8 +134,9 @@ ObpDeallocateObject(IN PVOID Object)
 }
 
 VOID
-FASTCALL
-ObpDeleteObject(IN PVOID Object)
+NTAPI
+ObpDeleteObject(IN PVOID Object,
+                IN BOOLEAN CalledFromWorkerThread)
 {
     POBJECT_HEADER Header;
     POBJECT_TYPE ObjectType;
@@ -203,12 +204,15 @@ VOID
 NTAPI
 ObpReapObject(IN PVOID Parameter)
 {
-    POBJECT_HEADER ReapObject;
+    POBJECT_HEADER ReapObject = (PVOID)1;
     PVOID NextObject;
 
     /* Start reaping */
-    while ((ReapObject = InterlockedExchangePointer(&ObpReaperList, NULL)))
+    do
     {
+        /* Get the reap object */
+        ReapObject = InterlockedExchangePointer(&ObpReaperList, ReapObject);
+
         /* Start deletion loop */
         do
         {
@@ -216,12 +220,13 @@ ObpReapObject(IN PVOID Parameter)
             NextObject = ReapObject->NextToFree;
 
             /* Delete the object */
-            ObpDeleteObject(&ReapObject->Body);
+            ObpDeleteObject(&ReapObject->Body, TRUE);
 
             /* Move to the next one */
             ReapObject = NextObject;
-        } while (NextObject);
-    }
+        } while ((NextObject) && (NextObject != (PVOID)1));
+    } while ((ObpReaperList != (PVOID)1) ||
+             (InterlockedCompareExchange((PLONG)&ObpReaperList, 0, 1) != 1));
 }
 
 /*++

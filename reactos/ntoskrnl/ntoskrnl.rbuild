@@ -257,9 +257,7 @@
     <directory name="mm">
         <if property="ARCH" value="i386">
             <directory name="i386">
-                <file>memsafe.s</file>
                 <file>page.c</file>
-                <file>pfault.c</file>
             </directory>
         </if>
             <file>anonmem.c</file>

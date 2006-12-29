@@ -686,17 +686,10 @@ MmPageFault(
 NTSTATUS
 NTAPI
 MmAccessFault(
-    KPROCESSOR_MODE Mode,
-    ULONG_PTR Address,
-    BOOLEAN FromMdl
-);
-
-NTSTATUS
-NTAPI
-MmNotPresentFault(
-    KPROCESSOR_MODE Mode,
-    ULONG_PTR Address,
-    BOOLEAN FromMdl
+    IN BOOLEAN StoreInstruction,
+    IN PVOID Address,
+    IN KPROCESSOR_MODE Mode,
+    IN PVOID TrapInformation
 );
 
 /* anonmem.c *****************************************************************/

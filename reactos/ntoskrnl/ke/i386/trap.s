@@ -87,13 +87,17 @@ _KiUnexpectedEntrySize:
 _UnexpectedMsg:
     .asciz "\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n"
 
+_UnhandledMsg:
+    .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
+
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
 .text
 
 _KiGetTickCount:
 _KiCallbackReturn:
 _KiRaiseAssertion:
-    int 3
+    /* FIXME: TODO */
+    UNHANDLED_PATH
 
 .func KiSystemService
 Dr_kss: DR_TRAP_FIXUP
@@ -144,6 +148,7 @@ SharedCode:
 
     /* Check if we should flush the User Batch */
     xor ebx, ebx
+ReadBatch:
     or ebx, [ecx+TEB_GDI_BATCH_COUNT]
     jz NotWin32K
 
@@ -432,8 +437,8 @@ V86_Exit:
     iret
 
 AbiosExit:
-    /* Not yet supported */
-    int 3
+    /* FIXME: TODO */
+    UNHANDLED_PATH
 
 .func KiDebugService
 Dr_kids:    DR_TRAP_FIXUP
@@ -672,6 +677,13 @@ _DispatchTwoParam:
 
 /* HARDWARE TRAP HANDLERS ****************************************************/
 
+.func KiFixupFrame
+_KiFixupFrame:
+
+    /* TODO: Routine to fixup a KTRAP_FRAME when faulting from a syscall. */
+    UNHANDLED_PATH
+.endfunc
+
 .func KiTrap0
 Dr_kit0:    DR_TRAP_FIXUP
 V86_kit0:   V86_TRAP_FIXUP
@@ -710,7 +722,8 @@ VdmCheck:
 
     /* We don't support this yet! */
 V86Int0:
-    int 3
+    /* FIXME: TODO */
+    UNHANDLED_PATH
 .endfunc
 
 .func KiTrap1
@@ -754,7 +767,7 @@ V86Int1:
     jz EnableInterrupts
 
     /* We don't support VDM! */
-    int 3
+    UNHANDLED_PATH
 .endfunc
 
 .globl _KiTrap2
@@ -813,7 +826,7 @@ V86Int3:
     jz EnableInterrupts3
 
     /* We don't support VDM! */
-    int 3
+    UNHANDLED_PATH
 .endfunc
 
 .func KiTrap4
@@ -855,7 +868,7 @@ VdmCheck4:
 
     /* We don't support this yet! */
 V86Int4:
-    int 3
+    UNHANDLED_PATH
 .endfunc
 
 .func KiTrap5
@@ -901,7 +914,7 @@ VdmCheck5:
 
     /* We don't support this yet! */
 V86Int5:
-    int 3
+    UNHANDLED_PATH
 .endfunc
 
 .func KiTrap6
@@ -917,8 +930,7 @@ _KiTrap6:
     V86_TRAP_PROLOG kit6
 
     /* Not yet supported (Invalid OPCODE from V86) */
-    int 3
-    jmp $
+    UNHANDLED_PATH
 
 NotV86UD:
     /* Push error code */
@@ -993,8 +1005,7 @@ LockCrash:
 IsVdmOpcode:
 
     /* Unhandled yet */
-    int 3
-    jmp $
+    UNHANDLED_PATH
 
     /* Return to caller */
     jmp _Kei386EoiHelper@0
@@ -1302,8 +1313,7 @@ V86Npx:
     jz HandleUserNpx
 
     /* V86 NPX not handled */
-    int 3
-    jmp $
+    UNHANDLED_PATH
 
 EmulationEnabled:
     /* Did this come from kernel-mode? */
@@ -1456,7 +1466,7 @@ RaiseIrql:
     jnz NoReflect
 
     /* FIXME: TODO */
-    int 3
+    UNHANDLED_PATH
 
 NoReflect:
 
@@ -1485,9 +1495,21 @@ NotV86:
     test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
     jnz UserModeGpf
 
-    /* FIXME: Check for GPF during GPF */
+    /* Check if we have a VDM alert */
+    cmp dword ptr fs:[KPCR_VDM_ALERT], 0
+    jnz VdmAlertGpf
+
+    /* Check for GPF during GPF */
+    mov eax, [ebp+KTRAP_FRAME_EIP]
+    cmp eax, offset CheckPrivilegedInstruction
+    jbe KmodeGpf
+    cmp eax, offset CheckPrivilegedInstruction2
+
+    /* FIXME: TODO */
+    UNHANDLED_PATH
 
     /* Get the opcode and trap frame */
+KmodeGpf:
     mov eax, [ebp+KTRAP_FRAME_EIP]
     mov eax, [eax]
     mov edx, [ebp+KTRAP_FRAME_EBP]
@@ -1573,8 +1595,7 @@ TrapCopy:
 MsrCheck:
 
     /* FIXME: Handle RDMSR/WRMSR */
-    int 3
-    jmp $
+    UNHANDLED_PATH
 
 NotIretGpf:
 
@@ -1606,7 +1627,6 @@ SegPopGpf:
     lea eax, [ebp+KTRAP_FRAME_ESP]
     cmp edx, eax
     jz HandleSegPop
-    int 3
 
     /* Handle segment POP fault by setting it to 0 */
 HandleSegPop:
@@ -1620,26 +1640,239 @@ ExitGpfTrap:
 
 UserModeGpf:
 
-    /* FIXME: Unhandled */
-    int 3
-    jmp $
+    /* If the previous mode was kernel, raise a fatal exception */
+    mov eax, 13
+    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz _KiSystemFatalException
+
+    /* Get the process and check which CS this came from */
+    mov ebx, fs:[KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jz CheckVdmGpf
+
+    /* Check if this is a VDM */
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jnz DispatchV86Gpf
+
+    /* Enable interrupts and check if we have an error code */
+    sti
+    cmp word ptr [ebp+KTRAP_FRAME_ERROR_CODE], 0
+    jnz SetException
+    jmp CheckPrivilegedInstruction
+
+HandleSegPop2:
+    /* Update EIP (will be updated below again) */
+    add dword ptr [ebp+KTRAP_FRAME_EIP], 1
+
+HandleBop4:
+    /* Clear the segment, update EIP and ESP */
+    mov dword ptr [edx], 0
+    add dword ptr [ebp+KTRAP_FRAME_EIP], 1
+    add dword ptr [ebp+KTRAP_FRAME_ESP], 4
+    jmp _Kei386EoiHelper@0
+
+CheckVdmGpf:
+    /* Check if this is a VDM */
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz CheckPrivilegedInstruction
+
+    /* Check what kind of instruction this is */
+    mov eax, [ebp+KTRAP_FRAME_EIP]
+    mov eax, [eax]
+
+    /* FIXME: Check for BOP4 */
+
+    /* Check if this is POP FS */
+    mov edx, ebp
+    add edx, KTRAP_FRAME_FS
+    cmp ax, 0xA10F
+    jz HandleSegPop2
+
+    /* Check if this is POP GS */
+    add edx, KTRAP_FRAME_GS - KTRAP_FRAME_FS
+    cmp ax, 0xA90F
+    jz HandleSegPop2
+
+CheckPrivilegedInstruction:
+    /* FIXME */
+    UNHANDLED_PATH
+
+CheckPrivilegedInstruction2:
+    /* FIXME */
+    UNHANDLED_PATH
+
+SetException:
+    /* FIXME */
+    UNHANDLED_PATH
+
+DispatchV86Gpf:
+    /* FIXME */
+    UNHANDLED_PATH
 .endfunc
 
 .func KiTrap14
 Dr_kit14:   DR_TRAP_FIXUP
 V86_kit14:  V86_TRAP_FIXUP
 _KiTrap14:
+
     /* Enter trap */
     TRAP_PROLOG kit14
 
-    /* Call the C exception handler */
-    push 14
-    push ebp
-    call _KiPageFaultHandler
-    add esp, 8
+    /* Check if we have a VDM alert */
+    cmp dword ptr fs:[KPCR_VDM_ALERT], 0
+    jnz VdmAlertGpf
 
-    /* Return to caller */
+    /* Get the current thread */
+    mov edi, fs:[KPCR_CURRENT_THREAD]
+
+    /* Get the stack address of the frame */
+    lea eax, [esp+KTRAP_FRAME_LENGTH+NPX_FRAME_LENGTH]
+    sub eax, [edi+KTHREAD_INITIAL_STACK]
+    jz NoFixUp
+
+    /* This isn't the base frame, check if it's the second */
+    cmp eax, -KTRAP_FRAME_EFLAGS
+    jb NoFixUp
+
+    /* Check if we have a TEB */
+    mov eax, fs:[KPCR_TEB]
+    or eax, eax
+    jle NoFixUp
+
+    /* Fixup the frame */
+    call _KiFixupFrame
+
+    /* Save CR2 */
+NoFixUp:
+    mov edi, cr2
+
+    /* ROS HACK: Sometimes we get called with INTS DISABLED! WTF? */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
+    je HandlePf
+
+    /* Enable interrupts and check if we got here with interrupts disabled */
+    sti
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
+    jz IllegalState
+
+HandlePf:
+    /* Send trap frame and check if this is kernel-mode or usermode */
+    push ebp
+    mov eax, [ebp+KTRAP_FRAME_CS]
+    and eax, MODE_MASK
+    push eax
+
+    /* Send faulting address and check if this is read or write */
+    push edi
+    mov eax, [ebp+KTRAP_FRAME_ERROR_CODE]
+    and eax, 1
+    push eax
+
+    /* Call the access fault handler */
+    call _MmAccessFault@16
+    test eax, eax
+    jl AccessFail
+
+    /* Access fault handled, return to caller */
     jmp _Kei386EoiHelper@0
+
+AccessFail:
+    /* First check if this is a fault in the S-LIST functions */
+    mov ecx, offset _ExpInterlockedPopEntrySListFault@0
+    cmp [ebp+KTRAP_FRAME_EIP], ecx
+    jz SlistFault
+
+    /* Check if this is a fault in the syscall handler */
+    mov ecx, offset CopyParams
+    cmp [ebp+KTRAP_FRAME_EIP], ecx
+    jz SysCallCopyFault
+    mov ecx, offset ReadBatch
+    cmp [ebp+KTRAP_FRAME_EIP], ecx
+    jnz CheckVdmPf
+
+    /* FIXME: TODO */
+    UNHANDLED_PATH
+    jmp _Kei386EoiHelper@0
+
+SysCallCopyFault:
+    /* FIXME: TODO */
+    UNHANDLED_PATH
+    jmp _Kei386EoiHelper@0
+
+    /* Check if the fault occured in a V86 mode */
+CheckVdmPf:
+    mov ecx, [ebp+KTRAP_FRAME_ERROR_CODE]
+    and ecx, 1
+    shr ecx, 1
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz VdmPF
+
+    /* Check if the fault occured in a VDM */
+    mov esi, fs:[KPCR_CURRENT_THREAD]
+    mov esi, [esi+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [esi+EPROCESS_VDM_OBJECTS], 0
+    jz CheckStatus
+
+    /* Check if we this was in kernel-mode */
+    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz CheckStatus
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jz CheckStatus
+
+VdmPF:
+    /* FIXME: TODO */
+    UNHANDLED_PATH
+
+    /* Save EIP and check what kind of status failure we got */
+CheckStatus:
+    mov esi, [ebp+KTRAP_FRAME_EIP]
+    cmp eax, STATUS_ACCESS_VIOLATION
+    je AccessViol
+    cmp eax, STATUS_GUARD_PAGE_VIOLATION
+    je SpecialCode
+    cmp eax, STATUS_STACK_OVERFLOW
+    je SpecialCode
+
+    /* Setup an in-page exception to dispatch */
+    mov edx, ecx
+    mov ebx, esi
+    mov esi, edi
+    mov ecx, 3
+    mov edi, eax
+    mov eax, STATUS_IN_PAGE_ERROR
+    call _CommonDispatchException
+
+AccessViol:
+    /* Use more proper status code */
+    mov eax, KI_EXCEPTION_ACCESS_VIOLATION
+
+SpecialCode:
+    /* Setup a normal page fault exception */
+    mov ebx, esi
+    mov edx, ecx
+    mov esi, edi
+    jmp _DispatchTwoParam
+
+SlistFault:
+    /* FIXME: TODO */
+    UNHANDLED_PATH
+
+IllegalState:
+
+    /* This is completely illegal, bugcheck the system */
+    push ebp
+    push esi
+    push ecx
+    push eax
+    push edi
+    push IRQL_NOT_LESS_OR_EQUAL
+    call _KeBugCheckWithTf@24
+
+VdmAlertGpf:
+
+    /* FIXME: NOT SUPPORTED */
+    UNHANDLED_PATH
 .endfunc
 
 .func KiTrap0F
@@ -1752,8 +1985,7 @@ _Ki16BitStackException:
     add esp, [eax+KTHREAD_INITIAL_STACK]
 
     /* Switch to good stack segment */
-    /* TODO */
-    int 3
+    UNHANDLED_PATH
 .endfunc
 
 /* UNEXPECTED INTERRUPT HANDLERS **********************************************/
@@ -1867,7 +2099,7 @@ CheckQuantum:
     jz Return
 
     /* FIXME: Schedule new thread */
-    int 3
+    UNHANDLED_PATH
 
 Return:
     /* All done */
@@ -1904,7 +2136,7 @@ _KiInterruptTemplateDispatch:
 _KiChainedDispatch2ndLvl@0:
 
     /* Not yet supported */
-    int 3
+    UNHANDLED_PATH
 .endfunc
 
 .func KiChainedDispatch@0

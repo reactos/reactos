@@ -67,6 +67,7 @@ NtAcceptConnectPort@24
 NtAccessCheck@32
 NtAccessCheckAndAuditAlarm@44
 NtAddAtom@12
+NtAddBootEntry@8
 NtAdjustGroupsToken@24
 NtAdjustPrivilegesToken@24
 NtAlertResumeThread@8

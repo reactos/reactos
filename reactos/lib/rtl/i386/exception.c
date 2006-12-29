@@ -10,29 +10,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <rtl.h>
-
 #define NDEBUG
 #include <debug.h>
-
-/* PRIVATE FUNCTIONS *********************************************************/
-
-VOID
-NTAPI
-RtlpGetStackLimits(PULONG_PTR StackBase,
-                   PULONG_PTR StackLimit);
-
-PEXCEPTION_REGISTRATION_RECORD
-NTAPI
-RtlpGetExceptionList(VOID);
-
-VOID
-NTAPI
-RtlpSetExceptionList(PEXCEPTION_REGISTRATION_RECORD NewExceptionList);
-
-typedef struct _DISPATCHER_CONTEXT
-{
-    PEXCEPTION_REGISTRATION_RECORD RegistrationPointer;
-} DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
@@ -100,7 +79,6 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                               sizeof(*RegistrationFrame));
 
         /* Call the handler */
-        DPRINT1("Calling handler: %p\n", RegistrationFrame->Handler);
         Disposition = RtlpExecuteHandlerForException(ExceptionRecord,
                                                      RegistrationFrame,
                                                      Context,
@@ -192,7 +170,7 @@ RtlUnwind(IN PVOID TargetFrame OPTIONAL,
           IN PVOID ReturnValue)
 {
     PEXCEPTION_REGISTRATION_RECORD RegistrationFrame, OldFrame;
-    DISPATCHER_CONTEXT  DispatcherContext;
+    DISPATCHER_CONTEXT DispatcherContext;
     EXCEPTION_RECORD ExceptionRecord2, ExceptionRecord3;
     EXCEPTION_DISPOSITION Disposition;
     ULONG_PTR StackLow, StackHigh;
@@ -306,7 +284,7 @@ RtlUnwind(IN PVOID TargetFrame OPTIONAL,
                                                       &DispatcherContext,
                                                       RegistrationFrame->
                                                       Handler);
-            switch (Disposition)
+            switch(Disposition)
             {
                 /* Continue searching */
                 case ExceptionContinueSearch:

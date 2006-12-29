@@ -10,31 +10,32 @@
 //
 //
 // Ob:
-//  - Fix bug related to Deferred Loading (don't requeue active work item).
 //  - Add Directory Lock.
+//  - Strengthen code with debug checks and assertions.
+//  - Fix FIXMEs/commented out code.
+//
+// Ex:
+//  - Fixup existing code that talks to Ke.
+//  - Implement Generic Callback mechanism.
+//  - Use pushlocks for handle implementation.
+//
+// Lpc:
+//  - Figure out why NTLPC-processes won't die anymore.
+//
+// Ke1:
+//  - Implement KiInitMachineDependent.
+//  - Implement Privileged Instruction Handler in Umode GPF.
 //
 // Fstub:
 //  - Implement IoAssignDriveLetters using mount manager support.
 //
-// Ke:
-//  - Figure out why the DPC stack doesn't really work.
-//  - Fix SEH/Page Fault + Exceptions!? Weird exception bugs!
+// Hal:
+//  - Use APC and DPC Interrupt Dispatchers.
+//  - CMOS Initialization and CMOS Spinlock.
+//
+// Ke2:
 //  - New optimized table-based tick-hashed timer implementation.
 //  - New Thread Scheduler based on 2003.
-//  - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
-//
-// Hal:
-//  - New IRQL Implementation.
-//  - CMOS Initialization and CMOS Spinlock.
-//  - Report resource usage to kernel (HalReportResourceUsage).
-//
-// Lpc:
-//  - Activate new NTLPC and delete old implementation.
-//  - Figure out why LPC-processes won't die anymore.
-//
-// Ex:
-//  - Implement Generic Callback mechanism.
-//  - Use pushlocks for handle implementation.
 //
 // Kd:
 //  - Implement KD Kernel Debugging and WinDBG support.
@@ -45,3 +46,30 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// REACTOS GUIDANCE PLAN
+//  ________________________________________________________________________________________________________
+// /                                                                                                        \
+// | OB, PS, LPC, DBGK, IO => Almost entirely fixed interaction with Ke/Ex.                               | |
+// | SE => Not looked at. Interaction with Ps/Io is minimal and currently hacked away. Preserve.          |J|
+// | EX => Needs re-visiting (in trunk). Do callbacks/push locks for interaction with Ps.                 |A|
+// | KD/KDBG => Laptop has special version of ROS without these components. Commit in branch.             |N|
+// | INIT => Boot sequence still needs work in terms of interaction with Ke and CPU features.             | |
+// | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |F|
+// | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |E|
+// | HAL => Needs APC/DPC/IRQL implementation fixed ASAP in terms of interaction with Ke.                 |B|
+// | FSTUB => Needs IoAssignDriveLetters fixed ASAP but not critical to Ke/Ex. Interacts with Io.         | |
+// | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |M|
+// | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |A|
+// | CM => TOTAL REWRITE.                                                                                 |R|
+// | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           | |
+// | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |A|
+// | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |P|
+// | KE => Timer Rewrite + Thread Scheduler Rewrite.                                                      |R|
+// | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |I|
+// | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |L|
+// | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           | |
+// | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |M|
+// | MM => TOTAL REWRITE.                                                                                 |A|
+// |                                                                                                      |Y|
+// \________________________________________________________________________________________________________/
+//

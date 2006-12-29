@@ -134,7 +134,7 @@ _RtlpExecuteHandlerForException@20:
 .globl _RtlpExecuteHandlerForUnwind@20
 _RtlpExecuteHandlerForUnwind@20:
     /* Copy the routine in EDX */
-    mov edx, offset _RtlpExceptionProtector
+    mov edx, offset _RtlpUnwindProtector
 .endfunc
 
 .func RtlpExecuteHandler@20
@@ -243,7 +243,7 @@ _RtlpUnwindProtector:
     /* Put the exception record in ECX and check the Flags */
     mov ecx, [esp+4]
     test dword ptr [ecx+EXCEPTION_RECORD_EXCEPTION_FLAGS], EXCEPTION_UNWINDING + EXCEPTION_EXIT_UNWIND
-    jnz .return
+    jz .return
 
     /* Save the frame in ECX and Context in EDX */
     mov ecx, [esp+8]

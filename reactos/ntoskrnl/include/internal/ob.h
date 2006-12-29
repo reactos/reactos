@@ -188,9 +188,10 @@ ObQueryDeviceMapInformation(
 // Object Lifetime Functions
 //
 VOID
-FASTCALL
+NTAPI
 ObpDeleteObject(
-    IN PVOID Object
+    IN PVOID Object,
+    IN BOOLEAN CalledFromWorkerThread
 );
 
 LONG

@@ -50,7 +50,7 @@ VdmSwapContext(IN PKTRAP_FRAME TrapFrame,
 
     /* Make sure that we're at APC_LEVEL and that this is a valid frame */
     ASSERT_IRQL(APC_LEVEL);
-    ASSERT(TrapFrame->DbgArgMark = 0xBADB0D00);
+    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
 
     /* Check if this is a V86 frame */
     if (TrapFrame->EFlags & EFLAGS_V86_MASK)
@@ -61,9 +61,9 @@ VdmSwapContext(IN PKTRAP_FRAME TrapFrame,
         OutContext->SegEs = TrapFrame->V86Es;
         OutContext->SegDs = TrapFrame->V86Ds;
     }
-    else if (TrapFrame->SegCs == (KGDT_R3_CODE | RPL_MASK))
+    else if (TrapFrame->SegCs != (KGDT_R3_CODE | RPL_MASK))
     {
-        /* This was user mode, copy segment registers */
+        /* This was kernel mode, copy segment registers */
         OutContext->SegGs = TrapFrame->SegGs;
         OutContext->SegFs = TrapFrame->SegFs;
         OutContext->SegEs = TrapFrame->SegEs;

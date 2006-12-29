@@ -381,6 +381,9 @@
  */
 .global @ExInterlockedPopEntrySList@8
 .global @InterlockedPopEntrySList@4
+.global _ExpInterlockedPopEntrySListResume@0
+.global _ExpInterlockedPopEntrySListFault@0
+.global _ExpInterlockedPopEntrySListEnd@0
 @ExInterlockedPopEntrySList@8:
 @InterlockedPopEntrySList@4:
 
@@ -392,10 +395,10 @@
     mov ebp, ecx
 
     /* Get sequence number and link pointer */
+_ExpInterlockedPopEntrySListResume@0:
     mov edx, [ebp+4]
     mov eax, [ebp]
 
-1:
     /* Check if the list is empty */
     or eax, eax
     jz 2f
@@ -404,9 +407,11 @@
     lea ecx, [edx-1]
 
     /* Get next pointer and do the exchange */
+_ExpInterlockedPopEntrySListFault@0:
     mov ebx, [eax]
+_ExpInterlockedPopEntrySListEnd@0:
     LOCK cmpxchg8b [ebp]
-    jnz 1b
+    jnz _ExpInterlockedPopEntrySListResume@0
 
     /* Restore registers and return */
 2:

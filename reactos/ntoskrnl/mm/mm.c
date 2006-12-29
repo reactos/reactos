@@ -75,9 +75,9 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
 
 NTSTATUS
 NTAPI
-MmAccessFault(KPROCESSOR_MODE Mode,
-                       ULONG_PTR Address,
-                       BOOLEAN FromMdl)
+MmpAccessFault(KPROCESSOR_MODE Mode,
+                  ULONG_PTR Address,
+                  BOOLEAN FromMdl)
 {
    PMADDRESS_SPACE AddressSpace;
    MEMORY_AREA* MemoryArea;
@@ -109,7 +109,7 @@ MmAccessFault(KPROCESSOR_MODE Mode,
       {
          DPRINT1("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
          DbgPrint("%s:%d\n",__FILE__,__LINE__);
-         return(STATUS_UNSUCCESSFUL);
+         return(STATUS_ACCESS_VIOLATION);
       }
       AddressSpace = MmGetKernelAddressSpace();
    }
@@ -131,13 +131,13 @@ MmAccessFault(KPROCESSOR_MODE Mode,
          {
             MmUnlockAddressSpace(AddressSpace);
          }
-         return (STATUS_UNSUCCESSFUL);
+         return (STATUS_ACCESS_VIOLATION);
       }
 
       switch (MemoryArea->Type)
       {
          case MEMORY_AREA_SYSTEM:
-            Status = STATUS_UNSUCCESSFUL;
+            Status = STATUS_ACCESS_VIOLATION;
             break;
 
          case MEMORY_AREA_PAGED_POOL:
@@ -152,15 +152,15 @@ MmAccessFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
-            Status = STATUS_UNSUCCESSFUL;
+            Status = STATUS_ACCESS_VIOLATION;
             break;
 
          case MEMORY_AREA_SHARED_DATA:
-            Status = STATUS_UNSUCCESSFUL;
+            Status = STATUS_ACCESS_VIOLATION;
             break;
 
          default:
-            Status = STATUS_UNSUCCESSFUL;
+            Status = STATUS_ACCESS_VIOLATION;
             break;
       }
    }
@@ -170,32 +170,6 @@ MmAccessFault(KPROCESSOR_MODE Mode,
    if (!FromMdl)
    {
       MmUnlockAddressSpace(AddressSpace);
-   }
-   return(Status);
-}
-
-NTSTATUS
-NTAPI
-MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
-{
-   NTSTATUS Status;
-   PFN_TYPE AllocatedPage;
-   Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
-   if (!NT_SUCCESS(Status))
-   {
-      MmUnlockAddressSpace(MmGetKernelAddressSpace());
-      Status = MmRequestPageMemoryConsumer(MC_PPOOL, TRUE, &AllocatedPage);
-      MmLockAddressSpace(MmGetKernelAddressSpace());
-   }
-   Status =
-      MmCreateVirtualMapping(NULL,
-                             (PVOID)PAGE_ROUND_DOWN(Address),
-                             PAGE_READWRITE,
-                             &AllocatedPage,
-                             1);
-   if (Locked)
-   {
-      MmLockPage(AllocatedPage);
    }
    return(Status);
 }
@@ -227,7 +201,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
       DPRINT("No current process\n");
       if (Address < (ULONG_PTR)MmSystemRangeStart)
       {
-         return(STATUS_UNSUCCESSFUL);
+         return(STATUS_ACCESS_VIOLATION);
       }
    }
 
@@ -242,7 +216,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
       if (Mode != KernelMode)
       {
 	 CPRINT("Address: %x\n", Address);
-         return(STATUS_UNSUCCESSFUL);
+         return(STATUS_ACCESS_VIOLATION);
       }
       AddressSpace = MmGetKernelAddressSpace();
    }
@@ -268,7 +242,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
          {
             MmUnlockAddressSpace(AddressSpace);
          }
-         return (STATUS_UNSUCCESSFUL);
+         return (STATUS_ACCESS_VIOLATION);
       }
 
       switch (MemoryArea->Type)
@@ -280,7 +254,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             }
 
          case MEMORY_AREA_SYSTEM:
-            Status = STATUS_UNSUCCESSFUL;
+            Status = STATUS_ACCESS_VIOLATION;
             break;
 
          case MEMORY_AREA_SECTION_VIEW:
@@ -309,7 +283,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          default:
-            Status = STATUS_UNSUCCESSFUL;
+            Status = STATUS_ACCESS_VIOLATION;
             break;
       }
    }
@@ -322,6 +296,67 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
    }
    return(Status);
 }
+
+extern BOOLEAN Mmi386MakeKernelPageTableGlobal(PVOID Address);
+
+NTSTATUS
+NTAPI
+MmAccessFault(IN BOOLEAN StoreInstruction,
+              IN PVOID Address,
+              IN KPROCESSOR_MODE Mode,
+              IN PVOID TrapInformation)
+{
+    /* Cute little hack for ROS */
+    if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)
+    {
+        /* Check for an invalid page directory in kernel mode */
+        if (Mmi386MakeKernelPageTableGlobal(Address))
+        {
+            /* All is well with the world */
+            return STATUS_SUCCESS;
+        }
+    }
+
+    /* Keep same old ReactOS Behaviour */
+    if (StoreInstruction)
+    {
+        /* Call access fault */
+        return MmpAccessFault(Mode, (ULONG_PTR)Address, TrapInformation ? FALSE : TRUE);
+    }
+    else
+    {
+        /* Call not present */
+        return MmNotPresentFault(Mode, (ULONG_PTR)Address, TrapInformation ? FALSE : TRUE);
+    }
+}
+
+NTSTATUS
+NTAPI
+MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
+{
+   NTSTATUS Status;
+   PFN_TYPE AllocatedPage;
+   Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
+   if (!NT_SUCCESS(Status))
+   {
+      MmUnlockAddressSpace(MmGetKernelAddressSpace());
+      Status = MmRequestPageMemoryConsumer(MC_PPOOL, TRUE, &AllocatedPage);
+      MmLockAddressSpace(MmGetKernelAddressSpace());
+   }
+   Status =
+      MmCreateVirtualMapping(NULL,
+                             (PVOID)PAGE_ROUND_DOWN(Address),
+                             PAGE_READWRITE,
+                             &AllocatedPage,
+                             1);
+   if (Locked)
+   {
+      MmLockPage(AllocatedPage);
+   }
+   return(Status);
+}
+
+
 
 /* Miscellanea functions: they may fit somewhere else */
 

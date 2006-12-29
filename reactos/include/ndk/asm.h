@@ -169,6 +169,7 @@ Author:
 #define KPCR_STALL_SCALE_FACTOR                 0x4C
 #define KPCR_SET_MEMBER                         0x48
 #define KPCR_NUMBER                             0x51
+#define KPCR_VDM_ALERT                          0x54
 #define KPCR_PRCB_DATA                          0x120
 #define KPCR_CURRENT_THREAD                     0x124
 #define KPCR_PRCB_NEXT_THREAD                   0x128
@@ -473,9 +474,13 @@ Author:
 #endif
 
 //
-// DR7 Values
+// DR6 and 7 Masks
 //
+#define DR6_LEGAL                               0xE00F
+#define DR7_LEGAL                               0xFFFF0155
+#define DR7_ACTIVE                              0x55
 #define DR7_RESERVED_MASK                       0xDC00
+#define DR7_OVERRIDE_MASK                       0xF0000
 
 //
 // Usermode callout frame definitions
@@ -491,6 +496,10 @@ Author:
 //
 #ifdef __ASM__
 #define STATUS_ACCESS_VIOLATION                 0xC0000005
+#define STATUS_IN_PAGE_ERROR                    0xC0000006
+#define STATUS_GUARD_PAGE_VIOLATION             0x80000001
+#define STATUS_STACK_OVERFLOW                   0xC00000FD
+#define KI_EXCEPTION_ACCESS_VIOLATION           0x10000004
 #define STATUS_INVALID_SYSTEM_SERVICE           0xC000001C
 #define STATUS_NO_CALLBACK_ACTIVE               0xC0000258
 #define STATUS_CALLBACK_POP_STACK               0xC0000423

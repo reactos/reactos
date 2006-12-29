@@ -16,6 +16,24 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define PAGED_CODE_RTL()
 #endif
 
+VOID
+NTAPI
+RtlpGetStackLimits(PULONG_PTR StackBase,
+                   PULONG_PTR StackLimit);
+
+PEXCEPTION_REGISTRATION_RECORD
+NTAPI
+RtlpGetExceptionList(VOID);
+
+VOID
+NTAPI
+RtlpSetExceptionList(PEXCEPTION_REGISTRATION_RECORD NewExceptionList);
+
+typedef struct _DISPATCHER_CONTEXT
+{
+    PEXCEPTION_REGISTRATION_RECORD RegistrationPointer;
+} DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
+
 /* These provide support for sharing code between User and Kernel RTL */
 PVOID
 NTAPI
@@ -112,7 +130,7 @@ RtlpCaptureContext(OUT PCONTEXT ContextRecord);
 NTSTATUS
 NTAPI
 DebugService(IN ULONG Service,
-             IN PCVOID Buffer,
+             IN const void* Buffer,
              IN ULONG Length,
              IN PVOID Argument1,
              IN PVOID Argument2);

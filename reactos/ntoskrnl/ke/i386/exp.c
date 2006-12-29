@@ -14,6 +14,36 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+
+/* DR Registers in the CONTEXT structure */
+UCHAR KiDebugRegisterContextOffsets[9] =
+{
+    FIELD_OFFSET(CONTEXT, Dr0),
+    FIELD_OFFSET(CONTEXT, Dr1),
+    FIELD_OFFSET(CONTEXT, Dr2),
+    FIELD_OFFSET(CONTEXT, Dr3),
+    0,
+    0,
+    FIELD_OFFSET(CONTEXT, Dr6),
+    FIELD_OFFSET(CONTEXT, Dr7),
+    0,
+};
+
+/* DR Registers in the KTRAP_FRAME structure */
+UCHAR KiDebugRegisterTrapOffsets[9] =
+{
+    FIELD_OFFSET(KTRAP_FRAME, Dr0),
+    FIELD_OFFSET(KTRAP_FRAME, Dr1),
+    FIELD_OFFSET(KTRAP_FRAME, Dr2),
+    FIELD_OFFSET(KTRAP_FRAME, Dr3),
+    0,
+    0,
+    FIELD_OFFSET(KTRAP_FRAME, Dr6),
+    FIELD_OFFSET(KTRAP_FRAME, Dr7),
+    0,
+};
+
 /* FUNCTIONS *****************************************************************/
 
 _SEH_DEFINE_LOCALS(KiCopyInfo)
@@ -51,6 +81,101 @@ KeInitExceptions(VOID)
         KiIdt[i].Selector = KiIdt[i].ExtendedOffset;
         KiIdt[i].ExtendedOffset = FlippedSelector;
     }
+}
+
+ULONG
+FASTCALL
+KiUpdateDr7(IN ULONG Dr7)
+{
+    ULONG DebugMask = KeGetCurrentThread()->DispatcherHeader.DebugActive;
+
+    /* Check if debugging is enabled */
+    if (DebugMask & DR_ACTIVE_MASK)
+    {
+        /* Sanity checks */
+        ASSERT((DebugMask & DR_REG_MASK) != 0);
+        ASSERT((Dr7 & ~DR7_RESERVED_MASK) == DR7_OVERRIDE_MASK);
+        return 0;
+    }
+
+    /* Return DR7 itself */
+    return Dr7;
+}
+
+BOOLEAN
+FASTCALL
+KiRecordDr7(OUT PULONG Dr7Ptr,
+            OUT PULONG DrMask)
+{
+    ULONG NewMask, Mask;
+    UCHAR Result;
+
+    /* Check if the caller gave us a mask */
+    if (!DrMask)
+    {
+        /* He didn't use the one from the thread */
+        Mask = KeGetCurrentThread()->DispatcherHeader.DebugActive;
+    }
+    else
+    {
+        /* He did, read it */
+        Mask = *DrMask;
+    }
+
+    /* Sanity check */
+    ASSERT((*Dr7Ptr & DR7_RESERVED_MASK) == 0);
+
+    /* Check if DR7 is empty */
+    NewMask = Mask;
+    if (!(*Dr7Ptr))
+    {
+        /* Assume failure */
+        Result = FALSE;
+
+        /* Check the DR mask */
+        NewMask &= 0x7F;
+        if (NewMask & DR_REG_MASK)
+        {
+            /* Set the active mask */
+            NewMask |= DR_ACTIVE_MASK;
+
+            /* Set DR7 override */
+            *DrMask = DR7_OVERRIDE_MASK;
+        }
+        else
+        {
+            /* Sanity check */
+            ASSERT(NewMask == 0);
+        }
+    }
+    else
+    {
+        /* Check if we have a mask or not */
+        Result = NewMask ? TRUE: FALSE;
+
+        /* Update the mask to disable debugging */
+        NewMask &= ~DR_ACTIVE_MASK;
+        NewMask |= 0x80;
+    }
+
+    /* Check if caller wants the new mask */
+    if (DrMask)
+    {
+        /* Update it */
+        *DrMask = NewMask;
+    }
+    else
+    {
+        /* Check if the mask changed */
+        if (Mask != NewMask)
+        {
+            /* Update it */
+            KeGetCurrentThread()->DispatcherHeader.DebugActive = NewMask;
+        }
+    }
+
+    /* Return the result */
+    return Result;
 }
 
 ULONG
@@ -192,6 +317,8 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     ULONG i;
     BOOLEAN V86Switch = FALSE;
     KIRQL OldIrql = APC_LEVEL;
+    ULONG DrMask = 0;
+    PVOID SafeDr;
 
     /* Do this at APC_LEVEL */
     if (KeGetCurrentIrql() < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
@@ -207,8 +334,8 @@ KeContextToTrapFrame(IN PCONTEXT Context,
             V86Switch = TRUE;
         }
 
-        /* Copy EFLAGS. FIXME: Needs to be sanitized */
-        TrapFrame->EFlags = Context->EFlags;
+        /* Copy EFLAGS and sanitize them*/
+        TrapFrame->EFlags = Ke386SanitizeFlags(Context->EFlags, PreviousMode);
 
         /* Copy EBP and EIP */
         TrapFrame->Ebp = Context->Ebp;
@@ -222,14 +349,14 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         }
         else
         {
-            /* We weren't in V86, so sanitize the CS (FIXME!) */
-            TrapFrame->SegCs = Context->SegCs;
+            /* We weren't in V86, so sanitize the CS */
+            TrapFrame->SegCs = Ke386SanitizeSeg(Context->SegCs, PreviousMode);
 
             /* Don't let it under 8, that's invalid */
             if ((PreviousMode != KernelMode) && (TrapFrame->SegCs < 8))
             {
                 /* Force it to User CS */
-                TrapFrame->SegCs = (KGDT_R3_CODE | RPL_MASK);
+                TrapFrame->SegCs = KGDT_R3_CODE | RPL_MASK;
             }
         }
 
@@ -261,7 +388,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         /* Check if we were in V86 Mode */
         if (TrapFrame->EFlags & EFLAGS_V86_MASK)
         {
-            /* Copy the V86 Segments directlry */
+            /* Copy the V86 Segments directly */
             TrapFrame->V86Ds = Context->SegDs;
             TrapFrame->V86Es = Context->SegEs;
             TrapFrame->V86Fs = Context->SegFs;
@@ -272,12 +399,12 @@ KeContextToTrapFrame(IN PCONTEXT Context,
             /* For kernel mode, write the standard values */
             TrapFrame->SegDs = KGDT_R3_DATA | RPL_MASK;
             TrapFrame->SegEs = KGDT_R3_DATA | RPL_MASK;
-            TrapFrame->SegFs = Context->SegFs;
+            TrapFrame->SegFs = Ke386SanitizeSeg(Context->SegFs, PreviousMode);
             TrapFrame->SegGs = 0;
         }
         else
         {
-            /* For user mode, return the values directlry */
+            /* For user mode, return the values directly */
             TrapFrame->SegDs = Context->SegDs;
             TrapFrame->SegEs = Context->SegEs;
             TrapFrame->SegFs = Context->SegFs;
@@ -320,7 +447,13 @@ KeContextToTrapFrame(IN PCONTEXT Context,
             /* Mask out any invalid flags */
             FxSaveArea->Cr0NpxState &= ~(CR0_EM | CR0_MP | CR0_TS);
 
-            /* FIXME: Check if this is a VDM app */
+            /* Check if this is a VDM app */
+            if (PsGetCurrentProcess()->VdmObjects)
+            {
+                /* Allow the EM flag */
+                FxSaveArea->Cr0NpxState |= Context->FloatSave.Cr0NpxState &
+                                           (CR0_EM | CR0_MP);
+            }
         }
     }
 
@@ -373,16 +506,40 @@ KeContextToTrapFrame(IN PCONTEXT Context,
             }
             else
             {
-                /* Just dump the Fn state in */
-                RtlCopyMemory(&FxSaveArea->U.FnArea,
-                              &Context->FloatSave,
-                              sizeof(FNSAVE_FORMAT));
+                /* Copy the structure */
+                FxSaveArea->U.FnArea.ControlWord = Context->FloatSave.
+                                                   ControlWord;
+                FxSaveArea->U.FnArea.StatusWord = Context->FloatSave.
+                                                  StatusWord;
+                FxSaveArea->U.FnArea.TagWord = Context->FloatSave.TagWord;
+                FxSaveArea->U.FnArea.ErrorOffset = Context->FloatSave.
+                                                   ErrorOffset;
+                FxSaveArea->U.FnArea.ErrorSelector = Context->FloatSave.
+                                                     ErrorSelector;
+                FxSaveArea->U.FnArea.DataOffset = Context->FloatSave.
+                                                  DataOffset;
+                FxSaveArea->U.FnArea.DataSelector = Context->FloatSave.
+                                                    DataSelector;
+
+                /* Loop registers */
+                for (i = 0; i < SIZE_OF_80387_REGISTERS; i++)
+                {
+                    /* Copy registers */
+                    FxSaveArea->U.FnArea.RegisterArea[i] =
+                        Context->FloatSave.RegisterArea[i];
+                }
             }
 
             /* Mask out any invalid flags */
             FxSaveArea->Cr0NpxState &= ~(CR0_EM | CR0_MP | CR0_TS);
 
-            /* FIXME: Check if this is a VDM app */
+            /* Check if this is a VDM app */
+            if (PsGetCurrentProcess()->VdmObjects)
+            {
+                /* Allow the EM flag */
+                FxSaveArea->Cr0NpxState |= Context->FloatSave.Cr0NpxState &
+                    (CR0_EM | CR0_MP);
+            }
         }
         else
         {
@@ -394,22 +551,37 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     /* Handle the Debug Registers */
     if ((ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
     {
-        /* FIXME: All these should be sanitized */
-        TrapFrame->Dr0 = Context->Dr0;
-        TrapFrame->Dr1 = Context->Dr1;
-        TrapFrame->Dr2 = Context->Dr2;
-        TrapFrame->Dr3 = Context->Dr3;
-        TrapFrame->Dr6 = Context->Dr6;
-        TrapFrame->Dr7 = Context->Dr7;
+        /* Loop DR registers */
+        for (i = 0; i < 4; i++)
+        {
+            /* Sanitize the context DR Address */
+            SafeDr = Ke386SanitizeDr(KiDrFromContext(i, Context), PreviousMode);
 
-        /* Check if usermode */
+            /* Save it in the trap frame */
+            *KiDrFromTrapFrame(i, TrapFrame) = SafeDr;
+
+            /* Check if this DR address is active and add it in the DR mask */
+            if (SafeDr) DrMask |= DR_MASK(i);
+        }
+
+        /* Now save and sanitize DR6 */
+        TrapFrame->Dr6 = Context->Dr6 & DR6_LEGAL;
+        if (TrapFrame->Dr6) DrMask |= DR_MASK(6);
+
+        /* Save and sanitize DR7 */
+        TrapFrame->Dr7 = Context->Dr7 & DR7_LEGAL;
+        KiRecordDr7(&TrapFrame->Dr7, &DrMask);
+
+        /* If we're in user-mode */
         if (PreviousMode != KernelMode)
         {
-            /* Set the Debug Flag */
-            KeGetCurrentThread()->DispatcherHeader.DebugActive =
-                (Context->Dr7 & DR7_ACTIVE) ? TRUE: FALSE;
+            /* FIXME: Save the mask */
+            //KeGetCurrentThread()->DispatcherHeader.DebugActive = DrMask;
         }
     }
+
+    /* Check if thread has IOPL and force it enabled if so */
+    if (KeGetCurrentThread()->Iopl) TrapFrame->EFlags |= 0x3000;
 
     /* Restore IRQL */
     if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
@@ -429,6 +601,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     } FloatSaveBuffer;
     FLOATING_SAVE_AREA *FloatSaveArea;
     KIRQL OldIrql = APC_LEVEL;
+    ULONG i;
 
     /* Do this at APC_LEVEL */
     if (KeGetCurrentIrql() < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
@@ -550,10 +723,23 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
                 KiFlushNPXState(NULL);
             }
 
-            /* Copy into the Context */
-            RtlCopyMemory(&Context->FloatSave,
-                          FloatSaveArea,
-                          sizeof(FNSAVE_FORMAT));
+            /* Copy structure */
+            Context->FloatSave.ControlWord = FloatSaveArea->ControlWord;
+            Context->FloatSave.StatusWord = FloatSaveArea->StatusWord;
+            Context->FloatSave.TagWord = FloatSaveArea->TagWord;
+            Context->FloatSave.ErrorOffset = FloatSaveArea->ErrorOffset;
+            Context->FloatSave.ErrorSelector = FloatSaveArea->ErrorSelector;
+            Context->FloatSave.DataOffset = FloatSaveArea->DataOffset;
+            Context->FloatSave.DataSelector = FloatSaveArea->DataSelector;
+            Context->FloatSave.Cr0NpxState = FxSaveArea->Cr0NpxState;
+
+            /* Loop registers */
+            for (i = 0; i < SIZE_OF_80387_REGISTERS; i++)
+            {
+                /* Copy them */
+                Context->FloatSave.RegisterArea[i] =
+                    FloatSaveArea->RegisterArea[i];
+            }
          }
          else
          {
@@ -566,24 +752,26 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) ==
         CONTEXT_DEBUG_REGISTERS)
     {
-        /* Copy the debug registers */
-        Context->Dr0 = TrapFrame->Dr0;
-        Context->Dr1 = TrapFrame->Dr1;
-        Context->Dr2 = TrapFrame->Dr2;
-        Context->Dr3 = TrapFrame->Dr3;
-        Context->Dr6 = TrapFrame->Dr6;
-
-        /* For user-mode, only set DR7 if a debugger is active */
-        if (((TrapFrame->SegCs & MODE_MASK) ||
-            (TrapFrame->EFlags & EFLAGS_V86_MASK)) &&
-            (KeGetCurrentThread()->DispatcherHeader.DebugActive))
+        /* Make sure DR7 is valid */
+        if (TrapFrame->Dr7 & ~DR7_RESERVED_MASK)
         {
-            /* Copy it over */
-            Context->Dr7 = TrapFrame->Dr7;
+            /* Copy the debug registers */
+            Context->Dr0 = TrapFrame->Dr0;
+            Context->Dr1 = TrapFrame->Dr1;
+            Context->Dr2 = TrapFrame->Dr2;
+            Context->Dr3 = TrapFrame->Dr3;
+            Context->Dr6 = TrapFrame->Dr6;
+
+            /* Update DR7 */
+            //Context->Dr7 = KiUpdateDr7(TrapFrame->Dr7);
         }
         else
         {
-            /* Clear it */
+            /* Otherwise clear DR registers */
+            Context->Dr0 =
+            Context->Dr1 =
+            Context->Dr3 =
+            Context->Dr6 =
             Context->Dr7 = 0;
         }
     }
@@ -757,13 +945,13 @@ DispatchToUser:
                 KiEspToTrapFrame(TrapFrame, NewStack - 2 * sizeof(ULONG_PTR));
 
                 /* Force correct segments */
-                TrapFrame->SegCs = KGDT_R3_CODE | RPL_MASK;
-                TrapFrame->SegDs = KGDT_R3_DATA | RPL_MASK;
-                TrapFrame->SegEs = KGDT_R3_DATA | RPL_MASK;
-                TrapFrame->SegFs = KGDT_R3_TEB | RPL_MASK;
+                TrapFrame->SegCs = Ke386SanitizeSeg(KGDT_R3_CODE, PreviousMode);
+                TrapFrame->SegDs = Ke386SanitizeSeg(KGDT_R3_DATA, PreviousMode);
+                TrapFrame->SegEs = Ke386SanitizeSeg(KGDT_R3_DATA, PreviousMode);
+                TrapFrame->SegFs = Ke386SanitizeSeg(KGDT_R3_TEB, PreviousMode);
                 TrapFrame->SegGs = 0;
 
-                /* Set EIP to the User-mode Dispathcer */
+                /* Set EIP to the User-mode Dispatcher */
                 TrapFrame->Eip = (ULONG)KeUserExceptionDispatcher;
                 _SEH_LEAVE;
             }

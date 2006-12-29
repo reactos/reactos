@@ -66,6 +66,30 @@
 #endif
 
 //
+// @name UNHANDLED_PATH
+//
+// This macro TODO
+//
+// @param None
+//
+// @remark None.
+//
+.macro UNHANDLED_PATH
+    /* Get EIP */
+    call $+5
+    pop eax
+
+    /* Print debug message */
+    push eax
+    push offset _UnhandledMsg
+    call _DbgPrint
+    add esp, 8
+
+    /* Loop indefinitely */
+    jmp $
+.endm
+
+//
 // @name IDT
 //
 // This macro creates an IDT entry for the given handler
@@ -182,7 +206,6 @@ _KiUnexpectedInterrupt&Number:
     push offset V86DebugMsg
     call _DbgPrint
     add esp, 8
-    int 3
     jmp $
 .endm
 
@@ -511,7 +534,7 @@ _KiUnexpectedInterrupt&Number:
 
     /* Check if this was kernel mode */
 1:
-    cmp dword ptr [esp+KTRAP_FRAME_CS], KGDT_R0_CODE
+    cmp word ptr [esp+KTRAP_FRAME_CS], KGDT_R0_CODE
     jz 1f
 
     /* Set segments */
@@ -947,7 +970,7 @@ PendingUserApc:
     /* Assert the saved exception list */
     or edx, edx
     jnz 1f
-    int 3
+    UNHANDLED_PATH
 1:
 #endif
 
@@ -962,7 +985,7 @@ PendingUserApc:
     /* Assert the saved previous mode */
     cmp ecx, -1
     jnz 1f
-    int 3
+    UNHANDLED_PATH
 1:
 #endif
 
@@ -976,7 +999,7 @@ PendingUserApc:
     mov ecx, [esp+KTRAP_FRAME_PREVIOUS_MODE]
     cmp ecx, -1
     jz 1f
-    int 3
+    UNHANDLED_PATH
 1:
 #endif
 .endif
@@ -1111,7 +1134,7 @@ FastExit:
     add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
 
 6:
-    int 3
+    UNHANDLED_PATH
     jmp 5b
 #endif
 

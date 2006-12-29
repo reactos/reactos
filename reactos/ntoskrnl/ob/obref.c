@@ -50,21 +50,27 @@ ObReferenceObjectSafe(IN PVOID Object)
 
 VOID
 NTAPI
-ObpDeferObjectDeletion(IN PVOID Object)
+ObpDeferObjectDeletion(IN POBJECT_HEADER Header)
 {
-    POBJECT_HEADER Header = OBJECT_TO_OBJECT_HEADER(Object);
+    PVOID Entry, NewEntry;
 
-    /* Add us to the list */
+    /* Loop while trying to update the list */
     do
     {
-        Header->NextToFree = ObpReaperList;
-    } while (InterlockedCompareExchangePointer(&ObpReaperList,
-                                               Header,
-                                               Header->NextToFree) !=
-             Header->NextToFree);
+        /* Get the current entry */
+        Entry = ObpReaperList;
 
-    /* Queue the work item */
-    ExQueueWorkItem(&ObpReaperWorkItem, DelayedWorkQueue);
+        /* Link our object to the list */
+        Header->NextToFree = Entry;
+        NewEntry = Header;
+
+        /* Update the list */
+    } while (InterlockedCompareExchangePointer(&ObpReaperList,
+                                               NewEntry,
+                                               Entry) != Entry);
+
+    /* Queue the work item if needed */
+    if (!Entry) ExQueueWorkItem(&ObpReaperWorkItem, CriticalWorkQueue);
 }
 
 LONG
@@ -91,11 +97,7 @@ ObDereferenceObjectEx(IN PVOID Object,
 
     /* Check whether the object can now be deleted. */
     NewCount = InterlockedExchangeAdd(&Header->PointerCount, -Count);
-    if (!Count)
-    {
-        /* Add us to the deferred deletion list */
-        ObpDeferObjectDeletion(Object);
-    }
+    if (!Count) ObpDeferObjectDeletion(Header);
 
     /* Return the current count */
     return NewCount;
@@ -308,12 +310,12 @@ ObfDereferenceObject(IN PVOID Object)
         if (KeGetCurrentIrql() == PASSIVE_LEVEL)
         {
             /* Remove the object */
-            ObpDeleteObject(Object);
+            ObpDeleteObject(Object, FALSE);
         }
         else
         {
             /* Add us to the deferred deletion list */
-            ObpDeferObjectDeletion(Object);
+            ObpDeferObjectDeletion(Header);
         }
     }
 
@@ -325,11 +327,13 @@ VOID
 NTAPI
 ObDereferenceObjectDeferDelete(IN PVOID Object)
 {
+    POBJECT_HEADER Header = OBJECT_TO_OBJECT_HEADER(Object);
+
     /* Check whether the object can now be deleted. */
-    if (!(InterlockedDecrement(&OBJECT_TO_OBJECT_HEADER(Object)->PointerCount)))
+    if (!InterlockedDecrement(&Header->PointerCount))
     {
         /* Add us to the deferred deletion list */
-        ObpDeferObjectDeletion(Object);
+        ObpDeferObjectDeletion(Header);
     }
 }
 
