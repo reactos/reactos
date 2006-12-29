@@ -28,6 +28,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_GLYPH_H
 #include <freetype/tttables.h>
 #include <freetype/fttrigon.h>
 #include <freetype/ftglyph.h>
@@ -53,6 +54,20 @@ static FAST_MUTEX FreeTypeLock;
 static LIST_ENTRY FontListHead;
 static FAST_MUTEX FontListLock;
 static BOOL RenderingEnabled = TRUE;
+
+#define MAX_FONT_CACHE 256
+UINT Hits;
+UINT Misses;
+
+typedef struct _FONT_CACHE_ENTRY {
+  LIST_ENTRY ListEntry;
+  int GlyphIndex;
+  FT_Face Face;
+  FT_Glyph Glyph;
+  int Height;
+} FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
+static LIST_ENTRY FontCacheListHead;
+static UINT FontCacheNumEntries;
 
 static PWCHAR ElfScripts[32] = { /* these are in the order of the fsCsb[0] bits */
   L"Western", /*00*/
@@ -133,6 +148,8 @@ InitFontSupport(VOID)
    ULONG ulError;
 
    InitializeListHead(&FontListHead);
+   InitializeListHead(&FontCacheListHead);
+   FontCacheNumEntries = 0;
    ExInitializeFastMutex(&FontListLock);
    ExInitializeFastMutex(&FreeTypeLock);
 
@@ -1437,6 +1454,103 @@ NtGdiEnumFonts(HDC  hDC,
   UNIMPLEMENTED;
   return 0;
 }
+FT_Glyph STDCALL
+NtGdiGlyphCacheGet(
+   FT_Face Face,
+   INT GlyphIndex,
+   INT Height)
+{
+   PLIST_ENTRY CurrentEntry;
+   PFONT_CACHE_ENTRY FontEntry;
+
+//   DbgPrint("CacheGet\n");
+
+   CurrentEntry = FontCacheListHead.Flink;
+   while (CurrentEntry != &FontCacheListHead)
+   {
+      FontEntry = (PFONT_CACHE_ENTRY)CurrentEntry;
+      if (FontEntry->Face == Face &&
+          FontEntry->GlyphIndex == GlyphIndex &&
+          FontEntry->Height == Height)
+         break;
+      CurrentEntry = CurrentEntry->Flink;
+   }
+
+   if (CurrentEntry == &FontCacheListHead) {
+//      DbgPrint("Miss! %x\n", FontEntry->Glyph);
+      Misses++;
+      if (Misses>100) {
+         DbgPrint ("Hits: %d Misses: %d\n", Hits, Misses);
+         Hits = Misses = 0;
+      }
+      return NULL;
+   }
+
+   RemoveEntryList(CurrentEntry);
+   InsertHeadList(&FontCacheListHead, CurrentEntry);
+
+//   DbgPrint("Hit! %x\n", FontEntry->Glyph);
+   Hits++;
+      if (Hits>100) {
+         DbgPrint ("Hits: %d Misses: %d\n", Hits, Misses);
+         Hits = Misses = 0;
+      }
+   return FontEntry->Glyph;
+}
+
+FT_Glyph STDCALL
+NtGdiGlyphCacheSet(
+   FT_Face Face,
+   INT GlyphIndex,
+   INT Height,
+   FT_GlyphSlot GlyphSlot,
+   FT_Render_Mode RenderMode)
+{
+   FT_Glyph GlyphCopy;
+   INT error;
+   PFONT_CACHE_ENTRY NewEntry;
+
+//   DbgPrint("CacheSet.\n"); 
+
+   error = FT_Get_Glyph(GlyphSlot, &GlyphCopy);
+   if (error)
+   {
+      DbgPrint("Failure caching glyph.\n"); 
+      return NULL;
+   };
+   error = FT_Glyph_To_Bitmap(&GlyphCopy, RenderMode, 0, 1);
+   if (error)
+   {
+      DbgPrint("Failure rendering glyph.\n"); 
+      return NULL;
+   };
+
+   NewEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_CACHE_ENTRY), TAG_FONT);
+   if (!NewEntry)
+   {
+      DbgPrint("Alloc failure caching glyph.\n");
+      FT_Done_Glyph(GlyphCopy);
+      return NULL;
+   }
+
+   NewEntry->GlyphIndex = GlyphIndex;
+   NewEntry->Face = Face;
+   NewEntry->Glyph = GlyphCopy;
+   NewEntry->Height = Height;
+
+   InsertHeadList(&FontCacheListHead, &NewEntry->ListEntry);
+   if (FontCacheNumEntries++ > MAX_FONT_CACHE) {
+      NewEntry = (PFONT_CACHE_ENTRY)FontCacheListHead.Blink;
+      FT_Done_Glyph(NewEntry->Glyph);
+      RemoveTailList(&FontCacheListHead);
+      ExFreePool(NewEntry);
+      FontCacheNumEntries--;
+   }
+
+//   DbgPrint("Returning the glyphcopy: %x\n", GlyphCopy);
+
+   return GlyphCopy;
+}
 
 BOOL STDCALL
 NtGdiExtTextOut(
@@ -1461,6 +1575,8 @@ NtGdiExtTextOut(
    int error, glyph_index, n, i;
    FT_Face face;
    FT_GlyphSlot glyph;
+   FT_Glyph realglyph;
+   FT_BitmapGlyph realglyph2;
    LONGLONG TextLeft, RealXStart;
    ULONG TextTop, previous, BackgroundLeft;
    FT_Bool use_kerning;
@@ -1727,15 +1843,17 @@ NtGdiExtTextOut(
       for (i = Start; i < Count; i++)
       {
          glyph_index = FT_Get_Char_Index(face, *TempText);
+         if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index, TextObj->logfont.lfHeight)))
+         {
          error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-
          if (error)
          {
             DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
          }
 
          glyph = face->glyph;
-
+            realglyph = NtGdiGlyphCacheSet(face, glyph_index, TextObj->logfont.lfHeight, glyph, RenderMode);
+         }
          /* retrieve kerning distance */
          if (use_kerning && previous && glyph_index)
          {
@@ -1744,7 +1862,7 @@ NtGdiExtTextOut(
             TextWidth += delta.x;
          }
 
-         TextWidth += glyph->advance.x;
+         TextWidth += realglyph->advance.x >> 10;
 
          previous = glyph_index;
          TempText++;
@@ -1773,16 +1891,21 @@ NtGdiExtTextOut(
    for (i = 0; i < Count; i++)
    {
       glyph_index = FT_Get_Char_Index(face, *String);
+      if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index, TextObj->logfont.lfHeight)))
+      {
       error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
       if (error)
       {
          DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
-	 IntUnLockFreeType;
+         IntUnLockFreeType;
          goto fail;
       }
-
       glyph = face->glyph;
+         realglyph = NtGdiGlyphCacheSet(face, glyph_index, TextObj->logfont.lfHeight, glyph, RenderMode);
+      }
+//      DbgPrint("realglyph: %x\n", realglyph);
+//      DbgPrint("TextLeft: %d\n", TextLeft);
 
       /* retrieve kerning distance and move pen position */
       if (use_kerning && previous && glyph_index && NULL == Dx)
@@ -1791,21 +1914,29 @@ NtGdiExtTextOut(
          FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
          TextLeft += delta.x;
       }
+//      DPRINT1("TextLeft: %d\n", TextLeft);
+//      DPRINT1("TextTop: %d\n", TextTop);
 
-      if (glyph->format == ft_glyph_format_outline)
+      if (realglyph->format == ft_glyph_format_outline)
       {
-         error = FT_Render_Glyph(glyph, RenderMode);
+         DbgPrint("Should already be done\n");
+//         error = FT_Render_Glyph(glyph, RenderMode);
+         error = FT_Glyph_To_Bitmap(&realglyph, RenderMode, 0, 0);
          if (error)
          {
             DPRINT1("WARNING: Failed to render glyph!\n");
             goto fail;
          }
       }
+      realglyph2 = (FT_BitmapGlyph)realglyph;
+
+//      DPRINT1("Pitch: %d\n", pitch);
+//      DPRINT1("Advance: %d\n", realglyph->advance.x);
 
       if (fuOptions & ETO_OPAQUE)
       {
          DestRect.left = BackgroundLeft;
-         DestRect.right = (TextLeft + glyph->advance.x + 32) >> 6;
+         DestRect.right = (TextLeft + (realglyph->advance.x >> 10) + 32) >> 6;
          DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
          DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
          IntEngBitBlt(
@@ -1823,15 +1954,21 @@ NtGdiExtTextOut(
          BackgroundLeft = DestRect.right;
       }
 
-      DestRect.left = ((TextLeft + 32) >> 6) + glyph->bitmap_left;
-      DestRect.right = DestRect.left + glyph->bitmap.width;
-      DestRect.top = TextTop + yoff - glyph->bitmap_top;
-      DestRect.bottom = DestRect.top + glyph->bitmap.rows;
+      DestRect.left = ((TextLeft + 32) >> 6) + realglyph2->left;
+      DestRect.right = DestRect.left + realglyph2->bitmap.width;
+      DestRect.top = TextTop + yoff - realglyph2->top;
+      DestRect.bottom = DestRect.top + realglyph2->bitmap.rows;
 
-      bitSize.cx = glyph->bitmap.width;
-      bitSize.cy = glyph->bitmap.rows;
-      MaskRect.right = glyph->bitmap.width;
-      MaskRect.bottom = glyph->bitmap.rows;
+//      DbgPrint("lrtb %d %d %d %d\n", DestRect.left, DestRect.right,
+//                                     DestRect.top, DestRect.bottom);
+//      DbgPrint("specified lrtb %d %d %d %d\n", SpecifiedDestRect.left, SpecifiedDestRect.right,
+//                                     SpecifiedDestRect.top, SpecifiedDestRect.bottom);
+//      DbgPrint ("dc->w.DCOrgX: %d\n", dc->w.DCOrgX);
+
+      bitSize.cx = realglyph2->bitmap.width;
+      bitSize.cy = realglyph2->bitmap.rows;
+      MaskRect.right = realglyph2->bitmap.width;
+      MaskRect.bottom = realglyph2->bitmap.rows;
 
       /*
        * We should create the bitmap out of the loop at the biggest possible
@@ -1844,13 +1981,14 @@ NtGdiExtTextOut(
        * the FreeType bitmap to a temporary bitmap.
        */
 
-      HSourceGlyph = EngCreateBitmap(bitSize, glyph->bitmap.pitch,
-                                     (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ?
+      HSourceGlyph = EngCreateBitmap(bitSize, realglyph2->bitmap.pitch,
+                                     (realglyph2->bitmap.pixel_mode == ft_pixel_mode_grays) ?
                                      BMF_8BPP : BMF_1BPP, BMF_TOPDOWN,
-                                     glyph->bitmap.buffer);
+                                     realglyph2->bitmap.buffer);
       if ( !HSourceGlyph )
       {
         DPRINT1("WARNING: EngLockSurface() failed!\n");
+        FT_Done_Glyph(realglyph);
 	IntUnLockFreeType;
         goto fail;
       }
@@ -1901,11 +2039,13 @@ NtGdiExtTextOut(
 
       if (NULL == Dx)
       {
-         TextLeft += glyph->advance.x;
+         TextLeft += realglyph->advance.x >> 10;
+//         DbgPrint("new TextLeft: %d\n", TextLeft);
       }
       else
       {
          TextLeft += Dx[i] << 6;
+//         DbgPrint("new TextLeft2: %d\n", TextLeft);
       }
       previous = glyph_index;
 
