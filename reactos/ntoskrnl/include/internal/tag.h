@@ -161,4 +161,6 @@
 /* Se Process Audit */
 #define TAG_SEPA          TAG('S', 'e', 'P', 'a')
 
+#define TAG_WAIT            TAG('W', 'a', 'i', 't')
+
 #endif /* _NTOSKRNL_TAG_H */

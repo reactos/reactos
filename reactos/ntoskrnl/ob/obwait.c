@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define TAG_WAIT TAG('W', 'a', 'i', 't')
-
 /* FUNCTIONS *****************************************************************/
 
 /*++
@@ -52,7 +50,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
                          IN PLARGE_INTEGER TimeOut OPTIONAL)
 {
     PKWAIT_BLOCK WaitBlockArray = NULL;
-    HANDLE Handles[MAXIMUM_WAIT_OBJECTS];
+    HANDLE Handles[MAXIMUM_WAIT_OBJECTS], KernelHandle;
     PVOID Objects[MAXIMUM_WAIT_OBJECTS];
     PVOID WaitObjects[MAXIMUM_WAIT_OBJECTS];
     ULONG i = 0, ReferencedObjects = 0, j;
@@ -65,17 +63,16 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     ACCESS_MASK GrantedAccess;
     PVOID DefaultObject;
     NTSTATUS Status = STATUS_SUCCESS;
-    DPRINT("NtWaitForMultipleObjects(ObjectCount %lu HandleArray[] %x,"
-           " Alertable %d, TimeOut %x)\n",
-           ObjectCount, HandleArray, Alertable, TimeOut);
+    PAGED_CODE();
 
     /* Enter a critical region since we'll play with handles */
     LockInUse = TRUE;
     KeEnterCriticalRegion();
 
     /* Check for valid Object Count */
-    if ((ObjectCount > MAXIMUM_WAIT_OBJECTS) || !ObjectCount)
+    if ((ObjectCount > MAXIMUM_WAIT_OBJECTS) || !(ObjectCount))
     {
+        /* Fail */
         Status = STATUS_INVALID_PARAMETER_1;
         goto Quickie;
     }
@@ -83,6 +80,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     /* Check for valid Wait Type */
     if ((WaitType != WaitAll) && (WaitType != WaitAny))
     {
+        /* Fail */
         Status = STATUS_INVALID_PARAMETER_3;
         goto Quickie;
     }
@@ -93,16 +91,18 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         /* Check if the call came from user mode */
         if(PreviousMode != KernelMode)
         {
-            /* Probe all the handles */
-            ProbeForRead(HandleArray,
-                         ObjectCount * sizeof(HANDLE),
-                         sizeof(HANDLE));
+            /* Check if we have a timeout */
             if (TimeOut)
             {
                 /* Make a local copy of the timeout on the stack */
                 SafeTimeOut = ProbeForReadLargeInteger(TimeOut);
                 TimeOut = &SafeTimeOut;
             }
+
+            /* Probe all the handles */
+            ProbeForRead(HandleArray,
+                         ObjectCount * sizeof(HANDLE),
+                         sizeof(HANDLE));
         }
 
        /*
@@ -132,6 +132,12 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
                                                ObjectCount *
                                                sizeof(KWAIT_BLOCK),
                                                TAG_WAIT);
+        if (!WaitBlockArray)
+        {
+            /* Fail */
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Quickie;
+        }
     }
 
     /* Start the loop */
@@ -142,16 +148,21 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         {
             /* Use the System Handle Table and decode */
             HandleTable = ObpKernelHandleTable;
-            Handles[i] = ObKernelHandleToHandle(Handles[i]);
+            KernelHandle = ObKernelHandleToHandle(Handles[i]);
+
+            /* Get a pointer to it */
+            HandleEntry = ExMapHandleToPointer(HandleTable, KernelHandle);
         }
         else
         {
             /* Use the Process' Handle table and get the Ex Handle */
             HandleTable = PsGetCurrentProcess()->ObjectTable;
+
+            /* Get a pointer to it */
+            HandleEntry = ExMapHandleToPointer(HandleTable, Handles[i]);
         }
 
-        /* Get a pointer to it */
-        HandleEntry = ExMapHandleToPointer(HandleTable, Handles[i]);
+        /* Check if we have an entry */
         if (!HandleEntry)
         {
             /* Fail, handle is invalid */
@@ -349,12 +360,11 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     LARGE_INTEGER SafeTimeOut;
     NTSTATUS Status = STATUS_SUCCESS;
-    DPRINT("NtWaitForSingleObject(ObjectHandle %x, Alertable %d, TimeOut %x)\n",
-            ObjectHandle,Alertable,TimeOut);
 
     /* Check if we came with a timeout from user mode */
-    if (TimeOut && PreviousMode != KernelMode)
+    if ((TimeOut) && (PreviousMode != KernelMode))
     {
+        /* Enter SEH for proving */
         _SEH_TRY
         {
             /* Make a copy on the stack */
@@ -367,8 +377,6 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* Fail if we got an access violation */
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -449,16 +457,15 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     POBJECT_TYPE Type;
-    PVOID SignalObj;
-    PVOID WaitObj;
-    PVOID WaitableObject;
+    PVOID SignalObj, WaitObj, WaitableObject;
     LARGE_INTEGER SafeTimeOut;
     OBJECT_HANDLE_INFORMATION HandleInfo;
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Check if we came with a timeout from user mode */
-    if (TimeOut && PreviousMode != KernelMode)
+    if ((TimeOut) && (PreviousMode != KernelMode))
     {
+        /* Enter SEH for probing */
         _SEH_TRY
         {
             /* Make a copy on the stack */
@@ -471,8 +478,6 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* Fail if we got an access violation */
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -511,7 +516,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     }
 
     /* Check Signal Object Type */
-    Type = OBJECT_TO_OBJECT_HEADER(WaitObj)->Type;
+    Type = OBJECT_TO_OBJECT_HEADER(SignalObj)->Type;
     if (Type == ExEventObjectType)
     {
         /* Check if we came from user-mode without the right access */
