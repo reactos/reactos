@@ -6,6 +6,53 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
+#if DBG
+VOID
+FORCEINLINE
+ObpCalloutStart(IN PKIRQL CalloutIrql)
+{
+    /* Save the callout IRQL */
+    *CalloutIrql = KeGetCurrentIrql();
+}
+
+VOID
+FORCEINLINE
+ObpCalloutEnd(IN KIRQL CalloutIrql,
+              IN PCHAR Procedure,
+              IN POBJECT_TYPE ObjectType,
+              IN PVOID Object)
+{
+    /* Detect IRQL change */
+    if (CalloutIrql != KeGetCurrentIrql())
+    {
+        /* Print error */
+        DbgPrint("OB: ObjectType: %wZ  Procedure: %s  Object: %08x\n",
+                 &ObjectType->Name, Procedure, Object);
+        DbgPrint("    Returned at %x IRQL, but was called at %x IRQL\n",
+                 KeGetCurrentIrql(), CalloutIrql);
+        DbgBreakPoint();
+    }
+}
+#else
+VOID
+FORCEINLINE
+ObpCalloutStart(IN PKIRQL CalloutIrql)
+{
+    /* No-op */
+    UNREFERENCED_PARAMETER(CalloutIrql);
+}
+
+VOID
+FORCEINLINE
+ObpCalloutEnd(IN KIRQL CalloutIrql,
+              IN PCHAR Procedure,
+              IN POBJECT_TYPE ObjectType,
+              IN PVOID Object)
+{
+    UNREFERENCED_PARAMETER(CalloutIrql);
+}
+#endif
+
 VOID
 FORCEINLINE
 ObpEnterObjectTypeMutex(IN POBJECT_TYPE ObjectType)

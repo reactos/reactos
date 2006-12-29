@@ -165,7 +165,7 @@ CmiObjectDelete(PVOID  DeletedObject);
 NTSTATUS STDCALL
 CmiObjectSecurity(PVOID ObjectBody,
 		  SECURITY_OPERATION_CODE OperationCode,
-		  SECURITY_INFORMATION SecurityInformation,
+		  PSECURITY_INFORMATION SecurityInformation,
 		  PSECURITY_DESCRIPTOR SecurityDescriptor,
 		  PULONG BufferLength,
 		  PSECURITY_DESCRIPTOR *OldSecurityDescriptor,

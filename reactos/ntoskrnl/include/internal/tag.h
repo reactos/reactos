@@ -162,5 +162,6 @@
 #define TAG_SEPA          TAG('S', 'e', 'P', 'a')
 
 #define TAG_WAIT            TAG('W', 'a', 'i', 't')
+#define TAG_SEC_QUERY       TAG('O', 'b', 'S', 'q')
 
 #endif /* _NTOSKRNL_TAG_H */

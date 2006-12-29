@@ -299,7 +299,7 @@ NTAPI
 SeDefaultObjectMethod(
     PVOID Object,
     SECURITY_OPERATION_CODE OperationType,
-    SECURITY_INFORMATION SecurityInformation,
+    PSECURITY_INFORMATION SecurityInformation,
     PSECURITY_DESCRIPTOR NewSecurityDescriptor,
     PULONG ReturnLength,
     PSECURITY_DESCRIPTOR *OldSecurityDescriptor,

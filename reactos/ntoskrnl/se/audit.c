@@ -376,24 +376,30 @@ SeDeleteObjectAuditAlarm(IN PVOID Object,
   UNIMPLEMENTED;
 }
 
-
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID
+NTAPI
 SeOpenObjectAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
-		       IN PVOID Object OPTIONAL,
-		       IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
-		       IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-		       IN PACCESS_STATE AccessState,
-		       IN BOOLEAN ObjectCreated,
-		       IN BOOLEAN AccessGranted,
-		       IN KPROCESSOR_MODE AccessMode,
-		       OUT PBOOLEAN GenerateOnClose)
+                       IN PVOID Object OPTIONAL,
+                       IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
+                       IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                       IN PACCESS_STATE AccessState,
+                       IN BOOLEAN ObjectCreated,
+                       IN BOOLEAN AccessGranted,
+                       IN KPROCESSOR_MODE AccessMode,
+                       OUT PBOOLEAN GenerateOnClose)
 {
-    DPRINT1("SeOpenObjectAuditAlarm is UNIMPLEMENTED!\n");
-}
+    PAGED_CODE();
 
+    /* Audits aren't done on kernel-mode access */
+    if (AccessMode == KernelMode) return;
+
+    /* Otherwise, unimplemented! */
+    //UNIMPLEMENTED;
+    return;
+}
 
 /*
  * @unimplemented

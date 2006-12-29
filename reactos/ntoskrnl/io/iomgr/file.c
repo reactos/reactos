@@ -1055,7 +1055,7 @@ NTSTATUS
 NTAPI
 IopSecurityFile(IN PVOID ObjectBody,
                 IN SECURITY_OPERATION_CODE OperationCode,
-                IN SECURITY_INFORMATION SecurityInformation,
+                IN PSECURITY_INFORMATION SecurityInformation,
                 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                 IN OUT PULONG BufferLength,
                 IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
@@ -1183,7 +1183,7 @@ IopSecurityFile(IN PVOID ObjectBody,
         /* Set the major function and parameters */
         StackPtr->MajorFunction = IRP_MJ_QUERY_SECURITY;
         StackPtr->Parameters.QuerySecurity.SecurityInformation =
-            SecurityInformation;
+            *SecurityInformation;
         StackPtr->Parameters.QuerySecurity.Length = *BufferLength;
         Irp->UserBuffer = SecurityDescriptor;
     }
@@ -1192,7 +1192,7 @@ IopSecurityFile(IN PVOID ObjectBody,
         /* Set the major function and parameters for a set */
         StackPtr->MajorFunction = IRP_MJ_SET_SECURITY;
         StackPtr->Parameters.SetSecurity.SecurityInformation =
-            SecurityInformation;
+            *SecurityInformation;
         StackPtr->Parameters.SetSecurity.SecurityDescriptor =
             SecurityDescriptor;
     }
@@ -1246,7 +1246,7 @@ IopSecurityFile(IN PVOID ObjectBody,
         if (OperationCode == QuerySecurityDescriptor)
         {
             /* Set a World Security Descriptor */
-            Status = SeSetWorldSecurityDescriptor(SecurityInformation,
+            Status = SeSetWorldSecurityDescriptor(*SecurityInformation,
                                                   SecurityDescriptor,
                                                   BufferLength);
         }

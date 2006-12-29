@@ -898,7 +898,7 @@ NTAPI
 IopSecurityFile(
     IN PVOID ObjectBody,
     IN SECURITY_OPERATION_CODE OperationCode,
-    IN SECURITY_INFORMATION SecurityInformation,
+    IN PSECURITY_INFORMATION SecurityInformation,
     IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN OUT PULONG BufferLength,
     OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,

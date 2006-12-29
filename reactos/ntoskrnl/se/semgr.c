@@ -203,7 +203,7 @@ NTSTATUS
 STDCALL
 SeDefaultObjectMethod(PVOID Object,
                       SECURITY_OPERATION_CODE OperationType,
-                      SECURITY_INFORMATION SecurityInformation,
+                      PSECURITY_INFORMATION _SecurityInformation,
                       PSECURITY_DESCRIPTOR _SecurityDescriptor,
                       PULONG ReturnLength,
                       PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
@@ -225,10 +225,12 @@ SeDefaultObjectMethod(PVOID Object,
   ULONG Control = 0;
   ULONG_PTR Current;
   NTSTATUS Status;
+  SECURITY_INFORMATION SecurityInformation;
 
     if (OperationType == SetSecurityDescriptor)
     {
         ObjectSd = Header->SecurityDescriptor;
+        SecurityInformation = *_SecurityInformation;
 
       /* Get owner and owner size */
       if (SecurityInformation & OWNER_SECURITY_INFORMATION)
@@ -401,7 +403,7 @@ SeDefaultObjectMethod(PVOID Object,
     }
     else if (OperationType == QuerySecurityDescriptor)
     {
-        Status = SeQuerySecurityDescriptorInfo(&SecurityInformation,
+        Status = SeQuerySecurityDescriptorInfo(_SecurityInformation,
                                                SecurityDescriptor,
                                                ReturnLength,
                                                &Header->SecurityDescriptor);

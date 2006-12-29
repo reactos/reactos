@@ -215,7 +215,7 @@ typedef NTSTATUS
 (NTAPI *OB_SECURITY_METHOD)(
     IN PVOID Object,
     IN SECURITY_OPERATION_CODE OperationType,
-    IN SECURITY_INFORMATION SecurityInformation, // FIXME: <= should be a pointer
+    IN PSECURITY_INFORMATION SecurityInformation,
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN OUT PULONG CapturedLength,
     IN OUT PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
