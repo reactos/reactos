@@ -1478,11 +1478,13 @@ NtGdiGlyphCacheGet(
 
    if (CurrentEntry == &FontCacheListHead) {
 //      DbgPrint("Miss! %x\n", FontEntry->Glyph);
+/*
       Misses++;
       if (Misses>100) {
          DbgPrint ("Hits: %d Misses: %d\n", Hits, Misses);
          Hits = Misses = 0;
       }
+*/
       return NULL;
    }
 
@@ -1490,11 +1492,14 @@ NtGdiGlyphCacheGet(
    InsertHeadList(&FontCacheListHead, CurrentEntry);
 
 //   DbgPrint("Hit! %x\n", FontEntry->Glyph);
+/*
    Hits++;
+
       if (Hits>100) {
          DbgPrint ("Hits: %d Misses: %d\n", Hits, Misses);
          Hits = Misses = 0;
       }
+*/
    return FontEntry->Glyph;
 }
 
