@@ -774,7 +774,7 @@ NtGdiPolyDraw(
                 POINT pts[4];
                 pts[0].x = dc->w.CursPosX;
                 pts[0].y = dc->w.CursPosY;
-                RtlCopyMemory(pts + 1, lppt, sizeof(POINT) * 3);
+                RtlCopyMemory(pts + 1, &lppt[i], sizeof(POINT) * 3);
                 IntGdiPolyBezier(dc, pts, 4);
                 i += 2;
             }
