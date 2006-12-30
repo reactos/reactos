@@ -149,7 +149,6 @@ IntGdiPolyBezier(DC      *dc,
     Pts = GDI_Bezier ( pt, Count, &nOut );
     if ( Pts )
     {
-      DbgPrint("Pts = %p, no = %d\n", Pts, nOut);
       ret = IntGdiPolyline(dc, Pts, nOut);
       ExFreePool(Pts);
     }
@@ -729,12 +728,76 @@ BOOL
 APIENTRY
 NtGdiPolyDraw(
     IN HDC hdc,
-    IN LPPOINT ppt,
-    IN LPBYTE pjAttr,
-    IN ULONG cpt)
+    IN LPPOINT lppt,
+    IN LPBYTE lpbTypes,
+    IN ULONG cCount)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    PDC dc;
+    BOOL result = FALSE;
+    POINT lastmove;
+    unsigned int i;
+
+    dc = DC_LockDc(hdc); 
+    if(!dc) return FALSE;
+
+    _SEH_TRY
+    {
+        ProbeArrayForRead(lppt, sizeof(POINT), cCount, sizeof(LONG));
+        ProbeArrayForRead(lpbTypes, sizeof(BYTE), cCount, sizeof(BYTE));
+        
+        /* check for each bezierto if there are two more points */
+        for( i = 0; i < cCount; i++ )
+        if( lpbTypes[i] != PT_MOVETO &&
+            lpbTypes[i] & PT_BEZIERTO )
+        {
+            if( cCount < i+3 ) _SEH_LEAVE;
+            else i += 2;
+        }
+    
+        /* if no moveto occurs, we will close the figure here */
+        lastmove.x = dc->w.CursPosX;
+        lastmove.y = dc->w.CursPosY;
+    
+        /* now let's draw */
+        for( i = 0; i < cCount; i++ )
+        {
+            if( lpbTypes[i] == PT_MOVETO )
+            {
+                IntGdiMoveToEx( dc, lppt[i].x, lppt[i].y, NULL );
+                lastmove.x = dc->w.CursPosX;
+                lastmove.y = dc->w.CursPosY;
+            }
+            else if( lpbTypes[i] & PT_LINETO )
+                IntGdiLineTo( dc, lppt[i].x, lppt[i].y );
+            else if( lpbTypes[i] & PT_BEZIERTO )
+            {
+                POINT pts[4];
+                pts[0].x = dc->w.CursPosX;
+                pts[0].y = dc->w.CursPosY;
+                RtlCopyMemory(pts + 1, lppt, sizeof(POINT) * 3);
+                IntGdiPolyBezier(dc, pts, 4);
+                i += 2;
+            }
+            else _SEH_LEAVE;
+        
+            if( lpbTypes[i] & PT_CLOSEFIGURE )
+            {
+                if( PATH_IsPathOpen( dc->w.path ) ) IntGdiCloseFigure( dc );
+                else IntGdiLineTo( dc, lastmove.x, lastmove.y );
+            }
+        }
+        
+        result = TRUE;
+    }
+    _SEH_HANDLE
+    {
+        SetLastNtError(_SEH_GetExceptionCode());
+    }
+    _SEH_END;
+    
+    DC_UnlockDc(dc);
+
+    return result;
 }
 
 BOOL

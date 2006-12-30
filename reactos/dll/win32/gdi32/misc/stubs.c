@@ -789,24 +789,6 @@ SetAbortProc(
  */
 BOOL
 STDCALL
-PolyDraw(
-	HDC		hdc,
-	CONST POINT	*a1,
-	CONST BYTE	*a2,
-	int		a3
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 ScaleViewportExtEx(
 	HDC	a0,
 	int	a1,

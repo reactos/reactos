@@ -22,4 +22,6 @@ BOOL FASTCALL PATH_Rectangle (PDC dc, INT x1, INT y1, INT x2, INT y2);
 BOOL FASTCALL PATH_RoundRect(DC *dc, INT x1, INT y1, INT x2, INT y2, INT ell_width, INT ell_height);
 BOOL FASTCALL PATH_PathToRegion (GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn);
 
+VOID FASTCALL IntGdiCloseFigure(PDC pDc);
+
 #endif /* _WIN32K_PATH_H */
