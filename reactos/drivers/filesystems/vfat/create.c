@@ -656,24 +656,7 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 			VfatCloseFile (DeviceExt, FileObject);
 			return(STATUS_NOT_A_DIRECTORY);
 		}
-#ifndef USE_ROS_CC_AND_FS
-      if (!(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY))
-      {
-         if (Stack->Parameters.Create.SecurityContext->DesiredAccess & FILE_WRITE_DATA || 
-            RequestedDisposition == FILE_OVERWRITE ||
-            RequestedDisposition == FILE_OVERWRITE_IF)
-	 {
-	    if (!MmFlushImageSection(&pFcb->SectionObjectPointers, MmFlushForWrite))
-	    {
-	       DPRINT1("%wZ\n", &pFcb->PathNameU);
-	       DPRINT1("%d %d %d\n", Stack->Parameters.Create.SecurityContext->DesiredAccess & FILE_WRITE_DATA, 
-		       RequestedDisposition == FILE_OVERWRITE, RequestedDisposition == FILE_OVERWRITE_IF);
-	       VfatCloseFile (DeviceExt, FileObject);
-	       return STATUS_SHARING_VIOLATION;
-	    }
-	 }
-      }
-#endif
+
 		if (PagingFileCreate)
 		{
 			/* FIXME:
