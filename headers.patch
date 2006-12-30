@@ -24,6 +24,19 @@ Index: drivers/filesystems/ntfs/ntfs.h
  
  
  #define CACHEPAGESIZE(pDeviceExt) \
+Index: drivers/filesystems/vfat/vfat.h
+===================================================================
+--- drivers/filesystems/vfat/vfat.h	(revision 25241)
++++ drivers/filesystems/vfat/vfat.h	(working copy)
+@@ -6,7 +6,7 @@
+ #ifdef __GNUC__
+ #include <ccros.h>
+ 
+-#define USE_ROS_CC_AND_FS
++//#define USE_ROS_CC_AND_FS
+ #else
+ #define KEBUGCHECK KeBugCheck
+ #define KEBUGCHECKEX KeBugCheckEx
 Index: include/reactos/exeformat.h
 ===================================================================
 --- include/reactos/exeformat.h	(revision 22988)
