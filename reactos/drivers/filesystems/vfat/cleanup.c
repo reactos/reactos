@@ -29,24 +29,50 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
   pFcb = (PVFATFCB) FileObject->FsContext;
   if (pFcb)
     {
-      if (!(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY) &&
-          FsRtlAreThereCurrentFileLocks(&pFcb->FileLock))
-       {
-         /* remove all locks this process have on this file */
-         FsRtlFastUnlockAll(&pFcb->FileLock,
-                            FileObject,
-                            IoGetRequestorProcess(IrpContext->Irp),
-                            NULL);
-       }
+      if (pFcb->Flags & FCB_IS_VOLUME)
+        {
+          pFcb->OpenHandleCount--;
 
-     if (pFcb->Flags & FCB_IS_DIRTY)
-       {
-	 VfatUpdateEntry (pFcb);
-       }
+          if (pFcb->OpenHandleCount != 0)
+            {
+              IoRemoveShareAccess(FileObject, &pFcb->FCBShareAccess);
+            }
+        }
+      else
+        {
+          if(!ExAcquireResourceExclusiveLite (&pFcb->MainResource,
+                                              (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+            {
+	      return STATUS_PENDING;
+	    }
+          if(!ExAcquireResourceExclusiveLite (&pFcb->PagingIoResource,
+                                              (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+            {
+	      ExReleaseResourceLite (&pFcb->MainResource);
+	      return STATUS_PENDING;
+	    }
+	  
+          pFcb->OpenHandleCount--;
 
-     if (pFcb->Flags & FCB_DELETE_PENDING &&
-         pFcb->OpenHandleCount == 1)
-       {
+          if (!(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY) &&
+              FsRtlAreThereCurrentFileLocks(&pFcb->FileLock))
+            {
+              /* remove all locks this process have on this file */
+              FsRtlFastUnlockAll(&pFcb->FileLock,
+                                 FileObject,
+                                 IoGetRequestorProcess(IrpContext->Irp),
+                                 NULL);
+            }
+
+          if (pFcb->Flags & FCB_IS_DIRTY)
+            {
+	       VfatUpdateEntry (pFcb);
+            }
+
+          if (pFcb->Flags & FCB_DELETE_PENDING &&
+              pFcb->OpenHandleCount == 0)
+            {
+              DPRINT("'%wZ'\n", &pFcb->PathNameU);
 	 PFILE_OBJECT tmpFileObject;
 	 tmpFileObject = pFcb->FileObject;
 	 if (tmpFileObject != NULL)
@@ -71,10 +97,21 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
 #ifdef USE_ROS_CC_AND_FS
      CcRosReleaseFileCache (FileObject);
 #else
-     CcUninitializeCacheMap (FileObject, NULL, NULL);
+          if (FileObject->SectionObjectPointer->SharedCacheMap)
+	    {
+              CcUninitializeCacheMap (FileObject, &pFcb->RFCB.FileSize, NULL);
+	    }
 #endif
-     pFcb->OpenHandleCount--;
-     IoRemoveShareAccess(FileObject, &pFcb->FCBShareAccess);
+          if (pFcb->OpenHandleCount != 0)
+            {
+              IoRemoveShareAccess(FileObject, &pFcb->FCBShareAccess);
+            }
+
+          FileObject->Flags |= FO_CLEANUP_COMPLETE;
+
+          ExReleaseResourceLite (&pFcb->PagingIoResource);
+          ExReleaseResourceLite (&pFcb->MainResource);
+	}
     }
   return STATUS_SUCCESS;
 }
@@ -103,6 +140,11 @@ NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT IrpContext)
    Status = VfatCleanupFile(IrpContext);
 
    ExReleaseResourceLite (&IrpContext->DeviceExt->DirResource);
+
+   if (Status == STATUS_PENDING)
+   {
+      return VfatQueueRequest(IrpContext);
+   }
 
 ByeBye:
    IrpContext->Irp->IoStatus.Status = Status;
