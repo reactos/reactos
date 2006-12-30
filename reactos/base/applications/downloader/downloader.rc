@@ -8,9 +8,5 @@
 #include <reactos/version.rc>
 
 #include "resources/generic.rc"
-#include "resources/en.rc"
-#include "resources/de.rc"
-
-
-
-
+#include "translations/en.rc"
+#include "translations/de.rc"
