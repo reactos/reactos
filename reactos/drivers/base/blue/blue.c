@@ -817,18 +817,21 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
                              sizeof(DEVICE_EXTENSION),
                              &DeviceName,
                              FILE_DEVICE_SCREEN,
-                             0,
+                             FILE_DEVICE_SECURE_OPEN,
                              TRUE,
                              &DeviceObject);
 
     if (!NT_SUCCESS(Status))
-      {
+    {
         return Status;
-      }
+    }
 
-    IoCreateSymbolicLink (&SymlinkName, &DeviceName);
-
-    return (STATUS_SUCCESS);
+    Status = IoCreateSymbolicLink (&SymlinkName, &DeviceName);
+    if (NT_SUCCESS(Status))
+        DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+    else
+        IoDeleteDevice (DeviceObject);
+    return Status;
 }
 
 /* EOF */
