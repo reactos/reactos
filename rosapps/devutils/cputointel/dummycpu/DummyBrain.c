@@ -18,7 +18,8 @@
  * 9 = can not read file
  */
 
-CPU_INT DummyBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress)
+CPU_INT DummyBrain(char *infileName, char *outputfileName, 
+                   CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
 {
     FILE *infp;
     FILE *outfp;
@@ -102,9 +103,10 @@ CPU_INT DummyBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress
         /* Add */
         if ((cpuint - (cpuint & GetMaskByte(cpuDummyInit_Add))) == ConvertBitToByte(cpuDummyInit_Add))
         {
-            retsize = DUMMY_Add(outfp, cpu_buffer, cpu_pos, cpu_size, BaseAddress);
-            if (retsize<0)            
-                 retcode = 1;            
+            retsize = DUMMY_Add( outfp, cpu_buffer, cpu_pos, cpu_size,
+                                 BaseAddress, cpuarch);
+            if (retsize<0)
+                 retcode = 1;
             else
                  cpu_pos += retsize;
         }

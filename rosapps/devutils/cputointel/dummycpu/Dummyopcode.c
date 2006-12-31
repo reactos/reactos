@@ -12,6 +12,10 @@
  *               cpu_pos     : Current positions in the cpu_buffer 
  *               cpu_size    : The memory size of the cpu_buffer
  *               BaseAddress : The base address you whant the binay file should run from 
+ *               cpuarch     : if it exists diffent cpu from a manufactor like pentium,
+ *                             pentinum-mmx so on, use this flag to specify which type 
+ *                             of cpu you whant or do not use it if it does not exists
+ *                             other or any sub model.
  *
  * Return value :
  *               value -1            : unimplement 
@@ -19,7 +23,8 @@
  *               value +1 and higher : who many byte we should add to cpu_pos
  */
  
-CPU_INT DUMMY_Add(FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos, CPU_UNINT cpu_size, CPU_UNINT BaseAddress)
+CPU_INT DUMMY_Add( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
+                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
 
 {
     /* 
