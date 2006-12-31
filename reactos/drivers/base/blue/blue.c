@@ -801,6 +801,7 @@ NTSTATUS STDCALL
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;
+    NTSTATUS Status;
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\BlueScreen");
     UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\??\\BlueScreen");
 
@@ -812,13 +813,18 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DriverObject->MajorFunction[IRP_MJ_WRITE]  = ScrWrite;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL ] = ScrIoControl;
 
-    IoCreateDevice (DriverObject,
-                    sizeof(DEVICE_EXTENSION),
-                    &DeviceName,
-                    FILE_DEVICE_SCREEN,
-                    0,
-                    TRUE,
-                    &DeviceObject);
+    Status = IoCreateDevice (DriverObject,
+                             sizeof(DEVICE_EXTENSION),
+                             &DeviceName,
+                             FILE_DEVICE_SCREEN,
+                             0,
+                             TRUE,
+                             &DeviceObject);
+
+    if (!NT_SUCCESS(Status))
+      {
+        return Status;
+      }
 
     IoCreateSymbolicLink (&SymlinkName, &DeviceName);
 
