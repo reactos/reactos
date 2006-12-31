@@ -21,10 +21,10 @@ CPU_INT M68k_Add(FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos, CPU_UNINT 
     CPU_INT Ry;
     //CPU_INT cpuint;
             
-    opmode = ConvertBitToByte(table_Opmode);
-    mode = ConvertBitToByte(table_Mode);
-    Rx = ConvertBitToByte(table_Rx);
-    Ry = ConvertBitToByte(table_Ry);
+    opmode = ConvertBitToByte(M68k_Opmode);
+    mode = ConvertBitToByte(M68k_Mode);
+    Rx = ConvertBitToByte(M68k_Rx);
+    Ry = ConvertBitToByte(M68k_Ry);
 
     fprintf(out,"Line_0x%8x :\n",BaseAddress + cpu_pos);
 

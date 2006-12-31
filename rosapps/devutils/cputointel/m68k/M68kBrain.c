@@ -100,7 +100,7 @@ CPU_INT M68KBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress)
         cpuint = cpu_buffer[cpu_pos];
     
         /* Abcd */
-        if ((cpuint - (cpuint & GetMaskByte(cpuint_table_Abcd))) == ConvertBitToByte(cpuint_table_Abcd))                        
+        if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Abcd))) == ConvertBitToByte(cpuM68kInit_Abcd))
         {
             retsize = M68k_Abcd(outfp, cpu_buffer, cpu_pos, cpu_size, BaseAddress);
             if (retsize<0)            
@@ -109,7 +109,7 @@ CPU_INT M68KBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress)
                  cpu_pos += retsize;
         }
         /* Add */
-        if ((cpuint - (cpuint & GetMaskByte(cpuint_table_Add))) == ConvertBitToByte(cpuint_table_Add))
+        if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Add))) == ConvertBitToByte(cpuM68kInit_Add))
         {
             retsize = M68k_Add(outfp, cpu_buffer, cpu_pos, cpu_size, BaseAddress);
             if (retsize<0)            
@@ -118,7 +118,7 @@ CPU_INT M68KBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress)
                  cpu_pos += retsize;
         }
         /* Addi */
-        if ((cpuint - (cpuint & GetMaskByte(cpuint_table_Addi))) == ConvertBitToByte(cpuint_table_Addi))
+        if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Addi))) == ConvertBitToByte(cpuM68kInit_Addi))
         {
             retsize = M68k_Addi(outfp, cpu_buffer, cpu_pos, cpu_size, BaseAddress);
             if (retsize<0)            
@@ -127,7 +127,7 @@ CPU_INT M68KBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress)
                  cpu_pos += retsize;
         }
         /* Addq */
-        if ((cpuint - (cpuint & GetMaskByte(cpuint_table_Addq))) == ConvertBitToByte(cpuint_table_Addq))
+        if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Addq))) == ConvertBitToByte(cpuM68kInit_Addq))
         {
             retsize = M68k_Addq(outfp, cpu_buffer, cpu_pos, cpu_size, BaseAddress);
             if (retsize<0)            
@@ -136,7 +136,7 @@ CPU_INT M68KBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress)
                  cpu_pos += retsize;
         }
         /* Addx */
-        if ((cpuint - (cpuint & GetMaskByte(cpuint_table_Addx))) == ConvertBitToByte(cpuint_table_Addx))
+        if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Addx))) == ConvertBitToByte(cpuM68kInit_Addx))
         {
             retsize = M68k_Addx(outfp, cpu_buffer, cpu_pos, cpu_size, BaseAddress);
             if (retsize<0)            
@@ -145,7 +145,7 @@ CPU_INT M68KBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress)
                  cpu_pos += retsize;
         }
         /* And */
-        if ((cpuint - (cpuint & GetMaskByte(cpuint_table_And))) == ConvertBitToByte(cpuint_table_And))
+        if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_And))) == ConvertBitToByte(cpuM68kInit_And))
         {
             retsize = M68k_Add(outfp, cpu_buffer, cpu_pos, cpu_size, BaseAddress);
             if (retsize<0)            
@@ -154,7 +154,7 @@ CPU_INT M68KBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress)
                  cpu_pos += retsize;
         }
         /* Andi */
-        if ((cpuint - (cpuint & GetMaskByte(cpuint_table_Andi))) == ConvertBitToByte(cpuint_table_Andi))
+        if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Andi))) == ConvertBitToByte(cpuM68kInit_Andi))
         {
             retsize = M68k_Andi(outfp, cpu_buffer, cpu_pos, cpu_size, BaseAddress);
             if (retsize<0)            
@@ -163,10 +163,10 @@ CPU_INT M68KBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress)
                  cpu_pos += retsize;
         }
         /* AndToCCR */
-        if ((cpuint - (cpuint & GetMaskByte(cpuint_table_AndToCCRF))) == ConvertBitToByte(cpuint_table_AndToCCRF))
+        if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_AndToCCRF))) == ConvertBitToByte(cpuM68kInit_AndToCCRF))
         {            
             cpuint = cpu_buffer[cpu_pos+1];
-            if ((cpuint - (cpuint & GetMaskByte(cpuint_table_AndToCCRS))) == ConvertBitToByte(cpuint_table_AndToCCRS))
+            if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_AndToCCRS))) == ConvertBitToByte(cpuM68kInit_AndToCCRS))
             {
                 cpu_pos++;
                 retsize = M68k_AndToCCR(outfp, cpu_buffer, cpu_pos, cpu_size, BaseAddress);
@@ -177,7 +177,7 @@ CPU_INT M68KBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress)
             }
             else
             {
-                cpuint = cpu_buffer[cpu_pos];                
+                cpuint = cpu_buffer[cpu_pos];
             }
         }
 

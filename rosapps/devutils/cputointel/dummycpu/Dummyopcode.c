@@ -1,0 +1,35 @@
+
+#include <stdio.h>
+#include <stdlib.h> 
+#include "Dummy.h"
+#include "misc.h"
+
+
+/* cpuDummyInit_Add
+ * Input param : 
+ *               out         : The file pointer that we write to (the output file to intel asm) 
+ *               cpu_buffer  : The memory buffer we have our binary code that we whant convert
+ *               cpu_pos     : Current positions in the cpu_buffer 
+ *               cpu_size    : The memory size of the cpu_buffer
+ *               BaseAddress : The base address you whant the binay file should run from 
+ *
+ * Return value :
+ *               value -1            : unimplement 
+ *               value  0            : wrong opcode or not vaild opcode
+ *               value +1 and higher : who many byte we should add to cpu_pos
+ */
+ 
+CPU_INT DUMMY_Add(FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos, CPU_UNINT cpu_size, CPU_UNINT BaseAddress)
+
+{
+    /* 
+     * ConvertBitToByte() is perfect to use to get the bit being in use from a bit array
+     * GetMaskByte() is perfect if u whant known which bit have been mask out 
+     * see M68kopcode.c and how it use the ConvertBitToByte()
+     */
+
+    fprintf(out,"Line_0x%8x :\n",BaseAddress + cpu_pos);
+
+    printf(";Add unimplement\n");
+    return -1;
+}

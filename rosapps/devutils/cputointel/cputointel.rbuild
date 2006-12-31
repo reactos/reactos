@@ -12,4 +12,7 @@
 	<file>m68k/M68kBrain.c</file>
 	<file>m68k/M68kopcode.c</file>
 
+	<file>dummycpu/DummyBrain.c</file>
+	<file>dummycpu/Dummyopcode.c</file>
+
 </module>
