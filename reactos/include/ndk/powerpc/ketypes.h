@@ -646,4 +646,6 @@ typedef struct _KEXCEPTION_FRAME
     DOUBLE Fpr31;
 } KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
+#define KeGetPreviousMode       ExGetPreviousMode
+
 #endif

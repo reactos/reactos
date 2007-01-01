@@ -54,6 +54,7 @@
 	</directory>
 	<directory name="rtl">
 		<file>list.c</file>
+		<file>libsupp.c</file>
 	</directory>
 	<directory name="ui">
 		<file>gui.c</file>

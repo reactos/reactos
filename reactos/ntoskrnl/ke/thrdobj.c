@@ -828,17 +828,6 @@ KeGetCurrentThread(VOID)
 /*
  * @implemented
  */
-KPROCESSOR_MODE
-NTAPI
-KeGetPreviousMode(VOID)
-{
-    /* Return the previous mode of this thread */
-    return KeGetCurrentThread()->PreviousMode;
-}
-
-/*
- * @implemented
- */
 ULONG
 NTAPI
 KeQueryRuntimeThread(IN PKTHREAD Thread,

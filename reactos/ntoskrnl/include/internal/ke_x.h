@@ -194,9 +194,6 @@
     }                                                                       \
 }
 
-#undef FORCEINLINE
-#define FORCEINLINE
-
 //
 // Recalculates the due time
 //

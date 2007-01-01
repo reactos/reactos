@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern ULONG TotalNLSSize;
+
 // This is needed because headers define wrong one for ReactOS
 #undef KIP0PCRADDRESS
 #define KIP0PCRADDRESS                      0xffdff000
@@ -300,7 +302,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	// Check if it's more than the allowed for OS loader
 	// if yes - don't map the pages, just add as FirmwareTemporary
 	//
-	if (BasePage + PageCount > LOADER_HIGH_ZONE)
+	if (BasePage + PageCount > LOADER_HIGH_ZONE && (Type != LoaderNlsData))
 	{
 		Mad[MadCount].MemoryType = LoaderFirmwareTemporary;
 
@@ -353,24 +355,9 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	else
 	{
 		//
-		// Now choose memory type as usual. FIXME!!!
+		// Set memory type
 		//
-		if (Type == 0)
-		{
-			Mad[MadCount].MemoryType = LoaderFree;
-		}
-		else if (Type != 0 && Type != 1)
-		{
-			Mad[MadCount].MemoryType = LoaderFirmwarePermanent;
-		}
-		else if (Type == 1)
-		{
-			Mad[MadCount].MemoryType = LoaderSystemCode;
-		}
-		else
-		{
-			Mad[MadCount].MemoryType = LoaderFirmwarePermanent;
-		}
+		Mad[MadCount].MemoryType = Type;
 
 		//
 		// Add descriptor
@@ -397,12 +384,15 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    ULONG TssBasePage,
                    PVOID GdtIdt)
 {
-#ifdef _M_IX86
 	ULONG i, PagesCount;
-	ULONG LastPageIndex, LastPageType;
+	ULONG LastPageIndex, LastPageType, NtType;
 	PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
 	ULONG NoEntries;
+#if 0
 	PKTSS Tss;
+#endif
+	PVOID NlsBase = VaToPa(((PNLS_DATA_BLOCK)VaToPa(LoaderBlock->NlsData))->AnsiCodePageData);
+	ULONG NlsBasePage = (ULONG_PTR)NlsBase >> PAGE_SHIFT;
 
 	//
 	// Creating a suitable memory map for the Windows can be tricky, so let's
@@ -439,7 +429,8 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return FALSE;
 	}
 
-	DbgPrint((DPRINT_WINDOWS, "Got memory map with %d entries\n"));
+	DbgPrint((DPRINT_WINDOWS, "Got memory map with %d entries, NlsBasePage 0x%X\n",
+		NoEntries, NlsBasePage));
 
 	// Construct a good memory map from what we've got
 	PagesCount = 1;
@@ -447,14 +438,67 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	LastPageType = MemoryMap[0].PageAllocated;
 	for(i=1;i<NoEntries;i++)
 	{
-		if (MemoryMap[i].PageAllocated == LastPageType)
+		if (MemoryMap[i].PageAllocated == LastPageType &&
+			(i < NlsBasePage || i > NlsBasePage+TotalNLSSize) && (i != NoEntries-1) )
 		{
 			PagesCount++;
 		}
+		else if (i == NlsBasePage)
+		{
+			// This is NLS data, map it accordingly
+			// It's VERY important for NT kernel - it calculates size of NLS
+			// tables based on NlsData memory type descriptors!
+
+			// Firstly map what we already have (if we have any)
+			// Convert mem types
+			if (LastPageType == 0)
+				NtType = LoaderFree;
+			else if (LastPageType != 0 && LastPageType != 1)
+				NtType = LoaderFirmwarePermanent;
+			else if (LastPageType == 1)
+				NtType = LoaderSystemCode;
+			else
+				NtType = LoaderFirmwarePermanent;
+
+			if (PagesCount > 0)
+				MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, NtType);
+
+			// Then map nls data
+			MempAddMemoryBlock(LoaderBlock, NlsBasePage, TotalNLSSize, LoaderNlsData);
+
+			// skip them
+			i += TotalNLSSize;
+
+			// Reset our counter vars
+			LastPageIndex = i;
+			LastPageType = MemoryMap[i].PageAllocated;
+			PagesCount = 1;
+
+			continue;
+		}
 		else
 		{
-			// Add the region
-			MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, LastPageType);
+			// Add the resulting region
+
+			// Convert mem types
+			if (LastPageType == 0)
+			{
+				NtType = LoaderFree;
+			}
+			else if (LastPageType != 0 && LastPageType != 1)
+			{
+				NtType = LoaderFirmwarePermanent;
+			}
+			else if (LastPageType == 1)
+			{
+				NtType = LoaderSystemCode;
+			}
+			else
+			{
+				NtType = LoaderFirmwarePermanent;
+			}
+
+			MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, NtType);
 
 			// Reset our counter vars
 			LastPageIndex = i;
@@ -480,6 +524,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	// Page Tables have been setup, make special handling for PCR and TSS
 	// (which is done in BlSetupFotNt in usual ntldr)
+#ifdef _M_IX86
 	HalPT[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage+1;
 	HalPT[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
 	HalPT[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
@@ -493,6 +538,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	//DbgPrint((DPRINT_WINDOWS, "VideoMemoryBase: 0x%X\n", VideoMemoryBase));
 
 	Tss = (PKTSS)(KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
+#endif
 
 	// Fill the memory descriptor list and 
 	//PrepareMemoryDescriptorList();
@@ -525,23 +571,29 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	//BS->ExitBootServices(ImageHandle,MapKey);
 
 	// Disable Interrupts
-	Ke386DisableInterrupts();
+	_disable();
 
 	// Re-initalize EFLAGS
+#ifdef _M_IX86
 	Ke386EraseFlags();
+#endif
 
 	// Set the PDBR
-	Ke386SetPageTableDirectory((ULONG_PTR)PDE);
+#ifdef _M_IX86
+	__writecr3((ULONG_PTR)PDE);
+#endif
 
 	// Enable paging by modifying CR0
-	Ke386SetCr0(Ke386GetCr0() | CR0_PG);
+#ifdef _M_IX86
+	__writecr0(__readcr0() | CR0_PG);
+#endif
 
 	// Set processor context
-	WinLdrSetProcessorContext(GdtIdt, KIP0PCRADDRESS, KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
+	WinLdrSetProcessorContext(GdtIdt, KIP0PCRADDRESS, 0/*KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT)*/);
 
 	// Zero KI_USER_SHARED_DATA page
 	memset((PVOID)KI_USER_SHARED_DATA, 0, MM_PAGE_SIZE);
-#endif
+
 	return TRUE;
 }
 

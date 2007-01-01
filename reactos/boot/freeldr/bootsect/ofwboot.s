@@ -86,7 +86,6 @@ zero_registers:
 
 	blr
 	
-	.org	0x1000
 freeldr_banner:
 	.ascii	"ReactOS OpenFirmware Boot Program\r\n\0"
 
@@ -99,7 +98,7 @@ ofw_memory_size:
 	.long	0
 	.long	0
 	
-	.org	0x2000
+	.org	0x1000
 stack:
 	.space	0x4000
 

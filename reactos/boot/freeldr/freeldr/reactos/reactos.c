@@ -30,8 +30,13 @@ LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded f
 char					reactos_module_strings[64][256];	// Array to hold module names
 unsigned long			reactos_memory_map_descriptor_size;
 memory_map_t			reactos_memory_map[32];		// Memory map
-
+ARC_DISK_SIGNATURE      reactos_arc_disk_info[32]; // ARC Disk Information
+char                    reactos_arc_strings[32][256];
+unsigned long           reactos_disk_count = 0;
+CHAR szHalName[255];
+CHAR szBootPath[255];
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
+BOOLEAN FrLdrBootType;
 
 static BOOLEAN
 NTAPI
@@ -123,6 +128,7 @@ LoadKernelSymbols(PCHAR szKernelName, int nPos)
   PROSSYM_INFO RosSymInfo;
   ULONG Size;
   ULONG_PTR Base;
+  //return TRUE;
 
   RosSymInit(&FreeldrCallbacks);
 
@@ -562,14 +568,12 @@ VOID
 LoadAndBootReactOS(PCSTR OperatingSystemName)
 {
 	PFILE FilePointer;
-	CHAR  name[1024];
-	CHAR  value[1024];
-	CHAR  SystemPath[1024];
-	CHAR  szKernelName[1024];
-	CHAR  szHalName[1024];
-	CHAR  szFileName[1024];
-	CHAR  szBootPath[256];
-	UINT   i;
+	CHAR name[255];
+	CHAR value[255];
+	CHAR SystemPath[255];
+	CHAR szKernelName[255];
+	CHAR szFileName[255];
+	UINT i;
 	CHAR  MsgBuffer[256];
 	ULONG SectionId;
 
@@ -595,6 +599,8 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	UiDrawStatusText("Detecting Hardware...");
     UiDrawProgressBarCenter(1, 100, szLoadingMsg);
 
+    printf("LoadAndBootReactOS\n");
+
 	/*
 	 * Setup multiboot information structure
 	 */
@@ -602,17 +608,21 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
 	LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
 	LoaderBlock.BootDevice = 0xffffffff;
-	LoaderBlock.CommandLine = (unsigned long)reactos_kernel_cmdline;
+	LoaderBlock.CommandLine = (ULONG)reactos_kernel_cmdline;
 	LoaderBlock.ModsCount = 0;
-	LoaderBlock.ModsAddr = (unsigned long)reactos_modules;
+	LoaderBlock.ModsAddr = (ULONG)reactos_modules;
+	LoaderBlock.DrivesAddr = (ULONG)reactos_arc_disk_info;
 	LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&reactos_memory_map, 32) * sizeof(memory_map_t);
+	printf("Got memory map length: %d\n", LoaderBlock.MmapLength);
 	if (LoaderBlock.MmapLength)
 	{
 		LoaderBlock.MmapAddr = (unsigned long)&reactos_memory_map;
 		LoaderBlock.Flags |= MB_FLAGS_MEM_INFO | MB_FLAGS_MMAP_INFO;
-		reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
+		*((PULONG)(LoaderBlock.MmapAddr - sizeof(ULONG))) = 
+		    reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
 		DbgPrint((DPRINT_REACTOS, "memory map length: %d\n", LoaderBlock.MmapLength));
 		DbgPrint((DPRINT_REACTOS, "dumping memory map:\n"));
+		printf("memory map length: %d\n", LoaderBlock.MmapLength);
 		for (i=0; i<(LoaderBlock.MmapLength/sizeof(memory_map_t)); i++)
 		{
 			if (BiosMemoryUsable == reactos_memory_map[i].type &&
@@ -634,6 +644,10 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 			          reactos_memory_map[i].base_addr_low,
 				  reactos_memory_map[i].length_low,
 				  reactos_memory_map[i].type));
+			printf("start: %x size: %x type %d\n",
+			          reactos_memory_map[i].base_addr_low,
+				  reactos_memory_map[i].length_low,
+				  reactos_memory_map[i].type);
 		}
 	}
 	DbgPrint((DPRINT_REACTOS, "low_mem = %d\n", LoaderBlock.MemLower));
@@ -679,7 +693,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	/*
 	 * Read the optional kernel parameters (if any)
 	 */
-	if (IniReadSettingByName(SectionId, "Options", value, 1024))
+	if (IniReadSettingByName(SectionId, "Options", value, sizeof(value)))
 	{
 		strcat(reactos_kernel_cmdline, " ");
 		strcat(reactos_kernel_cmdline, value);
@@ -692,6 +706,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     UiDrawProgressBarCenter(5, 100, szLoadingMsg);
 
 	if (AcpiPresent) LoaderBlock.Flags |= MB_FLAGS_ACPI_TABLE;
+    LoaderBlock.DrivesCount = reactos_disk_count;
 
 	UiDrawStatusText("Loading...");
 
@@ -715,7 +730,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	 * Find the kernel image name
 	 * and try to load the kernel off the disk
 	 */
-	if(IniReadSettingByName(SectionId, "Kernel", value, 1024))
+	if(IniReadSettingByName(SectionId, "Kernel", value, sizeof(value)))
 	{
 		/*
 		 * Set the name and
@@ -739,13 +754,11 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		strcat(szKernelName, value);
 	}
 
-    if (!FrLdrLoadKernel(szKernelName, 5)) return;
-
 	/*
 	 * Find the HAL image name
 	 * and try to load the kernel off the disk
 	 */
-	if(IniReadSettingByName(SectionId, "Hal", value, 1024))
+	if(IniReadSettingByName(SectionId, "Hal", value, sizeof(value)))
 	{
 		/*
 		 * Set the name and
@@ -769,19 +782,10 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		strcat(szHalName, value);
 	}
 
-	if (!FrLdrLoadDriver(szHalName, 10))
-		return;
+    /* Load the kernel */
+    if (!FrLdrLoadKernel(szKernelName, 5)) return;
+    if (!FrLdrLoadDriver(szHalName, 6)) return;
 
-#if 0
-    /* Load bootvid */
-		strcpy(value, "INBV.DLL");
-		strcpy(szHalName, szBootPath);
-		strcat(szHalName, "SYSTEM32\\");
-		strcat(szHalName, value);
-
-	if (!FrLdrLoadDriver(szHalName, 10))
-		return;
-#endif
 	/*
 	 * Load the System hive from disk
 	 */
@@ -820,11 +824,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	/*
 	 * Import the loaded system hive
 	 */
-	if( !RegImportBinaryHive((PCHAR)Base, Size) )
-	{
-	    printf("Could not load system hive\n");
-	    return;
-	}
+	RegImportBinaryHive((PCHAR)Base, Size);
 
 	/*
 	 * Initialize the 'CurrentControlSet' link
@@ -874,8 +874,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 
 #undef DbgPrint
 ULONG
-__cdecl
-DbgPrint(PCCH Format, ...)
+DbgPrint(const char *Format, ...)
 {
 	va_list ap;
 	CHAR Buffer[512];

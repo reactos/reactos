@@ -62,7 +62,7 @@ extern "C" {
 #elif (_MSC_VER)
 #define FORCEINLINE __inline
 #else
-#define FORCEINLINE static __inline
+#define FORCEINLINE static __attribute__((unused))
 #endif
 #endif
 

@@ -92,8 +92,10 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 	if (FreePagesInLookupTable < PagesNeeded)
 	{
 #ifdef _M_PPC
+		ULONG ptr;
 	        printf("Allocating %d bytes directly ...\n", MemorySize);
-	        MemPointer = (PVOID)ofw_claim(0,MemorySize,MM_PAGE_SIZE);
+	        ptr = ofw_claim(0,MemorySize,MM_PAGE_SIZE);
+		MemPointer = (PVOID)(REV(ptr));
 #endif
 		if( !MemPointer ) 
 		{

@@ -30,30 +30,37 @@ _kernel_trap_stack_top:
 	.globl NtProcessStartup
 	.globl KiSystemStartup
 	.globl KiRosPrepareForSystemStartup
+	.globl DrawNumber
+	
 NtProcessStartup:
-    lis		0,AP_MAGIC@ha
-    ori		0,0,AP_MAGIC@l
-    cmpw	0,0,3
+    lis		30,AP_MAGIC@ha
+    ori		30,30,AP_MAGIC@l
+    cmpw	0,30,3
     bne		.m1
-     
+
+    /*
+     * Set a normal MSR value
+     */
+    xor		0,0,0     
+    ori		30,0,0x3031
+    mtmsr	30
+
     /*
      *  Reserve space for the floating point save area.
      */
     addi  1,1,-SIZEOF_FX_SAVE_AREA
 
-    /*
-     * Call the application processor initialization code
-     */
-    bl  KiSystemStartup
-    
-.m1:     
+    /* Bye bye asm land! */
+    mr		4,3
+    bl		KiRosPrepareForSystemStartup
+		
+.m1:
     /* Load the initial kernel stack */
     lis		1,_kernel_stack_top@ha
     ori		1,1,_kernel_stack_top@l
     addi	1,1,-SIZEOF_FX_SAVE_AREA
     
     /* Call the main kernel initialization */
-    mr		3,5
-    mr		4,6
+    mr		4,3
     bl		KiRosPrepareForSystemStartup
 

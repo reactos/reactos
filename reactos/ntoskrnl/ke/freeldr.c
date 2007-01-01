@@ -9,6 +9,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -48,6 +49,14 @@ MEMORY_ALLOCATION_DESCRIPTOR BldrMemoryDescriptors[64];
 WCHAR BldrModuleStrings[64][260];
 NLS_DATA_BLOCK BldrNlsDataBlock;
 SETUP_LOADER_BLOCK BldrSetupBlock;
+struct _boot_infos_t *BootInfo;
+
+#ifdef _M_PPC
+#include "font.h"
+boot_infos_t PpcEarlybootInfo;
+#endif
+
+#define KSEG0_BASE 0x80000000
 
 /* FUNCTIONS *****************************************************************/
 
@@ -294,6 +303,7 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 {
     ULONG i;
     ULONG size;
+    ULONG StartKernelBase;
     ULONG HalBase;
     ULONG DriverBase;
     ULONG DriverSize;
@@ -302,6 +312,20 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 #ifdef _M_IX86
     PKTSS Tss;
     PKGDTENTRY TssEntry;
+#endif
+#ifdef _M_PPC
+    { 
+	__asm__("ori 0,0,0");
+	char *nk = "ntoskrnl is here";
+	boot_infos_t *XBootInfo = (boot_infos_t *)LoaderBlock->ArchExtra;
+	memcpy(&PpcEarlybootInfo, XBootInfo, sizeof(PpcEarlybootInfo));
+	PpcEarlybootInfo.dispFont = BootDigits;
+	BootInfo = (struct _boot_infos_t *)&PpcEarlybootInfo;
+	DrawNumber(BootInfo, 0x1234abcd, 10, 100);
+	DrawNumber(BootInfo, (ULONG)nk, 10 , 150);
+	DrawString(BootInfo, nk, 100, 150);
+	__asm__("ori 0,0,0");
+    }
 #endif
 
 #ifdef _M_IX86
@@ -320,12 +344,19 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
 #endif
 
+    DrawNumber(BootInfo, 0xb0071f03, 190, 90);
+    DrawNumber(BootInfo, (ULONG)BootInfo, 190, 100);
+
     /* Copy the Loader Block Data locally since Low-Memory will be wiped */
+    TRACE;
     memcpy(&KeRosLoaderBlock, LoaderBlock, sizeof(ROS_LOADER_PARAMETER_BLOCK));
+    TRACE;
     memcpy(&KeLoaderModules[0],
            (PVOID)KeRosLoaderBlock.ModsAddr,
            sizeof(LOADER_MODULE) * KeRosLoaderBlock.ModsCount);
+    TRACE;
     KeRosLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
+    TRACE;
 
     /* Check for BIOS memory map */
     KeMemoryMapRangeCount = 0;
@@ -334,6 +365,8 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
         /* We have a memory map from the nice BIOS */
         size = *((PULONG)(KeRosLoaderBlock.MmapAddr - sizeof(ULONG)));
         i = 0;
+
+	TRACEXY(size, KeRosLoaderBlock.MmapLength);
 
         /* Map it until we run out of size */
         while (i < KeRosLoaderBlock.MmapLength)
@@ -361,16 +394,23 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
         KeRosLoaderBlock.MmapLength = 0;
         KeRosLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
     }
+    TRACE;
 
     /* Save the Base Address */
     MmSystemRangeStart = (PVOID)KeRosLoaderBlock.KernelBase;
+    TRACEXY((ULONG)KeLoaderCommandLine, (ULONG)LoaderBlock->CommandLine);
 
     /* Set the Command Line */
     strcpy(KeLoaderCommandLine, (PCHAR)LoaderBlock->CommandLine);
     KeRosLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
+    TRACE;
+
+    /* Get the address of ntoskrnl in openfirmware memory */
+    StartKernelBase = KeLoaderModules[0].ModStart;
+    TRACE;
 
     /* Create a block for each module */
-    for (i = 1; i < KeRosLoaderBlock.ModsCount; i++)
+    for (i = 0; i < KeRosLoaderBlock.ModsCount; i++)
     {
         /* Check if we have to copy the path or not */
         if ((s = strrchr((PCHAR)KeLoaderModules[i].String, '/')) != 0)
@@ -382,7 +422,18 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
             strcpy(KeLoaderModuleStrings[i], (PCHAR)KeLoaderModules[i].String);
         }
 
-#ifdef _M_IX86
+#ifdef _M_PPC
+	if(i == 0) {
+	    DrawNumber(BootInfo, KeLoaderModules[i].ModStart, 10, 200);
+	    DrawNumber(BootInfo, KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart, 100, 200);
+	    DrawNumber(BootInfo, KeLoaderModules[i].ModEnd, 190, 200);
+	    DrawNumber(BootInfo, KeLoaderModules[i+1].ModStart, 10, 210);
+	    DrawNumber(BootInfo, KeLoaderModules[i+1].ModEnd - KeLoaderModules[i+1].ModStart, 100, 210);
+	    DrawNumber(BootInfo, KeLoaderModules[i+1].ModEnd, 190, 210);
+	}
+	KeLoaderModules[i].ModStart += KSEG0_BASE - StartKernelBase;
+	KeLoaderModules[i].ModEnd   += KSEG0_BASE - StartKernelBase;
+#else
         /* Substract the base Address in Physical Memory */
         KeLoaderModules[i].ModStart -= 0x200000;
 
@@ -399,10 +450,12 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
         /* Select the proper String */
         KeLoaderModules[i].String = (ULONG)KeLoaderModuleStrings[i];
     }
+    TRACE;
 
     /* Choose last module address as the final kernel address */
     MmFreeLdrLastKernelAddress =
         PAGE_ROUND_UP(KeLoaderModules[KeRosLoaderBlock.ModsCount - 1].ModEnd);
+    TRACE;
 
     /* Select the HAL Base */
     HalBase = KeLoaderModules[1].ModStart;
@@ -410,11 +463,13 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     /* Choose Driver Base */
     DriverBase = MmFreeLdrLastKernelAddress;
     LdrHalBase = (ULONG_PTR)DriverBase;
+    TRACE;
 
     /* Initialize Module Management */
     LdrInitModuleManagement((PVOID)KeLoaderModules[0].ModStart);
 
     /* Load HAL.DLL with the PE Loader */
+    TRACE;
     LdrSafePEProcessModule((PVOID)HalBase,
                             (PVOID)DriverBase,
                             (PVOID)KeLoaderModules[0].ModStart,
@@ -429,15 +484,18 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     //
     // This dirty hack fixes it, and should make symbol lookup work too.
     //
+    TRACE;
     HalModuleObject.SizeOfImage =  RtlImageNtHeader((PVOID)HalModuleObject.
                                                     DllBase)->
                                                     OptionalHeader.SizeOfImage;
 
     /* Increase the last kernel address with the size of HAL */
+    TRACE;
     MmFreeLdrLastKernelAddress += PAGE_ROUND_UP(DriverSize);
 
 #ifdef _M_IX86
     /* Now select the final beginning and ending Kernel Addresses */
+    TRACE;
     MmFreeLdrFirstKrnlPhysAddr = KeLoaderModules[0].ModStart -
                                  KSEG0_BASE + 0x200000;
     MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress -
@@ -445,22 +503,28 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 #endif
 
     /* Setup the IDT */
+    TRACE;
     KeInitExceptions(); // ONCE HACK BELOW IS GONE, MOVE TO KISYSTEMSTARTUP!
+    TRACE;
     KeInitInterrupts(); // ROS HACK DEPRECATED SOON BY NEW HAL
 
     /* Load the Kernel with the PE Loader */
+    TRACE;
     LdrSafePEProcessModule((PVOID)KeLoaderModules[0].ModStart,
                            (PVOID)KeLoaderModules[0].ModStart,
                            (PVOID)DriverBase,
                            &DriverSize);
 
     /* Sets up the VDM Data */
+    TRACE;
     NtEarlyInitVdm();
 
     /* Convert the loader block */
+    TRACE;
     KiRosFrldrLpbToNtLpb(&KeRosLoaderBlock, &NtLoaderBlock);
 
     /* Do general System Startup */
+    TRACE;
     KiSystemStartup(NtLoaderBlock);
 }
 

@@ -3,6 +3,7 @@
 
 typedef char font_char[57];
 typedef struct _boot_infos_t {
+    void *loaderBlock;
     int dispDeviceRect[4];
     int dispDeviceRowBytes;
     int dispDeviceDepth;

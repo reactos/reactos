@@ -29,7 +29,7 @@ extern ULONG CacheSizeLimit;
 of_proxy ofproxy;
 void *PageDirectoryStart, *PageDirectoryEnd;
 static int chosen_package, stdin_handle, part_handle = -1, kernel_mem = 0;
-int mmu_handle = 0;
+int mmu_handle = 0, FixedMemory = 0;
 BOOLEAN AcpiPresent = FALSE;
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { 0 };
 jmp_buf jmp;
@@ -344,9 +344,12 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 	/* Hack for pearpc */
 	if( kernel_mem ) {
 	    BiosMemoryMap[slots].Length = kernel_mem * 1024;
-	    ofw_claim((int)BiosMemoryMap[slots].BaseAddress,
-		      (int)BiosMemoryMap[slots].Length,
-		      0x1000);
+	    if( !FixedMemory ) {
+		ofw_claim((int)BiosMemoryMap[slots].BaseAddress,
+			  (int)BiosMemoryMap[slots].Length,
+			  0x1000);
+		FixedMemory = BiosMemoryMap[slots].BaseAddress;
+	    }
 	    total += BiosMemoryMap[slots].Length;
 	    slots++;
 	    break;
@@ -519,6 +522,10 @@ void PpcInit( of_proxy the_ofproxy ) {
 		 (char *)&stdin_handle_chosen, sizeof(stdin_handle_chosen) );
     ofw_getprop( chosen_package, "mmu",
 		 (char *)&mmu_handle_chosen, sizeof(mmu_handle_chosen) );
+
+    ofw_print_string("Found stdin ");
+    ofw_print_number(stdin_handle_chosen);
+    ofw_print_string("\r\n");
 
     stdin_handle = REV(stdin_handle_chosen);
     mmu_handle = REV(mmu_handle_chosen);

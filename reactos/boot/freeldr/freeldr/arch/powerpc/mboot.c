@@ -74,6 +74,7 @@ ULONG RaToPa(ULONG p) {
 #define BAT_GRANULARITY             (64 * 1024)
 #define KernelMemorySize            (16 * 1024 * 1024)
 #define KernelEntryPoint            (KernelEntry - KERNEL_BASE_PHYS) + KernelBase
+#define XROUNDUP(x,n)               ((((ULONG)x) + ((n) - 1)) & (~((n) - 1)))
 
 /* Load Address of Next Module */
 ULONG_PTR NextModuleBase = 0;
@@ -165,6 +166,7 @@ AddPageMapping( DIRECTORY_HEADER *TranslationMap,
 		ULONG OldVirt) {
     ULONG Phys;
     DIRECTORY_ENTRY *Entry;
+
     if( !TranslationMap->DirectoryPage ||
 	TranslationMap->UsedSpace >= ((1<<PFN_SHIFT)/sizeof(DIRECTORY_ENTRY)) )
     {
@@ -190,9 +192,9 @@ FrLdrStartup(ULONG Magic)
 {
     KernelEntryFn KernelEntryAddress = 
 	(KernelEntryFn)(KernelEntry + KernelBase);
-    register ULONG_PTR i asm("r4"), j asm("r5") = 0;
-    register DIRECTORY_HEADER *TranslationMap asm("r6") = 
-	MmAllocateMemory(1<<PFN_SHIFT);
+    ULONG_PTR i, j;
+    DIRECTORY_HEADER *TranslationMap = MmAllocateMemory(4<<PFN_SHIFT);
+    ULONG_PTR stack = ((ULONG_PTR)TranslationMap)+(4<<PFN_SHIFT);
     boot_infos_t *LocalBootInfo = (boot_infos_t *)TranslationMap;
     TranslationMap = (DIRECTORY_HEADER *)
 	(((PCHAR)&LocalBootInfo[1]) + sizeof(BootDigits));
@@ -202,17 +204,22 @@ FrLdrStartup(ULONG Magic)
     ULONG_PTR KernelVirtAddr, NewMapSdr = 
 	(ULONG_PTR)MmAllocateMemory(128*1024);
     DIRECTORY_ENTRY *Entry;
+    LoaderBlock.ArchExtra = (ULONG)LocalBootInfo;
 
-    NewMapSdr = ROUND_UP(NewMapSdr,64*1024);
+    printf("Translation map: %x\n", TranslationMap);
+    NewMapSdr = XROUNDUP(NewMapSdr,64*1024);
     printf("New SDR1 value will be %x\n", NewMapSdr);
 
     memset(TranslationMap,0,sizeof(*TranslationMap));
 
+    printf("Translation map zeroed\n");
     /* Add the page containing the page directory */
-    AddPageMapping( TranslationMap, (ULONG)TranslationMap, 0 );
+    for( i = (ULONG_PTR)TranslationMap; i < stack; i += (1<<PFN_SHIFT) ) {
+	AddPageMapping( TranslationMap, i, 0 );
+    }
 
-    /* Map freeldr space 0xe00000 ... 0xe50000 */
-    for( i = 0xe00000; i < 0xe50000; i += (1<<PFN_SHIFT),j++ ) {
+    /* Map freeldr space 0xe00000 ... 0xe60000 */
+    for( i = 0xe00000; i < 0xe80000; i += (1<<PFN_SHIFT) ) {
 	AddPageMapping( TranslationMap, i, 0 );
     }
 
@@ -225,6 +232,7 @@ FrLdrStartup(ULONG Magic)
     }
 
     printf("Built map of %d pages\n", TranslationMap->NumberOfPages);
+    printf("Local boot info at %x\n", LocalBootInfo);
 
     /* 
      * Stuff page table entries for the page containing this code,
@@ -243,11 +251,12 @@ FrLdrStartup(ULONG Magic)
     }
 
     /* Tell them we're booting */
-    DrawNumber(LocalBootInfo,0x1cabba9e,10,100);
+    DrawNumber(LocalBootInfo,(ULONG)&LoaderBlock,10,100);
     DrawNumber(LocalBootInfo,(ULONG)KernelEntryAddress,100,100);
 
     SetSDR1( NewMapSdr );
-    KernelEntryAddress( (void*)LocalBootInfo );
+    KernelEntryAddress( (void*)&LoaderBlock );
+    /* Nothing more */
     while(1);
 }
 
@@ -364,6 +373,12 @@ FrLdrSetupPageDirectory(VOID)
 {
 }
 
+ULONG SignExtend24(ULONG Base, ULONG Delta)
+{
+    Delta = (Base & 0xfffffc) + Delta;
+    return (Base & 0xff000003) | (Delta & 0xfffffc);
+}
+
 /*++
  * FrLdrMapKernel
  * INTERNAL
@@ -402,6 +417,7 @@ FrLdrMapKernel(FILE *KernelImage)
     ULONG_PTR Delta;
     PUSHORT ShortPtr;
     PULONG LongPtr;
+    PLOADER_MODULE ModuleData;
 
     /* Allocate 1024 bytes for PE Header */
     ImageHeader = (PIMAGE_DOS_HEADER)MmAllocateMemory(1024);
@@ -519,6 +535,11 @@ FrLdrMapKernel(FILE *KernelImage)
                     *ShortPtr += HIWORD(Delta);
                     break;
 
+	        case IMAGE_REL_BASED_HIGHADJ:
+		    *ShortPtr += 
+			HIWORD(Delta) + ((LOWORD(Delta) & 0x8000) ? 1 : 0);
+		    break;
+
                 case IMAGE_REL_BASED_LOW:
                     *ShortPtr += LOWORD(Delta);
                     break;
@@ -528,8 +549,13 @@ FrLdrMapKernel(FILE *KernelImage)
                     *LongPtr += Delta;
                     break;
 
+	        case IMAGE_REL_BASED_MIPS_JMPADDR:
+		    LongPtr = (PULONG)ShortPtr;
+		    *LongPtr = SignExtend24(*LongPtr,Delta);
+		    break;
+
 	        default:
-		    printf("Unknown relocation %d\n", *TypeOffset >> 12);
+		    //printf("Unknown relocation %d\n", *TypeOffset >> 12);
 		    break;
             }
 
@@ -540,8 +566,13 @@ FrLdrMapKernel(FILE *KernelImage)
         RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDir->SizeOfBlock);
     }
 
+    ModuleData = &reactos_modules[LoaderBlock.ModsCount];
+    ModuleData->ModStart = (ULONG)KernelMemory;
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP((ULONG)KernelMemory + ImageSize, PAGE_SIZE);
+    ModuleData->ModEnd = NextModuleBase;
+    ModuleData->String = (ULONG)"ntoskrnl.exe";
+    LoaderBlock.ModsCount++;
 
     /* Return Success */
     return TRUE;
@@ -579,6 +610,11 @@ FrLdrLoadModule(FILE *ModuleImage,
     /* Fill out Module Data Structure */
     ModuleData->ModStart = NextModuleBase;
     ModuleData->ModEnd = NextModuleBase + LocalModuleSize;
+
+    printf("Module size %x len %x name %s\n", 
+	   ModuleData->ModStart,
+	   ModuleData->ModEnd - ModuleData->ModStart,
+	   ModuleName);
 
     /* Save name */
     strcpy(NameBuffer, ModuleName);

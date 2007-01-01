@@ -65,6 +65,27 @@ typedef struct _MEMORY_ALLOCATION_DESCRIPTOR
     ULONG PageCount;
 } MEMORY_ALLOCATION_DESCRIPTOR, *PMEMORY_ALLOCATION_DESCRIPTOR;
 
+typedef struct _BOOT_DRIVER_LIST_ENTRY
+{
+    LIST_ENTRY ListEntry;
+    UNICODE_STRING FilePath;
+    UNICODE_STRING RegistryPath;
+    struct _LDR_DATA_TABLE_ENTRY *DataTableEntry;
+} BOOT_DRIVER_LIST_ENTRY, *PBOOT_DRIVER_LIST_ENTRY;
+
+typedef struct _ARC_DISK_SIGNATURE
+{
+    LIST_ENTRY ListEntry;
+    ULONG Signature;
+    PCHAR ArcName;
+    ULONG CheckSum;
+    BOOLEAN ValidPartitionTable;
+    BOOLEAN xInt13;
+    BOOLEAN IsGpt;
+    BOOLEAN Reserved;
+    CHAR GptSignature[16];
+} ARC_DISK_SIGNATURE, *PARC_DISK_SIGNATURE;
+
 typedef struct _CONFIGURATION_COMPONENT
 {
     CONFIGURATION_CLASS Class;
@@ -268,6 +289,11 @@ typedef struct _I386_LOADER_BLOCK
     ULONG Reserved;
 } I386_LOADER_BLOCK, *PI386_LOADER_BLOCK;
 
+typedef struct _POWERPC_LOADER_BLOCK
+{
+    PVOID BootInfo;
+} POWERPC_LOADER_BLOCK, *PPOWERPC_LOADER_BLOCK;
+
 //
 // Loader Parameter Block
 //
@@ -298,6 +324,7 @@ typedef struct _LOADER_PARAMETER_BLOCK
         I386_LOADER_BLOCK I386;
         ALPHA_LOADER_BLOCK Alpha;
         IA64_LOADER_BLOCK Ia64;
+	POWERPC_LOADER_BLOCK PowerPC;
     } u;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
 

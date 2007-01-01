@@ -23,6 +23,11 @@
 #include "i386/fpu.h"
 #include "i386/v86m.h"
 #elif defined(_M_PPC)
+#ifndef InterlockedExchangeAddSizeT
+#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
+#define InterlockedIncrementSizeT(a) InterlockedIncrement((LONG *)a)
+#define InterlockedDecrementSizeT(a) InterlockedDecrement((LONG *)a)
+#endif
 #include "powerpc/mm.h"
 #else
 #error "Unknown CPU"
@@ -330,6 +335,11 @@ C_ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
 C_ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcStack) == KPCR_PRCB_DPC_STACK);
 C_ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
+#endif
+
+#ifdef _M_PPC
+#include <reactos/ppcboot.h>
+#include <reactos/ppcdebug.h>
 #endif
 
 #endif /* INCLUDE_INTERNAL_NTOSKRNL_H */

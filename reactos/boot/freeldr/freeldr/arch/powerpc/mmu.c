@@ -230,7 +230,23 @@ inline int GetSDR1() {
 }
 
 inline void SetSDR1( int sdr ) {
+#if 0
+    int i,j;
+#endif
     __asm__("mtsdr1 3");
+#if 0
+    __asm__("sync");
+    __asm__("isync");
+    __asm__("ptesync");
+    
+    for( i = 0; i < 256; i++ ) {
+	j = i << 12;
+	__asm__("tlbie %0,0" : : "r" (j));
+    }
+    __asm__("eieio");
+    __asm__("tlbsync");
+    __asm__("ptesync");
+#endif
 }
 
 inline int BatHit( int bath, int batl, int virt ) {
@@ -318,12 +334,6 @@ BOOLEAN InsertPageEntry( int virt, int phys, int slot, int _sdr1 ) {
 
 	SetPhys( ptegaddr + (i * 8), ptehi );
 	SetPhys( ptegaddr + (i * 8) + 4, ptelo );
-
-	__asm__("ptesync");
-	__asm__("tlbie %0,0" : : "r" (virt));
-	__asm__("eieio");
-	__asm__("tlbsync");
-	__asm__("ptesync");
 
 	return TRUE;
     }

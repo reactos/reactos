@@ -25,8 +25,10 @@
   <define name="__cdecl__" empty="true" />
   <define name="dllimport" empty="true" />
   <define name="WORDS_BIGENDIAN" empty="true" />
+  <define name="MB_CUR_MAX">1</define>
   <compilerflag>-fshort-wchar</compilerflag>
   <compilerflag>-fsigned-char</compilerflag>
+  <compilerflag>-map</compilerflag>
   <if property="MP" value="1">
     <define name="CONFIG_SMP" value="1" />
   </if>

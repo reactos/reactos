@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
+#define InterlockedIncrementSizeT(a) InterlockedIncrement((LONG *)a)
+#define InterlockedDecrementSizeT(a) InterlockedDecrement((LONG *)a)
+
 /* FUNCTIONS *****************************************************************/
 
 /*++
