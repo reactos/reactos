@@ -157,8 +157,12 @@ BOOL ProcessXML (const char* filename, struct Category* Root)
 	FILE* file = fopen(filename, "r");
 	if(!file) 
 	{
-		MessageBoxW(0,Strings[IDS_XMLERROR_1],0,0);
-		return FALSE;
+		file = fopen("downloader.xml", "r"); 
+		if(!file) 
+		{
+			MessageBoxW(0,Strings[IDS_XMLERROR_1],0,0);
+			return FALSE;
+		}
 	}
 
 	XML_Parser parser = XML_ParserCreate(NULL);

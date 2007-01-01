@@ -13,6 +13,8 @@
 #include "resources.h"
 #include "structures.h"
 
+#define XML_PATH "C:\\ReactOS\\system32\\downloader.xml"
+
 HWND hCategories, hApps, hDownloadButton, hUpdateButton, hHelpButton;
 HBITMAP hLogo, hUnderline;
 WCHAR* DescriptionHeadline = L"";
@@ -97,7 +99,7 @@ BOOL SetupControls (HWND hwnd)
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 
 	// Parse the XML file
-	if (ProcessXML ("apps.xml", &Root) == FALSE)
+	if (ProcessXML (XML_PATH, &Root) == FALSE)
 		return FALSE;
 
 	// Set up the controls

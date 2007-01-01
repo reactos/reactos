@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<installfile base="system32">apps.xml</installfile>    
+<installfile base="system32">downloader.xml</installfile>    
 <module name="downloader" type="win32gui" installbase="system32" installname="downloader.exe">
 	<include base="downloader">.</include>
 	<include base="expat">.</include>
