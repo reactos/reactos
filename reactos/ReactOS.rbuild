@@ -33,6 +33,7 @@
     <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
   </if>
   <compilerflag>-Wpointer-arith</compilerflag>
+  <linkerflag>-enable-stdcall-fixup</linkerflag>
 
   <include>.</include>
   <include>include</include>
