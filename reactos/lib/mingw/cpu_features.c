@@ -29,6 +29,7 @@ unsigned int __cpu_features = 0;
 
 void  __cpu_features_init (void)
 {
+#ifdef __i386__
   unsigned int eax, ebx, ecx, edx;
   /* Try to change the value of CPUID bit (bit 21) in EFLAGS.
      If the bit can be toggled, CPUID is supported.  */
@@ -75,8 +76,7 @@ void  __cpu_features_init (void)
     __cpu_features |= _CRT_3DNOW; 
   if (edx & EDX_3DNOWP)
     __cpu_features |= _CRT_3DNOWP; 
-
-  return;
+#endif
 }
 
 #ifdef TEST

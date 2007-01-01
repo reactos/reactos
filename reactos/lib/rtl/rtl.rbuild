@@ -35,7 +35,7 @@
 			<file>rtlmem.s</file>
 			<file>pow_asm.s</file>
 			<file>res_asm.s</file>
-            <file>seh.s</file>
+			<file>seh.s</file>
 			<file>sin_asm.s</file>
 			<file>sqrt_asm.s</file>
 			<file>tan_asm.s</file>
@@ -46,10 +46,10 @@
 		<file>tree.c</file>
 	</directory>
 
-      <ifnot property="ARCH" value="i386">
-             <file>memgen.c</file>
-             <file>mem.c</file> 
-      </ifnot>
+	<ifnot property="ARCH" value="i386">
+		<file>memgen.c</file>
+		<file>mem.c</file> 
+	</ifnot>
 
 	<file>access.c</file>
 	<file>acl.c</file>

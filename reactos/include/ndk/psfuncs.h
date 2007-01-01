@@ -229,6 +229,7 @@ NtCreateThread(
 );
 
 #ifndef NTOS_MODE_USER
+#if defined(_M_IX86)
 FORCEINLINE
 PTEB
 NtCurrentTeb(VOID)
@@ -247,6 +248,9 @@ NtCurrentTeb(VOID)
     return ret;
 #endif
 }
+#endif
+#else
+struct _TEB * NtCurrentTeb(void);
 #endif
 
 NTSYSCALLAPI

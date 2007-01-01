@@ -218,7 +218,11 @@ __mingw_wCRTStartup (void)
 
   /* Align the stack to 16 bytes for the sake of SSE ops in main
      or in functions inlined into main.  */
+#if defined(__i386__)
   asm  __volatile__  ("andl $-16, %%esp" : : : "%esp");
+#else
+#error Unsupported architecture
+#endif
 
   /*
    * Call the main function. If the user does not supply one

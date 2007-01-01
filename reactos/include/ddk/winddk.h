@@ -5219,6 +5219,31 @@ typedef struct _KFLOATING_SAVE {
   ULONG  Spare1;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
+static __inline
+ULONG
+DDKAPI
+KeGetCurrentProcessorNumber(VOID)
+{
+#if defined(__GNUC__)
+  ULONG ret;
+  __asm__ __volatile__ (
+    "movl %%fs:%c1, %0\n"
+    : "=r" (ret)
+    : "i" (FIELD_OFFSET(KPCR, Number))
+  );
+  return ret;
+#elif defined(_MSC_VER)
+#if _MSC_FULL_VER >= 13012035
+  return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
+#else
+  __asm { movzx eax, _PCR KPCR.Number }
+#endif
+#else
+#error Unknown compiler
+#endif
+}
+#endif /* _X86_ */
+
 #define PAGE_SIZE                         0x1000
 #define PAGE_SHIFT                        12L
 
@@ -5295,30 +5320,6 @@ KIRQL
 DDKAPI
 KeGetCurrentIrql(
   VOID);
-
-static __inline
-ULONG
-DDKAPI
-KeGetCurrentProcessorNumber(VOID)
-{
-#if defined(__GNUC__)
-  ULONG ret;
-  __asm__ __volatile__ (
-    "movl %%fs:%c1, %0\n"
-    : "=r" (ret)
-    : "i" (FIELD_OFFSET(KPCR, Number))
-  );
-  return ret;
-#elif defined(_MSC_VER)
-#if _MSC_FULL_VER >= 13012035
-  return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
-#else
-  __asm { movzx eax, _PCR KPCR.Number }
-#endif
-#else
-#error Unknown compiler
-#endif
-}
 
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
@@ -5415,8 +5416,6 @@ KfReleaseSpinLock(
 #define RtlCopyMemoryNonTemporal RtlCopyMemory
 
 #define KeGetDcacheFillSize() 1L
-
-#endif /* _X86_ */
 
 
 
@@ -10579,13 +10578,13 @@ DbgBreakPointWithStatus(
   IN ULONG  Status);
 
 ULONG
-__cdecl
+DDKCDECLAPI
 DbgPrint(
   IN PCCH  Format,
   IN ...);
 
 ULONG
-__cdecl
+DDKCDECLAPI
 DbgPrintEx(
   IN ULONG  ComponentId,
   IN ULONG  Level,

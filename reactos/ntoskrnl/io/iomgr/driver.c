@@ -858,6 +858,10 @@ IopInitializeBuiltinDriver(
    {
       FileNameWithoutPath = ModuleName->Buffer;
    }
+   else
+   {
+      FileNameWithoutPath++;
+   }
 
    /*
     * Load the module
