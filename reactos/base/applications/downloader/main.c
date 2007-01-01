@@ -79,9 +79,10 @@ void CategoryChoosen (HWND hwnd, struct Category* Category)
 	(void)TreeView_DeleteItem(hwnd, TVI_ROOT);
 	(void)TreeView_DeleteItem(hwnd, TVI_ROOT); // Delete twice to bypass bug in windows 
 
-	Insert.item.mask = TVIF_TEXT|TVIF_PARAM;
+	Insert.item.mask = TVIF_TEXT|TVIF_PARAM|TVIF_IMAGE;
 	Insert.hInsertAfter = TVI_LAST;
 	Insert.hParent = TVI_ROOT;
+	Insert.item.iImage = 0;
 
 	CurrentApplication = Category->Apps;
 
@@ -124,9 +125,10 @@ BOOL SetupControls (HWND hwnd)
 	SendMessageW(hDownloadButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_DOWNLOAD)));
 
 	// Set deflaut entry for hApps
-	Insert.item.mask = TVIF_TEXT;
+	Insert.item.mask = TVIF_TEXT|TVIF_IMAGE;
 	Insert.item.pszText = Strings[IDS_CHOOSE_CATEGORY];
 	Insert.item.cchTextMax = lstrlenW(Strings[IDS_CHOOSE_CATEGORY]); 
+	Insert.item.iImage = 0;
 	SendMessage(hApps, TVM_INSERTITEM, 0, (LPARAM)&Insert); 
 
 	// Create Tree Icons
