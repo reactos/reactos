@@ -12,6 +12,10 @@
 			<description>Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, Composer bundle you will ever need.</description>
 			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/seamonkey/releases/1.0.7/seamonkey-1.0.7.en-US.win32.installer.exe</location>
 		</application>
+		<application name="Samba TNG">
+			<description>This tool allows you to access your Windows shared folders and printers.</description>
+			<location>http://svn.reactos.org/packages/samba-tng.exe</location>
+		</application>
 		<application name="Mozilla ActiveX Control">
 			<description>Essential Component to get ReactOS Explorer's and other applications Internet Browsing feature running.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/MozillaControl1712-ReactOS.exe</location>
