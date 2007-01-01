@@ -3,8 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ARM/ARM.h"
 #include "m68k/m68k.h"
-#include "ppc/ppc.h"
+#include "PPC/PPC.h"
 #include "misc.h"
 
 int main(int argc, char * argv[])
@@ -21,6 +22,7 @@ int main(int argc, char * argv[])
     printf("       -cpu m68030      : convert motorala 68030 to intel asm \n");
     printf("       -cpu m68040      : convert motorala 68040 to intel asm \n");
     printf("       -cpu ppc         : convert PowerPC to intel asm \n");
+    printf("       -cpu ARM4        : convert ARM4 to intel asm \n");
     printf("--------------------------------------------------------------\n");
     printf(".......-BaseAddress adr : the start base address only accpect \n");
     printf(".......                   dec value");
@@ -71,6 +73,8 @@ int main(int argc, char * argv[])
                 return M68KBrain(infile, outfile, BaseAddress, 68040);
             else if (stricmp(argv[2],"ppc"))
                 return PPCBrain(infile, outfile, BaseAddress, 0);
+            else if (stricmp(argv[2],"arm4"))
+                return ARMBrain(infile, outfile, BaseAddress, 4);
         }
     }
     return 0;
