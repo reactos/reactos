@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
  * FILE:          hal/halx86/xbox/pci_xbox.c
@@ -24,38 +23,40 @@
 
 /* VARIABLES ***************************************************************/
 
-static ULONG (STDCALL *GenericGetPciData)(PBUS_HANDLER BusHandler,
-                                          ULONG BusNumber,
-                                          ULONG SlotNumber,
-                                          PVOID Buffer,
-                                          ULONG Offset,
-                                          ULONG Length);
-static ULONG (STDCALL *GenericSetPciData)(PBUS_HANDLER BusHandler,
-                                          ULONG BusNumber,
-                                          ULONG SlotNumber,
-                                          PVOID Buffer,
-                                          ULONG Offset,
-                                          ULONG Length);
+static ULONG (NTAPI *GenericGetPciData)(IN PBUS_HANDLER BusHandler,
+                                        IN PBUS_HANDLER RootHandler,
+                                        IN PCI_SLOT_NUMBER SlotNumber,
+                                        OUT PUCHAR Buffer,
+                                        IN ULONG Offset,
+                                        IN ULONG Length);
+static ULONG (NTAPI *GenericSetPciData)(IN PBUS_HANDLER BusHandler,
+                                        IN PBUS_HANDLER RootHandler,
+                                        IN PCI_SLOT_NUMBER SlotNumber,
+                                        IN PUCHAR Buffer,
+                                        IN ULONG Offset,
+                                        IN ULONG Length);
 
 /* FUNCTIONS ***************************************************************/
 
-static ULONG STDCALL
-HalpXboxGetPciData(PBUS_HANDLER BusHandler,
-                   ULONG BusNumber,
-                   ULONG SlotNumber,
-                   PVOID Buffer,
-                   ULONG Offset,
-                   ULONG Length)
+static ULONG NTAPI
+HalpXboxGetPciData(IN PBUS_HANDLER BusHandler,
+                   IN PBUS_HANDLER RootHandler,
+                   IN PCI_SLOT_NUMBER SlotNumber,
+                   OUT PUCHAR Buffer,
+                   IN ULONG Offset,
+                   IN ULONG Length)
 {
+  ULONG BusNumber = BusHandler->BusNumber;
+
   DPRINT("HalpXboxGetPciData() called.\n");
   DPRINT("  BusNumber %lu\n", BusNumber);
   DPRINT("  SlotNumber %lu\n", SlotNumber);
   DPRINT("  Offset 0x%lx\n", Offset);
   DPRINT("  Length 0x%lx\n", Length);
 
-  if ((0 == BusNumber && 0 == (SlotNumber & 0x1f) &&
-       (1 == ((SlotNumber >> 5) & 0x07) || 2 == ((SlotNumber >> 5) & 0x07))) ||
-      (1 == BusNumber && 0 != (SlotNumber & 0x1f)))
+  if ((0 == BusNumber && 0 == SlotNumber.u.bits.DeviceNumber &&
+       (1 == SlotNumber.u.bits.FunctionNumber || 2 == SlotNumber.u.bits.FunctionNumber)) ||
+      (1 == BusNumber && 0 != SlotNumber.u.bits.DeviceNumber))
     {
       DPRINT("Blacklisted PCI slot\n");
       if (0 == Offset && 2 <= Length)
@@ -66,32 +67,34 @@ HalpXboxGetPciData(PBUS_HANDLER BusHandler,
       return 0;
     }
 
-  return GenericGetPciData(BusHandler, BusNumber, SlotNumber, Buffer, Offset, Length);
+  return GenericGetPciData(BusHandler, RootHandler, SlotNumber, Buffer, Offset, Length);
 }
 
-static ULONG STDCALL
-HalpXboxSetPciData(PBUS_HANDLER BusHandler,
-                   ULONG BusNumber,
-                   ULONG SlotNumber,
-                   PVOID Buffer,
-                   ULONG Offset,
-                   ULONG Length)
+static ULONG NTAPI
+HalpXboxSetPciData(IN PBUS_HANDLER BusHandler,
+                   IN PBUS_HANDLER RootHandler,
+                   IN PCI_SLOT_NUMBER SlotNumber,
+                   IN PUCHAR Buffer,
+                   IN ULONG Offset,
+                   IN ULONG Length)
 {
+  ULONG BusNumber = BusHandler->BusNumber;
+
   DPRINT("HalpXboxSetPciData() called.\n");
   DPRINT("  BusNumber %lu\n", BusNumber);
   DPRINT("  SlotNumber %lu\n", SlotNumber);
   DPRINT("  Offset 0x%lx\n", Offset);
   DPRINT("  Length 0x%lx\n", Length);
 
-  if ((0 == BusNumber && 0 == (SlotNumber & 0x1f) &&
-       (1 == ((SlotNumber >> 5) & 0x07) || 2 == ((SlotNumber >> 5) & 0x07))) ||
-      (1 == BusNumber && 0 != (SlotNumber & 0x1f)))
+  if ((0 == BusNumber && 0 == SlotNumber.u.bits.DeviceNumber &&
+       (1 == SlotNumber.u.bits.FunctionNumber || 2 == SlotNumber.u.bits.FunctionNumber)) ||
+      (1 == BusNumber && 0 != SlotNumber.u.bits.DeviceNumber))
     {
       DPRINT1("Trying to set data on blacklisted PCI slot\n");
       return 0;
     }
 
-  return GenericSetPciData(BusHandler, BusNumber, SlotNumber, Buffer, Offset, Length);
+  return GenericSetPciData(BusHandler, RootHandler, SlotNumber, Buffer, Offset, Length);
 }
 
 void
