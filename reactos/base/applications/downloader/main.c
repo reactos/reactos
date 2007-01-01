@@ -305,11 +305,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			MoveWindow(hHelpButton, LOWORD(lParam)-50, 10, 40, 40, FALSE);
 			MoveWindow(hUpdateButton, LOWORD(lParam)-100, 10, 40, 40, FALSE);
 			MoveWindow(hDownloadButton, (Split_Vertical+LOWORD(lParam))/2-70, HIWORD(lParam)-45, 140, 35, FALSE);
-
-			RECT Top = {0,0,LOWORD(lParam),60};
-			InvalidateRect(hwnd, &Top, TRUE);
-			RECT Bottom = {Split_Vertical, Split_Hozizontal, LOWORD(lParam), HIWORD(lParam)};
-			InvalidateRect(hwnd, &Bottom, FALSE);
 		}
 		break;
 
@@ -345,6 +340,7 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 	WndClass.lpszClassName	= L"Downloader";
 	WndClass.lpfnWndProc	= WndProc;
 	WndClass.hInstance		= hInstance;
+	WndClass.style			= CS_HREDRAW | CS_VREDRAW;
 	WndClass.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
 	WndClass.hCursor		= LoadCursor(NULL, IDC_ARROW);
 
