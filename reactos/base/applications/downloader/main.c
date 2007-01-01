@@ -1,4 +1,4 @@
-/*
+/* $Id$
  * PROJECT:         ReactOS Downloader
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/downloader/xml.c
@@ -30,10 +30,11 @@ WCHAR Strings [STRING_COUNT][MAX_STRING_LENGHT];
 
 void ShowMessage (WCHAR* title, WCHAR* message)
 {
+	HWND hwnd;
 	DescriptionHeadline = title;
 	DescriptionText = message;
 
-	HWND hwnd = GetParent(hCategories);
+	hwnd = GetParent(hCategories);
 	InvalidateRect(hwnd,NULL,TRUE); 
 	UpdateWindow(hwnd);
 }
@@ -63,6 +64,7 @@ void AddItems (HWND hwnd, struct Category* Category, struct Category* Parent)
 void CategoryChoosen (HWND hwnd, struct Category* Category)
 {
 	struct Application* CurrentApplication;
+	TV_INSERTSTRUCTW Insert;
 	SelectedApplication = NULL;
 	
 	if(Category->Children && !Category->Apps)
@@ -77,7 +79,6 @@ void CategoryChoosen (HWND hwnd, struct Category* Category)
 	(void)TreeView_DeleteItem(hwnd, TVI_ROOT);
 	(void)TreeView_DeleteItem(hwnd, TVI_ROOT); // Delete twice to bypass bug in windows 
 
-	TV_INSERTSTRUCTW Insert;
 	Insert.item.mask = TVIF_TEXT|TVIF_PARAM;
 	Insert.hInsertAfter = TVI_LAST;
 	Insert.hParent = TVI_ROOT;
@@ -96,6 +97,8 @@ void CategoryChoosen (HWND hwnd, struct Category* Category)
 
 BOOL SetupControls (HWND hwnd)
 {
+	TV_INSERTSTRUCTW Insert = {0};
+	HIMAGELIST hImageList;
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 
 	// Parse the XML file
@@ -121,14 +124,13 @@ BOOL SetupControls (HWND hwnd)
 	SendMessageW(hDownloadButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,(LPARAM)(HANDLE)LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_DOWNLOAD)));
 
 	// Set deflaut entry for hApps
-	TV_INSERTSTRUCTW Insert = {0}; 
 	Insert.item.mask = TVIF_TEXT;
 	Insert.item.pszText = Strings[IDS_CHOOSE_CATEGORY];
 	Insert.item.cchTextMax = lstrlenW(Strings[IDS_CHOOSE_CATEGORY]); 
 	SendMessage(hApps, TVM_INSERTITEM, 0, (LPARAM)&Insert); 
 
 	// Create Tree Icons
-	HIMAGELIST hImageList = ImageList_Create(16, 16, ILC_COLORDDB, 1, 1);
+	hImageList = ImageList_Create(16, 16, ILC_COLORDDB, 1, 1);
 	SendMessageW(hCategories, TVM_SETIMAGELIST, TVSIL_NORMAL, (LPARAM)(HIMAGELIST)hImageList);
 	SendMessageW(hApps, TVM_SETIMAGELIST, TVSIL_NORMAL, (LPARAM)(HIMAGELIST)hImageList);
 
@@ -168,11 +170,13 @@ static void DrawBitmap (HDC hdc, int x, int y, HBITMAP hBmp)
 
 HFONT GetFont (BOOL Title)
 {
+	int Height;
+	int Scale;
     LOGFONT Font;
     GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), &Font);
 
-	int Height = Title ? 20 : 19;
-	int Scale = Font.lfWidth/Font.lfHeight;
+	Height = Title ? 20 : 19;
+	Scale = Font.lfWidth/Font.lfHeight;
  
 	return CreateFont(Height, Height*Scale, Font.lfEscapement, Font.lfOrientation, Title ? FW_EXTRABOLD : FW_NORMAL, Font.lfItalic, 
 		Font.lfUnderline, Font.lfStrikeOut, Font.lfCharSet, Font.lfOutPrecision, Font.lfClipPrecision, Font.lfQuality, 
@@ -182,6 +186,8 @@ HFONT GetFont (BOOL Title)
 static void DrawDescription (HDC hdc, RECT DescriptionRect)
 {
 	int i;
+	HFONT Font;
+	RECT Rect = {DescriptionRect.left+5, DescriptionRect.top+3, DescriptionRect.right-2, DescriptionRect.top+22};
 
 	// Backgroud
 	Rectangle(hdc, DescriptionRect.left, DescriptionRect.top, DescriptionRect.right, DescriptionRect.bottom);
@@ -191,9 +197,8 @@ static void DrawDescription (HDC hdc, RECT DescriptionRect)
 		DrawBitmap(hdc, i, DescriptionRect.top+22, hUnderline); // less code then stretching ;)
 
 	// Headline
-	HFONT Font = GetFont(TRUE);
+	Font = GetFont(TRUE);
 	SelectObject(hdc, Font);
-	RECT Rect = {DescriptionRect.left+5, DescriptionRect.top+3, DescriptionRect.right-2, DescriptionRect.top+22};
 	DrawTextW(hdc, DescriptionHeadline, lstrlenW(DescriptionHeadline), &Rect, DT_SINGLELINE|DT_NOPREFIX);
 	DeleteObject(Font);
 
@@ -298,15 +303,21 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 			int Split_Hozizontal = (HIWORD(lParam)-(45+60))/2 + 60;
 			int Split_Vertical = 200;
+			RECT Rect = {Split_Vertical+5, Split_Hozizontal+5, LOWORD(lParam)-10, HIWORD(lParam)-50};
+			RECT Top = {0,0,LOWORD(lParam),60};
+			RECT Bottom = {Split_Vertical, Split_Hozizontal, LOWORD(lParam), HIWORD(lParam)};
 
 			ResizeControl(hCategories, 10, 60, Split_Vertical, HIWORD(lParam)-10);
 			ResizeControl(hApps, Split_Vertical+5, 60, LOWORD(lParam)-10, Split_Hozizontal);
-			RECT Rect = {Split_Vertical+5, Split_Hozizontal+5, LOWORD(lParam)-10, HIWORD(lParam)-50};
 			DescriptionRect = Rect;
 
 			MoveWindow(hHelpButton, LOWORD(lParam)-50, 10, 40, 40, FALSE);
 			MoveWindow(hUpdateButton, LOWORD(lParam)-100, 10, 40, 40, FALSE);
 			MoveWindow(hDownloadButton, (Split_Vertical+LOWORD(lParam))/2-70, HIWORD(lParam)-45, 140, 35, FALSE);
+
+
+			InvalidateRect(hwnd, &Top, TRUE);
+			InvalidateRect(hwnd, &Bottom, FALSE);
 		}
 		break;
 
@@ -329,6 +340,8 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 {
 	HWND hwnd;
 	int i;
+	WNDCLASSEXW WndClass = {0};
+	MSG msg;
 
 	InitCommonControls();
 
@@ -337,7 +350,6 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 		LoadStringW(hInstance, i, Strings[i], MAX_STRING_LENGHT); // if you know a better method please tell me. 
 
 	// Create the window
-	WNDCLASSEXW WndClass = {0};
 	WndClass.cbSize			= sizeof(WNDCLASSEX); 
 	WndClass.lpszClassName	= L"Downloader";
 	WndClass.lpfnWndProc	= WndProc;
@@ -363,7 +375,6 @@ INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
 	UpdateWindow(hwnd);
 
 	// Message Loop
-	MSG msg;
 	while(GetMessage(&msg,NULL,0,0))
 	{
 		TranslateMessage(&msg);

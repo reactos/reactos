@@ -1,4 +1,4 @@
-/*
+/* $Id$
  * PROJECT:         ReactOS Downloader
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base\applications\downloader\xml.c
@@ -21,6 +21,8 @@ extern WCHAR Strings [STRING_COUNT][MAX_STRING_LENGHT];
 
 void tag_opened (void* usrdata, const char* tag, const char** arg)
 {
+	int i;
+
 	if(!strcmp(tag, "tree") && !CurrentApplication)
 	{
 		// check version
@@ -49,7 +51,6 @@ void tag_opened (void* usrdata, const char* tag, const char** arg)
 		}
 		TagOpen = TRUE;
 
-		int i;
 		for (i=0; arg[i]; i+=2) 
 		{
 			if(!strcmp(arg[i], "name"))
@@ -81,7 +82,6 @@ void tag_opened (void* usrdata, const char* tag, const char** arg)
 			CurrentApplication = Current->Apps;
 		}
 
-		int i;
 		for (i=0; arg[i]; i+=2) 
 		{
 			if(!strcmp(arg[i], "name"))
@@ -147,6 +147,8 @@ BOOL ProcessXML (const char* filename, struct Category* Root)
 {
 	int done = 0;
 	char buffer[255];
+	FILE* file;
+	XML_Parser parser;
 
 	if(Current)
 		return FALSE;
@@ -154,7 +156,7 @@ BOOL ProcessXML (const char* filename, struct Category* Root)
 	Current = Root;
 	TagOpen = TRUE;
 
-	FILE* file = fopen(filename, "r");
+	file = fopen(filename, "r");
 	if(!file) 
 	{
 		file = fopen("downloader.xml", "r"); 
@@ -165,7 +167,7 @@ BOOL ProcessXML (const char* filename, struct Category* Root)
 		}
 	}
 
-	XML_Parser parser = XML_ParserCreate(NULL);
+	parser = XML_ParserCreate(NULL);
 	XML_SetElementHandler(parser, tag_opened, tag_closed);
 	XML_SetCharacterDataHandler(parser, text);
 

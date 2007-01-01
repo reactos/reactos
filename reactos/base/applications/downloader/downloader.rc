@@ -7,6 +7,4 @@
 
 #include <reactos/version.rc>
 
-#include "resources/generic.rc"
-#include "translations/en.rc"
-#include "translations/de.rc"
+#include "rsrc.rc"
