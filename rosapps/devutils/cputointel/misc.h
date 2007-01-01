@@ -12,3 +12,6 @@ CPU_UNINT ConvertBitToByte(CPU_BYTE *bit);
 CPU_UNINT GetMaskByte(CPU_BYTE *bit);
 
 
+CPU_UNINT ConvertBitToByte32(CPU_BYTE *bit);
+CPU_UNINT GetMaskByte32(CPU_BYTE *bit);
+
