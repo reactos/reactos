@@ -36,8 +36,8 @@
 
 
 /* Screensaver Page */
-#define IDC_SCREENS_CHOICES             1010
-#define IDC_SCREENS_PREVIEW             1011
+#define IDC_SCREENS_PREVIEW             1010
+#define IDC_SCREENS_CHOICES             1011
 #define IDC_SCREENS_POWER_BUTTON        1012
 #define IDC_SCREENS_SETTINGS            1013
 #define IDC_SCREENS_TESTSC              1014
@@ -55,7 +55,7 @@
 #define IDS_STRETCH                 2004
 #define IDS_TILE                    2005
 
-#define IDC_SETTINGS_DEVICE	       201
+#define IDC_SETTINGS_DEVICE          201
 #define IDC_SETTINGS_BPP             202
 #define IDC_SETTINGS_RESOLUTION      203
 #define IDC_SETTINGS_RESOLUTION_TEXT 204
@@ -76,7 +76,11 @@
 #define IDS_COLOR_8BIT			2908
 #define IDS_COLOR_16BIT			2916
 #define IDS_COLOR_24BIT			2924
-#define IDS_COLOR_32BIT			2932  
+#define IDS_COLOR_32BIT			2932
+
+
+/* Appearance Page */
+#define IDC_APPEARANCE_PREVIEW 1500
 
 #endif /* __CPL_DESK_RESOURCE_H__ */
 

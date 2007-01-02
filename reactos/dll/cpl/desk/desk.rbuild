@@ -27,5 +27,6 @@
 	<file>appearance.c</file>
 	<file>settings.c</file>
 	<file>dibitmap.c</file>
+	<file>preview.c</file>
 	<file>desk.rc</file>
 </module>

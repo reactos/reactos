@@ -46,13 +46,15 @@ BEGIN
     PUSHBUTTON      "&Alimentazione",IDC_SCREENS_POWER_BUTTON,165, 162, 73, 15
 END
 
-IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 188
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Aspetto"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
+                    WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Questo spazio è stato intenzionalmente lasciato in bianco.",IDC_STATIC,66,
-                    90,112,8
+                    150,112,8
 END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188

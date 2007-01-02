@@ -9,6 +9,7 @@
  */
 
 #include "desk.h"
+#include "preview.h"
 
 #define NUM_APPLETS	(1)
 
@@ -114,15 +115,20 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 
 
 BOOL WINAPI
-DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
+DllMain(HINSTANCE hInstDLL, DWORD dwReason, LPVOID lpvReserved)
 {
     UNREFERENCED_PARAMETER(lpvReserved);
 
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
-        case DLL_THREAD_ATTACH:
-            hApplet = hinstDLL;
+            RegisterPreviewControl(hInstDLL);
+//        case DLL_THREAD_ATTACH:
+            hApplet = hInstDLL;
+            break;
+
+        case DLL_PROCESS_DETACH:
+            UnregisterPreviewControl(hInstDLL);
             break;
     }
 

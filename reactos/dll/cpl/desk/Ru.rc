@@ -49,12 +49,14 @@ BEGIN
                     15
 END
 
-IDD_APPEARANCE DIALOGEX 0, 0, 246, 188
+IDD_APPEARANCE DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Оформление"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Настройки временно отсутсвуют",IDC_STATIC,65,87,114,8
+    CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
+                    WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
+    LTEXT           "Настройки временно отсутсвуют",IDC_STATIC,65,150,114,8
 END
 
 IDD_SETTINGS DIALOGEX 0, 0, 246, 188
