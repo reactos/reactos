@@ -18,82 +18,20 @@
  * 9 = can not read file
  */
 
-CPU_INT PPCBrain(char *infileName, char *outputfileName, 
-                   CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
+CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
+                     CPU_UNINT cpu_pos,
+                     CPU_UNINT cpu_size,
+                     CPU_UNINT BaseAddress,
+                     CPU_UNINT cpuarch,
+                     FILE *outfp)
 {
-    FILE *infp;
-    FILE *outfp;
-    CPU_BYTE *cpu_buffer;   
-    CPU_UNINT cpu_pos = 0;
     CPU_UNINT cpu_oldpos;
-    CPU_UNINT cpu_size=0;
     CPU_INT cpuint;
     CPU_INT retcode = 0;
     CPU_INT retsize;
 
-    /* Open file for read */
-    if (!(infp = fopen(infileName,"RB")))
-    {
-        printf("Can not open file %s\n",infileName);
-        return 3;
-    }
 
-    /* Open file for write */
-    if (!(outfp = fopen(outputfileName,"WB")))
-    {
-        printf("Can not open file %s\n",outputfileName);
-        return 4;
-    }
-
-    /* Load the binary file to a memory buffer */
-    fseek(infp,0,SEEK_END);
-    if (!ferror(infp))
-    {
-        printf("error can not seek in the read file");
-        fclose(infp);
-        fclose(outfp);        
-        return 5;
-    }
-    
-    /* get the memory size buffer */
-    cpu_size = ftell(infp);
-    if (!ferror(infp))
-    {
-        printf("error can not get file size of the read file");
-        fclose(infp);
-        fclose(outfp);        
-        return 6;
-    }
-
-    if (cpu_size==0)
-    {
-        printf("error file size is Zero lenght of the read file");
-        fclose(infp);
-        fclose(outfp);        
-        return 7;
-    }
-
-    /* alloc memory now */
-    if (!(cpu_buffer = (unsigned char *) malloc(cpu_size)))
-    {
-        printf("error can not alloc %uld size for memory buffer",cpu_size);
-        fclose(infp);
-        fclose(outfp);        
-        return 8;
-    }
-
-    /* read from the file now in one sweep */
-    fread(cpu_buffer,1,cpu_size,infp);
-    if (!ferror(infp))
-    {
-        printf("error can not read file ");
-        fclose(infp);
-        fclose(outfp);        
-        return 9;
-    }
-    fclose(infp);
-
-    /* now we start the process */    
+    /* now we start the process */
     while (cpu_pos<cpu_size)
     {
         cpu_oldpos = cpu_pos;

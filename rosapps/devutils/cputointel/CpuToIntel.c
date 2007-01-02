@@ -14,8 +14,12 @@ int main(int argc, char * argv[])
     int t=0;
     char *infile=NULL;
     char *outfile=NULL;
+    char *cpuid=NULL;
+    CPU_INT type=0;
+
 
     printf("Usage :\n");
+    printf(" need for -inbin and autodetect  if it does not found a PE header \n");
     printf("       -cpu m68000      : convert motorala 68000/68008 to intel asm \n");
     printf("       -cpu m68010      : convert motorala 68010 to intel asm \n");
     printf("       -cpu m68020      : convert motorala 68020 to intel asm \n");
@@ -23,13 +27,18 @@ int main(int argc, char * argv[])
     printf("       -cpu m68040      : convert motorala 68040 to intel asm \n");
     printf("       -cpu ppc         : convert PowerPC to intel asm \n");
     printf("       -cpu ARM4        : convert ARM4 to intel asm \n");
-    printf("--------------------------------------------------------------\n");
+    printf("------------------------------------------------------------------\n");
+    printf(" for -inbin and autodetect  if it does not found a PE header or do\n");
+    printf(" not set at all, this options are free to use     \n");
     printf(".......-BaseAddress adr : the start base address only accpect \n");
     printf(".......                   dec value");
-    printf("--------------------------------------------------------------\n");
+    printf("------------------------------------------------------------------\n");
+    printf("       -in filename     : try autodetect file type for you");
+    printf("                          whant convert\n");
     printf("       -inBin filename  : the bin file you whant convert\n");
-    printf("       -OutAsm filename  : the Asm file you whant create\n");
-    printf("--------------------------------------------------------------\n");
+    printf("       -inExe filename  : the PE file you whant convert\n");
+    printf("       -OutAsm filename : the Asm file you whant create\n");
+    printf("------------------------------------------------------------------\n");
     printf("More cpu will be added with the time or options, this is      \n");
     printf("version 0.0.1 of the cpu to intel converter writen by         \n");
     printf("Magnus Olsen (magnus@greatlord.com), it does not do anything  \n");
@@ -41,10 +50,24 @@ int main(int argc, char * argv[])
 
     for (t=1; t<7;t+=2)
     {
+        if (stricmp(argv[t],"-in"))
+        {
+            infile = argv[t+1];
+            type=0;
+        }
+
         if (stricmp(argv[t],"-inBin"))
         {
             infile = argv[t+1];
+            type=1;
         }
+
+        if (stricmp(argv[t],"-inExe"))
+        {
+            infile = argv[t+1];
+            type=1;
+        }
+
         if (stricmp(argv[t],"-OutAsm"))
         {
             outfile = argv[t+1];
@@ -53,30 +76,20 @@ int main(int argc, char * argv[])
         {
             BaseAddress = atol(argv[t+1]);
         }
-
-        
-    }
-
-    for (t=1;t<7;t+=2)
-    {
-        if (stricmp(argv[1],"-cpu"))
+        if (stricmp(argv[t],"-cpu"))
         {
-            if (stricmp(argv[2],"m68000"))
-                return M68KBrain(infile, outfile, BaseAddress, 68000);
-            else if (stricmp(argv[2],"m68010"))
-                return M68KBrain(infile, outfile, BaseAddress, 68010);
-            else if (stricmp(argv[2],"m68020"))
-                return M68KBrain(infile, outfile, BaseAddress, 68020);
-            else if (stricmp(argv[2],"m68030"))
-                return M68KBrain(infile, outfile, BaseAddress, 68030);
-            else if (stricmp(argv[2],"m68040"))
-                return M68KBrain(infile, outfile, BaseAddress, 68040);
-            else if (stricmp(argv[2],"ppc"))
-                return PPCBrain(infile, outfile, BaseAddress, 0);
-            else if (stricmp(argv[2],"arm4"))
-                return ARMBrain(infile, outfile, BaseAddress, 4);
+            cpuid = argv[t+1];
         }
+
     }
-    return 0;
+
+    return LoadPFileImage(infile,outfile,BaseAddress,cpuid,type);
 }
+
+
+
+
+
+
+
 

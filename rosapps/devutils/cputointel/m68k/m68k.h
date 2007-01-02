@@ -1,6 +1,12 @@
 
 #include "../misc.h"
-CPU_INT M68KBrain(char *infileName, char *outputfileName, CPU_UNINT BaseAddress, CPU_UNINT cpuarch);
+CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
+                     CPU_UNINT cpu_pos,
+                     CPU_UNINT cpu_size,
+                     CPU_UNINT BaseAddress,
+                     CPU_UNINT cpuarch,
+                     FILE *outfp);
+
 
 CPU_INT M68k_Abcd(FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos, CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch);
 CPU_INT M68k_Add(FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos, CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch);
