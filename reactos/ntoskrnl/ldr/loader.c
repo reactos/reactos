@@ -112,11 +112,8 @@ LdrInitModuleManagement ( PVOID KernelBase )
     PIMAGE_NT_HEADERS NtHeader;
 
     /* Initialize the module list and spinlock */
-    TRACEX(&ModuleListHead);
     InitializeListHead(&ModuleListHead);
-    TRACE;
     KeInitializeSpinLock(&ModuleListLock);
-    TRACE;
 
     /* Initialize ModuleObject for NTOSKRNL */
     RtlZeroMemory(&NtoskrnlModuleObject, sizeof(LDR_DATA_TABLE_ENTRY));
@@ -124,27 +121,20 @@ LdrInitModuleManagement ( PVOID KernelBase )
     RtlInitUnicodeString(&NtoskrnlModuleObject.FullDllName, KERNEL_MODULE_NAME);
     LdrpBuildModuleBaseName(&NtoskrnlModuleObject.BaseDllName, &NtoskrnlModuleObject.FullDllName);
 
-    TRACEXY(&RtlImageNtHeader,KernelBase);
     NtHeader = RtlImageNtHeader((PVOID)KernelBase);
-    TRACE;
     NtoskrnlModuleObject.EntryPoint = (PVOID) ((ULONG_PTR) NtoskrnlModuleObject.DllBase + NtHeader->OptionalHeader.AddressOfEntryPoint);
-    TRACE;
     DPRINT("ModuleObject:%08x  entrypoint at %x\n", &NtoskrnlModuleObject, NtoskrnlModuleObject.EntryPoint);
     NtoskrnlModuleObject.SizeOfImage = NtHeader->OptionalHeader.SizeOfImage;
-    TRACE;
 
     InsertTailList(&ModuleListHead, &NtoskrnlModuleObject.InLoadOrderLinks);
 
     /* Initialize ModuleObject for HAL */
-    TRACE;
     RtlZeroMemory(&HalModuleObject, sizeof(LDR_DATA_TABLE_ENTRY));
     HalModuleObject.DllBase = (PVOID) LdrHalBase;
 
-    TRACE;
     RtlInitUnicodeString(&HalModuleObject.FullDllName, HAL_MODULE_NAME);
     LdrpBuildModuleBaseName(&HalModuleObject.BaseDllName, &HalModuleObject.FullDllName);
 
-    TRACEX(LdrHalBase);
     NtHeader = RtlImageNtHeader((PVOID)LdrHalBase);
     if(!NtHeader) 
     {
@@ -154,7 +144,6 @@ LdrInitModuleManagement ( PVOID KernelBase )
     DPRINT("ModuleObject:%08x  entrypoint at %x\n", &HalModuleObject, HalModuleObject.EntryPoint);
     HalModuleObject.SizeOfImage = NtHeader->OptionalHeader.SizeOfImage;
 
-    TRACE;
     InsertTailList(&ModuleListHead, &HalModuleObject.InLoadOrderLinks);
 }
 
@@ -377,19 +366,15 @@ LdrProcessModule(
 {
     PIMAGE_DOS_HEADER PEDosHeader;
 
-    TRACE;
-
     /*  If MZ header exists  */
     PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
     if (PEDosHeader->e_magic == IMAGE_DOS_SIGNATURE && PEDosHeader->e_lfanew != 0L)
     {
-	TRACE;
         return LdrPEProcessModule(ModuleLoadBase,
             ModuleName,
             ModuleObject);
     }
 
-    TRACE;
     CPRINT("Module wasn't PE\n");
     return STATUS_UNSUCCESSFUL;
 }
@@ -1077,7 +1062,6 @@ LdrSafePEProcessModule (
             /* For ntoskrnl, we must stop after the bss section */
             break;
         }
-
     }
 
     return DriverBase;
