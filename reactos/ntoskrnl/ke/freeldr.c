@@ -348,15 +348,11 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     DrawNumber(BootInfo, (ULONG)BootInfo, 190, 100);
 
     /* Copy the Loader Block Data locally since Low-Memory will be wiped */
-    TRACE;
     memcpy(&KeRosLoaderBlock, LoaderBlock, sizeof(ROS_LOADER_PARAMETER_BLOCK));
-    TRACE;
     memcpy(&KeLoaderModules[0],
            (PVOID)KeRosLoaderBlock.ModsAddr,
            sizeof(LOADER_MODULE) * KeRosLoaderBlock.ModsCount);
-    TRACE;
     KeRosLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
-    TRACE;
 
     /* Check for BIOS memory map */
     KeMemoryMapRangeCount = 0;
@@ -365,8 +361,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
         /* We have a memory map from the nice BIOS */
         size = *((PULONG)(KeRosLoaderBlock.MmapAddr - sizeof(ULONG)));
         i = 0;
-
-	TRACEXY(size, KeRosLoaderBlock.MmapLength);
 
         /* Map it until we run out of size */
         while (i < KeRosLoaderBlock.MmapLength)
@@ -394,20 +388,16 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
         KeRosLoaderBlock.MmapLength = 0;
         KeRosLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
     }
-    TRACE;
 
     /* Save the Base Address */
     MmSystemRangeStart = (PVOID)KeRosLoaderBlock.KernelBase;
-    TRACEXY((ULONG)KeLoaderCommandLine, (ULONG)LoaderBlock->CommandLine);
 
     /* Set the Command Line */
     strcpy(KeLoaderCommandLine, (PCHAR)LoaderBlock->CommandLine);
     KeRosLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
-    TRACE;
 
     /* Get the address of ntoskrnl in openfirmware memory */
     StartKernelBase = KeLoaderModules[0].ModStart;
-    TRACE;
 
     /* Create a block for each module */
     for (i = 0; i < KeRosLoaderBlock.ModsCount; i++)
@@ -450,26 +440,28 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
         /* Select the proper String */
         KeLoaderModules[i].String = (ULONG)KeLoaderModuleStrings[i];
     }
-    TRACE;
 
     /* Choose last module address as the final kernel address */
     MmFreeLdrLastKernelAddress =
         PAGE_ROUND_UP(KeLoaderModules[KeRosLoaderBlock.ModsCount - 1].ModEnd);
-    TRACE;
 
+#ifndef _M_PPC
     /* Select the HAL Base */
     HalBase = KeLoaderModules[1].ModStart;
 
     /* Choose Driver Base */
     DriverBase = MmFreeLdrLastKernelAddress;
     LdrHalBase = (ULONG_PTR)DriverBase;
-    TRACE;
+#else
+    HalBase = KeLoaderModules[1].ModStart;
+    DriverBase = MmFreeLdrLastKernelAddress;
+    LdrHalBase = KeLoaderModules[1].ModStart;
+#endif
 
     /* Initialize Module Management */
     LdrInitModuleManagement((PVOID)KeLoaderModules[0].ModStart);
 
     /* Load HAL.DLL with the PE Loader */
-    TRACE;
     LdrSafePEProcessModule((PVOID)HalBase,
                             (PVOID)DriverBase,
                             (PVOID)KeLoaderModules[0].ModStart,
@@ -484,18 +476,15 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     //
     // This dirty hack fixes it, and should make symbol lookup work too.
     //
-    TRACE;
     HalModuleObject.SizeOfImage =  RtlImageNtHeader((PVOID)HalModuleObject.
                                                     DllBase)->
                                                     OptionalHeader.SizeOfImage;
 
     /* Increase the last kernel address with the size of HAL */
-    TRACE;
     MmFreeLdrLastKernelAddress += PAGE_ROUND_UP(DriverSize);
 
 #ifdef _M_IX86
     /* Now select the final beginning and ending Kernel Addresses */
-    TRACE;
     MmFreeLdrFirstKrnlPhysAddr = KeLoaderModules[0].ModStart -
                                  KSEG0_BASE + 0x200000;
     MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress -
@@ -503,28 +492,24 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 #endif
 
     /* Setup the IDT */
-    TRACE;
     KeInitExceptions(); // ONCE HACK BELOW IS GONE, MOVE TO KISYSTEMSTARTUP!
-    TRACE;
     KeInitInterrupts(); // ROS HACK DEPRECATED SOON BY NEW HAL
 
     /* Load the Kernel with the PE Loader */
-    TRACE;
     LdrSafePEProcessModule((PVOID)KeLoaderModules[0].ModStart,
                            (PVOID)KeLoaderModules[0].ModStart,
                            (PVOID)DriverBase,
                            &DriverSize);
 
     /* Sets up the VDM Data */
-    TRACE;
+#ifdef _M_IX86
     NtEarlyInitVdm();
+#endif
 
     /* Convert the loader block */
-    TRACE;
     KiRosFrldrLpbToNtLpb(&KeRosLoaderBlock, &NtLoaderBlock);
 
     /* Do general System Startup */
-    TRACE;
     KiSystemStartup(NtLoaderBlock);
 }
 
