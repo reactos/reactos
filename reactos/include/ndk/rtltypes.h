@@ -138,7 +138,7 @@ Author:
      HEAP_CREATE_ALIGN_16           |                       \
      HEAP_CREATE_ENABLE_TRACING     |                       \
      HEAP_CREATE_ENABLE_EXECUTE)
-#ifdef C_ASSERT
+#ifndef __GNUC__
 C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #endif
 
