@@ -1,0 +1,141 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Russian resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
+#ifdef _WIN32
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+#pragma code_page(1251)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAINDIALOG DIALOG DISCARDABLE  0, 0, 403, 223
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "Keyboard layout test"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Exit",ID_CANCEL,138,202,121,14
+    EDITTEXT        IDC_EDIT1,7,140,195,58,ES_MULTILINE | ES_AUTOHSCROLL
+    LISTBOX         IDC_LIST,185,17,101,87,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Loaded layouts",IDC_STATIC,190,7,49,8
+    LTEXT           "Active layout:",IDC_ACTIVE,7,127,173,10,SS_SUNKEN
+    EDITTEXT        IDC_EDIT2,206,140,190,58,ES_MULTILINE | ES_AUTOHSCROLL
+    PUSHBUTTON      "Unload",IDC_UNLOAD,186,105,48,14
+    PUSHBUTTON      "Activate",IDC_ACTIVATE,237,121,47,14
+    GROUPBOX        "Activate Flags",IDC_STATIC,293,7,103,67
+    CONTROL         "KLF_REORDER",IDC_KLF_REORDER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,299,22,69,10
+    CONTROL         "KLF_RESET",IDC_KLF_RESET,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,299,34,66,12
+    CONTROL         "KLF_SETFORPROCESS",IDC_KLF_SETFORPROCESS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,299,48,95,10
+    CONTROL         "KLF_SHIFTLOCK",IDC_KLF_SHIFTLOCK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,299,60,72,10
+    GROUPBOX        "Activate layout",IDC_STATIC,294,77,101,60
+    CONTROL         "From list",IDC_FROMLIST,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,298,90,41,10
+    CONTROL         "HKL_NEXT",IDC_HKL_NEXT,"Button",BS_AUTORADIOBUTTON,298,
+                    101,53,10
+    CONTROL         "HKL_PREV",IDC_HKL_PREV,"Button",BS_AUTORADIOBUTTON,298,
+                    112,53,10
+    CONTROL         "From edit",IDC_FROMEDIT,"Button",BS_AUTORADIOBUTTON,298,
+                    124,45,10
+    GROUPBOX        "Load layout",IDC_STATIC,7,7,173,118
+    CONTROL         "KLF_ACTIVATE",IDL_KLF_ACTIVATE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,42,67,10
+    CONTROL         "KLF_NOTELLSHELL",IDL_KLF_NOTELLSHELL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,55,83,10
+    LTEXT           "pwszKLID:",IDC_STATIC,15,22,35,8
+    EDITTEXT        IDC_KLID,53,21,64,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "KLF_REORDER",IDL_KLF_REORDER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,68,69,10
+    CONTROL         "KLF_REPLACELANG",IDL_KLF_REPLACELANG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,81,85,10
+    CONTROL         "KLF_SUBSTITUTE_OK",IDL_KLF_SUBSTITUTE_OK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,94,92,10
+    CONTROL         "KLF_SETFORPROCESS",IDL_KLF_SETFORPROCESS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,107,95,10
+    PUSHBUTTON      "Load",IDC_LOAD,125,21,50,14
+    PUSHBUTTON      "Refresh",IDC_REFRESH,237,106,48,14
+    EDITTEXT        IDC_HANDLE,185,122,49,14,ES_AUTOHSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_MAINDIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 396
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 216
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#endif    // Russian resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

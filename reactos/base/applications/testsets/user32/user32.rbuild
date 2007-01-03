@@ -7,4 +7,7 @@
 <directory name="sysicon">
 	<xi:include href="sysicon/sysicon.rbuild" />
 </directory>
+<directory name="kbdlayout">
+	<xi:include href="kbdlayout/kbdlayout.rbuild" />
+</directory>
 </group>
