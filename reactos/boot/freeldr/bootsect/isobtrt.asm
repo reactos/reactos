@@ -41,8 +41,6 @@
 ; Note: The Makefile builds one version with DEBUG_MESSAGES automatically.
 ;%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
 
-%define WAIT_FOR_KEY
-
 
 ; ---------------------------------------------------------------------------
 ;   BEGIN THE BIOS/CODE/DATA SEGMENT
@@ -137,47 +135,22 @@ relocate:
 	call	writestr
 %endif
 
+; check if there is a mbr on the hdd if so boot from it
 
-	; Make sure the keyboard buffer is empty
-%ifdef WAIT_FOR_KEY
-.kbd_buffer_test:
-	call	pollchar
-	jz	.kbd_buffer_empty
-	call	getchar
-	jmp	.kbd_buffer_test
-.kbd_buffer_empty:
-
-	; Check if there is harddisk
 	pusha
-	mov	ax, 0800h
+	mov	ax, 0201h
 	mov	dx, 0080h
+	mov	cx, 0001h
+	mov	bx, trackbuf
 	int	13h
 	popa
-	jmp	.boot_cdrom
+	jc	.boot_cdrom ; could not read hdd
 
-	; Display the 'Press key' message and wait for a maximum of 5 seconds
-	call	crlf
-	mov	si, presskey_msg		; si points to 'Press key' message
-	call	writestr			; display the message
-
-	mov	byte [TimeoutCount], 5
-.next_second:
-	mov	eax, [BIOS_timer]		; load current tick counter
-	add	eax, 19				; 
-
-.poll_again:
-	call	pollchar
-	jnz	.boot_cdrom
-
-	mov	ebx, [BIOS_timer]
-	cmp	eax, ebx
-	jnz	.poll_again
-
-	mov	si, dot_msg			; print '.'
-	call	writestr
-	dec	byte [TimeoutCount]		; decrement timeout counter
-	jz	.boot_harddisk
-	jmp	.next_second
+	push ax
+	mov ax, word [trackbuf+510]
+	cmp ax, 0
+	je	.boot_cdrom ; no boot sector found (hopefully there are no weird bootsectors which begin with 0)
+	pop ax
 
 .boot_harddisk:
 	call	crlf
@@ -199,14 +172,8 @@ relocate:
 	mov	dx, 0080h
 
 	jmp	0:0x7C00
-%endif
 
 .boot_cdrom:
-%ifdef WAIT_FOR_KEY
-	call	crlf
-	call	crlf
-%endif
-
 	; Save and display the boot drive number
 	mov	[DriveNo], dl
 %ifdef DEBUG_MESSAGES
