@@ -139,13 +139,21 @@ relocate:
 	jmp	.kbd_buffer_test
 .kbd_buffer_empty:
 
-	; Check if there is harddisk
+	; Check for MBR on harddisk
 	pusha
-	mov	ax, 0800h
+	mov	ax, 0201h
 	mov	dx, 0080h
+	mov	cx, 0001h
+	mov	bx, trackbuf
 	int	13h
 	popa
-	jc	.boot_cdrom
+	jc	.boot_cdrom ; could not read hdd
+
+	push ax
+	mov ax, word [trackbuf]
+	cmp ax, 0
+	je	.boot_cdrom ; no boot sector found (hopefully there are no weird bootsectors which begin with 0)
+	pop ax
 
 	; Display the 'Press key' message and wait for a maximum of 5 seconds
 	call	crlf
