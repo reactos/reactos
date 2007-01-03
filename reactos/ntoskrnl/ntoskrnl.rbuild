@@ -49,6 +49,9 @@
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file first="true">main_asm.S</file>
+				<file>mmu.c</file>
+				<file>cpu.c</file>
+				<file>exp.c</file>
 				<file>kiinit.c</file>
 				<file>ppc_irq.c</file>
 			</directory>
