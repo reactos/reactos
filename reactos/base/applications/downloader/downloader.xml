@@ -20,6 +20,10 @@
 			<description>Essential Component to get ReactOS Explorer's and other applications Internet Browsing feature running.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/MozillaControl1712-ReactOS.exe</location>
 		</application>
+		<application name="Miranda IM">
+			<description>Open source multiprotocol instant messaging application - May not work completely.</description>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/miranda/miranda-im-v0.5.1-unicode.exe</location>
+		</application>
 		<application name="Putty">
 			<description>A free SSH, Telnet, rlogin, and raw TCP client.</description>
 			<location>http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.58-installer.exe</location>
