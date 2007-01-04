@@ -167,7 +167,7 @@ Ke386SanitizeDr(IN PVOID DrAddress,
     {                                                                       \
         /* Check if we need to request an APC Delivery */                   \
         if (!(IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode])) &&   \
-            !(_Thread->KernelApcDisable))                                   \
+            !(_Thread->SpecialApcDisable))                                  \
         {                                                                   \
             /* Check for the right environment */                           \
             KiCheckForKernelApcDelivery();                                  \
