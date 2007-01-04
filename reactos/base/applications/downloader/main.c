@@ -170,21 +170,6 @@ static void DrawBitmap (HDC hdc, int x, int y, HBITMAP hBmp)
 	DeleteDC(hdcMem);
 }
 
-HFONT GetFont (BOOL Title)
-{
-	int Height;
-	int Scale;
-    LOGFONT Font;
-    GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), &Font);
-
-	Height = Title ? 20 : 19;
-	Scale = Font.lfWidth/Font.lfHeight;
- 
-	return CreateFont(Height, Height*Scale, Font.lfEscapement, Font.lfOrientation, Title ? FW_EXTRABOLD : FW_NORMAL, Font.lfItalic, 
-		Font.lfUnderline, Font.lfStrikeOut, Font.lfCharSet, Font.lfOutPrecision, Font.lfClipPrecision, Font.lfQuality, 
-		Font.lfPitchAndFamily, Font.lfFaceName); 
-}
-
 static void DrawDescription (HDC hdc, RECT DescriptionRect)
 {
 	int i;
@@ -199,13 +184,15 @@ static void DrawDescription (HDC hdc, RECT DescriptionRect)
 		DrawBitmap(hdc, i, DescriptionRect.top+22, hUnderline); // less code then stretching ;)
 
 	// Headline
-	Font = GetFont(TRUE);
+	Font = CreateFont(-16 , 0, 0, 0, FW_EXTRABOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+						OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, L"Arial");
 	SelectObject(hdc, Font);
 	DrawTextW(hdc, DescriptionHeadline, lstrlenW(DescriptionHeadline), &Rect, DT_SINGLELINE|DT_NOPREFIX);
 	DeleteObject(Font);
 
 	// Description
-	Font = GetFont(FALSE);
+	Font = CreateFont(-13 , 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+						OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, L"Arial");
 	SelectObject(hdc, Font);
 	Rect.top += 40;
 	Rect.bottom = DescriptionRect.bottom-2;
@@ -305,27 +292,21 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 			int Split_Hozizontal = (HIWORD(lParam)-(45+60))/2 + 60;
 			int Split_Vertical = 200;
-			RECT Rect = {Split_Vertical+5, Split_Hozizontal+5, LOWORD(lParam)-10, HIWORD(lParam)-50};
-			RECT Top = {0,0,LOWORD(lParam),60};
-			RECT Bottom = {Split_Vertical, Split_Hozizontal, LOWORD(lParam), HIWORD(lParam)};
 
 			ResizeControl(hCategories, 10, 60, Split_Vertical, HIWORD(lParam)-10);
 			ResizeControl(hApps, Split_Vertical+5, 60, LOWORD(lParam)-10, Split_Hozizontal);
+			RECT Rect = {Split_Vertical+5, Split_Hozizontal+5, LOWORD(lParam)-10, HIWORD(lParam)-50};
 			DescriptionRect = Rect;
 
-			MoveWindow(hHelpButton, LOWORD(lParam)-50, 10, 40, 40, FALSE);
-			MoveWindow(hUpdateButton, LOWORD(lParam)-100, 10, 40, 40, FALSE);
-			MoveWindow(hDownloadButton, (Split_Vertical+LOWORD(lParam))/2-70, HIWORD(lParam)-45, 140, 35, FALSE);
-
-
-			InvalidateRect(hwnd, &Top, TRUE);
-			InvalidateRect(hwnd, &Bottom, FALSE);
+			MoveWindow(hHelpButton, LOWORD(lParam)-50, 10, 40, 40, TRUE);
+			MoveWindow(hUpdateButton, LOWORD(lParam)-100, 10, 40, 40, TRUE);
+			MoveWindow(hDownloadButton, (Split_Vertical+LOWORD(lParam))/2-70, HIWORD(lParam)-45, 140, 35, TRUE);
 		}
 		break;
 
 		case WM_DESTROY:
 		{
-			DeleteObject(hLogo);
+			DeleteObject(hLogo);	
 			if(Root.Children)
 				FreeTree(Root.Children);
 			PostQuitMessage(0);
