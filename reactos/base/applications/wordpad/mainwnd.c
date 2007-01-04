@@ -160,8 +160,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
                WORD CmdId,
                HWND hControl)
 {
-    //static TCHAR szFileName[MAX_PATH];
-    //static TCHAR szImageName[MAX_PATH];
+    static TCHAR szFileName[MAX_PATH];
+    static TCHAR szDocumentName[MAX_PATH];
 
     UNREFERENCED_PARAMETER(hControl);
 
@@ -176,7 +176,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
             LoadAndFormatString(hInstance,
                                 IDS_DEFAULT_NAME,
-                                &OpenInfo.lpImageName,
+                                &OpenInfo.lpDocumentName,
                                 ++Info->ImagesCreated);
 
             Ret = DialogBox(hInstance,
@@ -200,21 +200,21 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
         case ID_OPEN:
         {
-/*            OPEN_EDIT_INFO OpenInfo;
+            OPEN_EDIT_INFO OpenInfo;
 
             if (DoOpenFile(Info->hSelf,
-                           szFileName,   / * full file path * /
-                           szImageName)) / * file name * /
+                           szFileName,   /* full file path */
+                           szDocumentName)) /* file name */
             {
                 OpenInfo.CreateNew = FALSE;
 
-                OpenInfo.Open.lpImagePath = szFileName;
-                OpenInfo.lpImageName = szImageName;
+                OpenInfo.lpDocumentPath = szFileName;
+                OpenInfo.lpDocumentName = szDocumentName;
 
                 CreateEditWindow(Info,
                                  &OpenInfo);
             }
-*/
+
         }
         break;
 

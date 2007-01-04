@@ -47,9 +47,9 @@ typedef struct _OPEN_EDIT_INFO
     union
     {
         UINT DocType;       /* new */
-        LPTSTR lpImagePath; /* open */
+        LPTSTR lpDocumentPath; /* open */
     };
-    LPTSTR lpImageName;
+    LPTSTR lpDocumentName;
 
 } OPEN_EDIT_INFO, *POPEN_EDIT_INFO;
 

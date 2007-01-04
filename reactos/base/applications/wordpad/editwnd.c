@@ -147,7 +147,7 @@ CreateEditWindow(struct _MAIN_WND_INFO *MainWnd,
         Info->OpenInfo = OpenInfo;
 
         hWndEditor = CreateMDIWindow(szEditWndClass,
-                                     OpenInfo->lpImageName,
+                                     OpenInfo->lpDocumentName,
                                      WS_MAXIMIZE,
                                      CW_USEDEFAULT,
                                      CW_USEDEFAULT,

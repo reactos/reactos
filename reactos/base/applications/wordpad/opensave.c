@@ -30,7 +30,10 @@ DoOpenFile(HWND hwnd,
 {
 	DWORD err;
 
-	static TCHAR Filter[] = _T("RichText files (*.rtf)\0*.rtf\0");
+	static TCHAR Filter[] = _T("All documents (*.txt,*.rtf)\0*.txt;*.rtf\0") \
+		_T("Rich Text Document (*.rtf)\0*.rtf\0") \
+		_T("Text Document (*.txt)\0*.txt\0");
+
 
 	ofn.lpstrFilter = Filter;
 	ofn.lpstrFile = szFileName;
@@ -56,7 +59,8 @@ BOOL
 DoSaveFile(HWND hwnd)
 {
 	TCHAR szFileName[MAX_PATH] = _T("");
-	static TCHAR Filter[] = _T("RichText files (*.rtf)\0*.rtf\0");
+	static TCHAR Filter[] = _T("Rich Text Document (*.rtf)\0*.rtf\0") \
+		_T("Text Document (*.txt)\0*.txt\0");
 
 	ofn.lpstrFilter = Filter;
 	ofn.lpstrFile = szFileName;
