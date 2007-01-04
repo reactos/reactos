@@ -59,7 +59,7 @@ BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "To miejsce pozosta³o celowo puste",IDC_STATIC,66,
-                    1590,112,8
+                    150,112,8
 END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188
@@ -114,4 +114,14 @@ BEGIN
     IDS_COLOR_24BIT "True Color (24 Bitów)"
     IDS_COLOR_32BIT "True Color (32 Bitów)"
     IDS_PIXEL "%lux%lu pikseli"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INACTWIN "Inactive Window"
+    IDS_ACTWIN   "Active Window"
+    IDS_WINTEXT  "Window Text"
+    IDS_MESSBOX  "Message Box"
+    IDS_MESSTEXT "Message Text"
+    IDS_BUTTEXT  "OK"
 END

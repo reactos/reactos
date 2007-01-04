@@ -117,3 +117,13 @@ BEGIN
     IDS_COLOR_32BIT "16,7 miljoner färger (32 Bit)"
     IDS_PIXEL "%lux%lu Pixlar"
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INACTWIN "Inactive Window"
+    IDS_ACTWIN   "Active Window"
+    IDS_WINTEXT  "Window Text"
+    IDS_MESSBOX  "Message Box"
+    IDS_MESSTEXT "Message Text"
+    IDS_BUTTEXT  "OK"
+END

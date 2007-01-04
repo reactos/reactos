@@ -82,5 +82,13 @@
 /* Appearance Page */
 #define IDC_APPEARANCE_PREVIEW 1500
 
+#define IDS_INACTWIN    1510
+#define IDS_ACTWIN      1511
+#define IDS_WINTEXT     1512
+#define IDS_MESSBOX     1513
+#define IDS_MESSTEXT    1514
+#define IDS_BUTTEXT     1515
+
+
 #endif /* __CPL_DESK_RESOURCE_H__ */
 

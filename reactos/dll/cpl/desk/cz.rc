@@ -114,3 +114,13 @@ BEGIN
     IDS_COLOR_32BIT "True Color (32 Bit)"
     IDS_PIXEL "%lux%lu bodù"
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INACTWIN "Inactive Window"
+    IDS_ACTWIN   "Active Window"
+    IDS_WINTEXT  "Window Text"
+    IDS_MESSBOX  "Message Box"
+    IDS_MESSTEXT "Message Text"
+    IDS_BUTTEXT  "OK"
+END

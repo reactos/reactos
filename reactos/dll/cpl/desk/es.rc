@@ -121,3 +121,13 @@ BEGIN
     IDS_COLOR_32BIT "La más alta (32 bits)"
     IDS_PIXEL "%lu por %lu píxeles"
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INACTWIN "Inactive Window"
+    IDS_ACTWIN   "Active Window"
+    IDS_WINTEXT  "Window Text"
+    IDS_MESSBOX  "Message Box"
+    IDS_MESSTEXT "Message Text"
+    IDS_BUTTEXT  "OK"
+END

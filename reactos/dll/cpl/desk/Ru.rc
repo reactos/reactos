@@ -142,3 +142,13 @@ BEGIN
     IDS_BACKGROUND_COMDLG_FILTER "Картинки (*.bmp;*.dib)\000*.bmp;*.dib"
     IDS_SUPPORTED_EXT       "*.bmp;*.dib"
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INACTWIN "Inactive Window"
+    IDS_ACTWIN   "Active Window"
+    IDS_WINTEXT  "Window Text"
+    IDS_MESSBOX  "Message Box"
+    IDS_MESSTEXT "Message Text"
+    IDS_BUTTEXT  "OK"
+END

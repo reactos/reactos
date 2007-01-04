@@ -39,6 +39,10 @@ typedef struct _PREVIEW_DATA
 
     RECT rcDialogButton;
 
+    LOGFONT CaptionFont;
+    LOGFONT DialogFont;
+    LOGFONT MenuFont;
+
 } PREVIEW_DATA, *PPREVIEW_DATA;
 
 
@@ -173,34 +177,63 @@ PreviewWndProc(HWND hwnd,
     PAINTSTRUCT ps;
     RECT rc;
 
+    static TCHAR szInAct[32];
+    static TCHAR szAct[32];
+    static TCHAR szWinTxt[32];
+    static TCHAR szMessBox[32];
+    static TCHAR szMessText[32];
+    static TCHAR szButText[4];
+
     pPreviewData = (PPREVIEW_DATA)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_CREATE:
+        {
+            NONCLIENTMETRICS NonClientMetrics;
+
             pPreviewData = (PPREVIEW_DATA)HeapAlloc(GetProcessHeap(),
                                                     HEAP_ZERO_MEMORY,
                                                     sizeof(PREVIEW_DATA));
-            if (pPreviewData)
-            {
-                SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pPreviewData);
-                pPreviewData->clrDesktop = GetSysColor(COLOR_DESKTOP);
-                pPreviewData->hbrDesktop = CreateSolidBrush(pPreviewData->clrDesktop);
-                pPreviewData->clrWindow = GetSysColor(COLOR_WINDOW);
-                pPreviewData->hbrWindow = CreateSolidBrush(pPreviewData->clrWindow);
+            if (!pPreviewData)
+                return -1;
 
-                pPreviewData->cxEdge = GetSystemMetrics(SM_CXEDGE);
-                pPreviewData->cyEdge = GetSystemMetrics(SM_CXEDGE);
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pPreviewData);
+            pPreviewData->clrDesktop = GetSysColor(COLOR_DESKTOP);
+            pPreviewData->hbrDesktop = CreateSolidBrush(pPreviewData->clrDesktop);
+            pPreviewData->clrWindow = GetSysColor(COLOR_WINDOW);
+            pPreviewData->hbrWindow = CreateSolidBrush(pPreviewData->clrWindow);
 
-                pPreviewData->cyCaption = 20; //GetSystemMetrics(SM_CYCAPTION);
-            }
+            pPreviewData->cxEdge = GetSystemMetrics(SM_CXEDGE);
+            pPreviewData->cyEdge = GetSystemMetrics(SM_CXEDGE);
+
+            pPreviewData->cyCaption = 20; //GetSystemMetrics(SM_CYCAPTION);
+
+            /* load font info */
+            NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
+            SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
+            pPreviewData->CaptionFont = NonClientMetrics.lfCaptionFont;
+            pPreviewData->MenuFont = NonClientMetrics.lfMenuFont;
+            pPreviewData->DialogFont = NonClientMetrics.lfMessageFont;
+
+            LoadString(hApplet, IDS_INACTWIN, szInAct, sizeof(szInAct));
+            LoadString(hApplet, IDS_ACTWIN, szAct, sizeof(szAct));
+            LoadString(hApplet, IDS_WINTEXT, szWinTxt, sizeof(szWinTxt));
+            LoadString(hApplet, IDS_MESSBOX, szMessBox, sizeof(szMessBox));
+            LoadString(hApplet, IDS_MESSTEXT, szMessText, sizeof(szMessText));
+            LoadString(hApplet, IDS_BUTTEXT, szButText, sizeof(szButText));
+
             break;
+        }
 
         case WM_SIZE:
             OnSize(LOWORD(lParam), HIWORD(lParam), pPreviewData);
             break;
 
         case WM_PAINT:
+        {
+            RECT tmpRc;
+
             hdc = BeginPaint(hwnd, &ps);
 
             /* Desktop */
@@ -210,19 +243,40 @@ PreviewWndProc(HWND hwnd,
             DrawEdge(hdc, &pPreviewData->rcInactiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
             DrawCaption(hwnd, hdc, &pPreviewData->rcInactiveCaption, DC_GRADIENT | DC_TEXT);
             DrawCaptionButtons(hdc, &pPreviewData->rcInactiveCaption, TRUE);
+            CopyMemory(&tmpRc, &pPreviewData->rcInactiveCaption, sizeof(RECT));
+            tmpRc.left += 4;
+            tmpRc.top += 2;
+            SelectObject(hdc, CreateFontIndirect(&pPreviewData->CaptionFont));
+            SetTextColor(hdc, RGB(212,208,200));
+            DrawText(hdc, szInAct, lstrlen(szInAct), &tmpRc, DT_LEFT);
+            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
 
 
             /* Active Window */
             DrawEdge(hdc, &pPreviewData->rcActiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
             DrawCaption(hwnd, hdc, &pPreviewData->rcActiveCaption, DC_ACTIVE | DC_GRADIENT | DC_TEXT);
             DrawCaptionButtons(hdc, &pPreviewData->rcActiveCaption, TRUE);
+            CopyMemory(&tmpRc, &pPreviewData->rcActiveCaption, sizeof(RECT));
+            tmpRc.left += 4;
+            tmpRc.top += 2;
+            SetTextColor(hdc, RGB(255,255,255)); // FIXME: don't hardcode colors
+            SelectObject(hdc, CreateFontIndirect(&pPreviewData->CaptionFont));
+            DrawText(hdc, szAct, lstrlen(szAct), &tmpRc, DT_LEFT);
+            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
 
             /* FIXME: Draw the menu bar */
             CopyRect(&rc, &pPreviewData->rcActiveClient);
             DrawEdge(hdc, &rc, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
             FillRect(hdc, &rc, pPreviewData->hbrWindow);
 
-            /* FIXME: Draw the client text */
+            /* Draw the client text */
+            CopyMemory(&tmpRc, &pPreviewData->rcActiveClient, sizeof(RECT));
+            tmpRc.left += 4;
+            tmpRc.top += 2;
+            SetTextColor(hdc, RGB(0,0,0));
+            SelectObject(hdc, CreateFontIndirect(&pPreviewData->DialogFont));
+            DrawText(hdc, szWinTxt, lstrlen(szWinTxt), &tmpRc, DT_LEFT);
+            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
 
             /* Draw the scroll bar */
             DrawScrollbar(hdc, &pPreviewData->rcActiveScroll);
@@ -232,13 +286,35 @@ PreviewWndProc(HWND hwnd,
             DrawEdge(hdc, &pPreviewData->rcDialogFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
             DrawCaption(hwnd, hdc, &pPreviewData->rcDialogCaption, DC_ACTIVE | DC_GRADIENT | DC_TEXT);
             DrawCaptionButtons(hdc, &pPreviewData->rcDialogCaption, FALSE);
+            CopyMemory(&tmpRc, &pPreviewData->rcDialogCaption, sizeof(RECT));
+            tmpRc.left += 4;
+            tmpRc.top += 2;
+            SetTextColor(hdc, RGB(255,255,255));
+            SelectObject(hdc, CreateFontIndirect(&pPreviewData->CaptionFont));
+            DrawText(hdc, szMessBox, lstrlen(szMessBox), &tmpRc, DT_LEFT);
+            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
+
+            /* draw the dialog text */
+            CopyMemory(&tmpRc, &pPreviewData->rcDialogClient, sizeof(RECT));
+            tmpRc.left += 4;
+            tmpRc.top += 2;
+            SetTextColor(hdc, RGB(0,0,0));
+            SelectObject(hdc, CreateFontIndirect(&pPreviewData->DialogFont));
+            DrawText(hdc, szMessText, lstrlen(szMessText), &tmpRc, DT_LEFT);
+            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
 
             /* Draw Button */
             DrawFrameControl(hdc, &pPreviewData->rcDialogButton, DFC_BUTTON, DFCS_BUTTONPUSH);
+            CopyMemory(&tmpRc, &pPreviewData->rcDialogButton, sizeof(RECT));
+            tmpRc.top += 6;
+            SelectObject(hdc, CreateFontIndirect(&pPreviewData->DialogFont));
+            DrawText(hdc, szButText, lstrlen(szButText), &tmpRc, DT_CENTER);
+            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
 
 
             EndPaint(hwnd, &ps);
             break;
+        }
 
         case WM_DESTROY:
             DeleteObject(pPreviewData->hbrDesktop);
