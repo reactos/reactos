@@ -176,7 +176,7 @@ PreviewWndProc(HWND hwnd,
     HDC hdc;
     PAINTSTRUCT ps;
     RECT rc;
-
+    static NONCLIENTMETRICS NonClientMetrics;
     static TCHAR szInAct[32];
     static TCHAR szAct[32];
     static TCHAR szWinTxt[32];
@@ -190,8 +190,6 @@ PreviewWndProc(HWND hwnd,
     {
         case WM_CREATE:
         {
-            NONCLIENTMETRICS NonClientMetrics;
-
             pPreviewData = (PPREVIEW_DATA)HeapAlloc(GetProcessHeap(),
                                                     HEAP_ZERO_MEMORY,
                                                     sizeof(PREVIEW_DATA));
