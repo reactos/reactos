@@ -28,16 +28,9 @@ DoOpenFile(HWND hwnd,
            LPTSTR szFileName,
            LPTSTR szTitleName)
 {
-    DWORD err;
-	/*static TCHAR Filter[] = _T("All image files (*.gif,*.bmp,*.jpg,*.jpeg,*.tif,*.png)\0*.gif,*.bmp,*.jpg,*.jpeg,*.tif,*.png\0") \
-                            _T("All files (*.*)\0*.*\0") \
-                            _T("Graphics Interchange format (*gif)\0*.gif\0") \
-                            _T("Windows Bitmap (*bmp)\0*.bmp\0") \
-                            _T("JPEG File Interchange Format (*jpg,*.jpeg)\0*.jpg,*.jpeg\0") \
-                            _T("TAG Image File Format (*tif)\0*.tif\0") \
-                            _T("Portable Network Graphics (*png)\0*.png\0\0");*/
+	DWORD err;
 
-    static TCHAR Filter[] = _T("Windows Bitmap (*.bmp)\0*.bmp\0");
+	static TCHAR Filter[] = _T("RichText files (*.rtf)\0*.rtf\0");
 
 	ofn.lpstrFilter = Filter;
 	ofn.lpstrFile = szFileName;
@@ -63,11 +56,7 @@ BOOL
 DoSaveFile(HWND hwnd)
 {
 	TCHAR szFileName[MAX_PATH] = _T("");
-	static TCHAR Filter[] = _T("Graphics Interchange format (*gif)\0*.gif\0") \
-                            _T("Windows Bitmap (*bmp)\0*.bmp\0") \
-                            _T("JPEG File Interchange Format (*jpg,*.jpeg)\0*.jpg,*.jpeg\0") \
-                            _T("TAG Image File Format (*tif)\0*.tif\0") \
-                            _T("Portable Network Graphics (*png)\0*.png\0\0");
+	static TCHAR Filter[] = _T("RichText files (*.rtf)\0*.rtf\0");
 
 	ofn.lpstrFilter = Filter;
 	ofn.lpstrFile = szFileName;
@@ -82,6 +71,6 @@ DoSaveFile(HWND hwnd)
 	if (CommDlgExtendedError() != CDERR_GENERALCODES)
         MessageBox(NULL, _T("Save to file failed"), NULL, 0);
 
-    return FALSE;
+	return FALSE;
 }
 
