@@ -134,4 +134,3 @@ wsock32 dll\win32\wsock32
 wshtcpip drivers\network\wshtcpip
 framebuf drivers\video\displays\framebuf
 vgaddi drivers\video\displays\vga
-Checking automatic dependencies...done
