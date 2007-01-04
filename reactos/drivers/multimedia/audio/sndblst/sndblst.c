@@ -68,8 +68,14 @@ static NTSTATUS InitDevice(
     DPRINT("Creating DOS link\n");
 
     /* Create the dos device link */
-    IoCreateSymbolicLink(&SymlinkName,
+    s = IoCreateSymbolicLink(&SymlinkName,
 		       &DeviceName);
+
+	if (!NT_SUCCESS(s))
+    {
+        IoDeleteDevice(DeviceObject);
+        return s;
+    }
 
     DPRINT("Initializing device\n");
 
@@ -126,6 +132,7 @@ static NTSTATUS InitDevice(
         // Set state indication somehow
         // Failure - what error code do we give?!
         // return STATUS_????
+        IoDeleteDevice(DeviceObject);
         return STATUS_UNSUCCESSFUL;
     }
 
