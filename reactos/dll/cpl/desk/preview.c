@@ -19,6 +19,9 @@ typedef struct _PREVIEW_DATA
     DWORD clrWindow;
     HBRUSH hbrWindow;
 
+    DWORD clrScrollbar;
+    HBRUSH hbrScrollbar;
+
     INT cxEdge;
     INT cyEdge;
 
@@ -56,21 +59,6 @@ typedef struct _PREVIEW_DATA
 } PREVIEW_DATA, *PPREVIEW_DATA;
 
 
-/* HACK: fill the caption bar squares due to NULL text */
-static VOID
-FillSquare(HDC hdc, PRECT rect)
-{
-    INT x, y, i;
-
-    x = rect->left + 2;
-    y = rect->top + 2;
-
-    for (i = 3; i < 12; i++)
-    {
-        BitBlt(hdc, x, y + i, 10, 1, hdc, x, y, SRCCOPY);
-    }
-}
-
 
 static VOID
 DrawCaptionButtons(HDC hdc, LPRECT lpRect, BOOL bMinMax)
@@ -102,6 +90,75 @@ DrawCaptionButtons(HDC hdc, LPRECT lpRect, BOOL bMinMax)
 
         DrawFrameControl(hdc, &rc5, DFC_CAPTION, DFCS_CAPTIONMIN);
     }
+}
+
+static VOID
+DrawScrollbar(HDC hdc, LPRECT rc, HBRUSH hbrScrollbar)
+{
+    RECT rcTop;
+    RECT rcBottom;
+    RECT rcMiddle;
+    int width;
+
+    width = rc->right - rc->left;
+
+    rcTop.left = rc->left;
+    rcTop.right = rc->right;
+    rcTop.top = rc->top;
+    rcTop.bottom = rc->top + width;
+
+    rcMiddle.left = rc->left;
+    rcMiddle.right = rc->right;
+    rcMiddle.top = rc->top + width;
+    rcMiddle.bottom = rc->bottom - width;
+
+    rcBottom.left = rc->left;
+    rcBottom.right = rc->right;
+    rcBottom.top = rc->bottom - width;
+    rcBottom.bottom = rc->bottom;
+
+    DrawFrameControl(hdc, &rcTop, DFC_SCROLL, DFCS_SCROLLUP);
+    DrawFrameControl(hdc, &rcBottom, DFC_SCROLL, DFCS_SCROLLDOWN);
+
+    FillRect(hdc, &rcMiddle, hbrScrollbar);
+}
+
+
+static VOID
+OnCreate(PPREVIEW_DATA pPreviewData)
+{
+    NONCLIENTMETRICS NonClientMetrics;
+
+    pPreviewData->clrScrollbar = GetSysColor(COLOR_SCROLLBAR);
+    pPreviewData->hbrScrollbar = CreateSolidBrush(pPreviewData->clrScrollbar);
+
+    pPreviewData->clrDesktop = GetSysColor(COLOR_DESKTOP);
+    pPreviewData->hbrDesktop = CreateSolidBrush(pPreviewData->clrDesktop);
+    pPreviewData->clrWindow = GetSysColor(COLOR_WINDOW);
+    pPreviewData->hbrWindow = CreateSolidBrush(pPreviewData->clrWindow);
+
+    pPreviewData->cxEdge = GetSystemMetrics(SM_CXEDGE);
+    pPreviewData->cyEdge = GetSystemMetrics(SM_CXEDGE);
+
+    pPreviewData->cyCaption = 20; //GetSystemMetrics(SM_CYCAPTION);
+
+    /* load font info */
+    NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
+    pPreviewData->CaptionFont = NonClientMetrics.lfCaptionFont;
+    pPreviewData->MenuFont = NonClientMetrics.lfMenuFont;
+    pPreviewData->DialogFont = NonClientMetrics.lfMessageFont;
+
+    AllocAndLoadString(&pPreviewData->lpInAct, hApplet, IDS_INACTWIN);
+    AllocAndLoadString(&pPreviewData->lpAct, hApplet, IDS_ACTWIN);
+    AllocAndLoadString(&pPreviewData->lpWinTxt, hApplet, IDS_WINTEXT);
+    AllocAndLoadString(&pPreviewData->lpMessBox, hApplet, IDS_MESSBOX);
+    AllocAndLoadString(&pPreviewData->lpMessText, hApplet, IDS_MESSTEXT);
+    AllocAndLoadString(&pPreviewData->lpButText, hApplet, IDS_BUTTEXT);
+    AllocAndLoadString(&pPreviewData->lpMenNorm, hApplet, IDS_NORMAL);
+    AllocAndLoadString(&pPreviewData->lpMenDis, hApplet, IDS_DISABLED);
+    AllocAndLoadString(&pPreviewData->lpMenSel, hApplet, IDS_SELECTED);
+
 }
 
 
@@ -165,7 +222,7 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
     pPreviewData->rcDialogCaption.left = pPreviewData->rcDialogFrame.left + 3;
     pPreviewData->rcDialogCaption.top = pPreviewData->rcDialogFrame.top + 3;
     pPreviewData->rcDialogCaption.right = pPreviewData->rcDialogFrame.right - 3;
-    pPreviewData->rcDialogCaption.bottom = pPreviewData->rcDialogFrame.top + 20 + 2;
+    pPreviewData->rcDialogCaption.bottom = pPreviewData->rcDialogFrame.top + 20 + 1;
 
     /* Calculate the dialog client rectangle */
     pPreviewData->rcDialogClient.left = pPreviewData->rcDialogFrame.left + 3;
@@ -186,9 +243,107 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
 
 
 static VOID
-DrawScrollbar(HDC hdc, LPRECT rc)
+OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
 {
+    PAINTSTRUCT ps;
+    HDC hdc;
+    HFONT hFont;
+    RECT rc;
 
+    hdc = BeginPaint(hwnd, &ps);
+
+    /* Desktop */
+    FillRect(hdc, &pPreviewData->rcDesktop, pPreviewData->hbrDesktop);
+
+    /* Inactive Window */
+    DrawEdge(hdc, &pPreviewData->rcInactiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
+    SetTextColor(hdc, RGB(212,208,200));
+
+    hFont = CreateFontIndirect(&pPreviewData->CaptionFont);
+    DrawCaptionTemp(NULL, hdc, &pPreviewData->rcInactiveCaption, hFont,
+                    NULL, pPreviewData->lpInAct, DC_GRADIENT | DC_ICON | DC_TEXT);
+    DeleteObject(hFont);
+
+    DrawCaptionButtons(hdc, &pPreviewData->rcInactiveCaption, TRUE);
+
+    /* Active Window */
+    DrawEdge(hdc, &pPreviewData->rcActiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
+    SetTextColor(hdc, RGB(255,255,255)); // FIXME: don't hardcode colors
+
+    hFont = CreateFontIndirect(&pPreviewData->CaptionFont);
+    DrawCaptionTemp(NULL, hdc, &pPreviewData->rcActiveCaption, hFont,
+                    NULL, pPreviewData->lpAct, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT);
+    DeleteObject(hFont);
+
+    DrawCaptionButtons(hdc, &pPreviewData->rcActiveCaption, TRUE);
+
+    /* FIXME: Draw the menu bar */
+
+    /* Draw the client area */
+    CopyRect(&rc, &pPreviewData->rcActiveClient);
+    DrawEdge(hdc, &rc, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
+    FillRect(hdc, &rc, pPreviewData->hbrWindow);
+
+    /* Draw the client text */
+    CopyRect(&rc, &pPreviewData->rcActiveClient);
+    rc.left += 4;
+    rc.top += 2;
+    SetTextColor(hdc, RGB(0,0,0));
+    SelectObject(hdc, CreateFontIndirect(&pPreviewData->DialogFont));
+    DrawText(hdc, pPreviewData->lpWinTxt, lstrlen(pPreviewData->lpWinTxt), &rc, DT_LEFT);
+    DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
+
+    /* Draw the scroll bar */
+    DrawScrollbar(hdc, &pPreviewData->rcActiveScroll, pPreviewData->hbrScrollbar);
+
+    /* Dialog Window */
+    DrawEdge(hdc, &pPreviewData->rcDialogFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
+    SetTextColor(hdc, RGB(255,255,255));
+
+    hFont = CreateFontIndirect(&pPreviewData->CaptionFont);
+    DrawCaptionTemp(NULL, hdc, &pPreviewData->rcDialogCaption, hFont,
+                    NULL, pPreviewData->lpMessBox, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT);
+    DeleteObject(hFont);
+
+    DrawCaptionButtons(hdc, &pPreviewData->rcDialogCaption, FALSE);
+
+    /* Draw the dialog text */
+    CopyRect(&rc, &pPreviewData->rcDialogClient);
+    rc.left += 4;
+    rc.top += 2;
+    SetTextColor(hdc, RGB(0,0,0));
+    SelectObject(hdc, CreateFontIndirect(&pPreviewData->DialogFont));
+    DrawText(hdc, pPreviewData->lpMessText, lstrlen(pPreviewData->lpMessText), &rc, DT_LEFT);
+    DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
+
+    /* Draw Button */
+    DrawFrameControl(hdc, &pPreviewData->rcDialogButton, DFC_BUTTON, DFCS_BUTTONPUSH);
+    CopyRect(&rc, &pPreviewData->rcDialogButton);
+    rc.top += 6;
+    SelectObject(hdc, CreateFontIndirect(&pPreviewData->DialogFont));
+    DrawText(hdc, pPreviewData->lpButText, lstrlen(pPreviewData->lpButText), &rc, DT_CENTER);
+    DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
+
+    EndPaint(hwnd, &ps);
+}
+
+
+static VOID
+OnDestroy(PPREVIEW_DATA pPreviewData)
+{
+    DeleteObject(pPreviewData->hbrScrollbar);
+    DeleteObject(pPreviewData->hbrDesktop);
+    DeleteObject(pPreviewData->hbrWindow);
+
+    LocalFree((HLOCAL)pPreviewData->lpInAct);
+    LocalFree((HLOCAL)pPreviewData->lpAct);
+    LocalFree((HLOCAL)pPreviewData->lpWinTxt);
+    LocalFree((HLOCAL)pPreviewData->lpMessBox);
+    LocalFree((HLOCAL)pPreviewData->lpMessText);
+    LocalFree((HLOCAL)pPreviewData->lpButText);
+    LocalFree((HLOCAL)pPreviewData->lpMenNorm);
+    LocalFree((HLOCAL)pPreviewData->lpMenDis);
+    LocalFree((HLOCAL)pPreviewData->lpMenSel);
 }
 
 
@@ -199,18 +354,12 @@ PreviewWndProc(HWND hwnd,
                LPARAM lParam)
 {
     PPREVIEW_DATA pPreviewData;
-    HDC hdc;
-    PAINTSTRUCT ps;
-    RECT rc;
 
     pPreviewData = (PPREVIEW_DATA)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_CREATE:
-        {
-            NONCLIENTMETRICS NonClientMetrics;
-
             pPreviewData = (PPREVIEW_DATA)HeapAlloc(GetProcessHeap(),
                                                     HEAP_ZERO_MEMORY,
                                                     sizeof(PREVIEW_DATA));
@@ -218,140 +367,19 @@ PreviewWndProc(HWND hwnd,
                 return -1;
 
             SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pPreviewData);
-            pPreviewData->clrDesktop = GetSysColor(COLOR_DESKTOP);
-            pPreviewData->hbrDesktop = CreateSolidBrush(pPreviewData->clrDesktop);
-            pPreviewData->clrWindow = GetSysColor(COLOR_WINDOW);
-            pPreviewData->hbrWindow = CreateSolidBrush(pPreviewData->clrWindow);
-
-            pPreviewData->cxEdge = GetSystemMetrics(SM_CXEDGE);
-            pPreviewData->cyEdge = GetSystemMetrics(SM_CXEDGE);
-
-            pPreviewData->cyCaption = 20; //GetSystemMetrics(SM_CYCAPTION);
-
-            /* load font info */
-            NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
-            SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
-            pPreviewData->CaptionFont = NonClientMetrics.lfCaptionFont;
-            pPreviewData->MenuFont = NonClientMetrics.lfMenuFont;
-            pPreviewData->DialogFont = NonClientMetrics.lfMessageFont;
-
-            AllocAndLoadString(&pPreviewData->lpInAct, hApplet, IDS_INACTWIN);
-            AllocAndLoadString(&pPreviewData->lpAct, hApplet, IDS_ACTWIN);
-            AllocAndLoadString(&pPreviewData->lpWinTxt, hApplet, IDS_WINTEXT);
-            AllocAndLoadString(&pPreviewData->lpMessBox, hApplet, IDS_MESSBOX);
-            AllocAndLoadString(&pPreviewData->lpMessText, hApplet, IDS_MESSTEXT);
-            AllocAndLoadString(&pPreviewData->lpButText, hApplet, IDS_BUTTEXT);
-            AllocAndLoadString(&pPreviewData->lpMenNorm, hApplet, IDS_NORMAL);
-            AllocAndLoadString(&pPreviewData->lpMenDis, hApplet, IDS_DISABLED);
-            AllocAndLoadString(&pPreviewData->lpMenSel, hApplet, IDS_SELECTED);
-
+            OnCreate(pPreviewData);
             break;
-        }
 
         case WM_SIZE:
             OnSize(LOWORD(lParam), HIWORD(lParam), pPreviewData);
             break;
 
         case WM_PAINT:
-        {
-            RECT tmpRc;
-
-            hdc = BeginPaint(hwnd, &ps);
-
-            /* Desktop */
-            FillRect(hdc, &pPreviewData->rcDesktop, pPreviewData->hbrDesktop);
-
-            /* Inactive Window */
-            DrawEdge(hdc, &pPreviewData->rcInactiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
-            DrawCaption(hwnd, hdc, &pPreviewData->rcInactiveCaption, DC_GRADIENT | DC_TEXT);
-            DrawCaptionButtons(hdc, &pPreviewData->rcInactiveCaption, TRUE);
-            FillSquare(hdc, &pPreviewData->rcInactiveCaption);
-            CopyRect(&tmpRc, &pPreviewData->rcInactiveCaption);
-            tmpRc.left += 4;
-            tmpRc.top += 2;
-            SelectObject(hdc, CreateFontIndirect(&pPreviewData->CaptionFont));
-            SetTextColor(hdc, RGB(212,208,200));
-            DrawText(hdc, pPreviewData->lpInAct, lstrlen(pPreviewData->lpInAct), &tmpRc, DT_LEFT);
-            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
-
-            /* Active Window */
-            DrawEdge(hdc, &pPreviewData->rcActiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
-            DrawCaption(hwnd, hdc, &pPreviewData->rcActiveCaption, DC_ACTIVE | DC_GRADIENT | DC_TEXT);
-            DrawCaptionButtons(hdc, &pPreviewData->rcActiveCaption, TRUE);
-            FillSquare(hdc, &pPreviewData->rcActiveCaption);
-            CopyRect(&tmpRc, &pPreviewData->rcActiveCaption);
-            tmpRc.left += 4;
-            tmpRc.top += 2;
-            SetTextColor(hdc, RGB(255,255,255)); // FIXME: don't hardcode colors
-            SelectObject(hdc, CreateFontIndirect(&pPreviewData->CaptionFont));
-            DrawText(hdc, pPreviewData->lpAct, lstrlen(pPreviewData->lpAct), &tmpRc, DT_LEFT);
-            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
-
-            /* FIXME: Draw the menu bar */
-            CopyRect(&rc, &pPreviewData->rcActiveClient);
-            DrawEdge(hdc, &rc, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
-            FillRect(hdc, &rc, pPreviewData->hbrWindow);
-
-            /* Draw the client text */
-            CopyRect(&tmpRc, &pPreviewData->rcActiveClient);
-            tmpRc.left += 4;
-            tmpRc.top += 2;
-            SetTextColor(hdc, RGB(0,0,0));
-            SelectObject(hdc, CreateFontIndirect(&pPreviewData->DialogFont));
-            DrawText(hdc, pPreviewData->lpWinTxt, lstrlen(pPreviewData->lpWinTxt), &tmpRc, DT_LEFT);
-            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
-
-            /* Draw the scroll bar */
-            DrawScrollbar(hdc, &pPreviewData->rcActiveScroll);
-
-            /* Dialog Window */
-            DrawEdge(hdc, &pPreviewData->rcDialogFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
-            DrawCaption(hwnd, hdc, &pPreviewData->rcDialogCaption, DC_ACTIVE | DC_GRADIENT | DC_TEXT);
-            DrawCaptionButtons(hdc, &pPreviewData->rcDialogCaption, FALSE);
-            FillSquare(hdc, &pPreviewData->rcDialogCaption);
-            CopyRect(&tmpRc, &pPreviewData->rcDialogCaption);
-            tmpRc.left += 4;
-            tmpRc.top += 2;
-            SetTextColor(hdc, RGB(255,255,255));
-            SelectObject(hdc, CreateFontIndirect(&pPreviewData->CaptionFont));
-            DrawText(hdc, pPreviewData->lpMessBox, lstrlen(pPreviewData->lpMessBox), &tmpRc, DT_LEFT);
-            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
-
-            /* draw the dialog text */
-            CopyRect(&tmpRc, &pPreviewData->rcDialogClient);
-            tmpRc.left += 4;
-            tmpRc.top += 2;
-            SetTextColor(hdc, RGB(0,0,0));
-            SelectObject(hdc, CreateFontIndirect(&pPreviewData->DialogFont));
-            DrawText(hdc, pPreviewData->lpMessText, lstrlen(pPreviewData->lpMessText), &tmpRc, DT_LEFT);
-            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
-
-            /* Draw Button */
-            DrawFrameControl(hdc, &pPreviewData->rcDialogButton, DFC_BUTTON, DFCS_BUTTONPUSH);
-            CopyRect(&tmpRc, &pPreviewData->rcDialogButton);
-            tmpRc.top += 6;
-            SelectObject(hdc, CreateFontIndirect(&pPreviewData->DialogFont));
-            DrawText(hdc, pPreviewData->lpButText, lstrlen(pPreviewData->lpButText), &tmpRc, DT_CENTER);
-            DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
-
-            EndPaint(hwnd, &ps);
+            OnPaint(hwnd, pPreviewData);
             break;
-        }
 
         case WM_DESTROY:
-            DeleteObject(pPreviewData->hbrDesktop);
-            DeleteObject(pPreviewData->hbrWindow);
-
-            LocalFree((HLOCAL)pPreviewData->lpInAct);
-            LocalFree((HLOCAL)pPreviewData->lpAct);
-            LocalFree((HLOCAL)pPreviewData->lpWinTxt);
-            LocalFree((HLOCAL)pPreviewData->lpMessBox);
-            LocalFree((HLOCAL)pPreviewData->lpMessText);
-            LocalFree((HLOCAL)pPreviewData->lpButText);
-            LocalFree((HLOCAL)pPreviewData->lpMenNorm);
-            LocalFree((HLOCAL)pPreviewData->lpMenDis);
-            LocalFree((HLOCAL)pPreviewData->lpMenSel);
-
+            OnDestroy(pPreviewData);
             HeapFree(GetProcessHeap(), 0, pPreviewData);
             break;
 
