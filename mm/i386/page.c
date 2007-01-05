@@ -70,7 +70,6 @@ __inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
 
 extern BOOLEAN Ke386Pae;
 extern BOOLEAN Ke386NoExecute;
-extern BOOLEAN Ke386GlobalPagesEnabled;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -86,11 +85,11 @@ MiFlushTlbIpiRoutine(PVOID Address)
    }
    else if (Address == (PVOID)0xfffffffe)
    {
-      FLUSH_TLB;
+      KeFlushCurrentTb();
    }
    else
    {
-      FLUSH_TLB_ONE(Address);
+       __invlpg(Address);
    }
 }
 
@@ -113,7 +112,7 @@ MiFlushTlb(PULONG Pt, PVOID Address)
 #else
    if ((Pt && MmUnmapPageTable(Pt)) || Address >= MmSystemRangeStart)
    {
-      FLUSH_TLB_ONE(Address);
+      __invlpg(Address);
    }
 #endif
 }
@@ -123,9 +122,7 @@ MiFlushTlb(PULONG Pt, PVOID Address)
 PULONG
 MmGetPageDirectory(VOID)
 {
-   unsigned int page_dir=0;
-   Ke386GetPageTableDirectory(page_dir);
-   return((PULONG)page_dir);
+   return (PULONG)__readcr3();
 }
 
 static ULONG
@@ -2223,7 +2220,7 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
       }
    }
    Address = (PVOID)((ULONG_PTR)HYPERSPACE + i * PAGE_SIZE);
-   FLUSH_TLB_ONE(Address);
+   __invlpg(Address);
    return Address;
 }
 
@@ -2245,7 +2242,7 @@ MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
       Entry = InterlockedExchange((PLONG)ADDR_TO_PTE(Address), PFN_TO_PTE(NewPage) | PA_PRESENT | PA_READWRITE);
       Pfn = PTE_TO_PFN(Entry);
    }
-   FLUSH_TLB_ONE(Address);
+   __invlpg(Address);
    return Pfn;
 }
 
@@ -2267,7 +2264,7 @@ MmDeleteHyperspaceMapping(PVOID Address)
       Entry = InterlockedExchange((PLONG)ADDR_TO_PTE(Address), 0);
       Pfn = PTE_TO_PFN(Entry);
    }
-   FLUSH_TLB_ONE(Address);
+   __invlpg(Address);
    return Pfn;
 }
 

@@ -144,6 +144,65 @@ MmGetFileObjectForSection(IN PROS_SECTION_OBJECT Section)
     return Section->FileObject; // Section->ControlArea->FileObject on NT
 }
 
+NTSTATUS
+NTAPI
+MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
+                        OUT POBJECT_NAME_INFORMATION *ModuleName)
+{
+    POBJECT_NAME_INFORMATION ObjectNameInfo;
+    NTSTATUS Status;
+    ULONG ReturnLength;
+
+    /* Make sure it's an image section */
+    *ModuleName = NULL;
+    if (!(Section->AllocationAttributes & SEC_IMAGE))
+    {
+        /* It's not, fail */
+        return STATUS_SECTION_NOT_IMAGE;
+    }
+
+    /* Allocate memory for our structure */
+    ObjectNameInfo = ExAllocatePoolWithTag(PagedPool,
+                                           1024,
+                                           TAG('M', 'm', ' ', ' '));
+    if (!ObjectNameInfo) return STATUS_NO_MEMORY;
+
+    /* Query the name */
+    Status = ObQueryNameString(Section->FileObject,
+                               ObjectNameInfo,
+                               1024,
+                               &ReturnLength);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, free memory */
+        ExFreePool(ObjectNameInfo);
+        return Status;
+    }
+
+    /* Success */
+    *ModuleName = ObjectNameInfo;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+MmGetFileNameForAddress(IN PVOID Address,
+                        OUT PUNICODE_STRING ModuleName)
+{
+    /*
+     * FIXME: TODO.
+     * Filip says to get the MADDRESS_SPACE from EPROCESS,
+     * then use the MmMarea routines to locate the Marea that 
+     * corresponds to the address. Then make sure it's a section
+     * view type (MEMORY_AREA_SECTION_VIEW) and use the marea's
+     * per-type union to get the .u.SectionView.Section pointer to
+     * the SECTION_OBJECT. Then we can use MmGetFileNameForSection
+     * to get the full filename.
+     */
+    RtlCreateUnicodeString(ModuleName, L"C:\\ReactOS\\system32\\ntdll.dll");
+    return STATUS_SUCCESS;
+}
+
 /* Note: Mmsp prefix denotes "Memory Manager Section Private". */
 
 /*
@@ -2916,7 +2975,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    return(STATUS_SUCCESS);
 }
 
-VOID STATIC
+VOID static
 MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
                       PVOID BaseAddress,
                       ULONG RegionSize,
@@ -4586,7 +4645,7 @@ NtOpenSection(PHANDLE   SectionHandle,
    return(Status);
 }
 
-NTSTATUS STATIC
+NTSTATUS static
 MmMapViewOfSegment(PMADDRESS_SPACE AddressSpace,
                    PROS_SECTION_OBJECT Section,
                    PMM_SECTION_SEGMENT Segment,
@@ -4835,7 +4894,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    return(Status);
 }
 
-VOID STATIC
+VOID static
 MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                   PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
@@ -4927,7 +4986,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
    }
 }
 
-STATIC NTSTATUS
+static NTSTATUS
 MmUnmapViewOfSegment(PMADDRESS_SPACE AddressSpace,
                      PVOID BaseAddress)
 {
@@ -5066,7 +5125,8 @@ MmUnmapViewOfSection(PEPROCESS Process,
        * and calculate the image base address */
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+         // This field is RESERVED and not respected by Windows
+         //if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             if (Segment == &SectionSegments[i])
             {
@@ -5082,7 +5142,8 @@ MmUnmapViewOfSection(PEPROCESS Process,
 
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+         // This field is RESERVED and not respected by Windows
+         //if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             PVOID SBaseAddress = (PVOID)
                                  ((char*)ImageBaseAddress + (ULONG_PTR)SectionSegments[i].VirtualAddress);
@@ -5626,7 +5687,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
       ImageSize = 0;
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+         // This field is RESERVED and not respected by Windows
+         //if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             ULONG_PTR MaxExtent;
             MaxExtent = (ULONG_PTR)SectionSegments[i].VirtualAddress +
@@ -5656,7 +5718,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+         // This field is RESERVED and not respected by Windows
+         //if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             PVOID SBaseAddress = (PVOID)
                                  ((char*)ImageBase + (ULONG_PTR)SectionSegments[i].VirtualAddress);
@@ -6628,5 +6691,55 @@ MmFlushDataFileSection(PROS_SECTION_OBJECT Section, PLARGE_INTEGER StartOffset, 
 
    return STATUS_SUCCESS;
 }
+
+NTSTATUS
+NTAPI
+NtAllocateUserPhysicalPages(IN HANDLE ProcessHandle,
+                            IN OUT PULONG NumberOfPages,
+                            IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtMapUserPhysicalPages(IN PVOID *VirtualAddresses,
+                       IN ULONG NumberOfPages,
+                       IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtMapUserPhysicalPagesScatter(IN PVOID *VirtualAddresses,
+                              IN ULONG NumberOfPages,
+                              IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtFreeUserPhysicalPages(IN HANDLE ProcessHandle,
+                        IN OUT PULONG NumberOfPages,
+                        IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
+                        IN PVOID File2MappedAsFile)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /* EOF */

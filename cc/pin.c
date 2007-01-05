@@ -34,7 +34,7 @@ BOOLEAN STDCALL
 CcMapData (IN PFILE_OBJECT FileObject,
            IN PLARGE_INTEGER FileOffset, 
            IN ULONG Length, 
-           IN BOOLEAN Wait, 
+           IN ULONG Flags, 
            OUT PVOID * piBcb, 
            OUT PVOID * pBuffer)
 {
@@ -55,8 +55,9 @@ CcMapData (IN PFILE_OBJECT FileObject,
     ASSERT (piBcb);
     ASSERT (pBuffer);
 
-    if (!Wait)
+    if (Flags)
     {
+		DPRINT1("No Flags implemented yet.");
         *piBcb = NULL;
         *pBuffer = NULL;
         return FALSE;

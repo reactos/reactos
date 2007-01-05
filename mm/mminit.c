@@ -19,6 +19,7 @@
 /*
  * Compiler defined symbols
  */
+extern unsigned int _image_base__;
 extern unsigned int _text_start__;
 extern unsigned int _text_end__;
 
@@ -158,8 +159,8 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
                       0,
                       BoundaryAddressMultiple);
 
-   BaseAddress = (PVOID)KERNEL_BASE;
-   Length = PAGE_ROUND_UP(((ULONG_PTR)&_text_end__)) - KERNEL_BASE;
+   BaseAddress = (PVOID)&_image_base__;
+   Length = PAGE_ROUND_UP(((ULONG_PTR)&_text_end__)) - (ULONG_PTR)&_image_base__;
    ParamLength = ParamLength - Length;
 
    /*
@@ -299,11 +300,15 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    ULONG i;
    ULONG kernel_len;
    ULONG_PTR MappingAddress;
+   PLDR_DATA_TABLE_ENTRY LdrEntry;
 
    DPRINT("MmInit1(FirstKrnlPhysAddr, %p, LastKrnlPhysAddr %p, LastKernelAddress %p)\n",
           FirstKrnlPhysAddr,
           LastKrnlPhysAddr,
           LastKernelAddress);
+
+   /* Set the page directory */
+   PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
 
    if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
    {
@@ -317,15 +322,31 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
             last = (BIOSMemoryMap[i].BaseAddrLow + BIOSMemoryMap[i].LengthLow + PAGE_SIZE -1) / PAGE_SIZE;
          }
       }
-      if ((last - 256) * 4 > KeLoaderBlock.MemHigher)
+      if ((last - 256) * 4 > MmFreeLdrMemHigher)
       {
-         KeLoaderBlock.MemHigher = (last - 256) * 4;
+         MmFreeLdrMemHigher = (last - 256) * 4;
       }
    }
 
-   if (KeLoaderBlock.MemHigher >= (MaxMem - 1) * 1024)
+   /* NTLDR Hacks */
+   if (!MmFreeLdrMemHigher) MmFreeLdrMemHigher = 65536;
+   if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
+   if (!FirstKrnlPhysAddr)
    {
-      KeLoaderBlock.MemHigher = (MaxMem - 1) * 1024;
+       /* Get the kernel entry */
+       LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink,
+                                    LDR_DATA_TABLE_ENTRY,
+                                    InLoadOrderLinks);
+
+       /* Get the addresses */
+       FirstKrnlPhysAddr = (ULONG_PTR)LdrEntry->DllBase - KSEG0_BASE;
+
+       /* FIXME: How do we get the last address? */
+   }
+
+   if (MmFreeLdrMemHigher >= (MaxMem - 1) * 1024)
+   {
+      MmFreeLdrMemHigher = (MaxMem - 1) * 1024;
    }
 
    /* Set memory limits */
@@ -357,7 +378,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    /*
     * Free physical memory not used by the kernel
     */
-   MmStats.NrTotalPages = KeLoaderBlock.MemHigher/4;
+   MmStats.NrTotalPages = MmFreeLdrMemHigher/4;
    if (!MmStats.NrTotalPages)
    {
       DbgPrint("Memory not detected, default to 8 MB\n");
@@ -413,9 +434,9 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
 #endif
 
    DPRINT("Invalidating between %x and %x\n",
-          LastKernelAddress, KERNEL_BASE + 0x00600000);
+          LastKernelAddress, KSEG0_BASE + 0x00600000);
    for (MappingAddress = LastKernelAddress;
-        MappingAddress < KERNEL_BASE + 0x00600000;
+        MappingAddress < KSEG0_BASE + 0x00600000;
         MappingAddress += PAGE_SIZE)
    {
       MmRawDeleteVirtualMapping((PVOID)MappingAddress);
@@ -458,7 +479,6 @@ MmInit3(VOID)
    MmDeletePageTable(NULL, 0);
 #endif
 
-   MmInitZeroPageThread();
    MmCreatePhysicalMemorySection();
    MiInitBalancerThread();
 

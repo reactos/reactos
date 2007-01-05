@@ -291,7 +291,7 @@ MmCreatePeb(PEPROCESS Process)
 
     /* Map NLS Tables */
     DPRINT("Mapping NLS\n");
-    Status = MmMapViewOfSection(NlsSectionObject,
+    Status = MmMapViewOfSection(ExpNlsSectionPointer,
                                 (PEPROCESS)Process,
                                 &TableBase,
                                 0,
@@ -322,9 +322,9 @@ MmCreatePeb(PEPROCESS Process)
     Peb->Mutant = NULL;
 
     /* NLS */
-    Peb->AnsiCodePageData = (char*)TableBase + NlsAnsiTableOffset;
-    Peb->OemCodePageData = (char*)TableBase + NlsOemTableOffset;
-    Peb->UnicodeCaseTableData = (char*)TableBase + NlsUnicodeTableOffset;
+    Peb->AnsiCodePageData = (PCHAR)TableBase + ExpAnsiCodePageDataOffset;
+    Peb->OemCodePageData = (PCHAR)TableBase + ExpOemCodePageDataOffset;
+    Peb->UnicodeCaseTableData = (PCHAR)TableBase + ExpUnicodeCaseTableDataOffset;
 
     /* Default Version Data (could get changed below) */
     Peb->OSMajorVersion = NtMajorVersion;

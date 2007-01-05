@@ -263,6 +263,7 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
    MmUnlockAddressSpace(AddressSpace);
    if (Address < MmSystemRangeStart)
    {
+       ASSERT(Process);
       ObDereferenceObject(Process);
    }
 

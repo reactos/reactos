@@ -408,7 +408,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
       KEBUGCHECK(0);
    }
    new_entry->Address = Address;
-   new_entry->Process = Process;
+   new_entry->Process = (PEPROCESS)Process;
 #ifdef DBG
    new_entry->Caller = __builtin_return_address(0);
 #endif   
@@ -510,7 +510,7 @@ MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
    current_entry = MmGetRmapListHeadPage(Page);
    while (current_entry != NULL)
    {
-      if (current_entry->Process == Process &&
+      if (current_entry->Process == (PEPROCESS)Process &&
             current_entry->Address == Address)
       {
          if (previous_entry == NULL)
