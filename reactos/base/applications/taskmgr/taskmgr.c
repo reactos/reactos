@@ -956,19 +956,21 @@ void TaskManager_OnTabWndSelChange(void)
         ShowWindow(hPerformancePage, SW_HIDE);
         BringWindowToTop(hApplicationPage);
 
-	LoadString(hInst, IDS_MENU_LARGEICONS, szTemp, 256);
+        LoadString(hInst, IDS_MENU_LARGEICONS, szTemp, 256);
         AppendMenu(hViewMenu, MF_STRING, ID_VIEW_LARGE, szTemp);
 
-	LoadString(hInst, IDS_MENU_SMALLICONS, szTemp, 256);
+        LoadString(hInst, IDS_MENU_SMALLICONS, szTemp, 256);
         AppendMenu(hViewMenu, MF_STRING, ID_VIEW_SMALL, szTemp);
 
-	LoadString(hInst, IDS_MENU_DETAILS, szTemp, 256);
+        LoadString(hInst, IDS_MENU_DETAILS, szTemp, 256);
         AppendMenu(hViewMenu, MF_STRING, ID_VIEW_DETAILS, szTemp);
+
+//RemoveMenu(hMenu, 3, MF_BYPOSITION);
 
         if (GetMenuItemCount(hMenu) <= 4) {
             hSubMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_WINDOWSMENU));
 
-	    LoadString(hInst, IDS_MENU_WINDOWS, szTemp, 256);
+            LoadString(hInst, IDS_MENU_WINDOWS, szTemp, 256);
             InsertMenu(hMenu, 3, MF_BYPOSITION|MF_POPUP, (UINT)hSubMenu, szTemp);
 
             DrawMenuBar(hMainWnd);
@@ -1001,7 +1003,7 @@ void TaskManager_OnTabWndSelChange(void)
             CheckMenuItem(hOptionsMenu, ID_OPTIONS_SHOW16BITTASKS, MF_BYCOMMAND|MF_CHECKED);
         if (GetMenuItemCount(hMenu) > 4)
         {
-            RemoveMenu(hMenu, 3, MF_BYPOSITION);
+            DeleteMenu(hMenu, 3, MF_BYPOSITION);
             DrawMenuBar(hMainWnd);
         }
         /*
@@ -1016,7 +1018,7 @@ void TaskManager_OnTabWndSelChange(void)
         ShowWindow(hPerformancePage, SW_SHOW);
         BringWindowToTop(hPerformancePage);
         if (GetMenuItemCount(hMenu) > 4) {
-            RemoveMenu(hMenu, 3, MF_BYPOSITION);
+            DeleteMenu(hMenu, 3, MF_BYPOSITION);
             DrawMenuBar(hMainWnd);
         }
         hSubMenu = CreatePopupMenu();
