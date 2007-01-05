@@ -1,0 +1,23 @@
+ALINK Source Code, V1.6, Copyright 1998-9 Anthony A.J. Williams. 
+All Rights Reserved.
+
+This source code is free for all to use, compile and distribute for any
+purpose, provided it remains unmodified, and I am credited. You may not
+charge for this source code, or any executables compiled from it, but you
+may charge a small distribution fee to cover costs, and you may charge
+for any warranty or support you may wish to give your customers.
+
+As this source is free, it comes with no warranty whatsoever - use it
+entirely at your own risk.
+
+makefile contains the makefile for use with GCC (RSXNT)
+
+alink.mak contains the makefile for use with GCC (RSXNT), linking with the
+ALINK libaries. Set C_INCLUDE_PATH to point to the ALINK library headers.
+
+alink2.mak contains the makefile for use with MSVC, linking with the ALINK
+libraries. Set INCLUDE to point to the ALINK library headers.
+
+Any comments or bug reports, please email me at
+
+anthony_w@geocities.com
