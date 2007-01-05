@@ -20,13 +20,14 @@
 	<library>ntdll</library>
 	<library>msimg32</library>
 	<library>msvcrt</library>
+	<file>appearance.c</file>
+	<file>background.c</file>
 	<file>classinst.c</file>
 	<file>desk.c</file>
-	<file>background.c</file>
-	<file>screensaver.c</file>
-	<file>appearance.c</file>
-	<file>settings.c</file>
 	<file>dibitmap.c</file>
-	<file>preview.c</file>
+	<file>misc.c</file>
+  <file>preview.c</file>
+	<file>screensaver.c</file>
+	<file>settings.c</file>
 	<file>desk.rc</file>
 </module>
