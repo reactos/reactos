@@ -22,10 +22,18 @@
 #if defined(_MSC_VER)
 #define BitScanForward _BitScanForward
 #define BitScanReverse _BitScanReverse
+#define InterlockedBitTestAndSet _interlockedbittestandset
+#define InterlockedBitTestAndReset _interlockedbittestandreset
+
 BOOLEAN _BitScanForward (OUT ULONG *Index, IN ULONG Mask);
 BOOLEAN _BitScanReverse (OUT ULONG *Index, IN ULONG Mask);
+BOOLEAN _interlockedbittestandset (IN LONG *Base, IN LONG Offset);
+BOOLEAN _interlockedbittestandreset (IN LONG *Base, IN LONG Offset);
+
 #pragma intrinsic(_BitScanForward)
 #pragma intrinsic(_BitScanReverse)
+#pragma intrinsic(_interlockedbittestandset)
+#pragma intrinsic(_interlockedbittestandreset)
 
 #define inline __inline
 #endif

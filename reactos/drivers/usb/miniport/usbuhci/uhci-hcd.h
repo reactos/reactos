@@ -421,7 +421,14 @@ static inline struct usb_hcd *uhci_to_hcd(struct uhci_hcd *uhci)
 	return container_of((void *) uhci, struct usb_hcd, hcd_priv);
 }
 
-#define uhci_dev(u)	(uhci_to_hcd(u)->self.controller)
+//#define uhci_dev(u)	(uhci_to_hcd(u)->self.controller)
+static struct device *uhci_dev(struct uhci_hcd *uhci)
+{
+	//struct uhci_hcd *uhci = (struct uhci_hcd *) (hcd->hcd_priv);//hcd_to_uhci(hcd);
+	struct usb_hcd *new_hcd = container_of((void *) uhci, struct usb_hcd, hcd_priv); // uhci_to_hcd(uhci)
+		
+	return new_hcd->self.controller; //uhci_dev(uhci);
+}
 
 struct urb_priv {
 	struct list_head urb_list;

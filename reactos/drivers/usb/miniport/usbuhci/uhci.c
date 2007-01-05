@@ -25,7 +25,7 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	/* Initialize generic linux structure */
 	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;
-	dev->dev.dev_ext = DeviceObject;
+	dev->dev.dev_ext = (PVOID)DeviceExtension; /*DeviceObject*/
 	dev->slot_name = ExAllocatePoolWithTag(NonPagedPool, 128, USB_UHCI_TAG); // 128 max len for slot name
 	dev->bus = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct usb_bus), USB_UHCI_TAG); //FIXME: Remove all this
 								// small allocations from non-paged pool, move them to big device extension struct
@@ -36,7 +36,7 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	
 	strcpy(dev->dev.name, "UnivHCI PCI-USB Controller");
 	strcpy(dev->slot_name, "UHCD PCI Slot");
-
+	
 	/* Init the HCD. Probe will be called automatically, but will fail because id=NULL */
 	Status = uhci_hcd_init();
 	if (!NT_SUCCESS(Status))
@@ -48,10 +48,21 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 		ExFreePoolWithTag(dev, USB_UHCI_TAG);
 		return Status;
 	}
+	DPRINT("uhci_hcd_init() done\n");
 
 	/* Init core usb */
 	usb_init();
 	DPRINT("usb_init() done\n");
+
+	{
+		/* Test code by Fireball */
+		struct device dev;
+		dma_addr_t dma_handle;
+		void *res;
+
+		dev.dev_ext = DeviceExtension;
+		res = dma_alloc_coherent(&dev, 12, &dma_handle, 0);
+	}
 
 	/* Probe device with real id now */
 	uhci_pci_driver.probe(dev, uhci_pci_ids);

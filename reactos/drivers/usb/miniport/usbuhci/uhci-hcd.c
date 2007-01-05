@@ -561,6 +561,30 @@ static int uhci_start(struct usb_hcd *hcd)
 	dma_addr_t dma_handle;
 	struct dentry *dentry;
 
+	/* TEST BEGIN */
+	{
+		/* Test code by Fireball */
+		dma_addr_t dma_handle;
+		void *res;
+		struct uhci_hcd *uhci = (struct uhci_hcd *) (hcd->hcd_priv);//hcd_to_uhci(hcd);
+		struct usb_hcd *new_hcd = container_of((void *) uhci, struct usb_hcd, hcd_priv); // uhci_to_hcd(uhci)
+		
+		struct device *dv = new_hcd->self.controller; //uhci_dev(uhci);
+
+		DPRINT1("hcd: %p, hcd->self.controller: %p\n", hcd, hcd->self.controller);
+		DPRINT1("new_hcd: %p, dv: %p, uhci_dev(uhci): %p\n", new_hcd, dv, uhci_dev(uhci));
+		DPRINT1("uhci: %p, dv->dev_ext: %p\n", uhci, dv->dev_ext);
+
+		//dv.dev_ext = (((struct device *)(hcd->self.controller))->dev_ext);
+		//res = dma_alloc_coherent(dv, 8192, &dma_handle, 0);
+		uhci->fl = dma_alloc_coherent(dv, sizeof(*uhci->fl), &dma_handle, 0);
+	}
+
+	uhci->fl = dma_alloc_coherent(uhci_dev(uhci), sizeof(*uhci->fl),
+			&dma_handle, 0);
+	return;
+	/* TEST END */
+
 	hcd->uses_new_polling = 1;
 	if (pci_find_capability(to_pci_dev(uhci_dev(uhci)), PCI_CAP_ID_PM))
 		hcd->can_wakeup = 1;		/* Assume it supports PME# */
@@ -898,7 +922,7 @@ static struct hc_driver uhci_driver = {
 	NULL, NULL,
 #endif
 
-	/*.stop =*/			uhci_stop,
+	/*.stop =*/				uhci_stop,
 	/*.get_frame_number =*/	uhci_hcd_get_frame_number,
 
 	/*.urb_enqueue =*/		uhci_urb_enqueue,

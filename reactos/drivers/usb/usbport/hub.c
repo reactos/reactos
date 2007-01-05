@@ -2758,6 +2758,7 @@ DPRINT1("passed spin_unlock_irq, i=%d\n", i);
 		}
 
 		/* deal with port status changes */
+		ASSERT(hub->descriptor);
 		for (i = 1; i <= hub->descriptor->bNbrPorts; i++) {
 			if (test_bit(i, hub->busy_bits))
 				continue;
@@ -2885,7 +2886,7 @@ loop:
 static int STDCALL hub_thread(void *__unused)
 {
 	pr_debug("hub_thread starting");
-
+DbgBreakPoint();
 	do {
 		hub_events();
 		wait_event_interruptible(khubd_wait,

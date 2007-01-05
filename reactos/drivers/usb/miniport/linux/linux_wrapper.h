@@ -48,6 +48,7 @@ typedef int ssize_t;
 #endif
 typedef int irqreturn_t;
 typedef unsigned long kernel_ulong_t;
+typedef unsigned long gfp_t;
 
 typedef KEVENT wait_queue_head_t;
 /*------------------------------------------------------------------------*/ 
@@ -593,7 +594,8 @@ static __inline char *pci_name(struct pci_dev *pdev) { return pdev->dev.bus_id; 
 #define dma_pool_free(a,b,c) pci_pool_free(a,b,c)
 #define dma_pool_destroy(a) pci_pool_destroy(a)
 
-#define dma_alloc_coherent(dev,sz,dma_handle,gfp) my_pci_alloc_consistent(to_pci_dev(dev), sz, dma_handle);
+#define dma_alloc_coherent(dev,sz,dma_handle,gfp) my_dma_alloc_coherent(dev, sz, dma_handle, gfp)
+void *my_dma_alloc_coherent(struct device *dev, size_t size, dma_addr_t *dma_handle, gfp_t flag);
 #define dma_free_coherent(dev,sz,vaddr,dma_handle) DPRINT1("dma_free_coherent UNIMPLEMENTED!\n");
 
 #define dma_map_single(a,b,c,d)		my_dma_map_single(a,b,c,d)
@@ -726,10 +728,11 @@ void my_kmem_cache_free(kmem_cache_t *co, void *ptr);
         ( ((type)(x) < (type)(y)) ? (type)(x): (type)(y) )
 #endif
 
-/*#define container_of(ptr, type, member) ({                      \
+#define container_of(ptr, type, member) ({                      \
         const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
-        (type *)( (char *)__mptr - offsetof(type,member) );})*/
-#define container_of(ptr, type, member) CONTAINING_RECORD(ptr, type, member)
+        (type *)( (char *)__mptr - offsetof(type,member) );})
+
+//#define container_of(ptr, type, member) CONTAINING_RECORD(ptr, type, member)
 
 /* from linux/stddef.h */
 

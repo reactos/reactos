@@ -144,7 +144,7 @@ static int uhci_show_qh(struct uhci_qh *qh, char *buf, int len, int space)
 		out += sprintf(out, "%*s Element != First TD\n", space, "");
 
 	while (tmp != head) {
-		struct uhci_td *td = list_entry(tmp, struct uhci_td, list);
+		/*struct uhci_td **/td = list_entry(tmp, struct uhci_td, list);
 
 		tmp = tmp->next;
 

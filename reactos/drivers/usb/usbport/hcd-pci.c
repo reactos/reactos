@@ -67,6 +67,16 @@ usb_hcd_pci_probe (struct pci_dev *dev, const struct pci_device_id *id)
 
 	printk("usbcore: usb_hcd_pci_probe() called\n");
 
+	{
+		/* Test code by Fireball */
+		struct device dv;
+		dma_addr_t dma_handle;
+		void *res;
+
+		dv.dev_ext = dev->dev_ext;
+		res = dma_alloc_coherent(&dv, 12, &dma_handle, 0);
+	}
+
 	if (usb_disabled())
 		return -ENODEV;
 
@@ -131,6 +141,16 @@ usb_hcd_pci_probe (struct pci_dev *dev, const struct pci_device_id *id)
 	// control by SMM/BIOS to control by Linux (if needed)
 	pci_set_drvdata (dev, hcd); // ReactOS-specific, needed in order to get pointer to usb_hcd in any place.
 	pci_set_master (dev);
+
+	{
+		/* Test code by Fireball */
+		struct device dv;
+		dma_addr_t dma_handle;
+		void *res;
+
+		dv.dev_ext = dev->dev_ext;
+		res = dma_alloc_coherent(&dv, 12, &dma_handle, 0);
+	}
 
 	retval = usb_add_hcd (hcd, dev->irq, SA_SHIRQ);
 	if (retval != 0)
@@ -402,5 +422,6 @@ int usb_hcd_pci_resume (struct pci_dev *dev)
 EXPORT_SYMBOL (usb_hcd_pci_resume);
 
 #endif	/* CONFIG_PM */
+
 
 

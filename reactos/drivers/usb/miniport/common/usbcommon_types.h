@@ -33,7 +33,7 @@ typedef struct _USBMP_DEVICE_EXTENSTION
    ULONG Flags;
    //ULONG AdapterInterfaceType;
    ULONG SystemIoBusNumber;
-   ULONG SystemIoSlotNumber;
+   PCI_SLOT_NUMBER SystemIoSlotNumber;
    //LIST_ENTRY AddressMappingListHead;
 
    // DMA stuff, and buffers

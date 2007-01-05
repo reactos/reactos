@@ -41,16 +41,10 @@ static __inline void set_bit(int nr, volatile void * addr)
 		:"=m" (ADDR)
 		:"Ir" (nr));
 #elif defined(_MSC_VER)
-	__asm {
-           mov eax, nr
-           mov ecx, addr
-           lock bts [ecx], eax
-           setc al
-    };
-#else
 	InterlockedBitTestAndSet(addr, nr);
+#else
+#error Unknown compiler for inline assembler!
 #endif
-
 }
 
 /**
@@ -180,12 +174,7 @@ static __inline int test_and_set_bit(int nr, volatile void * addr)
 
 	return oldbit;
 #elif defined(_MSC_VER)
-    __asm {
-           mov eax, nr
-           mov ecx, addr
-           lock bts [ecx], eax
-           setc al
-    };
+	return InterlockedBitTestAndSet(addr, nr);
 #else
 #error Unknown compiler for inline assembler
 #endif
@@ -211,12 +200,7 @@ static __inline int __test_and_set_bit(int nr, volatile void * addr)
 		:"Ir" (nr));
 	return oldbit;
 #elif defined(_MSC_VER)
-    __asm {
-           mov eax, nr
-           mov ecx, addr
-           lock bts [ecx], eax
-           setc al
-    };
+	return test_and_set_bit(nr, addr);
 #else
 #error Unknown compiler for inline assembler
 #endif
@@ -241,12 +225,7 @@ static __inline int test_and_clear_bit(int nr, volatile void * addr)
 		:"Ir" (nr) : "memory");
 	return oldbit;
 #elif defined(_MSC_VER)
-    __asm {
-           mov eax, nr
-           mov ecx, addr
-           lock btr [ecx], eax
-           setc al
-    };
+	return InterlockedBitTestAndReset(addr, nr);
 #else
 #error Unknown compiler for inline assembler
 #endif
@@ -272,17 +251,13 @@ static __inline int __test_and_clear_bit(int nr, volatile void * addr)
 		:"Ir" (nr));
 	return oldbit;
 #elif defined(_MSC_VER)
-    __asm {
-           mov eax, nr
-           mov ecx, addr
-           lock btr [ecx], eax
-           setc al
-    };
+	test_and_clear_bit(nr, addr);
 #else
 #error Unknown compiler for inline assembler
 #endif
 }
 
+#ifdef THIS_IS_NOT_USED
 /* WARNING: non atomic and it can be reordered! */
 static __inline int __test_and_change_bit(int nr, volatile void * addr)
 {
@@ -335,6 +310,8 @@ static __inline int test_and_change_bit(int nr, volatile void * addr)
 #error Unknown compiler for inline assembler
 #endif
 }
+
+#endif /* THIS_IS_NOT_USED */
 
 #if 0 /* Fool kernel-doc since it doesn't do macros yet */
 /**

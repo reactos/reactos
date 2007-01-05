@@ -86,6 +86,8 @@ UsbMpFdoStartDevice(
 	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	PCM_RESOURCE_LIST AllocatedResources;
 	ULONG Size;
+	USHORT FunctionNum, DeviceNum;
+	ULONG propAddress;
 	NTSTATUS Status;
 
 	if (DeviceObject == KeyboardFdo || DeviceObject == MouseFdo)
@@ -207,16 +209,23 @@ UsbMpFdoStartDevice(
 		DeviceExtension->PhysicalDeviceObject,
 		DevicePropertyAddress,
 		Size,
-		&DeviceExtension->SystemIoSlotNumber,
+		&propAddress,
 		&Size);
+
+	DeviceExtension->SystemIoSlotNumber.u.AsULONG = 0;
 
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT1("USBMP: IoGetDeviceProperty DevicePropertyAddress failed\n");
-		DeviceExtension->SystemIoSlotNumber = 0;
 	}
 
-	DPRINT("USBMP: Slotnumber 0x%x\n", DeviceExtension->SystemIoSlotNumber);
+	FunctionNum = (USHORT)((propAddress) & 0x0000FFFF);
+    DeviceNum = (USHORT)(((propAddress) >> 16) & 0x0000FFFF);
+
+	DeviceExtension->SystemIoSlotNumber.u.bits.DeviceNumber = DeviceNum;
+	DeviceExtension->SystemIoSlotNumber.u.bits.FunctionNumber = FunctionNum;
+
+	DPRINT("USBMP: Slotnumber 0x%x, Device: 0x%x, Func: 0x%x\n", DeviceExtension->SystemIoSlotNumber.u.AsULONG, DeviceNum, FunctionNum);
 
 	/* Init wrapper with this object */
 	return InitLinuxWrapper(DeviceObject);

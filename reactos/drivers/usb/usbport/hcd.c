@@ -1776,6 +1776,8 @@ int STDCALL usb_add_hcd(struct usb_hcd *hcd,
 	/* Although in principle hcd->driver->start() might need to use rhdev,
 	 * none of the current drivers do.
 	 */
+
+DbgBreakPoint();
 	if ((retval = hcd->driver->start(hcd)) < 0) {
 		dev_err(hcd->self.controller, "startup error %d\n", retval);
 		goto err_hcd_driver_start;

@@ -701,7 +701,7 @@ void my_pci_pool_free (struct pci_pool * pool, void * vaddr, dma_addr_t dma)
 	set_bit (block, &pool->pages[page].bitmap[map]);
 
 	pool->blocks_allocated--;
-	//DPRINT("pci_pool_free(): alloc'd: %d\n", pool->blocks_allocated);
+	DPRINT("pci_pool_free(): alloc'd: %d\n", pool->blocks_allocated);
 }
 
 /*
@@ -725,10 +725,11 @@ void my_pci_pool_destroy (struct pci_pool * pool)
 	ExFreePool(pool);
 }
 
+// the code here is identical to dma_alloc_coherent
 void  *my_pci_alloc_consistent(struct pci_dev *hwdev, size_t size, dma_addr_t *dma_handle)
 {
     PUSBMP_DEVICE_EXTENSION devExt = (PUSBMP_DEVICE_EXTENSION)hwdev->dev_ext;
-	DPRINT1("pci_alloc_consistent() size=%d\n", size);
+	DPRINT1("pci_alloc_consistent() size=%d, dma_handle=%p\n", size, (PPHYSICAL_ADDRESS)dma_handle);
 
     return devExt->pDmaAdapter->DmaOperations->AllocateCommonBuffer(devExt->pDmaAdapter, size, (PPHYSICAL_ADDRESS)dma_handle, FALSE); //FIXME: Cache-enabled?
 }
@@ -818,6 +819,23 @@ void my_pci_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr, size_t size
 {
 	my_dma_unmap_single(&hwdev->dev, dma_addr, size, direction);
 }
+
+// the code here is very similar to pci_alloc_consistent()
+void *my_dma_alloc_coherent(struct device *dev, size_t size, dma_addr_t *dma_handle, gfp_t flag)
+{
+	//struct pci_dev *pdev = to_pci_dev(dev);
+	//return my_pci_alloc_consistent(pdev, sz, dma_handle);
+
+    PUSBMP_DEVICE_EXTENSION devExt = (PUSBMP_DEVICE_EXTENSION)dev->dev_ext;
+	DPRINT1("dma_alloc_coherent() size=%d, dev=%p, dev_ext=%p, dma_handle=%p, DmaAdapter=%p\n", size, dev, dev->dev_ext, (PPHYSICAL_ADDRESS)dma_handle, devExt->pDmaAdapter);
+
+    return devExt->pDmaAdapter->DmaOperations->AllocateCommonBuffer(devExt->pDmaAdapter, size, (PPHYSICAL_ADDRESS)dma_handle, FALSE); //FIXME: Cache-enabled?
+
+}
+/*
+void dma_free_coherent(struct device *dev, size_t size,
+			 void *vaddr, dma_addr_t dma_handle); */
+
 
 
 /*------------------------------------------------------------------------*/ 
@@ -936,8 +954,8 @@ int my_pci_write_config_word(struct pci_dev *dev, int where, u16 val)
 	//FIXME: Is returning this value correct?
 	//FIXME: Mixing pci_dev and win structs isn't a good thing at all (though I doubt it wants to access device in another slot/bus)
 	DPRINT1("pci_write_config_word: BusNum: %d, SlotNum: 0x%x, value: 0x%x, where: 0x%x\n",
-		dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber, val, where);
-	return HalSetBusDataByOffset(PCIConfiguration, dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber, &val, where, sizeof(val));
+		dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber.u.AsULONG, val, where);
+	return HalSetBusDataByOffset(PCIConfiguration, dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber.u.AsULONG, &val, where, sizeof(val));
 }
 
 /*------------------------------------------------------------------------*/ 
@@ -950,9 +968,9 @@ int my_pci_read_config_word(struct pci_dev *dev, int where, u16 *val)
 
 	//FIXME: Is returning this value correct?
 	//FIXME: Mixing pci_dev and win structs isn't a good thing at all
-	result = HalGetBusDataByOffset(PCIConfiguration, dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber, val, where, sizeof(*val));
+	result = HalGetBusDataByOffset(PCIConfiguration, dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber.u.AsULONG, val, where, sizeof(*val));
 	DPRINT1("pci_read_config_word: BusNum: %d, SlotNum: 0x%x, value: 0x%x, where: 0x%x\n",
-		dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber, *val, where);
+		dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber.u.AsULONG, *val, where);
 
 	return result;
 }
