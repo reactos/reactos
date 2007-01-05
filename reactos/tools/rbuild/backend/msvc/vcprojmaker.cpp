@@ -410,12 +410,17 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			if (module.importLibrary != NULL)
 				fprintf ( OUT, "\t\t\t\tModuleDefinitionFile=\"%s\"\r\n", module.importLibrary->definition.c_str());
 			fprintf ( OUT, "\t\t\t\tAdditionalDependencies=\"" );
+			bool use_msvcrt_lib = false;
 			for ( i = 0; i < libraries.size(); i++ )
 			{
 				if ( i > 0 )
 					fprintf ( OUT, " " );
 				string libpath = libraries[i].c_str();
 				libpath = libpath.erase (0, libpath.find_last_of ("\\") + 1 );
+				if ( libpath == "msvcrt.lib" )
+				{
+					use_msvcrt_lib = true;
+				}
 				fprintf ( OUT, "%s", libpath.c_str() );
 			}
 			fprintf ( OUT, "\"\r\n" );
@@ -474,6 +479,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				}
 				else if ( module.type == Win32CUI || module.type == Win32GUI || module.type == Win32SCR)
 				{
+					if ( use_msvcrt_lib )
+					{
+						fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+					}
 					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", console ? 1 : 2 );
 				}
 			}
@@ -491,6 +500,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 						fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint(false).c_str ());
 				}
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str ());
+				if ( use_msvcrt_lib )
+				{
+					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+				}
 			}
 			fprintf ( OUT, "\t\t\t\tTargetMachine=\"%d\"/>\r\n", 1 );
 		}
