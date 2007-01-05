@@ -965,8 +965,6 @@ void TaskManager_OnTabWndSelChange(void)
         LoadString(hInst, IDS_MENU_DETAILS, szTemp, 256);
         AppendMenu(hViewMenu, MF_STRING, ID_VIEW_DETAILS, szTemp);
 
-//RemoveMenu(hMenu, 3, MF_BYPOSITION);
-
         if (GetMenuItemCount(hMenu) <= 4) {
             hSubMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_WINDOWSMENU));
 
