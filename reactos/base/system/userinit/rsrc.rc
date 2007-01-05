@@ -2,6 +2,7 @@
 #include <windows.h>
 #include "resource.h"
 
+LANGUAGE LANG_NEUTRAL,SUBLANG_NEUTRAL
 
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
@@ -14,5 +15,4 @@
 #include "lang/uk-UA.rc"
 #include "lang/nb-NO.rc"
 #include "lang/fr-FR.rc"
-LANGUAGE LANG_NEUTRAL,SUBLANG_NEUTRAL
-
+#include "lang/it-IT.rc"

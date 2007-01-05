@@ -20,3 +20,4 @@ IDB_TREEVIEW_ICON_8	BITMAP DISCARDABLE	"resources/8.bmp"
 
 #include "translations/en.rc"
 #include "translations/de.rc"
+#include "translations/it.rc"
