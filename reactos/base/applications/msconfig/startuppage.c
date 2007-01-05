@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS Applications
- * LICENSE:     GPL - See COPYING in the top level directory
+ * LICENSE:     LGPL - See COPYING in the top level directory
  * FILE:        base/applications/startuppage.c
  * PURPOSE:     Startup page message handler
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
@@ -116,25 +116,17 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
                             dwDataLength = MAX_VALUE_NAME;
                             if(RegEnumValue(hSubKey, SubIndex, szSubValueName, &dwValueLength, NULL, NULL, (LPBYTE)Data, &dwDataLength) == ERROR_SUCCESS)
                             {
+                                item.iSubItem = -1;
                                 if (!_tcscmp(szSubValueName, _T("command")))
-                                {
-                                    GetLongPathName(Data, Data, (DWORD) _tcsclen(Data));
-                                    item.pszText = Data;
                                     item.iSubItem = 1;
-                                    SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-                                }
                                 else if (!_tcscmp(szSubValueName, _T("key")) || !_tcscmp(szSubValueName, _T("location")))
-                                {
-                                    GetLongPathName(Data, Data, (DWORD) _tcsclen(Data));
-                                    item.pszText = Data;
                                     item.iSubItem = 2;
-                                    SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-                                }
                                 else if (!_tcscmp(szSubValueName, _T("item")))
-                                {
+                                    item.iSubItem = 0;
+                                if (item.iSubItem != -1)
+								{
                                     GetLongPathName(Data, Data, (DWORD) _tcsclen(Data));
                                     item.pszText = Data;
-                                    item.iSubItem = 0;
                                     SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
                                 }
                             }
@@ -183,7 +175,7 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
                     (void)ListView_InsertItem(hStartupListCtrl, &item);
                     ListView_SetCheckState(hStartupListCtrl, item.iItem, TRUE);
 
-                    if (dwType == REG_SZ)
+                    if ((dwType == REG_SZ) || (dwType == REG_EXPAND_SZ))
                     {
                         GetLongPathName(Data, Data, (DWORD) _tcsclen(Data));
                         item.pszText = Data;
