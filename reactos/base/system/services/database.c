@@ -137,7 +137,7 @@ ScmCreateNewServiceRecord(LPWSTR lpServiceName,
     DPRINT("Service: '%S'\n", lpServiceName);
 
     /* Allocate service entry */
-    lpService = HeapAlloc(GetProcessHeap(),
+    lpService = (SERVICE*) HeapAlloc(GetProcessHeap(),
                           HEAP_ZERO_MEMORY,
                           sizeof(SERVICE) + ((wcslen(lpServiceName) + 1) * sizeof(WCHAR)));
     if (lpService == NULL)
@@ -449,7 +449,7 @@ ScmCheckDriver(PSERVICE Service)
 
     BufferLength = sizeof(OBJECT_DIRECTORY_INFORMATION) +
                    2 * MAX_PATH * sizeof(WCHAR);
-    DirInfo = HeapAlloc(GetProcessHeap(),
+    DirInfo = (OBJECT_DIRECTORY_INFORMATION*) HeapAlloc(GetProcessHeap(),
                         HEAP_ZERO_MEMORY,
                         BufferLength);
 
@@ -541,7 +541,7 @@ ScmControlService(PSERVICE Service,
 
     DPRINT("ScmControlService() called\n");
 
-    ControlPacket = HeapAlloc(GetProcessHeap(),
+    ControlPacket = (SCM_CONTROL_PACKET*) HeapAlloc(GetProcessHeap(),
                               HEAP_ZERO_MEMORY,
                               sizeof(SCM_CONTROL_PACKET));
     if (ControlPacket == NULL)
@@ -600,7 +600,7 @@ ScmSendStartCommand(PSERVICE Service,
     DPRINT("ArgsLength: %ld\nTotalLength: %ld\n\n", ArgsLength, TotalLength);
 
     /* Allocate a control packet */
-    ControlPacket = HeapAlloc(GetProcessHeap(),
+    ControlPacket = (SCM_CONTROL_PACKET*) HeapAlloc(GetProcessHeap(),
                               HEAP_ZERO_MEMORY,
                               sizeof(SCM_CONTROL_PACKET) + (TotalLength - 1) * sizeof(WCHAR));
     if (ControlPacket == NULL)

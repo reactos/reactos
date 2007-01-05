@@ -221,7 +221,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	SetLastError(0);
 	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, NULL,
 			    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
-				 FILE_FLAG_SEQUENTIAL_SCAN, NULL);	
+				 FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 
 #ifdef _DEBUG
 	DebugPrintf (_T("Batch: (\'%s\', \'%s\', \'%s\')  hFile = %x\n"),
@@ -264,7 +264,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	}
 
 	bc->hBatchFile = hFile;
-	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN); 
+	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN);
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
 
@@ -275,7 +275,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
     //
     // Allocate enough memory to hold the params and copy them over without modifications
     //
-    bc->raw_params = malloc((_tcslen(param)+1) * sizeof(TCHAR));
+    bc->raw_params = (TCHAR*) malloc((_tcslen(param)+1) * sizeof(TCHAR));
     if (bc->raw_params != NULL)
     {
         memset (bc->raw_params, 0, _tcslen(bc->raw_params) * sizeof(TCHAR));

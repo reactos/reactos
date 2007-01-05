@@ -300,7 +300,7 @@ GetButtonHeight(HDC hDC,
   rect.top = 0;
   rect.bottom = 25;
 
-  hOldFont = SelectObject(hDC, hFont);
+  hOldFont = (HFONT) SelectObject(hDC, hFont);
   DrawText(hDC, szText, -1, &rect, DT_TOP | DT_CALCRECT | DT_WORDBREAK);
   SelectObject(hDC, hOldFont);
 
@@ -487,7 +487,7 @@ PaintBanner(HDC hdc, LPRECT rcPanel)
   HBRUSH hOldBrush;
 
   /* Title bitmap */
-  hOldBitmap = SelectObject(hdcMem, hTitleBitmap);
+  hOldBitmap = (HBITMAP) SelectObject(hdcMem, hTitleBitmap);
   BitBlt(hdc,
 	 rcPanel->left,
 	 rcPanel->top,
@@ -497,7 +497,7 @@ PaintBanner(HDC hdc, LPRECT rcPanel)
   SelectObject(hdcMem, hOldBitmap);
 
   /* Dark blue line */
-  hOldBrush = SelectObject(hdc, hbrDarkBlue);
+  hOldBrush = (HBRUSH) SelectObject(hdc, hbrDarkBlue);
   PatBlt(hdc,
 	 rcPanel->left,
 	 rcPanel->bottom - 3,
@@ -535,7 +535,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
   PaintBanner(hdc, &rcTitlePanel);
 
   /* Left panel */
-  hOldBrush = SelectObject (hdc, hbrLightBlue);
+  hOldBrush = (HBRUSH) SelectObject (hdc, hbrLightBlue);
   PatBlt(hdc,
 	 rcLeftPanel.left,
 	 rcLeftPanel.top,
@@ -545,7 +545,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
   SelectObject(hdc, hOldBrush);
 
   /* Right panel */
-  hOldBrush = SelectObject (hdc, WHITE_BRUSH);
+  hOldBrush = (HBRUSH) SelectObject (hdc, WHITE_BRUSH);
   PatBlt(hdc,
 	 rcRightPanel.left,
 	 rcRightPanel.top,
@@ -556,7 +556,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
   /* Draw dark verical line */
   hPen = CreatePen(PS_SOLID, 0, DARK_BLUE);
-  hOldPen = SelectObject(hdc, hPen);
+  hOldPen = (HPEN) SelectObject(hdc, hPen);
   MoveToEx(hdc, rcRightPanel.left, rcRightPanel.top, NULL);
   LineTo(hdc, rcRightPanel.left, rcRightPanel.bottom);
   SelectObject(hdc, hOldPen);
@@ -566,7 +566,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
   if ((nTopic == -1) && (hDefaultTopicBitmap != 0))
     {
       GetObject(hDefaultTopicBitmap, sizeof(BITMAP), &bmpInfo);
-      hOldBitmap = SelectObject (hdcMem, hDefaultTopicBitmap);
+      hOldBitmap = (HBITMAP) SelectObject (hdcMem, hDefaultTopicBitmap);
       BitBlt(hdc,
 	     rcRightPanel.right - bmpInfo.bmWidth,
 	     rcRightPanel.bottom - bmpInfo.bmHeight,
@@ -580,7 +580,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
   else if ((nTopic != -1) && (hTopicBitmap[nTopic] != 0))
     {
       GetObject(hTopicBitmap[nTopic], sizeof(BITMAP), &bmpInfo);
-      hOldBitmap = SelectObject (hdcMem, hTopicBitmap[nTopic]);
+      hOldBitmap = (HBITMAP) SelectObject (hdcMem, hTopicBitmap[nTopic]);
       BitBlt(hdc,
 	     rcRightPanel.right - bmpInfo.bmWidth,
 	     rcRightPanel.bottom - bmpInfo.bmHeight,
@@ -626,7 +626,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
   rcTitle.right = rcLeftPanel.right - 5;
   rcTitle.top = rcLeftPanel.bottom - 40;
   rcTitle.bottom = rcLeftPanel.bottom - 5;
-  hOldFont = SelectObject(hdc, hfontTopicDescription);
+  hOldFont = (HFONT) SelectObject(hdc, hfontTopicDescription);
   DrawText(hdc, version, -1, &rcTitle, DT_BOTTOM | DT_CALCRECT | DT_SINGLELINE);
   DrawText(hdc, version, -1, &rcTitle, DT_BOTTOM | DT_SINGLELINE);
   SelectObject(hdc, hOldFont);
@@ -636,7 +636,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
   rcTitle.right = rcRightPanel.right - 8;
   rcTitle.top = rcRightPanel.top + 8;
   rcTitle.bottom = rcTitle.top + 57;
-  hOldFont = SelectObject(hdc, hfontTopicTitle);
+  hOldFont = (HFONT) SelectObject(hdc, hfontTopicTitle);
   DrawText(hdc, szTopicTitle, -1, &rcTitle, DT_TOP | DT_CALCRECT);
 
   SetTextColor(hdc, DARK_BLUE);
@@ -686,9 +686,9 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
   else
     {
       if (lpDis->CtlID == (ULONG)nTopic)
-	hOldBrush = SelectObject(lpDis->hDC, hbrRightPanel);
+	hOldBrush = (HBRUSH) SelectObject(lpDis->hDC, hbrRightPanel);
       else
-	hOldBrush = SelectObject(lpDis->hDC, hbrLightBlue);
+	hOldBrush = (HBRUSH) SelectObject(lpDis->hDC, hbrLightBlue);
 
       PatBlt(lpDis->hDC,
 	     lpDis->rcItem.left,
@@ -699,7 +699,7 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
       SelectObject(lpDis->hDC, hOldBrush);
 
       hPen = CreatePen(PS_SOLID, 0, DARK_BLUE);
-      hOldPen = SelectObject(lpDis->hDC, hPen);
+      hOldPen = (HPEN) SelectObject(lpDis->hDC, hPen);
       MoveToEx(lpDis->hDC, lpDis->rcItem.left, lpDis->rcItem.bottom-1, NULL);
       LineTo(lpDis->hDC, lpDis->rcItem.right, lpDis->rcItem.bottom-1);
       SelectObject(lpDis->hDC, hOldPen);
@@ -723,7 +723,7 @@ OnMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   UNREFERENCED_PARAMETER(wParam);
   UNREFERENCED_PARAMETER(lParam);
- 
+
   if (nTopic != -1)
     {
       nTopic = -1;

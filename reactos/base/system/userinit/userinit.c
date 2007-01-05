@@ -51,7 +51,7 @@ ReadRegSzKey(
 		return rc;
 	if (dwType != REG_SZ)
 		return ERROR_FILE_NOT_FOUND;
-	Value = HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
+	Value = (WCHAR*) HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
 	if (!Value)
 		return ERROR_NOT_ENOUGH_MEMORY;
 	rc = RegQueryValueExW(hKey, pszKey, NULL, NULL, (LPBYTE)Value, &cbData);

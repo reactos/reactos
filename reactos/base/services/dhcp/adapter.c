@@ -31,7 +31,7 @@ PCHAR *GetSubkeyNames( PCHAR MainKeyName, PCHAR Append ) {
     DH_DbgPrint(MID_TRACE,("AppendLen: %d, CharTotal: %d\n",
                            AppendLen, CharTotal));
 
-    Out = malloc( CharTotal );
+    Out = (CHAR**) malloc( CharTotal );
     OutKeyName = ((PCHAR)&Out[MaxSubKeys+1]);
 
     if( !Out ) { RegCloseKey( MainKey ); return NULL; }
@@ -73,7 +73,7 @@ PCHAR RegReadString( HKEY Root, PCHAR Subkey, PCHAR Value ) {
 
     DH_DbgPrint(MID_TRACE,("Value %s has size %d\n", Value, SubOutLen));
 
-    if( !(SubOut = malloc(SubOutLen)) )
+    if( !(SubOut = (CHAR*) malloc(SubOutLen)) )
         goto regerror;
 
     if( (Error = RegQueryValueEx( ValueKey, Value, NULL, NULL,
@@ -128,7 +128,7 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
             RootDevice &&
             !strcmp( DriverDesc, Adapter->DhclientInfo.name ) ) {
             TargetKeyName =
-                malloc( strlen( TargetKeyNameStart ) +
+                (CHAR*) malloc( strlen( TargetKeyNameStart ) +
                         strlen( RootDevice ) +
                         strlen( TargetKeyNameEnd ) + 1 );
             if( !TargetKeyName ) goto cleanup;
@@ -219,7 +219,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
  */
 
 void AdapterInit() {
-    PMIB_IFTABLE Table = malloc(sizeof(MIB_IFTABLE));
+    PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
     DWORD Error, Size, i;
     PDHCP_ADAPTER Adapter = NULL;
 
@@ -233,7 +233,7 @@ void AdapterInit() {
            ERROR_INSUFFICIENT_BUFFER ) {
         DH_DbgPrint(MID_TRACE,("Error %d, New Buffer Size: %d\n", Error, Size));
         free( Table );
-        Table = malloc( Size );
+        Table = (PMIB_IFTABLE) malloc( Size );
     }
 
     if( Error != NO_ERROR ) goto term;
@@ -243,7 +243,7 @@ void AdapterInit() {
     for( i = 0; i < Table->dwNumEntries; i++ ) {
         DH_DbgPrint(MID_TRACE,("Getting adapter %d attributes\n",
                                Table->table[i].dwIndex));
-        Adapter = calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
+        Adapter = (DHCP_ADAPTER*) calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
 
         if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET ) {
             memcpy( &Adapter->IfMib, &Table->table[i],
@@ -258,9 +258,9 @@ void AdapterInit() {
                    Adapter->IfMib.dwPhysAddrLen);
             Adapter->DhclientInfo.hw_address.hlen  =
                 Adapter->IfMib.dwPhysAddrLen;
-            /* I'm not sure where else to set this, but 
+            /* I'm not sure where else to set this, but
                some DHCP servers won't take a zero.
-               We checked the hardware type earlier in 
+               We checked the hardware type earlier in
                the if statement. */
             Adapter->DhclientInfo.hw_address.htype  =
                 HTYPE_ETHER;

@@ -135,7 +135,7 @@ static LPWSTR build_properties(struct string_list *property_list)
 	for(list = property_list; list; list = list->next)
 		len += lstrlenW(list->str) + 3;
 
-	ret = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+	ret = (WCHAR*) HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
 
 	/* add a space before each string, and quote the value */
 	p = ret;
@@ -179,7 +179,7 @@ static LPWSTR build_transforms(struct string_list *transform_list)
 	for(list = transform_list; list; list = list->next)
 		len += lstrlenW(list->str) + 1;
 
-	ret = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+	ret = (WCHAR*) HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
 
 	/* add all the transforms with a semicolon between each one */
 	p = ret;
@@ -211,7 +211,7 @@ static DWORD msi_atou(LPCWSTR str)
 static LPWSTR msi_strdup(LPCWSTR str)
 {
 	DWORD len = lstrlenW(str)+1;
-	LPWSTR ret = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
+	LPWSTR ret = (WCHAR*) HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
 	lstrcpyW(ret, str);
 	return ret;
 }
@@ -227,7 +227,7 @@ static BOOL msi_strequal(LPCWSTR str1, LPCSTR str2)
 		return TRUE;
 	if( lstrlenW(str1) != (len-1) )
 		return TRUE;
-	strW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
+	strW = (WCHAR*) HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
 	MultiByteToWideChar( CP_ACP, 0, str2, -1, strW, len);
 	ret = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, str1, len, strW, len);
 	HeapFree(GetProcessHeap(), 0, strW);
@@ -245,7 +245,7 @@ static BOOL msi_strprefix(LPCWSTR str1, LPCSTR str2)
 		return TRUE;
 	if( lstrlenW(str1) < (len-1) )
 		return TRUE;
-	strW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
+	strW = (WCHAR*) HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
 	MultiByteToWideChar( CP_ACP, 0, str2, -1, strW, len);
 	ret = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, str1, len-1, strW, len-1);
 	HeapFree(GetProcessHeap(), 0, strW);
@@ -393,7 +393,7 @@ static void process_args( WCHAR *cmdline, int *pargc, WCHAR ***pargv )
 	int i, n;
 
 	n = chomp( p );
-	argv = HeapAlloc(GetProcessHeap(), 0, sizeof (WCHAR*)*(n+1));
+	argv = (WCHAR**) HeapAlloc(GetProcessHeap(), 0, sizeof (WCHAR*)*(n+1));
 	for( i=0; i<n; i++ )
 	{
 		argv[i] = p;
@@ -419,7 +419,7 @@ static BOOL process_args_from_reg( LPWSTR ident, int *pargc, WCHAR ***pargv )
 	r = RegQueryValueExW(hkey, ident, 0, &type, 0, &sz);
 	if(r == ERROR_SUCCESS && type == REG_SZ)
 	{
-		buf = HeapAlloc(GetProcessHeap(), 0, sz);
+		buf = (WCHAR*) HeapAlloc(GetProcessHeap(), 0, sz);
 		r = RegQueryValueExW(hkey, ident, 0, &type, (LPBYTE)buf, &sz);
 		if( r == ERROR_SUCCESS )
 		{
@@ -781,23 +781,23 @@ int main(int argc, char **argv)
 			}
 			else if(!msi_strequal(argvW[i]+2, "f"))
 			{
-				InstallUILevel = INSTALLUILEVEL_FULL|INSTALLUILEVEL_ENDDIALOG;
+				InstallUILevel = (INSTALLUILEVEL) (INSTALLUILEVEL_FULL|INSTALLUILEVEL_ENDDIALOG);
 			}
 			else if(!msi_strequal(argvW[i]+2, "n+"))
 			{
-				InstallUILevel = INSTALLUILEVEL_NONE|INSTALLUILEVEL_ENDDIALOG;
+				InstallUILevel = (INSTALLUILEVEL) (INSTALLUILEVEL_NONE|INSTALLUILEVEL_ENDDIALOG);
 			}
 			else if(!msi_strequal(argvW[i]+2, "b+"))
 			{
-				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_ENDDIALOG;
+				InstallUILevel = (INSTALLUILEVEL) (INSTALLUILEVEL_BASIC|INSTALLUILEVEL_ENDDIALOG);
 			}
 			else if(!msi_strequal(argvW[i]+2, "b-"))
 			{
-				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_PROGRESSONLY;
+				InstallUILevel = (INSTALLUILEVEL) (INSTALLUILEVEL_BASIC|INSTALLUILEVEL_PROGRESSONLY);
 			}
 			else if(!msi_strequal(argvW[i]+2, "b+!"))
 			{
-				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_ENDDIALOG;
+				InstallUILevel = (INSTALLUILEVEL) (INSTALLUILEVEL_BASIC|INSTALLUILEVEL_ENDDIALOG);
 				WINE_FIXME("Unknown modifier: !\n");
 			}
 			else

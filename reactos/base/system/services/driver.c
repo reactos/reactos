@@ -123,7 +123,7 @@ ScmGetDriverStatus(PSERVICE lpService,
 
     BufferLength = sizeof(OBJECT_DIRECTORY_INFORMATION) +
                    2 * MAX_PATH * sizeof(WCHAR);
-    DirInfo = HeapAlloc(GetProcessHeap(),
+    DirInfo = (OBJECT_DIRECTORY_INFORMATION*) HeapAlloc(GetProcessHeap(),
                         HEAP_ZERO_MEMORY,
                         BufferLength);
 

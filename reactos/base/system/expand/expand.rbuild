@@ -2,7 +2,7 @@
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <module name="expand" type="win32cui" installbase="system32" installname="expand.exe" usewrc="false">
 	<include base="ReactOS">include/reactos/wine</include>
-	<include base="cmd">.</include>
+	<include base="expand">.</include>
 	<define name="__USE_W32API" />
 	<define name="ANONYMOUSUNIONS" />
 	<define name="_WIN32_WINNT">0x0501</define>

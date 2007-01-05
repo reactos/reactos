@@ -139,13 +139,13 @@ CreateGroupListRoutine(PWSTR ValueName,
 
         Group = (PSERVICE_GROUP)HeapAlloc(GetProcessHeap(),
                                           HEAP_ZERO_MEMORY,
-                                          sizeof(SERVICE_GROUP) + (wcslen(ValueData) * sizeof(WCHAR)));
+                                          sizeof(SERVICE_GROUP) + (wcslen((const wchar_t*) ValueData) * sizeof(WCHAR)));
         if (Group == NULL)
         {
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        wcscpy(Group->szGroupName, ValueData);
+        wcscpy(Group->szGroupName, (const wchar_t*) ValueData);
         Group->lpGroupName = Group->szGroupName;
         Group->dwRefCount = (DWORD)-1;
 

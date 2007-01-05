@@ -146,7 +146,7 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
     if (lpDatabaseName == NULL)
         lpDatabaseName = SERVICES_ACTIVE_DATABASEW;
 
-    Ptr = HeapAlloc(GetProcessHeap(),
+    Ptr = (MANAGER_HANDLE*) HeapAlloc(GetProcessHeap(),
                     HEAP_ZERO_MEMORY,
                     sizeof(MANAGER_HANDLE) + wcslen(lpDatabaseName) * sizeof(WCHAR));
     if (Ptr == NULL)
@@ -171,7 +171,7 @@ ScmCreateServiceHandle(PSERVICE lpServiceEntry,
 {
     PSERVICE_HANDLE Ptr;
 
-    Ptr = HeapAlloc(GetProcessHeap(),
+    Ptr = (SERVICE_HANDLE*) HeapAlloc(GetProcessHeap(),
                     HEAP_ZERO_MEMORY,
                     sizeof(SERVICE_HANDLE));
     if (Ptr == NULL)
@@ -1033,7 +1033,7 @@ ScmrCreateServiceW(handle_t BindingHandle,
          * first part of full file name is the OS directory */
         if (lpBinaryPathName[1] == ':') lpBinaryPathName += GetWindowsDirectoryW(NULL, 0);
 
-        lpImagePath = HeapAlloc(GetProcessHeap(),
+        lpImagePath = (WCHAR*) HeapAlloc(GetProcessHeap(),
                                 HEAP_ZERO_MEMORY,
                                 (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
         if (lpImagePath == NULL)
@@ -1060,7 +1060,7 @@ ScmrCreateServiceW(handle_t BindingHandle,
         *lpDisplayName != 0 &&
         wcsicmp(lpService->lpDisplayName, lpDisplayName) != 0)
     {
-        lpService->lpDisplayName = HeapAlloc(GetProcessHeap(), 0,
+        lpService->lpDisplayName = (WCHAR*) HeapAlloc(GetProcessHeap(), 0,
                                              (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
         if (lpService->lpDisplayName == NULL)
         {
