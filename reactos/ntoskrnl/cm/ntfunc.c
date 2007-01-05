@@ -1350,29 +1350,29 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     }
   }
 
-    if (ObjectAttributes->ObjectName->Buffer[(ObjectAttributes->ObjectName->Length / sizeof(WCHAR)) - 1] == '\\')
-  {
-    ObjectAttributes->ObjectName->Buffer[(ObjectAttributes->ObjectName->Length / sizeof(WCHAR)) - 1] = UNICODE_NULL;
-    ObjectAttributes->ObjectName->Length -= sizeof(WCHAR);
-    ObjectAttributes->ObjectName->MaximumLength -= sizeof(WCHAR);
-  }
-
   /* WINE checks for the length also */
   /*if (ObjectAttributes->ObjectName->Length > MAX_NAME_LENGTH)
 	  return(STATUS_BUFFER_OVERFLOW);*/
 
-      /* Capture all the info */
+   /* Capture all the info */
    DPRINT("Capturing Create Info\n");
    Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                        PreviousMode,
                                        FALSE,
                                        &ObjectCreateInfo,
                                        &ObjectName);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
-	return Status;
-     }
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  if (ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] == '\\')
+    {
+      ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] = UNICODE_NULL;
+      ObjectName.Length -= sizeof(WCHAR);
+      ObjectName.MaximumLength -= sizeof(WCHAR);
+    }
 
   PostOpenKeyInfo.CompleteName = &ObjectName;
   PreOpenKeyInfo.CompleteName = &ObjectName;
