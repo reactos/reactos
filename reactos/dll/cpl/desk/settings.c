@@ -601,13 +601,13 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 			hdcMem = CreateCompatibleDC(hdc);
 			SelectObject(hdcMem, pGlobalData->hBitmap);
-
+/*
 			TransparentBlt(hdc, 98, 0,
 				       pGlobalData->cxSource,
 				       pGlobalData->cySource, hdcMem, 0, 0,
 				       pGlobalData->cxSource,
 				       pGlobalData->cySource, 0xFF80FF);
-
+*/
 			DeleteDC(hdcMem);
 			EndPaint(hwndDlg, &ps);
 
