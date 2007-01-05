@@ -753,7 +753,7 @@ IntroPage(PINPUT_RECORD Ir)
 	{
 	  return LICENSE_PAGE;
       break;
-	}   
+	}
     }
 
   return INTRO_PAGE;
@@ -815,7 +815,7 @@ RepairIntroPage(PINPUT_RECORD Ir)
   CONSOLE_SetTextXY(6, 12, "The repair functions are not implemented yet.");
 
   CONSOLE_SetTextXY(8, 15, "\x07  Press R for the Recovery Console.");
-  
+
   CONSOLE_SetTextXY(8, 17, "\x07  Press ESC to return to the main page.");
 
   CONSOLE_SetTextXY(8, 19, "\x07  Press ENTER to reboot your computer.");
@@ -2806,7 +2806,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 		 Ir, POPUP_WAIT_ENTER);
       return(QUIT_PAGE);
     }
- 
+
   if (!PrepareCopyPageInfFile(SetupInf, NULL, Ir))
     {
       return QUIT_PAGE;
@@ -2859,9 +2859,9 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 	  return QUIT_PAGE;
 	}
 
-      InfHandle = INF_OpenBufferedFileA(InfFileData,
+      InfHandle = INF_OpenBufferedFileA((CHAR*) InfFileData,
 				   InfFileSize,
-				   NULL,
+				   (const CHAR*) NULL,
 				   INF_STYLE_WIN4,
 				   &ErrorLine);
       if (InfHandle == INVALID_HANDLE_VALUE)
@@ -3156,12 +3156,12 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
 	  CONSOLE_NormalTextXY (8, Line, 48, 1);
-	  
+
 	  Line++;
       if (Line<12) Line=14;
       if (Line>14) Line=12;
-      	 
-       
+
+
 
 	  CONSOLE_InvertTextXY (8, Line, 48, 1);
 	}
@@ -3169,7 +3169,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
 	  CONSOLE_NormalTextXY (8, Line, 48, 1);
-	  
+
 	  Line--;
       if (Line<12) Line=14;
       if (Line>14) Line=12;
@@ -3518,11 +3518,11 @@ RunUSetup(VOID)
 	    break;
 
 	  case FORMAT_PARTITION_PAGE:
-	    Page = FormatPartitionPage(&Ir);
+	    Page = (PAGE_NUMBER) FormatPartitionPage(&Ir);
 	    break;
 
 	  case CHECK_FILE_SYSTEM_PAGE:
-	    Page = CheckFileSystemPage(&Ir);
+	    Page = (PAGE_NUMBER) CheckFileSystemPage(&Ir);
 	    break;
 
 	  case INSTALL_DIRECTORY_PAGE:

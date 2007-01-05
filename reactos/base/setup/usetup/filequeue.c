@@ -170,7 +170,7 @@ SetupQueueCopy(HSPFILEQ QueueHandle,
   if (SourceCabinet != NULL)
     {
       Length = wcslen(SourceCabinet);
-      Entry->SourceCabinet = RtlAllocateHeap(ProcessHeap,
+      Entry->SourceCabinet = (WCHAR*) RtlAllocateHeap(ProcessHeap,
     					  0,
     					  (Length + 1) * sizeof(WCHAR));
       if (Entry->SourceCabinet == NULL)
@@ -188,7 +188,7 @@ SetupQueueCopy(HSPFILEQ QueueHandle,
 
   /* Copy source root path */
   Length = wcslen(SourceRootPath);
-  Entry->SourceRootPath = RtlAllocateHeap(ProcessHeap,
+  Entry->SourceRootPath = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 					  0,
 					  (Length + 1) * sizeof(WCHAR));
   if (Entry->SourceRootPath == NULL)
@@ -207,7 +207,7 @@ SetupQueueCopy(HSPFILEQ QueueHandle,
   if (SourcePath != NULL)
   {
     Length = wcslen(SourcePath);
-    Entry->SourcePath = RtlAllocateHeap(ProcessHeap,
+    Entry->SourcePath = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 					0,
 					(Length + 1) * sizeof(WCHAR));
     if (Entry->SourcePath == NULL)
@@ -226,7 +226,7 @@ SetupQueueCopy(HSPFILEQ QueueHandle,
 
   /* Copy source file name */
   Length = wcslen(SourceFilename);
-  Entry->SourceFilename = RtlAllocateHeap(ProcessHeap,
+  Entry->SourceFilename = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 					  0,
 					  (Length + 1) * sizeof(WCHAR));
   if (Entry->SourceFilename == NULL)
@@ -247,7 +247,7 @@ SetupQueueCopy(HSPFILEQ QueueHandle,
   Length = wcslen(TargetDirectory);
   if (TargetDirectory[Length] == '\\')
     Length--;
-  Entry->TargetDirectory = RtlAllocateHeap(ProcessHeap,
+  Entry->TargetDirectory = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 					   0,
 					   (Length + 1) * sizeof(WCHAR));
   if (Entry->TargetDirectory == NULL)
@@ -269,7 +269,7 @@ SetupQueueCopy(HSPFILEQ QueueHandle,
   if (TargetFilename != NULL)
   {
     Length = wcslen(TargetFilename);
-    Entry->TargetFilename = RtlAllocateHeap(ProcessHeap,
+    Entry->TargetFilename = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 					    0,
 					    (Length + 1) * sizeof(WCHAR));
     if (Entry->TargetFilename == NULL)

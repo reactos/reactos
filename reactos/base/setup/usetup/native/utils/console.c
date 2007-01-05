@@ -194,7 +194,7 @@ WriteConsoleOutputCharacterA(
 	PCHAR pText;
 	NTSTATUS Status;
 
-	Buffer = RtlAllocateHeap(
+	Buffer = (CHAR*) RtlAllocateHeap(
 		ProcessHeap,
 		0,
 		nLength + sizeof(COORD));
@@ -242,7 +242,7 @@ WriteConsoleOutputCharacterW(
 	NTSTATUS Status;
 	ULONG i;
 
-	Buffer = RtlAllocateHeap(
+	Buffer = (CHAR*) RtlAllocateHeap(
 		ProcessHeap,
 		0,
 		nLength + sizeof(COORD));

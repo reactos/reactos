@@ -160,7 +160,7 @@ IniCacheAddKey(PINICACHESECTION Section,
 		sizeof(INICACHEKEY));
 
 
-  Key->Name = RtlAllocateHeap(ProcessHeap,
+  Key->Name = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 			      0,
 			      (NameLength + 1) * sizeof(WCHAR));
   if (Key->Name == NULL)
@@ -180,7 +180,7 @@ IniCacheAddKey(PINICACHESECTION Section,
   Key->Name[NameLength] = 0;
 
 
-  Key->Data = RtlAllocateHeap(ProcessHeap,
+  Key->Data = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 			      0,
 			      (DataLength + 1) * sizeof(WCHAR));
   if (Key->Data == NULL)
@@ -277,7 +277,7 @@ IniCacheAddSection(PINICACHE Cache,
 		sizeof(INICACHESECTION));
 
   /* Allocate and initialize section name */
-  Section->Name = RtlAllocateHeap(ProcessHeap,
+  Section->Name = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 				  0,
 				  (NameLength + 1) * sizeof(WCHAR));
   if (Section->Name == NULL)
@@ -576,7 +576,7 @@ IniCacheLoad(PINICACHE *Cache,
   DPRINT("File size: %lu\n", FileLength);
 
   /* Allocate file buffer */
-  FileBuffer = RtlAllocateHeap(ProcessHeap,
+  FileBuffer = (CHAR*) RtlAllocateHeap(ProcessHeap,
 			       0,
 			       FileLength + 1);
   if (FileBuffer == NULL)
@@ -891,7 +891,7 @@ IniCacheInsertKey(PINICACHESECTION Section,
 		sizeof(INICACHEKEY));
 
   /* Allocate name buffer */
-  Key->Name = RtlAllocateHeap(ProcessHeap,
+  Key->Name = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 			      0,
 			      (wcslen(Name) + 1) * sizeof(WCHAR));
   if (Key->Name == NULL)
@@ -907,7 +907,7 @@ IniCacheInsertKey(PINICACHESECTION Section,
   wcscpy(Key->Name, Name);
 
   /* Allocate data buffer */
-  Key->Data = RtlAllocateHeap(ProcessHeap,
+  Key->Data = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 			      0,
 			      (wcslen(Data) + 1) * sizeof(WCHAR));
   if (Key->Data == NULL)
@@ -1035,7 +1035,7 @@ IniCacheSave(PINICACHE Cache,
   DPRINT1("BufferSize: %lu\n", BufferSize);
 
   /* Allocate file buffer */
-  Buffer = RtlAllocateHeap(ProcessHeap,
+  Buffer = (CHAR*) RtlAllocateHeap(ProcessHeap,
 			   0,
 			   BufferSize);
   if (Buffer == NULL)
@@ -1153,7 +1153,7 @@ IniCacheAppendSection(PINICACHE Cache,
 		sizeof(INICACHESECTION));
 
   /* Allocate and initialize section name */
-  Section->Name = RtlAllocateHeap(ProcessHeap,
+  Section->Name = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 				  0,
 				  (wcslen(Name) + 1) * sizeof(WCHAR));
   if (Section->Name == NULL)

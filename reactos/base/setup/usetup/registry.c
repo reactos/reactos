@@ -270,7 +270,7 @@ do_reg_operation(HANDLE KeyHandle,
 
 	  if (Size)
 	    {
-	      Str = RtlAllocateHeap (ProcessHeap, 0, Size * sizeof(WCHAR));
+	      Str = (WCHAR*) RtlAllocateHeap (ProcessHeap, 0, Size * sizeof(WCHAR));
 	      if (Str == NULL)
 		return FALSE;
 
@@ -296,7 +296,7 @@ do_reg_operation(HANDLE KeyHandle,
 
 	  if (Size)
 	    {
-	      Str = RtlAllocateHeap (ProcessHeap, 0, Size * sizeof(WCHAR));
+	      Str = (WCHAR*) RtlAllocateHeap (ProcessHeap, 0, Size * sizeof(WCHAR));
 	      if (Str == NULL)
 		return FALSE;
 
@@ -363,7 +363,7 @@ do_reg_operation(HANDLE KeyHandle,
 
       if (Size)
 	{
-	  Data = RtlAllocateHeap (ProcessHeap, 0, Size);
+	  Data = (unsigned char*) RtlAllocateHeap (ProcessHeap, 0, Size);
 	  if (Data == NULL)
 	    return FALSE;
 
@@ -659,7 +659,7 @@ SetInstallPathValue(PUNICODE_STRING InstallPath)
   HANDLE KeyHandle;
   NTSTATUS Status;
 
-  /* Create the 'secret' InstallPath key */			   
+  /* Create the 'secret' InstallPath key */
   InitializeObjectAttributes (&ObjectAttributes,
 			      &KeyName,
 			      OBJ_CASE_INSENSITIVE,
@@ -703,7 +703,7 @@ SetMountedDeviceValue(CHAR Letter, ULONG Signature, LARGE_INTEGER StartingOffset
 
   swprintf(ValueNameBuffer, L"\\DosDevices\\%C:", Letter);
   RtlInitUnicodeString(&ValueName, ValueNameBuffer);
-  
+
   InitializeObjectAttributes (&ObjectAttributes,
 			      &KeyName,
 			      OBJ_CASE_INSENSITIVE,
@@ -714,7 +714,7 @@ SetMountedDeviceValue(CHAR Letter, ULONG Signature, LARGE_INTEGER StartingOffset
 		       &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
-      Status = NtCreateKey(&KeyHandle, 
+      Status = NtCreateKey(&KeyHandle,
                            KEY_ALL_ACCESS,
                            &ObjectAttributes,
                            0,

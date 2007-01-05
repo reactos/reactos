@@ -287,7 +287,7 @@ AddPartitionToList (ULONG DiskNumber,
 	}
       else
 	{
-	  PartEntry->FormatState = Unknown;
+	  PartEntry->FormatState = UnknownFormat;
 	}
 
       InsertTailList (&DiskEntry->PartListHead,
@@ -514,7 +514,7 @@ SystemConfigurationDataQueryRoutine(PWSTR ValueName,
 			FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize % sizeof(CM_INT13_DRIVE_PARAMETER) != 0)
 			continue;
 
-		*Int13Drives = RtlAllocateHeap(ProcessHeap, 0, FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize);
+		*Int13Drives = (CM_INT13_DRIVE_PARAMETER*) RtlAllocateHeap(ProcessHeap, 0, FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize);
 		if (*Int13Drives == NULL)
 			return STATUS_NO_MEMORY;
 		memcpy(
@@ -567,7 +567,7 @@ EnumerateBiosDiskEntries(PPARTLIST PartList)
         {
           break;
         }
-        
+
       swprintf(Name, L"%s\\%lu\\DiskController", ROOT_NAME, AdapterCount);
       Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                       Name,
@@ -589,7 +589,7 @@ EnumerateBiosDiskEntries(PPARTLIST PartList)
                   RtlFreeHeap(ProcessHeap, 0, Int13Drives);
                   return;
                 }
-                
+
               swprintf(Name, L"%s\\%lu\\DiskController\\0\\DiskPeripheral", ROOT_NAME, AdapterCount);
               Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                               Name,
@@ -605,7 +605,7 @@ EnumerateBiosDiskEntries(PPARTLIST PartList)
                   DiskCount = 0;
                   while (1)
                     {
-                      BiosDiskEntry = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, sizeof(BIOSDISKENTRY));
+                      BiosDiskEntry = (BIOSDISKENTRY*) RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, sizeof(BIOSDISKENTRY));
                       if (BiosDiskEntry == NULL)
                         {
                           break;
@@ -716,7 +716,7 @@ AddDiskToList (HANDLE FileHandle,
       return;
     }
 
-  Mbr = RtlAllocateHeap(ProcessHeap,
+  Mbr = (PARTITION_SECTOR*) RtlAllocateHeap(ProcessHeap,
                         0,
                         DiskGeometry.BytesPerSector);
 
@@ -724,7 +724,7 @@ AddDiskToList (HANDLE FileHandle,
     {
       return;
     }
-  
+
   FileOffset.QuadPart = 0;
   Status = NtReadFile(FileHandle,
                       NULL,
@@ -785,7 +785,7 @@ AddDiskToList (HANDLE FileHandle,
      /* FIXME:
       *   Compare the size from bios and the reported size from driver.
       *   If we have more than one disk with a zero or with the same signatur
-      *   we must create new signatures and reboot. After the reboot, 
+      *   we must create new signatures and reboot. After the reboot,
       *   it is possible to identify the disks.
       */
      if (BiosDiskEntry->Signature == Signature &&
@@ -1036,7 +1036,7 @@ DestroyPartitionList (PPARTLIST List)
     {
       Entry = RemoveHeadList(&List->BiosDiskListHead);
       BiosDiskEntry = CONTAINING_RECORD(Entry, BIOSDISKENTRY, ListEntry);
-      
+
       RtlFreeHeap(ProcessHeap, 0, BiosDiskEntry);
     }
 
@@ -1311,7 +1311,7 @@ PrintDiskData (PPARTLIST List,
     {
       WriteConsoleOutputCharacterA (StdOutput,
 				    LineBuffer,
-				    min (strlen (LineBuffer), Width - 2),
+				    min ((USHORT)strlen (LineBuffer), Width - 2),
 				    coPos,
 				    &Written);
     }
@@ -2380,7 +2380,7 @@ WritePartitionsToDisk (PPARTLIST List)
           else
 	    {
 	      DriveLayout->PartitionCount = PartitionCount;
-              
+
 	      Index = 0;
 	      Entry2 = DiskEntry1->PartListHead.Flink;
 	      while (Entry2 != &DiskEntry1->PartListHead)
@@ -2423,7 +2423,7 @@ WritePartitionsToDisk (PPARTLIST List)
 
                   /* check if the signature already exist */
                   /* FIXME:
-                   *   Check also signatures from disks, which are 
+                   *   Check also signatures from disks, which are
                    *   not visible (bootable) by the bios.
                    */
                   Entry2 = List->DiskListHead.Flink;
@@ -2442,7 +2442,7 @@ WritePartitionsToDisk (PPARTLIST List)
                       break;
                     }
                 }
-              
+
               /* set one partition entry to dirty, this will update the signature */
               DriveLayout->PartitionEntry[0].RewritePartition = TRUE;
 
@@ -2466,7 +2466,7 @@ WritePartitionsToDisk (PPARTLIST List)
 			       FILE_ALL_ACCESS,
                                &ObjectAttributes,
                                &Iosb,
-                               0,				   
+                               0,
                                FILE_SYNCHRONOUS_IO_NONALERT);
 
 	  if (!NT_SUCCESS (Status))

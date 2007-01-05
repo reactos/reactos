@@ -187,7 +187,7 @@ CreateComputerTypeList(HINF InfFile)
 	  break;
 	}
 
-      UserData = RtlAllocateHeap(ProcessHeap,
+      UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 				 0,
 				 (wcslen(KeyName) + 1) * sizeof(WCHAR));
       if (UserData == NULL)
@@ -308,7 +308,7 @@ GetDisplayIdentifier(PWSTR Identifier,
 
 	      BufferLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) +
 			     256 * sizeof(WCHAR);
-	      ValueInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+	      ValueInfo = (KEY_VALUE_PARTIAL_INFORMATION*) RtlAllocateHeap(RtlGetProcessHeap(),
 					  0,
 					  BufferLength);
 	      if (ValueInfo == NULL)
@@ -443,7 +443,7 @@ CreateDisplayDriverList(HINF InfFile)
 	  break;
 	}
 
-      UserData = RtlAllocateHeap(ProcessHeap,
+      UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 				 0,
 				 (wcslen(KeyName) + 1) * sizeof(WCHAR));
       if (UserData == NULL)
@@ -486,7 +486,7 @@ ProcessComputerFiles(HINF InfFile, PGENERIC_LIST List, PWCHAR* AdditionalSection
 	}
 
 	wcscpy(SectionName, L"Files.");
-	wcscat(SectionName, Entry->UserData);
+	wcscat(SectionName, (const wchar_t*) Entry->UserData);
 	*AdditionalSectionName = SectionName;
 
 	return TRUE;
@@ -514,7 +514,7 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
       return FALSE;
     }
 
-  if (!SetupFindFirstLineW(InfFile, L"Display", Entry->UserData, &Context))
+  if (!SetupFindFirstLineW(InfFile, L"Display", (WCHAR*) Entry->UserData, &Context))
     {
       DPRINT("SetupFindFirstLineW() failed\n");
       return FALSE;
@@ -554,7 +554,7 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
     }
   Width = wcstoul(Buffer, NULL, 10);
   Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
-				 RegPath, 
+				 RegPath,
 				 L"DefaultSettings.XResolution",
 				 REG_DWORD,
 				 &Width,
@@ -565,7 +565,7 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
       return FALSE;
     }
 
-  
+
   if (!INF_GetDataField(&Context, 5, &Buffer))
     {
       DPRINT("INF_GetDataField() failed\n");
@@ -637,7 +637,7 @@ CreateKeyboardDriverList(HINF InfFile)
 	  break;
 	}
 
-      UserData = RtlAllocateHeap(ProcessHeap,
+      UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 				 0,
 				 (wcslen(KeyName) + 1) * sizeof(WCHAR));
       if (UserData == NULL)
@@ -695,7 +695,7 @@ CreateKeyboardLayoutList(HINF InfFile)
 	  break;
 	}
 
-      UserData = RtlAllocateHeap(ProcessHeap,
+      UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap,
 				 0,
 				 (wcslen(KeyName) + 1) * sizeof(WCHAR));
       if (UserData == NULL)
