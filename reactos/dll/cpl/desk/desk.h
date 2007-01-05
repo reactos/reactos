@@ -33,6 +33,10 @@ extern HINSTANCE hApplet;
 PDIBITMAP DibLoadImage(LPTSTR lpFilename);
 VOID DibFreeImage(PDIBITMAP lpBitmap);
 
+INT AllocAndLoadString(LPTSTR *lpTarget,
+                       HINSTANCE hInst,
+                       UINT uID);
+
 DWORD DbgPrint(PCH Format,...);
 
 #endif /* __CPL_DESK_H__ */

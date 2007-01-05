@@ -8,7 +8,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_INTERNAL_NAME       "desk\0"
 #define REACTOS_STR_ORIGINAL_FILENAME   "desk.cpl\0"
 
-#include <reactos/version.rc>
+//#include <reactos/version.rc>
 
 IDC_DESK_ICON ICON "resources/applet.ico"
 IDC_DESK_ICON2 ICON "resources/applet.ico"

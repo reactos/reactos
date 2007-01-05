@@ -88,6 +88,9 @@
 #define IDS_MESSBOX     1513
 #define IDS_MESSTEXT    1514
 #define IDS_BUTTEXT     1515
+#define IDS_NORMAL      1516
+#define IDS_DISABLED    1517
+#define IDS_SELECTED    1518
 
 
 #endif /* __CPL_DESK_RESOURCE_H__ */

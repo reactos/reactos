@@ -124,4 +124,7 @@ BEGIN
     IDS_MESSBOX  "Message Box"
     IDS_MESSTEXT "Message Text"
     IDS_BUTTEXT  "OK"
+    IDS_NORMAL   "Normal"
+    IDS_DISABLED "Disabled"
+    IDS_SELECTED "Selected"
 END
