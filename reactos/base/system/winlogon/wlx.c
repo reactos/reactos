@@ -165,7 +165,7 @@ WlxDialogBox(
 	if (PreviousWindowProc != NULL)
 		return -1;
 	PreviousWindowProc = dlgprc;
-	return (int)DialogBoxW(hInst, lpszTemplate, hwndOwner, DefaultWlxWindowProc);
+	return (int)DialogBoxW((HINSTANCE) hInst, lpszTemplate, hwndOwner, DefaultWlxWindowProc);
 }
 
 /*
