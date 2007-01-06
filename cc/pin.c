@@ -54,14 +54,15 @@ CcMapData (IN PFILE_OBJECT FileObject,
     ASSERT (FileOffset);
     ASSERT (piBcb);
     ASSERT (pBuffer);
+	ASSERT (Flags & MAP_WAIT);
 
-    if (Flags)
+    if (!(Flags & MAP_WAIT))
     {
-		DPRINT1("No Flags implemented yet.");
+		DPRINT1("Reading without MAP_WAIT flag is not implented yet.\n");
         *piBcb = NULL;
         *pBuffer = NULL;
         return FALSE;
-    }
+	}
 
     Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
 
