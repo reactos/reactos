@@ -1124,8 +1124,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       SwapEntry = SWAPENTRY_FROM_SSE(Entry);
 
       /*
-       * Release all our locks and read in the page from disk
-       */
+      * Release all our locks and read in the page from disk
+      */
       MmUnlockSectionSegment(Segment);
 
       MmUnlockAddressSpace(AddressSpace);
@@ -1242,6 +1242,8 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    PMM_PAGEOP PageOp;
    PMM_REGION Region;
    ULONG Entry;
+
+   DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address, Locked);
 
    /*
     * Check if the page has been paged out or has already been set readwrite
