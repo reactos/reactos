@@ -3679,7 +3679,7 @@ extern NTSTATUS NTAPI PeFmtCreateSection
 (
  IN CONST VOID * FileHeader,
  IN SIZE_T FileHeaderSize,
- IN PFILE_OBJECT FileObject,
+ IN PVOID File,
  OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
  OUT PULONG Flags,
  IN PEXEFMT_CB_READ_FILE ReadFileCb,
@@ -3690,7 +3690,7 @@ extern NTSTATUS NTAPI ElfFmtCreateSection
 (
  IN CONST VOID * FileHeader,
  IN SIZE_T FileHeaderSize,
- IN PFILE_OBJECT FileObject,
+ IN PVOID File,
  OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
  OUT PULONG Flags,
  IN PEXEFMT_CB_READ_FILE ReadFileCb,
@@ -3732,8 +3732,8 @@ ExeFmtpAllocateSegments(IN ULONG NrSegments)
 static
 NTSTATUS
 NTAPI
-ExeFmtpReadFile(IN PFILE_OBJECT FileObject,
-                ULONG SectorSize,
+ExeFmtpReadFile(IN PVOID File,
+                IN ULONG SectorSize,
                 IN PLARGE_INTEGER Offset,
                 IN ULONG Length,
                 OUT PVOID * Data,
@@ -3741,6 +3741,7 @@ ExeFmtpReadFile(IN PFILE_OBJECT FileObject,
                 OUT PULONG ReadSize)
 {
    NTSTATUS Status;
+   PFILE_OBJECT FileObject = (PFILE_OBJECT)File;
    LARGE_INTEGER FileOffset;
    ULONG AdjustOffset;
    ULONG OffsetAdjustment;
@@ -4187,7 +4188,6 @@ ExeFmtpCreateImageSection(PFILE_OBJECT FileObject,
     */
    Offset.QuadPart = 0;
 
-   /* FIXME: use FileObject instead of FileHandle */
    Status = ExeFmtpReadFile (FileObject,
                              FileFsSize.BytesPerSector,
                              &Offset,
@@ -4214,7 +4214,6 @@ ExeFmtpCreateImageSection(PFILE_OBJECT FileObject,
       ImageSectionObject->BytesPerSector = FileFsSize.BytesPerSector;
       Flags = 0;
 
-      /* FIXME: use FileObject instead of FileHandle */
       Status = ExeFmtpLoaders[i](FileHeader,
                                  FileHeaderSize,
                                  FileObject,

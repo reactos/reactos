@@ -144,7 +144,7 @@ static __inline BOOLEAN AlignUp(OUT PULONG AlignedAddress, IN ULONG Address, IN 
 */
 NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
 				  IN SIZE_T FileHeaderSize,
-				  IN PFILE_OBJECT FileObject,
+				  IN PVOID File,
 				  OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
 				  OUT PULONG Flags,
 				  IN PEXEFMT_CB_READ_FILE ReadFileCb,
@@ -172,7 +172,7 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
 
     ASSERT(FileHeader);
     ASSERT(FileHeaderSize > 0);
-    ASSERT(FileObject);
+    ASSERT(File);
     ASSERT(ImageSectionObject);
     ASSERT(ReadFileCb);
     ASSERT(AllocateSegmentsCb);
@@ -241,7 +241,7 @@ l_ReadHeaderFromFile:
 	lnOffset.QuadPart = pidhDosHeader->e_lfanew;
 
 	/* read the header from the file */
-	nStatus = ReadFileCb(FileObject, ImageSectionObject->BytesPerSector, &lnOffset, sizeof(IMAGE_NT_HEADERS64), &pData, &pBuffer, &cbReadSize);
+	nStatus = ReadFileCb(File, ImageSectionObject->BytesPerSector, &lnOffset, sizeof(IMAGE_NT_HEADERS64), &pData, &pBuffer, &cbReadSize);
 
 	if(!NT_SUCCESS(nStatus))
 	    DIE(("ReadFile failed, status %08X\n", nStatus));
@@ -523,7 +523,7 @@ l_ReadHeaderFromFile:
 	lnOffset.QuadPart = cbSectionHeadersOffset;
 
 	/* read the header from the file */
-	nStatus = ReadFileCb(FileObject, ImageSectionObject->BytesPerSector, &lnOffset, cbSectionHeadersSize, &pData, &pBuffer, &cbReadSize);
+	nStatus = ReadFileCb(File, ImageSectionObject->BytesPerSector, &lnOffset, cbSectionHeadersSize, &pData, &pBuffer, &cbReadSize);
 
 	if(!NT_SUCCESS(nStatus))
 	    DIE(("ReadFile failed with status %08X\n", nStatus));
