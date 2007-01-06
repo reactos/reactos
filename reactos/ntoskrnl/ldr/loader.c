@@ -714,7 +714,11 @@ LdrPEProcessModule(
         CPRINT("Incorrect PE magic: %08x\n", PENtHeaders->Signature);
         return STATUS_UNSUCCESSFUL;
     }
+#ifdef _M_IX86
     if (PENtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_I386)
+#elif defined(_M_PPC)
+    if (PENtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_POWERPC)
+#endif
     {
         CPRINT("Incorrect Architechture: %04x\n", PENtHeaders->FileHeader.Machine);
         return STATUS_UNSUCCESSFUL;
