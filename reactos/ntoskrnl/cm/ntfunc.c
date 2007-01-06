@@ -1367,7 +1367,8 @@ NtOpenKey(OUT PHANDLE KeyHandle,
       return Status;
     }
 
-  if (ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] == '\\')
+  if (ObjectName.Buffer && 
+      ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] == '\\')
     {
       ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] = UNICODE_NULL;
       ObjectName.Length -= sizeof(WCHAR);
