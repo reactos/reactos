@@ -98,6 +98,13 @@ BEGIN
   END
 END
 
+IDR_PREVIEW_MENU MENU
+BEGIN
+    MENUITEM "Normal",           ID_MENU_NORMAL
+    MENUITEM "Disabled",         ID_MENU_DISABLED
+    MENUITEM "Selected",         ID_MENU_SELECTED
+END
+
 STRINGTABLE 
 BEGIN
     IDS_CPLNAME "Дисплей"
@@ -133,7 +140,4 @@ BEGIN
     IDS_MESSBOX  "Message Box"
     IDS_MESSTEXT "Message Text"
     IDS_BUTTEXT  "OK"
-    IDS_NORMAL   "Normal"
-    IDS_DISABLED "Disabled"
-    IDS_SELECTED "Selected"
 END

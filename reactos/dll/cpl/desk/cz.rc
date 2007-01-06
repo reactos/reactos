@@ -94,7 +94,14 @@ BEGIN
   END
 END
 
-STRINGTABLE 
+IDR_PREVIEW_MENU MENU
+BEGIN
+    MENUITEM "Normal",           ID_MENU_NORMAL
+    MENUITEM "Disabled",         ID_MENU_DISABLED
+    MENUITEM "Selected",         ID_MENU_SELECTED
+END
+
+STRINGTABLE
 BEGIN
     IDS_CPLNAME "Obrazovka"
     IDS_CPLDESCRIPTION "Nastavení obrazovky, spoøièe, vzhledu a rozlišení."
@@ -123,7 +130,4 @@ BEGIN
     IDS_MESSBOX  "Message Box"
     IDS_MESSTEXT "Message Text"
     IDS_BUTTEXT  "OK"
-    IDS_NORMAL   "Normal"
-    IDS_DISABLED "Disabled"
-    IDS_SELECTED "Selected"
 END

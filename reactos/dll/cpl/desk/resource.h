@@ -67,6 +67,10 @@
 #define ID_MENU_ADD					2013
 #define ID_MENU_DELETE				2014
 
+#define IDR_PREVIEW_MENU     2100
+#define ID_MENU_NORMAL       2101
+#define ID_MENU_DISABLED     2102
+#define ID_MENU_SELECTED     2103
 
 /* Settings Page */
 
@@ -88,9 +92,6 @@
 #define IDS_MESSBOX     1513
 #define IDS_MESSTEXT    1514
 #define IDS_BUTTEXT     1515
-#define IDS_NORMAL      1516
-#define IDS_DISABLED    1517
-#define IDS_SELECTED    1518
 
 
 #endif /* __CPL_DESK_RESOURCE_H__ */

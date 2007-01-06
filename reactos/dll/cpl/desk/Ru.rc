@@ -81,12 +81,6 @@ BEGIN
     PUSHBUTTON      "До&полнительно...",IDC_SETTINGS_ADVANCED,306,165,56,14
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
 IDR_POPUP_MENU MENU 
 BEGIN
     POPUP ""
@@ -99,11 +93,12 @@ BEGIN
     END
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
+IDR_PREVIEW_MENU MENU
+BEGIN
+    MENUITEM "Normal",           ID_MENU_NORMAL
+    MENUITEM "Disabled",         ID_MENU_DISABLED
+    MENUITEM "Selected",         ID_MENU_SELECTED
+END
 
 STRINGTABLE 
 BEGIN
@@ -151,7 +146,4 @@ BEGIN
     IDS_MESSBOX  "Message Box"
     IDS_MESSTEXT "Message Text"
     IDS_BUTTEXT  "OK"
-    IDS_NORMAL   "Normal"
-    IDS_DISABLED "Disabled"
-    IDS_SELECTED "Selected"
 END

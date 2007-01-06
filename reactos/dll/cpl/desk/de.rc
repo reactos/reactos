@@ -83,14 +83,21 @@ END
 
 IDR_POPUP_MENU MENU DISCARDABLE
 BEGIN
-  POPUP ""
-  BEGIN
-	MENUITEM "&Konfigurieren",  ID_MENU_CONFIG
-	MENUITEM "&Vorschau",       ID_MENU_PREVIEW
-	MENUITEM SEPARATOR
-	MENUITEM "&Hinzufügen",     ID_MENU_ADD
-	MENUITEM "&Löschen\tDel",   ID_MENU_DELETE
-  END
+    POPUP ""
+    BEGIN
+        MENUITEM "&Konfigurieren",  ID_MENU_CONFIG
+        MENUITEM "&Vorschau",       ID_MENU_PREVIEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Hinzufügen",     ID_MENU_ADD
+        MENUITEM "&Löschen\tDel",   ID_MENU_DELETE
+    END
+END
+
+IDR_PREVIEW_MENU MENU
+BEGIN
+    MENUITEM "Normal",           ID_MENU_NORMAL
+    MENUITEM "Disabled",         ID_MENU_DISABLED
+    MENUITEM "Selected",         ID_MENU_SELECTED
 END
 
 STRINGTABLE
@@ -127,7 +134,4 @@ BEGIN
     IDS_MESSBOX  "Message Box"
     IDS_MESSTEXT "Message Text"
     IDS_BUTTEXT  "OK"
-    IDS_NORMAL   "Normal"
-    IDS_DISABLED "Disabled"
-    IDS_SELECTED "Selected"
 END
