@@ -952,7 +952,11 @@ LdrSafePEProcessModule (
     {
         return NULL;
     }
+#ifdef _M_IX86
     if (PENtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_I386)
+#elif defined(_M_PPC)
+    if (PENtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_POWERPC)
+#endif
     {
         return NULL;
     }
