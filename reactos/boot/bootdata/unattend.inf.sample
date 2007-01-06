@@ -31,6 +31,8 @@ TimeZoneIndex=85
 ; DisableAutoDaylightTimeSet = 1
 
 ; enable this setting to format the selected partition
+; 1 - format enabled
+; 0 - format disabled
 FormatPartition=1
 
 ; enable this section to automatically launch programs
@@ -38,3 +40,8 @@ FormatPartition=1
 ;
 ; [GuiRunOnce]
 ; %SystemRoot%\system32\cmd.exe
+
+; enable this setting to disable vmware driver install
+; yes - disabled
+; no  - enabled
+DisableVmwInst = yes

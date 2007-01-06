@@ -1784,7 +1784,8 @@ ProcessPageDlgProc(HWND hwndDlg,
           if (wParam)
             {
 #ifdef VMWINST
-              RunVMWInstall(GetParent(hwndDlg));
+              if(!SetupData->UnattendSetup && !SetupData->DisableVmwInst)
+                RunVMWInstall(GetParent(hwndDlg));
 #endif
 
               /* Enable the Back and Next buttons */
@@ -2002,6 +2003,11 @@ ProcessUnattendInf(HINF hUnattendedInf)
     else if (_tcscmp(szName, _T("DisableAutoDaylightTimeSet")))
       {
         SetupData.DisableAutoDaylightTimeSet = _ttoi(szValue);
+      }
+    else if (_tcscmp(szName, _T("DisableVmwInst")))
+      {
+        if(_tcscmp(szValue, _T("yes"))) SetupData.DisableVmwInst = 1;
+        else SetupData.DisableVmwInst = 0;
       }
   }
   while (SetupFindNextLine(&InfContext, &InfContext));

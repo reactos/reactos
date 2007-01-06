@@ -46,6 +46,7 @@ typedef struct _SETUPDATA
   TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];	/* max. 63 characters */
   TCHAR AdminPassword[15];				/* max. 14 characters */
   BOOL  UnattendSetup;
+  BOOL  DisableVmwInst;
 
   SYSTEMTIME SystemTime;
   PTIMEZONE_ENTRY TimeZoneListHead;
