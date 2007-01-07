@@ -1564,7 +1564,7 @@ NtGdiExtTextOut(
    INT YStart,
    UINT fuOptions,
    CONST RECT *lprc,
-   LPCWSTR String,
+   LPCWSTR UnsafeString,
    UINT Count,
    CONST INT *UnsafeDx)
 {
@@ -1610,6 +1610,7 @@ NtGdiExtTextOut(
    INT *Dx = NULL;
    POINT Start;
    BOOL DoBreak = FALSE;
+   LPCWSTR String, SafeString = NULL;
 
    // TODO: Write test-cases to exactly match real Windows in different
    // bad parameters (e.g. does Windows check the DC or the RECT first?).
@@ -1626,12 +1627,34 @@ NtGdiExtTextOut(
       return TRUE;
    }
 
+	/* Check if String is valid */
+   if ((Count > 0xFFFF) || (Count > 0 && UnsafeString == NULL))
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      goto fail;
+   }
+   if (Count > 0)
+   {
+      SafeString = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), TAG_GDITEXT);
+      if (!SafeString)
+      {
+         goto fail;
+      }
+      Status = MmCopyFromCaller(SafeString, UnsafeString, Count * sizeof(WCHAR));
+      if (! NT_SUCCESS(Status))
+      {
+        goto fail;
+      }
+   }
+   String = SafeString;
+
    if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
    {
       // At least one of the two flags were specified. Copy lprc. Once.
       Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
       if (!NT_SUCCESS(Status))
       {
+         DC_UnlockDc(dc);
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          return FALSE;
       }
@@ -1994,7 +2017,7 @@ NtGdiExtTextOut(
       {
         DPRINT1("WARNING: EngLockSurface() failed!\n");
         FT_Done_Glyph(realglyph);
-	IntUnLockFreeType;
+        IntUnLockFreeType;
         goto fail;
       }
       SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
@@ -2071,6 +2094,10 @@ NtGdiExtTextOut(
    }
    BRUSHOBJ_UnlockBrush(BrushFg);
    NtGdiDeleteObject(hBrushFg);
+   if (NULL != SafeString)
+   {
+      ExFreePool((void*)SafeString);
+   }
    if (NULL != Dx)
    {
       ExFreePool(Dx);
@@ -2096,6 +2123,10 @@ fail:
    {
       BRUSHOBJ_UnlockBrush(BrushFg);
       NtGdiDeleteObject(hBrushFg);
+   }
+   if (NULL != SafeString)
+   {
+      ExFreePool((void*)SafeString);
    }
    if (NULL != Dx)
    {
