@@ -67,6 +67,20 @@ static PVOID CabinetReservedArea = NULL;
 
 /* Needed by zlib, but we don't want the dependency on msvcrt.dll */
 
+/* round to 16 bytes + alloc at minimum 16 bytes */
+#define ROUND_SIZE(size) (max(16, ROUND_UP(size, 16)))
+
+void* __cdecl malloc(size_t _size)
+{
+   size_t nSize = ROUND_SIZE(_size);
+   
+   if (nSize<_size) 
+       return NULL;     
+       
+   return RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, nSize);
+}
+
+
 void __cdecl free(void* _ptr)
 {
   RtlFreeHeap(ProcessHeap, 0, _ptr);
