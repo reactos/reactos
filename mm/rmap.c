@@ -364,26 +364,6 @@ MmSetDirtyAllRmaps(PFN_TYPE Page)
    ExReleaseFastMutex(&RmapListLock);
 }
 
-ULONG
-NTAPI
-MmGetRmapCount(PFN_TYPE Page)
-{
-   ULONG Count = 0;
-   PMM_RMAP_ENTRY current_entry;
-
-   ExAcquireFastMutex(&RmapListLock);
-   current_entry = MmGetRmapListHeadPage(Page);
-
-   while (current_entry)
-   {
-      Count++;
-      current_entry = current_entry->Next;
-   }
-   ExReleaseFastMutex(&RmapListLock);
-
-   return Count;
-}
-
 BOOLEAN
 NTAPI
 MmIsDirtyPageRmap(PFN_TYPE Page)
