@@ -36,19 +36,19 @@ END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "The ReactOS developers would like to acknowledge the following Open Source projects, "\
-                    "(parts of) which were used to create ReactOS:",
+    LTEXT           "Les développeurs de ReactOS voudraient présenter les projets Open Source suivants, "\
+                    "(ou seulement des composants) qui ont été utilisés pour créer ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS | 
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS is licensed under the GPL, so if you want to reuse or redistribute "\
-                    "(parts of) it you must respect the GPL",
+    LTEXT           "ReactOS est sous license GPL, ainsi si vous voulez le réutiliser ou le redistribuer "\
+                    "(ou seulement des composants) vous devez respecter la GPL",
                     IDC_STATIC,15,110,227,19
-    PUSHBUTTON      "&View GPL...",IDC_VIEWGPL,251,110,50,19
-    LTEXT           "Click Next to continue with Setup.",IDC_STATIC,15,136,
+    PUSHBUTTON      "&Voir la GPL...",IDC_VIEWGPL,251,110,50,19
+    LTEXT           "Cliquez sur Suivant pour continuer l'installation.",IDC_STATIC,15,136,
                     195,17
 END
 
@@ -112,25 +112,25 @@ END
 
 IDD_DATETIMEPAGE DIALOG DISCARDABLE  0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Date and Time", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "Date et Heure", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT "Timezone", IDC_STATIC, 53, 42, 253, 8
+    LTEXT "Fuseau horaire", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Automatically adjust clock for &daylight saving changes",
+    AUTOCHECKBOX "Ajuster automatiquement l'horloge pour l'heure &d'été",
                  IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
 
 IDD_PROCESSPAGE DIALOG 0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
@@ -166,36 +166,58 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "Acknowledgements"
-    IDS_ACKSUBTITLE      "The shoulders ReactOS stands on and license information"
-    IDS_OWNERTITLE       "Personalize your Software"
-    IDS_OWNERSUBTITLE    "Setup uses this information about yourself to personalize ReactOS."
-    IDS_COMPUTERTITLE    "Computer Name and Administrator Password"
-    IDS_COMPUTERSUBTITLE "You must provide a name and an Administrator Password for your computer."
-    IDS_LOCALETITLE      "Regional settings"
-    IDS_LOCALESUBTITLE   "You can customize ReactOS for different regions and languages."
-    IDS_DATETIMETITLE    "Date and Time"
-    IDS_DATETIMESUBTITLE "Set the correct date and time for your computer."
-    IDS_PROCESSTITLE     "Process page title"
-    IDS_PROCESSSUBTITLE  "Process page subtitle"
+    IDS_ACKTITLE         "Remerciements"
+    IDS_ACKSUBTITLE      "Les épaules sur lesquelles repose ReactOS et informations sur la licence"
+    IDS_OWNERTITLE       "Personnalisez votre logiciel"
+    IDS_OWNERSUBTITLE    "L'installation utilise ces information sur vous pour personnaliser ReactOS."
+    IDS_COMPUTERTITLE    "Nom de l'ordinateur et mot de passe Administrateur"
+    IDS_COMPUTERSUBTITLE "Vous devez fournir un nom et un mot de passe Administrateur pour votre ordinateur."
+    IDS_LOCALETITLE      "Options régionales"
+    IDS_LOCALESUBTITLE   "Vous pouvez modifier ReactOS pour différentes régions et langues."
+    IDS_DATETIMETITLE    "Date et Heure"
+    IDS_DATETIMESUBTITLE "Configurez la date et l'heure correcte pour votre ordinateur."
+    IDS_PROCESSTITLE     "Titre de page de processus"
+    IDS_PROCESSSUBTITLE  "Sous-titre de page de processus"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "Accessories"
-    IDS_CMT_CALC        "Launch Calculator"
-    IDS_CMT_CMD         "Open command prompt"
-    IDS_CMT_EXPLORER    "Launch Explorer"
-    IDS_CMT_WINEFILE    "Launch Winefile"
-    IDS_CMT_NOTEPAD     "Launch Text Editor"
-    IDS_CMT_REGEDIT     "Launch Registry Editor"
+    IDS_CMT_WINEFILE    "Lancer Winefile"
+    IDS_CMT_IBROWSER	"Lancer iBrowser"
+    IDS_CMT_GETFIREFOX	"Télécharger/installer FireFox"
+    IDS_CMT_DOWNLOADER  "Télécharger et installer diverses applications"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Games"
+    IDS_ACCESSORIES     "Accessoires"
+    IDS_CMT_CALC        "Lancer la Calculatrice"
+    IDS_CMT_CMD         "Ouvrir l'invite de commandes"
+    IDS_CMT_EXPLORER    "Lancer Explorer"
+    IDS_CMT_WINEFILE    "Lancer Winefile"
+    IDS_CMT_NOTEPAD     "Lancer l'Éditeur de Texte"
+    IDS_CMT_REGEDIT     "Lancer l'Éditeur de Registre"
+    IDS_CMT_SCREENSHOT  "Faire une capture d'écran"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GAMES		    "Jeux"
     IDS_CMT_SOLITAIRE	"Solitaire"
     IDS_CMT_WINEMINE	"WineMine"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_REACTOS_SETUP		    "Installation de ReactOS"
+    IDS_UNKNOWN_ERROR           "Erreur inconnue"
+    IDS_REGISTERING_COMPONENTS  "Enregistrement des composants..."
+    IDS_LOADLIBRARY_FAILED	    "Échec de LoadLibrary: "
+    IDS_GETPROCADDR_FAILED	    "Échec de GetProcAddr: "
+    IDS_REGSVR_FAILED           "Échec de DllRegisterServer: "
+    IDS_DLLINSTALL_FAILED	    "Échec de DllInstall: "
+    IDS_TIMEOUT			        "Délai dépassé lors de l'enregistrement"
+    IDS_REASON_UNKNOWN          ""
 END
 
 /* EOF */
