@@ -1009,24 +1009,23 @@ HalpIsValidPartitionEntry(IN PPARTITION_DESCRIPTOR Entry,
                           IN ULONGLONG MaxOffset,
                           IN ULONGLONG MaxSector)
 {
-    ULONGLONG endingSector;
+    ULONGLONG EndingSector;
     PAGED_CODE();
 
     /* Unused partitions are considered valid */
     if (Entry->PartitionType == PARTITION_ENTRY_UNUSED) return TRUE;
 
     /* Get the last sector of the partition */
-    endingSector = GET_STARTING_SECTOR(Entry) + 
-                   GET_PARTITION_LENGTH(Entry);
+    EndingSector = GET_STARTING_SECTOR(Entry) +  GET_PARTITION_LENGTH(Entry);
 
     /* Check if it's more then the maximum sector */
-    if (endingSector > MaxSector)
+    if (EndingSector > MaxSector)
     {
         /* Invalid partition */
         DPRINT1("FSTUB: entry is invalid\n");
         DPRINT1("FSTUB: offset %#08lx\n", GET_STARTING_SECTOR(Entry));
         DPRINT1("FSTUB: length %#08lx\n", GET_PARTITION_LENGTH(Entry));
-        DPRINT1("FSTUB: end %#I64x\n", endingSector);
+        DPRINT1("FSTUB: end %#I64x\n", EndingSector);
         DPRINT1("FSTUB: max %#I64x\n", MaxSector);
         return FALSE;
     }
@@ -1036,7 +1035,7 @@ HalpIsValidPartitionEntry(IN PPARTITION_DESCRIPTOR Entry,
         DPRINT1("FSTUB: entry is invalid\n");
         DPRINT1("FSTUB: offset %#08lx\n", GET_STARTING_SECTOR(Entry));
         DPRINT1("FSTUB: length %#08lx\n", GET_PARTITION_LENGTH(Entry));
-        DPRINT1("FSTUB: end %#I64x\n", endingSector);
+        DPRINT1("FSTUB: end %#I64x\n", EndingSector);
         DPRINT1("FSTUB: maxOffset %#I64x\n", MaxOffset);
         return FALSE;
     }
@@ -1055,59 +1054,69 @@ HalpCalculateChsValues(IN PLARGE_INTEGER PartitionOffset,
                        IN ULONG ConventionalCylinders,
                        OUT PPARTITION_DESCRIPTOR PartitionDescriptor)
 {
-    LARGE_INTEGER FirstSector, SectorCount, LastSector;
-    ULONG SectorsPerCylinder, StartCluster, EndCluster;
-    ULONG StartHead, EndHead;
-    ULONG StartSector, EndSector;
-    ULONG Remainder;
+    LARGE_INTEGER FirstSector, SectorCount;
+    ULONG LastSector, Remainder, SectorsPerCylinder;
+    ULONG StartingCylinder, EndingCylinder;
+    ULONG StartingTrack, EndingTrack;
+    ULONG StartingSector, EndingSector;
     PAGED_CODE();
 
     /* Calculate the number of sectors for each cylinder */
     SectorsPerCylinder = SectorsPerTrack * NumberOfTracks;
 
-    /* Calculate the start and end sector, as well as the count */
+    /* Calculate the first sector, and the sector count */
     FirstSector.QuadPart = PartitionOffset->QuadPart >> ShiftCount;
     SectorCount.QuadPart = PartitionLength->QuadPart >> ShiftCount;
-    LastSector.QuadPart = FirstSector.QuadPart + SectorCount.QuadPart - 1;
 
-    /* Calculate the start and end clusters */
-    StartCluster = FirstSector.LowPart / SectorsPerCylinder;
-    EndCluster = LastSector.LowPart / SectorsPerCylinder;
+    /* Now calculate the last sector */
+    LastSector = FirstSector.LowPart + SectorCount.LowPart - 1;
+
+    /* Calculate the first and last cylinders */
+    StartingCylinder = FirstSector.LowPart / SectorsPerCylinder;
+    EndingCylinder = LastSector / SectorsPerCylinder;
 
     /* Set the default number of cylinders */
     if (!ConventionalCylinders) ConventionalCylinders = 1024;
 
     /* Normalize the values */
-    if (StartCluster >= ConventionalCylinders)
+    if (StartingCylinder >= ConventionalCylinders)
     {
         /* Set the maximum to 1023 */
-        StartCluster = ConventionalCylinders - 1;
+        StartingCylinder = ConventionalCylinders - 1;
     }
-    if (EndCluster >= ConventionalCylinders)
+    if (EndingCylinder >= ConventionalCylinders)
     {
         /* Set the maximum to 1023 */
-        EndCluster = ConventionalCylinders - 1;
+        EndingCylinder = ConventionalCylinders - 1;
     }
 
     /* Calculate the starting head and sector that still remain */
-    Remainder = StartCluster % SectorsPerCylinder;
-    StartHead = Remainder / SectorsPerTrack;
-    StartSector = Remainder % SectorsPerTrack;
+    Remainder = FirstSector.LowPart % SectorsPerCylinder;
+    StartingTrack = Remainder / SectorsPerTrack;
+    StartingSector = Remainder % SectorsPerTrack;
 
     /* Calculate the ending head and sector that still remain */
-    Remainder = EndCluster % SectorsPerCylinder;
-    EndHead = Remainder / SectorsPerTrack;
-    EndSector = Remainder % SectorsPerTrack;
+    Remainder = LastSector % SectorsPerCylinder;
+    EndingTrack = Remainder / SectorsPerTrack;
+    EndingSector = Remainder % SectorsPerTrack;
 
-    /* Write the values in the descriptor */
-    PartitionDescriptor->StartingCylinderMsb = StartCluster;
-    PartitionDescriptor->EndingCylinderMsb = EndCluster;
-    PartitionDescriptor->StartingTrack = StartHead;
-    PartitionDescriptor->EndingTrack = EndHead;
-    PartitionDescriptor->StartingCylinderLsb =  ((StartSector + 1) & 0x3F) |
-                                                ((StartCluster >> 2) & 0xC0);
-    PartitionDescriptor->EndingCylinderLsb = ((EndSector + 1) & 0x3F) |
-                                             ((EndCluster >> 2) & 0xC0);
+    /* Set cylinder data for the MSB */
+    PartitionDescriptor->StartingCylinderMsb = (UCHAR)StartingCylinder;
+    PartitionDescriptor->EndingCylinderMsb = (UCHAR)EndingCylinder;
+
+    /* Set the track data */
+    PartitionDescriptor->StartingTrack = (UCHAR)StartingTrack;
+    PartitionDescriptor->EndingTrack = (UCHAR)EndingTrack;
+
+    /* Update cylinder data for the LSB */
+    StartingCylinder = ((StartingSector + 1) & 0x3F) |
+                       ((StartingCylinder >> 2) & 0xC0);
+    EndingCylinder = ((EndingSector + 1) & 0x3F) |
+                     ((EndingCylinder >> 2) & 0xC0);
+
+    /* Set the cylinder data for the LSB */
+    PartitionDescriptor->StartingCylinderLsb = (UCHAR)StartingCylinder;
+    PartitionDescriptor->EndingCylinderLsb = (UCHAR)EndingCylinder;
 }
 
 VOID
@@ -1338,6 +1347,7 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStackLocation;
     PBOOT_SECTOR_INFO BootSectorInfo = (PBOOT_SECTOR_INFO)Buffer;
     UCHAR PartitionType;
+    LARGE_INTEGER HiddenSectors64;
     VolumeOffset.QuadPart = Offset.QuadPart = 0;
     PAGED_CODE();
 
@@ -1584,18 +1594,19 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 PartitionInfo->StartingOffset.QuadPart =
                     StartOffset +
                     UInt32x32To64(GET_STARTING_SECTOR(PartitionDescriptor),
-                    SectorSize);
+                                  SectorSize);
 
                 /* Calculate the number of hidden sectors */
-                PartitionInfo->HiddenSectors = (PartitionInfo->
-                                                StartingOffset.QuadPart -
-                                                StartOffset) /
-                                                SectorSize;
+                HiddenSectors64.QuadPart = (PartitionInfo->
+                                            StartingOffset.QuadPart -
+                                            StartOffset) /
+                                            SectorSize;
+                PartitionInfo->HiddenSectors = HiddenSectors64.LowPart;
 
                 /* Get the partition length */
                 PartitionInfo->PartitionLength.QuadPart =
                     UInt32x32To64(GET_PARTITION_LENGTH(PartitionDescriptor),
-                    SectorSize);
+                                  SectorSize);
 
                 /* FIXME: REACTOS HACK */
                 PartitionInfo->PartitionNumber = i + 1;
@@ -1845,9 +1856,9 @@ IoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
             if (++i == PartitionNumber)
             {
                 /* We found a match, set the type */
-                PartitionDescriptor->PartitionType = PartitionType;
+                PartitionDescriptor->PartitionType = (UCHAR)PartitionType;
 
-                /* Reset the resusable event */
+                /* Reset the reusable event */
                 KeResetEvent(&Event);
 
                 /* Build the write IRP */
@@ -1947,7 +1958,8 @@ IoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     PPARTITION_TABLE PartitionTable;
     LARGE_INTEGER Offset, NextOffset, ExtendedOffset, SectorOffset;
     LARGE_INTEGER StartOffset, PartitionLength;
-    ULONG i, j, k;
+    ULONG i, j;
+    CCHAR k;
     BOOLEAN IsEzDrive = FALSE, IsSuperFloppy = FALSE, DoRewrite = FALSE, IsMbr;
     ULONG ConventionalCylinders;
     LONGLONG DiskSize;
@@ -1957,7 +1969,7 @@ IoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStackLocation;
     PPARTITION_INFORMATION PartitionInfo = PartitionBuffer->PartitionEntry;
     PPARTITION_INFORMATION TableEntry;
-    NextOffset.QuadPart = Offset.QuadPart = 0;
+    ExtendedOffset.QuadPart = NextOffset.QuadPart = Offset.QuadPart = 0;
     PAGED_CODE();
 
     /* Normalize the buffer size */
@@ -2011,14 +2023,15 @@ IoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_FILE_SYSTEM);
     if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
 
+    /* Loop the entries */
     Entry = (PPTE)&Buffer[PARTITION_TABLE_OFFSET];
     for (i = 0; i < DiskLayout->TableCount; i++)
     {
         /* Set if this is the MBR partition */
-        IsMbr= !i;
+        IsMbr= (BOOLEAN)!i;
 
         /* Initialize th event */
-        KeInitializeEvent( &Event, NotificationEvent, FALSE );
+        KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
         /* Build the read IRP */
         Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
