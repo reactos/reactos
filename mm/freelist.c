@@ -45,7 +45,6 @@ typedef struct _PHYSICAL_PAGE
    SWAPENTRY SavedSwapEntry;
    ULONG LockCount;
    ULONG MapCount;
-   ULONG ShareCount;
    struct _MM_RMAP_ENTRY* RmapListHead;
 }
 PHYSICAL_PAGE, *PPHYSICAL_PAGE;
@@ -78,7 +77,7 @@ MmTransferOwnershipPage(PFN_TYPE Pfn, ULONG NewConsumer)
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    if (MmPageArray[Pfn].MapCount != 0)
    {
-      DbgPrint("Transfering mapped page.\n");
+      DPRINT1("Transfering mapped page.\n");
       KEBUGCHECK(0);
    }
    if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
@@ -408,7 +407,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
 					          1);
          if (!NT_SUCCESS(Status))
          {
-            DbgPrint("Unable to create virtual mapping\n");
+            DPRINT1("Unable to create virtual mapping\n");
             KEBUGCHECK(0);
          }
       }
@@ -585,7 +584,7 @@ MmMarkPageMapped(PFN_TYPE Pfn)
       KeAcquireSpinLock(&PageListLock, &oldIrql);
       if (MmPageArray[Pfn].Flags.Type == MM_PHYSICAL_PAGE_FREE)
       {
-         DbgPrint("Mapping non-used page\n");
+         DPRINT1("Mapping non-used page\n");
          KEBUGCHECK(0);
       }
       MmPageArray[Pfn].MapCount++;
@@ -604,12 +603,12 @@ MmMarkPageUnmapped(PFN_TYPE Pfn)
       KeAcquireSpinLock(&PageListLock, &oldIrql);
       if (MmPageArray[Pfn].Flags.Type == MM_PHYSICAL_PAGE_FREE)
       {
-         DbgPrint("Unmapping non-used page\n");
+         DPRINT1("Unmapping non-used page\n");
          KEBUGCHECK(0);
       }
       if (MmPageArray[Pfn].MapCount == 0)
       {
-         DbgPrint("Unmapping not mapped page\n");
+         DPRINT1("Unmapping not mapped page\n");
          KEBUGCHECK(0);
       }
       MmPageArray[Pfn].MapCount--;
@@ -677,7 +676,7 @@ MmReferencePageUnsafe(PFN_TYPE Pfn)
 
    if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
-      DbgPrint("Referencing non-used page\n");
+      DPRINT1("Referencing non-used page\n");
       KEBUGCHECK(0);
    }
 
@@ -717,7 +716,7 @@ MmGetReferenceCountPage(PFN_TYPE Pfn)
 
    if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
-      DPRINT1("Getting reference count for free page (%x, %x)\n", Pfn, MmPageArray[Pfn].Flags.Type);
+      DPRINT1("Getting reference count for free page\n");
       KEBUGCHECK(0);
    }
 
@@ -765,12 +764,12 @@ MmDereferencePage(PFN_TYPE Pfn)
 
    if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
-      DbgPrint("Dereferencing free page\n");
+      DPRINT1("Dereferencing free page\n");
       KEBUGCHECK(0);
    }
    if (MmPageArray[Pfn].ReferenceCount == 0)
    {
-      DbgPrint("Derefrencing page with reference count 0\n");
+      DPRINT1("Derefrencing page with reference count 0\n");
       KEBUGCHECK(0);
    }
 
@@ -780,36 +779,30 @@ MmDereferencePage(PFN_TYPE Pfn)
       MmStats.NrFreePages++;
       MmStats.NrSystemPages--;
       RemoveEntryList(&MmPageArray[Pfn].ListEntry);
-      if (MmPageArray[Pfn].ShareCount != 0)
-      {
-         DbgPrint("Freeing shared page (%x ShareCount %d)\n",
-	          Pfn << PAGE_SHIFT, MmPageArray[Pfn].ShareCount);
-	 KEBUGCHECK(0);
-      }
       if (MmPageArray[Pfn].RmapListHead != NULL)
       {
-         DbgPrint("Freeing page with rmap entries.\n");
+         DPRINT1("Freeing page with rmap entries.\n");
          KEBUGCHECK(0);
       }
       if (MmPageArray[Pfn].MapCount != 0)
       {
-         DbgPrint("Freeing mapped page (0x%x count %d)\n",
+         DPRINT1("Freeing mapped page (0x%x count %d)\n",
                   Pfn << PAGE_SHIFT, MmPageArray[Pfn].MapCount);
          KEBUGCHECK(0);
       }
       if (MmPageArray[Pfn].LockCount > 0)
       {
-         DbgPrint("Freeing locked page\n");
+         DPRINT1("Freeing locked page\n");
          KEBUGCHECK(0);
       }
       if (MmPageArray[Pfn].SavedSwapEntry != 0)
       {
-         DbgPrint("Freeing page with swap entry.\n");
+         DPRINT1("Freeing page with swap entry.\n");
          KEBUGCHECK(0);
       }
       if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
       {
-         DbgPrint("Freeing page with flags %x\n",
+         DPRINT1("Freeing page with flags %x\n",
                   MmPageArray[Pfn].Flags.Type);
          KEBUGCHECK(0);
       }
@@ -844,7 +837,7 @@ MmGetLockCountPage(PFN_TYPE Pfn)
 
    if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
-      DbgPrint("Getting lock count for free page\n");
+      DPRINT1("Getting lock count for free page\n");
       KEBUGCHECK(0);
    }
 
@@ -871,7 +864,7 @@ MmLockPageUnsafe(PFN_TYPE Pfn)
 
    if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
-      DbgPrint("Locking free page\n");
+      DPRINT1("Locking free page\n");
       KEBUGCHECK(0);
    }
 
@@ -910,79 +903,12 @@ MmUnlockPage(PFN_TYPE Pfn)
 
    if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
-      DbgPrint("Unlocking free page\n");
+      DPRINT1("Unlocking free page\n");
       KEBUGCHECK(0);
    }
 
    MmPageArray[Pfn].LockCount--;
    KeReleaseSpinLock(&PageListLock, oldIrql);
-}
-
-ULONG
-MmSharePage(PFN_TYPE Pfn)
-{
-   KIRQL oldIrql;
-   ULONG ShareCount;
-
-   KeAcquireSpinLock(&PageListLock, &oldIrql);
-
-   if (Pfn >= MmPageArraySize)
-   {
-      DPRINT1("%x %x\n", Pfn, MmPageArraySize);
-      KEBUGCHECK(0);
-   }
-
-   if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
-     {
-	DPRINT1("Sharing free page %lx\n", Pfn);
-	KEBUGCHECK(0);
-     }
-   if (MmPageArray[Pfn].ShareCount == 0xffffffff)
-     {
-       DPRINT1("Maximum share count reached\n");
-       KEBUGCHECK(0);
-     }
-   MmPageArray[Pfn].ShareCount++;
-   ShareCount = MmPageArray[Pfn].ShareCount;
-   KeReleaseSpinLock(&PageListLock, oldIrql);
-   return ShareCount;
-}
-
-ULONG
-MmUnsharePage(PFN_TYPE Pfn)
-{
-   KIRQL oldIrql;
-   ULONG ShareCount;
-
-   KeAcquireSpinLock(&PageListLock, &oldIrql);
-
-   if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
-     {
-	DbgPrint("Unsharing free page\n");
-	KEBUGCHECK(0);
-     }
-
-   if (MmPageArray[Pfn].ShareCount == 0)
-     {
-       DbgPrint("Unsharing not shared page\n");
-       KEBUGCHECK(0);
-     }
-   MmPageArray[Pfn].ShareCount--;
-   ShareCount = MmPageArray[Pfn].ShareCount;
-   KeReleaseSpinLock(&PageListLock, oldIrql);
-   return ShareCount;
-}
-
-ULONG
-MmGetShareCountPage(PFN_TYPE Pfn)
-{
-   return MmPageArray[Pfn].ShareCount;
-}
-
-ULONG 
-MmGetMemoryConsumerPage(PFN_TYPE Pfn)
-{
-	return MmPageArray[Pfn].Flags.Consumer;
 }
 
 PFN_TYPE
@@ -1022,12 +948,12 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
 
    if (PageDescriptor->Flags.Type != MM_PHYSICAL_PAGE_FREE)
    {
-      DbgPrint("Got non-free page from freelist\n");
+      DPRINT1("Got non-free page from freelist\n");
       KEBUGCHECK(0);
    }
    if (PageDescriptor->MapCount != 0)
    {
-      DbgPrint("Got mapped page from freelist\n");
+      DPRINT1("Got mapped page from freelist\n");
       KEBUGCHECK(0);
    }
    if (PageDescriptor->ReferenceCount != 0)
@@ -1040,7 +966,6 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
    PageDescriptor->ReferenceCount = 1;
    PageDescriptor->LockCount = 0;
    PageDescriptor->MapCount = 0;
-   PageDescriptor->ShareCount = 0;
    PageDescriptor->SavedSwapEntry = SavedSwapEntry;
    InsertTailList(&UsedPageListHeads[Consumer], ListEntry);
 
@@ -1056,7 +981,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
    }
    if (PageDescriptor->MapCount != 0)
    {
-      DbgPrint("Returning mapped page.\n");
+      DPRINT1("Returning mapped page.\n");
       KEBUGCHECK(0);
    }
    return PfnOffset;
@@ -1141,7 +1066,6 @@ MmAllocPagesSpecifyRange(ULONG Consumer,
          PageDescriptor->ReferenceCount = 1;
          PageDescriptor->LockCount = 0;
          PageDescriptor->MapCount = 0;
-	 PageDescriptor->ShareCount = 0;
          PageDescriptor->SavedSwapEntry = 0; /* FIXME: Do we need swap entries? */
          InsertTailList(&UsedPageListHeads[Consumer], &PageDescriptor->ListEntry);
 
@@ -1176,7 +1100,6 @@ MmAllocPagesSpecifyRange(ULONG Consumer,
             PageDescriptor->ReferenceCount = 1;
             PageDescriptor->LockCount = 0;
             PageDescriptor->MapCount = 0;
-	    PageDescriptor->ShareCount = 0;
             PageDescriptor->SavedSwapEntry = 0; /* FIXME: Do we need swap entries? */
             RemoveEntryList(&PageDescriptor->ListEntry);
             InsertTailList(&UsedPageListHeads[Consumer], &PageDescriptor->ListEntry);
@@ -1241,13 +1164,13 @@ MmZeroPageThreadMain(PVOID Ignored)
                                      NULL);
       if (!NT_SUCCESS(Status))
       {
-         DbgPrint("ZeroPageThread: Wait failed\n");
+         DPRINT1("ZeroPageThread: Wait failed\n");
          KEBUGCHECK(0);
       }
 
       if (ZeroPageThreadShouldTerminate)
       {
-         DbgPrint("ZeroPageThread: Terminating\n");
+         DPRINT1("ZeroPageThread: Terminating\n");
          return STATUS_SUCCESS;
       }
       Count = 0;
@@ -1266,7 +1189,7 @@ MmZeroPageThreadMain(PVOID Ignored)
          KeAcquireSpinLock(&PageListLock, &oldIrql);
          if (PageDescriptor->MapCount != 0)
          {
-            DbgPrint("Mapped page on freelist.\n");
+            DPRINT1("Mapped page on freelist.\n");
             KEBUGCHECK(0);
          }
 	 PageDescriptor->Flags.Zero = 1;

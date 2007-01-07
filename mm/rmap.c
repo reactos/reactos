@@ -308,7 +308,6 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
         */ 
         MmDeleteVirtualMapping(AddressSpace->Process, (PVOID)Address, FALSE, NULL, NULL);
         MmUnlockAddressSpace(AddressSpace);
-        // FIXME Comment out for now // while(MmUnsharePage(Page));
         MmDeleteAllRmaps(Page, NULL, NULL);
         MmReleasePageMemoryConsumer(MC_CACHE, Page);
    }
@@ -363,6 +362,26 @@ MmSetDirtyAllRmaps(PFN_TYPE Page)
       current_entry = current_entry->Next;
    }
    ExReleaseFastMutex(&RmapListLock);
+}
+
+ULONG
+NTAPI
+MmGetRmapCount(PFN_TYPE Page)
+{
+   ULONG Count = 0;
+   PMM_RMAP_ENTRY current_entry;
+
+   ExAcquireFastMutex(&RmapListLock);
+   current_entry = MmGetRmapListHeadPage(Page);
+
+   while (current_entry)
+   {
+      Count++;
+      current_entry = current_entry->Next;
+   }
+   ExReleaseFastMutex(&RmapListLock);
+
+   return Count;
 }
 
 BOOLEAN
