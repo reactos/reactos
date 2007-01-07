@@ -1,5 +1,4 @@
-/* $Id$
- * PROJECT:     ReactOS Downloader (was GetFirefox)
+/* PROJECT:     ReactOS Downloader (was GetFirefox)
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/downloader/download.c
  * PURPOSE:     Displaying a download dialog

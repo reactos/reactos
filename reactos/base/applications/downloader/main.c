@@ -1,5 +1,4 @@
-/* $Id$
- * PROJECT:         ReactOS Downloader
+/* PROJECT:         ReactOS Downloader
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/downloader/xml.c
  * PURPOSE:         Main program
