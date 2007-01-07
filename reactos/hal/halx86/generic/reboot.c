@@ -46,7 +46,7 @@ HalpReboot(VOID)
 
     /* Read periodic register and clear the interrupt enable */
     Data = READ_PORT_UCHAR((PUCHAR)0x71);
-    WRITE_PORT_UCHAR((PUCHAR)0x71, Data & 0xBF);
+    WRITE_PORT_UCHAR((PUCHAR)0x71, Data & ~0x40);
     KeStallExecutionProcessor(1);
 
     /* Setup control register A */
@@ -55,7 +55,7 @@ HalpReboot(VOID)
 
     /* Read divider rate and reset it */
     Data = READ_PORT_UCHAR((PUCHAR)0x71);
-    WRITE_PORT_UCHAR((PUCHAR)0x71, (Data & 0xF0) | 0x06);
+    WRITE_PORT_UCHAR((PUCHAR)0x71, (Data & ~0x9) | 0x06);
     KeStallExecutionProcessor(1);
 
     /* Reset neutral CMOS address */
