@@ -56,7 +56,7 @@
 	<category name="Multimedia" icon="4">
 	</category>
 	<category name="Development" icon="5">
-		<application name="ReactOS Build Envirement">
+		<application name="ReactOS Build Environment">
 			<description>Allows you to build the ReactOS Source. For more instructions see our wiki.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/RosBE-0.3.3.exe</location>
 		</application>
