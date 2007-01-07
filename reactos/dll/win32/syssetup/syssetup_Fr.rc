@@ -194,9 +194,9 @@ BEGIN
     IDS_CMT_CALC        "Lancer la Calculatrice"
     IDS_CMT_CMD         "Ouvrir l'invite de commandes"
     IDS_CMT_EXPLORER    "Lancer Explorer"
-    IDS_CMT_WINEFILE    "Lancer Winefile"
     IDS_CMT_NOTEPAD     "Lancer l'Éditeur de Texte"
     IDS_CMT_REGEDIT     "Lancer l'Éditeur de Registre"
+    IDS_CMT_WORDPAD     "Lancer l'Éditeur de Documents"
     IDS_CMT_SCREENSHOT  "Faire une capture d'écran"
 END
 
