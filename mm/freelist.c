@@ -819,6 +819,12 @@ MmDereferencePage(PFN_TYPE Pfn)
    KeReleaseSpinLock(&PageListLock, oldIrql);
 }
 
+ULONG 
+MmGetMemoryConsumerPage(PFN_TYPE Pfn)
+{
+   return MmPageArray[Pfn].Flags.Consumer;
+}
+
 ULONG
 NTAPI
 MmGetLockCountPage(PFN_TYPE Pfn)
