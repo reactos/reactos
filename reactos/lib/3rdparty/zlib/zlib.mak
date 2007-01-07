@@ -24,10 +24,8 @@ ZLIB_HOST_SOURCES = $(addprefix $(ZLIB_BASE_), \
 	trees.c \
 	zutil.c \
 	inflate.c \
-	infblock.c \
+	infback.c \
 	inftrees.c \
-	infcodes.c \
-	infutil.c \
 	inffast.c \
 	)
 
@@ -77,19 +75,11 @@ $(ZLIB_INT_)inflate.host.o: $(ZLIB_BASE_)inflate.c | $(ZLIB_INT)
 	$(ECHO_CC)
 	${host_gcc} $(ZLIB_HOST_CFLAGS) -c $< -o $@
 
-$(ZLIB_INT_)infblock.host.o: $(ZLIB_BASE_)infblock.c | $(ZLIB_INT)
+$(ZLIB_INT_)infback.host.o: $(ZLIB_BASE_)infback.c | $(ZLIB_INT)
 	$(ECHO_CC)
 	${host_gcc} $(ZLIB_HOST_CFLAGS) -c $< -o $@
 
 $(ZLIB_INT_)inftrees.host.o: $(ZLIB_BASE_)inftrees.c | $(ZLIB_INT)
-	$(ECHO_CC)
-	${host_gcc} $(ZLIB_HOST_CFLAGS) -c $< -o $@
-
-$(ZLIB_INT_)infcodes.host.o: $(ZLIB_BASE_)infcodes.c | $(ZLIB_INT)
-	$(ECHO_CC)
-	${host_gcc} $(ZLIB_HOST_CFLAGS) -c $< -o $@
-
-$(ZLIB_INT_)infutil.host.o: $(ZLIB_BASE_)infutil.c | $(ZLIB_INT)
 	$(ECHO_CC)
 	${host_gcc} $(ZLIB_HOST_CFLAGS) -c $< -o $@
 

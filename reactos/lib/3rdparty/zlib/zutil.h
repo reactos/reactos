@@ -1,5 +1,5 @@
 /* zutil.h -- internal interface and configuration of the compression library
- * Copyright (C) 1995-2002 Jean-loup Gailly.
+ * Copyright (C) 1995-2005 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -10,20 +10,33 @@
 
 /* @(#) $Id$ */
 
-#ifndef _Z_UTIL_H
-#define _Z_UTIL_H
+#ifndef ZUTIL_H
+#define ZUTIL_H
 
+#define ZLIB_INTERNAL
 #include "zlib.h"
 
 #ifdef STDC
-#  include <stddef.h>
+#  ifndef _WIN32_WCE
+#    include <stddef.h>
+#  endif
 #  include <string.h>
 #  include <stdlib.h>
 #endif
 #ifdef NO_ERRNO_H
+#   ifdef _WIN32_WCE
+      /* The Microsoft C Run-Time Library for Windows CE doesn't have
+       * errno.  We define it as a global variable to simplify porting.
+       * Its value is always 0 and should not be used.  We rename it to
+       * avoid conflict with other libraries that use the same workaround.
+       */
+#     define errno z_errno
+#   endif
     extern int errno;
 #else
-#   include <errno.h>
+#  ifndef _WIN32_WCE
+#    include <errno.h>
+#  endif
 #endif
 
 #ifndef local
@@ -37,7 +50,7 @@ typedef unsigned short ush;
 typedef ush FAR ushf;
 typedef unsigned long  ulg;
 
-extern const char *z_errmsg[10]; /* indexed by 2-zlib_error */
+extern const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 /* (size given to avoid silly warnings with Visual C++) */
 
 #define ERR_MSG(err) z_errmsg[Z_NEED_DICT-(err)]
@@ -73,7 +86,7 @@ extern const char *z_errmsg[10]; /* indexed by 2-zlib_error */
 
         /* target dependencies */
 
-#ifdef MSDOS
+#if defined(MSDOS) || (defined(WINDOWS) && !defined(WIN32))
 #  define OS_CODE  0x00
 #  if defined(__TURBOC__) || defined(__BORLANDC__)
 #    if(__STDC__ == 1) && (defined(__LARGE__) || defined(__COMPACT__))
@@ -81,19 +94,15 @@ extern const char *z_errmsg[10]; /* indexed by 2-zlib_error */
        void _Cdecl farfree( void *block );
        void *_Cdecl farmalloc( unsigned long nbytes );
 #    else
-#     include <alloc.h>
+#      include <alloc.h>
 #    endif
 #  else /* MSC or DJGPP */
 #    include <malloc.h>
 #  endif
 #endif
 
-#ifdef OS2
-#  define OS_CODE  0x06
-#endif
-
-#ifdef WIN32 /* Window 95 & Windows NT */
-#  define OS_CODE  0x0b
+#ifdef AMIGA
+#  define OS_CODE  0x01
 #endif
 
 #if defined(VAXC) || defined(VMS)
@@ -102,12 +111,15 @@ extern const char *z_errmsg[10]; /* indexed by 2-zlib_error */
      fopen((name), (mode), "mbc=60", "ctx=stm", "rfm=fix", "mrs=512")
 #endif
 
-#ifdef AMIGA
-#  define OS_CODE  0x01
-#endif
-
 #if defined(ATARI) || defined(atarist)
 #  define OS_CODE  0x05
+#endif
+
+#ifdef OS2
+#  define OS_CODE  0x06
+#  ifdef M_I86
+     #include <malloc.h>
+#  endif
 #endif
 
 #if defined(MACOS) || defined(TARGET_OS_MAC)
@@ -121,12 +133,18 @@ extern const char *z_errmsg[10]; /* indexed by 2-zlib_error */
 #  endif
 #endif
 
-#ifdef __50SERIES /* Prime/PRIMOS */
-#  define OS_CODE  0x0F
-#endif
-
 #ifdef TOPS20
 #  define OS_CODE  0x0a
+#endif
+
+#ifdef WIN32
+#  ifndef __CYGWIN__  /* Cygwin is Unix, not Win32 */
+#    define OS_CODE  0x0b
+#  endif
+#endif
+
+#ifdef __50SERIES /* Prime/PRIMOS */
+#  define OS_CODE  0x0f
 #endif
 
 #if defined(_BEOS_) || defined(RISCOS)
@@ -134,11 +152,18 @@ extern const char *z_errmsg[10]; /* indexed by 2-zlib_error */
 #endif
 
 #if (defined(_MSC_VER) && (_MSC_VER > 600))
-#  define fdopen(fd,type)  _fdopen(fd,type)
+#  if defined(_WIN32_WCE)
+#    define fdopen(fd,mode) NULL /* No fdopen() */
+#    ifndef _PTRDIFF_T_DEFINED
+       typedef int ptrdiff_t;
+#      define _PTRDIFF_T_DEFINED
+#    endif
+#  else
+#    define fdopen(fd,type)  _fdopen(fd,type)
+#  endif
 #endif
 
-
-        /* Common defaults */
+        /* common defaults */
 
 #ifndef OS_CODE
 #  define OS_CODE  0x03  /* assume Unix */
@@ -150,11 +175,37 @@ extern const char *z_errmsg[10]; /* indexed by 2-zlib_error */
 
          /* functions */
 
-#ifdef HAVE_STRERROR
-   extern char *strerror OF((int));
-#  define zstrerror(errnum) strerror(errnum)
-#else
-#  define zstrerror(errnum) ""
+#if defined(STDC99) || (defined(__TURBOC__) && __TURBOC__ >= 0x550)
+#  ifndef HAVE_VSNPRINTF
+#    define HAVE_VSNPRINTF
+#  endif
+#endif
+#if defined(__CYGWIN__)
+#  ifndef HAVE_VSNPRINTF
+#    define HAVE_VSNPRINTF
+#  endif
+#endif
+#ifndef HAVE_VSNPRINTF
+#  ifdef MSDOS
+     /* vsnprintf may exist on some MS-DOS compilers (DJGPP?),
+        but for now we just assume it doesn't. */
+#    define NO_vsnprintf
+#  endif
+#  ifdef __TURBOC__
+#    define NO_vsnprintf
+#  endif
+#  ifdef WIN32
+     /* In Win32, vsnprintf is available as the "non-ANSI" _vsnprintf. */
+#    if !defined(vsnprintf) && !defined(NO_vsnprintf)
+#      define vsnprintf _vsnprintf
+#    endif
+#  endif
+#  ifdef __SASC
+#    define NO_vsnprintf
+#  endif
+#endif
+#ifdef VMS
+#  define NO_vsnprintf
 #endif
 
 #if defined(pyr)
@@ -207,8 +258,6 @@ extern const char *z_errmsg[10]; /* indexed by 2-zlib_error */
 #endif
 
 
-typedef uLong (ZEXPORT *check_func) OF((uLong check, const Bytef *buf,
-				       uInt len));
 voidpf zcalloc OF((voidpf opaque, unsigned items, unsigned size));
 void   zcfree  OF((voidpf opaque, voidpf ptr));
 
@@ -217,4 +266,4 @@ void   zcfree  OF((voidpf opaque, voidpf ptr));
 #define ZFREE(strm, addr)  (*((strm)->zfree))((strm)->opaque, (voidpf)(addr))
 #define TRY_FREE(s, p) {if (p) ZFREE(s, p);}
 
-#endif /* _Z_UTIL_H */
+#endif /* ZUTIL_H */

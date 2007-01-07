@@ -1,5 +1,6 @@
 # Makefile for zlib
 # Microsoft C 5.1 or later
+# Last updated: 19-Mar-2003
 
 # To use, do "make makefile.msc"
 # To compile in small model, set below: MODEL=S
@@ -32,75 +33,55 @@ LDFLAGS=/noi/e/st:0x1500/noe/farcall/packcode
 # "/farcall/packcode" are only useful for `large code' memory models
 # but should be a "no-op" for small code models.
 
-O=.obj
 
 # variables
-OBJ1 = adler32$(O) compress$(O) crc32$(O) gzio$(O) uncompr$(O) deflate$(O) \
-  trees$(O)
-OBJP1 = adler32$(O)+compress$(O)+crc32$(O)+gzio$(O)+uncompr$(O)+deflate$(O)+\
-  trees$(O)
-OBJ2 = zutil$(O) inflate$(O) infblock$(O) inftrees$(O) infcodes$(O) \
-  infutil$(O) inffast$(O)
-OBJP2 = zutil$(O)+inflate$(O)+infblock$(O)+inftrees$(O)+infcodes$(O)+\
-  infutil$(O)+inffast$(O)
-
-ZLIB_H = zlib.h zconf.h
-ZUTIL_H = zutil.h $(ZLIB_H)
-
 ZLIB_LIB = zlib_$(MODEL).lib
 
+OBJ1 = adler32.obj compress.obj crc32.obj deflate.obj gzio.obj infback.obj
+OBJ2 = inffast.obj inflate.obj inftrees.obj trees.obj uncompr.obj zutil.obj
+
+
+# targets
 all:  $(ZLIB_LIB) example.exe minigzip.exe
 
-# individual dependencies and action rules:
-adler32.obj: adler32.c $(ZLIB_H)
+.c.obj:
 	$(CC) -c $(LIB_CFLAGS) $*.c
 
-compress.obj: compress.c $(ZLIB_H)
-	$(CC) -c $(LIB_CFLAGS) $*.c
+adler32.obj: adler32.c zlib.h zconf.h
 
-crc32.obj: crc32.c $(ZLIB_H)
-	$(CC) -c $(LIB_CFLAGS) $*.c
+compress.obj: compress.c zlib.h zconf.h
 
-deflate.obj: deflate.c deflate.h $(ZUTIL_H)
-	$(CC) -c $(LIB_CFLAGS) $*.c
+crc32.obj: crc32.c zlib.h zconf.h crc32.h
 
-gzio.obj: gzio.c $(ZUTIL_H)
-	$(CC) -c $(LIB_CFLAGS) $*.c
+deflate.obj: deflate.c deflate.h zutil.h zlib.h zconf.h
 
-infblock.obj: infblock.c $(ZUTIL_H) infblock.h inftrees.h infcodes.h infutil.h
-	$(CC) -c $(LIB_CFLAGS) $*.c
+gzio.obj: gzio.c zutil.h zlib.h zconf.h
 
-infcodes.obj: infcodes.c $(ZUTIL_H) inftrees.h infutil.h infcodes.h inffast.h
-	$(CC) -c $(LIB_CFLAGS) $*.c
+infback.obj: infback.c zutil.h zlib.h zconf.h inftrees.h inflate.h \
+ inffast.h inffixed.h
 
-inflate.obj: inflate.c $(ZUTIL_H) infblock.h
-	$(CC) -c $(LIB_CFLAGS) $*.c
+inffast.obj: inffast.c zutil.h zlib.h zconf.h inftrees.h inflate.h \
+ inffast.h
 
-inftrees.obj: inftrees.c $(ZUTIL_H) inftrees.h
-	$(CC) -c $(LIB_CFLAGS) $*.c
+inflate.obj: inflate.c zutil.h zlib.h zconf.h inftrees.h inflate.h \
+ inffast.h inffixed.h
 
-infutil.obj: infutil.c $(ZUTIL_H) inftrees.h infutil.h
-	$(CC) -c $(LIB_CFLAGS) $*.c
+inftrees.obj: inftrees.c zutil.h zlib.h zconf.h inftrees.h
 
-inffast.obj: inffast.c $(ZUTIL_H) inftrees.h infutil.h inffast.h
-	$(CC) -c $(LIB_CFLAGS) $*.c
+trees.obj: trees.c zutil.h zlib.h zconf.h deflate.h trees.h
 
-trees.obj: trees.c deflate.h $(ZUTIL_H)
-	$(CC) -c $(LIB_CFLAGS) $*.c
+uncompr.obj: uncompr.c zlib.h zconf.h
 
-uncompr.obj: uncompr.c $(ZLIB_H)
-	$(CC) -c $(LIB_CFLAGS) $*.c
+zutil.obj: zutil.c zutil.h zlib.h zconf.h
 
-zutil.obj: zutil.c $(ZUTIL_H)
-	$(CC) -c $(LIB_CFLAGS) $*.c
-
-example.obj: example.c $(ZLIB_H)
+example.obj: example.c zlib.h zconf.h
 	$(CC) -c $(CFLAGS) $*.c
 
-minigzip.obj: minigzip.c $(ZLIB_H)
+minigzip.obj: minigzip.c zlib.h zconf.h
 	$(CC) -c $(CFLAGS) $*.c
 
-# we must cut the command line to fit in the MS/DOS 128 byte limit:
+
+# the command line is cut to fit in the MS-DOS 128 byte limit:
 $(ZLIB_LIB): $(OBJ1) $(OBJ2)
 	if exist $(ZLIB_LIB) del $(ZLIB_LIB)
 	lib $(ZLIB_LIB) $(OBJ1);
@@ -114,8 +95,12 @@ minigzip.exe: minigzip.obj $(ZLIB_LIB)
 
 test: example.exe minigzip.exe
 	example
-	echo hello world | minigzip | minigzip -d 
+	echo hello world | minigzip | minigzip -d
 
-#clean:
-#	del *.obj
-#	del *.exe
+clean:
+	-del *.obj
+	-del *.lib
+	-del *.exe
+	-del *.map
+	-del zlib_*.bak
+	-del foo.gz

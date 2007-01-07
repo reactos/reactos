@@ -4,9 +4,9 @@
 #include <iomanip.h>
 
 void main() {
-	char h[256] = "Hello";
-	char* g = "Goodbye";
-	ozstream out("temp.gz");
+    char h[256] = "Hello";
+    char* g = "Goodbye";
+    ozstream out("temp.gz");
     out < "This works well" < h < g;
     out.close();
 

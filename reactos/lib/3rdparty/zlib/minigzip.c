@@ -1,6 +1,6 @@
 /* minigzip.c -- simulate gzip using the zlib compression library
- * Copyright (C) 1995-2002 Jean-loup Gailly.
- * For conditions of distribution and use, see copyright notice in zlib.h 
+ * Copyright (C) 1995-2005 Jean-loup Gailly.
+ * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
 /*
@@ -21,8 +21,6 @@
 #ifdef STDC
 #  include <string.h>
 #  include <stdlib.h>
-#else
-   extern void exit  OF((int));
 #endif
 
 #ifdef USE_MMAP
@@ -31,7 +29,7 @@
 #  include <sys/stat.h>
 #endif
 
-#if defined(MSDOS) || defined(OS2) || defined(WIN32)
+#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
 #  include <fcntl.h>
 #  include <io.h>
 #  define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
@@ -112,7 +110,7 @@ void gz_compress(in, out)
     if (gz_compress_mmap(in, out) == Z_OK) return;
 #endif
     for (;;) {
-        len = fread(buf, 1, sizeof(buf), in);
+        len = (int)fread(buf, 1, sizeof(buf), in);
         if (ferror(in)) {
             perror("fread");
             exit(1);
@@ -147,7 +145,7 @@ int gz_compress_mmap(in, out)
     if (buf_len <= 0) return Z_ERRNO;
 
     /* Now do the actual mmap: */
-    buf = mmap((caddr_t) 0, buf_len, PROT_READ, MAP_SHARED, ifd, (off_t)0); 
+    buf = mmap((caddr_t) 0, buf_len, PROT_READ, MAP_SHARED, ifd, (off_t)0);
     if (buf == (caddr_t)(-1)) return Z_ERRNO;
 
     /* Compress the whole file at once: */
@@ -179,8 +177,8 @@ void gz_uncompress(in, out)
         if (len == 0) break;
 
         if ((int)fwrite(buf, 1, (unsigned)len, out) != len) {
-	    error("failed fwrite");
-	}
+            error("failed fwrite");
+        }
     }
     if (fclose(out)) error("failed fclose");
 
@@ -229,7 +227,7 @@ void file_uncompress(file)
     char *infile, *outfile;
     FILE  *out;
     gzFile in;
-    int len = strlen(file);
+    uInt len = (uInt)strlen(file);
 
     strcpy(buf, file);
 
@@ -260,10 +258,11 @@ void file_uncompress(file)
 
 
 /* ===========================================================================
- * Usage:  minigzip [-d] [-f] [-h] [-1 to -9] [files...]
+ * Usage:  minigzip [-d] [-f] [-h] [-r] [-1 to -9] [files...]
  *   -d : decompress
  *   -f : compress with Z_FILTERED
  *   -h : compress with Z_HUFFMAN_ONLY
+ *   -r : compress with Z_RLE
  *   -1 to -9 : compression level
  */
 
@@ -282,18 +281,22 @@ int main(argc, argv)
 
     while (argc > 0) {
       if (strcmp(*argv, "-d") == 0)
-	uncompr = 1;
+        uncompr = 1;
       else if (strcmp(*argv, "-f") == 0)
-	outmode[3] = 'f';
+        outmode[3] = 'f';
       else if (strcmp(*argv, "-h") == 0)
-	outmode[3] = 'h';
+        outmode[3] = 'h';
+      else if (strcmp(*argv, "-r") == 0)
+        outmode[3] = 'R';
       else if ((*argv)[0] == '-' && (*argv)[1] >= '1' && (*argv)[1] <= '9' &&
-	       (*argv)[2] == 0)
-	outmode[2] = (*argv)[1];
+               (*argv)[2] == 0)
+        outmode[2] = (*argv)[1];
       else
-	break;
+        break;
       argc--, argv++;
     }
+    if (outmode[3] == ' ')
+        outmode[3] = 0;
     if (argc == 0) {
         SET_BINARY_MODE(stdin);
         SET_BINARY_MODE(stdout);
@@ -315,6 +318,5 @@ int main(argc, argv)
             }
         } while (argv++, --argc);
     }
-    exit(0);
-    return 0; /* to avoid warning */
+    return 0;
 }

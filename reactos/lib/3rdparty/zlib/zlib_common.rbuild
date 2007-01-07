@@ -9,8 +9,6 @@
 <file>trees.c</file>
 <file>zutil.c</file>
 <file>inflate.c</file>
-<file>infblock.c</file>
+<file>infback.c</file>
 <file>inftrees.c</file>
-<file>infcodes.c</file>
-<file>infutil.c</file>
 <file>inffast.c</file>

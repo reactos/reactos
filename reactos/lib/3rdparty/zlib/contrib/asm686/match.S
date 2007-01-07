@@ -38,26 +38,28 @@
 #define	deflatestate		56	/* the function arguments	*/
 #define	curmatch		60
 
-/* Offsets for fields in the deflate_state structure. These numbers
- * are calculated from the definition of deflate_state, with the
- * assumption that the compiler will dword-align the fields. (Thus,
- * changing the definition of deflate_state could easily cause this
- * program to crash horribly, without so much as a warning at
- * compile time. Sigh.)
+/* All the +zlib1222add offsets are due to the addition of fields
+ *  in zlib in the deflate_state structure since the asm code was first written
+ * (if you compile with zlib 1.0.4 or older, use "zlib1222add equ (-4)").
+ * (if you compile with zlib between 1.0.5 and 1.2.2.1, use "zlib1222add equ 0").
+ * if you compile with zlib 1.2.2.2 or later , use "zlib1222add equ 8").
  */
-#define	dsWSize			36
-#define	dsWMask			44
-#define	dsWindow		48
-#define	dsPrev			56
-#define	dsMatchLen		88
-#define	dsPrevMatch		92
-#define	dsStrStart		100
-#define	dsMatchStart		104
-#define	dsLookahead		108
-#define	dsPrevLen		112
-#define	dsMaxChainLen		116
-#define	dsGoodMatch		132
-#define	dsNiceMatch		136
+
+#define zlib1222add		(8)
+
+#define	dsWSize			(36+zlib1222add)
+#define	dsWMask			(44+zlib1222add)
+#define	dsWindow		(48+zlib1222add)
+#define	dsPrev			(56+zlib1222add)
+#define	dsMatchLen		(88+zlib1222add)
+#define	dsPrevMatch		(92+zlib1222add)
+#define	dsStrStart		(100+zlib1222add)
+#define	dsMatchStart		(104+zlib1222add)
+#define	dsLookahead		(108+zlib1222add)
+#define	dsPrevLen		(112+zlib1222add)
+#define	dsMaxChainLen		(116+zlib1222add)
+#define	dsGoodMatch		(132+zlib1222add)
+#define	dsNiceMatch		(136+zlib1222add)
 
 
 .file "match.S"

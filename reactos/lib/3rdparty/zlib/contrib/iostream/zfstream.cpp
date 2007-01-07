@@ -1,5 +1,4 @@
 
-#include <memory.h>
 #include "zfstream.h"
 
 gzfilebuf::gzfilebuf() :
@@ -17,15 +16,13 @@ gzfilebuf::~gzfilebuf() {
 }
 
 gzfilebuf *gzfilebuf::open( const char *name,
-			    int io_mode ) {
+                            int io_mode ) {
 
   if ( is_open() )
     return NULL;
 
   char char_mode[10];
-  char *p;
-  memset(char_mode,'\0',10);
-  p = char_mode;
+  char *p = char_mode;
 
   if ( io_mode & ios::in ) {
     mode = ios::in;
@@ -47,6 +44,9 @@ gzfilebuf *gzfilebuf::open( const char *name,
   if ( io_mode & (ios::out|ios::app )) {
     *p++ = '9';
   }
+
+  // Put the end-of-string indicator
+  *p = '\0';
 
   if ( (file = gzopen(name, char_mode)) == NULL )
     return NULL;
@@ -58,15 +58,13 @@ gzfilebuf *gzfilebuf::open( const char *name,
 }
 
 gzfilebuf *gzfilebuf::attach( int file_descriptor,
-			      int io_mode ) {
+                              int io_mode ) {
 
   if ( is_open() )
     return NULL;
 
   char char_mode[10];
-  char *p;
-  memset(char_mode,'\0',10);
-  p = char_mode;
+  char *p = char_mode;
 
   if ( io_mode & ios::in ) {
     mode = ios::in;
@@ -88,6 +86,9 @@ gzfilebuf *gzfilebuf::attach( int file_descriptor,
   if ( io_mode & (ios::out|ios::app )) {
     *p++ = '9';
   }
+
+  // Put the end-of-string indicator
+  *p = '\0';
 
   if ( (file = gzdopen(file_descriptor, char_mode)) == NULL )
     return NULL;
@@ -112,13 +113,13 @@ gzfilebuf *gzfilebuf::close() {
 
 }
 
-int gzfilebuf::setcompressionlevel( short comp_level ) {
+int gzfilebuf::setcompressionlevel( int comp_level ) {
 
   return gzsetparams(file, comp_level, -2);
 
 }
 
-int gzfilebuf::setcompressionstrategy( short comp_strategy ) {
+int gzfilebuf::setcompressionstrategy( int comp_strategy ) {
 
   return gzsetparams(file, -2, comp_strategy);
 
@@ -151,7 +152,7 @@ int gzfilebuf::underflow() {
 
     if ( out_waiting() ) {
       if ( flushbuf() == EOF )
-	return EOF;
+        return EOF;
     }
 
   }
@@ -180,11 +181,11 @@ int gzfilebuf::overflow( int c ) {
     setg(0,0,0);
   } else {
     if (in_avail()) {
-	return EOF;
+        return EOF;
     }
     if (out_waiting()) {
       if (flushbuf() == EOF)
-	return EOF;
+        return EOF;
     }
   }
 
@@ -282,12 +283,11 @@ void gzfilestream_common::close() {
 
 }
 
-gzfilebuf *gzfilestream_common::rdbuf() {
-
+gzfilebuf *gzfilestream_common::rdbuf()
+{
   return &buffer;
-
 }
-     
+
 gzifstream::gzifstream() :
   ios( gzfilestream_common::rdbuf() )
 {

@@ -1,15 +1,15 @@
 # Makefile for zlib.  Modified for djgpp v2.0 by F. J. Donahoe, 3/15/96.
 # Copyright (C) 1995-1998 Jean-loup Gailly.
-# For conditions of distribution and use, see copyright notice in zlib.h 
+# For conditions of distribution and use, see copyright notice in zlib.h
 
 # To compile, or to compile and test, type:
-# 
+#
 #   make -fmakefile.dj2;  make test -fmakefile.dj2
-# 
+#
 # To install libz.a, zconf.h and zlib.h in the djgpp directories, type:
-# 
+#
 #    make install -fmakefile.dj2
-# 
+#
 # after first defining LIBRARY_PATH and INCLUDE_PATH in djgpp.env as
 # in the sample below if the pattern of the DJGPP distribution is to
 # be followed.  Remember that, while <sp>'es around <=> are ignored in
@@ -52,21 +52,25 @@ prefix=/usr/local
 exec_prefix = $(prefix)
 
 OBJS = adler32.o compress.o crc32.o gzio.o uncompr.o deflate.o trees.o \
-       zutil.o inflate.o infblock.o inftrees.o infcodes.o infutil.o inffast.o
+       zutil.o inflate.o infback.o inftrees.o inffast.o
+
+OBJA =
+# to use the asm code: make OBJA=match.o
 
 TEST_OBJS = example.o minigzip.o
 
 all: example.exe minigzip.exe
 
+check: test
 test: all
 	./example
-	echo hello world | .\minigzip | .\minigzip -d 
+	echo hello world | .\minigzip | .\minigzip -d
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-libz.a: $(OBJS)
-	$(AR) $@ $(OBJS)
+libz.a: $(OBJS) $(OBJA)
+	$(AR) $@ $(OBJS) $(OBJA)
 
 %.exe : %.o $(LIBS)
 	$(LD) $@ $< $(LDLIBS)

@@ -1,11 +1,11 @@
 # Makefile for zlib.  Modified for emx 0.9c by Chr. Spieler, 6/17/98.
 # Copyright (C) 1995-1998 Jean-loup Gailly.
-# For conditions of distribution and use, see copyright notice in zlib.h 
+# For conditions of distribution and use, see copyright notice in zlib.h
 
 # To compile, or to compile and test, type:
-# 
+#
 #   make -fmakefile.emx;  make test -fmakefile.emx
-# 
+#
 
 CC=gcc
 
@@ -34,7 +34,7 @@ prefix=/usr/local
 exec_prefix = $(prefix)
 
 OBJS = adler32.o compress.o crc32.o gzio.o uncompr.o deflate.o trees.o \
-       zutil.o inflate.o infblock.o inftrees.o infcodes.o infutil.o inffast.o
+       zutil.o inflate.o infback.o inftrees.o inffast.o
 
 TEST_OBJS = example.o minigzip.o
 
@@ -42,7 +42,7 @@ all: example.exe minigzip.exe
 
 test: all
 	./example
-	echo hello world | .\minigzip | .\minigzip -d 
+	echo hello world | .\minigzip | .\minigzip -d
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@

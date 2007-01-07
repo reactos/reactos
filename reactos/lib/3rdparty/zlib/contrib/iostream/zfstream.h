@@ -1,6 +1,6 @@
 
-#ifndef _zfstream_h
-#define _zfstream_h
+#ifndef zfstream_h
+#define zfstream_h
 
 #include <fstream.h>
 #include "zlib.h"
@@ -16,8 +16,8 @@ public:
   gzfilebuf *attach( int file_descriptor, int io_mode );
   gzfilebuf *close();
 
-  int setcompressionlevel( short comp_level );
-  int setcompressionstrategy( short comp_strategy );
+  int setcompressionlevel( int comp_level );
+  int setcompressionstrategy( int comp_strategy );
 
   inline int is_open() const { return (file !=NULL); }
 
@@ -98,18 +98,19 @@ private:
   T val;
 };
 
-template<class T> gzofstream &operator<<(gzofstream &s,
-					 const gzomanip<T> &m) {
+template<class T> gzofstream &operator<<(gzofstream &s, const gzomanip<T> &m)
+{
   return (*m.func)(s, m.val);
-  
 }
 
-inline gzofstream &setcompressionlevel( gzofstream &s, int l ) {
+inline gzofstream &setcompressionlevel( gzofstream &s, int l )
+{
   (s.rdbuf())->setcompressionlevel(l);
   return s;
 }
 
-inline gzofstream &setcompressionstrategy( gzofstream &s, int l ) {
+inline gzofstream &setcompressionstrategy( gzofstream &s, int l )
+{
   (s.rdbuf())->setcompressionstrategy(l);
   return s;
 }
@@ -125,18 +126,3 @@ inline gzomanip<int> setcompressionstrategy(int l)
 }
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
