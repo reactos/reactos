@@ -51,7 +51,7 @@ GetSourcePaths(PUNICODE_STRING SourcePath,
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &LinkName,
-			     OBJ_OPENLINK,
+			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 

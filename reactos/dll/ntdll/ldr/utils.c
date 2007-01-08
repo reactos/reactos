@@ -344,7 +344,7 @@ LdrpInitLoader(VOID)
                        L"KnownDllPath");
   InitializeObjectAttributes(&ObjectAttributes,
                              &Name,
-                             OBJ_CASE_INSENSITIVE | OBJ_OPENLINK,
+                             OBJ_CASE_INSENSITIVE,
                              LdrpKnownDllsDirHandle,
                              NULL);
   Status = NtOpenSymbolicLinkObject(&LinkHandle,
