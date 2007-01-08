@@ -1396,6 +1396,9 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     KIRQL OldIrql;
     IOTRACE(IO_FILE_DEBUG, "ObjectBody: %p\n", ObjectBody);
 
+    /* If this isn't the last handle for the current process, quit */
+    if (HandleCount != 1) return;
+
     /* Check if the file is locked and has more then one handle opened */
     if ((FileObject->LockOperation) && (SystemHandleCount != 1))
     {

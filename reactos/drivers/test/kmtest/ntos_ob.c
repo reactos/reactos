@@ -28,12 +28,7 @@
 //#define NDEBUG
 #include "debug.h"
 
-#include "ndk/obtypes.h"
-#include "ndk/obfuncs.h"
-
-#include "ndk/ifssupp.h"
-#include "ndk/setypes.h"
-#include "ndk/sefuncs.h"
+#include "ntndk.h"
 
 // I ment to make this test scalable, but for now
 // we work with two object types only

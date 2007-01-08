@@ -19,7 +19,177 @@
 
 PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
+#define TAG_OB_HANDLE TAG('O', 'b', 'H', 'd')
+
 /* PRIVATE FUNCTIONS *********************************************************/
+
+POBJECT_HANDLE_COUNT_ENTRY
+NTAPI
+ObpInsertHandleCount(IN POBJECT_HEADER ObjectHeader)
+{
+    POBJECT_HEADER_HANDLE_INFO HandleInfo;
+    POBJECT_HANDLE_COUNT_ENTRY FreeEntry;
+    POBJECT_HANDLE_COUNT_DATABASE HandleDatabase, OldHandleDatabase;
+    ULONG i;
+    ULONG Size, OldSize;
+    OBJECT_HANDLE_COUNT_DATABASE SingleDatabase;
+    PAGED_CODE();
+
+    /* Get the handle info */
+    HandleInfo = OBJECT_HEADER_TO_HANDLE_INFO(ObjectHeader);
+    if (!HandleInfo) return NULL;
+
+    /* Check if we only have one entry */
+    if (ObjectHeader->Flags & OB_FLAG_SINGLE_PROCESS)
+    {
+        /* Fill out the single entry */
+        SingleDatabase.CountEntries = 1;
+        SingleDatabase.HandleCountEntries[0] = HandleInfo->SingleEntry;
+
+        /* Use this as the old size */
+        OldHandleDatabase = &SingleDatabase;
+        OldSize = sizeof(SingleDatabase);
+
+        /* Now we'll have two entries, and an entire DB */
+        i = 2;
+        Size = sizeof(OBJECT_HANDLE_COUNT_DATABASE) +
+               sizeof(OBJECT_HANDLE_COUNT_ENTRY);
+    }
+    else
+    {
+        /* We already have a DB, get the information from it */
+        OldHandleDatabase = HandleInfo->HandleCountDatabase;
+        i = OldHandleDatabase->CountEntries;
+        OldSize = sizeof(OBJECT_HANDLE_COUNT_DATABASE) +
+                  ((i - 1) * sizeof(OBJECT_HANDLE_COUNT_ENTRY));
+
+        /* Add 4 more entries */
+        i += 4;
+        Size = OldSize += (4 * sizeof(OBJECT_HANDLE_COUNT_ENTRY));
+    }
+
+    /* Allocate the DB */
+    HandleDatabase = ExAllocatePoolWithTag(PagedPool, Size, TAG_OB_HANDLE);
+    if (!HandleDatabase) return NULL;
+
+    /* Copy the old database */
+    RtlMoveMemory(HandleDatabase, OldHandleDatabase, OldSize);
+
+    /* Check if we he had a single entry before */
+    if (ObjectHeader->Flags & OB_FLAG_SINGLE_PROCESS)
+    {
+        /* Now we have more */
+        ObjectHeader->Flags &= ~OB_FLAG_SINGLE_PROCESS;
+    }
+    else
+    {
+        /* Otherwise we had a DB, free it */
+        ExFreePool(OldHandleDatabase);
+    }
+
+    /* Find the end of the copy and zero out the new data */
+    FreeEntry = (PVOID)((ULONG_PTR)HandleDatabase + OldSize);
+    RtlZeroMemory(FreeEntry, Size - OldSize);
+
+    /* Set the new information and return the free entry */
+    HandleDatabase->CountEntries = i;
+    HandleInfo->HandleCountDatabase = HandleDatabase;
+    return FreeEntry;
+}
+
+NTSTATUS
+NTAPI
+ObpIncrementHandleDataBase(IN POBJECT_HEADER ObjectHeader,
+                           IN PEPROCESS Process,
+                           IN OUT PULONG NewProcessHandleCount)
+{
+    POBJECT_HEADER_HANDLE_INFO HandleInfo;
+    POBJECT_HANDLE_COUNT_ENTRY HandleEntry, FreeEntry = NULL;
+    POBJECT_HANDLE_COUNT_DATABASE HandleDatabase;
+    ULONG i;
+    PAGED_CODE();
+
+    /* Get the handle info and check if we only have one entry */
+    HandleInfo = OBJECT_HEADER_TO_HANDLE_INFO(ObjectHeader);
+    if (ObjectHeader->Flags & OB_FLAG_SINGLE_PROCESS)
+    {
+        /* Check if the entry is free */
+        if (!HandleInfo->SingleEntry.HandleCount)
+        {
+            /* Add ours */
+            HandleInfo->SingleEntry.HandleCount = 1;
+            HandleInfo->SingleEntry.Process = Process;
+
+            /* Return success and 1 handle */
+            *NewProcessHandleCount = 1;
+            return STATUS_SUCCESS;
+        }
+        else if (HandleInfo->SingleEntry.Process == Process)
+        {
+            /* Busy entry, but same process */
+            *NewProcessHandleCount = ++HandleInfo->SingleEntry.HandleCount;
+            return STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Insert a new entry */
+            FreeEntry = ObpInsertHandleCount(ObjectHeader);
+            if (!FreeEntry) return STATUS_INSUFFICIENT_RESOURCES;
+
+            /* Fill it out */
+            FreeEntry->Process = Process;
+            FreeEntry->HandleCount = 1;
+
+            /* Return success and 1 handle */
+            *NewProcessHandleCount = 1;
+            return STATUS_SUCCESS;
+        }
+    }
+
+    /* We have a database instead */
+    HandleDatabase = HandleInfo->HandleCountDatabase;
+    if (HandleDatabase)
+    {
+        /* Get the entries and loop them */
+        i = HandleDatabase->CountEntries;
+        HandleEntry = &HandleDatabase->HandleCountEntries[0];
+        while (i)
+        {
+            /* Check if this is a match */
+            if (HandleEntry->Process == Process)
+            {
+                /* Found it, get the process handle count */
+                *NewProcessHandleCount = ++HandleEntry->HandleCount;
+                return STATUS_SUCCESS;
+            }
+            else if (!HandleEntry->HandleCount)
+            {
+                /* Found a free entry */
+                FreeEntry = HandleEntry;
+            }
+
+            /* Keep looping */
+            HandleEntry++;
+            i--;
+        }
+
+        /* Check if we couldn't find a free entry */
+        if (!FreeEntry)
+        {
+            /* Allocate one */
+            FreeEntry = ObpInsertHandleCount(ObjectHeader);
+            if (!FreeEntry) return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Fill out the entry */
+        FreeEntry->Process = Process;
+        FreeEntry->HandleCount = 1;
+        *NewProcessHandleCount = 1;
+    }
+
+    /* Return success if we got here */
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 NTAPI
@@ -101,6 +271,10 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     LONG NewCount;
     POBJECT_HEADER_CREATOR_INFO CreatorInfo;
     KIRQL CalloutIrql;
+    POBJECT_HEADER_HANDLE_INFO HandleInfo;
+    POBJECT_HANDLE_COUNT_ENTRY HandleEntry;
+    POBJECT_HANDLE_COUNT_DATABASE HandleDatabase;
+    ULONG i;
 
     /* Get the object type and header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
@@ -138,8 +312,53 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     /* Is the object type keeping track of handles? */
     if (ObjectType->TypeInfo.MaintainHandleCount)
     {
-        /* FIXME */
-        DPRINT("Handle Database not yet implemented\n");
+        /* Get handle information */
+        HandleInfo = OBJECT_HEADER_TO_HANDLE_INFO(ObjectHeader);
+
+        /* Check if there's only a single entry */
+        if (ObjectHeader->Flags & OB_FLAG_SINGLE_PROCESS)
+        {
+            /* It should be us */
+            ASSERT(HandleInfo->SingleEntry.Process == Process);
+            ASSERT(HandleInfo->SingleEntry.HandleCount > 0);
+
+            /* Get the handle counts */
+            ProcessHandleCount = HandleInfo->SingleEntry.HandleCount--;
+            HandleEntry = &HandleInfo->SingleEntry;
+        }
+        else
+        {
+            /* Otherwise, get the database */
+            HandleDatabase = HandleInfo->HandleCountDatabase;
+            if (HandleDatabase)
+            {
+                /* Get the entries and loop them */
+                i = HandleDatabase->CountEntries;
+                HandleEntry = &HandleDatabase->HandleCountEntries[0];
+                while (i)
+                {
+                    /* Check if this is a match */
+                    if ((HandleEntry->HandleCount) &&
+                        (HandleEntry->Process == Process))
+                    {
+                        /* Found it, get the process handle count */
+                        ProcessHandleCount = HandleEntry->HandleCount--;
+                    }
+
+                    /* Keep looping */
+                    HandleEntry++;
+                    i--;
+                }
+            }
+        }
+
+        /* Check if this is the last handle */
+        if (ProcessHandleCount == 1)
+        {
+            /* Then clear the entry */
+            HandleEntry->Process = NULL;
+            HandleEntry->HandleCount = 0;
+        }
     }
 
     /* Release the lock */
@@ -461,8 +680,17 @@ ObpIncrementHandleCount(IN PVOID Object,
     /* Check if we have a handle database */
     if (ObjectType->TypeInfo.MaintainHandleCount)
     {
-        /* FIXME: TODO */
-        DPRINT("Handle DB not yet supported\n");
+        /* Increment the handle database */
+        Status = ObpIncrementHandleDataBase(ObjectHeader,
+                                            Process,
+                                            &ProcessHandleCount);
+        if (!NT_SUCCESS(Status))
+        {
+            /* FIXME: This should never happen for now */
+            DPRINT1("Unhandled case\n");
+            KEBUGCHECK(0);
+            goto Quickie;
+        }
     }
 
     /* Release the lock */
@@ -672,8 +900,17 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     /* Check if we have a handle database */
     if (ObjectType->TypeInfo.MaintainHandleCount)
     {
-        /* FIXME: TODO */
-        DPRINT("Handle DB not yet supported\n");
+        /* Increment the handle database */
+        Status = ObpIncrementHandleDataBase(ObjectHeader,
+                                            Process,
+                                            &ProcessHandleCount);
+        if (!NT_SUCCESS(Status))
+        {
+            /* FIXME: This should never happen for now */
+            DPRINT1("Unhandled case\n");
+            KEBUGCHECK(0);
+            goto Quickie;
+        }
     }
 
     /* Release the lock */
