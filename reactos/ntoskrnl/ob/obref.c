@@ -454,7 +454,7 @@ ObReferenceObjectByName(IN PUNICODE_STRING ObjectPath,
 
 Quickie:
     /* Free the captured name if we had one, and return status */
-    if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+    ObpFreeObjectNameBuffer(&ObjectName);
     return Status;
 }
 

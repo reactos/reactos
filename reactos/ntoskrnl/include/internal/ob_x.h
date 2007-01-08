@@ -130,7 +130,7 @@ ObpAllocateCapturedAttributes(IN PP_NPAGED_LOOKASIDE_NUMBER Type)
 }
 
 VOID
-static __inline
+FORCEINLINE
 ObpFreeCapturedAttributes(IN PVOID Buffer,
                           IN PP_NPAGED_LOOKASIDE_NUMBER Type)
 {
@@ -168,23 +168,7 @@ ObpFreeCapturedAttributes(IN PVOID Buffer,
 }
 
 VOID
-static __inline
-ObpReleaseCapturedName(IN PUNICODE_STRING Name)
-{
-    /* We know this is a pool-allocation if the size doesn't match */
-    if (Name->MaximumLength != 248)
-    {
-        ExFreePool(Name->Buffer);
-    }
-    else
-    {
-        /* Otherwise, free from the lookaside */
-        ObpFreeCapturedAttributes(Name, LookasideNameBufferList);
-    }
-}
-
-VOID
-static __inline
+FORCEINLINE
 ObpFreeAndReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 {
     /* First release the attributes, then free them from the lookaside list */

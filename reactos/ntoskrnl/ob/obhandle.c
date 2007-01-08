@@ -2090,7 +2090,7 @@ Cleanup:
 Quickie:
     /* Release the object attributes and temporary buffer */
     ObpReleaseCapturedAttributes(&TempBuffer->ObjectCreateInfo);
-    if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+    if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
     ExFreePool(TempBuffer);
 
     /* Return status */
@@ -2673,9 +2673,7 @@ NTSTATUS
 NTAPI
 NtClose(IN HANDLE Handle)
 {
-    //
-    // Call the internal API
-    //
+    /* Call the internal API */
     return ObpCloseHandle(Handle, ExGetPreviousMode());
 }
 

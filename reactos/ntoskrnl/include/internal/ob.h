@@ -288,6 +288,12 @@ ObFreeObjectCreateInfoBuffer(
     IN POBJECT_CREATE_INFORMATION ObjectCreateInfo
 );
 
+VOID
+NTAPI
+ObpFreeObjectNameBuffer(
+    IN PUNICODE_STRING Name
+);
+
 //
 // DOS Devices Functions
 //

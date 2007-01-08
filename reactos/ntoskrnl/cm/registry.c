@@ -548,7 +548,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     /* Yields a new reference */
     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
 
-    if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+    if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
     if (!NT_SUCCESS(Status))
       {
 	return Status;

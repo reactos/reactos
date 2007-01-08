@@ -577,7 +577,7 @@ Cleanup:
     ReleaseCapturedUnicodeString(&CapturedClass,
                                  PreviousMode);
   }
-  if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+  if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
   if (FreeRemainingPath) RtlFreeUnicodeString(&RemainingPath);
   //if (Object != NULL) ObDereferenceObject(Object);
 
@@ -1384,7 +1384,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
       PostOpenKeyInfo.Status = Status;
       CmiCallRegisteredCallbacks (RegNtPostOpenKey, &PostOpenKeyInfo);
       ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-      if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+      if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
       return Status;
     }
 
@@ -1436,7 +1436,7 @@ openkey_cleanup:
   PostOpenKeyInfo.Object = NT_SUCCESS(Status) ? (PVOID)Object : NULL;
   PostOpenKeyInfo.Status = Status;
   CmiCallRegisteredCallbacks (RegNtPostOpenKey, &PostOpenKeyInfo);
-  if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+  if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
 
   if (Object)
     {

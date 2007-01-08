@@ -285,17 +285,70 @@ ObpSetPermanentObject(IN PVOID ObjectBody,
     }
 }
 
+PWCHAR
+NTAPI
+ObpAllocateObjectNameBuffer(IN ULONG Length,
+                            IN BOOLEAN UseLookaside,
+                            IN OUT PUNICODE_STRING ObjectName)
+{
+    ULONG MaximumLength;
+    PVOID Buffer;
+
+    /* Set the maximum length to the length plus the terminator */
+    MaximumLength = Length + sizeof(UNICODE_NULL);
+
+    /* Check if we should use the lookaside buffer */
+    if (!(UseLookaside) || (MaximumLength > 248))
+    {
+        /* Nope, allocate directly from pool */
+        Buffer = ExAllocatePoolWithTag(PagedPool,
+                                       MaximumLength,
+                                       OB_NAME_TAG);
+    }
+    else
+    {
+        /* Allocate from the lookaside */
+        //MaximumLength = 248; <= hack, we should actually set this...!
+        Buffer = ObpAllocateCapturedAttributes(LookasideNameBufferList);
+    }
+
+    /* Setup the string */
+    ObjectName->Length = (USHORT)Length;
+    ObjectName->MaximumLength = (USHORT)MaximumLength;
+    ObjectName->Buffer = Buffer;
+    return Buffer;
+}
+
+VOID
+NTAPI
+ObpFreeObjectNameBuffer(IN PUNICODE_STRING Name)
+{
+    PVOID Buffer = Name->Buffer;
+
+    /* We know this is a pool-allocation if the size doesn't match */
+    if (Name->MaximumLength != 248)
+    {
+        /* Free it from the pool */
+        ExFreePool(Buffer);
+    }
+    else
+    {
+        /* Otherwise, free from the lookaside */
+        ObpFreeCapturedAttributes(Buffer, LookasideNameBufferList);
+    }
+}
+
 NTSTATUS
 NTAPI
 ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
                      IN PUNICODE_STRING ObjectName,
                      IN KPROCESSOR_MODE AccessMode,
-                     IN BOOLEAN AllocateFromLookaside)
+                     IN BOOLEAN UseLookaside)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG StringLength, MaximumLength;
+    ULONG StringLength;
     PWCHAR StringBuffer = NULL;
-    UNICODE_STRING LocalName = {0}; /* <= GCC 4.0 + Optimizer */
+    UNICODE_STRING LocalName;
     PAGED_CODE();
 
     /* Initialize the Input String */
@@ -331,41 +384,20 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
             }
             else
             {
-                /* Set the maximum length to the length plus the terminator */
-                MaximumLength = StringLength + sizeof(UNICODE_NULL);
-
-                /* Check if we should use the lookaside buffer */
-                //if (!(AllocateFromLookaside) || (MaximumLength > 248))
+                /* Allocate the string buffer */
+                StringBuffer = ObpAllocateObjectNameBuffer(StringLength,
+                                                           UseLookaside,
+                                                           CapturedName);
+                if (!StringBuffer)
                 {
-                    /* Nope, allocate directly from pool */
-                    StringBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                                         MaximumLength,
-                                                         OB_NAME_TAG);
-                }
-                //else
-                {
-                    /* Allocate from the lookaside */
-                //    MaximumLength = 248;
-                //    StringBuffer =
-                //        ObpAllocateCapturedAttributes(LookasideNameBufferList);
-                }
-
-                /* Setup the string */
-                CapturedName->Length = (USHORT)StringLength;
-                CapturedName->MaximumLength = (USHORT)MaximumLength;
-                CapturedName->Buffer = StringBuffer;
-
-                /* Make sure we have a buffer */
-                if (StringBuffer)
-                {
-                    /* Copy the string and null-terminate it */
-                    RtlMoveMemory(StringBuffer, LocalName.Buffer, StringLength);
-                    StringBuffer[StringLength / sizeof(WCHAR)] = UNICODE_NULL;
+                    /* Set failure code */
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
                 }
                 else
                 {
-                    /* Fail */
-                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    /* Copy the name */
+                    RtlMoveMemory(StringBuffer, LocalName.Buffer, StringLength);
+                    StringBuffer[StringLength / sizeof(WCHAR)] = UNICODE_NULL;
                 }
             }
         }
@@ -875,7 +907,7 @@ ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,
 
         /* Release the Capture Info, we don't need it */
         ObpReleaseCapturedAttributes(ObjectCreateInfo);
-        if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+        if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
     }
 
     /* We failed, so release the Buffer */
