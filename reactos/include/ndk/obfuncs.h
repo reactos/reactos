@@ -23,6 +23,7 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
+#include <pstypes.h>
 #include <obtypes.h>
 
 #ifndef NTOS_MODE_USER
