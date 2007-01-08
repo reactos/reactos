@@ -1282,6 +1282,12 @@ IntSystemParametersInfo(
             *((NONCLIENTMETRICSW*)pvParam) = pMetrics;
             return TRUE;
          }
+      case SPI_SETNONCLIENTMETRICS:
+         {
+            ASSERT(pvParam);
+            pMetrics = *((NONCLIENTMETRICSW*)pvParam);
+            return TRUE;
+         }
       case SPI_GETFOCUSBORDERHEIGHT:
          {
             ASSERT(pvParam);
@@ -1445,10 +1451,11 @@ UserSystemParametersInfo(
             return( TRUE);
          }
       case SPI_GETNONCLIENTMETRICS:
+      case SPI_SETNONCLIENTMETRICS:
          {
             NONCLIENTMETRICSW metrics;
 
-            Status = MmCopyFromCaller(&metrics.cbSize, pvParam, sizeof(UINT));
+            Status = MmCopyFromCaller(&metrics, pvParam, sizeof(NONCLIENTMETRICSW));
             if(!NT_SUCCESS(Status))
             {
                SetLastNtError(Status);
@@ -1465,7 +1472,7 @@ UserSystemParametersInfo(
                return( FALSE);
             }
 
-            Status = MmCopyToCaller(pvParam, &metrics.cbSize, sizeof(NONCLIENTMETRICSW));
+            Status = MmCopyToCaller(pvParam, &metrics, sizeof(NONCLIENTMETRICSW));
             if(!NT_SUCCESS(Status))
             {
                SetLastNtError(Status);
