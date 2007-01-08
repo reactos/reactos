@@ -369,21 +369,21 @@ ObReferenceObjectByPointer(IN PVOID Object,
         return STATUS_OBJECT_TYPE_MISMATCH;
     }
 
-    /* Oncrement the reference count and return success */
+    /* Increment the reference count and return success */
     InterlockedIncrement(&Header->PointerCount);
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
-ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
-                        ULONG Attributes,
-                        PACCESS_STATE PassedAccessState,
-                        ACCESS_MASK DesiredAccess,
-                        POBJECT_TYPE ObjectType,
-                        KPROCESSOR_MODE AccessMode,
-                        PVOID ParseContext,
-                        PVOID* ObjectPtr)
+ObReferenceObjectByName(IN PUNICODE_STRING ObjectPath,
+                        IN ULONG Attributes,
+                        IN PACCESS_STATE PassedAccessState,
+                        IN ACCESS_MASK DesiredAccess,
+                        IN POBJECT_TYPE ObjectType,
+                        IN KPROCESSOR_MODE AccessMode,
+                        IN OUT PVOID ParseContext,
+                        OUT PVOID* ObjectPtr)
 {
     PVOID Object = NULL;
     UNICODE_STRING ObjectName;
@@ -391,10 +391,17 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
     OBP_LOOKUP_CONTEXT Context;
     AUX_DATA AuxData;
     ACCESS_STATE AccessState;
+    PAGED_CODE();
+
+    /* Fail quickly */
+    if (!ObjectPath) return STATUS_OBJECT_NAME_INVALID;
 
     /* Capture the name */
     Status = ObpCaptureObjectName(&ObjectName, ObjectPath, AccessMode, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
+
+    /* We also need a valid name after capture */
+    if (!ObjectName.Length) return STATUS_OBJECT_NAME_INVALID;
 
     /* Check if we didn't get an access state */
     if (!PassedAccessState)
@@ -410,21 +417,33 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 
     /* Find the object */
     *ObjectPtr = NULL;
-    Status = ObFindObject(NULL,
-                          &ObjectName,
-                          Attributes,
-                          AccessMode,
-                          &Object,
-                          ObjectType,
-                          &Context,
-                          PassedAccessState,
-                          NULL,
-                          ParseContext,
-                          NULL);
+    Status = ObpLookupObjectName(NULL,
+                                 &ObjectName,
+                                 Attributes,
+                                 ObjectType,
+                                 AccessMode,
+                                 ParseContext,
+                                 NULL,
+                                 NULL,
+                                 PassedAccessState,
+                                 &Context,
+                                 &Object);
+    Context.Object = NULL;
+
+    /* Check if the lookup succeeded */
     if (NT_SUCCESS(Status))
     {
-        /* Return the object */
-        *ObjectPtr = Object;
+        /* Check if access is allowed */
+        if (ObpCheckObjectReference(Object,
+                                    PassedAccessState,
+                                    FALSE,
+                                    AccessMode,
+                                    &Status))
+        {
+            /* Return the object */
+            Status = STATUS_SUCCESS;
+            *ObjectPtr = Object;
+        }
     }
 
     /* Free the access state */

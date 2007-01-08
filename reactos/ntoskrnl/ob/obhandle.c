@@ -24,7 +24,8 @@ PHANDLE_TABLE ObpKernelHandleTable = NULL;
 NTSTATUS
 NTAPI
 ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
-                        IN POBJECT_TYPE ObjectType)
+                        IN POBJECT_TYPE ObjectType,
+                        OUT PBOOLEAN NewObject)
 {
     POBJECT_HEADER_QUOTA_INFO ObjectQuota;
     ULONG PagedPoolCharge, NonPagedPoolCharge;
@@ -32,10 +33,14 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
 
     /* Get quota information */
     ObjectQuota = OBJECT_HEADER_TO_QUOTA_INFO(ObjectHeader);
+    *NewObject = FALSE;
 
     /* Check if this is a new object */
     if (ObjectHeader->Flags & OB_FLAG_CREATE_INFO)
     {
+        /* Set the flag */
+        *NewObject = TRUE;
+
         /* Remove the flag */
         ObjectHeader->Flags &= ~ OB_FLAG_CREATE_INFO;
         if (ObjectQuota)
@@ -95,6 +100,7 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     LONG SystemHandleCount, ProcessHandleCount;
     LONG NewCount;
     POBJECT_HEADER_CREATOR_INFO CreatorInfo;
+    KIRQL CalloutIrql;
 
     /* Get the object type and header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
@@ -109,7 +115,7 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     /* Lock the object type */
     ObpEnterObjectTypeMutex(ObjectType);
 
-    /* FIXME: The process handle count should be in the Handle DB. Investigate */
+    /* Set default counts */
     SystemHandleCount = ObjectHeader->HandleCount;
     ProcessHandleCount = 0;
 
@@ -129,6 +135,13 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
         }
     }
 
+    /* Is the object type keeping track of handles? */
+    if (ObjectType->TypeInfo.MaintainHandleCount)
+    {
+        /* FIXME */
+        DPRINT("Handle Database not yet implemented\n");
+    }
+
     /* Release the lock */
     ObpLeaveObjectTypeMutex(ObjectType);
 
@@ -136,11 +149,13 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     if (ObjectType->TypeInfo.CloseProcedure)
     {
         /* Call it */
+        ObpCalloutStart(&CalloutIrql);
         ObjectType->TypeInfo.CloseProcedure(Process,
                                             ObjectBody,
                                             GrantedAccess,
                                             ProcessHandleCount,
                                             SystemHandleCount);
+        ObpCalloutEnd(CalloutIrql, "Close", ObjectType, ObjectBody);
     }
 
     /* Check if we should delete the object */
@@ -193,6 +208,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     POBJECT_TYPE ObjectType;
     POBJECT_HEADER ObjectHeader;
     ACCESS_MASK GrantedAccess;
+    KIRQL CalloutIrql;
     PAGED_CODE();
 
     /* Get the object data */
@@ -212,15 +228,20 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     if (ObjectType->TypeInfo.OkayToCloseProcedure)
     {
         /* Call it and check if it's not letting us close it */
+        ObpCalloutStart(&CalloutIrql);
         if (!ObjectType->TypeInfo.OkayToCloseProcedure(PsGetCurrentProcess(),
                                                        Body,
                                                        Handle,
                                                        AccessMode))
         {
             /* Fail */
+            ObpCalloutEnd(CalloutIrql, "NtClose", ObjectType, Body);
             ExUnlockHandleTableEntry(HandleTable, HandleEntry);
             return STATUS_HANDLE_NOT_CLOSABLE;
         }
+
+        /* Success, validate callout retrn */
+        ObpCalloutEnd(CalloutIrql, "NtClose", ObjectType, Body);
     }
 
     /* The callback allowed us to close it, but does the handle itself? */
@@ -241,7 +262,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
             }
             else
             {
-                /* Return the error isntead */
+                /* Return the error instead */
                 return STATUS_HANDLE_NOT_CLOSABLE;
             }
         }
@@ -258,9 +279,6 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     ObpDecrementHandleCount(Body, PsGetCurrentProcess(), GrantedAccess);
 
     /* Dereference the object as well */
-    ASSERT(ObjectHeader->Type);
-    ASSERT(ObjectHeader->PointerCount != 0xCCCCCCCC);
-
     ObDereferenceObject(Body);
 
     /* Return to caller */
@@ -315,6 +333,10 @@ ObpIncrementHandleCount(IN PVOID Object,
     POBJECT_TYPE ObjectType;
     ULONG ProcessHandleCount;
     NTSTATUS Status;
+    PEPROCESS ExclusiveProcess;
+    BOOLEAN Exclusive = FALSE, NewObject;
+    POBJECT_HEADER_CREATOR_INFO CreatorInfo;
+    KIRQL CalloutIrql;
 
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -331,8 +353,59 @@ ObpIncrementHandleCount(IN PVOID Object,
     ObpEnterObjectTypeMutex(ObjectType);
 
     /* Charge quota and remove the creator info flag */
-    Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType);
+    Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType, &NewObject);
     if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check if the open is exclusive */
+    if (HandleAttributes & OBJ_EXCLUSIVE)
+    {
+        /* Check if the object allows this, or if the inherit flag was given */
+        if ((HandleAttributes & OBJ_INHERIT) ||
+            !(ObjectHeader->Flags & OB_FLAG_EXCLUSIVE))
+        {
+            /* Incorrect attempt */
+            DPRINT1("Failing here\n");
+            Status = STATUS_INVALID_PARAMETER;
+            goto Quickie;
+        }
+
+        /* Check if we have access to it */
+        ExclusiveProcess = OBJECT_HEADER_TO_EXCLUSIVE_PROCESS(ObjectHeader);
+        if ((!(ExclusiveProcess) && (ObjectHeader->HandleCount)) ||
+            ((ExclusiveProcess) && (ExclusiveProcess != PsGetCurrentProcess())))
+        {
+            /* This isn't the right process */
+            Status = STATUS_ACCESS_DENIED;
+            goto Quickie;
+        }
+
+        /* Now you got exclusive access */
+        Exclusive = TRUE;
+    }
+    else if ((ObjectHeader->Flags & OB_FLAG_EXCLUSIVE) &&
+             (OBJECT_HEADER_TO_EXCLUSIVE_PROCESS(ObjectHeader)))
+    {
+        /* Caller didn't want exclusive access, but the object is exclusive */
+        Status = STATUS_ACCESS_DENIED;
+        goto Quickie;
+    }
+
+    /*
+     * Check if this is an object that went from 0 handles back to existence,
+     * but doesn't have an open procedure, only a close procedure. This means
+     * that it will never realize that the object is back alive, so we must
+     * fail the request.
+     */
+    if (!(ObjectHeader->HandleCount) &&
+        !(NewObject) &&
+        (ObjectType->TypeInfo.MaintainHandleCount) &&
+        !(ObjectType->TypeInfo.OpenProcedure) &&
+        (ObjectType->TypeInfo.CloseProcedure))
+    {
+        /* Fail */
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quickie;
+    }
 
     /* Check if we're opening an existing handle */
     if (OpenReason == ObOpenHandle)
@@ -345,7 +418,7 @@ ObpIncrementHandleCount(IN PVOID Object,
                                  &Status))
         {
             /* Access was denied, so fail */
-            return Status;
+            goto Quickie;
         }
     }
     else if (OpenReason == ObCreateHandle)
@@ -365,30 +438,82 @@ ObpIncrementHandleCount(IN PVOID Object,
             RtlMapGenericMask(&AccessState->RemainingDesiredAccess,
                               &ObjectType->TypeInfo.GenericMapping);
         }
+
+        /* Check if the caller is trying to access system security */
+        if (AccessState->RemainingDesiredAccess & ACCESS_SYSTEM_SECURITY)
+        {
+            /* FIXME: TODO */
+            DPRINT1("ACCESS_SYSTEM_SECURITY not validated!\n");
+        }
+    }
+
+    /* Check if this is an exclusive handle */
+    if (Exclusive)
+    {
+        /* Save the owner process */
+        OBJECT_HEADER_TO_QUOTA_INFO(ObjectHeader)->ExclusiveProcess = Process;
     }
 
     /* Increase the handle count */
     InterlockedIncrement(&ObjectHeader->HandleCount);
+    ProcessHandleCount = 0;
+
+    /* Check if we have a handle database */
+    if (ObjectType->TypeInfo.MaintainHandleCount)
+    {
+        /* FIXME: TODO */
+        DPRINT("Handle DB not yet supported\n");
+    }
 
     /* Release the lock */
     ObpLeaveObjectTypeMutex(ObjectType);
 
-    /* FIXME: Use the Handle Database */
-    ProcessHandleCount = 0;
-
     /* Check if we have an open procedure */
+    Status = STATUS_SUCCESS;
     if (ObjectType->TypeInfo.OpenProcedure)
     {
         /* Call it */
-        ObjectType->TypeInfo.OpenProcedure(OpenReason,
-                                           Process,
-                                           Object,
-                                           AccessState->PreviouslyGrantedAccess,
-                                           ProcessHandleCount);
+        ObpCalloutStart(&CalloutIrql);
+        Status = ObjectType->TypeInfo.OpenProcedure(OpenReason,
+                                                    Process,
+                                                    Object,
+                                                    AccessState->PreviouslyGrantedAccess,
+                                                    ProcessHandleCount);
+        ObpCalloutEnd(CalloutIrql, "Open", ObjectType, Object);
+
+        /* Check if the open procedure failed */
+        if (!NT_SUCCESS(Status))
+        {
+            /* FIXME: This should never happen for now */
+            DPRINT1("Unhandled case\n");
+            KEBUGCHECK(0);
+            return Status;
+        }
+    }
+
+    /* Check if we have creator info */
+    CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(ObjectHeader);
+    if (CreatorInfo)
+    {
+        /* We do, acquire the lock */
+        ObpEnterObjectTypeMutex(ObjectType);
+
+        /* Insert us on the list */
+        InsertTailList(&ObjectType->TypeList, &CreatorInfo->TypeList);
+
+        /* Release the lock */
+        ObpLeaveObjectTypeMutex(ObjectType);
     }
 
     /* Increase total number of handles */
     InterlockedIncrement((PLONG)&ObjectType->TotalNumberOfHandles);
+    if (ObjectType->TotalNumberOfHandles > ObjectType->HighWaterNumberOfHandles)
+    {
+        /* Fixup count */
+        ObjectType->HighWaterNumberOfHandles = ObjectType->TotalNumberOfHandles;
+    }
+
+    /* Trace call and return */
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Incremented count for: %p. Reason: %lx HC LC %lx %lx\n",
             __FUNCTION__,
@@ -396,7 +521,12 @@ ObpIncrementHandleCount(IN PVOID Object,
             OpenReason,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
-    return STATUS_SUCCESS;
+    return Status;
+
+Quickie:
+    /* Release lock and return */
+    ObpLeaveObjectTypeMutex(ObjectType);
+    return Status;
 }
 
 /*++
@@ -439,6 +569,10 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     POBJECT_TYPE ObjectType;
     ULONG ProcessHandleCount;
     NTSTATUS Status;
+    PEPROCESS ExclusiveProcess;
+    BOOLEAN Exclusive = FALSE, NewObject;
+    POBJECT_HEADER_CREATOR_INFO CreatorInfo;
+    KIRQL CalloutIrql;
 
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -454,8 +588,59 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     ObpEnterObjectTypeMutex(ObjectType);
 
     /* Charge quota and remove the creator info flag */
-    Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType);
+    Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType, &NewObject);
     if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check if the open is exclusive */
+    if (HandleAttributes & OBJ_EXCLUSIVE)
+    {
+        /* Check if the object allows this, or if the inherit flag was given */
+        if ((HandleAttributes & OBJ_INHERIT) ||
+            !(ObjectHeader->Flags & OB_FLAG_EXCLUSIVE))
+        {
+            /* Incorrect attempt */
+            DPRINT1("failing here\n");
+            Status = STATUS_INVALID_PARAMETER;
+            goto Quickie;
+        }
+
+        /* Check if we have access to it */
+        ExclusiveProcess = OBJECT_HEADER_TO_EXCLUSIVE_PROCESS(ObjectHeader);
+        if ((!(ExclusiveProcess) && (ObjectHeader->HandleCount)) ||
+            ((ExclusiveProcess) && (ExclusiveProcess != PsGetCurrentProcess())))
+        {
+            /* This isn't the right process */
+            Status = STATUS_ACCESS_DENIED;
+            goto Quickie;
+        }
+
+        /* Now you got exclusive access */
+        Exclusive = TRUE;
+    }
+    else if ((ObjectHeader->Flags & OB_FLAG_EXCLUSIVE) &&
+             (OBJECT_HEADER_TO_EXCLUSIVE_PROCESS(ObjectHeader)))
+    {
+        /* Caller didn't want exclusive access, but the object is exclusive */
+        Status = STATUS_ACCESS_DENIED;
+        goto Quickie;
+    }
+
+    /*
+     * Check if this is an object that went from 0 handles back to existence,
+     * but doesn't have an open procedure, only a close procedure. This means
+     * that it will never realize that the object is back alive, so we must
+     * fail the request.
+     */
+    if (!(ObjectHeader->HandleCount) &&
+        !(NewObject) &&
+        (ObjectType->TypeInfo.MaintainHandleCount) &&
+        !(ObjectType->TypeInfo.OpenProcedure) &&
+        (ObjectType->TypeInfo.CloseProcedure))
+    {
+        /* Fail */
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quickie;
+    }
 
     /* Convert MAXIMUM_ALLOWED to GENERIC_ALL */
     if (*DesiredAccess & MAXIMUM_ALLOWED)
@@ -473,35 +658,85 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
                           &ObjectType->TypeInfo.GenericMapping);
     }
 
+    /* Check if this is an exclusive handle */
+    if (Exclusive)
+    {
+        /* Save the owner process */
+        OBJECT_HEADER_TO_QUOTA_INFO(ObjectHeader)->ExclusiveProcess = Process;
+    }
+
     /* Increase the handle count */
     InterlockedIncrement(&ObjectHeader->HandleCount);
-
-    /* Release the object type */
-    ObpLeaveObjectTypeMutex(ObjectType);
-
-    /* FIXME: Use the Handle Database */
     ProcessHandleCount = 0;
 
+    /* Check if we have a handle database */
+    if (ObjectType->TypeInfo.MaintainHandleCount)
+    {
+        /* FIXME: TODO */
+        DPRINT("Handle DB not yet supported\n");
+    }
+
+    /* Release the lock */
+    ObpLeaveObjectTypeMutex(ObjectType);
+
     /* Check if we have an open procedure */
+    Status = STATUS_SUCCESS;
     if (ObjectType->TypeInfo.OpenProcedure)
     {
         /* Call it */
-        ObjectType->TypeInfo.OpenProcedure(ObCreateHandle,
-                                           Process,
-                                           Object,
-                                           *DesiredAccess,
-                                           ProcessHandleCount);
+        ObpCalloutStart(&CalloutIrql);
+        Status = ObjectType->TypeInfo.OpenProcedure(ObCreateHandle,
+                                                    Process,
+                                                    Object,
+                                                    *DesiredAccess,
+                                                    ProcessHandleCount);
+        ObpCalloutEnd(CalloutIrql, "Open", ObjectType, Object);
+
+        /* Check if the open procedure failed */
+        if (!NT_SUCCESS(Status))
+        {
+            /* FIXME: This should never happen for now */
+            DPRINT1("Unhandled case\n");
+            KEBUGCHECK(0);
+            return Status;
+        }
+    }
+
+    /* Check if we have creator info */
+    CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(ObjectHeader);
+    if (CreatorInfo)
+    {
+        /* We do, acquire the lock */
+        ObpEnterObjectTypeMutex(ObjectType);
+
+        /* Insert us on the list */
+        InsertTailList(&ObjectType->TypeList, &CreatorInfo->TypeList);
+
+        /* Release the lock */
+        ObpLeaveObjectTypeMutex(ObjectType);
     }
 
     /* Increase total number of handles */
     InterlockedIncrement((PLONG)&ObjectType->TotalNumberOfHandles);
+    if (ObjectType->TotalNumberOfHandles > ObjectType->HighWaterNumberOfHandles)
+    {
+        /* Fixup count */
+        ObjectType->HighWaterNumberOfHandles = ObjectType->TotalNumberOfHandles;
+    }
+
+    /* Trace call and return */
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Incremented count for: %p. UNNAMED HC LC %lx %lx\n",
             __FUNCTION__,
             Object,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
-    return STATUS_SUCCESS;
+    return Status;
+
+Quickie:
+    /* Release lock and return */
+    ObpLeaveObjectTypeMutex(ObjectType);
+    return Status;
 }
 
 /*++
@@ -709,12 +944,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
 *
 * @return <FILLMEIN>.
 *
-* @remarks Gloomy says OpenReason is "enables Security" if == 1.
-*          since this function *has* to call ObpIncrementHandleCount,
-*          which needs to somehow know the OpenReason, and since
-*          ObOpenHandle == 1, I'm guessing this is actually the
-*          OpenReason. Also makes sense since this function is shared
-*          by Duplication, Creation and Opening..
+* @remarks Cleans up the Lookup Context on success.
 *
 *--*/
 NTSTATUS
@@ -725,6 +955,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
                 IN PACCESS_STATE AccessState,
                 IN ULONG AdditionalReferences,
                 IN ULONG HandleAttributes,
+                IN POBP_LOOKUP_CONTEXT Context,
                 IN KPROCESSOR_MODE AccessMode,
                 OUT PVOID *ReturnedObject,
                 OUT PHANDLE ReturnedHandle)
@@ -1485,14 +1716,11 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 {
     PVOID Object = NULL;
     UNICODE_STRING ObjectName;
-    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
     NTSTATUS Status;
-    OBP_LOOKUP_CONTEXT Context;
     POBJECT_HEADER ObjectHeader;
-    AUX_DATA AuxData;
     PGENERIC_MAPPING GenericMapping = NULL;
-    ACCESS_STATE AccessState;
     OB_OPEN_REASON OpenReason;
+    POB_TEMP_BUFFER TempBuffer;
     PAGED_CODE();
 
     /* Check if we didn't get any Object Attributes */
@@ -1503,11 +1731,17 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Allocate the temporary buffer */
+    TempBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                       sizeof(OB_TEMP_BUFFER),
+                                       TAG_OB_TEMP_STORAGE);
+    if (!TempBuffer) return STATUS_INSUFFICIENT_RESOURCES;
+
     /* Capture all the info */
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                         AccessMode,
                                         TRUE,
-                                        &ObjectCreateInfo,
+                                        &TempBuffer->ObjectCreateInfo,
                                         &ObjectName);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -1518,35 +1752,40 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
         if (ObjectType) GenericMapping = &ObjectType->TypeInfo.GenericMapping;
 
         /* Use our built-in access state */
-        PassedAccessState = &AccessState;
-        Status = SeCreateAccessState(&AccessState,
-                                     &AuxData,
+        PassedAccessState = &TempBuffer->LocalAccessState;
+        Status = SeCreateAccessState(&TempBuffer->LocalAccessState,
+                                     &TempBuffer->AuxData,
                                      DesiredAccess,
                                      GenericMapping);
         if (!NT_SUCCESS(Status)) goto Quickie;
     }
 
     /* Get the security descriptor */
-    if (ObjectCreateInfo.SecurityDescriptor)
+    if (TempBuffer->ObjectCreateInfo.SecurityDescriptor)
     {
         /* Save it in the access state */
         PassedAccessState->SecurityDescriptor =
-            ObjectCreateInfo.SecurityDescriptor;
+            TempBuffer->ObjectCreateInfo.SecurityDescriptor;
     }
 
     /* Now do the lookup */
-    Status = ObFindObject(ObjectCreateInfo.RootDirectory,
-                          &ObjectName,
-                          ObjectCreateInfo.Attributes,
-                          AccessMode,
-                          &Object,
-                          ObjectType,
-                          &Context,
-                          PassedAccessState,
-                          ObjectCreateInfo.SecurityQos,
-                          ParseContext,
-                          NULL);
-    if (!NT_SUCCESS(Status)) goto Cleanup;
+    Status = ObpLookupObjectName(TempBuffer->ObjectCreateInfo.RootDirectory,
+                                 &ObjectName,
+                                 TempBuffer->ObjectCreateInfo.Attributes,
+                                 ObjectType,
+                                 AccessMode,
+                                 ParseContext,
+                                 TempBuffer->ObjectCreateInfo.SecurityQos,
+                                 NULL,
+                                 PassedAccessState,
+                                 &TempBuffer->LookupContext,
+                                 &Object);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Cleanup after lookup */
+        TempBuffer->LookupContext.Object = NULL;
+        goto Cleanup;
+    }
 
     /* Check if this object has create information */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -1570,29 +1809,44 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
         OpenReason = ObOpenHandle;
     }
 
-    /* Create the actual handle now */
-    Status = ObpCreateHandle(OpenReason,
-                             Object,
-                             ObjectType,
-                             PassedAccessState,
-                             0,
-                             ObjectCreateInfo.Attributes,
-                             AccessMode,
-                             NULL,
-                             Handle);
-    if (!NT_SUCCESS(Status)) ObDereferenceObject(Object);
+    /* Check if we have invalid object attributes */
+    if (ObjectHeader->Type->TypeInfo.InvalidAttributes &
+        TempBuffer->ObjectCreateInfo.Attributes)
+    {
+        /* Set failure code */
+        Status = STATUS_INVALID_PARAMETER;
+        TempBuffer->LookupContext.Object = NULL;
+    }
+    else
+    {
+        /* Create the actual handle now */
+        Status = ObpCreateHandle(OpenReason,
+                                 Object,
+                                 ObjectType,
+                                 PassedAccessState,
+                                 0,
+                                 TempBuffer->ObjectCreateInfo.Attributes,
+                                 &TempBuffer->LookupContext,
+                                 AccessMode,
+                                 NULL,
+                                 Handle);
+        if (!NT_SUCCESS(Status)) ObDereferenceObject(Object);
+    }
 
 Cleanup:
     /* Delete the access state */
-    if (PassedAccessState == &AccessState)
+    if (PassedAccessState == &TempBuffer->LocalAccessState)
     {
         SeDeleteAccessState(PassedAccessState);
     }
 
-    /* Release the object attributes and return status */
 Quickie:
-    ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+    /* Release the object attributes and temporary buffer */
+    ObpReleaseCapturedAttributes(&TempBuffer->ObjectCreateInfo);
     if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+    ExFreePool(TempBuffer);
+
+    /* Return status */
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - returning Object %p with PC S: %lx %lx\n",
             __FUNCTION__,
@@ -1684,6 +1938,7 @@ ObOpenObjectByPointer(IN PVOID Object,
                              PassedAccessState,
                              0,
                              HandleAttributes,
+                             NULL,
                              AccessMode,
                              NULL,
                              Handle);
@@ -1747,39 +2002,70 @@ ObFindHandleForObject(IN PEPROCESS Process,
 NTSTATUS
 NTAPI
 ObInsertObject(IN PVOID Object,
-               IN PACCESS_STATE PassedAccessState OPTIONAL,
+               IN PACCESS_STATE AccessState OPTIONAL,
                IN ACCESS_MASK DesiredAccess,
-               IN ULONG AdditionalReferences,
-               OUT PVOID *ReferencedObject OPTIONAL,
+               IN ULONG ObjectPointerBias,
+               OUT PVOID *NewObject OPTIONAL,
                OUT PHANDLE Handle)
 {
     POBJECT_CREATE_INFORMATION ObjectCreateInfo;
-    POBJECT_HEADER Header;
+    POBJECT_HEADER ObjectHeader;
     POBJECT_TYPE ObjectType;
-    PVOID FoundObject = Object;
-    POBJECT_HEADER FoundHeader = NULL;
-    NTSTATUS Status = STATUS_SUCCESS, RealStatus;
-    PSECURITY_DESCRIPTOR DirectorySd = NULL;
-    BOOLEAN SdAllocated;
-    OBP_LOOKUP_CONTEXT Context;
+    PUNICODE_STRING ObjectName;
+    PVOID InsertObject;
+    PSECURITY_DESCRIPTOR ParentDescriptor = NULL;
+    BOOLEAN SdAllocated = FALSE;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
-    ACCESS_STATE AccessState;
+    OBP_LOOKUP_CONTEXT Context;
+    ACCESS_STATE LocalAccessState;
     AUX_DATA AuxData;
-    BOOLEAN IsNamed = FALSE;
-    OB_OPEN_REASON OpenReason = ObCreateHandle;
+    OB_OPEN_REASON OpenReason;
+    KPROCESSOR_MODE PreviousMode;
+    NTSTATUS Status = STATUS_SUCCESS, RealStatus;
     PAGED_CODE();
 
-    /* Get the Header and Create Info */
-    Header = OBJECT_TO_OBJECT_HEADER(Object);
-    ObjectCreateInfo = Header->ObjectCreateInfo;
-    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(Header);
-    ObjectType = Header->Type;
+    /* Get the Header */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+
+    /* Detect invalid insert */
+    if (!(ObjectHeader->Flags & OB_FLAG_CREATE_INFO))
+    {
+        /* Display warning and break into debugger */
+        DPRINT1("OB: Attempting to insert existing object %08x\n", Object);
+        KEBUGCHECK(0);
+        DbgBreakPoint();
+
+        /* Allow debugger to continue */
+        ObDereferenceObject(Object);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get the create and name info, as well as the object type */
+    ObjectCreateInfo = ObjectHeader->ObjectCreateInfo;
+    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+    ObjectType = ObjectHeader->Type;
+
 
     /* Check if this is an named object */
-    if ((ObjectNameInfo) && (ObjectNameInfo->Name.Buffer)) IsNamed = TRUE;
+    ObjectName = NULL;
+    if ((ObjectNameInfo) && (ObjectNameInfo->Name.Buffer))
+    {
+        /* Get the object name */
+        ObjectName = &ObjectNameInfo->Name;
+    }
+
+    /* Sanity check, but broken on ROS due to Cm */
+#if 0
+    ASSERT((Handle) ||
+           ((ObjectPointerBias == 0) &&
+            (ObjectName == NULL) &&
+            (ObjectType->TypeInfo.SecurityRequired) &&
+            (NewObject == NULL)));
+#endif
 
     /* Check if the object is unnamed and also doesn't have security */
-    if ((!ObjectType->TypeInfo.SecurityRequired) && !(IsNamed))
+    PreviousMode = KeGetPreviousMode();
+    if (!(ObjectType->TypeInfo.SecurityRequired) && !(ObjectName))
     {
         /* ReactOS HACK */
         if (Handle)
@@ -1790,16 +2076,17 @@ ObInsertObject(IN PVOID Object,
             /* Create the handle */
             Status = ObpCreateUnnamedHandle(Object,
                                             DesiredAccess,
-                                            AdditionalReferences + 1,
+                                            ObjectPointerBias + 1,
                                             ObjectCreateInfo->Attributes,
-                                            ExGetPreviousMode(),
-                                            ReferencedObject,
+                                            PreviousMode,
+                                            NewObject,
                                             Handle);
         }
 
         /* Free the create information */
         ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);
-        Header->ObjectCreateInfo = NULL;
+        ObjectHeader->ObjectCreateInfo = NULL;
+
 
         /* Remove the extra keep-alive reference */
         if (Handle) ObDereferenceObject(Object);
@@ -1808,17 +2095,17 @@ ObInsertObject(IN PVOID Object,
         OBTRACE(OB_HANDLE_DEBUG,
                 "%s - returning Object with PC S: %lx %lx\n",
                 __FUNCTION__,
-                OBJECT_TO_OBJECT_HEADER(Object)->PointerCount,
+                ObjectHeader->PointerCount,
                 Status);
         return Status;
     }
 
     /* Check if we didn't get an access state */
-    if (!PassedAccessState)
+    if (!AccessState)
     {
         /* Use our built-in access state */
-        PassedAccessState = &AccessState;
-        Status = SeCreateAccessState(&AccessState,
+        AccessState = &LocalAccessState;
+        Status = SeCreateAccessState(&LocalAccessState,
                                      &AuxData,
                                      DesiredAccess,
                                      &ObjectType->TypeInfo.GenericMapping);
@@ -1831,37 +2118,50 @@ ObInsertObject(IN PVOID Object,
     }
 
     /* Save the security descriptor */
-    PassedAccessState->SecurityDescriptor =
-        ObjectCreateInfo->SecurityDescriptor;
+    AccessState->SecurityDescriptor = ObjectCreateInfo->SecurityDescriptor;
+
+    /* Validate the access mask */
+    Status = STATUS_SUCCESS;//ObpValidateAccessMask(AccessState);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        ObDereferenceObject(Object);
+        return Status;
+    }
+
+    /* Setup a lookup context */
+    Context.Object = NULL;
+    InsertObject = Object;
+    OpenReason = ObCreateHandle;
 
     /* Check if the object is named */
-    if (IsNamed)
+    if (ObjectName)
     {
         /* Look it up */
-        Status = ObFindObject(ObjectCreateInfo->RootDirectory,
-                              &ObjectNameInfo->Name,
-                              ObjectCreateInfo->Attributes,
-                              (Header->Flags & OB_FLAG_KERNEL_MODE) ?
-                              KernelMode : UserMode,
-                              &FoundObject,
-                              ObjectType,
-                              &Context,
-                              PassedAccessState,
-                              ObjectCreateInfo->SecurityQos,
-                              ObjectCreateInfo->ParseContext,
-                              Object);
+        Status = ObpLookupObjectName(ObjectCreateInfo->RootDirectory,
+                                     ObjectName,
+                                     ObjectCreateInfo->Attributes,
+                                     ObjectType,
+                                     (ObjectHeader->Flags & OB_FLAG_KERNEL_MODE) ?
+                                     KernelMode : UserMode,
+                                     ObjectCreateInfo->ParseContext,
+                                     ObjectCreateInfo->SecurityQos,
+                                     Object,
+                                     AccessState,
+                                     &Context,
+                                     &InsertObject);
+
         /* Check if we found an object that doesn't match the one requested */
-        if ((NT_SUCCESS(Status)) && (FoundObject) && (Object != FoundObject))
+        if ((NT_SUCCESS(Status)) && (InsertObject) && (Object != InsertObject))
         {
             /* This means we're opening an object, not creating a new one */
-            FoundHeader = OBJECT_TO_OBJECT_HEADER(FoundObject);
             OpenReason = ObOpenHandle;
 
             /* Make sure the caller said it's OK to do this */
             if (ObjectCreateInfo->Attributes & OBJ_OPENIF)
             {
                 /* He did, but did he want this type? */
-                if (ObjectType != FoundHeader->Type)
+                if (ObjectType != OBJECT_TO_OBJECT_HEADER(InsertObject)->Type)
                 {
                     /* Wrong type, so fail */
                     Status = STATUS_OBJECT_TYPE_MISMATCH;
@@ -1884,43 +2184,53 @@ ObInsertObject(IN PVOID Object,
         {
             /* We failed, dereference the object and delete the access state */
             ObDereferenceObject(Object);
-            if (PassedAccessState == &AccessState)
+            if (AccessState == &LocalAccessState)
             {
                 /* We used a local one; delete it */
-                SeDeleteAccessState(PassedAccessState);
+                SeDeleteAccessState(AccessState);
             }
 
             /* Return failure code */
             return Status;
         }
+        else
+        {
+            /* Check if this is a symbolic link */
+            if (ObjectType == ObSymbolicLinkType)
+            {
+                /* Create the internal name */
+                DPRINT("FIXME: Created link!\n");
+                //ObpCreateSymbolicLinkName(FoundObject);
+            }
+        }
     }
 
     /* Now check if this object is being created */
-    if (FoundObject == Object)
+    if (InsertObject == Object)
     {
         /* Check if it's named or forces security */
-        if ((IsNamed) || (ObjectType->TypeInfo.SecurityRequired))
+        if ((ObjectName) || (ObjectType->TypeInfo.SecurityRequired))
         {
             /* Make sure it's inserted into an object directory */
             if ((ObjectNameInfo) && (ObjectNameInfo->Directory))
             {
                 /* Get the current descriptor */
                 ObGetObjectSecurity(ObjectNameInfo->Directory,
-                                    &DirectorySd,
+                                    &ParentDescriptor,
                                     &SdAllocated);
             }
 
             /* Now assign it */
-            Status = ObAssignSecurity(PassedAccessState,
-                                      DirectorySd,
+            Status = ObAssignSecurity(AccessState,
+                                      ParentDescriptor,
                                       Object,
                                       ObjectType);
 
             /* Check if we captured one */
-            if (DirectorySd)
+            if (ParentDescriptor)
             {
                 /* We did, release it */
-                ObReleaseObjectSecurity(DirectorySd, SdAllocated);
+                ObReleaseObjectSecurity(ParentDescriptor, SdAllocated);
             }
             else if (NT_SUCCESS(Status))
             {
@@ -1930,8 +2240,8 @@ ObInsertObject(IN PVOID Object,
                                             TRUE);
 
                 /* Clear the current one */
-                PassedAccessState->SecurityDescriptor =
-                    ObjectCreateInfo->SecurityDescriptor = NULL;
+                AccessState->SecurityDescriptor =
+                ObjectCreateInfo->SecurityDescriptor = NULL;
             }
         }
 
@@ -1941,10 +2251,10 @@ ObInsertObject(IN PVOID Object,
             /* We failed, dereference the object and delete the access state */
             KEBUGCHECK(0);
             ObDereferenceObject(Object);
-            if (PassedAccessState == &AccessState)
+            if (AccessState == &LocalAccessState)
             {
                 /* We used a local one; delete it */
-                SeDeleteAccessState(PassedAccessState);
+                SeDeleteAccessState(AccessState);
             }
 
             /* Return failure code */
@@ -1961,33 +2271,28 @@ ObInsertObject(IN PVOID Object,
      * a handle if Handle is NULL when the Registry Code calls it, because
      * the registry code totally bastardizes the Ob and needs to be fixed
      */
+    ObjectHeader->ObjectCreateInfo = NULL;
     if (Handle)
     {
         /* Create the handle */
         Status = ObpCreateHandle(OpenReason,
-                                 FoundObject,
+                                 InsertObject,
                                  NULL,
-                                 PassedAccessState,
-                                 AdditionalReferences + 1,
+                                 AccessState,
+                                 ObjectPointerBias + 1,
                                  ObjectCreateInfo->Attributes,
-                                 ExGetPreviousMode(),
-                                 ReferencedObject,
+                                 &Context,
+                                 PreviousMode,
+                                 NewObject,
                                  Handle);
     }
-
-    /* We can delete the Create Info now */
-    Header->ObjectCreateInfo = NULL;
-    ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);
 
     /* Check if creating the handle failed */
     if (!NT_SUCCESS(Status))
     {
         /* If the object had a name, backout everything */
-        if (IsNamed) ObpDeleteNameCheck(Object);
+        if (ObjectName) ObpDeleteNameCheck(Object);
     }
-
-    /* Remove the extra keep-alive reference */
-    if (Handle) ObDereferenceObject(Object);
 
     /* Check our final status */
     if (!NT_SUCCESS(Status))
@@ -1997,12 +2302,17 @@ ObInsertObject(IN PVOID Object,
         RealStatus = Status;
     }
 
-    /* Check if we created our own access state */
-    if (PassedAccessState == &AccessState)
-    {
-        /* We used a local one; delete it */
-        SeDeleteAccessState(PassedAccessState);
-    }
+
+
+
+    /* Remove the extra keep-alive reference */
+    if (Handle) ObDereferenceObject(Object);
+
+    /* We can delete the Create Info now */
+    ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);
+
+    /* Check if we created our own access state and delete it if so */
+    if (AccessState == &LocalAccessState) SeDeleteAccessState(AccessState);
 
     /* Return status code */
     OBTRACE(OB_HANDLE_DEBUG,

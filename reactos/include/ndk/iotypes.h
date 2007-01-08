@@ -23,9 +23,7 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
-#if !defined(_NTIFS_)
-typedef PVOID PFS_FILTER_CALLBACKS;
-#endif
+#include <ifssupp.h>
 
 //
 // I/O Completion Access Rights

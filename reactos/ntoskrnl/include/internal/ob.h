@@ -81,6 +81,18 @@ typedef struct _OBP_CLOSE_HANDLE_CONTEXT
 } OBP_CLOSE_HANDLE_CONTEXT, *POBP_CLOSE_HANDLE_CONTEXT;
 
 //
+// Private Temporary Buffer for Lookup Routines
+//
+#define TAG_OB_TEMP_STORAGE TAG('O', 'b', 'S', 't')
+typedef struct _OB_TEMP_BUFFER
+{
+    ACCESS_STATE LocalAccessState;
+    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
+    OBP_LOOKUP_CONTEXT LookupContext;
+    AUX_DATA AuxData;
+} OB_TEMP_BUFFER, *POB_TEMP_BUFFER;
+
+//
 // Directory Namespace Functions
 //
 BOOLEAN
@@ -152,18 +164,18 @@ ObKillProcess(
 //
 NTSTATUS
 NTAPI
-ObFindObject(
+ObpLookupObjectName(
     IN HANDLE RootHandle,
     IN PUNICODE_STRING ObjectName,
     IN ULONG Attributes,
-    IN KPROCESSOR_MODE PreviousMode,
-    IN PVOID *ReturnedObject,
     IN POBJECT_TYPE ObjectType,
-    IN POBP_LOOKUP_CONTEXT Context,
-    IN PACCESS_STATE AccessState,
+    IN KPROCESSOR_MODE AccessMode,
+    IN OUT PVOID ParseContext,
     IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    IN PVOID ParseContext,
-    IN PVOID Insert
+    IN PVOID InsertObject,
+    IN PACCESS_STATE AccessState,
+    IN POBP_LOOKUP_CONTEXT LookupContext,
+    OUT PVOID *FoundObject
 );
 
 //
@@ -268,6 +280,12 @@ ObDereferenceDeviceMap(
 );
 
 VOID
+FASTCALL
+ObfDereferenceDeviceMap(
+    IN PVOID DeviceMap
+);
+
+VOID
 NTAPI
 ObInheritDeviceMap(
     IN PEPROCESS Parent,
@@ -314,14 +332,50 @@ ObpDereferenceCachedSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
+//
+// Object Security Routines
+//
 BOOLEAN
 NTAPI
 ObCheckObjectAccess(
     IN PVOID Object,
     IN OUT PACCESS_STATE AccessState,
-    IN BOOLEAN Unknown,
+    IN BOOLEAN LockHeld,
     IN KPROCESSOR_MODE AccessMode,
     OUT PNTSTATUS ReturnedStatus
+);
+
+BOOLEAN
+NTAPI
+ObCheckCreateObjectAccess(
+    IN PVOID Object,
+    IN ACCESS_MASK CreateAccess,
+    IN PACCESS_STATE AccessState,
+    IN PUNICODE_STRING ComponentName,
+    IN BOOLEAN LockHeld,
+    IN KPROCESSOR_MODE AccessMode,
+    OUT PNTSTATUS AccessStatus
+);
+
+BOOLEAN
+NTAPI
+ObpCheckTraverseAccess(
+    IN PVOID Object,
+    IN ACCESS_MASK TraverseAccess,
+    IN PACCESS_STATE AccessState OPTIONAL,
+    IN BOOLEAN LockHeld,
+    IN KPROCESSOR_MODE AccessMode,
+    OUT PNTSTATUS AccessStatus
+);
+
+BOOLEAN
+NTAPI
+ObpCheckObjectReference(
+    IN PVOID Object,
+    IN OUT PACCESS_STATE AccessState,
+    IN BOOLEAN LockHeld,
+    IN KPROCESSOR_MODE AccessMode,
+    OUT PNTSTATUS AccessStatus
 );
 
 //

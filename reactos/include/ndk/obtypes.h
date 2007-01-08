@@ -23,16 +23,14 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
-
-//
-// If the IFS wasn't included, define this here
-//
-#ifndef EX_PUSH_LOCK
-#define EX_PUSH_LOCK    ULONG_PTR
+#ifndef NTOS_MODE_USER
+#include <extypes.h>
 #endif
 
-#ifdef NTOS_MODE_USER
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WS03SP1
 
+#ifdef NTOS_MODE_USER
 //
 // Definitions for Object Creation
 //
@@ -86,6 +84,7 @@ Author:
 #define OB_FLAG_PERMANENT                       0x10
 #define OB_FLAG_SECURITY                        0x20
 #define OB_FLAG_SINGLE_PROCESS                  0x40
+#define OB_FLAG_DEFER_DELETE                    0x80
 
 #define OBJECT_TO_OBJECT_HEADER(o)                          \
     CONTAINING_RECORD((o), OBJECT_HEADER, Body)
@@ -106,6 +105,11 @@ Author:
     ((POBJECT_HEADER_CREATOR_INFO)(!((h)->Flags &           \
         OB_FLAG_CREATOR_INFO) ? NULL: ((PCHAR)(h) -         \
         sizeof(OBJECT_HEADER_CREATOR_INFO))))
+
+#define OBJECT_HEADER_TO_EXCLUSIVE_PROCESS(h)               \
+    ((!((h)->Flags & OB_FLAG_EXCLUSIVE)) ?                  \
+        NULL: (((POBJECT_HEADER_QUOTA_INFO)((PCHAR)(h) -    \
+        (h)->QuotaInfoOffset))->ExclusiveProcess))
 
 //
 // Reasons for Open Callback
@@ -359,8 +363,8 @@ typedef struct _OBJECT_DIRECTORY
     struct _OBJECT_DIRECTORY_ENTRY *HashBuckets[NUMBER_HASH_BUCKETS];
 #if (NTDDI_VERSION < NTDDI_WINXP)
     ERESOURCE Lock;
-#elif (NTDDI_VERSION >= NTDDI_WINXP)
-    ERESOURCE Lock; // FIXME: HACKHACK, SHOULD BE EX_PUSH_LOCK
+#else
+    EX_PUSH_LOCK Lock;
 #endif
 #if (NTDDI_VERSION < NTDDI_WINXP)
     BOOLEAN CurrentEntryValid;

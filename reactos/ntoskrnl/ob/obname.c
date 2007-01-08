@@ -14,8 +14,9 @@
 #define NTDDI_VERSION NTDDI_WINXP
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
+BOOLEAN ObpCaseInsensitive = TRUE;
 POBJECT_DIRECTORY NameSpaceRoot = NULL;
 POBJECT_DIRECTORY ObpTypeDirectoryObject = NULL;
 
@@ -181,6 +182,8 @@ ObpDeleteNameCheck(IN PVOID Object)
          (ObjectNameInfo->Name.Length) &&
          !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
     {
+        Context.Object = NULL;
+
         /* Make sure it's still inserted */
         Context.Directory = ObjectNameInfo->Directory;
         Context.DirectoryLocked = TRUE;
@@ -220,6 +223,8 @@ ObpDeleteNameCheck(IN PVOID Object)
             ExFreePool(ObjectNameInfo->Name.Buffer);
             RtlInitEmptyUnicodeString(&ObjectNameInfo->Name, NULL, 0);
 
+            Context.Object = NULL;
+
             /* Clear the current directory and de-reference it */
             Directory = ObjectNameInfo->Directory;
             ObjectNameInfo->Directory = NULL;
@@ -237,17 +242,17 @@ ObpDeleteNameCheck(IN PVOID Object)
 
 NTSTATUS
 NTAPI
-ObFindObject(IN HANDLE RootHandle,
-             IN PUNICODE_STRING ObjectName,
-             IN ULONG Attributes,
-             IN KPROCESSOR_MODE AccessMode,
-             IN PVOID *ReturnedObject,
-             IN POBJECT_TYPE ObjectType,
-             IN POBP_LOOKUP_CONTEXT Context,
-             IN PACCESS_STATE AccessState,
-             IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-             IN OUT PVOID ParseContext,
-             OUT PVOID ExpectedObject)
+ObpLookupObjectName(IN HANDLE RootHandle,
+                    IN PUNICODE_STRING ObjectName,
+                    IN ULONG Attributes,
+                    IN POBJECT_TYPE ObjectType,
+                    IN KPROCESSOR_MODE AccessMode,
+                    IN OUT PVOID ParseContext,
+                    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+                    IN PVOID ExpectedObject,
+                    IN PACCESS_STATE AccessState,
+                    IN POBP_LOOKUP_CONTEXT Context,
+                    OUT PVOID *ReturnedObject)
 {
     PVOID RootDirectory;
     PVOID CurrentDirectory = NULL;
@@ -500,7 +505,7 @@ ReparseNewDir:
             ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(CurrentHeader);
 
             /* Copy the Name */
-            RtlCopyMemory(NewName, PartName.Buffer, PartName.MaximumLength);
+            RtlMoveMemory(NewName, PartName.Buffer, PartName.MaximumLength);
 
             /* Free old name */
             if (ObjectNameInfo->Name.Buffer) ExFreePool(ObjectNameInfo->Name.Buffer);
@@ -526,7 +531,7 @@ Reparse:
         /* We found it, so now get its header */
         CurrentHeader = OBJECT_TO_OBJECT_HEADER(CurrentObject);
 
-        /* 
+        /*
          * Check for a parse Procedure, but don't bother to parse for an insert
          * unless it's a Symbolic Link, in which case we MUST parse
          */
@@ -674,9 +679,9 @@ Reparse:
 
 NTSTATUS
 NTAPI
-ObQueryNameString(IN  PVOID Object,
+ObQueryNameString(IN PVOID Object,
                   OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
-                  IN  ULONG Length,
+                  IN ULONG Length,
                   OUT PULONG ReturnLength)
 {
     POBJECT_HEADER_NAME_INFO LocalInfo;
