@@ -828,7 +828,6 @@ ObQueryNameString(IN PVOID Object,
             else
             {
                 /* Directory without a name, we add "..." */
-                DPRINT("Nameless Directory\n");
                 ObjectName -= sizeof(L"...");
                 ObjectName = L"...";
                 break;

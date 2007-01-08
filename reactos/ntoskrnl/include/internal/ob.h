@@ -149,6 +149,18 @@ ObpParseSymbolicLink(
     OUT PVOID *NextObject
 );
 
+VOID
+NTAPI
+ObpCreateSymbolicLinkName(
+    IN POBJECT_SYMBOLIC_LINK SymbolicLink
+);
+
+VOID
+NTAPI
+ObpDeleteSymbolicLinkName(
+    IN POBJECT_SYMBOLIC_LINK SymbolicLink
+);
+
 //
 // Process/Handle Table Init/Rundown
 //

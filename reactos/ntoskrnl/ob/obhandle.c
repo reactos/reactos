@@ -2506,8 +2506,7 @@ ObInsertObject(IN PVOID Object,
             if (ObjectType == ObSymbolicLinkType)
             {
                 /* Create the internal name */
-                DPRINT("FIXME: Created link!\n");
-                //ObpCreateSymbolicLinkName(FoundObject);
+                ObpCreateSymbolicLinkName(Object);
             }
         }
     }

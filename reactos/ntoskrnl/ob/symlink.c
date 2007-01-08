@@ -19,6 +19,39 @@ POBJECT_TYPE ObSymbolicLinkType = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+ObpDeleteSymbolicLinkName(IN POBJECT_SYMBOLIC_LINK SymbolicLink)
+{
+    /* FIXME: Device maps not supported yet */
+
+}
+
+VOID
+NTAPI
+ObpCreateSymbolicLinkName(IN POBJECT_SYMBOLIC_LINK SymbolicLink)
+{
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_HEADER_NAME_INFO ObjectNameInfo;
+
+    /* Get header data */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(SymbolicLink);
+    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+
+    /* Check if we are not actually in a directory with a device map */
+    if (!(ObjectNameInfo) ||
+        !(ObjectNameInfo->Directory) ||
+        !(ObjectNameInfo->Directory->DeviceMap))
+    {
+        /* There's nothing to do, return */
+        return;
+    }
+
+    /* FIXME: We don't support device maps yet */
+    DPRINT1("Unhandled path!\n");
+    KEBUGCHECK(0);
+}
+
 /*++
 * @name ObpDeleteSymbolicLink
 *

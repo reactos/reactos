@@ -719,10 +719,6 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
-    DPRINT("NtCreateDirectoryObject(DirectoryHandle %x, "
-            "DesiredAccess %x, ObjectAttributes %x\n",
-            DirectoryHandle, DesiredAccess, ObjectAttributes);
-
     /* Check if we need to do any probing */
     if(PreviousMode != KernelMode)
     {
