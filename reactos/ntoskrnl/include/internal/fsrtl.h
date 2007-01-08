@@ -1,96 +1,61 @@
-#ifndef __INCLUDE_INTERNAL_IFS_H
-#define __INCLUDE_INTERNAL_IFS_H
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/include/fsrtl.h
+ * PURPOSE:         Internal header for the File System Runtime Library
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ */
 
-typedef struct _FILE_LOCK_GRANTED
-{
-    LIST_ENTRY            ListEntry;
-    FILE_LOCK_INFO            Lock;
-    PVOID             UnlockContext;
-} FILE_LOCK_GRANTED, *PFILE_LOCK_GRANTED;
+//
+// Define this if you want debugging support
+//
+#define _FSRTL_DEBUG_                                   0x00
 
-typedef struct _FILE_LOCK_TOC
-{
-    KSPIN_LOCK            SpinLock;
-    LIST_ENTRY            GrantedListHead;
-    LIST_ENTRY            PendingListHead;
-} FILE_LOCK_TOC, *PFILE_LOCK_TOC;
+//
+// These define the Debug Masks Supported
+//
+#define FSRTL_FASTIO_DEBUG                              0x01
+#define FSRTL_OPLOCK_DEBUG                              0x02
+#define FSRTL_TUNNEL_DEBUG                              0x04
+#define FSRTL_MCB_DEBUG                                 0x08
+#define FSRTL_NAME_DEBUG                                0x10
+#define FSRTL_NOTIFY_DEBUG                              0x20
+#define FSRTL_FILELOCK_DEBUG                            0x40
+#define FSRTL_UNC_DEBUG                                 0x80
+#define FSRTL_FILTER_DEBUG                              0x100
+#define FSRTL_CONTEXT_DEBUG                             0x200
 
-VOID
-INIT_FUNCTION
-NTAPI
-FsRtlpInitNotifyImplementation(VOID);
-
-VOID 
-NTAPI
-FsRtlInitSystem(VOID);
-
-VOID
-NTAPI
-FsRtlpFileLockCancelRoutine(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
-
-BOOLEAN
-FASTCALL
-FsRtlpCheckLockForReadOrWriteAccess(
-    IN PFILE_LOCK FileLock,
-    IN PLARGE_INTEGER FileOffset,
-    IN PLARGE_INTEGER Length,
-    IN ULONG Key,
-    IN PFILE_OBJECT FileObject,
-    IN PEPROCESS Process,
-    IN BOOLEAN Read
-);
-
-NTSTATUS
-FASTCALL
-FsRtlpFastUnlockAllByKey(
-    IN PFILE_LOCK FileLock,
-    IN PFILE_OBJECT FileObject,
-    IN PEPROCESS Process,
-    IN ULONG Key,
-    IN BOOLEAN UseKey,
-    IN PVOID Context OPTIONAL
-);
-
-BOOLEAN
-FASTCALL
-FsRtlpAddLock(
-    IN PFILE_LOCK_TOC LockToc,
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER FileOffset,
-    IN PLARGE_INTEGER Length,
-    IN PEPROCESS Process,
-    IN ULONG Key,
-    IN BOOLEAN ExclusiveLock,
-    IN PVOID UnlockContext
-);
-
-VOID
-FASTCALL
-FsRtlpCompletePendingLocks(
-    IN PFILE_LOCK FileLock,
-    IN PFILE_LOCK_TOC LockToc,
-    IN OUT PKIRQL  oldirql,
-    IN PVOID Context
-);
-
-NTSTATUS
-FASTCALL
-FsRtlpUnlockSingle(
-    IN PFILE_LOCK FileLock,
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER FileOffset,
-    IN PLARGE_INTEGER Length,
-    IN PEPROCESS Process,
-    IN ULONG Key,
-    IN PVOID Context OPTIONAL,
-    IN BOOLEAN CallUnlockRoutine
-);
-
-VOID
-FASTCALL
-FsRtlpDumpFileLocks(IN PFILE_LOCK FileLock);
-
+//
+// Debug/Tracing support
+//
+#if _FSRTL_DEBUG_
+#ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
+#define FSTRACE DbgPrintEx
+#else
+#define FSTRACE(x, ...)                                 \
+    if (x & FsRtlpTraceLevel) DbgPrint(__VA_ARGS__)
 #endif
+#else
+#define FSTRACE(x, ...) DPRINT(__VA_ARGS__)
+#endif
+
+//
+// Number of internal ERESOURCE structures allocated for callers to request
+//
+#define FSRTL_MAX_RESOURCES 16
+
+//
+// Initialization Routines
+//
+VOID
+NTAPI
+FsRtlInitSystem(
+    VOID
+);
+
+//
+// Global data inside the File System Runtime Library
+//
+extern PERESOURCE FsRtlPagingIoResources;
+extern PUCHAR _FsRtlLegalAnsiCharacterArray;
+extern PAGED_LOOKASIDE_LIST FsRtlFileLockLookasideList;

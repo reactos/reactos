@@ -154,18 +154,23 @@
             <file>zone.c</file>
         <file>zw.S</file>
     </directory>
-    <directory name="fs">
-            <file>context.c</file>
+    <directory name="fsrtl">
+            <file>dbcsname.c</file>
             <file>fastio.c</file>
+            <file>faulttol.c</file>
             <file>filelock.c</file>
-            <file>mcb.c</file>
+            <file>filter.c</file>
+            <file>filtrctx.c</file>
+            <file>fsfilter.c</file>
+            <file>fsrtlpc.c</file>
+            <file>largemcb.c</file>
             <file>name.c</file>
             <file>notify.c</file>
             <file>oplock.c</file>
-            <file>pool.c</file>
+            <file>pnp.c</file>
+            <file>stackovf.c</file>
             <file>tunnel.c</file>
             <file>unc.c</file>
-            <file>util.c</file>
     </directory>
     <directory name="fstub">
         <file>disksup.c</file>
