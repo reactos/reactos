@@ -13,11 +13,11 @@
 
 /* INCLUDES ***************************************************************/
 
-#define NTDDI_VERSION NTDDI_WS03
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
+BOOLEAN ObpLUIDDeviceMapsEnabled;
 POBJECT_TYPE ObDirectoryType = NULL;
 
 /* PRIVATE FUNCTIONS ******************************************************/
@@ -53,6 +53,18 @@ ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
 
     /* Make sure we have a name */
     ASSERT(ObjectHeader->NameInfoOffset != 0);
+
+    /* Validate the context */
+    if ((Context->Object) ||
+        !(Context->DirectoryLocked) ||
+        (Parent != Context->Directory))
+    {
+        /* Invalid context */
+        DPRINT1("OB: ObpInsertEntryDirectory - invalid context %p %ld\n",
+                Context, Context->DirectoryLocked);
+        KEBUGCHECK(0);
+        return FALSE;
+    }
 
     /* Allocate a new Directory Entry */
     NewEntry = ExAllocatePoolWithTag(PagedPool,
@@ -116,6 +128,7 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
 {
     BOOLEAN CaseInsensitive = FALSE;
     POBJECT_HEADER_NAME_INFO HeaderNameInfo;
+    POBJECT_HEADER ObjectHeader;
     ULONG HashValue;
     ULONG HashIndex;
     LONG TotalChars;
@@ -127,8 +140,8 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
     PWSTR Buffer;
     PAGED_CODE();
 
-    /* Always disable this until we have DOS Device Maps */
-    SearchShadow = FALSE;
+    /* Check if we should search the shadow directory */
+    if (!ObpLUIDDeviceMapsEnabled) SearchShadow = FALSE;
 
     /* Fail if we don't have a directory or name */
     if (!(Directory) || !(Name)) goto Quickie;
@@ -137,11 +150,11 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
     TotalChars = Name->Length / sizeof(WCHAR);
     Buffer = Name->Buffer;
 
-    /* Fail if the name is empty */
-    if (!(Buffer) || !(TotalChars)) goto Quickie;
-
     /* Set up case-sensitivity */
     if (Attributes & OBJ_CASE_INSENSITIVE) CaseInsensitive = TRUE;
+
+    /* Fail if the name is empty */
+    if (!(Buffer) || !(TotalChars)) goto Quickie;
 
     /* Create the Hash */
     for (HashValue = 0; TotalChars; TotalChars--)
@@ -172,9 +185,7 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
     /* Check if the directory is already locked */
     if (!Context->DirectoryLocked)
     {
-        /* Lock it */
-        KeEnterCriticalRegion();
-        ExAcquireResourceSharedLite(&Directory->Lock, TRUE);
+
     }
 
     /* Start looping */
@@ -184,10 +195,11 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         if (CurrentEntry->HashValue == HashValue)
         {
             /* Make sure that it has a name */
-            ASSERT(OBJECT_TO_OBJECT_HEADER(CurrentEntry->Object)->NameInfoOffset != 0);
+            ObjectHeader = OBJECT_TO_OBJECT_HEADER(CurrentEntry->Object);
 
             /* Get the name information */
-            HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(CurrentEntry->Object));
+            ASSERT(ObjectHeader->NameInfoOffset != 0);
+            HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
 
             /* Do the names match? */
             if ((Name->Length == HeaderNameInfo->Name.Length) &&
@@ -207,6 +219,11 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         /* Set this entry as the first, to speed up incoming insertion */
         if (AllocatedEntry != LookupBucket)
         {
+            /* Check if the directory was locked */
+            if (!Context->DirectoryLocked)
+            {
+            }
+
             /* Set the Current Entry */
             *AllocatedEntry = CurrentEntry->ChainLink;
 
@@ -220,17 +237,42 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         /* Save the found object */
         FoundObject = CurrentEntry->Object;
         if (!FoundObject) goto Quickie;
-    }
 
-    /* Check if the directory was unlocked (which means we locked it) */
-    if (!Context->DirectoryLocked)
+        /* Get the object name information */
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(FoundObject);
+        HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+
+        /* Reference the object being looked up */
+        //ObReferenceObject(FoundObject);
+
+        /* Check if the directory was locked */
+        if (!Context->DirectoryLocked)
+        {
+        }
+    }
+    else
     {
-        /* Lock it */
-        ExReleaseResourceLite(&Directory->Lock);
-        KeLeaveCriticalRegion();
+        /* Check if the directory was locked */
+        if (!Context->DirectoryLocked)
+        {
+        }
+
+        /* Check if we should scan the shadow directory */
+        if ((SearchShadow) && (Directory->DeviceMap))
+        {
+            /* FIXME: We don't support this yet */
+            KEBUGCHECK(0);
+        }
     }
 
 Quickie:
+    /* Check if we found an object already */
+    if (Context->Object)
+    {
+        /* We already did a lookup, so remove this object's query reference */
+        //ObpRemoveQueryReference(Context->Object);
+    }
+
     /* Return the object we found */
     Context->Object = FoundObject;
     return FoundObject;
