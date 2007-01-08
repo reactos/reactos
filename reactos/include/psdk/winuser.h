@@ -4123,6 +4123,7 @@ typedef MONITORINFOEXW MONITORINFOEX, *LPMONITORINFOEX;
 #define GetClassInfo GetClassInfoW
 #define GetClassInfoEx GetClassInfoExW
 #define GetClassLong GetClassLongW
+#define GetClassLongPtr GetClassLongPtrW
 #define GetClassName GetClassNameW
 #define GetClipboardFormatName GetClipboardFormatNameW
 #define GetDlgItemText GetDlgItemTextW
@@ -4290,6 +4291,7 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #define GetClassInfo GetClassInfoA
 #define GetClassInfoEx GetClassInfoExA
 #define GetClassLong GetClassLongA
+#define GetClassLongPtr GetClassLongPtrA
 #define GetClassName GetClassNameA
 #define GetClipboardFormatName GetClipboardFormatNameA
 #define GetDlgItemText GetDlgItemTextA
