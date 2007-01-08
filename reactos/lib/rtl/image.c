@@ -164,13 +164,22 @@ LdrProcessRelocationBlockLongLong(
     USHORT Type;
     USHORT i;
     PUSHORT ShortPtr;
+    ULONG Addend;
     PULONG LongPtr;
+
+    DbgPrint("Relocating %08x-%08x (With delta %08x)\n",
+	     Address, Address + 0x1000, (ULONG)Delta);
 
     for (i = 0; i < Count; i++)
     {
         Offset = *TypeOffset & 0xFFF;
         Type = *TypeOffset >> 12;
         ShortPtr = (PUSHORT)(RVA(Address, Offset));
+
+	DbgPrint("Correcting (%04x) %08x at %08x\n", 
+		 Type, 
+		 *((PULONG)RVA(Address,Offset)),
+		 ShortPtr);
 
         /*
         * Don't relocate within the relocation section itself.
@@ -203,6 +212,11 @@ LdrProcessRelocationBlockLongLong(
             break;
 
         case IMAGE_REL_BASED_HIGHADJ:
+	    Addend = (((ULONG)*ShortPtr) << 16) + (ULONG)Delta;
+	    if(Addend & 0x8000) Addend += 0x8000;
+	    *ShortPtr = Addend >> 16;
+	    break;
+
         case IMAGE_REL_BASED_MIPS_JMPADDR:
         default:
             DPRINT1("Unknown/unsupported fixup type %hu.\n", Type);
@@ -256,6 +270,12 @@ LdrRelocateImageWithBias(
     RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)BaseAddress + RelocationDDir->VirtualAddress);
     RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDDir->Size);
 
+    DbgPrint("Relocating a module from %08x to %08x (relocs at %08x to %08x)\n", 
+	     NtHeaders->OptionalHeader.ImageBase,
+	     BaseAddress,
+	     RelocationDir,
+	     RelocationEnd);
+
     while (RelocationDir < RelocationEnd &&
         RelocationDir->SizeOfBlock > 0)
     {
@@ -263,6 +283,8 @@ LdrRelocateImageWithBias(
         Address = (ULONG_PTR)RVA(BaseAddress, RelocationDir->VirtualAddress);
         TypeOffset = (PUSHORT)(RelocationDir + 1);
 
+	DbgPrint("Performing %d relocs from %08x to %08x\n", 
+		 Count, Address, Address + 0x1000);
         RelocationDir = LdrProcessRelocationBlockLongLong(Address,
                                                           Count,
                                                           TypeOffset,
