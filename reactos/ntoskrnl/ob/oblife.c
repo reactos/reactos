@@ -107,9 +107,6 @@ ObpDeallocateObject(IN PVOID Object)
                 /* Add the SD charge too */
                 if (Header->Flags & OB_FLAG_SECURITY) PagedPoolCharge += 2048;
             }
-
-            /* FIXME: Should be returning quota */
-            DPRINT("Quotas: %lx %lx\n", PagedPoolCharge, NonPagedPoolCharge);
         }
     }
 
@@ -129,6 +126,9 @@ ObpDeallocateObject(IN PVOID Object)
         NameInfo->Name.Buffer = NULL;
     }
 
+    /* Catch invalid access */
+    Header->Type = (POBJECT_TYPE)0xBAADB0B0;
+
     /* Free the object using the same allocation tag */
     ExFreePoolWithTag(HeaderLocation, ObjectType->Key);
 }
@@ -142,6 +142,7 @@ ObpDeleteObject(IN PVOID Object,
     POBJECT_TYPE ObjectType;
     POBJECT_HEADER_NAME_INFO NameInfo;
     POBJECT_HEADER_CREATOR_INFO CreatorInfo;
+    KIRQL CalloutIrql;
     PAGED_CODE();
 
     /* Get the header and type */
@@ -152,33 +153,32 @@ ObpDeleteObject(IN PVOID Object,
     NameInfo = OBJECT_HEADER_TO_NAME_INFO(Header);
     CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(Header);
 
-    /* Lock the object type */
-    ObpEnterObjectTypeMutex(ObjectType);
-
     /* Check if the object is on a type list */
     if ((CreatorInfo) && !(IsListEmpty(&CreatorInfo->TypeList)))
     {
+        /* Lock the object type */
+        ObpEnterObjectTypeMutex(ObjectType);
+
         /* Remove the object from the type list */
         RemoveEntryList(&CreatorInfo->TypeList);
-    }
 
-    /* Release the lock */
-    ObpLeaveObjectTypeMutex(ObjectType);
+        /* Release the lock */
+        ObpLeaveObjectTypeMutex(ObjectType);
+    }
 
     /* Check if we have a name */
     if ((NameInfo) && (NameInfo->Name.Buffer))
     {
         /* Free it */
         ExFreePool(NameInfo->Name.Buffer);
-
-        /* Clean up the string so we don't try this again */
-        RtlInitUnicodeString(&NameInfo->Name, NULL);
+        RtlInitEmptyUnicodeString(&NameInfo->Name, NULL, 0);
     }
 
     /* Check if we have a security descriptor */
     if (Header->SecurityDescriptor)
     {
         /* Call the security procedure to delete it */
+        ObpCalloutStart(&CalloutIrql);
         ObjectType->TypeInfo.SecurityProcedure(Object,
                                                DeleteSecurityDescriptor,
                                                0,
@@ -187,13 +187,16 @@ ObpDeleteObject(IN PVOID Object,
                                                &Header->SecurityDescriptor,
                                                0,
                                                NULL);
+        ObpCalloutEnd(CalloutIrql, "Security", ObjectType, Object);
     }
 
     /* Check if we have a delete procedure */
     if (ObjectType->TypeInfo.DeleteProcedure)
     {
         /* Call it */
+        ObpCalloutStart(&CalloutIrql);
         ObjectType->TypeInfo.DeleteProcedure(Object);
+        ObpCalloutEnd(CalloutIrql, "Delete", ObjectType, Object);
     }
 
     /* Now de-allocate all object members */
@@ -256,15 +259,26 @@ ObpSetPermanentObject(IN PVOID ObjectBody,
 
     /* Get the header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
+
+    /* Acquire object type lock */
+    ObpEnterObjectTypeMutex(ObjectHeader->Type);
+
+    /* Check what we're doing to it */
     if (Permanent)
     {
         /* Set it to permanent */
         ObjectHeader->Flags |= OB_FLAG_PERMANENT;
+
+        /* Release the lock */
+        ObpLeaveObjectTypeMutex(ObjectHeader->Type);
     }
     else
     {
         /* Remove the flag */
         ObjectHeader->Flags &= ~OB_FLAG_PERMANENT;
+
+        /* Release the lock */
+        ObpLeaveObjectTypeMutex(ObjectHeader->Type);
 
         /* Check if we should delete the object now */
         ObpDeleteNameCheck(ObjectBody);
@@ -623,9 +637,10 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     Header = ExAllocatePoolWithTag(PoolType, FinalSize + ObjectSize, Tag);
     if (!Header) return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Initialize quota info */
+    /* Check if we have a quota header */
     if (QuotaSize)
     {
+        /* Initialize quota info */
         QuotaInfo = (POBJECT_HEADER_QUOTA_INFO)Header;
         QuotaInfo->PagedPoolCharge = ObjectCreateInfo->PagedPoolCharge;
         QuotaInfo->NonPagedPoolCharge = ObjectCreateInfo->NonPagedPoolCharge;
@@ -634,26 +649,41 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         Header = (POBJECT_HEADER)(QuotaInfo + 1);
     }
 
-    /* Initialize Handle Info */
+    /* Check if we have a handle database header */
     if (HandleSize)
     {
+        /* Initialize Handle Info */
         HandleInfo = (POBJECT_HEADER_HANDLE_INFO)Header;
         HandleInfo->SingleEntry.HandleCount = 0;
         Header = (POBJECT_HEADER)(HandleInfo + 1);
     }
 
-    /* Initialize the Object Name Info */
+    /* Check if we have a name header */
     if (NameSize)
     {
+        /* Initialize the Object Name Info */
         NameInfo = (POBJECT_HEADER_NAME_INFO)Header;
         NameInfo->Name = *ObjectName;
         NameInfo->Directory = NULL;
+        NameInfo->QueryReferences = 1;
+
+        /* Check if this is a call with the special protection flag */
+        if ((PreviousMode == KernelMode) &&
+            (ObjectCreateInfo) &&
+            (ObjectCreateInfo->Attributes & 0x10000))
+        {
+            /* Set flag which will make the object protected from user-mode */
+            NameInfo->QueryReferences |= 0x40000000;
+        }
+
+        /* Set the header pointer */
         Header = (POBJECT_HEADER)(NameInfo + 1);
     }
 
-    /* Initialize Creator Info */
+    /* Check if we have a creator header */
     if (CreatorSize)
     {
+        /* Initialize Creator Info */
         CreatorInfo = (POBJECT_HEADER_CREATOR_INFO)Header;
         CreatorInfo->CreatorBackTraceIndex = 0;
         CreatorInfo->CreatorUniqueProcess = PsGetCurrentProcessId();
@@ -739,7 +769,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     if (ObjectType)
     {
         /* Increase the number of objects of this type */
-        ObjectType->TotalNumberOfObjects++;
+        InterlockedIncrement(&ObjectType->TotalNumberOfObjects);
 
         /* Update the high water */
         ObjectType->HighWaterNumberOfObjects = max(ObjectType->
@@ -774,8 +804,6 @@ ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,
     POBJECT_CREATE_INFORMATION ObjectCreateInfo;
     UNICODE_STRING ObjectName;
     POBJECT_HEADER Header;
-    DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n", 
-            Type, ObjectAttributes, Object);
 
     /* Allocate a capture buffer */
     ObjectCreateInfo = ObpAllocateCapturedAttributes(LookasideCreateInfoList);
@@ -898,6 +926,8 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
         if (*p++ == OBJ_NAME_PATH_SEPARATOR) return STATUS_OBJECT_NAME_INVALID;
     }
 
+    Context.Object = NULL;
+
     /* Check if we've already created the directory of types */
     if (ObpTypeDirectoryObject)
     {
@@ -911,6 +941,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
                                     &Context))
         {
             /* We have already created it, so fail */
+            Context.Object = NULL;
             return STATUS_OBJECT_NAME_COLLISION;
         }
     }
@@ -922,6 +953,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     if (!ObjectName.Buffer)
     {
         /* Out of memory, fail */
+        Context.Object = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -938,6 +970,8 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
                                (POBJECT_HEADER*)&Header);
     if (!NT_SUCCESS(Status))
     {
+        Context.Object = NULL;
+
         /* Free the name and fail */
         ExFreePool(ObjectName.Buffer);
         return Status;
@@ -1067,12 +1101,15 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
             ObReferenceObject(ObpTypeDirectoryObject);
         }
 
+        Context.Object = NULL;
+
         /* Return the object type and success */
         *ObjectType = LocalObjectType;
         return STATUS_SUCCESS;
     }
 
     /* If we got here, then we failed */
+    Context.Object = NULL;
     return STATUS_INSUFFICIENT_RESOURCES;
 }
 
@@ -1094,6 +1131,8 @@ VOID
 NTAPI
 ObMakeTemporaryObject(IN PVOID ObjectBody)
 {
+    PAGED_CODE();
+
     /* Call the internal API */
     ObpSetPermanentObject(ObjectBody, FALSE);
 }
