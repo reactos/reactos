@@ -3,7 +3,8 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/fsrtl/name.c
  * PURPOSE:         Provides name parsing and other support routines for FSDs
- * PROGRAMMERS:     None.
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Filip Navara (navaraf@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -46,52 +47,56 @@ FsRtlAreNamesEqual(IN PCUNICODE_STRING Name1,
 {
     UNICODE_STRING UpcaseName1;
     UNICODE_STRING UpcaseName2;
-    BOOLEAN StringsAreEqual;
+    BOOLEAN StringsAreEqual, MemoryAllocated = FALSE;
+    ULONG i;
 
     /* Well, first check their size */
-    if (Name1->Length != Name2->Length) {
-        /* Not equal! */
-        return FALSE;
-    }
+    if (Name1->Length != Name2->Length) return FALSE;
 
-    /* Turn them into Upcase if we don't have a table */
-    if (IgnoreCase && !UpcaseTable) {
-        RtlUpcaseUnicodeString(&UpcaseName1, Name1, TRUE);
+    /* Check if the caller didn't give an upcase table */
+    if ((IgnoreCase) && !(UpcaseTable))
+    {
+        /* Upcase the string ourselves */
+        Status = RtlUpcaseUnicodeString(&UpcaseName1, Name1, TRUE);
+        if (!NT_SUCCESS(Status)) RtlRaiseStatus(Status);
+
+        /* Upcase the second string too */
         RtlUpcaseUnicodeString(&UpcaseName2, Name2, TRUE);
         Name1 = &UpcaseName1;
         Name2 = &UpcaseName2;
 
-        goto ManualCase;
+        /* Make sure we go through the path below, but free the strings */
+        IgnoreCase = FALSE;
+        MemoryAllocated = TRUE;
     }
 
     /* Do a case-sensitive search */
-    if (!IgnoreCase) {
-
-ManualCase:
+    if (!IgnoreCase)
+    {
         /* Use a raw memory compare */
         StringsAreEqual = RtlEqualMemory(Name1->Buffer,
                                          Name2->Buffer,
                                          Name1->Length);
 
-        /* Clear the strings if we need to */
-        if (IgnoreCase) {
+        /* Check if we allocated strings */
+        if (MemoryAllocated)
+        {
+            /* Free them */
             RtlFreeUnicodeString(&UpcaseName1);
             RtlFreeUnicodeString(&UpcaseName2);
         }
 
         /* Return the equality */
         return StringsAreEqual;
-
-    } else {
-
+    }
+    else
+    {
         /* Case in-sensitive search */
-
-        LONG i;
-
-        for (i = Name1->Length / sizeof(WCHAR) - 1; i >= 0; i--) {
-
-            if (UpcaseTable[Name1->Buffer[i]] != UpcaseTable[Name2->Buffer[i]]) {
-
+        for (i = 0; i < Name1->Length / sizeof(WCHAR); i++)
+        {
+            /* Check if the character matches */
+            if (UpcaseTable[Name1->Buffer[i]] != UpcaseTable[Name2->Buffer[i]])
+            {
                 /* Non-match found! */
                 return FALSE;
             }

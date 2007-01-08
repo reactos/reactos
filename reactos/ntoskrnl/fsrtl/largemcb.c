@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/fsrtl/largemcb.c
  * PURPOSE:         Mapping Control Block (MCB) support for File System Drivers
- * PROGRAMMERS:     None.
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
