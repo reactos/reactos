@@ -41,16 +41,15 @@ ExGetPreviousMode (VOID)
 /*
  * @unimplemented
  */
-VOID
-STDCALL
-ExEnumHandleTable (
-	PULONG	HandleTable,
-	PVOID	Callback,
-	PVOID	Param,
-	PHANDLE	Handle OPTIONAL
-	)
+BOOLEAN
+NTAPI
+ExEnumHandleTable(IN PHANDLE_TABLE HandleTable,
+                  IN PVOID Callback,
+                  IN OUT PVOID Param,
+                  OUT PHANDLE Handle OPTIONAL)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /*

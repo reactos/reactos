@@ -299,15 +299,14 @@ IntParseDesktopPath(PEPROCESS Process,
    {
       /* search the process handle table for (inherited) window station
          handles, use a more appropriate one than WinSta0 if possible. */
-      Status = ObFindHandleForObject(Process,
-                                     NULL,
-                                     ExWindowStationObjectType,
-                                     NULL,
-                                     (PHANDLE)hWinSta);
-      if(!NT_SUCCESS(Status))
+      if (!ObFindHandleForObject(Process,
+                                 NULL,
+                                 ExWindowStationObjectType,
+                                 NULL,
+                                 (PHANDLE)hWinSta))
       {
-         /* we had no luck searching for opened handles, use WinSta0 now */
-         RtlInitUnicodeString(&WinSta, L"WinSta0");
+            /* we had no luck searching for opened handles, use WinSta0 now */
+            RtlInitUnicodeString(&WinSta, L"WinSta0");
       }
    }
 
@@ -315,12 +314,11 @@ IntParseDesktopPath(PEPROCESS Process,
    {
       /* search the process handle table for (inherited) desktop
          handles, use a more appropriate one than Default if possible. */
-      Status = ObFindHandleForObject(Process,
-                                     NULL,
-                                     ExDesktopObjectType,
-                                     NULL,
-                                     (PHANDLE)hDesktop);
-      if(!NT_SUCCESS(Status))
+      if (!ObFindHandleForObject(Process,
+                                 NULL,
+                                 ExDesktopObjectType,
+                                 NULL,
+                                 (PHANDLE)hDesktop))
       {
          /* we had no luck searching for opened handles, use Desktop now */
          RtlInitUnicodeString(&Desktop, L"Default");
@@ -479,13 +477,11 @@ IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject)
 
    ASSERT(DesktopObject);
 
-   Status = ObFindHandleForObject(PsGetCurrentProcess(),
-                                  DesktopObject,
-                                  ExDesktopObjectType,
-                                  NULL,
-                                  (PHANDLE)&Ret);
-
-   if(!NT_SUCCESS(Status))
+   if (!ObFindHandleForObject(PsGetCurrentProcess(),
+                              DesktopObject,
+                              ExDesktopObjectType,
+                              NULL,
+                              (PHANDLE)&Ret))
    {
       Status = ObOpenObjectByPointer(DesktopObject,
                                      0,

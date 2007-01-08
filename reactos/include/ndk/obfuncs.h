@@ -109,7 +109,7 @@ ObReferenceObjectByName(
 );
 
 NTKERNELAPI
-NTSTATUS 
+BOOLEAN
 NTAPI
 ObFindHandleForObject(
     IN PEPROCESS Process,

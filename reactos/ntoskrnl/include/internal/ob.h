@@ -79,6 +79,12 @@ typedef struct _OBP_CLOSE_HANDLE_CONTEXT
     PHANDLE_TABLE HandleTable;
     KPROCESSOR_MODE AccessMode;
 } OBP_CLOSE_HANDLE_CONTEXT, *POBP_CLOSE_HANDLE_CONTEXT;
+typedef struct _OBP_FIND_HANDLE_DATA
+{
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_TYPE ObjectType;
+    POBJECT_HANDLE_INFORMATION HandleInformation;
+} OBP_FIND_HANDLE_DATA, *POBP_FIND_HANDLE_DATA;
 
 //
 // Private Temporary Buffer for Lookup Routines

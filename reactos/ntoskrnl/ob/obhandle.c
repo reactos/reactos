@@ -23,6 +23,18 @@ PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+BOOLEAN
+NTAPI
+ObpEnumFindHandleProcedure(IN PHANDLE_TABLE_ENTRY HandleEntry,
+                           IN HANDLE Handle,
+                           IN PVOID Context)
+{
+    /* FIXME: TODO */
+    DPRINT1("Not yet implemented!\n");
+    KEBUGCHECK(0);
+    return FALSE;
+}
+
 POBJECT_HANDLE_COUNT_ENTRY
 NTAPI
 ObpInsertHandleCount(IN POBJECT_HEADER ObjectHeader)
@@ -583,7 +595,6 @@ ObpIncrementHandleCount(IN PVOID Object,
             !(ObjectHeader->Flags & OB_FLAG_EXCLUSIVE))
         {
             /* Incorrect attempt */
-            DPRINT1("Failing here\n");
             Status = STATUS_INVALID_PARAMETER;
             goto Quickie;
         }
@@ -827,7 +838,6 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
             !(ObjectHeader->Flags & OB_FLAG_EXCLUSIVE))
         {
             /* Incorrect attempt */
-            DPRINT1("failing here\n");
             Status = STATUS_INVALID_PARAMETER;
             goto Quickie;
         }
@@ -2196,15 +2206,75 @@ ObOpenObjectByPointer(IN PVOID Object,
     return Status;
 }
 
-NTSTATUS STDCALL
+/*++
+* @name ObFindHandleForObject
+* @implemented NT4
+*
+*     The ObFindHandleForObject routine <FILLMEIN>
+*
+* @param Process
+*        <FILLMEIN>.
+*
+* @param Object
+*        <FILLMEIN>.
+*
+* @param ObjectType
+*        <FILLMEIN>.
+*
+* @param HandleInformation
+*        <FILLMEIN>.
+*
+* @param HandleReturn
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
+BOOLEAN
+NTAPI
 ObFindHandleForObject(IN PEPROCESS Process,
                       IN PVOID Object,
                       IN POBJECT_TYPE ObjectType,
                       IN POBJECT_HANDLE_INFORMATION HandleInformation,
-                      OUT PHANDLE HandleReturn)
+                      OUT PHANDLE Handle)
 {
-    DPRINT("ObFindHandleForObject is unimplemented!\n");
-    return STATUS_UNSUCCESSFUL;
+    OBP_FIND_HANDLE_DATA FindData;
+    BOOLEAN Result = FALSE;
+
+    /* Make sure we have an object table */
+    if (Process->ObjectTable)
+    {
+        /* Check if we have an object */
+        if (Object)
+        {
+            /* Set its header */
+            FindData.ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+        }
+        else
+        {
+            /* Otherwise, no object to match*/
+            FindData.ObjectHeader = NULL;
+        }
+
+        /* Set other information */
+        FindData.ObjectType = ObjectType;
+        FindData.HandleInformation = HandleInformation;
+
+        /* Enumerate the handle table */
+        if (ExEnumHandleTable(Process->ObjectTable,
+                              ObpEnumFindHandleProcedure,
+                              &FindData,
+                              Handle))
+        {
+            /* Set success */
+            Result = TRUE;
+        }
+    }
+
+    /* Return the result */
+    return Result;
 }
 
 /*++
