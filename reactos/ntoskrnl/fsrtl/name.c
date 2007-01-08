@@ -49,6 +49,7 @@ FsRtlAreNamesEqual(IN PCUNICODE_STRING Name1,
     UNICODE_STRING UpcaseName2;
     BOOLEAN StringsAreEqual, MemoryAllocated = FALSE;
     ULONG i;
+    NTSTATUS Status;
 
     /* Well, first check their size */
     if (Name1->Length != Name2->Length) return FALSE;
