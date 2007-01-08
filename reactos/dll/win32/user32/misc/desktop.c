@@ -107,6 +107,8 @@ SystemParametersInfoA(UINT uiAction,
       case SPI_GETGRADIENTCAPTIONS:
       case SPI_GETFOCUSBORDERHEIGHT:
       case SPI_GETFOCUSBORDERWIDTH:
+      case SPI_GETMINIMIZEDMETRICS:
+      case SPI_SETMINIMIZEDMETRICS:
         {
            return NtUserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
         }

@@ -913,6 +913,7 @@ IntSystemParametersInfo(
    static BOOL bInitialized = FALSE;
    static LOGFONTW IconFont;
    static NONCLIENTMETRICSW pMetrics;
+   static MINIMIZEDMETRICS MinimizedMetrics;
    static BOOL GradientCaptions = TRUE;
    static UINT FocusBorderHeight = 1;
    static UINT FocusBorderWidth = 1;
@@ -939,6 +940,12 @@ IntSystemParametersInfo(
       pMetrics.iMenuWidth = UserGetSystemMetrics(SM_CXMENUSIZE);
       pMetrics.iMenuHeight = UserGetSystemMetrics(SM_CYMENUSIZE);
       pMetrics.cbSize = sizeof(NONCLIENTMETRICSW);
+
+      MinimizedMetrics.cbSize = sizeof(MINIMIZEDMETRICS);
+      MinimizedMetrics.iWidth = UserGetSystemMetrics(SM_CXMINIMIZED);
+      MinimizedMetrics.iHorzGap = UserGetSystemMetrics(SM_CXMINSPACING);
+      MinimizedMetrics.iVertGap = UserGetSystemMetrics(SM_CYMINSPACING);
+      MinimizedMetrics.iArrange = ARW_HIDE;
 
       bInitialized = TRUE;
    }
@@ -1288,6 +1295,18 @@ IntSystemParametersInfo(
             pMetrics = *((NONCLIENTMETRICSW*)pvParam);
             return TRUE;
          }
+      case SPI_GETMINIMIZEDMETRICS:
+         {
+            ASSERT(pvParam);
+            *((MINIMIZEDMETRICS*)pvParam) = MinimizedMetrics;
+            return TRUE;
+         }
+      case SPI_SETMINIMIZEDMETRICS:
+         {
+            ASSERT(pvParam);
+            MinimizedMetrics = *((MINIMIZEDMETRICS*)pvParam);
+            return TRUE;
+         }
       case SPI_GETFOCUSBORDERHEIGHT:
          {
             ASSERT(pvParam);
@@ -1473,6 +1492,35 @@ UserSystemParametersInfo(
             }
 
             Status = MmCopyToCaller(pvParam, &metrics, sizeof(NONCLIENTMETRICSW));
+            if(!NT_SUCCESS(Status))
+            {
+               SetLastNtError(Status);
+               return( FALSE);
+            }
+            return( TRUE);
+         }
+      case SPI_GETMINIMIZEDMETRICS:
+      case SPI_SETMINIMIZEDMETRICS:
+         {
+            MINIMIZEDMETRICS minimetrics;
+
+            Status = MmCopyFromCaller(&minimetrics, pvParam, sizeof(MINIMIZEDMETRICS));
+            if(!NT_SUCCESS(Status))
+            {
+               SetLastNtError(Status);
+               return( FALSE);
+            }
+            if(minimetrics.cbSize != sizeof(MINIMIZEDMETRICS))
+            {
+               SetLastWin32Error(ERROR_INVALID_PARAMETER);
+               return( FALSE);
+            }
+            if(!IntSystemParametersInfo(uiAction, uiParam, &minimetrics, fWinIni))
+            {
+               return( FALSE);
+            }
+
+            Status = MmCopyToCaller(pvParam, &minimetrics, sizeof(MINIMIZEDMETRICS));
             if(!NT_SUCCESS(Status))
             {
                SetLastNtError(Status);
