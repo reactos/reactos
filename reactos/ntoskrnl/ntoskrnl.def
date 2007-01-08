@@ -940,7 +940,7 @@ PsJobType DATA
 PsLookupProcessByProcessId@8
 PsLookupProcessThreadByCid@12
 PsLookupThreadByThreadId@8
-PsProcessType DATA
+PsProcessType=_PsProcessType
 PsReferenceImpersonationToken@16
 PsReferencePrimaryToken@4
 PsRemoveCreateThreadNotifyRoutine@4

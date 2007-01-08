@@ -64,6 +64,7 @@
 //
 #define IoFileObjectType                _IoFileObjectType
 #define PsThreadType                    _PsThreadType
+#define PsProcessType                   _PsProcessType
 #define ExEventObjectType               _ExEventObjectType
 #define ExSemaphoreObjectType           _ExSemaphoreObjectType
 #define KdDebuggerEnabled               _KdDebuggerEnabled
