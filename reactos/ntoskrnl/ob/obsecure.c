@@ -11,9 +11,208 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* PRIVATE FUNCTIONS *********************************************************/
+
+BOOLEAN
+NTAPI
+ObCheckCreateObjectAccess(IN PVOID Object,
+                          IN ACCESS_MASK CreateAccess,
+                          IN PACCESS_STATE AccessState,
+                          IN PUNICODE_STRING ComponentName,
+                          IN BOOLEAN LockHeld,
+                          IN KPROCESSOR_MODE AccessMode,
+                          OUT PNTSTATUS AccessStatus)
+{
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_TYPE ObjectType;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    BOOLEAN SdAllocated;
+    BOOLEAN Result = TRUE;
+    ACCESS_MASK GrantedAccess = 0;
+    PPRIVILEGE_SET Privileges = NULL;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Get the header and type */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectType = ObjectHeader->Type;
+
+    /* Get the security descriptor */
+    Status = ObGetObjectSecurity(Object, &SecurityDescriptor, &SdAllocated);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed */
+        *AccessStatus = Status;
+        return FALSE;
+    }
+
+    /* Lock the security context */
+    SeLockSubjectContext(&AccessState->SubjectSecurityContext);
+
+    /* Check if we have an SD */
+    if (SecurityDescriptor)
+    {
+        /* Now do the entire access check */
+        Result = SeAccessCheck(SecurityDescriptor,
+                               &AccessState->SubjectSecurityContext,
+                               TRUE,
+                               CreateAccess,
+                               0,
+                               &Privileges,
+                               &ObjectType->TypeInfo.GenericMapping,
+                               AccessMode,
+                               &GrantedAccess,
+                               AccessStatus);
+        if (Privileges)
+        {
+            /* We got privileges, append them to the access state and free them */
+            Status = SeAppendPrivileges(AccessState, Privileges);
+            SeFreePrivileges(Privileges);
+        }
+    }
+
+    /* We're done, unlock the context and release security */
+    SeUnlockSubjectContext(&AccessState->SubjectSecurityContext);
+    ObReleaseObjectSecurity(SecurityDescriptor, SdAllocated);
+    return Result;
+}
+
+BOOLEAN
+NTAPI
+ObpCheckTraverseAccess(IN PVOID Object,
+                       IN ACCESS_MASK TraverseAccess,
+                       IN PACCESS_STATE AccessState OPTIONAL,
+                       IN BOOLEAN LockHeld,
+                       IN KPROCESSOR_MODE AccessMode,
+                       OUT PNTSTATUS AccessStatus)
+{
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_TYPE ObjectType;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    BOOLEAN SdAllocated;
+    BOOLEAN Result;
+    ACCESS_MASK GrantedAccess = 0;
+    PPRIVILEGE_SET Privileges = NULL;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Get the header and type */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectType = ObjectHeader->Type;
+
+    /* Get the security descriptor */
+    Status = ObGetObjectSecurity(Object, &SecurityDescriptor, &SdAllocated);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed */
+        *AccessStatus = Status;
+        return FALSE;
+    }
+
+    /* Lock the security context */
+    SeLockSubjectContext(&AccessState->SubjectSecurityContext);
+
+    /* Now do the entire access check */
+    Result = SeAccessCheck(SecurityDescriptor,
+                           &AccessState->SubjectSecurityContext,
+                           TRUE,
+                           TraverseAccess,
+                           0,
+                           &Privileges,
+                           &ObjectType->TypeInfo.GenericMapping,
+                           AccessMode,
+                           &GrantedAccess,
+                           AccessStatus);
+    if (Privileges)
+    {
+        /* We got privileges, append them to the access state and free them */
+        Status = SeAppendPrivileges(AccessState, Privileges);
+        SeFreePrivileges(Privileges);
+    }
+
+    /* We're done, unlock the context and release security */
+    SeUnlockSubjectContext(&AccessState->SubjectSecurityContext);
+    ObReleaseObjectSecurity(SecurityDescriptor, SdAllocated);
+    return Result;
+}
+
+BOOLEAN
+NTAPI
+ObpCheckObjectReference(IN PVOID Object,
+                        IN OUT PACCESS_STATE AccessState,
+                        IN BOOLEAN LockHeld,
+                        IN KPROCESSOR_MODE AccessMode,
+                        OUT PNTSTATUS AccessStatus)
+{
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_TYPE ObjectType;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    BOOLEAN SdAllocated;
+    BOOLEAN Result;
+    ACCESS_MASK GrantedAccess = 0;
+    PPRIVILEGE_SET Privileges = NULL;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Get the header and type */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectType = ObjectHeader->Type;
+
+    /* Get the security descriptor */
+    Status = ObGetObjectSecurity(Object, &SecurityDescriptor, &SdAllocated);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed */
+        *AccessStatus = Status;
+        return FALSE;
+    }
+
+    /* Lock the security context */
+    SeLockSubjectContext(&AccessState->SubjectSecurityContext);
+
+    /* Now do the entire access check */
+    Result = SeAccessCheck(SecurityDescriptor,
+                           &AccessState->SubjectSecurityContext,
+                           TRUE,
+                           AccessState->RemainingDesiredAccess,
+                           AccessState->PreviouslyGrantedAccess,
+                           &Privileges,
+                           &ObjectType->TypeInfo.GenericMapping,
+                           AccessMode,
+                           &GrantedAccess,
+                           AccessStatus);
+    if (Result)
+    {
+        /* Update the access state */
+        AccessState->RemainingDesiredAccess &= ~GrantedAccess;
+        AccessState->PreviouslyGrantedAccess |= GrantedAccess;
+    }
+
+    /* Check if we have an SD */
+    if (SecurityDescriptor)
+    {
+        /* Do audit alarm */
+#if 0
+        SeObjectReferenceAuditAlarm(&AccessState->OperationID,
+                                    Object,
+                                    SecurityDescriptor,
+                                    &AccessState->SubjectSecurityContext,
+                                    AccessState->RemainingDesiredAccess |
+                                    AccessState->PreviouslyGrantedAccess,
+                                    ((PAUX_DATA)(AccessState->AuxData))->
+                                    PrivilegeSet,
+                                    Result,
+                                    AccessMode);
+#endif
+    }
+
+    /* We're done, unlock the context and release security */
+    SeUnlockSubjectContext(&AccessState->SubjectSecurityContext);
+    ObReleaseObjectSecurity(SecurityDescriptor, SdAllocated);
+    return Result;
+}
 
 /*++
 * @name ObCheckObjectAccess
@@ -26,7 +225,7 @@
 * @param AccessState
 *        <FILLMEIN>
 *
-* @param Unknown
+* @param LockHeld
 *        <FILLMEIN>
 *
 * @param AccessMode
@@ -44,7 +243,7 @@ BOOLEAN
 NTAPI
 ObCheckObjectAccess(IN PVOID Object,
                     IN OUT PACCESS_STATE AccessState,
-                    IN BOOLEAN Unknown,
+                    IN BOOLEAN LockHeld,
                     IN KPROCESSOR_MODE AccessMode,
                     OUT PNTSTATUS ReturnedStatus)
 {
@@ -93,7 +292,7 @@ ObCheckObjectAccess(IN PVOID Object,
                            ReturnedStatus);
     if (Privileges)
     {
-        /* We got privileges, append them to teh access state and free them */
+        /* We got privileges, append them to the access state and free them */
         Status = SeAppendPrivileges(AccessState, Privileges);
         SeFreePrivileges(Privileges);
     }
