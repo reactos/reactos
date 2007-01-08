@@ -957,14 +957,14 @@ IntSystemParametersInfo(
       case SPI_SETDOUBLECLICKTIME:
       case SPI_SETDESKWALLPAPER:
       case SPI_GETDESKWALLPAPER:
-	  case SPI_GETWHEELSCROLLLINES:
-	  case SPI_GETWHEELSCROLLCHARS:
-	  case SPI_SETSCREENSAVERRUNNING: 
-	  case SPI_GETSCREENSAVERRUNNING:
-	  case SPI_GETSCREENSAVETIMEOUT:
-	  case SPI_SETSCREENSAVETIMEOUT:
-	  case SPI_GETSCREENSAVEACTIVE:
-	  case SPI_GETFLATMENU:
+      case SPI_GETWHEELSCROLLLINES:
+      case SPI_GETWHEELSCROLLCHARS:
+      case SPI_SETSCREENSAVERRUNNING: 
+      case SPI_GETSCREENSAVERRUNNING:
+      case SPI_GETSCREENSAVETIMEOUT:
+      case SPI_SETSCREENSAVETIMEOUT:
+      case SPI_GETSCREENSAVEACTIVE:
+      case SPI_GETFLATMENU:
       case SPI_SETFLATMENU:
          {
             PSYSTEM_CURSORINFO CurInfo;
@@ -981,43 +981,43 @@ IntSystemParametersInfo(
 
             switch(uiAction)
             {
-			   case SPI_GETFLATMENU:
-				   if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->FlatMenu;    
+               case SPI_GETFLATMENU:
+                  if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->FlatMenu;    
                   return TRUE;
-			      break;
+                  break;
                case SPI_SETFLATMENU:				   
-				   WinStaObject->FlatMenu = uiParam;                               
-			      break;
-			   case	SPI_GETSCREENSAVETIMEOUT:
-				   if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->ScreenSaverTimeOut;                   
-				   return TRUE;
-				   break;
-			   case	SPI_SETSCREENSAVETIMEOUT:				  
-                   WinStaObject->ScreenSaverTimeOut = uiParam;                  
-				  break;
-			   case SPI_GETSCREENSAVERRUNNING:
-                     if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
+                  WinStaObject->FlatMenu = uiParam;                               
+                  break;
+               case SPI_GETSCREENSAVETIMEOUT:
+                  if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->ScreenSaverTimeOut;                   
                   return TRUE;
-				  break;
-			   case SPI_SETSCREENSAVERRUNNING:				  
-				   if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
-                   WinStaObject->ScreenSaverRunning = uiParam;				                     
-				  break;
-			   case SPI_GETSCREENSAVEACTIVE:
-					/* FIXME: how to disable the screensaver? */
-					if (pvParam != NULL) *((BOOL*)pvParam) = TRUE;
-				  return TRUE;
-				  break;
-			   case SPI_GETWHEELSCROLLLINES:
-				    CurInfo = IntGetSysCursorInfo(WinStaObject);
-					if (pvParam != NULL) *((UINT*)pvParam) = CurInfo->WheelScroLines;
-					/* FIXME add this value to scroll list as scroll value ?? */
+                  break;
+               case SPI_SETSCREENSAVETIMEOUT:				  
+                  WinStaObject->ScreenSaverTimeOut = uiParam;                  
+                  break;
+               case SPI_GETSCREENSAVERRUNNING:
+                  if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
+                  return TRUE;
+                  break;
+               case SPI_SETSCREENSAVERRUNNING:				  
+                  if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
+                  WinStaObject->ScreenSaverRunning = uiParam;				                     
+                  break;
+               case SPI_GETSCREENSAVEACTIVE:
+                  /* FIXME: how to disable the screensaver? */
+                  if (pvParam != NULL) *((BOOL*)pvParam) = TRUE;
+                  return TRUE;
+                  break;
+               case SPI_GETWHEELSCROLLLINES:
+                  CurInfo = IntGetSysCursorInfo(WinStaObject);
+                  if (pvParam != NULL) *((UINT*)pvParam) = CurInfo->WheelScroLines;
+                  /* FIXME add this value to scroll list as scroll value ?? */
                   return TRUE;
                   break;
                case SPI_GETWHEELSCROLLCHARS:
-				    CurInfo = IntGetSysCursorInfo(WinStaObject);
-					if (pvParam != NULL) *((UINT*)pvParam) = CurInfo->WheelScroChars;
-					// FIXME add this value to scroll list as scroll value ?? 
+                  CurInfo = IntGetSysCursorInfo(WinStaObject);
+                  if (pvParam != NULL) *((UINT*)pvParam) = CurInfo->WheelScroChars;
+                  // FIXME add this value to scroll list as scroll value ?? 
                   return TRUE;
                   break;
                case SPI_SETDOUBLECLKWIDTH:
@@ -1396,14 +1396,14 @@ UserSystemParametersInfo(
       case SPI_GETGRADIENTCAPTIONS:
       case SPI_GETFOCUSBORDERHEIGHT:
       case SPI_GETFOCUSBORDERWIDTH:
-	  case SPI_GETWHEELSCROLLLINES:
+      case SPI_GETWHEELSCROLLLINES:
       case SPI_GETWHEELSCROLLCHARS:
-	  case SPI_GETSCREENSAVERRUNNING:
-	  case SPI_SETSCREENSAVERRUNNING:
-	  case SPI_GETSCREENSAVETIMEOUT:
-	  case SPI_SETSCREENSAVETIMEOUT:
-	  case SPI_GETSCREENSAVEACTIVE:
-	  case SPI_GETFLATMENU:
+      case SPI_GETSCREENSAVERRUNNING:
+      case SPI_SETSCREENSAVERRUNNING:
+      case SPI_GETSCREENSAVETIMEOUT:
+      case SPI_SETSCREENSAVETIMEOUT:
+      case SPI_GETSCREENSAVEACTIVE:
+      case SPI_GETFLATMENU:
       case SPI_SETFLATMENU:
          {
             BOOL Ret;
@@ -1529,10 +1529,10 @@ UserSystemParametersInfo(
             return( TRUE);
          }
       default :
-		  {
-              DPRINT1("FIXME: UNIMPLEMENTED SPI Code: %lx \n",uiAction );
-			  break;
-		  }
+         {
+            DPRINT1("FIXME: UNIMPLEMENTED SPI Code: %lx \n",uiAction );
+            break;
+         }
    }
    return( FALSE);
 }
