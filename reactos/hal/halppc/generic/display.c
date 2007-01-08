@@ -122,58 +122,15 @@
  */
 
 #include <hal.h>
+#include <ppcboot.h>
 #define NDEBUG
 #include <debug.h>
 
+#include "font.h"
+boot_infos_t PpcEarlybootInfo;
+BOOLEAN PPCGetEEBit();
 
 #define SCREEN_SYNCHRONIZATION
-
-#define VGA_GRAPH_MEM 0xa0000
-#define VGA_CHAR_MEM  0xb8000
-#define VGA_END_MEM   0xbffff
-
-#define VGA_AC_INDEX            0x3c0
-#define VGA_AC_READ             0x3c1
-#define VGA_AC_WRITE            0x3c0
-
-#define VGA_MISC_WRITE          0x3c2
-
-#define VGA_SEQ_INDEX           0x3c4
-#define VGA_SEQ_DATA            0x3c5
-
-#define VGA_DAC_MASK            0x3c6
-#define VGA_DAC_READ_INDEX      0x3c7
-#define VGA_DAC_WRITE_INDEX     0x3c8
-#define VGA_DAC_DATA            0x3c9
-#define VGA_FEATURE_READ        0x3ca
-#define VGA_MISC_READ           0x3cc
-
-#define VGA_GC_INDEX            0x3ce
-#define VGA_GC_DATA             0x3cf
-
-#define VGA_CRTC_INDEX          0x3d4
-#define VGA_CRTC_DATA           0x3d5
-
-#define VGA_INSTAT_READ         0x3da
-
-#define VGA_SEQ_NUM_REGISTERS   5
-#define VGA_CRTC_NUM_REGISTERS  25
-#define VGA_GC_NUM_REGISTERS    9
-#define VGA_AC_NUM_REGISTERS    21
-
-#define CRTC_COLUMNS       0x01
-#define CRTC_OVERFLOW      0x07
-#define CRTC_ROWS          0x12
-#define CRTC_SCANLINES     0x09
-
-#define CRTC_CURHI         0x0e
-#define CRTC_CURLO         0x0f
-
-
-#define CHAR_ATTRIBUTE_BLACK  0x00  /* black on black */
-#define CHAR_ATTRIBUTE        0x17  /* grey on blue */
-
-#define FONT_AMOUNT        (8*8192)
 
 /* VARIABLES ****************************************************************/
 
@@ -184,34 +141,27 @@ static ULONG SizeY = 25;
 
 static BOOLEAN DisplayInitialized = FALSE;
 static BOOLEAN HalOwnsDisplay = TRUE;
-
-static PUSHORT VideoBuffer = NULL;
-static PUCHAR GraphVideoBuffer = NULL;
-
+static ULONG GraphVideoBuffer = 0;
 static PHAL_RESET_DISPLAY_PARAMETERS HalResetDisplayParameters = NULL;
 
-static UCHAR SavedTextPalette[768];
-static UCHAR SavedTextMiscOutReg;
-static UCHAR SavedTextCrtcReg[VGA_CRTC_NUM_REGISTERS];
-static UCHAR SavedTextAcReg[VGA_AC_NUM_REGISTERS];
-static UCHAR SavedTextGcReg[VGA_GC_NUM_REGISTERS];
-static UCHAR SavedTextSeqReg[VGA_SEQ_NUM_REGISTERS];
-static UCHAR SavedTextFont[2][FONT_AMOUNT];
-static BOOLEAN TextPaletteEnabled = FALSE;
+extern UCHAR XboxFont8x16[];
+extern void SetPhys( ULONG Addr, ULONG Data );
+extern void SetPhysByte( ULONG Addr, ULONG Data );
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID FASTCALL
 HalClearDisplay (UCHAR CharAttribute)
 {
-   WORD *ptr = (WORD*)VideoBuffer;
    ULONG i;
+   ULONG deviceSize = 
+       PpcEarlybootInfo.dispDeviceRowBytes * PpcEarlybootInfo.dispDeviceDepth *
+       PpcEarlybootInfo.dispDeviceRect[3];
+   for(i = 0; i < deviceSize; i += sizeof(int) ) 
+       SetPhys(GraphVideoBuffer + i, CharAttribute);
 
-  for (i = 0; i < SizeX * SizeY; i++, ptr++)
-    *ptr = ((CharAttribute << 8) + ' ');
-
-  CursorX = 0;
-  CursorY = 0;
+   CursorX = 0;
+   CursorY = 0;
 }
 
 
@@ -220,352 +170,38 @@ HalClearDisplay (UCHAR CharAttribute)
 VOID STATIC
 HalScrollDisplay (VOID)
 {
-  PUSHORT ptr;
-  int i;
-
-  ptr = VideoBuffer + SizeX;
-  RtlMoveMemory(VideoBuffer,
-		ptr,
-		SizeX * (SizeY - 1) * 2);
-
-  ptr = VideoBuffer  + (SizeX * (SizeY - 1));
-  for (i = 0; i < (int)SizeX; i++, ptr++)
+    PULONG Dest = (PULONG)GraphVideoBuffer, 
+	Src = (PULONG)(GraphVideoBuffer + (16 * PpcEarlybootInfo.dispDeviceRowBytes));
+    PULONG End  = (PULONG)
+	GraphVideoBuffer + 
+	(PpcEarlybootInfo.dispDeviceRowBytes * PpcEarlybootInfo.dispDeviceDepth *
+	 PpcEarlybootInfo.dispDeviceRect[3]);
+    
+    for( ; Src < End; Src += sizeof(int) ) 
     {
-      *ptr = (CHAR_ATTRIBUTE << 8) + ' ';
+	*Dest++ = *Src++;
     }
 }
 
 VOID STATIC FASTCALL
 HalPutCharacter (CHAR Character)
 {
-  PUSHORT ptr;
+    int i,j,k;
+    PCHAR Dest = (PCHAR)
+	(GraphVideoBuffer + 
+	 (16 * PpcEarlybootInfo.dispDeviceRowBytes * CursorY) + 
+	 ((PpcEarlybootInfo.dispDeviceDepth / 8) * CursorX));
 
-  ptr = VideoBuffer + ((CursorY * SizeX) + CursorX);
-  *ptr = (CHAR_ATTRIBUTE << 8) + Character;
-}
-
-VOID STATIC
-HalDisablePalette(VOID)
-{
-  (VOID)READ_PORT_UCHAR((PUCHAR)VGA_INSTAT_READ);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_AC_INDEX, 0x20);
-  TextPaletteEnabled = FALSE;
-}
-
-VOID STATIC
-HalEnablePalette(VOID)
-{
-  (VOID)READ_PORT_UCHAR((PUCHAR)VGA_INSTAT_READ);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_AC_INDEX, 0x00);
-  TextPaletteEnabled = TRUE;
-}
-
-UCHAR STATIC FASTCALL
-HalReadGc(ULONG Index)
-{
-  WRITE_PORT_UCHAR((PUCHAR)VGA_GC_INDEX, (UCHAR)Index);
-  return(READ_PORT_UCHAR((PUCHAR)VGA_GC_DATA));
-}
-
-VOID STATIC FASTCALL
-HalWriteGc(ULONG Index, UCHAR Value)
-{
-  WRITE_PORT_UCHAR((PUCHAR)VGA_GC_INDEX, (UCHAR)Index);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_GC_DATA, Value);
-}
-
-UCHAR STATIC FASTCALL
-HalReadSeq(ULONG Index)
-{
-  WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_INDEX, (UCHAR)Index);
-  return(READ_PORT_UCHAR((PUCHAR)VGA_SEQ_DATA));
-}
-
-VOID STATIC FASTCALL
-HalWriteSeq(ULONG Index, UCHAR Value)
-{
-  WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_INDEX, (UCHAR)Index);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_DATA, Value);
-}
-
-VOID STATIC FASTCALL
-HalWriteAc(ULONG Index, UCHAR Value)
-{
-  if (TextPaletteEnabled)
-    {
-      Index &= ~0x20;
+    for( i = 0; i < 16; i++ ) {
+	for( j = 0; j < 8; j++ ) {
+	    for( k = 0; k < PpcEarlybootInfo.dispDeviceDepth / 8; k++ ) {
+		SetPhysByte
+		    ((ULONG)(Dest + (j * PpcEarlybootInfo.dispDeviceDepth) + k), 
+		     ((1 << j) & (XboxFont8x16[(16 * Character) + i]) ? 0xff : 1));
+	    }
+	}
+	Dest += PpcEarlybootInfo.dispDeviceRowBytes;
     }
-  else
-    {
-      Index |= 0x20;
-    }
-  (VOID)READ_PORT_UCHAR((PUCHAR)VGA_INSTAT_READ);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_AC_INDEX, (UCHAR)Index);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_AC_WRITE, Value);
-}
-
-UCHAR STATIC FASTCALL
-HalReadAc(ULONG Index)
-{
-  if (TextPaletteEnabled)
-    {
-      Index &= ~0x20;
-    }
-  else
-    {
-      Index |= 0x20;
-    }
-  (VOID)READ_PORT_UCHAR((PUCHAR)VGA_INSTAT_READ);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_AC_INDEX, (UCHAR)Index);
-  return(READ_PORT_UCHAR((PUCHAR)VGA_AC_READ));
-}
-
-VOID STATIC FASTCALL
-HalWriteCrtc(ULONG Index, UCHAR Value)
-{
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, (UCHAR)Index);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, Value);
-}
-
-UCHAR STATIC FASTCALL
-HalReadCrtc(ULONG Index)
-{
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, (UCHAR)Index);
-  return(READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA));
-}
-
-VOID STATIC FASTCALL
-HalResetSeq(BOOLEAN Start)
-{
-  if (Start)
-    {
-      HalWriteSeq(0x00, 0x01);
-    }
-  else
-    {
-      HalWriteSeq(0x00, 0x03);
-    }
-}
-
-VOID STATIC FASTCALL
-HalBlankScreen(BOOLEAN On)
-{
-  UCHAR Scrn;
-
-  Scrn = HalReadSeq(0x01);
-
-  if (On)
-    {
-      Scrn &= ~0x20;
-    }
-  else
-    {
-      Scrn |= 0x20;
-    }
-
-  HalResetSeq(TRUE);
-  HalWriteSeq(0x01, Scrn);
-  HalResetSeq(FALSE);
-}
-
-VOID STATIC
-HalSaveFont(VOID)
-{
-  UCHAR Attr10;
-  UCHAR MiscOut, Gc4, Gc5, Gc6, Seq2, Seq4;
-  ULONG i;
-
-  /* Check if we are already in graphics mode. */
-  Attr10 = HalReadAc(0x10);
-  if (Attr10 & 0x01)
-    {
-      return;
-    }
-
-  /* Save registers. */
-  MiscOut = READ_PORT_UCHAR((PUCHAR)VGA_MISC_READ);
-  Gc4 = HalReadGc(0x04);
-  Gc5 = HalReadGc(0x05);
-  Gc6 = HalReadGc(0x06);
-  Seq2 = HalReadSeq(0x02);
-  Seq4 = HalReadSeq(0x04);
-
-  /* Force colour mode. */
-  WRITE_PORT_UCHAR((PUCHAR)VGA_MISC_WRITE, (UCHAR)(MiscOut | 0x01));
-
-  HalBlankScreen(FALSE);
-
-  for (i = 0; i < 2; i++)
-    {
-      /* Save font 1 */
-      HalWriteSeq(0x02, (UCHAR)(0x04 << i)); /* Write to plane 2 or 3 */
-      HalWriteSeq(0x04, 0x06); /* Enable plane graphics. */
-      HalWriteGc(0x04, (UCHAR)(0x02 + i)); /* Read plane 2 or 3 */
-      HalWriteGc(0x05, 0x00); /* Write mode 0; read mode 0 */
-      HalWriteGc(0x06, 0x05); /* Set graphics. */
-      memcpy(SavedTextFont[i], GraphVideoBuffer, FONT_AMOUNT);
-    }
-
-  /* Restore registers. */
-  HalWriteAc(0x10, Attr10);
-  HalWriteSeq(0x02, Seq2);
-  HalWriteSeq(0x04, Seq4);
-  HalWriteGc(0x04, Gc4);
-  HalWriteGc(0x05, Gc5);
-  HalWriteGc(0x06, Gc6);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_MISC_WRITE, MiscOut);
-
-  HalBlankScreen(TRUE);
-}
-
-VOID STATIC
-HalSaveMode(VOID)
-{
-  ULONG i;
-
-  SavedTextMiscOutReg = READ_PORT_UCHAR((PUCHAR)VGA_MISC_READ);
-
-  for (i = 0; i < VGA_CRTC_NUM_REGISTERS; i++)
-    {
-      SavedTextCrtcReg[i] = HalReadCrtc(i);
-    }
-
-  HalEnablePalette();
-  for (i = 0; i < VGA_AC_NUM_REGISTERS; i++)
-    {
-      SavedTextAcReg[i] = HalReadAc(i);
-    }
-  HalDisablePalette();
-
-  for (i = 0; i < VGA_GC_NUM_REGISTERS; i++)
-    {
-      SavedTextGcReg[i] = HalReadGc(i);
-    }
-
-  for (i = 0; i < VGA_SEQ_NUM_REGISTERS; i++)
-    {
-      SavedTextSeqReg[i] = HalReadSeq(i);
-    }
-}
-
-VOID STATIC
-HalDacDelay(VOID)
-{
-  (VOID)READ_PORT_UCHAR((PUCHAR)VGA_INSTAT_READ);
-  (VOID)READ_PORT_UCHAR((PUCHAR)VGA_INSTAT_READ);
-}
-
-VOID STATIC
-HalSavePalette(VOID)
-{
-  ULONG i;
-  WRITE_PORT_UCHAR((PUCHAR)VGA_DAC_MASK, 0xFF);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_DAC_READ_INDEX, 0x00);
-  for (i = 0; i < 768; i++)
-    {
-      SavedTextPalette[i] = READ_PORT_UCHAR((PUCHAR)VGA_DAC_DATA);
-      HalDacDelay();
-    }
-}
-
-VOID STATIC
-HalRestoreFont(VOID)
-{
-  UCHAR MiscOut, Attr10, Gc1, Gc3, Gc4, Gc5, Gc6, Gc8;
-  UCHAR Seq2, Seq4;
-  ULONG i;
-
-  /* Save registers. */
-  MiscOut = READ_PORT_UCHAR((PUCHAR)VGA_MISC_READ);
-  Attr10 = HalReadAc(0x10);
-  Gc1 = HalReadGc(0x01);
-  Gc3 = HalReadGc(0x03);
-  Gc4 = HalReadGc(0x04);
-  Gc5 = HalReadGc(0x05);
-  Gc6 = HalReadGc(0x06);
-  Gc8 = HalReadGc(0x08);
-  Seq2 = HalReadSeq(0x02);
-  Seq4 = HalReadSeq(0x04);
-
-  /* Force into colour mode. */
-  WRITE_PORT_UCHAR((PUCHAR)VGA_MISC_WRITE, (UCHAR)(MiscOut | 0x10));
-
-  HalBlankScreen(FALSE);
-
-  HalWriteGc(0x03, 0x00);  /* Don't rotate; write unmodified. */
-  HalWriteGc(0x08, 0xFF);  /* Write all bits. */
-  HalWriteGc(0x01, 0x00);  /* All planes from CPU. */
-
-  for (i = 0; i < 2; i++)
-    {
-      HalWriteSeq(0x02, (UCHAR)(0x04 << i)); /* Write to plane 2 or 3 */
-      HalWriteSeq(0x04, 0x06); /* Enable plane graphics. */
-      HalWriteGc(0x04, (UCHAR)(0x02 + i)); /* Read plane 2 or 3 */
-      HalWriteGc(0x05, 0x00); /* Write mode 0; read mode 0. */
-      HalWriteGc(0x06, 0x05); /* Set graphics. */
-      memcpy(GraphVideoBuffer, SavedTextFont[i], FONT_AMOUNT);
-    }
-
-  HalBlankScreen(TRUE);
-
-  /* Restore registers. */
-  WRITE_PORT_UCHAR((PUCHAR)VGA_MISC_WRITE, MiscOut);
-  HalWriteAc(0x10, Attr10);
-  HalWriteGc(0x01, Gc1);
-  HalWriteGc(0x03, Gc3);
-  HalWriteGc(0x04, Gc4);
-  HalWriteGc(0x05, Gc5);
-  HalWriteGc(0x06, Gc6);
-  HalWriteGc(0x08, Gc8);
-  HalWriteSeq(0x02, Seq2);
-  HalWriteSeq(0x04, Seq4);
-}
-
-VOID STATIC
-HalRestoreMode(VOID)
-{
-  ULONG i;
-
-  WRITE_PORT_UCHAR((PUCHAR)VGA_MISC_WRITE, SavedTextMiscOutReg);
-
-  for (i = 1; i < VGA_SEQ_NUM_REGISTERS; i++)
-    {
-      HalWriteSeq(i, SavedTextSeqReg[i]);
-    }
-
-  /* Unlock CRTC registers 0-7 */
-  HalWriteCrtc(17, (UCHAR)(SavedTextCrtcReg[17] & ~0x80));
-
-  for (i = 0; i < VGA_CRTC_NUM_REGISTERS; i++)
-    {
-      HalWriteCrtc(i, SavedTextCrtcReg[i]);
-    }
-
-  for (i = 0; i < VGA_GC_NUM_REGISTERS; i++)
-    {
-      HalWriteGc(i, SavedTextGcReg[i]);
-    }
-
-  HalEnablePalette();
-  for (i = 0; i < VGA_AC_NUM_REGISTERS; i++)
-    {
-      HalWriteAc(i, SavedTextAcReg[i]);
-    }
-  HalDisablePalette();
-}
-
-VOID STATIC
-HalRestorePalette(VOID)
-{
-  ULONG i;
-  WRITE_PORT_UCHAR((PUCHAR)VGA_DAC_MASK, 0xFF);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_DAC_WRITE_INDEX, 0x00);
-  for (i = 0; i < 768; i++)
-    {
-      WRITE_PORT_UCHAR((PUCHAR)VGA_DAC_DATA, SavedTextPalette[i]);
-      HalDacDelay();
-    }
-  HalDisablePalette();
 }
 
 /* PRIVATE FUNCTIONS ********************************************************/
@@ -578,55 +214,27 @@ HalInitializeDisplay (PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
  *         InitParameters = Parameters setup by the boot loader
  */
 {
-  PHYSICAL_ADDRESS PhysBuffer;
+    __asm__("mr 20, %0\n\t"
+	    "mr 21, %0\n\t"
+	    "nop" : 
+	    : 
+	    "r" (DisplayInitialized),
+	    "r" (&GraphVideoBuffer) : 
+	    "r20", "r21");
 
   if (! DisplayInitialized)
     {
-      ULONG ScanLines;
-      ULONG Data;
-
-      PhysBuffer.u.HighPart = 0;
-      PhysBuffer.u.LowPart = VGA_GRAPH_MEM;
-      GraphVideoBuffer = MmMapIoSpace(PhysBuffer, VGA_END_MEM - VGA_GRAPH_MEM + 1, MmNonCached);
-      if (NULL == GraphVideoBuffer)
-        {
-          return;
-        }
-      VideoBuffer = (PUSHORT) (GraphVideoBuffer + (VGA_CHAR_MEM - VGA_GRAPH_MEM));
+      boot_infos_t *XBootInfo = (boot_infos_t *)LoaderBlock->ArchExtra;
+      GraphVideoBuffer = (ULONG)XBootInfo->dispDeviceBase;
+      memcpy(&PpcEarlybootInfo, XBootInfo, sizeof(*XBootInfo));
 
       /* Set cursor position */
-//      CursorX = LoaderBlock->cursorx;
-//      CursorY = LoaderBlock->cursory;
       CursorX = 0;
       CursorY = 0;
 
-      /* read screen size from the crtc */
-      /* FIXME: screen size should be read from the boot parameters */
-      WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_COLUMNS);
-      SizeX = READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA) + 1;
-      WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_ROWS);
-      SizeY = READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA);
-      WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_OVERFLOW);
-      Data = READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA);
-      SizeY |= (((Data & 0x02) << 7) | ((Data & 0x40) << 3));
-      SizeY++;
-      WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_SCANLINES);
-      ScanLines = (READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA) & 0x1F) + 1;
-      SizeY = SizeY / ScanLines;
-
-#ifdef BOCHS_30ROWS
-      SizeY=30;
-#endif
-      HalClearDisplay(CHAR_ATTRIBUTE_BLACK);
+      HalClearDisplay(1);
 
       DisplayInitialized = TRUE;
-
-      /* 
-	 Save the VGA state at this point so we can restore it on a bugcheck.
-      */
-      HalSavePalette();
-      HalSaveMode();
-      HalSaveFont();
     }
 }
 
@@ -645,14 +253,8 @@ HalReleaseDisplayOwnership(VOID)
   if (HalOwnsDisplay == TRUE)
     return;
 
-  if (!HalResetDisplayParameters(SizeX, SizeY))
-    {
-      HalRestoreMode();
-      HalRestoreFont();
-      HalRestorePalette();
-    }
   HalOwnsDisplay = TRUE;
-  HalClearDisplay(CHAR_ATTRIBUTE);
+  HalClearDisplay(0);
 }
 
 
@@ -681,12 +283,9 @@ HalDisplayString(IN PCH String)
  */
 {
   PCH pch;
-#ifdef SCREEN_SYNCHRONIZATION
-  int offset;
-#endif
   static KSPIN_LOCK Lock;
   KIRQL OldIrql;
-  ULONG Flags;
+  BOOLEAN InterruptsEnabled = PPCGetEEBit();
 
   /* See comment at top of file */
   if (! HalOwnsDisplay || ! DisplayInitialized)
@@ -699,18 +298,7 @@ HalDisplayString(IN PCH String)
   OldIrql = KfRaiseIrql(HIGH_LEVEL);
   KiAcquireSpinLock(&Lock);
 
-  Ki386SaveFlags(Flags);
-  Ki386DisableInterrupts();
-  
-#ifdef SCREEN_SYNCHRONIZATION
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURHI);
-  offset = READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA)<<8;
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURLO);
-  offset += READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA);
-  
-  CursorY = offset / SizeX;
-  CursorX = offset % SizeX;
-#endif
+  _disable();
   
   while (*pch != 0)
     {
@@ -747,15 +335,8 @@ HalDisplayString(IN PCH String)
       pch++;
     }
   
-#ifdef SCREEN_SYNCHRONIZATION
-  offset = (CursorY * SizeX) + CursorX;
-  
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURLO);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, (UCHAR)(offset & 0xff));
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURHI);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, (UCHAR)((offset >> 8) & 0xff));
-#endif
-  Ki386RestoreFlags(Flags);
+  if(InterruptsEnabled)
+      _enable();
 
   KiReleaseSpinLock(&Lock);
   KfLowerIrql(OldIrql);
