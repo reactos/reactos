@@ -13,6 +13,8 @@ static const TCHAR szPreviewWndClass[] = TEXT("PreviewWndClass");
 
 typedef struct _PREVIEW_DATA
 {
+    HWND hwndParent;
+
     DWORD clrDesktop;
     HBRUSH hbrDesktop;
 
@@ -39,6 +41,7 @@ typedef struct _PREVIEW_DATA
     RECT rcActiveFrame;
     RECT rcActiveCaption;
     RECT rcActiveMenuBar;
+    RECT rcSelectedMenuItem;
     RECT rcActiveClient;
     RECT rcActiveScroll;
 
@@ -175,6 +178,9 @@ OnCreate(HWND hwnd, PPREVIEW_DATA pPreviewData)
                    MF_BYCOMMAND | MF_DISABLED);
     HiliteMenuItem(hwnd, pPreviewData->hMenu,
                    ID_MENU_SELECTED, MF_BYCOMMAND | MF_HILITE);
+
+//    GetMenuItemRect(hwnd, pPreviewData->hMenu,
+//                    ID_MENU_SELECTED, &pPreviewData->rcSelectedMenuItem);
 
 
     AllocAndLoadString(&pPreviewData->lpInAct, hApplet, IDS_INACTWIN);
@@ -348,6 +354,54 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
 
 
 static VOID
+OnLButtonDown(HWND hwnd, int xPos, int yPos, PPREVIEW_DATA pPreviewData)
+{
+    UINT type = IDX_DESKTOP;
+    POINT pt;
+
+    pt.x = xPos;
+    pt.y = yPos;
+
+    if (PtInRect(&pPreviewData->rcInactiveFrame, pt))
+        type = IDX_INACTIVE_BORDER;
+
+    if (PtInRect(&pPreviewData->rcInactiveCaption, pt))
+        type = IDX_INACTIVE_CAPTION;
+
+
+    if (PtInRect(&pPreviewData->rcActiveFrame, pt))
+        type = IDX_ACTIVE_BORDER;
+
+    if (PtInRect(&pPreviewData->rcActiveCaption, pt))
+        type = IDX_ACTIVE_CAPTION;
+
+    if (PtInRect(&pPreviewData->rcActiveMenuBar, pt))
+        type = IDX_MENU;
+
+//    if (PtInRect(&pPreviewData->rcSelectedMenuItem, pt))
+//        type = IDX_SELECTION;
+
+    if (PtInRect(&pPreviewData->rcActiveClient, pt))
+        type = IDX_WINDOW;
+
+    if (PtInRect(&pPreviewData->rcActiveScroll, pt))
+        type = IDX_SCROLLBAR;
+
+
+    if (PtInRect(&pPreviewData->rcDialogFrame, pt))
+        type = IDX_DIALOG;
+
+    if (PtInRect(&pPreviewData->rcDialogCaption, pt))
+        type = IDX_ACTIVE_CAPTION;
+
+    if (PtInRect(&pPreviewData->rcDialogButton, pt))
+        type = IDX_3D_OBJECTS;
+
+    SendMessage(GetParent(hwnd), WM_USER, 0, type);
+}
+
+
+static VOID
 OnDestroy(PPREVIEW_DATA pPreviewData)
 {
     DeleteObject(pPreviewData->hbrScrollbar);
@@ -398,6 +452,10 @@ PreviewWndProc(HWND hwnd,
 
         case WM_PAINT:
             OnPaint(hwnd, pPreviewData);
+            break;
+
+        case WM_LBUTTONDOWN:
+            OnLButtonDown(hwnd, LOWORD(lParam), HIWORD(lParam), pPreviewData);
             break;
 
         case WM_DESTROY:
