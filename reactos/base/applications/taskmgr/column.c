@@ -31,7 +31,7 @@ INT_PTR CALLBACK    ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam,
 
 void AddColumns(void)
 {
-    int        size;
+    LRESULT        size;
 
     if (TaskManagerSettings.Column_ImageName) {
         LoadString(hInst, IDS_TAB_IMAGENAME, szTemp, 256);
@@ -188,7 +188,7 @@ void SaveColumnSettings(void)
     HDITEM    hditem;
     int        i;
     TCHAR    text[260];
-    int        size;
+    LRESULT        size;
 
     /* Reset column data */
     for (i=0; i<25; i++)
@@ -551,31 +551,31 @@ ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         if (LOWORD(wParam) == IDOK)
         {
-            TaskManagerSettings.Column_ImageName = SendMessage(GetDlgItem(hDlg, IDC_IMAGENAME), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_PID = SendMessage(GetDlgItem(hDlg, IDC_PID), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_UserName = SendMessage(GetDlgItem(hDlg, IDC_USERNAME), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_SessionID = SendMessage(GetDlgItem(hDlg, IDC_SESSIONID), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_CPUUsage = SendMessage(GetDlgItem(hDlg, IDC_CPUUSAGE), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_CPUTime = SendMessage(GetDlgItem(hDlg, IDC_CPUTIME), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_MemoryUsage = SendMessage(GetDlgItem(hDlg, IDC_MEMORYUSAGE), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_PeakMemoryUsage = SendMessage(GetDlgItem(hDlg, IDC_PEAKMEMORYUSAGE), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_MemoryUsageDelta = SendMessage(GetDlgItem(hDlg, IDC_MEMORYUSAGEDELTA), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_PageFaults = SendMessage(GetDlgItem(hDlg, IDC_PAGEFAULTS), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_PageFaultsDelta = SendMessage(GetDlgItem(hDlg, IDC_PAGEFAULTSDELTA), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_VirtualMemorySize = SendMessage(GetDlgItem(hDlg, IDC_VIRTUALMEMORYSIZE), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_PagedPool = SendMessage(GetDlgItem(hDlg, IDC_PAGEDPOOL), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_NonPagedPool = SendMessage(GetDlgItem(hDlg, IDC_NONPAGEDPOOL), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_BasePriority = SendMessage(GetDlgItem(hDlg, IDC_BASEPRIORITY), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_HandleCount = SendMessage(GetDlgItem(hDlg, IDC_HANDLECOUNT), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_ThreadCount = SendMessage(GetDlgItem(hDlg, IDC_THREADCOUNT), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_USERObjects = SendMessage(GetDlgItem(hDlg, IDC_USEROBJECTS), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_GDIObjects = SendMessage(GetDlgItem(hDlg, IDC_GDIOBJECTS), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_IOReads = SendMessage(GetDlgItem(hDlg, IDC_IOREADS), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_IOWrites = SendMessage(GetDlgItem(hDlg, IDC_IOWRITES), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_IOOther = SendMessage(GetDlgItem(hDlg, IDC_IOOTHER), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_IOReadBytes = SendMessage(GetDlgItem(hDlg, IDC_IOREADBYTES), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_IOWriteBytes = SendMessage(GetDlgItem(hDlg, IDC_IOWRITEBYTES), BM_GETCHECK, 0, 0);
-            TaskManagerSettings.Column_IOOtherBytes = SendMessage(GetDlgItem(hDlg, IDC_IOOTHERBYTES), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_ImageName = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_IMAGENAME), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_PID = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_PID), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_UserName = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_USERNAME), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_SessionID = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_SESSIONID), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_CPUUsage = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_CPUUSAGE), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_CPUTime = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_CPUTIME), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_MemoryUsage = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_MEMORYUSAGE), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_PeakMemoryUsage = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_PEAKMEMORYUSAGE), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_MemoryUsageDelta = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_MEMORYUSAGEDELTA), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_PageFaults = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_PAGEFAULTS), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_PageFaultsDelta = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_PAGEFAULTSDELTA), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_VirtualMemorySize = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_VIRTUALMEMORYSIZE), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_PagedPool = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_PAGEDPOOL), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_NonPagedPool = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_NONPAGEDPOOL), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_BasePriority = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_BASEPRIORITY), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_HandleCount = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_HANDLECOUNT), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_ThreadCount = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_THREADCOUNT), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_USERObjects = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_USEROBJECTS), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_GDIObjects = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_GDIOBJECTS), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_IOReads = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_IOREADS), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_IOWrites = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_IOWRITES), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_IOOther = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_IOOTHER), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_IOReadBytes = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_IOREADBYTES), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_IOWriteBytes = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_IOWRITEBYTES), BM_GETCHECK, 0, 0);
+            TaskManagerSettings.Column_IOOtherBytes = (BOOL) SendMessage(GetDlgItem(hDlg, IDC_IOOTHERBYTES), BM_GETCHECK, 0, 0);
 
             EndDialog(hDlg, LOWORD(wParam));
             return TRUE;

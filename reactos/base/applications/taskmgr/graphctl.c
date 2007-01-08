@@ -22,7 +22,7 @@
 
 #include <precomp.h>
 
-LONG OldGraphCtrlWndProc;
+WNDPROC OldGraphCtrlWndProc;
 
 static void GraphCtrl_Init(TGraphCtrl* this)
 {
@@ -101,8 +101,14 @@ static void GraphCtrl_Init(TGraphCtrl* this)
 
 void GraphCtrl_Dispose(TGraphCtrl* this)
 {
+    int plot;
+
+    for (plot = 0; plot < MAX_PLOTS; plot++)
+        DeleteObject(this->m_penPlot[plot]);
+
     /*  just to be picky restore the bitmaps for the two memory dc's */
     /*  (these dc's are being destroyed so there shouldn't be any leaks) */
+
     if (this->m_bitmapOldGrid != NULL) SelectObject(this->m_dcGrid, this->m_bitmapOldGrid);
     if (this->m_bitmapOldPlot != NULL) SelectObject(this->m_dcPlot, this->m_bitmapOldPlot);
     if (this->m_bitmapGrid    != NULL) DeleteObject(this->m_bitmapGrid);
@@ -209,6 +215,7 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
         // so create a new bitmap of the appropriate size
         if(this->m_bitmapGrid != NULL)
         {
+            this->m_bitmapGrid = (HBITMAP)SelectObject(this->m_dcGrid, this->m_bitmapOldGrid);
             DeleteObject(this->m_bitmapGrid);
             this->m_bitmapGrid = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
             SelectObject(this->m_dcGrid, this->m_bitmapGrid);
@@ -341,6 +348,7 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
         // so create a new bitmap of the appropriate size
         if(this->m_bitmapPlot != NULL)
         {
+            this->m_bitmapPlot = (HBITMAP)SelectObject(this->m_dcPlot, this->m_bitmapOldPlot);
             DeleteObject(this->m_bitmapPlot);
             this->m_bitmapPlot = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
             SelectObject(this->m_dcPlot, this->m_bitmapPlot);

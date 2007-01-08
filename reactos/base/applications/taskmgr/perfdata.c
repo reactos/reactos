@@ -63,6 +63,10 @@ BOOL PerfDataInitialize(void)
 
 void PerfDataUninitialize(void)
 {
+
+    if (pPerfData != NULL)
+        HeapFree(GetProcessHeap(), 0, pPerfData);
+
     DeleteCriticalSection(&PerfDataCriticalSection);
 
     if (SystemUserSid != NULL)
@@ -121,8 +125,13 @@ void PerfDataRefresh(void)
     /* Get processor time information */
     SysProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)HeapAlloc(GetProcessHeap(), 0, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberOfProcessors);
     status = NtQuerySystemInformation(SystemProcessorPerformanceInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberOfProcessors, &ulSize);
+
     if (status != NO_ERROR)
+    {
+        if (SysProcessorTimeInfo != NULL)
+            HeapFree(GetProcessHeap(), 0, SysProcessorTimeInfo);
         return;
+    }
 
     /* Get handle information
      * We don't know how much data there is so just keep

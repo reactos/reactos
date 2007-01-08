@@ -42,10 +42,11 @@ DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
 INT_PTR CALLBACK
 ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    RECT    rc;
+    RECT       rc;
     int        nXDifference;
     int        nYDifference;
     int        cx, cy;
+    HANDLE     hRefreshThread = NULL;
 
     switch (message) {
     case WM_INITDIALOG:
@@ -79,10 +80,10 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         /*
          * Subclass the process list control so we can intercept WM_ERASEBKGND
          */
-        OldProcessListWndProc = (WNDPROC)SetWindowLongPtr(hProcessPageListCtrl, GWL_WNDPROC, (DWORD_PTR)ProcessListWndProc);
+        OldProcessListWndProc = (WNDPROC)(LONG_PTR) SetWindowLongPtr(hProcessPageListCtrl, GWL_WNDPROC, (LONG_PTR)ProcessListWndProc);
 
         /* Start our refresh thread */
-         CreateThread(NULL, 0, ProcessPageRefreshThread, NULL, 0, NULL);
+        hRefreshThread = CreateThread(NULL, 0, ProcessPageRefreshThread, NULL, 0, NULL);
 
         return TRUE;
 
@@ -90,6 +91,7 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         /* Close the event handle, this will make the */
         /* refresh thread exit when the wait fails */
         CloseHandle(hProcessPageEvent);
+        CloseHandle(hRefreshThread);	
 
         SaveColumnSettings();
 

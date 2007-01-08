@@ -110,58 +110,63 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	RECT	rc;
 	int		nXDifference;
 	int		nYDifference;
-
+#ifdef RUN_PERF_PAGE
+	HANDLE	hRefreshThread = NULL;
+#endif
 /*     HDC hdc; */
 /*     PAINTSTRUCT ps; */
 
     switch (message) {
-	case WM_DESTROY:
-		GraphCtrl_Dispose(&PerformancePageCpuUsageHistoryGraph);
-		GraphCtrl_Dispose(&PerformancePageMemUsageHistoryGraph);
-		break;
+    case WM_DESTROY:
+        GraphCtrl_Dispose(&PerformancePageCpuUsageHistoryGraph);
+        GraphCtrl_Dispose(&PerformancePageMemUsageHistoryGraph);
+#ifdef RUN_PERF_PAGE
+		CloseHandle(hRefreshThread);
+#endif
+        break;
 
-	case WM_INITDIALOG:
+    case WM_INITDIALOG:
 
-		/*  Save the width and height */
-		GetClientRect(hDlg, &rc);
-		nPerformancePageWidth = rc.right;
-		nPerformancePageHeight = rc.bottom;
+        /*  Save the width and height */
+        GetClientRect(hDlg, &rc);
+        nPerformancePageWidth = rc.right;
+        nPerformancePageHeight = rc.bottom;
 
-		/*  Update window position */
-		SetWindowPos(hDlg, NULL, 15, 30, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
+        /*  Update window position */
+        SetWindowPos(hDlg, NULL, 15, 30, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
 
-		/*
-		 *  Get handles to all the controls
-		 */
-		hPerformancePageTotalsFrame = GetDlgItem(hDlg, IDC_TOTALS_FRAME);
-		hPerformancePageCommitChargeFrame = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_FRAME);
-		hPerformancePageKernelMemoryFrame = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_FRAME);
-		hPerformancePagePhysicalMemoryFrame = GetDlgItem(hDlg, IDC_PHYSICAL_MEMORY_FRAME);
+        /*
+         *  Get handles to all the controls
+         */
+        hPerformancePageTotalsFrame = GetDlgItem(hDlg, IDC_TOTALS_FRAME);
+        hPerformancePageCommitChargeFrame = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_FRAME);
+        hPerformancePageKernelMemoryFrame = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_FRAME);        
+        hPerformancePagePhysicalMemoryFrame = GetDlgItem(hDlg, IDC_PHYSICAL_MEMORY_FRAME);
 
-		hPerformancePageCpuUsageFrame = GetDlgItem(hDlg, IDC_CPU_USAGE_FRAME);
-		hPerformancePageMemUsageFrame = GetDlgItem(hDlg, IDC_MEM_USAGE_FRAME);
-		hPerformancePageCpuUsageHistoryFrame = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_FRAME);
-		hPerformancePageMemUsageHistoryFrame = GetDlgItem(hDlg, IDC_MEMORY_USAGE_HISTORY_FRAME);
+        hPerformancePageCpuUsageFrame = GetDlgItem(hDlg, IDC_CPU_USAGE_FRAME);
+        hPerformancePageMemUsageFrame = GetDlgItem(hDlg, IDC_MEM_USAGE_FRAME);
+        hPerformancePageCpuUsageHistoryFrame = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_FRAME);
+        hPerformancePageMemUsageHistoryFrame = GetDlgItem(hDlg, IDC_MEMORY_USAGE_HISTORY_FRAME);
 
-		hPerformancePageCommitChargeTotalEdit = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_TOTAL);
-		hPerformancePageCommitChargeLimitEdit = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_LIMIT);
-		hPerformancePageCommitChargePeakEdit = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_PEAK);
-		hPerformancePageKernelMemoryTotalEdit = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_TOTAL);
-		hPerformancePageKernelMemoryPagedEdit = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_PAGED);
-		hPerformancePageKernelMemoryNonPagedEdit = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_NONPAGED);
-		hPerformancePagePhysicalMemoryTotalEdit = GetDlgItem(hDlg, IDC_PHYSICAL_MEMORY_TOTAL);
-		hPerformancePagePhysicalMemoryAvailableEdit = GetDlgItem(hDlg, IDC_PHYSICAL_MEMORY_AVAILABLE);
-		hPerformancePagePhysicalMemorySystemCacheEdit = GetDlgItem(hDlg, IDC_PHYSICAL_MEMORY_SYSTEM_CACHE);
-		hPerformancePageTotalsHandleCountEdit = GetDlgItem(hDlg, IDC_TOTALS_HANDLE_COUNT);
-		hPerformancePageTotalsProcessCountEdit = GetDlgItem(hDlg, IDC_TOTALS_PROCESS_COUNT);
-		hPerformancePageTotalsThreadCountEdit = GetDlgItem(hDlg, IDC_TOTALS_THREAD_COUNT);
+        hPerformancePageCommitChargeTotalEdit = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_TOTAL);
+        hPerformancePageCommitChargeLimitEdit = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_LIMIT);
+        hPerformancePageCommitChargePeakEdit = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_PEAK);
+        hPerformancePageKernelMemoryTotalEdit = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_TOTAL);
+        hPerformancePageKernelMemoryPagedEdit = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_PAGED);
+        hPerformancePageKernelMemoryNonPagedEdit = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_NONPAGED);
+        hPerformancePagePhysicalMemoryTotalEdit = GetDlgItem(hDlg, IDC_PHYSICAL_MEMORY_TOTAL);
+        hPerformancePagePhysicalMemoryAvailableEdit = GetDlgItem(hDlg, IDC_PHYSICAL_MEMORY_AVAILABLE);
+        hPerformancePagePhysicalMemorySystemCacheEdit = GetDlgItem(hDlg, IDC_PHYSICAL_MEMORY_SYSTEM_CACHE);
+        hPerformancePageTotalsHandleCountEdit = GetDlgItem(hDlg, IDC_TOTALS_HANDLE_COUNT);
+        hPerformancePageTotalsProcessCountEdit = GetDlgItem(hDlg, IDC_TOTALS_PROCESS_COUNT);
+        hPerformancePageTotalsThreadCountEdit = GetDlgItem(hDlg, IDC_TOTALS_THREAD_COUNT);
 
         hPerformancePageCpuUsageGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_GRAPH);
-		hPerformancePageMemUsageGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_GRAPH);
-		hPerformancePageMemUsageHistoryGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
+        hPerformancePageMemUsageGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_GRAPH);
+        hPerformancePageMemUsageHistoryGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
         hPerformancePageCpuUsageHistoryGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
-
-		GetClientRect(hPerformancePageCpuUsageHistoryGraph, &rc);
+        
+        GetClientRect(hPerformancePageCpuUsageHistoryGraph, &rc);
         /*  create the control */
         /* PerformancePageCpuUsageHistoryGraph.Create(0, rc, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH); */
         GraphCtrl_Create(&PerformancePageCpuUsageHistoryGraph, hPerformancePageCpuUsageHistoryGraph, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
@@ -185,19 +190,19 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         GraphCtrl_SetBackgroundColor(&PerformancePageMemUsageHistoryGraph, RGB(0, 0, 0)) ;
         GraphCtrl_SetGridColor(&PerformancePageMemUsageHistoryGraph, RGB(152, 215, 152)) ;
         GraphCtrl_SetPlotColor(&PerformancePageMemUsageHistoryGraph, 0, RGB(255, 255, 0)) ;
-		/*  Start our refresh thread */
+        /*  Start our refresh thread */
 #ifdef RUN_PERF_PAGE
-        CreateThread(NULL, 0, PerformancePageRefreshThread, NULL, 0, NULL);
+        hRefreshThread = CreateThread(NULL, 0, PerformancePageRefreshThread, NULL, 0, NULL);
 #endif
 
-		/*
-		 *  Subclass graph buttons
-		 */
-        OldGraphWndProc = SetWindowLongPtr(hPerformancePageCpuUsageGraph, GWL_WNDPROC, (DWORD_PTR)Graph_WndProc);
-        SetWindowLongPtr(hPerformancePageMemUsageGraph, GWL_WNDPROC, (DWORD_PTR)Graph_WndProc);
-		OldGraphCtrlWndProc = SetWindowLongPtr(hPerformancePageMemUsageHistoryGraph, GWL_WNDPROC, (DWORD_PTR)GraphCtrl_WndProc);
-		SetWindowLongPtr(hPerformancePageCpuUsageHistoryGraph, GWL_WNDPROC, (DWORD_PTR)GraphCtrl_WndProc);
-		return TRUE;
+        /*
+         *  Subclass graph buttons
+         */
+        OldGraphWndProc = (WNDPROC)(LONG_PTR) SetWindowLongPtr(hPerformancePageCpuUsageGraph, GWL_WNDPROC, (LONG_PTR)Graph_WndProc);
+        SetWindowLongPtr(hPerformancePageMemUsageGraph, GWL_WNDPROC, (LONG_PTR)Graph_WndProc);
+        OldGraphCtrlWndProc = (WNDPROC)(LONG_PTR) SetWindowLongPtr(hPerformancePageMemUsageHistoryGraph, GWL_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
+        SetWindowLongPtr(hPerformancePageCpuUsageHistoryGraph, GWL_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
+        return TRUE;
 
 	case WM_COMMAND:
 		break;
@@ -420,13 +425,13 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
         	 *  Get the CPU usage
         	 */
 	        CpuUsage = PerfDataGetProcessorUsage();
-        	if (CpuUsage < 0 )        CpuUsage = 0;
+        	if (CpuUsage <= 0 )        CpuUsage = 0;
         	if (CpuUsage > 100)       CpuUsage = 100;
         	
         	if (TaskManagerSettings.ShowKernelTimes)
         	{
         		CpuKernelUsage = PerfDataGetProcessorSystemUsage();
-        		if (CpuKernelUsage < 0)   CpuKernelUsage = 0;
+        		if (CpuKernelUsage <= 0)   CpuKernelUsage = 0;
         		if (CpuKernelUsage > 100) CpuKernelUsage = 100;
 			} 
 			else

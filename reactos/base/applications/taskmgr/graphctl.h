@@ -85,7 +85,7 @@ typedef struct
   RECT     m_rectPlot;
 } TGraphCtrl;
 
-extern LONG OldGraphCtrlWndProc;
+extern WNDPROC OldGraphCtrlWndProc;
 double  GraphCtrl_AppendPoint(TGraphCtrl* this,
                               double dNewPoint0, double dNewPoint1,
                               double dNewPoint2, double dNewPoint3);

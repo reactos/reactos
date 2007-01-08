@@ -96,7 +96,7 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
      * Now that we are done drawing put the
      * old bitmap back.
      */
-    SelectObject(hDC, hOldBitmap);
+    hBitmap = SelectObject(hDC, hOldBitmap);
     hOldBitmap = NULL;
 
     iconInfo.fIcon = TRUE;
@@ -114,7 +114,7 @@ done:
     if (hScreenDC)
         ReleaseDC(NULL, hScreenDC);
     if (hOldBitmap)
-        SelectObject(hDC, hOldBitmap);
+        hBitmap = SelectObject(hDC, hOldBitmap);
     if (hDC)
         DeleteDC(hDC);
     if (hBitmapBrush)

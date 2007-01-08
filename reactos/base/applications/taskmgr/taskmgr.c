@@ -444,7 +444,7 @@ BOOL OnCreate(HWND hWnd)
     nParts[0] = 100;
     nParts[1] = 210;
     nParts[2] = 400;
-    SendMessage(hStatusWnd, SB_SETPARTS, 3, (long)nParts);
+    SendMessage(hStatusWnd, SB_SETPARTS, 3, (LPARAM) (LPINT) nParts);
 
     /* Create tab pages */
     hTabWnd = GetDlgItem(hWnd, IDC_TAB);
@@ -596,7 +596,7 @@ BOOL OnCreate(HWND hWnd)
  * This function handles all the moving events for the application
  * It moves every child window that needs moving
  */
-void OnMove( UINT nType, int cx, int cy )
+void OnMove( WPARAM nType, int cx, int cy )
 {
 #ifdef __GNUC__TEST__
     MoveWindow(hApplicationPage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
@@ -609,7 +609,7 @@ void OnMove( UINT nType, int cx, int cy )
  * This function handles all the sizing events for the application
  * It re-sizes every window, and child window that needs re-sizing
  */
-void OnSize( UINT nType, int cx, int cy )
+void OnSize( WPARAM nType, int cx, int cy )
 {
     int     nParts[3];
     int     nXDifference;
@@ -638,7 +638,7 @@ void OnSize( UINT nType, int cx, int cy )
     nParts[0] = bInMenuLoop ? -1 : 100;
     nParts[1] = 210;
     nParts[2] = cx;
-    SendMessage(hStatusWnd, SB_SETPARTS, bInMenuLoop ? 1 : 3, (long)nParts);
+    SendMessage(hStatusWnd, SB_SETPARTS, bInMenuLoop ? 1 : 3, (LPARAM) (LPINT) nParts);
 
     /* Resize the tab control */
     GetWindowRect(hTabWnd, &rc);
@@ -814,7 +814,7 @@ void TaskManager_OnEnterMenuLoop(HWND hWnd)
 
     /* Update the status bar pane sizes */
     nParts = -1;
-    SendMessage(hStatusWnd, SB_SETPARTS, 1, (long)&nParts);
+    SendMessage(hStatusWnd, SB_SETPARTS, 1, (LPARAM) (LPINT)&nParts);
     bInMenuLoop = TRUE;
     SendMessage(hStatusWnd, SB_SETTEXT, (WPARAM)0, (LPARAM)_T(""));
 }
@@ -835,7 +835,7 @@ void TaskManager_OnExitMenuLoop(HWND hWnd)
     nParts[0] = 100;
     nParts[1] = 210;
     nParts[2] = rc.right;
-    SendMessage(hStatusWnd, SB_SETPARTS, 3, (long)nParts);
+    SendMessage(hStatusWnd, SB_SETPARTS, 3, (LPARAM) (LPINT) nParts);
     SendMessage(hStatusWnd, SB_SETTEXT, 0, (LPARAM)_T(""));
     wsprintf(text, szCpuUsage, PerfDataGetProcessorUsage());
     SendMessage(hStatusWnd, SB_SETTEXT, 1, (LPARAM)text);
@@ -969,7 +969,7 @@ void TaskManager_OnTabWndSelChange(void)
             hSubMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_WINDOWSMENU));
 
             LoadString(hInst, IDS_MENU_WINDOWS, szTemp, 256);
-            InsertMenu(hMenu, 3, MF_BYPOSITION|MF_POPUP, (UINT)hSubMenu, szTemp);
+            InsertMenu(hMenu, 3, MF_BYPOSITION|MF_POPUP, (UINT_PTR) hSubMenu, szTemp);
 
             DrawMenuBar(hMainWnd);
         }
@@ -1028,7 +1028,7 @@ void TaskManager_OnTabWndSelChange(void)
         AppendMenu(hSubMenu, MF_STRING, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, szTemp);
 
         LoadString(hInst, IDS_MENU_CPUHISTORY, szTemp, 256);
-        AppendMenu(hViewMenu, MF_STRING|MF_POPUP, (UINT)hSubMenu, szTemp);
+        AppendMenu(hViewMenu, MF_STRING|MF_POPUP, (UINT_PTR) hSubMenu, szTemp);
 
         LoadString(hInst, IDS_MENU_SHOWKERNELTIMES, szTemp, 256);
         AppendMenu(hViewMenu, MF_STRING, ID_VIEW_SHOWKERNELTIMES, szTemp);

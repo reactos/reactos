@@ -66,6 +66,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     LV_COLUMN   column;
     TCHAR       szTemp[256];
     int         cx, cy;
+    HANDLE      hRefreshThread = NULL;
 
     switch (message) {
     case WM_INITDIALOG:
@@ -105,7 +106,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         UpdateApplicationListControlViewSetting();
 
         /* Start our refresh thread */
-        CreateThread(NULL, 0, ApplicationPageRefreshThread, NULL, 0, NULL);
+        hRefreshThread = CreateThread(NULL, 0, ApplicationPageRefreshThread, NULL, 0, NULL);
 
         return TRUE;
 
@@ -113,6 +114,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         /* Close the event handle, this will make the */
         /* refresh thread exit when the wait fails */
         CloseHandle(hApplicationPageEvent);
+        CloseHandle(hRefreshThread);
         break;
 
     case WM_COMMAND:
@@ -283,8 +285,8 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 
     if (!hIcon)
     {
-        hIcon = (HICON)GetClassLong(hWnd, bLargeIcon ? GCL_HICON : GCL_HICONSM);
-        if (!hIcon) hIcon = (HICON)GetClassLong(hWnd, bLargeIcon ? GCL_HICONSM : GCL_HICON);
+        hIcon = (HICON)(LONG_PTR)GetClassLongPtr(hWnd, bLargeIcon ? GCL_HICON : GCL_HICONSM);
+        if (!hIcon) hIcon = (HICON)(LONG_PTR)GetClassLongPtr(hWnd, bLargeIcon ? GCL_HICONSM : GCL_HICON);
         if (!hIcon) SendMessageTimeout(hWnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (PDWORD_PTR)xhIcon);
         if (!hIcon) SendMessageTimeout(hWnd, WM_GETICON, bLargeIcon ? ICON_SMALL /*0*/ : ICON_BIG /*1*/, 0, 0, 1000, (PDWORD_PTR)xhIcon);
     }

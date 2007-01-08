@@ -127,8 +127,8 @@ extern	TASKMANAGER_SETTINGS	TaskManagerSettings;
 /* Foward declarations of functions included in this code module: */
 INT_PTR CALLBACK TaskManagerWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL OnCreate(HWND hWnd);
-void OnSize(UINT nType, int cx, int cy);
-void OnMove(UINT nType, int cx, int cy);
+void OnSize(WPARAM nType, int cx, int cy);
+void OnMove(WPARAM nType, int cx, int cy);
 void FillSolidRect(HDC hDC, LPCRECT lpRect, COLORREF clr);
 void FillSolidRect2(HDC hDC, int x, int y, int cx, int cy, COLORREF clr);
 void Draw3dRect(HDC hDC, int x, int y, int cx, int cy, COLORREF clrTopLeft, COLORREF clrBottomRight);

@@ -24,7 +24,7 @@
 
 int                nlastBarsUsed = 0;
 
-LONG                OldGraphWndProc;
+WNDPROC                OldGraphWndProc;
 
 void                Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd);
 void                Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd);
@@ -162,7 +162,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
      * Get the CPU usage
      */
     CpuUsage = PerfDataGetProcessorUsage();
-    if (CpuUsage < 0)         CpuUsage = 0;
+    if (CpuUsage <= 0)         CpuUsage = 0;
     if (CpuUsage > 100)       CpuUsage = 100;
 
     _stprintf(Text, _T("%d%%"), (int)CpuUsage);
@@ -190,9 +190,9 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     
     if (TaskManagerSettings.ShowKernelTimes)
     {
-	    CpuKernelUsage = PerfDataGetProcessorSystemUsage();
-	    if (CpuKernelUsage < 0)   CpuKernelUsage = 0;
-	    if (CpuKernelUsage > 100) CpuKernelUsage = 100;
+        CpuKernelUsage = PerfDataGetProcessorSystemUsage();
+        if (CpuKernelUsage <= 0)   CpuKernelUsage = 0;
+        if (CpuKernelUsage >= 100) CpuKernelUsage = 100;
         nBarsUsedKernel = (nBars * CpuKernelUsage) / 100;
     }
     else
