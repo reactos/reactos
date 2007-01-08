@@ -790,7 +790,7 @@ ExReleasePushLock(PEX_PUSH_LOCK PushLock)
 
     /* Check if nobody is waiting on us and try clearing the lock here */
     if ((OldValue.Waiting) ||
-        (ExpChangePushlock(PushLock, NewValue.Ptr, OldValue.Ptr) ==
+        (ExpChangePushlock(PushLock, NewValue.Ptr, OldValue.Ptr) !=
          OldValue.Ptr))
     {
         /* We have waiters, use the long path */
