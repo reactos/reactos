@@ -220,6 +220,8 @@ extern void BuildPedllFile( FILE *outfile, DLLSPEC *spec );
 extern int parse_spec_file( FILE *file, DLLSPEC *spec );
 extern int parse_def_file( FILE *file, DLLSPEC *spec );
 
+extern int mkstemps(char *template, int suffix_len);
+
 /* global variables */
 
 extern int current_line;
