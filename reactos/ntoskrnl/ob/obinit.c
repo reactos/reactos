@@ -12,11 +12,9 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ObInit)
-#endif
+/* GLOBALS *******************************************************************/
 
 GENERIC_MAPPING ObpTypeMapping =
 {
@@ -280,6 +278,10 @@ ObPostPhase0:
     Status = NtClose(Handle);
     if (!NT_SUCCESS(Status)) return FALSE;
 
+    Context.Object = NULL;
+    Context.Directory = ObpTypeDirectoryObject;
+    Context.DirectoryLocked = TRUE;
+
     /* Loop the object types */
     ListHead = &ObTypeObjectType->TypeList;
     NextEntry = ListHead->Flink;
@@ -297,10 +299,6 @@ ObPostPhase0:
         /* Make sure we have a name, and aren't inserted yet */
         if ((NameInfo) && !(NameInfo->Directory))
         {
-            /* Set up the context for the insert */
-            Context.Directory = ObpTypeDirectoryObject;
-            Context.DirectoryLocked = TRUE;
-
             /* Do the initial lookup to setup the context */
             if (!ObpLookupEntryDirectory(ObpTypeDirectoryObject,
                                          &NameInfo->Name,
@@ -318,6 +316,8 @@ ObPostPhase0:
         /* Move to the next entry */
         NextEntry = NextEntry->Flink;
     }
+
+    Context.Object = NULL;
 
     /* Initialize DOS Devices Directory and related Symbolic Links */
     Status = ObpCreateDosDevicesDirectory();
