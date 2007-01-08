@@ -297,6 +297,11 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 }
 
 VOID
+INIT_FUNCTION
+NTAPI
+LdrpSettleHal(PVOID NewHalBase);
+
+VOID
 FASTCALL
 KiRosPrepareForSystemStartup(IN ULONG Dummy,
                              IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
@@ -467,18 +472,9 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
                             (PVOID)KeLoaderModules[0].ModStart,
                             &DriverSize);
 
-    //
-    //
-    // HACK HACK HACK WHEN WILL YOU PEOPLE FIX FREELDR?!?!?!
-    // FREELDR SENDS US AN ***INVALID*** HAL PE HEADER!!!
-    // WE READ IT IN LdrInitModuleManagement ABOVE!!!
-    // WE SET .SizeOfImage TO A *GARBAGE* VALUE!!!
-    //
-    // This dirty hack fixes it, and should make symbol lookup work too.
-    //
-    HalModuleObject.SizeOfImage =  RtlImageNtHeader((PVOID)HalModuleObject.
-                                                    DllBase)->
-                                                    OptionalHeader.SizeOfImage;
+#ifdef _M_PPC
+    LdrpSettleHal((PVOID)DriverBase);
+#endif
 
     /* Increase the last kernel address with the size of HAL */
     MmFreeLdrLastKernelAddress += PAGE_ROUND_UP(DriverSize);

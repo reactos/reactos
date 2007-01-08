@@ -26,7 +26,7 @@
 #endif /* __GNUC__ */
 #endif
 
-#if 0
+#if 1
 #undef ps
 #define ps(args...) DPRINT1(args)
 #endif
@@ -102,6 +102,14 @@ LdrInit1 ( VOID )
 {
     /* Hook for KDB on initialization of the loader. */
     KDB_LOADERINIT_HOOK(&NtoskrnlModuleObject, &HalModuleObject);
+}
+
+VOID
+INIT_FUNCTION
+NTAPI
+LdrpSettleHal (PVOID NewHalBase)
+{
+    HalModuleObject.DllBase = (PVOID) NewHalBase;
 }
 
 VOID
@@ -994,9 +1002,9 @@ LdrSafePEProcessModule (
             //  Copy current section into current offset of virtual section
             if (Section->SizeOfRawData)
             {
-                //            ps("PESectionHeaders[Idx].VirtualAddress (%X) + DriverBase %x\n",
-                //                PESectionHeaders[Idx].VirtualAddress, PESectionHeaders[Idx].VirtualAddress + DriverBase);
-                memcpy(Section->VirtualAddress   + (char*)DriverBase,
+		ps("PESectionHeaders[Idx].VirtualAddress (%X) + DriverBase %x\n",
+		   PESectionHeaders[Idx].VirtualAddress, PESectionHeaders[Idx].VirtualAddress + DriverBase);
+                memmove(Section->VirtualAddress   + (char*)DriverBase,
                     Section->PointerToRawData + (char*)ModuleLoadBase,
                     Section->Misc.VirtualSize > Section->SizeOfRawData ? Section->SizeOfRawData : Section->Misc.VirtualSize);
             }
@@ -1010,6 +1018,17 @@ LdrSafePEProcessModule (
                 PENtHeaders->OptionalHeader.SectionAlignment);
         }
 
+        /*  Perform relocation fixups  */
+        Status = LdrRelocateImageWithBias(DriverBase, 0, "", STATUS_SUCCESS,
+            STATUS_CONFLICTING_ADDRESSES, STATUS_INVALID_IMAGE_FORMAT);
+
+        if (!NT_SUCCESS(Status))
+        {
+            return NULL;
+        }
+    }
+    else if(ModuleLoadBase != (PVOID)PENtHeaders->OptionalHeader.ImageBase)
+    {
         /*  Perform relocation fixups  */
         Status = LdrRelocateImageWithBias(DriverBase, 0, "", STATUS_SUCCESS,
             STATUS_CONFLICTING_ADDRESSES, STATUS_INVALID_IMAGE_FORMAT);
@@ -1392,6 +1411,7 @@ LdrPEProcessImportDirectoryEntry(
                 DPRINT1("Failed to import %s from %wZ\n", pe_name->Name, &ImportedModule->FullDllName);
                 return STATUS_UNSUCCESSFUL;
             }
+	    DbgPrint("Function %08x: %s\n", *ImportAddressList, pe_name->Name);
         }
         ImportAddressList++;
         FunctionNameList++;
