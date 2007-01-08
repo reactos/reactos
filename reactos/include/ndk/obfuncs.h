@@ -118,6 +118,12 @@ ObFindHandleForObject(
     OUT PHANDLE Handle
 );
 
+VOID
+NTAPI
+ObDereferenceObjectDeferDelete(
+    IN PVOID Object
+);
+
 #endif
 
 //
