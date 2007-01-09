@@ -342,6 +342,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 	string CompilerVar;
 	string baseaddr;
 	string windres_defines;
+	string widl_options;
 	string project_linker_flags = "-Wl,--enable-stdcall-fixup ";
 	project_linker_flags += GenerateProjectLinkerFlags();
 
@@ -353,7 +354,20 @@ CBBackend::_generate_cbproj ( const Module& module )
 	vector<string> source_files, resource_files, includes, libraries, libpaths;
 	vector<string> header_files, common_defines, compiler_flags;
 	vector<string> vars, values;
-	
+
+	/* do not create project files for these targets
+	   use virtual targets instead */
+	switch (module.type)
+	{
+		case Iso:
+		case LiveIso:
+		case IsoRegTest:
+		case LiveIsoRegTest:
+			return;
+		default:
+			break;
+	}
+
 	compiler_flags.push_back ( "-Wall" );
 
 	// Always force disabling of sibling calls optimisation for GCC
@@ -414,6 +428,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 				module.GetBasePath() );
 
 			includes.push_back ( path );
+			widl_options += "-I" + path + " ";
 		}
 		const vector<Library*>& libs = data.libraries;
 		for ( i = 0; i < libs.size(); i++ )
@@ -467,12 +482,13 @@ CBBackend::_generate_cbproj ( const Module& module )
 
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>\r\n" );
 	fprintf ( OUT, "<CodeBlocks_project_file>\r\n" );
-	fprintf ( OUT, "\t<FileVersion major=\"1\" minor=\"5\" />\r\n" );
+	fprintf ( OUT, "\t<FileVersion major=\"1\" minor=\"6\" />\r\n" );
 	fprintf ( OUT, "\t<Project>\r\n" );
 	fprintf ( OUT, "\t\t<Option title=\"%s\" />\r\n", module.name.c_str() );
 	fprintf ( OUT, "\t\t<Option pch_mode=\"2\" />\r\n" );
 	fprintf ( OUT, "\t\t<Option default_target=\"\" />\r\n" );
 	fprintf ( OUT, "\t\t<Option compiler=\"gcc\" />\r\n" );
+	fprintf ( OUT, "\t\t<Option extended_obj_names=\"1\" />\r\n" );
 	fprintf ( OUT, "\t\t<Option virtualFolders=\"\" />\r\n" );
 	fprintf ( OUT, "\t\t<Build>\r\n" );
 
@@ -501,7 +517,9 @@ CBBackend::_generate_cbproj ( const Module& module )
 		}
 
 		if ( lib )
+		{
 			fprintf ( OUT, "\t\t\t\t<Option type=\"2\" />\r\n" );
+		}
 		else if ( dll )		
 			fprintf ( OUT, "\t\t\t\t<Option type=\"3\" />\r\n" );
 		else if ( sys )
@@ -522,6 +540,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		}
 		
 		fprintf ( OUT, "\t\t\t\t<Option compiler=\"gcc\" />\r\n" );
+
 		if ( module_type == ".cpl" )
 		{
 			fprintf ( OUT, "\t\t\t\t<Option parameters=\"shell32,Control_RunDLL &quot;$exe_output&quot;,@\" />\r\n" );
@@ -632,12 +651,25 @@ CBBackend::_generate_cbproj ( const Module& module )
 		if ( module.type == StaticLibrary && module.importLibrary )
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib $exe_output; %s -U\" />\r\n", module.importLibrary->dllname.c_str (), module.importLibrary->definition.c_str(), module.mangledSymbols ? "" : "--kill-at" );
 		else if ( module.importLibrary != NULL )
-			fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib &quot;%s\\%s\\lib$(TARGET_OUTPUT_BASENAME).a&quot; %s\" />\r\n", module.GetTargetName ().c_str(), module.importLibrary->definition.c_str(), intdir.c_str(), module.GetBasePath().c_str(), module.mangledSymbols ? "" : "--kill-at" );
-			//fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib &quot;$(TARGET_OBJECT_DIR)lib$(TARGET_OUTPUT_BASENAME).a&quot; %s\" />\r\n", module.GetTargetName ().c_str(), module.importLibrary->definition.c_str(), module.mangledSymbols ? "" : "--kill-at" );
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib &quot;$(TARGET_OBJECT_DIR)lib$(TARGET_OUTPUT_BASENAME).a&quot; %s\" />\r\n", module.GetTargetName ().c_str(), module.importLibrary->definition.c_str(), module.mangledSymbols ? "" : "--kill-at" );
+
+
+		for ( i = 0; i < resource_files.size(); i++ )
+		{
+			const string& resource_file = resource_files[i];
+#ifdef WIN32
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"cmd /c del $(TARGET_OBJECT_DIR)\\%s.rci.tmp 2&gt;NUL\" />\r\n", resource_file.c_str() );
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"cmd /c del $(TARGET_OBJECT_DIR)\\%s.res.tmp 2&gt;NUL\" />\r\n", resource_file.c_str() );
+#else
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"rm $(TARGET_OBJECT_DIR)/%s.rci.tmp 2&gt;/dev/null\" />\r\n", resource_file.c_str() );
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"rm $(TARGET_OBJECT_DIR)/%s.res.tmp 2&gt;/dev/null\" />\r\n", resource_file.c_str() );
+#endif
+		}
 
 		if ( dll )
 		{
-			
+			if (IsWineModule( module ))
+				fprintf ( OUT, "\t\t\t\t\t<Add before=\"%s\\tools\\winebuild\\winebuild.exe -o %s --def -E %s.spec\" />\r\n", outdir.c_str(), module.importLibrary->definition.c_str(),  module.name.c_str());
 			fprintf ( OUT, "\t\t\t\t\t<Add before=\"dlltool --dllname %s --def %s --output-exp %s.temp.exp %s\" />\r\n", module.GetTargetName ().c_str(), module.importLibrary->definition.c_str(), module.name.c_str(), module.mangledSymbols ? "" : "--kill-at" );
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"%s\\tools\\pefixup $exe_output -exports\" />\r\n", outdir.c_str() );
 #ifdef WIN32
@@ -696,9 +728,28 @@ CBBackend::_generate_cbproj ( const Module& module )
 
 		string extension = GetExtension ( source_file );
 		if ( extension == ".s" || extension == ".S" )
+		{
+			fprintf ( OUT, "\t\t\t<Option compile=\"1\" />\r\n" );
+			fprintf ( OUT, "\t\t\t<Option link=\"1\" />\r\n" );
 			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"gcc -x assembler-with-cpp -c $file -o $link_objects $includes -D__ASM__ $options\" />\r\n" );
-		if ( extension == ".asm" || extension == ".ASM" )		
+		}
+		else if ( extension == ".asm" || extension == ".ASM" )		
+		{
+			fprintf ( OUT, "\t\t\t<Option compile=\"1\" />\r\n" );
+			fprintf ( OUT, "\t\t\t<Option link=\"1\" />\r\n" );
 			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"nasm -f win32 $file -o $link_objects\" />\r\n" );
+		}
+		else if ( extension == ".idl" || extension == ".IDL" )		
+		{
+			fprintf ( OUT, "\t\t\t<Option compile=\"1\" />\r\n" );
+			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"%s\\tools\\widl\\widl.exe %s %s -h -H &quot;$(TARGET_OUTPUT_DIR)\\$file_c.h&quot; -c -C &quot;$(TARGET_OUTPUT_DIR)\\$file_c.c&quot; $file\\ngcc %s -c &quot;$(TARGET_OUTPUT_DIR)\\$file_c.c&quot; -o &quot;$(TARGET_OUTPUT_DIR)\\$file_c.o&quot;\" />\r\n", outdir.c_str(), widl_options.c_str(), windres_defines.c_str(), widl_options.c_str() );
+		}
+		else if ( extension == ".spec" || extension == ".SPEC" )		
+		{
+			fprintf ( OUT, "\t\t\t<Option compile=\"1\" />\r\n" );
+			fprintf ( OUT, "\t\t\t<Option link=\"1\" />\r\n" );
+			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"%s\\tools\\winebuild\\winebuild.exe -o $file.stubs.c --pedll $file\\n$compiler -c $options $includes $file.stubs.c -o $(TARGET_OBJECT_DIR)\\$file.o\" />\r\n", outdir.c_str() );
+		}
 
 		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
 		{
@@ -715,7 +766,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		fprintf ( OUT, "\t\t<Unit filename=\"%s\">\r\n", resource_file.c_str() );
 		fprintf ( OUT, "\t\t\t<Option compilerVar=\"WINDRES\" />\r\n" );
 		string extension = GetExtension ( resource_file );
-		fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"gcc -xc -E -DRC_INVOKED $includes %s $file -o kernel32.kernel32.rci.tmp\\n%s\\tools\\wrc\\wrc.exe $includes %s kernel32.kernel32.rci.tmp kernel32.kernel32.res.tmp\\n$rescomp --output-format=coff kernel32.kernel32.res.tmp -o $resource_output\" />\r\n" , windres_defines.c_str(), outdir.c_str(),  windres_defines.c_str() );
+		fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"gcc -xc -E -DRC_INVOKED $includes %s $file -o $(TARGET_OBJECT_DIR)\\$file.rci.tmp\\n%s\\tools\\wrc\\wrc.exe $includes %s $(TARGET_OBJECT_DIR)\\$file.rci.tmp $(TARGET_OBJECT_DIR)\\$file.res.tmp\\n$rescomp --output-format=coff $(TARGET_OBJECT_DIR)\\$file.res.tmp -o $resource_output\" />\r\n" , windres_defines.c_str(), outdir.c_str(),  windres_defines.c_str() );
 		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
 		{
 			const CBConfiguration& cfg = *m_configurations[icfg];
@@ -826,4 +877,14 @@ CBBackend::_lookup_property ( const Module& module, const std::string& name ) co
 	}
 	// TODO FIXME - should we check global if-ed properties?
 	return NULL;
+}
+
+bool
+CBBackend::IsWineModule ( const Module& module ) const
+{
+	if ( module.importLibrary == NULL)
+		return false;
+
+	size_t index = module.importLibrary->definition.rfind ( ".spec.def" );
+	return ( index != string::npos );
 }
