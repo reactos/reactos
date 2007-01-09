@@ -302,24 +302,29 @@ CBBackend::_generate_workspace ( FILE* OUT )
 	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
-		
-		std::string Cbp_file = CbpFileName ( module );
-		fprintf ( OUT, "\t\t<Project filename=\"%s\">\r\n", Cbp_file.c_str());
-		
-		/* dependencies */
-		vector<const IfableData*> ifs_list;
-		ifs_list.push_back ( &module.project.non_if_data );
-		ifs_list.push_back ( &module.non_if_data );
-		while ( ifs_list.size() )
+
+		if ((module.type != Iso) && 
+			(module.type != LiveIso) &&
+			(module.type != IsoRegTest) &&
+			(module.type != LiveIsoRegTest))
 		{
-			const IfableData& data = *ifs_list.back();
-			ifs_list.pop_back();
-			const vector<Library*>& libs = data.libraries;
-			for ( size_t j = 0; j < libs.size(); j++ )
-				fprintf ( OUT, "\t\t\t<Depends filename=\"%s\\%s_auto.cbp\" />\r\n", libs[j]->importedModule->GetBasePath().c_str(), libs[j]->name.c_str() );
-		}
-		fprintf ( OUT, "\t\t</Project>\r\n" );
-	
+			std::string Cbp_file = CbpFileName ( module );
+			fprintf ( OUT, "\t\t<Project filename=\"%s\">\r\n", Cbp_file.c_str());
+			
+			/* dependencies */
+			vector<const IfableData*> ifs_list;
+			ifs_list.push_back ( &module.project.non_if_data );
+			ifs_list.push_back ( &module.non_if_data );
+			while ( ifs_list.size() )
+			{
+				const IfableData& data = *ifs_list.back();
+				ifs_list.pop_back();
+				const vector<Library*>& libs = data.libraries;
+				for ( size_t j = 0; j < libs.size(); j++ )
+					fprintf ( OUT, "\t\t\t<Depends filename=\"%s\\%s_auto.cbp\" />\r\n", libs[j]->importedModule->GetBasePath().c_str(), libs[j]->name.c_str() );
+			}
+			fprintf ( OUT, "\t\t</Project>\r\n" );
+		}	
 	}
 	fprintf ( OUT, "\t</Workspace>\r\n" );
 	fprintf ( OUT, "</CodeBlocks_workspace_file>\r\n" );
