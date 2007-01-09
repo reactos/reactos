@@ -304,6 +304,7 @@ ObpLookupObjectName(IN HANDLE RootHandle,
     KPROCESSOR_MODE AccessCheckMode;
     OB_PARSE_METHOD ParseRoutine;
     KIRQL CalloutIrql;
+    POBJECT_DIRECTORY ReferencedDirectory = NULL, ReferencedParentDirectory = NULL;
     PAGED_CODE();
     OBTRACE(OB_NAMESPACE_DEBUG,
             "%s - Finding Object: %wZ. Expecting: %p\n",
@@ -535,6 +536,13 @@ ReparseNewDir:
         if ((AccessCheckMode != KernelMode) &&
             !(AccessState->Flags & TOKEN_HAS_TRAVERSE_PRIVILEGE))
         {
+            /* We shouldn't have referenced a directory yet */
+            ASSERT(ReferencedDirectory == NULL);
+
+            /* Reference the directory */
+            ObReferenceObject(Directory);
+            ReferencedDirectory = Directory;
+
             /* Check if we have a parent directory */
             if (ParentDirectory)
             {
@@ -555,6 +563,14 @@ ReparseNewDir:
         /* Check if we don't have a remaining name yet */
         if (!RemainingName.Length)
         {
+            /* Check if we don't have a referenced directory yet */
+            if (!ReferencedDirectory)
+            {
+                /* Reference it */
+                ObReferenceObject(Directory);
+                ReferencedDirectory = Directory;
+            }
+
             /* Check if we are inserting an object */
             if (InsertObject)
             {
@@ -684,6 +700,26 @@ Reparse:
             /* Increment the pointer count */
             InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
 
+            /* Cleanup from the first lookup */
+            //ObpCleanupDirectoryLookup(LookupContext, TRUE);
+            LookupContext->Object = NULL;
+
+            /* Check if we have a referenced directory */
+            if (ReferencedDirectory)
+            {
+                /* We do, dereference it */
+                ObDereferenceObject(ReferencedDirectory);
+                ReferencedDirectory = NULL;
+            }
+
+            /* Check if we have a referenced parent directory */
+            if (ReferencedParentDirectory)
+            {
+                /* We do, dereference it */
+                ObDereferenceObject(ReferencedParentDirectory);
+                ReferencedParentDirectory = NULL;
+            }
+
             /* Call the Parse Procedure */
             ObpCalloutStart(&CalloutIrql);
             Status = ParseRoutine(Object,
@@ -804,9 +840,18 @@ Reparse:
                 /* We still have a name; check if this is a directory object */
                 if (ObjectHeader->Type == ObDirectoryType)
                 {
-                    /* Restart from this directory */
+                    /* Check if we have a referenced parent directory */
+                    if (ReferencedParentDirectory)
+                    {
+                        /* Dereference it */
+                        ObDereferenceObject(ReferencedParentDirectory);
+                    }
+
+                    /* Restart the lookup from this directory */
+                    ReferencedParentDirectory = ReferencedDirectory;
                     ParentDirectory = Directory;
                     Directory = Object;
+                    ReferencedDirectory = NULL;
                 }
                 else
                 {
@@ -825,6 +870,19 @@ Reparse:
         /* Cleanup after lookup */
         //ObpCleanupDirectoryLookup(LookupContext, TRUE);
         LookupContext->Object = NULL;
+    }
+
+    /* Check if we have a device map and dereference it if so */
+    //if (DeviceMap) ObfDereferenceDeviceMap(DeviceMap);
+
+    /* Check if we have a referenced directory and dereference it if so */
+    if (ReferencedDirectory) ObDereferenceObject(ReferencedDirectory);
+
+    /* Check if we have a referenced parent directory */
+    if (ReferencedParentDirectory)
+    {
+        /* We do, dereference it */
+        ObDereferenceObject(ReferencedParentDirectory);
     }
 
     /* Set the found object and check if we got one */
