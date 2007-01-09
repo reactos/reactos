@@ -287,30 +287,46 @@ ObpLookupObjectName(IN HANDLE RootHandle,
                     IN KPROCESSOR_MODE AccessMode,
                     IN OUT PVOID ParseContext,
                     IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-                    IN PVOID ExpectedObject,
+                    IN PVOID InsertObject,
                     IN PACCESS_STATE AccessState,
-                    IN POBP_LOOKUP_CONTEXT Context,
-                    OUT PVOID *ReturnedObject)
+                    IN POBP_LOOKUP_CONTEXT LookupContext,
+                    OUT PVOID *FoundObject)
 {
     PVOID RootDirectory;
-    PVOID CurrentDirectory = NULL;
-    PVOID CurrentObject = NULL;
-    POBJECT_HEADER CurrentHeader;
-    NTSTATUS Status = STATUS_SUCCESS;
-    PVOID NewName;
+    PVOID Directory = NULL;
+    PVOID Object;
+    POBJECT_HEADER ObjectHeader;
+    NTSTATUS Status;
+    PWCHAR NewName;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
-    UNICODE_STRING RemainingPath, PartName;
+    UNICODE_STRING RemainingName, ComponentName;
     BOOLEAN InsideRoot = FALSE;
+    KPROCESSOR_MODE AccessCheckMode;
     OB_PARSE_METHOD ParseRoutine;
+    KIRQL CalloutIrql;
     PAGED_CODE();
-
-    /* Assume failure */
     OBTRACE(OB_NAMESPACE_DEBUG,
             "%s - Finding Object: %wZ. Expecting: %p\n",
             __FUNCTION__,
             ObjectName,
-            ExpectedObject);
-    *ReturnedObject = NULL;
+            InsertObject);
+
+    /* Initialize starting state */
+    LookupContext->Object = NULL;
+    *FoundObject = NULL;
+    Status = STATUS_SUCCESS;
+    Object = NULL;
+
+    /* Check if case-insensitivity is forced */
+    if ((ObpCaseInsensitive) || (ObjectType->TypeInfo.CaseInsensitive))
+    {
+        /* Add the flag to disable case sensitivity */
+        Attributes |= OBJ_CASE_INSENSITIVE;
+    }
+
+    /* Check if this is a access checks are being forced */
+    AccessCheckMode = (Attributes & OBJ_FORCE_ACCESS_CHECK) ?
+                       UserMode : AccessMode;
 
     /* Check if we got a Root Directory */
     if (RootHandle)
@@ -325,12 +341,12 @@ ObpLookupObjectName(IN HANDLE RootHandle,
         if (!NT_SUCCESS(Status)) return Status;
 
         /* Get the header */
-        CurrentHeader = OBJECT_TO_OBJECT_HEADER(RootDirectory);
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(RootDirectory);
 
         /* The name cannot start with a separator, unless this is a file */
         if ((ObjectName->Buffer) &&
             (ObjectName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR) &&
-            (CurrentHeader->Type != IoFileObjectType))
+            (ObjectHeader->Type != IoFileObjectType))
         {
             /* The syntax is bad, so fail this request */
             ObDereferenceObject(RootDirectory);
@@ -338,10 +354,10 @@ ObpLookupObjectName(IN HANDLE RootHandle,
         }
 
         /* Don't parse a Directory */
-        if (CurrentHeader->Type != ObDirectoryType)
+        if (ObjectHeader->Type != ObDirectoryType)
         {
             /* Make sure the Object Type has a parse routine */
-            ParseRoutine = CurrentHeader->Type->TypeInfo.ParseProcedure;
+            ParseRoutine = ObjectHeader->Type->TypeInfo.ParseProcedure;
             if (!ParseRoutine)
             {
                 /* We can't parse a name if we don't have a parse routine */
@@ -353,19 +369,21 @@ ObpLookupObjectName(IN HANDLE RootHandle,
             while (TRUE)
             {
                 /* Start with the full name */
-                RemainingPath = *ObjectName;
+                RemainingName = *ObjectName;
 
                 /* Call the Parse Procedure */
+                ObpCalloutStart(&CalloutIrql);
                 Status = ParseRoutine(RootDirectory,
                                       ObjectType,
                                       AccessState,
                                       AccessMode,
                                       Attributes,
                                       ObjectName,
-                                      &RemainingPath,
+                                      &RemainingName,
                                       ParseContext,
                                       SecurityQos,
-                                      &CurrentObject);
+                                      &Object);
+                ObpCalloutEnd(CalloutIrql, "Parse", ObjectHeader->Type, Object);
 
                 /* Check for success or failure, so not reparse */
                 if ((Status != STATUS_REPARSE) &&
@@ -375,16 +393,16 @@ ObpLookupObjectName(IN HANDLE RootHandle,
                     if (!NT_SUCCESS(Status))
                     {
                         /* Parse routine might not have cleared this, do it */
-                        CurrentObject = NULL;
+                        Object = NULL;
                     }
-                    else if (!CurrentObject)
+                    else if (!Object)
                     {
                         /* Modify status to reflect failure inside Ob */
                         Status = STATUS_OBJECT_NAME_NOT_FOUND;
                     }
 
                     /* We're done, return the status and object */
-                    *ReturnedObject = CurrentObject;
+                    *FoundObject = Object;
                     ObDereferenceObject(RootDirectory);
                     return Status;
                 }
@@ -409,8 +427,11 @@ ObpLookupObjectName(IN HANDLE RootHandle,
                                                 0,
                                                 ObjectType,
                                                 AccessMode);
-            if (NT_SUCCESS(Status)) *ReturnedObject = RootDirectory;
+            if (NT_SUCCESS(Status)) Object = RootDirectory;
+
+            /* Remove the first reference we added and return the object */
             ObDereferenceObject(RootDirectory);
+            *FoundObject = Object;
             return Status;
         }
     }
@@ -435,14 +456,14 @@ ObpLookupObjectName(IN HANDLE RootHandle,
             if (!RootDirectory)
             {
                 /* This must be the first time we're creating it... right? */
-                if (ExpectedObject)
+                if (InsertObject)
                 {
                     /* Yes, so return it to ObInsert so that it can create it */
-                    Status = ObReferenceObjectByPointer(ExpectedObject,
+                    Status = ObReferenceObjectByPointer(InsertObject,
                                                         0,
                                                         ObjectType,
                                                         AccessMode);
-                    if (NT_SUCCESS(Status)) *ReturnedObject = ExpectedObject;
+                    if (NT_SUCCESS(Status)) *FoundObject = InsertObject;
                     return Status;
                 }
                 else
@@ -459,7 +480,7 @@ ObpLookupObjectName(IN HANDLE RootHandle,
                                                     0,
                                                     ObjectType,
                                                     AccessMode);
-                if (NT_SUCCESS(Status)) *ReturnedObject = RootDirectory;
+                if (NT_SUCCESS(Status)) *FoundObject = RootDirectory;
                 return Status;
             }
         }
@@ -467,7 +488,7 @@ ObpLookupObjectName(IN HANDLE RootHandle,
 
     /* Save the name */
 ReparseNewDir:
-    RemainingPath = *ObjectName;
+    RemainingName = *ObjectName;
 
     /* Reparse */
     while (TRUE)
@@ -476,121 +497,171 @@ ReparseNewDir:
         if (!InsideRoot)
         {
             /* Yes, use the root directory and remember that */
-            CurrentDirectory = RootDirectory;
+            Directory = RootDirectory;
             InsideRoot = TRUE;
         }
 
         /* Check if the name starts with a path separator */
-        if ((RemainingPath.Length) &&
-            (RemainingPath.Buffer[0] == OBJ_NAME_PATH_SEPARATOR))
+        if ((RemainingName.Length) &&
+            (RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR))
         {
             /* Skip the path separator */
-            RemainingPath.Buffer++;
-            RemainingPath.Length -= sizeof(OBJ_NAME_PATH_SEPARATOR);
+            RemainingName.Buffer++;
+            RemainingName.Length -= sizeof(OBJ_NAME_PATH_SEPARATOR);
         }
 
         /* Find the next Part Name */
-        PartName = RemainingPath;
-        while (RemainingPath.Length)
+        ComponentName = RemainingName;
+        while (RemainingName.Length)
         {
             /* Break if we found the \ ending */
-            if (RemainingPath.Buffer[0] == OBJ_NAME_PATH_SEPARATOR) break;
+            if (RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR) break;
 
             /* Move on */
-            RemainingPath.Buffer++;
-            RemainingPath.Length -= sizeof(OBJ_NAME_PATH_SEPARATOR);
+            RemainingName.Buffer++;
+            RemainingName.Length -= sizeof(OBJ_NAME_PATH_SEPARATOR);
         }
 
         /* Get its size and make sure it's valid */
-        if (!(PartName.Length -= RemainingPath.Length))
+        if (!(ComponentName.Length -= RemainingName.Length))
         {
             Status = STATUS_OBJECT_NAME_INVALID;
             break;
         }
 
         /* Do the look up */
-        Context->DirectoryLocked = TRUE;
-        Context->Directory = CurrentDirectory;
-        CurrentObject = ObpLookupEntryDirectory(CurrentDirectory,
-                                                &PartName,
+        LookupContext->DirectoryLocked = TRUE;
+        LookupContext->Directory = Directory;
+        Object = ObpLookupEntryDirectory(Directory,
+                                                &ComponentName,
                                                 Attributes,
-                                                FALSE,
-                                                Context);
-        if (!CurrentObject)
+                                                InsertObject ? FALSE : TRUE,
+                                                LookupContext);
+        if (!Object)
         {
             /* We didn't find it... do we still have a path? */
-            if (RemainingPath.Length)
+            if (RemainingName.Length)
             {
                 /* Then tell the caller the path wasn't found */
                 Status = STATUS_OBJECT_PATH_NOT_FOUND;
                 break;
             }
-            else if (!ExpectedObject)
+            else if (!InsertObject)
             {
                 /* Otherwise, we have a path, but the name isn't valid */
                 Status = STATUS_OBJECT_NAME_NOT_FOUND;
                 break;
             }
 
-            /* Reference newly to be inserted object */
-            ObReferenceObject(ExpectedObject);
-            CurrentHeader = OBJECT_TO_OBJECT_HEADER(ExpectedObject);
+            /* Check create access for the object */
+            if (!ObCheckCreateObjectAccess(Directory,
+                                           ObjectType == ObDirectoryType ?
+                                           DIRECTORY_CREATE_SUBDIRECTORY :
+                                           DIRECTORY_CREATE_OBJECT,
+                                           AccessState,
+                                           &ComponentName,
+                                           FALSE,
+                                           AccessCheckMode,
+                                           &Status))
+            {
+                /* We don't have create access, fail */
+                break;
+            }
 
-            /* Create Object Name */
-            NewName = ExAllocatePoolWithTag(NonPagedPool,
-                                            PartName.MaximumLength,
-                                            OB_NAME_TAG);
-            ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(CurrentHeader);
+                /* Get the object header */
+                ObjectHeader = OBJECT_TO_OBJECT_HEADER(InsertObject);
 
-            /* Copy the Name */
-            RtlMoveMemory(NewName, PartName.Buffer, PartName.MaximumLength);
+                /* FIXME: Check if this is a Section Object or Sym Link */
+                /* FIXME: If it is, then check if this isn't session 0 */
+                /* FIXME: If it isn't, check for SeCreateGlobalPrivilege */
+                /* FIXME: If privilege isn't there, check for unsecure name */
+                /* FIXME: If it isn't a known unsecure name, then fail */
 
-            /* Free old name */
-            if (ObjectNameInfo->Name.Buffer) ExFreePool(ObjectNameInfo->Name.Buffer);
+                /* Create Object Name */
+                NewName = ExAllocatePoolWithTag(PagedPool,
+                                                ComponentName.Length,
+                                                OB_NAME_TAG);
+                if (!(NewName) ||
+                    !(ObpInsertEntryDirectory(Directory,
+                                              LookupContext,
+                                              ObjectHeader)))
+                {
+                    /* Either couldn't allocate the name, or insert failed */
+                    if (NewName) ExFreePool(NewName);
 
-            /* Write new one */
-            ObjectNameInfo->Name.Buffer = NewName;
-            ObjectNameInfo->Name.Length = PartName.Length;
-            ObjectNameInfo->Name.MaximumLength = PartName.MaximumLength;
+                    /* Fail due to memory reasons */
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
 
-            /* Rereference the Directory and insert */
-            ObReferenceObject(CurrentDirectory);
-            ObpInsertEntryDirectory(CurrentDirectory, Context, CurrentHeader);
+                /* Reference newly to be inserted object */
+                ObReferenceObject(InsertObject);
 
-            /* Return Status and the Expected Object */
-            Status = STATUS_SUCCESS;
-            CurrentObject = ExpectedObject;
+                /* Get the name information */
+                ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
 
-            /* Get out of here */
-            break;
+                /* Reference the directory */
+                ObReferenceObject(Directory);
+
+                /* Copy the Name */
+                RtlCopyMemory(NewName,
+                              ComponentName.Buffer,
+                              ComponentName.Length);
+
+                /* Check if we had an old name */
+                if (ObjectNameInfo->Name.Buffer)
+                {
+                    /* Free it */
+                    ExFreePool(ObjectNameInfo->Name.Buffer);
+                }
+
+                /* Write new one */
+                ObjectNameInfo->Name.Buffer = NewName;
+                ObjectNameInfo->Name.Length = ComponentName.Length;
+                ObjectNameInfo->Name.MaximumLength = ComponentName.Length;
+
+                /* Return Status and the Expected Object */
+                Status = STATUS_SUCCESS;
+                Object = InsertObject;
+
+                /* Get out of here */
+                break;
         }
 
 Reparse:
         /* We found it, so now get its header */
-        CurrentHeader = OBJECT_TO_OBJECT_HEADER(CurrentObject);
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 
         /*
          * Check for a parse Procedure, but don't bother to parse for an insert
          * unless it's a Symbolic Link, in which case we MUST parse
          */
-        ParseRoutine = CurrentHeader->Type->TypeInfo.ParseProcedure;
-        if (ParseRoutine &&
-            (!ExpectedObject || ParseRoutine == ObpParseSymbolicLink))
+        ParseRoutine = ObjectHeader->Type->TypeInfo.ParseProcedure;
+        if ((ParseRoutine) &&
+            (!(InsertObject) || (ParseRoutine == ObpParseSymbolicLink)))
         {
             /* Use the Root Directory next time */
             InsideRoot = FALSE;
 
+            /* Increment the pointer count */
+            InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+
             /* Call the Parse Procedure */
-            Status = ParseRoutine(CurrentObject,
+            ObpCalloutStart(&CalloutIrql);
+            Status = ParseRoutine(Object,
                                   ObjectType,
                                   AccessState,
                                   AccessMode,
                                   Attributes,
                                   ObjectName,
-                                  &RemainingPath,
+                                  &RemainingName,
                                   ParseContext,
                                   SecurityQos,
-                                  &CurrentObject);
+                                  &Object);
+            ObpCalloutEnd(CalloutIrql, "Parse", ObjectHeader->Type, Object);
+
+            /* Remove our extra reference */
+            ObDereferenceObject(&ObjectHeader->Body);
 
             /* Check if we have to reparse */
             if ((Status == STATUS_REPARSE) ||
@@ -615,7 +686,7 @@ Reparse:
                     if (Status == STATUS_REPARSE_OBJECT)
                     {
                         /* Did we actually get an object to which to reparse? */
-                        if (!CurrentObject)
+                        if (!Object)
                         {
                             /* We didn't, so set a failure status */
                             Status = STATUS_OBJECT_NAME_NOT_FOUND;
@@ -634,16 +705,16 @@ Reparse:
                 else if (RootDirectory == NameSpaceRoot)
                 {
                     /* We got STATUS_REPARSE but are at the Root Directory */
-                    CurrentObject = NULL;
+                    Object = NULL;
                     Status = STATUS_OBJECT_NAME_NOT_FOUND;
                 }
             }
             else if (!NT_SUCCESS(Status))
             {
                 /* Total failure */
-                CurrentObject = NULL;
+                Object = NULL;
             }
-            else if (!CurrentObject)
+            else if (!Object)
             {
                 /* We didn't reparse but we didn't find the Object Either */
                 Status = STATUS_OBJECT_NAME_NOT_FOUND;
@@ -655,17 +726,35 @@ Reparse:
         else
         {
             /* No parse routine...do we still have a remaining name? */
-            if (!RemainingPath.Length)
+            if (!RemainingName.Length)
             {
                 /* Are we creating an object? */
-                if (!ExpectedObject)
+                if (!InsertObject)
                 {
-                    /* We don't... reference the Object */
-                    Status = ObReferenceObjectByPointer(CurrentObject,
+                    /* Check if this is a user-mode call that needs to traverse */
+                    if ((AccessCheckMode != KernelMode) &&
+                        !(AccessState->Flags & TOKEN_HAS_TRAVERSE_PRIVILEGE))
+                    {
+                        /* Check if we can get it */
+                        if (!ObpCheckTraverseAccess(Directory,
+                                                    DIRECTORY_TRAVERSE,
+                                                    AccessState,
+                                                    FALSE,
+                                                    AccessCheckMode,
+                                                    &Status))
+                        {
+                            /* We don't have access, fail */
+                            Object = NULL;
+                            break;
+                        }
+                    }
+
+                    /* Reference the Object */
+                    Status = ObReferenceObjectByPointer(Object,
                                                         0,
                                                         ObjectType,
                                                         AccessMode);
-                    if (!NT_SUCCESS(Status)) CurrentObject = NULL;
+                    if (!NT_SUCCESS(Status)) Object = NULL;
                 }
 
                 /* And get out of the reparse loop */
@@ -674,42 +763,51 @@ Reparse:
             else
             {
                 /* We still have a name; check if this is a directory object */
-                if (CurrentHeader->Type == ObDirectoryType)
+                if (ObjectHeader->Type == ObDirectoryType)
                 {
                     /* Restart from this directory */
-                    CurrentDirectory = CurrentObject;
+                    Directory = Object;
                 }
                 else
                 {
                     /* We still have a name, but no parse routine for it */
                     Status = STATUS_OBJECT_TYPE_MISMATCH;
-                    CurrentObject = NULL;
+                    Object = NULL;
                     break;
                 }
             }
         }
     }
 
-    /* Write what we found, and if it's null, check if we got success */
-    if (!(*ReturnedObject = CurrentObject) && (NT_SUCCESS(Status)))
+    /* Check if we failed */
+    if (!NT_SUCCESS(Status))
     {
-        /* Nothing found... but we have success. Correct the status code */
-        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        /* Cleanup after lookup */
+        //ObpCleanupDirectoryLookup(LookupContext, TRUE);
+        LookupContext->Object = NULL;
+    }
+
+    /* Set the found object and check if we got one */
+    *FoundObject = Object;
+    if (!Object)
+    {
+        /* Nothing was found. Did we reparse or get success? */
+        if ((Status == STATUS_REPARSE) || (NT_SUCCESS(Status)))
+        {
+            /* Set correct failure */
+            Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        }
     }
 
     /* Check if we had a root directory */
-    if (RootHandle)
-    {
-        /* Dereference it */
-        ObDereferenceObject(RootDirectory);
-    }
+    if (RootHandle) ObDereferenceObject(RootDirectory);
 
     /* Return status to caller */
     OBTRACE(OB_NAMESPACE_DEBUG,
             "%s - Found Object: %p. Expected: %p\n",
             __FUNCTION__,
-            *ReturnedObject,
-            ExpectedObject);
+            *FoundObject,
+            InsertObject);
     return Status;
 }
 
