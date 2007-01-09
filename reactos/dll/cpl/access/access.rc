@@ -16,3 +16,4 @@
 #include "Ru.rc"
 #include "Fr.rc"
 #include "Es.rc"
+#include "Cz.rc"
