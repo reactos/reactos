@@ -1,13 +1,16 @@
 
-#define CPU_UNINT unsigned int
-#define CPU_INT int
 
-#define CPU_BYTE unsigned char
+/* 64bits unsigned */
+#define CPU_UNINT64 unsigned long long
+
+/* 32bits */
+#define CPU_UNINT   unsigned int
+#define CPU_INT     int
+
+/* 8bits unsigned */
+#define CPU_BYTE    unsigned char
 
 /* Prototypes for misc stuff */
-
-
-/* Convert Bit index to int */
 CPU_INT LoadPFileImage(char *infileName, char *outputfileName, CPU_UNINT BaseAddress, char *cpuid, CPU_UNINT type);
 CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos, CPU_UNINT base,  CPU_UNINT size);
 
