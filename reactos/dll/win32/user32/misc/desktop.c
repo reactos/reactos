@@ -42,6 +42,32 @@ DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
 VOID
 STDCALL
+LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA)
+{
+#define COPYS(f,len) MultiByteToWideChar ( CP_THREAD_ACP, 0, pA->f, len, pW->f, len )
+#define COPYN(f) pW->f = pA->f
+
+  COPYN(lfHeight);
+  COPYN(lfWidth);
+  COPYN(lfEscapement);
+  COPYN(lfOrientation);
+  COPYN(lfWeight);
+  COPYN(lfItalic);
+  COPYN(lfUnderline);
+  COPYN(lfStrikeOut);
+  COPYN(lfCharSet);
+  COPYN(lfOutPrecision);
+  COPYN(lfClipPrecision);
+  COPYN(lfQuality);
+  COPYN(lfPitchAndFamily);
+  COPYS(lfFaceName,LF_FACESIZE);
+
+#undef COPYN
+#undef COPYS
+}
+
+VOID
+STDCALL
 LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
 {
 #define COPYS(f,len) WideCharToMultiByte ( CP_THREAD_ACP, 0, pW->f, len, pA->f, len, NULL, NULL )
@@ -136,6 +162,32 @@ SystemParametersInfoA(UINT uiAction,
            LogFontW2A(&(nclma->lfMenuFont), &(nclmw.lfMenuFont));
            LogFontW2A(&(nclma->lfStatusFont), &(nclmw.lfStatusFont));
            LogFontW2A(&(nclma->lfMessageFont), &(nclmw.lfMessageFont));
+           return TRUE;
+        }
+      case SPI_SETNONCLIENTMETRICS:
+        {
+           LPNONCLIENTMETRICSA nclma = (LPNONCLIENTMETRICSA)pvParam;
+           NONCLIENTMETRICSW nclmw;
+           nclmw.cbSize = sizeof(NONCLIENTMETRICSW);
+           nclmw.iBorderWidth = nclma->iBorderWidth;
+           nclmw.iScrollWidth = nclma->iScrollWidth;
+           nclmw.iScrollHeight = nclma->iScrollHeight;
+           nclmw.iCaptionWidth = nclma->iCaptionWidth;
+           nclmw.iCaptionHeight = nclma->iCaptionHeight;
+           nclmw.iSmCaptionWidth = nclma->iSmCaptionWidth;
+           nclmw.iSmCaptionHeight = nclma->iSmCaptionHeight;
+           nclmw.iMenuWidth = nclma->iMenuWidth;
+           nclmw.iMenuHeight = nclma->iMenuHeight;
+           LogFontA2W(&(nclmw.lfCaptionFont), &(nclma->lfCaptionFont));
+           LogFontA2W(&(nclmw.lfSmCaptionFont), &(nclma->lfSmCaptionFont));
+           LogFontA2W(&(nclmw.lfMenuFont), &(nclma->lfMenuFont));
+           LogFontA2W(&(nclmw.lfStatusFont), &(nclma->lfStatusFont));
+           LogFontA2W(&(nclmw.lfMessageFont), &(nclma->lfMessageFont));
+
+           if (!SystemParametersInfoW(uiAction, sizeof(NONCLIENTMETRICSW),
+                                      &nclmw, fWinIni))
+             return FALSE;
+
            return TRUE;
         }
       case SPI_GETICONTITLELOGFONT:
