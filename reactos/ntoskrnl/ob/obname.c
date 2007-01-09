@@ -173,6 +173,17 @@ ObpDeleteNameCheck(IN PVOID Object)
     ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
     ObjectType = ObjectHeader->Type;
 
+    /* Check if we have a name information structure */
+    if (ObjectNameInfo)
+    {
+        /* Add a query reference */
+        if (!ObpIncrementQueryReference(ObjectHeader, ObjectNameInfo))
+        {
+            /* No references, so the name info is invalid */
+            ObjectNameInfo = NULL;
+        }
+    }
+
     /*
      * Check if the handle count is 0, if the object is named,
      * and if the object isn't a permanent object.
@@ -182,61 +193,88 @@ ObpDeleteNameCheck(IN PVOID Object)
          (ObjectNameInfo->Name.Length) &&
          !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
     {
+        /* Setup a lookup context */
         Context.Object = NULL;
 
-        /* Make sure it's still inserted */
+        /* Lock the directory */
+        //ObpAcquireDirectoryLockExclusive(ObjectNameInfo->Directory, &Context);
+
+        /* Set the lookup parameters */
         Context.Directory = ObjectNameInfo->Directory;
         Context.DirectoryLocked = TRUE;
+        Context.LockStateSignature = 0xCCCC1234;
+
+        /* Do the lookup */
         Object = ObpLookupEntryDirectory(ObjectNameInfo->Directory,
                                          &ObjectNameInfo->Name,
                                          0,
                                          FALSE,
                                          &Context);
-        if ((Object) && !(ObjectHeader->HandleCount))
+        if (Object)
         {
             /* Lock the object type */
             ObpEnterObjectTypeMutex(ObjectType);
 
-            /* First delete it from the directory */
-            ObpDeleteEntryDirectory(&Context);
-
-            /* Now check if we have a security callback */
-            if (ObjectType->TypeInfo.SecurityRequired)
+            /* Make sure we can still delete the object */
+            if (!(ObjectHeader->HandleCount) &&
+                !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
             {
-                /* Call it */
-                ObjectType->TypeInfo.SecurityProcedure(Object,
-                                                       DeleteSecurityDescriptor,
-                                                       0,
-                                                       NULL,
-                                                       NULL,
-                                                       &ObjectHeader->
-                                                       SecurityDescriptor,
-                                                       ObjectType->
-                                                       TypeInfo.PoolType,
-                                                       NULL);
+                /* First delete it from the directory */
+                ObpDeleteEntryDirectory(&Context);
+
+                /* Check if this is a symbolic link */
+                if (ObjectType == ObSymbolicLinkType)
+                {
+                    /* Remove internal name */
+                    ObpDeleteSymbolicLinkName(Object);
+                }
+
+                /* Add a query reference */
+                ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+                if (!ObpIncrementQueryReference(ObjectHeader, ObjectNameInfo))
+                {
+                    /* No references, so the name info is invalid */
+                    ObjectNameInfo = NULL;
+                }
+
+                /* Check if the magic protection flag is set */
+                if ((ObjectNameInfo) &&
+                    (ObjectNameInfo->QueryReferences & 0x40000000))
+                {
+                    /* Add deletion flag */
+                    InterlockedExchangeAdd(&ObjectNameInfo->QueryReferences,
+                                           0xC0000000);
+                }
+
+                /* Get the directory */
+                Directory = ObjectNameInfo->Directory;
             }
 
             /* Release the lock */
             ObpLeaveObjectTypeMutex(ObjectType);
-
-            /* Free the name */
-            ExFreePool(ObjectNameInfo->Name.Buffer);
-            RtlInitEmptyUnicodeString(&ObjectNameInfo->Name, NULL, 0);
-
-            Context.Object = NULL;
-
-            /* Clear the current directory and de-reference it */
-            Directory = ObjectNameInfo->Directory;
-            ObjectNameInfo->Directory = NULL;
         }
+
+        /* Cleanup after lookup */
+        //ObpCleanupDirectoryLookup(&Context, TRUE);
+        Context.Object = NULL;
+
+        /* Remove another query reference since we added one on top */
+        ObpDecrementQueryReference(ObjectNameInfo);
 
         /* Check if we were inserted in a directory */
         if (Directory)
         {
-            /* We were, so dereference the directory and the object as well */
-            ObDereferenceObject(Directory);
+            /* We were, so first remove the extra reference we had added */
+            ObpDecrementQueryReference(ObjectNameInfo);
+
+            /* Now dereference the object as well */
             ObDereferenceObject(Object);
         }
+    }
+    else
+    {
+        /* Remove the reference we added */
+        if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
     }
 }
 

@@ -2352,6 +2352,16 @@ ObInsertObject(IN PVOID Object,
     ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
     ObjectType = ObjectHeader->Type;
 
+    /* Check if we have name information */
+    if (ObjectNameInfo)
+    {
+        /* Add a query reference */
+        if (!ObpIncrementQueryReference(ObjectHeader, ObjectNameInfo))
+        {
+            /* There are no query references, so the name info is invalid */
+            ObjectNameInfo = NULL;
+        }
+    }
 
     /* Check if this is an named object */
     ObjectName = NULL;
@@ -2394,6 +2404,8 @@ ObInsertObject(IN PVOID Object,
         ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);
         ObjectHeader->ObjectCreateInfo = NULL;
 
+        /* Remove a query reference if we added one */
+        if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
 
         /* Remove the extra keep-alive reference */
         if (Handle) ObDereferenceObject(Object);
@@ -2419,6 +2431,7 @@ ObInsertObject(IN PVOID Object,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
+            if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
             ObDereferenceObject(Object);
             return Status;
         }
@@ -2489,7 +2502,10 @@ ObInsertObject(IN PVOID Object,
         /* Check if anything until now failed */
         if (!NT_SUCCESS(Status))
         {
-            /* We failed, dereference the object and delete the access state */
+            /* Remove query reference that we added */
+            if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
+
+            /* Dereference the object and delete the access state */
             ObDereferenceObject(Object);
             if (AccessState == &LocalAccessState)
             {
@@ -2554,8 +2570,10 @@ ObInsertObject(IN PVOID Object,
         /* Check if anything until now failed */
         if (!NT_SUCCESS(Status))
         {
-            /* We failed, dereference the object and delete the access state */
-            KEBUGCHECK(0);
+            /* Remove query reference that we added */
+            if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
+
+            /* Dereference the object and delete the access state */
             ObDereferenceObject(Object);
             if (AccessState == &LocalAccessState)
             {
@@ -2564,6 +2582,7 @@ ObInsertObject(IN PVOID Object,
             }
 
             /* Return failure code */
+            KEBUGCHECK(0);
             return Status;
         }
     }
@@ -2608,8 +2627,8 @@ ObInsertObject(IN PVOID Object,
         RealStatus = Status;
     }
 
-
-
+    /* Remove a query reference */
+    if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
 
     /* Remove the extra keep-alive reference */
     if (Handle) ObDereferenceObject(Object);
