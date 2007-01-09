@@ -3,6 +3,24 @@
 
 #include <internal/kbd.h>
 
+typedef struct _KBDRVFILE
+{
+  PSINGLE_LIST_ENTRY pkbdfChain;
+  WCHAR wcKBDF[9];              // used w GetKeyboardLayoutName same as wszKLID.
+  struct _KBDTABLES* KBTables;  // KBDTABLES in ntoskrnl/include/internal/kbd.h
+} KBDRVFILE, *PKBDRVFILE;
+
+typedef struct _KBL
+{
+  PLIST_ENTRY pklChain;
+  DWORD dwKBLFlags;
+  HKL hkl;
+  PKBDRVFILE pkbdf;
+} KBL, *PKBL;
+
+#define KBL_UNLOADED 0x2000000
+#define KBL_RESET    0x4000000
+
 NTSTATUS FASTCALL
 InitInputImpl(VOID);
 NTSTATUS FASTCALL

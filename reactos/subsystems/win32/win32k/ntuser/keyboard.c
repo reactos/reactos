@@ -53,6 +53,9 @@
 BYTE gQueueKeyStateTable[256];
 
 
+PKBDRVFILE KBLList = NULL; // Keyboard layout list.
+
+
 /* FUNCTIONS *****************************************************************/
 
 /* Initialization -- Right now, just zero the key state and init the lock */
