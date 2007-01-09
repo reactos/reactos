@@ -283,9 +283,6 @@ ObPostPhase0:
 
     /* Lock it */
     //ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
-
-    /* Setup directory */
-    // FIXME: ObpSetLookupDirectory(Dir);?
     Context.Directory = ObpTypeDirectoryObject;
     Context.DirectoryLocked = TRUE;
     Context.LockStateSignature = 0xCCCC1234;
@@ -326,7 +323,7 @@ ObPostPhase0:
     }
 
     /* Cleanup after lookup */
-    //ObpCleanupDirectoryLookup(&Context, TRUE);
+    //ObpCleanupDirectoryLookup(&Context);
     Context.Object = NULL;
 
     /* Initialize DOS Devices Directory and related Symbolic Links */

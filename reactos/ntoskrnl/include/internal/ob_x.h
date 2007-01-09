@@ -8,92 +8,12 @@
 
 #include "ex.h"
 
-#if DBG
-VOID
-FORCEINLINE
-ObpCalloutStart(IN PKIRQL CalloutIrql)
-{
-    /* Save the callout IRQL */
-    *CalloutIrql = KeGetCurrentIrql();
-}
-
-VOID
-FORCEINLINE
-ObpCalloutEnd(IN KIRQL CalloutIrql,
-              IN PCHAR Procedure,
-              IN POBJECT_TYPE ObjectType,
-              IN PVOID Object)
-{
-    /* Detect IRQL change */
-    if (CalloutIrql != KeGetCurrentIrql())
-    {
-        /* Print error */
-        DbgPrint("OB: ObjectType: %wZ  Procedure: %s  Object: %08x\n",
-                 &ObjectType->Name, Procedure, Object);
-        DbgPrint("    Returned at %x IRQL, but was called at %x IRQL\n",
-                 KeGetCurrentIrql(), CalloutIrql);
-        DbgBreakPoint();
-    }
-}
-#else
-VOID
-FORCEINLINE
-ObpCalloutStart(IN PKIRQL CalloutIrql)
-{
-    /* No-op */
-    UNREFERENCED_PARAMETER(CalloutIrql);
-}
-
-VOID
-FORCEINLINE
-ObpCalloutEnd(IN KIRQL CalloutIrql,
-              IN PCHAR Procedure,
-              IN POBJECT_TYPE ObjectType,
-              IN PVOID Object)
-{
-    UNREFERENCED_PARAMETER(CalloutIrql);
-}
-#endif
-
-VOID
-FORCEINLINE
-_ObpAcquireDirectoryLockShared(IN POBJECT_DIRECTORY Directory,
-                               IN POBP_LOOKUP_CONTEXT Context)
-{
-    /* It's not, set lock flag */
-    Context->LockStateSignature = 0xBBBB1234;
-
-    /* Lock it */
-    KeEnterCriticalRegion();
-    ExAcquirePushLockShared(&Directory->Lock);
-
-    /* Update lock flag */
-    Context->LockStateSignature = 0xDDDD1234;
-}
-
-VOID
-FORCEINLINE
-_ObpAcquireDirectoryLockExclusive(IN POBJECT_DIRECTORY Directory,
-                                  IN POBP_LOOKUP_CONTEXT Context)
-{
-    /* Update lock flag */
-    Context->LockStateSignature = 0xAAAA1234;
-
-    /* Lock it */
-    KeEnterCriticalRegion();
-    ExAcquirePushLockExclusive(&Directory->Lock);
-}
-
-VOID
-FORCEINLINE
-_ObpReleaseDirectoryLock(IN POBJECT_DIRECTORY Directory,
-                         IN POBP_LOOKUP_CONTEXT Context)
-{
-    /* Release the lock */
-    ExReleasePushLock(&Directory->Lock);
-    Context->LockStateSignature = 0xEEEE1234;
-    KeLeaveCriticalRegion();
-}
+#define OBP_LOCK_STATE_PRE_ACQUISITION_EXCLUSIVE    0xAAAA1234
+#define OBP_LOCK_STATE_PRE_ACQUISITION_SHARED       0xBBBB1234
+#define OBP_LOCK_STATE_POST_ACQUISITION_EXCLUSIVE   0xCCCC1234
+#define OBP_LOCK_STATE_POST_ACQUISITION_SHARED      0xDDDD1234
+#define OBP_LOCK_STATE_RELEASED                     0xEEEE1234
+#define OBP_LOCK_STATE_INITIALIZED                  0xFFFF1234
 
 ULONG
 FORCEINLINE
@@ -159,22 +79,68 @@ _ObpDecrementQueryReference(IN POBJECT_HEADER_NAME_INFO HeaderNameInfo)
 
 VOID
 FORCEINLINE
-_ObpCleanupDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context,
-                           IN BOOLEAN DereferenceObject)
+_ObpAcquireDirectoryLockShared(IN POBJECT_DIRECTORY Directory,
+                               IN POBP_LOOKUP_CONTEXT Context)
+{
+    /* It's not, set lock flag */
+    Context->LockStateSignature = OBP_LOCK_STATE_PRE_ACQUISITION_SHARED;
+
+    /* Lock it */
+    KeEnterCriticalRegion();
+    ExAcquirePushLockShared(&Directory->Lock);
+
+    /* Update lock flag */
+    Context->LockStateSignature = OBP_LOCK_STATE_POST_ACQUISITION_SHARED;
+}
+
+VOID
+FORCEINLINE
+_ObpAcquireDirectoryLockExclusive(IN POBJECT_DIRECTORY Directory,
+                                  IN POBP_LOOKUP_CONTEXT Context)
+{
+    /* Update lock flag */
+    Context->LockStateSignature = OBP_LOCK_STATE_PRE_ACQUISITION_EXCLUSIVE;
+
+    /* Acquire an exclusive directory lock */
+    KeEnterCriticalRegion();
+    ExAcquirePushLockExclusive(&Directory->Lock);
+
+    /* Set the directory */
+    Context->Directory = Directory;
+
+    /* Update lock settings */
+    Context->LockStateSignature = OBP_LOCK_STATE_POST_ACQUISITION_EXCLUSIVE;
+    Context->DirectoryLocked = TRUE;
+}
+
+VOID
+FORCEINLINE
+_ObpReleaseDirectoryLock(IN POBJECT_DIRECTORY Directory,
+                         IN POBP_LOOKUP_CONTEXT Context)
+{
+    /* Release the lock */
+    ExReleasePushLock(&Directory->Lock);
+    Context->LockStateSignature = OBP_LOCK_STATE_RELEASED;
+    KeLeaveCriticalRegion();
+}
+
+VOID
+FORCEINLINE
+_ObpInitializeDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context)
+{
+    /* Initialize a null context */
+    Context->Object = NULL;
+    Context->Directory = NULL;
+    Context->DirectoryLocked = FALSE;
+    Context->LockStateSignature = OBP_LOCK_STATE_INITIALIZED;
+}
+
+VOID
+FORCEINLINE
+_ObpReleaseLookupContextObject(IN POBP_LOOKUP_CONTEXT Context)
 {
     POBJECT_HEADER ObjectHeader;
     POBJECT_HEADER_NAME_INFO HeaderNameInfo;
-
-    /* Check if we came back with the directory locked */
-    if (Context->DirectoryLocked)
-    {
-        /* Release the lock */
-        _ObpReleaseDirectoryLock(Context->Directory, Context);
-    }
-
-    /* Clear the context  */
-    Context->Directory = NULL;
-    Context->DirectoryLocked = FALSE;
 
     /* Check if we had found an object */
     if (Context->Object)
@@ -186,20 +152,27 @@ _ObpCleanupDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context,
         /* Check if we do have name information */
         if (HeaderNameInfo) _ObpDecrementQueryReference(HeaderNameInfo);
 
-        /* Check if we need to dereference it */
-        if (DereferenceObject) ObDereferenceObject(Context->Object);
+        /* Dereference the object */
+        ObDereferenceObject(Context->Object);
+        Context->Object = NULL;
     }
 }
 
 VOID
 FORCEINLINE
-_ObpInitializeDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context)
+_ObpCleanupDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context)
 {
-    /* Initialize a null context */
-    Context->Object = NULL;
+    /* Check if we came back with the directory locked */
+    if (Context->DirectoryLocked)
+    {
+        /* Release the lock */
+        _ObpReleaseDirectoryLock(Context->Directory, Context);
+    }
+
+    /* Clear the context  */
     Context->Directory = NULL;
     Context->DirectoryLocked = FALSE;
-    Context->LockStateSignature = 0xFFFF1234;
+    _ObpReleaseLookupContextObject(Context);
 }
 
 #if _OB_DEBUG_
@@ -365,5 +338,49 @@ ObpFreeAndReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateIn
     ObpFreeCapturedAttributes(ObjectCreateInfo, LookasideCreateInfoList);
 }
 
+#if DBG
+VOID
+FORCEINLINE
+ObpCalloutStart(IN PKIRQL CalloutIrql)
+{
+    /* Save the callout IRQL */
+    *CalloutIrql = KeGetCurrentIrql();
+}
 
+VOID
+FORCEINLINE
+ObpCalloutEnd(IN KIRQL CalloutIrql,
+              IN PCHAR Procedure,
+              IN POBJECT_TYPE ObjectType,
+              IN PVOID Object)
+{
+    /* Detect IRQL change */
+    if (CalloutIrql != KeGetCurrentIrql())
+    {
+        /* Print error */
+        DbgPrint("OB: ObjectType: %wZ  Procedure: %s  Object: %08x\n",
+                 &ObjectType->Name, Procedure, Object);
+        DbgPrint("    Returned at %x IRQL, but was called at %x IRQL\n",
+                 KeGetCurrentIrql(), CalloutIrql);
+        DbgBreakPoint();
+    }
+}
+#else
+VOID
+FORCEINLINE
+ObpCalloutStart(IN PKIRQL CalloutIrql)
+{
+    /* No-op */
+    UNREFERENCED_PARAMETER(CalloutIrql);
+}
 
+VOID
+FORCEINLINE
+ObpCalloutEnd(IN KIRQL CalloutIrql,
+              IN PCHAR Procedure,
+              IN POBJECT_TYPE ObjectType,
+              IN PVOID Object)
+{
+    UNREFERENCED_PARAMETER(CalloutIrql);
+}
+#endif

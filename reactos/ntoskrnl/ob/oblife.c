@@ -958,14 +958,19 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
         if (*p++ == OBJ_NAME_PATH_SEPARATOR) return STATUS_OBJECT_NAME_INVALID;
     }
 
-    Context.Object = NULL;
+    /* Setup a lookup context */
+    ObpInitializeDirectoryLookup(&Context);
 
     /* Check if we've already created the directory of types */
     if (ObpTypeDirectoryObject)
     {
-        /* Then scan it to figure out if we've already created this type */
+        /* Acquire the directory lock */
+        //ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
         Context.Directory = ObpTypeDirectoryObject;
         Context.DirectoryLocked = TRUE;
+        Context.LockStateSignature = 0xCCCC1234;
+
+        /* Do the lookup */
         if (ObpLookupEntryDirectory(ObpTypeDirectoryObject,
                                     TypeName,
                                     OBJ_CASE_INSENSITIVE,

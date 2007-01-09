@@ -194,12 +194,10 @@ ObpDeleteNameCheck(IN PVOID Object)
          !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
     {
         /* Setup a lookup context */
-        Context.Object = NULL;
+        ObpInitializeDirectoryLookup(&Context);
 
         /* Lock the directory */
         //ObpAcquireDirectoryLockExclusive(ObjectNameInfo->Directory, &Context);
-
-        /* Set the lookup parameters */
         Context.Directory = ObjectNameInfo->Directory;
         Context.DirectoryLocked = TRUE;
         Context.LockStateSignature = 0xCCCC1234;
@@ -255,7 +253,7 @@ ObpDeleteNameCheck(IN PVOID Object)
         }
 
         /* Cleanup after lookup */
-        //ObpCleanupDirectoryLookup(&Context, TRUE);
+        //ObpCleanupDirectoryLookup(&Context);
         Context.Object = NULL;
 
         /* Remove another query reference since we added one on top */
@@ -313,7 +311,7 @@ ObpLookupObjectName(IN HANDLE RootHandle,
             InsertObject);
 
     /* Initialize starting state */
-    LookupContext->Object = NULL;
+    ObpInitializeDirectoryLookup(LookupContext);
     *FoundObject = NULL;
     Status = STATUS_SUCCESS;
     Object = NULL;
@@ -575,10 +573,7 @@ ReparseNewDir:
             if (InsertObject)
             {
                 /* Lock the directory */
-                //ObpAcquireDirectoryLockExclusive(LookupContext, Directory);
-
-                /* Setup the context */
-                // FIXME: ObpSetLookupDirectory(Dir);?
+                //ObpAcquireDirectoryLockExclusive(Directory, LookupContext);
                 LookupContext->Directory = Directory;
                 LookupContext->DirectoryLocked = TRUE;
                 LookupContext->LockStateSignature = 0xCCCC1234;
@@ -701,7 +696,7 @@ Reparse:
             InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
 
             /* Cleanup from the first lookup */
-            //ObpCleanupDirectoryLookup(LookupContext, TRUE);
+            //ObpCleanupDirectoryLookup(LookupContext);
             LookupContext->Object = NULL;
 
             /* Check if we have a referenced directory */
@@ -868,7 +863,7 @@ Reparse:
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup after lookup */
-        //ObpCleanupDirectoryLookup(LookupContext, TRUE);
+        //ObpCleanupDirectoryLookup(LookupContext);
         LookupContext->Object = NULL;
     }
 

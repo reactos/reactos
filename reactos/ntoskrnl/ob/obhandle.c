@@ -1249,7 +1249,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     if ((Type) && (ObjectType != Type))
     {
         /* They don't, cleanup */
-        //if (Context) ObpCleanupDirectoryLookup(Object, Context);
+        //if (Context) ObpCleanupDirectoryLookup(Context);
         return STATUS_OBJECT_TYPE_MISMATCH;
     }
 
@@ -1287,7 +1287,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
          * We failed (meaning security failure, according to NT Internals)
          * detach and return
          */
-        //if (Context) ObpCleanupDirectoryLookup(Object, Context);
+        //if (Context) ObpCleanupDirectoryLookup(Context);
         if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
         return Status;
     }
@@ -1327,7 +1327,8 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     }
 
     /* Now we can release the object */
-    //if (Context) ObpCleanupDirectoryLookup(Object, Context);
+    //if (Context) ObpCleanupDirectoryLookup(Context);
+    if (Context) Context->Object = NULL;
 
     /* Save the object header */
     NewEntry.Object = ObjectHeader;
@@ -2116,7 +2117,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup after lookup */
-        //ObpCleanupDirectoryLookup(&TempBuffer->LookupContext, TRUE);
+        //ObpCleanupDirectoryLookup(&TempBuffer->LookupContext);
         TempBuffer->LookupContext.Object = NULL;
         goto Cleanup;
     }
@@ -2151,7 +2152,8 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
         Status = STATUS_INVALID_PARAMETER;
 
         /* Cleanup after lookup */
-        //ObpCleanupDirectoryLookup(&TempBuffer->LookupContext, TRUE);
+        //ObpCleanupDirectoryLookup(&TempBuffer->LookupContext);
+        TempBuffer->LookupContext.Object = NULL;
     }
     else
     {

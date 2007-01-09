@@ -430,7 +430,7 @@ ObReferenceObjectByName(IN PUNICODE_STRING ObjectPath,
                                  &Object);
 
     /* Cleanup after lookup */
-    //ObpCleanupDirectoryLookup(&Context, TRUE);
+    //ObpCleanupDirectoryLookup(&Context);
     Context.Object = NULL;
 
     /* Check if the lookup succeeded */
