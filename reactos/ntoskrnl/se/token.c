@@ -350,7 +350,7 @@ SeSubProcessToken(IN PTOKEN ParentToken,
         Status = ObInsertObject(NewToken,
                                 NULL,
                                 0,
-                                1,
+                                0,
                                 NULL,
                                 NULL);
         if (NT_SUCCESS(Status))
@@ -658,6 +658,8 @@ SepInitializeTokenImplementation(VOID)
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Token");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
+    ObjectTypeInitializer.SecurityRequired = TRUE;
     ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(TOKEN);
     ObjectTypeInitializer.GenericMapping = SepTokenMapping;
     ObjectTypeInitializer.PoolType = PagedPool;

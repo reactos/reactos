@@ -263,18 +263,6 @@ IopCreateDriverObject(
          ExFreePool(Buffer);
    }
 
-
-   Status = ObInsertObject(Object,
-                           NULL,
-                           FILE_ALL_ACCESS,
-                           0,
-                           NULL,
-                           NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return Status;
-   }  
-
    *DriverObject = Object;
 
    return STATUS_SUCCESS;

@@ -2329,6 +2329,7 @@ ObInsertObject(IN PVOID Object,
     OB_OPEN_REASON OpenReason;
     KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status = STATUS_SUCCESS, RealStatus;
+    BOOLEAN IsNewObject;
     PAGED_CODE();
 
     /* Get the Header */
@@ -2371,34 +2372,28 @@ ObInsertObject(IN PVOID Object,
         ObjectName = &ObjectNameInfo->Name;
     }
 
-    /* Sanity check, but broken on ROS due to Cm */
-#if 0
+    /* Sanity check */
     ASSERT((Handle) ||
            ((ObjectPointerBias == 0) &&
             (ObjectName == NULL) &&
             (ObjectType->TypeInfo.SecurityRequired) &&
             (NewObject == NULL)));
-#endif
 
     /* Check if the object is unnamed and also doesn't have security */
     PreviousMode = KeGetPreviousMode();
     if (!(ObjectType->TypeInfo.SecurityRequired) && !(ObjectName))
     {
-        /* ReactOS HACK */
-        if (Handle)
-        {
-            /* Assume failure */
-            *Handle = NULL;
+        /* Assume failure */
+        *Handle = NULL;
 
-            /* Create the handle */
-            Status = ObpCreateUnnamedHandle(Object,
-                                            DesiredAccess,
-                                            ObjectPointerBias + 1,
-                                            ObjectCreateInfo->Attributes,
-                                            PreviousMode,
-                                            NewObject,
-                                            Handle);
-        }
+        /* Create the handle */
+        Status = ObpCreateUnnamedHandle(Object,
+                                        DesiredAccess,
+                                        ObjectPointerBias + 1,
+                                        ObjectCreateInfo->Attributes,
+                                        PreviousMode,
+                                        NewObject,
+                                        Handle);
 
         /* Free the create information */
         ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);
@@ -2408,7 +2403,7 @@ ObInsertObject(IN PVOID Object,
         if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
 
         /* Remove the extra keep-alive reference */
-        if (Handle) ObDereferenceObject(Object);
+        ObDereferenceObject(Object);
 
         /* Return */
         OBTRACE(OB_HANDLE_DEBUG,
@@ -2590,12 +2585,7 @@ ObInsertObject(IN PVOID Object,
     /* Save the actual status until here */
     RealStatus = Status;
 
-    /* HACKHACK: Because of ROS's incorrect startup, this can be called
-     * without a valid Process until I finalize the startup patch,
-     * so don't create a handle if this is the case. We also don't create
-     * a handle if Handle is NULL when the Registry Code calls it, because
-     * the registry code totally bastardizes the Ob and needs to be fixed
-     */
+    /* Check if caller wants us to create a handle */
     ObjectHeader->ObjectCreateInfo = NULL;
     if (Handle)
     {
@@ -2610,28 +2600,38 @@ ObInsertObject(IN PVOID Object,
                                  PreviousMode,
                                  NewObject,
                                  Handle);
-    }
+        if (!NT_SUCCESS(Status))
+        {
+            /* If the object had a name, backout everything */
+            if (ObjectName) ObpDeleteNameCheck(Object);
 
-    /* Check if creating the handle failed */
-    if (!NT_SUCCESS(Status))
+            /* Return the status of the failure */
+            *Handle = NULL;
+            RealStatus = Status;
+        }
+
+        /* Remove a query reference */
+        if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
+
+        /* Remove the extra keep-alive reference */
+        ObDereferenceObject(Object);
+    }
+    else
     {
-        /* If the object had a name, backout everything */
-        if (ObjectName) ObpDeleteNameCheck(Object);
+        /* Otherwise, lock the object type */
+        ObpEnterObjectTypeMutex(ObjectType);
+
+        /* And charge quota for the process to make it appear as used */
+        RealStatus = ObpChargeQuotaForObject(ObjectHeader,
+                                             ObjectType,
+                                             &IsNewObject);
+
+        /* Release the lock */
+        ObpLeaveObjectTypeMutex(ObjectType);
+
+        /* Check if we failed and dereference the object if so */
+        if (!NT_SUCCESS(RealStatus)) ObDereferenceObject(Object);
     }
-
-    /* Check our final status */
-    if (!NT_SUCCESS(Status))
-    {
-        /* Return the status of the failure */
-        *Handle = NULL;
-        RealStatus = Status;
-    }
-
-    /* Remove a query reference */
-    if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
-
-    /* Remove the extra keep-alive reference */
-    if (Handle) ObDereferenceObject(Object);
 
     /* We can delete the Create Info now */
     ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);

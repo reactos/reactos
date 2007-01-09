@@ -597,6 +597,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	RtlFreeUnicodeString(&RemainingPath);
 	return Status;
       }
+#if 0
     DPRINT("Inserting Key into Object Tree\n");
     Status =  ObInsertObject((PVOID)NewKey,
                              NULL,
@@ -605,6 +606,11 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
                              NULL,
                              NULL);
   DPRINT("Status %x\n", Status);
+#else
+    /* Free the create information */
+    ObpFreeAndReleaseCapturedAttributes(OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo);
+    OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo = NULL;
+#endif
   NewKey->Flags = 0;
   NewKey->SubKeyCounts = 0;
   NewKey->SubKeys = NULL;

@@ -382,6 +382,7 @@ CmiObjectParse(IN PVOID ParsedObject,
           RtlFreeUnicodeString(&KeyName);
           return(Status);
         }
+#if 0
       DPRINT("Inserting Key into Object Tree\n");
       Status = ObInsertObject((PVOID)FoundObject,
                               NULL,
@@ -390,6 +391,11 @@ CmiObjectParse(IN PVOID ParsedObject,
                               NULL,
                               NULL);
       DPRINT("Status %x\n", Status);
+#else
+/* Free the create information */
+ObpFreeAndReleaseCapturedAttributes(OBJECT_TO_OBJECT_HEADER(FoundObject)->ObjectCreateInfo);
+OBJECT_TO_OBJECT_HEADER(FoundObject)->ObjectCreateInfo = NULL;
+#endif
 
       /* Add the keep-alive reference */
       ObReferenceObject(FoundObject);
