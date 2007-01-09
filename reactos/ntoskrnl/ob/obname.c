@@ -293,7 +293,7 @@ ObpLookupObjectName(IN HANDLE RootHandle,
                     OUT PVOID *FoundObject)
 {
     PVOID RootDirectory;
-    PVOID Directory = NULL;
+    PVOID Directory = NULL, ParentDirectory = NULL;
     PVOID Object;
     POBJECT_HEADER ObjectHeader;
     NTSTATUS Status;
@@ -523,20 +523,58 @@ ReparseNewDir:
         }
 
         /* Get its size and make sure it's valid */
-        if (!(ComponentName.Length -= RemainingName.Length))
+        ComponentName.Length -= RemainingName.Length;
+        if (!ComponentName.Length)
         {
+            /* Invalid size, fail */
             Status = STATUS_OBJECT_NAME_INVALID;
             break;
         }
 
-        /* Do the look up */
-        LookupContext->DirectoryLocked = TRUE;
-        LookupContext->Directory = Directory;
+        /* Check if this is a user-mode call that needs to traverse */
+        if ((AccessCheckMode != KernelMode) &&
+            !(AccessState->Flags & TOKEN_HAS_TRAVERSE_PRIVILEGE))
+        {
+            /* Check if we have a parent directory */
+            if (ParentDirectory)
+            {
+                /* Check for traverse access */
+                if (!ObpCheckTraverseAccess(ParentDirectory,
+                                            DIRECTORY_TRAVERSE,
+                                            AccessState,
+                                            FALSE,
+                                            AccessCheckMode,
+                                            &Status))
+                {
+                    /* We don't have it, fail */
+                    break;
+                }
+            }
+        }
+
+        /* Check if we don't have a remaining name yet */
+        if (!RemainingName.Length)
+        {
+            /* Check if we are inserting an object */
+            if (InsertObject)
+            {
+                /* Lock the directory */
+                //ObpAcquireDirectoryLockExclusive(LookupContext, Directory);
+
+                /* Setup the context */
+                // FIXME: ObpSetLookupDirectory(Dir);?
+                LookupContext->Directory = Directory;
+                LookupContext->DirectoryLocked = TRUE;
+                LookupContext->LockStateSignature = 0xCCCC1234;
+            }
+        }
+
+        /* Do the lookup */
         Object = ObpLookupEntryDirectory(Directory,
-                                                &ComponentName,
-                                                Attributes,
-                                                InsertObject ? FALSE : TRUE,
-                                                LookupContext);
+                                         &ComponentName,
+                                         Attributes,
+                                         InsertObject ? FALSE : TRUE,
+                                         LookupContext);
         if (!Object)
         {
             /* We didn't find it... do we still have a path? */
@@ -568,64 +606,64 @@ ReparseNewDir:
                 break;
             }
 
-                /* Get the object header */
-                ObjectHeader = OBJECT_TO_OBJECT_HEADER(InsertObject);
+            /* Get the object header */
+            ObjectHeader = OBJECT_TO_OBJECT_HEADER(InsertObject);
 
-                /* FIXME: Check if this is a Section Object or Sym Link */
-                /* FIXME: If it is, then check if this isn't session 0 */
-                /* FIXME: If it isn't, check for SeCreateGlobalPrivilege */
-                /* FIXME: If privilege isn't there, check for unsecure name */
-                /* FIXME: If it isn't a known unsecure name, then fail */
+            /* FIXME: Check if this is a Section Object or Sym Link */
+            /* FIXME: If it is, then check if this isn't session 0 */
+            /* FIXME: If it isn't, check for SeCreateGlobalPrivilege */
+            /* FIXME: If privilege isn't there, check for unsecure name */
+            /* FIXME: If it isn't a known unsecure name, then fail */
 
-                /* Create Object Name */
-                NewName = ExAllocatePoolWithTag(PagedPool,
-                                                ComponentName.Length,
-                                                OB_NAME_TAG);
-                if (!(NewName) ||
-                    !(ObpInsertEntryDirectory(Directory,
-                                              LookupContext,
-                                              ObjectHeader)))
-                {
-                    /* Either couldn't allocate the name, or insert failed */
-                    if (NewName) ExFreePool(NewName);
+            /* Create Object Name */
+            NewName = ExAllocatePoolWithTag(PagedPool,
+                                            ComponentName.Length,
+                                            OB_NAME_TAG);
+            if (!(NewName) ||
+                !(ObpInsertEntryDirectory(Directory,
+                                          LookupContext,
+                                          ObjectHeader)))
+            {
+                /* Either couldn't allocate the name, or insert failed */
+                if (NewName) ExFreePool(NewName);
 
-                    /* Fail due to memory reasons */
-                    Status = STATUS_INSUFFICIENT_RESOURCES;
-                    break;
-                }
-
-                /* Reference newly to be inserted object */
-                ObReferenceObject(InsertObject);
-
-                /* Get the name information */
-                ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
-
-                /* Reference the directory */
-                ObReferenceObject(Directory);
-
-                /* Copy the Name */
-                RtlCopyMemory(NewName,
-                              ComponentName.Buffer,
-                              ComponentName.Length);
-
-                /* Check if we had an old name */
-                if (ObjectNameInfo->Name.Buffer)
-                {
-                    /* Free it */
-                    ExFreePool(ObjectNameInfo->Name.Buffer);
-                }
-
-                /* Write new one */
-                ObjectNameInfo->Name.Buffer = NewName;
-                ObjectNameInfo->Name.Length = ComponentName.Length;
-                ObjectNameInfo->Name.MaximumLength = ComponentName.Length;
-
-                /* Return Status and the Expected Object */
-                Status = STATUS_SUCCESS;
-                Object = InsertObject;
-
-                /* Get out of here */
+                /* Fail due to memory reasons */
+                Status = STATUS_INSUFFICIENT_RESOURCES;
                 break;
+            }
+
+            /* Reference newly to be inserted object */
+            ObReferenceObject(InsertObject);
+
+            /* Get the name information */
+            ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+
+            /* Reference the directory */
+            ObReferenceObject(Directory);
+
+            /* Copy the Name */
+            RtlCopyMemory(NewName,
+                          ComponentName.Buffer,
+                          ComponentName.Length);
+
+            /* Check if we had an old name */
+            if (ObjectNameInfo->Name.Buffer)
+            {
+                /* Free it */
+                ExFreePool(ObjectNameInfo->Name.Buffer);
+            }
+
+            /* Write new one */
+            ObjectNameInfo->Name.Buffer = NewName;
+            ObjectNameInfo->Name.Length = ComponentName.Length;
+            ObjectNameInfo->Name.MaximumLength = ComponentName.Length;
+
+            /* Return Status and the Expected Object */
+            Status = STATUS_SUCCESS;
+            Object = InsertObject;
+
+            /* Get out of here */
+            break;
         }
 
 Reparse:
@@ -680,6 +718,7 @@ Reparse:
                     }
 
                     /* Start at Root */
+                    ParentDirectory = NULL;
                     RootDirectory = NameSpaceRoot;
 
                     /* Check for reparse status */
@@ -766,6 +805,7 @@ Reparse:
                 if (ObjectHeader->Type == ObDirectoryType)
                 {
                     /* Restart from this directory */
+                    ParentDirectory = Directory;
                     Directory = Object;
                 }
                 else

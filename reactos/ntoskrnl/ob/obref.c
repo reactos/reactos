@@ -444,7 +444,6 @@ ObReferenceObjectByName(IN PUNICODE_STRING ObjectPath,
                                     &Status))
         {
             /* Return the object */
-            Status = STATUS_SUCCESS;
             *ObjectPtr = Object;
         }
     }

@@ -1054,7 +1054,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
   else
     {
-      *AccessStatus = STATUS_ACCESS_DENIED;
+      *AccessStatus = STATUS_SUCCESS;
       DPRINT("FIX caller rights (granted 0x%lx, desired 0x%lx)!\n",
         *GrantedAccess, DesiredAccess);
       return TRUE; /* FIXME: should be FALSE */
