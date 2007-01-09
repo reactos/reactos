@@ -2030,6 +2030,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup after lookup */
+        //ObpCleanupDirectoryLookup(&TempBuffer->LookupContext, TRUE);
         TempBuffer->LookupContext.Object = NULL;
         goto Cleanup;
     }
@@ -2062,7 +2063,9 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     {
         /* Set failure code */
         Status = STATUS_INVALID_PARAMETER;
-        TempBuffer->LookupContext.Object = NULL;
+
+        /* Cleanup after lookup */
+        //ObpCleanupDirectoryLookup(&TempBuffer->LookupContext, TRUE);
     }
     else
     {
@@ -2440,12 +2443,13 @@ ObInsertObject(IN PVOID Object,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
+        if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
         ObDereferenceObject(Object);
         return Status;
     }
 
     /* Setup a lookup context */
-    Context.Object = NULL;
+    ObpInitializeDirectoryLookup(&Context);
     InsertObject = Object;
     OpenReason = ObCreateHandle;
 

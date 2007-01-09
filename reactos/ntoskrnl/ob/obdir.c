@@ -185,7 +185,8 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
     /* Check if the directory is already locked */
     if (!Context->DirectoryLocked)
     {
-
+        /* Lock it */
+        ObpAcquireDirectoryLockShared(Directory, Context);
     }
 
     /* Start looping */
@@ -222,6 +223,8 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
             /* Check if the directory was locked */
             if (!Context->DirectoryLocked)
             {
+                /* Convert the lock from shared to exclusive */
+                ExConvertPushLockSharedToExclusive(&Directory->Lock);
             }
 
             /* Set the Current Entry */
@@ -241,6 +244,11 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         /* Get the object name information */
         ObjectHeader = OBJECT_TO_OBJECT_HEADER(FoundObject);
         HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+        if (HeaderNameInfo)
+        {
+            /* Add a query reference */
+            //ObpIncrementQueryReference(ObjectHeader, HeaderNameInfo);
+        }
 
         /* Reference the object being looked up */
         //ObReferenceObject(FoundObject);
@@ -248,6 +256,8 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         /* Check if the directory was locked */
         if (!Context->DirectoryLocked)
         {
+            /* Release the lock */
+            ObpReleaseDirectoryLock(Directory, Context);
         }
     }
     else
@@ -255,6 +265,8 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         /* Check if the directory was locked */
         if (!Context->DirectoryLocked)
         {
+            /* Release the lock */
+            ObpReleaseDirectoryLock(Directory, Context);
         }
 
         /* Check if we should scan the shadow directory */

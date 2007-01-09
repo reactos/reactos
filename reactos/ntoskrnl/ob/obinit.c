@@ -278,9 +278,17 @@ ObPostPhase0:
     Status = NtClose(Handle);
     if (!NT_SUCCESS(Status)) return FALSE;
 
-    Context.Object = NULL;
+    /* Initialize lookup context */
+    ObpInitializeDirectoryLookup(&Context);
+
+    /* Lock it */
+    //ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
+
+    /* Setup directory */
+    // FIXME: ObpSetLookupDirectory(Dir);?
     Context.Directory = ObpTypeDirectoryObject;
     Context.DirectoryLocked = TRUE;
+    Context.LockStateSignature = 0xCCCC1234;
 
     /* Loop the object types */
     ListHead = &ObTypeObjectType->TypeList;
@@ -317,6 +325,8 @@ ObPostPhase0:
         NextEntry = NextEntry->Flink;
     }
 
+    /* Cleanup after lookup */
+    //ObpCleanupDirectoryLookup(&Context, TRUE);
     Context.Object = NULL;
 
     /* Initialize DOS Devices Directory and related Symbolic Links */
