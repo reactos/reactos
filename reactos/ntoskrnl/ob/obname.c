@@ -292,19 +292,19 @@ ObpLookupObjectName(IN HANDLE RootHandle,
                     IN POBP_LOOKUP_CONTEXT LookupContext,
                     OUT PVOID *FoundObject)
 {
-    PVOID RootDirectory;
-    PVOID Directory = NULL, ParentDirectory = NULL;
     PVOID Object;
     POBJECT_HEADER ObjectHeader;
+    UNICODE_STRING ComponentName, RemainingName;
+    BOOLEAN InsideRoot = FALSE;
+    PDEVICE_MAP DeviceMap = NULL;
+    POBJECT_DIRECTORY Directory = NULL, ParentDirectory = NULL, RootDirectory;
+    POBJECT_DIRECTORY ReferencedDirectory = NULL, ReferencedParentDirectory = NULL;
+    KIRQL CalloutIrql;
+    OB_PARSE_METHOD ParseRoutine;
     NTSTATUS Status;
+    KPROCESSOR_MODE AccessCheckMode;
     PWCHAR NewName;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
-    UNICODE_STRING RemainingName, ComponentName;
-    BOOLEAN InsideRoot = FALSE;
-    KPROCESSOR_MODE AccessCheckMode;
-    OB_PARSE_METHOD ParseRoutine;
-    KIRQL CalloutIrql;
-    POBJECT_DIRECTORY ReferencedDirectory = NULL, ReferencedParentDirectory = NULL;
     PAGED_CODE();
     OBTRACE(OB_NAMESPACE_DEBUG,
             "%s - Finding Object: %wZ. Expecting: %p\n",
@@ -337,7 +337,7 @@ ObpLookupObjectName(IN HANDLE RootHandle,
                                            0,
                                            NULL,
                                            AccessMode,
-                                           &RootDirectory,
+                                           (PVOID*)&RootDirectory,
                                            NULL);
         if (!NT_SUCCESS(Status)) return Status;
 
@@ -377,7 +377,7 @@ ObpLookupObjectName(IN HANDLE RootHandle,
                 Status = ParseRoutine(RootDirectory,
                                       ObjectType,
                                       AccessState,
-                                      AccessMode,
+                                      AccessCheckMode,
                                       Attributes,
                                       ObjectName,
                                       &RemainingName,
@@ -725,7 +725,7 @@ Reparse:
             Status = ParseRoutine(Object,
                                   ObjectType,
                                   AccessState,
-                                  AccessMode,
+                                  AccessCheckMode,
                                   Attributes,
                                   ObjectName,
                                   &RemainingName,
@@ -873,7 +873,7 @@ Reparse:
     }
 
     /* Check if we have a device map and dereference it if so */
-    //if (DeviceMap) ObfDereferenceDeviceMap(DeviceMap);
+    if (DeviceMap) ObfDereferenceDeviceMap(DeviceMap);
 
     /* Check if we have a referenced directory and dereference it if so */
     if (ReferencedDirectory) ObDereferenceObject(ReferencedDirectory);

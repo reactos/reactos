@@ -11,8 +11,7 @@
 //
 // Ob:
 //  - Add Directory Lock.
-//  - Strengthen code with debug checks and assertions.
-//  - Fix FIXMEs/commented out code.
+//  - Add Object Table Referencing.
 //
 // Ex:
 //  - Fixup existing code that talks to Ke.

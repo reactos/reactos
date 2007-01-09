@@ -1031,14 +1031,16 @@ ObpCreateUnnamedHandle(IN PVOID Object,
     POBJECT_HEADER ObjectHeader;
     HANDLE Handle;
     KAPC_STATE ApcState;
-    BOOLEAN AttachedToProcess = FALSE;
+    BOOLEAN AttachedToProcess = FALSE, KernelHandle = FALSE;
     PVOID HandleTable;
     NTSTATUS Status;
-    ULONG i;
+    ACCESS_MASK GrantedAccess;
+    POBJECT_TYPE ObjectType;
     PAGED_CODE();
 
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectType = ObjectHeader->Type;
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Creating handle for: %p. UNNAMED. HC LC %lx %lx\n",
             __FUNCTION__,
@@ -1051,6 +1053,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
     {
         /* Set the handle table */
         HandleTable = ObpKernelHandleTable;
+        KernelHandle = TRUE;
 
         /* Check if we're not in the system process */
         if (PsGetCurrentProcess() != PsInitialSystemProcess)
@@ -1082,8 +1085,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
         return Status;
     }
 
-    /* Save the object header (assert its validity too) */
-    ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
+    /* Save the object header */
     NewEntry.Object = ObjectHeader;
 
     /* Mask out the internal attributes */
@@ -1092,20 +1094,20 @@ ObpCreateUnnamedHandle(IN PVOID Object,
                               EX_HANDLE_ENTRY_INHERITABLE |
                               EX_HANDLE_ENTRY_AUDITONCLOSE);
 
-    /* Save the access mask */
-    NewEntry.GrantedAccess = DesiredAccess;
+    /* Remove what's not in the valid access mask */
+    GrantedAccess = DesiredAccess & (ObjectType->TypeInfo.ValidAccessMask |
+                                     ACCESS_SYSTEM_SECURITY);
 
     /* Handle extra references */
     if (AdditionalReferences)
     {
-        /* Make a copy in case we fail later below */
-        i = AdditionalReferences;
-        while (i--)
-        {
-            /* Increment the count */
-            InterlockedIncrement(&ObjectHeader->PointerCount);
-        }
+        /* Add them to the header */
+        InterlockedExchangeAdd(&ObjectHeader->PointerCount,
+                               AdditionalReferences);
     }
+
+    /* Save the access mask */
+    NewEntry.GrantedAccess = GrantedAccess;
 
     /*
      * Create the actual handle. We'll need to do this *after* calling
@@ -1118,22 +1120,26 @@ ObpCreateUnnamedHandle(IN PVOID Object,
             NewEntry.Object, NewEntry.ObAttributes & 3, NewEntry.GrantedAccess);
     Handle = ExCreateHandle(HandleTable, &NewEntry);
 
-     /* Detach if needed */
-    if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
-
     /* Make sure we got a handle */
     if (Handle)
     {
         /* Check if this was a kernel handle */
-        if (HandleAttributes & OBJ_KERNEL_HANDLE)
-        {
-            /* Set the kernel handle bit */
-            Handle = ObMarkHandleAsKernelHandle(Handle);
-        }
+        if (KernelHandle) Handle = ObMarkHandleAsKernelHandle(Handle);
 
         /* Return handle and object */
         *ReturnedHandle = Handle;
-        if (ReturnedObject) *ReturnedObject = Object;
+
+        /* Return the new object only if caller wanted it biased */
+        if ((AdditionalReferences) && (ReturnedObject))
+        {
+            /* Return it */
+            *ReturnedObject = Object;
+        }
+
+        /* Detach if needed */
+        if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
+
+        /* Trace and return */
         OBTRACE(OB_HANDLE_DEBUG,
                 "%s - Returning Handle: %lx HC LC %lx %lx\n",
                 __FUNCTION__,
@@ -1144,16 +1150,25 @@ ObpCreateUnnamedHandle(IN PVOID Object,
     }
 
     /* Handle extra references */
-    while (AdditionalReferences--)
+    if (AdditionalReferences == 1)
     {
-        /* Decrement the count */
-        InterlockedDecrement(&ObjectHeader->PointerCount);
+        /* Dereference the object once */
+        ObDereferenceObject(Object);
+    }
+    else if (AdditionalReferences > 1)
+    {
+        /* Dereference it many times */
+        InterlockedExchangeAdd(&ObjectHeader->PointerCount,
+                               -AdditionalReferences);
     }
 
     /* Decrement the handle count and detach */
     ObpDecrementHandleCount(&ObjectHeader->Body,
                             PsGetCurrentProcess(),
-                            NewEntry.GrantedAccess);
+                            GrantedAccess);
+
+    /* Detach and fail */
+    if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
     return STATUS_INSUFFICIENT_RESOURCES;
 }
 
@@ -1191,7 +1206,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
 *
 * @return <FILLMEIN>.
 *
-* @remarks Cleans up the Lookup Context on success.
+* @remarks Cleans up the Lookup Context on return.
 *
 *--*/
 NTSTATUS
@@ -1211,11 +1226,12 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     POBJECT_HEADER ObjectHeader;
     HANDLE Handle;
     KAPC_STATE ApcState;
-    BOOLEAN AttachedToProcess = FALSE;
+    BOOLEAN AttachedToProcess = FALSE, KernelHandle = FALSE;
     POBJECT_TYPE ObjectType;
     PVOID HandleTable;
     NTSTATUS Status;
-    ULONG i;
+    ACCESS_MASK DesiredAccess, GrantedAccess;
+    PAUX_DATA AuxData;
     PAGED_CODE();
 
     /* Get the object header and type */
@@ -1230,13 +1246,19 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
             ObjectHeader->PointerCount);
 
     /* Check if the types match */
-    if ((Type) && (ObjectType != Type)) return STATUS_OBJECT_TYPE_MISMATCH;
+    if ((Type) && (ObjectType != Type))
+    {
+        /* They don't, cleanup */
+        //if (Context) ObpCleanupDirectoryLookup(Object, Context);
+        return STATUS_OBJECT_TYPE_MISMATCH;
+    }
 
     /* Check if this is a kernel handle */
     if ((HandleAttributes & OBJ_KERNEL_HANDLE) && (AccessMode == KernelMode))
     {
         /* Set the handle table */
         HandleTable = ObpKernelHandleTable;
+        KernelHandle = TRUE;
 
         /* Check if we're not in the system process */
         if (PsGetCurrentProcess() != PsInitialSystemProcess)
@@ -1265,13 +1287,17 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
          * We failed (meaning security failure, according to NT Internals)
          * detach and return
          */
+        //if (Context) ObpCleanupDirectoryLookup(Object, Context);
         if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
         return Status;
     }
 
-    /* Save the object header (assert its validity too) */
-    ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
-    NewEntry.Object = ObjectHeader;
+    /* Check if we are doing audits on close */
+    if (AccessState->GenerateOnClose)
+    {
+        /* Force the attribute on */
+        HandleAttributes|= EX_HANDLE_ENTRY_AUDITONCLOSE;
+    }
 
     /* Mask out the internal attributes */
     NewEntry.ObAttributes |= HandleAttributes &
@@ -1279,21 +1305,35 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
                               EX_HANDLE_ENTRY_INHERITABLE |
                               EX_HANDLE_ENTRY_AUDITONCLOSE);
 
-    /* Save the access mask */
-    NewEntry.GrantedAccess = AccessState->RemainingDesiredAccess |
-                             AccessState->PreviouslyGrantedAccess;
+    /* Get the original desired access */
+    DesiredAccess = AccessState->RemainingDesiredAccess |
+                    AccessState->PreviouslyGrantedAccess;
+
+    /* Remove what's not in the valid access mask */
+    GrantedAccess = DesiredAccess & (ObjectType->TypeInfo.ValidAccessMask |
+                                     ACCESS_SYSTEM_SECURITY);
+
+    /* Update the value in the access state */
+    AccessState->PreviouslyGrantedAccess = GrantedAccess;
+
+    /* Get the auxiliary data */
+    AuxData = AccessState->AuxData;
 
     /* Handle extra references */
     if (AdditionalReferences)
     {
-        /* Make a copy in case we fail later below */
-        i = AdditionalReferences;
-        while (i--)
-        {
-            /* Increment the count */
-            InterlockedIncrement(&ObjectHeader->PointerCount);
-        }
+        /* Add them to the header */
+        InterlockedExchangeAdd(&ObjectHeader->PointerCount, AdditionalReferences);
     }
+
+    /* Now we can release the object */
+    //if (Context) ObpCleanupDirectoryLookup(Object, Context);
+
+    /* Save the object header */
+    NewEntry.Object = ObjectHeader;
+
+    /* Save the access mask */
+    NewEntry.GrantedAccess = GrantedAccess;
 
     /*
      * Create the actual handle. We'll need to do this *after* calling
@@ -1306,22 +1346,59 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
             NewEntry.Object, NewEntry.ObAttributes & 3, NewEntry.GrantedAccess);
     Handle = ExCreateHandle(HandleTable, &NewEntry);
 
-     /* Detach if needed */
-    if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
-
     /* Make sure we got a handle */
     if (Handle)
     {
-        /* Check if this was a kernel handle */
-        if (HandleAttributes & OBJ_KERNEL_HANDLE)
+        /* Check if we have auxiliary data */
+        if (AuxData)
         {
-            /* Set the kernel handle bit */
-            Handle = ObMarkHandleAsKernelHandle(Handle);
+            /* FIXME: Change handle security */
         }
 
-        /* Return handle and object */
+        /* Check if this was a kernel handle */
+        if (KernelHandle) Handle = ObMarkHandleAsKernelHandle(Handle);
+
+        /* Return it */
         *ReturnedHandle = Handle;
-        if (ReturnedObject) *ReturnedObject = Object;
+
+        /* Check if we need to generate on audit */
+        if (AccessState->GenerateAudit)
+        {
+            /* Audit the handle creation */
+            //SeAuditHandleCreation(AccessState, Handle);
+        }
+
+        /* Check if this was a create */
+        if (OpenReason == ObCreateHandle)
+        {
+            /* Check if we need to audit the privileges */
+            if ((AuxData->PrivilegeSet) &&
+                (AuxData->PrivilegeSet->PrivilegeCount))
+            {
+                /* Do the audit */
+#if 0
+                SePrivilegeObjectAuditAlarm(Handle,
+                                            &AccessState->
+                                            SubjectSecurityContext,
+                                            GrantedAccess,
+                                            AuxData->PrivilegeSet,
+                                            TRUE,
+                                            ExGetPreviousMode());
+#endif
+            }
+        }
+
+        /* Return the new object only if caller wanted it biased */
+        if ((AdditionalReferences) && (ReturnedObject))
+        {
+            /* Return it */
+            *ReturnedObject = Object;
+        }
+
+        /* Detach if needed */
+        if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
+
+        /* Trace and return */
         OBTRACE(OB_HANDLE_DEBUG,
                 "%s - Returning Handle: %lx HC LC %lx %lx\n",
                 __FUNCTION__,
@@ -1331,17 +1408,26 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
         return STATUS_SUCCESS;
     }
 
-    /* Handle extra references */
-    while (AdditionalReferences--)
-    {
-        /* Increment the count */
-        InterlockedDecrement(&ObjectHeader->PointerCount);
-    }
-
     /* Decrement the handle count and detach */
     ObpDecrementHandleCount(&ObjectHeader->Body,
                             PsGetCurrentProcess(),
-                            NewEntry.GrantedAccess);
+                            GrantedAccess);
+
+    /* Handle extra references */
+    if (AdditionalReferences == 1)
+    {
+        /* Dereference the object once */
+        ObDereferenceObject(Object);
+    }
+    else if (AdditionalReferences > 1)
+    {
+        /* Dereference it many times */
+        InterlockedExchangeAdd(&ObjectHeader->PointerCount,
+                               -AdditionalReferences);
+    }
+
+    /* Detach if necessary and fail */
+    if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
     return STATUS_INSUFFICIENT_RESOURCES;
 }
 

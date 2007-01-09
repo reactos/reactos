@@ -55,6 +55,7 @@ LpcpInitSystem(VOID)
     ObjectTypeInitializer.CloseProcedure = LpcpClosePort;
     ObjectTypeInitializer.DeleteProcedure = LpcpDeletePort;
     ObjectTypeInitializer.ValidAccessMask = PORT_ALL_ACCESS;
+    ObjectTypeInitializer.MaintainTypeList = TRUE;
     ObCreateObjectType(&Name,
                        &ObjectTypeInitializer,
                        NULL,
