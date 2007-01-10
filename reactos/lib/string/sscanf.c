@@ -5,7 +5,8 @@
 #include <ndk/rtlfuncs.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <stdio.h>
+
+#define EOF		(-1)
 
 /* helper function for *scanf.  Returns the value of character c in the
  * given base, or -1 if the given character is not a digit of the base.
