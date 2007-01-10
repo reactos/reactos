@@ -274,45 +274,48 @@ endif
 	cp = $(Q)cp
 	NUL = /dev/null
 else # mingw32-windows
-  ifeq ($(OSTYPE),msys)
-	HOST=mingw32-linux
-	export EXEPREFIX = ./
-	export EXEPOSTFIX = .exe
-	export SEP = /
-	mkdir = -$(Q)mkdir -p
-	gcc = $(Q)gcc
-	gpp = $(Q)g++
-	ld = $(Q)ld
-	nm = $(Q)nm
-	objdump = $(Q)objdump
-	ar = $(Q)ar
-	objcopy = $(Q)objcopy
-	dlltool = $(Q)dlltool
-	strip = $(Q)strip
-	windres = $(Q)windres
-	rm = $(Q)rm -f
-	cp = $(Q)cp
-	NUL = /dev/null
-  else
-	export EXEPREFIX =
-	export EXEPOSTFIX = .exe
-	ROS_EMPTY =
-	export SEP = \$(ROS_EMPTY)
-	mkdir = -$(Q)mkdir
-	gcc = $(Q)gcc
-	gpp = $(Q)g++
-	ld = $(Q)ld
-	nm = $(Q)nm
-	objdump = $(Q)objdump
-	ar = $(Q)ar
-	objcopy = $(Q)objcopy
-	dlltool = $(Q)dlltool
-	strip = $(Q)strip
-	windres = $(Q)windres
-	rm = $(Q)del /f /q
-	cp = $(Q)copy /y
-	NUL = NUL
-  endif
+	ifeq ($(OSTYPE),msys)
+		HOST=mingw32-linux
+		export EXEPREFIX = ./
+		export EXEPOSTFIX = .exe
+		export SEP = /
+		mkdir = -$(Q)mkdir -p
+		rm = $(Q)rm -f
+		cp = $(Q)cp
+		NUL = /dev/null
+	else
+		export EXEPREFIX =
+		export EXEPOSTFIX = .exe
+		ROS_EMPTY =
+		export SEP = \$(ROS_EMPTY)
+		mkdir = -$(Q)mkdir
+		rm = $(Q)del /f /q
+		cp = $(Q)copy /y
+		NUL = NUL
+	endif
+	ifeq ($(ROS_PREFIX),)
+		gcc = $(Q)gcc
+		gpp = $(Q)g++
+		ld = $(Q)ld
+		nm = $(Q)nm
+		objdump = $(Q)objdump
+		ar = $(Q)ar
+		objcopy = $(Q)objcopy
+		dlltool = $(Q)dlltool
+		strip = $(Q)strip
+		windres = $(Q)windres
+	else
+		gcc = $(ROS_PREFIX)-gcc
+		gpp = $(Q)$(ROS_PREFIX)-g++
+		ld = $(Q)$(ROS_PREFIX)-ld
+		nm = $(Q)$(ROS_PREFIX)-nm
+		objdump = $(Q)$(ROS_PREFIX)-objdump
+		ar = $(Q)$(ROS_PREFIX)-ar
+		objcopy = $(Q)$(ROS_PREFIX)-objcopy
+		dlltool = $(Q)$(ROS_PREFIX)-dlltool
+		strip = $(Q)$(ROS_PREFIX)-strip
+		windres = $(Q)$(ROS_PREFIX)-windres
+	endif
 endif
 
 ifneq ($(ROS_INTERMEDIATE),)
