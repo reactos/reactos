@@ -36,8 +36,6 @@
 /* Directory to load key layouts from */
 #define SYSTEMROOT_DIR L"\\SystemRoot\\System32\\"
 
-#define STATE_GWL_OFFSET  0
-
 /* GLOBALS *******************************************************************/
 
 typedef struct __TRACKINGLIST {
