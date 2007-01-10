@@ -347,9 +347,12 @@ EnableWindow(HWND hWnd,
         }
         else
         {
-            /* Remove keyboard focus from that window */
-            SetFocus(NULL);
             Style |= WS_DISABLED;
+            /* Remove keyboard focus from that window if it had focus */
+            if (hWnd == GetFocus())
+            {
+               SetFocus(NULL);
+            }
         }
         NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
 
