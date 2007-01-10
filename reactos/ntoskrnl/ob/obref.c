@@ -478,8 +478,8 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
     NTSTATUS Status;
     PAGED_CODE();
 
-    /* Fail immediately if the handle is NULL */
-    if (!Handle) return STATUS_INVALID_HANDLE;
+    /* Assume failure */
+    *Object = NULL;
 
     /* Check if the caller wants the current process */
     if ((Handle == NtCurrentProcess()) &&
@@ -488,9 +488,6 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
         /* Get the current process */
         CurrentProcess = PsGetCurrentProcess();
 
-        /* Reference ourselves */
-        ObReferenceObject(CurrentProcess);
-
         /* Check if the caller wanted handle information */
         if (HandleInformation)
         {
@@ -498,6 +495,10 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
             HandleInformation->HandleAttributes = 0;
             HandleInformation->GrantedAccess = PROCESS_ALL_ACCESS;
         }
+
+        /* Reference ourselves */
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(CurrentProcess);
+        InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
 
         /* Return the pointer */
         *Object = CurrentProcess;
@@ -516,9 +517,6 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
         /* Get the current thread */
         CurrentThread = PsGetCurrentThread();
 
-        /* Reference ourselves */
-        ObReferenceObject(CurrentThread);
-
         /* Check if the caller wanted handle information */
         if (HandleInformation)
         {
@@ -526,6 +524,10 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
             HandleInformation->HandleAttributes = 0;
             HandleInformation->GrantedAccess = THREAD_ALL_ACCESS;
         }
+
+        /* Reference ourselves */
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(CurrentThread);
+        InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
 
         /* Return the pointer */
         *Object = CurrentThread;
@@ -551,6 +553,7 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
     }
 
     /* Enter a critical region while we touch the handle table */
+    ASSERT(HandleTable != NULL);
     KeEnterCriticalRegion();
 
     /* Get the handle entry */
@@ -588,9 +591,10 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
 
                 /* Unlock the handle */
                 ExUnlockHandleTableEntry(HandleTable, HandleEntry);
+                KeLeaveCriticalRegion();
 
                 /* Return success */
-                KeLeaveCriticalRegion();
+                ASSERT(*Object != NULL);
                 return STATUS_SUCCESS;
             }
             else

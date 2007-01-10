@@ -23,6 +23,165 @@ PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+PHANDLE_TABLE
+NTAPI
+ObReferenceProcessHandleTable(IN PEPROCESS Process)
+{
+    PHANDLE_TABLE HandleTable = NULL;
+
+    /* Lock the process */
+    if (ExAcquireRundownProtection(&Process->RundownProtect))
+    {
+        /* Get the handle table */
+        HandleTable = Process->ObjectTable;
+        if (!HandleTable)
+        {
+            /* No table, release the lock */
+            ExReleaseRundownProtection(&Process->RundownProtect);
+        }
+    }
+
+    /* Return the handle table */
+    return HandleTable;
+}
+
+VOID
+NTAPI
+ObDereferenceProcessHandleTable(IN PEPROCESS Process)
+{
+    /* Release the process lock */
+    ExReleaseRundownProtection(&Process->RundownProtect);
+}
+
+NTSTATUS
+NTAPI
+ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
+                                  IN PEPROCESS Process,
+                                  IN PHANDLE_TABLE HandleTable,
+                                  IN KPROCESSOR_MODE AccessMode,
+                                  OUT PVOID *Object,
+                                  OUT POBJECT_HANDLE_INFORMATION HandleInformation)
+{
+    PHANDLE_TABLE_ENTRY HandleEntry;
+    POBJECT_HEADER ObjectHeader;
+    ACCESS_MASK GrantedAccess;
+    ULONG Attributes;
+    PEPROCESS CurrentProcess;
+    PETHREAD CurrentThread;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Assume failure */
+    *Object = NULL;
+
+    /* Check if the caller wants the current process */
+    if (Handle == NtCurrentProcess())
+    {
+        /* Get the current process */
+        CurrentProcess = PsGetCurrentProcess();
+
+        /* Check if the caller wanted handle information */
+        if (HandleInformation)
+        {
+            /* Return it */
+            HandleInformation->HandleAttributes = 0;
+            HandleInformation->GrantedAccess = Process->GrantedAccess;
+        }
+
+        /* Reference ourselves */
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(CurrentProcess);
+        InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+
+        /* Return the pointer */
+        *Object = CurrentProcess;
+        return STATUS_SUCCESS;
+    }
+
+    /* Check if the caller wants the current thread */
+    if (Handle == NtCurrentThread())
+    {
+        /* Get the current thread */
+        CurrentThread = PsGetCurrentThread();
+
+        /* Check if the caller wanted handle information */
+        if (HandleInformation)
+        {
+            /* Return it */
+            HandleInformation->HandleAttributes = 0;
+            HandleInformation->GrantedAccess = CurrentThread->GrantedAccess;
+        }
+
+        /* Reference ourselves */
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(CurrentThread);
+        InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+
+        /* Return the pointer */
+        *Object = CurrentThread;
+        return STATUS_SUCCESS;
+    }
+
+    /* Check if this is a kernel handle */
+    if (ObIsKernelHandle(Handle, AccessMode))
+    {
+        /* Use the kernel handle table and get the actual handle value */
+        Handle = ObKernelHandleToHandle(Handle);
+        HandleTable = ObpKernelHandleTable;
+    }
+    else
+    {
+        /* Otherwise use this process's handle table */
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
+    }
+
+    /* Enter a critical region while we touch the handle table */
+    ASSERT(HandleTable != NULL);
+    KeEnterCriticalRegion();
+
+    /* Get the handle entry */
+    HandleEntry = ExMapHandleToPointer(HandleTable, Handle);
+    if (HandleEntry)
+    {
+        /* Get the object header and validate the type*/
+        ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
+
+        /* Get the granted access and validate it */
+        GrantedAccess = HandleEntry->GrantedAccess;
+
+        /* Mask out the internal attributes */
+        Attributes = HandleEntry->ObAttributes &
+                     (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
+                      EX_HANDLE_ENTRY_INHERITABLE |
+                      EX_HANDLE_ENTRY_AUDITONCLOSE);
+
+        /* Fill out the information */
+        HandleInformation->HandleAttributes = Attributes;
+        HandleInformation->GrantedAccess = GrantedAccess;
+
+        /* Return the pointer */
+        *Object = &ObjectHeader->Body;
+
+        /* Add a reference */
+        InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+
+        /* Unlock the handle */
+        ExUnlockHandleTableEntry(HandleTable, HandleEntry);
+        KeLeaveCriticalRegion();
+
+        /* Return success */
+        ASSERT(*Object != NULL);
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Invalid handle */
+        Status = STATUS_INVALID_HANDLE;
+    }
+
+    /* Return failure status */
+    KeLeaveCriticalRegion();
+    return Status;
+}
+
 BOOLEAN
 NTAPI
 ObpEnumFindHandleProcedure(IN PHANDLE_TABLE_ENTRY HandleEntry,
@@ -1741,11 +1900,15 @@ ObpCreateHandleTable(IN PEPROCESS Parent,
     /* Check if we have a parent */
     if (Parent)
     {
+        /* Get the parent's table */
+        HandleTable = ObReferenceProcessHandleTable(Parent);
+        if (!HandleTable) return STATUS_PROCESS_IS_TERMINATING;
+
         /* Duplicate the parent's */
         HandleTable = ExDupHandleTable(Process,
                                        ObpDuplicateHandleCallback,
                                        NULL,
-                                       Parent->ObjectTable);
+                                       HandleTable);
     }
     else
     {
@@ -1753,11 +1916,14 @@ ObpCreateHandleTable(IN PEPROCESS Parent,
         HandleTable = ExCreateHandleTable(Process);
     }
 
-    /* Now write it and make sure we got one */
+    /* Now write it */
     Process->ObjectTable = HandleTable;
-    if (!HandleTable) return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* If we got here then the table was created OK */
+    /* Dereference the parent's handle table if we have one */
+    if (Parent) ObDereferenceProcessHandleTable(Parent);
+
+    /* Fail or succeed depending on whether we got a handle table or not */
+    if (!HandleTable) return STATUS_INSUFFICIENT_RESOURCES;
     return STATUS_SUCCESS;
 }
 
@@ -1778,9 +1944,20 @@ VOID
 NTAPI
 ObKillProcess(IN PEPROCESS Process)
 {
-    PHANDLE_TABLE HandleTable = Process->ObjectTable;
+    PHANDLE_TABLE HandleTable;
     OBP_CLOSE_HANDLE_CONTEXT Context;
+    BOOLEAN HardErrors;
     PAGED_CODE();
+
+    /* Wait for process rundown */
+    ExWaitForRundownProtectionRelease(&Process->RundownProtect);
+
+    /* Get the object table */
+    HandleTable = Process->ObjectTable;
+    if (!HandleTable) return;
+
+    /* Disable hard errors while we close handles */
+    HardErrors = IoSetThreadHardErrorMode(FALSE);
 
     /* Enter a critical region */
     KeEnterCriticalRegion();
@@ -1793,13 +1970,20 @@ ObKillProcess(IN PEPROCESS Process)
     ExSweepHandleTable(HandleTable,
                        ObpCloseHandleCallback,
                        &Context);
+    if (HandleTable->HandleCount != 0)
+    {
+        DPRINT1("FIXME: %d handles remain!\n", HandleTable->HandleCount);
+    }
 
-    /* Destroy the table and leave the critical region */
-    ExDestroyHandleTable(HandleTable);
+    /* Leave the critical region */
     KeLeaveCriticalRegion();
 
-    /* Clear the object table */
+    /* Re-enable hard errors */
+    IoSetThreadHardErrorMode(HardErrors);
+
+    /* Destroy the object table */
     Process->ObjectTable = NULL;
+    ExDestroyHandleTable(HandleTable);
 }
 
 NTSTATUS
@@ -1820,12 +2004,12 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
     POBJECT_TYPE ObjectType;
     HANDLE NewHandle;
     KAPC_STATE ApcState;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ACCESS_MASK TargetAccess, SourceAccess;
     ACCESS_STATE AccessState;
     PACCESS_STATE PassedAccessState = NULL;
     AUX_DATA AuxData;
-    PHANDLE_TABLE HandleTable = NULL;
+    PHANDLE_TABLE HandleTable;
     OBJECT_HANDLE_INFORMATION HandleInformation;
     PAGED_CODE();
     OBTRACE(OB_HANDLE_DEBUG,
@@ -1835,32 +2019,77 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
             SourceProcess,
             TargetProcess);
 
-    /* Check if we're not in the source process */
-    if (SourceProcess != PsGetCurrentProcess())
+    /* Check if we're not duplicating the same access */
+    if (!(Options & DUPLICATE_SAME_ACCESS))
     {
-        /* Attach to it */
-        KeStackAttachProcess(&SourceProcess->Pcb, &ApcState);
-        AttachedToProcess = TRUE;
+        /* Validate the desired access */
+        Status = STATUS_SUCCESS; //ObpValidateDesiredAccess(DesiredAccess);
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
-    /* Now reference the source handle */
-    Status = ObReferenceObjectByHandle(SourceHandle,
-                                       0,
-                                       NULL,
-                                       PreviousMode,
-                                       (PVOID*)&SourceObject,
-                                       &HandleInformation);
+    /* Reference the object table */
+    HandleTable = ObReferenceProcessHandleTable(SourceProcess);
+    if (!HandleTable) return STATUS_PROCESS_IS_TERMINATING;
 
-    /* Check if we were attached */
-    if (AttachedToProcess)
+    /* Reference the process object */
+    Status = ObpReferenceProcessObjectByHandle(SourceHandle,
+                                               0,
+                                               HandleTable,
+                                               PreviousMode,
+                                               &SourceObject,
+                                               &HandleInformation);
+    if (!NT_SUCCESS(Status))
     {
-        /* We can safely detach now */
-        KeUnstackDetachProcess(&ApcState);
-        AttachedToProcess = FALSE;
+        /* Fail */
+        ObDereferenceProcessHandleTable(SourceProcess);
+        return Status;
     }
 
-    /* Fail if we couldn't reference it */
-    if (!NT_SUCCESS(Status)) return Status;
+    /* Check if there's no target process */
+    if (!TargetProcess)
+    {
+        /* Check if the caller wanted actual duplication */
+        if (!(Options & DUPLICATE_CLOSE_SOURCE))
+        {
+            /* Invalid request */
+            Status = STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            /* Otherwise, do the attach */
+            KeStackAttachProcess(&SourceProcess->Pcb, &ApcState);
+
+            /* Close the handle and detach */
+            NtClose(SourceHandle);
+            KeUnstackDetachProcess(&ApcState);
+        }
+
+        /* Return */
+        ObDereferenceProcessHandleTable(SourceProcess);
+        ObDereferenceObject(SourceObject);
+        return Status;
+    }
+
+    /* Get the target handle table */
+    HandleTable = ObReferenceProcessHandleTable(TargetProcess);
+    if (!HandleTable)
+    {
+        /* Check if the caller wanted us to close the handle */
+        if (Options & DUPLICATE_CLOSE_SOURCE)
+        {
+            /* Do the attach */
+            KeStackAttachProcess(&SourceProcess->Pcb, &ApcState);
+
+            /* Close the handle and detach */
+            NtClose(SourceHandle);
+            KeUnstackDetachProcess(&ApcState);
+        }
+
+        /* Return */
+        ObDereferenceProcessHandleTable(SourceProcess);
+        ObDereferenceObject(SourceObject);
+        return STATUS_PROCESS_IS_TERMINATING;
+    }
 
     /* Get the source access */
     SourceAccess = HandleInformation.GrantedAccess;
@@ -1898,7 +2127,8 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
     if (DesiredAccess & GENERIC_ACCESS)
     {
         /* Map it */
-        RtlMapGenericMask(&DesiredAccess, &ObjectType->TypeInfo.GenericMapping);
+        RtlMapGenericMask(&DesiredAccess,
+                          &ObjectType->TypeInfo.GenericMapping);
     }
 
     /* Set the target access */
@@ -1940,9 +2170,6 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
                                          HandleAttributes,
                                          PsGetCurrentProcess(),
                                          ObDuplicateHandle);
-
-        /* Set the handle table, now that we know this handle was added */
-        HandleTable = PsGetCurrentProcess()->ObjectTable;
     }
 
     /* Check if we were attached */
@@ -1989,6 +2216,10 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
 
     /* Return the handle */
     if (TargetHandle) *TargetHandle = NewHandle;
+
+    /* Dereference handle tables */
+    ObDereferenceProcessHandleTable(SourceProcess);
+    ObDereferenceProcessHandleTable(TargetProcess);
 
     /* Return status */
     OBTRACE(OB_HANDLE_DEBUG,

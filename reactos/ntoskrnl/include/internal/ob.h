@@ -171,6 +171,18 @@ ObpCreateHandleTable(
     IN PEPROCESS Process
 );
 
+PHANDLE_TABLE
+NTAPI
+ObReferenceProcessHandleTable(
+    IN PEPROCESS Process
+);
+
+VOID
+NTAPI
+ObDereferenceProcessHandleTable(
+    IN PEPROCESS Process
+);
+
 VOID
 NTAPI
 ObKillProcess(

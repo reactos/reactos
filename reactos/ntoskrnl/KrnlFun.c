@@ -8,11 +8,6 @@
 //                     Do NOT ask when it will be fixed.
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
-//
-// Ob:
-//  - Add Directory Lock.
-//  - Add Object Table Referencing.
-//
 // Ex:
 //  - Fixup existing code that talks to Ke.
 //  - Implement Generic Callback mechanism.
