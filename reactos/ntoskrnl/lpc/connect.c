@@ -9,9 +9,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include "lpc.h"
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
