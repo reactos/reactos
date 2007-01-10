@@ -909,6 +909,7 @@ IntSystemParametersInfo(
 {
    PWINSTATION_OBJECT WinStaObject;
    NTSTATUS Status;
+   BOOL bChanged = FALSE;
 
    static BOOL bInitialized = FALSE;
    static LOGFONTW IconFont;
@@ -956,16 +957,18 @@ IntSystemParametersInfo(
       case SPI_SETDOUBLECLKHEIGHT:
       case SPI_SETDOUBLECLICKTIME:
       case SPI_SETDESKWALLPAPER:
+      case SPI_SETSCREENSAVERRUNNING: 
+      case SPI_SETSCREENSAVETIMEOUT:
+      case SPI_SETFLATMENU:
+         /* We will change something, so set the flag here */
+         bChanged = TRUE;
       case SPI_GETDESKWALLPAPER:
       case SPI_GETWHEELSCROLLLINES:
       case SPI_GETWHEELSCROLLCHARS:
-      case SPI_SETSCREENSAVERRUNNING: 
       case SPI_GETSCREENSAVERRUNNING:
       case SPI_GETSCREENSAVETIMEOUT:
-      case SPI_SETSCREENSAVETIMEOUT:
       case SPI_GETSCREENSAVEACTIVE:
       case SPI_GETFLATMENU:
-      case SPI_SETFLATMENU:
          {
             PSYSTEM_CURSORINFO CurInfo;
 
@@ -982,43 +985,42 @@ IntSystemParametersInfo(
             switch(uiAction)
             {
                case SPI_GETFLATMENU:
-                  if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->FlatMenu;    
-                  return TRUE;
+                  ASSERT(pvParam);
+                  *((UINT*)pvParam) = WinStaObject->FlatMenu;
                   break;
-               case SPI_SETFLATMENU:				   
-                  WinStaObject->FlatMenu = uiParam;                               
+               case SPI_SETFLATMENU:
+                  WinStaObject->FlatMenu = uiParam;
                   break;
                case SPI_GETSCREENSAVETIMEOUT:
-                  if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->ScreenSaverTimeOut;                   
-                  return TRUE;
-                  break;
-               case SPI_SETSCREENSAVETIMEOUT:				  
-                  WinStaObject->ScreenSaverTimeOut = uiParam;                  
+                   ASSERT(pvParam);
+                   *((UINT*)pvParam) = WinStaObject->ScreenSaverTimeOut;
+               break;
+               case SPI_SETSCREENSAVETIMEOUT:
+                  WinStaObject->ScreenSaverTimeOut = uiParam;
                   break;
                case SPI_GETSCREENSAVERRUNNING:
                   if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
-                  return TRUE;
                   break;
-               case SPI_SETSCREENSAVERRUNNING:				  
+               case SPI_SETSCREENSAVERRUNNING:
                   if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
-                  WinStaObject->ScreenSaverRunning = uiParam;				                     
+                  WinStaObject->ScreenSaverRunning = uiParam;
                   break;
                case SPI_GETSCREENSAVEACTIVE:
                   /* FIXME: how to disable the screensaver? */
-                  if (pvParam != NULL) *((BOOL*)pvParam) = TRUE;
-                  return TRUE;
+                  ASSERT(pvParam);
+                  *((BOOL*)pvParam) = TRUE;
                   break;
                case SPI_GETWHEELSCROLLLINES:
+                  ASSERT(pvParam);
                   CurInfo = IntGetSysCursorInfo(WinStaObject);
-                  if (pvParam != NULL) *((UINT*)pvParam) = CurInfo->WheelScroLines;
+                  *((UINT*)pvParam) = CurInfo->WheelScroLines;
                   /* FIXME add this value to scroll list as scroll value ?? */
-                  return TRUE;
                   break;
                case SPI_GETWHEELSCROLLCHARS:
+                  ASSERT(pvParam);
                   CurInfo = IntGetSysCursorInfo(WinStaObject);
-                  if (pvParam != NULL) *((UINT*)pvParam) = CurInfo->WheelScroChars;
+                  *((UINT*)pvParam) = CurInfo->WheelScroChars;
                   // FIXME add this value to scroll list as scroll value ?? 
-                  return TRUE;
                   break;
                case SPI_SETDOUBLECLKWIDTH:
                   CurInfo = IntGetSysCursorInfo(WinStaObject);
@@ -1125,7 +1127,7 @@ IntSystemParametersInfo(
                      if(!KeyValuePartialInfo)
                      {
                         NtClose(KeyHandle);
-                        return 0;
+                        return FALSE;
                      }
 
                      Status = ZwQueryValueKey(KeyHandle, &Tile, KeyValuePartialInformation,
@@ -1134,7 +1136,7 @@ IntSystemParametersInfo(
                      {
                         ZwClose(KeyHandle);
                         ExFreePool(KeyValuePartialInfo);
-                        return 0;
+                        return FALSE;
                      }
                 
                      Tile.Length = KeyValuePartialInfo->DataLength;
@@ -1160,7 +1162,7 @@ IntSystemParametersInfo(
                      if(!KeyValuePartialInfo)
                      {
                         ZwClose(KeyHandle);
-                        return 0;
+                        return FALSE;
                      }
 
                      Status = ZwQueryValueKey(KeyHandle, &Style, KeyValuePartialInformation,
@@ -1169,7 +1171,7 @@ IntSystemParametersInfo(
                      {
                         ZwClose(KeyHandle);
                         ExFreePool(KeyValuePartialInfo);
-                        return 0;
+                        return FALSE;
                      }
                 
                      Style.Length = KeyValuePartialInfo->DataLength;
@@ -1210,7 +1212,7 @@ IntSystemParametersInfo(
             /* FIXME save the value to the registry */
 
             ObDereferenceObject(WinStaObject);
-            return TRUE;
+            break;
          }
       case SPI_SETWORKAREA:
          {
@@ -1226,8 +1228,9 @@ IntSystemParametersInfo(
             ASSERT(pvParam);
             rc = (RECT*)pvParam;
             Desktop->WorkArea = *rc;
+            bChanged = TRUE;
 
-            return TRUE;
+            break;
          }
       case SPI_GETWORKAREA:
          {
@@ -1242,13 +1245,14 @@ IntSystemParametersInfo(
             ASSERT(pvParam);
             IntGetDesktopWorkArea(Desktop, (PRECT)pvParam);
 
-            return TRUE;
+            break;
          }
       case SPI_SETGRADIENTCAPTIONS:
          {
             GradientCaptions = (pvParam != NULL);
             /* FIXME - should be checked if the color depth is higher than 8bpp? */
-            return TRUE;
+            bChanged = TRUE;
+            break;
          }
       case SPI_GETGRADIENTCAPTIONS:
          {
@@ -1256,78 +1260,83 @@ IntSystemParametersInfo(
             BOOL Ret = GradientCaptions;
 
             hDC = IntGetScreenDC();
-            if(hDC)
+            if(!hDC)
             {
-               Ret = (NtGdiGetDeviceCaps(hDC, BITSPIXEL) > 8) && Ret;
-
-               ASSERT(pvParam);
-               *((PBOOL)pvParam) = Ret;
-               return TRUE;
+               return FALSE;
             }
-            return FALSE;
+            Ret = (NtGdiGetDeviceCaps(hDC, BITSPIXEL) > 8) && Ret;
+
+            ASSERT(pvParam);
+            *((PBOOL)pvParam) = Ret;
+            break;
          }
       case SPI_SETFONTSMOOTHING:
          {
             IntEnableFontRendering(uiParam != 0);
-            return TRUE;
+            bChanged = TRUE;
+            break;
          }
       case SPI_GETFONTSMOOTHING:
          {
             ASSERT(pvParam);
             *((BOOL*)pvParam) = IntIsFontRenderingEnabled();
-            return TRUE;
+            break;
          }
       case SPI_GETICONTITLELOGFONT:
          {
             ASSERT(pvParam);
             *((LOGFONTW*)pvParam) = IconFont;
-            return TRUE;
+            break;
          }
       case SPI_GETNONCLIENTMETRICS:
          {
             ASSERT(pvParam);
             *((NONCLIENTMETRICSW*)pvParam) = pMetrics;
-            return TRUE;
+            break;
          }
       case SPI_SETNONCLIENTMETRICS:
          {
             ASSERT(pvParam);
             pMetrics = *((NONCLIENTMETRICSW*)pvParam);
-            return TRUE;
+            bChanged = TRUE;
+            break;
          }
       case SPI_GETMINIMIZEDMETRICS:
          {
             ASSERT(pvParam);
             *((MINIMIZEDMETRICS*)pvParam) = MinimizedMetrics;
-            return TRUE;
+            break;
          }
       case SPI_SETMINIMIZEDMETRICS:
          {
             ASSERT(pvParam);
             MinimizedMetrics = *((MINIMIZEDMETRICS*)pvParam);
-            return TRUE;
+            bChanged = TRUE;
+            break;
          }
       case SPI_GETFOCUSBORDERHEIGHT:
          {
             ASSERT(pvParam);
             *((UINT*)pvParam) = FocusBorderHeight;
-            return TRUE;
+            break;
          }
       case SPI_GETFOCUSBORDERWIDTH:
          {
             ASSERT(pvParam);
             *((UINT*)pvParam) = FocusBorderWidth;
-            return TRUE;
+            break;
          }
       case SPI_SETFOCUSBORDERHEIGHT:
          {
             FocusBorderHeight = (UINT)pvParam;
-            return TRUE;
+            bChanged = TRUE;
+            break;
          }
       case SPI_SETFOCUSBORDERWIDTH:
          {
             FocusBorderWidth = (UINT)pvParam;
-            return TRUE;
+            bChanged = TRUE;
+            break;
          }
 
       default:
@@ -1337,7 +1346,18 @@ IntSystemParametersInfo(
             return FALSE;
          }
    }
-   return FALSE;
+   /* Did we change something ? */
+   if (bChanged)
+   {
+      /* Shall we send a WM_SETTINGCHANGE message ? */
+      if (fWinIni & (SPIF_UPDATEINIFILE | SPIF_SENDCHANGE))
+      {
+         /* Broadcast WM_SETTINGCHANGE to all toplevel windows */
+         /* FIXME: lParam should be pointer to a string containing the reg key */
+         UserPostMessage(HWND_BROADCAST, WM_SETTINGCHANGE, (WPARAM)uiAction, 0);
+      }
+   }
+   return TRUE;
 }
 
 /*
@@ -1396,14 +1416,14 @@ UserSystemParametersInfo(
       case SPI_GETGRADIENTCAPTIONS:
       case SPI_GETFOCUSBORDERHEIGHT:
       case SPI_GETFOCUSBORDERWIDTH:
-      case SPI_GETWHEELSCROLLLINES:
+	  case SPI_GETWHEELSCROLLLINES:
       case SPI_GETWHEELSCROLLCHARS:
-      case SPI_GETSCREENSAVERRUNNING:
-      case SPI_SETSCREENSAVERRUNNING:
-      case SPI_GETSCREENSAVETIMEOUT:
-      case SPI_SETSCREENSAVETIMEOUT:
-      case SPI_GETSCREENSAVEACTIVE:
-      case SPI_GETFLATMENU:
+	  case SPI_GETSCREENSAVERRUNNING:
+	  case SPI_SETSCREENSAVERRUNNING:
+	  case SPI_GETSCREENSAVETIMEOUT:
+	  case SPI_SETSCREENSAVETIMEOUT:
+	  case SPI_GETSCREENSAVEACTIVE:
+	  case SPI_GETFLATMENU:
       case SPI_SETFLATMENU:
          {
             BOOL Ret;
@@ -1529,10 +1549,10 @@ UserSystemParametersInfo(
             return( TRUE);
          }
       default :
-         {
-            DPRINT1("FIXME: UNIMPLEMENTED SPI Code: %lx \n",uiAction );
-            break;
-         }
+		  {
+              DPRINT1("FIXME: UNIMPLEMENTED SPI Code: %lx \n",uiAction );
+			  break;
+		  }
    }
    return( FALSE);
 }
