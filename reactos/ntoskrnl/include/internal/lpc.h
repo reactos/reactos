@@ -1,91 +1,56 @@
-#ifndef __INCLUDE_INTERNAL_PORT_H
-#define __INCLUDE_INTERNAL_PORT_H
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/include/lpc.h
+* PURPOSE:         Internal header for the Local Procedure Call
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*/
 
-/* EPORT.Type */
+//
+// Define this if you want debugging support
+//
+#define _LPC_DEBUG_                                         0x01
 
-#define EPORT_TYPE_SERVER_RQST_PORT   (0)
-#define EPORT_TYPE_SERVER_COMM_PORT   (1)
-#define EPORT_TYPE_CLIENT_COMM_PORT   (2)
+//
+// These define the Debug Masks Supported
+//
+#define LPC_CREATE_DEBUG                                    0x01
+#define LPC_CLOSE_DEBUG                                     0x02
+#define LPC_CONNECT_DEBUG                                   0x04
+#define LPC_LISTEN_DEBUG                                    0x08
+#define LPC_REPLY_DEBUG                                     0x10
+#define LPC_COMPLETE_DEBUG                                  0x20
+#define LPC_SEND_DEBUG                                      0x40
 
-/* EPORT.State */
-
-#define EPORT_INACTIVE                (0)
-#define EPORT_WAIT_FOR_CONNECT        (1)
-#define EPORT_WAIT_FOR_ACCEPT         (2)
-#define EPORT_WAIT_FOR_COMPLETE_SRV   (3)
-#define EPORT_WAIT_FOR_COMPLETE_CLT   (4)
-#define EPORT_CONNECTED_CLIENT        (5)
-#define EPORT_CONNECTED_SERVER        (6)
-#define EPORT_DISCONNECTED            (7)
-
-extern POBJECT_TYPE LpcPortObjectType;
-extern ULONG        LpcpNextMessageId;
-#ifndef NTLPC
-extern FAST_MUTEX   LpcpLock;
+//
+// Debug/Tracing support
+//
+#if _LPC_DEBUG_
+#ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
+#define LPCTRACE(x, ...)                                    \
+    {                                                       \
+        DbgPrintEx("%s [%.16s] - ",                         \
+                   __FUNCTION__,                            \
+                   PsGetCurrentProcess()->ImageFileName);   \
+        DbgPrintEx(__VA_ARGS__);                            \
+    }
+#else
+#define LPCTRACE(x, ...)                                    \
+    if (x & LpcpTraceLevel)                                 \
+    {                                                       \
+        DbgPrint("%s [%.16s:%lx] - ",                       \
+                 __FUNCTION__,                              \
+                 PsGetCurrentProcess()->ImageFileName,      \
+                 PsGetCurrentThreadId());                   \
+        DbgPrint(__VA_ARGS__);                              \
+    }
+#endif
 #endif
 
-typedef struct _EPORT_LISTENER
-{
-    HANDLE ListenerPid;
-    LIST_ENTRY ListenerListEntry;
-} EPORT_LISTENER, *PEPORT_LISTENER;
-
-typedef struct _EPORT
-{
-    KSPIN_LOCK Lock;
-    KSEMAPHORE Semaphore;
-    USHORT Type;
-    USHORT State;
-    struct _EPORT *RequestPort;
-    struct _EPORT *OtherPort;
-    ULONG QueueLength;
-    LIST_ENTRY QueueListHead;
-    ULONG ConnectQueueLength;
-    LIST_ENTRY ConnectQueueListHead;
-    ULONG MaxDataLength;
-    ULONG MaxConnectInfoLength;
-    ULONG MaxPoolUsage; /* size of NP zone */
-} EPORT, *PEPORT;
-
-typedef struct _EPORT_CONNECT_REQUEST_MESSAGE
-{
-    PORT_MESSAGE MessageHeader;
-    PEPROCESS ConnectingProcess;
-    struct _SECTION_OBJECT* SendSectionObject;
-    LARGE_INTEGER SendSectionOffset;
-    ULONG SendViewSize;
-    ULONG ConnectDataLength;
-    UCHAR ConnectData[0];
-} EPORT_CONNECT_REQUEST_MESSAGE, *PEPORT_CONNECT_REQUEST_MESSAGE;
-
-typedef struct _EPORT_CONNECT_REPLY_MESSAGE
-{
-    PORT_MESSAGE MessageHeader;
-    PVOID SendServerViewBase;
-    ULONG ReceiveClientViewSize;
-    PVOID ReceiveClientViewBase;
-    ULONG MaximumMessageSize;
-    ULONG ConnectDataLength;
-    UCHAR ConnectData[0];
-} EPORT_CONNECT_REPLY_MESSAGE, *PEPORT_CONNECT_REPLY_MESSAGE;
-
-typedef struct _QUEUEDMESSAGE
-{
-    PEPORT Sender;
-    LIST_ENTRY QueueListEntry;
-    PORT_MESSAGE Message;
-} QUEUEDMESSAGE, *PQUEUEDMESSAGE;
-
-NTSTATUS
-NTAPI
-LpcSendTerminationPort(
-    PEPORT Port,
-    LARGE_INTEGER CreationTime
-);
-
-/* Code in ntoskrnl/lpc/close.c */
-
-VOID 
+//
+// Internal Port Management
+//
+VOID
 NTAPI
 LpcpClosePort(
     IN PEPROCESS Process OPTIONAL,
@@ -97,66 +62,69 @@ LpcpClosePort(
 
 VOID
 NTAPI
-LpcpDeletePort(IN PVOID ObjectBody);
-
-VOID
-NTAPI
-LpcExitThread(IN PETHREAD Thread);
-
-/* Code in ntoskrnl/lpc/queue.c */
-
-VOID
-NTAPI
-EiEnqueueConnectMessagePort(
-    IN OUT PEPORT Port,
-    IN PQUEUEDMESSAGE Message
-);
-
-VOID
-NTAPI
-EiEnqueueMessagePort(
-    IN OUT PEPORT Port,
-    IN PQUEUEDMESSAGE Message
-);
-
-VOID
-NTAPI
-EiEnqueueMessageAtHeadPort(
-    IN OUT PEPORT Port,
-    IN PQUEUEDMESSAGE Message
-);
-
-PQUEUEDMESSAGE
-NTAPI
-EiDequeueConnectMessagePort(IN OUT PEPORT Port);
-
-PQUEUEDMESSAGE
-NTAPI
-EiDequeueMessagePort(IN OUT PEPORT Port);
-
-/* Code in ntoskrnl/lpc/port.c */
-
-NTSTATUS
-NTAPI
-LpcpInitializePort(
-    IN OUT PEPORT Port,
-    IN USHORT Type,
-    IN PEPORT Parent OPTIONAL
+LpcpDeletePort(
+    IN PVOID ObjectBody
 );
 
 NTSTATUS
 NTAPI
-LpcpInitSystem (VOID);
+LpcpInitializePortQueue(
+    IN PLPCP_PORT_OBJECT Port
+);
 
-/* Code in ntoskrnl/lpc/reply.c */
-
-NTSTATUS
+VOID
 NTAPI
-EiReplyOrRequestPort(
-    IN PEPORT Port,
-    IN PPORT_MESSAGE LpcReply,
+LpcpFreeToPortZone(
+    IN PLPCP_MESSAGE Message,
+    IN ULONG Flags
+);
+
+VOID
+NTAPI
+LpcpMoveMessage(
+    IN PPORT_MESSAGE Destination,
+    IN PPORT_MESSAGE Origin,
+    IN PVOID Data,
     IN ULONG MessageType,
-    IN PEPORT Sender
+    IN PCLIENT_ID ClientId
 );
 
-#endif /* __INCLUDE_INTERNAL_PORT_H */
+VOID
+NTAPI
+LpcpSaveDataInfoMessage(
+    IN PLPCP_PORT_OBJECT Port,
+    IN PLPCP_MESSAGE Message
+);
+
+//
+// Module-external utlity functions
+//
+VOID
+NTAPI
+LpcExitThread(
+    IN PETHREAD Thread
+);
+
+//
+// Initialization functions
+//
+NTSTATUS
+NTAPI
+LpcpInitSystem(
+    VOID
+);
+
+//
+// Global data inside the Process Manager
+//
+extern POBJECT_TYPE LpcPortObjectType;
+extern ULONG LpcpNextMessageId, LpcpNextCallbackId;
+extern KGUARDED_MUTEX LpcpLock;
+extern PAGED_LOOKASIDE_LIST LpcpMessagesLookaside;
+extern ULONG LpcpMaxMessageSize;
+extern ULONG LpcpTraceLevel;
+
+//
+// Inlined Functions
+//
+#include "lpc_x.h"

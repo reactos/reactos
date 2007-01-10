@@ -1,72 +1,52 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/lpc/listen.c
- * PURPOSE:         Communication mechanism
- *
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ * PURPOSE:         Local Procedure Call: Listening
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include "lpc.h"
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* PUBLIC FUNCTIONS **********************************************************/
 
-/**********************************************************************
- * NAME							EXPORTED
- *	NtListenPort@8
- *
- * DESCRIPTION
- *	Listen on a named port and wait for a connection attempt.
- *
- * ARGUMENTS
- *	PortHandle	[IN] LPC port to listen on.
- *
- *	ConnectMsg	[IN] User provided storage for a
- *			possible connection request LPC message.
- *
- * RETURN VALUE
- *	STATUS_SUCCESS if a connection request is received
- *	successfully; otherwise an error code.
- *
- *	The buffer ConnectMessage is filled with the connection
- *	request message queued by NtConnectPort() in PortHandle.
- *
- * NOTE
+/*
+ * @implemented
  */
-/*EXPORTED*/ NTSTATUS STDCALL
-NtListenPort (IN	HANDLE		PortHandle,
-	      IN	PPORT_MESSAGE	ConnectMsg)
+NTSTATUS
+NTAPI
+NtListenPort(IN HANDLE PortHandle,
+             OUT PPORT_MESSAGE ConnectMessage)
 {
-  NTSTATUS	Status;
+        NTSTATUS Status;
+        PAGED_CODE();
+        LPCTRACE(LPC_LISTEN_DEBUG, "Handle: %lx\n", PortHandle);
 
-  /*
-   * Wait forever for a connection request.
-   */
-  for (;;)
-    {
-      Status = NtReplyWaitReceivePort(PortHandle,
-				      NULL,
-				      NULL,
-				      ConnectMsg);
-      /*
-       * Accept only LPC_CONNECTION_REQUEST requests.
-       * Drop any other message.
-       */
-      if (!NT_SUCCESS(Status) ||
-	  LPC_CONNECTION_REQUEST == ConnectMsg->u2.s2.Type)
-	{
-	  DPRINT("Got message (type %x)\n", LPC_CONNECTION_REQUEST);
-	  break;
-	}
-      DPRINT("Got message (type %x)\n", ConnectMsg->u2.s2.Type);
-    }
+        /* Wait forever for a connection request. */
+        for (;;)
+        {
+            /* Do the wait */
+            Status = NtReplyWaitReceivePort(PortHandle,
+                                            NULL,
+                                            NULL,
+                                            ConnectMessage);
 
-  return (Status);
+            /* Accept only LPC_CONNECTION_REQUEST requests. */
+            if ((Status != STATUS_SUCCESS) ||
+                (LpcpGetMessageType(ConnectMessage) == LPC_CONNECTION_REQUEST))
+            {
+                /* Break out */
+                break;
+            }
+        }
+
+        /* Return status */
+        return Status;
 }
 
 

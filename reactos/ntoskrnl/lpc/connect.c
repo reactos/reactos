@@ -1,933 +1,568 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/lpc/connect.c
- * PURPOSE:         Communication mechanism
- *
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ * PURPOSE:         Local Procedure Call: Connection Management
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include "lpc.h"
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
-/**********************************************************************
- * NAME							EXPORTED
- * 	EiConnectPort/12
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- */
-NTSTATUS STDCALL
-EiConnectPort(IN PEPORT* ConnectedPort,
-	      IN PEPORT NamedPort,
-	      IN PVOID Section,
-	      IN LARGE_INTEGER SectionOffset,
-	      IN ULONG ViewSize,
-	      OUT PVOID* ClientSendViewBase,
-	      OUT PVOID* ServerSendViewBase,
-	      OUT PULONG ReceiveViewSize,
-	      OUT PVOID* ReceiveViewBase,
-	      OUT PULONG MaximumMessageSize,
-	      IN OUT PVOID ConnectData,
-	      IN OUT PULONG ConnectDataLength)
+PVOID
+NTAPI
+LpcpFreeConMsg(IN OUT PLPCP_MESSAGE *Message,
+               IN OUT PLPCP_CONNECTION_MESSAGE *ConnectMessage,
+               IN PETHREAD CurrentThread)
 {
-  PEPORT_CONNECT_REQUEST_MESSAGE RequestMessage;
-  ULONG RequestConnectDataLength;
-  PEPORT OurPort;
-  PQUEUEDMESSAGE Reply;
-  PEPORT_CONNECT_REPLY_MESSAGE CReply;
-  NTSTATUS Status;
-  KIRQL oldIrql;
+    PVOID SectionToMap;
 
-  if (ConnectDataLength == NULL)
+    /* Acquire the LPC lock */
+    KeAcquireGuardedMutex(&LpcpLock);
+
+    /* Check if the reply chain is not empty */
+    if (!IsListEmpty(&CurrentThread->LpcReplyChain))
     {
-      RequestConnectDataLength = 0;
-    }
-  else
-    {
-      RequestConnectDataLength = *ConnectDataLength;
+        /* Remove this entry and re-initialize it */
+        RemoveEntryList(&CurrentThread->LpcReplyChain);
+        InitializeListHead(&CurrentThread->LpcReplyChain);
     }
 
-  /*
-   * Create a port to represent our side of the connection
-   */
-  Status = ObCreateObject (KernelMode,
-			   LpcPortObjectType,
-			   NULL,
-			   KernelMode,
-			   NULL,
-			   sizeof(EPORT),
-			   0,
-			   0,
-			   (PVOID*)&OurPort);
-  if (!NT_SUCCESS(Status))
+    /* Check if there's a reply message */
+    if (CurrentThread->LpcReplyMessage)
     {
-      return (Status);
-    }
-  LpcpInitializePort(OurPort, EPORT_TYPE_CLIENT_COMM_PORT, NamedPort);
+        /* Get the message */
+        *Message = CurrentThread->LpcReplyMessage;
 
-  /*
-   * Allocate a request message.
-   */
-  RequestMessage = ExAllocatePool(NonPagedPool,
-				  sizeof(EPORT_CONNECT_REQUEST_MESSAGE) +
-				  RequestConnectDataLength);
-  if (RequestMessage == NULL)
+        /* Clear message data */
+        CurrentThread->LpcReceivedMessageId = 0;
+        CurrentThread->LpcReplyMessage = NULL;
+
+        /* Get the connection message and clear the section */
+        *ConnectMessage = (PLPCP_CONNECTION_MESSAGE)(*Message + 1);
+        SectionToMap = (*ConnectMessage)->SectionToMap;
+        (*ConnectMessage)->SectionToMap = NULL;
+    }
+    else
     {
-      ObDereferenceObject(OurPort);
-      return(STATUS_NO_MEMORY);
+        /* No message to return */
+        *Message = NULL;
+        SectionToMap = NULL;
     }
 
-  /*
-   * Initialize the request message.
-   */
-  RequestMessage->MessageHeader.u1.s1.DataLength =
-    sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength -
-    sizeof(PORT_MESSAGE);
-  RequestMessage->MessageHeader.u1.s1.TotalLength =
-    sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength;
-  DPRINT("RequestMessageSize %d\n",
-	 RequestMessage->MessageHeader.u1.s1.TotalLength);
-  RequestMessage->MessageHeader.ClientViewSize = 0;
-  RequestMessage->ConnectingProcess = PsGetCurrentProcess();
-  ObReferenceObjectByPointer(RequestMessage->ConnectingProcess,
-			     PROCESS_VM_OPERATION,
-			     NULL,
-			     KernelMode);
-  RequestMessage->SendSectionObject = (struct _SECTION_OBJECT*)Section;
-  RequestMessage->SendSectionOffset = SectionOffset;
-  RequestMessage->SendViewSize = ViewSize;
-  RequestMessage->ConnectDataLength = RequestConnectDataLength;
-  if (RequestConnectDataLength > 0)
-    {
-      memcpy(RequestMessage->ConnectData, ConnectData,
-	     RequestConnectDataLength);
-    }
-
-  /*
-   * Queue the message to the named port
-   */
-  EiReplyOrRequestPort(NamedPort,
-		       &RequestMessage->MessageHeader,
-		       LPC_CONNECTION_REQUEST,
-		       OurPort);
-  KeReleaseSemaphore(&NamedPort->Semaphore, IO_NO_INCREMENT, 1, FALSE);
-  ExFreePool(RequestMessage);
-
-  /*
-   * Wait for them to accept our connection
-   */
-  KeWaitForSingleObject(&OurPort->Semaphore,
-			UserRequest,
-			UserMode,
-			FALSE,
-			NULL);
-
-  /*
-   * Dequeue the response
-   */
-  KeAcquireSpinLock (&OurPort->Lock, &oldIrql);
-  Reply = EiDequeueMessagePort (OurPort);
-  KeReleaseSpinLock (&OurPort->Lock, oldIrql);
-  CReply = (PEPORT_CONNECT_REPLY_MESSAGE)&Reply->Message;
-
-  /*
-   * Do some initial cleanup.
-   */
-  ObDereferenceObject(PsGetCurrentProcess());
-
-  /*
-   * Check for connection refusal.
-   */
-  if (CReply->MessageHeader.u2.s2.Type == LPC_CONNECTION_REFUSED)
-    {
-      ObDereferenceObject(OurPort);
-      ExFreePool(Reply);
-      /*
-       * FIXME: Check what NT does here. Giving the user data back on
-       * connect failure sounds reasonable; it probably wouldn't break
-       * anything anyway.
-       */
-      if (ConnectDataLength != NULL)
-	{
-	  *ConnectDataLength = CReply->ConnectDataLength;
-	  memcpy(ConnectData, CReply->ConnectData, CReply->ConnectDataLength);
-	}
-      return(STATUS_PORT_CONNECTION_REFUSED);
-    }
-
-  /*
-   * Otherwise we are connected. Copy data back to the client.
-   */
-  *ServerSendViewBase = CReply->SendServerViewBase;
-  *ReceiveViewSize = CReply->ReceiveClientViewSize;
-  *ReceiveViewBase = CReply->ReceiveClientViewBase;
-  *MaximumMessageSize = CReply->MaximumMessageSize;
-  if (ConnectDataLength != NULL)
-    {
-      *ConnectDataLength = CReply->ConnectDataLength;
-      memcpy(ConnectData, CReply->ConnectData, CReply->ConnectDataLength);
-    }
-
-  /*
-   * Create our view of the send section object.
-   */
-  if (Section != NULL)
-    {
-      *ClientSendViewBase = 0;
-      Status = MmMapViewOfSection(Section,
-				  PsGetCurrentProcess(),
-				  ClientSendViewBase,
-				  0,
-				  ViewSize,
-				  &SectionOffset,
-				  &ViewSize,
-				  ViewUnmap,
-				  0 /* MEM_TOP_DOWN? */,
-				  PAGE_READWRITE);
-      if (!NT_SUCCESS(Status))
-	{
-	  /* FIXME: Cleanup here. */
-	  return(Status);
-	}
-    }
-
-  /*
-   * Do the final initialization of our port.
-   */
-  OurPort->State = EPORT_CONNECTED_CLIENT;
-
-  /*
-   * Cleanup.
-   */
-  ExFreePool(Reply);
-  *ConnectedPort = OurPort;
-  return(STATUS_SUCCESS);
+    /* Release the lock and return the section */
+    KeReleaseGuardedMutex(&LpcpLock);
+    return SectionToMap;
 }
 
-/**********************************************************************
- * NAME							EXPORTED
- * 	NtConnectPort/8
- *
- * DESCRIPTION
- *	Connect to a named port and wait for the other side to
- *	accept or reject the connection request.
- *
- * ARGUMENTS
- *	ConnectedPort
- *	PortName
- *	Qos
- *	WriteMap
- *	ReadMap
- *	MaxMessageSize
- *	ConnectInfo
- *	UserConnectInfoLength
- *
- * RETURN VALUE
- *
- * @unimplemented
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
  */
-NTSTATUS STDCALL
-NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
-	       PUNICODE_STRING			PortName,
-	       PSECURITY_QUALITY_OF_SERVICE	Qos,
-	       PPORT_VIEW		UnsafeWriteMap,
-	       PREMOTE_PORT_VIEW		UnsafeReadMap,
-	       PULONG				UnsafeMaximumMessageSize,
-	       PVOID				UnsafeConnectData,
-	       PULONG				UnsafeConnectDataLength)
+NTSTATUS
+NTAPI
+NtSecureConnectPort(OUT PHANDLE PortHandle,
+                    IN PUNICODE_STRING PortName,
+                    IN PSECURITY_QUALITY_OF_SERVICE Qos,
+                    IN OUT PPORT_VIEW ClientView OPTIONAL,
+                    IN PSID ServerSid OPTIONAL,
+                    IN OUT PREMOTE_PORT_VIEW ServerView OPTIONAL,
+                    OUT PULONG MaxMessageLength OPTIONAL,
+                    IN OUT PVOID ConnectionInformation OPTIONAL,
+                    IN OUT PULONG ConnectionInformationLength OPTIONAL)
 {
-  HANDLE ConnectedPortHandle;
-  PORT_VIEW WriteMap;
-  REMOTE_PORT_VIEW ReadMap;
-  ULONG MaximumMessageSize;
-  PVOID ConnectData = NULL;
-  ULONG ConnectDataLength = 0;
-  PVOID SectionObject;
-  LARGE_INTEGER SectionOffset;
-  PEPORT ConnectedPort;
-  KPROCESSOR_MODE PreviousMode;
-  NTSTATUS Status = STATUS_SUCCESS;
-  PEPORT NamedPort;
-  
-  PreviousMode = ExGetPreviousMode();
-  
-  if (PreviousMode != KernelMode)
+    ULONG ConnectionInfoLength = 0;
+    PLPCP_PORT_OBJECT Port, ClientPort;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    NTSTATUS Status = STATUS_SUCCESS;
+    HANDLE Handle;
+    PVOID SectionToMap;
+    PLPCP_MESSAGE Message;
+    PLPCP_CONNECTION_MESSAGE ConnectMessage;
+    PETHREAD Thread = PsGetCurrentThread();
+    ULONG PortMessageLength;
+    LARGE_INTEGER SectionOffset;
+    PTOKEN Token;
+    PTOKEN_USER TokenUserInfo;
+    PAGED_CODE();
+    LPCTRACE(LPC_CONNECT_DEBUG,
+             "Name: %wZ. Qos: %p. Views: %p/%p. Sid: %p\n",
+             PortName,
+             Qos,
+             ClientView,
+             ServerView,
+             ServerSid);
+
+    /* Validate client view */
+    if ((ClientView) && (ClientView->Length != sizeof(PORT_VIEW)))
     {
-      _SEH_TRY
-        {
-          ProbeForWriteHandle(UnsafeConnectedPortHandle);
-          if (UnsafeMaximumMessageSize != NULL)
-            {
-              ProbeForWriteUlong(UnsafeMaximumMessageSize);
-            }
-        }
-      _SEH_HANDLE
-        {
-          Status = _SEH_GetExceptionCode();
-        }
-      _SEH_END;
-      
-      if (!NT_SUCCESS(Status))
-        {
-          return Status;
-        }
+        /* Fail */
+        return STATUS_INVALID_PARAMETER;
     }
 
-  /*
-   * Copy in write map and partially validate.
-   */
-  if (UnsafeWriteMap != NULL)
+    /* Validate server view */
+    if ((ServerView) && (ServerView->Length != sizeof(REMOTE_PORT_VIEW)))
     {
-      if (PreviousMode != KernelMode)
-        {
-          _SEH_TRY
-            {
-              ProbeForWrite(UnsafeWriteMap,
-                            sizeof(PORT_VIEW),
-                            1);
-              RtlCopyMemory(&WriteMap,
-                            UnsafeWriteMap,
-                            sizeof(PORT_VIEW));
-            }
-          _SEH_HANDLE
-            {
-              Status = _SEH_GetExceptionCode();
-            }
-          _SEH_END;
-
-          if (!NT_SUCCESS(Status))
-            {
-              return Status;
-            }
-        }
-      else
-        {
-          RtlCopyMemory(&WriteMap,
-                        UnsafeWriteMap,
-                        sizeof(PORT_VIEW));
-        }
-
-      if (WriteMap.Length != sizeof(PORT_VIEW))
-	{
-	  return(STATUS_INVALID_PARAMETER_4);
-	}
-      SectionOffset.QuadPart = WriteMap.SectionOffset;
-    }
-  else
-    {
-      WriteMap.SectionHandle = INVALID_HANDLE_VALUE;
+        /* Fail */
+        return STATUS_INVALID_PARAMETER;
     }
 
-  /*
-   * Handle connection data.
-   */
-  if (UnsafeConnectData)
+    /* Check if caller sent connection information length */
+    if (ConnectionInformationLength)
     {
-      if (PreviousMode != KernelMode)
-        {
-          _SEH_TRY
-            {
-              ConnectDataLength = ProbeForReadUlong(UnsafeConnectDataLength);
-            }
-          _SEH_HANDLE
-            {
-              Status = _SEH_GetExceptionCode();
-            }
-          _SEH_END;
+        /* Retrieve the input length */
+        ConnectionInfoLength = *ConnectionInformationLength;
+    }
 
-          if (!NT_SUCCESS(Status))
-            {
-              return Status;
-            }
-        }
-      else
-        {
-          ConnectDataLength = *UnsafeConnectDataLength;
-        }
+    /* Get the port */
+    Status = ObReferenceObjectByName(PortName,
+                                     0,
+                                     NULL,
+                                     PORT_ALL_ACCESS,
+                                     LpcPortObjectType,
+                                     PreviousMode,
+                                     NULL,
+                                     (PVOID *)&Port);
+    if (!NT_SUCCESS(Status)) return Status;
 
-      if (ConnectDataLength != 0)
-        {
-          ConnectData = ExAllocatePool(NonPagedPool, ConnectDataLength);
-          if (ConnectData == NULL)
-            {
-              return(STATUS_NO_MEMORY);
-            }
+    /* This has to be a connection port */
+    if ((Port->Flags & LPCP_PORT_TYPE_MASK) != LPCP_CONNECTION_PORT)
+    {
+        /* It isn't, so fail */
+        ObDereferenceObject(Port);
+        return STATUS_INVALID_PORT_HANDLE;
+    }
 
-          if (PreviousMode != KernelMode)
+    /* Check if we have a SID */
+    if (ServerSid)
+    {
+        /* Make sure that we have a server */
+        if (Port->ServerProcess)
+        {
+            /* Get its token and query user information */
+            Token = PsReferencePrimaryToken(Port->ServerProcess);
+            //Status = SeQueryInformationToken(Token, TokenUser, (PVOID*)&TokenUserInfo);
+            // FIXME: Need SeQueryInformationToken
+            Status = STATUS_SUCCESS;
+            TokenUserInfo = ExAllocatePool(PagedPool, sizeof(TOKEN_USER));
+            TokenUserInfo->User.Sid = ServerSid;
+            PsDereferencePrimaryToken(Token);
+
+            /* Check for success */
+            if (NT_SUCCESS(Status))
             {
-              _SEH_TRY
+                /* Compare the SIDs */
+                if (!RtlEqualSid(ServerSid, TokenUserInfo->User.Sid))
                 {
-                  ProbeForWriteUlong(UnsafeConnectData);
-                  RtlCopyMemory(ConnectData,
-                                UnsafeConnectData,
-                                ConnectDataLength);
+                    /* Fail */
+                    Status = STATUS_SERVER_SID_MISMATCH;
                 }
-              _SEH_HANDLE
-                {
-                  Status = _SEH_GetExceptionCode();
-                }
-              _SEH_END;
 
-              if (!NT_SUCCESS(Status))
-                {
-                  ExFreePool(ConnectData);
-                  return Status;
-                }
+                /* Free token information */
+                ExFreePool(TokenUserInfo);
             }
-          else
-            {
-              RtlCopyMemory(ConnectData,
-                            UnsafeConnectData,
-                            ConnectDataLength);
-            }
+        }
+        else
+        {
+            /* Invalid SID */
+            Status = STATUS_SERVER_SID_MISMATCH;
+        }
+
+        /* Check if SID failed */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Quit */
+            ObDereferenceObject(Port);
+            return Status;
         }
     }
 
-  /*
-   * Reference the named port.
-   */
-  Status = ObReferenceObjectByName (PortName,
+    /* Create the client port */
+    Status = ObCreateObject(PreviousMode,
+                            LpcPortObjectType,
+                            NULL,
+                            PreviousMode,
+                            NULL,
+                            sizeof(LPCP_PORT_OBJECT),
+                            0,
+                            0,
+                            (PVOID *)&ClientPort);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, dereference the server port and return */
+        ObDereferenceObject(Port);
+        return Status;
+    }
+
+    /* Setup the client port */
+    RtlZeroMemory(ClientPort, sizeof(LPCP_PORT_OBJECT));
+    ClientPort->Flags = LPCP_CLIENT_PORT;
+    ClientPort->ConnectionPort = Port;
+    ClientPort->MaxMessageLength = Port->MaxMessageLength;
+    ClientPort->SecurityQos = *Qos;
+    InitializeListHead(&ClientPort->LpcReplyChainHead);
+    InitializeListHead(&ClientPort->LpcDataInfoChainHead);
+
+    /* Check if we have dynamic security */
+    if (Qos->ContextTrackingMode == SECURITY_DYNAMIC_TRACKING)
+    {
+        /* Remember that */
+        ClientPort->Flags |= LPCP_SECURITY_DYNAMIC;
+    }
+    else
+    {
+        /* Create our own client security */
+        Status = SeCreateClientSecurity(Thread,
+                                        Qos,
+                                        FALSE,
+                                        &ClientPort->StaticSecurity);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Security failed, dereference and return */
+            ObDereferenceObject(ClientPort);
+            return Status;
+        }
+    }
+
+    /* Initialize the port queue */
+    Status = LpcpInitializePortQueue(ClientPort);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        ObDereferenceObject(ClientPort);
+        return Status;
+    }
+
+    /* Check if we have a client view */
+    if (ClientView)
+    {
+        /* Get the section handle */
+        Status = ObReferenceObjectByHandle(ClientView->SectionHandle,
+                                           SECTION_MAP_READ |
+                                           SECTION_MAP_WRITE,
+                                           MmSectionObjectType,
+                                           PreviousMode,
+                                           (PVOID*)&SectionToMap,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            ObDereferenceObject(Port);
+            return Status;
+        }
+
+        /* Set the section offset */
+        SectionOffset.QuadPart = ClientView->SectionOffset;
+
+        /* Map it */
+        Status = MmMapViewOfSection(SectionToMap,
+                                    PsGetCurrentProcess(),
+                                    &Port->ClientSectionBase,
                                     0,
+                                    0,
+                                    &SectionOffset,
+                                    &ClientView->ViewSize,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE);
+
+        /* Update the offset */
+        ClientView->SectionOffset = SectionOffset.LowPart;
+
+        /* Check for failure */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            ObDereferenceObject(SectionToMap);
+            ObDereferenceObject(Port);
+            return Status;
+        }
+
+        /* Update the base */
+        ClientView->ViewBase = Port->ClientSectionBase;
+    }
+    else
+    {
+        /* No section */
+        SectionToMap = NULL;
+    }
+
+    /* Normalize connection information */
+    if (ConnectionInfoLength > Port->MaxConnectionInfoLength)
+    {
+        /* Use the port's maximum allowed value */
+        ConnectionInfoLength = Port->MaxConnectionInfoLength;
+    }
+
+    /* Allocate a message from the port zone */
+    Message = LpcpAllocateFromPortZone();
+    if (!Message)
+    {
+        /* Fail if we couldn't allocate a message */
+        if (SectionToMap) ObDereferenceObject(SectionToMap);
+        ObDereferenceObject(ClientPort);
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Set pointer to the connection message and fill in the CID */
+    ConnectMessage = (PLPCP_CONNECTION_MESSAGE)(Message + 1);
+    Message->Request.ClientId = Thread->Cid;
+
+    /* Check if we have a client view */
+    if (ClientView)
+    {
+        /* Set the view size */
+        Message->Request.ClientViewSize = ClientView->ViewSize;
+
+        /* Copy the client view and clear the server view */
+        RtlMoveMemory(&ConnectMessage->ClientView,
+                      ClientView,
+                      sizeof(PORT_VIEW));
+        RtlZeroMemory(&ConnectMessage->ServerView, sizeof(REMOTE_PORT_VIEW));
+    }
+    else
+    {
+        /* Set the size to 0 and clear the connect message */
+        Message->Request.ClientViewSize = 0;
+        RtlZeroMemory(ConnectMessage, sizeof(LPCP_CONNECTION_MESSAGE));
+    }
+
+    /* Set the section and client port. Port is NULL for now */
+    ConnectMessage->ClientPort = NULL;
+    ConnectMessage->SectionToMap = SectionToMap;
+
+    /* Set the data for the connection request message */
+    Message->Request.u1.s1.DataLength = sizeof(LPCP_CONNECTION_MESSAGE) +
+                                        ConnectionInfoLength;
+    Message->Request.u1.s1.TotalLength = sizeof(LPCP_MESSAGE) +
+                                         Message->Request.u1.s1.DataLength;
+    Message->Request.u2.s2.Type = LPC_CONNECTION_REQUEST;
+
+    /* Check if we have connection information */
+    if (ConnectionInformation)
+    {
+        /* Copy it in */
+        RtlMoveMemory(ConnectMessage + 1,
+                      ConnectionInformation,
+                      ConnectionInfoLength);
+    }
+
+    /* Acquire the port lock */
+    KeAcquireGuardedMutex(&LpcpLock);
+
+    /* Check if someone already deleted the port name */
+    if (Port->Flags & LPCP_NAME_DELETED)
+    {
+        /* Fail the request */
+        KeReleaseGuardedMutex(&LpcpLock);
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        goto Cleanup;
+    }
+
+    /* Associate no thread yet */
+    Message->RepliedToThread = NULL;
+
+    /* Generate the Message ID and set it */
+    Message->Request.MessageId =  LpcpNextMessageId++;
+    if (!LpcpNextMessageId) LpcpNextMessageId = 1;
+    Thread->LpcReplyMessageId = Message->Request.MessageId;
+
+    /* Insert the message into the queue and thread chain */
+    InsertTailList(&Port->MsgQueue.ReceiveHead, &Message->Entry);
+    InsertTailList(&Port->LpcReplyChainHead, &Thread->LpcReplyChain);
+    Thread->LpcReplyMessage = Message;
+
+    /* Now we can finally reference the client port and link it*/
+    ObReferenceObject(ClientPort);
+    ConnectMessage->ClientPort = ClientPort;
+
+    /* Release the lock */
+    KeReleaseGuardedMutex(&LpcpLock);
+    LPCTRACE(LPC_CONNECT_DEBUG,
+             "Messages: %p/%p. Ports: %p/%p. Status: %lx\n",
+             Message,
+             ConnectMessage,
+             Port,
+             ClientPort,
+             Status);
+
+    /* If this is a waitable port, set the event */
+    if (Port->Flags & LPCP_WAITABLE_PORT) KeSetEvent(&Port->WaitEvent,
+                                                     1,
+                                                     FALSE);
+
+    /* Release the queue semaphore */
+    LpcpCompleteWait(Port->MsgQueue.Semaphore);
+
+    /* Now wait for a reply */
+    LpcpConnectWait(&Thread->LpcReplySemaphore, PreviousMode);
+
+    /* Check if our wait ended in success */
+    if (Status != STATUS_SUCCESS) goto Cleanup;
+
+    /* Free the connection message */
+    SectionToMap = LpcpFreeConMsg(&Message, &ConnectMessage, Thread);
+
+    /* Check if we got a message back */
+    if (Message)
+    {
+        /* Check for new return length */
+        if ((Message->Request.u1.s1.DataLength -
+             sizeof(LPCP_CONNECTION_MESSAGE)) < ConnectionInfoLength)
+        {
+            /* Set new normalized connection length */
+            ConnectionInfoLength = Message->Request.u1.s1.DataLength -
+                                   sizeof(LPCP_CONNECTION_MESSAGE);
+        }
+
+        /* Check if we had connection information */
+        if (ConnectionInformation)
+        {
+            /* Check if we had a length pointer */
+            if (ConnectionInformationLength)
+            {
+                /* Return the length */
+                *ConnectionInformationLength = ConnectionInfoLength;
+            }
+
+            /* Return the connection information */
+            RtlMoveMemory(ConnectionInformation,
+                          ConnectMessage + 1,
+                          ConnectionInfoLength );
+        }
+
+        /* Make sure we had a connected port */
+        if (ClientPort->ConnectedPort)
+        {
+            /* Get the message length before the port might get killed */
+            PortMessageLength = Port->MaxMessageLength;
+
+            /* Insert the client port */
+            Status = ObInsertObject(ClientPort,
                                     NULL,
-                                    PORT_ALL_ACCESS,  /* DesiredAccess */
-                                    LpcPortObjectType,
-                                    PreviousMode,
-                                    NULL,
-                                    (PVOID*)&NamedPort);
-  if (!NT_SUCCESS(Status))
-    {
-      if (KeGetPreviousMode() != KernelMode)
-	{
-	  ExFreePool(ConnectData);
-	}
-      return(Status);
-    }
-
-  /*
-   * Reference the send section object.
-   */
-  if (WriteMap.SectionHandle != INVALID_HANDLE_VALUE)
-    {
-      Status = ObReferenceObjectByHandle(WriteMap.SectionHandle,
-					 SECTION_MAP_READ | SECTION_MAP_WRITE,
-					 MmSectionObjectType,
-					 PreviousMode,
-					 (PVOID*)&SectionObject,
-					 NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  ObDereferenceObject(NamedPort);
-	  if (KeGetPreviousMode() != KernelMode)
-	    {
-	      ExFreePool(ConnectData);
-	    }
-	  return(Status);
-	}
-    }
-  else
-    {
-      SectionObject = NULL;
-    }
-
-  /*
-   * Do the connection establishment.
-   */
-  Status = EiConnectPort(&ConnectedPort,
-			 NamedPort,
-			 SectionObject,
-			 SectionOffset,
-			 WriteMap.ViewSize,
-			 &WriteMap.ViewBase,
-			 &WriteMap.ViewRemoteBase,
-			 &ReadMap.ViewSize,
-			 &ReadMap.ViewBase,
-			 &MaximumMessageSize,
-			 ConnectData,
-			 &ConnectDataLength);
-  if (!NT_SUCCESS(Status))
-    {
-      /* FIXME: Again, check what NT does here. */
-      if (UnsafeConnectDataLength != NULL)
-	{
-	  if (PreviousMode != KernelMode)
-	    {
-              _SEH_TRY
-                {
-                  RtlCopyMemory(UnsafeConnectData,
-                                ConnectData,
-                                ConnectDataLength);
-                  *UnsafeConnectDataLength = ConnectDataLength;
-                }
-              _SEH_HANDLE
-                {
-                  Status = _SEH_GetExceptionCode();
-                }
-              _SEH_END;
-	    }
-	  else
-	    {
-               RtlCopyMemory(UnsafeConnectData,
-                             ConnectData,
-                             ConnectDataLength);
-               *UnsafeConnectDataLength = ConnectDataLength;
-	    }
-
-          ExFreePool(ConnectData);
-	}
-      return(Status);
-    }
-
-  /*
-   * Do some initial cleanup.
-   */
-  if (SectionObject != NULL)
-    {
-      ObDereferenceObject(SectionObject);
-      SectionObject = NULL;
-    }
-  ObDereferenceObject(NamedPort);
-  NamedPort = NULL;
-
-  /*
-   * Copy the data back to the caller.
-   */
-
-  if (UnsafeConnectDataLength != NULL)
-    {
-      if (PreviousMode != KernelMode)
-	{
-          _SEH_TRY
+                                    PORT_ALL_ACCESS,
+                                    0,
+                                    (PVOID *)NULL,
+                                    &Handle);
+            if (NT_SUCCESS(Status))
             {
-              *UnsafeConnectDataLength = ConnectDataLength;
-              
-              if (ConnectData != NULL)
+                /* Return the handle */
+                *PortHandle = Handle;
+                LPCTRACE(LPC_CONNECT_DEBUG,
+                         "Handle: %lx. Length: %lx\n",
+                         Handle,
+                         PortMessageLength);
+
+                /* Check if maximum length was requested */
+                if (MaxMessageLength) *MaxMessageLength = PortMessageLength;
+
+                /* Check if we had a client view */
+                if (ClientView)
                 {
-                  RtlCopyMemory(UnsafeConnectData,
-                                ConnectData,
-                                ConnectDataLength);
+                    /* Copy it back */
+                    RtlMoveMemory(ClientView,
+                                  &ConnectMessage->ClientView,
+                                  sizeof(PORT_VIEW));
+                }
+
+                /* Check if we had a server view */
+                if (ServerView)
+                {
+                    /* Copy it back */
+                    RtlMoveMemory(ServerView,
+                                  &ConnectMessage->ServerView,
+                                  sizeof(REMOTE_PORT_VIEW));
                 }
             }
-          _SEH_HANDLE
-            {
-              Status = _SEH_GetExceptionCode();
-            }
-          _SEH_END;
-
-	  if (!NT_SUCCESS(Status))
-	    {
-              if (ConnectData != NULL)
-                {
-                  ExFreePool(ConnectData);
-                }
-              return(Status);
-	    }
-	}
-      else
+        }
+        else
         {
-          *UnsafeConnectDataLength = ConnectDataLength;
-          
-          if (ConnectData != NULL)
+            /* No connection port, we failed */
+            if (SectionToMap) ObDereferenceObject(SectionToMap);
+
+            /* Check if it's because the name got deleted */
+            if (Port->Flags & LPCP_NAME_DELETED)
             {
-              RtlCopyMemory(UnsafeConnectData,
-                            ConnectData,
-                            ConnectDataLength);
+                /* Set the correct status */
+                Status = STATUS_OBJECT_NAME_NOT_FOUND;
             }
+            else
+            {
+                /* Otherwise, the caller refused us */
+                Status = STATUS_PORT_CONNECTION_REFUSED;
+            }
+
+            /* Kill the port */
+            ObDereferenceObject(ClientPort);
         }
 
-      if (ConnectData != NULL)
-	{
-	  ExFreePool(ConnectData);
-	}
+        /* Free the message */
+        LpcpFreeToPortZone(Message, FALSE);
+        return Status;
     }
-  Status = ObInsertObject(ConnectedPort,
-			  NULL,
-			  PORT_ALL_ACCESS,
-			  1,
-			  (PVOID*)&ConnectedPort,
-			  &ConnectedPortHandle);
-  if (!NT_SUCCESS(Status))
+
+    /* No reply message, fail */
+    if (SectionToMap) ObDereferenceObject(SectionToMap);
+    ObDereferenceObject(ClientPort);
+    return STATUS_PORT_CONNECTION_REFUSED;
+
+Cleanup:
+    /* We failed, free the message */
+    SectionToMap = LpcpFreeConMsg(&Message, &ConnectMessage, Thread);
+
+    /* Check if the semaphore got signaled */
+    if (KeReadStateSemaphore(&Thread->LpcReplySemaphore))
     {
-      return(Status);
+        /* Wait on it */
+        KeWaitForSingleObject(&Thread->LpcReplySemaphore,
+                              KernelMode,
+                              Executive,
+                              FALSE,
+                              NULL);
     }
 
-  if (PreviousMode != KernelMode)
-    {
-      _SEH_TRY
-        {
-          *UnsafeConnectedPortHandle = ConnectedPortHandle;
-          
-          if (UnsafeWriteMap != NULL)
-            {
-              RtlCopyMemory(UnsafeWriteMap,
-                            &WriteMap,
-                            sizeof(PORT_VIEW));
-            }
+    /* Check if we had a message and free it */
+    if (Message) LpcpFreeToPortZone(Message, FALSE);
 
-          if (UnsafeReadMap != NULL)
-            {
-              RtlCopyMemory(UnsafeReadMap,
-                            &ReadMap,
-                            sizeof(REMOTE_PORT_VIEW));
-            }
+    /* Dereference other objects */
+    if (SectionToMap) ObDereferenceObject(SectionToMap);
+    ObDereferenceObject(ClientPort);
 
-          if (UnsafeMaximumMessageSize != NULL)
-            {
-              *UnsafeMaximumMessageSize = MaximumMessageSize;
-            }
-        }
-      _SEH_HANDLE
-        {
-          Status = _SEH_GetExceptionCode();
-        }
-      _SEH_END;
-      
-      if (!NT_SUCCESS(Status))
-        {
-          return Status;
-        }
-    }
-  else
-    {
-      *UnsafeConnectedPortHandle = ConnectedPortHandle;
-      
-      if (UnsafeWriteMap != NULL)
-        {
-          RtlCopyMemory(UnsafeWriteMap,
-                        &WriteMap,
-                        sizeof(PORT_VIEW));
-        }
-
-      if (UnsafeReadMap != NULL)
-        {
-          RtlCopyMemory(UnsafeReadMap,
-                        &ReadMap,
-                        sizeof(REMOTE_PORT_VIEW));
-        }
-
-      if (UnsafeMaximumMessageSize != NULL)
-        {
-          *UnsafeMaximumMessageSize = MaximumMessageSize;
-        }
-    }
-
-  /*
-   * All done.
-   */
-
-  return(STATUS_SUCCESS);
+    /* Return status */
+    return Status;
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- *	NtAcceptConnectPort/6
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *	ServerPortHandle
- *	NamedPortHandle
- *	LpcMessage
- *	AcceptIt
- *	WriteMap
- *	ReadMap
- *
- * RETURN VALUE
+/*
+ * @implemented
  */
-/*EXPORTED*/ NTSTATUS STDCALL
-NtAcceptConnectPort (PHANDLE			ServerPortHandle,
-		     HANDLE			NamedPortHandle,
-		     PPORT_MESSAGE		LpcMessage,
-		     BOOLEAN			AcceptIt,
-		     PPORT_VIEW	WriteMap,
-		     PREMOTE_PORT_VIEW	ReadMap)
+NTSTATUS
+NTAPI
+NtConnectPort(OUT PHANDLE PortHandle,
+              IN PUNICODE_STRING PortName,
+              IN PSECURITY_QUALITY_OF_SERVICE Qos,
+              IN PPORT_VIEW ClientView,
+              IN PREMOTE_PORT_VIEW ServerView,
+              OUT PULONG MaxMessageLength,
+              IN PVOID ConnectionInformation,
+              OUT PULONG ConnectionInformationLength)
 {
-  NTSTATUS	Status;
-  PEPORT		NamedPort;
-  PEPORT		OurPort = NULL;
-  PQUEUEDMESSAGE	ConnectionRequest;
-  KIRQL		oldIrql;
-  PEPORT_CONNECT_REQUEST_MESSAGE CRequest;
-  PEPORT_CONNECT_REPLY_MESSAGE CReply;
-  ULONG Size;
-  KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-
-  Size = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
-  if (LpcMessage)
-  {
-     Size += LpcMessage->u1.s1.DataLength;
-  }
-
-  CReply = ExAllocatePool(NonPagedPool, Size);
-  if (CReply == NULL)
-    {
-      return(STATUS_NO_MEMORY);
-    }
-
-  Status = ObReferenceObjectByHandle(NamedPortHandle,
-				     PORT_ALL_ACCESS,
-				     LpcPortObjectType,
-				     PreviousMode,
-				     (PVOID*)&NamedPort,
-				     NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      ExFreePool(CReply);
-      return (Status);
-    }
-
-  /*
-   * Create a port object for our side of the connection
-   */
-  if (AcceptIt)
-    {
-      Status = ObCreateObject(PreviousMode,
-			      LpcPortObjectType,
-			      NULL,
-			      PreviousMode,
-			      NULL,
-			      sizeof(EPORT),
-			      0,
-			      0,
-			      (PVOID*)&OurPort);
-      if (!NT_SUCCESS(Status))
-	{
-	  ExFreePool(CReply);
-	  ObDereferenceObject(NamedPort);
-	  return(Status);
-	}
-
-      Status = ObInsertObject ((PVOID)OurPort,
-			       NULL,
-			       PORT_ALL_ACCESS,
-			       0,
-			       NULL,
-			       ServerPortHandle);
-      if (!NT_SUCCESS(Status))
-	{
-	  ObDereferenceObject(OurPort);
-	  ExFreePool(CReply);
-	  ObDereferenceObject(NamedPort);
-	  return(Status);
-	}
-
-      LpcpInitializePort(OurPort, EPORT_TYPE_SERVER_COMM_PORT, NamedPort);
-    }
-
-  /*
-   * Dequeue the connection request
-   */
-  KeAcquireSpinLock(&NamedPort->Lock, &oldIrql);
-  ConnectionRequest = EiDequeueConnectMessagePort (NamedPort);
-  KeReleaseSpinLock(&NamedPort->Lock, oldIrql);
-  CRequest = (PEPORT_CONNECT_REQUEST_MESSAGE)(&ConnectionRequest->Message);
-
-  /*
-   * Prepare the reply.
-   */
-  if (LpcMessage != NULL)
-    {
-      memcpy(&CReply->MessageHeader, LpcMessage, sizeof(PORT_MESSAGE));
-      memcpy(&CReply->ConnectData, (PVOID)(LpcMessage + 1),
-	     LpcMessage->u1.s1.DataLength);
-      CReply->MessageHeader.u1.s1.TotalLength =
-	sizeof(EPORT_CONNECT_REPLY_MESSAGE) + LpcMessage->u1.s1.DataLength;
-      CReply->MessageHeader.u1.s1.DataLength = CReply->MessageHeader.u1.s1.TotalLength -
-	sizeof(PORT_MESSAGE);
-      CReply->ConnectDataLength = LpcMessage->u1.s1.DataLength;
-    }
-  else
-    {
-      CReply->MessageHeader.u1.s1.TotalLength = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
-      CReply->MessageHeader.u1.s1.DataLength = sizeof(EPORT_CONNECT_REPLY_MESSAGE) -
-	sizeof(PORT_MESSAGE);
-      CReply->ConnectDataLength = 0;
-    }
-  if (!AcceptIt)
-    {
-      EiReplyOrRequestPort(ConnectionRequest->Sender,
-			   &CReply->MessageHeader,
-			   LPC_CONNECTION_REFUSED,
-			   NamedPort);
-      KeReleaseSemaphore(&ConnectionRequest->Sender->Semaphore,
-			 IO_NO_INCREMENT,
-			 1,
-			 FALSE);
-      ObDereferenceObject(ConnectionRequest->Sender);
-      ExFreePool(ConnectionRequest);
-      ExFreePool(CReply);
-      ObDereferenceObject(NamedPort);
-      return (STATUS_SUCCESS);
-    }
-
-  /*
-   * Prepare the connection.
-   */
-  if (WriteMap != NULL)
-    {
-      PVOID SectionObject;
-      LARGE_INTEGER SectionOffset;
-
-      Status = ObReferenceObjectByHandle(WriteMap->SectionHandle,
-					 SECTION_MAP_READ | SECTION_MAP_WRITE,
-					 MmSectionObjectType,
-					 PreviousMode,
-					 (PVOID*)&SectionObject,
-					 NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-
-      SectionOffset.QuadPart = WriteMap->SectionOffset;
-      WriteMap->ViewRemoteBase = 0;
-      CReply->ReceiveClientViewSize = WriteMap->ViewSize;
-      Status = MmMapViewOfSection(SectionObject,
-				  CRequest->ConnectingProcess,
-				  &WriteMap->ViewRemoteBase,
-				  0,
-				  CReply->ReceiveClientViewSize,
-				  &SectionOffset,
-				  &CReply->ReceiveClientViewSize,
-				  ViewUnmap,
-				  0 /* MEM_TOP_DOWN? */,
-				  PAGE_READWRITE);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-
-      WriteMap->ViewBase = 0;
-      Status = MmMapViewOfSection(SectionObject,
-				  PsGetCurrentProcess(),
-				  &WriteMap->ViewBase,
-				  0,
-				  WriteMap->ViewSize,
-				  &SectionOffset,
-				  &WriteMap->ViewSize,
-				  ViewUnmap,
-				  0 /* MEM_TOP_DOWN? */,
-				  PAGE_READWRITE);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-
-      ObDereferenceObject(SectionObject);
-    }
-  if (ReadMap != NULL && CRequest->SendSectionObject != NULL)
-    {
-      LARGE_INTEGER SectionOffset;
-
-      SectionOffset = CRequest->SendSectionOffset;
-      ReadMap->ViewSize = CRequest->SendViewSize;
-      ReadMap->ViewBase = 0;
-      Status = MmMapViewOfSection(CRequest->SendSectionObject,
-				  PsGetCurrentProcess(),
-				  &ReadMap->ViewBase,
-				  0,
-				  CRequest->SendViewSize,
-				  &SectionOffset,
-				  &CRequest->SendViewSize,
-				  ViewUnmap,
-				  0 /* MEM_TOP_DOWN? */,
-				  PAGE_READWRITE);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-    }
-
-  /*
-   * Finish the reply.
-   */
-  if (ReadMap != NULL)
-    {
-      CReply->SendServerViewBase = ReadMap->ViewBase;
-    }
-  else
-    {
-      CReply->SendServerViewBase = 0;
-    }
-  if (WriteMap != NULL)
-    {
-      CReply->ReceiveClientViewBase = WriteMap->ViewRemoteBase;
-    }
-  CReply->MaximumMessageSize = LPC_MAX_MESSAGE_LENGTH;
-
-
-  /*
-   * Connect the two ports
-   */
-  OurPort->OtherPort = ConnectionRequest->Sender;
-  OurPort->OtherPort->OtherPort = OurPort;
-  EiReplyOrRequestPort(ConnectionRequest->Sender,
-		       (PPORT_MESSAGE)CReply,
-		       LPC_REPLY,
-		       OurPort);
-  ExFreePool(ConnectionRequest);
-  ExFreePool(CReply);
-
-  //ObDereferenceObject(OurPort);
-  ObDereferenceObject(NamedPort);
-
-  return (STATUS_SUCCESS);
-}
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	NtSecureConnectPort/9
- *
- * DESCRIPTION
- *	Connect to a named port and wait for the other side to
- *	accept the connection. Possibly verify that the server
- *	matches the ServerSid (trusted server).
- *	Present in w2k+.
- *
- * ARGUMENTS
- *	ConnectedPort
- *	PortName: fully qualified name in the Ob name space;
- *	Qos
- *	WriteMap
- *	ServerSid
- *	ReadMap
- *	MaxMessageSize
- *	ConnectInfo
- *	UserConnectInfoLength
- *
- * RETURN VALUE
- */
-NTSTATUS STDCALL
-NtSecureConnectPort (OUT    PHANDLE				ConnectedPort,
-		     IN     PUNICODE_STRING			PortName,
-		     IN     PSECURITY_QUALITY_OF_SERVICE	Qos,
-		     IN OUT PPORT_VIEW			WriteMap		OPTIONAL,
-		     IN     PSID				ServerSid		OPTIONAL,
-		     IN OUT PREMOTE_PORT_VIEW			ReadMap			OPTIONAL,
-		     OUT    PULONG				MaxMessageSize		OPTIONAL,
-		     IN OUT PVOID				ConnectInfo		OPTIONAL,
-		     IN OUT PULONG				UserConnectInfoLength	OPTIONAL)
-{
-  /* TODO: implement a new object type: WaitablePort */
-  /* TODO: verify the process' SID that hosts the rendez-vous port equals ServerSid */
-  return NtConnectPort (ConnectedPort,
-		        PortName,
-		        Qos,
-		        WriteMap,
-		        ReadMap,
-		        MaxMessageSize,
-		        ConnectInfo,
-		        UserConnectInfoLength);
+    /* Call the newer API */
+    return NtSecureConnectPort(PortHandle,
+                               PortName,
+                               Qos,
+                               ClientView,
+                               NULL,
+                               ServerView,
+                               MaxMessageLength,
+                               ConnectionInformation,
+                               ConnectionInformationLength);
 }
 
 /* EOF */

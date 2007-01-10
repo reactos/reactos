@@ -1716,8 +1716,7 @@ ObpSetHandleAttributes(IN PHANDLE_TABLE HandleTable,
                        IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
                        IN PVOID Context)
 {
-    POBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleInfo =
-        (POBP_SET_HANDLE_ATTRIBUTES_CONTEXT)Context;
+    POBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleInfo = Context;
     POBJECT_HEADER ObjectHeader = EX_HTE_TO_HDR(HandleTableEntry);
     PAGED_CODE();
 

@@ -75,6 +75,6 @@
   working on the \ntlpc directory. Leave this disabled unless you really know
   what you're doing.
 -->
-<property name="NTLPC" value="0" />
+<property name="NTLPC" value="1" />
 
 </rbuild>
