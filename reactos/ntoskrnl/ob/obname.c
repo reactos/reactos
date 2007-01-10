@@ -238,7 +238,7 @@ ObpDeleteNameCheck(IN PVOID Object)
                     (ObjectNameInfo->QueryReferences & 0x40000000))
                 {
                     /* Add deletion flag */
-                    InterlockedExchangeAdd(&ObjectNameInfo->QueryReferences,
+                    InterlockedExchangeAdd((PLONG)&ObjectNameInfo->QueryReferences,
                                            0xC0000000);
                 }
 

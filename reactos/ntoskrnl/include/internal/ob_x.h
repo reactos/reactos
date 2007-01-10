@@ -27,7 +27,7 @@ ObpIncrementQueryReference(IN POBJECT_HEADER ObjectHeader,
     while ((NewValue != 0) && (References = NewValue))
     {
         /* Increment the number of references */
-        if (InterlockedCompareExchange(&ObjectNameInfo->QueryReferences,
+        if (InterlockedCompareExchange((PLONG)&ObjectNameInfo->QueryReferences,
                                        NewValue + 1,
                                        NewValue) == References)
         {
@@ -56,7 +56,7 @@ ObpDecrementQueryReference(IN POBJECT_HEADER_NAME_INFO HeaderNameInfo)
     POBJECT_DIRECTORY Directory;
 
     /* Remove a query reference and check if it was the last one */
-    if (!InterlockedExchangeAdd(&HeaderNameInfo->QueryReferences, -1))
+    if (!InterlockedExchangeAdd((PLONG)&HeaderNameInfo->QueryReferences, -1))
     {
         /* Check if we have a name */
         if (HeaderNameInfo->Name.Buffer)

@@ -801,7 +801,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     if (ObjectType)
     {
         /* Increase the number of objects of this type */
-        InterlockedIncrement(&ObjectType->TotalNumberOfObjects);
+        InterlockedIncrement((PLONG)&ObjectType->TotalNumberOfObjects);
 
         /* Update the high water */
         ObjectType->HighWaterNumberOfObjects = max(ObjectType->

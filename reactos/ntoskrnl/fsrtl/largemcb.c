@@ -58,6 +58,9 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
                           OUT PLONGLONG SectorCount)
 {
     KEBUGCHECK(0);
+    *Vbn = 0;
+    *Lbn = 0;
+    *SectorCount= 0;
     return FALSE;
 }
 
@@ -132,6 +135,8 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
                          OUT PULONG Index OPTIONAL)
 {
     KEBUGCHECK(0);
+    *Lbn = 0;
+    *SectorCountFromLbn = 0;
     return FALSE;
 }
 
@@ -146,6 +151,9 @@ FsRtlLookupLastLargeMcbEntryAndIndex(IN PLARGE_MCB OpaqueMcb,
                                      OUT PULONG Index)
 {
     KEBUGCHECK(0);
+    *LargeVbn = 0;
+    *LargeLbn = 0;
+    *Index = 0;
     return FALSE;
 }
 
@@ -172,8 +180,8 @@ FsRtlLookupLastMcbEntry(IN PMCB Mcb,
                         OUT PLBN Lbn)
 {
     BOOLEAN Return = FALSE;
-    LONGLONG llVbn;
-    LONGLONG llLbn;
+    LONGLONG llVbn = 0;
+    LONGLONG llLbn = 0;
 
     /* Call the Large version */
     Return = FsRtlLookupLastLargeMcbEntry(
