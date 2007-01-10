@@ -51,7 +51,7 @@ ObpIncrementQueryReference(IN POBJECT_HEADER ObjectHeader,
 
 VOID
 FORCEINLINE
-_ObpDecrementQueryReference(IN POBJECT_HEADER_NAME_INFO HeaderNameInfo)
+ObpDecrementQueryReference(IN POBJECT_HEADER_NAME_INFO HeaderNameInfo)
 {
     POBJECT_DIRECTORY Directory;
 
@@ -79,7 +79,7 @@ _ObpDecrementQueryReference(IN POBJECT_HEADER_NAME_INFO HeaderNameInfo)
 
 VOID
 FORCEINLINE
-_ObpAcquireDirectoryLockShared(IN POBJECT_DIRECTORY Directory,
+ObpAcquireDirectoryLockShared(IN POBJECT_DIRECTORY Directory,
                                IN POBP_LOOKUP_CONTEXT Context)
 {
     /* It's not, set lock flag */
@@ -95,7 +95,7 @@ _ObpAcquireDirectoryLockShared(IN POBJECT_DIRECTORY Directory,
 
 VOID
 FORCEINLINE
-_ObpAcquireDirectoryLockExclusive(IN POBJECT_DIRECTORY Directory,
+ObpAcquireDirectoryLockExclusive(IN POBJECT_DIRECTORY Directory,
                                   IN POBP_LOOKUP_CONTEXT Context)
 {
     /* Update lock flag */
@@ -115,7 +115,7 @@ _ObpAcquireDirectoryLockExclusive(IN POBJECT_DIRECTORY Directory,
 
 VOID
 FORCEINLINE
-_ObpReleaseDirectoryLock(IN POBJECT_DIRECTORY Directory,
+ObpReleaseDirectoryLock(IN POBJECT_DIRECTORY Directory,
                          IN POBP_LOOKUP_CONTEXT Context)
 {
     /* Release the lock */
@@ -126,7 +126,7 @@ _ObpReleaseDirectoryLock(IN POBJECT_DIRECTORY Directory,
 
 VOID
 FORCEINLINE
-_ObpInitializeDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context)
+ObpInitializeDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context)
 {
     /* Initialize a null context */
     Context->Object = NULL;
@@ -137,7 +137,7 @@ _ObpInitializeDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context)
 
 VOID
 FORCEINLINE
-_ObpReleaseLookupContextObject(IN POBP_LOOKUP_CONTEXT Context)
+ObpReleaseLookupContextObject(IN POBP_LOOKUP_CONTEXT Context)
 {
     POBJECT_HEADER ObjectHeader;
     POBJECT_HEADER_NAME_INFO HeaderNameInfo;
@@ -150,7 +150,7 @@ _ObpReleaseLookupContextObject(IN POBP_LOOKUP_CONTEXT Context)
         HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
 
         /* Check if we do have name information */
-        if (HeaderNameInfo) _ObpDecrementQueryReference(HeaderNameInfo);
+        if (HeaderNameInfo) ObpDecrementQueryReference(HeaderNameInfo);
 
         /* Dereference the object */
         ObDereferenceObject(Context->Object);
@@ -160,60 +160,20 @@ _ObpReleaseLookupContextObject(IN POBP_LOOKUP_CONTEXT Context)
 
 VOID
 FORCEINLINE
-_ObpCleanupDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context)
+ObpCleanupDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context)
 {
     /* Check if we came back with the directory locked */
     if (Context->DirectoryLocked)
     {
         /* Release the lock */
-        _ObpReleaseDirectoryLock(Context->Directory, Context);
+        ObpReleaseDirectoryLock(Context->Directory, Context);
     }
 
     /* Clear the context  */
     Context->Directory = NULL;
     Context->DirectoryLocked = FALSE;
-    _ObpReleaseLookupContextObject(Context);
+    ObpReleaseLookupContextObject(Context);
 }
-
-#if _OB_DEBUG_
-#define ObpAcquireDirectoryLockShared(a, b)                                 \
-{                                                                           \
-    DbgPrint("OB QUERY: Acquiring lock at %s %d\n", __FUNCTION__, __LINE__);\
-    _ObpAcquireDirectoryLockShared(a, b);                                   \
-}
-#define ObpAcquireDirectoryLockExclusive(a, b)                              \
-{                                                                           \
-    DbgPrint("OB QUERY: Acquiring lock at %s %d\n", __FUNCTION__, __LINE__);\
-    _ObpAcquireDirectoryLockExclusive(a, b);                                \
-}
-#define ObpReleaseDirectoryLock(a, b)                                       \
-{                                                                           \
-    DbgPrint("OB QUERY: Releasing lock at %s %d\n", __FUNCTION__, __LINE__);\
-    _ObpReleaseDirectoryLock(a, b);                                         \
-}
-#define ObpInitializeDirectoryLookup(a)                                     \
-{                                                                           \
-    DbgPrint("OB QUERY: Initialization at %s %d\n", __FUNCTION__, __LINE__);\
-    _ObpInitializeDirectoryLookup(a);                                       \
-}
-#define ObpCleanupDirectoryLookup(a, b)                                     \
-{                                                                           \
-    DbgPrint("OB QUERY: Cleanup at %s %d\n", __FUNCTION__, __LINE__);       \
-    _ObpCleanupDirectoryLookup(a, b);                                       \
-}
-#define ObpDecrementQueryReference(a)                                       \
-{                                                                           \
-    DbgPrint("OB QUERY: Decrement at %s %d\n", __FUNCTION__, __LINE__);     \
-    _ObpDecrementQueryReference(a);                                         \
-}
-#else
-#define ObpDecrementQueryReference          _ObpDecrementQueryReference
-#define ObpAcquireDirectoryLockExclusive    _ObpAcquireDirectoryLockExclusive
-#define ObpAcquireDirectoryLockShared       _ObpAcquireDirectoryLockShared
-#define ObpReleaseDirectoryLock             _ObpReleaseDirectoryLock
-#define ObpInitializeDirectoryLookup        _ObpInitializeDirectoryLookup
-#define ObpCleanupDirectoryLookup           _ObpCleanupDirectoryLookup
-#endif
 
 VOID
 FORCEINLINE

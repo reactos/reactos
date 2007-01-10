@@ -282,10 +282,7 @@ ObPostPhase0:
     ObpInitializeDirectoryLookup(&Context);
 
     /* Lock it */
-    //ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
-    Context.Directory = ObpTypeDirectoryObject;
-    Context.DirectoryLocked = TRUE;
-    Context.LockStateSignature = 0xCCCC1234;
+    ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
 
     /* Loop the object types */
     ListHead = &ObTypeObjectType->TypeList;
@@ -323,8 +320,7 @@ ObPostPhase0:
     }
 
     /* Cleanup after lookup */
-    //ObpCleanupDirectoryLookup(&Context);
-    Context.Object = NULL;
+    ObpCleanupDirectoryLookup(&Context);
 
     /* Initialize DOS Devices Directory and related Symbolic Links */
     Status = ObpCreateDosDevicesDirectory();

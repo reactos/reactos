@@ -965,10 +965,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     if (ObpTypeDirectoryObject)
     {
         /* Acquire the directory lock */
-        //ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
-        Context.Directory = ObpTypeDirectoryObject;
-        Context.DirectoryLocked = TRUE;
-        Context.LockStateSignature = 0xCCCC1234;
+        ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
 
         /* Do the lookup */
         if (ObpLookupEntryDirectory(ObpTypeDirectoryObject,
@@ -978,7 +975,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
                                     &Context))
         {
             /* We have already created it, so fail */
-            Context.Object = NULL;
+            ObpCleanupDirectoryLookup(&Context);
             return STATUS_OBJECT_NAME_COLLISION;
         }
     }
@@ -990,7 +987,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     if (!ObjectName.Buffer)
     {
         /* Out of memory, fail */
-        Context.Object = NULL;
+        ObpCleanupDirectoryLookup(&Context);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1007,9 +1004,8 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
                                (POBJECT_HEADER*)&Header);
     if (!NT_SUCCESS(Status))
     {
-        Context.Object = NULL;
-
         /* Free the name and fail */
+        ObpCleanupDirectoryLookup(&Context);
         ExFreePool(ObjectName.Buffer);
         return Status;
     }
@@ -1138,7 +1134,8 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
             ObReferenceObject(ObpTypeDirectoryObject);
         }
 
-        Context.Object = NULL;
+        /* Cleanup the lookup context */
+        ObpCleanupDirectoryLookup(&Context);
 
         /* Return the object type and success */
         *ObjectType = LocalObjectType;
@@ -1146,7 +1143,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     }
 
     /* If we got here, then we failed */
-    Context.Object = NULL;
+    ObpCleanupDirectoryLookup(&Context);
     return STATUS_INSUFFICIENT_RESOURCES;
 }
 

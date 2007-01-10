@@ -247,11 +247,11 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         if (HeaderNameInfo)
         {
             /* Add a query reference */
-            //ObpIncrementQueryReference(ObjectHeader, HeaderNameInfo);
+            ObpIncrementQueryReference(ObjectHeader, HeaderNameInfo);
         }
 
         /* Reference the object being looked up */
-        //ObReferenceObject(FoundObject);
+        ObReferenceObject(FoundObject);
 
         /* Check if the directory was locked */
         if (!Context->DirectoryLocked)
@@ -282,7 +282,7 @@ Quickie:
     if (Context->Object)
     {
         /* We already did a lookup, so remove this object's query reference */
-        //ObpRemoveQueryReference(Context->Object);
+        //ObpDecrementQueryReference(Context->Object);
     }
 
     /* Return the object we found */

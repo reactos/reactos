@@ -191,16 +191,14 @@ ObpDeleteNameCheck(IN PVOID Object)
     if (!(ObjectHeader->HandleCount) &&
          (ObjectNameInfo) &&
          (ObjectNameInfo->Name.Length) &&
+         (ObjectNameInfo->Directory) &&
          !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
     {
         /* Setup a lookup context */
         ObpInitializeDirectoryLookup(&Context);
 
         /* Lock the directory */
-        //ObpAcquireDirectoryLockExclusive(ObjectNameInfo->Directory, &Context);
-        Context.Directory = ObjectNameInfo->Directory;
-        Context.DirectoryLocked = TRUE;
-        Context.LockStateSignature = 0xCCCC1234;
+        ObpAcquireDirectoryLockExclusive(ObjectNameInfo->Directory, &Context);
 
         /* Do the lookup */
         Object = ObpLookupEntryDirectory(ObjectNameInfo->Directory,
@@ -253,8 +251,7 @@ ObpDeleteNameCheck(IN PVOID Object)
         }
 
         /* Cleanup after lookup */
-        //ObpCleanupDirectoryLookup(&Context);
-        Context.Object = NULL;
+        ObpCleanupDirectoryLookup(&Context);
 
         /* Remove another query reference since we added one on top */
         ObpDecrementQueryReference(ObjectNameInfo);
@@ -573,10 +570,7 @@ ReparseNewDir:
             if (InsertObject)
             {
                 /* Lock the directory */
-                //ObpAcquireDirectoryLockExclusive(Directory, LookupContext);
-                LookupContext->Directory = Directory;
-                LookupContext->DirectoryLocked = TRUE;
-                LookupContext->LockStateSignature = 0xCCCC1234;
+                ObpAcquireDirectoryLockExclusive(Directory, LookupContext);
             }
         }
 
@@ -696,8 +690,7 @@ Reparse:
             InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
 
             /* Cleanup from the first lookup */
-            //ObpCleanupDirectoryLookup(LookupContext);
-            LookupContext->Object = NULL;
+            ObpCleanupDirectoryLookup(LookupContext);
 
             /* Check if we have a referenced directory */
             if (ReferencedDirectory)
@@ -863,8 +856,7 @@ Reparse:
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup after lookup */
-        //ObpCleanupDirectoryLookup(LookupContext);
-        LookupContext->Object = NULL;
+        ObpCleanupDirectoryLookup(LookupContext);
     }
 
     /* Check if we have a device map and dereference it if so */
