@@ -56,8 +56,8 @@ include tools/rgenstat/rgenstat.mak
 include tools/rsym.mak
 include tools/sysreg/sysreg.mak
 include tools/unicode/unicode.mak
+include tools/wpp/wpp.mak
 include tools/widl/widl.mak
 include tools/winebuild/winebuild.mak
 include tools/wmc/wmc.mak
-include tools/wpp/wpp.mak
 include tools/wrc/wrc.mak
