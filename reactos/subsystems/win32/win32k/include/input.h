@@ -18,8 +18,8 @@ typedef struct _KBL
   PKBDRVFILE pkbdf;
 } KBL, *PKBL;
 
-#define KBL_UNLOADED 0x2000000
-#define KBL_RESET    0x4000000
+#define KBL_UNLOADED 0x20000000
+#define KBL_RESET    0x40000000
 
 NTSTATUS FASTCALL
 InitInputImpl(VOID);
