@@ -359,7 +359,7 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
    DPRINT("RtlResetRtlTranslations() called\n");
 
    /* Set ANSI data */
-   NlsAnsiToUnicodeTable = NlsTable->AnsiTableInfo.MultiByteTable;
+   NlsAnsiToUnicodeTable = (PWCHAR)NlsTable->AnsiTableInfo.MultiByteTable; /* Real type is PUSHORT */
    NlsUnicodeToAnsiTable = NlsTable->AnsiTableInfo.WideCharTable;
    NlsDbcsUnicodeToAnsiTable = (PWCHAR)NlsTable->AnsiTableInfo.WideCharTable;
    NlsMbCodePageTag = (NlsTable->AnsiTableInfo.DBCSCodePage != 0);
@@ -368,7 +368,7 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
    DPRINT("Ansi codepage %hu\n", NlsAnsiCodePage);
 
    /* Set OEM data */
-   NlsOemToUnicodeTable = NlsTable->OemTableInfo.MultiByteTable;
+   NlsOemToUnicodeTable = (PWCHAR)NlsTable->OemTableInfo.MultiByteTable; /* Real type is PUSHORT */
    NlsUnicodeToOemTable = NlsTable->OemTableInfo.WideCharTable;
    NlsDbcsUnicodeToOemTable = (PWCHAR)NlsTable->OemTableInfo.WideCharTable;
    NlsMbOemCodePageTag = (NlsTable->OemTableInfo.DBCSCodePage != 0);

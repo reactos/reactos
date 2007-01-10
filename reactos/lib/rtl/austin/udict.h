@@ -57,8 +57,8 @@ typedef enum {
 
 typedef enum {
     udict_balanced = 0,
-    udict_leftheavy = -1,
-    udict_rightheavy = 1
+    udict_leftheavy = 1,
+    udict_rightheavy = 2
 } udict_avl_balance_t;
 
 typedef union {

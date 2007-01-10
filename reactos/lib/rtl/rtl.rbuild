@@ -39,6 +39,7 @@
 			<file>sin_asm.s</file>
 			<file>sqrt_asm.s</file>
 			<file>tan_asm.s</file>
+			<file>thread.c</file>
 		</directory>
 	</if>
 	<directory name="austin">
