@@ -109,7 +109,7 @@ static const VGA_REGISTERS VidpMode3Regs =
    /* Sequencer Registers */
    {0x03, 0x00, 0x03, 0x00, 0x02},
    /* Misc Output Register */
-   0xE3
+   0x67
 };
 
 static const UCHAR DefaultPalette[] =
