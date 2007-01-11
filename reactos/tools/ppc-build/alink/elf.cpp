@@ -429,7 +429,7 @@ void loadelf(FILE *objfile)
         seg->winFlags ^= WINF_NEG_FLAGS;
 	seg->datmask.resize(roundup(seg->length,8)/8);
 	seg->data.resize(roundup(seg->length,8));
-	if(seg->name == ".bss") 
+	if(elf32shdr[i].sh_type == SHT_NOBITS) 
 	{
 	    memset(&seg->datmask[0], 0, seg->datmask.size());
 	    memset(&seg->data[0], 0, seg->data.size());
