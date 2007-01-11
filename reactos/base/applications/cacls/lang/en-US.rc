@@ -24,7 +24,7 @@ CACLS filename [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                               C  Change (write)\n\
                               F  Full control\n\
    /D user       Deny specified user access.\n\
-Wildcards can be used to specify more that one file in a command.\n\
+Wildcards can be used to specify more than one file in a command.\n\
 You can specify more than one user in a command.\n\n\
 Abbreviations:\n\
    CI - Container Inherit.\n\

@@ -171,7 +171,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_IMAGE_MONOCHROME  "Monochrome (1 bit)"
-  IDS_IMAGE_GREYSCALE   "Greyscale (8 bit)"
+  IDS_IMAGE_GREYSCALE   "Grayscale (8 bit)"
   IDS_IMAGE_PALETTE     "Palette or 256 color (8 bit)"
   IDS_IMAGE_TRUECOLOR   "True color (24 bit)"
 
