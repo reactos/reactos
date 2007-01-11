@@ -747,7 +747,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		else if ( extension == ".idl" || extension == ".IDL" )		
 		{
 			fprintf ( OUT, "\t\t\t<Option compile=\"1\" />\r\n" );
-			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"%s\\tools\\widl\\widl.exe %s %s -h -H &quot;$(TARGET_OUTPUT_DIR)\\$file_c.h&quot; -c -C &quot;$(TARGET_OUTPUT_DIR)\\$file_c.c&quot; $file\\ngcc %s -c &quot;$(TARGET_OUTPUT_DIR)\\$file_c.c&quot; -o &quot;$(TARGET_OUTPUT_DIR)\\$file_c.o&quot;\" />\r\n", outdir.c_str(), widl_options.c_str(), windres_defines.c_str(), widl_options.c_str() );
+			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"%s\\tools\\widl\\widl.exe %s %s -h -H &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.h&quot; -c -C &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.c&quot; $file\\ngcc %s -c &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.c&quot; -o &quot;$(TARGET_OUTPUT_DIR)$file_c.o&quot;\" />\r\n", outdir.c_str(), widl_options.c_str(), windres_defines.c_str(), widl_options.c_str() );
 		}
 		else if ( extension == ".spec" || extension == ".SPEC" )		
 		{
