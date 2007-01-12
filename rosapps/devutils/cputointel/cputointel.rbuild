@@ -7,6 +7,7 @@
 	<library>user32</library>
 
 	<file>CpuToIntel.c</file>
+	<file>ImageLoader.c</file>
 	<file>misc.c</file>
 
 	<file>ARM/ARMBrain.c</file>

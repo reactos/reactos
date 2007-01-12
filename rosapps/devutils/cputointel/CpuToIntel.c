@@ -84,6 +84,8 @@ int main(int argc, char * argv[])
     }
 
     return LoadPFileImage(infile,outfile,BaseAddress,cpuid,type);
+    //return LoadPFileImage("e:\\cputointel.exe","e:\\cputointel.asm",0,0,0);
+
 }
 
 
