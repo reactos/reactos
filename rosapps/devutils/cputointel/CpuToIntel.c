@@ -13,6 +13,7 @@ int main(int argc, char * argv[])
     char *outfile=NULL;
     char *cpuid=NULL;
     CPU_INT type=0;
+    CPU_INT mode = 1;
 
 
     printf("Usage :\n");
@@ -35,6 +36,7 @@ int main(int argc, char * argv[])
     printf("       -inBin filename  : the bin file you whant convert\n");
     printf("       -inExe filename  : the PE file you whant convert\n");
     printf("       -OutAsm filename : the Asm file you whant create\n");
+    printf("       -OutDis filename : Do disambler of the source file\n");
     printf("------------------------------------------------------------------\n");
     printf("More cpu will be added with the time or options, this is      \n");
     printf("version 0.0.1 of the cpu to intel converter writen by         \n");
@@ -42,10 +44,12 @@ int main(int argc, char * argv[])
     printf("yet, more that basic desgin how it should be writen.          \n");
     printf("Copyright 2006 by Magnus Olsen, licen under GPL 2.0 for now.  \n");
 
-    if (argc < 7)
-        return .110;
 
-    for (t=1; t<7;t+=2)
+    if (argc <4)
+        return 110;
+
+    /* fixme better error checking for the input param */
+    for (t=1; t<argc;t+=2)
     {
         if (stricmp(argv[t],"-in"))
         {
@@ -69,6 +73,11 @@ int main(int argc, char * argv[])
         {
             outfile = argv[t+1];
         }
+        if (stricmp(argv[t],"-OutDis"))
+        {
+            outfile = argv[t+1];
+            mode = 0;
+        }
         if (stricmp(argv[t],"-BaseAddress"))
         {
             BaseAddress = atol(argv[t+1]);
@@ -80,7 +89,8 @@ int main(int argc, char * argv[])
 
     }
 
-    return LoadPFileImage(infile,outfile,BaseAddress,cpuid,type);
+
+    return LoadPFileImage(infile,outfile,BaseAddress,cpuid,type, mode);
     //return LoadPFileImage("e:\\cputointel.exe","e:\\cputointel.asm",0,0,0);
 
 }

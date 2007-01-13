@@ -24,7 +24,8 @@
  */
  
 CPU_INT PPC_Addx( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
-                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
+                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch,
+                   CPU_INT mode)
 
 {
     /* 

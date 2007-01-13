@@ -5,7 +5,33 @@
 #include "ARM.h"
 #include "../../misc.h"
 
-/* retun 
+/* 
+ * DummyBrain is example how you create you own cpu brain to translate from 
+ * cpu to intel assembler, I have not add DummyBrain to the loader it is not
+ * need it in our example. When you write you own brain, it must be setup in
+ * misc.c function LoadPFileImage and PEFileStart, PEFileStart maybe does not
+ * need the brain you have writen so you do not need setup it there then.
+ *
+ * input param: 
+ *         cpu_buffer   : the memory buffer with loaded program we whant translate
+ *         cpu_pos      : the positions in the cpu_buffer 
+ *         cpu_size     : the alloced memory size of the cpu_buffer
+ *         BaseAddress  : the virtual memory address we setup to use.
+ *         cpuarch      : the sub arch for the brain, example if it exists more one
+ *                        cpu with same desgin but few other opcode or extend opcode
+ *         outfp        : the output file pointer
+ *
+ *           mode       : if we should run disambler of this binary or
+ *                        translate it, Disambler will not calc the
+ *                        the row name right so we simple give each
+                          row a name. In translations mode we run a 
+ *                        analys so we getting better optimzing and 
+ *                        only row name there we need.
+ *                        value for mode are :
+ *                                             0 = disambler mode
+ *                                             1 = translate mode intel
+ *
+ * return value
  *         0            : Ok 
  *         1            : unimplemt 
  *         2            : Unkonwn Opcode
@@ -18,7 +44,8 @@ CPU_INT ARMBrain(  CPU_BYTE *cpu_buffer,
                    CPU_UNINT cpu_size,
                    CPU_UNINT BaseAddress,
                    CPU_UNINT cpuarch,
-                   FILE *outfp)
+                   FILE *outfp,
+                   CPU_INT mode)
 {
     CPU_UNINT cpu_oldpos;
     CPU_INT cpuint;
@@ -37,7 +64,7 @@ CPU_INT ARMBrain(  CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte32(cpuARMInit_))) == ConvertBitToByte32(cpuARMInit_))
         {
             retsize = ARM_( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                 BaseAddress, cpuarch);
+                                 BaseAddress, cpuarch, mode);
             if (retsize<0)
                  retcode = 1;
             else

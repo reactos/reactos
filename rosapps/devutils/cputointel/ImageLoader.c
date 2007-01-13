@@ -10,12 +10,19 @@
 #include "From/PPC/PPC.h"
 
 /*
- *
+ * infileName       file name to convert or disambler 
+ * outputfileName   file name to save to
+ * BaseAddress      the address we should emulate
+ * cpuid            the cpu we choice not vaild for pe loader
+ * type             the loading mode Auto, PE, bin
+ * mode             disambler mode : 0 the arch cpu.
+ *                  translate mode : 1 intel
+ * 
  */
 
 CPU_INT LoadPFileImage( char *infileName, char *outputfileName, 
                      CPU_UNINT BaseAddress, char *cpuid,
-                     CPU_UNINT type)
+                     CPU_UNINT type, CPU_INT mode)
 {
     FILE *infp;
     FILE *outfp;
@@ -102,7 +109,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
 
     if (type==0) 
     {
-       if ( PEFileStart(cpu_buffer, 0, BaseAddress, cpu_size, outfp) !=0)
+       if ( PEFileStart(cpu_buffer, 0, BaseAddress, cpu_size, outfp, mode) !=0)
        {
             type=1;
        }
@@ -111,24 +118,24 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
     if (type== 1)
     {
         if (stricmp(cpuid,"m68000"))
-                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68000,outfp);
+                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68000,outfp,mode);
         else if (stricmp(cpuid,"m68010"))
-                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68010,outfp);
+                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68010,outfp,mode);
         else if (stricmp(cpuid,"m68020"))
-                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68020,outfp);
+                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68020,outfp,mode);
         else if (stricmp(cpuid,"m68030"))
-                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68030,outfp);
+                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68030,outfp,mode);
         else if (stricmp(cpuid,"m68040"))
-                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68040,outfp);
+                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68040,outfp,mode);
         else if (stricmp(cpuid,"ppc"))
-                return PPCBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,0,outfp);
+                return PPCBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,0,outfp,mode);
         else if (stricmp(cpuid,"arm4"))
-                return ARMBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,4,outfp);
+                return ARMBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,4,outfp,mode);
     }
 
     if (type==2) 
     {
-       return PEFileStart(cpu_buffer, 0, BaseAddress, cpu_size, outfp);
+       return PEFileStart(cpu_buffer, 0, BaseAddress, cpu_size, outfp, mode);
 
     }
 
@@ -137,7 +144,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
 
 CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
                      CPU_UNINT base,  CPU_UNINT size,
-                     FILE *outfp)
+                     FILE *outfp, CPU_INT mode)
 {
     PIMAGE_DOS_HEADER DosHeader;
     PIMAGE_NT_HEADERS NtHeader;
@@ -329,7 +336,7 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
                case IMAGE_FILE_MACHINE_POWERPC:
                     printf("CPU POWERPC Detected no CPUBrain implement for it\n");
                          //PPCBrain(memory, pos, cpu_size, base, 0, outfp);
-                    return PPCBrain(memory+SectionHeader->PointerToRawData,  0, SectionHeader->SizeOfRawData, 0, 0, outfp);
+                    return PPCBrain(memory+SectionHeader->PointerToRawData,  0, SectionHeader->SizeOfRawData, 0, 0, outfp,mode);
 
                     return 3;
 

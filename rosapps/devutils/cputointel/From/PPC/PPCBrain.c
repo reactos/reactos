@@ -21,6 +21,16 @@
  *                        cpu with same desgin but few other opcode or extend opcode
  *         outfp        : the output file pointer
  *
+ *           mode       : if we should run disambler of this binary or
+ *                        translate it, Disambler will not calc the
+ *                        the row name right so we simple give each
+                          row a name. In translations mode we run a 
+ *                        analys so we getting better optimzing and 
+ *                        only row name there we need.
+ *                        value for mode are :
+ *                                             0 = disambler mode
+ *                                             1 = translate mode intel
+ *
  * return value
  *         0            : Ok 
  *         1            : unimplemt 
@@ -34,7 +44,8 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
                      CPU_UNINT cpu_size,
                      CPU_UNINT BaseAddress,
                      CPU_UNINT cpuarch,
-                     FILE *outfp)
+                     FILE *outfp,
+                     CPU_INT mode)
 {
     CPU_UNINT cpu_oldpos;
     CPU_INT cpuint;
@@ -53,7 +64,7 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Addx))) == ConvertBitToByte32(cpuPPCInit_Addx))
         {
             retsize = PPC_Addx( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                 BaseAddress, cpuarch);
+                                 BaseAddress, cpuarch, mode);
             if (retsize<0)
                  retcode = 1;
             else
