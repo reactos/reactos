@@ -273,68 +273,92 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
        }
 
        
-       else if (strnicmp(SectionHeader->Name,".text",5)==0)
+       else if (strnicmp(SectionHeader->Name,".text\0",6)==0)
        {
+           /*
+                FIXME we should output gas syntax 
+                BITS 32
+                GLOBAL _lrotate;
+                EXTERN _printf;
+                COMMON _commvar 4;
+           */
+
+            fprintf(outfp,".SECTION .text");
             switch (NtHeader->FileHeader.Machine)
             {
                 case IMAGE_FILE_MACHINE_ALPHA:
                      printf("CPU ALPHA Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found Alpha");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_ALPHA64:
                      printf("CPU ALPHA64/AXP64 Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found Alpha64/AXP64");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_AM33:
                      printf("CPU AM33 Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found AM33");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_AMD64:
                      printf("CPU AMD64 Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found AMD64");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_ARM:
                      printf("CPU ARM Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found ARM");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_CEE:
                      printf("CPU CEE Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found CEE");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_CEF:
                      printf("CPU CEF Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found CEF");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_EBC:
                      printf("CPU EBC Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found EBC");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_I386:
                      printf("CPU I386 Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found I386");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_IA64:
                      printf("CPU IA64 Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found IA64");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_M32R:
                      printf("CPU M32R Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found M32R");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_MIPS16:
                      printf("CPU MIPS16 Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found MIPS16");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_MIPSFPU:
                      printf("CPU MIPSFPU Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found MIPSFPU");
                      return 3;
 
                 case IMAGE_FILE_MACHINE_MIPSFPU16:
                      printf("CPU MIPSFPU16 Detected no CPUBrain implement for it\n");
+                     fprintf(outfp,"; CPU found MIPSFPU16");
                      return 3;
 
                case IMAGE_FILE_MACHINE_POWERPC:
-                    printf("CPU POWERPC Detected no CPUBrain implement for it\n");
+                    printf("CPU POWERPC Detected partily CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found POWERPC");
                          //PPCBrain(memory, pos, cpu_size, base, 0, outfp);
                     return PPCBrain(memory+SectionHeader->PointerToRawData,  0, SectionHeader->SizeOfRawData, 0, 0, outfp,mode);
 
@@ -342,50 +366,62 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
 
                case IMAGE_FILE_MACHINE_POWERPCFP:
                     printf("CPU POWERPCFP Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found POWERPCFP");
                     return 3;
 
                case IMAGE_FILE_MACHINE_R10000:
                     printf("CPU R10000 Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found R10000");
                     return 3;
 
                case IMAGE_FILE_MACHINE_R3000:
                     printf("CPU R3000 Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found R3000");
                     return 3;
 
                case IMAGE_FILE_MACHINE_R4000:
                     printf("CPU R4000 Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found R4000");
                     return 3;
 
                case IMAGE_FILE_MACHINE_SH3:
                     printf("CPU SH3 Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found SH3");
                     return 3;
 
                case IMAGE_FILE_MACHINE_SH3DSP:
                     printf("CPU SH3DSP Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found SH3DSP");
                     return 3;
 
                case IMAGE_FILE_MACHINE_SH3E:
                     printf("CPU SH3E Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found SH3E");
                     return 3;
 
                case IMAGE_FILE_MACHINE_SH4:
                     printf("CPU SH4 Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found SH4");
                     return 3;
 
                case IMAGE_FILE_MACHINE_SH5:
                     printf("CPU SH5 Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found SH5");
                     return 3;
 
                case IMAGE_FILE_MACHINE_THUMB:
                     printf("CPU THUMB Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found THUMB");
                     return 3;
 
                case IMAGE_FILE_MACHINE_TRICORE:
                     printf("CPU TRICORE Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found TRICORE");
                     return 3;
 
                case IMAGE_FILE_MACHINE_WCEMIPSV2:
                     printf("CPU WCEMIPSV2 Detected no CPUBrain implement for it\n");
+                    fprintf(outfp,"; CPU found WCEMIPSV2");
                     return 3;
 
                default:
