@@ -57,7 +57,7 @@ namespace System_
 		free(command);
 		return pid;
 	}
-#elif defined (__LINUX__)
+#else
 /********************************************************************************************************************/
 	OsSupport::ProcessID OsSupport::createProcess(TCHAR *procname, int procargsnum, TCHAR **procargs)
 	{
@@ -66,10 +66,23 @@ namespace System_
 		if ((pid = fork()) < 0)
 		{
 			cerr << "OsSupport::createProcess> fork failed" << endl;
-			return pid;
+			return 0;
 		}
-
+		if (pid == 0)
+		{
+			execv(procname, procargs);
+			return 0;
+		}
+		
+		return pid;
 	}
+
+	bool OsSupport::terminateProcess(OsSupport::ProcessID pid)
+	{
+		kill(pid, SIGKILL);
+		return true;
+	}
+
 
 #endif
 

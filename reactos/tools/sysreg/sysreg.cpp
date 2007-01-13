@@ -20,7 +20,9 @@ using Sysreg_::ConfigParser;
 using Sysreg_::RegressionTest;
 using Sysreg_::RosBootTest;
 
+#if 0
 using System_::SymbolFile;
+#endif
 
 typedef ComponentFactoryTemplate<RegressionTest, string> ComponentFactory;
 
@@ -87,9 +89,9 @@ int _tmain(int argc, TCHAR * argv[])
 	string envvar;
 	string ros = _T("ROS_OUTPUT");
 	config.getStringValue (ros, envvar);
-
+#if 0
 	SymbolFile::initialize (config, envvar);
-	
+#endif	
 	if (regtest->execute (config))
 	{
 		cout << "The regression test " << regtest->getName () << " completed successfully" << endl;

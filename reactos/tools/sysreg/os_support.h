@@ -10,10 +10,12 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 
-#ifdef WIN32
+#if 0
 #include <windows.h>
-#elif defined(__LINUX__)
+#else
 #include <unistd.h>
+#include <sys/types.h>
+#include <signal.h>
 #endif
 
 #include "user_types.h"
@@ -34,14 +36,10 @@ namespace System_
 #ifdef WIN32
 
 		typedef DWORD ProcessID;
-
-#elif defined(__LINUX__)
+#else
 
 		typedef pid_t ProcessID;
-
-#else
-#error you need to define pid handle type for your platform
-#endif
+		#endif
 
 //---------------------------------------------------------------------------------------
 ///
