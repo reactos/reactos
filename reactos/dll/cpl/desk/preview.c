@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        lib/cpl/desk/preview.c
  * PURPOSE:     Draws the preview control
- * COPYRIGHT:   Copyright 2006 Eric Kohl
+ * COPYRIGHT:   Copyright 2006, 2007 Eric Kohl
  */
 
 #include "desk.h"
@@ -37,9 +37,11 @@ typedef struct _PREVIEW_DATA
     RECT rcDesktop;
     RECT rcInactiveFrame;
     RECT rcInactiveCaption;
+    RECT rcInactiveCaptionButtons;
 
     RECT rcActiveFrame;
     RECT rcActiveCaption;
+    RECT rcActiveCaptionButtons;
     RECT rcActiveMenuBar;
     RECT rcSelectedMenuItem;
     RECT rcActiveClient;
@@ -47,6 +49,7 @@ typedef struct _PREVIEW_DATA
 
     RECT rcDialogFrame;
     RECT rcDialogCaption;
+    RECT rcDialogCaptionButtons;
     RECT rcDialogClient;
 
     RECT rcDialogButton;
@@ -215,6 +218,12 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
     pPreviewData->rcInactiveCaption.right = pPreviewData->rcInactiveFrame.right - pPreviewData->cxEdge - 1/*3*/ - 1;
     pPreviewData->rcInactiveCaption.bottom = pPreviewData->rcInactiveFrame.top + pPreviewData->cyCaption /*20*/ + 2;
 
+    /* Calculate the inactive caption buttons rectangle */
+    pPreviewData->rcInactiveCaptionButtons.left = pPreviewData->rcInactiveCaption.right - 2 - 2 - 3 * 16;
+    pPreviewData->rcInactiveCaptionButtons.top = pPreviewData->rcInactiveCaption.top + 2;
+    pPreviewData->rcInactiveCaptionButtons.right = pPreviewData->rcInactiveCaption.right - 2;
+    pPreviewData->rcInactiveCaptionButtons.bottom = pPreviewData->rcInactiveCaption.bottom - 2;
+
     /* Calculate the active window rectangle */
     pPreviewData->rcActiveFrame.left = pPreviewData->rcInactiveFrame.left + 3 + 1;
     pPreviewData->rcActiveFrame.top = pPreviewData->rcInactiveCaption.bottom + 1;
@@ -226,6 +235,12 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
     pPreviewData->rcActiveCaption.top = pPreviewData->rcActiveFrame.top + 3 + 1;
     pPreviewData->rcActiveCaption.right = pPreviewData->rcActiveFrame.right - 3 - 1;
     pPreviewData->rcActiveCaption.bottom = pPreviewData->rcActiveFrame.top + pPreviewData->cyCaption/*20*/ + 2;
+
+    /* Calculate the active caption buttons rectangle */
+    pPreviewData->rcActiveCaptionButtons.left = pPreviewData->rcActiveCaption.right - 2 - 2 - 3 * 16;
+    pPreviewData->rcActiveCaptionButtons.top = pPreviewData->rcActiveCaption.top + 2;
+    pPreviewData->rcActiveCaptionButtons.right = pPreviewData->rcActiveCaption.right - 2;
+    pPreviewData->rcActiveCaptionButtons.bottom = pPreviewData->rcActiveCaption.bottom - 2;
 
     /* Calculate the active menu bar rectangle */
     pPreviewData->rcActiveMenuBar.left = pPreviewData->rcActiveFrame.left + 3 + 1;
@@ -257,6 +272,12 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
     pPreviewData->rcDialogCaption.top = pPreviewData->rcDialogFrame.top + 3;
     pPreviewData->rcDialogCaption.right = pPreviewData->rcDialogFrame.right - 3;
     pPreviewData->rcDialogCaption.bottom = pPreviewData->rcDialogFrame.top + 20 + 1;
+
+    /* Calculate the inactive caption buttons rectangle */
+    pPreviewData->rcDialogCaptionButtons.left = pPreviewData->rcDialogCaption.right - 2 - 16;
+    pPreviewData->rcDialogCaptionButtons.top = pPreviewData->rcDialogCaption.top + 2;
+    pPreviewData->rcDialogCaptionButtons.right = pPreviewData->rcDialogCaption.right - 2;
+    pPreviewData->rcDialogCaptionButtons.bottom = pPreviewData->rcDialogCaption.bottom - 2;
 
     /* Calculate the dialog client rectangle */
     pPreviewData->rcDialogClient.left = pPreviewData->rcDialogFrame.left + 3;
@@ -368,12 +389,17 @@ OnLButtonDown(HWND hwnd, int xPos, int yPos, PPREVIEW_DATA pPreviewData)
     if (PtInRect(&pPreviewData->rcInactiveCaption, pt))
         type = IDX_INACTIVE_CAPTION;
 
+    if (PtInRect(&pPreviewData->rcInactiveCaptionButtons, pt))
+        type = IDX_CAPTION_BUTTON;
 
     if (PtInRect(&pPreviewData->rcActiveFrame, pt))
         type = IDX_ACTIVE_BORDER;
 
     if (PtInRect(&pPreviewData->rcActiveCaption, pt))
         type = IDX_ACTIVE_CAPTION;
+
+    if (PtInRect(&pPreviewData->rcActiveCaptionButtons, pt))
+        type = IDX_CAPTION_BUTTON;
 
     if (PtInRect(&pPreviewData->rcActiveMenuBar, pt))
         type = IDX_MENU;
@@ -387,12 +413,14 @@ OnLButtonDown(HWND hwnd, int xPos, int yPos, PPREVIEW_DATA pPreviewData)
     if (PtInRect(&pPreviewData->rcActiveScroll, pt))
         type = IDX_SCROLLBAR;
 
-
     if (PtInRect(&pPreviewData->rcDialogFrame, pt))
         type = IDX_DIALOG;
 
     if (PtInRect(&pPreviewData->rcDialogCaption, pt))
         type = IDX_ACTIVE_CAPTION;
+
+    if (PtInRect(&pPreviewData->rcDialogCaptionButtons, pt))
+        type = IDX_CAPTION_BUTTON;
 
     if (PtInRect(&pPreviewData->rcDialogButton, pt))
         type = IDX_3D_OBJECTS;
