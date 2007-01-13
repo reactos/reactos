@@ -17,6 +17,7 @@
 #include "hu-HU.rc"
 #include "nb-NO.rc"
 #include "uk-UA.rc"
+#include "it-IT.rc"
 
 STRINGTABLE DISCARDABLE
 {
