@@ -3,9 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ARM/ARM.h"
-#include "From/m68k/m68k.h"
-#include "From/PPC/PPC.h"
 #include "misc.h"
 
 int main(int argc, char * argv[])

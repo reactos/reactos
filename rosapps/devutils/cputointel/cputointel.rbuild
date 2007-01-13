@@ -10,8 +10,8 @@
 	<file>ImageLoader.c</file>
 	<file>misc.c</file>
 
-	<file>ARM/ARMBrain.c</file>
-	<file>ARM/ARMopcode.c</file>
+	<file>From/ARM/ARMBrain.c</file>
+	<file>From/ARM/ARMopcode.c</file>
 
 	<file>From/m68k/M68kBrain.c</file>
 	<file>From/m68k/M68kopcode.c</file>
