@@ -97,6 +97,37 @@ CPU_UNINT GetMaskByte32(CPU_BYTE *bit)
 
 
 
+CPU_UNINT GetData32Le(CPU_BYTE *cpu_buffer)
+{
+    CPU_UNINT cpuint;
+    CPU_UNINT split1;
+    CPU_UNINT split2;
+    CPU_UNINT split3;
+    CPU_UNINT split4;
+
+    cpuint = *((CPU_UNINT*) &cpu_buffer[0]);
+
+    split1 = cpu_buffer[0];
+    split2 = cpu_buffer[1];
+    split3 = cpu_buffer[2];
+    split4 = cpu_buffer[3];
+
+
+    cpuint = split4+(split3 <<8 )+(split2 <<16 )+(split1 <<24 );
+
+    return cpuint;
+}
+
+CPU_UNINT GetData32Be(CPU_BYTE *cpu_buffer)
+{
+    CPU_UNINT cpuint;
+
+    cpuint = *((CPU_UNINT*) &cpu_buffer[0]);
+
+    return cpuint;
+}
+
+
 // add no carry
 
 

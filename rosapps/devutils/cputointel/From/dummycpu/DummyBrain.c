@@ -59,7 +59,13 @@ CPU_INT DummyBrain(  CPU_BYTE *cpu_buffer,
     {
         cpu_oldpos = cpu_pos;
 
-        cpuint = cpu_buffer[cpu_pos];
+        /* use the GetData32Be or GetData32Le
+           to read from the memory the
+           Le is for small endian and the
+           Be is for big endian
+           the 32 is how many bits we should read 
+         */
+        cpuint = GetData32Be(&cpu_buffer[cpu_pos]);
     
         /* Add */
         if ((cpuint - (cpuint & GetMaskByte(cpuDummyInit_Add))) == ConvertBitToByte(cpuDummyInit_Add))

@@ -39,3 +39,31 @@ CPU_INT PPC_Addx( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     printf(";Add unimplement\n");
     return -1;
 }
+ //                                                          stb
+                                                             
+ // li  %r3, 0  : op    00          00         60           38
+ // li = ld
+//                   0000 0000   0000 0000  0100 0000    0011 1000
+CPU_INT PPC_Ld( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
+                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch,
+                   CPU_INT mode)
+{
+    CPU_UNINT formA;
+    CPU_UNINT formD;
+    CPU_UNINT formDS;
+    CPU_UNINT opcode;
+
+    opcode = GetData32Le(cpu_buffer);
+    formA = (opcode & ConvertBitToByte(PPC_A)) >> 5;
+    formD = (opcode & ConvertBitToByte(PPC_D)) >> 10;
+    formDS = (opcode & ConvertBitToByte(PPC_ds)) >> 15;
+
+    if (mode==0)
+    {
+        fprintf(out,"Line_0x%8x :\n",BaseAddress + cpu_pos);
+    }
+
+    printf(";not full implement \n");
+    return 4;
+}
+

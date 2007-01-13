@@ -20,3 +20,6 @@ CPU_UNINT GetMaskByte(CPU_BYTE *bit);
 CPU_UNINT ConvertBitToByte32(CPU_BYTE *bit);
 CPU_UNINT GetMaskByte32(CPU_BYTE *bit);
 
+CPU_UNINT GetData32Le(CPU_BYTE *cpu_buffer);
+CPU_UNINT GetData32Be(CPU_BYTE *cpu_buffer);
+
