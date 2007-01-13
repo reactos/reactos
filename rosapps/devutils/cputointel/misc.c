@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "misc.h"
+#include "any_op.h"
 #include "From/ARM/ARM.h"
 #include "From/m68k/m68k.h"
 #include "From/PPC/PPC.h"
@@ -128,7 +129,35 @@ CPU_UNINT GetData32Be(CPU_BYTE *cpu_buffer)
 }
 
 
-// add no carry
+CPU_INT AllocAny()
+{
+
+    if (pMyBrainAnalys== NULL)
+    {
+        pMyBrainAnalys = (PMYBrainAnalys) malloc(sizeof(MYBrainAnalys));
+        if (pMyBrainAnalys==NULL)
+        {
+            return -1;
+        }
+        ZeroMemory(pMyBrainAnalys,sizeof(MYBrainAnalys));
+    }
+    else
+    {
+        PMYBrainAnalys tmp;
+        tmp = (PMYBrainAnalys) malloc(sizeof(MYBrainAnalys));
+        if (tmp==NULL)
+        {
+            return -1;
+        }
+        ZeroMemory(pMyBrainAnalys,sizeof(MYBrainAnalys));
+
+        pMyBrainAnalys->ptr_next = (CPU_BYTE*)tmp;
+        tmp->ptr_prev= (CPU_BYTE*)pMyBrainAnalys;
+        
+        pMyBrainAnalys = tmp;
+    }
+return 0;
+}
 
 
 

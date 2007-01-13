@@ -3,7 +3,7 @@
 #include <stdlib.h> 
 #include "PPC.h"
 #include "../../misc.h"
-
+#include "../../any_op.h"
 
 /* cpuDummyInit_Add
  * Input param : 
@@ -39,11 +39,6 @@ CPU_INT PPC_Addx( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     printf(";Add unimplement\n");
     return -1;
 }
- //                                                          stb
-                                                             
- // li  %r3, 0  : op    00          00         60           38
- // li = ld
-//                   0000 0000   0000 0000  0100 0000    0011 1000
 
 
 CPU_INT PPC_Ld( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
@@ -60,10 +55,23 @@ CPU_INT PPC_Ld( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     formD =  (opcode & ConvertBitToByte32(PPC_D)) >> 10;
     formDS = (opcode & ConvertBitToByte32(PPC_ds)) >> 15;
 
+    fprintf(out,"Line_0x%08x:\n",BaseAddress + cpu_pos);
     if (mode==0)
     {
-        fprintf(out,"Line_0x%08x:\n",BaseAddress + cpu_pos);
         fprintf(out,"li %%r%d,%d\n",formA, formDS);
+    }
+    if (mode!=0)
+    {
+        /* own translatons langues */
+        if (AllocAny()!=0)  /* alloc memory for pMyBrainAnalys */
+        {
+            return -1;
+        }
+        pMyBrainAnalys->op = OP_ANY_mov;
+        pMyBrainAnalys->type= 1 + 8; /* 1 dst reg, 8 imm */
+        pMyBrainAnalys->src_size = 16;
+        pMyBrainAnalys->src = formDS;
+        pMyBrainAnalys->dst = formA;
     }
 
     printf(";not full implement \n");

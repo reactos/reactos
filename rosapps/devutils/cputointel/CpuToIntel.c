@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "misc.h"
+#include "any_op.h"
+
+PMYBrainAnalys pMyBrainAnalys = NULL;
+
 
 int main(int argc, char * argv[])
 {
@@ -88,7 +92,6 @@ int main(int argc, char * argv[])
         }
 
     }
-
 
     return LoadPFileImage(infile,outfile,BaseAddress,cpuid,type, mode);
     //return LoadPFileImage("e:\\testms.exe","e:\\cputointel.asm",0,0,0,0);
