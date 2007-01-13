@@ -27,6 +27,8 @@
  *         0            : Ok 
  *         1            : unimplemt 
  *         2            : Unkonwn Opcode
+ *         3            : unimplement cpu
+ *         4            : unknown machine
  */
 
 CPU_INT DummyBrain(  CPU_BYTE *cpu_buffer,

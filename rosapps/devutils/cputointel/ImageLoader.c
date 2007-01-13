@@ -9,6 +9,10 @@
 #include "m68k/m68k.h"
 #include "PPC/PPC.h"
 
+/*
+ *
+ */
+
 CPU_INT LoadPFileImage( char *infileName, char *outputfileName, 
                      CPU_UNINT BaseAddress, char *cpuid,
                      CPU_UNINT type)
@@ -135,10 +139,11 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
                      CPU_UNINT base,  CPU_UNINT size,
                      FILE *outfp)
 {
-    //INT sizeofHeader = IMAGE_NT_SIGNATURE;
     PIMAGE_DOS_HEADER DosHeader;
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER SectionHeader;
+    INT NumberOfSections;
+    INT NumberOfSectionsCount=0;
 
     DosHeader = (PIMAGE_DOS_HEADER)memory;
     if ( (DosHeader->e_magic != IMAGE_DOS_SIGNATURE) ||
@@ -147,8 +152,6 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
         printf("No MZ file \n");
         return -1;
     }
-
-    
 
     NtHeader = (PIMAGE_NT_HEADERS) (((ULONG)memory) + ((ULONG)DosHeader->e_lfanew));
     if (NtHeader->Signature != IMAGE_NT_SIGNATURE)
@@ -218,9 +221,6 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
             break;
     }
 
-
-
-
     /*
     SectionHeader->Name == ".tls$"
     SectionHeader->Name == ".tls"
@@ -248,141 +248,147 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
     SectionHeader->Name == ".textbss"  // bss segment 
     */
 
-
-   
     //*base =  NtHeader->OptionalHeader.AddressOfEntryPoint;
 
-   SectionHeader = IMAGE_FIRST_SECTION(NtHeader);
-   while (SectionHeader != NULL)
-   {
-       if (strcmpi(SectionHeader->Name,".rsrc"))
+    SectionHeader = IMAGE_FIRST_SECTION(NtHeader);
+    NumberOfSections = NtHeader->FileHeader.NumberOfSections;
+
+    for (NumberOfSectionsCount = 0; NumberOfSectionsCount < NumberOfSections; NumberOfSectionsCount++, SectionHeader++)
+    {
+       if (strnicmp(SectionHeader->Name,".rsrc",5)==0)
        {
            /* FIXME add a rc bin to text scanner */
        }
 
-       else if (strcmpi(SectionHeader->Name,".textbss"))
+       else if (strnicmp(SectionHeader->Name,".textbss",8)==0)
        {
           /* FIXME add a bss to text scanner */
        }
 
-       else if (strcmpi(SectionHeader->Name,".text"))
+       
+       else if (strnicmp(SectionHeader->Name,".text",5)==0)
        {
             switch (NtHeader->FileHeader.Machine)
             {
                 case IMAGE_FILE_MACHINE_ALPHA:
                      printf("CPU ALPHA Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_ALPHA64:
                      printf("CPU ALPHA64/AXP64 Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_AM33:
                      printf("CPU AM33 Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_AMD64:
                      printf("CPU AMD64 Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_ARM:
                      printf("CPU ARM Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_CEE:
                      printf("CPU CEE Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_CEF:
                      printf("CPU CEF Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_EBC:
                      printf("CPU EBC Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_I386:
                      printf("CPU I386 Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_IA64:
                      printf("CPU IA64 Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_M32R:
                      printf("CPU M32R Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_MIPS16:
                      printf("CPU MIPS16 Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_MIPSFPU:
                      printf("CPU MIPSFPU Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                 case IMAGE_FILE_MACHINE_MIPSFPU16:
                      printf("CPU MIPSFPU16 Detected no CPUBrain implement for it\n");
-                     return -1;
+                     return 3;
 
                case IMAGE_FILE_MACHINE_POWERPC:
                     printf("CPU POWERPC Detected no CPUBrain implement for it\n");
-                    return -1;
+                         //PPCBrain(memory, pos, cpu_size, base, 0, outfp);
+                    return PPCBrain(memory+SectionHeader->PointerToRawData,  0, SectionHeader->SizeOfRawData, 0, 0, outfp);
+
+                    return 3;
 
                case IMAGE_FILE_MACHINE_POWERPCFP:
                     printf("CPU POWERPCFP Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                case IMAGE_FILE_MACHINE_R10000:
                     printf("CPU R10000 Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                case IMAGE_FILE_MACHINE_R3000:
                     printf("CPU R3000 Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                case IMAGE_FILE_MACHINE_R4000:
                     printf("CPU R4000 Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                case IMAGE_FILE_MACHINE_SH3:
                     printf("CPU SH3 Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                case IMAGE_FILE_MACHINE_SH3DSP:
                     printf("CPU SH3DSP Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                case IMAGE_FILE_MACHINE_SH3E:
                     printf("CPU SH3E Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                case IMAGE_FILE_MACHINE_SH4:
                     printf("CPU SH4 Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                case IMAGE_FILE_MACHINE_SH5:
                     printf("CPU SH5 Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                case IMAGE_FILE_MACHINE_THUMB:
                     printf("CPU THUMB Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                case IMAGE_FILE_MACHINE_TRICORE:
                     printf("CPU TRICORE Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                case IMAGE_FILE_MACHINE_WCEMIPSV2:
                     printf("CPU WCEMIPSV2 Detected no CPUBrain implement for it\n");
-                    return -1;
+                    return 3;
 
                default:
                     printf("Unknown Machine : %d",NtHeader->FileHeader.Machine);
-                    return -1;
+                    return 4;
+            /* End case swich */
             }
+       /* End if .text statment */
       }
-      /* FIXME add couter to next sections */
+    /* End for loop */
    } 
 
    return 0;

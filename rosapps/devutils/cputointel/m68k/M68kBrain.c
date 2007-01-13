@@ -6,16 +6,11 @@
 #include "../misc.h"
 
 /* retun 
- * 0 = Ok 
- * 1 = unimplemt 
- * 2 = Unkonwn Opcode 
- * 3 = can not open read file
- * 4 = can not open write file
- * 5 = can not seek to end of read file
- * 6 = can not get the file size of the read file
- * 7 = read file size is Zero
- * 8 = can not alloc memory
- * 9 = can not read file
+ *         0            : Ok 
+ *         1            : unimplemt 
+ *         2            : Unkonwn Opcode
+ *         3            : unimplement cpu
+ *         4            : unknown machine
  */
 
 CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
