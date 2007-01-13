@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include "Dummy.h"
-#include "misc.h"
+#include "../../misc.h"
 
 
 /* cpuDummyInit_Add

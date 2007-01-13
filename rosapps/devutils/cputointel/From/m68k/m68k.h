@@ -1,5 +1,5 @@
 
-#include "../misc.h"
+#include "../../misc.h"
 CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
                      CPU_UNINT cpu_pos,
                      CPU_UNINT cpu_size,

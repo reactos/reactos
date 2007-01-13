@@ -3,7 +3,7 @@
 #include <stdlib.h> 
 #include "M68kBrain.h"
 #include "m68k.h"
-#include "../misc.h"
+#include "../../misc.h"
 
 /* retun 
  *         0            : Ok 

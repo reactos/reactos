@@ -13,13 +13,13 @@
 	<file>ARM/ARMBrain.c</file>
 	<file>ARM/ARMopcode.c</file>
 
-	<file>m68k/M68kBrain.c</file>
-	<file>m68k/M68kopcode.c</file>
+	<file>From/m68k/M68kBrain.c</file>
+	<file>From/m68k/M68kopcode.c</file>
 
-	<file>PPC/PPCBrain.c</file>
-	<file>PPC/PPCopcode.c</file>
+	<file>From/PPC/PPCBrain.c</file>
+	<file>From/PPC/PPCopcode.c</file>
 
-	<file>dummycpu/DummyBrain.c</file>
-	<file>dummycpu/Dummyopcode.c</file>
+	<file>From/dummycpu/DummyBrain.c</file>
+	<file>From/dummycpu/Dummyopcode.c</file>
 
 </module>

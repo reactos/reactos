@@ -1,11 +1,9 @@
 
 #include <stdio.h>
 #include <stdlib.h> 
-#include "DummyBrain.h"
-#include "Dummy.h"
-#include "../misc.h"
-
-
+#include "PPCBrain.h"
+#include "PPC.h"
+#include "../../misc.h"
 
 /* 
  * DummyBrain is example how you create you own cpu brain to translate from 
@@ -31,7 +29,7 @@
  *         4            : unknown machine
  */
 
-CPU_INT DummyBrain(  CPU_BYTE *cpu_buffer,
+CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
                      CPU_UNINT cpu_pos,
                      CPU_UNINT cpu_size,
                      CPU_UNINT BaseAddress,
@@ -43,6 +41,7 @@ CPU_INT DummyBrain(  CPU_BYTE *cpu_buffer,
     CPU_INT retcode = 0;
     CPU_INT retsize;
 
+
     /* now we start the process */
     while (cpu_pos<cpu_size)
     {
@@ -51,9 +50,9 @@ CPU_INT DummyBrain(  CPU_BYTE *cpu_buffer,
         cpuint = cpu_buffer[cpu_pos];
     
         /* Add */
-        if ((cpuint - (cpuint & GetMaskByte(cpuDummyInit_Add))) == ConvertBitToByte(cpuDummyInit_Add))
+        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Addx))) == ConvertBitToByte32(cpuPPCInit_Addx))
         {
-            retsize = DUMMY_Add( outfp, cpu_buffer, cpu_pos, cpu_size,
+            retsize = PPC_Addx( outfp, cpu_buffer, cpu_pos, cpu_size,
                                  BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
@@ -85,5 +84,5 @@ CPU_INT DummyBrain(  CPU_BYTE *cpu_buffer,
             break;
         }
     }
-    return retcode;
+    return retcode;    
 }

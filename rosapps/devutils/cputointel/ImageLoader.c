@@ -6,8 +6,8 @@
 #include <string.h>
 #include "misc.h"
 #include "ARM/ARM.h"
-#include "m68k/m68k.h"
-#include "PPC/PPC.h"
+#include "From/m68k/m68k.h"
+#include "From/PPC/PPC.h"
 
 /*
  *

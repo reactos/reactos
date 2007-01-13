@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ARM/ARM.h"
-#include "m68k/m68k.h"
-#include "PPC/PPC.h"
+#include "From/m68k/m68k.h"
+#include "From/PPC/PPC.h"
 #include "misc.h"
 
 int main(int argc, char * argv[])

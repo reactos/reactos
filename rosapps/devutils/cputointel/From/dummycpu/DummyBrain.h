@@ -1,5 +1,5 @@
 
-#include "../misc.h"
+#include "../../misc.h"
 
 
 /* example how setup a opcode, this opcode is 16bit long (taken from M68K) 

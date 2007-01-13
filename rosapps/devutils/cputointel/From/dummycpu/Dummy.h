@@ -1,5 +1,5 @@
 
-#include "../misc.h"
+#include "../../misc.h"
 
 CPU_INT DummyBrain(  CPU_BYTE *cpu_buffer,
                      CPU_UNINT cpu_pos,
