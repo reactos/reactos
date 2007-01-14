@@ -52,20 +52,6 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
     CPU_INT retcode = 0;
     CPU_INT retsize;
 
-
-    /* 0x12 = 0001 0010,  
-       0x10 = 0001 0000
-       0x13 = 0001 0011
-
-       0x20 = 0010 0000  0   0000 0010 2
-       0x80 = 1000 0000  0   0000 1000 8
-       0x4e = 0010 1110  E  1110 0010  2
-
-       0x20            00                80          4e
-       0010 0000   0000 0000         1000 0000   0100 1110
-
-    */
-
     /* now we start the process */
     while (cpu_pos<cpu_size)
     {

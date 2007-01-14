@@ -6,6 +6,8 @@
 	<library>kernel32</library>
 	<library>user32</library>
 
+	<file>AnyalsingProcess.c</file>
+	<file>ConvertToIntelProcess.c</file>
 	<file>CpuToIntel.c</file>
 	<file>ImageLoader.c</file>
 	<file>misc.c</file>
