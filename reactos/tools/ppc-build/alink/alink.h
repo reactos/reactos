@@ -375,6 +375,7 @@ typedef enum segframe_t {
 #define R_PPC_ADDR16_HI   5
 #define R_PPC_ADDR16_HA   6
 #define R_PPC_REL24       10
+#define R_PPC_PLTREL24    18
 #define R_PPC_UADDR32     24
 #define R_PPC_REL32       26
 #define R_PPC_SECTOFF     33
@@ -397,6 +398,11 @@ typedef enum segframe_t {
 #define IMAGE_REL_PPC_SECRELLO 0x13
 #define IMAGE_REL_PPC_SECRELHI 0x14
 #define IMAGE_REL_PPC_GPREL    0x15
+#define IMAGE_REL_BASED_ABSOLUTE 0
+#define IMAGE_REL_BASED_HIGH     1
+#define IMAGE_REL_BASED_LOW      2
+#define IMAGE_REL_BASED_HIGHLOW  3
+#define IMAGE_REL_BASED_HIGHADJ  4
 
 #define OUTPUT_COM 1
 #define OUTPUT_EXE 2

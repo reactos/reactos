@@ -1216,6 +1216,9 @@ void BuildPERelocs(long relocSectNum,PUCHAR objectTable)
         case FIX_SELF_OFS16_2:
 	case FIX_SELF_LBYTE:
 	case FIX_RVA32:
+	case FIX_REL32:
+	case FIX_PPC_REL24:
+	case FIX_PPC_SECTOFF:
                 continue; /* self-relative fixups and RVA fixups don't relocate */
         default:
                 break;
@@ -1260,8 +1263,20 @@ void BuildPERelocs(long relocSectNum,PUCHAR objectTable)
             break;
         case FIX_PTR1632:
         case FIX_OFS32:
-    case FIX_OFS32_2:
+	case FIX_OFS32_2:
             j|= PE_REL_OFS32;
+
+	case FIX_ADDR32:
+	    j = (IMAGE_REL_BASED_HIGHLOW << 12) | (j & 0xfff);
+	    break;
+
+	case FIX_PPC_RVA16LO:
+	    j = (IMAGE_REL_BASED_LOW << 12) | (j & 0xfff);
+	    break;
+
+	case FIX_PPC_RVA16HA:
+	    j = (IMAGE_REL_BASED_HIGHADJ << 12) | (j & 0xfff);
+	    break;
         }
         /* store relocation */
 	put16(relocSect->data, relocSect->length, j);
@@ -2382,6 +2397,7 @@ void OutputWin32file(const std::string &outname)
 
     for(i=0;i<outlist.size();i++)
     {
+	fprintf(stderr, "Segment %08x: %s\n", outlist[i]->getbase(), outlist[i]->name.c_str());
         if(outlist[i] && ((outlist[i]->attr&SEG_ALIGN) !=SEG_ABS))
         {
             /* ensure section is aligned to file-Align */

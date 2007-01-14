@@ -306,12 +306,22 @@ void loadelf(FILE *objfile)
 		     elf32sym.st_name);
 
 #if 0
+		const char *segname = 
+		    elf32sym.st_shndx & 0x8000 ? 
+		    "*SPC*" :
+		    (char *)
+		    (&stringList[0] + 
+		     stringListOffsets[elf32hdr.e_shtrndx] + 
+		     elf32shdr[elf32sym.st_shndx].sh_name);
+
 		fprintf(stderr, 
 			"S[%05x] value %08x size %08x info %08x "
-			"other %08x shndx %08x %s\n",
+			"other %08x shndx %08x (%-10s) %s\n",
 			j, 
 			elf32sym.st_value, elf32sym.st_size, elf32sym.st_info,
-			elf32sym.st_other, elf32sym.st_shndx, sym[j].name.c_str());
+			elf32sym.st_other, elf32sym.st_shndx, 
+			segname,
+			sym[j].name.c_str());
 #endif
 		
 		if(!case_sensitive)
@@ -608,6 +618,7 @@ void loadelf(FILE *objfile)
 		reloc->rtype = FIX_PPC_ADDR24;
 		break;
 
+	    case R_PPC_PLTREL24:
 	    case R_PPC_REL24:
 		reloc->rtype = FIX_PPC_REL24;
 		break;
