@@ -44,6 +44,31 @@ CPU_INT PPC_Addx( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     return -1;
 }
 
+CPU_INT PPC_Blr( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
+                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch,
+                   CPU_INT mode)
+{
+
+    BaseAddress +=cpu_pos;
+    if (mode==0)
+    {
+        fprintf(out,"Line_0x%08x:\n",BaseAddress);
+        fprintf(out,"blr\n");
+    }
+    else if (mode>0)
+    {
+        /* own translatons langues */
+        if (AllocAny()!=0)  /* alloc memory for pMyBrainAnalys */
+        {
+            return -1;
+        }
+        pMyBrainAnalys->op = OP_ANY_ret;
+        pMyBrainAnalys->memAdr=BaseAddress;
+    }
+
+    return 4;
+}
+
 
 CPU_INT PPC_Ld( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
                    CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch,

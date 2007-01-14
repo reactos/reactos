@@ -1,7 +1,7 @@
 
 
 #define OP_ANY_mov  0x00000000
-
+#define OP_ANY_ret  0x00000001
 
 typedef struct _BrainAnalys
 {

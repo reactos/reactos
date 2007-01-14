@@ -161,7 +161,13 @@ return 0;
 
 CPU_INT FreeAny()
 {
-  PMYBrainAnalys tmp;
+  PMYBrainAnalys tmp = NULL;
+
+  if (pMyBrainAnalys == NULL)
+  {
+      return -1;
+  }
+
   tmp = (PMYBrainAnalys)pMyBrainAnalys->ptr_prev;
 
   while (pMyBrainAnalys != NULL)

@@ -53,6 +53,19 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
     CPU_INT retsize;
 
 
+    /* 0x12 = 0001 0010,  
+       0x10 = 0001 0000
+       0x13 = 0001 0011
+
+       0x20 = 0010 0000  0   0000 0010 2
+       0x80 = 1000 0000  0   0000 1000 8
+       0x4e = 0010 1110  E  1110 0010  2
+
+       0x20            00                80          4e
+       0010 0000   0000 0000         1000 0000   0100 1110
+
+    */
+
     /* now we start the process */
     while (cpu_pos<cpu_size)
     {
@@ -60,10 +73,21 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
 
         cpuint = GetData32Le(&cpu_buffer[cpu_pos]);
 
-        /* Add */
-        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Addx))) == ConvertBitToByte32(cpuPPCInit_Addx))
+        ///* Add */
+        //if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Addx))) == ConvertBitToByte32(cpuPPCInit_Addx))
+        //{
+        //    retsize = PPC_Addx( outfp, cpu_buffer, cpu_pos, cpu_size,
+        //                         BaseAddress, cpuarch, mode);
+        //    if (retsize<0)
+        //         retcode = 1;
+        //    else
+        //         cpu_pos += retsize;
+        //}
+
+         /* 0x38 Ld aslo known as Li */
+        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Ld))) == ConvertBitToByte32(cpuPPCInit_Ld))
         {
-            retsize = PPC_Addx( outfp, cpu_buffer, cpu_pos, cpu_size,
+            retsize = PPC_Ld( outfp, cpu_buffer, cpu_pos, cpu_size,
                                  BaseAddress, cpuarch, mode);
             if (retsize<0)
                  retcode = 1;
@@ -71,10 +95,10 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
                  cpu_pos += retsize;
         }
 
-         /* Ld aslo known as Li */
-        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Ld))) == ConvertBitToByte32(cpuPPCInit_Ld))
+         /* hard code the op blr */
+        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Blr))) == ConvertBitToByte32(cpuPPCInit_Blr))
         {
-            retsize = PPC_Ld( outfp, cpu_buffer, cpu_pos, cpu_size,
+            retsize = PPC_Blr( outfp, cpu_buffer, cpu_pos, cpu_size,
                                  BaseAddress, cpuarch, mode);
             if (retsize<0)
                  retcode = 1;
@@ -106,5 +130,5 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
             break;
         }
     }
-    return retcode;    
+    return retcode;
 }
