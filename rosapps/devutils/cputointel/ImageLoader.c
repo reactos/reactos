@@ -29,6 +29,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
     CPU_BYTE *cpu_buffer;   
     CPU_UNINT cpu_pos = 0;
     CPU_UNINT cpu_size=0;
+    CPU_INT ret;
      //fopen("testms.exe","RB");
     
 
@@ -113,6 +114,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
        {
             type=1;
        }
+       FreeAny();
        fclose(outfp);
        return 0;
     }
@@ -120,25 +122,62 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
     if (type== 1)
     {
         if (stricmp(cpuid,"m68000"))
-                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68000,outfp,mode);
+        {
+            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68000,outfp,mode);
+            FreeAny();
+            fclose(outfp);
+        }
         else if (stricmp(cpuid,"m68010"))
-                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68010,outfp,mode);
+        {
+            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68010,outfp,mode);
+            FreeAny();
+            fclose(outfp);
+            return ret;
+        }
         else if (stricmp(cpuid,"m68020"))
-                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68020,outfp,mode);
+        {
+            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68020,outfp,mode);
+            FreeAny();
+            fclose(outfp);
+            return ret;
+        }
         else if (stricmp(cpuid,"m68030"))
-                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68030,outfp,mode);
+        {
+            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68030,outfp,mode);
+            FreeAny();
+            fclose(outfp);
+            return ret;
+        }
         else if (stricmp(cpuid,"m68040"))
-                return M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68040,outfp,mode);
+        {
+            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68040,outfp,mode);
+            FreeAny();
+            fclose(outfp);
+            return ret;
+        }
         else if (stricmp(cpuid,"ppc"))
-                return PPCBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,0,outfp,mode);
+        {
+            ret = PPCBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,0,outfp,mode);
+            FreeAny();
+            fclose(outfp);
+            return ret;
+        }
         else if (stricmp(cpuid,"arm4"))
-                return ARMBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,4,outfp,mode);
+        {
+            ret = ARMBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,4,outfp,mode);
+            FreeAny();
+            fclose(outfp);
+            return ret;
+        }
     }
 
     if (type==2) 
     {
-       return PEFileStart(cpu_buffer, 0, BaseAddress, cpu_size, outfp, mode);
 
+       ret = PEFileStart(cpu_buffer, 0, BaseAddress, cpu_size, outfp, mode);
+       FreeAny();
+       fclose(outfp);
+       return ret;
     }
 
     return 0;

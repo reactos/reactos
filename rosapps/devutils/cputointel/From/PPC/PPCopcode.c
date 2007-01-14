@@ -5,6 +5,10 @@
 #include "../../misc.h"
 #include "../../any_op.h"
 
+/* reg r0-r31 
+  r3 = eax
+ */
+
 /* cpuDummyInit_Add
  * Input param : 
  *               out         : The file pointer that we write to (the output file to intel asm) 
@@ -51,16 +55,22 @@ CPU_INT PPC_Ld( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     CPU_UNINT opcode;
 
     opcode = GetData32Le(cpu_buffer);
+    formD =  (opcode & ConvertBitToByte32(PPC_D)) >> 6;
     formA =  (opcode & ConvertBitToByte32(PPC_A)) >> 13;
-    formD =  (opcode & ConvertBitToByte32(PPC_D)) >> 10;
     formDS = (opcode & ConvertBitToByte32(PPC_ds)) >> 15;
 
-    fprintf(out,"Line_0x%08x:\n",BaseAddress + cpu_pos);
+    if (formD != 0)
+    {
+        return 0;
+    }
+
+    BaseAddress +=cpu_pos;
     if (mode==0)
     {
+        fprintf(out,"Line_0x%08x:\n",BaseAddress);
         fprintf(out,"li %%r%d,%d\n",formA, formDS);
     }
-    if (mode!=0)
+    else if (mode>0)
     {
         /* own translatons langues */
         if (AllocAny()!=0)  /* alloc memory for pMyBrainAnalys */
@@ -72,9 +82,9 @@ CPU_INT PPC_Ld( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
         pMyBrainAnalys->src_size = 16;
         pMyBrainAnalys->src = formDS;
         pMyBrainAnalys->dst = formA;
+        pMyBrainAnalys->memAdr=BaseAddress;
     }
 
-    printf(";not full implement \n");
     return 4;
 }
 

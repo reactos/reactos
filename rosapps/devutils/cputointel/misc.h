@@ -24,3 +24,4 @@ CPU_UNINT GetData32Le(CPU_BYTE *cpu_buffer);
 CPU_UNINT GetData32Be(CPU_BYTE *cpu_buffer);
 
 CPU_INT AllocAny();
+CPU_INT FreeAny();

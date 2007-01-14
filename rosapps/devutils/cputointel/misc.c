@@ -159,6 +159,32 @@ CPU_INT AllocAny()
 return 0;
 }
 
+CPU_INT FreeAny()
+{
+  PMYBrainAnalys tmp;
+  tmp = (PMYBrainAnalys)pMyBrainAnalys->ptr_prev;
+
+  while (pMyBrainAnalys != NULL)
+  {
+    if (pMyBrainAnalys == NULL)
+    {
+        break;
+    }
+
+    free(pMyBrainAnalys);
+
+    if (pMyBrainAnalys != NULL)
+    {
+        printf("fail to free memory");
+        return -1;
+    }
+
+    pMyBrainAnalys = tmp;
+  }
+
+  return 0;
+}
+
 
 
 
