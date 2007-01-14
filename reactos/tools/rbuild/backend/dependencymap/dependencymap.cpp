@@ -23,6 +23,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <stdio.h>
 
@@ -31,6 +32,7 @@
 
 using std::string;
 using std::vector;
+using std::map;
 using std::ifstream;
 
 #ifdef OUT
@@ -83,15 +85,18 @@ DepMapBackend::_clean_project_files ( void )
 	remove ( "dependencymap.xml" );
 }
 
+
 void
 DepMapBackend::_generate_depmap ( FILE* OUT )
 {
-
 	/* add dependencies */
+
+	typedef map<string, module_data*> ModuleMap;
+	ModuleMap module_map;
+
 	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
-
 		if ((module.type != Iso) && 
 			(module.type != LiveIso) &&
 			(module.type != IsoRegTest) &&
@@ -100,6 +105,21 @@ DepMapBackend::_generate_depmap ( FILE* OUT )
 			vector<const IfableData*> ifs_list;
 			ifs_list.push_back ( &module.project.non_if_data );
 			ifs_list.push_back ( &module.non_if_data );
+
+			module_data * current_data;
+			ModuleMap::iterator mod_it = module_map.find ( module.name );
+			if (mod_it != module_map.end ())
+			{
+				current_data = mod_it->second;
+			}
+			else
+			{
+				current_data = new module_data();
+				if (current_data)
+				{
+					module_map.insert (std::make_pair<string, module_data*>(module.name, current_data));
+				}
+			}
 			while ( ifs_list.size() )
 			{
 				const IfableData& data = *ifs_list.back();
@@ -107,15 +127,68 @@ DepMapBackend::_generate_depmap ( FILE* OUT )
 				const vector<Library*>& libs = data.libraries;
 				for ( size_t j = 0; j < libs.size(); j++ )
 				{
-					//add module.name and libs[j]->name 
+					ModuleMap::iterator it = module_map.find ( libs[j]->name );
+					
+					if ( it != module_map.end ())
+					{
+						module_data * data = it->second;
+						data->references.push_back ( module.name );
+					}
+					else
+					{
+						module_data * data = new module_data();
+						if ( data )
+						{
+							data->references.push_back ( module.name );
+						}
+						module_map.insert ( std::make_pair<string, module_data*>( libs[j]->name, data ) );
+					}
+					current_data->libraries.push_back ( libs[j]->name );
 				}
 			}
 		}	
 	}
+	
+	fprintf ( m_DepMapFile, "<?xml version=\"1.0\" encoding=\"iso-8859-1\" ?>\r\n" );
+	fprintf ( m_DepMapFile, "<?xml-stylesheet type=\"text/xsl\" href=\"depmap.xsl\"?>\r\n" );
+	fprintf ( m_DepMapFile, "<components>" );
 
-/* save data to file
-	fprintf ( OUT, "\r\n" );
-*/
+	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
+	{
+		Module& module = *ProjectNode.modules[i];
+		
+		ModuleMap::iterator it = module_map.find ( module.name );
+		if ( it != module_map.end () )
+		{
+			module_data * data = it->second;
+			
+			fprintf ( m_DepMapFile, "<component name=\"%s\" base=\"%s\" ref_count=\"%u\" library_count=\"%u\">\r\n", module.name.c_str(), module.GetBasePath ().c_str (), data->references.size (), data->libraries.size () );
+			
+			if ( data->references.size () )
+			{
+				fprintf ( m_DepMapFile, "\t<references>\r\n" );
+				for ( size_t j = 0; j < data->references.size (); j++ )
+				{
+					fprintf ( m_DepMapFile, "\t\t<reference name =\"%s\" />\r\n", data->references[j].c_str () );
+				}
+				fprintf ( m_DepMapFile, "\t</references>\r\n" );
+			}
+			
+			if ( data->libraries.size () )
+			{
+				fprintf ( m_DepMapFile, "\t<libraries>\r\n" );
+				for ( size_t j = 0; j < data->libraries.size (); j++ )
+				{
+					fprintf ( m_DepMapFile, "\t\t<library name =\"%s\" />\r\n", data->libraries[j].c_str () );
+				}
+				fprintf ( m_DepMapFile, "\t</libraries>\r\n" );
+			}
+
+			fprintf ( m_DepMapFile, "</component>\r\n" );
+		}
+	}
+
+	fprintf ( m_DepMapFile, "</components>" );
 }
 
 
