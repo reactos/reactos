@@ -328,7 +328,7 @@ static int convert_bitmap(char *data, int size)
 	else 
 	{
 		fprintf(stderr, "bisizel %d bosizel %d b4sizel %d\n", bisizel, bosizel, b4sizel);
-		yyerror("Invalid bitmap format, bih->biSize = %ld", bih->biSize);
+		yyerror("Invalid bitmap format, bih->biSize = %u", bih->biSize);
 	}
 
 	switch(type)
@@ -1045,7 +1045,7 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 			for(id = mbp[i].idlo; id <= mbp[i].idhi; id++)
 			{
 				if(MSGTAB_BAD_PTR(mep, rd->data, rd->size, mep->length))
-					yyerror("Messagetable's data for block %d, ID 0x%08lx is outside of defined data", (int)i, id);
+					yyerror("Messagetable's data for block %d, ID 0x%08x is outside of defined data", (int)i, id);
 				if(mep->flags == 1)	/* Docu says 'flags == 0x0001' for unicode */
 				{
 					WORD *wp = (WORD *)&mep[1];
@@ -1053,7 +1053,7 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 					int n;
 
 					if(mep->length & 1)
-						yyerror("Message 0x%08lx is unicode (block %d), but has odd length (%d)", id, (int)i, mep->length);
+						yyerror("Message 0x%08x is unicode (block %d), but has odd length (%d)", id, (int)i, mep->length);
 					for(n = 0; n < l; n++)
 						wp[n] = BYTESWAP_WORD(wp[n]);
 
@@ -1098,7 +1098,7 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 				mep->flags  = BYTESWAP_WORD(mep->flags);
 
 				if(MSGTAB_BAD_PTR(mep, rd->data, rd->size, mep->length))
-					yyerror("Messagetable's data for block %d, ID 0x%08lx is outside of defined data", (int)i, id);
+					yyerror("Messagetable's data for block %d, ID 0x%08x is outside of defined data", (int)i, id);
 				if(mep->flags == 1)	/* Docu says 'flags == 0x0001' for unicode */
 				{
 					WORD *wp = (WORD *)&mep[1];
@@ -1106,7 +1106,7 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 					int n;
 
 					if(mep->length & 1)
-						yyerror("Message 0x%08lx is unicode (block %d), but has odd length (%d)", id, (int)i, mep->length);
+						yyerror("Message 0x%08x is unicode (block %d), but has odd length (%d)", id, (int)i, mep->length);
 					for(n = 0; n < l; n++)
 						wp[n] = BYTESWAP_WORD(wp[n]);
 
