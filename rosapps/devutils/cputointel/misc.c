@@ -140,6 +140,7 @@ CPU_INT AllocAny()
             return -1;
         }
         ZeroMemory(pMyBrainAnalys,sizeof(MYBrainAnalys));
+        pStartMyBrainAnalys = pMyBrainAnalys;
     }
     else
     {
@@ -149,7 +150,7 @@ CPU_INT AllocAny()
         {
             return -1;
         }
-        ZeroMemory(pMyBrainAnalys,sizeof(MYBrainAnalys));
+        ZeroMemory(tmp,sizeof(MYBrainAnalys));
 
         pMyBrainAnalys->ptr_next = (CPU_BYTE*)tmp;
         tmp->ptr_prev= (CPU_BYTE*)pMyBrainAnalys;

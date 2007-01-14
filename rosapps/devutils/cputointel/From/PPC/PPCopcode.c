@@ -103,7 +103,7 @@ CPU_INT PPC_Ld( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
             return -1;
         }
         pMyBrainAnalys->op = OP_ANY_mov;
-        pMyBrainAnalys->type= 1 + 8; /* 1 dst reg, 8 imm */
+        pMyBrainAnalys->type= 8 + 16; /* 8 dst reg, 16 imm */
         pMyBrainAnalys->src_size = 16;
         pMyBrainAnalys->src = formDS;
         pMyBrainAnalys->dst = formA;

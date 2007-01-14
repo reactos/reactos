@@ -6,9 +6,9 @@
 typedef struct _BrainAnalys
 {
     CPU_UNINT op;  /*  one tranlator for any cpu type set our own opcode */
-    CPU_INT  type; /*  0 = source are memmory, 1 source are register */
-                   /*  2 = dest are memmory,   4 dest are register */
-                   /*  8 = source are imm                          */
+    CPU_INT  type; /*  1 = source are memmory, 2 source are register */
+                   /*  4 = dest are memmory,   8 dest are register */
+                   /*  16 = source are imm                          */
 
     CPU_INT src_size; /* who many bits are src not vaild for reg*/
     CPU_INT dst_size; /* who many bits are dst not vaild for reg*/
@@ -23,5 +23,5 @@ typedef struct _BrainAnalys
     CPU_BYTE* ptr_prev; /* hook previus one */
 } MYBrainAnalys, *PMYBrainAnalys;
 
-extern PMYBrainAnalys pMyBrainAnalys;
-
+extern PMYBrainAnalys pMyBrainAnalys;     /* current working address */
+extern PMYBrainAnalys pStartMyBrainAnalys; /* start address */
