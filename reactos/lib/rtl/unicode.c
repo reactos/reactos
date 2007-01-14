@@ -2105,7 +2105,7 @@ RtlDuplicateUnicodeString(
     if (SourceString == NULL || DestinationString == NULL ||
         SourceString->Length > SourceString->MaximumLength ||
         (SourceString->Length == 0 && SourceString->MaximumLength > 0 && SourceString->Buffer == NULL) ||
-        Flags == RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING || Flags >= 4 || Flags < 0) {
+        Flags == RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING || Flags >= 4) {
         return STATUS_INVALID_PARAMETER;
     }
 
