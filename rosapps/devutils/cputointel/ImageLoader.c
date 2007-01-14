@@ -351,18 +351,18 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
 
     for (NumberOfSectionsCount = 0; NumberOfSectionsCount < NumberOfSections; NumberOfSectionsCount++, SectionHeader++)
     {
-       if (strnicmp(SectionHeader->Name,".rsrc",5)==0)
+       if (strnicmp((PCHAR) SectionHeader->Name,".rsrc",5)==0)
        {
            /* FIXME add a rc bin to text scanner */
        }
 
-       else if (strnicmp(SectionHeader->Name,".textbss",8)==0)
+       else if (strnicmp((PCHAR) SectionHeader->Name,".textbss",8)==0)
        {
           /* FIXME add a bss to text scanner */
        }
 
        
-       else if (strnicmp(SectionHeader->Name,".text\0",6)==0)
+       else if (strnicmp((PCHAR) SectionHeader->Name,".text\0",6)==0)
        {
            /*
                 FIXME we should output gas syntax 
