@@ -193,6 +193,9 @@ ObpDeleteObject(IN PVOID Object,
     /* Check if we have a delete procedure */
     if (ObjectType->TypeInfo.DeleteProcedure)
     {
+        /* Save whether we were deleted from worker thread or not */
+        if (!CalledFromWorkerThread) Header->Flags |= OB_FLAG_DEFER_DELETE;
+
         /* Call it */
         ObpCalloutStart(&CalloutIrql);
         ObjectType->TypeInfo.DeleteProcedure(Object);
@@ -207,14 +210,13 @@ VOID
 NTAPI
 ObpReapObject(IN PVOID Parameter)
 {
-    POBJECT_HEADER ReapObject = (PVOID)1;
-    PVOID NextObject;
+    POBJECT_HEADER ReapObject, NextObject;
 
     /* Start reaping */
     do
     {
         /* Get the reap object */
-        ReapObject = InterlockedExchangePointer(&ObpReaperList, ReapObject);
+        ReapObject = InterlockedExchangePointer(&ObpReaperList, (PVOID)1);
 
         /* Start deletion loop */
         do
@@ -227,7 +229,7 @@ ObpReapObject(IN PVOID Parameter)
 
             /* Move to the next one */
             ReapObject = NextObject;
-        } while ((NextObject) && (NextObject != (PVOID)1));
+        } while ((ReapObject) && (ReapObject != (PVOID)1));
     } while ((ObpReaperList != (PVOID)1) ||
              (InterlockedCompareExchange((PLONG)&ObpReaperList, 0, 1) != 1));
 }

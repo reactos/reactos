@@ -55,7 +55,7 @@ ObpCreateDosDevicesDirectory(VOID)
                                         SYMBOLIC_LINK_ALL_ACCESS,
                                         &ObjectAttributes,
                                         &Name);
-        if (NT_SUCCESS(Status)) NtClose(SymHandle);
+    if (NT_SUCCESS(Status)) NtClose(SymHandle);
 
     /* Link \??\Global to \?? */
     RtlInitUnicodeString(&LinkName, L"Global");

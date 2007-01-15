@@ -6454,6 +6454,12 @@ RtlxUnicodeStringToAnsiSize(
 #define RtlZeroBytes RtlZeroMemory
 #endif
 
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeAreAllApcsDisabled(
+    VOID
+);
 
 /* Guarded Mutex routines */
 

@@ -13,7 +13,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -52,7 +52,7 @@ VOID
 NTAPI
 ObpDeferObjectDeletion(IN POBJECT_HEADER Header)
 {
-    PVOID Entry, NewEntry;
+    PVOID Entry;
 
     /* Loop while trying to update the list */
     do
@@ -62,11 +62,10 @@ ObpDeferObjectDeletion(IN POBJECT_HEADER Header)
 
         /* Link our object to the list */
         Header->NextToFree = Entry;
-        NewEntry = Header;
 
         /* Update the list */
     } while (InterlockedCompareExchangePointer(&ObpReaperList,
-                                               NewEntry,
+                                               Header,
                                                Entry) != Entry);
 
     /* Queue the work item if needed */
@@ -306,8 +305,8 @@ ObfDereferenceObject(IN PVOID Object)
             return Header->PointerCount;
         }
 
-        /* Check if we're at PASSIVE */
-        if (KeGetCurrentIrql() == PASSIVE_LEVEL)
+        /* Check if APCs are still active */
+        if (!KeAreAllApcsDisabled())
         {
             /* Remove the object */
             ObpDeleteObject(Object, FALSE);

@@ -173,6 +173,10 @@ ObInit(VOID)
     /* Initialize the Default Event */
     KeInitializeEvent(&ObpDefaultObject, NotificationEvent, TRUE );
 
+    /* Setup default access for the system process */
+    PsGetCurrentProcess()->GrantedAccess = PROCESS_ALL_ACCESS;
+    PsGetCurrentThread()->GrantedAccess = THREAD_ALL_ACCESS;
+
     /* Setup the Object Reaper */
     ExInitializeWorkItem(&ObpReaperWorkItem, ObpReapObject, NULL);
 
