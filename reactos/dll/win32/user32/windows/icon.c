@@ -526,42 +526,39 @@ CURSORICON_FindBestCursor(LPVOID dir,
                           int Height,
                           int ColorBits)
 {
-    int i, cx, cy, Bits, BestBits = 0, BestEntry = -1;
-    UINT iTotalDiff, iXDiff=0, iYDiff=0, iColorDiff;
-    UINT iTempXDiff, iTempYDiff, iTempColorDiff;
+    int i, MaxWidth, MaxHeight, cx, cy, Bits, BestEntry = -1;
 
-    /* Find Best Fit */
-    iTotalDiff = 0xFFFFFFFF;
-    iColorDiff = 0xFFFFFFFF;
+    /* Double height to account for AND and XOR masks */
+    Height *= 2;
+
+    /* First find the largest one smaller than or equal to the requested size*/
+    MaxWidth = MaxHeight = 0;
     for (i = 0; get_entry(dir, i, &cx, &cy, &Bits); i++ )
     {
-        iTempXDiff = abs(Width - cx);
-        iTempYDiff = abs(Height - cy);
-
-        if(iTotalDiff > (iTempXDiff + iTempYDiff))
+        if ((cx <= Width) && (cy <= Height) &&
+            (cx > MaxWidth) && (cy > MaxHeight) &&
+            (Bits == 1))
         {
-            iXDiff = iTempXDiff;
-            iYDiff = iTempYDiff;
-            iTotalDiff = iXDiff + iYDiff;
+            BestEntry = i;
+            MaxWidth  = cx;
+            MaxHeight = cy;
         }
     }
+    if (BestEntry != -1)
+        return BestEntry;
 
-    /* Find Best Colors for Best Fit */
+    /* Now find the smallest one larger than the requested size */
+    MaxWidth = MaxHeight = 255;
     for (i = 0; get_entry(dir, i, &cx, &cy, &Bits); i++ )
     {
-        if(abs(Width - cx) == iXDiff && abs(Height - cy) == iYDiff)
+        if (((cx < MaxWidth) && (cy < MaxHeight) && (Bits == 1)) ||
+            (BestEntry == -1))
         {
-            iTempColorDiff = abs(ColorBits - Bits);
-            if(iColorDiff > iTempColorDiff)
-            {
-                BestEntry = i;
-                BestBits = Bits;
-                iColorDiff = iTempColorDiff;
-            }
+            BestEntry = i;
+            MaxWidth  = cx;
+            MaxHeight = cy;
         }
     }
-
-    DPRINT("Best Cursor: ResId: %d, bits : %d\n", BestEntry, BestBits);
 
     return BestEntry;
 }
@@ -672,7 +669,7 @@ LookupIconIdFromDirectoryEx(PBYTE xdir,
         if(bIcon)
             entry = CURSORICON_FindBestIconRes(dir, width, height, ColorBits);
         else
-            entry = CURSORICON_FindBestCursorRes(dir, width, height, ColorBits);
+            entry = CURSORICON_FindBestCursorRes(dir, width, height, 1);
 
         if (entry)
             retVal = entry->nID;
