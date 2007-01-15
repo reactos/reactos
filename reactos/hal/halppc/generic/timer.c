@@ -79,7 +79,7 @@ static BOOLEAN UdelayCalibrated = FALSE;
 
 /* FUNCTIONS **************************************************************/
 
-static BOOLEAN PPCGetEEBit()
+BOOLEAN PPCGetEEBit()
 {
     ULONG Msr;
     __asm__("mfmsr %0" : "=r" (Msr));

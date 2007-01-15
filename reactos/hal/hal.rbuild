@@ -5,4 +5,7 @@
 <directory name="halx86">
 	<xi:include href="halx86/directory.rbuild" />
 </directory>
+<directory name="halppc">
+	<xi:include href="halppc/directory.rbuild" />
+</directory>
 </group>

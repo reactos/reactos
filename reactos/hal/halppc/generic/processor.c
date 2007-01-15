@@ -20,13 +20,15 @@
 
 /* FUNCTIONS *****************************************************************/
 
+#define INITIAL_STALL_COUNT 0x10000
+
 VOID STDCALL
 HalInitializeProcessor(ULONG ProcessorNumber,
                        PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-  DPRINT("HalInitializeProcessor(%lu %p)\n", ProcessorNumber, LoaderBlock);
-    /* Set default IDR */
-    KeGetPcr()->IDR = 0xFFFFFFFB;
+    DPRINT("HalInitializeProcessor(%lu %p)\n", ProcessorNumber, LoaderBlock);
+    /* Do this a bit earlier for the purpose of getting gossip from the kernel */
+    HalInitializeDisplay ((PROS_LOADER_PARAMETER_BLOCK)(LoaderBlock->u.PowerPC.BootInfo));
     KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 }
 

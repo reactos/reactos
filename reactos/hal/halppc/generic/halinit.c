@@ -37,6 +37,7 @@ HalInitSystem (ULONG BootPhase,
 {
   if (BootPhase == 0)
     {
+      HalInitializeDisplay ((PROS_LOADER_PARAMETER_BLOCK)(LoaderBlock->u.PowerPC.BootInfo));
       RtlZeroMemory(&HalpHooks, sizeof(HALP_HOOKS));
       HalpInitPhase0((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);      
     }
@@ -46,7 +47,6 @@ HalInitSystem (ULONG BootPhase,
       //HalpInitPhase1();
 
       /* Initialize display and make the screen black */
-      HalInitializeDisplay ((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);
       HalpInitBusHandlers();
       HalpInitDma();
 

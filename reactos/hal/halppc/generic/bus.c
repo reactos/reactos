@@ -138,9 +138,9 @@ HalpInitBusHandlers(VOID)
   InitializeListHead(&HalpBusHandlerList);
 
   /* Initialize hal dispatch tables */
+#if 0
   HalQuerySystemInformation = HalpQuerySystemInformation;
 
-#if 0
   HalSetSystemInformation = HalpSetSystemInformation;
 
   HalQueryBusSlots = HalpQueryBusSlots;

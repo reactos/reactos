@@ -123,10 +123,11 @@
 
 #include <hal.h>
 #include <ppcboot.h>
+#include <ppcdebug.h>
+
 #define NDEBUG
 #include <debug.h>
 
-#include "font.h"
 boot_infos_t PpcEarlybootInfo;
 BOOLEAN PPCGetEEBit();
 
@@ -146,6 +147,7 @@ static PHAL_RESET_DISPLAY_PARAMETERS HalResetDisplayParameters = NULL;
 
 extern UCHAR XboxFont8x16[];
 extern void SetPhys( ULONG Addr, ULONG Data );
+extern ULONG GetPhys( ULONG Addr );
 extern void SetPhysByte( ULONG Addr, ULONG Data );
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -155,7 +157,7 @@ HalClearDisplay (UCHAR CharAttribute)
 {
    ULONG i;
    ULONG deviceSize = 
-       PpcEarlybootInfo.dispDeviceRowBytes * PpcEarlybootInfo.dispDeviceDepth *
+       PpcEarlybootInfo.dispDeviceRowBytes *
        PpcEarlybootInfo.dispDeviceRect[3];
    for(i = 0; i < deviceSize; i += sizeof(int) ) 
        SetPhys(GraphVideoBuffer + i, CharAttribute);
@@ -170,34 +172,43 @@ HalClearDisplay (UCHAR CharAttribute)
 VOID STATIC
 HalScrollDisplay (VOID)
 {
-    PULONG Dest = (PULONG)GraphVideoBuffer, 
-	Src = (PULONG)(GraphVideoBuffer + (16 * PpcEarlybootInfo.dispDeviceRowBytes));
-    PULONG End  = (PULONG)
+    ULONG i, deviceSize = 
+	PpcEarlybootInfo.dispDeviceRowBytes *
+	PpcEarlybootInfo.dispDeviceRect[3];
+    ULONG Dest = (ULONG)GraphVideoBuffer, 
+	Src = (ULONG)(GraphVideoBuffer + (16 * PpcEarlybootInfo.dispDeviceRowBytes));
+    ULONG End  = (ULONG)
 	GraphVideoBuffer + 
-	(PpcEarlybootInfo.dispDeviceRowBytes * PpcEarlybootInfo.dispDeviceDepth *
-	 PpcEarlybootInfo.dispDeviceRect[3]);
+	(PpcEarlybootInfo.dispDeviceRowBytes *
+	 (PpcEarlybootInfo.dispDeviceRect[3]-16));
     
-    for( ; Src < End; Src += sizeof(int) ) 
+    while( Src < End ) 
     {
-	*Dest++ = *Src++;
+	SetPhys((ULONG)Dest, GetPhys(Src));
+	Src += 4; Dest += 4;
     }
+
+    /* Clear the bottom row */
+    for(i = End; i < deviceSize; i += sizeof(int) ) 
+	SetPhys(GraphVideoBuffer + i, 1);
 }
 
 VOID STATIC FASTCALL
 HalPutCharacter (CHAR Character)
 {
     int i,j,k;
-    PCHAR Dest = (PCHAR)
+    ULONG Dest =
 	(GraphVideoBuffer + 
 	 (16 * PpcEarlybootInfo.dispDeviceRowBytes * CursorY) + 
-	 ((PpcEarlybootInfo.dispDeviceDepth / 8) * CursorX));
+	 (8 * (PpcEarlybootInfo.dispDeviceDepth / 8) * CursorX)), RowDest;
+    UCHAR ByteToPlace;
 
     for( i = 0; i < 16; i++ ) {
+	RowDest = Dest;
 	for( j = 0; j < 8; j++ ) {
-	    for( k = 0; k < PpcEarlybootInfo.dispDeviceDepth / 8; k++ ) {
-		SetPhysByte
-		    ((ULONG)(Dest + (j * PpcEarlybootInfo.dispDeviceDepth) + k), 
-		     ((1 << j) & (XboxFont8x16[(16 * Character) + i]) ? 0xff : 1));
+	    ByteToPlace = ((128 >> j) & (XboxFont8x16[(16 * Character) + i])) ? 0xff : 1;
+	    for( k = 0; k < PpcEarlybootInfo.dispDeviceDepth / 8; k++, RowDest++ ) {
+		SetPhysByte(RowDest, ByteToPlace);
 	    }
 	}
 	Dest += PpcEarlybootInfo.dispDeviceRowBytes;
@@ -214,15 +225,7 @@ HalInitializeDisplay (PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
  *         InitParameters = Parameters setup by the boot loader
  */
 {
-    __asm__("mr 20, %0\n\t"
-	    "mr 21, %0\n\t"
-	    "nop" : 
-	    : 
-	    "r" (DisplayInitialized),
-	    "r" (&GraphVideoBuffer) : 
-	    "r20", "r21");
-
-  if (! DisplayInitialized)
+    if (! DisplayInitialized)
     {
       boot_infos_t *XBootInfo = (boot_infos_t *)LoaderBlock->ArchExtra;
       GraphVideoBuffer = (ULONG)XBootInfo->dispDeviceBase;
@@ -231,6 +234,9 @@ HalInitializeDisplay (PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
       /* Set cursor position */
       CursorX = 0;
       CursorY = 0;
+
+      SizeX = XBootInfo->dispDeviceRowBytes / XBootInfo->dispDeviceDepth;
+      SizeY = XBootInfo->dispDeviceRect[3] / 16;
 
       HalClearDisplay(1);
 
@@ -283,7 +289,7 @@ HalDisplayString(IN PCH String)
  */
 {
   PCH pch;
-  static KSPIN_LOCK Lock;
+  //static KSPIN_LOCK Lock;
   KIRQL OldIrql;
   BOOLEAN InterruptsEnabled = PPCGetEEBit();
 
@@ -296,7 +302,7 @@ HalDisplayString(IN PCH String)
   pch = String;
 
   OldIrql = KfRaiseIrql(HIGH_LEVEL);
-  KiAcquireSpinLock(&Lock);
+  //KiAcquireSpinLock(&Lock);
 
   _disable();
   
@@ -331,14 +337,14 @@ HalDisplayString(IN PCH String)
 	  HalScrollDisplay ();
 	  CursorY = SizeY - 1;
 	}
-  
+
       pch++;
     }
-  
+
   if(InterruptsEnabled)
       _enable();
 
-  KiReleaseSpinLock(&Lock);
+  //KiReleaseSpinLock(&Lock);
   KfLowerIrql(OldIrql);
 }
 

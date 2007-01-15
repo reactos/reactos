@@ -57,6 +57,7 @@ static ULONG HalpPendingInterruptCount[NR_IRQS];
 
 VOID STDCALL
 KiInterruptDispatch2 (ULONG Irq, KIRQL old_level);
+BOOLEAN PPCGetEEBit();
 
 /* FUNCTIONS ****************************************************************/
 
@@ -73,26 +74,7 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
 VOID NTAPI HalpInitPICs(VOID)
 {
   memset(HalpPendingInterruptCount, 0, sizeof(HalpPendingInterruptCount));
-
-  /* Initialization sequence */
-  WRITE_PORT_UCHAR((PUCHAR)0x20, 0x11);
-  WRITE_PORT_UCHAR((PUCHAR)0xa0, 0x11);
-  /* Start of hardware irqs (0x24) */
-  WRITE_PORT_UCHAR((PUCHAR)0x21, IRQ_BASE);
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, IRQ_BASE + 8);
-  /* 8259-1 is master */
-  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x4);
-  /* 8259-2 is slave */
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x2);
-  /* 8086 mode */
-  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x1);
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x1);   
-  /* Enable interrupts */
-  WRITE_PORT_UCHAR((PUCHAR)0x21, pic_mask.master);
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, pic_mask.slave);
-  
-  /* We can now enable interrupts */
-  Ki386EnableInterrupts();
+  _enable();
 }
 
 VOID HalpEndSystemInterrupt(KIRQL Irql)
@@ -100,7 +82,7 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
  * FUNCTION: Enable all irqs with higher priority.
  */
 {
-  ULONG flags;
+  BOOLEAN InterruptsEnabled = PPCGetEEBit();
   const USHORT mask[] = 
   {
      0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -110,15 +92,15 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
   };     
 
   /* Interrupts should be disable while enabling irqs of both pics */
-  Ki386SaveFlags(flags);
-  Ki386DisableInterrupts();
+  _disable();
 
   pic_mask_intr.both &= mask[Irql];
   WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.master));
   WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
 
   /* restore flags */
-  Ki386RestoreFlags(flags);
+  if(InterruptsEnabled)
+      _enable();
 }
 
 VOID STATIC
