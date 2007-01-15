@@ -220,45 +220,24 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         /* Set this entry as the first, to speed up incoming insertion */
         if (AllocatedEntry != LookupBucket)
         {
-            /* Check if the directory was locked */
-            if (!Context->DirectoryLocked)
+            /* Check if the directory was locked or convert the lock */
+            if ((Context->DirectoryLocked) ||
+                (ExConvertPushLockSharedToExclusive(&Directory->Lock)))
             {
-                /* Convert the lock from shared to exclusive */
-                ExConvertPushLockSharedToExclusive(&Directory->Lock);
+                /* Set the Current Entry */
+                *AllocatedEntry = CurrentEntry->ChainLink;
+
+                /* Link to the old Hash Entry */
+                CurrentEntry->ChainLink = *LookupBucket;
+
+                /* Set the new Hash Entry */
+                *LookupBucket = CurrentEntry;
             }
-
-            /* Set the Current Entry */
-            *AllocatedEntry = CurrentEntry->ChainLink;
-
-            /* Link to the old Hash Entry */
-            CurrentEntry->ChainLink = *LookupBucket;
-
-            /* Set the new Hash Entry */
-            *LookupBucket = CurrentEntry;
         }
 
         /* Save the found object */
         FoundObject = CurrentEntry->Object;
-        if (!FoundObject) goto Quickie;
-
-        /* Get the object name information */
-        ObjectHeader = OBJECT_TO_OBJECT_HEADER(FoundObject);
-        HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
-        if (HeaderNameInfo)
-        {
-            /* Add a query reference */
-            ObpIncrementQueryReference(ObjectHeader, HeaderNameInfo);
-        }
-
-        /* Reference the object being looked up */
-        ObReferenceObject(FoundObject);
-
-        /* Check if the directory was locked */
-        if (!Context->DirectoryLocked)
-        {
-            /* Release the lock */
-            ObpReleaseDirectoryLock(Directory, Context);
-        }
+        goto Quickie;
     }
     else
     {
@@ -278,11 +257,34 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
     }
 
 Quickie:
+    /* Check if we inserted an object */
+    if (FoundObject)
+    {
+        /* Get the object name information */
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(FoundObject);
+        ObpAcquireNameInformation(ObjectHeader);
+
+        /* Reference the object being looked up */
+        ObReferenceObject(FoundObject);
+
+        /* Check if the directory was locked */
+        if (!Context->DirectoryLocked)
+        {
+            /* Release the lock */
+            ObpReleaseDirectoryLock(Directory, Context);
+        }
+    }
+
     /* Check if we found an object already */
     if (Context->Object)
     {
         /* We already did a lookup, so remove this object's query reference */
-        //ObpDecrementQueryReference(Context->Object);
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(Context->Object);
+        HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+        ObpReleaseNameInformation(HeaderNameInfo);
+
+        /* Also dereference the object itself */
+        ObDereferenceObject(Context->Object);
     }
 
     /* Return the object we found */
@@ -354,17 +356,17 @@ ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context)
 *--*/
 NTSTATUS
 NTAPI
-NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
-                       IN ACCESS_MASK DesiredAccess,
-                       IN POBJECT_ATTRIBUTES ObjectAttributes)
+NtOpenDirectoryObject(OUT PHANDLE DirectoryHandle,
+                      IN ACCESS_MASK DesiredAccess,
+                      IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-    HANDLE hDirectory;
+    HANDLE Directory;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
     /* Check if we need to do any probing */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
@@ -377,8 +379,6 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* If we failed, return the error */
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -389,13 +389,13 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
                                 NULL,
                                 DesiredAccess,
                                 NULL,
-                                &hDirectory);
-    if(NT_SUCCESS(Status))
+                                &Directory);
+    if (NT_SUCCESS(Status))
     {
         _SEH_TRY
         {
             /* Write back the handle to the caller */
-            *DirectoryHandle = hDirectory;
+            *DirectoryHandle = Directory;
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
@@ -476,10 +476,14 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     UNICODE_STRING Name;
     PWSTR p;
+    OBP_LOOKUP_CONTEXT LookupContext;
     PAGED_CODE();
 
+    /* Initialize lookup */
+    ObpInitializeDirectoryLookup(&LookupContext);
+
     /* Check if we need to do any probing */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
@@ -491,7 +495,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
             if (!RestartScan) SkipEntries = *Context;
 
             /* Probe the return length if the caller specified one */
-            if(ReturnLength) ProbeForWriteUlong(ReturnLength);
+            if (ReturnLength) ProbeForWriteUlong(ReturnLength);
         }
         _SEH_HANDLE
         {
@@ -499,8 +503,6 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* Return the exception to caller if we failed */
         if(!NT_SUCCESS(Status)) return Status;
     }
     else if (!RestartScan)
@@ -530,6 +532,9 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
         ExFreePool(LocalBuffer);
         return Status;
     }
+
+    /* Lock directory in shared mode */
+    ObpAcquireDirectoryLockShared(Directory, &LookupContext);
 
     /* Start at position 0 */
     DirectoryInfo = (POBJECT_DIRECTORY_INFORMATION)LocalBuffer;
@@ -691,6 +696,9 @@ Quickie:
     }
     _SEH_END;
 
+    /* Unlock the directory */
+    ObpReleaseDirectoryLock(Directory, &LookupContext);
+
     /* Dereference the directory and free our buffer */
     ObDereferenceObject(Directory);
     ExFreePool(LocalBuffer);
@@ -726,7 +734,7 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
                         IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
     POBJECT_DIRECTORY Directory;
-    HANDLE hDirectory;
+    HANDLE NewHandle;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
@@ -745,8 +753,6 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* If we failed, return the error */
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -760,30 +766,33 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
                             0,
                             0,
                             (PVOID*)&Directory);
-    if(NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Setup the object */
+    RtlZeroMemory(Directory, sizeof(OBJECT_DIRECTORY));
+    ExInitializePushLock((PULONG_PTR)&Directory->Lock);
+    Directory->SessionId = -1;
+
+    /* Insert it into the handle table */
+    Status = ObInsertObject((PVOID)Directory,
+                            NULL,
+                            DesiredAccess,
+                            0,
+                            NULL,
+                            &NewHandle);
+
+    /* Enter SEH to protect write */
+    _SEH_TRY
     {
-        /* Insert it into the handle table */
-        Status = ObInsertObject((PVOID)Directory,
-                                NULL,
-                                DesiredAccess,
-                                0,
-                                NULL,
-                                &hDirectory);
-        if(NT_SUCCESS(Status))
-        {
-            _SEH_TRY
-            {
-                /* Return the handle back to the caller */
-                *DirectoryHandle = hDirectory;
-            }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
-            {
-                /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
-            }
-            _SEH_END;
-        }
+        /* Return the handle back to the caller */
+        *DirectoryHandle = NewHandle;
     }
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
+        /* Get the exception code */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
 
     /* Return status to caller */
     return Status;

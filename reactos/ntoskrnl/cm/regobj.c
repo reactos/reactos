@@ -27,6 +27,121 @@ CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
 		 PUNICODE_STRING TargetPath);
 
 /* FUNCTONS *****************************************************************/
+
+PVOID
+NTAPI
+CmpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
+                        IN PUNICODE_STRING Name,
+                        IN ULONG Attributes,
+                        IN UCHAR SearchShadow,
+                        IN POBP_LOOKUP_CONTEXT Context)
+{
+    BOOLEAN CaseInsensitive = FALSE;
+    POBJECT_HEADER_NAME_INFO HeaderNameInfo;
+    ULONG HashValue;
+    ULONG HashIndex;
+    LONG TotalChars;
+    WCHAR CurrentChar;
+    POBJECT_DIRECTORY_ENTRY *AllocatedEntry;
+    POBJECT_DIRECTORY_ENTRY *LookupBucket;
+    POBJECT_DIRECTORY_ENTRY CurrentEntry;
+    PVOID FoundObject = NULL;
+    PWSTR Buffer;
+    PAGED_CODE();
+
+    /* Always disable this until we have DOS Device Maps */
+    SearchShadow = FALSE;
+
+    /* Fail if we don't have a directory or name */
+    if (!(Directory) || !(Name)) goto Quickie;
+
+    /* Get name information */
+    TotalChars = Name->Length / sizeof(WCHAR);
+    Buffer = Name->Buffer;
+
+    /* Fail if the name is empty */
+    if (!(Buffer) || !(TotalChars)) goto Quickie;
+
+    /* Set up case-sensitivity */
+    if (Attributes & OBJ_CASE_INSENSITIVE) CaseInsensitive = TRUE;
+
+    /* Create the Hash */
+    for (HashValue = 0; TotalChars; TotalChars--)
+    {
+        /* Go to the next Character */
+        CurrentChar = *Buffer++;
+
+        /* Prepare the Hash */
+        HashValue += (HashValue << 1) + (HashValue >> 1);
+
+        /* Create the rest based on the name */
+        if (CurrentChar < 'a') HashValue += CurrentChar;
+        else if (CurrentChar > 'z') HashValue += RtlUpcaseUnicodeChar(CurrentChar);
+        else HashValue += (CurrentChar - ('a'-'A'));
+    }
+
+    /* Merge it with our number of hash buckets */
+    HashIndex = HashValue % 37;
+
+    /* Save the result */
+    Context->HashValue = HashValue;
+    Context->HashIndex = (USHORT)HashIndex;
+
+    /* Get the root entry and set it as our lookup bucket */
+    AllocatedEntry = &Directory->HashBuckets[HashIndex];
+    LookupBucket = AllocatedEntry;
+
+    /* Start looping */
+    while ((CurrentEntry = *AllocatedEntry))
+    {
+        /* Do the hashes match? */
+        if (CurrentEntry->HashValue == HashValue)
+        {
+            /* Make sure that it has a name */
+            ASSERT(OBJECT_TO_OBJECT_HEADER(CurrentEntry->Object)->NameInfoOffset != 0);
+
+            /* Get the name information */
+            HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(CurrentEntry->Object));
+
+            /* Do the names match? */
+            if ((Name->Length == HeaderNameInfo->Name.Length) &&
+                (RtlEqualUnicodeString(Name, &HeaderNameInfo->Name, CaseInsensitive)))
+            {
+                break;
+            }
+        }
+
+        /* Move to the next entry */
+        AllocatedEntry = &CurrentEntry->ChainLink;
+    }
+
+    /* Check if we still have an entry */
+    if (CurrentEntry)
+    {
+        /* Set this entry as the first, to speed up incoming insertion */
+        if (AllocatedEntry != LookupBucket)
+        {
+            /* Set the Current Entry */
+            *AllocatedEntry = CurrentEntry->ChainLink;
+
+            /* Link to the old Hash Entry */
+            CurrentEntry->ChainLink = *LookupBucket;
+
+            /* Set the new Hash Entry */
+            *LookupBucket = CurrentEntry;
+        }
+
+        /* Save the found object */
+        FoundObject = CurrentEntry->Object;
+        if (!FoundObject) goto Quickie;
+    }
+
+Quickie:
+    /* Return the object we found */
+    Context->Object = FoundObject;
+    return FoundObject;
+}
+
 NTSTATUS
 NTAPI
 CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
@@ -137,9 +252,10 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
             if (End != NULL) *End = 0;
 
             RtlInitUnicodeString(&StartUs, Start);
+            ObpInitializeDirectoryLookup(&Context);
             Context.DirectoryLocked = TRUE;
             Context.Directory = CurrentObject;
-            FoundObject = ObpLookupEntryDirectory(CurrentObject, &StartUs, Attributes, FALSE, &Context);
+            FoundObject = CmpLookupEntryDirectory(CurrentObject, &StartUs, Attributes, FALSE, &Context);
             if (FoundObject == NULL)
             {
                 if (End != NULL)

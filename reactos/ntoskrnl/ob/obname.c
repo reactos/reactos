@@ -170,19 +170,8 @@ ObpDeleteNameCheck(IN PVOID Object)
 
     /* Get object structures */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+    ObjectNameInfo = ObpAcquireNameInformation(ObjectHeader);
     ObjectType = ObjectHeader->Type;
-
-    /* Check if we have a name information structure */
-    if (ObjectNameInfo)
-    {
-        /* Add a query reference */
-        if (!ObpIncrementQueryReference(ObjectHeader, ObjectNameInfo))
-        {
-            /* No references, so the name info is invalid */
-            ObjectNameInfo = NULL;
-        }
-    }
 
     /*
      * Check if the handle count is 0, if the object is named,
@@ -225,21 +214,14 @@ ObpDeleteNameCheck(IN PVOID Object)
                     ObpDeleteSymbolicLinkName(Object);
                 }
 
-                /* Add a query reference */
-                ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
-                if (!ObpIncrementQueryReference(ObjectHeader, ObjectNameInfo))
-                {
-                    /* No references, so the name info is invalid */
-                    ObjectNameInfo = NULL;
-                }
-
                 /* Check if the magic protection flag is set */
+                ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
                 if ((ObjectNameInfo) &&
                     (ObjectNameInfo->QueryReferences & 0x40000000))
                 {
-                    /* Add deletion flag */
+                    /* Remove protection flag */
                     InterlockedExchangeAdd((PLONG)&ObjectNameInfo->QueryReferences,
-                                           0xC0000000);
+                                           -0x40000000);
                 }
 
                 /* Get the directory */
@@ -254,13 +236,13 @@ ObpDeleteNameCheck(IN PVOID Object)
         ObpCleanupDirectoryLookup(&Context);
 
         /* Remove another query reference since we added one on top */
-        ObpDecrementQueryReference(ObjectNameInfo);
+        ObpReleaseNameInformation(ObjectNameInfo);
 
         /* Check if we were inserted in a directory */
         if (Directory)
         {
             /* We were, so first remove the extra reference we had added */
-            ObpDecrementQueryReference(ObjectNameInfo);
+            ObpReleaseNameInformation(ObjectNameInfo);
 
             /* Now dereference the object as well */
             ObDereferenceObject(Object);
@@ -269,7 +251,7 @@ ObpDeleteNameCheck(IN PVOID Object)
     else
     {
         /* Remove the reference we added */
-        if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
+        ObpReleaseNameInformation(ObjectNameInfo);
     }
 }
 
@@ -313,11 +295,15 @@ ObpLookupObjectName(IN HANDLE RootHandle,
     Status = STATUS_SUCCESS;
     Object = NULL;
 
-    /* Check if case-insensitivity is forced */
-    if ((ObpCaseInsensitive) || (ObjectType->TypeInfo.CaseInsensitive))
+    /* Check if case-insensitivity is checked */
+    if (ObpCaseInsensitive)
     {
-        /* Add the flag to disable case sensitivity */
-        Attributes |= OBJ_CASE_INSENSITIVE;
+        /* Check if the object type requests this */
+        if (!(ObjectType) || (ObjectType->TypeInfo.CaseInsensitive))
+        {
+            /* Add the flag to disable case sensitivity */
+            Attributes |= OBJ_CASE_INSENSITIVE;
+        }
     }
 
     /* Check if this is a access checks are being forced */

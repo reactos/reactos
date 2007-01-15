@@ -2693,7 +2693,6 @@ ObInsertObject(IN PVOID Object,
     {
         /* Display warning and break into debugger */
         DPRINT1("OB: Attempting to insert existing object %08x\n", Object);
-        KEBUGCHECK(0);
         DbgBreakPoint();
 
         /* Allow debugger to continue */
@@ -2703,22 +2702,11 @@ ObInsertObject(IN PVOID Object,
 
     /* Get the create and name info, as well as the object type */
     ObjectCreateInfo = ObjectHeader->ObjectCreateInfo;
-    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+    ObjectNameInfo = ObpAcquireNameInformation(ObjectHeader);
     ObjectType = ObjectHeader->Type;
-
-    /* Check if we have name information */
-    if (ObjectNameInfo)
-    {
-        /* Add a query reference */
-        if (!ObpIncrementQueryReference(ObjectHeader, ObjectNameInfo))
-        {
-            /* There are no query references, so the name info is invalid */
-            ObjectNameInfo = NULL;
-        }
-    }
+    ObjectName = NULL;
 
     /* Check if this is an named object */
-    ObjectName = NULL;
     if ((ObjectNameInfo) && (ObjectNameInfo->Name.Buffer))
     {
         /* Get the object name */
@@ -2738,6 +2726,7 @@ ObInsertObject(IN PVOID Object,
     {
         /* Assume failure */
         *Handle = NULL;
+        ObjectHeader->ObjectCreateInfo = NULL;
 
         /* Create the handle */
         Status = ObpCreateUnnamedHandle(Object,
@@ -2750,10 +2739,9 @@ ObInsertObject(IN PVOID Object,
 
         /* Free the create information */
         ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);
-        ObjectHeader->ObjectCreateInfo = NULL;
 
-        /* Remove a query reference if we added one */
-        if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
+        /* Release the object name information */
+        ObpReleaseNameInformation(ObjectNameInfo);
 
         /* Remove the extra keep-alive reference */
         ObDereferenceObject(Object);
@@ -2779,7 +2767,7 @@ ObInsertObject(IN PVOID Object,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
+            ObpReleaseNameInformation(ObjectNameInfo);
             ObDereferenceObject(Object);
             return Status;
         }
@@ -2793,7 +2781,7 @@ ObInsertObject(IN PVOID Object,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
+        ObpReleaseNameInformation(ObjectNameInfo);
         ObDereferenceObject(Object);
         return Status;
     }
@@ -2855,7 +2843,7 @@ ObInsertObject(IN PVOID Object,
             ObpCleanupDirectoryLookup(&Context);
 
             /* Remove query reference that we added */
-            if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
+            ObpReleaseNameInformation(ObjectNameInfo);
 
             /* Dereference the object and delete the access state */
             ObDereferenceObject(Object);
@@ -2922,11 +2910,19 @@ ObInsertObject(IN PVOID Object,
         /* Check if anything until now failed */
         if (!NT_SUCCESS(Status))
         {
-            /* Cleanup lookup context */
+            /* Check if the directory was added */
+            if (Context.DirectoryLocked)
+            {
+                /* Weird case where we need to do a manual delete */
+                DPRINT1("Unhandled path\n");
+                KEBUGCHECK(0);
+            }
+
+            /* Cleanup the lookup */
             ObpCleanupDirectoryLookup(&Context);
 
             /* Remove query reference that we added */
-            if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
+            ObpReleaseNameInformation(ObjectNameInfo);
 
             /* Dereference the object and delete the access state */
             ObDereferenceObject(Object);
@@ -2971,7 +2967,7 @@ ObInsertObject(IN PVOID Object,
         }
 
         /* Remove a query reference */
-        if (ObjectNameInfo) ObpDecrementQueryReference(ObjectNameInfo);
+        ObpReleaseNameInformation(ObjectNameInfo);
 
         /* Remove the extra keep-alive reference */
         ObDereferenceObject(Object);
@@ -3078,7 +3074,8 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
             SourceProcessHandle,
             TargetProcessHandle);
 
-    if((TargetHandle) && (PreviousMode != KernelMode))
+    /* Check if we have a target handle */
+    if ((TargetHandle) && (PreviousMode != KernelMode))
     {
         /* Enter SEH */
         _SEH_TRY
@@ -3092,8 +3089,6 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* Fail if the pointer was invalid */
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -3168,7 +3163,7 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
             hTarget,
             TargetProcessHandle,
             Status);
-    ObDereferenceObject(Target);
+    if (Target) ObDereferenceObject(Target);
     ObDereferenceObject(SourceProcess);
     return Status;
 }

@@ -15,48 +15,58 @@
 #define OBP_LOCK_STATE_RELEASED                     0xEEEE1234
 #define OBP_LOCK_STATE_INITIALIZED                  0xFFFF1234
 
-ULONG
+POBJECT_HEADER_NAME_INFO
 FORCEINLINE
-ObpIncrementQueryReference(IN POBJECT_HEADER ObjectHeader,
-                           IN POBJECT_HEADER_NAME_INFO ObjectNameInfo)
+ObpAcquireNameInformation(IN POBJECT_HEADER ObjectHeader)
 {
+    POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     ULONG NewValue, References;
 
-    /* Get the number of references */
-    NewValue = ObjectNameInfo->QueryReferences;
-    while ((NewValue != 0) && (References = NewValue))
-    {
-        /* Increment the number of references */
-        if (InterlockedCompareExchange((PLONG)&ObjectNameInfo->QueryReferences,
-                                       NewValue + 1,
-                                       NewValue) == References)
-        {
-            /* Check if the object is to be deferred deleted */
-            if (ObjectHeader->Flags & OB_FLAG_DEFER_DELETE)
-            {
-                /* FIXME: Unhandled*/
-                DbgPrint("OB: Unhandled path\n");
-                KEBUGCHECK(0);
-            }
+    /* Make sure we have name information at all */
+    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+    if (!ObjectNameInfo) return NULL;
 
-            /* Done looping */
-            NewValue = ObjectNameInfo->QueryReferences;
-            break;
-        }
+    /* Get the number of references */
+    References = ObjectNameInfo->QueryReferences;
+    for (;;)
+    {
+        /* Check if the count is 0 and fail if so */
+        if (!References) return NULL;
+
+        /* Increment the number of references */
+        NewValue = InterlockedCompareExchange((PLONG)&ObjectNameInfo->
+                                              QueryReferences,
+                                              References + 1,
+                                              References);
+        if (NewValue == References) break;
+
+        /* We failed, try again */
+        References = NewValue;
     }
 
-    /* Return the number of references */
-    return NewValue;
+    /* Check for magic flag */
+    if (ObjectNameInfo->QueryReferences & 0x80000000)
+    {
+        /* FIXME: Unhandled*/
+        DbgPrint("OB: Unhandled path\n");
+        KEBUGCHECK(0);
+    }
+
+    /* Return the name information */
+    return ObjectNameInfo;
 }
 
 VOID
 FORCEINLINE
-ObpDecrementQueryReference(IN POBJECT_HEADER_NAME_INFO HeaderNameInfo)
+ObpReleaseNameInformation(IN POBJECT_HEADER_NAME_INFO HeaderNameInfo)
 {
     POBJECT_DIRECTORY Directory;
 
+    /* Bail out if there's no info at all */
+    if (!HeaderNameInfo) return;
+
     /* Remove a query reference and check if it was the last one */
-    if (!InterlockedExchangeAdd((PLONG)&HeaderNameInfo->QueryReferences, -1))
+    if (!InterlockedDecrement((PLONG)&HeaderNameInfo->QueryReferences))
     {
         /* Check if we have a name */
         if (HeaderNameInfo->Name.Buffer)
@@ -149,8 +159,8 @@ ObpReleaseLookupContextObject(IN POBP_LOOKUP_CONTEXT Context)
         ObjectHeader = OBJECT_TO_OBJECT_HEADER(Context->Object);
         HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
 
-        /* Check if we do have name information */
-        if (HeaderNameInfo) ObpDecrementQueryReference(HeaderNameInfo);
+        /* release the name information */
+        ObpReleaseNameInformation(HeaderNameInfo);
 
         /* Dereference the object */
         ObDereferenceObject(Context->Object);
@@ -167,11 +177,11 @@ ObpCleanupDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context)
     {
         /* Release the lock */
         ObpReleaseDirectoryLock(Context->Directory, Context);
+        Context->Directory = NULL;
+        Context->DirectoryLocked = FALSE;
     }
 
     /* Clear the context  */
-    Context->Directory = NULL;
-    Context->DirectoryLocked = FALSE;
     ObpReleaseLookupContextObject(Context);
 }
 
