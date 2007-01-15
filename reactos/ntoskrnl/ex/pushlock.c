@@ -97,7 +97,7 @@ ExfWakePushLock(PEX_PUSH_LOCK PushLock,
                 OldValue = NewValue;
 
                 /* Check if it's still locked */
-                if (OldValue.Locked) continue;
+                if (!OldValue.Locked) break;
             }
         }
 

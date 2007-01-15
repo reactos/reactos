@@ -36,7 +36,6 @@
 /* Directory to load key layouts from */
 #define SYSTEMROOT_DIR L"\\SystemRoot\\System32\\"
 
-
 /* GLOBALS *******************************************************************/
 
 typedef struct __TRACKINGLIST {
@@ -338,11 +337,27 @@ EnableWindow(HWND hWnd,
 	     BOOL bEnable)
 {
     LONG Style = NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE);
-    Style = bEnable ? Style & ~WS_DISABLED : Style | WS_DISABLED;
-    NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
+    /* check if updating is needed */
+    UINT bIsDisabled = (Style & WS_DISABLED);
+    if ( (bIsDisabled && bEnable) || (!bIsDisabled && !bEnable) )
+    {
+        if (bEnable)
+        {
+            Style &= ~WS_DISABLED;
+        }
+        else
+        {
+            Style |= WS_DISABLED;
+            /* Remove keyboard focus from that window if it had focus */
+            if (hWnd == GetFocus())
+            {
+               SetFocus(NULL);
+            }
+        }
+        NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
 
-    SendMessageA(hWnd, WM_ENABLE, (LPARAM) IsWindowEnabled(hWnd), 0);
-
+        SendMessageA(hWnd, WM_ENABLE, (LPARAM) IsWindowEnabled(hWnd), 0);
+    }
     // Return nonzero if it was disabled, or zero if it wasn't:
     return IsWindowEnabled(hWnd);
 }

@@ -304,27 +304,37 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
 
 static
 HWND FASTCALL
-co_IntSetFocusWindow(PWINDOW_OBJECT Window)
+co_IntSetFocusWindow(PWINDOW_OBJECT Window OPTIONAL)
 {
    HWND hWndPrev = 0;
    PUSER_MESSAGE_QUEUE ThreadQueue;
 
-   ASSERT_REFS_CO(Window);
+   if (Window)
+      ASSERT_REFS_CO(Window);
 
    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
    ASSERT(ThreadQueue != 0);
 
    hWndPrev = ThreadQueue->FocusWindow;
-   if (hWndPrev == Window->hSelf)
+
+   if (Window != 0)
    {
-      return hWndPrev;
+      if (hWndPrev == Window->hSelf)
+      {
+         return hWndPrev;
+      }
+
+      ThreadQueue->FocusWindow = Window->hSelf;
+
+      co_IntSendKillFocusMessages(hWndPrev, Window->hSelf);
+      co_IntSendSetFocusMessages(hWndPrev, Window->hSelf);
    }
-
-   ThreadQueue->FocusWindow = Window->hSelf;
-
-   co_IntSendKillFocusMessages(hWndPrev, Window->hSelf);
-   co_IntSendSetFocusMessages(hWndPrev, Window->hSelf);
-
+   else
+   {
+      ThreadQueue->FocusWindow = 0;
+ 
+      co_IntSendKillFocusMessages(hWndPrev, 0);
+   }
    return hWndPrev;
 }
 
@@ -562,16 +572,23 @@ NtUserSetFocus(HWND hWnd)
    DPRINT("Enter NtUserSetFocus(%x)\n", hWnd);
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
+   if (hWnd)
    {
-      RETURN(NULL);
-   }
+      if (!(Window = UserGetWindowObject(hWnd)))
+      {
+         RETURN(NULL);
+      }
 
-   UserRefObjectCo(Window, &Ref);
-   ret = co_UserSetFocus(Window);
-   UserDerefObjectCo(Window);
+      UserRefObjectCo(Window, &Ref);
+      ret = co_UserSetFocus(Window);
+      UserDerefObjectCo(Window);
    
-   RETURN(ret);
+      RETURN(ret);
+   }
+   else
+   {
+      RETURN( co_UserSetFocus(0));
+   }
 
 CLEANUP:
    DPRINT("Leave NtUserSetFocus, ret=%i\n",_ret_);
