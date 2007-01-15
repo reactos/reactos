@@ -231,10 +231,7 @@ LoadCursorIconImage(
       if (IconResDir == NULL)
          return NULL;
 
-      /*
-       * Find the best fitting in the IconResDir for this resolution
-       */
-
+      /* Find the best fitting in the IconResDir for this resolution */
       id = LookupIconIdFromDirectoryEx((PBYTE)IconResDir, Icon, width, height,
                                        fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
 
@@ -256,6 +253,7 @@ LoadCursorIconImage(
                                        SizeofResource(hinst, h2Resource),
                                        Icon, 0x00030000, width, height,
                                        fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+
       if (hIcon && 0 != (fuLoad & LR_SHARED))
       {
          NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes,
