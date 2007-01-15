@@ -1400,14 +1400,10 @@ UserDrawIconEx(
       IconSize.cy = bmpMask.bmHeight / 2;
    }
 
-   /* A hack to get alpha-blending support for icons.
-      Disabled now because of a bug in alpha blending function
-      (which blends with white background instead of the background).
-    */
-   /*if (bmpColor.bmBitsPixel == 32)
+   if (bmpColor.bmBitsPixel == 32)
    {
       bAlpha = TRUE;
-   }*/
+   }
 
    if(!diFlags)
       diFlags = DI_NORMAL;
@@ -1518,11 +1514,82 @@ UserDrawIconEx(
    {
         if (bAlpha)
         {
+            BITMAPINFO bi;
+            BITMAP bm;
+            BITMAPOBJ *Bitmap;
+            PBYTE pBits;
             BLENDFUNCTION  BlendFunc;
-            BlendFunc.BlendOp = AC_SRC_OVER; /* right ? */
+            BYTE Red, Green, Blue, Alpha;
+            DWORD Count = 0;
+            INT i, j;
+
+            /* Bitmap header */
+            bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
+            bi.bmiHeader.biWidth = cxWidth;
+            bi.bmiHeader.biHeight = cyHeight;
+            bi.bmiHeader.biPlanes = 1;
+            bi.bmiHeader.biBitCount = 32;
+            bi.bmiHeader.biCompression = BI_RGB;
+            bi.bmiHeader.biSizeImage = cxWidth * cyHeight * 4;
+            bi.bmiHeader.biClrUsed = 0;
+            bi.bmiHeader.biClrImportant = 0;
+
+            Bitmap = GDIOBJ_LockObj(GdiHandleTable, hbmOff, GDI_OBJECT_TYPE_BITMAP);
+            if (Bitmap == NULL)
+            {
+                DPRINT1("GDIOBJ_LockObj() failed!\n");
+                goto cleanup;
+            }
+            BITMAP_GetObject(Bitmap, sizeof(BITMAP), &bm);
+
+            /* Buffer */
+            pBits = ExAllocatePoolWithTag(PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
+            if (pBits == NULL)
+            {
+                DPRINT1("ExAllocatePoolWithTag() failed!\n");
+                goto cleanup;
+            }
+
+            /* get icon bits */
+            NtGdiGetBitmapBits(hbmOff, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
+
+            /* premultiply with the alpha channel value */
+            for (i = 0; i < cyHeight; i++)
+            {
+                for (j = 0; j < cxWidth; j++)
+                {
+                    DWORD OrigPixel = 0;
+                    DWORD AlphaPixel = 0;
+ 
+                    OrigPixel = *(DWORD *)(pBits + Count);
+ 
+                    Red   = (BYTE)((OrigPixel >>  0) & 0xff);
+                    Green = (BYTE)((OrigPixel >>  8) & 0xff);
+                    Blue  = (BYTE)((OrigPixel >> 16) & 0xff);
+                    Alpha = (BYTE)((OrigPixel >> 24) & 0xff);
+ 
+                    Red = (Red * Alpha) / 0xff;
+                    Green = (Green * Alpha) / 0xff;
+                    Blue = (Blue * Alpha) / 0xff;
+ 
+                    AlphaPixel = (DWORD)(Red | (Green << 8) | (Blue << 16) | (Alpha << 24));
+ 
+                    *(DWORD *)(pBits + Count) = AlphaPixel;
+                    Count += sizeof (DWORD);
+                }
+            }
+
+            /* set icon bits */
+            NtGdiSetBitmapBits(hbmOff, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
+            ExFreePool(pBits);
+
+            GDIOBJ_UnlockObjByPtr(GdiHandleTable, Bitmap);
+
+            BlendFunc.BlendOp = AC_SRC_OVER;
             BlendFunc.BlendFlags = 0;
             BlendFunc.SourceConstantAlpha = 255;
             BlendFunc.AlphaFormat = AC_SRC_ALPHA;
+
             NtGdiAlphaBlend(hDc, xLeft, yTop, cxWidth, cyHeight, 
                             hdcOff, 0, 0, cxWidth, cyHeight, BlendFunc);
         }
