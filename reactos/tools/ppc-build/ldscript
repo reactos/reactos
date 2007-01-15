@@ -23,6 +23,7 @@ SECTIONS
   .rodata :
   {
     *(.rodata)
+    *(.got2)
   }
   .idata :
   {
@@ -40,6 +41,7 @@ SECTIONS
   }
   .bss :
   {
+    *(.sbss)
     *(.bss)
     *(COMMON)
   }  
