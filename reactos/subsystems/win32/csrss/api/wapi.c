@@ -225,9 +225,12 @@ ClientConnectionThread(HANDLE ServerPort)
         /* If the connection was closed, handle that */
         if (Request->Header.u2.s2.Type == LPC_PORT_CLOSED)
         {
-            DPRINT1("Port died, oh well\n");
+            DPRINT("Port died, oh well\n");
             CsrFreeProcessData( Request->Header.ClientId.UniqueProcess );
-            break;
+            //NtClose()
+            Reply = NULL;
+            continue;
+            //break;
         }
 
         if (Request->Header.u2.s2.Type == LPC_CONNECTION_REQUEST)
@@ -239,7 +242,7 @@ ClientConnectionThread(HANDLE ServerPort)
 
         if (Request->Header.u2.s2.Type == LPC_CLIENT_DIED)
         {
-            DPRINT1("Clietn died, oh well\n");
+            DPRINT("Clietn died, oh well\n");
             Reply = NULL;
             continue;
         }

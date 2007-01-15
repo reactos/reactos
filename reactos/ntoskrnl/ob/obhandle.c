@@ -1969,10 +1969,7 @@ ObKillProcess(IN PEPROCESS Process)
     ExSweepHandleTable(HandleTable,
                        ObpCloseHandleCallback,
                        &Context);
-    if (HandleTable->HandleCount != 0)
-    {
-        DPRINT1("FIXME: %d handles remain!\n", HandleTable->HandleCount);
-    }
+    ASSERT(HandleTable->HandleCount == 0);
 
     /* Leave the critical region */
     KeLeaveCriticalRegion();

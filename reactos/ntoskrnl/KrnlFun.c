@@ -9,23 +9,19 @@
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
 // Ex:
-//  - Fixup existing code that talks to Ke.
 //  - Implement Generic Callback mechanism.
 //  - Use pushlocks for handle implementation.
-//
-// Lpc:
-//  - Figure out why NTLPC-processes won't die anymore.
 //
 // Ke1:
 //  - Implement KiInitMachineDependent.
 //  - Implement Privileged Instruction Handler in Umode GPF.
 //
-// Fstub:
-//  - Implement IoAssignDriveLetters using mount manager support.
-//
 // Hal:
 //  - Use APC and DPC Interrupt Dispatchers.
 //  - CMOS Initialization and CMOS Spinlock.
+//
+// Fstub:
+//  - Implement IoAssignDriveLetters using mount manager support.
 //
 // Ke2:
 //  - New optimized table-based tick-hashed timer implementation.

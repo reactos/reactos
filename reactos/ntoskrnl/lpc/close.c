@@ -180,7 +180,7 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
     /* Loop queued messages */
     ListHead = &Port->MsgQueue.ReceiveHead;
     NextEntry =  ListHead->Flink;
-    while (ListHead != NextEntry)
+    while ((NextEntry) && (ListHead != NextEntry))
     {
         /* Get the message */
         Message = CONTAINING_RECORD(NextEntry, LPCP_MESSAGE, Entry);
