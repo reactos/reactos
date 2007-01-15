@@ -661,9 +661,9 @@ LookupIconIdFromDirectoryEx(PBYTE xdir,
         }
         else
         {
-            HDC hdc = GetDC(0);
+            HDC hdc = CreateICW(NULL, NULL, NULL, NULL);
             ColorBits = GetDeviceCaps(hdc, BITSPIXEL);
-            ReleaseDC(0, hdc);
+            DeleteDC(hdc);
         }
 
         if(bIcon)
