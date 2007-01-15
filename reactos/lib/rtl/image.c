@@ -176,11 +176,6 @@ LdrProcessRelocationBlockLongLong(
         Type = *TypeOffset >> 12;
         ShortPtr = (PUSHORT)(RVA(Address, Offset));
 
-	DbgPrint("Correcting (%04x) %08x at %08x\n", 
-		 Type, 
-		 *((PULONG)RVA(Address,Offset)),
-		 ShortPtr);
-
         /*
         * Don't relocate within the relocation section itself.
         * GCC/LD generates sometimes relocation records for the relocation section.
@@ -213,7 +208,6 @@ LdrProcessRelocationBlockLongLong(
 
         case IMAGE_REL_BASED_HIGHADJ:
 	    Addend = (((ULONG)*ShortPtr) << 16) + (ULONG)Delta;
-	    if(Addend & 0x8000) Addend += 0x8000;
 	    *ShortPtr = Addend >> 16;
 	    break;
 

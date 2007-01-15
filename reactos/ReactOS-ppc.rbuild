@@ -29,6 +29,10 @@
   <compilerflag>-fshort-wchar</compilerflag>
   <compilerflag>-fsigned-char</compilerflag>
   <compilerflag>-map</compilerflag>
+  <compilerflag>-mfull-toc</compilerflag>
+  <compilerflag>-meabi</compilerflag>
+  <compilerflag>-O2</compilerflag>
+  <compilerflag>-Wno-strict-aliasing</compilerflag>
   <if property="MP" value="1">
     <define name="CONFIG_SMP" value="1" />
   </if>
