@@ -364,7 +364,7 @@ BOOLEAN
 FORCEINLINE
 _ExAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
-    ULONG_PTR Value, NewValue, OldValue;
+    ULONG_PTR Value, NewValue;
 
     /* Get the current value and mask the active bit */
     Value = RunRef->Count &~ EX_RUNDOWN_ACTIVE;
@@ -373,8 +373,8 @@ _ExAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
     NewValue = Value + EX_RUNDOWN_COUNT_INC;
 
     /* Change the value */
-    OldValue = ExpChangeRundown(RunRef, NewValue, Value);
-    if (OldValue != Value)
+    NewValue = ExpChangeRundown(RunRef, NewValue, Value);
+    if (NewValue != Value)
     {
         /* Rundown was active, use long path */
         return ExfAcquireRundownProtection(RunRef);
@@ -405,7 +405,7 @@ VOID
 FORCEINLINE
 _ExReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
-    ULONG_PTR Value, NewValue, OldValue;
+    ULONG_PTR Value, NewValue;
 
     /* Get the current value and mask the active bit */
     Value = RunRef->Count &~ EX_RUNDOWN_ACTIVE;
@@ -414,10 +414,10 @@ _ExReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
     NewValue = Value - EX_RUNDOWN_COUNT_INC;
 
     /* Change the value */
-    OldValue = ExpChangeRundown(RunRef, NewValue, Value);
+    NewValue = ExpChangeRundown(RunRef, NewValue, Value);
 
     /* Check if the rundown was active */
-    if (OldValue != Value)
+    if (NewValue != Value)
     {
         /* Rundown was active, use long path */
         ExfReleaseRundownProtection(RunRef);
@@ -476,7 +476,7 @@ _ExWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
 
     /* Set the active bit */
     Value = ExpChangeRundown(RunRef, EX_RUNDOWN_ACTIVE, 0);
-    if ((Value) || (Value != EX_RUNDOWN_ACTIVE))
+    if ((Value) && (Value != EX_RUNDOWN_ACTIVE))
     {
         /* If the the rundown wasn't already active, then take the long path */
         ExfWaitForRundownProtectionRelease(RunRef);
