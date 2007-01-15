@@ -1552,7 +1552,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
             case 'c':
               {
                 ULONG BreakpointNumber;
-                ULONG dr6_;
+                ULONG dr6_ = 0;
 
                 /* try to read optional parameter, pc unchanged if no parm */
                 if (GspHex2Long (&ptr, &Address))

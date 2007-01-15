@@ -14,11 +14,17 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <ppcdebug.h>
 
 /* GLOBALS *******************************************************************/
 
+/* Ku bit should be set, so that we get the best options for page protection */
+#define PPC_SEG_Ku 0x40000000
+#define PPC_SEG_Ks 0x20000000
+
 extern LOADER_MODULE KeLoaderModules[64];
 extern ULONG KeLoaderModuleCount;
+extern ULONG_PTR MmFreeLdrLastKernelAddress;
 KPRCB PrcbData[MAXIMUM_PROCESSORS];
 
 /* FUNCTIONS *****************************************************************/
@@ -78,29 +84,17 @@ KiInitializePcr(IN ULONG ProcessorNumber,
                 IN PKTHREAD IdleThread,
                 IN PVOID DpcStack)
 {
-    TRACE;
     Pcr->MajorVersion = PCR_MAJOR_VERSION;
-    TRACE;
     Pcr->MinorVersion = PCR_MINOR_VERSION;
-    TRACE;
     Pcr->CurrentIrql = PASSIVE_LEVEL;
-    TRACE;
     Pcr->Prcb = PrcbData;
-    TRACEXY(Pcr->Prcb, PrcbData);
     Pcr->Prcb->MajorVersion = 1;
-    TRACE;
     Pcr->Prcb->MinorVersion = 1;
-    TRACE;
     Pcr->Prcb->Number = 0; /* UP for now */
-    TRACE;
     Pcr->Prcb->SetMember = 1;
-    TRACE;
     Pcr->Prcb->BuildType = 0;
-    TRACE;
     Pcr->Prcb->DpcStack = DpcStack;
-    TRACE;
     KiProcessorBlock[ProcessorNumber] = Pcr->Prcb;
-    TRACEXY(0xd00d,0xbeef);
 }
 
 extern ULONG KiGetFeatureBits();
@@ -257,7 +251,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Set up segs for normal paged address space. */
     for( i = 0; i < 16; i++ ) {
-	SetSR(i, i);
+	SetSR(i, (i < 8 ? PPC_SEG_Ku : PPC_SEG_Ks) | i);
     }
 
     /* Save the loader block and get the current CPU */
@@ -269,14 +263,13 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 	/* We'll allocate a page from the end of the kernel area for KPCR.  This code will probably
 	 * change when we get SMP support.
 	 */
-	ULONG LastPage = ROUND_UP(KeLoaderModules[KeLoaderModuleCount-1].ModEnd,1<<PAGE_SHIFT);
-	PhysicalPage = PpcVirt2phys(LastPage, FALSE);
+	PhysicalPage = PpcVirt2phys(MmFreeLdrLastKernelAddress, FALSE);
+	MmFreeLdrLastKernelAddress += (1<<PAGE_SHIFT);
 	InsertPageEntry((ULONG)Pcr, PhysicalPage, 0, 0);
-	*((PULONG)Pcr) = -1;
-	if(!((PULONG)Pcr)) {
-	    TRACEXY(0xCABBA9E, 0xC0FFEE);
-	    while(1); 
-	}
+	
+	PhysicalPage = PpcVirt2phys(MmFreeLdrLastKernelAddress, FALSE);
+	MmFreeLdrLastKernelAddress += (1<<PAGE_SHIFT);
+	InsertPageEntry((ULONG)KI_USER_SHARED_DATA, PhysicalPage, 0, 0);
     }
 
     /* Skip initial setup if this isn't the Boot CPU */
@@ -289,44 +282,35 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                     &KiInitialThread.Tcb,
                     KiDoubleFaultStack);
 
-    TRACE;
     /* Set us as the current process */
     KiInitialThread.Tcb.ApcState.Process = &KiInitialProcess.Pcb;
 
-    TRACE;
     /* Setup CPU-related fields */
 AppCpuInit:
-    TRACE;
     Prcb = Pcr->Prcb;
     Pcr->Number = Cpu;
     Pcr->SetMember = 1 << Cpu;
     Prcb->SetMember = 1 << Cpu;
 
-    TRACE;
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, LoaderBlock);
 
-    TRACE;
     /* Set active processors */
     KeActiveProcessors |= Pcr->SetMember;
     KeNumberProcessors++;
 
-    TRACE;
     /* Initialize the Debugger for the Boot CPU */
     if (!Cpu) KdInitSystem (0, LoaderBlock);
 
-    TRACE;
     /* Check for break-in */
     if (KdPollBreakIn()) 
     {
 	DbgBreakPointWithStatus(1);
     }
 
-    TRACE;
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
 
-    TRACE;
     /* Call main kernel intialization */
     KiInitializeKernel(&KiInitialProcess.Pcb,
                        &KiInitialThread.Tcb,
@@ -334,6 +318,5 @@ AppCpuInit:
                        Prcb,
                        Cpu,
                        (PVOID)LoaderBlock);
-    TRACE;
 }
 

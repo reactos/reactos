@@ -850,7 +850,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 	       ULONG Attributes,
 	       PKEY_OBJECT* ReturnedObject)
 {
-  PKEY_OBJECT CurKey;
+  PKEY_OBJECT CurKey = 0;
   ULONG Index;
 
   DPRINT("Scanning key list for: %wZ (Parent: %wZ)\n",

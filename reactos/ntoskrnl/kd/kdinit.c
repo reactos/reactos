@@ -34,10 +34,15 @@ BOOLEAN KdpEarlyBreak = FALSE;
 LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
 KD_DISPATCH_TABLE DispatchTable[KdMax];
 
+#ifdef _M_IX86
 PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
                                          KdpSerialInit,
                                          KdpInitDebugLog,
                                          KdpBochsInit};
+#elif defined(_M_PPC)
+PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
+					 KdpInitDebugLog};
+#endif
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -248,7 +253,10 @@ KdInitSystem(ULONG BootPhase,
         /* Call Providers at Phase 0 */
         for (i = 0; i < KdMax; i++)
         {
-            InitRoutines[i](&DispatchTable[i], 0);
+	    if(InitRoutines[i])
+	    {
+		InitRoutines[i](&DispatchTable[i], 0);
+	    }
         }
 
         /* Call Wrapper at Phase 0 */

@@ -294,6 +294,11 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     /* Parse it and change every slash to a space */
     BootPath = LoaderBlock->LoadOptions;
     do {if (*BootPath == '/') *BootPath = ' ';} while (*BootPath++);
+
+#ifdef _M_PPC
+    /* Finally link to the ReactOS specific part in the extension section */
+    LoaderBlock->u.PowerPC.BootInfo = &KeRosLoaderBlock;
+#endif
 }
 
 VOID
@@ -325,6 +330,7 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 	boot_infos_t *XBootInfo = (boot_infos_t *)LoaderBlock->ArchExtra;
 	memcpy(&PpcEarlybootInfo, XBootInfo, sizeof(PpcEarlybootInfo));
 	PpcEarlybootInfo.dispFont = BootDigits;
+	LoaderBlock->ArchExtra = (ULONG)&PpcEarlybootInfo;
 	BootInfo = (struct _boot_infos_t *)&PpcEarlybootInfo;
 	DrawNumber(BootInfo, 0x1234abcd, 10, 100);
 	DrawNumber(BootInfo, (ULONG)nk, 10 , 150);
@@ -447,10 +453,14 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     }
 
     /* Choose last module address as the final kernel address */
+    /* This is a workaround re: high and low adjust.
+     * The ABI we're using doesn't respect HIGHADJ pairing like compilers for NT do, so well be a bit 
+     * lenient.  This can be fixed later.
+     */
+#ifndef _M_PPC
     MmFreeLdrLastKernelAddress =
         PAGE_ROUND_UP(KeLoaderModules[KeRosLoaderBlock.ModsCount - 1].ModEnd);
 
-#ifndef _M_PPC
     /* Select the HAL Base */
     HalBase = KeLoaderModules[1].ModStart;
 
@@ -458,7 +468,13 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     DriverBase = MmFreeLdrLastKernelAddress;
     LdrHalBase = (ULONG_PTR)DriverBase;
 #else
+    MmFreeLdrLastKernelAddress =
+        ROUND_UP(KeLoaderModules[KeRosLoaderBlock.ModsCount - 1].ModEnd, 0x10000);
+
+    /* Select the HAL Base */
     HalBase = KeLoaderModules[1].ModStart;
+
+    /* Choose Driver Base */
     DriverBase = MmFreeLdrLastKernelAddress;
     LdrHalBase = KeLoaderModules[1].ModStart;
 #endif
@@ -466,15 +482,15 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     /* Initialize Module Management */
     LdrInitModuleManagement((PVOID)KeLoaderModules[0].ModStart);
 
+#ifdef _M_PPC
+    LdrpSettleHal((PVOID)DriverBase);
+#endif
+
     /* Load HAL.DLL with the PE Loader */
     LdrSafePEProcessModule((PVOID)HalBase,
                             (PVOID)DriverBase,
                             (PVOID)KeLoaderModules[0].ModStart,
                             &DriverSize);
-
-#ifdef _M_PPC
-    LdrpSettleHal((PVOID)DriverBase);
-#endif
 
     /* Increase the last kernel address with the size of HAL */
     MmFreeLdrLastKernelAddress += PAGE_ROUND_UP(DriverSize);

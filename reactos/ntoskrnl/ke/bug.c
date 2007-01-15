@@ -122,6 +122,7 @@ INIT_FUNCTION
 NTAPI
 KiInitializeBugCheck(VOID)
 {
+#if 0
     PRTL_MESSAGE_RESOURCE_DATA BugCheckData;
     LDR_RESOURCE_INFO ResourceInfo;
     PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
@@ -148,6 +149,7 @@ KiInitializeBugCheck(VOID)
                                    NULL);
         if (NT_SUCCESS(Status)) KiBugCodeMessages = BugCheckData;
     }
+#endif
 }
 
 VOID
