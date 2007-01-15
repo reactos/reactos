@@ -78,7 +78,7 @@ KeWaitForGate(IN PKGATE Gate,
 
                 /* Release the APC lock and return */
                 KiReleaseApcLock(&ApcLock);
-                return;
+                break;
             }
 
             /* Setup a Wait Block */
@@ -122,8 +122,8 @@ KeWaitForGate(IN PKGATE Gate,
             /* Find a new thread to run */
             Status = KiSwapThread(Thread, KeGetCurrentPrcb());
 
-            /* Check if we were executing an APC */
-            if (Status != STATUS_KERNEL_APC) return;
+            /* Make sure we weren't executing an APC */
+            if (Status == STATUS_SUCCESS) return;
         }
     } while (TRUE);
 }
@@ -149,18 +149,14 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
         KiAcquireDispatcherObject(&Gate->Header);
 
         /* Make sure we're not already signaled or that the list is empty */
-        if (Gate->Header.SignalState)
-        {
-            /* Lower IRQL and quit */
-            KeLowerIrql(OldIrql);
-            return;
-        }
+        if (Gate->Header.SignalState) break;
 
         /* Check if our wait list is empty */
         if (IsListEmpty(&Gate->Header.WaitListHead))
         {
             /* It is, so signal the event */
             Gate->Header.SignalState = 1;
+            break;
         }
         else
         {
@@ -187,7 +183,7 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
             RemoveEntryList(&WaitBlock->WaitListEntry);
 
             /* Clear wait status */
-            WaitThread->WaitStatus = 0;
+            WaitThread->WaitStatus = STATUS_SUCCESS;
 
             /* Set state and CPU */
             WaitThread->State = DeferredReady;
@@ -223,6 +219,7 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
 
             /* Exit the dispatcher */
             KiExitDispatcher(OldIrql);
+            return;
         }
     }
 

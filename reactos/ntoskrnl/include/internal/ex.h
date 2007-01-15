@@ -745,7 +745,8 @@ ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
     ASSERT(PushLock->Waiting || PushLock->Shared == 0);
 
     /* Unlock the pushlock */
-    OldValue.Value = InterlockedExchangeAddSizeT((PLONG)PushLock, -1);
+    OldValue.Value = InterlockedExchangeAddSizeT((PLONG)PushLock,
+                                                 -EX_PUSH_LOCK_LOCK);
 
     /* Sanity checks */
     ASSERT(OldValue.Locked);
