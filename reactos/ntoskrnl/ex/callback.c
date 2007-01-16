@@ -42,6 +42,110 @@ KEVENT ExpCallbackEvent;
 
 VOID
 NTAPI
+ExInitializeCallback(IN OUT PEX_CALLBACK Callback)
+{
+    /* Initialize the fast references */
+    Callback->RoutineBlock.Object = NULL;
+}
+
+PEX_CALLBACK_ROUTINE_BLOCK
+NTAPI
+ExAllocateCallBack(IN PEX_CALLBACK_FUNCTION Function,
+                   IN PVOID Context)
+{
+    PEX_CALLBACK_ROUTINE_BLOCK Callback;
+
+    /* Allocate a callback */
+    Callback = ExAllocatePoolWithTag(PagedPool,
+                                     sizeof(*Callback),
+                                     TAG('C', 'b', 'r', 'b'));
+    if (Callback)
+    {
+        /* Initialize it */
+        Callback->Function = Function;
+        Callback->Context = Context;
+        ExInitializeRundownProtection(&Callback->RundownProtect);
+    }
+
+    /* Return it */
+    return Callback;
+}
+
+VOID
+NTAPI
+ExFreeCallback(IN PEX_CALLBACK_ROUTINE_BLOCK Callback)
+{
+    /* Just free it from memory */
+    ExFreePool(Callback);
+}
+
+VOID
+NTAPI
+ExWaitForCallBacks(IN PEX_CALLBACK_ROUTINE_BLOCK Callback)
+{
+    /* Wait on the rundown */
+    ExWaitForRundownProtectionRelease(&Callback->RundownProtect);
+}
+
+PEX_CALLBACK_FUNCTION
+NTAPI
+ExGetCallBackBlockRoutine(IN PEX_CALLBACK_ROUTINE_BLOCK Callback)
+{
+    /* Return the function */
+    return Callback->Function;
+}
+
+PVOID
+NTAPI
+ExGetCallBackBlockContext(IN PEX_CALLBACK_ROUTINE_BLOCK Callback)
+{
+    /* Return the context */
+    return Callback->Context;
+}
+
+VOID
+NTAPI
+ExDereferenceCallBackBlock(IN OUT PEX_CALLBACK CallBack,
+                           IN PEX_CALLBACK_ROUTINE_BLOCK CallbackRoutineBlock)
+{
+    /* FIXME: TODO */
+}
+
+PEX_CALLBACK_ROUTINE_BLOCK
+NTAPI
+ExReferenceCallBackBlock(IN OUT PEX_CALLBACK CallBack)
+{
+    /* FIXME: TODO */
+    return NULL;
+}
+
+VOID
+NTAPI // FIXME: FORCEINLINE AFTER TESTING!
+ExDoCallBack(IN OUT PEX_CALLBACK Callback,
+             IN PVOID Context,
+             IN PVOID Argument1,
+             IN PVOID Argument2)
+{
+    PEX_CALLBACK_ROUTINE_BLOCK CallbackRoutineBlock;
+    PEX_CALLBACK_FUNCTION Function;
+
+    /* Reference the block */
+    CallbackRoutineBlock = ExReferenceCallBackBlock(Callback);
+    if (CallbackRoutineBlock)
+    {
+        /* Get the function */
+        Function = ExGetCallBackBlockRoutine(CallbackRoutineBlock);
+
+        /* Do the callback */
+        Function(Context, Argument1, Argument2);
+
+        /* Now dereference it */
+        ExDereferenceCallBackBlock(Callback, CallbackRoutineBlock);
+    }
+}
+
+VOID
+NTAPI
 ExpDeleteCallback(IN PVOID Object)
 {
     /* Sanity check */
