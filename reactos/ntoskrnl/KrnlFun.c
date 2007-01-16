@@ -9,7 +9,6 @@
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
 // Ex:
-//  - Implement Generic Callback mechanism.
 //  - Use pushlocks for handle implementation.
 //
 // Ke1:

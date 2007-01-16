@@ -365,14 +365,11 @@ extern KGUARDED_MUTEX PspActiveProcessMutex;
 extern LARGE_INTEGER ShortPsLockDelay;
 extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
 extern PHANDLE_TABLE PspCidTable;
-extern PCREATE_THREAD_NOTIFY_ROUTINE
-PspThreadNotifyRoutine[PSP_MAX_CREATE_THREAD_NOTIFY];
-extern PCREATE_PROCESS_NOTIFY_ROUTINE
-PspProcessNotifyRoutine[PSP_MAX_CREATE_PROCESS_NOTIFY];
-extern PLOAD_IMAGE_NOTIFY_ROUTINE
-PspLoadImageNotifyRoutine[PSP_MAX_LOAD_IMAGE_NOTIFY];
+extern EX_CALLBACK PspThreadNotifyRoutine[PSP_MAX_CREATE_THREAD_NOTIFY];
+extern EX_CALLBACK PspProcessNotifyRoutine[PSP_MAX_CREATE_PROCESS_NOTIFY];
+extern EX_CALLBACK PspLoadImageNotifyRoutine[PSP_MAX_LOAD_IMAGE_NOTIFY];
 extern PLEGO_NOTIFY_ROUTINE PspLegoNotifyRoutine;
-extern ULONG PspThreadNotifyRoutineCount;
+extern ULONG PspThreadNotifyRoutineCount, PspProcessNotifyRoutineCount;
 extern BOOLEAN PsImageNotifyEnabled;
 extern PKWIN32_PROCESS_CALLOUT PspW32ProcessCallout;
 extern PKWIN32_THREAD_CALLOUT PspW32ThreadCallout;

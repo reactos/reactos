@@ -230,31 +230,6 @@ ExReferenceCallBackBlock(IN OUT PEX_CALLBACK CallBack)
     return CallbackRoutineBlock;
 }
 
-VOID
-NTAPI // FIXME: FORCEINLINE AFTER TESTING!
-ExDoCallBack(IN OUT PEX_CALLBACK Callback,
-             IN PVOID Context,
-             IN PVOID Argument1,
-             IN PVOID Argument2)
-{
-    PEX_CALLBACK_ROUTINE_BLOCK CallbackRoutineBlock;
-    PEX_CALLBACK_FUNCTION Function;
-
-    /* Reference the block */
-    CallbackRoutineBlock = ExReferenceCallBackBlock(Callback);
-    if (CallbackRoutineBlock)
-    {
-        /* Get the function */
-        Function = ExGetCallBackBlockRoutine(CallbackRoutineBlock);
-
-        /* Do the callback */
-        Function(Context, Argument1, Argument2);
-
-        /* Now dereference it */
-        ExDereferenceCallBackBlock(Callback, CallbackRoutineBlock);
-    }
-}
-
 BOOLEAN
 NTAPI
 ExCompareExchangeCallBack(IN OUT PEX_CALLBACK CallBack,

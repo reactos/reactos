@@ -33,13 +33,19 @@ PspRunCreateThreadNotifyRoutines(IN PETHREAD CurrentThread,
                                  IN BOOLEAN Create)
 {
     ULONG i;
-    CLIENT_ID Cid = CurrentThread->Cid;
 
-    /* Loop the notify routines */
-    for (i = 0; i < PspThreadNotifyRoutineCount; i++)
+    /* Check if we have registered routines */
+    if (PspThreadNotifyRoutineCount)
     {
-        /* Call it */
-        PspThreadNotifyRoutine[i](Cid.UniqueProcess, Cid.UniqueThread, Create);
+        /* Loop callbacks */
+        for (i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)
+        {
+            /* Do the callback */
+            ExDoCallBack(&PspThreadNotifyRoutine[i],
+                         CurrentThread->Cid.UniqueProcess,
+                         CurrentThread->Cid.UniqueThread,
+                         (PVOID)(ULONG_PTR)Create);
+        }
     }
 }
 
@@ -49,17 +55,18 @@ PspRunCreateProcessNotifyRoutines(IN PEPROCESS CurrentProcess,
                                   IN BOOLEAN Create)
 {
     ULONG i;
-    HANDLE ProcessId = (HANDLE)CurrentProcess->UniqueProcessId;
-    HANDLE ParentId = CurrentProcess->InheritedFromUniqueProcessId;
 
-    /* Loop the notify routines */
-    for(i = 0; i < PSP_MAX_CREATE_PROCESS_NOTIFY; ++i)
+    /* Check if we have registered routines */
+    if (PspProcessNotifyRoutineCount)
     {
-        /* Make sure it exists */
-        if(PspProcessNotifyRoutine[i])
+        /* Loop callbacks */
+        for (i = 0; i < PSP_MAX_CREATE_PROCESS_NOTIFY; i++)
         {
-            /* Call it */
-            PspProcessNotifyRoutine[i](ParentId, ProcessId, Create);
+            /* Do the callback */
+            ExDoCallBack(&PspProcessNotifyRoutine[i],
+                         CurrentProcess->InheritedFromUniqueProcessId,
+                         (PVOID)(ULONG_PTR)Create,
+                         NULL);
         }
     }
 }
@@ -75,12 +82,11 @@ PspRunLoadImageNotifyRoutines(PUNICODE_STRING FullImageName,
     /* Loop the notify routines */
     for (i = 0; i < PSP_MAX_LOAD_IMAGE_NOTIFY; ++ i)
     {
-        /* Make sure it exists */
-        if (PspLoadImageNotifyRoutine[i])
-        {
-            /* Call it */
-            PspLoadImageNotifyRoutine[i](FullImageName, ProcessId, ImageInfo);
-        }
+        /* Do the callback */
+        ExDoCallBack(&PspLoadImageNotifyRoutine[i],
+                     FullImageName,
+                     ProcessId,
+                     ImageInfo);
     }
 }
 

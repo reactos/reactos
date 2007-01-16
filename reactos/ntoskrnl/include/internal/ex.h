@@ -169,7 +169,59 @@ ExInitPoolLookasidePointers(VOID);
 VOID
 NTAPI
 ExInitializeCallBack(
-    IN PEX_CALLBACK Callback
+    IN OUT PEX_CALLBACK Callback
+);
+
+PEX_CALLBACK_ROUTINE_BLOCK
+NTAPI
+ExAllocateCallBack(
+    IN PEX_CALLBACK_FUNCTION Function,
+    IN PVOID Context
+);
+
+VOID
+NTAPI
+ExFreeCallBack(
+    IN PEX_CALLBACK_ROUTINE_BLOCK CallbackRoutineBlock
+);
+
+BOOLEAN
+NTAPI
+ExCompareExchangeCallBack (
+    IN OUT PEX_CALLBACK CallBack,
+    IN PEX_CALLBACK_ROUTINE_BLOCK NewBlock,
+    IN PEX_CALLBACK_ROUTINE_BLOCK OldBlock
+);
+
+PEX_CALLBACK_ROUTINE_BLOCK
+NTAPI
+ExReferenceCallBackBlock(
+    IN OUT PEX_CALLBACK CallBack
+);
+
+VOID
+NTAPI
+ExDereferenceCallBackBlock(
+    IN OUT PEX_CALLBACK CallBack,
+    IN PEX_CALLBACK_ROUTINE_BLOCK CallbackRoutineBlock
+);
+
+PEX_CALLBACK_FUNCTION
+NTAPI
+ExGetCallBackBlockRoutine(
+    IN PEX_CALLBACK_ROUTINE_BLOCK CallbackRoutineBlock
+);
+
+PVOID
+NTAPI
+ExGetCallBackBlockContext(
+    IN PEX_CALLBACK_ROUTINE_BLOCK CallbackRoutineBlock
+);
+
+VOID
+NTAPI
+ExWaitForCallBacks(
+    IN PEX_CALLBACK_ROUTINE_BLOCK CallbackRoutineBlock
 );
 
 /* Rundown Functions ********************************************************/
@@ -336,6 +388,33 @@ ExSystemExceptionFilter(VOID);
 static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
 {
     return ExSystemExceptionFilter();
+}
+
+/* CALLBACKS *****************************************************************/
+
+VOID
+FORCEINLINE
+ExDoCallBack(IN OUT PEX_CALLBACK Callback,
+             IN PVOID Context,
+             IN PVOID Argument1,
+             IN PVOID Argument2)
+{
+    PEX_CALLBACK_ROUTINE_BLOCK CallbackRoutineBlock;
+    PEX_CALLBACK_FUNCTION Function;
+
+    /* Reference the block */
+    CallbackRoutineBlock = ExReferenceCallBackBlock(Callback);
+    if (CallbackRoutineBlock)
+    {
+        /* Get the function */
+        Function = ExGetCallBackBlockRoutine(CallbackRoutineBlock);
+
+        /* Do the callback */
+        Function(Context, Argument1, Argument2);
+
+        /* Now dereference it */
+        ExDereferenceCallBackBlock(Callback, CallbackRoutineBlock);
+    }
 }
 
 /* RUNDOWN *******************************************************************/
