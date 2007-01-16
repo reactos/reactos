@@ -8,6 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#define NTDDI_VERSION NTDDI_WS03
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
@@ -89,7 +90,7 @@ KiInsertQueueApc(IN PKAPC Apc,
     PLIST_ENTRY ListHead, NextEntry;
     PKAPC QueuedApc;
     NTSTATUS Status;
-    BOOLEAN RequestInterrupt;
+    BOOLEAN RequestInterrupt = FALSE;
 
     /*
      * Check if the caller wanted this APC to use the thread's environment at
@@ -137,8 +138,8 @@ KiInsertQueueApc(IN PKAPC Apc,
     {
         /* Special APC, find the first Normal APC in the list */
         ListHead = &ApcState->ApcListHead[ApcMode];
-        NextEntry = ListHead->Flink;
-        while(NextEntry != ListHead)
+        NextEntry = ListHead->Blink;
+        while (NextEntry != ListHead)
         {
             /* Get the APC */
             QueuedApc = CONTAINING_RECORD(NextEntry, KAPC, ApcListEntry);
@@ -147,11 +148,8 @@ KiInsertQueueApc(IN PKAPC Apc,
             if (QueuedApc->NormalRoutine) break;
 
             /* Move to the next APC in the Queue */
-            NextEntry = NextEntry->Flink;
+            NextEntry = NextEntry->Blink;
         }
-
-        /* Move to the APC before this one (ie: the last Special APC) */
-        NextEntry = NextEntry->Blink;
 
         /* Insert us here */
         InsertHeadList(NextEntry, &Apc->ApcListEntry);
@@ -185,23 +183,8 @@ KiInsertQueueApc(IN PKAPC Apc,
             /* Acquire the dispatcher lock */
             KiAcquireDispatcherLock();
 
-            /* Check if this is a non-kernel mode APC */
-            if (ApcMode != KernelMode)
-            {
-                /*
-                 * Not a Kernel-Mode APC. Are we waiting in user-mode?
-                 * If so, then are we alertable or already have an APC pending?
-                 */
-                if (((Thread->State == Waiting) && (Thread->WaitMode == UserMode)) &&
-                    ((Thread->Alertable) || (Thread->ApcState.UserApcPending)))
-                {
-                    /* Set user-mode APC pending */
-                    Thread->ApcState.UserApcPending = TRUE;
-                    Status = STATUS_USER_APC;
-                    goto Unwait;
-                }
-            }
-            else
+            /* Check if this is a kernel-mode APC */
+            if (ApcMode == KernelMode)
             {
                 /* Kernel-mode APC, set us pending */
                 Thread->ApcState.KernelApcPending = TRUE;
@@ -211,45 +194,37 @@ KiInsertQueueApc(IN PKAPC Apc,
                 {
                     /* The thread is running, so remember to send a request */
                     RequestInterrupt = TRUE;
-#ifndef CONFIG_SMP
-                    /* On UP systems, request it immediately */
-                    HalRequestSoftwareInterrupt(APC_LEVEL);
-#endif
                 }
-                else
+                else if ((Thread->State == Waiting) &&
+                         (Thread->WaitIrql == PASSIVE_LEVEL) &&
+                         !(Thread->SpecialApcDisable) &&
+                         (!(Apc->NormalRoutine) ||
+                          (!(Thread->KernelApcDisable) &&
+                           !(Thread->ApcState.KernelApcInProgress))))
                 {
-                    /*
-                     * If the thread is Waiting at PASSIVE_LEVEL AND
-                     *      Special APCs are not disabled AND
-                     *          He is a Normal APC AND
-                     *              Kernel APCs are not disabled AND
-                     *                  Kernel APC is not pending OR
-                     *          He is a Special APC THEN
-                     *              Unwait thread with STATUS_KERNEL_APC
-                     */
-                    if ((Thread->State == Waiting) &&
-                        (Thread->WaitIrql == PASSIVE_LEVEL) &&
-                        !(Thread->SpecialApcDisable) &&
-                        (!(Apc->NormalRoutine) ||
-                         (!(Thread->KernelApcDisable) &&
-                          !(Thread->ApcState.KernelApcInProgress))))
-                    {
-                        /* We'll unwait with this status */
-                        Status = STATUS_KERNEL_APC;
+                    /* We'll unwait with this status */
+                    Status = STATUS_KERNEL_APC;
 
-                        /* Wake up the thread */
+                    /* Wake up the thread */
 Unwait:
-                        KiUnwaitThread(Thread, Status, PriorityBoost);
-                    }
-                    else
-                    {
-                        /* Check if the thread is in a deferred ready state */
-                        if (Thread->State == DeferredReady)
-                        {
-                            /* FIXME: TODO in new scheduler */
-                        }
-                    }
+                    KiUnwaitThread(Thread, Status, PriorityBoost);
                 }
+                else if (Thread->State == GateWait)
+                {
+                    /* We were in a gate wait. FIXME: Handle this */
+                    DPRINT1("Not yet supported -- Report this to Alex\n");
+                    KEBUGCHECK(0);
+                }
+            }
+            else if ((Thread->State == Waiting) &&
+                     (Thread->WaitMode == UserMode) &&
+                     ((Thread->Alertable) ||
+                      (Thread->ApcState.UserApcPending)))
+            {
+                /* Set user-mode APC pending */
+                Thread->ApcState.UserApcPending = TRUE;
+                Status = STATUS_USER_APC;
+                goto Unwait;
             }
 
             /* Release dispatcher lock */
@@ -891,10 +866,7 @@ KeRemoveQueueApc(IN PKAPC Apc)
 
         /* Acquire the dispatcher lock and remove it from the list */
         KiAcquireDispatcherLockAtDpcLevel();
-        RemoveEntryList(&Apc->ApcListEntry);
-
-        /* If the Queue is completely empty, then no more APCs are pending */
-        if (IsListEmpty(&ApcState->ApcListHead[Apc->ApcMode]))
+        if (RemoveEntryList(&ApcState->ApcListHead[Apc->ApcMode]))
         {
             /* Set the correct state based on the APC Mode */
             if (Apc->ApcMode == KernelMode)

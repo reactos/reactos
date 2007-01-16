@@ -280,7 +280,7 @@ NtCancelTimer(IN HANDLE TimerHandle,
                                        PreviousMode,
                                        (PVOID*)&Timer,
                                        NULL);
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
         /* Lock the Timer */
         KeAcquireSpinLock(&Timer->Lock, &OldIrql);
@@ -289,7 +289,9 @@ NtCancelTimer(IN HANDLE TimerHandle,
         if (Timer->ApcAssociated)
         {
             /* Get the Thread. */
-            TimerThread = CONTAINING_RECORD(Timer->TimerApc.Thread, ETHREAD, Tcb);
+            TimerThread = CONTAINING_RECORD(Timer->TimerApc.Thread,
+                                            ETHREAD,
+                                            Tcb);
 
             /* Lock its active list */
             KeAcquireSpinLockAtDpcLevel(&TimerThread->ActiveTimerListLock);
@@ -403,7 +405,7 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
                             0,
                             0,
                             (PVOID*)&Timer);
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
         /* Initialize the DPC */
         KeInitializeDpc(&Timer->TimerDpc, ExpTimerDpcRoutine, Timer);
@@ -475,7 +477,7 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
                                 DesiredAccess,
                                 NULL,
                                 &hTimer);
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
         /* Make sure it's safe to write to the handle */
         _SEH_TRY
@@ -531,14 +533,15 @@ NtQueryTimer(IN HANDLE TimerHandle,
         _SEH_TRY
         {
             /* Return the remaining time, corrected */
-            BasicInfo->TimeRemaining.QuadPart = Timer->KeTimer.DueTime.QuadPart -
+            BasicInfo->TimeRemaining.QuadPart = Timer->
+                                                KeTimer.DueTime.QuadPart -
                                                 KeQueryInterruptTime();
 
             /* Return the current state */
             BasicInfo->SignalState = KeReadStateTimer(&Timer->KeTimer);
 
             /* Return the buffer length if requested */
-            if(ReturnLength) *ReturnLength = sizeof(TIMER_BASIC_INFORMATION);
+            if (ReturnLength) *ReturnLength = sizeof(TIMER_BASIC_INFORMATION);
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
