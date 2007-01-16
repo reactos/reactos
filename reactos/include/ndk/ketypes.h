@@ -679,7 +679,6 @@ typedef enum _KOBJECTS
 //
 // Kernel Thread (KTHREAD)
 //
-#include <pshpack1.h>
 typedef struct _KTHREAD
 {
     DISPATCHER_HEADER DispatcherHeader;
@@ -700,31 +699,31 @@ typedef struct _KTHREAD
         {
             UCHAR ApcStateFill[23];
             UCHAR ApcQueueable;
+            volatile UCHAR NextProcessor;
+            volatile UCHAR DeferredProcessor;
+            UCHAR AdjustReason;
+            SCHAR AdjustIncrement;
         };
     };
-    volatile UCHAR NextProcessor;
-    volatile UCHAR DeferredProcessor;
-    UCHAR AdjustReason;
-    SCHAR AdjustIncrement;
     KSPIN_LOCK ApcQueueLock;
     ULONG ContextSwitches;
     volatile UCHAR State;
     UCHAR NpxState;
-    UCHAR WaitIrql;
-    SCHAR WaitMode;
-    LONG WaitStatus;
+    KIRQL WaitIrql;
+    KPROCESSOR_MODE WaitMode;
+    LONG_PTR WaitStatus;
     union
     {
         PKWAIT_BLOCK WaitBlockList;
         PKGATE GateObject;
     };
-    UCHAR Alertable;
-    UCHAR WaitNext;
+    BOOLEAN Alertable;
+    BOOLEAN WaitNext;
     UCHAR WaitReason;
     SCHAR Priority;
-    UCHAR EnableStackSwap;
+    BOOLEAN EnableStackSwap;
     volatile UCHAR SwapBusy;
-    UCHAR Alerted[2];
+    BOOLEAN Alerted[MaximumMode];
     union
     {
         LIST_ENTRY WaitListEntry;
@@ -745,51 +744,50 @@ typedef struct _KTHREAD
     union
     {
         KTIMER Timer;
-        UCHAR TimerFill[40];
-    };
-    union
-    {
         struct
         {
-            LONG AutoAlignment:1;
-            LONG DisableBoost:1;
+            UCHAR TimerFill[40];
+            union
+            {
+                struct
+                {
+                    LONG AutoAlignment:1;
+                    LONG DisableBoost:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-            LONG EtwStackTrace1ApcInserted:1;
-            LONG EtwStackTrace2ApcInserted:1;
-            LONG CycleChargePending:1;
-            LONG ReservedFlags:27;
+                    LONG EtwStackTrace1ApcInserted:1;
+                    LONG EtwStackTrace2ApcInserted:1;
+                    LONG CycleChargePending:1;
+                    LONG ReservedFlags:27;
 #else
-            LONG ReservedFlags:30;
+                    LONG ReservedFlags:30;
 #endif
+                };
+                LONG ThreadFlags;
+            };
         };
-        LONG ThreadFlags;
     };
-    PVOID Padding;
     union
     {
-        KWAIT_BLOCK WaitBlock[4];
-        union
+        KWAIT_BLOCK WaitBlock[THREAD_WAIT_OBJECTS + 1];
+        struct
         {
-            struct
-            {
-                UCHAR WaitBlockFill0[23];
-                UCHAR SystemAffinityActive;
-            };
-            struct
-            {
-                UCHAR WaitBlockFill1[47];
-                SCHAR PreviousMode;
-            };
-            struct
-            {
-                UCHAR WaitBlockFill2[71];
-                UCHAR ResourceIndex;
-            };
-            struct
-            {
-                UCHAR WaitBlockFill3[95];
-                UCHAR LargeStack;
-            };
+            UCHAR WaitBlockFill0[23];
+            BOOLEAN SystemAffinityActive;
+        };
+        struct
+        {
+            UCHAR WaitBlockFill1[47];
+            CCHAR PreviousMode;
+        };
+        struct
+        {
+            UCHAR WaitBlockFill2[71];
+            UCHAR ResourceIndex;
+        };
+        struct
+        {
+            UCHAR WaitBlockFill3[95];
+            UCHAR LargeStack;
         };
     };
     LIST_ENTRY QueueListEntry;
@@ -801,15 +799,15 @@ typedef struct _KTHREAD
     PVOID ServiceTable;
     UCHAR ApcStateIndex;
     UCHAR IdealProcessor;
-    UCHAR Preempted;
+    BOOLEAN Preempted;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    UCHAR CalloutActive;
+    BOOLEAN CalloutActive;
 #else
-    UCHAR ProcessReadyQueue;
+    BOOLEAN ProcessReadyQueue;
 #endif
-    UCHAR KernelStackResident;
-    CHAR BasePriority;
-    CHAR PriorityDecrement;
+    BOOLEAN KernelStackResident;
+    SCHAR BasePriority;
+    SCHAR PriorityDecrement;
     CHAR Saturation;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONG SystemCallNumber;
@@ -833,29 +831,29 @@ typedef struct _KTHREAD
     union
     {
         KAPC_STATE SavedApcState;
-        union
-        {
-            UCHAR SavedApcStateFill[23];
-            SCHAR FreezeCount;
-        };
-    };
-    SCHAR SuspendCount;
-    UCHAR UserIdealProcessor;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    union
-    {
         struct
         {
-            UCHAR ReservedBits0:1;
-            UCHAR SegmentsPresent:1;
-            UCHAR Reservedbits1:1;
-        };
-        UCHAR NestedStateFlags;
-    };
+            UCHAR SavedApcStateFill[23];
+            CCHAR FreezeCount;
+            CCHAR SuspendCount;
+            UCHAR UserIdealProcessor;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+            union
+            {
+                struct
+                {
+                    UCHAR ReservedBits0:1;
+                    UCHAR SegmentsPresent:1;
+                    UCHAR Reservedbits1:1;
+                };
+                UCHAR NestedStateFlags;
+            };
 #else
-    UCHAR CalloutActive;
+            UCHAR CalloutActive;
 #endif
-    UCHAR Iopl;
+            UCHAR Iopl;
+        };
+    };
     PVOID Win32Thread;
     PVOID StackBase;
     union
@@ -894,15 +892,18 @@ typedef struct _KTHREAD
         {
             UCHAR SuspendApcFill5[47];
             UCHAR PowerState;
+            ULONG UserTime;
         };
     };
-    ULONG UserTime;
     union
     {
         KSEMAPHORE SuspendSemaphore;
-        UCHAR SuspendSemaphorefill[20];
+        struct
+        {
+            UCHAR SuspendSemaphorefill[20];
+            ULONG SListFaultCount;
+        };
     };
-    ULONG SListFaultCount;
     LIST_ENTRY ThreadListEntry;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     LIST_ENTRY MutantListHead;
@@ -912,7 +913,6 @@ typedef struct _KTHREAD
     PVOID MdlForLockedteb;
 #endif
 } KTHREAD;
-#include <poppack.h>
 
 #define ASSERT_THREAD(object) \
     ASSERT((((object)->DispatcherHeader.Type & KOBJECT_TYPE_MASK) == ThreadObject))
