@@ -60,8 +60,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Vide pour l'instant....",IDC_STATIC,66,
-                    150,112,8
+    LTEXT           "Item:", IDC_STATIC, 7, 159, 26, 9
+    COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188

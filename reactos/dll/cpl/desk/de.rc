@@ -55,9 +55,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-
-    LTEXT           "This space is intentionally left blank",IDC_STATIC,66,
-                    150,112,8
+    LTEXT           "Item:", IDC_STATIC, 7, 159, 26, 9
+    COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -134,4 +133,26 @@ BEGIN
     IDS_MESSBOX  "Message Box"
     IDS_MESSTEXT "Message Text"
     IDS_BUTTEXT  "OK"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ITEM_3D_OBJECTS      "3D-Objekte"
+    IDS_ITEM_SCROLLBAR       "Bildlaufleiste"
+    IDS_ITEM_DESKTOP         "Desktop"
+    IDS_ITEM_MESSAGE_BOX     "Dialogfeld"
+    IDS_ITEM_WINDOW          "Fenster"
+    IDS_ITEM_APP_BACKGROUND  "Hintergrund der Anwendung"
+    IDS_ITEM_SELECTED_ITEMS  "Markierte Elemente"
+    IDS_ITEM_MENU            "Menü"
+    IDS_ITEM_PALETTE_TITLE   "Palettentitel"
+    IDS_ITEM_TOOLTIP         "Quickinfo"
+    IDS_ITEM_INACTIVE_WINDOW "Rahmen der inaktiven Fenster"
+    IDS_ITEM_ACTIVE_WINDOW   "Rahmen der aktiven Fenster"
+    IDS_ITEM_ICON            "Symbol"
+    IDS_ITEM_ICON_SPACE_HORZ "Symbolabstand (Horizontal)"
+    IDS_ITEM_ICON_SPACE_VERT "Symbolabstand (Vertikal)"
+    IDS_ITEM_INACTIVE_TITLE  "Titelleiste des inaktiven Fensters"
+    IDS_ITEM_ACTIVE_TITLE    "Titelleiste des aktiven Fensters"
+    IDS_ITEM_CAPTION_BUTTONS "Titelleistenschaltfläche"
 END

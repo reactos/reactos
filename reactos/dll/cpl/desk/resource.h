@@ -84,7 +84,8 @@
 
 
 /* Appearance Page */
-#define IDC_APPEARANCE_PREVIEW 1500
+#define IDC_APPEARANCE_PREVIEW   1500
+#define IDC_APPEARANCE_UI_ITEM   1501
 
 #define IDS_INACTWIN    1510
 #define IDS_ACTWIN      1511
@@ -92,6 +93,29 @@
 #define IDS_MESSBOX     1513
 #define IDS_MESSTEXT    1514
 #define IDS_BUTTEXT     1515
+
+#define IDS_ITEM_3D_OBJECTS      1601
+#define IDS_ITEM_SCROLLBAR       1602
+#define IDS_ITEM_DESKTOP         1603
+#define IDS_ITEM_MESSAGE_BOX     1604
+#define IDS_ITEM_WINDOW          1605
+#define IDS_ITEM_APP_BACKGROUND  1606
+#define IDS_ITEM_SELECTED_ITEMS  1607
+#define IDS_ITEM_MENU            1608
+#define IDS_ITEM_PALETTE_TITLE   1609
+#define IDS_ITEM_TOOLTIP         1610
+#define IDS_ITEM_INACTIVE_WINDOW 1611
+#define IDS_ITEM_ACTIVE_WINDOW   1612
+#define IDS_ITEM_ICON            1613
+#define IDS_ITEM_ICON_SPACE_HORZ 1614
+#define IDS_ITEM_ICON_SPACE_VERT 1615
+#define IDS_ITEM_INACTIVE_TITLE  1616
+#define IDS_ITEM_ACTIVE_TITLE    1617
+#define IDS_ITEM_CAPTION_BUTTONS 1618
+
+/* Update these IDs when you change the string id list */
+#define IDS_ITEM_FIRST           (IDS_ITEM_3D_OBJECTS)
+#define IDS_ITEM_LAST            (IDS_ITEM_CAPTION_BUTTONS + 1)
 
 
 #endif /* __CPL_DESK_RESOURCE_H__ */
