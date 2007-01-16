@@ -37,6 +37,7 @@ SYSTEM_CALLBACKS ExpInitializeCallback[] =
 
 POBJECT_TYPE ExCallbackObjectType;
 KEVENT ExpCallbackEvent;
+EX_PUSH_LOCK ExpCallBackFlush;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -254,6 +255,98 @@ ExDoCallBack(IN OUT PEX_CALLBACK Callback,
     }
 }
 
+BOOLEAN
+NTAPI
+ExCompareExchangeCallBack(IN OUT PEX_CALLBACK CallBack,
+                          IN PEX_CALLBACK_ROUTINE_BLOCK NewBlock,
+                          IN PEX_CALLBACK_ROUTINE_BLOCK OldBlock)
+{
+    EX_FAST_REF Value, NewValue;
+    PEX_CALLBACK_ROUTINE_BLOCK CallbackRoutineBlock;
+    PEX_FAST_REF FastRef = &CallBack->RoutineBlock;
+
+    /* Check that we have a new block */
+    if (NewBlock)
+    {
+        /* Acquire rundown */
+        if (!ExfAcquireRundownProtectionEx(&NewBlock->RundownProtect,
+                                           MAX_FAST_REFS + 1))
+        {
+            /* This should never happen */
+            ASSERTMSG("Callback block is already undergoing rundown", FALSE);
+            return FALSE;
+        }
+    }
+
+    /* Sanity check and start swap loop */
+    ASSERT(!(((ULONG_PTR)NewBlock) & MAX_FAST_REFS));
+    for (;;)
+    {
+        /* Get the current value */
+        Value = *FastRef;
+
+        /* Make sure there's enough references to swap */
+        if (!((Value.Value ^ (ULONG_PTR)OldBlock) <= MAX_FAST_REFS)) break;
+
+        /* Check if we have an object to swap */
+        if (NewBlock)
+        {
+            /* Set up the value with maximum fast references */
+            NewValue.Value = (ULONG_PTR)NewBlock | MAX_FAST_REFS;
+        }
+        else
+        {
+            /* Write the object address itself (which is empty) */
+            NewValue.Value = (ULONG_PTR)NewBlock;
+        }
+
+        /* Do the actual compare exchange */
+        NewValue.Object = InterlockedCompareExchangePointer(&FastRef->Object,
+                                                            NewValue.Object,
+                                                            Value.Object);
+        if (NewValue.Object != Value.Object) continue;
+
+        /* All done */
+        break;
+    }
+
+    /* Get the routine block */
+    CallbackRoutineBlock = (PVOID)(Value.Value & ~MAX_FAST_REFS);
+
+    /* Make sure the swap worked */
+    if (CallbackRoutineBlock == OldBlock)
+    {
+        /* Make sure we replaced a valid pointer */
+        if (CallbackRoutineBlock)
+        {
+            /* Acquire the flush lock and immediately release it */
+            KeEnterCriticalRegion();
+            ExWaitOnPushLock(&ExpCallBackFlush);
+
+            /* Release rundown protection */
+            KeLeaveCriticalRegion();
+            ExfReleaseRundownProtectionEx(&CallbackRoutineBlock->RundownProtect,
+                                          Value.RefCnt + 1);
+        }
+
+        /* Compare worked */
+        return TRUE;
+    }
+    else
+    {
+        /* It failed, check if we had a block */
+        if (NewBlock)
+        {
+            /* We did, remove the refernces that we had added */
+            ExfReleaseRundownProtectionEx(&NewBlock->RundownProtect,
+                                          MAX_FAST_REFS + 1);
+        }
+
+        /* Return failure */
+        return FALSE;
+    }
+}
+
 VOID
 NTAPI
 ExpDeleteCallback(IN PVOID Object)
@@ -286,6 +379,9 @@ ExpInitializeCallbacks(VOID)
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     HANDLE DirectoryHandle;
     ULONG i;
+
+    /* Setup lightweight callback lock */
+    ExpCallBackFlush.Value = 0;
 
     /* Initialize the Callback Object type  */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
