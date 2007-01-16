@@ -60,7 +60,7 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
                                           CallBack))
             {
                 /* Decrement the number of routines */
-                InterlockedDecrement(&PspProcessNotifyRoutineCount);
+                InterlockedDecrement((PLONG)&PspProcessNotifyRoutineCount);
 
                 /* Dereference the block */
                 ExDereferenceCallBackBlock(&PspProcessNotifyRoutine[i],
@@ -97,7 +97,7 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
                                           NULL))
             {
                 /* Found and inserted into an empty slot, return */
-                InterlockedIncrement(&PspProcessNotifyRoutineCount);
+                InterlockedIncrement((PLONG)&PspProcessNotifyRoutineCount);
                 return STATUS_SUCCESS;
             }
         }
@@ -149,7 +149,7 @@ PsRemoveLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
                                               CallBack))
                 {
                     /* We removed it, now dereference the block */
-                    InterlockedDecrement(&PspLoadImageNotifyRoutineCount);
+                    InterlockedDecrement((PLONG)&PspLoadImageNotifyRoutineCount);
                     ExDereferenceCallBackBlock(&PspLoadImageNotifyRoutine[i],
                                                CallBack);
 
@@ -195,7 +195,7 @@ PsSetLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
                                       NULL))
         {
             /* Return success */
-            InterlockedIncrement(&PspLoadImageNotifyRoutineCount);
+            InterlockedIncrement((PLONG)&PspLoadImageNotifyRoutineCount);
             PsImageNotifyEnabled = TRUE;
             return STATUS_SUCCESS;
         }
@@ -233,7 +233,7 @@ PsRemoveCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
                                               CallBack))
                 {
                     /* We removed it, now dereference the block */
-                    InterlockedDecrement(&PspThreadNotifyRoutineCount);
+                    InterlockedDecrement((PLONG)&PspThreadNotifyRoutineCount);
                     ExDereferenceCallBackBlock(&PspThreadNotifyRoutine[i],
                                                CallBack);
 
@@ -279,7 +279,7 @@ PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
                                       NULL))
         {
             /* Return success */
-            InterlockedIncrement(&PspThreadNotifyRoutineCount);
+            InterlockedIncrement((PLONG)&PspThreadNotifyRoutineCount);
             return STATUS_SUCCESS;
         }
     }
