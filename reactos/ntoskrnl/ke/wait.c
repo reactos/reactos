@@ -42,75 +42,33 @@ FASTCALL
 KiWaitTest(IN PVOID ObjectPointer,
            IN KPRIORITY Increment)
 {
-    PLIST_ENTRY WaitEntry;
-    PLIST_ENTRY WaitList;
-    PKWAIT_BLOCK CurrentWaitBlock;
-    PKWAIT_BLOCK NextWaitBlock;
+    PLIST_ENTRY WaitEntry, WaitList;
+    PKWAIT_BLOCK WaitBlock;
     PKTHREAD WaitThread;
-    PKMUTANT FirstObject = ObjectPointer, Object;
+    PKMUTANT FirstObject = ObjectPointer;
+    NTSTATUS WaitStatus;
 
     /* Loop the Wait Entries */
     WaitList = &FirstObject->Header.WaitListHead;
     WaitEntry = WaitList->Flink;
-    while ((FirstObject->Header.SignalState > 0) &&
-           (WaitEntry != WaitList))
+    while ((FirstObject->Header.SignalState > 0) && (WaitEntry != WaitList))
     {
         /* Get the current wait block */
-        CurrentWaitBlock = CONTAINING_RECORD(WaitEntry,
-                                             KWAIT_BLOCK,
-                                             WaitListEntry);
-        WaitThread = CurrentWaitBlock->Thread;
+        WaitBlock = CONTAINING_RECORD(WaitEntry, KWAIT_BLOCK, WaitListEntry);
+        WaitThread = WaitBlock->Thread;
+        WaitStatus = STATUS_KERNEL_APC;
 
         /* Check the current Wait Mode */
-        if (CurrentWaitBlock->WaitType == WaitAny)
+        if (WaitBlock->WaitType == WaitAny)
         {
             /* Easy case, satisfy only this wait */
-            WaitEntry = WaitEntry->Blink;
+            WaitStatus = (NTSTATUS)WaitBlock->WaitKey;
             KiSatisfyObjectWait(FirstObject, WaitThread);
         }
-        else
-        {
-            /* Everything must be satisfied */
-            NextWaitBlock = CurrentWaitBlock->NextWaitBlock;
 
-            /* Loop first to make sure they are valid */
-            while (NextWaitBlock != CurrentWaitBlock)
-            {
-                /* Make sure this isn't a timeout block */
-                if (NextWaitBlock->WaitKey != STATUS_TIMEOUT)
-                {
-                    /* Get the object */
-                    Object = NextWaitBlock->Object;
-
-                    /* Check if this is a mutant */
-                    if ((Object->Header.Type == MutantObject) &&
-                        (Object->Header.SignalState <= 0) &&
-                        (WaitThread == Object->OwnerThread))
-                    {
-                        /* It's a signaled mutant */
-                    }
-                    else if (Object->Header.SignalState <= 0)
-                    {
-                        /* Skip the unwaiting */
-                        goto SkipUnwait;
-                    }
-                }
-
-                /* Go to the next Wait block */
-                NextWaitBlock = NextWaitBlock->NextWaitBlock;
-            }
-
-            /* All the objects are signaled, we can satisfy */
-            WaitEntry = WaitEntry->Blink;
-            KiWaitSatisfyAll(CurrentWaitBlock);
-        }
-
-        /* All waits satisfied, unwait the thread */
-        KiUnwaitThread(WaitThread, CurrentWaitBlock->WaitKey, Increment);
-
-SkipUnwait:
-        /* Next entry */
-        WaitEntry = WaitEntry->Flink;
+        /* Now do the rest of the unwait */
+        KiUnwaitThread(WaitThread, WaitStatus, Increment);
+        WaitEntry = WaitList->Flink;
     }
 }
 
@@ -166,7 +124,7 @@ KiUnwaitThread(IN PKTHREAD Thread,
     /* Tell the scheduler do to the increment when it readies the thread */
     ASSERT(Increment >= 0);
     Thread->AdjustIncrement = (SCHAR)Increment;
-    Thread->AdjustReason = 1;
+    Thread->AdjustReason = AdjustUnwait;
 
     /* Reschedule the Thread */
     KiReadyThread(Thread);

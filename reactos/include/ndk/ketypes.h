@@ -281,6 +281,16 @@ typedef enum _KTHREAD_STATE
 } KTHREAD_STATE, *PKTHREAD_STATE;
 
 //
+// Adjust reasons
+//
+typedef enum _ADJUST_REASON
+{
+    AdjustNone = 0,
+    AdjustUnwait = 1,
+    AdjustBoost = 2
+} ADJUST_REASON;
+
+//
 // Process States
 //
 typedef enum _KPROCESS_STATE

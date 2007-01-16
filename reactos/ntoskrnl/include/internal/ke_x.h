@@ -503,28 +503,27 @@ KxUnwaitThread(IN DISPATCHER_HEADER *Object,
                IN KPRIORITY Increment)
 {
     PLIST_ENTRY WaitEntry, WaitList;
-    PKWAIT_BLOCK CurrentWaitBlock;
+    PKWAIT_BLOCK WaitBlock;
     PKTHREAD WaitThread;
     ULONG WaitKey;
 
     /* Loop the Wait Entries */
     WaitList = &Object->WaitListHead;
+    ASSERT(IsListEmpty(&Object->WaitListHead) == FALSE);
     WaitEntry = WaitList->Flink;
     do
     {
         /* Get the current wait block */
-        CurrentWaitBlock = CONTAINING_RECORD(WaitEntry,
-                                             KWAIT_BLOCK,
-                                             WaitListEntry);
+        WaitBlock = CONTAINING_RECORD(WaitEntry, KWAIT_BLOCK, WaitListEntry);
 
         /* Get the waiting thread */
-        WaitThread = CurrentWaitBlock->Thread;
+        WaitThread = WaitBlock->Thread;
 
         /* Check the current Wait Mode */
-        if (CurrentWaitBlock->WaitType == WaitAny)
+        if (WaitBlock->WaitType == WaitAny)
         {
             /* Use the actual wait key */
-            WaitKey = CurrentWaitBlock->WaitKey;
+            WaitKey = WaitBlock->WaitKey;
         }
         else
         {
@@ -549,37 +548,34 @@ KxUnwaitThreadForEvent(IN PKEVENT Event,
                        IN KPRIORITY Increment)
 {
     PLIST_ENTRY WaitEntry, WaitList;
-    PKWAIT_BLOCK CurrentWaitBlock;
+    PKWAIT_BLOCK WaitBlock;
     PKTHREAD WaitThread;
 
     /* Loop the Wait Entries */
     WaitList = &Event->Header.WaitListHead;
+    ASSERT(IsListEmpty(&Event->Header.WaitListHead) == FALSE);
     WaitEntry = WaitList->Flink;
     do
     {
         /* Get the current wait block */
-        CurrentWaitBlock = CONTAINING_RECORD(WaitEntry,
-                                             KWAIT_BLOCK,
-                                             WaitListEntry);
+        WaitBlock = CONTAINING_RECORD(WaitEntry, KWAIT_BLOCK, WaitListEntry);
 
         /* Get the waiting thread */
-        WaitThread = CurrentWaitBlock->Thread;
+        WaitThread = WaitBlock->Thread;
 
         /* Check the current Wait Mode */
-        if (CurrentWaitBlock->WaitType == WaitAny)
+        if (WaitBlock->WaitType == WaitAny)
         {
             /* Un-signal it */
             Event->Header.SignalState = 0;
 
             /* Un-signal the event and unwait the thread */
-            KiUnwaitThread(WaitThread, CurrentWaitBlock->WaitKey, Increment);
+            KiUnwaitThread(WaitThread, WaitBlock->WaitKey, Increment);
             break;
         }
-        else
-        {
-            /* Unwait the thread with STATUS_KERNEL_APC */
-            KiUnwaitThread(WaitThread, STATUS_KERNEL_APC, Increment);
-        }
+
+        /* Unwait the thread with STATUS_KERNEL_APC */
+        KiUnwaitThread(WaitThread, STATUS_KERNEL_APC, Increment);
 
         /* Next entry */
         WaitEntry = WaitList->Flink;
