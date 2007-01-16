@@ -1516,8 +1516,8 @@ UserDrawIconEx(
         {
             BITMAPINFO bi;
             BITMAP bm;
-            BITMAPOBJ *Bitmap;
-            PBYTE pBits;
+            BITMAPOBJ *Bitmap = NULL;
+            PBYTE pBits = NULL;
             BLENDFUNCTION  BlendFunc;
             BYTE Red, Green, Blue, Alpha;
             DWORD Count = 0;
@@ -1547,6 +1547,7 @@ UserDrawIconEx(
             if (pBits == NULL)
             {
                 DPRINT1("ExAllocatePoolWithTag() failed!\n");
+                GDIOBJ_UnlockObjByPtr(GdiHandleTable, Bitmap);
                 goto cleanup;
             }
 
@@ -1609,7 +1610,6 @@ UserDrawIconEx(
 cleanup:
    if(DoFlickerFree)
    {
-
       if(hOldOffBmp) NtGdiSelectObject(hdcOff, hOldOffBmp);
       if(hOldOffBrush) NtGdiSelectObject(hdcOff, hOldOffBrush);
       if(hbmOff) NtGdiDeleteObject(hbmOff);
