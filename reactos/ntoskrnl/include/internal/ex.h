@@ -34,6 +34,12 @@ typedef struct _ETIMER
     LIST_ENTRY WakeTimerListEntry;
 } ETIMER, *PETIMER;
 
+typedef struct
+{
+    PCALLBACK_OBJECT *CallbackObject;
+    PWSTR Name;
+} SYSTEM_CALLBACKS;
+
 #define MAX_FAST_REFS           7
 
 #define EX_OBJ_TO_HDR(eob) ((POBJECT_HEADER)((ULONG_PTR)(eob) &                \
@@ -107,7 +113,7 @@ ExInitializeSystemLookasideList(
     IN PLIST_ENTRY ListHead
 );
 
-VOID
+BOOLEAN
 NTAPI
 ExpInitializeCallbacks(VOID);
 

@@ -488,11 +488,25 @@ typedef __ALIGNED(16) struct _EX_PUSH_LOCK_WAIT_BLOCK
 //
 typedef struct _CALLBACK_OBJECT
 {
-    ULONG Name;
+    ULONG Signature;
     KSPIN_LOCK Lock;
     LIST_ENTRY RegisteredCallbacks;
-    ULONG AllowMultipleCallbacks;
-} CALLBACK_OBJECT , *PCALLBACK_OBJECT;
+    BOOLEAN AllowMultipleCallbacks;
+    UCHAR reserved[3];
+} CALLBACK_OBJECT, *PCALLBACK_OBJECT;
+
+//
+// Callback Handle
+//
+typedef struct _CALLBACK_REGISTRATION
+{
+    LIST_ENTRY Link;
+    PCALLBACK_OBJECT CallbackObject;
+    PCALLBACK_FUNCTION CallbackFunction;
+    PVOID CallbackContext;
+    ULONG Busy;
+    BOOLEAN UnregisterWaiting;
+} CALLBACK_REGISTRATION, *PCALLBACK_REGISTRATION;
 
 //
 // Internal Callback Object
