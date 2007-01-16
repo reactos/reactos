@@ -6519,6 +6519,22 @@ KeTryToAcquireGuardedMutex(
     IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtectionEx(
+     IN OUT PEX_RUNDOWN_REF RunRef,
+     IN ULONG Count
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseRundownProtectionEx(
+     IN OUT PEX_RUNDOWN_REF RunRef,
+     IN ULONG Count
+);
+
 /* Fast Mutex */
 #define ExInitializeFastMutex(_FastMutex) \
 { \
