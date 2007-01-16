@@ -252,11 +252,15 @@ VOID
 STDCALL
 KiAdjustQuantumThread(IN PKTHREAD Thread)
 {
-    KPRIORITY Priority;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* Acquire thread and PRCB lock */
+    KiAcquireThreadLock(Thread);
+    KiAcquirePrcbLock(Prcb);
 
     /* Don't adjust for RT threads */
     if ((Thread->Priority < LOW_REALTIME_PRIORITY) &&
-        Thread->BasePriority < LOW_REALTIME_PRIORITY - 2)
+        (Thread->BasePriority < (LOW_REALTIME_PRIORITY - 2)))
     {
         /* Decrease Quantum by one and see if we've ran out */
         if (--Thread->Quantum <= 0)
@@ -265,46 +269,45 @@ KiAdjustQuantumThread(IN PKTHREAD Thread)
             Thread->Quantum = Thread->QuantumReset;
 
             /* Calculate new Priority */
-            Priority = Thread->Priority - (Thread->PriorityDecrement + 1);
+            Thread->Priority = KiComputeNewPriority(Thread, 1);
 
-            /* Normalize it if we've gone too low */
-            if (Priority < Thread->BasePriority) Priority = Thread->BasePriority;
-
-            /* Reset the priority decrement, we've done it */
-            Thread->PriorityDecrement = 0;
-
-            /* Set the new priority, if needed */
-            if (Priority != Thread->Priority)
+#ifdef NEW_SCHEDULER
+            /* Check if there's no next thread scheduled */
+            if (!Prcb->NextThread)
             {
-                /* 
-                 * FIXME: This should be a call to KiSetPriorityThread but
-                 * due to the current ""scheduler"" in ROS, it can't be done
-                 * cleanly since it actualyl dispatches threads instead.
-                 */
-                Thread->Priority = (SCHAR)Priority;
+                /* Select a new thread and set it on standby */
+                NextThread = KiSelectNextThread(Prcb);
+                NextThread->State = Standby;
+                Prcb->NextThread = NextThread;
             }
             else
             {
-                /* FIXME: Priority hasn't changed, find a new thread */
+                /* This thread can be preempted again */
+                Thread->Preempted = FALSE;
             }
+#else
+            /* We need to dispatch a new thread */
+            KiDispatchThread(Ready);
+#endif
         }
     }
 
-    /* Nothing to do... */
-    return;
+    /* Release locks */
+    KiReleasePrcbLock(Prcb);
+    KiReleaseThreadLock(Thread);
 }
 
 VOID
 STDCALL
-KiSetPriorityThread(PKTHREAD Thread,
-                    KPRIORITY Priority,
-                    PBOOLEAN Released)
+KiSetPriorityThread(IN PKTHREAD Thread,
+                    IN KPRIORITY Priority,
+                    OUT PBOOLEAN Released)
 {
     KPRIORITY OldPriority = Thread->Priority;
     ULONG Mask;
-    int i;
+    ULONG i;
     PKPCR Pcr;
-    DPRINT("Changing prio to : %lx\n", Priority);
+    ASSERT((Priority >= 0) && (Priority <= HIGH_PRIORITY));
 
     /* Check if priority changed */
     if (OldPriority != Priority)
@@ -458,4 +461,5 @@ NtYieldExecution(VOID)
     KiDispatchThread(Ready);
     return STATUS_SUCCESS;
 }
+
 

@@ -39,7 +39,6 @@ VOID
 NTAPI
 KiQuantumEnd(VOID)
 {
-    KPRIORITY Priority;
     PKPRCB Prcb = KeGetCurrentPrcb();
     PKTHREAD NextThread, Thread = Prcb->CurrentThread;
 
@@ -66,7 +65,7 @@ KiQuantumEnd(VOID)
             Thread->Quantum = Thread->QuantumReset;
 
             /* Calculate new priority */
-            Priority = Thread->Priority = KiComputeNewPriority(Thread);
+            Thread->Priority = KiComputeNewPriority(Thread, 1);
 
             /* Check if a new thread is scheduled */
             if (!Prcb->NextThread)
@@ -337,7 +336,7 @@ KeInsertQueueDpc(IN PKDPC Dpc,
         if (&Prcb->DpcData[DPC_THREADED].DpcListHead == &DpcData->DpcListHead)
         {
             /* Make sure a threaded DPC isn't already active */
-            if (!(Prcb->DpcThreadActive) && (!Prcb->DpcThreadRequested))
+            if (!(Prcb->DpcThreadActive) && !(Prcb->DpcThreadRequested))
             {
                 /* FIXME: Setup Threaded DPC */
                 ASSERT(FALSE);
@@ -346,7 +345,7 @@ KeInsertQueueDpc(IN PKDPC Dpc,
         else
         {
             /* Make sure a DPC isn't executing already */
-            if ((!Prcb->DpcRoutineActive) && (!Prcb->DpcInterruptRequested))
+            if (!(Prcb->DpcRoutineActive) && !(Prcb->DpcInterruptRequested))
             {
                 /* Check if this is the same CPU */
                 if (Prcb != CurrentPrcb)

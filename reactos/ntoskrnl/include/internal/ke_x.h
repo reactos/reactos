@@ -1304,7 +1304,8 @@ KiSelectReadyThread(IN KPRIORITY Priority,
 //
 SCHAR
 FORCEINLINE
-KiComputeNewPriority(IN PKTHREAD Thread)
+KiComputeNewPriority(IN PKTHREAD Thread,
+                     IN SCHAR Adjustment)
 {
     SCHAR Priority;
 
@@ -1319,7 +1320,7 @@ KiComputeNewPriority(IN PKTHREAD Thread)
     if (Priority < LOW_REALTIME_PRIORITY)
     {
         /* Decrease priority by the priority decrement */
-        Priority -= (Thread->PriorityDecrement + 1);
+        Priority -= (Thread->PriorityDecrement + Adjustment);
 
         /* Don't go out of bounds */
         if (Priority < Thread->BasePriority) Priority = Thread->BasePriority;

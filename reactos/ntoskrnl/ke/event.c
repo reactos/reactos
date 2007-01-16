@@ -237,7 +237,7 @@ KeSetEventBoostPriority(IN PKEVENT Event,
     KIRQL OldIrql;
     PKWAIT_BLOCK WaitBlock;
     PKTHREAD Thread = KeGetCurrentThread(), WaitThread;
-    ASSERT_EVENT(Event);
+    ASSERT(Event->Header.Type == SynchronizationEvent);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Acquire Dispatcher Database Lock */
@@ -275,14 +275,14 @@ KeSetEventBoostPriority(IN PKEVENT Event,
         if (WaitingThread) *WaitingThread = WaitThread;
 
         /* Calculate new priority */
-        Thread->Priority = KiComputeNewPriority(Thread);
+        Thread->Priority = KiComputeNewPriority(Thread, 0);
 
         /* Unlink the waiting thread */
-        KiUnlinkThread(WaitThread, STATUS_WAIT_0);
+        KiUnlinkThread(WaitThread, STATUS_SUCCESS);
 
         /* Request priority boosting */
         WaitThread->AdjustIncrement = Thread->Priority;
-        WaitThread->AdjustReason = 2;
+        WaitThread->AdjustReason = AdjustBoost;
 
         /* Ready the thread */
         KiReadyThread(WaitThread);
