@@ -70,7 +70,22 @@ KiQuantumEnd(VOID)
             /* Check if a new thread is scheduled */
             if (!Prcb->NextThread)
             {
-                /* FIXME: TODO. Add code from new scheduler */
+#ifdef NEW_SCHEDULER
+                /* Get a new ready thread */
+                NextThread = KiSelectReadyThread(Thread->Priority, Prcb);
+                if (NextThread)
+                {
+                    /* Found one, set it on standby */
+                    NextThread->Standby;
+                    Prcb->NextThread = NewThread;
+                }
+#else
+                /* Just leave now */
+                KiReleasePrcbLock(Prcb);
+                KeLowerIrql(DISPATCH_LEVEL);
+                KiDispatchThread(Ready);
+                return;
+#endif
             }
             else
             {
@@ -94,13 +109,8 @@ KiQuantumEnd(VOID)
         /* Just leave now */
         KiReleasePrcbLock(Prcb);
         KeLowerIrql(DISPATCH_LEVEL);
-        KiDispatchThread(Ready); // FIXME: ROS
         return;
     }
-
-    /* This shouldn't happen on ROS yet */
-    DPRINT1("The impossible happened - Tell Alex\n");
-    ASSERT(FALSE);
 
     /* Get the next thread now */
     NextThread = Prcb->NextThread;
@@ -296,7 +306,7 @@ KeInsertQueueDpc(IN PKDPC Dpc,
     }
 
     /* Check if this is a threaded DPC and threaded DPCs are enabled */
-    if ((Dpc->Type = ThreadedDpcObject) && (Prcb->ThreadDpcEnable))
+    if ((Dpc->Type == ThreadedDpcObject) && (Prcb->ThreadDpcEnable))
     {
         /* Then use the threaded data */
         DpcData = &Prcb->DpcData[DPC_THREADED];

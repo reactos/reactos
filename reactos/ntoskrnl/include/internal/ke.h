@@ -223,15 +223,14 @@ NTAPI
 KiDeferredReadyThread(IN PKTHREAD Thread);
 
 KAFFINITY
-NTAPI
+FASTCALL
 KiSetAffinityThread(
     IN PKTHREAD Thread,
-    IN KAFFINITY Affinity,
-    IN PBOOLEAN Released // hack
+    IN KAFFINITY Affinity
 );
 
 PKTHREAD
-NTAPI
+FASTCALL
 KiSelectNextThread(
     IN PKPRCB Prcb
 );

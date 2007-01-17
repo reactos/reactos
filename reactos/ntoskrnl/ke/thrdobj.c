@@ -1252,7 +1252,6 @@ KeSetAffinityThread(IN PKTHREAD Thread,
 {
     KIRQL OldIrql;
     KAFFINITY OldAffinity;
-    BOOLEAN Released;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -1260,21 +1259,10 @@ KeSetAffinityThread(IN PKTHREAD Thread,
     OldIrql = KiAcquireDispatcherLock();
 
     /* Call the internal function */
-    OldAffinity = KiSetAffinityThread(Thread, Affinity, &Released);
+    OldAffinity = KiSetAffinityThread(Thread, Affinity);
 
-    /* Check if lock was released */
-    if (!Released)
-    {
-        /* Release the dispatcher database */
-        KiReleaseDispatcherLock(OldIrql);
-    }
-    else
-    {
-        /* Lower IRQL only */
-        KeLowerIrql(OldIrql);
-    }
-
-    /* Return old affinity */
+    /* Release the dispatcher database and return old affinity */
+    KiReleaseDispatcherLock(OldIrql);
     return OldAffinity;
 }
 

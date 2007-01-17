@@ -1259,12 +1259,12 @@ KiSelectReadyThread(IN KPRIORITY Priority,
 {
     LONG PriorityMask, PrioritySet, HighPriority;
     PLIST_ENTRY ListEntry;
-    PKTHREAD Thread;
+    PKTHREAD Thread = NULL;
 
     /* Save the current mask and get the priority set for the CPU */
     PriorityMask = Priority;
     PrioritySet = Prcb->ReadySummary >> (UCHAR)Priority;
-    if (!PrioritySet) return NULL;
+    if (!PrioritySet) goto Quickie;
 
     /*  Get the highest priority possible */
     BitScanReverse((PULONG)&HighPriority, PrioritySet);
@@ -1275,7 +1275,7 @@ KiSelectReadyThread(IN KPRIORITY Priority,
     ASSERT(IsListEmpty(&Prcb->DispatcherReadyListHead[HighPriority]) == FALSE);
 
     /* Get the first thread on the list */
-    ListEntry = &Prcb->DispatcherReadyListHead[HighPriority];
+    ListEntry = Prcb->DispatcherReadyListHead[HighPriority].Flink;
     Thread = CONTAINING_RECORD(ListEntry, KTHREAD, WaitListEntry);
 
     /* Make sure this thread is here for a reason */
@@ -1284,14 +1284,14 @@ KiSelectReadyThread(IN KPRIORITY Priority,
     ASSERT(Thread->NextProcessor == Prcb->Number);
 
     /* Remove it from the list */
-    RemoveEntryList(&Thread->WaitListEntry);
-    if (IsListEmpty(&Thread->WaitListEntry))
+    if (RemoveEntryList(&Thread->WaitListEntry))
     {
         /* The list is empty now, reset the ready summary */
         Prcb->ReadySummary ^= PRIORITY_MASK(HighPriority);
     }
 
     /* Sanity check and return the thread */
+Quickie:
     ASSERT((Thread == NULL) ||
            (Thread->BasePriority == 0) ||
            (Thread->Priority != 0));

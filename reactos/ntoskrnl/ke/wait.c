@@ -183,10 +183,6 @@ KiExitDispatcher(IN KIRQL OldIrql)
     /* Make sure there's a new thread scheduled */
     if (!Prcb->NextThread) goto Quickie;
 
-    /* This shouldn't happen on ROS yet */
-    DPRINT1("The impossible happened - Tell Alex\n");
-    ASSERT(FALSE);
-
     /* Lock the PRCB */
     KiAcquirePrcbLock(Prcb);
 
