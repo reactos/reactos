@@ -8,7 +8,7 @@
  * the opcode. but a opcode have also normal bit that is always been set to 
  * same. thuse bit are always 0 or 1
  */
-CPU_BYTE cpuPPCInit_Addx[32] = {2,0,1,0,1,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,0};
+
 CPU_BYTE cpuPPCInit_Blr[32]  = {0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1,1,1,0};
 
 

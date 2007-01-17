@@ -22,6 +22,7 @@ CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
     if (HowManyRegInUse > 8)
     {
         setup_ebp =1; /* we will use ebx as ebp */
+        stack = HowManyRegInUse * regbits;
     }
 
 
@@ -36,13 +37,17 @@ CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
     fprintf(outfp,"_main:\n");
 
     /* setup a frame pointer */
-    //fprintf(outfp,"\n; Setup frame pointer \n");
-    //fprintf(outfp,"push ebp\n");
-    //fprintf(outfp,"mov  ebp,esp\n");
-    //fprintf(outfp,"sub  esp, %d ; Alloc %d bytes for reg\n\n",stack,stack);
+
+    if (setup_ebp == 1)
+    {
+        fprintf(outfp,"\n; Setup frame pointer \n");
+        fprintf(outfp,"push ebx\n");
+        fprintf(outfp,"mov  ebx,esp\n");
+        fprintf(outfp,"sub  esp, %d ; Alloc %d bytes for reg\n\n",stack,stack);
+    }
 
     fprintf(outfp,"; Start the program \n");
-    while (pMystart!=pMyend)
+    while (pMystart!=NULL)
     {
         /* fixme the line lookup from anaylysing process */
 
@@ -60,7 +65,7 @@ CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
                 {
                     /* source are imm */
 
-                    if (pMyBrainAnalys->dst == eax)
+                    if (pMystart->dst == eax)
                     {
                         if (pMystart->src == 0)
                             fprintf(outfp,"xor eax,eax\n");
@@ -90,8 +95,7 @@ CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
                     }
                     else
                     {
-                        //fprintf(outfp,"mov dword [ebp - %d], %llu\n", tmp, pMystart->src);
-                        printf("not support move from register\n");
+                        fprintf(outfp,"mov dword [ebx - %d], %llu\n", tmp, pMystart->src);
                     }
                 }
             } /* end pMyBrainAnalys->type & 8 */
@@ -100,12 +104,12 @@ CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
         /* return */
         if (pMystart->op == OP_ANY_ret)
         {
-            //if (pMyBrainAnalys->ptr_next == NULL)
-            //{
-            //   fprintf(outfp,"\n; clean up after the frame \n");
-            //   fprintf(outfp,"mov esp, ebp\n");
-            //   fprintf(outfp,"pop ebp\n");
-            //}
+            if (pMyBrainAnalys->ptr_next == NULL)
+            {
+               fprintf(outfp,"\n; clean up after the frame \n");
+               fprintf(outfp,"mov esp, ebx\n");
+               fprintf(outfp,"pop ebx\n");
+            }
             fprintf(outfp,"ret\n");
         }
         pMystart = (PMYBrainAnalys) pMystart->ptr_next;

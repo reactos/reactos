@@ -27,22 +27,7 @@
  *               value +1 and higher : who many byte we should add to cpu_pos
  */
  
-CPU_INT PPC_Addx( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
-                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch,
-                   CPU_INT mode)
 
-{
-    /* 
-     * ConvertBitToByte() is perfect to use to get the bit being in use from a bit array
-     * GetMaskByte() is perfect if u whant known which bit have been mask out 
-     * see M68kopcode.c and how it use the ConvertBitToByte()
-     */
-
-    fprintf(out,"Line_0x%8x :\n",BaseAddress + cpu_pos);
-
-    printf(";Add unimplement\n");
-    return -1;
-}
 
 CPU_INT PPC_Blr( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
                    CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch,
