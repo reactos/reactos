@@ -101,15 +101,16 @@ Author:
 #define KTHREAD_STACK_LIMIT                     0x1C
 #define KTHREAD_TEB                             0x74
 #define KTHREAD_KERNEL_STACK                    0x20
-#define KTHREAD_STATE                           0x4C
-#define KTHREAD_NPX_STATE                       0x4D
 #define KTHREAD_ALERTED                         0x5E
 #define KTHREAD_APCSTATE_PROCESS                0x28 + 0x10
 #define KTHREAD_PENDING_USER_APC                0x28 + 0x16
 #define KTHREAD_PENDING_KERNEL_APC              0x28 + 0x15
 #define KTHREAD_CONTEXT_SWITCHES                0x48
+#define KTHREAD_STATE                           0x4C
+#define KTHREAD_NPX_STATE                       0x4D
 #define KTHREAD_WAIT_IRQL                       0x4E
 #define KTHREAD_NEXT_PROCESSOR                  0x40
+#define KTHREAD_WAIT_REASON                     0x5A
 #define KTHREAD_SWAP_BUSY                       0x5D
 #define KTHREAD_SERVICE_TABLE                   0x118
 #define KTHREAD_PREVIOUS_MODE                   0xD7

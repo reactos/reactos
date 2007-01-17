@@ -725,7 +725,7 @@ KeInsertQueueApc(IN PKAPC Apc,
     }
 
     /* Release the APC lock and return success */
-    KiReleaseApcLock(&ApcLock);
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
     KiExitDispatcher(ApcLock.OldIrql);
     return State;
 }
@@ -949,5 +949,6 @@ KeAreAllApcsDisabled(VOID)
     return ((KeGetCurrentThread()->SpecialApcDisable) ||
             (KeGetCurrentIrql() >= APC_LEVEL)) ? TRUE : FALSE;
 }
+
 
 

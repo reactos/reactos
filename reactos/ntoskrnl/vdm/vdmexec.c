@@ -49,7 +49,7 @@ VdmSwapContext(IN PKTRAP_FRAME TrapFrame,
     ULONG EFlags, OldEFlags;
 
     /* Make sure that we're at APC_LEVEL and that this is a valid frame */
-    ASSERT_IRQL(APC_LEVEL);
+    ASSERT(KeGetCurrentIrql() == APC_LEVEL);
     ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
 
     /* Check if this is a V86 frame */
@@ -320,4 +320,5 @@ VdmDispatchBop(IN PKTRAP_FRAME TrapFrame)
     /* Return success */
     return TRUE;
 }
+
 

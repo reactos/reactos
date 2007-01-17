@@ -28,7 +28,7 @@ IoAllocateController(IN PCONTROLLER_OBJECT ControllerObject,
                      IN PVOID Context)
 {
     IO_ALLOCATION_ACTION Result;
-    ASSERT_IRQL(DISPATCH_LEVEL);
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     /* Initialize the Wait Context Block */
     DeviceObject->Queue.Wcb.DeviceContext = Context;

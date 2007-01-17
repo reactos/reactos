@@ -199,7 +199,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
                                 DeferredContext,
                                 SystemArgument1,
                                 SystemArgument2);
-                ASSERT_IRQL(DISPATCH_LEVEL);
+                ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
                 /* Disable interrupts and keep looping */
                 _disable();

@@ -161,7 +161,7 @@ KiExitDispatcher(IN KIRQL OldIrql)
     BOOLEAN PendingApc;
 
     /* Make sure we're at synchronization level */
-    ASSERT_IRQL(SYNCH_LEVEL);
+    ASSERT_IRQL_EQUAL(SYNCH_LEVEL);
 
     /* Check if we have deferred threads */
     KiCheckDeferredReadyList(Prcb);
@@ -484,11 +484,11 @@ StartWait:
     return WaitStatus;
 
 DontWait:
-    /* Adjust the Quantum */
-    KiAdjustQuantumThread(Thread);
+    /* Release dispatcher lock but maintain high IRQL */
+    KiReleaseDispatcherLockFromDpcLevel();
 
-    /* Release & Return */
-    KiReleaseDispatcherLock(Thread->WaitIrql);
+    /* Adjust the Quantum and return the wait status */
+    KiAdjustQuantumThread(Thread);
     return WaitStatus;
 }
 
@@ -761,11 +761,11 @@ StartWait:
     return WaitStatus;
 
 DontWait:
-    /* Adjust the Quantum */
-    KiAdjustQuantumThread(Thread);
+    /* Release dispatcher lock but maintain high IRQL */
+    KiReleaseDispatcherLockFromDpcLevel();
 
-    /* Release & Return */
-    KiReleaseDispatcherLock(Thread->WaitIrql);
+    /* Adjust the Quantum and return the wait status */
+    KiAdjustQuantumThread(Thread);
     return WaitStatus;
 }
 

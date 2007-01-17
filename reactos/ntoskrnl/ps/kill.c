@@ -911,7 +911,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
     if ((bSelf) || (PsGetCurrentThread() == Thread))
     {
         /* This should only happen at passive */
-        ASSERT_IRQL(PASSIVE_LEVEL);
+        ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
         /* Mark it as terminated */
         PspSetCrossThreadFlag(Thread, CT_TERMINATED_BIT);

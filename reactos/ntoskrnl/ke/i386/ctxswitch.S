@@ -11,11 +11,11 @@
 /* INCLUDES ******************************************************************/
 
 #include <roscfg.h>
-#include <internal/i386/ke.h>
 #include <ndk/asm.h>
 .intel_syntax noprefix
 
 #define Running 2
+#define WrDispatchInt 0x1F
 
 /* FUNCTIONS ****************************************************************/
 
@@ -289,6 +289,7 @@ BadThread:
  *     Absolutely all registers except ESP can be trampled here for maximum code flexibility.
  *
  *--*/
+.globl @KiSwapContextInternal@0
 .func @KiSwapContextInternal@0, @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
 
@@ -413,7 +414,7 @@ SameProcess:
     sub eax, NPX_FRAME_LENGTH
 
     /* Check if this isn't V86 Mode, so we can bias the Esp0 */
-    test dword ptr [eax - KTRAP_FRAME_SIZE + KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    test dword ptr [eax - KTRAP_FRAME_SIZE + KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz NoAdjust
 
     /* Bias esp */
@@ -562,7 +563,6 @@ WrongCpu:
 .globl @KiSwapContext@8
 .func @KiSwapContext@8, @KiSwapContext@8
 @KiSwapContext@8:
-    /* Note, we CANNOT touch ebp */
 
     /* Save 4 registers */
     sub esp, 4 * 4
@@ -664,7 +664,7 @@ CheckSchedule:
     /* Set the current thread to ready */
     mov edi, [ebx+KPCR_CURRENT_THREAD]
 #ifdef CONFIG_SMP
-    mov [edi+KTHREAD_STATE], Ready
+    mov byte ptr [edi+KTHREAD_SWAP_BUSY], 1
 
     /* Acquire the PRCB Lock */
     lock bts [ebx+KPCR_PRCB_PRCB_LOCK], 0

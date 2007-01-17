@@ -632,7 +632,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     NTSTATUS Status;
     PEXTENDED_DEVOBJ_EXTENSION DeviceObjectExtension;
 
-    ASSERT_IRQL(PASSIVE_LEVEL);
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     DPRINT("IoRegisterDeviceInterface(): PDO %p, RefString: %wZ\n",
         PhysicalDeviceObject, ReferenceString);

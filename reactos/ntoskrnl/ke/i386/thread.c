@@ -6,18 +6,18 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-/* INCLUDES ****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
-typedef struct _KSHARED_CTXSWITCH_FRAME
+typedef struct _KSWITCHFRAME
 {
     PVOID ExceptionList;
-    KIRQL WaitIrql;
-    PVOID RetEip;
-} KSHARED_CTXSWITCH_FRAME, *PKSHARED_CTXSWITCH_FRAME;
+    BOOLEAN ApcBypassDisable;
+    PVOID RetAddr;
+} KSWITCHFRAME, *PKSWITCHFRAME;
 
 typedef struct _KSTART_FRAME
 {
@@ -27,65 +27,47 @@ typedef struct _KSTART_FRAME
     BOOLEAN UserThread;
 } KSTART_FRAME, *PKSTART_FRAME;
 
-/*
- * This is the Initial Thread Stack Frame on i386.
- *
- * It is composed of :
- *
- *     - A shared Thread Switching frame so that we can use
- *       the context-switching code when initializing the thread.
- *
- *     - The Stack Frame for KiThreadStartup, which are the parameters
- *       that it will receive (System/Start Routines & Context)
- *
- *     - A Trap Frame with the Initial Context *IF AND ONLY IF THE THREAD IS USER*
- *
- *     - The FPU Save Area, theoretically part of the Trap Frame's "ExtendedRegisters"
- *
- * This Initial Thread Stack Frame starts at Thread->InitialStack and it spans
- * a total size of 0x2B8 bytes.
- */
-typedef struct _KUINIT_FRAME {
-    KSHARED_CTXSWITCH_FRAME CtxSwitchFrame;    /* -0x2B8 */
-    KSTART_FRAME StartFrame;                   /* -0x2AC */
-    KTRAP_FRAME TrapFrame;                     /* -0x29C */
-    FX_SAVE_AREA FxSaveArea;                   /* -0x210 */
+typedef struct _KUINIT_FRAME
+{
+    KSWITCHFRAME CtxSwitchFrame;
+    KSTART_FRAME StartFrame;
+    KTRAP_FRAME TrapFrame;
+    FX_SAVE_AREA FxSaveArea;
 } KUINIT_FRAME, *PKUINIT_FRAME;
 
-typedef struct _KKINIT_FRAME {
-    KSHARED_CTXSWITCH_FRAME CtxSwitchFrame;    /* -0x22C */
-    KSTART_FRAME StartFrame;                   /* -0x220 */
-    FX_SAVE_AREA FxSaveArea;                   /* -0x210 */
+typedef struct _KKINIT_FRAME
+{
+    KSWITCHFRAME CtxSwitchFrame;
+    KSTART_FRAME StartFrame;
+    FX_SAVE_AREA FxSaveArea;
 } KKINIT_FRAME, *PKKINIT_FRAME;
 
 /* FUNCTIONS *****************************************************************/
 
 VOID
-STDCALL
-Ke386InitThreadWithContext(PKTHREAD Thread,
-                           PKSYSTEM_ROUTINE SystemRoutine,
-                           PKSTART_ROUTINE StartRoutine,
-                           PVOID StartContext,
-                           PCONTEXT ContextPointer)
+NTAPI
+Ke386InitThreadWithContext(IN PKTHREAD Thread,
+                           IN PKSYSTEM_ROUTINE SystemRoutine,
+                           IN PKSTART_ROUTINE StartRoutine,
+                           IN PVOID StartContext,
+                           IN PCONTEXT ContextPointer)
 {
     PFX_SAVE_AREA FxSaveArea;
     PFXSAVE_FORMAT FxSaveFormat;
     PKSTART_FRAME StartFrame;
-    PKSHARED_CTXSWITCH_FRAME CtxSwitchFrame;
+    PKSWITCHFRAME CtxSwitchFrame;
     PKTRAP_FRAME TrapFrame;
     CONTEXT LocalContext;
     PCONTEXT Context = NULL;
     ULONG ContextFlags;
 
     /* Check if this is a With-Context Thread */
-    DPRINT("Ke386InitThreadContext\n");
     if (ContextPointer)
     {
         /* Set up the Initial Frame */
         PKUINIT_FRAME InitFrame;
         InitFrame = (PKUINIT_FRAME)((ULONG_PTR)Thread->InitialStack -
                                     sizeof(KUINIT_FRAME));
-        DPRINT("Setting up a user-mode thread. InitFrame at: %p\n", InitFrame);
 
         /* Copy over the context we got */
         RtlCopyMemory(&LocalContext, ContextPointer, sizeof(CONTEXT));
@@ -190,7 +172,6 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
         PKKINIT_FRAME InitFrame;
         InitFrame = (PKKINIT_FRAME)((ULONG_PTR)Thread->InitialStack -
                                     sizeof(KKINIT_FRAME));
-        DPRINT("Setting up a kernel thread. InitFrame at: %p\n", InitFrame);
 
         /* Setup the Fx Area */
         FxSaveArea = &InitFrame->FxSaveArea;
@@ -230,15 +211,14 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
     StartFrame->SystemRoutine = SystemRoutine;
 
     /* And set up the Context Switch Frame */
-    CtxSwitchFrame->RetEip = KiThreadStartup;
-    CtxSwitchFrame->WaitIrql = APC_LEVEL;
-    CtxSwitchFrame->ExceptionList = (PVOID)0xFFFFFFFF;
+    CtxSwitchFrame->RetAddr = KiThreadStartup;
+    CtxSwitchFrame->ApcBypassDisable = TRUE;
+    CtxSwitchFrame->ExceptionList = EXCEPTION_CHAIN_END;;
 
     /* Save back the new value of the kernel stack. */
-    DPRINT("Final Kernel Stack: %x \n", CtxSwitchFrame);
     Thread->KernelStack = (PVOID)CtxSwitchFrame;
-    return;
 }
 
 /* EOF */
+
 

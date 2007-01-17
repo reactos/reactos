@@ -1257,21 +1257,20 @@ PKTHREAD
 KiSelectReadyThread(IN KPRIORITY Priority,
                     IN PKPRCB Prcb)
 {
-    LONG PriorityMask, PrioritySet, HighPriority;
+    ULONG PrioritySet, HighPriority;
     PLIST_ENTRY ListEntry;
     PKTHREAD Thread = NULL;
 
     /* Save the current mask and get the priority set for the CPU */
-    PriorityMask = Priority;
-    PrioritySet = Prcb->ReadySummary >> (UCHAR)Priority;
+    PrioritySet = Prcb->ReadySummary >> Priority;
     if (!PrioritySet) goto Quickie;
 
-    /*  Get the highest priority possible */
+    /* Get the highest priority possible */
     BitScanReverse((PULONG)&HighPriority, PrioritySet);
     ASSERT((PrioritySet & PRIORITY_MASK(HighPriority)) != 0);
-    HighPriority += PriorityMask;
+    HighPriority += Priority;
 
-    /* Make sure the list isn't at highest priority */
+    /* Make sure the list isn't empty at the highest priority */
     ASSERT(IsListEmpty(&Prcb->DispatcherReadyListHead[HighPriority]) == FALSE);
 
     /* Get the first thread on the list */

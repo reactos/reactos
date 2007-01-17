@@ -8,12 +8,15 @@
 //                     Do NOT ask when it will be fixed.
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
-// Ex:
-//  - Use pushlocks for handle implementation.
-//
 // Ke1:
 //  - Implement KiInitMachineDependent.
 //  - Implement Privileged Instruction Handler in Umode GPF.
+//
+// Ex:
+//  - Use pushlocks for handle implementation.
+//
+// Ke2:
+//  - Dispatcher Rewrite (DPCs-Timers-Waits).
 //
 // Hal:
 //  - Use APC and DPC Interrupt Dispatchers.
@@ -21,10 +24,6 @@
 //
 // Fstub:
 //  - Implement IoAssignDriveLetters using mount manager support.
-//
-// Ke2:
-//  - New optimized table-based tick-hashed timer implementation.
-//  - New Thread Scheduler based on 2003.
 //
 // Kd:
 //  - Implement KD Kernel Debugging and WinDBG support.

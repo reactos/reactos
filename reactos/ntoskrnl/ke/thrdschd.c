@@ -21,6 +21,15 @@ ULONG KiIdleSMTSummary;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+FASTCALL
+KiQueueReadyThread(IN PKTHREAD Thread,
+                   IN PKPRCB Prcb)
+{
+    /* Call the macro. We keep the API for compatibility with ASM code */
+    KxQueueReadyThread(Thread, Prcb);
+}
+
 static
 VOID
 KiInsertIntoThreadList(KPRIORITY Priority,
@@ -247,7 +256,7 @@ KiReadyThread(IN PKTHREAD Thread)
     if (Process->State != ProcessInMemory)
     {
         /* We don't page out processes in ROS */
-        ASSERT(FALSE);
+        KEBUGCHECK(0);
     }
     else if (!Thread->KernelStackResident)
     {
@@ -260,7 +269,7 @@ KiReadyThread(IN PKTHREAD Thread)
         Thread->State = Transition;
 
         /* The stack is always resident in ROS */
-        ASSERT(FALSE);
+        KEBUGCHECK(0);
     }
     else
     {
@@ -326,10 +335,11 @@ KiAdjustQuantumThread(IN PKTHREAD Thread)
     /* Release locks */
     KiReleasePrcbLock(Prcb);
     KiReleaseThreadLock(Thread);
+    KiExitDispatcher(Thread->WaitIrql);
 }
 
 VOID
-STDCALL
+NTAPI
 KiSetPriorityThread(IN PKTHREAD Thread,
                     IN KPRIORITY Priority,
                     OUT PBOOLEAN Released)
@@ -351,7 +361,7 @@ KiSetPriorityThread(IN PKTHREAD Thread,
             if (Thread->State == Ready)
             {
                 /* Make sure we're not on the ready queue */
-                if (Thread->ProcessReadyQueue)
+                if (!Thread->ProcessReadyQueue)
                 {
                     /* Get the PRCB for the thread and lock it */
                     Processor = Thread->NextProcessor;
@@ -362,12 +372,12 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                     if ((Thread->State == Ready) &&
                         (Thread->NextProcessor == Prcb->Number))
                     {
+#ifdef NEW_SCHEDULER
                         /* Sanity check */
                         ASSERT((Prcb->ReadySummary &
                                 PRIORITY_MASK(Thread->Priority)));
 
                         /* Remove it from the current queue */
-#ifdef NEW_SCHEDULER
                         if (RemoveEntryList(&Thread->WaitListEntry))
                         {
                             /* Update the ready summary */
@@ -395,7 +405,6 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                     else
                     {
                         /* Release the lock and loop again */
-                        KEBUGCHECK(0);
                         KiReleasePrcbLock(Prcb);
                         continue;
                     }
@@ -409,7 +418,6 @@ KiSetPriorityThread(IN PKTHREAD Thread,
             else if (Thread->State == Standby)
             {
                 /* Get the PRCB for the thread and lock it */
-                KEBUGCHECK(0);
                 Processor = Thread->NextProcessor;
                 Prcb = KiProcessorBlock[Processor];
                 KiAcquirePrcbLock(Prcb);

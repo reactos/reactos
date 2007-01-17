@@ -12,6 +12,9 @@
 #include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
 
+#define Running 2
+#define WrDispatchInt 0x1F
+
 /* GLOBALS *******************************************************************/
 
 .data
@@ -2082,7 +2085,7 @@ _KiDispatchInterrupt@0:
 
     /* Restore stack and exception list */
     pop esp
-    pop dword ptr [ebx]
+    pop dword ptr [ebx+KPCR_EXCEPTION_LIST]
     pop ebp
 
 CheckQuantum:
@@ -2096,10 +2099,44 @@ CheckQuantum:
 
     /* Check if we have a thread to swap to */
     cmp byte ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
-    jz Return
+    jmp Return
 
-    /* FIXME: Schedule new thread */
-    UNHANDLED_PATH
+    /* Make space on the stack to save registers */
+    sub esp, 3 * 4
+    mov [esp+8], esi
+    mov [esi+4], edi
+    mov [esi+0], ebp
+
+    /* Get the current thread */
+    mov edi, [ebx+KPCR_CURRENT_THREAD]
+
+#ifdef CONFIG_SMP
+    #error SMP Interrupt not handled!
+#endif
+
+    /* Get the next thread and clear it */
+    mov esi, [ebx+KPCR_PRCB_NEXT_THREAD]
+    and dword ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
+
+    /* Set us as the current running thread */
+    mov [ebx+KPCR_CURRENT_THREAD], esi
+    mov byte ptr [esi+KTHREAD_STATE], Running
+    mov byte ptr [edi+KTHREAD_WAIT_REASON], WrDispatchInt
+
+    /* Put thread in ECX and get the PRCB in EDX */
+    mov ecx, edi
+    lea edx, [ebx+KPCR_PRCB_DATA]
+    call @KiQueueReadyThread@8
+
+    /* Set APC_LEVEL and do the swap */
+    mov cl, APC_LEVEL
+    call @KiSwapContextInternal@0
+
+    /* Restore registers */
+    mov ebp, [esp+0]
+    mov edi, [esp+4]
+    mov esi, [esp+8]
+    add esp, 3*4
 
 Return:
     /* All done */
