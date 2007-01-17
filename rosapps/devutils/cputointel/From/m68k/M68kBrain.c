@@ -21,16 +21,6 @@
  *                        cpu with same desgin but few other opcode or extend opcode
  *         outfp        : the output file pointer
  *
- *           mode       : if we should run disambler of this binary or
- *                        translate it, Disambler will not calc the
- *                        the row name right so we simple give each
-                          row a name. In translations mode we run a 
- *                        analys so we getting better optimzing and 
- *                        only row name there we need.
- *                        value for mode are :
- *                                             0 = disambler mode
- *                                             1 = translate mode intel
- *
  * return value
  *         0            : Ok 
  *         1            : unimplemt 
@@ -44,8 +34,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
                      CPU_UNINT cpu_size,
                      CPU_UNINT BaseAddress,
                      CPU_UNINT cpuarch,
-                     FILE *outfp,
-                     CPU_INT mode)
+                     FILE *outfp)
 {
     CPU_UNINT cpu_oldpos;
     CPU_INT cpuint;
@@ -63,7 +52,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Abcd))) == ConvertBitToByte(cpuM68kInit_Abcd))
         {
             retsize = M68k_Abcd( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                 BaseAddress, cpuarch, mode);
+                                 BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -73,7 +62,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Add))) == ConvertBitToByte(cpuM68kInit_Add))
         {
             retsize = M68k_Add( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -83,7 +72,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Addi))) == ConvertBitToByte(cpuM68kInit_Addi))
         {
             retsize = M68k_Addi( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                 BaseAddress, cpuarch, mode);
+                                 BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -93,7 +82,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Addq))) == ConvertBitToByte(cpuM68kInit_Addq))
         {
             retsize = M68k_Addq( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                 BaseAddress, cpuarch, mode);
+                                 BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -103,7 +92,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Addx))) == ConvertBitToByte(cpuM68kInit_Addx))
         {
             retsize = M68k_Addx( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                 BaseAddress, cpuarch, mode);
+                                 BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -113,7 +102,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_And))) == ConvertBitToByte(cpuM68kInit_And))
         {
             retsize = M68k_Add( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -123,7 +112,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Andi))) == ConvertBitToByte(cpuM68kInit_Andi))
         {
             retsize = M68k_Andi( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                 BaseAddress, cpuarch, mode);
+                                 BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -137,7 +126,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
             {
                 cpu_pos++;
                 retsize = M68k_AndToCCR( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                         BaseAddress, cpuarch, mode);
+                                         BaseAddress, cpuarch);
                 if (retsize<0)
                     retcode = 1;
                 else
@@ -153,7 +142,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Bhi))) == ConvertBitToByte(cpuM68kInit_Bhi))
         {
             retsize = M68k_Bhi( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -164,7 +153,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Bls))) == ConvertBitToByte(cpuM68kInit_Bls))
         {
             retsize = M68k_Bls( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -175,7 +164,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Bcc))) == ConvertBitToByte(cpuM68kInit_Bcc))
         {
             retsize = M68k_Bcc( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -186,7 +175,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Bcs))) == ConvertBitToByte(cpuM68kInit_Bcs))
         {
             retsize = M68k_Bcs( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -197,7 +186,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Bne))) == ConvertBitToByte(cpuM68kInit_Bne))
         {
             retsize = M68k_Bne( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -208,7 +197,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Beq))) == ConvertBitToByte(cpuM68kInit_Beq))
         {
             retsize = M68k_Beq( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -219,7 +208,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Bvc))) == ConvertBitToByte(cpuM68kInit_Bvc))
         {
             retsize = M68k_Bvc( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -230,7 +219,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Bvs))) == ConvertBitToByte(cpuM68kInit_Bvs))
         {
             retsize = M68k_Bvs( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -241,7 +230,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Bpl))) == ConvertBitToByte(cpuM68kInit_Bpl))
         {
             retsize = M68k_Bpl( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -252,7 +241,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Bmi))) == ConvertBitToByte(cpuM68kInit_Bmi))
         {
             retsize = M68k_Bmi( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -263,7 +252,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Bge))) == ConvertBitToByte(cpuM68kInit_Bge))
         {
             retsize = M68k_Bge( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -274,7 +263,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Blt))) == ConvertBitToByte(cpuM68kInit_Blt))
         {
             retsize = M68k_Blt( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -285,7 +274,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Bgt))) == ConvertBitToByte(cpuM68kInit_Bgt))
         {
             retsize = M68k_Bgt( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -296,7 +285,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Ble))) == ConvertBitToByte(cpuM68kInit_Ble))
         {
             retsize = M68k_Ble( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                BaseAddress, cpuarch, mode);
+                                BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else

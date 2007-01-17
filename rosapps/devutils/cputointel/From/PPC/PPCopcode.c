@@ -30,34 +30,25 @@
 
 
 CPU_INT PPC_Blr( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
-                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch,
-                   CPU_INT mode)
+                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
 {
 
     BaseAddress +=cpu_pos;
-    if (mode==0)
+
+    /* own translatons langues */
+    if (AllocAny()!=0)  /* alloc memory for pMyBrainAnalys */
     {
-        fprintf(out,"Line_0x%08x:\n",BaseAddress);
-        fprintf(out,"blr\n");
+       return -1;
     }
-    else if (mode>0)
-    {
-        /* own translatons langues */
-        if (AllocAny()!=0)  /* alloc memory for pMyBrainAnalys */
-        {
-            return -1;
-        }
-        pMyBrainAnalys->op = OP_ANY_ret;
-        pMyBrainAnalys->memAdr=BaseAddress;
-    }
+    pMyBrainAnalys->op = OP_ANY_ret;
+    pMyBrainAnalys->memAdr=BaseAddress;
 
     return 4;
 }
 
 
 CPU_INT PPC_Ld( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
-                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch,
-                   CPU_INT mode)
+                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
 {
     CPU_UNINT formA;
     CPU_UNINT formD;
@@ -75,25 +66,18 @@ CPU_INT PPC_Ld( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     }
 
     BaseAddress +=cpu_pos;
-    if (mode==0)
+
+    /* own translatons langues */
+    if (AllocAny()!=0)  /* alloc memory for pMyBrainAnalys */
     {
-        fprintf(out,"Line_0x%08x:\n",BaseAddress);
-        fprintf(out,"li %%r%d,%d\n",formA, formDS);
+        return -1;
     }
-    else if (mode>0)
-    {
-        /* own translatons langues */
-        if (AllocAny()!=0)  /* alloc memory for pMyBrainAnalys */
-        {
-            return -1;
-        }
-        pMyBrainAnalys->op = OP_ANY_mov;
-        pMyBrainAnalys->type= 8 + 16; /* 8 dst reg, 16 imm */
-        pMyBrainAnalys->src_size = 16;
-        pMyBrainAnalys->src = formDS;
-        pMyBrainAnalys->dst = formA;
-        pMyBrainAnalys->memAdr=BaseAddress;
-    }
+    pMyBrainAnalys->op = OP_ANY_mov;
+    pMyBrainAnalys->type= 8 + 16; /* 8 dst reg, 16 imm */
+    pMyBrainAnalys->src_size = 16;
+    pMyBrainAnalys->src = formDS;
+    pMyBrainAnalys->dst = formA;
+    pMyBrainAnalys->memAdr=BaseAddress;
 
     return 4;
 }

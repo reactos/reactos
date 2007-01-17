@@ -10,8 +10,8 @@
 #include "From/PPC/PPC.h"
 
 static  CPU_INT machine_type = 0;
-static  CPU_INT ToMachine_type = IMAGE_FILE_MACHINE_I386;
-
+//static  CPU_INT ToMachine_type = IMAGE_FILE_MACHINE_I386;
+static  CPU_INT ToMachine_type = IMAGE_FILE_MACHINE_POWERPC;
 /*
  * infileName       file name to convert or disambler 
  * outputfileName   file name to save to
@@ -20,8 +20,42 @@ static  CPU_INT ToMachine_type = IMAGE_FILE_MACHINE_I386;
  * type             the loading mode Auto, PE, bin
  * mode             disambler mode : 0 the arch cpu.
  *                  translate mode : 1 intel
+ *                  translate mode : 2 ppc
  * 
  */
+
+static void SetCPU(CPU_INT FromCpu, CPU_INT mode)
+{
+    machine_type = FromCpu;
+    switch(mode)
+    {
+        case 0:
+            ToMachine_type = machine_type;
+            break;
+
+        case 1:
+            ToMachine_type = IMAGE_FILE_MACHINE_I386;
+            break;
+
+        case 2:
+            ToMachine_type = IMAGE_FILE_MACHINE_POWERPC;
+            break;
+
+        default:
+            printf("Not supported mode\n");
+            break;
+
+    }
+}
+
+static void Convert(FILE *outfp, CPU_INT FromCpu, CPU_INT mode)
+{
+    SetCPU(machine_type,mode);
+    AnyalsingProcess();
+    ConvertProcess(outfp, machine_type, ToMachine_type);
+    FreeAny();
+}
+
 
 CPU_INT LoadPFileImage( char *infileName, char *outputfileName, 
                      CPU_UNINT BaseAddress, char *cpuid,
@@ -121,9 +155,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
        {
             if (mode > 0)
             {
-                AnyalsingProcess();
-                ConvertProcess(outfp, machine_type, ToMachine_type);
-                FreeAny();
+                Convert(outfp,machine_type,mode);
             }
             fclose(outfp);
             return 0;
@@ -134,83 +166,69 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
     {
         if (stricmp(cpuid,"m68000"))
         {
-            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68000,outfp,mode);
+            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68000,outfp);
             if (mode > 1)
             {
-                AnyalsingProcess();
-                ConvertProcess(outfp, machine_type, ToMachine_type);
-                FreeAny();
+                Convert(outfp,machine_type,mode);
             }
             fclose(outfp);
         }
         else if (stricmp(cpuid,"m68010"))
         {
-            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68010,outfp,mode);
+            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68010,outfp);
             if (mode > 1)
             {
-                AnyalsingProcess();
-                ConvertProcess(outfp, machine_type, ToMachine_type);
-                FreeAny();
+                Convert(outfp,machine_type,mode);
             }
             fclose(outfp);
             return ret;
         }
         else if (stricmp(cpuid,"m68020"))
         {
-            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68020,outfp,mode);
+            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68020,outfp);
             if (mode > 1)
             {
-                AnyalsingProcess();
-                ConvertProcess(outfp, machine_type, ToMachine_type);
-                FreeAny();
+                Convert(outfp,machine_type,mode);
             }
             fclose(outfp);
             return ret;
         }
         else if (stricmp(cpuid,"m68030"))
         {
-            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68030,outfp,mode);
+            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68030,outfp);
             if (mode > 1)
             {
-                AnyalsingProcess();
-                ConvertProcess(outfp, machine_type, ToMachine_type);
-                FreeAny();
+                Convert(outfp,machine_type,mode);
             }
             fclose(outfp);
             return ret;
         }
         else if (stricmp(cpuid,"m68040"))
         {
-            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68040,outfp,mode);
+            ret = M68KBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,68040,outfp);
             if (mode > 1)
             {
-                AnyalsingProcess();
-                ConvertProcess(outfp, machine_type, ToMachine_type);
-                FreeAny();
+                Convert(outfp,machine_type,mode);
             }
             fclose(outfp);
             return ret;
         }
         else if (stricmp(cpuid,"ppc"))
         {
-            ret = PPCBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,0,outfp,mode);
+            ret = PPCBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,0,outfp);
             if (mode > 1)
             {
-                AnyalsingProcess();
-                ConvertProcess(outfp, machine_type, ToMachine_type);
-                FreeAny();
+                Convert(outfp,machine_type,mode);
             }
             fclose(outfp);
             return ret;
         }
         else if (stricmp(cpuid,"arm4"))
         {
-            ret = ARMBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,4,outfp,mode);
+            ret = ARMBrain(cpu_buffer,cpu_pos,cpu_size,BaseAddress,4,outfp);
             if (mode > 1)
             {
-                AnyalsingProcess();
-                ConvertProcess(outfp, machine_type, ToMachine_type);
-                FreeAny();
+                Convert(outfp,machine_type,mode);
             }
             fclose(outfp);
             return ret;
@@ -223,9 +241,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
        ret = PEFileStart(cpu_buffer, 0, BaseAddress, cpu_size, outfp, mode);
        if (mode > 1)
        {
-            AnyalsingProcess();
-            ConvertProcess(outfp, machine_type, ToMachine_type);
-            FreeAny();
+           Convert(outfp,machine_type,mode);
        }
        fclose(outfp);
        return ret;
@@ -466,7 +482,7 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
                     fprintf(outfp,"; CPU found POWERPC\n");
                          //PPCBrain(memory, pos, cpu_size, base, 0, outfp);
                     machine_type = IMAGE_FILE_MACHINE_POWERPC;
-                    return PPCBrain(memory+SectionHeader->PointerToRawData,  0, SectionHeader->SizeOfRawData, 0, 0, outfp,mode);
+                    return PPCBrain(memory+SectionHeader->PointerToRawData,  0, SectionHeader->SizeOfRawData, 0, 0, outfp);
 
 
                case IMAGE_FILE_MACHINE_POWERPCFP:

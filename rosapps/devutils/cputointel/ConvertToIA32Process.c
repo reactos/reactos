@@ -8,7 +8,7 @@
 #include "misc.h"
 #include "any_op.h"
 
-CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
+CPU_INT ConvertToIA32Process( FILE *outfp, CPU_INT eax, CPU_INT ebp,
                                CPU_INT edx, CPU_INT esp, 
                                PMYBrainAnalys pMystart, 
                                PMYBrainAnalys pMyend, CPU_INT regbits,
@@ -109,7 +109,7 @@ CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
                             fprintf(outfp,"mov dword [ebx - %d], %llu\n", tmp, pMystart->src);
                         else
                         {
-                            fprintf(outfp,"unsuported optimze should not happen it happen :(\n", tmp, pMystart->src);
+                            fprintf(outfp,"unsuported optimze should not happen it happen :(\n");
                         }
                     }
                 }

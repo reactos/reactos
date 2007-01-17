@@ -44,8 +44,7 @@ CPU_INT ARMBrain(  CPU_BYTE *cpu_buffer,
                    CPU_UNINT cpu_size,
                    CPU_UNINT BaseAddress,
                    CPU_UNINT cpuarch,
-                   FILE *outfp,
-                   CPU_INT mode)
+                   FILE *outfp)
 {
     CPU_UNINT cpu_oldpos;
     CPU_INT cpuint;
@@ -64,7 +63,7 @@ CPU_INT ARMBrain(  CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte32(cpuARMInit_))) == ConvertBitToByte32(cpuARMInit_))
         {
             retsize = ARM_( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                 BaseAddress, cpuarch, mode);
+                                 BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else

@@ -50,7 +50,20 @@ CPU_INT ConvertProcess(FILE *outfp, CPU_INT FromCpuid, CPU_INT ToCpuid)
     switch (ToCpuid)
     {
         case IMAGE_FILE_MACHINE_I386:
-             ret = ConvertToIntelProcess( outfp, eax, ebp,
+             ret = ConvertToIA32Process( outfp, eax, ebp,
+                                edx, esp, 
+                               pMystart, 
+                               pMyend, regbits,
+                               HowManyRegInUse);
+             if (ret !=0)
+             {
+                 printf("should not happen contact a devloper, x86 fail\n");
+                 return -1;
+             }
+             break;
+
+        case IMAGE_FILE_MACHINE_POWERPC:
+             ret = ConvertToPPCProcess( outfp, eax, ebp,
                                 edx, esp, 
                                pMystart, 
                                pMyend, regbits,

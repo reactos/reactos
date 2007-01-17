@@ -5,6 +5,13 @@
 #define OP_ANY_mov  0x00000000
 #define OP_ANY_ret  0x00000001
 
+/* We are using same abi as PPC 
+ * eax = register 3
+ * edx = register 4
+ * esp = register 1
+ * ebp = register 31
+ */
+
 typedef struct _BrainAnalys
 {
     CPU_UNINT op;  /*  one tranlator for any cpu type set our own opcode */
@@ -33,8 +40,14 @@ typedef struct _BrainAnalys
 extern PMYBrainAnalys pMyBrainAnalys;     /* current working address */
 extern PMYBrainAnalys pStartMyBrainAnalys; /* start address */
 
-CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
+CPU_INT ConvertToIA32Process( FILE *outfp, CPU_INT eax, CPU_INT ebp,
                                CPU_INT edx, CPU_INT esp, 
+                               PMYBrainAnalys pMystart, 
+                               PMYBrainAnalys pMyend, CPU_INT regbits,
+                               CPU_INT HowManyRegInUse);
+
+CPU_INT ConvertToPPCProcess( FILE *outfp, CPU_INT r3, CPU_INT r31,
+                               CPU_INT r4, CPU_INT r1, 
                                PMYBrainAnalys pMystart, 
                                PMYBrainAnalys pMyend, CPU_INT regbits,
                                CPU_INT HowManyRegInUse);

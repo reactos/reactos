@@ -16,17 +16,6 @@
  *                             pentinum-mmx so on, use this flag to specify which type 
  *                             of cpu you whant or do not use it if it does not exists
  *                             other or any sub model.
- *
- *                mode       : if we should run disambler of this binary or
- *                             translate it, Disambler will not calc the
- *                             the row name right so we simple give each
-                               row a name. In translations mode we run a 
- *                             analys so we getting better optimzing and 
- *                             only row name there we need.
- *                             value for mode are :
- *                                                  0 = disambler mode
- *                                                  1 = translate mode intel
- *
  * Return value :
  *               value -1            : unimplement 
  *               value  0            : wrong opcode or not vaild opcode
@@ -34,8 +23,7 @@
  */
  
 CPU_INT DUMMY_Add( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
-                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch,
-                   CPU_INT mode)
+                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
 
 {
     /* 

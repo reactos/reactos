@@ -23,16 +23,6 @@
  *                        cpu with same desgin but few other opcode or extend opcode
  *         outfp        : the output file pointer
  *
- *           mode       : if we should run disambler of this binary or
- *                        translate it, Disambler will not calc the
- *                        the row name right so we simple give each
-                          row a name. In translations mode we run a 
- *                        analys so we getting better optimzing and 
- *                        only row name there we need.
- *                        value for mode are :
- *                                             0 = disambler mode
- *                                             1 = translate mode intel
- *
  * return value
  *         0            : Ok 
  *         1            : unimplemt 
@@ -46,8 +36,7 @@ CPU_INT DummyBrain(  CPU_BYTE *cpu_buffer,
                      CPU_UNINT cpu_size,
                      CPU_UNINT BaseAddress,
                      CPU_UNINT cpuarch,
-                     FILE *outfp,
-                     CPU_INT mode)
+                     FILE *outfp)
 {
     CPU_UNINT cpu_oldpos;
     CPU_INT cpuint;
@@ -71,7 +60,7 @@ CPU_INT DummyBrain(  CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte(cpuDummyInit_Add))) == ConvertBitToByte(cpuDummyInit_Add))
         {
             retsize = DUMMY_Add( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                 BaseAddress, cpuarch, mode);
+                                 BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else

@@ -44,8 +44,7 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
                      CPU_UNINT cpu_size,
                      CPU_UNINT BaseAddress,
                      CPU_UNINT cpuarch,
-                     FILE *outfp,
-                     CPU_INT mode)
+                     FILE *outfp)
 {
     CPU_UNINT cpu_oldpos;
     CPU_INT cpuint;
@@ -64,7 +63,7 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Ld))) == ConvertBitToByte32(cpuPPCInit_Ld))
         {
             retsize = PPC_Ld( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                 BaseAddress, cpuarch, mode);
+                                 BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
@@ -75,7 +74,7 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
         if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Blr))) == ConvertBitToByte32(cpuPPCInit_Blr))
         {
             retsize = PPC_Blr( outfp, cpu_buffer, cpu_pos, cpu_size,
-                                 BaseAddress, cpuarch, mode);
+                                 BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else

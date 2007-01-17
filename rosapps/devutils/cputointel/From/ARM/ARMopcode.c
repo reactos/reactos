@@ -34,8 +34,7 @@
  */
  
 CPU_INT ARM_( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
-                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch,
-                   CPU_INT mode)
+                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
 
 {
     /* 
