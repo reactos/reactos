@@ -13,10 +13,6 @@
 CPU_INT ConvertProcess(FILE *outfp, CPU_INT FromCpuid, CPU_INT ToCpuid)
 {
     CPU_INT ret=0;
-   CPU_INT eax =-1;
-   CPU_INT ebp =-1;
-   CPU_INT edx =-1;
-   CPU_INT esp =-1;
    CPU_INT regbits=-1;
    CPU_INT HowManyRegInUse = 0;
    CPU_INT RegTableCount[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -31,10 +27,6 @@ CPU_INT ConvertProcess(FILE *outfp, CPU_INT FromCpuid, CPU_INT ToCpuid)
         (FromCpuid == IMAGE_FILE_MACHINE_I386))
     {
         regbits = 32 / 8;
-        esp = 1;
-        eax = 3;
-        edx = 4;
-        ebp = 31;
     }
 
     /* FIXME calc where todo first split */
@@ -61,19 +53,19 @@ CPU_INT ConvertProcess(FILE *outfp, CPU_INT FromCpuid, CPU_INT ToCpuid)
         if (RegTableCount[t]!=0)
         {
             HowManyRegInUse++;
+            RegTableCount[t]=t;
         }
-        
     }
+
 
     /* switch to the acual converting now */
     switch (ToCpuid)
     {
         case IMAGE_FILE_MACHINE_I386:
-             ret = ConvertToIA32Process( outfp, eax, ebp,
-                                edx, esp, 
-                               pMystart, 
-                               pMyend, regbits,
-                               HowManyRegInUse);
+             ret = ConvertToIA32Process( outfp, pMystart, 
+                                         pMyend, regbits,
+                                         HowManyRegInUse,
+                                         RegTableCount);
              if (ret !=0)
              {
                  printf("should not happen contact a devloper, x86 fail\n");
@@ -82,11 +74,10 @@ CPU_INT ConvertProcess(FILE *outfp, CPU_INT FromCpuid, CPU_INT ToCpuid)
              break;
 
         case IMAGE_FILE_MACHINE_POWERPC:
-             ret = ConvertToPPCProcess( outfp, eax, ebp,
-                                edx, esp, 
-                               pMystart, 
-                               pMyend, regbits,
-                               HowManyRegInUse);
+             ret = ConvertToPPCProcess( outfp, pMystart, 
+                                        pMyend, regbits,
+                                        HowManyRegInUse,
+                                        RegTableCount);
              if (ret !=0)
              {
                  printf("should not happen contact a devloper, x86 fail\n");

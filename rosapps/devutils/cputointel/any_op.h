@@ -11,18 +11,18 @@
  * esp = register 1
  * ebp = register 31
 
- * ecx = 5
- * ebx = 6
- * esi = 7
- * edi = 8
- * mmx/sse/fpu 0 = 10
- * mmx/sse/fpu 1 = 12
- * mmx/sse/fpu 2 = 14
- * mmx/sse/fpu 3 = 16
- * mmx/sse/fpu 4 = 18
- * mmx/sse/fpu 5 = 20
- * mmx/sse/fpu 6 = 22
- * mmx/sse/fpu 7 = 24
+ * ecx = 8
+ * ebx = 9
+ * esi = 10
+ * edi = 11
+ * mmx/sse/fpu 0 = 12
+ * mmx/sse/fpu 1 = 14
+ * mmx/sse/fpu 2 = 16
+ * mmx/sse/fpu 3 = 18
+ * mmx/sse/fpu 4 = 20
+ * mmx/sse/fpu 5 = 22
+ * mmx/sse/fpu 6 = 24
+ * mmx/sse/fpu 7 = 28
  */
 
 typedef struct _BrainAnalys
@@ -53,16 +53,16 @@ typedef struct _BrainAnalys
 extern PMYBrainAnalys pMyBrainAnalys;     /* current working address */
 extern PMYBrainAnalys pStartMyBrainAnalys; /* start address */
 
-CPU_INT ConvertToIA32Process( FILE *outfp, CPU_INT eax, CPU_INT ebp,
-                               CPU_INT edx, CPU_INT esp, 
+CPU_INT ConvertToIA32Process( FILE *outfp, 
                                PMYBrainAnalys pMystart, 
                                PMYBrainAnalys pMyend, CPU_INT regbits,
-                               CPU_INT HowManyRegInUse);
+                               CPU_INT HowManyRegInUse,
+                               CPU_INT *RegTableCount);
 
-CPU_INT ConvertToPPCProcess( FILE *outfp, CPU_INT r3, CPU_INT r31,
-                               CPU_INT r4, CPU_INT r1, 
+CPU_INT ConvertToPPCProcess( FILE *outfp, 
                                PMYBrainAnalys pMystart, 
                                PMYBrainAnalys pMyend, CPU_INT regbits,
-                               CPU_INT HowManyRegInUse);
+                               CPU_INT HowManyRegInUse,
+                               CPU_INT *RegTableCount);
 
 #endif

@@ -8,21 +8,67 @@
 #include "misc.h"
 #include "any_op.h"
 
-CPU_INT ConvertToIA32Process( FILE *outfp, CPU_INT eax, CPU_INT ebp,
-                               CPU_INT edx, CPU_INT esp, 
+/*
+ * eax = register 3
+ * edx = register 4
+ * esp = register 1
+ * ebp = register 31
+
+ * ecx = 8
+ * ebx = 9
+ * esi = 10
+ * edi = 11
+ * mmx/sse/fpu 0 = 12
+ * mmx/sse/fpu 1 = 14
+ * mmx/sse/fpu 2 = 16
+ * mmx/sse/fpu 3 = 18
+ * mmx/sse/fpu 4 = 20
+ * mmx/sse/fpu 5 = 22
+ * mmx/sse/fpu 6 = 24
+ * mmx/sse/fpu 7 = 28
+ */
+
+CPU_INT ConvertToIA32Process( FILE *outfp,
                                PMYBrainAnalys pMystart, 
                                PMYBrainAnalys pMyend, CPU_INT regbits,
-                               CPU_INT HowManyRegInUse)
+                               CPU_INT HowManyRegInUse,
+                               CPU_INT *RegTableCount)
 {
 
     CPU_INT stack = 0;
     CPU_UNINT tmp;
     CPU_INT setup_ebp = 0 ; /* 0 = no, 1 = yes */
+    CPU_INT t=0;
 
-    /* Fixme at moment we can not optimze code */
+    /* Fixme optimze the RegTableCount table  */
+
     //if (HowManyRegInUse > 9)
-    if (HowManyRegInUse > 4)
+    if (HowManyRegInUse > 8)
     {
+        setup_ebp =1; /* we will use ebx as ebp */
+        stack = HowManyRegInUse * regbits;
+    }
+
+    if (RegTableCount[1]!=0)
+        t++;
+    if (RegTableCount[3]!=0)
+        t++;
+    if (RegTableCount[4]!=0)
+        t++;
+    if (RegTableCount[8]!=0)
+        t++;
+    if (RegTableCount[9]!=0)
+        t++;
+    if (RegTableCount[10]!=0)
+        t++;
+    if (RegTableCount[11]!=0)
+        t++;
+    if (RegTableCount[31]!=0)
+        t++;
+
+    if (HowManyRegInUse != t)
+    {
+        /* fixme optimze the table or active the frame pointer */
         setup_ebp =1; /* we will use ebx as ebp */
         stack = HowManyRegInUse * regbits;
     }
@@ -42,19 +88,7 @@ CPU_INT ConvertToIA32Process( FILE *outfp, CPU_INT eax, CPU_INT ebp,
         fprintf(outfp,"mov  ebx,esp\n");
         fprintf(outfp,"sub  esp, %d ; Alloc %d bytes for reg\n\n",stack,stack);
     }
-    else
-    {
-         /*
-        0 EAX
-        1 ECX
-        2 EDX
-        5 EBX
-        6 ESP
-        7 EBP
-        8 ESI
-        9 EDI
-        */
-    }
+
 
     fprintf(outfp,"; Start the program \n");
     while (pMystart!=NULL)
@@ -75,33 +109,73 @@ CPU_INT ConvertToIA32Process( FILE *outfp, CPU_INT eax, CPU_INT ebp,
                 {
                     /* source are imm */
 
-                    if (pMystart->dst == eax)
+                     /* 
+                     * esi = 10
+                     * edi = 11 */
+
+                    /* eax */
+                    if (pMystart->dst == RegTableCount[3])
                     {
                         if (pMystart->src == 0)
                             fprintf(outfp,"xor eax,eax\n");
                         else
                             fprintf(outfp,"mov eax,%llu\n",pMystart->src);
                     }
-                    else if (pMystart->dst == ebp)
+                    /* ebp */
+                    else if (pMystart->dst == RegTableCount[31])
                     {
                         if (pMystart->src == 0)
                             fprintf(outfp,"xor ebp,ebp\n");
                         else
                             fprintf(outfp,"mov ebp,%llu\n",pMystart->src);
                     }
-                    else if (pMystart->dst == edx)
+                    /* edx */
+                    else if (pMystart->dst == RegTableCount[4])
                     {
                         if (pMystart->src == 0)
                             fprintf(outfp,"xor edx,edx\n");
                         else
                             fprintf(outfp,"mov edx,%llu\n",pMystart->src);
                     }
-                    else if (pMystart->dst == esp)
+                    /* esp */
+                    else if (pMystart->dst == RegTableCount[1])
                     {
                         if (pMystart->src == 0)
                             fprintf(outfp,"xor esp,esp\n");
                         else
                             fprintf(outfp,"mov esp,%llu\n",pMystart->src);
+                    }
+                    /* ecx */
+                    else if (pMystart->dst == RegTableCount[8])
+                    {
+                        if (pMystart->src == 0)
+                            fprintf(outfp,"xor ecx,ecx\n");
+                        else
+                            fprintf(outfp,"mov ecx,%llu\n",pMystart->src);
+                    }
+                    /* ebx */
+                    else if (pMystart->dst == RegTableCount[9])
+                    {
+                        if (pMystart->src == 0)
+                            fprintf(outfp,"xor ebx,ebx\n");
+                        else
+                            fprintf(outfp,"mov ebx,%llu\n",pMystart->src);
+                    }
+                    /* esi */
+                    else if (pMystart->dst == RegTableCount[10])
+                    {
+                        if (pMystart->src == 0)
+                            fprintf(outfp,"xor esi,esi\n");
+                        else
+                            fprintf(outfp,"mov esi,%llu\n",pMystart->src);
+                    }
+                    /* edi */
+                    else if (pMystart->dst == RegTableCount[10])
+                    {
+                        if (pMystart->src == 0)
+                            fprintf(outfp,"xor edi,edi\n");
+                        else
+                            fprintf(outfp,"mov edi,%llu\n",pMystart->src);
                     }
                     else
                     {
