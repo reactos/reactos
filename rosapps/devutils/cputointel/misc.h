@@ -26,5 +26,7 @@ CPU_UNINT GetData32Be(CPU_BYTE *cpu_buffer);
 CPU_INT AllocAny();
 CPU_INT FreeAny();
 CPU_INT AnyalsingProcess();
-CPU_INT ConvertToIntelProcess(FILE *outfp, CPU_INT cpuid);
+
+CPU_INT ConvertProcess(FILE *outfp, CPU_INT FromCpuid, CPU_INT ToCpuid);
+
 

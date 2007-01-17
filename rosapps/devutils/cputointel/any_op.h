@@ -1,4 +1,6 @@
 
+#ifndef __ANY_OP_H__
+#define __ANY_OP_H__
 
 #define OP_ANY_mov  0x00000000
 #define OP_ANY_ret  0x00000001
@@ -18,6 +20,11 @@ typedef struct _BrainAnalys
 
     CPU_UNINT memAdr; /* where are we in the current memory pos + baseaddress */
 
+    CPU_INT row; /* 0 = no row, 
+                  * 1 = row is bcc (conditions), 
+                  * 2 = row is jsr (Call)
+                  */
+
     /* try translate the Adress to a name */
     CPU_BYTE* ptr_next; /* hook next one */
     CPU_BYTE* ptr_prev; /* hook previus one */
@@ -25,3 +32,11 @@ typedef struct _BrainAnalys
 
 extern PMYBrainAnalys pMyBrainAnalys;     /* current working address */
 extern PMYBrainAnalys pStartMyBrainAnalys; /* start address */
+
+CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
+                               CPU_INT edx, CPU_INT esp, 
+                               PMYBrainAnalys pMystart, 
+                               PMYBrainAnalys pMyend, CPU_INT regbits,
+                               CPU_INT HowManyRegInUse);
+
+#endif

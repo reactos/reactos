@@ -10,6 +10,7 @@
 #include "From/PPC/PPC.h"
 
 static  CPU_INT machine_type = 0;
+static  CPU_INT ToMachine_type = IMAGE_FILE_MACHINE_I386;
 
 /*
  * infileName       file name to convert or disambler 
@@ -121,7 +122,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
             if (mode > 0)
             {
                 AnyalsingProcess();
-                ConvertToIntelProcess(outfp,machine_type);
+                ConvertProcess(outfp, machine_type, ToMachine_type);
                 FreeAny();
             }
             fclose(outfp);
@@ -137,7 +138,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
             if (mode > 1)
             {
                 AnyalsingProcess();
-                ConvertToIntelProcess(outfp,machine_type);
+                ConvertProcess(outfp, machine_type, ToMachine_type);
                 FreeAny();
             }
             fclose(outfp);
@@ -148,7 +149,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
             if (mode > 1)
             {
                 AnyalsingProcess();
-                ConvertToIntelProcess(outfp,machine_type);
+                ConvertProcess(outfp, machine_type, ToMachine_type);
                 FreeAny();
             }
             fclose(outfp);
@@ -160,7 +161,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
             if (mode > 1)
             {
                 AnyalsingProcess();
-                ConvertToIntelProcess(outfp,machine_type);
+                ConvertProcess(outfp, machine_type, ToMachine_type);
                 FreeAny();
             }
             fclose(outfp);
@@ -172,7 +173,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
             if (mode > 1)
             {
                 AnyalsingProcess();
-                ConvertToIntelProcess(outfp,machine_type);
+                ConvertProcess(outfp, machine_type, ToMachine_type);
                 FreeAny();
             }
             fclose(outfp);
@@ -184,7 +185,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
             if (mode > 1)
             {
                 AnyalsingProcess();
-                ConvertToIntelProcess(outfp,machine_type);
+                ConvertProcess(outfp, machine_type, ToMachine_type);
                 FreeAny();
             }
             fclose(outfp);
@@ -196,7 +197,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
             if (mode > 1)
             {
                 AnyalsingProcess();
-                ConvertToIntelProcess(outfp,machine_type);
+                ConvertProcess(outfp, machine_type, ToMachine_type);
                 FreeAny();
             }
             fclose(outfp);
@@ -208,7 +209,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
             if (mode > 1)
             {
                 AnyalsingProcess();
-                ConvertToIntelProcess(outfp,machine_type);
+                ConvertProcess(outfp, machine_type, ToMachine_type);
                 FreeAny();
             }
             fclose(outfp);
@@ -223,7 +224,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
        if (mode > 1)
        {
             AnyalsingProcess();
-            ConvertToIntelProcess(outfp,machine_type);
+            ConvertProcess(outfp, machine_type, ToMachine_type);
             FreeAny();
        }
        fclose(outfp);
