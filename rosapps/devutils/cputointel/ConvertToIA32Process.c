@@ -19,16 +19,13 @@ CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
     CPU_UNINT tmp;
     CPU_INT setup_ebp = 0 ; /* 0 = no, 1 = yes */
 
-    if (HowManyRegInUse > 8)
+    /* Fixme at moment we can not optimze code */
+    //if (HowManyRegInUse > 9)
+    if (HowManyRegInUse > 4)
     {
         setup_ebp =1; /* we will use ebx as ebp */
         stack = HowManyRegInUse * regbits;
     }
-
-
-
-    
-    
 
     fprintf(outfp,"BITS 32\n");
     fprintf(outfp,"GLOBAL _main\n");
@@ -44,6 +41,19 @@ CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
         fprintf(outfp,"push ebx\n");
         fprintf(outfp,"mov  ebx,esp\n");
         fprintf(outfp,"sub  esp, %d ; Alloc %d bytes for reg\n\n",stack,stack);
+    }
+    else
+    {
+         /*
+        0 EAX
+        1 ECX
+        2 EDX
+        5 EBX
+        6 ESP
+        7 EBP
+        8 ESI
+        9 EDI
+        */
     }
 
     fprintf(outfp,"; Start the program \n");
@@ -95,7 +105,12 @@ CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
                     }
                     else
                     {
-                        fprintf(outfp,"mov dword [ebx - %d], %llu\n", tmp, pMystart->src);
+                        if (setup_ebp == 1)
+                            fprintf(outfp,"mov dword [ebx - %d], %llu\n", tmp, pMystart->src);
+                        else
+                        {
+                            fprintf(outfp,"unsuported optimze should not happen it happen :(\n", tmp, pMystart->src);
+                        }
                     }
                 }
             } /* end pMyBrainAnalys->type & 8 */
@@ -106,9 +121,12 @@ CPU_INT ConvertToIntelProcess( FILE *outfp, CPU_INT eax, CPU_INT ebp,
         {
             if (pMyBrainAnalys->ptr_next == NULL)
             {
-               fprintf(outfp,"\n; clean up after the frame \n");
-               fprintf(outfp,"mov esp, ebx\n");
-               fprintf(outfp,"pop ebx\n");
+               if (setup_ebp == 1)
+               {
+                    fprintf(outfp,"\n; clean up after the frame \n");
+                    fprintf(outfp,"mov esp, ebx\n");
+                    fprintf(outfp,"pop ebx\n");
+               }
             }
             fprintf(outfp,"ret\n");
         }
