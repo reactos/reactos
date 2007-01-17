@@ -289,7 +289,6 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
     PLIST_ENTRY NextEntry, ListHead;
     KPRIORITY NewPriority, OldPriority;
     PKTHREAD Thread;
-    BOOLEAN Released;
     ASSERT_PROCESS(Process);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -368,7 +367,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
 
                 /* Disable decrements and update priority */
                 Thread->PriorityDecrement = 0;
-                KiSetPriorityThread(Thread, NewPriority, &Released);
+                KiSetPriorityThread(Thread, NewPriority);
             }
 
             /* Release the thread lock */
@@ -430,7 +429,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
 
                 /* Disable decrements and update priority */
                 Thread->PriorityDecrement = 0;
-                KiSetPriorityThread(Thread, NewPriority, &Released);
+                KiSetPriorityThread(Thread, NewPriority);
             }
 
             /* Release the thread lock */
@@ -442,7 +441,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
     }
 
     /* Release Dispatcher Database */
-    if (!Released) KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseDispatcherLockFromDpcLevel();
 
     /* Release the process lock */
     KiReleaseProcessLockFromDpcLevel(&ProcessLock);

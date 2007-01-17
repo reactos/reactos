@@ -2099,13 +2099,13 @@ CheckQuantum:
 
     /* Check if we have a thread to swap to */
     cmp byte ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
-    jmp Return
+    je Return
 
     /* Make space on the stack to save registers */
     sub esp, 3 * 4
     mov [esp+8], esi
-    mov [esi+4], edi
-    mov [esi+0], ebp
+    mov [esp+4], edi
+    mov [esp+0], ebp
 
     /* Get the current thread */
     mov edi, [ebx+KPCR_CURRENT_THREAD]

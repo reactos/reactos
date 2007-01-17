@@ -289,7 +289,6 @@ PspInitPhase0(VOID)
     PETHREAD SysThread;
     MM_SYSTEMSIZE SystemSize;
     UNICODE_STRING Name;
-    ULONG i;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
 
     /* FIXME: Initialize Lock Data do it STATIC */
@@ -379,12 +378,6 @@ PspInitPhase0(VOID)
     ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
-
-    /* Setup ROS Scheduler lists (HACK!) */
-    for (i = 0; i < MAXIMUM_PRIORITY; i++)
-    {
-        InitializeListHead(&PriorityListHead[i]);
-    }
 
     /*  Initialize the Thread type  */
     RtlInitUnicodeString(&Name, L"Thread");

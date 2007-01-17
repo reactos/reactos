@@ -449,11 +449,10 @@ NTAPI
 KeQueryBasePriorityThread(IN PKTHREAD Thread);
 
 VOID
-NTAPI
+FASTCALL
 KiSetPriorityThread(
     IN PKTHREAD Thread,
-    IN KPRIORITY Priority,
-    IN PBOOLEAN Released // hack
+    IN KPRIORITY Priority
 );
 
 BOOLEAN

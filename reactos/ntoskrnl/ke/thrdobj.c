@@ -1126,7 +1126,6 @@ KeSetBasePriorityThread(IN PKTHREAD Thread,
     KPRIORITY OldBasePriority, Priority, BasePriority;
     LONG OldIncrement;
     PKPROCESS Process;
-    BOOLEAN Released = FALSE;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -1220,25 +1219,14 @@ KeSetBasePriorityThread(IN PKTHREAD Thread,
     {
         /* Reset the quantum and do the actual priority modification */
         Thread->Quantum = Thread->QuantumReset;
-        KiSetPriorityThread(Thread, Priority, &Released);
+        KiSetPriorityThread(Thread, Priority);
     }
 
     /* Release thread lock */
     KiReleaseThreadLock(Thread);
 
-    /* Check if lock was released */
-    if (!Released)
-    {
-        /* Release the dispatcher database */
-        KiReleaseDispatcherLock(OldIrql);
-    }
-    else
-    {
-        /* Lower IRQL only */
-        KeLowerIrql(OldIrql);
-    }
-
-    /* Return old increment */
+    /* Release the dispatcher database and return old increment */
+    KiReleaseDispatcherLock(OldIrql);
     return OldIncrement;
 }
 
@@ -1276,7 +1264,6 @@ KeSetPriorityThread(IN PKTHREAD Thread,
 {
     KIRQL OldIrql;
     KPRIORITY OldPriority;
-    BOOLEAN Released = FALSE;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
     ASSERT((Priority <= HIGH_PRIORITY) && (Priority >= LOW_PRIORITY));
@@ -1302,23 +1289,14 @@ KeSetPriorityThread(IN PKTHREAD Thread,
         if ((Thread->BasePriority != 0) && !(Priority)) Priority = 1;
 
         /* Set the new Priority */
-        KiSetPriorityThread(Thread, Priority, &Released);
+        KiSetPriorityThread(Thread, Priority);
     }
 
     /* Release thread lock */
     KiReleaseThreadLock(Thread);
 
-    /* Check if lock was released */
-    if (!Released)
-    {
-        /* Release the dispatcher database */
-        KiReleaseDispatcherLock(OldIrql);
-    }
-    else
-    {
-        /* Lower IRQL only */
-        KeLowerIrql(OldIrql);
-    }
+    /* Release the dispatcher database */
+    KiReleaseDispatcherLock(OldIrql);
 
     /* Return Old Priority */
     return OldPriority;

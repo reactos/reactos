@@ -14,8 +14,6 @@
 
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
-ULONG PriorityListMask = 0;
 ULONG KiIdleSummary;
 ULONG KiIdleSMTSummary;
 
@@ -30,7 +28,243 @@ KiQueueReadyThread(IN PKTHREAD Thread,
     KxQueueReadyThread(Thread, Prcb);
 }
 
-static
+VOID
+NTAPI
+KiDeferredReadyThread(IN PKTHREAD Thread)
+{
+    PKPRCB Prcb;
+    BOOLEAN Preempted;
+    ULONG Processor = 0;
+    KPRIORITY OldPriority;
+    PKTHREAD NextThread;
+
+    /* Sanity checks */
+    ASSERT(Thread->State == DeferredReady);
+    ASSERT((Thread->Priority >= 0) && (Thread->Priority <= HIGH_PRIORITY));
+
+    /* Check if we have any adjusts to do */
+    if (Thread->AdjustReason == AdjustBoost)
+    {
+        /* Lock the thread */
+        KiAcquireThreadLock(Thread);
+
+        /* Check if the priority is low enough to qualify for boosting */
+        if ((Thread->Priority <= Thread->AdjustIncrement) &&
+            (Thread->Priority < (LOW_REALTIME_PRIORITY - 3)) &&
+            !(Thread->DisableBoost))
+        {
+            /* Calculate the new priority based on the adjust increment */
+            OldPriority = min(Thread->AdjustIncrement + 1,
+                              LOW_REALTIME_PRIORITY - 1);
+
+            /* Make sure we're not decreasing outside of the priority range */
+            ASSERT((Thread->PriorityDecrement >= 0) &&
+                   (Thread->PriorityDecrement <= Thread->Priority));
+
+            /* Calculate the new priority decrement based on the boost */
+            Thread->PriorityDecrement += ((SCHAR)OldPriority - Thread->Priority);
+
+            /* Again verify that this decrement is valid */
+            ASSERT((Thread->PriorityDecrement >= 0) &&
+                   (Thread->PriorityDecrement <= OldPriority));
+
+            /* Set the new priority */
+            Thread->Priority = (SCHAR)OldPriority;
+        }
+
+        /* We need 4 quanta, make sure we have them, then decrease by one */
+        if (Thread->Quantum < 4) Thread->Quantum = 4;
+        Thread->Quantum--;
+
+        /* Make sure the priority is still valid */
+        ASSERT((Thread->Priority >= 0) && (Thread->Priority <= HIGH_PRIORITY));
+
+        /* Release the lock and clear the adjust reason */
+        KiReleaseThreadLock(Thread);
+        Thread->AdjustReason = AdjustNone;
+    }
+    else if (Thread->AdjustReason == AdjustUnwait)
+    {
+        /* Acquire the thread lock and check if this is a real-time thread */
+        KiAcquireThreadLock(Thread);
+        if (Thread->Priority < LOW_REALTIME_PRIORITY)
+        {
+            /* It's not real time, but is it time critical? */
+            if (Thread->BasePriority >= (LOW_REALTIME_PRIORITY - 2))
+            {
+                /* It is, so simply reset its quantum */
+                Thread->Quantum = Thread->QuantumReset;
+            }
+            else
+            {
+                /* Has the priority been adjusted previously? */
+                if (!(Thread->PriorityDecrement) && (Thread->AdjustIncrement))
+                {
+                    /* Yes, reset its quantum */
+                    Thread->Quantum = Thread->QuantumReset;
+                }
+
+                /* Wait code already handles quantum adjustment during APCs */
+                if (Thread->WaitStatus != STATUS_KERNEL_APC)
+                {
+                    /* Decrease the quantum by one and check if we're out */
+                    if (--Thread->Quantum <= 0)
+                    {
+                        /* We are, reset the quantum and get a new priority */
+                        Thread->Quantum = Thread->QuantumReset;
+                        Thread->Priority = KiComputeNewPriority(Thread, 1);
+                    }
+                }
+            }
+
+            /* Now check if we have no decrement and boosts are enabled */
+            if (!(Thread->PriorityDecrement) && !(Thread->DisableBoost))
+            {
+                /* Make sure we have an increment */
+                ASSERT(Thread->AdjustIncrement >= 0);
+
+                /* Calculate the new priority after the increment */
+                OldPriority = Thread->BasePriority + Thread->AdjustIncrement;
+
+                /* Check if this new priority is higher */
+                if (OldPriority > Thread->Priority)
+                {
+                    /* Make sure we don't go into the real time range */
+                    if (OldPriority >= LOW_REALTIME_PRIORITY)
+                    {
+                        /* Normalize it back down one notch */
+                        OldPriority = LOW_REALTIME_PRIORITY - 1;
+                    }
+
+                    /* Check if the priority is higher then the boosted base */
+                    if (OldPriority > (Thread->BasePriority +
+                                       Thread->AdjustIncrement))
+                    {
+                        /* Setup a priority decrement to nullify the boost  */
+                        Thread->PriorityDecrement = ((SCHAR)OldPriority -
+                                                    Thread->BasePriority -
+                                                    Thread->AdjustIncrement);
+                    }
+
+                    /* Make sure that the priority decrement is valid */
+                    ASSERT((Thread->PriorityDecrement >= 0) &&
+                           (Thread->PriorityDecrement <= OldPriority));
+
+                    /* Set this new priority */
+                    Thread->Priority = (SCHAR)OldPriority;
+                }
+            }
+        }
+        else
+        {
+            /* It's a real-time thread, so just reset its quantum */
+            Thread->Quantum = Thread->QuantumReset;
+        }
+
+        /* Make sure the priority makes sense */
+        ASSERT((Thread->Priority >= 0) && (Thread->Priority <= HIGH_PRIORITY));
+
+        /* Release the thread lock and reset the adjust reason */
+        KiReleaseThreadLock(Thread);
+        Thread->AdjustReason = AdjustNone;
+    }
+
+    /* Clear thread preemption status and save current values */
+    Preempted = Thread->Preempted;
+    OldPriority = Thread->Priority;
+    Thread->Preempted = FALSE;
+
+    /* Queue the thread on CPU 0 and get the PRCB */
+    Thread->NextProcessor = 0;
+    Prcb = KiProcessorBlock[0];
+
+    /* Check if we have an idle summary */
+    if (KiIdleSummary)
+    {
+        /* Clear it and set this thread as the next one */
+        KiIdleSummary = 0;
+        Thread->State = Standby;
+        Prcb->NextThread = Thread;
+        return;
+    }
+
+    /* Set the CPU number */
+    Thread->NextProcessor = (UCHAR)Processor;
+
+    /* Get the next scheduled thread */
+    NextThread = Prcb->NextThread;
+    if (NextThread)
+    {
+        /* Sanity check */
+        ASSERT(NextThread->State == Standby);
+
+        /* Check if priority changed */
+        if (OldPriority > NextThread->Priority)
+        {
+            /* Preempt the thread */
+            NextThread->Preempted = TRUE;
+
+            /* Put this one as the next one */
+            Thread->State = Standby;
+            Prcb->NextThread = Thread;
+
+            /* Set it in deferred ready mode */
+            NextThread->State = DeferredReady;
+            NextThread->DeferredProcessor = Prcb->Number;
+            KiReleasePrcbLock(Prcb);
+            KiDeferredReadyThread(NextThread);
+            return;
+        }
+    }
+    else
+    {
+        /* Set the next thread as the current thread */
+        NextThread = Prcb->CurrentThread;
+        if (OldPriority > NextThread->Priority)
+        {
+            /* Preempt it if it's already running */
+            if (NextThread->State == Running) NextThread->Preempted = TRUE;
+
+            /* Set the thread on standby and as the next thread */
+            Thread->State = Standby;
+            Prcb->NextThread = Thread;
+
+            /* Release the lock */
+            KiReleasePrcbLock(Prcb);
+
+            /* Check if we're running on another CPU */
+            if (KeGetCurrentProcessorNumber() != Thread->NextProcessor)
+            {
+                /* We are, send an IPI */
+                KiIpiSendRequest(AFFINITY_MASK(Thread->NextProcessor), IPI_DPC);
+            }
+            return;
+        }
+    }
+
+    /* Sanity check */
+    ASSERT((OldPriority >= 0) && (OldPriority <= HIGH_PRIORITY));
+
+    /* Set this thread as ready */
+    Thread->State = Ready;
+    Thread->WaitTime = KeTickCount.LowPart;
+
+    /* Insert this thread in the appropriate order */
+    Preempted ? InsertHeadList(&Prcb->DispatcherReadyListHead[OldPriority],
+                               &Thread->WaitListEntry) :
+                InsertTailList(&Prcb->DispatcherReadyListHead[OldPriority],
+                               &Thread->WaitListEntry);
+
+    /* Update the ready summary */
+    Prcb->ReadySummary |= PRIORITY_MASK(OldPriority);
+
+    /* Sanity check */
+    ASSERT(OldPriority == Thread->Priority);
+
+    /* Release the lock */
+    KiReleasePrcbLock(Prcb);
+}
+
 VOID
 KiInsertIntoThreadList(KPRIORITY Priority,
                        PKTHREAD Thread)
@@ -44,23 +278,21 @@ KiInsertIntoThreadList(KPRIORITY Priority,
         KEBUGCHECK(0);
     }
 
-    InsertTailList(&PriorityListHead[Priority], &Thread->WaitListEntry);
-    PriorityListMask |= (1 << Priority);
+    InsertTailList(&KeGetCurrentPrcb()->DispatcherReadyListHead[Priority], &Thread->WaitListEntry);
+    KeGetCurrentPrcb()->ReadySummary |= (1 << Priority);
 }
 
-static
 VOID
 KiRemoveFromThreadList(PKTHREAD Thread)
 {
     ASSERT(Ready == Thread->State);
     RemoveEntryList(&Thread->WaitListEntry);
-    if (IsListEmpty(&PriorityListHead[(ULONG)Thread->Priority])) {
+    if (IsListEmpty(&KeGetCurrentPrcb()->DispatcherReadyListHead[Thread->Priority])) {
 
-        PriorityListMask &= ~(1 << Thread->Priority);
+        KeGetCurrentPrcb()->ReadySummary &= ~(1 << Thread->Priority);
     }
 }
 
-static
 PKTHREAD
 KiScanThreadList(KPRIORITY Priority,
                  KAFFINITY Affinity)
@@ -70,9 +302,9 @@ KiScanThreadList(KPRIORITY Priority,
 
     Mask = (1 << Priority);
 
-    if (PriorityListMask & Mask) {
+    if (KeGetCurrentPrcb()->ReadySummary & Mask) {
 
-        LIST_FOR_EACH(current, &PriorityListHead[Priority], KTHREAD, WaitListEntry) {
+        LIST_FOR_EACH(current, &KeGetCurrentPrcb()->DispatcherReadyListHead[Priority], KTHREAD, WaitListEntry) {
 
             if (current->State != Ready) {
 
@@ -165,11 +397,18 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
 }
 
 VOID
-NTAPI
-KiDeferredReadyThread(IN PKTHREAD Thread)
+STDCALL
+KiDispatchThread(ULONG NewThreadStatus)
 {
-    /* FIXME: Not yet implemented */
-    KEBUGCHECK(0);
+    KIRQL OldIrql;
+
+    if (KeGetCurrentPrcb()->IdleThread == NULL) {
+        return;
+    }
+
+    OldIrql = KiAcquireDispatcherLock();
+    KiDispatchThreadNoLock(NewThreadStatus);
+    KeLowerIrql(OldIrql);
 }
 
 PKTHREAD
@@ -203,15 +442,71 @@ FASTCALL
 KiSwapThread(IN PKTHREAD CurrentThread,
              IN PKPRCB Prcb)
 {
-    BOOLEAN ApcState;
+    BOOLEAN ApcState = FALSE;
+    KIRQL WaitIrql;
+    LONG_PTR WaitStatus;
+    PKTHREAD NextThread;
+#ifdef NEW_SCHEDULER
+    PEPROCESS HackOfDoom = PsGetCurrentProcess();
+#endif
     ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 
-#ifdef NEW_SCHEDULER
+    /* Acquire the PRCB lock */
+    KiAcquirePrcbLock(Prcb);
 
+    /* Get the next thread */
+    NextThread = Prcb->NextThread;
+    if (NextThread)
+    {
+        /* Already got a thread, set it up */
+        Prcb->NextThread = NULL;
+        Prcb->CurrentThread = NextThread;
+        NextThread->State = Running;
+    }
+    else
+    {
+#ifdef NEW_SCHEDULER
+        /* Try to find a ready thread */
+        NextThread = KiSelectReadyThread(0, Prcb);
+        if (NextThread)
+        {
+            /* Switch to it */
+            Prcb->CurrentThread = NextThread;
+            NextThread->State = Running;
+        }
+        else
+        {
+            /* Set the idle summary */
+            InterlockedOr(&KiIdleSummary, Prcb->SetMember);
+
+            /* Schedule the idle thread */
+            NextThread = Prcb->IdleThread;
+            Prcb->CurrentThread = NextThread;
+            NextThread->State = Running;
+        }
 #else
-    /* Find a new thread to run */
-    ApcState = KiDispatchThreadNoLock(Waiting);
+        /* Find a new thread to run */
+        ApcState = KiDispatchThreadNoLock(Waiting);
 #endif
+    }
+
+    /* Sanity check and release the PRCB */
+    ASSERT(CurrentThread != Prcb->IdleThread);
+    KiReleasePrcbLock(Prcb);
+
+    /* Save the wait IRQL */
+    WaitIrql = CurrentThread->WaitIrql;
+
+#ifdef NEW_SCHEDULER
+    /* REACTOS Mm Hack of Doom */
+    MmUpdatePageDir(HackOfDoom,((PETHREAD)NextThread)->ThreadsProcess, sizeof(EPROCESS));
+
+    /* Swap contexts */
+    ApcState = KiSwapContext(CurrentThread, NextThread);
+#endif
+
+    /* Get the wait status */
+    WaitStatus = CurrentThread->WaitStatus;
 
     /* Check if we need to deliver APCs */
     if (ApcState)
@@ -221,29 +516,12 @@ KiSwapThread(IN PKTHREAD CurrentThread,
 
         /* Deliver APCs */
         KiDeliverApc(KernelMode, NULL, NULL);
-        ASSERT(CurrentThread->WaitIrql == 0);
+        ASSERT(WaitIrql == 0);
     }
 
-    /* Lower IRQL back to what it was */
-    KfLowerIrql(CurrentThread->WaitIrql);
-
-    /* Return the wait status */
-    return CurrentThread->WaitStatus;
-}
-
-VOID
-STDCALL
-KiDispatchThread(ULONG NewThreadStatus)
-{
-    KIRQL OldIrql;
-
-    if (KeGetCurrentPrcb()->IdleThread == NULL) {
-        return;
-    }
-
-    OldIrql = KiAcquireDispatcherLock();
-    KiDispatchThreadNoLock(NewThreadStatus);
-    KeLowerIrql(OldIrql);
+    /* Lower IRQL back to what it was and return the wait status */
+    KeLowerIrql(WaitIrql);
+    return WaitStatus;
 }
 
 VOID
@@ -289,6 +567,7 @@ NTAPI
 KiAdjustQuantumThread(IN PKTHREAD Thread)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
+    PKTHREAD NextThread;
 
     /* Acquire thread and PRCB lock */
     KiAcquireThreadLock(Thread);
@@ -327,6 +606,7 @@ KiAdjustQuantumThread(IN PKTHREAD Thread)
             }
 #else
             /* We need to dispatch a new thread */
+            NextThread = NULL;
             KiDispatchThread(Ready);
 #endif
         }
@@ -339,10 +619,9 @@ KiAdjustQuantumThread(IN PKTHREAD Thread)
 }
 
 VOID
-NTAPI
+FASTCALL
 KiSetPriorityThread(IN PKTHREAD Thread,
-                    IN KPRIORITY Priority,
-                    OUT PBOOLEAN Released)
+                    IN KPRIORITY Priority)
 {
     PKPRCB Prcb;
     ULONG Processor;
@@ -381,7 +660,8 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                         if (RemoveEntryList(&Thread->WaitListEntry))
                         {
                             /* Update the ready summary */
-                            Prcb->ReadySummary ^= PRIORITY_MASK(Thread->Priority);
+                            Prcb->ReadySummary ^= PRIORITY_MASK(Thread->
+                                                                Priority);
                         }
 #else
                         KiRemoveFromThreadList(Thread);
@@ -393,8 +673,7 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                         /* Re-insert it at its current priority */
 #ifndef NEW_SCHEDULER
                         KiInsertIntoThreadList(Priority, Thread);
-                        KiDispatchThreadNoLock(Ready);
-                        *Released = TRUE;
+                        //KiDispatchThreadNoLock(Ready);
 #else
                         KiInsertDeferredReadyList(Thread);
 #endif
@@ -486,14 +765,13 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                         }
 #else
                         /* Check for threads with a higher priority */
-                        if (PriorityListMask & ~((1 << (Priority + 1)) - 1))
+                        if (KeGetCurrentPrcb()->ReadySummary & ~((1 << (Priority + 1)) - 1))
                         {
                             /* Found a thread, is it us? */
                             if (Thread == KeGetCurrentThread())
                             {
                                 /* Dispatch us */
-                                KiDispatchThreadNoLock(Ready);
-                                *Released = TRUE;
+                                //KiDispatchThreadNoLock(Ready);
                                 return;
                             }
                         }
@@ -535,9 +813,6 @@ KiSetPriorityThread(IN PKTHREAD Thread,
             break;
         }
     }
-
-    /* Return to caller */
-    *Released = FALSE;
 }
 
 KAFFINITY
@@ -579,13 +854,75 @@ NTSTATUS
 NTAPI
 NtYieldExecution(VOID)
 {
-    //
-    // TODO (nothing too hard, just want to test out other code)
-    //
-    //DPRINT1("NO YIELD PERFORMED! If you see this, contact Alex\n");
-    //return STATUS_NO_YIELD_PERFORMED;
+#ifdef NEW_SCHEDULER
+    NTSTATUS Status = STATUS_NO_YIELD_PERFORMED;
+    KIRQL OldIrql;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    PKTHREAD Thread = KeGetCurrentThread(), NextThread;
+
+    /* Fail if there's no ready summary */
+    if (!Prcb->ReadySummary) return Status;
+
+    /* Raise IRQL to synch */
+    OldIrql = KeRaiseIrqlToSynchLevel();
+
+    /* Now check if there's still a ready summary */
+    if (Prcb->ReadySummary)
+    {
+        /* Acquire thread and PRCB lock */
+        KiAcquireThreadLock(Thread);
+        KiAcquirePrcbLock(Prcb);
+
+        /* Find a new thread to run if none was selected */
+        if (!Prcb->NextThread) Prcb->NextThread = KiSelectReadyThread(1, Prcb);
+
+        /* Make sure we still have a next thread to schedule */
+        NextThread = Prcb->NextThread;
+        if (NextThread)
+        {
+            /* Reset quantum and recalculate priority */
+            Thread->Quantum = Thread->QuantumReset;
+            Thread->Priority = KiComputeNewPriority(Thread, 1);
+
+            /* Release the thread lock */
+            KiReleaseThreadLock(Thread);
+
+            /* Set context swap busy */
+            KiSetThreadSwapBusy(Thread);
+
+            /* Set the new thread as running */
+            Prcb->NextThread = NULL;
+            Prcb->CurrentThread = NextThread;
+            NextThread->State = Running;
+
+            /* Setup a yield wait and queue the thread */
+            Thread->WaitReason = WrYieldExecution;
+            KxQueueReadyThread(Thread, Prcb);
+
+            /* Make it wait at APC_LEVEL */
+            Thread->WaitIrql = APC_LEVEL;
+
+            /* Sanity check */
+            ASSERT(OldIrql <= DISPATCH_LEVEL);
+
+            /* Swap to new thread */
+            KiSwapContext(Thread, NextThread);
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Release the PRCB and thread lock */
+            KiReleasePrcbLock(Prcb);
+            KiReleaseThreadLock(Thread);
+        }
+    }
+
+    /* Lower IRQL and return */
+    KeLowerIrql(OldIrql);
+    return Status;
+#else
     KiDispatchThread(Ready);
     return STATUS_SUCCESS;
+#endif
 }
-
 

@@ -76,8 +76,8 @@ KiQuantumEnd(VOID)
                 if (NextThread)
                 {
                     /* Found one, set it on standby */
-                    NextThread->Standby;
-                    Prcb->NextThread = NewThread;
+                    NextThread->State = Standby;
+                    Prcb->NextThread = NextThread;
                 }
 #else
                 /* Just leave now */
