@@ -10,6 +10,19 @@
  * edx = register 4
  * esp = register 1
  * ebp = register 31
+
+ * ecx = 5
+ * ebx = 6
+ * esi = 7
+ * edi = 8
+ * mmx/sse/fpu 0 = 10
+ * mmx/sse/fpu 1 = 12
+ * mmx/sse/fpu 2 = 14
+ * mmx/sse/fpu 3 = 16
+ * mmx/sse/fpu 4 = 18
+ * mmx/sse/fpu 5 = 20
+ * mmx/sse/fpu 6 = 22
+ * mmx/sse/fpu 7 = 24
  */
 
 typedef struct _BrainAnalys

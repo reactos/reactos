@@ -19,11 +19,16 @@ CPU_INT ConvertProcess(FILE *outfp, CPU_INT FromCpuid, CPU_INT ToCpuid)
    CPU_INT esp =-1;
    CPU_INT regbits=-1;
    CPU_INT HowManyRegInUse = 0;
-
+   CPU_INT RegTableCount[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+   CPU_INT t;
    PMYBrainAnalys pMystart = pStartMyBrainAnalys;
    PMYBrainAnalys pMyend = pMyBrainAnalys;
 
-   if (FromCpuid == IMAGE_FILE_MACHINE_POWERPC)
+   PMYBrainAnalys ptmpMystart = pStartMyBrainAnalys;
+   PMYBrainAnalys ptmpMyend = pMyBrainAnalys;
+
+   if ( (FromCpuid == IMAGE_FILE_MACHINE_POWERPC) ||
+        (FromCpuid == IMAGE_FILE_MACHINE_I386))
     {
         regbits = 32 / 8;
         esp = 1;
@@ -32,21 +37,35 @@ CPU_INT ConvertProcess(FILE *outfp, CPU_INT FromCpuid, CPU_INT ToCpuid)
         ebp = 31;
     }
 
-
     /* FIXME calc where todo first split */
 
-    /* FIXME calc who many register are in use */
+   /* count how many register we got */
+    ptmpMystart = pMystart;
+    ptmpMyend = pMyend;
+    while (ptmpMystart!=NULL)
+    {
+        if ((ptmpMystart->type & 2) == 2)
+            RegTableCount[ptmpMystart->src]++;
 
-    //ret = ConvertToIntelProcess(FILE *outfp,
-    //                      CPU_INT eax,
-    //                      CPU_INT edx,
-    //                      CPU_INT edx,
-    //                      CPU_INT esp,
-    //                      PMYBrainAnalys start,
-    //                      PMYBrainAnalys end);
+        if ((ptmpMystart->type & 8) == 8)
+            RegTableCount[ptmpMystart->dst]++;
 
+        if (ptmpMystart == ptmpMyend)
+            ptmpMystart=NULL;
+        else
+            ptmpMystart = (PMYBrainAnalys) ptmpMystart->ptr_next;
+    }
 
+    for (t=0;t<31;t++)
+    {
+        if (RegTableCount[t]!=0)
+        {
+            HowManyRegInUse++;
+        }
+        
+    }
 
+    /* switch to the acual converting now */
     switch (ToCpuid)
     {
         case IMAGE_FILE_MACHINE_I386:

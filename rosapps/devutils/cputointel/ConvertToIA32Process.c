@@ -130,7 +130,11 @@ CPU_INT ConvertToIA32Process( FILE *outfp, CPU_INT eax, CPU_INT ebp,
             }
             fprintf(outfp,"ret\n");
         }
-        pMystart = (PMYBrainAnalys) pMystart->ptr_next;
+        if (pMystart == pMyend)
+            pMystart=NULL;
+        else
+            pMystart = (PMYBrainAnalys) pMystart->ptr_next;
+        
     }
     return 0;
 }
