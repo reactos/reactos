@@ -9,9 +9,44 @@ Bit expain
 1 = mean bit is set
 2 = mean this bit can be 0 or 1
 
-opcode                                     Name 	Desciptions
-
+opcode                                     Name 	Desciptions							
 0010 0000 0000 0000 1000 0000 0100 1110    blr		return from a functions
 
 0222 2222 2222 2222 2222 2222 0011 1000    Li reg,#imm  move a value to a register
+
+
+
+
+
+Here how the primary opcode work 
+xxxx xxxx xxxx xxxx DDDS SSSS 3333 33DD	  
+
+3 = it is the primary opcode
+D = Destions register
+S = Source reigters   
+                                                                    opcode
+							   ------------------------
+                                                          |bit order:  0123 45   67|
+     -------   -------					   -----------         ----                                                                        
+34: | 0c 00 | | e1 93 | stw r31,12(r1) 0000 1100 0000 0000 1110 0001 | 1001 00 | 00
+38: | 14 00 | | 01 90 | stw r0,20(r1)  0001 0100 0000 0000 0000 0001 | 1001 00 | 11
+     -------   -------                                                ---------  
+        |         |
+        |         |--> Get source register R0-R31 (0xE1 & 0x1F) = 1
+        |         |
+        |         |--> Get Dest register R0-R31 ((0xE1 & 0xE0)>>5) | ((0x90 & 0x3)<<3)  = 31 or 0      
+        |         |     (The adding the two last bit on the end is maybe wrong need examine it)
+        |         |
+        |          --> Get the opcpde (0x90 & 0xFC)
+       \ /        
+                   
+ The address offset 12 or 20
+
+
+ ---------------------------------------------------------
+|bit order: pos   1111 1111 1111 1111 0000 0000 0000 0000 |
+|	          89AB CDEF 0123 4567 89AB CDEF 0123 4567 |            	
+|---------------------------------------------------------|
+|           bits  0000 1100 0000 0000 1110 0001 1001 0000 |
+ ---------------------------------------------------------
 
