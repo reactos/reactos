@@ -25,11 +25,11 @@ UserProfileDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            HWND hLink = GetDlgItem(hwndDlg, IDC_USERACCOUNT_LINK);
+//            HWND hLink = GetDlgItem(hwndDlg, IDC_USERACCOUNT_LINK);
 
-            TextToLink(hLink, 
-                       _T("rundll32.exe"),
-                       _T("shell32.dll, Control_RunDLL nusrmgr.cpl"));
+//            TextToLink(hLink, 
+//                       _T("rundll32.exe"),
+//                       _T("shell32.dll, Control_RunDLL nusrmgr.cpl"));
 
             MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
         }
@@ -45,6 +45,22 @@ UserProfileDlgProc(HWND hwndDlg,
             }
         }
         break;
+
+        case WM_NOTIFY:
+        {
+            NMHDR *nmhdr = (NMHDR *)lParam;
+
+            if (nmhdr->idFrom == IDC_USERACCOUNT_LINK && nmhdr->code == NM_CLICK)
+            {
+                ShellExecute(hwndDlg,
+                             TEXT("open"),
+                             TEXT("rundll32.exe"),
+                             TEXT("shell32.dll, Control_RunDLL nusrmgr.cpl"),
+                             NULL,
+                             SW_SHOWNORMAL);
+            }
+            break;
+        }
   }
   return FALSE;
 }

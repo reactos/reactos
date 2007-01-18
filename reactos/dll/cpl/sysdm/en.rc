@@ -16,7 +16,7 @@ BEGIN
     LTEXT       "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
-    LTEXT       "Visit the ReactOS Homepage", IDC_ROSHOMEPAGE_LINK, 20, 200, 93, 8
+    CONTROL     "Visit the <A HREF=""http://www.reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 93, 8
     PUSHBUTTON  "View &licence...", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -149,7 +149,7 @@ BEGIN
     PUSHBUTTON  "Copy To", IDC_USERPROFILE_COPY, 200, 156, 50, 13
 
     LTEXT       "To create new user accounts, open ", IDC_STATIC, 7, 175, 116, 8
-    LTEXT       "User Accounts", IDC_USERACCOUNT_LINK, 123, 175, 48, 8
+    CONTROL     "<A>User Accounts</A>", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 123, 175, 48, 8
     LTEXT       "in Control Panel.", IDC_STATIC, 173, 175, 64, 8
 
     DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 13

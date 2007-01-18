@@ -9,6 +9,10 @@
 #include <cpl.h>
 #include <shellapi.h>
 #include <shlwapi.h>
+#include <shlguid.h>
+#include <shlobj.h>
+#include <cplext.h>
+#include <regstr.h>
 #include "resource.h"
 
 #define NUM_APPLETS (1)
@@ -40,8 +44,6 @@ INT_PTR CALLBACK EnvironmentDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 INT_PTR CALLBACK StartRecDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK VirtMemDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK LicenceDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-
-BOOL TextToLink(HWND hwnd, LPTSTR lpApp, LPTSTR lpParams);
 
 typedef struct _PAGEFILE
 {

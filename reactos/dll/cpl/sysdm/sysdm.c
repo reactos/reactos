@@ -18,48 +18,44 @@ APPLET Applets[NUM_APPLETS] =
   {IDI_CPLSYSTEM, IDS_CPLSYSTEMNAME, IDS_CPLSYSTEMDESCRIPTION, SystemApplet}
 };
 
-static void
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+#define MAX_SYSTEM_PAGES    8
+
+static BOOL CALLBACK
+PropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
 {
-  ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-  psp->dwSize = sizeof(PROPSHEETPAGE);
-  psp->dwFlags = PSP_DEFAULT;
-  psp->hInstance = hApplet;
-  psp->pszTemplate = MAKEINTRESOURCE(idDlg);
-  psp->pfnDlgProc = DlgProc;
+    PROPSHEETHEADER *ppsh = (PROPSHEETHEADER *)lParam;
+    if (ppsh != NULL && ppsh->nPages < MAX_SYSTEM_PAGES)
+    {
+        ppsh->phpage[ppsh->nPages++] = hpage;
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
-/* Property Sheet Callback */
-int CALLBACK
-PropSheetProc(
-	HWND hwndDlg,
-	UINT uMsg,
-	LPARAM lParam
-)
+static BOOL
+InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc)
 {
-  UNREFERENCED_PARAMETER(hwndDlg);
-  switch(uMsg)
-  {
-    case PSCB_BUTTONPRESSED:
-      switch(lParam)
-      {
-        case PSBTN_OK: /* OK */
-          break;
-        case PSBTN_CANCEL: /* Cancel */
-          break;
-        case PSBTN_APPLYNOW: /* Apply now */
-          break;
-        case PSBTN_FINISH: /* Close */
-          break;
-        default:
-          return FALSE;
-      }
-      break;
+    HPROPSHEETPAGE hPage;
+    PROPSHEETPAGE psp;
 
-    case PSCB_INITIALIZED:
-      break;
-  }
-  return TRUE;
+    if (ppsh->nPages < MAX_SYSTEM_PAGES)
+    {
+        ZeroMemory(&psp, sizeof(psp));
+        psp.dwSize = sizeof(psp);
+        psp.dwFlags = PSP_DEFAULT;
+        psp.hInstance = hApplet;
+        psp.pszTemplate = MAKEINTRESOURCE(idDlg);
+        psp.pfnDlgProc = DlgProc;
+
+        hPage = CreatePropertySheetPage(&psp);
+        if (hPage != NULL)
+        {
+            return PropSheetAddPage(hPage, (LPARAM)ppsh);
+        }
+    }
+
+    return FALSE;
 }
 
 /* First Applet */
@@ -67,28 +63,32 @@ PropSheetProc(
 LONG CALLBACK
 SystemApplet(VOID)
 {
-  PROPSHEETPAGE psp[4];
+  HPROPSHEETPAGE hpsp[MAX_SYSTEM_PAGES];
   PROPSHEETHEADER psh;
-  TCHAR Caption[1024];
+  TCHAR Caption[128];
+  static INITCOMMONCONTROLSEX icc = {sizeof(INITCOMMONCONTROLSEX), ICC_LINK_CLASS};
+
+  if (!InitCommonControlsEx(&icc))
+      return 0;
 
   LoadString(hApplet, IDS_CPLSYSTEMNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
   ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE; /* | PSH_USECALLBACK */
+  psh.dwFlags =  PSH_PROPTITLE;
   psh.hwndParent = NULL;
   psh.hInstance = hApplet;
   psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
   psh.pszCaption = Caption;
-  psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+  psh.nPages = 0;
   psh.nStartPage = 0;
-  psh.ppsp = psp;
-  psh.pfnCallback = NULL; /* PropSheetProc; */
+  psh.phpage = hpsp;
+  psh.pfnCallback = NULL;
 
-  InitPropSheetPage(&psp[0], IDD_PROPPAGEGENERAL, (DLGPROC) GeneralPageProc);
-  InitPropSheetPage(&psp[1], IDD_PROPPAGECOMPUTER, (DLGPROC) ComputerPageProc);
-  InitPropSheetPage(&psp[2], IDD_PROPPAGEHARDWARE, (DLGPROC) HardwarePageProc);
-  InitPropSheetPage(&psp[3], IDD_PROPPAGEADVANCED, (DLGPROC) AdvancedPageProc);
+  InitPropSheetPage(&psh, IDD_PROPPAGEGENERAL, (DLGPROC) GeneralPageProc);
+  InitPropSheetPage(&psh, IDD_PROPPAGECOMPUTER, (DLGPROC) ComputerPageProc);
+  InitPropSheetPage(&psh, IDD_PROPPAGEHARDWARE, (DLGPROC) HardwarePageProc);
+  InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, (DLGPROC) AdvancedPageProc);
 
   return (LONG)(PropertySheet(&psh) != -1);
 }

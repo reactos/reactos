@@ -10,6 +10,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #define REACTOS_STR_ORIGINAL_FILENAME "sysdm.cpl\0"
 #include <reactos/version.rc>
 
+123 24 DISCARDABLE "manifest.xml"
+
 IDI_CPLSYSTEM   ICON "resources/applet.ico"
 
 IDI_USERPROF    ICON "resources/devmgr.ico"

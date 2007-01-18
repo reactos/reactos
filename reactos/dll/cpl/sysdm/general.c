@@ -353,12 +353,6 @@ GeneralPageProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            HWND hLink = GetDlgItem(hwndDlg, IDC_ROSHOMEPAGE_LINK);
-
-            TextToLink(hLink,
-                       _T("http://www.reactos.org"),
-                       NULL);
-
             InitImageInfo(&ImgInfo);
             GetSystemInformation(hwndDlg);
         }
@@ -407,6 +401,24 @@ GeneralPageProc(HWND hwndDlg,
                 }
             }
             return TRUE;
+        }
+
+        case WM_NOTIFY:
+        {
+            NMHDR *nmhdr = (NMHDR *)lParam;
+
+            if (nmhdr->idFrom == IDC_ROSHOMEPAGE_LINK && nmhdr->code == NM_CLICK)
+            {
+                PNMLINK nml = (PNMLINK)nmhdr;
+
+                ShellExecuteW(hwndDlg,
+                              L"open",
+                              nml->item.szUrl,
+                              NULL,
+                              NULL,
+                              SW_SHOWNORMAL);
+            }
+            break;
         }
 
     }
