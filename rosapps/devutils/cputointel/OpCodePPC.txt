@@ -1,0 +1,17 @@
+
+PowerPC 32bits
+
+reg = R0-R31
+#imm = a value you set 
+
+Bit expain 
+0 = mean bit is zero
+1 = mean bit is set
+2 = mean this bit can be 0 or 1
+
+opcode                                     Name 	Desciptions
+
+0010 0000 0000 0000 1000 0000 0100 1110    blr		return from a functions
+
+0222 2222 2222 2222 2222 2222 0011 1000    Li reg,#imm  move a value to a register
+
