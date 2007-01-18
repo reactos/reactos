@@ -26,7 +26,21 @@
  *               value  0            : wrong opcode or not vaild opcode
  *               value +1 and higher : who many byte we should add to cpu_pos
  */
- 
+
+/* only for ppc */
+#define PPC_GetBitArray6toA(opcode) (((opcode & 0x3) << 3) | ((opcode & 0xE000) >> 13))
+
+
+
+
+CPU_UNINT PPC_GetBitArrayBto31(CPU_UNINT opcode)
+{
+    CPU_INT x1;
+   /* FIXME make it to a macro
+    * not tested to 100% yet */
+   x1 = ((opcode & 0xFFFF0000)>>16);
+    return  x1;
+}
 
 
 CPU_INT PPC_Blr( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
@@ -47,23 +61,12 @@ CPU_INT PPC_Blr( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
 }
 
 
-CPU_INT PPC_Ld( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
+CPU_INT PPC_Li( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
                    CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
 {
-    CPU_UNINT formA;
-    CPU_UNINT formD;
-    CPU_UNINT formDS;
     CPU_UNINT opcode;
 
     opcode = GetData32Le(cpu_buffer);
-    formD =  (opcode & ConvertBitToByte32(PPC_D)) >> 6;
-    formA =  (opcode & ConvertBitToByte32(PPC_A)) >> 13;
-    formDS = (opcode & ConvertBitToByte32(PPC_ds)) >> 15;
-
-    if (formD != 0)
-    {
-        return 0;
-    }
 
     BaseAddress +=cpu_pos;
 
@@ -75,8 +78,8 @@ CPU_INT PPC_Ld( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     pMyBrainAnalys->op = OP_ANY_mov;
     pMyBrainAnalys->type= 8 + 16; /* 8 dst reg, 16 imm */
     pMyBrainAnalys->src_size = 16;
-    pMyBrainAnalys->src = formDS;
-    pMyBrainAnalys->dst = formA;
+    pMyBrainAnalys->src = PPC_GetBitArrayBto31(opcode);
+    pMyBrainAnalys->dst = PPC_GetBitArray6toA(opcode);
     pMyBrainAnalys->memAdr=BaseAddress;
 
     return 4;

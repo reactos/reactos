@@ -20,14 +20,15 @@ opcode                                     Name 	Desciptions
 
 Here how the primary opcode work 
 xxxx xxxx xxxx xxxx DDDS SSSS 3333 33DD	  
+   
 
 3 = it is the primary opcode
 D = Destions register
 S = Source reigters   
-                                                                    opcode
-							   ------------------------
-                                                          |bit order:  0123 45   67|
-     -------   -------					   -----------         ----                                                                        
+                                                                        opcode
+                                                           ------------------------
+                                                           |bit order:  0123 45   67|
+     -------   -------                                      -----------         ----                                                                        
 34: | 0c 00 | | e1 93 | stw r31,12(r1) 0000 1100 0000 0000 1110 0001 | 1001 00 | 00
 38: | 14 00 | | 01 90 | stw r0,20(r1)  0001 0100 0000 0000 0000 0001 | 1001 00 | 11
      -------   -------                                                ---------  
@@ -41,8 +42,7 @@ S = Source reigters
        \ /        
                    
  The address offset 12 or 20
-
-
+                                     
  ---------------------------------------------------------
 |bit order: pos   1111 1111 1111 1111 0000 0000 0000 0000 |
 |	          89AB CDEF 0123 4567 89AB CDEF 0123 4567 |            	

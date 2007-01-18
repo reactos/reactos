@@ -59,10 +59,10 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
         cpuint = GetData32Le(&cpu_buffer[cpu_pos]);
 
 
-         /* 0x38 Ld aslo known as Li */
-        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Ld))) == ConvertBitToByte32(cpuPPCInit_Ld))
+         /* 0xE = Li*/
+        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Li))) == ConvertBitToByte32(cpuPPCInit_Li))
         {
-            retsize = PPC_Ld( outfp, cpu_buffer, cpu_pos, cpu_size,
+            retsize = PPC_Li( outfp, cpu_buffer, cpu_pos, cpu_size,
                                  BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;

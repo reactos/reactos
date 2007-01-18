@@ -2,22 +2,25 @@ CpuToIntel is a experment tools and is strict under havy devloping
 
 
 The Idea
-The idea is to convert a binary file or win pe file 
+The idea is to converting binary files or win pe files 
 from one cpu to another cpu, But it does not exists
 plan to port over diffent hardware architect like
 how diffent hw comucate, example x86 DMA controller
-to PPC like. It is only to convert the the binary or
-pe file to another cpu. it mean a user mode apps
-will always be ported, but if it self modify code
-it will not work. But it exists a idea to deal with
-self modify code. 
+to PPC like that stuff. It is only to convert the 
+binary or pe files to another cpu. it mean a user 
+mode apps will always be ported, but if it self 
+modify code it will not work. But it exists idea how 
+to deal with self modify code. 
 
 
 The idea to handling self modify code
-The idea is to add a small emulator that 
-runing the apps or adding a anylasuing process
-to dectect self modify code and extract it
-this is hard thing todo. almost imposible
+The idea is to add a small emulator or adding 
+anaylysing  process to dectect self modify code 
+and extract it. This is very hard part todo, some say
+imposible, some other say almost imposble. and I say
+it is posible todo but extream hard todo. for it is
+very diffcul to dectect self modify code with a
+analysing process.
 
 
 Why the name are CpuToIntel
