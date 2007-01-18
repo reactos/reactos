@@ -540,8 +540,8 @@ extern "C" {
 #define SB_BOTTOM	7
 #define SB_TOP	6
 #define IS_INTRESOURCE(i) (((ULONG_PTR)(i) >> 16) == 0)
-#define MAKEINTRESOURCEA(i) (LPSTR)((DWORD)((WORD)(i)))
-#define MAKEINTRESOURCEW(i) (LPWSTR)((DWORD)((WORD)(i)))
+#define MAKEINTRESOURCEA(i) (LPSTR)((ULONG_PTR)((WORD)(i)))
+#define MAKEINTRESOURCEW(i) (LPWSTR)((ULONG_PTR)((WORD)(i)))
 #ifndef XFree86Server
 # define RT_CURSOR MAKEINTRESOURCE(1)
 # define RT_FONT MAKEINTRESOURCE(8)

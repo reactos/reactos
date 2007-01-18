@@ -164,7 +164,7 @@ DepMapBackend::_generate_depmap ( FILE* OUT )
 			
 			
 
-			fprintf ( m_DepMapFile, "<component name=\"%s\" base=\"%s\" ref_count=\"%u\" library_count=\"%u\">\r\n", module.name.c_str(), module.GetBasePath ().c_str (), data->references.size (), data->libraries.size () );
+			fprintf ( m_DepMapFile, "<component name=\"%s\" base=\"%s\" ref_count=\"%u\" library_count=\"%u\">\r\n", module.name.c_str(), module.GetBasePath ().c_str (), (unsigned int) data->references.size (), (unsigned int) data->libraries.size () );
 			
 			if ( data->references.size () )
 			{

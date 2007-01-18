@@ -22,7 +22,7 @@
 	<file>wcscmpi.c</file>
 	<file>_wgetopt.c</file>
 </module>
-<module name="mingw_main" type="staticlibrary" isstartuplib="true">
+<module name="mingw_main" type="staticlibrary" isstartuplib="true" allowwarnings="true">
 	<include base="ReactOS">include/crt</include>
 	<include base="ReactOS">include/psdk</include>
 	<include base="mingw_common">include</include>
@@ -30,7 +30,7 @@
 	<file>crt1.c</file>
 	<file>main.c</file>
 </module>
-<module name="mingw_wmain" type="staticlibrary" isstartuplib="true">
+<module name="mingw_wmain" type="staticlibrary" isstartuplib="true" allowwarnings="true">
 	<include base="ReactOS">include/crt</include>
 	<include base="ReactOS">include/psdk</include>
 	<include base="mingw_common">include</include>

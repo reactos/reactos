@@ -21,7 +21,7 @@ CardWindow SolWnd;
 
 LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam);
 
-void MakePath(TCHAR *szDest, UINT nDestLen, TCHAR *szExt)
+void MakePath(TCHAR *szDest, UINT nDestLen, const TCHAR *szExt)
 {
     TCHAR *ptr;
     
