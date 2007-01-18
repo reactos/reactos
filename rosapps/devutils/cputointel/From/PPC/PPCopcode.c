@@ -116,7 +116,7 @@ CPU_INT PPC_Stwu( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     tmp =  _byteswap_ushort( ((CPU_SHORT)((opcode >> 16) & 0xffff)));
 
     pMyBrainAnalys->op = OP_ANY_mov;
-    pMyBrainAnalys->type= 2 + 64;
+    pMyBrainAnalys->type= 2 + 64 + 128;
     pMyBrainAnalys->src_size = 32;
     pMyBrainAnalys->dst_size = 32;
     pMyBrainAnalys->src = PPC_GetBitArrayBto31xx(opcode);

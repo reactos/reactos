@@ -33,6 +33,7 @@ typedef struct _BrainAnalys
                    /*  16 = source are imm                          */
                    /*  32 =  soucre -xx(r1) or [eax-xx] */
                    /*  64 =  dest -xx(r1) or [eax-xx] */
+                   /*  128 =  update form the src be update with dest */
 
     CPU_INT src_size; /* who many bits are src not vaild for reg*/
     CPU_INT dst_size; /* who many bits are dst not vaild for reg*/

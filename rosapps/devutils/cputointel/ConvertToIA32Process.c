@@ -190,7 +190,7 @@ CPU_INT ConvertToIA32Process( FILE *outfp,
                 {
                     /* dest [eax - 0x20], source reg */
                     
-                    fprintf(outfp,"mov [");
+                    fprintf(outfp,"mov dword [");
                     standardreg( RegTableCount,
                                  pMystart->dst,
                                  setup_ebp, outfp);
@@ -199,6 +199,19 @@ CPU_INT ConvertToIA32Process( FILE *outfp,
                                  pMystart->src,
                                  setup_ebp, outfp);
                     fprintf(outfp,"\n");
+
+                   if ((pMystart->type & 128)== 128)
+                   {
+                        fprintf(outfp,"mov ");
+                        standardreg( RegTableCount,
+                                     pMystart->src,
+                                     setup_ebp, outfp);
+                        fprintf(outfp," , ");
+                        standardreg( RegTableCount,
+                                     pMystart->dst,
+                                     setup_ebp, outfp);
+                        fprintf(outfp," %d\n",pMystart->dst_extra);
+                   }
                 }
             }
 
