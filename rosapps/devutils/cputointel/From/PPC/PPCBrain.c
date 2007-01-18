@@ -116,5 +116,6 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
         }
     }
 
+//    return 0; // hack getting dismabler working or converting working
     return retcode;
 }

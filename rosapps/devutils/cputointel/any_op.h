@@ -32,6 +32,7 @@ typedef struct _BrainAnalys
                    /*  4 = dest are memmory,   8 dest are register */
                    /*  16 = source are imm                          */
                    /*  32 =  soucre -xx(r1) or [eax-xx] */
+                   /*  64 =  dest -xx(r1) or [eax-xx] */
 
     CPU_INT src_size; /* who many bits are src not vaild for reg*/
     CPU_INT dst_size; /* who many bits are dst not vaild for reg*/
@@ -40,6 +41,7 @@ typedef struct _BrainAnalys
     CPU_UNINT64 dst;
 
     CPU_INT src_extra; /* if type == 32 are set */
+    CPU_INT dst_extra; /* if type == 32 are set */
 
     CPU_UNINT memAdr; /* where are we in the current memory pos + baseaddress */
 

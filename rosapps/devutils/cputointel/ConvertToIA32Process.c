@@ -28,6 +28,57 @@
  * mmx/sse/fpu 7 = 28
  */
 
+static void standardreg(CPU_INT *RegTableCount, CPU_UNINT reg, CPU_INT setup_ebp, FILE *outfp)
+{
+    /* eax */
+    if (reg == RegTableCount[3])
+    {
+        fprintf(outfp,"eax");
+    }
+    /* ebp */
+    else if (reg == RegTableCount[31])
+    {
+        fprintf(outfp,"ebp");
+    }
+    /* edx */
+    else if (reg == RegTableCount[4])
+    {
+        fprintf(outfp,"edx");
+    }
+    /* esp */
+    else if (reg == RegTableCount[1])
+    {
+        fprintf(outfp,"esp");
+    }
+    /* ecx */
+    else if (reg == RegTableCount[8])
+    {
+        fprintf(outfp,"ecx");
+    }
+    /* ebx */
+    else if (reg == RegTableCount[9])
+    {
+        fprintf(outfp,"ebx");
+    }
+    /* esi */
+    else if (reg == RegTableCount[10])
+    {
+        fprintf(outfp,"esi");
+    }
+    /* edi */
+    else if (reg == RegTableCount[10])
+    {
+        fprintf(outfp,"edi");
+    }
+    else
+    {
+        if (setup_ebp == 1)
+            fprintf(outfp,"dword [ebx - %d]");
+        else
+            fprintf(outfp,"; unsuported should not happen it happen :(\n");
+    }
+}
+
 CPU_INT ConvertToIA32Process( FILE *outfp,
                                PMYBrainAnalys pMystart, 
                                PMYBrainAnalys pMyend, CPU_INT regbits,
@@ -108,99 +159,52 @@ CPU_INT ConvertToIA32Process( FILE *outfp,
                 if ((pMystart->type & 16)== 16)
                 {
                     /* source are imm */
-
-                     /* 
-                     * esi = 10
-                     * edi = 11 */
-
-                    /* eax */
-                    if (pMystart->dst == RegTableCount[3])
+                    if ((pMystart->src == 0) &&
+                        (setup_ebp == 0))
                     {
-                        if (pMystart->src == 0)
-                            fprintf(outfp,"xor eax,eax\n");
-                        else
-                            fprintf(outfp,"mov eax,%llu\n",pMystart->src);
-                    }
-                    /* ebp */
-                    else if (pMystart->dst == RegTableCount[31])
-                    {
-                        if (pMystart->src == 0)
-                            fprintf(outfp,"xor ebp,ebp\n");
-                        else
-                            fprintf(outfp,"mov ebp,%llu\n",pMystart->src);
-                    }
-                    /* edx */
-                    else if (pMystart->dst == RegTableCount[4])
-                    {
-                        if (pMystart->src == 0)
-                            fprintf(outfp,"xor edx,edx\n");
-                        else
-                            fprintf(outfp,"mov edx,%llu\n",pMystart->src);
-                    }
-                    /* esp */
-                    else if (pMystart->dst == RegTableCount[1])
-                    {
-                        if (pMystart->src == 0)
-                            fprintf(outfp,"xor esp,esp\n");
-                        else
-                            fprintf(outfp,"mov esp,%llu\n",pMystart->src);
-                    }
-                    /* ecx */
-                    else if (pMystart->dst == RegTableCount[8])
-                    {
-                        if (pMystart->src == 0)
-                            fprintf(outfp,"xor ecx,ecx\n");
-                        else
-                            fprintf(outfp,"mov ecx,%llu\n",pMystart->src);
-                    }
-                    /* ebx */
-                    else if (pMystart->dst == RegTableCount[9])
-                    {
-                        if (pMystart->src == 0)
-                            fprintf(outfp,"xor ebx,ebx\n");
-                        else
-                            fprintf(outfp,"mov ebx,%llu\n",pMystart->src);
-                    }
-                    /* esi */
-                    else if (pMystart->dst == RegTableCount[10])
-                    {
-                        if (pMystart->src == 0)
-                            fprintf(outfp,"xor esi,esi\n");
-                        else
-                            fprintf(outfp,"mov esi,%llu\n",pMystart->src);
-                    }
-                    /* edi */
-                    else if (pMystart->dst == RegTableCount[10])
-                    {
-                        if (pMystart->src == 0)
-                            fprintf(outfp,"xor edi,edi\n");
-                        else
-                            fprintf(outfp,"mov edi,%llu\n",pMystart->src);
+                        /* small optimze */
+                        fprintf(outfp,"xor ");
+                        standardreg( RegTableCount,
+                                     pMystart->dst,
+                                     setup_ebp, outfp);
+                        fprintf(outfp,",");
+                        standardreg( RegTableCount,
+                                     pMystart->dst,
+                                     setup_ebp, outfp);
+                        fprintf(outfp,"\n");
                     }
                     else
                     {
-                        if (setup_ebp == 1)
-                            fprintf(outfp,"mov dword [ebx - %d], %llu\n", tmp, pMystart->src);
-                        else
-                        {
-                            fprintf(outfp,"unsuported optimze should not happen it happen :(\n");
-                        }
+                        fprintf(outfp,"mov ");
+                        standardreg( RegTableCount,
+                                     pMystart->dst,
+                                     setup_ebp, outfp);
+                        fprintf(outfp,",%llu\n",pMystart->src);
                     }
-                }
-
-                if ((pMystart->type & 32)== 32)
-                {
-                    /* source are [reg - xx] */
-                    if (setup_ebp == 1)
-                         fprintf(outfp,"not supporet\n");
-                    else
-                    {
-                        fprintf(outfp,"not supporet\n");
-                        fprintf(outfp,"mov eax, word[eax%d]\n",pMystart->src_extra);
-                    }
-        
-                }
+                } /* end "source are imm" */
             } /* end pMyBrainAnalys->type & 8 */
+
+            if ((pMystart->type & 64)== 64)
+            {
+                if ((pMystart->type & 2)== 2)
+                {
+                    /* dest [eax - 0x20], source reg */
+                    
+                    fprintf(outfp,"mov [");
+                    standardreg( RegTableCount,
+                                 pMystart->dst,
+                                 setup_ebp, outfp);
+                    fprintf(outfp," %d], ",pMystart->dst_extra);
+                    standardreg( RegTableCount,
+                                 pMystart->src,
+                                 setup_ebp, outfp);
+                    fprintf(outfp,"\n");
+                }
+            }
+
+
+
+
         }
 
         /* return */

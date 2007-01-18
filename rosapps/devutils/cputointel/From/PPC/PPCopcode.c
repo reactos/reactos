@@ -98,6 +98,8 @@ CPU_INT PPC_Li( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
 CPU_INT PPC_Stwu( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
 {
+    /* r1 store at -0x20(r1) */
+
     CPU_UNINT opcode;
     CPU_SHORT tmp = 0;
 
@@ -114,12 +116,12 @@ CPU_INT PPC_Stwu( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     tmp =  _byteswap_ushort( ((CPU_SHORT)((opcode >> 16) & 0xffff)));
 
     pMyBrainAnalys->op = OP_ANY_mov;
-    pMyBrainAnalys->type= 2 + 8 + 32; /* 2 src reg  8 dst reg, 32 neg */
-    pMyBrainAnalys->src_size = 16;
-    pMyBrainAnalys->dst_size = 16;
+    pMyBrainAnalys->type= 2 + 64;
+    pMyBrainAnalys->src_size = 32;
+    pMyBrainAnalys->dst_size = 32;
     pMyBrainAnalys->src = PPC_GetBitArrayBto31xx(opcode);
     pMyBrainAnalys->dst = PPC_GetBitArrayDstReg(opcode);
-    pMyBrainAnalys-> src_extra = tmp;
+    pMyBrainAnalys-> dst_extra = tmp;
     pMyBrainAnalys->memAdr=BaseAddress;
 
     return 4;

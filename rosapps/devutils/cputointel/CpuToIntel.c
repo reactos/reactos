@@ -95,7 +95,7 @@ int main(int argc, char * argv[])
     //}
 
     //return LoadPFileImage(infile,outfile,BaseAddress,cpuid,type, mode);
-   return LoadPFileImage("e:\\testppc.exe","e:\\cputointel.asm",0,0,0,2); // disambler
+   return LoadPFileImage("e:\\testppc.exe","e:\\cputointel.asm",0,0,0,1); // disambler
    // return LoadPFileImage("e:\\testms.exe","e:\\cputointel.asm",0,0,0,1); // convert
 
 }
