@@ -157,9 +157,7 @@ BEGIN
     PUSHBUTTON  "Löschen", IDC_USERPROFILE_DELETE, 134, 156, 56, 13
     PUSHBUTTON  "Kopieren nach", IDC_USERPROFILE_COPY, 194, 156, 56, 13
 
-    LTEXT       "Um neue Benutzerprofile zu erstellen, öffnen Sie ", IDC_STATIC, 7, 175, 162, 8
-    CONTROL     "<A>Benutzerkonten</A>", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 167, 175, 56, 8
-    LTEXT       "in der Systemsteuerung.", IDC_STATIC, 8, 185, 101, 8
+    CONTROL     "Um neue Benutzerprofile zu erstellen, öffnen Sie <A>Benutzerkonten</A> in der Systemsteuerung.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 319, 8
 
     DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 13
     PUSHBUTTON  "Abbrechen", IDCANCEL, 196, 200, 54, 13
