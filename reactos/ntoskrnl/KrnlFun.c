@@ -9,7 +9,6 @@
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
 // Ke1:
-//  - Implement KiInitMachineDependent.
 //  - Implement Privileged Instruction Handler in Umode GPF.
 //
 // Ex:
@@ -27,10 +26,6 @@
 //
 // Kd:
 //  - Implement KD Kernel Debugging and WinDBG support.
-//
-// Native:
-//  - Rewrite loader.
-//  - Make smss NT-compatible.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

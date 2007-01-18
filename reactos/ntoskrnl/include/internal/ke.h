@@ -37,6 +37,18 @@ typedef struct _DISPATCH_INFO
     PKINTERRUPT_ROUTINE *FlatDispatch;
 } DISPATCH_INFO, *PDISPATCH_INFO;
 
+typedef struct _KI_SAMPLE_MAP
+{
+    LARGE_INTEGER PerfStart;
+    LARGE_INTEGER PerfEnd;
+    LONGLONG PerfDelta;
+    LARGE_INTEGER PerfFreq;
+    LONGLONG TSCStart;
+    LONGLONG TSCEnd;
+    LONGLONG TSCDelta;
+    ULONG MHz;
+} KI_SAMPLE_MAP, *PKI_SAMPLE_MAP;
+
 typedef struct _KTIMER_TABLE_ENTRY
 {
     LIST_ENTRY Entry;
@@ -113,7 +125,7 @@ extern KSPIN_LOCK BugCheckCallbackLock;
 extern KDPC KiExpireTimerDpc;
 extern KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 extern LIST_ENTRY KiTimerListHead;
-extern KMUTEX KiGenericCallDpcMutex;
+extern FAST_MUTEX KiGenericCallDpcMutex;
 extern LIST_ENTRY KiProfileListHead, KiProfileSourceListHead;
 extern KSPIN_LOCK KiProfileLock;
 extern LIST_ENTRY KiProcessListHead;
@@ -233,6 +245,13 @@ PKTHREAD
 FASTCALL
 KiSelectNextThread(
     IN PKPRCB Prcb
+);
+
+VOID
+NTAPI
+CPUID(
+    OUT ULONG CpuInfo[4],
+    IN ULONG InfoType
 );
 
 /* gmutex.c ********************************************************************/

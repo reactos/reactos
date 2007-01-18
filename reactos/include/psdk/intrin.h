@@ -930,7 +930,7 @@ static __inline__ __attribute__((always_inline)) unsigned long long __rdtsc(void
 	unsigned long lo32;
 	unsigned long hi32;
 
-	__asm__("rdtsc" : "=a" (lo32), "=d" (hi32));
+	__asm__ __volatile__("rdtsc" : "=a" (lo32), "=d" (hi32));
 
 	{
 		union u_

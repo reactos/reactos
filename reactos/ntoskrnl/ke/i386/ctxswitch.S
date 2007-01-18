@@ -17,7 +17,55 @@
 #define Running 2
 #define WrDispatchInt 0x1F
 
+Dividend: .float 4195835.0
+Divisor:  .float 3145727.0
+Result1:  .float 0
+Result2:  .float 0
+
 /* FUNCTIONS ****************************************************************/
+
+.globl _KiIsNpxErrataPresent@0
+.func KiIsNpxErrataPresent@0
+_KiIsNpxErrataPresent@0:
+
+    /* Disable interrupts */
+    cli
+
+    /* Get CR0 and mask out FPU flags */
+    mov eax, cr0
+    mov ecx, eax
+    and eax, ~(CR0_MP + CR0_TS + CR0_EM)
+    mov cr0, eax
+
+    /* Initialize the FPU */
+    fninit
+
+    /* Do the divison and inverse multiplication */
+    fld qword ptr Dividend
+    fstp qword ptr Result1
+    fld qword ptr Divisor
+    fstp qword ptr Result2
+    fld qword ptr Result1
+    fdiv qword ptr Result2
+    fmul qword ptr Result2
+
+    /* Do the compare and check flags */
+    fcomp qword ptr Result1
+    fstsw ax
+    sahf
+
+    /* Restore CR0 and interrupts */
+    mov cr0, ecx
+    sti
+
+    /* Return errata status */
+    xor eax, eax
+    jz NoErrata
+    inc eax
+
+NoErrata:
+    ret
+.endfunc
 
 .globl _KiIsNpxPresent@0
 .func KiIsNpxPresent@0

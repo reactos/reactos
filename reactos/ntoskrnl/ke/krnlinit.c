@@ -94,7 +94,7 @@ KiInitSystem(VOID)
     InitializeListHead(&KiStackInSwapListHead);
 
     /* Initialize the mutex for generic DPC calls */
-    KeInitializeMutex(&KiGenericCallDpcMutex, 0);
+    ExInitializeFastMutex(&KiGenericCallDpcMutex);
 
     /* Initialize the syscall table */
     KeServiceDescriptorTable[0].Base = MainSSDT;
@@ -183,7 +183,7 @@ KiInitSpinLocks(IN PKPRCB Prcb,
     Prcb->QueueIndex = 1;
     Prcb->ReadySummary = 0;
     Prcb->DeferredReadyListHead.Next = NULL;
-    for (i = 0; i < 32; i++)
+    for (i = 0; i < MAXIMUM_PRIORITY; i++)
     {
         /* Initialize the ready list */
         InitializeListHead(&Prcb->DispatcherReadyListHead[i]);
@@ -246,9 +246,13 @@ KiInitSpinLocks(IN PKPRCB Prcb,
     {
         /* Initialize the lock and setup the Queued Spinlock */
         KeInitializeSpinLock(&KiTimerTableLock[i]);
-        Prcb->LockQueue[i].Next = NULL;
-        Prcb->LockQueue[i].Lock = &KiTimerTableLock[i];
+        Prcb->LockQueue[LockQueueTimerTableLock + i].Next = NULL;
+        Prcb->LockQueue[LockQueueTimerTableLock + i].Lock =
+            &KiTimerTableLock[i];
     }
+
+    /* Initialize the PRCB lock */
+    KeInitializeSpinLock(&Prcb->PrcbLock);
 
     /* Check if this is the boot CPU */
     if (!Number)

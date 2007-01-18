@@ -340,6 +340,14 @@ KiGetFeatureBits(VOID)
             FeatureBits &= ~KF_WORKING_PTE;
         }
 
+        /* Check if the CPU is too old to support SYSENTER */
+        if ((Prcb->CpuType < 6) ||
+            ((Prcb->CpuType == 6) && (Prcb->CpuStep < 0x0303)))
+        {
+            /* Disable it */
+            Reg[3] &= ~0x800;
+        }
+
         /* Set the current features */
         CpuFeatures = Reg[3];
     }
@@ -354,6 +362,7 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & 0x00002000) FeatureBits |= KF_GLOBAL_PAGE | KF_CR4;
     if (CpuFeatures & 0x00008000) FeatureBits |= KF_CMOV;
     if (CpuFeatures & 0x00010000) FeatureBits |= KF_PAT;
+    if (CpuFeatures & 0x00200000) FeatureBits |= KF_DTS;
     if (CpuFeatures & 0x00800000) FeatureBits |= KF_MMX;
     if (CpuFeatures & 0x01000000) FeatureBits |= KF_FXSR;
     if (CpuFeatures & 0x02000000) FeatureBits |= KF_XMMI;
@@ -388,6 +397,9 @@ KiGetFeatureBits(VOID)
             {
                 /* Check which extended features are available. */
                 CPUID(Reg, 0x80000001);
+
+                /* Check if NX-bit is supported */
+                if (Reg[3] & 0x00100000) FeatureBits |= KF_NX_BIT;
 
                 /* Now handle each features for each CPU Vendor */
                 switch (Vendor)
@@ -741,8 +753,23 @@ ULONG_PTR
 NTAPI
 Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
 {
-    /* FIXME: Support this */
-    DPRINT1("Your machine supports XMMI exceptions but ReactOS doesn't\n");
+#if 0 // needs kitrap13
+    PKIDTENTRY IdtEntry;
+
+    /* Get the IDT Entry for Interrupt 19 */
+    IdtEntry = ((PKIPCR)KeGetPcr())->IDT[19];
+
+    /* Set it up */
+    IdtEntry->Selector = KGDT_R0_CODE;
+    IdtEntry->Offset = (KiTrap13 & 0xFFFF);
+    IdtEntry->ExtendedOffset = (KiTrap13 >> 16) & 0xFFFF;
+    ((PKIDT_ACCESS)&IdtEntry->Access)->Dpl = 0;
+    ((PKIDT_ACCESS)&IdtEntry->Access)->Present = 1;
+    ((PKIDT_ACCESS)&IdtEntry->Access)->SegmentType = I386_INTERRUPT_GATE;
+#endif
+
+    /* Enable XMMI exceptions */
+    __writecr4(__readcr4() | CR4_XMMEXCPT);
     return 0;
 }
 
@@ -750,8 +777,34 @@ VOID
 NTAPI
 KiI386PentiumLockErrataFixup(VOID)
 {
-    /* FIXME: Support this */
-    DPRINT1("WARNING: Your machine has a CPU bug that ReactOS can't bypass!\n");
+    KDESCRIPTOR IdtDescriptor;
+    PKIDTENTRY NewIdt, NewIdt2;
+
+    /* Allocate memory for a new IDT */
+    NewIdt = ExAllocatePool(NonPagedPool, 2 * PAGE_SIZE);
+
+    /* Put everything after the first 7 entries on a new page */
+    NewIdt2 = (PVOID)((ULONG_PTR)NewIdt + PAGE_SIZE - (7 * sizeof(KIDTENTRY)));
+
+    /* Disable interrupts */
+    _disable();
+
+    /* Get the current IDT and copy it */
+    Ke386GetInterruptDescriptorTable(IdtDescriptor);
+    RtlCopyMemory(NewIdt2,
+                  (PVOID)IdtDescriptor.Base,
+                  IdtDescriptor.Limit + 1);
+    IdtDescriptor.Base = (ULONG)NewIdt2;
+
+    /* Set the new IDT */
+    Ke386SetInterruptDescriptorTable(IdtDescriptor);
+    ((PKIPCR)KeGetPcr())->IDT = NewIdt2;
+
+    /* Restore interrupts */
+    _enable();
+
+    /* Set the first 7 entries as read-only to produce a fault */
+    MmSetPageProtect(NULL, NewIdt, PAGE_READONLY);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

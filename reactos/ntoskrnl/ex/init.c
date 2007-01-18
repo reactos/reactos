@@ -39,6 +39,12 @@ BOOLEAN NoGuiBoot = FALSE;
 /* NT Boot Path */
 UNICODE_STRING NtSystemRoot;
 
+/* NT Initial User Application */
+WCHAR NtInitialUserProcessBuffer[128] = L"\\SystemRoot\\System32\\smss.exe";
+ULONG NtInitialUserProcessBufferLength = sizeof(NtInitialUserProcessBuffer) -
+                                         sizeof(WCHAR);
+ULONG NtInitialUserProcessBufferType = REG_SZ;
+
 /* Boot NLS information */
 PVOID ExpNlsTableBase;
 ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
@@ -68,7 +74,7 @@ ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                &LinkName,
                                OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
                                NULL,
-                               SePublicDefaultSd);
+                               SePublicDefaultUnrestrictedSd);
 
     /* Create it */
     Status = NtCreateDirectoryObject(&LinkHandle,
@@ -88,7 +94,7 @@ ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                &LinkName,
                                OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
                                NULL,
-                               SePublicDefaultSd);
+                               SePublicDefaultUnrestrictedSd);
 
     /* Create it */
     Status = NtCreateDirectoryObject(&LinkHandle,
@@ -115,7 +121,7 @@ ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                &LinkName,
                                OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
                                NULL,
-                               SePublicDefaultSd);
+                               SePublicDefaultUnrestrictedSd);
 
     /* Build the ARC name */
     sprintf(Buffer,
@@ -353,10 +359,11 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
     PWSTR p;
     UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
     UNICODE_STRING SmssName, Environment, SystemDriveString;
+    PVOID EnvironmentPtr = NULL;
 
     /* Allocate memory for the process parameters */
     Size = sizeof(RTL_USER_PROCESS_PARAMETERS) +
-           ((MAX_PATH * 4) * sizeof(WCHAR));
+           ((MAX_PATH * 6) * sizeof(WCHAR));
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
                                      (PVOID)&ProcessParameters,
                                      0,
@@ -378,7 +385,7 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
     /* Allocate a page for the environment */
     Size = PAGE_SIZE;
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                     (PVOID)&ProcessParameters->Environment,
+                                     &EnvironmentPtr,
                                      0,
                                      &Size,
                                      MEM_COMMIT,
@@ -388,6 +395,9 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
         /* Failed */
         KeBugCheckEx(SESSION2_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
+
+    /* Write the pointer */
+    ProcessParameters->Environment = EnvironmentPtr;
 
     /* Make a buffer for the DOS path */
     p = (PWSTR)(ProcessParameters + 1);
@@ -416,11 +426,48 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
     ProcessParameters->ImagePathName.Buffer = p;
     ProcessParameters->ImagePathName.MaximumLength = MAX_PATH * sizeof(WCHAR);
 
-    /* Append the system path and session manager name */
-    RtlAppendUnicodeToString(&ProcessParameters->ImagePathName,
-                             L"\\SystemRoot\\System32");
-    RtlAppendUnicodeToString(&ProcessParameters->ImagePathName,
-                             L"\\smss.exe");
+    /* Make sure the buffer is a valid string which within the given length */
+    if ((NtInitialUserProcessBufferType != REG_SZ) ||
+        ((NtInitialUserProcessBufferLength != -1) &&
+         ((NtInitialUserProcessBufferLength < sizeof(WCHAR)) ||
+          (NtInitialUserProcessBufferLength >
+           sizeof(NtInitialUserProcessBuffer) - sizeof(WCHAR)))))
+    {
+        /* Invalid initial process string, bugcheck */
+        KeBugCheckEx(SESSION2_INITIALIZATION_FAILED,
+                     (ULONG_PTR)STATUS_INVALID_PARAMETER,
+                     NtInitialUserProcessBufferType,
+                     NtInitialUserProcessBufferLength,
+                     sizeof(NtInitialUserProcessBuffer));
+    }
+
+    /* Cut out anything after a space */
+    p = NtInitialUserProcessBuffer;
+    while (*p && *p != L' ') p++;
+
+    /* Set the image path length */
+    ProcessParameters->ImagePathName.Length =
+        (USHORT)((PCHAR)p - (PCHAR)NtInitialUserProcessBuffer);
+
+    /* Copy the actual buffer */
+    RtlCopyMemory(ProcessParameters->ImagePathName.Buffer,
+                  NtInitialUserProcessBuffer,
+                  ProcessParameters->ImagePathName.Length);
+
+    /* Null-terminate it */
+    ProcessParameters->
+        ImagePathName.Buffer[ProcessParameters->ImagePathName.Length /
+                             sizeof(WCHAR)] = UNICODE_NULL;
+
+    /* Make a buffer for the command line */
+    p = (PWSTR)((PCHAR)ProcessParameters->ImagePathName.Buffer +
+                ProcessParameters->ImagePathName.MaximumLength);
+    ProcessParameters->CommandLine.Buffer = p;
+    ProcessParameters->CommandLine.MaximumLength = MAX_PATH * sizeof(WCHAR);
+
+    /* Add the image name to the command line */
+    RtlAppendUnicodeToString(&ProcessParameters->CommandLine,
+                             NtInitialUserProcessBuffer);
 
     /* Create the environment string */
     RtlInitEmptyUnicodeString(&Environment,
@@ -446,11 +493,8 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
     RtlAppendUnicodeStringToString(&Environment, &NtSystemRoot);
     RtlAppendUnicodeStringToString(&Environment, &NullString);
 
-    /* Get and set the command line equal to the image path */
-    ProcessParameters->CommandLine = ProcessParameters->ImagePathName;
-    SmssName = ProcessParameters->ImagePathName;
-
     /* Create SMSS process */
+    SmssName = ProcessParameters->ImagePathName;
     Status = RtlCreateUserProcess(&SmssName,
                                   OBJ_CASE_INSENSITIVE,
                                   RtlDeNormalizeProcessParams(
@@ -731,9 +775,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
     Buffer[--AnsiPath.Length] = ANSI_NULL;
 
     /* Get the string from KUSER_SHARED_DATA's buffer */
-    NtSystemRoot.Buffer = SharedUserData->NtSystemRoot;
-    NtSystemRoot.MaximumLength = sizeof(SharedUserData->NtSystemRoot) / sizeof(WCHAR);
-    NtSystemRoot.Length = 0;
+    RtlInitEmptyUnicodeString(&NtSystemRoot,
+                              SharedUserData->NtSystemRoot,
+                              sizeof(SharedUserData->NtSystemRoot));
 
     /* Now fill it in */
     Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
@@ -960,19 +1004,17 @@ ExPhase2Init(PVOID Context)
         /* Bugcheck the system if SMSS couldn't initialize */
         KeBugCheck(SESSION5_INITIALIZATION_FAILED);
     }
-    else
-    {
-        /* Close process handles */
-        ZwClose(ThreadHandle);
-        ZwClose(ProcessHandle);
 
-        /* FIXME: We should free the initial process' memory!*/
+    /* Close process handles */
+    ZwClose(ThreadHandle);
+    ZwClose(ProcessHandle);
 
-        /* Increase init phase */
-        ExpInitializationPhase += 1;
+    /* FIXME: We should free the initial process' memory!*/
 
-        /* Jump into zero page thread */
-        MmZeroPageThreadMain(NULL);
-    }
+    /* Increase init phase */
+    ExpInitializationPhase += 1;
+
+    /* Jump into zero page thread */
+    MmZeroPageThreadMain(NULL);
 }
 /* EOF */

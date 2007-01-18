@@ -40,6 +40,11 @@ Author:
 #define SSDT_MAX_ENTRIES                2
 
 //
+// Processor Architectures
+//
+#define PROCESSOR_ARCHITECTURE_INTEL    0
+
+//
 // Object Type Mask for Kernel Dispatcher Objects
 //
 #define KOBJECT_TYPE_MASK               0x7F
@@ -87,8 +92,10 @@ Author:
 #define KF_3DNOW                        0x00004000
 #define KF_AMDK6MTRR                    0x00008000
 #define KF_XMMI64                       0x00010000
-#define KF_NX_DISABLED                  0x00400000
-#define KF_NX_ENABLED                   0x00800000
+#define KF_DTS                          0x00020000
+#define KF_NX_BIT                       0x20000000
+#define KF_NX_DISABLED                  0x40000000
+#define KF_NX_ENABLED                   0x80000000
 
 //
 // KPCR Access for non-IA64 builds

@@ -92,6 +92,12 @@ KiIsNpxPresent(
     VOID
 );
 
+BOOLEAN
+NTAPI
+KiIsNpxErrataPresent(
+    VOID
+);
+
 VOID
 NTAPI
 KiSetProcessorType(VOID);

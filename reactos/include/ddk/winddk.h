@@ -427,6 +427,11 @@ typedef struct _KSYSTEM_TIME
 
 extern volatile KSYSTEM_TIME KeTickCount;
 
+#define NX_SUPPORT_POLICY_ALWAYSOFF 0
+#define NX_SUPPORT_POLICY_ALWAYSON 1
+#define NX_SUPPORT_POLICY_OPTIN 2
+#define NX_SUPPORT_POLICY_OPTOUT 3
+
 typedef struct _KUSER_SHARED_DATA
 {
     ULONG TickCountLowDeprecated;
