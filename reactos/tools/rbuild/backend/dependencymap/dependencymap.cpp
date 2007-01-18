@@ -150,7 +150,7 @@ DepMapBackend::_generate_depmap ( FILE* OUT )
 	}
 	
 	fprintf ( m_DepMapFile, "<?xml version=\"1.0\" encoding=\"iso-8859-1\" ?>\r\n" );
-	//fprintf ( m_DepMapFile, "<?xml-stylesheet type=\"text/xsl\" href=\"depmap.xsl\"?>\r\n" );
+	fprintf ( m_DepMapFile, "<?xml-stylesheet type=\"text/xsl\" href=\"depmap.xsl\"?>\r\n" );
 	fprintf ( m_DepMapFile, "<components>\r\n" );
 
 	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
@@ -164,8 +164,12 @@ DepMapBackend::_generate_depmap ( FILE* OUT )
 			
 			
 
-			fprintf ( m_DepMapFile, "<component name=\"%s\" base=\"%s\" ref_count=\"%u\" library_count=\"%u\">\r\n", module.name.c_str(), module.GetBasePath ().c_str (), (unsigned int) data->references.size (), (unsigned int) data->libraries.size () );
-			
+			fprintf ( m_DepMapFile, "\t<component>\r\n" );
+			fprintf ( m_DepMapFile, "\t\t<name>%s</name>\r\n", module.name.c_str () );
+			fprintf ( m_DepMapFile, "\t\t<base>%s</base>\r\n", module.GetBasePath ().c_str () );
+			fprintf ( m_DepMapFile, "\t\t<ref_count>%u</ref_count>\r\n", (unsigned int)data->references.size () );
+			fprintf ( m_DepMapFile, "\t\t<lib_count>%u</lib_count>\r\n", (unsigned int)data->libraries.size () );
+#if 0			
 			if ( data->references.size () )
 			{
 				fprintf ( m_DepMapFile, "\t<references>\r\n" );
@@ -185,8 +189,8 @@ DepMapBackend::_generate_depmap ( FILE* OUT )
 				}
 				fprintf ( m_DepMapFile, "\t</libraries>\r\n" );
 			}
-
-			fprintf ( m_DepMapFile, "</component>\r\n" );
+#endif
+			fprintf ( m_DepMapFile, "\t</component>\r\n" );
 		}
 	}
 
