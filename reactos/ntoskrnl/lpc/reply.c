@@ -57,7 +57,8 @@ LpcpFreeDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
 VOID
 NTAPI
 LpcpSaveDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
-                        IN PLPCP_MESSAGE Message)
+                        IN PLPCP_MESSAGE Message,
+                        IN ULONG LockFlags)
 {
     PAGED_CODE();
 
@@ -402,7 +403,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         if (Message->Request.u2.s2.DataInfoOffset)
         {
             /* It does, save it, and don't free the message below */
-            LpcpSaveDataInfoMessage(Port, Message);
+            LpcpSaveDataInfoMessage(Port, Message, 1);
             Message = NULL;
         }
     }

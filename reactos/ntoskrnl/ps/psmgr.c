@@ -231,7 +231,6 @@ PsLocateSystemDll(VOID)
         KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 4, 0, 0);
     }
 
-
     /* Map it */
     Status = PspMapSystemDll(PsGetCurrentProcess(), &PspSystemDllBase);
     if (!NT_SUCCESS(Status))
@@ -290,9 +289,7 @@ PspInitPhase0(VOID)
     MM_SYSTEMSIZE SystemSize;
     UNICODE_STRING Name;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
-
-    /* FIXME: Initialize Lock Data do it STATIC */
-    ShortPsLockDelay.QuadPart = -100LL;
+    ULONG i;
 
     /* Get the system size */
     SystemSize = MmQuerySystemSize();
@@ -320,10 +317,22 @@ PspInitPhase0(VOID)
             break;
     }
 
+    /* Setup callbacks */
+    for (i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)
+    {
+        ExInitializeCallBack(&PspThreadNotifyRoutine[i]);
+    }
+    for (i = 0; i < PSP_MAX_CREATE_PROCESS_NOTIFY; i++)
+    {
+        ExInitializeCallBack(&PspProcessNotifyRoutine[i]);
+    }
+    for (i = 0; i < PSP_MAX_LOAD_IMAGE_NOTIFY; i++)
+    {
+        ExInitializeCallBack(&PspLoadImageNotifyRoutine[i]);
+    }
+
     /* Setup the quantum table */
     PsChangeQuantumTable(FALSE, PsRawPrioritySeparation);
-
-    /* Setup callbacks when we implement Generic Callbacks */
 
     /* Set quota settings */
     if (!PspDefaultPagedLimit) PspDefaultPagedLimit = 0;
@@ -406,6 +415,7 @@ PspInitPhase0(VOID)
 
     /* Create the CID Handle table */
     PspCidTable = ExCreateHandleTable(NULL);
+    if (!PspCidTable) return FALSE;
 
     /* FIXME: Initialize LDT/VDM support */
 
@@ -447,11 +457,22 @@ PspInitPhase0(VOID)
     strcpy(PsInitialSystemProcess->ImageFileName, "System");
 
     /* Allocate a structure for the audit name */
-    PsIdleProcess->SeAuditProcessCreationInfo.ImageFileName =
-        ExAllocatePoolWithTag(PagedPool, sizeof(UNICODE_STRING), TAG_SEPA);
-    if (!PsIdleProcess->SeAuditProcessCreationInfo.ImageFileName) KEBUGCHECK(0);
+    PsInitialSystemProcess->SeAuditProcessCreationInfo.ImageFileName =
+        ExAllocatePoolWithTag(PagedPool,
+                              sizeof(OBJECT_NAME_INFORMATION),
+                              TAG_SEPA);
+    if (!PsInitialSystemProcess->SeAuditProcessCreationInfo.ImageFileName)
+    {
+        /* Allocation failed */
+        return FALSE;
+    }
 
-    /* Setup the system initailization thread */
+    /* Zero it */
+    RtlZeroMemory(PsInitialSystemProcess->
+                  SeAuditProcessCreationInfo.ImageFileName,
+                  sizeof(OBJECT_NAME_INFORMATION));
+
+    /* Setup the system initialization thread */
     Status = PsCreateSystemThread(&SysThreadHandle,
                                   THREAD_ALL_ACCESS,
                                   &ObjectAttributes,

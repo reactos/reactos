@@ -93,7 +93,8 @@ VOID
 NTAPI
 LpcpSaveDataInfoMessage(
     IN PLPCP_PORT_OBJECT Port,
-    IN PLPCP_MESSAGE Message
+    IN PLPCP_MESSAGE Message,
+    IN ULONG LockHeld
 );
 
 //

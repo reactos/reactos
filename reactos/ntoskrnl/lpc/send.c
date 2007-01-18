@@ -391,7 +391,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
                 (Message->Request.u2.s2.DataInfoOffset))
             {
                 /* Save the data information */
-                LpcpSaveDataInfoMessage(Port, Message);
+                LpcpSaveDataInfoMessage(Port, Message, 0);
             }
             else
             {

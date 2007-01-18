@@ -46,6 +46,17 @@ KeFindNextRightSetAffinity(IN UCHAR Number,
     return (UCHAR)Result;
 }
 
+
+BOOLEAN
+NTAPI
+KeReadStateThread(IN PKTHREAD Thread)
+{
+    ASSERT_THREAD(Thread);
+
+    /* Return signal state */
+    return (BOOLEAN)Thread->DispatcherHeader.SignalState;
+}
+
 KPRIORITY
 NTAPI
 KeQueryBasePriorityThread(IN PKTHREAD Thread)

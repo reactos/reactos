@@ -216,6 +216,10 @@ NTAPI
 KeSuspendThread(PKTHREAD Thread);
 
 BOOLEAN
+NTAPI
+KeReadStateThread(IN PKTHREAD Thread);
+
+BOOLEAN
 FASTCALL
 KiSwapContext(
     IN PKTHREAD CurrentThread,
