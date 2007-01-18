@@ -9,16 +9,10 @@
  * same. thuse bit are always 0 or 1
  */
 
-CPU_BYTE cpuPPCInit_Blr[32]  = {0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1,1,1,0};
-
-
-/* xxxx xxxx xxxx xxxx DDD0 0000 xxxx xxDD 
- * 2222 2222 2222 2222 2222 2222 0011 1022 Li 
- */
-CPU_BYTE cpuPPCInit_Li[32]  = {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,1,1, 1,0,2,2};
-
-
-
+/* FIXME RA should be 0 in stwu */
+CPU_BYTE cpuPPCInit_Blr[32]   = {0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1,1,1,0};
+CPU_BYTE cpuPPCInit_Li[32]    = {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,1,1,1,0,2,2};
+CPU_BYTE cpuPPCInit_stwu[32]  = {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,1,0,1,2,2};
 /* mask */
 /*
  * no mask  we implement function getting the reg right 

@@ -160,6 +160,9 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
             fclose(outfp);
             return 0;
        }
+
+       /* fixme */
+       return -1;
     }
 
     if (type== 1)

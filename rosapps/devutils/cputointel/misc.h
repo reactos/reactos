@@ -7,6 +7,9 @@
 #define CPU_UNINT   unsigned int
 #define CPU_INT     int
 
+/* 16 bits signed */
+#define CPU_SHORT short
+
 /* 8bits unsigned */
 #define CPU_BYTE    unsigned char
 

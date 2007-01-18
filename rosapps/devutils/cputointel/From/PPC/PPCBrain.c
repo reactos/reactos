@@ -58,8 +58,18 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
 
         cpuint = GetData32Le(&cpu_buffer[cpu_pos]);
 
+        /* blr */
+        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Blr))) == ConvertBitToByte32(cpuPPCInit_Blr))
+        {
+            retsize = PPC_Blr( outfp, cpu_buffer, cpu_pos, cpu_size,
+                                 BaseAddress, cpuarch);
+            if (retsize<0)
+                 retcode = 1;
+            else
+                 cpu_pos += retsize;
+        }
 
-         /* 0xE = Li*/
+         /* Li*/
         if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Li))) == ConvertBitToByte32(cpuPPCInit_Li))
         {
             retsize = PPC_Li( outfp, cpu_buffer, cpu_pos, cpu_size,
@@ -70,17 +80,17 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
                  cpu_pos += retsize;
         }
 
-         /* hard code the op blr */
-        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_Blr))) == ConvertBitToByte32(cpuPPCInit_Blr))
+        /* stwu */
+        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_stwu))) == ConvertBitToByte32(cpuPPCInit_stwu))
         {
-            retsize = PPC_Blr( outfp, cpu_buffer, cpu_pos, cpu_size,
+            retsize = PPC_Stwu( outfp, cpu_buffer, cpu_pos, cpu_size,
                                  BaseAddress, cpuarch);
             if (retsize<0)
                  retcode = 1;
             else
                  cpu_pos += retsize;
         }
-    
+
         /* Found all Opcode and breakout and return no error found */
         if (cpu_pos >=cpu_size)
         {
@@ -105,5 +115,6 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
             break;
         }
     }
+
     return retcode;
 }

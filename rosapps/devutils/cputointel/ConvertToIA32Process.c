@@ -187,6 +187,19 @@ CPU_INT ConvertToIA32Process( FILE *outfp,
                         }
                     }
                 }
+
+                if ((pMystart->type & 32)== 32)
+                {
+                    /* source are [reg - xx] */
+                    if (setup_ebp == 1)
+                         fprintf(outfp,"not supporet\n");
+                    else
+                    {
+                        fprintf(outfp,"not supporet\n");
+                        fprintf(outfp,"mov eax, word[eax%d]\n",pMystart->src_extra);
+                    }
+        
+                }
             } /* end pMyBrainAnalys->type & 8 */
         }
 

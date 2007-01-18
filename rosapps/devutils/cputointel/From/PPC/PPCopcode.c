@@ -27,10 +27,19 @@
  *               value +1 and higher : who many byte we should add to cpu_pos
  */
 
-/* only for ppc */
-#define PPC_GetBitArray6toA(opcode) (((opcode & 0x3) << 3) | ((opcode & 0xE000) >> 13))
+/* Get Dest register */
+#define PPC_GetBitArrayDstReg(opcode) (((opcode & 0x3) << 3) | ((opcode & 0xE000) >> 13))
 
+/* Get Source register */
+CPU_UNINT PPC_GetBitArrayBto31xx(CPU_UNINT opcode)
+{
+    CPU_INT x1;
 
+   /* FIXME make it to a macro
+    * not tested to 100% yet */
+    x1 = ((opcode & 0x1F00)>>8);
+    return  x1;
+}
 
 
 CPU_UNINT PPC_GetBitArrayBto31(CPU_UNINT opcode)
@@ -79,9 +88,39 @@ CPU_INT PPC_Li( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     pMyBrainAnalys->type= 8 + 16; /* 8 dst reg, 16 imm */
     pMyBrainAnalys->src_size = 16;
     pMyBrainAnalys->src = PPC_GetBitArrayBto31(opcode);
-    pMyBrainAnalys->dst = PPC_GetBitArray6toA(opcode);
+    pMyBrainAnalys->dst = PPC_GetBitArrayDstReg(opcode);
     pMyBrainAnalys->memAdr=BaseAddress;
 
     return 4;
 }
 
+
+CPU_INT PPC_Stwu( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
+                  CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
+{
+    CPU_UNINT opcode;
+    CPU_SHORT tmp = 0;
+
+    opcode = GetData32Le(cpu_buffer);
+
+    BaseAddress +=cpu_pos;
+
+    /* own translatons langues */
+    if (AllocAny()!=0)  /* alloc memory for pMyBrainAnalys */
+    {
+        return -1;
+    }
+
+    tmp =  _byteswap_ushort( ((CPU_SHORT)((opcode >> 16) & 0xffff)));
+
+    pMyBrainAnalys->op = OP_ANY_mov;
+    pMyBrainAnalys->type= 2 + 8 + 32; /* 2 src reg  8 dst reg, 32 neg */
+    pMyBrainAnalys->src_size = 16;
+    pMyBrainAnalys->dst_size = 16;
+    pMyBrainAnalys->src = PPC_GetBitArrayBto31xx(opcode);
+    pMyBrainAnalys->dst = PPC_GetBitArrayDstReg(opcode);
+    pMyBrainAnalys-> src_extra = tmp;
+    pMyBrainAnalys->memAdr=BaseAddress;
+
+    return 4;
+}
