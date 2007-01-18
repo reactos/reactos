@@ -425,7 +425,7 @@ KiSelectNextThread(IN PKPRCB Prcb)
         Thread = Prcb->IdleThread;
 
         /* Enable idle scheduling */
-        InterlockedOr(&KiIdleSummary, Prcb->SetMember);
+        InterlockedOr((PLONG) &KiIdleSummary, Prcb->SetMember);
         Prcb->IdleSchedule = TRUE;
 
         /* FIXME: SMT support */
