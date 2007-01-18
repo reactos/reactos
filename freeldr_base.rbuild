@@ -68,13 +68,15 @@
 		<file>pixel.c</file>
 		<file>video.c</file>
 	</directory>
-	<directory name="windows">
-		<file>conversion.c</file>
-		<file>peloader.c</file>
-		<file>winldr.c</file>
-		<file>wlmemory.c</file>
-		<file>wlregistry.c</file>
-	</directory>
+	<if property="ARCH" value="i386">
+		<directory name="windows">
+			<file>conversion.c</file>
+			<file>peloader.c</file>
+			<file>winldr.c</file>
+			<file>wlmemory.c</file>
+			<file>wlregistry.c</file>
+		</directory>
+	</if>
 	<file>freeldr.c</file>
 	<file>debug.c</file>
 	<file>version.c</file>
