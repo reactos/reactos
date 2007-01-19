@@ -21,11 +21,6 @@ extern ULONG TotalNLSSize;
 #undef KIP0PCRADDRESS
 #define KIP0PCRADDRESS                      0xffdff000
 
-//
-// This is the zone which is used by the OS loader
-//
-#define LOADER_HIGH_ZONE ((16*1024*1024) >> MM_PAGE_SHIFT) //16Mb page
-
 #define HYPER_SPACE_ENTRY       0x300
 
 PCHAR  MemTypeDesc[]  = {

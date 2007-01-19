@@ -352,7 +352,7 @@ ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG Pa
 	if (FromEnd)
 	{
 		/* Allocate "high" (from end) pages */
-		for (Index=/*LastFreePageHint-1*/(16*1024*1024>>12)-1; Index>0; Index--)
+		for (Index=/*LastFreePageHint-1*/LOADER_HIGH_ZONE-1; Index>0; Index--)
 		//for (Index=LastFreePageHint-1; Index>0; Index--)
 		{
 			if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
