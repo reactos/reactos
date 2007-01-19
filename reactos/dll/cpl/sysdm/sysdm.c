@@ -102,8 +102,9 @@ SystemApplet(VOID)
   HPROPSHEETPAGE hpsp[MAX_SYSTEM_PAGES];
   PROPSHEETHEADER psh;
   HMODULE hNetIdDll;
+  HPSXA hpsxa;
   LONG Ret;
-  static const INITCOMMONCONTROLSEX icc = {sizeof(INITCOMMONCONTROLSEX), ICC_LINK_CLASS};
+  static INITCOMMONCONTROLSEX icc = {sizeof(INITCOMMONCONTROLSEX), ICC_LINK_CLASS};
 
   if (!InitCommonControlsEx(&icc))
       return 0;
