@@ -12,14 +12,12 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>comctl32</library>
-	<library>netapi32</library>
 	<library>ntdll</library>
 	<library>msimg32</library>
 	<library>shell32</library>
 	<library>shlwapi</library>
 	<library>ole32</library>
 	<file>advanced.c</file>
-	<file>computer.c</file>
 	<file>environment.c</file>
 	<file>general.c</file>
 	<file>hardprof.c</file>

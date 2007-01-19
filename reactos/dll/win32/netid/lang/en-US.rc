@@ -1,0 +1,22 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Computer Name"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT       "ReactOS uses the following information to identify your computer on the network.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT       "Computer Description:", IDC_STATIC, 6, 40, 70, 9
+    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT       "Full computer name:", IDC_STATIC, 6, 68, 64, 9
+    LTEXT       "(Default)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    LTEXT       "Workgroup:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    LTEXT       "(empty)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    LTEXT       "To use the Network Identfication Wizard to join a domain and create a local user, click ""Network ID"".", IDC_STATIC, 6, 108, 172, 24
+    PUSHBUTTON  "&Network ID...", IDC_NETWORK_ID, 190, 114, 58, 15
+    LTEXT       "To rename this computer or join a domain, click ""Change"".", IDC_STATIC, 6, 149, 170, 17
+    PUSHBUTTON  "&Change...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
+    LTEXT       "Note: Only Administrators can change the identification of this computer.", IDC_STATIC, 6, 179, 300, 9
+END
+

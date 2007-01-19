@@ -12,6 +12,7 @@
   <property name="BASEADDRESS_SLAYER" value="0x5c7e0000" />
   <property name="BASEADDRESS_DPLAYX" value="0x5e080000" />
   <property name="BASEADDRESS_DINPUT" value="0x5f580000" />
+  <property name="BASEADDRESS_NETID" value="0x5f660000" />
   <property name="BASEADDRESS_MAPI32" value="0x62250000" />
   <property name="BASEADDRESS_HDWWIZ" value="0x64d40000" />
   <property name="BASEADDRESS_TIMEDATE" value="0x64da0000" />

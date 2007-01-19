@@ -193,6 +193,7 @@ dll\win32\msvideo\msvfw32.dll                       1
 dll\win32\mswsock\mswsock.dll                       1
 dll\win32\netapi32\netapi32.dll                     1
 dll\win32\netcfgx\netcfgx.dll                       1
+dll\win32\netid\netid.dll                           1
 dll\win32\newdev\newdev.dll                         1
 dll\win32\ntmarta\ntmarta.dll                       1
 dll\win32\objsel\objsel.dll                         1

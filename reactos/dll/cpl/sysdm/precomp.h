@@ -5,7 +5,6 @@
 #include <commctrl.h>
 #include <tchar.h>
 #include <stdio.h>
-#include <lm.h>
 #include <cpl.h>
 #include <shellapi.h>
 #include <shlwapi.h>
@@ -33,7 +32,6 @@ void ShowLastWin32Error(HWND hWndOwner);
 
 /* prop sheet pages */
 INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-INT_PTR CALLBACK ComputerPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK HardwarePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 

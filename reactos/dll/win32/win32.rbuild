@@ -136,6 +136,9 @@
 <directory name="netcfgx">
 	<xi:include href="netcfgx/netcfgx.rbuild" />
 </directory>
+<directory name="netid">
+	<xi:include href="netid/netid.rbuild" />
+</directory>
 <directory name="newdev">
 	<xi:include href="newdev/newdev.rbuild" />
 </directory>
