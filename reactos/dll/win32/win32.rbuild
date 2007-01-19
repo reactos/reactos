@@ -19,6 +19,9 @@
 <directory name="avifil32">
 	<xi:include href="avifil32/avifil32.rbuild" />
 </directory>
+<directory name="beepmidi">
+	<xi:include href="beepmidi/beepmidi.rbuild" />
+</directory>
 <directory name="cabinet">
 	<xi:include href="cabinet/cabinet.rbuild" />
 </directory>
