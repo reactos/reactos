@@ -149,14 +149,16 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 	rbBand.cyMaxChild = 0;
 	rbBand.cyIntegral = btn_hgt;
 
-	rbBand.lpText = TEXT("Toolbar");
+	TCHAR ToolBarText[] = _T("Toolbar");
+	rbBand.lpText = ToolBarText;
 	rbBand.hwndChild = _htoolbar;
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt + 4;
 	rbBand.cx = 182;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
-	rbBand.lpText = TEXT("Address");
+	TCHAR AddressText[] = _T("Address");
+	rbBand.lpText = AddressText;
 	rbBand.hwndChild = _haddressedit;
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt - 2;

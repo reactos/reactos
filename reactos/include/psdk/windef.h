@@ -123,8 +123,8 @@ extern "C" {
 #endif /* __GNUC__/__WATCOMC__ */
 #define MAKEWORD(a,b)	((WORD)(((BYTE)(a))|(((WORD)((BYTE)(b)))<<8)))
 #define MAKELONG(a,b)	((LONG)(((WORD)(a))|(((DWORD)((WORD)(b)))<<16)))
-#define LOWORD(l)	((WORD)((DWORD)(l)))
-#define HIWORD(l)	((WORD)(((DWORD)(l)>>16)&0xFFFF))
+#define LOWORD(l)	((WORD)((DWORD_PTR)(l)))
+#define HIWORD(l)	((WORD)(((DWORD_PTR)(l)>>16)&0xFFFF))
 #define LOBYTE(w)	((BYTE)(w))
 #define HIBYTE(w)	((BYTE)(((WORD)(w)>>8)&0xFF))
 

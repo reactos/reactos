@@ -25,6 +25,10 @@
  // Martin Fuchs, 23.07.2003
  //
 
+ // STL headers for strings and streams
+#include <string>
+#include <iostream>
+using namespace std;
 
  // standard windows headers
 #define WIN32_LEAN_AND_MEAN
@@ -154,11 +158,6 @@ BOOL exists_path(LPCTSTR path);
 #ifdef _MSC_VER
 #pragma warning(disable: 4786)	// disable warnings about too long debug information symbols
 #endif
-
- // STL headers for strings and streams
-#include <string>
-#include <iostream>
-using namespace std;
 
  // containers
 #include <map>

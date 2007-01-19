@@ -133,7 +133,7 @@ void BrowserNavigator::goto_url(LPCTSTR url)
 	else {
 		_new_url = url;
 
-		_browser->Navigate(L"about:blank", NULL, NULL, NULL, NULL);
+		_browser->Navigate(BStr(L"about:blank"), NULL, NULL, NULL, NULL);
 	}
 }
 
