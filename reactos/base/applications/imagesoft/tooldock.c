@@ -460,8 +460,7 @@ TbdCreateToolbarWnd(PTOOLBAR_DOCKS TbDocks,
 
                 if (Drag)
                 {
-                    SetCursor(LoadCursor(NULL,
-                                         MAKEINTRESOURCE(IDC_ARROW)));
+                    SetCursor(LoadCursor(NULL, IDC_ARROW));
                     SendMessage(hToolbar,
                                 WM_NCLBUTTONDOWN,
                                 HTCAPTION,
@@ -936,8 +935,7 @@ RebarSubclassProc(HWND hWnd,
                                                         &pt,
                                                         1);
 
-                                        SetCursor(LoadCursor(NULL,
-                                                             MAKEINTRESOURCE(IDC_SIZEALL)));
+                                        SetCursor(LoadCursor(NULL, IDC_SIZEALL));
 
                                         SendMessage(TbDocks->hRebar[DragTo],
                                                     WM_LBUTTONDOWN,

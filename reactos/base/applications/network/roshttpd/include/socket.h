@@ -82,9 +82,9 @@ public:
     virtual VOID SetPort( UINT nPort) {};
 	virtual VOID Open();
 	virtual VOID Close();
-	virtual INT Transmit( LPSTR lpsBuffer,  UINT nLength) { return 0; };
+	virtual INT Transmit( LPCSTR lpsBuffer,  UINT nLength) { return 0; };
 	virtual INT Receive(LPSTR lpsBuffer,  UINT nLength) { return 0; };
-	virtual INT SendText( LPSTR lpsStr) { return 0; };
+	virtual INT SendText( LPCSTR lpsStr) { return 0; };
 protected:
 	SOCKET Socket;
 	SOCKADDR_IN SockAddrIn;
@@ -100,9 +100,9 @@ public:
 	CServerClientSocket() {};
 	CServerClientSocket(LPCServerSocket lpServerSocket);
 	CServerSocket *GetServerSocket();
-	virtual INT Transmit( LPSTR lpsBuffer,  UINT nLength);
+	virtual INT Transmit( LPCSTR lpsBuffer,  UINT nLength);
 	virtual INT Receive(LPSTR lpsBuffer,  UINT nLength);
-	virtual INT SendText( LPSTR lpsText);
+	virtual INT SendText( LPCSTR lpsText);
 	virtual VOID MessageLoop();
 	virtual VOID OnRead() {};
 	//virtual VOID OnWrite() {};

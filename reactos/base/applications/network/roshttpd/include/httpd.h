@@ -37,7 +37,7 @@ public:
 	void SplitResource(const LPSTR lpsResource, LPSTR lpsPath, LPSTR lpsFilename, LPSTR lpsExtension);
     void ProcessRequest();
     void SendFile(const LPSTR lpsFilename);
-    void Report(const LPSTR lpsCode, const LPSTR lpsStr);
+    void Report(LPCSTR lpsCode, const LPSTR lpsStr);
 private:
 	BOOL bStop;
 	LPSTR lpsBuffer;

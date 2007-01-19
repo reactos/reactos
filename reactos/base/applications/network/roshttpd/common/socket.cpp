@@ -102,36 +102,36 @@ VOID CSocket::Close()
 // Constructor with serversocket as parameter
 CServerClientSocket::CServerClientSocket(LPCServerSocket lpServerSocket)
 {
-	ServerSocket = lpServerSocket;
+    ServerSocket = lpServerSocket;
 }
 
 // Transmit data to socket
-INT CServerClientSocket::Transmit( LPSTR lpsBuffer, UINT nLength)
+INT CServerClientSocket::Transmit( LPCSTR lpsBuffer, UINT nLength)
 {
     return send(Socket, lpsBuffer, nLength, 0);
 }
 
 // Send a string to socket
-INT CServerClientSocket::SendText( LPSTR lpsText)
+INT CServerClientSocket::SendText( LPCSTR lpsText)
 {
     static CHAR crlf[3] = {0x0D, 0x0A, 0x00};
-	INT nCount;
+    INT nCount;
 
     nCount = Transmit(lpsText, strlen(lpsText));
-	nCount += Transmit(crlf, strlen(crlf));
-	return nCount;
+    nCount += Transmit(crlf, strlen(crlf));
+    return nCount;
 }
 
 // Receive data from socket
 INT CServerClientSocket::Receive(LPSTR lpsBuffer, UINT nLength)
 {
-	return recv(Socket, lpsBuffer, nLength, 0);
+    return recv(Socket, lpsBuffer, nLength, 0);
 }
 
 // Process winsock messages if any
 VOID CServerClientSocket::MessageLoop()
 {
-	UINT nStatus;
+    UINT nStatus;
     WSANETWORKEVENTS NetworkEvents;
 
     nStatus = WSAWaitForMultipleEvents(1, &Event, FALSE, 0, FALSE);

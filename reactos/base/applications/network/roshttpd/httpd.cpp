@@ -41,7 +41,7 @@ CHttpClient::CHttpClient(CServerSocket *serversocket)
 VOID CHttpClient::SplitUri(LPSTR lpsUri, LPSTR lpsHost, LPSTR lpsResource, LPSTR lpsParams)
 {
     LPSTR lpsPos;
-	LPSTR lpsStr;
+    LPSTR lpsStr;
     UINT i;
 
 	strcpy(lpsHost, "");
@@ -118,7 +118,7 @@ VOID CHttpClient::SplitResource(LPSTR lpsResource, LPSTR lpsPath, LPSTR lpsFilen
 VOID CHttpClient::ProcessRequest()
 {
     CHAR sStr[255];
-	CHAR sHost[255];
+    CHAR sHost[255];
     CHAR sResource[255];
     CHAR sParams[255];
 
@@ -145,7 +145,7 @@ VOID CHttpClient::ProcessRequest()
 				}
 			}
 			strcpy(sStr, pConfiguration->GetHttpBase());
-	        strcat(sStr, sResource);
+			strcat(sStr, sResource);
 			SendFile(sStr);
 			break;
 		}
@@ -212,7 +212,7 @@ VOID CHttpClient::SendFile(LPSTR lpsFilename)
 		return;
 	}
 
-	SendText("HTTP/1.1 200 OK");
+    SendText("HTTP/1.1 200 OK");
     SendText("Server: ROSHTTPD");
     SendText("MIME-version: 1.0");
     SendText("Content-Type: text/plain");
@@ -260,7 +260,7 @@ VOID CHttpClient::SendFile(LPSTR lpsFilename)
 }
 
 // Report something to client
-VOID CHttpClient::Report(LPSTR lpsCode, LPSTR lpsStr)
+VOID CHttpClient::Report(LPCSTR lpsCode, LPSTR lpsStr)
 {
     CHAR sTmp[128];
     CHAR sTmp2[16];
