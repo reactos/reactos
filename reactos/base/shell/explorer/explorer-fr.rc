@@ -366,7 +366,7 @@ BEGIN
     IDS_MINIMIZE_ALL        "mimimiser toutes les fenêtres"
     IDS_DESKTOP_NUM         "Bureau %d"
     IDS_VOLUME              "Volume"
-    IDS_ITEMS_CUR           "abjets actuels"
+    IDS_ITEMS_CUR           "objets actuels"
     IDS_ITEMS_CONFIGURED    "configuration"
     IDS_ITEMS_VISIBLE       "visible"
     IDS_ITEMS_HIDDEN        "caché"
