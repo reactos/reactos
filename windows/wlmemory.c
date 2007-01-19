@@ -273,24 +273,32 @@ MempDisablePages()
 
 	for (i=0; i<MadCount; i++)
 	{
-		if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
-			Mad[i].MemoryType == LoaderSpecialMemory)
-		{
-			ULONG StartPage, EndPage, Page;
+		ULONG StartPage, EndPage, Page;
 
-			StartPage = Mad[i].BasePage;
-			EndPage = Mad[i].BasePage + Mad[i].PageCount;
+		StartPage = Mad[i].BasePage;
+		EndPage = Mad[i].BasePage + Mad[i].PageCount;
+
+		if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
+			Mad[i].MemoryType == LoaderSpecialMemory ||
+			Mad[i].MemoryType == LoaderFree ||
+			(Mad[i].MemoryType == LoaderFirmwareTemporary && EndPage <= LOADER_HIGH_ZONE) ||
+			Mad[i].MemoryType == LoaderOsloaderStack ||
+			Mad[i].MemoryType == LoaderLoadedProgram)
+		{
 
 			//
 			// But, the first megabyte of memory always stays!
 			// And, to tell the truth, we don't care about what's higher
 			// than LOADER_HIGH_ZONE
-			if (StartPage < 0x100)
-				StartPage = 0x100;
+			if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
+				Mad[i].MemoryType == LoaderSpecialMemory)
+			{
+				if (StartPage < 0x100)
+					StartPage = 0x100;
 
-			if (EndPage > LOADER_HIGH_ZONE)
-				EndPage = LOADER_HIGH_ZONE;
-
+				if (EndPage > LOADER_HIGH_ZONE)
+					EndPage = LOADER_HIGH_ZONE;
+			}
 
 			for (Page = StartPage; Page < EndPage; Page++)
 			{
@@ -301,9 +309,12 @@ MempDisablePages()
 				{
 					KernelPT = (PHARDWARE_PTE)(PDE[Entry].PageFrameNumber << MM_PAGE_SHIFT);
 
-					KernelPT[Page & 0x3ff].PageFrameNumber = 0;
-					KernelPT[Page & 0x3ff].Valid = 0;
-					KernelPT[Page & 0x3ff].Write = 0;
+					if (KernelPT)
+					{
+						KernelPT[Page & 0x3ff].PageFrameNumber = 0;
+						KernelPT[Page & 0x3ff].Valid = 0;
+						KernelPT[Page & 0x3ff].Write = 0;
+					}
 				}
 			}
 		}
