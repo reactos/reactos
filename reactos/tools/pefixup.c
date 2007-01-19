@@ -24,6 +24,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 #ifndef O_BINARY
 #define O_BINARY 0

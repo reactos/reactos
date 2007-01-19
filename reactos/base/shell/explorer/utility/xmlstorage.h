@@ -714,7 +714,7 @@ struct XMLNode : public XS_String
 			return super::find(x);
 		}
 
-		XS_String get(const char* x, LPXSSTR def=XS_EMPTY_STR) const
+		XS_String get(const char* x, LPCXSSTR def=XS_EMPTY_STR) const
 		{
 			const_iterator found = find(x);
 
@@ -728,7 +728,7 @@ struct XMLNode : public XS_String
 	 /// map of XML node attributes
 	struct AttributeMap : public std::map<XS_String, XS_String>
 	{
-		XS_String get(const char* x, LPXSSTR def=XS_EMPTY_STR) const
+		XS_String get(const char* x, LPCXSSTR def=XS_EMPTY_STR) const
 		{
 			const_iterator found = find(x);
 
@@ -848,7 +848,7 @@ struct XMLNode : public XS_String
 	}
 
 	 /// read only access to an attribute
-	template<typename T> XS_String get(const T& attr_name, LPXSSTR def=XS_EMPTY_STR) const
+	template<typename T> XS_String get(const T& attr_name, LPCXSSTR def=XS_EMPTY_STR) const
 	{
 		AttributeMap::const_iterator found = _attributes.find(attr_name);
 
