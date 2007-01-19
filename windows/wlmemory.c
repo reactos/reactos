@@ -262,6 +262,56 @@ MempSetupPaging(IN ULONG StartPage,
 }
 
 VOID
+MempDisablePages()
+{
+	int i;
+
+	//
+	// We need to delete kernel mapping from memory areas which are
+	// marked as Special or Permanent memory (thus non-accessible)
+	//
+
+	for (i=0; i<MadCount; i++)
+	{
+		if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
+			Mad[i].MemoryType == LoaderSpecialMemory)
+		{
+			ULONG StartPage, EndPage, Page;
+
+			StartPage = Mad[i].BasePage;
+			EndPage = Mad[i].BasePage + Mad[i].PageCount;
+
+			//
+			// But, the first megabyte of memory always stays!
+			// And, to tell the truth, we don't care about what's higher
+			// than LOADER_HIGH_ZONE
+			if (StartPage < 0x100)
+				StartPage = 0x100;
+
+			if (EndPage > LOADER_HIGH_ZONE)
+				EndPage = LOADER_HIGH_ZONE;
+
+
+			for (Page = StartPage; Page < EndPage; Page++)
+			{
+				PHARDWARE_PTE KernelPT;
+				ULONG Entry = (Page >> 10) + (KSEG0_BASE >> 22);
+
+				if (PDE[Entry].Valid)
+				{
+					KernelPT = (PHARDWARE_PTE)(PDE[Entry].PageFrameNumber << MM_PAGE_SHIFT);
+
+					KernelPT[Page & 0x3ff].PageFrameNumber = 0;
+					KernelPT[Page & 0x3ff].Valid = 0;
+					KernelPT[Page & 0x3ff].Write = 0;
+				}
+			}
+		}
+	}
+}
+
+
+VOID
 MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    ULONG BasePage,
                    ULONG PageCount,
@@ -423,6 +473,30 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		}
 	}
 
+	// TEMP, DEBUG!
+	// adding special reserved memory zones for vmware workstation
+#if 0
+	{
+		Mad[MadCount].BasePage = 0xfec00;
+		Mad[MadCount].PageCount = 0x10;
+		Mad[MadCount].MemoryType = LoaderSpecialMemory;
+		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
+		MadCount++;
+
+		Mad[MadCount].BasePage = 0xfee00;
+		Mad[MadCount].PageCount = 0x1;
+		Mad[MadCount].MemoryType = LoaderSpecialMemory;
+		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
+		MadCount++;
+
+		Mad[MadCount].BasePage = 0xfffe0;
+		Mad[MadCount].PageCount = 0x20;
+		Mad[MadCount].MemoryType = LoaderSpecialMemory;
+		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
+		MadCount++;
+	}
+#endif
+
 	DbgPrint((DPRINT_WINDOWS, "MadCount: %d\n", MadCount));
 
 	WinLdrpDumpMemoryDescriptors(LoaderBlock); //FIXME: Delete!
@@ -453,6 +527,9 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	//DbgPrint((DPRINT_WINDOWS, "VideoMemoryBase: 0x%X\n", VideoMemoryBase));
 
 	Tss = (PKTSS)(KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
+
+	// Unmap what is not needed from kernel page table
+	MempDisablePages();
 
 	// Fill the memory descriptor list and 
 	//PrepareMemoryDescriptorList();
@@ -655,7 +732,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	//
 	// TSS Selector (0x28)
 	//
-	pGdt[5].LimitLow				= 0x78-1; // 60 dwords
+	pGdt[5].LimitLow				= 0x78-1; //FIXME: Check this
 	pGdt[5].BaseLow = (USHORT)(Tss & 0xffff);
 	pGdt[5].HighWord.Bytes.BaseMid = (UCHAR)((Tss >> 16) & 0xff);
 	pGdt[5].HighWord.Bytes.Flags1	= 0x89;
