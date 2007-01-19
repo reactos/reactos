@@ -25,11 +25,18 @@
  // Martin Fuchs, 23.07.2003
  //
 
+#ifdef __cplusplus
+
+#ifdef _MSC_VER
+#pragma warning(disable: 4786)	// disable warnings about too long debug information symbols
+#endif
 
  // STL headers for strings and streams
 #include <string>
 #include <iostream>
 using namespace std;
+
+#endif /* __cplusplus */
 
 
  // standard windows headers
@@ -195,10 +202,6 @@ BOOL exists_path(LPCTSTR path);
 
 
 #ifdef __cplusplus
-
-#ifdef _MSC_VER
-#pragma warning(disable: 4786)	// disable warnings about too long debug information symbols
-#endif
 
  // containers
 #include <map>
