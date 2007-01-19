@@ -102,6 +102,7 @@ SystemApplet(VOID)
   HPROPSHEETPAGE hpsp[MAX_SYSTEM_PAGES];
   PROPSHEETHEADER psh;
   HMODULE hNetIdDll;
+  HPSXA hpsxa;
   LONG Ret;
   static INITCOMMONCONTROLSEX icc = {sizeof(INITCOMMONCONTROLSEX), ICC_LINK_CLASS};
 
@@ -125,7 +126,19 @@ SystemApplet(VOID)
   InitPropSheetPage(&psh, IDD_PROPPAGEHARDWARE, (DLGPROC) HardwarePageProc);
   InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, (DLGPROC) AdvancedPageProc);
 
+  /* Load additional pages provided by shell extensions */
+  hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\System"), MAX_SYSTEM_PAGES - psh.nPages);
+  if (hpsxa != NULL)
+  {
+    SHAddFromPropSheetExtArray(hpsxa, PropSheetAddPage, (LPARAM)&psh);
+  }
+
   Ret = (LONG)(PropertySheet(&psh) != -1);
+
+  if (hpsxa != NULL)
+  {
+    SHDestroyPropSheetExtArray(hpsxa);
+  }
 
   if (hNetIdDll != NULL)
       FreeLibrary(hNetIdDll);
