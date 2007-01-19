@@ -20,7 +20,6 @@ NetIDPageProc(IN HWND hwndDlg,
               IN WPARAM wParam,
               IN LPARAM lParam)
 {
-    LPWKSTA_INFO_101 wki;
     INT_PTR Ret = 0;
 
     UNREFERENCED_PARAMETER(lParam);
@@ -31,6 +30,7 @@ NetIDPageProc(IN HWND hwndDlg,
         case WM_INITDIALOG:
         {
             /* Display computer name */
+            LPWKSTA_INFO_101 wki = NULL;
             DWORD Size = MAX_COMPUTERNAME_LENGTH + 1;
             TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
             if (GetComputerName(ComputerName,&Size))
@@ -46,8 +46,10 @@ NetIDPageProc(IN HWND hwndDlg,
                 SetDlgItemText(hwndDlg,
                                IDC_WORKGROUPDOMAIN_NAME,
                                wki->wki101_langroup);
-                NetApiBufferFree(&wki);
             }
+
+            if (wki != NULL)
+                NetApiBufferFree(wki);
 
             Ret = TRUE;
             break;
