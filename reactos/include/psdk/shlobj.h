@@ -431,6 +431,11 @@ extern "C" {
 typedef ULONG SFGAOF;
 typedef DWORD SHGDNF;
 
+#ifndef HPSXA_DEFINED
+#define HPSXA_DEFINED
+DECLARE_HANDLE(HPSXA);
+#endif
+
 typedef struct _IDA {
 	UINT cidl;
 	UINT aoffset[1];
@@ -994,6 +999,15 @@ DECLARE_INTERFACE_(IShellExtInit, IUnknown)
 #undef INTERFACE
 typedef IShellExtInit *LPSHELLEXTINIT;
 
+#if defined(COBJMACROS)
+/*** IUnknown methods ***/
+#define IShellExtInit_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IShellExtInit_AddRef(p)             (p)->lpVtbl->AddRef(p)
+#define IShellExtInit_Release(p)            (p)->lpVtbl->Release(p)
+/*** IShellExtInit methods ***/
+#define IShellExtInit_Initialize(p,a,b,c)   (p)->lpVtbl->Initialize(p,a,b,c)
+#endif
+
 #define INTERFACE IShellPropSheetExt
 DECLARE_INTERFACE_(IShellPropSheetExt, IUnknown)
 {
@@ -1005,6 +1019,17 @@ DECLARE_INTERFACE_(IShellPropSheetExt, IUnknown)
 };
 #undef INTERFACE
 typedef IShellPropSheetExt *LPSHELLPROPSHEETEXT;
+
+#if defined(COBJMACROS)
+/*** IUnknown methods ***/
+#define IShellPropSheetExt_QueryInterface(p,a,b)    (p)->lpVtbl->QueryInterface(p,a,b)
+#define IShellPropSheetExt_AddRef(p)                (p)->lpVtbl->AddRef(p)
+#define IShellPropSheetExt_Release(p)               (p)->lpVtbl->Release(p)
+/*** IShellPropSheetExt methods ***/
+#define IShellPropSheetExt_AddPage(p,a,b)           (p)->lpVtbl->AddPage(p,a,b)
+#define IShellPropSheetExt_ReplacePage(p,a,b,c)     (p)->lpVtbl->ReplacePage(p,a,b,c)
+#endif
+
 
 #define INTERFACE IExtractIconA
 DECLARE_INTERFACE_(IExtractIconA, IUnknown)
@@ -1855,14 +1880,18 @@ typedef struct _SFV_CREATE
     IShellFolderViewCB *psfvcb;
 } SFV_CREATE;
 
+
+UINT WINAPI SHAddFromPropSheetExtArray(HPSXA,LPFNADDPROPSHEETPAGE,LPARAM);
 void WINAPI SHAddToRecentDocs(UINT,PCVOID);
 LPITEMIDLIST WINAPI SHBrowseForFolderA(PBROWSEINFOA);
 LPITEMIDLIST WINAPI SHBrowseForFolderW(PBROWSEINFOW);
 DWORD WINAPI SHCLSIDFromStringA(LPCSTR,CLSID*);
 DWORD WINAPI SHCLSIDFromStringW(LPCWSTR,CLSID*);
+HPSXA WINAPI SHCreatePropSheetExtArray(HKEY,LPCWSTR,UINT);
 HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE*,IShellView**);
 HRESULT WINAPI SHCreateShellFolderViewEx(LPCSFV pshfvi, IShellView **ppshv);
 void WINAPI SHChangeNotify(LONG,UINT,PCVOID,PCVOID);
+void WINAPI SHDestroyPropSheetExtArray(HPSXA);
 HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER,LPCITEMIDLIST,int,PVOID,int);
 HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER,LPCITEMIDLIST,int,PVOID,int);
 HRESULT WINAPI SHGetDesktopFolder(LPSHELLFOLDER*);
@@ -1895,6 +1924,7 @@ void WINAPI SHGetSettings(LPSHELLFLAGSTATE,DWORD);
 #if (_WIN32_WINNT >= 0x0500) /* W2K */
 void WINAPI SHGetSetSettings(LPSHELLSTATE,DWORD,BOOL);
 #endif
+UINT WINAPI SHReplaceFromPropSheetExtArray(HPSXA,UINT,LPFNADDPROPSHEETPAGE,LPARAM);
 
 #if (_WIN32_WINNT >= 0x0500) /* W2K */
 BOOL WINAPI ILIsEqual(LPCITEMIDLIST, LPCITEMIDLIST);
