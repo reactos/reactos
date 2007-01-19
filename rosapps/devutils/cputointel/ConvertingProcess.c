@@ -42,13 +42,19 @@ CPU_INT ConvertProcess(FILE *outfp, CPU_INT FromCpuid, CPU_INT ToCpuid)
         if ((ptmpMystart->type & 8) == 8)
             RegTableCount[ptmpMystart->dst]++;
 
+        if ((ptmpMystart->type & 32) == 32)
+            RegTableCount[ptmpMystart->src]++;
+
+        if ((ptmpMystart->type & 64) == 64)
+            RegTableCount[ptmpMystart->dst]++;
+
         if (ptmpMystart == ptmpMyend)
             ptmpMystart=NULL;
         else
             ptmpMystart = (PMYBrainAnalys) ptmpMystart->ptr_next;
     }
 
-    for (t=0;t<31;t++)
+    for (t=0;t<=31;t++)
     {
         if (RegTableCount[t]!=0)
         {

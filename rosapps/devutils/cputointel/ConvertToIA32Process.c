@@ -28,7 +28,7 @@
  * mmx/sse/fpu 7 = 28
  */
 
-static void standardreg(CPU_INT *RegTableCount, CPU_UNINT reg, CPU_INT setup_ebp, FILE *outfp)
+static void standardreg(CPU_INT *RegTableCount, CPU_INT reg, CPU_INT setup_ebp, FILE *outfp)
 {
     /* eax */
     if (reg == RegTableCount[3])
@@ -66,7 +66,7 @@ static void standardreg(CPU_INT *RegTableCount, CPU_UNINT reg, CPU_INT setup_ebp
         fprintf(outfp,"esi");
     }
     /* edi */
-    else if (reg == RegTableCount[10])
+    else if (reg == RegTableCount[11])
     {
         fprintf(outfp,"edi");
     }
@@ -194,7 +194,11 @@ CPU_INT ConvertToIA32Process( FILE *outfp,
                     standardreg( RegTableCount,
                                  pMystart->dst,
                                  setup_ebp, outfp);
-                    fprintf(outfp," %d], ",pMystart->dst_extra);
+                    if (pMystart->dst_extra>=0)
+                        fprintf(outfp," +%d], ",pMystart->dst_extra);
+                    else
+                        fprintf(outfp," %d], ",pMystart->dst_extra);
+
                     standardreg( RegTableCount,
                                  pMystart->src,
                                  setup_ebp, outfp);

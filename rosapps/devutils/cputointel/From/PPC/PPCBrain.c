@@ -80,6 +80,18 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
                  cpu_pos += retsize;
         }
 
+        /* stw */
+        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_stw))) == ConvertBitToByte32(cpuPPCInit_stw))
+        {
+            retsize = PPC_Stw( outfp, cpu_buffer, cpu_pos, cpu_size,
+                                 BaseAddress, cpuarch);
+            if (retsize<0)
+                 retcode = 1;
+            else
+                 cpu_pos += retsize;
+        }
+        retcode = 0;
+
         /* stwu */
         if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_stwu))) == ConvertBitToByte32(cpuPPCInit_stwu))
         {
@@ -116,6 +128,6 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
         }
     }
 
-//    return 0; // hack getting dismabler working or converting working
+    return 0; // hack getting dismabler working or converting working
     return retcode;
 }

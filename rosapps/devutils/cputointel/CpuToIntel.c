@@ -94,8 +94,11 @@ int main(int argc, char * argv[])
 
     //}
 
+    //                                                    mode 0 disambler
+    //                                                    mode 1 convert to intel 
+    //                                                    mode 2 convert to ppc
     //return LoadPFileImage(infile,outfile,BaseAddress,cpuid,type, mode);
-   return LoadPFileImage("e:\\testppc.exe","e:\\cputointel.asm",0,0,0,1); // disambler
+   return LoadPFileImage("e:\\testppc.exe","e:\\cputointel.asm",0,0,0,1); 
    // return LoadPFileImage("e:\\testms.exe","e:\\cputointel.asm",0,0,0,1); // convert
 
 }

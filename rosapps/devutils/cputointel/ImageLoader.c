@@ -485,7 +485,8 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
                     fprintf(outfp,"; CPU found POWERPC\n");
                          //PPCBrain(memory, pos, cpu_size, base, 0, outfp);
                     machine_type = IMAGE_FILE_MACHINE_POWERPC;
-                    return PPCBrain(memory+SectionHeader->PointerToRawData,  0, SectionHeader->SizeOfRawData, 0, 0, outfp);
+                    PPCBrain(memory+SectionHeader->PointerToRawData,  0, SectionHeader->SizeOfRawData, 0, 0, outfp);
+                    break;
 
 
                case IMAGE_FILE_MACHINE_POWERPCFP:
