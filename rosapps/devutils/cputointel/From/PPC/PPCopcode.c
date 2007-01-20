@@ -95,6 +95,31 @@ CPU_INT PPC_Li( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
 }
 
 
+CPU_INT PPC_mr( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
+                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
+{
+    CPU_UNINT opcode;
+
+    opcode = GetData32Le(&cpu_buffer[cpu_pos]);
+
+    BaseAddress +=cpu_pos;
+
+    /* own translatons langues */
+    if (AllocAny()!=0)  /* alloc memory for pMyBrainAnalys */
+    {
+        return -1;
+    }
+    pMyBrainAnalys->op = OP_ANY_mov;
+    pMyBrainAnalys->type= 2 + 8 + 16; /* 8 dst reg, 2 src reg */
+    pMyBrainAnalys->src_size = 32;
+    pMyBrainAnalys->src = PPC_GetBitArraySrcReg(opcode);
+    pMyBrainAnalys->dst = PPC_GetBitArrayBto31xx(opcode);
+    pMyBrainAnalys->memAdr=BaseAddress;
+
+    return 4;
+}
+
+
 CPU_INT PPC_Stw( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
                   CPU_UNINT cpu_size, CPU_UNINT BaseAddress, CPU_UNINT cpuarch)
 {

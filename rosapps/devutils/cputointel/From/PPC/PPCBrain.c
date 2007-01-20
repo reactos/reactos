@@ -80,6 +80,17 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
                  cpu_pos += retsize;
         }
 
+        /* mr */
+        if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_mr))) == ConvertBitToByte32(cpuPPCInit_mr))
+        {
+            retsize = PPC_mr( outfp, cpu_buffer, cpu_pos, cpu_size,
+                                 BaseAddress, cpuarch);
+            if (retsize<0)
+                 retcode = 1;
+            else
+                 cpu_pos += retsize;
+        }
+
         /* stw */
         if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_stw))) == ConvertBitToByte32(cpuPPCInit_stw))
         {
@@ -90,7 +101,6 @@ CPU_INT PPCBrain(    CPU_BYTE *cpu_buffer,
             else
                  cpu_pos += retsize;
         }
-        retcode = 0;
 
         /* stwu */
         if ((cpuint - (cpuint & GetMaskByte32(cpuPPCInit_stwu))) == ConvertBitToByte32(cpuPPCInit_stwu))
