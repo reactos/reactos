@@ -33,17 +33,18 @@ StartRecDlgProc(HWND hwndDlg,
                 WPARAM wParam,
                 LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
 	TCHAR *szSystemDrive;
 	TCHAR szDefaultOS[MAX_PATH];
 	TCHAR szDefaultOSName[MAX_PATH];
 	TCHAR szTimeout[10];
 	int iTimeout;
 
-    switch(uMsg)
-    {
-        case WM_INITDIALOG:
-        {
+	UNREFERENCED_PARAMETER(lParam);
+	
+	switch(uMsg)
+	{
+		case WM_INITDIALOG:
+		{
 			/* get Path to freeldr.ini or boot.ini */
 			szSystemDrive = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_PATH);
 			if (szSystemDrive != NULL)
@@ -76,11 +77,11 @@ StartRecDlgProc(HWND hwndDlg,
 			if (iTimeout != 0)
 				SendDlgItemMessage(hwndDlg, IDC_STRECLIST, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
 
-        }
-        break;
+		}
+		break;
 
-        case WM_COMMAND:
-        {
+		case WM_COMMAND:
+		{
 			switch(LOWORD(wParam))
 			{
 				case IDC_STRRECEDIT:
@@ -113,8 +114,8 @@ StartRecDlgProc(HWND hwndDlg,
 						SetTimeout(hwndDlg, 0);
 				}
 			}
-        }
-        break;
+		}
+		break;
   }
   return FALSE;
 }
