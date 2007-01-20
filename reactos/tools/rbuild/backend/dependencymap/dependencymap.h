@@ -50,6 +50,17 @@ class DepMapBackend : public Backend
 		void _generate_depmap ( FILE* OUT );
 		void _clean_project_files ( void );
 
+		struct module_data
+		{
+			std::vector <std::string> libraries;
+			std::vector <std::string> references;
+		
+			module_data()
+			{}
+			~module_data()
+			{}
+		};
+
 };
 
 
