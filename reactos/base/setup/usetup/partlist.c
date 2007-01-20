@@ -636,14 +636,14 @@ EnumerateBiosDiskEntries(PPARTLIST PartList)
 
                       InsertTailList(&PartList->BiosDiskListHead, &BiosDiskEntry->ListEntry);
 
-                      DPRINT("DiskNumber:        %d\n", BiosDiskEntry->DiskNumber);
-                      DPRINT("Signature:         %08x\n", BiosDiskEntry->Signature);
-                      DPRINT("Checksum:          %08x\n", BiosDiskEntry->Checksum);
-                      DPRINT("BytesPerSector:    %d\n", BiosDiskEntry->DiskGeometry.BytesPerSector);
-                      DPRINT("NumberOfCylinders: %d\n", BiosDiskEntry->DiskGeometry.NumberOfCylinders);
-                      DPRINT("NumberOfHeads:     %d\n", BiosDiskEntry->DiskGeometry.NumberOfHeads);
+                      DPRINT("DiskNumber:        %lu\n", BiosDiskEntry->DiskNumber);
+                      DPRINT("Signature:         %08lx\n", BiosDiskEntry->Signature);
+                      DPRINT("Checksum:          %08lx\n", BiosDiskEntry->Checksum);
+                      DPRINT("BytesPerSector:    %lu\n", BiosDiskEntry->DiskGeometry.BytesPerSector);
+                      DPRINT("NumberOfCylinders: %lu\n", BiosDiskEntry->DiskGeometry.NumberOfCylinders);
+                      DPRINT("NumberOfHeads:     %lu\n", BiosDiskEntry->DiskGeometry.NumberOfHeads);
                       DPRINT("DriveSelect:       %02x\n", BiosDiskEntry->Int13DiskData.DriveSelect);
-                      DPRINT("MaxCylinders:      %d\n", BiosDiskEntry->Int13DiskData.MaxCylinders);
+                      DPRINT("MaxCylinders:      %lu\n", BiosDiskEntry->Int13DiskData.MaxCylinders);
                       DPRINT("SectorsPerTrack:   %d\n", BiosDiskEntry->Int13DiskData.SectorsPerTrack);
                       DPRINT("MaxHeads:          %d\n", BiosDiskEntry->Int13DiskData.MaxHeads);
                       DPRINT("NumberDrives:      %d\n", BiosDiskEntry->Int13DiskData.NumberDrives);

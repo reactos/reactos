@@ -110,12 +110,12 @@ typedef struct _GREEN_DRIVER_EXTENSION
 
 /************************************ createclose.c */
 
-NTSTATUS NTAPI
+NTSTATUS
 GreenCreate(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
-NTSTATUS NTAPI
+NTSTATUS
 GreenClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);

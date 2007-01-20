@@ -11,7 +11,7 @@
 #define NDEBUG
 #include <debug.h>
 
-NTSTATUS NTAPI
+NTSTATUS
 GreenCreate(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -24,7 +24,7 @@ GreenCreate(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS NTAPI
+NTSTATUS
 GreenClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)

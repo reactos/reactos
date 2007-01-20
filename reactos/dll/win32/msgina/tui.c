@@ -32,6 +32,11 @@ TUIDisplayStatusMessage(
 
 	TRACE("TUIDisplayStatusMessage(%ws)\n", pMessage);
 
+	UNREFERENCED_PARAMETER(pgContext);
+	UNREFERENCED_PARAMETER(hDesktop);
+	UNREFERENCED_PARAMETER(dwOptions);
+	UNREFERENCED_PARAMETER(pTitle);
+
 	return
 		WriteConsoleW(
 			GetStdHandle(STD_OUTPUT_HANDLE),
@@ -51,6 +56,8 @@ static BOOL
 TUIRemoveStatusMessage(
 	IN PGINA_CONTEXT pgContext)
 {
+	UNREFERENCED_PARAMETER(pgContext);
+
 	/* Nothing to do */
 	return TRUE;
 }
@@ -64,7 +71,7 @@ DisplayResourceText(
 	static LPCWSTR newLine = L"\n";
 	DWORD count;
 
-	if (!LoadStringW(hDllInstance, uIdResourceText, Prompt, 256))
+	if (0 == LoadStringW(hDllInstance, uIdResourceText, Prompt, 256))
 		return FALSE;
 	if (!WriteConsoleW(
 		GetStdHandle(STD_OUTPUT_HANDLE),
@@ -92,6 +99,8 @@ TUIDisplaySASNotice(
 {
 	TRACE("TUIDisplaySASNotice()\n");
 
+	UNREFERENCED_PARAMETER(pgContext);
+
 	DisplayResourceText(IDS_LOGGEDOUTSAS, TRUE);
 	DisplayResourceText(IDS_PRESSCTRLALTDELETE, TRUE);
 }
@@ -102,6 +111,8 @@ TUILoggedOnSAS(
 	IN DWORD dwSasType)
 {
 	TRACE("TUILoggedOnSAS()\n");
+
+	UNREFERENCED_PARAMETER(pgContext);
 
 	if (dwSasType != WLX_SAS_TYPE_CTRL_ALT_DEL)
 	{
@@ -115,7 +126,6 @@ TUILoggedOnSAS(
 
 static BOOL
 ReadString(
-	IN PGINA_CONTEXT pgContext,
 	IN UINT uIdResourcePrompt,
 	IN OUT PWSTR Buffer,
 	IN DWORD BufferLength,
@@ -164,6 +174,7 @@ ReadString(
 		}
 		Buffer[i++] = readChar;
 		/* FIXME: buffer overflow if the user writes too many chars! */
+		UNREFERENCED_PARAMETER(BufferLength);
 		/* FIXME: handle backspace */
 	}
 	Buffer[i] = UNICODE_NULL;
@@ -193,9 +204,9 @@ TUILoggedOutSAS(
 	TRACE("TUILoggedOutSAS()\n");
 
 	/* Ask the user for credentials */
-	if (!ReadString(pgContext, IDS_ASKFORUSER, UserName, 256, TRUE))
+	if (!ReadString(IDS_ASKFORUSER, UserName, 256, TRUE))
 		return WLX_SAS_ACTION_NONE;
-	if (!ReadString(pgContext, IDS_ASKFORPASSWORD, Password, 256, FALSE))
+	if (!ReadString(IDS_ASKFORPASSWORD, Password, 256, FALSE))
 		return WLX_SAS_ACTION_NONE;
 
 	if (DoLoginTasks(pgContext, UserName, NULL, Password))
@@ -213,13 +224,15 @@ TUILockedSAS(
 
 	TRACE("TUILockedSAS()\n");
 
+	UNREFERENCED_PARAMETER(pgContext);
+
 	if (!DisplayResourceText(IDS_LOGGEDOUTSAS, TRUE))
 		return WLX_SAS_ACTION_UNLOCK_WKSTA;
 
 	/* Ask the user for credentials */
-	if (!ReadString(pgContext, IDS_ASKFORUSER, UserName, 256, TRUE))
+	if (!ReadString(IDS_ASKFORUSER, UserName, 256, TRUE))
 		return WLX_SAS_ACTION_NONE;
-	if (!ReadString(pgContext, IDS_ASKFORPASSWORD, Password, 256, FALSE))
+	if (!ReadString(IDS_ASKFORPASSWORD, Password, 256, FALSE))
 		return WLX_SAS_ACTION_NONE;
 
 	FIXME("FIXME: Check user/password\n");
