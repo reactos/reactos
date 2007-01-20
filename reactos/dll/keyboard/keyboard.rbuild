@@ -35,6 +35,9 @@
 	<directory name="kbdsk">
 		<xi:include href="kbdsk/kbdsk.rbuild" />
 	</directory>
+	<directory name="kbdth">
+		<xi:include href="kbdth/kbdth.rbuild" />
+	</directory>
 	<directory name="kbduk">
 		<xi:include href="kbduk/kbduk.rbuild" />
 	</directory>

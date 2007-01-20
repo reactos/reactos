@@ -36,7 +36,7 @@ namespace System_
 			return false;
 		}
 		// 
-		m_File = _tpopen(PipeCmd.c_str(), AccessMode.c_str());
+		m_File = popen(PipeCmd.c_str(), "r"); //AccessMode.c_str());
 		if (m_File)
 		{
 			cerr << "PipeReader::openPipe> successfully opened pipe" << endl;
@@ -57,7 +57,7 @@ namespace System_
 			return false;
 		}
 
-		int res = _pclose(m_File);
+		int res = pclose(m_File);
 		
 		if (res == INT_MAX)
 		{

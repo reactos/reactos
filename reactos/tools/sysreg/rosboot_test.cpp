@@ -11,8 +11,8 @@
 
 #include "rosboot_test.h"
 #include "pipe_reader.h"
-#include "namedpipe_reader.h"
-#include "sym_file.h"
+//#include "namedpipe_reader.h"
+//#include "sym_file.h"
 #include "file_reader.h"
 #include "os_support.h"
 
@@ -24,14 +24,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
  
-
+			
 namespace Sysreg_
 {
 	using std::vector;
 	using System_::PipeReader;
+#if 0
 	using System_::NamedPipeReader;
 	using System_::SymbolFile;
+#endif
 	using System_::FileReader;
 	using System_::OsSupport;
 
@@ -93,7 +96,8 @@ namespace Sysreg_
 		{
 			TCHAR * stop;
 			m_Timeout = _tcstod(timeout.c_str (), &stop);
-			if (_isnan(m_Timeout) || m_Timeout == 0.0)
+
+			if (isnan(m_Timeout) || m_Timeout == 0.0)
 			{
 				cerr << "Warning: overriding timeout with default of 60 sec" << endl;
 				m_Timeout = 60.0;
@@ -289,10 +293,10 @@ namespace Sysreg_
 				///
 				string result;
 				result.reserve (200);
-
+#if 0
 				SymbolFile::resolveAddress (modulename, address, result);
 				cerr << result << endl;
-				
+#endif				
 				///
 				/// TODO
 				///
@@ -338,17 +342,18 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
 	bool RosBootTest::fetchDebugByPipe(string boot_cmd)
 	{
-		NamedPipeReader namedpipe_reader;
 		string pipecmd = _T("");
+		bool ret = true;
 		
 		///
 		/// FIXME
 		/// split up arguments
 
 		OsSupport::ProcessID pid = OsSupport::createProcess ((TCHAR*)boot_cmd.c_str (), 0, NULL); 
-
+#if 0		
 		string::size_type pipe_pos = boot_cmd.find (_T("serial pipe:"));
 
+		NamedPipeReader namedpipe_reader;
 		if (pipe_pos != string::npos)
 		{
 			pipe_pos += 12;
@@ -371,7 +376,7 @@ namespace Sysreg_
 			/// delay reading until emulator is ready
 			///
 
-			_sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
+			sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
 		}
 
 		if (!namedpipe_reader.openPipe(pipecmd))
@@ -382,7 +387,6 @@ namespace Sysreg_
 		string Buffer;
 		Buffer.reserve (500);
 
-		bool ret = true;
 		vector<string> vect;
 		size_t lines = 0;
 		bool write_log;
@@ -436,7 +440,7 @@ namespace Sysreg_
 		}
 		_sleep(3* CLOCKS_PER_SEC);
 		OsSupport::terminateProcess (pid);
-
+#endif
 		return ret;
 	}
 //---------------------------------------------------------------------------------------
@@ -457,7 +461,7 @@ namespace Sysreg_
 			/// delay reading until emulator is ready
 			///
 
-			_sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
+			sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
 		}
 
 		OsSupport::ProcessID pid = 0;

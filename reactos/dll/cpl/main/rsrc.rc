@@ -19,3 +19,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "Ru.rc"
 #include "Uk.rc"
 #include "Cz.rc"
+#include "It.rc"
