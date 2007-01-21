@@ -417,7 +417,7 @@ unsigned long TConsole::WriteStringFast(const char* pszString, unsigned long cbS
 		if(ini.get_vt100_mode() && cbString + (unsigned)CON_CUR_X == (unsigned)CON_COLS) {
 
 			cbString--;
-			if(cbString >= 0) WriteConsole(hConsole, pszString, cbString, &Result, 0);
+			if((long)cbString >= 0) WriteConsole(hConsole, pszString, cbString, &Result, 0);
 
 			COORD dwBufferCoord;
 			dwBufferCoord.X = 0;
