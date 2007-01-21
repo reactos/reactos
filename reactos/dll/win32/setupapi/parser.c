@@ -1033,7 +1033,7 @@ WCHAR *PARSER_get_dest_dir( INFCONTEXT *context )
     const WCHAR *dir;
     WCHAR *ptr, *ret;
     INT dirid;
-    unsigned int len1;
+    unsigned int len1 = 0;
     DWORD len2;
 
     if (!SetupGetIntField( context, 1, &dirid )) return NULL;
