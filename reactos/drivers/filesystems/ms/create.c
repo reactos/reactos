@@ -111,7 +111,7 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
     PMSFS_CCB Ccb;
     KIRQL oldIrql;
     PLIST_ENTRY current_entry;
-    PMSFS_FCB current;
+    PMSFS_FCB current = NULL;
     PMAILSLOT_CREATE_PARAMETERS Buffer;
 
     DPRINT("MsfsCreateMailslot(DeviceObject %p Irp %p)\n", DeviceObject, Irp);

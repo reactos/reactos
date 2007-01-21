@@ -1515,7 +1515,7 @@ SetupDiLoadClassIcon(
     {
         LPWSTR Buffer = NULL;
         LPCWSTR DllName;
-        INT iconIndex;
+        INT iconIndex = 0;
         HKEY hKey = INVALID_HANDLE_VALUE;
 
         hKey = SetupDiOpenClassRegKey(ClassGuid, KEY_QUERY_VALUE);
