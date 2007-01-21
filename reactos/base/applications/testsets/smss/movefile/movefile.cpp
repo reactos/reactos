@@ -85,11 +85,11 @@ int Generate()
 	HANDLE hFile = NULL;
 	BOOL fReturnValue;
 
-	char *szxReplacedFile = "c:\\testFileIsReplaced";
-	char *szxMovedFileWithRepl = "c:\\testFileShouldBeMovedW";
-	char *szxMovedFile = "c:\\testFileShouldBeMoved";
-	char *szxNewMovedFile = "c:\\testFileIsMoved";
-	char *szxDeletedFile = "c:\\testFileShouldBeDeleted";
+	const char szxReplacedFile[] = "c:\\testFileIsReplaced";
+	const char szxMovedFileWithRepl[] = "c:\\testFileShouldBeMovedW";
+	const char szxMovedFile[] = "c:\\testFileShouldBeMoved";
+	const char szxNewMovedFile[] = "c:\\testFileIsMoved";
+	const char szxDeletedFile[] = "c:\\testFileShouldBeDeleted";
 
 	memset(sBuf, 0xaa, sizeof(sBuf));
 

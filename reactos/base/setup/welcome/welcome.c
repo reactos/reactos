@@ -129,7 +129,7 @@ WinMain(HINSTANCE hInst,
   wndclass.cbWndExtra = 0;
   wndclass.hInstance = hInstance;
   wndclass.hIcon = hMainIcon;
-  wndclass.hCursor = LoadCursor (NULL, MAKEINTRESOURCE(IDC_ARROW));
+  wndclass.hCursor = LoadCursor (NULL, IDC_ARROW);
   wndclass.hbrBackground = 0;
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName = szFrameClass;
