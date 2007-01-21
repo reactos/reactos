@@ -1,11 +1,11 @@
 <tree Version="1"> <!-- Application version this tree is made for -->
 	<category name="Internet &amp; Network" icon="1">
 		<application name="Firefox">
-			<description>The most popular free webbrowser out there.</description>
+			<description>The most popular and one of the best free WebBrowsers out there.</description>
 			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/firefox/releases/latest/win32/en-US/Firefox%20Setup%202.0.0.1.exe</location>
 		</application>
 		<application name="Thunderbird">
-			<description>The most popular free Mail Client out there.</description>
+			<description>The most popular and one of the best free MailClients out there.</description>
 			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/thunderbird/releases/latest/win32/en-US/Thunderbird%20Setup%201.5.0.9.exe</location>
 		</application>
 		<application name="SeaMonkey">
@@ -13,11 +13,11 @@
 			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/seamonkey/releases/1.0.7/seamonkey-1.0.7.en-US.win32.installer.exe</location>
 		</application>
 		<application name="Samba TNG">
-			<description>This tool allows you to access your Windows shared folders and printers.</description>
+			<description>This tool allows you to access your Windows shared folders/printers with ReactOS.</description>
 			<location>http://svn.reactos.org/packages/samba-tng.exe</location>
 		</application>
 		<application name="Mozilla ActiveX Control">
-			<description>Essential Component to get ReactOS Explorer's and other applications Internet Browsing feature running.</description>
+			<description>Essential Component to get ReactOS Explorer's and other application's Internet Browsing feature running.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/MozillaControl1712-ReactOS.exe</location>
 		</application>
 		<application name="Miranda IM">
@@ -45,7 +45,7 @@
 			<location>http://gd.tuwien.ac.at/graphics/irfanview/iview399.exe</location>
 		</application>
 		<application name="IrfanView Plugins">
-			<description>Additional Plugins for supporting more File types.</description>
+			<description>Additional Plugins for supporting more file types.</description>
 			<location>http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_399.exe</location>
 		</application>
 		<application name="TuxPaint">
@@ -57,7 +57,7 @@
 	</category>
 	<category name="Development" icon="5">
 		<application name="ReactOS Build Environment">
-			<description>Allows you to build the ReactOS Source. For more instructions see our wiki.</description>
+			<description>Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/RosBE-0.3.3.exe</location>
 		</application>
 	</category>
@@ -66,10 +66,14 @@
 			<description>SamNMax, Day of Tentacle, etc on ReactOS</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/scummvm/scummvm-0.9.1-win32.exe</location>
 		</application>
+		<application name="Tile World">
+			<description>Nice Clone of Chip's Challenge originally made for the Atari Lynx. Includes free CCLP2 Graphics Pack, so you dont need the copyrighted Original.</description>
+			<location>http://www.muppetlabs.com/~breadbox/pub/software/tworld/tworld-1.3.0-win32-CCLP2.exe</location>
+		</application>
 	</category>
 	<category name="Tools" icon="7">
 		<application name="7-Zip">
-			<description>Utility to create and open zip, tar, rar and other archive files.</description>
+			<description>Utility to create and open 7zip, zip, tar, rar and other archive files.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/sevenzip/7z442.exe</location>
 		</application>
 		<application name="uTorrent">
@@ -77,10 +81,14 @@
 			<location>http://download.utorrent.com/1.6/uTorrent-1.6-install.exe</location>
 		</application>
 		<application name="Audio Grabber">
-			<description>A very good CD Ripper/File Converter.</description>
+			<description>A very good CD Ripper/Audio File Converter.</description>
 			<location>http://www.audiograbber.de/files/342677432/agsetup183se.exe</location>
 		</application>
 	</category>
 	<category name="Others" icon="8">
+		<application name="Simple Direct Media Layer (SDL) Runtime">
+			<description>Needed for many Open Source Games to run. You need 7-Zip or a similar Utility to extract it.</description>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/libsdl/SDL-1.2.11-win32.zip</location>
+		</application>
 	</category>
 </tree>
