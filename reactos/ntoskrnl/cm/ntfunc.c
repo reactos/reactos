@@ -88,7 +88,7 @@ CmpCreateHandle(PVOID ObjectBody,
     NewEntry.GrantedAccess = GrantedAccess;
 
     if ((HandleAttributes & OBJ_KERNEL_HANDLE) &&
-        ExGetPreviousMode == KernelMode)
+        ExGetPreviousMode() == KernelMode)
     {
         Process = PsInitialSystemProcess;
         if (Process != CurrentProcess)
