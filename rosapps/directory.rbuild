@@ -30,9 +30,11 @@
 	<xi:include href="notevil/notevil.rbuild" />
 </directory>
 
+<!--
 <directory name="packmgr">
 	<xi:include href="packmgr/directory.rbuild" />
 </directory>
+-->
 
 <directory name="sysutils">
 	<xi:include href="sysutils/sysutils.rbuild" />
