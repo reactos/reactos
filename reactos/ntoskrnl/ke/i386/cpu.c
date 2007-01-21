@@ -544,7 +544,7 @@ KiInitializeTSS2(IN PKTSS Tss,
     {
         /* Set the Limit */
         TssEntry->LimitLow = sizeof(KTSS) - 1;
-        TssEntry->HighWord.Bits.LimitHi &= 0xF0;
+        TssEntry->HighWord.Bits.LimitHi = 0;
     }
 
     /* Now clear the I/O Map */
