@@ -1,3 +1,4 @@
+#include <windows.h>
 #include <conio.h>
 #include <io.h>
 #include <stdio.h>
@@ -502,7 +503,7 @@ applyPatch_file_open_error:
          if (c == 'y')
          {
             char buffer[MAX_PATH];
-            snprintf(buffer, MAX_PATH, "%s.bak", fileName);
+            _snprintf(buffer, MAX_PATH, "%s.bak", fileName);
             buffer[MAX_PATH-1] = '\0';
             makeBackup = 1;
             if (access(buffer, 0) >= 0) /* file exists */
