@@ -47,7 +47,7 @@ static PACTIVE_SERVICE lpActiveServices = NULL;
 /* FUNCTIONS *****************************************************************/
 
 static PACTIVE_SERVICE
-ScLookupServiceByServiceName(LPWSTR lpServiceName)
+ScLookupServiceByServiceName(LPCWSTR lpServiceName)
 {
     DWORD i;
 
@@ -441,7 +441,7 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
 {
     PACTIVE_SERVICE Service;
 
-    Service = ScLookupServiceByServiceName((LPWSTR)lpServiceName);
+    Service = ScLookupServiceByServiceName(lpServiceName);
     if (Service == NULL)
     {
         return (SERVICE_STATUS_HANDLE)NULL;

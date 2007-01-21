@@ -1111,7 +1111,7 @@ IsWellKnownSid(IN PSID pSid,
 
     for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++)
         if (WellKnownSids[i].Type == WellKnownSidType)
-            if (EqualSid(pSid, (PSID)&(WellKnownSids[i].Sid.Revision)))
+            if (EqualSid(pSid, (PSID)((ULONG_PTR)&WellKnownSids[i].Sid.Revision)))
                 return TRUE;
 
     return FALSE;
