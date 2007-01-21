@@ -233,7 +233,7 @@ HACCEL WINAPI LoadAcceleratorsW(HINSTANCE hInstance, LPCWSTR lpTableName)
  return U32LoadAccelerators
  (
   hInstance,
-  FindResourceExW(hInstance, MAKEINTRESOURCEW(RT_ACCELERATOR), lpTableName, 0)
+  FindResourceExW(hInstance, (LPCWSTR) RT_ACCELERATOR, lpTableName, 0)
  );
 }
 
@@ -245,7 +245,7 @@ HACCEL WINAPI LoadAcceleratorsA(HINSTANCE hInstance, LPCSTR lpTableName)
 {
   HRSRC Accel;
 
-  Accel = FindResourceExA(hInstance, MAKEINTRESOURCEA(RT_ACCELERATOR), lpTableName, 0);
+  Accel = FindResourceExA(hInstance, (LPCSTR) RT_ACCELERATOR, lpTableName, 0);
   if (NULL == Accel)
     {
       return NULL;

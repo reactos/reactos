@@ -236,8 +236,8 @@ LoadCursorIconImage(
                                        fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
 
       h2Resource = FindResourceW(hinst, MAKEINTRESOURCEW(id),
-                                 Icon ? MAKEINTRESOURCEW(RT_ICON) :
-                                 MAKEINTRESOURCEW(RT_CURSOR));
+                                 Icon ? (LPCWSTR) RT_ICON :
+                                 (LPCWSTR) RT_CURSOR);
       if (h2Resource == NULL)
          return NULL;
 

@@ -123,7 +123,7 @@ HalInitSystem(IN ULONG BootPhase,
         ((PKIPCR)KeGetPcr())->IDT[0x30].ExtendedOffset =
             (USHORT)(((ULONG_PTR)HalpClockInterrupt >> 16) & 0xFFFF);
         ((PKIPCR)KeGetPcr())->IDT[0x30].Offset =
-            (USHORT)HalpClockInterrupt;
+            (ULONG_PTR)HalpClockInterrupt;
         HalEnableSystemInterrupt(0x30, CLOCK2_LEVEL, Latched);
 
         /* Initialize DMA. NT does this in Phase 0 */
