@@ -1,3 +1,58 @@
+Changes from 2.13 to 2.14
+- added Philippine peso glyph U+20B1 (by Clayborne Arevalo)
+- made U+2012 have the same width as digits, according to Unicode 5.0, 
+  page 206 (by Roozbeh Pournader)
+- made all of the "above" combining characters remove the dot of "i", 
+  "j", etc (Soft_Dotted characters), according to Unicode 5.0, 
+  page 228 (by Roozbeh Pournader)
+- made U+012F, U+03F3, U+0456, U+0458, U+1E2D, and U+1ECB (all fonts 
+  except Mono), U+0249, U+2148, and U+2149 (Sans and Sans Condensed), 
+  U+0268 (Sans ExtraLight, Serif and Serif Condensed), and U+029D (Serif 
+  and Serif Condensed) respect the Soft_Dotted property (by Roozbeh 
+  Pournader)
+- added U+223E, U+223F, U+2240, U+22C2, U+22C3 to Sans (by Rémy Oudompheng)
+- added U+203D to Serif (by Gee Fung Sit)
+- added zero-width glyphs for U+2061-U+2063 to Sans and Serif (by Gee 
+  Fung Sit)
+- changed isolated forms of Arabic waw (U+0648, U+0624 and U+06C6) (bug #9432) 
+  (by Ben Laenen)
+- added Lao consonants U+0E81, U+0E82, U+0E84, U+0E87, U+0E88, U+0E8A, 
+  U+0E8D, U+0E94-0E97, U+0E99-0E9F, U+0EA1-0EA3, U+0EA5, U+0EA7, U+0EAA, 
+  U+0EAB, U+0EAD-0EAF to Sans Mono (by Rémy Oudompheng)
+- added U+0200-U+0217, U+0226-U+0229, U+02F3, U+1E00-U+1E07, 
+  U+1E0A-U+1E0B, U+1E18-U+1E1F, U+1E22-U+1E23, U+1E28-U+1E2D, 
+  U+1E3A-U+1E3B, U+1E40, U+1E48-U+1E49, U+1E56, U+1E58-U+1E59, 
+  U+1E5E-U+1E5F, U+1E60, U+1E68-U+1E6B, U+1E6E-U+1E6F, U+1E72-U+1E77, 
+  U+1E86-U+1E8B, U+1E92-U+1E96, U+1EA0-U+1EA1, U+1EF4-U+1EF5 to Mono 
+  (by Ben Laenen)
+- renamed uppercase variants of diacritics (macron, breve, double grave, 
+  double acute, inverted breve, dot above) to "uni03XX.case" in Mono 
+  (by Ben Laenen)
+- moved uppercase variants of diacritics up in Mono so they properly 
+  vertically align on capitals (by Ben Laenen)
+- precomposed glyphs with macron, breve, double grave, double acute, 
+  inverted breve, dot above, macron below, breve below, inverted breve 
+  below, dot below, cedilla, caron below, circumflex below, diaeresis 
+  below, tilde below now reference to combining diacritics instead of 
+  space modifiers in Mono (by Ben Laenen)
+- made ring below (U+0325), and half rings below (U+031C and U+0339) 
+  smaller in Mono (by Ben Laenen)
+- added U+205F to all fonts (by Roozbeh Pournader)
+- added U+035E-U+035F to Sans (by Roozbeh Pournader)
+- added empty glyphs for U+034F, U+202A-U+202E, U+2060, U+206A-206F, 
+  U+FE00-U+FE0F to non-Mono fonts (by Roozbeh Pournader)
+- added U+2101, U+2107-U+2108, U+210B, U+210C, U+2110, U+2112, U+211B, 
+  U+211F, U+2123, U+2125, U+2128-U+2129, U+212C-U+212D, U+212F, 
+  U+2130-U+2131, U+2133, U+2136-U+213A, U+2141-U+2144, U+2B00-U+2B11, 
+  U+2B20-U+2B23 to Sans (by John Karp)
+- reshaped omega (U+03C9) in Mono (by Ben Laenen)
+- added U+2205, U+22C6, U+2300-U+2301, U+2303-U+2306, U+230C-U+230F, 
+  U+2312-U+2315, U+231C-U+231F, U+2335, U+2337-U+233E, U+2341-U+2344, 
+  U+2347-U+2348, U+234B-U+234D, U+2349-U+2350, U+2352-U+2354, 
+  U+2357-U+2359, U+235A-U+235C, U+235E-U+2360, U+2363-U+2365, 
+  U+2368-U+2369, U+236B-U+2370, U+2373-U+237A, U+2380-U+2383, 
+  U+2388-U+238B, U+2395 in Mono (by Ben Laenen)
+
 Changes from 2.12 to 2.13
 - adjusted U+0198B, U+01B3-U+01B4 in Sans, hinted U+01B4 in Sans Book 
   (by Denis Jacquerye)
@@ -708,4 +763,4 @@ Changes from 0.9 to 0.9.1:
 - proper caron shape for dcaron and tcaron
 - minor visual changes
 
-$Id: NEWS 1388 2006-12-17 11:20:45Z moyogo $
+$Id: NEWS 1507 2007-01-21 16:47:57Z moyogo $
