@@ -1806,7 +1806,7 @@ NdisQueryBufferOffset(
                         VirtualAddress, \
                         Length)         \
 {                                       \
-	if (VirtualAddress)                   \
+	if (ARGUMENT_PRESENT(VirtualAddress))                   \
 		*((PVOID*)VirtualAddress) = MmGetSystemAddressForMdl(Buffer); \
                                         \
 	*((PUINT)Length) = MmGetMdlByteCount(Buffer); \
@@ -2032,7 +2032,7 @@ NdisQueryPacket(
     OUT PUINT  TotalPacketLength  OPTIONAL)
 {
     if (FirstBuffer)
-        *((PNDIS_BUFFER*)FirstBuffer) = Packet->Private.Head;
+        *FirstBuffer = Packet->Private.Head;
     if (TotalPacketLength || BufferCount || PhysicalBufferCount)
     {
         if (!Packet->Private.ValidCounts)
@@ -2060,14 +2060,14 @@ NdisQueryPacket(
         }
 
         if (PhysicalBufferCount)
-            *((PUINT)PhysicalBufferCount) = Packet->Private.PhysicalCount;
+            *PhysicalBufferCount = Packet->Private.PhysicalCount;
 
         if (BufferCount)
-            *((PUINT)BufferCount) = Packet->Private.Count;
+            *BufferCount = Packet->Private.Count;
 
         if (TotalPacketLength)
-            *((PUINT)TotalPacketLength) = Packet->Private.TotalLength;
-    } 
+            *TotalPacketLength = Packet->Private.TotalLength;
+    }
 }
 
 /*

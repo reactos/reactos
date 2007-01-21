@@ -5429,7 +5429,7 @@ KfReleaseSpinLock(
 */
 
 #define ARGUMENT_PRESENT(ArgumentPointer) \
-  ((BOOLEAN) ((PVOID)ArgumentPointer != (PVOID)NULL))
+  ((CHAR*)((ULONG_PTR)(ArgumentPointer)) != (CHAR*)NULL)
 
 /*
  * ULONG
