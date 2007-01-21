@@ -416,7 +416,7 @@ static const struct op_mask
     SETUP			= {FALSE, FALSE, FALSE, TRUE, TRUE, TRUE};
 #define DEFAULT SESSION_START
 
-int startup(int argc, char *argv[])
+int startup(int argc, const char *argv[])
 {
     struct op_mask ops; /* Which of the ops do we want to perform? */
     /* First, set the current directory to SystemRoot */

@@ -152,7 +152,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
                                      NULL,
                                      0))
             {
-                if (szVolume != _T('\0'))
+                if (szVolume[0] != _T('\0'))
                 {
                     TCHAR szVol[MAX_PATH + 2];
 

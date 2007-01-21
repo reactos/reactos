@@ -1186,7 +1186,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	/**TODO launching autostart programs can be moved into a background thread. */
 	if (autostart) {
-		char* argv[] = {"", "s"};	// call startup routine in SESSION_START mode
+		const char* argv[] = {"", "s"};	// call startup routine in SESSION_START mode
 		startup(2, argv);
 	}
 

@@ -115,7 +115,7 @@ typedef double GLclampd;
 typedef void GLvoid;
 
 /* Called by the driver to set the dispatch table */
-typedef DWORD APIENTRY (*SetContextCallBack)( const ICDTable * );
+typedef DWORD WINAPI (*SetContextCallBack)( const ICDTable * );
 
 /* OpenGL ICD data */
 typedef struct tagGLDRIVERDATA
@@ -129,23 +129,23 @@ typedef struct tagGLDRIVERDATA
 	DWORD   driver_version;         /*!< DriverVersion value from registry */
 	DWORD   flags;                  /*!< Flags value from registry */
 
-	BOOL      APIENTRY (*DrvCopyContext)( HGLRC, HGLRC, UINT );
-	HGLRC     APIENTRY (*DrvCreateContext)( HDC );
-	HGLRC     APIENTRY (*DrvCreateLayerContext)( HDC, int );
-	BOOL      APIENTRY (*DrvDeleteContext)( HGLRC );
-	BOOL      APIENTRY (*DrvDescribeLayerPlane)( HDC, int, int, UINT, LPLAYERPLANEDESCRIPTOR );
-	int       APIENTRY (*DrvDescribePixelFormat)( IN HDC, IN int, IN UINT, OUT LPPIXELFORMATDESCRIPTOR );
-	int       APIENTRY (*DrvGetLayerPaletteEntries)( HDC, int, int, int, COLORREF * );
-	PROC      APIENTRY (*DrvGetProcAddress)( LPCSTR lpProcName );
-	void      APIENTRY (*DrvReleaseContext)( HGLRC hglrc ); /* maybe returns BOOL? */
-	BOOL      APIENTRY (*DrvRealizeLayerPalette)( HDC, int, BOOL );
-	PICDTable APIENTRY (*DrvSetContext)( HDC hdc, HGLRC hglrc, SetContextCallBack callback );
-	int       APIENTRY (*DrvSetLayerPaletteEntries)( HDC, int, int, int, CONST COLORREF * );
-	BOOL      APIENTRY (*DrvSetPixelFormat)( IN HDC, IN int ); /*, IN CONST PIXELFORMATDESCRIPTOR * );*/
-	BOOL      APIENTRY (*DrvShareLists)( HGLRC, HGLRC );
-	BOOL      APIENTRY (*DrvSwapBuffers)( HDC );
-	BOOL      APIENTRY (*DrvSwapLayerBuffers)( HDC, UINT );
-	BOOL      APIENTRY (*DrvValidateVersion)( DWORD );
+	BOOL      WINAPI (*DrvCopyContext)( HGLRC, HGLRC, UINT );
+	HGLRC     WINAPI (*DrvCreateContext)( HDC );
+	HGLRC     WINAPI (*DrvCreateLayerContext)( HDC, int );
+	BOOL      WINAPI (*DrvDeleteContext)( HGLRC );
+	BOOL      WINAPI (*DrvDescribeLayerPlane)( HDC, int, int, UINT, LPLAYERPLANEDESCRIPTOR );
+	int       WINAPI (*DrvDescribePixelFormat)( IN HDC, IN int, IN UINT, OUT LPPIXELFORMATDESCRIPTOR );
+	int       WINAPI (*DrvGetLayerPaletteEntries)( HDC, int, int, int, COLORREF * );
+	PROC      WINAPI (*DrvGetProcAddress)( LPCSTR lpProcName );
+	void      WINAPI (*DrvReleaseContext)( HGLRC hglrc ); /* maybe returns BOOL? */
+	BOOL      WINAPI (*DrvRealizeLayerPalette)( HDC, int, BOOL );
+	PICDTable WINAPI (*DrvSetContext)( HDC hdc, HGLRC hglrc, SetContextCallBack callback );
+	int       WINAPI (*DrvSetLayerPaletteEntries)( HDC, int, int, int, CONST COLORREF * );
+	BOOL      WINAPI (*DrvSetPixelFormat)( IN HDC, IN int ); /*, IN CONST PIXELFORMATDESCRIPTOR * );*/
+	BOOL      WINAPI (*DrvShareLists)( HGLRC, HGLRC );
+	BOOL      WINAPI (*DrvSwapBuffers)( HDC );
+	BOOL      WINAPI (*DrvSwapLayerBuffers)( HDC, UINT );
+	BOOL      WINAPI (*DrvValidateVersion)( DWORD );
 
 	struct tagGLDRIVERDATA *next;   /* next ICD -- linked list */
 } GLDRIVERDATA;

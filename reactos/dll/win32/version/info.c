@@ -259,7 +259,7 @@ static DWORD VERSION_GetFileVersionInfo_PE( LPCWSTR filename, DWORD datasize, LP
     }
     hRsrc = FindResourceW(hModule,
 			  MAKEINTRESOURCEW(VS_VERSION_INFO),
-			  MAKEINTRESOURCEW(VS_FILE_INFO));
+			  (LPCWSTR) VS_FILE_INFO);
     if(!hRsrc)
     {
 	WARN("Could not find VS_VERSION_INFO in %s\n", debugstr_w(filename));

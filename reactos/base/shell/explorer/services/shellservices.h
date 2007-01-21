@@ -27,7 +27,7 @@
 
 
  // launch start programs
-extern "C" int startup(int argc, char *argv[]);
+extern "C" int startup(int argc, const char *argv[]);
 
  // load Shell Service Objects (volume control, printer/network icons, ...)
 struct SSOThread : public Thread
