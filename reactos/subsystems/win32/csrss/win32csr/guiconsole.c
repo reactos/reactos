@@ -1874,7 +1874,7 @@ GuiInit(VOID)
   wc.style = 0;
   wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
   wc.hIcon = LoadIconW(Win32CsrDllHandle, MAKEINTRESOURCEW(1));
-  wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
+  wc.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
   wc.hbrBackground = NULL;
   wc.lpszMenuName = NULL;
   wc.cbClsExtra = 0;
