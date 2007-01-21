@@ -16,7 +16,7 @@ unsigned int __unguarded_readlc_active;
 int _current_category;	/* used by setlocale */
 const char *_current_locale;
 
-int parse_locale(char *locale, char *lang, char *country, char *code_page);
+int parse_locale(const char *locale, char *lang, char *country, char *code_page);
 
 /*
  * @unimplemented
@@ -27,7 +27,7 @@ char *setlocale(int category, const char *locale)
 	char country[100];
 	char code_page[100];
 	if (NULL != locale) {
-		parse_locale((char *)locale,lang,country,code_page);
+		parse_locale(locale,lang,country,code_page);
 	}
 
 	//printf("%s %s %s %s\n",locale,lang,country,code_page);
@@ -63,7 +63,7 @@ locale  "lang[_country[.code_page]]"
             | NULL
 
 */
-int parse_locale(char *locale, char *lang, char *country, char *code_page)
+int parse_locale(const char *locale, char *lang, char *country, char *code_page)
 {
 	while ( *locale != 0 && *locale != '.' && *locale != '_' )
 	{
