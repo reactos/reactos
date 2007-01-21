@@ -63,8 +63,8 @@ typedef struct _INTERNAL_BCB
 
 VOID
 NTAPI
-CcMdlReadCompleteDev(
-    IN PMDL MdlChain,
+CcMdlReadComplete2(
+    IN PMDL MemoryDescriptorList,
     IN PFILE_OBJECT FileObject
 );
 

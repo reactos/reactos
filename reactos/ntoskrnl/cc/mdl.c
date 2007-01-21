@@ -51,15 +51,15 @@ CcMdlRead(
  */
 VOID
 STDCALL
-CcMdlReadCompleteDev(IN PMDL MdlChain,
+CcMdlReadComplete2(IN PMDL MemoryDescriptorList,
                      IN PFILE_OBJECT FileObject)
 {
     PMDL Mdl;
 
     /* Free MDLs */
-    while ((Mdl = MdlChain))
+    while ((Mdl = MemoryDescriptorList))
     {
-        MdlChain = Mdl->Next;
+        MemoryDescriptorList = Mdl->Next;
         MmUnlockPages(Mdl);
         IoFreeMdl(Mdl);
     }
@@ -103,7 +103,7 @@ CcMdlReadComplete(IN PFILE_OBJECT FileObject,
     }
 
     /* Use slow path */
-    CcMdlReadCompleteDev(MdlChain, FileObject);
+    CcMdlReadComplete2(MdlChain, FileObject);
 }
 
 /*

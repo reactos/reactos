@@ -33,6 +33,7 @@ extern ULONG NTSYSAPI CcFastReadNotPossible;
 extern ULONG NTSYSAPI CcFastReadWait;
 extern ULONG NTSYSAPI CcFastReadResourceMiss;
 extern ULONG NTSYSAPI CcFastReadNoWait;
+extern ULONG NTSYSAPI CcFastMdlReadNotPossible;
 
 
 #ifdef _NTIFS_INCLUDED_
