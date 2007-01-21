@@ -77,6 +77,9 @@ _SEH_FILTER(FsRtlCcCopyFilter)
 }	
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
 FsRtlCopyRead(IN PFILE_OBJECT FileObject,
@@ -244,6 +247,9 @@ Cleanup:
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
 FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
@@ -715,6 +721,9 @@ FsRtlMdlRead(IN PFILE_OBJECT FileObject,
     return FALSE;
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
 FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,

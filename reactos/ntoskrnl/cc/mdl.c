@@ -34,7 +34,7 @@ CcMdlRead(
 
 /*
  * NAME							INTERNAL
- * CcMdlReadCompleteDev@8
+ * CcMdlReadComplete2@8
  *
  * DESCRIPTION
  *
