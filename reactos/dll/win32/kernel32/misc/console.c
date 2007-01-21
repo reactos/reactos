@@ -2765,10 +2765,10 @@ SetConsoleCursorInfo(
 
 static BOOL
 IntScrollConsoleScreenBuffer(HANDLE hConsoleOutput,
-                             PSMALL_RECT lpScrollRectangle,
-                             PSMALL_RECT lpClipRectangle,
+                             const SMALL_RECT *lpScrollRectangle,
+                             const SMALL_RECT *lpClipRectangle,
                              COORD dwDestinationOrigin,
-                             PCHAR_INFO lpFill,
+                             const CHAR_INFO *lpFill,
                              BOOL bUnicode)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
@@ -2846,10 +2846,10 @@ ScrollConsoleScreenBufferW(
 	)
 {
   return IntScrollConsoleScreenBuffer(hConsoleOutput,
-                                      (PSMALL_RECT)lpScrollRectangle,
-                                      (PSMALL_RECT)lpClipRectangle,
+                                      lpScrollRectangle,
+                                      lpClipRectangle,
                                       dwDestinationOrigin,
-                                      (PCHAR_INFO)lpFill,
+                                      lpFill,
                                       TRUE);
 }
 

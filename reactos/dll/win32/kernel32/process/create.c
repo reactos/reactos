@@ -981,7 +981,7 @@ GetAppName:
                 RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
                 RtlFreeHeap(RtlGetProcessHeap(), 0, ApplicationName.Buffer);
                 return CreateProcessW(L"ntvdm.exe",
-                                      (LPWSTR)lpApplicationName,
+                                      (LPWSTR)((ULONG_PTR)lpApplicationName), /* FIXME: Buffer must be writable!!! */
                                       lpProcessAttributes,
                                       lpThreadAttributes,
                                       bInheritHandles,
@@ -1052,7 +1052,7 @@ GetAppName:
                 RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
                 RtlFreeHeap(RtlGetProcessHeap(), 0, ApplicationName.Buffer);
                 return CreateProcessW(L"ntvdm.exe",
-                                      (LPWSTR)lpApplicationName,
+                                      (LPWSTR)((ULONG_PTR)lpApplicationName), /* FIXME: Buffer must be writable!!! */
                                       lpProcessAttributes,
                                       lpThreadAttributes,
                                       bInheritHandles,
