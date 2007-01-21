@@ -667,7 +667,7 @@ NTAPI
 KeFlushCurrentTb(VOID)
 {
     /* Flush the TLB by resetting CR3 */
-    __writecr3((ULONGLONG)__readcr3);
+    __writecr3((ULONGLONG)__readcr3());
 }
 
 VOID
