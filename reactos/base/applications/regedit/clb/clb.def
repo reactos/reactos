@@ -1,10 +1,10 @@
 LIBRARY clb.dll
 
 EXPORTS
-ClbAddData@12 @1
-ClbSetColumnWidths@12 @2
-ClbStyleW@8 @3
-ClbWndProc@16 @4
-CustomControlInfoW@4 @5
+ClbAddData @1
+ClbSetColumnWidths @2
+ClbStyleW @3
+ClbWndProc @4
+CustomControlInfoW @5
 
 ; EOF
