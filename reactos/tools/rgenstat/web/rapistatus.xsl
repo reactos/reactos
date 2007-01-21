@@ -47,8 +47,8 @@
 							<TD> Implemented </TD>
 							<TD> <IMG src="sc.gif"/> </TD>
 							<TD> Complete </TD>
-						<TR>
 						</TR>
+						<TR>
 							<TD> <IMG src="f.gif"/> </TD>
 							<TD> Function </TD>
 							<TD> <IMG src="u.gif"/> </TD>
