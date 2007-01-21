@@ -2022,48 +2022,52 @@ NdisQueryBufferOffset(
  *   OUT PNDIS_BUFFER  *FirstBuffer  OPTIONAL,
  *   OUT PUINT  TotalPacketLength  OPTIONAL);
  */
-#define NdisQueryPacket(Packet,                                           \
-                        PhysicalBufferCount,                              \
-                        BufferCount,                                      \
-                        FirstBuffer,                                      \
-                        TotalPacketLength)                                \
-{                                                                         \
-  if (FirstBuffer)                                                        \
-    *((PNDIS_BUFFER*)FirstBuffer) = (Packet)->Private.Head;               \
-  if ((TotalPacketLength) || (BufferCount) || (PhysicalBufferCount))      \
-  {                                                                       \
-    if (!(Packet)->Private.ValidCounts) {                                 \
-      UINT _Offset;                                                       \
-      UINT _PacketLength;                                                 \
-      PNDIS_BUFFER _NdisBuffer;                                           \
-      UINT _PhysicalBufferCount = 0;                                      \
-      UINT _TotalPacketLength   = 0;                                      \
-      UINT _Count               = 0;                                      \
-                                                                          \
-      for (_NdisBuffer = (Packet)->Private.Head;                          \
-        _NdisBuffer != (PNDIS_BUFFER)NULL;                                \
-        _NdisBuffer = _NdisBuffer->Next)                                  \
-      {                                                                   \
-        _PhysicalBufferCount += NDIS_BUFFER_TO_SPAN_PAGES(_NdisBuffer);   \
-        NdisQueryBufferOffset(_NdisBuffer, &_Offset, &_PacketLength);     \
-        _TotalPacketLength += _PacketLength;                              \
-        _Count++;                                                         \
-      }                                                                   \
-      (Packet)->Private.PhysicalCount = _PhysicalBufferCount;             \
-      (Packet)->Private.TotalLength   = _TotalPacketLength;               \
-      (Packet)->Private.Count         = _Count;                           \
-      (Packet)->Private.ValidCounts   = TRUE;                             \
-	}                                                                       \
-                                                                          \
-  if (PhysicalBufferCount)                                                \
-      *((PUINT)PhysicalBufferCount) = (Packet)->Private.PhysicalCount;    \
-                                                                          \
-  if (BufferCount)                                                        \
-      *((PUINT)BufferCount) = (Packet)->Private.Count;                    \
-                                                                          \
-  if (TotalPacketLength)                                                  \
-      *((PUINT)TotalPacketLength) = (Packet)->Private.TotalLength;        \
-  } \
+static __inline
+VOID
+NdisQueryPacket(
+    IN PNDIS_PACKET  Packet,
+    OUT PUINT  PhysicalBufferCount  OPTIONAL,
+    OUT PUINT  BufferCount  OPTIONAL,
+    OUT PNDIS_BUFFER  *FirstBuffer  OPTIONAL,
+    OUT PUINT  TotalPacketLength  OPTIONAL)
+{
+    if (FirstBuffer)
+        *((PNDIS_BUFFER*)FirstBuffer) = Packet->Private.Head;
+    if (TotalPacketLength || BufferCount || PhysicalBufferCount)
+    {
+        if (!Packet->Private.ValidCounts)
+        {
+            UINT Offset;
+            UINT PacketLength;
+            PNDIS_BUFFER NdisBuffer;
+            UINT PhysicalBufferCount = 0;
+            UINT TotalPacketLength = 0;
+            UINT Count = 0;
+
+            for (NdisBuffer = Packet->Private.Head;
+                 NdisBuffer != (PNDIS_BUFFER)NULL;
+                 NdisBuffer = NdisBuffer->Next)
+            {
+                PhysicalBufferCount += NDIS_BUFFER_TO_SPAN_PAGES(NdisBuffer);
+                NdisQueryBufferOffset(NdisBuffer, &Offset, &PacketLength);
+                TotalPacketLength += PacketLength;
+                Count++;
+            }
+            Packet->Private.PhysicalCount = PhysicalBufferCount;
+            Packet->Private.TotalLength = TotalPacketLength;
+            Packet->Private.Count = Count;
+            Packet->Private.ValidCounts = TRUE;
+        }
+
+        if (PhysicalBufferCount)
+            *((PUINT)PhysicalBufferCount) = Packet->Private.PhysicalCount;
+
+        if (BufferCount)
+            *((PUINT)BufferCount) = Packet->Private.Count;
+
+        if (TotalPacketLength)
+            *((PUINT)TotalPacketLength) = Packet->Private.TotalLength;
+    } 
 }
 
 /*

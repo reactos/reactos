@@ -155,7 +155,7 @@ typedef struct _NIC_ADAPTER
     UINT TXFree;    /* Number of free transmit buffers */
     UINT TXNext;    /* Next buffer to use */
     /* Length of packet. 0 means buffer is unused */
-    INT TXSize[DRIVER_DEFAULT_TX_BUFFER_COUNT];
+    UINT TXSize[DRIVER_DEFAULT_TX_BUFFER_COUNT];
     INT TXCurrent;  /* Current buffer beeing transmitted. -1 means none */
 
     /* Head of transmit queue */
