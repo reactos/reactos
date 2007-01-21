@@ -18,7 +18,7 @@ POBJECT_TYPE LpcPortObjectType;
 ULONG LpcpMaxMessageSize;
 PAGED_LOOKASIDE_LIST LpcpMessagesLookaside;
 KGUARDED_MUTEX LpcpLock;
-ULONG LpcpTraceLevel = LPC_CLOSE_DEBUG;
+ULONG LpcpTraceLevel = 0;
 ULONG LpcpNextMessageId = 1, LpcpNextCallbackId = 1;
 
 static GENERIC_MAPPING LpcpPortMapping = 

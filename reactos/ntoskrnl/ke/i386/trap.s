@@ -93,6 +93,33 @@ _UnexpectedMsg:
 _UnhandledMsg:
     .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
 
+_KiTrapPrefixTable:
+    .byte 0xF2                      /* REP                                  */
+    .byte 0xF3                      /* REP INS/OUTS                         */
+    .byte 0x67                      /* ADDR                                 */
+    .byte 0xF0                      /* LOCK                                 */
+    .byte 0x66                      /* OP                                   */
+    .byte 0x2E                      /* SEG                                  */
+    .byte 0x3E                      /* DS                                   */
+    .byte 0x26                      /* ES                                   */
+    .byte 0x64                      /* FS                                   */
+    .byte 0x65                      /* GS                                   */
+    .byte 0x36                      /* SS                                   */
+
+_KiTrapIoTable:
+    .byte 0xE4                      /* IN                                   */
+    .byte 0xE5                      /* IN                                   */
+    .byte 0xEC                      /* IN                                   */
+    .byte 0xED                      /* IN                                   */
+    .byte 0x6C                      /* INS                                  */
+    .byte 0x6D                      /* INS                                  */
+    .byte 0xE6                      /* OUT                                  */
+    .byte 0xE7                      /* OUT                                  */
+    .byte 0xEE                      /* OUT                                  */
+    .byte 0xEF                      /* OUT                                  */
+    .byte 0x6E                      /* OUTS                                 */
+    .byte 0x6F                      /* OUTS                                 */
+
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
 .text
 
@@ -1426,6 +1453,29 @@ _KiTrap12:
     jmp _KiSystemFatalException
 .endfunc
 
+.func KiTrapExceptHandler
+_KiTrapExceptHandler:
+
+    /* Setup SEH handler frame */
+    mov esp, [esp+8]
+    pop fs:[KPCR_EXCEPTION_LIST]
+    add esp, 4
+    pop ebp
+
+    /* Check if the fault came from user mode */
+    test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jnz SetException
+
+    /* Kernel fault, bugcheck */
+    push ebp
+    push 0
+    push 0
+    push 0
+    push 0
+    push KMODE_EXCEPTION_NOT_HANDLED
+    call _KeBugCheckWithTf@24
+.endfunc
+
 .func KiTrap13
 Dr_kitd:    DR_TRAP_FIXUP
 V86_kitd:   V86_TRAP_FIXUP
@@ -1630,6 +1680,7 @@ SegPopGpf:
     lea eax, [ebp+KTRAP_FRAME_ESP]
     cmp edx, eax
     jz HandleSegPop
+    int 3
 
     /* Handle segment POP fault by setting it to 0 */
 HandleSegPop:
@@ -1668,7 +1719,7 @@ HandleSegPop2:
     /* Update EIP (will be updated below again) */
     add dword ptr [ebp+KTRAP_FRAME_EIP], 1
 
-HandleBop4:
+HandleEsPop:
     /* Clear the segment, update EIP and ESP */
     mov dword ptr [edx], 0
     add dword ptr [ebp+KTRAP_FRAME_EIP], 1
@@ -1680,15 +1731,23 @@ CheckVdmGpf:
     cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
     jz CheckPrivilegedInstruction
 
+    /* Bring interrupts back */
+    sti
+
     /* Check what kind of instruction this is */
     mov eax, [ebp+KTRAP_FRAME_EIP]
     mov eax, [eax]
 
     /* FIXME: Check for BOP4 */
 
-    /* Check if this is POP FS */
+    /* Check if this is POP ES */
     mov edx, ebp
-    add edx, KTRAP_FRAME_FS
+    add edx, KTRAP_FRAME_ES
+    cmp al, 0x07
+    jz HandleEsPop
+
+    /* Check if this is POP FS */
+    add edx, KTRAP_FRAME_FS - KTRAP_FRAME_ES
     cmp ax, 0xA10F
     jz HandleSegPop2
 
@@ -1698,16 +1757,102 @@ CheckVdmGpf:
     jz HandleSegPop2
 
 CheckPrivilegedInstruction:
+    /* Bring interrupts back */
+    sti
+
+    /* Setup a SEH handler */
+    push ebp
+    push offset _KiTrapExceptHandler
+    push fs:[KPCR_EXCEPTION_LIST]
+    mov fs:[KPCR_EXCEPTION_LIST], esp
+
+    /* Get EIP */
+    mov esi, [ebp+KTRAP_FRAME_EIP]
+
+    /* Setup loop count */
+    mov ecx, 15
+
+InstLoop:
+    /* Save loop count */
+    push ecx
+
+    /* Get the instruction */
+    lods byte ptr [esi]
+
+    /* Now lookup in the prefix table */
+    mov ecx, 11
+    mov edi, offset _KiTrapPrefixTable
+    repnz scasb
+
+    /* Restore loop count */
+    pop ecx
+
+    /* If it's not a prefix byte, check other instructions */
+    jnz NotPrefixByte
+
     /* FIXME */
     UNHANDLED_PATH
+
+NotPrefixByte:
+    /* FIXME: Check if it's a HLT */
+
+    /* Check if the instruction has two bytes */
+    cmp al, 0xF
+    jne CheckRing3Io
+
+    /* FIXME */
+    UNHANDLED_PATH
+
+CheckRing3Io:
+    /* Get EFLAGS and IOPL */
+    mov ebx, [ebp+KTRAP_FRAME_EFLAGS]
+    and ebx, 0x3000
+    shr ebx, 12
+
+    /* Check the CS's RPL mask */
+    mov ecx, [ebp+KTRAP_FRAME_CS]
+    and ecx, RPL_MASK
+    cmp ebx, ecx
+    jge NotIoViolation
 
 CheckPrivilegedInstruction2:
-    /* FIXME */
-    UNHANDLED_PATH
+    /* Check if this is a CLI or STI */
+    cmp al, 0xFA
+    je IsPrivInstruction
+    cmp al, 0xFB
+    je IsPrivInstruction
+
+    /* Setup I/O table lookup */
+    mov ecx, 13
+    mov edi, offset _KiTrapIoTable
+
+    /* Loopup in the table */
+    repnz scasb
+    jnz NotIoViolation
+
+    /* FIXME: Check IOPM!!! */
+
+IsPrivInstruction:
+    /* Cleanup the SEH frame */
+    pop fs:[KPCR_EXCEPTION_LIST]
+    add esp, 8
+
+    /* Setup the exception */
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    mov eax, STATUS_PRIVILEGED_INSTRUCTION
+    jmp _DispatchNoParam
+
+NotIoViolation:
+    /* Cleanup the SEH frame */
+    pop fs:[KPCR_EXCEPTION_LIST]
+    add esp, 8
 
 SetException:
-    /* FIXME */
-    UNHANDLED_PATH
+    /* Setup the exception */
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    mov esi, -1
+    mov eax, STATUS_ACCESS_VIOLATION
+    jmp _DispatchTwoParam
 
 DispatchV86Gpf:
     /* FIXME */

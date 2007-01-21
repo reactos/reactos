@@ -238,15 +238,13 @@ DbgkCreateThread(PVOID StartAddress)
         if (Teb)
         {
             /* Copy the system library name and link to it */
-#if 0
             wcsncpy(Teb->StaticUnicodeBuffer,
                     L"ntdll.dll",
                     sizeof(Teb->StaticUnicodeBuffer) / sizeof(WCHAR));
-#endif
             Teb->Tib.ArbitraryUserPointer = Teb->StaticUnicodeBuffer;
 
             /* Return it in the debug event as well */
-            LoadDll->NamePointer = Teb->Tib.ArbitraryUserPointer;
+            LoadDll->NamePointer = &Teb->Tib.ArbitraryUserPointer;
         }
 
         /* Get a handle */

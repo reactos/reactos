@@ -8,9 +8,6 @@
 //                     Do NOT ask when it will be fixed.
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
-// Ke1:
-//  - Implement Privileged Instruction Handler in Umode GPF.
-//
 // Ex:
 //  - Use pushlocks for handle implementation.
 //

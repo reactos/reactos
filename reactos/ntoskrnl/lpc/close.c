@@ -57,7 +57,7 @@ LpcpFreeToPortZone(IN PLPCP_MESSAGE Message,
     PETHREAD Thread = NULL;
     BOOLEAN LockHeld = Flags & 1, ReleaseLock = Flags & 2;
     PAGED_CODE();
-    LPCTRACE(LPC_CLOSE_DEBUG, "Message: %p. Flags: %lx\n", Message, Flags);
+    DPRINT1("Message: %p. Flags: %lx\n", Message, Flags);
 
     /* Acquire the lock if not already */
     if (!LockHeld) KeAcquireGuardedMutex(&LpcpLock);
@@ -342,6 +342,9 @@ LpcpDeletePort(IN PVOID ObjectBody)
         /* Send it */
         for (;;)
         {
+            /* FIXME: HACK OF D00m */
+            break;
+
             /* Send the message */
             if (LpcRequestPort(Port,
                                &ClientDiedMsg.h) != STATUS_NO_MEMORY) break;
