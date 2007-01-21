@@ -110,7 +110,7 @@ CPU_INT PPC_mr( FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
         return -1;
     }
     pMyBrainAnalys->op = OP_ANY_mov;
-    pMyBrainAnalys->type= 2 + 8 + 16; /* 8 dst reg, 2 src reg */
+    pMyBrainAnalys->type= 2 + 8; /* 8 dst reg, 2 src reg */
     pMyBrainAnalys->src_size = 32;
     pMyBrainAnalys->src = PPC_GetBitArraySrcReg(opcode);
     pMyBrainAnalys->dst = PPC_GetBitArrayBto31xx(opcode);
