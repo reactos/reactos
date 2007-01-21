@@ -137,7 +137,6 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
     KIRQL OldIrql;
     ASSERT_GATE(Gate);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    ASSERT(FALSE);
 
     /* Start entry loop */
     for (;;)

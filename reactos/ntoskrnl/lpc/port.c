@@ -18,7 +18,7 @@ POBJECT_TYPE LpcPortObjectType;
 ULONG LpcpMaxMessageSize;
 PAGED_LOOKASIDE_LIST LpcpMessagesLookaside;
 KGUARDED_MUTEX LpcpLock;
-ULONG LpcpTraceLevel = 0;
+ULONG LpcpTraceLevel = LPC_CLOSE_DEBUG;
 ULONG LpcpNextMessageId = 1, LpcpNextCallbackId = 1;
 
 static GENERIC_MAPPING LpcpPortMapping = 
@@ -54,7 +54,6 @@ LpcpInitSystem(VOID)
     ObjectTypeInitializer.CloseProcedure = LpcpClosePort;
     ObjectTypeInitializer.DeleteProcedure = LpcpDeletePort;
     ObjectTypeInitializer.ValidAccessMask = PORT_ALL_ACCESS;
-    ObjectTypeInitializer.MaintainTypeList = TRUE;
     ObCreateObjectType(&Name,
                        &ObjectTypeInitializer,
                        NULL,

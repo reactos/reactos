@@ -45,7 +45,7 @@
         {                                                   \
             /* It's still signaled, so wait on it */        \
             KeWaitForSingleObject(s,                        \
-                                  Executive,                \
+                                  WrExecutive,              \
                                   KernelMode,               \
                                   FALSE,                    \
                                   NULL);                    \
@@ -73,7 +73,7 @@
         {                                                   \
             /* It's still signaled, so wait on it */        \
             KeWaitForSingleObject(s,                        \
-                                  Executive,                \
+                                  WrExecutive,              \
                                   KernelMode,               \
                                   FALSE,                    \
                                   NULL);                    \

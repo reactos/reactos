@@ -18,7 +18,8 @@ VOID
 NTAPI
 LpcpFreeDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
                         IN ULONG MessageId,
-                        IN ULONG CallbackId)
+                        IN ULONG CallbackId,
+                        IN CLIENT_ID ClientId)
 {
     PLPCP_MESSAGE Message;
     PLIST_ENTRY ListHead, NextEntry;
@@ -28,6 +29,7 @@ LpcpFreeDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
     {
         /* Use it */
         Port = Port->ConnectionPort;
+        if (!Port) return;
     }
 
     /* Loop the list */
@@ -40,12 +42,13 @@ LpcpFreeDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
 
         /* Make sure it matches */
         if ((Message->Request.MessageId == MessageId) &&
-            (Message->Request.CallbackId == CallbackId))
+            (Message->Request.ClientId.UniqueThread == ClientId.UniqueThread) &&
+            (Message->Request.ClientId.UniqueProcess == ClientId.UniqueProcess))
         {
             /* Unlink and free it */
             RemoveEntryList(&Message->Entry);
             InitializeListHead(&Message->Entry);
-            LpcpFreeToPortZone(Message, TRUE);
+            LpcpFreeToPortZone(Message, 1);
             break;
         }
 
@@ -58,25 +61,31 @@ VOID
 NTAPI
 LpcpSaveDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
                         IN PLPCP_MESSAGE Message,
-                        IN ULONG LockFlags)
+                        IN ULONG LockHeld)
 {
     PAGED_CODE();
 
     /* Acquire the lock */
-    KeAcquireGuardedMutex(&LpcpLock);
+    if (!LockHeld) KeAcquireGuardedMutex(&LpcpLock);
 
     /* Check if the port we want is the connection port */
     if ((Port->Flags & LPCP_PORT_TYPE_MASK) > LPCP_UNCONNECTED_PORT)
     {
         /* Use it */
         Port = Port->ConnectionPort;
+        if (!Port)
+        {
+            /* Release the lock and return */
+            if (!LockHeld) KeReleaseGuardedMutex(&LpcpLock);
+            return;
+        }
     }
 
     /* Link the message */
     InsertTailList(&Port->LpcDataInfoChainHead, &Message->Entry);
 
     /* Release the lock */
-    KeReleaseGuardedMutex(&LpcpLock);
+    if (!LockHeld) KeReleaseGuardedMutex(&LpcpLock);
 }
 
 VOID
@@ -119,7 +128,7 @@ LpcpMoveMessage(IN PPORT_MESSAGE Destination,
     Destination->ClientViewSize = Origin->ClientViewSize;
 
     /* Copy the Message Data */
-    RtlMoveMemory(Destination + 1,
+    RtlCopyMemory(Destination + 1,
                   Data,
                   ((Destination->u1.Length & 0xFFFF) + 3) &~3);
 }
@@ -149,7 +158,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
                          OUT PPORT_MESSAGE ReceiveMessage,
                          IN PLARGE_INTEGER Timeout OPTIONAL)
 {
-    PLPCP_PORT_OBJECT Port, ReceivePort;
+    PLPCP_PORT_OBJECT Port, ReceivePort, ConnectionPort = NULL;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode(), WaitMode = PreviousMode;
     NTSTATUS Status;
     PLPCP_MESSAGE Message;
@@ -207,8 +216,32 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
     /* Check if this is anything but a client port */
     if ((Port->Flags & LPCP_PORT_TYPE_MASK) != LPCP_CLIENT_PORT)
     {
-        /* Use the connection port */
-        ReceivePort = Port->ConnectionPort;
+        /* Check if this is the connection port */
+        if (Port->ConnectionPort == Port)
+        {
+            /* Use this port */
+            ConnectionPort = ReceivePort = Port;
+            ObReferenceObject(ConnectionPort);
+        }
+        else
+        {
+            /* Acquire the lock */
+            KeAcquireGuardedMutex(&LpcpLock);
+
+            /* Get the port */
+            ConnectionPort = ReceivePort = Port->ConnectionPort;
+            if (!ConnectionPort)
+            {
+                /* Fail */
+                KeReleaseGuardedMutex(&LpcpLock);
+                ObDereferenceObject(Port);
+                return STATUS_PORT_DISCONNECTED;
+            }
+
+            /* Release lock and reference */
+            ObReferenceObject(Port);
+            KeReleaseGuardedMutex(&LpcpLock);
+        }
     }
     else
     {
@@ -227,6 +260,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         {
             /* No thread found, fail */
             ObDereferenceObject(Port);
+            if (ConnectionPort) ObDereferenceObject(ConnectionPort);
             return Status;
         }
 
@@ -235,6 +269,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         if (!Message)
         {
             /* Fail if we couldn't allocate a message */
+            if (ConnectionPort) ObDereferenceObject(ConnectionPort);
             ObDereferenceObject(WakeupThread);
             ObDereferenceObject(Port);
             return STATUS_NO_MEMORY;
@@ -244,11 +279,16 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         KeAcquireGuardedMutex(&LpcpLock);
 
         /* Make sure this is the reply the thread is waiting for */
-        if (WakeupThread->LpcReplyMessageId != ReplyMessage->MessageId)
+        if ((WakeupThread->LpcReplyMessageId != ReplyMessage->MessageId))// ||
+#if 0
+            ((WakeupThread->LpcReplyMessage) &&
+            (LpcpGetMessageType(&((PLPCP_MESSAGE)WakeupThread->
+                                LpcReplyMessage)->Request) != LPC_REQUEST)))
+#endif
         {
             /* It isn't, fail */
-            LpcpFreeToPortZone(Message, TRUE);
-            KeReleaseGuardedMutex(&LpcpLock);
+            LpcpFreeToPortZone(Message, 3);
+            if (ConnectionPort) ObDereferenceObject(ConnectionPort);
             ObDereferenceObject(WakeupThread);
             ObDereferenceObject(Port);
             return STATUS_REPLY_MESSAGE_MISMATCH;
@@ -260,11 +300,6 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
                         ReplyMessage + 1,
                         LPC_REPLY,
                         NULL);
-
-        /* Free any data information */
-        LpcpFreeDataInfoMessage(Port,
-                                ReplyMessage->MessageId,
-                                ReplyMessage->CallbackId);
 
         /* Reference the thread while we use it */
         ObReferenceObject(WakeupThread);
@@ -291,6 +326,12 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
             Thread->LpcReceivedMessageId = 0;
             Thread->LpcReceivedMsgIdValid = FALSE;
         }
+
+        /* Free any data information */
+        LpcpFreeDataInfoMessage(Port,
+                                ReplyMessage->MessageId,
+                                ReplyMessage->CallbackId,
+                                ReplyMessage->ClientId);
 
         /* Release the lock and release the LPC semaphore to wake up waiters */
         KeReleaseGuardedMutex(&LpcpLock);
@@ -319,6 +360,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
 
         /* Release the lock and fail */
         KeReleaseGuardedMutex(&LpcpLock);
+        if (ConnectionPort) ObDereferenceObject(ConnectionPort);
         ObDereferenceObject(Port);
         return STATUS_UNSUCCESSFUL;
     }
@@ -347,9 +389,6 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
     Thread->LpcReceivedMessageId = Message->Request.MessageId;
     Thread->LpcReceivedMsgIdValid = TRUE;
 
-    /* Done touching global data, release the lock */
-    KeReleaseGuardedMutex(&LpcpLock);
-
     /* Check if this was a connection request */
     if (LpcpGetMessageType(&Message->Request) == LPC_CONNECTION_REQUEST)
     {
@@ -374,7 +413,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         ReceiveMessage->u1.s1.TotalLength = sizeof(LPCP_MESSAGE) +
                                             ConnectionInfoLength;
         ReceiveMessage->u1.s1.DataLength = ConnectionInfoLength;
-        RtlMoveMemory(ReceiveMessage + 1,
+        RtlCopyMemory(ReceiveMessage + 1,
                       ConnectMessage + 1,
                       ConnectionInfoLength);
 
@@ -413,8 +452,17 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         ASSERT(FALSE);
     }
 
-    /* If we have a message pointer here, free it */
-    if (Message) LpcpFreeToPortZone(Message, FALSE);
+    /* Check if we have a message pointer here */
+    if (Message)
+    {
+        /* Free it and release the lock */
+        LpcpFreeToPortZone(Message, 3);
+    }
+    else
+    {
+        /* Just release the lock */
+        KeReleaseGuardedMutex(&LpcpLock);
+    }
 
 Cleanup:
     /* All done, dereference the port and return the status */
@@ -422,6 +470,7 @@ Cleanup:
              "Port: %p. Status: %p\n",
              Port,
              Status);
+    if (ConnectionPort) ObDereferenceObject(ConnectionPort);
     ObDereferenceObject(Port);
     return Status;
 }
