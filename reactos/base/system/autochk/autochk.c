@@ -360,7 +360,7 @@ _main(int argc,
         if ((DeviceMap.Query.DriveMap & (1 << i))
          && (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED))
         {
-            swprintf(DrivePath, L"%c:\\", 'A'+i);
+            swprintf(DrivePath, L"%c:\\", L'A'+i);
             CheckVolume(DrivePath);
         }
     }
