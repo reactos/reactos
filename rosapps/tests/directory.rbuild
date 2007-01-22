@@ -115,7 +115,7 @@
 <directory name="icontest">
 	<xi:include href="icontest/icontest.rbuild" />
 </directory>
-<directory name="imagelistviewer">
+<directory name="Imagelistviewer">
 	<xi:include href="Imagelistviewer/imagelistviewer.rbuild" />
 </directory>
 
