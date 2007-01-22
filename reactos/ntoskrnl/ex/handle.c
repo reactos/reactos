@@ -490,7 +490,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
                                 IN BOOLEAN DoInit)
 {
     ULONG i, j, Index;
-    PHANDLE_TABLE_ENTRY Low, *Mid, **High, *SecondLevel, **ThirdLevel;
+    PHANDLE_TABLE_ENTRY Low = NULL, *Mid, **High, *SecondLevel, **ThirdLevel;
     ULONG NewFree, FirstFree;
     PVOID Value;
     ULONG_PTR TableBase = HandleTable->TableCode & ~3;
