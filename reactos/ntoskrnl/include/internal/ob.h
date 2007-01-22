@@ -103,6 +103,15 @@ typedef struct _OBP_FIND_HANDLE_DATA
 } OBP_FIND_HANDLE_DATA, *POBP_FIND_HANDLE_DATA;
 
 //
+// Structure for quick-compare of a DOS Device path
+//
+typedef union
+{
+    WCHAR Name[sizeof(ULARGE_INTEGER) / sizeof(WCHAR)];
+    ULARGE_INTEGER Alignment;
+} ALIGNEDNAME;
+
+//
 // Private Temporary Buffer for Lookup Routines
 //
 #define TAG_OB_TEMP_STORAGE TAG('O', 'b', 'S', 't')
@@ -502,6 +511,9 @@ extern WORK_QUEUE_ITEM ObpReaperWorkItem;
 extern volatile PVOID ObpReaperList;
 extern NPAGED_LOOKASIDE_LIST ObpNmLookasideList, ObpCiLookasideList;
 extern BOOLEAN IoCountOperations;
+extern ALIGNEDNAME ObpDosDevicesShortNamePrefix;
+extern ALIGNEDNAME ObpDosDevicesShortNameRoot;
+extern UNICODE_STRING ObpDosDevicesShortName;
 
 //
 // Inlined Functions

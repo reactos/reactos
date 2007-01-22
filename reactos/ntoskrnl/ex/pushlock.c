@@ -362,7 +362,7 @@ ExTimedWaitForUnblockPushLock(IN PEX_PUSH_LOCK PushLock,
 VOID
 FASTCALL
 ExWaitForUnblockPushLock(IN PEX_PUSH_LOCK PushLock,
-                         IN PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock)
+                         IN PVOID WaitBlock)
 {
     /* Call the timed function with no timeout */
     ExTimedWaitForUnblockPushLock(PushLock, WaitBlock, NULL);

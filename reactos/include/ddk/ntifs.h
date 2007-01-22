@@ -50,6 +50,9 @@ extern "C" {
 #define NTSYSAPI
 #endif
 
+#define EX_PUSH_LOCK ULONG_PTR
+#define PEX_PUSH_LOCK PULONG_PTR
+
 #include "csq.h"
 
 typedef struct _SE_EXPORTS                  *PSE_EXPORTS;
@@ -1402,35 +1405,6 @@ typedef struct _PATHNAME_BUFFER {
     WCHAR Name[1];
 } PATHNAME_BUFFER, *PPATHNAME_BUFFER;
 
-#if (VER_PRODUCTBUILD >= 2600)
-
-typedef struct _PRIVATE_CACHE_MAP_FLAGS {
-    ULONG DontUse           : 16;
-    ULONG ReadAheadActive   : 1;
-    ULONG ReadAheadEnabled  : 1;
-    ULONG Available         : 14;
-} PRIVATE_CACHE_MAP_FLAGS, *PPRIVATE_CACHE_MAP_FLAGS;
-
-typedef struct _PRIVATE_CACHE_MAP {
-    _ANONYMOUS_UNION union {
-        CSHORT                  NodeTypeCode;
-        PRIVATE_CACHE_MAP_FLAGS Flags;
-        ULONG                   UlongFlags;
-    } DUMMYUNIONNAME;
-    ULONG                       ReadAheadMask;
-    PFILE_OBJECT                FileObject;
-    LARGE_INTEGER               FileOffset1;
-    LARGE_INTEGER               BeyondLastByte1;
-    LARGE_INTEGER               FileOffset2;
-    LARGE_INTEGER               BeyondLastByte2;
-    LARGE_INTEGER               ReadAheadOffset[2];
-    ULONG                       ReadAheadLength[2];
-    KSPIN_LOCK                  ReadAheadSpinLock;
-    LIST_ENTRY                  PrivateLinks;
-} PRIVATE_CACHE_MAP, *PPRIVATE_CACHE_MAP;
-
-#endif
-
 typedef enum _RTL_GENERIC_COMPARE_RESULTS
 {
     GenericLessThan,
@@ -1714,16 +1688,6 @@ typedef struct _TUNNEL {
     LIST_ENTRY          TimerQueue;
     USHORT              NumEntries;
 } TUNNEL, *PTUNNEL;
-
-typedef struct _VACB {
-    PVOID               BaseAddress;
-    PSHARED_CACHE_MAP   SharedCacheMap;
-    union {
-        LARGE_INTEGER   FileOffset;
-        USHORT          ActiveCount;
-    } Overlay;
-    LIST_ENTRY          LruList;
-} VACB, *PVACB;
 
 typedef struct _VAD_HEADER {
     PVOID       StartVPN;

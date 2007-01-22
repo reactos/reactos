@@ -652,18 +652,24 @@ _ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
 
 VOID
 FASTCALL
-ExBlockPushLock(PEX_PUSH_LOCK PushLock,
-                PVOID WaitBlock);
+ExBlockPushLock(
+    IN PEX_PUSH_LOCK PushLock,
+    IN PVOID WaitBlock
+);
 
 VOID
 FASTCALL
-ExfUnblockPushLock(PEX_PUSH_LOCK PushLock,
-                   PVOID CurrentWaitBlock);
+ExfUnblockPushLock(
+    IN PEX_PUSH_LOCK PushLock,
+    IN PVOID CurrentWaitBlock
+);
 
 VOID
 FASTCALL
-ExWaitForUnblockPushLock(IN PEX_PUSH_LOCK PushLock,
-                         IN PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock);
+ExWaitForUnblockPushLock(
+    IN PEX_PUSH_LOCK PushLock,
+    IN PVOID WaitBlock
+);
 
 /*++
  * @name ExInitializePushLock

@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* Always target Windows 2003 Service Pack 1 */
-#undef NTDDI_VERSION
+#define _WIN32_WINNT _WIN32_WINNT_WS03
 #define NTDDI_VERSION NTDDI_WS03SP1
 #define NTKERNELAPI
 
