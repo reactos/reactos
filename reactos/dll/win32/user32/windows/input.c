@@ -33,9 +33,6 @@
 #include <wine/debug.h>
 
 
-/* Directory to load key layouts from */
-#define SYSTEMROOT_DIR L"\\SystemRoot\\System32\\"
-
 /* GLOBALS *******************************************************************/
 
 typedef struct __TRACKINGLIST {
@@ -73,10 +70,11 @@ ReadRegistryValue( PUNICODE_STRING KeyName,
    PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
    ULONG Length = 0;
    ULONG ResLength = 0;
-   UNICODE_STRING Temp;
+   PWCHAR ReturnBuffer;
 
    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE,
                               NULL, NULL);
+
    Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
    if( !NT_SUCCESS(Status) )
    {
@@ -116,13 +114,18 @@ ReadRegistryValue( PUNICODE_STRING KeyName,
       return Status;
    }
 
-   Temp.Length = Temp.MaximumLength = KeyValuePartialInfo->DataLength;
-   Temp.Buffer = (PWCHAR)KeyValuePartialInfo->Data;
-
    /* At this point, KeyValuePartialInfo->Data contains the key data */
-   RtlInitUnicodeString(ReturnedValue,L"");
-   RtlAppendUnicodeStringToString(ReturnedValue,&Temp);
-
+   ReturnBuffer = LocalAlloc(0, KeyValuePartialInfo->DataLength);
+   if(!ReturnBuffer)
+   {
+      NtClose(KeyHandle);
+      LocalFree(KeyValuePartialInfo);
+      return STATUS_NO_MEMORY;
+   }
+   
+   RtlCopyMemory(ReturnBuffer, KeyValuePartialInfo->Data, KeyValuePartialInfo->DataLength);
+   RtlInitUnicodeString(ReturnedValue, ReturnBuffer);
+   
    LocalFree(KeyValuePartialInfo);
    NtClose(KeyHandle);
 
@@ -148,10 +151,12 @@ IntLoadKeyboardLayout( LPCWSTR pwszKLID,
   UNICODE_STRING LayoutFile;
   UNICODE_STRING FullLayoutPath;
   LCID LocaleId;  
-  PWCHAR KeyboardLayoutWSTR;
   ULONG_PTR layout;
   LANGID langid;
-
+  WCHAR FullPathBuffer[MAX_PATH];
+  WCHAR LayoutKeyNameBuffer[128] = L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet"
+                                L"\\Control\\KeyboardLayouts\\";
+  
   layout = (ULONG_PTR) wcstoul(pwszKLID, NULL, 16);
 
 //  LocaleId = GetSystemDefaultLCID();
@@ -171,55 +176,59 @@ IntLoadKeyboardLayout( LPCWSTR pwszKLID,
   else
       layout |= layout << 16;
 
-  DPRINT("Input  = %S\n", pwszKLID );
-
-  DPRINT("DefaultLocale = %lx\n", LocaleId);
-
+  DPRINT("Input  = %S, DefaultLocale = %lx\n", pwszKLID, LocaleId );
   swprintf(LocaleBuffer, L"%08lx", LocaleId);
-
   DPRINT("DefaultLocale = %S\n", LocaleBuffer);
   RtlInitUnicodeString(&DefaultLocale, LocaleBuffer);
 
-  RtlInitUnicodeString(&LayoutKeyName,
-                       L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet"
-                       L"\\Control\\KeyboardLayouts\\");
-
-  RtlAppendUnicodeStringToString(&LayoutKeyName,&DefaultLocale);
-
-  RtlInitUnicodeString(&LayoutValueName,L"Layout File");
-
+  RtlInitUnicodeString(&LayoutKeyName, LayoutKeyNameBuffer);
+  LayoutKeyName.MaximumLength = sizeof(LayoutKeyNameBuffer);
+  RtlAppendUnicodeStringToString(&LayoutKeyName, &DefaultLocale);
+  DPRINT("LayoutKeyName=%wZ\n", &LayoutKeyName);
+  RtlInitUnicodeString(&LayoutValueName, L"Layout File");
   Status =  ReadRegistryValue(&LayoutKeyName,&LayoutValueName,&LayoutFile);
-
-  RtlFreeUnicodeString(&LayoutKeyName);
   
-  DPRINT("Read registry and got %wZ\n", &LayoutFile);
-
-  RtlInitUnicodeString(&FullLayoutPath,SYSTEMROOT_DIR);
-  RtlAppendUnicodeStringToString(&FullLayoutPath,&LayoutFile);
-
-  DPRINT("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
-
-  RtlFreeUnicodeString(&LayoutFile);
-
-  KeyboardLayoutWSTR = LocalAlloc(LMEM_ZEROINIT, 
-                                    FullLayoutPath.Length + sizeof(WCHAR));
-
-  if( !KeyboardLayoutWSTR )
+  if(!NT_SUCCESS(Status))
   {
-     DPRINT1("Couldn't allocate a string for the keyboard layout name.\n");
-     RtlFreeUnicodeString(&FullLayoutPath);
+     DPRINT1("Failed to read registry value, %x\n", Status);
      return NULL;
   }
-  memcpy(KeyboardLayoutWSTR,FullLayoutPath.Buffer, FullLayoutPath.Length);
+    
+  DPRINT("Read registry and got %wZ\n", &LayoutFile);
+  
+  Status = GetSystemDirectory(FullPathBuffer, sizeof(FullPathBuffer));
+  if(Status == 0 || Status > sizeof(FullPathBuffer))
+  {
+     DPRINT1("GetSystemDirectory() failed! (%d)\n", GetLastError());
+     RtlFreeUnicodeString(&LayoutFile);
+     return NULL;
+  }
+  
+  RtlInitUnicodeString(&FullLayoutPath, FullPathBuffer);
+  FullLayoutPath.MaximumLength = sizeof(FullPathBuffer);
+  if(FullLayoutPath.Length < FullLayoutPath.MaximumLength-1)
+  {
+    FullLayoutPath.Buffer[FullLayoutPath.Length/sizeof(WCHAR)] = '\\';
+    FullLayoutPath.Buffer[FullLayoutPath.Length/sizeof(WCHAR)+1] = 0;
+    FullLayoutPath.Length+=sizeof(WCHAR);
+  }
+  Status = RtlAppendUnicodeStringToString(&FullLayoutPath, &LayoutFile);
+  DPRINT("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
+  RtlFreeUnicodeString(&LayoutFile);
+  
+  if(!NT_SUCCESS(Status))
+  {
+    DPRINT1("RtlAppendUnicodeStringToString() failed! (%x)\n", Status);
+    return NULL;
+  }
 
-  KeyboardLayoutWSTR[FullLayoutPath.Length / sizeof(WCHAR)] = 0;
+  KBModule = LoadLibraryEx(FullPathBuffer, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 
-  KBModule = LoadLibraryW(KeyboardLayoutWSTR);
-
-  DPRINT( "Load Keyboard Layout: %S\n", KeyboardLayoutWSTR );
-
-  if( !KBModule )
-     DPRINT1( "Load Keyboard Layout: No %wZ\n", &FullLayoutPath );
+  if(!KBModule )
+  { 
+     DPRINT1( "Failed to load %wZ, lasterror = %d\n", &FullLayoutPath, GetLastError() );
+     return NULL;
+  }
 
   pAddr = GetProcAddress( KBModule, (LPCSTR) 1);
   offTable = (DWORD) pAddr - (DWORD) KBModule; // Weeks to figure this out!
@@ -228,7 +237,7 @@ IntLoadKeyboardLayout( LPCWSTR pwszKLID,
 
   FreeLibrary(KBModule);
 
-  Handle = CreateFileW( KeyboardLayoutWSTR,
+  Handle = CreateFileW( FullPathBuffer,
                         GENERIC_READ,
                         FILE_SHARE_READ,
                         NULL,
@@ -244,9 +253,6 @@ IntLoadKeyboardLayout( LPCWSTR pwszKLID,
                                     Flags);
 
   NtClose(Handle);
-
-  LocalFree(KeyboardLayoutWSTR);
-  RtlFreeUnicodeString(&FullLayoutPath);
 
   return hKL;
 }
