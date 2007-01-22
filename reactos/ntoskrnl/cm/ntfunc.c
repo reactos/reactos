@@ -49,7 +49,8 @@ CmpCreateHandle(PVOID ObjectBody,
                 */
 {
     HANDLE_TABLE_ENTRY NewEntry;
-    PEPROCESS Process, CurrentProcess;
+    PEPROCESS CurrentProcess;
+    PVOID HandleTable;
     POBJECT_HEADER ObjectHeader;
     HANDLE Handle;
     KAPC_STATE ApcState;
@@ -90,22 +91,20 @@ CmpCreateHandle(PVOID ObjectBody,
     if ((HandleAttributes & OBJ_KERNEL_HANDLE) &&
         ExGetPreviousMode() == KernelMode)
     {
-        Process = PsInitialSystemProcess;
-        if (Process != CurrentProcess)
+        HandleTable = ObpKernelHandleTable;
+        if (PsGetCurrentProcess() != PsInitialSystemProcess)
         {
-            KeStackAttachProcess(&Process->Pcb,
+            KeStackAttachProcess(&PsInitialSystemProcess->Pcb,
                 &ApcState);
             AttachedToProcess = TRUE;
         }
     }
     else
     {
-        Process = CurrentProcess;
-        /* mask out the OBJ_KERNEL_HANDLE attribute */
-        HandleAttributes &= ~OBJ_KERNEL_HANDLE;
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
     }
 
-    Handle = ExCreateHandle(Process->ObjectTable,
+    Handle = ExCreateHandle(HandleTable,
         &NewEntry);
 
     if (AttachedToProcess)
