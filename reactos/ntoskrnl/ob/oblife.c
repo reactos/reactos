@@ -1442,10 +1442,9 @@ NtQueryObject(IN HANDLE ObjectHandle,
                                ObjectInformation;
 
                 /* Set the flags */
-                HandleFlags->Inherit = (HandleInfo.HandleAttributes &
-                                        EX_HANDLE_ENTRY_INHERITABLE) != 0;
+                HandleFlags->Inherit = HandleInfo.HandleAttributes & OBJ_INHERIT;
                 HandleFlags->ProtectFromClose = (HandleInfo.HandleAttributes &
-                                                 EX_HANDLE_ENTRY_PROTECTFROMCLOSE) != 0;
+                                                 OBJ_PROTECT_CLOSE) != 0;
 
                 /* Break out with success */
                 Status = STATUS_SUCCESS;
@@ -1581,7 +1580,7 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
     if (!ExChangeHandle(ObjectTable,
                         ObjectHandle,
                         ObpSetHandleAttributes,
-                        &Context))
+                        (ULONG_PTR)&Context))
     {
         /* Some failure */
         Status = STATUS_ACCESS_DENIED;

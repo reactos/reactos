@@ -8,7 +8,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTDDI_VERSION NTDDI_WS03SP1
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
@@ -787,4 +786,5 @@ AppCpuInit:
     /* Jump into the idle loop */
     KiIdleLoop();
 }
+
 

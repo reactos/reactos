@@ -829,8 +829,7 @@ ObQueryObjectAuditingByHandle(IN HANDLE Handle,
     if(HandleEntry)
     {
         /* Check if the flag is set */
-        *GenerateOnClose = (HandleEntry->ObAttributes &
-                            EX_HANDLE_ENTRY_AUDITONCLOSE) != 0;
+        *GenerateOnClose = HandleEntry->ObAttributes & OBJ_AUDIT_OBJECT_CLOSE;
 
         /* Unlock the entry */
         ExUnlockHandleTableEntry(HandleTable, HandleEntry);

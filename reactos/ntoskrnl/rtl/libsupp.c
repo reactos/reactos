@@ -259,7 +259,7 @@ RtlpDestroyAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
       ExSweepHandleTable(AtomTable->ExHandleTable,
                          NULL,
                          NULL);
-      ExDestroyHandleTable(AtomTable->ExHandleTable);
+      ExDestroyHandleTable(AtomTable->ExHandleTable, NULL);
       AtomTable->ExHandleTable = NULL;
    }
 }
@@ -308,7 +308,8 @@ VOID
 RtlpFreeAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
 {
    ExDestroyHandle(AtomTable->ExHandleTable,
-                   (HANDLE)((ULONG_PTR)Entry->HandleIndex << 2));
+                   (HANDLE)((ULONG_PTR)Entry->HandleIndex << 2),
+                   NULL);
 }
 
 BOOLEAN
@@ -336,7 +337,8 @@ RtlpCreateAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
       }
       else
          ExDestroyHandle(AtomTable->ExHandleTable,
-                         Handle);
+                         Handle,
+                         NULL);
    }
    
    return FALSE;

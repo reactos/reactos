@@ -560,7 +560,7 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
     if (HandleEntry)
     {
         /* Get the object header and validate the type*/
-        ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
+        ObjectHeader = ObpGetHandleObject(HandleEntry);
         if (!(ObjectType) || (ObjectType == ObjectHeader->Type))
         {
             /* Get the granted access and validate it */
@@ -572,10 +572,7 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
                 InterlockedIncrement(&ObjectHeader->PointerCount);
 
                 /* Mask out the internal attributes */
-                Attributes = HandleEntry->ObAttributes &
-                             (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
-                              EX_HANDLE_ENTRY_INHERITABLE |
-                              EX_HANDLE_ENTRY_AUDITONCLOSE);
+                Attributes = HandleEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
 
                 /* Check if the caller wants handle information */
                 if (HandleInformation)

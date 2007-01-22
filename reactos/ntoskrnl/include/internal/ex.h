@@ -21,6 +21,20 @@ ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 PVOID ExpNlsSectionPointer;
 
+typedef struct _EXHANDLE
+{
+    union
+    {
+        struct
+        {
+            ULONG TagBits:2;
+            ULONG Index:30;
+        };
+        HANDLE GenericHandleOverlay;
+        ULONG_PTR Value;
+    };
+} EXHANDLE, *PEXHANDLE;
+
 typedef struct _ETIMER
 {
     KTIMER KeTimer;
@@ -42,13 +56,6 @@ typedef struct
 
 #define MAX_FAST_REFS           7
 
-#define EX_OBJ_TO_HDR(eob) ((POBJECT_HEADER)((ULONG_PTR)(eob) &                \
-  ~(EX_HANDLE_ENTRY_PROTECTFROMCLOSE | EX_HANDLE_ENTRY_INHERITABLE |           \
-  EX_HANDLE_ENTRY_AUDITONCLOSE)))
-#define EX_HTE_TO_HDR(hte) ((POBJECT_HEADER)((ULONG_PTR)((hte)->Object) &   \
-  ~(EX_HANDLE_ENTRY_PROTECTFROMCLOSE | EX_HANDLE_ENTRY_INHERITABLE |           \
-  EX_HANDLE_ENTRY_AUDITONCLOSE)))
-
 /* Note: we only use a spinlock on SMP. On UP, we cli/sti intead */
 #ifndef CONFIG_SMP
 #define ExAcquireResourceLock(l, i) { \
@@ -67,6 +74,27 @@ typedef struct
 #define ExWaitForRundownProtectionRelease               _ExWaitForRundownProtectionRelease
 #define ExRundownCompleted                              _ExRundownCompleted
 #define ExGetPreviousMode                               KeGetPreviousMode
+
+
+//
+// Various bits tagged on the handle or handle table
+//
+#define EXHANDLE_TABLE_ENTRY_LOCK_BIT    1
+#define FREE_HANDLE_MASK                -1
+
+//
+// Number of entries in each table level
+//
+#define LOW_LEVEL_ENTRIES   (PAGE_SIZE / sizeof(HANDLE_TABLE_ENTRY))
+#define MID_LEVEL_ENTRIES   (PAGE_SIZE / sizeof(PHANDLE_TABLE_ENTRY))
+#define HIGH_LEVEL_ENTRIES  (65535 / (LOW_LEVEL_ENTRIES * MID_LEVEL_ENTRIES))
+
+//
+// Maximum index in each table level before we need another table
+//
+#define MAX_LOW_INDEX       LOW_LEVEL_ENTRIES
+#define MAX_MID_INDEX       (MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
+#define MAX_HIGH_INDEX      (MID_LEVEL_ENTRIES * MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 
 //
 // Detect GCC 4.1.2+
@@ -308,104 +336,98 @@ ExfWaitForRundownProtectionRelease(
 
 /* HANDLE TABLE FUNCTIONS ***************************************************/
 
-#define EX_HANDLE_ENTRY_LOCKED (1 << ((sizeof(PVOID) * 8) - 1))
-#define EX_HANDLE_ENTRY_PROTECTFROMCLOSE (1 << 0)
-#define EX_HANDLE_ENTRY_INHERITABLE (1 << 1)
-#define EX_HANDLE_ENTRY_AUDITONCLOSE (1 << 2)
-
-#define EX_HANDLE_TABLE_CLOSING 0x1
-
-#define EX_HANDLE_ENTRY_FLAGSMASK (EX_HANDLE_ENTRY_LOCKED |                    \
-                                   EX_HANDLE_ENTRY_PROTECTFROMCLOSE |          \
-                                   EX_HANDLE_ENTRY_INHERITABLE |               \
-                                   EX_HANDLE_ENTRY_AUDITONCLOSE)
-
-typedef VOID (NTAPI PEX_SWEEP_HANDLE_CALLBACK)(
+typedef VOID
+(NTAPI *PEX_SWEEP_HANDLE_CALLBACK)(
     PHANDLE_TABLE_ENTRY HandleTableEntry,
-    HANDLE Handle,  
+    HANDLE Handle,
     PVOID Context
 );
 
-typedef BOOLEAN (NTAPI PEX_DUPLICATE_HANDLE_CALLBACK)(
-    PHANDLE_TABLE HandleTable, 
-    PHANDLE_TABLE_ENTRY HandleTableEntry, 
-    PVOID Context
-);
-
-typedef BOOLEAN (NTAPI PEX_CHANGE_HANDLE_CALLBACK)(
-    PHANDLE_TABLE HandleTable, 
-    PHANDLE_TABLE_ENTRY HandleTableEntry, 
-    PVOID Context
-);
-
-VOID
-ExpInitializeHandleTables(VOID);
-
-PHANDLE_TABLE
-ExCreateHandleTable(IN PEPROCESS QuotaProcess  OPTIONAL);
-
-VOID
-ExDestroyHandleTable(
-    IN PHANDLE_TABLE HandleTable
-);
-
-VOID
-ExSweepHandleTable(
+typedef BOOLEAN
+(NTAPI *PEX_DUPLICATE_HANDLE_CALLBACK)(
+    IN PEPROCESS Process,
     IN PHANDLE_TABLE HandleTable,
-    IN PEX_SWEEP_HANDLE_CALLBACK SweepHandleCallback  OPTIONAL,
-    IN PVOID Context  OPTIONAL
+    IN PHANDLE_TABLE_ENTRY HandleTableEntry,
+    IN PHANDLE_TABLE_ENTRY NewEntry
+);
+
+typedef BOOLEAN
+(NTAPI *PEX_CHANGE_HANDLE_CALLBACK)(
+    PHANDLE_TABLE_ENTRY HandleTableEntry,
+    ULONG_PTR Context
+);
+
+VOID
+NTAPI
+ExpInitializeHandleTables(
+    VOID
 );
 
 PHANDLE_TABLE
-ExDupHandleTable(
-    IN PEPROCESS QuotaProcess  OPTIONAL,
-    IN PEX_DUPLICATE_HANDLE_CALLBACK DuplicateHandleCallback  OPTIONAL,
-    IN PVOID Context  OPTIONAL,
-    IN PHANDLE_TABLE SourceHandleTable
-);
-
-BOOLEAN
-ExLockHandleTableEntry(
-    IN PHANDLE_TABLE HandleTable,
-    IN PHANDLE_TABLE_ENTRY Entry
+NTAPI
+ExCreateHandleTable(
+    IN PEPROCESS Process OPTIONAL
 );
 
 VOID
+NTAPI
 ExUnlockHandleTableEntry(
     IN PHANDLE_TABLE HandleTable,
-    IN PHANDLE_TABLE_ENTRY Entry
+    IN PHANDLE_TABLE_ENTRY HandleTableEntry
 );
 
 HANDLE
+NTAPI
 ExCreateHandle(
     IN PHANDLE_TABLE HandleTable,
-    IN PHANDLE_TABLE_ENTRY Entry
-);
-
-BOOLEAN
-ExDestroyHandle(
-    IN PHANDLE_TABLE HandleTable,
-    IN HANDLE Handle
+    IN PHANDLE_TABLE_ENTRY HandleTableEntry
 );
 
 VOID
-ExDestroyHandleByEntry(
+NTAPI
+ExDestroyHandleTable(
     IN PHANDLE_TABLE HandleTable,
-    IN PHANDLE_TABLE_ENTRY Entry,
-    IN HANDLE Handle
+    IN PVOID DestroyHandleProcedure OPTIONAL
+);
+
+BOOLEAN
+NTAPI
+ExDestroyHandle(
+    IN PHANDLE_TABLE HandleTable,
+    IN HANDLE Handle,
+    IN PHANDLE_TABLE_ENTRY HandleTableEntry OPTIONAL
 );
 
 PHANDLE_TABLE_ENTRY
+NTAPI
 ExMapHandleToPointer(
     IN PHANDLE_TABLE HandleTable,
     IN HANDLE Handle
 );
 
+PHANDLE_TABLE
+NTAPI
+ExDupHandleTable(
+    IN PEPROCESS Process,
+    IN PHANDLE_TABLE HandleTable,
+    IN PEX_DUPLICATE_HANDLE_CALLBACK DupHandleProcedure,
+    IN ULONG_PTR Mask
+);
+
 BOOLEAN
+NTAPI
 ExChangeHandle(
     IN PHANDLE_TABLE HandleTable,
     IN HANDLE Handle,
-    IN PEX_CHANGE_HANDLE_CALLBACK ChangeHandleCallback,
+    IN PEX_CHANGE_HANDLE_CALLBACK ChangeRoutine,
+    IN ULONG_PTR Context
+);
+
+VOID
+NTAPI
+ExSweepHandleTable(
+    IN PHANDLE_TABLE HandleTable,
+    IN PEX_SWEEP_HANDLE_CALLBACK EnumHandleProcedure,
     IN PVOID Context
 );
 
@@ -797,7 +819,7 @@ ExConvertPushLockSharedToExclusive(IN PEX_PUSH_LOCK PushLock)
 VOID
 FORCEINLINE
 ExWaitOnPushLock(PEX_PUSH_LOCK PushLock)
-{
+{  
     /* Check if we're locked */
     if (PushLock->Locked)
     {

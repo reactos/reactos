@@ -44,6 +44,16 @@
      GENERIC_ALL)
 
 //
+// Handle Bit Flags
+//
+#define OBJ_PROTECT_CLOSE                               0x01
+//#define OBJ_INHERIT                                   0x02
+#define OBJ_AUDIT_OBJECT_CLOSE                          0x04
+#define OBJ_HANDLE_ATTRIBUTES                           (OBJ_PROTECT_CLOSE |\
+                                                         OBJ_INHERIT |      \
+                                                         OBJ_AUDIT_OBJECT_CLOSE)
+
+//
 // Identifies a Kernel Handle
 //
 #define KERNEL_HANDLE_FLAG                              \
@@ -65,6 +75,12 @@
 //
 #define ObpGetHandleCountByHandleTable(HandleTable)     \
     ((PHANDLE_TABLE)HandleTable)->HandleCount
+
+//
+// Converts from an EXHANDLE object to a POBJECT_HEADER
+//
+#define ObpGetHandleObject(x)                           \
+    ((POBJECT_HEADER)((ULONG_PTR)x->Object & ~OBJ_HANDLE_ATTRIBUTES))
 
 //
 // Context Structures for Ex*Handle Callbacks
@@ -214,9 +230,8 @@ ObpLookupObjectName(
 BOOLEAN
 NTAPI
 ObpSetHandleAttributes(
-    IN PHANDLE_TABLE HandleTable,
     IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
-    IN PVOID Context
+    IN ULONG_PTR Context
 );
 
 VOID

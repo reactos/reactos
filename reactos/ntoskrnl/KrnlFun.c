@@ -8,9 +8,6 @@
 //                     Do NOT ask when it will be fixed.
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
-// Ex:
-//  - Use pushlocks for handle implementation.
-//
 // Ke2:
 //  - Dispatcher Rewrite (DPCs-Timers-Waits).
 //

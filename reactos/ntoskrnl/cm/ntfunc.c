@@ -66,7 +66,7 @@ CmpCreateHandle(PVOID ObjectBody,
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
 
     /* check that this is a valid kernel pointer */
-    ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
+    //ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
 
     if (GrantedAccess & MAXIMUM_ALLOWED)
     {
@@ -82,9 +82,9 @@ CmpCreateHandle(PVOID ObjectBody,
 
     NewEntry.Object = ObjectHeader;
     if(HandleAttributes & OBJ_INHERIT)
-        NewEntry.ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
+        NewEntry.ObAttributes |= OBJ_INHERIT;
     else
-        NewEntry.ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
+        NewEntry.ObAttributes &= ~OBJ_INHERIT;
     NewEntry.GrantedAccess = GrantedAccess;
 
     if ((HandleAttributes & OBJ_KERNEL_HANDLE) &&

@@ -310,7 +310,7 @@ PspDeleteProcess(IN PVOID ObjectBody)
     if (Process->UniqueProcessId)
     {
         /* Delete the PID */
-        if (!(ExDestroyHandle(PspCidTable, Process->UniqueProcessId)))
+        if (!(ExDestroyHandle(PspCidTable, Process->UniqueProcessId, NULL)))
         {
             /* Something wrong happened, bugcheck */
             KEBUGCHECK(CID_HANDLE_DELETION);
@@ -360,7 +360,7 @@ PspDeleteThread(IN PVOID ObjectBody)
     if (Thread->Cid.UniqueThread)
     {
         /* Delete the CID Handle */
-        if (!(ExDestroyHandle(PspCidTable, Thread->Cid.UniqueThread)))
+        if (!(ExDestroyHandle(PspCidTable, Thread->Cid.UniqueThread, NULL)))
         {
             /* Something wrong happened, bugcheck */
             KEBUGCHECK(CID_HANDLE_DELETION);

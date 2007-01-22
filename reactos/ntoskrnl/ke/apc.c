@@ -8,7 +8,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTDDI_VERSION NTDDI_WS03
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
@@ -949,6 +948,7 @@ KeAreAllApcsDisabled(VOID)
     return ((KeGetCurrentThread()->SpecialApcDisable) ||
             (KeGetCurrentIrql() >= APC_LEVEL)) ? TRUE : FALSE;
 }
+
 
 
 

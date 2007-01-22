@@ -8,7 +8,9 @@
 
 /* INCLUDES ******************************************************************/
 
-/* Tells the WDK that we don't want to import */
+/* Always target Windows 2003 Service Pack 1 */
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WS03SP1
 #define NTKERNELAPI
 
 /* DDK/IFS/NDK Headers */

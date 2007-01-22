@@ -131,16 +131,13 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
     if (HandleEntry)
     {
         /* Get the object header and validate the type*/
-        ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
+        ObjectHeader = ObpGetHandleObject(HandleEntry);
 
         /* Get the granted access and validate it */
         GrantedAccess = HandleEntry->GrantedAccess;
 
         /* Mask out the internal attributes */
-        Attributes = HandleEntry->ObAttributes &
-                     (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
-                      EX_HANDLE_ENTRY_INHERITABLE |
-                      EX_HANDLE_ENTRY_AUDITONCLOSE);
+        Attributes = HandleEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
 
         /* Fill out the information */
         HandleInformation->HandleAttributes = Attributes;
@@ -588,7 +585,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     PAGED_CODE();
 
     /* Get the object data */
-    ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
+    ObjectHeader = ObpGetHandleObject(HandleEntry);
     ObjectType = ObjectHeader->Type;
     Body = &ObjectHeader->Body;
     GrantedAccess = HandleEntry->GrantedAccess;
@@ -621,7 +618,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     }
 
     /* The callback allowed us to close it, but does the handle itself? */
-    if ((HandleEntry->ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE) &&
+    if ((HandleEntry->ObAttributes & OBJ_PROTECT_CLOSE) &&
         !(IgnoreHandleProtection))
     {
         /* It doesn't, are we from user mode? */
@@ -650,7 +647,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     }
 
     /* Destroy and unlock the handle entry */
-    ExDestroyHandleByEntry(HandleTable, HandleEntry, Handle);
+    ExDestroyHandle(HandleTable, Handle, HandleEntry);
 
     /* Now decrement the handle count */
     ObpDecrementHandleCount(Body, PsGetCurrentProcess(), GrantedAccess);
@@ -1258,10 +1255,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
     NewEntry.Object = ObjectHeader;
 
     /* Mask out the internal attributes */
-    NewEntry.ObAttributes |= HandleAttributes &
-                             (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
-                              EX_HANDLE_ENTRY_INHERITABLE |
-                              EX_HANDLE_ENTRY_AUDITONCLOSE);
+    NewEntry.ObAttributes |= HandleAttributes & OBJ_HANDLE_ATTRIBUTES;
 
     /* Remove what's not in the valid access mask */
     GrantedAccess = DesiredAccess & (ObjectType->TypeInfo.ValidAccessMask |
@@ -1460,14 +1454,11 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     if (AccessState->GenerateOnClose)
     {
         /* Force the attribute on */
-        HandleAttributes|= EX_HANDLE_ENTRY_AUDITONCLOSE;
+        HandleAttributes|= OBJ_AUDIT_OBJECT_CLOSE;
     }
 
     /* Mask out the internal attributes */
-    NewEntry.ObAttributes |= HandleAttributes &
-                             (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
-                              EX_HANDLE_ENTRY_INHERITABLE |
-                              EX_HANDLE_ENTRY_AUDITONCLOSE);
+    NewEntry.ObAttributes |= HandleAttributes & OBJ_HANDLE_ATTRIBUTES;
 
     /* Get the original desired access */
     DesiredAccess = AccessState->RemainingDesiredAccess |
@@ -1697,9 +1688,6 @@ ObpCloseHandle(IN HANDLE Handle,
 *
 *     The ObpSetHandleAttributes routine <FILLMEIN>
 *
-* @param HandleTable
-*        <FILLMEIN>.
-*
 * @param HandleTableEntry
 *        <FILLMEIN>.
 *
@@ -1713,12 +1701,11 @@ ObpCloseHandle(IN HANDLE Handle,
 *--*/
 BOOLEAN
 NTAPI
-ObpSetHandleAttributes(IN PHANDLE_TABLE HandleTable,
-                       IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
-                       IN PVOID Context)
+ObpSetHandleAttributes(IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
+                       IN ULONG_PTR Context)
 {
-    POBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleInfo = Context;
-    POBJECT_HEADER ObjectHeader = EX_HTE_TO_HDR(HandleTableEntry);
+    POBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleInfo = (PVOID)Context;
+    POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
     PAGED_CODE();
 
     /* Don't allow operations on kernel objects */
@@ -1740,24 +1727,24 @@ ObpSetHandleAttributes(IN PHANDLE_TABLE HandleTable,
         }
 
         /* Set the flag */
-        HandleTableEntry->ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
+        HandleTableEntry->ObAttributes |= OBJ_INHERIT;
     }
     else
     {
         /* Otherwise this implies we're removing the flag */
-        HandleTableEntry->ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
+        HandleTableEntry->ObAttributes &= ~OBJ_INHERIT;
     }
 
     /* Check if making the handle protected */
     if (SetHandleInfo->Information.ProtectFromClose)
     {
         /* Set the flag */
-        HandleTableEntry->ObAttributes |= EX_HANDLE_ENTRY_PROTECTFROMCLOSE;
+        HandleTableEntry->ObAttributes |= OBJ_PROTECT_CLOSE;
     }
     else
     {
         /* Otherwise, remove it */
-        HandleTableEntry->ObAttributes &= ~EX_HANDLE_ENTRY_PROTECTFROMCLOSE;
+        HandleTableEntry->ObAttributes &= ~OBJ_PROTECT_CLOSE;
     }
 
     /* Return success */
@@ -1823,9 +1810,10 @@ ObpCloseHandleCallback(IN PHANDLE_TABLE_ENTRY HandleTableEntry,
 *--*/
 BOOLEAN
 NTAPI
-ObpDuplicateHandleCallback(IN PHANDLE_TABLE HandleTable,
-                           IN PHANDLE_TABLE_ENTRY HandleTableEntry,
-                           IN PVOID Context)
+ObpDuplicateHandleCallback(IN PEPROCESS Process,
+                           IN PHANDLE_TABLE HandleTable,
+                           IN PHANDLE_TABLE_ENTRY OldEntry,
+                           IN PHANDLE_TABLE_ENTRY HandleTableEntry)
 {
     POBJECT_HEADER ObjectHeader;
     BOOLEAN Ret = FALSE;
@@ -1834,11 +1822,17 @@ ObpDuplicateHandleCallback(IN PHANDLE_TABLE HandleTable,
     PAGED_CODE();
 
     /* Make sure that the handle is inheritable */
-    Ret = (HandleTableEntry->ObAttributes & EX_HANDLE_ENTRY_INHERITABLE) != 0;
+    Ret = (HandleTableEntry->ObAttributes & OBJ_INHERIT) != 0;
     if (Ret)
     {
         /* Get the object header */
-        ObjectHeader = EX_HTE_TO_HDR(HandleTableEntry);
+        ObjectHeader = ObpGetHandleObject(HandleTableEntry);
+
+        /* Increment the pointer count */
+        InterlockedIncrement(&ObjectHeader->PointerCount);
+
+        /* Release the handle lock */
+        ExUnlockHandleTableEntry(HandleTable, OldEntry);
 
         /* Setup the access state */
         AccessState.PreviouslyGrantedAccess = HandleTableEntry->GrantedAccess;
@@ -1848,18 +1842,19 @@ ObpDuplicateHandleCallback(IN PHANDLE_TABLE HandleTable,
                                          &AccessState,
                                          KernelMode,
                                          HandleTableEntry->ObAttributes,
-                                         PsGetCurrentProcess(),
+                                         Process,
                                          ObInheritHandle);
         if (!NT_SUCCESS(Status))
         {
             /* Return failure */
+            ObDereferenceObject(&ObjectHeader->Body);
             Ret = FALSE;
         }
-        else
-        {
-            /* Otherwise increment the pointer count */
-            InterlockedIncrement(&ObjectHeader->PointerCount);
-        }
+    }
+    else
+    {
+        /* Release the handle lock */
+        ExUnlockHandleTableEntry(HandleTable, OldEntry);
     }
 
     /* Return duplication result */
@@ -1906,9 +1901,9 @@ ObpCreateHandleTable(IN PEPROCESS Parent,
 
         /* Duplicate the parent's */
         HandleTable = ExDupHandleTable(Process,
+                                       HandleTable,
                                        ObpDuplicateHandleCallback,
-                                       NULL,
-                                       HandleTable);
+                                       OBJ_INHERIT);
     }
     else
     {
@@ -1981,7 +1976,7 @@ ObKillProcess(IN PEPROCESS Process)
 
     /* Destroy the object table */
     Process->ObjectTable = NULL;
-    ExDestroyHandleTable(HandleTable);
+    ExDestroyHandleTable(HandleTable, NULL);
 }
 
 NTSTATUS
@@ -2121,10 +2116,7 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
 
     /* Fill out the entry */
     NewHandleEntry.Object = ObjectHeader;
-    NewHandleEntry.ObAttributes |= HandleAttributes &
-                                   (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
-                                    EX_HANDLE_ENTRY_INHERITABLE |
-                                    EX_HANDLE_ENTRY_AUDITONCLOSE);
+    NewHandleEntry.ObAttributes |= HandleAttributes & OBJ_HANDLE_ATTRIBUTES;
 
     /* Check if we're using a generic mask */
     if (DesiredAccess & GENERIC_ACCESS)

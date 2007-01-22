@@ -10,8 +10,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NTDDI_VERSION NTDDI_WS03
-
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
