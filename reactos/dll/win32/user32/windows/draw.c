@@ -717,123 +717,81 @@ static BOOL UITOOLS95_DFC_ButtonCheck(HDC dc, LPRECT r, UINT uFlags)
     return TRUE;
 }
 
-/* Ported from WINE20020904 */
-/* Draw a radio/radioimage/radiomask button coming from DrawFrameControl()
- *
- * Does a pretty good job in emulating MS behavior. Some quirks are
- * however there because MS uses a TrueType font (Marlett) to draw
- * the buttons.
- */
 static BOOL UITOOLS95_DFC_ButtonRadio(HDC dc, LPRECT r, UINT uFlags)
 {
-    RECT myr;
-    int i;
-    int SmallDiam = UITOOLS_MakeSquareRect(r, &myr);
-    int BorderShrink = SmallDiam / 16;
-    HPEN hpsave;
-    HBRUSH hbsave;
-    int xc, yc;
+    RECT rc;
+    LOGFONT lf;
+    HFONT hFont, hOldFont;
+    int SmallDiam, i;
 
-    if(BorderShrink < 1) BorderShrink = 1;
+    LPCTSTR OutRight = TEXT("j"); // Outer right
+    LPCTSTR OutLeft  = TEXT("k"); // Outer left
+    LPCTSTR InRight  = TEXT("l"); // inner left
+    LPCTSTR InLeft   = TEXT("m"); // inner right
+    LPCTSTR Center   = TEXT("n"); // center
 
-    if((uFlags & 0xff) == DFCS_BUTTONRADIOIMAGE)
-    {
-        FillRect(dc, r, (HBRUSH)GetStockObject(BLACK_BRUSH));
-    }
+    SmallDiam = UITOOLS_MakeSquareRect(r, &rc);
 
-    xc = myr.left + SmallDiam - SmallDiam/2;
-    yc = myr.top  + SmallDiam - SmallDiam/2;
-
-    /* Define bounding box */
-    i = 14*SmallDiam/16;
-    myr.left   = xc - i+i/2;
-    myr.right  = xc + i/2;
-    myr.top    = yc - i+i/2;
-    myr.bottom = yc + i/2;
+    ZeroMemory(&lf, sizeof(LOGFONT));
+    lf.lfHeight = SmallDiam;
+    lf.lfWidth = 0;
+    lf.lfWeight = FW_NORMAL;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lstrcpy(lf.lfFaceName, TEXT("Marlett"));
+    hFont = CreateFontIndirect(&lf);
+    hOldFont = SelectObject(dc, hFont);
 
     if((uFlags & 0xff) == DFCS_BUTTONRADIOMASK)
     {
-        hbsave = (HBRUSH)SelectObject(dc, GetStockObject(BLACK_BRUSH));
-        Ellipse(dc, myr.left, myr.top, myr.right, myr.bottom);
-        SelectObject(dc, hbsave);
+        SetBkMode(dc, OPAQUE);
+        SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
+        TextOut(dc, rc.left, rc.top, Center, 1);
+        SetBkMode(dc, TRANSPARENT);
+        SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
+        TextOut(dc, rc.left, rc.top, OutRight, 1);
+        SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
+        TextOut(dc, rc.left, rc.top, OutLeft, 1);
     }
     else
     {
-        if(uFlags & (DFCS_FLAT|DFCS_MONO))
+        SetBkMode(dc, TRANSPARENT);
+
+        /* Center section, white for active, grey for inactive */
+        i= !(uFlags & (DFCS_INACTIVE|DFCS_PUSHED)) ? COLOR_WINDOW : COLOR_BTNFACE;
+        SetTextColor(dc, GetSysColor(i));
+        TextOut(dc, rc.left, rc.top, Center, 1);
+
+        if(uFlags & (DFCS_FLAT | DFCS_MONO))
         {
-            hpsave = (HPEN)SelectObject(dc, GetSysColorPen(COLOR_WINDOWFRAME));
-            hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(COLOR_WINDOWFRAME));
-            Ellipse(dc, myr.left, myr.top, myr.right, myr.bottom);
-            SelectObject(dc, hbsave);
-            SelectObject(dc, hpsave);
+            SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
+            TextOut(dc, rc.left, rc.top, OutRight, 1);
+            TextOut(dc, rc.left, rc.top, OutLeft, 1);
+            TextOut(dc, rc.left, rc.top, InRight, 1);
+            TextOut(dc, rc.left, rc.top, InLeft, 1);
         }
         else
         {
-            hpsave = (HPEN)SelectObject(dc, GetSysColorPen(COLOR_BTNHIGHLIGHT));
-            hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(COLOR_BTNHIGHLIGHT));
-            Pie(dc, myr.left, myr.top, myr.right+1, myr.bottom+1, myr.left-1, myr.bottom, myr.right+1, myr.top);
-
-            SelectObject(dc, GetSysColorPen(COLOR_BTNSHADOW));
-            SelectObject(dc, GetSysColorBrush(COLOR_BTNSHADOW));
-            Pie(dc, myr.left, myr.top, myr.right+1, myr.bottom+1, myr.right+1, myr.top, myr.left-1, myr.bottom);
-
-            myr.left   += BorderShrink;
-            myr.right  -= BorderShrink;
-            myr.top    += BorderShrink;
-            myr.bottom -= BorderShrink;
-
-            SelectObject(dc, GetSysColorPen(COLOR_3DLIGHT));
-            SelectObject(dc, GetSysColorBrush(COLOR_3DLIGHT));
-            Pie(dc, myr.left, myr.top, myr.right+1, myr.bottom+1, myr.left-1, myr.bottom, myr.right+1, myr.top);
-
-            SelectObject(dc, GetSysColorPen(COLOR_3DDKSHADOW));
-            SelectObject(dc, GetSysColorBrush(COLOR_3DDKSHADOW));
-            Pie(dc, myr.left, myr.top, myr.right+1, myr.bottom+1, myr.right+1, myr.top, myr.left-1, myr.bottom);
-            SelectObject(dc, hbsave);
-            SelectObject(dc, hpsave);
+            SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW)); 
+            TextOut(dc, rc.left, rc.top, OutRight, 1);
+            SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
+            TextOut(dc, rc.left, rc.top, OutLeft, 1);
+            SetTextColor(dc, GetSysColor(COLOR_3DDKSHADOW));
+            TextOut(dc, rc.left, rc.top, InRight, 1);
+            SetTextColor(dc, GetSysColor(COLOR_3DLIGHT));
+            TextOut(dc, rc.left, rc.top, InLeft, 1);
         }
-
-        i = 10*SmallDiam/16;
-        myr.left   = xc - i+i/2;
-        myr.right  = xc + i/2;
-        myr.top    = yc - i+i/2;
-        myr.bottom = yc + i/2;
-        i= !(uFlags & (DFCS_INACTIVE|DFCS_PUSHED)) ? COLOR_WINDOW : COLOR_BTNFACE;
-        hpsave = (HPEN)SelectObject(dc, GetSysColorPen(i));
-        hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(i));
-        Ellipse(dc, myr.left, myr.top, myr.right, myr.bottom);
-        SelectObject(dc, hbsave);
-        SelectObject(dc, hpsave);
     }
 
     if(uFlags & DFCS_CHECKED)
     {
-        i = 6*SmallDiam/16;
-        i = i < 1 ? 1 : i;
-        myr.left   = xc - i+i/2;
-        myr.right  = xc + i/2;
-        myr.top    = yc - i+i/2;
-        myr.bottom = yc + i/2;
+        LPCTSTR Check = TEXT("i");
 
-        i = uFlags & DFCS_INACTIVE ? COLOR_BTNSHADOW : COLOR_WINDOWTEXT;
-        hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(i));
-        hpsave = (HPEN)SelectObject(dc, GetSysColorPen(i));
-        Ellipse(dc, myr.left, myr.top, myr.right, myr.bottom);
-        SelectObject(dc, hpsave);
-        SelectObject(dc, hbsave);
+        SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
+        TextOut(dc, rc.left, rc.top, Check, 1);
     }
-
-    /* FIXME: M$ has a Polygon in the center at relative points: */
-    /* 0.476, 0.476 (times SmallDiam, SmallDiam) */
-    /* 0.476, 0.525 */
-    /* 0.500, 0.500 */
-    /* 0.500, 0.499 */
-    /* when the button is unchecked. The reason for it is unknown. The */
-    /* color is COLOR_BTNHIGHLIGHT, although the Polygon gets painted at */
-    /* least 3 times (it looks like a clip-region when you see it happen). */
-    /* I do not really see a reason why this should be implemented. If you */
-    /* have a good reason, let me know. Maybe this is a quirk in the Marlett */
-    /* font. */
+    
+    SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
+    SelectObject(dc, hOldFont);
 
     return TRUE;
 }
