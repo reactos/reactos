@@ -111,8 +111,8 @@ BOOLEAN
 NTAPI
 ExEnumHandleTable(
     IN PHANDLE_TABLE HandleTable,
-    IN PVOID Callback,
-    IN OUT PVOID Param,
+    IN PEX_ENUM_HANDLE_CALLBACK EnumHandleProcedure,
+    IN OUT PVOID Context,
     OUT PHANDLE Handle OPTIONAL
 );
 

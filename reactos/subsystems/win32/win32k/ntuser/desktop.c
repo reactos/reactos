@@ -297,6 +297,7 @@ IntParseDesktopPath(PEPROCESS Process,
 
    if(!WinStaPresent)
    {
+#if 0
       /* search the process handle table for (inherited) window station
          handles, use a more appropriate one than WinSta0 if possible. */
       if (!ObFindHandleForObject(Process,
@@ -304,6 +305,7 @@ IntParseDesktopPath(PEPROCESS Process,
                                  ExWindowStationObjectType,
                                  NULL,
                                  (PHANDLE)hWinSta))
+#endif
       {
             /* we had no luck searching for opened handles, use WinSta0 now */
             RtlInitUnicodeString(&WinSta, L"WinSta0");
@@ -312,6 +314,7 @@ IntParseDesktopPath(PEPROCESS Process,
 
    if(!DesktopPresent && hDesktop != NULL)
    {
+#if 0
       /* search the process handle table for (inherited) desktop
          handles, use a more appropriate one than Default if possible. */
       if (!ObFindHandleForObject(Process,
@@ -319,6 +322,7 @@ IntParseDesktopPath(PEPROCESS Process,
                                  ExDesktopObjectType,
                                  NULL,
                                  (PHANDLE)hDesktop))
+#endif
       {
          /* we had no luck searching for opened handles, use Desktop now */
          RtlInitUnicodeString(&Desktop, L"Default");
@@ -496,6 +500,10 @@ IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject)
          DPRINT1("Unable to create a desktop handle\n");
          return NULL;
       }
+   }
+   else
+   {
+       DPRINT1("Got handle: %lx\n", Ret);
    }
 
    return Ret;

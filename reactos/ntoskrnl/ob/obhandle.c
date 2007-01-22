@@ -177,10 +177,46 @@ ObpEnumFindHandleProcedure(IN PHANDLE_TABLE_ENTRY HandleEntry,
                            IN HANDLE Handle,
                            IN PVOID Context)
 {
-    /* FIXME: TODO */
-    DPRINT1("Not yet implemented!\n");
-    KEBUGCHECK(0);
-    return FALSE;
+    POBJECT_HEADER ObjectHeader;
+    ACCESS_MASK GrantedAccess;
+    ULONG HandleAttributes;
+    POBP_FIND_HANDLE_DATA FindData = Context;
+
+    /* Get the object header */
+    ObjectHeader = ObpGetHandleObject(HandleEntry);
+
+    /* Make sure it's valid and matching */
+    if ((FindData->ObjectHeader) && (FindData->ObjectHeader != ObjectHeader))
+    {
+        /* No match, fail */
+        return FALSE;
+    }
+
+    /* Now attempt to match the object type */
+    if ((FindData->ObjectType) && (FindData->ObjectType != ObjectHeader->Type))
+    {
+        /* No match, fail */
+        return FALSE;
+    }
+
+    /* Check if we have extra information */
+    if (FindData->HandleInformation)
+    {
+        /* Get the granted access and attributes */
+        GrantedAccess = HandleEntry->GrantedAccess;
+        HandleAttributes = HandleEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
+
+        /* Attempt to match them */
+        if ((FindData->HandleInformation->HandleAttributes != HandleAttributes) ||
+            (FindData->HandleInformation->GrantedAccess != GrantedAccess))
+        {
+            /* No match, fail */
+            return FALSE;
+        }
+    }
+
+    /* We have a match */
+    return TRUE;
 }
 
 POBJECT_HANDLE_COUNT_ENTRY

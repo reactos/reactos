@@ -39,7 +39,7 @@ ExpLookupHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     ULONG_PTR TableBase;
     PHANDLE_TABLE_ENTRY Entry = NULL;
     EXHANDLE Handle = LookupHandle;
-    PCHAR Level1, Level2, Level3;
+    PUCHAR Level1, Level2, Level3;
 
     /* Clear the tag bits and check what the next handle is */
     Handle.TagBits = 0;
@@ -1238,4 +1238,62 @@ ExSweepHandleTable(IN PHANDLE_TABLE HandleTable,
         /* Skip past the last entry */
         Handle.Value += SizeOfHandle(1);
     }
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+ExEnumHandleTable(IN PHANDLE_TABLE HandleTable,
+                  IN PEX_ENUM_HANDLE_CALLBACK EnumHandleProcedure,
+                  IN OUT PVOID Context,
+                  OUT PHANDLE EnumHandle OPTIONAL)
+{
+    EXHANDLE Handle;
+    PHANDLE_TABLE_ENTRY HandleTableEntry;
+    BOOLEAN Result = FALSE;
+    PAGED_CODE();
+
+    /* Enter a critical region */
+    KeEnterCriticalRegion();
+
+    /* Set the initial value and loop the entries */
+    Handle.Value = 0;
+    while ((HandleTableEntry = ExpLookupHandleTableEntry(HandleTable, Handle)))
+    {
+        /* Validate the entry */
+        if ((HandleTableEntry) &&
+            (HandleTableEntry->Object) &&
+            (HandleTableEntry->NextFreeTableEntry != -2) &&
+            (HandleTableEntry->Object != (PVOID)0xCDCDCDCD)) // HACK OF ETERNAL LAPDANCE
+        {
+            /* Lock the entry */
+            if (ExpLockHandleTableEntry(HandleTable, HandleTableEntry))
+            {
+                /* Notify the callback routine */
+                Result = EnumHandleProcedure(HandleTableEntry,
+                                             Handle.GenericHandleOverlay,
+                                             Context);
+
+                /* Unlock it */
+                ExUnlockHandleTableEntry(HandleTable, HandleTableEntry);
+
+                /* Was this the one looked for? */
+                if (Result)
+                {
+                    /* If so, return it if requested */
+                    if (EnumHandle) *EnumHandle = Handle.GenericHandleOverlay;
+                    break;
+                }
+            }
+        }
+
+        /* Go to the next entry */
+        Handle.Value += SizeOfHandle(1);
+    }
+
+    /* Leave the critical region and return callback result */
+    KeLeaveCriticalRegion();
+    return Result;
 }

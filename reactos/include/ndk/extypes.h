@@ -362,6 +362,17 @@ NTSTATUS
 #else
 
 //
+// Handle Enumeration Callback
+//
+struct _HANDLE_TABLE_ENTRY;
+typedef BOOLEAN
+(NTAPI *PEX_ENUM_HANDLE_CALLBACK)(
+    IN struct _HANDLE_TABLE_ENTRY *HandleTableEntry,
+    IN HANDLE Handle,
+    IN PVOID Context
+);
+
+//
 // Compatibility with Windows XP Drivers using ERESOURCE
 //
 typedef struct _ERESOURCE_XP
