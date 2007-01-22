@@ -2137,7 +2137,7 @@ void ME_RegisterEditorClass(HINSTANCE hInstance)
   wcW.cbWndExtra = 4;
   wcW.hInstance = NULL; /* hInstance would register DLL-local class */
   wcW.hIcon = NULL;
-  wcW.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_IBEAM));
+  wcW.hCursor = LoadCursorW(NULL, (LPCWSTR) IDC_IBEAM);
   wcW.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
   wcW.lpszMenuName = NULL;
   wcW.lpszClassName = wszClassName;
@@ -2153,7 +2153,7 @@ void ME_RegisterEditorClass(HINSTANCE hInstance)
   wcA.cbWndExtra = 4;
   wcA.hInstance = NULL; /* hInstance would register DLL-local class */
   wcA.hIcon = NULL;
-  wcA.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_IBEAM));
+  wcA.hCursor = LoadCursorA(NULL, (LPCSTR) IDC_IBEAM);
   wcA.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
   wcA.lpszMenuName = NULL;
   wcA.lpszClassName = "RichEdit20A";

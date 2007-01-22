@@ -939,7 +939,7 @@ static BOOL RegisterWindowClasses (void)
     text_position.cbWndExtra = 0;
     text_position.hInstance = hinst;
     text_position.hIcon = NULL;
-    text_position.hCursor = LoadCursorA(NULL, MAKEINTRESOURCEA(IDC_ARROW));
+    text_position.hCursor = LoadCursorA(NULL, (LPCSTR) IDC_ARROW);
     text_position.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     text_position.lpszMenuName = NULL;
     text_position.lpszClassName = szEditTextPositionClass;
