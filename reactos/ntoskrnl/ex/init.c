@@ -1,11 +1,11 @@
 /*
-* PROJECT:         ReactOS Kernel
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/ex/init.c
-* PURPOSE:         Executive Initialization Code
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*                  Eric Kohl (ekohl@rz-online.de)
-*/
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/ex/init.c
+ * PURPOSE:         Executive Initialization Code
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Eric Kohl (ekohl@rz-online.de)
+ */
 
 /* INCLUDES ******************************************************************/
 

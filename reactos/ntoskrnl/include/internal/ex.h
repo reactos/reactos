@@ -68,6 +68,36 @@ typedef struct
 #define ExRundownCompleted                              _ExRundownCompleted
 #define ExGetPreviousMode                               KeGetPreviousMode
 
+//
+// Detect GCC 4.1.2+
+//
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40102
+
+//
+// Broken GCC with Alignment Bug. We'll do alignment ourselves at higher cost.
+//
+#define DEFINE_WAIT_BLOCK(x)                                \
+    struct _AlignHack                                       \
+    {                                                       \
+        UCHAR Hack[15];                                     \
+        EX_PUSH_LOCK_WAIT_BLOCK UnalignedBlock;             \
+    } WaitBlockBuffer;                                      \
+    PEX_PUSH_LOCK_WAIT_BLOCK x = (PEX_PUSH_LOCK_WAIT_BLOCK) \
+        ((ULONG_PTR)&WaitBlockBuffer.UnalignedBlock &~ 0xF);
+        
+#else
+
+//
+// This is only for compatibility; the compiler will optimize the extra
+// local variable (the actual pointer) away, so we don't take any perf hit
+// by doing this.
+//
+#define DEFINE_WAIT_BLOCK(x)                                \
+    EX_PUSH_LOCK_WAIT_BLOCK WaitBlockBuffer;                \
+    PEX_PUSH_LOCK_WAIT_BLOCK x = &WaitBlockBuffer;
+    
+#endif
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID
@@ -596,6 +626,23 @@ _ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
 
 /* PUSHLOCKS *****************************************************************/
 
+/* FIXME: VERIFY THESE! */
+
+VOID
+FASTCALL
+ExBlockPushLock(PEX_PUSH_LOCK PushLock,
+                PVOID WaitBlock);
+
+VOID
+FASTCALL
+ExfUnblockPushLock(PEX_PUSH_LOCK PushLock,
+                   PVOID CurrentWaitBlock);
+
+VOID
+FASTCALL
+ExWaitForUnblockPushLock(IN PEX_PUSH_LOCK PushLock,
+                         IN PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock);
+
 /*++
  * @name ExInitializePushLock
  * INTERNAL MACRO
@@ -751,12 +798,16 @@ VOID
 FORCEINLINE
 ExWaitOnPushLock(PEX_PUSH_LOCK PushLock)
 {
-    /* Acquire the lock */
-    ExfAcquirePushLockExclusive(PushLock);
-    ASSERT(PushLock->Locked);
+    /* Check if we're locked */
+    if (PushLock->Locked)
+    {
+        /* Acquire the lock */
+        ExfAcquirePushLockExclusive(PushLock);
+        ASSERT(PushLock->Locked);
 
-    /* Release it */
-    ExfReleasePushLockExclusive(PushLock);
+        /* Release it */
+        ExfReleasePushLockExclusive(PushLock);
+    }
 }
 
 /*++
