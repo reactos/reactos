@@ -109,7 +109,7 @@ BOOL WINAPI StackWalk(DWORD MachineType, HANDLE hProcess, HANDLE hThread,
 
     if (curr_mode == stm_start)
     {
-        THREAD_BASIC_INFORMATION info;
+        /*THREAD_BASIC_INFORMATION info;*/
 
         if ((frame->AddrPC.Mode == AddrModeFlat) &&
             (frame->AddrFrame.Mode != AddrModeFlat))

@@ -176,15 +176,15 @@ char *hookup(char *host, int port)
 		code = -1;
 		goto bad;
 	}
-        cin = cout = s;
+	cin = cout = s;
 	if (verbose) {
 		printf("Connected to %s.\n", hostname);
 		(void) fflush(stdout);
 	}
 	if (getreply(0) > 2) { 	/* read startup message from server */
-           closesocket(cin);
-           code = -1;
-           goto bad;
+		closesocket(cin);
+		code = -1;
+		goto bad;
 	}
 #ifdef SO_OOBINLINE
 	{
@@ -222,26 +222,26 @@ int login(const char *host)
 		acct = pacct;
 	}
 	while (user == NULL) {
-           const char *myname = "none"; // This needs to become the usename env
+		const char *myname = "none"; // This needs to become the usename env
 
-           if (myname)
-              printf("Name (%s:%s): ", host, myname);
-           else
-              printf("Name (%s): ", host);
-	   (void) fflush(stdout);
-           (void) fgets(tmp, sizeof(tmp) - 1, stdin);
-           tmp[strlen(tmp) - 1] = '\0';
-           if (*tmp == '\0')
-              user = myname;
-           else
-              user = tmp;
+		if (myname)
+			printf("Name (%s:%s): ", host, myname);
+		else
+			printf("Name (%s): ", host);
+		(void) fflush(stdout);
+		(void) fgets(tmp, sizeof(tmp) - 1, stdin);
+		tmp[strlen(tmp) - 1] = '\0';
+		if (*tmp == '\0')
+			user = myname;
+		else
+			user = tmp;
 	}
 	n = command("USER %s", user);
 	if (n == CONTINUE) {
 		if (pass == NULL)
 			pass = getpass("Password:");
 		n = command("PASS %s", pass);
-                fflush(stdin);
+		fflush(stdin);
 	}
 	if (n == CONTINUE) {
 		aflag++;
@@ -284,7 +284,7 @@ int command(const char *fmt, ...)
 {
 	va_list ap;
 	int r;
-	void (*oldintr)(int), cmdabort(int);
+	void (*oldintr)(int);
 
 	abrtflag = 0;
 	if (debug) {
@@ -301,16 +301,16 @@ int command(const char *fmt, ...)
 		return (0);
 	}
 	oldintr = signal(SIGINT,cmdabort);
-        {
-           char buffer[1024];
+	{
+		char buffer[1024];
 
-           va_start(ap, fmt);
-           vsprintf(buffer, fmt, ap);
-           va_end(ap);
+		va_start(ap, fmt);
+		vsprintf(buffer, fmt, ap);
+		va_end(ap);
 //DLJ: to work through  firewalls - send the command as a single message
-		   strcat(buffer,"\r\n");
-           fprintfSocket(cout, buffer);
-        }
+		strcat(buffer,"\r\n");
+		fprintfSocket(cout, buffer);
+	}
 //DLJ: the following two lines are replaced by the strcat above - seems to
 // make it work through firewalls.
 //	fprintfSocket(cout, "\r\n");
@@ -335,7 +335,7 @@ getreply(expecteof)
 	register int dig;
 	register char *cp;
 	int originalcode = 0, continuation = 0;
-	void (*oldintr)(int), cmdabort(int);
+	void (*oldintr)(int);
 	int pflag = 0;
 	char *pt = pasv;
 
@@ -460,7 +460,7 @@ void abortsend()
 void sendrequest(const char *cmd, const char *local, const char *remote, int printnames)
 {
 	FILE *fin;
-        int dout = 0;
+	int dout = 0;
 	int (*closefunc)(), _pclose(), fclose();
 	sig_t (*oldintr)(), (*oldintp)();
 	char buf[BUFSIZ], *bufp;
@@ -624,39 +624,39 @@ null();//	oldintp = signal(SIGPIPE, SIG_IGN);
 
 	case TYPE_A:
 		{
-        char buf[1024];
+		char buf[1024];
 		static int bufsize = 1024;
 		int ipos=0;
 
 		while ((c = getc(fin)) != EOF) {
-                   if (c == '\n') {
-                      while (hash && (bytes >= hashbytes)) {
-                         (void) putchar('#');
-                         (void) fflush(stdout);
-                         hashbytes += HASHBYTES;
-                      }
+			if (c == '\n') {
+				while (hash && (bytes >= hashbytes)) {
+					(void) putchar('#');
+					(void) fflush(stdout);
+					hashbytes += HASHBYTES;
+				}
 // Szurgot: The following code is unncessary on Win32.
-//                      (void) fputcSocket(dout, '\r');
-//                         bytes++;
-                   }
+//				(void) fputcSocket(dout, '\r');
+//				bytes++;
+			}
 
-				   if (ipos >= bufsize) {
-						fputSocket(dout,buf,ipos);
-						if(!hash) (void) putchar('.');
-						ipos=0;
-				   }
-				   buf[ipos]=c; ++ipos;
-				   bytes++;
+			if (ipos >= bufsize) {
+				fputSocket(dout,buf,ipos);
+				if(!hash) (void) putchar('.');
+				ipos=0;
+			}
+			buf[ipos]=c; ++ipos;
+			bytes++;
 		}
 		if (ipos) {
 			fputSocket(dout,buf,ipos);
 			ipos=0;
 		}
 		if (hash) {
-                   if (bytes < hashbytes)
-                      (void) putchar('#');
-                   (void) putchar('\n');
-                   (void) fflush(stdout);
+			if (bytes < hashbytes)
+			(void) putchar('#');
+			(void) putchar('\n');
+			(void) fflush(stdout);
 		}
 		else {
 			(void) putchar('.');
@@ -664,13 +664,13 @@ null();//	oldintp = signal(SIGPIPE, SIG_IGN);
 			(void) fflush(stdout);
 		}
 		if (ferror(fin))
-                   perror(local);
+			perror(local);
 //		if (ferror(dout)) {
 //			if (errno != EPIPE)
 //				perror("netout");
 //			bytes = -1;
 //		}
-                break;
+		break;
 		}
 	}
 	(void) gettimeofday(&stop, (struct timezone *)0);
@@ -734,13 +734,13 @@ void recvrequest(const char *cmd, const char *local, const char *remote, const c
                 int printnames)
 {
 	FILE *fout = stdout;
-        int din = 0;
+	int din = 0;
 	int (*closefunc)(), _pclose(), fclose();
 	void (*oldintr)(int), (*oldintp)(int);
 	int oldverbose = 0, oldtype = 0, is_retr, tcrflag, nfnd, bare_lfs = 0;
 	char msg;
 //	static char *buf; // Szurgot: Shouldn't this go SOMEWHERE?
-        char buf[1024];
+	char buf[1024];
 	static int bufsize = 1024;
 	long bytes = 0, hashbytes = HASHBYTES;
 //	struct
@@ -783,45 +783,45 @@ null();//	oldintr = signal(SIGINT, abortrecv);
 	if (strcmp(local, "-") && *local != '|') {
 #ifndef _WIN32
 // This whole thing is a problem... access Won't work on non-existent files
-           if (access(local, 2) < 0) {
-              char *dir = rindex(local, '/');
+		if (access(local, 2) < 0) {
+			char *dir = rindex(local, '/');
 
-              if (errno != ENOENT && errno != EACCES) {
-                 perror(local);
-                 (void) signal(SIGINT, oldintr);
-                 code = -1;
-                 return;
-              }
-              if (dir != NULL)
-                 *dir = 0;
-              d = access(dir ? local : ".", 2);
-              if (dir != NULL)
-                 *dir = '/';
-              if (d < 0) {
-                 perror(local);
-                 (void) signal(SIGINT, oldintr);
-                 code = -1;
-                 return;
-              }
-              if (!runique && errno == EACCES &&
-                  chmod(local, 0600) < 0) {
-                 perror(local);
-                 (void) signal(SIGINT, oldintr);
-                 code = -1;
-                 return;
-              }
-              if (runique && errno == EACCES &&
-                  (local = gunique(local)) == NULL) {
-                 (void) signal(SIGINT, oldintr);
-                 code = -1;
-                 return;
-              }
-           }
-           else if (runique && (local = gunique(local)) == NULL) {
-              (void) signal(SIGINT, oldintr);
-              code = -1;
-              return;
-           }
+			if (errno != ENOENT && errno != EACCES) {
+				perror(local);
+				(void) signal(SIGINT, oldintr);
+				code = -1;
+				return;
+			}
+			if (dir != NULL)
+				*dir = 0;
+			d = access(dir ? local : ".", 2);
+			if (dir != NULL)
+				*dir = '/';
+			if (d < 0) {
+				perror(local);
+				(void) signal(SIGINT, oldintr);
+				code = -1;
+				return;
+			}
+			if (!runique && errno == EACCES &&
+			    chmod(local, 0600) < 0) {
+				perror(local);
+				(void) signal(SIGINT, oldintr);
+				code = -1;
+				return;
+			}
+			if (runique && errno == EACCES &&
+			    (local = gunique(local)) == NULL) {
+				(void) signal(SIGINT, oldintr);
+				code = -1;
+				return;
+			}
+		}
+		else if (runique && (local = gunique(local)) == NULL) {
+			(void) signal(SIGINT, oldintr);
+			code = -1;
+			return;
+		}
 #endif
 	}
 	if (initconn()) {
@@ -926,15 +926,15 @@ null();//		oldintp = signal(SIGPIPE, SIG_IGN);
 //			if ((d = write(fileno(fout), buf, c)) != c)
 //				break;
 		while ((c = recv(din, buf, bufsize, 0)) > 0) {
-                   write(fileno(fout), buf, c);
-                   bytes += c;
-                   if (hash) {
-                      while (bytes >= hashbytes) {
-                         (void) putchar('#');
-                         hashbytes += HASHBYTES;
-                      }
-                      (void) fflush(stdout);
-                   }
+			write(fileno(fout), buf, c);
+			bytes += c;
+			if (hash) {
+				while (bytes >= hashbytes) {
+					(void) putchar('#');
+					hashbytes += HASHBYTES;
+				}
+				(void) fflush(stdout);
+			}
 		}
 		if (hash && bytes > 0) {
 			if (bytes < HASHBYTES)
@@ -981,23 +981,23 @@ done:
 			if (c == '\n')
 				bare_lfs++;
 			while (c == '\r') {
-                           while (hash && (bytes >= hashbytes)) {
-                              (void) putchar('#');
-                              (void) fflush(stdout);
-                              hashbytes += HASHBYTES;
-                           }
-                           bytes++;
-                           if ((c = fgetcSocket(din)) != '\n' || tcrflag) {
-                              if (ferror(fout))
-                                 goto break2;
-                              (void) putc('\r', fout);
-                              if (c == '\0') {
-                                 bytes++;
-                                 goto contin2;
-                              }
-                              if (c == EOF)
-                                 goto contin2;
-                           }
+				while (hash && (bytes >= hashbytes)) {
+					(void) putchar('#');
+					(void) fflush(stdout);
+					hashbytes += HASHBYTES;
+				}
+				bytes++;
+				if ((c = fgetcSocket(din)) != '\n' || tcrflag) {
+					if (ferror(fout))
+					goto break2;
+					(void) putc('\r', fout);
+					if (c == '\0') {
+						bytes++;
+						goto contin2;
+					}
+					if (c == EOF)
+						goto contin2;
+				}
 			}
 			(void) putc(c, fout);
 			bytes++;
@@ -1089,7 +1089,7 @@ null();//		(void) signal(SIGINT,oldintr);
 	fprintfSocket(cout,"%c%c",IAC,IP);
 	msg = (char)IAC;
 /* send IAC in urgent mode instead of DM because UNIX places oob mark */
-/* after urgent byte rather than before as now is protocol            */
+/* after urgent byte rather than before as now is protocol */
 	if (send(cout,&msg,1,MSG_OOB) != 1) {
 		perror("abort");
 	}
@@ -1154,51 +1154,51 @@ initconn()
 
 
 	if (passivemode) {
-      data = socket(AF_INET, SOCK_STREAM, 0);
-      if (data < 0) {
-        perror("ftp: socket");
-        return(1);
-      }
-      if ((options & SO_DEBUG) &&
-          setsockopt(data, SOL_SOCKET, SO_DEBUG, (char *)&on,
-                     sizeof (on)) < 0)
-        perror("ftp: setsockopt (ignored)");
-      if (command("PASV") != COMPLETE) {
-        printf("Passive mode refused.\n");
-        goto bad;
-      }
+		data = socket(AF_INET, SOCK_STREAM, 0);
+		if (data < 0) {
+			perror("ftp: socket");
+			return(1);
+		}
+		if ((options & SO_DEBUG) &&
+		    setsockopt(data, SOL_SOCKET, SO_DEBUG, (char *)&on,
+		    sizeof (on)) < 0)
+			perror("ftp: setsockopt (ignored)");
+		if (command("PASV") != COMPLETE) {
+			printf("Passive mode refused.\n");
+			goto bad;
+		}
 
-      /*
-       * What we've got at this point is a string of comma
-       * separated one-byte unsigned integer values.
-       * The first four are the an IP address. The fifth is
-       * the MSB of the port number, the sixth is the LSB.
-       * From that we'll prepare a sockaddr_in.
-       */
+		/*
+		 * What we've got at this point is a string of comma
+		 * separated one-byte unsigned integer values.
+		 * The first four are the an IP address. The fifth is
+		 * the MSB of the port number, the sixth is the LSB.
+		 * From that we'll prepare a sockaddr_in.
+		 */
 
-      if (sscanf(pasv,"%d,%d,%d,%d,%d,%d",
-                 &a0, &a1, &a2, &a3, &p0, &p1) != 6) {
-        printf("Passive mode address scan failure. Shouldn't happen!\n");
-        goto bad;
-      }
+		if (sscanf(pasv,"%d,%d,%d,%d,%d,%d",
+		    &a0, &a1, &a2, &a3, &p0, &p1) != 6) {
+			printf("Passive mode address scan failure. Shouldn't happen!\n");
+			goto bad;
+		}
 
-      bzero(&data_addr, sizeof(data_addr));
-      data_addr.sin_family = AF_INET;
-      a = (char *)&data_addr.sin_addr.s_addr;
-      a[0] = a0 & 0xff;
-      a[1] = a1 & 0xff;
-      a[2] = a2 & 0xff;
-      a[3] = a3 & 0xff;
-      p = (char *)&data_addr.sin_port;
-      p[0] = p0 & 0xff;
-      p[1] = p1 & 0xff;
+		bzero(&data_addr, sizeof(data_addr));
+		data_addr.sin_family = AF_INET;
+		a = (char *)&data_addr.sin_addr.s_addr;
+		a[0] = a0 & 0xff;
+		a[1] = a1 & 0xff;
+		a[2] = a2 & 0xff;
+		a[3] = a3 & 0xff;
+		p = (char *)&data_addr.sin_port;
+		p[0] = p0 & 0xff;
+		p[1] = p1 & 0xff;
 
-      if (connect(data, (struct sockaddr *)&data_addr,
-                  sizeof(data_addr)) < 0) {
-        perror("ftp: connect");
-        goto bad;
-      }
-      return(0);
+		if (connect(data, (struct sockaddr *)&data_addr,
+		    sizeof(data_addr)) < 0) {
+			perror("ftp: connect");
+			goto bad;
+		}
+		return(0);
 	}
 
 
@@ -1262,26 +1262,26 @@ bad:
 
 int dataconn(const char *mode)
 {
-   struct sockaddr_in from;
-   int s, fromlen = sizeof (from);
+	struct sockaddr_in from;
+	int s, fromlen = sizeof (from);
 
-   if (passivemode)
-     return (data);
+	if (passivemode)
+		return (data);
 
-   s = accept(data, (struct sockaddr *) &from, &fromlen);
-   if (s < 0) {
-      perror("ftp: accept");
-      (void) closesocket(data), data = -1;
-      return (int) (NULL);
-   }
+	s = accept(data, (struct sockaddr *) &from, &fromlen);
+	if (s < 0) {
+		perror("ftp: accept");
+		(void) closesocket(data), data = -1;
+		return (int) (NULL);
+	}
 	if(closesocket(data)) {
 		int iret=WSAGetLastError ();
 		fprintf(stdout,"Error closing socket(%d)\n",iret);
 		(void) fflush(stdout);
 	}
 
-   data = s;
-   return (data);
+	data = s;
+	return (data);
 }
 
 void ptransfer(direction, bytes, t0, t1)
@@ -1356,7 +1356,7 @@ void pswitch(int flag)
 	struct comvars *ip, *op;
 
 	abrtflag = 0;
-    oldintr = signal(SIGINT, psabort);
+	oldintr = signal(SIGINT, psabort);
 	if (flag) {
 		if (proxy)
 			return;
@@ -1415,7 +1415,7 @@ void pswitch(int flag)
 	(void) strncpy(ip->mo, mapout, MAXPATHLEN - 1);
 	(ip->mo)[strlen(ip->mo)] = '\0';
 	(void) strcpy(mapout, op->mo);
-//        (void) signal(SIGINT, oldintr);
+//	(void) signal(SIGINT, oldintr);
 	if (abrtflag) {
 		abrtflag = 0;
 		(*oldintr)(1);
@@ -1816,5 +1816,5 @@ gunique(local)
 
 int null(void)
 {
-   return 0;
+	return 0;
 }
