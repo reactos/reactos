@@ -321,7 +321,7 @@ ExpFreeHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         /* Get the current value and write */
         OldValue = *Free;
         HandleTableEntry->NextFreeTableEntry = (ULONG)OldValue;
-        if (InterlockedCompareExchange(Free, NewValue, OldValue) == OldValue)
+        if (InterlockedCompareExchange((PLONG) Free, NewValue, OldValue) == OldValue)
         {
             /* Break out, we're done. Make sure the handle value makes sense */
             ASSERT((OldValue & FREE_HANDLE_MASK) <
@@ -596,7 +596,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
     }
 
     /* Update the index of the next handle */
-    Index = InterlockedExchangeAdd(&HandleTable->NextHandleNeedingPool,
+    Index = InterlockedExchangeAdd((PLONG) &HandleTable->NextHandleNeedingPool,
                                    SizeOfHandle(LOW_LEVEL_ENTRIES));
 
     /* Check if need to initialize the table */
@@ -613,7 +613,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
             Low[LOW_LEVEL_ENTRIES - 1].NextFreeTableEntry = FirstFree;
 
             /* Change the index */
-            NewFree = InterlockedCompareExchange(&HandleTable->FirstFree,
+            NewFree = InterlockedCompareExchange((PLONG) &HandleTable->FirstFree,
                                                  Index,
                                                  FirstFree);
             if (NewFree == FirstFree) break;
@@ -631,7 +631,7 @@ ExpMoveFreeHandles(IN PHANDLE_TABLE HandleTable)
     ULONG LastFree, i;
 
     /* Clear the last free index */
-    LastFree = InterlockedExchange(&HandleTable->LastFree, 0);
+    LastFree = InterlockedExchange((PLONG) &HandleTable->LastFree, 0);
 
     /* Check if we had no index */
     if (!LastFree) return LastFree;
@@ -647,7 +647,7 @@ ExpMoveFreeHandles(IN PHANDLE_TABLE HandleTable)
     if (!HandleTable->StrictFIFO)
     {
         /* Update the first free index */
-        if (!InterlockedCompareExchange(&HandleTable->FirstFree, LastFree, 0))
+        if (!InterlockedCompareExchange((PLONG) &HandleTable->FirstFree, LastFree, 0))
         {
             /* We're done, exit */
             return LastFree;
@@ -744,7 +744,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
         /* Now get the next value and do the compare */
         NewValue = Entry->NextFreeTableEntry;
-        NewValue1 = InterlockedCompareExchange(&HandleTable->FirstFree,
+        NewValue1 = InterlockedCompareExchange((PLONG) &HandleTable->FirstFree,
                                                NewValue,
                                                OldValue);
 
@@ -911,7 +911,7 @@ ExUnlockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
            (KeGetCurrentIrql() == APC_LEVEL));
 
     /* Set the lock bit and make sure it wasn't earlier */
-    OldValue = InterlockedOr(&HandleTableEntry->Value,
+    OldValue = InterlockedOr((PLONG) &HandleTableEntry->Value,
                              EXHANDLE_TABLE_ENTRY_LOCK_BIT);
     ASSERT((OldValue & EXHANDLE_TABLE_ENTRY_LOCK_BIT) == 0);
 
