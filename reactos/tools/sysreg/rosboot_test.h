@@ -13,6 +13,10 @@
 
 #include "reg_test.h"
 #include <vector>
+#ifndef WIN32
+#include <unistd.h>
+#define _sleep sleep
+#endif
 
 namespace Sysreg_
 {

@@ -22,6 +22,7 @@ SYSREGBUILD_SOURCES = $(addprefix $(SYSREGBUILD_BASE_),\
 	conf_parser.cpp \
 	env_var.cpp \
 	pipe_reader.cpp \
+	namedpipe_reader.cpp \
 	rosboot_test.cpp \
 	sysreg.cpp \
 	file_reader.cpp \

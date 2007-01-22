@@ -5,7 +5,7 @@
  * FILE:        tools/sysreg/namedpipe_reader.cpp
  * PURPOSE:     pipe reader support
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
- *				Christoph von Wittich (Christoph@ApiViewer.de)
+ *              Christoph von Wittich (Christoph_vW@ReactOS.org)
  */
 
 #include "namedpipe_reader.h"
@@ -20,7 +20,7 @@ namespace System_
 
 	using std::vector;
 //---------------------------------------------------------------------------------------
-	NamedPipeReader::NamedPipeReader() : h_Pipe(NULL)
+	NamedPipeReader::NamedPipeReader() : h_Pipe(NULLVAL)
 	{
 
 	}
@@ -35,15 +35,13 @@ namespace System_
 
 	bool NamedPipeReader::openPipe(string const & PipeCmd)
 	{
-		if (h_Pipe != NULL)
+		if (h_Pipe != NULLVAL)
 		{
 			cerr << "NamedPipeReader::openPipe> pipe already open" << endl;
 			return false;
 		}
 
-#ifdef __LINUX__
-
-#else
+#ifdef WIN32
 		h_Pipe = CreateFile(PipeCmd.c_str(),
 			GENERIC_WRITE | GENERIC_READ,
 			0,
@@ -55,6 +53,7 @@ namespace System_
 
 		if(INVALID_HANDLE_VALUE == h_Pipe) {
 			cerr << "NamedPipeReader::openPipe> failed to open pipe " << PipeCmd << GetLastError() << endl;
+			h_Pipe = NULLVAL;
 			return false;
 		}
 		else
@@ -66,7 +65,19 @@ namespace System_
 		ConnectNamedPipe(
 			h_Pipe,
 			0);
+#else
+		h_Pipe = open("PipeCmd.c_str()", O_RDONLY);
 
+		if(INVALID_HANDLE_VALUE == h_Pipe) {
+			cerr << "NamedPipeReader::openPipe> failed to open pipe " << PipeCmd << endl;
+			h_Pipe = NULLVAL;
+			return false;
+		}
+		else
+		{
+			cout << "NamedPipeReader::openPipe> successfully opened pipe" << endl;
+			return true;
+		}
 #endif
 
 	}
@@ -82,14 +93,14 @@ namespace System_
 		}
 
 
-#ifdef __LINUX__
-
+#ifndef WIN32
+		close(h_Pipe);
 #else
 		DisconnectNamedPipe(h_Pipe);
 		CloseHandle(h_Pipe);
 #endif
 
-		h_Pipe = NULL;
+		h_Pipe = NULLVAL;
 		return true;
 	}
 //---------------------------------------------------------------------------------------
@@ -193,7 +204,7 @@ namespace System_
 		localbuf = (char*) HeapAlloc(GetProcessHeap(), 0, localsize * sizeof(char));
 #ifdef UNICODE
 		wchar_t * wbuf = (WCHAR*) HeapAlloc(GetProcessHeap(), 0, localsize * sizeof(wchar_t));
-#endif
+#endif /* UNICODE */
 		if (localbuf != NULL)
 		{
 			bool append_line = false;
@@ -205,7 +216,7 @@ namespace System_
 					ZeroMemory(localbuf, localsize * sizeof(char));
 #ifdef UNICODE
 					ZeroMemory(wbuf, localsize * sizeof(wchar_t));
-#endif
+#endif /* UNICODE */
 
 					fSuccess = ReadFile( 
 						h_Pipe,
@@ -222,9 +233,9 @@ namespace System_
 					{
 						extractLines(wbuf, vect, append_line, cbRead);
 					}
-#else
+#else /* UNICODE */
 					extractLines(localbuf, vect, append_line, cbRead);
-#endif
+#endif /* UNICODE */
 
 				} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
 			} while (append_line);
@@ -235,13 +246,52 @@ namespace System_
 			HeapFree(GetProcessHeap(), 0, localbuf);
 #ifdef UNICODE
 			HeapFree(GetProcessHeap(), 0, wbuf);
-#endif
+#endif /* UNICODE */
 		}
 		else
 		{
 			return 0;
 		}
-#endif
+
+#else /* WIN32 */
+
+	localbuf = (char*) malloc(localsize * sizeof(char));		
+	if (localbuf != NULL)
+	{
+
+		DWORD cbRead;
+
+		bool append_line = false;
+		do
+		{
+			do 
+			{ 
+				memset(localbuf, 0, localsize * sizeof(char));
+
+				cbRead = read(h_Pipe,
+						localbuf,
+						(localsize-1) * sizeof(char));
+				 
+				if (cbRead > 0)
+				{
+					extractLines(localbuf, vect, append_line, cbRead);
+				}
+
+			} while (!cbRead);  // repeat loop as long as there is data to read 
+		} while (append_line);
+
+		if (cbRead < 0)
+			return 0;
+
+
+		free(localbuf);
+	}
+	else
+	{
+		return 0;
+	}
+
+#endif /* WIN32 */
 
 	return (vect.size () - lines);
 	}

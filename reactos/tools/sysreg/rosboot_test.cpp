@@ -11,7 +11,7 @@
 
 #include "rosboot_test.h"
 #include "pipe_reader.h"
-//#include "namedpipe_reader.h"
+#include "namedpipe_reader.h"
 //#include "sym_file.h"
 #include "file_reader.h"
 #include "os_support.h"
@@ -31,10 +31,8 @@ namespace Sysreg_
 {
 	using std::vector;
 	using System_::PipeReader;
-#if 0
 	using System_::NamedPipeReader;
-	using System_::SymbolFile;
-#endif
+/*	using System_::SymbolFile; */
 	using System_::FileReader;
 	using System_::OsSupport;
 
@@ -349,8 +347,8 @@ namespace Sysreg_
 		/// FIXME
 		/// split up arguments
 
+
 		OsSupport::ProcessID pid = OsSupport::createProcess ((TCHAR*)boot_cmd.c_str (), 0, NULL); 
-#if 0		
 		string::size_type pipe_pos = boot_cmd.find (_T("serial pipe:"));
 
 		NamedPipeReader namedpipe_reader;
@@ -440,7 +438,7 @@ namespace Sysreg_
 		}
 		_sleep(3* CLOCKS_PER_SEC);
 		OsSupport::terminateProcess (pid);
-#endif
+
 		return ret;
 	}
 //---------------------------------------------------------------------------------------
