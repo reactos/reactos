@@ -116,7 +116,7 @@
 	<xi:include href="icontest/icontest.rbuild" />
 </directory>
 <directory name="imagelistviewer">
-	<xi:include href="imagelistviewer/imagelistviewer.rbuild" />
+	<xi:include href="Imagelistviewer/imagelistviewer.rbuild" />
 </directory>
 
 <!-- fixme: iptest -->
