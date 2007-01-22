@@ -535,10 +535,10 @@ void
 MingwModuleHandler::GetReferencedObjectLibraryModuleCleanTargets ( vector<string>& moduleNames ) const
 {
 	for ( size_t i = 0; i < module.non_if_data.libraries.size (); i++ )
- 	{
- 		Library& library = *module.non_if_data.libraries[i];
+	{
+		Library& library = *module.non_if_data.libraries[i];
 		if ( library.importedModule->type == ObjectLibrary )
- 			moduleNames.push_back ( GetModuleCleanTarget ( *library.importedModule ) );
+			moduleNames.push_back ( GetModuleCleanTarget ( *library.importedModule ) );
 	}
 }
 
@@ -550,7 +550,7 @@ MingwModuleHandler::GenerateCleanTarget () const
 	
 	fprintf ( fMakefile,
 	          ".PHONY: %s_clean\n",
-                  module.name.c_str() );
+	          module.name.c_str() );
 	vector<string> referencedModuleNames;
 	GetReferencedObjectLibraryModuleCleanTargets ( referencedModuleNames );
 	fprintf ( fMakefile,
@@ -1188,7 +1188,7 @@ MingwModuleHandler::GenerateWidlCommandsServer (
 	string generatedHeaderFilename = GetRpcServerHeaderFilename ( basename );
 	CLEAN_FILE(generatedHeaderFilename);
 
-  	string generatedServerFilename = PassThruCacheDirectory (
+	string generatedServerFilename = PassThruCacheDirectory (
 		basename + "_s.c",
 		backend->intermediateDirectory );
 	CLEAN_FILE(generatedServerFilename);
@@ -1239,7 +1239,7 @@ MingwModuleHandler::GenerateWidlCommandsClient (
 	string generatedHeaderFilename = GetRpcClientHeaderFilename ( basename );
 	CLEAN_FILE(generatedHeaderFilename);
 
-  	string generatedClientFilename = PassThruCacheDirectory (
+	string generatedClientFilename = PassThruCacheDirectory (
 		basename + "_c.c",
 		backend->intermediateDirectory );
 	CLEAN_FILE(generatedClientFilename);
@@ -1493,10 +1493,10 @@ MingwModuleHandler::GenerateCleanObjectsAsYouGoCode () const
 	{
 		vector<string> objectFiles;
 		GetObjectsVector ( module.non_if_data,
-                           objectFiles );
+		                   objectFiles );
 		vector<string> lines;
 		MergeStringVector ( objectFiles,
-	                        lines );
+		                    lines );
 		for ( size_t i = 0; i < lines.size (); i++ )
 		{
 			fprintf ( fMakefile,
@@ -1518,14 +1518,14 @@ MingwModuleHandler::GenerateRunRsymCode () const
 void
 MingwModuleHandler::GenerateRunStripCode () const
 {
-    fprintf ( fMakefile,
-        "ifeq ($(ROS_LEAN_AND_MEAN),yes)\n" );
+	fprintf ( fMakefile,
+	          "ifeq ($(ROS_LEAN_AND_MEAN),yes)\n" );
 	fprintf ( fMakefile,
 	          "\t$(ECHO_STRIP)\n" );
 	fprintf ( fMakefile,
 	          "\t${strip} -s -x -X $@\n\n" );
-    fprintf ( fMakefile,
-        "endif\n" );
+	fprintf ( fMakefile,
+	          "endif\n" );
 }
 
 void
@@ -2331,7 +2331,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 
 		string linkerParameters = ssprintf ( "-Wl,-T,%s%cntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared",
 		                                     module.GetBasePath ().c_str (),
-                                                     cSep,
+		                                     cSep,
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
@@ -3232,8 +3232,8 @@ MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirec
 
 	string livecdIni = "boot" + sSep + "bootdata" + sSep + "livecd.ini";
 	OutputCopyCommand ( livecdIni,
-                        "freeldr.ini",
-                        livecdDirectory );
+	                    "freeldr.ini",
+	                    livecdDirectory );
 }
 
 void
@@ -3244,8 +3244,8 @@ MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory )
 		backend->outputDirectory );
 	CreateDirectory ( livecdDirectory + sSep + "loader" );
 	OutputCopyCommand ( freeldr,
-                        "setupldr.sys",
-                        livecdDirectory + sSep + "loader" );
+	                   "setupldr.sys",
+	                   livecdDirectory + sSep + "loader" );
 }
 
 void
@@ -3260,7 +3260,7 @@ MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 	fprintf ( fMakefile,
 	          "\t$(MKHIVE_TARGET) boot%cbootdata %s boot%cbootdata%clivecd.inf boot%cbootdata%chiveinst.inf\n",
 	          cSep, reactosSystem32ConfigDirectory.c_str (),
-                  cSep, cSep, cSep, cSep );
+	          cSep, cSep, cSep, cSep );
 }
 
 void

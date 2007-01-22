@@ -106,7 +106,7 @@ MingwBackend::CanEnablePreCompiledHeaderSupportForModule ( const Module& module 
 	size_t i;
 	for ( i = 0; i < compilationUnits.size (); i++ )
 	{
- 		CompilationUnit& compilationUnit = *compilationUnits[i];
+		CompilationUnit& compilationUnit = *compilationUnits[i];
 		if ( compilationUnit.files.size () != 1 )
 			return false;
 	}
@@ -148,7 +148,7 @@ MingwBackend::ProcessModules ()
 		MingwModuleHandler* h = MingwModuleHandler::InstanciateHandler (
 			module,
 			this );
-        h->AddImplicitLibraries ( module );
+		h->AddImplicitLibraries ( module );
 		if ( use_pch && CanEnablePreCompiledHeaderSupportForModule ( module ) )
 			h->EnablePreCompiledHeaderSupport ();
 		if ( module.host == HostDefault )
@@ -761,16 +761,16 @@ MingwBackend::GetNetwideAssemblerVersion ( const string& nasmCommand )
 	if ( nasmCommand.find("yasm") != std::string::npos )
 	{
 		versionCommand = ssprintf ( "%s --version",
-										   nasmCommand.c_str (),
-										   NUL,
-										   NUL );
+		                            nasmCommand.c_str (),
+		                            NUL,
+		                            NUL );
 	}
 	else
 	{
 		versionCommand = ssprintf ( "%s -v",
-										   nasmCommand.c_str (),
-										   NUL,
-										   NUL );
+		                            nasmCommand.c_str (),
+		                            NUL,
+		                            NUL );
 	}
 	return GetVersionString( versionCommand );
 }
@@ -871,7 +871,7 @@ MingwBackend::IsSupportedBinutilsVersion ( const string& binutilsVersion )
 
 	if ( ( ( strcmp ( binutilsVersion.c_str (), "20040902") >= 0 ) &&
 	       ( strcmp ( binutilsVersion.c_str (), "20041008") <= 0 ) ) ||
-    	       ( strcmp ( binutilsVersion.c_str (), "20031001") < 0 ) )
+	       ( strcmp ( binutilsVersion.c_str (), "20031001") < 0 ) )
 		return false;
 	else
 		return true;
@@ -1153,7 +1153,7 @@ MingwBackend::GetRegistryTargetFiles ()
 		installDirectory ) );
 	return system32ConfigDirectory + sSep + "default " +
 		system32ConfigDirectory + sSep + "sam " +
-                system32ConfigDirectory + sSep + "security " +
+		system32ConfigDirectory + sSep + "security " +
 		system32ConfigDirectory + sSep + "software " +
 		system32ConfigDirectory + sSep + "system";
 }
@@ -1181,7 +1181,7 @@ MingwBackend::OutputRegistryInstallTarget ()
 	fprintf ( fMakefile,
 	          "\t$(MKHIVE_TARGET) boot%cbootdata %s boot%cbootdata%chiveinst.inf\n",
 	          cSep, system32ConfigDirectory.c_str (),
-                  cSep, cSep );
+	          cSep, cSep );
 	fprintf ( fMakefile,
 	          "\n" );
 }

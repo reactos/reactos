@@ -256,13 +256,13 @@ main ( int argc, char** argv )
 		printf ( "  -vo{version|configuration} Adds subdirectory path to the default Intermediate-Outputdirectory.\n" );
 		printf ( "\n" );
 		printf ( "  buildsystem   Target build system. Can be one of:\n" );
- 
- 		std::map<std::string,Backend::Factory*>::iterator iter;
- 		for (iter = Backend::Factory::map_begin(); iter != Backend::Factory::map_end(); iter++)
- 		{
- 			Backend::Factory *factory = iter->second;
- 			printf ( "                %-10s %s\n", factory->Name(), factory->Description());
- 		}
+
+		std::map<std::string,Backend::Factory*>::iterator iter;
+		for (iter = Backend::Factory::map_begin(); iter != Backend::Factory::map_end(); iter++)
+		{
+			Backend::Factory *factory = iter->second;
+			printf ( "                %-10s %s\n", factory->Name(), factory->Description());
+		}
 		return 1;
 	}
 	try

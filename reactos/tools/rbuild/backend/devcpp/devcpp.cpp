@@ -152,7 +152,7 @@ bool FileExists(string &filename)
 void DevCppBackend::ProcessFile(string &filepath)
 {
 	// Remove the .\ at the start of the filenames
-    if ((filepath[0] == '.') && (filepath[1] == '\\')) filepath.erase(0, 2);
+	if ((filepath[0] == '.') && (filepath[1] == '\\')) filepath.erase(0, 2);
 
 	if(!FileExists(filepath))
 		return;

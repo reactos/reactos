@@ -101,12 +101,12 @@ SysSetupGenerator::Generate ( HINF inf,
 		InfHostCloseFile ( inf );
 	}
 
-      if ( 0 != InfHostAddLine ( context, NULL ) ||
-           0 != InfHostAddField ( context, GetDirectoryId ( module ).c_str () ) ||
-           0 != InfHostAddField ( context, "" ) ||
-           0 != InfHostAddField ( context, module.installName.c_str () ) ||
-           0 != InfHostAddField ( context, GetFlags ( module ).c_str () ) )
-        {
+	if ( 0 != InfHostAddLine ( context, NULL ) ||
+	     0 != InfHostAddField ( context, GetDirectoryId ( module ).c_str () ) ||
+	     0 != InfHostAddField ( context, "" ) ||
+	     0 != InfHostAddField ( context, module.installName.c_str () ) ||
+	     0 != InfHostAddField ( context, GetFlags ( module ).c_str () ) )
+	{
 		InfHostFreeContext ( context );
 		InfHostCloseFile ( inf );
 		throw InvalidOperationException ( __FILE__,

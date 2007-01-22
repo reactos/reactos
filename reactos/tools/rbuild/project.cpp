@@ -227,7 +227,6 @@ Project::WriteConfigurationFile ()
 void
 Project::ExecuteInvocations ()
 {
-	fprintf( stderr, "ExecuteInvocations\n" );
 	for ( size_t i = 0; i < modules.size (); i++ )
 		modules[i]->InvokeModule ();
 }

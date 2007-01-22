@@ -791,9 +791,9 @@ MSVCBackend::_generate_dsp ( const Module& module )
 void
 MSVCBackend::_generate_dsw_header ( FILE* OUT )
 {
-    fprintf ( OUT, "Microsoft Developer Studio Workspace File, Format Version 6.00\r\n" );
-    fprintf ( OUT, "# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!\r\n" );
-    fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "Microsoft Developer Studio Workspace File, Format Version 6.00\r\n" );
+	fprintf ( OUT, "# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!\r\n" );
+	fprintf ( OUT, "\r\n" );
 }
 
 void
@@ -803,21 +803,21 @@ MSVCBackend::_generate_dsw_project (
 	std::string dsp_file,
 	const std::vector<Dependency*>& dependencies )
 {
-    dsp_file = DosSeparator ( std::string(".\\") + dsp_file );
-    
-	// TODO FIXME - must they be sorted?
-    //@dependencies = sort(@dependencies);
+	dsp_file = DosSeparator ( std::string(".\\") + dsp_file );
 
-    fprintf ( OUT, "###############################################################################\r\n" );
-    fprintf ( OUT, "\r\n" );
-    fprintf ( OUT, "Project: \"%s\"=%s - Package Owner=<4>\r\n", module.name.c_str(), dsp_file.c_str() );
-    fprintf ( OUT, "\r\n" );
-    fprintf ( OUT, "Package=<5>\r\n" );
-    fprintf ( OUT, "{{{\r\n" );
-    fprintf ( OUT, "}}}\r\n" );
-    fprintf ( OUT, "\r\n" );
-    fprintf ( OUT, "Package=<4>\r\n" );
-    fprintf ( OUT, "{{{\r\n" );
+	// TODO FIXME - must they be sorted?
+	//@dependencies = sort(@dependencies);
+
+	fprintf ( OUT, "###############################################################################\r\n" );
+	fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "Project: \"%s\"=%s - Package Owner=<4>\r\n", module.name.c_str(), dsp_file.c_str() );
+	fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "Package=<5>\r\n" );
+	fprintf ( OUT, "{{{\r\n" );
+	fprintf ( OUT, "}}}\r\n" );
+	fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "Package=<4>\r\n" );
+	fprintf ( OUT, "{{{\r\n" );
 	for ( size_t i = 0; i < dependencies.size(); i++ )
 	{
 		Dependency& dependency = *dependencies[i];
@@ -860,7 +860,7 @@ MSVCBackend::_generate_wine_dsw ( FILE* OUT )
 		std::string dsp_file = DspFileName ( module );
 
 		// TODO FIXME - more wine hacks?
-        /*if ( module.name == "gdi32" )
+		/*if ( module.name == "gdi32" )
 		{
 			for ( size_t idir = 0; idir < gdi32_dirs.size(); idir++ )
 			{
@@ -869,9 +869,9 @@ MSVCBackend::_generate_wine_dsw ( FILE* OUT )
 
 				dependencies.push_back ( Replace ( "gdi32_" + dir2, "/", "_" ) );
 			}
-        }*/
+		}*/
 
 		_generate_dsw_project ( OUT, module, dsp_file, module.dependencies );
-    }
-    _generate_dsw_footer ( OUT );
+	}
+	_generate_dsw_footer ( OUT );
 }
