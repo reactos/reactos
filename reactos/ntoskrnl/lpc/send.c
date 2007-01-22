@@ -155,8 +155,8 @@ LpcRequestPort(IN PVOID PortObject,
 
         /* We're done */
         KeLeaveCriticalRegion();
-        LPCTRACE(LPC_SEND_DEBUG, "Port: %p. Message: %p\n", QueuePort, Message);
         if (ConnectionPort) ObDereferenceObject(ConnectionPort);
+        LPCTRACE(LPC_SEND_DEBUG, "Port: %p. Message: %p\n", QueuePort, Message);
         return STATUS_SUCCESS;
     }
 
@@ -366,7 +366,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
         /* Insert the message in our chain */
         InsertTailList(&QueuePort->MsgQueue.ReceiveHead, &Message->Entry);
         InsertTailList(&ReplyPort->LpcReplyChainHead, &Thread->LpcReplyChain);
-        Thread->LpcWaitingOnPort = Port;
+        LpcpSetPortToThread(Thread, Port);
 
         /* Release the lock and get the semaphore we'll use later */
         KeEnterCriticalRegion();
@@ -392,7 +392,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     KeAcquireGuardedMutex(&LpcpLock);
 
     /* Get the LPC Message and clear our thread's reply data */
-    Message = Thread->LpcReplyMessage;
+    Message = LpcpGetMessageFromThread(Thread);
     Thread->LpcReplyMessage = NULL;
     Thread->LpcReplyMessageId = 0;
 

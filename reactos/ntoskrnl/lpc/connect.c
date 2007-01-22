@@ -35,7 +35,7 @@ LpcpFreeConMsg(IN OUT PLPCP_MESSAGE *Message,
     }
 
     /* Check if there's a reply message */
-    ReplyMessage = CurrentThread->LpcReplyMessage;
+    ReplyMessage = LpcpGetMessageFromThread(CurrentThread);
     if (ReplyMessage)
     {
         /* Get the message */
@@ -54,7 +54,7 @@ LpcpFreeConMsg(IN OUT PLPCP_MESSAGE *Message,
         CurrentThread->LpcReplyMessage = NULL;
 
         /* Get the connection message and clear the section */
-        *ConnectMessage = (PLPCP_CONNECTION_MESSAGE)(*Message + 1);
+        *ConnectMessage = (PLPCP_CONNECTION_MESSAGE)(ReplyMessage + 1);
         SectionToMap = (*ConnectMessage)->SectionToMap;
         (*ConnectMessage)->SectionToMap = NULL;
     }

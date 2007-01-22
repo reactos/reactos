@@ -48,6 +48,14 @@
 #endif
 
 //
+// LPC Port/Message Flags
+//
+#define LPCP_THREAD_FLAG_IS_PORT                            1
+#define LPCP_THREAD_FLAG_NO_IMPERSONATION                   2
+#define LPCP_THREAD_FLAGS                                   (LPCP_THREAD_FLAG_IS_PORT | \
+                                                             LPCP_THREAD_FLAG_NO_IMPERSONATION)
+
+//
 // Internal Port Management
 //
 VOID

@@ -279,12 +279,10 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         KeAcquireGuardedMutex(&LpcpLock);
 
         /* Make sure this is the reply the thread is waiting for */
-        if ((WakeupThread->LpcReplyMessageId != ReplyMessage->MessageId))// ||
-#if 0
-            ((WakeupThread->LpcReplyMessage) &&
-            (LpcpGetMessageType(&((PLPCP_MESSAGE)WakeupThread->
-                                LpcReplyMessage)->Request) != LPC_REQUEST)))
-#endif
+        if ((WakeupThread->LpcReplyMessageId != ReplyMessage->MessageId) ||
+            ((LpcpGetMessageFromThread(WakeupThread)) &&
+             (LpcpGetMessageType(&LpcpGetMessageFromThread(WakeupThread)->
+                                 Request) != LPC_REQUEST)))
         {
             /* It isn't, fail */
             LpcpFreeToPortZone(Message, 3);

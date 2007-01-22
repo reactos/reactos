@@ -592,14 +592,6 @@ typedef struct _HANDLE_TABLE_ENTRY
     };
 } HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
 
-//
-// FIXME
-//
-#ifdef _REACTOS_
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WIN2K
-#endif
-
 typedef struct _HANDLE_TABLE
 {
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -610,7 +602,7 @@ typedef struct _HANDLE_TABLE
     PEPROCESS QuotaProcess;
     PVOID UniqueProcessId;
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-    EX_PUSH_LOCK HandleLock;
+    EX_PUSH_LOCK HandleTableLock[4];
     LIST_ENTRY HandleTableList;
     EX_PUSH_LOCK HandleContentionEvent;
 #else

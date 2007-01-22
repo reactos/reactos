@@ -36,7 +36,7 @@ LpcExitThread(IN PETHREAD Thread)
     Thread->LpcReplyMessageId = 0;
 
     /* Check if there's a reply message */
-    Message = Thread->LpcReplyMessage;
+    Message = LpcpGetMessageFromThread(Thread);
     if (Message)
     {
         /* FIXME: TODO */
@@ -57,7 +57,7 @@ LpcpFreeToPortZone(IN PLPCP_MESSAGE Message,
     PETHREAD Thread = NULL;
     BOOLEAN LockHeld = Flags & 1, ReleaseLock = Flags & 2;
     PAGED_CODE();
-    DPRINT1("Message: %p. Flags: %lx\n", Message, Flags);
+    LPCTRACE(LPC_CLOSE_DEBUG, "Message: %p. Flags: %lx\n", Message, Flags);
 
     /* Acquire the lock if not already */
     if (!LockHeld) KeAcquireGuardedMutex(&LpcpLock);
@@ -125,10 +125,10 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
     {
         /* Disconnect it */
         Port->ConnectedPort->ConnectedPort = NULL;
-        if (Port->ConnectedPort->ConnectionPort)
+        ConnectionPort = Port->ConnectedPort->ConnectionPort;
+        if (ConnectionPort)
         {
-            /* Save and clear connection port */
-            ConnectionPort = Port->ConnectedPort->ConnectionPort;
+            /* Clear connection port */
             Port->ConnectedPort->ConnectionPort = NULL;
         }
     }
@@ -162,7 +162,7 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
         if (!KeReadStateSemaphore(&Thread->LpcReplySemaphore))
         {
             /* Get the message */
-            Message = Thread->LpcReplyMessage;
+            Message = LpcpGetMessageFromThread(Thread);
             if (Message)
             {
                 /* Check if it's a connection request */
@@ -198,7 +198,7 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
 
     /* Loop queued messages */
     while ((Port->MsgQueue.ReceiveHead.Flink) &&
-           !(IsListEmpty (&Port->MsgQueue.ReceiveHead)))
+           !(IsListEmpty(&Port->MsgQueue.ReceiveHead)))
     {
         /* Get the message */
         Message = CONTAINING_RECORD(Port->MsgQueue.ReceiveHead.Flink,
@@ -342,9 +342,6 @@ LpcpDeletePort(IN PVOID ObjectBody)
         /* Send it */
         for (;;)
         {
-            /* FIXME: HACK OF D00m */
-            break;
-
             /* Send the message */
             if (LpcRequestPort(Port,
                                &ClientDiedMsg.h) != STATUS_NO_MEMORY) break;
