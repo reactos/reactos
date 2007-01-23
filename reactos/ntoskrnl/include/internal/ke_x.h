@@ -193,7 +193,8 @@ Ke386SanitizeDr(IN PVOID DrAddress,
             (Object)->OwnerThread = Thread;                                 \
                                                                             \
             /* Disable APCs if needed */                                    \
-            Thread->KernelApcDisable -= (Object)->ApcDisable;               \
+            Thread->KernelApcDisable = Thread->KernelApcDisable -           \
+                                       (Object)->ApcDisable;                \
                                                                             \
             /* Check if it's abandoned */                                   \
             if ((Object)->Abandoned)                                        \
@@ -238,7 +239,8 @@ Ke386SanitizeDr(IN PVOID DrAddress,
         (Object)->OwnerThread = Thread;                                     \
                                                                             \
         /* Disable APCs if needed */                                        \
-        Thread->KernelApcDisable -= (Object)->ApcDisable;                   \
+        Thread->KernelApcDisable = Thread->KernelApcDisable -               \
+                                   (Object)->ApcDisable;                    \
                                                                             \
         /* Check if it's abandoned */                                       \
         if ((Object)->Abandoned)                                            \
@@ -259,7 +261,7 @@ Ke386SanitizeDr(IN PVOID DrAddress,
 //
 // Satisfies the wait of any nonmutant dispatcher object
 //
-#define KiSatisfyNonMutantWait(Object, Thread)                              \
+#define KiSatisfyNonMutantWait(Object)                                      \
 {                                                                           \
     if (((Object)->Header.Type & TIMER_OR_EVENT_TYPE) ==                    \
              EventSynchronizationObject)                                    \
@@ -454,7 +456,7 @@ KxSetTimerForThreadWait(IN PKTIMER Timer,
         /* Fill out the wait block */                                       \
         WaitBlock = &WaitBlockArray[Index];                                 \
         WaitBlock->Object = Object[Index];                                  \
-        WaitBlock->WaitKey = Index;                                         \
+        WaitBlock->WaitKey = (USHORT)Index;                                 \
         WaitBlock->WaitType = WaitType;                                     \
         WaitBlock->Thread = Thread;                                         \
                                                                             \
@@ -1470,10 +1472,6 @@ VOID
 FORCEINLINE
 KiInsertWaitTimer(IN PKTIMER Timer)
 {
-    /* Set default data */
-    Timer->Header.Inserted = TRUE;
-    if (!Timer->Period) Timer->Header.SignalState = FALSE;
-
     /* Now insert it into the Timer List */
     InsertAscendingList(&KiTimerListHead,
                         Timer,

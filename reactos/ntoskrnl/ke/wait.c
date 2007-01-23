@@ -11,33 +11,9 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* PRIVATE FUNCTIONS *********************************************************/
-
-#if 0
-VOID
-FASTCALL
-KiWaitSatisfyAll(PKWAIT_BLOCK FirstBlock)
-{
-    PKWAIT_BLOCK WaitBlock = FirstBlock;
-    PKTHREAD WaitThread = WaitBlock->Thread;
-
-    /* Loop through all the Wait Blocks, and wake each Object */
-    do
-    {
-        /* Make sure it hasn't timed out */
-        if (WaitBlock->WaitKey != STATUS_TIMEOUT)
-        {
-            /* Wake the Object */
-            KiSatisfyObjectWait((PKMUTANT)WaitBlock->Object, WaitThread);
-        }
-
-        /* Move to the next block */
-        WaitBlock = WaitBlock->NextWaitBlock;
-    } while (WaitBlock != FirstBlock);
-}
-#endif
 
 VOID
 FASTCALL
@@ -163,7 +139,7 @@ KiExitDispatcher(IN KIRQL OldIrql)
     BOOLEAN PendingApc;
 
     /* Make sure we're at synchronization level */
-    ASSERT_IRQL_EQUAL(SYNCH_LEVEL);
+    ASSERT(KeGetCurrentIrql() == SYNCH_LEVEL);
 
     /* Check if we have deferred threads */
     KiCheckDeferredReadyList(Prcb);
@@ -288,7 +264,7 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
 
             /* Check if the timer expired */
             InterruptTime.QuadPart = KeQueryInterruptTime();
-            if (InterruptTime.QuadPart >= Timer->DueTime.QuadPart)
+            if ((ULONGLONG)InterruptTime.QuadPart >= Timer->DueTime.QuadPart)
             {
                 /* It did, so we don't need to wait */
                 goto NoWait;
@@ -426,7 +402,7 @@ KeWaitForSingleObject(IN PVOID Object,
             else if (CurrentObject->Header.SignalState > 0)
             {
                 /* Another satisfied object */
-                KiSatisfyNonMutantWait(CurrentObject, Thread);
+                KiSatisfyNonMutantWait(CurrentObject);
                 WaitStatus = STATUS_WAIT_0;
                 goto DontWait;
             }
@@ -440,7 +416,8 @@ KeWaitForSingleObject(IN PVOID Object,
             {
                 /* Check if the timer expired */
                 InterruptTime.QuadPart = KeQueryInterruptTime();
-                if (InterruptTime.QuadPart >= Timer->DueTime.QuadPart)
+                if ((ULONGLONG)InterruptTime.QuadPart >=
+                    Timer->DueTime.QuadPart)
                 {
                     /* It did, so we don't need to wait */
                     WaitStatus = STATUS_TIMEOUT;
@@ -626,7 +603,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
                     else if (CurrentObject->Header.SignalState > 0)
                     {
                         /* Another signaled object, unwait and return */
-                        KiSatisfyNonMutantWait(CurrentObject, Thread);
+                        KiSatisfyNonMutantWait(CurrentObject);
                         WaitStatus = Index;
                         goto DontWait;
                     }
@@ -702,7 +679,8 @@ KeWaitForMultipleObjects(IN ULONG Count,
             {
                 /* Check if the timer expired */
                 InterruptTime.QuadPart = KeQueryInterruptTime();
-                if (InterruptTime.QuadPart >= Timer->DueTime.QuadPart)
+                if ((ULONGLONG)InterruptTime.QuadPart >=
+                    Timer->DueTime.QuadPart)
                 {
                     /* It did, so we don't need to wait */
                     WaitStatus = STATUS_TIMEOUT;

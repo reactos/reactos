@@ -1066,7 +1066,7 @@ ExDupHandleTable(IN PEPROCESS Process,
 
     /* Loop each entry */
     while (NewTable->NextHandleNeedingPool <
-            HandleTable->NextHandleNeedingPool)
+           HandleTable->NextHandleNeedingPool)
     {
         /* Insert it into the duplicated copy */
         if (!ExpAllocateHandleTableEntrySlow(NewTable, FALSE))
