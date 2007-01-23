@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS International Control Panel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            lib/cpl/intl/locale.h
+ * FILE:            dll/cpl/intl/locale.h
  * PURPOSE:         Regional parameters page
  * PROGRAMMERS:     Eric Kohl
  *                  Alexey Zavyalov (gen_x@mail.ru)
@@ -235,10 +235,9 @@ RegOptsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                /* If setup button pressed */
                 case IDC_SETUP_BUTTON:
-                        // setup button code...
-                        MessageBox(NULL, L"Not implemented yet", L"Info",
-                            MB_OK | MB_ICONINFORMATION);
+                    SetupApplet(hwndDlg, uMsg, wParam, lParam);
                 break;
 
                 /* If selected other locale */
@@ -256,10 +255,12 @@ RegOptsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     }
                 break;
 
+                /* If changed location */
                 case IDC_LOCATION_COMBO:
                     if (HIWORD(wParam) == CBN_SELCHANGE ||
                         HIWORD(wParam) == CBN_EDITCHANGE)
                     {
+                        /* Set "Apply" button enabled */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                 break;

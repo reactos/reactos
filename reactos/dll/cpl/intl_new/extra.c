@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS International Control Panel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            lib/cpl/intl/extra.c
+ * FILE:            dll/cpl/intl/extra.c
  * PURPOSE:         Extra parameters page
  * PROGRAMMERS:     Alexey Zavyalov (gen_x@mail.ru)
 */
@@ -73,7 +73,10 @@ CreateLanguagesList(HWND hWnd)
 /* Extra Parameters page dialog callback */
 INT_PTR
 CALLBACK
-ExtraOptsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+ExtraOptsProc(HWND hwndDlg,
+              UINT uMsg,
+              WPARAM wParam,
+              LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(wParam);
     switch(uMsg)

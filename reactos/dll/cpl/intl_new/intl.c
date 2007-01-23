@@ -19,7 +19,7 @@
 /* GLOBALS ******************************************************************/
 
 #define NUM_APPLETS     (1)
-#define NUM_SHEETS      2
+#define NUM_SHEETS       3
 
 LONG APIENTRY Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
 
@@ -74,6 +74,7 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 
     InitPropSheetPage(&PsPage[0], IDD_REGOPTSPAGE, RegOptsProc);
     InitPropSheetPage(&PsPage[1], IDD_EXTRAOPTSPAGE, ExtraOptsProc);
+    InitPropSheetPage(&PsPage[2], IDD_LANGSOPTSPAGE, LangsOptsProc);
 
     return (LONG)(PropertySheet(&psh) != -1);
 }
