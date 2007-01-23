@@ -91,7 +91,11 @@
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
 #define _ReadWriteBarrier() __sync_synchronize()
 #else
-/* TODO: _ReadWriteBarrier() */
+static __inline__ __attribute__((always_inline)) _MemoryBarrier(void)
+{
+	__asm__ __volatile__("" : : : "memory");
+}
+#define _ReadWriteBarrier() _MemoryBarrier()
 #endif
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
@@ -190,82 +194,66 @@ static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile l
 static __inline__ __attribute__((always_inline)) char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand)
 {
 	char retval = Comperand;
-	__asm__("lock; cmpxchgb %b[Exchange], %[Destination]" : "=a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange) : "memory");
+	__asm__("lock; cmpxchgb %b[Exchange], %[Destination]" : [retval] "+a" (retval) : [Destination] "m" (*Destination), [Exchange] "q" (Exchange) : "memory");
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand)
 {
 	short retval = Comperand;
-	__asm__("lock; cmpxchgw %w[Exchange], %[Destination]" : "=a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange): "memory");
+	__asm__("lock; cmpxchgw %w[Exchange], %[Destination]" : [retval] "+a" (retval) : [Destination] "m" (*Destination), [Exchange] "q" (Exchange): "memory");
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand)
 {
 	long retval = Comperand;
-	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : "=a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange): "memory");
+	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : [retval] "+a" (retval) : [Destination] "m" (*Destination), [Exchange] "q" (Exchange): "memory");
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * const Destination, const long long Exchange, const long long Comperand)
 {
-	unsigned long lo32Retval = (unsigned long)((Comperand >>  0) & 0xFFFFFFFF);
-	long hi32Retval = (unsigned long)((Comperand >> 32) & 0xFFFFFFFF);
-
-	unsigned long lo32Exchange = (unsigned long)((Exchange >>  0) & 0xFFFFFFFF);
-	long hi32Exchange = (unsigned long)((Exchange >> 32) & 0xFFFFFFFF);
+	long long retval = Comperand;
 
 	__asm__
 	(
 		"cmpxchg8b %[Destination]" :
-		"=a" (lo32Retval), "=d" (hi32Retval) :
-		[Destination] "rm" (Destination), "b" (lo32Exchange), "c" (hi32Exchange) :
+		[retval] "+A" (retval) :
+			[Destination] "m" (*Destination),
+			"b" ((unsigned long)((Exchange >>  0) & 0xFFFFFFFF)),
+			"c" ((unsigned long)((Exchange >> 32) & 0xFFFFFFFF)) :
 		"memory"
 	);
 
-	{
-		union u_
-		{
-			long long ll;
-			struct s_
-			{
-				unsigned long lo32;
-				long hi32;
-			}
-			s;
-		}
-		u = { s : { lo32 : lo32Retval, hi32 : hi32Retval } };
-
-		return u.ll;
-	}
+	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
 {
-	void * retval;
-	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : "=a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange), "a" (Comperand) : "memory");
+	void * retval = (void *)Comperand;
+	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : [retval] "=a" (retval) : "[retval]" (retval), [Destination] "m" (*Destination), [Exchange] "q" (Exchange) : "memory");
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volatile long * const Target, const long Value)
 {
 	long retval = Value;
-	__asm__("lock; xchgl %[retval], %[Target]" : [retval] "=r" (retval) : [Target] "rm" (Target) : "memory");
+	__asm__("xchgl %[retval], %[Target]" : [retval] "+r" (retval) : [Target] "m" (*Target) : "memory");
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
 {
 	void * retval = Value;
-	__asm__("lock; xchgl %[retval], %[Target]" : [retval] "=r" (retval) : [Target] "rm" (Target) : "memory");
+	__asm__("xchgl %[retval], %[Target]" : [retval] "+r" (retval) : [Target] "m" (*Target) : "memory");
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * const Addend, const long Value)
 {
 	long retval = Value;
-	__asm__("lock; xaddl %[retval], %[Addend]" : [retval] "=r" (retval) : [Addend] "rm" (Addend));
+	__asm__("lock; xaddl %[retval], %[Addend]" : [retval] "+r" (retval) : [Addend] "m" (*Addend) : "memory");
 	return retval;
 }
 
@@ -449,17 +437,17 @@ static __inline__ __attribute__((always_inline)) long _InterlockedIncrement(vola
 	return _InterlockedExchangeAdd(lpAddend, 1) + 1;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandreset(volatile long * const a, const long b)
+static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandreset(volatile long * a, const long b)
 {
 	unsigned char retval;
-	__asm__("lock; btr %[b], %[a]; setc %b[retval]" : [retval] "=q" (retval) : [a] "rm" (a), [b] "Nr" (b));
+	__asm__("lock; btrl %[b], %[a]; setb %b[retval]" : [retval] "=r" (retval), [a] "=m" (a) : [b] "Ir" (b) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandset(volatile long * const a, const long b)
+static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandset(volatile long * a, const long b)
 {
 	unsigned char retval;
-	__asm__("lock; bts %[b], %[a]; setc %b[retval]" : [retval] "=q" (retval) : [a] "rm" (a), [b] "Nr" (b));
+	__asm__("lock; btsl %[b], %[a]; setc %b[retval]" : [retval] "=r" (retval), [a] "=m" (a) : [b] "Ir" (b) : "memory");
 	return retval;
 }
 
