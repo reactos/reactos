@@ -20,6 +20,8 @@ Author:
 #ifndef _ASM_H
 #define _ASM_H
 
+//#define NEW_SCHEDULER
+
 //
 // PCR Access
 //
@@ -138,6 +140,16 @@ Author:
 #define EPROCESS_VDM_OBJECTS                    0x144
 
 //
+// KTIMER_TABLE Offsets
+//
+#ifdef __ASM__
+#define KTIMER_TABLE_ENTRY                      0x00
+#define KTIMER_TABLE_TIME                       0x08
+#define TIMER_ENTRY_SIZE                        0x10
+#define TIMER_TABLE_SIZE                        0x200
+#endif
+
+//
 // KPRCB Offsets
 //
 #define KPRCB_DR0                               0x2F8
@@ -146,6 +158,8 @@ Author:
 #define KPRCB_DR3                               0x304
 #define KPRCB_DR6                               0x308
 #define KPRCB_DR7                               0x20C
+#define KPRCB_TIMER_HAND                        0x964
+#define KPRCB_TIMER_REQUEST                     0x968
 
 //
 // KPCR Offsets

@@ -677,18 +677,9 @@ MainLoop:
 #endif
     jz CheckSchedule
 
-    /* Raise to DISPATCH_LEVEL */
-    mov ecx, DISPATCH_LEVEL
-    call @KfRaiseIrql@4
-    mov edi, eax
-
     /* Handle the above */
     lea ecx, [ebx+KPCR_PRCB_DATA]
     call @KiRetireDpcList@4
-
-    /* Lower IRQL */
-    mov ecx, edi
-    call @KfLowerIrql@4
 
 CheckSchedule:
 #ifndef NEW_SCHEDULER

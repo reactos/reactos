@@ -373,126 +373,220 @@ KiCheckAlertability(IN PKTHREAD Thread,
     return STATUS_WAIT_0;
 }
 
+VOID
 FORCEINLINE
-BOOLEAN
-KxDelayThreadWait(IN PKTHREAD Thread,
-                   IN BOOLEAN Alertable,
-                   IN KPROCESSOR_MODE WaitMode)
+KxSetTimerForThreadWait(IN PKTIMER Timer,
+                        IN LARGE_INTEGER Interval)
 {
-    BOOLEAN Swappable;
-    PKWAIT_BLOCK TimerBlock = &Thread->WaitBlock[TIMER_WAIT_BLOCK];
+    LARGE_INTEGER InterruptTime, SystemTime, TimeDifference;
 
-    /* Setup the Wait Block */
-    Thread->WaitBlockList = TimerBlock;
-    TimerBlock->NextWaitBlock = TimerBlock;
-
-    /* Link the timer to this Wait Block */
-    Thread->Timer.Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;
-    Thread->Timer.Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;
-
-    /* Clear wait status */
-    Thread->WaitStatus = STATUS_WAIT_0;
-
-    /* Setup wait fields */
-    Thread->Alertable = Alertable;
-    Thread->WaitReason = DelayExecution;
-    Thread->WaitMode = WaitMode;
-
-    /* Check if we can swap the thread's stack */
-    Thread->WaitListEntry.Flink = NULL;
-    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);
-
-    /* Set the wait time */
-    Thread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
-    return Swappable;
-}
-
-FORCEINLINE
-BOOLEAN
-KxMultiThreadWait(IN PKTHREAD Thread,
-                  IN PKWAIT_BLOCK WaitBlock,
-                  IN BOOLEAN Alertable,
-                  IN KWAIT_REASON WaitReason,
-                  IN KPROCESSOR_MODE WaitMode)
-{
-    BOOLEAN Swappable;
-    PKTIMER ThreadTimer = &Thread->Timer;
-
-    /* Set default wait status */
-    Thread->WaitStatus = STATUS_WAIT_0;
-
-    /* Link wait block array to the thread */
-    Thread->WaitBlockList = WaitBlock;
-
-    /* Initialize the timer list */
-    InitializeListHead(&ThreadTimer->Header.WaitListHead);
-
-    /* Set wait settings */
-    Thread->Alertable = Alertable;
-    Thread->WaitMode = WaitMode;
-    Thread->WaitReason = WaitReason;
-
-    /* Check if we can swap the thread's stack */
-    Thread->WaitListEntry.Flink = NULL;
-    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);
-
-    /* Set the wait time */
-    Thread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
-    return Swappable;
-}
-
-FORCEINLINE
-BOOLEAN
-KxSingleThreadWait(IN PKTHREAD Thread,
-                   IN PKWAIT_BLOCK WaitBlock,
-                   IN PVOID Object,
-                   IN PLARGE_INTEGER Timeout,
-                   IN BOOLEAN Alertable,
-                   IN KWAIT_REASON WaitReason,
-                   IN KPROCESSOR_MODE WaitMode)
-{
-    BOOLEAN Swappable;
-    PKWAIT_BLOCK TimerBlock = &Thread->WaitBlock[TIMER_WAIT_BLOCK];
-
-    /* Setup the Wait Block */
-    Thread->WaitBlockList = WaitBlock;
-    WaitBlock->WaitKey = STATUS_WAIT_0;
-    WaitBlock->Object = Object;
-    WaitBlock->WaitType = WaitAny;
-
-    /* Clear wait status */
-    Thread->WaitStatus = STATUS_WAIT_0;
-
-    /* Check if we have a timer */
-    if (Timeout)
+    /* Check the timer's interval to see if it's absolute */
+    Timer->Header.Absolute = FALSE;
+    if (!Timer->Period) Timer->Header.SignalState = FALSE;
+    if (Interval.HighPart >= 0)
     {
-        /* Pointer to timer block */
-        WaitBlock->NextWaitBlock = TimerBlock;
-        TimerBlock->NextWaitBlock = WaitBlock;
+        /* Get the system time and calculate the relative time */
+        KeQuerySystemTime(&SystemTime);
+        TimeDifference.QuadPart = SystemTime.QuadPart - Interval.QuadPart;
+        Timer->Header.Absolute = TRUE;
 
-        /* Link the timer to this Wait Block */
-        Thread->Timer.Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;
-        Thread->Timer.Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;
-    }
-    else
-    {
-        /* No timer block, just ourselves */
-        WaitBlock->NextWaitBlock = WaitBlock;
+        /* Check if we've already expired */
+        if (TimeDifference.HighPart >= 0)
+        {
+            /* Reset everything */
+            Timer->DueTime.QuadPart = 0;
+            Timer->Header.SignalState = TRUE;
+            return;
+        }
+        else
+        {
+            /* Update the interval */
+            Interval = TimeDifference;
+        }
     }
 
-    /* Setup wait fields */
-    Thread->Alertable = Alertable;
-    Thread->WaitReason = WaitReason;
-    Thread->WaitMode = WaitMode;
-
-    /* Check if we can swap the thread's stack */
-    Thread->WaitListEntry.Flink = NULL;
-    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);
-
-    /* Set the wait time */
-    Thread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
-    return Swappable;
+    /* Calculate the due time */
+    InterruptTime.QuadPart = KeQueryInterruptTime();
+    Timer->DueTime.QuadPart = InterruptTime.QuadPart - Interval.QuadPart;
 }
+
+#define KxDelayThreadWait()                                                 \
+                                                                            \
+    /* Setup the Wait Block */                                              \
+    Thread->WaitBlockList = TimerBlock;                                     \
+                                                                            \
+    /* Setup the timer */                                                   \
+    KxSetTimerForThreadWait(Timer, *Interval);                              \
+                                                                            \
+    /* Save the due time for the caller */                                  \
+    DueTime.QuadPart = Timer->DueTime.QuadPart;                             \
+                                                                            \
+    /* Link the timer to this Wait Block */                                 \
+    TimerBlock->NextWaitBlock = TimerBlock;                                 \
+    Timer->Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;          \
+    Timer->Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;          \
+                                                                            \
+    /* Clear wait status */                                                 \
+    Thread->WaitStatus = STATUS_SUCCESS;                                    \
+                                                                            \
+    /* Setup wait fields */                                                 \
+    Thread->Alertable = Alertable;                                          \
+    Thread->WaitReason = DelayExecution;                                    \
+    Thread->WaitMode = WaitMode;                                            \
+                                                                            \
+    /* Check if we can swap the thread's stack */                           \
+    Thread->WaitListEntry.Flink = NULL;                                     \
+    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
+                                                                            \
+    /* Set the wait time */                                                 \
+    Thread->WaitTime = KeTickCount.LowPart;
+
+#define KxMultiThreadWait()                                                 \
+    /* Link wait block array to the thread */                               \
+    Thread->WaitBlockList = WaitBlockArray;                                 \
+                                                                            \
+    /* Reset the index */                                                   \
+    Index = 0;                                                              \
+                                                                            \
+    /* Loop wait blocks */                                                  \
+    do                                                                      \
+    {                                                                       \
+        /* Fill out the wait block */                                       \
+        WaitBlock = &WaitBlockArray[Index];                                 \
+        WaitBlock->Object = Object[Index];                                  \
+        WaitBlock->WaitKey = Index;                                         \
+        WaitBlock->WaitType = WaitType;                                     \
+        WaitBlock->Thread = Thread;                                         \
+                                                                            \
+        /* Link to next block */                                            \
+        WaitBlock->NextWaitBlock = &WaitBlockArray[Index + 1];              \
+        Index++;                                                            \
+    } while (Index < Count);                                                \
+                                                                            \
+    /* Link the last block */                                               \
+    WaitBlock->NextWaitBlock = WaitBlockArray;                              \
+                                                                            \
+    /* Set default wait status */                                           \
+    Thread->WaitStatus = STATUS_WAIT_0;                                     \
+                                                                            \
+    /* Check if we have a timer */                                          \
+    if (Timeout)                                                            \
+    {                                                                       \
+        /* Link to the block */                                             \
+        TimerBlock->NextWaitBlock = WaitBlockArray;                         \
+                                                                            \
+        /* Setup the timer */                                               \
+        KxSetTimerForThreadWait(Timer, *Timeout);                           \
+                                                                            \
+        /* Save the due time for the caller */                              \
+        DueTime.QuadPart = Timer->DueTime.QuadPart;                         \
+                                                                            \
+        /* Initialize the list */                                           \
+        InitializeListHead(&Timer->Header.WaitListHead);                    \
+    }                                                                       \
+                                                                            \
+    /* Set wait settings */                                                 \
+    Thread->Alertable = Alertable;                                          \
+    Thread->WaitMode = WaitMode;                                            \
+    Thread->WaitReason = WaitReason;                                        \
+                                                                            \
+    /* Check if we can swap the thread's stack */                           \
+    Thread->WaitListEntry.Flink = NULL;                                     \
+    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
+                                                                            \
+    /* Set the wait time */                                                 \
+    Thread->WaitTime = KeTickCount.LowPart;
+
+#define KxSingleThreadWait()                                                \
+    /* Setup the Wait Block */                                              \
+    Thread->WaitBlockList = WaitBlock;                                      \
+    WaitBlock->WaitKey = STATUS_SUCCESS;                                    \
+    WaitBlock->Object = Object;                                             \
+    WaitBlock->WaitType = WaitAny;                                          \
+                                                                            \
+    /* Clear wait status */                                                 \
+    Thread->WaitStatus = STATUS_SUCCESS;                                    \
+                                                                            \
+    /* Check if we have a timer */                                          \
+    if (Timeout)                                                            \
+    {                                                                       \
+        /* Setup the timer */                                               \
+        KxSetTimerForThreadWait(Timer, *Timeout);                           \
+                                                                            \
+        /* Save the due time for the caller */                              \
+        DueTime.QuadPart = Timer->DueTime.QuadPart;                         \
+                                                                            \
+        /* Pointer to timer block */                                        \
+        WaitBlock->NextWaitBlock = TimerBlock;                              \
+        TimerBlock->NextWaitBlock = WaitBlock;                              \
+                                                                            \
+        /* Link the timer to this Wait Block */                             \
+        Timer->Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;      \
+        Timer->Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;      \
+    }                                                                       \
+    else                                                                    \
+    {                                                                       \
+        /* No timer block, just ourselves */                                \
+        WaitBlock->NextWaitBlock = WaitBlock;                               \
+    }                                                                       \
+                                                                            \
+    /* Set wait settings */                                                 \
+    Thread->Alertable = Alertable;                                          \
+    Thread->WaitMode = WaitMode;                                            \
+    Thread->WaitReason = WaitReason;                                        \
+                                                                            \
+    /* Check if we can swap the thread's stack */                           \
+    Thread->WaitListEntry.Flink = NULL;                                     \
+    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
+                                                                            \
+    /* Set the wait time */                                                 \
+    Thread->WaitTime = KeTickCount.LowPart;
+
+#define KxQueueThreadWait()                                                 \
+    /* Setup the Wait Block */                                              \
+    Thread->WaitBlockList = WaitBlock;                                      \
+    WaitBlock->WaitKey = STATUS_SUCCESS;                                    \
+    WaitBlock->Object = Queue;                                              \
+    WaitBlock->WaitType = WaitAny;                                          \
+    WaitBlock->Thread = Thread;                                             \
+                                                                            \
+    /* Clear wait status */                                                 \
+    Thread->WaitStatus = STATUS_SUCCESS;                                    \
+                                                                            \
+    /* Check if we have a timer */                                          \
+    if (Timeout)                                                            \
+    {                                                                       \
+        /* Setup the timer */                                               \
+        KxSetTimerForThreadWait(Timer, *Timeout);                           \
+                                                                            \
+        /* Save the due time for the caller */                              \
+        DueTime.QuadPart = Timer->DueTime.QuadPart;                         \
+                                                                            \
+        /* Pointer to timer block */                                        \
+        WaitBlock->NextWaitBlock = TimerBlock;                              \
+        TimerBlock->NextWaitBlock = WaitBlock;                              \
+                                                                            \
+        /* Link the timer to this Wait Block */                             \
+        Timer->Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;      \
+        Timer->Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;      \
+    }                                                                       \
+    else                                                                    \
+    {                                                                       \
+        /* No timer block, just ourselves */                                \
+        WaitBlock->NextWaitBlock = WaitBlock;                               \
+    }                                                                       \
+                                                                            \
+    /* Set wait settings */                                                 \
+    Thread->Alertable = FALSE;                                              \
+    Thread->WaitMode = WaitMode;                                            \
+    Thread->WaitReason = WrQueue;                                           \
+                                                                            \
+    /* Check if we can swap the thread's stack */                           \
+    Thread->WaitListEntry.Flink = NULL;                                     \
+    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
+                                                                            \
+    /* Set the wait time */                                                 \
+    Thread->WaitTime = KeTickCount.LowPart;
 
 //
 // Unwaits a Thread
@@ -772,6 +866,27 @@ KiRequestApcInterrupt(IN BOOLEAN NeedApc,
     /* We deliver instantly on UP */
     UNREFERENCED_PARAMETER(NeedApc);
     UNREFERENCED_PARAMETER(Processor);
+}
+
+FORCEINLINE
+PKSPIN_LOCK_QUEUE
+KiAcquireTimerLock(IN ULONG Hand)
+{
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
+    /* Nothing to do on UP */
+    UNREFERENCED_PARAMETER(Hand);
+    return NULL;
+}
+
+FORCEINLINE
+VOID
+KiReleaseTimerLock(IN PKSPIN_LOCK_QUEUE LockQueue)
+{
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
+    /* Nothing to do on UP */
+    UNREFERENCED_PARAMETER(LockQueue);
 }
 
 #else
@@ -1349,4 +1464,20 @@ KeGetPreviousMode(VOID)
 {
     /* Return the current mode */
     return KeGetCurrentThread()->PreviousMode;
+}
+
+VOID
+FORCEINLINE
+KiInsertWaitTimer(IN PKTIMER Timer)
+{
+    /* Set default data */
+    Timer->Header.Inserted = TRUE;
+    if (!Timer->Period) Timer->Header.SignalState = FALSE;
+
+    /* Now insert it into the Timer List */
+    InsertAscendingList(&KiTimerListHead,
+                        Timer,
+                        KTIMER,
+                        TimerListEntry,
+                        DueTime.QuadPart);
 }
