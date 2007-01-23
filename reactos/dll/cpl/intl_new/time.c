@@ -523,7 +523,7 @@ TimeOptsSetProc(HWND hwndDlg,
                 
 
                 /* FIXME: */
-                _sleep(15);
+                Sleep(15);
                 UpdateTimeLocaleSamples(hwndDlg, LOCALE_USER_DEFAULT);
             }
         }

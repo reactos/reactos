@@ -837,7 +837,7 @@ NumsOptsSetProc(HWND hwndDlg,
                 InitNegNumFmtCB(hwndDlg);
 
                 /* FIXME: */
-                _sleep(15);
+                Sleep(15);
                 /* Update sum format samples */
                 UpdateNumSamples(hwndDlg, LOCALE_USER_DEFAULT);
             }

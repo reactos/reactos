@@ -596,7 +596,7 @@ DateOptsSetProc(HWND hwndDlg,
                 if(!SetLongDateFormat(hwndDlg)) break;
                 InitShortDateCB(hwndDlg);
                 /* FIXME: */
-                _sleep(15);
+                Sleep(15);
                 UpdateDateLocaleSamples(hwndDlg, LOCALE_USER_DEFAULT);
             }
         }

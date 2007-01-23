@@ -715,7 +715,7 @@ CurrencyOptsSetProc(HWND hwndDlg,
                 InitNegCurrencySumCB(hwndDlg);
 
                 /* FIXME: */
-                _sleep(15);
+                Sleep(15);
                 UpdateCurrencyLocaleSamples(hwndDlg, LOCALE_USER_DEFAULT);
             }
         }
