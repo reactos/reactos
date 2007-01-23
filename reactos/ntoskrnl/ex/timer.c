@@ -79,7 +79,7 @@ ExTimerRundown(VOID)
             /* Cancel the timer and remove its DPC and APC */
             KeCancelTimer(&Timer->KeTimer);
             KeRemoveQueueDpc(&Timer->TimerDpc);
-            if (KeRemoveQueueApc(&Timer->TimerApc)) DerefsToDo = 2;
+            if (KeRemoveQueueApc(&Timer->TimerApc)) DerefsToDo++;
 
             /* Add another dereference to do */
             DerefsToDo++;
@@ -101,7 +101,6 @@ ExTimerRundown(VOID)
 
     /* Release lock and return */
     KeReleaseSpinLock(&Thread->ActiveTimerListLock, OldIrql);
-    return;
 }
 
 VOID
@@ -200,7 +199,7 @@ ExpTimerApcKernelRoutine(IN PKAPC Apc,
 
             /* Disable it */
             Timer->ApcAssociated = FALSE;
-            DerefsToDo = 2;
+            DerefsToDo++;
         }
     }
     else
@@ -306,7 +305,7 @@ NtCancelTimer(IN HANDLE TimerHandle,
             /* Cancel the Timer */
             KeCancelTimer(&Timer->KeTimer);
             KeRemoveQueueDpc(&Timer->TimerDpc);
-            if (KeRemoveQueueApc(&Timer->TimerApc)) DerefsToDo = 2;
+            if (KeRemoveQueueApc(&Timer->TimerApc)) DerefsToDo++;
             DerefsToDo++;
         }
         else
@@ -351,7 +350,7 @@ NtCancelTimer(IN HANDLE TimerHandle,
             }
             _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
             {
-                Status = _SEH_GetExceptionCode();
+
             }
             _SEH_END;
         }
@@ -374,6 +373,14 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
+    /* Check for correct timer type */
+    if ((TimerType != NotificationTimer) &&
+        (TimerType != SynchronizationTimer))
+    {
+        /* Fail */
+        return STATUS_INVALID_PARAMETER_4;
+    }
+
     /* Check Parameter Validity */
     if (PreviousMode != KernelMode)
     {
@@ -387,12 +394,6 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
         }
         _SEH_END;
         if(!NT_SUCCESS(Status)) return Status;
-    }
-
-    /* Check for correct timer type */
-    if ((TimerType != NotificationTimer) && (TimerType != SynchronizationTimer))
-    {
-        return STATUS_INVALID_PARAMETER_4;
     }
 
     /* Create the Object */
@@ -427,16 +428,20 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
                                 NULL,
                                 &hTimer);
 
-        /* Make sure it's safe to write to the handle */
-        _SEH_TRY
+        /* Check for success */
+        if (NT_SUCCESS(Status))
         {
-            *TimerHandle = hTimer;
+            /* Make sure it's safe to write to the handle */
+            _SEH_TRY
+            {
+                *TimerHandle = hTimer;
+            }
+            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            {
+
+            }
+            _SEH_END;
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
     }
 
     /* Return to Caller */
@@ -486,7 +491,7 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
-            Status = _SEH_GetExceptionCode();
+
         }
         _SEH_END;
     }
@@ -578,13 +583,16 @@ NtSetTimer(IN HANDLE TimerHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
+    /* Check for a valid Period */
+    if (Period < 0) return STATUS_INVALID_PARAMETER_6;
+
     /* Check Parameter Validity */
     if (PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
             TimerDueTime = ProbeForReadLargeInteger(DueTime);
-            if(PreviousState) ProbeForWriteBoolean(PreviousState);
+            if (PreviousState) ProbeForWriteBoolean(PreviousState);
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
@@ -593,9 +601,6 @@ NtSetTimer(IN HANDLE TimerHandle,
         _SEH_END;
         if(!NT_SUCCESS(Status)) return Status;
     }
-
-    /* Check for a valid Period */
-    if (Period < 0) return STATUS_INVALID_PARAMETER_6;
 
     /* Get the Timer Object */
     Status = ObReferenceObjectByHandle(TimerHandle,
@@ -640,7 +645,7 @@ NtSetTimer(IN HANDLE TimerHandle,
             /* Cancel the Timer */
             KeCancelTimer(&Timer->KeTimer);
             KeRemoveQueueDpc(&Timer->TimerDpc);
-            if (KeRemoveQueueApc(&Timer->TimerApc)) DerefsToDo = 2;
+            if (KeRemoveQueueApc(&Timer->TimerApc)) DerefsToDo++;
             DerefsToDo++;
         }
         else
@@ -653,6 +658,7 @@ NtSetTimer(IN HANDLE TimerHandle,
         State = KeReadStateTimer(&Timer->KeTimer);
 
         /* Handle Wake Timers */
+        Timer->WakeTimer = WakeTimer;
         KeAcquireSpinLockAtDpcLevel(&ExpWakeListLock);
         if ((WakeTimer) && !(Timer->WakeTimerListEntry.Flink))
         {
@@ -713,7 +719,6 @@ NtSetTimer(IN HANDLE TimerHandle,
             }
             _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
             {
-                Status = _SEH_GetExceptionCode();
             }
             _SEH_END;
         }
