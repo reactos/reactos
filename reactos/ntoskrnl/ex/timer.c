@@ -601,6 +601,11 @@ NtSetTimer(IN HANDLE TimerHandle,
         _SEH_END;
         if(!NT_SUCCESS(Status)) return Status;
     }
+    else
+    {
+        /* Capture the time directly */
+        TimerDueTime = *DueTime;
+    }
 
     /* Get the Timer Object */
     Status = ObReferenceObjectByHandle(TimerHandle,
@@ -681,7 +686,7 @@ NtSetTimer(IN HANDLE TimerHandle,
             KeInitializeApc(&Timer->TimerApc,
                             &Thread->Tcb,
                             CurrentApcEnvironment,
-                            &ExpTimerApcKernelRoutine,
+                            ExpTimerApcKernelRoutine,
                             (PKRUNDOWN_ROUTINE)NULL,
                             (PKNORMAL_ROUTINE)TimerApcRoutine,
                             PreviousMode,
@@ -727,5 +732,3 @@ NtSetTimer(IN HANDLE TimerHandle,
     /* Return to Caller */
     return Status;
 }
-
-/* EOF */
