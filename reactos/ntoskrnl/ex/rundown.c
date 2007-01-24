@@ -36,21 +36,21 @@ ExfAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
     ULONG_PTR Value = RunRef->Count, NewValue;
 
-    /* Make sure a rundown is not active */
-    if (Value & EX_RUNDOWN_ACTIVE) return FALSE;
-
     /* Loop until successfully incremented the counter */
     for (;;)
     {
+        /* Make sure a rundown is not active */
+        if (Value & EX_RUNDOWN_ACTIVE) return FALSE;
+
         /* Add a reference */
         NewValue = Value + EX_RUNDOWN_COUNT_INC;
 
         /* Change the value */
-        Value = ExpChangeRundown(RunRef, NewValue, Value);
-        if (Value == NewValue) return TRUE;
+        NewValue = ExpChangeRundown(RunRef, NewValue, Value);
+        if (NewValue == Value) return TRUE;
 
-        /* Make sure a rundown is not active */
-        if (Value & EX_RUNDOWN_ACTIVE) return FALSE;
+        /* Update it */
+        Value = NewValue;
     }
 }
 
@@ -79,24 +79,21 @@ ExfAcquireRundownProtectionEx(IN PEX_RUNDOWN_REF RunRef,
 {
     ULONG_PTR Value = RunRef->Count, NewValue;
 
-    /* Make sure a rundown is not active */
-    if (Value & EX_RUNDOWN_ACTIVE) return FALSE;
-
-    /* Convert the count to our internal representation */
-    Count <<= EX_RUNDOWN_COUNT_SHIFT;
-
     /* Loop until successfully incremented the counter */
     for (;;)
     {
-        /* Add references */
-        NewValue = Value + Count;
-
-        /* Change the value */
-        Value = ExpChangeRundown(RunRef, NewValue, Value);
-        if (Value == NewValue) return TRUE;
-
         /* Make sure a rundown is not active */
         if (Value & EX_RUNDOWN_ACTIVE) return FALSE;
+
+        /* Add references */
+        NewValue = Value + EX_RUNDOWN_COUNT_INC * Count;
+
+        /* Change the value */
+        NewValue = ExpChangeRundown(RunRef, NewValue, Value);
+        if (NewValue == Value) return TRUE;
+
+        /* Update the value */
+        Value = NewValue;
     }
 }
 
@@ -201,11 +198,11 @@ ExfReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
     ULONG_PTR Value = RunRef->Count, NewValue;
     PEX_RUNDOWN_WAIT_BLOCK WaitBlock;
 
-    /* Check if rundown is not active */
-    if (!(Value & EX_RUNDOWN_ACTIVE))
+    /* Loop until successfully incremented the counter */
+    for (;;)
     {
-        /* Loop until successfully incremented the counter */
-        for (;;)
+        /* Check if rundown is not active */
+        if (!(Value & EX_RUNDOWN_ACTIVE))
         {
             /* Sanity check */
             ASSERT((Value >= EX_RUNDOWN_COUNT_INC) || (KeNumberProcessors > 1));
@@ -214,23 +211,28 @@ ExfReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
             NewValue = Value - EX_RUNDOWN_COUNT_INC;
 
             /* Change the value */
-            Value = ExpChangeRundown(RunRef, NewValue, Value);
-            if (Value == NewValue) return;
+            NewValue = ExpChangeRundown(RunRef, NewValue, Value);
+            if (NewValue == Value) break;
 
-            /* Loop again if we're still not active */
-            if (Value & EX_RUNDOWN_ACTIVE) break;
+            /* Update value */
+            Value = NewValue;
         }
-    }
+        else
+        {
+            /* Get the wait block */
+            WaitBlock = (PEX_RUNDOWN_WAIT_BLOCK)(Value & ~EX_RUNDOWN_ACTIVE);
+            ASSERT((WaitBlock->Count > 0) || (KeNumberProcessors > 1));
 
-    /* Get the wait block */
-    WaitBlock = (PEX_RUNDOWN_WAIT_BLOCK)(Value & ~EX_RUNDOWN_ACTIVE);
-    ASSERT((WaitBlock->Count > 0) || (KeNumberProcessors > 1));
+            /* Remove the one count */
+            if (!InterlockedDecrementSizeT(&WaitBlock->Count))
+            {
+                /* We're down to 0 now, so signal the event */
+                KeSetEvent(&WaitBlock->WakeEvent, IO_NO_INCREMENT, FALSE);
+            }
 
-    /* Remove the one count */
-    if (!InterlockedDecrementSizeT(&WaitBlock->Count))
-    {
-        /* We're down to 0 now, so signal the event */
-        KeSetEvent(&WaitBlock->WakeEvent, IO_NO_INCREMENT, FALSE);
+            /* We're all done */
+            break;
+        }
     }
 }
 
@@ -260,37 +262,43 @@ ExfReleaseRundownProtectionEx(IN PEX_RUNDOWN_REF RunRef,
     ULONG_PTR Value = RunRef->Count, NewValue;
     PEX_RUNDOWN_WAIT_BLOCK WaitBlock;
 
-    /* Check if rundown is not active */
-    if (!(Value & EX_RUNDOWN_ACTIVE))
+    /* Loop until successfully incremented the counter */
+    for (;;)
     {
-        /* Loop until successfully incremented the counter */
-        for (;;)
+        /* Check if rundown is not active */
+        if (!(Value & EX_RUNDOWN_ACTIVE))
         {
             /* Sanity check */
-            ASSERT((Value >= EX_RUNDOWN_COUNT_INC * Count) || (KeNumberProcessors > 1));
+            ASSERT((Value >= EX_RUNDOWN_COUNT_INC * Count) ||
+                   (KeNumberProcessors > 1));
 
             /* Get the new value */
-            NewValue = Value - (Count * EX_RUNDOWN_COUNT_INC);
+            NewValue = Value - EX_RUNDOWN_COUNT_INC * Count;
 
             /* Change the value */
-            Value = ExpChangeRundown(RunRef, NewValue, Value);
-            if (Value == NewValue) return;
+            NewValue = ExpChangeRundown(RunRef, NewValue, Value);
+            if (NewValue == Value) break;
 
-            /* Loop again if we're still not active */
-            if (Value & EX_RUNDOWN_ACTIVE) break;
+            /* Update value */
+            Value = NewValue;
         }
-    }
+        else
+        {
+            /* Get the wait block */
+            WaitBlock = (PEX_RUNDOWN_WAIT_BLOCK)(Value & ~EX_RUNDOWN_ACTIVE);
+            ASSERT((WaitBlock->Count >= Count) || (KeNumberProcessors > 1));
 
-    /* Get the wait block */
-    WaitBlock = (PEX_RUNDOWN_WAIT_BLOCK)(Value & ~EX_RUNDOWN_ACTIVE);
-    ASSERT((WaitBlock->Count >= Count) || (KeNumberProcessors > 1));
+            /* Remove the counts */
+            if (InterlockedExchangeAddSizeT(&WaitBlock->Count,
+                                            -(LONG)Count) == (LONG)Count)
+            {
+                /* We're down to 0 now, so signal the event */
+                KeSetEvent(&WaitBlock->WakeEvent, IO_NO_INCREMENT, FALSE);
+            }
 
-    /* Remove the count */
-    if (InterlockedExchangeAddSizeT(&WaitBlock->Count, -(LONG)Count) ==
-        (LONG)Count)
-    {
-        /* We're down to 0 now, so signal the event */
-        KeSetEvent(&WaitBlock->WakeEvent, IO_NO_INCREMENT, FALSE);
+            /* We're all done */
+            break;
+        }
     }
 }
 
@@ -330,17 +338,17 @@ ExfWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
                                                 EX_RUNDOWN_ACTIVE);
 
     /* Start waitblock set loop */
-    for(;;)
+    for (;;)
     {
         /* Save the count */
         Count = Value >> EX_RUNDOWN_COUNT_SHIFT;
 
-        /* If the count is over one or we don't have en event yet, create it */
-        if (Count || !Event)
+        /* If the count is over one and we don't have en event yet, create it */
+        if ((Count) && !(Event))
         {
             /* Initialize the event */
             KeInitializeEvent(&WaitBlock.WakeEvent,
-                              NotificationEvent,
+                              SynchronizationEvent,
                               FALSE);
 
             /* Set the pointer */

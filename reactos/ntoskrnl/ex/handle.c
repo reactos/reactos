@@ -866,8 +866,6 @@ ExDestroyHandleByEntry(IN PHANDLE_TABLE HandleTable,
 
   DPRINT("DestroyHandleByEntry HT:0x%p Entry:0x%p\n", HandleTable, Entry);
 
-  if (!(HandleTable->Flags & EX_HANDLE_TABLE_CLOSING))
-  {
     KeEnterCriticalRegion();
     ExAcquireHandleLockExclusive(HandleTable);
 
@@ -879,7 +877,6 @@ ExDestroyHandleByEntry(IN PHANDLE_TABLE HandleTable,
 
     ExReleaseHandleLock(HandleTable);
     KeLeaveCriticalRegion();
-  }
 }
 
 PHANDLE_TABLE_ENTRY

@@ -144,7 +144,7 @@ SmpApiConnectedThread(PVOID pConnectedPort)
 				break;
 			case LPC_PORT_CLOSED:
 			      Reply = NULL;
-			      break;
+			      continue;
 			default:
 				if ((Request.SmHeader.ApiIndex) &&
 					(Request.SmHeader.ApiIndex < (sizeof SmApi / sizeof SmApi[0])))
