@@ -18,3 +18,4 @@ IDC_FLAGS ICON "resources/flags.ico"
 */
 
 #include "En.rc"
+#include "Fr.rc"
