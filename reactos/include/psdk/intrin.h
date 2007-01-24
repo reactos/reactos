@@ -38,9 +38,6 @@
 	implementation - e.g. __stosX; on the other hand, some memory barriers that
 	*are* present could have been missed
 */
-/*
-	FIXME: atomic intrinsics haven't been tested yet
-*/
 
 /*
 	NOTE: this is a *compatibility* header. Some functions may look wrong at
@@ -72,10 +69,6 @@
 	would use in the same case
 */
 
-/*
-	BUGBUG: 'long long' arguments and returns mess up GCC royally. There has to
-	be something we can do about them
-*/
 #ifdef __i386__
 
 /*** Stack frame juggling ***/
@@ -685,91 +678,53 @@ static __inline__ __attribute__((always_inline)) unsigned short _rotr16(const un
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned long long __ll_lshift(const unsigned long long Mask, int Bit)
+/*
+	NOTE: in __ll_lshift, __ll_rshift and __ull_rshift we use the "A"
+	constraint (edx:eax) for the Mask argument, because it's the only way GCC
+	can pass 64-bit operands around - passing the two 32 bit parts separately
+	just confuses it. Also we declare Bit as an int and then truncate it to
+	match Visual C++ behavior
+*/
+static __inline__ __attribute__((always_inline)) unsigned long long __ll_lshift(const unsigned long long Mask, const int Bit)
 {
-	unsigned long lo32 = (unsigned long)((Mask >>  0) & 0xFFFFFFFF);
-	unsigned long hi32 = (unsigned long)((Mask >> 32) & 0xFFFFFFFF);
+	unsigned long long retval = Mask;
 
 	__asm__
 	(
-		"shldl %b[Bit], %k[Lo32], %k[Hi32]; sall %b[Bit], %k[Lo32]" :
-		[Lo32] "=q" (lo32), [Hi32] "=qm" (hi32):
-		"[Lo32]" (lo32), "[Hi32]" (hi32), [Bit] "Ic" (Bit)
+		"shldl %b[Bit], %%eax, %%edx; sall %b[Bit], %%eax" :
+		"+A" (retval) :
+		[Bit] "Nc" ((unsigned char)((unsigned long)Bit) & 0xFF)
 	);
 
-	{
-		union u_
-		{
-			unsigned long long ull;
-			struct s_
-			{
-				unsigned long lo32;
-				unsigned long hi32;
-			}
-			s;
-		}
-		u = { s : { lo32 : lo32, hi32 : hi32 } };
-
-		return u.ull;
-	}
+	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) long long __ll_rshift(const long long Mask, const int Bit)
 {
-	unsigned long lo32 = (unsigned long)((Mask >>  0) & 0xFFFFFFFF);
-	long hi32 = (unsigned long)((Mask >> 32) & 0xFFFFFFFF);
+	unsigned long long retval = Mask;
 
 	__asm__
 	(
-		"shrdl %b[Bit], %k[Lo32], %k[Hi32]; sarl %b[Bit], %k[Lo32]" :
-		[Lo32] "=q" (lo32), [Hi32] "=qm" (hi32):
-		"[Lo32]" (lo32), "[Hi32]" (hi32), [Bit] "Ic" (Bit)
+		"shldl %b[Bit], %%eax, %%edx; sarl %b[Bit], %%eax" :
+		"+A" (retval) :
+		[Bit] "Nc" ((unsigned char)((unsigned long)Bit) & 0xFF)
 	);
 
-	{
-		union u_
-		{
-			long long ll;
-			struct s_
-			{
-				unsigned long lo32;
-				long hi32;
-			}
-			s;
-		}
-		u = { s : { lo32 : lo32, hi32 : hi32 } };
-
-		return u.ll;
-	}
+	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned long long __ull_rshift(const unsigned long long Mask, int Bit)
 {
-	unsigned long lo32 = (unsigned long)((Mask >>  0) & 0xFFFFFFFF);
-	unsigned long hi32 = (unsigned long)((Mask >> 32) & 0xFFFFFFFF);
+	unsigned long long retval = Mask;
 
 	__asm__
 	(
-		"shrdl %b[Bit], %k[Hi32], %k[Lo32]; shrl %b[Bit], %k[Hi32]" :
-		[Lo32] "=qm" (lo32), [Hi32] "=q" (hi32):
-		"[Lo32]" (lo32), "[Hi32]" (hi32), [Bit] "Ic" (Bit)
+		"shrdl %b[Bit], %%eax, %%edx; shrl %b[Bit], %%eax" :
+		"+A" (retval) :
+		[Bit] "Nc" ((unsigned char)((unsigned long)Bit) & 0xFF)
 	);
 
-	{
-		union u_
-		{
-			unsigned long long ull;
-			struct s_
-			{
-				unsigned long lo32;
-				unsigned long hi32;
-			}
-			s;
-		}
-		u = { s : { lo32 : lo32, hi32 : hi32 } };
-
-		return u.ull;
-	}
+	return retval;
 }
 
 
