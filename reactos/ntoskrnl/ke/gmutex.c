@@ -30,9 +30,6 @@ KiAcquireGuardedMutexContented(IN OUT PKGUARDED_MUTEX GuardedMutex)
     BitsToRemove = GM_LOCK_BIT;
     BitsToAdd = GM_LOCK_WAITER_INC;
 
-    /* Get the Count Bits */
-    OldValue = GuardedMutex->Count;
-
     /* Start change loop */
     for (;;)
     {
@@ -42,43 +39,47 @@ KiAcquireGuardedMutexContented(IN OUT PKGUARDED_MUTEX GuardedMutex)
         ASSERT((BitsToAdd == GM_LOCK_WAITER_INC) ||
                (BitsToAdd == GM_LOCK_WAITER_WOKEN));
 
-        /* Check if the Guarded Mutex is locked */
-        if (OldValue & GM_LOCK_BIT)
-        {
-            /* Sanity check */
-            ASSERT((BitsToRemove == GM_LOCK_BIT) ||
-                   ((OldValue & GM_LOCK_WAITER_WOKEN) != 0));
+        /* Get the Count Bits */
+        OldValue = GuardedMutex->Count;
 
-            /* Unlock it by removing the Lock Bit */
-            NewValue = InterlockedCompareExchange(&GuardedMutex->Count,
-                                                  OldValue ^ BitsToRemove,
-                                                  OldValue);
-            if (NewValue == OldValue) break;
-
-            /* Value got changed behind our backs, start over */
-            OldValue = NewValue;
-        }
-        else
+        /* Start internal bit change loop */
+        for (;;)
         {
-            /* The Guarded Mutex isn't locked, so simply set the bits */
-            NewValue = InterlockedCompareExchange(&GuardedMutex->Count,
-                                                  OldValue + BitsToAdd,
-                                                  OldValue);
-            if (NewValue != OldValue)
+            /* Check if the Guarded Mutex is locked */
+            if (OldValue & GM_LOCK_BIT)
             {
-                /* Value got changed behind our backs, start over */
-                OldValue = NewValue;
-                continue;
+                /* Sanity check */
+                ASSERT((BitsToRemove == GM_LOCK_BIT) ||
+                       ((OldValue & GM_LOCK_WAITER_WOKEN) != 0));
+
+                /* Unlock it by removing the Lock Bit */
+                NewValue = OldValue ^ BitsToRemove;
+                NewValue = InterlockedCompareExchange(&GuardedMutex->Count,
+                                                      NewValue,
+                                                      OldValue);
+                if (NewValue == OldValue) return;
+            }
+            else
+            {
+                /* The Guarded Mutex isn't locked, so simply set the bits */
+                NewValue = OldValue + BitsToAdd;
+                NewValue = InterlockedCompareExchange(&GuardedMutex->Count,
+                                                      NewValue,
+                                                      OldValue);
+                if (NewValue == OldValue) break;
             }
 
-            /* Now we have to wait for it */
-            KeWaitForGate(&GuardedMutex->Gate, WrGuardedMutex, KernelMode);
-            ASSERT((GuardedMutex->Count & GM_LOCK_WAITER_WOKEN) != 0);
+            /* Old value changed, loop again */
+            OldValue = NewValue;
+        }
 
-            /* Ok, the wait is done, so set the new bits */
-            BitsToRemove = GM_LOCK_BIT | GM_LOCK_WAITER_WOKEN;
-            BitsToAdd = GM_LOCK_WAITER_WOKEN;
-       }
+        /* Now we have to wait for it */
+        KeWaitForGate(&GuardedMutex->Gate, WrGuardedMutex, KernelMode);
+        ASSERT((GuardedMutex->Count & GM_LOCK_WAITER_WOKEN) != 0);
+
+        /* Ok, the wait is done, so set the new bits */
+        BitsToRemove = GM_LOCK_BIT | GM_LOCK_WAITER_WOKEN;
+        BitsToAdd = GM_LOCK_WAITER_WOKEN;
     }
 }
 
@@ -109,7 +110,7 @@ KiReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
     GuardedMutex->Owner = NULL;
 
     /* Add the Lock Bit */
-    OldValue = InterlockedExchangeAdd(&GuardedMutex->Count, 1);
+    OldValue = InterlockedExchangeAdd(&GuardedMutex->Count, GM_LOCK_BIT);
     ASSERT((OldValue & GM_LOCK_BIT) == 0);
 
     /* Check if it was already locked, but not woken */
@@ -247,7 +248,7 @@ KeTryToAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
 
     /* Remove the lock */
     OldBit = InterlockedBitTestAndReset(&GuardedMutex->Count, GM_LOCK_BIT_V);
-    if (OldBit)
+    if (!OldBit)
     {
         /* Re-enable APCs */
         KeLeaveGuardedRegion();
