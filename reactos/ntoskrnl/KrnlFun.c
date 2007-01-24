@@ -24,7 +24,6 @@
 //
 // Ke1:
 //  - Implement KiInitMachineDependent.
-//  - Implement Privileged Instruction Handler in Umode GPF.
 //
 // Fstub:
 //  - Implement IoAssignDriveLetters using mount manager support.

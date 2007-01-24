@@ -1010,7 +1010,7 @@ WinMain(HINSTANCE hInstance,
 {
 
   PVOID ExceptionHandler;
-  //int Version;
+  int Version;
   WCHAR *lc;
 
   hAppInstance = hInstance;
@@ -1024,9 +1024,9 @@ WinMain(HINSTANCE hInstance,
     return 1;
   }
 
-  //if(!DetectVMware(&Version))
+  if(!DetectVMware(&Version))
   {
-    //return 1;
+    return 1;
   }
 
   /* unregister the handler */

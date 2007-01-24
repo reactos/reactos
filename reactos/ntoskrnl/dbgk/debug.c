@@ -221,13 +221,9 @@ DbgkpSendApiMessageLpc(IN OUT PDBGKM_MSG Message,
     PsGetCurrentProcess()->CreateReported = TRUE;
 
     /* Send the LPC command */
-#if 0
     Status = LpcRequestWaitReplyPort(Port,
                                      (PPORT_MESSAGE)Message,
                                      (PPORT_MESSAGE)&Buffer[0]);
-#else
-    Status = STATUS_UNSUCCESSFUL;
-#endif
 
     /* Flush the instruction cache */
     ZwFlushInstructionCache(NtCurrentProcess(), NULL, 0);
@@ -486,6 +482,15 @@ DbgkpPostFakeModuleMessages(IN PEPROCESS Process,
     i = 0;
     while ((NextEntry != ListHead) && (i < 500))
     {
+        /* Skip the first entry */
+        if (!i)
+        {
+            /* Go to the next module */
+            NextEntry = NextEntry->Flink;
+            i++;
+            continue;
+        }
+
         /* Get the entry */
         LdrEntry = CONTAINING_RECORD(NextEntry,
                                      LDR_DATA_TABLE_ENTRY,
@@ -724,7 +729,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
         /* Get the next thread */
         ThisThread = PsGetNextProcessThread(Process, ThisThread);
         OldThread = pLastThread;
-    } while(ThisThread);
+    } while (ThisThread);
 
     /* Check the API status */
     if (!NT_SUCCESS(Status))
@@ -1075,7 +1080,7 @@ DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
               OwnerProcess, DebugObject);
 
     /* If this isn't the last handle, do nothing */
-    if (HandleCount > 1) return;
+    if (SystemHandleCount > 1) return;
 
     /* Otherwise, lock the debug object */
     ExAcquireFastMutex(&DebugObject->Mutex);
@@ -1293,8 +1298,12 @@ ThreadScan:
                 /* Check if we couldn't acquire rundown for it */
                 if (DebugEvent->Flags & 0x10)
                 {
-                    /* Set busy flag */
-                    InterlockedOr((PLONG)&DebugEvent->Flags, 0x100);
+                    /* Set the skip termination flag */
+                    PspSetCrossThreadFlag(EventThread, CT_SKIP_CREATION_MSG_BIT);
+
+                    /* Insert it into the temp list */
+                    RemoveEntryList(&DebugEvent->EventList);
+                    InsertTailList(&TempList, &DebugEvent->EventList);
                 }
                 else
                 {
@@ -1312,15 +1321,15 @@ ThreadScan:
                     /* Clear the backout thread */
                     DebugEvent->BackoutThread = NULL;
 
-                    /* Set flag */
-                    InterlockedOr((PLONG)&DebugEvent->Flags, 0x80);
+                    /* Set skip flag */
+                    PspSetCrossThreadFlag(EventThread, CT_SKIP_CREATION_MSG_BIT);
                 }
             }
             else
             {
-                /* FIXME: TODO */
-                DPRINT1("Unhandled dbgk path!\n");
-                KEBUGCHECK(0);
+                /* Insert it into the temp list */
+                RemoveEntryList(&DebugEvent->EventList);
+                InsertTailList(&TempList, &DebugEvent->EventList);
             }
 
             /* Check if the lock is held */
@@ -1346,11 +1355,14 @@ ThreadScan:
     if (LastThread) ObDereferenceObject(LastThread);
 
     /* Loop our temporary list */
-    NextEntry = TempList.Flink;
-    while (NextEntry != &TempList)
+    while (!IsListEmpty(&TempList))
     {
-        /* FIXME: TODO */
-        KEBUGCHECK(0);
+        /* Remove the event */
+        NextEntry = RemoveHeadList(&TempList);
+        DebugEvent = CONTAINING_RECORD (NextEntry, DEBUG_EVENT, EventList);
+
+        /* Wake it */
+        DbgkpWakeTarget(DebugEvent);
     }
 
     /* Check if we got here through success and mark the PEB, then return */
@@ -1520,9 +1532,8 @@ NtDebugContinue(IN HANDLE DebugHandle,
 
     /* Make sure that the status is valid */
     if ((ContinueStatus != DBG_CONTINUE) &&
+        (ContinueStatus != DBG_EXCEPTION_HANDLED) &&
         (ContinueStatus != DBG_EXCEPTION_NOT_HANDLED) &&
-        (ContinueStatus != DBG_REPLY_LATER) &&
-        (ContinueStatus != DBG_UNABLE_TO_PROVIDE_HANDLE) &&
         (ContinueStatus != DBG_TERMINATE_THREAD) &&
         (ContinueStatus != DBG_TERMINATE_PROCESS))
     {
@@ -1820,41 +1831,48 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     DBGUI_WAIT_STATE_CHANGE WaitStateChange;
     NTSTATUS Status = STATUS_SUCCESS;
     PDEBUG_EVENT DebugEvent, DebugEvent2;
-    PLIST_ENTRY ListHead, NextEntry;
+    PLIST_ENTRY ListHead, NextEntry, NextEntry2;
     PAGED_CODE();
     DBGKTRACE(DBGK_OBJECT_DEBUG, "Handle: %p\n", DebugHandle);
 
     /* Clear the initial wait state change structure */
     RtlZeroMemory(&WaitStateChange, sizeof(WaitStateChange));
 
-    /* Check if the call was from user mode */
-    if (PreviousMode != KernelMode)
+    /* Protect probe in SEH */
+    _SEH_TRY
     {
-        /* Protect probe in SEH */
-        _SEH_TRY
+        /* Check if we came with a timeout */
+        if (Timeout)
         {
-            /* Check if we came with a timeout */
-            if (Timeout)
+            /* Check if the call was from user mode */
+            if (PreviousMode != KernelMode)
             {
-                /* Make a copy on the stack */
-                SafeTimeOut = ProbeForReadLargeInteger(Timeout);
-                Timeout = &SafeTimeOut;
+                /* Probe it */
+                ProbeForReadLargeInteger(Timeout);
             }
 
+            /* Make a local copy */
+            SafeTimeOut = *Timeout;
+            Timeout = &SafeTimeOut;
+
+            /* Query the current time */
+            KeQuerySystemTime(&StartTime);
+        }
+
+        /* Check if the call was from user mode */
+        if (PreviousMode != KernelMode)
+        {
             /* Probe the state change structure */
             ProbeForWrite(StateChange, sizeof(*StateChange), sizeof(ULONG));
         }
-        _SEH_HANDLE
-        {
-            /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-        if (!NT_SUCCESS(Status)) return Status;
-
-        /* Query the current time */
-        KeQuerySystemTime(&StartTime);
     }
+    _SEH_HANDLE
+    {
+        /* Get the exception code */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the debug object */
     Status = ObReferenceObjectByHandle(DebugHandle,
@@ -1870,13 +1888,13 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     Thread = NULL;
 
     /* Wait on the debug object given to us */
-    Status = KeWaitForSingleObject(DebugObject,
-                                   Executive,
-                                   PreviousMode,
-                                   Alertable,
-                                   Timeout);
     while (TRUE)
     {
+        Status = KeWaitForSingleObject(DebugObject,
+                                       Executive,
+                                       PreviousMode,
+                                       Alertable,
+                                       Timeout);
         if (!NT_SUCCESS(Status) ||
             (Status == STATUS_TIMEOUT) ||
             (Status == STATUS_ALERTED) ||
@@ -1917,10 +1935,11 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
                     GotEvent = TRUE;
 
                     /* Loop the list internally */
-                    while (&DebugEvent->EventList != NextEntry)
+                    NextEntry2 = DebugObject->EventList.Flink;
+                    while (NextEntry2 != NextEntry)
                     {
                         /* Get the debug event */
-                        DebugEvent2 = CONTAINING_RECORD(NextEntry,
+                        DebugEvent2 = CONTAINING_RECORD(NextEntry2,
                                                         DEBUG_EVENT,
                                                         EventList);
 
@@ -1936,7 +1955,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
                         }
 
                         /* Move to the next entry */
-                        NextEntry = NextEntry->Flink;
+                        NextEntry2 = NextEntry2->Flink;
                     }
 
                     /* Check if we still have a valid event */
@@ -1962,14 +1981,15 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
 
                 /* Set flag */
                 DebugEvent->Flags |= 1;
-                Status = STATUS_SUCCESS;
             }
             else
             {
                 /* Unsignal the event */
-                DebugObject->EventsPresent.Header.SignalState = 0;
-                Status = STATUS_SUCCESS;
+                KeClearEvent(&DebugObject->EventsPresent);
             }
+
+            /* Set success */
+            Status = STATUS_SUCCESS;
         }
 
         /* Release the mutex */
@@ -1980,13 +2000,22 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
         if (!GotEvent)
         {
             /* Check if we can wait again */
-            if (!SafeTimeOut.QuadPart)
+            if (SafeTimeOut.QuadPart < 0)
             {
                 /* Query the new time */
                 KeQuerySystemTime(&NewTime);
 
                 /* Substract times */
-                /* FIXME: TODO */
+                SafeTimeOut.QuadPart += (NewTime.QuadPart - StartTime.QuadPart);
+                StartTime = NewTime;
+
+                /* Check if we've timed out */
+                if (SafeTimeOut.QuadPart > 0)
+                {
+                    /* We have, break out of the loop */
+                    Status = STATUS_TIMEOUT;
+                    break;
+                }
             }
         }
         else
