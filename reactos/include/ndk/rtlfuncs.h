@@ -2502,7 +2502,17 @@ DbgPrompt(
 
 VOID
 NTAPI
-DbgBreakPoint(VOID);
+DbgBreakPoint(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+DbgLoadImageSymbols(
+    IN PANSI_STRING Name,
+    IN PVOID Base,
+    IN ULONG ProcessId
+);
 
 //
 // Generic Table Functions

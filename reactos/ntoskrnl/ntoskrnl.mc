@@ -1081,6 +1081,14 @@ Language=English
 SPIN_LOCK_INIT_FAILURE
 .
 
+MessageId=0x8F
+Severity=Success
+Facility=System
+SymbolicName=PP0_INITIALIZATION_FAILED
+Language=English
+PP0_INITIALIZATION_FAILED
+.
+
 MessageId=0x94
 Severity=Success
 Facility=System

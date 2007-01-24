@@ -441,6 +441,12 @@ PnpInit(
     VOID
 );
 
+BOOLEAN
+NTAPI
+PpInitSystem(
+    VOID
+);
+
 VOID
 PnpInit2(
     VOID

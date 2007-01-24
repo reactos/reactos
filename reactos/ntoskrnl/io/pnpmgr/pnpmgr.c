@@ -19,6 +19,11 @@
 
 PDEVICE_NODE IopRootDeviceNode;
 KSPIN_LOCK IopDeviceTreeLock;
+ERESOURCE PpRegistryDeviceResource;
+KGUARDED_MUTEX PpDeviceReferenceTableLock;
+RTL_AVL_TABLE PpDeviceReferenceTable;
+
+extern ULONG ExpInitializationPhase;
 
 /* DATA **********************************************************************/
 
@@ -3317,5 +3322,90 @@ PnpInit(VOID)
     }
 }
 
+RTL_GENERIC_COMPARE_RESULTS
+NTAPI
+PiCompareInstancePath(IN PRTL_AVL_TABLE Table,
+                      IN PVOID FirstStruct,
+                      IN PVOID SecondStruct)
+{
+    /* FIXME: TODO */
+    KEBUGCHECK(0);
+    return 0;
+}
+
+//
+//  The allocation function is called by the generic table package whenever
+//  it needs to allocate memory for the table.
+//
+
+PVOID
+NTAPI
+PiAllocateGenericTableEntry(IN PRTL_AVL_TABLE Table,
+                            IN CLONG ByteSize)
+{
+    /* FIXME: TODO */
+    KEBUGCHECK(0);
+    return NULL;
+}
+
+VOID
+NTAPI
+PiFreeGenericTableEntry(IN PRTL_AVL_TABLE Table,
+                        IN PVOID Buffer)
+{
+    /* FIXME: TODO */
+    KEBUGCHECK(0);
+}
+
+VOID
+NTAPI
+PpInitializeDeviceReferenceTable(VOID)
+{
+    /* Setup the guarded mutex and AVL table */
+    KeInitializeGuardedMutex(&PpDeviceReferenceTableLock);
+    RtlInitializeGenericTableAvl(&PpDeviceReferenceTable,
+                                 PiCompareInstancePath,
+                                 PiAllocateGenericTableEntry,
+                                 PiFreeGenericTableEntry,
+                                 NULL);
+}
+
+BOOLEAN
+NTAPI
+PiInitPhase0(VOID)
+{
+    /* Initialize the resource when accessing device registry data */
+    ExInitializeResourceLite(&PpRegistryDeviceResource);
+
+    /* Setup the device reference AVL table */
+    PpInitializeDeviceReferenceTable();
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+PpInitSystem(VOID)
+{
+    /* Check the initialization phase */
+    switch (ExpInitializationPhase)
+    {
+    case 0:
+
+        /* Do Phase 0 */
+        return PiInitPhase0();
+
+    case 1:
+
+        /* Do Phase 1 */
+        return FALSE;
+        //return PiInitPhase1();
+
+    default:
+
+        /* Don't know any other phase! Bugcheck! */
+        KeBugCheck(UNEXPECTED_INITIALIZATION_CALL);
+        return FALSE;
+    }
+}
 
 /* EOF */

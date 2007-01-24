@@ -135,6 +135,12 @@ DebugService(IN ULONG Service,
              IN PVOID Argument1,
              IN PVOID Argument2);
 
+NTSTATUS
+NTAPI
+DebugService2(IN PVOID Argument1,
+              IN PVOID Argument2,
+              IN ULONG Service);
+
 /* Tags for the String Allocators */
 #define TAG_USTR        TAG('U', 'S', 'T', 'R')
 #define TAG_ASTR        TAG('A', 'S', 'T', 'R')

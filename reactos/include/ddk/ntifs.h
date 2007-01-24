@@ -1534,6 +1534,16 @@ typedef struct _RTL_AVL_TABLE
     PVOID TableContext;
 } RTL_AVL_TABLE, *PRTL_AVL_TABLE;
 
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeGenericTableAvl(
+    PRTL_AVL_TABLE Table,
+    PRTL_AVL_COMPARE_ROUTINE CompareRoutine,
+    PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine,
+    PRTL_AVL_FREE_ROUTINE FreeRoutine,
+    PVOID TableContext
+);
 
 #if defined(USE_LPC6432)
 #define LPC_CLIENT_ID CLIENT_ID64

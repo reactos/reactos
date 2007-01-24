@@ -82,6 +82,7 @@ ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                      &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
+        /* Failed */
         KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 1, 0, 0);
     }
 
@@ -102,6 +103,7 @@ ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                      &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
+        /* Failed */
         KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 2, 0, 0);
     }
 
@@ -113,6 +115,7 @@ ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     Status = RtlAnsiStringToUnicodeString(&LinkName, &AnsiName, TRUE);
     if (!NT_SUCCESS(Status))
     {
+        /* Failed */
         KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 3, 0, 0);
     }
 
@@ -154,6 +157,7 @@ ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Check if creating the link failed */
     if (!NT_SUCCESS(Status))
     {
+        /* Failed */
         KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 5, 0, 0);
     }
 
@@ -669,6 +673,97 @@ ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
+ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    ULONG i = 0;
+    PLIST_ENTRY NextEntry;
+    ULONG Count, Length;
+    PWCHAR Name;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    BOOLEAN OverFlow = FALSE;
+    CHAR NameBuffer[256];
+    ANSI_STRING SymbolString;
+
+    /* Loop the driver list */
+    NextEntry = LoaderBlock->LoadOrderListHead.Flink;
+    while (NextEntry != &LoaderBlock->LoadOrderListHead)
+    {
+        /* Skip the first two images */
+        if (i >= 2)
+        {
+            /* Get the entry */
+            LdrEntry = CONTAINING_RECORD(NextEntry,
+                                         LDR_DATA_TABLE_ENTRY,
+                                         InLoadOrderLinks);
+            if (LdrEntry->FullDllName.Buffer[0] == L'\\')
+            {
+                /* We have a name, read its data */
+                Name = LdrEntry->FullDllName.Buffer;
+                Length = LdrEntry->FullDllName.Length / sizeof(WCHAR);
+
+                /* Check if our buffer can hold it */
+                if (sizeof(NameBuffer) < Length + sizeof(ANSI_NULL))
+                {
+                    /* It's too long */
+                    OverFlow = TRUE;
+                }
+                else
+                {
+                    /* Copy the name */
+                    for (Count = 0; Count < Length; Count++, Name++)
+                    {
+                        /* Copy the character */
+                        NameBuffer[Count] = (CHAR)*Name;
+                    }
+
+                    /* Null-terminate */
+                    NameBuffer[Count] = ANSI_NULL;
+                }
+            }
+            else
+            {
+                /* This should be a driver, check if it fits */
+                if (sizeof(NameBuffer) <
+                    (sizeof("\\System32\\Drivers\\") +
+                     NtSystemRoot.Length / sizeof(WCHAR) - sizeof(UNICODE_NULL) +
+                     LdrEntry->BaseDllName.Length / sizeof(WCHAR) +
+                     sizeof(ANSI_NULL)))
+                {
+                    /* Buffer too small */
+                    OverFlow = TRUE;
+                }
+                else
+                {
+                    /* Otherwise build the name. HACKED for GCC :( */
+                    sprintf(NameBuffer,
+                            "%c\\System32\\Drivers\\%S",
+                            SharedUserData->NtSystemRoot[2],
+                            LdrEntry->BaseDllName.Buffer);
+                }
+            }
+
+            /* Check if the buffer was ok */
+            if (!OverFlow)
+            {
+                /* Initialize the ANSI_STRING for the debugger */
+                RtlInitString(&SymbolString, NameBuffer);
+
+                /* Load the symbols */
+                DbgLoadImageSymbols(&SymbolString, LdrEntry->DllBase, -1);
+            }
+        }
+
+        /* Go to the next entry */
+        i++;
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Check if we should break after symbol load */
+    if (KdBreakAfterSymbolLoad) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+}
+
+VOID
+NTAPI
 ExpInitializeExecutive(IN ULONG Cpu,
                        IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -676,6 +771,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     CHAR Buffer[256];
     ANSI_STRING AnsiPath;
     NTSTATUS Status;
+    PCHAR CommandLine, PerfMem;
+    ULONG PerfMemUsed;
 
     /* Validate Loader */
     if (!ExpIsLoaderValid(LoaderBlock))
@@ -728,6 +825,50 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* Set phase to 0 */
     ExpInitializationPhase = 0;
+
+    /* Get boot command line */
+    CommandLine = LoaderBlock->LoadOptions;
+    if (CommandLine)
+    {
+        /* Upcase it for comparison and check if we're in performance mode */
+        _strupr(CommandLine);
+        PerfMem = strstr(CommandLine, "PERFMEM");
+        if (PerfMem)
+        {
+            /* Check if the user gave a number of bytes to use */
+            PerfMem = strstr(PerfMem, "=");
+            if (PerfMem)
+            {
+                /* Read the number of pages we'll use */
+                PerfMemUsed = atol(PerfMem + 1) * (1024 * 1024 / PAGE_SIZE);
+                if (PerfMem)
+                {
+                    /* FIXME: TODO */
+                    DPRINT1("BBT performance mode not yet supported."
+                            "/PERFMEM option ignored.\n");
+                }
+            }
+        }
+
+        /* Check if we're burning memory */
+        PerfMem = strstr(CommandLine, "BURNMEMORY");
+        if (PerfMem)
+        {
+            /* Check if the user gave a number of bytes to use */
+            PerfMem = strstr(PerfMem, "=");
+            if (PerfMem)
+            {
+                /* Read the number of pages we'll use */
+                PerfMemUsed = atol(PerfMem + 1) * (1024 * 1024 / PAGE_SIZE);
+                if (PerfMem)
+                {
+                    /* FIXME: TODO */
+                    DPRINT1("Burnable memory support not yet present."
+                            "/BURNMEM option ignored.\n");
+                }
+            }
+        }
+    }
 
     /* Setup NLS Base and offsets */
     NlsData = LoaderBlock->NlsData;
@@ -786,11 +927,14 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Setup bugcheck messages */
     KiInitializeBugCheck();
 
+    /* Setup initial system settings (FIXME: Needs Cm Rewrite) */
+    //CmGetSystemControlValues(CommandLine, &CmControlVector);
+
     /* Initialize the executive at phase 0 */
     if (!ExInitSystem()) KEBUGCHECK(PHASE0_INITIALIZATION_FAILED);
 
-    /* Break into the Debugger if requested */
-    if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+    /* Load boot symbols */
+    ExpLoadBootSymbols(LoaderBlock);
 
     /* Set system ranges */
     SharedUserData->Reserved1 = (ULONG_PTR)MmHighestUserAddress;
@@ -798,6 +942,22 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* Make a copy of the NLS Tables */
     ExpInitNls(LoaderBlock);
+
+    /* Check if the user wants a kernel stack trace database */
+    if (NtGlobalFlag & FLG_KERNEL_STACK_TRACE_DB)
+    {
+        /* FIXME: TODO */
+        DPRINT1("Kernel-mode stack trace support not yet present."
+                "FLG_KERNEL_STACK_TRACE_DB flag ignored.\n");
+    }
+
+    /* Check if he wanted exception logging */
+    if (NtGlobalFlag & FLG_ENABLE_EXCEPTION_LOGGING)
+    {
+        /* FIXME: TODO */
+        DPRINT1("Kernel-mode exception logging support not yet present."
+                "FLG_ENABLE_EXCEPTION_LOGGING flag ignored.\n");
+    }
 
     /* Initialize the Handle Table */
     ExpInitializeHandleTables();
@@ -827,14 +987,11 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Load basic Security for other Managers */
     if (!SeInit()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
-    /* Set up Region Maps, Sections and the Paging File */
-    MmInit2();
-
-    /* Initialize the boot video. */
-    InbvDisplayInitialize();
-
     /* Initialize the Process Manager */
     if (!PsInitSystem()) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
+
+    /* Initialize the PnP Manager */
+    if (!PpInitSystem()) KEBUGCHECK(PP0_INITIALIZATION_FAILED);
 
     /* Initialize the User-Mode Debugging Subsystem */
     DbgkInitialize();
@@ -883,12 +1040,16 @@ ExPhase2Init(PVOID Context)
     if (strstr(KeLoaderBlock->LoadOptions, "NOGUIBOOT")) NoGuiBoot = TRUE;
 
     /* Display the boot screen image if not disabled */
+    InbvDisplayInitialize();
     if (!ExpInTextModeSetup) InbvDisplayInitialize2(NoGuiBoot);
     if (!NoGuiBoot) InbvDisplayBootLogo();
 
     /* Clear the screen to blue and display the boot notice and debug status */
     if (NoGuiBoot) ExpDisplayNotice();
     KdInitSystem(2, KeLoaderBlock);
+
+    /* Set up Region Maps, Sections and the Paging File */
+    MmInit2();
 
     /* Initialize Power Subsystem in Phase 0 */
     PoInit(0, AcpiTableDetected);

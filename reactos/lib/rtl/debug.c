@@ -315,15 +315,37 @@ DbgSetDebugFilterState(IN ULONG ComponentId,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
-DbgLoadImageSymbols(IN PUNICODE_STRING Name,
-                    IN ULONG Base,
-                    IN ULONG Unknown3)
+DbgLoadImageSymbols(IN PANSI_STRING Name,
+                    IN PVOID Base,
+                    IN ULONG ProcessId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIMAGE_NT_HEADERS NtHeader;
+    KD_SYMBOLS_INFO SymbolInfo;
+
+    /* Setup the symbol data */
+    SymbolInfo.BaseOfDll = Base;
+    SymbolInfo.ProcessId = UlongToPtr(ProcessId);
+
+    /* Get NT Headers */
+    NtHeader = NULL; //RtlImageNtHeader(Base);
+    if (NtHeader)
+    {
+        /* Get the rest of the data */
+        SymbolInfo.CheckSum = NtHeader->OptionalHeader.CheckSum;
+        SymbolInfo.SizeOfImage = NtHeader->OptionalHeader.SizeOfImage;
+    }
+    else
+    {
+        /* No data available */
+        SymbolInfo.CheckSum = SymbolInfo.SizeOfImage = 0;
+    }
+
+    /* Load the symbols */
+    DebugService2(Name, &SymbolInfo, BREAKPOINT_LOAD_SYMBOLS);
+    return STATUS_SUCCESS;
 }
 /* EOF */
