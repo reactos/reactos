@@ -833,13 +833,13 @@ static __inline__ __attribute__((always_inline)) void __outdwordstring(unsigned 
 /*** System information ***/
 static __inline__ __attribute__((always_inline)) void __cpuid(int CPUInfo[], const int InfoType)
 {
-	__asm__("cpuid" : "=a" (CPUInfo[0]), "=b" (CPUInfo[1]), "=c" (CPUInfo[2]), "=d" (CPUInfo[3]) : "a" (InfoType));
+	__asm__ __volatile__("cpuid" : "=a" (CPUInfo[0]), "=b" (CPUInfo[1]), "=c" (CPUInfo[2]), "=d" (CPUInfo[3]) : "a" (InfoType));
 }
 
 static __inline__ __attribute__((always_inline)) unsigned long long __rdtsc(void)
 {
 	unsigned long long retval;
-	__asm__("rdtsc" : "=A" (retval));
+	__asm__ __volatile__("rdtsc" : "=A"(retval));
 	return retval;
 }
 
@@ -870,44 +870,44 @@ static __inline__ __attribute__((always_inline)) void _enable(void)
 static __inline__ __attribute__((always_inline)) unsigned long __readcr0(void)
 {
 	unsigned long value;
-	__asm__("mov %%cr0, %[value]" : [value] "=q" (value));
+	__asm__ __volatile__("mov %%cr0, %[value]" : [value] "=q" (value));
 	return value;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned long __readcr2(void)
 {
 	unsigned long value;
-	__asm__("mov %%cr2, %[value]" : [value] "=q" (value));
+	__asm__ __volatile__("mov %%cr2, %[value]" : [value] "=q" (value));
 	return value;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned long __readcr3(void)
 {
 	unsigned long value;
-	__asm__("mov %%cr3, %[value]" : [value] "=q" (value));
+	__asm__ __volatile__("mov %%cr3, %[value]" : [value] "=q" (value));
 	return value;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned long __readcr4(void)
 {
 	unsigned long value;
-	__asm__("mov %%cr4, %[value]" : [value] "=q" (value));
+	__asm__ __volatile__("mov %%cr4, %[value]" : [value] "=q" (value));
 	return value;
 }
 
 static __inline__ __attribute__((always_inline)) void __writecr0(const unsigned long long Data)
 {
-	__asm__("mov %[Data], %%cr0" : : [Data] "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
+	__asm__("mov %[Data], %%cr0" : : [Data] "q" ((const unsigned long)(Data & 0xFFFFFFFF)) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __writecr3(const unsigned long long Data)
 {
-	__asm__("mov %[Data], %%cr3" : : [Data] "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
+	__asm__("mov %[Data], %%cr3" : : [Data] "q" ((const unsigned long)(Data & 0xFFFFFFFF)) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __writecr4(const unsigned long long Data)
 {
-	__asm__("mov %[Data], %%cr4" : : [Data] "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
+	__asm__("mov %[Data], %%cr4" : : [Data] "q" ((const unsigned long)(Data & 0xFFFFFFFF)) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __invlpg(void * const Address)
@@ -920,26 +920,19 @@ static __inline__ __attribute__((always_inline)) void __invlpg(void * const Addr
 static __inline__ __attribute__((always_inline)) unsigned long long __readmsr(const int reg)
 {
 	unsigned long long retval;
-	__asm__("rdmsr" : "=A" (retval) : "c" (reg));
+	__asm__ __volatile__("rdmsr" : "=A" (retval) : "c" (reg));
 	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) void __writemsr(const unsigned long Register, const unsigned long long Value)
 {
-	__asm__
-	(
-		"wrmsr" :
-		:
-		"a" ((unsigned long)((Value >>  0) & 0xFFFFFFFF)),
-		"d" ((unsigned long)((Value >> 32) & 0xFFFFFFFF)),
-		"c" (Register)
-	);
+	__asm__ __volatile__("wrmsr" : : "A" (Value), "c" (Register));
 }
 
 static __inline__ __attribute__((always_inline)) unsigned long long __readpmc(const int counter)
 {
 	unsigned long long retval;
-	__asm__("rdpmc" : "=A" (retval) : "c" (counter));
+	__asm__ __volatile__("rdpmc" : "=A" (retval) : "c" (counter));
 	return retval;
 }
 
@@ -953,7 +946,7 @@ static __inline__ __attribute__((always_inline)) unsigned long __segmentlimit(co
 
 static __inline__ __attribute__((always_inline)) void __wbinvd(void)
 {
-	__asm__("wbinvd");
+	__asm__ __volatile__("wbinvd");
 }
 
 #else
