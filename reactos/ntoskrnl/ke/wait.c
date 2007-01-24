@@ -77,13 +77,7 @@ KiUnlinkThread(IN PKTHREAD Thread,
 
     /* Check if there's a Thread Timer */
     Timer = &Thread->Timer;
-    if (Timer->Header.Inserted)
-    {
-        /* Remove the timer */
-        Timer->Header.Inserted = FALSE;
-        RemoveEntryList(&Timer->TimerListEntry);
-        //KiRemoveTimer(Timer);
-    }
+    if (Timer->Header.Inserted) KxRemoveTreeTimer(Timer);
 
     /* Increment the Queue's active threads */
     if (Thread->Queue) Thread->Queue->CurrentCount++;
@@ -219,6 +213,7 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
     BOOLEAN Swappable;
     PLARGE_INTEGER OriginalDueTime;
     LARGE_INTEGER DueTime, NewDueTime, InterruptTime;
+    ULONG Hand = 0;
 
     /* If this is a user-mode wait of 0 seconds, yield execution */
     if (!(Interval->QuadPart) && (WaitMode != KernelMode))
@@ -285,7 +280,7 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
             /* Insert the timer and swap the thread */
             ASSERT(Thread->WaitIrql <= DISPATCH_LEVEL);
             KiSetThreadSwapBusy(Thread);
-            KiInsertWaitTimer(Timer);
+            KxInsertTimer(Timer, Hand);
             WaitStatus = KiSwapThread(Thread, KeGetCurrentPrcb());
 
             /* Check if were swapped ok */
@@ -350,6 +345,7 @@ KeWaitForSingleObject(IN PVOID Object,
     BOOLEAN Swappable;
     LARGE_INTEGER DueTime, NewDueTime, InterruptTime;
     PLARGE_INTEGER OriginalDueTime = Timeout;
+    ULONG Hand = 0;
 
     /* Check if the lock is already held */
     if (!Thread->WaitNext) goto WaitStart;
@@ -449,7 +445,7 @@ KeWaitForSingleObject(IN PVOID Object,
             if (Timeout)
             {
                 /* Insert it */
-                KiInsertWaitTimer(Timer);
+                KxInsertTimer(Timer, Hand);
             }
             else
             {
@@ -515,7 +511,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
     BOOLEAN Swappable;
     PLARGE_INTEGER OriginalDueTime = Timeout;
     LARGE_INTEGER DueTime, NewDueTime, InterruptTime;
-    ULONG Index;
+    ULONG Index, Hand = 0;
 
     /* Make sure the Wait Count is valid */
     if (!WaitBlockArray)
@@ -726,7 +722,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
             if (Timeout)
             {
                 /* Insert it */
-                KiInsertWaitTimer(Timer);
+                KxInsertTimer(Timer, Hand);
             }
             else
             {

@@ -8,9 +8,6 @@
 //                     Do NOT ask when it will be fixed.
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
-// Ke2:
-//  - Dispatcher Rewrite (DPCs-Timers-Waits).
-//
 // Hal:
 //  - Use APC and DPC Interrupt Dispatchers.
 //  - CMOS Initialization and CMOS Spinlock.
@@ -26,14 +23,15 @@
 // REACTOS GUIDANCE PLAN
 //  ________________________________________________________________________________________________________
 // /                                                                                                        \
-// | OB, PS, LPC, DBGK, IO => Almost entirely fixed interaction with Ke/Ex.                               | |
+// | OB, PS, LPC, DBGK, EX => "Code complete". No expected changes until 0.5.0                            | |
 // | SE => Not looked at. Interaction with Ps/Io is minimal and currently hacked away. Preserve.          |J|
-// | EX => Needs re-visiting (in trunk). Do callbacks/push locks for interaction with Ps.                 |A|
+// | INIT => Boot sequence still needs work in terms of interaction with Ke and CPU features.             |A|
 // | KD/KDBG => Laptop has special version of ROS without these components. Commit in branch.             |N|
-// | INIT => Boot sequence still needs work in terms of interaction with Ke and CPU features.             | |
-// | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |F|
-// | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |E|
-// | HAL => Needs APC/DPC/IRQL implementation fixed ASAP in terms of interaction with Ke.                 |B|
+// | HAL => Needs APC/DPC/IRQL implementation fixed ASAP in terms of interaction with Ke.                 | |
+// | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           | |
+// | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |F|
+// | KE => Enable new thread scheduler and ensure it works.                                               |E|
+// | KD => Implement KD64 6.0, compatible with WinDBG                                                     |B|
 // | FSTUB => Needs IoAssignDriveLetters fixed ASAP but not critical to Ke/Ex. Interacts with Io.         | |
 // | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |M|
 // | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |A|
@@ -41,7 +39,7 @@
 // | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           | |
 // | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |A|
 // | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |P|
-// | KE => Timer Rewrite + Thread Scheduler Rewrite.                                                      |R|
+// | PNPMGR => TBD                                                                                        |R|
 // | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |I|
 // | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |L|
 // | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           | |

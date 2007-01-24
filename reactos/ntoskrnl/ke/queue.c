@@ -75,6 +75,7 @@ KiInsertQueue(IN PKQUEUE Queue,
     PKTHREAD Thread = KeGetCurrentThread();
     PKWAIT_BLOCK WaitBlock;
     PLIST_ENTRY WaitEntry;
+    PKTIMER Timer;
     ASSERT_QUEUE(Queue);
 
     /* Save the old state */
@@ -109,12 +110,8 @@ KiInsertQueue(IN PKQUEUE Queue,
         Thread->WaitReason = 0;
 
         /* Check if there's a Thread Timer */
-        if (Thread->Timer.Header.Inserted)
-        {
-            /* Cancel the Thread Timer with the no-lock fastpath */
-            Thread->Timer.Header.Inserted = FALSE;
-            RemoveEntryList(&Thread->Timer.TimerListEntry);
-        }
+        Timer = &Thread->Timer;
+        if (Timer->Header.Inserted) KxRemoveTreeTimer(Timer);
 
         /* Reschedule the Thread */
         KiReadyThread(Thread);
@@ -251,6 +248,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
     BOOLEAN Swappable;
     PLARGE_INTEGER OriginalDueTime = Timeout;
     LARGE_INTEGER DueTime, NewDueTime, InterruptTime;
+    ULONG Hand = 0;
     ASSERT_QUEUE(Queue);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -390,7 +388,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
                 if (Timeout)
                 {
                     /* Insert it */
-                    KiInsertWaitTimer(Timer);
+                    KxInsertTimer(Timer, Hand);
                 }
                 else
                 {

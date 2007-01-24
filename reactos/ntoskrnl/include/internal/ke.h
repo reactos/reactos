@@ -55,6 +55,15 @@ typedef struct _KTIMER_TABLE_ENTRY
     ULARGE_INTEGER Time;
 } KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
 
+#define MAX_TIMER_DPCS                      16
+
+typedef struct _DPC_QUEUE_ENTRY
+{
+    PKDPC Dpc;
+    PKDEFERRED_ROUTINE Routine;
+    PVOID Context;
+} DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
+
 typedef PCHAR
 (NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
     IN PUNICODE_STRING Unicode,
@@ -122,9 +131,8 @@ extern ULONG KiTimeLimitIsrMicroseconds;
 extern ULONG KiServiceLimit;
 extern LIST_ENTRY BugcheckCallbackListHead, BugcheckReasonCallbackListHead;
 extern KSPIN_LOCK BugCheckCallbackLock;
-extern KDPC KiExpireTimerDpc;
+extern KDPC KiTimerExpireDpc;
 extern KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
-extern LIST_ENTRY KiTimerListHead;
 extern FAST_MUTEX KiGenericCallDpcMutex;
 extern LIST_ENTRY KiProfileListHead, KiProfileSourceListHead;
 extern KSPIN_LOCK KiProfileLock;
@@ -256,6 +264,27 @@ NTAPI
 CPUID(
     OUT ULONG CpuInfo[4],
     IN ULONG InfoType
+);
+
+BOOLEAN
+FASTCALL
+KiInsertTimerTable(
+    IN PKTIMER Timer,
+    IN ULONG Hand
+);
+
+BOOLEAN
+FASTCALL
+KiInsertTreeTimer(
+    IN PKTIMER Timer,
+    IN LARGE_INTEGER Interval
+);
+
+VOID
+FASTCALL
+KiCompleteTimer(
+    IN PKTIMER Timer,
+    IN PKSPIN_LOCK_QUEUE LockQueue
 );
 
 /* gmutex.c ********************************************************************/
@@ -562,13 +591,6 @@ BOOLEAN
 NTAPI
 KeDisableThreadApcQueueing(IN PKTHREAD Thread);
 
-BOOLEAN
-NTAPI
-KiInsertTimer(
-    PKTIMER Timer,
-    LARGE_INTEGER DueTime
-);
-
 VOID
 FASTCALL
 KiWaitTest(
@@ -596,6 +618,21 @@ KiInsertQueue(
     IN PKQUEUE Queue,
     IN PLIST_ENTRY Entry,
     BOOLEAN Head
+);
+
+VOID
+NTAPI
+KiTimerExpiration(
+    IN PKDPC Dpc,
+    IN PVOID DeferredContext,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2
+);
+
+ULONG
+NTAPI
+KiComputeTimerTableIndex(
+    IN LONGLONG TimeValue
 );
 
 ULONG

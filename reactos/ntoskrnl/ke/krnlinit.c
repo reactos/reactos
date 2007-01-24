@@ -67,8 +67,8 @@ KiInitSystem(VOID)
     KeInitializeSpinLock(&BugCheckCallbackLock);
 
     /* Initialize the Timer Expiration DPC */
-    KeInitializeDpc(&KiExpireTimerDpc, KiExpireTimers, NULL);
-    KeSetTargetProcessorDpc(&KiExpireTimerDpc, 0);
+    KeInitializeDpc(&KiTimerExpireDpc, KiTimerExpiration, NULL);
+    KeSetTargetProcessorDpc(&KiTimerExpireDpc, 0);
 
     /* Initialize Profiling data */
     KeInitializeSpinLock(&KiProfileLock);
@@ -83,9 +83,6 @@ KiInitSystem(VOID)
         KiTimerTableListHead[i].Time.HighPart = 0xFFFFFFFF;
         KiTimerTableListHead[i].Time.LowPart = 0;
     }
-
-    /* Initialize old-style list */
-    InitializeListHead(&KiTimerListHead);
 
     /* Initialize the Swap event and all swap lists */
     KeInitializeEvent(&KiSwapEvent, SynchronizationEvent, FALSE);
@@ -292,4 +289,6 @@ KeInitSystem(VOID)
     KiInitMachineDependent();
     return TRUE;
 }
+
+
 

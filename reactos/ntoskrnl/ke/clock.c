@@ -27,7 +27,7 @@
 /* GLOBALS ****************************************************************/
 
 LARGE_INTEGER KeBootTime, KeBootTimeBias;
-KDPC KiExpireTimerDpc;
+KDPC KiTimerExpireDpc;
 BOOLEAN KiClockSetupComplete = FALSE;
 ULONG KiTimeLimitIsrMicroseconds;
 
@@ -37,7 +37,6 @@ ULONG KiTimeLimitIsrMicroseconds;
 volatile KSYSTEM_TIME KeTickCount = {0};
 volatile ULONG KiRawTicks = 0;
 LONG KiTickOffset = 0;
-extern LIST_ENTRY KiTimerListHead;
 
 /*
  * The increment in the system clock every timer tick (in system time units)

@@ -13,6 +13,45 @@
 
 /* FUNCTIONS ******************************************************************/
 
+.globl _KiComputeTimerTableIndex@8
+.func KiComputeTimerTableIndex@8
+_KiComputeTimerTableIndex@8:
+
+    /* Save registers */
+    push ebx
+
+    /* Make the first multiplication */
+    mov eax, [esp+8]
+    mul dword ptr [_KiTimeIncrementReciprocal+4]
+    mov ebx, eax
+    mov ecx, edx
+
+    /* Make the second multiplication */
+    mov eax, [esp+12]
+    mul dword ptr [_KiTimeIncrementReciprocal]
+    add ebx, eax
+    adc ecx, edx
+
+    /* Multiply by the reciprocal */
+    mov eax, [esp+8]
+    mul dword ptr [_KiTimeIncrementReciprocal]
+    mov eax, [esp+12]
+    push edx
+    mul dword ptr [_KiTimeIncrementReciprocal+4]
+    pop edx
+    add edx, ebx
+    adc eax, ecx
+
+    /* Shift the result and generate the index */
+    mov cl, [_KiTimeIncrementShiftCount]
+    shr eax, cl
+    and eax, TIMER_TABLE_SIZE - 1
+
+    /* Return */
+    pop ebx
+    ret 8
+.endfunc
+
 .globl _KeUpdateRunTime@4
 .func KeUpdateRunTime@4
 _KeUpdateRunTime@4:
@@ -214,13 +253,50 @@ _KeUpdateSystemTime@0:
     /* FIXME: HACK */
     mov ds:[USER_SHARED_DATA], ecx
 
+    /* Get hand index and entry into the table */
+    and eax, TIMER_TABLE_SIZE - 1
+    shl eax, 4
+
+    /* Compare the due time */
+    cmp esi, [eax+_KiTimerTableListHead+KTIMER_TABLE_TIME+4]
+    jb NextHand
+    ja TimerExpired
+    cmp edi, [eax+_KiTimerTableListHead+KTIMER_TABLE_TIME]
+    jnb TimerExpired
+
+NextHand:
+    /* Move to the next hand */
+    inc ebx
+    mov eax, ebx
+
 IncompleteTick:
 
-    /* FIXME: NASTY Queue DPC to handle registered timers */
-    push 0
-    push [esp+KTRAP_FRAME_EIP]
-    push offset _KiExpireTimerDpc
-    call _KeInsertQueueDpc@12
+    /* Get hand index and entry into the table */
+    and eax, TIMER_TABLE_SIZE - 1
+    shl eax, 4
+
+    /* Compare the due time */
+    cmp esi, [eax+_KiTimerTableListHead+KTIMER_TABLE_TIME+4]
+    jb DebugCheck
+    ja TimerExpired
+    cmp edi, [eax+_KiTimerTableListHead+KTIMER_TABLE_TIME]
+    jb DebugCheck
+
+TimerExpired:
+
+    /* Check if expiration is active */
+    mov ecx, [fs:KPCR_PRCB]
+    cmp dword ptr [ecx+KPRCB_TIMER_REQUEST], 0
+    jne DebugCheck
+
+    /* It's not, register it */
+    mov [ecx+KPRCB_TIMER_REQUEST], esp
+    mov [ecx+KPRCB_TIMER_HAND], ebx
+    mov ecx, DISPATCH_LEVEL
+    call @HalRequestSoftwareInterrupt@4
+
+DebugCheck:
+    /* FIXME: Check for KdDebuggerEnabled */
 
     /* Check if this was a full tick */
     cmp dword ptr _KiTickOffset, 0
