@@ -85,8 +85,6 @@
 
 
 /*** Atomic operations ***/
-/* TODO: _ReadBarrier */
-/* TODO: _WriteBarrier */
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
 #define _ReadWriteBarrier() __sync_synchronize()
@@ -97,6 +95,10 @@ static __inline__ __attribute__((always_inline)) _MemoryBarrier(void)
 }
 #define _ReadWriteBarrier() _MemoryBarrier()
 #endif
+
+/* BUGBUG: GCC only supports full barriers */
+#define _ReadBarrier _ReadWriteBarrier
+#define _WriteBarrier _ReadWriteBarrier
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
 
@@ -774,50 +776,16 @@ static __inline__ __attribute__((always_inline)) unsigned long long __ull_rshift
 /*** 64-bit math ***/
 static __inline__ __attribute__((always_inline)) long long __emul(const int a, const int b)
 {
-	unsigned long lo32;
-	long hi32;
-
-	__asm__("imul %[b]" : "=a" (lo32), "=d" (hi32) : [a] "a" (a), [b] "rm" (b));
-
-	{
-		union u_
-		{
-			long long ll;
-			struct s_
-			{
-				unsigned long lo32;
-				long hi32;
-			}
-			s;
-		}
-		u = { s : { lo32 : lo32, hi32 : hi32 } };
-
-		return u.ll;
-	}
+	long long retval;
+	__asm__("imull %[b]" : "=A" (retval) : [a] "a" (a), [b] "rm" (b));
+	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned long long __emulu(const unsigned int a, const unsigned int b)
 {
-	unsigned long lo32;
-	unsigned long hi32;
-
-	__asm__("mul %[b]" : "=a" (lo32), "=d" (hi32) : [a] "a" (a), [b] "rm" (b));
-
-	{
-		union u_
-		{
-			unsigned long long ull;
-			struct s_
-			{
-				unsigned long lo32;
-				unsigned long hi32;
-			}
-			s;
-		}
-		u = { s : { lo32 : lo32, hi32 : hi32 } };
-
-		return u.ull;
-	}
+	unsigned long long retval;
+	__asm__("mull %[b]" : "=A" (retval) : [a] "a" (a), [b] "rm" (b));
+	return retval;
 }
 
 
@@ -915,26 +883,9 @@ static __inline__ __attribute__((always_inline)) void __cpuid(int CPUInfo[], con
 
 static __inline__ __attribute__((always_inline)) unsigned long long __rdtsc(void)
 {
-	unsigned long lo32;
-	unsigned long hi32;
-
-	__asm__ __volatile__("rdtsc" : "=a" (lo32), "=d" (hi32));
-
-	{
-		union u_
-		{
-			unsigned long long ull;
-			struct s_
-			{
-				unsigned long lo32;
-				unsigned long hi32;
-			}
-			s;
-		}
-		u = { s : { lo32 : lo32, hi32 : hi32 } };
-
-		return u.ull;
-	}
+	unsigned long long retval;
+	__asm__("rdtsc" : "=A" (retval));
+	return retval;
 }
 
 
@@ -1013,26 +964,9 @@ static __inline__ __attribute__((always_inline)) void __invlpg(void * const Addr
 /*** System operations ***/
 static __inline__ __attribute__((always_inline)) unsigned long long __readmsr(const int reg)
 {
-	unsigned long lo32;
-	unsigned long hi32;
-
-	__asm__("rdmsr" : "=a" (lo32), "=d" (hi32) : "c" (reg));
-
-	{
-		union u_
-		{
-			unsigned long long ull;
-			struct s_
-			{
-				unsigned long lo32;
-				unsigned long hi32;
-			}
-			s;
-		}
-		u = { s : { lo32 : lo32, hi32 : hi32 } };
-
-		return u.ull;
-	}
+	unsigned long long retval;
+	__asm__("rdmsr" : "=A" (retval) : "c" (reg));
+	return retval;
 }
 
 static __inline__ __attribute__((always_inline)) void __writemsr(const unsigned long Register, const unsigned long long Value)
@@ -1049,26 +983,9 @@ static __inline__ __attribute__((always_inline)) void __writemsr(const unsigned 
 
 static __inline__ __attribute__((always_inline)) unsigned long long __readpmc(const int counter)
 {
-	unsigned long lo32;
-	unsigned long hi32;
-
-	__asm__("rdpmc" : "=a" (lo32), "=d" (hi32) : "c" (counter));
-
-	{
-		union u_
-		{
-			unsigned long long ull;
-			struct s_
-			{
-				unsigned long lo32;
-				unsigned long hi32;
-			}
-			s;
-		}
-		u = { s : { lo32 : lo32, hi32 : hi32 } };
-
-		return u.ull;
-	}
+	unsigned long long retval;
+	__asm__("rdpmc" : "=A" (retval) : "c" (counter));
+	return retval;
 }
 
 /* NOTE: an immediate value for 'a' will raise an ICE in Visual C++ */
