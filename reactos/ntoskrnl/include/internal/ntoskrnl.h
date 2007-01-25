@@ -66,7 +66,6 @@ typedef struct __DESCRIPTOR
 /*
  * Initalization functions (called once by main())
  */
-VOID MmInitSystem(ULONG Phase, PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
 BOOLEAN NTAPI ObInit(VOID);
 BOOLEAN NTAPI CmInitSystem1(VOID);
 VOID CmShutdownRegistry(VOID);

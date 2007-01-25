@@ -153,7 +153,7 @@ PUCHAR FsRtlLegalAnsiCharacterArray = LegalAnsiCharacterArray;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-VOID
+BOOLEAN
 NTAPI
 FsRtlInitSystem(VOID)
 {
@@ -179,6 +179,8 @@ FsRtlInitSystem(VOID)
     {
         ExInitializeResource(&FsRtlPagingIoResources[i]);
     }
+
+    return TRUE;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

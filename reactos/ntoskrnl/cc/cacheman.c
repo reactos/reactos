@@ -16,11 +16,12 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+BOOLEAN
 NTAPI
 CcInitializeCacheManager(VOID)
 {
-  CcInitView();
+    CcInitView();
+    return TRUE;
 }
 
 /*

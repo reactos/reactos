@@ -280,14 +280,30 @@ IopDisplayLoadingMessage(PVOID ServiceName,
                          BOOLEAN Unicode)
 {
     CHAR TextBuffer[256];
+    PCHAR Extra = ".sys";
+
     if (ExpInTextModeSetup) return;
-    if (Unicode) 
+    if (Unicode)
     {
-        sprintf(TextBuffer, "Loading %S...\n", (PWCHAR)ServiceName);
+        if (wcsstr(ServiceName, L".sys")) Extra = "";
+        sprintf(TextBuffer,
+                "%s%s%s\\%S%s\n",
+                KeLoaderBlock->ArcBootDeviceName,
+                KeLoaderBlock->NtBootPathName,
+                "System32\\Drivers",
+                (PWCHAR)ServiceName,
+                Extra);
     }
     else
     {
-        sprintf(TextBuffer, "Loading %s...\n", (PCHAR)ServiceName);
+        if (strstr(ServiceName, ".sys")) Extra = "";
+        sprintf(TextBuffer,
+                "%s%s%s\\%s%s\n",
+                KeLoaderBlock->ArcBootDeviceName,
+                KeLoaderBlock->NtBootPathName,
+                "System32\\Drivers",
+                (PCHAR)ServiceName,
+                Extra);
     }
     HalDisplayString(TextBuffer);
 }

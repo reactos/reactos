@@ -314,42 +314,6 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ExpNlsTableBase = SectionBase;
 }
 
-VOID
-INIT_FUNCTION
-ExpDisplayNotice(VOID)
-{
-    CHAR str[50];
-   
-    if (ExpInTextModeSetup)
-    {
-        HalDisplayString(
-        "\n\n\n     ReactOS " KERNEL_VERSION_STR " Setup \n");
-        HalDisplayString(
-        "    \xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD");
-        HalDisplayString(
-        "\xCD\xCD\n");
-        return;
-    }
-    
-    HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "
-                     KERNEL_VERSION_BUILD_STR")\n");
-    HalDisplayString(RES_STR_LEGAL_COPYRIGHT);
-    HalDisplayString("\n\nReactOS is free software, covered by the GNU General "
-                     "Public License, and you\n");
-    HalDisplayString("are welcome to change it and/or distribute copies of it "
-                     "under certain\n");
-    HalDisplayString("conditions. There is absolutely no warranty for "
-                      "ReactOS.\n\n");
-
-    /* Display number of Processors */
-    sprintf(str,
-            "Found %x system processor(s). [%lu MB Memory]\n",
-            (int)KeNumberProcessors,
-            (MmFreeLdrMemHigher + 1088)/ 1024);
-    HalDisplayString(str);
-    
-}
-
 NTSTATUS
 NTAPI
 ExpLoadInitialProcess(IN OUT PRTL_USER_PROCESS_INFORMATION ProcessInformation)
@@ -1083,6 +1047,8 @@ Phase1InitializationDiscard(PVOID Context)
         InitWinPEModeType |= (strstr(CommandLine, "INRAM")) ? 0x80000000 : 1;
     }
 
+    /* FIXME: Print product name, version, and build */
+
     /* Initialize Power Subsystem in Phase 0 */
     if (!PoInitSystem(0, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);
 
@@ -1127,6 +1093,11 @@ Phase1InitializationDiscard(PVOID Context)
     /* Initialize all processors */
     if (!HalAllProcessorsStarted()) KeBugCheck(HAL1_INITIALIZATION_FAILED);
 
+    /* FIXME: Print CPU and Memory */
+
+    /* Update the progress bar */
+    InbvUpdateProgressBar(5);
+
     /* Call OB initialization again */
     if (!ObInit()) KeBugCheck(OBJECT1_INITIALIZATION_FAILED);
 
@@ -1158,53 +1129,77 @@ Phase1InitializationDiscard(PVOID Context)
     }
 
     /* Set up Region Maps, Sections and the Paging File */
-    MmInit2();
+    if (!MmInitSystem(1, LoaderBlock)) KeBugCheck(MEMORY1_INITIALIZATION_FAILED);
 
     /* Create NLS section */
     ExpInitNls(KeLoaderBlock);
 
     /* Initialize Cache Views */
-    CcInitializeCacheManager();
+    if (!CcInitializeCacheManager()) KeBugCheck(CACHE_INITIALIZATION_FAILED);
 
     /* Initialize the Registry */
     if (!CmInitSystem1()) KeBugCheck(CONFIG_INITIALIZATION_FAILED);
+
+    /* Update progress bar */
+    InbvUpdateProgressBar(15);
 
     /* Update timezone information */
     ExRefreshTimeZoneInformation(&SystemBootTime);
 
     /* Initialize the File System Runtime Library */
-    FsRtlInitSystem();
+    if (!FsRtlInitSystem()) KeBugCheck(FILE_INITIALIZATION_FAILED);
 
     /* Report all resources used by HAL */
     HalReportResourceUsage();
 
-    /* Initialize LPC */
-    LpcpInitSystem();
+    /* Call the debugger DLL once we have KD64 6.0 support */
+    //KdDebuggerInitialize1(LoaderBlock);
 
-    /* Enter the kernel debugger before starting up the boot drivers */
-    if (KdDebuggerEnabled && KdpEarlyBreak) DbgBreakPoint();
+    /* Setup PnP Manager in phase 1 */
+    if (!PpInitSystem()) KeBugCheck(PP1_INITIALIZATION_FAILED);
+
+    /* Update progress bar */
+    InbvUpdateProgressBar(20);
+
+    /* Initialize LPC */
+    if (!LpcInitSystem()) KeBugCheck(LPC_INITIALIZATION_FAILED);
 
     /* Initialize the I/O Subsystem */
     if (!IoInitSystem(KeLoaderBlock)) KeBugCheck(IO1_INITIALIZATION_FAILED);
 
     /* Unmap Low memory, and initialize the MPW and Balancer Thread */
-    MmInit3();
-#if DBG
-    extern ULONG Guard;
-#endif
-    ASSERT(Guard == 0xCACA1234);
+    MmInitSystem(2, LoaderBlock);
+
+    /* Update progress bar */
+    InbvUpdateProgressBar(80);
 
     /* Initialize VDM support */
     KeI386VdmInitialize();
 
     /* Initialize Power Subsystem in Phase 1*/
-    PoInitSystem(1, AcpiTableDetected);
+    if (!PoInitSystem(1, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);
 
     /* Initialize the Process Manager at Phase 1 */
     if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
 
+    /* Update progress bar */
+    InbvUpdateProgressBar(85);
+
+    /* Make sure nobody touches the loader block again */
+    if (LoaderBlock == KeLoaderBlock) KeLoaderBlock = NULL;
+    LoaderBlock = Context = NULL;
+
+    /* Update progress bar */
+    InbvUpdateProgressBar(90);
+
     /* Launch initial process */
     Status = ExpLoadInitialProcess(ProcessInfo);
+
+    /* Update progress bar */
+    InbvUpdateProgressBar(100);
+
+    /* Allow strings to be displayed */
+    InbvEnableDisplayString(TRUE);
 
     /* Wait 5 seconds for it to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);

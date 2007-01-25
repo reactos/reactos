@@ -3398,7 +3398,7 @@ PpInitSystem(VOID)
     case 1:
 
         /* Do Phase 1 */
-        return FALSE;
+        return TRUE;
         //return PiInitPhase1();
 
     default:

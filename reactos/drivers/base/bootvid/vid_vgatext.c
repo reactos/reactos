@@ -48,7 +48,7 @@
 #define CRTC_CURLO         0x0f
 
 #define CHAR_ATTRIBUTE_BLACK  0x00  /* black on black */
-#define CHAR_ATTRIBUTE        0x1F  /* grey on blue */
+#define CHAR_ATTRIBUTE        0x07  /* grey on blue */
 
 /* GLOBALS *******************************************************************/
 
@@ -65,7 +65,7 @@ VidpVgaTextClearDisplay(VOID)
    ULONG i;
 
    for (i = 0; i < SizeX * SizeY; i++, ptr++)
-      *ptr = (0x1700 + ' ');
+      *ptr = (0x0000 + ' ');
 }
 
 static BOOLEAN NTAPI

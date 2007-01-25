@@ -926,13 +926,13 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	 * Load boot drivers
 	 */
 	FrLdrLoadBootDrivers(szBootPath, 40);
-	UiUnInitialize("Booting ReactOS...");
+	//UiUnInitialize("Booting ReactOS...");
 
 	/*
 	 * Now boot the kernel
 	 */
 	DiskStopFloppyMotor();
-    MachVideoPrepareForReactOS();
+    //MachVideoPrepareForReactOS();
     FrLdrStartup(0x2badb002);
 }
 

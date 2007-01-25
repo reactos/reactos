@@ -453,44 +453,39 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
 
 BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
 
-VOID
+BOOLEAN
 NTAPI
-INIT_FUNCTION
-MmInit2(VOID)
+MmInitSystem(IN ULONG Phase,
+             IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-   MmInitializeRmapList();
-   RmapReady = TRUE;
-   MmInitializePageOp();
-   PageOpReady = TRUE;
-   MmInitSectionImplementation();
-   SectionsReady = TRUE;
-   MmInitPagingFile();
-   PagingReady = TRUE;
-}
+    if (Phase == 1)
+    {
+        MmInitializeRmapList();
+        RmapReady = TRUE;
+        MmInitializePageOp();
+        PageOpReady = TRUE;
+        MmInitSectionImplementation();
+        SectionsReady = TRUE;
+        MmInitPagingFile();
+        PagingReady = TRUE;
+    }
+    else if (Phase == 2)
+    {
+        /*
+        * Unmap low memory
+        */
+        MmCreatePhysicalMemorySection();
+        MiInitBalancerThread();
 
-VOID
-INIT_FUNCTION
-NTAPI
-MmInit3(VOID)
-{
-   /*
-    * Unmap low memory
-    */
-#ifdef CONFIG_SMP
-   /* In SMP mode we can unmap the low memory
-      if all processors are started. */
-   MmDeletePageTable(NULL, 0);
-#endif
+        /*
+        * Initialise the modified page writer.
+        */
+        MmInitMpwThread();
 
-   MmCreatePhysicalMemorySection();
-   MiInitBalancerThread();
+        /* FIXME: Read parameters from memory */
+    }
 
-   /*
-    * Initialise the modified page writer.
-    */
-   MmInitMpwThread();
-
-   /* FIXME: Read parameters from memory */
+    return TRUE;
 }
 
 VOID static

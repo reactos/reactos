@@ -12,27 +12,26 @@
 //  - Use APC and DPC Interrupt Dispatchers.
 //  - CMOS Initialization and CMOS Spinlock.
 //
-// Fstub:
-//  - Implement IoAssignDriveLetters using mount manager support.
-//
-// Kd:
-//  - Implement KD Kernel Debugging and WinDBG support.
+// Global:
+//  - TODO: Complete the list of bufxies
+//  - Fix process reference count leak.
+//  - Fix atapi.sys loading one more time at each boot.
+//  - Fix LiveCD.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 // REACTOS GUIDANCE PLAN
 //  ________________________________________________________________________________________________________
 // /                                                                                                        \
-// | OB, PS, LPC, DBGK, EX => "Code complete". No expected changes until 0.5.0                            | |
+// | OB, PS, LPC, DBGK, EX, INIT => "Code complete". No expected changes until 0.5.0                      | |
 // | SE => Not looked at. Interaction with Ps/Io is minimal and currently hacked away. Preserve.          |J|
-// | INIT => Boot sequence still needs work in terms of interaction with Ke and CPU features.             |A|
-// | KD/KDBG => Laptop has special version of ROS without these components. Commit in branch.             |N|
-// | HAL => Needs APC/DPC/IRQL implementation fixed ASAP in terms of interaction with Ke.                 | |
+// | KD/KDBG => Laptop has special version of ROS without these components. Commit in branch.             |A|
+// | HAL => Needs APC/DPC/IRQL implementation fixed ASAP in terms of interaction with Ke.                 |N|
 // | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           | |
 // | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |F|
-// | KE => Enable new thread scheduler and ensure it works.                                               |E|
-// | KD => Implement KD64 6.0, compatible with WinDBG                                                     |B|
-// | FSTUB => Needs IoAssignDriveLetters fixed ASAP but not critical to Ke/Ex. Interacts with Io.         | |
+// | BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES   |E|
+// | KE => Enable new thread scheduler and ensure it works.                                               |B|
+// | KD => Implement KD64 6.0, compatible with WinDBG                                                     | |
 // | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |M|
 // | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |A|
 // | CM => TOTAL REWRITE.                                                                                 |R|

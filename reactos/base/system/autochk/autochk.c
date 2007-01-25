@@ -306,7 +306,7 @@ CheckVolume(
     }
 
     /* Call provider */
-    PrintString("  Verifying volume %S\n", DrivePath);
+    //PrintString("  Verifying volume %S\n", DrivePath);
     RtlInitUnicodeString(&DrivePathU, DrivePath);
     Status = ChkdskFunc(&DrivePathU,
                         TRUE, // FixErrors
@@ -364,7 +364,7 @@ _main(int argc,
             CheckVolume(DrivePath);
         }
     }
-    PrintString("  Done\n\n");
+    //PrintString("  Done\n\n");
     return 0;
 }
 

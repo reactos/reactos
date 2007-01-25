@@ -117,9 +117,9 @@ LpcExitThread(
 //
 // Initialization functions
 //
-NTSTATUS
+BOOLEAN
 NTAPI
-LpcpInitSystem(
+LpcInitSystem(
     VOID
 );
 

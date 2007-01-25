@@ -110,7 +110,7 @@ NTSTATUS
 NTAPI
 WriteCacheSegment(PCACHE_SEGMENT CacheSeg);
 
-VOID
+BOOLEAN
 NTAPI
 CcInitializeCacheManager(VOID);
 

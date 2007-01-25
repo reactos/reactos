@@ -31,10 +31,9 @@ static GENERIC_MAPPING LpcpPortMapping =
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-NTSTATUS
-INIT_FUNCTION
+BOOLEAN
 NTAPI
-LpcpInitSystem(VOID)
+LpcInitSystem(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
@@ -70,7 +69,7 @@ LpcpInitSystem(VOID)
                                    32);
 
     /* We're done */
-    return STATUS_SUCCESS;
+    return TRUE;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

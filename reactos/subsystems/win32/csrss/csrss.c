@@ -36,8 +36,8 @@ int _cdecl _main(int argc,
 {
    NTSTATUS Status = STATUS_SUCCESS;
    
-   PrintString("ReactOS Client/Server Run-Time (Build %s)\n",
-	     KERNEL_VERSION_BUILD_STR);
+   //PrintString("ReactOS Client/Server Run-Time (Build %s)\n",
+	     //KERNEL_VERSION_BUILD_STR);
 
    /*==================================================================
     *	Initialize the Win32 environment subsystem server.

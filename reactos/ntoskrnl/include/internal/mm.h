@@ -550,13 +550,10 @@ MmInit1(
     ULONG MaxMemInMeg
 );
 
-VOID
+BOOLEAN
 NTAPI
-MmInit2(VOID);
-
-VOID
-NTAPI
-MmInit3(VOID);
+MmInitSystem(IN ULONG Phase,
+             IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 VOID
 NTAPI
