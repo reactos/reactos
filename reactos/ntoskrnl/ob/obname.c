@@ -985,6 +985,7 @@ ObQueryNameString(IN PVOID Object,
     POBJECT_DIRECTORY ParentDirectory;
     ULONG NameSize;
     PWCH ObjectName;
+    BOOLEAN ObjectIsNamed;
 
     /* Get the Kernel Meta-Structures */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -994,8 +995,9 @@ ObQueryNameString(IN PVOID Object,
     if (ObjectHeader->Type->TypeInfo.QueryNameProcedure)
     {
         /* Call the procedure */
+        ObjectIsNamed = ((LocalInfo) && (LocalInfo->Name.Length > 0));
         return ObjectHeader->Type->TypeInfo.QueryNameProcedure(Object,
-                                                               TRUE, //fixme
+                                                               ObjectIsNamed,
                                                                ObjectNameInfo,
                                                                Length,
                                                                ReturnLength,

@@ -269,6 +269,34 @@ typedef struct _OBJECT_DIRECTORY_INFORMATION
     UNICODE_STRING TypeName;
 } OBJECT_DIRECTORY_INFORMATION, *POBJECT_DIRECTORY_INFORMATION;
 
+//
+// Object Type Information
+//
+typedef struct _OBJECT_TYPE_INFORMATION
+{
+    UNICODE_STRING TypeName;
+    ULONG TotalNumberOfObjects;
+    ULONG TotalNumberOfHandles;
+    ULONG TotalPagedPoolUsage;
+    ULONG TotalNonPagedPoolUsage;
+    ULONG TotalNamePoolUsage;
+    ULONG TotalHandleTableUsage;
+    ULONG HighWaterNumberOfObjects;
+    ULONG HighWaterNumberOfHandles;
+    ULONG HighWaterPagedPoolUsage;
+    ULONG HighWaterNonPagedPoolUsage;
+    ULONG HighWaterNamePoolUsage;
+    ULONG HighWaterHandleTableUsage;
+    ULONG InvalidAttributes;
+    GENERIC_MAPPING GenericMapping;
+    ULONG ValidAccessMask;
+    BOOLEAN SecurityRequired;
+    BOOLEAN MaintainHandleCount;
+    ULONG PoolType;
+    ULONG DefaultPagedPoolCharge;
+    ULONG DefaultNonPagedPoolCharge;
+} OBJECT_TYPE_INFORMATION, *POBJECT_TYPE_INFORMATION;
+
 #ifndef NTOS_MODE_USER
 
 typedef struct _OBJECT_BASIC_INFORMATION
@@ -306,14 +334,14 @@ typedef struct _OBJECT_CREATE_INFORMATION
 typedef struct _OBJECT_TYPE_INITIALIZER
 {
     USHORT Length;
-    UCHAR UseDefaultObject;
-    UCHAR CaseInsensitive;
+    BOOLEAN UseDefaultObject;
+    BOOLEAN CaseInsensitive;
     ULONG InvalidAttributes;
     GENERIC_MAPPING GenericMapping;
     ULONG ValidAccessMask;
-    UCHAR SecurityRequired;
-    UCHAR MaintainHandleCount;
-    UCHAR MaintainTypeList;
+    BOOLEAN SecurityRequired;
+    BOOLEAN MaintainHandleCount;
+    BOOLEAN MaintainTypeList;
     POOL_TYPE PoolType;
     ULONG DefaultPagedPoolCharge;
     ULONG DefaultNonPagedPoolCharge;

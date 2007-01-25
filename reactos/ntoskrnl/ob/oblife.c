@@ -820,6 +820,78 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+ObQueryTypeInfo(IN POBJECT_TYPE ObjectType,
+                OUT POBJECT_TYPE_INFORMATION ObjectTypeInfo,
+                IN ULONG Length,
+                OUT PULONG ReturnLength)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PWSTR InfoBuffer;
+
+    /* Enter SEH */
+    _SEH_TRY
+    {
+        /* Set return length aligned to 4-byte boundary */
+        *ReturnLength += sizeof(*ObjectTypeInfo) +
+                         ALIGN_UP(ObjectType->Name.MaximumLength, ULONG);
+
+        /* Check if thats too much though. */
+        if (Length < *ReturnLength) return STATUS_INFO_LENGTH_MISMATCH;
+
+        /* Build the data */
+        ObjectTypeInfo->TotalNumberOfHandles =
+            ObjectType->TotalNumberOfHandles;
+        ObjectTypeInfo->TotalNumberOfObjects =
+            ObjectType->TotalNumberOfObjects;
+        ObjectTypeInfo->HighWaterNumberOfHandles =
+            ObjectType->HighWaterNumberOfHandles;
+        ObjectTypeInfo->HighWaterNumberOfObjects =
+            ObjectType->HighWaterNumberOfObjects;
+        ObjectTypeInfo->PoolType =
+            ObjectType->TypeInfo.PoolType;
+        ObjectTypeInfo->DefaultNonPagedPoolCharge =
+            ObjectType->TypeInfo.DefaultNonPagedPoolCharge;
+        ObjectTypeInfo->DefaultPagedPoolCharge =
+            ObjectType->TypeInfo.DefaultPagedPoolCharge;
+        ObjectTypeInfo->ValidAccessMask =
+            ObjectType->TypeInfo.ValidAccessMask;
+        ObjectTypeInfo->SecurityRequired =
+            ObjectType->TypeInfo.SecurityRequired;
+        ObjectTypeInfo->InvalidAttributes =
+            ObjectType->TypeInfo.InvalidAttributes;
+        ObjectTypeInfo->GenericMapping =
+            ObjectType->TypeInfo.GenericMapping;
+        ObjectTypeInfo->MaintainHandleCount =
+            ObjectType->TypeInfo.MaintainHandleCount;
+
+        /* Setup the name buffer */
+        InfoBuffer = (PWSTR)(ObjectTypeInfo + 1);
+        ObjectTypeInfo->TypeName.Buffer = InfoBuffer;
+        ObjectTypeInfo->TypeName.MaximumLength = ObjectType->Name.MaximumLength;
+        ObjectTypeInfo->TypeName.Length = ObjectType->Name.Length;
+
+        /* Copy it */
+        RtlCopyMemory(InfoBuffer,
+                      ObjectType->Name.Buffer,
+                      ObjectType->Name.Length);
+
+        /* Null-terminate it */
+        (InfoBuffer)[ObjectType->Name.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
+        /* Otherwise, get the exception code */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    /* Return status to caller */
+    return Status;
+}
+
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 NTSTATUS
@@ -1416,8 +1488,13 @@ NtQueryObject(IN HANDLE ObjectHandle,
 
             /* Information about this type */
             case ObjectTypeInformation:
-                DPRINT1("NOT IMPLEMENTED!\n");
-                Status = STATUS_NOT_IMPLEMENTED;
+
+                /* Call the helper and break out */
+                Status = ObQueryTypeInfo(ObjectHeader->Type,
+                                         (POBJECT_TYPE_INFORMATION)
+                                         ObjectInformation,
+                                         Length,
+                                         &InfoLength);
                 break;
 
             /* Information about all types */
