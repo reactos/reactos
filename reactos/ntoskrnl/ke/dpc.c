@@ -22,6 +22,8 @@ ULONG KiAdjustDpcThreshold = 20;
 ULONG KiIdealDpcRate = 20;
 BOOLEAN KeThreadDpcEnable;
 FAST_MUTEX KiGenericCallDpcMutex;
+KDPC KiTimerExpireDpc;
+ULONG KiTimeLimitIsrMicroseconds;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

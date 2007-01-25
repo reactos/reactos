@@ -149,7 +149,11 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    KIRQL oldIrql;
    PMM_PAGEOP PageOp;
 
-   if (!PageOpReady) KEBUGCHECK(0);
+   if (!PageOpReady)
+   {
+       DPRINT1("PAGEOPS USED TOO SOON!!!\n");
+       while (TRUE);
+   }
 
    /*
     * Calcuate the hash value for pageop structure
@@ -262,6 +266,7 @@ MmInitializePageOp(VOID)
                                     TAG_MM_PAGEOP,
                                     50);
 }
+
 
 
 

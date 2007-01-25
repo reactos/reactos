@@ -15,9 +15,6 @@
 
 /* DATA **********************************************************************/
 
-/* HACK */
-extern BOOLEAN KiClockSetupComplete;
-
 #define BUILD_OSCSDVERSION(major, minor) (((major & 0xFF) << 8) | (minor & 0xFF))
 
 /* NT Version Info */
@@ -1126,9 +1123,6 @@ Phase1InitializationDiscard(PVOID Context)
         KeBootTime = UniversalBootTime;
         KeBootTimeBias = 0;
     }
-
-    /* The clock is ready now (FIXME: HACK FOR OLD HAL) */
-    KiClockSetupComplete = TRUE;
 
     /* Initialize all processors */
     if (!HalAllProcessorsStarted()) KeBugCheck(HAL1_INITIALIZATION_FAILED);

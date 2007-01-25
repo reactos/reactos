@@ -82,7 +82,7 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
 NTSTATUS
 ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
 {
-    LARGE_INTEGER LocalTime, SystemTime;
+    LARGE_INTEGER LocalTime, SystemTime, OldTime;
     TIME_FIELDS TimeFields;
     DPRINT("ExpSetTimeZoneInformation() called\n");
 
@@ -123,7 +123,7 @@ ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
     ExLocalTimeToSystemTime(&LocalTime, &SystemTime);
 
     /* Set the new system time */
-    KeSetSystemTime(&SystemTime, NULL, FALSE, NULL);
+    KeSetSystemTime(&SystemTime, &OldTime, FALSE, NULL);
 
     /* Return success */
     DPRINT("ExpSetTimeZoneInformation() done\n");
@@ -184,16 +184,13 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
         return STATUS_PRIVILEGE_NOT_HELD;
     }
 
-    /* Check if caller wants the old time */
-    if(PreviousTime) KeQuerySystemTime(&OldSystemTime);
-
     /* Convert the time and set it in HAL */
     ExSystemTimeToLocalTime(&NewSystemTime, &LocalTime);
     RtlTimeToTimeFields(&LocalTime, &TimeFields);
     HalSetRealTimeClock(&TimeFields);
 
     /* Now set system time */
-    KeSetSystemTime(&NewSystemTime, NULL, FALSE, NULL);
+    KeSetSystemTime(&NewSystemTime, &OldSystemTime, FALSE, NULL);
 
     /* Check if caller wanted previous time */
     if(PreviousTime)

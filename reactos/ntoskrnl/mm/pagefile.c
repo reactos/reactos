@@ -363,7 +363,11 @@ MmReserveSwapPages(ULONG Nr)
    KIRQL oldIrql;
    ULONG MiAvailSwapPages;
 
-   if (!PagingReady) KEBUGCHECK(0);
+   if (!PagingReady)
+   {
+       DPRINT1("PAGING USED TOO SOON!!!\n");
+       while (TRUE);
+   }
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    MiAvailSwapPages =
       (MiFreeSwapPages * MM_PAGEFILE_COMMIT_RATIO) + MM_PAGEFILE_COMMIT_GRACE;
@@ -383,7 +387,11 @@ MmDereserveSwapPages(ULONG Nr)
 {
    KIRQL oldIrql;
 
-   if (!PagingReady) KEBUGCHECK(0);
+   if (!PagingReady)
+   {
+       DPRINT1("PAGING USED TOO SOON!!!\n");
+       while (TRUE);
+   }
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    MiReservedSwapPages = MiReservedSwapPages - Nr;
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
@@ -395,7 +403,11 @@ MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
    KIRQL oldIrql;
    ULONG i, j;
 
-   if (!PagingReady) KEBUGCHECK(0);
+   if (!PagingReady)
+   {
+       DPRINT1("PAGING USED TOO SOON!!!\n");
+       while (TRUE);
+   }
    KeAcquireSpinLock(&PagingFile->AllocMapLock, &oldIrql);
 
    for (i = 0; i < PagingFile->AllocMapSize; i++)
@@ -425,7 +437,11 @@ MmFreeSwapPage(SWAPENTRY Entry)
    ULONG off;
    KIRQL oldIrql;
 
-   if (!PagingReady) KEBUGCHECK(0);
+   if (!PagingReady)
+   {
+       DPRINT1("PAGING USED TOO SOON!!!\n");
+       while (TRUE);
+   }
    i = FILE_FROM_ENTRY(Entry);
    off = OFFSET_FROM_ENTRY(Entry);
 
@@ -470,7 +486,11 @@ MmAllocSwapPage(VOID)
    ULONG off;
    SWAPENTRY entry;
 
-   if (!PagingReady) KEBUGCHECK(0);
+   if (!PagingReady)
+   {
+       DPRINT1("PAGING USED TOO SOON!!!\n");
+       while (TRUE);
+   }
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
 
    if (MiFreeSwapPages == 0)
