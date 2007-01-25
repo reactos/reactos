@@ -3064,6 +3064,14 @@ HalDisplayString (
 );
 
 NTKERNELAPI
+UCHAR
+NTAPI
+KeSetIdealProcessorThread(
+    IN OUT PKTHREAD Thread,
+    IN UCHAR Processor
+);
+
+NTKERNELAPI
 NTSTATUS
 NTAPI
 IoAttachDeviceToDeviceStackSafe(

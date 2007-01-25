@@ -258,39 +258,37 @@ ExitThread(DWORD uExitCode)
  * @implemented
  */
 HANDLE
-STDCALL
-OpenThread(
-    DWORD dwDesiredAccess,
-    BOOL bInheritHandle,
-    DWORD dwThreadId
-    )
+WINAPI
+OpenThread(DWORD dwDesiredAccess,
+           BOOL bInheritHandle,
+           DWORD dwThreadId)
 {
-   NTSTATUS errCode;
-   HANDLE ThreadHandle;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   CLIENT_ID ClientId ;
+    NTSTATUS errCode;
+    HANDLE ThreadHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    CLIENT_ID ClientId ;
 
-   ClientId.UniqueProcess = 0;
-   ClientId.UniqueThread = (HANDLE)dwThreadId;
+    ClientId.UniqueProcess = 0;
+    ClientId.UniqueThread = (HANDLE)dwThreadId;
 
-   InitializeObjectAttributes (&ObjectAttributes,
-			      NULL,
-			      (bInheritHandle ? OBJ_INHERIT : 0),
-			      NULL,
-			      NULL);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               (bInheritHandle ? OBJ_INHERIT : 0),
+                               NULL,
+                               NULL);
 
-   errCode = NtOpenThread(&ThreadHandle,
-			   dwDesiredAccess,
-			   &ObjectAttributes,
-			   &ClientId);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus (errCode);
-	return NULL;
-     }
-   return ThreadHandle;
+    errCode = NtOpenThread(&ThreadHandle,
+                           dwDesiredAccess,
+                           &ObjectAttributes,
+                           &ClientId);
+    if (!NT_SUCCESS(errCode))
+    {
+        SetLastErrorByStatus (errCode);
+        return NULL;
+    }
+
+    return ThreadHandle;
 }
-
 
 /*
  * @implemented
@@ -298,252 +296,239 @@ OpenThread(
 PTEB
 GetTeb(VOID)
 {
-  return(NtCurrentTeb());
+    return NtCurrentTeb();
 }
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
-SwitchToThread(VOID)
-{
-  NTSTATUS Status;
-  Status = NtYieldExecution();
-  return Status != STATUS_NO_YIELD_PERFORMED;
-}
-
-
-/*
- * @implemented
- */
-DWORD STDCALL
-GetCurrentThreadId(VOID)
-{
-  return((DWORD)(NtCurrentTeb()->Cid).UniqueThread);
-}
-
-/*
- * @implemented
- */
-BOOL STDCALL
-GetThreadTimes(HANDLE hThread,
-	       LPFILETIME lpCreationTime,
-	       LPFILETIME lpExitTime,
-	       LPFILETIME lpKernelTime,
-	       LPFILETIME lpUserTime)
-{
-  KERNEL_USER_TIMES KernelUserTimes;
-  NTSTATUS Status;
-
-  Status = NtQueryInformationThread(hThread,
-				    ThreadTimes,
-				    &KernelUserTimes,
-				    sizeof(KERNEL_USER_TIMES),
-				    NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
-    }
-
-  lpCreationTime->dwLowDateTime = KernelUserTimes.CreateTime.u.LowPart;
-  lpCreationTime->dwHighDateTime = KernelUserTimes.CreateTime.u.HighPart;
-
-  lpExitTime->dwLowDateTime = KernelUserTimes.ExitTime.u.LowPart;
-  lpExitTime->dwHighDateTime = KernelUserTimes.ExitTime.u.HighPart;
-
-  lpKernelTime->dwLowDateTime = KernelUserTimes.KernelTime.u.LowPart;
-  lpKernelTime->dwHighDateTime = KernelUserTimes.KernelTime.u.HighPart;
-
-  lpUserTime->dwLowDateTime = KernelUserTimes.UserTime.u.LowPart;
-  lpUserTime->dwHighDateTime = KernelUserTimes.UserTime.u.HighPart;
-
-  return(TRUE);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
-GetThreadContext(HANDLE hThread,
-		 LPCONTEXT lpContext)
-{
-  NTSTATUS Status;
-
-  Status = NtGetContextThread(hThread,
-			      lpContext);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
-    }
-
-  return(TRUE);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
-SetThreadContext(HANDLE hThread,
-		 CONST CONTEXT *lpContext)
-{
-  NTSTATUS Status;
-
-  Status = NtSetContextThread(hThread,
-			      (void *)lpContext);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
-    }
-
-  return(TRUE);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
-GetExitCodeThread(HANDLE hThread,
-		  LPDWORD lpExitCode)
-{
-  THREAD_BASIC_INFORMATION ThreadBasic;
-  NTSTATUS Status;
-
-  Status = NtQueryInformationThread(hThread,
-				    ThreadBasicInformation,
-				    &ThreadBasic,
-				    sizeof(THREAD_BASIC_INFORMATION),
-				    NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
-    }
-
-  memcpy(lpExitCode, &ThreadBasic.ExitStatus, sizeof(DWORD));
-
-  return(TRUE);
-}
-
-
-/*
- * @implemented
- */
-DWORD STDCALL
-ResumeThread(HANDLE hThread)
-{
-  ULONG PreviousResumeCount;
-  NTSTATUS Status;
-
-  Status = NtResumeThread(hThread,
-			  &PreviousResumeCount);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(-1);
-    }
-
-  return(PreviousResumeCount);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
-TerminateThread(HANDLE hThread,
-		DWORD dwExitCode)
-{
-  NTSTATUS Status;
-
-  if (0 == hThread)
-    {
-      SetLastError(ERROR_INVALID_HANDLE);
-      return(FALSE);
-    }
-
-  Status = NtTerminateThread(hThread,
-			     dwExitCode);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
-    }
-
-  return(TRUE);
-}
-
-
-/*
- * @implemented
- */
-DWORD STDCALL
-SuspendThread(HANDLE hThread)
-{
-  ULONG PreviousSuspendCount;
-  NTSTATUS Status;
-
-  Status = NtSuspendThread(hThread,
-			   &PreviousSuspendCount);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(-1);
-    }
-
-  return(PreviousSuspendCount);
-}
-
-
-/*
- * @implemented
- */
-DWORD STDCALL
-SetThreadAffinityMask(HANDLE hThread,
-		      DWORD dwThreadAffinityMask)
-{
-  THREAD_BASIC_INFORMATION ThreadBasic;
-  KAFFINITY AffinityMask;
-  NTSTATUS Status;
-
-  AffinityMask = (KAFFINITY)dwThreadAffinityMask;
-
-  Status = NtQueryInformationThread(hThread,
-				    ThreadBasicInformation,
-				    &ThreadBasic,
-				    sizeof(THREAD_BASIC_INFORMATION),
-				    NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(0);
-    }
-
-  Status = NtSetInformationThread(hThread,
-				  ThreadAffinityMask,
-				  &AffinityMask,
-				  sizeof(KAFFINITY));
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    ThreadBasic.AffinityMask = 0;
-  }
-
-  return(ThreadBasic.AffinityMask);
-}
-
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
+SwitchToThread(VOID)
+{
+    NTSTATUS Status;
+    Status = NtYieldExecution();
+    return Status != STATUS_NO_YIELD_PERFORMED;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetCurrentThreadId(VOID)
+{
+    return (DWORD)(NtCurrentTeb()->Cid).UniqueThread;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+NTAPI
+GetThreadTimes(HANDLE hThread,
+               LPFILETIME lpCreationTime,
+               LPFILETIME lpExitTime,
+               LPFILETIME lpKernelTime,
+               LPFILETIME lpUserTime)
+{
+    KERNEL_USER_TIMES KernelUserTimes;
+    NTSTATUS Status;
+
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadTimes,
+                                      &KernelUserTimes,
+                                      sizeof(KERNEL_USER_TIMES),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return(FALSE);
+    }
+
+    *lpCreationTime = *(LPFILETIME)&KernelUserTimes.CreateTime;
+    *lpExitTime = *(LPFILETIME)&KernelUserTimes.ExitTime;
+    *lpKernelTime = *(LPFILETIME)&KernelUserTimes.KernelTime;
+    *lpUserTime = *(LPFILETIME)&KernelUserTimes.UserTime;
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetThreadContext(HANDLE hThread,
+                 LPCONTEXT lpContext)
+{
+    NTSTATUS Status;
+
+    Status = NtGetContextThread(hThread, lpContext);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetThreadContext(HANDLE hThread,
+                 CONST CONTEXT *lpContext)
+{
+    NTSTATUS Status;
+
+    Status = NtSetContextThread(hThread, (PCONTEXT)lpContext);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetExitCodeThread(HANDLE hThread,
+                  LPDWORD lpExitCode)
+{
+    THREAD_BASIC_INFORMATION ThreadBasic;
+    NTSTATUS Status;
+
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadBasicInformation,
+                                      &ThreadBasic,
+                                      sizeof(THREAD_BASIC_INFORMATION),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return(FALSE);
+    }
+
+    *lpExitCode = ThreadBasic.ExitStatus;
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+ResumeThread(HANDLE hThread)
+{
+    ULONG PreviousResumeCount;
+    NTSTATUS Status;
+
+    Status = NtResumeThread(hThread, &PreviousResumeCount);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return -1;
+    }
+
+    return PreviousResumeCount;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+TerminateThread(HANDLE hThread,
+                DWORD dwExitCode)
+{
+    NTSTATUS Status;
+
+    if (!hThread)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    Status = NtTerminateThread(hThread, dwExitCode);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+SuspendThread(HANDLE hThread)
+{
+    ULONG PreviousSuspendCount;
+    NTSTATUS Status;
+
+    Status = NtSuspendThread(hThread, &PreviousSuspendCount);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return -1;
+    }
+
+    return PreviousSuspendCount;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+SetThreadAffinityMask(HANDLE hThread,
+                      DWORD dwThreadAffinityMask)
+{
+    THREAD_BASIC_INFORMATION ThreadBasic;
+    KAFFINITY AffinityMask;
+    NTSTATUS Status;
+
+    AffinityMask = (KAFFINITY)dwThreadAffinityMask;
+
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadBasicInformation,
+                                      &ThreadBasic,
+                                      sizeof(THREAD_BASIC_INFORMATION),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return 0;
+    }
+
+    Status = NtSetInformationThread(hThread,
+                                    ThreadAffinityMask,
+                                    &AffinityMask,
+                                    sizeof(KAFFINITY));
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        ThreadBasic.AffinityMask = 0;
+    }
+
+    return ThreadBasic.AffinityMask;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
 SetThreadPriority(HANDLE hThread,
                   int nPriority)
 {
@@ -580,7 +565,7 @@ SetThreadPriority(HANDLE hThread,
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetThreadPriority(HANDLE hThread)
 {
     THREAD_BASIC_INFORMATION ThreadBasic;
@@ -616,55 +601,54 @@ GetThreadPriority(HANDLE hThread)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 GetThreadPriorityBoost(IN HANDLE hThread,
-		       OUT PBOOL pDisablePriorityBoost)
+                       OUT PBOOL pDisablePriorityBoost)
 {
-  ULONG PriorityBoost;
-  NTSTATUS Status;
+    ULONG PriorityBoost;
+    NTSTATUS Status;
 
-  Status = NtQueryInformationThread(hThread,
-				    ThreadPriorityBoost,
-				    &PriorityBoost,
-				    sizeof(ULONG),
-				    NULL);
-  if (!NT_SUCCESS(Status))
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadPriorityBoost,
+                                      &PriorityBoost,
+                                      sizeof(ULONG),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
+        SetLastErrorByStatus(Status);
+        return FALSE;
     }
 
-  *pDisablePriorityBoost = !((BOOL)PriorityBoost);
-
-  return(TRUE);
+    *pDisablePriorityBoost = PriorityBoost;
+    return TRUE;
 }
-
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+NTAPI
 SetThreadPriorityBoost(IN HANDLE hThread,
-		       IN BOOL bDisablePriorityBoost)
+                       IN BOOL bDisablePriorityBoost)
 {
-  ULONG PriorityBoost;
-  NTSTATUS Status;
+    ULONG PriorityBoost;
+    NTSTATUS Status;
 
-  PriorityBoost = (ULONG)!bDisablePriorityBoost;
+    PriorityBoost = (ULONG)bDisablePriorityBoost;
 
-  Status = NtSetInformationThread(hThread,
-				  ThreadPriorityBoost,
-				  &PriorityBoost,
-				  sizeof(ULONG));
-  if (!NT_SUCCESS(Status))
+    Status = NtSetInformationThread(hThread,
+                                    ThreadPriorityBoost,
+                                    &PriorityBoost,
+                                    sizeof(ULONG));
+    if (!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
+        SetLastErrorByStatus(Status);
+        return FALSE;
     }
 
-  return(TRUE);
+    return TRUE;
 }
-
 
 /*
  * @implemented
@@ -693,29 +677,28 @@ GetThreadSelectorEntry(IN HANDLE hThread,
   return TRUE;
 }
 
-
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD
+WINAPI
 SetThreadIdealProcessor(HANDLE hThread,
-			DWORD dwIdealProcessor)
+                        DWORD dwIdealProcessor)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = NtSetInformationThread(hThread,
-				  ThreadIdealProcessor,
-				  &dwIdealProcessor,
-				  sizeof(ULONG));
-  if (!NT_SUCCESS(Status))
+    Status = NtSetInformationThread(hThread,
+                                    ThreadIdealProcessor,
+                                    &dwIdealProcessor,
+                                    sizeof(ULONG));
+    if (!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus(Status);
-      return -1;
+        SetLastErrorByStatus(Status);
+        return -1;
     }
 
-  return dwIdealProcessor;
+    return dwIdealProcessor;
 }
-
 
 /*
  * @implemented
@@ -739,7 +722,6 @@ GetProcessIdOfThread(HANDLE Thread)
 
   return (DWORD)ThreadBasic.ClientId.UniqueProcess;
 }
-
 
 /*
  * @implemented

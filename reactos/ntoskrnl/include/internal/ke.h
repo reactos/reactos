@@ -217,6 +217,13 @@ KeReadyThread(
     IN PKTHREAD Thread
 );
 
+BOOLEAN
+NTAPI
+KeSetDisableBoostThread(
+    IN OUT PKTHREAD Thread,
+    IN BOOLEAN Disable
+);
+
 VOID
 NTAPI
 KeBalanceSetManager(IN PVOID Context);
@@ -225,7 +232,7 @@ VOID
 NTAPI
 KiReadyThread(IN PKTHREAD Thread);
 
-NTSTATUS
+ULONG
 NTAPI
 KeSuspendThread(PKTHREAD Thread);
 

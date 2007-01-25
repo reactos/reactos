@@ -63,7 +63,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 {
     PEPROCESS Process;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     ULONG Length = 0;
     PPROCESS_BASIC_INFORMATION ProcessBasicInfo =
         (PPROCESS_BASIC_INFORMATION)ProcessInformation;
@@ -78,6 +78,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     PAGED_CODE();
 
     /* Check validity of Information Class */
+#if 0
     Status = DefaultQueryInfoBufferCheck(ProcessInformationClass,
                                          PsProcessInfoClass,
                                          RTL_NUMBER_OF(PsProcessInfoClass),
@@ -86,6 +87,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                                          ReturnLength,
                                          PreviousMode);
     if (!NT_SUCCESS(Status)) return Status;
+#endif
 
     /* Check if this isn't the cookie class */
     if(ProcessInformationClass != ProcessCookie)
@@ -490,6 +492,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     PAGED_CODE();
 
     /* Verify Information Class validity */
+#if 0
     Status = DefaultSetInfoBufferCheck(ProcessInformationClass,
                                        PsProcessInfoClass,
                                        RTL_NUMBER_OF(PsProcessInfoClass),
@@ -497,6 +500,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                                        ProcessInformationLength,
                                        PreviousMode);
     if (!NT_SUCCESS(Status)) return Status;
+#endif
 
     /* Check what class this is */
     Access = PROCESS_SET_INFORMATION;
@@ -718,12 +722,18 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
     NTSTATUS Status;
     HANDLE TokenHandle = NULL;
     KPRIORITY Priority = 0;
-    KAFFINITY Affinity = 0;
+    KAFFINITY Affinity = 0, CombinedAffinity;
     PVOID Address = NULL;
     PEPROCESS Process;
+    ULONG DisableBoost = 0;
+    ULONG IdealProcessor = 0;
+    PTEB Teb;
+    ULONG TlsIndex = 0;
+    PVOID *ExpansionSlots;
     PAGED_CODE();
 
     /* Verify Information Class validity */
+#if 0
     Status = DefaultSetInfoBufferCheck(ThreadInformationClass,
                                        PsThreadInfoClass,
                                        RTL_NUMBER_OF(PsThreadInfoClass),
@@ -731,6 +741,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
                                        ThreadInformationLength,
                                        PreviousMode);
     if (!NT_SUCCESS(Status)) return Status;
+#endif
 
     /* Check what class this is */
     Access = THREAD_SET_INFORMATION;
@@ -769,6 +780,15 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             _SEH_END;
             if (!NT_SUCCESS(Status)) break;
 
+            /* Validate it */
+            if ((Priority > HIGH_PRIORITY) ||
+                (Priority <= LOW_PRIORITY))
+            {
+                /* Fail */
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
             /* Set the priority */
             KeSetPriorityThread(&Thread->Tcb, Priority);
             break;
@@ -788,6 +808,25 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH_END;
             if (!NT_SUCCESS(Status)) break;
+
+            /* Validate it */
+            if ((Priority > THREAD_BASE_PRIORITY_MAX) ||
+                (Priority < THREAD_BASE_PRIORITY_MIN))
+            {
+                /* These ones are OK */
+                if ((Priority != THREAD_BASE_PRIORITY_LOWRT + 1) ||
+                    (Priority != THREAD_BASE_PRIORITY_IDLE - 1))
+                {
+                    /* Check if the process is real time */
+                    if (PsGetCurrentProcess()->PriorityClass !=
+                        PROCESS_PRIORITY_CLASS_REALTIME)
+                    {
+                        /* It isn't, fail */
+                        Status = STATUS_INVALID_PARAMETER;
+                        break;
+                    }
+                }
+            }
 
             /* Set the base priority */
             KeSetBasePriorityThread(&Thread->Tcb, Priority);
@@ -809,11 +848,48 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             _SEH_END;
             if (!NT_SUCCESS(Status)) break;
 
+            /* Validate it */
+            if (!Affinity)
+            {
+                /* Fail */
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
             /* Get the process */
             Process = Thread->ThreadsProcess;
 
-            /* Set the affinity */
-            KeSetAffinityThread(&Thread->Tcb, Affinity & Process->Pcb.Affinity);
+            /* Try to acquire rundown */
+            if (ExAcquireRundownProtection(&Process->RundownProtect))
+            {
+                /* Lock it */
+                KeEnterCriticalRegion();
+                ExAcquirePushLockShared(&Process->ProcessLock);
+
+                /* Combine masks */
+                CombinedAffinity = Affinity & Process->Pcb.Affinity;
+                if (CombinedAffinity != Affinity)
+                {
+                    /* Fail */
+                    Status = STATUS_INVALID_PARAMETER;
+                }
+                else
+                {
+                    /* Set the affinity */
+                    KeSetAffinityThread(&Thread->Tcb, CombinedAffinity);
+                }
+
+                /* Release the lock and rundown */
+                ExReleasePushLockShared(&Process->ProcessLock);
+                KeLeaveCriticalRegion();
+            }
+            else
+            {
+                /* Too late */
+                Status = STATUS_PROCESS_IS_TERMINATING;
+            }
+
+            /* Return status */
             break;
 
         case ThreadImpersonationToken:
@@ -856,6 +932,138 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             Thread->Win32StartAddress = Address;
             break;
 
+        case ThreadIdealProcessor:
+
+            /* Use SEH for capture */
+            _SEH_TRY
+            {
+                /* Get the priority */
+                IdealProcessor = *(PULONG_PTR)ThreadInformation;
+            }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Validate it */
+            if (IdealProcessor > MAXIMUM_PROCESSORS)
+            {
+                /* Fail */
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Set the ideal */
+            Status = KeSetIdealProcessorThread(&Thread->Tcb,
+                                               (CCHAR)IdealProcessor);
+
+            /* Get the TEB and protect the thread */
+            Teb = Thread->Tcb.Teb;
+            if ((Teb) && (ExAcquireRundownProtection(&Thread->RundownProtect)))
+            {
+                /* Save the ideal processor */
+                Teb->IdealProcessor = Thread->Tcb.IdealProcessor;
+
+                /* Release rundown protection */
+                ExReleaseRundownProtection(&Thread->RundownProtect);
+            }
+
+            break;
+
+        case ThreadPriorityBoost:
+
+            /* Use SEH for capture */
+            _SEH_TRY
+            {
+                /* Get the priority */
+                DisableBoost = *(PULONG_PTR)ThreadInformation;
+            }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Call the kernel */
+            KeSetDisableBoostThread(&Thread->Tcb, (BOOLEAN)DisableBoost);
+            break;
+
+        case ThreadZeroTlsCell:
+
+            /* Use SEH for capture */
+            _SEH_TRY
+            {
+                /* Get the priority */
+                TlsIndex = *(PULONG_PTR)ThreadInformation;
+            }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) break;
+
+            /* This is only valid for the current thread */
+            if (Thread != PsGetCurrentThread())
+            {
+                /* Fail */
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Get the process */
+            Process = Thread->ThreadsProcess;
+
+            /* Loop the threads */
+            Thread = PsGetNextProcessThread(Process, NULL);
+            while (Thread)
+            {
+                /* Acquire rundown */
+                if (ExAcquireRundownProtection(&Thread->RundownProtect))
+                {
+                    /* Get the TEB */
+                    Teb = Thread->Tcb.Teb;
+                    if (Teb)
+                    {
+                        /* Check if we're in the expansion range */
+                        if (TlsIndex > TLS_MINIMUM_AVAILABLE - 1)
+                        {
+                            if (TlsIndex < (TLS_MINIMUM_AVAILABLE +
+                                            TLS_EXPANSION_SLOTS) - 1)
+                            {
+                                /* Check if we have expansion slots */
+                                ExpansionSlots = Teb->TlsExpansionSlots;
+                                if (ExpansionSlots)
+                                {
+                                    /* Clear the index */
+                                    ExpansionSlots[TlsIndex - TLS_MINIMUM_AVAILABLE] = 0;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            /* Clear the index */
+                            Teb->TlsSlots[TlsIndex] = NULL;
+                        }
+                    }
+
+                    /* Release rundown */
+                    ExReleaseRundownProtection(&Thread->RundownProtect);
+                }
+
+                /* Go to the next thread */
+                Thread = PsGetNextProcessThread(Process, Thread);
+            }
+
+            /* All done */
+            break;
+
         default:
             /* We don't implement it yet */
             DPRINT1("Not implemented: %lx\n", ThreadInformationClass);
@@ -890,6 +1098,7 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
     PAGED_CODE();
 
     /* Verify Information Class validity */
+#if 0
     Status = DefaultQueryInfoBufferCheck(ThreadInformationClass,
                                          PsThreadInfoClass,
                                          RTL_NUMBER_OF(PsThreadInfoClass),
@@ -898,6 +1107,7 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
                                          ReturnLength,
                                          PreviousMode);
     if (!NT_SUCCESS(Status)) return Status;
+#endif
 
     /* Check what class this is */
     Access = THREAD_QUERY_INFORMATION;

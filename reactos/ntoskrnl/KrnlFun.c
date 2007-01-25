@@ -14,8 +14,10 @@
 //
 // Global:
 //  - TODO: Complete the list of bufxies
+//  - Fix hang/slowdown during boot -> New scheduler
+//      - Fix freelist.c errors with new scheduler enabled.
 //  - Fix process reference count leak.
-//  - Fix atapi.sys loading one more time at each boot.
+//  - Fix atapi.sys or serial.sys loading one more time at each boot.
 //  - Fix LiveCD.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,12 +27,12 @@
 // /                                                                                                        \
 // | OB, PS, LPC, DBGK, EX, INIT => "Code complete". No expected changes until 0.5.0                      | |
 // | SE => Not looked at. Interaction with Ps/Io is minimal and currently hacked away. Preserve.          |J|
-// | KD/KDBG => Laptop has special version of ROS without these components. Commit in branch.             |A|
-// | HAL => Needs APC/DPC/IRQL implementation fixed ASAP in terms of interaction with Ke.                 |N|
-// | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           | |
-// | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |F|
-// | BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES   |E|
-// | KE => Enable new thread scheduler and ensure it works.                                               |B|
+// | HAL => Needs APC/DPC/IRQL implementation fixed ASAP in terms of interaction with Ke.                 |A|
+// | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |N|
+// | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           | |
+// | BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES   |F|
+// | KE => Enable new thread scheduler and ensure it works.                                               |E|
+// | KD/KDBG => Laptop has special version of ROS without these components. Commit in branch.             |B|
 // | KD => Implement KD64 6.0, compatible with WinDBG                                                     | |
 // | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |M|
 // | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           |A|

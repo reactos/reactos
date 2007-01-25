@@ -91,6 +91,26 @@ KeQueryBasePriorityThread(IN PKTHREAD Thread)
     return BaseIncrement;
 }
 
+BOOLEAN
+NTAPI
+KeSetDisableBoostThread(IN OUT PKTHREAD Thread,
+                        IN BOOLEAN Disable)
+{
+    ASSERT_THREAD(Thread);
+
+    /* Check if we're enabling or disabling */
+    if (Disable != FALSE)
+    {
+        /* Set the bit */
+        return InterlockedBitTestAndSet(&Thread->ThreadFlags, 1);
+    }
+    else
+    {
+        /* Remove the bit */
+        return InterlockedBitTestAndReset(&Thread->ThreadFlags, 1);
+    }
+}
+
 VOID
 NTAPI
 KeReadyThread(IN PKTHREAD Thread)
@@ -531,7 +551,7 @@ KiSuspendThread(IN PVOID NormalContext,
                           NULL);
 }
 
-NTSTATUS
+ULONG
 NTAPI
 KeSuspendThread(PKTHREAD Thread)
 {
