@@ -1,6 +1,6 @@
 <module name="intl_new" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_INTL}" installbase="system32" installname="intl_new.cpl" usewrc="false">
 	<importlibrary definition="intl.def" />
-	<include base="intl">.</include>
+	<include base="intl_new">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />
