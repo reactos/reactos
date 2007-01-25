@@ -1400,6 +1400,10 @@ NTSTATUS
 NTAPI
 MmInitMpwThread(VOID);
 
+NTSTATUS
+NTAPI
+MmInitBsmThread(VOID);
+
 /* pager.c *******************************************************************/
 
 BOOLEAN

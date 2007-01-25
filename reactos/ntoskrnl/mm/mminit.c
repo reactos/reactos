@@ -482,6 +482,9 @@ MmInitSystem(IN ULONG Phase,
         */
         MmInitMpwThread();
 
+        /* Initialize the balance set manager */
+        MmInitBsmThread();
+
         /* FIXME: Read parameters from memory */
     }
 

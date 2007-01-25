@@ -219,6 +219,10 @@ KeReadyThread(
 
 VOID
 NTAPI
+KeBalanceSetManager(IN PVOID Context);
+
+VOID
+NTAPI
 KiReadyThread(IN PKTHREAD Thread);
 
 NTSTATUS

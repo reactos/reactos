@@ -47,6 +47,7 @@
             </directory>
         </if>
             <file>apc.c</file>
+            <file>balmgr.c</file>
             <file>bug.c</file>
             <file>clock.c</file>
             <file>config.c</file>

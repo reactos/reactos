@@ -212,7 +212,7 @@ Unwait:
                 {
                     /* We were in a gate wait. FIXME: Handle this */
                     DPRINT1("Not yet supported -- Report this to Alex\n");
-                    KEBUGCHECK(0);
+                    while (TRUE);
                 }
             }
             else if ((Thread->State == Waiting) &&
