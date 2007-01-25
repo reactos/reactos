@@ -271,7 +271,7 @@ PspInitializeSystemDll(VOID)
 
 BOOLEAN
 NTAPI
-PspInitPhase1(VOID)
+PspInitPhase1()
 {
     /* Initialize the System DLL and return status of operation */
     if (!NT_SUCCESS(PspInitializeSystemDll())) return FALSE;
@@ -280,7 +280,7 @@ PspInitPhase1(VOID)
 
 BOOLEAN
 NTAPI
-PspInitPhase0(VOID)
+PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -478,8 +478,8 @@ PspInitPhase0(VOID)
                                   &ObjectAttributes,
                                   0,
                                   NULL,
-                                  ExPhase2Init,
-                                  NULL);
+                                  Phase1Initialization,
+                                  LoaderBlock);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Create a handle to it */
@@ -497,7 +497,7 @@ PspInitPhase0(VOID)
 
 BOOLEAN
 NTAPI
-PsInitSystem(VOID)
+PsInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Check the initialization phase */
     switch (ExpInitializationPhase)
@@ -505,7 +505,7 @@ PsInitSystem(VOID)
     case 0:
 
         /* Do Phase 0 */
-        return PspInitPhase0();
+        return PspInitPhase0(LoaderBlock);
 
     case 1:
 
@@ -515,7 +515,11 @@ PsInitSystem(VOID)
     default:
 
         /* Don't know any other phase! Bugcheck! */
-        KeBugCheck(UNEXPECTED_INITIALIZATION_CALL);
+        KeBugCheckEx(UNEXPECTED_INITIALIZATION_CALL,
+                     1,
+                     ExpInitializationPhase,
+                     0,
+                     0);
         return FALSE;
     }
 }

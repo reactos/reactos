@@ -451,15 +451,21 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    MmInitializeMdlImplementation();
 }
 
+BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
+
 VOID
 NTAPI
 INIT_FUNCTION
 MmInit2(VOID)
 {
    MmInitializeRmapList();
+   RmapReady = TRUE;
    MmInitializePageOp();
+   PageOpReady = TRUE;
    MmInitSectionImplementation();
+   SectionsReady = TRUE;
    MmInitPagingFile();
+   PagingReady = TRUE;
 }
 
 VOID

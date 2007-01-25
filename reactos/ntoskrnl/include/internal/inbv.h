@@ -14,7 +14,7 @@ VOID NTAPI
 InbvDisplayInitialize2(BOOLEAN NoGuiBoot);
 
 VOID NTAPI
-InbvDisplayBootLogo(VOID);
+InbvDisplayBootLogo(IN BOOLEAN SosEnabled);
 
 VOID NTAPI
 InbvUpdateProgressBar(ULONG Progress);

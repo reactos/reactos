@@ -1105,6 +1105,14 @@ Language=English
 INVALID_WORK_QUEUE_ITEM
 .
 
+MessageId=0xA0
+Severity=Success
+Facility=System
+SymbolicName=INTERNAL_POWER_ERROR
+Language=English
+INTERNAL_POWER_ERROR
+.
+
 MessageId=0xA5
 Severity=Success
 Facility=System

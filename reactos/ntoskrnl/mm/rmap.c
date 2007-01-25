@@ -379,6 +379,8 @@ MmIsDirtyPageRmap(PFN_TYPE Page)
    return(FALSE);
 }
 
+extern BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
+
 VOID
 NTAPI
 MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
@@ -387,6 +389,8 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    PMM_RMAP_ENTRY current_entry;
    PMM_RMAP_ENTRY new_entry;
    ULONG PrevSize;
+
+   if (!RmapReady) KEBUGCHECK(0);
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 

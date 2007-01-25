@@ -35,9 +35,9 @@
 //
 // Initialization routines
 //
-VOID
+BOOLEAN
 NTAPI
-PoInit(
+PoInitSystem(
     IN ULONG BootPhase,
     IN BOOLEAN HaveAcpiTable
 );

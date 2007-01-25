@@ -33,8 +33,7 @@ ULONG ExpInitializationPhase;
 BOOLEAN ExpInTextModeSetup;
 BOOLEAN IoRemoteBootClient;
 ULONG InitSafeBootMode;
-
-BOOLEAN NoGuiBoot = FALSE;
+BOOLEAN InitIsWinPEMode, InitWinPEModeType;
 
 /* NT Boot Path */
 UNICODE_STRING NtSystemRoot;
@@ -52,6 +51,9 @@ ULONG ExpUnicodeCaseTableDataOffset;
 NLSTABLEINFO ExpNlsTableInfo;
 ULONG ExpNlsTableSize;
 PVOID ExpNlsSectionPointer;
+
+/* CMOS Timer Sanity */
+BOOLEAN ExCmosClockIsSane = TRUE;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -353,13 +355,11 @@ ExpDisplayNotice(VOID)
 
 NTSTATUS
 NTAPI
-ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
-                      IN PHANDLE ThreadHandle)
+ExpLoadInitialProcess(IN OUT PRTL_USER_PROCESS_INFORMATION ProcessInformation)
 {
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
     NTSTATUS Status;
     ULONG Size;
-    RTL_USER_PROCESS_INFORMATION ProcessInformation;
     PWSTR p;
     UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
     UNICODE_STRING SmssName, Environment, SystemDriveString;
@@ -509,7 +509,7 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
                                   FALSE,
                                   NULL,
                                   NULL,
-                                  &ProcessInformation);
+                                  ProcessInformation);
     if (!NT_SUCCESS(Status))
     {
         /* Failed */
@@ -517,16 +517,14 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
     }
 
     /* Resume the thread */
-    Status = ZwResumeThread(ProcessInformation.ThreadHandle, NULL);
+    Status = ZwResumeThread(ProcessInformation->ThreadHandle, NULL);
     if (!NT_SUCCESS(Status))
     {
         /* Failed */
         KeBugCheckEx(SESSION4_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
-    /* Return Handles */
-    *ProcessHandle = ProcessInformation.ProcessHandle;
-    *ThreadHandle = ProcessInformation.ThreadHandle;
+    /* Return success */
     return STATUS_SUCCESS;
 }
 
@@ -749,7 +747,9 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 RtlInitString(&SymbolString, NameBuffer);
 
                 /* Load the symbols */
-                DbgLoadImageSymbols(&SymbolString, LdrEntry->DllBase, -1);
+                DbgLoadImageSymbols(&SymbolString,
+                                    LdrEntry->DllBase,
+                                    0xFFFFFFFF);
             }
         }
 
@@ -988,7 +988,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     if (!SeInit()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
     /* Initialize the Process Manager */
-    if (!PsInitSystem()) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
+    if (!PsInitSystem(LoaderBlock)) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
 
     /* Initialize the PnP Manager */
     if (!PpInitSystem()) KEBUGCHECK(PP0_INITIALIZATION_FAILED);
@@ -1018,14 +1018,27 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
 VOID
 NTAPI
-ExPhase2Init(PVOID Context)
+Phase1InitializationDiscard(PVOID Context)
 {
+    PLOADER_PARAMETER_BLOCK LoaderBlock = Context;
+    PCHAR CommandLine, Y2KHackRequired;
     LARGE_INTEGER Timeout;
-    HANDLE ProcessHandle;
-    HANDLE ThreadHandle;
     NTSTATUS Status;
     TIME_FIELDS TimeFields;
-    LARGE_INTEGER SystemBootTime, UniversalBootTime;
+    LARGE_INTEGER SystemBootTime, UniversalBootTime, OldTime;
+    PRTL_USER_PROCESS_INFORMATION ProcessInfo;
+    BOOLEAN SosEnabled, NoGuiBoot;
+    ULONG YearHack = 0;
+
+    /* Allocate initial process information */
+    ProcessInfo = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(RTL_USER_PROCESS_INFORMATION),
+                                        TAG('I', 'n', 'i', 't'));
+    if (!ProcessInfo)
+    {
+        /* Bugcheck */
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 8, 0, 0);
+    }
 
     /* Set to phase 1 */
     ExpInitializationPhase = 1;
@@ -1034,29 +1047,59 @@ ExPhase2Init(PVOID Context)
     KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
 
     /* Do Phase 1 HAL Initialization */
-    HalInitSystem(1, KeLoaderBlock);
+    if (!HalInitSystem(1, LoaderBlock)) KeBugCheck(HAL1_INITIALIZATION_FAILED);
+
+    /* Get the command line and upcase it */
+    CommandLine = _strupr(LoaderBlock->LoadOptions);
 
     /* Check if GUI Boot is enabled */
-    if (strstr(KeLoaderBlock->LoadOptions, "NOGUIBOOT")) NoGuiBoot = TRUE;
+    NoGuiBoot = (strstr(CommandLine, "NOGUIBOOT")) ? TRUE: FALSE;
 
-    /* Display the boot screen image if not disabled */
+    /* Get the SOS setting */
+    SosEnabled = strstr(CommandLine, "SOS") ? TRUE: FALSE;
+
+    /* Setup the boot driver */
     InbvDisplayInitialize();
     if (!ExpInTextModeSetup) InbvDisplayInitialize2(NoGuiBoot);
-    if (!NoGuiBoot) InbvDisplayBootLogo();
 
-    /* Clear the screen to blue and display the boot notice and debug status */
-    if (NoGuiBoot) ExpDisplayNotice();
-    KdInitSystem(2, KeLoaderBlock);
+    /* Check if GUI boot is enabled */
+    if (!NoGuiBoot)
+    {
+        /* It is, display the boot logo and enable printing strings */
+        InbvEnableDisplayString(SosEnabled);
+        InbvDisplayBootLogo(SosEnabled);
+    }
+    else
+    {
+        /* Release display ownership if not using GUI boot */
+        if (!SosEnabled) InbvNotifyDisplayOwnershipLost(NULL);
 
-    /* Set up Region Maps, Sections and the Paging File */
-    MmInit2();
+        /* Don't allow boot-time strings */
+        InbvEnableDisplayString(FALSE);
+    }
+
+    /* Check if this is LiveCD (WinPE) mode */
+    if (strstr(CommandLine, "MININT"))
+    {
+        /* Setup WinPE Settings */
+        InitIsWinPEMode = TRUE;
+        InitWinPEModeType |= (strstr(CommandLine, "INRAM")) ? 0x80000000 : 1;
+    }
 
     /* Initialize Power Subsystem in Phase 0 */
-    PoInit(0, AcpiTableDetected);
+    if (!PoInitSystem(0, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);
+
+    /* Check for Y2K hack */
+    Y2KHackRequired = strstr(CommandLine, "YEAR");
+    if (Y2KHackRequired) Y2KHackRequired = strstr(Y2KHackRequired, "=");
+    if (Y2KHackRequired) YearHack = atol(Y2KHackRequired + 1);
 
     /* Query the clock */
-    if (HalQueryRealTimeClock(&TimeFields))
+    if ((ExCmosClockIsSane) && (HalQueryRealTimeClock(&TimeFields)))
     {
+        /* Check if we're using the Y2K hack */
+        if (Y2KHackRequired) TimeFields.Year = (CSHORT)YearHack;
+
         /* Convert to time fields */
         RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
         UniversalBootTime = SystemBootTime;
@@ -1075,40 +1118,53 @@ ExPhase2Init(PVOID Context)
         UniversalBootTime.QuadPart = SystemBootTime.QuadPart +
                                      ExpTimeZoneBias.QuadPart;
 #endif
-        KiSetSystemTime(&UniversalBootTime);
+
+        /* Update the system time */
+        KeSetSystemTime(&UniversalBootTime, &OldTime, FALSE, NULL);
 
         /* Remember this as the boot time */
         KeBootTime = UniversalBootTime;
+        KeBootTimeBias = 0;
     }
 
     /* The clock is ready now (FIXME: HACK FOR OLD HAL) */
     KiClockSetupComplete = TRUE;
 
     /* Initialize all processors */
-    HalAllProcessorsStarted();
+    if (!HalAllProcessorsStarted()) KeBugCheck(HAL1_INITIALIZATION_FAILED);
 
     /* Call OB initialization again */
     if (!ObInit()) KeBugCheck(OBJECT1_INITIALIZATION_FAILED);
 
     /* Initialize Basic System Objects and Worker Threads */
-    if (!ExInitSystem()) KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 1, 0, 0, 0);
+    if (!ExInitSystem()) KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 0, 0, 1, 0);
 
     /* Initialize the later stages of the kernel */
-    if (!KeInitSystem()) KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 2, 0, 0, 0);
+    if (!KeInitSystem()) KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 0, 0, 2, 0);
 
     /* Call KD Providers at Phase 1 */
     if (!KdInitSystem(ExpInitializationPhase, KeLoaderBlock))
     {
         /* Failed, bugcheck */
-        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 3, 0, 0, 0);
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 0, 0, 3, 0);
     }
 
+    /* Initialize the SRM in Phase 1 */
+    if (!SeInit()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
+
+    /* Update the progress bar */
+    InbvUpdateProgressBar(10);
+
     /* Create SystemRoot Link */
-    Status = ExpCreateSystemRootLink(KeLoaderBlock);
+    Status = ExpCreateSystemRootLink(LoaderBlock);
     if (!NT_SUCCESS(Status))
     {
+        /* Failed to create the system root link */
         KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
+
+    /* Set up Region Maps, Sections and the Paging File */
+    MmInit2();
 
     /* Create NLS section */
     ExpInitNls(KeLoaderBlock);
@@ -1148,17 +1204,17 @@ ExPhase2Init(PVOID Context)
     KeI386VdmInitialize();
 
     /* Initialize Power Subsystem in Phase 1*/
-    PoInit(1, AcpiTableDetected);
+    PoInitSystem(1, AcpiTableDetected);
 
     /* Initialize the Process Manager at Phase 1 */
-    if (!PsInitSystem()) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
+    if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
 
     /* Launch initial process */
-    Status = ExpLoadInitialProcess(&ProcessHandle, &ThreadHandle);
+    Status = ExpLoadInitialProcess(ProcessInfo);
 
     /* Wait 5 seconds for it to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);
-    Status = ZwWaitForSingleObject(ProcessHandle, FALSE, &Timeout);
+    Status = ZwWaitForSingleObject(ProcessInfo->ProcessHandle, FALSE, &Timeout);
     if (!NoGuiBoot) InbvFinalizeBootLogo();
     if (Status == STATUS_SUCCESS)
     {
@@ -1167,15 +1223,26 @@ ExPhase2Init(PVOID Context)
     }
 
     /* Close process handles */
-    ZwClose(ThreadHandle);
-    ZwClose(ProcessHandle);
+    ZwClose(ProcessInfo->ThreadHandle);
+    ZwClose(ProcessInfo->ProcessHandle);
 
     /* FIXME: We should free the initial process' memory!*/
 
     /* Increase init phase */
     ExpInitializationPhase += 1;
 
+    /* Free the process information */
+    ExFreePool(ProcessInfo);
+}
+
+VOID
+NTAPI
+Phase1Initialization(IN PVOID Context)
+{
+    /* Do the .INIT part of Phase 1 which we can free later */
+    Phase1InitializationDiscard(Context);
+
     /* Jump into zero page thread */
     MmZeroPageThreadMain(NULL);
 }
-/* EOF */
+

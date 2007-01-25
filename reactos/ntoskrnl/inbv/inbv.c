@@ -300,14 +300,14 @@ InbvDisplayInitialize2(BOOLEAN NoGuiBoot)
 
 
 VOID NTAPI
-InbvDisplayBootLogo(VOID)
+InbvDisplayBootLogo(IN BOOLEAN SosEnabled)
 {
    InbvEnableBootDriver(TRUE);
 
    if (BootVidDriverInstalled)
    {
       InbvResetDisplayParameters = BootVidResetDisplayParameters;
-      BootVidDisplayBootLogo(BootVidBase);
+      if (!SosEnabled) BootVidDisplayBootLogo(BootVidBase);
    }
 }
 

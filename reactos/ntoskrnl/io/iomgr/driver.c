@@ -30,7 +30,6 @@ UNICODE_STRING IopHardwareDatabaseKey =
 POBJECT_TYPE IoDriverObjectType = NULL;
 
 extern BOOLEAN ExpInTextModeSetup;
-extern BOOLEAN NoGuiBoot;
 
 /* DECLARATIONS ***************************************************************/
 
@@ -281,7 +280,7 @@ IopDisplayLoadingMessage(PVOID ServiceName,
                          BOOLEAN Unicode)
 {
     CHAR TextBuffer[256];
-    if (ExpInTextModeSetup || !NoGuiBoot) return;
+    if (ExpInTextModeSetup) return;
     if (Unicode) 
     {
         sprintf(TextBuffer, "Loading %S...\n", (PWCHAR)ServiceName);

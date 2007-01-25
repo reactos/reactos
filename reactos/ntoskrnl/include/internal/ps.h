@@ -82,7 +82,7 @@ PspShutdownProcessManager(
 BOOLEAN
 NTAPI
 PsInitSystem(
-    VOID
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 //

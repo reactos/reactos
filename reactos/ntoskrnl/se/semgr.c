@@ -20,58 +20,95 @@ PSE_EXPORTS SeExports = NULL;
 SE_EXPORTS SepExports;
 
 static ERESOURCE SepSubjectContextLock;
+extern ULONG ExpInitializationPhase;
 
 
 /* PROTOTYPES ***************************************************************/
 
 static BOOLEAN SepInitExports(VOID);
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, SeInit)
-#pragma alloc_text(INIT, SepInitExports)
-#endif
-
 /* FUNCTIONS ****************************************************************/
 
-BOOLEAN 
-INIT_FUNCTION
+BOOLEAN
 NTAPI
-SeInit(VOID)
+SepInitializationPhase0(VOID)
 {
     DPRINT1("FIXME: SeAccessCheck has been HACKED to always grant access!\n");
     DPRINT1("FIXME: Please fix all the code that doesn't get proper rights!\n");
 
-  SepInitLuid();
+    SepInitLuid();
+    if (!SepInitSecurityIDs()) return FALSE;
+    if (!SepInitDACLs()) return FALSE;
+    if (!SepInitSDs()) return FALSE;
+    SepInitPrivileges();
+    if (!SepInitExports()) return FALSE;
 
-  if (!SepInitSecurityIDs())
-    return FALSE;
+    /* Initialize the subject context lock */
+    ExInitializeResource(&SepSubjectContextLock);
 
-  if (!SepInitDACLs())
-    return FALSE;
+    /* Initialize token objects */
+    SepInitializeTokenImplementation();
 
-  if (!SepInitSDs())
-    return FALSE;
+    /* Clear impersonation info for the idle thread */
+    PsGetCurrentThread()->ImpersonationInfo = NULL;
+    PspClearCrossThreadFlag(PsGetCurrentThread(),
+                            CT_ACTIVE_IMPERSONATION_INFO_BIT);
 
-  SepInitPrivileges();
+    /* Initialize the boot token */
+    ObInitializeFastReference(&PsGetCurrentProcess()->Token, NULL);
+    ObInitializeFastReference(&PsGetCurrentProcess()->Token,
+                              SepCreateSystemProcessToken());
+    return TRUE;
+}
 
-  if (!SepInitExports())
-    return FALSE;
+BOOLEAN
+NTAPI
+SepInitializationPhase1(VOID)
+{
+    NTSTATUS Status;
+    PAGED_CODE();
 
-  /* Initialize the subject context lock */
-  ExInitializeResource(&SepSubjectContextLock);
+    /* Insert the system token into the tree */
+    Status = ObInsertObject((PVOID)(PsGetCurrentProcess()->Token.Value &
+                                    ~MAX_FAST_REFS),
+                            NULL,
+                            0,
+                            0,
+                            NULL,
+                            NULL);
+    ASSERT(NT_SUCCESS(Status));
 
-  /* Initialize token objects */
-  SepInitializeTokenImplementation();
+    /* FIXME: TODO \\ Security directory */
+    return TRUE;
+}
 
-  /* Clear impersonation info for the idle thread */
-  PsGetCurrentThread()->ImpersonationInfo = NULL;
-  PspClearCrossThreadFlag(PsGetCurrentThread(), CT_ACTIVE_IMPERSONATION_INFO_BIT);
+BOOLEAN
+NTAPI
+SeInit(VOID)
+{
+    /* Check the initialization phase */
+    switch (ExpInitializationPhase)
+    {
+    case 0:
 
-  /* Initailize the boot token */
-  ObInitializeFastReference(&PsGetCurrentProcess()->Token, NULL);
-  ObInitializeFastReference(&PsGetCurrentProcess()->Token,
-      SepCreateSystemProcessToken());
-  return TRUE;
+        /* Do Phase 0 */
+        return SepInitializationPhase0();
+
+    case 1:
+
+        /* Do Phase 1 */
+        return SepInitializationPhase1();
+
+    default:
+
+        /* Don't know any other phase! Bugcheck! */
+        KeBugCheckEx(UNEXPECTED_INITIALIZATION_CALL,
+                     0,
+                     ExpInitializationPhase,
+                     0,
+                     0);
+        return FALSE;
+    }
 }
 
 BOOLEAN

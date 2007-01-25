@@ -123,7 +123,7 @@ ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
     ExLocalTimeToSystemTime(&LocalTime, &SystemTime);
 
     /* Set the new system time */
-    KiSetSystemTime(&SystemTime);
+    KeSetSystemTime(&SystemTime, NULL, FALSE, NULL);
 
     /* Return success */
     DPRINT("ExpSetTimeZoneInformation() done\n");
@@ -193,7 +193,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     HalSetRealTimeClock(&TimeFields);
 
     /* Now set system time */
-    KiSetSystemTime(&NewSystemTime);
+    KeSetSystemTime(&NewSystemTime, NULL, FALSE, NULL);
 
     /* Check if caller wanted previous time */
     if(PreviousTime)

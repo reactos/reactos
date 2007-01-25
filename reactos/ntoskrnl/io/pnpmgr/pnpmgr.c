@@ -3363,11 +3363,12 @@ PpInitializeDeviceReferenceTable(VOID)
 {
     /* Setup the guarded mutex and AVL table */
     KeInitializeGuardedMutex(&PpDeviceReferenceTableLock);
-    RtlInitializeGenericTableAvl(&PpDeviceReferenceTable,
-                                 PiCompareInstancePath,
-                                 PiAllocateGenericTableEntry,
-                                 PiFreeGenericTableEntry,
-                                 NULL);
+    RtlInitializeGenericTableAvl(
+        &PpDeviceReferenceTable,
+        (PRTL_AVL_COMPARE_ROUTINE)PiCompareInstancePath,
+        (PRTL_AVL_ALLOCATE_ROUTINE)PiAllocateGenericTableEntry,
+        (PRTL_AVL_FREE_ROUTINE)PiFreeGenericTableEntry,
+        NULL);
 }
 
 BOOLEAN

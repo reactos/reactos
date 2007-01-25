@@ -138,7 +138,7 @@ ExInit2(VOID);
 
 VOID
 NTAPI
-ExPhase2Init(
+Phase1Initialization(
     IN PVOID Context
 );
 

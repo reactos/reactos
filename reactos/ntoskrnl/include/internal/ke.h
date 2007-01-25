@@ -85,6 +85,7 @@ extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
 extern LARGE_INTEGER KeBootTime;
+extern ULONG KeBootTimeBias;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
 extern ULONG KeI386FxsrPresent;
@@ -781,7 +782,12 @@ KeRosDumpStackFrames(
 
 VOID
 NTAPI
-KiSetSystemTime(PLARGE_INTEGER NewSystemTime);
+KeSetSystemTime(
+    IN PLARGE_INTEGER NewSystemTime,
+    OUT PLARGE_INTEGER OldSystemTime,
+    IN BOOLEAN FixInterruptTime,
+    IN PLARGE_INTEGER HalTime
+);
 
 ULONG
 NTAPI

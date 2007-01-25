@@ -26,7 +26,8 @@
 
 /* GLOBALS ****************************************************************/
 
-LARGE_INTEGER KeBootTime, KeBootTimeBias;
+LARGE_INTEGER KeBootTime;
+ULONG KeBootTimeBias;
 KDPC KiTimerExpireDpc;
 BOOLEAN KiClockSetupComplete = FALSE;
 ULONG KiTimeLimitIsrMicroseconds;
@@ -59,7 +60,10 @@ ULONG KeTimeAdjustment   = 100000;
 
 VOID
 NTAPI
-KiSetSystemTime(PLARGE_INTEGER NewSystemTime)
+KeSetSystemTime(IN PLARGE_INTEGER NewSystemTime,
+                OUT PLARGE_INTEGER OldTime,
+                IN BOOLEAN FixInterruptTime,
+                IN PLARGE_INTEGER HalTime)
 {
   LARGE_INTEGER OldSystemTime;
   LARGE_INTEGER DeltaTime;

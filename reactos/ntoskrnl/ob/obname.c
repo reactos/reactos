@@ -501,7 +501,7 @@ ParseFromRoot:
             if (DeviceMap)
             {
                 /* Dereference it */
-                ObfDereferenceDeviceMap(DeviceMap);
+                //ObfDereferenceDeviceMap(DeviceMap);
                 DeviceMap = NULL;
             }
 
@@ -935,7 +935,7 @@ ReparseObject:
     }
 
     /* Check if we have a device map and dereference it if so */
-    if (DeviceMap) ObfDereferenceDeviceMap(DeviceMap);
+    //if (DeviceMap) ObfDereferenceDeviceMap(DeviceMap);
 
     /* Check if we have a referenced directory and dereference it if so */
     if (ReferencedDirectory) ObDereferenceObject(ReferencedDirectory);
