@@ -477,7 +477,7 @@ KiSwapThread(IN PKTHREAD CurrentThread,
         else
         {
             /* Set the idle summary */
-            InterlockedOr(&KiIdleSummary, Prcb->SetMember);
+            InterlockedOr((PLONG)&KiIdleSummary, Prcb->SetMember);
 
             /* Schedule the idle thread */
             NextThread = Prcb->IdleThread;
