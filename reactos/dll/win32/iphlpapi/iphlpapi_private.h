@@ -22,10 +22,10 @@
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x500
 #define WIN32_NO_STATUS
+#include <winsock2.h>
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
-#include <winsock2.h>
 #include <nspapi.h>
 #include <iptypes.h>
 #include "iphlpapi.h"
