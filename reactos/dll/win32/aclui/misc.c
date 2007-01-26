@@ -262,7 +262,7 @@ InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
         STGMEDIUM stm;
         FORMATETC fe;
 
-        fe.cfFormat = RegisterClipboardFormat(CFSTR_DSOP_DS_SELECTION_LIST);
+        fe.cfFormat = (WORD)RegisterClipboardFormat(CFSTR_DSOP_DS_SELECTION_LIST);
         fe.ptd = NULL;
         fe.dwAspect = DVASPECT_CONTENT;
         fe.lindex = -1;
