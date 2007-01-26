@@ -98,8 +98,8 @@ LockFileEx(
 			&Offset,
 			&BytesToLock,
 			0,
-			LockImmediate,
-			LockExclusive);
+			(BOOLEAN)LockImmediate,
+			(BOOLEAN)LockExclusive);
    if ( !NT_SUCCESS(errCode) )
      {
       SetLastErrorByStatus (errCode);

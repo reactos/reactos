@@ -157,8 +157,8 @@ HeapExtend(HANDLE hHeap,
 {
     NTSTATUS Status;
 
-    /* Call the RTL API */
-    Status = RtlExtendHeap(hHeap, dwFlags, BaseAddress, dwBytes);
+    /* Call the RTL API. Gone in Vista, so commented out. */
+    Status = STATUS_NOT_IMPLEMENTED; //RtlExtendHeap(hHeap, dwFlags, BaseAddress, dwBytes);
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
@@ -185,7 +185,7 @@ HeapQueryTagW(HANDLE hHeap,
     return RtlQueryTagHeap(hHeap,
                            dwFlags,
                            wTagIndex,
-                           bResetCounters,
+                           (BOOLEAN)bResetCounters,
                            lpTagInfo);
 }
 
@@ -204,8 +204,8 @@ HeapSummary(HANDLE hHeap,
     /* Fill in the length information */
     Usage.Length = sizeof(Usage);
 
-    /* Call RTL */
-    Status = RtlUsageHeap(hHeap, dwFlags, &Usage);
+    /* Call RTL. Gone in Vista, so commented out */
+    Status = STATUS_NOT_IMPLEMENTED; //RtlUsageHeap(hHeap, dwFlags, &Usage);
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
@@ -231,8 +231,8 @@ HeapUsage(HANDLE hHeap,
 {
     NTSTATUS Status;
 
-    /* Call RTL */
-    Status = RtlUsageHeap(hHeap, dwFlags, Usage);
+    /* Call RTL. Gone in Vista, so commented out */
+    Status = STATUS_NOT_IMPLEMENTED; //RtlUsageHeap(hHeap, dwFlags, &Usage);
     if (!NT_SUCCESS(Status))
     {
         /* We failed */

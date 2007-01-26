@@ -10,19 +10,15 @@
 #define DPRINT
 #endif
 #define CHECKPOINT
-#ifdef ASSERT
-#undef ASSERT
-#endif
-#define ASSERT(x)
 #else
 #define DPRINT(...) do { DbgPrint("(KERNEL32:%s:%d) ",__FILE__,__LINE__); DbgPrint(__VA_ARGS__); } while(0);
 #define CHECKPOINT do { DbgPrint("(KERNEL32:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0);
-#ifdef ASSERT
-#undef ASSERT
-#endif
-#define ASSERT(x) do { if(!x) RtlAssert("#x", __FILE__,__LINE__, ""); } while(0);
 #endif
 
+#ifdef ASSERT
+#undef ASSERT
+#define ASSERT(x) do { if(!x) RtlAssert("#x", __FILE__,__LINE__, ""); } while(0);
+#endif
 #define DPRINT1(...) do { DbgPrint("(KERNEL32:%s:%d) ",__FILE__,__LINE__); DbgPrint(__VA_ARGS__); } while(0);
 #define CHECKPOINT1 do { DbgPrint("(KERNEL32:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0);
 

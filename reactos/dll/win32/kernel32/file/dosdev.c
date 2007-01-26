@@ -135,10 +135,10 @@ QueryDosDeviceA(
     while (ucchMax)
     {
       CurrentLength = min (ucchMax, MAXUSHORT / 2);
-      TargetPathU.MaximumLength = TargetPathU.Length = CurrentLength * sizeof(WCHAR);
+      TargetPathU.MaximumLength = TargetPathU.Length = (USHORT)CurrentLength * sizeof(WCHAR);
      
       TargetPathA.Length = 0;
-      TargetPathA.MaximumLength = CurrentLength;
+      TargetPathA.MaximumLength = (USHORT)CurrentLength;
 
       RtlUnicodeStringToAnsiString (&TargetPathA,
 				    &TargetPathU,

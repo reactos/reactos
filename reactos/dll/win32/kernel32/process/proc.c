@@ -376,7 +376,7 @@ WinExec(LPCSTR lpCmdLine,
 
    RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
    StartupInfo.cb = sizeof(STARTUPINFOA);
-   StartupInfo.wShowWindow = uCmdShow;
+   StartupInfo.wShowWindow = (WORD)uCmdShow;
    StartupInfo.dwFlags = 0;
 
    if (! CreateProcessA(NULL,
@@ -419,20 +419,6 @@ RegisterWaitForInputIdle (
 	return;
 }
 
-
-/*
- * @unimplemented
- */
-DWORD STDCALL
-WaitForInputIdle (
-	HANDLE	hProcess,
-	DWORD	dwMilliseconds
-	)
-{
-	return 0;
-}
-
-
 /*
  * @implemented
  */
@@ -460,7 +446,7 @@ GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
   lpStartupInfo->dwYCountChars = Params->CountCharsY;
   lpStartupInfo->dwFillAttribute = Params->FillAttribute;
   lpStartupInfo->dwFlags = Params->WindowFlags;
-  lpStartupInfo->wShowWindow = Params->ShowWindowFlags;
+  lpStartupInfo->wShowWindow = (WORD)Params->ShowWindowFlags;
   lpStartupInfo->cbReserved2 = Params->RuntimeData.Length;
   lpStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeData.Buffer;
   
@@ -531,7 +517,7 @@ GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 	lpLocalStartupInfo->dwYCountChars = Params->CountCharsY;
 	lpLocalStartupInfo->dwFillAttribute = Params->FillAttribute;
 	lpLocalStartupInfo->dwFlags = Params->WindowFlags;
-	lpLocalStartupInfo->wShowWindow = Params->ShowWindowFlags;
+	lpLocalStartupInfo->wShowWindow = (WORD)Params->ShowWindowFlags;
 	lpLocalStartupInfo->cbReserved2 = Params->RuntimeData.Length;
 	lpLocalStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeData.Buffer;
 

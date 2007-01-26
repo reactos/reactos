@@ -199,7 +199,7 @@ BasepConvertUnicodeEnvironment(OUT SIZE_T* EnvSize,
     else
     {
 
-        AnsiEnv.Length = (ULONG_PTR)pcScan - (ULONG_PTR)lpEnvironment + sizeof(CHAR);
+        AnsiEnv.Length = (USHORT)((ULONG_PTR)pcScan - (ULONG_PTR)lpEnvironment + sizeof(CHAR));
     }
     AnsiEnv.MaximumLength = AnsiEnv.Length + 1;
     
@@ -221,7 +221,7 @@ BasepConvertUnicodeEnvironment(OUT SIZE_T* EnvSize,
     }
         
     /* Use the allocated size */
-    UnicodeEnv.MaximumLength = *EnvSize;
+    UnicodeEnv.MaximumLength = (USHORT)*EnvSize;
     
     /* Convert */
     RtlAnsiStringToUnicodeString(&UnicodeEnv, &AnsiEnv, FALSE);
@@ -754,7 +754,7 @@ CreateProcessInternalW(HANDLE hToken,
 
     /* Easy stuff first, convert the process priority class */
     PriorityClass.Foreground = FALSE;
-    PriorityClass.PriorityClass = BasepConvertPriorityClass(dwCreationFlags);
+    PriorityClass.PriorityClass = (UCHAR)BasepConvertPriorityClass(dwCreationFlags);
 
     if (lpCommandLine)
     {
@@ -1158,7 +1158,7 @@ GetAppName:
                              PROCESS_ALL_ACCESS,
                              ObjectAttributes,
                              NtCurrentProcess(),
-                             bInheritHandles,
+                             (BOOLEAN)bInheritHandles,
                              hSection,
                              hDebug,
                              NULL);

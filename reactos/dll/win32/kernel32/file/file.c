@@ -38,16 +38,16 @@ FilenameA2W(LPCSTR NameA, BOOL alloc)
    PUNICODE_STRING pstrW;
    NTSTATUS Status;
 
-   ASSERT(NtCurrentTeb()->StaticUnicodeString.Buffer == NtCurrentTeb()->StaticUnicodeBuffer);
+   //ASSERT(NtCurrentTeb()->StaticUnicodeString.Buffer == NtCurrentTeb()->StaticUnicodeBuffer);
    ASSERT(NtCurrentTeb()->StaticUnicodeString.MaximumLength == sizeof(NtCurrentTeb()->StaticUnicodeBuffer));
 
    RtlInitAnsiString(&str, NameA);
    pstrW = alloc ? &strW : &NtCurrentTeb()->StaticUnicodeString;
 
    if (bIsFileApiAnsi)
-        Status= RtlAnsiStringToUnicodeString( pstrW, &str, alloc );
+        Status= RtlAnsiStringToUnicodeString( pstrW, &str, (BOOLEAN)alloc );
    else
-        Status= RtlOemStringToUnicodeString( pstrW, &str, alloc );
+        Status= RtlOemStringToUnicodeString( pstrW, &str, (BOOLEAN)alloc );
 
     if (NT_SUCCESS(Status))
        return pstrW->Buffer;
@@ -85,7 +85,7 @@ FilenameU2A_FitOrFail(
       ANSI_STRING str;
 
       str.Buffer = DestA;
-      str.MaximumLength = destLen;
+      str.MaximumLength = (USHORT)destLen;
 
 
       if (bIsFileApiAnsi)
@@ -337,7 +337,7 @@ OpenFile(LPCSTR lpFileName,
                     0,
                     FileNameString.Buffer);
 
-	lpReOpenBuff->nErrCode = RtlNtStatusToDosError(errCode);
+	lpReOpenBuff->nErrCode = (WORD)RtlNtStatusToDosError(errCode);
 
 	if (!NT_SUCCESS(errCode))
 	{
@@ -1541,7 +1541,7 @@ CheckNameLegalDOS8Dot3W(
     if(lpOemName != NULL)
     {
       AnsiName.Buffer = lpOemName;
-      AnsiName.MaximumLength = OemNameSize * sizeof(CHAR);
+      AnsiName.MaximumLength = (USHORT)OemNameSize * sizeof(CHAR);
       AnsiName.Length = 0;
     }
 
@@ -1583,7 +1583,7 @@ CheckNameLegalDOS8Dot3A(
     if(lpOemName != NULL)
     {
       AnsiName.Buffer = lpOemName;
-      AnsiName.MaximumLength = OemNameSize * sizeof(CHAR);
+      AnsiName.MaximumLength = (USHORT)OemNameSize * sizeof(CHAR);
       AnsiName.Length = 0;
     }
 
@@ -1628,7 +1628,7 @@ GetFinalPathNameByHandleA(IN HANDLE hFile,
         cchFilePath > sizeof(FilePathW) / sizeof(FilePathW[0]))
     {
         FilePathU.Length = 0;
-        FilePathU.MaximumLength = cchFilePath * sizeof(WCHAR);
+        FilePathU.MaximumLength = (USHORT)cchFilePath * sizeof(WCHAR);
         FilePathU.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                            0,
                                            FilePathU.MaximumLength);

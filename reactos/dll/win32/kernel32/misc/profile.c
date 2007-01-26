@@ -76,7 +76,7 @@ static RTL_CRITICAL_SECTION_DEBUG critsect_debug =
 {
     0, 0, &PROFILE_CritSect,
     { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": PROFILE_CritSect") }
+      0, 0, 0, 0
 };
 static RTL_CRITICAL_SECTION PROFILE_CritSect = { &critsect_debug, -1, 0, 0, 0, 0 };
 
@@ -121,7 +121,7 @@ static void PROFILE_CopyEntry( LPWSTR buffer, LPCWSTR value, int len,
     }
 
     lstrcpynW( buffer, value, len );
-    if (quote && (len >= wcslen(value))) buffer[wcslen(buffer)-1] = '\0';
+    if (quote && (len >= (int)wcslen(value))) buffer[wcslen(buffer)-1] = '\0';
 }
 
 

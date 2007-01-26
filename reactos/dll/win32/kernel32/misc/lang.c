@@ -23,8 +23,6 @@
 /* FIXME:  these are included in winnls.h, however including this file causes alot of
            conflicting type errors. */
 
-#define LOCALE_SYEARMONTH 0x1006
-#define LOCALE_IPAPERSIZE 0x100A
 #define LOCALE_RETURN_NUMBER 0x20000000
 #define LOCALE_USE_CP_ACP 0x40000000
 #define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|LOCALE_RETURN_NUMBER)
@@ -994,7 +992,7 @@ CompareStringW (
     }
     else
         Result = RtlCompareUnicodeString(
-                      &String1, &String2, dwCmpFlags & NORM_IGNORECASE);
+                      &String1, &String2, (BOOLEAN)(dwCmpFlags & NORM_IGNORECASE));
     
     
     if (Result) /* need to translate result */

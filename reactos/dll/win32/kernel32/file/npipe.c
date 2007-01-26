@@ -919,7 +919,7 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 
   if(lpUserName != NULL)
   {
-    UserNameW.MaximumLength = nMaxUserNameSize * sizeof(WCHAR);
+    UserNameW.MaximumLength = (USHORT)nMaxUserNameSize * sizeof(WCHAR);
     UserNameW.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, UserNameW.MaximumLength);
     if (UserNameW.Buffer == NULL)
     {
@@ -929,7 +929,7 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 
     UserNameA.Buffer = lpUserName;
     UserNameA.Length = 0;
-    UserNameA.MaximumLength = nMaxUserNameSize;
+    UserNameA.MaximumLength = (USHORT)nMaxUserNameSize;
   }
 
   Ret = GetNamedPipeHandleStateW(hNamedPipe,

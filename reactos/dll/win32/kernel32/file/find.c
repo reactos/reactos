@@ -95,7 +95,7 @@ InternalCopyFindDataA(LPWIN32_FIND_DATAA            lpFindFileData,
     lpFindFileData->nFileSizeHigh = lpFileInfo->EndOfFile.u.HighPart;
     lpFindFileData->nFileSizeLow = lpFileInfo->EndOfFile.u.LowPart;
 
-    FileNameU.Length = FileNameU.MaximumLength = lpFileInfo->FileNameLength;
+    FileNameU.Length = FileNameU.MaximumLength = (USHORT)lpFileInfo->FileNameLength;
     FileNameU.Buffer = lpFileInfo->FileName;
 
     FileNameA.MaximumLength = sizeof(lpFindFileData->cFileName) - sizeof(CHAR);
@@ -213,7 +213,7 @@ InternalFindFirstFile (
 	PWSTR SearchPath;
 	PWCHAR SearchPattern;
 	ULONG Length;
-	BOOLEAN bResult;
+	BOOL bResult;
 
 	DPRINT("FindFirstFileW(lpFileName %S)\n",
 	       lpFileName);
@@ -698,7 +698,7 @@ static VOID
 InternalCopyStreamInfo(IN OUT PKERNEL32_FIND_STREAM_DATA IData,
                        OUT LPVOID lpFindStreamData)
 {
-    ASSERT(IData->pCurrent != NULL);
+    ASSERT(IData->pCurrent);
 
     switch (IData->InfoLevel)
     {

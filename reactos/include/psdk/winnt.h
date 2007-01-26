@@ -2669,7 +2669,9 @@ typedef struct _RTL_CRITICAL_SECTION_DEBUG {
 	LIST_ENTRY ProcessLocksList;
 	DWORD EntryCount;
 	DWORD ContentionCount;
-	DWORD Spare[2];
+    DWORD Flags;
+    WORD CreatorBackTraceIndexHigh;
+    WORD SpareWORD;
 } RTL_CRITICAL_SECTION_DEBUG,*PRTL_CRITICAL_SECTION_DEBUG;
 typedef struct _RTL_CRITICAL_SECTION {
 	PRTL_CRITICAL_SECTION_DEBUG DebugInfo;

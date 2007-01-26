@@ -483,7 +483,7 @@ GetConsoleCommandHistoryLengthA (DWORD	Unknown0)
 /*
  * @unimplemented
  */
-DWORD STDCALL
+INT STDCALL
 GetConsoleDisplayMode (LPDWORD lpdwMode)
      /*
       * FUNCTION: Get the console display mode
@@ -592,7 +592,7 @@ GetConsoleInputWaitHandle (VOID)
 /*
  * @unimplemented
  */
-DWORD STDCALL
+INT STDCALL
 GetCurrentConsoleFont(HANDLE hConsoleOutput,
 		      BOOL bMaximumWindow,
 		      PCONSOLE_FONT_INFO lpConsoleCurrentFont)
@@ -1126,7 +1126,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
     Request->Data.WriteConsoleRequest.ConsoleHandle = hConsoleOutput;
     Request->Data.WriteConsoleRequest.Unicode = bUnicode;
 
-    nChars = min(nNumberOfCharsToWrite, CSRSS_MAX_WRITE_CONSOLE / CharSize);
+    nChars = (USHORT)min(nNumberOfCharsToWrite, CSRSS_MAX_WRITE_CONSOLE / CharSize);
     Request->Data.WriteConsoleRequest.NrCharactersToWrite = nChars;
 
     SizeBytes = nChars * CharSize;
@@ -1245,8 +1245,8 @@ IntReadConsole(HANDLE hConsoleInput,
 
     Request->Data.ReadConsoleRequest.ConsoleHandle = hConsoleInput;
     Request->Data.ReadConsoleRequest.Unicode = bUnicode;
-    Request->Data.ReadConsoleRequest.NrCharactersToRead = min(nNumberOfCharsToRead, CSRSS_MAX_READ_CONSOLE / CharSize);
-    Request->Data.ReadConsoleRequest.nCharsCanBeDeleted = CharsRead;
+    Request->Data.ReadConsoleRequest.NrCharactersToRead = (WORD)min(nNumberOfCharsToRead, CSRSS_MAX_READ_CONSOLE / CharSize);
+    Request->Data.ReadConsoleRequest.nCharsCanBeDeleted = (WORD)CharsRead;
     Status = CsrClientCallServer(Request,
                                  NULL,
                                  CsrRequest,
@@ -1477,7 +1477,7 @@ IntFillConsoleOutputCharacter(HANDLE hConsoleOutput,
   else
     Request.Data.FillOutputRequest.Char.AsciiChar = *((CHAR*)cCharacter);
   Request.Data.FillOutputRequest.Position = dwWriteCoord;
-  Request.Data.FillOutputRequest.Length = nLength;
+  Request.Data.FillOutputRequest.Length = (WORD)nLength;
   Status = CsrClientCallServer(&Request, NULL,
                                CsrRequest,
                                sizeof(CSR_API_MESSAGE));
@@ -2316,7 +2316,7 @@ IntWriteConsoleOutputCharacter(HANDLE hConsoleOutput,
 
     Request->Data.WriteConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
     Request->Data.WriteConsoleOutputCharRequest.Unicode = bUnicode;
-    Request->Data.WriteConsoleOutputCharRequest.Length = min(nLength, nChars);
+    Request->Data.WriteConsoleOutputCharRequest.Length = (WORD)min(nLength, nChars);
     BytesWrite = Request->Data.WriteConsoleOutputCharRequest.Length * CharSize;
 
     memcpy(Request->Data.WriteConsoleOutputCharRequest.String, lpCharacter, BytesWrite);
@@ -2430,7 +2430,7 @@ WriteConsoleOutputAttribute(
       *lpNumberOfAttrsWritten = nLength;
    while( nLength )
       {
-	 Size = min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB / sizeof(WORD));
+	 Size = (WORD)min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB / sizeof(WORD));
          Request->Data.WriteConsoleOutputAttribRequest.ConsoleHandle = hConsoleOutput;
 	 Request->Data.WriteConsoleOutputAttribRequest.Length = Size;
          memcpy(Request->Data.WriteConsoleOutputAttribRequest.Attribute, lpAttribute, Size * sizeof(WORD));
@@ -2479,9 +2479,9 @@ FillConsoleOutputAttribute(
 
    CsrRequest = MAKE_CSR_API(FILL_OUTPUT_ATTRIB, CSR_CONSOLE);
    Request.Data.FillOutputAttribRequest.ConsoleHandle = hConsoleOutput;
-   Request.Data.FillOutputAttribRequest.Attribute = wAttribute;
+   Request.Data.FillOutputAttribRequest.Attribute = (CHAR)wAttribute;
    Request.Data.FillOutputAttribRequest.Coord = dwWriteCoord;
-   Request.Data.FillOutputAttribRequest.Length = nLength;
+   Request.Data.FillOutputAttribRequest.Length = (WORD)nLength;
    Status = CsrClientCallServer( &Request, NULL, CsrRequest, sizeof( CSR_API_MESSAGE ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Request.Status ) )
       {
@@ -2891,7 +2891,7 @@ SetConsoleTextAttribute(
 
    CsrRequest = MAKE_CSR_API(SET_ATTRIB, CSR_CONSOLE);
    Request.Data.SetAttribRequest.ConsoleHandle = hConsoleOutput;
-   Request.Data.SetAttribRequest.Attrib = wAttributes;
+   Request.Data.SetAttribRequest.Attrib = (CHAR)wAttributes;
    Status = CsrClientCallServer( &Request, NULL, CsrRequest, sizeof( CSR_API_MESSAGE ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Request.Status ) )
       {
@@ -2975,7 +2975,7 @@ BOOL WINAPI
 SetConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine,
 		      BOOL Add)
 {
-  BOOLEAN Ret;
+  BOOL Ret;
 
   RtlEnterCriticalSection(&DllLock);
   if (Add)
@@ -3652,7 +3652,7 @@ GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
       RtlInitUnicodeString(&BufferU, Buffer);
 
       BufferA.Length = 0;
-      BufferA.MaximumLength = nBufferLength;
+      BufferA.MaximumLength = (USHORT)nBufferLength;
       BufferA.Buffer = lpBuffer;
 
       RtlUnicodeStringToAnsiString(&BufferA, &BufferU, FALSE);

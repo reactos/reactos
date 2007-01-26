@@ -489,7 +489,7 @@ IntWideCharToMultiByteUTF8(UINT CodePage, DWORD Flags,
             break;
          }
          TempLength--;
-         *MultiByteString++ = Char;
+         *MultiByteString++ = (CHAR)Char;
          continue;
       }
 

@@ -323,7 +323,7 @@ DllMain(HANDLE hDll,
             if (hDll == (HANDLE)0x7c800000)
             {
                 PULONG Eip;
-                Eip = (PULONG)*(PULONG)*(PULONG)NtCurrentTeb()->Tib.ExceptionList +
+                Eip = (PULONG)*(PULONG)NtCurrentTeb()->Tib.ExceptionList +
                        0x9 +
                        FIELD_OFFSET(CONTEXT, Eip) / sizeof(ULONG);
                 *Eip = (ULONG)BaseProcessStartThunk;

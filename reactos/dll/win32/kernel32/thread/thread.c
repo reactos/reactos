@@ -838,7 +838,7 @@ SleepEx(DWORD dwMilliseconds,
        * System time units are 100 nanoseconds (a nanosecond is a billionth of
        * a second).
        */
-      Interval.QuadPart = -((ULONGLONG)dwMilliseconds * 10000);
+      Interval.QuadPart = -((LONGLONG)dwMilliseconds * 10000);
     }
   else
     {
@@ -847,7 +847,7 @@ SleepEx(DWORD dwMilliseconds,
     }
 
 dowait:
-  errCode = NtDelayExecution (bAlertable, &Interval);
+  errCode = NtDelayExecution ((BOOLEAN)bAlertable, &Interval);
   if ((bAlertable) && (errCode == STATUS_ALERTED)) goto dowait;
   return (errCode == STATUS_USER_APC) ? WAIT_IO_COMPLETION : 0;
 }
@@ -865,7 +865,7 @@ InternalWorkItemTrampoline(PVOID Context)
 {
     QUEUE_USER_WORKITEM_CONTEXT Info;
 
-    ASSERT(Context != NULL);
+    ASSERT(Context);
 
     /* Save the context to the stack */
     Info = *(volatile QUEUE_USER_WORKITEM_CONTEXT *)Context;

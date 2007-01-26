@@ -119,7 +119,7 @@ FindFirstChangeNotificationW (
                                         NULL,//Buffer,
                                         0,//BufferLength,
                                         dwNotifyFilter,
-                                        bWatchSubtree);
+                                        (BOOLEAN)bWatchSubtree);
    if (!NT_SUCCESS(Status))
    {
       SetLastErrorByStatus(Status);
@@ -200,7 +200,7 @@ ReadDirectoryChangesW(
       lpBuffer,
       nBufferLength,
       dwNotifyFilter,
-      bWatchSubtree
+      (BOOLEAN)bWatchSubtree
       );
 
    if (!NT_SUCCESS(Status))

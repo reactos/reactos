@@ -12,8 +12,8 @@
 /* INCLUDES ******************************************************************/
 
 /* PSDK/NDK Headers */
+#define DBG 1
 #define WIN32_NO_STATUS
-#define NTOS_MODE_USER
 #define _KERNEL32_
 #include <windows.h>
 #include <tlhelp32.h>
@@ -29,7 +29,6 @@
 
 /* DDK Driver Headers */
 #include <ntddbeep.h>
-#include <ntddser.h>
 #include <mountmgr.h>
 #include <mountdev.h>
 

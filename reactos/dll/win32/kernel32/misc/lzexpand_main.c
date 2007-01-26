@@ -266,9 +266,9 @@ INT WINAPI GetExpandedNameA( LPSTR in, LPSTR out )
 	}
 	if (isalpha(head.lastchar)) {
 		if (fnislowercased)
-			head.lastchar=tolower(head.lastchar);
+			head.lastchar=(CHAR)tolower(head.lastchar);
 		else
-			head.lastchar=toupper(head.lastchar);
+			head.lastchar=(CHAR)toupper(head.lastchar);
 	}
 
 	/* now look where to replace the last character */

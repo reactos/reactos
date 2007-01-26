@@ -43,14 +43,14 @@ GetEnvironmentVariableA (
 
 	/* initialize ansi variable value string */
 	VarValue.Length = 0;
-	VarValue.MaximumLength = nSize;
+	VarValue.MaximumLength = (USHORT)nSize;
 	VarValue.Buffer = lpBuffer;
 
 	/* initialize unicode variable value string and allocate buffer */
 	VarValueU.Length = 0;
 	if (nSize != 0)
 	{
-	    VarValueU.MaximumLength = (nSize - 1) * sizeof(WCHAR);
+	    VarValueU.MaximumLength = (USHORT)(nSize - 1) * sizeof(WCHAR);
 	    VarValueU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
 	                                        0,
 	                                        nSize * sizeof(WCHAR));
@@ -139,7 +139,7 @@ GetEnvironmentVariableW (
 	                      lpName);
 
 	VarValue.Length = 0;
-	VarValue.MaximumLength = (nSize != 0 ? (nSize - 1) * sizeof(WCHAR) : 0);
+	VarValue.MaximumLength = (USHORT)(nSize != 0 ? (nSize - 1) * sizeof(WCHAR) : 0);
 	VarValue.Buffer = lpBuffer;
 
 	Status = RtlQueryEnvironmentVariable_U (NULL,
@@ -298,10 +298,10 @@ GetEnvironmentStringsA (
 	DPRINT("EnvPtr %p\n", EnvPtr);
 
 	/* convert unicode environment to ansi */
-	UnicodeString.MaximumLength = Length * sizeof(WCHAR) + sizeof(WCHAR);
+	UnicodeString.MaximumLength = (USHORT)Length * sizeof(WCHAR) + sizeof(WCHAR);
 	UnicodeString.Buffer = EnvU;
 
-	AnsiString.MaximumLength = Length + 1;
+	AnsiString.MaximumLength = (USHORT)Length + 1;
 	AnsiString.Length = 0;
 	AnsiString.Buffer = EnvPtr;
 
@@ -314,7 +314,7 @@ GetEnvironmentStringsA (
 		if (UnicodeString.Length > 0)
 		{
 			AnsiString.Length = 0;
-			AnsiString.MaximumLength = Length + 1 - (AnsiString.Buffer - EnvPtr);
+			AnsiString.MaximumLength = (USHORT)Length + 1 - (AnsiString.Buffer - EnvPtr);
 
 			RtlUnicodeStringToAnsiString (&AnsiString,
 			                              &UnicodeString,
@@ -407,11 +407,11 @@ ExpandEnvironmentStringsA (
         }
 
 	Destination.Length = 0;
-	Destination.MaximumLength = nSize;
+	Destination.MaximumLength = (USHORT)nSize;
 	Destination.Buffer = lpDst;
 
 	DestinationU.Length = 0;
-	DestinationU.MaximumLength = nSize * sizeof(WCHAR);
+	DestinationU.MaximumLength = (USHORT)nSize * sizeof(WCHAR);
 	DestinationU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
 	                                       0,
 	                                       DestinationU.MaximumLength);
@@ -473,7 +473,7 @@ ExpandEnvironmentStringsW (
 	                      (LPWSTR)lpSrc);
 
 	Destination.Length = 0;
-	Destination.MaximumLength = nSize * sizeof(WCHAR);
+	Destination.MaximumLength = (USHORT)nSize * sizeof(WCHAR);
 	Destination.Buffer = lpDst;
 
 	Status = RtlExpandEnvironmentStrings_U (NULL,

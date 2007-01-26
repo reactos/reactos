@@ -914,12 +914,12 @@ GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
         /* Reset the right size and fill out the information */
         lpBuffer->dwLength = sizeof(MEMORYSTATUS);
         lpBuffer->dwMemoryLoad = lpBufferEx.dwMemoryLoad;
-        lpBuffer->dwTotalPhys = lpBufferEx.ullTotalPhys;
-        lpBuffer->dwAvailPhys = lpBufferEx.ullAvailPhys;
-        lpBuffer->dwTotalPageFile = lpBufferEx.ullTotalPageFile;
-        lpBuffer->dwAvailPageFile = lpBufferEx.ullAvailPageFile;
-        lpBuffer->dwTotalVirtual = lpBufferEx.ullTotalVirtual;
-        lpBuffer->dwAvailVirtual = lpBufferEx.ullAvailVirtual;
+        lpBuffer->dwTotalPhys = (SIZE_T)lpBufferEx.ullTotalPhys;
+        lpBuffer->dwAvailPhys = (SIZE_T)lpBufferEx.ullAvailPhys;
+        lpBuffer->dwTotalPageFile = (SIZE_T)lpBufferEx.ullTotalPageFile;
+        lpBuffer->dwAvailPageFile = (SIZE_T)lpBufferEx.ullAvailPageFile;
+        lpBuffer->dwTotalVirtual = (SIZE_T)lpBufferEx.ullTotalVirtual;
+        lpBuffer->dwAvailVirtual = (SIZE_T)lpBufferEx.ullAvailVirtual;
     }
 }
 
