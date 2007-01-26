@@ -1830,7 +1830,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     PDEBUG_OBJECT DebugObject;
     DBGUI_WAIT_STATE_CHANGE WaitStateChange;
     NTSTATUS Status = STATUS_SUCCESS;
-    PDEBUG_EVENT DebugEvent, DebugEvent2;
+    PDEBUG_EVENT DebugEvent = NULL, DebugEvent2;
     PLIST_ENTRY ListHead, NextEntry, NextEntry2;
     PAGED_CODE();
     DBGKTRACE(DBGK_OBJECT_DEBUG, "Handle: %p\n", DebugHandle);
