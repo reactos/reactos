@@ -114,7 +114,9 @@ KiScanReadyQueues(IN PKDPC Dpc,
     }
 
     /* Release the locks and dispatcher */
+#ifndef NEW_SCHEDULER
 OldSched:
+#endif
     KiReleasePrcbLock(Prcb);
     KiReleaseDispatcherLock(OldIrql);
 

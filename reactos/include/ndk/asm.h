@@ -20,7 +20,7 @@ Author:
 #ifndef _ASM_H
 #define _ASM_H
 
-//#define NEW_SCHEDULER
+#define NEW_SCHEDULER
 
 //
 // PCR Access
