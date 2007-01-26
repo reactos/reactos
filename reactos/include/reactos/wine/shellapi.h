@@ -7,7 +7,9 @@
  * and definitions that are missing in w32api.
  */
 
+#if !defined (_MSC_VER)
 #include_next <shellapi.h>
+#endif
 
 #ifndef _WINE_SHELLAPI_H
 #define _WINE_SHELLAPI_H

@@ -9,7 +9,9 @@
 
 #include <winnetwk.h>
 
+#if !defined (_MSC_VER)
 #include_next <shlobj.h>
+#endif
 
 #include <shlguid.h>
 #include <shobjidl.h>

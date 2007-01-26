@@ -7,7 +7,9 @@
  * and definitions that are missing in w32api.
  */
 
+#if !defined (_MSC_VER)
 #include_next <shlguid.h>
+#endif
 
 
 #ifndef __WINE_SHLGUID_H

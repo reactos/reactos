@@ -13,6 +13,8 @@
 #define OFN_ENABLEINCLUDENOTIFY      0x00400000
 #define NEWFILEOPENORD 			 1547
 
+#if !defined (_MSC_VER)
 #include_next <dlgs.h>
+#endif
 
 #endif /* __WINE_DLGS_H */

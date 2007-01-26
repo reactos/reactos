@@ -4,7 +4,9 @@
 #include "../roscfg.h"
 #include <stdarg.h>
 #include <windef.h>
+#if !defined(_MSC_VER)
 #include <winnt.h>
+#endif
 
 /* Add ROS Master debug functions if not added yet */
 #ifndef __INTERNAL_DEBUG

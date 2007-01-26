@@ -12,6 +12,8 @@
 #define NTM_TT_OPENTYPE     0x00040000 /* wingdi.h */
 #define NTM_TYPE1           0x00100000 /* wingdi.h */
 
+#if !defined(_MSC_VER)
 #include_next <wingdi.h>
+#endif
 
 #endif /* __WINE_GDI_H */
