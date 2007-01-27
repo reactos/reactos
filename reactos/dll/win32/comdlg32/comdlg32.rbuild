@@ -30,4 +30,5 @@
 	<file>printdlg.c</file>
 	<file>rsrc.rc</file>
 	<file>comdlg32.spec</file>
+	<pch>precomp.h</pch>
 </module>

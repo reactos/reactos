@@ -19,21 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <string.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "winternl.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "commdlg.h"
-#include "cdlg.h"
-#include "cdlg16.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
@@ -49,11 +35,11 @@ short WINAPI GetFileTitleA(LPCSTR lpFile, LPSTR lpTitle, WORD cbBuf)
     LPWSTR lpWTitle;
 
     RtlCreateUnicodeStringFromAsciiz(&strWFile, lpFile);
-    lpWTitle = RtlAllocateHeap( GetProcessHeap(), 0, cbBuf*sizeof(WCHAR));
+    lpWTitle = HeapAlloc( GetProcessHeap(), 0, cbBuf*sizeof(WCHAR));
     ret = GetFileTitleW(strWFile.Buffer, lpWTitle, cbBuf);
     if (!ret) WideCharToMultiByte( CP_ACP, 0, lpWTitle, -1, lpTitle, cbBuf, NULL, NULL );
     RtlFreeUnicodeString( &strWFile );
-    RtlFreeHeap( GetProcessHeap(), 0, lpWTitle );
+    HeapFree( GetProcessHeap(), 0, lpWTitle );
     return ret;
 }
 

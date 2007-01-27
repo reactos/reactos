@@ -23,20 +23,7 @@
    sometimes, especially when 2 instances of the
    dialog are loaded at the same time */
 
-#include <ctype.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "commdlg.h"
-#include "dlgs.h"
-#include "wine/debug.h"
-#include "cderr.h"
-#include "cdlg.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 

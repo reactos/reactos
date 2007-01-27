@@ -46,39 +46,10 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
+//#include "config.h"
+//#include "wine/port.h"
 
-#include <ctype.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winternl.h"
-#include "winnls.h"
-#include "wine/unicode.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "commdlg.h"
-#include "dlgs.h"
-#include "cdlg.h"
-#include "filedlg31.h"
-#include "wine/debug.h"
-#include "cderr.h"
-#include "shellapi.h"
-#include "shlguid.h"
-#include "shlobj.h"
-#include "filedlgbrowser.h"
-#include "shlwapi.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 

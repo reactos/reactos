@@ -19,22 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "commdlg.h"
-#include "cderr.h"
-#include "dlgs.h"
-#include "wine/debug.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
-
-#include "cdlg.h"
-
 
 /*-----------------------------------------------------------------------*/
 

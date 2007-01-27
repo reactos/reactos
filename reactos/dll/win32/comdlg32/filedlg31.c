@@ -18,32 +18,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <ctype.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
-#include "cderr.h"
-#include "winreg.h"
-#include "winternl.h"
-#include "winuser.h"
-#include "commdlg.h"
-#include "cderr.h"
-#include "winreg.h"
-#include "winternl.h"
-#include "shlwapi.h"
+
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
-
-#include "cdlg.h"
-#include "filedlg31.h"
 
 #define BUFFILE 512
 #define BUFFILEALLOC 512 * sizeof(WCHAR)

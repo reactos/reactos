@@ -20,31 +20,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <ctype.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winspool.h"
-#include "winerror.h"
-
-#include "wine/debug.h"
-
-#include "commdlg.h"
-#include "dlgs.h"
-#include "cderr.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
-
-#include "cdlg.h"
-#include "printdlg.h"
 
 /* Yes these constants are the same, but we're just copying win98 */
 #define UPDOWN_ID 0x270f
