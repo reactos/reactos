@@ -303,14 +303,22 @@ BOOLEAN NTAPI
 RtlEqualPrefixSid(IN PSID Sid1_,
                   IN PSID Sid2_)
 {
-  PISID Sid1 =  Sid1_;
-  PISID Sid2 =  Sid2_;
+   PISID Sid1 =  Sid1_;
+   PISID Sid2 =  Sid2_;
+   SIZE_T SidLen;
 
-  PAGED_CODE_RTL();
+   PAGED_CODE_RTL();
 
-   return(Sid1->SubAuthorityCount == Sid2->SubAuthorityCount &&
-          !RtlCompareMemory(Sid1, Sid2,
-                            (Sid1->SubAuthorityCount - 1) * sizeof(DWORD) + 8));
+   if (Sid1->SubAuthorityCount == Sid2->SubAuthorityCount)
+   {
+      SidLen = FIELD_OFFSET(SID,
+                            SubAuthority[Sid1->SubAuthorityCount]);
+      return RtlCompareMemory(Sid1,
+                              Sid2,
+                              SidLen) == SidLen;
+   }
+
+   return FALSE;
 }
 
 
