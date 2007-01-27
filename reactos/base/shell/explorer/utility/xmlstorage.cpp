@@ -279,12 +279,12 @@ XMLNode* XMLNode::create_relative(const char* path)
 
 
  /// encode XML string literals
-std::string EncodeXMLString(const XS_String& str)
+std::string EncodeXMLString(const XS_String& str, bool cdata)
 {
 	LPCXSSTR s = str.c_str();
 	size_t l = XS_len(s);
 
-	if (l <= BUFFER_LEN) {
+	if (!cdata && l<=BUFFER_LEN) {
 		LPXSSTR buffer = (LPXSSTR)alloca(6*sizeof(XS_CHAR)*XS_len(s));	// worst case "&quot;" / "&apos;"
 		LPXSSTR o = buffer;
 
@@ -410,10 +410,10 @@ XS_String DecodeXMLString(const XS_String& str)
 				p += 5;
 			} else
 				*o++ = *p;
-		} else if (*p=='<' && !XS_nicmp(p+1,XS_TEXT("!CDATA["),7)) {
-			p += 9;
-			LPCXSSTR e = XS_strstr(p, XS_TEXT("]]>"));
+		} else if (*p=='<' && !XS_nicmp(p+1,XS_TEXT("![CDATA["),8)) {
+			LPCXSSTR e = XS_strstr(p+9, XS_TEXT("]]>"));
 			if (e) {
+				p += 9;
 				size_t l = e - p;
 				memcpy(o, p, l);
 				o += l;

@@ -409,7 +409,7 @@ inline std::string get_utf8(const XS_String& s)
 
 #endif // XS_STRING_UTF8
 
-extern std::string EncodeXMLString(const XS_String& str);
+extern std::string EncodeXMLString(const XS_String& str, bool cdata=false);
 extern XS_String DecodeXMLString(const XS_String& str);
 
 
@@ -940,9 +940,9 @@ struct XMLNode : public XS_String
 		return DecodeXMLString(ret.c_str());
 	}
 
-	void set_content(const XS_String& s)
+	void set_content(const XS_String& s, bool cdata=false)
 	{
-		_content.assign(EncodeXMLString(s.c_str()));
+		_content.assign(EncodeXMLString(s.c_str(), cdata));
 	}
 
 #ifdef XMLNODE_LOCATION
@@ -2391,10 +2391,10 @@ struct XMLWriter
 		return _stack.top()._attributes[attr_name];
 	}
 
-	void set_content(const XS_String& s)
+	void set_content(const XS_String& s, bool cdata=false)
 	{
 		if (!_stack.empty())
-			_stack.top()._content = EncodeXMLString(s.c_str());
+			_stack.top()._content = EncodeXMLString(s.c_str(), cdata);
 	}
 
 	 // public for access in StackEntry
