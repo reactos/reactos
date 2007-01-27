@@ -701,9 +701,95 @@ NTAPI
 FsRtlGetFileSize(IN PFILE_OBJECT  FileObject,
                  IN OUT PLARGE_INTEGER FileSize)
 {
-    KEBUGCHECK(0);
-    return STATUS_UNSUCCESSFUL;
+    FILE_STANDARD_INFORMATION Info;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatus;
+    PDEVICE_OBJECT DeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+    KEVENT Event;
+    PIO_STACK_LOCATION IoStackLocation;
+    PIRP Irp;
+    BOOLEAN OldHardError;
+
+    
+    PAGED_CODE();
+
+    /* Get Device Object and Fast Calls */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+    /* Check if we support Fast Calls, and check FastIoQueryStandardInfo */
+    /* Call the function and see if it succeeds */
+    if (    !FastDispatch ||
+            !FastDispatch->FastIoQueryStandardInfo ||
+            !FastDispatch->FastIoQueryStandardInfo(FileObject,TRUE,
+                &Info,&IoStatus,DeviceObject))
+    {
+        /* If any of the above failed, then we are going to send an IRP to the device object */
+        /* Initialize the even for the IO */
+        KeInitializeEvent(&Event,NotificationEvent,FALSE);
+        /* Allocate the IRP */
+        Irp = IoAllocateIrp(DeviceObject->StackSize,FALSE);
+        if (Irp == NULL) 
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+
+        /* Don't process hard error */
+        OldHardError = IoSetThreadHardErrorMode(FALSE);
+
+        /* Setup the IRP */
+        Irp->UserIosb = &IoStatus;
+        Irp->UserEvent = &Event;
+        Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+        Irp->Flags = IRP_INPUT_OPERATION | IRP_PAGING_IO;
+        Irp->RequestorMode = KernelMode;
+        Irp->Tail.Overlay.OriginalFileObject = FileObject;
+        Irp->AssociatedIrp.SystemBuffer = &Info;
+
+        /* Setup out stack location */
+        IoStackLocation = Irp->Tail.Overlay.CurrentStackLocation;
+        IoStackLocation--;
+        IoStackLocation->MajorFunction = IRP_MJ_QUERY_INFORMATION;
+        IoStackLocation->FileObject = FileObject;
+        IoStackLocation->DeviceObject = DeviceObject;
+        IoStackLocation->Parameters.QueryFile.Length =  ALIGN_UP(sizeof(FILE_INFORMATION_CLASS),ULONG);
+        IoStackLocation->Parameters.QueryFile.FileInformationClass = FileStandardInformation;
+
+        /* Send the IRP to the related device object */
+        Status = IofCallDriver(DeviceObject,Irp);
+
+        /* Standard DDK IRP result processing */
+        if (Status == STATUS_PENDING) {
+            KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+        }
+
+        /* If there was a synchronous error, signal it */
+        if (!NT_SUCCESS(Status)) {
+            IoStatus.Status = Status;
+        }
+        
+        IoSetThreadHardErrorMode(OldHardError);
+    }
+
+    /* Check the sync/async IO result */
+    if (NT_SUCCESS(IoStatus.Status)) 
+    {
+        /* Was the request for a directory ? */
+        if (Info.Directory) 
+        {
+            IoStatus.Status = STATUS_FILE_IS_A_DIRECTORY;
+        }
+        else
+        {
+            FileSize->QuadPart = Info.EndOfFile.QuadPart;
+         }
+    }
+
+    return IoStatus.Status;
 }
+                
 
 /*
  * @implemented
@@ -717,8 +803,45 @@ FsRtlMdlRead(IN PFILE_OBJECT FileObject,
              OUT PMDL *MdlChain,
              OUT PIO_STATUS_BLOCK IoStatus)
 {
-    KEBUGCHECK(0);
-    return FALSE;
+    PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+
+    /* Get Device Object and Fast Calls */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+    /* Check if we support Fast Calls, and check this one */
+    if (FastDispatch && FastDispatch->MdlRead)
+    {
+        /* Use the fast path */
+        return FastDispatch->MdlRead(FileObject,
+                                     FileOffset,
+                                     Length,
+                                     LockKey,
+                                     MdlChain,
+                                     IoStatus,
+                                     DeviceObject);
+    }
+
+    /* Get the Base File System (Volume) and Fast Calls */
+    BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    FastDispatch = BaseDeviceObject->DriverObject->FastIoDispatch;
+
+    /* If the Base Device Object has its own FastDispatch Routine, fail */
+    if (FastDispatch && FastDispatch->MdlRead &&
+        BaseDeviceObject != DeviceObject)
+    {
+        return FALSE;
+    }
+
+    /* No fast path, use slow path */
+    return FsRtlMdlReadDev(FileObject,
+                           FileOffset,
+                           Length,
+                           LockKey,
+                           MdlChain,
+                           IoStatus,
+                           DeviceObject);
 }
 
 /*
