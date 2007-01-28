@@ -18,9 +18,15 @@
 
 BOOLEAN FsRtlTest_StartTest() {
     HANDLE Fh = NULL;
+    PFILE_OBJECT Pfo = NULL;
+
+    HANDLE DirFh = NULL;
+    PFILE_OBJECT DirPfo = NULL;
+    
+    
     IO_STATUS_BLOCK IoStatus;
-    NTSTATUS  Return = TRUE;
-    PFILE_OBJECT Pfo;
+    BOOLEAN Return;
+    NTSTATUS  Status = STATUS_SUCCESS;
     LONGLONG i = 0;
 
     PCHAR Buffer;
@@ -56,7 +62,8 @@ BOOLEAN FsRtlTest_StartTest() {
 
         ------------------------------------------------------------------------  */
     FsRtlTest_OpenTestFile(&Fh, &Pfo);
-
+    FSRTL_TEST("Opening Test File.",((Pfo != NULL) && (Fh != NULL)));
+    
     /* Extract the test variable from the FCB struct */
     FcbHeader = (PFSRTL_COMMON_FCB_HEADER)Pfo->FsContext;
     AllocationSize = &FcbHeader->AllocationSize;
@@ -340,12 +347,137 @@ BOOLEAN FsRtlTest_StartTest() {
 
     Return = TRUE;
 
+    if (Pfo) 
+    {
+        ObDereferenceObject(Pfo);
+        Pfo = NULL;
+    }
+
+    if (Fh)
+    {
+        ZwClose(Fh);
+        Fh = NULL;
+    }
+
+    /*  ------------------------------------------------------------------------------------------
+        TESTING:
+        
+            FsRtlMdlRead(IN PFILE_OBJECT FileObject,
+                        IN PLARGE_INTEGER FileOffset,
+                        IN ULONG Length,
+                        IN ULONG LockKey,
+                        OUT PMDL *MdlChain,
+                        OUT PIO_STATUS_BLOCK IoStatus)
+
+            FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,
+                                    IN PMDL MemoryDescriptorList)
+                        
+        ------------------------------------------------------------------------------------------
+    */
+
+    FsRtlTest_OpenTestFile(&Fh, &Pfo);
+
+    /* Extract the test variable from the FCB struct */
+    FcbHeader = (PFSRTL_COMMON_FCB_HEADER)Pfo->FsContext;
+    AllocationSize = &FcbHeader->AllocationSize;
+    ValidDataLength = &FcbHeader->ValidDataLength;
+    FileSize = &FcbHeader->FileSize;
+    
+
+    /* We are going to build a 100k file */
+    /* This will inititate caching and build some size */
+    Offset.QuadPart = 0;
+    Length = 100*_1KB;
+    Return = FsRltTest_WritefileZw(Fh,&Offset,Length, Buffer, &IoStatus);
+    FSRTL_TEST("FsRtlMdlRead() - Building 100k filesize.",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
+    Return = TRUE;
+    
+
+    Offset.LowPart = 0x0;
+    Offset.HighPart = 0x0;
+    Length  = 0x10000;
+
+    /* Testing a 64KB read */
+    MdlChain = NULL;
+    Return = FsRtlMdlRead(Pfo,&Offset,Length,0,&MdlChain,&IoStatus);
+    FSRTL_TEST("FsRtlMdlRead() - Testing 64k IO",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
+    FSRTL_TEST("FsRtlMdlRead() - Releasing the MDL",FsRtlMdlReadComplete(Pfo,MdlChain));
+    
+
+    /* Testing read past the end of the file */
+    Offset.QuadPart = FileSize->QuadPart - (5 * _1KB);
+    Length = 10 * _1KB;
+    MdlChain = NULL;
+    Return = FsRtlMdlRead(Pfo,&Offset,Length,0,&MdlChain,&IoStatus);
+    FSRTL_TEST("FsRtlMdlRead() - Testing reading past end of file but starting before EOF",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status) && IoStatus.Information == (FileSize->QuadPart-Offset.QuadPart)));
+    FSRTL_TEST("FsRtlMdlRead() - Releasing the MDL",FsRtlMdlReadComplete(Pfo,MdlChain));
+    
+    Offset.QuadPart = FileSize->QuadPart + 1;
+    Length = 10 * _1KB;
+    MdlChain = NULL;
+    Return = FsRtlMdlRead(Pfo,&Offset,Length,0,&MdlChain,&IoStatus);
+    FSRTL_TEST("FsRtlMdlRead() - Testing reading past end of file but starting after EOF",(NT_SUCCESS(Return) && (IoStatus.Status == STATUS_END_OF_FILE) && IoStatus.Information == 0));
+    
+    /* Testing FastIoIsNotPossible */
+    Offset.LowPart = 0x0;
+    Offset.HighPart = 0x0;
+    MdlChain = NULL;
+    Length  = 0x10000;
+    FcbHeader->IsFastIoPossible = FastIoIsNotPossible;
+    FSRTL_TEST("FsRtlMdlRead() - FastIo is not possible flag. Wait = TRUE",!FsRtlMdlRead(Pfo,&Offset,Length,0,&MdlChain,&IoStatus));
+
+    Return = TRUE;
+
+    if (Pfo) 
+    {
+        ObDereferenceObject(Pfo);
+        Pfo = NULL;
+    }
+
+    if (Fh)
+    {
+        ZwClose(Fh);
+        Fh = NULL;
+    }
+    
 
 
+    /*  ------------------------------------------------------------------------------------------
+        TESTING:
+        
+                    FsRtlGetFileSize(IN PFILE_OBJECT  FileObject,
+                                     IN OUT PLARGE_INTEGER FileSize)
+                        
+        ------------------------------------------------------------------------------------------
+    */
+    FsRtlTest_OpenTestFile(&Fh, &Pfo);
+    FSRTL_TEST("FsRtlGetFileSize() - Opening Test File.",((Pfo != NULL) && (Fh != NULL)));
+    
+    FsRtlTest_OpenTestDirectory(&DirFh, &DirPfo);
+    FSRTL_TEST("FsRtlGetFileSize() - Opening Test Directory.",((DirPfo != NULL) && (DirFh != NULL)));
+
+    Status = FsRtlGetFileSize(Pfo,&OldSize);
+    FSRTL_TEST("FsRtlGetFileSize() - Get the size of a real file",NT_SUCCESS(Status));
+    
+    Status = FsRtlGetFileSize(DirPfo,&OldSize);
+    FSRTL_TEST("FsRtlGetFileSize() - Get the size of a directory file",(Status == STATUS_FILE_IS_A_DIRECTORY));
+    
+    
     /* The test if over. Do clean up */ 
 
 Cleanup:
 
+    if (DirPfo) 
+    {
+        ObDereferenceObject(DirPfo);
+        DirPfo = NULL;
+    }
+
+    if (DirFh)
+    {
+        ZwClose(DirFh);
+        DirFh = NULL;
+     }
     if (Pfo) 
     {
         ObDereferenceObject(Pfo);
@@ -442,6 +574,46 @@ void FsRtlTest_FillBuffer(LARGE_INTEGER Start, ULONG Length, PVOID Buffer) {
         );
 }
 
+ NTSTATUS FsRtlTest_OpenTestDirectory(PHANDLE Pfh, PFILE_OBJECT *Ppfo) {
+    UNICODE_STRING FileName;
+    OBJECT_ATTRIBUTES oa;
+    IO_STATUS_BLOCK IoStatus;
+    NTSTATUS  Return;
+    
+    RtlInitUnicodeString(&FileName,L"\\??\\C:\\testdir01");
+
+    InitializeObjectAttributes(
+    &oa,
+    &FileName,
+    OBJ_KERNEL_HANDLE,
+    NULL,
+    NULL;
+    );
+
+    Return = IoCreateFile(Pfh,
+                        GENERIC_WRITE,
+                        &oa,
+                        &IoStatus,
+                        0,
+                        FILE_ATTRIBUTE_NORMAL,
+                        0,
+                        FILE_OPEN_IF,
+                        FILE_DIRECTORY_FILE,FILE_SYNCHRONOUS_IO_ALERT | FILE_DELETE_ON_CLOSE,
+                        NULL,
+                        0,
+                        CreateFileTypeNone,
+                        NULL,
+                        0);
+
+      Return = ObReferenceObjectByHandle(
+        *Pfh,
+        GENERIC_WRITE,
+        NULL,
+        KernelMode,
+        Ppfo,
+        NULL
+        );
+}
 
 /* All the testing is done from driver entry */
 NTSTATUS DriverEntry( IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath )
