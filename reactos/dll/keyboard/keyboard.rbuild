@@ -23,6 +23,9 @@
 	<directory name="kbdhu">
 		<xi:include href="kbdhu/kbdhu.rbuild" />
 	</directory>
+	<directory name="kbdit">
+		<xi:include href="kbdit/kbdit.rbuild" />
+	</directory>
 	<directory name="kbdru">
 		<xi:include href="kbdru/kbdru.rbuild" />
 	</directory>
