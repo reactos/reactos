@@ -253,15 +253,20 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
     return 0;
 }
 
+#define  MAXSECTIONNUMBER 16
+
 CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
                      CPU_UNINT base,  CPU_UNINT size,
                      FILE *outfp, CPU_INT mode)
 {
     PIMAGE_DOS_HEADER DosHeader;
     PIMAGE_NT_HEADERS NtHeader;
-    PIMAGE_SECTION_HEADER SectionHeader;
+    IMAGE_SECTION_HEADER SectionHeader[MAXSECTIONNUMBER] = {NULL};
+    PIMAGE_SECTION_HEADER pSectionHeader;
+    PIMAGE_EXPORT_DIRECTORY ExportEntry;
     INT NumberOfSections;
     INT NumberOfSectionsCount=0;
+    INT i;
 
     DosHeader = (PIMAGE_DOS_HEADER)memory;
     if ( (DosHeader->e_magic != IMAGE_DOS_SIGNATURE) ||
@@ -339,61 +344,47 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
             break;
     }
 
-    /*
-    SectionHeader->Name == ".tls$"
-    SectionHeader->Name == ".tls"
-    SectionHeader->Name == ".text"  // Executable code 
-    SectionHeader->Name == ".sxdata"
-    SectionHeader->Name == ".sdata"
-    SectionHeader->Name == ".sbss"
-    SectionHeader->Name == ".rsrc" // rc data
-    SectionHeader->Name == ".reloc"
-    SectionHeader->Name == ".rdata" // read only initialized data
-    SectionHeader->Name == ".pdata"
-    SectionHeader->Name == ".idlsym" 
-    SectionHeader->Name == ".idata" // Import tables 
-    SectionHeader->Name == ".edata" // Export tables 
-    SectionHeader->Name == ".drective"
-    SectionHeader->Name == ".debug$T"
-    SectionHeader->Name == ".debug$S"
-    SectionHeader->Name == ".debug$P"
-    SectionHeader->Name == ".debug$F"
-    SectionHeader->Name == ".data"  //data segment 
-    SectionHeader->Name == ".cormeta"
-    SectionHeader->Name == ".bss"  // bss segment 
 
-    undoc
-    SectionHeader->Name == ".textbss"  // bss segment 
-    */
+    printf("Number of object : %d\n",NtHeader->FileHeader.NumberOfSections);
+    printf("Base Address : %8x\n\n",NtHeader->OptionalHeader.ImageBase);
 
-    //*base =  NtHeader->OptionalHeader.AddressOfEntryPoint;
+    pSectionHeader = IMAGE_FIRST_SECTION(NtHeader);
 
-    SectionHeader = IMAGE_FIRST_SECTION(NtHeader);
     NumberOfSections = NtHeader->FileHeader.NumberOfSections;
 
-    for (NumberOfSectionsCount = 0; NumberOfSectionsCount < NumberOfSections; NumberOfSectionsCount++, SectionHeader++)
+    for (i = 0; i < NumberOfSections; i++)
     {
-       if (strnicmp((PCHAR) SectionHeader->Name,".rsrc",5)==0)
-       {
-           /* FIXME add a rc bin to text scanner */
-       }
+        SectionHeader[i] = *pSectionHeader++;
+        printf("Found Sector : %s \n ",SectionHeader[i].Name);
+        printf("RVA: %08lX ",SectionHeader[i].VirtualAddress);
+        printf("Offset: %08lX ",SectionHeader[i].PointerToRawData);
+        printf("Size: %08lX ",SectionHeader[i].SizeOfRawData);
+        printf("Flags: %08lX \n\n",SectionHeader[i].Characteristics);
+    }
 
-       else if (strnicmp((PCHAR) SectionHeader->Name,".textbss",8)==0)
-       {
-          /* FIXME add a bss to text scanner */
-       }
+    /* Get export data */
+    if (NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size != 0)
+    {
+        for (i = 0; i < NumberOfSections; i++)
+        {
+            if ( SectionHeader[i].VirtualAddress <= (ULONG) NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress &&
+                 SectionHeader[i].VirtualAddress + SectionHeader[i].SizeOfRawData > (ULONG)NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress)
+            {
+                  ExportEntry = (PIMAGE_NT_HEADERS) (((ULONG)memory) +
+                                (ULONG)(NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress - 
+                                SectionHeader[i].VirtualAddress + 
+                                SectionHeader[i].PointerToRawData));
+            }
+        }
+    }
 
-       
-       else if (strnicmp((PCHAR) SectionHeader->Name,".text\0",6)==0)
-       {
-           /*
-                FIXME we should output gas syntax 
-                BITS 32
-                GLOBAL _lrotate;
-                EXTERN _printf;
-                COMMON _commvar 4;
-           */
 
+/* start decoding */
+
+for (i=0;i < NumberOfSections; i++)
+{
+       if (strnicmp((PCHAR) SectionHeader[i].Name,".text\0",6)==0)
+       {
             switch (NtHeader->FileHeader.Machine)
             {
                 case IMAGE_FILE_MACHINE_ALPHA:
@@ -485,7 +476,7 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
                     fprintf(outfp,"; CPU found POWERPC\n");
                          //PPCBrain(memory, pos, cpu_size, base, 0, outfp);
                     machine_type = IMAGE_FILE_MACHINE_POWERPC;
-                    PPCBrain(memory+SectionHeader->PointerToRawData,  0, SectionHeader->SizeOfRawData, 0, 0, outfp);
+                    PPCBrain(memory+SectionHeader[i].PointerToRawData,  0, SectionHeader[i].SizeOfRawData, NtHeader->OptionalHeader.ImageBase, 0, outfp);
                     break;
 
 
@@ -564,12 +555,9 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
                default:
                     printf("Unknown Machine : %d",NtHeader->FileHeader.Machine);
                     return 4;
-            /* End case swich */
-            }
-       /* End if .text statment */
-      }
-    /* End for loop */
-   } 
+            }  /* end case switch*/
+      } /* end if text sector */
+} /* end for */
 
    return 0;
 }

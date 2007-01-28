@@ -156,6 +156,19 @@ CPU_INT ConvertToIA32Process( FILE *outfp,
                 /* dst are register */
                 tmp = stack - (pMystart->dst*regbits);
 
+                if ((pMystart->type & 2)== 2)
+                {
+                        fprintf(outfp,"mov ");
+                        standardreg( RegTableCount,
+                                     pMystart->dst,
+                                     setup_ebp, outfp);
+                        fprintf(outfp," , ");
+                        standardreg( RegTableCount,
+                                     pMystart->src,
+                                     setup_ebp, outfp);
+                        fprintf(outfp,"\n");
+
+                }
                 if ((pMystart->type & 16)== 16)
                 {
                     /* source are imm */
