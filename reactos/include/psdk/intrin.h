@@ -82,7 +82,7 @@
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
 #define _ReadWriteBarrier() __sync_synchronize()
 #else
-static __inline__ __attribute__((always_inline)) _MemoryBarrier(void)
+static void __inline__ __attribute__((always_inline)) _MemoryBarrier(void)
 {
 	__asm__ __volatile__("" : : : "memory");
 }

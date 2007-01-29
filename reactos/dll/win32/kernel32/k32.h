@@ -12,7 +12,6 @@
 /* INCLUDES ******************************************************************/
 
 /* PSDK/NDK Headers */
-#define DBG 1
 #define WIN32_NO_STATUS
 #define _KERNEL32_
 #include <windows.h>

@@ -8,10 +8,6 @@
 
 /* INCLUDES *****************************************************************/
 
-/* File contains Vista Semantics */
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
-
 #include <k32.h>
 
 #define NDEBUG

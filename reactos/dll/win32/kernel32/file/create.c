@@ -14,15 +14,41 @@
 
 /* INCLUDES *****************************************************************/
 
-/* File contains Vista Semantics */
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
-
 #include <k32.h>
 
 #define NDEBUG
 #include "../include/debug.h"
 
+
+#define SYMLINK_FLAG_RELATIVE   1
+
+typedef struct _REPARSE_DATA_BUFFER {
+    ULONG  ReparseTag;
+    USHORT ReparseDataLength;
+    USHORT Reserved;
+    union {
+        struct {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            ULONG Flags;
+            WCHAR PathBuffer[1];
+        } SymbolicLinkReparseBuffer;
+        struct {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            WCHAR PathBuffer[1];
+        } MountPointReparseBuffer;
+        struct {
+            UCHAR  DataBuffer[1];
+        } GenericReparseBuffer;
+    };
+} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+
+#define REPARSE_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer)
 
 /* FUNCTIONS ****************************************************************/
 
@@ -391,13 +417,13 @@ CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
     ULONG dwCreateOptions;
     DWORD dwErr;
 
-    if(!lpSymlinkFileName || !lpTargetFileName || (dwFlags | SYMLINK_FLAG_DIRECTORY) != SYMLINK_FLAG_DIRECTORY)
+    if(!lpSymlinkFileName || !lpTargetFileName || (dwFlags | SYMBOLIC_LINK_FLAG_DIRECTORY) != SYMBOLIC_LINK_FLAG_DIRECTORY)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    if(dwFlags & SYMLINK_FLAG_DIRECTORY)
+    if(dwFlags & SYMBOLIC_LINK_FLAG_DIRECTORY)
         dwCreateOptions = FILE_DIRECTORY_FILE;
     else
         dwCreateOptions = FILE_NON_DIRECTORY_FILE;
@@ -468,8 +494,8 @@ CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
 
     pBufTail = (PBYTE)(pReparseData->SymbolicLinkReparseBuffer.PathBuffer);
 
-    pReparseData->ReparseTag = IO_REPARSE_TAG_SYMLINK;
-    pReparseData->ReparseDataLength = cbReparseData - REPARSE_DATA_BUFFER_HEADER_SIZE;
+    pReparseData->ReparseTag = (ULONG)IO_REPARSE_TAG_SYMLINK;
+    pReparseData->ReparseDataLength = (USHORT)cbReparseData - REPARSE_DATA_BUFFER_HEADER_SIZE;
     pReparseData->Reserved = 0;
 
     pReparseData->SymbolicLinkReparseBuffer.SubstituteNameOffset = 0;
@@ -478,7 +504,7 @@ CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
     RtlCopyMemory(pBufTail, TargetFileName.Buffer, TargetFileName.Length);
 
     pReparseData->SymbolicLinkReparseBuffer.PrintNameOffset = pReparseData->SymbolicLinkReparseBuffer.SubstituteNameLength;
-    pReparseData->SymbolicLinkReparseBuffer.PrintNameLength = cbPrintName;
+    pReparseData->SymbolicLinkReparseBuffer.PrintNameLength = (USHORT)cbPrintName;
     pBufTail += pReparseData->SymbolicLinkReparseBuffer.PrintNameOffset;
     RtlCopyMemory(pBufTail, lpTargetFileName, cbPrintName);
 
@@ -574,13 +600,13 @@ Cleanup:
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 CreateSymbolicLinkA(IN LPCSTR lpSymlinkFileName,
                     IN LPCSTR lpTargetFileName,
                     IN DWORD dwFlags)
 {
     PWCHAR SymlinkW, TargetW;
-    BOOL Ret;
+    BOOLEAN Ret;
 
     if(!lpSymlinkFileName || !lpTargetFileName)
     {

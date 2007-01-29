@@ -80,7 +80,7 @@
 	</directory>
 	<directory name="process">
 		<file>cmdline.c</file>
-		<file>create.c</file>
+		<file>procsup.c</file>
 		<file>job.c</file>
 		<file>proc.c</file>
 		<file>session.c</file>
@@ -125,7 +125,6 @@
 	<define name="WINVER">0x0500</define>
 	<library>kernel32_base</library>
 	<library>pseh</library>
-	<library>intrlck</library>
 	<library>ntdll</library>
 	<linkerflag>-lgcc</linkerflag>
 	<linkerflag>-nostartfiles</linkerflag>

@@ -504,7 +504,7 @@ extern "C" {
 #define QUERY_ACTCTX_FLAG_ACTCTX_IS_HMODULE 0x00000008
 #define QUERY_ACTCTX_FLAG_ACTCTX_IS_ADDRESS 0x00000010
 #if (_WIN32_WINNT >= 0x0600)
-#define SYMLINK_FLAG_DIRECTORY 0x1
+#define SYMBOLIC_LINK_FLAG_DIRECTORY 0x1
 #endif
 #endif /* (_WIN32_WINNT >= 0x0501) */
 #if (_WIN32_WINNT >= 0x0500)
@@ -1683,20 +1683,20 @@ VOID WINAPI InitializeSRWLock(PSRWLOCK);
 #endif
 #ifndef __INTERLOCKED_DECLARED
 #define __INTERLOCKED_DECLARED
-LONG WINAPI InterlockedCompareExchange(LPLONG,LONG,LONG);
+LONG WINAPI InterlockedCompareExchange(IN OUT LONG volatile *,LONG,LONG);
 /* PVOID WINAPI InterlockedCompareExchangePointer(PVOID*,PVOID,PVOID); */
 #define InterlockedCompareExchangePointer(d,e,c) \
     (PVOID)InterlockedCompareExchange((LPLONG)(d),(LONG)(e),(LONG)(c))
-LONG WINAPI InterlockedDecrement(LPLONG);
-LONG WINAPI InterlockedExchange(LPLONG,LONG);
+LONG WINAPI InterlockedDecrement(IN OUT LONG volatile *);
+LONG WINAPI InterlockedExchange(IN OUT LONG volatile *,LONG);
 /* PVOID WINAPI InterlockedExchangePointer(PVOID*,PVOID); */
 #define InterlockedExchangePointer(t,v) \
     (PVOID)InterlockedExchange((LPLONG)(t),(LONG)(v))
-LONG WINAPI InterlockedExchangeAdd(LPLONG,LONG);
+LONG WINAPI InterlockedExchangeAdd(IN OUT LONG volatile *,LONG);
 #if (_WIN32_WINNT >= 0x0501)
 PSLIST_ENTRY WINAPI InterlockedFlushSList(PSLIST_HEADER);
 #endif
-LONG WINAPI InterlockedIncrement(LPLONG);
+LONG WINAPI InterlockedIncrement(IN OUT LONG volatile *);
 #if (_WIN32_WINNT >= 0x0501)
 PSLIST_ENTRY WINAPI InterlockedPopEntrySList(PSLIST_HEADER);
 PSLIST_ENTRY WINAPI InterlockedPushEntrySList(PSLIST_HEADER,PSLIST_ENTRY);

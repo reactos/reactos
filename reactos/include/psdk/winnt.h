@@ -1598,7 +1598,6 @@ typedef VOID (NTAPI *WORKERCALLBACKFUNC)(PVOID);
 #define INCREF(x) ((((x)&~N_BTMASK)<<N_TSHIFT)|(IMAGE_SYM_DTYPE_POINTER<<N_BTSHFT)|((x)&N_BTMASK))
 #define DECREF(x) ((((x)>>N_TSHIFT)&~N_BTMASK)|((x)&N_BTMASK))
 #define TLS_MINIMUM_AVAILABLE 64
-#define REPARSE_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer)
 #define REPARSE_GUID_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer)
 #define MAXIMUM_REPARSE_DATA_BUFFER_SIZE 16384
 #define IO_REPARSE_TAG_RESERVED_ZERO 0
@@ -3306,31 +3305,6 @@ typedef struct _NT_TIB {
 	PVOID ArbitraryUserPointer;
 	struct _NT_TIB *Self;
 } NT_TIB,*PNT_TIB;
-typedef struct _REPARSE_DATA_BUFFER {
-	DWORD  ReparseTag;
-	WORD   ReparseDataLength;
-	WORD   Reserved;
-	_ANONYMOUS_UNION union {
-		struct {
-			WORD   SubstituteNameOffset;
-			WORD   SubstituteNameLength;
-			WORD   PrintNameOffset;
-			WORD   PrintNameLength;
-			ULONG  Flags;
-			WCHAR PathBuffer[1];
-		} SymbolicLinkReparseBuffer;
-		struct {
-			WORD   SubstituteNameOffset;
-			WORD   SubstituteNameLength;
-			WORD   PrintNameOffset;
-			WORD   PrintNameLength;
-			WCHAR PathBuffer[1];
-		} MountPointReparseBuffer;
-		struct {
-			BYTE   DataBuffer[1];
-		} GenericReparseBuffer;
-	} DUMMYUNIONNAME;
-} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 typedef struct _REPARSE_GUID_DATA_BUFFER {
 	DWORD  ReparseTag;
 	WORD   ReparseDataLength;

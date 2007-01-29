@@ -323,9 +323,10 @@ DllMain(HANDLE hDll,
             if (hDll == (HANDLE)0x7c800000)
             {
                 PULONG Eip;
-                Eip = (PULONG)*(PULONG)NtCurrentTeb()->Tib.ExceptionList +
-                       0x9 +
-                       FIELD_OFFSET(CONTEXT, Eip) / sizeof(ULONG);
+                __debugbreak();
+                Eip = (PULONG)*(PULONG)*(PULONG)NtCurrentTeb()->Tib.ExceptionList +
+                    0x9 +
+                    FIELD_OFFSET(CONTEXT, Eip) / sizeof(ULONG);
                 *Eip = (ULONG)BaseProcessStartThunk;
             }
         }
@@ -464,6 +465,45 @@ DllMain(HANDLE hDll,
     }
 
     return TRUE;
+}
+
+LONG
+WINAPI
+InterlockedIncrement(IN OUT LONG volatile *lpAddend)
+{
+    return _InterlockedIncrement(lpAddend);
+}
+
+LONG
+WINAPI
+InterlockedDecrement(IN OUT LONG volatile *lpAddend)
+{
+    return _InterlockedDecrement(lpAddend);
+}
+
+LONG
+WINAPI
+InterlockedExchange(IN OUT LONG volatile *Target,
+                    IN LONG Value)
+{
+    return _InterlockedExchange(Target, Value);
+}
+
+LONG
+WINAPI
+InterlockedExchangeAdd(IN OUT LONG volatile *Addend,
+                       IN LONG Value)
+{
+    return _InterlockedExchangeAdd(Addend, Value);
+}
+
+LONG
+WINAPI
+InterlockedCompareExchange(IN OUT LONG volatile *Destination,
+                           IN LONG Exchange,
+                           IN LONG Comperand)
+{
+    return _InterlockedCompareExchange(Destination, Exchange, Comperand);
 }
 
 /* EOF */
