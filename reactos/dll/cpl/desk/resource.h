@@ -84,8 +84,14 @@
 
 
 /* Appearance Page */
-#define IDC_APPEARANCE_PREVIEW   1500
-#define IDC_APPEARANCE_UI_ITEM   1501
+#define IDC_APPEARANCE_PREVIEW       1500
+#define IDC_APPEARANCE_UI_ITEM       1501
+
+#define IDC_APPEAR_SIZE          1502
+#define IDC_APPEAR_SIZE_UPDOWN   1503
+
+#define IDC_APPEAR_FONT_NAME     1510
+
 
 #define IDS_INACTWIN    1510
 #define IDS_ACTWIN      1511
@@ -119,4 +125,5 @@
 
 
 #endif /* __CPL_DESK_RESOURCE_H__ */
+
 

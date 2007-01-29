@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Timedate Control Panel
+ * PROJECT:     ReactOS Desktop Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        lib/cpl/desk/preview.c
  * PURPOSE:     Draws the preview control
@@ -32,7 +32,11 @@ typedef struct _PREVIEW_DATA
     INT cxEdge;
     INT cyEdge;
 
+    INT cySizeFrame;
+
     INT cyCaption;
+    INT cyMenu;
+    INT cxScrollbar;
 
     RECT rcDesktop;
     RECT rcInactiveFrame;
@@ -76,13 +80,13 @@ typedef struct _PREVIEW_DATA
 
 
 static VOID
-DrawCaptionButtons(HDC hdc, LPRECT lpRect, BOOL bMinMax)
+DrawCaptionButtons(HDC hdc, LPRECT lpRect, BOOL bMinMax, int x)
 {
     RECT rc3;
     RECT rc4;
     RECT rc5;
 
-    rc3.left = lpRect->right - 2 - 16;
+    rc3.left = lpRect->right - 2 - x;
     rc3.top = lpRect->top + 2;
     rc3.right = lpRect->right - 2;
     rc3.bottom = lpRect->bottom - 2;
@@ -91,21 +95,22 @@ DrawCaptionButtons(HDC hdc, LPRECT lpRect, BOOL bMinMax)
 
     if (bMinMax)
     {
-        rc4.left = rc3.left - 16 - 2;
+        rc4.left = rc3.left - x - 2;
         rc4.top = rc3.top;
-        rc4.right = rc3.right - 16 - 2;
+        rc4.right = rc3.right - x - 2;
         rc4.bottom = rc3.bottom;
 
         DrawFrameControl(hdc, &rc4, DFC_CAPTION, DFCS_CAPTIONMAX);
 
-        rc5.left = rc4.left - 16;
+        rc5.left = rc4.left - x;
         rc5.top = rc4.top;
-        rc5.right = rc4.right - 16;
+        rc5.right = rc4.right - x;
         rc5.bottom = rc4.bottom;
 
         DrawFrameControl(hdc, &rc5, DFC_CAPTION, DFCS_CAPTIONMIN);
     }
 }
+
 
 static VOID
 DrawScrollbar(HDC hdc, LPRECT rc, HBRUSH hbrScrollbar)
@@ -160,7 +165,11 @@ OnCreate(HWND hwnd, PPREVIEW_DATA pPreviewData)
     pPreviewData->cxEdge = GetSystemMetrics(SM_CXEDGE);
     pPreviewData->cyEdge = GetSystemMetrics(SM_CXEDGE);
 
-    pPreviewData->cyCaption = 20; //GetSystemMetrics(SM_CYCAPTION);
+    pPreviewData->cySizeFrame = GetSystemMetrics(SM_CYSIZEFRAME);
+
+    pPreviewData->cyCaption = GetSystemMetrics(SM_CYCAPTION);
+    pPreviewData->cyMenu = GetSystemMetrics(SM_CYMENU);
+    pPreviewData->cxScrollbar = GetSystemMetrics(SM_CXVSCROLL);
 
     /* load font info */
     NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
@@ -196,15 +205,9 @@ OnCreate(HWND hwnd, PPREVIEW_DATA pPreviewData)
 
 
 static VOID
-OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
+CalculateItemSize(PPREVIEW_DATA pPreviewData)
 {
     int width, height;
-
-    /* Get Desktop rectangle */
-    pPreviewData->rcDesktop.left = 0;
-    pPreviewData->rcDesktop.top = 0;
-    pPreviewData->rcDesktop.right = cx;
-    pPreviewData->rcDesktop.bottom = cy;
 
     /* Calculate the inactive window rectangle */
     pPreviewData->rcInactiveFrame.left = pPreviewData->rcDesktop.left + 8;
@@ -216,7 +219,7 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
     pPreviewData->rcInactiveCaption.left = pPreviewData->rcInactiveFrame.left + pPreviewData->cxEdge + 1/*3*/ + 1;
     pPreviewData->rcInactiveCaption.top = pPreviewData->rcInactiveFrame.top + pPreviewData->cyEdge + 1/*3*/ + 1;
     pPreviewData->rcInactiveCaption.right = pPreviewData->rcInactiveFrame.right - pPreviewData->cxEdge - 1/*3*/ - 1;
-    pPreviewData->rcInactiveCaption.bottom = pPreviewData->rcInactiveFrame.top + pPreviewData->cyCaption /*20*/ + 2;
+    pPreviewData->rcInactiveCaption.bottom = pPreviewData->rcInactiveFrame.top + pPreviewData->cyCaption + 1 + 2;
 
     /* Calculate the inactive caption buttons rectangle */
     pPreviewData->rcInactiveCaptionButtons.left = pPreviewData->rcInactiveCaption.right - 2 - 2 - 3 * 16;
@@ -234,7 +237,7 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
     pPreviewData->rcActiveCaption.left = pPreviewData->rcActiveFrame.left + 3 + 1;
     pPreviewData->rcActiveCaption.top = pPreviewData->rcActiveFrame.top + 3 + 1;
     pPreviewData->rcActiveCaption.right = pPreviewData->rcActiveFrame.right - 3 - 1;
-    pPreviewData->rcActiveCaption.bottom = pPreviewData->rcActiveFrame.top + pPreviewData->cyCaption/*20*/ + 2;
+    pPreviewData->rcActiveCaption.bottom = pPreviewData->rcActiveFrame.top + pPreviewData->cyCaption + 1 + 2;
 
     /* Calculate the active caption buttons rectangle */
     pPreviewData->rcActiveCaptionButtons.left = pPreviewData->rcActiveCaption.right - 2 - 2 - 3 * 16;
@@ -246,7 +249,7 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
     pPreviewData->rcActiveMenuBar.left = pPreviewData->rcActiveFrame.left + 3 + 1;
     pPreviewData->rcActiveMenuBar.top = pPreviewData->rcActiveCaption.bottom + 1;
     pPreviewData->rcActiveMenuBar.right = pPreviewData->rcActiveFrame.right - 3 - 1;
-    pPreviewData->rcActiveMenuBar.bottom = pPreviewData->rcActiveMenuBar.top + 20;
+    pPreviewData->rcActiveMenuBar.bottom = pPreviewData->rcActiveMenuBar.top + pPreviewData->cyMenu + 1;
 
     /* Calculate the active client rectangle */
     pPreviewData->rcActiveClient.left = pPreviewData->rcActiveFrame.left + 3 + 1;
@@ -255,7 +258,7 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
     pPreviewData->rcActiveClient.bottom = pPreviewData->rcActiveFrame.bottom - 3 - 1;
 
     /* Calculate the active scroll rectangle */
-    pPreviewData->rcActiveScroll.left = pPreviewData->rcActiveClient.right - 2 - 16;
+    pPreviewData->rcActiveScroll.left = pPreviewData->rcActiveClient.right - 2 - pPreviewData->cxScrollbar;
     pPreviewData->rcActiveScroll.top = pPreviewData->rcActiveClient.top + 2;
     pPreviewData->rcActiveScroll.right = pPreviewData->rcActiveClient.right - 2;
     pPreviewData->rcActiveScroll.bottom = pPreviewData->rcActiveClient.bottom - 2;
@@ -271,7 +274,7 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
     pPreviewData->rcDialogCaption.left = pPreviewData->rcDialogFrame.left + 3;
     pPreviewData->rcDialogCaption.top = pPreviewData->rcDialogFrame.top + 3;
     pPreviewData->rcDialogCaption.right = pPreviewData->rcDialogFrame.right - 3;
-    pPreviewData->rcDialogCaption.bottom = pPreviewData->rcDialogFrame.top + 20 + 1;
+    pPreviewData->rcDialogCaption.bottom = pPreviewData->rcDialogFrame.top + pPreviewData->cyCaption + 1 + 1;
 
     /* Calculate the inactive caption buttons rectangle */
     pPreviewData->rcDialogCaptionButtons.left = pPreviewData->rcDialogCaption.right - 2 - 16;
@@ -298,6 +301,19 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
 
 
 static VOID
+OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
+{
+    /* Get Desktop rectangle */
+    pPreviewData->rcDesktop.left = 0;
+    pPreviewData->rcDesktop.top = 0;
+    pPreviewData->rcDesktop.right = cx;
+    pPreviewData->rcDesktop.bottom = cy;
+
+    CalculateItemSize(pPreviewData);
+}
+
+
+static VOID
 OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
 {
     PAINTSTRUCT ps;
@@ -315,14 +331,14 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     SetTextColor(hdc, pPreviewData->clrInactiveCaptionText);
     DrawCaptionTemp(NULL, hdc, &pPreviewData->rcInactiveCaption,  pPreviewData->hCaptionFont,
                     NULL, pPreviewData->lpInAct, DC_GRADIENT | DC_ICON | DC_TEXT);
-    DrawCaptionButtons(hdc, &pPreviewData->rcInactiveCaption, TRUE);
+    DrawCaptionButtons(hdc, &pPreviewData->rcInactiveCaption, TRUE, pPreviewData->cyCaption - 2);
 
     /* Active Window */
     DrawEdge(hdc, &pPreviewData->rcActiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
     SetTextColor(hdc, pPreviewData->clrActiveCaptionText);
     DrawCaptionTemp(NULL, hdc, &pPreviewData->rcActiveCaption, pPreviewData->hCaptionFont,
                     NULL, pPreviewData->lpAct, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT);
-    DrawCaptionButtons(hdc, &pPreviewData->rcActiveCaption, TRUE);
+    DrawCaptionButtons(hdc, &pPreviewData->rcActiveCaption, TRUE, pPreviewData->cyCaption - 2);
 
     /* FIXME: Draw the menu bar */
     DrawMenuBarTemp(hwnd, hdc, &pPreviewData->rcActiveMenuBar,
@@ -351,7 +367,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     SetTextColor(hdc, pPreviewData->clrActiveCaptionText);
     DrawCaptionTemp(NULL, hdc, &pPreviewData->rcDialogCaption, pPreviewData->hCaptionFont,
                     NULL, pPreviewData->lpMessBox, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT);
-    DrawCaptionButtons(hdc, &pPreviewData->rcDialogCaption, FALSE);
+    DrawCaptionButtons(hdc, &pPreviewData->rcDialogCaption, FALSE, pPreviewData->cyCaption - 2);
 
     /* Draw the dialog text */
     CopyRect(&rc, &pPreviewData->rcDialogClient);
@@ -489,6 +505,54 @@ PreviewWndProc(HWND hwnd,
         case WM_DESTROY:
             OnDestroy(pPreviewData);
             HeapFree(GetProcessHeap(), 0, pPreviewData);
+            break;
+
+        case PVM_GETCYCAPTION:
+            return pPreviewData->cyCaption;
+
+        case PVM_SETCYCAPTION:
+            if ((INT)lParam > 0)
+            {
+                pPreviewData->cyCaption = (INT)lParam;
+                CalculateItemSize(pPreviewData);
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            break;
+
+        case PVM_GETCYMENU:
+            return pPreviewData->cyMenu;
+
+        case PVM_SETCYMENU:
+            if ((INT)lParam > 0)
+            {
+                pPreviewData->cyMenu = (INT)lParam;
+                CalculateItemSize(pPreviewData);
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            break;
+
+        case PVM_GETCXSCROLLBAR:
+            return pPreviewData->cxScrollbar;
+
+        case PVM_SETCXSCROLLBAR:
+            if ((INT)lParam > 0)
+            {
+                pPreviewData->cxScrollbar = (INT)lParam;
+                CalculateItemSize(pPreviewData);
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            break;
+
+        case PVM_GETCYSIZEFRAME:
+            return pPreviewData->cySizeFrame;
+
+        case PVM_SETCYSIZEFRAME:
+            if ((INT)lParam > 0)
+            {
+                pPreviewData->cySizeFrame = (INT)lParam;
+                CalculateItemSize(pPreviewData);
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
             break;
 
         default:
