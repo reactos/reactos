@@ -25,7 +25,7 @@
 LONG
 NTAPI
 InterlockedExchangeAdd(
-	PLONG Addend,
+	IN OUT LONG volatile *Addend,
 	LONG Increment)
 {
 	LONG ret;

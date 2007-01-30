@@ -23,7 +23,7 @@
 #include <windows.h>
 LONG
 NTAPI
-InterlockedExchange(LPLONG target, LONG value)
+InterlockedExchange(IN OUT LONG volatile *target, LONG value)
 {
 	LONG ret;
 	__asm__ (

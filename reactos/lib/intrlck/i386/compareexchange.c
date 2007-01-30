@@ -25,7 +25,7 @@
 LONG
 NTAPI
 InterlockedCompareExchange(
-	LPLONG Destination,
+	IN OUT LONG volatile *Destination,
 	LONG Exchange,
 	LONG Comperand)
 {

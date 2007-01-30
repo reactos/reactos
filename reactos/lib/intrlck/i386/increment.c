@@ -22,7 +22,7 @@
 #include <windows.h>
 LONG
 NTAPI
-InterlockedIncrement(PLONG lpAddend)
+InterlockedIncrement(IN OUT LONG volatile *lpAddend)
 {
 	LONG ret;
 	__asm__
