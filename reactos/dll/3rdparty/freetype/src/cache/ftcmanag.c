@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache Manager (body).                                       */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,11 +18,12 @@
 
 #include <ft2build.h>
 #include FT_CACHE_H
-#include FT_CACHE_INTERNAL_MANAGER_H
+#include "ftcmanag.h"
 #include FT_INTERNAL_OBJECTS_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_SIZES_H
 
+#include "ftccback.h"
 #include "ftcerror.h"
 
 
@@ -453,7 +454,7 @@
 
 #ifdef FT_DEBUG_ERROR
 
-  FT_EXPORT_DEF( void )
+  static void
   FTC_Manager_Check( FTC_Manager  manager )
   {
     FTC_Node  node, first;
@@ -519,7 +520,7 @@
 
   /* documentation is in ftcmanag.h */
 
-  FT_EXPORT_DEF( void )
+  FT_LOCAL_DEF( void )
   FTC_Manager_Compress( FTC_Manager  manager )
   {
     FTC_Node   node, first;
@@ -561,7 +562,7 @@
 
   /* documentation is in ftcmanag.h */
 
-  FT_EXPORT_DEF( FT_Error )
+  FT_LOCAL_DEF( FT_Error )
   FTC_Manager_RegisterCache( FTC_Manager      manager,
                              FTC_CacheClass   clazz,
                              FTC_Cache       *acache )
@@ -612,7 +613,7 @@
   }
 
 
-  FT_EXPORT_DEF( FT_UInt )
+  FT_LOCAL_DEF( FT_UInt )
   FTC_Manager_FlushN( FTC_Manager  manager,
                       FT_UInt      count )
   {
@@ -675,6 +676,57 @@
     if ( node && (FT_UInt)node->cache_index < manager->num_caches )
       node->ref_count--;
   }
+
+
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+
+  FT_EXPORT_DEF( FT_Error )
+  FTC_Manager_Lookup_Face( FTC_Manager  manager,
+                           FTC_FaceID   face_id,
+                           FT_Face     *aface )
+  {
+    return FTC_Manager_LookupFace( manager, face_id, aface );
+  }
+
+
+  FT_EXPORT( FT_Error )
+  FTC_Manager_Lookup_Size( FTC_Manager  manager,
+                           FTC_Font     font,
+                           FT_Face     *aface,
+                           FT_Size     *asize )
+  {
+    FTC_ScalerRec  scaler;
+    FT_Error       error;
+    FT_Size        size;
+    FT_Face        face;
+
+
+    scaler.face_id = font->face_id;
+    scaler.width   = font->pix_width;
+    scaler.height  = font->pix_height;
+    scaler.pixel   = TRUE;
+    scaler.x_res   = 0;
+    scaler.y_res   = 0;
+
+    error = FTC_Manager_LookupSize( manager, &scaler, &size );
+    if ( error )
+    {
+      face = NULL;
+      size = NULL;
+    }
+    else
+      face = size->face;
+
+    if ( aface )
+      *aface = face;
+
+    if ( asize )
+      *asize = size;
+
+    return error;
+  }
+
+#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
 /* END */

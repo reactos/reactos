@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Embedded resource forks accessor (specification).                    */
 /*                                                                         */
-/*  Copyright 2004 by                                                      */
+/*  Copyright 2004, 2006 by                                                */
 /*  Masatake YAMATO and Redhat K.K.                                        */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -154,7 +154,7 @@ FT_BEGIN_HEADER
   /*    offsets ::                                                         */
   /*      The stream offsets for the resource data specified by `tag'.     */
   /*      This array is allocated by the function, so you have to call     */
-  /*      @FT_Free after use.                                              */
+  /*      @ft_mem_free after use.                                          */
   /*                                                                       */
   /*    count ::                                                           */
   /*      The length of offsets array.                                     */

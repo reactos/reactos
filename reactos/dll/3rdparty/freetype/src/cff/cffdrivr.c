@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -302,9 +302,57 @@
   }
 
 
+  static FT_Error
+  cff_ps_get_font_info( CFF_Face         face,
+                        PS_FontInfoRec*  afont_info )
+  {
+    CFF_Font  cff   = (CFF_Font)face->extra.data;
+    FT_Error  error = FT_Err_Ok;
+
+
+    if ( cff && cff->font_info == NULL )
+    {
+      CFF_FontRecDict  dict = &cff->top_font.font_dict;
+      PS_FontInfoRec  *font_info;
+      FT_Memory        memory = face->root.memory;
+
+
+      if ( FT_ALLOC( font_info, sizeof ( *font_info ) ) )
+        goto Fail;
+
+      font_info->version     = cff_index_get_sid_string( &cff->string_index,
+                                                         dict->version,
+                                                         cff->psnames );
+      font_info->notice      = cff_index_get_sid_string( &cff->string_index,
+                                                         dict->notice,
+                                                         cff->psnames );
+      font_info->full_name   = cff_index_get_sid_string( &cff->string_index,
+                                                         dict->full_name,
+                                                         cff->psnames );
+      font_info->family_name = cff_index_get_sid_string( &cff->string_index,
+                                                         dict->family_name,
+                                                         cff->psnames );
+      font_info->weight      = cff_index_get_sid_string( &cff->string_index,
+                                                         dict->weight,
+                                                         cff->psnames );
+      font_info->italic_angle        = dict->italic_angle;
+      font_info->is_fixed_pitch      = dict->is_fixed_pitch;
+      font_info->underline_position  = (FT_Short)dict->underline_position;
+      font_info->underline_thickness = (FT_Short)dict->underline_thickness;
+
+      cff->font_info = font_info;
+    }
+
+    *afont_info = *cff->font_info;
+
+  Fail:
+    return error;
+  }
+
+
   static const FT_Service_PsInfoRec  cff_service_ps_info =
   {
-    (PS_GetFontInfoFunc)   NULL,        /* unsupported with CFF fonts */
+    (PS_GetFontInfoFunc)   cff_ps_get_font_info,
     (PS_HasGlyphNamesFunc) cff_ps_has_glyph_names,
     (PS_GetFontPrivateFunc)NULL         /* unsupported with CFF fonts */
   };
@@ -313,8 +361,8 @@
   /*
    * TT CMAP INFO
    *
-   * If the charmap is a synthetic Unicode encoding cmap or 
-   * a Type 1 standard (or expert) encoding cmap, hide TT CMAP INFO 
+   * If the charmap is a synthetic Unicode encoding cmap or
+   * a Type 1 standard (or expert) encoding cmap, hide TT CMAP INFO
    * service defined in SFNT module.
    *
    * Otherwise call the service function in the sfnt module.
@@ -330,7 +378,7 @@
 
     cmap_info->language = 0;
 
-    if ( cmap->clazz != &cff_cmap_encoding_class_rec && 
+    if ( cmap->clazz != &cff_cmap_encoding_class_rec &&
          cmap->clazz != &cff_cmap_unicode_class_rec  )
     {
       FT_Face             face    = FT_CMAP_FACE( cmap );
@@ -433,14 +481,24 @@
     cff_slot_init,
     cff_slot_done,
 
-    cff_point_size_reset,
-    cff_size_reset,
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    ft_stub_set_char_sizes,
+    ft_stub_set_pixel_sizes,
+#endif
 
     Load_Glyph,
 
     cff_get_kerning,
     0,                      /* FT_Face_AttachFunc      */
-    0                       /* FT_Face_GetAdvancesFunc */
+    0,                      /* FT_Face_GetAdvancesFunc */
+
+    cff_size_request,
+
+#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+    cff_size_select
+#else
+    0                       /* FT_Size_SelectFunc      */
+#endif
   };
 
 

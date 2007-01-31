@@ -1,46 +1,46 @@
-This file contains a list of various font formats.  It gives the
+This  file  contains a  list  of various  font  formats.   It gives  the
 reference document and whether it is supported in FreeType 2.
 
 
   file type:
-    The only special case is `MAC'; on older Mac OS versions, a `file'
-    is stored as a data and a resource fork, this is, within two
-    separate data chunks.  In all other cases, the font data is stored
+    The only special  case is `MAC'; on older Mac  OS versions, a `file'
+    is  stored as  a  data and  a  resource fork,  this  is, within  two
+    separate data chunks.   In all other cases, the  font data is stored
     in a single file.
 
   wrapper format:
-    The format used to represent the font data.  In the table below it
-    is used only if the font format differs.  Possible values are
-    `SFNT' (binary), `PS' (a text header, followed by binary or text
-    data), and `LZW' (compressed with either `gzip' or `compress').
+    The format used  to represent the font data.  In  the table below it
+    is used only if the font format differs.  Possible values are `SFNT'
+    (binary), `PS' (a text header, followed by binary or text data), and
+    `LZW' (compressed with either `gzip' or `compress').
 
   font format:
-    How the font is to be accessed, possibly after converting the file
-    type and wrapper format into a generic form.  Bitmap formats are
-    `BDF', `PCF', and one form of `WINFNT'; all others are vector
+    How the font  is to be accessed, possibly  after converting the file
+    type and  wrapper format  into a generic  form.  Bitmap  formats are
+    `BDF',  `PCF', and  one  form  of `WINFNT';  all  others are  vector
     formats.
 
   font type:
-    Sub-formats of the font format.  `SBIT' and `MACSBIT' are bitmap
+    Sub-formats  of the font  format.  `SBIT'  and `MACSBIT'  are bitmap
     formats, `MM' and `VAR' support optical axes.
 
   glyph access:
-    If not specified, the glyph access is `standard' to the font
-    format.  Values are `CID' for CID-keyed fonts, `SYNTHETIC' for
-    fonts which are modified versions of other fonts by means of a
-    transformation matrix, `COLLECTION' for collecting multiple fonts
-    (sharing most of the data) into a single file, and `TYPE_0' for PS
-    fonts which are to be accessed in a tree-like structure.
+    If not specified, the glyph access is `standard' to the font format.
+    Values are  `CID' for CID-keyed  fonts, `SYNTHETIC' for  fonts which
+    are modified  versions of other  fonts by means of  a transformation
+    matrix, `COLLECTION' for collecting  multiple fonts (sharing most of
+    the data) into a single file, and `TYPE_0' for PS fonts which are to
+    be accessed in a tree-like structure.
 
   FreeType driver:
-    The module in the FreeType library which handles the specific font
-    format.  A missing entry means that FreeType doesn't support the
+    The module in  the FreeType library which handles  the specific font
+    format.   A missing entry  means that  FreeType doesn't  support the
     font format (yet).
 
 
-Please send additions and/or corrections to wl@gnu.org or to the
-FreeType developer's list at freetype-devel@nongnu.org (for subscribers
-only).  If you can provide a font example for a format which isn't
+Please  send  additions  and/or  corrections  to wl@gnu.org  or  to  the
+FreeType developer's list  at freetype-devel@nongnu.org (for subscribers
+only).   If you  can provide  a font  example for  a format  which isn't
 supported yet please send a mail too.
 
 
@@ -122,16 +122,17 @@ MAC  ---     PS     TYPE_1  ---        type1    T1_SPEC.pdf
 ---  ---     WINFNT VECTOR  ---        ---      MS Windows 3 Developer's Notes
 
 
-[1] Support should be rather simple since this is identical to `CFF'
-    but in a PS wrapper.
+[1] Support should be rather simple since this is identical to `CFF' but
+    in a PS wrapper.
 
 [2] Official PFR specification:
 
       http://www.bitstream.com/categories/developer/truedoc/pfrspec.html
       http://www.bitstream.com/categories/developer/truedoc/pfrspec1.2.pdf
 
-    The syntax of the auxiliary data is not defined there, but is partially
-    defined in MHP 1.0.3 (also called ETSI TS 101812 V1.3.1) section 7.4.
+    The  syntax of  the  auxiliary data  is  not defined  there, but  is
+    partially defined in  MHP 1.0.3 (also called ETSI  TS 101812 V1.3.1)
+    section 7.4.
 
       http://www.etsi.org/
       http://webapp.etsi.org/workprogram/Report_WorkItem.asp?WKI_ID=18799
@@ -143,10 +144,10 @@ MAC  ---     PS     TYPE_1  ---        type1    T1_SPEC.pdf
 Copyright 2004, 2005 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
-This  file  is  part  of the  FreeType  project, and may  only be  used,
-modified,  and  distributed  under  the  terms of  the FreeType  project
-license, LICENSE.TXT.   By continuing to use, modify, or distribute this
-file you  indicate that  you have  read the  license and understand  and
+This  file is  part  of the  FreeType  project, and  may  only be  used,
+modified,  and  distributed under  the  terms  of  the FreeType  project
+license, LICENSE.TXT.  By continuing  to use, modify, or distribute this
+file  you indicate that  you have  read the  license and  understand and
 accept it fully.
 
 

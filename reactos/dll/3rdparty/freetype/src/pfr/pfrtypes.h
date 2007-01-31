@@ -217,14 +217,6 @@ FT_BEGIN_HEADER
                                ( (FT_UInt32)p[-2] << 16 ) | p[-1] )
 
 
-  typedef struct  PFR_KernPairRec_
-  {
-    FT_UInt    glyph1;
-    FT_UInt    glyph2;
-    FT_Int     kerning;
-
-  } PFR_KernPairRec, *PFR_KernPair;
-
   /************************************************************************/
 
   typedef struct  PFR_PhyFontRec_
@@ -266,9 +258,6 @@ FT_BEGIN_HEADER
     FT_UInt            num_kern_pairs;
     PFR_KernItem       kern_items;
     PFR_KernItem*      kern_items_tail;
-#ifndef FT_OPTIMIZE_MEMORY
-    PFR_KernPair       kern_pairs;
-#endif
 
     /* not part of the spec, but used during load */
     FT_UInt32          bct_offset;

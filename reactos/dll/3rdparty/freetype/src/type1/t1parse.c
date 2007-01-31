@@ -105,18 +105,18 @@
 
     if ( FT_STREAM_SEEK( 0 ) )
       goto Exit;
-      
+
     error = read_pfb_tag( stream, &tag, &size );
     if ( error )
       goto Exit;
-      
+
     if ( tag != 0x8001U && FT_STREAM_SEEK( 0 ) )
       goto Exit;
-      
+
     if ( !FT_FRAME_ENTER( header_length ) )
     {
       error = 0;
-      
+
       if ( ft_memcmp( stream->cursor, header_string, header_length ) != 0 )
         error = T1_Err_Unknown_File_Format;
 

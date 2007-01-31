@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript Type 1 decoding routines (body).                          */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -65,6 +65,7 @@
     op_pop,
     op_return,
     op_setcurrentpoint,
+    op_unknown15,
 
     op_max    /* never remove this one */
 
@@ -99,7 +100,8 @@
     1, /* callsubr */
     0, /* pop */
     0, /* return */
-    2  /* setcurrentpoint */
+    2, /* setcurrentpoint */
+    2  /* opcode 15 (undocumented and obsolete) */
   };
 
 
@@ -323,6 +325,8 @@
     FT_Byte*         limit;
     T1_Builder       builder = &decoder->builder;
     FT_Pos           x, y, orig_x, orig_y;
+    FT_Int           known_othersubr_result_cnt   = 0;
+    FT_Int           unknown_othersubr_result_cnt = 0;
 
     T1_Hints_Funcs   hinter;
 
@@ -344,6 +348,19 @@
 
     hinter = (T1_Hints_Funcs)builder->hints_funcs;
 
+    /* a font that reads BuildCharArray without setting */
+    /* its values first is buggy, but ...               */
+    FT_ASSERT( ( decoder->len_buildchar == 0 ) ==
+               ( decoder->buildchar == NULL ) );
+
+    if ( decoder->len_buildchar > 0 )
+      memset( &decoder->buildchar[0],
+              0,
+              sizeof( decoder->buildchar[0] ) *
+                decoder->len_buildchar );
+
+    FT_TRACE4(( "\nStart charstring\n" ));
+
     zone->base           = charstring_base;
     limit = zone->limit  = charstring_base + charstring_len;
     ip    = zone->cursor = zone->base;
@@ -364,6 +381,11 @@
       T1_Operator  op    = op_none;
       FT_Long      value = 0;
 
+
+      FT_ASSERT( known_othersubr_result_cnt == 0   ||
+                 unknown_othersubr_result_cnt == 0 );
+
+      FT_TRACE5(( " (%d)", decoder->top - decoder->stack ));
 
       /*********************************************************************/
       /*                                                                   */
@@ -414,7 +436,7 @@
         break;
 
       case 15:          /* undocumented, obsolete operator */
-        op = op_none;
+        op = op_unknown15;
         break;
 
       case 21:
@@ -520,6 +542,23 @@
         }
       }
 
+      if ( unknown_othersubr_result_cnt > 0 )
+      {
+        switch ( op )
+        {
+        case op_callsubr:
+        case op_return:
+        case op_none:
+        case op_pop:
+          break;
+
+        default:
+          /* all operands have been transferred by previous pops */
+          unknown_othersubr_result_cnt = 0;
+          break;
+        }
+      }
+
       /*********************************************************************/
       /*                                                                   */
       /*  Push value on stack, or process operator                         */
@@ -540,16 +579,59 @@
       }
       else if ( op == op_callothersubr )  /* callothersubr */
       {
+        FT_Int  subr_no;
+        FT_Int  arg_cnt;
+
+
         FT_TRACE4(( " callothersubr" ));
 
         if ( top - decoder->stack < 2 )
           goto Stack_Underflow;
 
         top -= 2;
-        switch ( (FT_Int)top[1] )
+
+        subr_no = (FT_Int)top[1];
+        arg_cnt = (FT_Int)top[0];
+
+        /***********************************************************/
+        /*                                                         */
+        /* remove all operands to callothersubr from the stack     */
+        /*                                                         */
+        /* for handled othersubrs, where we know the number of     */
+        /* arguments, we increase the stack by the value of        */
+        /* known_othersubr_result_cnt                              */
+        /*                                                         */
+        /* for unhandled othersubrs the following pops adjust the  */
+        /* stack pointer as necessary                              */
+
+        if ( arg_cnt > top - decoder->stack )
+          goto Stack_Underflow;
+
+        top -= arg_cnt;
+
+        known_othersubr_result_cnt   = 0;
+        unknown_othersubr_result_cnt = 0;
+
+        /* XXX TODO: The checks to `arg_count == <whatever>'       */
+        /* might not be correct; an othersubr expects a certain    */
+        /* number of operands on the PostScript stack (as opposed  */
+        /* to the T1 stack) but it doesn't have to put them there  */
+        /* by itself; previous othersubrs might have left the      */
+        /* operands there if they were not followed by an          */
+        /* appropriate number of pops                              */
+        /*                                                         */
+        /* On the other hand, Adobe Reader 7.0.8 for Linux doesn't */
+        /* accept a font that contains charstrings like            */
+        /*                                                         */
+        /*     100 200 2 20 callothersubr                          */
+        /*     300 1 20 callothersubr pop                          */
+        /*                                                         */
+        /* Perhaps this is the reason why BuildCharArray exists.   */
+
+        switch ( subr_no )
         {
         case 1:                     /* start flex feature */
-          if ( top[0] != 0 )
+          if ( arg_cnt != 0 )
             goto Unexpected_OtherSubr;
 
           decoder->flex_state        = 1;
@@ -564,7 +646,7 @@
             FT_Int  idx;
 
 
-            if ( top[0] != 0 )
+            if ( arg_cnt != 0 )
               goto Unexpected_OtherSubr;
 
             /* note that we should not add a point for index 0; */
@@ -580,7 +662,7 @@
           break;
 
         case 0:                     /* end flex feature */
-          if ( top[0] != 3 )
+          if ( arg_cnt != 3 )
             goto Unexpected_OtherSubr;
 
           if ( decoder->flex_state       == 0 ||
@@ -591,40 +673,15 @@
             goto Syntax_Error;
           }
 
-          /* now consume the remaining `pop pop setcurpoint' */
-          if ( ip + 6 > limit ||
-               ip[0] != 12 || ip[1] != 17 || /* pop */
-               ip[2] != 12 || ip[3] != 17 || /* pop */
-               ip[4] != 12 || ip[5] != 33 )  /* setcurpoint */
-          {
-            FT_ERROR(( "t1_decoder_parse_charstrings: "
-                       "invalid flex charstring\n" ));
-            goto Syntax_Error;
-          }
-
-          ip += 6;
-          decoder->flex_state = 0;
+          /* the two `results' are popped by the following setcurrentpoint */
+          known_othersubr_result_cnt = 2;
           break;
 
         case 3:                     /* change hints */
-          if ( top[0] != 1 )
+          if ( arg_cnt != 1 )
             goto Unexpected_OtherSubr;
 
-          /* eat the following `pop' */
-          if ( ip + 2 > limit )
-          {
-            FT_ERROR(( "t1_decoder_parse_charstrings: "
-                       "invalid escape (12+%d)\n", ip[-1] ));
-            goto Syntax_Error;
-          }
-
-          if ( ip[0] != 12 || ip[1] != 17 )
-          {
-            FT_ERROR(( "t1_decoder_parse_charstrings: " ));
-            FT_ERROR(( "`pop' expected, found (%d %d)\n", ip[0], ip[1] ));
-            goto Syntax_Error;
-          }
-          ip += 2;
+          known_othersubr_result_cnt = 1;
 
           if ( hinter )
             hinter->reset( hinter->hints, builder->current->n_points );
@@ -656,17 +713,13 @@
               goto Syntax_Error;
             }
 
-            num_points = (FT_UInt)top[1] - 13 + ( top[1] == 18 );
-            if ( top[0] != (FT_Int)( num_points * blend->num_designs ) )
+            num_points = (FT_UInt)subr_no - 13 + ( subr_no == 18 );
+            if ( arg_cnt != (FT_Int)( num_points * blend->num_designs ) )
             {
               FT_ERROR(( "t1_decoder_parse_charstrings: " ));
               FT_ERROR(( "incorrect number of mm arguments\n" ));
               goto Syntax_Error;
             }
-
-            top -= blend->num_designs * num_points;
-            if ( top < decoder->stack )
-              goto Stack_Underflow;
 
             /* we want to compute:                                   */
             /*                                                       */
@@ -695,16 +748,178 @@
 
               *values++ = tmp;
             }
-            /* note that `top' will be incremented later by calls to `pop' */
+
+            known_othersubr_result_cnt = num_points;
             break;
           }
 
+#ifdef CAN_HANDLE_NON_INTEGRAL_T1_OPERANDS
+
+          /* We cannot yet enable these since currently  */
+          /* our T1 stack stores integers which lack the */
+          /* precision to express the values             */
+
+        case 19:
+          /* <idx> 1 19 callothersubr                             */
+          /* => replace elements starting from index cvi( <idx> ) */
+          /*    of BuildCharArray with WeightVector               */
+          {
+            FT_Int    idx;
+            PS_Blend  blend = decoder->blend;
+
+
+            if ( arg_cnt != 1 || blend == NULL )
+              goto Unexpected_OtherSubr;
+
+            idx = top[0];
+
+            if ( idx < 0                                                 ||
+                 idx + blend->num_designs > decoder->face->len_buildchar )
+              goto Unexpected_OtherSubr;
+
+            memcpy( &decoder->buildchar[idx],
+                    blend->weight_vector,
+                    blend->num_designs *
+                      sizeof( blend->weight_vector[ 0 ] ) );
+          }
+          break;
+
+        case 20:
+          /* <arg1> <arg2> 2 20 callothersubr pop   */
+          /* ==> push <arg1> + <arg2> onto T1 stack */
+          if ( arg_cnt != 2 )
+            goto Unexpected_OtherSubr;
+
+          top[0] += top[1]; /* XXX (over|under)flow */
+
+          known_othersubr_result_cnt = 1;
+          break;
+
+        case 21:
+          /* <arg1> <arg2> 2 21 callothersubr pop   */
+          /* ==> push <arg1> - <arg2> onto T1 stack */
+          if ( arg_cnt != 2 )
+            goto Unexpected_OtherSubr;
+
+          top[0] -= top[1]; /* XXX (over|under)flow */
+
+          known_othersubr_result_cnt = 1;
+          break;
+
+        case 22:
+          /* <arg1> <arg2> 2 22 callothersubr pop   */
+          /* ==> push <arg1> * <arg2> onto T1 stack */
+          if ( arg_cnt != 2 )
+            goto Unexpected_OtherSubr;
+
+          top[0] *= top[1]; /* XXX (over|under)flow */
+
+          known_othersubr_result_cnt = 1;
+          break;
+
+        case 23:
+          /* <arg1> <arg2> 2 23 callothersubr pop   */
+          /* ==> push <arg1> / <arg2> onto T1 stack */
+          if ( arg_cnt != 2 || top[1] == 0 )
+            goto Unexpected_OtherSubr;
+
+          top[0] /= top[1]; /* XXX (over|under)flow */
+
+          known_othersubr_result_cnt = 1;
+          break;
+
+#endif /* CAN_HANDLE_NON_INTEGRAL_T1_OPERANDS */
+
+        case 24:
+          /* <val> <idx> 2 24 callothersubr              */
+          /* => set BuildCharArray[cvi( <idx> )] = <val> */
+          {
+            FT_Int    idx;
+            PS_Blend  blend = decoder->blend;
+
+            if ( arg_cnt != 2 || blend == NULL )
+              goto Unexpected_OtherSubr;
+
+            idx = top[1];
+
+            if ( idx < 0 || (FT_UInt) idx >= decoder->len_buildchar )
+              goto Unexpected_OtherSubr;
+
+            decoder->buildchar[idx] = top[0];
+          }
+          break;
+
+        case 25:
+          /* <idx> 1 25 callothersubr pop       */
+          /* => push BuildCharArray[cvi( idx )] */
+          /*    onto T1 stack                   */
+          {
+            FT_Int    idx;
+            PS_Blend  blend = decoder->blend;
+
+            if ( arg_cnt != 1 || blend == NULL )
+              goto Unexpected_OtherSubr;
+
+            idx = top[0];
+
+            if ( idx < 0 || (FT_UInt) idx >= decoder->len_buildchar )
+              goto Unexpected_OtherSubr;
+
+            top[0] = decoder->buildchar[idx];
+          }
+
+          known_othersubr_result_cnt = 1;
+          break;
+
+#if 0
+        case 26:
+          /* <val> mark <idx> ==> set BuildCharArray[cvi( <idx> )] = <val>, */
+          /*                      leave mark on T1 stack                    */
+          /* <val> <idx>      ==> set BuildCharArray[cvi( <idx> )] = <val>  */
+          XXX who has left his mark on the (PostScript) stack ?;
+          break;
+#endif
+
+        case 27:
+          /* <res1> <res2> <val1> <val2> 4 27 callothersubr pop */
+          /* ==> push <res1> onto T1 stack if <val1> <= <val2>,  */
+          /*     otherwise push <res2>                          */
+          if ( arg_cnt != 4 )
+            goto Unexpected_OtherSubr;
+
+          if ( top[2] > top[3] )
+            top[0] = top[1];
+
+          known_othersubr_result_cnt = 1;
+          break;
+
+#ifdef CAN_HANDLE_NON_INTEGRAL_T1_OPERANDS
+        case 28:
+          /* 0 28 callothersubr pop                               */
+          /* => push random value from interval [0, 1) onto stack */
+          if ( arg_cnt != 0 )
+            goto Unexpected_OtherSubr;
+
+          top[0] = FT_rand();
+          known_othersubr_result_cnt = 1;
+          break;
+#endif
+
         default:
+          FT_ERROR(( "t1_decoder_parse_charstrings: "
+                     "unknown othersubr [%d %d], wish me luck!\n",
+                     arg_cnt, subr_no ));
+          unknown_othersubr_result_cnt = arg_cnt;
+          break;
+
         Unexpected_OtherSubr:
           FT_ERROR(( "t1_decoder_parse_charstrings: "
-                     "invalid othersubr [%d %d]!\n", top[0], top[1] ));
+                     "invalid othersubr [%d %d]!\n", arg_cnt, subr_no ));
           goto Syntax_Error;
         }
+
+        top += known_othersubr_result_cnt;
+
         decoder->top = top;
       }
       else  /* general operator */
@@ -712,8 +927,37 @@
         FT_Int  num_args = t1_args_count[op];
 
 
+        FT_ASSERT( num_args >= 0 );
+
         if ( top - decoder->stack < num_args )
           goto Stack_Underflow;
+
+        /* XXX Operators usually take their operands from the        */
+        /*     bottom of the stack, i.e., the operands are           */
+        /*     decoder->stack[0], ..., decoder->stack[num_args - 1]; */
+        /*     only div, callsubr, and callothersubr are different.  */
+        /*     In practice it doesn't matter (?).                    */
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+
+        switch ( op )
+        {
+        case op_callsubr:
+        case op_div:
+        case op_callothersubr:
+        case op_pop:
+        case op_return:
+          break;
+
+        default:
+          if ( top - decoder->stack != num_args )
+            FT_TRACE0(( "\nMore operands on the stack than expected "
+                        "(have %d, expected %d)\n",
+                        top - decoder->stack, num_args ));
+            break;
+        }
+
+#endif /* FT_DEBUG_LEVEL_TRACE */
 
         top -= num_args;
 
@@ -740,8 +984,30 @@
           /* add current outline to the glyph slot */
           FT_GlyphLoader_Add( builder->loader );
 
+          FT_TRACE4(( "\n" ));
+
+          /* the compiler should optimize away this empty loop but ... */
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+
+          if ( decoder->len_buildchar > 0 )
+          {
+            FT_UInt  i;
+
+
+            FT_TRACE4(( "BuildCharArray = [ " ));
+
+            for ( i = 0; i < decoder->len_buildchar; ++i )
+              FT_TRACE4(( "%d ", decoder->buildchar[ i ] ));
+
+            FT_TRACE4(( "]\n" ));
+          }
+
+#endif /* FT_DEBUG_LEVEL_TRACE */
+
+          FT_TRACE4(( "\n" ));
+
           /* return now! */
-          FT_TRACE4(( "\n\n" ));
           return PSaux_Err_Ok;
 
         case op_hsbw:
@@ -997,8 +1263,22 @@
         case op_pop:
           FT_TRACE4(( " pop" ));
 
-          /* theoretically, the arguments are already on the stack */
-          top++;
+          if ( known_othersubr_result_cnt > 0 )
+          {
+            known_othersubr_result_cnt--;
+            /* ignore, we pushed the operands ourselves */
+            break;
+          }
+
+          if ( unknown_othersubr_result_cnt == 0 )
+          {
+            FT_ERROR(( "t1_decoder_parse_charstrings: "
+                       "no more operands for othersubr!\n" ));
+            goto Syntax_Error;
+          }
+
+          unknown_othersubr_result_cnt--;
+          top++;   /* `push' the operand to callothersubr onto the stack */
           break;
 
         case op_return:
@@ -1073,15 +1353,38 @@
         case op_setcurrentpoint:
           FT_TRACE4(( " setcurrentpoint" ));
 
-          FT_ERROR(( "t1_decoder_parse_charstrings: " ));
-          FT_ERROR(( "unexpected `setcurrentpoint'\n" ));
-          goto Syntax_Error;
+          /* From the T1 specs, section 6.4:                        */
+          /*                                                        */
+          /*   The setcurrentpoint command is used only in          */
+          /*   conjunction with results from OtherSubrs procedures. */
+
+          /* known_othersubr_result_cnt != 0 is already handled above */
+          if ( decoder->flex_state != 1 )
+          {
+            FT_ERROR(( "t1_decoder_parse_charstrings: " ));
+            FT_ERROR(( "unexpected `setcurrentpoint'\n" ));
+
+            goto Syntax_Error;
+          }
+          else
+            decoder->flex_state = 0;
+          break;
+
+        case op_unknown15:
+          FT_TRACE4(( " opcode_15" ));
+          /* nothing to do except to pop the two arguments */
+          break;
 
         default:
           FT_ERROR(( "t1_decoder_parse_charstrings: "
                      "unhandled opcode %d\n", op ));
           goto Syntax_Error;
         }
+
+        /* XXX Operators usually clear the operand stack;  */
+        /*     only div, callsubr, callothersubr, pop, and */
+        /*     return are different.                       */
+        /*     In practice it doesn't matter (?).          */
 
         decoder->top = top;
 
@@ -1143,6 +1446,10 @@
 
     t1_builder_init( &decoder->builder, face, size, slot, hinting );
 
+    /* decoder->buildchar and decoder->len_buildchar have to be  */
+    /* initialized by the caller since we cannot know the length */
+    /* of the BuildCharArray                                     */
+
     decoder->num_glyphs     = (FT_UInt)face->num_glyphs;
     decoder->glyph_names    = glyph_names;
     decoder->hint_mode      = hint_mode;
@@ -1151,7 +1458,7 @@
 
     decoder->funcs          = t1_decoder_funcs;
 
-    return 0;
+    return PSaux_Err_Ok;
   }
 
 

@@ -4,7 +4,7 @@
 #
 
 
-# Copyright 1996-2000, 2003 by
+# Copyright 1996-2000, 2003, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -14,26 +14,17 @@
 # fully.
 
 
-ifndef TOP_DIR
-  TOP_DIR := .
-endif
 TOP_DIR := $(shell cd $(TOP_DIR); pwd)
+OBJ_DIR := $(shell cd $(OBJ_DIR); pwd)
+
+PLATFORM := unix
 
 DELETE := rm -f
+CAT    := cat
 SEP    := /
 
 # we use a special devel ftoption.h
-BUILD_DIR := $(TOP_DIR)/devel
-
-# do not set the platform to `unix', or libtool will trick you
-PLATFORM := unixdev
-
-
-# The directory where all object files are placed.
-#
-ifndef OBJ_DIR
-  OBJ_DIR := $(shell cd $(TOP_DIR)/objs; pwd)
-endif
+DEVEL_DIR := $(TOP_DIR)/devel
 
 
 # library file name
@@ -50,6 +41,5 @@ LIB_DIR := $(OBJ_DIR)
 
 
 NO_OUTPUT := 2> /dev/null
-
 
 # EOF

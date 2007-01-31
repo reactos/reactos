@@ -5,7 +5,7 @@
 /*    TrueType and OpenType embedded bitmap support (body).                */
 /*    This is a heap-optimized version.                                    */
 /*                                                                         */
-/*  Copyright 2005 by                                                      */
+/*  Copyright 2005, 2006, 2007 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -15,6 +15,9 @@
 /*  understand and accept it fully.                                        */
 /*                                                                         */
 /***************************************************************************/
+
+
+/* This file is included by ttsbit.c */
 
 
 #include <ft2build.h>
@@ -86,15 +89,15 @@
 
 
   FT_LOCAL_DEF( FT_Error )
-  tt_face_load_sbit_strikes( TT_Face    face,
-                             FT_Stream  stream )
+  tt_face_load_eblc( TT_Face    face,
+                     FT_Stream  stream )
   {
     FT_Error   error  = SFNT_Err_Ok;
     FT_Fixed   version;
     FT_ULong   num_strikes, table_size;
     FT_Byte*   p;
     FT_Byte*   p_limit;
-    FT_UInt    nn, count;
+    FT_UInt    count;
 
 
     face->sbit_num_strikes = 0;
@@ -137,52 +140,12 @@
      *  paranoid there and don't trust the data.
      */
     count = (FT_UInt)num_strikes;
-    if ( 8 +48UL * count > table_size )
+    if ( 8 + 48UL * count > table_size )
       count = (FT_UInt)( ( p_limit - p ) / 48 );
 
     face->sbit_num_strikes = count;
 
-    /*
-     *  Now allocate the root array of FT_Bitmap_Size records and
-     *  populate them.  Unfortunately, it isn't possible to indicate bit
-     *  depths in the FT_Bitmap_Size record.  This is a design error.
-     */
-    {
-      FT_Memory  memory  = face->root.stream->memory;
-      FT_UInt    em_size = (FT_UInt) face->header.Units_Per_EM;
-      FT_Short   height  = (FT_Short)( face->horizontal.Ascender -
-                                       face->horizontal.Descender +
-                                       face->horizontal.Line_Gap );
-
-      FT_Short   avgwidth = face->os2.xAvgCharWidth;
-
-
-      if ( FT_NEW_ARRAY( face->root.available_sizes, count ) )
-        goto Fail;
-
-      for ( nn = 0; nn < count; nn++ )
-      {
-        FT_Bitmap_Size*  bsize = face->root.available_sizes + nn;
-        FT_UInt          x_ppem, y_ppem;
-
-
-        x_ppem = p[44];
-        y_ppem = p[45];
-
-        bsize->x_ppem = (FT_Pos)(x_ppem << 6);
-        bsize->y_ppem = (FT_Pos)(y_ppem << 6);
-
-        bsize->height = (FT_Short)( height*y_ppem   + em_size / 2 ) / em_size;
-        bsize->width  = (FT_Short)( avgwidth*y_ppem + em_size / 2 ) / em_size;
-        bsize->size   = bsize->y_ppem;
-
-        p += 48;
-      }
-
-      face->root.face_flags     |= FT_FACE_FLAG_FIXED_SIZES;
-      face->root.num_fixed_sizes = count;
-    }
-
+    FT_TRACE3(( "sbit_num_strikes: %u\n", count ));
   Exit:
     return error;
 
@@ -194,7 +157,7 @@
 
 
   FT_LOCAL_DEF( void )
-  tt_face_free_sbit_strikes( TT_Face  face )
+  tt_face_free_eblc( TT_Face  face )
   {
     FT_Stream  stream = face->root.stream;
 
@@ -206,35 +169,41 @@
 
 
   FT_LOCAL_DEF( FT_Error )
-  tt_face_set_sbit_strike( TT_Face    face,
-                           FT_UInt    x_ppem,
-                           FT_UInt    y_ppem,
-                           FT_ULong  *astrike_index )
+  tt_face_set_sbit_strike( TT_Face          face,
+                           FT_Size_Request  req,
+                           FT_ULong*        astrike_index )
   {
-    FT_UInt   nn, count;
-    FT_Byte*  p;
-    FT_Byte*  p_limit;
+    return FT_Match_Size( (FT_Face)face, req, 0, astrike_index );
+  }
 
 
-    if ( x_ppem > 255               ||
-         y_ppem < 1 || y_ppem > 255 )
-      return SFNT_Err_Invalid_PPem;
+  FT_LOCAL_DEF( FT_Error )
+  tt_face_load_strike_metrics( TT_Face           face,
+                               FT_ULong          strike_index,
+                               FT_Size_Metrics*  metrics )
+  {
+    FT_Byte*         strike;
 
-    p       = face->sbit_table + 8;
-    p_limit = p + face->sbit_table_size;
-    count   = face->sbit_num_strikes;
 
-    for ( nn = 0; nn < count; nn++ )
-    {
-      if ( x_ppem == (FT_UInt)p[44] && y_ppem == (FT_UInt)p[45] )
-      {
-        *astrike_index = (FT_ULong)nn;
-        return SFNT_Err_Ok;
-      }
-      p += 48;
-    }
+    if ( strike_index >= (FT_ULong)face->sbit_num_strikes )
+      return SFNT_Err_Invalid_Argument;
 
-    return SFNT_Err_Invalid_PPem;
+    strike = face->sbit_table + 8 + strike_index * 48;
+
+    metrics->x_ppem = (FT_UShort)strike[44];
+    metrics->y_ppem = (FT_UShort)strike[45];
+
+    metrics->ascender  = (FT_Char)strike[16] << 6;  /* hori.ascender  */
+    metrics->descender = (FT_Char)strike[17] << 6;  /* hori.descender */
+    metrics->height    = metrics->ascender - metrics->descender;
+
+    /* XXX: Is this correct? */
+    metrics->max_advance = ( (FT_Char)strike[22] + /* min_origin_SB  */
+                                      strike[18] + /* max_width      */
+                             (FT_Char)strike[23]   /* min_advance_SB */
+                                                 ) << 6;
+
+    return SFNT_Err_Ok;
   }
 
 
@@ -523,9 +492,18 @@
         }
 
         if ( w > 0 )
-          wval = (FT_UInt)(wval | ( *p++ & ( 0xFF00U >> w ) ) );
+          wval = (FT_UInt)( wval | ( *p++ & ( 0xFF00U >> w ) ) );
+
+        /* all bits read and there are ( x_pos + w ) bits to be written */
 
         write[0] = (FT_Byte)( write[0] | ( wval >> x_pos ) );
+
+        if ( x_pos + w > 8 )
+        {
+          write++;
+          wval   <<= 8;
+          write[0] = (FT_Byte)( write[0] | ( wval >> x_pos ) );
+        }
       }
     }
 
@@ -543,9 +521,9 @@
   {
     FT_Error    error = SFNT_Err_Ok;
     FT_Byte*    line;
-    FT_Int      bit_height, bit_width, pitch, width, height, h;
+    FT_Int      bit_height, bit_width, pitch, width, height, h, nbits;
     FT_Bitmap*  bitmap;
-    FT_UInt32   rval;
+    FT_UShort   rval;
 
 
     if ( !decoder->bitmap_allocated )
@@ -572,7 +550,7 @@
       goto Exit;
     }
 
-    if ( p + ( ( width + 7 ) >> 3 ) * height > limit )
+    if ( p + ( ( width * height + 7 ) >> 3 ) > limit )
     {
       error = SFNT_Err_Invalid_File_Format;
       goto Exit;
@@ -581,39 +559,61 @@
     /* now do the blit */
     line  += y_pos * pitch + ( x_pos >> 3 );
     x_pos &= 7;
-    rval   = 0x10000UL;
+
+    /* the higher byte of `rval' is used as a buffer */
+    rval  = 0;
+    nbits = 0;
 
     for ( h = height; h > 0; h--, line += pitch )
     {
-      FT_Byte*   write = line;
-      FT_UInt32  wval  = 0x100 << x_pos;
-      FT_Int     w;
+      FT_Byte*  write = line;
+      FT_Int    w = width;
 
 
-      for ( w = width; w >= 8; w -= 8 )
+      if ( x_pos )
       {
-        if ( rval & 0x10000UL )
-          rval = 0x100 | *p++;
+        w = ( width < 8 - x_pos ) ? width : 8 - x_pos;
 
-        wval |= rval & 0x80;
-
-        wval <<= 1;
-        rval <<= 1;
-
-        if ( wval & 0x10000UL )
+        if ( nbits < w )
         {
-          write[0] = (FT_Byte)( write[0] | ( wval >> 8 ) );
-          write   += 1;
-          wval     = 0x100;
+          rval  |= *p++;
+          nbits += 8 - w;
         }
+        else
+        {
+          rval  >>= 8;
+          nbits  -= w;
+        }
+
+        *write++ |= ( ( rval >> nbits ) & 0xFF ) & ~( 0xFF << w );
+        rval    <<= 8;
+
+        w = width - w;
       }
 
-      if ( wval != 0x100 )
+      for ( ; w >= 8; w -= 8 )
       {
-        while ( wval > 0x1FF )
-          wval >>= 1;
+        rval     |= *p++;
+        *write++ |= ( rval >> nbits ) & 0xFF;
 
-        write[0] = (FT_Byte)( write[0] | wval );
+        rval <<= 8;
+      }
+
+      if ( w > 0 )
+      {
+        if ( nbits < w )
+        {
+          rval   |= *p++;
+          *write |= ( ( rval >> nbits ) & 0xFF ) & ( 0xFF00U >> w );
+          nbits  += 8 - w;
+
+          rval <<= 8;
+        }
+        else
+        {
+          *write |= ( ( rval >> nbits ) & 0xFF ) & ( 0xFF00U >> w );
+          nbits  -= w;
+        }
       }
     }
 
@@ -830,7 +830,7 @@
         if ( tt_sbit_decoder_load_metrics( decoder, &p, p_limit, 1 ) )
           goto NoBitmap;
 
-        image_start = image_offset + image_size * ( glyph_index - start );
+        image_start = image_size * ( glyph_index - start );
         image_end   = image_start  + image_size;
       }
       break;
@@ -910,7 +910,7 @@
         if ( mm >= num_glyphs )
           goto NoBitmap;
 
-        image_start = image_offset + image_size*mm;
+        image_start = image_size*mm;
         image_end   = image_start + image_size;
       }
       break;

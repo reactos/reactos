@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID objects manager (specification).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004 by                                     */
+/*  Copyright 1996-2001, 2002, 2004, 2006 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -125,17 +125,8 @@ FT_BEGIN_HEADER
   cid_size_init( FT_Size  size );       /* CID_Size */
 
   FT_LOCAL( FT_Error )
-  cid_size_reset( FT_Size  size,        /* CID_Size */
-                  FT_UInt  char_width,
-                  FT_UInt  char_height );
-
-  FT_LOCAL( FT_Error )
-  cid_point_size_reset( FT_Size     size,
-                        FT_F26Dot6  char_width,
-                        FT_F26Dot6  char_height,
-                        FT_UInt     horz_resolution,
-                        FT_UInt     vert_resolution );
-
+  cid_size_request( FT_Size          size,      /* CID_Size */
+                    FT_Size_Request  req );
 
   FT_LOCAL( FT_Error )
   cid_face_init( FT_Stream      stream,

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Multiple Master font interface (specification).             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003, 2004 by                                     */
+/*  Copyright 1996-2001, 2003, 2004, 2006 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -40,11 +40,11 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    The following types and functions are used to manage Multiple      */
-  /*    Master fonts, i.e. the selection of specific design instances by   */
+  /*    Master fonts, i.e., the selection of specific design instances by  */
   /*    setting design axis coordinates.                                   */
   /*                                                                       */
   /*    George Williams has extended this interface to make it work with   */
-  /*    both Type 1 Multiple Masters fonts, and GX distortable (var)       */
+  /*    both Type 1 Multiple Masters fonts and GX distortable (var)        */
   /*    fonts.  Some of these routines only work with MM fonts, others     */
   /*    will work with both types.  They are similar enough that a         */
   /*    consistent interface makes sense.                                  */
@@ -93,7 +93,7 @@ FT_BEGIN_HEADER
   /* <Fields>                                                              */
   /*    num_axis    :: Number of axes.  Cannot exceed 4.                   */
   /*                                                                       */
-  /*    num_designs :: Number of designs; should ne normally 2^num_axis    */
+  /*    num_designs :: Number of designs; should be normally 2^num_axis    */
   /*                   even though the Type 1 specification strangely      */
   /*                   allows for intermediate designs to be present. This */
   /*                   number cannot exceed 16.                            */

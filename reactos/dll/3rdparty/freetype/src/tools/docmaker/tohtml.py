@@ -7,11 +7,11 @@ import time
 # The following defines the HTML header used by all generated pages.
 #
 html_header_1 = """\
-<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN"
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>"""
 
 html_header_2= """ API Reference</title>
@@ -23,6 +23,7 @@ html_header_2= """ API Reference</title>
   p { text-align: justify; }
   h1 { text-align: center; }
   li { text-align: justify; }
+  td { padding: 0 0.5em 0 0.5em }
 
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -69,8 +70,20 @@ para_footer = "</p>"
 
 # Block header and footer.
 #
-block_header = '<table align=center width="75%"><tr><td>'
-block_footer = '</td></tr></table><hr width="75%">'
+block_header        = '<table align=center width="75%"><tr><td>'
+block_footer_start  = """\
+</td></tr></table>
+<hr width="75%">
+<table align=center width="75%"><tr><td><font size=-2>[<a href="
+"""
+block_footer_middle = """\
+">Index</a>]</font></td>
+<td width="100%"></td>
+<td><font size=-2>[<a href="
+"""
+block_footer_end    = """\
+">TOC</a>]</font></td></tr></table>
+"""
 
 # Description header/footer.
 #
@@ -93,6 +106,16 @@ source_footer = "\n</pre></table><br>"
 chapter_header = '<br><table align=center width="75%"><tr><td><h2>'
 chapter_inter  = '</h2><ul class="empty"><li>'
 chapter_footer = '</li></ul></td></tr></table>'
+
+# Index footer.
+index_footer_start = """\
+<hr>
+<table><tr><td width="100%"></td>
+<td><font size=-2>[<a href="
+"""
+index_footer_end = """\
+">TOC</a>]</font></td></tr></table>
+"""
 
 
 # source language keyword coloration/styling
@@ -154,7 +177,7 @@ class HtmlFormatter(Formatter):
         self.html_header   = html_header_1 + project_title + html_header_2 + \
                              project_title + html_header_3
 
-        self.html_footer = "<center><font size=""-2"">generated on " +   \
+        self.html_footer = "<center><font size=""-2"">generated on " +      \
                             time.asctime( time.localtime( time.time() ) ) + \
                            "</font></center>" + html_footer
 
@@ -188,22 +211,27 @@ class HtmlFormatter(Formatter):
             try:
                 name = m.group(1)
                 rest = m.group(2)
-                block = self.identifiers[ name ]
+                block = self.identifiers[name]
                 url   = self.make_block_url( block )
                 return '<a href="' + url + '">' + name + '</a>' + rest
             except:
+                # we detected a cross-reference to an unknown item
+                sys.stderr.write( \
+                   "WARNING: undefined cross reference '" + name + "'.\n" )
                 return '?' + name + '?' + rest
 
         # look for italics and bolds
         m = re_italic.match( word )
         if m:
             name = m.group(1)
-            return '<i>'+name+'</i>'
+            rest = m.group(3)
+            return '<i>' + name + '</i>' + rest
 
         m = re_bold.match( word )
         if m:
             name = m.group(1)
-            return '<b>'+name+'</b>'
+            rest = m.group(3)
+            return '<b>' + name + '</b>' + rest
 
         return html_quote(word)
 
@@ -215,8 +243,12 @@ class HtmlFormatter(Formatter):
             line = self.make_html_word( words[0] )
             for word in words[1:]:
                 line = line + " " + self.make_html_word( word )
+            # convert `...' quotations into real left and right single quotes
+            line = re.sub( r"(^|\W)`(.*?)'(\W|$)",
+                           r'\1&lsquo;\2&rsquo;\3',
+                           line )
 
-        return "<p>" + line + "</p>"
+        return para_header + line + para_footer
 
 
     def  make_html_code( self, lines ):
@@ -246,7 +278,7 @@ class HtmlFormatter(Formatter):
 
     def print_html_field( self, field ):
         if field.name:
-            print "<table><tr valign=top><td><b>"+field.name+"</b></td><td>"
+            print "<table><tr valign=top><td><p><b>"+field.name+"</b></p></td><td>"
 
         print self.make_html_items( field.items )
 
@@ -277,9 +309,9 @@ class HtmlFormatter(Formatter):
                     result = result + prefix + '<a href="' + \
                              self.make_block_url(block) + '">' + name + '</a>'
                 else:
-                    result = result + html_quote(line[ : length ])
+                    result = result + html_quote(line[:length])
 
-                line = line[ length : ]
+                line = line[length:]
             else:
                 result = result + html_quote(line)
                 line   = []
@@ -288,9 +320,14 @@ class HtmlFormatter(Formatter):
 
 
     def print_html_field_list( self, fields ):
-        print "<table cellpadding=3>"
+        print "<table cellpadding=3 border=0>"
         for field in fields:
-            print "<tr valign=top><td><b>" + field.name + "</b></td><td>"
+            if len(field.name) > 22:
+              print "<tr valign=top><td colspan=0><b>"+field.name+"</b></td></tr>"
+              print "<tr valign=top><td></td><td>"
+            else:
+              print "<tr valign=top><td><b>" + field.name + "</b></td><td>"
+
             self.print_html_items( field.items )
             print "</td></tr>"
         print "</table>"
@@ -325,15 +362,15 @@ class HtmlFormatter(Formatter):
         self.index_items = {}
 
     def  index_name_enter( self, name ):
-        block = self.identifiers[ name ]
+        block = self.identifiers[name]
         url   = self.make_block_url( block )
-        self.index_items[ name ] = url
+        self.index_items[name] = url
 
     def  index_exit( self ):
 
         # block_index already contains the sorted list of index names
         count = len( self.block_index )
-        rows  = (count + self.columns - 1)/self.columns
+        rows  = (count + self.columns - 1) / self.columns
 
         print "<table align=center border=0 cellpadding=0 cellspacing=0>"
         for r in range(rows):
@@ -341,8 +378,8 @@ class HtmlFormatter(Formatter):
             for c in range(self.columns):
                 i = r + c*rows
                 if i < count:
-                    bname = self.block_index[ r + c*rows ]
-                    url   = self.index_items[ bname ]
+                    bname = self.block_index[r + c * rows]
+                    url   = self.index_items[bname]
                     line = line + '<td><a href="' + url + '">' + bname + '</a></td>'
                 else:
                     line = line + '<td></td>'
@@ -350,7 +387,11 @@ class HtmlFormatter(Formatter):
             print line
 
         print "</table>"
-        print self.html_footer
+
+        print index_footer_start + \
+              self.file_prefix + "toc.html" + \
+              index_footer_end
+
         self.index_items = {}
 
     def  index_dump( self, index_filename = None ):
@@ -410,37 +451,39 @@ class HtmlFormatter(Formatter):
         print section.title
         print section_title_footer
 
-        # print section synopsys
-        print section_synopsis_header
-        print "<table align=center cellspacing=5 cellpadding=0 border=0>"
-
         maxwidth = 0
         for b in section.blocks.values():
-            if len(b.name) > maxwidth:
-                maxwidth = len(b.name)
+            if len( b.name ) > maxwidth:
+                maxwidth = len( b.name )
 
         width  = 70  # XXX magic number
-        columns = width / maxwidth
-        if columns < 1:
-            columns = 1
+        if maxwidth <> 0:
+            # print section synopsis
+            print section_synopsis_header
+            print "<table align=center cellspacing=5 cellpadding=0 border=0>"
 
-        count   = len(section.block_names)
-        rows    = (count + columns-1)/columns
-        for r in range(rows):
-            line = "<tr>"
-            for c in range(columns):
-                i = r + c*rows
-                line = line + '<td></td><td>'
-                if i < count:
-                    name = section.block_names[i]
-                    line = line + '<a href="#' + name + '">' + name + '</a>'
+            columns = width / maxwidth
+            if columns < 1:
+                columns = 1
 
-                line = line + '</td>'
-            line = line + "</tr>"
-            print line
+            count = len( section.block_names )
+            rows  = ( count + columns - 1 ) / columns
 
-        print "</table><br><br>"
-        print section_synopsis_footer
+            for r in range( rows ):
+                line = "<tr>"
+                for c in range( columns ):
+                    i = r + c * rows
+                    line = line + '<td></td><td>'
+                    if i < count:
+                        name = section.block_names[i]
+                        line = line + '<a href="#' + name + '">' + name + '</a>'
+
+                    line = line + '</td>'
+                line = line + "</tr>"
+                print line
+
+            print "</table><br><br>"
+            print section_synopsis_footer
 
         print description_header
         print self.make_html_items( section.description )
@@ -476,7 +519,9 @@ class HtmlFormatter(Formatter):
             print marker_footer
 
     def  block_exit( self, block ):
-        print block_footer
+        print block_footer_start + self.file_prefix + "index.html" + \
+              block_footer_middle + self.file_prefix + "toc.html" + \
+              block_footer_end
 
 
     def  section_exit( self, section ):
@@ -486,4 +531,4 @@ class HtmlFormatter(Formatter):
     def section_dump_all( self ):
         for section in self.sections:
             self.section_dump( section, self.file_prefix + section.name + '.html' )
-        
+

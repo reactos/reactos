@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Unix-specific FreeType low-level system interface (body).            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004 by                                     */
+/*  Copyright 1996-2001, 2002, 2004, 2005, 2006 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,7 +23,7 @@
 #include FT_SYSTEM_H
 #include FT_ERRORS_H
 #include FT_TYPES_H
-#include FT_INTERNAL_OBJECTS_H
+#include FT_INTERNAL_STREAM_H
 
   /* memory-mapping includes and definitions */
 #ifdef HAVE_UNISTD_H
@@ -226,7 +226,7 @@
 
   /* documentation is in ftobjs.h */
 
-  FT_EXPORT_DEF( FT_Error )
+  FT_BASE_DEF( FT_Error )
   FT_Stream_Open( FT_Stream    stream,
                   const char*  filepathname )
   {
@@ -280,32 +280,32 @@
     else
     {
       ssize_t  total_read_count;
-    
+
 
       FT_ERROR(( "FT_Stream_Open:" ));
       FT_ERROR(( " could not `mmap' file `%s'\n", filepathname ));
-      
+
       stream->base = (unsigned char*)ft_alloc( NULL, stream->size );
-      
+
       if ( !stream->base )
       {
         FT_ERROR(( "FT_Stream_Open:" ));
         FT_ERROR(( " could not `alloc' memory\n" ));
         goto Fail_Map;
       }
-      
+
       total_read_count = 0;
       do {
         ssize_t  read_count;
 
 
-        read_count = read( file, 
-                           stream->base + total_read_count, 
+        read_count = read( file,
+                           stream->base + total_read_count,
                            stream->size - total_read_count );
 
-        if ( ( read_count == -1 ) )
+        if ( read_count <= 0 )
         {
-          if ( errno == EINTR )
+          if ( read_count == -1 && errno == EINTR )
             continue;
 
           FT_ERROR(( "FT_Stream_Open:" ));
@@ -360,7 +360,7 @@
 
   /* documentation is in ftobjs.h */
 
-  FT_EXPORT_DEF( FT_Memory )
+  FT_BASE_DEF( FT_Memory )
   FT_New_Memory( void )
   {
     FT_Memory  memory;
@@ -384,7 +384,7 @@
 
   /* documentation is in ftobjs.h */
 
-  FT_EXPORT_DEF( void )
+  FT_BASE_DEF( void )
   FT_Done_Memory( FT_Memory  memory )
   {
 #ifdef FT_DEBUG_MEMORY

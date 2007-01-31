@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2001 by
+# Copyright 1996-2001, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,10 +13,11 @@
 # fully.
 
 
-make_module_list: add_pshinter_module
+FTMODULE_H_COMMANDS += PSHINTER_MODULE
 
-add_pshinter_module:
-	$(OPEN_DRIVER)pshinter_module_class$(CLOSE_DRIVER)
-	$(ECHO_DRIVER)pshinter  $(ECHO_DRIVER_DESC)Postscript hinter module$(ECHO_DRIVER_DONE)
+define PSHINTER_MODULE
+$(OPEN_DRIVER)pshinter_module_class$(CLOSE_DRIVER)
+$(ECHO_DRIVER)pshinter  $(ECHO_DRIVER_DESC)Postscript hinter module$(ECHO_DRIVER_DONE)
+endef
 
 # EOF

@@ -21,10 +21,10 @@ process relies on this to figure the location of the Freetype2 include
 files.
 
 
-To rebuild the  sources it is neccessary to  have MMS/MMK installed on
+To rebuild  the  sources it is necessary to  have MMS/MMK installed on
 the system.
 
-The library is avalaible in the directory
+The library is available in the directory
 
   [.LIB]
 

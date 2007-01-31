@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Embedded resource forks accessor (body).                             */
 /*                                                                         */
-/*  Copyright 2004, 2005 by                                                */
+/*  Copyright 2004, 2005, 2006 by                                          */
 /*  Masatake YAMATO and Redhat K.K.                                        */
 /*                                                                         */
 /*  FT_Raccess_Get_HeaderInfo() and raccess_guess_darwin_hfsplus() are     */
@@ -179,7 +179,7 @@
         if ( error )
           return error;
 
-        if ( FT_ALLOC( offsets_internal, *count * sizeof( FT_Long ) ) )
+        if ( FT_NEW_ARRAY( offsets_internal, *count ) )
           return error;
 
         for ( j = 0; j < *count; ++j )
@@ -426,20 +426,25 @@
     FT_Error   error;
     char*      newpath;
     FT_Memory  memory;
+    FT_Long    base_file_len = ft_strlen( base_file_name );
 
     FT_UNUSED( stream );
 
 
     memory = library->memory;
 
-    if ( FT_ALLOC( newpath,
-                   ft_strlen( base_file_name ) + ft_strlen( "/rsrc" ) + 1 ) )
+    if ( base_file_len > FT_INT_MAX )
+      return FT_Err_Array_Too_Large;
+
+    if ( FT_ALLOC( newpath, base_file_len + 6 ) )
       return error;
 
-    ft_strcpy( newpath, base_file_name );
-    ft_strcat( newpath, "/rsrc" );
+    FT_MEM_COPY( newpath, base_file_name, base_file_len );
+    FT_MEM_COPY( newpath + base_file_len, "/rsrc", 6 );
+
     *result_file_name = newpath;
-    *result_offset = 0;
+    *result_offset    = 0;
+
     return FT_Err_Ok;
   }
 
@@ -642,7 +647,7 @@
     error = raccess_guess_apple_double( library, stream2, file_name,
                                         &nouse, result_offset );
 
-    FT_Stream_Close( stream2 );
+    FT_Stream_Free( stream2, 0 );
 
     return error;
   }
@@ -657,7 +662,7 @@
     char*        tmp;
     const char*  slash;
     unsigned     new_length;
-    FT_ULong     error = FT_Err_Ok;
+    FT_Error     error = FT_Err_Ok;
 
     FT_UNUSED( error );
 

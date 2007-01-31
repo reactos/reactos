@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType tables definitions and interface                 */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -407,9 +407,9 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure used to model a TrueType Postscript table.  All fields */
-  /*    comply to the TrueType table.  This structure does not reference   */
-  /*    the Postscript glyph names, which can be nevertheless accessed     */
-  /*    with the `ttpost' module.                                          */
+  /*    comply to the TrueType specification.  This structure does not     */
+  /*    reference the Postscript glyph names, which can be nevertheless    */
+  /*    accessed with the `ttpost' module.                                 */
   /*                                                                       */
   typedef struct  TT_Postscript_
   {
@@ -436,7 +436,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure used to model a TrueType PCLT table.  All fields       */
-  /*    comply to the TrueType table.                                      */
+  /*    comply to the TrueType specification.                              */
   /*                                                                       */
   typedef struct  TT_PCLT_
   {
@@ -594,8 +594,8 @@ FT_BEGIN_HEADER
   /*    The table is owned by the face object and disappears with it.      */
   /*                                                                       */
   /*    This function is only useful to access SFNT tables that are loaded */
-  /*    by the sfnt/truetype/opentype drivers.  See @FT_Sfnt_Tag for a     */
-  /*    list.                                                              */
+  /*    by the sfnt, truetype, and opentype drivers.  See @FT_Sfnt_Tag for */
+  /*    a list.                                                             */
   /*                                                                       */
   FT_EXPORT( void* )
   FT_Get_Sfnt_Table( FT_Face      face,
@@ -604,56 +604,61 @@ FT_BEGIN_HEADER
 
  /**************************************************************************
   *
-  * <Function>
-  *    FT_Load_Sfnt_Table
+  * @function:
+  *   FT_Load_Sfnt_Table
   *
-  * <Description>
+  * @description:
   *   Loads any font table into client memory.
   *
-  * <Input>
-  *   face   :: A handle to the source face.
+  * @input:
+  *   face ::
+  *     A handle to the source face.
   *
-  *   tag    :: The 4-byte tag of the table to load.  Use the value 0 if
-  *             you want to access the whole font file.  Otherwise, you can
-  *             use one of the definitions found in the @FT_TRUETYPE_TAGS_H
-  *             file, or forge a new one with @FT_MAKE_TAG.
-  *              
-  *   offset :: The starting offset in the table (or file if tag == 0).
+  *   tag ::
+  *     The four-byte tag of the table to load.  Use the value 0 if you want
+  *     to access the whole font file.  Otherwise, you can use one of the
+  *     definitions found in the @FT_TRUETYPE_TAGS_H file, or forge a new
+  *     one with @FT_MAKE_TAG.
   *
-  * <Output>
-  *   buffer :: The target buffer address.  The client must ensure that
-  *             the memory array is big enough to hold the data.
+  *   offset ::
+  *     The starting offset in the table (or file if tag == 0).
   *
-  * <InOut>
-  *   length :: If the `length' parameter is NULL, then try to load the whole
-  *             table.  Return an error code if it fails.
+  * @output:
+  *   buffer ::
+  *     The target buffer address.  The client must ensure that the memory
+  *     array is big enough to hold the data.
   *
-  *             Else, if `*length' is 0, exit immediately while returning
-  *             the table's (or file) full size in it.
+  * @inout:
+  *   length ::
+  *     If the `length' parameter is NULL, then try to load the whole table.
+  *     Return an error code if it fails.
   *
-  *             Else the number of bytes to read from the table or file,
-  *             from the starting offset.
+  *     Else, if `*length' is 0, exit immediately while returning the
+  *     table's (or file) full size in it.
   *
-  * <Return>
+  *     Else the number of bytes to read from the table or file, from the
+  *     starting offset.
+  *
+  * @return:
   *   FreeType error code.  0 means success.
   *
-  * <Note>
+  * @note:
   *   If you need to determine the table's length you should first call this
   *   function with `*length' set to 0, as in the following example:
   *
-  *   {
-  *     FT_ULong  length = 0;
+  *     {
+  *       FT_ULong  length = 0;
   *
   *
-  *     error = FT_Load_Sfnt_Table( face, tag, 0, NULL, &length );
-  *     if ( error ) { ... table does not exist ... }
+  *       error = FT_Load_Sfnt_Table( face, tag, 0, NULL, &length );
+  *       if ( error ) { ... table does not exist ... }
   *
-  *     buffer = malloc( length );
-  *     if ( buffer == NULL ) { ... not enough memory ... }
+  *       buffer = malloc( length );
+  *       if ( buffer == NULL ) { ... not enough memory ... }
   *
-  *     error = FT_Load_Sfnt_Table( face, tag, 0, buffer, &length );
-  *     if ( error ) { ... could not load table ... }
-  *   }
+  *       error = FT_Load_Sfnt_Table( face, tag, 0, buffer, &length );
+  *       if ( error ) { ... could not load table ... }
+  *     }
   */
   FT_EXPORT( FT_Error )
   FT_Load_Sfnt_Table( FT_Face    face,
@@ -665,13 +670,13 @@ FT_BEGIN_HEADER
 
  /**************************************************************************
   *
-  * <Function>
-  *    FT_Sfnt_Table_Info
+  * @function:
+  *   FT_Sfnt_Table_Info
   *
-  * <Description>
+  * @description:
   *   Returns information on an SFNT table.
   *
-  * <Input>
+  * @input:
   *   face ::
   *     A handle to the source face.
   *
@@ -679,17 +684,17 @@ FT_BEGIN_HEADER
   *     The index of an SFNT table.  The function returns
   *     FT_Err_Table_Missing for an invalid value.
   *
-  * <Output>
+  * @output:
   *   tag ::
   *     The name tag of the SFNT table.
   *
   *   length ::
   *     The length of the SFNT table.
   *
-  * <Return>
+  * @return:
   *   FreeType error code.  0 means success.
   *
-  * <Note>
+  * @note:
   *   SFNT tables with length zero are treated as missing by Windows.
   *
   */
@@ -707,7 +712,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Return TrueType/sfnt specific cmap language ID.  Definitions of    */
-  /*    language ID values are in freetype/ttnameid.h.                     */
+  /*    language ID values are in `freetype/ttnameid.h'.                   */
   /*                                                                       */
   /* <Input>                                                               */
   /*    charmap ::                                                         */

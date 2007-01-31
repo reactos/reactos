@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf files
 
-    Copyright (C) 2000, 2001, 2002, 2003, 2004 by
+    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2006 by
     Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -203,19 +203,23 @@ THE SOFTWARE.
 
     /* free properties */
     {
-      PCF_Property  prop = face->properties;
+      PCF_Property  prop;
       FT_Int        i;
 
 
-      for ( i = 0; i < face->nprops; i++ )
+      if ( face->properties )
       {
-        prop = &face->properties[i];
+        for ( i = 0; i < face->nprops; i++ )
+        {
+          prop = &face->properties[i];
 
-        FT_FREE( prop->name );
-        if ( prop->isString )
-          FT_FREE( prop->value );
+          if ( prop ) {
+            FT_FREE( prop->name );
+            if ( prop->isString )
+              FT_FREE( prop->value.atom );
+          }
+        }
       }
-
       FT_FREE( face->properties );
     }
 
@@ -257,6 +261,8 @@ THE SOFTWARE.
     {
       FT_Error  error2;
 
+
+      PCF_Face_Done( pcfface );
 
       /* this didn't work, try gzip support! */
       error2 = FT_Stream_OpenGzip( &face->gzip_stream, stream );
@@ -357,81 +363,64 @@ THE SOFTWARE.
 
   Fail:
     FT_TRACE2(( "[not a valid PCF file]\n" ));
+    PCF_Face_Done( pcfface );
     error = PCF_Err_Unknown_File_Format;  /* error */
     goto Exit;
   }
 
 
   FT_CALLBACK_DEF( FT_Error )
-  PCF_Set_Pixel_Size( FT_Size  size,
-                      FT_UInt  pixel_width,
-                      FT_UInt  pixel_height )
+  PCF_Size_Select( FT_Size   size,
+                   FT_ULong  strike_index )
   {
-    PCF_Face  face = (PCF_Face)FT_SIZE_FACE( size );
-
-    FT_UNUSED( pixel_width );
+    PCF_Accel  accel = &( (PCF_Face)size->face )->accel;
 
 
-    if ( pixel_height == (FT_UInt)face->root.available_sizes->height )
-    {
-      size->metrics.ascender    = face->accel.fontAscent << 6;
-      size->metrics.descender   = face->accel.fontDescent * (-64);
-#if 0
-      size->metrics.height      = face->accel.maxbounds.ascent << 6;
-#endif
-      size->metrics.height      = size->metrics.ascender -
-                                  size->metrics.descender;
+    FT_Select_Metrics( size->face, strike_index );
 
-      size->metrics.max_advance = face->accel.maxbounds.characterWidth << 6;
+    size->metrics.ascender    =  accel->fontAscent << 6;
+    size->metrics.descender   = -accel->fontDescent << 6;
+    size->metrics.max_advance =  accel->maxbounds.characterWidth << 6;
 
-      return PCF_Err_Ok;
-    }
-    else
-    {
-      FT_TRACE4(( "pixel size WRONG\n" ));
-      return PCF_Err_Invalid_Pixel_Size;
-    }
+    return PCF_Err_Ok;
   }
 
 
   FT_CALLBACK_DEF( FT_Error )
-  PCF_Set_Point_Size( FT_Size     size,
-                      FT_F26Dot6  char_width,
-                      FT_F26Dot6  char_height,
-                      FT_UInt     horz_resolution,
-                      FT_UInt     vert_resolution )
+  PCF_Size_Request( FT_Size          size,
+                    FT_Size_Request  req )
   {
-    PCF_Face  face = (PCF_Face)FT_SIZE_FACE( size );
-
-    FT_UNUSED( char_width );
-    FT_UNUSED( char_height );
-    FT_UNUSED( horz_resolution );
-    FT_UNUSED( vert_resolution );
+    PCF_Face         face  = (PCF_Face)size->face;
+    FT_Bitmap_Size*  bsize = size->face->available_sizes;
+    FT_Error         error = PCF_Err_Invalid_Pixel_Size;
+    FT_Long          height;
 
 
-    FT_TRACE4(( "rec %d - pres %d\n",
-                size->metrics.y_ppem,
-                face->root.available_sizes->y_ppem >> 6 ));
+    height = FT_REQUEST_HEIGHT( req );
+    height = ( height + 32 ) >> 6;
 
-    if ( size->metrics.y_ppem == face->root.available_sizes->y_ppem >> 6 )
+    switch ( req->type )
     {
-      size->metrics.ascender    = face->accel.fontAscent << 6;
-      size->metrics.descender   = face->accel.fontDescent * (-64);
-#if 0
-      size->metrics.height      = face->accel.maxbounds.ascent << 6;
-#endif
-      size->metrics.height      = size->metrics.ascender -
-                                  size->metrics.descender;
+    case FT_SIZE_REQUEST_TYPE_NOMINAL:
+      if ( height == ( bsize->y_ppem + 32 ) >> 6 )
+        error = PCF_Err_Ok;
+      break;
 
-      size->metrics.max_advance = face->accel.maxbounds.characterWidth << 6;
+    case FT_SIZE_REQUEST_TYPE_REAL_DIM:
+      if ( height == ( face->accel.fontAscent +
+                       face->accel.fontDescent ) )
+        error = PCF_Err_Ok;
+      break;
 
-      return PCF_Err_Ok;
+    default:
+      error = PCF_Err_Unimplemented_Feature;
+      break;
     }
+
+    if ( error )
+      return error;
     else
-    {
-      FT_TRACE4(( "size WRONG\n" ));
-      return PCF_Err_Invalid_Pixel_Size;
-    }
+      return PCF_Size_Select( size, 0 );
   }
 
 
@@ -453,7 +442,7 @@ THE SOFTWARE.
 
     FT_TRACE4(( "load_glyph %d ---", glyph_index ));
 
-    if ( !face )
+    if ( !face || glyph_index >= (FT_UInt)face->root.num_glyphs )
     {
       error = PCF_Err_Invalid_Argument;
       goto Exit;
@@ -528,6 +517,7 @@ THE SOFTWARE.
       }
     }
 
+    slot->format      = FT_GLYPH_FORMAT_BITMAP;
     slot->bitmap_left = metric->leftSideBearing;
     slot->bitmap_top  = metric->ascent;
 
@@ -538,8 +528,9 @@ THE SOFTWARE.
                                    metric->leftSideBearing ) << 6;
     slot->metrics.height       = bitmap->rows << 6;
 
-    slot->linearHoriAdvance = (FT_Fixed)bitmap->width << 16;
-    slot->format            = FT_GLYPH_FORMAT_BITMAP;
+    ft_synthesize_vertical_metrics( &slot->metrics,
+                                    ( face->accel.fontAscent +
+                                      face->accel.fontDescent ) << 6 );
 
     FT_TRACE4(( " --- ok\n" ));
 
@@ -659,14 +650,18 @@ THE SOFTWARE.
     0,                      /* FT_Slot_InitFunc */
     0,                      /* FT_Slot_DoneFunc */
 
-    PCF_Set_Point_Size,
-    PCF_Set_Pixel_Size,
-
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    ft_stub_set_char_sizes,
+    ft_stub_set_pixel_sizes,
+#endif
     PCF_Glyph_Load,
 
     0,                      /* FT_Face_GetKerningFunc  */
     0,                      /* FT_Face_AttachFunc      */
-    0                       /* FT_Face_GetAdvancesFunc */
+    0,                      /* FT_Face_GetAdvancesFunc */
+
+    PCF_Size_Request,
+    PCF_Size_Select
   };
 
 

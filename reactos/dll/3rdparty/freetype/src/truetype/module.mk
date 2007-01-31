@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,10 +13,11 @@
 # fully.
 
 
-make_module_list: add_truetype_driver
+FTMODULE_H_COMMANDS += TRUETYPE_DRIVER
 
-add_truetype_driver:
-	$(OPEN_DRIVER)tt_driver_class$(CLOSE_DRIVER)
-	$(ECHO_DRIVER)truetype  $(ECHO_DRIVER_DESC)Windows/Mac font files with extension *.ttf or *.ttc$(ECHO_DRIVER_DONE)
+define TRUETYPE_DRIVER
+$(OPEN_DRIVER)tt_driver_class$(CLOSE_DRIVER)
+$(ECHO_DRIVER)truetype  $(ECHO_DRIVER_DESC)Windows/Mac font files with extension *.ttf or *.ttc$(ECHO_DRIVER_DONE)
+endef
 
 # EOF

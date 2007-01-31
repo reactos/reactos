@@ -3,17 +3,9 @@ Here is a list of items that need to be addressed in FreeType 2
 
 * Implement stem3/counter hints properly in the Postscript hinter.
 
-* Finalize the cache sub-system.  It has been in beta far too long :-)
-
-* The automatic and Postscript hinters have been improved to increase
-  the quality of AA text, but Monochrome and LCD hinting still suck.  We
-  need to do something about that.
-
 * Add CIDCMap support to the CID driver.
 
-* Add track kerning support to the Type1 and PFR driver and the API
-  (The degree of kerning, e.g. light, normal or tight, and
-  the glyph size has to be passed as parameter).
+* Add track kerning support to the PFR driver.
 
 * Add kerning (AFM file) support to the CID driver.
 
@@ -35,7 +27,7 @@ Other bugs have been registered at the savannah bugzilla of FreeType.
 
 ------------------------------------------------------------------------
 
-Copyright 2001, 2002, 2003, 2004, 2005 by
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,

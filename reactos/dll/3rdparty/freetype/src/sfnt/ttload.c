@@ -5,7 +5,7 @@
 /*    Load the basic TrueType tables, i.e., tables that can be either in   */
 /*    TTF or OTF fonts (body).                                             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -60,7 +60,7 @@
     TT_Table  limit;
 
 
-    FT_TRACE3(( "tt_face_lookup_table: %08p, `%c%c%c%c' -- ",
+    FT_TRACE4(( "tt_face_lookup_table: %08p, `%c%c%c%c' -- ",
                 face,
                 (FT_Char)( tag >> 24 ),
                 (FT_Char)( tag >> 16 ),
@@ -76,12 +76,12 @@
       /* tables the same as missing tables.                   */
       if ( entry->Tag == tag && entry->Length != 0 )
       {
-        FT_TRACE3(( "found table.\n" ));
+        FT_TRACE4(( "found table.\n" ));
         return entry;
       }
     }
 
-    FT_TRACE3(( "could not find table!\n" ));
+    FT_TRACE4(( "could not find table!\n" ));
     return 0;
   }
 
@@ -134,34 +134,29 @@
   }
 
 
-  /* In theory, we should check the values of `search_range',              */
-  /* `entry_selector', and `range_shift' to detect non-SFNT based files    */
-  /* whose header might also start with 0x100000L (yes, these exist).      */
-  /*                                                                       */
-  /* Very unfortunately, many TrueType fonts don't have these fields       */
-  /* set correctly and we must ignore them to support them.  An            */
-  /* alternative way to check the font file is thus to:                    */
+  /* Here, we                                                              */
   /*                                                                       */
   /* - check that `num_tables' is valid                                    */
-  /* - look for a "head" table, check its size, and parse it to            */
-  /*   see if its "magic" field is correctly set                           */
+  /* - look for a `head' table, check its size, and parse it to check      */
+  /*   whether its `magic' field is correctly set                          */
   /*                                                                       */
   /* When checking directory entries, ignore the tables `glyx' and `locx'  */
   /* which are hacked-out versions of `glyf' and `loca' in some PostScript */
-  /* Type 42 fonts, and will generally be invalid.                         */
+  /* Type 42 fonts, and which are generally invalid.                       */
   /*                                                                       */
   static FT_Error
-  sfnt_dir_check( FT_Stream  stream,
-                  FT_ULong   offset,
-                  FT_UInt    num_tables )
-   {
+  check_table_dir( SFNT_Header  sfnt,
+                   FT_Stream    stream )
+  {
     FT_Error        error;
-    FT_UInt         nn, has_head = 0;
+    FT_UInt         nn;
+    FT_UInt         has_head = 0, has_sing = 0, has_meta = 0;
+    FT_ULong        offset = sfnt->offset + 12;
 
     const FT_ULong  glyx_tag = FT_MAKE_TAG( 'g', 'l', 'y', 'x' );
     const FT_ULong  locx_tag = FT_MAKE_TAG( 'l', 'o', 'c', 'x' );
 
-    static const FT_Frame_Field  sfnt_dir_entry_fields[] =
+    static const FT_Frame_Field  table_dir_entry_fields[] =
     {
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  TT_TableRec
@@ -175,93 +170,84 @@
     };
 
 
-    /* if 'num_tables' is 0, read the table count from the file */
-    if ( num_tables == 0 )
-    {
-      if ( FT_STREAM_SEEK( offset )     ||
-           FT_STREAM_SKIP( 4 )          ||
-           FT_READ_USHORT( num_tables ) ||
-           FT_STREAM_SKIP( 6 )          )
-        goto Bad_Format;
+    if ( sfnt->num_tables == 0                         ||
+         offset + sfnt->num_tables * 16 > stream->size )
+      return SFNT_Err_Unknown_File_Format;
 
-      if ( offset + 12 + num_tables*16 > stream->size )
-        goto Bad_Format;
-    }
-    else if ( FT_STREAM_SEEK( offset + 12 ) )
-      goto Bad_Format;
+    if ( FT_STREAM_SEEK( offset ) )
+      return error;
 
-    for ( nn = 0; nn < num_tables; nn++ )
+    for ( nn = 0; nn < sfnt->num_tables; nn++ )
     {
       TT_TableRec  table;
 
 
-      if ( FT_STREAM_READ_FIELDS( sfnt_dir_entry_fields, &table ) )
-        goto Bad_Format;
+      if ( FT_STREAM_READ_FIELDS( table_dir_entry_fields, &table ) )
+        return error;
 
-      if ( table.Offset + table.Length > stream->size     &&
-           table.Tag != glyx_tag && table.Tag != locx_tag )
-        goto Bad_Format;
+      if ( table.Offset + table.Length > stream->size &&
+           table.Tag != glyx_tag                      &&
+           table.Tag != locx_tag                      )
+        return SFNT_Err_Unknown_File_Format;
 
-      if ( table.Tag == TTAG_head )
+      if ( table.Tag == TTAG_head || table.Tag == TTAG_bhed )
       {
         FT_UInt32  magic;
 
 
-#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
-      head_retry:
-#endif  /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */
+#ifndef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+        if ( table.Tag == TTAG_head )
+#endif
+          has_head = 1;
 
-        has_head = 1;
-
-        /* The table length should be 0x36, but certain font tools
-         * make it 0x38, so we will just check that it is greater.
+        /*
+         * The table length should be 0x36, but certain font tools make it
+         * 0x38, so we will just check that it is greater.
          *
-         * Note that according to the specification,
-         * the table must be padded to 32-bit lengths, but this doesn't
-         * apply to the value of its "Length" field!
+         * Note that according to the specification, the table must be
+         * padded to 32-bit lengths, but this doesn't apply to the value of
+         * its `Length' field!
+         *
          */
-        if ( table.Length < 0x36                 ||
-             FT_STREAM_SEEK( table.Offset + 12 ) ||
-             FT_READ_ULONG( magic )              ||
-             magic != 0x5F0F3CF5UL               )
-          goto Bad_Format;
+        if ( table.Length < 0x36 )
+          return SFNT_Err_Unknown_File_Format;
 
-        if ( FT_STREAM_SEEK( offset + 28 + 16*nn ) )
-          goto Bad_Format;
+        if ( FT_STREAM_SEEK( table.Offset + 12 ) ||
+             FT_READ_ULONG( magic )              )
+          return error;
+
+        if ( magic != 0x5F0F3CF5UL )
+          return SFNT_Err_Unknown_File_Format;
+
+        if ( FT_STREAM_SEEK( offset + ( nn + 1 ) * 16 ) )
+          return error;
       }
-#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
-      else if ( table.Tag == TTAG_bhed )
-        goto head_retry;
-#endif  /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */      
+      else if ( table.Tag == TTAG_SING )
+        has_sing = 1;
+      else if ( table.Tag == TTAG_META )
+        has_meta = 1;
     }
 
-    if ( has_head == 0 )
-      goto Bad_Format;
-
-  Exit:
-    return error;
-
-  Bad_Format:
-    error = SFNT_Err_Unknown_File_Format;
-    goto Exit;
+    /* if `sing' and `meta' tables are present, there is no `head' table */
+    if ( has_head || ( has_sing && has_meta ) )
+      return SFNT_Err_Ok;
+    else
+      return SFNT_Err_Unknown_File_Format;
   }
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    tt_face_load_sfnt_header                                           */
+  /*    tt_face_load_font_dir                                              */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Loads the header of a SFNT font file.  Supports collections.       */
+  /*    Loads the header of a SFNT font file.                              */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face       :: A handle to the target face object.                  */
   /*                                                                       */
   /*    stream     :: The input stream.                                    */
-  /*                                                                       */
-  /*    face_index :: If the font is a collection, the number of the font  */
-  /*                  in the collection.  Must be zero otherwise.          */
   /*                                                                       */
   /* <Output>                                                              */
   /*    sfnt       :: The SFNT header.                                     */
@@ -270,24 +256,19 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    The stream cursor must be at the font file's origin.               */
-  /*                                                                       */
-  /*    This function recognizes fonts embedded in a `TrueType collection' */
-  /*                                                                       */
-  /*    The header will be checked whether it is valid by looking at the   */
-  /*    values of `search_range', `entry_selector', and `range_shift'.     */
+  /*    The stream cursor must be at the beginning of the font directory.  */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  tt_face_load_sfnt_header( TT_Face      face,
-                            FT_Stream    stream,
-                            FT_Long      face_index,
-                            SFNT_Header  sfnt )
+  tt_face_load_font_dir( TT_Face    face,
+                         FT_Stream  stream )
   {
-    FT_Error   error;
-    FT_ULong   font_format_tag, format_tag, offset;
-    FT_Memory  memory = stream->memory;
+    SFNT_HeaderRec  sfnt;
+    FT_Error        error;
+    FT_Memory       memory = stream->memory;
+    TT_TableRec*    entry;
+    TT_TableRec*    limit;
 
-    static const FT_Frame_Field  sfnt_header_fields[] =
+    static const FT_Frame_Field  offset_table_fields[] =
     {
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  SFNT_HeaderRec
@@ -300,151 +281,53 @@
       FT_FRAME_END
     };
 
-    static const FT_Frame_Field  ttc_header_fields[] =
-    {
-#undef  FT_STRUCTURE
-#define FT_STRUCTURE  TTC_HeaderRec
 
-      FT_FRAME_START( 8 ),
-        FT_FRAME_LONG( version ),
-        FT_FRAME_LONG( count   ),
-      FT_FRAME_END
-    };
+    FT_TRACE2(( "tt_face_load_font_dir: %08p\n", face ));
 
+    /* read the offset table */
 
-    FT_TRACE2(( "tt_face_load_sfnt_header: %08p, %ld\n",
-                face, face_index ));
+    sfnt.offset = FT_STREAM_POS();
 
-    face->ttc_header.tag     = 0;
-    face->ttc_header.version = 0;
-    face->ttc_header.count   = 0;
+    if ( FT_READ_ULONG( sfnt.format_tag )                    ||
+         FT_STREAM_READ_FIELDS( offset_table_fields, &sfnt ) )
+      return error;
 
-    face->num_tables = 0;
+    /* many fonts don't have these fields set correctly */
+#if 0
+    if ( sfnt.search_range != 1 << ( sfnt.entry_selector + 4 )        ||
+         sfnt.search_range + sfnt.range_shift != sfnt.num_tables << 4 )
+      return SFNT_Err_Unknown_File_Format;
+#endif
 
-    /* First of all, read the first 4 bytes.  If it is `ttcf', then the   */
-    /* file is a TrueType collection, otherwise it is a single-face font. */
-    /*                                                                    */
-    offset = FT_STREAM_POS();
+    /* load the table directory */
 
-    if ( FT_READ_ULONG( font_format_tag ) )
-      goto Exit;
+    FT_TRACE2(( "-- Tables count:   %12u\n",  sfnt.num_tables ));
+    FT_TRACE2(( "-- Format version: %08lx\n", sfnt.format_tag ));
 
-    format_tag = font_format_tag;
-
-    if ( font_format_tag == TTAG_ttcf )
-    {
-      FT_Int  n;
-
-
-      FT_TRACE3(( "tt_face_load_sfnt_header: file is a collection\n" ));
-
-      /* It is a TrueType collection, i.e. a file containing several */
-      /* font files.  Read the font directory now                    */
-      if ( FT_STREAM_READ_FIELDS( ttc_header_fields, &face->ttc_header ) )
-        goto Exit;
-
-      /* now read the offsets of each font in the file */
-      if ( FT_NEW_ARRAY( face->ttc_header.offsets, face->ttc_header.count ) ||
-           FT_FRAME_ENTER( face->ttc_header.count * 4L )                    )
-        goto Exit;
-
-      for ( n = 0; n < face->ttc_header.count; n++ )
-        face->ttc_header.offsets[n] = FT_GET_ULONG();
-
-      FT_FRAME_EXIT();
-
-      /* check face index */
-      if ( face_index >= face->ttc_header.count )
-      {
-        error = SFNT_Err_Bad_Argument;
-        goto Exit;
-      }
-
-      /* seek to the appropriate TrueType file, then read tag */
-      offset = face->ttc_header.offsets[face_index];
-
-      if ( FT_STREAM_SEEK( offset )   ||
-           FT_READ_LONG( format_tag ) )
-        goto Exit;
-    }
-
-    /* the format tag was read, now check the rest of the header */
-    sfnt->format_tag = format_tag;
-    sfnt->offset     = offset;
-
-    if ( FT_STREAM_READ_FIELDS( sfnt_header_fields, sfnt ) )
-      goto Exit;
-
-    /* now check the sfnt directory */
-    error = sfnt_dir_check( stream, offset, sfnt->num_tables );
+    /* check first */
+    error = check_table_dir( &sfnt, stream );
     if ( error )
     {
-      FT_TRACE2(( "tt_face_load_sfnt_header: file is not SFNT!\n" ));
-      error = SFNT_Err_Unknown_File_Format;
-      goto Exit;
+      FT_TRACE2(( "tt_face_load_font_dir: invalid table directory!\n" ));
+
+      return error;
     }
 
-    /* disallow face index values > 0 for non-TTC files */
-    if ( font_format_tag != TTAG_ttcf && face_index > 0 )
-      error = SFNT_Err_Bad_Argument;
-
-  Exit:
-    return error;
-  }
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    tt_face_load_directory                                             */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Loads the table directory into a face object.                      */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    face   :: A handle to the target face object.                      */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    stream :: The input stream.                                        */
-  /*                                                                       */
-  /*    sfnt   :: The SFNT directory header.                               */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    The stream cursor must be at the font file's origin.               */
-  /*                                                                       */
-  FT_LOCAL_DEF( FT_Error )
-  tt_face_load_directory( TT_Face      face,
-                          FT_Stream    stream,
-                          SFNT_Header  sfnt )
-  {
-    FT_Error     error;
-    FT_Memory    memory = stream->memory;
-
-    TT_TableRec  *entry, *limit;
-
-
-    FT_TRACE2(( "tt_face_load_directory: %08p\n", face ));
-
-    FT_TRACE2(( "-- Tables count:   %12u\n",  sfnt->num_tables ));
-    FT_TRACE2(( "-- Format version: %08lx\n", sfnt->format_tag ));
-
-    face->num_tables = sfnt->num_tables;
+    face->num_tables = sfnt.num_tables;
+    face->format_tag = sfnt.format_tag;
 
     if ( FT_QNEW_ARRAY( face->dir_tables, face->num_tables ) )
-      goto Exit;
+      return error;
 
-    if ( FT_STREAM_SEEK( sfnt->offset + 12 )      ||
+    if ( FT_STREAM_SEEK( sfnt.offset + 12 )       ||
          FT_FRAME_ENTER( face->num_tables * 16L ) )
-      goto Exit;
+      return error;
 
     entry = face->dir_tables;
     limit = entry + face->num_tables;
 
     for ( ; entry < limit; entry++ )
-    {                    /* loop through the tables and get all entries */
+    {
       entry->Tag      = FT_GET_TAG4();
       entry->CheckSum = FT_GET_ULONG();
       entry->Offset   = FT_GET_LONG();
@@ -461,9 +344,8 @@
 
     FT_FRAME_EXIT();
 
-    FT_TRACE2(( "Directory loaded\n\n" ));
+    FT_TRACE2(( "table directory loaded\n\n" ));
 
-  Exit:
     return error;
   }
 
@@ -611,29 +493,17 @@
     };
 
 
-    FT_TRACE2(( "tt_face_load_generic_header: "
-                "%08p, looking up font table `%c%c%c%c'.\n",
-                face,
-                (FT_Char)( tag >> 24 ),
-                (FT_Char)( tag >> 16 ),
-                (FT_Char)( tag >> 8  ),
-                (FT_Char)( tag       ) ));
-
     error = face->goto_table( face, tag, stream, 0 );
     if ( error )
-    {
-      FT_TRACE2(( "tt_face_load_generic_header: Font table is missing!\n" ));
       goto Exit;
-    }
 
     header = &face->header;
 
     if ( FT_STREAM_READ_FIELDS( header_fields, header ) )
       goto Exit;
 
-    FT_TRACE2(( "    Units per EM: %8u\n", header->Units_Per_EM ));
-    FT_TRACE2(( "    IndexToLoc:   %8d\n", header->Index_To_Loc_Format ));
-    FT_TRACE2(( "tt_face_load_generic_header: Font table loaded.\n" ));
+    FT_TRACE3(( "Units per EM: %4u\n", header->Units_Per_EM ));
+    FT_TRACE3(( "IndexToLoc:   %4d\n", header->Index_To_Loc_Format ));
 
   Exit:
     return error;
@@ -641,8 +511,8 @@
 
 
   FT_LOCAL_DEF( FT_Error )
-  tt_face_load_header( TT_Face    face,
-                       FT_Stream  stream )
+  tt_face_load_head( TT_Face    face,
+                     FT_Stream  stream )
   {
     return tt_face_load_generic_header( face, stream, TTAG_head );
   }
@@ -651,8 +521,8 @@
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
 
   FT_LOCAL_DEF( FT_Error )
-  tt_face_load_bitmap_header( TT_Face    face,
-                              FT_Stream  stream )
+  tt_face_load_bhed( TT_Face    face,
+                     FT_Stream  stream )
   {
     return tt_face_load_generic_header( face, stream, TTAG_bhed );
   }
@@ -677,8 +547,8 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  tt_face_load_max_profile( TT_Face    face,
-                            FT_Stream  stream )
+  tt_face_load_maxp( TT_Face    face,
+                     FT_Stream  stream )
   {
     FT_Error        error;
     TT_MaxProfile*  maxProfile = &face->max_profile;
@@ -714,16 +584,12 @@
     };
 
 
-    FT_TRACE2(( "Load_TT_MaxProfile: %08p\n", face ));
-
     error = face->goto_table( face, TTAG_maxp, stream, 0 );
     if ( error )
       goto Exit;
 
     if ( FT_STREAM_READ_FIELDS( maxp_fields, maxProfile ) )
       goto Exit;
-
-    face->root.num_glyphs = maxProfile->numGlyphs;
 
     maxProfile->maxPoints             = 0;
     maxProfile->maxContours           = 0;
@@ -752,369 +618,9 @@
 
       if ( maxProfile->maxFunctionDefs == 0 )
         maxProfile->maxFunctionDefs = 64;
-
-      face->root.internal->max_points =
-        (FT_UShort)FT_MAX( maxProfile->maxCompositePoints,
-                           maxProfile->maxPoints );
-
-      face->root.internal->max_contours =
-        (FT_Short)FT_MAX( maxProfile->maxCompositeContours,
-                          maxProfile->maxContours );
-
-      face->max_components = (FT_ULong)maxProfile->maxComponentElements +
-                             maxProfile->maxComponentDepth;
-
-      /* XXX: some fonts have maxComponents set to 0; we will */
-      /*      then use 16 of them by default.                 */
-      if ( face->max_components == 0 )
-        face->max_components = 16;
-
-      /* We also increase maxPoints and maxContours in order to support */
-      /* some broken fonts.                                             */
-      face->root.internal->max_points   += (FT_UShort)8;
-      face->root.internal->max_contours += (FT_Short) 4;
     }
 
-    FT_TRACE2(( "MAXP loaded.\n" ));
-
-  Exit:
-    return error;
-  }
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    tt_face_load_metrics                                               */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Loads the horizontal or vertical metrics table into a face object. */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face     :: A handle to the target face object.                    */
-  /*                                                                       */
-  /*    stream   :: The input stream.                                      */
-  /*                                                                       */
-  /*    vertical :: A boolean flag.  If set, load vertical metrics.        */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-#ifdef FT_OPTIMIZE_MEMORY
-
-  static FT_Error
-  tt_face_load_metrics( TT_Face    face,
-                        FT_Stream  stream,
-                        FT_Bool    vertical )
-  {
-    FT_Error   error;
-    FT_ULong   table_size;
-    FT_Byte**  ptable;
-    FT_ULong*  ptable_size;
-    
-    
-    FT_TRACE2(( "TT_Load_%s_Metrics: %08p\n", vertical ? "Vertical"
-                                                       : "Horizontal",
-                                              face ));
-
-    if ( vertical )
-    {
-      ptable      = &face->vert_metrics;
-      ptable_size = &face->vert_metrics_size;
-      
-      /* The table is optional, quit silently if it wasn't found.      */
-      /*                                                               */
-      /* XXX: Some fonts have a valid vertical header with a non-null  */
-      /*      `number_of_VMetrics' fields, but no corresponding `vmtx' */
-      /*      table to get the metrics from (e.g. mingliu).            */
-      /*                                                               */
-      /*      For safety, we set the field to 0!                       */
-      /*                                                               */
-      error = face->goto_table( face, TTAG_vmtx, stream, &table_size );
-      if ( error )
-      {
-        /* Set number_Of_VMetrics to 0! */
-        FT_TRACE2(( "  no vertical header in file.\n" ));
-        error = SFNT_Err_Ok;
-        goto Exit;
-      }
-    }
-    else
-    {
-      ptable      = &face->horz_metrics;
-      ptable_size = &face->horz_metrics_size;
-
-      error = face->goto_table( face, TTAG_hmtx, stream, &table_size );
-      if ( error )
-      {
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-        /* If this is an incrementally loaded font and there are */
-        /* overriding metrics, tolerate a missing `hmtx' table.  */
-        if ( face->root.internal->incremental_interface          &&
-             face->root.internal->incremental_interface->funcs->
-               get_glyph_metrics                                 )
-        {
-          face->horizontal.number_Of_HMetrics = 0;
-          error = SFNT_Err_Ok;
-          goto Exit;
-        }
-#endif
-
-        FT_ERROR(( " no horizontal metrics in file!\n" ));
-        error = SFNT_Err_Hmtx_Table_Missing;
-        goto Exit;
-      }
-    }
-    
-    if ( FT_FRAME_EXTRACT( table_size, *ptable ) )
-      goto Exit;
-      
-    *ptable_size = table_size;
-    
-  Exit:
-    return error;
-  }
-
-#else /* !OPTIMIZE_MEMORY */
-
-  static FT_Error
-  tt_face_load_metrics( TT_Face    face,
-                        FT_Stream  stream,
-                        FT_Bool    vertical )
-  {
-    FT_Error   error;
-    FT_Memory  memory = stream->memory;
-
-    FT_ULong   table_len;
-    FT_Long    num_shorts, num_longs, num_shorts_checked;
-
-    TT_LongMetrics *   longs;
-    TT_ShortMetrics**  shorts;
-
-
-    FT_TRACE2(( "TT_Load_%s_Metrics: %08p\n", vertical ? "Vertical"
-                                                       : "Horizontal",
-                                              face ));
-
-    if ( vertical )
-    {
-      /* The table is optional, quit silently if it wasn't found.      */
-      /*                                                               */
-      /* XXX: Some fonts have a valid vertical header with a non-null  */
-      /*      `number_of_VMetrics' fields, but no corresponding `vmtx' */
-      /*      table to get the metrics from (e.g. mingliu).            */
-      /*                                                               */
-      /*      For safety, we set the field to 0!                       */
-      /*                                                               */
-      error = face->goto_table( face, TTAG_vmtx, stream, &table_len );
-      if ( error )
-      {
-        /* Set number_Of_VMetrics to 0! */
-        FT_TRACE2(( "  no vertical header in file.\n" ));
-        face->vertical.number_Of_VMetrics = 0;
-        error = SFNT_Err_Ok;
-        goto Exit;
-      }
-
-      num_longs = face->vertical.number_Of_VMetrics;
-      longs     = (TT_LongMetrics *)&face->vertical.long_metrics;
-      shorts    = (TT_ShortMetrics**)&face->vertical.short_metrics;
-    }
-    else
-    {
-      error = face->goto_table( face, TTAG_hmtx, stream, &table_len );
-      if ( error )
-      {
-
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-        /* If this is an incrementally loaded font and there are */
-        /* overriding metrics, tolerate a missing `hmtx' table.  */
-        if ( face->root.internal->incremental_interface          &&
-             face->root.internal->incremental_interface->funcs->
-               get_glyph_metrics                                 )
-        {
-          face->horizontal.number_Of_HMetrics = 0;
-          error = SFNT_Err_Ok;
-          goto Exit;
-        }
-#endif
-
-        FT_ERROR(( " no horizontal metrics in file!\n" ));
-        error = SFNT_Err_Hmtx_Table_Missing;
-        goto Exit;
-      }
-
-      num_longs = face->horizontal.number_Of_HMetrics;
-      longs     = (TT_LongMetrics *)&face->horizontal.long_metrics;
-      shorts    = (TT_ShortMetrics**)&face->horizontal.short_metrics;
-    }
-
-    /* never trust derived values */
-
-    num_shorts         = face->max_profile.numGlyphs - num_longs;
-    num_shorts_checked = ( table_len - num_longs * 4L ) / 2;
-
-    if ( num_shorts < 0 )
-    {
-      FT_ERROR(( "TT_Load_%s_Metrics: more metrics than glyphs!\n",
-                 vertical ? "Vertical"
-                          : "Horizontal" ));
-
-      error = vertical ? SFNT_Err_Invalid_Vert_Metrics
-                       : SFNT_Err_Invalid_Horiz_Metrics;
-      goto Exit;
-    }
-
-    if ( FT_QNEW_ARRAY( *longs,  num_longs  ) ||
-         FT_QNEW_ARRAY( *shorts, num_shorts ) )
-      goto Exit;
-
-    if ( FT_FRAME_ENTER( table_len ) )
-      goto Exit;
-
-    {
-      TT_LongMetrics  cur   = *longs;
-      TT_LongMetrics  limit = cur + num_longs;
-
-
-      for ( ; cur < limit; cur++ )
-      {
-        cur->advance = FT_GET_USHORT();
-        cur->bearing = FT_GET_SHORT();
-      }
-    }
-
-    /* do we have an inconsistent number of metric values? */
-    {
-      TT_ShortMetrics*  cur   = *shorts;
-      TT_ShortMetrics*  limit = cur +
-                                FT_MIN( num_shorts, num_shorts_checked );
-
-
-      for ( ; cur < limit; cur++ )
-        *cur = FT_GET_SHORT();
-
-      /* We fill up the missing left side bearings with the     */
-      /* last valid value.  Since this will occur for buggy CJK */
-      /* fonts usually only, nothing serious will happen.       */
-      if ( num_shorts > num_shorts_checked && num_shorts_checked > 0 )
-      {
-        FT_Short  val = (*shorts)[num_shorts_checked - 1];
-
-
-        limit = *shorts + num_shorts;
-        for ( ; cur < limit; cur++ )
-          *cur = val;
-      }
-    }
-
-    FT_FRAME_EXIT();
-
-    FT_TRACE2(( "loaded\n" ));
-
-  Exit:
-    return error;
-  }
-
-#endif /* !FT_OPTIMIZE_METRICS */
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    tt_face_load_metrics_header                                        */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Loads the horizontal or vertical header in a face object.          */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face     :: A handle to the target face object.                    */
-  /*                                                                       */
-  /*    stream   :: The input stream.                                      */
-  /*                                                                       */
-  /*    vertical :: A boolean flag.  If set, load vertical metrics.        */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  FT_LOCAL_DEF( FT_Error )
-  tt_face_load_metrics_header( TT_Face    face,
-                               FT_Stream  stream,
-                               FT_Bool    vertical )
-  {
-    FT_Error        error;
-    TT_HoriHeader*  header;
-
-    const FT_Frame_Field  metrics_header_fields[] =
-    {
-#undef  FT_STRUCTURE
-#define FT_STRUCTURE  TT_HoriHeader
-
-      FT_FRAME_START( 36 ),
-        FT_FRAME_ULONG ( Version ),
-        FT_FRAME_SHORT ( Ascender ),
-        FT_FRAME_SHORT ( Descender ),
-        FT_FRAME_SHORT ( Line_Gap ),
-        FT_FRAME_USHORT( advance_Width_Max ),
-        FT_FRAME_SHORT ( min_Left_Side_Bearing ),
-        FT_FRAME_SHORT ( min_Right_Side_Bearing ),
-        FT_FRAME_SHORT ( xMax_Extent ),
-        FT_FRAME_SHORT ( caret_Slope_Rise ),
-        FT_FRAME_SHORT ( caret_Slope_Run ),
-        FT_FRAME_SHORT ( caret_Offset ),
-        FT_FRAME_SHORT ( Reserved[0] ),
-        FT_FRAME_SHORT ( Reserved[1] ),
-        FT_FRAME_SHORT ( Reserved[2] ),
-        FT_FRAME_SHORT ( Reserved[3] ),
-        FT_FRAME_SHORT ( metric_Data_Format ),
-        FT_FRAME_USHORT( number_Of_HMetrics ),
-      FT_FRAME_END
-    };
-
-
-    FT_TRACE2(( vertical ? "Vertical header " : "Horizontal header " ));
-
-    if ( vertical )
-    {
-      face->vertical_info = 0;
-
-      /* The vertical header table is optional, so return quietly if */
-      /* we don't find it.                                           */
-      error = face->goto_table( face, TTAG_vhea, stream, 0 );
-      if ( error )
-      {
-        error = SFNT_Err_Ok;
-        goto Exit;
-      }
-
-      face->vertical_info = 1;
-      header = (TT_HoriHeader*)&face->vertical;
-    }
-    else
-    {
-      /* The horizontal header is mandatory; return an error if we */
-      /* don't find it.                                            */
-      error = face->goto_table( face, TTAG_hhea, stream, 0 );
-      if ( error )
-      {
-        error = SFNT_Err_Horiz_Header_Missing;
-        goto Exit;
-      }
-
-      header = &face->horizontal;
-    }
-
-    if ( FT_STREAM_READ_FIELDS( metrics_header_fields, header ) )
-      goto Exit;
-
-    header->long_metrics  = NULL;
-    header->short_metrics = NULL;
-
-    FT_TRACE2(( "loaded\n" ));
-
-    /* Now try to load the corresponding metrics */
-
-    error = tt_face_load_metrics( face, stream, vertical );
+    FT_TRACE3(( "numGlyphs: %u\n", maxProfile->numGlyphs ));
 
   Exit:
     return error;
@@ -1138,8 +644,8 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  tt_face_load_names( TT_Face    face,
-                      FT_Stream  stream )
+  tt_face_load_name( TT_Face    face,
+                     FT_Stream  stream )
   {
     FT_Error      error;
     FT_Memory     memory = stream->memory;
@@ -1179,16 +685,9 @@
     table         = &face->name_table;
     table->stream = stream;
 
-    FT_TRACE2(( "Names " ));
-
     error = face->goto_table( face, TTAG_name, stream, &table_len );
     if ( error )
-    {
-      /* The name table is required so indicate failure. */
-      FT_TRACE2(( "is missing!\n" ));
-      error = SFNT_Err_Name_Table_Missing;
       goto Exit;
-    }
 
     table_pos = FT_STREAM_POS();
 
@@ -1208,7 +707,7 @@
 
     if ( storage_start > storage_limit )
     {
-      FT_ERROR(( "tt_face_load_names: invalid `name' table\n" ));
+      FT_ERROR(( "invalid `name' table\n" ));
       error = SFNT_Err_Name_Table_Missing;
       goto Exit;
     }
@@ -1255,8 +754,6 @@
 
     FT_FRAME_EXIT();
 
-    FT_TRACE2(( "loaded\n" ));
-
     /* everything went well, update face->num_names */
     face->num_names = (FT_UShort) table->numNameRecords;
 
@@ -1277,7 +774,7 @@
   /*    face :: A handle to the target face object.                        */
   /*                                                                       */
   FT_LOCAL_DEF( void )
-  tt_face_free_names( TT_Face  face )
+  tt_face_free_name( TT_Face  face )
   {
     FT_Memory     memory = face->root.driver->root.memory;
     TT_NameTable  table  = &face->name_table;
@@ -1330,19 +827,10 @@
 
     error = face->goto_table( face, TTAG_cmap, stream, &face->cmap_size );
     if ( error )
-    {
-      FT_TRACE2(( "No `cmap' table in font !\n" ));
-      error = SFNT_Err_CMap_Table_Missing;
       goto Exit;
-    }
 
-    if ( !FT_FRAME_EXTRACT( face->cmap_size, face->cmap_table ) )
-      FT_TRACE2(( "`cmap' table loaded\n" ));
-    else
-    {
-      FT_ERROR(( "`cmap' table is too short!\n" ));
+    if ( FT_FRAME_EXTRACT( face->cmap_size, face->cmap_table ) )
       face->cmap_size = 0;
-    }
 
   Exit:
     return error;
@@ -1445,19 +933,12 @@
     };
 
 
-    FT_TRACE2(( "OS/2 Table " ));
-
     /* We now support old Mac fonts where the OS/2 table doesn't  */
     /* exist.  Simply put, we set the `version' field to 0xFFFF   */
     /* and test this value each time we need to access the table. */
     error = face->goto_table( face, TTAG_OS2, stream, 0 );
     if ( error )
-    {
-      FT_TRACE2(( "is missing!\n" ));
-      face->os2.version = 0xFFFFU;
-      error = SFNT_Err_Ok;
       goto Exit;
-    }
 
     os2 = &face->os2;
 
@@ -1486,7 +967,11 @@
       }
     }
 
-    FT_TRACE2(( "loaded\n" ));
+    FT_TRACE3(( "sTypoAscender:  %4d\n",   os2->sTypoAscender ));
+    FT_TRACE3(( "sTypoDescender: %4d\n",   os2->sTypoDescender ));
+    FT_TRACE3(( "usWinAscent:    %4u\n",   os2->usWinAscent ));
+    FT_TRACE3(( "usWinDescent:   %4u\n",   os2->usWinDescent ));
+    FT_TRACE3(( "fsSelection:    0x%2x\n", os2->fsSelection ));
 
   Exit:
     return error;
@@ -1510,8 +995,8 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  tt_face_load_postscript( TT_Face    face,
-                           FT_Stream  stream )
+  tt_face_load_post( TT_Face    face,
+                     FT_Stream  stream )
   {
     FT_Error        error;
     TT_Postscript*  post = &face->postscript;
@@ -1535,18 +1020,19 @@
     };
 
 
-    FT_TRACE2(( "PostScript " ));
-
     error = face->goto_table( face, TTAG_post, stream, 0 );
     if ( error )
-      return SFNT_Err_Post_Table_Missing;
+      return error;
 
     if ( FT_STREAM_READ_FIELDS( post_fields, post ) )
       return error;
 
     /* we don't load the glyph names, we do that in another */
     /* module (ttpost).                                     */
-    FT_TRACE2(( "loaded\n" ));
+
+    FT_TRACE3(( "FormatType:   0x%x\n", post->FormatType ));
+    FT_TRACE3(( "isFixedPitch:   %s\n", post->isFixedPitch
+                                        ? "  yes" : "   no" ));
 
     return SFNT_Err_Ok;
   }
@@ -1599,21 +1085,13 @@
     TT_PCLT*  pclt = &face->pclt;
 
 
-    FT_TRACE2(( "PCLT " ));
-
     /* optional table */
     error = face->goto_table( face, TTAG_PCLT, stream, 0 );
     if ( error )
-    {
-      FT_TRACE2(( "missing (optional)\n" ));
-      pclt->Version = 0;
-      return SFNT_Err_Ok;
-    }
+      goto Exit;
 
     if ( FT_STREAM_READ_FIELDS( pclt_fields, pclt ) )
       goto Exit;
-
-    FT_TRACE2(( "loaded\n" ));
 
   Exit:
     return error;
@@ -1647,12 +1125,10 @@
     TT_GaspRange   gaspranges;
 
 
-    FT_TRACE2(( "tt_face_load_gasp: %08p\n", face ));
-
     /* the gasp table is optional */
     error = face->goto_table( face, TTAG_gasp, stream, 0 );
     if ( error )
-      return SFNT_Err_Ok;
+      goto Exit;
 
     if ( FT_FRAME_ENTER( 4L ) )
       goto Exit;
@@ -1662,8 +1138,16 @@
 
     FT_FRAME_EXIT();
 
+    /* only support versions 0 and 1 of the table */
+    if ( face->gasp.version >= 2 )
+    {
+      face->gasp.numRanges = 0;
+      error = SFNT_Err_Invalid_Table;
+      goto Exit;
+    }
+
     num_ranges = face->gasp.numRanges;
-    FT_TRACE3(( "number of ranges = %d\n", num_ranges ));
+    FT_TRACE3(( "numRanges: %u\n", num_ranges ));
 
     if ( FT_QNEW_ARRAY( gaspranges, num_ranges ) ||
          FT_FRAME_ENTER( num_ranges * 4L )      )
@@ -1676,201 +1160,17 @@
       gaspranges[j].maxPPEM  = FT_GET_USHORT();
       gaspranges[j].gaspFlag = FT_GET_USHORT();
 
-      FT_TRACE3(( " [max:%d flag:%d]",
-                    gaspranges[j].maxPPEM,
-                    gaspranges[j].gaspFlag ));
+      FT_TRACE3(( "gaspRange %d: rangeMaxPPEM %5d, rangeGaspBehavior 0x%x\n",
+                  j,
+                  gaspranges[j].maxPPEM,
+                  gaspranges[j].gaspFlag ));
     }
-    FT_TRACE3(( "\n" ));
-
-    FT_FRAME_EXIT();
-    FT_TRACE2(( "GASP loaded\n" ));
-
-  Exit:
-    return error;
-  }
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    tt_face_load_hdmx                                                  */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Loads the horizontal device metrics table.                         */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face   :: A handle to the target face object.                      */
-  /*                                                                       */
-  /*    stream :: A handle to the input stream.                            */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-#ifdef FT_OPTIMIZE_MEMORY
-
-  FT_LOCAL_DEF( FT_Error )
-  tt_face_load_hdmx( TT_Face    face,
-                     FT_Stream  stream )
-  {
-    FT_Error   error;
-    FT_Memory  memory = stream->memory;
-    FT_UInt    version, nn, num_records;
-    FT_ULong   table_size, record_size;
-    FT_Byte*   p;
-    FT_Byte*   limit;
-
-
-    /* this table is optional */
-    error = face->goto_table( face, TTAG_hdmx, stream, &table_size );
-    if ( error || table_size < 8 )
-      return SFNT_Err_Ok;
-
-    if ( FT_FRAME_EXTRACT( table_size, face->hdmx_table ) )
-      goto Exit;
-
-    p     = face->hdmx_table;
-    limit = p + table_size;
-
-    version     = FT_NEXT_USHORT( p );
-    num_records = FT_NEXT_USHORT( p );
-    record_size = FT_NEXT_ULONG( p );
-
-    if ( version != 0 || num_records > 255 || record_size > 0x40000 )
-    {
-      error = SFNT_Err_Invalid_File_Format;
-      goto Fail;
-    }
-
-    if ( FT_NEW_ARRAY( face->hdmx_record_sizes, num_records ) )
-      goto Fail;
-
-    for ( nn = 0; nn < num_records; nn++ )
-    {
-      if ( p + record_size > limit )
-        break;
-        
-      face->hdmx_record_sizes[nn] = p[0];
-      p                          += record_size;
-    }
-    
-    face->hdmx_record_count = nn;
-    face->hdmx_table_size   = table_size;
-
-  Exit:
-    return error;
-    
-  Fail:
-    FT_FRAME_RELEASE( face->hdmx_table );
-    face->hdmx_table_size = 0;
-    goto Exit;
-  }
-
-
-  FT_LOCAL_DEF( void )
-  tt_face_free_hdmx( TT_Face  face )
-  {
-    FT_Stream  stream = face->root.stream;
-    FT_Memory  memory = stream->memory;
-    
-
-    FT_FREE( face->hdmx_record_sizes );
-    FT_FRAME_RELEASE( face->hdmx_table );
-  }
-
-#else /* !FT_OPTIMIZE_MEMORY */
-
-  FT_LOCAL_DEF( FT_Error )
-  tt_face_load_hdmx( TT_Face    face,
-                     FT_Stream  stream )
-  {
-    FT_Error   error;
-    FT_Memory  memory = stream->memory;
-
-    TT_Hdmx    hdmx = &face->hdmx;
-    FT_Short   num_records;
-    FT_Long    num_glyphs;
-    FT_Long    record_size;
-
-
-    hdmx->version     = 0;
-    hdmx->num_records = 0;
-    hdmx->records     = 0;
-
-    /* this table is optional */
-    error = face->goto_table( face, TTAG_hdmx, stream, 0 );
-    if ( error )
-      return SFNT_Err_Ok;
-
-    if ( FT_FRAME_ENTER( 8L ) )
-      goto Exit;
-
-    hdmx->version = FT_GET_USHORT();
-    num_records   = FT_GET_SHORT();
-    record_size   = FT_GET_LONG();
 
     FT_FRAME_EXIT();
 
-    if ( record_size < 0 || num_records < 0 )
-      return SFNT_Err_Invalid_File_Format;
-
-    /* Only recognize format 0 */
-    if ( hdmx->version != 0 )
-      goto Exit;
-
-    /* we can't use FT_QNEW_ARRAY here; otherwise tt_face_free_hdmx */
-    /* could fail during deallocation                               */
-    if ( FT_NEW_ARRAY( hdmx->records, num_records ) )
-      goto Exit;
-
-    hdmx->num_records = num_records;
-    num_glyphs        = face->root.num_glyphs;
-    record_size      -= num_glyphs + 2;
-
-    {
-      TT_HdmxEntry  cur   = hdmx->records;
-      TT_HdmxEntry  limit = cur + hdmx->num_records;
-
-
-      for ( ; cur < limit; cur++ )
-      {
-        /* read record */
-        if ( FT_READ_BYTE( cur->ppem      ) ||
-             FT_READ_BYTE( cur->max_width ) )
-          goto Exit;
-
-        if ( FT_QALLOC( cur->widths, num_glyphs )      ||
-             FT_STREAM_READ( cur->widths, num_glyphs ) )
-          goto Exit;
-
-        /* skip padding bytes */
-        if ( record_size > 0 && FT_STREAM_SKIP( record_size ) )
-          goto Exit;
-      }
-    }
-
   Exit:
     return error;
   }
-
-
-  FT_LOCAL_DEF( void )
-  tt_face_free_hdmx( TT_Face  face )
-  {
-    if ( face )
-    {
-      FT_Int     n;
-      FT_Memory  memory = face->root.driver->root.memory;
-
-
-      for ( n = 0; n < face->hdmx.num_records; n++ )
-        FT_FREE( face->hdmx.records[n].widths );
-
-      FT_FREE( face->hdmx.records );
-      face->hdmx.num_records = 0;
-    }
-  }
-
-#endif /* !OPTIMIZE_MEMORY */
 
 
 /* END */

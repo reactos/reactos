@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 2004 by
+# Copyright 2004, 2005, 2006 by
 # Albert Chin-A-Young.
 #
 # Based on src/lzw/rules.mk, Copyright 2002 by
@@ -28,12 +28,12 @@ LZW_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(LZW_DIR))
 
 # LZW support sources (i.e., C files)
 #
-LZW_DRV_SRC := $(LZW_DIR)/ftlzw.c \
-               $(LZW_DIR)/zopen.c
+LZW_DRV_SRC := $(LZW_DIR)/ftlzw.c
 
 # LZW support headers
 #
-LZW_DRV_H := $(LZW_DIR)/zopen.h
+LZW_DRV_H := $(LZW_DIR)/ftzopen.h \
+             $(LZW_DIR)/ftzopen.c
 
 
 # LZW driver object(s)

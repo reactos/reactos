@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph loader (specification).                           */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2005, 2006 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -43,6 +43,7 @@ FT_BEGIN_HEADER
   typedef struct FT_GlyphLoaderRec_*  FT_GlyphLoader ;
 
 
+#if 0  /* moved to freetype.h in version 2.2 */
 #define FT_SUBGLYPH_FLAG_ARGS_ARE_WORDS          1
 #define FT_SUBGLYPH_FLAG_ARGS_ARE_XY_VALUES      2
 #define FT_SUBGLYPH_FLAG_ROUND_XY_TO_GRID        4
@@ -50,6 +51,7 @@ FT_BEGIN_HEADER
 #define FT_SUBGLYPH_FLAG_XY_SCALE             0x40
 #define FT_SUBGLYPH_FLAG_2X2                  0x80
 #define FT_SUBGLYPH_FLAG_USE_MY_METRICS      0x200
+#endif
 
 
   typedef struct  FT_SubGlyphRec_
@@ -59,7 +61,7 @@ FT_BEGIN_HEADER
     FT_Int     arg1;
     FT_Int     arg2;
     FT_Matrix  transform;
-    
+
   } FT_SubGlyphRec;
 
 
@@ -67,6 +69,7 @@ FT_BEGIN_HEADER
   {
     FT_Outline   outline;       /* outline             */
     FT_Vector*   extra_points;  /* extra points table  */
+    FT_Vector*   extra_points2; /* second extra points table */
     FT_UInt      num_subglyphs; /* number of subglyphs */
     FT_SubGlyph  subglyphs;     /* subglyphs           */
 
@@ -116,6 +119,24 @@ FT_BEGIN_HEADER
   FT_GlyphLoader_CheckPoints( FT_GlyphLoader  loader,
                               FT_UInt         n_points,
                               FT_UInt         n_contours );
+
+
+#define FT_GLYPHLOADER_CHECK_P( _loader, _count )                    \
+   ( (_count) == 0 || (int)((_loader)->base.outline.n_points    +    \
+                            (_loader)->current.outline.n_points +    \
+                            (_count)) <= (int)(_loader)->max_points )
+
+#define FT_GLYPHLOADER_CHECK_C( _loader, _count )                     \
+  ( (_count) == 0 || (int)((_loader)->base.outline.n_contours    +    \
+                           (_loader)->current.outline.n_contours +    \
+                           (_count)) <= (int)(_loader)->max_contours )
+
+#define FT_GLYPHLOADER_CHECK_POINTS( _loader, _points,_contours )      \
+  ( ( FT_GLYPHLOADER_CHECK_P( _loader, _points )   &&                  \
+      FT_GLYPHLOADER_CHECK_C( _loader, _contours ) )                   \
+    ? 0                                                                \
+    : FT_GlyphLoader_CheckPoints( (_loader), (_points), (_contours) ) )
+
 
   /* check that there is enough space to add `n_subs' sub-glyphs to */
   /* a glyph loader                                                 */

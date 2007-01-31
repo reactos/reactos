@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,10 +13,15 @@
 # fully.
 
 
-make_module_list: add_smooth_renderer
+FTMODULE_H_COMMANDS += SMOOTH_RENDERER
 
-add_smooth_renderer:
-	$(OPEN_DRIVER)ft_smooth_renderer_class$(CLOSE_DRIVER)
-	$(ECHO_DRIVER)smooth    $(ECHO_DRIVER_DESC)anti-aliased bitmap renderer$(ECHO_DRIVER_DONE)
+define SMOOTH_RENDERER
+$(OPEN_DRIVER)ft_smooth_renderer_class$(CLOSE_DRIVER)
+$(ECHO_DRIVER)smooth    $(ECHO_DRIVER_DESC)anti-aliased bitmap renderer$(ECHO_DRIVER_DONE)
+$(OPEN_DRIVER)ft_smooth_lcd_renderer_class$(CLOSE_DRIVER)
+$(ECHO_DRIVER)smooth    $(ECHO_DRIVER_DESC)anti-aliased bitmap renderer for LCDs$(ECHO_DRIVER_DONE)
+$(OPEN_DRIVER)ft_smooth_lcdv_renderer_class$(CLOSE_DRIVER)
+$(ECHO_DRIVER)smooth    $(ECHO_DRIVER_DESC)anti-aliased bitmap renderer for vertical LCDs$(ECHO_DRIVER_DONE)
+endef
 
 # EOF

@@ -2,9 +2,9 @@
 # FreeType 2 BDF module definition
 #
 
-# Copyright 2001, 2002 by
+# Copyright 2001, 2002, 2006 by
 # Francesco Zappa Nardelli
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -23,9 +23,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-make_module_list: add_bdf_driver
 
-add_bdf_driver:
-	$(OPEN_DRIVER)bdf_driver_class$(CLOSE_DRIVER)
-	$(ECHO_DRIVER)bdf    $(ECHO_DRIVER_DESC)bdf bitmap fonts$(ECHO_DRIVER_DONE)
+FTMODULE_H_COMMANDS += BDF_DRIVER
 
+define BDF_DRIVER
+$(OPEN_DRIVER)bdf_driver_class$(CLOSE_DRIVER)
+$(ECHO_DRIVER)bdf       $(ECHO_DRIVER_DESC)bdf bitmap fonts$(ECHO_DRIVER_DONE)
+endef
+
+# EOF

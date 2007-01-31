@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private base classes (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -29,6 +29,7 @@
 #include <ft2build.h>
 #include FT_RENDER_H
 #include FT_SIZES_H
+#include FT_LCD_FILTER_H
 #include FT_INTERNAL_MEMORY_H
 #include FT_INTERNAL_GLYPH_LOADER_H
 #include FT_INTERNAL_DRIVER_H
@@ -211,11 +212,18 @@ FT_BEGIN_HEADER
   /*      this data when first opened.  This field exists only if          */
   /*      @FT_CONFIG_OPTION_INCREMENTAL is defined.                        */
   /*                                                                       */
+  /*    ignore_unpatented_hinter ::                                        */
+  /*      This boolean flag instructs the glyph loader to ignore the       */
+  /*      native font hinter, if one is found.  This is exclusively used   */
+  /*      in the case when the unpatented hinter is compiled within the    */
+  /*      library.                                                         */
+  /*                                                                       */
   typedef struct  FT_Face_InternalRec_
   {
-    FT_UShort           max_points;
-    FT_Short            max_contours;
-
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    FT_UShort           reserved1;
+    FT_Short            reserved2;
+#endif
     FT_Matrix           transform_matrix;
     FT_Vector           transform_delta;
     FT_Int              transform_flags;
@@ -225,6 +233,8 @@ FT_BEGIN_HEADER
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
     FT_Incremental_InterfaceRec*  incremental_interface;
 #endif
+
+    FT_Bool             ignore_unpatented_hinter;
 
   } FT_Face_InternalRec;
 
@@ -451,26 +461,58 @@ FT_BEGIN_HEADER
 
  /* */
 
- /*
-  * Free the bitmap of a given glyphslot when needed
-  * (i.e., only when it was allocated with ft_glyphslot_alloc_bitmap).
-  */
+#define FT_REQUEST_WIDTH( req )                                            \
+          ( (req)->horiResolution                                          \
+              ? (FT_Pos)( (req)->width * (req)->horiResolution + 36 ) / 72 \
+              : (req)->width )
+
+#define FT_REQUEST_HEIGHT( req )                                            \
+          ( (req)->vertResolution                                           \
+              ? (FT_Pos)( (req)->height * (req)->vertResolution + 36 ) / 72 \
+              : (req)->height )
+
+
+  /* Set the metrics according to a bitmap strike. */
+  FT_BASE( void )
+  FT_Select_Metrics( FT_Face   face,
+                     FT_ULong  strike_index );
+
+
+  /* Set the metrics according to a size request. */
+  FT_BASE( void )
+  FT_Request_Metrics( FT_Face          face,
+                      FT_Size_Request  req );
+
+
+  /* Match a size request against `available_sizes'. */
+  FT_BASE( FT_Error )
+  FT_Match_Size( FT_Face          face,
+                 FT_Size_Request  req,
+                 FT_Bool          ignore_width,
+                 FT_ULong*        size_index );
+
+
+  /* Use the horizontal metrics to synthesize the vertical metrics. */
+  /* If `advance' is zero, it is also synthesized.                  */
+  FT_BASE( void )
+  ft_synthesize_vertical_metrics( FT_Glyph_Metrics*  metrics,
+                                  FT_Pos             advance );
+
+
+  /* Free the bitmap of a given glyphslot when needed (i.e., only when it */
+  /* was allocated with ft_glyphslot_alloc_bitmap).                       */
   FT_BASE( void )
   ft_glyphslot_free_bitmap( FT_GlyphSlot  slot );
 
 
- /*
-  * Allocate a new bitmap buffer in a glyph slot.
-  */
+  /* Allocate a new bitmap buffer in a glyph slot. */
   FT_BASE( FT_Error )
   ft_glyphslot_alloc_bitmap( FT_GlyphSlot  slot,
                              FT_ULong      size );
 
 
- /*
-  * Set the bitmap buffer in a glyph slot to a given pointer.
-  * The buffer will not be freed by a later call to ft_glyphslot_free_bitmap.
-  */
+  /* Set the bitmap buffer in a glyph slot to a given pointer.  The buffer */
+  /* will not be freed by a later call to ft_glyphslot_free_bitmap.        */
   FT_BASE( void )
   ft_glyphslot_set_bitmap( FT_GlyphSlot  slot,
                            FT_Byte*      buffer );
@@ -582,18 +624,21 @@ FT_BEGIN_HEADER
   /*************************************************************************/
 
 
-/* this hook is used by the TrueType debugger. It must be set to an alternate
- * truetype bytecode interpreter function
- */
+  /* This hook is used by the TrueType debugger.  It must be set to an */
+  /* alternate truetype bytecode interpreter function.                 */
 #define FT_DEBUG_HOOK_TRUETYPE            0
 
 
-/* set this debug hook to a non-null pointer to force unpatented hinting
- * for all faces when both TT_CONFIG_OPTION_BYTECODE_INTERPRETER and
- * TT_CONFIG_OPTION_UNPATENTED_HINTING are defined. this is only used
- * during debugging
- */
+  /* Set this debug hook to a non-null pointer to force unpatented hinting */
+  /* for all faces when both TT_USE_BYTECODE_INTERPRETER and               */
+  /* TT_CONFIG_OPTION_UNPATENTED_HINTING are defined.  This is only used   */
+  /* during debugging.                                                     */
 #define FT_DEBUG_HOOK_UNPATENTED_HINTING  1
+
+
+  typedef void  (*FT_Bitmap_LcdFilterFunc)( FT_Bitmap*      bitmap,
+                                            FT_Render_Mode  render_mode,
+                                            FT_Library      library );
 
 
   /*************************************************************************/
@@ -669,6 +714,13 @@ FT_BEGIN_HEADER
 
     FT_DebugHook_Func  debug_hooks[4];
 
+#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
+    FT_LcdFilter             lcd_filter;
+    FT_Int                   lcd_extra;        /* number of extra pixels */
+    FT_Byte                  lcd_weights[7];   /* filter weights, if any */
+    FT_Bitmap_LcdFilterFunc  lcd_filter_func;  /* filtering callback     */
+#endif
+
   } FT_LibraryRec;
 
 
@@ -709,7 +761,7 @@ FT_BEGIN_HEADER
   /* <Return>                                                              */
   /*    A pointer to the new memory object.  0 in case of error.           */
   /*                                                                       */
-  FT_EXPORT( FT_Memory )
+  FT_BASE( FT_Memory )
   FT_New_Memory( void );
 
 
@@ -724,7 +776,7 @@ FT_BEGIN_HEADER
   /* <Input>                                                               */
   /*    memory :: A handle to the memory manager.                          */
   /*                                                                       */
-  FT_EXPORT( void )
+  FT_BASE( void )
   FT_Done_Memory( FT_Memory  memory );
 
 #endif /* !FT_CONFIG_OPTION_NO_DEFAULT_SYSTEM */

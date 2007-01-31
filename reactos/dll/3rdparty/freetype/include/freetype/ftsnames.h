@@ -7,7 +7,7 @@
 /*                                                                         */
 /*    This is _not_ used to retrieve glyph names!                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2006 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -78,12 +78,12 @@ FT_BEGIN_HEADER
   /*    name_id     :: An identifier for `string'.                         */
   /*                                                                       */
   /*    string      :: The `name' string.  Note that its format differs    */
-  /*                   depending on the (platform,encoding) pair. It can   */
-  /*                   be a Pascal String, a UTF-16 one, etc..             */
+  /*                   depending on the (platform,encoding) pair.  It can  */
+  /*                   be a Pascal String, a UTF-16 one, etc.              */
   /*                                                                       */
   /*                   Generally speaking, the string is not               */
-  /*                   zero-terminated. Please refer to the TrueType       */
-  /*                   specification for details..                         */
+  /*                   zero-terminated.  Please refer to the TrueType      */
+  /*                   specification for details.                          */
   /*                                                                       */
   /*    string_len  :: The length of `string' in bytes.                    */
   /*                                                                       */
@@ -91,6 +91,9 @@ FT_BEGIN_HEADER
   /*    Possible values for `platform_id', `encoding_id', `language_id',   */
   /*    and `name_id' are given in the file `ttnameid.h'.  For details     */
   /*    please refer to the TrueType or OpenType specification.            */
+  /*                                                                       */
+  /*    See also @TT_PLATFORM_XXX, @TT_APPLE_ID_XXX, @TT_MAC_ID_XXX,       */
+  /*    @TT_ISO_ID_XXX, and @TT_MS_ID_XXX.                                 */
   /*                                                                       */
   typedef struct  FT_SfntName_
   {
@@ -137,7 +140,7 @@ FT_BEGIN_HEADER
   /*    idx   :: The index of the `name' string.                           */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    aname :: The indexed FT_SfntName structure.                        */
+  /*    aname :: The indexed @FT_SfntName structure.                       */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
@@ -146,7 +149,7 @@ FT_BEGIN_HEADER
   /*    The `string' array returned in the `aname' structure is not        */
   /*    null-terminated.                                                   */
   /*                                                                       */
-  /*    Use FT_Get_Sfnt_Name_Count() to get the total number of available  */
+  /*    Use @FT_Get_Sfnt_Name_Count to get the total number of available   */
   /*    `name' table entries, then do a loop until you get the right       */
   /*    platform, encoding, and name ID.                                   */
   /*                                                                       */

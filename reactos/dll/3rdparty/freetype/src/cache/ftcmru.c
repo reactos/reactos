@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType MRU support (body).                                         */
 /*                                                                         */
-/*  Copyright 2003, 2004 by                                                */
+/*  Copyright 2003, 2004, 2006 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,14 +18,14 @@
 
 #include <ft2build.h>
 #include FT_CACHE_H
-#include FT_CACHE_INTERNAL_MRU_H
+#include "ftcmru.h"
 #include FT_INTERNAL_OBJECTS_H
 #include FT_INTERNAL_DEBUG_H
 
 #include "ftcerror.h"
 
 
-  FT_EXPORT_DEF( void )
+  FT_LOCAL_DEF( void )
   FTC_MruNode_Prepend( FTC_MruNode  *plist,
                        FTC_MruNode   node )
   {
@@ -69,7 +69,7 @@
   }
 
 
-  FT_EXPORT_DEF( void )
+  FT_LOCAL_DEF( void )
   FTC_MruNode_Up( FTC_MruNode  *plist,
                   FTC_MruNode   node )
   {
@@ -118,7 +118,7 @@
   }
 
 
-  FT_EXPORT_DEF( void )
+  FT_LOCAL_DEF( void )
   FTC_MruNode_Remove( FTC_MruNode  *plist,
                       FTC_MruNode   node )
   {
@@ -165,7 +165,7 @@
   }
 
 
-  FT_EXPORT_DEF( void )
+  FT_LOCAL_DEF( void )
   FTC_MruList_Init( FTC_MruList       list,
                     FTC_MruListClass  clazz,
                     FT_UInt           max_nodes,
@@ -181,7 +181,7 @@
   }
 
 
-  FT_EXPORT( void )
+  FT_LOCAL_DEF( void )
   FTC_MruList_Reset( FTC_MruList  list )
   {
     while ( list->nodes )
@@ -191,14 +191,15 @@
   }
 
 
-  FT_EXPORT( void )
+  FT_LOCAL_DEF( void )
   FTC_MruList_Done( FTC_MruList  list )
   {
     FTC_MruList_Reset( list );
   }
 
 
-  FT_EXPORT_DEF( FTC_MruNode )
+#ifndef FTC_INLINE
+  FT_LOCAL_DEF( FTC_MruNode )
   FTC_MruList_Find( FTC_MruList  list,
                     FT_Pointer   key )
   {
@@ -229,9 +230,9 @@
 
     return NULL;
   }
+#endif
 
-
-  FT_EXPORT_DEF( FT_Error )
+  FT_LOCAL_DEF( FT_Error )
   FTC_MruList_New( FTC_MruList   list,
                    FT_Pointer    key,
                    FTC_MruNode  *anode )
@@ -285,7 +286,8 @@
   }
 
 
-  FT_EXPORT( FT_Error )
+#ifndef FTC_INLINE
+  FT_LOCAL_DEF( FT_Error )
   FTC_MruList_Lookup( FTC_MruList   list,
                       FT_Pointer    key,
                       FTC_MruNode  *anode )
@@ -300,9 +302,9 @@
     *anode = node;
     return 0;
   }
+#endif /* FTC_INLINE */
 
-
-  FT_EXPORT_DEF( void )
+  FT_LOCAL_DEF( void )
   FTC_MruList_Remove( FTC_MruList  list,
                       FTC_MruNode  node )
   {
@@ -321,7 +323,7 @@
   }
 
 
-  FT_EXPORT_DEF( void )
+  FT_LOCAL_DEF( void )
   FTC_MruList_RemoveSelection( FTC_MruList              list,
                                FTC_MruNode_CompareFunc  selection,
                                FT_Pointer               key )

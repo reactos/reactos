@@ -2,7 +2,7 @@
 # FreeType 2 template for Unix-specific compiler definitions
 #
 
-# Copyright 1996-2000, 2002, 2003 by
+# Copyright 1996-2000, 2002, 2003, 2005, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -15,9 +15,7 @@
 CC           := @CC@
 COMPILER_SEP := $(SEP)
 
-ifndef LIBTOOL
-  LIBTOOL := $(BUILD_DIR)/libtool
-endif
+LIBTOOL ?= $(BUILD_DIR)/libtool
 
 
 # The object file extension (for standard and static libraries).  This can be
@@ -25,6 +23,13 @@ endif
 #
 O  := lo
 SO := o
+
+
+# The executable file extension.  Although most Unix platforms use no
+# extension, we copy the extension detected by autoconf.  Useful for cross
+# building on Unix systems for non-Unix systems.
+#
+E := @EXEEXT@
 
 
 # The library file extension (for standard and static libraries).  This can
@@ -72,8 +77,8 @@ T := -o$(space)
 #
 #   We use our own FreeType configuration file.
 #
-CFLAGS := -c @XX_CFLAGS@ @CPPFLAGS@ @CFLAGS@ \
-          -DFT_CONFIG_CONFIG_H="<ftconfig.h>"
+CPPFLAGS := @CPPFLAGS@
+CFLAGS   := -c @XX_CFLAGS@ @CFLAGS@ -DFT_CONFIG_CONFIG_H="<ftconfig.h>"
 
 # ANSIFLAGS: Put there the flags used to make your compiler ANSI-compliant.
 #
@@ -90,11 +95,19 @@ CC    := $(LIBTOOL) --mode=compile $(CCraw)
 LDFLAGS := @LDFLAGS@
 
 
+# export symbols
+#
+CCraw_build  := @CC_BUILD@	# native CC of building system
+E_BUILD      := @EXEEXT_BUILD@	# extension for exexutable on building system
+EXPORTS_LIST := $(OBJ_DIR)/ftexport.sym
+CCexe        := $(CCraw_build)	# used to compile `apinames' only
+
+
 # Library linking
 #
 LINK_LIBRARY = $(LIBTOOL) --mode=link $(CCraw) -o $@ $(OBJECTS_LIST) \
                           -rpath $(libdir) -version-info $(version_info) \
-                          $(LDFLAGS)
-
+                          $(LDFLAGS) -no-undefined \
+                          # -export-symbols $(EXPORTS_LIST)
 
 # EOF

@@ -5,7 +5,7 @@
 /*    Load the basic TrueType tables, i.e., tables that can be either in   */
 /*    TTF or OTF fonts (specification).                                    */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2005 by                                     */
+/*  Copyright 1996-2001, 2002, 2005, 2006 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,15 +41,9 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  tt_face_load_sfnt_header( TT_Face      face,
-                            FT_Stream    stream,
-                            FT_Long      face_index,
-                            SFNT_Header  sfnt );
+  tt_face_load_font_dir( TT_Face    face,
+                         FT_Stream  stream );
 
-  FT_LOCAL( FT_Error )
-  tt_face_load_directory( TT_Face      face,
-                          FT_Stream    stream,
-                          SFNT_Header  sfnt );
 
   FT_LOCAL( FT_Error )
   tt_face_load_any( TT_Face    face,
@@ -60,14 +54,8 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  tt_face_load_header( TT_Face    face,
-                       FT_Stream  stream );
-
-
-  FT_LOCAL( FT_Error )
-  tt_face_load_metrics_header( TT_Face    face,
-                               FT_Stream  stream,
-                               FT_Bool    vertical );
+  tt_face_load_head( TT_Face    face,
+                     FT_Stream  stream );
 
 
   FT_LOCAL( FT_Error )
@@ -76,13 +64,13 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  tt_face_load_max_profile( TT_Face    face,
-                            FT_Stream  stream );
+  tt_face_load_maxp( TT_Face    face,
+                     FT_Stream  stream );
 
 
   FT_LOCAL( FT_Error )
-  tt_face_load_names( TT_Face    face,
-                      FT_Stream  stream );
+  tt_face_load_name( TT_Face    face,
+                     FT_Stream  stream );
 
 
   FT_LOCAL( FT_Error )
@@ -91,24 +79,16 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  tt_face_load_postscript( TT_Face    face,
-                           FT_Stream  stream );
-
-
-  FT_LOCAL( FT_Error )
-  tt_face_load_hdmx( TT_Face    face,
+  tt_face_load_post( TT_Face    face,
                      FT_Stream  stream );
+
 
   FT_LOCAL( FT_Error )
   tt_face_load_pclt( TT_Face    face,
                      FT_Stream  stream );
 
   FT_LOCAL( void )
-  tt_face_free_names( TT_Face  face );
-
-
-  FT_LOCAL( void )
-  tt_face_free_hdmx ( TT_Face  face );
+  tt_face_free_name( TT_Face  face );
 
 
   FT_LOCAL( FT_Error )
@@ -118,8 +98,8 @@ FT_BEGIN_HEADER
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
 
   FT_LOCAL( FT_Error )
-  tt_face_load_bitmap_header( TT_Face    face,
-                              FT_Stream  stream );
+  tt_face_load_bhed( TT_Face    face,
+                     FT_Stream  stream );
 
 #endif /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */
 

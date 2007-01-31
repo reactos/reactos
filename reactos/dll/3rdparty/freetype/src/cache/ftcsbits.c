@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType sbits manager (body).                                       */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,7 +18,7 @@
 
 #include <ft2build.h>
 #include FT_CACHE_H
-#include FT_CACHE_INTERNAL_SBITS_H
+#include "ftcsbits.h"
 #include FT_INTERNAL_OBJECTS_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_ERRORS_H
@@ -77,7 +77,7 @@
   }
 
 
-  FT_EXPORT_DEF( void )
+  FT_LOCAL_DEF( void )
   FTC_SNode_Free( FTC_SNode  snode,
                   FTC_Cache  cache )
   {
@@ -197,7 +197,7 @@
   }
 
 
-  FT_EXPORT_DEF( FT_Error )
+  FT_LOCAL_DEF( FT_Error )
   FTC_SNode_New( FTC_SNode  *psnode,
                  FTC_GQuery  gquery,
                  FTC_Cache   cache )
@@ -298,11 +298,15 @@
   }
 
 
-  FT_EXPORT_DEF( FT_ULong )
+#if 0
+
+  FT_LOCAL_DEF( FT_ULong )
   FTC_SNode_Weight( FTC_SNode  snode )
   {
     return ftc_snode_weight( FTC_NODE( snode ), NULL );
   }
+
+#endif /* 0 */
 
 
   FT_LOCAL_DEF( FT_Bool )
@@ -341,7 +345,7 @@
        *  However, we need to `lock' the node before this operation to
        *  prevent it from being flushed within the loop.
        *
-       *  When we exit the loop, we unlock the node, then check the `error' 
+       *  When we exit the loop, we unlock the node, then check the `error'
        *  variable.  If it is non-zero, this means that the cache was
        *  completely flushed and that no usable memory was found to load
        *  the bitmap.
@@ -385,7 +389,7 @@
   }
 
 
-  FT_EXPORT_DEF( FT_Bool )
+  FT_LOCAL_DEF( FT_Bool )
   FTC_SNode_Compare( FTC_SNode   snode,
                      FTC_GQuery  gquery,
                      FTC_Cache   cache )

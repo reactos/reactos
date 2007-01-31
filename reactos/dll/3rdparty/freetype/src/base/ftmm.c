@@ -174,7 +174,7 @@
 
 
   /* documentation is in ftmm.h */
-  
+
   /* This is exactly the same as the previous function.  It exists for */
   /* orthogonality.                                                    */
 

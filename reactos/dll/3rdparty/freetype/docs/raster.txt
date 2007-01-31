@@ -30,8 +30,8 @@ I. Introduction
   A  rasterizer is  a library  in charge  of converting  a vectorial
   representation of a shape  into a bitmap.  The FreeType rasterizer
   has  been  originally developed  to  render  the  glyphs found  in
-  TrueType  files, made  up  of segments  and second-order  Béziers.
-  Meanwhile it has been extended to render third-order Bézier curves
+  TrueType  files, made  up  of segments  and second-order  BÃ©ziers.
+  Meanwhile it has been extended to render third-order BÃ©zier curves
   also.   This  document  is   an  explanation  of  its  design  and
   implementation.
 
@@ -99,24 +99,24 @@ II. Rendering Technology
     points indicate a line segment joining the two points.
 
     One `off' point amidst two `on' points indicates a second-degree
-    (conic)  Bézier parametric  arc, defined  by these  three points
+    (conic)  BÃ©zier parametric  arc, defined  by these  three points
     (the `off' point being the  control point, and the `on' ones the
-    start and end points).  Similarly, a third-degree (cubic) Bézier
+    start and end points).  Similarly, a third-degree (cubic) BÃ©zier
     curve  is described  by four  points (two  `off'  control points
     between two `on' points).
 
     Finally,  for  second-order curves  only,  two successive  `off'
     points  forces the  rasterizer to  create, during  rendering, an
     `on'  point amidst them,  at their  exact middle.   This greatly
-    facilitates the  definition of  successive Bézier arcs.
+    facilitates the  definition of  successive BÃ©zier arcs.
 
-  The parametric form of a second-order Bézier curve is:
+  The parametric form of a second-order BÃ©zier curve is:
 
       P(t) = (1-t)^2*P1 + 2*t*(1-t)*P2 + t^2*P3
 
       (P1 and P3 are the end points, P2 the control point.)
 
-  The parametric form of a third-order Bézier curve is:
+  The parametric form of a third-order BÃ©zier curve is:
 
       P(t) = (1-t)^3*P1 + 3*t*(1-t)^2*P2 + 3*t^2*(1-t)*P3 + t^3*P4
 
@@ -125,7 +125,7 @@ II. Rendering Technology
   For both formulae, t is a real number in the range [0..1].
 
   Note  that the rasterizer  does not  use these  formulae directly.
-  They exhibit,  however, one very  useful property of  Bézier arcs:
+  They exhibit,  however, one very  useful property of  BÃ©zier arcs:
   Each  point of  the curve  is a  weighted average  of  the control
   points.
 
@@ -331,7 +331,7 @@ II. Rendering Technology
 
     The  render pool doesn't  need to  be large.   A 4KByte  pool is
     enough for nearly all renditions, though nearly 100% slower than
-    a more confortable 16KByte or 32KByte pool (that was tested with
+    a more comfortable 16KByte or 32KByte pool (that was tested with
     complex glyphs at sizes over 500 pixels).
 
 
@@ -372,7 +372,7 @@ II. Rendering Technology
       - min scanline = FLOOR  ( min y )
       - max scanline = CEILING( max y )
 
-    A problem  arises with Bézier  Arcs.  While a segment  is always
+    A problem  arises with BÃ©zier  Arcs.  While a segment  is always
     necessarily y-monotonic (i.e.,  flat, ascending, or descending),
     which makes extrema computations easy,  the ascent of an arc can
     vary between its control points.
@@ -384,7 +384,7 @@ II. Rendering Technology
                                        * off curve
                    __-x--_
                 _--       -_
-          P1  _-            -          A non y-monotonic Bézier arc.
+          P1  _-            -          A non y-monotonic BÃ©zier arc.
              #               \
                               -        The arc goes from P1 to P3.
                                \
@@ -431,7 +431,7 @@ II. Rendering Technology
                                        * off curve
                    __-x--_
                 _--       -_
-          P1  _-            -          A non-y-monotonic Bézier arc.
+          P1  _-            -          A non-y-monotonic BÃ©zier arc.
              #               \
                               -        Here we have
                                \              P2.y >= P1.y &&
@@ -445,10 +445,10 @@ II. Rendering Technology
     but  we rely  on a  different technique,  which use  will become
     apparent soon.
 
-    Bézier  arcs have  the  special property  of  being very  easily
-    decomposed into two sub-arcs,  which are themselves Bézier arcs.
+    BÃ©zier  arcs have  the  special property  of  being very  easily
+    decomposed into two sub-arcs,  which are themselves BÃ©zier arcs.
     Moreover, it is easy to prove that there is at most one vertical
-    extremum on  each Bézier arc (for  second-degree curves; similar
+    extremum on  each BÃ©zier arc (for  second-degree curves; similar
     conditions can be found for third-order arcs).
 
     For instance,  the following arc  P1P2P3 can be  decomposed into
@@ -461,7 +461,7 @@ II. Rendering Technology
                                     * off curve
 
 
-                                    original Bézier arc P1P2P3.
+                                    original BÃ©zier arc P1P2P3.
                 __---__
              _--       --_
            _-             -_
@@ -492,7 +492,7 @@ II. Rendering Technology
                                       tangent to the curve.
 
 
-    We have then decomposed  a non-y-monotonic Bézier curve into two
+    We have then decomposed  a non-y-monotonic BÃ©zier curve into two
     smaller sub-arcs.  Note that in the above drawing, both sub-arcs
     are monotonic, and that the extremum is then Q3=R1.  However, in
     a  more general  case,  only  one sub-arc  is  guaranteed to  be
@@ -530,9 +530,9 @@ II. Rendering Technology
 
     In  the case  of segments,  the computation  is straightforward,
     using  the  Euclidian   algorithm  (also  known  as  Bresenham).
-    However, for Bézier arcs, the job is a little more complicated.
+    However, for BÃ©zier arcs, the job is a little more complicated.
 
-    We assume  that all Béziers that  are part of a  profile are the
+    We assume  that all BÃ©ziers that  are part of a  profile are the
     result of  flattening the curve,  which means that they  are all
     y-monotonic (ascending  or descending, and never  flat).  We now
     have  to compute the  intersections of  arcs with  the profile's
@@ -545,8 +545,8 @@ II. Rendering Technology
                                  compute its intersections with the
                                  drawn scanlines.  As already
       ---------------------      mentioned this can be done
-                                 directly, but the involed algorithm
-          * P2         _---# P3  is far too slow.
+                                 directly, but the involved
+          * P2         _---# P3  algorithm is far too slow.
       ------------- _--  --
                   _-
                 _/               Instead, it is still possible to
@@ -631,5 +631,5 @@ accept it fully.
 --- end of raster.txt ---
 
 Local Variables:
-coding: latin-1
+coding: utf-8
 End:

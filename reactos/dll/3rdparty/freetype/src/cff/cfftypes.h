@@ -5,7 +5,7 @@
 /*    Basic OpenType/CFF type definitions and interface (specification     */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2006, 2007 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,6 +23,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_TYPE1_TABLES_H
 
 
 FT_BEGIN_HEADER
@@ -39,6 +40,9 @@ FT_BEGIN_HEADER
   /* <Fields>                                                              */
   /*    stream      :: The source input stream.                            */
   /*                                                                       */
+  /*    start       :: The position of the first index byte in the         */
+  /*                   input stream.                                       */
+  /*                                                                       */
   /*    count       :: The number of elements in the index.                */
   /*                                                                       */
   /*    off_size    :: The size in bytes of object offsets in index.       */
@@ -46,16 +50,21 @@ FT_BEGIN_HEADER
   /*    data_offset :: The position of first data byte in the index's      */
   /*                   bytes.                                              */
   /*                                                                       */
-  /*    offsets     :: A table of element offsets in the index.            */
+  /*    data_size   :: The size of the data table in this index.           */
+  /*                                                                       */
+  /*    offsets     :: A table of element offsets in the index.  Must be   */
+  /*                   loaded explicitly.                                  */
   /*                                                                       */
   /*    bytes       :: If the index is loaded in memory, its bytes.        */
   /*                                                                       */
   typedef struct  CFF_IndexRec_
   {
     FT_Stream  stream;
+    FT_ULong   start;
     FT_UInt    count;
     FT_Byte    off_size;
     FT_ULong   data_offset;
+    FT_ULong   data_size;
 
     FT_ULong*  offsets;
     FT_Byte*   bytes;
@@ -84,6 +93,9 @@ FT_BEGIN_HEADER
     FT_UShort*  sids;
     FT_UShort*  cids;       /* the inverse mapping of `sids'; only needed */
                             /* for CID-keyed fonts                        */
+    FT_UInt     max_cid;
+    FT_UInt     num_glyphs;
+
   } CFF_CharsetRec, *CFF_Charset;
 
 
@@ -243,6 +255,9 @@ FT_BEGIN_HEADER
 
     /* interface to Postscript Names service */
     void*            psnames;
+
+    /* since version 2.3.0 */
+    PS_FontInfoRec*  font_info;   /* font info dictionary */
 
   } CFF_FontRec, *CFF_Font;
 

@@ -5,7 +5,7 @@
 /*    Postcript name table processing for TrueType and OpenType fonts      */
 /*    (body).                                                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2006 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -175,7 +175,7 @@
     /* There already exist fonts which have more than 32768 glyph names */
     /* in this table, so the test for this threshold has been dropped.  */
 
-    if ( num_glyphs > face->root.num_glyphs )
+    if ( num_glyphs > face->max_profile.numGlyphs )
     {
       error = SFNT_Err_Invalid_File_Format;
       goto Exit;
@@ -286,13 +286,13 @@
       goto Exit;
 
     /* check the number of glyphs */
-    if ( num_glyphs > face->root.num_glyphs || num_glyphs > 258 )
+    if ( num_glyphs > face->max_profile.numGlyphs || num_glyphs > 258 )
     {
       error = SFNT_Err_Invalid_File_Format;
       goto Exit;
     }
 
-    if ( FT_ALLOC( offset_table, num_glyphs )       ||
+    if ( FT_NEW_ARRAY( offset_table, num_glyphs )   ||
          FT_STREAM_READ( offset_table, num_glyphs ) )
       goto Fail;
 
@@ -448,7 +448,7 @@
     if ( !face )
       return SFNT_Err_Invalid_Face_Handle;
 
-    if ( idx >= (FT_UInt)face->root.num_glyphs )
+    if ( idx >= (FT_UInt)face->max_profile.numGlyphs )
       return SFNT_Err_Invalid_Glyph_Index;
 
 #ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES

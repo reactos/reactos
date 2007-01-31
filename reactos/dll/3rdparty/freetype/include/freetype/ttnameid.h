@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType name ID definitions (specification only).                   */
 /*                                                                         */
-/*  Copyright 1996-2002, 2003, 2004 by                                     */
+/*  Copyright 1996-2002, 2003, 2004, 2006 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -65,7 +65,7 @@ FT_BEGIN_HEADER
    *     Used by Microsoft to indicate Windows-specific charmaps.  See
    *     @TT_MS_ID_XXX for a list of corresponding `encoding_id' values.
    *     Note that most fonts contain a Unicode charmap using
-   *     (@TT_PLATFORM_MICROSOFT, @TT_MS_ID_UNICODE_CS).
+   *     (TT_PLATFORM_MICROSOFT, @TT_MS_ID_UNICODE_CS).
    *
    *   TT_PLATFORM_CUSTOM ::
    *     Used to indicate application-specific charmaps.
@@ -96,14 +96,18 @@ FT_BEGIN_HEADER
    * @values:
    *   TT_APPLE_ID_DEFAULT ::
    *     Unicode version 1.0.
+   *
    *   TT_APPLE_ID_UNICODE_1_1 ::
    *     Unicode 1.1; specifies Hangul characters starting at U+34xx.
+   *
    *   TT_APPLE_ID_ISO_10646 ::
-   *     Deprecated (identical to preceding.)
+   *     Deprecated (identical to preceding).
+   *
    *   TT_APPLE_ID_UNICODE_2_0 ::
-   *     Unicode 2.0 and beyond (UTF-16 BMP only.)
+   *     Unicode 2.0 and beyond (UTF-16 BMP only).
+   *
    *   TT_APPLE_ID_UNICODE_32 ::
-   *     Unicode 3.1 and beyond, using UTF-32
+   *     Unicode 3.1 and beyond, using UTF-32.
    */
 
 #define TT_APPLE_ID_DEFAULT      0 /* Unicode 1.0 */
@@ -491,7 +495,7 @@ FT_BEGIN_HEADER
 #define TT_MS_LANGID_CHINESE_MACAU  TT_MS_LANGID_CHINESE_HONG_KONG
 #endif
 
-#if 0  /* used only with .NET "cultures"; commented out */
+#if 0  /* used only with .NET `cultures'; commented out */
 #define TT_MS_LANGID_CHINESE_TRADITIONAL               0x7C04
 #endif
 

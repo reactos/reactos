@@ -5,7 +5,7 @@
 /*    Support for the FT_Outline type used to store glyph shapes of        */
 /*    most scalable font formats (specification).                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2005 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2005, 2006 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -85,7 +85,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Walks over an outline's structure to decompose it into individual  */
-  /*    segments and Bezier arcs.  This function is also able to emit      */
+  /*    segments and Bézier arcs.  This function is also able to emit      */
   /*    `move to' and `close to' operations to indicate the start and end  */
   /*    of new contours in the outline.                                    */
   /*                                                                       */
@@ -122,8 +122,8 @@ FT_BEGIN_HEADER
   /* <Input>                                                               */
   /*    library     :: A handle to the library object from where the       */
   /*                   outline is allocated.  Note however that the new    */
-  /*                   outline will NOT necessarily be FREED, when         */
-  /*                   destroying the library, by FT_Done_FreeType().      */
+  /*                   outline will *not* necessarily be *freed*, when     */
+  /*                   destroying the library, by @FT_Done_FreeType.       */
   /*                                                                       */
   /*    numPoints   :: The maximal number of points within the outline.    */
   /*                                                                       */
@@ -160,7 +160,7 @@ FT_BEGIN_HEADER
   /*    FT_Outline_Done                                                    */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Destroys an outline created with FT_Outline_New().                 */
+  /*    Destroys an outline created with @FT_Outline_New.                  */
   /*                                                                       */
   /* <Input>                                                               */
   /*    library :: A handle of the library object used to allocate the     */
@@ -176,7 +176,7 @@ FT_BEGIN_HEADER
   /*    descriptor will be released.                                       */
   /*                                                                       */
   /*    The reason why this function takes an `library' parameter is       */
-  /*    simply to use FT_Free().                                           */
+  /*    simply to use ft_mem_free().                                       */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Outline_Done( FT_Library   library,
@@ -213,10 +213,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Returns an outline's `control box'.  The control box encloses all  */
-  /*    the outline's points, including Bezier control points.  Though it  */
+  /*    the outline's points, including Bézier control points.  Though it  */
   /*    coincides with the exact bounding box for most glyphs, it can be   */
   /*    slightly larger in some situations (like when rotating an outline  */
-  /*    which contains Bezier outside arcs).                               */
+  /*    which contains Bézier outside arcs).                               */
   /*                                                                       */
   /*    Computing the control box is very fast, while getting the bounding */
   /*    box can take much more time as it needs to walk over all segments  */
@@ -296,7 +296,7 @@ FT_BEGIN_HEADER
   /*    matrix  :: A pointer to the transformation matrix.                 */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    You can use FT_Outline_Translate() if you need to translate the    */
+  /*    You can use @FT_Outline_Translate if you need to translate the     */
   /*    outline's points.                                                  */
   /*                                                                       */
   FT_EXPORT( void )
@@ -314,6 +314,9 @@ FT_BEGIN_HEADER
   /*    `strength' pixels wider and higher.  You may think of the left and */
   /*    bottom borders as unchanged.                                       */
   /*                                                                       */
+  /*    Negative `strength' values to reduce the outline thickness are     */
+  /*    possible also.                                                     */
+  /*                                                                       */
   /* <InOut>                                                               */
   /*    outline  :: A handle to the target outline.                        */
   /*                                                                       */
@@ -324,7 +327,21 @@ FT_BEGIN_HEADER
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_EXPORT_DEF( FT_Error )
+  /* <Note>                                                                */
+  /*    The used algorithm to increase or decrease the thickness of the    */
+  /*    glyph doesn't change the number of points; this means that certain */
+  /*    situations like acute angles or intersections are sometimes        */
+  /*    handled incorrectly.                                               */
+  /*                                                                       */
+  /*    Example call:                                                      */
+  /*                                                                       */
+  /*    {                                                                  */
+  /*      FT_Load_Glyph( face, index, FT_LOAD_DEFAULT );                   */
+  /*      if ( face->slot->format == FT_GLYPH_FORMAT_OUTLINE )             */
+  /*        FT_Outline_Embolden( &face->slot->outline, strength );         */
+  /*    }                                                                  */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
   FT_Outline_Embolden( FT_Outline*  outline,
                        FT_Pos       strength );
 
@@ -342,7 +359,7 @@ FT_BEGIN_HEADER
   /*    outline :: A pointer to the target outline descriptor.             */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    This functions toggles the bit flag `FT_OUTLINE_REVERSE_FILL' in   */
+  /*    This functions toggles the bit flag @FT_OUTLINE_REVERSE_FILL in    */
   /*    the outline's `flags' field.                                       */
   /*                                                                       */
   /*    It shouldn't be used by a normal client application, unless it     */
@@ -366,7 +383,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    outline :: A pointer to the source outline descriptor.             */
   /*                                                                       */
-  /* <Output>                                                              */
+  /* <InOut>                                                               */
   /*    abitmap :: A pointer to the target bitmap descriptor.              */
   /*                                                                       */
   /* <Return>                                                              */
@@ -391,7 +408,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Renders an outline within a bitmap using the current scan-convert. */
-  /*    This functions uses an FT_Raster_Params structure as an argument,  */
+  /*    This functions uses an @FT_Raster_Params structure as an argument, */
   /*    allowing advanced features like direct composition, translucency,  */
   /*    etc.                                                               */
   /*                                                                       */
@@ -401,14 +418,14 @@ FT_BEGIN_HEADER
   /*    outline :: A pointer to the source outline descriptor.             */
   /*                                                                       */
   /* <InOut>                                                               */
-  /*    params  :: A pointer to a FT_Raster_Params structure used to       */
+  /*    params  :: A pointer to an @FT_Raster_Params structure used to     */
   /*               describe the rendering operation.                       */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    You should know what you are doing and how FT_Raster_Params works  */
+  /*    You should know what you are doing and how @FT_Raster_Params works */
   /*    to use this function.                                              */
   /*                                                                       */
   /*    The field `params.source' will be set to `outline' before the scan */
@@ -425,13 +442,13 @@ FT_BEGIN_HEADER
   *
   * @enum:
   *   FT_Orientation
-  *  
+  *
   * @description:
   *   A list of values used to describe an outline's contour orientation.
   *
   *   The TrueType and Postscript specifications use different conventions
   *   to determine whether outline contours should be filled or unfilled.
-  *   
+  *
   * @values:
   *   FT_ORIENTATION_TRUETYPE ::
   *     According to the TrueType specification, clockwise contours must
@@ -450,14 +467,20 @@ FT_BEGIN_HEADER
   *     This is identical to @FT_ORIENTATION_POSTSCRIPT, but is used to
   *     remember that in Postscript, everything that is to the left of
   *     the drawing direction of a contour must be filled.
+  *
+  *   FT_ORIENTATION_NONE ::
+  *     The orientation cannot be determined.  That is, different parts of
+  *     the glyph have different orientation.
+  *
   */
   typedef enum
   {
     FT_ORIENTATION_TRUETYPE   = 0,
     FT_ORIENTATION_POSTSCRIPT = 1,
     FT_ORIENTATION_FILL_RIGHT = FT_ORIENTATION_TRUETYPE,
-    FT_ORIENTATION_FILL_LEFT  = FT_ORIENTATION_POSTSCRIPT
-  
+    FT_ORIENTATION_FILL_LEFT  = FT_ORIENTATION_POSTSCRIPT,
+    FT_ORIENTATION_NONE
+
   } FT_Orientation;
 
 
@@ -465,7 +488,7 @@ FT_BEGIN_HEADER
   *
   * @function:
   *   FT_Outline_Get_Orientation
-  *  
+  *
   * @description:
   *   This function analyzes a glyph outline and tries to compute its
   *   fill orientation (see @FT_Orientation).  This is done by computing
@@ -496,3 +519,8 @@ FT_END_HEADER
 
 
 /* END */
+
+
+/* Local Variables: */
+/* coding: utf-8    */
+/* End:             */

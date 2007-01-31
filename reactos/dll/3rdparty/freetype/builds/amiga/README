@@ -56,7 +56,7 @@ directory.  The results are:
 
 - ftdebugpure.o, an object module containing the pure version of the
   debugging code which uses KVPrintf() from lib:debug.lib and no
-  exit().  For debugging of Amiga run-time shared system libraries. 
+  exit().  For debugging of Amiga run-time shared system libraries.
   Source code is in src/base/ftdebug.c.
 
 - NO ftinit.o.  Because linking with a link library should result in

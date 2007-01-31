@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 objects manager (specification).                             */
 /*                                                                         */
-/*  Copyright 2002, 2003 by Roberto Alameda.                               */
+/*  Copyright 2002, 2003, 2006, 2007 by Roberto Alameda.                   */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -80,16 +80,14 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  T42_Size_SetChars( T42_Size    size,
-                     FT_F26Dot6  char_width,
-                     FT_F26Dot6  char_height,
-                     FT_UInt     horz_resolution,
-                     FT_UInt     vert_resolution );
+  T42_Size_Request( T42_Size         size,
+                    FT_Size_Request  req );
+
 
   FT_LOCAL( FT_Error )
-  T42_Size_SetPixels( T42_Size  size,
-                      FT_UInt   pixel_width,
-                      FT_UInt   pixel_height );
+  T42_Size_Select( T42_Size  size,
+                   FT_ULong  strike_index );
+
 
   FT_LOCAL( void )
   T42_Size_Done( T42_Size  size );

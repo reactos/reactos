@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF character mapping table (cmap) support (specification).          */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2006 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -39,14 +39,14 @@ FT_BEGIN_HEADER
   {
     FT_CMapRec  cmap;
     FT_UShort*  gids;   /* up to 256 elements */
-    
+
   } CFF_CMapStdRec;
 
 
   FT_CALLBACK_TABLE const FT_CMap_ClassRec
   cff_cmap_encoding_class_rec;
 
-  
+
   /*************************************************************************/
   /*************************************************************************/
   /*****                                                               *****/
@@ -56,24 +56,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
 
   /* unicode (synthetic) cmaps */
-  typedef struct CFF_CMapUnicodeRec_*  CFF_CMapUnicode;
-
-  typedef struct  CFF_CMapUniPairRec_
-  {
-    FT_UInt32  unicode;
-    FT_UInt    gindex;
-  
-  } CFF_CMapUniPairRec, *CFF_CMapUniPair;
-
-
-  typedef struct  CFF_CMapUnicodeRec_
-  {
-    FT_CMapRec       cmap;
-    FT_UInt          num_pairs;
-    CFF_CMapUniPair  pairs;
-
-  } CFF_CMapUnicodeRec;
-
 
   FT_CALLBACK_TABLE const FT_CMap_ClassRec
   cff_cmap_unicode_class_rec;

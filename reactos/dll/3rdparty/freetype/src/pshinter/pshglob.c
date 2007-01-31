@@ -5,7 +5,7 @@
 /*    PostScript hinter global hinting management (body).                  */
 /*    Inspired by the new auto-hinter module.                              */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004 by                                    */
+/*  Copyright 2001, 2002, 2003, 2004, 2006 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -150,7 +150,7 @@
     FT_UNUSED( target );
 
 
-    for ( ; read_count > 0; read_count -= 2 )
+    for ( ; read_count > 1; read_count -= 2 )
     {
       FT_Int         reference, delta;
       FT_UInt        count;

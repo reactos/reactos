@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 Glyph Loader (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -230,6 +230,9 @@
     if ( error )
       return error;
 
+    /* TODO: initialize decoder.len_buildchar and decoder.buildchar */
+    /*       if we ever support CID-keyed multiple master fonts     */
+
     decoder.builder.metrics_only = 1;
     decoder.builder.load_points  = 0;
 
@@ -245,27 +248,13 @@
 
     *max_advance = decoder.builder.advance.x;
 
+    psaux->t1_decoder_funcs->done( &decoder );
+
     return CID_Err_Ok;
   }
 
 
 #endif /* 0 */
-
-
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-  /**********                                                      *********/
-  /**********                                                      *********/
-  /**********               UNHINTED GLYPH LOADER                  *********/
-  /**********                                                      *********/
-  /**********    The following code is in charge of loading a      *********/
-  /**********    single outline.  It completely ignores hinting    *********/
-  /**********    and is used when FT_LOAD_NO_HINTING is set.       *********/
-  /**********                                                      *********/
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
 
 
   FT_LOCAL_DEF( FT_Error )
@@ -286,6 +275,12 @@
     FT_Vector      font_offset;
 
 
+    if ( glyph_index >= (FT_UInt)face->root.num_glyphs )
+    {
+      error = CID_Err_Invalid_Argument;
+      goto Exit;
+    }
+
     if ( load_flags & FT_LOAD_NO_RECURSE )
       load_flags |= FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING;
 
@@ -300,148 +295,132 @@
 
     cidglyph->format = FT_GLYPH_FORMAT_OUTLINE;
 
-    {
-      error = psaux->t1_decoder_funcs->init( &decoder,
-                                             cidglyph->face,
-                                             cidsize,
-                                             cidglyph,
-                                             0, /* glyph names -- XXX */
-                                             0, /* blend == 0 */
-                                             hinting,
-                                             FT_LOAD_TARGET_MODE( load_flags ),
-                                             cid_load_glyph );
+    error = psaux->t1_decoder_funcs->init( &decoder,
+                                           cidglyph->face,
+                                           cidsize,
+                                           cidglyph,
+                                           0, /* glyph names -- XXX */
+                                           0, /* blend == 0 */
+                                           hinting,
+                                           FT_LOAD_TARGET_MODE( load_flags ),
+                                           cid_load_glyph );
+    if ( error )
+      goto Exit;
 
-      /* set up the decoder */
-      decoder.builder.no_recurse = FT_BOOL(
-        ( ( load_flags & FT_LOAD_NO_RECURSE ) != 0 ) );
+    /* TODO: initialize decoder.len_buildchar and decoder.buildchar */
+    /*       if we ever support CID-keyed multiple master fonts     */
 
-      error = cid_load_glyph( &decoder, glyph_index );
+    /* set up the decoder */
+    decoder.builder.no_recurse = FT_BOOL(
+      ( ( load_flags & FT_LOAD_NO_RECURSE ) != 0 ) );
 
-      font_matrix = decoder.font_matrix;
-      font_offset = decoder.font_offset;
+    error = cid_load_glyph( &decoder, glyph_index );
+    if ( error )
+      goto Exit;
 
-      /* save new glyph tables */
-      psaux->t1_decoder_funcs->done( &decoder );
-    }
+    font_matrix = decoder.font_matrix;
+    font_offset = decoder.font_offset;
 
-    /* now, set the metrics -- this is rather simple, as   */
+    /* save new glyph tables */
+    psaux->t1_decoder_funcs->done( &decoder );
+
+    /* now set the metrics -- this is rather simple, as    */
     /* the left side bearing is the xMin, and the top side */
     /* bearing the yMax                                    */
-    if ( !error )
+    cidglyph->outline.flags &= FT_OUTLINE_OWNER;
+    cidglyph->outline.flags |= FT_OUTLINE_REVERSE_FILL;
+
+    /* for composite glyphs, return only left side bearing and */
+    /* advance width                                           */
+    if ( load_flags & FT_LOAD_NO_RECURSE )
     {
-      cidglyph->outline.flags &= FT_OUTLINE_OWNER;
-      cidglyph->outline.flags |= FT_OUTLINE_REVERSE_FILL;
+      FT_Slot_Internal  internal = cidglyph->internal;
 
-      /* for composite glyphs, return only left side bearing and */
-      /* advance width                                           */
-      if ( load_flags & FT_LOAD_NO_RECURSE )
+
+      cidglyph->metrics.horiBearingX = decoder.builder.left_bearing.x;
+      cidglyph->metrics.horiAdvance  = decoder.builder.advance.x;
+
+      internal->glyph_matrix      = font_matrix;
+      internal->glyph_delta       = font_offset;
+      internal->glyph_transformed = 1;
+    }
+    else
+    {
+      FT_BBox            cbox;
+      FT_Glyph_Metrics*  metrics = &cidglyph->metrics;
+      FT_Vector          advance;
+
+
+      /* copy the _unscaled_ advance width */
+      metrics->horiAdvance                  = decoder.builder.advance.x;
+      cidglyph->linearHoriAdvance           = decoder.builder.advance.x;
+      cidglyph->internal->glyph_transformed = 0;
+
+      /* make up vertical ones */
+      metrics->vertAdvance        = ( face->cid.font_bbox.yMax -
+                                      face->cid.font_bbox.yMin ) >> 16;
+      cidglyph->linearVertAdvance = metrics->vertAdvance;
+
+      cidglyph->format            = FT_GLYPH_FORMAT_OUTLINE;
+
+      if ( size && cidsize->metrics.y_ppem < 24 )
+        cidglyph->outline.flags |= FT_OUTLINE_HIGH_PRECISION;
+
+      /* apply the font matrix */
+      FT_Outline_Transform( &cidglyph->outline, &font_matrix );
+
+      FT_Outline_Translate( &cidglyph->outline,
+                            font_offset.x,
+                            font_offset.y );
+
+      advance.x = metrics->horiAdvance;
+      advance.y = 0;
+      FT_Vector_Transform( &advance, &font_matrix );
+      metrics->horiAdvance = advance.x + font_offset.x;
+
+      advance.x = 0;
+      advance.y = metrics->vertAdvance;
+      FT_Vector_Transform( &advance, &font_matrix );
+      metrics->vertAdvance = advance.y + font_offset.y;
+
+      if ( ( load_flags & FT_LOAD_NO_SCALE ) == 0 )
       {
-        FT_Slot_Internal  internal = cidglyph->internal;
+        /* scale the outline and the metrics */
+        FT_Int       n;
+        FT_Outline*  cur = decoder.builder.base;
+        FT_Vector*   vec = cur->points;
+        FT_Fixed     x_scale = glyph->x_scale;
+        FT_Fixed     y_scale = glyph->y_scale;
 
 
-        cidglyph->metrics.horiBearingX = decoder.builder.left_bearing.x;
-        cidglyph->metrics.horiAdvance  = decoder.builder.advance.x;
-
-        internal->glyph_matrix         = font_matrix;
-        internal->glyph_delta          = font_offset;
-        internal->glyph_transformed    = 1;
-      }
-      else
-      {
-        FT_BBox            cbox;
-        FT_Glyph_Metrics*  metrics = &cidglyph->metrics;
-        FT_Vector          advance;
-
-
-        /* copy the _unscaled_ advance width */
-        metrics->horiAdvance                  = decoder.builder.advance.x;
-        cidglyph->linearHoriAdvance           = decoder.builder.advance.x;
-        cidglyph->internal->glyph_transformed = 0;
-
-        /* make up vertical metrics */
-        metrics->vertBearingX = 0;
-        metrics->vertBearingY = 0;
-        metrics->vertAdvance  = 0;
-
-        cidglyph->linearVertAdvance = 0;
-        cidglyph->format            = FT_GLYPH_FORMAT_OUTLINE;
-
-        if ( size && cidsize->metrics.y_ppem < 24 )
-          cidglyph->outline.flags |= FT_OUTLINE_HIGH_PRECISION;
-
-        /* apply the font matrix */
-        FT_Outline_Transform( &cidglyph->outline, &font_matrix );
-
-        FT_Outline_Translate( &cidglyph->outline,
-                              font_offset.x,
-                              font_offset.y );
-
-        advance.x = metrics->horiAdvance;
-        advance.y = 0;
-        FT_Vector_Transform( &advance, &font_matrix );
-        metrics->horiAdvance = advance.x + font_offset.x;
-        advance.x = 0;
-        advance.y = metrics->vertAdvance;
-        FT_Vector_Transform( &advance, &font_matrix );
-        metrics->vertAdvance = advance.y + font_offset.y;
-
-        if ( ( load_flags & FT_LOAD_NO_SCALE ) == 0 )
-        {
-          /* scale the outline and the metrics */
-          FT_Int       n;
-          FT_Outline*  cur = decoder.builder.base;
-          FT_Vector*   vec = cur->points;
-          FT_Fixed     x_scale = glyph->x_scale;
-          FT_Fixed     y_scale = glyph->y_scale;
-
-
-          /* First of all, scale the points */
-          if ( !hinting )
-            for ( n = cur->n_points; n > 0; n--, vec++ )
-            {
-              vec->x = FT_MulFix( vec->x, x_scale );
-              vec->y = FT_MulFix( vec->y, y_scale );
-            }
-
-          FT_Outline_Get_CBox( &cidglyph->outline, &cbox );
-
-          /* Then scale the metrics */
-          metrics->horiAdvance  = FT_MulFix( metrics->horiAdvance,  x_scale );
-          metrics->vertAdvance  = FT_MulFix( metrics->vertAdvance,  y_scale );
-
-          metrics->vertBearingX = FT_MulFix( metrics->vertBearingX, x_scale );
-          metrics->vertBearingY = FT_MulFix( metrics->vertBearingY, y_scale );
-
-          if ( hinting )
+        /* First of all, scale the points */
+        if ( !hinting || !decoder.builder.hints_funcs )
+          for ( n = cur->n_points; n > 0; n--, vec++ )
           {
-            metrics->horiAdvance = FT_PIX_ROUND( metrics->horiAdvance );
-            metrics->vertAdvance = FT_PIX_ROUND( metrics->vertAdvance );
-
-            metrics->vertBearingX = FT_PIX_ROUND( metrics->vertBearingX );
-            metrics->vertBearingY = FT_PIX_ROUND( metrics->vertBearingY );
+            vec->x = FT_MulFix( vec->x, x_scale );
+            vec->y = FT_MulFix( vec->y, y_scale );
           }
-        }
 
-        /* compute the other metrics */
-        FT_Outline_Get_CBox( &cidglyph->outline, &cbox );
-
-        /* grid fit the bounding box if necessary */
-        if ( hinting )
-        {
-          cbox.xMin = FT_PIX_FLOOR( cbox.xMin );
-          cbox.yMin = FT_PIX_FLOOR( cbox.yMin );
-          cbox.xMax = FT_PIX_CEIL( cbox.xMax );
-          cbox.yMax = FT_PIX_CEIL( cbox.yMax );
-        }
-
-        metrics->width  = cbox.xMax - cbox.xMin;
-        metrics->height = cbox.yMax - cbox.yMin;
-
-        metrics->horiBearingX = cbox.xMin;
-        metrics->horiBearingY = cbox.yMax;
+        /* Then scale the metrics */
+        metrics->horiAdvance = FT_MulFix( metrics->horiAdvance, x_scale );
+        metrics->vertAdvance = FT_MulFix( metrics->vertAdvance, y_scale );
       }
+
+      /* compute the other metrics */
+      FT_Outline_Get_CBox( &cidglyph->outline, &cbox );
+
+      metrics->width  = cbox.xMax - cbox.xMin;
+      metrics->height = cbox.yMax - cbox.yMin;
+
+      metrics->horiBearingX = cbox.xMin;
+      metrics->horiBearingY = cbox.yMax;
+
+      /* make up vertical ones */
+      ft_synthesize_vertical_metrics( metrics,
+                                      metrics->vertAdvance );
     }
 
+  Exit:
     return error;
   }
 

@@ -54,11 +54,11 @@ FT_BEGIN_HEADER
   {
     FT_UInt                  type;
     PFR_ExtraItem_ParseFunc  parser;
-  
+
   } PFR_ExtraItemRec;
-  
+
   typedef const struct PFR_ExtraItemRec_*  PFR_ExtraItem;
- 
+
 
   FT_LOCAL( FT_Error )
   pfr_extra_items_skip( FT_Byte*  *pp,
@@ -109,7 +109,7 @@ FT_BEGIN_HEADER
                      FT_Memory    memory );
 
   /* */
- 
+
 FT_END_HEADER
 
 #endif /* __PFRLOAD_H__ */

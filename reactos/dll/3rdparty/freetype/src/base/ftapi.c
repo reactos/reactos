@@ -49,7 +49,7 @@
     FT_UNUSED( library );
 
     FT_Stream_OpenMemory( stream, base, size );
-  }                        
+  }
 
 
   FT_BASE_DEF( FT_Error )
@@ -57,7 +57,7 @@
                   FT_ULong   pos )
   {
     return FT_Stream_Seek( stream, pos );
-  }                  
+  }
 
 
   FT_BASE_DEF( FT_Error )
@@ -65,7 +65,7 @@
                   FT_Long    distance )
   {
     return FT_Stream_Skip( stream, distance );
-  }                  
+  }
 
 
   FT_BASE_DEF( FT_Error )
@@ -74,7 +74,7 @@
                   FT_ULong   count )
   {
     return FT_Stream_Read( stream, buffer, count );
-  }                  
+  }
 
 
   FT_BASE_DEF( FT_Error )
@@ -84,7 +84,7 @@
                      FT_ULong   count )
   {
     return FT_Stream_ReadAt( stream, pos, buffer, count );
-  }                    
+  }
 
 
   FT_BASE_DEF( FT_Error )
@@ -93,7 +93,7 @@
                     FT_Byte**  pbytes )
   {
     return FT_Stream_ExtractFrame( stream, count, pbytes );
-  }                    
+  }
 
 
   FT_BASE_DEF( void )
@@ -101,14 +101,14 @@
                     FT_Byte**  pbytes )
   {
     FT_Stream_ReleaseFrame( stream, pbytes );
-  }                    
+  }
 
   FT_BASE_DEF( FT_Error )
   FT_Access_Frame( FT_Stream  stream,
                    FT_ULong   count )
   {
     return FT_Stream_EnterFrame( stream, count );
-  }                   
+  }
 
 
   FT_BASE_DEF( void )
@@ -116,6 +116,6 @@
   {
     FT_Stream_ExitFrame( stream );
   }
-                   
+
 
 /* END */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType and CFF data/program tables loader (body).                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,6 +22,7 @@
 #include FT_INTERNAL_STREAM_H
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 #include FT_TRUETYPE_TAGS_H
+#include FT_TYPE1_TABLES_H
 
 #include "cffload.h"
 #include "cffparse.h"
@@ -32,1016 +33,147 @@
 #if 1
   static const FT_UShort  cff_isoadobe_charset[229] =
   {
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    28,
-    29,
-    30,
-    31,
-    32,
-    33,
-    34,
-    35,
-    36,
-    37,
-    38,
-    39,
-    40,
-    41,
-    42,
-    43,
-    44,
-    45,
-    46,
-    47,
-    48,
-    49,
-    50,
-    51,
-    52,
-    53,
-    54,
-    55,
-    56,
-    57,
-    58,
-    59,
-    60,
-    61,
-    62,
-    63,
-    64,
-    65,
-    66,
-    67,
-    68,
-    69,
-    70,
-    71,
-    72,
-    73,
-    74,
-    75,
-    76,
-    77,
-    78,
-    79,
-    80,
-    81,
-    82,
-    83,
-    84,
-    85,
-    86,
-    87,
-    88,
-    89,
-    90,
-    91,
-    92,
-    93,
-    94,
-    95,
-    96,
-    97,
-    98,
-    99,
-    100,
-    101,
-    102,
-    103,
-    104,
-    105,
-    106,
-    107,
-    108,
-    109,
-    110,
-    111,
-    112,
-    113,
-    114,
-    115,
-    116,
-    117,
-    118,
-    119,
-    120,
-    121,
-    122,
-    123,
-    124,
-    125,
-    126,
-    127,
-    128,
-    129,
-    130,
-    131,
-    132,
-    133,
-    134,
-    135,
-    136,
-    137,
-    138,
-    139,
-    140,
-    141,
-    142,
-    143,
-    144,
-    145,
-    146,
-    147,
-    148,
-    149,
-    150,
-    151,
-    152,
-    153,
-    154,
-    155,
-    156,
-    157,
-    158,
-    159,
-    160,
-    161,
-    162,
-    163,
-    164,
-    165,
-    166,
-    167,
-    168,
-    169,
-    170,
-    171,
-    172,
-    173,
-    174,
-    175,
-    176,
-    177,
-    178,
-    179,
-    180,
-    181,
-    182,
-    183,
-    184,
-    185,
-    186,
-    187,
-    188,
-    189,
-    190,
-    191,
-    192,
-    193,
-    194,
-    195,
-    196,
-    197,
-    198,
-    199,
-    200,
-    201,
-    202,
-    203,
-    204,
-    205,
-    206,
-    207,
-    208,
-    209,
-    210,
-    211,
-    212,
-    213,
-    214,
-    215,
-    216,
-    217,
-    218,
-    219,
-    220,
-    221,
-    222,
-    223,
-    224,
-    225,
-    226,
-    227,
-    228
+      0,   1,   2,   3,   4,   5,   6,   7,
+      8,   9,  10,  11,  12,  13,  14,  15,
+     16,  17,  18,  19,  20,  21,  22,  23,
+     24,  25,  26,  27,  28,  29,  30,  31,
+     32,  33,  34,  35,  36,  37,  38,  39,
+     40,  41,  42,  43,  44,  45,  46,  47,
+     48,  49,  50,  51,  52,  53,  54,  55,
+     56,  57,  58,  59,  60,  61,  62,  63,
+     64,  65,  66,  67,  68,  69,  70,  71,
+     72,  73,  74,  75,  76,  77,  78,  79,
+     80,  81,  82,  83,  84,  85,  86,  87,
+     88,  89,  90,  91,  92,  93,  94,  95,
+     96,  97,  98,  99, 100, 101, 102, 103,
+    104, 105, 106, 107, 108, 109, 110, 111,
+    112, 113, 114, 115, 116, 117, 118, 119,
+    120, 121, 122, 123, 124, 125, 126, 127,
+    128, 129, 130, 131, 132, 133, 134, 135,
+    136, 137, 138, 139, 140, 141, 142, 143,
+    144, 145, 146, 147, 148, 149, 150, 151,
+    152, 153, 154, 155, 156, 157, 158, 159,
+    160, 161, 162, 163, 164, 165, 166, 167,
+    168, 169, 170, 171, 172, 173, 174, 175,
+    176, 177, 178, 179, 180, 181, 182, 183,
+    184, 185, 186, 187, 188, 189, 190, 191,
+    192, 193, 194, 195, 196, 197, 198, 199,
+    200, 201, 202, 203, 204, 205, 206, 207,
+    208, 209, 210, 211, 212, 213, 214, 215,
+    216, 217, 218, 219, 220, 221, 222, 223,
+    224, 225, 226, 227, 228
   };
 
   static const FT_UShort  cff_expert_charset[166] =
   {
-    0,
-    1,
-    229,
-    230,
-    231,
-    232,
-    233,
-    234,
-    235,
-    236,
-    237,
-    238,
-    13,
-    14,
-    15,
-    99,
-    239,
-    240,
-    241,
-    242,
-    243,
-    244,
-    245,
-    246,
-    247,
-    248,
-    27,
-    28,
-    249,
-    250,
-    251,
-    252,
-    253,
-    254,
-    255,
-    256,
-    257,
-    258,
-    259,
-    260,
-    261,
-    262,
-    263,
-    264,
-    265,
-    266,
-    109,
-    110,
-    267,
-    268,
-    269,
-    270,
-    271,
-    272,
-    273,
-    274,
-    275,
-    276,
-    277,
-    278,
-    279,
-    280,
-    281,
-    282,
-    283,
-    284,
-    285,
-    286,
-    287,
-    288,
-    289,
-    290,
-    291,
-    292,
-    293,
-    294,
-    295,
-    296,
-    297,
-    298,
-    299,
-    300,
-    301,
-    302,
-    303,
-    304,
-    305,
-    306,
-    307,
-    308,
-    309,
-    310,
-    311,
-    312,
-    313,
-    314,
-    315,
-    316,
-    317,
-    318,
-    158,
-    155,
-    163,
-    319,
-    320,
-    321,
-    322,
-    323,
-    324,
-    325,
-    326,
-    150,
-    164,
-    169,
-    327,
-    328,
-    329,
-    330,
-    331,
-    332,
-    333,
-    334,
-    335,
-    336,
-    337,
-    338,
-    339,
-    340,
-    341,
-    342,
-    343,
-    344,
-    345,
-    346,
-    347,
-    348,
-    349,
-    350,
-    351,
-    352,
-    353,
-    354,
-    355,
-    356,
-    357,
-    358,
-    359,
-    360,
-    361,
-    362,
-    363,
-    364,
-    365,
-    366,
-    367,
-    368,
-    369,
-    370,
-    371,
-    372,
-    373,
-    374,
-    375,
-    376,
-    377,
-    378
+      0,   1, 229, 230, 231, 232, 233, 234,
+    235, 236, 237, 238,  13,  14,  15,  99,
+    239, 240, 241, 242, 243, 244, 245, 246,
+    247, 248,  27,  28, 249, 250, 251, 252,
+    253, 254, 255, 256, 257, 258, 259, 260,
+    261, 262, 263, 264, 265, 266, 109, 110,
+    267, 268, 269, 270, 271, 272, 273, 274,
+    275, 276, 277, 278, 279, 280, 281, 282,
+    283, 284, 285, 286, 287, 288, 289, 290,
+    291, 292, 293, 294, 295, 296, 297, 298,
+    299, 300, 301, 302, 303, 304, 305, 306,
+    307, 308, 309, 310, 311, 312, 313, 314,
+    315, 316, 317, 318, 158, 155, 163, 319,
+    320, 321, 322, 323, 324, 325, 326, 150,
+    164, 169, 327, 328, 329, 330, 331, 332,
+    333, 334, 335, 336, 337, 338, 339, 340,
+    341, 342, 343, 344, 345, 346, 347, 348,
+    349, 350, 351, 352, 353, 354, 355, 356,
+    357, 358, 359, 360, 361, 362, 363, 364,
+    365, 366, 367, 368, 369, 370, 371, 372,
+    373, 374, 375, 376, 377, 378
   };
 
   static const FT_UShort  cff_expertsubset_charset[87] =
   {
-    0,
-    1,
-    231,
-    232,
-    235,
-    236,
-    237,
-    238,
-    13,
-    14,
-    15,
-    99,
-    239,
-    240,
-    241,
-    242,
-    243,
-    244,
-    245,
-    246,
-    247,
-    248,
-    27,
-    28,
-    249,
-    250,
-    251,
-    253,
-    254,
-    255,
-    256,
-    257,
-    258,
-    259,
-    260,
-    261,
-    262,
-    263,
-    264,
-    265,
-    266,
-    109,
-    110,
-    267,
-    268,
-    269,
-    270,
-    272,
-    300,
-    301,
-    302,
-    305,
-    314,
-    315,
-    158,
-    155,
-    163,
-    320,
-    321,
-    322,
-    323,
-    324,
-    325,
-    326,
-    150,
-    164,
-    169,
-    327,
-    328,
-    329,
-    330,
-    331,
-    332,
-    333,
-    334,
-    335,
-    336,
-    337,
-    338,
-    339,
-    340,
-    341,
-    342,
-    343,
-    344,
-    345,
-    346
+      0,   1, 231, 232, 235, 236, 237, 238,
+     13,  14,  15,  99, 239, 240, 241, 242,
+    243, 244, 245, 246, 247, 248,  27,  28,
+    249, 250, 251, 253, 254, 255, 256, 257,
+    258, 259, 260, 261, 262, 263, 264, 265,
+    266, 109, 110, 267, 268, 269, 270, 272,
+    300, 301, 302, 305, 314, 315, 158, 155,
+    163, 320, 321, 322, 323, 324, 325, 326,
+    150, 164, 169, 327, 328, 329, 330, 331,
+    332, 333, 334, 335, 336, 337, 338, 339,
+    340, 341, 342, 343, 344, 345, 346
   };
 
   static const FT_UShort  cff_standard_encoding[256] =
   {
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    28,
-    29,
-    30,
-    31,
-    32,
-    33,
-    34,
-    35,
-    36,
-    37,
-    38,
-    39,
-    40,
-    41,
-    42,
-    43,
-    44,
-    45,
-    46,
-    47,
-    48,
-    49,
-    50,
-    51,
-    52,
-    53,
-    54,
-    55,
-    56,
-    57,
-    58,
-    59,
-    60,
-    61,
-    62,
-    63,
-    64,
-    65,
-    66,
-    67,
-    68,
-    69,
-    70,
-    71,
-    72,
-    73,
-    74,
-    75,
-    76,
-    77,
-    78,
-    79,
-    80,
-    81,
-    82,
-    83,
-    84,
-    85,
-    86,
-    87,
-    88,
-    89,
-    90,
-    91,
-    92,
-    93,
-    94,
-    95,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    96,
-    97,
-    98,
-    99,
-    100,
-    101,
-    102,
-    103,
-    104,
-    105,
-    106,
-    107,
-    108,
-    109,
-    110,
-    0,
-    111,
-    112,
-    113,
-    114,
-    0,
-    115,
-    116,
-    117,
-    118,
-    119,
-    120,
-    121,
-    122,
-    0,
-    123,
-    0,
-    124,
-    125,
-    126,
-    127,
-    128,
-    129,
-    130,
-    131,
-    0,
-    132,
-    133,
-    0,
-    134,
-    135,
-    136,
-    137,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    138,
-    0,
-    139,
-    0,
-    0,
-    0,
-    0,
-    140,
-    141,
-    142,
-    143,
-    0,
-    0,
-    0,
-    0,
-    0,
-    144,
-    0,
-    0,
-    0,
-    145,
-    0,
-    0,
-    146,
-    147,
-    148,
-    149,
-    0,
-    0,
-    0,
-    0
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      1,   2,   3,   4,   5,   6,   7,   8,
+      9,  10,  11,  12,  13,  14,  15,  16,
+     17,  18,  19,  20,  21,  22,  23,  24,
+     25,  26,  27,  28,  29,  30,  31,  32,
+     33,  34,  35,  36,  37,  38,  39,  40,
+     41,  42,  43,  44,  45,  46,  47,  48,
+     49,  50,  51,  52,  53,  54,  55,  56,
+     57,  58,  59,  60,  61,  62,  63,  64,
+     65,  66,  67,  68,  69,  70,  71,  72,
+     73,  74,  75,  76,  77,  78,  79,  80,
+     81,  82,  83,  84,  85,  86,  87,  88,
+     89,  90,  91,  92,  93,  94,  95,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,  96,  97,  98,  99, 100, 101, 102,
+    103, 104, 105, 106, 107, 108, 109, 110,
+      0, 111, 112, 113, 114,   0, 115, 116,
+    117, 118, 119, 120, 121, 122,   0, 123,
+      0, 124, 125, 126, 127, 128, 129, 130,
+    131,   0, 132, 133,   0, 134, 135, 136,
+    137,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0, 138,   0, 139,   0,   0,   0,   0,
+    140, 141, 142, 143,   0,   0,   0,   0,
+      0, 144,   0,   0,   0, 145,   0,   0,
+    146, 147, 148, 149,   0,   0,   0,   0
   };
 
   static const FT_UShort  cff_expert_encoding[256] =
   {
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    229,
-    230,
-    0,
-    231,
-    232,
-    233,
-    234,
-    235,
-    236,
-    237,
-    238,
-    13,
-    14,
-    15,
-    99,
-    239,
-    240,
-    241,
-    242,
-    243,
-    244,
-    245,
-    246,
-    247,
-    248,
-    27,
-    28,
-    249,
-    250,
-    251,
-    252,
-    0,
-    253,
-    254,
-    255,
-    256,
-    257,
-    0,
-    0,
-    0,
-    258,
-    0,
-    0,
-    259,
-    260,
-    261,
-    262,
-    0,
-    0,
-    263,
-    264,
-    265,
-    0,
-    266,
-    109,
-    110,
-    267,
-    268,
-    269,
-    0,
-    270,
-    271,
-    272,
-    273,
-    274,
-    275,
-    276,
-    277,
-    278,
-    279,
-    280,
-    281,
-    282,
-    283,
-    284,
-    285,
-    286,
-    287,
-    288,
-    289,
-    290,
-    291,
-    292,
-    293,
-    294,
-    295,
-    296,
-    297,
-    298,
-    299,
-    300,
-    301,
-    302,
-    303,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    304,
-    305,
-    306,
-    0,
-    0,
-    307,
-    308,
-    309,
-    310,
-    311,
-    0,
-    312,
-    0,
-    0,
-    312,
-    0,
-    0,
-    314,
-    315,
-    0,
-    0,
-    316,
-    317,
-    318,
-    0,
-    0,
-    0,
-    158,
-    155,
-    163,
-    319,
-    320,
-    321,
-    322,
-    323,
-    324,
-    325,
-    0,
-    0,
-    326,
-    150,
-    164,
-    169,
-    327,
-    328,
-    329,
-    330,
-    331,
-    332,
-    333,
-    334,
-    335,
-    336,
-    337,
-    338,
-    339,
-    340,
-    341,
-    342,
-    343,
-    344,
-    345,
-    346,
-    347,
-    348,
-    349,
-    350,
-    351,
-    352,
-    353,
-    354,
-    355,
-    356,
-    357,
-    358,
-    359,
-    360,
-    361,
-    362,
-    363,
-    364,
-    365,
-    366,
-    367,
-    368,
-    369,
-    370,
-    371,
-    372,
-    373,
-    374,
-    375,
-    376,
-    377,
-    378
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      1, 229, 230,   0, 231, 232, 233, 234,
+    235, 236, 237, 238,  13,  14,  15,  99,
+    239, 240, 241, 242, 243, 244, 245, 246,
+    247, 248,  27,  28, 249, 250, 251, 252,
+      0, 253, 254, 255, 256, 257,   0,   0,
+      0, 258,   0,   0, 259, 260, 261, 262,
+      0,   0, 263, 264, 265,   0, 266, 109,
+    110, 267, 268, 269,   0, 270, 271, 272,
+    273, 274, 275, 276, 277, 278, 279, 280,
+    281, 282, 283, 284, 285, 286, 287, 288,
+    289, 290, 291, 292, 293, 294, 295, 296,
+    297, 298, 299, 300, 301, 302, 303,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
+      0, 304, 305, 306,   0,   0, 307, 308,
+    309, 310, 311,   0, 312,   0,   0, 312,
+      0,   0, 314, 315,   0,   0, 316, 317,
+    318,   0,   0,   0, 158, 155, 163, 319,
+    320, 321, 322, 323, 324, 325,   0,   0,
+    326, 150, 164, 169, 327, 328, 329, 330,
+    331, 332, 333, 334, 335, 336, 337, 338,
+    339, 340, 341, 342, 343, 344, 345, 346,
+    347, 348, 349, 350, 351, 352, 353, 354,
+    355, 356, 357, 358, 359, 360, 361, 362,
+    363, 364, 365, 366, 367, 368, 369, 370,
+    371, 372, 373, 374, 375, 376, 377, 378
   };
 #endif
 
@@ -1063,28 +195,35 @@
 #define FT_COMPONENT  trace_cffload
 
 
-  /* read a CFF offset from memory */
+  /* read an offset from the index's stream current position */
   static FT_ULong
-  cff_get_offset( FT_Byte*  p,
-                  FT_Byte   off_size )
+  cff_index_read_offset( CFF_Index  idx,
+                         FT_Error  *errorp )
   {
-    FT_ULong  result;
+    FT_Error   error;
+    FT_Stream  stream = idx->stream;
+    FT_Byte    tmp[4];
+    FT_ULong   result = 0;
 
 
-    for ( result = 0; off_size > 0; off_size-- )
+    if ( !FT_STREAM_READ( tmp, idx->off_size ) )
     {
-      result <<= 8;
-      result  |= *p++;
+      FT_Int  nn;
+
+
+      for ( nn = 0; nn < idx->off_size; nn++ )
+        result = ( result << 8 ) | tmp[nn];
     }
 
+    *errorp = error;
     return result;
   }
 
 
   static FT_Error
-  cff_new_index( CFF_Index  idx,
-                 FT_Stream  stream,
-                 FT_Bool    load )
+  cff_index_init( CFF_Index  idx,
+                  FT_Stream  stream,
+                  FT_Bool    load )
   {
     FT_Error   error;
     FT_Memory  memory = stream->memory;
@@ -1094,13 +233,12 @@
     FT_MEM_ZERO( idx, sizeof ( *idx ) );
 
     idx->stream = stream;
+    idx->start  = FT_STREAM_POS();
     if ( !FT_READ_USHORT( count ) &&
          count > 0                )
     {
-      FT_Byte*   p;
-      FT_Byte    offsize;
-      FT_ULong   data_size;
-      FT_ULong*  poff;
+      FT_Byte   offsize;
+      FT_ULong  size;
 
 
       /* there is at least one element; read the offset size,           */
@@ -1108,40 +246,43 @@
       if ( FT_READ_BYTE( offsize ) )
         goto Exit;
 
-      idx->stream   = stream;
-      idx->count    = count;
-      idx->off_size = offsize;
-      data_size     = (FT_ULong)( count + 1 ) * offsize;
-
-      if ( FT_NEW_ARRAY( idx->offsets, count + 1 ) ||
-           FT_FRAME_ENTER( data_size )             )
-        goto Exit;
-
-      poff = idx->offsets;
-      p    = (FT_Byte*)stream->cursor;
-
-      for ( ; (FT_Short)count >= 0; count-- )
+      if ( offsize < 1 || offsize > 4 )
       {
-        poff[0] = cff_get_offset( p, offsize );
-        poff++;
-        p += offsize;
+        error = FT_Err_Invalid_Table;
+        goto Exit;
       }
 
-      FT_FRAME_EXIT();
+      idx->count    = count;
+      idx->off_size = offsize;
+      size          = (FT_ULong)( count + 1 ) * offsize;
 
-      idx->data_offset = FT_STREAM_POS();
-      data_size        = poff[-1] - 1;
+      idx->data_offset = idx->start + 3 + size;
+
+      if ( FT_STREAM_SKIP( size - offsize ) )
+        goto Exit;
+
+      size = cff_index_read_offset( idx, &error );
+      if ( error )
+        goto Exit;
+
+      if ( size == 0 )
+      {
+        error = CFF_Err_Invalid_Table;
+        goto Exit;
+      }
+
+      idx->data_size = --size;
 
       if ( load )
       {
         /* load the data */
-        if ( FT_FRAME_EXTRACT( data_size, idx->bytes ) )
+        if ( FT_FRAME_EXTRACT( size, idx->bytes ) )
           goto Exit;
       }
       else
       {
         /* skip the data */
-        if ( FT_STREAM_SKIP( data_size ) )
+        if ( FT_STREAM_SKIP( size ) )
           goto Exit;
       }
     }
@@ -1155,7 +296,7 @@
 
 
   static void
-  cff_done_index( CFF_Index  idx )
+  cff_index_done( CFF_Index  idx )
   {
     if ( idx->stream )
     {
@@ -1172,6 +313,67 @@
   }
 
 
+  static FT_Error
+  cff_index_load_offsets( CFF_Index  idx )
+  {
+    FT_Error   error  = 0;
+    FT_Stream  stream = idx->stream;
+    FT_Memory  memory = stream->memory;
+
+
+    if ( idx->count > 0 && idx->offsets == NULL )
+    {
+      FT_Byte    offsize = idx->off_size;
+      FT_ULong   data_size;
+      FT_Byte*   p;
+      FT_Byte*   p_end;
+      FT_ULong*  poff;
+
+
+      data_size = (FT_ULong)( idx->count + 1 ) * offsize;
+
+      if ( FT_NEW_ARRAY( idx->offsets, idx->count + 1 ) ||
+           FT_STREAM_SEEK( idx->start + 3 )             ||
+           FT_FRAME_ENTER( data_size )                  )
+        goto Exit;
+
+      poff   = idx->offsets;
+      p      = (FT_Byte*)stream->cursor;
+      p_end  = p + data_size;
+
+      switch ( offsize )
+      {
+      case 1:
+        for ( ; p < p_end; p++, poff++ )
+          poff[0] = p[0];
+        break;
+
+      case 2:
+        for ( ; p < p_end; p += 2, poff++ )
+          poff[0] = FT_PEEK_USHORT( p );
+        break;
+
+      case 3:
+        for ( ; p < p_end; p += 3, poff++ )
+          poff[0] = FT_PEEK_OFF3( p );
+        break;
+
+      default:
+        for ( ; p < p_end; p += 4, poff++ )
+          poff[0] = FT_PEEK_ULONG( p );
+      }
+
+      FT_FRAME_EXIT();
+    }
+
+  Exit:
+    if ( error )
+      FT_FREE( idx->offsets );
+
+    return error;
+  }
+
+
   /* allocate a table containing pointers to an index's elements */
   static FT_Error
   cff_index_get_pointers( CFF_Index   idx,
@@ -1185,6 +387,13 @@
 
     *table = 0;
 
+    if ( idx->offsets == NULL )
+    {
+      error = cff_index_load_offsets( idx );
+      if ( error )
+        goto Exit;
+    }
+
     if ( idx->count > 0 && !FT_NEW_ARRAY( t, idx->count + 1 ) )
     {
       old_offset = 1;
@@ -1194,6 +403,10 @@
         if ( !offset )
           offset = old_offset;
 
+        /* sanity check for invalid offset tables */
+        else if ( offset < old_offset || offset - 1 >= idx->data_size )
+          offset = old_offset;
+
         t[n] = idx->bytes + offset - 1;
 
         old_offset = offset;
@@ -1201,6 +414,7 @@
       *table = t;
     }
 
+  Exit:
     return error;
   }
 
@@ -1217,25 +431,49 @@
     if ( idx && idx->count > element )
     {
       /* compute start and end offsets */
-      FT_ULong  off1, off2 = 0;
+      FT_Stream  stream = idx->stream;
+      FT_ULong   off1, off2 = 0;
 
 
-      off1 = idx->offsets[element];
-      if ( off1 )
+      /* load offsets from file or the offset table */
+      if ( !idx->offsets )
       {
-        do
+        FT_ULong  pos = element * idx->off_size;
+
+
+        if ( FT_STREAM_SEEK( idx->start + 3 + pos ) )
+          goto Exit;
+
+        off1 = cff_index_read_offset( idx, &error );
+        if ( error )
+          goto Exit;
+
+        if ( off1 != 0 )
         {
-          element++;
-          off2 = idx->offsets[element];
+          do
+          {
+            element++;
+            off2 = cff_index_read_offset( idx, &error );
+          }
+          while ( off2 == 0 && element < idx->count );
+        }
+      }
+      else   /* use offsets table */
+      {
+        off1 = idx->offsets[element];
+        if ( off1 )
+        {
+          do
+          {
+            element++;
+            off2 = idx->offsets[element];
 
-        } while ( off2 == 0 && element < idx->count );
-
-        if ( !off2 )
-          off1 = 0;
+          } while ( off2 == 0 && element < idx->count );
+        }
       }
 
       /* access element */
-      if ( off1 )
+      if ( off1 && off2 > off1 )
       {
         *pbyte_len = off2 - off1;
 
@@ -1247,9 +485,6 @@
         else
         {
           /* this index is still on disk/file, access it through a frame */
-          FT_Stream  stream = idx->stream;
-
-
           if ( FT_STREAM_SEEK( idx->data_offset + off1 - 1 ) ||
                FT_FRAME_EXTRACT( off2 - off1, *pbytes )      )
             goto Exit;
@@ -1493,6 +728,61 @@
   /*************************************************************************/
   /*************************************************************************/
 
+  static FT_Error
+  cff_charset_compute_cids( CFF_Charset  charset,
+                            FT_UInt      num_glyphs,
+                            FT_Memory    memory )
+  {
+    FT_Error   error   = FT_Err_Ok;
+    FT_UInt    i;
+    FT_UShort  max_cid = 0;
+
+
+    if ( charset->max_cid > 0 )
+      goto Exit;
+
+    for ( i = 0; i < num_glyphs; i++ )
+      if ( charset->sids[i] > max_cid )
+        max_cid = charset->sids[i];
+    max_cid++;
+
+    if ( FT_NEW_ARRAY( charset->cids, max_cid ) )
+      goto Exit;
+
+    for ( i = 0; i < num_glyphs; i++ )
+      charset->cids[charset->sids[i]] = (FT_UShort)i;
+
+    charset->max_cid    = max_cid;
+    charset->num_glyphs = num_glyphs;
+
+  Exit:
+    return error;
+  }
+
+
+  FT_LOCAL_DEF( FT_UInt )
+  cff_charset_cid_to_gindex( CFF_Charset  charset,
+                             FT_UInt      cid )
+  {
+    FT_UInt  result = 0;
+
+
+    if ( cid < charset->max_cid )
+      result = charset->cids[cid];
+
+    return result;
+  }
+
+
+  static void
+  cff_charset_free_cids( CFF_Charset  charset,
+                         FT_Memory    memory )
+  {
+    FT_FREE( charset->cids );
+    charset->max_cid = 0;
+  }
+
+
   static void
   cff_charset_done( CFF_Charset  charset,
                     FT_Stream    stream )
@@ -1500,8 +790,9 @@
     FT_Memory  memory = stream->memory;
 
 
+    cff_charset_free_cids( charset, memory );
+
     FT_FREE( charset->sids );
-    FT_FREE( charset->cids );
     charset->format = 0;
     charset->offset = 0;
   }
@@ -1672,23 +963,7 @@
 
     /* we have to invert the `sids' array for subsetted CID-keyed fonts */
     if ( invert )
-    {
-      FT_UInt    i;
-      FT_UShort  max_cid = 0;
-
-
-      for ( i = 0; i < num_glyphs; i++ )
-        if ( charset->sids[i] > max_cid )
-          max_cid = charset->sids[i];
-      max_cid++;
-
-      if ( FT_NEW_ARRAY( charset->cids, max_cid ) )
-        goto Exit;
-      FT_MEM_ZERO( charset->cids, sizeof ( FT_UShort ) * max_cid );
-
-      for ( i = 0; i < num_glyphs; i++ )
-        charset->cids[charset->sids[i]] = (FT_UShort)i;
-    }
+      error = cff_charset_compute_cids( charset, num_glyphs, memory );
 
   Exit:
     /* Clean up if there was an error. */
@@ -1894,9 +1169,6 @@
     }
     else
     {
-      FT_UInt i;
-
-
       /* We take into account the fact a CFF font can use a predefined */
       /* encoding without containing all of the glyphs encoded by this */
       /* encoding (see the note at the end of section 12 in the CFF    */
@@ -1919,32 +1191,31 @@
 
         encoding->count = 0;
 
+        error = cff_charset_compute_cids( charset, num_glyphs,
+                                          stream->memory );
+        if ( error )
+          goto Exit;
+
         for ( j = 0; j < 256; j++ )
         {
-          /* If j is encoded, find the GID for it. */
-          if ( encoding->sids[j] )
+          FT_UInt  sid = encoding->sids[j];
+          FT_UInt  gid = 0;
+
+
+          if ( sid )
+            gid = cff_charset_cid_to_gindex( charset, sid );
+
+          if ( gid != 0 )
           {
-            for ( i = 1; i < num_glyphs; i++ )
-              /* We matched, so break. */
-              if ( charset->sids[i] == encoding->sids[j] )
-                break;
+            encoding->codes[j] = (FT_UShort)gid;
 
-            /* i will be equal to num_glyphs if we exited the above */
-            /* loop without a match.  In this case, we also have to */
-            /* fix the code to SID mapping.                         */
-            if ( i == num_glyphs )
-            {
-              encoding->codes[j] = 0;
-              encoding->sids [j] = 0;
-            }
-            else
-            {
-              encoding->codes[j] = (FT_UShort)i;
-
-              /* update encoding count */
-              if ( encoding->count < j + 1 )
-                encoding->count = j + 1;
-            }
+            if ( encoding->count < j + 1 )
+              encoding->count = j + 1;
+          }
+          else
+          {
+            encoding->codes[j] = 0;
+            encoding->sids [j] = 0;
           }
         }
         break;
@@ -2040,6 +1311,9 @@
       FT_FRAME_EXIT();
       if ( error )
         goto Exit;
+
+      /* ensure that `num_blue_values' is even */
+      priv->num_blue_values &= ~1;
     }
 
     /* read the local subrs, if any */
@@ -2049,7 +1323,7 @@
                            priv->local_subrs_offset ) )
         goto Exit;
 
-      error = cff_new_index( &font->local_subrs_index, stream, 1 );
+      error = cff_index_init( &font->local_subrs_index, stream, 1 );
       if ( error )
         goto Exit;
 
@@ -2071,7 +1345,7 @@
   {
     if ( subfont )
     {
-      cff_done_index( &subfont->local_subrs_index );
+      cff_index_done( &subfont->local_subrs_index );
       FT_FREE( subfont->local_subrs );
     }
   }
@@ -2127,10 +1401,14 @@
       goto Exit;
 
     /* read the name, top dict, string and global subrs index */
-    if ( FT_SET_ERROR( cff_new_index( &font->name_index,         stream, 0 )) ||
-         FT_SET_ERROR( cff_new_index( &font->font_dict_index,    stream, 0 )) ||
-         FT_SET_ERROR( cff_new_index( &font->string_index,       stream, 0 )) ||
-         FT_SET_ERROR( cff_new_index( &font->global_subrs_index, stream, 1 )) )
+    if ( FT_SET_ERROR( cff_index_init( &font->name_index,
+                                       stream, 0 ) )              ||
+         FT_SET_ERROR( cff_index_init( &font->font_dict_index,
+                                       stream, 0 ) )              ||
+         FT_SET_ERROR( cff_index_init( &font->string_index,
+                                       stream, 0 ) )              ||
+         FT_SET_ERROR( cff_index_init( &font->global_subrs_index,
+                                       stream, 1 ) )              )
       goto Exit;
 
     /* well, we don't really forget the `disabled' fonts... */
@@ -2158,7 +1436,7 @@
     if ( FT_STREAM_SEEK( base_offset + dict->charstrings_offset ) )
       goto Exit;
 
-    error = cff_new_index( &font->charstrings_index, stream, 0 );
+    error = cff_index_init( &font->charstrings_index, stream, 0 );
     if ( error )
       goto Exit;
 
@@ -2175,7 +1453,7 @@
       if ( FT_STREAM_SEEK( base_offset + dict->cid_fd_array_offset ) )
         goto Exit;
 
-      error = cff_new_index( &fd_index, stream, 0 );
+      error = cff_index_init( &fd_index, stream, 0 );
       if ( error )
         goto Exit;
 
@@ -2190,11 +1468,11 @@
       if ( FT_NEW_ARRAY( sub, fd_index.count ) )
         goto Fail_CID;
 
-      /* setup pointer table */
+      /* set up pointer table */
       for ( idx = 0; idx < fd_index.count; idx++ )
         font->subfonts[idx] = sub + idx;
 
-      /* now load each sub font independently */
+      /* now load each subfont independently */
       for ( idx = 0; idx < fd_index.count; idx++ )
       {
         sub = font->subfonts[idx];
@@ -2211,7 +1489,7 @@
                                   base_offset + dict->cid_fd_select_offset );
 
     Fail_CID:
-      cff_done_index( &fd_index );
+      cff_index_done( &fd_index );
 
       if ( error )
         goto Exit;
@@ -2281,11 +1559,11 @@
     FT_UInt    idx;
 
 
-    cff_done_index( &font->global_subrs_index );
-    cff_done_index( &font->string_index );
-    cff_done_index( &font->font_dict_index );
-    cff_done_index( &font->name_index );
-    cff_done_index( &font->charstrings_index );
+    cff_index_done( &font->global_subrs_index );
+    cff_index_done( &font->string_index );
+    cff_index_done( &font->font_dict_index );
+    cff_index_done( &font->name_index );
+    cff_index_done( &font->charstrings_index );
 
     /* release font dictionaries, but only if working with */
     /* a CID keyed CFF font                                */
@@ -2294,7 +1572,8 @@
       for ( idx = 0; idx < font->num_subfonts; idx++ )
         cff_subfont_done( memory, font->subfonts[idx] );
 
-      FT_FREE( font->subfonts );
+      /* the subfonts array has been allocated as a single block */
+      FT_FREE( font->subfonts[0] );
     }
 
     cff_encoding_done( &font->encoding );
@@ -2303,6 +1582,16 @@
     cff_subfont_done( memory, &font->top_font );
 
     CFF_Done_FD_Select( &font->fd_select, font->stream );
+
+    if (font->font_info != NULL)
+    {
+      FT_FREE( font->font_info->version );
+      FT_FREE( font->font_info->notice );
+      FT_FREE( font->font_info->full_name );
+      FT_FREE( font->font_info->family_name );
+      FT_FREE( font->font_info->weight );
+      FT_FREE( font->font_info );
+    }
 
     FT_FREE( font->global_subrs );
     FT_FREE( font->font_name );

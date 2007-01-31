@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    ANSI-specific configuration file (specification only).               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -201,7 +201,7 @@ FT_BEGIN_HEADER
 
 #elif defined( __GNUC__ )
 
-  /* GCC provides the "long long" type */
+  /* GCC provides the `long long' type */
 #define FT_LONG64
 #define FT_INT64  long long int
 
@@ -265,9 +265,9 @@ FT_BEGIN_HEADER
 #ifndef FT_BASE_DEF
 
 #ifdef __cplusplus
-#define FT_BASE_DEF( x )  extern "C"  x
+#define FT_BASE_DEF( x )  x
 #else
-#define FT_BASE_DEF( x )  extern  x
+#define FT_BASE_DEF( x )  x
 #endif
 
 #endif /* !FT_BASE_DEF */

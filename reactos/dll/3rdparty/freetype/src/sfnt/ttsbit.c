@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType and OpenType embedded bitmap support (body).                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,9 +20,15 @@
 #include FT_INTERNAL_STREAM_H
 #include FT_TRUETYPE_TAGS_H
 
-#ifdef FT_OPTIMIZE_MEMORY
+  /*
+   *  Alas, the memory-optimized sbit loader can't be used when implementing
+   *  the `old internals' hack
+   */
+#if !defined FT_CONFIG_OPTION_OLD_INTERNALS
+
 #include "ttsbit0.c"
-#else /* !OPTIMIZE_MEMORY */
+
+#else /* !FT_CONFIG_OPTION_OLD_INTERNALS */
 
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
@@ -216,7 +222,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    TT_Load_SBit_Const_Metrics                                         */
+  /*    Load_SBit_Const_Metrics                                            */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Loads the metrics for `EBLC' index tables format 2 and 5.          */
@@ -246,7 +252,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    TT_Load_SBit_Range_Codes                                           */
+  /*    Load_SBit_Range_Codes                                              */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Loads the range codes for `EBLC' index tables format 4 and 5.      */
@@ -311,7 +317,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    TT_Load_SBit_Range                                                 */
+  /*    Load_SBit_Range                                                    */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Loads a given `EBLC' index/range table.                            */
@@ -392,7 +398,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    tt_face_load_sbit_strikes                                          */
+  /*    tt_face_load_eblc                                                  */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Loads the table of embedded bitmap sizes for this face.            */
@@ -406,8 +412,8 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  tt_face_load_sbit_strikes( TT_Face    face,
-                             FT_Stream  stream )
+  tt_face_load_eblc( TT_Face    face,
+                     FT_Stream  stream )
   {
     FT_Error   error  = 0;
     FT_Memory  memory = stream->memory;
@@ -584,41 +590,6 @@
       }
     }
 
-    /* now set up the root fields to indicate the strikes */
-    if ( face->num_sbit_strikes )
-    {
-      FT_ULong  n;
-      FT_Face   root = FT_FACE( face );
-
-
-      if ( FT_NEW_ARRAY( root->available_sizes, face->num_sbit_strikes ) )
-        goto Exit;
-
-      for ( n = 0 ; n < face->num_sbit_strikes ; n++ )
-      {
-        FT_Bitmap_Size*  bsize  = root->available_sizes + n;
-        TT_SBit_Strike   strike = face->sbit_strikes + n;
-        FT_UShort        fupem  = face->header.Units_Per_EM;
-        FT_Short         height = (FT_Short)( face->horizontal.Ascender -
-                                              face->horizontal.Descender +
-                                              face->horizontal.Line_Gap );
-        FT_Short         avg    = face->os2.xAvgCharWidth;
-
-
-        /* assume 72dpi */
-        bsize->height =
-          (FT_Short)( ( height * strike->y_ppem + fupem / 2 ) / fupem );
-        bsize->width  =
-          (FT_Short)( ( avg * strike->y_ppem + fupem / 2 ) / fupem );
-        bsize->size   = strike->y_ppem << 6;
-        bsize->x_ppem = strike->x_ppem << 6;
-        bsize->y_ppem = strike->y_ppem << 6;
-      }
-
-      root->face_flags     |= FT_FACE_FLAG_FIXED_SIZES;
-      root->num_fixed_sizes = (FT_Int)face->num_sbit_strikes;
-    }
-
   Exit:
     return error;
   }
@@ -627,7 +598,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    tt_face_free_sbit_strikes                                          */
+  /*    tt_face_free_eblc                                                  */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Releases the embedded bitmap tables.                               */
@@ -636,7 +607,7 @@
   /*    face :: The target face object.                                    */
   /*                                                                       */
   FT_LOCAL_DEF( void )
-  tt_face_free_sbit_strikes( TT_Face  face )
+  tt_face_free_eblc( TT_Face  face )
   {
     FT_Memory       memory       = face->root.memory;
     TT_SBit_Strike  strike       = face->sbit_strikes;
@@ -671,30 +642,41 @@
 
 
   FT_LOCAL_DEF( FT_Error )
-  tt_face_set_sbit_strike( TT_Face    face,
-                           FT_UInt    x_ppem,
-                           FT_UInt    y_ppem,
-                           FT_ULong  *astrike_index )
+  tt_face_set_sbit_strike( TT_Face          face,
+                           FT_Size_Request  req,
+                           FT_ULong*        astrike_index )
   {
-    FT_ULong  i;
+    return FT_Match_Size( (FT_Face)face, req, 0, astrike_index );
+  }
 
 
-    if ( x_ppem > 255 ||
-         y_ppem < 1 || y_ppem > 255 )
-      return SFNT_Err_Invalid_PPem;
+  FT_LOCAL_DEF( FT_Error )
+  tt_face_load_strike_metrics( TT_Face           face,
+                               FT_ULong          strike_index,
+                               FT_Size_Metrics*  metrics )
+  {
+    TT_SBit_Strike  strike;
 
-    for ( i = 0; i < face->num_sbit_strikes; i++ )
-    {
-      if ( ( (FT_UInt)face->sbit_strikes[i].y_ppem == y_ppem )     &&
-           ( ( x_ppem == 0 )                                     ||
-             ( (FT_UInt)face->sbit_strikes[i].x_ppem == x_ppem ) ) )
-      {
-        *astrike_index = i;
-        return SFNT_Err_Ok;
-      }
-    }
 
-    return SFNT_Err_Invalid_PPem;
+    if ( strike_index >= face->num_sbit_strikes )
+      return SFNT_Err_Invalid_Argument;
+
+    strike = face->sbit_strikes + strike_index;
+
+    metrics->x_ppem = strike->x_ppem;
+    metrics->y_ppem = strike->y_ppem;
+
+    metrics->ascender  = strike->hori.ascender << 6;
+    metrics->descender = strike->hori.descender << 6;
+
+    /* XXX: Is this correct? */
+    metrics->max_advance = ( strike->hori.min_origin_SB  +
+                             strike->hori.max_width      +
+                             strike->hori.min_advance_SB ) << 6;
+
+    metrics->height = metrics->ascender - metrics->descender;
+
+    return SFNT_Err_Ok;
   }
 
 
@@ -910,7 +892,7 @@
       {
         TT_SBit_SmallMetricsRec  smetrics;
 
-        const FT_Frame_Field  sbit_small_metrics_fields[] =
+        static const FT_Frame_Field  sbit_small_metrics_fields[] =
         {
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  TT_SBit_SmallMetricsRec
@@ -1501,7 +1483,7 @@
       /* some heuristic values */
 
       metrics->vertBearingX = (FT_Char)(-metrics->width / 2 );
-      metrics->vertBearingY = (FT_Char)( advance / 10 );
+      metrics->vertBearingY = (FT_Char)( ( advance - metrics->height ) / 2 );
       metrics->vertAdvance  = (FT_Char)( advance * 12 / 10 );
     }
 
@@ -1513,7 +1495,7 @@
     return error;
   }
 
-#endif /* !OPTIMIZE_MEMORY */
+#endif /* !FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
 /* END */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter module implementation (body).                            */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005 by                                          */
+/*  Copyright 2003, 2004, 2005, 2006 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,6 +18,14 @@
 
 #include "afmodule.h"
 #include "afloader.h"
+
+#ifdef AF_DEBUG
+  int    _af_debug;
+  int    _af_debug_disable_horz_hints;
+  int    _af_debug_disable_vert_hints;
+  int    _af_debug_disable_blue_hints;
+  void*  _af_debug_hints;
+#endif
 
 #include FT_INTERNAL_OBJECTS_H
 

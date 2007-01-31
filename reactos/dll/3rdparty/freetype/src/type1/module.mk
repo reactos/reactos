@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,10 +13,11 @@
 # fully.
 
 
-make_module_list: add_type1_driver
+FTMODULE_H_COMMANDS += TYPE1_DRIVER
 
-add_type1_driver:
-	$(OPEN_DRIVER)t1_driver_class$(CLOSE_DRIVER)
-	$(ECHO_DRIVER)type1     $(ECHO_DRIVER_DESC)Postscript font files with extension *.pfa or *.pfb$(ECHO_DRIVER_DONE)
+define TYPE1_DRIVER
+$(OPEN_DRIVER)t1_driver_class$(CLOSE_DRIVER)
+$(ECHO_DRIVER)type1     $(ECHO_DRIVER_DESC)Postscript font files with extension *.pfa or *.pfb$(ECHO_DRIVER_DONE)
+endef
 
 # EOF

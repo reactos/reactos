@@ -8,14 +8,14 @@ Introduction
 ************
 
 BDF (Bitmap Distribution Format) is a bitmap font format defined by Adobe,
-which is intended to be easily understood by both humans and computers. 
+which is intended to be easily understood by both humans and computers.
 This code implements a BDF driver for the FreeType library, following the
 Adobe Specification V 2.2.  The specification of the BDF font format is
 available from Adobe's web site:
 
   http://partners.adobe.com/asn/developer/PDFS/TN/5005.BDF_Spec.pdf
 
-Many good bitmap fonts in bdf format come with XFree86 (www.XFree86.org). 
+Many good bitmap fonts in bdf format come with XFree86 (www.XFree86.org).
 They do not define vertical metrics, because the X Consortium BDF
 specification has removed them.
 
@@ -40,13 +40,13 @@ client application the work of interpreting them.  For instance:
   FT_New_Face( library, ..., &face );
 
   bdfface = (BDF_Public_Face)face;
-  
-  if ( ( bdfface->charset_registry == "ISO10646" ) && 
+
+  if ( ( bdfface->charset_registry == "ISO10646" ) &&
        ( bdfface->charset_encoding == "1" )        )
     [..]
 
 
-Thus the driver always exports `ft_encoding_none' as face->charmap.encoding. 
+Thus the driver always exports `ft_encoding_none' as face->charmap.encoding.
 FT_Get_Char_Index's behavior is unmodified, that is, it converts the ULong
 value given as argument into the corresponding glyph number.
 

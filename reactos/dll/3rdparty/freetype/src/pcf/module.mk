@@ -2,9 +2,9 @@
 # FreeType 2 PCF module definition
 #
 
-# Copyright 2000 by
+# Copyright 2000, 2006 by
 # Francesco Zappa Nardelli
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -23,10 +23,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-make_module_list: add_pcf_driver
 
-add_pcf_driver:
-	$(OPEN_DRIVER)pcf_driver_class$(CLOSE_DRIVER)
-	$(ECHO_DRIVER)pcf       $(ECHO_DRIVER_DESC)pcf bitmap fonts$(ECHO_DRIVER_DONE)
+FTMODULE_H_COMMANDS += PCF_DRIVER
+
+define PCF_DRIVER
+$(OPEN_DRIVER)pcf_driver_class$(CLOSE_DRIVER)
+$(ECHO_DRIVER)pcf       $(ECHO_DRIVER_DESC)pcf bitmap fonts$(ECHO_DRIVER_DONE)
+endef
 
 # EOF

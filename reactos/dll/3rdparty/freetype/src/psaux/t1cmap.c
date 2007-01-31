@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 character map support (body).                                 */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2006 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -257,194 +257,71 @@
   /*************************************************************************/
   /*************************************************************************/
 
-  FT_CALLBACK_DEF( FT_Int )
-  t1_cmap_uni_pair_compare( const void*  pair1,
-                            const void*  pair2 )
+  FT_CALLBACK_DEF( const char * )
+  t1_get_glyph_name( T1_Face  face,
+                     FT_UInt  idx )
   {
-    FT_UInt32  u1 = ((T1_CMapUniPair)pair1)->unicode;
-    FT_UInt32  u2 = ((T1_CMapUniPair)pair2)->unicode;
-
-
-    if ( u1 < u2 )
-      return -1;
-
-    if ( u1 > u2 )
-      return +1;
-
-    return 0;
+    return face->type1.glyph_names[idx];
   }
 
 
   FT_CALLBACK_DEF( FT_Error )
-  t1_cmap_unicode_init( T1_CMapUnicode  cmap )
+  t1_cmap_unicode_init( PS_Unicodes  unicodes )
   {
-    FT_Error            error;
-    FT_UInt             count;
-    T1_Face             face    = (T1_Face)FT_CMAP_FACE( cmap );
+    T1_Face             face    = (T1_Face)FT_CMAP_FACE( unicodes );
     FT_Memory           memory  = FT_FACE_MEMORY( face );
     FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)face->psnames;
 
 
-    cmap->num_pairs = 0;
-    cmap->pairs     = NULL;
-
-    count = face->type1.num_glyphs;
-
-    if ( !FT_NEW_ARRAY( cmap->pairs, count ) )
-    {
-      FT_UInt         n, new_count;
-      T1_CMapUniPair  pair;
-      FT_UInt32       uni_code;
-
-
-      pair = cmap->pairs;
-      for ( n = 0; n < count; n++ )
-      {
-        const char*  gname = face->type1.glyph_names[n];
-
-
-        /* build unsorted pair table by matching glyph names */
-        if ( gname )
-        {
-          uni_code = psnames->unicode_value( gname );
-
-          if ( uni_code != 0 )
-          {
-            pair->unicode = uni_code;
-            pair->gindex  = n;
-            pair++;
-          }
-        }
-      }
-
-      new_count = (FT_UInt)( pair - cmap->pairs );
-      if ( new_count == 0 )
-      {
-        /* there are no unicode characters in here! */
-        FT_FREE( cmap->pairs );
-        error = PSaux_Err_Invalid_Argument;
-      }
-      else
-      {
-        /* re-allocate if the new array is much smaller than the original */
-        /* one                                                            */
-        if ( new_count != count && new_count < count / 2 )
-        {
-          (void)FT_RENEW_ARRAY( cmap->pairs, count, new_count );
-          error = 0;
-        }
-
-        /* sort the pairs table to allow efficient binary searches */
-        ft_qsort( cmap->pairs,
-                  new_count,
-                  sizeof ( T1_CMapUniPairRec ),
-                  t1_cmap_uni_pair_compare );
-
-        cmap->num_pairs = new_count;
-      }
-    }
-
-    return error;
+    return psnames->unicodes_init( memory,
+                                   unicodes,
+                                   face->type1.num_glyphs,
+                                   (PS_GetGlyphNameFunc)&t1_get_glyph_name,
+                                   (PS_FreeGlyphNameFunc)NULL,
+                                   (FT_Pointer)face );
   }
 
 
   FT_CALLBACK_DEF( void )
-  t1_cmap_unicode_done( T1_CMapUnicode  cmap )
+  t1_cmap_unicode_done( PS_Unicodes  unicodes )
   {
-    FT_Face    face   = FT_CMAP_FACE(cmap);
-    FT_Memory  memory = FT_FACE_MEMORY(face);
+    FT_Face    face   = FT_CMAP_FACE( unicodes );
+    FT_Memory  memory = FT_FACE_MEMORY( face );
 
-    FT_FREE( cmap->pairs );
-    cmap->num_pairs = 0;
+
+    FT_FREE( unicodes->maps );
+    unicodes->num_maps = 0;
   }
 
 
   FT_CALLBACK_DEF( FT_UInt )
-  t1_cmap_unicode_char_index( T1_CMapUnicode  cmap,
-                              FT_UInt32       char_code )
+  t1_cmap_unicode_char_index( PS_Unicodes  unicodes,
+                              FT_UInt32    char_code )
   {
-    FT_UInt         min = 0;
-    FT_UInt         max = cmap->num_pairs;
-    FT_UInt         mid;
-    T1_CMapUniPair  pair;
+    T1_Face             face    = (T1_Face)FT_CMAP_FACE( unicodes );
+    FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)face->psnames;
 
 
-    while ( min < max )
-    {
-      mid  = min + ( max - min ) / 2;
-      pair = cmap->pairs + mid;
-
-      if ( pair->unicode == char_code )
-        return pair->gindex;
-
-      if ( pair->unicode < char_code )
-        min = mid + 1;
-      else
-        max = mid;
-    }
-    return 0;
+    return psnames->unicodes_char_index( unicodes, char_code );
   }
 
 
   FT_CALLBACK_DEF( FT_UInt )
-  t1_cmap_unicode_char_next( T1_CMapUnicode  cmap,
-                             FT_UInt32      *pchar_code )
+  t1_cmap_unicode_char_next( PS_Unicodes  unicodes,
+                             FT_UInt32   *pchar_code )
   {
-    FT_UInt    result    = 0;
-    FT_UInt32  char_code = *pchar_code + 1;
+    T1_Face             face    = (T1_Face)FT_CMAP_FACE( unicodes );
+    FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)face->psnames;
 
 
-  Restart:
-    {
-      FT_UInt         min = 0;
-      FT_UInt         max = cmap->num_pairs;
-      FT_UInt         mid;
-      T1_CMapUniPair  pair;
-
-
-      while ( min < max )
-      {
-        mid  = min + ( ( max - min ) >> 1 );
-        pair = cmap->pairs + mid;
-
-        if ( pair->unicode == char_code )
-        {
-          result = pair->gindex;
-          if ( result != 0 )
-            goto Exit;
-
-          char_code++;
-          goto Restart;
-        }
-
-        if ( pair->unicode < char_code )
-          min = mid+1;
-        else
-          max = mid;
-      }
-
-      /* we didn't find it, but we have a pair just above it */
-      char_code = 0;
-
-      if ( min < cmap->num_pairs )
-      {
-        pair   = cmap->pairs + min;
-        result = pair->gindex;
-        if ( result != 0 )
-          char_code = pair->unicode;
-      }
-    }
-
-  Exit:
-    *pchar_code = char_code;
-    return result;
+    return psnames->unicodes_char_next( unicodes, pchar_code );
   }
 
 
   FT_CALLBACK_TABLE_DEF const FT_CMap_ClassRec
   t1_cmap_unicode_class_rec =
   {
-    sizeof ( T1_CMapUnicodeRec ),
+    sizeof ( PS_UnicodesRec ),
 
     (FT_CMap_InitFunc)     t1_cmap_unicode_init,
     (FT_CMap_DoneFunc)     t1_cmap_unicode_done,

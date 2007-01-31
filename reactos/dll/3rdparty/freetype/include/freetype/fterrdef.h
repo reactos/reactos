@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType error codes (specification).                                */
 /*                                                                         */
-/*  Copyright 2002, 2004 by                                                */
+/*  Copyright 2002, 2004, 2006 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -52,6 +52,8 @@
                 "broken table" )
   FT_ERRORDEF_( Invalid_Offset,                              0x09, \
                 "broken offset within table" )
+  FT_ERRORDEF_( Array_Too_Large,                             0x0A, \
+                "array allocation size too large" )
 
   /* glyph/character errors */
 
@@ -226,6 +228,8 @@
                 "`ENCODING' field missing" )
   FT_ERRORDEF_( Missing_Bbx_Field,                           0xB6, \
                 "`BBX' field missing" )
+  FT_ERRORDEF_( Bbx_Too_Big,                                 0xB7, \
+                "`BBX' too big" )
 
 
 /* END */

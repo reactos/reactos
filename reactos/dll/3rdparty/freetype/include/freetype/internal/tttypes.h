@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType type definitions and interface (specification    */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2005 by                               */
+/*  Copyright 1996-2001, 2002, 2004, 2005, 2006, 2007 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -311,7 +311,7 @@ FT_BEGIN_HEADER
   } TT_GaspRec;
 
 
-#ifndef FT_OPTIMIZE_MEMORY
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
 
   /*************************************************************************/
   /*                                                                       */
@@ -389,7 +389,7 @@ FT_BEGIN_HEADER
 
   } TT_Kern0_PairRec, *TT_Kern0_Pair;
 
-#endif /* !OPTIMIZE_MEMORY */
+#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
   /*************************************************************************/
@@ -843,6 +843,72 @@ FT_BEGIN_HEADER
   typedef struct GX_BlendRec_  *GX_Blend;
 #endif
 
+  /*************************************************************************/
+  /*************************************************************************/
+  /*************************************************************************/
+  /***                                                                   ***/
+  /***                                                                   ***/
+  /***              EMBEDDED BDF PROPERTIES TABLE SUPPORT                ***/
+  /***                                                                   ***/
+  /***                                                                   ***/
+  /*************************************************************************/
+  /*************************************************************************/
+  /*************************************************************************/
+
+  /*
+   * These types are used to support a `BDF ' table that isn't part of the
+   * official TrueType specification.  It is mainly used in SFNT-based
+   * bitmap fonts that were generated from a set of BDF fonts.
+   *
+   * The format of the table is as follows.
+   *
+   *   USHORT   version      `BDF ' table version number, should be 0x0001.
+   *   USHORT   strikeCount  Number of strikes (bitmap sizes) in this table.
+   *   ULONG    stringTable  Offset (froms start of BDF table) to string
+   *                         table.
+   *
+   * This is followed by an array of `strikeCount' descriptors, having the
+   * following format.
+   *
+   *   USHORT   ppem         Vertical pixels per EM for this strike.
+   *   USHORT   numItems     Number of items for this strike (properties and
+   *                         atoms).  Maximum is 255.
+   *
+   * This array in turn is followed by `strikeCount' value sets.  Each
+   * `value set' is an array of `numItems' items with the following format.
+   *
+   *   ULONG    item_name    Offset in string table to item name.
+   *   USHORT   item_type    The item type.  Possible values are
+   *                            0 => string (e.g., COMMENT)
+   *                            1 => atom   (e.g., FONT or even SIZE)
+   *                            2 => int32
+   *                            3 => uint32
+   *                         0x10 => A flag to indicate a properties.  This
+   *                                 is ORed with the above values.
+   *   ULONG    item_value   For strings  => Offset into string table without
+   *                                         the corresponding double quotes.
+   *                         For atoms    => Offset into string table.
+   *                         For integers => Direct value.
+   *
+   * All strings in the string table consist of bytes and are
+   * zero-terminated.
+   *
+   */
+
+#ifdef TT_CONFIG_OPTION_BDF
+
+  typedef struct  TT_BDFRec_
+  {
+    FT_Byte*   table;
+    FT_Byte*   table_end;
+    FT_Byte*   strings;
+    FT_UInt32  strings_size;
+    FT_UInt    num_strikes;
+    FT_Bool    loaded;
+
+  } TT_BDFRec, *TT_BDF;
+
+#endif /* TT_CONFIG_OPTION_BDF */
 
   /*************************************************************************/
   /*************************************************************************/
@@ -1036,10 +1102,6 @@ FT_BEGIN_HEADER
   /*                            table.  We thus define additional fields   */
   /*                            below to hold the computed maxima.         */
   /*                                                                       */
-  /*    max_components       :: The maximum number of glyph components     */
-  /*                            required to load any composite glyph from  */
-  /*                            this font.  Used to size the load stack.   */
-  /*                                                                       */
   /*    vertical_info        :: A boolean which is set when the font file  */
   /*                            contains vertical metrics.  If not, the    */
   /*                            value of the `vertical' field is           */
@@ -1205,20 +1267,14 @@ FT_BEGIN_HEADER
 
     TT_Header             header;       /* TrueType header table          */
     TT_HoriHeader         horizontal;   /* TrueType horizontal header     */
-#ifdef FT_OPTIMIZE_MEMORY
-    FT_Byte*              horz_metrics;
-    FT_ULong              horz_metrics_size;
-#endif
 
     TT_MaxProfile         max_profile;
-    FT_ULong              max_components;
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    FT_ULong              max_components;  /* stubbed to 0 */
+#endif
 
     FT_Bool               vertical_info;
     TT_VertHeader         vertical;     /* TT Vertical header, if present */
-#ifdef FT_OPTIMIZE_MEMORY
-    FT_Byte*              vert_metrics;
-    FT_ULong              vert_metrics_size;
-#endif
 
     FT_UShort             num_names;    /* number of name records  */
     TT_NameTableRec       name_table;   /* name table              */
@@ -1226,7 +1282,7 @@ FT_BEGIN_HEADER
     TT_OS2                os2;          /* TrueType OS/2 table            */
     TT_Postscript         postscript;   /* TrueType Postscript table      */
 
-    FT_Byte*              cmap_table;   /* extracted 'cmap' table */
+    FT_Byte*              cmap_table;   /* extracted `cmap' table */
     FT_ULong              cmap_size;
 
     TT_Loader_GotoTableFunc   goto_table;
@@ -1253,13 +1309,7 @@ FT_BEGIN_HEADER
     /***********************************************************************/
 
     /* horizontal device metrics */
-#ifdef FT_OPTIMIZE_MEMORY
-    FT_Byte*              hdmx_table;
-    FT_ULong              hdmx_table_size;
-    FT_UInt               hdmx_record_count;
-    FT_ULong              hdmx_record_size;
-    FT_Byte*              hdmx_record_sizes;
-#else
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
     TT_HdmxRec            hdmx;
 #endif
 
@@ -1270,11 +1320,7 @@ FT_BEGIN_HEADER
     TT_PCLT               pclt;
 
     /* embedded bitmaps support */
-#ifdef FT_OPTIMIZE_MEMORY
-    FT_Byte*              sbit_table;
-    FT_ULong              sbit_table_size;
-    FT_UInt               sbit_num_strikes;
-#else
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
     FT_ULong              num_sbit_strikes;
     TT_SBit_Strike        sbit_strikes;
 #endif
@@ -1293,15 +1339,10 @@ FT_BEGIN_HEADER
     /***********************************************************************/
 
     /* the glyph locations */
-#ifdef FT_OPTIMIZE_MEMORY
-    FT_UInt               num_locations;
-    FT_Byte*              glyph_locations;
-#else
-    FT_UShort             num_locations;
-    FT_Long*              glyph_locations;
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    FT_UShort             num_locations_stub;
+    FT_Long*              glyph_locations_stub;
 #endif
-
-    FT_ULong              glyf_len;
 
     /* the font program, if any */
     FT_ULong              font_program_size;
@@ -1315,13 +1356,7 @@ FT_BEGIN_HEADER
     FT_ULong              cvt_size;
     FT_Short*             cvt;
 
-#ifdef FT_OPTIMIZE_MEMORY
-    FT_Byte*              kern_table;
-    FT_ULong              kern_table_size;
-    FT_UInt               num_kern_tables;
-    FT_UInt32             kern_avail_bits;
-    FT_UInt32             kern_order_bits;
-#else
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
     /* the format 0 kerning table, if any */
     FT_Int                num_kern_pairs;
     FT_Int                kern_table_index;
@@ -1337,11 +1372,6 @@ FT_BEGIN_HEADER
     FT_Bool               unpatented_hinting;
 #endif
 
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-    FT_Bool               doblend;
-    GX_Blend              blend;
-#endif
-
     /***********************************************************************/
     /*                                                                     */
     /* Other tables or fields. This is used by derivative formats like     */
@@ -1352,6 +1382,51 @@ FT_BEGIN_HEADER
     FT_Generic            extra;
 
     const char*           postscript_name;
+
+    /* since version 2.1.8, but was originally placed after */
+    /* `glyph_locations_stub'                               */
+    FT_ULong              glyf_len;
+
+    /* since version 2.1.8, but was originally placed before `extra' */
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    FT_Bool               doblend;
+    GX_Blend              blend;
+#endif
+
+    /* since version 2.2 */
+
+    FT_Byte*              horz_metrics;
+    FT_ULong              horz_metrics_size;
+
+    FT_Byte*              vert_metrics;
+    FT_ULong              vert_metrics_size;
+
+    FT_UInt               num_locations;
+    FT_Byte*              glyph_locations;
+
+    FT_Byte*              hdmx_table;
+    FT_ULong              hdmx_table_size;
+    FT_UInt               hdmx_record_count;
+    FT_ULong              hdmx_record_size;
+    FT_Byte*              hdmx_record_sizes;
+
+    FT_Byte*              sbit_table;
+    FT_ULong              sbit_table_size;
+    FT_UInt               sbit_num_strikes;
+
+    FT_Byte*              kern_table;
+    FT_ULong              kern_table_size;
+    FT_UInt               num_kern_tables;
+    FT_UInt32             kern_avail_bits;
+    FT_UInt32             kern_order_bits;
+
+#ifdef TT_CONFIG_OPTION_BDF
+    TT_BDFRec             bdf;
+#endif /* TT_CONFIG_OPTION_BDF */
+
+    /* since 2.3.0 */
+    FT_ULong              horz_metrics_offset;
+    FT_ULong              vert_metrics_offset;
 
   } TT_FaceRec;
 
@@ -1385,19 +1460,24 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*     contours     :: The contours end points.                          */
   /*                                                                       */
+  /*     first_point  :: Offset of the current subglyph's first point.     */
+  /*                                                                       */
   typedef struct  TT_GlyphZoneRec_
   {
     FT_Memory   memory;
     FT_UShort   max_points;
     FT_UShort   max_contours;
-    FT_UShort   n_points;   /* number of points in zone    */
-    FT_Short    n_contours; /* number of contours          */
+    FT_UShort   n_points;    /* number of points in zone    */
+    FT_Short    n_contours;  /* number of contours          */
 
-    FT_Vector*  org;        /* original point coordinates  */
-    FT_Vector*  cur;        /* current point coordinates   */
+    FT_Vector*  org;         /* original point coordinates  */
+    FT_Vector*  cur;         /* current point coordinates   */
+    FT_Vector*  orus;        /* original (unscaled) point coordinates */
 
-    FT_Byte*    tags;       /* current touch flags         */
-    FT_UShort*  contours;   /* contour end points          */
+    FT_Byte*    tags;        /* current touch flags         */
+    FT_UShort*  contours;    /* contour end points          */
+
+    FT_UShort   first_point; /* offset of first (#0) point  */
 
   } TT_GlyphZoneRec, *TT_GlyphZone;
 
@@ -1423,15 +1503,11 @@ FT_BEGIN_HEADER
     FT_BBox          bbox;
     FT_Int           left_bearing;
     FT_Int           advance;
-    FT_Int           top_bearing;
-    FT_Int           vadvance;
     FT_Int           linear;
     FT_Bool          linear_def;
     FT_Bool          preserve_pps;
     FT_Vector        pp1;
     FT_Vector        pp2;
-    FT_Vector        pp3;
-    FT_Vector        pp4;
 
     FT_ULong         glyf_offset;
 
@@ -1445,6 +1521,16 @@ FT_BEGIN_HEADER
 
     /* for possible extensibility in other formats */
     void*            other;
+
+    /* since version 2.1.8 */
+    FT_Int           top_bearing;
+    FT_Int           vadvance;
+    FT_Vector        pp3;
+    FT_Vector        pp4;
+
+    /* since version 2.2.1 */
+    FT_Byte*         cursor;
+    FT_Byte*         limit;
 
   } TT_LoaderRec;
 

@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,10 +13,11 @@
 # fully.
 
 
-make_module_list: add_cff_driver
+FTMODULE_H_COMMANDS += CFF_DRIVER
 
-add_cff_driver:
-	$(OPEN_DRIVER)cff_driver_class$(CLOSE_DRIVER)
-	$(ECHO_DRIVER)cff       $(ECHO_DRIVER_DESC)OpenType fonts with extension *.otf$(ECHO_DRIVER_DONE)
+define CFF_DRIVER
+$(OPEN_DRIVER)cff_driver_class$(CLOSE_DRIVER)
+$(ECHO_DRIVER)cff       $(ECHO_DRIVER_DESC)OpenType fonts with extension *.otf$(ECHO_DRIVER_DONE)
+endef
 
 # EOF

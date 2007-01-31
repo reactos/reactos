@@ -1,7 +1,7 @@
 CREDITS
 
 The code in this tree is based (it is actually an exact copy with some
-ReactOS specific extra files) on the FreeType library, version 2.1.9.
+ReactOS specific extra files) on the FreeType library, version 2.3.0
 It was written and is being maintained by the FreeType team. The projects
 website is http://www.freetype.org.
 

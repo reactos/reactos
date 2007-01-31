@@ -174,12 +174,12 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    An FT_List iterator function which is called during a list parse   */
-  /*    by FT_List_Iterate().                                              */
+  /*    by @FT_List_Iterate.                                               */
   /*                                                                       */
   /* <Input>                                                               */
   /*    node :: The current iteration list node.                           */
   /*                                                                       */
-  /*    user :: A typeless pointer passed to FT_List_Iterate().            */
+  /*    user :: A typeless pointer passed to @FT_List_Iterate.             */
   /*            Can be used to point to the iteration's state.             */
   /*                                                                       */
   typedef FT_Error
@@ -219,8 +219,8 @@ FT_BEGIN_HEADER
   /*    FT_List_Destructor                                                 */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    An FT_List iterator function which is called during a list         */
-  /*    finalization by FT_List_Finalize() to destroy all elements in a    */
+  /*    An @FT_List iterator function which is called during a list        */
+  /*    finalization by @FT_List_Finalize to destroy all elements in a     */
   /*    given list.                                                        */
   /*                                                                       */
   /* <Input>                                                               */
@@ -228,7 +228,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    data   :: The current object to destroy.                           */
   /*                                                                       */
-  /*    user   :: A typeless pointer passed to FT_List_Iterate().  It can  */
+  /*    user   :: A typeless pointer passed to @FT_List_Iterate.  It can   */
   /*              be used to point to the iteration's state.               */
   /*                                                                       */
   typedef void

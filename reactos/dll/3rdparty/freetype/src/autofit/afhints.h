@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines (specification).                        */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005 by                                          */
+/*  Copyright 2003, 2004, 2005, 2006 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -125,6 +125,7 @@ FT_BEGIN_HEADER
     FT_Short    pos;         /* position of segment                 */
     FT_Short    min_coord;   /* minimum coordinate of segment       */
     FT_Short    max_coord;   /* maximum coordinate of segment       */
+    FT_Short    height;      /* the hinted segment height           */
 
     AF_Edge     edge;        /* the segment's parent edge           */
     AF_Segment  edge_next;   /* link to next segment in parent edge */
@@ -133,6 +134,7 @@ FT_BEGIN_HEADER
     AF_Segment  serif;       /* primary segment for serifs */
     FT_Pos      num_linked;  /* number of linked segments  */
     FT_Pos      score;       /* used during stem matching  */
+    FT_Pos      len;         /* used during stem matching  */
 
     AF_Point    first;       /* first point in edge segment             */
     AF_Point    last;        /* last point in edge segment              */
@@ -212,6 +214,24 @@ FT_BEGIN_HEADER
 #define AF_HINTS_TEST_SCALER( h, f )  ( (h)->scaler_flags & (f) )
 #define AF_HINTS_TEST_OTHER( h, f )   ( (h)->other_flags  & (f) )
 
+
+#ifdef AF_DEBUG
+
+#define AF_HINTS_DO_HORIZONTAL( h )                                     \
+          ( !_af_debug_disable_horz_hints                            && \
+            !AF_HINTS_TEST_SCALER( h, AF_SCALER_FLAG_NO_HORIZONTAL ) )
+
+#define AF_HINTS_DO_VERTICAL( h )                                     \
+          ( !_af_debug_disable_vert_hints                          && \
+            !AF_HINTS_TEST_SCALER( h, AF_SCALER_FLAG_NO_VERTICAL ) )
+
+#define AF_HINTS_DO_ADVANCE( h )                                \
+          !AF_HINTS_TEST_SCALER( h, AF_SCALER_FLAG_NO_ADVANCE )
+
+#define AF_HINTS_DO_BLUES( h )  ( !_af_debug_disable_blue_hints )
+
+#else /* !AF_DEBUG */
+
 #define AF_HINTS_DO_HORIZONTAL( h )                                \
           !AF_HINTS_TEST_SCALER( h, AF_SCALER_FLAG_NO_HORIZONTAL )
 
@@ -220,6 +240,10 @@ FT_BEGIN_HEADER
 
 #define AF_HINTS_DO_ADVANCE( h )                                \
           !AF_HINTS_TEST_SCALER( h, AF_SCALER_FLAG_NO_ADVANCE )
+
+#define AF_HINTS_DO_BLUES( h )  1
+
+#endif /* !AF_DEBUG */
 
 
   FT_LOCAL( AF_Direction )
@@ -272,10 +296,24 @@ FT_BEGIN_HEADER
   af_glyph_hints_align_weak_points( AF_GlyphHints  hints,
                                     AF_Dimension   dim );
 
+#ifdef AF_USE_WARPER
+  FT_LOCAL( void )
+  af_glyph_hints_scale_dim( AF_GlyphHints  hints,
+                            AF_Dimension   dim,
+                            FT_Fixed       scale,
+                            FT_Pos         delta );
+#endif
+
   FT_LOCAL( void )
   af_glyph_hints_done( AF_GlyphHints  hints );
 
 /* */
+
+#define AF_SEGMENT_LEN( seg )          ( (seg)->max_coord - (seg)->min_coord )
+
+#define AF_SEGMENT_DIST( seg1, seg2 )  ( ( (seg1)->pos > (seg2)->pos )   \
+                                           ? (seg1)->pos - (seg2)->pos   \
+                                           : (seg2)->pos - (seg1)->pos )
 
 
 FT_END_HEADER
