@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType's OpenType validation module implementation (body).         */
 /*                                                                         */
-/*  Copyright 2004, 2005 by                                                */
+/*  Copyright 2004, 2005, 2006 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -39,10 +39,10 @@
 
 
   static FT_Error
-  otv_load_table( FT_Face    face,
-                  FT_Tag     tag,
-                  FT_Byte*  *table,
-                  FT_ULong  *table_len )
+  otv_load_table( FT_Face             face,
+                  FT_Tag              tag,
+                  FT_Byte* volatile*  table,
+                  FT_ULong*           table_len )
   {
     FT_Error   error;
     FT_Memory  memory = FT_FACE_MEMORY( face );
@@ -65,18 +65,22 @@
 
 
   static FT_Error
-  otv_validate( FT_Face    face,
-                FT_UInt    ot_flags,
-                FT_Bytes  *ot_base,
-                FT_Bytes  *ot_gdef,
-                FT_Bytes  *ot_gpos,
-                FT_Bytes  *ot_gsub,
-                FT_Bytes  *ot_jstf )
+  otv_validate( FT_Face volatile   face,
+                FT_UInt            ot_flags,
+                FT_Bytes          *ot_base,
+                FT_Bytes          *ot_gdef,
+                FT_Bytes          *ot_gpos,
+                FT_Bytes          *ot_gsub,
+                FT_Bytes          *ot_jstf )
   {
-    FT_Error         error = OTV_Err_Ok;
-    FT_Byte          *base, *gdef, *gpos, *gsub, *jstf;
-    FT_ULong         len_base, len_gdef, len_gpos, len_gsub, len_jstf;
-    FT_ValidatorRec  valid;
+    FT_Error                  error = OTV_Err_Ok;
+    FT_Byte* volatile         base;
+    FT_Byte* volatile         gdef;
+    FT_Byte* volatile         gpos;
+    FT_Byte* volatile         gsub;
+    FT_Byte* volatile         jstf;
+    FT_ULong                  len_base, len_gdef, len_gpos, len_gsub, len_jstf;
+    FT_ValidatorRec volatile  valid;
 
 
     base     = gdef     = gpos     = gsub     = jstf     = NULL;
@@ -134,7 +138,7 @@
     if ( gpos )
     {
       ft_validator_init( &valid, gpos, gpos + len_gpos, FT_VALIDATE_DEFAULT );
-      if (ft_setjmp( valid.jump_buffer ) == 0 )
+      if ( ft_setjmp( valid.jump_buffer ) == 0 )
         otv_GPOS_validate( gpos, face->num_glyphs, &valid );
       error = valid.error;
       if ( error )
@@ -194,14 +198,14 @@
 
 
   static
-  const FT_Service_OTvalidateRec  otvalid_interface = 
+  const FT_Service_OTvalidateRec  otvalid_interface =
   {
     otv_validate
   };
 
 
   static
-  const FT_ServiceDescRec  otvalid_services[] = 
+  const FT_ServiceDescRec  otvalid_services[] =
   {
     { FT_SERVICE_ID_OPENTYPE_VALIDATE, &otvalid_interface },
     { NULL, NULL }

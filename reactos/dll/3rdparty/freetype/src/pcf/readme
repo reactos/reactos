@@ -13,11 +13,11 @@ Glyph images are loaded into memory only on demand, thus leading to a small
 memory footprint.
 
 Informations on the PCF font format can only be worked out from
-``pcfread.c'', and ``pcfwrite.c'', to be found, for instance, in the XFree86
+`pcfread.c', and `pcfwrite.c', to be found, for instance, in the XFree86
 (www.xfree86.org) source tree (xc/lib/font/bitmap/).
 
 Many good bitmap fonts in bdf format come with XFree86: they can be
-compiled into the pcf format using the ``bdftopcf'' utility.
+compiled into the pcf format using the `bdftopcf' utility.
 
 
 Supported hardware
@@ -46,11 +46,11 @@ client application the work of interpreting them.  For instance:
   FT_New_Face( library,..., &face );
 
   pcfface = (PCF_Public_Face)face;
-  
-  if ((pcfface->charset_registry == "ISO10646") && 
+
+  if ((pcfface->charset_registry == "ISO10646") &&
         (pcfface->charset_encoding) == "1")) [..]
 
-Thus the driver always export ``ft_encoding_none'' as
+Thus the driver always export `ft_encoding_none' as
 face->charmap.encoding.  FT_Get_Char_Index() behavior is unmodified, that
 is, it converts the ULong value given as argument into the corresponding
 glyph number.

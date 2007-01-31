@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType synthesizing code for emboldening and slanting (body).      */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -68,6 +68,29 @@
   /*************************************************************************/
 
 
+  FT_EXPORT_DEF( FT_Error )
+  FT_GlyphSlot_Own_Bitmap( FT_GlyphSlot  slot )
+  {
+    if ( slot && slot->format == FT_GLYPH_FORMAT_BITMAP   &&
+         !( slot->internal->flags & FT_GLYPH_OWN_BITMAP ) )
+    {
+      FT_Bitmap  bitmap;
+      FT_Error   error;
+
+
+      FT_Bitmap_New( &bitmap );
+      error = FT_Bitmap_Copy( slot->library, &slot->bitmap, &bitmap );
+      if ( error )
+        return error;
+
+      slot->bitmap = bitmap;
+      slot->internal->flags |= FT_GLYPH_OWN_BITMAP;
+    }
+
+    return FT_Err_Ok;
+  }
+
+
   /* documentation is in ftsynth.h */
 
   FT_EXPORT_DEF( void )
@@ -75,19 +98,27 @@
   {
     FT_Library  library = slot->library;
     FT_Face     face    = FT_SLOT_FACE( slot );
-    FT_Error    error   = FT_Err_Ok;
+    FT_Error    error;
     FT_Pos      xstr, ystr;
 
 
+    if ( slot->format != FT_GLYPH_FORMAT_OUTLINE &&
+         slot->format != FT_GLYPH_FORMAT_BITMAP )
+      return;
+
     /* some reasonable strength */
     xstr = FT_MulFix( face->units_per_EM,
-                      face->size->metrics.y_scale ) / 42;
+                      face->size->metrics.y_scale ) / 24;
     ystr = xstr;
 
     if ( slot->format == FT_GLYPH_FORMAT_OUTLINE )
     {
       error = FT_Outline_Embolden( &slot->outline, xstr );
-      xstr = xstr * 4;  /* according to the documentation */
+      /* ignore error */
+
+      /* this is more than enough for most glyphs; if you need accurate */
+      /* values, you have to call FT_Outline_Get_CBox                   */
+      xstr = xstr * 2;
       ystr = xstr;
     }
     else if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
@@ -97,45 +128,31 @@
         xstr = 1 << 6;
       ystr = FT_PIX_FLOOR( ystr );
 
-      /* slot must be bitmap-owner */
-      if ( !( slot->internal->flags & FT_GLYPH_OWN_BITMAP ) )
-      {
-        FT_Bitmap  bitmap;
+      error = FT_GlyphSlot_Own_Bitmap( slot );
+      if ( error )
+        return;
 
-
-        FT_Bitmap_New( &bitmap );
-        error = FT_Bitmap_Copy( library, &slot->bitmap, &bitmap );
-
-        if ( !error )
-        {
-          slot->bitmap = bitmap;
-          slot->internal->flags |= FT_GLYPH_OWN_BITMAP;
-        }
-      }
-
-      if ( !error )
-        error = FT_Bitmap_Embolden( library, &slot->bitmap, xstr, ystr );
+      error = FT_Bitmap_Embolden( library, &slot->bitmap, xstr, ystr );
+      if ( error )
+        return;
     }
-    else
-      error = FT_Err_Invalid_Argument;
 
-    /* modify the metrics accordingly */
-    if ( !error )
-    {
+    if ( slot->advance.x )
       slot->advance.x += xstr;
+
+    if ( slot->advance.y )
       slot->advance.y += ystr;
 
-      slot->metrics.width        += xstr;
-      slot->metrics.height       += ystr;
-      slot->metrics.horiBearingY += ystr;
-      slot->metrics.horiAdvance  += xstr;
-      slot->metrics.vertBearingX -= xstr / 2;
-      slot->metrics.vertBearingY += ystr;
-      slot->metrics.vertAdvance  += ystr;
+    slot->metrics.width        += xstr;
+    slot->metrics.height       += ystr;
+    slot->metrics.horiBearingY += ystr;
+    slot->metrics.horiAdvance  += xstr;
+    slot->metrics.vertBearingX -= xstr / 2;
+    slot->metrics.vertBearingY += ystr;
+    slot->metrics.vertAdvance  += ystr;
 
-      if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
-        slot->bitmap_top += ystr >> 6;
-    }
+    if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
+      slot->bitmap_top += ystr >> 6;
   }
 
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for validating OpenType tables (specification).         */
 /*                                                                         */
-/*  Copyright 2004, 2005 by                                                */
+/*  Copyright 2004, 2005, 2006 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -64,7 +64,7 @@ FT_BEGIN_HEADER
  /**********************************************************************
   *
   * @enum:
-  *    FT_VALIDATE_XXX
+  *    FT_VALIDATE_OTXXX
   *
   * @description:
   *    A list of bit-field constants used with @FT_OpenType_Validate to
@@ -121,7 +121,7 @@ FT_BEGIN_HEADER
   *
   *    validation_flags ::
   *       A bit field which specifies the tables to be validated.  See
-  *       @FT_VALIDATE_XXX for possible values.
+  *       @FT_VALIDATE_OTXXX for possible values.
   *
   * @output:
   *    BASE_table ::
@@ -147,17 +147,45 @@ FT_BEGIN_HEADER
   *   otherwise.
   *
   *   After use, the application should deallocate the five tables with
-  *   `free'.  A NULL value indicates that the table either doesn't exist
-  *   in the font, or the application hasn't asked for validation.
+  *   @FT_OpenType_Free.  A NULL value indicates that the table either
+  *   doesn't exist in the font, or the application hasn't asked for
+  *   validation.
   */
   FT_EXPORT( FT_Error )
   FT_OpenType_Validate( FT_Face    face,
                         FT_UInt    validation_flags,
-                        FT_Bytes  *BASE_table, 
-                        FT_Bytes  *GDEF_table, 
-                        FT_Bytes  *GPOS_table, 
-                        FT_Bytes  *GSUB_table, 
+                        FT_Bytes  *BASE_table,
+                        FT_Bytes  *GDEF_table,
+                        FT_Bytes  *GPOS_table,
+                        FT_Bytes  *GSUB_table,
                         FT_Bytes  *JSTF_table );
+
+  /* */
+
+ /**********************************************************************
+  *
+  * @function:
+  *    FT_OpenType_Free
+  *
+  * @description:
+  *    Free the buffer allocated by OpenType validator.
+  *
+  * @input:
+  *    face ::
+  *       A handle to the input face.
+  *
+  *    table ::
+  *       The pointer to the buffer that is allocated by
+  *       @FT_OpenType_Validate.
+  *
+  * @note:
+  *   This function must be used to free the buffer allocated by
+  *   @FT_OpenType_Validate only.
+  */
+  FT_EXPORT( void )
+  FT_OpenType_Free( FT_Face   face,
+                    FT_Bytes  table );
+
 
  /* */
 

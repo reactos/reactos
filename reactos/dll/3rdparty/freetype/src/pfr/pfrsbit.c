@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR bitmap loader (body).                                   */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2006 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -605,11 +605,20 @@
       FT_Byte*  p;
 
 
-      advance = FT_MulDiv( size->root.metrics.x_ppem << 8,
+      /* compute linear advance */
+      advance = character->advance;
+      if ( phys->metrics_resolution != phys->outline_resolution )
+        advance = FT_MulDiv( advance,
+                             phys->outline_resolution,
+                             phys->metrics_resolution );
+
+      glyph->root.linearHoriAdvance = advance;
+
+      /* compute default advance, i.e., scaled advance.  This can be */
+      /* overridden in the bitmap header of certain glyphs.          */
+      advance = FT_MulDiv( (FT_Fixed)size->root.metrics.x_ppem << 8,
                            character->advance,
                            phys->metrics_resolution );
-
-      /* XXX: handle linearHoriAdvance correctly! */
 
       if ( FT_STREAM_SEEK( face->header.gps_section_offset + gps_offset ) ||
            FT_FRAME_ENTER( gps_size )                                     )

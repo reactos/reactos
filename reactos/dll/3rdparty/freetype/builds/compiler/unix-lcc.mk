@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2003 by
+# Copyright 1996-2000, 2003, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -63,9 +63,7 @@ T := -o$(space)
 #   Use the ANSIFLAGS variable to define the compiler flags used to enfore
 #   ANSI compliance.
 #
-ifndef CFLAGS
-  CFLAGS := -c -g
-endif
+CFLAGS ?= -c -g
 
 # ANSIFLAGS: Put there the flags used to make your compiler ANSI-compliant.
 #
@@ -78,10 +76,8 @@ ANSIFLAGS := -A
 
 # library linking
 #
-ifndef CLEAN_LIBRARY
-  CLEAN_LIBRARY = $(DELETE) $(PROJECT_LIBRARY)
-endif
-LINK_LIBRARY = $(AR) -r $@ $(OBJECTS_LIST)
+CLEAN_LIBRARY ?= $(DELETE) $(PROJECT_LIBRARY)
+LINK_LIBRARY   = $(AR) -r $@ $(OBJECTS_LIST)
 
 
 # EOF

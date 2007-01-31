@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 objects manager (specification).                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2006 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -109,7 +109,8 @@ FT_BEGIN_HEADER
   T1_Size_Done( T1_Size  size );
 
   FT_LOCAL( FT_Error )
-  T1_Size_Reset( T1_Size  size );
+  T1_Size_Request( T1_Size          size,
+                   FT_Size_Request  req );
 
   FT_LOCAL( FT_Error )
   T1_Size_Init( T1_Size  size );
@@ -151,7 +152,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   T1_GlyphSlot_Init( T1_GlyphSlot  slot );
-  
+
   FT_LOCAL( void )
   T1_GlyphSlot_Done( T1_GlyphSlot  slot );
 

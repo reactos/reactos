@@ -1,6 +1,6 @@
 /*
  * Copyright 2000 Computing Research Labs, New Mexico State University
- * Copyright 2001, 2002, 2003, 2004, 2005 Francesco Zappa Nardelli
+ * Copyright 2001, 2002, 2003, 2004, 2005, 2006 Francesco Zappa Nardelli
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1064,8 +1064,8 @@
                           _BDF_BBX      | \
                           _BDF_BITMAP   )
 
-#define _BDF_GLYPH_WIDTH_CHECK   0x40000000L
-#define _BDF_GLYPH_HEIGHT_CHECK  0x80000000L
+#define _BDF_GLYPH_WIDTH_CHECK   0x40000000UL
+#define _BDF_GLYPH_HEIGHT_CHECK  0x80000000UL
 
 
   /* Auto correction messages. */
@@ -1092,6 +1092,7 @@
 #define ERRMSG1  "[line %ld] Missing \"%s\" line.\n"
 #define ERRMSG2  "[line %ld] Font header corrupted or missing fields.\n"
 #define ERRMSG3  "[line %ld] Font glyphs corrupted or missing fields.\n"
+#define ERRMSG4  "[line %ld] BBX too big.\n"
 
 
   static FT_Error
@@ -1561,6 +1562,14 @@
 
       p->glyph_enc = _bdf_atol( p->list.field[1], 0, 10 );
 
+      /* Check that the encoding is in the range [0,65536] because        */
+      /* otherwise p->have (a bitmap with static size) overflows.         */
+      if ( (size_t)p->glyph_enc >= sizeof ( p->have ) * 8 )
+      {
+        error = BDF_Err_Invalid_File_Format;
+        goto Exit;
+      }
+
       /* Check to see whether this encoding has already been encountered. */
       /* If it has then change it to unencoded so it gets added if        */
       /* indicated.                                                       */
@@ -1666,7 +1675,7 @@
       nibbles = glyph->bpr << 1;
       bp      = glyph->bitmap + p->row * glyph->bpr;
 
-      for ( i = 0, *bp = 0; i < nibbles; i++ )
+      for ( i = 0; i < nibbles; i++ )
       {
         c = line[i];
         *bp = (FT_Byte)( ( *bp << 4 ) + a2i[c] );
@@ -1676,7 +1685,8 @@
 
       /* Remove possible garbage at the right. */
       mask_index = ( glyph->bbx.width * p->font->bpp ) & 7;
-      *bp &= nibble_mask[mask_index];
+      if ( glyph->bbx.width )
+        *bp &= nibble_mask[mask_index];
 
       /* If any line has extra columns, indicate they have been removed. */
       if ( ( line[nibbles] == '0' || a2i[(int)line[nibbles]] != 0 ) &&
@@ -1805,6 +1815,9 @@
     /* And finally, gather up the bitmap. */
     if ( ft_memcmp( line, "BITMAP", 6 ) == 0 )
     {
+      unsigned long  bitmap_size;
+
+
       if ( !( p->flags & _BDF_BBX ) )
       {
         /* Missing BBX field. */
@@ -1815,7 +1828,16 @@
 
       /* Allocate enough space for the bitmap. */
       glyph->bpr   = ( glyph->bbx.width * p->font->bpp + 7 ) >> 3;
-      glyph->bytes = (unsigned short)( glyph->bpr * glyph->bbx.height );
+
+      bitmap_size = glyph->bpr * glyph->bbx.height;
+      if ( bitmap_size > 0xFFFFU )
+      {
+        FT_ERROR(( "_bdf_parse_glyphs: " ERRMSG4, lineno ));
+        error = BDF_Err_Bbx_Too_Big;
+        goto Exit;
+      }
+      else
+        glyph->bytes = (unsigned short)bitmap_size;
 
       if ( FT_NEW_ARRAY( glyph->bitmap, glyph->bytes ) )
         goto Exit;
@@ -2182,7 +2204,7 @@
                  bdf_options_t*  opts,
                  bdf_font_t*    *font )
   {
-    unsigned long  lineno;
+    unsigned long  lineno = 0; /* make compiler happy */
     _bdf_parse_t   *p;
 
     FT_Memory      memory = extmemory;
@@ -2202,7 +2224,7 @@
     error = _bdf_readstream( stream, _bdf_parse_start,
                              (void *)p, &lineno );
     if ( error )
-      goto Exit;
+      goto Fail;
 
     if ( p->font != 0 )
     {
@@ -2294,7 +2316,7 @@
         if ( FT_RENEW_ARRAY( p->font->comments,
                              p->font->comments_len,
                              p->font->comments_len + 1 ) )
-          goto Exit;
+          goto Fail;
 
         p->font->comments[p->font->comments_len] = 0;
       }
@@ -2315,6 +2337,15 @@
     }
 
     return error;
+
+  Fail:
+    bdf_free_font( p->font );
+
+    memory = extmemory;
+
+    FT_FREE( p->font );
+
+    goto Exit;
   }
 
 

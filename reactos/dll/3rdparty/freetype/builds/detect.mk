@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2001, 2002, 2003 by
+# Copyright 1996-2000, 2001, 2002, 2003, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -38,17 +38,12 @@
 #   TOP_DIR      The top-most directory in the FreeType library source
 #                hierarchy.  If not defined, it will default to `.'.
 
-# If TOP_DIR is not defined, default it to `.'
-#
-ifndef TOP_DIR
-  TOP_DIR := .
-endif
-
 # Set auto-detection default to `ansi' resp. UNIX-like operating systems.
 #
 PLATFORM     := ansi
 DELETE       := $(RM)
 COPY         := cp
+CAT          := cat
 SEP          := /
 
 BUILD_CONFIG := $(TOP_DIR)/builds

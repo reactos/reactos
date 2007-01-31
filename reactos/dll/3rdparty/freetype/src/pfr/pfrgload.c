@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR glyph loader (body).                                    */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2005 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -133,7 +133,7 @@
     /* check that we have begun a new path */
     FT_ASSERT( glyph->path_begun != 0 );
 
-    error = FT_GlyphLoader_CheckPoints( loader, 1, 0 );
+    error = FT_GLYPHLOADER_CHECK_POINTS( loader, 1, 0 );
     if ( !error )
     {
       FT_UInt  n = outline->n_points;
@@ -163,7 +163,7 @@
     /* check that we have begun a new path */
     FT_ASSERT( glyph->path_begun != 0 );
 
-    error = FT_GlyphLoader_CheckPoints( loader, 3, 0 );
+    error = FT_GLYPHLOADER_CHECK_POINTS( loader, 3, 0 );
     if ( !error )
     {
       FT_Vector*  vec = outline->points         + outline->n_points;
@@ -199,7 +199,7 @@
     glyph->path_begun = 1;
 
     /* check that there is space for a new contour and a new point */
-    error = FT_GlyphLoader_CheckPoints( loader, 1, 1 );
+    error = FT_GLYPHLOADER_CHECK_POINTS( loader, 1, 1 );
     if ( !error )
       /* add new start point */
       error = pfr_glyph_line_to( glyph, to );

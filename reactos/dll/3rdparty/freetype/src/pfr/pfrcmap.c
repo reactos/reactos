@@ -16,7 +16,7 @@
 /***************************************************************************/
 
 
-#include "pfrcmap.h" 
+#include "pfrcmap.h"
 #include "pfrobjs.h"
 #include FT_INTERNAL_DEBUG_H
 
@@ -29,12 +29,12 @@
 
     cmap->num_chars = face->phy_font.num_chars;
     cmap->chars     = face->phy_font.chars;
-    
+
     /* just for safety, check that the character entries are correctly */
     /* sorted in increasing character code order                       */
     {
       FT_UInt  n;
-      
+
 
       for ( n = 1; n < cmap->num_chars; n++ )
       {
@@ -42,7 +42,7 @@
           FT_ASSERT( 0 );
       }
     }
-    
+
     return 0;
   }
 

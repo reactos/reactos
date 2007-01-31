@@ -39,7 +39,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
 
   /* handle to a validation object */
-  typedef struct FT_ValidatorRec_*  FT_Validator;
+  typedef struct FT_ValidatorRec_ volatile*  FT_Validator;
 
 
   /*************************************************************************/
@@ -98,6 +98,8 @@ FT_BEGIN_HEADER
                      const FT_Byte*      limit,
                      FT_ValidationLevel  level );
 
+  /* Do not use this. It's broken and will cause your validator to crash */
+  /* if you run it on an invalid font.                                   */
   FT_BASE( FT_Int )
   ft_validator_run( FT_Validator  valid );
 

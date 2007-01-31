@@ -200,7 +200,7 @@
   /*************************************************************************/
   /*************************************************************************/
 
-#define Ligature  otv_Ligature_validate, "Ligature"
+#define LigatureFunc  otv_Ligature_validate
 
   /* uses valid->glyph_count */
 

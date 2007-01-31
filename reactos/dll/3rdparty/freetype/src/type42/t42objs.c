@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 objects manager (body).                                      */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005 by Roberto Alameda.                   */
+/*  Copyright 2002, 2003, 2004, 2005, 2006 by Roberto Alameda.             */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -202,12 +202,19 @@
     root->num_charmaps = 0;
     root->face_index   = face_index;
 
-    root->face_flags  = FT_FACE_FLAG_SCALABLE;
-    root->face_flags |= FT_FACE_FLAG_HORIZONTAL;
-    root->face_flags |= FT_FACE_FLAG_GLYPH_NAMES;
+    root->face_flags = FT_FACE_FLAG_SCALABLE    |
+                       FT_FACE_FLAG_HORIZONTAL  |
+                       FT_FACE_FLAG_GLYPH_NAMES;
 
     if ( info->is_fixed_pitch )
       root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
+
+    /* We only set this flag if we have the patented bytecode interpreter. */
+    /* There are no known `tricky' Type42 fonts that could be loaded with  */
+    /* the unpatented interpreter.                                         */
+#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+    root->face_flags |= FT_FACE_FLAG_HINTER;
+#endif
 
     /* XXX: TODO -- add kerning with .afm support */
 
@@ -259,11 +266,25 @@
     root->available_sizes = 0;
 
     /* Load the TTF font embedded in the T42 font */
-    error = FT_New_Memory_Face( FT_FACE_LIBRARY( face ),
-                                face->ttf_data,
-                                face->ttf_size,
-                                0,
-                                &face->ttf_face );
+    {
+      FT_Open_Args  args;
+
+
+      args.flags       = FT_OPEN_MEMORY;
+      args.memory_base = face->ttf_data;
+      args.memory_size = face->ttf_size;
+
+      if ( num_params )
+      {
+        args.flags     |= FT_OPEN_PARAMS;
+        args.num_params = num_params;
+        args.params     = params;
+      }
+
+      error = FT_Open_Face( FT_FACE_LIBRARY( face ),
+                            &args, 0, &face->ttf_face );
+    }
+
     if ( error )
       goto Exit;
 
@@ -283,9 +304,6 @@
 
     root->underline_position  = (FT_Short)info->underline_position;
     root->underline_thickness = (FT_Short)info->underline_thickness;
-
-    root->internal->max_points   = 0;
-    root->internal->max_contours = 0;
 
     /* compute style flags */
     root->style_flags = 0;
@@ -471,6 +489,43 @@
   }
 
 
+  FT_LOCAL_DEF( FT_Error )
+  T42_Size_Request( T42_Size         size,
+                    FT_Size_Request  req )
+  {
+    T42_Face  face = (T42_Face)size->root.face;
+    FT_Error  error;
+
+
+    FT_Activate_Size( size->ttsize );
+
+    error = FT_Request_Size( face->ttf_face, req );
+    if ( !error )
+      ( (FT_Size)size )->metrics = face->ttf_face->size->metrics;
+
+    return error;
+  }
+
+
+  FT_LOCAL_DEF( FT_Error )
+  T42_Size_Select( T42_Size  size,
+                   FT_ULong  strike_index )
+  {
+    T42_Face  face = (T42_Face)size->root.face;
+    FT_Error  error;
+
+
+    FT_Activate_Size( size->ttsize );
+
+    error = FT_Select_Size( face->ttf_face, strike_index );
+    if ( !error )
+      ( (FT_Size)size )->metrics = face->ttf_face->size->metrics;
+
+    return error;
+
+  }
+
+
   FT_LOCAL_DEF( void )
   T42_Size_Done( T42_Size  size )
   {
@@ -516,45 +571,6 @@
   T42_GlyphSlot_Done( T42_GlyphSlot slot )
   {
     FT_Done_GlyphSlot( slot->ttslot );
-  }
-
-
-
-  FT_LOCAL_DEF( FT_Error )
-  T42_Size_SetChars( T42_Size    size,
-                     FT_F26Dot6  char_width,
-                     FT_F26Dot6  char_height,
-                     FT_UInt     horz_resolution,
-                     FT_UInt     vert_resolution )
-  {
-    FT_Face   face    = size->root.face;
-    T42_Face  t42face = (T42_Face)face;
-
-
-    FT_Activate_Size( size->ttsize );
-
-    return FT_Set_Char_Size( t42face->ttf_face,
-                             char_width,
-                             char_height,
-                             horz_resolution,
-                             vert_resolution );
-  }
-
-
-  FT_LOCAL_DEF( FT_Error )
-  T42_Size_SetPixels( T42_Size  size,
-                      FT_UInt   pixel_width,
-                      FT_UInt   pixel_height )
-  {
-    FT_Face   face    = size->root.face;
-    T42_Face  t42face = (T42_Face)face;
-
-
-    FT_Activate_Size( size->ttsize );
-
-    return FT_Set_Pixel_Sizes( t42face->ttf_face,
-                               pixel_width,
-                               pixel_height );
   }
 
 

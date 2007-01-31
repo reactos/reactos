@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver for Windows FNT/FON files                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -460,14 +460,43 @@
 
       {
         FT_Bitmap_Size*  bsize = root->available_sizes;
+        FT_UShort        x_res, y_res;
 
 
         bsize->width  = font->header.avg_width;
         bsize->height = (FT_Short)(
           font->header.pixel_height + font->header.external_leading );
         bsize->size   = font->header.nominal_point_size << 6;
-        bsize->x_ppem = font->header.pixel_width << 6;
-        bsize->y_ppem = font->header.pixel_height << 6;
+
+        x_res = font->header.horizontal_resolution;
+        if ( !x_res )
+          x_res = 72;
+
+        y_res = font->header.vertical_resolution;
+        if ( !y_res )
+          y_res = 72;
+
+        bsize->y_ppem = FT_MulDiv( bsize->size, y_res, 72 );
+        bsize->y_ppem = FT_PIX_ROUND( bsize->y_ppem );
+
+        /*
+         * this reads:
+         *
+         * the nominal height is larger than the bbox's height
+         *
+         * => nominal_point_size contains incorrect value;
+         *    use pixel_height as the nominal height
+         */
+        if ( bsize->y_ppem > font->header.pixel_height << 6 )
+        {
+          FT_TRACE2(( "use pixel_height as the nominal height\n" ));
+
+          bsize->y_ppem = font->header.pixel_height << 6;
+          bsize->size   = FT_MulDiv( bsize->y_ppem, 72, y_res );
+        }
+
+        bsize->x_ppem = FT_MulDiv( bsize->size, x_res, 72 );
+        bsize->x_ppem = FT_PIX_ROUND( bsize->x_ppem );
       }
 
       {
@@ -502,7 +531,7 @@
 
       /* reserve one slot for the .notdef glyph at index 0 */
       root->num_glyphs = font->header.last_char -
-                           font->header.first_char + 1 + 1;
+                         font->header.first_char + 1 + 1;
 
       /* Some broken fonts don't delimit the face name with a final */
       /* NULL byte -- the frame is erroneously one byte too small.  */
@@ -511,14 +540,18 @@
       family_size = font->header.file_size - font->header.face_name_offset;
       if ( FT_ALLOC( font->family_name, family_size + 1 ) )
         goto Fail;
+
       FT_MEM_COPY( font->family_name,
                    font->fnt_frame + font->header.face_name_offset,
                    family_size );
+
       font->family_name[family_size] = '\0';
+
       if ( FT_REALLOC( font->family_name,
                        family_size,
                        ft_strlen( font->family_name ) + 1 ) )
         goto Fail;
+
       root->family_name = font->family_name;
       root->style_name  = (char *)"Regular";
 
@@ -543,27 +576,58 @@
 
 
   static FT_Error
-  FNT_Size_Set_Pixels( FT_Size  size )
+  FNT_Size_Select( FT_Size  size )
   {
-    FNT_Face  face = (FNT_Face)FT_SIZE_FACE( size );
-    FT_Face   root = FT_FACE( face );
+    FNT_Face          face   = (FNT_Face)size->face;
+    FT_WinFNT_Header  header = &face->font->header;
 
 
-    if ( size->metrics.y_ppem == root->available_sizes->y_ppem >> 6 )
+    FT_Select_Metrics( size->face, 0 );
+
+    size->metrics.ascender    = header->ascent * 64;
+    size->metrics.descender   = -( header->pixel_height -
+                                   header->ascent ) * 64;
+    size->metrics.max_advance = header->max_width * 64;
+
+    return FNT_Err_Ok;
+  }
+
+
+  static FT_Error
+  FNT_Size_Request( FT_Size          size,
+                    FT_Size_Request  req )
+  {
+    FNT_Face          face    = (FNT_Face)size->face;
+    FT_WinFNT_Header  header  = &face->font->header;
+    FT_Bitmap_Size*   bsize   = size->face->available_sizes;
+    FT_Error          error   = FNT_Err_Invalid_Pixel_Size;
+    FT_Long           height;
+
+
+    height = FT_REQUEST_HEIGHT( req );
+    height = ( height + 32 ) >> 6;
+
+    switch ( req->type )
     {
-      FNT_Font  font = face->font;
+    case FT_SIZE_REQUEST_TYPE_NOMINAL:
+      if ( height == ( bsize->y_ppem + 32 ) >> 6 )
+        error = FNT_Err_Ok;
+      break;
 
+    case FT_SIZE_REQUEST_TYPE_REAL_DIM:
+      if ( height == header->pixel_height )
+        error = FNT_Err_Ok;
+      break;
 
-      size->metrics.ascender    = font->header.ascent * 64;
-      size->metrics.descender   = -( font->header.pixel_height -
-                                       font->header.ascent ) * 64;
-      size->metrics.height      = font->header.pixel_height * 64;
-      size->metrics.max_advance = font->header.max_width * 64;
-
-      return FNT_Err_Ok;
+    default:
+      error = FNT_Err_Unimplemented_Feature;
+      break;
     }
+
+    if ( error )
+      return error;
     else
-      return FNT_Err_Invalid_Pixel_Size;
+      return FNT_Size_Select( size );
   }
 
 
@@ -585,7 +649,8 @@
     FT_UNUSED( load_flags );
 
 
-    if ( !face || !font )
+    if ( !face || !font ||
+         glyph_index >= (FT_UInt)( FT_FACE( face )->num_glyphs ) )
     {
       error = FNT_Err_Invalid_Argument;
       goto Exit;
@@ -633,7 +698,7 @@
 
       /* note: since glyphs are stored in columns and not in rows we */
       /*       can't use ft_glyphslot_set_bitmap                     */
-      if ( FT_ALLOC( bitmap->buffer, pitch * bitmap->rows ) )
+      if ( FT_ALLOC_MULT( bitmap->buffer, pitch, bitmap->rows ) )
         goto Exit;
 
       column = (FT_Byte*)bitmap->buffer;
@@ -660,8 +725,8 @@
     slot->metrics.horiBearingX = 0;
     slot->metrics.horiBearingY = slot->bitmap_top << 6;
 
-    slot->linearHoriAdvance    = (FT_Fixed)bitmap->width << 16;
-    slot->format               = FT_GLYPH_FORMAT_BITMAP;
+    ft_synthesize_vertical_metrics( &slot->metrics,
+                                    bitmap->rows << 6 );
 
   Exit:
     return error;
@@ -741,13 +806,18 @@
     (FT_Slot_InitFunc)        0,
     (FT_Slot_DoneFunc)        0,
 
-    (FT_Size_ResetPointsFunc) FNT_Size_Set_Pixels,
-    (FT_Size_ResetPixelsFunc) FNT_Size_Set_Pixels,
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    ft_stub_set_char_sizes,
+    ft_stub_set_pixel_sizes,
+#endif
     (FT_Slot_LoadFunc)        FNT_Load_Glyph,
 
     (FT_Face_GetKerningFunc)  0,
     (FT_Face_AttachFunc)      0,
-    (FT_Face_GetAdvancesFunc) 0
+    (FT_Face_GetAdvancesFunc) 0,
+
+    (FT_Size_RequestFunc)     FNT_Size_Request,
+    (FT_Size_SelectFunc)      FNT_Size_Select
   };
 
 

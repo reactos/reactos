@@ -141,7 +141,7 @@ if test "$echo_libs" = "yes" ; then
   if test "$enable_shared" = "yes" ; then
     eval "rpath=\"$hardcode_libdir_flag_spec\""
   fi
-  libs="-lfreetype @LIBZ@"
+  libs="-lfreetype @LIBZ@ @FT2_EXTRA_LIBS@"
   if test "$libdir" != "/usr/lib" && test "$libdir" != "/usr/lib64"; then
     echo -L$libdir $rpath $libs
   else

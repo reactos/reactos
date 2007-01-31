@@ -28,15 +28,15 @@ def beautify_block( block ):
         for markup in markups:
             text.extend( markup.beautify( first ) )
             first = 0
-        
+
         # now beautify the documentation "borders" themselves
         lines = [ " /*************************************************************************" ]
         for l in text:
             lines.append( "  *" + l )
         lines.append( "  */" )
-        
+
         block.lines = lines
-        
+
 
 def usage():
     print "\nDocBeauty 0.1 Usage information\n"
@@ -46,7 +46,7 @@ def usage():
     print "  -b : backup original files with the 'orig' extension"
     print ""
     print "  --backup : same as -b"
-    
+
 
 def main( argv ):
     """main program loop"""

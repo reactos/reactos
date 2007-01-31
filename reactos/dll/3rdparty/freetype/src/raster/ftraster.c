@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph rasterizer (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2005 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2005, 2007 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -378,19 +378,19 @@
 #else /* FT_STATIC_RASTER */
 
 
-#define RAS_ARGS       TRaster_Instance*  raster,
-#define RAS_ARG        TRaster_Instance*  raster
+#define RAS_ARGS       PWorker    worker,
+#define RAS_ARG        PWorker    worker
 
-#define RAS_VARS       raster,
-#define RAS_VAR        raster
+#define RAS_VARS       worker,
+#define RAS_VAR        worker
 
-#define FT_UNUSED_RASTER  FT_UNUSED( raster )
+#define FT_UNUSED_RASTER  FT_UNUSED( worker )
 
 
 #endif /* FT_STATIC_RASTER */
 
 
-  typedef struct TRaster_Instance_  TRaster_Instance;
+  typedef struct TWorker_   TWorker, *PWorker;
 
 
   /* prototypes used for sweep function dispatch */
@@ -422,7 +422,7 @@
   /* at the top.  Thus, their offset can be coded with less    */
   /* opcodes, and it results in a smaller executable.          */
 
-  struct  TRaster_Instance_
+  struct  TWorker_
   {
     Int       precision_bits;       /* precision related variables         */
     Int       precision;
@@ -498,15 +498,9 @@
     TBand     band_stack[16];       /* band stack used for sub-banding     */
     Int       band_top;             /* band stack top                      */
 
-    Int       count_table[256];     /* Look-up table used to quickly count */
-                                    /* set bits in a gray 2x2 cell         */
-
-    void*     memory;
-
 #ifdef FT_RASTER_OPTION_ANTI_ALIASING
 
-    Byte      grays[5];             /* Palette of gray levels used for     */
-                                    /* render.                             */
+    Byte*     grays;
 
     Byte      gray_lines[RASTER_GRAY_LINES];
                                 /* Intermediate table used to render the   */
@@ -523,28 +517,51 @@
 
 #endif /* FT_RASTER_ANTI_ALIASING */
 
-#if 0
-    PByte       flags;              /* current flags table                 */
-    PUShort     outs;               /* current outlines table              */
-    FT_Vector*  coords;
-
-    UShort      nPoints;            /* number of points in current glyph   */
-    Short       nContours;          /* number of contours in current glyph */
-#endif
-
   };
 
 
+  typedef struct TRaster_
+  {
+    char*     buffer;
+    long      buffer_size;
+    void*     memory;
+    PWorker   worker;
+    Byte      grays[5];
+    Short     gray_width;
+
+  } TRaster, *PRaster;
+
 #ifdef FT_STATIC_RASTER
 
-  static TRaster_Instance  cur_ras;
+  static TWorker   cur_ras;
 #define ras  cur_ras
 
 #else
 
-#define ras  (*raster)
+#define ras  (*worker)
 
 #endif /* FT_STATIC_RASTER */
+
+
+static const char  count_table[256] =
+{
+  0 , 1 , 1 , 2 , 1 , 2 , 2 , 3 , 1 , 2 , 2 , 3 , 2 , 3 , 3 , 4,
+  1 , 2 , 2 , 3 , 2 , 3 , 3 , 4 , 2 , 3 , 3 , 4 , 3 , 4 , 4 , 5,
+  1 , 2 , 2 , 3 , 2 , 3 , 3 , 4 , 2 , 3 , 3 , 4 , 3 , 4 , 4 , 5,
+  2 , 3 , 3 , 4 , 3 , 4 , 4 , 5 , 3 , 4 , 4 , 5 , 4 , 5 , 5 , 6,
+  1 , 2 , 2 , 3 , 2 , 3 , 3 , 4 , 2 , 3 , 3 , 4 , 3 , 4 , 4 , 5,
+  2 , 3 , 3 , 4 , 3 , 4 , 4 , 5 , 3 , 4 , 4 , 5 , 4 , 5 , 5 , 6,
+  2 , 3 , 3 , 4 , 3 , 4 , 4 , 5 , 3 , 4 , 4 , 5 , 4 , 5 , 5 , 6,
+  3 , 4 , 4 , 5 , 4 , 5 , 5 , 6 , 4 , 5 , 5 , 6 , 5 , 6 , 6 , 7,
+  1 , 2 , 2 , 3 , 2 , 3 , 3 , 4 , 2 , 3 , 3 , 4 , 3 , 4 , 4 , 5,
+  2 , 3 , 3 , 4 , 3 , 4 , 4 , 5 , 3 , 4 , 4 , 5 , 4 , 5 , 5 , 6,
+  2 , 3 , 3 , 4 , 3 , 4 , 4 , 5 , 3 , 4 , 4 , 5 , 4 , 5 , 5 , 6,
+  3 , 4 , 4 , 5 , 4 , 5 , 5 , 6 , 4 , 5 , 5 , 6 , 5 , 6 , 6 , 7,
+  2 , 3 , 3 , 4 , 3 , 4 , 4 , 5 , 3 , 4 , 4 , 5 , 4 , 5 , 5 , 6,
+  3 , 4 , 4 , 5 , 4 , 5 , 5 , 6 , 4 , 5 , 5 , 6 , 5 , 6 , 6 , 7,
+  3 , 4 , 4 , 5 , 4 , 5 , 5 , 6 , 4 , 5 , 5 , 6 , 5 , 6 , 6 , 7,
+  4 , 5 , 5 , 6 , 5 , 6 , 6 , 7 , 5 , 6 , 6 , 7 , 6 , 7 , 7 , 8 };
+
 
 
   /*************************************************************************/
@@ -2494,7 +2511,7 @@
   {
     Int    c1, c2;
     PByte  pix, bit, bit2;
-    Int*   count = ras.count_table;
+    char*  count = (char*)count_table;
     Byte*  grays;
 
 
@@ -3153,32 +3170,19 @@
 
 
   static void
-  ft_black_init( TRaster_Instance*  raster )
+  ft_black_init( PRaster  raster )
   {
-    FT_UInt  n;
-    FT_ULong c;
-
-
-    /* setup count table */
-    for ( n = 0; n < 256; n++ )
-    {
-      c = ( n & 0x55 ) + ( ( n & 0xAA ) >> 1 );
-
-      c = ( ( c << 6 ) & 0x3000 ) |
-          ( ( c << 4 ) & 0x0300 ) |
-          ( ( c << 2 ) & 0x0030 ) |
-                   (c  & 0x0003 );
-
-      ras.count_table[n] = (UInt)c;
-    }
+    FT_UNUSED( raster );
 
 #ifdef FT_RASTER_OPTION_ANTI_ALIASING
+    FT_UInt  n;
+
 
     /* set default 5-levels gray palette */
     for ( n = 0; n < 5; n++ )
       raster->grays[n] = n * 255 / 4;
 
-    ras.gray_width = RASTER_GRAY_LINES / 2;
+    raster->gray_width = RASTER_GRAY_LINES / 2;
 
 #endif
   }
@@ -3195,7 +3199,7 @@
   ft_black_new( void*      memory,
                 FT_Raster  *araster )
   {
-     static TRaster_Instance  the_raster;
+     static TRaster  the_raster;
 
 
      *araster = (FT_Raster)&the_raster;
@@ -3218,11 +3222,11 @@
 
 
   static int
-  ft_black_new( FT_Memory           memory,
-                TRaster_Instance**  araster )
+  ft_black_new( FT_Memory   memory,
+                PRaster    *araster )
   {
-    FT_Error           error;
-    TRaster_Instance*  raster;
+    FT_Error  error;
+    PRaster   raster;
 
 
     *araster = 0;
@@ -3239,7 +3243,7 @@
 
 
   static void
-  ft_black_done( TRaster_Instance*  raster )
+  ft_black_done( PRaster  raster )
   {
     FT_Memory  memory = (FT_Memory)raster->memory;
     FT_FREE( raster );
@@ -3250,21 +3254,34 @@
 
 
   static void
-  ft_black_reset( TRaster_Instance*  raster,
-                  char*              pool_base,
-                  long               pool_size )
+  ft_black_reset( PRaster   raster,
+                  char*     pool_base,
+                  long      pool_size )
   {
-    if ( (&ras) && pool_base && pool_size >= 4096 )
+    if ( raster )
     {
-      /* save the pool */
-      ras.buff     = (PLong)pool_base;
-      ras.sizeBuff = ras.buff + pool_size / sizeof ( Long );
+      if ( pool_base && pool_size >= (long)sizeof(TWorker) + 2048 )
+      {
+        PWorker  worker = (PWorker)pool_base;
+
+
+        raster->buffer      = pool_base + ( (sizeof ( *worker ) + 7 ) & ~7 );
+        raster->buffer_size = ( ( pool_base + pool_size ) -
+                                (char*)raster->buffer ) / sizeof ( Long );
+        raster->worker      = worker;
+      }
+      else
+      {
+        raster->buffer      = NULL;
+        raster->buffer_size = 0;
+        raster->worker      = NULL;
+      }
     }
   }
 
 
   static void
-  ft_black_set_mode( TRaster_Instance*  raster,
+  ft_black_set_mode( PRaster            raster,
                      unsigned long      mode,
                      const char*        palette )
   {
@@ -3273,11 +3290,11 @@
     if ( mode == FT_MAKE_TAG( 'p', 'a', 'l', '5' ) )
     {
       /* set 5-levels gray palette */
-      ras.grays[0] = palette[0];
-      ras.grays[1] = palette[1];
-      ras.grays[2] = palette[2];
-      ras.grays[3] = palette[3];
-      ras.grays[4] = palette[4];
+      raster->grays[0] = palette[0];
+      raster->grays[1] = palette[1];
+      raster->grays[2] = palette[2];
+      raster->grays[3] = palette[3];
+      raster->grays[4] = palette[4];
     }
 
 #else
@@ -3291,14 +3308,15 @@
 
 
   static int
-  ft_black_render( TRaster_Instance*        raster,
+  ft_black_render( PRaster                  raster,
                    const FT_Raster_Params*  params )
   {
     const FT_Outline*  outline    = (const FT_Outline*)params->source;
     const FT_Bitmap*   target_map = params->target;
+    PWorker            worker;
 
 
-    if ( !(&ras) || !ras.buff || !ras.sizeBuff )
+    if ( !raster || !raster->buffer || !raster->buffer_size )
       return Raster_Err_Not_Ini;
 
     /* return immediately if the outline is empty */
@@ -3311,6 +3329,8 @@
     if ( outline->n_points != outline->contours[outline->n_contours - 1] + 1 )
       return Raster_Err_Invalid;
 
+    worker = raster->worker;
+
     /* this version of the raster does not support direct rendering, sorry */
     if ( params->flags & FT_RASTER_FLAG_DIRECT )
       return Raster_Err_Unsupported;
@@ -3320,6 +3340,14 @@
 
     ras.outline  = *outline;
     ras.target   = *target_map;
+
+    worker->buff        = (PLong) raster->buffer;
+    worker->sizeBuff    = worker->buff +
+                            raster->buffer_size / sizeof ( Long );
+#ifdef FT_RASTER_OPTION_ANTI_ALIASING
+    worker->grays       = raster->grays;
+    worker->gray_width  = raster->gray_width;
+#endif
 
     return ( ( params->flags & FT_RASTER_FLAG_AA )
                ? Render_Gray_Glyph( RAS_VAR )

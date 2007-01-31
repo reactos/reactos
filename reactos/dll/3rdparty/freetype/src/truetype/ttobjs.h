@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (specification).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -109,7 +109,7 @@ FT_BEGIN_HEADER
   } TT_GraphicsState;
 
 
-#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+#ifdef TT_USE_BYTECODE_INTERPRETER
 
   FT_LOCAL( void )
   tt_glyphzone_done( TT_GlyphZone  zone );
@@ -120,7 +120,7 @@ FT_BEGIN_HEADER
                     FT_Short      maxContours,
                     TT_GlyphZone  zone );
 
-#endif /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
+#endif /* TT_USE_BYTECODE_INTERPRETER */
 
 
 
@@ -316,17 +316,15 @@ FT_BEGIN_HEADER
   {
     FT_SizeRec         root;
 
-    FT_Size_Metrics    metrics; /* slightly different from the root metrics */
+    /* we have our own copy of metrics so that we can modify */
+    /* it without affecting auto-hinting (when used)         */
+    FT_Size_Metrics    metrics;
+
     TT_Size_Metrics    ttmetrics;
 
-#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+    FT_ULong           strike_index;      /* 0xFFFFFFFF to indicate invalid */
 
-    FT_UInt            strike_index;    /* 0xFFFF to indicate invalid */
-    FT_Size_Metrics    strike_metrics;  /* current strike's metrics   */
-
-#endif
-
-#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+#ifdef TT_USE_BYTECODE_INTERPRETER
 
     FT_UInt            num_function_defs; /* number of function definitions */
     FT_UInt            max_function_defs;
@@ -360,7 +358,10 @@ FT_BEGIN_HEADER
     FT_Bool            debug;
     TT_ExecContext     context;
 
-#endif /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
+    FT_Bool            bytecode_ready;
+    FT_Bool            cvt_ready;
+
+#endif /* TT_USE_BYTECODE_INTERPRETER */
 
   } TT_SizeRec;
 
@@ -414,8 +415,21 @@ FT_BEGIN_HEADER
   FT_LOCAL( void )
   tt_size_done( FT_Size  ttsize );          /* TT_Size */
 
+#ifdef TT_USE_BYTECODE_INTERPRETER
+
+  FT_LOCAL( FT_Error )
+  tt_size_run_fpgm( TT_Size  size );
+
+  FT_LOCAL( FT_Error )
+  tt_size_run_prep( TT_Size  size );
+
+#endif /* TT_USE_BYTECODE_INTERPRETER */
+
   FT_LOCAL( FT_Error )
   tt_size_reset( TT_Size  size );
+
+  FT_LOCAL( FT_Error )
+  tt_size_ready_bytecode( TT_Size  size );
 
 
   /*************************************************************************/
@@ -427,6 +441,14 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( void )
   tt_driver_done( FT_Module  ttdriver );    /* TT_Driver */
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* Slot functions                                                        */
+  /*                                                                       */
+  FT_LOCAL( FT_Error )
+  tt_slot_init( FT_GlyphSlot  slot );
 
 
 FT_END_HEADER

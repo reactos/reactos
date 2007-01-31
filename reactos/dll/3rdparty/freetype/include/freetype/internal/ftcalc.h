@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Arithmetic computations (specification).                             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -44,12 +44,11 @@ FT_BEGIN_HEADER
   /* <Note>                                                                */
   /*    This function is not very fast.                                    */
   /*                                                                       */
-  FT_EXPORT( FT_Int32 )
+  FT_BASE( FT_Int32 )
   FT_SqrtFixed( FT_Int32  x );
 
 
-#define SQRT_32( x )  FT_Sqrt32( x )
-
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
 
   /*************************************************************************/
   /*                                                                       */
@@ -69,6 +68,8 @@ FT_BEGIN_HEADER
   FT_EXPORT( FT_Int32 )
   FT_Sqrt32( FT_Int32  x );
 
+#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
+
 
   /*************************************************************************/
   /*                                                                       */
@@ -77,7 +78,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
 
 
-#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+#ifdef TT_USE_BYTECODE_INTERPRETER
 
   /*************************************************************************/
   /*                                                                       */
@@ -107,7 +108,31 @@ FT_BEGIN_HEADER
                       FT_Long  b,
                       FT_Long  c );
 
-#endif /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
+#endif /* TT_USE_BYTECODE_INTERPRETER */
+
+
+  /*
+   *  Return -1, 0, or +1, depending on the orientation of a given corner.
+   *  We use the Cartesian coordinate system, with positive vertical values
+   *  going upwards.  The function returns +1 if the corner turns to the
+   *  left, -1 to the right, and 0 for undecidable cases.
+   */
+  FT_BASE( FT_Int )
+  ft_corner_orientation( FT_Pos  in_x,
+                         FT_Pos  in_y,
+                         FT_Pos  out_x,
+                         FT_Pos  out_y );
+
+  /*
+   *  Return TRUE if a corner is flat or nearly flat.  This is equivalent to
+   *  saying that the angle difference between the `in' and `out' vectors is
+   *  very small.
+   */
+  FT_BASE( FT_Int )
+  ft_corner_is_flat( FT_Pos  in_x,
+                     FT_Pos  in_y,
+                     FT_Pos  out_x,
+                     FT_Pos  out_y );
 
 
 #define INT_TO_F26DOT6( x )    ( (FT_Long)(x) << 6  )

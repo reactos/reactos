@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph rasterizer interface (body).                      */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2005 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2005, 2006 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -161,13 +161,13 @@
     if ( !( mode & FT_RENDER_MODE_MONO ) )
     {
       /* we pad to 32 bits, only for backwards compatibility with FT 1.x */
-      pitch = FT_PAD_CEIL( width, 4 );
+      pitch              = FT_PAD_CEIL( width, 4 );
       bitmap->pixel_mode = FT_PIXEL_MODE_GRAY;
       bitmap->num_grays  = 256;
     }
     else
     {
-      pitch = ( ( width + 15 ) >> 4 ) << 1;
+      pitch              = ( ( width + 15 ) >> 4 ) << 1;
       bitmap->pixel_mode = FT_PIXEL_MODE_MONO;
     }
 
@@ -175,7 +175,7 @@
     bitmap->rows  = height;
     bitmap->pitch = pitch;
 
-    if ( FT_ALLOC( bitmap->buffer, (FT_ULong)pitch * height ) )
+    if ( FT_ALLOC_MULT( bitmap->buffer, pitch, height ) )
       goto Exit;
 
     slot->internal->flags |= FT_GLYPH_OWN_BITMAP;

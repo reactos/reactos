@@ -5,7 +5,7 @@
 /*    FreeType glyph image formats and default raster interface            */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -129,7 +129,7 @@ FT_BEGIN_HEADER
   /*    FT_PIXEL_MODE_GRAY ::                                              */
   /*      An 8-bit bitmap, generally used to represent anti-aliased glyph  */
   /*      images.  Each pixel is stored in one byte.  Note that the number */
-  /*      of value "gray" levels is stored in the `num_bytes' field of     */
+  /*      of value `gray' levels is stored in the `num_bytes' field of     */
   /*      the @FT_Bitmap structure (it generally is 256).                  */
   /*                                                                       */
   /*    FT_PIXEL_MODE_GRAY2 ::                                             */
@@ -144,15 +144,15 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    FT_PIXEL_MODE_LCD ::                                               */
   /*      An 8-bit bitmap, used to represent RGB or BGR decimated glyph    */
-  /*      images used for display on LCD displays; the bitmap's width is   */
-  /*      three times wider than the original glyph image.  See also       */
+  /*      images used for display on LCD displays; the bitmap is three     */
+  /*      times wider than the original glyph image.  See also             */
   /*      @FT_RENDER_MODE_LCD.                                             */
   /*                                                                       */
   /*    FT_PIXEL_MODE_LCD_V ::                                             */
   /*      An 8-bit bitmap, used to represent RGB or BGR decimated glyph    */
-  /*      images used for display on rotated LCD displays; the bitmap's    */
-  /*      height is three times taller than the original glyph image.      */
-  /*      See also @FT_RENDER_MODE_LCD_V.                                  */
+  /*      images used for display on rotated LCD displays; the bitmap      */
+  /*      is three times taller than the original glyph image.  See also   */
+  /*      @FT_RENDER_MODE_LCD_V.                                           */
   /*                                                                       */
   typedef enum  FT_Pixel_Mode_
   {
@@ -179,11 +179,11 @@ FT_BEGIN_HEADER
   /*    @FT_Pixel_Mode values instead.                                     */
   /*                                                                       */
   /* <Values>                                                              */
-  /*    ft_pixel_mode_none  :: see @FT_PIXEL_MODE_NONE                     */
-  /*    ft_pixel_mode_mono  :: see @FT_PIXEL_MODE_MONO                     */
-  /*    ft_pixel_mode_grays :: see @FT_PIXEL_MODE_GRAY                     */
-  /*    ft_pixel_mode_pal2  :: see @FT_PIXEL_MODE_GRAY2                    */
-  /*    ft_pixel_mode_pal4  :: see @FT_PIXEL_MODE_GRAY4                    */
+  /*    ft_pixel_mode_none  :: See @FT_PIXEL_MODE_NONE.                    */
+  /*    ft_pixel_mode_mono  :: See @FT_PIXEL_MODE_MONO.                    */
+  /*    ft_pixel_mode_grays :: See @FT_PIXEL_MODE_GRAY.                    */
+  /*    ft_pixel_mode_pal2  :: See @FT_PIXEL_MODE_GRAY2.                   */
+  /*    ft_pixel_mode_pal4  :: See @FT_PIXEL_MODE_GRAY4.                   */
   /*                                                                       */
 #define ft_pixel_mode_none   FT_PIXEL_MODE_NONE
 #define ft_pixel_mode_mono   FT_PIXEL_MODE_MONO
@@ -203,8 +203,8 @@ FT_BEGIN_HEADER
   /* <Description>                                                         */
   /*    THIS TYPE IS DEPRECATED.  DO NOT USE IT!                           */
   /*                                                                       */
-  /*    An enumeration type used to describe the format of a bitmap        */
-  /*    palette, used with ft_pixel_mode_pal4 and ft_pixel_mode_pal8.      */
+  /*    An enumeration type to describe the format of a bitmap palette,    */
+  /*    used with ft_pixel_mode_pal4 and ft_pixel_mode_pal8.               */
   /*                                                                       */
   /* <Fields>                                                              */
   /*    ft_palette_mode_rgb  :: The palette is an array of 3-bytes RGB     */
@@ -258,7 +258,7 @@ FT_BEGIN_HEADER
   /*                    most cases.                                        */
   /*                                                                       */
   /*    num_grays    :: This field is only used with                       */
-  /*                    `FT_PIXEL_MODE_GRAY'; it gives the number of gray  */
+  /*                    @FT_PIXEL_MODE_GRAY; it gives the number of gray   */
   /*                    levels used in the bitmap.                         */
   /*                                                                       */
   /*    pixel_mode   :: The pixel mode, i.e., how pixel bits are stored.   */
@@ -313,16 +313,16 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    n_points   :: The number of points in the outline.                 */
   /*                                                                       */
-  /*    points     :: A pointer to an array of `n_points' FT_Vector        */
+  /*    points     :: A pointer to an array of `n_points' @FT_Vector       */
   /*                  elements, giving the outline's point coordinates.    */
   /*                                                                       */
   /*    tags       :: A pointer to an array of `n_points' chars, giving    */
   /*                  each outline point's type.  If bit 0 is unset, the   */
-  /*                  point is `off' the curve, i.e. a Bezier control      */
+  /*                  point is `off' the curve, i.e., a Bézier control     */
   /*                  point, while it is `on' when set.                    */
   /*                                                                       */
   /*                  Bit 1 is meaningful for `off' points only.  If set,  */
-  /*                  it indicates a third-order Bezier arc control point; */
+  /*                  it indicates a third-order Bézier arc control point; */
   /*                  and a second-order control point if unset.           */
   /*                                                                       */
   /*    contours   :: An array of `n_contours' shorts, giving the end      */
@@ -333,7 +333,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    flags      :: A set of bit flags used to characterize the outline  */
   /*                  and give hints to the scan-converter and hinter on   */
-  /*                  how to convert/grid-fit it.  See FT_Outline_Flags.   */
+  /*                  how to convert/grid-fit it.  See @FT_OUTLINE_FLAGS.  */
   /*                                                                       */
   typedef struct  FT_Outline_
   {
@@ -362,7 +362,7 @@ FT_BEGIN_HEADER
   /*    FT_OUTLINE_NONE           :: Value 0 is reserved.                  */
   /*                                                                       */
   /*    FT_OUTLINE_OWNER          :: If set, this flag indicates that the  */
-  /*                                 outline's field arrays (i.e.          */
+  /*                                 outline's field arrays (i.e.,         */
   /*                                 `points', `flags' & `contours') are   */
   /*                                 `owned' by the outline object, and    */
   /*                                 should thus be freed when it is       */
@@ -486,8 +486,8 @@ FT_BEGIN_HEADER
   /*    Error code.  0 means success.                                      */
   /*                                                                       */
   typedef int
-  (*FT_Outline_MoveToFunc)( FT_Vector*  to,
-                            void*       user );
+  (*FT_Outline_MoveToFunc)( const FT_Vector*  to,
+                            void*             user );
 
 #define FT_Outline_MoveTo_Func  FT_Outline_MoveToFunc
 
@@ -512,8 +512,8 @@ FT_BEGIN_HEADER
   /*    Error code.  0 means success.                                      */
   /*                                                                       */
   typedef int
-  (*FT_Outline_LineToFunc)( FT_Vector*  to,
-                            void*       user );
+  (*FT_Outline_LineToFunc)( const FT_Vector*  to,
+                            void*             user );
 
 #define  FT_Outline_LineTo_Func  FT_Outline_LineToFunc
 
@@ -526,7 +526,7 @@ FT_BEGIN_HEADER
   /*    A function pointer type use to describe the signature of a `conic  */
   /*    to' function during outline walking/decomposition.                 */
   /*                                                                       */
-  /*    A `conic to' is emitted to indicate a second-order Bezier arc in   */
+  /*    A `conic to' is emitted to indicate a second-order Bézier arc in   */
   /*    the outline.                                                       */
   /*                                                                       */
   /* <Input>                                                               */
@@ -542,9 +542,9 @@ FT_BEGIN_HEADER
   /*    Error code.  0 means success.                                      */
   /*                                                                       */
   typedef int
-  (*FT_Outline_ConicToFunc)( FT_Vector*  control,
-                             FT_Vector*  to,
-                             void*       user );
+  (*FT_Outline_ConicToFunc)( const FT_Vector*  control,
+                             const FT_Vector*  to,
+                             void*             user );
 
 #define  FT_Outline_ConicTo_Func  FT_Outline_ConicToFunc
 
@@ -557,12 +557,12 @@ FT_BEGIN_HEADER
   /*    A function pointer type used to describe the signature of a `cubic */
   /*    to' function during outline walking/decomposition.                 */
   /*                                                                       */
-  /*    A `cubic to' is emitted to indicate a third-order Bezier arc.      */
+  /*    A `cubic to' is emitted to indicate a third-order Bézier arc.      */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    control1 :: A pointer to the first Bezier control point.           */
+  /*    control1 :: A pointer to the first Bézier control point.           */
   /*                                                                       */
-  /*    control2 :: A pointer to the second Bezier control point.          */
+  /*    control2 :: A pointer to the second Bézier control point.          */
   /*                                                                       */
   /*    to       :: A pointer to the target end point.                     */
   /*                                                                       */
@@ -573,10 +573,10 @@ FT_BEGIN_HEADER
   /*    Error code.  0 means success.                                      */
   /*                                                                       */
   typedef int
-  (*FT_Outline_CubicToFunc)( FT_Vector*  control1,
-                             FT_Vector*  control2,
-                             FT_Vector*  to,
-                             void*       user );
+  (*FT_Outline_CubicToFunc)( const FT_Vector*  control1,
+                             const FT_Vector*  control2,
+                             const FT_Vector*  to,
+                             void*             user );
 
 #define  FT_Outline_CubicTo_Func  FT_Outline_CubicToFunc
 
@@ -588,7 +588,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure to hold various function pointers used during outline  */
-  /*    decomposition in order to emit segments, conic, and cubic Beziers, */
+  /*    decomposition in order to emit segments, conic, and cubic Béziers, */
   /*    as well as `move to' and `close to' operations.                    */
   /*                                                                       */
   /* <Fields>                                                              */
@@ -596,9 +596,9 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    line_to  :: The segment emitter.                                   */
   /*                                                                       */
-  /*    conic_to :: The second-order Bezier arc emitter.                   */
+  /*    conic_to :: The second-order Bézier arc emitter.                   */
   /*                                                                       */
-  /*    cubic_to :: The third-order Bezier arc emitter.                    */
+  /*    cubic_to :: The third-order Bézier arc emitter.                    */
   /*                                                                       */
   /*    shift    :: The shift that is applied to coordinates before they   */
   /*                are sent to the emitter.                               */
@@ -611,8 +611,10 @@ FT_BEGIN_HEADER
   /*    version of the original coordinates (this is important for high    */
   /*    accuracy during scan-conversion).  The transformation is simple:   */
   /*                                                                       */
+  /*    {                                                                  */
   /*      x' = (x << shift) - delta                                        */
   /*      y' = (x << shift) - delta                                        */
+  /*    }                                                                  */
   /*                                                                       */
   /*    Set the value of `shift' and `delta' to 0 to get the original      */
   /*    point coordinates.                                                 */
@@ -644,14 +646,16 @@ FT_BEGIN_HEADER
   /*    FT_IMAGE_TAG                                                       */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    This macro converts four letter tags into an unsigned long.        */
+  /*    This macro converts four-letter tags to an unsigned long type.     */
   /*                                                                       */
   /* <Note>                                                                */
   /*    Since many 16bit compilers don't like 32bit enumerations, you      */
   /*    should redefine this macro in case of problems to something like   */
   /*    this:                                                              */
   /*                                                                       */
+  /*    {                                                                  */
   /*      #define FT_IMAGE_TAG( value, _x1, _x2, _x3, _x4 )  value         */
+  /*    }                                                                  */
   /*                                                                       */
   /*    to get a simple enumeration without assigning special numbers.     */
   /*                                                                       */
@@ -677,7 +681,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Values>                                                              */
   /*    FT_GLYPH_FORMAT_NONE ::                                            */
-  /*      The value 0 is reserved and does describe a glyph format.        */
+  /*      The value 0 is reserved.                                         */
   /*                                                                       */
   /*    FT_GLYPH_FORMAT_COMPOSITE ::                                       */
   /*      The glyph image is a composite of several other images.  This    */
@@ -690,13 +694,13 @@ FT_BEGIN_HEADER
   /*      the @FT_GlyphSlotRec structure to read it.                       */
   /*                                                                       */
   /*    FT_GLYPH_FORMAT_OUTLINE ::                                         */
-  /*      The glyph image is a vertorial outline made of line segments     */
-  /*      and Bezier arcs; it can be described as an @FT_Outline; you      */
+  /*      The glyph image is a vectorial outline made of line segments     */
+  /*      and Bézier arcs; it can be described as an @FT_Outline; you      */
   /*      generally want to access the `outline' field of the              */
   /*      @FT_GlyphSlotRec structure to read it.                           */
   /*                                                                       */
   /*    FT_GLYPH_FORMAT_PLOTTER ::                                         */
-  /*      The glyph image is a vectorial path with no inside/outside       */
+  /*      The glyph image is a vectorial path with no inside and outside   */
   /*      contours.  Some Type 1 fonts, like those in the Hershey family,  */
   /*      contain glyphs in this format.  These are described as           */
   /*      @FT_Outline, but FreeType isn't currently capable of rendering   */
@@ -724,11 +728,11 @@ FT_BEGIN_HEADER
   /*    @FT_Glyph_Format values instead.                                   */
   /*                                                                       */
   /* <Values>                                                              */
-  /*    ft_glyph_format_none      :: see @FT_GLYPH_FORMAT_NONE             */
-  /*    ft_glyph_format_composite :: see @FT_GLYPH_FORMAT_COMPOSITE        */
-  /*    ft_glyph_format_bitmap    :: see @FT_GLYPH_FORMAT_BITMAP           */
-  /*    ft_glyph_format_outline   :: see @FT_GLYPH_FORMAT_OUTLINE          */
-  /*    ft_glyph_format_plotter   :: see @FT_GLYPH_FORMAT_PLOTTER          */
+  /*    ft_glyph_format_none      :: See @FT_GLYPH_FORMAT_NONE.            */
+  /*    ft_glyph_format_composite :: See @FT_GLYPH_FORMAT_COMPOSITE.       */
+  /*    ft_glyph_format_bitmap    :: See @FT_GLYPH_FORMAT_BITMAP.          */
+  /*    ft_glyph_format_outline   :: See @FT_GLYPH_FORMAT_OUTLINE.         */
+  /*    ft_glyph_format_plotter   :: See @FT_GLYPH_FORMAT_PLOTTER.         */
   /*                                                                       */
 #define ft_glyph_format_none       FT_GLYPH_FORMAT_NONE
 #define ft_glyph_format_composite  FT_GLYPH_FORMAT_COMPOSITE
@@ -809,11 +813,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Note>                                                                */
   /*    This structure is used by the span drawing callback type named     */
-  /*    FT_SpanFunc which takes the y-coordinate of the span as a          */
+  /*    @FT_SpanFunc which takes the y-coordinate of the span as a         */
   /*    a parameter.                                                       */
   /*                                                                       */
-  /*    The coverage value is always between 0 and 255, even if the number */
-  /*    of gray levels have been set through FT_Set_Gray_Levels().         */
+  /*    The coverage value is always between 0 and 255.                    */
   /*                                                                       */
   typedef struct  FT_Span_
   {
@@ -851,20 +854,20 @@ FT_BEGIN_HEADER
   /*    given background bitmap, and even perform translucency.            */
   /*                                                                       */
   /*    Note that the `count' field cannot be greater than a fixed value   */
-  /*    defined by the FT_MAX_GRAY_SPANS configuration macro in            */
-  /*    ftoption.h.  By default, this value is set to 32, which means that */
-  /*    if there are more than 32 spans on a given scanline, the callback  */
-  /*    will be called several times with the same `y' parameter in order  */
-  /*    to draw all callbacks.                                             */
+  /*    defined by the `FT_MAX_GRAY_SPANS' configuration macro in          */
+  /*    `ftoption.h'.  By default, this value is set to 32, which means    */
+  /*    that if there are more than 32 spans on a given scanline, the      */
+  /*    callback is called several times with the same `y' parameter in    */
+  /*    order to draw all callbacks.                                       */
   /*                                                                       */
   /*    Otherwise, the callback is only called once per scan-line, and     */
   /*    only for those scanlines that do have `gray' pixels on them.       */
   /*                                                                       */
   typedef void
-  (*FT_SpanFunc)( int       y,
-                  int       count,
-                  FT_Span*  spans,
-                  void*     user );
+  (*FT_SpanFunc)( int             y,
+                  int             count,
+                  const FT_Span*  spans,
+                  void*           user );
 
 #define FT_Raster_Span_Func   FT_SpanFunc
 
@@ -958,8 +961,8 @@ FT_BEGIN_HEADER
   /*    FT_RASTER_FLAG_CLIP    :: This flag is only used in direct         */
   /*                              rendering mode.  If set, the output will */
   /*                              be clipped to a box specified in the     */
-  /*                              "clip_box" field of the FT_Raster_Params */
-  /*                              structure.                               */
+  /*                              `clip_box' field of the                  */
+  /*                              @FT_Raster_Params structure.             */
   /*                                                                       */
   /*                              Note that by default, the glyph bitmap   */
   /*                              is clipped to the target pixmap, except  */
@@ -990,8 +993,8 @@ FT_BEGIN_HEADER
   /* <Fields>                                                              */
   /*    target      :: The target bitmap.                                  */
   /*                                                                       */
-  /*    source      :: A pointer to the source glyph image (e.g. an        */
-  /*                   FT_Outline).                                        */
+  /*    source      :: A pointer to the source glyph image (e.g., an       */
+  /*                   @FT_Outline).                                       */
   /*                                                                       */
   /*    flags       :: The rendering flags.                                */
   /*                                                                       */
@@ -1012,11 +1015,11 @@ FT_BEGIN_HEADER
   /*                   26.6 fixed-point units).                            */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    An anti-aliased glyph bitmap is drawn if the FT_RASTER_FLAG_AA bit */
-  /*    flag is set in the `flags' field, otherwise a monochrome bitmap    */
-  /*    will be generated.                                                 */
+  /*    An anti-aliased glyph bitmap is drawn if the @FT_RASTER_FLAG_AA    */
+  /*    bit flag is set in the `flags' field, otherwise a monochrome       */
+  /*    bitmap is generated.                                               */
   /*                                                                       */
-  /*    If the FT_RASTER_FLAG_DIRECT bit flag is set in `flags', the       */
+  /*    If the @FT_RASTER_FLAG_DIRECT bit flag is set in `flags', the      */
   /*    raster will call the `gray_spans' callback to draw gray pixel      */
   /*    spans, in the case of an aa glyph bitmap, it will call             */
   /*    `black_spans', and `bit_test' and `bit_set' in the case of a       */
@@ -1063,9 +1066,9 @@ FT_BEGIN_HEADER
   /* <Note>                                                                */
   /*    The `memory' parameter is a typeless pointer in order to avoid     */
   /*    un-wanted dependencies on the rest of the FreeType code.  In       */
-  /*    practice, it is a FT_Memory, i.e., a handle to the standard        */
-  /*    FreeType memory allocator.  However, this field can be completely  */
-  /*    ignored by a given raster implementation.                          */
+  /*    practice, it is an @FT_Memory object, i.e., a handle to the        */
+  /*    standard FreeType memory allocator.  However, this field can be    */
+  /*    completely ignored by a given raster implementation.               */
   /*                                                                       */
   typedef int
   (*FT_Raster_NewFunc)( void*       memory,
@@ -1160,31 +1163,31 @@ FT_BEGIN_HEADER
   /* <Input>                                                               */
   /*    raster :: A handle to the raster object.                           */
   /*                                                                       */
-  /*    params :: A pointer to a FT_Raster_Params structure used to store  */
-  /*              the rendering parameters.                                */
+  /*    params :: A pointer to an @FT_Raster_Params structure used to      */
+  /*              store the rendering parameters.                          */
   /*                                                                       */
   /* <Return>                                                              */
   /*    Error code.  0 means success.                                      */
   /*                                                                       */
   /* <Note>                                                                */
   /*    The exact format of the source image depends on the raster's glyph */
-  /*    format defined in its FT_Raster_Funcs structure.  It can be an     */
-  /*    FT_Outline or anything else in order to support a large array of   */
+  /*    format defined in its @FT_Raster_Funcs structure.  It can be an    */
+  /*    @FT_Outline or anything else in order to support a large array of  */
   /*    glyph formats.                                                     */
   /*                                                                       */
   /*    Note also that the render function can fail and return a           */
-  /*    FT_Err_Unimplemented_Feature error code if the raster used does    */
+  /*    `FT_Err_Unimplemented_Feature' error code if the raster used does  */
   /*    not support direct composition.                                    */
   /*                                                                       */
   /*    XXX: For now, the standard raster doesn't support direct           */
   /*         composition but this should change for the final release (see */
-  /*         the files demos/src/ftgrays.c and demos/src/ftgrays2.c for    */
-  /*         examples of distinct implementations which support direct     */
+  /*         the files `demos/src/ftgrays.c' and `demos/src/ftgrays2.c'    */
+  /*         for examples of distinct implementations which support direct */
   /*         composition).                                                 */
   /*                                                                       */
   typedef int
-  (*FT_Raster_RenderFunc)( FT_Raster          raster,
-                           FT_Raster_Params*  params );
+  (*FT_Raster_RenderFunc)( FT_Raster                raster,
+                           const FT_Raster_Params*  params );
 
 #define  FT_Raster_Render_Func    FT_Raster_RenderFunc
 
@@ -1228,3 +1231,8 @@ FT_END_HEADER
 
 
 /* END */
+
+
+/* Local Variables: */
+/* coding: utf-8    */
+/* End:             */

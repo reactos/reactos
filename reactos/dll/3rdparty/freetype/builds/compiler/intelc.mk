@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2003 by
+# Copyright 1996-2000, 2003, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -54,6 +54,7 @@ L := /Fl
 # Target flag.
 #
 T := /Fo
+TE := /Fe
 
 
 # C flags
@@ -69,13 +70,11 @@ T := /Fo
 #   _does_ compute an arithmetic value, so we disable this warning
 #   with "/Qwd32".
 #
-ifndef CFLAGS
-  CFLAGS := /nologo /c /Ox /G5 /W3 /Qwd32
-endif
+CFLAGS ?= /nologo /c /Ox /G5 /W3 /Qwd32
 
 # ANSIFLAGS: Put there the flags used to make your compiler ANSI-compliant.
 #
-ANSIFLAGS := /Qansi /Za
+ANSIFLAGS := /Qansi_alias /Za
 
 # Library linking
 #

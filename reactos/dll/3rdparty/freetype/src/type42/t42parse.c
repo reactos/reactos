@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 font parser (body).                                          */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005 by Roberto Alameda.                   */
+/*  Copyright 2002, 2003, 2004, 2005, 2006 by Roberto Alameda.             */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -49,6 +49,8 @@
                    T42_Loader  loader );
 
 
+  /* as Type42 fonts have no Private dict,         */
+  /* we set the last argument of T1_FIELD_XXX to 0 */
   static const
   T1_FieldRec  t42_keywords[] = {
 
@@ -57,39 +59,39 @@
 #undef  T1CODE
 #define T1CODE        T1_FIELD_LOCATION_FONT_INFO
 
-    T1_FIELD_STRING( "version",            version )
-    T1_FIELD_STRING( "Notice",             notice )
-    T1_FIELD_STRING( "FullName",           full_name )
-    T1_FIELD_STRING( "FamilyName",         family_name )
-    T1_FIELD_STRING( "Weight",             weight )
-    T1_FIELD_NUM   ( "ItalicAngle",        italic_angle )
-    T1_FIELD_BOOL  ( "isFixedPitch",       is_fixed_pitch )
-    T1_FIELD_NUM   ( "UnderlinePosition",  underline_position )
-    T1_FIELD_NUM   ( "UnderlineThickness", underline_thickness )
+    T1_FIELD_STRING( "version",            version,             0 )
+    T1_FIELD_STRING( "Notice",             notice,              0 )
+    T1_FIELD_STRING( "FullName",           full_name,           0 )
+    T1_FIELD_STRING( "FamilyName",         family_name,         0 )
+    T1_FIELD_STRING( "Weight",             weight,              0 )
+    T1_FIELD_NUM   ( "ItalicAngle",        italic_angle,        0 )
+    T1_FIELD_BOOL  ( "isFixedPitch",       is_fixed_pitch,      0 )
+    T1_FIELD_NUM   ( "UnderlinePosition",  underline_position,  0 )
+    T1_FIELD_NUM   ( "UnderlineThickness", underline_thickness, 0 )
 
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  T1_FontRec
 #undef  T1CODE
 #define T1CODE        T1_FIELD_LOCATION_FONT_DICT
 
-    T1_FIELD_KEY  ( "FontName",    font_name )
-    T1_FIELD_NUM  ( "PaintType",   paint_type )
-    T1_FIELD_NUM  ( "FontType",    font_type )
-    T1_FIELD_FIXED( "StrokeWidth", stroke_width )
+    T1_FIELD_KEY  ( "FontName",    font_name,    0 )
+    T1_FIELD_NUM  ( "PaintType",   paint_type,   0 )
+    T1_FIELD_NUM  ( "FontType",    font_type,    0 )
+    T1_FIELD_FIXED( "StrokeWidth", stroke_width, 0 )
 
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  FT_BBox
 #undef  T1CODE
 #define T1CODE        T1_FIELD_LOCATION_BBOX
 
-    T1_FIELD_BBOX("FontBBox", xMin )
+    T1_FIELD_BBOX("FontBBox", xMin, 0 )
 
-    T1_FIELD_CALLBACK( "FontMatrix",  t42_parse_font_matrix )
-    T1_FIELD_CALLBACK( "Encoding",    t42_parse_encoding )
-    T1_FIELD_CALLBACK( "CharStrings", t42_parse_charstrings )
-    T1_FIELD_CALLBACK( "sfnts",       t42_parse_sfnts )
+    T1_FIELD_CALLBACK( "FontMatrix",  t42_parse_font_matrix, 0 )
+    T1_FIELD_CALLBACK( "Encoding",    t42_parse_encoding,    0 )
+    T1_FIELD_CALLBACK( "CharStrings", t42_parse_charstrings, 0 )
+    T1_FIELD_CALLBACK( "sfnts",       t42_parse_sfnts,       0 )
 
-    { 0, T1_FIELD_LOCATION_CID_INFO, T1_FIELD_TYPE_NONE, 0, 0, 0, 0, 0 }
+    { 0, T1_FIELD_LOCATION_CID_INFO, T1_FIELD_TYPE_NONE, 0, 0, 0, 0, 0, 0 }
   };
 
 
@@ -623,6 +625,7 @@
             status         = OTHER_TABLES;
             face->ttf_size = ttf_size;
 
+            /* there are no more than 256 tables, so no size check here */
             if ( FT_REALLOC( face->ttf_data, 12 + 16 * num_tables,
                              ttf_size + 1 ) )
               goto Fail;
@@ -1071,7 +1074,7 @@
             if ( !name )
               continue;
 
-            if ( cur[0] == name[0]                                  && 
+            if ( cur[0] == name[0]                                  &&
                  len == (FT_PtrDist)ft_strlen( (const char *)name ) &&
                  ft_memcmp( cur, name, len ) == 0                   )
             {

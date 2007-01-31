@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver interface (specification).                      */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2006 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -53,6 +53,16 @@ FT_BEGIN_HEADER
 
 
   typedef FT_Error
+  (*FT_Size_RequestFunc)( FT_Size          size,
+                          FT_Size_Request  req );
+
+  typedef FT_Error
+  (*FT_Size_SelectFunc)( FT_Size   size,
+                         FT_ULong  size_index );
+
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+
+  typedef FT_Error
   (*FT_Size_ResetPointsFunc)( FT_Size     size,
                               FT_F26Dot6  char_width,
                               FT_F26Dot6  char_height,
@@ -63,6 +73,8 @@ FT_BEGIN_HEADER
   (*FT_Size_ResetPixelsFunc)( FT_Size  size,
                               FT_UInt  pixel_width,
                               FT_UInt  pixel_height );
+
+#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
   typedef FT_Error
   (*FT_Slot_LoadFunc)( FT_GlyphSlot  slot,
@@ -129,16 +141,9 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    done_slot        :: The format-specific slot destructor.           */
   /*                                                                       */
-  /*    set_char_sizes   :: A handle to a function used to set the new     */
-  /*                        character size in points + resolution.  Can be */
-  /*                        set to 0 to indicate default behaviour.        */
   /*                                                                       */
-  /*    set_pixel_sizes  :: A handle to a function used to set the new     */
-  /*                        character size in pixels.  Can be set to 0 to  */
-  /*                        indicate default behaviour.                    */
-  /*                                                                       */
-  /*    load_glyph       :: A function handle to load a given glyph image  */
-  /*                        in a slot.  This field is mandatory!           */
+  /*    load_glyph       :: A function handle to load a glyph to a slot.   */
+  /*                        This field is mandatory!                       */
   /*                                                                       */
   /*    get_char_index   :: A function handle to return the glyph index of */
   /*                        a given character for a given charmap.  This   */
@@ -156,7 +161,7 @@ FT_BEGIN_HEADER
   /*                        face, or a CIDMap on a CID-keyed face.         */
   /*                                                                       */
   /*    get_advances     :: A function handle used to return advance       */
-  /*                        widths of 'count' glyphs (in font units),      */
+  /*                        widths of `count' glyphs (in font units),      */
   /*                        starting at `first'.  The `vertical' flag must */
   /*                        be set to get vertical advance heights.  The   */
   /*                        `advances' buffer is caller-allocated.         */
@@ -165,6 +170,15 @@ FT_BEGIN_HEADER
   /*                        device-independent text layout without loading */
   /*                        a single glyph image.                          */
   /*                                                                       */
+  /*    request_size     :: A handle to a function used to request the new */
+  /*                        character size.  Can be set to 0 if the        */
+  /*                        scaling done in the base layer suffices.       */
+  /*                                                                       */
+  /*    select_size      :: A handle to a function used to select a new    */
+  /*                        fixed size.  It is used only if                */
+  /*                        @FT_FACE_FLAG_FIXED_SIZES is set.  Can be set  */
+  /*                        to 0 if the scaling done in the base layer     */
+  /*                        suffices.                                      */
   /* <Note>                                                                */
   /*    Most function pointers, with the exception of `load_glyph' and     */
   /*    `get_char_index' can be set to 0 to indicate a default behaviour.  */
@@ -186,8 +200,12 @@ FT_BEGIN_HEADER
     FT_Slot_InitFunc          init_slot;
     FT_Slot_DoneFunc          done_slot;
 
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+
     FT_Size_ResetPointsFunc   set_char_sizes;
     FT_Size_ResetPixelsFunc   set_pixel_sizes;
+
+#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
     FT_Slot_LoadFunc          load_glyph;
 
@@ -195,7 +213,35 @@ FT_BEGIN_HEADER
     FT_Face_AttachFunc        attach_file;
     FT_Face_GetAdvancesFunc   get_advances;
 
+    /* since version 2.2 */
+    FT_Size_RequestFunc       request_size;
+    FT_Size_SelectFunc        select_size;
+
   } FT_Driver_ClassRec, *FT_Driver_Class;
+
+
+  /*
+   *  The following functions are used as stubs for `set_char_sizes' and
+   *  `set_pixel_sizes'; the code uses `request_size' and `select_size'
+   *  functions instead.
+   *
+   *  Implementation is in `src/base/ftobjs.c'.
+   */
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+
+  FT_BASE( FT_Error )
+  ft_stub_set_char_sizes( FT_Size     size,
+                          FT_F26Dot6  width,
+                          FT_F26Dot6  height,
+                          FT_UInt     horz_res,
+                          FT_UInt     vert_res );
+
+  FT_BASE( FT_Error )
+  ft_stub_set_pixel_sizes( FT_Size  size,
+                           FT_UInt  width,
+                           FT_UInt  height );
+
+#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
 FT_END_HEADER

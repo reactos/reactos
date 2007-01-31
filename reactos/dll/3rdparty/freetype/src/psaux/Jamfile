@@ -16,7 +16,9 @@ SubDir  FT2_TOP $(FT2_SRC_DIR) psaux ;
 
   if $(FT2_MULTI)
   {
-    _sources = psauxmod psobjs t1decode t1cmap ;
+    _sources = psauxmod psobjs   t1decode t1cmap
+               psconv   afmparse
+               ;
   }
   else
   {

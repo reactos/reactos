@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Postscript (Type1/Type2) hints recorder (specification).             */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003 by                                          */
+/*  Copyright 2001, 2002, 2003, 2006 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,7 +22,7 @@
   /*  font drivers to record the hints of a given character/glyph.          */
   /*                                                                        */
   /*  The hints are recorded in a unified format, and are later processed   */
-  /*  by the "optimizer" and "fitter" to adjust the outlines to the pixel   */
+  /*  by the `optimizer' and `fitter' to adjust the outlines to the pixel   */
   /*  grid.                                                                 */
   /*                                                                        */
   /**************************************************************************/

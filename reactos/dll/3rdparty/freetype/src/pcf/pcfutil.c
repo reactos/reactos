@@ -2,7 +2,11 @@
 
 Copyright 1990, 1994, 1998  The Open Group
 
-All Rights Reserved.
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
 
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
@@ -43,12 +47,12 @@ in this Software without prior written authorization from The Open Group.
     for ( ; --nbytes >= 0; buf++ )
     {
       unsigned int  val = *buf;
-      
+
 
       val = ( ( val >> 1 ) & 0x55 ) | ( ( val << 1 ) & 0xAA );
       val = ( ( val >> 2 ) & 0x33 ) | ( ( val << 2 ) & 0xCC );
       val = ( ( val >> 4 ) & 0x0F ) | ( ( val << 4 ) & 0xF0 );
-      
+
       *buf = (unsigned char)val;
     }
   }

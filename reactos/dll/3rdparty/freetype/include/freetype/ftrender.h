@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType renderer modules public interface (specification).          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2005 by                                           */
+/*  Copyright 1996-2001, 2005, 2006 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -46,9 +46,9 @@ FT_BEGIN_HEADER
   (*FT_Glyph_DoneFunc)( FT_Glyph  glyph );
 
   typedef void
-  (*FT_Glyph_TransformFunc)( FT_Glyph    glyph,
-                             FT_Matrix*  matrix,
-                             FT_Vector*  delta );
+  (*FT_Glyph_TransformFunc)( FT_Glyph          glyph,
+                             const FT_Matrix*  matrix,
+                             const FT_Vector*  delta );
 
   typedef void
   (*FT_Glyph_GetBBoxFunc)( FT_Glyph  glyph,
@@ -85,16 +85,16 @@ FT_BEGIN_HEADER
 
 
   typedef FT_Error
-  (*FT_Renderer_RenderFunc)( FT_Renderer   renderer,
-                             FT_GlyphSlot  slot,
-                             FT_UInt       mode,
-                             FT_Vector*    origin );
+  (*FT_Renderer_RenderFunc)( FT_Renderer       renderer,
+                             FT_GlyphSlot      slot,
+                             FT_UInt           mode,
+                             const FT_Vector*  origin );
 
   typedef FT_Error
-  (*FT_Renderer_TransformFunc)( FT_Renderer   renderer,
-                                FT_GlyphSlot  slot,
-                                FT_Matrix*    matrix,
-                                FT_Vector*    delta );
+  (*FT_Renderer_TransformFunc)( FT_Renderer       renderer,
+                                FT_GlyphSlot      slot,
+                                const FT_Matrix*  matrix,
+                                const FT_Vector*  delta );
 
 
   typedef void
@@ -124,7 +124,7 @@ FT_BEGIN_HEADER
   /*    The renderer module class descriptor.                              */
   /*                                                                       */
   /* <Fields>                                                              */
-  /*    root         :: The root FT_Module_Class fields.                   */
+  /*    root         :: The root @FT_Module_Class fields.                  */
   /*                                                                       */
   /*    glyph_format :: The glyph image format this renderer handles.      */
   /*                                                                       */
@@ -133,10 +133,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    set_mode     :: A method used to pass additional parameters.       */
   /*                                                                       */
-  /*    raster_class :: For `FT_GLYPH_FORMAT_OUTLINE' renderers only, this */
+  /*    raster_class :: For @FT_GLYPH_FORMAT_OUTLINE renderers only.  This */
   /*                    is a pointer to its raster's class.                */
   /*                                                                       */
-  /*    raster       :: For `FT_GLYPH_FORMAT_OUTLINE' renderers only. this */
+  /*    raster       :: For @FT_GLYPH_FORMAT_OUTLINE renderers only.  This */
   /*                    is a pointer to the corresponding raster object,   */
   /*                    if any.                                            */
   /*                                                                       */
@@ -176,8 +176,8 @@ FT_BEGIN_HEADER
   /*    An error will be returned if a module already exists by that name, */
   /*    or if the module requires a version of FreeType that is too great. */
   /*                                                                       */
-  /*    To add a new renderer, simply use FT_Add_Module().  To retrieve a  */
-  /*    renderer by its name, use FT_Get_Module().                         */
+  /*    To add a new renderer, simply use @FT_Add_Module.  To retrieve a   */
+  /*    renderer by its name, use @FT_Get_Module.                          */
   /*                                                                       */
   FT_EXPORT( FT_Renderer )
   FT_Get_Renderer( FT_Library       library,

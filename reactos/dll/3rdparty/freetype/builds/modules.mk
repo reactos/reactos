@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2003 by
+# Copyright 1996-2000, 2003, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -20,43 +20,45 @@
 # This file is in charge of handling the generation of the modules list
 # file.
 
-.PHONY: make_module_list clean_module_list
 
-# MODULE_LIST, as its name suggests, indicates where the modules list
-# resides.  For now, it is in `include/freetype/config/ftmodule.h'.
+# Build the modules list.
 #
-ifndef MODULE_LIST
-  MODULE_LIST := $(TOP_DIR)/include/$(PROJECT)/config/ftmodule.h
-endif
-
-# To build the modules list, we invoke the `make_module_list' target.
-#
-# This rule is commented out by default since FreeType comes already with
-# an ftmodule.h file.
-#
-#$(MODULE_LIST): make_module_list
-
+$(FTMODULE_H): $(MODULES_CFG)
+	$(FTMODULE_H_INIT)
+	$(FTMODULE_H_CREATE)
+	$(FTMODULE_H_DONE)
 
 ifneq ($(findstring $(PLATFORM),dos win32 win16 os2),)
   OPEN_MODULE   := @echo$(space)
-  CLOSE_MODULE  :=  >> $(subst /,\,$(MODULE_LIST))
-  REMOVE_MODULE := @-$(DELETE) $(subst /,\,$(MODULE_LIST))
+  CLOSE_MODULE  :=  >> $(subst /,\,$(FTMODULE_H))
+  REMOVE_MODULE := @-$(DELETE) $(subst /,\,$(FTMODULE_H))
 else
   OPEN_MODULE   := @echo "
-  CLOSE_MODULE  := " >> $(MODULE_LIST)
-  REMOVE_MODULE := @-$(DELETE) $(MODULE_LIST)
+  CLOSE_MODULE  := " >> $(FTMODULE_H)
+  REMOVE_MODULE := @-$(DELETE) $(FTMODULE_H)
 endif
 
 
-# Before the modules list file can be generated, we must remove the file in
-# order to `clean' the list.
-#
-clean_module_list:
-	$(REMOVE_MODULE)
-	@-echo Regenerating modules list in $(MODULE_LIST)...
+define FTMODULE_H_INIT
+$(REMOVE_MODULE)
+@-echo Generating modules list in $(FTMODULE_H)...
+$(OPEN_MODULE)/* This is a generated file. */$(CLOSE_MODULE)
+endef
 
-make_module_list: clean_module_list
-	@echo done.
+# It is no mistake that the final closing parenthesis is on the
+# next line -- it produces proper newlines during the expansion
+# of `foreach'.
+#
+define FTMODULE_H_CREATE
+$(foreach COMMAND,$(FTMODULE_H_COMMANDS),$($(COMMAND))
+)
+endef
+
+define FTMODULE_H_DONE
+$(OPEN_MODULE)/* EOF */$(CLOSE_MODULE)
+@echo done.
+endef
+
 
 # $(OPEN_DRIVER) & $(CLOSE_DRIVER) are used to specify a given font driver
 # in the `module.mk' rules file.
@@ -68,10 +70,10 @@ ECHO_DRIVER      := @echo "* module:$(space)
 ECHO_DRIVER_DESC := (
 ECHO_DRIVER_DONE := )"
 
-# Each `module.mk' in the `src' sub-dirs is used to add one rule to the
-# target `make_module_list'.
+# Each `module.mk' in the `src/*' subdirectories adds a variable with
+# commands to $(FTMODULE_H_COMMANDS).  Note that we can't use SRC_DIR here.
 #
-include $(wildcard $(TOP_DIR)/src/*/module.mk)
+-include $(patsubst %,$(TOP_DIR)/src/%/module.mk,$(MODULES))
 
 
 # EOF

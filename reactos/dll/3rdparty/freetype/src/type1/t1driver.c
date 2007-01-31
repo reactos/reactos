@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 driver interface (body).                                      */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -36,6 +36,8 @@
 #include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 #include FT_SERVICE_POSTSCRIPT_INFO_H
+#include FT_SERVICE_KERNING_H
+
 
   /*************************************************************************/
   /*                                                                       */
@@ -176,6 +178,12 @@
     (PS_GetFontPrivateFunc)t1_ps_get_font_private,
   };
 
+#ifndef T1_CONFIG_OPTION_NO_AFM
+  static const FT_Service_KerningRec  t1_service_kerning =
+  {
+    T1_Get_Track_Kerning,
+  };
+#endif
 
  /*
   *  SERVICE LIST
@@ -188,6 +196,10 @@
     { FT_SERVICE_ID_GLYPH_DICT,           &t1_service_glyph_dict },
     { FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_TYPE_1 },
     { FT_SERVICE_ID_POSTSCRIPT_INFO,      &t1_service_ps_info },
+
+#ifndef T1_CONFIG_OPTION_NO_AFM
+    { FT_SERVICE_ID_KERNING,              &t1_service_kerning },
+#endif
 
 #ifndef T1_CONFIG_OPTION_NO_MM_SUPPORT
     { FT_SERVICE_ID_MULTI_MASTERS,        &t1_service_multi_masters },
@@ -246,15 +258,14 @@
                FT_UInt     right_glyph,
                FT_Vector*  kerning )
   {
-    T1_AFM*  afm;
-
-
     kerning->x = 0;
     kerning->y = 0;
 
-    afm = (T1_AFM*)face->afm_data;
-    if ( afm )
-      T1_Get_Kerning( afm, left_glyph, right_glyph, kerning );
+    if ( face->afm_data )
+      T1_Get_Kerning( (AFM_FontInfo)face->afm_data,
+                      left_glyph,
+                      right_glyph,
+                      kerning );
 
     return T1_Err_Ok;
   }
@@ -295,8 +306,10 @@
     (FT_Slot_InitFunc)        T1_GlyphSlot_Init,
     (FT_Slot_DoneFunc)        T1_GlyphSlot_Done,
 
-    (FT_Size_ResetPointsFunc) T1_Size_Reset,
-    (FT_Size_ResetPixelsFunc) T1_Size_Reset,
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    ft_stub_set_char_sizes,
+    ft_stub_set_pixel_sizes,
+#endif
     (FT_Slot_LoadFunc)        T1_Load_Glyph,
 
 #ifdef T1_CONFIG_OPTION_NO_AFM
@@ -306,7 +319,9 @@
     (FT_Face_GetKerningFunc)  Get_Kerning,
     (FT_Face_AttachFunc)      T1_Read_Metrics,
 #endif
-    (FT_Face_GetAdvancesFunc) 0
+    (FT_Face_GetAdvancesFunc) 0,
+    (FT_Size_RequestFunc)     T1_Size_Request,
+    (FT_Size_SelectFunc)      0
   };
 
 

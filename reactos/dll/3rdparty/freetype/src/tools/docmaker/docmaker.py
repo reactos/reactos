@@ -36,7 +36,7 @@ def usage():
     print "  --title  : same as -t, as in '--title=\"My Project\"'"
     print "  --output : same as -o, as in '--output=mydir'"
     print "  --prefix : same as -p, as in '--prefix=ft2'"
-    
+
 
 def main( argv ):
     """main program loop"""
@@ -87,7 +87,7 @@ def main( argv ):
     for filename in file_list:
         source_processor.parse_file( filename )
         content_processor.parse_sources( source_processor )
-        
+
     # process sections
     content_processor.finish()
 

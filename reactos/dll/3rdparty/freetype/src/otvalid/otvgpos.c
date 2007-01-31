@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType GPOS table validation (body).                               */
 /*                                                                         */
-/*  Copyright 2002, 2004, 2005 by                                          */
+/*  Copyright 2002, 2004, 2005, 2006 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -48,9 +48,9 @@
   /*************************************************************************/
   /*************************************************************************/
 
-#define BaseArray       otv_x_sxy, "BaseArray"
-#define LigatureAttach  otv_x_sxy, "LigatureAttach"
-#define Mark2Array      otv_x_sxy, "Mark2Array"
+#define BaseArrayFunc       otv_x_sxy
+#define LigatureAttachFunc  otv_x_sxy
+#define Mark2ArrayFunc      otv_x_sxy
 
   /* uses valid->extra1 (counter)                             */
   /* uses valid->extra2 (boolean to handle NULL anchor field) */
@@ -67,9 +67,9 @@
 
     OTV_LIMIT_CHECK( 2 );
 
-    OTV_TRACE(( " (Count = %d)\n", Count ));
-
     Count = FT_NEXT_USHORT( p );
+
+    OTV_TRACE(( " (Count = %d)\n", Count ));
 
     OTV_LIMIT_CHECK( Count * valid->extra1 * 2 );
 
@@ -88,8 +88,8 @@
           OTV_SIZE_CHECK( anchor_offset );
           if ( anchor_offset )
             otv_Anchor_validate( table + anchor_offset, valid );
-        }        
-        else  
+        }
+        else
           otv_Anchor_validate( table + anchor_offset, valid );
       }
 
@@ -97,9 +97,9 @@
   }
 
 
-#define MarkBasePosFormat1  otv_u_O_O_u_O_O, "MarkBasePosFormat1"
-#define MarkLigPosFormat1   otv_u_O_O_u_O_O, "MarkLigPosFormat1"
-#define MarkMarkPosFormat1  otv_u_O_O_u_O_O, "MarkMarkPosFormat1"
+#define MarkBasePosFormat1Func  otv_u_O_O_u_O_O
+#define MarkLigPosFormat1Func   otv_u_O_O_u_O_O
+#define MarkMarkPosFormat1Func  otv_u_O_O_u_O_O
 
   /* sets valid->extra1 (class count) */
 
@@ -130,7 +130,7 @@
     otv_MarkArray_validate( table + Array1, valid );
 
     valid->nesting_level++;
-    func          = valid->func[valid->nesting_level];    
+    func          = valid->func[valid->nesting_level];
     valid->extra1 = ClassCount;
 
     func( table + Array2, valid );

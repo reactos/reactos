@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Amiga-specific configuration file (specification only).              */
 /*                                                                         */
-/*  Copyright 2005 by                                                      */
+/*  Copyright 2005, 2006, 2007 by                                          */
 /*  Werner Lemberg and Detlef Würkner.                                     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,17 +20,13 @@
  * with Amiga-specific changes. When the compiler searches this directory
  * before the default directory, we can do some modifications.
  *
- * Here we must change FT_BASE_DEF and FT_EXPORT_DEF so that SAS/C does
+ * Here we must change FT_EXPORT_DEF so that SAS/C does
  * generate the needed XDEFs.
  */
 
 #if 0
-#define FT_BASE_DEF( x )  extern  x
 #define FT_EXPORT_DEF( x )  extern  x
 #endif
-
-#undef FT_BASE_DEF
-#define FT_BASE_DEF( x )  x
 
 #undef FT_EXPORT_DEF
 #define FT_EXPORT_DEF( x )  x
@@ -44,7 +40,7 @@
 #endif
 #else
 /* We must define that, it seems that
- * lib/gcc-lib/ppc-morphos/2.95.3/include/syslimits.h is missing in 
+ * lib/gcc-lib/ppc-morphos/2.95.3/include/syslimits.h is missing in
  * ppc-morphos-gcc-2.95.3-bin.tgz (gcc for 68k producing MorphOS PPC elf
  * binaries from http://www.morphos.de)
  */

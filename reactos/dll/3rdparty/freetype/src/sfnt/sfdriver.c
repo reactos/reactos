@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level SFNT driver interface (body).                             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,8 +34,14 @@
 #include "ttpost.h"
 #endif
 
+#ifdef TT_CONFIG_OPTION_BDF
+#include "ttbdf.h"
+#include FT_SERVICE_BDF_H
+#endif
+
 #include "ttcmap.h"
 #include "ttkern.h"
+#include "ttmtx.h"
 
 #include FT_SERVICE_GLYPH_DICT_H
 #include FT_SERVICE_POSTSCRIPT_NAME_H
@@ -284,20 +290,65 @@
   };
 
 
- /*
-  *  TT CMAP INFO
-  *
-  */
+  /*
+   *  TT CMAP INFO
+   */
   static const FT_Service_TTCMapsRec  tt_service_get_cmap_info =
   {
     (TT_CMap_Info_GetFunc)tt_get_cmap_info
   };
 
 
- /*
-  *  SERVICE LIST
-  *
-  */
+#ifdef TT_CONFIG_OPTION_BDF
+
+  static FT_Error
+  sfnt_get_charset_id( TT_Face       face,
+                       const char*  *acharset_encoding,
+                       const char*  *acharset_registry )
+  {
+    BDF_PropertyRec  encoding, registry;
+    FT_Error         error;
+
+
+    /* XXX: I don't know whether this is correct, since
+     *      tt_face_find_bdf_prop only returns something correct if we have
+     *      previously selected a size that is listed in the BDF table.
+     *      Should we change the BDF table format to include single offsets
+     *      for `CHARSET_REGISTRY' and `CHARSET_ENCODING'?
+     */
+    error = tt_face_find_bdf_prop( face, "CHARSET_REGISTRY", &registry );
+    if ( !error )
+    {
+      error = tt_face_find_bdf_prop( face, "CHARSET_ENCODING", &encoding );
+      if ( !error )
+      {
+        if ( registry.type == BDF_PROPERTY_TYPE_ATOM &&
+             encoding.type == BDF_PROPERTY_TYPE_ATOM )
+        {
+          *acharset_encoding = encoding.u.atom;
+          *acharset_registry = registry.u.atom;
+        }
+        else
+          error = FT_Err_Invalid_Argument;
+      }
+    }
+
+    return error;
+  }
+
+
+  static const FT_Service_BDFRec  sfnt_service_bdf =
+  {
+    (FT_BDF_GetCharsetIdFunc) sfnt_get_charset_id,
+    (FT_BDF_GetPropertyFunc)  tt_face_find_bdf_prop,
+  };
+
+#endif /* TT_CONFIG_OPTION_BDF */
+
+
+  /*
+   *  SERVICE LIST
+   */
 
   static const FT_ServiceDescRec  sfnt_services[] =
   {
@@ -305,6 +356,9 @@
     { FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &sfnt_service_ps_name },
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
     { FT_SERVICE_ID_GLYPH_DICT,           &sfnt_service_glyph_dict },
+#endif
+#ifdef TT_CONFIG_OPTION_BDF
+    { FT_SERVICE_ID_BDF,                  &sfnt_service_bdf },
 #endif
     { FT_SERVICE_ID_TT_CMAP,              &tt_service_get_cmap_info },
 
@@ -318,14 +372,136 @@
   {
     FT_UNUSED( module );
 
-    if ( ft_strcmp( module_interface, "get_sfnt" ) == 0 )
-      return (FT_Module_Interface)get_sfnt_table;
-
-    if ( ft_strcmp( module_interface, "load_sfnt" ) == 0 )
-      return (FT_Module_Interface)tt_face_load_any;
-
     return ft_service_list_lookup( sfnt_services, module_interface );
   }
+
+
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+
+  FT_CALLBACK_DEF( FT_Error )
+  tt_face_load_sfnt_header_stub( TT_Face      face,
+                                 FT_Stream    stream,
+                                 FT_Long      face_index,
+                                 SFNT_Header  header )
+  {
+    FT_UNUSED( face );
+    FT_UNUSED( stream );
+    FT_UNUSED( face_index );
+    FT_UNUSED( header );
+
+    return FT_Err_Unimplemented_Feature;
+  }
+
+
+  FT_CALLBACK_DEF( FT_Error )
+  tt_face_load_directory_stub( TT_Face      face,
+                               FT_Stream    stream,
+                               SFNT_Header  header )
+  {
+    FT_UNUSED( face );
+    FT_UNUSED( stream );
+    FT_UNUSED( header );
+
+    return FT_Err_Unimplemented_Feature;
+  }
+
+
+  FT_CALLBACK_DEF( FT_Error )
+  tt_face_load_hdmx_stub( TT_Face    face,
+                          FT_Stream  stream )
+  {
+    FT_UNUSED( face );
+    FT_UNUSED( stream );
+
+    return FT_Err_Unimplemented_Feature;
+  }
+
+
+  FT_CALLBACK_DEF( void )
+  tt_face_free_hdmx_stub( TT_Face  face )
+  {
+    FT_UNUSED( face );
+  }
+
+
+  FT_CALLBACK_DEF( FT_Error )
+  tt_face_set_sbit_strike_stub( TT_Face    face,
+                                FT_UInt    x_ppem,
+                                FT_UInt    y_ppem,
+                                FT_ULong*  astrike_index )
+  {
+    /*
+     * We simply forge a FT_Size_Request and call the real function
+     * that does all the work.
+     *
+     * This stub might be called by libXfont in the X.Org Xserver,
+     * compiled against version 2.1.8 or newer.
+     */
+
+    FT_Size_RequestRec  req;
+
+
+    req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
+    req.width          = (FT_F26Dot6)x_ppem;
+    req.height         = (FT_F26Dot6)y_ppem;
+    req.horiResolution = 0;
+    req.vertResolution = 0;
+
+    *astrike_index = 0x7FFFFFFFUL;
+
+    return tt_face_set_sbit_strike( face, &req, astrike_index );
+  }
+
+
+  FT_CALLBACK_DEF( FT_Error )
+  tt_face_load_sbit_stub( TT_Face    face,
+                          FT_Stream  stream )
+  {
+    FT_UNUSED( face );
+    FT_UNUSED( stream );
+
+    /*
+     *  This function was originally implemented to load the sbit table.
+     *  However, it has been replaced by `tt_face_load_eblc', and this stub
+     *  is only there for some rogue clients which would want to call it
+     *  directly (which doesn't make much sense).
+     */
+    return FT_Err_Unimplemented_Feature;
+  }
+
+
+  FT_CALLBACK_DEF( void )
+  tt_face_free_sbit_stub( TT_Face  face )
+  {
+    /* nothing to do in this stub */
+    FT_UNUSED( face );
+  }
+
+
+  FT_CALLBACK_DEF( FT_Error )
+  tt_face_load_charmap_stub( TT_Face    face,
+                             void*      cmap,
+                             FT_Stream  input )
+  {
+    FT_UNUSED( face );
+    FT_UNUSED( cmap );
+    FT_UNUSED( input );
+
+    return FT_Err_Unimplemented_Feature;
+  }
+
+
+  FT_CALLBACK_DEF( FT_Error )
+  tt_face_free_charmap_stub( TT_Face  face,
+                             void*    cmap )
+  {
+    FT_UNUSED( face );
+    FT_UNUSED( cmap );
+
+    return 0;
+  }
+
+#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
   static
@@ -339,67 +515,94 @@
     sfnt_get_interface,
 
     tt_face_load_any,
-    tt_face_load_sfnt_header,
-    tt_face_load_directory,
 
-    tt_face_load_header,
-    tt_face_load_metrics_header,
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    tt_face_load_sfnt_header_stub,
+    tt_face_load_directory_stub,
+#endif
+
+    tt_face_load_head,
+    tt_face_load_hhea,
     tt_face_load_cmap,
-    tt_face_load_max_profile,
+    tt_face_load_maxp,
     tt_face_load_os2,
-    tt_face_load_postscript,
+    tt_face_load_post,
 
-    tt_face_load_names,
-    tt_face_free_names,
+    tt_face_load_name,
+    tt_face_free_name,
 
-    tt_face_load_hdmx,
-    tt_face_free_hdmx,
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    tt_face_load_hdmx_stub,
+    tt_face_free_hdmx_stub,
+#endif
 
     tt_face_load_kern,
     tt_face_load_gasp,
     tt_face_load_pclt,
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
-
     /* see `ttload.h' */
-    tt_face_load_bitmap_header,
+    tt_face_load_bhed,
+#else
+    0,
+#endif
 
-    /* see `ttsbit.h' and `sfnt.h' */
-    tt_face_set_sbit_strike,
-    tt_face_load_sbit_strikes,
-    0 /* tt_find_sbit_image */,
-    0 /* tt_load_sbit_metrics */,
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    tt_face_set_sbit_strike_stub,
+    tt_face_load_sbit_stub,
+
+    tt_find_sbit_image,
+    tt_load_sbit_metrics,
+#endif
+
+#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
     tt_face_load_sbit_image,
-    tt_face_free_sbit_strikes,
+#else
+    0,
+#endif
 
-#else /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */
-
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-
-#endif /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    tt_face_free_sbit_stub,
+#endif
 
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
-
-    /* see `ttkern.h' */
-    tt_face_get_kerning,
-
     /* see `ttpost.h' */
     tt_face_get_ps_name,
     tt_face_free_ps_names,
-
-#else /* TT_CONFIG_OPTION_POSTSCRIPT_NAMES */
-
+#else
     0,
     0,
+#endif
 
-#endif /* TT_CONFIG_OPTION_POSTSCRIPT_NAMES */
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+    tt_face_load_charmap_stub,
+    tt_face_free_charmap_stub,
+#endif
 
+    /* since version 2.1.8 */
+
+    tt_face_get_kerning,
+
+    /* since version 2.2 */
+
+    tt_face_load_font_dir,
+    tt_face_load_hmtx,
+
+#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+    /* see `ttsbit.h' and `sfnt.h' */
+    tt_face_load_eblc,
+    tt_face_free_eblc,
+
+    tt_face_set_sbit_strike,
+    tt_face_load_strike_metrics,
+#else
+    0,
+    0,
+    0,
+    0,
+#endif
+
+    tt_face_get_metrics
   };
 
 

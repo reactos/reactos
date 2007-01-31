@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,9 +13,11 @@
 # fully.
 
 
-make_module_list: add_windows_driver
+FTMODULE_H_COMMANDS += WINDOWS_DRIVER
 
-add_windows_driver:
-	$(OPEN_DRIVER)winfnt_driver_class$(CLOSE_DRIVER)
-	$(ECHO_DRIVER)winfnt    $(ECHO_DRIVER_DESC)Windows bitmap fonts with extension *.fnt or *.fon$(ECHO_DRIVER_DONE)
+define WINDOWS_DRIVER
+$(OPEN_DRIVER)winfnt_driver_class$(CLOSE_DRIVER)
+$(ECHO_DRIVER)winfnt    $(ECHO_DRIVER_DESC)Windows bitmap fonts with extension *.fnt or *.fon$(ECHO_DRIVER_DONE)
+endef
 
+# EOF

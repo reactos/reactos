@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Support functions for X11.                                           */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004 by                                          */
+/*  Copyright 2002, 2003, 2004, 2006 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -31,24 +31,44 @@
 
 FT_BEGIN_HEADER
 
-  /* this comment is intentionally disabled for now, to prevent this       */
-  /* function from appearing in the API Reference.                         */
 
-  /*@***********************************************************************/
+  /*************************************************************************/
   /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Get_X11_Font_Format                                             */
+  /* <Section>                                                             */
+  /*   font_formats                                                        */
+  /*                                                                       */
+  /* <Title>                                                               */
+  /*   Font Formats                                                        */
+  /*                                                                       */
+  /* <Abstract>                                                            */
+  /*   Getting the font format.                                            */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Return a string describing the format of a given face as an X11    */
-  /*    FONT_PROPERTY.  It should only be used by the FreeType 2 font      */
-  /*    backend of the XFree86 font server.                                */
+  /*   The single function in this section can be used to get the font     */
+  /*   format.  Note that this information is not needed normally;         */
+  /*   however, there are special cases (like in PDF devices) where it is  */
+  /*   important to differentiate, inspite of FreeType's uniform API.      */
+  /*                                                                       */
+  /*************************************************************************/
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*   FT_Get_X11_Font_Format                                              */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*   Return a string describing the format of a given face, using values */
+  /*   which can be used as an X11 FONT_PROPERTY.  Possible values are     */
+  /*   `TrueType', `Type 1', `BDF', `PCF', `Type 42', `CID Type 1', `CFF', */
+  /*   `PFR', and `Windows FNT'.                                           */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    face :: Input face handle.                                         */
+  /*   face ::                                                             */
+  /*     Input face handle.                                                */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    Font format string.  NULL in case of error.                        */
+  /*   Font format string.  NULL in case of error.                         */
   /*                                                                       */
   FT_EXPORT( const char* )
   FT_Get_X11_Font_Format( FT_Face  face );

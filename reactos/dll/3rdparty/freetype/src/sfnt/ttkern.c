@@ -5,7 +5,7 @@
 /*    Load the basic TrueType kerning table.  This doesn't handle          */
 /*    kerning data within the GPOS table at the moment.                    */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -40,8 +40,6 @@
 #undef  TT_KERN_INDEX
 #define TT_KERN_INDEX( g1, g2 )  ( ( (FT_ULong)(g1) << 16 ) | (g2) )
 
-
-#ifdef FT_OPTIMIZE_MEMORY
 
   FT_LOCAL_DEF( FT_Error )
   tt_face_load_kern( TT_Face    face,
@@ -246,7 +244,10 @@
           }
           else /* linear search */
           {
-            for ( count = num_pairs; count > 0; count-- )
+            FT_UInt  count2;
+
+
+            for ( count2 = num_pairs; count2 > 0; count2-- )
             {
               FT_ULong  key = FT_NEXT_ULONG( p );
 
@@ -263,7 +264,7 @@
         break;
 
        /*
-        *  We don't support format 2 because we've never seen a single font
+        *  We don't support format 2 because we haven't seen a single font
         *  using it in real life...
         */
 
@@ -285,206 +286,6 @@
 
     return result;
   }
-
-#else /* !OPTIMIZE_MEMORY */
-
-  FT_CALLBACK_DEF( int )
-  tt_kern_pair_compare( const void*  a,
-                        const void*  b );
-
-
-  FT_LOCAL_DEF( FT_Error )
-  tt_face_load_kern( TT_Face    face,
-                     FT_Stream  stream )
-  {
-    FT_Error   error;
-    FT_Memory  memory = stream->memory;
-
-    FT_UInt    n, num_tables;
-
-
-    /* the kern table is optional; exit silently if it is missing */
-    error = face->goto_table( face, TTAG_kern, stream, 0 );
-    if ( error )
-      return SFNT_Err_Ok;
-
-    if ( FT_FRAME_ENTER( 4L ) )
-      goto Exit;
-
-    (void)FT_GET_USHORT();         /* version */
-    num_tables = FT_GET_USHORT();
-
-    FT_FRAME_EXIT();
-
-    for ( n = 0; n < num_tables; n++ )
-    {
-      FT_UInt  coverage;
-      FT_UInt  length;
-
-
-      if ( FT_FRAME_ENTER( 6L ) )
-        goto Exit;
-
-      (void)FT_GET_USHORT();           /* version                 */
-      length   = FT_GET_USHORT() - 6;  /* substract header length */
-      coverage = FT_GET_USHORT();
-
-      FT_FRAME_EXIT();
-
-      if ( coverage == 0x0001 )
-      {
-        FT_UInt        num_pairs;
-        TT_Kern0_Pair  pair;
-        TT_Kern0_Pair  limit;
-
-
-        /* found a horizontal format 0 kerning table! */
-        if ( FT_FRAME_ENTER( 8L ) )
-          goto Exit;
-
-        num_pairs = FT_GET_USHORT();
-
-        /* skip the rest */
-
-        FT_FRAME_EXIT();
-
-        /* allocate array of kerning pairs */
-        if ( FT_QNEW_ARRAY( face->kern_pairs, num_pairs ) ||
-             FT_FRAME_ENTER( 6L * num_pairs )             )
-          goto Exit;
-
-        pair  = face->kern_pairs;
-        limit = pair + num_pairs;
-        for ( ; pair < limit; pair++ )
-        {
-          pair->left  = FT_GET_USHORT();
-          pair->right = FT_GET_USHORT();
-          pair->value = FT_GET_USHORT();
-        }
-
-        FT_FRAME_EXIT();
-
-        face->num_kern_pairs   = num_pairs;
-        face->kern_table_index = n;
-
-        /* ensure that the kerning pair table is sorted (yes, some */
-        /* fonts have unsorted tables!)                            */
-
-        if ( num_pairs > 0 )
-        {
-          TT_Kern0_Pair  pair0 = face->kern_pairs;
-          FT_ULong       prev  = TT_KERN_INDEX( pair0->left, pair0->right );
-
-
-          for ( pair0++; pair0 < limit; pair0++ )
-          {
-            FT_ULong  next = TT_KERN_INDEX( pair0->left, pair0->right );
-
-
-            if ( next < prev )
-              goto SortIt;
-
-            prev = next;
-          }
-          goto Exit;
-
-        SortIt:
-          ft_qsort( (void*)face->kern_pairs, (int)num_pairs,
-                    sizeof ( TT_Kern0_PairRec ), tt_kern_pair_compare );
-        }
-
-        goto Exit;
-      }
-
-      if ( FT_STREAM_SKIP( length ) )
-        goto Exit;
-    }
-
-    /* no kern table found -- doesn't matter */
-    face->kern_table_index = -1;
-    face->num_kern_pairs   = 0;
-    face->kern_pairs       = NULL;
-
-  Exit:
-    return error;
-  }
-
-
-  FT_CALLBACK_DEF( int )
-  tt_kern_pair_compare( const void*  a,
-                        const void*  b )
-  {
-    TT_Kern0_Pair  pair1 = (TT_Kern0_Pair)a;
-    TT_Kern0_Pair  pair2 = (TT_Kern0_Pair)b;
-
-    FT_ULong  index1 = TT_KERN_INDEX( pair1->left, pair1->right );
-    FT_ULong  index2 = TT_KERN_INDEX( pair2->left, pair2->right );
-
-    return index1 < index2 ? -1
-                           : ( index1 > index2 ? 1
-                                               : 0 );
-  }
-
-
-  FT_LOCAL_DEF( void )
-  tt_face_done_kern( TT_Face  face )
-  {
-    FT_Memory  memory = face->root.stream->memory;
-
-
-    FT_FREE( face->kern_pairs );
-    face->num_kern_pairs = 0;
-  }
-
-
-  FT_LOCAL_DEF( FT_Int )
-  tt_face_get_kerning( TT_Face  face,
-                       FT_UInt  left_glyph,
-                       FT_UInt  right_glyph )
-  {
-    FT_Int         result = 0;
-    TT_Kern0_Pair  pair;
-
-
-    if ( face && face->kern_pairs )
-    {
-      /* there are some kerning pairs in this font file! */
-      FT_ULong  search_tag = TT_KERN_INDEX( left_glyph, right_glyph );
-      FT_Long   left, right;
-
-
-      left  = 0;
-      right = face->num_kern_pairs - 1;
-
-      while ( left <= right )
-      {
-        FT_Long   middle = left + ( ( right - left ) >> 1 );
-        FT_ULong  cur_pair;
-
-
-        pair     = face->kern_pairs + middle;
-        cur_pair = TT_KERN_INDEX( pair->left, pair->right );
-
-        if ( cur_pair == search_tag )
-          goto Found;
-
-        if ( cur_pair < search_tag )
-          left = middle + 1;
-        else
-          right = middle - 1;
-      }
-    }
-
-  Exit:
-    return result;
-
-  Found:
-    result = pair->value;
-    goto Exit;
-  }
-
-#endif /* !OPTIMIZE_MEMORY */
-
 
 #undef TT_KERN_INDEX
 

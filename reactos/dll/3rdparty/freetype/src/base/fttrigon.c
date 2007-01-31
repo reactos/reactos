@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType trigonometric functions (body).                             */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004 by                                    */
+/*  Copyright 2001, 2002, 2003, 2004, 2005 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -109,6 +109,50 @@
     z     = ( ( x >= 0 ) ? x : - x ) | ( (y >= 0) ? y : -y );
     shift = 0;
 
+#if 1
+    /* determine msb bit index in `shift' */
+    if ( z >= ( 1L << 16 ) )
+    {
+      z     >>= 16;
+      shift  += 16;
+    }
+    if ( z >= ( 1L << 8 ) )
+    {
+      z     >>= 8;
+      shift  += 8;
+    }
+    if ( z >= ( 1L << 4 ) )
+    {
+      z     >>= 4;
+      shift  += 4;
+    }
+    if ( z >= ( 1L << 2 ) )
+    {
+      z     >>= 2;
+      shift  += 2;
+    }
+    if ( z >= ( 1L << 1 ) )
+    {
+      z    >>= 1;
+      shift += 1;
+    }
+
+    if ( shift <= 27 )
+    {
+      shift  = 27 - shift;
+      vec->x = x << shift;
+      vec->y = y << shift;
+    }
+    else
+    {
+      shift -= 27;
+      vec->x = x >> shift;
+      vec->y = y >> shift;
+      shift  = -shift;
+    }
+
+#else /* 0 */
+
     if ( z < ( 1L << 27 ) )
     {
       do
@@ -116,7 +160,6 @@
         shift++;
         z <<= 1;
       } while ( z < ( 1L << 27 ) );
-
       vec->x = x << shift;
       vec->y = y << shift;
     }
@@ -132,6 +175,9 @@
       vec->y = y >> shift;
       shift  = -shift;
     }
+
+#endif /* 0 */
+
     return shift;
   }
 

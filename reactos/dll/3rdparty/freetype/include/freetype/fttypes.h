@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType simple types definitions (specification only).              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004 by                                     */
+/*  Copyright 1996-2001, 2002, 2004, 2006 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -273,8 +273,8 @@ FT_BEGIN_HEADER
   /*    FT_Fixed                                                           */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    This type is used to store 16.16 fixed float values, like scales   */
-  /*    or matrix coefficients.                                            */
+  /*    This type is used to store 16.16 fixed float values, like scaling  */
+  /*    values or matrix coefficients.                                     */
   /*                                                                       */
   typedef signed long  FT_Fixed;
 
@@ -308,7 +308,7 @@ FT_BEGIN_HEADER
   /*    FT_Offset                                                          */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    This is equivalent to the ANSI C `size_t' type, i.e. the largest   */
+  /*    This is equivalent to the ANSI C `size_t' type, i.e., the largest  */
   /*    _unsigned_ integer type used to express a file size or position,   */
   /*    or a memory block size.                                            */
   /*                                                                       */
@@ -321,7 +321,7 @@ FT_BEGIN_HEADER
   /*    FT_PtrDist                                                         */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    This is equivalent to the ANSI C `ptrdiff_t' type, i.e. the        */
+  /*    This is equivalent to the ANSI C `ptrdiff_t' type, i.e., the       */
   /*    largest _signed_ integer type used to express the distance         */
   /*    between two pointers.                                              */
   /*                                                                       */
@@ -409,7 +409,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Describes a function used to destroy the `client' data of any      */
-  /*    FreeType object.  See the description of the FT_Generic type for   */
+  /*    FreeType object.  See the description of the @FT_Generic type for  */
   /*    details of usage.                                                  */
   /*                                                                       */
   /* <Input>                                                               */
@@ -461,7 +461,7 @@ FT_BEGIN_HEADER
   /*    FT_MAKE_TAG                                                        */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    This macro converts four letter tags which are used to label       */
+  /*    This macro converts four-letter tags which are used to label       */
   /*    TrueType tables into an unsigned long to be used within FreeType.  */
   /*                                                                       */
   /* <Note>                                                                */
@@ -498,8 +498,8 @@ FT_BEGIN_HEADER
   /*    FT_ListNode                                                        */
   /*                                                                       */
   /* <Description>                                                         */
-  /*     Many elements and objects in FreeType are listed through a        */
-  /*     FT_List record (see FT_ListRec).  As its name suggests, a         */
+  /*     Many elements and objects in FreeType are listed through an       */
+  /*     @FT_List record (see @FT_ListRec).  As its name suggests, an      */
   /*     FT_ListNode is a handle to a single list element.                 */
   /*                                                                       */
   typedef struct FT_ListNodeRec_*  FT_ListNode;
@@ -511,7 +511,7 @@ FT_BEGIN_HEADER
   /*    FT_List                                                            */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A handle to a list record (see FT_ListRec).                        */
+  /*    A handle to a list record (see @FT_ListRec).                       */
   /*                                                                       */
   typedef struct FT_ListRec_*  FT_List;
 

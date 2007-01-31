@@ -3,9 +3,9 @@
 /*  ftbitmap.h                                                             */
 /*                                                                         */
 /*    FreeType utility functions for converting 1bpp, 2bpp, 4bpp, and 8bpp */
-/*    bitmaps into 8bpp format (specification).                            */  
+/*    bitmaps into 8bpp format (specification).                            */
 /*                                                                         */
-/*  Copyright 2004, 2005 by                                                */
+/*  Copyright 2004, 2005, 2006 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -57,7 +57,7 @@ FT_BEGIN_HEADER
   /*    FT_Bitmap_New                                                      */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Initialize a pointer to an FT_Bitmap structure.                    */
+  /*    Initialize a pointer to an @FT_Bitmap structure.                   */
   /*                                                                       */
   /* <InOut>                                                               */
   /*    abitmap :: A pointer to the bitmap structure.                      */
@@ -85,7 +85,7 @@ FT_BEGIN_HEADER
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_EXPORT_DEF( FT_Error )
+  FT_EXPORT( FT_Error )
   FT_Bitmap_Copy( FT_Library        library,
                   const FT_Bitmap  *source,
                   FT_Bitmap        *target);
@@ -120,10 +120,10 @@ FT_BEGIN_HEADER
   /*    The current implementation restricts `xStrength' to be less than   */
   /*    or equal to 8 if bitmap is of pixel_mode @FT_PIXEL_MODE_MONO.      */
   /*                                                                       */
-  /*    Don't embolden the bitmap owned by a @FT_GlyphSlot directly!  Call */
-  /*    @FT_Bitmap_Copy to get a copy and work on the copy instead.        */
+  /*    If you want to embolden the bitmap owned by a @FT_GlyphSlotRec,    */
+  /*    you should call `FT_GlyphSlot_Own_Bitmap' on the slot first.       */
   /*                                                                       */
-  FT_EXPORT_DEF( FT_Error )
+  FT_EXPORT( FT_Error )
   FT_Bitmap_Embolden( FT_Library  library,
                       FT_Bitmap*  bitmap,
                       FT_Pos      xStrength,

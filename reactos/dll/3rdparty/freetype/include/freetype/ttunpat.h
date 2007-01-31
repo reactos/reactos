@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Definitions for the unpatented TrueType hinting system               */
 /*                                                                         */
-/*  Copyright 2003 by                                                      */
+/*  Copyright 2003, 2006 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  Written by Graham Asher <graham.asher@btinternet.com>                  */
@@ -43,7 +43,7 @@ FT_BEGIN_HEADER
   * @description:
   *   A constant used as the tag of an @FT_Parameter structure to indicate
   *   that unpatented methods only should be used by the TrueType bytecode
-  *   interpreter for a typeface opened by FT_Open_Face.
+  *   interpreter for a typeface opened by @FT_Open_Face.
   *
   */
 #define FT_PARAM_TAG_UNPATENTED_HINTING  FT_MAKE_TAG( 'u', 'n', 'p', 'a' )

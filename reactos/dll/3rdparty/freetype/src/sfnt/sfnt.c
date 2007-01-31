@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Single object library component.                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,6 +20,7 @@
 
 #include <ft2build.h>
 #include "ttload.c"
+#include "ttmtx.c"
 #include "ttcmap.c"
 #include "ttkern.c"
 #include "sfobjs.c"
@@ -33,5 +34,8 @@
 #include "ttpost.c"
 #endif
 
+#ifdef TT_CONFIG_OPTION_BDF
+#include "ttbdf.c"
+#endif
 
 /* END */

@@ -1,7 +1,7 @@
 #! /bin/sh
 # mkinstalldirs --- make directory hierarchy
 
-scriptversion=2005-02-02.21
+scriptversion=2006-05-11.19
 
 # Original author: Noah Friedman <friedman@prep.ai.mit.edu>
 # Created: 1993-05-16
@@ -11,8 +11,11 @@ scriptversion=2005-02-02.21
 # bugs to <bug-automake@gnu.org> or send patches to
 # <automake-patches@gnu.org>.
 
+nl='
+'
+IFS=" ""	$nl"
 errstatus=0
-dirmode=""
+dirmode=
 
 usage="\
 Usage: mkinstalldirs [-h] [--help] [--version] [-m MODE] DIR ...
@@ -103,13 +106,21 @@ esac
 
 for file
 do
-  set fnord `echo ":$file" | sed -ne 's/^:\//#/;s/^://;s/\// /g;s/^#/\//;p'`
+  case $file in
+    /*) pathcomp=/ ;;
+    *)  pathcomp= ;;
+  esac
+  oIFS=$IFS
+  IFS=/
+  set fnord $file
   shift
+  IFS=$oIFS
 
-  pathcomp=
   for d
   do
-    pathcomp="$pathcomp$d"
+    test "x$d" = x && continue
+
+    pathcomp=$pathcomp$d
     case $pathcomp in
       -*) pathcomp=./$pathcomp ;;
     esac
@@ -124,7 +135,7 @@ do
       else
 	if test ! -z "$dirmode"; then
 	  echo "chmod $dirmode $pathcomp"
-	  lasterr=""
+	  lasterr=
 	  chmod "$dirmode" "$pathcomp" || lasterr=$?
 
 	  if test ! -z "$lasterr"; then
@@ -134,7 +145,7 @@ do
       fi
     fi
 
-    pathcomp="$pathcomp/"
+    pathcomp=$pathcomp/
   done
 done
 

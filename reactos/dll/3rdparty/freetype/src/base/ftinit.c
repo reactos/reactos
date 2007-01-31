@@ -75,7 +75,7 @@
   };
 
 
-  /* documentation is in ftmodule.h */
+  /* documentation is in ftmodapi.h */
 
   FT_EXPORT_DEF( void )
   FT_Add_Default_Modules( FT_Library  library )

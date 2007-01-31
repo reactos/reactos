@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Tags for TrueType and OpenType tables (specification only).          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2004 by                                           */
+/*  Copyright 1996-2001, 2004, 2005 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -36,8 +36,10 @@ FT_BEGIN_HEADER
 #define TTAG_avar  FT_MAKE_TAG( 'a', 'v', 'a', 'r' )
 #define TTAG_BASE  FT_MAKE_TAG( 'B', 'A', 'S', 'E' )
 #define TTAG_bdat  FT_MAKE_TAG( 'b', 'd', 'a', 't' )
+#define TTAG_BDF   FT_MAKE_TAG( 'B', 'D', 'F', ' ' )
 #define TTAG_bhed  FT_MAKE_TAG( 'b', 'h', 'e', 'd' )
 #define TTAG_bloc  FT_MAKE_TAG( 'b', 'l', 'o', 'c' )
+#define TTAG_bsln  FT_MAKE_TAG( 'b', 's', 'l', 'n' )
 #define TTAG_CFF   FT_MAKE_TAG( 'C', 'F', 'F', ' ' )
 #define TTAG_cmap  FT_MAKE_TAG( 'c', 'm', 'a', 'p' )
 #define TTAG_cvar  FT_MAKE_TAG( 'c', 'v', 'a', 'r' )
@@ -46,6 +48,7 @@ FT_BEGIN_HEADER
 #define TTAG_EBDT  FT_MAKE_TAG( 'E', 'B', 'D', 'T' )
 #define TTAG_EBLC  FT_MAKE_TAG( 'E', 'B', 'L', 'C' )
 #define TTAG_EBSC  FT_MAKE_TAG( 'E', 'B', 'S', 'C' )
+#define TTAG_feat  FT_MAKE_TAG( 'f', 'e', 'a', 't' )
 #define TTAG_fpgm  FT_MAKE_TAG( 'f', 'p', 'g', 'm' )
 #define TTAG_fvar  FT_MAKE_TAG( 'f', 'v', 'a', 'r' )
 #define TTAG_gasp  FT_MAKE_TAG( 'g', 'a', 's', 'p' )
@@ -59,18 +62,27 @@ FT_BEGIN_HEADER
 #define TTAG_hhea  FT_MAKE_TAG( 'h', 'h', 'e', 'a' )
 #define TTAG_hmtx  FT_MAKE_TAG( 'h', 'm', 't', 'x' )
 #define TTAG_JSTF  FT_MAKE_TAG( 'J', 'S', 'T', 'F' )
+#define TTAG_just  FT_MAKE_TAG( 'j', 'u', 's', 't' )
 #define TTAG_kern  FT_MAKE_TAG( 'k', 'e', 'r', 'n' )
+#define TTAG_lcar  FT_MAKE_TAG( 'l', 'c', 'a', 'r' )
 #define TTAG_loca  FT_MAKE_TAG( 'l', 'o', 'c', 'a' )
 #define TTAG_LTSH  FT_MAKE_TAG( 'L', 'T', 'S', 'H' )
 #define TTAG_maxp  FT_MAKE_TAG( 'm', 'a', 'x', 'p' )
+#define TTAG_META  FT_MAKE_TAG( 'M', 'E', 'T', 'A' )
 #define TTAG_MMFX  FT_MAKE_TAG( 'M', 'M', 'F', 'X' )
 #define TTAG_MMSD  FT_MAKE_TAG( 'M', 'M', 'S', 'D' )
+#define TTAG_mort  FT_MAKE_TAG( 'm', 'o', 'r', 't' )
+#define TTAG_morx  FT_MAKE_TAG( 'm', 'o', 'r', 'x' )
 #define TTAG_name  FT_MAKE_TAG( 'n', 'a', 'm', 'e' )
+#define TTAG_opbd  FT_MAKE_TAG( 'o', 'p', 'b', 'd' )
 #define TTAG_OS2   FT_MAKE_TAG( 'O', 'S', '/', '2' )
 #define TTAG_OTTO  FT_MAKE_TAG( 'O', 'T', 'T', 'O' )
 #define TTAG_PCLT  FT_MAKE_TAG( 'P', 'C', 'L', 'T' )
 #define TTAG_post  FT_MAKE_TAG( 'p', 'o', 's', 't' )
 #define TTAG_prep  FT_MAKE_TAG( 'p', 'r', 'e', 'p' )
+#define TTAG_prop  FT_MAKE_TAG( 'p', 'r', 'o', 'p' )
+#define TTAG_SING  FT_MAKE_TAG( 'S', 'I', 'N', 'G' )
+#define TTAG_trak  FT_MAKE_TAG( 't', 'r', 'a', 'k' )
 #define TTAG_true  FT_MAKE_TAG( 't', 'r', 'u', 'e' )
 #define TTAG_ttc   FT_MAKE_TAG( 't', 't', 'c', ' ' )
 #define TTAG_ttcf  FT_MAKE_TAG( 't', 't', 'c', 'f' )

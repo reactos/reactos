@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType & CFF data/program tables loader (specification).           */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2007 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -50,6 +50,11 @@ FT_BEGIN_HEADER
   FT_LOCAL( void )
   cff_index_forget_element( CFF_Index  idx,
                             FT_Byte**  pbytes );
+
+
+  FT_LOCAL( FT_UInt )
+  cff_charset_cid_to_gindex( CFF_Charset  charset,
+                             FT_UInt      cid );
 
 
   FT_LOCAL( FT_Error )

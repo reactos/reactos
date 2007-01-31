@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PSNames module implementation (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2005 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2005, 2006 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -32,9 +32,14 @@
 #ifdef FT_CONFIG_OPTION_ADOBE_GLYPH_LIST
 
 
+#define VARIANT_BIT         ( 1L << 31 )
+#define BASE_GLYPH( code )  ( (code) & ~VARIANT_BIT )
+
+
   /* Return the Unicode value corresponding to a given glyph.  Note that */
   /* we do deal with glyph variants by detecting a non-initial dot in    */
-  /* the name, as in `A.swash' or `e.final'.                             */
+  /* the name, as in `A.swash' or `e.final'; in this case, the           */
+  /* VARIANT_BIT is set in the return value.                             */
   /*                                                                     */
   static FT_UInt32
   ps_unicode_value( const char*  glyph_name )
@@ -72,7 +77,9 @@
             d += 10;
         }
 
-        /* exit if a non-uppercase hexadecimal character was found */
+        /* Exit if a non-uppercase hexadecimal character was found   */
+        /* -- this also catches character codes below `0' since such */
+        /* negative numbers cast to `unsigned int' are far too big.  */
         if ( d >= 16 )
           break;
 
@@ -80,8 +87,13 @@
       }
 
       /* there must be exactly four hex digits */
-      if ( ( *p == '\0' || *p == '.' ) && count == 0 )
-        return value;
+      if ( count == 0 )
+      {
+        if ( *p == '\0' )
+          return value;
+        if ( *p == '.' )
+          return value ^ VARIANT_BIT;
+      }
     }
 
     /* If the name begins with `u', followed by four to six uppercase */
@@ -115,12 +127,17 @@
         value = ( value << 4 ) + d;
       }
 
-      if ( ( *p == '\0' || *p == '.' ) && count <= 2 )
-        return value;
+      if ( count <= 2 )
+      {
+        if ( *p == '\0' )
+          return value;
+        if ( *p == '.' )
+          return value ^ VARIANT_BIT;
+      }
     }
 
-    /* look for a non-initial dot in the glyph name in order to */
-    /* sort-out variants like `A.swash', `e.final', etc.        */
+    /* Look for a non-initial dot in the glyph name in order to */
+    /* find variants like `A.swash', `e.final', etc.            */
     {
       const char*  p   = glyph_name;
       const char*  dot = NULL;
@@ -128,15 +145,18 @@
 
       for ( ; *p; p++ )
       {
-        if ( *p == '.' && p > glyph_name && !dot )
+        if ( *p == '.' && p > glyph_name )
+        {
           dot = p;
+          break;
+        }
       }
 
+      /* now look up the glyph in the Adobe Glyph List */
       if ( !dot )
-        dot = p;
-
-      /* now, look up the glyph in the Adobe Glyph List */
-      return ft_get_adobe_glyph_index( glyph_name, dot );
+        return ft_get_adobe_glyph_index( glyph_name, p );
+      else
+        return ft_get_adobe_glyph_index( glyph_name, dot ) ^ VARIANT_BIT;
     }
   }
 
@@ -148,18 +168,26 @@
   {
     PS_UniMap*  map1 = (PS_UniMap*)a;
     PS_UniMap*  map2 = (PS_UniMap*)b;
+    FT_UInt32   unicode1 = BASE_GLYPH( map1->unicode );
+    FT_UInt32   unicode2 = BASE_GLYPH( map2->unicode );
 
 
-    return ( map1->unicode - map2->unicode );
+    /* sort base glyphs before glyph variants */
+    if ( unicode1 == unicode2 )
+      return map1->unicode - map2->unicode;
+    else
+      return unicode1 - unicode2;
   }
 
 
-  /* Builds a table that maps Unicode values to glyph indices */
+  /* Build a table that maps Unicode values to glyph indices. */
   static FT_Error
-  ps_unicodes_init( FT_Memory     memory,
-                    FT_UInt       num_glyphs,
-                    const char**  glyph_names,
-                    PS_Unicodes*  table )
+  ps_unicodes_init( FT_Memory             memory,
+                    PS_Unicodes           table,
+                    FT_UInt               num_glyphs,
+                    PS_GetGlyphNameFunc   get_glyph_name,
+                    PS_FreeGlyphNameFunc  free_glyph_name,
+                    FT_Pointer            glyph_data )
   {
     FT_Error  error;
 
@@ -180,39 +208,47 @@
 
       for ( n = 0; n < num_glyphs; n++ )
       {
-        const char*  gname = glyph_names[n];
+        const char*  gname = get_glyph_name( glyph_data, n );
 
 
         if ( gname )
         {
           uni_char = ps_unicode_value( gname );
 
-          if ( uni_char != 0 && uni_char != 0xFFFFL )
+          if ( BASE_GLYPH( uni_char ) != 0 )
           {
-            map->unicode     = (FT_UInt)uni_char;
+            map->unicode     = uni_char;
             map->glyph_index = n;
             map++;
           }
+
+          if ( free_glyph_name )
+            free_glyph_name( glyph_data, gname );
         }
       }
 
-      /* now, compress the table a bit */
+      /* now compress the table a bit */
       count = (FT_UInt)( map - table->maps );
-
-      if ( count > 0 && FT_REALLOC( table->maps,
-                                    num_glyphs * sizeof ( PS_UniMap ),
-                                    count * sizeof ( PS_UniMap ) ) )
-        count = 0;
 
       if ( count == 0 )
       {
         FT_FREE( table->maps );
         if ( !error )
-          error = PSnames_Err_Invalid_Argument;  /* no unicode chars here! */
+          error = PSnames_Err_Invalid_Argument;  /* No unicode chars here! */
       }
-      else
-        /* sort the table in increasing order of unicode values */
-        ft_qsort( table->maps, count, sizeof ( PS_UniMap ), compare_uni_maps );
+      else {
+        /* Reallocate if the number of used entries is much smaller. */
+        if ( count < num_glyphs / 2 )
+        {
+          (void)FT_RENEW_ARRAY( table->maps, num_glyphs, count );
+          error = PSnames_Err_Ok;
+        }
+
+        /* Sort the table in increasing order of unicode values, */
+        /* taking care of glyph variants.                        */
+        ft_qsort( table->maps, count, sizeof ( PS_UniMap ),
+                  compare_uni_maps );
+      }
 
       table->num_maps = count;
     }
@@ -222,75 +258,106 @@
 
 
   static FT_UInt
-  ps_unicodes_char_index( PS_Unicodes*  table,
-                          FT_ULong      unicode )
+  ps_unicodes_char_index( PS_Unicodes  table,
+                          FT_UInt32    unicode )
   {
-    PS_UniMap  *min, *max, *mid;
+    PS_UniMap  *min, *max, *mid, *result = NULL;
 
 
-    /* perform a binary search on the table */
+    /* Perform a binary search on the table. */
 
     min = table->maps;
     max = min + table->num_maps - 1;
 
     while ( min <= max )
     {
-      mid = min + ( max - min ) / 2;
+      FT_UInt32  base_glyph;
+
+
+      mid = min + ( ( max - min ) >> 1 );
+
       if ( mid->unicode == unicode )
-        return mid->glyph_index;
+      {
+        result = mid;
+        break;
+      }
+
+      base_glyph = BASE_GLYPH( mid->unicode );
+
+      if ( base_glyph == unicode )
+        result = mid; /* remember match but continue search for base glyph */
 
       if ( min == max )
         break;
 
-      if ( mid->unicode < unicode )
+      if ( base_glyph < unicode )
         min = mid + 1;
       else
         max = mid - 1;
     }
 
-    return 0xFFFFU;
+    if ( result )
+      return result->glyph_index;
+    else
+      return 0;
   }
 
 
   static FT_ULong
-  ps_unicodes_char_next( PS_Unicodes*  table,
-                         FT_ULong      unicode )
+  ps_unicodes_char_next( PS_Unicodes  table,
+                         FT_UInt32   *unicode )
   {
-    PS_UniMap  *min, *max, *mid;
+    FT_UInt    result    = 0;
+    FT_UInt32  char_code = *unicode + 1;
 
 
-    unicode++;
-    /* perform a binary search on the table */
-
-    min = table->maps;
-    max = min + table->num_maps - 1;
-
-    while ( min <= max )
     {
-      mid = min + ( max - min ) / 2;
-      if ( mid->unicode == unicode )
-        return unicode;
+      FT_UInt     min = 0;
+      FT_UInt     max = table->num_maps;
+      FT_UInt     mid;
+      PS_UniMap*  map;
+      FT_UInt32   base_glyph;
 
-      if ( min == max )
-        break;
 
-      if ( mid->unicode < unicode )
-        min = mid + 1;
-      else
-        max = mid - 1;
+      while ( min < max )
+      {
+        mid = min + ( ( max - min ) >> 1 );
+        map = table->maps + mid;
+
+        if ( map->unicode == char_code )
+        {
+          result = map->glyph_index;
+          goto Exit;
+        }
+
+        base_glyph = BASE_GLYPH( map->unicode );
+
+        if ( base_glyph == char_code )
+          result = map->glyph_index;
+
+        if ( base_glyph < char_code )
+          min = mid + 1;
+        else
+          max = mid;
+      }
+
+      if ( result )
+        goto Exit;               /* we have a variant glyph */
+
+      /* we didn't find it; check whether we have a map just above it */
+      char_code = 0;
+
+      if ( min < table->num_maps )
+      {
+        map       = table->maps + min;
+        result    = map->glyph_index;
+        char_code = BASE_GLYPH( map->unicode );
+      }
     }
 
-    if ( max < table->maps )
-      max = table->maps;
-
-    while ( max < table->maps + table->num_maps )
-    {
-      if ( unicode < max->unicode )
-        return max->unicode;
-      max++;
-    }
-
-    return 0;
+  Exit:
+    *unicode = char_code;
+    return result;
   }
 
 
@@ -336,8 +403,8 @@
 
 #endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
 
-    (PS_Macintosh_Name_Func)   ps_get_macintosh_name,
-    (PS_Adobe_Std_Strings_Func)ps_get_standard_strings,
+    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,
+    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings,
 
     t1_standard_encoding,
     t1_expert_encoding

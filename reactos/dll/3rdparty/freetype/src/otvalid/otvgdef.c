@@ -38,8 +38,8 @@
   /*************************************************************************/
   /*************************************************************************/
 
-#define AttachList    otv_O_x_Ox, "AttachList"
-#define LigCaretList  otv_O_x_Ox, "LigCaretList"
+#define AttachListFunc    otv_O_x_Ox
+#define LigCaretListFunc  otv_O_x_Ox
 
   /* sets valid->extra1 (0)           */
 
@@ -88,7 +88,7 @@
   /*************************************************************************/
   /*************************************************************************/
 
-#define  CaretValue  otv_CaretValue_validate, "CaretValue"
+#define CaretValueFunc  otv_CaretValue_validate
 
   static void
   otv_CaretValue_validate( FT_Bytes       table,

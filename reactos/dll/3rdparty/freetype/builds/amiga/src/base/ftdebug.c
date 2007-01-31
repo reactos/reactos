@@ -74,7 +74,7 @@ extern struct DOSIFace *IDOS;
 
   /* documentation is in ftdebug.h */
 
-  FT_EXPORT_DEF( void )
+  FT_BASE_DEF( void )
   FT_Message( const char*  fmt, ... )
   {
     va_list  ap;
@@ -89,7 +89,7 @@ extern struct DOSIFace *IDOS;
 
   /* documentation is in ftdebug.h */
 
-  FT_EXPORT_DEF( void )
+  FT_BASE_DEF( void )
   FT_Panic( const char*  fmt, ... )
   {
     va_list  ap;
@@ -127,7 +127,7 @@ extern struct DOSIFace *IDOS;
 
   /* documentation is in ftdebug.h */
 
-  FT_EXPORT_DEF( FT_Int )
+  FT_BASE_DEF( FT_Int )
   FT_Trace_Get_Count( void )
   {
     return trace_count;
@@ -136,7 +136,7 @@ extern struct DOSIFace *IDOS;
 
   /* documentation is in ftdebug.h */
 
-  FT_EXPORT_DEF( const char * )
+  FT_BASE_DEF( const char * )
   FT_Trace_Get_Name( FT_Int  idx )
   {
     int  max = FT_Trace_Get_Count();
@@ -253,14 +253,14 @@ extern struct DOSIFace *IDOS;
   }
 
 
-  FT_EXPORT_DEF( FT_Int )
+  FT_BASE_DEF( FT_Int )
   FT_Trace_Get_Count( void )
   {
     return 0;
   }
 
 
-  FT_EXPORT_DEF( const char * )
+  FT_BASE_DEF( const char * )
   FT_Trace_Get_Name( FT_Int  idx )
   {
     FT_UNUSED( idx );

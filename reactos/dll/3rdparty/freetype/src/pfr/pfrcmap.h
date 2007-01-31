@@ -31,7 +31,7 @@ FT_BEGIN_HEADER
     FT_CMapRec  cmap;
     FT_UInt     num_chars;
     PFR_Char    chars;
-  
+
   } PFR_CMapRec, *PFR_CMap;
 
 

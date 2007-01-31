@@ -8,7 +8,7 @@
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005 by                                    */
+/*  Copyright 2002, 2003, 2004, 2005, 2006 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -24,6 +24,7 @@
 #include FT_INTERNAL_MEMORY_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_DEBUG_H
+#include FT_GZIP_H
 #include <string.h>
 
 
@@ -99,12 +100,12 @@
                  uInt       size )
   {
     FT_ULong    sz = (FT_ULong)size * items;
+    FT_Error    error;
     FT_Pointer  p;
 
 
-    FT_MEM_ALLOC( p, sz );
-
-    return (voidpf) p;
+    (void)FT_ALLOC( p, sz );
+    return p;
   }
 
 
@@ -553,6 +554,28 @@
   }
 
 
+  static FT_ULong
+  ft_gzip_get_uncompressed_size( FT_Stream  stream )
+  {
+    FT_Error  error;
+    FT_ULong  old_pos;
+    FT_ULong  result = 0;
+
+
+    old_pos = stream->pos;
+    if ( !FT_Stream_Seek( stream, stream->size - 4 ) )
+    {
+      result = (FT_ULong)FT_Stream_ReadLong( stream, &error );
+      if ( error )
+        result = 0;
+
+      FT_Stream_Seek( stream, old_pos );
+    }
+
+    return result;
+  }
+
+
   FT_EXPORT_DEF( FT_Error )
   FT_Stream_OpenGzip( FT_Stream  stream,
                       FT_Stream  source )
@@ -583,6 +606,52 @@
       }
 
       stream->descriptor.pointer = zip;
+    }
+
+    /*
+     *  We use the following trick to try to dramatically improve the
+     *  performance while dealing with small files.  If the original stream
+     *  size is less than a certain threshold, we try to load the whole font
+     *  file into memory.  This saves us from using the 32KB buffer needed
+     *  to inflate the file, plus the two 4KB intermediate input/output
+     *  buffers used in the `FT_GZipFile' structure.
+     */
+    {
+      FT_ULong  zip_size = ft_gzip_get_uncompressed_size( source );
+
+
+      if ( zip_size != 0 && zip_size < 40 * 1024 )
+      {
+        FT_Byte*  zip_buff;
+
+
+        if ( !FT_ALLOC( zip_buff, zip_size ) )
+        {
+          FT_ULong  count;
+
+
+          count = ft_gzip_file_io( zip, 0, zip_buff, zip_size );
+          if ( count == zip_size )
+          {
+            ft_gzip_file_done( zip );
+            FT_FREE( zip );
+
+            stream->descriptor.pointer = NULL;
+
+            stream->size  = zip_size;
+            stream->pos   = 0;
+            stream->base  = zip_buff;
+            stream->read  = NULL;
+            stream->close = ft_gzip_stream_close;
+
+            goto Exit;
+          }
+
+          ft_gzip_file_io( zip, 0, NULL, 0 );
+          FT_FREE( zip_buff );
+        }
+        error = 0;
+      }
     }
 
     stream->size  = 0x7FFFFFFFL;  /* don't know the real size! */

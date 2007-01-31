@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter glyph loading routines (body).                           */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005 by                                          */
+/*  Copyright 2003, 2004, 2005, 2006 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,24 +27,13 @@
   af_loader_init( AF_Loader  loader,
                   FT_Memory  memory )
   {
-    FT_Error  error;
-
-
     FT_ZERO( loader );
 
     af_glyph_hints_init( &loader->hints, memory );
-
-    error = FT_GlyphLoader_New( memory, &loader->gloader );
-    if ( !error )
-    {
-      error = FT_GlyphLoader_CreateExtra( loader->gloader );
-      if ( error )
-      {
-        FT_GlyphLoader_Done( loader->gloader );
-        loader->gloader = NULL;
-      }
-    }
-    return error;
+#ifdef AF_DEBUG
+    _af_debug_hints = &loader->hints;
+#endif
+    return FT_GlyphLoader_New( memory, &loader->gloader );
   }
 
 
@@ -84,6 +73,9 @@
     loader->face    = NULL;
     loader->globals = NULL;
 
+#ifdef AF_DEBUG
+    _af_debug_hints = NULL;
+#endif
     FT_GlyphLoader_Done( loader->gloader );
     loader->gloader = NULL;
   }
@@ -138,17 +130,13 @@
 
       /* copy the outline points in the loader's current               */
       /* extra points which is used to keep original glyph coordinates */
-      error = FT_GlyphLoader_CheckPoints( gloader,
-                                          slot->outline.n_points + 4,
-                                          slot->outline.n_contours );
+      error = FT_GLYPHLOADER_CHECK_POINTS( gloader,
+                                           slot->outline.n_points + 4,
+                                           slot->outline.n_contours );
       if ( error )
         goto Exit;
 
       FT_ARRAY_COPY( gloader->current.outline.points,
-                     slot->outline.points,
-                     slot->outline.n_points );
-
-      FT_ARRAY_COPY( gloader->current.extra_points,
                      slot->outline.points,
                      slot->outline.n_points );
 
@@ -184,6 +172,7 @@
       /* we now need to hint the metrics according to the change in */
       /* width/positioning that occured during the hinting process  */
       {
+#ifndef AF_USE_WARPER
         FT_Pos        old_advance, old_rsb, old_lsb, new_lsb;
         FT_Pos        pp1x_uh, pp2x_uh;
         AF_AxisHints  axis  = &hints->axis[AF_DIMENSION_HORZ];
@@ -192,7 +181,7 @@
                               axis->num_edges - 1; /* rightmost edge */
 
 
-        if ( axis->num_edges > 1 )
+        if ( axis->num_edges > 1 && AF_HINTS_DO_ADVANCE( hints ) )
         {
           old_advance = loader->pp2.x;
           old_rsb     = old_advance - edge2->opos;
@@ -217,20 +206,26 @@
           loader->pp1.x = FT_PIX_ROUND( pp1x_uh );
           loader->pp2.x = FT_PIX_ROUND( pp2x_uh );
 
+          if ( loader->pp1.x >= new_lsb )
+            loader->pp1.x -= 64;
+
+          if ( loader->pp2.x <= pp2x_uh )
+            loader->pp2.x += 64;
+
           slot->lsb_delta = loader->pp1.x - pp1x_uh;
           slot->rsb_delta = loader->pp2.x - pp2x_uh;
-
-#if 0
-          /* try to fix certain bad advance computations */
-          if ( loader->pp2.x + loader->pp1.x == edge2->pos && old_rsb > 4 )
-            loader->pp2.x += 64;
-#endif
-
         }
         else
+#endif /* !AF_USE_WARPER */
         {
+          FT_Pos   pp1x = loader->pp1.x;
+          FT_Pos   pp2x = loader->pp2.x;
+
           loader->pp1.x = FT_PIX_ROUND( loader->pp1.x );
           loader->pp2.x = FT_PIX_ROUND( loader->pp2.x );
+
+          slot->lsb_delta = loader->pp1.x - pp1x;
+          slot->rsb_delta = loader->pp2.x - pp2x;
         }
       }
 
@@ -307,16 +302,11 @@
           {
             FT_Vector*  cur   = gloader->base.outline.points +
                                 num_base_points;
-            FT_Vector*  org   = gloader->base.extra_points +
-                                num_base_points;
             FT_Vector*  limit = cur + num_new_points;
 
 
-            for ( ; cur < limit; cur++, org++ )
-            {
+            for ( ; cur < limit; cur++ )
               FT_Vector_Transform( cur, &subglyph->transform );
-              FT_Vector_Transform( org, &subglyph->transform );
-            }
           }
 
           /* apply offset */
@@ -376,12 +366,21 @@
   Hint_Metrics:
     if ( depth == 0 )
     {
-      FT_BBox  bbox;
+      FT_BBox    bbox;
+      FT_Vector  vvector;
 
+
+      vvector.x = slot->metrics.vertBearingX - slot->metrics.horiBearingX;
+      vvector.y = slot->metrics.vertBearingY - slot->metrics.horiBearingY;
+      vvector.x = FT_MulFix( vvector.x, metrics->scaler.x_scale );
+      vvector.y = FT_MulFix( vvector.y, metrics->scaler.y_scale );
 
       /* transform the hinted outline if needed */
       if ( loader->transformed )
+      {
         FT_Outline_Transform( &gloader->base.outline, &loader->trans_matrix );
+        FT_Vector_Transform( &vvector, &loader->trans_matrix );
+      }
 
       /* we must translate our final outline by -pp1.x and compute */
       /* the new metrics                                           */
@@ -400,6 +399,9 @@
       slot->metrics.horiBearingX = bbox.xMin;
       slot->metrics.horiBearingY = bbox.yMax;
 
+      slot->metrics.vertBearingX = FT_PIX_FLOOR( bbox.xMin + vvector.x );
+      slot->metrics.vertBearingY = FT_PIX_FLOOR( bbox.yMax + vvector.y );
+
       /* for mono-width fonts (like Andale, Courier, etc.) we need */
       /* to keep the original rounded advance width                */
 #if 0
@@ -416,7 +418,11 @@
                                                metrics->scaler.x_scale );
 #endif
 
+      slot->metrics.vertAdvance = FT_MulFix( slot->metrics.vertAdvance,
+                                              metrics->scaler.y_scale );
+
       slot->metrics.horiAdvance = FT_PIX_ROUND( slot->metrics.horiAdvance );
+      slot->metrics.vertAdvance = FT_PIX_ROUND( slot->metrics.vertAdvance );
 
       /* now copy outline into glyph slot */
       FT_GlyphLoader_Rewind( internal->loader );

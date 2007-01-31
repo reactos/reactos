@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType common tables validation (body).                            */
 /*                                                                         */
-/*  Copyright 2004, 2005 by                                                */
+/*  Copyright 2004, 2005, 2006 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -222,9 +222,9 @@
 
         OTV_LIMIT_CHECK( 2 );
 
-        OTV_TRACE(( " (GlyphCount = %d)\n", GlyphCount ));
-
         GlyphCount = FT_NEXT_USHORT( p );
+
+        OTV_TRACE(( " (GlyphCount = %d)\n", GlyphCount ));
 
         OTV_LIMIT_CHECK( GlyphCount * 2 );    /* ClassValueArray */
       }

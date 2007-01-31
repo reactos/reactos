@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2003 by
+# Copyright 1996-2000, 2003, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -29,6 +29,7 @@ ifeq ($(PLATFORM),os2)
 
   COPY   := copy
   DELETE := del
+  CAT    := type
   SEP    := $(BACKSLASH)
 
   # gcc-emx by default

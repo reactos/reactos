@@ -6,6 +6,10 @@
 	<define name="__NTDRIVER__" />
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="__USE_W32API" />
+	<define name="FT2_BUILD_LIBRARY"  />
+	<if property="NSWPAT" value="0">
+		<define name="TT_CONFIG_OPTION_UNPATENTED_HINTING" />
+	</if>
 	<if property="NSWPAT" value="1">
 		<define name="TT_CONFIG_OPTION_BYTECODE_INTERPRETER" />
 	</if>
@@ -18,13 +22,14 @@
 	<directory name="src">
 		<directory name="base">
 			<file>ftsystem.c</file>
-			<file>ftdebug.c</file>
 			<file>ftinit.c</file>
+			<file>ftdebug.c</file>
 			<file>ftbase.c</file>
 			<file>ftbbox.c</file>
+			<file>ftglyph.c</file>
 			<file>ftbdf.c</file>
 			<file>ftbitmap.c</file>
-			<file>ftglyph.c</file>
+			<file>ftgxval.c</file>
 			<file>ftmm.c</file>
 			<file>ftotval.c</file>
 			<file>ftpfr.c</file>
@@ -32,7 +37,6 @@
 			<file>ftsynth.c</file>
 			<file>fttype1.c</file>
 			<file>ftwinfnt.c</file>
-			<file>ftxf86.c</file>
 		</directory>
 		<directory name="autofit">
 			<file>autofit.c</file>
@@ -49,6 +53,9 @@
 		<directory name="cid">
 			<file>type1cid.c</file>
 		</directory>
+		<directory name="gxvalid">
+			<file>gxvalid.c</file>
+		</directory>
 		<directory name="gzip">
 			<file>ftgzip.c</file>
 		</directory>
@@ -56,13 +63,7 @@
 			<file>ftlzw.c</file>
 		</directory>
 		<directory name="otvalid">
-			<file>otvbase.c</file>
-			<file>otvcommn.c</file>
-			<file>otvgpos.c</file>
-			<file>otvgsub.c</file>
-			<file>otvgdef.c</file>
-			<file>otvjstf.c</file>
-			<file>otvmod.c</file>
+			<file>otvalid.c</file>
 		</directory>
 		<directory name="pcf">
 			<file>pcf.c</file>
@@ -77,7 +78,7 @@
 			<file>pshinter.c</file>
 		</directory>
 		<directory name="psnames">
-			<file>psmodule.c</file>
+			<file>psnames.c</file>
 		</directory>
 		<directory name="raster">
 			<file>raster.c</file>

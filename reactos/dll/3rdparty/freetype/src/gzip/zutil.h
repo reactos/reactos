@@ -80,7 +80,6 @@ typedef unsigned long  ulg;
 #     include <alloc.h>
 #    endif
 #  else /* MSC or DJGPP */
-#    include <malloc.h>
 #  endif
 #endif
 
@@ -95,7 +94,7 @@ typedef unsigned long  ulg;
 #if defined(VAXC) || defined(VMS)
 #  define OS_CODE  0x02
 #  define F_OPEN(name, mode) \
-     fopen((name), (mode), "mbc=60", "ctx=stm", "rfm=fix", "mrs=512")
+     ft_fopen((name), (mode), "mbc=60", "ctx=stm", "rfm=fix", "mrs=512")
 #endif
 
 #ifdef AMIGA
@@ -141,7 +140,7 @@ typedef unsigned long  ulg;
 #endif
 
 #ifndef F_OPEN
-#  define F_OPEN(name, mode) fopen((name), (mode))
+#  define F_OPEN(name, mode) ft_fopen((name), (mode))
 #endif
 
          /* functions */

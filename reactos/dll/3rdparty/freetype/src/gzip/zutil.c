@@ -157,8 +157,8 @@ void  zcfree (voidpf opaque, voidpf ptr)
 #ifndef MY_ZCALLOC /* Any system without a special alloc function */
 
 #ifndef STDC
-extern voidp  calloc OF((uInt items, uInt size));
-extern void   free   OF((voidpf ptr));
+extern voidp  ft_scalloc OF((uInt items, uInt size));
+extern void   ft_sfree   OF((voidpf ptr));
 #endif
 
 voidpf zcalloc (opaque, items, size)
@@ -167,14 +167,14 @@ voidpf zcalloc (opaque, items, size)
     unsigned size;
 {
     if (opaque) items += size - size; /* make compiler happy */
-    return (voidpf)calloc(items, size);
+    return (voidpf)ft_scalloc(items, size);
 }
 
 void  zcfree (opaque, ptr)
     voidpf opaque;
     voidpf ptr;
 {
-    free(ptr);
+    ft_sfree(ptr);
     if (opaque) return; /* make compiler happy */
 }
 

@@ -27,11 +27,15 @@
 
 FT_BEGIN_HEADER
 
+
+#define TT_CMAP_FLAG_UNSORTED     1
+#define TT_CMAP_FLAG_OVERLAPPING  2
+
   typedef struct  TT_CMapRec_
   {
     FT_CMapRec  cmap;
     FT_Byte*    data;           /* pointer to in-memory cmap table */
-    FT_Bool     unsorted;       /* for format 4 only               */
+    FT_Int      flags;          /* for format 4 only               */
 
   } TT_CMapRec, *TT_CMap;
 

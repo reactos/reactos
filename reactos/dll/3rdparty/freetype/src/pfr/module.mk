@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 2002 by
+# Copyright 2002, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,10 +13,11 @@
 # fully.
 
 
-make_module_list: add_pfr_driver
+FTMODULE_H_COMMANDS += PFR_DRIVER
 
-add_pfr_driver:
-	$(OPEN_DRIVER)pfr_driver_class$(CLOSE_DRIVER)
-	$(ECHO_DRIVER)pfr       $(ECHO_DRIVER_DESC)PFR/TrueDoc font files with extension *.pfr$(ECHO_DRIVER_DONE)
+define PFR_DRIVER
+$(OPEN_DRIVER)pfr_driver_class$(CLOSE_DRIVER)
+$(ECHO_DRIVER)pfr       $(ECHO_DRIVER_DESC)PFR/TrueDoc font files with extension *.pfr$(ECHO_DRIVER_DONE)
+endef
 
 # EOF

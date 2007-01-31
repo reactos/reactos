@@ -2,7 +2,7 @@
 
   FreeType font driver for pcf fonts
 
-  Copyright (C) 2000, 2001, 2002, 2003 by
+  Copyright (C) 2000, 2001, 2002, 2003, 2006 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -171,12 +171,12 @@ FT_BEGIN_HEADER
 #define PCF_FILE_VERSION        ( ( 'p' << 24 ) | \
                                   ( 'c' << 16 ) | \
                                   ( 'f' <<  8 ) | 1 )
-#define PCF_FORMAT_MASK         0xFFFFFF00L
+#define PCF_FORMAT_MASK         0xFFFFFF00UL
 
-#define PCF_DEFAULT_FORMAT      0x00000000L
-#define PCF_INKBOUNDS           0x00000200L
-#define PCF_ACCEL_W_INKBOUNDS   0x00000100L
-#define PCF_COMPRESSED_METRICS  0x00000100L
+#define PCF_DEFAULT_FORMAT      0x00000000UL
+#define PCF_INKBOUNDS           0x00000200UL
+#define PCF_ACCEL_W_INKBOUNDS   0x00000100UL
+#define PCF_COMPRESSED_METRICS  0x00000100UL
 
 #define PCF_FORMAT_MATCH( a, b ) \
           ( ( (a) & PCF_FORMAT_MASK ) == ( (b) & PCF_FORMAT_MASK ) )
