@@ -1186,7 +1186,10 @@ Phase1InitializationDiscard(PVOID Context)
     InbvUpdateProgressBar(85);
 
     /* Make sure nobody touches the loader block again */
-    if (LoaderBlock == KeLoaderBlock) KeLoaderBlock = NULL;
+    /* FIXME: IopLoadServiceModule() touches KeLoaderBlock->LoadOrderListHead,
+       and that happens past this point too. So either copy that list to the
+       Io's allocated space, or properly fix Io. */
+    //if (LoaderBlock == KeLoaderBlock) KeLoaderBlock = NULL;
     LoaderBlock = Context = NULL;
 
     /* Update progress bar */
