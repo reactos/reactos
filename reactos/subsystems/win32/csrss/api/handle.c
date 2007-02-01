@@ -88,7 +88,7 @@ CsrReleaseObjectByPointer(Object_t *Object)
   unsigned DefIndex;
 
   /* dec ref count */
-  if (InterlockedDecrement(&Object->ReferenceCount) == 0)
+  if (_InterlockedDecrement(&Object->ReferenceCount) == 0)
     {
       Found = FALSE;
       for (DefIndex = 0; ! Found && DefIndex < ObjectDefinitionsCount; DefIndex++)
@@ -166,13 +166,13 @@ NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handl
        RtlCopyMemory(Block,
 		     ProcessData->HandleTable,
 		     ProcessData->HandleTableSize * sizeof(HANDLE));
-       Block = InterlockedExchangePointer(&ProcessData->HandleTable, Block);
+       Block = _InterlockedExchangePointer((volatile void*)&ProcessData->HandleTable, Block);
        RtlFreeHeap( CsrssApiHeap, 0, Block );
        ProcessData->HandleTableSize += 64;
      }
    ProcessData->HandleTable[i] = Object;
    *Handle = (HANDLE)(((i + 1) << 2) | 0x3);
-   InterlockedIncrement( &Object->ReferenceCount );
+   _InterlockedIncrement( &Object->ReferenceCount );
    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
    return(STATUS_SUCCESS);
 }
@@ -207,7 +207,7 @@ NTSTATUS STDCALL CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData,
         if (SourceProcessData->HandleTable[i])
         {
             TargetProcessData->HandleTable[i] = SourceProcessData->HandleTable[i];
-            InterlockedIncrement( &SourceProcessData->HandleTable[i]->ReferenceCount );
+            _InterlockedIncrement( &SourceProcessData->HandleTable[i]->ReferenceCount );
         }
     }
    RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
