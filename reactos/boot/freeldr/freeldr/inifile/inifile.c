@@ -104,12 +104,12 @@ BOOLEAN IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PCHAR Setti
 			DbgPrint((DPRINT_INIFILE, "IniReadSettingByNumber() Setting value = %s\n", SectionItem->ItemValue));
 
 			DbgPrint((DPRINT_INIFILE, "1 NameSize = %d ValueSize = %d\n", NameSize, ValueSize));
-			RtlZeroMemory(SettingName, NameSize);
-			RtlZeroMemory(SettingValue, ValueSize);
 			DbgPrint((DPRINT_INIFILE, "2 NameSize = %d ValueSize = %d\n", NameSize, ValueSize));
-			strncpy(SettingName, SectionItem->ItemName, NameSize);
+			strncpy(SettingName, SectionItem->ItemName, NameSize - 1);
+			SettingName[NameSize - 1] = '\0';
 			DbgPrint((DPRINT_INIFILE, "3 NameSize = %d ValueSize = %d\n", NameSize, ValueSize));
-			strncpy(SettingValue, SectionItem->ItemValue, ValueSize);
+			strncpy(SettingValue, SectionItem->ItemValue, ValueSize - 1);
+			SettingValue[ValueSize - 1] = '\0';
 			DbgPrint((DPRINT_INIFILE, "4 NameSize = %d ValueSize = %d\n", NameSize, ValueSize));
 			DbgDumpBuffer(DPRINT_INIFILE, SettingName, NameSize);
 			DbgDumpBuffer(DPRINT_INIFILE, SettingValue, ValueSize);
@@ -146,8 +146,8 @@ BOOLEAN IniReadSettingByName(ULONG SectionId, PCSTR SettingName, PCHAR Buffer, U
 			DbgPrint((DPRINT_INIFILE, "IniReadSettingByName() Setting \'%s\' found.\n", SettingName));
 			DbgPrint((DPRINT_INIFILE, "IniReadSettingByName() Setting value = %s\n", SectionItem->ItemValue));
 
-			RtlZeroMemory(Buffer, BufferSize);
-			strncpy(Buffer, SectionItem->ItemValue, BufferSize);
+			strncpy(Buffer, SectionItem->ItemValue, BufferSize - 1);
+			Buffer[BufferSize - 1] = '\0';
 
 			return TRUE;
 		}
