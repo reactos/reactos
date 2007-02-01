@@ -730,6 +730,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
     PTEB Teb;
     ULONG TlsIndex = 0;
     PVOID *ExpansionSlots;
+    PETHREAD ProcThread;
     PAGED_CODE();
 
     /* Verify Information Class validity */
@@ -1021,14 +1022,14 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             Process = Thread->ThreadsProcess;
 
             /* Loop the threads */
-            Thread = PsGetNextProcessThread(Process, NULL);
-            while (Thread)
+            ProcThread = PsGetNextProcessThread(Process, NULL);
+            while (ProcThread)
             {
                 /* Acquire rundown */
-                if (ExAcquireRundownProtection(&Thread->RundownProtect))
+                if (ExAcquireRundownProtection(&ProcThread->RundownProtect))
                 {
                     /* Get the TEB */
-                    Teb = Thread->Tcb.Teb;
+                    Teb = ProcThread->Tcb.Teb;
                     if (Teb)
                     {
                         /* Check if we're in the expansion range */
@@ -1054,11 +1055,11 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
                     }
 
                     /* Release rundown */
-                    ExReleaseRundownProtection(&Thread->RundownProtect);
+                    ExReleaseRundownProtection(&ProcThread->RundownProtect);
                 }
 
                 /* Go to the next thread */
-                Thread = PsGetNextProcessThread(Process, Thread);
+                ProcThread = PsGetNextProcessThread(Process, ProcThread);
             }
 
             /* All done */
