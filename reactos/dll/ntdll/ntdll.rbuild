@@ -10,7 +10,6 @@
 	<define name="_NTOSKRNL_" />
 	<define name="__NO_CTYPE_INLINES" />
 	<library>rtl</library>
-	<library>intrlck</library>
 	<library>string</library>
 	<library>pseh</library>
 	<linkerflag>-lgcc</linkerflag>
