@@ -27,6 +27,7 @@
 #include "rtlp.h"
 
 #include <pseh/pseh.h>
+#include <intrin.h>
 
 #endif /* RTL_H */
 
