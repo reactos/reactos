@@ -14,7 +14,6 @@
 
 #include <ntddk.h>
 #include <ntddbeep.h>
-#include <limits.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -200,7 +199,7 @@ BeepDeviceControl(PDEVICE_OBJECT DeviceObject,
 			    FALSE,
 			    NULL);
     }
-  else if (BeepParam->Duration == ULONG_MAX)
+  else if (BeepParam->Duration == MAXULONG)
     {
       if (DeviceExtension->BeepOn == TRUE)
 	{
