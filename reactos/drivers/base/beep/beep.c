@@ -14,6 +14,7 @@
 
 #include <ntddk.h>
 #include <ntddbeep.h>
+#include <limits.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -183,7 +184,7 @@ BeepDeviceControl(PDEVICE_OBJECT DeviceObject,
   DPRINT("Beep:\n  Freq: %lu Hz\n  Dur: %lu ms\n",
 	 BeepParam->Frequency,
 	 BeepParam->Duration);
-  if (BeepParam->Duration >= 0)
+  if (BeepParam->Duration > 0)
     {
       DueTime.QuadPart = (LONGLONG)BeepParam->Duration * -10000;
 
@@ -199,7 +200,7 @@ BeepDeviceControl(PDEVICE_OBJECT DeviceObject,
 			    FALSE,
 			    NULL);
     }
-  else if (BeepParam->Duration == (ULONG)-1)
+  else if (BeepParam->Duration == ULONG_MAX)
     {
       if (DeviceExtension->BeepOn == TRUE)
 	{
