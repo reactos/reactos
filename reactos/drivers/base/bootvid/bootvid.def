@@ -1,14 +1,14 @@
 LIBRARY bootvid.sys
 
 EXPORTS
-VidInitialize@4
-VidCleanUp@0
-VidResetDisplay@0
-VidBufferToScreenBlt@24
-VidScreenToBufferBlt@24
-VidBitBlt@12
-VidSolidColorFill@20
-VidDisplayString@4
-BootVidDisplayBootLogo@4
-BootVidUpdateProgress@4
-BootVidFinalizeBootLogo@0
+VidInitialize
+VidCleanUp
+VidResetDisplay
+VidBufferToScreenBlt
+VidScreenToBufferBlt
+VidBitBlt
+VidSolidColorFill
+VidDisplayString
+BootVidDisplayBootLogo
+BootVidUpdateProgress
+BootVidFinalizeBootLogo
