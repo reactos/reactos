@@ -13,6 +13,7 @@
 #include <ntddk.h>
 #include <ntdddisk.h>
 #include <arc/arc.h>
+#include <intrin.h>
 #include <ndk/halfuncs.h>
 #include <ndk/iofuncs.h>
 #include <ndk/kdfuncs.h>
@@ -164,8 +165,8 @@ HalAllocateCommonBuffer(
 PVOID
 NTAPI
 HalAllocateCrashDumpRegisters(
-  ULONG Unknown1,
-  ULONG Unknown2)
+  PADAPTER_OBJECT AdapterObject,
+  PULONG NumberOfMapRegisters)
 {
   UNIMPLEMENTED;
   return NULL;
@@ -619,7 +620,7 @@ HalpAssignDriveLetters(IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
                        OUT PSTRING NtSystemPathString)
 {
     /* Call the kernel */
-    return IoAssignDriveLetters(LoaderBlock,
+    IoAssignDriveLetters(LoaderBlock,
                                 NtDeviceName,
                                 NtSystemPath,
                                 NtSystemPathString);
