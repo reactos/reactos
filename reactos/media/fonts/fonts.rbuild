@@ -30,7 +30,7 @@
 <installfile base="media/fonts">courb.ttf</installfile>
 <installfile base="media/fonts">courbi.ttf</installfile>
 <installfile base="media/fonts">helb____.ttf</installfile>
-<installfile base="media/fonts">TGMarlett.ttf</installfile>
+<installfile base="media/fonts">Marlett.ttf</installfile>
 <installfile base="media/fonts">timr____.ttf</installfile>
 <installfile base="media/fonts">UTB_____.ttf</installfile>
 <installfile base="media/fonts">UTBI____.ttf</installfile>
