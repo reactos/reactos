@@ -40,7 +40,7 @@ HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
                         IN ULONG NumberPages)
 {
     /* Use kernel memory manager I/O map facilities */
-    return MmUnmapIoSpace(VirtualAddress, NumberPages << PAGE_SHIFT);
+    MmUnmapIoSpace(VirtualAddress, NumberPages << PAGE_SHIFT);
 }
 
 /* FUNCTIONS *****************************************************************/
