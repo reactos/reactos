@@ -36,6 +36,20 @@
 
 
 <!--
+  OPTIMIZE what level do you want ReactOS to be optimized at 
+  this setting does not work if GDB is set
+    0 = off
+    1 = Normal compiling recommended, is default setting in official build and debug build
+   
+    warning : 2,3,4,5  is not tested on ReactOS. Change at own risk. 
+
+    2 = gcc -Oz with -mpreferred-stack-boundary=2
+    3 = gcc -O1 with -mpreferred-stack-boundary=2
+    4 = gcc -O2 with -mpreferred-stack-boundary=2
+    5 = gcc -O3 with -mpreferred-stack-boundary=2
+-->
+<property name="OPTIMIZE" value="1" />
+<!--
   Whether to compile for an uniprocessor or multiprocessor machine.
 -->
 <property name="MP" value="0" />
