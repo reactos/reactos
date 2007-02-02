@@ -35,18 +35,22 @@
     </if>
     <if property="OPTIMIZE" value="2">
         <compilerflag>-Os</compilerflag>
+        <compilerflag>-Wno-strict-aliasing</compilerflag>
         <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
     </if>
     <if property="OPTIMIZE" value="3">
         <compilerflag>-O1</compilerflag>
+        <compilerflag>-Wno-strict-aliasing</compilerflag>
         <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
     </if>
     <if property="OPTIMIZE" value="4">
         <compilerflag>-O2</compilerflag>
+        <compilerflag>-Wno-strict-aliasing</compilerflag>
         <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
     </if>
     <if property="OPTIMIZE" value="5">
         <compilerflag>-O3</compilerflag>
+        <compilerflag>-Wno-strict-aliasing</compilerflag>
         <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
     </if>
   </if>
