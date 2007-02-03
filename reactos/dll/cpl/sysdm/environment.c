@@ -237,6 +237,7 @@ SetListViewColumns(HWND hwndListView)
 {
   RECT rect;
   LV_COLUMN column;
+  TCHAR szStr[32];
 
   GetClientRect(hwndListView, &rect);
 
@@ -245,12 +246,14 @@ SetListViewColumns(HWND hwndListView)
   column.fmt=LVCFMT_LEFT;
   column.cx = (INT)((rect.right - rect.left) * 0.32);
   column.iSubItem = 0;
-  column.pszText = _T("Variable");
+  LoadString(hApplet, IDS_VARIABLE, szStr, sizeof(szStr) / sizeof(szStr[0]));
+  column.pszText = szStr;
   (void)ListView_InsertColumn(hwndListView, 0, &column);
 
   column.cx = (INT)((rect.right - rect.left) * 0.63);
   column.iSubItem = 1;
-  column.pszText = _T("Value");
+  LoadString(hApplet, IDS_VALUE, szStr, sizeof(szStr) / sizeof(szStr[0]));
+  column.pszText = szStr;
   (void)ListView_InsertColumn(hwndListView, 1, &column);
 }
 

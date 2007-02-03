@@ -119,4 +119,6 @@ STRINGTABLE
 BEGIN
   IDS_CPLSYSTEMNAME "Systém"
   IDS_CPLSYSTEMDESCRIPTION "Zobrazuje informace o Vašem poèítaèi, mìní rùzné systémové promìnné a hardwarové vlastnosti."
+    IDS_VARIABLE "Variable"
+    IDS_VALUE    "Value"
 END

@@ -152,4 +152,6 @@ BEGIN
   IDS_MIN "Минимально возможное:	%s"
   IDS_REC "Рекомендованное:		%s"
   IDS_CUR "Текущее:			%s"
+    IDS_VARIABLE "Variable"
+    IDS_VALUE    "Value"
 END

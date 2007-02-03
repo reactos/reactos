@@ -117,4 +117,6 @@ STRINGTABLE
 BEGIN
   IDS_CPLSYSTEMNAME "System Indstillinger"
   IDS_CPLSYSTEMDESCRIPTION "Se mere information omkring din computer, og skift diverse system og hardware indstillinger."
+    IDS_VARIABLE "Variable"
+    IDS_VALUE    "Value"
 END

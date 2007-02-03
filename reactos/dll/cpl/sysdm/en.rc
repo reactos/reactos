@@ -265,4 +265,6 @@ BEGIN
     IDS_GIGABYTE "GB of RAM"
     IDS_TERABYTE "TB of RAM"
     IDS_PETABYTE "PB of RAM"
+    IDS_VARIABLE "Variable"
+    IDS_VALUE    "Value"
 END

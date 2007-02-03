@@ -24,6 +24,7 @@ RC_LICENSE RTDATA "resources/gpl.txt"
 
 #include "en.rc"
 #include "de.rc"
+#include "fr.rc"
 /*
 #include "cz.rc"
 #include "dk.rc"

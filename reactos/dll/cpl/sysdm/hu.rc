@@ -120,4 +120,6 @@ STRINGTABLE
 BEGIN
   IDS_CPLSYSTEMNAME "Rendszer"
   IDS_CPLSYSTEMDESCRIPTION "A számítógéppel kapcsolatos információk megjelenítése, különbözõ rendszer és hardver beállítások módosítása."
+    IDS_VARIABLE "Variable"
+    IDS_VALUE    "Value"
 END

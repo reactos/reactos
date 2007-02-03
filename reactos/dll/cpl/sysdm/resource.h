@@ -18,6 +18,8 @@
 #define IDS_TERABYTE                    64
 #define IDS_PETABYTE                    65
 
+#define IDS_VARIABLE                    66
+#define IDS_VALUE                       67
 
 /* propsheet - general */
 #define IDD_PROPPAGEGENERAL             100

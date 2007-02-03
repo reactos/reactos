@@ -123,4 +123,6 @@ STRINGTABLE
 BEGIN
   IDS_CPLSYSTEMNAME "Systema"
   IDS_CPLSYSTEMDESCRIPTION "Ver información de su Computadora y cambiar varias opciones del systema."
+    IDS_VARIABLE "Variable"
+    IDS_VALUE    "Value"
 END
