@@ -1,26 +1,31 @@
 #ifndef NTOSKRNL_INBV_H
 #define NTOSKRNL_INBV_H
 
-/* INCLUDES ******************************************************************/
+typedef struct _InbvProgressState
+{
+    ULONG Floor;
+    ULONG Ceiling;
+    ULONG Bias;
+} INBV_PROGRESS_STATE;
 
-/* DEFINES *******************************************************************/
+VOID
+NTAPI
+InbvUpdateProgressBar(
+    IN ULONG Progress
+);
 
-/* FUNCTIONS *****************************************************************/
+BOOLEAN
+NTAPI
+InbvDriverInitialize(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN ULONG Count
+);
 
-VOID NTAPI INIT_FUNCTION
-InbvDisplayInitialize(VOID);
-
-VOID NTAPI
-InbvDisplayInitialize2(BOOLEAN NoGuiBoot);
-
-VOID NTAPI
-InbvDisplayBootLogo(IN BOOLEAN SosEnabled);
-
-VOID NTAPI
-InbvUpdateProgressBar(ULONG Progress);
-
-VOID NTAPI
-InbvFinalizeBootLogo(VOID);
+VOID
+NTAPI
+InbvEnableBootDriver(
+    IN BOOLEAN Enable
+);
 
 #endif /* NTOSKRNL_INBV_H */
 

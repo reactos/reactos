@@ -41,7 +41,6 @@ ARC_DISK_INFORMATION BldrArcDiskInfo;                   // 0x9F34
 CHAR BldrArcNames[32][256];                             // 0x9F3C
 ARC_DISK_SIGNATURE BldrDiskInfo[32];                    // 0xBF3C
                                                         // 0xC23C
-ULONG Guard = 0xCACA1234;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -342,7 +341,7 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     MmSystemRangeStart = (PVOID)KeRosLoaderBlock->KernelBase;
 
     /* Convert every driver address to virtual memory */
-    for (i = 2; i < KeRosLoaderBlock->ModsCount; i++)
+    for (i = 3; i < KeRosLoaderBlock->ModsCount; i++)
     {
         /* Subtract the base Address in Physical Memory */
         KeRosLoaderBlock->ModsAddr[i].ModStart -= 0x200000;

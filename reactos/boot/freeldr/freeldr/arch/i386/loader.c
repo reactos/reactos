@@ -744,7 +744,8 @@ LdrPEGetOrLoadModule(IN PCHAR ModuleName,
          * code, and we'll just call it instead.
          */
         if (!_stricmp(ImportedName, "hal.dll") ||
-            !_stricmp(ImportedName, "kdcom.dll"))
+            !_stricmp(ImportedName, "kdcom.dll") ||
+            !_stricmp(ImportedName, "bootvid.dll"))
         {
             /* Load the HAL */
             FrLdrLoadImage(ImportedName, 10);

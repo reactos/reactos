@@ -20,6 +20,7 @@
     <library>rossym</library>
     <library>string</library>
     <library>kdcom</library>
+    <library>bootvid</library>
     <library>wdmguid</library>
     <directory name="include">
         <pch>ntoskrnl.h</pch>

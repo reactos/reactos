@@ -1020,20 +1020,20 @@ Phase1InitializationDiscard(PVOID Context)
     SosEnabled = strstr(CommandLine, "SOS") ? TRUE: FALSE;
 
     /* Setup the boot driver */
-    InbvDisplayInitialize();
-    if (!ExpInTextModeSetup) InbvDisplayInitialize2(NoGuiBoot);
+    InbvEnableBootDriver(!NoGuiBoot);
+    InbvDriverInitialize(LoaderBlock, 18);
 
     /* Check if GUI boot is enabled */
     if (!NoGuiBoot)
     {
         /* It is, display the boot logo and enable printing strings */
         InbvEnableDisplayString(SosEnabled);
-        InbvDisplayBootLogo(SosEnabled);
+        //DisplayBootBitmap(SosEnabled);
     }
     else
     {
         /* Release display ownership if not using GUI boot */
-        if (!SosEnabled) InbvNotifyDisplayOwnershipLost(NULL);
+        InbvNotifyDisplayOwnershipLost(NULL);
 
         /* Don't allow boot-time strings */
         InbvEnableDisplayString(FALSE);
@@ -1207,7 +1207,8 @@ Phase1InitializationDiscard(PVOID Context)
     /* Wait 5 seconds for it to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);
     Status = ZwWaitForSingleObject(ProcessInfo->ProcessHandle, FALSE, &Timeout);
-    if (!NoGuiBoot) InbvFinalizeBootLogo();
+    //if (InbvBootDriverInstalled) FinalizeBootLogo();
+
     if (Status == STATUS_SUCCESS)
     {
         /* Bugcheck the system if SMSS couldn't initialize */

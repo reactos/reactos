@@ -1,350 +1,531 @@
-/* $Id$
- *
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/inbv/inbv.c
- * PURPOSE:        Boot video support
- *
- * PROGRAMMERS:    Casper S. Hornstrup (chorns@users.sourceforge.net)
- */
-
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
-
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, InbvDisplayInitialize)
-#endif
+#include <debug.h>
+#include "bootvid\bootvid.h"
 
 /* GLOBALS *******************************************************************/
 
-/* DATA **********************************************************************/
-
-static BOOLEAN BootVidDriverInstalled = FALSE;
-
-static BOOLEAN (NTAPI *VidInitialize)(BOOLEAN);
-static VOID (NTAPI *VidCleanUp)(VOID);
-static VOID (NTAPI *VidResetDisplay)(VOID);
-static VOID (NTAPI *VidBufferToScreenBlt)(PUCHAR, ULONG, ULONG, ULONG, ULONG, ULONG);
-static VOID (NTAPI *VidScreenToBufferBlt)(PUCHAR, ULONG, ULONG, ULONG, ULONG, ULONG);
-static VOID (NTAPI *VidBitBlt)(PUCHAR, ULONG, ULONG);
-static VOID (NTAPI *VidSolidColorFill)(ULONG, ULONG, ULONG, ULONG, ULONG);
-static VOID (NTAPI *VidDisplayString)(PCSTR);
-static NTSTATUS (NTAPI *BootVidDisplayBootLogo)(PVOID);
-static VOID (NTAPI *BootVidUpdateProgress)(ULONG Progress);
-static VOID (NTAPI *BootVidFinalizeBootLogo)(VOID);
-
-static KSPIN_LOCK InbvLock;
-static KIRQL InbvOldIrql;
-static ULONG InbvDisplayState = 0;
-static PHAL_RESET_DISPLAY_PARAMETERS InbvResetDisplayParameters = NULL;
-static PVOID BootVidBase;
+KSPIN_LOCK BootDriverLock;
+KIRQL InbvOldIrql;
+INBV_DISPLAY_STATE InbvDisplayState;
+BOOLEAN InbvBootDriverInstalled;
+BOOLEAN InbvDisplayDebugStrings;
+INBV_DISPLAY_STRING_FILTER InbvDisplayFilter;
+ULONG ProgressBarLeft, ProgressBarTop;
+BOOLEAN ShowProgressBar;
+INBV_PROGRESS_STATE InbvProgressState;
+INBV_RESET_DISPLAY_PARAMETERS InbvResetDisplayParameters;
+ULONG ResourceCount;
+PUCHAR ResourceList[64];
 
 /* FUNCTIONS *****************************************************************/
 
-VOID NTAPI INIT_FUNCTION
-InbvDisplayInitialize(VOID)
+PVOID
+NTAPI
+FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                   IN ULONG ResourceId)
 {
-   struct {
-      ANSI_STRING Name;
-      PVOID *Ptr;
-   } Exports[] = {
-      { RTL_CONSTANT_STRING("VidInitialize"), (PVOID*)&VidInitialize },
-      { RTL_CONSTANT_STRING("VidCleanUp"), (PVOID*)&VidCleanUp },
-      { RTL_CONSTANT_STRING("VidResetDisplay"), (PVOID*)&VidResetDisplay },      
-      { RTL_CONSTANT_STRING("VidBufferToScreenBlt"), (PVOID*)&VidBufferToScreenBlt },
-      { RTL_CONSTANT_STRING("VidScreenToBufferBlt"), (PVOID*)&VidScreenToBufferBlt },
-      { RTL_CONSTANT_STRING("VidBitBlt"), (PVOID*)&VidBitBlt },
-      { RTL_CONSTANT_STRING("VidSolidColorFill"), (PVOID*)&VidSolidColorFill },
-      { RTL_CONSTANT_STRING("VidDisplayString"), (PVOID*)&VidDisplayString },      
-      { RTL_CONSTANT_STRING("BootVidDisplayBootLogo"), (PVOID*)&BootVidDisplayBootLogo },
-      { RTL_CONSTANT_STRING("BootVidUpdateProgress"), (PVOID*)&BootVidUpdateProgress },
-      { RTL_CONSTANT_STRING("BootVidFinalizeBootLogo"), (PVOID*)&BootVidFinalizeBootLogo }
-   };
-   UNICODE_STRING BootVidPath = RTL_CONSTANT_STRING(L"bootvid.sys");
-   PLDR_DATA_TABLE_ENTRY ModuleObject = NULL, LdrEntry;
-   ULONG Index;
-   NTSTATUS Status;
+    UNICODE_STRING UpString = RTL_CONSTANT_STRING(L"ntoskrnl.exe");
+    UNICODE_STRING MpString = RTL_CONSTANT_STRING(L"ntkrnlmp.exe");
+    PLIST_ENTRY NextEntry, ListHead;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
+    LDR_RESOURCE_INFO ResourceInfo;
+    ULONG Size;
+    NTSTATUS Status;
+    PVOID Data = NULL;
 
-   /* FIXME: Hack, try to search for boot driver. */
-#if 0
-   ModuleObject = LdrGetModuleObject(&BootVidPath);
-#else
-   {
-      NTSTATUS LdrProcessModule(PVOID, PUNICODE_STRING, PLDR_DATA_TABLE_ENTRY*);
-      PLIST_ENTRY ListHead, NextEntry;
+    /* Loop the driver list */
+    ListHead = &LoaderBlock->LoadOrderListHead;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
 
-      ListHead = &KeLoaderBlock->LoadOrderListHead;
-      NextEntry = ListHead->Flink;
-      while (ListHead != NextEntry)
-      {
-          /* Get the entry */
-          LdrEntry = CONTAINING_RECORD(NextEntry,
-                                       LDR_DATA_TABLE_ENTRY,
-                                       InLoadOrderLinks);
-
-          /* Compare names */
-          if (RtlEqualUnicodeString(&LdrEntry->BaseDllName, &BootVidPath, TRUE))
-          {
-              /* Tell, that the module is already loaded */
-              LdrEntry->Flags |= LDRP_ENTRY_INSERTED;
-              Status = LdrProcessModule(LdrEntry->DllBase,
-                                        &BootVidPath,
-                                        &ModuleObject);
-              if (!NT_SUCCESS(Status))
-              {
-                  DPRINT1("%x\n", Status);
-                  return;
-              }
+        /* Check for a match */
+        if ((RtlEqualUnicodeString(&LdrEntry->BaseDllName, &UpString, TRUE)) ||
+            (RtlEqualUnicodeString(&LdrEntry->BaseDllName, &MpString, TRUE)))
+        {
+            /* Break out */
             break;
-         }
+        }
+    }
 
-          /* Go to the next driver */
-          NextEntry= NextEntry->Flink;
-      }
-   }
-#endif
+    /* Check if we found it */
+    if (NextEntry != ListHead)
+    {
+        /* Try to find the resource */
+        ResourceInfo.Type = 2;
+        ResourceInfo.Name = ResourceId;
+        ResourceInfo.Language = 0;
+        Status = LdrFindResource_U(LdrEntry->DllBase,
+                                   &ResourceInfo,
+                                   RESOURCE_DATA_LEVEL,
+                                   &ResourceDataEntry);
+        if (NT_SUCCESS(Status))
+        {
+            /* Access the resource */
+            Status = LdrAccessResource(LdrEntry->DllBase,
+                                       ResourceDataEntry,
+                                       &Data,
+                                       &Size);
+            if (!NT_SUCCESS(Status)) Data = NULL;
+        }
+    }
 
-   if (ModuleObject != NULL)
-   {
-      for (Index = 0; Index < sizeof(Exports) / sizeof(Exports[0]); Index++)
-      {
-         Status = LdrGetProcedureAddress(ModuleObject->DllBase,
-                                         &Exports[Index].Name, 0,
-                                         Exports[Index].Ptr);
-         if (!NT_SUCCESS(Status))
-            return;
-      }
-
-      DPRINT("Done!\n");
-      KeInitializeSpinLock(&InbvLock);
-      BootVidBase = ModuleObject->DllBase;
-      BootVidDriverInstalled = TRUE;
-   }
+    /* Return the pointer */
+    return Data;
 }
 
-static VOID NTAPI
+BOOLEAN
+NTAPI
+InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                     IN ULONG Count)
+{
+    PCHAR CommandLine;
+    BOOLEAN CustomLogo = FALSE;
+    ULONG i;
+
+    /* Quit if we're already installed */
+    if (InbvBootDriverInstalled) return TRUE;
+
+    /* Initialize the lock and check the current display state */
+    KeInitializeSpinLock(&BootDriverLock);
+    if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)
+    {
+        /* Check if we have a custom boot logo */
+        CommandLine = _strupr(LoaderBlock->LoadOptions);
+        CustomLogo = strstr(CommandLine, "BOOTLOGO") ? TRUE: FALSE;
+    }
+
+    /* Initialize the video */
+    InbvBootDriverInstalled = VidInitialize(CustomLogo);
+    DPRINT1("Init: %lx\n", InbvBootDriverInstalled);
+    if (InbvBootDriverInstalled)
+    {
+        /* Find bitmap resources in the kernel */
+        ResourceCount = Count;
+        for (i = 0; i < Count; i++)
+        {
+            /* Do the lookup */
+            ResourceList[i] = FindBitmapResource(LoaderBlock, i);
+        }
+
+        /* Set the progress bar ranges */
+        InbvSetProgressBarSubset(0, 100);
+    }
+
+    /* Return install state */
+    return InbvBootDriverInstalled;
+}
+
+VOID
+NTAPI
 InbvAcquireLock(VOID)
 {
-   if ((InbvOldIrql = KeGetCurrentIrql()) < DISPATCH_LEVEL)
-      InbvOldIrql = KfRaiseIrql(DISPATCH_LEVEL);
-   KiAcquireSpinLock(&InbvLock);
+    /* Check if we're below dispatch level */
+    InbvOldIrql = KeGetCurrentIrql();
+    if (InbvOldIrql < DISPATCH_LEVEL)
+    {
+        /* Raise IRQL to dispatch level */
+        InbvOldIrql = KfRaiseIrql(DISPATCH_LEVEL);
+    }
+
+    /* Acquire the lock */
+    KiAcquireSpinLock(&BootDriverLock);
 }
 
-static VOID NTAPI
+VOID
+NTAPI
 InbvReleaseLock(VOID)
 {
-   KiReleaseSpinLock(&InbvLock);
-   if (InbvOldIrql < DISPATCH_LEVEL)
-      KfLowerIrql(InbvOldIrql);
+    /* Release the driver lock */
+    KiReleaseSpinLock(&BootDriverLock);
+
+    /* If we were below dispatch level, lower IRQL back */
+    if (InbvOldIrql < DISPATCH_LEVEL) KfLowerIrql(InbvOldIrql);
 }
 
-VOID STDCALL 
+VOID
+NTAPI
 InbvEnableBootDriver(IN BOOLEAN Enable)
 {
-   if (BootVidDriverInstalled)
-   {
-      if (InbvDisplayState >= 2)
-         return;
-      InbvAcquireLock();
-      if (InbvDisplayState == 0)
-         VidCleanUp();
-      InbvDisplayState = !Enable;
-      InbvReleaseLock();
-   }
-   else
-   {
-      InbvDisplayState = !Enable;
-   }
+    /* Check if we're installed */
+    if (InbvBootDriverInstalled)
+    {
+        /* Check for lost state */
+        if (InbvDisplayState >= INBV_DISPLAY_STATE_LOST) return;
+
+        /* Acquire the lock */
+        InbvAcquireLock();
+
+        /* Cleanup the screen if we own it */
+        if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED) VidCleanUp();
+
+        /* Set the new display state */
+        InbvDisplayState = Enable ? INBV_DISPLAY_STATE_OWNED:
+                                    INBV_DISPLAY_STATE_DISABLED;
+
+        /* Release the lock */
+        InbvReleaseLock();
+    }
+    else
+    {
+        /* Set the new display state */
+        InbvDisplayState = Enable ? INBV_DISPLAY_STATE_OWNED:
+                                    INBV_DISPLAY_STATE_DISABLED;
+    }
 }
 
-VOID NTAPI
+VOID
+NTAPI
 InbvAcquireDisplayOwnership(VOID)
 {
-   if (InbvResetDisplayParameters && InbvDisplayState == 2)
-   { 
-      if (InbvResetDisplayParameters != NULL)
-         InbvResetDisplayParameters(80, 50);
-   }
-   InbvDisplayState = 0;
+    /* Check if we have a callback and we're just acquiring it now */
+    if ((InbvResetDisplayParameters) &&
+        (InbvDisplayState == INBV_DISPLAY_STATE_LOST))
+    {
+        /* Call the callback */
+        InbvResetDisplayParameters(80, 50);
+    }
+
+    /* Acquire the display */
+    InbvDisplayState = INBV_DISPLAY_STATE_OWNED;
 }
 
-BOOLEAN STDCALL
+VOID
+NTAPI
+InbvSetDisplayOwnership(IN BOOLEAN DisplayOwned)
+{
+    /* Set the new display state */
+    InbvDisplayState = DisplayOwned ? INBV_DISPLAY_STATE_OWNED:
+                                      INBV_DISPLAY_STATE_LOST;
+}
+
+BOOLEAN
+NTAPI
 InbvCheckDisplayOwnership(VOID)
 {
-   return InbvDisplayState != 2;
+    /* Return if we own it or not */
+    return InbvDisplayState != INBV_DISPLAY_STATE_LOST;
 }
 
-BOOLEAN STDCALL
+INBV_DISPLAY_STATE
+NTAPI
+InbvGetDisplayState(VOID)
+{
+    /* Return the actual state */
+    return InbvDisplayState;
+}
+
+BOOLEAN
+NTAPI
 InbvDisplayString(IN PCHAR String)
 {
-   if (BootVidDriverInstalled && InbvDisplayState == 0)
-   {
-      InbvAcquireLock();
-      VidDisplayString(String);
-      InbvReleaseLock();
+    /* Make sure we own the display */
+    if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)
+    {
+        /* If we're not allowed, return success anyway */
+        if (!InbvDisplayDebugStrings) return TRUE;
 
-      /* Call Headless (We don't support headless for now) 
-      HeadlessDispatch(DISPLAY_STRING);
-      */
+        /* Check if a filter is installed */
+        if (InbvDisplayFilter) InbvDisplayFilter(&String);
 
-      return TRUE;
-   }
+        /* Acquire the lock */
+        InbvAcquireLock();
 
-   return FALSE;
+        /* Make sure we're installed and display the string */
+        if (InbvBootDriverInstalled) VidDisplayString(String);
+
+        /* Call Headless (We don't support headless for now)
+        HeadlessDispatch(DISPLAY_STRING); */
+
+        /* Release the lock */
+        InbvReleaseLock();
+
+        /* All done */
+        return TRUE;
+    }
+
+    /* We don't own it, fail */
+    return FALSE;
 }
 
-
-BOOLEAN STDCALL
+BOOLEAN
+NTAPI
 InbvEnableDisplayString(IN BOOLEAN Enable)
 {
-   return FALSE;
+    BOOLEAN OldSetting;
+
+    /* Get the old setting */
+    OldSetting = InbvDisplayDebugStrings;
+
+    /* Update it */
+    InbvDisplayDebugStrings = Enable;
+
+    /* Return the old setting */
+    return OldSetting;
 }
 
-
-VOID STDCALL
-InbvInstallDisplayStringFilter(IN PVOID Unknown)
+VOID
+NTAPI
+InbvInstallDisplayStringFilter(IN INBV_DISPLAY_STRING_FILTER Filter)
 {
+    /* Save the filter */
+    InbvDisplayFilter = Filter;
 }
 
-
-BOOLEAN STDCALL
+BOOLEAN
+NTAPI
 InbvIsBootDriverInstalled(VOID)
 {
-   return BootVidDriverInstalled;
+    /* Return driver state */
+    return InbvBootDriverInstalled;
 }
 
-
-VOID STDCALL
-InbvNotifyDisplayOwnershipLost(
-   IN PVOID Callback)
+VOID
+NTAPI
+InbvNotifyDisplayOwnershipLost(IN INBV_RESET_DISPLAY_PARAMETERS Callback)
 {
-   if (BootVidDriverInstalled)
-   {
-      InbvAcquireLock();
-      if (InbvDisplayState != 2)
-         VidCleanUp();
-      else if (InbvResetDisplayParameters != NULL)
-         InbvResetDisplayParameters(80, 50);
-      InbvResetDisplayParameters = Callback;
-      InbvDisplayState = 2;
-      InbvReleaseLock();
-   }
-   else
-   {
-      InbvResetDisplayParameters = Callback;
-      InbvDisplayState = 2;
-   }
+    /* Check if we're installed */
+    if (InbvBootDriverInstalled)
+    {
+        /* Acquire the lock and cleanup if we own the screen */
+        InbvAcquireLock();
+        if (InbvDisplayState != INBV_DISPLAY_STATE_LOST) VidCleanUp();
+
+        /* Set the reset callback and display state */
+        InbvResetDisplayParameters = Callback;
+        InbvDisplayState = INBV_DISPLAY_STATE_LOST;
+
+        /* Release the lock */
+        InbvReleaseLock();
+    }
+    else
+    {
+        /* Set the reset callback and display state */
+        InbvResetDisplayParameters = Callback;
+        InbvDisplayState = INBV_DISPLAY_STATE_LOST;
+    }
 }
 
-
-BOOLEAN STDCALL
+BOOLEAN
+NTAPI
 InbvResetDisplay(VOID)
 {
-   if (BootVidDriverInstalled && InbvDisplayState == 0)
-   {
-      VidResetDisplay();
-      return TRUE;
-   }
-   return FALSE;
+    /* Check if we're installed and we own it */
+    if ((InbvBootDriverInstalled) &&
+        (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
+    {
+        /* Do the reset */
+        VidResetDisplay(TRUE);
+        return TRUE;
+    }
+
+    /* Nothing to reset */
+    return FALSE;
 }
 
-
-VOID STDCALL
-InbvSetScrollRegion(
-   IN ULONG Left,
-   IN ULONG Top,
-   IN ULONG Width,
-   IN ULONG Height)
+VOID
+NTAPI
+InbvSetScrollRegion(IN ULONG Left,
+                    IN ULONG Top,
+                    IN ULONG Width,
+                    IN ULONG Height)
 {
+    /* Just call bootvid */
+    VidSetScrollRegion(Left, Top, Width, Height);
 }
 
-
-VOID STDCALL
-InbvSetTextColor(
-   IN ULONG Color)
+VOID
+NTAPI
+InbvSetTextColor(IN ULONG Color)
 {
+    /* FIXME: Headless */
+
+    /* Update the text color */
+    VidSetTextColor(Color);
 }
 
-
-VOID STDCALL
-InbvSolidColorFill(
-   IN ULONG Left,
-   IN ULONG Top,
-   IN ULONG Width,
-   IN ULONG Height,
-   IN ULONG Color)
+VOID
+NTAPI
+InbvSolidColorFill(IN ULONG Left,
+                   IN ULONG Top,
+                   IN ULONG Width,
+                   IN ULONG Height,
+                   IN ULONG Color)
 {
-   if (BootVidDriverInstalled && InbvDisplayState == 0)
-   {
-      VidSolidColorFill(Left, Top, Width, Height, Color);
-   }
+    /* Make sure we own it */
+    if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)
+    {
+        /* Acquire the lock */
+        InbvAcquireLock();
+
+        /* Check if we're installed */
+        if (InbvBootDriverInstalled)
+        {
+            /* Call bootvid */
+            VidSolidColorFill(Left, Top, Width, Height, Color);
+        }
+
+        /* FIXME: Headless */
+
+        /* Release the lock */
+        InbvReleaseLock();
+    }
 }
 
-
-BOOLEAN NTAPI
-BootVidResetDisplayParameters(ULONG SizeX, ULONG SizeY)
+VOID
+NTAPI
+InbvUpdateProgressBar(IN ULONG Progress)
 {
-   BootVidFinalizeBootLogo();
-   return TRUE;
+    ULONG FillCount, Left = 0;
+
+    /* Make sure the progress bar is enabled, that we own and are installed */
+    if ((ShowProgressBar) &&
+        (InbvBootDriverInstalled) &&
+        (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
+    {
+        /* Calculate the fill count */
+        FillCount = InbvProgressState.Bias * Progress + InbvProgressState.Floor;
+        FillCount *= 18;
+        FillCount /= 10000;
+
+        /* Start fill loop */
+        while (FillCount)
+        {
+            /* Acquire the lock */
+            InbvAcquireLock();
+
+            /* Fill the progress bar */
+            VidSolidColorFill(Left + ProgressBarLeft,
+                              ProgressBarTop,
+                              Left + ProgressBarLeft + 7,
+                              ProgressBarTop + 7,
+                              11);
+
+            /* Release the lock */
+            InbvReleaseLock();
+
+            /* Update the X position */
+            Left += 9;
+            FillCount--;
+        }
+    }
 }
 
-
-VOID NTAPI
-InbvDisplayInitialize2(BOOLEAN NoGuiBoot)
+VOID
+NTAPI
+InbvBufferToScreenBlt(IN PUCHAR Buffer,
+                      IN ULONG X,
+                      IN ULONG Y,
+                      IN ULONG Width,
+                      IN ULONG Height,
+                      IN ULONG Delta)
 {
-   VidInitialize(!NoGuiBoot);
+    /* Check if we're installed and we own it */
+    if ((InbvBootDriverInstalled) &&
+        (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
+    {
+        /* Do the blit */
+        VidBufferToScreenBlt(Buffer, X, Y, Width, Height, Delta);
+    }
 }
 
-
-VOID NTAPI
-InbvDisplayBootLogo(IN BOOLEAN SosEnabled)
+VOID
+NTAPI
+InbvBitBlt(IN PUCHAR Buffer,
+           IN ULONG X,
+           IN ULONG Y)
 {
-   InbvEnableBootDriver(TRUE);
+    /* Check if we're installed and we own it */
+    if ((InbvBootDriverInstalled) &&
+        (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
+    {
+        /* Acquire the lock */
+        InbvAcquireLock();
 
-   if (BootVidDriverInstalled)
-   {
-      InbvResetDisplayParameters = BootVidResetDisplayParameters;
-      if (!SosEnabled) BootVidDisplayBootLogo(BootVidBase);
-   }
+        /* Do the blit */
+        VidBitBlt(Buffer, X, Y);
+
+        /* Release the lock */
+        InbvReleaseLock();
+    }
 }
 
-
-VOID NTAPI
-InbvUpdateProgressBar(
-   IN ULONG Progress)
+VOID
+NTAPI
+InbvScreenToBufferBlt(IN PUCHAR Buffer,
+                      IN ULONG X,
+                      IN ULONG Y,
+                      IN ULONG Width,
+                      IN ULONG Height,
+                      IN ULONG Delta)
 {
-   if (BootVidDriverInstalled)
-   {
-      BootVidUpdateProgress(Progress);
-   }
+    /* Check if we're installed and we own it */
+    if ((InbvBootDriverInstalled) &&
+        (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
+    {
+        /* Do the blit */
+        VidScreenToBufferBlt(Buffer, X, Y, Width, Height, Delta);
+    }
 }
 
-
-VOID NTAPI
-InbvFinalizeBootLogo(VOID)
+VOID
+NTAPI
+InbvSetProgressBarCoordinates(IN ULONG Left,
+                              IN ULONG Top)
 {
-   if (BootVidDriverInstalled)
-   {
-      /* Notify the hal we have released the display. */
-      /* InbvReleaseDisplayOwnership(); */
-      BootVidFinalizeBootLogo();
-      InbvEnableBootDriver(FALSE);
-   }
+    /* Update the coordinates */
+    ProgressBarLeft = Left;
+    ProgressBarTop = Top;
+
+    /* Enable the progress bar */
+    ShowProgressBar = TRUE;
 }
 
-
-NTSTATUS STDCALL
-NtDisplayString(
-   IN PUNICODE_STRING DisplayString)
+VOID
+NTAPI
+InbvSetProgressBarSubset(IN ULONG Floor,
+                         IN ULONG Ceiling)
 {
-   OEM_STRING OemString;
+    /* Sanity checks */
+    ASSERT(Floor < Ceiling);
+    ASSERT(Ceiling <= 100);
 
-   RtlUnicodeStringToOemString(&OemString, DisplayString, TRUE);
-   InbvDisplayString(OemString.Buffer);
-   RtlFreeOemString(&OemString);
+    /* Update the progress bar state */
+    InbvProgressState.Floor = Floor * 100;
+    InbvProgressState.Ceiling = Ceiling * 100;
+    InbvProgressState.Bias = (Ceiling * 100) - Floor;
+}
 
-   return STATUS_SUCCESS;
+PUCHAR
+NTAPI
+InbvGetResourceAddress(IN ULONG ResourceNumber)
+{
+    /* Validate the resource number */
+    if (ResourceNumber > ResourceCount) return NULL;
+
+    /* Return the address */
+    return ResourceList[ResourceNumber--];
+}
+
+NTSTATUS
+NTAPI
+NtDisplayString(IN PUNICODE_STRING DisplayString)
+{
+    OEM_STRING OemString;
+
+    /* Convert the string to OEM and display it */
+    RtlUnicodeStringToOemString(&OemString, DisplayString, TRUE);
+    InbvDisplayString(OemString.Buffer);
+    RtlFreeOemString(&OemString);
+
+    /* Return success */
+    return STATUS_SUCCESS;
 }
