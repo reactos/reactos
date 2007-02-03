@@ -14,6 +14,9 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#undef KeAcquireSpinLock
+#define KeAcquireSpinLock(a,b) { _disable(); *(b) = KfAcquireSpinLock(a); }
+
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializeMdlImplementation)
 #endif
@@ -956,6 +959,7 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 
 
 /* EOF */
+
 
 
 

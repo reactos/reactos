@@ -14,6 +14,9 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#undef KeAcquireSpinLock
+#define KeAcquireSpinLock(a,b) { _disable(); *(b) = KfAcquireSpinLock(a); }
+
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializePageOp)
 #endif
@@ -266,6 +269,7 @@ MmInitializePageOp(VOID)
                                     TAG_MM_PAGEOP,
                                     50);
 }
+
 
 
 
