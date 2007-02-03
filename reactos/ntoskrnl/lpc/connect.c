@@ -299,7 +299,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
 
         /* Reference and remember the process */
         ClientPort->MappingProcess = PsGetCurrentProcess();
-        ObReferenceObject(ClientPort->MappingProcess);
+        //ObReferenceObject(ClientPort->MappingProcess);
     }
     else
     {

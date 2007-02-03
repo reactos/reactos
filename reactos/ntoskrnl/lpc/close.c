@@ -374,7 +374,7 @@ LpcpDeletePort(IN PVOID ObjectBody)
         }
 
         /* Dereference the mapping process */
-        ObDereferenceObject(Port->MappingProcess);
+        //ObDereferenceObject(Port->MappingProcess);
         Port->MappingProcess = NULL;
     }
 
