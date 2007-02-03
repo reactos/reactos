@@ -12,6 +12,9 @@
  *
  *    01-Jul-2005 (Brandon Turner) <turnerb7@msu.edu>)
  *        Added ConPrintfPaging and ConOutPrintfPaging
+ *
+ *    02-Feb-2007 (Paolo Devoti) <devotip at gmail.com>)
+ *        Fixed ConPrintfPaging
  */
  
  
@@ -252,8 +255,8 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
   /* the number of chars in a roow */
 	int ScreenCol = 0;  
  
-  /* chars since end of line */
-	int CharEL = 0; 
+  /* chars since start of line */
+	int CharSL = 0; 
  
 	int i = 0;
  
@@ -261,67 +264,54 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 		LineCount = 0;
  
   /* rest LineCount and return if no string have been given */
-        if (szFormat == NULL)
-                return 0;
+    if (szFormat == NULL)
+            return 0;
  
  
 	//get the size of the visual screen that can be printed too
 	if (!GetConsoleScreenBufferInfo(hConsole, &csbi))
-        {
-                // we assuming its a file handle
-                ConPrintf(szFormat, arg_ptr, nStdHandle);
-                return 0;
-        }
+    {
+        // we assuming its a file handle
+        ConPrintf(szFormat, arg_ptr, nStdHandle);
+        return 0;
+    }
 	//subtract 2 to account for "press any key..." and for the blank line at the end of PagePrompt()
 	ScreenLines = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
 	ScreenCol = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
  
 	//make sure they didnt make the screen to small 
 	if(ScreenLines<4)
-        {
-	        ConPrintf(szFormat, arg_ptr, nStdHandle);
-                return 0;
-        }
+    {
+	    ConPrintf(szFormat, arg_ptr, nStdHandle);
+            return 0;
+    }
  
 	len = _vstprintf (szOut, szFormat, arg_ptr);
 	pBuf = szOut;
  
 	for(i = 0; i < len; i++)
-	{ 
- 
-                if(pBuf[i] == _T('\n'))
-		{			        
-			LineCount++; 
-                        CharEL=0;
-		}      
-                else
-                {      
-                        CharEL++;           
-                        if (CharEL>=ScreenCol)
-                        {        
-                                if (i+1<len)
-                                {
-                                        if(pBuf[i+1] != _T('\n')) LineCount++;          
-                                }
-                                CharEL=0;
-                        }
-                }
- 
-                /* FIXME : write more that one char at time */
-                WriteFile (GetStdHandle (nStdHandle),&pBuf[i],sizeof(CHAR),&dwWritten,NULL);
-	        if(LineCount >= ScreenLines)
-	        {
-                        if(_tcsnicmp(&pBuf[i], _T("\n"), 2)!=0)
-                        WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(CHAR),&dwWritten,NULL); 
- 
-		        if(PagePrompt() != PROMPT_YES)
-		        {
-			        return 1;
-		        }
-		        //reset the number of lines being printed         
-		        LineCount = 0;
-                        CharEL=0;
-	        }
+	{
+		// search 'end of string' '\n' or 'end of screen line'
+		for(; (i < len) && (pBuf[i] != _T('\n') && (CharSL<ScreenCol)) ; i++)
+			CharSL++;
+
+        WriteFile (GetStdHandle (nStdHandle),&pBuf[i-CharSL],sizeof(CHAR)*(CharSL+1),&dwWritten,NULL);
+		LineCount++; 
+        CharSL=0;
+
+	    if(LineCount >= ScreenLines)
+	    {
+            if(_tcsnicmp(&pBuf[i], _T("\n"), 2)!=0)
+				WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(CHAR),&dwWritten,NULL); 
+
+		    if(PagePrompt() != PROMPT_YES)
+		    {
+			    return 1;
+		    }
+		    //reset the number of lines being printed         
+		    LineCount = 0;
+            CharSL=0;
+	    }
  
 	}
  
