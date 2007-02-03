@@ -14,8 +14,7 @@
 //
 // Global:
 //  - TODO: Complete the list of bufxies
-//  - Fix hang/slowdown during boot -> New scheduler
-//      - Fix freelist.c errors with new scheduler enabled.
+//  - Fix DPCs interrupting code at DISPATCH_LEVEL
 //  - Fix process reference count leak.
 //  - Fix atapi.sys or serial.sys loading one more time at each boot.
 //  - Fix LiveCD.
