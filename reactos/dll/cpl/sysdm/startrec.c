@@ -47,7 +47,7 @@ StartRecDlgProc(HWND hwndDlg,
 		{
 			/* get Path to freeldr.ini or boot.ini */
 			szSystemDrive = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_PATH);
-			if (szSystemDrive != NULL)
+			if (szSystemDrive != NULL && szSystemDrive != NULL)
 			{
 				szSystemDrive = _tgetenv(_T("SystemDrive"));
 				if (m_szFreeldrIni != NULL)
