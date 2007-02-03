@@ -127,6 +127,11 @@
  *
  *    1-Jul-2004 (Brandon Turner <turnerb7@msu.edu>)
  *        Added /p back in using ConOutPrintfPaging
+ *
+ *    3-feb-2007 (Paolo Devoti devotip at gmail)
+ *        Removed variables formerly in use to handle pagination
+ *		  Pagination belongs to ConOutPrintfPaging
+ *		  Removed already commented out code of old pagination
  */
 
 #include <precomp.h>
@@ -802,54 +807,12 @@ DirParsePathspec (LPTSTR szPathspec, LPTSTR szPath, LPTSTR szFilespec)
 
 
 /*
- * incline
- *
- * increment our line if paginating, display message at end of screen
- */
-#if 0
-static BOOL
-IncLine (LPINT pLine, LPDIRSWITCHFLAGS lpFlags)
-{
-	BOOL bError;
-	CONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo;
-	LONG WindowHeight;
-
-	bError = GetConsoleScreenBufferInfo(hConsole, &lpConsoleScreenBufferInfo);
-
-	WindowHeight = lpConsoleScreenBufferInfo.srWindow.Bottom - lpConsoleScreenBufferInfo.srWindow.Top;
-
-	/* That prevents bad behiour if WindowHeight could not be calculated */
-	if (!WindowHeight)
-	{
-		 WindowHeight= 1000000;
-	}
-
-	if (!(lpFlags->bPause))
-		return FALSE;
-
-	(*pLine)++;
-
-	/*
-	 * Because I don't know if WindowsHeight work in all cases,
-	 * perhaps then maxy is the right value
-	 */
-	if (*pLine >= (int)maxy - 2 || *pLine >= WindowHeight)
-	{
-		*pLine = 0;
-		return (PagePrompt () == PROMPT_BREAK);
-	}
-
-	return FALSE;
-}
-#endif
-
-/*
  * PrintDirectoryHeader
  *
  * print the header for the dir command
  */
 static BOOL
-PrintDirectoryHeader(LPTSTR szPath, LPINT pLine, LPDIRSWITCHFLAGS lpFlags)
+PrintDirectoryHeader(LPTSTR szPath, LPDIRSWITCHFLAGS lpFlags)
 {
   TCHAR szMsg[RC_STRING_MAX_SIZE];
   TCHAR szRootName[MAX_PATH];
@@ -1114,7 +1077,6 @@ PrintSummary(LPTSTR szPath,
 	     ULONG ulFiles,
 	     ULONG ulDirs,
 	     ULARGE_INTEGER u64Bytes,
-	     LPINT pLine,
 	     LPDIRSWITCHFLAGS lpFlags)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
@@ -1768,7 +1730,6 @@ QsortFiles(LPWIN32_FIND_DATA ptrArray[],	/* [IN/OUT] The array with file info po
 static INT
 DirList(LPTSTR szPath,			/* [IN] The path that dir starts */
 		LPTSTR szFilespec,		/* [IN] The type of file that we are looking for */
-		LPINT pLine,			/* FIXME: Maybe used for paginating */
 		LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags of the listing */
 {
 	HANDLE hSearch;							/* The handle of the search */
@@ -1950,7 +1911,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 					_tcscpy(szFullFileSpec, szFullPath);
 					_tcscat(szFullFileSpec, wfdFileInfo.cFileName);
 					/* We do the same for tha folder */
-					if (DirList(szFullFileSpec, szFilespec, pLine,lpFlags) != 0)
+					if (DirList(szFullFileSpec, szFilespec, lpFlags) != 0)
 					{
 						return 1;
 					}
@@ -1988,7 +1949,6 @@ CommandDir(LPTSTR first, LPTSTR rest)
 	TCHAR	szFilespec[MAX_PATH];
 	LPTSTR*	params;
 	INT		entries = 0;
-	INT		nLine = 0;
 	UINT	loop = 0;
 	DIRSWITCHFLAGS stFlags;
 
@@ -2078,7 +2038,7 @@ CommandDir(LPTSTR first, LPTSTR rest)
 
 		/* Print the drive header if the drive changed */
 		if(cDrive != szPath[0] && !stFlags.bBareFormat) {
-			if (!PrintDirectoryHeader (szPath, &nLine, &stFlags)) {
+			if (!PrintDirectoryHeader (szPath, &stFlags)) {
 				nErrorLevel = 1;
 				return 1;
 			}
@@ -2088,7 +2048,7 @@ CommandDir(LPTSTR first, LPTSTR rest)
 		
 
 		/* do the actual dir */
-		if (DirList (szPath, szFilespec, &nLine, &stFlags))
+		if (DirList (szPath, szFilespec, &stFlags))
 		{
 			nErrorLevel = 1;
 			return 1;
@@ -2100,7 +2060,6 @@ CommandDir(LPTSTR first, LPTSTR rest)
 		recurse_file_cnt,
 		recurse_dir_cnt,
 		recurse_bytes,
-		&nLine,
 		&stFlags);
 	
 	return 0;
