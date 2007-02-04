@@ -47,10 +47,10 @@ StartRecDlgProc(HWND hwndDlg,
 		{
 			/* get Path to freeldr.ini or boot.ini */
 			szSystemDrive = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_PATH);
-			if (szSystemDrive != NULL && szSystemDrive != NULL)
+			if (szSystemDrive != NULL)
 			{
 				szSystemDrive = _tgetenv(_T("SystemDrive"));
-				if (m_szFreeldrIni != NULL)
+				if (m_szFreeldrIni != NULL && szSystemDrive != NULL)
 				{						
 					_tcscpy(m_szFreeldrIni, szSystemDrive);
 					_tcscat(m_szFreeldrIni, _T("\\freeldr.ini"));
