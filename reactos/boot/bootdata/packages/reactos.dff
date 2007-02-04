@@ -241,9 +241,8 @@ dll\win32\wsock32\wsock32.dll                       1
 
 ; Drivers
 drivers\base\kdcom\kdcom.dll                        2
-drivers\base\bootvid\bootvid.dll                    2
+drivers\base\bootvid\bootvid.dll                    1
 drivers\base\beep\beep.sys                          2
-drivers\base\bootvid\bootvid.sys                    2
 drivers\base\null\null.sys                          2
 drivers\base\serial\serial.sys                      2
 
@@ -284,6 +283,8 @@ drivers\video\displays\framebuf\framebuf.dll        1
 drivers\video\miniport\vga\vgamp.sys                2
 drivers\video\miniport\vbe\vbemp.sys                2
 drivers\video\videoprt\videoprt.sys                 2
+
+drivers\wmi\wmilib.sys                              2
 
 ; Media
 media\fonts\DejaVuSans.ttf                          3

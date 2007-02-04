@@ -148,9 +148,19 @@ typedef ULONG WAIT_TYPE;
 #define WaitAny 1
 typedef HANDLE TRACEHANDLE;
 typedef PVOID PWMILIB_CONTEXT;
-typedef PVOID PSYSCTL_IRP_DISPOSITION;
 typedef ULONG LOGICAL;
 #endif
+
+/*
+** WmiLib specific structure
+*/
+typedef enum
+{
+    IrpProcessed,    // Irp was processed and possibly completed
+    IrpNotCompleted, // Irp was process and NOT completed
+    IrpNotWmi,       // Irp is not a WMI irp
+    IrpForward       // Irp is wmi irp, but targeted at another device object
+} SYSCTL_IRP_DISPOSITION, *PSYSCTL_IRP_DISPOSITION;
 
 /*
 ** Routines specific to this DDK
