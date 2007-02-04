@@ -3,7 +3,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include "bootvid\bootvid.h"
+#include "bootvid/bootvid.h"
 
 /* GLOBALS *******************************************************************/
 
@@ -239,7 +239,7 @@ InbvDisplayString(IN PCHAR String)
         InbvAcquireLock();
 
         /* Make sure we're installed and display the string */
-        if (InbvBootDriverInstalled) VidDisplayString(String);
+        if (InbvBootDriverInstalled) VidDisplayString((PUCHAR) String);
 
         /* Call Headless (We don't support headless for now)
         HeadlessDispatch(DISPLAY_STRING); */
