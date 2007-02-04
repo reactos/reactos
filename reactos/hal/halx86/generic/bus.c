@@ -93,6 +93,28 @@ HalpGetSystemInterruptVector(IN ULONG BusNumber,
     return Vector;
 }
 
+BOOLEAN
+NTAPI
+HalpFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
+                              IN OUT PULONG AddressSpace,
+                              OUT PPHYSICAL_ADDRESS TranslatedAddress,
+                              IN OUT PULONG_PTR Context,
+                              IN BOOLEAN NextBus)
+{
+    /* Make sure we have a context */
+    if (!Context) return FALSE;
+
+    /* If we have data in the context, then this shouldn't be a new lookup */
+    if ((*Context) && (NextBus == TRUE)) return FALSE;
+
+    /* Return bus data */
+    TranslatedAddress->QuadPart = BusAddress.QuadPart;
+
+    /* Set context value and return success */
+    *Context = 1;
+    return TRUE;
+}
+
 VOID
 NTAPI
 HalpInitNonBusHandler(VOID)
@@ -100,7 +122,7 @@ HalpInitNonBusHandler(VOID)
     /* These should be written by the PCI driver later, but we give defaults */
     HalPciTranslateBusAddress = HalpTranslateBusAddress;
     HalPciAssignSlotResources = HalpAssignSlotResources;
-    //HalFindBusAddressTranslation = HalpFindBusAddressTranslation;
+    HalFindBusAddressTranslation = HalpFindBusAddressTranslation;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

@@ -1018,7 +1018,7 @@ IopInitializeBootDrivers(VOID)
     }
 
     /* Loop modules again */
-    NextEntry = ListHead->Flink->Flink->Flink;
+    NextEntry = ListHead->Flink->Flink->Flink->Flink;
     while (ListHead != NextEntry)
     {
         /* Get the entry */

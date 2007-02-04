@@ -423,7 +423,7 @@ TryAgain:
                 //
                 // Reset the display
                 //
-                HalResetDisplay();
+                //HalResetDisplay();
                 curr_x = 0;
                 curr_y = 0;
 

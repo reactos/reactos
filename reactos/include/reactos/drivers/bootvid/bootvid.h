@@ -40,7 +40,7 @@ VidBufferToScreenBlt(IN PUCHAR Buffer,
                      IN ULONG Width,
                      IN ULONG Height,
                      IN ULONG Delta);
-                     
+
 VOID
 NTAPI
 VidDisplayString(PUCHAR String);
@@ -50,7 +50,7 @@ NTAPI
 VidBitBlt(PUCHAR Buffer,
           ULONG Left,
           ULONG Top);
-          
+
 VOID
 NTAPI
 VidScreenToBufferBlt(PUCHAR Buffer,
@@ -59,7 +59,7 @@ VidScreenToBufferBlt(PUCHAR Buffer,
                      ULONG Width,
                      ULONG Height,
                      ULONG Delta);
-                     
+
 VOID
 NTAPI
 VidSolidColorFill(IN ULONG Left,
@@ -68,5 +68,4 @@ VidSolidColorFill(IN ULONG Left,
                   IN ULONG Bottom,
                   IN UCHAR Color);
 
-                     
 #endif

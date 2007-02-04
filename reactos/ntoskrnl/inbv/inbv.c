@@ -104,8 +104,7 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
 
     /* Initialize the video */
-    InbvBootDriverInstalled = VidInitialize(CustomLogo);
-    DPRINT1("Init: %lx\n", InbvBootDriverInstalled);
+    InbvBootDriverInstalled = VidInitialize(!CustomLogo);
     if (InbvBootDriverInstalled)
     {
         /* Find bitmap resources in the kernel */
@@ -239,10 +238,8 @@ InbvDisplayString(IN PCHAR String)
         /* Acquire the lock */
         InbvAcquireLock();
 
-#if 0
         /* Make sure we're installed and display the string */
         if (InbvBootDriverInstalled) VidDisplayString(String);
-#endif
 
         /* Call Headless (We don't support headless for now)
         HeadlessDispatch(DISPLAY_STRING); */
