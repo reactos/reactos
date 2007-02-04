@@ -43,4 +43,4 @@ extern ULONG curr_x;
 extern ULONG curr_y;
 extern ULONG_PTR VgaRegisterBase;
 extern ULONG_PTR VgaBase;
-extern CHAR FontData[256 * 13];
+extern UCHAR FontData[256 * 13];
