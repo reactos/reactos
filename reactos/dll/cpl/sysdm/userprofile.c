@@ -25,12 +25,6 @@ UserProfileDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-//            HWND hLink = GetDlgItem(hwndDlg, IDC_USERACCOUNT_LINK);
-
-//            TextToLink(hLink, 
-//                       _T("rundll32.exe"),
-//                       _T("shell32.dll, Control_RunDLL nusrmgr.cpl"));
-
             MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
         }
         break;
