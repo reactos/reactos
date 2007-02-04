@@ -1,7 +1,7 @@
 #include "ntddk.h"
-#include "arc\arc.h"
+#include "arc/arc.h"
 #include "halfuncs.h"
-#include "drivers\bootvid\bootvid.h"
+#include "drivers/bootvid/bootvid.h"
 
 //
 // Command Stream Definitions
