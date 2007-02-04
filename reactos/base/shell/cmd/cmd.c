@@ -187,6 +187,9 @@ ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len, BOOL bPutSeperato
 	INT c = 0;
 	INT n = 0;
 
+	if (len <= 1)
+		return 0;
+
 	if (num.QuadPart == 0)
 	{
 		des[0] = _T('0');
@@ -203,6 +206,8 @@ ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len, BOOL bPutSeperato
                         temp[30 - c++] = (TCHAR)(num.QuadPart % 10) + _T('0');
 			num.QuadPart /= 10;
 		}
+        if (c>len)
+			c=len;
 
 		for (n = 0; n <= c; n++)
 			des[n] = temp[31 - c + n];
