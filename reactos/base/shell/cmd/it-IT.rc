@@ -28,7 +28,7 @@ Per visualizzare tutti gli alias:\n\
 Per attivarne uno nuovo o sostituire uno esistente:\n\
   ALIAS da=dir a:\n\n\
 Per rimuovere un alias:\n\
-  ALIAS da="
+  ALIAS da=\n"
 
 STRING_BEEP_HELP, "Segnale acustico.\n\nBEEP\n"
 
@@ -107,7 +107,7 @@ dec  esa  name       dec  esa  nome\n\
 
 STRING_COPY_HELP1,  "Sovrascrivi %s (Si/No/Tutti)? "
 
-STRING_COPY_HELP2, "Copia uno o piu' file in un'altra destinazione.\n\n\
+STRING_COPY_HELP2, "Copia uno o più file in un'altra destinazione.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] sorgente [/A|/B]\n\
      [+ sorgente [/A|/B] [+ ...]] [destinazione [/A|/B]]\n\n\
   sorgente     Inica il file o i file da copiare.\n\
@@ -134,7 +134,7 @@ DATE [/T][data]\n\n\
 Scrivi  DATE senza parametri per visualizzare la data attuale e\n\
 chiedere quella nuova. Premi ENTER per mantenerla inalterata.\n"
 				
-STRING_DEL_HELP1,  "Cancella uno o piu' file.\n\n\
+STRING_DEL_HELP1,  "Cancella uno o più file.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\
 ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\n\
@@ -155,9 +155,9 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\n\
         H     nascosto\n\
         -     prefisso con il significato di non\n"
 
-STRING_DEL_HELP2, "All files in the directory will be deleted!\nAre you sure (Y/N)?"
-STRING_DEL_HELP3, "    %lu file deleted\n"
-STRING_DEL_HELP4, "    %lu files deleted\n"
+STRING_DEL_HELP2, "Tutti i file nella cartella saranno cancellati!\nSei sicuro (S/N)?"
+STRING_DEL_HELP3, "    %lu file cancellato\n"
+STRING_DEL_HELP4, "    %lu file cancellati\n"
 
 STRING_DELAY_HELP, "aspetta per il tempo indicato in secondi o millisecondi\n\
 DELAY [/m]n\n\n\
@@ -179,8 +179,8 @@ STRING_DIR_HELP1, "DIR [disco:][percorso][nomefilen] [/A[[:]attributi]] [/B] [/C
   /L          Usa minuscole.\n\
   /N          Nuovo formato con i nomi dei file sulla estrema destra.\n\
   /O          Elenca i file ordinati.\n\
-  sortorder    N  Per nome (alfabetico)    S  Dimensione (per primo il piu' piccolo)\n\
-               E  Estensione (alfabetico)  D  By date/time (per primo il piu' vecchio)\n\
+  sortorder    N  Per nome (alfabetico)    S  Dimensione (per primo il più piccolo)\n\
+               E  Estensione (alfabetico)  D  By date/time (per primo il più vecchio)\n\
                G  Le cartelle per prime    -  Prefisso per invertire l'ordine\n\
   /P          Pasa dopo ogni schermata piena.\n\
   /Q          Visualizza il proprietario del file.\n\
@@ -244,7 +244,7 @@ STRING_EXIT_HELP, "Esce dall'interprete dei comandi.\n\n\
 STRING_FOR_HELP1, "Esegue un comand specifico per ogni file indicato\n\n\
 FOR %variabile IN (listafile) DO comando [parametri]\n\n\
   %variabile Indica un parametro sostituibile.\n\
-  (listafile)Indica un insieme di uno o piu' file. Si possono usare i\
+  (listafile)Indica un insieme di uno o più file. Si possono usare i\
              caratteri jolly.\n\
   comando    Indica un comando da eseguire per ogni file.\n\
   parametri  Indica i parametri o le selezioni per il comando.\n\n\
@@ -309,7 +309,7 @@ STRING_MISC_HELP1, "Premi un tasto per continuare...\n"
 STRING_MOVE_HELP1, "Sovrascrivi %s (Si/No/Tutti)? "
 
 STRING_MOVE_HELP2, "Sposta i file o cambia il nome a file e cartelle.\n\n\
-Per spostare uno o piu' file:\n\
+Per spostare uno o più file:\n\
 MOVE [/N][disco:][percorso]nomefile1[,...] destinazione\n\n\
 To rename a directory:\n\
 MOVE [/N][disco:][percorso]]cartella1 cartella2\n\n\
@@ -421,7 +421,7 @@ stringa      Indica il titolo.\n"
 STRING_TIME_HELP1, "Visualizza o assegna l'ora di sistema.\n\n\
 TIME [/T][ora]\n\n\
   /T    Visualizza solo\n\n\
-Se TIME è usato senza parametri viene visualizzata l'ra attuale e richiesta\n\
+Se TIME è usato senza parametri viene visualizzata l'ora attuale e richiesta\n\
 quella nuova. Premere INVIO per non modificarla.\n"
 
 STRING_TIME_HELP2, "Inserisci la nuova ora: "
@@ -526,12 +526,12 @@ CHOICE   Aspetta che l'utente scelga una tra le opzioni disponibili.\n\
 CLS      Cancella lo schermo.\n\
 CMD      Esegue un altro interprete dei comandi.\n\
 COLOR    Imposta i colori della console.\n\
-COPY     Copia uno o piu' file in un'altra destinazione.\n\
+COPY     Copia uno o più file in un'altra destinazione.\n\
 DATE     Visualizza o modifica la data.\n\
-DELETE   Cancella uno o piu' file.\n\
+DELETE   Cancella uno o più file.\n\
 DIR      Visualizza un elenco di file e sottocartelle in una cartella.\n\
 ECHO     Visualizza messaggi, o abilita e disabilita la visualizzazione dei comandi.\n\
-ERASE    Cancella uno o piu' file.\n\
+ERASE    Cancella uno o più file.\n\
 EXIT     Esce dall'interprete dei comandi.\n\
 FOR      Esegue un comando per ognuno dei file indicati.\n\
 FREE     Spazio libero.\n\
@@ -542,7 +542,7 @@ IF       Esegue elaborazioni condizionali in un batch.\n\
 LABEL    Crea, modifica, o cancella l'etichetta di un disco.\n\
 MD       Crea una cartella.\n\
 MKDIR    Crea una cartella.\n\
-MOVE     Muove uno o piu' file da una cartella a un'altra\n\
+MOVE     Muove uno o più file da una cartella a un'altra\n\
 PATH     Visualizza o imposta i percorsi di ricerca per gli eseguibili.\n\
 PAUSE    Ferma l'esecuzione di un batch e visualizza un messaggio.\n\
 POPD     Ripristina il valore precedente della cartella corrente salvato da\n\
@@ -551,8 +551,8 @@ PROMPT   Cambia il messaggio di pronto per i comandi.\n\
 PUSHD    Salva la cartella corrente e poi la cambia.\n\
 RD       Rimuove una cartella.\n\
 REM      Commenti in un batch.\n\
-REN      Rinomina uno piu' file.\n\
-RENAME   Rinomina uno piu' file.\n\
+REN      Rinomina uno più file.\n\
+RENAME   Rinomina uno più file.\n\
 RMDIR    Rimuove una cartella.\n\
 SCREEN   Sposta il cursore e visualizza un testo.\n\
 SET      Visualizza, modifica, o cancella le variabili di ambiente.\n\
