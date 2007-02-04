@@ -239,8 +239,10 @@ InbvDisplayString(IN PCHAR String)
         /* Acquire the lock */
         InbvAcquireLock();
 
+#if 0
         /* Make sure we're installed and display the string */
         if (InbvBootDriverInstalled) VidDisplayString(String);
+#endif
 
         /* Call Headless (We don't support headless for now)
         HeadlessDispatch(DISPLAY_STRING); */
