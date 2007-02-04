@@ -45,22 +45,49 @@ StartRecDlgProc(HWND hwndDlg,
 	{
 		case WM_INITDIALOG:
 		{
+			DWORD dwBufSize;
+
 			/* get Path to freeldr.ini or boot.ini */
-			szSystemDrive = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_PATH);
+			szSystemDrive = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(TCHAR));
 			if (szSystemDrive != NULL)
 			{
-				szSystemDrive = _tgetenv(_T("SystemDrive"));
-				if (m_szFreeldrIni != NULL && szSystemDrive != NULL)
-				{						
-					_tcscpy(m_szFreeldrIni, szSystemDrive);
-					_tcscat(m_szFreeldrIni, _T("\\freeldr.ini"));
-					if (!PathFileExists(m_szFreeldrIni))
+				dwBufSize = GetEnvironmentVariable(_T("SystemDrive"), szSystemDrive, MAX_PATH);
+				if (dwBufSize > MAX_PATH)
+				{
+					TCHAR *szTmp;
+					DWORD dwBufSize2;
+
+					szTmp = HeapReAlloc(GetProcessHeap(), 0, szSystemDrive, dwBufSize * sizeof(TCHAR));
+					if (szTmp == NULL)
+						goto FailGetSysDrive;
+
+					szSystemDrive = szTmp;
+
+					dwBufSize2 = GetEnvironmentVariable(_T("SystemDrive"), szSystemDrive, dwBufSize);
+					if (dwBufSize2 > dwBufSize || dwBufSize2 == 0)
+						goto FailGetSysDrive;
+				}
+				else if (dwBufSize == 0)
+				{
+FailGetSysDrive:
+					HeapFree(GetProcessHeap(), 0, szSystemDrive);
+					szSystemDrive = NULL;
+				}
+
+				if (szSystemDrive != NULL)
+				{
+					if (m_szFreeldrIni != NULL)
 					{
 						_tcscpy(m_szFreeldrIni, szSystemDrive);
-						_tcscat(m_szFreeldrIni, _T("\\boot.ini"));
+						_tcscat(m_szFreeldrIni, _T("\\freeldr.ini"));
+						if (!PathFileExists(m_szFreeldrIni))
+						{
+							_tcscpy(m_szFreeldrIni, szSystemDrive);
+							_tcscat(m_szFreeldrIni, _T("\\boot.ini"));
+						}
 					}
+					HeapFree(GetProcessHeap(), 0, szSystemDrive);
 				}
-				HeapFree(GetProcessHeap(), 0, szSystemDrive);
 			}
    
 			SetDlgItemText(hwndDlg, IDC_STRRECDUMPFILE, _T("%SystemRoot%\\MiniDump"));
