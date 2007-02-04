@@ -1263,10 +1263,38 @@ STDCALL
 NtUserGetKeyboardLayoutName(
    LPWSTR lpszName)
 {
-   UNIMPLEMENTED
+  BOOL ret = FALSE;
+  LCID LocaleId;
+  WCHAR LocaleBuffer[16];
+  NTSTATUS Status;
 
-   return 0;
+
+  UserEnterExclusive();
+
+   DPRINT("Enter NtUserGetKeyboardLayoutName\n");
+
+   Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
+   if (NT_SUCCESS(Status))
+   {
+        swprintf(LocaleBuffer, L"%08lx", LocaleId);
+        DPRINT("LocaleId : %08lx\n",LocaleId);
+        _SEH_TRY
+        {
+           ProbeForWrite(lpszName, 16, 1);
+           RtlCopyMemory(lpszName,LocaleBuffer,16);
+            ret = TRUE;
+        }
+        _SEH_HANDLE
+        {
+            SetLastNtError(_SEH_GetExceptionCode());
+            ret = FALSE;
+        }
+        _SEH_END;
+   }
+   UserLeave();
+   return ret;
 }
+
 
 HKL FASTCALL
 UserGetKeyboardLayout(
