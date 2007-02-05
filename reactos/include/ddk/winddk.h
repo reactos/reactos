@@ -10526,7 +10526,6 @@ PoUnregisterSystemState(
 
 /** WMI library support routines **/
 
-NTKERNELAPI
 NTSTATUS
 NTAPI
 WmiCompleteRequest(
@@ -10536,7 +10535,6 @@ WmiCompleteRequest(
   IN ULONG  BufferUsed,
   IN CCHAR  PriorityBoost);
 
-NTKERNELAPI
 NTSTATUS
 NTAPI
 WmiFireEvent(
@@ -10556,7 +10554,6 @@ WmiQueryTraceInformation(
   OUT PULONG  RequiredLength OPTIONAL,
   IN PVOID  Buffer OPTIONAL);
 
-NTKERNELAPI
 NTSTATUS
 NTAPI
 WmiSystemControl(
