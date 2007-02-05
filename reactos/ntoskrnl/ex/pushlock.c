@@ -342,6 +342,33 @@ ExTimedWaitForUnblockPushLock(IN PEX_PUSH_LOCK PushLock,
 }
 
 /*++
+ * @name ExWaitForUnblockPushLock
+ *
+ *     The ExWaitForUnblockPushLock routine waits for a pushlock
+ *     to be unblocked, for a specified internal.
+ *
+ * @param PushLock
+ *        Pointer to a pushlock whose waiter list needs to be optimized.
+ *
+ * @param WaitBlock
+ *        Pointer to the pushlock's wait block.
+ *
+ * @return STATUS_SUCCESS is the pushlock is now unblocked, otherwise the error
+ *         code returned by KeWaitForSingleObject.
+ *
+ * @remarks If the wait fails, then a manual unblock is attempted.
+ *
+ *--*/
+VOID
+FASTCALL
+ExWaitForUnblockPushLock(IN PEX_PUSH_LOCK PushLock,
+                         IN PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock)
+{
+    /* Call the timed function with no timeout */
+    ExTimedWaitForUnblockPushLock(PushLock, WaitBlock, NULL);
+}
+
+/*++
  * @name ExBlockPushLock
  *
  *     The ExBlockPushLock routine blocks a pushlock.
@@ -360,25 +387,33 @@ ExTimedWaitForUnblockPushLock(IN PEX_PUSH_LOCK PushLock,
 VOID
 FASTCALL
 ExBlockPushLock(PEX_PUSH_LOCK PushLock,
-                PVOID WaitBlock)
+                PVOID pWaitBlock)
 {
-    PVOID NewValue, OldValue;
+    PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock = pWaitBlock;
+    EX_PUSH_LOCK NewValue, OldValue;
+    
+    /* Detect invalid wait block alignment */
+    ASSERT((ULONG_PTR)pWaitBlock & 0x10);
 
     /* Set the waiting bit */
-    ((PEX_PUSH_LOCK_WAIT_BLOCK)WaitBlock)->Flags |= EX_PUSH_LOCK_FLAGS_WAIT;
+    WaitBlock->Flags = EX_PUSH_LOCK_FLAGS_WAIT;
+    
+    /* Get the old value */
+    OldValue = *PushLock;
 
-    /* Link the wait blocks */
-    ((PEX_PUSH_LOCK_WAIT_BLOCK)WaitBlock)->Next = PushLock->Ptr;
-
-    /* Try to set this one as the wait block now */
-    NewValue = PushLock->Ptr;
+    /* Start block loop */
     for (;;)
     {
+        /* Link the wait blocks */
+        WaitBlock->Next = OldValue.Ptr;
+
         /* Set the new wait block value */
-        OldValue = InterlockedCompareExchangePointer(&PushLock->Ptr,
-                                                     WaitBlock,
-                                                     NewValue);
-        if (OldValue == NewValue) break;
+        NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
+                                                         WaitBlock,
+                                                         OldValue.Ptr);
+        if (OldValue.Ptr == NewValue.Ptr) break;
+        
+        /* Try again with the new value */
         NewValue = OldValue;
     }
 }
@@ -404,7 +439,7 @@ VOID
 FASTCALL
 ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
 {
-    EX_PUSH_LOCK_WAIT_BLOCK WaitBlock;
+    DEFINE_WAIT_BLOCK(WaitBlock);
     EX_PUSH_LOCK OldValue = *PushLock, NewValue, TempValue;
     BOOLEAN NeedWake;
     ULONG i;
@@ -435,23 +470,23 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
         else
         {
             /* We'll have to create a Waitblock */
-            WaitBlock.Flags = EX_PUSH_LOCK_FLAGS_EXCLUSIVE |
-                              EX_PUSH_LOCK_FLAGS_WAIT;
-            WaitBlock.Previous = NULL;
+            WaitBlock->Flags = EX_PUSH_LOCK_FLAGS_EXCLUSIVE |
+                               EX_PUSH_LOCK_FLAGS_WAIT;
+            WaitBlock->Previous = NULL;
             NeedWake = FALSE;
 
             /* Check if there is already a waiter */
             if (OldValue.Waiting)
             {
                 /* Nobody is the last waiter yet */
-                WaitBlock.Last = NULL;
+                WaitBlock->Last = NULL;
 
                 /* We are an exclusive waiter */
-                WaitBlock.ShareCount = 0;
+                WaitBlock->ShareCount = 0;
 
                 /* Set the current Wait Block pointer */
-                WaitBlock.Next = (PEX_PUSH_LOCK_WAIT_BLOCK)((ULONG_PTR)
-                                  OldValue.Ptr &~ EX_PUSH_LOCK_PTR_BITS);
+                WaitBlock->Next = (PEX_PUSH_LOCK_WAIT_BLOCK)((ULONG_PTR)
+                                   OldValue.Ptr &~ EX_PUSH_LOCK_PTR_BITS);
 
                 /* Point to ours */
                 NewValue.Value = (OldValue.Value & EX_PUSH_LOCK_MULTIPLE_SHARED) |
@@ -466,10 +501,10 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
             else
             {
                 /* We are the first waiter, so loop the wait block */
-                WaitBlock.Last = &WaitBlock;
+                WaitBlock->Last = WaitBlock;
 
                 /* Set the share count */
-                WaitBlock.ShareCount = OldValue.Shared;
+                WaitBlock->ShareCount = OldValue.Shared;
 
                 /* Check if someone is sharing this pushlock */
                 if (OldValue.Shared > 1)
@@ -483,7 +518,7 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
                 else
                 {
                     /* No shared count */
-                    WaitBlock.ShareCount = 0;
+                    WaitBlock->ShareCount = 0;
 
                     /* Point to our wait block */
                     NewValue.Value = EX_PUSH_LOCK_LOCK |
@@ -494,10 +529,10 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
 
 #if DBG
             /* Setup the Debug Wait Block */
-            WaitBlock.Signaled = 0;
-            WaitBlock.OldValue = OldValue;
-            WaitBlock.NewValue = NewValue;
-            WaitBlock.PushLock = PushLock;
+            WaitBlock->Signaled = 0;
+            WaitBlock->OldValue = OldValue;
+            WaitBlock->NewValue = NewValue;
+            WaitBlock->PushLock = PushLock;
 #endif
 
             /* Sanity check */
@@ -524,26 +559,26 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
             }
 
             /* Set up the Wait Gate */
-            KeInitializeGate(&WaitBlock.WakeGate);
+            KeInitializeGate(&WaitBlock->WakeGate);
 
             /* Now spin on the push lock if necessary */
             i = ExPushLockSpinCount;
-            if ((i) && (WaitBlock.Flags & EX_PUSH_LOCK_WAITING))
+            if ((i) && (WaitBlock->Flags & EX_PUSH_LOCK_WAITING))
             {
                 /* Spin */
                 while (--i) YieldProcessor();
             }
 
             /* Now try to remove the wait bit */
-            if (InterlockedBitTestAndReset(&WaitBlock.Flags, 1))
+            if (InterlockedBitTestAndReset(&WaitBlock->Flags, 1))
             {
                 /* Nobody removed it already, let's do a full wait */
-                KeWaitForGate(&WaitBlock.WakeGate, WrPushLock, KernelMode);
-                ASSERT(WaitBlock.Signaled);
+                KeWaitForGate(&WaitBlock->WakeGate, WrPushLock, KernelMode);
+                ASSERT(WaitBlock->Signaled);
             }
 
             /* We shouldn't be shared anymore */
-            ASSERT((WaitBlock.ShareCount == 0));
+            ASSERT((WaitBlock->ShareCount == 0));
 
             /* Loop again */
             OldValue = NewValue;
@@ -570,7 +605,7 @@ VOID
 FASTCALL
 ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 {
-    EX_PUSH_LOCK_WAIT_BLOCK WaitBlock;
+    DEFINE_WAIT_BLOCK(WaitBlock);
     EX_PUSH_LOCK OldValue = *PushLock, NewValue;
     BOOLEAN NeedWake;
     ULONG i;
@@ -614,20 +649,20 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
         else
         {
             /* We'll have to create a Waitblock */
-            WaitBlock.Flags = EX_PUSH_LOCK_FLAGS_WAIT;
-            WaitBlock.ShareCount = 0;
+            WaitBlock->Flags = EX_PUSH_LOCK_FLAGS_WAIT;
+            WaitBlock->ShareCount = 0;
             NeedWake = FALSE;
-            WaitBlock.Previous = NULL;
+            WaitBlock->Previous = NULL;
 
             /* Check if there is already a waiter */
             if (OldValue.Waiting)
             {
                 /* Set the current Wait Block pointer */
-                WaitBlock.Next = (PEX_PUSH_LOCK_WAIT_BLOCK)((ULONG_PTR)
-                                 OldValue.Ptr &~ EX_PUSH_LOCK_PTR_BITS);
+                WaitBlock->Next = (PEX_PUSH_LOCK_WAIT_BLOCK)((ULONG_PTR)
+                                   OldValue.Ptr &~ EX_PUSH_LOCK_PTR_BITS);
 
                 /* Nobody is the last waiter yet */
-                WaitBlock.Last = NULL;
+                WaitBlock->Last = NULL;
 
                 /* Point to ours */
                 NewValue.Value = (OldValue.Value & (EX_PUSH_LOCK_MULTIPLE_SHARED |
@@ -642,7 +677,7 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
             else
             {
                 /* We are the first waiter, so loop the wait block */
-                WaitBlock.Last = &WaitBlock;
+                WaitBlock->Last = WaitBlock;
 
                 /* Point to our wait block */
                 NewValue.Value = (OldValue.Value & (EX_PUSH_LOCK_MULTIPLE_SHARED |
@@ -656,10 +691,10 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 
 #if DBG
             /* Setup the Debug Wait Block */
-            WaitBlock.Signaled = 0;
-            WaitBlock.OldValue = OldValue;
-            WaitBlock.NewValue = NewValue;
-            WaitBlock.PushLock = PushLock;
+            WaitBlock->Signaled = 0;
+            WaitBlock->OldValue = OldValue;
+            WaitBlock->NewValue = NewValue;
+            WaitBlock->PushLock = PushLock;
 #endif
 
             /* Write the new value */
@@ -683,26 +718,26 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
             }
 
             /* Set up the Wait Gate */
-            KeInitializeGate(&WaitBlock.WakeGate);
+            KeInitializeGate(&WaitBlock->WakeGate);
 
             /* Now spin on the push lock if necessary */
             i = ExPushLockSpinCount;
-            if ((i) && (WaitBlock.Flags & EX_PUSH_LOCK_WAITING))
+            if ((i) && (WaitBlock->Flags & EX_PUSH_LOCK_WAITING))
             {
                 /* Spin */
                 while (--i) YieldProcessor();
             }
 
             /* Now try to remove the wait bit */
-            if (InterlockedBitTestAndReset(&WaitBlock.Flags, 1))
+            if (InterlockedBitTestAndReset(&WaitBlock->Flags, 1))
             {
                 /* Fast-path did not work, we need to do a full wait */
-                KeWaitForGate(&WaitBlock.WakeGate, WrPushLock, KernelMode);
-                ASSERT(WaitBlock.Signaled);
+                KeWaitForGate(&WaitBlock->WakeGate, WrPushLock, KernelMode);
+                ASSERT(WaitBlock->Signaled);
             }
 
             /* We shouldn't be shared anymore */
-            ASSERT((WaitBlock.ShareCount == 0));
+            ASSERT((WaitBlock->ShareCount == 0));
         }
     }
 }
@@ -1004,7 +1039,7 @@ VOID
 FASTCALL
 ExfReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
 {
-    EX_PUSH_LOCK NewValue;
+    EX_PUSH_LOCK NewValue, WakeValue;
     EX_PUSH_LOCK OldValue = *PushLock;
 
     /* Loop until we can change */
@@ -1024,7 +1059,8 @@ ExfReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
             /* Sanity check */
             ASSERT(NewValue.Waking && !NewValue.Locked);
 
-            /* Write the New Value */
+            /* Write the New Value. Save our original value for waking */
+            WakeValue = NewValue;
             NewValue.Ptr = InterlockedCompareExchangePointer(PushLock,
                                                              NewValue.Ptr,
                                                              OldValue.Ptr);
@@ -1032,14 +1068,10 @@ ExfReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
             /* Check if the value changed behind our back */
             if (NewValue.Value != OldValue.Value)
             {
-                /* Loop again */
-                OldValue = NewValue;
-                continue;
+                /* Wake the Pushlock */
+                ExfWakePushLock(PushLock, WakeValue);
+                break;
             }
-
-            /* Wake the Pushlock */
-            ExfWakePushLock(PushLock, NewValue);
-            break;
         }
         else
         {
@@ -1056,10 +1088,10 @@ ExfReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
 
             /* Check if the value changed behind our back */
             if (NewValue.Value == OldValue.Value) break;
-
-            /* Loop again */
-            OldValue = NewValue;
         }
+
+        /* Loop again */
+        OldValue = NewValue;
     }
 }
 
@@ -1128,7 +1160,7 @@ ExfUnblockPushLock(PEX_PUSH_LOCK PushLock,
     KIRQL OldIrql = DISPATCH_LEVEL;
 
     /* Get the wait block and erase the previous one */
-    WaitBlock = InterlockedExchangePointer(PushLock->Ptr, 0);
+    WaitBlock = InterlockedExchangePointer(&PushLock->Ptr, NULL);
     if (WaitBlock)
     {
         /* Check if there is a linked pushlock and raise IRQL appropriately */
@@ -1144,7 +1176,7 @@ ExfUnblockPushLock(PEX_PUSH_LOCK PushLock,
             if (InterlockedBitTestAndReset(&WaitBlock->Flags, 1))
             {
                 /* Nobody removed the flag before us, so signal the event */
-                KeSetEventBoostPriority(&WaitBlock->WakeEvent, IO_NO_INCREMENT);
+                KeSetEventBoostPriority(&WaitBlock->WakeEvent, NULL);
             }
 
             /* Check if there was a next block */
@@ -1161,6 +1193,6 @@ ExfUnblockPushLock(PEX_PUSH_LOCK PushLock,
            EX_PUSH_LOCK_FLAGS_WAIT))
     {
         /* Wait for the pushlock to be unblocked */
-        ExTimedWaitForUnblockPushLock(PushLock, CurrentWaitBlock, NULL);
+        ExWaitForUnblockPushLock(PushLock, CurrentWaitBlock);
     }
 }
