@@ -2882,16 +2882,16 @@ void calc_buffer_format(CALC *calc) {
         MessageBeep(0);
     }
 
-    if (point) {
-        p = calc->buffer;
-        n = _tcslen(p) - 1;
-        while (*(p+n) &&
-                *(p+n) != TEXT('.') &&
-                *(p+n) == TEXT('0')) {
-            calc->buffer[n] = TEXT('\0');
-            n--;
-        }
-    }
+    //if (point) {
+    //    p = calc->buffer;
+    //    n = _tcslen(p) - 1;
+    //    while (*(p+n) &&
+    //            *(p+n) != TEXT('.') &&
+    //           *(p+n) == TEXT('0')) {
+    //        calc->buffer[n] = TEXT('\0');
+    //        n--;
+    //    }
+    //}
 
     // remove leading zeros
 
