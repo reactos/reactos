@@ -206,7 +206,7 @@ CreateIconFromResource(
   BOOL fIcon,
   DWORD dwVer)
 {
-  return CreateIconFromResourceEx(presbits, dwResSize, fIcon, dwVer, 0, 0, 0);
+  return CreateIconFromResourceEx(presbits, dwResSize, fIcon, dwVer, 0, 0, LR_DEFAULTSIZE|LR_SHARED );
 }
 
 
