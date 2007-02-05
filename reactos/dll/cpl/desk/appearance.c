@@ -6,7 +6,7 @@
  * PURPOSE:         Appearance property page
  * 
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
- *                  Eric Kohl
+ *                  Eric Kohl (email?)
  */
 
 #include "desk.h"
