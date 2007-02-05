@@ -186,9 +186,8 @@ LoadCursorIconImage(
    UINT fuLoad,
    ULONG uType)
 {
+   HRSRC hResInfo;
    HANDLE hResource;
-   HANDLE h2Resource;
-   HANDLE hfRes;
    HANDLE hFile;
    HANDLE hSection;
    CURSORICONFILEDIR *IconDIR;
@@ -211,25 +210,20 @@ LoadCursorIconImage(
       if (hinst == NULL)
          hinst = User32Instance;
 
-      hResource = hfRes = FindResourceW(hinst, lpszName,
+      hResInfo = FindResourceW(hinst, lpszName,
                                         Icon ? RT_GROUP_ICON : RT_GROUP_CURSOR);
-      if (hResource == NULL)
+      if (hResInfo == NULL)
          return NULL;
 
-      if (fuLoad & LR_SHARED)
-      {
-         hIcon = NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes, width, height);
-         if (hIcon)
-            return hIcon;
-      }
-
-      hResource = LoadResource(hinst, hResource);
+      hResource = LoadResource(hinst, hResInfo);
       if (hResource == NULL)
          return NULL;
 
       IconResDir = LockResource(hResource);
       if (IconResDir == NULL)
+      {
          return NULL;
+      }
 
       /*
        * Find the best fitting in the IconResDir for this resolution
@@ -238,27 +232,45 @@ LoadCursorIconImage(
       id = LookupIconIdFromDirectoryEx((PBYTE)IconResDir, Icon, width, height,
                                        fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
 
-      h2Resource = FindResourceW(hinst, MAKEINTRESOURCEW(id),
+      hResInfo = FindResourceW(hinst, MAKEINTRESOURCEW(id),
                                  Icon ? MAKEINTRESOURCEW(RT_ICON) :
                                  MAKEINTRESOURCEW(RT_CURSOR));
-      if (h2Resource == NULL)
+      if (hResInfo == NULL)
+      {
          return NULL;
+      }
 
-      hResource = LoadResource(hinst, h2Resource);
+      /* Now we have found the icon we want to load.
+       * Let's see if we already loaded it */
+      if (fuLoad & LR_SHARED)
+      {
+         hIcon = NtUserFindExistingCursorIcon(hinst, hResInfo, 0, 0);
+         if (hIcon)
+         {
+            return hIcon;
+         }
+      }
+
+      hResource = LoadResource(hinst, hResInfo);
       if (hResource == NULL)
+      {
          return NULL;
+      }
 
       ResIcon = LockResource(hResource);
       if (ResIcon == NULL)
+      {
          return NULL;
+      }
 
       hIcon = CreateIconFromResourceEx((PBYTE)ResIcon,
-                                       SizeofResource(hinst, h2Resource),
+                                       SizeofResource(hinst, hResInfo),
                                        Icon, 0x00030000, width, height,
                                        fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+
       if (hIcon && 0 != (fuLoad & LR_SHARED))
       {
-         NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes,
+         NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, hResInfo,
                                  (HRSRC)NULL);
       }
 
