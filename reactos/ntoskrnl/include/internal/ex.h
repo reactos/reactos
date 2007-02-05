@@ -21,6 +21,19 @@ ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 PVOID ExpNlsSectionPointer;
 
+typedef struct _ETIMER
+{
+    KTIMER KeTimer;
+    KAPC TimerApc;
+    KDPC TimerDpc;
+    LIST_ENTRY ActiveTimerListEntry;
+    KSPIN_LOCK Lock;
+    LONG Period;
+    BOOLEAN ApcAssociated;
+    BOOLEAN WakeTimer;
+    LIST_ENTRY WakeTimerListEntry;
+} ETIMER, *PETIMER;
+
 #define MAX_FAST_REFS           7
 
 #define EX_OBJ_TO_HDR(eob) ((POBJECT_HEADER)((ULONG_PTR)(eob) &                \
