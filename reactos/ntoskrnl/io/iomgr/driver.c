@@ -443,18 +443,28 @@ IopLoadServiceModule(
 
    if (*ModuleObject == NULL)
    {
-      Status = STATUS_UNSUCCESSFUL;
+      /*
+       * Case for disabled drivers
+       */
+
+      if (ServiceStart >= 4)
+      {
+         /* FIXME: Check if it is the right status code */
+         Status = STATUS_PLUGPLAY_NO_DEVICE;
+      }
 
       /*
        * Special case for boot modules that were loaded by boot loader.
        */
 
-      if (ServiceStart == 0)
+      else if (KeLoaderBlock)
       {
          WCHAR SearchNameBuffer[256];
          UNICODE_STRING SearchName;
          PLIST_ENTRY ListHead, NextEntry;
          PLDR_DATA_TABLE_ENTRY LdrEntry;
+
+         Status = STATUS_UNSUCCESSFUL;
 
          /*
           * FIXME:
@@ -499,10 +509,10 @@ IopLoadServiceModule(
       }
 
       /*
-       * Case for rest of the drivers (except disabled)
+       * Case for rest of the drivers
        */
 
-      else if (ServiceStart < 4)
+      else
       {
          DPRINT("Loading module\n");
          Status = LdrLoadModule(&ServiceImagePath, ModuleObject);
