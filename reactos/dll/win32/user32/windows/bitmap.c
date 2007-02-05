@@ -222,15 +222,12 @@ LoadCursorIconImage(
       IconResDir = LockResource(hResource);
       if (IconResDir == NULL)
       {
-         FreeResource(hResource);
          return NULL;
       }
 
       /* Find the best fitting in the IconResDir for this resolution */
       id = LookupIconIdFromDirectoryEx((PBYTE)IconResDir, Icon, width, height,
                                        fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
-
-      FreeResource(hResource);
 
       hResInfo = FindResourceW(hinst, MAKEINTRESOURCEW(id),
                                  Icon ? (LPCWSTR) RT_ICON :
@@ -260,7 +257,6 @@ LoadCursorIconImage(
       ResIcon = LockResource(hResource);
       if (ResIcon == NULL)
       {
-         FreeResource(hResource);
          return NULL;
       }
 
@@ -268,7 +264,6 @@ LoadCursorIconImage(
                                        SizeofResource(hinst, hResInfo),
                                        Icon, 0x00030000, width, height,
                                        fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
-      FreeResource(hResource);
 
       if (hIcon && 0 != (fuLoad & LR_SHARED))
       {
