@@ -15,6 +15,7 @@
  	<define name="USE_EXTERNAL_DXTN_LIB=1" />
  	<define name="USE_MGL_NAMESPACE" />
  	<define name="USE_X86_ASM" />
+ 	<define name="USE_MMX_ASM" />
  	<include base="mesa32">include</include>
  	<include base="mesa32">src</include>
  	<include base="mesa32">src/main</include>
