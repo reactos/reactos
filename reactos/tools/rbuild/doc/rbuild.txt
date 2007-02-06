@@ -19,14 +19,14 @@ This will create ReactOS.iso in the top-level reactos directory.
 
 Top-level XML Build File
 ------------------------
-The top-level xml build file (ReactOS.xml) is processed by rbuild. The following is an example of how it could look like:
+The top-level xml build file (ReactOS.rbuild) is processed by rbuild. The following is an example of how it could look like:
 
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <project name="ReactOS" makefile="Makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
-	<xi:include href="config.xml">
+	<xi:include href="config.rbuild">
 		<xi:fallback>
-			<xi:include href="config.template.xml" />
+			<xi:include href="config.template.rbuild" />
 		</xi:fallback>
 	</xi:include>
 
@@ -39,7 +39,7 @@ The top-level xml build file (ReactOS.xml) is processed by rbuild. The following
 	<include base="ReactOS">include</include>
 
 	<directory name="boot">
-		<xi:include href="boot/boot.xml" />
+		<xi:include href="boot/boot.rbuild" />
 	</directory>
 
 	<module name="bootcd" type="iso">
@@ -52,9 +52,9 @@ xi:include
 It is possible to split an xml build file over several files. The include element in the xi namespace is used to accomplish this.
 
 Syntax:
-	<xi:include href="config.xml">
+	<xi:include href="config.rbuild">
 		<xi:fallback>
-			<xi:include href="config.template.xml" />
+			<xi:include href="config.template.rbuild" />
 		</xi:fallback>
 	</xi:include>
 

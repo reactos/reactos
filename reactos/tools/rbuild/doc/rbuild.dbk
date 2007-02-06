@@ -59,14 +59,14 @@
     <section>
       <title>Top-level XML Build File</title>
 
-      <para>The top-level XML build file (<filename>ReactOS.xml</filename>) is
+      <para>The top-level XML build file (<filename>ReactOS.rbuild</filename>) is
       processed by <command>rbuild</command>. The following is an example of
       how it could look like:<programlisting>&lt;?xml version="1.0"?&gt;
 &lt;!DOCTYPE project SYSTEM "tools/rbuild/project.dtd"&gt;
 &lt;project name="ReactOS" makefile="Makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude"&gt;
-  &lt;xi:include href="config.xml"&gt;
+  &lt;xi:include href="config.rbuild"&gt;
     &lt;xi:fallback&gt;
-      &lt;xi:include href="config.template.xml" /&gt;
+      &lt;xi:include href="config.template.rbuild" /&gt;
     &lt;/xi:fallback&gt;
   &lt;/xi:include&gt;
 
@@ -79,7 +79,7 @@
   &lt;include base="ReactOS"&gt;include&lt;/include&gt;
 
   &lt;directory name="boot"&gt;
-    &lt;xi:include href="boot/boot.xml" /&gt;
+    &lt;xi:include href="boot/boot.rbuild" /&gt;
   &lt;/directory&gt;
 
   &lt;module name="bootcd" type="iso"&gt;
@@ -92,7 +92,7 @@
 
       <para>XML files used by <command>rbuild</command> are modular and use
       XInclude to include other chunks of XML in the top-level
-      <filename>ReactOS.xml</filename> file. The namespace used by XInclude is
+      <filename>ReactOS.rbuild</filename> file. The namespace used by XInclude is
       <literal>xi</literal>.</para>
 
       <section id="element.xi.include">
@@ -105,9 +105,9 @@
         <section>
           <title>Syntax</title>
 
-          <programlisting>&lt;xi:include href="<replaceable>config.xml</replaceable>"&gt;
+          <programlisting>&lt;xi:include href="<replaceable>config.rbuild</replaceable>"&gt;
   &lt;xi:fallback&gt;
-    &lt;xi:include href="<replaceable>config.template.xml</replaceable>" /&gt;
+    &lt;xi:include href="<replaceable>config.template.rbuild</replaceable>" /&gt;
   &lt;/xi:fallback&gt;
 &lt;/xi:include&gt;</programlisting>
         </section>
@@ -152,7 +152,7 @@
           <title>Syntax</title>
 
           <programlisting>&lt;xi:fallback&gt;
-  &lt;xi:include href="<replaceable>config.template.xml</replaceable>" /&gt;
+  &lt;xi:include href="<replaceable>config.template.rbuild</replaceable>" /&gt;
 &lt;/xi:fallback&gt;</programlisting>
         </section>
 
@@ -1642,7 +1642,7 @@
           <title>Parents</title>
 
           <para>None. This is the top-level (root) element of
-          <filename>ReactOS.xml</filename> file.</para>
+          <filename>ReactOS.rbuild</filename> file.</para>
         </section>
 
         <section>
