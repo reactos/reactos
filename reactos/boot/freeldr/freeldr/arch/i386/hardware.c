@@ -1925,6 +1925,8 @@ DetectPS2AuxDevice(VOID)
 {
   UCHAR Scancode;
   UCHAR Status;
+  ULONG Loops;
+  BOOLEAN Result = TRUE;
 
   PS2ControllerWait();
   WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_CONTROL,
@@ -1935,31 +1937,43 @@ DetectPS2AuxDevice(VOID)
   WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA,
 		   0xF2);
 
-  StallExecutionProcessor(10000);
+  /* Wait for reply */
+  for (Loops = 0; Loops < 10; Loops++)
+    {
+      StallExecutionProcessor(10000);
+      Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
+      if ((Status & CONTROLLER_STATUS_OUTPUT_BUFFER_FULL) != 0)
+        break;
+    }
 
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
   if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) == 0)
-    {
-      return FALSE;
-    }
+    Result = FALSE;
 
   Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
   if (Scancode != 0xFA)
-    return FALSE;
+    Result = FALSE;
 
   StallExecutionProcessor(10000);
 
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
   if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) == 0)
-    {
-      return FALSE;
-    }
+    Result = FALSE;
 
   Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
   if (Scancode != 0x00)
-    return FALSE;
+    Result = FALSE;
 
-  return TRUE;
+  /* Flush output buffer */
+  for (Loops = 0; Loops < 10; Loops++)
+    {
+      Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
+      if ((Status & CONTROLLER_STATUS_OUTPUT_BUFFER_FULL) == 0)
+        break;
+      StallExecutionProcessor(10000);
+    }
+
+  return Result;
 }
 
 
