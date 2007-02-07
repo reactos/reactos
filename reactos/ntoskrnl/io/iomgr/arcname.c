@@ -33,6 +33,8 @@ IopApplyRosCdromArcHack(IN ULONG i)
     FILE_BASIC_INFORMATION FileInfo;
     NTSTATUS Status;
     PCHAR p, q;
+    PCONFIGURATION_INFORMATION ConfigInfo = IoGetConfigurationInformation();
+    extern BOOLEAN InitIsWinPEMode, ExpInTextModeSetup;
 
     /* Only ARC Name left - Build full ARC Name */
     p = strstr(KeLoaderBlock->ArcBootDeviceName, "cdrom");
@@ -86,7 +88,7 @@ IopApplyRosCdromArcHack(IN ULONG i)
             RtlFreeUnicodeString(&DeviceName);
         }
 
-        if (!(strstr(KeLoaderBlock->LoadOptions, "MININT")))
+        if (!InitIsWinPEMode)
         {
             /* Build the name */
             sprintf(p, "cdrom(%lu)", DeviceNumber);
@@ -102,13 +104,16 @@ IopApplyRosCdromArcHack(IN ULONG i)
             }
         }
     }
+    
+    /* OK, how many disks are there? */
+    DeviceNumber += ConfigInfo->DiskCount;
 
     /* Return whether this is the CD or not */
-    if (DeviceNumber != 1)
+    if ((InitIsWinPEMode) || (ExpInTextModeSetup))
     {
         /* Hack until IoAssignDriveLetters is fixed */
-        swprintf(SharedUserData->NtSystemRoot, L"D:\\reactos");
-        return TRUE;
+        swprintf(SharedUserData->NtSystemRoot, L"%c:\\reactos", 'C' + DeviceNumber);
+        return TRUE; 
     }
 
     /* Failed */
