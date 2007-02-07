@@ -8,7 +8,7 @@
 #include <wingdi.h>
 
 #if !defined(_MSC_VER)
-#include_next <winuser.h>
+#include "../../psdk/winuser.h"
 #endif
 
 #define WS_EX_TRAYWINDOW 0x80000000L
