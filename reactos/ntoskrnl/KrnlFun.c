@@ -15,9 +15,7 @@
 // Global:
 //  - TODO: Complete the list of bufxies
 //  - Fix DPCs interrupting code at DISPATCH_LEVEL
-//  - Fix process reference count leak.
 //  - Fix atapi.sys or serial.sys loading one more time at each boot.
-//  - Fix LiveCD.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

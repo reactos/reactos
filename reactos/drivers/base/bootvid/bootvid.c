@@ -463,7 +463,7 @@ VidResetDisplay(IN BOOLEAN HalReset)
     curr_y = 0;
 
     /* Clear the screen with HAL if we were asked to */
-    if (HalReset) HalResetDisplay();
+    //if (HalReset) HalResetDisplay();
 
     /* Re-initialize the VGA Display */
     VgaInterpretCmdStream(AT_Initialization);

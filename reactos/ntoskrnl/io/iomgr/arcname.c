@@ -86,17 +86,20 @@ IopApplyRosCdromArcHack(IN ULONG i)
             RtlFreeUnicodeString(&DeviceName);
         }
 
-        /* Build the name */
-        sprintf(p, "cdrom(%lu)", DeviceNumber);
-
-        /* Adjust original command line */
-        q = strchr(p, ')');
-        if (q)
+        if (!(strstr(KeLoaderBlock->LoadOptions, "MININT")))
         {
-            q++;
-            strcpy(Buffer, q);
+            /* Build the name */
             sprintf(p, "cdrom(%lu)", DeviceNumber);
-            strcat(p, Buffer);
+
+            /* Adjust original command line */
+            q = strchr(p, ')');
+            if (q)
+            {
+                q++;
+                strcpy(Buffer, q);
+                sprintf(p, "cdrom(%lu)", DeviceNumber);
+                strcat(p, Buffer);
+            }
         }
     }
 
