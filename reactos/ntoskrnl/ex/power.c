@@ -150,7 +150,7 @@ ShutdownThreadMain(PVOID Context)
         InbvSetTextColor(15);
         InbvInstallDisplayStringFilter(NULL);
         InbvEnableDisplayString(TRUE);
-        InbvSetScrollRegion(0, 0, 639, 479);
+        //InbvSetScrollRegion(0, 0, 639, 479);
      }
 
    if (Action == ShutdownNoReboot)

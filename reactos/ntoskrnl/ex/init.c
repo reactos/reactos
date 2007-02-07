@@ -33,6 +33,7 @@ ULONG ExpInitializationPhase;
 BOOLEAN ExpInTextModeSetup;
 BOOLEAN IoRemoteBootClient;
 ULONG InitSafeBootMode;
+BOOLEAN InitIsWinPEMode, InitWinPEModeType;
 
 BOOLEAN NoGuiBoot = FALSE;
 
@@ -820,6 +821,7 @@ NTAPI
 ExPhase2Init(PVOID Context)
 {
     LARGE_INTEGER Timeout;
+    PCHAR CommandLine;
     HANDLE ProcessHandle;
     HANDLE ThreadHandle;
     NTSTATUS Status;
@@ -835,8 +837,11 @@ ExPhase2Init(PVOID Context)
     /* Do Phase 1 HAL Initialization */
     HalInitSystem(1, KeLoaderBlock);
 
+    /* Get the command line and upcase it */
+    CommandLine = _strupr(KeLoaderBlock->LoadOptions);
+
     /* Check if GUI Boot is enabled */
-    if (strstr(KeLoaderBlock->LoadOptions, "NOGUIBOOT")) NoGuiBoot = TRUE;
+    if (strstr(CommandLine, "NOGUIBOOT")) NoGuiBoot = TRUE;
 
     /* Display the boot screen image if not disabled */
     if (!ExpInTextModeSetup) InbvDisplayInitialize2(NoGuiBoot);
@@ -845,6 +850,14 @@ ExPhase2Init(PVOID Context)
     /* Clear the screen to blue and display the boot notice and debug status */
     if (NoGuiBoot) ExpDisplayNotice();
     KdInitSystem(2, KeLoaderBlock);
+
+    /* Check if this is LiveCD (WinPE) mode */
+    if (strstr(CommandLine, "MININT"))
+    {
+        /* Setup WinPE Settings */
+        InitIsWinPEMode = TRUE;
+        InitWinPEModeType |= (strstr(CommandLine, "INRAM")) ? 0x80000000 : 1;
+    }
 
     /* Initialize Power Subsystem in Phase 0 */
     PoInit(0, AcpiTableDetected);
