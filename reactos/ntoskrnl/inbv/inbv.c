@@ -19,6 +19,9 @@ INBV_PROGRESS_STATE InbvProgressState;
 INBV_RESET_DISPLAY_PARAMETERS InbvResetDisplayParameters;
 ULONG ResourceCount;
 PUCHAR ResourceList[64];
+BOOLEAN SysThreadCreated;
+ROT_BAR_TYPE RotBarSelection;
+ULONG PltRotBarStatus;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -527,4 +530,95 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
 
     /* Return success */
     return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+DisplayBootBitmap(IN BOOLEAN SosMode)
+{
+    PVOID Bitmap, Header;
+    ROT_BAR_TYPE TempRotBarSelection = RB_UNSPECIFIED;
+
+    /* Check if the system thread has already been created */
+    if (SysThreadCreated)
+    {
+        /* Reset the progress bar */
+        InbvAcquireLock();
+        RotBarSelection = 0;
+        InbvReleaseLock();
+    }
+
+    /* Check if this is SOS mode */
+    ShowProgressBar = FALSE;
+    if (SosMode)
+    {
+        /* Check if this is a server OS */
+        if (SharedUserData->NtProductType == NtProductWinNt)
+        {
+            /* It's not, set workstation settings */
+            InbvSetTextColor(15);
+            InbvSolidColorFill(0, 0, 639, 479, 7);
+            InbvSolidColorFill(0, 421, 639, 479, 1);
+
+            /* Get resources */
+            Bitmap = InbvGetResourceAddress(6);
+            Header = InbvGetResourceAddress(7);
+        }
+        else
+        {
+            /* Set server settings */
+            InbvSetTextColor(14);
+            InbvSolidColorFill(0, 0, 639, 479, 6);
+            InbvSolidColorFill(0, 421, 639, 479, 1);
+
+            /* Get resources */
+            Bitmap = InbvGetResourceAddress(14);
+            Header = InbvGetResourceAddress(15);
+        }
+
+        /* Set the scrolling region */
+        InbvSetScrollRegion(32, 80, 631, 400);
+
+        /* Make sure we have resources */
+        if ((Bitmap) && (Header))
+        {
+            /* BitBlt them on the screen */
+            InbvBitBlt(Header, 0, 419);
+            InbvBitBlt(Bitmap, 0, 0);
+        }
+    }
+    else
+    {
+        /* Is the boot driver installed? */
+        if (!InbvBootDriverInstalled) return;
+
+        /* FIXME: TODO, display full-screen bitmap */
+    }
+
+    /* Do we have a system thread? */
+    if (SysThreadCreated)
+    {
+        /* We do, set the progress bar location */
+        InbvAcquireLock();
+        RotBarSelection = TempRotBarSelection;
+        //InbvRotBarInit();
+        InbvReleaseLock();
+    }
+}
+
+VOID
+NTAPI
+FinalizeBootLogo(VOID)
+{
+    /* Acquire lock and check the display state */
+    InbvAcquireLock();
+    if (InbvGetDisplayState() == INBV_DISPLAY_STATE_OWNED)
+    {
+        /* Clear the screen */
+        VidSolidColorFill(0, 0, 639, 479, 0);
+    }
+
+    /* Reset progress bar and lock */
+    PltRotBarStatus = 3;
+    InbvReleaseLock();
 }

@@ -1028,7 +1028,7 @@ Phase1InitializationDiscard(PVOID Context)
     {
         /* It is, display the boot logo and enable printing strings */
         InbvEnableDisplayString(SosEnabled);
-        //DisplayBootBitmap(SosEnabled);
+        DisplayBootBitmap(SosEnabled);
     }
     else
     {
@@ -1204,7 +1204,7 @@ Phase1InitializationDiscard(PVOID Context)
     /* Wait 5 seconds for it to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);
     Status = ZwWaitForSingleObject(ProcessInfo->ProcessHandle, FALSE, &Timeout);
-    //if (InbvBootDriverInstalled) FinalizeBootLogo();
+    if (InbvBootDriverInstalled) FinalizeBootLogo();
 
     if (Status == STATUS_SUCCESS)
     {

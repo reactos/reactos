@@ -596,7 +596,7 @@ PcVideoSetMode80x50_80x43(VOID)
 {
   if (VIDEOCARD_VGA == PcVideoDetectVideoCard())
     {
-      PcVideoSetBiosMode(0x03);
+      PcVideoSetBiosMode(0x12);
       PcVideoSetFont8x8();
       PcVideoSelectAlternatePrintScreen();
       PcVideoDisableCursorEmulation();
@@ -1108,8 +1108,8 @@ PcVideoSync(VOID)
 VOID
 PcVideoPrepareForReactOS(VOID)
 {
-  PcVideoSetMode80x50_80x43();
-  PcVideoHideShowTextCursor(FALSE);
+    PcVideoSetBiosMode(0x12);
+    PcVideoHideShowTextCursor(FALSE);
 }
 
 /* EOF */

@@ -8,6 +8,12 @@ typedef struct _InbvProgressState
     ULONG Bias;
 } INBV_PROGRESS_STATE;
 
+typedef enum _ROT_BAR_TYPE
+{
+    RB_UNSPECIFIED,
+    RB_SQUARE_CELLS
+} ROT_BAR_TYPE;
+
 VOID
 NTAPI
 InbvUpdateProgressBar(
@@ -25,6 +31,18 @@ VOID
 NTAPI
 InbvEnableBootDriver(
     IN BOOLEAN Enable
+);
+
+VOID
+NTAPI
+DisplayBootBitmap(
+    IN BOOLEAN SosMode
+);
+
+VOID
+NTAPI
+FinalizeBootLogo(
+    VOID
 );
 
 #endif /* NTOSKRNL_INBV_H */

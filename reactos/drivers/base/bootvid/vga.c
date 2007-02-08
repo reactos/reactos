@@ -847,7 +847,7 @@ VidSetScrollRegion(ULONG x1,
 {
     /* Assert alignment */
     ASSERT((x1 & 0x7) == 0);
-    ASSERT((x2 & 0x7) == 0);
+    ASSERT((x2 & 0x7) == 7);
 
     /* Set Scroll Region */
     ScrollRegion[0] = x1;

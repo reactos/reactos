@@ -310,7 +310,7 @@ CreateFreeLoaderIniForDos(PWCHAR IniPath,
 		    NULL,
 		    INSERT_LAST,
 		    L"Options",
-		    L"/DEBUGPORT=SCREEN /NOGUIBOOT /SOS");
+		    L"/DEBUGPORT=SCREEN /SOS");
 
   /* Create "DOS" section */
   IniSection = IniCacheAppendSection(IniCache,
