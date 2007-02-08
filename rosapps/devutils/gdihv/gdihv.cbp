@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="5" />
+	<Project>
+		<Option title="gdihv" />
+		<Option pch_mode="2" />
+		<Option default_target="" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="..\..\..\..\output-i386\modules\rosapps\devutils\gdihv\gdihv.exe" />
+				<Option working_dir="..\..\..\..\output-i386\modules\rosapps\devutils\gdihv" />
+				<Option object_output="..\..\..\..\obj-i386\modules\rosapps\devutils\gdihv" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-D__USE_W32API" />
+					<Add option="-D_WIN32_IE=0x0501" />
+					<Add option="-D_WIN32_WINNT=0x0501" />
+					<Add directory="..\..\..\..\include" />
+					<Add directory="..\..\..\..\include\crt" />
+					<Add directory="..\..\..\..\include\psdk" />
+					<Add directory="..\..\..\..\include\ndk" />
+					<Add directory="..\..\..\..\include\ddk" />
+				</Compiler>
+				<Linker>
+					<Add library="user32" />
+					<Add library="kernel32" />
+					<Add library="comctl32" />
+					<Add library="psapi" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Linker>
+			<Add library="gdi32" />
+			<Add library="user32" />
+			<Add library="kernel32" />
+		</Linker>
+		<Unit filename="gdi.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option virtualFolder="header\" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="gdihv.c">
+			<Option compilerVar="CC" />
+			<Option virtualFolder="source\" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="gdihv.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option virtualFolder="header\" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="gdihv.rbuild">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option virtualFolder="header\" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="gdihv.rc">
+			<Option compilerVar="WINDRES" />
+			<Option virtualFolder="resources\" />
+			<Option objectName="gdihv.res" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="handlelist.c">
+			<Option compilerVar="CC" />
+			<Option virtualFolder="source\" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="handlelist.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option virtualFolder="header\" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="mainwnd.c">
+			<Option compilerVar="CC" />
+			<Option virtualFolder="source\" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="mainwnd.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option virtualFolder="header\" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="proclist.c">
+			<Option compilerVar="CC" />
+			<Option virtualFolder="source\" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="proclist.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option virtualFolder="header\" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="resource.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option virtualFolder="header\" />
+			<Option target="Debug" />
+		</Unit>
+		<Extensions />
+	</Project>
+</CodeBlocks_project_file>
