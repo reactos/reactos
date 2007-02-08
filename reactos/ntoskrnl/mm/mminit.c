@@ -468,6 +468,14 @@ MmInitSystem(IN ULONG Phase,
         SectionsReady = TRUE;
         MmInitPagingFile();
         PagingReady = TRUE;
+
+        /* Setup shared user data settings that NT does as well */
+        ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
+        SharedUserData->NumberOfPhysicalPages = MmStats.NrTotalPages;
+        SharedUserData->LargePageMinimum = 0;
+
+        /* For now, we assume that we're always Workstation */
+        SharedUserData->NtProductType = NtProductWinNt;
     }
     else if (Phase == 2)
     {

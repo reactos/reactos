@@ -45,6 +45,8 @@ FinalizeBootLogo(
     VOID
 );
 
+extern BOOLEAN InbvBootDriverInstalled;
+
 #endif /* NTOSKRNL_INBV_H */
 
 
