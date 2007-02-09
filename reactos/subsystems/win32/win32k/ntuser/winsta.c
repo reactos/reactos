@@ -485,9 +485,9 @@ NtUserCreateWindowStation(
    /*
     * Initialize the new window station object
     */
-    WindowStationObject->ScreenSaverRunning = FALSE;
-	WindowStationObject->ScreenSaverTimeOut = 30;
-	WindowStationObject->FlatMenu = FALSE;
+   WindowStationObject->ScreenSaverRunning = FALSE;
+   WindowStationObject->ScreenSaverTimeOut = 10 * 60;
+   WindowStationObject->FlatMenu = FALSE;
 
    if(!(CurInfo = ExAllocatePool(PagedPool, sizeof(SYSTEM_CURSORINFO))))
    {
