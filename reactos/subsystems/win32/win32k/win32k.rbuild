@@ -120,6 +120,7 @@
 			<file>hotkey.c</file>
 			<file>input.c</file>
 			<file>keyboard.c</file>
+			<file>kbdlayout.c</file>
 			<file>menu.c</file>
 			<file>message.c</file>
 			<file>metric.c</file>

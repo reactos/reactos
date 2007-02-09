@@ -1,7 +1,7 @@
 LIBRARY user32.dll
 
 EXPORTS
-ActivateKeyboardLayout@8
+ActivateKeyboardLayout@8=NtUserActivateKeyboardLayout@8
 AdjustWindowRect@12
 AdjustWindowRectEx@16
 AlignRects@16
@@ -295,7 +295,7 @@ GetKeyNameTextA@12
 GetKeyNameTextW@12
 GetKeyState@4
 GetKeyboardLayout@4
-GetKeyboardLayoutList@8
+GetKeyboardLayoutList@8=NtUserGetKeyboardLayoutList@8
 GetKeyboardLayoutNameA@4
 GetKeyboardLayoutNameW@4
 GetKeyboardState@4

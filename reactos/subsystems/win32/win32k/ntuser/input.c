@@ -529,8 +529,8 @@ KeyboardThreadMain(PVOID StartContext)
                                      KernelMode,
                                      TRUE,
                                      NULL);
-      DPRINT( "Keyboard Input Thread Starting...\n" );
 
+      DPRINT( "Keyboard Input Thread Starting...\n" );
       /*
        * Receive and process keyboard input.
        */
@@ -754,7 +754,7 @@ KeyboardThreadMain(PVOID StartContext)
              * keyboard layout in use.
              */
             W32kKeyProcessMessage(&msg,
-                                  ((PW32THREAD)FocusThread->Tcb.Win32Thread)->KeyboardLayout,
+                                  ((PW32THREAD)FocusThread->Tcb.Win32Thread)->KeyboardLayout->KBTables,
                                   KeyInput.Flags & KEY_E0 ? 0xE0 :
                                   (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
 
@@ -816,8 +816,10 @@ InitInputImpl(VOID)
    }
 
    /* Initialize the default keyboard layout */
-   (VOID)W32kGetDefaultKeyLayout();
-
+   if(!UserInitDefaultKeyboardLayout())
+   {
+      DPRINT1("Failed to initialize default keyboard layout!\n");
+   }
 
    Status = PsCreateSystemThread(&MouseThreadHandle,
                                  THREAD_ALL_ACCESS,
