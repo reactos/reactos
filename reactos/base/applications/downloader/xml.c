@@ -2,7 +2,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base\applications\downloader\xml.c
  * PURPOSE:         Parsing of application information xml files
- * PROGRAMMERS:     Maarten Bosma
+ * PROGRAMMERS:     Maarten Bosma, Lester Kortenhoeven
  */
 
 #include <libs/expat/expat.h>
@@ -81,6 +81,15 @@ void tag_opened (void* usrdata, const char* tag, const char** arg)
 			CurrentApplication = Current->Apps;
 		}
 
+		int currentlengt = lstrlenW(CurrentApplication->Maintainer);
+		MultiByteToWideChar(CP_ACP, 0, 0, 0, &CurrentApplication->Maintainer[currentlengt], 0x100-currentlengt);
+		currentlengt = lstrlenW(CurrentApplication->RegName);
+		MultiByteToWideChar(CP_ACP, 0, 0, 0, &CurrentApplication->RegName[currentlengt], 0x100-currentlengt);
+		currentlengt = lstrlenW(CurrentApplication->Version);
+		MultiByteToWideChar(CP_ACP, 0, 0, 0, &CurrentApplication->Version[currentlengt], 0x100-currentlengt);
+		currentlengt = lstrlenW(CurrentApplication->Licence);
+		MultiByteToWideChar(CP_ACP, 0, 0, 0, &CurrentApplication->Licence[currentlengt], 0x100-currentlengt);
+
 		for (i=0; arg[i]; i+=2) 
 		{
 			if(!strcmp(arg[i], "name"))
@@ -103,11 +112,15 @@ void text (void* usrdata, const char* data, int len)
 	if (!CurrentApplication)
 		return;
 
-	// FIXME: handle newlines e.g. in Description
 	if(!strcmp(CurrentTag, "maintainer"))
 	{
-		int currentlengt = lstrlenW(CurrentApplication->Location);
+		int currentlengt = lstrlenW(CurrentApplication->Maintainer);
 		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Maintainer[currentlengt], 0x100-currentlengt);
+	}
+	else if(!strcmp(CurrentTag, "regname"))
+	{
+		int currentlengt = lstrlenW(CurrentApplication->RegName);
+		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->RegName[currentlengt], 0x100-currentlengt);
 	}
 	else if(!strcmp(CurrentTag, "description"))
 	{
@@ -118,6 +131,16 @@ void text (void* usrdata, const char* data, int len)
 	{
 		int currentlengt = lstrlenW(CurrentApplication->Location);
 		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Location[currentlengt], 0x100-currentlengt);
+	}
+	else if(!strcmp(CurrentTag, "version"))
+	{
+		int currentlengt = lstrlenW(CurrentApplication->Version);
+		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Version[currentlengt], 0x400-currentlengt);
+	}
+	else if(!strcmp(CurrentTag, "licence"))
+	{
+		int currentlengt = lstrlenW(CurrentApplication->Licence);
+		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Licence[currentlengt], 0x100-currentlengt);
 	}
 }
 

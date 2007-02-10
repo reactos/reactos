@@ -29,4 +29,7 @@ BEGIN
   IDS_XMLERROR_1		"Could not find the xml file !"
   IDS_XMLERROR_2		"Could not parse the xml file !"
   IDS_DOWNLOAD_ERROR		"Unable to download the file.\nPlease check you internet connection."
+  IDS_VERSION			"Version: "
+  IDS_LICENCE			"Licence: "
+  IDS_MAINTAINER		"Maintainer: "
 END

@@ -2,6 +2,7 @@
 struct Application
 {
 	WCHAR Name[0x100];
+	WCHAR RegName[0x100];
 	WCHAR Version[0x100];
 	WCHAR Maintainer[0x100];
 	WCHAR Licence[0x100];
