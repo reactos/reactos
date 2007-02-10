@@ -158,34 +158,35 @@ static BOOL UserLoadKbdDll(WCHAR *wsKLID,
 
    *phModule = EngLoadImage(FullLayoutPath.Buffer);
    
-   if(!*phModule) 
+   if(*phModule) 
    {
-      DPRINT1( "Failed to load %wZ\n", &FullLayoutPath );
-   }
-   else 
-   {
-      DPRINT( "Loaded Keyboard Layout: %wZ\n", &FullLayoutPath  );
-   }
+      DPRINT("Loaded %wZ\n", &FullLayoutPath);
+      
+      RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
+      LdrGetProcedureAddress((PVOID)*phModule,
+                             &kbdProcedureName,
+                             0,
+                             (PVOID*)&layerDescGetFn);
    
-   RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
-   LdrGetProcedureAddress((PVOID)*phModule,
-                          &kbdProcedureName,
-                          0,
-                          (PVOID*)&layerDescGetFn);
+      if(layerDescGetFn)
+      {
+         *pKbdTables = layerDescGetFn();
+      }
+      else
+      {
+         DPRINT1("Error: %wZ has no KbdLayerDescriptor()\n", &FullLayoutPath);
+      }
 
-   if(layerDescGetFn)
-   {
-      *pKbdTables = layerDescGetFn();
+      if(!layerDescGetFn || !*pKbdTables)
+      {
+         DPRINT1("Failed to load the keyboard layout.\n");
+         EngUnloadImage(*phModule);
+         return FALSE;
+      }  
    }
    else
    {
-      DPRINT1("Error: %wZ has no KbdLayerDescriptor()\n", &FullLayoutPath);
-   }
-
-   if(!layerDescGetFn || !*pKbdTables)
-   {
-      DPRINT1("Failed to load the keyboard layout.\n");
-      EngUnloadImage(*phModule);
+      DPRINT1("Failed to load dll %wZ\n", &FullLayoutPath);
       return FALSE;
    }
    
