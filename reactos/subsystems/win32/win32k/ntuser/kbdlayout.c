@@ -283,6 +283,8 @@ static PKBL UserHklToKbl(HKL hKl)
       if(pKbl->hkl == hKl) return pKbl;
       pKbl = (PKBL) pKbl->List.Flink;
    } while(pKbl != KBLList);
+   
+   return NULL;
 }
 
 static PKBL UserActivateKbl(PW32THREAD Thread, PKBL pKbl)
