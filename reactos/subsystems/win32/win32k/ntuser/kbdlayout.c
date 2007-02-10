@@ -462,14 +462,5 @@ NtUserActivateKeyboardLayout(
    return Ret;
 }
 
-DWORD
-STDCALL
-NtUserUnloadKeyboardLayout(
-   DWORD Unknown0)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
 
 /* EOF */
