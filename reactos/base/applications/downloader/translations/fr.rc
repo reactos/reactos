@@ -29,4 +29,7 @@ BEGIN
   IDS_XMLERROR_1		"Impossible de trouver le fichier xml !"
   IDS_XMLERROR_2		"Impossible d'analyser le fichier xml !"
   IDS_DOWNLOAD_ERROR		"Impossible de télécharger le fichier.\nVeuillez vérifier votre connexion Internet."
+  IDS_VERSION			"Version: "
+  IDS_LICENCE			"Licence: "
+  IDS_MAINTAINER		"Maintainer: "
 END
