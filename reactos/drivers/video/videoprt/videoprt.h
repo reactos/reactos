@@ -34,7 +34,9 @@
 #include <ndk/ntndk.h>
 #include <reactos/helper.h>
 
-#define NDEBUG
+//#define NDEBUG
+#undef NDEBUG
+#define DEBUG
 #include <debug.h>
 
 #define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')

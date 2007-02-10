@@ -428,7 +428,7 @@ NtUserInternalGetWindowText             3
 NtUserIsClipboardFormatAvailable        1
 NtUserKillSystemTimer                   2
 NtUserKillTimer                         2
-NtUserLoadKeyboardLayoutEx              2
+NtUserLoadKeyboardLayoutEx              6
 NtUserLockWindowStation                 1
 NtUserLockWindowUpdate                  1
 NtUserLockWorkStation                   0

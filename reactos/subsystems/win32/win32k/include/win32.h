@@ -8,7 +8,7 @@ typedef struct _W32THREAD
   struct _USER_MESSAGE_QUEUE* MessageQueue;
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
-  struct _KBL* KeyboardLayout;
+  struct _KBDTABLES* KeyboardLayout;
   struct _DESKTOP_OBJECT* Desktop;
   HANDLE hDesktop;
   DWORD MessagePumpHookValue;
@@ -36,7 +36,7 @@ typedef struct _W32PROCESS
   LIST_ENTRY PrivateFontListHead;
   FAST_MUTEX DriverObjListLock;
   LIST_ENTRY DriverObjListHead;
-  struct _KBL* KeyboardLayout;
+  struct _KBDTABLES* KeyboardLayout;
   ULONG Flags;
   LONG GDIObjects;
   LONG UserObjects;
