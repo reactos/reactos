@@ -158,8 +158,14 @@ static BOOL UserLoadKbdDll(WCHAR *wsKLID,
 
    *phModule = EngLoadImage(FullLayoutPath.Buffer);
    
-   if(!*phModule) DPRINT1( "Failed to load %wZ\n", &FullLayoutPath );
-   else DPRINT( "Loaded Keyboard Layout: %wZ\n", &FullLayoutPath  );
+   if(!*phModule) 
+   {
+      DPRINT1( "Failed to load %wZ\n", &FullLayoutPath );
+   }
+   else 
+   {
+      DPRINT( "Loaded Keyboard Layout: %wZ\n", &FullLayoutPath  );
+   }
    
    RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
    LdrGetProcedureAddress((PVOID)*phModule,
@@ -204,7 +210,7 @@ static PKBL UserLoadDllAndCreateKbl(LCID LocaleId)
    
    if(!UserLoadKbdDll(NewKbl->Name, &NewKbl->hModule, &NewKbl->KBTables))
    {
-      DPRINT1("%s: failed to load %x dll!\n", LocaleId);
+      DPRINT1("%s: failed to load %x dll!\n", __FUNCTION__, LocaleId);
       ExFreePool(NewKbl);
       return NULL;
    }
@@ -240,7 +246,10 @@ BOOL UserInitDefaultKeyboardLayout()
    {
       DPRINT1("Could not get default locale (%08lx).\n", Status);
    }
-   else DPRINT("DefaultLocale = %08lx\n", LocaleId);
+   else 
+   {
+      DPRINT("DefaultLocale = %08lx\n", LocaleId);
+   }
 
    if(!NT_SUCCESS(Status) || !(DefaultKL = UserLoadDllAndCreateKbl(LocaleId)))
    {
