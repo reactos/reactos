@@ -52,6 +52,19 @@ DD_Cleanup(PVOID ObjectBody)
     return TRUE;
 }
 
+
+/* Documations how it works in windows and what we should do 
+*
+ *  HANDLE NtGdiDdCreateDirectDrawObject(HDC hdc)
+ *
+ *  Use CreateDCW(L”Display”,NULL,NULL,NULL); or some thing  else to create a DC.
+.*
+ *  A NULL DC are not accpect it  return 0 as error
+ *
+ *  How the interal works see msdn and ddk that is egunt inforamtions to figour or see reactos
+ *  source code. ReactOS interal working diffent here what windows does. 
+ */
+
 HANDLE STDCALL 
 NtGdiDdCreateDirectDrawObject(HDC hdc)
 {
@@ -80,7 +93,6 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 
         if (hdc == NULL)
         {
-            DPRINT1("FIXME hdc is NULL \n"); 
             return NULL;
         }
     }
@@ -183,6 +195,8 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
     DPRINT1("DirectDraw return handler 0x%x\n",hDirectDraw); 
     return hDirectDraw;
 }
+
+
 
 BOOL STDCALL 
 NtGdiDdDeleteDirectDrawObject( HANDLE hDirectDrawLocal)
