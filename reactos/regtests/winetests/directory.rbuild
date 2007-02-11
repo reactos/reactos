@@ -47,6 +47,9 @@
 <directory name="user32">
 	<xi:include href="user32/user32.rbuild" />
 </directory>
+<directory name="usp10">
+	<xi:include href="usp10/usp10.rbuild" />
+</directory>
 <directory name="version">
 	<xi:include href="version/version.rbuild" />
 </directory>
