@@ -237,7 +237,7 @@ static BOOL msi_strequal(LPCWSTR str1, LPCSTR str2)
 /* str2 is at the beginning of str1, ignoring case */
 static BOOL msi_strprefix(LPCWSTR str1, LPCSTR str2)
 {
-	DWORD len, ret;
+	int len, ret;
 	LPWSTR strW;
 
 	len = MultiByteToWideChar( CP_ACP, 0, str2, -1, NULL, 0);
