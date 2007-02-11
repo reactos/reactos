@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win32kdxtest", "win32kdxtest_vc8_auto.vcproj", "{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug - Wine headers|Win32 = Debug - Wine headers|Win32
+		Debug|Win32 = Debug|Win32
+		Release - Wine headers|Win32 = Release - Wine headers|Win32
+		Release|Win32 = Release|Win32
+		Speed - Wine headers|Win32 = Speed - Wine headers|Win32
+		Speed|Win32 = Speed|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Debug - Wine headers|Win32.ActiveCfg = Debug - Wine headers|Win32
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Debug - Wine headers|Win32.Build.0 = Debug - Wine headers|Win32
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Debug|Win32.Build.0 = Debug|Win32
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Release - Wine headers|Win32.ActiveCfg = Release - Wine headers|Win32
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Release - Wine headers|Win32.Build.0 = Release - Wine headers|Win32
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Release|Win32.ActiveCfg = Release|Win32
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Release|Win32.Build.0 = Release|Win32
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Speed - Wine headers|Win32.ActiveCfg = Speed - Wine headers|Win32
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Speed - Wine headers|Win32.Build.0 = Speed - Wine headers|Win32
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Speed|Win32.ActiveCfg = Speed|Win32
+		{40A5198A-36E0-4ABF-B17B-2C7C1F8365EF}.Speed|Win32.Build.0 = Speed|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
