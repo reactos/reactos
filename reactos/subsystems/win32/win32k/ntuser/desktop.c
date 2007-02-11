@@ -1068,6 +1068,7 @@ NtUserOpenDesktop(
    UNICODE_STRING SafeDesktopName;
    NTSTATUS Status;
    HDESK Desktop;
+   BOOL Result;
    DECLARE_RETURN(HDESK);
 
    DPRINT("Enter NtUserOpenDesktop: %wZ\n", lpszDesktopName);
@@ -1106,17 +1107,19 @@ NtUserOpenDesktop(
       RtlInitUnicodeString(&SafeDesktopName, NULL);
    }
 
-   if (!IntGetFullWindowStationName(&DesktopName, &WinStaObject->Name,
-                                    lpszDesktopName))
-   {
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      ObDereferenceObject(WinStaObject);
-      RtlFreeUnicodeString(&SafeDesktopName);
-      RETURN( 0);
-   }
+   Result = IntGetFullWindowStationName(&DesktopName, &WinStaObject->Name,
+                                        &SafeDesktopName);
 
    RtlFreeUnicodeString(&SafeDesktopName);
    ObDereferenceObject(WinStaObject);
+
+
+   if (!Result)
+   {
+      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+      RETURN( 0);
+   }
+
 
    DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
 

@@ -213,8 +213,8 @@ NtUserEnumDisplayDevices (
    if (lpDisplayDevice->cb < sizeof(DISPLAY_DEVICE))
       return FALSE;
 
-   swprintf(lpDisplayDevice->DeviceName, L"\\\\.\\DISPLAY1");
-   swprintf(lpDisplayDevice->DeviceString, L"<Unknown>");
+   wcscpy(lpDisplayDevice->DeviceName, L"\\\\.\\DISPLAY1");
+   wcscpy(lpDisplayDevice->DeviceString, L"<Unknown>");
    lpDisplayDevice->StateFlags = DISPLAY_DEVICE_ATTACHED_TO_DESKTOP
                                  | DISPLAY_DEVICE_MODESPRUNED
                                  | DISPLAY_DEVICE_PRIMARY_DEVICE
