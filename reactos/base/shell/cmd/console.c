@@ -241,13 +241,10 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 {
 	INT len;
+	PTCHAR pBuf;
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	DWORD dwWritten;
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-#ifdef _UNICODE
-	INT WideLen;
-	PCHAR pBuf;
-#endif
  
   /* used to count number of lines since last pause */
 	static int LineCount = 0;
@@ -269,7 +266,8 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
   /* rest LineCount and return if no string have been given */
     if (szFormat == NULL)
             return 0;
-  
+ 
+ 
 	//get the size of the visual screen that can be printed too
 	if (!GetConsoleScreenBufferInfo(hConsole, &csbi))
     {
@@ -289,48 +287,37 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
     }
  
 	len = _vstprintf (szOut, szFormat, arg_ptr);
-
-
-#ifdef _UNICODE
-	pBuf = malloc(len + 1);
-#endif
+	pBuf = szOut;
  
 	for(i = 0; i < len; i++)
 	{
 		// search 'end of string' '\n' or 'end of screen line'
-		for(; (i < len) && (szOut[i] != _T('\n') && (CharSL<ScreenCol)) ; i++)
+		for(; (i < len) && (pBuf[i] != _T('\n') && (CharSL<ScreenCol)) ; i++)
 			CharSL++;
 
-#ifdef _UNICODE
-		WideLen = WideCharToMultiByte( OutputCodePage, 0, &szOut[i-CharSL], CharSL + 1, pBuf, CharSL + 1, NULL, NULL);
-		WriteFile (GetStdHandle (nStdHandle),pBuf,WideLen,&dwWritten,NULL);
-#else
-		WriteFile (GetStdHandle (nStdHandle),&szOut[i-CharSL],sizeof(CHAR)*(CharSL+1),&dwWritten,NULL);
-#endif
-
-		LineCount++;
+        WriteFile (GetStdHandle (nStdHandle),&pBuf[i-CharSL],sizeof(CHAR)*(CharSL+1),&dwWritten,NULL);
+		LineCount++; 
+        CharSL=0;
 
 	    if(LineCount >= ScreenLines)
 	    {
-            if(_tcsnicmp(&szOut[i], _T("\n"), 2)!=0)
+            if(_tcsnicmp(&pBuf[i], _T("\n"), 2)!=0)
 				WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(CHAR),&dwWritten,NULL); 
 
 		    if(PagePrompt() != PROMPT_YES)
 		    {
-			    break;
+			    return 1;
 		    }
 		    //reset the number of lines being printed         
 		    LineCount = 0;
+            CharSL=0;
 	    }
-        CharSL=0;
+ 
 	}
  
 #ifdef _UNICODE
 	free(pBuf);
 #endif
-	if (i < len) //!= PROMPT_YES
-		return 1;
-
 	return 0;
 }
  

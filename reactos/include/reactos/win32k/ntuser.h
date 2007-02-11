@@ -299,11 +299,11 @@ NTAPI
 NtUserAcquireOrReleaseInputOwnership(
   BOOLEAN Release);
 
-DWORD
+HKL
 NTAPI
 NtUserActivateKeyboardLayout(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HKL hKl,
+  ULONG Flags);
 
 DWORD
 NTAPI
@@ -1008,11 +1008,11 @@ NTAPI
 NtUserGetKeyboardLayout(
   DWORD dwThreadid);
 
-DWORD
+UINT
 NTAPI
 NtUserGetKeyboardLayoutList(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  INT nItems,
+  HKL *pHklBuff);
 
 BOOL
 NTAPI
@@ -1219,11 +1219,7 @@ NtUserKillTimer
 HKL
 NTAPI
 NtUserLoadKeyboardLayoutEx(
-  HANDLE Handle,
-  DWORD offTable,
-  HKL hKL,
-  PUNICODE_STRING puszKLID,
-  UINT KLayoutLangID,
+  LCID LocaleId,
   UINT Flags);
 
 BOOL

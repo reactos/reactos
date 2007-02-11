@@ -15,17 +15,6 @@
 
 DWORD
 STDCALL
-NtUserActivateKeyboardLayout(
-   DWORD Unknown0,
-   DWORD Unknown1)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
-STDCALL
 NtUserAttachThreadInput(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -636,6 +625,7 @@ NtUserUnloadKeyboardLayout(
 
    return 0;
 }
+
 
 DWORD
 STDCALL
