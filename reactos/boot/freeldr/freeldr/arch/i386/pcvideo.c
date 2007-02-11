@@ -1108,7 +1108,7 @@ PcVideoSync(VOID)
 VOID
 PcVideoPrepareForReactOS(VOID)
 {
-    PcVideoSetBiosMode(0x12);
+    PcVideoSetMode80x50_80x43();
     PcVideoHideShowTextCursor(FALSE);
 }
 
