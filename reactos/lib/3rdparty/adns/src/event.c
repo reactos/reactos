@@ -114,7 +114,7 @@ void adns__tcp_tryconnect(adns_state ads, struct timeval now) {
 	ADNS_CLEAR_ERRNO
     fd= socket(AF_INET,SOCK_STREAM,proto->p_proto);
 	ADNS_CAPTURE_ERRNO;
-    if (fd<0) {
+    if (fd == INVALID_SOCKET) {
       adns__diag(ads,-1,0,"cannot create TCP socket: %s",strerror(errno));
       return;
     }

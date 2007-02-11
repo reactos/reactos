@@ -536,7 +536,7 @@ static int init_finish(adns_state ads) {
   ADNS_CLEAR_ERRNO;
   ads->udpsocket= socket(AF_INET,SOCK_DGRAM,proto->p_proto);
   ADNS_CAPTURE_ERRNO;
-  if (ads->udpsocket<0) { r= errno; goto x_free; }
+  if (ads->udpsocket == INVALID_SOCKET) { r= errno; goto x_free; }
 
   r= adns__setnonblock(ads,ads->udpsocket);
   if (r) { r= errno; goto x_closeudp; }
@@ -682,7 +682,7 @@ void adns_finish(adns_state ads) {
     else break;
   }
   adns_socket_close(ads->udpsocket);
-  if (ads->tcpsocket >= 0) adns_socket_close(ads->tcpsocket);
+  if (ads->tcpsocket != INVALID_SOCKET) adns_socket_close(ads->tcpsocket);
   adns__vbuf_free(&ads->tcpsend);
   adns__vbuf_free(&ads->tcprecv);
   freesearchlist(ads);
