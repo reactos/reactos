@@ -247,6 +247,9 @@
 <directory name="userenv">
 	<xi:include href="userenv/userenv.rbuild" />
 </directory>
+<directory name="usp10">
+	<xi:include href="usp10/usp10.rbuild" />
+</directory>
 <directory name="uxtheme">
 	<xi:include href="uxtheme/uxtheme.rbuild" />
 </directory>
