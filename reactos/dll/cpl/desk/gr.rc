@@ -5,18 +5,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ταπετσαρία"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "",IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW,78,10,
-                    90,65,WS_EX_STATICEDGE
-    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT | 
+    CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
+                    78, 10, 90, 65, WS_EX_STATICEDGE
+    CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | 
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,7,99,173,71
+                    WS_BORDER | WS_TABSTOP, 7, 99, 173, 71
     LTEXT           "Επιλέξτε μια εικόνα ως ταπετσαρία:",
-                    IDC_STATIC,8,87,180,8
-    PUSHBUTTON      "&Αναζήτηση...",IDC_BROWSE_BUTTON,187,135,50,14
-    PUSHBUTTON      "&Χρώμα...",IDC_COLOR_BUTTON,187,155,50,14
-    LTEXT           "Τοποθεσία:",IDC_STATIC,187,98,36,8
-    COMBOBOX        IDC_PLACEMENT_COMBO,187,108,50,90,CBS_DROPDOWNLIST | 
-                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+                    IDC_STATIC, 8, 87, 180, 8
+    PUSHBUTTON      "&Αναζήτηση...", IDC_BROWSE_BUTTON, 187, 135, 50, 14
+    PUSHBUTTON      "&Χρώμα...", IDC_COLOR_BUTTON, 187, 155, 50, 14
+    LTEXT           "Τοποθεσία:", IDC_STATIC, 187, 98, 36, 8
+    COMBOBOX        IDC_PLACEMENT_COMBO, 187, 108, 50, 90,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_SCREENSAVER DIALOGEX DISCARDABLE  0, 0, 246, 188
@@ -24,6 +24,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Προφύλαξη οθόνης"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
+                    80, 10, 83, 57, WS_EX_STATICEDGE
     GROUPBOX        "&Προφύλαξη οθόνης",IDC_SCREENS_DUMMY, 5, 7, 238, 136
     
     LTEXT           "Λίστα προφυλάξεων οθόνης:",IDC_STATIC,13, 24, 150, 9
@@ -42,12 +44,14 @@ BEGIN
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP,52, 109, 12, 12
-    LTEXT           "Λεπτά πριν την έναρξη της προφύλαξης οθόνης.",IDC_STATIC,70, 111, 147, 9
+    LTEXT           "Λεπτά πριν την έναρξη της προφύλαξης οθόνης.",
+                    IDC_STATIC,70, 111, 147, 9
 
-    GROUPBOX        "&Στοιχεία εξοικονόμησης ενέργειας της οθόνης",IDC_SCREENS_DUMMY2,5, 146, 238, 50
+    GROUPBOX        "&Στοιχεία εξοικονόμησης ενέργειας της οθόνης",
+                    IDC_SCREENS_DUMMY2, 5, 146, 238, 50
     LTEXT           "Για να ρυθμίσετε τα στοιχεία ενέργειας της οθόνης, κάντε κλικ στο 'Ρυμίσεις ενέργειας'.",
-                    IDC_STATIC,16, 159, 145, 35
-    PUSHBUTTON      "&Ρυθμίσεις ενέργειας",IDC_SCREENS_POWER_BUTTON,165, 162, 73, 15
+                    IDC_STATIC, 16, 159, 145, 35
+    PUSHBUTTON      "&Ρυθμίσεις ενέργειας", IDC_SCREENS_POWER_BUTTON, 165, 162, 73, 15
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -57,13 +61,49 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Item:", IDC_STATIC, 7, 159, 26, 9
+    LTEXT           "Colorscheme", IDC_STATIC, 7, 140, 64, 7
     COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Size:", IDC_STATIC, 142, 159, 16, 9
-    EDITTEXT        IDC_APPEAR_SIZE, 142, 169, 38, 13, ES_RIGHT | WS_GROUP
-    CONTROL         "", IDC_APPEAR_SIZE_UPDOWN, UPDOWN_CLASS, WS_BORDER | WS_GROUP |
-                    UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT,
-                    172, 169, 10, 13
+    PUSHBUTTON      "Advanced", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
+END
+
+IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
+CAPTION "Advanced Appearance"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
+                    WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
+    
+    LTEXT "Element:", 8, 5, 160, 50, 9
+    COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+    
+    LTEXT "&Size", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
+    EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
+    CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
+
+    LTEXT   "&1st Color:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    LTEXT   "&2nd Color:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    LTEXT "Font:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT   "Fontsize:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, NOT CBS_SIMPLE | CBS_DROPDOWN | WS_VSCROLL
+
+    LTEXT   "Color:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
+    CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    AUTOCHECKBOX   "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
+    AUTOCHECKBOX   "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE 
+
+    PUSHBUTTON "Cancel", IDCANCEL, 191, 220, 50, 14 
+    DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
+    
+    EDITTEXT IDC_CONVERT, -1, -1, 0, 0, ES_LEFT
 END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188
@@ -74,8 +114,8 @@ BEGIN
     LTEXT           "&Εμφάνιση:",1820,3,100,30,8
     LTEXT           "<none>",IDC_SETTINGS_DEVICE,9,109,224,8
     GROUPBOX        "&Περιοχή οθόνης",1818,3,120,115,43
-    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
-                    30,130,58,17
+    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
     LTEXT           "Λιγότερο",1815,9,130,15,8,NOT WS_GROUP
     LTEXT           "Περισσότερο",1816,93,130,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
@@ -110,7 +150,6 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Display"
     IDS_CPLDESCRIPTION "Παραμετροποιεί την επιφάνεια εργασίας και την προφύλαξη οθόνης."
-    
     IDS_NONE "(Κενό)"
     IDS_CENTER "Κέντρο"
     IDS_STRETCH "Τεντωμένο"
@@ -145,22 +184,26 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ITEM_3D_OBJECTS      "3D Objects"
-    IDS_ITEM_SCROLLBAR       "Scrollbar"
-    IDS_ITEM_DESKTOP         "Desktop"
-    IDS_ITEM_MESSAGE_BOX     "Message Box"
-    IDS_ITEM_WINDOW          "Window"
-    IDS_ITEM_APP_BACKGROUND  "Application Background"
-    IDS_ITEM_SELECTED_ITEMS  "Selected Items"
-    IDS_ITEM_MENU            "Menu"
-    IDS_ITEM_PALETTE_TITLE   "Palette Title"
-    IDS_ITEM_TOOLTIP         "Tooltip"
-    IDS_ITEM_INACTIVE_WINDOW "Inactive Window Border"
-    IDS_ITEM_ACTIVE_WINDOW   "Active Window Border"
-    IDS_ITEM_ICON            "Icon"
-    IDS_ITEM_ICON_SPACE_HORZ "Icon Spacing (Horizontal)"
-    IDS_ITEM_ICON_SPACE_VERT "Icon Spacing (Vertical)"
-    IDS_ITEM_INACTIVE_TITLE  "Inactive Title Bar"
-    IDS_ITEM_ACTIVE_TITLE    "Active Title Bar"
-    IDS_ITEM_CAPTION_BUTTONS "Caption Buttons"
+    IDS_ELEMENT_1 "Desktop"
+    IDS_ELEMENT_2 "Caption of inactive windows"
+    IDS_ELEMENT_3 "Border of inactive windows"
+    IDS_ELEMENT_4 "Caption of active windows"
+    IDS_ELEMENT_5 "Border of active windows"
+    IDS_ELEMENT_6 "Menu"
+    IDS_ELEMENT_7 "Hilited elements"
+    IDS_ELEMENT_8 "Windows"
+    IDS_ELEMENT_9 "Scrollbars"
+    IDS_ELEMENT_10 "3D objects"
+    IDS_ELEMENT_11 "Palette title"
+	IDS_ELEMENT_12 "Symbol title"
+    IDS_ELEMENT_13 "Captionbar"
+    IDS_ELEMENT_14 "Deactivated menu elements"
+    IDS_ELEMENT_15 "Dialog"
+    IDS_ELEMENT_16 "Scrollbar controls"
+    IDS_ELEMENT_17 "Application background"
+    IDS_ELEMENT_18 "Small captionbar"
+    IDS_ELEMENT_19 "Symbol distance (horizontal)"
+    IDS_ELEMENT_20 "Symbol distance (vertical)"
+    IDS_ELEMENT_21 "Quickinfo"
+    IDS_ELEMENT_22 "Symbol"
 END

@@ -5,14 +5,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hintergrund"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 80, 10, 83, 57, WS_EX_STATICEDGE
-    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER 
-                    | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
-    LTEXT           "Hintergrundbild:", IDC_STATIC, 8, 103, 180, 9
+    CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
+                    80, 10, 83, 57, WS_EX_STATICEDGE
+    CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
+                    WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
+    LTEXT           "Hintergrundbild:", 
+                    IDC_STATIC, 8, 103, 180, 9
     PUSHBUTTON      "&Durchsuchen...", IDC_BROWSE_BUTTON, 188, 114, 55, 15
     PUSHBUTTON      "&Farbe...", IDC_COLOR_BUTTON, 188, 177, 55, 15
     LTEXT           "&Ausrichtung:", IDC_STATIC, 188, 140, 50, 9
-    COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_SCREENSAVER DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -20,32 +24,34 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Bildschirmschoner"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 80, 10, 83, 57, WS_EX_STATICEDGE
-
+    CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
+                    80, 10, 83, 57, WS_EX_STATICEDGE
     GROUPBOX        "&Bildschrimschoner",IDC_STATIC, 5, 7, 238, 136
 
-    LTEXT           "Installierte Bildschrimschoner:",IDC_STATIC,13, 24, 150, 9
-    CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
+    LTEXT           "Installierte Bildschrimschoner:", IDC_STATIC, 13, 24, 150, 9
+    CONTROL         "", IDC_SCREENS_CHOICES, "SysListView32", LVS_REPORT | 
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,13, 34, 170, 69
+                    LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 13, 34, 170, 69
 
-    PUSHBUTTON      "&Einstellungen",IDC_SCREENS_SETTINGS,188, 34, 50, 15,WS_GROUP
-    PUSHBUTTON      "&Vorschau",IDC_SCREENS_TESTSC,188, 52, 50, 15
+    PUSHBUTTON      "&Einstellungen", IDC_SCREENS_SETTINGS, 188, 34, 50, 15,WS_GROUP
+    PUSHBUTTON      "&Vorschau", IDC_SCREENS_TESTSC, 188, 52, 50, 15
 
-    CONTROL         "&Passwortschutz bei Reaktivierung.",IDC_SCREENS_USEPASSCHK,"button",
+    CONTROL         "&Passwortschutz bei Reaktivierung.", IDC_SCREENS_USEPASSCHK, "button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13, 121, 119, 18
 
-    LTEXT           "&Warte",IDC_STATIC,13, 110, 20, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY,35, 109, 31, 12,ES_RIGHT | WS_GROUP
-    CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
+    LTEXT           "&Warte", IDC_STATIC, 13, 110, 20, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 35, 109, 31, 12, ES_RIGHT | WS_GROUP
+    CONTROL         "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
-                    WS_BORDER | WS_GROUP,52, 109, 12, 12
-    LTEXT           "Minuten, bis der Bildschirmschoner angezeigt wird.",IDC_STATIC,70, 111, 147, 9
+                    WS_BORDER | WS_GROUP, 52, 109, 12, 12
+    LTEXT           "Minuten, bis der Bildschirmschoner angezeigt wird.",
+                    IDC_STATIC, 70, 111, 147, 9
 
-    GROUPBOX        "&Energiesparfunktion des Bildschirms",IDC_SCREENS_DUMMY2,5, 146, 238, 50
+    GROUPBOX        "&Energiesparfunktion des Bildschirms",
+                    IDC_SCREENS_DUMMY2, 5, 146, 238, 50
     LTEXT           "Hier können Sie Energiesparfunktionen Ihres Computers konfigurieren.",
-                    IDC_STATIC,16, 159, 145, 35
-    PUSHBUTTON      "Energ&ieeinstellungen",IDC_SCREENS_POWER_BUTTON,165, 162, 73, 15
+                    IDC_STATIC, 16, 159, 145, 35
+    PUSHBUTTON      "Energ&ieeinstellungen", IDC_SCREENS_POWER_BUTTON, 165, 162, 73, 15
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -55,13 +61,49 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Item:", IDC_STATIC, 7, 159, 26, 9
-    COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Size:", IDC_STATIC, 142, 159, 16, 9
-    EDITTEXT        IDC_APPEAR_SIZE, 142, 169, 38, 13, ES_RIGHT | WS_GROUP
-    CONTROL         "", IDC_APPEAR_SIZE_UPDOWN, UPDOWN_CLASS, WS_BORDER | WS_GROUP |
-                    UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT,
-                    172, 169, 10, 13
+    LTEXT           "Farbschema:", IDC_STATIC, 7, 140, 64, 7
+    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 134, 90 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Erweitert", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
+END
+
+IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
+CAPTION "Erweiterte Darstellung"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
+                    WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
+    
+    LTEXT "Element:", 8, 5, 160, 50, 9
+    COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+    
+    LTEXT "&Größe", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
+    EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
+    CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
+
+    LTEXT   "&1. Farbe:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 30, 9
+    CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    LTEXT   "&2. Farbe:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 30, 9
+    CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    LTEXT "Schriftart:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT   "Schriftgra&d:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, NOT CBS_SIMPLE | CBS_DROPDOWN | WS_VSCROLL
+
+    LTEXT   "Fa&rbe:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
+    CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    AUTOCHECKBOX   "F", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
+    AUTOCHECKBOX   "K ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE 
+
+    PUSHBUTTON "Abbrechen", IDCANCEL, 191, 220, 50, 14 
+    DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
+    
+    EDITTEXT IDC_CONVERT, -1, -1, 0, 0, ES_LEFT
 END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -72,8 +114,8 @@ BEGIN
     LTEXT           "&Anzeige:",1820,3,100,30,8
     LTEXT           "<kein>",IDC_SETTINGS_DEVICE,9,109,224,8
     GROUPBOX        "Bi&ldschirmauflösung",1818,3,120,115,43
-    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
-                    30,130,58,17
+    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
     LTEXT           "Niedrig",1815,9,130,15,8,NOT WS_GROUP
     LTEXT           "Hoch",1816,93,130,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
@@ -87,14 +129,14 @@ END
 
 IDR_POPUP_MENU MENU DISCARDABLE
 BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Konfigurieren",  ID_MENU_CONFIG
-        MENUITEM "&Vorschau",       ID_MENU_PREVIEW
-        MENUITEM SEPARATOR
-        MENUITEM "&Hinzufügen",     ID_MENU_ADD
-        MENUITEM "&Löschen\tDel",   ID_MENU_DELETE
-    END
+  POPUP ""
+  BEGIN
+    MENUITEM "&Konfigurieren", ID_MENU_CONFIG
+    MENUITEM "&Vorschau",      ID_MENU_PREVIEW
+    MENUITEM SEPARATOR
+    MENUITEM "&Hinzufügen",    ID_MENU_ADD
+    MENUITEM "&Löschen\tDel",  ID_MENU_DELETE
+  END
 END
 
 IDR_PREVIEW_MENU MENU
@@ -142,22 +184,26 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ITEM_3D_OBJECTS      "3D-Objekte"
-    IDS_ITEM_SCROLLBAR       "Bildlaufleiste"
-    IDS_ITEM_DESKTOP         "Desktop"
-    IDS_ITEM_MESSAGE_BOX     "Dialogfeld"
-    IDS_ITEM_WINDOW          "Fenster"
-    IDS_ITEM_APP_BACKGROUND  "Hintergrund der Anwendung"
-    IDS_ITEM_SELECTED_ITEMS  "Markierte Elemente"
-    IDS_ITEM_MENU            "Menü"
-    IDS_ITEM_PALETTE_TITLE   "Palettentitel"
-    IDS_ITEM_TOOLTIP         "Quickinfo"
-    IDS_ITEM_INACTIVE_WINDOW "Rahmen der inaktiven Fenster"
-    IDS_ITEM_ACTIVE_WINDOW   "Rahmen der aktiven Fenster"
-    IDS_ITEM_ICON            "Symbol"
-    IDS_ITEM_ICON_SPACE_HORZ "Symbolabstand (Horizontal)"
-    IDS_ITEM_ICON_SPACE_VERT "Symbolabstand (Vertikal)"
-    IDS_ITEM_INACTIVE_TITLE  "Titelleiste des inaktiven Fensters"
-    IDS_ITEM_ACTIVE_TITLE    "Titelleiste des aktiven Fensters"
-    IDS_ITEM_CAPTION_BUTTONS "Titelleistenschaltfläche"
+    IDS_ELEMENT_1 "Desktop"
+    IDS_ELEMENT_2 "Titelleiste der inaktiven Fenster"
+    IDS_ELEMENT_3 "Rahmen der inaktiven Fenster"
+    IDS_ELEMENT_4 "Titelleiste der aktiven Fenster"
+    IDS_ELEMENT_5 "Rahmen der Aktiven Fenster"
+    IDS_ELEMENT_6 "Menü"
+    IDS_ELEMENT_7 "Markierte Elemente"
+    IDS_ELEMENT_8 "Fenster"
+    IDS_ELEMENT_9 "Bildlaufleiste"
+    IDS_ELEMENT_10 "3D-Objekte"
+    IDS_ELEMENT_11 "Palettentitel"
+	IDS_ELEMENT_12 "Symboltitel"
+    IDS_ELEMENT_13 "Titelleistenschaltfläche"
+    IDS_ELEMENT_14 "Deaktiviertes Menüelement"
+    IDS_ELEMENT_15 "Dialogfeld"
+    IDS_ELEMENT_16 "Bildlaufleisten-Schaltflächen"
+    IDS_ELEMENT_17 "Hintergrund der Anwendung"
+    IDS_ELEMENT_18 "Kleine Titelleistenschaltfläche"
+    IDS_ELEMENT_19 "Symbolabstand (Horizontal)"
+    IDS_ELEMENT_20 "Symbolabstand (Vertikal)"
+    IDS_ELEMENT_21 "Quickinfo"
+    IDS_ELEMENT_22 "Symbol"
 END
