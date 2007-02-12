@@ -83,6 +83,7 @@ MainWindow_WndProc(HWND hMainWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_NOTIFY:
 		{
 			if (((LPNMLISTVIEW)lParam)->hdr.code == LVN_ITEMCHANGED
+			        && (wParam == IDC_PROCESSLIST)
 			        && (((LPNMLISTVIEW)lParam)->uNewState & LVIS_SELECTED)
 			        && !(((LPNMLISTVIEW)lParam)->uOldState & LVIS_SELECTED))
 			{

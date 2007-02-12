@@ -72,7 +72,7 @@ ProcessList_Update(HWND hListCtrl)
 	{
 		return;
 	}
-	for (i = 0; i < cProcesses; i++)
+	for (i = 1; i < cProcesses; i++)
 	{
 		wsprintf(strText, L"<unknown>");
 		item.lParam = ProcessIds[i];
