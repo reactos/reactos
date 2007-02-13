@@ -17,7 +17,6 @@
 #include <debug.h>
 
 PKBL KBLList = NULL; // Keyboard layout list.
-PKBL DefaultKL = NULL;
 
 typedef PVOID (*KbdLayerDescriptor)(VOID);
 NTSTATUS STDCALL LdrGetProcedureAddress(PVOID module,
@@ -193,13 +192,13 @@ static BOOL UserLoadKbdDll(WCHAR *wsKLID,
    return TRUE;
 }
 
-static PKBL UserLoadDllAndCreateKbl(LCID LocaleId)
+static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
 {
    PKBL NewKbl;
    ULONG hKl;
    LANGID langid;
    
-   NewKbl = ExAllocatePool(PagedPool, sizeof(NewKbl));
+   NewKbl = ExAllocatePool(PagedPool, sizeof(KBL));
    
    if(!NewKbl)
    { 
@@ -229,7 +228,7 @@ static PKBL UserLoadDllAndCreateKbl(LCID LocaleId)
    else hKl |= hKl << 16;
    
    NewKbl->hkl = (HKL) hKl;
-   NewKbl->lcid = LocaleId;
+   NewKbl->klid = LocaleId;
    NewKbl->Flags = 0;
    NewKbl->RefCount = 0;
    
@@ -238,7 +237,6 @@ static PKBL UserLoadDllAndCreateKbl(LCID LocaleId)
 
 BOOL UserInitDefaultKeyboardLayout()
 {
-
    LCID LocaleId;
    NTSTATUS Status;
 
@@ -252,27 +250,60 @@ BOOL UserInitDefaultKeyboardLayout()
       DPRINT("DefaultLocale = %08lx\n", LocaleId);
    }
 
-   if(!NT_SUCCESS(Status) || !(DefaultKL = UserLoadDllAndCreateKbl(LocaleId)))
+   if(!NT_SUCCESS(Status) || !(KBLList = UserLoadDllAndCreateKbl(LocaleId)))
    {
       DPRINT1("Trying to load US Keyboard Layout.\n");
       LocaleId = 0x409;
 
-      if(!(DefaultKL = UserLoadDllAndCreateKbl(LocaleId)))
+      if(!(KBLList = UserLoadDllAndCreateKbl(LocaleId)))
       {
          DPRINT1("Failed to load any Keyboard Layout\n");
          return FALSE;
       }
    }
    
-   InitializeListHead(&DefaultKL->List);
-   KBLList = DefaultKL;
+   InitializeListHead(&KBLList->List);
    return TRUE;
 }
 
-
 PKBL W32kGetDefaultKeyLayout(VOID)
 {
-   return DefaultKL;
+   LCID LocaleId;
+   NTSTATUS Status;
+   PKBL pKbl;
+
+   // This is probably wrong...
+   // I need to do more research.
+   Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Could not get default locale (%08lx).\n", Status);
+      DPRINT1("Assuming default locale = 0x409 (US).\n");
+      LocaleId = 0x409;
+   }
+   
+   pKbl = KBLList;
+   do
+   {
+      if(pKbl->klid == LocaleId)
+      {
+         return pKbl;
+      }
+      
+      pKbl = (PKBL) pKbl->List.Flink;
+   } while(pKbl != KBLList);
+   
+   DPRINT("Loading new default keyboard layout.\n");
+   pKbl = UserLoadDllAndCreateKbl(LocaleId);
+   
+   if(!pKbl)
+   {
+      DPRINT1("Failed to load %x!!! Returning any availableKL.\n", LocaleId);
+      return KBLList;
+   }
+   
+   InsertTailList(&KBLList->List, &pKbl->List);
+   return pKbl;
 }
 
 static PKBL UserHklToKbl(HKL hKl)
@@ -298,6 +329,8 @@ static PKBL UserActivateKbl(PW32THREAD Thread, PKBL pKbl)
    
    return Prev;
 }
+
+/* EXPORTS *******************************************************************/
 
 HKL FASTCALL
 UserGetKeyboardLayout(
@@ -326,8 +359,6 @@ UserGetKeyboardLayout(
    ObDereferenceObject(Thread);
    return Ret;
 }
-
-/* EXPORTS *******************************************************************/
 
 UINT
 STDCALL
@@ -408,8 +439,12 @@ NtUserGetKeyboardLayoutName(
 HKL
 STDCALL
 NtUserLoadKeyboardLayoutEx( 
-   IN LCID LocaleId,
-   IN UINT Flags)
+   IN DWORD dwKLID,
+   IN UINT Flags,
+   IN DWORD Unused1,
+   IN DWORD Unused2,
+   IN DWORD Unused3,
+   IN DWORD Unused4)
 {
    HKL Ret = NULL;
    PKBL pKbl;
@@ -419,7 +454,7 @@ NtUserLoadKeyboardLayoutEx(
    pKbl = KBLList;
    do
    {
-      if(pKbl->lcid == LocaleId)
+      if(pKbl->klid == dwKLID)
       {
          Ret = pKbl->hkl;
          goto the_end;
@@ -428,7 +463,13 @@ NtUserLoadKeyboardLayoutEx(
       pKbl = (PKBL) pKbl->List.Flink;
    } while(pKbl != KBLList);
    
-   pKbl = UserLoadDllAndCreateKbl(LocaleId);
+   pKbl = UserLoadDllAndCreateKbl(dwKLID);
+   
+   if(!pKbl)
+   {
+      goto the_end;
+   }
+   
    InsertTailList(&KBLList->List, &pKbl->List);
    Ret = pKbl->hkl;
    

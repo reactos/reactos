@@ -12,7 +12,7 @@ typedef struct _KBL
   HANDLE hModule;
   ULONG RefCount;
   HKL hkl;
-  LCID lcid;
+  DWORD klid; // Low word - language id. High word - device id.
 } KBL, *PKBL;
 
 #define KBL_UNLOADED 0x20000000

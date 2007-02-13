@@ -1217,10 +1217,14 @@ NtUserKillTimer
 );
 
 HKL
-NTAPI
-NtUserLoadKeyboardLayoutEx(
-  LCID LocaleId,
-  UINT Flags);
+STDCALL
+NtUserLoadKeyboardLayoutEx( 
+   IN DWORD dwKLID,
+   IN UINT Flags,
+   IN DWORD Unused1,
+   IN DWORD Unused2,
+   IN DWORD Unused3,
+   IN DWORD Unused4);
 
 BOOL
 NTAPI

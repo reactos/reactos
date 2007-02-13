@@ -332,6 +332,7 @@ LRESULT MainDialogProc(HWND hDlg,
 		case WM_INPUTLANGCHANGEREQUEST:
 		{
 			FormatMsg(L"dlg WM_INPUTLANGCHANGEREQUEST lParam=%x wParam=%x\n", lParam, wParam);
+			UpdateData(hDlg);
 			return FALSE;
 		}
 

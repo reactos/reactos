@@ -300,7 +300,7 @@ LoadKeyboardLayoutA(LPCSTR pwszKLID,
 {
   return NtUserLoadKeyboardLayoutEx(
                strtoul(pwszKLID, NULL, 16),
-               Flags);
+               Flags, 0, 0, 0, 0);
 }
 
 
@@ -315,7 +315,7 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
   // We will do things our own way.
   return NtUserLoadKeyboardLayoutEx(
                wcstoul(pwszKLID, NULL, 16),
-               Flags);
+               Flags, 0, 0, 0, 0);
 }
 
 
