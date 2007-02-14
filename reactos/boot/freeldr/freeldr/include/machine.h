@@ -52,7 +52,7 @@ typedef struct tagMACHVTBL
   VOID (*VideoSetPaletteColor)(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
   VOID (*VideoGetPaletteColor)(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue);
   VOID (*VideoSync)(VOID);
-  VOID (*VideoPrepareForReactOS)(VOID);
+  VOID (*VideoPrepareForReactOS)(IN BOOLEAN Setup);
 
   ULONG (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
@@ -91,7 +91,7 @@ BOOLEAN MachVideoIsPaletteFixed(VOID);
 VOID MachVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
 VOID MachVideoGetPaletteColor(UCHAR Color, UCHAR *Red, UCHAR *Green, UCHAR *Blue);
 VOID MachVideoSync(VOID);
-VOID MachVideoPrepareForReactOS(VOID);
+VOID MachVideoPrepareForReactOS(IN BOOLEAN Setup);
 ULONG MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 BOOLEAN MachDiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
 BOOLEAN
@@ -128,7 +128,7 @@ VOID MachHwDetect(VOID);
 #define MachVideoSetPaletteColor(Col, R, G, B)	MachVtbl.VideoSetPaletteColor((Col), (R), (G), (B))
 #define MachVideoGetPaletteColor(Col, R, G, B)	MachVtbl.VideoGetPaletteColor((Col), (R), (G), (B))
 #define MachVideoSync()				MachVtbl.VideoSync()
-#define MachVideoPrepareForReactOS()		MachVtbl.VideoPrepareForReactOS()
+#define MachVideoPrepareForReactOS(a)		MachVtbl.VideoPrepareForReactOS(a)
 #define MachGetMemoryMap(MMap, Size)		MachVtbl.GetMemoryMap((MMap), (Size))
 #define MachDiskGetBootVolume(Drv, Start, Cnt, FsType)	MachVtbl.DiskGetBootVolume((Drv), (Start), (Cnt), (FsType))
 #define MachDiskGetSystemVolume(SysPath, RemPath, Dev, Drv, Start, Cnt, FsType)	MachVtbl.DiskGetSystemVolume((SysPath), (RemPath), (Dev), (Drv), (Start), (Cnt), (FsType))

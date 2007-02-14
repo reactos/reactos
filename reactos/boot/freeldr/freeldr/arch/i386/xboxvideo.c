@@ -234,7 +234,7 @@ XboxVideoSync()
 }
 
 VOID
-XboxVideoPrepareForReactOS(VOID)
+XboxVideoPrepareForReactOS(IN BOOLEAN Setup)
 {
   XboxVideoClearScreenColor(MAKE_COLOR(0, 0, 0), TRUE);
 }

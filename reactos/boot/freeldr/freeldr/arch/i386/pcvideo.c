@@ -1106,9 +1106,16 @@ PcVideoSync(VOID)
 }
 
 VOID
-PcVideoPrepareForReactOS(VOID)
+PcVideoPrepareForReactOS(IN BOOLEAN Setup)
 {
-    PcVideoSetMode80x50_80x43();
+    if (Setup)
+    {
+        PcVideoSetMode80x50_80x43();
+    }
+    else
+    {
+        PcVideoSetBiosMode(0x12);
+    }
     PcVideoHideShowTextCursor(FALSE);
 }
 

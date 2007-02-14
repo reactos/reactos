@@ -398,6 +398,13 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"SystemPath",
 		    ArcPath);
 
+  /* Options=/SOS*/
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"Options",
+		    L"/SOS");
+
   /* Create "ReactOS_Debug" section */
   IniSection = IniCacheAppendSection(IniCache,
 				     L"ReactOS_Debug");
@@ -421,7 +428,7 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    NULL,
 		    INSERT_LAST,
 		    L"Options",
-		    L"/DEBUGPORT=COM1 /NOGUIBOOT /SOS");
+		    L"/DEBUGPORT=COM1 /SOS");
 
   /* Save the ini file */
   IniCacheSave(IniCache, IniPath);

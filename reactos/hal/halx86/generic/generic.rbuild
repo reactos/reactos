@@ -25,7 +25,7 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_NTHAL_" />
 	<define name="__USE_W32API" />
-	<file>irql.c</file>
+	<file>irq.s</file>
     <file>halinit.c</file>
 	<file>processor.c</file>
 	<file>spinlock.c</file>

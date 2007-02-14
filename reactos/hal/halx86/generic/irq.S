@@ -282,7 +282,7 @@ AfterMask:
     and PCR[KPCR_IDR], eax
 
     /* Get the current IRQL and mask the IRQs in the PIC */
-    movzx eax, byte ptr PCR[KPCR_IRQL]
+    mov eax, PCR[KPCR_IRQL]
     mov eax, KiI8259MaskTable[eax*4]
     or eax, PCR[KPCR_IDR]
     out 0x21, al
@@ -309,9 +309,9 @@ Invalid:
 _HalBeginSystemInterrupt@12:
 
     /* Convert to IRQ and call the handler */
-    movzx edx, byte ptr [esp+8]
-    sub edx, PRIMARY_VECTOR_BASE
-    jmp HalpSysIntHandler[edx*4]
+    movzx ebx, byte ptr [esp+8]
+    sub ebx, PRIMARY_VECTOR_BASE
+    jmp HalpSysIntHandler[ebx*4]
 
 IRQ15:
     /* This is IRQ 15, check if it's spurious */
@@ -344,12 +344,12 @@ IRQ7:
 GenericIRQ:
     /* Return the current IRQL */
     mov eax, [esp+12]
-    movzx ecx, byte ptr PCR[KPCR_IRQL]
+    mov ecx, PCR[KPCR_IRQL]
     mov [eax], cl
 
     /* Set the new IRQL */
     movzx eax, byte ptr [esp+4]
-    mov PCR[KPCR_IRQL], al
+    mov PCR[KPCR_IRQL], eax
 
     /* Set IRQ mask in the PIC */
     mov eax, KiI8259MaskTable[eax*4]
@@ -359,7 +359,7 @@ GenericIRQ:
     out 0xA1, al
 
     /* Check to which PIC the EOI was sent */
-    mov eax, edx
+    mov eax, ebx
     cmp eax, 8
     jnb Pic1
 
@@ -396,7 +396,7 @@ _HalEndSystemInterrupt@8:
 
     /* Get the IRQL and check if it's a software interrupt */
     movzx ecx, byte ptr [esp+4]
-    cmp byte ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
+    cmp dword ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
     jbe SkipMask2
 
     /* Hardware interrupt, mask the appropriate IRQs in the PIC */
@@ -409,7 +409,7 @@ _HalEndSystemInterrupt@8:
 SkipMask2:
 
     /* Set IRQL and check if there are pending software interrupts */
-    mov PCR[KPCR_IRQL], cl
+    mov PCR[KPCR_IRQL], ecx
     mov eax, PCR[KPCR_IRR]
     mov al, SoftIntByteTable[eax]
     cmp al, cl
@@ -439,7 +439,7 @@ _@KfLowerIrql@4:
 #endif
 
     /* Disable interrupts and check if IRQL is below DISPATCH_LEVEL */
-    cmp byte ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
+    cmp dword ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
     cli
     jbe SkipMask
 
@@ -453,7 +453,7 @@ _@KfLowerIrql@4:
 SkipMask:
 
     /* Set the new IRQL and check if there's a pending software interrupt */
-    mov PCR[KPCR_IRQL], cl
+    mov PCR[KPCR_IRQL], ecx
     mov eax, PCR[KPCR_IRR]
     mov al, SoftIntByteTable[eax]
     cmp al, cl
@@ -466,8 +466,8 @@ SkipMask:
 #if DBG
 InvalidIrql:
     /* Set HIGH_LEVEL */
-    movzx eax, byte ptr PCR[KPCR_IRQL]
-    mov byte ptr PCR[KPCR_IRQL], HIGH_LEVEL
+    mov eax, PCR[KPCR_IRQL]
+    mov dword ptr PCR[KPCR_IRQL], HIGH_LEVEL
 
     /* Bugcheck the system */
     push 3
@@ -493,8 +493,7 @@ _@KfRaiseIrql@4:
 @KfRaiseIrql@4:
 
     /* Get the IRQL  */
-    xor eax, eax
-    mov al, PCR[KPCR_IRQL]
+    mov eax, PCR[KPCR_IRQL]
     movzx ecx, cl
 
 #if DBG
@@ -532,13 +531,13 @@ _@KfRaiseIrql@4:
 SetIrql:
 
     /* Set the IRQL and return */
-    mov PCR[KPCR_IRQL], cl
+    mov PCR[KPCR_IRQL], ecx
     ret
 
 #if DBG
 InvalidKfRaise:
     /* Set to passive */
-    mov byte ptr PCR[KPCR_IRQL], PASSIVE_LEVEL
+    mov dword ptr PCR[KPCR_IRQL], PASSIVE_LEVEL
 
     /* Bugcheck the system */
     push 9
@@ -555,7 +554,7 @@ InvalidKfRaise:
 _KeGetCurrentIrql@0:
 
     /* Return the IRQL */
-    movzx eax, byte ptr PCR[KPCR_IRQL]
+    mov eax, PCR[KPCR_IRQL]
     ret
 .endfunc
 
@@ -564,15 +563,14 @@ _KeGetCurrentIrql@0:
 _KeRaiseIrqlToDpcLevel@0:
 
     /* Get the current IRQL */
-    xor eax, eax
-    mov al, PCR[KPCR_IRQL]
+    mov eax, PCR[KPCR_IRQL]
 
     /* Set DISPATCH_LEVEL */
-    mov byte ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
+    mov dword ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
 
 #if DBG
     /* Make sure we were not higher then dispatch */
-    cmp al, DISPATCH_LEVEL
+    cmp eax, DISPATCH_LEVEL
     ja InvalidRaise
 #endif
     ret
@@ -605,13 +603,13 @@ _KeRaiseIrqlToSynchLevel@0:
     out 0xA1, al
 
     /* Return the old IRQL, enable interrupts and set to DISPATCH */
-    mov al, PCR[KPCR_IRQL]
-    mov byte ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
+    mov eax, PCR[KPCR_IRQL]
+    mov dword ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
     popf
 
 #if DBG
     /* Validate raise */
-    cmp al, DISPATCH_LEVEL
+    cmp eax, DISPATCH_LEVEL
     ja InvalidSyRaise
 #endif
 
@@ -632,6 +630,8 @@ InvalidSyRaise:
 
 .globl _HalpApcInterrupt
 .func HalpApcInterrupt
+Dr_hapc:    DR_TRAP_FIXUP
+V86_hapc:   V86_TRAP_FIXUP
 _HalpApcInterrupt:
 
     /* Create fake interrupt stack */
@@ -679,6 +679,8 @@ DeliverApc:
 
 .globl _HalpDispatchInterrupt
 .func HalpDispatchInterrupt
+Dr_hdpc:    DR_TRAP_FIXUP
+V86_hdpc:   V86_TRAP_FIXUP
 _HalpDispatchInterrupt:
 
     /* Create fake interrupt stack */
@@ -688,7 +690,7 @@ _HalpDispatchInterrupt:
     push eax
 
     /* Enter interrupt */
-    INT_PROLOG hapc, DoPushFakeErrorCode
+    INT_PROLOG hdpc, DoPushFakeErrorCode
 .endfunc
 
 .globl _HalpDispatchInterrupt2ndEntry
