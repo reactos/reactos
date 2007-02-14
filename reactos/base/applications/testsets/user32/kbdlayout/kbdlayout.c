@@ -240,7 +240,10 @@ LRESULT MainDialogProc(HWND hDlg,
 			SubclassWnd(GetDlgItem(hDlg, IDC_EDIT2), L"Edit2");
 			SubclassWnd(GetDlgItem(hDlg, IDC_KLID), L"Klid");
 			SubclassWnd(GetDlgItem(hDlg, IDC_HANDLE), L"Handle");
-			SubclassWnd(GetDlgItem(hDlg, ID_CANCEL), L"Button");
+			SubclassWnd(GetDlgItem(hDlg, ID_CANCEL), L"CancelB");
+			SubclassWnd(GetDlgItem(hDlg, IDC_ACTIVATE), L"ActivateB");
+			SubclassWnd(GetDlgItem(hDlg, IDC_REFRESH), L"RefreshB");
+			SubclassWnd(GetDlgItem(hDlg, IDC_UNLOAD), L"UnloadB");
 
 			CheckRadioButton(hDlg, IDC_FROMLIST, IDC_FROMEDIT, IDC_FROMLIST);
 			SetWindowText(GetDlgItem(hDlg, IDC_KLID), L"00000419");
@@ -262,10 +265,12 @@ LRESULT MainDialogProc(HWND hDlg,
 				{
 					if((hKl = GetActivateHandle(hDlg)) != INVALID_HANDLE_VALUE)
 					{
-						if(!ActivateKeyboardLayout(hKl, GetActivateFlags(hDlg)))
+						if(!(hKl = ActivateKeyboardLayout(hKl, GetActivateFlags(hDlg))))
 							FormatBox(hDlg, MB_ICONERROR, L"Error", 
 								L"ActivateKeyboardLayout() failed. %d", GetLastError());
 						else UpdateData(hDlg);
+						//FormatBox(hDlg, 0, L"Activated", L"Prev - %x, err - %d.", hKl, 
+						// GetLastError());
 					}
 					else MessageBox(hDlg, L"No item selected", L"Error", MB_ICONERROR);
 					break;
