@@ -633,7 +633,7 @@ for(;;);
 
   /* Now boot the kernel */
   DiskStopFloppyMotor();
-  MachVideoPrepareForReactOS();
+  MachVideoPrepareForReactOS(TRUE);
   FrLdrStartup(0x2badb002);
 }
 

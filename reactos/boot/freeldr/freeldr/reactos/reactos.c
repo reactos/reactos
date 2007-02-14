@@ -932,7 +932,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	 * Now boot the kernel
 	 */
 	DiskStopFloppyMotor();
-    MachVideoPrepareForReactOS(FrLdrBootType);
+    MachVideoPrepareForReactOS(FALSE);
     FrLdrStartup(0x2badb002);
 }
 
