@@ -336,7 +336,7 @@ ExfWaitForRundownProtectionRelease(
 
 /* HANDLE TABLE FUNCTIONS ***************************************************/
 
-typedef VOID
+typedef BOOLEAN
 (NTAPI *PEX_SWEEP_HANDLE_CALLBACK)(
     PHANDLE_TABLE_ENTRY HandleTableEntry,
     HANDLE Handle,

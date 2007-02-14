@@ -15,9 +15,10 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 PHANDLE_TABLE ObpKernelHandleTable = NULL;
+ULONG ObpAccessProtectCloseBit = MAXIMUM_ALLOWED;
 
 #define TAG_OB_HANDLE TAG('O', 'b', 'H', 'd')
 
@@ -69,7 +70,6 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
     ULONG Attributes;
     PETHREAD Thread = PsGetCurrentThread();
     NTSTATUS Status;
-    PAGED_CODE();
 
     /* Assume failure */
     *Object = NULL;
@@ -86,7 +86,7 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
 
         /* Reference ourselves */
         ObjectHeader = OBJECT_TO_OBJECT_HEADER(Process);
-        InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+        InterlockedIncrement(&ObjectHeader->PointerCount);
 
         /* Return the pointer */
         *Object = Process;
@@ -249,7 +249,7 @@ ObpInsertHandleCount(IN POBJECT_HEADER ObjectHeader)
         /* Now we'll have two entries, and an entire DB */
         i = 2;
         Size = sizeof(OBJECT_HANDLE_COUNT_DATABASE) +
-               sizeof(OBJECT_HANDLE_COUNT_ENTRY);
+               ((i - 1) * sizeof(OBJECT_HANDLE_COUNT_ENTRY));
     }
     else
     {
@@ -261,7 +261,7 @@ ObpInsertHandleCount(IN POBJECT_HEADER ObjectHeader)
 
         /* Add 4 more entries */
         i += 4;
-        Size = OldSize += (4 * sizeof(OBJECT_HANDLE_COUNT_ENTRY));
+        Size = OldSize += ((i - 1) * sizeof(OBJECT_HANDLE_COUNT_ENTRY));
     }
 
     /* Allocate the DB */
@@ -395,7 +395,6 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
 {
     POBJECT_HEADER_QUOTA_INFO ObjectQuota;
     ULONG PagedPoolCharge, NonPagedPoolCharge;
-    PEPROCESS Process;
 
     /* Get quota information */
     ObjectQuota = OBJECT_HEADER_TO_QUOTA_INFO(ObjectHeader);
@@ -404,9 +403,6 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
     /* Check if this is a new object */
     if (ObjectHeader->Flags & OB_FLAG_CREATE_INFO)
     {
-        /* Set the flag */
-        *NewObject = TRUE;
-
         /* Remove the flag */
         ObjectHeader->Flags &= ~ OB_FLAG_CREATE_INFO;
         if (ObjectQuota)
@@ -422,14 +418,19 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
             NonPagedPoolCharge = ObjectType->TypeInfo.DefaultNonPagedPoolCharge;
         }
 
-        /*
-         * Charge the quota
-         * FIXME: This is a *COMPLETE* guess and probably defintely not the way to do this.
-         */
-        Process = PsGetCurrentProcess();
-        Process->QuotaBlock->QuotaEntry[PagedPool].Usage += PagedPoolCharge;
-        Process->QuotaBlock->QuotaEntry[NonPagedPool].Usage += NonPagedPoolCharge;
-        ObjectHeader->QuotaBlockCharged = Process->QuotaBlock;
+        /* Charge the quota */
+        ObjectHeader->QuotaBlockCharged = (PVOID)1;
+#if 0
+            PsChargeSharedPoolQuota(PsGetCurrentProcess(),
+                                    PagedPoolCharge,
+                                    NonPagedPoolCharge);
+#endif
+
+        /* Check if we don't have a quota block */
+        if (!ObjectHeader->QuotaBlockCharged) return STATUS_QUOTA_EXCEEDED;
+
+        /* Now set the flag */
+        *NewObject = TRUE;
     }
 
     /* Return success */
@@ -459,10 +460,10 @@ VOID
 NTAPI
 ObpDecrementHandleCount(IN PVOID ObjectBody,
                         IN PEPROCESS Process,
-                        IN ACCESS_MASK GrantedAccess)
+                        IN ACCESS_MASK GrantedAccess,
+                        IN POBJECT_TYPE ObjectType)
 {
     POBJECT_HEADER ObjectHeader;
-    POBJECT_TYPE ObjectType;
     LONG SystemHandleCount, ProcessHandleCount;
     LONG NewCount;
     KIRQL CalloutIrql;
@@ -474,7 +475,6 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
 
     /* Get the object type and header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
-    ObjectType = ObjectHeader->Type;
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Decrementing count for: %p. HC LC %lx %lx\n",
             __FUNCTION__,
@@ -539,6 +539,11 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
                     HandleEntry++;
                     i--;
                 }
+            }
+            else
+            {
+                /* No database, so no entry */
+                HandleEntry = NULL;
             }
         }
 
@@ -686,7 +691,10 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     ExDestroyHandle(HandleTable, Handle, HandleEntry);
 
     /* Now decrement the handle count */
-    ObpDecrementHandleCount(Body, PsGetCurrentProcess(), GrantedAccess);
+    ObpDecrementHandleCount(Body,
+                            PsGetCurrentProcess(),
+                            GrantedAccess,
+                            ObjectType);
 
     /* Dereference the object as well */
     ObDereferenceObject(Body);
@@ -749,6 +757,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     KIRQL CalloutIrql;
     KPROCESSOR_MODE ProbeMode;
     ULONG Total;
+    PAGED_CODE();
 
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -1359,7 +1368,8 @@ ObpCreateUnnamedHandle(IN PVOID Object,
     /* Decrement the handle count and detach */
     ObpDecrementHandleCount(&ObjectHeader->Body,
                             PsGetCurrentProcess(),
-                            GrantedAccess);
+                            GrantedAccess,
+                            ObjectType);
 
     /* Detach and fail */
     if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
@@ -1596,7 +1606,8 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     /* Decrement the handle count and detach */
     ObpDecrementHandleCount(&ObjectHeader->Body,
                             PsGetCurrentProcess(),
-                            GrantedAccess);
+                            GrantedAccess,
+                            ObjectType);
 
     /* Handle extra references */
     if (AdditionalReferences)
@@ -1644,6 +1655,7 @@ ObpCloseHandle(IN HANDLE Handle,
     KAPC_STATE ApcState;
     PHANDLE_TABLE_ENTRY HandleTableEntry;
     NTSTATUS Status;
+    PEPROCESS Process = PsGetCurrentProcess();
     PAGED_CODE();
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Closing handle: %lx\n", __FUNCTION__, Handle);
@@ -1656,7 +1668,7 @@ ObpCloseHandle(IN HANDLE Handle,
         Handle = ObKernelHandleToHandle(Handle);
 
         /* Check if we're not in the system process */
-        if (PsGetCurrentProcess() != PsInitialSystemProcess)
+        if (Process != PsInitialSystemProcess)
         {
             /* Attach to the system process */
             KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
@@ -1666,7 +1678,7 @@ ObpCloseHandle(IN HANDLE Handle,
     else
     {
         /* Use the process's handle table */
-        HandleTable = PsGetCurrentProcess()->ObjectTable;
+        HandleTable = Process->ObjectTable;
     }
 
     /* Enter a critical region to protect handle access */
@@ -1698,18 +1710,43 @@ ObpCloseHandle(IN HANDLE Handle,
         /* Detach */
         if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
 
-        /* Check if this was a user-mode caller with a valid debug port */
-        if ((AccessMode != KernelMode) &&
-            (PsGetCurrentProcess()->DebugPort))
+        /* Check if we have a valid handle that's not the process or thread */
+        if ((Handle) &&
+            (Handle != NtCurrentProcess()) &&
+            (Handle != NtCurrentThread()))
         {
-            /* Raise an exception */
-            Status = KeRaiseUserException(STATUS_INVALID_HANDLE);
+            /* Check if we came from user mode */
+            if (AccessMode != KernelMode)
+            {
+                /* Check if we have no debug port */
+                if (Process->DebugPort)
+                {
+                    /* Make sure we're not attached */
+                    if (!KeIsAttachedProcess())
+                    {
+                        /* Raise an exception */
+                        return KeRaiseUserException(STATUS_INVALID_HANDLE);
+                    }
+                }
+            }
+            else
+            {
+                /* This is kernel mode. Check if we're exiting */
+                if (!(PsIsThreadTerminating(PsGetCurrentThread())) &&
+                    (Process->Peb))
+                {
+                    /* Check if the debugger is enabled */
+                    if (KdDebuggerEnabled)
+                    {
+                        /* Bugcheck */
+                        KeBugCheckEx(0, (ULONG_PTR)Handle, 1, 0, 0);
+                    }
+                }
+            }
         }
-        else
-        {
-            /* Just return the status */
-            Status = STATUS_INVALID_HANDLE;
-        }
+
+        /* Set invalid status */
+        Status = STATUS_INVALID_HANDLE;
     }
 
     /* Return status */
@@ -1742,15 +1779,6 @@ ObpSetHandleAttributes(IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
 {
     POBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleInfo = (PVOID)Context;
     POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
-    PAGED_CODE();
-
-    /* Don't allow operations on kernel objects */
-    if ((ObjectHeader->Flags & OB_FLAG_KERNEL_MODE) &&
-        (SetHandleInfo->PreviousMode != KernelMode))
-    {
-        /* Fail */
-        return FALSE;
-    }
 
     /* Check if making the handle inheritable */
     if (SetHandleInfo->Information.Inherit)
@@ -1775,12 +1803,12 @@ ObpSetHandleAttributes(IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
     if (SetHandleInfo->Information.ProtectFromClose)
     {
         /* Set the flag */
-        HandleTableEntry->ObAttributes |= OBJ_PROTECT_CLOSE;
+        HandleTableEntry->GrantedAccess |= ObpAccessProtectCloseBit;
     }
     else
     {
         /* Otherwise, remove it */
-        HandleTableEntry->ObAttributes &= ~OBJ_PROTECT_CLOSE;
+        HandleTableEntry->GrantedAccess &= ~ObpAccessProtectCloseBit;
     }
 
     /* Return success */
@@ -1809,7 +1837,7 @@ ObpSetHandleAttributes(IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
 * @remarks None.
 *
 *--*/
-VOID
+BOOLEAN
 NTAPI
 ObpCloseHandleCallback(IN PHANDLE_TABLE_ENTRY HandleTableEntry,
                        IN HANDLE Handle,
@@ -1823,6 +1851,7 @@ ObpCloseHandleCallback(IN PHANDLE_TABLE_ENTRY HandleTableEntry,
                              Handle,
                              CloseContext->AccessMode,
                              TRUE);
+    return TRUE;
 }
 
 /*++
@@ -2078,6 +2107,15 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
         ObDereferenceProcessHandleTable(SourceProcess);
         return Status;
     }
+    else
+    {
+        /* Check if we have to don't have to audit object close */
+        if (!(HandleInformation.HandleAttributes & OBJ_AUDIT_OBJECT_CLOSE))
+        {
+            /* Then there is no audit mask */
+            AuditMask = 0;
+        }
+    }
 
     /* Check if there's no target process */
     if (!TargetProcess)
@@ -2142,6 +2180,12 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
         /* Duplicate them */
         HandleAttributes = HandleInformation.HandleAttributes;
     }
+    else
+    {
+        /* Don't allow caller to bypass auditing */
+        HandleAttributes |= HandleInformation.HandleAttributes &
+                            OBJ_AUDIT_OBJECT_CLOSE;
+    }
 
     /* Check if we're duplicating the access */
     if (Options & DUPLICATE_SAME_ACCESS) DesiredAccess = SourceAccess;
@@ -2151,6 +2195,7 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
     ObjectType = ObjectHeader->Type;
 
     /* Fill out the entry */
+    RtlZeroMemory(&NewHandleEntry, sizeof(HANDLE_TABLE_ENTRY));
     NewHandleEntry.Object = ObjectHeader;
     NewHandleEntry.ObAttributes |= HandleAttributes & OBJ_HANDLE_ATTRIBUTES;
 
@@ -2162,8 +2207,9 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
                           &ObjectType->TypeInfo.GenericMapping);
     }
 
-    /* Set the target access */
-    TargetAccess = DesiredAccess;
+    /* Set the target access, always propagate ACCESS_SYSTEM_SECURITY */
+    TargetAccess = DesiredAccess & (ObjectType->TypeInfo.ValidAccessMask |
+                                    ACCESS_SYSTEM_SECURITY);
     NewHandleEntry.GrantedAccess = TargetAccess;
 
     /* Check if we're asking for new access */
@@ -2242,7 +2288,8 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
         /* Undo the increment */
         ObpDecrementHandleCount(SourceObject,
                                 TargetProcess,
-                                TargetAccess);
+                                TargetAccess,
+                                ObjectType);
 
         /* Deference the object and set failure status */
         ObDereferenceObject(SourceObject);
@@ -2623,9 +2670,11 @@ ObFindHandleForObject(IN PEPROCESS Process,
 {
     OBP_FIND_HANDLE_DATA FindData;
     BOOLEAN Result = FALSE;
+    PVOID ObjectTable;
 
     /* Make sure we have an object table */
-    if (Process->ObjectTable)
+    ObjectTable = ObReferenceProcessHandleTable(Process);
+    if (ObjectTable)
     {
         /* Check if we have an object */
         if (Object)
@@ -2652,6 +2701,9 @@ ObFindHandleForObject(IN PEPROCESS Process,
             /* Set success */
             Result = TRUE;
         }
+
+        /* Let go of the table */
+        ObDereferenceProcessHandleTable(Process);
     }
 
     /* Return the result */
@@ -2859,6 +2911,14 @@ ObInsertObject(IN PVOID Object,
             }
             else
             {
+                /* Check if this was a symbolic link */
+                if (OBJECT_TO_OBJECT_HEADER(InsertObject)->Type ==
+                    ObSymbolicLinkType)
+                {
+                    /* Dereference it */
+                    ObDereferenceObject(InsertObject);
+                }
+
                 /* Caller wanted to create a new object, fail */
                 Status = STATUS_OBJECT_NAME_COLLISION;
             }
@@ -3094,7 +3154,6 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     HANDLE hTarget;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-    PAGED_CODE();
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Duplicating handle: %lx for %lx into %lx.\n",
             __FUNCTION__,
@@ -3108,8 +3167,9 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
         /* Enter SEH */
         _SEH_TRY
         {
-            /* Probe the handle */
+            /* Probe the handle and assume failure */
             ProbeForWriteHandle(TargetHandle);
+            *TargetHandle = NULL;
         }
         _SEH_HANDLE
         {

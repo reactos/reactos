@@ -398,7 +398,7 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
                 else
                 {
                     /* Copy the name */
-                    RtlMoveMemory(StringBuffer, LocalName.Buffer, StringLength);
+                    RtlCopyMemory(StringBuffer, LocalName.Buffer, StringLength);
                     StringBuffer[StringLength / sizeof(WCHAR)] = UNICODE_NULL;
                 }
             }
@@ -603,11 +603,12 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     else
     {
         /* Check if we have quota */
-        if ((ObjectCreateInfo->PagedPoolCharge !=
-             ObjectType->TypeInfo.DefaultPagedPoolCharge) ||
-            (ObjectCreateInfo->NonPagedPoolCharge !=
-             ObjectType->TypeInfo.DefaultNonPagedPoolCharge) ||
-            (ObjectCreateInfo->SecurityDescriptorCharge > 2048) ||
+        if ((((ObjectCreateInfo->PagedPoolCharge !=
+               ObjectType->TypeInfo.DefaultPagedPoolCharge) ||
+              (ObjectCreateInfo->NonPagedPoolCharge !=
+               ObjectType->TypeInfo.DefaultNonPagedPoolCharge) ||
+              (ObjectCreateInfo->SecurityDescriptorCharge > 2048)) &&
+             (PsGetCurrentProcess() != PsInitialSystemProcess)) ||
             (ObjectCreateInfo->Attributes & OBJ_EXCLUSIVE))
         {
             /* Set quota size */
@@ -1010,6 +1011,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     /* Verify parameters */
     if (!(TypeName) ||
         !(TypeName->Length) ||
+        (TypeName->Length % sizeof(WCHAR)) ||
         !(ObjectTypeInitializer) ||
         (ObjectTypeInitializer->Length != sizeof(*ObjectTypeInitializer)) ||
         (ObjectTypeInitializer->InvalidAttributes & ~OBJ_VALID_ATTRIBUTES) ||
@@ -1167,7 +1169,12 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
         LocalObjectType->DefaultObject = (PVOID)FIELD_OFFSET(FILE_OBJECT,
                                                              Event);
     }
-    /* FIXME: When LPC stops sucking, add a hack for Waitable Ports */
+    else if ((TypeName->Length == 24) && !(wcscmp(TypeName->Buffer, L"WaitablePort")))
+    {
+        /* Wait on the LPC Port's object directly */
+        LocalObjectType->DefaultObject = (PVOID)FIELD_OFFSET(LPCP_PORT_OBJECT,
+                                                             WaitEvent);
+    }
     else
     {
         /* No default Object */
@@ -1176,6 +1183,11 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
     /* Initialize Object Type components */
     ExInitializeResourceLite(&LocalObjectType->Mutex);
+    for (i = 0; i < 4; i++)
+    {
+        /* Initialize the object locks */
+        ExInitializeResourceLite(&LocalObjectType->ObjectLocks[i]);
+    }
     InitializeListHead(&LocalObjectType->TypeList);
 
     /* Lock the object type */
