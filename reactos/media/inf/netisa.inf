@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = Net
 ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 10/08/2005,1.01.0.0
+DriverVer  = 02/15/2007,1.01.0.0
 
 [DestinationDirs]
 DefaultDestDir = 12
@@ -27,6 +27,7 @@ AddReg = NE2000_AddReg.NT
 CopyFiles = NE2000_CopyFiles.NT
 
 [NE2000_AddReg.NT]
+HKR,,Characteristics,0x00010001,0x0000000
 HKR,,Port,0x00000000,"c100"
 HKR,,Irq,0x00000000,"B"
 HKR,,NetworkAddress,0x00000000,"001122334455"
