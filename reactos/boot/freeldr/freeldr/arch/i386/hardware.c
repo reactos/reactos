@@ -1621,58 +1621,69 @@ DetectKeyboardDevice(VOID)
 {
   UCHAR Status;
   UCHAR Scancode;
+  ULONG Loops;
+  BOOLEAN Result = TRUE;
 
+  /* Identify device */
   WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA,
 		   0xF2);
 
-  StallExecutionProcessor(10000);
+  /* Wait for reply */
+  for (Loops = 0; Loops < 100; Loops++)
+    {
+      StallExecutionProcessor(10000);
+      Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
+      if ((Status & CONTROLLER_STATUS_OUTPUT_BUFFER_FULL) != 0)
+        break;
+    }
 
-  Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
-  if ((Status & 0x01) != 0x01)
+  if ((Status & CONTROLLER_STATUS_OUTPUT_BUFFER_FULL) == 0)
     {
       /* PC/XT keyboard or no keyboard */
-      return FALSE;
+      Result = FALSE;
     }
 
   Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
   if (Scancode != 0xFA)
     {
       /* No ACK received */
-      return FALSE;
+      Result = FALSE;
     }
 
   StallExecutionProcessor(10000);
+
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
-  if ((Status & 0x01) != 0x01)
+  if ((Status & CONTROLLER_STATUS_OUTPUT_BUFFER_FULL) == 0)
     {
       /* Found AT keyboard */
-      return TRUE;
+      return Result;
     }
 
   Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
   if (Scancode != 0xAB)
     {
       /* No 0xAB received */
-      return FALSE;
+      Result = FALSE;
     }
 
   StallExecutionProcessor(10000);
+
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
-  if ((Status & 0x01) != 0x01)
+  if ((Status & CONTROLLER_STATUS_OUTPUT_BUFFER_FULL) == 0)
     {
       /* No byte in buffer */
-      return FALSE;
+      Result = FALSE;
     }
 
   Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
   if (Scancode != 0x41)
     {
       /* No 0x41 received */
-      return FALSE;
+      Result = FALSE;
     }
 
   /* Found MF-II keyboard */
-  return TRUE;
+  return Result;
 }
 
 
@@ -1880,7 +1891,6 @@ static BOOLEAN
 DetectPS2AuxPort(VOID)
 {
   ULONG Loops;
-  UCHAR Scancode;
   UCHAR Status;
 
   /* Put the value 0x5A in the output buffer using the
@@ -1901,22 +1911,15 @@ DetectPS2AuxPort(VOID)
 
   for (Loops = 0; Loops < 10; Loops++)
     {
-      Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
-
-      if ((Status & CONTROLLER_STATUS_OUTPUT_BUFFER_FULL) != 0)
-	{
-	  Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
-	  if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) != 0)
-	    {
-	      return TRUE;
-	    }
-	  break;
-	}
-
       StallExecutionProcessor(10000);
+      Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
+      if ((Status & CONTROLLER_STATUS_OUTPUT_BUFFER_FULL) != 0)
+        break;
     }
 
-  return FALSE;
+  READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
+
+  return (Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL);
 }
 
 
@@ -1938,7 +1941,7 @@ DetectPS2AuxDevice(VOID)
 		   0xF2);
 
   /* Wait for reply */
-  for (Loops = 0; Loops < 10; Loops++)
+  for (Loops = 0; Loops < 100; Loops++)
     {
       StallExecutionProcessor(10000);
       Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
@@ -1963,15 +1966,6 @@ DetectPS2AuxDevice(VOID)
   Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
   if (Scancode != 0x00)
     Result = FALSE;
-
-  /* Flush output buffer */
-  for (Loops = 0; Loops < 10; Loops++)
-    {
-      Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
-      if ((Status & CONTROLLER_STATUS_OUTPUT_BUFFER_FULL) == 0)
-        break;
-      StallExecutionProcessor(10000);
-    }
 
   return Result;
 }
