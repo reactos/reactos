@@ -95,109 +95,240 @@ const int g_SizeMetric[NUM_SIZES] =
 
 /******************************************************************************/
 
-INT_PTR CALLBACK
-AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static VOID
+LoadCurrentTheme(GLOBALS* g)
 {
-	INT i, index;
-	GLOBALS* g = NULL;
+	INT i;
+	NONCLIENTMETRICS NonClientMetrics;
 
-	switch(uMsg)
+	g->Theme.bHasChanged = FALSE;
+	/* FIXME: it may be custom! */
+	g->Theme.bIsCustom = FALSE;
+
+	/* Load colors */
+	for (i = 0; i <= 30; i++)
 	{
-		case WM_INITDIALOG:
-		{
-			AppearancePage_Init(hwndDlg);
-			break;
-		}
-		case WM_DESTROY:
-		{
-			AppearancePage_CleanUp(hwndDlg);
-			break;
-		}
-		case WM_COMMAND:
-		{
-			g = (GLOBALS*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-			switch(LOWORD(wParam))
-			{
-				case IDC_APPEARANCE_ADVANCED:
-				{
-					DialogBoxParam(hApplet, (LPCTSTR)IDD_ADVAPPEARANCE,
-						hwndDlg, AdvAppearanceDlgProc, (LPARAM)g);
-
-					/* Was anything changed in the advanced appearance dialog? */
-					if (memcmp(&g->Theme, &g->ThemeAdv, sizeof(THEME)) != 0)
-					{
-						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-						g->Theme = g->ThemeAdv;
-						g->Theme.bHasChanged = TRUE;
-					}
-					break;
-				}
-				case IDC_APPEARANCE_COLORSCHEME:
-				{
-					if(HIWORD(wParam) == CBN_SELCHANGE)
-					{
-						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-						g->Theme.bHasChanged = TRUE;
-						i = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETCURSEL, 0, 0);
-						index = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETITEMDATA, (WPARAM)i, 0);
-						LoadThemeFromReg(g, index);
-						break;
-					}
-					break;
-				}
-				default:
-				{
-					return FALSE;
-				}
-			}
-			return TRUE;
-		}
-		case WM_NOTIFY:
-		{
-			g = (GLOBALS*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-			LPNMHDR lpnm = (LPNMHDR)lParam;
-			switch(lpnm->code)
-			{   
-				case PSN_APPLY:
-				{
-					if (g->Theme.bHasChanged) 
-					{
-						ApplyTheme(g);
-					}
-					return(TRUE);
-					break;
-				}
-				default:
-				{
-					return FALSE;
-				}
-			}
-			return TRUE;
-		}
-		default:
-		{
-			return FALSE;
-		}
+		g->ColorList[i] = i;
+		g->Theme.crColor[i] = (COLORREF)GetSysColor(i);
 	}
-	return TRUE;
+
+	/* Load sizes */
+	for (i = 0; i <= 11; i++)
+	{
+		g->Theme.Size[i] = GetSystemMetrics(g_SizeMetric[i]);
+	}
+
+	/* Load fonts */
+	NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
+	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
+	g->Theme.lfFont[FONT_CAPTION] = NonClientMetrics.lfCaptionFont;
+	g->Theme.lfFont[FONT_SMCAPTION] = NonClientMetrics.lfSmCaptionFont;
+	g->Theme.lfFont[FONT_MENU] = NonClientMetrics.lfMenuFont;
+	g->Theme.lfFont[FONT_INFO] = NonClientMetrics.lfStatusFont;
+	g->Theme.lfFont[FONT_DIALOG] = NonClientMetrics.lfMessageFont;
+	SystemParametersInfo(SPI_GETICONTITLELOGFONT, sizeof(LOGFONT), &g->Theme.lfFont[FONT_ICON], 0);
 }
 
-void
-AppearancePage_Init(HWND hwndDlg)
+
+static VOID
+LoadThemeFromReg(GLOBALS* g, INT iPreset)
 {
-	GLOBALS* g;
+	INT i;
+	TCHAR strSizeName[20] = {TEXT("Sizes\\0")};
+	TCHAR strValueName[10];
+	HKEY hkNewSchemes, hkScheme, hkSize;
+	DWORD dwType, dwLength;
+
+	if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance\\New Schemes"), 
+		0, KEY_READ, &hkNewSchemes) == ERROR_SUCCESS)
+	{
+		if(RegOpenKeyEx(hkNewSchemes, g->ThemeTemplates[iPreset].strKeyName, 0, KEY_READ, &hkScheme) == ERROR_SUCCESS)
+		{
+			lstrcpyn(&strSizeName[6],g->ThemeTemplates[iPreset].strSizeName, 3);
+			if(RegOpenKeyEx(hkScheme, strSizeName, 0, KEY_READ, &hkSize) == ERROR_SUCCESS)
+			{
+				dwLength = sizeof(BOOL);
+				RegQueryValueEx(hkSize, TEXT("FlatMenus"), NULL, &dwType, (LPBYTE)&g->Theme.bFlatMenus, &dwLength);
+
+				for (i = 0; i <= 30; i++)
+				{
+					wsprintf(strValueName, TEXT("Color #%d"), i);
+					dwLength = sizeof(COLORREF);
+					RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.crColor[i], &dwLength);
+				}
+				for (i = 0; i <= 5; i++)
+				{
+					wsprintf(strValueName, TEXT("Font #%d"), i);
+					dwLength = sizeof(LOGFONT);
+					g->Theme.lfFont[i].lfFaceName[0] = 'x';
+					RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.lfFont[i], &dwLength);
+				}
+				for (i = 0; i <= 8; i++)
+				{
+					wsprintf(strValueName, TEXT("Size #%d"), i);
+					dwLength = sizeof(DWORD);
+					RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.Size[i], &dwLength);
+				}
+				RegCloseKey(hkScheme);
+			}
+			RegCloseKey(hkScheme);
+		}
+		RegCloseKey(hkNewSchemes);
+	}
+}
+
+
+static VOID
+ApplyTheme(GLOBALS* g)
+{
+	INT i, Result;
+	HKEY hKey;
+	DWORD dwDisposition = 0;
+	TCHAR clText[16] = {0};
+	NONCLIENTMETRICS NonClientMetrics;
+	HFONT hMyFont;
+	LOGFONT lfButtonFont;
+
+	if (!g->Theme.bHasChanged)
+		return;
+
+	g->Theme.bHasChanged = FALSE;
+
+	/* Update some globals */
+	g->crCOLOR_BTNFACE = g->Theme.crColor[COLOR_BTNFACE];
+	g->crCOLOR_BTNTEXT = g->Theme.crColor[COLOR_BTNTEXT];
+	g->crCOLOR_BTNSHADOW = g->Theme.crColor[COLOR_BTNSHADOW];
+	g->crCOLOR_BTNHIGHLIGHT = g->Theme.crColor[COLOR_BTNHIGHLIGHT];
+	lfButtonFont = g->Theme.lfFont[FONT_DIALOG];
+	
+	/* Create new font for bold button */
+	lfButtonFont.lfWeight = FW_BOLD;
+	lfButtonFont.lfItalic = FALSE;
+	hMyFont = CreateFontIndirect(&lfButtonFont);
+	if (hMyFont)
+	{
+		if (g->hBoldFont)
+			DeleteObject(g->hBoldFont);
+		g->hBoldFont = hMyFont;
+	}
+
+	/* Create new font for italic button */
+	lfButtonFont.lfWeight = FW_REGULAR;
+	lfButtonFont.lfItalic = TRUE;
+	hMyFont = CreateFontIndirect(&lfButtonFont);
+	if (hMyFont)
+	{
+		if (g->hItalicFont)
+			DeleteObject(g->hItalicFont);
+		g->hItalicFont = hMyFont;
+	}
+
+	/* Apply Colors from global variable */
+	SetSysColors(30, &g->ColorList[0], &g->Theme.crColor[0]);
+
+	/* Save colors to registry */
+	Result = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Colors"), 0, KEY_ALL_ACCESS, &hKey);
+	if (Result != ERROR_SUCCESS)
+	{
+		/* Could not open the key, try to create it */
+		Result = RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Colors"), 0, NULL, 0, KEY_ALL_ACCESS, NULL,&hKey, &dwDisposition);
+	}
+
+	if (Result == ERROR_SUCCESS)
+	{
+		for (i = 0; i <= 30; i++)
+		{
+			DWORD red   = GetRValue(g->Theme.crColor[i]);
+			DWORD green = GetGValue(g->Theme.crColor[i]);
+			DWORD blue  = GetBValue(g->Theme.crColor[i]);
+			wsprintf(clText, TEXT("%d %d %d"), red, green, blue);
+			RegSetValueEx(hKey, g_RegColorNames[i], 0, REG_SZ, (BYTE *)clText, lstrlen( clText )*sizeof(TCHAR) + sizeof(TCHAR));
+		}
+
+		RegCloseKey(hKey);
+	}
+	
+	/* Apply the fonts */
+	NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
+	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
+	NonClientMetrics.lfCaptionFont = g->Theme.lfFont[FONT_CAPTION];
+	NonClientMetrics.lfSmCaptionFont = g->Theme.lfFont[FONT_SMCAPTION];
+	NonClientMetrics.lfMenuFont = g->Theme.lfFont[FONT_MENU];
+	NonClientMetrics.lfStatusFont = g->Theme.lfFont[FONT_INFO];
+	NonClientMetrics.lfMessageFont = g->Theme.lfFont[FONT_DIALOG];
+	SystemParametersInfo(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
+	SystemParametersInfo(SPI_SETICONTITLELOGFONT, sizeof(LOGFONT), &g->Theme.lfFont[FONT_ICON], 0);
+
+	/* FIXME: Apply size metrics */
+
+	/* Save fonts and size metrics to registry */
+	Result = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop\\WindowMetrics"), 0, KEY_ALL_ACCESS, &hKey);
+	if (Result != ERROR_SUCCESS)
+	{
+		/* Could not open the key, try to create it */
+		Result = RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop\\WindowMetrics"), 0, NULL, 0, KEY_ALL_ACCESS, NULL,&hKey, &dwDisposition);
+	}
+
+	if (Result == ERROR_SUCCESS)
+	{
+		RegSetValueEx(hKey, TEXT("CaptionFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_CAPTION], sizeof(LOGFONT));
+		RegSetValueEx(hKey, TEXT("SmCaptionFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_SMCAPTION], sizeof(LOGFONT));
+		RegSetValueEx(hKey, TEXT("IconFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_ICON], sizeof(LOGFONT));
+		RegSetValueEx(hKey, TEXT("MenuFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_MENU], sizeof(LOGFONT));
+		RegSetValueEx(hKey, TEXT("StatusFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_INFO], sizeof(LOGFONT));
+		RegSetValueEx(hKey, TEXT("MessageFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_DIALOG], sizeof(LOGFONT));
+
+		/* Save size metrics to registry */
+		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_BORDER_X]);
+		RegSetValueEx(hKey, TEXT("BorderWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_CAPTION_Y]);
+		RegSetValueEx(hKey, TEXT("CaptionWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_CAPTION_Y]);
+		RegSetValueEx(hKey, TEXT("CaptionHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_SMCAPTION_Y]);
+		RegSetValueEx(hKey, TEXT("SmCaptionWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_SMCAPTION_Y]);
+		RegSetValueEx(hKey, TEXT("SmCaptionHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_ICON_SPC_X]);
+		RegSetValueEx(hKey, TEXT("IconSpacing"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_ICON_SPC_Y]);
+		RegSetValueEx(hKey, TEXT("IconVerticalSpacing"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_MENU_X]);
+		RegSetValueEx(hKey, TEXT("MenuWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_MENU_Y]);
+		RegSetValueEx(hKey, TEXT("MenuHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_SCROLL_X]);
+		RegSetValueEx(hKey, TEXT("ScrollWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_SCROLL_Y]);
+		RegSetValueEx(hKey, TEXT("ScrollHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+		wsprintf(clText, TEXT("%d"), g->Theme.Size[SIZE_ICON_X]);
+		RegSetValueEx(hKey, TEXT("Shell Icon Sizet"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
+
+		RegCloseKey(hKey);
+	}
+}
+
+
+/* Draw the preview window, unimplemented */
+#if 0
+static VOID
+DrawPreview(HWND hwndPreview, THEME* pTheme)
+{
+}
+#endif
+
+
+static VOID
+AppearancePage_Init(HWND hwndDlg, GLOBALS *g)
+{
 	HKEY hkNewSchemes, hkScheme, hkSizes, hkSize;
 	FILETIME ftLastWriteTime;
 	TCHAR strSelectedStyle[4];
 	DWORD dwLength, dwType;
 	DWORD dwDisposition = 0;
-	int iStyle, iSize, iTemplateIndex, iListIndex = 0;
-	int Result;
+	INT iStyle, iSize, iTemplateIndex, iListIndex = 0;
+	INT Result;
 
-	g = (GLOBALS*)malloc(sizeof(GLOBALS));
-	// FIXME: correct handling of error (g == NULL)
-
-	SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)g);
 	LoadCurrentTheme(g);
 
 	/* Fill color schemes combo */
@@ -264,230 +395,91 @@ AppearancePage_Init(HWND hwndDlg)
 		RegCloseKey(hkNewSchemes);
 	}
 	SendMessage(GetDlgItem(hwndDlg, IDC_APPEARANCE_COLORSCHEME), LB_SETCURSEL, 0, 0);
-	return;
 }
 
-void
-AppearancePage_CleanUp(HWND hwndDlg)
+
+static VOID
+AppearancePage_CleanUp(HWND hwndDlg, GLOBALS *g)
 {
-	GLOBALS* g = (GLOBALS*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-	free(g);
-	return;
 }
 
-void
-LoadCurrentTheme(GLOBALS* g)
+
+INT_PTR CALLBACK
+AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	int i;
-	NONCLIENTMETRICS NonClientMetrics;
+	INT i, index;
+	GLOBALS *g;
+	LPNMHDR lpnm;
 
-	g->Theme.bHasChanged = FALSE;
-	/* FIXME: it may be custom! */
-	g->Theme.bIsCustom = FALSE;
+	g = (GLOBALS*)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
-	/* Load colors */
-	for(i = 0; i <= 30; i++)
+	switch (uMsg)
 	{
-		g->ColorList[i] = i;
-		g->Theme.crColor[i] = (COLORREF)GetSysColor(i);
-	}
+		case WM_INITDIALOG:
+			g = (GLOBALS*)malloc(sizeof(GLOBALS));
+			if (g == NULL)
+				return FALSE;
 
-	/* Load sizes */
-	for(i = 0; i <= 11; i++)
-	{
-		g->Theme.Size[i] = GetSystemMetrics(g_SizeMetric[i]);
-	}
+			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)g);
+			AppearancePage_Init(hwndDlg, g);
+			break;
 
-	/* Load fonts */
-	NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
-	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
-	g->Theme.lfFont[FONT_CAPTION] = NonClientMetrics.lfCaptionFont;
-	g->Theme.lfFont[FONT_SMCAPTION] = NonClientMetrics.lfSmCaptionFont;
-	g->Theme.lfFont[FONT_MENU] = NonClientMetrics.lfMenuFont;
-	g->Theme.lfFont[FONT_INFO] = NonClientMetrics.lfStatusFont;
-	g->Theme.lfFont[FONT_DIALOG] = NonClientMetrics.lfMessageFont;
-	SystemParametersInfo(SPI_GETICONTITLELOGFONT, sizeof(LOGFONT), &g->Theme.lfFont[FONT_ICON], 0);
+		case WM_DESTROY:
+			AppearancePage_CleanUp(hwndDlg, g);
+			free(g);
+			break;
 
-	return;
-}
-
-void
-LoadThemeFromReg(GLOBALS* g, INT iPreset)
-{
-	int i;
-	TCHAR strSizeName[20] = {TEXT("Sizes\\0")};
-	TCHAR strValueName[10];
-	HKEY hkNewSchemes, hkScheme, hkSize;
-	DWORD dwType, dwLength;
-
-	if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance\\New Schemes"), 
-		0, KEY_READ, &hkNewSchemes) == ERROR_SUCCESS)
-	{
-		if(RegOpenKeyEx(hkNewSchemes, g->ThemeTemplates[iPreset].strKeyName, 0, KEY_READ, &hkScheme) == ERROR_SUCCESS)
-		{
-			lstrcpyn(&strSizeName[6],g->ThemeTemplates[iPreset].strSizeName, 3);
-			if(RegOpenKeyEx(hkScheme, strSizeName, 0, KEY_READ, &hkSize) == ERROR_SUCCESS)
+		case WM_COMMAND:
+			switch (LOWORD(wParam))
 			{
-				dwLength = sizeof(BOOL);
-				RegQueryValueEx(hkSize, TEXT("FlatMenus"), NULL, &dwType, (LPBYTE)&g->Theme.bFlatMenus, &dwLength);
+				case IDC_APPEARANCE_ADVANCED:
+					DialogBoxParam(hApplet, (LPCTSTR)IDD_ADVAPPEARANCE,
+						hwndDlg, AdvAppearanceDlgProc, (LPARAM)g);
 
-				for (i = 0; i <= 30; i++)
-				{
-					wsprintf(strValueName, TEXT("Color #%d"), i);
-					dwLength = sizeof(COLORREF);
-					RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.crColor[i], &dwLength);
-				}
-				for (i = 0; i <= 5; i++)
-				{
-					wsprintf(strValueName, TEXT("Font #%d"), i);
-					dwLength = sizeof(LOGFONT);
-					g->Theme.lfFont[i].lfFaceName[0] = 'x';
-					RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.lfFont[i], &dwLength);
-				}
-				for (i = 0; i <= 8; i++)
-				{
-					wsprintf(strValueName, TEXT("Size #%d"), i);
-					dwLength = sizeof(DWORD);
-					RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.Size[i], &dwLength);
-				}
-				RegCloseKey(hkScheme);
+					/* Was anything changed in the advanced appearance dialog? */
+					if (memcmp(&g->Theme, &g->ThemeAdv, sizeof(THEME)) != 0)
+					{
+						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+						g->Theme = g->ThemeAdv;
+						g->Theme.bHasChanged = TRUE;
+					}
+					break;
+
+				case IDC_APPEARANCE_COLORSCHEME:
+					if(HIWORD(wParam) == CBN_SELCHANGE)
+					{
+						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+						g->Theme.bHasChanged = TRUE;
+						i = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETCURSEL, 0, 0);
+						index = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETITEMDATA, (WPARAM)i, 0);
+						LoadThemeFromReg(g, index);
+					}
+					break;
+
+				default:
+					return FALSE;
 			}
-			RegCloseKey(hkScheme);
-		}
-		RegCloseKey(hkNewSchemes);
+			return TRUE;
+
+		case WM_NOTIFY:
+			lpnm = (LPNMHDR)lParam;
+			switch (lpnm->code)
+			{
+				case PSN_APPLY:
+					if (g->Theme.bHasChanged)
+					{
+						ApplyTheme(g);
+					}
+					return TRUE;
+
+				default:
+					return FALSE;
+			}
+			return TRUE;
+
+		default:
+			return FALSE;
 	}
-	return;
+
+	return TRUE;
 }
-
-void
-ApplyTheme(GLOBALS* g)
-{
-	int i, Result;
-	HKEY hKey;
-	DWORD dwDisposition = 0;
-	TCHAR clText[16] = {0};
-	NONCLIENTMETRICS NonClientMetrics;
-	HFONT hMyFont;
-	LOGFONT lfButtonFont;
-
-	if (!g->Theme.bHasChanged) return;
-
-	g->Theme.bHasChanged = FALSE;
-
-	/* Update some globals */
-	g->crCOLOR_BTNFACE = g->Theme.crColor[COLOR_BTNFACE];
-	g->crCOLOR_BTNTEXT = g->Theme.crColor[COLOR_BTNTEXT];
-	g->crCOLOR_BTNSHADOW = g->Theme.crColor[COLOR_BTNSHADOW];
-	g->crCOLOR_BTNHIGHLIGHT = g->Theme.crColor[COLOR_BTNHIGHLIGHT];
-	lfButtonFont = g->Theme.lfFont[FONT_DIALOG];
-	
-	/* Create new font for bold button */
-	lfButtonFont.lfWeight = FW_BOLD;
-	lfButtonFont.lfItalic = FALSE;
-	hMyFont = CreateFontIndirect(&lfButtonFont);
-	if (hMyFont)
-	{
-		if (g->hBoldFont) DeleteObject(g->hBoldFont);
-		g->hBoldFont = hMyFont;
-	}
-
-	/* Create new font for italic button */
-	lfButtonFont.lfWeight = FW_REGULAR;
-	lfButtonFont.lfItalic = TRUE;
-	hMyFont = CreateFontIndirect(&lfButtonFont);
-	if (hMyFont)
-	{
-		if (g->hItalicFont) DeleteObject(g->hItalicFont);
-		g->hItalicFont = hMyFont;
-	}
-
-	/* Apply Colors from global variable */
-	SetSysColors(30, &g->ColorList[0], &g->Theme.crColor[0]);
-
-	/* Save colors to registry */
-	Result = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Colors"), 0, KEY_ALL_ACCESS, &hKey);
-	if (Result != ERROR_SUCCESS)
-	{
-		/* Could not open the key, try to create it */
-		Result = RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Colors"), 0, NULL, 0, KEY_ALL_ACCESS, NULL,&hKey, &dwDisposition);
-	}
-	if (Result == ERROR_SUCCESS)
-	{
-		for(i = 0; i <= 30; i++)
-		{
-			DWORD red   = GetRValue(g->Theme.crColor[i]);
-			DWORD green = GetGValue(g->Theme.crColor[i]);
-			DWORD blue  = GetBValue(g->Theme.crColor[i]);
-			wsprintf(clText, TEXT("%d %d %d"), red, green, blue);
-			RegSetValueEx(hKey, g_RegColorNames[i], 0, REG_SZ, (BYTE *)clText, lstrlen( clText )*sizeof(TCHAR) + sizeof(TCHAR));
-		}
-		RegCloseKey(hKey);
-	}
-	
-	/* Apply the fonts */
-	NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
-	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
-	NonClientMetrics.lfCaptionFont = g->Theme.lfFont[FONT_CAPTION];
-	NonClientMetrics.lfSmCaptionFont = g->Theme.lfFont[FONT_SMCAPTION];
-	NonClientMetrics.lfMenuFont = g->Theme.lfFont[FONT_MENU];
-	NonClientMetrics.lfStatusFont = g->Theme.lfFont[FONT_INFO];
-	NonClientMetrics.lfMessageFont = g->Theme.lfFont[FONT_DIALOG];
-	SystemParametersInfo(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
-	SystemParametersInfo(SPI_SETICONTITLELOGFONT, sizeof(LOGFONT), &g->Theme.lfFont[FONT_ICON], 0);
-
-	/* FIXME: Apply size metrics */
-
-	/* Save fonts and size metrics to registry */
-	Result = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop\\WindowMetrics"), 0, KEY_ALL_ACCESS, &hKey);
-	if (Result != ERROR_SUCCESS)
-	{
-		/* Could not open the key, try to create it */
-		Result = RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop\\WindowMetrics"), 0, NULL, 0, KEY_ALL_ACCESS, NULL,&hKey, &dwDisposition);
-	}
-	if (Result == ERROR_SUCCESS)
-	{
-		RegSetValueEx(hKey, TEXT("CaptionFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_CAPTION], sizeof(LOGFONT));
-		RegSetValueEx(hKey, TEXT("SmCaptionFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_SMCAPTION], sizeof(LOGFONT));
-		RegSetValueEx(hKey, TEXT("IconFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_ICON], sizeof(LOGFONT));
-		RegSetValueEx(hKey, TEXT("MenuFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_MENU], sizeof(LOGFONT));
-		RegSetValueEx(hKey, TEXT("StatusFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_INFO], sizeof(LOGFONT));
-		RegSetValueEx(hKey, TEXT("MessageFont"), 0, REG_BINARY, (BYTE *)&g->Theme.lfFont[FONT_DIALOG], sizeof(LOGFONT));
-
-		/* Save size metrics to registry */
-		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_BORDER_X]);
-		RegSetValueEx(hKey, TEXT("BorderWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_CAPTION_Y]);
-		RegSetValueEx(hKey, TEXT("CaptionWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_CAPTION_Y]);
-		RegSetValueEx(hKey, TEXT("CaptionHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_SMCAPTION_Y]);
-		RegSetValueEx(hKey, TEXT("SmCaptionWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_SMCAPTION_Y]);
-		RegSetValueEx(hKey, TEXT("SmCaptionHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_ICON_SPC_X]);
-		RegSetValueEx(hKey, TEXT("IconSpacing"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_ICON_SPC_Y]);
-		RegSetValueEx(hKey, TEXT("IconVerticalSpacing"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_MENU_X]);
-		RegSetValueEx(hKey, TEXT("MenuWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_MENU_Y]);
-		RegSetValueEx(hKey, TEXT("MenuHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_SCROLL_X]);
-		RegSetValueEx(hKey, TEXT("ScrollWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * g->Theme.Size[SIZE_SCROLL_Y]);
-		RegSetValueEx(hKey, TEXT("ScrollHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), g->Theme.Size[SIZE_ICON_X]);
-		RegSetValueEx(hKey, TEXT("Shell Icon Sizet"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-
-		RegCloseKey(hKey);
-	}
-	return;
-}
-
-/* Draw the preview window, unimplemented */
-void
-DrawPreview(HWND hwndPreview, THEME* pTheme)
-{
-	return;
-}
-

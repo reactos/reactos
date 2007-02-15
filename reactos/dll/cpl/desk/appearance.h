@@ -85,19 +85,6 @@ extern const int g_SizeMetric[NUM_SIZES];
 
 /* prototypes for appearance.c */
 INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void AppearancePage_Init(HWND hwndDlg);
-void AppearancePage_CleanUp(HWND hwndDlg);
-void LoadCurrentTheme(GLOBALS* g);
-void LoadThemeFromReg(GLOBALS* g, INT iPreset);
-void ApplyTheme(GLOBALS* g);
 
 /* prototypes for advappearancedlg.c */
 INT_PTR CALLBACK AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void AdvAppearanceDlg_Init(HWND hwndDlg);
-void AdvAppearanceDlg_CleanUp(HWND hwndDlg);
-void UpdateControls(HWND hwndDlg, int iElement);
-void SaveCurrentValues(HWND hwndDlg);
-void InitColorButtons(HWND hwndDlg);
-void UpdateButtonColor(HWND hwndDlg, int ID, int nButton, int nColor);
-BOOL GetColor(HWND hwndDlg, int iElement, int nButton);
-int CALLBACK EnumFontFamExProc(ENUMLOGFONTEX*, NEWTEXTMETRICEX*, DWORD, LPARAM);
