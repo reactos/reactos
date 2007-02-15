@@ -309,6 +309,7 @@ UpdateControls(HWND hwndDlg, int iElement)
 
 	/* First enable / disable the controls */
 	EnableWindow(GetDlgItem(hwndDlg, IDC_ADVAPPEARANCE_SIZE_E), (g_Assignment[iElement].Size != -1));
+	EnableWindow(GetDlgItem(hwndDlg, IDC_ADVAPPEARANCE_SIZE_UD), (g_Assignment[iElement].Size != -1));
 	EnableWindow(GetDlgItem(hwndDlg, IDC_ADVAPPEARANCE_SIZE_T), (g_Assignment[iElement].Size != -1));
 	EnableWindow(GetDlgItem(hwndDlg, IDC_ADVAPPEARANCE_COLOR1_T), (g_Assignment[iElement].Color1 != -1));
 	EnableWindow(GetDlgItem(hwndDlg, IDC_ADVAPPEARANCE_COLOR2_T), (g_Assignment[iElement].Color2 != -1));
@@ -325,7 +326,10 @@ UpdateControls(HWND hwndDlg, int iElement)
 	UpdateButtonColor(hwndDlg, IDC_ADVAPPEARANCE_COLOR2_B, 1, g_Assignment[iElement].Color2);
 	UpdateButtonColor(hwndDlg, IDC_ADVAPPEARANCE_FONTCOLOR_B, 2, g_Assignment[iElement].FontColor);
 
-	SetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_SIZE_E, g_Assignment[iElement].Size == -1 ? 0 : g->ThemeAdv.Size[g_Assignment[iElement].Size], FALSE);
+	if (g_Assignment[iElement].Size != -1)
+		SetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_SIZE_E, g->ThemeAdv.Size[g_Assignment[iElement].Size], FALSE);
+	else
+		SetDlgItemText(hwndDlg, IDC_ADVAPPEARANCE_SIZE_E, TEXT(""));
 
 	HDC hdcDlg = GetDC(hwndDlg);	
 	if (g_Assignment[iElement].Font != -1)

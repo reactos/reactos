@@ -25,7 +25,7 @@ const ASSIGNMENT g_Assignment[NUM_ELEMENTS] =
   {SIZE_BORDER_X,	SIZE_BORDER_Y,	COLOR_ACTIVEBORDER,		-1,								-1,				-1},				/* active window border */
   {SIZE_MENU_X,		SIZE_MENU_Y,	COLOR_MENU,				-1, 							FONT_MENU,		COLOR_MENUTEXT},	/* menu */
   {SIZE_MENU_X,		SIZE_MENU_Y,	COLOR_HIGHLIGHT,		-1,								FONT_HILIGHT,	COLOR_HIGHLIGHTTEXT},/* marked element */
-  {-1,				-1,				COLOR_WINDOW,			COLOR_WINDOWFRAME,				-1,				COLOR_WINDOWTEXT},	/* window */
+  {-1,				-1,				COLOR_WINDOW,			-1 /*COLOR_WINDOWFRAME*/,				-1,				COLOR_WINDOWTEXT},	/* window */
   {SIZE_SCROLL_X,	SIZE_SCROLL_Y,	COLOR_SCROLLBAR,		-1,								-1,				-1},				/* scroll bar */
   {-1,				-1,				COLOR_3DFACE,			-1,								-1,				COLOR_BTNTEXT},		/* 3d objects */
   {SIZE_SMCAPTION_Y,-1,				-1,						-1,								FONT_SMCAPTION,	-1},				/* palette window caption */
