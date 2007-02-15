@@ -27,7 +27,7 @@ AddReg = PCNet_AddReg.NT
 CopyFiles = PCNet_CopyFiles.NT
 
 [PCNet_AddReg.NT]
-HKR,,Characteristics,0x00010001,0x0000000
+HKR,,Characteristics,0x00010001,0x00000004 ; NCF_PHYSICAL
 HKR,,BUS_TO_SCAN,,"ALL"
 HKR,,BUSTIMER,,"0"
 HKR,,BUSTYPE,,"5"
