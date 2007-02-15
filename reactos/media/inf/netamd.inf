@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = Net
 ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 10/08/2005,1.01.0.0
+DriverVer  = 02/15/2001,1.02
 
 [DestinationDirs]
 DefaultDestDir = 12
@@ -27,6 +27,7 @@ AddReg = PCNet_AddReg.NT
 CopyFiles = PCNet_CopyFiles.NT
 
 [PCNet_AddReg.NT]
+HKR,,Characteristics,0x00010001,0x0000000
 HKR,,BUS_TO_SCAN,,"ALL"
 HKR,,BUSTIMER,,"0"
 HKR,,BUSTYPE,,"5"
