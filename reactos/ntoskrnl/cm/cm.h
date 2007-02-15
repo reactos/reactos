@@ -447,4 +447,24 @@ static __inline HCELL_INDEX xHvAllocateCell(char *file, int line, PHHIVE Hive, S
 #define ObGetObjectPointerCount(x) OBJECT_TO_OBJECT_HEADER(x)->PointerCount
 #define ObGetObjectHandleCount(x) OBJECT_TO_OBJECT_HEADER(x)->HandleCount
 
+//
+// System Control Vector
+//
+typedef struct _CM_SYSTEM_CONTROL_VECTOR
+{
+    PWCHAR KeyPath;
+    PWCHAR ValueName;
+    PVOID Buffer;
+    PULONG BufferLength;
+    PULONG Type;
+} CM_SYSTEM_CONTROL_VECTOR, *PCM_SYSTEM_CONTROL_VECTOR;
+
+VOID
+NTAPI
+CmGetSystemControlValues(
+    IN PVOID SystemHiveData,
+    IN PCM_SYSTEM_CONTROL_VECTOR ControlVector
+);
+
+extern CM_SYSTEM_CONTROL_VECTOR CmControlVector[];
 #endif /*__INCLUDE_CM_H*/

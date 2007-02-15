@@ -11,7 +11,9 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
+//#include <ntoskrnl/cm/newcm.h>
+#include "ntoskrnl/cm/cm.h"
 
 /* DATA **********************************************************************/
 
@@ -889,7 +891,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     KiInitializeBugCheck();
 
     /* Setup initial system settings (FIXME: Needs Cm Rewrite) */
-    //CmGetSystemControlValues(CommandLine, &CmControlVector);
+    CmGetSystemControlValues(LoaderBlock->RegistryBase, CmControlVector);
 
     /* Initialize the executive at phase 0 */
     if (!ExInitSystem()) KEBUGCHECK(PHASE0_INITIALIZATION_FAILED);

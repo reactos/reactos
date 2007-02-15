@@ -9,12 +9,10 @@
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
 // Hal:
-//  - Use APC and DPC Interrupt Dispatchers.
 //  - CMOS Initialization and CMOS Spinlock.
 //
 // Global:
 //  - TODO: Complete the list of bufxies
-//  - Fix DPCs interrupting code at DISPATCH_LEVEL
 //  - Fix atapi.sys or serial.sys loading one more time at each boot.
 //
 ///////////////////////////////////////////////////////////////////////////////

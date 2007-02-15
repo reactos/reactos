@@ -86,6 +86,8 @@
             <file>regfile.c</file>
             <file>registry.c</file>
             <file>regobj.c</file>
+            <file>newcm.c</file>
+            <file>cmdata.c</file>
     </directory>
     <directory name="kdbg">
         <if property="ARCH" value="i386">
