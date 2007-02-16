@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <windows.h>
+#include <shlwapi.h>
 #include "structures.h"
 #include "resources.h"
 
@@ -54,7 +55,7 @@ void tag_opened (void* usrdata, const char* tag, const char** arg)
 		{
 			if(!strcmp(arg[i], "name"))
 			{
-				MultiByteToWideChar(CP_ACP, 0, arg[i+1], -1, Current->Name, 0x100);
+				MultiByteToWideChar(CP_UTF8, 0, arg[i+1], -1, Current->Name, 0x100);
 			}
 			if(!strcmp(arg[i], "icon"))
 			{
@@ -81,20 +82,11 @@ void tag_opened (void* usrdata, const char* tag, const char** arg)
 			CurrentApplication = Current->Apps;
 		}
 
-		int currentlengt = lstrlenW(CurrentApplication->Maintainer);
-		MultiByteToWideChar(CP_ACP, 0, 0, 0, &CurrentApplication->Maintainer[currentlengt], 0x100-currentlengt);
-		currentlengt = lstrlenW(CurrentApplication->RegName);
-		MultiByteToWideChar(CP_ACP, 0, 0, 0, &CurrentApplication->RegName[currentlengt], 0x100-currentlengt);
-		currentlengt = lstrlenW(CurrentApplication->Version);
-		MultiByteToWideChar(CP_ACP, 0, 0, 0, &CurrentApplication->Version[currentlengt], 0x100-currentlengt);
-		currentlengt = lstrlenW(CurrentApplication->Licence);
-		MultiByteToWideChar(CP_ACP, 0, 0, 0, &CurrentApplication->Licence[currentlengt], 0x100-currentlengt);
-
 		for (i=0; arg[i]; i+=2) 
 		{
 			if(!strcmp(arg[i], "name"))
 			{
-				MultiByteToWideChar(CP_ACP, 0, arg[i+1], -1, CurrentApplication->Name, 0x100);
+				MultiByteToWideChar(CP_UTF8, 0, arg[i+1], -1, CurrentApplication->Name, 0x100);
 			}
 		}
 	}
@@ -115,32 +107,32 @@ void text (void* usrdata, const char* data, int len)
 	if(!strcmp(CurrentTag, "maintainer"))
 	{
 		int currentlengt = lstrlenW(CurrentApplication->Maintainer);
-		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Maintainer[currentlengt], 0x100-currentlengt);
+		MultiByteToWideChar(CP_UTF8, 0, data, len, &CurrentApplication->Maintainer[currentlengt], 0x100-currentlengt);
 	}
 	else if(!strcmp(CurrentTag, "regname"))
 	{
 		int currentlengt = lstrlenW(CurrentApplication->RegName);
-		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->RegName[currentlengt], 0x100-currentlengt);
+		MultiByteToWideChar(CP_UTF8, 0, data, len, &CurrentApplication->RegName[currentlengt], 0x100-currentlengt);
 	}
 	else if(!strcmp(CurrentTag, "description"))
 	{
 		int currentlengt = lstrlenW(CurrentApplication->Description);
-		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Description[currentlengt], 0x400-currentlengt);
+		MultiByteToWideChar(CP_UTF8, 0, data, len, &CurrentApplication->Description[currentlengt], 0x400-currentlengt);
 	}
 	else if(!strcmp(CurrentTag, "location"))
 	{
 		int currentlengt = lstrlenW(CurrentApplication->Location);
-		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Location[currentlengt], 0x100-currentlengt);
+		MultiByteToWideChar(CP_UTF8, 0, data, len, &CurrentApplication->Location[currentlengt], 0x100-currentlengt);
 	}
 	else if(!strcmp(CurrentTag, "version"))
 	{
 		int currentlengt = lstrlenW(CurrentApplication->Version);
-		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Version[currentlengt], 0x400-currentlengt);
+		MultiByteToWideChar(CP_UTF8, 0, data, len, &CurrentApplication->Version[currentlengt], 0x400-currentlengt);
 	}
 	else if(!strcmp(CurrentTag, "licence"))
 	{
 		int currentlengt = lstrlenW(CurrentApplication->Licence);
-		MultiByteToWideChar(CP_ACP, 0, data, len, &CurrentApplication->Licence[currentlengt], 0x100-currentlengt);
+		MultiByteToWideChar(CP_UTF8, 0, data, len, &CurrentApplication->Licence[currentlengt], 0x100-currentlengt);
 	}
 }
 

@@ -19,6 +19,7 @@ HWND hwnd, hCategories, hApps, hDownloadButton, hUninstallButton, hUpdateButton,
 HBITMAP hLogo, hUnderline;
 WCHAR* DescriptionHeadline = L"";
 WCHAR* DescriptionText = L"";
+WCHAR ApplicationText[700];
 
 struct Category Root;
 struct Application* SelectedApplication;
@@ -27,6 +28,7 @@ INT_PTR CALLBACK DownloadProc (HWND, UINT, WPARAM, LPARAM);
 BOOL ProcessXML (const char* filename, struct Category* Root);
 VOID FreeTree (struct Category* Node);
 WCHAR Strings [STRING_COUNT][MAX_STRING_LENGHT];
+
 
 BOOL getUninstaller(WCHAR* RegName, WCHAR* Uninstaller) {
 
@@ -130,9 +132,6 @@ void CategoryChoosen (HWND hwnd, struct Category* Category)
 		Insert.item.iImage = 10;
 		if(StrCmpW(CurrentApplication->RegName,L"")) {
 			if(getUninstaller(CurrentApplication->RegName, Uninstaller))
-				Insert.item.iImage = 9;
-		} else {
-			if(getUninstaller(CurrentApplication->Name, Uninstaller))
 				Insert.item.iImage = 9;
 		} 
 		SendMessage(hwnd, TVM_INSERTITEM, 0, (LPARAM)&Insert);
@@ -333,9 +332,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 						if(StrCmpW(SelectedApplication->RegName, L"")) {
 							if(getUninstaller(SelectedApplication->RegName, Uninstaller))
 								startUninstaller(Uninstaller);
-						} else {
-							if(getUninstaller(SelectedApplication->Name, Uninstaller))
-								startUninstaller(Uninstaller);
 						}
 					}
 				}
@@ -367,33 +363,29 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					SelectedApplication = (struct Application*) ((LPNMTREEVIEW)lParam)->itemNew.lParam;
 					if(SelectedApplication)
 					{
-						DescriptionText = calloc(700,sizeof(WCHAR));
+						ApplicationText[0]=L'\0';
 						if(StrCmpW(SelectedApplication->Version, L"")) {
-							StrCatW(DescriptionText, Strings[IDS_VERSION]);
-							StrCatW(DescriptionText, SelectedApplication->Version);
-							StrCatW(DescriptionText, L"\n");
+							StrCatW(ApplicationText, Strings[IDS_VERSION]);
+							StrCatW(ApplicationText, SelectedApplication->Version);
+							StrCatW(ApplicationText, L"\n");
 						}
 						if(StrCmpW(SelectedApplication->Licence, L"")) {
-							StrCatW(DescriptionText, Strings[IDS_LICENCE]);
-							StrCatW(DescriptionText, SelectedApplication->Licence);
-							StrCatW(DescriptionText, L"\n");
+							StrCatW(ApplicationText, Strings[IDS_LICENCE]);
+							StrCatW(ApplicationText, SelectedApplication->Licence);
+							StrCatW(ApplicationText, L"\n");
 						}
 						if(StrCmpW(SelectedApplication->Maintainer, L"")) {
-							StrCatW(DescriptionText, Strings[IDS_MAINTAINER]);
-							StrCatW(DescriptionText, SelectedApplication->Maintainer);
-							StrCatW(DescriptionText, L"\n");
+							StrCatW(ApplicationText, Strings[IDS_MAINTAINER]);
+							StrCatW(ApplicationText, SelectedApplication->Maintainer);
+							StrCatW(ApplicationText, L"\n");
 						}
 						if(StrCmpW(SelectedApplication->Licence, L"") || StrCmpW(SelectedApplication->Version, L"") || StrCmpW(SelectedApplication->Maintainer, L""))
-							StrCatW(DescriptionText, L"\n");
-						StrCatW(DescriptionText, SelectedApplication->Description);
-						ShowMessage(SelectedApplication->Name, DescriptionText);
+							StrCatW(ApplicationText, L"\n");
+						StrCatW(ApplicationText, SelectedApplication->Description);
+						ShowMessage(SelectedApplication->Name, ApplicationText);
 						WCHAR Uninstaller[200];
 						if(StrCmpW(SelectedApplication->RegName, L"")) {
 							if(getUninstaller(SelectedApplication->RegName, Uninstaller)) {
-								bShowUninstaller = TRUE;
-							}
-						} else {
-							if(getUninstaller(SelectedApplication->Name, Uninstaller)) {
 								bShowUninstaller = TRUE;
 							}
 						}
