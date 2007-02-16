@@ -592,6 +592,10 @@
 				RelativePath=".\Windows2000Sp4.h"
 				>
 			</File>
+			<File
+				RelativePath=".\windowsos.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
