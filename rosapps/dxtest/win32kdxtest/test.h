@@ -35,7 +35,7 @@ BOOL NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal, DD_HALINFO *pHalInfo
         if (input == value) \
         { \
             counter++; \
-            printf("FAIL ret=%s, %d != %d )\n",text,input,value); \
+            printf("FAIL ret=%s, %d != %d )\n",text,(int)input,(int)value); \
         }
 
 
@@ -43,7 +43,7 @@ BOOL NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal, DD_HALINFO *pHalInfo
         if (input != value) \
         { \
             counter++; \
-            printf("FAIL ret=%s, %d == %d )\n",text,input,value); \
+            printf("FAIL ret=%s, %d == %d )\n",text,(int)input,(int)value); \
         }
 
 

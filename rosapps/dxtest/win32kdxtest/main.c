@@ -106,7 +106,7 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
                                                 puD3dTextureFormats, puNumHeaps, 
                                                 puvmList, puNumFourCC,
                                                 puFourCC);
-    testing_noteq(retValue,NULL,fails,"1. NtGdiDdQueryDirectDrawObject(NULL, ...);\0");
+    testing_noteq(retValue,0,fails,"1. NtGdiDdQueryDirectDrawObject(NULL, ...);\0");
     testing_noteq(pHalInfo,NULL,fails,"2. NtGdiDdQueryDirectDrawObject(NULL, ...);\0");
     testing_noteq(pCallBackFlags,NULL,fails,"3. NtGdiDdQueryDirectDrawObject(NULL, ...);\0");
     testing_noteq(puD3dCallbacks,NULL,fails,"4. NtGdiDdQueryDirectDrawObject(NULL, ...);\0");
@@ -123,7 +123,7 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
                                                 puvmList, puNumFourCC,
                                                 puFourCC);
 
-    testing_noteq(retValue,NULL,fails,"1. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, NULL, ...);\0");
+    testing_noteq(retValue,0,fails,"1. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, NULL, ...);\0");
     testing_noteq(pHalInfo,NULL,fails,"2. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, NULL, ...);\0");
     testing_noteq(pCallBackFlags,NULL,fails,"3. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, NULL, ...);\0");
     testing_noteq(puD3dCallbacks,NULL,fails,"4. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, NULL, ...);\0");
@@ -137,8 +137,6 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
 
 
     show_status(fails, "NtGdiDdQueryDirectDrawObject\0");
-
-    return retValue;
 }
 
 /*
@@ -159,8 +157,6 @@ test_NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
     testing_eq(retValue,TRUE,fails,"NtGdiDdDeleteDirectDrawObject(NULL);\0");
 
     show_status(fails, "NtGdiDdDeleteDirectDrawObject\0");
-
-    return retValue;
 }
 
 
