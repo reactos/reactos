@@ -1,0 +1,8 @@
+; $Id$
+;
+
+LIBRARY win32csr.dll
+
+EXPORTS
+
+Win32CsrInitialization@24

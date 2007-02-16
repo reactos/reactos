@@ -1,0 +1,12 @@
+#include "resource.h"
+/* Start move all hard code string to En.rc 
+ * By Magnus Olsen  2005
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STRINGTABLE DISCARDABLE
+{
+
+STRING_USERINIT_FAIL, "Userinit failed to start the shell!\n"
+
+}

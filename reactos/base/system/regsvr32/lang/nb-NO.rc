@@ -1,0 +1,32 @@
+#include "resource.h"
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
+ */
+
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
+STRINGTABLE DISCARDABLE
+{
+
+IDS_UsageMessage, "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdlinje]] dllnavn\n\
+/u -	Uregistert server\n\
+/s -	Stille; vis ingen melding bokser\n\
+/c -	Konsoll utbytte\n\
+/i -	Kall DllInstall pasning det en valgfri [cmdlinje]; når brukt med /u kalles dll avinstall\n\
+/n -	Ikke kall DllRegisterServer; denne mulighet må bli brukt med /i"
+
+IDS_NoDllSpecified,  "Ingen DLL navn spesifisert."
+
+IDS_InvalidFlag,     "ikke gjenkjent flagg: %s"
+
+IDS_SwitchN_NoI,     "ikke gjenkjent flagg: /n må bli brukt med  /i bryter"
+
+IDS_DllNotLoaded,    "LoadLibrary('%s') mislykket.\nGetLastError retur 0x%08x."
+
+IDS_MissingEntry,    "%s var lastet, men %s oppføring moment ble ikke funnet.\n\n\
+%s kan kanskje ikke bli eksportert, eller en forfalsket versjon av %s kan kanskje være i minnet. Tenk å bruke PView for å oppspore og fjerne det."
+
+IDS_FailureMessage,  "%s inngående %s mislykket.\nretur kode ble: 0x%08x"
+
+IDS_SuccessMessage   "%s inngående %s lykkes."
+}

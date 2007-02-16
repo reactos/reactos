@@ -1,0 +1,52 @@
+/*
+ * Copyright (C) 2004 Eric Kohl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+/*
+ *Spanish Language resource file
+ *ReactOs (c) 2005 Samuel Serapión Vega
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH    "%SystemDrive%\\Opciones y Documentos"
+    IDS_APPDATA        "Data de Aplicación"
+    IDS_DESKTOP        "Escritorio"
+    IDS_FAVORITES      "Favoritos"
+    IDS_STARTMENU      "Menu de Inicio"
+    IDS_PROGRAMS       "Menu de Inicio\\Programas"
+    IDS_ADMINTOOLS     "Menu de Inicio\\Programas\\Herramientas Administrativas"
+    IDS_STARTUP        "Menu de Inicio\\Programas\\Autoinicio"
+    IDS_MYDOCUMENTS    "Mis Documentos"
+    IDS_MYPICTURES     "Mis Documentos\\Mis Fotos"
+    IDS_MYMUSIC        "Mis Documentos\\Mi Música"
+    IDS_MYVIDEOS       "Mis Documentos\\Mis Videos"
+    IDS_TEMPLATES      "Plantillas"
+    IDS_RECENT         "Reciente"
+    IDS_SENDTO         "Enviar a"
+    IDS_PRINTHOOD      "Vecindario Inmpresión"
+    IDS_NETHOOD        "Vecindario Red"
+    IDS_LOCALSETTINGS  "Opciones Locales"
+    IDS_LOCALAPPDATA   "Opciones Locales\\Data de Aplicación"
+    IDS_TEMP           "Opciones Locales\\Temp"
+    IDS_CACHE          "Opciones Locales\\Archivos de Internet Temporales"
+    IDS_HISTORY        "Opciones Locales\\Historia"
+    IDS_COOKIES        "Cookies"
+    IDS_PROGRAMFILES   "%SystemDrive%\\Archivos de Programas"
+END

@@ -1,0 +1,12 @@
+#include "resource.h"
+/*
+ * Copyright 2005 David Nordenberg
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_SWEDISH
+STRINGTABLE DISCARDABLE
+{
+
+STRING_USERINIT_FAIL, "Userinit misslyckades att starta användargränssnittet!\n"
+
+}

@@ -1,0 +1,25 @@
+; SCSI.INF
+;
+; Installation file for the SCSI class
+;
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+
+Class      = SCSIAdapter
+ClassGUID  = {4D36E97B-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 10/19/1999,5.00.2157.1
+
+[ClassInstall32.NT]
+AddReg = SCSIClass.NT.AddReg
+
+[SCSIClass.NT.AddReg]
+HKR, , ,            0, %SCSIClassName%
+HKR, , Icon,        0, "-10"
+;HKR, , Installer32, 0, "syssetup.dll,ScsiClassInstaller"
+
+[Strings]
+ReactOS = "ReactOS Team"
+SCSIClassName = "SCSI- and RAID-Controller"

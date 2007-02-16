@@ -1,0 +1,28 @@
+// Italian language resource file Gabriel ilardi, september 4th 2006
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "C&hiudi",                      IDM_CLOSE
+    END
+    POPUP "&Visualizza"
+    BEGIN
+        MENUITEM "Titoli",                 	 IDM_LARGEICONS
+        MENUITEM "Icone",                 	 IDM_SMALLICONS
+        MENUITEM "Elenco",                       IDM_LIST
+        MENUITEM "Dettagli",                     IDM_DETAILS
+    END
+    POPUP "?"
+    BEGIN
+        MENUITEM "Informazioni",                       IDM_ABOUT
+    END
+END
+

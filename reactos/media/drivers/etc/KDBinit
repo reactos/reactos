@@ -1,0 +1,14 @@
+# Example KDB.init file
+#
+#
+
+# Set the disassembly flavor to "intel" (default is "at&t")
+set syntax intel
+
+# Change the condition to enter KDB on INT3 to "always" (default is "kmode")
+set condition INT3 first always
+
+# This is a special command available only in the KDBinit file - it breaks into
+# KDB when it is interpreting the init file at startup.
+#break
+

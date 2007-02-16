@@ -1,0 +1,33 @@
+/*
+ * PROJECT:     ReactOS Control Application
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/control/No.rc
+ * PURPOSE:     Norwegian translation
+ * TRANSLATOR:  LMH1
+ *               
+ */
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Fil"
+    BEGIN
+        MENUITEM "&Avslutt",                      IDM_CLOSE
+    END
+    POPUP "&Vis"
+    BEGIN
+        MENUITEM "Større Ikoner",                 IDM_LARGEICONS
+        MENUITEM "Mindre Ikoner",                 IDM_SMALLICONS
+        MENUITEM "Liste",                        IDM_LIST
+        MENUITEM "Detaljer",                     IDM_DETAILS
+    END
+    POPUP "Hjelp"
+    BEGIN
+        MENUITEM "Om",                       IDM_ABOUT
+    END
+END

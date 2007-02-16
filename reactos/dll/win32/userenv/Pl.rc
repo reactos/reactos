@@ -1,0 +1,47 @@
+/*
+ * Copyright (C) 2005 Sebastian Gasiorek
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH    "%SystemDrive%\\Documents and Settings"
+    IDS_APPDATA        "Dane aplikacji"
+    IDS_DESKTOP        "Pulpit"
+    IDS_FAVORITES      "Ulubione"
+    IDS_STARTMENU      "Menu Start"
+    IDS_PROGRAMS       "Menu Start\\Programy"
+    IDS_ADMINTOOLS     "Menu Start\\Programy\\Narzêdzia administracyjne"
+    IDS_STARTUP        "Menu Start\\Programy\\Autostart"
+    IDS_MYDOCUMENTS    "Moje dokumenty"
+    IDS_MYPICTURES     "Moje dokumenty\\Moje obrazy"
+    IDS_MYMUSIC        "Moje dokumenty\\Moja muzyka"
+    IDS_MYVIDEOS       "Moje dokumenty\\Moje wideo"
+    IDS_TEMPLATES      "Szablony"
+    IDS_RECENT         "Recent"
+    IDS_SENDTO         "SendTo"
+    IDS_PRINTHOOD      "PrintHood"
+    IDS_NETHOOD        "NetHood"
+    IDS_LOCALSETTINGS  "Ustawienia lokalne"
+    IDS_LOCALAPPDATA   "Ustawienia lokalne\\Dane aplikacji"
+    IDS_TEMP           "Ustawienia lokalne\\Temp"
+    IDS_CACHE          "Ustawienia lokalne\\Temporary Internet Files"
+    IDS_HISTORY        "Ustawienia lokalne\\Historia"
+    IDS_COOKIES        "Cookies"
+    IDS_PROGRAMFILES   "%SystemDrive%\\Program Files"
+END

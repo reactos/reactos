@@ -1,0 +1,48 @@
+/*
+ * Copyright (C) 2005 Kaj Kaloinen
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+LANGUAGE LANG_FINNISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH    "%SystemDrive%\\Documents and Settings"
+    IDS_APPDATA        "Application Data"
+    IDS_DESKTOP        "Työpöytä"
+    IDS_FAVORITES      "Suosikit"
+    IDS_STARTMENU      "Käynnistä Valikko"
+    IDS_PROGRAMS       "Käynnistä Valikko\\Kaikki Ohjelmat"
+    IDS_ADMINTOOLS     "Käynnistä Valikko\\Kaikki Ohjelmat\\Apuohjelmat"
+    IDS_STARTUP        "Käynnistä Valikko\\Kaikki Ohjelmat\\Käynnistys"
+    IDS_MYDOCUMENTS    "Omat Tiedostot"
+    IDS_MYPICTURES     "Omat Tiedostot\\Omat kuvatiedostot"
+    IDS_MYMUSIC        "Omat Tiedostot\\Omat musiikkitiedostot"
+    IDS_MYVIDEOS       "Omat Tiedostot\\Omat videot"
+    IDS_TEMPLATES      "Pohjat"
+    IDS_RECENT         "Viimeisin"
+    IDS_SENDTO         "Lähetä"
+    IDS_PRINTHOOD      "Tulostimet"
+    IDS_NETHOOD        "Lähiverkko"
+    IDS_LOCALSETTINGS  "Paikalliset Asetukset"
+    IDS_LOCALAPPDATA   "Paikalliset Asetukset\\Application Data"
+    IDS_TEMP           "Paikalliset Asetukset\\Temp"
+    IDS_CACHE          "Paikalliset Asetukset\\Temporary Internet Files"
+    IDS_HISTORY        "Paikalliset Asetukset\\Historia"
+    IDS_COOKIES        "Keksit"
+    IDS_PROGRAMFILES   "%SystemDrive%\\Program Files"
+END
+

@@ -1,0 +1,35 @@
+LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+
+IDD_DOWNLOAD DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
+STYLE DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Download..."
+FONT 8, "MS Shell Dlg"
+{
+  CONTROL "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER|PBS_SMOOTH,10,10,200,12
+  LTEXT "", IDC_STATUS, 10, 30, 200, 10, SS_CENTER
+  PUSHBUTTON "Cancel", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+  IDS_WINDOW_TITLE 		"Download ! - ReactOS Downloader"
+  IDS_WELCOME_TITLE		"Willkommen im ReactOS Downloader"
+  IDS_WELCOME 			"Bitte wählen Sie rechts eine Kategorie. Dies ist Version 1.0."
+  IDS_NO_APP_TITLE		"Keine Anwendung ausgewählt"
+  IDS_NO_APP	  		"Bitte wählen Sie eine Anwendung, bevor Sie die Download-Schaltfläche betätigen. Wenn Sie Hilfe benötigen, drücken Sie die Hilfe-Schaltfläche in der oberen rechten Ecke."
+  IDS_UPDATE_TITLE 		"Update"
+  IDS_UPDATE			"Diese Funktion wurde noch nicht implementiert."
+  IDS_HELP_TITLE 		"Hilfe"
+  IDS_HELP			"Wählen Sie links eine Kategorie, wählen Sie eine Anwendung und drücken Sie die Download-Schaltfläche. Um die Anwendungsinformationen zu aktualisieren, drücken Sie die Schaltfläche neben der Hilfe-Schaltfläche."
+  IDS_NO_APPS			"In dieser Kategorie sind bisher noch keine Anwendungen. Sie können helfen, indem Sie Anwendungen hinzufügen."
+  IDS_CHOOSE_APP		"Bitte wählen Sie eine Anwendung."
+  IDS_CHOOSE_SUB		"Bitte wählen Sie eine Unterkategorie."
+  IDS_CHOOSE_CATEGORY		"Bitte wählen Sie eine Kategorie."
+  IDS_CHOOSE_BOTH		"Bitte wählen Sie eine Unterkategorie oder eine Anwendung."
+  IDS_XMLERROR_1		"XML Datei nicht gefunden!"
+  IDS_XMLERROR_2		"XML Datei kann nicht verarbeitet werden!"
+  IDS_DOWNLOAD_ERROR		"Die Datei konnte nicht runtergeladen werden.\nBitte prüfen sie, ob eine Verbindung zum Internet besteht."
+  IDS_VERSION			"Version: "
+  IDS_LICENCE			"Lizenz: "
+  IDS_MAINTAINER		"Maintainer: "
+END

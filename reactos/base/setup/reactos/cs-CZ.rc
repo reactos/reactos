@@ -1,0 +1,12 @@
+/* $Id: En.rc 12852 2005-01-06 13:58:04Z denzil $ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+/* String Tables */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CAPTION  "Instalace ReactOS"
+    IDS_TEXT     "ReactOS nelze instalovat pøímo z tohoto CD!\n\nProsím restartujte poèítaè z tohoto CD aby jste nainstalovali ReactOS."
+END
+
+/* EOF */

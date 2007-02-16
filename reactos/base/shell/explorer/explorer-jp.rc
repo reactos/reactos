@@ -1,0 +1,399 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Japanese resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MDIFRAME MENU DISCARDABLE 
+BEGIN
+    POPUP "ファイル(&F)"
+    BEGIN
+        MENUITEM "実行(&E)...",                 ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "終了(&X)",                    ID_FILE_EXIT
+    END
+    POPUP "表\示(&V)"
+    BEGIN
+        MENUITEM "ツール バー(&T)",             ID_VIEW_TOOL_BAR
+        MENUITEM "エキストラ バー(&E)",         ID_VIEW_EXTRA_BAR
+        MENUITEM "ドライブバー(&D)",            ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "サイド バー(&I)",             ID_VIEW_SIDE_BAR
+        MENUITEM "ステータス バー(&S)",         ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "最新の情報に更新(&R)\tF5",    ID_REFRESH
+        MENUITEM "全画面表\示(&U)\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "SDI",                         ID_VIEW_SDI
+    END
+    POPUP "ウィンドウ(&W)"
+    BEGIN
+        MENUITEM "新しいウィンドウ(&W)",        ID_WINDOW_NEW
+        MENUITEM "重ねて表\示\tShift+F5",        ID_WINDOW_CASCADE
+        MENUITEM "水平に並べて表\示(&H)",        ID_WINDOW_TILE_HORZ
+        MENUITEM "垂直に並べて表\示(&V)\tShift+F4", ID_WINDOW_TILE_VERT
+        MENUITEM "自動整列",                    ID_WINDOW_AUTOSORT
+        MENUITEM "最小化された子ウィンドウを整列(&S)", ID_WINDOW_ARRANGE
+    END
+    POPUP "ツール(&T)"
+    BEGIN
+        MENUITEM "オプション(&O)",              ID_TOOLS_OPTIONS
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "Explorer FAQ (&F)...",            ID_EXPLORER_FAQ
+        MENUITEM "Explorer について(&A)...",    ID_ABOUT_EXPLORER
+        MENUITEM "OS について(&O)...",          ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_DESKTOPBAR MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "設定(&S)...",                 ID_DESKTOPBAR_SETTINGS
+        MENUITEM "タスク マネージャ(&T)...",    ID_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "Explorer について(&A)...",    ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_VOLUME MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "ボリューム コントロールを開く", ID_TRAY_VOLUME
+        MENUITEM "オーディオ プロパティの調整", ID_VOLUME_PROPERTIES
+    END
+END
+
+IDM_NOTIFYAREA MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "隠されたアイコンを表\示する(&S)", ID_SHOW_HIDDEN_ICONS
+        MENUITEM "アイコン ボタンを表\示する(&B)",  ID_SHOW_ICON_BUTTON
+        MENUITEM "通知のカスタマイズ(&C)...",   ID_CONFIG_NOTIFYAREA
+        MENUITEM "日付と時刻の調整(&T)...",     ID_CONFIG_TIME
+        MENUITEM SEPARATOR
+        MENUITEM "Explorer について(&A)...",    ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_SDIFRAME MENU DISCARDABLE 
+BEGIN
+    POPUP "ファイル(&F)"
+    BEGIN
+        MENUITEM "実行(&E)...",                 ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "閉じる(&C)",                  ID_FILE_EXIT
+    END
+    POPUP "表\示(&V)"
+    BEGIN
+        MENUITEM "ツール バー(&T)",             ID_VIEW_TOOL_BAR
+        MENUITEM "サイド バー(&I)",             ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "ステータス バー(&S)",         ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "最新の情報に更新(&R)\tF5",    ID_REFRESH
+        MENUITEM "全画面表\示(&U)\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "MDI (&M)",                        ID_VIEW_MDI
+    END
+    POPUP "ツール(&T)"
+    BEGIN
+        MENUITEM "オプション(&O)",              ID_TOOLS_OPTIONS
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "Explorer FAQ (&F)...",            ID_EXPLORER_FAQ
+        MENUITEM "Explorer について(&A)...",    ID_ABOUT_EXPLORER
+        MENUITEM "OS について(&O)...",          ID_ABOUT_WINDOWS
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EXECUTE DIALOG DISCARDABLE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "実行"
+FONT 9, "MS UI Gothic"
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,150,10
+    CONTROL         "コマンド(&C):",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+                    18,60,10
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "最小化した状態で実行(&S)",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+                    45,71,12
+    DEFPUSHBUTTON   "OK (&O)",1,158,6,47,14
+    PUSHBUTTON      "キャンセル(&C)",2,158,23,47,14
+    PUSHBUTTON      "ヘルプ(&H)",254,158,43,47,14
+END
+
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "スタートメニューからプログラムを検索"
+FONT 9, "MS UI Gothic", 0, 0, 0x1
+BEGIN
+    LTEXT           "フィルタ(&F):",IDC_STATIC,7,9,18,8
+    EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
+                    WS_TABSTOP,7,25,186,33
+    PUSHBUTTON      "登録をチェックする(&C)",IDC_CHECK_ENTRIES,143,7,50,14
+END
+
+IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "デスクトップのプロパティ"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT           "使用したいアイコンの配置を選択してください:",
+                    IDC_STATIC,7,7,166,8
+    CONTROL         "左上から下へ",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,25,46,44
+    CONTROL         "左上から右へ",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,25,46,44
+    CONTROL         "右上から左へ",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,25,46,44
+    CONTROL         "右上から下へ",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,25,46,44
+    CONTROL         "左下から上へ",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,73,46,44
+    CONTROL         "左下から右へ",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,73,46,44
+    CONTROL         "右下から左へ",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,73,46,44
+    CONTROL         "右下から下へ",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,73,46,44
+    CONTROL         "左右を下へ",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,121,46,44
+    CONTROL         "上と左右の端",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,121,46,44
+    CONTROL         "輪になるように",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,121,46,44
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
+                    WS_TABSTOP,159,121,46,44
+    CONTROL         "デスクトップにバージョンを表\示する(&V)",ID_DESKTOP_VERSION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
+END
+
+IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "タスク バーのプロパティ"
+FONT 9, "MS UI Gothic"
+BEGIN
+    CONTROL         "時計を表\示する(&C)",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,152,52,10
+    CONTROL         "アクティブでない通知アイコンを隠す(&H)",
+                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,174,111,10
+    PUSHBUTTON      "通知アイコン(&N)...",ID_CONFIG_NOTIFYAREA,153,173,50,14
+END
+
+IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "スタートメニューのプロパティ"
+FONT 9, "MS UI Gothic"
+BEGIN
+END
+
+IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "通知アイコンの設定"
+FONT 9, "MS UI Gothic", 0, 0, 0x1
+BEGIN
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
+                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
+    LTEXT           "ツール チップの内容(&T):",IDC_LABEL1,7,44,40,8
+    EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
+    LTEXT           "ウィンドウのタイトル(&I):",IDC_LABEL2,7,63,44,8
+    EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
+    LTEXT           "モジュールの場所(&M):",IDC_LABEL3,7,81,43,8
+    EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
+    GROUPBOX        "表\示モード(&D)",IDC_LABEL4,7,96,157,28
+    CONTROL         "表\示する(&S)",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,15,108,33,10
+    CONTROL         "隠す(&H)",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
+                    108,29,10
+    CONTROL         "自動的に隠す(&U)",IDC_NOTIFY_AUTOHIDE,"Button",
+                    BS_AUTORADIOBUTTON,112,108,43,10
+    ICON            "",IDC_PICTURE,173,101,21,20
+    LTEXT           "最終変更(&L):",IDC_LABEL6,7,132,43,8
+    EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    CONTROL         "隠れたアイコンも表\示(&W)",ID_SHOW_HIDDEN_ICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,56,10
+    DEFPUSHBUTTON   "OK (&O)",IDOK,91,153,50,14,WS_GROUP
+    PUSHBUTTON      "キャンセル(&C)",IDCANCEL,151,153,50,14
+END
+
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 138
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "エクスプローラのウィンドウ モードの選択"
+FONT 9, "MS UI Gothic", 0, 0, 0x1
+BEGIN
+    LTEXT           "使用したいユーザー インターフェースを選択してください:",
+                    IDC_STATIC,7,7,160,8
+    CONTROL         "MDI (Multiple Document Interface)(&M)",IDC_MDI,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10
+    CONTROL         "SDI (Single Document Interface)(&S)",IDC_SDI,"Button",
+                    BS_AUTORADIOBUTTON,7,62,118,10
+    CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
+    CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
+    CONTROL         "サブフォルダを新しいウィンドウで開く(&E)",
+                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,90,135,10
+    LTEXT           "これよりこの設定が、すべての Explorer ウィンドウのデフォルトになります。",
+                    IDC_STATIC,7,111,174,22
+    DEFPUSHBUTTON   "OK (&O)",IDOK,29,136,50,14,WS_GROUP
+    PUSHBUTTON      "キャンセル(&C)",IDCANCEL,106,136,50,14
+END
+
+IDD_ABOUT_EXPLORER DIALOG DISCARDABLE  0, 0, 199, 106
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Explorer について"
+FONT 10, "MS UI Gothic"
+BEGIN
+    LTEXT           "ReactOS Explorer",IDC_ROS_EXPLORER,91,13,104,11
+    LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,104,8
+    LTEXT           "(c) 2003-2005 Martin Fuchs",IDC_STATIC,91,42,104,8
+    LTEXT           "",IDC_WIN_VERSION,91,58,98,22
+    LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,17,84,129,
+                    8
+    CONTROL         "OK (&O)",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
+                    154,90,38,12
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "ReactOS Explorer"
+    IDS_START               "ｽﾀｰﾄ"
+    IDS_LOGOFF              "ログオフ..."
+    IDS_SHUTDOWN            "シャットダウン..."
+    IDS_LAUNCH              "ファイル名を指定して実行..."
+    IDS_START_HELP          "ヘルプ"
+    IDS_SEARCH_FILES        "ファイルやフォルダ..."
+    IDS_DOCUMENTS           "マイドキュメント"
+    IDS_FAVORITES           "お気に入り"
+    IDS_PROGRAMS            "プログラム"
+    IDS_SETTINGS            "設定"
+    IDS_EXPLORE             "エクスプローラ"
+    IDS_EMPTY               "(なし)"
+    IDS_RECENT              "最近使ったファイル"
+    IDS_ADMIN               "管理ツール"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "スタートメニュー"
+    IDS_MINIMIZE_ALL        "全ウィンドウを最小化"
+    IDS_DESKTOP_NUM         "デスクトップ %d"
+    IDS_VOLUME              "音量"
+    IDS_ITEMS_CUR           "現在のアイコン"
+    IDS_ITEMS_CONFIGURED    "設定"
+    IDS_ITEMS_VISIBLE       "表\示"
+    IDS_ITEMS_HIDDEN        "非表\示"
+    IDS_NOTIFY_SHOW         "表\示する"
+    IDS_NOTIFY_HIDE         "隠す"
+    IDS_NOTIFY_AUTOHIDE     "自動的に隠す"
+    IDS_SHOW_HIDDEN_ICONS   "隠れているアイコンも表\示する"
+    IDS_HIDE_ICONS          "アイコンを隠す"
+    IDS_TERMINATE           "ROS Explorer を終了する"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "ネットワーク"
+    IDS_CONNECTIONS         "ネットワーク接続"
+    IDS_DRIVES              "ローカルディスク"
+    IDS_SEARCH_COMPUTER     "コンピュータの検索..."
+    IDS_SETTINGS_MENU       "設定メニュー"
+    IDS_CONTROL_PANEL       "コントロール パネル"
+    IDS_PRINTERS            "プリンタ"
+    IDS_BROWSE              "ファイルのブラウズ"
+    IDS_SEARCH_PRG          "プログラムを検索..."
+    IDS_ALL_USERS           "All Users\\"
+    IDS_SEARCH              "検索"
+    IDS_ABOUT_EXPLORER      "Explorer について(&A)..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "二つ以上のプログラムが選択されました。\nすべてのプログラムを実行しますか?"
+    IDS_DESKTOPBAR_SETTINGS "デスクトップの設定"
+    IDS_DESKTOP             "デスクトップ"
+    IDS_TASKBAR             "タスクバー"
+END
+
+#endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,127 @@
+/*
+ * Copyright 1999 Julio Cesar Gazquez
+ * Copyright 2005 José Manuel Ferrer Ortiz
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+STRINGTABLE LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+BEGIN
+
+/* MMSYS errors */
+   MMSYSERR_NOERROR, "El comando especificado fue ejecutado."
+   MMSYSERR_ERROR, "Error externo indefinido."
+   MMSYSERR_BADDEVICEID, "Un identificador de dispositivo que ha sido usado está fuera de rango para su sistema."
+   MMSYSERR_NOTENABLED, "El manejador no fue activado."
+   MMSYSERR_ALLOCATED, "El dispositivo especificado aún está en uso. Espere hasta que esté libre e intente nuevamente."
+   MMSYSERR_INVALHANDLE, "El handle de dispositivo especificado es inválido."
+   MMSYSERR_NODRIVER, "¡No hay un manejador instalado en su sistema!\n"
+   MMSYSERR_NOMEM, "No hay suficiente memoria disponible para esta tarea. Cierre una o más aplicaciones para aumentar la memoria disponible e inténtelo de nuevo."
+   MMSYSERR_NOTSUPPORTED, "Esta función no está soportada. Use la función Capacidades para determinar qué funciones y mensajes soporta el manejador."
+   MMSYSERR_BADERRNUM, "Se ha especificado un número de error que no está definido en el sistema."
+   MMSYSERR_INVALFLAG, "Se ha pasado una bandera no válida a una función del sistema."
+   MMSYSERR_INVALPARAM, "Se ha pasado un parámetro no válido a una función del sistema."
+
+/* WAVE errors */
+   WAVERR_BADFORMAT, "El formato especificado no está soportado o no puede ser traducido. Use la función Capacidades para determinar los formatos soportados."
+   WAVERR_STILLPLAYING, "Esta operación no puede ejecutarse mientras continúa la reproducción. Reinicie el dispositivo, o espere hasta que la reproducción termine."
+   WAVERR_UNPREPARED, "La cabecera de onda no está preparada. Use la función Preparar para prepararla, e inténtelo de nuevo."
+   WAVERR_SYNC, "No puede abrirse el dispositivo sin usar la bandera WAVE_ALLOWSYNC. Utilícela, e inténtelo de nuevo."
+
+/* MIDI errors */
+   MIDIERR_UNPREPARED, "La cabecera MIDI no está preparada. Use la función Preparar para prepararla, e inténtelo de nuevo."
+   MIDIERR_STILLPLAYING, "Esta operación no puede ejecutarse mientras se continúa tocando. Reinicie el dispositivo, o espera hasta que termine de tocar."
+   MIDIERR_NOMAP, "No se encontró un mapa MIDI. Puede haber un problema con el controlador, el el fichero MIDIMAP.CFG puede faltar o estar corrupto."
+   MIDIERR_NOTREADY, "El puerto está transmitiendo datos al dispositivo. Espera hasta que los datos hayan sido transmitidos, e intente nuevamente."
+   MIDIERR_NODEVICE, "La configuración actual del mapeador MIDI refiere a un dispositivo MIDI que no está instalado en el sistema. Use el mapeador MIDI para editar la configuración."
+   MIDIERR_INVALIDSETUP, "La configuración actual de MIDI está dañada. Copie el fichero MIDIMAP.CFG original al directorio SYSTEM de ReactOS SYSTEM, e intente nuevamente."
+
+   /* MCI errors */
+   MCIERR_INVALID_DEVICE_ID, "Identificador de dispositivo MCI inválido. Use el identificador devuelto al abrir el dispositivo MCI."
+   MCIERR_UNRECOGNIZED_KEYWORD, "El controlador no puede reconocer el parámetro de comando especificado."
+   MCIERR_UNRECOGNIZED_COMMAND, "El controlador no puede reconocer el comando especificado."
+   MCIERR_HARDWARE, "Hay un problema con su dispositivo. Asegúrese de que esté funcionando correctamente o contacte al fabricante del dispositivo."
+   MCIERR_INVALID_DEVICE_NAME, "El dispositivo especificado no está abierto o no es reconocido por MCI."
+   MCIERR_OUT_OF_MEMORY, "No hay suficiente memoria para esta tarea.\nCierre una o más aplicaciones para aumentar la memoria disponible e intente nuevamente."
+   MCIERR_DEVICE_OPEN, "El nombre de dispositivo ya está siendo usado como un alias por esta aplicación. Use un alias único."
+   MCIERR_CANNOT_LOAD_DRIVER, "Hay un problema no detectable en la carga del controlador de dispositivo especificado."
+   MCIERR_MISSING_COMMAND_STRING, "No se ha especificado un comando."
+   MCIERR_PARAM_OVERFLOW, "La cadena de salida es muy grande para caber en el buffer de retorno. Aumente el tamaño del buffer."
+   MCIERR_MISSING_STRING_ARGUMENT, "El comando especificado requiere un parámetro de cadena de caracteres. Por favor provea uno."
+   MCIERR_BAD_INTEGER, "El entero especificado es inválido para este comando."
+   MCIERR_PARSER_INTERNAL, "El controlador de dispositivo devolvió un tipo de retorno inválido. Contacte al fabricante del dispositivo para obtener un nuevo controlador."
+   MCIERR_DRIVER_INTERNAL, "Hay un problema con el controlador de dispositivo. Contacte al fabricante del dispositivo para obtener un nuevo controlador."
+   MCIERR_MISSING_PARAMETER, "El comando especificado requiere un parámetro. Por favor provea uno."
+   MCIERR_UNSUPPORTED_FUNCTION, "El dispositivo MCI que está usando no soporta el comando especificado."
+   MCIERR_FILE_NOT_FOUND, "No se encuentra el fichero especificado. Asegúrese que el path y el nombre del fichero son correctos."
+   MCIERR_DEVICE_NOT_READY, "El controlador de dispositivo no está listo."
+   MCIERR_INTERNAL, "Un problema ha ocurrido inicializando el MCI. Intente reiniciar ReactOS."
+   MCIERR_DRIVER, "Hay un problema con el controlador del dispositivo. El controlador se ha cerrado. Intente reenviar el comando."
+   MCIERR_CANNOT_USE_ALL, "Utilice un nombre de dispositivo específico para este comando."
+   MCIERR_MULTIPLE, "Han ocurrido errores en más de un dispositivo. Especifique cada comando y dispositivo por separado para determinar que dispositivos causaron el error."
+   MCIERR_EXTENSION_NOT_FOUND, "No puede determinarse el tipo de dispositivo a partir de la extensión de fichero dada."
+   MCIERR_OUTOFRANGE, "El parámetro especificado está fuera del rango para el comando especificado."
+   MCIERR_FLAGS_NOT_COMPATIBLE, "Los parámetros especificados no pueden usarse juntos."
+   MCIERR_FILE_NOT_SAVED, "No puede grabarse el fichero especificado. Asegúrese de tener suficiente espacio en disco o de que permanece conectado a la red."
+   MCIERR_DEVICE_TYPE_REQUIRED, "No puede encontrarse el dispositivo especificado. Asegúrese de que está instalado o de que el nombre del dispositivo está escrito correctamente."
+   MCIERR_DEVICE_LOCKED, "El dispositivo especificado está siendo cerrado. Espere unos segundos e intente nuevamente."
+   MCIERR_DUPLICATE_ALIAS, "El alias especificado ya está siendo usado por esta aplicación. Use un alias único."
+   MCIERR_BAD_CONSTANT, "El parámetro especificado es inválido para este comando."
+   MCIERR_MUST_USE_SHAREABLE, "El controlador de dispositivo ya está en uso. Para compartirlo, use el parámetro 'compartible' ('shareable') con cada comando 'abrir' ('open')."
+   MCIERR_MISSING_DEVICE_NAME, "El comando especificado requiere un alias, fichero, controlador o nombre de dispositivo. Por favor provea uno."
+   MCIERR_BAD_TIME_FORMAT, "El valor especificado para el formato de tiempo es inválido. Verifique los formatos válidos en la documentación de MCI."
+   MCIERR_NO_CLOSING_QUOTE, "Una comilla de cierre está faltando en el valor del parámetro. Por favor provea una."
+   MCIERR_DUPLICATE_FLAGS, "Un parámetro o valor fue especificado dos veces. Especifíquelo una sola vez."
+   MCIERR_INVALID_FILE, "El fichero especificado no puede ser tocado en el dispositivo MCI especificado. El fichero puede estar corrupto o en un formato incorrecto."
+   MCIERR_NULL_PARAMETER_BLOCK, "Se ha pasado un bloque de parámetros nulo al MCI."
+   MCIERR_UNNAMED_RESOURCE, "No puede guardarse un fichero sin nombre. Provea un nombre para el fichero."
+   MCIERR_NEW_REQUIRES_ALIAS, "Debe especificar un alias cuando utilice el parámetro 'nuevo'."
+   MCIERR_NOTIFY_ON_AUTO_OPEN, "No puede usar el flag 'notificar' con dispositivos de apertura automática."
+   MCIERR_NO_ELEMENT_ALLOWED, "No puede usar un nombre de fichero con el dispositivo especificado."
+   MCIERR_NONAPPLICABLE_FUNCTION, "No pueden ejecutarse los comandos en el orden especificado. Corrija la secuencia de comandos e intente nuevamente."
+   MCIERR_ILLEGAL_FOR_AUTO_OPEN, "No puede ejecutarse el comando especificado en un dispositivo de apertura automática. Espere hasta que el dispositivo esté cerrado e intente nuevamente."
+   MCIERR_FILENAME_REQUIRED, "El nombre del fichero es inválido. Asegúrese de que el nombre del fichero no es mayor de 8 caracteres, seguido por un punto y una extensión."
+   MCIERR_EXTRA_CHARACTERS, "No puede especificar caracteres extra después de una cadena encerrada entre comillas."
+   MCIERR_DEVICE_NOT_INSTALLED, "El dispositivo especificado no está instalado en el sistema. Use la opción Controladores en el Panel de Control para instalar el dispositivo."
+   MCIERR_GET_CD, "No puede accederse al fichero o dispositivo MCI especificado. Intente cambiando de directorio o reiniciando el equipo."
+   MCIERR_SET_CD, "No puede accederse al fichero o dispositivo MCI especificado porque la aplicación no puede cambiar de directorio."
+   MCIERR_SET_DRIVE, "No puede accederse al fichero o dispositivo MCI especificado porque la aplicación no puede cambiar de unidad."
+   MCIERR_DEVICE_LENGTH, "Especifique un dispositivo o nombre de controlador de menos de 79 caracteres."
+   MCIERR_DEVICE_ORD_LENGTH, "Especifique un dispositivo o nombre de controlador de menos de 69 caracteres."
+   MCIERR_NO_INTEGER, "El comando especificado requiere un parámetro entero. Por favor provea uno."
+   MCIERR_WAVE_OUTPUTSINUSE, "Todos los dispositivos que pueden tocar ficheros en este formato están en uso. Espere hasta que se libere un dispositivo e intente nuevamente."
+   MCIERR_WAVE_SETOUTPUTINUSE, "No puede prepararse el dispositivo de forma de onda para reproducción porque está en uso. Espere hasta que el dispositivo esté libre e intente nuevamente."
+   MCIERR_WAVE_INPUTSINUSE, "Todos los dispositivos que pueden grabar ficheros en este formato están en uso. Espere hasta que se libere un dispositivo e intente nuevamente."
+   MCIERR_WAVE_SETINPUTINUSE, "No puede prepararse el dispositivo de forma de onda para grabación porque está en uso. Espere hasta que el dispositivo esté libre e intente nuevamente."
+   MCIERR_WAVE_OUTPUTUNSPECIFIED, "Cualquier dispositivo compatible de reproducción de forma de onda puede ser usado."
+   MCIERR_WAVE_INPUTUNSPECIFIED, "Cualquier dispositivo compatible de grabación de forma de onda puede ser usado."
+   MCIERR_WAVE_OUTPUTSUNSUITABLE, "No hay ningún dispositivo de forma de onda instalado capaz de reproducir ficheros en este formato. Use la opción Dispositivos para instalar el dispositivo de forma de onda."
+   MCIERR_WAVE_SETOUTPUTUNSUITABLE,"El dispositivo con el que intenta reproducir no puede reconocer el formato de fichero."
+   MCIERR_WAVE_INPUTSUNSUITABLE, "No hay ningún dispositivo de forma de onda instalado capaz de grabar ficheros en este formato. Use la opción Dispositivos para instalar el dispositivo de forma de onda."
+   MCIERR_WAVE_SETINPUTUNSUITABLE, "El dispositivo con el que intenta grabar no puede reconocer el formato de fichero."
+   MCIERR_NO_WINDOW, "No hay una ventana."
+   MCIERR_CREATEWINDOW, "No puede crearse o usar una ventana."
+   MCIERR_FILE_READ, "No puede leerse el fichero especificado. Asegúrese de que el fichero aún está presente, o revise su disco o conexión de red."
+   MCIERR_FILE_WRITE, "No puede grabarse el fichero especificado. Asegúrese de tener suficiente espacio en disco o de que permanece conectado a la red."
+   MCIERR_SEQ_DIV_INCOMPATIBLE, "Los formatos de tiempo de ""song pointer"" y SMPTE son mutuamente exclusivos. No pueden utilizarse a la vez."
+   MCIERR_SEQ_NOMIDIPRESENT, "El sistema no tiene dispositivos MIDI instalados. Use la opción Controladores en el Panel de Control para instalar el dispositivo."
+   MCIERR_SEQ_PORT_INUSE, "El puerto MIDI especificado ya está en uso. Espere hasta que esté libre e intente nuevamente."
+   MCIERR_SEQ_PORT_MAPNODEVICE, "La configuración actual del mapeador MIDI refiere a un dispositivo MIDI que no está instalado en el sistema. Use el la opción del mapeador MIDI en el Panel de Control para editar la configuración."
+   MCIERR_SEQ_PORT_MISCERROR, "Ha ocurrido un error con el puerto especificado."
+   MCIERR_SEQ_PORT_NONEXISTENT, "El dispositivo MIDI especificado no está instalado en el sistema. Use la opción Dispositivos en el Panel de Control para instalar un dispositivo MIDI."
+   MCIERR_SEQ_PORTUNSPECIFIED, "El sistema no tiene actualmente un puerto MIDI especificado."
+   MCIERR_SEQ_TIMER, "Todos los temporizadores de multimedia están siendo usados por otras aplicaciones. Cierre una de esas aplicaciones e intente nuevamente."
+
+END

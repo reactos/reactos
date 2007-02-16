@@ -1,0 +1,162 @@
+// French (fr) resources by Usurp (spetreolle at users dot sourceforge dot net)
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 250, 220
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Profils d'alimentation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  ICON IDI_ACDC, IDI_ACDC, 7,7,28,22
+  LTEXT "Choisissez le profil d'alimentation le plus approprié pour cet ordinateur. Notez que modifier les réglages suivants modifiera le profil sélectionné.",
+	-1,45,13,194,36
+  GROUPBOX "P&rofils d'alimentation", -1, 7,57,240,46
+  COMBOBOX IDC_ENERGYLIST, 14,70,224,92, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  PUSHBUTTON "&Sauvegarder sous...", -1, 100,85,75,15,WS_DISABLED
+  PUSHBUTTON "&Supprimer", -1, 180,85,55,15,WS_DISABLED
+  GROUPBOX "Inconnu", IDC_GRPDETAIL, 7,108,240,105
+  LTEXT "Alimentation:",IDC_SAT,15,120,60,10
+  LTEXT "Branché",IDC_SAC,100,120,45,15
+  ICON IDI_AC, IDC_IAC, 75,115,25,15
+  LTEXT "Sur piles",IDC_SDC,197,120,45,15
+  ICON IDI_DC, IDC_IDC, 165,115,25,15
+  LTEXT "Eteindre le &moniteur:",IDC_MONITOR,15,145,80,10
+  COMBOBOX IDC_MONITORACLIST, 100,140,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_MONITORDCLIST, 175,140,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Eteindre les d&isques durs:",IDC_DISK,15,160,80,10
+  COMBOBOX IDC_DISKACLIST, 100,155,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_DISKDCLIST, 175,155,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Mode s&tandby:",IDC_STANDBY,15,180,80,10
+  COMBOBOX IDC_STANDBYACLIST, 100,175,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_STANDBYDCLIST, 175,175,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Mise en veille du système:",IDC_HYBERNATE,15,195,80,10
+  COMBOBOX IDC_HYBERNATEACLIST, 100,190,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_HYBERNATEDCLIST, 175,190,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEALARMS DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Alarmes"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Alarme de batterie faible",-1,10,15,235,95
+    CONTROL         "Activer l'alarme de batterie faible quand le niveau d'énergie atteint:",IDC_ALARM1,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,25,180,15
+    LTEXT           "Inconnu",IDC_ALARMVALUE1,200,25,40,10
+    LTEXT           "0%",-1,20,40,15,15
+    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ | 
+                    TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
+    LTEXT           "100%",-1,215,40,25,10
+    PUSHBUTTON      "Action d'alarme...",-1,20,70,70,15,WS_DISABLED
+    LTEXT           "Notification:",-1,95,70,50,10
+    LTEXT           "Inconnu",IDC_ALARMMSG1,145,70,95,10
+    LTEXT           "Action:",-1,95,80,45,10
+    LTEXT           "Inconnu",IDC_ALARMAKTION1,145,80,95,10
+    LTEXT           "Lancer le Programme:",-1,95,90,50,10
+    LTEXT           "Inconnu",IDC_ALARMPROG1,150,90,40,10
+
+    GROUPBOX        "Alarme de batterie Critique",-1,10,115,235,95
+    CONTROL         "Activer l'alarme de batterie critique quand le niveau d'énergie atteint:",IDC_ALARM2,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,125,180,15
+    LTEXT           "Inconnu",IDC_ALARMVALUE2,200,125,40,10
+    LTEXT           "0%",-1,20,140,15,15
+    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ | 
+                    TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
+    LTEXT           "100%",-1,215,140,25,10
+    PUSHBUTTON      "Action d'alarme...",-1,20,170,70,15,WS_DISABLED
+    LTEXT           "Notification:",-1,95,170,50,10
+    LTEXT           "Inconnu",IDC_ALARMMSG2,145,170,95,10
+    LTEXT           "Action:",-1,95,180,45,10
+    LTEXT           "Inconnu",IDC_ALARMAKTION2,145,180,95,10
+    LTEXT           "Lancer le Programme:",-1,95,190,50,10
+    LTEXT           "Inconnu",IDC_ALARMPROG2,150,190,40,10
+END
+
+IDD_PROPPAGEADVANCED DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Avancé"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDI_ACDC,IDI_ACDC,5,5,20,20
+    LTEXT           "Choisissez les options d'économie d'énergie que vous voulez utiliser.",-1,30,5,205,20
+    GROUPBOX        "Options",-1,5,35,225,55
+    CONTROL         "Toujours &afficher l'icone sur la barre des taches",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,15,45,200,10
+    CONTROL         "&Demander un mot de passe pour sortir de la mise en veille",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,55,200,10
+    CONTROL         "&Luminosité faible quand l'ordinateur est sur piles.",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,65,200,10
+    GROUPBOX        "Boutons d'alimentation",-1,5,100,230,105
+    LTEXT           "&Quand je ferme le couvercle de mon portable:", IDC_SLIDCLOSE,10,110,210,10
+    COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Quand j'appuie sur le bouton Power de l'ordinateur:", IDC_SPOWERBUTTON,10,135,210,10
+    COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Quand j'appuie sur le bouton Sleep de l'ordinateur:", IDC_SSLEEPBUTTON,10,165,210,10
+    COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEHIBERNATE DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Mise en veille"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
+    LTEXT           "Quand votre ordinateur se met en veille, il enregistre tout ce qu'il a en memoire sur le disque dur et s'arrête. Quand votre ordinateur sort de la mise en veille, il reprend son état précédent. ",
+                    -1,35,5,195,35
+    GROUPBOX        "Mise en veille",-1,5,45,235,25
+    CONTROL         "Activer la mise en veille",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,55,210,10
+    GROUPBOX        "Espace disque pour la mise en veille",-1,5,80,240,60
+    LTEXT           "Espace disque libre:",-1,10,90,100,10
+    LTEXT           "Inconnu",IDC_FREESPACE,120,90,70,10
+    LTEXT           "Espace disque nécessaire :",-1,10,100,115,10
+    LTEXT           "Inconnu",IDC_SPACEFORHIBERNATEFILE,120,100,55,10
+    LTEXT           "Vous devez libérer de l'espace avant que votre ordinateur se mette en veille. ",IDC_TOLESSFREESPACE,10,115,220,20
+END
+
+STRINGTABLE
+BEGIN
+  IDS_CPLNAME_1 "Options d'alimentation"
+  IDS_CPLDESCRIPTION_1 "Configure les Options d'alimentation de votre ordinateur."
+  IDS_PROCENT "%i%%"
+  IDS_SOUND "Son"
+  IDS_TEXT "Texte"
+  IDS_CONFIG1 "Réglages pour le profil d'alimentation %1"
+  IDS_CONFIG2 "Réglages avancés pour %1"
+
+  IDS_SIZEBYTS "%i octets"
+  IDS_SIZEMB "%i MB"
+
+  IDS_NOACTION "Ne rien faire"
+
+  IDS_PowerActionNone1 "Pas d'action"
+  IDS_PowerActionUnknown "Inconnue"
+  IDS_PowerActionSleep "Stand by"
+  IDS_PowerActionHibernate "Mettre en veille"
+  IDS_PowerActionShutdown "Eteindre"
+  IDS_PowerActionRestart "Redémarrer"
+  IDS_PowerActionShutdownOff "Arreter le système et éteindre"
+  IDS_PowerActionWarmEject "Me demander quoi faire"
+  IDS_PowerActionNone2 "Aucune"
+
+  IDS_TIMEOUT1 "Après 1 min"
+  IDS_TIMEOUT2 "Après 2 mins"
+  IDS_TIMEOUT3 "Après 3 mins"
+  IDS_TIMEOUT4 "Après 5 mins"
+  IDS_TIMEOUT5 "Après 10 mins"
+  IDS_TIMEOUT6 "Après 15 mins"
+  IDS_TIMEOUT7 "Après 20 mins"
+  IDS_TIMEOUT8 "Après 25 mins"
+  IDS_TIMEOUT9 "Après 30 mins"
+  IDS_TIMEOUT10 "Après 45 mins"
+  IDS_TIMEOUT11 "Après 1 heure"
+  IDS_TIMEOUT12 "Après 2 heures"
+  IDS_TIMEOUT13 "Après 3 heures"
+  IDS_TIMEOUT14 "Après 4 heures"
+  IDS_TIMEOUT15 "Après 5 heures"
+  IDS_TIMEOUT16 "Jamais"
+END
+

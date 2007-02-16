@@ -1,0 +1,64 @@
+; FDC.INF
+
+; Installation file for floppy disk controllers
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = FDC
+ClassGUID  = {4D36E96A-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 15/08/2005,1.01.0.0
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[ClassInstall32.NT]
+AddReg = FDC.NT.AddReg
+
+[FDC.NT.AddReg]
+HKR, , ,               0, %FDCClassName%
+HKR, , Icon,           0, "-9"
+HKR,,NoInstallClass,,1
+
+[Manufacturer]
+%GenericMfg% = GenericMfg
+
+[GenericMfg]
+;FIXME: We do not have a driver yet
+;%*PNP0700.DeviceDesc% = fdc_Inst,*PNP0700
+%*PNP0700.DeviceDesc% = NO_DRV,*PNP0700
+
+;----------------------------- FDC DRIVER -----------------------------
+
+[fdc_Inst.NT]
+CopyFiles = fdc_CopyFiles.NT
+
+[fdc_CopyFiles.NT]
+fdc.sys
+
+[fdc_Inst.NT.Services]
+AddService = fdc, 0x00000002, fdc_Service_Inst
+
+[fdc_Service_Inst]
+ServiceType    = 1
+StartType      = 0
+ErrorControl   = 1
+ServiceBinary  = %12%\fdc.sys
+
+;---------------------------- NO DRIVER REQ -----------------------------
+
+[NO_DRV]
+
+[NO_DRV.Services]
+AddService = , 0x00000002
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+FDCClassName = "Floppy disks controllers"
+
+GenericMfg = "(Generic floppy disk controllers)"
+*PNP0700.DeviceDesc = "Generic floppy disk controller"

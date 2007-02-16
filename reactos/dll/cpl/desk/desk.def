@@ -1,0 +1,7 @@
+LIBRARY desk.cpl
+
+EXPORTS
+CPlApplet
+DisplayClassInstaller
+
+; EOF

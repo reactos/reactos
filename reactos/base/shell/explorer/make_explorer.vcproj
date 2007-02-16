@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="8,00"
+	Name="make_explorer"
+	ProjectGUID="{E132A04B-8BC6-4D18-81F2-F0156B809871}"
+	Keyword="MakeFileProj"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Unicode Release|Win32"
+			OutputDirectory=".\URelease"
+			IntermediateDirectory=".\URelease"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="msdevfilt -gcc make -f Makefile-precomp UNICODE=1"
+				ReBuildCommandLine="msdevfilt -gcc make -f Makefile-precomp UNICODE=1 clean all"
+				CleanCommandLine=""
+				Output="explorer.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="bjam|Win32"
+			OutputDirectory=".\Debug"
+			IntermediateDirectory=".\Debug"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; bjam"
+				ReBuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; bjam clean&amp;bjam release"
+				CleanCommandLine=""
+				Output="explorer.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory=".\Release"
+			IntermediateDirectory=".\Release"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile-precomp UNICODE=0"
+				ReBuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile-precomp UNICODE=0 clean all"
+				CleanCommandLine=""
+				Output="explorer.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="doxy docu|Win32"
+			OutputDirectory=".\Debug"
+			IntermediateDirectory=".\Debug"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="msdevfilt -java make docu"
+				ReBuildCommandLine="msdevfilt -java make docu full-docu"
+				CleanCommandLine=""
+				Output="explorer.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Unicode Debug|Win32"
+			OutputDirectory=".\UDebug"
+			IntermediateDirectory=".\UDebug"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile.MinGW UNICODE=1 DEBUG=1"
+				ReBuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile.MinGW UNICODE=1 DEBUG=1 clean all"
+				CleanCommandLine=""
+				Output="explorer.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory=".\Debug"
+			IntermediateDirectory=".\Debug"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile-precomp UNICODE=0 DEBUG=1"
+				ReBuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile-precomp UNICODE=0 DEBUG=1 clean all"
+				CleanCommandLine=""
+				Output="explorer.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<File
+			RelativePath="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile.MinGW UNICODE=0 DEBUG=1"
+			>
+		</File>
+		<File
+			RelativePath="Jamfile"
+			>
+		</File>
+		<File
+			RelativePath="Makefile"
+			>
+		</File>
+		<File
+			RelativePath="Makefile.MinGW"
+			>
+		</File>
+		<File
+			RelativePath="Makefile-precomp"
+			>
+		</File>
+		<File
+			RelativePath="Makefile.Wine"
+			>
+		</File>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

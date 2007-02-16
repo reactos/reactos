@@ -1,0 +1,30 @@
+LIBRARY SYSSETUP.DLL
+EXPORTS
+;ApplyAcls
+;DevInstallW
+;GenerateScsiHwIdList
+InitializeSetupActionLog@4
+InstallLiveCD@4
+InstallReactOS@4
+KeyboardClassInstaller@12
+LogItem@8
+;LogItem0
+;LogItem1
+;LogItem2
+;LogItem3
+;LogItemN
+MouseClassInstaller@12
+;PnPInitializationThread
+;RepairStartMenuItems
+;ReportError
+;ScsiClassInstaller
+SetupChangeFontSize@8
+;SetupChangeLocale
+;SetupCreateOptionalComponentsPage
+;SetupInfObjectInstallActionW
+;SetupSetLargeDialogFont
+;TapeClassInstaller
+TerminateSetupActionLog@0
+;UpgradePrinters
+;ViewSetupActionLog
+; EOF

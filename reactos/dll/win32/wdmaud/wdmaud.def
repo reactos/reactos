@@ -1,0 +1,26 @@
+; $Id: wdmaud.def 12852 2005-01-06 13:58:04Z mf $
+;
+; wdmaud.def
+;
+; ReactOS Operating System
+;
+; Each of the "message" functions can be commented out to stop the
+; corresponding device type from being supported. This is mainly so we can
+; focus on debugging a particular device type.
+;
+LIBRARY wdmaud.drv
+EXPORTS
+; DriverProc is needed so the driver can startup and shutdown
+DriverProc@20
+; Wave input support
+;widMessage@20
+; Wave output support
+wodMessage@20
+; Midi input support
+;midMessage@20
+; Midi output support
+;modMessage@20
+; Mixer support
+;mxdMessage@20
+; Auxiliary device support
+;auxMessage@20

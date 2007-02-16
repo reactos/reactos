@@ -1,0 +1,5 @@
+These files are originally from the freebsd TCP stack contained on oskit.
+Only files relevent to TCP are here, along with assorted interfaces that
+are needed to make them useful.  Overall, I intend this to implement a
+generic, standalone TCP library that can be used with any IP machinery
+required.

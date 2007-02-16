@@ -1,0 +1,47 @@
+; ACPI.INF
+
+; Installation file for ACPI driver
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = System
+ClassGUID  = {4D36E97D-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 10/11/2005,1.01.0.0
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[Manufacturer]
+%GenericMfg% = GenericMfg
+
+[GenericMfg]
+%*PNP0C08.DeviceDesc% = ACPI_Inst,*PNP0C08
+
+;------------------------------ ACPI DRIVER -----------------------------
+
+[ACPI_Inst.NT]
+CopyFiles = ACPI_CopyFiles.NT
+
+[ACPI_CopyFiles.NT]
+acpi.sys
+
+[ACPI_Inst.NT.Services]
+AddService = acpi, 0x00000002, acpi_Service_Inst
+
+[acpi_Service_Inst]
+ServiceType   = 1
+StartType     = 0
+ErrorControl  = 1
+ServiceBinary = %12%\acpi.sys
+LoadOrderGroup = Boot Bus Extender
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+
+GenericMfg = "(Generic system devices)"
+*PNP0C08.DeviceDesc = "ACPI hardware"

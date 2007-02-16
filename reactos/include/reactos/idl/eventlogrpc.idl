@@ -1,0 +1,237 @@
+/* 
+ *  Copyright 2005 Saveliy Tretiakov
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+#ifdef __midl
+
+[
+	uuid(82273FDC-E32A-18C3-3F78-827929DC23EA),
+    version(0.0),
+    pointer_default(unique)
+]
+
+interface eventlog
+{
+	cpp_quote("#define RPC_ENABLED")
+	cpp_quote("#if 0")
+	typedef [handle, unique] wchar_t *LPWSTR;
+	typedef [handle, unique] char *LPSTR;
+	typedef unsigned int NTSTATUS;
+	
+	typedef struct _UNICODE_STRING {
+		unsigned short Length;
+		unsigned short MaximumLength;
+		[size_is(MaximumLength/2), unique] wchar_t *Buffer;
+	} UNICODE_STRING, *PUNICODE_STRING;
+
+	typedef struct _ANSI_STRING {
+	    unsigned short Length;
+	    unsigned short MaximumLength;
+	    [size_is(MaximumLength), unique] char *Buffer;
+	} ANSI_STRING, *PANSI_STRING;
+	cpp_quote("#endif")
+
+	typedef [context_handle] struct _LOGHANDLE {
+		int pos;
+	} *LOGHANDLE;
+	typedef LOGHANDLE *PLOGHANDLE;
+
+	/* Function 0x00 */
+	NTSTATUS ElfrClearELFW(
+		[in] LOGHANDLE Handle,
+		[in] PUNICODE_STRING BackupName);
+
+	/* Function 0x01 */
+	NTSTATUS ElfrBackupELFW(
+		[in] LOGHANDLE Handle,
+		[in] PUNICODE_STRING BackupName);
+
+	/* Function 0x02 */
+	NTSTATUS ElfrCloseEL(
+		[in,out] PLOGHANDLE Handle);
+
+	/* Function 0x03 */
+	NTSTATUS ElfrDeregisterEventSource(
+		[in,out] PLOGHANDLE Handle);
+
+	/* Function 0x04 */
+	NTSTATUS ElfrNumberOfRecords(
+		[in] LOGHANDLE Handle,
+		[out] long * NumberOfRecords);
+
+	/* Function 0x05 */
+	NTSTATUS ElfrOldestRecord(
+		[in] LOGHANDLE LogHandle,
+		[out] long * OldestRecNumber);
+
+	/* Function 0x06 */
+	NTSTATUS ElfrChangeNotify(); // FIXME
+
+	/* Function 0x07 */
+	NTSTATUS ElfrOpenELW(
+		[in, unique] LPWSTR ServerName,
+		[in] PUNICODE_STRING FileName, 
+		[in] PUNICODE_STRING NullStr, 
+		[in] long MajorVer,
+		[in] long MinorVer,
+		[out] PLOGHANDLE Handle );
+
+	/* Function 0x08 */
+	NTSTATUS ElfrRegisterEventSourceW(
+		[in, unique] LPWSTR ServerName,
+		[in] PUNICODE_STRING LogName, 
+		[in] PUNICODE_STRING NullStr, 
+		[in] long MajorVer,
+		[in] long MinorVer,
+		[out] PLOGHANDLE Handle);
+
+	/* Function 0x09 */
+	NTSTATUS ElfrOpenBELW(
+		[in, unique] LPWSTR ServerName,
+		[in] PUNICODE_STRING BackupName, 
+		[in] long MajorVer,
+		[in] long MinorVer,
+		[out] PLOGHANDLE Handle);
+
+	/* Function 0x0a */
+	NTSTATUS ElfrReadELW(
+		[in] LOGHANDLE Handle,
+		[in] long Flags,
+		[in] long Offset,
+		[in] long BufSize,
+		[out,size_is(BufSize)] char * Buffer,
+		[out] long * BytesRead,
+		[out] long * BytesNeeded);
+
+	/* Function 0x0b */
+	NTSTATUS ElfrReportEventW(
+		[in] LOGHANDLE Handle,
+		[in] long Time,
+		[in] short Type,
+		[in] short Category,
+		[in] long ID,
+		[in] short NumStrings,
+		[in] long DataSize,
+		[in] PUNICODE_STRING ComputerName,
+		[in, unique] char *SID,
+		[in, size_is(NumStrings), unique] PUNICODE_STRING Strings[*],
+		[in, size_is(DataSize), unique] unsigned char * Data,
+		[in] short Flags,
+		[in,out,unique] long * unknown1,
+		[in,out,unique] long * unknown2);
+
+	/* Function 0x0c */
+	NTSTATUS ElfrClearELFA(
+		[in] LOGHANDLE Handle,
+		[in,unique] PANSI_STRING BackupName);
+
+	/* Function 0x0d */
+	NTSTATUS ElfrBackupELFA(
+		[in] LOGHANDLE Handle,
+		[in] PANSI_STRING BackupName);
+
+	/* Function 0x0e */
+	NTSTATUS ElfrOpenELA(
+		[in, unique] LPSTR ServerName,
+		[in] PANSI_STRING LogName, 
+		[in] PANSI_STRING NullStr, 
+		[in] long MajorVer,
+		[in] long MinorVer,
+		[out] PLOGHANDLE Handle);
+
+	/* Function 0x0f */
+	NTSTATUS ElfrRegisterEventSourceA(
+		[in, unique] LPSTR ServerName,
+		[in] PANSI_STRING LogName, 
+		[in] PANSI_STRING NullStr,
+		[in] long MajorVer,
+		[in] long MinorVer,
+		[out] PLOGHANDLE Handle);
+
+	/* Function 0x10 */
+	NTSTATUS ElfrOpenBELA(
+		[in, unique] LPSTR ServerName,
+		[in] PANSI_STRING BakckupName, 
+		[in] long MajorVer,
+		[in] long MinorVer,
+		[out] PLOGHANDLE Handle);
+
+	/* Function 0x11 */
+	NTSTATUS ElfrReadELA(
+		[in] LOGHANDLE Handle,
+		[in] long Flags,
+		[in] long Offset,
+		[in] long BufSize,
+		[out,size_is(BufSize)] unsigned char * Buffer,
+		[out] long *BytesRead,
+		[out] long *BytesNeeded);
+
+	/* Function 0x12 */
+	NTSTATUS ElfrReportEventA(
+		[in] LOGHANDLE Handle,
+		[in] long Time,
+		[in] short Type,
+		[in] short Category,
+		[in] long ID,
+		[in] short NumStrings,
+		[in] long DataSize,
+		[in] PANSI_STRING ComputerName,
+		[in, unique] unsigned char * SID,
+		[in, size_is(NumStrings), unique] PANSI_STRING Strings[*],
+		[in, size_is(DataSize), unique] unsigned char *Data,
+		[in] short Flags,
+		[in,out,unique] long * unknown1,
+		[in,out,unique] long * unknown2);
+
+	/* Function 0x13 */
+	NTSTATUS ElfrRegisterClusterSvc(); //FIXME
+
+	/* Function 0x14 */
+	NTSTATUS ElfrDeregisterClusterSvc(); //FIXME
+
+	/* Function 0x15 */
+	NTSTATUS ElfrWriteClusterEvents(); //FIXME
+
+	/* Function 0x16 */
+	NTSTATUS ElfrGetLogInformation(
+		[in] LOGHANDLE Handle,
+		[in] long InfoLevel,
+		[out, size_is(BufSize)] char *Buffer,
+		[in] long BufSize,
+		[out] long *BytesNeeded);
+	
+	/* Function 0x17 */
+	NTSTATUS ElfrFlushEL(
+		[in] LOGHANDLE Handle); 
+
+}
+
+#else
+
+
+[
+	uuid(82273FDC-E32A-18C3-3F78-827929DC23EA),
+    version(0.0),
+    explicit_handle
+]
+
+interface eventlog
+{
+	void func(handle_t h);
+}
+
+#endif // __midl

@@ -1,0 +1,28 @@
+// Hungarian language resource file (talley, 2005-10-12)
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Fájl"
+    BEGIN
+        MENUITEM "&Bezárás",                      IDM_CLOSE
+    END
+    POPUP "&Nézet"
+    BEGIN
+        MENUITEM "Nagy ikonok",                 IDM_LARGEICONS
+        MENUITEM "Kis ikonok",                 IDM_SMALLICONS
+        MENUITEM "Lista",                        IDM_LIST
+        MENUITEM "Részletek",                     IDM_DETAILS
+    END
+    POPUP "Súgó"
+    BEGIN
+        MENUITEM "Névjegy",                       IDM_ABOUT
+    END
+END
+

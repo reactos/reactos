@@ -1,0 +1,49 @@
+- Combobox to switch the second input field between "Filter" and "Command"
+- rewrite autostart code and include all possible autostart locations
+- read "DESCRIPT.ION" files to display file descriptions
+- detect display mode changes and adjust desktop bar size
+- handling of full screen applications
+- implement additional deskbands
+- Drag Drop and file renaming on the desktop does not work.
+- implement Drag Drop from the tree view.
+- activate accelerator keys like <DEL> in shell view folders
+- program manager "progman" DDE server
+- Windows-key combos
+- Application Desktop Toolbars
+- hide CVS subdirectories, may be even implement a CVS managment plugin
+- printer and RAS connection icons in desktop notification area
+- use multi threading for launching of programs and filling start menu subdirectories
+- close start start menu when resizing explorer bar
+- adjust already open windows of all running applications when resizing explorer bar
+- implement blink effect in task bar for SetForegoundWindow() requests
+- Execute selected programs with additional command line options ("Run" dialog with pre-filled edit field)
+- switch background images with desktop switcher
+- Desktop Manager: Desktop Names; Speicherung der Verteilung von Applikations-Fenstern auf die verschiedenen Desktops -> config file
+- autostart doesn't work on NT4 ?
+- hide desktop bar when showing full screen applications
+- new start menu entry "Filemanager" close to "Explore" -> display C: and D: drive in MDI window
+- Startmenu: You can open the start menu by pressing Win-key, but can't close with another hit of Win-key.
+- Export von Bookmarks für IE (+ Mozilla)
+
+- Search Programs -> performance monitor.msc -> Abort
+
+
+<Nonvo> Martin, I would have a whish concerning explorer: I often want to start a program and give it some parameters. So nice featue: "Start with param..."
+<tinus_> Nonvo: shell extension
+<m-fuchs> tinus: we should think about installing some default shell extensions
+<tinus_> m-fuchs: perhaps, but it'd be nice if they actually were shell extensions
+
+- ShellBrowser: Probleme mit TVIF_CHILDREN (in der dritten Ebene?)
+
+
+> The nits:
+> * the MDI file manager top window does not seem to be aware of the scroll-wheel
+> * the task bar clock color seems to be hard-coded, and so does not show
+>   with the High Contrast color. Several other places have similar issues
+> * there's no quick launch
+> * the desktop lacks much functionality, including the ability to arrange icons
+> * there are no startmenu settings/it does not heed the MS explorer ones
+
+> Is there some means of transferring applications across desktops?
+> What about (configurable) key combos to cycle/change desktops?
+

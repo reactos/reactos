@@ -1,0 +1,8 @@
+;
+; ReactOS Operating System
+;
+LIBRARY kbdur.dll
+
+EXPORTS
+KbdLayerDescriptor
+;EOF

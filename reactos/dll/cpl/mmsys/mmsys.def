@@ -1,0 +1,6 @@
+LIBRARY mmsys.cpl
+
+EXPORTS
+CPlApplet
+
+; EOF

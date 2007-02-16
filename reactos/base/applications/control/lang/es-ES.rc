@@ -1,0 +1,32 @@
+/*
+ *Spanish Language resource file
+ *ReactOs (c) 2005 Samuel Serapión Vega
+ */
+
+
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH_MODERN
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Archivo"
+    BEGIN
+        MENUITEM "&Cerrar",                      IDM_CLOSE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Iconos Grandes",               IDM_LARGEICONS
+        MENUITEM "Iconos Pequeños",              IDM_SMALLICONS
+        MENUITEM "Lista",                        IDM_LIST
+        MENUITEM "Detalles",                     IDM_DETAILS
+    END
+    POPUP "Ayuda"
+    BEGIN
+        MENUITEM "Sobre",                       IDM_ABOUT
+    END
+END
+

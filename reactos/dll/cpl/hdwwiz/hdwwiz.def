@@ -1,0 +1,6 @@
+LIBRARY hdwwiz.cpl
+
+EXPORTS
+CPlApplet
+
+; EOF

@@ -1,0 +1,30 @@
+/*
+ * PROJECT:         ReactOS System Configuration Applet
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * PURPOSE:         German language file for net.dll
+ * PROGRAMMERS:     Eric Kohl
+ * TRANSLATOR:      Colin Finck <mail@colinfinck.de>
+ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+
+IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Computername"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT       "ReactOS benutzt folgende Informationen, um ihren Computer im Netzwerk zu identifizieren.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT       "Computer-Beschreibung:", IDC_STATIC, 6, 40, 80, 9
+    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT       "Computername:", IDC_STATIC, 6, 68, 64, 9
+    LTEXT       "(Standard)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    LTEXT       "Arbeitsgruppe:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    LTEXT       "(leer)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    LTEXT       "Um den Netzwerk-Identifikations-Assistenten zum Anmelden an einer Domäne und dem Erstellen eines lokalen Benutzers aufzurufen, klicken Sie auf ""Netzwerk-ID"".", IDC_STATIC, 6, 108, 172, 32
+    PUSHBUTTON  "&Netzwerk-ID...", IDC_NETWORK_ID, 190, 114, 58, 15
+    LTEXT       "Um diesen Computer umzubenennen oder sich an einer Domäne anzumelden, klicken Sie auf ""Ändern"".", IDC_STATIC, 6, 149, 170, 17
+    PUSHBUTTON  "&Ändern...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
+    LTEXT       "Bitte beachten: Nur Administratoren können die Identifikation dieses Computers ändern.", IDC_STATIC, 6, 179, 250, 18
+END
+

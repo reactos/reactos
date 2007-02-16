@@ -1,0 +1,45 @@
+;USB.INF
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = USB
+ClassGUID  = {36FC9E60-C465-11CF-8056-444553540000}
+Provider   = %ReactOS%
+DriverVer  = 10/02/2005,1.00.0.0
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[Manufacturer]
+%GenericMfg% = GenericMfg
+
+[GenericMfg]
+%USB\CLASS_09.DeviceDesc% = usbhub_Inst,USB\CLASS_09
+
+;----------------------- GENERIC USB HUB DRIVER -------------------------
+
+[usbhub_Inst.NT]
+CopyFiles = usbhub_CopyFiles.NT
+
+[usbhub_CopyFiles.NT]
+usbhub.sys
+
+[usbhub_Inst.NT.Services]
+AddService = usbhub, 0x00000002, usbhub_Service_Inst
+
+[usbhub_Service_Inst]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 1
+ServiceBinary = %12%\usbhub.sys
+LoadOrderGroup = Base
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+
+GenericMfg = "(Generic USB-Hub)"
+USB\CLASS_09.DeviceDesc = "Generic USB-Hub"

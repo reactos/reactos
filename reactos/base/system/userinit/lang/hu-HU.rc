@@ -1,0 +1,13 @@
+#include "resource.h"
+/* Start move all hard code string to En.rc 
+ * By Magnus Olsen  2005
+ * Hungarian version is Copyright 2005 - Peter Nagy <nagylakas@gmail.com>
+ */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+
+STRING_USERINIT_FAIL, "Az Userinit nem tudja elindítani a rendszert!\n"
+
+}

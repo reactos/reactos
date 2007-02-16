@@ -1,0 +1,62 @@
+/*
+ * Copyright 1998 Juergen Schmied
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+#pragma code_page(936)  /* FIXME: default for CHINESE_TRADITIONAL is 950 */
+
+SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "關於 %s"
+FONT 8, "MS Shell Dlg"
+{
+ DEFPUSHBUTTON "確定", IDOK, 153, 133, 50, 12, WS_TABSTOP
+ LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+ ICON "", 1088, 10, 10, 14, 16
+ LTEXT "", 100, 35, 10, 137, 10
+ LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
+}
+
+SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+ ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+ LTEXT "&Open:", 12305, 7, 39, 24, 10
+ CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+ DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "Cancel", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "&Browse...", 12288, 170, 63, 50, 14, WS_TABSTOP
+}
+
+/*	columns in the shellview	*/
+STRINGTABLE LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+BEGIN
+	IDS_SHV_COLUMN1		"檔案"
+	IDS_SHV_COLUMN2		"大小"
+	IDS_SHV_COLUMN3		"類型"
+	IDS_SHV_COLUMN4		"已修改"
+	IDS_SHV_COLUMN5		"屬性"
+	IDS_SHV_COLUMN6		"使用空間"
+	IDS_SHV_COLUMN7		"剩餘空間"
+	IDS_SHV_COLUMN8		"Name" /*FIXME*/
+	IDS_SHV_COLUMN9		"Comments" /*FIXME*/
+END
+
+#pragma code_page(default)

@@ -1,0 +1,12 @@
+/* $Id: En.rc 21257 2006-03-08 23:07:09Z audit $ */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_NEUTRAL
+
+/* String Tables */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAPTION  "Установка ReactOS"
+    IDS_TEXT     "Вы не можете установить ReactOS с диска в данный момент!\n\nПожалуйста, загрузите компьютер с этого диска для установки ReactOS."
+END
+
+/* EOF */

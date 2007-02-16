@@ -1,0 +1,7 @@
+/* $Id$ */
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"Serial mouse device driver\0"
+#define REACTOS_STR_INTERNAL_NAME	"sermouse\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"sermouse.sys\0"
+#include <reactos/version.rc>

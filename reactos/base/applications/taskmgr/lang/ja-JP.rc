@@ -1,0 +1,686 @@
+/////////////////////////////////////////////////////////////////////////////
+// Japanese resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_TASKMANAGER MENU DISCARDABLE
+BEGIN
+    POPUP "ファイル(&F)"
+    BEGIN
+        MENUITEM "新しいタスクの実行(&N)",       ID_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "タスク マネージャの終了(&X)",  ID_FILE_EXIT
+    END
+    POPUP "オプション(&O)"
+    BEGIN
+        MENUITEM "常に手前に表\示(&A)",           ID_OPTIONS_ALWAYSONTOP
+        , CHECKED
+        MENUITEM "未使用時に最小化(&M)",         ID_OPTIONS_MINIMIZEONUSE
+        , CHECKED
+        MENUITEM "最小化時に隠す(&H)",           ID_OPTIONS_HIDEWHENMINIMIZED
+        , CHECKED
+        MENUITEM "16 ビット タスクの表\示(&S)",   ID_OPTIONS_SHOW16BITTASKS
+        , CHECKED
+    END
+    POPUP "表\示(&V)"
+    BEGIN
+        MENUITEM "最新の情報に更新(&R)",         ID_VIEW_REFRESH
+        POPUP "更新の頻度(&U)"
+        BEGIN
+            MENUITEM "高(&H)",                   ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "通常(&N)",                 ID_VIEW_UPDATESPEED_NORMAL
+            , CHECKED
+            MENUITEM "低(&L)",                   ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "一時停止(&P)",             ID_VIEW_UPDATESPEED_PAUSED
+
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "大きいアイコン(&G)",           ID_VIEW_LARGE
+        MENUITEM "小さいアイコン(&M)",           ID_VIEW_SMALL
+        MENUITEM "詳細(&D)",                     ID_VIEW_DETAILS, CHECKED
+        MENUITEM "表\示する列の選択(&S)...",      ID_VIEW_SELECTCOLUMNS
+        POPUP "CPU の履歴(&C)"
+        BEGIN
+            MENUITEM "全ての CPU で 1 グラフ(&O)", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+
+            MENUITEM "CPU ごとに 1 グラフ(&P)",  ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            , CHECKED
+        END
+        MENUITEM "カーネル時間を表\示する(&S)",   ID_VIEW_SHOWKERNELTIMES
+    END
+    POPUP "ウィンドウ(&W)"
+    BEGIN
+        MENUITEM "上下に並べて表\示(&H)",         ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "左右に並べて表\示(&V)",         ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "最小化(&M)",                   ID_WINDOWS_MINIMIZE
+        MENUITEM "最大化(&X)",                   ID_WINDOWS_MAXIMIZE
+        MENUITEM "重ねて表\示(&C)",               ID_WINDOWS_CASCADE
+        MENUITEM "手前に表\示(&B)",               ID_WINDOWS_BRINGTOFRONT
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "トピックの検索(&H)",           ID_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "バージョン情報(&A)",           ID_HELP_ABOUT
+    END
+END
+
+IDR_WINDOWSMENU MENU DISCARDABLE
+BEGIN
+    MENUITEM "上下に並べて表\示(&H)",             ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "左右に並べて表\示(&V)",             ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "最小化(&M)",                       ID_WINDOWS_MINIMIZE
+    MENUITEM "最大化(&X)",                       ID_WINDOWS_MAXIMIZE
+    MENUITEM "重ねて表\示(&C)",                   ID_WINDOWS_CASCADE
+    MENUITEM "手前に表\示(&B)",                   ID_WINDOWS_BRINGTOFRONT
+END
+
+IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "新しいタスクの実行(&N)",       ID_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "大きいアイコン(&G)",           ID_VIEW_LARGE
+        MENUITEM "小さいアイコン(&M)",           ID_VIEW_SMALL
+        MENUITEM "詳細(&D)",                     ID_VIEW_DETAILS, CHECKED
+    END
+END
+
+IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "切り替え(&S)",                 ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "手前に表\示(&B)",               ID_WINDOWS_BRINGTOFRONT
+        MENUITEM SEPARATOR
+        MENUITEM "上下に並べて表\示(&H)",         ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "左右に並べて表\示(&V)",         ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "最小化(&M)",                   ID_WINDOWS_MINIMIZE
+        MENUITEM "最大化(&X)",                   ID_WINDOWS_MAXIMIZE
+        MENUITEM "重ねて表\示(&C)",               ID_WINDOWS_CASCADE
+        MENUITEM SEPARATOR
+        MENUITEM "タスクの終了(&E)",             ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "プロセスの表\示(&G)",           ID_APPLICATION_PAGE_GOTOPROCESS
+
+    END
+END
+
+IDR_TRAY_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "元のサイズに戻す(&R)",         ID_RESTORE
+        MENUITEM "閉じる(&C)",                   ID_FILE_EXIT
+        MENUITEM SEPARATOR
+        MENUITEM "常に手前に表\示(&A)",           ID_OPTIONS_ALWAYSONTOP
+    END
+END
+
+IDR_PROCESS_PAGE_CONTEXT MENU DISCARDABLE
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "プロセスの終了(&E)",           ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "プロセス ツリーの終了(&T)",    ID_PROCESS_PAGE_ENDPROCESSTREE
+
+        MENUITEM "デバッグ(&D)",                 ID_PROCESS_PAGE_DEBUG
+        MENUITEM SEPARATOR
+        POPUP "優先度の設定(&P)"
+        BEGIN
+            MENUITEM "リアルタイム(&R)",         ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+
+            MENUITEM "高(&H)",                   ID_PROCESS_PAGE_SETPRIORITY_HIGH
+
+            MENUITEM "通常以上(&A)",             ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+
+            MENUITEM "通常(&N)",                 ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+
+            MENUITEM "通常以下(&B)",             ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+
+            MENUITEM "低(&L)",                   ID_PROCESS_PAGE_SETPRIORITY_LOW
+
+        END
+        MENUITEM "関係の設定(&A)...",             ID_PROCESS_PAGE_SETAFFINITY
+	MENUITEM "デバッグ チャンネルの変更(&C)...",          ID_PROCESS_PAGE_DEBUGCHANNELS
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  22, 17, 259, 210
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "タスク マネージャについて"
+FONT 9, "MS UI Gothic"
+BEGIN
+    CONTROL         "タスク マネージャ v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)",
+                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
+                    122,26
+    DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
+    ICON            IDI_TASKMANAGER,IDC_STATIC,19,30,20,20
+    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
+                    ES_READONLY | WS_VSCROLL
+END
+
+IDD_TASKMGR_DIALOG DIALOG DISCARDABLE  0, 0, 264, 246
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
+    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
+    WS_THICKFRAME
+CAPTION "タスク マネージャ"
+MENU IDR_TASKMANAGER
+FONT 9, "MS UI Gothic"
+BEGIN
+    CONTROL         "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,3,3,257,228
+END
+
+IDD_APPLICATION_PAGE DIALOG DISCARDABLE  0, 0, 247, 210
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 9, "MS UI Gothic"
+BEGIN
+    CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
+                    LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
+    PUSHBUTTON      "新しいタスク(&N)...",IDC_NEWTASK,187,189,53,14
+    PUSHBUTTON      "切り替え(&S)",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
+    PUSHBUTTON      "タスクの終了(&E)",IDC_ENDTASK,75,189,53,14,WS_DISABLED
+END
+
+IDD_PROCESS_PAGE DIALOG DISCARDABLE  0, 0, 247, 210
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 9, "MS UI Gothic"
+BEGIN
+    CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
+                    WS_BORDER | WS_TABSTOP,7,7,233,177
+    PUSHBUTTON      "プロセスの終了(&E)",IDC_ENDPROCESS,171,189,69,14
+    CONTROL         "全ユーザーのプロセスを表\示する(&S)",IDC_SHOWALLPROCESSES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
+END
+
+//IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
+IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 9, "MS UI Gothic"
+BEGIN
+    GROUPBOX        "CPU 使用量",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
+    GROUPBOX        "メモリ使用量",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "合計",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "コミット チャージ (KB)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "物理 メモリ (KB)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "カーネル メモリ (KB)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
+    LTEXT           "ハンドル",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
+    LTEXT           "スレッド",IDS_TOTALS_THREAD_COUNT,12,140,27,8
+    LTEXT           "プロセス",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
+    EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    EDITTEXT        IDC_TOTALS_THREAD_COUNT,65,140,45,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    LTEXT           "合計",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
+    LTEXT           "制限値",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8
+    LTEXT           "最大値",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
+    EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    LTEXT           "合計",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
+    LTEXT           "利用可能\",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
+    LTEXT           "システム キャッシュ",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
+    EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    LTEXT           "合計",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
+    LTEXT           "ページ",IDS_KERNEL_MEMORY_PAGED,137,184,21,8
+    LTEXT           "非ページ",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
+    EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+    GROUPBOX        "CPU 使用率の履歴",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "メモリ使用量の履歴",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
+    PUSHBUTTON      "CPU 使用率の表\示",IDC_CPU_USAGE_GRAPH,12,17,47,37,0,
+		    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "メモリ使用率の表\示",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "CPU 使用率の履歴",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
+                    153,37,0,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "メモリ使用量の履歴",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
+                    153,37,0,WS_EX_CLIENTEDGE
+END
+
+IDD_DEBUG_CHANNELS_DIALOG DIALOG DISCARDABLE  0, 0, 247, 210
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "デバッグ チャンネル"
+FONT 9, "MS UI Gothic"
+BEGIN
+    CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
+		    LVS_SORTASCENDING,7,7,233,177
+    PUSHBUTTON      "閉じる",IDOK,171,189,69,14
+END
+
+IDD_AFFINITY_DIALOG DIALOG DISCARDABLE  0, 0, 231, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "プロセッサの関係"
+FONT 9, "MS UI Gothic"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,120,133,50,14
+    PUSHBUTTON      "キャンセル",IDCANCEL,174,133,50,14
+    LTEXT           "プロセッサの関係の設定は、どの CPU でプロセスを実行するかを制御します。",
+                    IDC_STATIC,5,5,220,16
+    CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    11,28,37,10
+    CONTROL         "CPU 1",IDC_CPU1,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+                    WS_TABSTOP,11,41,37,10
+    CONTROL         "CPU 2",IDC_CPU2,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+                    WS_TABSTOP,11,54,37,10
+    CONTROL         "CPU 3",IDC_CPU3,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+                    WS_TABSTOP,11,67,37,10
+    CONTROL         "CPU 4",IDC_CPU4,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+                    WS_TABSTOP,11,80,37,10
+    CONTROL         "CPU 5",IDC_CPU5,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+                    WS_TABSTOP,11,93,37,10
+    CONTROL         "CPU 6",IDC_CPU6,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+                    WS_TABSTOP,11,106,37,10
+    CONTROL         "CPU 7",IDC_CPU7,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+                    WS_TABSTOP,11,119,37,10
+    CONTROL         "CPU 8",IDC_CPU8,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+                    WS_TABSTOP,61,28,37,10
+    CONTROL         "CPU 9",IDC_CPU9,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+                    WS_TABSTOP,61,41,37,10
+    CONTROL         "CPU 10",IDC_CPU10,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,61,54,41,10
+    CONTROL         "CPU 11",IDC_CPU11,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,61,67,41,10
+    CONTROL         "CPU 12",IDC_CPU12,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,61,80,41,10
+    CONTROL         "CPU 13",IDC_CPU13,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,61,93,41,10
+    CONTROL         "CPU 14",IDC_CPU14,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,61,106,41,10
+    CONTROL         "CPU 15",IDC_CPU15,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,61,119,41,10
+    CONTROL         "CPU 16",IDC_CPU16,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,116,28,41,10
+    CONTROL         "CPU 17",IDC_CPU17,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,116,41,41,10
+    CONTROL         "CPU 18",IDC_CPU18,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,116,54,41,10
+    CONTROL         "CPU 19",IDC_CPU19,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,116,67,41,10
+    CONTROL         "CPU 20",IDC_CPU20,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,116,80,41,10
+    CONTROL         "CPU 21",IDC_CPU21,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,116,93,41,10
+    CONTROL         "CPU 22",IDC_CPU22,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,116,106,41,10
+    CONTROL         "CPU 23",IDC_CPU23,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,116,119,41,10
+    CONTROL         "CPU 24",IDC_CPU24,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,175,28,41,10
+    CONTROL         "CPU 25",IDC_CPU25,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,175,41,41,10
+    CONTROL         "CPU 26",IDC_CPU26,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,175,54,41,10
+    CONTROL         "CPU 27",IDC_CPU27,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,175,67,41,10
+    CONTROL         "CPU 28",IDC_CPU28,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,175,80,41,10
+    CONTROL         "CPU 29",IDC_CPU29,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,175,93,41,10
+    CONTROL         "CPU 30",IDC_CPU30,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,175,106,41,10
+    CONTROL         "CPU 31",IDC_CPU31,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,175,119,41,10
+END
+
+IDD_COLUMNS_DIALOG DIALOG DISCARDABLE  0, 0, 195, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "列の選択"
+FONT 9, "MS UI Gothic"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,84,178,50,14
+    PUSHBUTTON      "キャンセル",IDCANCEL,138,178,50,14
+    LTEXT           "タスク マネージャの [プロセス] ページに表\示する列を選択します。",
+                    IDC_STATIC,7,7,181,17
+    CONTROL         "イメージ名(&I)",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,7,28,56,10
+    CONTROL         "PID (プロセス ID)(&P)",IDC_PID,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,88,10
+    CONTROL         "CPU 使用率(&C)",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,50,53,10
+    CONTROL         "CPU 時間(&E)",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,61,48,10
+    CONTROL         "メモリ使用量(&M)",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,72,63,10
+    CONTROL         "メモリ使用量デルタ(&D)",IDC_MEMORYUSAGEDELTA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,83,82,10
+    CONTROL         "最大メモリ使用量(&K)",IDC_PEAKMEMORYUSAGE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,94,82,10
+    CONTROL         "ページ フォルト(&F)",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,105,53,10
+    CONTROL         "USER オブジェクト(&U)",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,116,62,10
+    CONTROL         "I/O 読み取り",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,127,49,10
+    CONTROL         "I/O 読み取りバイト数",IDC_IOREADBYTES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
+    CONTROL         "セッション ID(&S)",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,149,50,10
+    CONTROL         "ユーザー名(&N)",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,160,51,10
+    CONTROL         "ページ フォルト デルタ(&A)",IDC_PAGEFAULTSDELTA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,28,72,10
+    CONTROL         "仮想メモリ サイズ(&V)",IDC_VIRTUALMEMORYSIZE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,39,77,10
+    CONTROL         "ページ プール(&G)",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,107,50,53,10
+    CONTROL         "非ページ プール(&O)",IDC_NONPAGEDPOOL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,61,67,10
+    CONTROL         "基本優先度(&R)",IDC_BASEPRIORITY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
+    CONTROL         "ハンドルの数(&H)",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,107,83,59,10
+    CONTROL         "スレッドの数(&T)",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,107,94,59,10
+    CONTROL         "GDI オブジェクト(&J)",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,107,105,55,10
+    CONTROL         "I/O 書き込み",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,107,116,49,10
+    CONTROL         "I/O 書き込みバイト数",IDC_IOWRITEBYTES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,127,65,10
+    CONTROL         "I/O その他",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,107,138,46,10
+    CONTROL         "I/O その他のバイト数",IDC_IOOTHERBYTES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,149,65,10
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 252
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 203
+    END
+
+    IDD_TASKMGR_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 260
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 231
+    END
+
+    IDD_APPLICATION_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 240
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 203
+    END
+
+    IDD_PROCESS_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 240
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 203
+    END
+
+    IDD_PERFORMANCE_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 242
+        VERTGUIDE, 12
+        VERTGUIDE, 65
+        VERTGUIDE, 110
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 205
+    END
+
+    IDD_AFFINITY_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 224
+        VERTGUIDE, 11
+        VERTGUIDE, 61
+        VERTGUIDE, 116
+        VERTGUIDE, 175
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
+        HORZGUIDE, 28
+        HORZGUIDE, 38
+        HORZGUIDE, 51
+        HORZGUIDE, 64
+        HORZGUIDE, 77
+        HORZGUIDE, 90
+        HORZGUIDE, 103
+        HORZGUIDE, 116
+        HORZGUIDE, 129
+    END
+
+    IDD_COLUMNS_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 188
+        VERTGUIDE, 107
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+        HORZGUIDE, 28
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_TITLE           "タスク マネージャ"
+    IDC_TASKMGR             "タスク マネージャ"
+    IDS_IDLE_PROCESS        "System Idle Process"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_FILE_NEW             "新しいプログラムを実行します。"
+    ID_OPTIONS_ALWAYSONTOP  "最小化されない限り、常にタスクマネージャがほかのすべてのウィンドウよりも手前に表\示されます。"
+    ID_OPTIONS_MINIMIZEONUSE
+                            "[切り替え] 操作を実行すると、タスク マネージャが最小化されます。"
+    ID_OPTIONS_HIDEWHENMINIMIZED "最小化されたときに、タスク マネージャを隠します。"
+    ID_VIEW_REFRESH         "[更新の頻度] の設定にかかわらず、今すぐタスク マネージャを更新します。"
+    ID_VIEW_LARGE           "大きいアイコンを使ってタスクを表\示します。"
+    ID_VIEW_SMALL           "小さいアイコンを使ってタスクを表\示します。"
+    ID_VIEW_DETAILS         "各タスクの情報を表\示します。"
+    ID_VIEW_UPDATESPEED_HIGH "毎秒 2 回表\示を更新します。"
+    ID_VIEW_UPDATESPEED_NORMAL "2 秒に 1 回表\示を更新します。"
+    ID_VIEW_UPDATESPEED_LOW "4 秒に 1 回表\示を更新します。"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_VIEW_UPDATESPEED_PAUSED "表\示を自動的に更新しません。"
+    ID_WINDOWS_TILEHORIZONTALLY
+                            "デスクトップ上でウィンドウを重ならないように上下に並べて表\示します。"
+    ID_WINDOWS_TILEVERTICALLY "デスクトップ上でウィンドウを重ならないように左右に並べて表\示します。"
+    ID_WINDOWS_MINIMIZE     "ウィンドウを最小化します。"
+    ID_WINDOWS_MAXIMIZE     "ウィンドウを最大化します。"
+    ID_WINDOWS_CASCADE      "デスクトップ上でウィンドウを重ねて表\示します。"
+    ID_WINDOWS_BRINGTOFRONT "ウィンドウを手前に表\示しますが、切り替えません。"
+    ID_HELP_TOPICS          "タスク マネージャのヘルプ トピックを表\示します。"
+    ID_HELP_ABOUT           "プログラム情報、バージョン番号、著作権を表\示します。"
+    ID_FILE_EXIT            "タスク マネージャ アプリケーションを終了します。"
+    ID_OPTIONS_SHOW16BITTASKS
+                            "16 ビット タスクを、関連付けられた ntvdm.exe の下に表\示します。"
+    ID_VIEW_SELECTCOLUMNS   "[プロセス] ページに表\示する列を選択します。"
+    ID_VIEW_SHOWKERNELTIMES "カーネル時間をパフォーマンス グラフ上に表\示します。"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL
+                            "すべての CPU の使用率の総計を 1 つのグラフで表\示します。"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "CPU 使用率の履歴を CPU ごとにグラフで表\示します。"
+    ID_APPLICATION_PAGE_SWITCHTO
+                            "タスクを手前に移動させ、切り替えます。"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_ENDTASK              "選択されているタスクに終了するよう伝えます。"
+    ID_GOTOPROCESS          "選択されているタスクに切り替えます。"
+    ID_RESTORE              "タスク マネージャを隠れた状態から元のサイズに戻します。"
+    ID_PROCESS_PAGE_ENDPROCESS "プロセスをシステムから削除します。"
+    ID_PROCESS_PAGE_ENDPROCESSTREE
+                            "このプロセスとすべての子プロセスをシステムから削除します。"
+    ID_PROCESS_PAGE_DEBUG   "デバッガをこのプロセスに接続します。"
+    ID_PROCESS_PAGE_SETAFFINITY
+                            "どの CPU でプロセスを実行するかを制御します。"
+    ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+                            "プロセスの優先度を リアルタイム に設定します。"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "プロセスの優先度を 高 に設定します。"
+    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+                            "プロセスの優先度を 通常以上 に設定します。"
+    ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+                            "プロセスの優先度を 通常 に設定します。"
+    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+                            "プロセスの優先度を 通常以下 に設定します。"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "プロセスの優先度を 低 に設定します。"
+    IDS_LICENSE             "このプログラムはフリーソ\フトウェアです。あなたはこれを、フリーソ\フトウェア財団によって発行された GNU General Public License (バージョン 2.1 か、希望によってはそれ以降のバージョンのうちどれか) の定める条件の下で再頒布または改変することができます。\r\n\r\nこのプログラムは有用であることを願って頒布されますが、*全くの無保証* です。商業可能\性の保証や特定の目的への適合性は、言外に示されたものも含め全く存在しません。詳しくは GNU General Public License をご覧ください。\r\n\r\nあなたはこのプログラムと共に、GNU 一般公衆利用許諾契約書の複製物を一部受け取ったはずです。もし受け取っていなければ、フリーソ\フトウェア財団まで請求してください (宛先は the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA)。"
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TAB_APPS                  "アプリケーション"
+    IDS_TAB_PROCESSES             "プロセス"
+    IDS_TAB_PERFORMANCE           "パフォーマンス"
+    IDS_TAB_TASK                  "タスク"
+    IDS_TAB_STATUS                "状態"
+    IDS_TAB_IMAGENAME             "イメージ名"
+    IDS_TAB_PID                   "PID"
+    IDS_TAB_USERNAME              "ユーザー名"
+    IDS_TAB_SESSIONID             "セッション ID"
+    IDS_TAB_CPU                   "CPU"
+    IDS_TAB_CPUTIME               "CPU 時間"
+    IDS_TAB_MEMUSAGE              "メモリ使用量"
+    IDS_TAB_PEAKMEMUSAGE          "最大メモリ使用量"
+    IDS_TAB_MEMDELTA              "メモリ デルタ"
+    IDS_TAB_PAGEFAULT             "ページ フォルト"
+    IDS_TAB_PFDELTA               "ページ フォルト デルタ"
+    IDS_TAB_VMSIZE                "仮想メモリ サイズ"
+    IDS_TAB_PAGEDPOOL             "ページ プール"
+    IDS_TAB_NPPOOL                "非ページ プール"
+    IDS_TAB_BASEPRI               "基本優先度"
+    IDS_TAB_HANDLES               "ハンドル"
+    IDS_TAB_THREADS               "スレッド"
+    IDS_TAB_USERPBJECTS           "USER オブジェクト"
+    IDS_TAB_GDIOBJECTS            "GDI オブジェクト"
+    IDS_TAB_IOREADS               "I/O 読み取り"
+    IDS_TAB_IOWRITES              "I/O 書き込み"
+    IDS_TAB_IOOTHER               "I/O その他"
+    IDS_TAB_IOREADBYTES           "I/O 読み取りバイト数"
+    IDS_TAB_IOWRITESBYTES         "I/O 書き込みバイト数"
+    IDS_TAB_IOOTHERBYTES          "I/O その他のバイト数"
+    IDS_MENU_SELECTCOLUMNS        "表\示する列の選択(&S)..."
+    IDS_MENU_16BITTASK            "16 ビット タスクの表\示(&S)"
+    IDS_MENU_WINDOWS              "ウィンドウ(&W)"
+    IDS_MENU_LARGEICONS           "大きいアイコン(&G)"
+    IDS_MENU_SMALLICONS           "小さいアイコン(&M)"
+    IDS_MENU_DETAILS              "詳細(&D)"
+    IDS_MENU_ONEGRAPHALLCPUS      "全ての CPU で 1 グラフ(&O)"
+    IDS_MENU_ONEGRAPHPERCPU       "CPU ごとに 1 グラフ(&P)"
+    IDS_MENU_CPUHISTORY           "CPU の履歴(&C)"
+    IDS_MENU_SHOWKERNELTIMES      "カーネル時間を表\示する(&S)"
+    IDS_CREATENEWTASK             "新しいタスクの作成"
+    IDS_CREATENEWTASK_DESC        "実行するプログラム名、または開くフォルダやドキュメント名、インターネット リソ\ース名を入力してください。"
+    IDS_MSG_ACCESSPROCESSAFF      "プロセスの関係へのアクセスまたは設定ができません。"
+    IDS_MSG_PROCESSONEPRO         "プロセスは少なくとも一つの CPU に関連付けられなくてはなりません。"
+    IDS_MSG_INVALIDOPTION         "無効なオプション"
+    IDS_MSG_UNABLEDEBUGPROCESS    "プロセスのデバッグができません。"
+    IDS_MSG_WARNINGDEBUG          "警告: このプロセスのデバッグをすると、データが失われる結果になることがあります。\nデバッガを接続しますか?"
+    IDS_MSG_TASKMGRWARNING        "タスク マネージャの警告"
+    IDS_MSG_WARNINGTERMINATING    "警告: プロセスを終了すると、データが失われたり、システムが\n不安定になったりなどの、予\期しない結果になることがあります。\nプロセスを終了する前に、状態またはデータを保存するかどうかの\n確認メッセージは表\示されません。プロセスを終了しますか?"
+    IDS_MSG_UNABLETERMINATEPRO    "プロセスを終了できません。"
+    IDS_MSG_UNABLECHANGEPRIORITY  "優先度を変更できません。"
+    IDS_MSG_WARNINGCHANGEPRIORITY "警告: このプロセスの優先度クラスを変更すると、システムが\n不安定になるなど、予\期しない結果になることがあります。\n優先度クラスを変更しますか?"
+    IDS_MSG_TRAYICONCPUUSAGE      "CPU 使用率: %d%%"
+    IDS_STATUS_MEMUSAGE           "メモリ使用量: %dKB / %dKB"
+    IDS_STATUS_CPUUSAGE           "CPU 使用率: %3d%%"
+    IDS_STATUS_PROCESSES          "プロセス: %d"
+    IDS_Not_Responding            "応答なし"
+    IDS_Running                   "実行中"  
+END
+
+
+#endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,17 @@
+LIBRARY REGTESTS.DLL
+EXPORTS
+_ExitProcess@4
+_GetModuleHandleA@4
+_GetProcAddress@8
+_LoadLibraryA@4
+_CreateThread@24
+_TerminateThread@8
+_WaitForSingleObject@8
+_GetLastError@0
+_CloseHandle@4
+_GetThreadTimes@20
+_SetPriorityClass@8
+_SetThreadPriority@8
+_GetCurrentProcess@0
+_GetCurrentThread@0
+_Sleep@4

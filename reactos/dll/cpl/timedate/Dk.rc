@@ -1,0 +1,66 @@
+LANGUAGE LANG_DANISH, SUBLANG_NEUTRAL
+
+IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 149
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Dato && Tid"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "&Dato", -1, 4, 2, 126, 133
+    COMBOBOX IDC_MONTHCB, 11, 17, 50, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT IDC_YEARTEXT,65, 17, 55, 12, ES_RIGHT | WS_GROUP | ES_READONLY
+	CONTROL "", IDC_YEAR, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | 
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP, 120, 17, 50, 12
+    CONTROL "", IDC_MONTHCALENDAR, "MonthCalWnd",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+            11, 37, 108, 80, WS_EX_CLIENTEDGE
+    GROUPBOX "&Klokken",
+             -1, 132, 2, 113, 133
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
+            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+            144, 105, 90, 12
+    LTEXT "", IDC_TIMEZONE, 6, 132, 242, 11
+    CONTROL "", IDC_CLOCKWND, "ClockWndClass",
+            WS_CHILD | WS_VISIBLE, 138, 12, 102, 89
+END
+
+
+IDD_TIMEZONEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Tidszone"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    CONTROL  "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
+    AUTOCHECKBOX "Justere uret automatisk efter &Sommertid/Vintertid.",
+                 IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+END
+
+
+IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Internet Time"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Automatically synchronize with an Internet time server", IDC_AUTODAYLIGHT,
+                    "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,11,7,241,10
+    LTEXT           "Server:", -1, 34, 22, 28, 13
+    PUSHBUTTON      "Update Now", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    LTEXT           "", IDC_SUCSYNC, 16, 54, 214, 23
+    LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
+    LTEXT           "Synchronazation can only occur when your computer is connected to the internet.", -1, 12, 114, 225, 25
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Dato/Tid"
+    IDS_CPLDESCRIPTION "Skifter Dato, Tid og Tidszone informationer."
+    IDS_TIMEZONETEXT "Nuværende tidszone: %s"
+    IDS_TIMEZONEINVALID "Ugyldig"
+    IDS_TIMEZONEUNKNOWN "Ukendt"
+    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
+    IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
+END

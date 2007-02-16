@@ -1,0 +1,28 @@
+// English language resource file (frik85, 2005-03-08)
+
+LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Tiedosto"
+    BEGIN
+        MENUITEM "&Sulje",                      IDM_CLOSE
+    END
+    POPUP "&Näytä"
+    BEGIN
+        MENUITEM "Suuret kuvakkeet",                 IDM_LARGEICONS
+        MENUITEM "Pienet kuvakkeet",                 IDM_SMALLICONS
+        MENUITEM "Luettelo",                        IDM_LIST
+        MENUITEM "Tiedot",                     IDM_DETAILS
+    END
+    POPUP "Ohje"
+    BEGIN
+        MENUITEM "Tietoja",                       IDM_ABOUT
+    END
+END
+

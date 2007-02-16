@@ -1,0 +1,33 @@
+#include "resource.h"
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
+ * Hungarian version is Copyright 2005 - Peter Nagy <nagylakas@gmail.com>
+ */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+{
+
+IDS_UsageMessage, "%s\n\nHasználat: regsvr32 [/u] [/s] [/c] [/n] [/i[:parancssor]] dll_neve\n\
+/u -	Kiszolgáló regisztrációjának megszüntetése\n\
+/s -	Néma üzemmód, üzenetek megjelenítése nélkül\n\
+/c -	Parancssori kimenet\n\
+/i -	DllInstall meghívása a következõ [parancssor] átadásával; /u hívással használva a dll eltávolítása\n\
+/n -	Ne hívja meg a DllRegisterServer függvényt; ezt a beállítást a /i kapcsolóval együtt kell használni"
+
+IDS_NoDllSpecified,  "Nincs megadva DLL név."
+
+IDS_InvalidFlag,     "Meghatároztlan belépési pont: %s"
+
+IDS_SwitchN_NoI,     "Meghatározatlan belépési pont: /n csak az /i kapcsolóval használható."
+
+IDS_DllNotLoaded,    "Hiba a LoadLibrary('%s') függvényben.\nA visszaadott kód: 0x%08x."
+
+IDS_MissingEntry,    "A(z) %s betöltõdése megtörtént, de nem található a következõ belépési pont: %s.\n\n\
+A(z) %s -t nem lehet hozzáadni, vagy a(z) %s egy érvénytelen változata van a memóriában. Használja a PView-et hogy megkeresse és eltávolítsa azt."
+
+IDS_FailureMessage,  "A(z) %s sikertelen a következõben: %s.\nA visszaadott kód: 0x%08x"
+
+IDS_SuccessMessage   "A(z) %s sikerült a következõben: %s."
+}

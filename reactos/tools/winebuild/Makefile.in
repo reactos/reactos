@@ -1,0 +1,37 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+EXEEXT    = @EXEEXT@
+
+PROGRAMS = winebuild$(EXEEXT)
+MANPAGES = winebuild.man
+MODULE   = none
+
+C_SRCS = \
+	import.c \
+	main.c \
+	parser.c \
+	relay.c \
+	res16.c \
+	res32.c \
+	spec16.c \
+	spec32.c \
+	utils.c
+
+all: $(PROGRAMS) $(MANPAGES)
+
+@MAKE_RULES@
+
+winebuild$(EXEEXT): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBPORT) $(LDFLAGS)
+
+install:: $(PROGRAMS) $(MANPAGES)
+	$(MKINSTALLDIRS) $(bindir) $(mandir)/man$(prog_manext)
+	$(INSTALL_PROGRAM) winebuild$(EXEEXT) $(bindir)/winebuild$(EXEEXT)
+	$(INSTALL_DATA) winebuild.man $(mandir)/man$(prog_manext)/winebuild.$(prog_manext)
+
+uninstall::
+	$(RM) $(bindir)/winebuild$(EXEEXT) $(mandir)/man$(prog_manext)/winebuild.$(prog_manext)
+
+### Dependencies:

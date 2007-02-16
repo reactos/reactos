@@ -1,0 +1,7 @@
+;
+; wmilib.def - export definition file for ReactOS
+;
+EXPORTS
+WmiCompleteRequest
+WmiFireEvent
+WmiSystemControl
