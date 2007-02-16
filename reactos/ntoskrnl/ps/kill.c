@@ -287,9 +287,6 @@ PspDeleteProcess(IN PVOID ObjectBody)
         KeUnstackDetachProcess(&ApcState);
     }
 
-    /* KDB hook */
-    KDB_DELETEPROCESS_HOOK(Process);
-
     /* Check if we have an address space, and clean it */
     if (Process->HasAddressSpace)
     {

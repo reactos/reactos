@@ -27,7 +27,7 @@
 #define R_MUTEX FAST_MUTEX
 #define R_ACQUIRE_MUTEX(pool) /*DPRINT1("Acquiring PPool Mutex\n");*/ ExAcquireFastMutex(&pool->Mutex)
 #define R_RELEASE_MUTEX(pool) /*DPRINT1("Releasing PPool Mutex\n");*/ ExReleaseFastMutex(&pool->Mutex)
-#define R_PRINT_ADDRESS(addr) KeRosPrintAddress(addr)
+#define R_PRINT_ADDRESS(addr) KiRosPrintAddress(addr)
 #define R_PANIC() KeBugCheck(0)
 #define R_DEBUG DbgPrint
 #define R_GET_STACK_FRAMES(ptr,cnt) RtlWalkFrameChain((PVOID*)ptr,cnt, 0)

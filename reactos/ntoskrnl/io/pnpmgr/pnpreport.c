@@ -89,16 +89,6 @@ IoReportResourceForDetection(
 
   *ConflictDetected = FALSE;
 
-  /* FIXME: Manually indicate conflicts with KD Ports */
-  if (DriverList)
-  {
-      if (KdpDetectConflicts(DriverList))
-      {
-        *ConflictDetected = TRUE;
-        return STATUS_CONFLICTING_ADDRESSES;
-      }
-  }
-
   if (PopSystemPowerDeviceNode != NULL && DriverListSize > 0)
   {
     /* We hope legacy devices will be enumerated by ACPI */

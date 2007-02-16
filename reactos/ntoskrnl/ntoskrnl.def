@@ -518,16 +518,7 @@ IoWriteTransferCount DATA
 @IofCallDriver@8
 @IofCompleteRequest@8
 IoIsWdmVersionAvailable@8
-KdChangeOption@24
 KdComPortInUse DATA
-KdDebuggerEnabled=_KdDebuggerEnabled
-KdDebuggerNotPresent=_KdDebuggerNotPresent
-KdDisableDebugger@0
-KdEnableDebugger@0
-KdEnteredDebugger
-KdPollBreakIn@0
-KdPowerTransition@4
-KdpServiceDispatcher@12
 Ke386CallBios@8
 @KeAcquireGuardedMutex@4
 @KeAcquireGuardedMutexUnsafe@4
@@ -552,7 +543,7 @@ KeDetachProcess@0
 KeDisconnectInterrupt@4
 KeEnterCriticalRegion@0=_KeEnterCriticalRegion@0
 KeEnterGuardedRegion@0=_KeEnterGuardedRegion@0
-KeEnterKernelDebugger@0
+;KeEnterKernelDebugger@0
 KeFindConfigurationEntry@16
 KeFindConfigurationNextEntry@20
 KeFlushEntireTb@8
@@ -675,7 +666,7 @@ KiCoprocessorError@0
 KiCheckForKernelApcDelivery@0
 KiDeliverApc@12
 KiDispatchInterrupt@0
-KiEnableTimerWatchdog
+;KiEnableTimerWatchdog
 KiIpiServiceRoutine@8
 @KiReleaseSpinLock@4
 KiUnexpectedInterrupt

@@ -16,6 +16,47 @@
 
 /* GLOBALS *******************************************************************/
 
+BOOLEAN
+NTAPI
+KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
+                          IN PKEXCEPTION_FRAME ExceptionFrame,
+                          IN PEXCEPTION_RECORD ExceptionRecord,
+                          IN PCONTEXT Context,
+                          IN KPROCESSOR_MODE PreviousMode,
+                          IN BOOLEAN SecondChance)
+{
+    /* HACK (just like all this routine */
+    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
+    {
+        Context->Eip++;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+KdInitSystem(IN ULONG BootPhase,
+             IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    /* STUB */
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+KdPollBreakIn(VOID)
+{
+    /* STUB */
+    return FALSE;
+}
+
+BOOLEAN _KdDebuggerEnabled = FALSE;
+BOOLEAN _KdDebuggerNotPresent = TRUE;
+BOOLEAN KdBreakAfterSymbolLoad = FALSE;
+PKDEBUG_ROUTINE KiDebugRoutine = KdpEnterDebuggerException;
+
 /* DR Registers in the CONTEXT structure */
 UCHAR KiDebugRegisterContextOffsets[9] =
 {
@@ -800,7 +841,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Set the context flags */
     Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
 
-    /* Check if User Mode or if the debugger isenabled */
+    /* Check if User Mode or if the debugger is enabled */
     if ((PreviousMode == UserMode) || (KdDebuggerEnabled))
     {
         /* Add the FPU Flag */
@@ -846,9 +887,6 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                 goto Handled;
             }
 
-            /* HACK: GDB Entry */
-            if (KdpCallGdb(TrapFrame, ExceptionRecord, &Context)) goto Handled;
-
             /* If the Debugger couldn't handle it, dispatch the exception */
             if (RtlDispatchException(ExceptionRecord, &Context)) goto Handled;
         }
@@ -893,9 +931,6 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                 /* Exception was handled */
                 goto Handled;
             }
-
-            /* HACK: GDB Entry */
-            if (KdpCallGdb(TrapFrame, ExceptionRecord, &Context)) goto Handled;
 
             /* Forward exception to user mode debugger */
             if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) goto Exit;
@@ -1045,4 +1080,6 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
     /* Return the old EIP */
     return (NTSTATUS)OldEip;
 }
+
+
 

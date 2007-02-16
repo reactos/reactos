@@ -77,7 +77,7 @@ HalHandleNMI(IN PVOID NmiInfo)
 
     /* Halt the system */
     HalDisplayString("\n*** The system has halted ***\n");
-    KeEnterKernelDebugger();
+    //KeEnterKernelDebugger();
 }
 
 /*

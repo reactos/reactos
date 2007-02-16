@@ -135,9 +135,6 @@ LdrInit1(VOID)
 
     /* Insert it into the list */
     InsertTailList(&ModuleListHead, &HalModuleObject->InLoadOrderLinks);
-
-    /* Hook for KDB on initialization of the loader. */
-    KDB_LOADERINIT_HOOK(NtoskrnlModuleObject, HalModuleObject);
 }
 
 NTSTATUS
@@ -320,9 +317,6 @@ LdrLoadModule(
 
     *ModuleObject = Module;
 
-    /* Hook for KDB on loading a driver. */
-    KDB_LOADDRIVER_HOOK(Filename, Module);
-
     return(STATUS_SUCCESS);
 }
 
@@ -337,9 +331,6 @@ LdrUnloadModule ( PLDR_DATA_TABLE_ENTRY ModuleObject )
     KeAcquireSpinLock(&ModuleListLock,&Irql);
     RemoveEntryList(&ModuleObject->InLoadOrderLinks);
     KeReleaseSpinLock(&ModuleListLock, Irql);
-
-    /* Hook for KDB on unloading a driver. */
-    KDB_UNLOADDRIVER_HOOK(ModuleObject);
 
     /* Free module section */
     //  MmFreeSection(ModuleObject->DllBase);

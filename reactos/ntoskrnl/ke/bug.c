@@ -99,7 +99,7 @@ KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
         }
 
         /* Print it out */
-        if (!KeRosPrintAddress((PVOID)Addr)) DbgPrint("<%X>", Addr);
+        if (!KiRosPrintAddress((PVOID)Addr)) DbgPrint("<%X>", Addr);
 
         /* Go to the next frame */
         DbgPrint("\n");

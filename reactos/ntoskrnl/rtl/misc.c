@@ -30,7 +30,8 @@ DebugPrint(IN PANSI_STRING DebugString,
            IN ULONG Level)
 {
     /* Temporary hack */
-    KdpPrintString(DebugString->Buffer, DebugString->Length);
+    //KdpPrintString(DebugString->Buffer, DebugString->Length);
+    //HalDisplayString((PCHAR)DebugString->Buffer);
     return STATUS_SUCCESS;
 }
 
@@ -84,4 +85,6 @@ RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation)
 
    return STATUS_INVALID_PARAMETER;
 }
+
+
 

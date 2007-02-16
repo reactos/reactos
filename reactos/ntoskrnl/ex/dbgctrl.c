@@ -14,6 +14,25 @@
 
 /* FUNCTIONS *****************************************************************/
 
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryDebugFilterState(ULONG ComponentId,
+                        ULONG Level)
+{
+    return STATUS_SUCCESS;
+}
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSetDebugFilterState(ULONG ComponentId,
+                      ULONG Level,
+                      BOOLEAN State)
+{
+    return STATUS_SUCCESS;
+}
+
 /*++
  * @name NtSystemDebugControl
  * @implemented
@@ -71,7 +90,6 @@ NtSystemDebugControl(SYSDBG_COMMAND ControlCode,
             break;
 
         case SysDbgQueryVersion:
-            KDB_LOADUSERMODULE_HOOK((PLDR_DATA_TABLE_ENTRY) InputBuffer);
             break;
 
         default:

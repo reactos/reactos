@@ -89,31 +89,6 @@
             <file>newcm.c</file>
             <file>cmdata.c</file>
     </directory>
-    <directory name="kdbg">
-        <if property="ARCH" value="i386">
-            <directory name="i386">
-                <if property="KDBG" value="1">
-                    <group>
-                        <file>i386-dis.c</file>
-                        <file>kdb_help.S</file>
-                        <file>longjmp.S</file>
-                        <file>setjmp.S</file>
-                    </group>
-                </if>
-            </directory>
-        </if>
-        <if property="KDBG" value="1">
-            <file>kdb.c</file>
-            <file>kdb_cli.c</file>
-            <file>kdb_expr.c</file>
-            <file>kdb_keyboard.c</file>
-            <file>kdb_serial.c</file>
-            <file>kdb_string.c</file>
-        </if>
-        <if property="DBG_OR_KDBG" value="true">
-            <file>kdb_symbols.c</file>
-        </if>
-    </directory>
     <directory name="dbgk">
         <file>dbgkutil.c</file>
         <file>debug.c</file>
@@ -217,15 +192,6 @@
             <file>pnpreport.c</file>
             <file>pnproot.c</file>
         </directory>
-    </directory>
-    <directory name="kd">
-            <directory name="wrappers">
-                <file>bochs.c</file>
-                <file>gdbstub.c</file>
-            </directory>
-            <file>kdinit.c</file>
-            <file>kdio.c</file>
-            <file>kdmain.c</file>
     </directory>
     <directory name="ldr">
             <file>loader.c</file>

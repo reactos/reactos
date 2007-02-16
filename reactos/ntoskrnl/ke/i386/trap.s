@@ -228,22 +228,6 @@ CopyParams:
     /* Copy the parameters */
     rep movsd
 
-#ifdef DBG
-    /*
-     * The following lines are for the benefit of GDB. It will see the return
-     * address of the "call ebx" below, find the last label before it and
-     * thinks that that's the start of the function. It will then check to see
-     * if it starts with a standard function prolog (push ebp, mov ebp,esp1).
-     * When that standard function prolog is not found, it will stop the
-     * stack backtrace. Since we do want to backtrace into usermode, let's
-     * make GDB happy and create a standard prolog.
-     */
-KiSystemService:
-    push ebp
-    mov ebp,esp
-    pop ebp
-#endif
-
     /* Do the System Call */
     call ebx
 
@@ -482,50 +466,15 @@ _KiDebugService:
     TRAP_PROLOG kids
 
     /* Increase EIP so we skip the INT3 */
-    //inc dword ptr [ebp+KTRAP_FRAME_EIP]
+    inc dword ptr [ebp+KTRAP_FRAME_EIP]
 
     /* Call debug service dispatcher */
     mov eax, [ebp+KTRAP_FRAME_EAX]
     mov ecx, [ebp+KTRAP_FRAME_ECX]
     mov edx, [ebp+KTRAP_FRAME_EAX]
 
-    /* Check for V86 mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz NotUserMode
-
-    /* Check if this is kernel or user-mode */
-    test byte ptr [ebp+KTRAP_FRAME_CS], 1
-    jz CallDispatch
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
-    jnz NotUserMode
-
-    /* Re-enable interrupts */
-VdmProc:
-    sti
-
-    /* Call the debug routine */
-CallDispatch:
-    mov esi, ecx
-    mov edi, edx
-    mov edx, eax
-    mov ecx, 3
-    push edi
-    push esi
-    push edx
-    call _KdpServiceDispatcher@12
-
-NotUserMode:
-
-    /* Get the current process */
-    mov ebx, [fs:KPCR_CURRENT_THREAD]
-    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
-
-    /* Check if this is a VDM Process */
-    //cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
-    //jz VdmProc
-
-    /* Exit through common routine */
-    jmp _Kei386EoiHelper@0
+    /* Jump to INT3 handler */
+    jmp PrepareInt3
 .endfunc
 
 .func NtRaiseException@12
@@ -819,7 +768,11 @@ _KiTrap3:
     /* Enter trap */
     TRAP_PROLOG kit3
 
+    /* Set status code */
+    mov eax, 0 //STATUS_SUCCESS
+
     /* Check for V86 */
+PrepareInt3:
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz V86Int3
 
