@@ -17,7 +17,7 @@
 #include "Windows2000Sp4.h" 
 
 /* Windows syscall code */
-#include "Windowsos.h"
+#include "windowsos.h"
 
 /* ReactOS syscall code */
 #include "sysreactos.h"
