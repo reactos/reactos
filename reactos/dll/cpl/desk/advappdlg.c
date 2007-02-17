@@ -409,6 +409,27 @@ AdvAppearanceDlg_CleanUp(HWND hwndDlg, GLOBALS* g)
 }
 
 
+static VOID
+SelectComboByElement(HWND hwnd, INT id, LPARAM lParam)
+{
+    INT nCount;
+    INT i;
+
+    nCount = SendDlgItemMessage(hwnd, id, CB_GETCOUNT, 0, 0);
+    if (nCount == CB_ERR)
+        return;
+
+    for (i = 0; i < nCount; i++)
+    {
+        if (SendDlgItemMessage(hwnd, id, CB_GETITEMDATA, (WPARAM)i, 0) == lParam)
+        {
+            SendDlgItemMessage(hwnd, id, CB_SETCURSEL, (WPARAM)i, 0);
+            break;
+        }
+    }
+}
+
+
 INT_PTR CALLBACK
 AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -440,6 +461,13 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case IDCANCEL:
 					g->ThemeAdv = g->Theme;
 					EndDialog(hwndDlg, 0);
+					break;
+
+				case IDC_APPEARANCE_PREVIEW:
+					SaveCurrentValues(hwndDlg, g);
+					SelectComboByElement(hwndDlg, IDC_ADVAPPEARANCE_ELEMENT, lParam);
+					g->CurrentElement = (INT)lParam;
+					UpdateControls(hwndDlg, g);
 					break;
 
 				case IDC_ADVAPPEARANCE_ELEMENT:

@@ -67,9 +67,9 @@ typedef struct tagGLOBALS
 	THEME_PRESET ThemeTemplates[MAX_TEMPLATES];
 	THEME Theme;
 	THEME ThemeAdv;
-	int ColorList[NUM_COLORS];
+	INT ColorList[NUM_COLORS];
 	HBITMAP hbmpColor[3];
-	int CurrentElement;
+	INT CurrentElement;
 	COLORREF crCOLOR_BTNFACE;
 	COLORREF crCOLOR_BTNSHADOW;
 	COLORREF crCOLOR_BTNTEXT;
@@ -81,7 +81,7 @@ typedef struct tagGLOBALS
 
 extern const ASSIGNMENT g_Assignment[NUM_ELEMENTS];
 extern const TCHAR g_RegColorNames[NUM_COLORS][MAX_COLORNAMELENGTH];
-extern const int g_SizeMetric[NUM_SIZES];
+extern const INT g_SizeMetric[NUM_SIZES];
 
 /* prototypes for appearance.c */
 INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

@@ -441,7 +441,10 @@ OnLButtonDown(HWND hwnd, int xPos, int yPos, PPREVIEW_DATA pPreviewData)
     if (PtInRect(&pPreviewData->rcDialogButton, pt))
         type = IDX_3D_OBJECTS;
 
-    SendMessage(GetParent(hwnd), WM_USER, 0, type);
+    SendMessage(GetParent(hwnd),
+                WM_COMMAND,
+                MAKEWPARAM(GetWindowLongPtrW(hwnd, GWLP_ID), 0),
+                (LPARAM)type);
 }
 
 
