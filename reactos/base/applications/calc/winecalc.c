@@ -476,17 +476,22 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (!(len = _tcslen(calc.display)))
                     return 0;
 
+                if (!(s = calc.display))
+                    return 0;
+
+                if (s[len - 1] == TEXT('.') || s[len - 1] == TEXT(','))
+                    len--;
+
                 if (!(hGlobalMemory = GlobalAlloc(GHND, (len + 1) * sizeof(TCHAR))))
                     return 0;
 
                 if (!(pGlobalMemory = GlobalLock(hGlobalMemory)))
                     return 0;
 
-                if (!(s = calc.display))
-                    return 0;
-
                 for (i = 0; i < len; i++)
                     *pGlobalMemory++ = *s++;
+
+                pGlobalMemory[len - 1] = 0;
 
                 GlobalUnlock(hGlobalMemory); // call GetLastError() for exception handling
 
@@ -496,7 +501,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (!EmptyClipboard())
                     return 0;
 
-                if (!SetClipboardData(CF_TEXT, hGlobalMemory))
+                if (!SetClipboardData(CF_TTEXT, hGlobalMemory))
                     return 0;
 
                 if (!CloseClipboard())
@@ -514,11 +519,11 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 HGLOBAL hGlobalMemory;
                 LPTSTR pGlobalMemory;
 
-                if (IsClipboardFormatAvailable(CF_TEXT)) {
+                if (IsClipboardFormatAvailable(CF_TTEXT)) {
                     if (!OpenClipboard(hWnd))
                         return 0;
 
-                    if (!(hGlobalMemory = GetClipboardData(CF_TEXT)))
+                    if (!(hGlobalMemory = GetClipboardData(CF_TTEXT)))
                         return 0;
 
                     if (!(size = GlobalSize(hGlobalMemory)))
