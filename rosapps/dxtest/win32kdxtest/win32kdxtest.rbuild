@@ -8,6 +8,7 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<file>main.c</file>
+	<file>dump.c</file>
      	<file>../../../../dll/win32/gdi32/misc/win32k.S</file>
 
 	

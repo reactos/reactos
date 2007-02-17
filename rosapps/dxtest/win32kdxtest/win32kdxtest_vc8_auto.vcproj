@@ -577,6 +577,10 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat;S"
 			>
 			<File
+				RelativePath=".\dump.c"
+				>
+			</File>
+			<File
 				RelativePath=".\main.c"
 				>
 			</File>

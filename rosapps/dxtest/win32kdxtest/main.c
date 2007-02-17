@@ -102,15 +102,15 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     DWORD *puFourCC = NULL;
 
     DD_HALINFO HalInfo;
-    DWORD CallBackFlags = 0;
+    DWORD CallBackFlags[4];
     D3DNTHAL_CALLBACKS D3dCallbacks;
     D3DNTHAL_GLOBALDRIVERDATA D3dDriverData;
     DD_D3DBUFCALLBACKS D3dBufferCallbacks;
     DDSURFACEDESC D3dTextureFormats;
-    DWORD NumHeaps = 0;
+    //DWORD NumHeaps = 0;
     VIDEOMEMORY vmList;
-    DWORD NumFourCC = 0;
-    DWORD FourCC = 0;
+    //DWORD NumFourCC = 0;
+    //DWORD FourCC = 0;
 
     /* clear data */
     memset(&vmList,0,sizeof(VIDEOMEMORY));
@@ -119,6 +119,7 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     memset(&D3dDriverData,0,sizeof(D3DNTHAL_GLOBALDRIVERDATA));
     memset(&D3dCallbacks,0,sizeof(D3DNTHAL_CALLBACKS));
     memset(&HalInfo,0,sizeof(DD_HALINFO));
+    memset(CallBackFlags,0,sizeof(DWORD)*3);
 
     printf("Start testing of NtGdiDdQueryDirectDrawObject\n");
     
@@ -179,6 +180,19 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     testing_noteq(puNumFourCC,NULL,fails,"8. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, NULL, ...);\0");
     testing_noteq(puFourCC,NULL,fails,"9. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, NULL, ...);\0");
     testing_noteq(pHalInfo->dwSize,sizeof(DD_HALINFO),fails,"10. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, NULL, ...);\0");
+
+#if DBG
+    dump(pHalInfo, "NtGdiDdQueryDirectDrawObject frist call");
+#endif
+
+    //pCallBackFlags = (DWORD *)&CallBackFlags;
+
+    //retValue = sysNtGdiDdQueryDirectDrawObject( hDirectDrawLocal, NULL, 
+    //                                            pCallBackFlags, puD3dCallbacks, 
+    //                                            puD3dDriverData, puD3dBufferCallbacks, 
+    //                                            puD3dTextureFormats, puNumHeaps, 
+    //                                            puvmList, puNumFourCC,
+    //                                            puFourCC);
 
     show_status(fails, "NtGdiDdQueryDirectDrawObject\0");
 }

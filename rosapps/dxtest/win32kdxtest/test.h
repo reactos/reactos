@@ -4,7 +4,7 @@ HANDLE test_NtGdiDdCreateDirectDrawObject();
 void test_NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal);
 void test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal);
 
-
+void dump(DD_HALINFO *pHalInfo, char *text);
 
 HANDLE sysNtGdiDdCreateDirectDrawObject(HDC hdc);
 BOOL sysNtGdiDdDeleteDirectDrawObject( HANDLE hDirectDrawLocal);
