@@ -1,7 +1,7 @@
 #include <precomp.h>
 
 
-INT_PTR CALLBACK
+static INT_PTR CALLBACK
 AboutDialogProc(HWND hDlg,
                 UINT message,
                 WPARAM wParam,
@@ -52,4 +52,13 @@ AboutDialogProc(HWND hDlg,
     }
 
     return FALSE;
+}
+
+VOID
+ShowAboutDlg(HWND hWndParent)
+{
+    DialogBox(hInstance,
+              MAKEINTRESOURCE(IDD_ABOUTBOX),
+              hWndParent,
+              AboutDialogProc);
 }

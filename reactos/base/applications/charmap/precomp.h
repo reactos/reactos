@@ -14,8 +14,6 @@
 #define FM_SETFONT (WM_USER + 1)
 
 extern HINSTANCE hInstance;
-extern const TCHAR szMapWndClass[];
-extern const TCHAR szLrgCellWndClass[];
 
 
 typedef struct _CELL
@@ -41,11 +39,9 @@ typedef struct _MAP
     INT iPage;
 } MAP, *PMAP;
 
-BOOL RegisterControls(HINSTANCE hInstance);
-VOID UnregisterControls(HINSTANCE hInstance);
+VOID ShowAboutDlg(HWND hWndParent);
 
-INT_PTR CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK LrgCellWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK MapWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL RegisterMapClasses(HINSTANCE hInstance);
+VOID UnregisterMapClasses(HINSTANCE hInstance);
 
 #endif /* __DEVMGMT_PRECOMP_H */

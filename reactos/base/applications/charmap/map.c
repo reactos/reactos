@@ -1,5 +1,7 @@
 #include <precomp.h>
 
+static const TCHAR szMapWndClass[] = TEXT("FontMapWnd");
+static const TCHAR szLrgCellWndClass[] = TEXT("LrgCellWnd");
 
 static VOID
 TagFontToCell(PCELL pCell,
@@ -481,4 +483,40 @@ MapWndProc(HWND hwnd,
     }
 
     return Ret;
+}
+
+BOOL
+RegisterMapClasses(HINSTANCE hInstance)
+{
+    WNDCLASS wc = {0};
+
+    //wc.style = CS_DBLCLKS;
+    wc.lpfnWndProc = MapWndProc;
+    wc.cbWndExtra = sizeof(PMAP);
+    wc.hInstance = hInstance;
+    wc.hCursor = LoadCursor(NULL,
+                            (LPTSTR)IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.lpszClassName = szMapWndClass;
+
+    if (RegisterClass(&wc))
+    {
+        wc.lpfnWndProc = LrgCellWndProc;
+        wc.cbWndExtra = 0;
+        wc.lpszClassName = szLrgCellWndClass;
+
+        return RegisterClass(&wc) != 0;
+    }
+
+    return FALSE;
+}
+
+VOID
+UnregisterMapClasses(HINSTANCE hInstance)
+{
+    UnregisterClass(szMapWndClass,
+                    hInstance);
+
+    UnregisterClass(szLrgCellWndClass,
+                    hInstance);
 }

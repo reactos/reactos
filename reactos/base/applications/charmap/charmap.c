@@ -1,12 +1,11 @@
 #include <precomp.h>
 
-const TCHAR szMapWndClass[] = TEXT("FontMapWnd");
-const TCHAR szLrgCellWndClass[] = TEXT("LrgCellWnd");
+#define ID_ABOUT    0x1
 
 HINSTANCE hInstance;
 
 /* Font-enumeration callback */
-int CALLBACK
+static int CALLBACK
 EnumFontNames(ENUMLOGFONTEX *lpelfe,
               NEWTEXTMETRICEX *lpntme,
               DWORD FontType,
@@ -120,19 +119,20 @@ ChangeMapFont(HWND hDlg)
 }
 
 
-BOOL CALLBACK
+static BOOL CALLBACK
 DlgProc(HWND hDlg,
         UINT Message,
         WPARAM wParam,
         LPARAM lParam)
 {
-    static HICON hSmIcon = NULL;
-    static HICON hBgIcon = NULL;
-
     switch(Message)
     {
         case WM_INITDIALOG:
         {
+            HICON hSmIcon;
+            HICON hBgIcon;
+            HMENU hSysMenu;
+
             hSmIcon = LoadImage(hInstance,
                                 MAKEINTRESOURCE(IDI_ICON),
                                 IMAGE_ICON,
@@ -159,6 +159,29 @@ DlgProc(HWND hDlg,
                                               IDC_FONTCOMBO));
 
             ChangeMapFont(hDlg);
+
+            hSysMenu = GetSystemMenu(hDlg,
+                                     FALSE);
+            if (hSysMenu != NULL)
+            {
+                LPCTSTR lpAboutText = NULL;
+
+                if (LoadString(hInstance,
+                               IDS_ABOUT,
+                               (LPTSTR)&lpAboutText,
+                               0))
+                {
+                    AppendMenu(hSysMenu,
+                               MF_SEPARATOR,
+                               0,
+                               NULL);
+                    AppendMenu(hSysMenu,
+                               MF_STRING,
+                               ID_ABOUT,
+                               lpAboutText);
+                }
+            }
+            return TRUE;
         }
         break;
 
@@ -184,8 +207,15 @@ DlgProc(HWND hDlg,
                 case IDOK:
                     EndDialog(hDlg, 0);
                 break;
+            }
+        }
+        break;
 
-                case IDC_ABOUT:
+        case WM_SYSCOMMAND:
+        {
+            switch(wParam)
+            {
+                case ID_ABOUT:
                     DialogBox(hInstance,
                               MAKEINTRESOURCE(IDD_ABOUTBOX),
                               hDlg,
@@ -199,43 +229,7 @@ DlgProc(HWND hDlg,
             return FALSE;
     }
 
-    return TRUE;
-}
-
-BOOL
-RegisterControls(HINSTANCE hInstance)
-{
-    WNDCLASS wc = {0};
-
-    //wc.style = CS_DBLCLKS;
-    wc.lpfnWndProc = MapWndProc;
-    wc.cbWndExtra = sizeof(PMAP);
-    wc.hInstance = hInstance;
-    wc.hCursor = LoadCursor(NULL,
-                            (LPTSTR)IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wc.lpszClassName = szMapWndClass;
-
-    if (RegisterClass(&wc))
-    {
-        wc.lpfnWndProc = LrgCellWndProc;
-        wc.cbWndExtra = 0;
-        wc.lpszClassName = szLrgCellWndClass;
-
-        return RegisterClass(&wc) != 0;
-    }
-
     return FALSE;
-}
-
-VOID
-UnregisterControls(HINSTANCE hInstance)
-{
-    UnregisterClass(szMapWndClass,
-                    hInstance);
-
-    UnregisterClass(szLrgCellWndClass,
-                    hInstance);
 }
 
 
@@ -246,7 +240,7 @@ WinMain(HINSTANCE hInst,
         int iCmd)
 {
     INITCOMMONCONTROLSEX iccx;
-    INT Ret;
+    INT Ret = 1;
 
     hInstance = hInst;
 
@@ -254,14 +248,15 @@ WinMain(HINSTANCE hInst,
     iccx.dwICC = ICC_TAB_CLASSES;
     InitCommonControlsEx(&iccx);
 
-    RegisterControls(hInstance);
+    if (RegisterMapClasses(hInstance))
+    {
+        Ret = DialogBox(hInstance,
+                        MAKEINTRESOURCE(IDD_CHARMAP),
+                        NULL,
+                        (DLGPROC)DlgProc) >= 0;
 
-    Ret = DialogBox(hInstance,
-                    MAKEINTRESOURCE(IDD_CHARMAP),
-                    NULL,
-                    (DLGPROC)DlgProc);
-
-    UnregisterControls(hInstance);
+        UnregisterMapClasses(hInstance);
+    }
 
     return Ret;
 }
