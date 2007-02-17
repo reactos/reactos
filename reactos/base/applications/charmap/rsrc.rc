@@ -1,0 +1,11 @@
+#include <windows.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+1 24 DISCARDABLE "manifest.xml"
+
+IDI_ICON ICON "res/charmap.ico"
+
+#include "lang/en-US.rc"
+
