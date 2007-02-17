@@ -7,6 +7,9 @@
 <directory name="calc">
 	<xi:include href="calc/calc.rbuild" />
 </directory>
+<directory name="charmap">
+	<xi:include href="charmap/charmap.rbuild" />
+</directory>
 <directory name="cmdutils">
 	<xi:include href="cmdutils/cmdutils.rbuild" />
 </directory>
