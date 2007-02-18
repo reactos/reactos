@@ -23,18 +23,6 @@ extern ULONG NtOSCSDVersion;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-NTAPI
-DebugPrint(IN PANSI_STRING DebugString,
-           IN ULONG ComponentId,
-           IN ULONG Level)
-{
-    /* Temporary hack */
-    //KdpPrintString(DebugString->Buffer, DebugString->Length);
-    //HalDisplayString((PCHAR)DebugString->Buffer);
-    return STATUS_SUCCESS;
-}
-
 /*
 * @implemented
 */

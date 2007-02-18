@@ -16,27 +16,21 @@
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
-#if 0
 NTSTATUS
 NTAPI
 DebugPrint(IN PANSI_STRING DebugString,
            IN ULONG ComponentId,
            IN ULONG Level)
 {
+    return STATUS_SUCCESS;
+
     /* Call the INT2D Service */
     return DebugService(BREAKPOINT_PRINT,
                         DebugString->Buffer,
                         DebugString->Length,
                         UlongToPtr(ComponentId),
-                        UlongToPtr(Level)); 
+                        UlongToPtr(Level));
 }
-#else
-NTSTATUS
-NTAPI
-DebugPrint(IN PANSI_STRING DebugString,
-           IN ULONG ComponentId,
-           IN ULONG Level);
-#endif
 
 NTSTATUS
 NTAPI
@@ -282,7 +276,7 @@ DbgPrompt(IN PCCH Prompt,
     Input.Buffer = Response;
 
     /* Setup the output string */
-    Output.Length = strlen (Prompt);
+    Output.Length = strlen(Prompt);
     Output.Buffer = Prompt;
 
     /* Call the system service */
