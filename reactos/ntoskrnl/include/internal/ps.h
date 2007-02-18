@@ -384,7 +384,8 @@ extern GENERIC_MAPPING PspJobMapping;
 extern POBJECT_TYPE PsJobType;
 extern LARGE_INTEGER ShortPsLockDelay;
 extern UNICODE_STRING PsNtDllPathName;
-extern LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
+extern LIST_ENTRY PsLoadedModuleList;
+extern ULONG PsNtosImageBase;
 
 //
 // Inlined Functions

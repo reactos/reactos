@@ -12,6 +12,7 @@
 #define _WIN32_WINNT _WIN32_WINNT_WS03
 #define NTDDI_VERSION NTDDI_WS03SP1
 #define NTKERNELAPI
+#define NOEXTAPI
 
 /* DDK/IFS/NDK Headers */
 #include <ntifs.h>
@@ -50,6 +51,11 @@
 
 /* SetupLDR Support */
 #include <arc/setupblk.h>
+
+/* KD Support */
+#include <windbgkd.h>
+#include <wdbgexts.h>
+#include <kddll.h>
 
 /* PNP GUIDs */
 #include <umpnpmgr/sysguid.h>

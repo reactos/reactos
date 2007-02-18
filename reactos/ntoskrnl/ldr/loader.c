@@ -42,7 +42,8 @@
 
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY ModuleListHead;
+LIST_ENTRY PsLoadedModuleList;
+ULONG PsNtosImageBase = 0x80100000;
 KSPIN_LOCK ModuleListLock;
 LDR_DATA_TABLE_ENTRY NtoskrnlModuleObject;
 LDR_DATA_TABLE_ENTRY HalModuleObject;
@@ -101,7 +102,7 @@ LdrInit1(VOID)
     PLDR_DATA_TABLE_ENTRY HalModuleObject, NtoskrnlModuleObject, LdrEntry;
 
     /* Initialize the module list and spinlock */
-    InitializeListHead(&ModuleListHead);
+    InitializeListHead(&PsLoadedModuleList);
     KeInitializeSpinLock(&ModuleListLock);
 
     /* Get the NTOSKRNL Entry from the loader */
@@ -112,13 +113,14 @@ LdrInit1(VOID)
                                                  sizeof(LDR_DATA_TABLE_ENTRY),
                                                  TAG('M', 'm', 'L', 'd'));
     NtoskrnlModuleObject->DllBase = LdrEntry->DllBase;
+    PsNtosImageBase = PtrToUlong(LdrEntry->DllBase);
     RtlInitUnicodeString(&NtoskrnlModuleObject->FullDllName, KERNEL_MODULE_NAME);
     LdrpBuildModuleBaseName(&NtoskrnlModuleObject->BaseDllName, &NtoskrnlModuleObject->FullDllName);
     NtoskrnlModuleObject->EntryPoint = LdrEntry->EntryPoint;
     NtoskrnlModuleObject->SizeOfImage = LdrEntry->SizeOfImage;
 
     /* Insert it into the list */
-    InsertTailList(&ModuleListHead, &NtoskrnlModuleObject->InLoadOrderLinks);
+    InsertTailList(&PsLoadedModuleList, &NtoskrnlModuleObject->InLoadOrderLinks);
 
     /* Get the HAL Entry from the loader */
     LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink->Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
@@ -134,7 +136,7 @@ LdrInit1(VOID)
     HalModuleObject->SizeOfImage = LdrEntry->SizeOfImage;
 
     /* Insert it into the list */
-    InsertTailList(&ModuleListHead, &HalModuleObject->InLoadOrderLinks);
+    InsertTailList(&PsLoadedModuleList, &HalModuleObject->InLoadOrderLinks);
 }
 
 NTSTATUS
@@ -384,8 +386,8 @@ LdrpQueryModuleInformation (
     KeAcquireSpinLock(&ModuleListLock,&Irql);
 
     /* calculate required size */
-    current_entry = ModuleListHead.Flink;
-    while (current_entry != (&ModuleListHead))
+    current_entry = PsLoadedModuleList.Flink;
+    while (current_entry != (&PsLoadedModuleList))
     {
         ModuleCount++;
         current = CONTAINING_RECORD(current_entry,LDR_DATA_TABLE_ENTRY,InLoadOrderLinks);
@@ -418,8 +420,8 @@ LdrpQueryModuleInformation (
     Smi->NumberOfModules = ModuleCount;
 
     ModuleCount = 0;
-    current_entry = ModuleListHead.Flink;
-    while (current_entry != (&ModuleListHead))
+    current_entry = PsLoadedModuleList.Flink;
+    while (current_entry != (&PsLoadedModuleList))
     {
         current = CONTAINING_RECORD(current_entry,LDR_DATA_TABLE_ENTRY,InLoadOrderLinks);
 
@@ -576,8 +578,8 @@ LdrGetModuleObject ( PUNICODE_STRING ModuleName )
 
     KeAcquireSpinLock(&ModuleListLock,&Irql);
 
-    Entry = ModuleListHead.Flink;
-    while (Entry != &ModuleListHead)
+    Entry = PsLoadedModuleList.Flink;
+    while (Entry != &PsLoadedModuleList)
     {
         Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
@@ -871,7 +873,7 @@ LdrPEProcessModule(
 
     /* Insert module */
     KeAcquireSpinLock(&ModuleListLock, &Irql);
-    InsertTailList(&ModuleListHead,
+    InsertTailList(&PsLoadedModuleList,
         &CreatedModuleObject->InLoadOrderLinks);
     KeReleaseSpinLock(&ModuleListLock, Irql);
 

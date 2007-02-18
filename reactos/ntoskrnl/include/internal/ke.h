@@ -71,11 +71,6 @@ typedef PCHAR
     IN ULONG Length
 );
 
-struct _KIRQ_TRAPFRAME;
-struct _KPCR;
-struct _KPRCB;
-struct _KEXCEPTION_FRAME;
-
 extern ULONG_PTR MmFreeLdrFirstKrnlPhysAddr;
 extern ULONG_PTR MmFreeLdrLastKrnlPhysAddr;
 extern ULONG_PTR MmFreeLdrLastKernelAddress;
@@ -154,6 +149,7 @@ extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
 extern UCHAR KiDebugRegisterTrapOffsets[9];
 extern UCHAR KiDebugRegisterContextOffsets[9];
+extern ULONG KiFreezeFlag;
 
 /* MACROS *************************************************************************/
 
@@ -192,16 +188,6 @@ extern UCHAR KiDebugRegisterContextOffsets[9];
 #define SIZE_OF_FX_REGISTERS 32
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
-
-/* Readies a Thread for Execution. */
-BOOLEAN
-NTAPI
-KiDispatchThreadNoLock(ULONG NewThreadStatus);
-
-/* Readies a Thread for Execution. */
-VOID
-NTAPI
-KiDispatchThread(ULONG NewThreadStatus);
 
 /* Finds a new thread to run */
 NTSTATUS
@@ -393,10 +379,6 @@ KeProfileInterruptWithSource(
     IN KPROFILE_SOURCE Source
 );
 
-BOOLEAN
-NTAPI
-KiRosPrintAddress(PVOID Address);
-
 VOID
 NTAPI
 KeUpdateRunTime(
@@ -520,27 +502,11 @@ KiSetPriorityThread(
     IN KPRIORITY Priority
 );
 
-BOOLEAN
-NTAPI
-KiDispatcherObjectWake(
-    DISPATCHER_HEADER* hdr,
-    KPRIORITY increment
-);
-
 VOID
 FASTCALL
 KiUnlinkThread(
     IN PKTHREAD Thread,
     IN NTSTATUS WaitStatus
-);
-
-VOID
-NTAPI
-KeExpireTimers(
-    PKDPC Apc,
-    PVOID Arg1,
-    PVOID Arg2,
-    PVOID Arg3
 );
 
 VOID
@@ -723,10 +689,6 @@ KeInitInterrupts(VOID);
 VOID
 NTAPI
 KiInitializeBugCheck(VOID);
-
-VOID
-NTAPI
-KiInitializeSystemClock(VOID);
 
 VOID
 NTAPI
@@ -948,6 +910,15 @@ WRMSR(
     IN ULONG Register,
     IN LONGLONG Value
 );
+
+BOOLEAN
+NTAPI
+KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
+                  IN PKEXCEPTION_FRAME ExceptionFrame);
+
+VOID
+NTAPI
+KeThawExecution(IN BOOLEAN Enable);
 
 #include "ke_x.h"
 

@@ -89,6 +89,21 @@ typedef struct _OBJECT_ATTRIBUTES {
   PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 #endif
+
+typedef struct LIST_ENTRY32
+{
+    ULONG Flink;
+    ULONG Blink;
+} LIST_ENTRY32;
+typedef LIST_ENTRY32 *PLIST_ENTRY32;
+
+typedef struct LIST_ENTRY64
+{
+    ULONGLONG Flink;
+    ULONGLONG Blink;
+} LIST_ENTRY64;
+typedef LIST_ENTRY64 *PLIST_ENTRY64;
+
 #define NOTHING
 #define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 #define TYPE_ALIGNMENT( t ) FIELD_OFFSET( struct { char x; t test; }, test )

@@ -19,7 +19,7 @@ LIST_ENTRY MiVerifierDriverAddedThunkListHead;
 KMUTANT MmSystemLoadLock;
 ULONG MiActiveVerifierThunks;
 
-extern LIST_ENTRY ModuleListHead;
+extern LIST_ENTRY PsLoadedModuleList;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -32,7 +32,7 @@ MiLookupDataTableEntry(IN PVOID Address)
     PAGED_CODE();
 
     /* Loop entries */
-    NextEntry = ModuleListHead.Flink;
+    NextEntry = PsLoadedModuleList.Flink;
     do 
     {
         /* Get the loader entry */
@@ -51,7 +51,7 @@ MiLookupDataTableEntry(IN PVOID Address)
 
         /* Move on */
         NextEntry = NextEntry->Flink;
-    } while(NextEntry != &ModuleListHead);
+    } while(NextEntry != &PsLoadedModuleList);
 
     /* Return the entry */
     return FoundEntry;
