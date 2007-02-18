@@ -1155,7 +1155,7 @@ Phase1InitializationDiscard(PVOID Context)
     HalReportResourceUsage();
 
     /* Call the debugger DLL once we have KD64 6.0 support */
-    //KdDebuggerInitialize1(LoaderBlock);
+    KdDebuggerInitialize1(LoaderBlock);
 
     /* Setup PnP Manager in phase 1 */
     if (!PpInitSystem()) KeBugCheck(PP1_INITIALIZATION_FAILED);

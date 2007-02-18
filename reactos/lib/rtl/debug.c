@@ -315,14 +315,14 @@ NTSTATUS
 NTAPI
 DbgLoadImageSymbols(IN PANSI_STRING Name,
                     IN PVOID Base,
-                    IN ULONG ProcessId)
+                    IN ULONG_PTR ProcessId)
 {
     PIMAGE_NT_HEADERS NtHeader;
     KD_SYMBOLS_INFO SymbolInfo;
 
     /* Setup the symbol data */
     SymbolInfo.BaseOfDll = Base;
-    SymbolInfo.ProcessId = UlongToPtr(ProcessId);
+    SymbolInfo.ProcessId = ProcessId;
 
     /* Get NT Headers */
     NtHeader = NULL; //RtlImageNtHeader(Base);
@@ -342,4 +342,25 @@ DbgLoadImageSymbols(IN PANSI_STRING Name,
     DebugService2(Name, &SymbolInfo, BREAKPOINT_LOAD_SYMBOLS);
     return STATUS_SUCCESS;
 }
+
+/*
+* @implemented
+*/
+VOID
+NTAPI
+DbgUnLoadImageSymbols(IN PANSI_STRING Name,
+                      IN PVOID Base,
+                      IN ULONG_PTR ProcessId)
+{
+    KD_SYMBOLS_INFO SymbolInfo;
+
+    /* Setup the symbol data */
+    SymbolInfo.BaseOfDll = Base;
+    SymbolInfo.ProcessId = ProcessId;
+    SymbolInfo.CheckSum = SymbolInfo.SizeOfImage = 0;
+
+    /* Load the symbols */
+    DebugService2(Name, &SymbolInfo, BREAKPOINT_UNLOAD_SYMBOLS);
+}
+
 /* EOF */

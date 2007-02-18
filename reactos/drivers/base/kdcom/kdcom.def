@@ -2,6 +2,7 @@ LIBRARY kdcom.dll
 EXPORTS
 
 KdDebuggerInitialize0@4
+KdDebuggerInitialize1@4
 KdSave@4
 KdRestore@4
 KdReceivePacket@20

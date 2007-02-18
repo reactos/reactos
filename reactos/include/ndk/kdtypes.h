@@ -168,7 +168,7 @@ typedef struct _SYSDBG_TRIAGE_DUMP
 typedef struct _KD_SYMBOLS_INFO
 {
     PVOID BaseOfDll;
-    PVOID ProcessId;
+    ULONG_PTR ProcessId;
     ULONG CheckSum;
     ULONG SizeOfImage;
 } KD_SYMBOLS_INFO, *PKD_SYMBOLS_INFO;

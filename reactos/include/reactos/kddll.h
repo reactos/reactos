@@ -7,6 +7,12 @@ KdDebuggerInitialize0(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+NTSTATUS
+NTAPI
+KdDebuggerInitialize1(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
 ULONG
 NTAPI
 KdReceivePacket(

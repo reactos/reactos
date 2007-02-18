@@ -567,6 +567,17 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 }
 
 /*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+KdDebuggerInitialize1(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
+{
+    /* FIXME: TODO */
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
  * @implemented
  */
 NTSTATUS
