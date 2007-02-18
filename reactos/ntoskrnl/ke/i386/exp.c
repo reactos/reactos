@@ -16,47 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-BOOLEAN
-NTAPI
-KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
-                          IN PKEXCEPTION_FRAME ExceptionFrame,
-                          IN PEXCEPTION_RECORD ExceptionRecord,
-                          IN PCONTEXT Context,
-                          IN KPROCESSOR_MODE PreviousMode,
-                          IN BOOLEAN SecondChance)
-{
-    /* HACK (just like all this routine */
-    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
-    {
-        Context->Eip++;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-BOOLEAN
-NTAPI
-KdInitSystem(IN ULONG BootPhase,
-             IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    /* STUB */
-    return TRUE;
-}
-
-BOOLEAN
-NTAPI
-KdPollBreakIn(VOID)
-{
-    /* STUB */
-    return FALSE;
-}
-
-BOOLEAN _KdDebuggerEnabled = FALSE;
-BOOLEAN _KdDebuggerNotPresent = TRUE;
-BOOLEAN KdBreakAfterSymbolLoad = FALSE;
-PKDEBUG_ROUTINE KiDebugRoutine = KdpEnterDebuggerException;
-
 /* DR Registers in the CONTEXT structure */
 UCHAR KiDebugRegisterContextOffsets[9] =
 {
