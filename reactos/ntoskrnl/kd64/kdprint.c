@@ -97,8 +97,8 @@ KdpSymbol(IN LPSTR DllPath,
     Status = KdpReportLoadSymbolsStateChange(DllPath,
                                              DllBase,
                                              Unload,
-                                             &Prcb->
-                                             ProcessorState.ContextFrame);
+                                             &Prcb->ProcessorState.
+                                             ContextFrame);
 #else
     Status = FALSE;
 #endif
