@@ -30,6 +30,41 @@ KdpPortUnlock(VOID)
     KiReleaseSpinLock(&KdpDebuggerLock);
 }
 
+BOOLEAN
+NTAPI
+KdpPollBreakInWithPortLock(VOID)
+{
+    BOOLEAN DoBreak = FALSE;
+
+    /* First make sure that KD is enabled */
+    if (KdDebuggerEnabled)
+    {
+        /* Check if a CTRL-C is in the queue */
+        if (KdpContext.KdpControlCPending)
+        {
+            /* Set it and prepare for break */
+            DoBreak = TRUE;
+            KdpContext.KdpControlCPending = FALSE;
+        }
+        else
+        {
+            /* Now get a packet */
+            if (!KdReceivePacket(PACKET_TYPE_KD_POLL_BREAKIN,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL))
+            {
+                /* Successful breakin */
+                DoBreak = TRUE;
+            }
+        }
+    }
+
+    /* Tell the caller to do a break */
+    return DoBreak;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*

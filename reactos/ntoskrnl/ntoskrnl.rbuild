@@ -198,6 +198,7 @@
         <file>kddata.c</file>
         <file>kdinit.c</file>
         <file>kdlock.c</file>
+        <file>kdprint.c</file>
         <file>kdtrap.c</file>
     </directory>
     <directory name="ldr">

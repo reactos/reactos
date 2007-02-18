@@ -104,6 +104,37 @@ KdEnableDebuggerWithLock(
     IN BOOLEAN NeedLock
 );
 
+ULONG
+NTAPI
+KdpPrint(
+    IN ULONG ComponentId,
+    IN ULONG ComponentMask,
+    IN LPSTR String,
+    IN ULONG Length,
+    IN KPROCESSOR_MODE PreviousMode,
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKEXCEPTION_FRAME ExceptionFrame,
+    OUT PBOOLEAN Status
+);
+
+ULONG
+NTAPI
+KdpSymbol(
+    IN LPSTR DllPath,
+    IN ULONG DllBase,
+    IN BOOLEAN Unload,
+    IN KPROCESSOR_MODE PreviousMode,
+    IN PCONTEXT ContextRecord,
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKEXCEPTION_FRAME ExceptionFrame
+);
+
+BOOLEAN
+NTAPI
+KdpPollBreakInWithPortLock(
+    VOID
+);
+
 extern DBGKD_GET_VERSION64 KdVersionBlock;
 extern KDDEBUGGER_DATA64 KdDebuggerDataBlock;
 extern LIST_ENTRY KdpDebuggerDataListHead;
@@ -133,4 +164,6 @@ extern BOOLEAN KdpControlCWaiting;
 extern BOOLEAN KdpPortLocked;
 extern KSPIN_LOCK KdpDebuggerLock;
 extern LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
-
+extern ULONG KdComponentTableSize;
+extern ULONG Kd_WIN2000_Mask;
+extern PULONG KdComponentTable[104];

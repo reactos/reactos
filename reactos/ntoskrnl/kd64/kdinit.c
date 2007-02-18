@@ -70,7 +70,6 @@ KdInitSystem(IN ULONG BootPhase,
     PLIST_ENTRY NextEntry;
     ULONG i;
     CHAR NameBuffer[256];
-    return TRUE;
 
     /* Check if this is Phase 1 */
     if (BootPhase)
@@ -207,9 +206,9 @@ KdInitSystem(IN ULONG BootPhase,
         KdDebuggerEnabled = TRUE;
 
         /* Let user-mode know that it's enabled as well */
-#undef KdDebuggerEnabled
-        SharedUserData->KdDebuggerEnabled = TRUE;
-#define KdDebuggerEnabled _KdDebuggerEnabled
+//#undef KdDebuggerEnabled
+        //SharedUserData->KdDebuggerEnabled = TRUE;
+//#define KdDebuggerEnabled _KdDebuggerEnabled
 
         /* Check if we have a loader block */
         if (LoaderBlock)

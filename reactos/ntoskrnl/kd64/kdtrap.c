@@ -101,7 +101,6 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
     BOOLEAN Unload = FALSE;
     ULONG Eip, Eax;
     BOOLEAN Status = FALSE;
-    while (TRUE);
 
     /*
      * Check if we got a STATUS_BREAKPOINT with a SubID for Print, Prompt or
@@ -120,7 +119,14 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
             case BREAKPOINT_PRINT:
 
                 /* Call the worker routine */
-                Eax = 0;
+                Eax = KdpPrint(ContextRecord->Ebx,
+                               ContextRecord->Edi,
+                               (LPSTR)ExceptionRecord->ExceptionInformation[1],
+                               (ULONG)ExceptionRecord->ExceptionInformation[2],
+                               PreviousMode,
+                               TrapFrame,
+                               ExceptionFrame,
+                               &Status);
 
                 /* Update the return value for the caller */
                 ContextRecord->Eax = Eax;
@@ -130,6 +136,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
             case BREAKPOINT_PROMPT:
 
                 /* Call the worker routine */
+                while (TRUE);
                 Eax = 0;
                 Status = TRUE;
 
@@ -147,6 +154,13 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
             case BREAKPOINT_LOAD_SYMBOLS:
 
                 /* Call the worker routine */
+                KdpSymbol(UlongToPtr(ExceptionRecord->ExceptionInformation[1]),
+                          (ULONG)ExceptionRecord->ExceptionInformation[2],
+                          Unload,
+                          PreviousMode,
+                          ContextRecord,
+                          TrapFrame,
+                          ExceptionFrame);
                 Status = TRUE;
                 break;
 
@@ -154,6 +168,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
             case BREAKPOINT_COMMAND_STRING:
 
                 /* Call the worker routine */
+                while (TRUE);
                 Status = TRUE;
 
             /* Anything else, do nothing */

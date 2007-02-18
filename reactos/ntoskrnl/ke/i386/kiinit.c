@@ -786,5 +786,3 @@ AppCpuInit:
     /* Jump into the idle loop */
     KiIdleLoop();
 }
-
-

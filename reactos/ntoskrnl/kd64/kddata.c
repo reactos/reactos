@@ -62,7 +62,7 @@ PKDEBUG_SWITCH_ROUTINE KiDebugSwitchRoutine;
 //
 BOOLEAN KdBreakAfterSymbolLoad;
 BOOLEAN KdPitchDebugger;
-BOOLEAN _KdDebuggerNotPresent = TRUE;
+BOOLEAN _KdDebuggerNotPresent;
 BOOLEAN _KdDebuggerEnabled;
 BOOLEAN KdAutoEnableOnEvent;
 BOOLEAN KdPreviouslyEnabled;
@@ -77,7 +77,7 @@ LARGE_INTEGER KdPerformanceCounterRate;
 KDPC KdpTimeSlipDpc;
 KTIMER KdpTimeSlipTimer;
 WORK_QUEUE_ITEM KdpTimeSlipWorkItem;
-LONG KdpTimeSlipPending;
+LONG KdpTimeSlipPending = 1;
 PKEVENT KdpTimeSlipEvent;
 KSPIN_LOCK KdpTimeSlipEventLock;
 LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;

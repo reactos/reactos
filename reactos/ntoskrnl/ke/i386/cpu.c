@@ -678,11 +678,12 @@ VOID
 NTAPI
 KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
 {
+    return;
     /* Restore the CR registers */
     __writecr0(ProcessorState->SpecialRegisters.Cr0);
     Ke386SetCr2(ProcessorState->SpecialRegisters.Cr2);
     __writecr3(ProcessorState->SpecialRegisters.Cr3);
-    __writecr4(ProcessorState->SpecialRegisters.Cr4);
+    if (KeFeatureBits & KF_CR4) __writecr4(ProcessorState->SpecialRegisters.Cr4);
 
     //
     // Restore the DR registers
@@ -711,7 +712,8 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     ProcessorState->SpecialRegisters.Cr0 = __readcr0();
     ProcessorState->SpecialRegisters.Cr2 = __readcr2();
     ProcessorState->SpecialRegisters.Cr3 = __readcr3();
-    ProcessorState->SpecialRegisters.Cr4 = __readcr4();
+    ProcessorState->SpecialRegisters.Cr4 = (KeFeatureBits & KF_CR4) ?
+                                           __readcr4() : 0;
 
     /* Save the DR registers */
     ProcessorState->SpecialRegisters.KernelDr0 = Ke386GetDr0();

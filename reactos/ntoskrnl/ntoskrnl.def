@@ -518,7 +518,8 @@ IoWriteTransferCount DATA
 @IofCallDriver@8
 @IofCompleteRequest@8
 IoIsWdmVersionAvailable@8
-KdComPortInUse DATA
+KdComPortInUse
+KdDebuggerNotPresent=_KdDebuggerNotPresent
 Ke386CallBios@8
 @KeAcquireGuardedMutex@4
 @KeAcquireGuardedMutexUnsafe@4
