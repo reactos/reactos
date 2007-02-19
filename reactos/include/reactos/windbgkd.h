@@ -2,6 +2,11 @@
 #define _WINDBGKG_
 
 //
+// Dependencies
+//
+#include "wdbgexts.h"
+
+//
 // Packet Size and Control Stream Size
 //
 #define PACKET_MAX_SIZE                     4000
@@ -136,6 +141,46 @@ typedef struct _KD_CONTEXT
 } KD_CONTEXT, *PKD_CONTEXT;
 
 //
+// Control Sets for Supported Architectures
+//
+#include <pshpack4.h>
+typedef struct _X86_DBGKD_CONTROL_SET
+{
+    ULONG TraceFlag;
+    ULONG Dr7;
+    ULONG CurrentSymbolStart;
+    ULONG CurrentSymbolEnd;
+} X86_DBGKD_CONTROL_SET, *PX86_DBGKD_CONTROL_SET;
+
+typedef struct _IA64_DBGKD_CONTROL_SET
+{
+    ULONG Continue;
+    ULONG64 CurrentSymbolStart;
+    ULONG64 CurrentSymbolEnd;
+} IA64_DBGKD_CONTROL_SET, *PIA64_DBGKD_CONTROL_SET;
+
+typedef struct _AMD64_DBGKD_CONTROL_SET
+{
+    ULONG TraceFlag;
+    ULONG64 Dr7;
+    ULONG64 CurrentSymbolStart;
+    ULONG64 CurrentSymbolEnd;
+} AMD64_DBGKD_CONTROL_SET, *PAMD64_DBGKD_CONTROL_SET;
+
+typedef struct _DBGKD_ANY_CONTROL_SET
+{
+    union
+    {
+        X86_DBGKD_CONTROL_SET X86ControlSet;
+        IA64_DBGKD_CONTROL_SET IA64ControlSet;
+        AMD64_DBGKD_CONTROL_SET Amd64ControlSet;
+    };
+} DBGKD_ANY_CONTROL_SET, *PDBGKD_ANY_CONTROL_SET;
+#include <poppack.h>
+
+typedef X86_DBGKD_CONTROL_SET DBGKD_CONTROL_SET;
+
+//
 // DBGKM Structure for Exceptions
 //
 typedef struct _DBGKM_EXCEPTION64
@@ -225,5 +270,194 @@ typedef struct _DBGKD_WAIT_STATE_CHANGE64
     DBGKD_CONTROL_REPORT ControlReport;
     CONTEXT Context;
 } DBGKD_WAIT_STATE_CHANGE64, *PDBGKD_WAIT_STATE_CHANGE64;
+
+//
+// DBGKD Manipulate Structures
+//
+typedef struct _DBGKD_READ_MEMORY64
+{
+    ULONG64 TargetBaseAddress;
+    ULONG TransferCount;
+    ULONG ActualBytesRead;
+} DBGKD_READ_MEMORY64, *PDBGKD_READ_MEMORY64;
+
+typedef struct _DBGKD_WRITE_MEMORY64
+{
+    ULONG64 TargetBaseAddress;
+    ULONG TransferCount;
+    ULONG ActualBytesWritten;
+} DBGKD_WRITE_MEMORY64, *PDBGKD_WRITE_MEMORY64;
+
+typedef struct _DBGKD_GET_CONTEXT
+{
+    ULONG Unused;
+} DBGKD_GET_CONTEXT, *PDBGKD_GET_CONTEXT;
+
+typedef struct _DBGKD_SET_CONTEXT
+{
+    ULONG ContextFlags;
+} DBGKD_SET_CONTEXT, *PDBGKD_SET_CONTEXT;
+
+typedef struct _DBGKD_WRITE_BREAKPOINT64
+{
+    ULONG64 BreakPointAddress;
+    ULONG BreakPointHandle;
+} DBGKD_WRITE_BREAKPOINT64, *PDBGKD_WRITE_BREAKPOINT64;
+
+typedef struct _DBGKD_RESTORE_BREAKPOINT
+{
+    ULONG BreakPointHandle;
+} DBGKD_RESTORE_BREAKPOINT, *PDBGKD_RESTORE_BREAKPOINT;
+
+typedef struct _DBGKD_CONTINUE
+{
+    NTSTATUS ContinueStatus;
+} DBGKD_CONTINUE, *PDBGKD_CONTINUE;
+
+#include <pshpack4.h>
+typedef struct _DBGKD_CONTINUE2
+{
+    NTSTATUS ContinueStatus;
+    union
+    {
+        DBGKD_CONTROL_SET ControlSet;
+        DBGKD_ANY_CONTROL_SET AnyControlSet;
+    };
+} DBGKD_CONTINUE2, *PDBGKD_CONTINUE2;
+#include <poppack.h>
+
+typedef struct _DBGKD_READ_WRITE_IO64
+{
+    ULONG64 IoAddress;
+    ULONG DataSize;
+    ULONG DataValue;
+} DBGKD_READ_WRITE_IO64, *PDBGKD_READ_WRITE_IO64;
+
+typedef struct _DBGKD_READ_WRITE_IO_EXTENDED64
+{
+    ULONG DataSize;
+    ULONG InterfaceType;
+    ULONG BusNumber;
+    ULONG AddressSpace;
+    ULONG64 IoAddress;
+    ULONG DataValue;
+} DBGKD_READ_WRITE_IO_EXTENDED64, *PDBGKD_READ_WRITE_IO_EXTENDED64;
+
+typedef struct _DBGKD_READ_WRITE_MSR
+{
+    ULONG Msr;
+    ULONG DataValueLow;
+    ULONG DataValueHigh;
+} DBGKD_READ_WRITE_MSR, *PDBGKD_READ_WRITE_MSR;
+
+typedef struct _DBGKD_QUERY_SPECIAL_CALLS
+{
+    ULONG NumberOfSpecialCalls;
+} DBGKD_QUERY_SPECIAL_CALLS, *PDBGKD_QUERY_SPECIAL_CALLS;
+
+typedef struct _DBGKD_SET_SPECIAL_CALL64
+{
+    ULONG64 SpecialCall;
+} DBGKD_SET_SPECIAL_CALL64, *PDBGKD_SET_SPECIAL_CALL64;
+
+typedef struct _DBGKD_SET_INTERNAL_BREAKPOINT64
+{
+    ULONG64 BreakpointAddress;
+    ULONG Flags;
+} DBGKD_SET_INTERNAL_BREAKPOINT64, *PDBGKD_SET_INTERNAL_BREAKPOINT64;
+
+typedef struct _DBGKD_GET_INTERNAL_BREAKPOINT64
+{
+    ULONG64 BreakpointAddress;
+    ULONG Flags;
+    ULONG Calls;
+    ULONG MaxCallsPerPeriod;
+    ULONG MinInstructions;
+    ULONG MaxInstructions;
+    ULONG TotalInstructions;
+} DBGKD_GET_INTERNAL_BREAKPOINT64, *PDBGKD_GET_INTERNAL_BREAKPOINT64;
+
+typedef struct _DBGKD_BREAKPOINTEX
+{
+    ULONG BreakPointCount;
+    NTSTATUS ContinueStatus;
+} DBGKD_BREAKPOINTEX, *PDBGKD_BREAKPOINTEX;
+
+typedef struct _DBGKD_SEARCH_MEMORY
+{
+    union
+    {
+        ULONG64 SearchAddress;
+        ULONG64 FoundAddress;
+    };
+    ULONG64 SearchLength;
+    ULONG PatternLength;
+} DBGKD_SEARCH_MEMORY, *PDBGKD_SEARCH_MEMORY;
+
+typedef struct _DBGKD_GET_SET_BUS_DATA
+{
+    ULONG BusDataType;
+    ULONG BusNumber;
+    ULONG SlotNumber;
+    ULONG Offset;
+    ULONG Length;
+} DBGKD_GET_SET_BUS_DATA, *PDBGKD_GET_SET_BUS_DATA;
+
+typedef struct _DBGKD_FILL_MEMORY
+{
+    ULONG64 Address;
+    ULONG Length;
+    USHORT Flags;
+    USHORT PatternLength;
+} DBGKD_FILL_MEMORY, *PDBGKD_FILL_MEMORY;
+
+typedef struct _DBGKD_QUERY_MEMORY
+{
+    ULONG64 Address;
+    ULONG64 Reserved;
+    ULONG AddressSpace;
+    ULONG Flags;
+} DBGKD_QUERY_MEMORY, *PDBGKD_QUERY_MEMORY;
+
+typedef struct _DBGKD_SWITCH_PARTITION
+{
+    ULONG Partition;
+} DBGKD_SWITCH_PARTITION;
+
+//
+// DBGKD Structure for Manipulate
+//
+typedef struct _DBGKD_MANIPULATE_STATE64
+{
+    ULONG ApiNumber;
+    USHORT ProcessorLevel;
+    USHORT Processor;
+    NTSTATUS ReturnStatus;
+    union
+    {
+        DBGKD_READ_MEMORY64 ReadMemory;
+        DBGKD_WRITE_MEMORY64 WriteMemory;
+        DBGKD_GET_CONTEXT GetContext;
+        DBGKD_SET_CONTEXT SetContext;
+        DBGKD_WRITE_BREAKPOINT64 WriteBreakPoint;
+        DBGKD_RESTORE_BREAKPOINT RestoreBreakPoint;
+        DBGKD_CONTINUE Continue;
+        DBGKD_CONTINUE2 Continue2;
+        DBGKD_READ_WRITE_IO64 ReadWriteIo;
+        DBGKD_READ_WRITE_IO_EXTENDED64 ReadWriteIoExtended;
+        DBGKD_QUERY_SPECIAL_CALLS QuerySpecialCalls;
+        DBGKD_SET_SPECIAL_CALL64 SetSpecialCall;
+        DBGKD_SET_INTERNAL_BREAKPOINT64 SetInternalBreakpoint;
+        DBGKD_GET_INTERNAL_BREAKPOINT64 GetInternalBreakpoint;
+        DBGKD_GET_VERSION64 GetVersion64;
+        DBGKD_BREAKPOINTEX BreakPointEx;
+        DBGKD_READ_WRITE_MSR ReadWriteMsr;
+        DBGKD_SEARCH_MEMORY SearchMemory;
+        DBGKD_GET_SET_BUS_DATA GetSetBusData;
+        DBGKD_FILL_MEMORY FillMemory;
+        DBGKD_QUERY_MEMORY QueryMemory;
+        DBGKD_SWITCH_PARTITION SwitchPartition;
+    } u;
+} DBGKD_MANIPULATE_STATE64, *PDBGKD_MANIPULATE_STATE64;
 
 #endif

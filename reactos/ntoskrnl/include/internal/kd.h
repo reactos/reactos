@@ -120,8 +120,8 @@ KdpPrint(
 ULONG
 NTAPI
 KdpSymbol(
-    IN LPSTR DllPath,
-    IN ULONG DllBase,
+    IN PSTRING DllPath,
+    IN PKD_SYMBOLS_INFO DllBase,
     IN BOOLEAN Unload,
     IN KPROCESSOR_MODE PreviousMode,
     IN PCONTEXT ContextRecord,
@@ -133,6 +133,15 @@ BOOLEAN
 NTAPI
 KdpPollBreakInWithPortLock(
     VOID
+);
+
+BOOLEAN
+NTAPI
+KdpReportLoadSymbolsStateChange(
+    IN PSTRING PathName,
+    IN PKD_SYMBOLS_INFO SymbolInfo,
+    IN BOOLEAN Unload,
+    IN OUT PCONTEXT Context
 );
 
 extern DBGKD_GET_VERSION64 KdVersionBlock;
@@ -167,3 +176,4 @@ extern LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 extern ULONG KdComponentTableSize;
 extern ULONG Kd_WIN2000_Mask;
 extern PULONG KdComponentTable[104];
+extern CHAR KdpMessageBuffer[4096], KdpPathBuffer[4096];

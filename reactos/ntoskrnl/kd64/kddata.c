@@ -83,6 +83,12 @@ KSPIN_LOCK KdpTimeSlipEventLock;
 LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 
 //
+// Buffers
+//
+CHAR KdpMessageBuffer[4096];
+CHAR KdpPathBuffer[4096];
+
+//
 // Debug Filter Masks
 //
 ULONG Kd_WIN2000_Mask = 1;

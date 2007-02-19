@@ -16,6 +16,488 @@
 
 VOID
 NTAPI
+KdpSetCommonState(IN ULONG NewState,
+                  IN PCONTEXT Context,
+                  IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange)
+{
+    USHORT InstructionCount;
+    BOOLEAN HadBreakpoints;
+
+    /* Setup common stuff available for all CPU architectures */
+    WaitStateChange->NewState = NewState;
+    WaitStateChange->ProcessorLevel = KeProcessorLevel;
+    WaitStateChange->Processor = (USHORT)KeGetCurrentPrcb()->Number;
+    WaitStateChange->NumberProcessors = (ULONG)KeNumberProcessors;
+    WaitStateChange->Thread = (ULONG)KeGetCurrentThread();
+    WaitStateChange->ProgramCounter = (ULONG64)Context->Eip;
+
+    /* Zero out the Control Report */
+    RtlZeroMemory(&WaitStateChange->ControlReport,
+                  sizeof(DBGKD_CONTROL_REPORT));
+
+    /* Now copy the instruction stream and set the count */
+    RtlCopyMemory(&WaitStateChange->ControlReport.InstructionStream[0],
+                  (PVOID)(ULONG_PTR)WaitStateChange->ProgramCounter,
+                  DBGKD_MAXSTREAM);
+    InstructionCount = DBGKD_MAXSTREAM;
+    WaitStateChange->ControlReport.InstructionCount = InstructionCount;
+
+    /* Clear all the breakpoints in this region */
+    HadBreakpoints = FALSE;
+#if 0
+        KdpDeleteBreakpointRange((PVOID)WaitStateChange->ProgramCounter,
+                                 (PVOID)(WaitStateChange->ProgramCounter +
+                                         WaitStateChange->ControlReport.
+                                         InstructionCount - 1));
+#endif
+    if (HadBreakpoints)
+    {
+        /* Copy the instruction stream again, this time without breakpoints */
+        RtlCopyMemory(&WaitStateChange->ControlReport.InstructionStream[0],
+                      (PVOID)(ULONG_PTR)WaitStateChange->ProgramCounter,
+                      WaitStateChange->ControlReport.InstructionCount);
+    }
+}
+
+VOID
+NTAPI
+KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
+                   IN PCONTEXT Context)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* Copy i386 specific debug registers */
+    WaitStateChange->ControlReport.Dr6 = Prcb->ProcessorState.SpecialRegisters.
+                                         KernelDr6;
+    WaitStateChange->ControlReport.Dr7 = Prcb->ProcessorState.SpecialRegisters.
+                                         KernelDr7;
+
+    /* Copy i386 specific segments */
+    WaitStateChange->ControlReport.SegCs = (USHORT)Context->SegCs;
+    WaitStateChange->ControlReport.SegDs = (USHORT)Context->SegDs;
+    WaitStateChange->ControlReport.SegEs = (USHORT)Context->SegEs;
+    WaitStateChange->ControlReport.SegFs = (USHORT)Context->SegFs;
+
+    /* Copy EFlags */
+    WaitStateChange->ControlReport.EFlags = Context->EFlags;
+
+    /* Set Report Flags */
+    WaitStateChange->ControlReport.ReportFlags = REPORT_INCLUDES_SEGS;
+    if (WaitStateChange->ControlReport.SegCs == KGDT_R0_CODE)
+    {
+        WaitStateChange->ControlReport.ReportFlags = REPORT_INCLUDES_CS;
+    }
+}
+
+BOOLEAN
+NTAPI
+KdpSendWaitContinue(IN ULONG PacketType,
+                    IN PSTRING SendHeader,
+                    IN PSTRING SendData OPTIONAL,
+                    IN OUT PCONTEXT ContextRecord)
+{
+    STRING Data, Header;
+    DBGKD_MANIPULATE_STATE64 ManipulateState;
+    ULONG Length;
+    KDSTATUS RecvCode;
+
+    /* Setup the Manipulate State structure */
+    Header.MaximumLength = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)&ManipulateState;
+    Data.MaximumLength = sizeof(KdpMessageBuffer);
+    Data.Buffer = KdpMessageBuffer;
+    //KdpContextSent = FALSE;
+
+SendPacket:
+    /* Send the Packet */
+    KdSendPacket(PacketType, SendHeader, SendData, &KdpContext);
+
+    /* If the debugger isn't present anymore, just return success */
+    if (KdDebuggerNotPresent) return TRUE;
+
+    /* Main processing Loop */
+    for (;;)
+    {
+        /* Receive Loop */
+        do
+        {
+            /* Wait to get a reply to our packet */
+            ManipulateState.ApiNumber = 0xFFFFFFFF;
+            RecvCode = KdReceivePacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                                       &Header,
+                                       &Data,
+                                       &Length,
+                                       &KdpContext);
+
+            /* If we got a resend request, do it */
+            if (RecvCode == KdPacketNeedsResend) goto SendPacket;
+        } while (RecvCode == KdPacketTimedOut);
+
+        /* Now check what API we got */
+        switch (ManipulateState.ApiNumber)
+        {
+            case DbgKdReadVirtualMemoryApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdReadVirtualMemoryApi);
+                while (TRUE);
+                break;
+
+            case DbgKdWriteVirtualMemoryApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdWriteVirtualMemoryApi);
+                while (TRUE);
+                break;
+
+            case DbgKdGetContextApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdGetContextApi);
+                while (TRUE);
+                break;
+
+            case DbgKdSetContextApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdSetContextApi);
+                while (TRUE);
+                break;
+
+            case DbgKdWriteBreakPointApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdWriteBreakPointApi);
+                while (TRUE);
+                break;
+
+            case DbgKdRestoreBreakPointApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdRestoreBreakPointApi);
+                while (TRUE);
+                break;
+
+            case DbgKdContinueApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdContinueApi);
+                while (TRUE);
+                break;
+
+            case DbgKdReadControlSpaceApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdReadControlSpaceApi);
+                while (TRUE);
+                break;
+
+            case DbgKdWriteControlSpaceApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdWriteControlSpaceApi);
+                while (TRUE);
+                break;
+
+            case DbgKdReadIoSpaceApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdReadIoSpaceApi);
+                while (TRUE);
+                break;
+
+            case DbgKdWriteIoSpaceApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdWriteIoSpaceApi);
+                while (TRUE);
+                break;
+
+            case DbgKdRebootApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdRebootApi);
+                while (TRUE);
+                break;
+
+            case DbgKdContinueApi2:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdContinueApi2);
+                while (TRUE);
+                break;
+
+            case DbgKdReadPhysicalMemoryApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdReadPhysicalMemoryApi);
+                while (TRUE);
+                break;
+
+            case DbgKdWritePhysicalMemoryApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdWritePhysicalMemoryApi);
+                while (TRUE);
+                break;
+
+            case DbgKdQuerySpecialCallsApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdQuerySpecialCallsApi);
+                while (TRUE);
+                break;
+
+            case DbgKdSetSpecialCallApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdSetSpecialCallApi);
+                while (TRUE);
+                break;
+
+            case DbgKdClearSpecialCallsApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdClearSpecialCallsApi);
+                while (TRUE);
+                break;
+
+            case DbgKdSetInternalBreakPointApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdSetInternalBreakPointApi);
+                while (TRUE);
+                break;
+
+            case DbgKdGetInternalBreakPointApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdGetInternalBreakPointApi);
+                while (TRUE);
+                break;
+
+            case DbgKdReadIoSpaceExtendedApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdReadIoSpaceExtendedApi);
+                while (TRUE);
+                break;
+
+            case DbgKdWriteIoSpaceExtendedApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdWriteIoSpaceExtendedApi);
+                while (TRUE);
+                break;
+
+            case DbgKdGetVersionApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdGetVersionApi);
+                while (TRUE);
+                break;
+
+            case DbgKdWriteBreakPointExApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdWriteBreakPointExApi);
+                while (TRUE);
+                break;
+
+            case DbgKdRestoreBreakPointExApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdRestoreBreakPointExApi);
+                while (TRUE);
+                break;
+
+            case DbgKdCauseBugCheckApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdCauseBugCheckApi);
+                while (TRUE);
+                break;
+
+            case DbgKdSwitchProcessor:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdSwitchProcessor);
+                while (TRUE);
+                break;
+
+            case DbgKdPageInApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdPageInApi);
+                while (TRUE);
+                break;
+
+            case DbgKdReadMachineSpecificRegister:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdReadMachineSpecificRegister);
+                while (TRUE);
+                break;
+
+            case DbgKdWriteMachineSpecificRegister:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdWriteMachineSpecificRegister);
+                while (TRUE);
+                break;
+
+            case OldVlm1:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(OldVlm1);
+                while (TRUE);
+                break;
+
+            case OldVlm2:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(OldVlm2);
+                while (TRUE);
+                break;
+
+            case DbgKdSearchMemoryApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdSearchMemoryApi);
+                while (TRUE);
+                break;
+
+            case DbgKdGetBusDataApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdGetBusDataApi);
+                while (TRUE);
+                break;
+
+            case DbgKdSetBusDataApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdSetBusDataApi);
+                while (TRUE);
+                break;
+
+            case DbgKdCheckLowMemoryApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdCheckLowMemoryApi);
+                while (TRUE);
+                break;
+
+            case DbgKdClearAllInternalBreakpointsApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdClearAllInternalBreakpointsApi);
+                while (TRUE);
+                break;
+
+            case DbgKdFillMemoryApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdFillMemoryApi);
+                while (TRUE);
+                break;
+
+            case DbgKdQueryMemoryApi:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdQueryMemoryApi);
+                while (TRUE);
+                break;
+
+            case DbgKdSwitchPartition:
+
+                /* FIXME: TODO */
+                Ke386SetCr2(DbgKdSwitchPartition);
+                while (TRUE);
+                break;
+
+            /* Unsupported Message */
+            default:
+
+                /* Setup an empty message, with failure */
+                while (TRUE);
+                Data.Length = 0;
+                ManipulateState.ReturnStatus = STATUS_UNSUCCESSFUL;
+
+                /* Send it */
+                KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                             &Header,
+                             &Data,
+                             &KdpContext);
+                break;
+        }
+    }
+}
+
+BOOLEAN
+NTAPI
+KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
+                                IN PKD_SYMBOLS_INFO SymbolInfo,
+                                IN BOOLEAN Unload,
+                                IN OUT PCONTEXT Context)
+{
+    PSTRING ExtraData;
+    STRING Data, Header;
+    DBGKD_WAIT_STATE_CHANGE64 WaitStateChange;
+    KCONTINUE_STATUS Status;
+
+    /* Start wait loop */
+    do
+    {
+        /* Build the architecture common parts of the message */
+        KdpSetCommonState(DbgKdLoadSymbolsStateChange,
+                          Context,
+                          &WaitStateChange);
+
+        /* Now finish creating the structure */
+        KdpSetContextState(&WaitStateChange, Context);
+
+        /* Fill out load data */
+        WaitStateChange.u.LoadSymbols.UnloadSymbols = Unload;
+        WaitStateChange.u.LoadSymbols.BaseOfDll = (ULONG)SymbolInfo->BaseOfDll;
+        WaitStateChange.u.LoadSymbols.ProcessId = SymbolInfo->ProcessId;
+        WaitStateChange.u.LoadSymbols.CheckSum = SymbolInfo->CheckSum;
+        WaitStateChange.u.LoadSymbols.SizeOfImage = SymbolInfo->SizeOfImage;
+
+        /* Check if we have a symbol name */
+        if (PathName)
+        {
+            /* Setup the information */
+            WaitStateChange.u.LoadSymbols.PathNameLength = PathName->Length;
+            Data.Buffer = KdpPathBuffer;
+            Data.Length = WaitStateChange.u.LoadSymbols.PathNameLength;
+            ExtraData = &Data;
+        }
+        else
+        {
+            /* No name */
+            WaitStateChange.u.LoadSymbols.PathNameLength = 0;
+            ExtraData = NULL;
+        }
+
+        /* Setup the header */
+        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64);
+        Header.Buffer = (PCHAR)&WaitStateChange;
+
+        /* Send the packet */
+        Status = KdpSendWaitContinue(PACKET_TYPE_KD_STATE_CHANGE64,
+                                     &Header,
+                                     ExtraData,
+                                     Context);
+    } while(Status == ContinueProcessorReselected);
+
+    /* Return status */
+    while (TRUE);
+    return Status;
+}
+
+VOID
+NTAPI
 KdpTimeSlipDpcRoutine(IN PKDPC Dpc,
                       IN PVOID DeferredContext,
                       IN PVOID SystemArgument1,

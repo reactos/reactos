@@ -12,8 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-CHAR KdpMessageBuffer[4096];
-
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
@@ -68,8 +66,8 @@ KdpCommandString(IN ULONG Length,
 
 ULONG
 NTAPI
-KdpSymbol(IN LPSTR DllPath,
-          IN ULONG DllBase,
+KdpSymbol(IN PSTRING DllPath,
+          IN PKD_SYMBOLS_INFO DllBase,
           IN BOOLEAN Unload,
           IN KPROCESSOR_MODE PreviousMode,
           IN PCONTEXT ContextRecord,
@@ -93,15 +91,11 @@ KdpSymbol(IN LPSTR DllPath,
                   sizeof(CONTEXT));
 
     /* Report the new state */
-#if 0
     Status = KdpReportLoadSymbolsStateChange(DllPath,
                                              DllBase,
                                              Unload,
                                              &Prcb->ProcessorState.
                                              ContextFrame);
-#else
-    Status = FALSE;
-#endif
 
     /* Now restore the processor state, manually again. */
     RtlCopyMemory(ContextRecord,

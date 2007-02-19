@@ -1,6 +1,13 @@
 #ifndef _KDDLL_
 #define _KDDLL_
 
+typedef enum _KDSTATUS
+{
+    KdPacketReceived = 0,
+    KdPacketTimedOut,
+    KdPacketNeedsResend
+} KDSTATUS;
+
 NTSTATUS
 NTAPI
 KdDebuggerInitialize0(
@@ -13,7 +20,7 @@ KdDebuggerInitialize1(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-ULONG
+KDSTATUS
 NTAPI
 KdReceivePacket(
     IN ULONG PacketType,

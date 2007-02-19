@@ -298,6 +298,17 @@ typedef enum _ADJUST_REASON
 } ADJUST_REASON;
 
 //
+// Continue Status
+//
+typedef enum _KCONTINUE_STATUS
+{
+    ContinueError = 0,
+    ContinueSuccess,
+    ContinueProcessorReselected,
+    ContinueNextProcessor
+} KCONTINUE_STATUS;
+
+//
 // Process States
 //
 typedef enum _KPROCESS_STATE

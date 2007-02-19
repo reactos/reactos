@@ -154,8 +154,8 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
             case BREAKPOINT_LOAD_SYMBOLS:
 
                 /* Call the worker routine */
-                KdpSymbol(UlongToPtr(ExceptionRecord->ExceptionInformation[1]),
-                          (ULONG)ExceptionRecord->ExceptionInformation[2],
+                KdpSymbol((PVOID)ExceptionRecord->ExceptionInformation[1],
+                          (PVOID)ExceptionRecord->ExceptionInformation[2],
                           Unload,
                           PreviousMode,
                           ContextRecord,
