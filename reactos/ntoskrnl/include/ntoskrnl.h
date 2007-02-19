@@ -8,13 +8,14 @@
 
 /* INCLUDES ******************************************************************/
 
-/* Always target Windows 2003 Service Pack 1 */
+/* Version Data */
+#include <ntverp.h>
 #define _WIN32_WINNT _WIN32_WINNT_WS03
 #define NTDDI_VERSION NTDDI_WS03SP1
-#define NTKERNELAPI
-#define NOEXTAPI
 
 /* DDK/IFS/NDK Headers */
+#define NTKERNELAPI
+#define NOEXTAPI
 #include <ntifs.h>
 #undef _KPROCESS
 #undef _EPROCESS
@@ -42,10 +43,8 @@
 #include <pseh/pseh.h>
 
 /* ReactOS Headers */
-#include <reactos/version.h>
-#include <reactos/resource.h>
+#include <reactos/buildno.h>
 #include <reactos/bugcodes.h>
-#include <reactos/rossym.h>
 #define ExRaiseStatus RtlRaiseStatus
 #include <reactos/probe.h>
 

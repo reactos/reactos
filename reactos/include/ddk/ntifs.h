@@ -44,7 +44,9 @@ extern "C" {
 
 #pragma pack(push,4)
 
+#ifndef VER_PRODUCTBUILD
 #define VER_PRODUCTBUILD 10000
+#endif
 
 #ifndef NTSYSAPI
 #define NTSYSAPI
