@@ -216,10 +216,7 @@ DlgProc(HWND hDlg,
             switch(wParam)
             {
                 case ID_ABOUT:
-                    DialogBox(hInstance,
-                              MAKEINTRESOURCE(IDD_ABOUTBOX),
-                              hDlg,
-                              AboutDialogProc);
+                    ShowAboutDlg(hDlg);
                 break;
             }
         }
@@ -234,10 +231,10 @@ DlgProc(HWND hDlg,
 
 
 INT WINAPI
-WinMain(HINSTANCE hInst,
-        HINSTANCE hPrev,
-        LPSTR Cmd,
-        int iCmd)
+_tWinMain(HINSTANCE hInst,
+          HINSTANCE hPrev,
+          LPTSTR Cmd,
+          int iCmd)
 {
     INITCOMMONCONTROLSEX iccx;
     INT Ret = 1;
