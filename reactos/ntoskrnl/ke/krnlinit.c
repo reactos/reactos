@@ -62,8 +62,8 @@ KiInitSystem(VOID)
     ULONG i;
 
     /* Initialize Bugcheck Callback data */
-    InitializeListHead(&BugcheckCallbackListHead);
-    InitializeListHead(&BugcheckReasonCallbackListHead);
+    InitializeListHead(&KeBugcheckCallbackListHead);
+    InitializeListHead(&KeBugcheckReasonCallbackListHead);
     KeInitializeSpinLock(&BugCheckCallbackLock);
 
     /* Initialize the Timer Expiration DPC */

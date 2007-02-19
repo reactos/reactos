@@ -503,6 +503,7 @@ Author:
 #define CBSTACK_STACK                           0x0
 #define CBSTACK_TRAP_FRAME                      0x4
 #define CBSTACK_CALLBACK_STACK                  0x8
+#define CBSTACK_EBP                             0x18
 #define CBSTACK_RESULT                          0x20
 #define CBSTACK_RESULT_LENGTH                   0x24
 

@@ -126,7 +126,7 @@ extern LARGE_INTEGER KiTimeIncrementReciprocal;
 extern UCHAR KiTimeIncrementShiftCount;
 extern ULONG KiTimeLimitIsrMicroseconds;
 extern ULONG KiServiceLimit;
-extern LIST_ENTRY BugcheckCallbackListHead, BugcheckReasonCallbackListHead;
+extern LIST_ENTRY KeBugcheckCallbackListHead, KeBugcheckReasonCallbackListHead;
 extern KSPIN_LOCK BugCheckCallbackLock;
 extern KDPC KiTimerExpireDpc;
 extern KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
@@ -150,6 +150,8 @@ extern PVOID KeRaiseUserExceptionDispatcher;
 extern UCHAR KiDebugRegisterTrapOffsets[9];
 extern UCHAR KiDebugRegisterContextOffsets[9];
 extern ULONG KiFreezeFlag;
+extern ULONG KeTimeIncrement;
+extern PVOID KiBugCheckData;
 
 /* MACROS *************************************************************************/
 

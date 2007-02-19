@@ -198,7 +198,7 @@ ObInit(VOID)
     ObjectTypeInitializer.GenericMapping = ObpTypeMapping;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_TYPE);
     ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObTypeObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObpTypeObjectType);
 
     /* Create the Directory Type */
     RtlInitUnicodeString(&Name, L"Directory");
@@ -247,7 +247,7 @@ ObPostPhase0:
                                        0,
                                        ObDirectoryType,
                                        KernelMode,
-                                       (PVOID*)&NameSpaceRoot,
+                                       (PVOID*)&ObpRootDirectoryObject,
                                        NULL);
     if (!NT_SUCCESS(Status)) return FALSE;
 
@@ -289,7 +289,7 @@ ObPostPhase0:
     ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
 
     /* Loop the object types */
-    ListHead = &ObTypeObjectType->TypeList;
+    ListHead = &ObpTypeObjectType->TypeList;
     NextEntry = ListHead->Flink;
     while (ListHead != NextEntry)
     {

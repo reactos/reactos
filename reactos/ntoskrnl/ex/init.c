@@ -24,8 +24,18 @@ ULONG NtMajorVersion = 5;
 ULONG NtMinorVersion = 0;
 ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(4, 0);
 ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
+
+/* NT System Info */
 ULONG NtGlobalFlag;
 ULONG ExSuiteMask;
+
+/* Cm Version Info */
+ULONG CmNtSpBuildNumber;
+ULONG CmNtCSDVersion;
+ULONG CmNtCSDReleaseType;
+UNICODE_STRING CmVersionString;
+UNICODE_STRING CmCSDVersionString;
+CHAR NtBuildLab[] = KERNEL_VERSION_BUILD_STR;
 
 /* Init flags and settings */
 ULONG ExpInitializationPhase;

@@ -23,7 +23,7 @@ typedef struct _IOP_ERROR_LOG_WORKER_DPC
 /* GLOBALS *******************************************************************/
 
 LONG IopTotalLogSize;
-LIST_ENTRY IopLogListHead;
+LIST_ENTRY IopErrorLogListHead;
 KSPIN_LOCK IopLogListLock;
 
 BOOLEAN IopLogWorkerRunning;
@@ -59,7 +59,7 @@ IopGetErrorLogEntry(VOID)
 
     /* Acquire the lock and check if the list is empty */
     KeAcquireSpinLock(&IopLogListLock, &OldIrql);
-    if (IsListEmpty(&IopLogListHead))
+    if (IsListEmpty(&IopErrorLogListHead))
     {
         /* List is empty, disable the worker and return NULL */
         IopLogWorkerRunning = FALSE;
@@ -68,7 +68,7 @@ IopGetErrorLogEntry(VOID)
     else
     {
         /* Otherwise, remove an entry */
-        ListEntry = RemoveHeadList(&IopLogListHead);
+        ListEntry = RemoveHeadList(&IopErrorLogListHead);
     }
 
     /* Release the lock and return the entry */
@@ -420,7 +420,7 @@ IopLogWorker(IN PVOID Parameter)
         if (!NT_SUCCESS(Status))
         {
             /* Requeue log message and restart the worker */
-            ExInterlockedInsertTailList(&IopLogListHead,
+            ExInterlockedInsertTailList(&IopErrorLogListHead,
                                         &LogEntry->ListEntry,
                                         &IopLogListLock);
             IopLogWorkerRunning = FALSE;
@@ -581,7 +581,7 @@ IoWriteErrorLogEntry(IN PVOID ElEntry)
 
     /* Acquire the lock and insert this write in the list */
     KeAcquireSpinLock(&IopLogListLock, &Irql);
-    InsertHeadList(&IopLogListHead, &LogEntry->ListEntry);
+    InsertHeadList(&IopErrorLogListHead, &LogEntry->ListEntry);
 
     /* Check if the worker is runnign */
     if (!IopLogWorkerRunning)

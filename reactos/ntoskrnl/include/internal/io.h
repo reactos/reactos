@@ -968,6 +968,7 @@ extern GENERIC_MAPPING IopCompletionMapping;
 extern GENERIC_MAPPING IopFileMapping;
 extern POBJECT_TYPE _IoFileObjectType;
 extern HAL_DISPATCH _HalDispatchTable;
+extern LIST_ENTRY IopErrorLogListHead;
 
 //
 // Inlined Functions

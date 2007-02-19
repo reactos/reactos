@@ -18,8 +18,8 @@
 
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY BugcheckCallbackListHead;
-LIST_ENTRY BugcheckReasonCallbackListHead;
+LIST_ENTRY KeBugcheckCallbackListHead;
+LIST_ENTRY KeBugcheckReasonCallbackListHead;
 KSPIN_LOCK BugCheckCallbackLock;
 ULONG KeBugCheckActive, KeBugCheckOwner;
 LONG KeBugCheckOwnerRecursionCount;
@@ -209,7 +209,7 @@ KiDoBugCheckCallbacks(VOID)
     ULONG_PTR Checksum;
 
     /* First make sure that the list is Initialized... it might not be */
-    ListHead = &BugcheckCallbackListHead;
+    ListHead = &KeBugcheckCallbackListHead;
     if ((ListHead->Flink) && (ListHead->Blink))
     {
         /* Loop the list */
@@ -1033,7 +1033,7 @@ KeRegisterBugCheckCallback(IN PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
         CallbackRecord->Component = Component;
         CallbackRecord->CallbackRoutine = CallbackRoutine;
         CallbackRecord->State = BufferInserted;
-        InsertTailList(&BugcheckCallbackListHead, &CallbackRecord->Entry);
+        InsertTailList(&KeBugcheckCallbackListHead, &CallbackRecord->Entry);
         Status = TRUE;
     }
 
@@ -1067,7 +1067,7 @@ KeRegisterBugCheckReasonCallback(
         CallbackRecord->CallbackRoutine = CallbackRoutine;
         CallbackRecord->State = BufferInserted;
         CallbackRecord->Reason = Reason;
-        InsertTailList(&BugcheckReasonCallbackListHead,
+        InsertTailList(&KeBugcheckReasonCallbackListHead,
                        &CallbackRecord->Entry);
         Status = TRUE;
     }

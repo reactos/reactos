@@ -19,7 +19,7 @@
 
 extern ULONG NtGlobalFlag;
 
-POBJECT_TYPE ObTypeObjectType = NULL;
+POBJECT_TYPE ObpTypeObjectType = NULL;
 KEVENT ObpDefaultObject;
 
 NPAGED_LOOKASIDE_LIST ObpNmLookasideList, ObpCiLookasideList;
@@ -1074,7 +1074,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     /* Allocate the Object */
     Status = ObpAllocateObject(NULL,
                                &ObjectName,
-                               ObTypeObjectType,
+                               ObpTypeObjectType,
                                sizeof(OBJECT_TYPE),
                                KernelMode,
                                (POBJECT_HEADER*)&Header);
@@ -1098,11 +1098,11 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     LocalObjectType->HighWaterNumberOfHandles = 0;
 
     /* Check if this is the first Object Type */
-    if (!ObTypeObjectType)
+    if (!ObpTypeObjectType)
     {
         /* It is, so set this as the type object */
-        ObTypeObjectType = LocalObjectType;
-        Header->Type = ObTypeObjectType;
+        ObpTypeObjectType = LocalObjectType;
+        Header->Type = ObpTypeObjectType;
 
         /* Set the hard-coded key and object count */
         LocalObjectType->TotalNumberOfObjects = 1;
@@ -1195,11 +1195,11 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
     /* Get creator info and insert it into the type list */
     CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(Header);
-    if (CreatorInfo) InsertTailList(&ObTypeObjectType->TypeList,
+    if (CreatorInfo) InsertTailList(&ObpTypeObjectType->TypeList,
                                     &CreatorInfo->TypeList);
 
     /* Set the index and the entry into the object type array */
-    LocalObjectType->Index = ObTypeObjectType->TotalNumberOfObjects;
+    LocalObjectType->Index = ObpTypeObjectType->TotalNumberOfObjects;
     if (LocalObjectType->Index < 32)
     {
         /* It fits, insert it */

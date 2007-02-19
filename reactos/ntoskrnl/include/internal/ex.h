@@ -18,9 +18,12 @@ extern ERESOURCE ExpFirmwareTableResource;
 extern LIST_ENTRY ExpFirmwareTableProviderListHead;
 extern BOOLEAN ExpIsWinPEMode;
 extern ULONG NtGlobalFlag;
+extern LIST_ENTRY ExpSystemResourcesList;
 ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 PVOID ExpNlsSectionPointer;
+extern CHAR NtBuildLab[];
+extern ULONG CmNtCSDVersion;
 
 typedef struct _EXHANDLE
 {

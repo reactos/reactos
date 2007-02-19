@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
+
 /* GLOBALS *******************************************************************/
 
 //
@@ -34,13 +36,6 @@ DBGKD_GET_VERSION64 KdVersionBlock =
     0,
     0
 };
-
-//
-// Debugger Data
-//
-KDDEBUGGER_DATA64 KdDebuggerDataBlock;
-LIST_ENTRY KdpDebuggerDataListHead;
-KSPIN_LOCK KdpDataSpinLock;
 
 //
 // Debugger State
@@ -87,6 +82,16 @@ LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 //
 CHAR KdpMessageBuffer[4096];
 CHAR KdpPathBuffer[4096];
+
+//
+// KdPrint Buffers
+//
+CHAR KdPrintDefaultCircularBuffer[0x8000];
+PCHAR KdPrintWritePointer = KdPrintDefaultCircularBuffer;
+ULONG KdPrintRolloverCount;
+PCHAR KdPrintCircularBuffer = KdPrintDefaultCircularBuffer;
+ULONG KdPrintBufferSize = sizeof(KdPrintDefaultCircularBuffer);
+ULONG KdPrintBufferChanges = 0;
 
 //
 // Debug Filter Masks
@@ -309,3 +314,143 @@ PULONG KdComponentTable[104] =
 };
 
 ULONG KdComponentTableSize = sizeof(KdComponentTable);
+
+//
+// Debugger Data
+//
+LIST_ENTRY KdpDebuggerDataListHead;
+KSPIN_LOCK KdpDataSpinLock;
+KDDEBUGGER_DATA64 KdDebuggerDataBlock =
+{
+    {{0}},
+    0,
+    {PtrToUlong(RtlpBreakWithStatusInstruction)},
+    0,
+    FIELD_OFFSET(KTHREAD, CallbackStack),
+    CBSTACK_CALLBACK_STACK,
+    CBSTACK_EBP,
+    0,
+    {PtrToUlong(KiCallUserMode)},
+    {0},
+    {PtrToUlong(&PsLoadedModuleList)},
+    {PtrToUlong(&PsActiveProcessHead)},
+    {PtrToUlong(&PspCidTable)},
+    {PtrToUlong(&ExpSystemResourcesList)},
+    {0},                                                        // ExpPagedPoolDescriptor
+    {0},                                                        // ExpNumberOfPagedPools
+    {PtrToUlong(&KeTimeIncrement)},
+    {PtrToUlong(&KeBugcheckCallbackListHead)},
+    {PtrToUlong(&KiBugCheckData)},
+    {PtrToUlong(&IopErrorLogListHead)},
+    {PtrToUlong(&ObpRootDirectoryObject)},
+    {PtrToUlong(&ObpTypeObjectType)},
+    {0},                                                        // MmSystemCacheStart
+    {0},                                                        // MmSystemCacheEnd
+    {0},                                                        // MmSystemCacheWs
+    {0},                                                        // MmPfnDatabase
+    {0},                                                        // MmSystemPtesStart
+    {0},                                                        // MmSystemPtesEnd
+    {0},                                                        // MmSubsectionBase
+    {0},                                                        // MmNumberOfPagingFiles
+    {0},                                                        // MmLowestPhysicalPage
+    {0},                                                        // MmHighestPhysicalPage
+    {0},                                                        // MmNumberOfPhysicalPages
+    {0},                                                        // MmMaximumNonPagedPoolInBytes
+    {0},                                                        // MmNonPagedSystemStart
+    {0},                                                        // MmNonPagedPoolStart
+    {0},                                                        // MmNonPagedPoolEnd
+    {0},                                                        // MmPagedPoolStart
+    {0},                                                        // MmPagedPoolEnd
+    {0},                                                        // MmPagedPoolInfo
+    PAGE_SIZE,
+    {0},                                                        // MmSizeOfPagedPoolInBytes
+    {0},                                                        // MmTotalCommitLimit
+    {0},                                                        // MmTotalCommittedPages
+    {0},                                                        // MmSharedCommit
+    {0},                                                        // MmDriverCommit
+    {0},                                                        // MmProcessCommit
+    {0},                                                        // MmPagedPoolCommit
+    {0},
+    {0},                                                        // MmZeroedPageListHead
+    {0},                                                        // MmFreePageListHead
+    {0},                                                        // MmStandbyPageListHead
+    {0},                                                        // MmModifiedPageListHead
+    {0},                                                        // MmModifiedNoWritePageListHead
+    {0},                                                        // MmAvailablePages
+    {0},                                                        // MmResidentAvailablePages
+    {0},                                                        // PoolTrackTable
+    {0},                                                        // NonPagedPoolDescriptor
+    {PtrToUlong(&MmHighestUserAddress)},
+    {PtrToUlong(&MmSystemRangeStart)},
+    {PtrToUlong(&MmUserProbeAddress)},
+    {PtrToUlong(KdPrintDefaultCircularBuffer)},
+    {PtrToUlong(KdPrintDefaultCircularBuffer + 1)},
+    {PtrToUlong(&KdPrintWritePointer)},
+    {PtrToUlong(&KdPrintRolloverCount)},
+    {0},                                                        // MmLoadedUserImageList
+    {PtrToUlong(&NtBuildLab)},
+    {0},
+    {PtrToUlong(KiProcessorBlock)},
+    {0},                                                        // MmUnloadedDrivers
+    {0},                                                        // MmLastUnloadedDrivers
+    {0},                                                        // MmTriageActionTaken
+    {0},                                                        // MmSpecialPoolTag
+    {0},                                                        // KernelVerifier
+    {0},                                                        // MmVerifierData
+    {0},                                                        // MmAllocatedNonPagedPool
+    {0},                                                        // MmPeakCommitment
+    {0},                                                        // MmtotalCommitLimitMaximum
+    {PtrToUlong(&CmNtCSDVersion)},
+    {0},                                                        // MmPhysicalMemoryBlock
+    {0},                                                        // MmSessionBase
+    {0},                                                        // MmSessionSize
+    {0},
+    {0},
+    FIELD_OFFSET(KTHREAD, NextProcessor),
+    FIELD_OFFSET(KTHREAD, Teb),
+    FIELD_OFFSET(KTHREAD, KernelStack),
+    FIELD_OFFSET(KTHREAD, InitialStack),
+    FIELD_OFFSET(KTHREAD, ApcState.Process),
+    FIELD_OFFSET(KTHREAD, State),
+    0,
+    0,
+    sizeof(EPROCESS),
+    FIELD_OFFSET(EPROCESS, Peb),
+    FIELD_OFFSET(EPROCESS, InheritedFromUniqueProcessId),
+    FIELD_OFFSET(EPROCESS, Pcb.DirectoryTableBase),
+    sizeof(KPRCB),
+    FIELD_OFFSET(KPRCB, DpcRoutineActive),
+    FIELD_OFFSET(KPRCB, CurrentThread),
+    FIELD_OFFSET(KPRCB, MHz),
+    FIELD_OFFSET(KPRCB, CpuType),
+    FIELD_OFFSET(KPRCB, VendorString),
+    FIELD_OFFSET(KPRCB, ProcessorState.ContextFrame),
+    FIELD_OFFSET(KPRCB, Number),
+    sizeof(ETHREAD),
+    {PtrToUlong(KdPrintDefaultCircularBuffer)},
+    {PtrToUlong(&KdPrintBufferSize)},
+    {PtrToUlong(&KeLoaderBlock)},
+    sizeof(KIPCR) + sizeof(KPRCB),
+    FIELD_OFFSET(KIPCR, Self),
+    FIELD_OFFSET(KPCR, Prcb),
+    FIELD_OFFSET(KIPCR, PrcbData),
+    0,
+    0,
+    0,
+    0,
+    0,
+    FIELD_OFFSET(KIPCR, PrcbData) +
+    FIELD_OFFSET(KPRCB, ProcessorState.SpecialRegisters),
+    KGDT_R0_CODE,
+    KGDT_R0_DATA,
+    KGDT_R0_PCR,
+    KGDT_R3_CODE,
+    KGDT_R3_DATA,
+    KGDT_R3_TEB,
+    KGDT_LDT,
+    KGDT_TSS,
+    0,
+    0,
+    {0},                                                        // IopNumTriagDumpDataBlocks
+    {0},                                                        // IopTriageDumpDataBlocks
+};
