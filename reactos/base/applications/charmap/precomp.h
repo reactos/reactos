@@ -12,9 +12,10 @@
 #define YLARGE 25
 
 #define FM_SETFONT (WM_USER + 1)
+#define FM_GETCHAR (WM_USER + 2)
+#define FM_SETCHAR (WM_USER + 3)
 
 extern HINSTANCE hInstance;
-
 
 typedef struct _CELL
 {
@@ -39,9 +40,17 @@ typedef struct _MAP
     INT iPage;
 } MAP, *PMAP;
 
+typedef struct {
+    NMHDR hdr;
+    TCHAR ch;
+} MAPNOTIFY, *LPMAPNOTIFY;
+
+
+LRESULT CALLBACK LrgCellWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 VOID ShowAboutDlg(HWND hWndParent);
 
 BOOL RegisterMapClasses(HINSTANCE hInstance);
 VOID UnregisterMapClasses(HINSTANCE hInstance);
 
-#endif /* __DEVMGMT_PRECOMP_H */
+#endif /* __CHARMAP_PRECOMP_H */

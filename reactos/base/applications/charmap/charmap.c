@@ -75,11 +75,10 @@ FillFontStyleComboList(HWND hwndCombo)
     ReleaseDC(hwndCombo,
               hdc);
 
-    /* set default to Arial */
     SendMessage(hwndCombo,
-                CB_SELECTSTRING,
-                -1,
-                (LPARAM)_T("Arial"));
+                CB_SETCURSEL,
+                0,
+                0);
 }
 
 
@@ -105,7 +104,7 @@ ChangeMapFont(HWND hDlg)
         {
             SendMessage(hCombo,
                         WM_GETTEXT,
-                        31,
+                        Len + 1,
                         (LPARAM)lpFontName);
 
             hMap = GetDlgItem(hDlg, IDC_FONTMAP);
@@ -115,6 +114,58 @@ ChangeMapFont(HWND hDlg)
                         0,
                         (LPARAM)lpFontName);
         }
+    }
+}
+
+
+static VOID
+AddCharToSelection(HWND hText,
+                   TCHAR ch)
+{
+    LPTSTR lpText;
+    INT Len = GetWindowTextLength(hText);
+
+    if (Len != 0)
+    {
+        lpText = HeapAlloc(GetProcessHeap(),
+                           0,
+                           (Len + 2) * sizeof(TCHAR));
+
+        if (lpText)
+        {
+            LPTSTR lpStr = lpText;
+
+            SendMessage(hText,
+                        WM_GETTEXT,
+                        Len + 1,
+                        (LPARAM)lpStr);
+
+            lpStr += Len;
+            *lpStr = ch;
+            lpStr++;
+            *lpStr = _T('\0');
+
+            SendMessage(hText,
+                        WM_SETTEXT,
+                        0,
+                        (LPARAM)lpText);
+
+            HeapFree(GetProcessHeap(),
+                     0,
+                     lpText);
+        }
+    }
+    else
+    {
+        TCHAR szText[2];
+
+        szText[0] = ch;
+        szText[1] = _T('\0');
+
+        SendMessage(hText,
+                    WM_SETTEXT,
+                    0,
+                    (LPARAM)szText);
     }
 }
 
@@ -204,6 +255,19 @@ DlgProc(HWND hDlg,
                 }
                 break;
 
+                case IDC_SELECT:
+                {
+                    TCHAR ch;
+                    HWND hMap = GetDlgItem(hDlg, IDC_FONTMAP);
+
+                    ch = SendMessage(hMap, FM_GETCHAR, 0, 0);
+
+                    AddCharToSelection(GetDlgItem(hDlg, IDC_TEXTBOX),
+                                       ch);
+
+                    break;
+                }
+
                 case IDOK:
                     EndDialog(hDlg, 0);
                 break;
@@ -217,6 +281,29 @@ DlgProc(HWND hDlg,
             {
                 case ID_ABOUT:
                     ShowAboutDlg(hDlg);
+                break;
+            }
+        }
+        break;
+
+        case WM_NOTIFY:
+        {
+            LPMAPNOTIFY lpnm = (LPMAPNOTIFY)lParam;
+
+            switch (lpnm->hdr.idFrom)
+            {
+                case IDC_FONTMAP:
+                {
+                    switch (lpnm->hdr.code)
+                    {
+                        case FM_SETCHAR:
+                        {
+                            AddCharToSelection(GetDlgItem(hDlg, IDC_TEXTBOX),
+                                               lpnm->ch);
+                        }
+                        break;
+                    }
+                }
                 break;
             }
         }

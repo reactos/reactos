@@ -11,7 +11,8 @@ SetLrgFont(PMAP infoPtr)
     LPTSTR lpFontName;
     INT Len;
 
-    hCombo = GetDlgItem(infoPtr->hParent, IDC_FONTCOMBO);
+    hCombo = GetDlgItem(infoPtr->hParent, 
+                        IDC_FONTCOMBO);
 
     Len = GetWindowTextLength(hCombo);
 
@@ -28,12 +29,14 @@ SetLrgFont(PMAP infoPtr)
                         31,
                         (LPARAM)lpFontName);
             
-            ZeroMemory(&lf, sizeof(lf));
+            ZeroMemory(&lf, 
+                       sizeof(lf));
 
             hdc = GetDC(infoPtr->hLrgWnd);
             lf.lfHeight = GetDeviceCaps(hdc,
                                         LOGPIXELSY) / 2;
-            ReleaseDC(infoPtr->hLrgWnd, hdc);
+            ReleaseDC(infoPtr->hLrgWnd, 
+                      hdc);
 
             lf.lfCharSet =  DEFAULT_CHARSET;
             lstrcpy(lf.lfFaceName,

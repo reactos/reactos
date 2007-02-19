@@ -72,7 +72,6 @@ static VOID
 FillGrid(PMAP infoPtr,
          HDC hdc)
 {
-    //GLYPHSET gs;
     HFONT hOldFont;
     TCHAR ch;
     INT x, y;
@@ -191,6 +190,34 @@ SetFont(PMAP infoPtr,
     InvalidateRect(infoPtr->hMapWnd,
                    NULL,
                    TRUE);
+}
+
+
+static LRESULT
+NotifyParentOfSelection(PMAP infoPtr,
+                        UINT code,
+                        TCHAR ch)
+{
+    LRESULT Ret = 0;
+
+    if (infoPtr->hParent != NULL)
+    {
+        MAPNOTIFY mnmh;
+
+        mnmh.hdr.hwndFrom = infoPtr->hMapWnd;
+        mnmh.hdr.idFrom = GetWindowLongPtr(infoPtr->hMapWnd,
+                                           GWLP_ID);
+        mnmh.hdr.code = code;
+
+        mnmh.ch = ch;
+
+        Ret = SendMessage(infoPtr->hParent,
+                          WM_NOTIFY,
+                          (WPARAM)mnmh.hdr.idFrom,
+                          (LPARAM)&mnmh);
+    }
+
+    return Ret;
 }
 
 
@@ -430,6 +457,16 @@ MapWndProc(HWND hwnd,
             break;
         }
 
+        case WM_LBUTTONDBLCLK:
+        {
+            NotifyParentOfSelection(infoPtr,
+                                    FM_SETCHAR,
+                                    infoPtr->pActiveCell->ch);
+
+
+            break;
+        }
+
         case WM_VSCROLL:
         {
             OnVScroll(infoPtr,
@@ -451,6 +488,11 @@ MapWndProc(HWND hwnd,
                      lpFontName);
 
             break;
+        }
+
+        case FM_GETCHAR:
+        {
+            return infoPtr->pActiveCell->ch;
         }
 
         case WM_PAINT:
@@ -485,12 +527,13 @@ MapWndProc(HWND hwnd,
     return Ret;
 }
 
+
 BOOL
 RegisterMapClasses(HINSTANCE hInstance)
 {
     WNDCLASS wc = {0};
 
-    //wc.style = CS_DBLCLKS;
+    wc.style = CS_DBLCLKS;
     wc.lpfnWndProc = MapWndProc;
     wc.cbWndExtra = sizeof(PMAP);
     wc.hInstance = hInstance;
