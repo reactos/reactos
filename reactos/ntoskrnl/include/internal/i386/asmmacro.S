@@ -1033,7 +1033,7 @@ PendingUserApc:
 .endif
 
     /* Check if we were called from kernel mode */
-    cmp dword ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
     jz 9f
 
 .if \RestoreSegments
