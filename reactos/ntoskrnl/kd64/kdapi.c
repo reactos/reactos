@@ -89,12 +89,82 @@ KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
     }
 }
 
-BOOLEAN
+VOID
+NTAPI
+KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
+{
+    /* Copy the version block */
+    RtlCopyMemory(Version, &KdVersionBlock, sizeof(DBGKD_GET_VERSION64));
+}
+
+VOID
+NTAPI
+KdpGetVersion(IN PDBGKD_MANIPULATE_STATE64 State)
+{
+    STRING Header;
+
+    /* Fill out the header */
+    Header.Length = sizeof(DBGKD_GET_VERSION64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Get the version block */
+    KdpSysGetVersion(&State->u.GetVersion64);
+
+    /* Fill out the state */
+    State->ApiNumber = DbgKdGetVersionApi;
+    State->ReturnStatus = STATUS_SUCCESS;
+
+    /* Send the packet */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
+                     IN PSTRING Data,
+                     IN PCONTEXT Context)
+{
+    STRING Header;
+    ULONG Length = State->u.ReadMemory.TransferCount;
+
+    /* Validate length */
+    if (Length > (PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64)))
+    {
+        /* Overflow, set it to maximum possible */
+        Length = PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64);
+    }
+
+    /* Copy data */
+    RtlCopyMemory(Data->Buffer,
+                  (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress,
+                  Length);
+    Data->Length = Length;
+
+    /* Fill out the header */
+    Header.Length = sizeof(DBGKD_GET_VERSION64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Fill out the state */
+    State->ReturnStatus = STATUS_SUCCESS;
+    State->u.ReadMemory.ActualBytesRead = Length;
+
+    /* Send the packet */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
+
+KCONTINUE_STATUS
 NTAPI
 KdpSendWaitContinue(IN ULONG PacketType,
                     IN PSTRING SendHeader,
                     IN PSTRING SendData OPTIONAL,
-                    IN OUT PCONTEXT ContextRecord)
+                    IN OUT PCONTEXT Context)
 {
     STRING Data, Header;
     DBGKD_MANIPULATE_STATE64 ManipulateState;
@@ -113,7 +183,7 @@ SendPacket:
     KdSendPacket(PacketType, SendHeader, SendData, &KdpContext);
 
     /* If the debugger isn't present anymore, just return success */
-    if (KdDebuggerNotPresent) return TRUE;
+    if (KdDebuggerNotPresent) return ContinueSuccess;
 
     /* Main processing Loop */
     for (;;)
@@ -122,7 +192,6 @@ SendPacket:
         do
         {
             /* Wait to get a reply to our packet */
-            ManipulateState.ApiNumber = 0xFFFFFFFF;
             RecvCode = KdReceivePacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                                        &Header,
                                        &Data,
@@ -138,9 +207,8 @@ SendPacket:
         {
             case DbgKdReadVirtualMemoryApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdReadVirtualMemoryApi);
-                while (TRUE);
+                /* Read virtual memory */
+                KdpReadVirtualMemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdWriteVirtualMemoryApi:
@@ -292,9 +360,8 @@ SendPacket:
 
             case DbgKdGetVersionApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdGetVersionApi);
-                while (TRUE);
+                /* Get version data */
+                KdpGetVersion(&ManipulateState);
                 break;
 
             case DbgKdWriteBreakPointExApi:

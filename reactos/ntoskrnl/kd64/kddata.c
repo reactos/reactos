@@ -340,7 +340,7 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {0},                                                        // ExpNumberOfPagedPools
     {PtrToUlong(&KeTimeIncrement)},
     {PtrToUlong(&KeBugcheckCallbackListHead)},
-    {PtrToUlong(&KiBugCheckData)},
+    {PtrToUlong(KiBugCheckData)},
     {PtrToUlong(&IopErrorLogListHead)},
     {PtrToUlong(&ObpRootDirectoryObject)},
     {PtrToUlong(&ObpTypeObjectType)},

@@ -151,7 +151,7 @@ extern UCHAR KiDebugRegisterTrapOffsets[9];
 extern UCHAR KiDebugRegisterContextOffsets[9];
 extern ULONG KiFreezeFlag;
 extern ULONG KeTimeIncrement;
-extern PVOID KiBugCheckData;
+extern ULONG_PTR KiBugCheckData[5];
 
 /* MACROS *************************************************************************/
 
