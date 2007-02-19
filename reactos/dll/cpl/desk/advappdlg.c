@@ -11,6 +11,7 @@
 
 #include "desk.h"
 #include "appearance.h"
+#include "preview.h"
 
 
 
@@ -477,6 +478,35 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						iListIndex = SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_ELEMENT, CB_GETCURSEL, 0, 0);
 						g->CurrentElement = SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_ELEMENT, CB_GETITEMDATA, (WPARAM)iListIndex, 0);
 						UpdateControls(hwndDlg, g);
+					}
+					break;
+
+				case IDC_ADVAPPEARANCE_SIZE_E:
+					if (g && HIWORD(wParam) == EN_CHANGE)
+					{
+						int i = (int)LOWORD(SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_SIZE_UD, UDM_GETPOS,0,0L));
+
+						switch (g->CurrentElement)
+						{
+							case IDX_INACTIVE_CAPTION:
+							case IDX_ACTIVE_CAPTION:
+							case IDX_CAPTION_BUTTON:
+								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCYCAPTION, 0, i);
+								break;
+
+							case IDX_MENU:
+								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCYMENU, 0, i);
+								break;
+
+							case IDX_SCROLLBAR:
+								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCXSCROLLBAR, 0, i);
+								break;
+
+							case IDX_INACTIVE_BORDER:
+							case IDX_ACTIVE_BORDER:
+								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCYSIZEFRAME, 0, i);
+								break;
+						}
 					}
 					break;
 

@@ -162,10 +162,10 @@ OnCreate(HWND hwnd, PPREVIEW_DATA pPreviewData)
     pPreviewData->clrWindowText = GetSysColor(COLOR_WINDOWTEXT);
     pPreviewData->clrButtonText = GetSysColor(COLOR_BTNTEXT);
 
-    pPreviewData->cxEdge = GetSystemMetrics(SM_CXEDGE);
-    pPreviewData->cyEdge = GetSystemMetrics(SM_CXEDGE);
+    pPreviewData->cxEdge = GetSystemMetrics(SM_CXEDGE) - 2;
+    pPreviewData->cyEdge = GetSystemMetrics(SM_CXEDGE) - 2;
 
-    pPreviewData->cySizeFrame = GetSystemMetrics(SM_CYSIZEFRAME);
+    pPreviewData->cySizeFrame = GetSystemMetrics(SM_CYSIZEFRAME) - 1;
 
     pPreviewData->cyCaption = GetSystemMetrics(SM_CYCAPTION);
     pPreviewData->cyMenu = GetSystemMetrics(SM_CYMENU);
@@ -216,10 +216,10 @@ CalculateItemSize(PPREVIEW_DATA pPreviewData)
     pPreviewData->rcInactiveFrame.bottom = pPreviewData->rcDesktop.bottom - 30;
 
     /* Calculate the inactive caption rectangle */
-    pPreviewData->rcInactiveCaption.left = pPreviewData->rcInactiveFrame.left + pPreviewData->cxEdge + 1/*3*/ + 1;
-    pPreviewData->rcInactiveCaption.top = pPreviewData->rcInactiveFrame.top + pPreviewData->cyEdge + 1/*3*/ + 1;
-    pPreviewData->rcInactiveCaption.right = pPreviewData->rcInactiveFrame.right - pPreviewData->cxEdge - 1/*3*/ - 1;
-    pPreviewData->rcInactiveCaption.bottom = pPreviewData->rcInactiveFrame.top + pPreviewData->cyCaption + 1 + 2;
+    pPreviewData->rcInactiveCaption.left = pPreviewData->rcInactiveFrame.left + pPreviewData->cxEdge + pPreviewData->cySizeFrame + 1;
+    pPreviewData->rcInactiveCaption.top = pPreviewData->rcInactiveFrame.top + pPreviewData->cyEdge + pPreviewData->cySizeFrame + 1;
+    pPreviewData->rcInactiveCaption.right = pPreviewData->rcInactiveFrame.right - pPreviewData->cxEdge - pPreviewData->cySizeFrame - 1;
+    pPreviewData->rcInactiveCaption.bottom = pPreviewData->rcInactiveCaption.top + pPreviewData->cyCaption;
 
     /* Calculate the inactive caption buttons rectangle */
     pPreviewData->rcInactiveCaptionButtons.left = pPreviewData->rcInactiveCaption.right - 2 - 2 - 3 * 16;
@@ -228,16 +228,16 @@ CalculateItemSize(PPREVIEW_DATA pPreviewData)
     pPreviewData->rcInactiveCaptionButtons.bottom = pPreviewData->rcInactiveCaption.bottom - 2;
 
     /* Calculate the active window rectangle */
-    pPreviewData->rcActiveFrame.left = pPreviewData->rcInactiveFrame.left + 3 + 1;
+    pPreviewData->rcActiveFrame.left = pPreviewData->rcInactiveFrame.left + 3 + pPreviewData->cySizeFrame;
     pPreviewData->rcActiveFrame.top = pPreviewData->rcInactiveCaption.bottom + 1;
     pPreviewData->rcActiveFrame.right = pPreviewData->rcDesktop.right - 10;
     pPreviewData->rcActiveFrame.bottom = pPreviewData->rcDesktop.bottom - 25;
 
     /* Calculate the active caption rectangle */
-    pPreviewData->rcActiveCaption.left = pPreviewData->rcActiveFrame.left + 3 + 1;
-    pPreviewData->rcActiveCaption.top = pPreviewData->rcActiveFrame.top + 3 + 1;
-    pPreviewData->rcActiveCaption.right = pPreviewData->rcActiveFrame.right - 3 - 1;
-    pPreviewData->rcActiveCaption.bottom = pPreviewData->rcActiveFrame.top + pPreviewData->cyCaption + 1 + 2;
+    pPreviewData->rcActiveCaption.left = pPreviewData->rcActiveFrame.left + pPreviewData->cxEdge + pPreviewData->cySizeFrame + 1;
+    pPreviewData->rcActiveCaption.top = pPreviewData->rcActiveFrame.top + pPreviewData->cxEdge + pPreviewData->cySizeFrame + 1;
+    pPreviewData->rcActiveCaption.right = pPreviewData->rcActiveFrame.right - pPreviewData->cxEdge - pPreviewData->cySizeFrame - 1;
+    pPreviewData->rcActiveCaption.bottom = pPreviewData->rcActiveCaption.top + pPreviewData->cyCaption;
 
     /* Calculate the active caption buttons rectangle */
     pPreviewData->rcActiveCaptionButtons.left = pPreviewData->rcActiveCaption.right - 2 - 2 - 3 * 16;
@@ -246,16 +246,16 @@ CalculateItemSize(PPREVIEW_DATA pPreviewData)
     pPreviewData->rcActiveCaptionButtons.bottom = pPreviewData->rcActiveCaption.bottom - 2;
 
     /* Calculate the active menu bar rectangle */
-    pPreviewData->rcActiveMenuBar.left = pPreviewData->rcActiveFrame.left + 3 + 1;
+    pPreviewData->rcActiveMenuBar.left = pPreviewData->rcActiveFrame.left + pPreviewData->cxEdge + pPreviewData->cySizeFrame + 1;
     pPreviewData->rcActiveMenuBar.top = pPreviewData->rcActiveCaption.bottom + 1;
-    pPreviewData->rcActiveMenuBar.right = pPreviewData->rcActiveFrame.right - 3 - 1;
+    pPreviewData->rcActiveMenuBar.right = pPreviewData->rcActiveFrame.right - pPreviewData->cxEdge - pPreviewData->cySizeFrame - 1;
     pPreviewData->rcActiveMenuBar.bottom = pPreviewData->rcActiveMenuBar.top + pPreviewData->cyMenu + 1;
 
     /* Calculate the active client rectangle */
-    pPreviewData->rcActiveClient.left = pPreviewData->rcActiveFrame.left + 3 + 1;
-    pPreviewData->rcActiveClient.top = pPreviewData->rcActiveMenuBar.bottom; // + 1;
-    pPreviewData->rcActiveClient.right = pPreviewData->rcActiveFrame.right - 3 - 1;
-    pPreviewData->rcActiveClient.bottom = pPreviewData->rcActiveFrame.bottom - 3 - 1;
+    pPreviewData->rcActiveClient.left = pPreviewData->rcActiveFrame.left + pPreviewData->cxEdge + pPreviewData->cySizeFrame + 1;
+    pPreviewData->rcActiveClient.top = pPreviewData->rcActiveMenuBar.bottom;
+    pPreviewData->rcActiveClient.right = pPreviewData->rcActiveFrame.right - pPreviewData->cxEdge - pPreviewData->cySizeFrame - 1;
+    pPreviewData->rcActiveClient.bottom = pPreviewData->rcActiveFrame.bottom - pPreviewData->cyEdge - pPreviewData->cySizeFrame - 1;
 
     /* Calculate the active scroll rectangle */
     pPreviewData->rcActiveScroll.left = pPreviewData->rcActiveClient.right - 2 - pPreviewData->cxScrollbar;
@@ -340,10 +340,10 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
                     NULL, pPreviewData->lpAct, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT);
     DrawCaptionButtons(hdc, &pPreviewData->rcActiveCaption, TRUE, pPreviewData->cyCaption - 2);
 
-    /* FIXME: Draw the menu bar */
+    /* Draw the menu bar */
     DrawMenuBarTemp(hwnd, hdc, &pPreviewData->rcActiveMenuBar,
-                    pPreviewData->hMenu /*HMENU hMenu*/,
-                    pPreviewData->hMessageFont /*HFONT hFont*/);
+                    pPreviewData->hMenu,
+                    pPreviewData->hMessageFont);
 
     /* Draw the client area */
     CopyRect(&rc, &pPreviewData->rcActiveClient);
@@ -578,7 +578,7 @@ RegisterPreviewControl(IN HINSTANCE hInstance)
     wc.lpfnWndProc = PreviewWndProc;
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)NULL; //(COLOR_BTNFACE + 1);
+    wc.hbrBackground = (HBRUSH)NULL;
     wc.lpszClassName = szPreviewWndClass;
 
     return RegisterClassEx(&wc) != (ATOM)0;
