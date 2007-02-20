@@ -160,69 +160,6 @@ FrLdrLoadImage(IN PCHAR szFileName,
     return TRUE;
 }
 
-static VOID
-FreeldrFreeMem(PVOID Area)
-{
-  MmFreeMemory(Area);
-}
-
-static PVOID
-FreeldrAllocMem(ULONG_PTR Size)
-{
-  return MmAllocateMemory((ULONG) Size);
-}
-
-static BOOLEAN
-FreeldrReadFile(PVOID FileContext, PVOID Buffer, ULONG Size)
-{
-  ULONG BytesRead;
-
-  return FsReadFile((PFILE) FileContext, (ULONG) Size, &BytesRead, Buffer)
-         && Size == BytesRead;
-}
-
-static BOOLEAN
-FreeldrSeekFile(PVOID FileContext, ULONG_PTR Position)
-{
-  FsSetFilePointer((PFILE) FileContext, (ULONG) Position);
-    return TRUE;
-}
-
-static BOOLEAN
-LoadKernelSymbols(PCHAR szKernelName, int nPos)
-{
-  static ROSSYM_CALLBACKS FreeldrCallbacks =
-    {
-      FreeldrAllocMem,
-      FreeldrFreeMem,
-      FreeldrReadFile,
-      FreeldrSeekFile
-    };
-  PFILE FilePointer;
-  PROSSYM_INFO RosSymInfo;
-  ULONG Size;
-  ULONG_PTR Base;
-  //return TRUE;
-
-  RosSymInit(&FreeldrCallbacks);
-
-  FilePointer = FsOpenFile(szKernelName);
-  if (FilePointer == NULL)
-    {
-      return FALSE;
-    }
-  if (! RosSymCreateFromFile(FilePointer, &RosSymInfo))
-    {
-      return FALSE;
-    }
-  Base = FrLdrCreateModule("NTOSKRNL.SYM");
-  Size = RosSymGetRawDataLength(RosSymInfo);
-  RosSymGetRawData(RosSymInfo, (PVOID)Base);
-  FrLdrCloseModule(Base, Size);
-  RosSymDelete(RosSymInfo);
-  return TRUE;
-}
-
 static BOOLEAN
 FrLdrLoadNlsFile(PCSTR szFileName,
                  PCSTR szModuleName)
@@ -915,12 +852,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		return;
 	}
 	UiDrawProgressBarCenter(30, 100, szLoadingMsg);
-
-	/*
-	 * Load kernel symbols
-	 */
-	LoadKernelSymbols(szKernelName, 30);
-	UiDrawProgressBarCenter(40, 100, szLoadingMsg);
 
 	/*
 	 * Load boot drivers

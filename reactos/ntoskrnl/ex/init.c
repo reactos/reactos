@@ -683,11 +683,12 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 else
                 {
                     /* Copy the name */
-                    for (Count = 0; Count < Length; Count++, Name++)
+                    Count = 0;
+                    do
                     {
                         /* Copy the character */
-                        NameBuffer[Count] = (CHAR)*Name;
-                    }
+                        NameBuffer[Count++] = (CHAR)*Name++;
+                    } while (Count < Length);
 
                     /* Null-terminate */
                     NameBuffer[Count] = ANSI_NULL;
@@ -704,13 +705,14 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 {
                     /* Buffer too small */
                     OverFlow = TRUE;
+                    while (TRUE);
                 }
                 else
                 {
                     /* Otherwise build the name. HACKED for GCC :( */
                     sprintf(NameBuffer,
-                            "%c\\System32\\Drivers\\%S",
-                            SharedUserData->NtSystemRoot[2],
+                            "%S\\System32\\Drivers\\%S",
+                            &SharedUserData->NtSystemRoot[2],
                             LdrEntry->BaseDllName.Buffer);
                 }
             }
