@@ -121,9 +121,6 @@ KdpGetVersion(IN PDBGKD_MANIPULATE_STATE64 State)
                  &KdpContext);
 }
 
-
-BOOLEAN VirtCalled = FALSE;
-
 VOID
 NTAPI
 KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
@@ -326,6 +323,54 @@ KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
                  &KdpContext);
 }
 
+VOID
+NTAPI
+KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
+              IN PSTRING Data,
+              IN PCONTEXT Context)
+{
+    STRING Header;
+    PVOID ControlStart;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /* Make sure that this is a valid request */
+    if (State->Processor < KeNumberProcessors)
+    {
+        /* Check if the request is for this CPU */
+        if (State->Processor == KeGetCurrentPrcb()->Number)
+        {
+            /* We're just copying our own context */
+            ControlStart = Context;
+        }
+        else
+        {
+            /* SMP not yet handled */
+            ControlStart = NULL;
+            while (TRUE);
+        }
+
+        /* Copy the memory */
+        RtlCopyMemory(ControlStart, Data->Buffer, sizeof(CONTEXT));
+
+        /* Finish up */
+        State->ReturnStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Invalid request */
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
 
 KCONTINUE_STATUS
 NTAPI
@@ -377,7 +422,6 @@ SendPacket:
 
                 /* Read virtual memory */
                 KdpReadVirtualMemory(&ManipulateState, &Data, Context);
-                VirtCalled = TRUE;
                 break;
 
             case DbgKdWriteVirtualMemoryApi:
@@ -389,15 +433,14 @@ SendPacket:
 
             case DbgKdGetContextApi:
 
-                /* FIXME: TODO */
+                /* Get the current context */
                 KdpGetContext(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdSetContextApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSetContextApi);
-                while (TRUE);
+                /* Set a new context */
+                KdpSetContext(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdWriteBreakPointApi:

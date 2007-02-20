@@ -25,68 +25,64 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
 {
     BOOLEAN Entered, Status;
     PKPRCB Prcb;
-    while (TRUE);
+    NTSTATUS ExceptionCode = ExceptionRecord->ExceptionCode;
 
-    /*
-     * Only go ahead with this if this is an INT3 or an INT1, or if the global
-     * flag forces us to call up the debugger on exception, or if this is a
-     * second chance exception which means it hasn't been handled by now.
-     */
-    if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) ||
-        (ExceptionRecord->ExceptionCode == STATUS_SINGLE_STEP)  ||
-        (NtGlobalFlag & FLG_STOP_ON_EXCEPTION) ||
-        (SecondChanceException))
+    /* Check if this is INT1 or 3, or if we're forced to handle it */
+    if ((ExceptionCode == STATUS_BREAKPOINT) ||
+        (ExceptionCode == STATUS_SINGLE_STEP) ||
+        //(ExceptionCode == STATUS_ASSERTION_FAILURE) ||
+        (NtGlobalFlag & FLG_STOP_ON_EXCEPTION))
     {
-        /*
-         * Also, unless this is a second chance exception, then do not call up
-         * the debugger if the debug port is disconnected or the exception code
-         * indicates success.
-         */
-        if (!(SecondChanceException) &&
-            ((ExceptionRecord->ExceptionCode == STATUS_PORT_DISCONNECTED) ||
-             (NT_SUCCESS(ExceptionRecord->ExceptionCode))))
+        /* Check if we can't really handle this */
+        if ((SecondChanceException) ||
+            (ExceptionCode == STATUS_PORT_DISCONNECTED) ||
+            (NT_SUCCESS(ExceptionCode)))
         {
-            /* Return false to hide the exception */
+            /* Return false to have someone else take care of the exception */
             return FALSE;
         }
-
-        /* Enter the debugger */
-        Entered = KdEnterDebugger(TrapFrame, ExceptionFrame);
-
-        /*
-         * Get the KPRCB and save the CPU Control State manually instead of
-         * using KiSaveProcessorState, since we already have a valid CONTEXT.
-         */
-        Prcb = KeGetCurrentPrcb();
-        KiSaveProcessorControlState(&Prcb->ProcessorState);
-        RtlCopyMemory(&Prcb->ProcessorState.ContextFrame,
-                      ContextRecord,
-                      sizeof(CONTEXT));
-
-        /* Report the new state */
-#if 0
-        Status = KdpReportExceptionStateChange(ExceptionRecord,
-                                               &Prcb->ProcessorState.
-                                               ContextFrame,
-                                               SecondChanceException);
-#else
-        Status = FALSE;
-#endif
-
-        /* Now restore the processor state, manually again. */
-        RtlCopyMemory(ContextRecord,
-                      &Prcb->ProcessorState.ContextFrame,
-                      sizeof(CONTEXT));
-        KiRestoreProcessorControlState(&Prcb->ProcessorState);
-
-        /* Exit the debugger and clear the CTRL-C state */
-        KdExitDebugger(Entered);
-        KdpControlCPressed = FALSE;
-        return Status;
+    }
+    else if (SecondChanceException)
+    {
+        /* We won't bother unless this is second chance */
+        return FALSE;
     }
 
-    /* Fail if we got here */
-    return FALSE;
+    /* Enter the debugger */
+    while (TRUE);
+    Entered = KdEnterDebugger(TrapFrame, ExceptionFrame);
+
+    /*
+     * Get the KPRCB and save the CPU Control State manually instead of
+     * using KiSaveProcessorState, since we already have a valid CONTEXT.
+     */
+    Prcb = KeGetCurrentPrcb();
+    KiSaveProcessorControlState(&Prcb->ProcessorState);
+    RtlCopyMemory(&Prcb->ProcessorState.ContextFrame,
+                  ContextRecord,
+                  sizeof(CONTEXT));
+
+    /* Report the new state */
+#if 0
+    Status = KdpReportExceptionStateChange(ExceptionRecord,
+                                           &Prcb->ProcessorState.
+                                           ContextFrame,
+                                           SecondChanceException);
+#else
+    while (TRUE);
+    Status = FALSE;
+#endif
+
+    /* Now restore the processor state, manually again. */
+    RtlCopyMemory(ContextRecord,
+                  &Prcb->ProcessorState.ContextFrame,
+                  sizeof(CONTEXT));
+    KiRestoreProcessorControlState(&Prcb->ProcessorState);
+
+    /* Exit the debugger and clear the CTRL-C state */
+    KdExitDebugger(Entered);
+    KdpControlCPressed = FALSE;
+    return Status;
 }
 
 BOOLEAN
