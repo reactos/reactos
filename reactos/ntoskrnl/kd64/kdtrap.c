@@ -49,7 +49,6 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Enter the debugger */
-    while (TRUE);
     Entered = KdEnterDebugger(TrapFrame, ExceptionFrame);
 
     /*
@@ -63,6 +62,7 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
                   sizeof(CONTEXT));
 
     /* Report the new state */
+    Ke386SetCr2(TrapFrame->HardwareEsp);
 #if 0
     Status = KdpReportExceptionStateChange(ExceptionRecord,
                                            &Prcb->ProcessorState.

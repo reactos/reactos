@@ -494,6 +494,7 @@ Author:
 #define DR6_LEGAL                               0xE00F
 #define DR7_LEGAL                               0xFFFF0155
 #define DR7_ACTIVE                              0x55
+#define DR7_OVERRIDE_V                          0x04
 #define DR7_RESERVED_MASK                       0xDC00
 #define DR7_OVERRIDE_MASK                       0xF0000
 

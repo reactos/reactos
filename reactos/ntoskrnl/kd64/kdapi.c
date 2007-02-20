@@ -242,6 +242,55 @@ KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
+KdpWriteControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
+                     IN PSTRING Data,
+                     IN PCONTEXT Context)
+{
+    PDBGKD_WRITE_MEMORY64 WriteMemory = &State->u.WriteMemory;
+    STRING Header;
+    ULONG Length;
+    PVOID ControlStart;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Make sure that this is a valid request */
+    Length = WriteMemory->TransferCount;
+    if ((((ULONG)WriteMemory->TargetBaseAddress + Length) <=
+          sizeof(KPROCESSOR_STATE)) &&
+        (State->Processor < KeNumberProcessors))
+    {
+        /* Set the proper address */
+        ControlStart = (PVOID)((ULONG_PTR)WriteMemory->TargetBaseAddress +
+                               (ULONG_PTR)&KiProcessorBlock[State->Processor]->
+                                           ProcessorState);
+
+        /* Copy the memory */
+        RtlCopyMemory(ControlStart, Data->Buffer, Data->Length);
+        Length = Data->Length;
+
+        /* Finish up */
+        State->ReturnStatus = STATUS_SUCCESS;
+        WriteMemory->ActualBytesWritten = Length;
+    }
+    else
+    {
+        /* Invalid request */
+        Data->Length = 0;
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+        WriteMemory->ActualBytesWritten = 0;
+    }
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
 KdpRestoreBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
                      IN PSTRING Data,
                      IN PCONTEXT Context)
@@ -335,7 +384,7 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
-    ASSERT(Data->Length == 0);
+    ASSERT(Data->Length == sizeof(CONTEXT));
 
     /* Make sure that this is a valid request */
     if (State->Processor < KeNumberProcessors)
@@ -472,8 +521,7 @@ SendPacket:
             case DbgKdWriteControlSpaceApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteControlSpaceApi);
-                while (TRUE);
+                KdpWriteControlSpace(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdReadIoSpaceApi:
