@@ -195,6 +195,7 @@
     </directory>
     <directory name="kd64">
         <file>kdapi.c</file>
+        <file>kdbreak.c</file>
         <file>kddata.c</file>
         <file>kdinit.c</file>
         <file>kdlock.c</file>

@@ -243,6 +243,39 @@ KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
                  &KdpContext);
 }
 
+VOID
+NTAPI
+KdpRestoreBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
+                     IN PSTRING Data,
+                     IN PCONTEXT Context)
+{
+    PDBGKD_RESTORE_BREAKPOINT RestoreBp = &State->u.RestoreBreakPoint;
+    STRING Header;
+
+    /* Fill out the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /* Get the version block */
+    if (KdpDeleteBreakpoint(RestoreBp->BreakPointHandle))
+    {
+        /* We're all good */
+        State->ReturnStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* We failed */
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Send the packet */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
 KCONTINUE_STATUS
 NTAPI
 KdpSendWaitContinue(IN ULONG PacketType,
@@ -327,8 +360,7 @@ SendPacket:
             case DbgKdRestoreBreakPointApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdRestoreBreakPointApi);
-                while (TRUE);
+                KdpRestoreBreakpoint(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdContinueApi:
@@ -862,7 +894,7 @@ KdEnableDebuggerWithLock(BOOLEAN NeedLock)
         {
             /* Reinitialize the Debugger */
             KdInitSystem(0, NULL) ;
-            //KdpRestoreAllBreakpoints();
+            KdpRestoreAllBreakpoints();
         }
     }
 

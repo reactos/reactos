@@ -1,3 +1,19 @@
+typedef struct _BREAKPOINT_ENTRY
+{
+    ULONG Flags;
+    PKPROCESS Process;
+    PVOID Address;
+    UCHAR Content;
+} BREAKPOINT_ENTRY, *PBREAKPOINT_ENTRY;
+
+typedef enum _KDP_BREAKPOINT_FLAGS
+{
+    KdpBreakpointActive = 1,
+    KdpBreakpointPending = 2,
+    KdpBreakpointSuspended = 4,
+    KdpBreakpointExpired = 8
+} KDP_BREAKPOINT_FLAGS;
+
 typedef
 BOOLEAN
 (NTAPI *PKDEBUG_ROUTINE)(
@@ -144,6 +160,18 @@ KdpReportLoadSymbolsStateChange(
     IN OUT PCONTEXT Context
 );
 
+VOID
+NTAPI
+KdpRestoreAllBreakpoints(
+    VOID
+);
+
+BOOLEAN
+NTAPI
+KdpDeleteBreakpoint(
+    IN ULONG BpEntry
+);
+
 extern DBGKD_GET_VERSION64 KdVersionBlock;
 extern KDDEBUGGER_DATA64 KdDebuggerDataBlock;
 extern LIST_ENTRY KdpDebuggerDataListHead;
@@ -177,3 +205,7 @@ extern ULONG KdComponentTableSize;
 extern ULONG Kd_WIN2000_Mask;
 extern PULONG KdComponentTable[104];
 extern CHAR KdpMessageBuffer[4096], KdpPathBuffer[4096];
+extern BREAKPOINT_ENTRY KdpBreakpointTable[20];
+extern ULONG KdpBreakpointInstruction;
+extern BOOLEAN KdpOweBreakpoint;
+extern BOOLEAN BreakpointsSuspended;

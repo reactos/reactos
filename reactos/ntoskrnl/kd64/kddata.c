@@ -46,6 +46,14 @@ ULONG KdDisableCount;
 LARGE_INTEGER KdPerformanceCounterRate;
 
 //
+// Breakpoint Data
+//
+BREAKPOINT_ENTRY KdpBreakpointTable[20];
+ULONG KdpBreakpointInstruction = 0xCC;
+BOOLEAN KdpOweBreakpoint;
+BOOLEAN BreakpointsSuspended;
+
+//
 // Time Slip Support
 //
 KDPC KdpTimeSlipDpc;
