@@ -805,17 +805,6 @@ IopAttachFilterDrivers(
    return STATUS_SUCCESS;
 }
 
-static VOID INIT_FUNCTION
-MiFreeBootDriverMemory(PVOID StartAddress, ULONG Length)
-{
-   ULONG i;
-
-   for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)
-   {
-      MmDeleteVirtualMapping(NULL, (char*)StartAddress + i * PAGE_SIZE, TRUE, NULL, NULL);
-   }
-}
-
 /*
  * IopInitializeBuiltinDriver
  *
@@ -1028,7 +1017,7 @@ IopInitializeBootDrivers(VOID)
     }
 
     /* Loop modules again */
-    NextEntry = ListHead->Flink->Flink->Flink->Flink;
+    NextEntry = ListHead->Flink;
     while (ListHead != NextEntry)
     {
         /* Get the entry */
@@ -1037,11 +1026,10 @@ IopInitializeBootDrivers(VOID)
                                      InLoadOrderLinks);
 
         /* Free memory */
-        DPRINT("Freeing memory at: %p of size: %lx for module: %wZ\n",
+        DPRINT("Driver at: %p ending at: %p for module: %wZ\n",
                 LdrEntry->DllBase,
-                LdrEntry->SizeOfImage,
+                (ULONG_PTR)LdrEntry->DllBase+ LdrEntry->SizeOfImage,
                 &LdrEntry->FullDllName);
-        MiFreeBootDriverMemory(LdrEntry->DllBase, LdrEntry->SizeOfImage);
 
         /* Go to the next driver */
         NextEntry = NextEntry->Flink;

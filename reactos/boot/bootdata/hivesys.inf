@@ -492,13 +492,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Blue","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Type",0x00010001,0x00000001
 
-; Boot Video Driver
-HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","ImagePath",0x00020000,"system32\drivers\bootvid.dll"
-HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Type",0x00010001,0x00000002
-
 ; Cdfs (ISO96660) filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Group",0x00000000,"File System"

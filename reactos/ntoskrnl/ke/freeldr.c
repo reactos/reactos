@@ -98,6 +98,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         if (!_stricmp(DriverName, "ansi.nls"))
         {
             /* ANSI Code page */
+            ModStart = (PVOID)((ULONG_PTR)ModStart + (KSEG0_BASE - 0x200000));
             LoaderBlock->NlsData->AnsiCodePageData = ModStart;
 
             /* Create an MD for it */
@@ -112,6 +113,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         else if (!_stricmp(DriverName, "oem.nls"))
         {
             /* OEM Code page */
+            ModStart = (PVOID)((ULONG_PTR)ModStart + (KSEG0_BASE - 0x200000));
             LoaderBlock->NlsData->OemCodePageData = ModStart;
 
             /* Create an MD for it */
@@ -126,6 +128,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         else if (!_stricmp(DriverName, "casemap.nls"))
         {
             /* Unicode Code page */
+            ModStart = (PVOID)((ULONG_PTR)ModStart + (KSEG0_BASE - 0x200000));
             LoaderBlock->NlsData->UnicodeCodePageData = ModStart;
 
             /* Create an MD for it */
@@ -143,6 +146,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             !(_stricmp(DriverName, "system.hiv")))
         {
             /* Save registry data */
+            ModStart = (PVOID)((ULONG_PTR)ModStart + (KSEG0_BASE - 0x200000));
             LoaderBlock->RegistryBase = ModStart;
             LoaderBlock->RegistryLength = ModSize;
 
@@ -164,6 +168,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             !(_stricmp(DriverName, "hardware.hiv")))
         {
             /* Create an MD for it */
+            ModStart = (PVOID)((ULONG_PTR)ModStart + (KSEG0_BASE - 0x200000));
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderRegistryData;
             MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
@@ -315,7 +320,6 @@ FASTCALL
 KiRosPrepareForSystemStartup(IN ULONG Dummy,
                              IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG i;
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
     PKTSS Tss;
     PKGDTENTRY TssEntry;
@@ -336,25 +340,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 
     /* Save pointer to ROS Block */
     KeRosLoaderBlock = LoaderBlock;
-
-    /* Save the Base Address */
-    MmSystemRangeStart = (PVOID)KeRosLoaderBlock->KernelBase;
-
-    /* Convert every driver address to virtual memory */
-    for (i = 3; i < KeRosLoaderBlock->ModsCount; i++)
-    {
-        /* Subtract the base Address in Physical Memory */
-        KeRosLoaderBlock->ModsAddr[i].ModStart -= 0x200000;
-
-        /* Add the Kernel Base Address in Virtual Memory */
-        KeRosLoaderBlock->ModsAddr[i].ModStart += KSEG0_BASE;
-
-        /* Subtract the base Address in Physical Memory */
-        KeRosLoaderBlock->ModsAddr[i].ModEnd -= 0x200000;
-
-        /* Add the Kernel Base Address in Virtual Memory */
-        KeRosLoaderBlock->ModsAddr[i].ModEnd += KSEG0_BASE;
-    }
 
     /* Save memory manager data */
     MmFreeLdrLastKernelAddress = PAGE_ROUND_UP(KeRosLoaderBlock->

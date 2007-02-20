@@ -34,7 +34,6 @@
 #define PDE_SHIFT 22
 #define PDE_SHIFT_PAE 18
 
-
 /* Converts a Relative Address read from the Kernel into a Physical Address */
 #define RaToPa(p) \
     (ULONG_PTR)((ULONG_PTR)p + KERNEL_BASE_PHYS)
@@ -59,26 +58,16 @@
 #define KpcrPageTableIndex          (KPCR_BASE >> 22)
 #define ApicPageTableIndex          (APIC_BASE >> 22)
 
-#define LowMemPageTableIndexPae     0
-#define StartupPageTableIndexPae    (STARTUP_BASE >> 21)
-#define HyperspacePageTableIndexPae (HYPERSPACE_PAE_BASE >> 21)
-#define KpcrPageTableIndexPae       (KPCR_BASE >> 21)
-#define ApicPageTableIndexPae       (APIC_BASE >> 21)
-
-
 #define KernelEntryPoint            (KernelEntry - KERNEL_BASE_PHYS) + KernelBase
 
 /* Load Address of Next Module */
-ULONG_PTR NextModuleBase = 0;
+ULONG_PTR NextModuleBase = KERNEL_BASE_PHYS;
 
 /* Currently Opened Module */
 PLOADER_MODULE CurrentModule = NULL;
 
 /* Unrelocated Kernel Base in Virtual Memory */
 ULONG_PTR KernelBase;
-
-/* Whether PAE is to be used or not */
-BOOLEAN PaeModeEnabled;
 
 /* Kernel Entrypoint in Physical Memory */
 ULONG_PTR KernelEntry;
@@ -135,7 +124,8 @@ extern PAGE_DIRECTORY_X64 kpcr_pagetable_pae;
 BOOLEAN
 NTAPI
 FrLdrLoadImage(IN PCHAR szFileName,
-               IN INT nPos);
+               IN INT nPos,
+               IN BOOLEAN IsKernel);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -164,9 +154,6 @@ FrLdrStartup(ULONG Magic)
 
     /* Re-initalize EFLAGS */
     Ke386EraseFlags();
-
-    /* Get the PAE Mode */
-    FrLdrGetPaeMode();
 
     /* Initialize the page directory */
     FrLdrSetupPageDirectory();
@@ -199,14 +186,6 @@ FrLdrSetupPae(ULONG Magic)
     ULONG_PTR PageDirectoryBaseAddress = (ULONG_PTR)&startup_pagedirectory;
     ASMCODE PagedJump;
 
-    if (PaeModeEnabled)
-    {
-        PageDirectoryBaseAddress = (ULONG_PTR)&startup_pagedirectorytable_pae;
-
-        /* Enable PAE */
-        __writecr4(__readcr4() | X86_CR4_PAE);
-    }
-
     /* Set the PDBR */
     __writecr3(PageDirectoryBaseAddress);
 
@@ -216,110 +195,6 @@ FrLdrSetupPae(ULONG Magic)
     /* Jump to Kernel */
     PagedJump = (ASMCODE)(PVOID)(KernelEntryPoint);
     PagedJump(Magic, &LoaderBlock);
-}
-
-/*++
- * FrLdrGetKernelBase
- * INTERNAL
- *
- *     Gets the Kernel Base to use.
- *
- * Params:
- *
- * Returns:
- *     None.
- *
- * Remarks:
- *     Sets both the FreeLdr internal variable as well as the one which
- *     will be used by the Kernel.
- *
- *--*/
-static VOID
-FASTCALL
-FrLdrGetKernelBase(VOID)
-{
-    PCHAR p;
-
-    /* Set KernelBase */
-    LoaderBlock.KernelBase = KernelBase;
-
-    /* Read Command Line */
-    p = (PCHAR)LoaderBlock.CommandLine;
-    while ((p = strchr(p, '/')) != NULL) {
-
-        /* Find "/3GB" */
-        if (!_strnicmp(p + 1, "3GB", 3)) {
-
-            /* Make sure there's nothing following it */
-            if (p[4] == ' ' || p[4] == 0) {
-
-                /* Use 3GB */
-                KernelBase = 0xE0000000;
-                LoaderBlock.KernelBase = 0xC0000000;
-            }
-        }
-
-        p++;
-    }
-}
-
-/*++
- * FrLdrGetPaeMode
- * INTERNAL
- *
- *     Determines whether PAE mode should be enabled or not.
- *
- * Params:
- *     None.
- *
- * Returns:
- *     None.
- *
- * Remarks:
- *     None.
- *
- *--*/
-VOID
-FASTCALL
-FrLdrGetPaeMode(VOID)
-{
-    BOOLEAN PaeModeSupported;
-
-    PaeModeSupported = FALSE;
-    PaeModeEnabled = FALSE;
-
-    if (CpuidSupported() & 1)
-    {
-       ULONG eax, ebx, ecx, FeatureBits;
-       GetCpuid(1, &eax, &ebx, &ecx, &FeatureBits);
-       if (FeatureBits & X86_FEATURE_PAE)
-       {
-          PaeModeSupported = TRUE;
-       }
-    }
-
-    if (PaeModeSupported)
-    {
-       PCHAR p;
-
-       /* Read Command Line */
-       p = (PCHAR)LoaderBlock.CommandLine;
-       while ((p = strchr(p, '/')) != NULL) {
-
-          p++;
-          /* Find "PAE" */
-          if (!_strnicmp(p, "PAE", 3)) {
-
-              /* Make sure there's nothing following it */
-              if (p[3] == ' ' || p[3] == 0) {
-
-                  /* Use Pae */
-                  PaeModeEnabled = TRUE;
-                  break;
-              }
-          }
-       }
-    }
 }
 
 /*++
@@ -344,192 +219,85 @@ FASTCALL
 FrLdrSetupPageDirectory(VOID)
 {
     PPAGE_DIRECTORY_X86 PageDir;
-    PPAGE_DIRECTORY_TABLE_X64 PageDirTablePae;
-    PPAGE_DIRECTORY_X64 PageDirPae;
     ULONG KernelPageTableIndex;
     ULONG i;
 
-    if (PaeModeEnabled) {
+    /* Get the Kernel Table Index */
+    KernelPageTableIndex = KernelBase >> PDE_SHIFT;
 
-        /* Get the Kernel Table Index */
-        KernelPageTableIndex = (KernelBase >> 21);
+    /* Get the Startup Page Directory */
+    PageDir = (PPAGE_DIRECTORY_X86)&startup_pagedirectory;
 
-        /* Get the Startup Page Directory Table */
-        PageDirTablePae = (PPAGE_DIRECTORY_TABLE_X64)&startup_pagedirectorytable_pae;
+    /* Set up the Low Memory PDE */
+    PageDir->Pde[LowMemPageTableIndex].Valid = 1;
+    PageDir->Pde[LowMemPageTableIndex].Write = 1;
+    PageDir->Pde[LowMemPageTableIndex].PageFrameNumber = PaPtrToPfn(lowmem_pagetable);
 
-        /* Get the Startup Page Directory */
-        PageDirPae = (PPAGE_DIRECTORY_X64)&startup_pagedirectory_pae;
+    /* Set up the Kernel PDEs */
+    PageDir->Pde[KernelPageTableIndex].Valid = 1;
+    PageDir->Pde[KernelPageTableIndex].Write = 1;
+    PageDir->Pde[KernelPageTableIndex].PageFrameNumber = PaPtrToPfn(kernel_pagetable);
+    PageDir->Pde[KernelPageTableIndex + 1].Valid = 1;
+    PageDir->Pde[KernelPageTableIndex + 1].Write = 1;
+    PageDir->Pde[KernelPageTableIndex + 1].PageFrameNumber = PaPtrToPfn(kernel_pagetable + 4096);
 
-        /* Set the Startup page directory table */
-        for (i = 0; i < 4; i++)
-        {
-            PageDirTablePae->Pde[i].Valid = 1;
-            PageDirTablePae->Pde[i].PageFrameNumber = PaPtrToPfn(startup_pagedirectory_pae) + i;
-        }
+    /* Set up the Startup PDE */
+    PageDir->Pde[StartupPageTableIndex].Valid = 1;
+    PageDir->Pde[StartupPageTableIndex].Write = 1;
+    PageDir->Pde[StartupPageTableIndex].PageFrameNumber = PaPtrToPfn(startup_pagedirectory);
 
-        /* Set up the Low Memory PDE */
-        for (i = 0; i < 2; i++)
-        {
-            PageDirPae->Pde[LowMemPageTableIndexPae + i].Valid = 1;
-            PageDirPae->Pde[LowMemPageTableIndexPae + i].Write = 1;
-            PageDirPae->Pde[LowMemPageTableIndexPae + i].PageFrameNumber = PaPtrToPfn(lowmem_pagetable_pae) + i;
-        }
+    /* Set up the Hyperspace PDE */
+    PageDir->Pde[HyperspacePageTableIndex].Valid = 1;
+    PageDir->Pde[HyperspacePageTableIndex].Write = 1;
+    PageDir->Pde[HyperspacePageTableIndex].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable);
 
-        /* Set up the Kernel PDEs */
-        for (i = 0; i < 3; i++)
-        {
-            PageDirPae->Pde[KernelPageTableIndex + i].Valid = 1;
-            PageDirPae->Pde[KernelPageTableIndex + i].Write = 1;
-            PageDirPae->Pde[KernelPageTableIndex + i].PageFrameNumber = PaPtrToPfn(kernel_pagetable_pae) + i;
-        }
+    /* Set up the Apic PDE */
+    PageDir->Pde[ApicPageTableIndex].Valid = 1;
+    PageDir->Pde[ApicPageTableIndex].Write = 1;
+    PageDir->Pde[ApicPageTableIndex].PageFrameNumber = PaPtrToPfn(apic_pagetable);
 
-        /* Set up the Startup PDE */
-        for (i = 0; i < 4; i++)
-        {
-            PageDirPae->Pde[StartupPageTableIndexPae + i].Valid = 1;
-            PageDirPae->Pde[StartupPageTableIndexPae + i].Write = 1;
-            PageDirPae->Pde[StartupPageTableIndexPae + i].PageFrameNumber = PaPtrToPfn(startup_pagedirectory_pae) + i;
-        }
+    /* Set up the KPCR PDE */
+    PageDir->Pde[KpcrPageTableIndex].Valid = 1;
+    PageDir->Pde[KpcrPageTableIndex].Write = 1;
+    PageDir->Pde[KpcrPageTableIndex].PageFrameNumber = PaPtrToPfn(kpcr_pagetable);
 
-        /* Set up the Hyperspace PDE */
-        for (i = 0; i < 2; i++)
-        {
-            PageDirPae->Pde[HyperspacePageTableIndexPae + i].Valid = 1;
-            PageDirPae->Pde[HyperspacePageTableIndexPae + i].Write = 1;
-            PageDirPae->Pde[HyperspacePageTableIndexPae + i].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable_pae) + i;
-        }
+    /* Set up Low Memory PTEs */
+    PageDir = (PPAGE_DIRECTORY_X86)&lowmem_pagetable;
+    for (i=0; i<1024; i++) {
 
-        /* Set up the Apic PDE */
-        for (i = 0; i < 2; i++)
-        {
-            PageDirPae->Pde[ApicPageTableIndexPae + i].Valid = 1;
-            PageDirPae->Pde[ApicPageTableIndexPae + i].Write = 1;
-            PageDirPae->Pde[ApicPageTableIndexPae + i].PageFrameNumber = PaPtrToPfn(apic_pagetable_pae) + i;
-        }
-
-        /* Set up the KPCR PDE */
-        PageDirPae->Pde[KpcrPageTableIndexPae].Valid = 1;
-        PageDirPae->Pde[KpcrPageTableIndexPae].Write = 1;
-        PageDirPae->Pde[KpcrPageTableIndexPae].PageFrameNumber = PaPtrToPfn(kpcr_pagetable_pae);
-
-        /* Set up Low Memory PTEs */
-        PageDirPae = (PPAGE_DIRECTORY_X64)&lowmem_pagetable_pae;
-        for (i=0; i<1024; i++) {
-
-            PageDirPae->Pde[i].Valid = 1;
-            PageDirPae->Pde[i].Write = 1;
-            PageDirPae->Pde[i].Owner = 1;
-            PageDirPae->Pde[i].PageFrameNumber = i;
-        }
-
-        /* Set up Kernel PTEs */
-        PageDirPae = (PPAGE_DIRECTORY_X64)&kernel_pagetable_pae;
-        for (i=0; i<1536; i++) {
-
-            PageDirPae->Pde[i].Valid = 1;
-            PageDirPae->Pde[i].Write = 1;
-            PageDirPae->Pde[i].PageFrameNumber = PaToPfn(KERNEL_BASE_PHYS) + i;
-        }
-
-        /* Set up APIC PTEs */
-        PageDirPae = (PPAGE_DIRECTORY_X64)&apic_pagetable_pae;
-        PageDirPae->Pde[0].Valid = 1;
-        PageDirPae->Pde[0].Write = 1;
-        PageDirPae->Pde[0].CacheDisable = 1;
-        PageDirPae->Pde[0].WriteThrough = 1;
-        PageDirPae->Pde[0].PageFrameNumber = PaToPfn(APIC_BASE);
-        PageDirPae->Pde[0x200].Valid = 1;
-        PageDirPae->Pde[0x200].Write = 1;
-        PageDirPae->Pde[0x200].CacheDisable = 1;
-        PageDirPae->Pde[0x200].WriteThrough = 1;
-        PageDirPae->Pde[0x200].PageFrameNumber = PaToPfn(APIC_BASE + KERNEL_BASE_PHYS);
-
-        /* Set up KPCR PTEs */
-        PageDirPae = (PPAGE_DIRECTORY_X64)&kpcr_pagetable_pae;
-        PageDirPae->Pde[0].Valid = 1;
-        PageDirPae->Pde[0].Write = 1;
-        PageDirPae->Pde[0].PageFrameNumber = 1;
-
-    } else {
-
-        /* Get the Kernel Table Index */
-        KernelPageTableIndex = KernelBase >> PDE_SHIFT;
-
-        /* Get the Startup Page Directory */
-        PageDir = (PPAGE_DIRECTORY_X86)&startup_pagedirectory;
-
-        /* Set up the Low Memory PDE */
-        PageDir->Pde[LowMemPageTableIndex].Valid = 1;
-        PageDir->Pde[LowMemPageTableIndex].Write = 1;
-        PageDir->Pde[LowMemPageTableIndex].PageFrameNumber = PaPtrToPfn(lowmem_pagetable);
-
-        /* Set up the Kernel PDEs */
-        PageDir->Pde[KernelPageTableIndex].Valid = 1;
-        PageDir->Pde[KernelPageTableIndex].Write = 1;
-        PageDir->Pde[KernelPageTableIndex].PageFrameNumber = PaPtrToPfn(kernel_pagetable);
-        PageDir->Pde[KernelPageTableIndex + 1].Valid = 1;
-        PageDir->Pde[KernelPageTableIndex + 1].Write = 1;
-        PageDir->Pde[KernelPageTableIndex + 1].PageFrameNumber = PaPtrToPfn(kernel_pagetable + 4096);
-
-        /* Set up the Startup PDE */
-        PageDir->Pde[StartupPageTableIndex].Valid = 1;
-        PageDir->Pde[StartupPageTableIndex].Write = 1;
-        PageDir->Pde[StartupPageTableIndex].PageFrameNumber = PaPtrToPfn(startup_pagedirectory);
-
-        /* Set up the Hyperspace PDE */
-        PageDir->Pde[HyperspacePageTableIndex].Valid = 1;
-        PageDir->Pde[HyperspacePageTableIndex].Write = 1;
-        PageDir->Pde[HyperspacePageTableIndex].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable);
-
-        /* Set up the Apic PDE */
-        PageDir->Pde[ApicPageTableIndex].Valid = 1;
-        PageDir->Pde[ApicPageTableIndex].Write = 1;
-        PageDir->Pde[ApicPageTableIndex].PageFrameNumber = PaPtrToPfn(apic_pagetable);
-
-        /* Set up the KPCR PDE */
-        PageDir->Pde[KpcrPageTableIndex].Valid = 1;
-        PageDir->Pde[KpcrPageTableIndex].Write = 1;
-        PageDir->Pde[KpcrPageTableIndex].PageFrameNumber = PaPtrToPfn(kpcr_pagetable);
-
-        /* Set up Low Memory PTEs */
-        PageDir = (PPAGE_DIRECTORY_X86)&lowmem_pagetable;
-        for (i=0; i<1024; i++) {
-
-            PageDir->Pde[i].Valid = 1;
-            PageDir->Pde[i].Write = 1;
-            PageDir->Pde[i].Owner = 1;
-            PageDir->Pde[i].PageFrameNumber = PaToPfn(i * PAGE_SIZE);
-        }
-
-        /* Set up Kernel PTEs */
-        PageDir = (PPAGE_DIRECTORY_X86)&kernel_pagetable;
-        for (i=0; i<1536; i++) {
-
-            PageDir->Pde[i].Valid = 1;
-            PageDir->Pde[i].Write = 1;
-            PageDir->Pde[i].PageFrameNumber = PaToPfn(KERNEL_BASE_PHYS + i * PAGE_SIZE);
-        }
-
-        /* Set up APIC PTEs */
-        PageDir = (PPAGE_DIRECTORY_X86)&apic_pagetable;
-        PageDir->Pde[0].Valid = 1;
-        PageDir->Pde[0].Write = 1;
-        PageDir->Pde[0].CacheDisable = 1;
-        PageDir->Pde[0].WriteThrough = 1;
-        PageDir->Pde[0].PageFrameNumber = PaToPfn(APIC_BASE);
-        PageDir->Pde[0x200].Valid = 1;
-        PageDir->Pde[0x200].Write = 1;
-        PageDir->Pde[0x200].CacheDisable = 1;
-        PageDir->Pde[0x200].WriteThrough = 1;
-        PageDir->Pde[0x200].PageFrameNumber = PaToPfn(APIC_BASE + KERNEL_BASE_PHYS);
-
-        /* Set up KPCR PTEs */
-        PageDir = (PPAGE_DIRECTORY_X86)&kpcr_pagetable;
-        PageDir->Pde[0].Valid = 1;
-        PageDir->Pde[0].Write = 1;
-        PageDir->Pde[0].PageFrameNumber = 1;
+        PageDir->Pde[i].Valid = 1;
+        PageDir->Pde[i].Write = 1;
+        PageDir->Pde[i].Owner = 1;
+        PageDir->Pde[i].PageFrameNumber = PaToPfn(i * PAGE_SIZE);
     }
-    return;
+
+    /* Set up Kernel PTEs */
+    PageDir = (PPAGE_DIRECTORY_X86)&kernel_pagetable;
+    for (i=0; i<1536; i++) {
+
+        PageDir->Pde[i].Valid = 1;
+        PageDir->Pde[i].Write = 1;
+        PageDir->Pde[i].PageFrameNumber = PaToPfn(KERNEL_BASE_PHYS + i * PAGE_SIZE);
+    }
+
+    /* Set up APIC PTEs */
+    PageDir = (PPAGE_DIRECTORY_X86)&apic_pagetable;
+    PageDir->Pde[0].Valid = 1;
+    PageDir->Pde[0].Write = 1;
+    PageDir->Pde[0].CacheDisable = 1;
+    PageDir->Pde[0].WriteThrough = 1;
+    PageDir->Pde[0].PageFrameNumber = PaToPfn(APIC_BASE);
+    PageDir->Pde[0x200].Valid = 1;
+    PageDir->Pde[0x200].Write = 1;
+    PageDir->Pde[0x200].CacheDisable = 1;
+    PageDir->Pde[0x200].WriteThrough = 1;
+    PageDir->Pde[0x200].PageFrameNumber = PaToPfn(APIC_BASE + KERNEL_BASE_PHYS);
+
+    /* Set up KPCR PTEs */
+    PageDir = (PPAGE_DIRECTORY_X86)&kpcr_pagetable;
+    PageDir->Pde[0].Valid = 1;
+    PageDir->Pde[0].Write = 1;
+    PageDir->Pde[0].PageFrameNumber = 1;
 }
 
 PVOID
@@ -723,10 +491,6 @@ LdrGetModuleObject(PCHAR ModuleName)
     return NULL;
 }
 
-BOOLEAN
-NTAPI
-FrLdrLoadHal(PCHAR szFileName, INT nPos);
-
 NTSTATUS
 NTAPI
 LdrPEGetOrLoadModule(IN PCHAR ModuleName,
@@ -748,7 +512,7 @@ LdrPEGetOrLoadModule(IN PCHAR ModuleName,
             !_stricmp(ImportedName, "bootvid.dll"))
         {
             /* Load the HAL */
-            FrLdrLoadImage(ImportedName, 10);
+            FrLdrLoadImage(ImportedName, 10, FALSE);
 
             /* Return the new module */
             *ImportedModule = LdrGetModuleObject(ImportedName);
@@ -847,91 +611,11 @@ FrLdrReMapImage(IN PIMAGE_NT_HEADERS NtHeader,
     }
 }
 
-/*++
- * FrLdrMapKernel
- * INTERNAL
- *
- *     Maps the Kernel into memory, does PE Section Mapping, initalizes the
- *     uninitialized data sections, and relocates the image.
- *
- * Params:
- *     KernelImage - FILE Structure representing the ntoskrnl image file.
- *
- * Returns:
- *     TRUE if the Kernel was mapped.
- *
- * Remarks:
- *     None.
- *
- *--*/
 BOOLEAN
 NTAPI
-FrLdrMapKernel(FILE *KernelImage)
-{
-    PIMAGE_NT_HEADERS NtHeader;
-    ULONG ImageSize;
-    PVOID LoadBase;
-
-    /* Set the virtual (image) and physical (load) addresses */
-    LoadBase = (PVOID)KERNEL_BASE_PHYS;
-
-    /* Load the first 1024 bytes of the kernel image so we can read the PE header */
-    if (!FsReadFile(KernelImage, 1024, NULL, LoadBase)) return FALSE;
-
-    /* Now read the MZ header to get the offset to the PE Header */
-    NtHeader = RtlImageNtHeader(LoadBase);
-
-    /* Get Kernel Base */
-    KernelBase = NtHeader->OptionalHeader.ImageBase;
-    FrLdrGetKernelBase();
-
-    /* Save Entrypoint */
-    KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
-
-    /* Save the Image Size */
-    ImageSize = NtHeader->OptionalHeader.SizeOfImage;
-
-    /* Set the file pointer to zero */
-    FsSetFilePointer(KernelImage, 0);
-
-    /* Load the file image */
-    FsReadFile(KernelImage, ImageSize, NULL, LoadBase);
-
-    /* Map it */
-    FrLdrReMapImage(NtHeader, LoadBase);
-
-    /* Calculate Difference between Real Base and Compiled Base*/
-    LdrRelocateImageWithBias(LoadBase,
-                             KernelBase - (ULONG_PTR)LoadBase,
-                             "FreeLdr",
-                             STATUS_SUCCESS,
-                             STATUS_UNSUCCESSFUL,
-                             STATUS_UNSUCCESSFUL);
-
-    /* Fill out Module Data Structure */
-    reactos_modules[0].ModStart = KernelBase;
-    reactos_modules[0].ModEnd = KernelBase + ImageSize;
-    strcpy(reactos_module_strings[0], "ntoskrnl.exe");
-    reactos_modules[0].String = (ULONG_PTR)reactos_module_strings[0];
-    LoaderBlock.ModsCount++;
-
-    /* Increase the next Load Base */
-    NextModuleBase = ROUND_UP(LoadBase + ImageSize, PAGE_SIZE);
-
-    /* Load the HAL now (name will be changed internally if needed) */
-    FrLdrLoadImage("hal.dll", 10);
-
-    /*  Perform import fixups */
-    LdrPEFixupImports(LoadBase, "ntoskrnl.exe");
-
-    /* Return Success */
-    return TRUE;
-}
-
-BOOLEAN
-NTAPI
-FrLdrMapImage(IN FILE *HalImage,
-              IN PCHAR Name)
+FrLdrMapImage(IN FILE *Image,
+              IN PCHAR Name,
+              IN ULONG ImageType)
 {
     PIMAGE_NT_HEADERS NtHeader;
     PVOID ImageBase, LoadBase;
@@ -940,10 +624,10 @@ FrLdrMapImage(IN FILE *HalImage,
 
     /* Set the virtual (image) and physical (load) addresses */
     LoadBase = (PVOID)NextModuleBase;
-    ImageBase  = RVA(LoadBase , -KERNEL_BASE_PHYS + KSEG0_BASE);
+    ImageBase = RVA(LoadBase , -KERNEL_BASE_PHYS + KSEG0_BASE);
 
     /* Load the first 1024 bytes of the HAL image so we can read the PE header */
-    if (!FsReadFile(HalImage, 1024, NULL, LoadBase)) return FALSE;
+    if (!FsReadFile(Image, 1024, NULL, LoadBase)) return FALSE;
 
     /* Now read the MZ header to get the offset to the PE Header */
     NtHeader = RtlImageNtHeader(LoadBase);
@@ -952,21 +636,22 @@ FrLdrMapImage(IN FILE *HalImage,
     ImageSize = NtHeader->OptionalHeader.SizeOfImage;
 
     /* Set the file pointer to zero */
-    FsSetFilePointer(HalImage, 0);
+    FsSetFilePointer(Image, 0);
 
     /* Load the file image */
-    FsReadFile(HalImage, ImageSize, NULL, LoadBase);
+    FsReadFile(Image, ImageSize, NULL, LoadBase);
 
     /* Map it into virtual memory */
-    FrLdrReMapImage(NtHeader, LoadBase);
+    if (ImageType != 2) FrLdrReMapImage(NtHeader, LoadBase);
 
     /* Calculate Difference between Real Base and Compiled Base*/
-    LdrRelocateImageWithBias(LoadBase,
-                             (ULONG_PTR)ImageBase - (ULONG_PTR)LoadBase,
-                             "FreeLdr",
-                             STATUS_SUCCESS,
-                             STATUS_UNSUCCESSFUL,
-                             STATUS_UNSUCCESSFUL);
+    if (ImageType != 2) LdrRelocateImageWithBias(LoadBase,
+                                                 (ULONG_PTR)ImageBase -
+                                                 (ULONG_PTR)LoadBase,
+                                                 "FreeLdr",
+                                                 STATUS_SUCCESS,
+                                                 STATUS_UNSUCCESSFUL,
+                                                 STATUS_UNSUCCESSFUL);
 
     /* Fill out Module Data Structure */
     reactos_modules[ImageId].ModStart = (ULONG_PTR)ImageBase;
@@ -978,9 +663,20 @@ FrLdrMapImage(IN FILE *HalImage,
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP(NextModuleBase + ImageSize, PAGE_SIZE);
 
-    /*  Perform import fixups  */
-    //DbgPrint("Fixing up: %s loaded at: %p\n", Name, ImageBase);
-    LdrPEFixupImports(LoadBase, Name);
+    /* Successful load! */
+    //DbgPrint("Image: %s loaded at: %p\n", Name, ImageBase);
+
+    /* Load HAL if this is the kernel */
+    if (ImageType == 1)
+    {
+        KernelBase = NtHeader->OptionalHeader.ImageBase;
+        KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
+        FrLdrLoadImage("hal.dll", 10, FALSE);
+        LoaderBlock.KernelBase = KernelBase;
+    }
+
+    /* Perform import fixups */
+    if (ImageType != 2) LdrPEFixupImports(LoadBase, Name);
 
     /* Return Success */
     return TRUE;

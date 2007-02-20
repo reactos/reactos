@@ -38,65 +38,19 @@ CHAR szBootPath[255];
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
 BOOLEAN FrLdrBootType;
 
-static BOOLEAN
-NTAPI
-FrLdrLoadKernel(PCHAR szFileName,
-                INT nPos)
-{
-    PFILE FilePointer;
-    PCHAR szShortName;
-    CHAR szBuffer[256];
-
-    /* Extract Kernel filename without path */
-    szShortName = strrchr(szFileName, '\\');
-    if (szShortName == NULL) {
-
-        /* No path, leave it alone */
-        szShortName = szFileName;
-
-    } else {
-
-        /* Skip the path */
-        szShortName = szShortName + 1;
-    }
-
-    /* Open the Kernel */
-    FilePointer = FsOpenFile(szFileName);
-
-    /* Make sure it worked */
-    if (FilePointer == NULL) {
-
-        /* Return failure on the short name */
-        strcpy(szBuffer, szShortName);
-        strcat(szBuffer, " not found.");
-        UiMessageBox(szBuffer);
-        return(FALSE);
-    }
-
-    /* Update the status bar with the current file */
-    strcpy(szBuffer, "Reading ");
-    strcat(szBuffer, szShortName);
-    UiDrawStatusText(szBuffer);
-
-    /* Do the actual loading */
-    FrLdrMapKernel(FilePointer);
-
-    /* Update Processbar and return success */
-    UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);
-    return(TRUE);
-}
-
 BOOLEAN
 NTAPI
 FrLdrMapImage(
     IN FILE *Image,
-    IN PCHAR ShortName
+    IN PCHAR ShortName,
+    IN ULONG ImageType
 );
 
 BOOLEAN
 NTAPI
 FrLdrLoadImage(IN PCHAR szFileName,
-               IN INT nPos)
+               IN INT nPos,
+               IN ULONG ImageType)
 {
     PFILE FilePointer;
     PCHAR szShortName;
@@ -153,74 +107,11 @@ FrLdrLoadImage(IN PCHAR szFileName,
     UiDrawStatusText(szBuffer);
 
     /* Do the actual loading */
-    FrLdrMapImage(FilePointer, szShortName);
+    FrLdrMapImage(FilePointer, szShortName, ImageType);
 
     /* Update Processbar and return success */
     if (!FrLdrBootType) UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);
     return TRUE;
-}
-
-static VOID
-FreeldrFreeMem(PVOID Area)
-{
-  MmFreeMemory(Area);
-}
-
-static PVOID
-FreeldrAllocMem(ULONG_PTR Size)
-{
-  return MmAllocateMemory((ULONG) Size);
-}
-
-static BOOLEAN
-FreeldrReadFile(PVOID FileContext, PVOID Buffer, ULONG Size)
-{
-  ULONG BytesRead;
-
-  return FsReadFile((PFILE) FileContext, (ULONG) Size, &BytesRead, Buffer)
-         && Size == BytesRead;
-}
-
-static BOOLEAN
-FreeldrSeekFile(PVOID FileContext, ULONG_PTR Position)
-{
-  FsSetFilePointer((PFILE) FileContext, (ULONG) Position);
-    return TRUE;
-}
-
-static BOOLEAN
-LoadKernelSymbols(PCHAR szKernelName, int nPos)
-{
-  static ROSSYM_CALLBACKS FreeldrCallbacks =
-    {
-      FreeldrAllocMem,
-      FreeldrFreeMem,
-      FreeldrReadFile,
-      FreeldrSeekFile
-    };
-  PFILE FilePointer;
-  PROSSYM_INFO RosSymInfo;
-  ULONG Size;
-  ULONG_PTR Base;
-  //return TRUE;
-
-  RosSymInit(&FreeldrCallbacks);
-
-  FilePointer = FsOpenFile(szKernelName);
-  if (FilePointer == NULL)
-    {
-      return FALSE;
-    }
-  if (! RosSymCreateFromFile(FilePointer, &RosSymInfo))
-    {
-      return FALSE;
-    }
-  Base = FrLdrCreateModule("NTOSKRNL.SYM");
-  Size = RosSymGetRawDataLength(RosSymInfo);
-  RosSymGetRawData(RosSymInfo, (PVOID)Base);
-  FrLdrCloseModule(Base, Size);
-  RosSymDelete(RosSymInfo);
-  return TRUE;
 }
 
 static BOOLEAN
@@ -374,49 +265,6 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     return(TRUE);
 }
 
-static BOOLEAN
-FrLdrLoadDriver(PCHAR szFileName,
-                INT nPos)
-{
-    PFILE FilePointer;
-    CHAR value[256];
-    LPSTR p;
-
-    /* Open the Driver */
-    FilePointer = FsOpenFile(szFileName);
-
-    /* Make sure we did */
-    if (FilePointer == NULL) {
-
-        /* Fail if file wasn't opened */
-        strcpy(value, szFileName);
-        strcat(value, " not found.");
-        UiMessageBox(value);
-        return(FALSE);
-    }
-
-    /* Update the status bar with the current file */
-    strcpy(value, "Reading ");
-    p = strrchr(szFileName, '\\');
-    if (p == NULL) {
-
-        strcat(value, szFileName);
-
-    } else {
-
-        strcat(value, p + 1);
-
-    }
-    UiDrawStatusText(value);
-
-    /* Load the driver */
-    FrLdrLoadModule(FilePointer, szFileName, NULL);
-
-    /* Update status and return */
-    UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);
-    return(TRUE);
-}
-
 static VOID
 FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                      INT nPos)
@@ -552,7 +400,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                         /* Update the position if needed */
                         if (nPos < 100) nPos += 5;
 
-                        FrLdrLoadDriver(ImagePath, nPos);
+                        FrLdrLoadImage(ImagePath, nPos, 2);
 
                     } else {
 
@@ -621,7 +469,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
 
                     if (nPos < 100) nPos += 5;
 
-                    FrLdrLoadDriver(ImagePath, nPos);
+                    FrLdrLoadImage(ImagePath, nPos, 2);
 
                 } else {
 
@@ -647,15 +495,12 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	CHAR SystemPath[255];
 	CHAR szKernelName[255];
 	CHAR szFileName[255];
-	UINT i;
 	CHAR  MsgBuffer[256];
 	ULONG SectionId;
 
 	ULONG_PTR Base;
 	ULONG Size;
 
-	extern ULONG PageDirectoryStart;
-	extern ULONG PageDirectoryEnd;
 	extern BOOLEAN AcpiPresent;
 
 	//
@@ -676,47 +521,36 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	/*
 	 * Setup multiboot information structure
 	 */
-	LoaderBlock.Flags = MB_FLAGS_BOOT_DEVICE | MB_FLAGS_COMMAND_LINE | MB_FLAGS_MODULE_INFO;
-	LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
-	LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
-	LoaderBlock.BootDevice = 0xffffffff;
 	LoaderBlock.CommandLine = reactos_kernel_cmdline;
 	LoaderBlock.ModsCount = 0;
 	LoaderBlock.ModsAddr = reactos_modules;
     LoaderBlock.DrivesAddr = reactos_arc_disk_info;
-	LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&reactos_memory_map, 32) * sizeof(memory_map_t);
-	if (LoaderBlock.MmapLength)
-	{
-		LoaderBlock.MmapAddr = (unsigned long)&reactos_memory_map;
-		LoaderBlock.Flags |= MB_FLAGS_MEM_INFO | MB_FLAGS_MMAP_INFO;
-		reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
-		DbgPrint((DPRINT_REACTOS, "memory map length: %d\n", LoaderBlock.MmapLength));
-		DbgPrint((DPRINT_REACTOS, "dumping memory map:\n"));
-		for (i=0; i<(LoaderBlock.MmapLength/sizeof(memory_map_t)); i++)
-		{
-			if (BiosMemoryUsable == reactos_memory_map[i].type &&
-			    0 == reactos_memory_map[i].base_addr_low)
-			{
-				LoaderBlock.MemLower = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024;
-				if (640 < LoaderBlock.MemLower)
-				{
-					LoaderBlock.MemLower = 640;
-				}
-			}
-			if (BiosMemoryUsable == reactos_memory_map[i].type &&
-			    reactos_memory_map[i].base_addr_low <= 1024 * 1024 &&
-			    1024 * 1024 <= reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low)
-			{
-				LoaderBlock.MemHigher = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024 - 1024;
-			}
-			DbgPrint((DPRINT_REACTOS, "start: %x\t size: %x\t type %d\n",
-			          reactos_memory_map[i].base_addr_low,
-				  reactos_memory_map[i].length_low,
-				  reactos_memory_map[i].type));
-		}
-	}
-	DbgPrint((DPRINT_REACTOS, "low_mem = %d\n", LoaderBlock.MemLower));
-	DbgPrint((DPRINT_REACTOS, "high_mem = %d\n", LoaderBlock.MemHigher));
+    LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&reactos_memory_map, 32) * sizeof(memory_map_t);
+    if (LoaderBlock.MmapLength)
+    {
+        ULONG i;
+
+        LoaderBlock.MmapAddr = (unsigned long)&reactos_memory_map;
+        reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
+        for (i=0; i<(LoaderBlock.MmapLength/sizeof(memory_map_t)); i++)
+        {
+            if (BiosMemoryUsable == reactos_memory_map[i].type &&
+                0 == reactos_memory_map[i].base_addr_low)
+            {
+                LoaderBlock.MemLower = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024;
+                if (640 < LoaderBlock.MemLower)
+                {
+                    LoaderBlock.MemLower = 640;
+                }
+            }
+            if (BiosMemoryUsable == reactos_memory_map[i].type &&
+                reactos_memory_map[i].base_addr_low <= 1024 * 1024 &&
+                1024 * 1024 <= reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low)
+            {
+                LoaderBlock.MemHigher = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024 - 1024;
+            }
+        }
+    }
 
 	/*
 	 * Initialize the registry
@@ -848,7 +682,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	}
 
     /* Load the kernel */
-    if (!FrLdrLoadKernel(szKernelName, 5)) return;
+    if (!FrLdrLoadImage(szKernelName, 5, 1)) return;
 
 	/*
 	 * Load the System hive from disk
@@ -915,12 +749,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		return;
 	}
 	UiDrawProgressBarCenter(30, 100, szLoadingMsg);
-
-	/*
-	 * Load kernel symbols
-	 */
-	LoadKernelSymbols(szKernelName, 30);
-	UiDrawProgressBarCenter(40, 100, szLoadingMsg);
 
 	/*
 	 * Load boot drivers
