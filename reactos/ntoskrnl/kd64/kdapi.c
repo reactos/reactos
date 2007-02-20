@@ -72,8 +72,8 @@ KdpSetCommonState(IN ULONG NewState,
     WaitStateChange->ProcessorLevel = KeProcessorLevel;
     WaitStateChange->Processor = (USHORT)KeGetCurrentPrcb()->Number;
     WaitStateChange->NumberProcessors = (ULONG)KeNumberProcessors;
-    WaitStateChange->Thread = (ULONG)KeGetCurrentThread();
-    WaitStateChange->ProgramCounter = (ULONG64)Context->Eip;
+    WaitStateChange->Thread = (ULONG)(LONG_PTR)KeGetCurrentThread();
+    WaitStateChange->ProgramCounter = (ULONG)(LONG_PTR)Context->Eip;
 
     /* Zero out the Control Report */
     RtlZeroMemory(&WaitStateChange->ControlReport,
@@ -835,7 +835,7 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
 
         /* Fill out load data */
         WaitStateChange.u.LoadSymbols.UnloadSymbols = Unload;
-        WaitStateChange.u.LoadSymbols.BaseOfDll = (ULONG)SymbolInfo->BaseOfDll;
+        WaitStateChange.u.LoadSymbols.BaseOfDll = (ULONGLONG)(LONG_PTR)SymbolInfo->BaseOfDll;
         WaitStateChange.u.LoadSymbols.ProcessId = SymbolInfo->ProcessId;
         WaitStateChange.u.LoadSymbols.CheckSum = SymbolInfo->CheckSum;
         WaitStateChange.u.LoadSymbols.SizeOfImage = SymbolInfo->SizeOfImage;
