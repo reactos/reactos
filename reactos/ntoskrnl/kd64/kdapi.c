@@ -104,7 +104,7 @@ KdpGetVersion(IN PDBGKD_MANIPULATE_STATE64 State)
     STRING Header;
 
     /* Fill out the header */
-    Header.Length = sizeof(DBGKD_GET_VERSION64);
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
 
     /* Get the version block */
@@ -121,6 +121,9 @@ KdpGetVersion(IN PDBGKD_MANIPULATE_STATE64 State)
                  &KdpContext);
 }
 
+
+BOOLEAN VirtCalled = FALSE;
+
 VOID
 NTAPI
 KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
@@ -129,6 +132,7 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
 {
     STRING Header;
     ULONG Length = State->u.ReadMemory.TransferCount;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     /* Validate length */
     if (Length > (PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64)))
@@ -137,18 +141,38 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
         Length = PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64);
     }
 
-    /* Copy data */
-    RtlCopyMemory(Data->Buffer,
-                  (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress,
-                  Length);
-    Data->Length = Length;
+#if 0
+    if (!MmIsAddressValid((PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress))
+    {
+        Ke386SetCr2(State->u.ReadMemory.TargetBaseAddress);
+        while (TRUE);
+    }
+#endif
+
+    if ((ULONG_PTR)State->u.ReadMemory.TargetBaseAddress < KSEG0_BASE)
+    {
+        Length = 0;
+        Status = STATUS_UNSUCCESSFUL;
+    }
+    else if ((ULONG_PTR)State->u.ReadMemory.TargetBaseAddress >= (ULONG_PTR)SharedUserData)
+    {
+        Length = 0;
+        Status = STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+        RtlCopyMemory(Data->Buffer,
+                      (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress,
+                      Length);
+    }
 
     /* Fill out the header */
-    Header.Length = sizeof(DBGKD_GET_VERSION64);
+    Data->Length = Length;
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
 
     /* Fill out the state */
-    State->ReturnStatus = STATUS_SUCCESS;
+    State->ReturnStatus = Status;
     State->u.ReadMemory.ActualBytesRead = Length;
 
     /* Send the packet */
@@ -158,6 +182,66 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                  &KdpContext);
 }
 
+VOID
+NTAPI
+KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
+                    IN PSTRING Data,
+                    IN PCONTEXT Context)
+{
+    PDBGKD_READ_MEMORY64 ReadMemory = &State->u.ReadMemory;
+    STRING Header;
+    ULONG Length, RealLength;
+    PVOID ControlStart;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /* Check the length requested */
+    Length = ReadMemory->TransferCount;
+    if (Length > (PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64)))
+    {
+        /* Use maximum allowed */
+        Length = PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64);
+    }
+
+    /* Make sure that this is a valid request */
+    if (((ULONG)ReadMemory->TargetBaseAddress < sizeof(KPROCESSOR_STATE)) &&
+        (State->Processor < KeNumberProcessors))
+    {
+        /* Get the actual length */
+        RealLength = sizeof(KPROCESSOR_STATE) -
+                     (ULONG_PTR)ReadMemory->TargetBaseAddress;
+        if (RealLength < Length) Length = RealLength;
+
+        /* Set the proper address */
+        ControlStart = (PVOID)((ULONG_PTR)ReadMemory->TargetBaseAddress +
+                               (ULONG_PTR)&KiProcessorBlock[State->Processor]->
+                                           ProcessorState);
+
+        /* Copy the memory */
+        RtlCopyMemory(Data->Buffer, ControlStart, Length);
+        Data->Length = Length;
+
+        /* Finish up */
+        State->ReturnStatus = STATUS_SUCCESS;
+        ReadMemory->ActualBytesRead = Data->Length;
+    }
+    else
+    {
+        /* Invalid request */
+        Data->Length = 0;
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+        ReadMemory->ActualBytesRead = 0;
+    }
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
 
 KCONTINUE_STATUS
 NTAPI
@@ -209,6 +293,7 @@ SendPacket:
 
                 /* Read virtual memory */
                 KdpReadVirtualMemory(&ManipulateState, &Data, Context);
+                VirtCalled = TRUE;
                 break;
 
             case DbgKdWriteVirtualMemoryApi:
@@ -255,9 +340,8 @@ SendPacket:
 
             case DbgKdReadControlSpaceApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdReadControlSpaceApi);
-                while (TRUE);
+                /* Read control space */
+                KdpReadControlSpace(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdWriteControlSpaceApi:

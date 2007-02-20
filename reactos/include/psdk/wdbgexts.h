@@ -20,7 +20,7 @@ enum
 #define DBGKD_VERS_FLAG_HSS                             0x0010
 #define DBGKD_VERS_FLAG_PARTITIONS                      0x0020
 
-#define KDBG_TAG                                        TAG('G', 'B', 'D', 'K')
+#define KDBG_TAG                                        TAG('K', 'D', 'B', 'G')
 
 typedef struct _DBGKD_GET_VERSION64
 {

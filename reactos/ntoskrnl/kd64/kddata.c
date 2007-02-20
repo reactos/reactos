@@ -17,27 +17,6 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 /* GLOBALS *******************************************************************/
 
 //
-// Debugger Version Block
-//
-DBGKD_GET_VERSION64 KdVersionBlock =
-{
-    0,
-    0,
-    DBGKD_64BIT_PROTOCOL_VERSION2,
-    KD_SECONDARY_VERSION_DEFAULT,
-    DBGKD_VERS_FLAG_DATA,
-    IMAGE_FILE_MACHINE_I386,
-    PACKET_TYPE_MAX,
-    0,
-    0,
-    DBGKD_SIMULATION_NONE,
-    {0},
-    0,
-    0,
-    0
-};
-
-//
 // Debugger State
 //
 KD_CONTEXT KdpContext;
@@ -320,6 +299,27 @@ ULONG KdComponentTableSize = sizeof(KdComponentTable);
 //
 LIST_ENTRY KdpDebuggerDataListHead;
 KSPIN_LOCK KdpDataSpinLock;
+
+//
+// Debugger Version and Data Block
+//
+DBGKD_GET_VERSION64 KdVersionBlock =
+{
+    0,
+    0,
+    DBGKD_64BIT_PROTOCOL_VERSION2,
+    KD_SECONDARY_VERSION_DEFAULT,
+    DBGKD_VERS_FLAG_DATA,
+    IMAGE_FILE_MACHINE_I386,
+    PACKET_TYPE_MAX,
+    0,
+    0,
+    DBGKD_SIMULATION_NONE,
+    {0},
+    0,
+    0,
+    0
+};
 KDDEBUGGER_DATA64 KdDebuggerDataBlock =
 {
     {{0}},

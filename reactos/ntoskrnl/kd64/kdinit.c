@@ -132,7 +132,8 @@ KdInitSystem(IN ULONG BootPhase,
                                      InLoadOrderLinks);
 
         /* Save the Kernel Base */
-        KdVersionBlock.KernBase =(ULONGLONG)(LONG_PTR)LdrEntry->DllBase;
+        LdrEntry->DllBase = (PVOID)PsNtosImageBase;
+        KdVersionBlock.KernBase = (ULONGLONG)(LONG_PTR)LdrEntry->DllBase;
 
         /* Check if we have a command line */
         CommandLine = LoaderBlock->LoadOptions;
@@ -179,7 +180,7 @@ KdInitSystem(IN ULONG BootPhase,
     }
 
     /* Set the Kernel Base in the Data Block */
-    KdDebuggerDataBlock.KernBase = (ULONG_PTR)PsNtosImageBase;
+    KdDebuggerDataBlock.KernBase = (ULONGLONG)(LONG_PTR)KdVersionBlock.KernBase;
 
     /* Initialize the debugger if requested */
     if ((EnableKd) && (NT_SUCCESS(KdDebuggerInitialize0(LoaderBlock))))
