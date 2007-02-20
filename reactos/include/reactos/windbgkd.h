@@ -7,6 +7,12 @@
 #include "wdbgexts.h"
 
 //
+// Conversion Macros
+//
+#define COPYSE(p64, p32, f)                 \
+    p64->f = (ULONG64)(LONG64)(LONG)p32->f
+
+//
 // Packet Size and Control Stream Size
 //
 #define PACKET_MAX_SIZE                     4000
@@ -459,5 +465,24 @@ typedef struct _DBGKD_MANIPULATE_STATE64
         DBGKD_SWITCH_PARTITION SwitchPartition;
     } u;
 } DBGKD_MANIPULATE_STATE64, *PDBGKD_MANIPULATE_STATE64;
+
+FORCEINLINE
+VOID
+ExceptionRecord32To64(IN PEXCEPTION_RECORD32 Ex32,
+                      OUT PEXCEPTION_RECORD64 Ex64)
+{
+    ULONG i;
+
+    Ex64->ExceptionCode = Ex32->ExceptionCode;
+    Ex64->ExceptionFlags = Ex32->ExceptionFlags;
+    Ex64->ExceptionRecord = Ex32->ExceptionRecord;
+    COPYSE(Ex64,Ex32,ExceptionAddress);
+    Ex64->NumberParameters = Ex32->NumberParameters;
+
+    for (i = 0; i < EXCEPTION_MAXIMUM_PARAMETERS; i++)
+    {
+        COPYSE(Ex64,Ex32,ExceptionInformation[i]);
+    }
+}
 
 #endif

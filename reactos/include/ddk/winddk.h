@@ -635,6 +635,17 @@ typedef IO_ALLOCATION_ACTION
   IN PVOID  MapRegisterBase,
   IN PVOID  Context);
 
+
+typedef struct _EXCEPTION_RECORD32
+{
+    NTSTATUS ExceptionCode;
+    ULONG ExceptionFlags;
+    ULONG ExceptionRecord;
+    ULONG ExceptionAddress;
+    ULONG NumberParameters;
+    ULONG ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD32, *PEXCEPTION_RECORD32;
+
 typedef struct _EXCEPTION_RECORD64
 {
     NTSTATUS ExceptionCode;

@@ -160,6 +160,14 @@ KdpReportLoadSymbolsStateChange(
     IN OUT PCONTEXT Context
 );
 
+BOOLEAN
+NTAPI
+KdpReportExceptionStateChange(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN OUT PCONTEXT Context,
+    IN BOOLEAN SecondChanceException
+);
+
 VOID
 NTAPI
 KdpRestoreAllBreakpoints(

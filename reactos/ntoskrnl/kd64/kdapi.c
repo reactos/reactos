@@ -871,6 +871,45 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
     return Status;
 }
 
+BOOLEAN
+NTAPI
+KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
+                              IN OUT PCONTEXT Context,
+                              IN BOOLEAN SecondChanceException)
+{
+    STRING Header, Data;
+    DBGKD_WAIT_STATE_CHANGE64 WaitStateChange;
+    BOOLEAN Status;
+
+    /* Start report loop */
+    do
+    {
+        /* Build the architecture common parts of the message */
+        KdpSetCommonState(DbgKdExceptionStateChange, Context, &WaitStateChange);
+
+        /* Convert the exception record to 64-bits and set First Chance flag */
+        ExceptionRecord32To64((PEXCEPTION_RECORD32)ExceptionRecord,
+                              &WaitStateChange.u.Exception.ExceptionRecord);
+        WaitStateChange.u.Exception.FirstChance = !SecondChanceException;
+
+        /* Now finish creating the structure */
+        KdpSetContextState(&WaitStateChange, Context);
+
+        /* Setup the actual header to send to KD */
+        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64);
+        Header.Buffer = (PCHAR)&WaitStateChange;
+
+        /* Send State Change packet and wait for a reply */
+        Status = KdpSendWaitContinue(PACKET_TYPE_KD_STATE_CHANGE64,
+                                     &Header,
+                                     &Data,
+                                     Context);
+    } while (Status == KdPacketNeedsResend);
+
+    /* Return */
+    return Status;
+}
+
 VOID
 NTAPI
 KdpTimeSlipDpcRoutine(IN PKDPC Dpc,

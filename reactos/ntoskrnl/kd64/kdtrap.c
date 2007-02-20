@@ -62,22 +62,16 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
                   sizeof(CONTEXT));
 
     /* Report the new state */
-    Ke386SetCr2(TrapFrame->HardwareEsp);
-#if 0
     Status = KdpReportExceptionStateChange(ExceptionRecord,
                                            &Prcb->ProcessorState.
                                            ContextFrame,
                                            SecondChanceException);
-#else
-    while (TRUE);
-    Status = FALSE;
-#endif
 
     /* Now restore the processor state, manually again. */
     RtlCopyMemory(ContextRecord,
                   &Prcb->ProcessorState.ContextFrame,
                   sizeof(CONTEXT));
-    KiRestoreProcessorControlState(&Prcb->ProcessorState);
+    //KiRestoreProcessorControlState(&Prcb->ProcessorState);
 
     /* Exit the debugger and clear the CTRL-C state */
     KdExitDebugger(Entered);
