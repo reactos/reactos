@@ -16,6 +16,50 @@
 
 VOID
 NTAPI
+KdpGetStateChange(IN PDBGKD_MANIPULATE_STATE64 State,
+                  IN PCONTEXT Context)
+{
+    PKPRCB Prcb;
+    ULONG i;
+
+    /* Check for success */
+    if (NT_SUCCESS(State->u.Continue2.ContinueStatus))
+    {
+        /* Check if we're tracing */
+        if (State->u.Continue2.ControlSet.TraceFlag)
+        {
+            /* Enable TF */
+            Context->EFlags |= EFLAGS_TF;
+        }
+        else
+        {
+            /* Remove it */
+            Context->EFlags &= ~EFLAGS_TF;
+        }
+
+        /* Loop all processors */
+        for (i = 0; i < KeNumberProcessors; i++)
+        {
+            /* Get the PRCB and update DR7 and DR6 */
+            Prcb = KiProcessorBlock[i];
+            Prcb->ProcessorState.SpecialRegisters.KernelDr7 =
+                State->u.Continue2.ControlSet.Dr7;
+            Prcb->ProcessorState.SpecialRegisters.KernelDr6 = 0;
+        }
+
+        /* Check if we have new symbol information */
+        if (State->u.Continue2.ControlSet.CurrentSymbolStart != 1)
+        {
+            /* Update it */
+            KdpCurrentSymbolStart =
+                State->u.Continue2.ControlSet.CurrentSymbolStart;
+            KdpCurrentSymbolEnd= State->u.Continue2.ControlSet.CurrentSymbolEnd;
+        }
+    }
+}
+
+VOID
+NTAPI
 KdpSetCommonState(IN ULONG NewState,
                   IN PCONTEXT Context,
                   IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange)
@@ -507,10 +551,8 @@ SendPacket:
 
             case DbgKdContinueApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdContinueApi);
-                while (TRUE);
-                break;
+                /* Simply continue */
+                return NT_SUCCESS(ManipulateState.u.Continue.ContinueStatus);
 
             case DbgKdReadControlSpaceApi:
 
@@ -547,9 +589,18 @@ SendPacket:
 
             case DbgKdContinueApi2:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdContinueApi2);
-                while (TRUE);
+                /* Check if caller reports success */
+                if (NT_SUCCESS(ManipulateState.u.Continue2.ContinueStatus))
+                {
+                    /* Update the state */
+                    KdpGetStateChange(&ManipulateState, Context);
+                    return ContinueSuccess;
+                }
+                else
+                {
+                    /* Return an error */
+                    return ContinueError;
+                }
                 break;
 
             case DbgKdReadPhysicalMemoryApi:
@@ -817,7 +868,6 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
     } while(Status == ContinueProcessorReselected);
 
     /* Return status */
-    while (TRUE);
     return Status;
 }
 

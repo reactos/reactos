@@ -101,7 +101,7 @@ KdpSymbol(IN PSTRING DllPath,
     RtlCopyMemory(ContextRecord,
                   &Prcb->ProcessorState.ContextFrame,
                   sizeof(CONTEXT));
-    KiRestoreProcessorControlState(&Prcb->ProcessorState);
+    //KiRestoreProcessorControlState(&Prcb->ProcessorState);
 
     /* Exit the debugger and clear the CTRL-C state */
     KdExitDebugger(Entered);

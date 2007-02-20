@@ -210,3 +210,4 @@ extern ULONG KdpBreakpointInstruction;
 extern BOOLEAN KdpOweBreakpoint;
 extern BOOLEAN BreakpointsSuspended;
 extern ULONG KdpNumInternalBreakpoints;
+extern ULONG KdpCurrentSymbolStart, KdpCurrentSymbolEnd;

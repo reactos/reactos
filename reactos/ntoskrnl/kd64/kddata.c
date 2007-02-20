@@ -54,6 +54,8 @@ BOOLEAN KdpOweBreakpoint;
 BOOLEAN BreakpointsSuspended;
 ULONG KdpNumInternalBreakpoints;
 
+ULONG KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
+
 //
 // Time Slip Support
 //
