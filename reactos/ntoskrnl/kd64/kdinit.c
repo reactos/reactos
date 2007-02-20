@@ -68,8 +68,9 @@ KdInitSystem(IN ULONG BootPhase,
     ANSI_STRING ImageName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;
-    ULONG i, j;
+    ULONG i, j, Length;
     CHAR NameBuffer[256];
+    PWCHAR Name;
 
     /* Check if this is Phase 1 */
     if (BootPhase)
@@ -230,11 +231,17 @@ KdInitSystem(IN ULONG BootPhase,
                                              InLoadOrderLinks);
 
                 /* Generate the image name */
-                for (j = 0; j < LdrEntry->BaseDllName.Length / 2; j++)
+                Name = LdrEntry->FullDllName.Buffer;
+                Length = LdrEntry->FullDllName.Length / sizeof(WCHAR);
+                j = 0;
+                do
                 {
                     /* Do cheap Unicode to ANSI conversion */
-                    NameBuffer[j] = (CHAR)LdrEntry->BaseDllName.Buffer[j];
-                }
+                    NameBuffer[j++] = (CHAR)*Name++;
+                } while (j < Length);
+
+                /* Null-terminate */
+                NameBuffer[j] = ANSI_NULL;
 
                 /* Load symbols for image */
                 RtlInitAnsiString(&ImageName, NameBuffer);

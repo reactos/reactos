@@ -845,6 +845,7 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
         {
             /* Setup the information */
             WaitStateChange.u.LoadSymbols.PathNameLength = PathName->Length;
+            RtlCopyMemory(KdpPathBuffer, PathName->Buffer, PathName->Length);
             Data.Buffer = KdpPathBuffer;
             Data.Length = WaitStateChange.u.LoadSymbols.PathNameLength;
             ExtraData = &Data;
