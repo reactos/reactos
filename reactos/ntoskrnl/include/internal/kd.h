@@ -209,3 +209,4 @@ extern BREAKPOINT_ENTRY KdpBreakpointTable[20];
 extern ULONG KdpBreakpointInstruction;
 extern BOOLEAN KdpOweBreakpoint;
 extern BOOLEAN BreakpointsSuspended;
+extern ULONG KdpNumInternalBreakpoints;

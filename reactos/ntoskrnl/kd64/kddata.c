@@ -52,6 +52,7 @@ BREAKPOINT_ENTRY KdpBreakpointTable[20];
 ULONG KdpBreakpointInstruction = 0xCC;
 BOOLEAN KdpOweBreakpoint;
 BOOLEAN BreakpointsSuspended;
+ULONG KdpNumInternalBreakpoints;
 
 //
 // Time Slip Support

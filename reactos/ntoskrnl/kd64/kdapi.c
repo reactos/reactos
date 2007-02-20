@@ -276,6 +276,57 @@ KdpRestoreBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
                  &KdpContext);
 }
 
+VOID
+NTAPI
+KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
+              IN PSTRING Data,
+              IN PCONTEXT Context)
+{
+    STRING Header;
+    PVOID ControlStart;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /* Make sure that this is a valid request */
+    if (State->Processor < KeNumberProcessors)
+    {
+        /* Check if the request is for this CPU */
+        if (State->Processor == KeGetCurrentPrcb()->Number)
+        {
+            /* We're just copying our own context */
+            ControlStart = Context;
+        }
+        else
+        {
+            /* SMP not yet handled */
+            ControlStart = NULL;
+            while (TRUE);
+        }
+
+        /* Copy the memory */
+        RtlCopyMemory(Data->Buffer, ControlStart, sizeof(CONTEXT));
+        Data->Length = sizeof(CONTEXT);
+
+        /* Finish up */
+        State->ReturnStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Invalid request */
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
+
 KCONTINUE_STATUS
 NTAPI
 KdpSendWaitContinue(IN ULONG PacketType,
@@ -339,8 +390,7 @@ SendPacket:
             case DbgKdGetContextApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdGetContextApi);
-                while (TRUE);
+                KdpGetContext(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdSetContextApi:
@@ -573,9 +623,8 @@ SendPacket:
 
             case DbgKdClearAllInternalBreakpointsApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdClearAllInternalBreakpointsApi);
-                while (TRUE);
+                /* Just clear the counter */
+                KdpNumInternalBreakpoints = 0;
                 break;
 
             case DbgKdFillMemoryApi:
