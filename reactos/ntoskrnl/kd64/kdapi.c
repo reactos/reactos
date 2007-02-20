@@ -464,6 +464,7 @@ SendPacket:
             case DbgKdReadPhysicalMemoryApi:
 
                 /* FIXME: TODO */
+                goto fail;
                 Ke386SetCr2(DbgKdReadPhysicalMemoryApi);
                 while (TRUE);
                 break;
@@ -653,6 +654,7 @@ SendPacket:
 
                 /* Setup an empty message, with failure */
                 while (TRUE);
+fail:
                 Data.Length = 0;
                 ManipulateState.ReturnStatus = STATUS_UNSUCCESSFUL;
 

@@ -678,7 +678,6 @@ VOID
 NTAPI
 KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
 {
-    return;
     /* Restore the CR registers */
     __writecr0(ProcessorState->SpecialRegisters.Cr0);
     Ke386SetCr2(ProcessorState->SpecialRegisters.Cr2);
@@ -698,8 +697,8 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     //
     // Restore GDT, IDT, LDT and TSS
     //
-    Ke386SetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr);
-    Ke386SetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr);
+    Ke386SetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr.Base);
+    Ke386SetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr.Base);
     Ke386SetTr(ProcessorState->SpecialRegisters.Tr);
     Ke386SetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
 }
@@ -725,8 +724,8 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     Ke386SetDr7(0);
 
     /* Save GDT, IDT, LDT and TSS */
-    Ke386GetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr);
-    Ke386GetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr);
+    Ke386GetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr.Base);
+    Ke386GetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr.Base);
     Ke386GetTr(ProcessorState->SpecialRegisters.Tr);
     Ke386GetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
 }
