@@ -20,6 +20,12 @@
 
 //////////////////////////////////////////////////////////////////
 
+#ifdef UNICODE
+#define CF_TTEXT CF_UNICODETEXT
+#else
+#define CF_TTEXT CF_TEXT
+#endif
+
 // numerics are defined here for easier porting
 
 typedef double calcfloat;
