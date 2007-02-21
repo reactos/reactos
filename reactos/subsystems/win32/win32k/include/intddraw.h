@@ -100,6 +100,14 @@ typedef struct
     /* Notify Callback */
     //LPDD_NOTIFYCALLBACK NotifyCallback
 
+    /* memory stuff */
+    DWORD dwNumHeaps;
+    PVIDEOMEMORY pvmList;
+
+    DWORD dwNumFourCC;
+    LPDWORD pdwFourCC;
+    
+
 } DD_DIRECTDRAW, *PDD_DIRECTDRAW;
 
 BOOL INTERNAL_CALL DD_Cleanup(PVOID pDD);
