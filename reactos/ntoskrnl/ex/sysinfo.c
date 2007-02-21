@@ -25,6 +25,123 @@ FAST_MUTEX ExpEnvironmentLock;
 ERESOURCE ExpFirmwareTableResource;
 LIST_ENTRY ExpFirmwareTableProviderListHead;
 
+NTSTATUS
+NTAPI
+ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
+                          IN PLIST_ENTRY UserModeList,
+                          OUT PRTL_PROCESS_MODULES Modules,
+                          IN ULONG Length,
+                          OUT PULONG ReturnLength)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG RequiredLength;
+    PRTL_PROCESS_MODULE_INFORMATION ModuleInfo;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    ANSI_STRING ModuleName;
+    ULONG ModuleCount = 0;
+    PLIST_ENTRY NextEntry;
+    PCHAR p;
+
+    /* Setup defaults */
+    RequiredLength = FIELD_OFFSET(RTL_PROCESS_MODULES, Modules);
+    ModuleInfo = &Modules->Modules[0];
+
+    /* Loop the kernel list */
+    NextEntry = KernelModeList->Flink;
+    while (NextEntry != KernelModeList)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+
+        /* Update size and check if we can manage one more entry */
+        RequiredLength += sizeof(RTL_PROCESS_MODULE_INFORMATION);
+        if (Length >= RequiredLength)
+        {
+            /* Fill it out */
+            ModuleInfo->MappedBase = NULL;
+            ModuleInfo->ImageBase = LdrEntry->DllBase;
+            ModuleInfo->ImageSize = LdrEntry->SizeOfImage;
+            ModuleInfo->Flags = LdrEntry->Flags;
+            ModuleInfo->LoadCount = LdrEntry->LoadCount;
+            ModuleInfo->LoadOrderIndex = ModuleCount;
+            ModuleInfo->InitOrderIndex = 0;
+
+            /* Setup name */
+            RtlInitEmptyAnsiString(&ModuleName,
+                                   ModuleInfo->FullPathName,
+                                   sizeof(ModuleInfo->FullPathName));
+
+            /* Convert it */
+            Status = RtlUnicodeStringToAnsiString(&ModuleName,
+                                                  &LdrEntry->FullDllName,
+                                                  FALSE);
+            if ((NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_OVERFLOW))
+            {
+                /* Calculate offset to name */
+                p = ModuleName.Buffer + ModuleName.Length;
+                while ((p > ModuleName.Buffer) && (*--p))
+                {
+                    /* Check if we found the separator */
+                    if (*p == OBJ_NAME_PATH_SEPARATOR)
+                    {
+                        /* We did, break out */
+                        p++;
+                        break;
+                    }
+                }
+
+                /* Set the offset */
+                ModuleInfo->OffsetToFileName = p - ModuleName.Buffer;
+            }
+            else
+            {
+                /* Return empty name */
+                ModuleInfo->FullPathName[0] = ANSI_NULL;
+                ModuleInfo->OffsetToFileName = 0;
+            }
+
+            /* Go to the next module */
+            ModuleInfo++;
+        }
+        else
+        {
+            /* Set error code */
+            Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+
+        /* Update count and move to next entry */
+        ModuleCount++;
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Check if caller also wanted user modules */
+    if (UserModeList)
+    {
+        /* FIXME: TODO */
+        DPRINT1("User-mode list not yet supported in ReactOS!\n");
+    }
+
+    /* Update return length */
+    if (ReturnLength) *ReturnLength = RequiredLength;
+
+    /* Validate the length again */
+    if (Length >= FIELD_OFFSET(RTL_PROCESS_MODULES, Modules))
+    {
+        /* Set the final count */
+        Modules->NumberOfModules = ModuleCount;
+    }
+    else
+    {
+        /* Otherwise, we failed */
+        Status = STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Done */
+    return Status;
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -835,7 +952,12 @@ QSI_DEF(SystemCallTimeInformation)
 /* Class 11 - Module Information */
 QSI_DEF(SystemModuleInformation)
 {
-	return LdrpQueryModuleInformation(Buffer, Size, ReqSize);
+    extern LIST_ENTRY ModuleListHead;
+    return ExpQueryModuleInformation(&ModuleListHead,
+                                     NULL,
+                                     (PRTL_PROCESS_MODULES)Buffer,
+                                     Size,
+                                     ReqSize);
 }
 
 /* Class 12 - Locks Information */

@@ -438,6 +438,25 @@ LdrPEProcessImportDirectoryEntry(
     return STATUS_SUCCESS;
 }
 
+typedef struct _LOAD_IMPORTS
+{
+    SIZE_T Count;
+    PLDR_DATA_TABLE_ENTRY Entry[1];
+} LOAD_IMPORTS, *PLOAD_IMPORTS;
+
+NTSTATUS
+NTAPI
+MiResolveImageReferences(IN PVOID ImageBase,
+                         IN PUNICODE_STRING ImageFileDirectory,
+                         IN PUNICODE_STRING NamePrefix OPTIONAL,
+                         OUT PCHAR *MissingApi,
+                         OUT PWCHAR *MissingDriver,
+                         OUT PLOAD_IMPORTS *LoadImports)
+{
+    /* We don't do anything for now */
+    return STATUS_SUCCESS;
+}
+
 static NTSTATUS
 LdrPEFixupImports (IN PVOID DllBase,
                    IN PWCHAR DllName)
@@ -490,15 +509,23 @@ LdrPEProcessModule(
     PIMAGE_DOS_HEADER PEDosHeader;
     PIMAGE_NT_HEADERS PENtHeaders;
     PIMAGE_SECTION_HEADER PESectionHeaders;
-    PLDR_DATA_TABLE_ENTRY CreatedModuleObject;
     NTSTATUS Status;
     KIRQL Irql;
+    PIMAGE_NT_HEADERS NtHeader;
+    UNICODE_STRING BaseName, BaseDirectory, PrefixName;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    ULONG EntrySize;
+    PLOAD_IMPORTS LoadedImports = (PVOID)-2;
+    PWSTR NameBuffer;
+    PCHAR MissingApiName, Buffer;
+    PWCHAR MissingDriverName;
 
     DPRINT("Processing PE Module at module base:%08lx\n", ModuleLoadBase);
 
     /*  Get header pointers  */
     PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
     PENtHeaders = RtlImageNtHeader(ModuleLoadBase);
+    NtHeader = PENtHeaders;
     PESectionHeaders = IMAGE_FIRST_SECTION(PENtHeaders);
 
 
@@ -578,78 +605,165 @@ LdrPEProcessModule(
         }
     }
 
-    /*  Perform relocation fixups  */
-    Status = LdrRelocateImageWithBias(DriverBase, 0, "", STATUS_SUCCESS,
-        STATUS_CONFLICTING_ADDRESSES, STATUS_INVALID_IMAGE_FORMAT);
+    /* Relocate the driver */
+    Status = LdrRelocateImageWithBias(DriverBase,
+                                      0,
+                                      "SYSLDR",
+                                      STATUS_SUCCESS,
+                                      STATUS_CONFLICTING_ADDRESSES,
+                                      STATUS_INVALID_IMAGE_FORMAT);
     if (!NT_SUCCESS(Status))
     {
-        //   MmFreeSection(DriverBase);
+        /* Fail */
         return Status;
     }
 
-    /* Create the module */
-    CreatedModuleObject = ExAllocatePoolWithTag (
-        NonPagedPool, sizeof(LDR_DATA_TABLE_ENTRY), TAG_MODULE_OBJECT );
-    if (CreatedModuleObject == NULL)
+    /* Allocate a buffer we'll use for names */
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, TAG_LDR_WSTR);
+    if (!Buffer)
     {
-        //   MmFreeSection(DriverBase);
+        /* Fail */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlZeroMemory(CreatedModuleObject, sizeof(LDR_DATA_TABLE_ENTRY));
-
-    /*  Initialize ModuleObject data  */
-    CreatedModuleObject->DllBase = DriverBase;
-
-    CreatedModuleObject->FullDllName.Length = 0;
-    CreatedModuleObject->FullDllName.MaximumLength = FileName->Length + sizeof(UNICODE_NULL);
-    CreatedModuleObject->FullDllName.Buffer =
-        ExAllocatePoolWithTag(PagedPool, CreatedModuleObject->FullDllName.MaximumLength, TAG_LDR_WSTR);
-    if (CreatedModuleObject->FullDllName.Buffer == NULL)
+    /* Check for a separator */
+    if (FileName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
     {
-        ExFreePool(CreatedModuleObject);
-        //   MmFreeSection(DriverBase);
+        PWCHAR p;
+        ULONG BaseLength;
+
+        /* Loop the path until we get to the base name */
+        p = &FileName->Buffer[FileName->Length / sizeof(WCHAR)];
+        while (*(p - 1) != OBJ_NAME_PATH_SEPARATOR) p--;
+
+        /* Get the length */
+        BaseLength = (ULONG)(&FileName->Buffer[FileName->Length / sizeof(WCHAR)] - p);
+        BaseLength *= sizeof(WCHAR);
+
+        /* Setup the string */
+        BaseName.Length = BaseLength;
+        BaseName.Buffer = p;
+    }
+    else
+    {
+        /* Otherwise, we already have a base name */
+        BaseName.Length = FileName->Length;
+        BaseName.Buffer = FileName->Buffer;
+    }
+
+    /* Setup the maximum length */
+    BaseName.MaximumLength = BaseName.Length;
+
+    /* Now compute the base directory */
+    BaseDirectory = *FileName;
+    BaseDirectory.Length -= BaseName.Length;
+    BaseDirectory.MaximumLength = BaseDirectory.Length;
+
+    /* And the prefix */
+    PrefixName = *FileName;
+
+    /* Calculate the size we'll need for the entry and allocate it */
+    EntrySize = sizeof(LDR_DATA_TABLE_ENTRY) +
+                BaseName.Length +
+                sizeof(UNICODE_NULL);
+
+    /* Allocate the entry */
+    LdrEntry = ExAllocatePoolWithTag(NonPagedPool, EntrySize, TAG_MODULE_OBJECT);
+    if (!LdrEntry)
+    {
+        /* Fail */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlCopyUnicodeString(&CreatedModuleObject->FullDllName, FileName);
-    CreatedModuleObject->FullDllName.Buffer[FileName->Length / sizeof(WCHAR)] = 0;
-    LdrpBuildModuleBaseName(&CreatedModuleObject->BaseDllName,
-        &CreatedModuleObject->FullDllName);
+    /* Setup the entry */
+    LdrEntry->Flags = LDRP_LOAD_IN_PROGRESS;
+    LdrEntry->LoadCount = 1;
+    LdrEntry->LoadedImports = LoadedImports;
+    LdrEntry->PatchInformation = NULL;
 
-    CreatedModuleObject->EntryPoint =
-        (PVOID)((ULONG_PTR)DriverBase +
-        PENtHeaders->OptionalHeader.AddressOfEntryPoint);
-    CreatedModuleObject->SizeOfImage = DriverSize;
-    DPRINT("EntryPoint at %x\n", CreatedModuleObject->EntryPoint);
-
-    /*  Perform import fixups  */
-    Status = LdrPEFixupImports(CreatedModuleObject->DllBase,
-        CreatedModuleObject->FullDllName.Buffer);
-    if (!NT_SUCCESS(Status))
+    /* Check the version */
+    if ((NtHeader->OptionalHeader.MajorOperatingSystemVersion >= 5) &&
+        (NtHeader->OptionalHeader.MajorImageVersion >= 5))
     {
-        //   MmFreeSection(DriverBase);
-        ExFreePool(CreatedModuleObject->FullDllName.Buffer);
-        ExFreePool(CreatedModuleObject);
-        return Status;
+        /* Mark this image as a native image */
+        LdrEntry->Flags |= 0x80000000;
     }
 
-    /* Insert module */
+    /* We'll put the name after the entry */
+    NameBuffer = (PVOID)(LdrEntry + 1);
+
+    /* Setup the rest of the entry */
+    LdrEntry->DllBase = DriverBase;
+    LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)DriverBase +
+                                   NtHeader->OptionalHeader.AddressOfEntryPoint);
+    LdrEntry->SizeOfImage = DriverSize;
+    LdrEntry->CheckSum = NtHeader->OptionalHeader.CheckSum;
+    LdrEntry->SectionPointer = NULL; // FIXME
+
+    /* Now write the DLL name */
+    LdrEntry->BaseDllName.Buffer = NameBuffer;
+    LdrEntry->BaseDllName.Length = BaseName.Length;
+    LdrEntry->BaseDllName.MaximumLength = BaseName.Length;
+
+    /* Copy and null-terminate it */
+    RtlCopyMemory(LdrEntry->BaseDllName.Buffer,
+                  BaseName.Buffer,
+                  BaseName.Length);
+    LdrEntry->BaseDllName.Buffer[BaseName.Length / 2] = UNICODE_NULL;
+
+    /* Now allocate the full name */
+    LdrEntry->FullDllName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                         PrefixName.Length +
+                                                         sizeof(UNICODE_NULL),
+                                                         TAG_LDR_WSTR);
+    if (!LdrEntry->FullDllName.Buffer)
+    {
+        /* Don't fail, just set it to zero */
+        LdrEntry->FullDllName.Length = 0;
+        LdrEntry->FullDllName.MaximumLength = 0;
+    }
+    else
+    {
+        /* Set it up */
+        LdrEntry->FullDllName.Length = PrefixName.Length;
+        LdrEntry->FullDllName.MaximumLength = PrefixName.Length;
+
+        /* Copy and null-terminate */
+        RtlCopyMemory(LdrEntry->FullDllName.Buffer,
+                      PrefixName.Buffer,
+                      PrefixName.Length);
+        LdrEntry->FullDllName.Buffer[PrefixName.Length / 2] = UNICODE_NULL;
+    }
+
+    /* Insert the entry */
     KeAcquireSpinLock(&ModuleListLock, &Irql);
-    InsertTailList(&ModuleListHead,
-        &CreatedModuleObject->InLoadOrderLinks);
+    InsertTailList(&ModuleListHead, &LdrEntry->InLoadOrderLinks);
     KeReleaseSpinLock(&ModuleListLock, Irql);
 
-    *ModuleObject = CreatedModuleObject;
+    /* Resolve imports */
+    MissingApiName = Buffer;
+    Status = MiResolveImageReferences(DriverBase,
+                                      &BaseDirectory,
+                                      NULL,
+                                      &MissingApiName,
+                                      &MissingDriverName,
+                                      &LoadedImports);
 
-    DPRINT("Loading Module %wZ...\n", FileName);
+    /* Resolve imports */
+    Status = LdrPEFixupImports(LdrEntry->DllBase,
+                               LdrEntry->FullDllName.Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        ExFreePool(LdrEntry->FullDllName.Buffer);
+        ExFreePool(LdrEntry);
+        return Status;
+    }
 
-    DPRINT("Module %wZ loaded at 0x%.08x.\n",
-        FileName, CreatedModuleObject->DllBase);
-
+    /* Return */
+    *ModuleObject = LdrEntry;
     return STATUS_SUCCESS;
 }
-
 
 VOID
 INIT_FUNCTION
@@ -896,115 +1010,5 @@ LdrLoadModule(
 
     return(STATUS_SUCCESS);
 }
-
-//
-// Used by NtSetSystemInformation
-//
-NTSTATUS
-NTAPI
-LdrpQueryModuleInformation (
-    PVOID Buffer,
-    ULONG Size,
-    PULONG ReqSize )
-{
-    PLIST_ENTRY current_entry;
-    PLDR_DATA_TABLE_ENTRY current;
-    ULONG ModuleCount = 0;
-    PRTL_PROCESS_MODULES Smi;
-    ANSI_STRING AnsiName;
-    PCHAR p;
-    KIRQL Irql;
-    PUNICODE_STRING UnicodeName;
-    ULONG tmpBufferSize = 0;
-    PWCHAR tmpNameBuffer;
-
-    KeAcquireSpinLock(&ModuleListLock,&Irql);
-
-    /* calculate required size */
-    current_entry = ModuleListHead.Flink;
-    while (current_entry != (&ModuleListHead))
-    {
-        ModuleCount++;
-        current = CONTAINING_RECORD(current_entry,LDR_DATA_TABLE_ENTRY,InLoadOrderLinks);
-        tmpBufferSize += current->FullDllName.Length + sizeof(WCHAR) + sizeof(UNICODE_STRING);
-        current_entry = current_entry->Flink;
-    }
-
-    *ReqSize = sizeof(RTL_PROCESS_MODULES)+
-        (ModuleCount - 1) * sizeof(RTL_PROCESS_MODULE_INFORMATION);
-
-    if (Size < *ReqSize)
-    {
-        KeReleaseSpinLock(&ModuleListLock, Irql);
-        return(STATUS_INFO_LENGTH_MISMATCH);
-    }
-
-    /* allocate a temp buffer to store the module names */
-    UnicodeName = ExAllocatePool(NonPagedPool, tmpBufferSize);
-    if (UnicodeName == NULL)
-    {
-        KeReleaseSpinLock(&ModuleListLock, Irql);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    tmpNameBuffer = (PWCHAR)((ULONG_PTR)UnicodeName + ModuleCount * sizeof(UNICODE_STRING));
-
-    /* fill the buffer */
-    memset(Buffer, '=', Size);
-
-    Smi = (PRTL_PROCESS_MODULES)Buffer;
-    Smi->NumberOfModules = ModuleCount;
-
-    ModuleCount = 0;
-    current_entry = ModuleListHead.Flink;
-    while (current_entry != (&ModuleListHead))
-    {
-        current = CONTAINING_RECORD(current_entry,LDR_DATA_TABLE_ENTRY,InLoadOrderLinks);
-
-        Smi->Modules[ModuleCount].Section = 0;                /* Always 0 */
-        Smi->Modules[ModuleCount].MappedBase = 0;                /* Always 0 */
-        Smi->Modules[ModuleCount].ImageBase = current->DllBase;
-        Smi->Modules[ModuleCount].ImageSize = current->SizeOfImage;
-        Smi->Modules[ModuleCount].Flags = 0;                /* Flags ??? (GN) */
-        Smi->Modules[ModuleCount].LoadOrderIndex = (USHORT)ModuleCount;
-        Smi->Modules[ModuleCount].InitOrderIndex = 0;
-        Smi->Modules[ModuleCount].LoadCount = 0; /* FIXME */
-        UnicodeName[ModuleCount].Buffer = tmpNameBuffer;
-        UnicodeName[ModuleCount].MaximumLength = current->FullDllName.Length + sizeof(WCHAR);
-        tmpNameBuffer += UnicodeName[ModuleCount].MaximumLength / sizeof(WCHAR);
-        RtlCopyUnicodeString(&UnicodeName[ModuleCount], &current->FullDllName);
-
-        ModuleCount++;
-        current_entry = current_entry->Flink;
-    }
-
-    KeReleaseSpinLock(&ModuleListLock, Irql);
-
-    for (ModuleCount = 0; ModuleCount < Smi->NumberOfModules; ModuleCount++)
-    {
-        AnsiName.Length = 0;
-        AnsiName.MaximumLength = 255;
-        AnsiName.Buffer = Smi->Modules[ModuleCount].FullPathName;
-        RtlUnicodeStringToAnsiString(&AnsiName, &UnicodeName[ModuleCount], FALSE);
-        AnsiName.Buffer[AnsiName.Length] = 0;
-        Smi->Modules[ModuleCount].InitOrderIndex = AnsiName.Length;
-
-        p = strrchr(AnsiName.Buffer, '\\');
-        if (p == NULL)
-        {
-            Smi->Modules[ModuleCount].OffsetToFileName = 0;
-        }
-        else
-        {
-            p++;
-            Smi->Modules[ModuleCount].OffsetToFileName = p - AnsiName.Buffer;
-        }
-    }
-
-    ExFreePool(UnicodeName);
-
-    return(STATUS_SUCCESS);
-}
-
-
 
 /* EOF */
