@@ -311,7 +311,7 @@ BOOL STDCALL NtGdiDdReenableDirectDrawObject(
 {
 	UNIMPLEMENTED
 
-	return 0;
+	return FALSE;
 }
 
 BOOL STDCALL NtGdiDdReleaseDC(

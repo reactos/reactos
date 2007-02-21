@@ -58,4 +58,10 @@
 #define TAG_FNTFILE	TAG('F', 'N', 'T', 'F') /* font file */
 #define TAG_SSECTPOOL   TAG('S', 'S', 'C', 'P') /* shared section pool */
 
+
+/* Dx internal tags rember I do not known if it right namees */
+#define TAG_DXPVMLIST TAG('D', 'X', 'P', 'L') /* pmvlist for the driver */
+#define TAG_DXFOURCC TAG('D', 'X', 'F', 'O') /* pdwFourCC for the driver */
+
+
 #endif /* _WIN32K_TAGS_H */
