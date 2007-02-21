@@ -42,5 +42,6 @@
 #include "res/lang/Pt.rc"
 #include "res/lang/Ru.rc"
 #include "res/lang/Sv.rc"
+#include "res/lang/Th.rc"
 #include "res/lang/Tr.rc"
 #include "res/lang/Uk.rc"

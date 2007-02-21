@@ -1,0 +1,7 @@
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+	IDS_CPLNAME "เพิ่มการติดตั้งอุปกรณ์"
+	IDS_CPLDESCRIPTION "เพิ่มการติดตั้งอุปกรณ์เข้ามายังเครื่องคอมพิวเตอร์ของคุณ"
+END
