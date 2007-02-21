@@ -2557,7 +2557,7 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
     sei.lpParameters = args;
     sei.lpVerb = szOpen;
 
-    if ( ShellExecuteExW( &sei ) && sei.hInstApp > 32 )
+    if ( ShellExecuteExW( &sei ) && (UINT)sei.hInstApp > 32 )
         r = S_OK;
     else
         r = E_FAIL;
