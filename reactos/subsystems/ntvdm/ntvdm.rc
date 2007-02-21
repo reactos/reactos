@@ -7,10 +7,11 @@
 #include <reactos/version.rc>
 
 #include "de-DE.rc"
-#include "es-ES.rc"
 #include "en-US.rc"
+#include "es-ES.rc"
 #include "fr-FR.rc"
 #include "hu-HU.rc"
 #include "ja-JP.rc"
 #include "nb-NO.rc"
+#include "th-TH.rc"
 #include "uk-UA.rc"
