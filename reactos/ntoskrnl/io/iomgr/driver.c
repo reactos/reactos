@@ -78,7 +78,7 @@ IopDeleteDriver(IN PVOID ObjectBody)
     if (DriverObject->DriverSection)
     {
         /* Unload it */
-        LdrpUnloadImage(DriverObject->DriverSection);
+        //LdrpUnloadImage(DriverObject->DriverSection);
     }
 
     /* Check if it has a name */

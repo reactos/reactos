@@ -556,7 +556,7 @@ LdrPEProcessModule(
         DPRINT("Failed to allocate a virtual section for driver\n");
         return STATUS_UNSUCCESSFUL;
     }
-    DPRINT1("DriverBase for %wZ: %x\n", FileName, DriverBase);
+    DPRINT("DriverBase for %wZ: %x\n", FileName, DriverBase);
 
     /*  Copy headers over */
     memcpy(DriverBase, ModuleLoadBase, PENtHeaders->OptionalHeader.SizeOfHeaders);
@@ -738,94 +738,6 @@ LdrGetModuleObject ( PUNICODE_STRING ModuleName )
     DPRINT("Could not find module '%wZ'\n", ModuleName);
 
     return(NULL);
-}
-
-//
-// Used by NtSetSystemInformation
-//
-NTSTATUS
-NTAPI
-LdrpLoadImage (
-    PUNICODE_STRING DriverName,
-    PVOID *ModuleBase,
-    PVOID *SectionPointer,
-    PVOID *EntryPoint,
-    PVOID *ExportSectionPointer )
-{
-    PLDR_DATA_TABLE_ENTRY ModuleObject;
-    NTSTATUS Status;
-
-    ModuleObject = LdrGetModuleObject(DriverName);
-    if (ModuleObject == NULL)
-    {
-        Status = LdrLoadModule(DriverName, &ModuleObject);
-        if (!NT_SUCCESS(Status))
-        {
-            return(Status);
-        }
-    }
-
-    if (ModuleBase)
-        *ModuleBase = ModuleObject->DllBase;
-
-    if (SectionPointer)
-        *SectionPointer = ModuleObject;
-
-    if (EntryPoint)
-        *EntryPoint = ModuleObject->EntryPoint;
-
-    //if (ExportSectionPointer)
-    //    *ExportSectionPointer = ModuleObject->
-
-    return(STATUS_SUCCESS);
-}
-
-//
-// Used by NtSetSystemInformation
-//
-NTSTATUS
-NTAPI
-LdrpUnloadImage ( PVOID ModuleBase )
-{
-    return(STATUS_NOT_IMPLEMENTED);
-}
-
-//
-// Used by NtSetSystemInformation
-//
-NTSTATUS
-NTAPI
-LdrpLoadAndCallImage ( PUNICODE_STRING ModuleName )
-{
-    PDRIVER_INITIALIZE DriverEntry;
-    PLDR_DATA_TABLE_ENTRY ModuleObject;
-    DRIVER_OBJECT DriverObject;
-    NTSTATUS Status;
-
-    ModuleObject = LdrGetModuleObject(ModuleName);
-    if (ModuleObject != NULL)
-    {
-        return(STATUS_IMAGE_ALREADY_LOADED);
-    }
-
-    Status = LdrLoadModule(ModuleName, &ModuleObject);
-    if (!NT_SUCCESS(Status))
-    {
-        return(Status);
-    }
-
-    DriverEntry = (PDRIVER_INITIALIZE)ModuleObject->EntryPoint;
-
-    RtlZeroMemory(&DriverObject, sizeof(DriverObject));
-//    DriverObject.DriverStart = ModuleObject->DllBase;
-
-    Status = DriverEntry(&DriverObject, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        LdrUnloadModule(ModuleObject);
-    }
-
-    return(Status);
 }
 
 //

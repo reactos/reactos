@@ -1137,33 +1137,62 @@ QSI_DEF(SystemFullMemoryInformation)
 }
 
 /* Class 26 - Load Image */
-SSI_DEF(SystemLoadImage)
+SSI_DEF(SystemLoadGdiDriverInformation)
 {
-  PSYSTEM_GDI_DRIVER_INFORMATION Sli = (PSYSTEM_GDI_DRIVER_INFORMATION)Buffer;
+    PSYSTEM_GDI_DRIVER_INFORMATION DriverInfo = (PVOID)Buffer;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    UNICODE_STRING ImageName;
+    PVOID ImageBase;
+    ULONG_PTR EntryPoint;
+    NTSTATUS Status;
+    PLDR_DATA_TABLE_ENTRY ModuleObject;
+    ULONG DirSize;
+    PIMAGE_NT_HEADERS NtHeader;
 
-  if (sizeof(SYSTEM_GDI_DRIVER_INFORMATION) != Size)
+    /* Validate size */
+    if (Size != sizeof(SYSTEM_GDI_DRIVER_INFORMATION))
     {
-      return(STATUS_INFO_LENGTH_MISMATCH);
+        /* Incorrect buffer length, fail */
+        return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-  return(LdrpLoadImage(&Sli->DriverName,
-		       &Sli->ImageAddress,
-		       &Sli->SectionPointer,
-		       &Sli->EntryPoint,
-		       (PVOID)&Sli->ExportSectionPointer));
+    /* Only kernel-mode can call this function */
+    if (PreviousMode != KernelMode) return STATUS_PRIVILEGE_NOT_HELD;
+
+    /* Load the driver */
+    ImageName = DriverInfo->DriverName;
+    Status = LdrLoadModule(&ImageName, &ModuleObject);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Return the export pointer */
+    ImageBase = ModuleObject->DllBase;
+    DriverInfo->ExportSectionPointer =
+        RtlImageDirectoryEntryToData(ImageBase,
+                                     TRUE,
+                                     IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                     &DirSize);
+
+    /* Get the entrypoint */
+    NtHeader = RtlImageNtHeader(ImageBase);
+    EntryPoint = NtHeader->OptionalHeader.AddressOfEntryPoint;
+    EntryPoint += (ULONG_PTR)ImageBase;
+
+    /* Save other data */
+    DriverInfo->ImageAddress = ImageBase;
+    DriverInfo->SectionPointer = NULL;
+    DriverInfo->EntryPoint = (PVOID)EntryPoint;
+    DriverInfo->ImageLength = NtHeader->OptionalHeader.SizeOfImage;
+
+    /* All is good */
+    return STATUS_SUCCESS;
 }
 
 /* Class 27 - Unload Image */
-SSI_DEF(SystemUnloadImage)
+SSI_DEF(SystemUnloadGdiDriverInformation)
 {
-  PVOID Sui = (PVOID)Buffer;
-
-  if (sizeof(PVOID) != Size)
-    {
-      return(STATUS_INFO_LENGTH_MISMATCH);
-    }
-
-  return(LdrpUnloadImage(Sui));
+    /* FIXME: TODO */
+    if (Size != sizeof(PVOID)) return STATUS_INFO_LENGTH_MISMATCH;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* Class 28 - Time Adjustment Information */
@@ -1290,16 +1319,74 @@ SSI_DEF(SystemRegistryQuotaInformation)
 }
 
 /* Class 38 - Load And Call Image */
-SSI_DEF(SystemLoadAndCallImage)
+SSI_DEF(SystemExtendServiceTableInformation)
 {
-  PUNICODE_STRING Slci = (PUNICODE_STRING)Buffer;
+    UNICODE_STRING ImageName;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    PLDR_DATA_TABLE_ENTRY ModuleObject;
+    NTSTATUS Status;
+    PIMAGE_NT_HEADERS NtHeader;
+    DRIVER_OBJECT Win32k;
+    PDRIVER_INITIALIZE DriverInit;
+    PVOID ImageBase;
+    ULONG_PTR EntryPoint;
 
-  if (sizeof(UNICODE_STRING) != Size)
+    /* Validate the size */
+    if (Size != sizeof(UNICODE_STRING)) return STATUS_INFO_LENGTH_MISMATCH;
+
+    /* Check who is calling */
+    if (PreviousMode != KernelMode)
     {
-      return(STATUS_INFO_LENGTH_MISMATCH);
+        /* Make sure we can load drivers */
+        if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, UserMode))
+        {
+            /* FIXME: We can't, fail */
+            //return STATUS_PRIVILEGE_NOT_HELD;
+        }
+
+        /* Probe and capture the driver name */
+        ProbeAndCaptureUnicodeString(&ImageName, UserMode, Buffer);
+
+        /* Force kernel as previous mode */
+        return ZwSetSystemInformation(SystemExtendServiceTableInformation,
+                                      &ImageName,
+                                      sizeof(ImageName));
     }
 
-  return(LdrpLoadAndCallImage(Slci));
+    /* Just copy the string */
+    ImageName = *(PUNICODE_STRING)Buffer;
+
+    /* Load the image */
+    Status = LdrLoadModule(&ImageName, &ModuleObject);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Get the headers */
+    ImageBase = ModuleObject->DllBase;
+    NtHeader = RtlImageNtHeader(ImageBase);
+    if (!NtHeader)
+    {
+        /* Fail */
+        LdrUnloadModule(ModuleObject);
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
+
+    /* Get the entrypoint */
+    EntryPoint = NtHeader->OptionalHeader.AddressOfEntryPoint;
+    EntryPoint += (ULONG_PTR)ImageBase;
+    DriverInit = (PDRIVER_INITIALIZE)EntryPoint;
+
+    /* Create a dummy device */
+    RtlZeroMemory(&Win32k, sizeof(Win32k));
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+    Win32k.DriverStart = ImageBase;
+
+    /* Call it */
+    Status = (DriverInit)(&Win32k, NULL);
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+    /* Unload if we failed */
+    if (!NT_SUCCESS(Status)) LdrUnloadModule(ModuleObject);
+    return Status;
 }
 
 /* Class 39 - Priority Separation */
@@ -1511,8 +1598,8 @@ CallQS [] =
 	SI_QX(SystemInterruptInformation),
 	SI_QS(SystemDpcBehaviourInformation),
 	SI_QX(SystemFullMemoryInformation), /* it should be SI_XX */
-	SI_XS(SystemLoadImage),
-	SI_XS(SystemUnloadImage),
+	SI_XS(SystemLoadGdiDriverInformation),
+	SI_XS(SystemUnloadGdiDriverInformation),
 	SI_QS(SystemTimeAdjustmentInformation),
 	SI_QX(SystemSummaryMemoryInformation), /* it should be SI_XX */
 	SI_QX(SystemNextEventIdInformation), /* it should be SI_XX */
@@ -1523,7 +1610,7 @@ CallQS [] =
 	SI_QX(SystemKernelDebuggerInformation),
 	SI_QX(SystemContextSwitchInformation),
 	SI_QS(SystemRegistryQuotaInformation),
-	SI_XS(SystemLoadAndCallImage),
+	SI_XS(SystemExtendServiceTableInformation),
 	SI_XS(SystemPrioritySeperation),
 	SI_QX(SystemPlugPlayBusInformation), /* it should be SI_XX */
 	SI_QX(SystemDockInformation), /* it should be SI_XX */
