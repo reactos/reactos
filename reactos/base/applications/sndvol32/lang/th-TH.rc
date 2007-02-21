@@ -1,0 +1,51 @@
+/*
+ * PROJECT:     ReactOS Sound Volume Control
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/sndvol32/lang/th-TH.rc
+ * PURPOSE:     Thai language file for Volume Control
+ * TRANSLATOR:  Sumath Aowsakulsutthi
+ */
+
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+
+IDM_MAINMENU MENU DISCARDABLE
+BEGIN
+    POPUP "&ตัวเลือก"
+    BEGIN
+        MENUITEM "&คุณสมบัติ", IDC_PROPERTIES
+        MENUITEM "ควบคุมแบบ&ขั้นสูง", IDC_ADVANCED_CONTROLS
+        MENUITEM SEPARATOR
+        MENUITEM "&ออกจากโปรแกรม", IDC_EXIT
+    END
+    POPUP "&ช่วยเหลือ"
+    BEGIN
+        MENUITEM "เ&นื้อหาในการช่วยเหลือ", IDC_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "เ&กี่ยวกับแผงควบคุมระบบเสียง", IDC_ABOUT
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SNDVOL32       "แผงควบคุมระบบเสียง"
+    IDS_NOMIXERDEVICES "ไม่พบอุปกรณ์ผสมเสียงใดๆเหลืออยู่เลย! โปรแกรมนี้จะถูกปิดทันที"
+END
+
+IDD_PREFERENCES DIALOGEX 0, 0, 224, 250
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "คุณสมบัติ"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "อุปกรณ์&ปรับแต่งเสียง:", -1, 7,8,48,9
+  COMBOBOX IDC_MIXERDEVICE, 55,8,162,80, CBS_DROPDOWNLIST | WS_TABSTOP
+  GROUPBOX "ปรับแต่งระบบเสียงให้ :", -1, 7,25,211,77
+  PUSHBUTTON "เ&ล่นย้อน", IDC_PLAYBACK, 13,43,47,8, BS_AUTORADIOBUTTON
+  PUSHBUTTON "&กำลังบันทึก", IDC_RECORDING, 13,61,47,8, BS_AUTORADIOBUTTON
+  PUSHBUTTON "&อื่นๆ:", IDC_OTHER, 13,80,42,8, BS_AUTORADIOBUTTON | WS_DISABLED
+  COMBOBOX IDC_LINE, 55,80,155,50, CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
+  LTEXT "แสดงการควบคุมระบบเสียง :", IDC_LABELCONTROLS, 7, 109, 162, 8
+  CONTROL "", IDC_CONTROLS, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP | WS_BORDER, 7, 122, 211, 96
+  
+  PUSHBUTTON "ตกลง", IDOK, 114,226,50,14
+  PUSHBUTTON "ยกเลิก", IDCANCEL, 168,226,50,14
+END

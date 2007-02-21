@@ -23,20 +23,21 @@
 
 IDI_CALCICON ICON "calculator.ico"
 
-#include "lang/en-US.rc"
 #include "lang/cz-CZ.rc"
 #include "lang/de-DE.rc"
+#include "lang/el-GR.rc"
+#include "lang/en-US.rc"
 #include "lang/es-ES.rc"
 #include "lang/fr-FR.rc"
+#include "lang/hu-HU.rc"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
+#include "lang/nb-NO.rc"
 #include "lang/nl-NL.rc"
 #include "lang/pt-PT.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sv-SE.rc"
-#include "lang/hu-HU.rc"
+#include "lang/th-TH.rc"
 #include "lang/uk-UA.rc"
-#include "lang/el-GR.rc"
-#include "lang/nb-NO.rc"
 
 LANGUAGE LANG_NEUTRAL,SUBLANG_NEUTRAL

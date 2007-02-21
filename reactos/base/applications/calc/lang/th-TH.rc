@@ -1,0 +1,155 @@
+/*
+ * WineCalc (th-TH.rc)
+ *
+ * Copyright 2006 Sumath Aowsakulsutthi
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include "windows.h"
+#include "resource.h"
+#include "winecalc.h"
+
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_APPNAME,	"สถานภาพทั่วไป"
+
+    IDS_COPYRIGHT1,	"เครื่องคิดเลข 5.0. ลิขสิทธิ์ภายใต้ LGPL 2"
+    IDS_COPYRIGHT2	"สงวนลิขสิทธิ์ 2003, เจมส์ บริจจ์ส"
+    IDS_COPYRIGHT3	"แซน โจส, แคลิฟอร์เนีย, สหรัฐอเมริกา"
+    IDS_COPYRIGHT4	"james@ActionMessage.com"
+    IDS_COPYRIGHT5	"http://www.ActionMessage.com/winecalc/"
+
+    IDS_BTN_BACKSPACE,		"ถอยหลัง"
+    IDS_BTN_CLEAR_ENTRY,	"CE"
+    IDS_BTN_CLEAR_ALL,		"C"
+    IDS_BTN_MEM_CLEAR,		"MC"
+    IDS_BTN_MEM_RECALL,		"MR"
+    IDS_BTN_MEM_STORE,		"MS"
+    IDS_BTN_MEM_PLUS,		"M+"
+    IDS_BTN_MEM_STATUS_M,	"M"
+    IDS_BTN_SQRT,		"รากที่สอง"
+    IDS_ERR_INVALID_INPUT,	"ค่าที่ป้อนให้ไม่สามารถใช้ในกรณีนี้ได้"
+    IDS_ERR_DIVIDE_BY_ZERO,	"ไม่สามารถหารด้วยศูนย์"
+    IDS_ERR_UNDEFINED,		"ไม่สามารถแสดงผลได้"
+}
+
+MAIN_MENU MENU DISCARDABLE
+{
+    POPUP "แก้ไข" {
+        MENUITEM "คัดลอก Ctrl+C",       IDM_COPY
+        MENUITEM "วาง Ctrl+V",		IDM_PASTE
+    }
+    POPUP "&มุมมอง" {
+        MENUITEM "แบบมาตรฐาน",		IDM_MODE_STANDARD
+        MENUITEM "แบบวิทยาศาสตร์",      IDM_MODE_SCIENTIFIC
+        MENUITEM SEPARATOR
+        MENUITEM "แสดงหลักตัวเลข",      IDM_DIGIT_GROUPING
+    }
+    POPUP "&ช่วยเหลือ" {
+        MENUITEM "ข้อมูลช่วยเหลือ",	IDM_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "เกี่ยวกับ GNU WineCalc",    IDM_ABOUT
+    }
+}
+
+SCIMS_MENU MENU DISCARDABLE
+{
+    POPUP "แก้ไข" {
+        MENUITEM "คัดลอก Ctrl+C",       IDM_COPY
+        MENUITEM "วาง Ctrl+V",		IDM_PASTE
+    }
+    POPUP "มุมมอง" {
+        MENUITEM "แบบมาตรฐาน",		IDM_MODE_STANDARD
+        MENUITEM "แบบวิทยาศาสตร์",      IDM_MODE_SCIENTIFIC
+        MENUITEM SEPARATOR
+        MENUITEM "ฐานสิบหก\tF5",		ID_CALC_NS_HEX
+        MENUITEM "ฐานสิบ\tF6",		ID_CALC_NS_DEC
+        MENUITEM "ฐานแปด\tF7",		ID_CALC_NS_OCT
+        MENUITEM "ฐานสอง\tF8",		ID_CALC_NS_BIN
+        MENUITEM SEPARATOR
+        MENUITEM "องศา\tF2",		ID_CALC_MS_DEGREES
+        MENUITEM "เรเดียน\tF3",		ID_CALC_MS_RADIANS
+        MENUITEM "เกรเดียน\tF4",		ID_CALC_MS_GRADS
+        MENUITEM SEPARATOR
+        MENUITEM "แสดงหลักตัวเลข",      IDM_DIGIT_GROUPING
+    }
+    POPUP "ช่วยเหลือ" {
+        MENUITEM "ข้อมูลช่วยเหลือ",	IDM_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "เกี่ยวกับ GNU WineCalc",    IDM_ABOUT
+    }
+}
+
+SCIWS_MENU MENU DISCARDABLE
+{
+    POPUP "แก้ไข" {
+        MENUITEM "คัดลอก Ctrl+C",       IDM_COPY
+        MENUITEM "วาง Ctrl+V",		IDM_PASTE
+    }
+    POPUP "มุมมอง" {
+        MENUITEM "แบบมาตรฐาน",		IDM_MODE_STANDARD
+        MENUITEM "แบบวิทยาศาสตร์",      IDM_MODE_SCIENTIFIC
+        MENUITEM SEPARATOR
+        MENUITEM "ฐานสิบหก\tF5",		ID_CALC_NS_HEX
+        MENUITEM "ฐานสิบ\tF6",		ID_CALC_NS_DEC
+        MENUITEM "ฐานแปด\tF7",		ID_CALC_NS_OCT
+        MENUITEM "ฐานสอง\tF8",		ID_CALC_NS_BIN
+        MENUITEM SEPARATOR
+        MENUITEM "Qword\tF12",		ID_CALC_WS_QWORD
+        MENUITEM "Dword\tF2",		ID_CALC_WS_DWORD
+        MENUITEM "Word\tF3",		ID_CALC_WS_WORD
+        MENUITEM "Byte\tF4",		ID_CALC_WS_BYTE
+        MENUITEM SEPARATOR
+        MENUITEM "แสดงหลักตัวเลข",      IDM_DIGIT_GROUPING
+    }
+    POPUP "ช่วยเหลือ" {
+        MENUITEM "ข้อมูลช่วยเหลือ",	IDM_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "เกี่ยวกับ GNU WineCalc",    IDM_ABOUT
+    }
+}
+
+MAIN_MENU ACCELERATORS
+BEGIN
+    VK_F1, IDV_HELP, VIRTKEY
+END
+
+DLG_ABOUT DIALOG 12,0,120,82
+CAPTION "เกี่ยวกับ GNU WineCalc"
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+BEGIN
+    DEFPUSHBUTTON "ตกลง", IDOK, 42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+WHATS_THIS_MENU MENU DISCARDABLE
+{
+    POPUP "" {
+        MENUITEM "สิ่งนี้คืออะไร ?",	IDM_WHATS_THIS
+    }
+}
+
+DLG_STATS DIALOG 12,0,125,78
+CAPTION "กล่องสถานะ"
+FONT 9, "Tahoma"
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+BEGIN
+    DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+END

@@ -1,0 +1,14 @@
+/*
+ * ReactOS rundll32
+ * Copyright (C) 2003-2004 ReactOS Team
+ * Copyright (C) 2006 Sumath Aowsakulsutthi (Thai translation)
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+IDS_DllNotLoaded, "การบรรจุค่าระบบเกิดผิดพลาด '%s'"
+IDS_MissingEntry, "การเข้าหาตำแหน่งผิดพลาด: %s\n%s"
+}

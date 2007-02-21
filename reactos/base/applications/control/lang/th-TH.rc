@@ -1,0 +1,34 @@
+/*
+ * PROJECT:     ReactOS Control Application
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/control/lang/th-TH.rc
+ * PURPOSE:     Thai translation
+ * TRANSLATOR:  Sumath Aowsakulsutthi
+ *
+ */
+
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "แ&ฟ้ม"
+    BEGIN
+        MENUITEM "&ปิด",                           IDM_CLOSE
+    END
+    POPUP "&มุมมอง"
+    BEGIN
+        MENUITEM "สัญรูปขนาดใหญ่",                 IDM_LARGEICONS
+        MENUITEM "สัญรูปขนาดเล็ก",                 IDM_SMALLICONS
+        MENUITEM "รายการ",                         IDM_LIST
+        MENUITEM "รายละเอียด",                     IDM_DETAILS
+    END
+    POPUP "ช่วยเหลือ"
+    BEGIN
+        MENUITEM "เกี่ยวกับ...",                   IDM_ABOUT
+    END
+END

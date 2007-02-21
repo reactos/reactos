@@ -1,0 +1,9 @@
+#include "resource.h"
+
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+
+STRING_USERINIT_FAIL, "ค่าผู้ใช้ผิดพลาดในตอนเข้าสู่ชั้นสถานะ!\n"
+
+}

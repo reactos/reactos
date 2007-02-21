@@ -28,6 +28,7 @@ IDI_MAIN ICON "res/reactos.ico"
 #include "nb-NO.rc"
 #include "ru-RU.rc"
 #include "sv-SE.rc"
+#include "th-TH.rc"
 #include "uk-UA.rc"
 
 /* EOF */
