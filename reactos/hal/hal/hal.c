@@ -17,7 +17,6 @@
 #include <ndk/halfuncs.h>
 #include <ndk/iofuncs.h>
 #include <ndk/kdfuncs.h>
-#include <internal/kd.h>
 
 #define NDEBUG
 #include <debug.h>

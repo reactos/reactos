@@ -1093,7 +1093,7 @@ NTSTATUS
 NTAPI
 KdEnableDebuggerWithLock(BOOLEAN NeedLock)
 {
-    KIRQL OldIrql;
+    KIRQL OldIrql = PASSIVE_LEVEL;
 
     /* Check if we need to acquire the lock */
     if (NeedLock)
