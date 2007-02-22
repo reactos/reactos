@@ -11,7 +11,7 @@
 
 
 void
-dump(DD_HALINFO *pHalInfo, char *text)
+dump_halinfo(DD_HALINFO *pHalInfo, char *text)
 {
     printf("dumping the DD_HALINFO from %s\n",text);
     

@@ -4,30 +4,13 @@ HANDLE test_NtGdiDdCreateDirectDrawObject();
 void test_NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal);
 void test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal);
 
-void dump(DD_HALINFO *pHalInfo, char *text);
+void dump_halinfo(DD_HALINFO *pHalInfo, char *text);
 
-HANDLE sysNtGdiDdCreateDirectDrawObject(HDC hdc);
-BOOL sysNtGdiDdDeleteDirectDrawObject( HANDLE hDirectDrawLocal);
-BOOL sysNtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal, DD_HALINFO *pHalInfo, 
-                                   DWORD *pCallBackFlags, 
-                                   LPD3DNTHAL_CALLBACKS puD3dCallbacks, 
-                                   LPD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData, 
-                                   PDD_D3DBUFCALLBACKS puD3dBufferCallbacks, 
-                                   LPDDSURFACEDESC puD3dTextureFormats, 
-                                   DWORD *puNumHeaps, VIDEOMEMORY *puvmList, 
-                                   DWORD *puNumFourCC, DWORD *puFourCC);
 
-HANDLE NtGdiDdCreateDirectDrawObject(HDC hdc);
-BOOL NtGdiDdDeleteDirectDrawObject( HANDLE hDirectDrawLocal);
 
-BOOL NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal, DD_HALINFO *pHalInfo, 
-                                   DWORD *pCallBackFlags, 
-                                   LPD3DNTHAL_CALLBACKS puD3dCallbacks, 
-                                   LPD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData, 
-                                   PDD_D3DBUFCALLBACKS puD3dBufferCallbacks, 
-                                   LPDDSURFACEDESC puD3dTextureFormats, 
-                                   DWORD *puNumHeaps, VIDEOMEMORY *puvmList, 
-                                   DWORD *puNumFourCC, DWORD *puFourCC);
+
+
+
 
 
 

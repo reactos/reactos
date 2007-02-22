@@ -9,41 +9,17 @@
 #include <wingdi.h>
 #include <winddi.h>
 #include <d3dnthal.h>
-
-
-
-
+#include <dll/directx/d3d8thk.h>
 #include "test.h"
 
-/* which syscall table shall we use WIndows or ReactOS */
+/* we using d3d8thk.dll it is doing the real syscall in windows 2000 
+ * in ReactOS and Windows XP and higher d3d8thk.dll it linking to
+ * gdi32.dll instead doing syscall, gdi32.dll export DdEntry1-56 
+ * and doing the syscall direcly. I did forget about it, This 
+ * test program are now working on any Windows and ReactOS 
+ * that got d3d8thk.dll
+ */
 
-/* Windows 2000 sp4 syscall table for win32k */
-#include "Windows2000Sp4.h" 
-
-/* Windows syscall code */
-#include "windowsos.h"
-
-/* ReactOS syscall code */
-#include "sysreactos.h"
-
-
-/*
-#define DdQueryDirectDrawObject             GdiEntry2
-
-#define DdCreateSurfaceObject               GdiEntry4
-#define DdDeleteSurfaceObject               GdiEntry5
-#define DdResetVisrgn                       GdiEntry6
-#define DdGetDC                             GdiEntry7
-#define DdReleaseDC                         GdiEntry8
-#define DdCreateDIBSection                  GdiEntry9
-#define DdReenableDirectDrawObject          GdiEntry10
-#define DdAttachSurface                     GdiEntry11
-#define DdUnattachSurface                   GdiEntry12
-#define DdQueryDisplaySettingsUniqueness    GdiEntry13
-#define DdGetDxHandle                       GdiEntry14
-#define DdSetGammaRamp                      GdiEntry15
-#define DdSwapTextureHandles                GdiEntry16
-*/
 int main(int argc, char **argv)
 {
     HANDLE hDirectDrawLocal;
@@ -69,10 +45,10 @@ test_NtGdiDdCreateDirectDrawObject()
 
     printf("Start testing of NtGdiDdCreateDirectDrawObject\n");
     
-    retValue = sysNtGdiDdCreateDirectDrawObject(NULL);
+    retValue = OsThunkDdCreateDirectDrawObject(NULL);
     testing_noteq(retValue,NULL,fails,"NtGdiDdCreateDirectDrawObject(NULL);\0");
 
-    retValue = sysNtGdiDdCreateDirectDrawObject(hdc);
+    retValue = OsThunkDdCreateDirectDrawObject(hdc);
     testing_eq(retValue,NULL,fails,"NtGdiDdCreateDirectDrawObject(hdc);\0");
 
     show_status(fails, "NtGdiDdCreateDirectDrawObject\0");
@@ -107,9 +83,9 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     D3DNTHAL_GLOBALDRIVERDATA D3dDriverData;
     DD_D3DBUFCALLBACKS D3dBufferCallbacks;
     DDSURFACEDESC D3dTextureFormats;
-    //DWORD NumHeaps = 0;
+    // DWORD NumHeaps = 0;
     VIDEOMEMORY vmList;
-    //DWORD NumFourCC = 0;
+    // DWORD NumFourCC = 0;
     //DWORD FourCC = 0;
 
     /* clear data */
@@ -124,7 +100,7 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     printf("Start testing of NtGdiDdQueryDirectDrawObject\n");
     
     /* testing NULL */
-    retValue = sysNtGdiDdQueryDirectDrawObject( NULL, pHalInfo, 
+    retValue = OsThunkDdQueryDirectDrawObject( NULL, pHalInfo, 
                                                 pCallBackFlags, puD3dCallbacks, 
                                                 puD3dDriverData, puD3dBufferCallbacks, 
                                                 puD3dTextureFormats, puNumHeaps, 
@@ -140,7 +116,7 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     testing_noteq(puNumFourCC,NULL,fails,"8. NtGdiDdQueryDirectDrawObject(NULL, ...);\0");
     testing_noteq(puFourCC,NULL,fails,"9. NtGdiDdQueryDirectDrawObject(NULL, ...);\0");
 
-    retValue = sysNtGdiDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, 
+    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, 
                                                 pCallBackFlags, puD3dCallbacks, 
                                                 puD3dDriverData, puD3dBufferCallbacks, 
                                                 puD3dTextureFormats, puNumHeaps, 
@@ -163,7 +139,7 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
      */
 
     pHalInfo = &HalInfo;
-    retValue = sysNtGdiDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, 
+    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, 
                                                 pCallBackFlags, puD3dCallbacks, 
                                                 puD3dDriverData, puD3dBufferCallbacks, 
                                                 puD3dTextureFormats, puNumHeaps, 
@@ -181,18 +157,12 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     testing_noteq(puFourCC,NULL,fails,"9. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, NULL, ...);\0");
     testing_noteq(pHalInfo->dwSize,sizeof(DD_HALINFO),fails,"10. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, NULL, ...);\0");
 
-#if DBG
-    dump(pHalInfo, "NtGdiDdQueryDirectDrawObject frist call");
-#endif
 
-    //pCallBackFlags = (DWORD *)&CallBackFlags;
 
-    //retValue = sysNtGdiDdQueryDirectDrawObject( hDirectDrawLocal, NULL, 
-    //                                            pCallBackFlags, puD3dCallbacks, 
-    //                                            puD3dDriverData, puD3dBufferCallbacks, 
-    //                                            puD3dTextureFormats, puNumHeaps, 
-    //                                            puvmList, puNumFourCC,
-    //                                            puFourCC);
+
+
+
+
 
     show_status(fails, "NtGdiDdQueryDirectDrawObject\0");
 }
@@ -208,10 +178,10 @@ test_NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
     BOOL retValue=FALSE;
     printf("Start testing of NtGdiDdDeleteDirectDrawObject\n");
     
-    retValue = sysNtGdiDdDeleteDirectDrawObject(hDirectDrawLocal);
+    retValue = OsThunkDdDeleteDirectDrawObject(hDirectDrawLocal);
     testing_eq(retValue,FALSE,fails,"NtGdiDdDeleteDirectDrawObject(hDirectDrawLocal);\0");
 
-    retValue = sysNtGdiDdDeleteDirectDrawObject(NULL);
+    retValue = OsThunkDdDeleteDirectDrawObject(NULL);
     testing_eq(retValue,TRUE,fails,"NtGdiDdDeleteDirectDrawObject(NULL);\0");
 
     show_status(fails, "NtGdiDdDeleteDirectDrawObject\0");
