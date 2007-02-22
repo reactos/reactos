@@ -3119,21 +3119,21 @@ typedef struct _IMAGE_IMPORT_BY_NAME {
 } IMAGE_IMPORT_BY_NAME,*PIMAGE_IMPORT_BY_NAME;
 typedef struct _IMAGE_THUNK_DATA {
 	union {
-		PBYTE ForwarderString;
-		PDWORD Function;
+		ULONG ForwarderString;
+		ULONG Function;
 		DWORD Ordinal;
-		PIMAGE_IMPORT_BY_NAME AddressOfData;
+		ULONG AddressOfData;
 	} u1;
 } IMAGE_THUNK_DATA,*PIMAGE_THUNK_DATA;
 typedef struct _IMAGE_IMPORT_DESCRIPTOR {
 	_ANONYMOUS_UNION union {
 		DWORD Characteristics;
-		PIMAGE_THUNK_DATA OriginalFirstThunk;
+		ULONG OriginalFirstThunk;
 	} DUMMYUNIONNAME;
 	DWORD TimeDateStamp;
 	DWORD ForwarderChain;
 	DWORD Name;
-	PIMAGE_THUNK_DATA FirstThunk;
+	ULONG FirstThunk;
 } IMAGE_IMPORT_DESCRIPTOR,*PIMAGE_IMPORT_DESCRIPTOR;
 typedef struct _IMAGE_BOUND_IMPORT_DESCRIPTOR {
 	DWORD TimeDateStamp;

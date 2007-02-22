@@ -248,6 +248,8 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 
 #define MAXIMUM_SUSPEND_COUNT             MAXCHAR
 
+#define MAXIMUM_FILENAME_LENGTH           256
+
 #define FILE_SUPERSEDED                   0x00000000
 #define FILE_OPENED                       0x00000001
 #define FILE_CREATED                      0x00000002

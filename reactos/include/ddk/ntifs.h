@@ -3814,6 +3814,14 @@ RtlAllocateHeap (
 );
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAppendStringToString(
+    PSTRING Destination,
+    const STRING *Source
+);
+
+NTSYSAPI
 USHORT
 NTAPI
 RtlCaptureStackBackTrace (

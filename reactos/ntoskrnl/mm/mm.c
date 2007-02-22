@@ -409,7 +409,7 @@ MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
     ANSI_STRING AnsiRoutineName;
     NTSTATUS Status;
     PLIST_ENTRY NextEntry;
-    extern LIST_ENTRY ModuleListHead;
+    extern LIST_ENTRY PsLoadedModuleList;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN Found = FALSE;
     UNICODE_STRING KernelName = RTL_CONSTANT_STRING(L"ntoskrnl.exe");
@@ -422,8 +422,8 @@ MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
     if (!NT_SUCCESS(Status)) return NULL;
 
     /* Loop the loaded module list */
-    NextEntry = ModuleListHead.Flink;
-    while (NextEntry != &ModuleListHead)
+    NextEntry = PsLoadedModuleList.Flink;
+    while (NextEntry != &PsLoadedModuleList)
     {
         /* Get the entry */
         LdrEntry = CONTAINING_RECORD(NextEntry,

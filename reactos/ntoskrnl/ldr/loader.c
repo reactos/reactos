@@ -20,44 +20,21 @@
 
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY ModuleListHead;
+LIST_ENTRY PsLoadedModuleList;
 KSPIN_LOCK ModuleListLock;
 LDR_DATA_TABLE_ENTRY NtoskrnlModuleObject;
 LDR_DATA_TABLE_ENTRY HalModuleObject;
 
 /* FUNCTIONS *****************************************************************/
 
-static PVOID
-LdrPEGetExportByName (
-                      PVOID BaseAddress,
-                      PUCHAR SymbolName,
-                      USHORT Hint );
-
-static VOID
-LdrpBuildModuleBaseName (
-                         PUNICODE_STRING BaseName,
-                         PUNICODE_STRING FullName )
-{
-    PWCHAR p;
-
-    DPRINT("LdrpBuildModuleBaseName()\n");
-    DPRINT("FullName %wZ\n", FullName);
-
-    p = wcsrchr(FullName->Buffer, L'\\');
-    if (p == NULL)
-    {
-        p = FullName->Buffer;
-    }
-    else
-    {
-        p++;
-    }
-
-    DPRINT("p %S\n", p);
-
-    RtlInitUnicodeString(BaseName, p);
-}
-
+NTSTATUS
+NTAPI
+MiResolveImageReferences(IN PVOID ImageBase,
+                         IN PUNICODE_STRING ImageFileDirectory,
+                         IN PUNICODE_STRING NamePrefix OPTIONAL,
+                         OUT PCHAR *MissingApi,
+                         OUT PWCHAR *MissingDriver,
+                         OUT PLOAD_IMPORTS *LoadImports);
 
 static LONG
 LdrpCompareModuleNames (
@@ -128,380 +105,128 @@ LdrpCompareModuleNames (
     return(0);
 }
 
-#ifndef PATH_MAX
-#define PATH_MAX 260
-#endif
-
-static NTSTATUS
-LdrPEGetOrLoadModule (
-                      PWCHAR ModuleName,
-                      PCHAR ImportedName,
-                      PLDR_DATA_TABLE_ENTRY* ImportedModule)
+VOID
+INIT_FUNCTION
+NTAPI
+LdrInit1(VOID)
 {
-    UNICODE_STRING DriverName;
-    UNICODE_STRING NameString;
-    WCHAR  NameBuffer[PATH_MAX];
-    NTSTATUS Status = STATUS_SUCCESS;
+    PLDR_DATA_TABLE_ENTRY HalModuleObject, NtoskrnlModuleObject, LdrEntry;
 
-    RtlCreateUnicodeStringFromAsciiz (&DriverName, ImportedName);
-    DPRINT("Import module: %wZ\n", &DriverName);
+    /* Initialize the module list and spinlock */
+    InitializeListHead(&PsLoadedModuleList);
+    KeInitializeSpinLock(&ModuleListLock);
 
-    *ImportedModule = LdrGetModuleObject(&DriverName);
-    if (*ImportedModule == NULL)
-    {
-        PWCHAR PathEnd;
-        ULONG PathLength;
+    /* Get the NTOSKRNL Entry from the loader */
+    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
-        PathEnd = wcsrchr(ModuleName, L'\\');
-        if (NULL != PathEnd)
-        {
-            PathLength = (PathEnd - ModuleName + 1) * sizeof(WCHAR);
-            RtlCopyMemory(NameBuffer, ModuleName, PathLength);
-            RtlCopyMemory(NameBuffer + (PathLength / sizeof(WCHAR)), DriverName.Buffer, DriverName.Length);
-            NameString.Buffer = NameBuffer;
-            NameString.MaximumLength = NameString.Length = (USHORT)PathLength + DriverName.Length;
+    /* Initialize ModuleObject for NTOSKRNL */
+    NtoskrnlModuleObject = ExAllocatePoolWithTag(PagedPool,
+                                                 sizeof(LDR_DATA_TABLE_ENTRY),
+                                                 TAG('M', 'm', 'L', 'd'));
+    NtoskrnlModuleObject->DllBase = LdrEntry->DllBase;
+    RtlInitUnicodeString(&NtoskrnlModuleObject->FullDllName, KERNEL_MODULE_NAME);
+    NtoskrnlModuleObject->BaseDllName = NtoskrnlModuleObject->FullDllName;
+    NtoskrnlModuleObject->EntryPoint = LdrEntry->EntryPoint;
+    NtoskrnlModuleObject->SizeOfImage = LdrEntry->SizeOfImage;
 
-            /* NULL-terminate */
-            NameString.MaximumLength += sizeof(WCHAR);
-            NameBuffer[NameString.Length / sizeof(WCHAR)] = 0;
+    /* Insert it into the list */
+    InsertTailList(&PsLoadedModuleList, &NtoskrnlModuleObject->InLoadOrderLinks);
 
-            Status = LdrLoadModule(&NameString, ImportedModule);
-        }
-        else
-        {
-            DPRINT("Module '%wZ' not loaded yet\n", &DriverName);
-            wcscpy(NameBuffer, L"\\SystemRoot\\system32\\drivers\\");
-            wcsncat(NameBuffer, DriverName.Buffer, DriverName.Length / sizeof(WCHAR));
-            RtlInitUnicodeString(&NameString, NameBuffer);
-            Status = LdrLoadModule(&NameString, ImportedModule);
-        }
-        if (!NT_SUCCESS(Status))
-        {
-            wcscpy(NameBuffer, L"\\SystemRoot\\system32\\");
-            wcsncat(NameBuffer, DriverName.Buffer, DriverName.Length / sizeof(WCHAR));
-            RtlInitUnicodeString(&NameString, NameBuffer);
-            Status = LdrLoadModule(&NameString, ImportedModule);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Unknown import module: %wZ (Status %lx)\n", &DriverName, Status);
-            }
-        }
-    }
-    RtlFreeUnicodeString(&DriverName);
-    return Status;
+    /* Get the HAL Entry from the loader */
+    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink->Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+    /* Initialize ModuleObject for HAL */
+    HalModuleObject = ExAllocatePoolWithTag(PagedPool,
+                                                 sizeof(LDR_DATA_TABLE_ENTRY),
+                                                 TAG('M', 'm', 'L', 'd'));
+    HalModuleObject->DllBase = LdrEntry->DllBase;
+    RtlInitUnicodeString(&HalModuleObject->FullDllName, HAL_MODULE_NAME);
+    HalModuleObject->BaseDllName = HalModuleObject->FullDllName;
+    HalModuleObject->EntryPoint = LdrEntry->EntryPoint;
+    HalModuleObject->SizeOfImage = LdrEntry->SizeOfImage;
+
+    /* Insert it into the list */
+    InsertTailList(&PsLoadedModuleList, &HalModuleObject->InLoadOrderLinks);
+
+    /* Hook for KDB on initialization of the loader. */
+    KDB_LOADERINIT_HOOK(NtoskrnlModuleObject, HalModuleObject);
 }
 
-static PVOID
-LdrPEFixupForward ( PCHAR ForwardName )
+//
+// Used for checking if a module is already in the module list.
+// Used during loading/unloading drivers.
+//
+PLDR_DATA_TABLE_ENTRY
+NTAPI
+LdrGetModuleObject ( PUNICODE_STRING ModuleName )
 {
-    CHAR NameBuffer[128];
-    UNICODE_STRING ModuleName;
-    PCHAR p;
-    PLDR_DATA_TABLE_ENTRY ModuleObject;
+    PLDR_DATA_TABLE_ENTRY Module;
+    PLIST_ENTRY Entry;
+    KIRQL Irql;
 
-    DPRINT("LdrPEFixupForward (%s)\n", ForwardName);
+    DPRINT("LdrGetModuleObject(%wZ) called\n", ModuleName);
 
-    strcpy(NameBuffer, ForwardName);
-    p = strchr(NameBuffer, '.');
-    if (p == NULL)
+    KeAcquireSpinLock(&ModuleListLock,&Irql);
+
+    Entry = PsLoadedModuleList.Flink;
+    while (Entry != &PsLoadedModuleList)
     {
-        return NULL;
+        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        DPRINT("Comparing %wZ and %wZ\n",
+            &Module->BaseDllName,
+            ModuleName);
+
+        if (!LdrpCompareModuleNames(&Module->BaseDllName, ModuleName))
+        {
+            DPRINT("Module %wZ\n", &Module->BaseDllName);
+            KeReleaseSpinLock(&ModuleListLock, Irql);
+            return(Module);
+        }
+
+        Entry = Entry->Flink;
     }
 
-    *p = 0;
+    KeReleaseSpinLock(&ModuleListLock, Irql);
 
-    DPRINT("Driver: %s  Function: %s\n", NameBuffer, p+1);
+    DPRINT("Could not find module '%wZ'\n", ModuleName);
 
-    RtlCreateUnicodeStringFromAsciiz(&ModuleName,
-        NameBuffer);
-    ModuleObject = LdrGetModuleObject(&ModuleName);
-    RtlFreeUnicodeString(&ModuleName);
-
-    DPRINT("ModuleObject: %p\n", ModuleObject);
-
-    if (ModuleObject == NULL)
-    {
-        DPRINT("LdrPEFixupForward: failed to find module %s\n", NameBuffer);
-        return NULL;
-    }
-    return LdrPEGetExportByName(ModuleObject->DllBase, (PUCHAR)(p+1), 0xffff);
+    return(NULL);
 }
 
-static PVOID
-LdrPEGetExportByOrdinal (
-                         PVOID BaseAddress,
-                         ULONG Ordinal )
-{
-    PIMAGE_EXPORT_DIRECTORY ExportDir;
-    ULONG ExportDirSize;
-    PULONG * ExFunctions;
-    PVOID Function;
-
-    ExportDir = (PIMAGE_EXPORT_DIRECTORY)RtlImageDirectoryEntryToData (
-        BaseAddress,
-        TRUE,
-        IMAGE_DIRECTORY_ENTRY_EXPORT,
-        &ExportDirSize);
-
-    ExFunctions = (PULONG *)RVA(BaseAddress,
-        ExportDir->AddressOfFunctions);
-    DPRINT("LdrPEGetExportByOrdinal(Ordinal %d) = %x\n",
-        Ordinal,
-        RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base]));
-
-    Function = 0 != ExFunctions[Ordinal - ExportDir->Base]
-    ? RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base] )
-        : NULL;
-
-    if (((ULONG_PTR)Function >= (ULONG_PTR)ExportDir) &&
-        ((ULONG_PTR)Function < (ULONG_PTR)ExportDir + ExportDirSize))
-    {
-        DPRINT("Forward: %s\n", (PCHAR)Function);
-        Function = LdrPEFixupForward((PCHAR)Function);
-    }
-
-    return Function;
-}
-
-static PVOID
-LdrPEGetExportByName (
-                      PVOID BaseAddress,
-                      PUCHAR SymbolName,
-                      USHORT Hint )
-{
-    PIMAGE_EXPORT_DIRECTORY ExportDir;
-    PULONG * ExFunctions;
-    PULONG * ExNames;
-    USHORT * ExOrdinals;
-    PVOID ExName;
-    ULONG Ordinal;
-    PVOID Function;
-    LONG minn, maxn, mid, res;
-    ULONG ExportDirSize;
-
-    DPRINT("LdrPEGetExportByName %x %s %hu\n", BaseAddress, SymbolName, Hint);
-
-    ExportDir = (PIMAGE_EXPORT_DIRECTORY)RtlImageDirectoryEntryToData(BaseAddress,
-        TRUE,
-        IMAGE_DIRECTORY_ENTRY_EXPORT,
-        &ExportDirSize);
-    if (ExportDir == NULL)
-    {
-        DPRINT1("LdrPEGetExportByName(): no export directory!\n");
-        return NULL;
-    }
-
-
-    /* The symbol names may be missing entirely */
-    if (ExportDir->AddressOfNames == 0)
-    {
-        DPRINT("LdrPEGetExportByName(): symbol names missing entirely\n");
-        return NULL;
-    }
-
-    /*
-    * Get header pointers
-    */
-    ExNames = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfNames);
-    ExOrdinals = (USHORT *)RVA(BaseAddress, ExportDir->AddressOfNameOrdinals);
-    ExFunctions = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfFunctions);
-
-    /*
-    * Check the hint first
-    */
-    if (Hint < ExportDir->NumberOfNames)
-    {
-        ExName = RVA(BaseAddress, ExNames[Hint]);
-        if (strcmp(ExName, (PCHAR)SymbolName) == 0)
-        {
-            Ordinal = ExOrdinals[Hint];
-            Function = RVA(BaseAddress, ExFunctions[Ordinal]);
-            if ((ULONG_PTR)Function >= (ULONG_PTR)ExportDir &&
-                (ULONG_PTR)Function < (ULONG_PTR)ExportDir + ExportDirSize)
-            {
-                DPRINT("Forward: %s\n", (PCHAR)Function);
-                Function = LdrPEFixupForward((PCHAR)Function);
-                if (Function == NULL)
-                {
-                    DPRINT1("LdrPEGetExportByName(): failed to find %s\n",SymbolName);
-                }
-                return Function;
-            }
-            if (Function != NULL)
-            {
-                return Function;
-            }
-        }
-    }
-
-    /*
-    * Binary search
-    */
-    minn = 0;
-    maxn = ExportDir->NumberOfNames - 1;
-    while (minn <= maxn)
-    {
-        mid = (minn + maxn) / 2;
-
-        ExName = RVA(BaseAddress, ExNames[mid]);
-        res = strcmp(ExName, (PCHAR)SymbolName);
-        if (res == 0)
-        {
-            Ordinal = ExOrdinals[mid];
-            Function = RVA(BaseAddress, ExFunctions[Ordinal]);
-            if ((ULONG_PTR)Function >= (ULONG_PTR)ExportDir &&
-                (ULONG_PTR)Function < (ULONG_PTR)ExportDir + ExportDirSize)
-            {
-                DPRINT("Forward: %s\n", (PCHAR)Function);
-                Function = LdrPEFixupForward((PCHAR)Function);
-                if (Function == NULL)
-                {
-                    DPRINT1("LdrPEGetExportByName(): failed to find %s\n",SymbolName);
-                }
-                return Function;
-            }
-            if (Function != NULL)
-            {
-                return Function;
-            }
-        }
-        else if (res > 0)
-        {
-            maxn = mid - 1;
-        }
-        else
-        {
-            minn = mid + 1;
-        }
-    }
-
-    ExName = RVA(BaseAddress, ExNames[mid]);
-    DPRINT1("LdrPEGetExportByName(): failed to find %s\n",SymbolName);
-    return (PVOID)NULL;
-}
-
-static NTSTATUS
-LdrPEProcessImportDirectoryEntry(
-                                 PVOID DriverBase,
-                                 PLDR_DATA_TABLE_ENTRY ImportedModule,
-                                 PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory )
-{
-    PVOID* ImportAddressList;
-    PULONG FunctionNameList;
-    ULONG Ordinal;
-
-    if (ImportModuleDirectory == NULL || ImportModuleDirectory->Name == 0)
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Get the import address list. */
-    ImportAddressList = (PVOID*)RVA(DriverBase, ImportModuleDirectory->FirstThunk);
-
-    /* Get the list of functions to import. */
-    if (ImportModuleDirectory->OriginalFirstThunk != 0)
-    {
-        FunctionNameList = (PULONG)RVA(DriverBase, ImportModuleDirectory->OriginalFirstThunk);
-    }
-    else
-    {
-        FunctionNameList = (PULONG)RVA(DriverBase, ImportModuleDirectory->FirstThunk);
-    }
-
-    /* Walk through function list and fixup addresses. */
-    while (*FunctionNameList != 0L)
-    {
-        if ((*FunctionNameList) & 0x80000000)
-        {
-            Ordinal = (*FunctionNameList) & 0x7fffffff;
-            *ImportAddressList = LdrPEGetExportByOrdinal(ImportedModule->DllBase, Ordinal);
-            if ((*ImportAddressList) == NULL)
-            {
-                DPRINT1("Failed to import #%ld from %wZ\n", Ordinal, &ImportedModule->FullDllName);
-                return STATUS_UNSUCCESSFUL;
-            }
-        }
-        else
-        {
-            IMAGE_IMPORT_BY_NAME *pe_name;
-            pe_name = RVA(DriverBase, *FunctionNameList);
-            *ImportAddressList = LdrPEGetExportByName(ImportedModule->DllBase, pe_name->Name, pe_name->Hint);
-            if ((*ImportAddressList) == NULL)
-            {
-                DPRINT1("Failed to import %s from %wZ\n", pe_name->Name, &ImportedModule->FullDllName);
-                return STATUS_UNSUCCESSFUL;
-            }
-        }
-        ImportAddressList++;
-        FunctionNameList++;
-    }
-    return STATUS_SUCCESS;
-}
-
-typedef struct _LOAD_IMPORTS
-{
-    SIZE_T Count;
-    PLDR_DATA_TABLE_ENTRY Entry[1];
-} LOAD_IMPORTS, *PLOAD_IMPORTS;
-
+//
+// Used when unloading drivers
+//
 NTSTATUS
 NTAPI
-MiResolveImageReferences(IN PVOID ImageBase,
-                         IN PUNICODE_STRING ImageFileDirectory,
-                         IN PUNICODE_STRING NamePrefix OPTIONAL,
-                         OUT PCHAR *MissingApi,
-                         OUT PWCHAR *MissingDriver,
-                         OUT PLOAD_IMPORTS *LoadImports)
+LdrUnloadModule ( PLDR_DATA_TABLE_ENTRY ModuleObject )
 {
-    /* We don't do anything for now */
-    return STATUS_SUCCESS;
+    KIRQL Irql;
+
+    /* Remove the module from the module list */
+    KeAcquireSpinLock(&ModuleListLock,&Irql);
+    RemoveEntryList(&ModuleObject->InLoadOrderLinks);
+    KeReleaseSpinLock(&ModuleListLock, Irql);
+
+    /* Hook for KDB on unloading a driver. */
+    KDB_UNLOADDRIVER_HOOK(ModuleObject);
+
+    /* Free module section */
+    //  MmFreeSection(ModuleObject->DllBase);
+
+    ExFreePool(ModuleObject->FullDllName.Buffer);
+    ExFreePool(ModuleObject);
+
+    return(STATUS_SUCCESS);
 }
 
-static NTSTATUS
-LdrPEFixupImports (IN PVOID DllBase,
-                   IN PWCHAR DllName)
-{
-    PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory;
-    PCHAR ImportedName;
-    PLDR_DATA_TABLE_ENTRY ImportedModule;
-    NTSTATUS Status;
-    ULONG Size;
-
-    /*  Process each import module  */
-    ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
-        RtlImageDirectoryEntryToData(DllBase,
-        TRUE,
-        IMAGE_DIRECTORY_ENTRY_IMPORT,
-        &Size);
-    DPRINT("Processeing import directory at %p\n", ImportModuleDirectory);
-    while (ImportModuleDirectory->Name)
-    {
-        /*  Check to make sure that import lib is kernel  */
-        ImportedName = (PCHAR) DllBase + ImportModuleDirectory->Name;
-
-        Status = LdrPEGetOrLoadModule(DllName, ImportedName, &ImportedModule);
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
-
-        Status = LdrPEProcessImportDirectoryEntry(DllBase, ImportedModule, ImportModuleDirectory);
-        if (!NT_SUCCESS(Status))
-        {
-            while (TRUE);
-            return Status;
-        }
-
-        ImportModuleDirectory++;
-    }
-    return STATUS_SUCCESS;
-}
-
-static NTSTATUS
-LdrPEProcessModule(
-                   PVOID ModuleLoadBase,
-                   PUNICODE_STRING FileName,
-                   PLDR_DATA_TABLE_ENTRY *ModuleObject )
+//
+// Used for images already loaded (boot drivers)
+//
+NTSTATUS
+LdrProcessModule(PVOID ModuleLoadBase,
+                 PUNICODE_STRING FileName,
+                 PLDR_DATA_TABLE_ENTRY *ModuleObject)
 {
     unsigned int DriverSize, Idx;
     ULONG CurrentSize;
@@ -641,7 +366,7 @@ LdrPEProcessModule(
         BaseLength *= sizeof(WCHAR);
 
         /* Setup the string */
-        BaseName.Length = BaseLength;
+        BaseName.Length = (USHORT)BaseLength;
         BaseName.Buffer = p;
     }
     else
@@ -698,7 +423,7 @@ LdrPEProcessModule(
                                    NtHeader->OptionalHeader.AddressOfEntryPoint);
     LdrEntry->SizeOfImage = DriverSize;
     LdrEntry->CheckSum = NtHeader->OptionalHeader.CheckSum;
-    LdrEntry->SectionPointer = NULL; // FIXME
+    LdrEntry->SectionPointer = LdrEntry;
 
     /* Now write the DLL name */
     LdrEntry->BaseDllName.Buffer = NameBuffer;
@@ -737,7 +462,7 @@ LdrPEProcessModule(
 
     /* Insert the entry */
     KeAcquireSpinLock(&ModuleListLock, &Irql);
-    InsertTailList(&ModuleListHead, &LdrEntry->InLoadOrderLinks);
+    InsertTailList(&PsLoadedModuleList, &LdrEntry->InLoadOrderLinks);
     KeReleaseSpinLock(&ModuleListLock, Irql);
 
     /* Resolve imports */
@@ -748,10 +473,6 @@ LdrPEProcessModule(
                                       &MissingApiName,
                                       &MissingDriverName,
                                       &LoadedImports);
-
-    /* Resolve imports */
-    Status = LdrPEFixupImports(LdrEntry->DllBase,
-                               LdrEntry->FullDllName.Buffer);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
@@ -763,145 +484,6 @@ LdrPEProcessModule(
     /* Return */
     *ModuleObject = LdrEntry;
     return STATUS_SUCCESS;
-}
-
-VOID
-INIT_FUNCTION
-NTAPI
-LdrInit1(VOID)
-{
-    PLDR_DATA_TABLE_ENTRY HalModuleObject, NtoskrnlModuleObject, LdrEntry;
-
-    /* Initialize the module list and spinlock */
-    InitializeListHead(&ModuleListHead);
-    KeInitializeSpinLock(&ModuleListLock);
-
-    /* Get the NTOSKRNL Entry from the loader */
-    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-    /* Initialize ModuleObject for NTOSKRNL */
-    NtoskrnlModuleObject = ExAllocatePoolWithTag(PagedPool,
-                                                 sizeof(LDR_DATA_TABLE_ENTRY),
-                                                 TAG('M', 'm', 'L', 'd'));
-    NtoskrnlModuleObject->DllBase = LdrEntry->DllBase;
-    RtlInitUnicodeString(&NtoskrnlModuleObject->FullDllName, KERNEL_MODULE_NAME);
-    LdrpBuildModuleBaseName(&NtoskrnlModuleObject->BaseDllName, &NtoskrnlModuleObject->FullDllName);
-    NtoskrnlModuleObject->EntryPoint = LdrEntry->EntryPoint;
-    NtoskrnlModuleObject->SizeOfImage = LdrEntry->SizeOfImage;
-
-    /* Insert it into the list */
-    InsertTailList(&ModuleListHead, &NtoskrnlModuleObject->InLoadOrderLinks);
-
-    /* Get the HAL Entry from the loader */
-    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink->Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-    /* Initialize ModuleObject for HAL */
-    HalModuleObject = ExAllocatePoolWithTag(PagedPool,
-                                                 sizeof(LDR_DATA_TABLE_ENTRY),
-                                                 TAG('M', 'm', 'L', 'd'));
-    HalModuleObject->DllBase = LdrEntry->DllBase;
-    RtlInitUnicodeString(&HalModuleObject->FullDllName, HAL_MODULE_NAME);
-    LdrpBuildModuleBaseName(&HalModuleObject->BaseDllName, &HalModuleObject->FullDllName);
-    HalModuleObject->EntryPoint = LdrEntry->EntryPoint;
-    HalModuleObject->SizeOfImage = LdrEntry->SizeOfImage;
-
-    /* Insert it into the list */
-    InsertTailList(&ModuleListHead, &HalModuleObject->InLoadOrderLinks);
-
-    /* Hook for KDB on initialization of the loader. */
-    KDB_LOADERINIT_HOOK(NtoskrnlModuleObject, HalModuleObject);
-}
-
-//
-// Used for checking if a module is already in the module list.
-// Used during loading/unloading drivers.
-//
-PLDR_DATA_TABLE_ENTRY
-NTAPI
-LdrGetModuleObject ( PUNICODE_STRING ModuleName )
-{
-    PLDR_DATA_TABLE_ENTRY Module;
-    PLIST_ENTRY Entry;
-    KIRQL Irql;
-
-    DPRINT("LdrGetModuleObject(%wZ) called\n", ModuleName);
-
-    KeAcquireSpinLock(&ModuleListLock,&Irql);
-
-    Entry = ModuleListHead.Flink;
-    while (Entry != &ModuleListHead)
-    {
-        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-        DPRINT("Comparing %wZ and %wZ\n",
-            &Module->BaseDllName,
-            ModuleName);
-
-        if (!LdrpCompareModuleNames(&Module->BaseDllName, ModuleName))
-        {
-            DPRINT("Module %wZ\n", &Module->BaseDllName);
-            KeReleaseSpinLock(&ModuleListLock, Irql);
-            return(Module);
-        }
-
-        Entry = Entry->Flink;
-    }
-
-    KeReleaseSpinLock(&ModuleListLock, Irql);
-
-    DPRINT("Could not find module '%wZ'\n", ModuleName);
-
-    return(NULL);
-}
-
-//
-// Used when unloading drivers
-//
-NTSTATUS
-NTAPI
-LdrUnloadModule ( PLDR_DATA_TABLE_ENTRY ModuleObject )
-{
-    KIRQL Irql;
-
-    /* Remove the module from the module list */
-    KeAcquireSpinLock(&ModuleListLock,&Irql);
-    RemoveEntryList(&ModuleObject->InLoadOrderLinks);
-    KeReleaseSpinLock(&ModuleListLock, Irql);
-
-    /* Hook for KDB on unloading a driver. */
-    KDB_UNLOADDRIVER_HOOK(ModuleObject);
-
-    /* Free module section */
-    //  MmFreeSection(ModuleObject->DllBase);
-
-    ExFreePool(ModuleObject->FullDllName.Buffer);
-    ExFreePool(ModuleObject);
-
-    return(STATUS_SUCCESS);
-}
-
-//
-// Used for images already loaded (boot drivers)
-//
-NTSTATUS
-LdrProcessModule(
-    PVOID ModuleLoadBase,
-    PUNICODE_STRING ModuleName,
-    PLDR_DATA_TABLE_ENTRY *ModuleObject )
-{
-    PIMAGE_DOS_HEADER PEDosHeader;
-
-    /*  If MZ header exists  */
-    PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
-    if (PEDosHeader->e_magic == IMAGE_DOS_SIGNATURE && PEDosHeader->e_lfanew != 0L)
-    {
-        return LdrPEProcessModule(ModuleLoadBase,
-            ModuleName,
-            ModuleObject);
-    }
-
-    DPRINT("Module wasn't PE\n");
-    return STATUS_UNSUCCESSFUL;
 }
 
 //

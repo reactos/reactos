@@ -37,15 +37,15 @@ KiRosPrintAddress(PVOID address)
 {
     PLIST_ENTRY current_entry;
     PLDR_DATA_TABLE_ENTRY current;
-    extern LIST_ENTRY ModuleListHead;
+    extern LIST_ENTRY PsLoadedModuleList;
     ULONG_PTR RelativeAddress;
     ULONG i = 0;
 
     do
     {
-        current_entry = ModuleListHead.Flink;
+        current_entry = PsLoadedModuleList.Flink;
 
-        while (current_entry != &ModuleListHead)
+        while (current_entry != &PsLoadedModuleList)
         {
             current = CONTAINING_RECORD(current_entry,
                                         LDR_DATA_TABLE_ENTRY,
@@ -267,13 +267,13 @@ KiPcToFileHeader(IN PVOID Eip,
     PVOID ImageBase, EipBase = NULL;
     PLDR_DATA_TABLE_ENTRY Entry;
     PLIST_ENTRY ListHead, NextEntry;
-    extern LIST_ENTRY ModuleListHead;
+    extern LIST_ENTRY PsLoadedModuleList;
 
     /* Assume no */
     *InKernel = FALSE;
 
     /* Set list pointers and make sure it's valid */
-    ListHead = &ModuleListHead;
+    ListHead = &PsLoadedModuleList;
     NextEntry = ListHead->Flink;
     if (NextEntry)
     {

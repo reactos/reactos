@@ -275,6 +275,7 @@
             <file>region.c</file>
             <file>rmap.c</file>
             <file>section.c</file>
+            <file>sysldr.c</file>
             <file>verifier.c</file>
             <file>virtual.c</file>
             <file>wset.c</file>

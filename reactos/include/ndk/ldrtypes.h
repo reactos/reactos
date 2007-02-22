@@ -119,6 +119,15 @@ typedef struct _LDR_DATA_TABLE_ENTRY
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
 
 //
+// Loaded Imports Reference Counting in Kernel
+//
+typedef struct _LOAD_IMPORTS
+{
+    SIZE_T Count;
+    PLDR_DATA_TABLE_ENTRY Entry[1];
+} LOAD_IMPORTS, *PLOAD_IMPORTS;
+
+//
 // Loader Resource Information
 //
 typedef struct _LDR_RESOURCE_INFO

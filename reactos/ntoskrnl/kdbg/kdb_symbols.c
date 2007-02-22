@@ -107,13 +107,12 @@ KdbpSymFindModule(IN PVOID Address  OPTIONAL,
 {
   PLIST_ENTRY current_entry;
   PLDR_DATA_TABLE_ENTRY current;
-  extern LIST_ENTRY ModuleListHead;
   INT Count = 0;
   INT Length;
 
-  current_entry = ModuleListHead.Flink;
+  current_entry = PsLoadedModuleList.Flink;
 
-  while (current_entry != &ModuleListHead)
+  while (current_entry != &PsLoadedModuleList)
     {
       current = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 

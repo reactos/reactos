@@ -952,8 +952,8 @@ QSI_DEF(SystemCallTimeInformation)
 /* Class 11 - Module Information */
 QSI_DEF(SystemModuleInformation)
 {
-    extern LIST_ENTRY ModuleListHead;
-    return ExpQueryModuleInformation(&ModuleListHead,
+    extern LIST_ENTRY PsLoadedModuleList;
+    return ExpQueryModuleInformation(&PsLoadedModuleList,
                                      NULL,
                                      (PRTL_PROCESS_MODULES)Buffer,
                                      Size,
