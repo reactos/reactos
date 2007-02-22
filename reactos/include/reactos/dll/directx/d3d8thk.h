@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+/* FIXME missing PD3DNTHAL_CONTEXTCREATEDATA
 BOOL STDCALL OsThunkD3dContextCreate(
     HANDLE hDirectDrawLocal,
     HANDLE hSurfColor,
@@ -16,12 +17,15 @@ BOOL STDCALL OsThunkD3dContextCreate(
     PD3DNTHAL_CONTEXTCREATEDATA pdcci
 );
 
+
 DWORD STDCALL OsThunkD3dContextDestroy(      
     PD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData
 );
+*/
 
 DWORD STDCALL OsThunkD3dContextDestroyAll(VOID);
 
+/* FIXME PD3DNTHAL_DRAWPRIMITIVES2DATA, PD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA missing
 DWORD STDCALL OsThunkD3dDrawPrimitives2(      
     HANDLE hCmdBuf,
     HANDLE hVBuf,
@@ -35,6 +39,7 @@ DWORD STDCALL OsThunkD3dDrawPrimitives2(
 DWORD STDCALL OsThunkD3dValidateTextureStageState(      
     PD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData
 );
+*/
 
 DWORD STDCALL OsThunkDdAddAttachedSurface(      
     HANDLE hSurface,
@@ -86,9 +91,7 @@ DWORD STDCALL OsThunkDdCreateD3DBuffer(
     HANDLE *puhSurface
 );
 
-HANDLE STDCALL OsThunkDdCreateDirectDrawObject(      
-    HDC hdc
-);
+HANDLE STDCALL OsThunkDdCreateDirectDrawObject(HDC hdc);
 
 HANDLE STDCALL OsThunkDdCreateMoComp(      
     HANDLE hDirectDraw,
@@ -232,12 +235,13 @@ DWORD STDCALL OsThunkDdLockD3D(
     PDD_LOCKDATA puLockData
 );
 
-BOOL STDCALL OsThunkDdQueryDirectDrawObject(      
+
+BOOL STDCALL OsThunkDdQueryDirectDrawObject(
     HANDLE hDirectDrawLocal,
-    DD_HALINFO *pHalInfo,
+    DD_HALINFO  *pHalInfo,
     DWORD *pCallBackFlags,
-    PD3DNTHAL_CALLBACKS puD3dCallbacks,
-    PD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
+    LPD3DNTHAL_CALLBACKS puD3dCallbacks,
+    LPD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
     PDD_D3DBUFCALLBACKS puD3dBufferCallbacks,
     LPDDSURFACEDESC puD3dTextureFormats,
     DWORD *puNumHeaps,
@@ -245,6 +249,7 @@ BOOL STDCALL OsThunkDdQueryDirectDrawObject(
     DWORD *puNumFourCC,
     DWORD *puFourCC
 );
+
 
 DWORD STDCALL OsThunkDdQueryMoCompStatus(      
     HANDLE hMoComp,
