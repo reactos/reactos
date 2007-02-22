@@ -987,6 +987,8 @@ DefWndScreenshot(HWND hWnd)
 
 }
 
+
+
 LRESULT STDCALL
 User32DefWindowProc(HWND hWnd,
 		    UINT Msg,
@@ -1522,7 +1524,34 @@ User32DefWindowProc(HWND hWnd,
         {
             return (1);
         }
-
+        
+        case WM_INPUTLANGCHANGEREQUEST:
+        {
+            HKL NewHkl;
+            
+            if(wParam & INPUTLANGCHANGE_BACKWARD 
+               && wParam & INPUTLANGCHANGE_FORWARD)
+            {
+                return FALSE;
+            }
+          
+            //FIXME: What to do with INPUTLANGCHANGE_SYSCHARSET ?
+          
+            if(wParam & INPUTLANGCHANGE_BACKWARD) NewHkl = HKL_PREV;
+            else if(wParam & INPUTLANGCHANGE_FORWARD) NewHkl = HKL_NEXT;
+            else NewHkl = lParam;
+          
+            NtUserActivateKeyboardLayout(NewHkl, 0);
+            
+            return TRUE;
+        }
+        
+        case WM_INPUTLANGCHANGE: 
+        {
+            //FIXME: What to do?
+            return TRUE;
+        }
+   
         case WM_ENDSESSION:
             if (wParam) PostQuitMessage(0);
             return 0;
