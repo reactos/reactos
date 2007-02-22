@@ -17,6 +17,7 @@
 LIST_ENTRY PsLoadedModuleList;
 KSPIN_LOCK PsLoadedModuleSpinLock;
 PVOID PsNtosImageBase;
+KMUTANT MmSystemLoadLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -913,4 +914,108 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* We're done */
     return TRUE;
+}
+
+BOOLEAN
+NTAPI
+MmVerifyImageIsOkForMpUse(IN PVOID BaseAddress)
+{
+    PIMAGE_NT_HEADERS NtHeader;
+    PAGED_CODE();
+
+    /* Get NT Headers */
+    NtHeader = RtlImageNtHeader(BaseAddress);
+    if (NtHeader)
+    {
+        /* Check if this image is only safe for UP while we have 2+ CPUs */
+        if ((KeNumberProcessors > 1) &&
+            (NtHeader->FileHeader.Characteristics & IMAGE_FILE_UP_SYSTEM_ONLY))
+        {
+            /* Fail */
+            return FALSE;
+        }
+    }
+
+    /* Otherwise, it's safe */
+    return TRUE;
+}
+
+NTSTATUS
+NTAPI
+MmCheckSystemImage(IN HANDLE ImageHandle,
+                   IN BOOLEAN PurgeSection)
+{
+    NTSTATUS Status;
+    HANDLE SectionHandle;
+    PVOID ViewBase = NULL;
+    SIZE_T ViewSize = 0;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_STANDARD_INFORMATION FileStandardInfo;
+    KAPC_STATE ApcState;
+    PAGED_CODE();
+
+    /* Create a section for the DLL */
+    Status = ZwCreateSection(&SectionHandle,
+                             SECTION_MAP_EXECUTE,
+                             NULL,
+                             NULL,
+                             PAGE_EXECUTE,
+                             SEC_COMMIT,
+                             ImageHandle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Make sure we're in the system process */
+    KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
+
+    /* Map it */
+    Status = ZwMapViewOfSection(SectionHandle,
+                                NtCurrentProcess(),
+                                &ViewBase,
+                                0,
+                                0,
+                                NULL,
+                                &ViewSize,
+                                ViewShare,
+                                0,
+                                PAGE_EXECUTE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, close the handle and return */
+        KeUnstackDetachProcess(&ApcState);
+        ZwClose(SectionHandle);
+        return Status;
+    }
+
+    /* Now query image information */
+    Status = ZwQueryInformationFile(ImageHandle,
+                                    &IoStatusBlock,
+                                    &FileStandardInfo,
+                                    sizeof(FileStandardInfo),
+                                    FileStandardInformation);
+    if ( NT_SUCCESS(Status) )
+    {
+        /* First, verify the checksum */
+        if (!LdrVerifyMappedImageMatchesChecksum(ViewBase,
+                                                 FileStandardInfo.
+                                                 EndOfFile.LowPart,
+                                                 FileStandardInfo.
+                                                 EndOfFile.LowPart))
+        {
+            /* Set checksum failure */
+            Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
+        }
+
+        /* Check that it's a valid SMP image if we have more then one CPU */
+        if (!MmVerifyImageIsOkForMpUse(ViewBase))
+        {
+            /* Otherwise it's not the right image */
+            Status = STATUS_IMAGE_MP_UP_MISMATCH;
+        }
+    }
+
+    /* Unmap the section, close the handle, and return status */
+    ZwUnmapViewOfSection(NtCurrentProcess(), ViewBase);
+    KeUnstackDetachProcess(&ApcState);
+    ZwClose(SectionHandle);
+    return Status;
 }

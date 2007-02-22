@@ -201,11 +201,71 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     PLOAD_IMPORTS LoadedImports = (PVOID)-2;
     PCHAR MissingApiName, Buffer;
     PWCHAR MissingDriverName;
+    PAGED_CODE();
+
+    /* Detect session-load */
+    if (Flags)
+    {
+        /* Sanity checks */
+        ASSERT(NamePrefix == NULL);
+        ASSERT(LoadedName == NULL);
+
+        /* Make sure the process is in session too */
+        if (!PsGetCurrentProcess()->ProcessInSession) return STATUS_NO_MEMORY;
+    }
 
     if (ModuleObject) *ModuleObject = NULL;
     if (ImageBaseAddress) *ImageBaseAddress = NULL;
 
-    DPRINT("Loading Module %wZ...\n", FileName);
+    /* Allocate a buffer we'll use for names */
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, TAG_LDR_WSTR);
+    if (!Buffer)
+    {
+        /* Fail */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Check for a separator */
+    if (FileName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
+    {
+        PWCHAR p;
+        ULONG BaseLength;
+
+        /* Loop the path until we get to the base name */
+        p = &FileName->Buffer[FileName->Length / sizeof(WCHAR)];
+        while (*(p - 1) != OBJ_NAME_PATH_SEPARATOR) p--;
+
+        /* Get the length */
+        BaseLength = (ULONG)(&FileName->Buffer[FileName->Length / sizeof(WCHAR)] - p);
+        BaseLength *= sizeof(WCHAR);
+
+        /* Setup the string */
+        BaseName.Length = (USHORT)BaseLength;
+        BaseName.Buffer = p;
+    }
+    else
+    {
+        /* Otherwise, we already have a base name */
+        BaseName.Length = FileName->Length;
+        BaseName.Buffer = FileName->Buffer;
+    }
+
+    /* Setup the maximum length */
+    BaseName.MaximumLength = BaseName.Length;
+
+    /* Now compute the base directory */
+    BaseDirectory = *FileName;
+    BaseDirectory.Length -= BaseName.Length;
+    BaseDirectory.MaximumLength = BaseDirectory.Length;
+
+    /* And the prefix, which for now is just the name itself */
+    PrefixName = *FileName;
+
+    /* Check if we have a prefix */
+    if (NamePrefix) DPRINT1("Prefixed images are not yet supported!\n");
+
+    /* Check if we already have a name, use it instead */
+    if (LoadedName) BaseName = *LoadedName;
 
     /*  Open the Module  */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -369,50 +429,6 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
         /* Fail */
         return Status;
     }
-
-    /* Allocate a buffer we'll use for names */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, TAG_LDR_WSTR);
-    if (!Buffer)
-    {
-        /* Fail */
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Check for a separator */
-    if (FileName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
-    {
-        PWCHAR p;
-        ULONG BaseLength;
-
-        /* Loop the path until we get to the base name */
-        p = &FileName->Buffer[FileName->Length / sizeof(WCHAR)];
-        while (*(p - 1) != OBJ_NAME_PATH_SEPARATOR) p--;
-
-        /* Get the length */
-        BaseLength = (ULONG)(&FileName->Buffer[FileName->Length / sizeof(WCHAR)] - p);
-        BaseLength *= sizeof(WCHAR);
-
-        /* Setup the string */
-        BaseName.Length = (USHORT)BaseLength;
-        BaseName.Buffer = p;
-    }
-    else
-    {
-        /* Otherwise, we already have a base name */
-        BaseName.Length = FileName->Length;
-        BaseName.Buffer = FileName->Buffer;
-    }
-
-    /* Setup the maximum length */
-    BaseName.MaximumLength = BaseName.Length;
-
-    /* Now compute the base directory */
-    BaseDirectory = *FileName;
-    BaseDirectory.Length -= BaseName.Length;
-    BaseDirectory.MaximumLength = BaseDirectory.Length;
-
-    /* And the prefix */
-    PrefixName = *FileName;
 
     /* Calculate the size we'll need for the entry and allocate it */
     EntrySize = sizeof(LDR_DATA_TABLE_ENTRY) +

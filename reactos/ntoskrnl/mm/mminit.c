@@ -453,6 +453,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
 }
 
 BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
+extern KMUTANT MmSystemLoadLock;
 
 BOOLEAN
 NTAPI
@@ -461,6 +462,9 @@ MmInitSystem(IN ULONG Phase,
 {
     if (Phase == 0)
     {
+        /* Initialize the Loader Lock */
+        KeInitializeMutant(&MmSystemLoadLock, FALSE);
+
         /* Reload boot drivers */
         MiReloadBootLoadedDrivers(LoaderBlock);
 

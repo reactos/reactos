@@ -49,8 +49,14 @@ Author:
 #define LDRP_IMAGE_NOT_AT_BASE                  0x00200000
 #define LDRP_COR_IMAGE                          0x00400000
 #define LDR_COR_OWNS_UNMAP                      0x00800000
-#define LDRP_DRIVER_VERIFYING                   0x02000000
+#define LDRP_SYSTEM_MAPPED                      0x01000000
+#define LDRP_IMAGE_VERIFYING                    0x02000000
+#define LDRP_DRIVER_DEPENDENT_DLL               0x04000000
+#define LDRP_ENTRY_NATIVE                       0x08800000
 #define LDRP_REDIRECTED                         0x10000000
+#define LDRP_NON_PAGED_DEBUG_INFO               0x20000000
+#define LDRP_MM_LOADED                          0x40000000
+#define LDRP_COMPAT_DATABASE_PROCESSED          0x80000000
 
 //
 // Dll Characteristics for LdrLoadDll
