@@ -148,7 +148,7 @@ MiSnapThunk(IN PVOID DllBase,
         /* Get the hint and check if it's valid */
         Hint = NameImport->Hint;
         if ((Hint < ExportDirectory->NumberOfNames) &&
-            !(strcmp(NameImport->Name, (PCHAR)DllBase + NameTable[Hint])))
+            !(strcmp((PCHAR) NameImport->Name, (PCHAR)DllBase + NameTable[Hint])))
         {
             /* We have a match, get the ordinal number from here */
             Ordinal = OrdinalTable[Hint];
@@ -163,7 +163,7 @@ MiSnapThunk(IN PVOID DllBase,
                 Mid = (Low + High) >> 1;
 
                 /* Compare name */
-                Ret = strcmp(NameImport->Name, (PCHAR)DllBase + NameTable[Mid]);
+                Ret = strcmp((PCHAR)NameImport->Name, (PCHAR)DllBase + NameTable[Mid]);
                 if (Ret < 0)
                 {
                     /* Update high */
