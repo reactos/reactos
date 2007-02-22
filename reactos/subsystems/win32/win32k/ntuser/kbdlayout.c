@@ -328,7 +328,7 @@ static PKBL UserActivateKbl(PW32THREAD Thread, PKBL pKbl)
    Thread->KeyboardLayout = pKbl;
    pKbl->RefCount++;
    
-   // Post WM_INPUTLANGCHANGE to thread's focus window
+   // Send WM_INPUTLANGCHANGE to thread's focus window
          
    Msg.hwnd = Thread->MessageQueue->FocusWindow;
    Msg.message = WM_INPUTLANGCHANGE;
@@ -457,33 +457,46 @@ NtUserLoadKeyboardLayoutEx(
    IN DWORD Unused4)
 {
    HKL Ret = NULL;
-   PKBL pKbl;
+   PKBL pKbl = NULL, Cur;
    
    UserEnterExclusive();
    
-   pKbl = KBLList;
+   Cur = KBLList;
    do
    {
-      if(pKbl->klid == dwKLID)
+      if(Cur->klid == dwKLID)
       {
-         Ret = pKbl->hkl;
+         pKbl = Cur;
+         break;
+      }
+      
+      Cur = (PKBL) Cur->List.Flink;
+   } while(Cur != KBLList);
+   
+   if(!pKbl) 
+   {
+      pKbl = UserLoadDllAndCreateKbl(dwKLID);
+   
+      if(!pKbl)
+      {
          goto the_end;
       }
       
-      pKbl = (PKBL) pKbl->List.Flink;
-   } while(pKbl != KBLList);
-   
-   pKbl = UserLoadDllAndCreateKbl(dwKLID);
-   
-   if(!pKbl)
-   {
-      goto the_end;
+      InsertTailList(&KBLList->List, &pKbl->List);
    }
    
-   InsertTailList(&KBLList->List, &pKbl->List);
+   if(Flags & KLF_REORDER) KBLList = pKbl;
+   
+   if(Flags & KLF_ACTIVATE) 
+   {
+      UserActivateKbl(PsGetCurrentThreadWin32Thread(), pKbl);
+   }
+
    Ret = pKbl->hkl;
    
    //FIXME: Respect Flags!
+   //       KLF_NOTELLSHELL KLF_SETFORPROCESS
+   //       KLF_REPLACELANG KLF_SUBSTITUTE_OK 
    
 the_end:
    UserLeave();
@@ -502,17 +515,35 @@ NtUserActivateKeyboardLayout(
    
    UserEnterExclusive();
    
-   pKbl = UserHklToKbl(hKl);
+   pWThread = PsGetCurrentThreadWin32Thread();
    
-   //FIXME: Respect flags!
+   if(pWThread->KeyboardLayout->hkl == hKl)
+   {
+      Ret = hKl;
+      goto the_end;
+   }
+    
+   if(hKl == (HKL)HKL_NEXT)
+   {
+      pKbl = (PKBL)pWThread->KeyboardLayout->List.Flink;
+   }
+   else if(hKl == (HKL)HKL_PREV)
+   {
+      pKbl = (PKBL)pWThread->KeyboardLayout->List.Blink;
+   }
+   else pKbl = UserHklToKbl(hKl);
+   
+   //FIXME:  KLF_RESET, KLF_SHIFTLOCK
+   //FIXME:  KLF_SETFORPROCESS
    
    if(pKbl)
    {
-      pWThread = PsGetCurrentThreadWin32Thread();
+      if(Flags & KLF_REORDER)
+         KBLList = pKbl;
       
-      if(pWThread->KeyboardLayout->hkl == hKl)
+      if(pKbl == pWThread->KeyboardLayout)
       {
-         Ret = hKl;
+         Ret = pKbl->hkl;
       }
       else
       {
@@ -521,6 +552,7 @@ NtUserActivateKeyboardLayout(
       }
    }
    
+the_end:
    UserLeave();
    return Ret;
 }
