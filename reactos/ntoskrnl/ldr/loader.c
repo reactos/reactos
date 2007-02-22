@@ -173,9 +173,12 @@ LdrUnloadModule ( PLDR_DATA_TABLE_ENTRY ModuleObject )
 //
 NTSTATUS
 NTAPI
-LdrLoadModule(
-              PUNICODE_STRING FileName,
-              PLDR_DATA_TABLE_ENTRY *ModuleObject )
+MmLoadSystemImage(IN PUNICODE_STRING FileName,
+                  IN PUNICODE_STRING NamePrefix OPTIONAL,
+                  IN PUNICODE_STRING LoadedName OPTIONAL,
+                  IN ULONG Flags,
+                  OUT PVOID *ModuleObject,
+                  OUT PVOID *ImageBaseAddress)
 {
     PVOID ModuleLoadBase;
     NTSTATUS Status;
@@ -199,7 +202,8 @@ LdrLoadModule(
     PCHAR MissingApiName, Buffer;
     PWCHAR MissingDriverName;
 
-    *ModuleObject = NULL;
+    if (ModuleObject) *ModuleObject = NULL;
+    if (ImageBaseAddress) *ImageBaseAddress = NULL;
 
     DPRINT("Loading Module %wZ...\n", FileName);
 
@@ -507,7 +511,8 @@ LdrLoadModule(
     /*  Cleanup  */
     ExFreePool(ModuleLoadBase);
 
-    *ModuleObject = Module;
+    if (ModuleObject) *ModuleObject = Module;
+    if (ImageBaseAddress) *ImageBaseAddress = Module->DllBase;
 
     /* Hook for KDB on loading a driver. */
     KDB_LOADDRIVER_HOOK(FileName, Module);

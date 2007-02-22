@@ -484,7 +484,12 @@ CheckDllState:
                 DllName.Buffer[(DllName.MaximumLength - 1) / 2] = UNICODE_NULL;
 
                 /* Load the image */
-                Status = LdrLoadModule(&DllName, &DllEntry);
+                Status = MmLoadSystemImage(&DllName,
+                                           NamePrefix,
+                                           NULL,
+                                           0,
+                                           (PVOID)&DllEntry,
+                                           &DllBase);
                 if (NT_SUCCESS(Status))
                 {
                     /* We can free the DLL Name */
@@ -511,8 +516,7 @@ CheckDllState:
                 /* We're now loaded */
                 Loaded = TRUE;
 
-                /* Get the base address and other information */
-                DllBase = DllEntry->DllBase;
+                /* Sanity check */
                 ASSERT(DllBase = DllEntry->DllBase);
 
                 /* Call the initialization routines */

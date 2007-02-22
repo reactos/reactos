@@ -1267,7 +1267,6 @@ SSI_DEF(SystemLoadGdiDriverInformation)
     PVOID ImageBase;
     ULONG_PTR EntryPoint;
     NTSTATUS Status;
-    PLDR_DATA_TABLE_ENTRY ModuleObject;
     ULONG DirSize;
     PIMAGE_NT_HEADERS NtHeader;
 
@@ -1283,11 +1282,15 @@ SSI_DEF(SystemLoadGdiDriverInformation)
 
     /* Load the driver */
     ImageName = DriverInfo->DriverName;
-    Status = LdrLoadModule(&ImageName, &ModuleObject);
+    Status = MmLoadSystemImage(&ImageName,
+                               NULL,
+                               NULL,
+                               0,
+                               NULL,
+                               &ImageBase);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Return the export pointer */
-    ImageBase = ModuleObject->DllBase;
     DriverInfo->ExportSectionPointer =
         RtlImageDirectoryEntryToData(ImageBase,
                                      TRUE,
@@ -1479,11 +1482,15 @@ SSI_DEF(SystemExtendServiceTableInformation)
     ImageName = *(PUNICODE_STRING)Buffer;
 
     /* Load the image */
-    Status = LdrLoadModule(&ImageName, &ModuleObject);
+    Status = MmLoadSystemImage(&ImageName,
+                               NULL,
+                               NULL,
+                               0,
+                               (PVOID)&ModuleObject,
+                               &ImageBase);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the headers */
-    ImageBase = ModuleObject->DllBase;
     NtHeader = RtlImageNtHeader(ImageBase);
     if (!NtHeader)
     {

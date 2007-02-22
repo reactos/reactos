@@ -455,7 +455,7 @@ IopLoadServiceModule(
       else
       {
          DPRINT("Loading module\n");
-         Status = LdrLoadModule(&ServiceImagePath, ModuleObject);
+         Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, NULL);
       }
    }
    else
@@ -1721,11 +1721,10 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
     * Load the driver module
     */
 
-   Status = LdrLoadModule(&ImagePath, &ModuleObject);
-
+   Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, NULL);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("LdrLoadModule() failed (Status %lx)\n", Status);
+      DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
       IopFreeDeviceNode(DeviceNode);
       goto ReleaseCapturedString;
    }

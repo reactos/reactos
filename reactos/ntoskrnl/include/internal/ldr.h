@@ -66,10 +66,12 @@ LdrInitDebug(
 
 NTSTATUS
 NTAPI
-LdrLoadModule(
-    PUNICODE_STRING Filename,
-    PLDR_DATA_TABLE_ENTRY *ModuleObject
-);
+MmLoadSystemImage(IN PUNICODE_STRING FileName,
+                  IN PUNICODE_STRING NamePrefix OPTIONAL,
+                  IN PUNICODE_STRING LoadedName OPTIONAL,
+                  IN ULONG Flags,
+                  OUT PVOID *ModuleObject,
+                  OUT PVOID *ImageBaseAddress);
 
 NTSTATUS
 NTAPI
