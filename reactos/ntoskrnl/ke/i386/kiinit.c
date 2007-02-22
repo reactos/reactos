@@ -533,9 +533,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
             0,
             4096);
 
-    /* Sets up the Text Sections of the Kernel and HAL for debugging */
-    LdrInit1();
-
     /* Set the NX Support policy */
     SharedUserData->NXSupportPolicy = (UCHAR)NXSupportPolicy;
 

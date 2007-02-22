@@ -459,7 +459,18 @@ NTAPI
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    if (Phase == 1)
+    if (Phase == 0)
+    {
+        /* Reload boot drivers */
+        MiReloadBootLoadedDrivers(LoaderBlock);
+
+        /* Initialize the loaded module list */
+        MiInitializeLoadedModuleList(LoaderBlock);
+
+        /* We're done, for now */
+        DPRINT("Mm0: COMPLETE\n");
+    }
+    else if (Phase == 1)
     {
         MmInitializeRmapList();
         RmapReady = TRUE;

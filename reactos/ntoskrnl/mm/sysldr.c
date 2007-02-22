@@ -12,7 +12,77 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+
+LIST_ENTRY PsLoadedModuleList;
+KSPIN_LOCK PsLoadedModuleSpinLock;
+PVOID PsNtosImageBase;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+               IN PVOID OldBase,
+               IN PVOID NewBase,
+               IN ULONG Size)
+{
+    ULONG_PTR OldBaseTop, Delta;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PLIST_ENTRY NextEntry;
+    ULONG ImportSize;
+    PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor;
+    PULONG ImageThunk;
+
+    /* Calculate the top and delta */
+    OldBaseTop = (ULONG_PTR)OldBase + Size - 1;
+    Delta = (ULONG_PTR)NewBase - (ULONG_PTR)OldBase;
+
+    /* Loop the loader block */
+    for (NextEntry = LoaderBlock->LoadOrderListHead.Flink;
+         NextEntry != &LoaderBlock->LoadOrderListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        /* Get the loader entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+
+        /* Get the import table */
+        ImportDescriptor = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
+                                                        TRUE,
+                                                        IMAGE_DIRECTORY_ENTRY_IMPORT,
+                                                        &ImportSize);
+        if (!ImportDescriptor) continue;
+
+        /* Make sure we have an IAT */
+        DPRINT("[Mm0]: Updating thunks in: %wZ\n", &LdrEntry->BaseDllName);
+        while ((ImportDescriptor->Name) &&
+               (ImportDescriptor->OriginalFirstThunk))
+        {
+            /* Get the image thunk */
+            ImageThunk = (PVOID)((ULONG_PTR)LdrEntry->DllBase +
+                                 ImportDescriptor->FirstThunk);
+            while (*ImageThunk)
+            {
+                /* Check if it's within this module */
+                if ((*ImageThunk >= (ULONG_PTR)OldBase) && (*ImageThunk <= OldBaseTop))
+                {
+                    /* Relocate it */
+                    DPRINT("[Mm0]: Updating IAT at: %p. Old Entry: %p. New Entry: %p.\n",
+                            ImageThunk, *ImageThunk, *ImageThunk + Delta);
+                    *ImageThunk += Delta;
+                }
+
+                /* Go to the next thunk */
+                ImageThunk++;
+            }
+
+            /* Go to the next import */
+            ImportDescriptor++;
+        }
+    }
+}
 
 NTSTATUS
 NTAPI
@@ -584,3 +654,259 @@ CheckDllState:
     return STATUS_SUCCESS;
 }
 
+VOID
+NTAPI
+MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PLIST_ENTRY NextEntry;
+    ULONG i = 0;
+    PIMAGE_NT_HEADERS NtHeader;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PIMAGE_FILE_HEADER FileHeader;
+    BOOLEAN ValidRelocs;
+    PIMAGE_DATA_DIRECTORY DataDirectory;
+    PVOID DllBase, NewImageAddress;
+    NTSTATUS Status;
+    ULONG DriverSize = 0, Size;
+    PIMAGE_SECTION_HEADER Section;
+
+    /* Loop driver list */
+    for (NextEntry = LoaderBlock->LoadOrderListHead.Flink;
+         NextEntry != &LoaderBlock->LoadOrderListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        /* Get the loader entry and NT header */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+        NtHeader = RtlImageNtHeader(LdrEntry->DllBase);
+
+        /* Debug info */
+        DPRINT("[Mm0]: Driver at: %p ending at: %p for module: %wZ\n",
+                LdrEntry->DllBase,
+                (ULONG_PTR)LdrEntry->DllBase+ LdrEntry->SizeOfImage,
+                &LdrEntry->FullDllName);
+
+        /* Skip kernel and HAL */
+        /* ROS HACK: Skip BOOTVID/KDCOM too */
+        i++;
+        if (i <= 4) continue;
+
+        /* Skip non-drivers */
+        if (!NtHeader) continue;
+
+#if 1 // Disable for FreeLDR 2.5
+        /*  Get header pointers  */
+        Section = IMAGE_FIRST_SECTION(NtHeader);
+
+        /*  Determine the size of the module  */
+        for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
+        {
+            /* Skip this section if we're not supposed to load it */
+            if (!(Section[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+            {
+                /* Add the size of this section into the total size */
+                Size = Section[i].VirtualAddress + Section[i].Misc.VirtualSize;
+                DriverSize = max(DriverSize, Size);
+            }
+        }
+
+        /* Round up the driver size to section alignment */
+        DriverSize = ROUND_UP(DriverSize, NtHeader->OptionalHeader.SectionAlignment);
+#endif
+
+        /* Get the file header and make sure we can relocate */
+        FileHeader = &NtHeader->FileHeader;
+        if (FileHeader->Characteristics & IMAGE_FILE_RELOCS_STRIPPED) continue;
+        if (NtHeader->OptionalHeader.NumberOfRvaAndSizes <
+            IMAGE_DIRECTORY_ENTRY_BASERELOC) continue;
+
+        /* Everything made sense until now, check the relocation section too */
+        DataDirectory = &NtHeader->OptionalHeader.
+                        DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
+        if (!DataDirectory->VirtualAddress)
+        {
+            /* We don't really have relocations */
+            ValidRelocs = FALSE;
+        }
+        else
+        {
+            /* Make sure the size is valid */
+            if ((DataDirectory->VirtualAddress + DataDirectory->Size) >
+                LdrEntry->SizeOfImage)
+            {
+                /* They're not, skip */
+                 continue;
+            }
+
+            /* We have relocations */
+            ValidRelocs = TRUE;
+        }
+
+        /* Remember the original address */
+        DllBase = LdrEntry->DllBase;
+
+        /*  Allocate a virtual section for the module  */
+        NewImageAddress = MmAllocateSection(DriverSize, NULL);
+        if (!NewImageAddress)
+        {
+            /* Shouldn't happen */
+            DPRINT1("[Mm0]: Couldn't allocate driver section!\n");
+            while (TRUE);
+        }
+
+        /* Sanity check */
+        DPRINT("[Mm0]: Copying from: %p to: %p\n", DllBase, NewImageAddress);
+        ASSERT(ExpInitializationPhase == 0);
+
+#if 0 // Enable for FreeLDR 2.5
+        /* Now copy the entire driver over */
+        RtlCopyMemory(NewImageAddress, DllBase, DriverSize);
+#else
+        /* Copy headers over */
+        RtlCopyMemory(NewImageAddress,
+                      DllBase,
+                      NtHeader->OptionalHeader.SizeOfHeaders);
+
+        /*  Copy image sections into virtual section  */
+        for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
+        {
+            /* Get the size of this section and check if it's valid and on-disk */
+            Size = Section[i].VirtualAddress + Section[i].Misc.VirtualSize;
+            if ((Size <= DriverSize) && (Section[i].SizeOfRawData))
+            {
+                /* Copy the data from the disk to the image */
+                RtlCopyMemory((PVOID)((ULONG_PTR)NewImageAddress +
+                                      Section[i].VirtualAddress),
+                              (PVOID)((ULONG_PTR)DllBase +
+                                      Section[i].PointerToRawData),
+                              Section[i].Misc.VirtualSize >
+                              Section[i].SizeOfRawData ?
+                              Section[i].SizeOfRawData :
+                              Section[i].Misc.VirtualSize);
+            }
+        }
+#endif
+
+        /* Sanity check */
+        ASSERT(*(PULONG)NewImageAddress == *(PULONG)DllBase);
+
+        /* Set the image base to the old address */
+        NtHeader->OptionalHeader.ImageBase = (ULONG_PTR)DllBase;
+
+        /* Check if we had relocations */
+        if (ValidRelocs)
+        {
+            /* Relocate the image */
+            Status = LdrRelocateImageWithBias(NewImageAddress,
+                                              0,
+                                              "SYSLDR",
+                                              STATUS_SUCCESS,
+                                              STATUS_CONFLICTING_ADDRESSES,
+                                              STATUS_INVALID_IMAGE_FORMAT);
+            if (!NT_SUCCESS(Status))
+            {
+                /* This shouldn't happen */
+                DPRINT1("Relocations failed!\n");
+                while (TRUE);
+            }
+        }
+
+        /* Update the loader entry */
+        LdrEntry->DllBase = NewImageAddress;
+
+        /* Update the thunks */
+        DPRINT("[Mm0]: Updating thunks to: %wZ\n", &LdrEntry->BaseDllName);
+        MiUpdateThunks(LoaderBlock,
+                       DllBase,
+                       NewImageAddress,
+                       LdrEntry->SizeOfImage);
+
+        /* Update the loader entry */
+        LdrEntry->Flags |= 0x01000000;
+        LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)NewImageAddress +
+                                NtHeader->OptionalHeader.AddressOfEntryPoint);
+        LdrEntry->SizeOfImage = DriverSize;
+    }
+}
+
+BOOLEAN
+NTAPI
+MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry, NewEntry;
+    PLIST_ENTRY ListHead, NextEntry;
+    ULONG EntrySize;
+
+    /* Setup the loaded module list and lock */
+    KeInitializeSpinLock(&PsLoadedModuleSpinLock);
+    InitializeListHead(&PsLoadedModuleList);
+
+    /* Get loop variables and the kernel entry */
+    ListHead = &LoaderBlock->LoadOrderListHead;
+    NextEntry = ListHead->Flink;
+    LdrEntry = CONTAINING_RECORD(NextEntry,
+                                 LDR_DATA_TABLE_ENTRY,
+                                 InLoadOrderLinks);
+    PsNtosImageBase = LdrEntry->DllBase;
+
+    /* Loop the loader block */
+    while (NextEntry != ListHead)
+    {
+        /* Get the loader entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+
+        /* FIXME: ROS HACK. Make sure this is a driver */
+        if (!RtlImageNtHeader(LdrEntry->DllBase))
+        {
+            /* Skip this entry */
+            NextEntry= NextEntry->Flink;
+            continue;
+        }
+
+        /* Calculate the size we'll need and allocate a copy */
+        EntrySize = sizeof(LDR_DATA_TABLE_ENTRY) +
+                    LdrEntry->BaseDllName.MaximumLength +
+                    sizeof(UNICODE_NULL);
+        NewEntry = ExAllocatePoolWithTag(NonPagedPool, EntrySize, TAG_LDR_WSTR);
+        if (!NewEntry) return FALSE;
+
+        /* Copy the entry over */
+        *NewEntry = *LdrEntry;
+
+        /* Allocate the name */
+        NewEntry->FullDllName.Buffer =
+            ExAllocatePoolWithTag(PagedPool,
+                                  LdrEntry->FullDllName.MaximumLength +
+                                  sizeof(UNICODE_NULL),
+                                  TAG_LDR_WSTR);
+        if (!NewEntry->FullDllName.Buffer) return FALSE;
+
+        /* Set the base name */
+        NewEntry->BaseDllName.Buffer = (PVOID)(NewEntry + 1);
+
+        /* Copy the full and base name */
+        RtlCopyMemory(NewEntry->FullDllName.Buffer,
+                      LdrEntry->FullDllName.Buffer,
+                      LdrEntry->FullDllName.MaximumLength);
+        RtlCopyMemory(NewEntry->BaseDllName.Buffer,
+                      LdrEntry->BaseDllName.Buffer,
+                      LdrEntry->BaseDllName.MaximumLength);
+
+        /* Null-terminate the base name */
+        NewEntry->BaseDllName.Buffer[NewEntry->BaseDllName.Length /
+                                     sizeof(WCHAR)] = UNICODE_NULL;
+
+        /* Insert the entry into the list */
+        InsertTailList(&PsLoadedModuleList, &NewEntry->InLoadOrderLinks);
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Build the import lists for the boot drivers */
+    //MiBuildImportsForBootDrivers();
+
+    /* We're done */
+    return TRUE;
+}

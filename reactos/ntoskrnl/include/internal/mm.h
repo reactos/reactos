@@ -1429,4 +1429,17 @@ MiQueryVirtualMemory(
     OUT PULONG ResultLength
 );
 
+VOID
+NTAPI
+MiReloadBootLoadedDrivers(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+BOOLEAN
+NTAPI
+MiInitializeLoadedModuleList(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+
 #endif

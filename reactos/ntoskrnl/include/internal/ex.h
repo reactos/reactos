@@ -20,6 +20,7 @@ extern BOOLEAN ExpIsWinPEMode;
 ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 PVOID ExpNlsSectionPointer;
+extern ULONG ExpInitializationPhase;
 
 typedef struct _EXHANDLE
 {

@@ -18,13 +18,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
-
-LIST_ENTRY PsLoadedModuleList;
-KSPIN_LOCK ModuleListLock;
-LDR_DATA_TABLE_ENTRY NtoskrnlModuleObject;
-LDR_DATA_TABLE_ENTRY HalModuleObject;
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -105,52 +98,7 @@ LdrpCompareModuleNames (
     return(0);
 }
 
-VOID
-INIT_FUNCTION
-NTAPI
-LdrInit1(VOID)
-{
-    PLDR_DATA_TABLE_ENTRY HalModuleObject, NtoskrnlModuleObject, LdrEntry;
-
-    /* Initialize the module list and spinlock */
-    InitializeListHead(&PsLoadedModuleList);
-    KeInitializeSpinLock(&ModuleListLock);
-
-    /* Get the NTOSKRNL Entry from the loader */
-    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-    /* Initialize ModuleObject for NTOSKRNL */
-    NtoskrnlModuleObject = ExAllocatePoolWithTag(PagedPool,
-                                                 sizeof(LDR_DATA_TABLE_ENTRY),
-                                                 TAG('M', 'm', 'L', 'd'));
-    NtoskrnlModuleObject->DllBase = LdrEntry->DllBase;
-    RtlInitUnicodeString(&NtoskrnlModuleObject->FullDllName, KERNEL_MODULE_NAME);
-    NtoskrnlModuleObject->BaseDllName = NtoskrnlModuleObject->FullDllName;
-    NtoskrnlModuleObject->EntryPoint = LdrEntry->EntryPoint;
-    NtoskrnlModuleObject->SizeOfImage = LdrEntry->SizeOfImage;
-
-    /* Insert it into the list */
-    InsertTailList(&PsLoadedModuleList, &NtoskrnlModuleObject->InLoadOrderLinks);
-
-    /* Get the HAL Entry from the loader */
-    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink->Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-    /* Initialize ModuleObject for HAL */
-    HalModuleObject = ExAllocatePoolWithTag(PagedPool,
-                                                 sizeof(LDR_DATA_TABLE_ENTRY),
-                                                 TAG('M', 'm', 'L', 'd'));
-    HalModuleObject->DllBase = LdrEntry->DllBase;
-    RtlInitUnicodeString(&HalModuleObject->FullDllName, HAL_MODULE_NAME);
-    HalModuleObject->BaseDllName = HalModuleObject->FullDllName;
-    HalModuleObject->EntryPoint = LdrEntry->EntryPoint;
-    HalModuleObject->SizeOfImage = LdrEntry->SizeOfImage;
-
-    /* Insert it into the list */
-    InsertTailList(&PsLoadedModuleList, &HalModuleObject->InLoadOrderLinks);
-
-    /* Hook for KDB on initialization of the loader. */
-    KDB_LOADERINIT_HOOK(NtoskrnlModuleObject, HalModuleObject);
-}
+extern KSPIN_LOCK PsLoadedModuleSpinLock;
 
 //
 // Used for checking if a module is already in the module list.
@@ -166,7 +114,7 @@ LdrGetModuleObject ( PUNICODE_STRING ModuleName )
 
     DPRINT("LdrGetModuleObject(%wZ) called\n", ModuleName);
 
-    KeAcquireSpinLock(&ModuleListLock,&Irql);
+    KeAcquireSpinLock(&PsLoadedModuleSpinLock,&Irql);
 
     Entry = PsLoadedModuleList.Flink;
     while (Entry != &PsLoadedModuleList)
@@ -180,14 +128,14 @@ LdrGetModuleObject ( PUNICODE_STRING ModuleName )
         if (!LdrpCompareModuleNames(&Module->BaseDllName, ModuleName))
         {
             DPRINT("Module %wZ\n", &Module->BaseDllName);
-            KeReleaseSpinLock(&ModuleListLock, Irql);
+            KeReleaseSpinLock(&PsLoadedModuleSpinLock, Irql);
             return(Module);
         }
 
         Entry = Entry->Flink;
     }
 
-    KeReleaseSpinLock(&ModuleListLock, Irql);
+    KeReleaseSpinLock(&PsLoadedModuleSpinLock, Irql);
 
     DPRINT("Could not find module '%wZ'\n", ModuleName);
 
@@ -204,9 +152,9 @@ LdrUnloadModule ( PLDR_DATA_TABLE_ENTRY ModuleObject )
     KIRQL Irql;
 
     /* Remove the module from the module list */
-    KeAcquireSpinLock(&ModuleListLock,&Irql);
+    KeAcquireSpinLock(&PsLoadedModuleSpinLock,&Irql);
     RemoveEntryList(&ModuleObject->InLoadOrderLinks);
-    KeReleaseSpinLock(&ModuleListLock, Irql);
+    KeReleaseSpinLock(&PsLoadedModuleSpinLock, Irql);
 
     /* Hook for KDB on unloading a driver. */
     KDB_UNLOADDRIVER_HOOK(ModuleObject);
@@ -221,29 +169,104 @@ LdrUnloadModule ( PLDR_DATA_TABLE_ENTRY ModuleObject )
 }
 
 //
-// Used for images already loaded (boot drivers)
+// Used by NtLoadDriver/IoMgr
 //
 NTSTATUS
-LdrProcessModule(PVOID ModuleLoadBase,
-                 PUNICODE_STRING FileName,
-                 PLDR_DATA_TABLE_ENTRY *ModuleObject)
+NTAPI
+LdrLoadModule(
+              PUNICODE_STRING FileName,
+              PLDR_DATA_TABLE_ENTRY *ModuleObject )
 {
+    PVOID ModuleLoadBase;
+    NTSTATUS Status;
+    HANDLE FileHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PLDR_DATA_TABLE_ENTRY Module;
+    FILE_STANDARD_INFORMATION FileStdInfo;
+    IO_STATUS_BLOCK IoStatusBlock;
     unsigned int DriverSize, Idx;
     ULONG CurrentSize;
     PVOID DriverBase;
     PIMAGE_DOS_HEADER PEDosHeader;
     PIMAGE_NT_HEADERS PENtHeaders;
     PIMAGE_SECTION_HEADER PESectionHeaders;
-    NTSTATUS Status;
     KIRQL Irql;
     PIMAGE_NT_HEADERS NtHeader;
     UNICODE_STRING BaseName, BaseDirectory, PrefixName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     ULONG EntrySize;
     PLOAD_IMPORTS LoadedImports = (PVOID)-2;
-    PWSTR NameBuffer;
     PCHAR MissingApiName, Buffer;
     PWCHAR MissingDriverName;
+
+    *ModuleObject = NULL;
+
+    DPRINT("Loading Module %wZ...\n", FileName);
+
+    /*  Open the Module  */
+    InitializeObjectAttributes(&ObjectAttributes,
+        FileName,
+        OBJ_CASE_INSENSITIVE,
+        NULL,
+        NULL);
+
+    Status = ZwOpenFile(&FileHandle,
+        GENERIC_READ,
+        &ObjectAttributes,
+        &IoStatusBlock,
+        FILE_SHARE_READ,
+        FILE_SYNCHRONOUS_IO_NONALERT);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Could not open module file: %wZ (Status 0x%08lx)\n", FileName, Status);
+        return(Status);
+    }
+
+
+    /*  Get the size of the file  */
+    Status = ZwQueryInformationFile(FileHandle,
+        &IoStatusBlock,
+        &FileStdInfo,
+        sizeof(FileStdInfo),
+        FileStandardInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Could not get file size\n");
+        NtClose(FileHandle);
+        return(Status);
+    }
+
+
+    /*  Allocate nonpageable memory for driver  */
+    ModuleLoadBase = ExAllocatePoolWithTag(NonPagedPool,
+        FileStdInfo.EndOfFile.u.LowPart,
+        TAG_DRIVER_MEM);
+    if (ModuleLoadBase == NULL)
+    {
+        DPRINT("Could not allocate memory for module");
+        NtClose(FileHandle);
+        return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+
+    /*  Load driver into memory chunk  */
+    Status = ZwReadFile(FileHandle,
+        0, 0, 0,
+        &IoStatusBlock,
+        ModuleLoadBase,
+        FileStdInfo.EndOfFile.u.LowPart,
+        0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Could not read module file into memory");
+        ExFreePool(ModuleLoadBase);
+        NtClose(FileHandle);
+        return(Status);
+    }
+
+
+    ZwClose(FileHandle);
 
     DPRINT("Processing PE Module at module base:%08lx\n", ModuleLoadBase);
 
@@ -414,9 +437,6 @@ LdrProcessModule(PVOID ModuleLoadBase,
         LdrEntry->Flags |= 0x80000000;
     }
 
-    /* We'll put the name after the entry */
-    NameBuffer = (PVOID)(LdrEntry + 1);
-
     /* Setup the rest of the entry */
     LdrEntry->DllBase = DriverBase;
     LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)DriverBase +
@@ -426,7 +446,7 @@ LdrProcessModule(PVOID ModuleLoadBase,
     LdrEntry->SectionPointer = LdrEntry;
 
     /* Now write the DLL name */
-    LdrEntry->BaseDllName.Buffer = NameBuffer;
+    LdrEntry->BaseDllName.Buffer = (PVOID)(LdrEntry + 1);
     LdrEntry->BaseDllName.Length = BaseName.Length;
     LdrEntry->BaseDllName.MaximumLength = BaseName.Length;
 
@@ -461,9 +481,9 @@ LdrProcessModule(PVOID ModuleLoadBase,
     }
 
     /* Insert the entry */
-    KeAcquireSpinLock(&ModuleListLock, &Irql);
+    KeAcquireSpinLock(&PsLoadedModuleSpinLock, &Irql);
     InsertTailList(&PsLoadedModuleList, &LdrEntry->InLoadOrderLinks);
-    KeReleaseSpinLock(&ModuleListLock, Irql);
+    KeReleaseSpinLock(&PsLoadedModuleSpinLock, Irql);
 
     /* Resolve imports */
     MissingApiName = Buffer;
@@ -482,105 +502,7 @@ LdrProcessModule(PVOID ModuleLoadBase,
     }
 
     /* Return */
-    *ModuleObject = LdrEntry;
-    return STATUS_SUCCESS;
-}
-
-//
-// Used by NtLoadDriver/IoMgr
-//
-NTSTATUS
-NTAPI
-LdrLoadModule(
-              PUNICODE_STRING Filename,
-              PLDR_DATA_TABLE_ENTRY *ModuleObject )
-{
-    PVOID ModuleLoadBase;
-    NTSTATUS Status;
-    HANDLE FileHandle;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    PLDR_DATA_TABLE_ENTRY Module;
-    FILE_STANDARD_INFORMATION FileStdInfo;
-    IO_STATUS_BLOCK IoStatusBlock;
-
-    *ModuleObject = NULL;
-
-    DPRINT("Loading Module %wZ...\n", Filename);
-
-    /*  Open the Module  */
-    InitializeObjectAttributes(&ObjectAttributes,
-        Filename,
-        OBJ_CASE_INSENSITIVE,
-        NULL,
-        NULL);
-
-    Status = ZwOpenFile(&FileHandle,
-        GENERIC_READ,
-        &ObjectAttributes,
-        &IoStatusBlock,
-        FILE_SHARE_READ,
-        FILE_SYNCHRONOUS_IO_NONALERT);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("Could not open module file: %wZ (Status 0x%08lx)\n", Filename, Status);
-        return(Status);
-    }
-
-
-    /*  Get the size of the file  */
-    Status = ZwQueryInformationFile(FileHandle,
-        &IoStatusBlock,
-        &FileStdInfo,
-        sizeof(FileStdInfo),
-        FileStandardInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("Could not get file size\n");
-        NtClose(FileHandle);
-        return(Status);
-    }
-
-
-    /*  Allocate nonpageable memory for driver  */
-    ModuleLoadBase = ExAllocatePoolWithTag(NonPagedPool,
-        FileStdInfo.EndOfFile.u.LowPart,
-        TAG_DRIVER_MEM);
-    if (ModuleLoadBase == NULL)
-    {
-        DPRINT("Could not allocate memory for module");
-        NtClose(FileHandle);
-        return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-
-    /*  Load driver into memory chunk  */
-    Status = ZwReadFile(FileHandle,
-        0, 0, 0,
-        &IoStatusBlock,
-        ModuleLoadBase,
-        FileStdInfo.EndOfFile.u.LowPart,
-        0, 0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("Could not read module file into memory");
-        ExFreePool(ModuleLoadBase);
-        NtClose(FileHandle);
-        return(Status);
-    }
-
-
-    ZwClose(FileHandle);
-
-    Status = LdrProcessModule(ModuleLoadBase,
-        Filename,
-        &Module);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("Could not process module\n");
-        ExFreePool(ModuleLoadBase);
-        return(Status);
-    }
+    Module = LdrEntry;
 
     /*  Cleanup  */
     ExFreePool(ModuleLoadBase);
@@ -588,7 +510,7 @@ LdrLoadModule(
     *ModuleObject = Module;
 
     /* Hook for KDB on loading a driver. */
-    KDB_LOADDRIVER_HOOK(Filename, Module);
+    KDB_LOADDRIVER_HOOK(FileName, Module);
 
     return(STATUS_SUCCESS);
 }

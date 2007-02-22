@@ -896,6 +896,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Initialize the executive at phase 0 */
     if (!ExInitSystem()) KEBUGCHECK(PHASE0_INITIALIZATION_FAILED);
 
+    /* Initialize the memory manager at phase 0 */
+    if (!MmInitSystem(0, LoaderBlock)) KeBugCheck(MEMORY1_INITIALIZATION_FAILED);
+
     /* Load boot symbols */
     ExpLoadBootSymbols(LoaderBlock);
 

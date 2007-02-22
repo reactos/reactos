@@ -127,6 +127,12 @@ FrLdrLoadImage(IN PCHAR szFileName,
                IN INT nPos,
                IN BOOLEAN IsKernel);
 
+PVOID
+NTAPI
+LdrPEGetExportByName(PVOID BaseAddress,
+                     PUCHAR SymbolName,
+                     USHORT Hint);
+
 /* FUNCTIONS *****************************************************************/
 
 /*++
@@ -300,6 +306,46 @@ FrLdrSetupPageDirectory(VOID)
     PageDir->Pde[0].PageFrameNumber = 1;
 }
 
+PLOADER_MODULE
+NTAPI
+LdrGetModuleObject(PCHAR ModuleName)
+{
+    ULONG i;
+
+    for (i = 0; i < LoaderBlock.ModsCount; i++)
+    {
+        if (strstr(_strupr((PCHAR)reactos_modules[i].String), _strupr(ModuleName)))
+        {
+            return &reactos_modules[i];
+        }
+    }
+
+    return NULL;
+}
+
+PVOID
+NTAPI
+LdrPEFixupForward(IN PCHAR ForwardName)
+{
+    CHAR NameBuffer[128];
+    PCHAR p;
+    PLOADER_MODULE ModuleObject;
+
+    strcpy(NameBuffer, ForwardName);
+    p = strchr(NameBuffer, '.');
+    if (p == NULL) return NULL;
+    *p = 0;
+
+    ModuleObject = LdrGetModuleObject(NameBuffer);
+    if (!ModuleObject)
+    {
+        DbgPrint("LdrPEFixupForward: failed to find module %s\n", NameBuffer);
+        return NULL;
+    }
+
+    return LdrPEGetExportByName((PVOID)ModuleObject->ModStart, (PUCHAR)(p + 1), 0xffff);
+}
+
 PVOID
 NTAPI
 LdrPEGetExportByName(PVOID BaseAddress,
@@ -360,10 +406,10 @@ LdrPEGetExportByName(PVOID BaseAddress,
             if ((ULONG_PTR)Function >= (ULONG_PTR)ExportDir &&
                 (ULONG_PTR)Function < (ULONG_PTR)ExportDir + ExportDirSize)
             {
-                Function = NULL;
+                Function = LdrPEFixupForward((PCHAR)Function);
                 if (Function == NULL)
                 {
-                    DbgPrint("LdrPEGetExportByName(): failed to find %s\n",SymbolName);
+                    DbgPrint("LdrPEGetExportByName(): failed to find %s\n", Function);
                 }
                 return Function;
             }
@@ -390,10 +436,10 @@ LdrPEGetExportByName(PVOID BaseAddress,
             if ((ULONG_PTR)Function >= (ULONG_PTR)ExportDir &&
                 (ULONG_PTR)Function < (ULONG_PTR)ExportDir + ExportDirSize)
             {
-                Function = NULL;
+                Function = LdrPEFixupForward((PCHAR)Function);
                 if (Function == NULL)
                 {
-                    DbgPrint("LdrPEGetExportByName(): failed to find %s\n",SymbolName);
+                    DbgPrint("1: failed to find %s\n", Function);
                 }
                 return Function;
             }
@@ -413,7 +459,7 @@ LdrPEGetExportByName(PVOID BaseAddress,
     }
 
     ExName = RVA(BaseAddress, ExNames[mid]);
-    DbgPrint("LdrPEGetExportByName(): failed to find %s\n",SymbolName);
+    DbgPrint("2: failed to find %s\n",SymbolName);
     return (PVOID)NULL;
 }
 
@@ -472,23 +518,6 @@ LdrPEProcessImportDirectoryEntry(PVOID DriverBase,
         FunctionNameList++;
     }
     return STATUS_SUCCESS;
-}
-
-PLOADER_MODULE
-NTAPI
-LdrGetModuleObject(PCHAR ModuleName)
-{
-    ULONG i;
-
-    for (i = 0; i < LoaderBlock.ModsCount; i++)
-    {
-        if (!_stricmp((PCHAR)reactos_modules[i].String, ModuleName))
-        {
-            return &reactos_modules[i];
-        }
-    }
-
-    return NULL;
 }
 
 NTSTATUS
