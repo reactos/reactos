@@ -7,7 +7,10 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Général"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Page de propriétés 1",-1,73,74,90,8
+  GROUPBOX "Langue principale", -1, 8, 11, 228, 74
+  ICON IDC_FLAGS, IDC_ICON1, 12, 26, 21, 20, SS_ICON
+  LTEXT "Sélectionnez la langue principale que vous voulez utiliser:", -1, 38, 25, 193, 22
+  COMBOBOX IDC_LANGUAGELIST, 39, 49, 191, 83, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 
@@ -86,10 +89,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Langues"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Langue principale", -1, 8, 11, 228, 74
-  ICON IDC_FLAGS, IDC_ICON1, 12, 26, 21, 20, SS_ICON
-  LTEXT "Sélectionnez la langue principale que vous voulez utiliser:", -1, 38, 25, 193, 22
-  COMBOBOX IDC_LANGUAGELIST, 39, 49, 191, 83, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+
 END
 
 

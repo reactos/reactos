@@ -7,7 +7,10 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Obecné nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Property Page 1",-1,73,74,90,8
+  GROUPBOX "Výchozí jazyk", -1, 8, 11, 228, 74
+  ICON IDC_FLAGS, IDC_ICON1, 12, 26, 21, 20, SS_ICON
+  LTEXT "Vyberte jazyk, ve kterém bude systém zobrazovat dialogy a hlášení:", -1, 38, 25, 193, 22
+  COMBOBOX IDC_LANGUAGELIST, 39, 49, 191, 83, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 
@@ -85,10 +88,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Jazyky"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Výchozí jazyk", -1, 8, 11, 228, 74
-  ICON IDC_FLAGS, IDC_ICON1, 12, 26, 21, 20, SS_ICON
-  LTEXT "Vyberte jazyk, ve kterém bude systém zobrazovat dialogy a hlášení:", -1, 38, 25, 193, 22
-  COMBOBOX IDC_LANGUAGELIST, 39, 49, 191, 83, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+
 END
 
 

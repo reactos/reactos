@@ -15,9 +15,9 @@
 	<library>msvcrt</library>
 	<file>currency.c</file>
 	<file>date.c</file>
-	<file>general.c</file>
+	<file>generalp.c</file>
 	<file>intl.c</file>
-	<file>locale.c</file>
+	<file>inplocale.c</file>
 	<file>numbers.c</file>
 	<file>time.c</file>
 	<file>intl.rc</file>

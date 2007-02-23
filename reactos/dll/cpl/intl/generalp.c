@@ -19,8 +19,8 @@
 /* $Id$
  *
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/locale.c
- * PURPOSE:         Locale property page
+ * FILE:            lib/cpl/intl/generalp.c
+ * PURPOSE:         General property page
  * PROGRAMMER:      Eric Kohl
  *                  Klemens Friedl
  *                  Aleksey Bragin
@@ -176,7 +176,7 @@ void SetNewLocale(LCID lcid)
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
-LocalePageProc(HWND hwndDlg,
+GeneralPageProc(HWND hwndDlg,
 	       UINT uMsg,
 	       WPARAM wParam,
 	       LPARAM lParam)

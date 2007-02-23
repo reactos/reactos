@@ -19,8 +19,8 @@
 /* $Id$
  *
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/general.c
- * PURPOSE:         General property page
+ * FILE:            lib/cpl/intl/inplocale.c
+ * PURPOSE:         Input Locale property page
  * PROGRAMMER:      Eric Kohl
  */
 
@@ -35,7 +35,7 @@
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
-GeneralPageProc(HWND hwndDlg,
+InpLocalePageProc(HWND hwndDlg,
 		UINT uMsg,
 		WPARAM wParam,
 		LPARAM lParam)
