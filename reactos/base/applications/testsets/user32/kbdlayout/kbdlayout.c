@@ -25,6 +25,18 @@ typedef struct {
 	WCHAR WndName[25];
 } WND_DATA;
 
+DWORD WINAPI ThreadProc(LPVOID lpParam)
+{
+
+	DialogBoxParam(hInst, 
+		MAKEINTRESOURCE(IDD_MAINDIALOG),
+		NULL, 
+		(DLGPROC)MainDialogProc, 
+		(LPARAM)NULL);
+
+	return 0;
+}
+
 INT WINAPI WinMain(HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
     LPSTR lpCmdLine,
@@ -34,11 +46,7 @@ INT WINAPI WinMain(HINSTANCE hInstance,
 
 	hInst = hInstance;
 
-	DialogBoxParam(hInst, 
-		MAKEINTRESOURCE(IDD_MAINDIALOG),
-		NULL, 
-		(DLGPROC)MainDialogProc, 
-		(LPARAM)NULL);
+	ThreadProc(0);
 
 	return 0;
 }
@@ -148,11 +156,11 @@ DWORD GetActivateFlags(HWND hDlg)
 	if(IsDlgButtonChecked(hDlg, IDC_KLF_REORDER))
 		ret |= KLF_REORDER;
 
-/*	if(IsDlgButtonChecked(hDlg, IDC_KLF_RESET))
+	if(IsDlgButtonChecked(hDlg, IDC_KLF_RESET))
 		ret |= KLF_RESET;
 
 	if(IsDlgButtonChecked(hDlg, IDC_KLF_SHIFTLOCK))
-		ret |= KLF_SHIFTLOCK;*/
+		ret |= KLF_SHIFTLOCK;
 
 	if(IsDlgButtonChecked(hDlg, IDC_KLF_SETFORPROCESS))
 		ret |= KLF_SETFORPROCESS;
@@ -201,14 +209,6 @@ HKL GetActivateHandle(HWND hDlg)
 
 	if(IsDlgButtonChecked(hDlg, IDC_FROMLIST))
 		return GetSelectedLayout(hDlg);
-	else if(IsDlgButtonChecked(hDlg, IDC_FROMEDIT))
-	{
-		WCHAR buf[25];
-		ULONG kl;
-		GetWindowText(GetDlgItem(hDlg, IDC_HANDLE), buf, 25);
-		swscanf(buf, L"%x", &kl);
-		return (HKL) kl;
-	}
 	else if(IsDlgButtonChecked(hDlg, IDC_HKL_NEXT)) 
 		return (HKL)HKL_NEXT;
 
@@ -232,21 +232,24 @@ LRESULT MainDialogProc(HWND hDlg,
 	{
 		case WM_INITDIALOG:
 		{
+			WCHAR Buf[255];
 			UpdateData(hDlg);
 			hMainDlg = hDlg;
 
 			SubclassWnd(GetDlgItem(hDlg, IDC_LIST), L"List");
 			SubclassWnd(GetDlgItem(hDlg, IDC_EDIT1), L"Edit1");
-			SubclassWnd(GetDlgItem(hDlg, IDC_EDIT2), L"Edit2");
 			SubclassWnd(GetDlgItem(hDlg, IDC_KLID), L"Klid");
-			SubclassWnd(GetDlgItem(hDlg, IDC_HANDLE), L"Handle");
 			SubclassWnd(GetDlgItem(hDlg, ID_CANCEL), L"CancelB");
 			SubclassWnd(GetDlgItem(hDlg, IDC_ACTIVATE), L"ActivateB");
 			SubclassWnd(GetDlgItem(hDlg, IDC_REFRESH), L"RefreshB");
 			SubclassWnd(GetDlgItem(hDlg, IDC_UNLOAD), L"UnloadB");
+			SubclassWnd(GetDlgItem(hDlg, IDC_LOAD), L"LoadB");
 
 			CheckRadioButton(hDlg, IDC_FROMLIST, IDC_FROMEDIT, IDC_FROMLIST);
 			SetWindowText(GetDlgItem(hDlg, IDC_KLID), L"00000419");
+
+			swprintf(Buf, L"Current thread id: %d", GetCurrentThreadId());
+			SetWindowText(GetDlgItem(hDlg, IDC_CURTHREAD), Buf);
 
 			return 0;
 		} /* WM_INITDIALOG */
@@ -306,6 +309,15 @@ LRESULT MainDialogProc(HWND hDlg,
 				{
 					UpdateData(hDlg);
 					break;
+				}
+
+				case IDC_NEWTHREAD:
+				{
+					if(!CreateThread(NULL, 0, ThreadProc, NULL, 0, NULL))
+					{
+						FormatBox(hDlg, MB_ICONERROR, L"Error!", 
+							L"Can not create thread (%d).", GetLastError());
+					}
 				}
 
 				case IDC_LIST:

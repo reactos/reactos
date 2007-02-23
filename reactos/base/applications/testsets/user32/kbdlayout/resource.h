@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by lab17.rc
+// Used by kbdlayout.rc
 //
 #define IDD_MAINDIALOG                  101
 #define ID_CANCEL                       1000
@@ -29,6 +29,8 @@
 #define IDC_LOAD                        1043
 #define IDC_REFRESH                     1044
 #define IDC_HANDLE                      1046
+#define IDC_CURTHREAD                   1049
+#define IDC_NEWTHREAD                   1050
 
 // Next default values for new objects
 // 
@@ -37,7 +39,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1049
+#define _APS_NEXT_CONTROL_VALUE         1051
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
