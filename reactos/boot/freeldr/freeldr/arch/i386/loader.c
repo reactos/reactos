@@ -598,46 +598,64 @@ LdrPEFixupImports(IN PVOID DllBase,
     return STATUS_SUCCESS;
 }
 
-VOID
+ULONG
 NTAPI
-FrLdrReMapImage(IN PIMAGE_NT_HEADERS NtHeader,
-                IN PVOID Base)
+FrLdrReMapImage(IN PVOID Base,
+                IN PVOID LoadBase)
 {
+    PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER Section;
-    ULONG SectionCount, SectionSize;
-    PVOID SourceSection, TargetSection;
-    INT i;
+    ULONG i, Size, DriverSize = 0;
 
-    /* Load the first section */
+    /* Get the first section */
+    NtHeader = RtlImageNtHeader(Base);
     Section = IMAGE_FIRST_SECTION(NtHeader);
-    SectionCount = NtHeader->FileHeader.NumberOfSections - 1;
 
-    /* Now go to the last section */
-    Section += SectionCount;
-
-    /* Walk each section backwards */
-    for (i = SectionCount; i >= 0; i--, Section--)
+    /*  Determine the size of the module  */
+    for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
     {
-        /* Get the disk location and the memory location, and the size */
-        SourceSection = RVA(Base, Section->PointerToRawData);
-        TargetSection = RVA(Base, Section->VirtualAddress);
-        SectionSize = Section->SizeOfRawData;
-
-        /* If the section is already mapped correctly, go to the next */
-        if (SourceSection == TargetSection) continue;
-
-        /* Load it into memory */
-        RtlMoveMemory(TargetSection, SourceSection, SectionSize);
-
-        /* Check for uninitialized data */
-        if (Section->SizeOfRawData < Section->Misc.VirtualSize)
+        /* Skip this section if we're not supposed to load it */
+        if (!(Section[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
         {
-            /* Zero it out */
-            RtlZeroMemory(RVA(Base, Section->VirtualAddress +
-                                    Section->SizeOfRawData),
-                          Section->Misc.VirtualSize - Section->SizeOfRawData);
+            /* Add the size of this section into the total size */
+            Size = Section[i].VirtualAddress + Section[i].Misc.VirtualSize;
+            DriverSize = max(DriverSize, Size);
         }
     }
+
+    /* Round up the driver size to section alignment */
+    DriverSize = ROUND_UP(DriverSize, NtHeader->OptionalHeader.SectionAlignment);
+
+    /* Allocate memory for the driver */
+    LoadBase = MmAllocateMemoryAtAddress(DriverSize, LoadBase);
+    ASSERT(LoadBase);
+
+    /* Copy headers over */
+    RtlMoveMemory(LoadBase,
+                  Base,
+                  NtHeader->OptionalHeader.SizeOfHeaders);
+
+    /*  Copy image sections into virtual section  */
+    for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
+    {
+        /* Get the size of this section and check if it's valid and on-disk */
+        Size = Section[i].VirtualAddress + Section[i].Misc.VirtualSize;
+        if ((Size <= DriverSize) && (Section[i].SizeOfRawData))
+        {
+            /* Copy the data from the disk to the image */
+            RtlCopyMemory((PVOID)((ULONG_PTR)LoadBase +
+                                  Section[i].VirtualAddress),
+                          (PVOID)((ULONG_PTR)Base +
+                                  Section[i].PointerToRawData),
+                          Section[i].Misc.VirtualSize >
+                          Section[i].SizeOfRawData ?
+                          Section[i].SizeOfRawData :
+                          Section[i].Misc.VirtualSize);
+        }
+    }
+
+    /* Return the size of the mapped driver */
+    return DriverSize;
 }
 
 BOOLEAN
@@ -646,32 +664,40 @@ FrLdrMapImage(IN FILE *Image,
               IN PCHAR Name,
               IN ULONG ImageType)
 {
-    PIMAGE_NT_HEADERS NtHeader;
-    PVOID ImageBase, LoadBase;
-    ULONG ImageSize;
+    PVOID ImageBase, LoadBase, ReadBuffer;
     ULONG ImageId = LoaderBlock.ModsCount;
+    ULONG ImageSize;
 
     /* Set the virtual (image) and physical (load) addresses */
     LoadBase = (PVOID)NextModuleBase;
     ImageBase = RVA(LoadBase , -KERNEL_BASE_PHYS + KSEG0_BASE);
 
-    /* Load the first 1024 bytes of the HAL image so we can read the PE header */
-    if (!FsReadFile(Image, 1024, NULL, LoadBase)) return FALSE;
-
-    /* Now read the MZ header to get the offset to the PE Header */
-    NtHeader = RtlImageNtHeader(LoadBase);
-
     /* Save the Image Size */
-    ImageSize = NtHeader->OptionalHeader.SizeOfImage;
+    ImageSize = FsGetFileSize(Image);
 
     /* Set the file pointer to zero */
     FsSetFilePointer(Image, 0);
 
-    /* Load the file image */
-    FsReadFile(Image, ImageSize, NULL, LoadBase);
+    if (ImageType != 2)
+    {
+        /* Allocate a temporary buffer for the read */
+        ReadBuffer = MmAllocateMemory(ImageSize);
 
-    /* Map it into virtual memory */
-    if (ImageType != 2) FrLdrReMapImage(NtHeader, LoadBase);
+        /* Load the file image */
+        FsReadFile(Image, ImageSize, NULL, ReadBuffer);
+
+        /* Map it into virtual memory */
+        ImageSize = FrLdrReMapImage(ReadBuffer, LoadBase);
+
+        /* Free the temporary buffer */
+        MmFreeMemory(ReadBuffer);
+    }
+    else
+    {
+        /* Load the file image */
+        FsReadFile(Image, ImageSize, NULL, LoadBase);
+        ImageSize = RtlImageNtHeader(LoadBase)->OptionalHeader.SizeOfImage;
+    }
 
     /* Calculate Difference between Real Base and Compiled Base*/
     if (ImageType != 2) LdrRelocateImageWithBias(LoadBase,
@@ -698,6 +724,8 @@ FrLdrMapImage(IN FILE *Image,
     /* Load HAL if this is the kernel */
     if (ImageType == 1)
     {
+        PIMAGE_NT_HEADERS NtHeader;
+        NtHeader = RtlImageNtHeader(LoadBase);
         KernelBase = NtHeader->OptionalHeader.ImageBase;
         KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
         FrLdrLoadImage("hal.dll", 10, FALSE);

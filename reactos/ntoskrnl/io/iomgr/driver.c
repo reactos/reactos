@@ -839,7 +839,9 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     PWCHAR FileNameWithoutPath;
     LPWSTR FileExtension;
     PUNICODE_STRING ModuleName = &LdrEntry->BaseDllName;
+#if 1 // Disable for FreeLDR 2.5
     PLDR_DATA_TABLE_ENTRY ModuleObject;
+#endif
 
 
    /*
@@ -873,9 +875,11 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    }
 
    /*
-    * Load the module. Remove for FreeLDR 2.5.
+    * Load the module. 
     */
    RtlCreateUnicodeString(&DeviceNode->ServiceName, FileNameWithoutPath);
+
+#if 1 // Remove for FreeLDR 2.5.
    Status = LdrProcessDriverModule(LdrEntry, &DeviceNode->ServiceName, &ModuleObject);
    if (!NT_SUCCESS(Status))
    {
@@ -883,6 +887,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
        CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
        return Status;
    }
+#endif
 
    /* Load symbols */
    KDB_SYMBOLFILE_HOOK(ModuleName);
@@ -900,7 +905,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    /*
     * Initialize the driver
     */
-   Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
+   Status = IopInitializeDriverModule(DeviceNode, LdrEntry,
       &DeviceNode->ServiceName, FALSE, &DriverObject);
 
    if (!NT_SUCCESS(Status))

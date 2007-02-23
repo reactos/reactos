@@ -1063,8 +1063,10 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PIMAGE_DATA_DIRECTORY DataDirectory;
     PVOID DllBase, NewImageAddress;
     NTSTATUS Status;
+#if 1 // Disable for FreeLDR 2.5
     ULONG DriverSize = 0, Size;
     PIMAGE_SECTION_HEADER Section;
+#endif
 
     /* Loop driver list */
     for (NextEntry = LoaderBlock->LoadOrderListHead.Flink;
@@ -1157,7 +1159,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 #if 0 // Enable for FreeLDR 2.5
         /* Now copy the entire driver over */
-        RtlCopyMemory(NewImageAddress, DllBase, DriverSize);
+        RtlCopyMemory(NewImageAddress, DllBase, LdrEntry->SizeOfImage);
 #else
         /* Copy headers over */
         RtlCopyMemory(NewImageAddress,
