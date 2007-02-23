@@ -1,0 +1,69 @@
+#include "resource.h"
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+STRING_HELP,  "Pemakaian: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+  [drive:]         Menetapkan drive yang akan diformat.\n\
+  -FS:file-system  Menetapkan tipe sistem file (%s).\n\
+  -V:label         Menetapkan label volume.\n\
+  -Q               Melakukan format cepat.\n\
+  -A:size          Mengabaikan besar unit alokasi standar. Setelan standar\n\
+                   sangat direkomendasikan untuk penggunaan umum\n\
+                   NTFS mendukung 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   FAT mendukung 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   Kompresi NTFS tidak didukung untuk ukuran unit alokasi\n\
+                   di atas 4096.\n\
+  -C               File dibuat pada volume yang baru standarnya akan\n\
+                   dikompres.\n\n"
+
+STRING_COMPLETE   "%lu persen selesai.\r"
+
+STRING_FORMAT_FAIL "FormatEx tidak bisa diselesaikan dengan sukses.\n\n"
+
+STRING_NO_SUPPORT  "Operasi Tida Didukung"
+
+STRING_FMIFS_FAIL  "Tidak bisa menemukan FMIFS entry points.\n\n"
+
+STRING_UNKNOW_ARG  "Argumen tidak dikenal: %S\n"
+
+STRING_DRIVE_PARM  "Parameter drive yang diperlukan kurang.\n\n"
+
+STRING_ERROR_DRIVE_TYPE  "Tidak bisa mendapatkan tipe drive"
+
+STRING_INSERT_DISK       "Sisipkan disket baru di drive %C:\ndan tekan Enter bila siap..."
+
+STRING_NO_VOLUME         "Tidak bisa memdapatkan volume"
+
+STRING_NO_VOLUME_SIZE    "Tidak bisa mendapatkan ukuran volume"
+
+STRING_FILESYSTEM        "Tipe sistem file adalah %S.\n"
+
+STRING_LABEL_NAME_EDIT  "Masukkan label volume saat ini untuk drive %C: "
+
+STRING_ERROR_LABEL     "Label volume yang dimasukan untuk drive ini tidak benar.\n"
+
+STRING_YN_FORMAT       "\nPERINGATAN, SELURUH DATA PADA DISK NON_REMOVABLE\n\
+DRIVE %C: AKAN HILANG!\nLanjutkan dengan Format (Y/T)? "
+
+STRING_YES_NO_FAQ      "YT"
+
+STRING_VERIFYING       "Memverifikasi"
+
+STRING_FAST_FMT        "Memformat Cepat"
+
+STRING_CREATE_FSYS     "Membuat struktur sistem file.\n"
+
+STRING_FMT_COMPLETE    "Format selesai.\n"
+
+STRING_VOL_COMPRESS    "Volume tidak mendukung kompresi.\n"
+
+STRING_ENTER_LABEL     "Label Volume (11 karakter, Enter untuk kosong)? "
+
+STRING_NO_LABEL        "Tidak bisa memberi label volume"
+
+STRING_FREE_SPACE     "\n%I64d byte total ruang disk.\n%I64d byte tersedia pada disk.\n"
+
+STRING_SERIAL_NUMBER   "\nNomor Seri Volume adalah %04X-%04X\n"
+}

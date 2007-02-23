@@ -3,9 +3,10 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-#include "lang/en-US.rc"
 #include "lang/de-DE.rc"
-#include "lang/ja-JP.rc"
+#include "lang/en-US.rc"
 #include "lang/hu-HU.rc"
+#include "lang/id-ID.rc"
+#include "lang/ja-JP.rc"
 #include "lang/nb-NO.rc"
 #include "lang/ru-RU.rc"

@@ -1,0 +1,33 @@
+/*
+ *  Indonesian language file by Zaenal Mutaqin 2007-02-15
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_UsageMessage, "%s\n\nPemakaian: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
+/u -	Jangan register server\n\
+/s -	Diam-diam; tidak menampilkan kotak pesan\n\
+/c -	Console output\n\
+/i -	Memanggil DllInstall mengoper opsional [cmdline]; saat digunakan dengan /u memanggil dll deinstalasi\n\
+/n -	Jangan panggil DllRegisterServer; opsi ini harus digunakan dengan /i"
+
+IDS_NoDllSpecified,  "Tidak ada nama DLL yang ditetapkan."
+
+IDS_InvalidFlag,     "Flag tidak dikenal: %s"
+
+IDS_SwitchN_NoI,     "Flag tidak dikenal: /n harus digunakan dengan saklar /i"
+
+IDS_DllNotLoaded,    "LoadLibrary('%s') gagal.\nGetLastError menghasilkan 0x%08x."
+
+IDS_MissingEntry,    "%s sudah diambil, tapi %s entry point tidak ditemukan.\n\n\
+%s mungkin tidak diekspor, atau versi rusak %s mungkin di memori. Pertimbangkan untuk menggunakan PView untuk mendeteksi dan menghapusnya."
+
+IDS_FailureMessage,  "%s dalam %s gagal.\nKode dihasilkan: 0x%08x"
+
+IDS_SuccessMessage   "%s dalam %s sukses."
+}

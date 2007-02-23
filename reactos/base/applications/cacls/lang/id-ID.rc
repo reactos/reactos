@@ -1,0 +1,74 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_HELP, "Menampilkan atau memodifikasi daftar kontrol akses (ACL) file\n\n\
+CACLS namafile [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
+               [/P user:perm [...]] [/D user [...]]\n\
+   namafile      Menampilkan ACLs.\n\
+   /T            Mengubah ACL file yang ditetapkan dalam\n\
+                 direktori saat ini dan semua subdirektorinya.\n\
+   /E            Edit ACL daripada menimpanya.\n\
+   /C            Melanjutkan walau kesalahan penolakan akses.\n\
+   /G user:perm  Memberikan hak akses pengguna yang ditetapkan.\n\
+                 Perm berupa: R  Baca\n\
+                              W  Tulis\n\
+                              C  Ubah (tulis)\n\
+                              F  Kontrol penuh\n\
+   /R user       Cabut hak akses pengguna yang ditetapkan (hanya berlaku dengan /E).\n\
+   /P user:perm  Ganti hak akses pengguna yang ditetapkan.\n\
+                 Perm berupa: N  Tidak ada\n\
+                              R  Baca\n\
+                              W  Tulis\n\
+                              C  Ubah (tulis)\n\
+                              F  Kontrol penuh\n\
+   /D user       Tolak akses pengguna yang ditetapkan.\n\
+Wildcards dapat digunakan untuk menetapkan lebih dari satu file dalam perintah.\n\
+Anda bisa menetapkan lebih dari satu pengguna dalam sebuah perintah.\n\n\
+Singkatan:\n\
+   CI - Container Inherit.\n\
+        ACE akan diwarisi oleh direktori.\n\
+   OI - Object Inherit.\n\
+        ACE akan diwarisi oleh file.\n\
+   IO - Inherit Only.\n\
+        ACE tidak berlaku untuk file/direktori saat ini.\n"
+
+IDS_ABBR_CI, "(CI)"
+IDS_ABBR_OI, "(OI)"
+IDS_ABBR_IO, "(IO)"
+IDS_ABBR_FULL, "F"
+IDS_ABBR_READ, "R"
+IDS_ABBR_WRITE, "W"
+IDS_ABBR_CHANGE, "C"
+IDS_ABBR_NONE, "N"
+IDS_ALLOW, ""
+IDS_DENY, "(DENY)"
+IDS_SPECIAL_ACCESS, "(akses spesial:)"
+IDS_GENERIC_READ, "GENERIC_READ"
+IDS_GENERIC_WRITE, "GENERIC_WRITE"
+IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"
+IDS_GENERIC_ALL, "GENERIC_ALL"
+IDS_FILE_GENERIC_EXECUTE, "FILE_GENERIC_EXECUTE"
+IDS_FILE_GENERIC_READ, "FILE_GENERIC_READ"
+IDS_FILE_GENERIC_WRITE, "FILE_GENERIC_WRITE"
+IDS_FILE_READ_DATA, "FILE_READ_DATA"
+IDS_FILE_WRITE_DATA, "FILE_WRITE_DATA"
+IDS_FILE_APPEND_DATA, "FILE_APPEND_DATA"
+IDS_FILE_READ_EA, "FILE_READ_EA"
+IDS_FILE_WRITE_EA, "FILE_WRITE_EA"
+IDS_FILE_EXECUTE, "FILE_EXECUTE"
+IDS_FILE_DELETE_CHILD, "FILE_DELETE_CHILD"
+IDS_FILE_READ_ATTRIBUTES, "FILE_READ_ATTRIBUTES"
+IDS_FILE_WRITE_ATTRIBUTES, "FILE_WRITE_ATTRIBUTES"
+IDS_MAXIMUM_ALLOWED, "MAXIMUM_ALLOWED"
+IDS_ACCESS_SYSTEM_SECURITY, "ACCESS_SYSTEM_SECURITY"
+IDS_SPECIFIC_RIGHTS_ALL, "SPECIFIC_RIGHTS_ALL"
+IDS_STANDARD_RIGHTS_REQUIRED, "STANDARD_RIGHTS_REQUIRED"
+IDS_SYNCHRONIZE, "SYNCHRONIZE"
+IDS_WRITE_OWNER, "WRITE_OWNER"
+IDS_WRITE_DAC, "WRITE_DAC"
+IDS_READ_CONTROL, "READ_CONTROL"
+IDS_DELETE, "DELETE"
+IDS_STANDARD_RIGHTS_ALL, "STANDARD_RIGHTS_ALL"
+}

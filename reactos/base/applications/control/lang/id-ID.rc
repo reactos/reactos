@@ -1,0 +1,28 @@
+// Indonesian language resource file (adezm, 2007-02-15)
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Tutup",                    IDM_CLOSE
+    END
+    POPUP "&Lihat"
+    BEGIN
+        MENUITEM "Ikon Besar",                IDM_LARGEICONS
+        MENUITEM "Ikon Kecil",                IDM_SMALLICONS
+        MENUITEM "Daftar",                    IDM_LIST
+        MENUITEM "Detil",                     IDM_DETAILS
+    END
+    POPUP "Bantuan"
+    BEGIN
+        MENUITEM "Tentang",                   IDM_ABOUT
+    END
+END
+

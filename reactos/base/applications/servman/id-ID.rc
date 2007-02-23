@@ -1,0 +1,282 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&File"
+  BEGIN
+    MENUITEM "Ekspor...",     ID_EXPORT
+    MENUITEM SEPARATOR
+    MENUITEM "&Keluar",       ID_EXIT
+  END
+  POPUP "Aksi"
+  BEGIN
+    MENUITEM "Sambung ke...", ID_CONNECT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Mulai",         ID_START, GRAYED
+    MENUITEM "Hentikan",      ID_STOP, GRAYED
+    MENUITEM "Istirahat",     ID_PAUSE, GRAYED
+    MENUITEM "Lanjutkan",     ID_RESUME, GRAYED
+    MENUITEM "Mulai lagi",    ID_RESTART, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Segarkan",      ID_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "Edit...",       ID_EDIT, GRAYED
+    MENUITEM "Buat...",       ID_CREATE
+    MENUITEM "Hapus...",      ID_DELETE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Properti...",   ID_PROP, GRAYED
+  END
+  POPUP "Lihat"
+  BEGIN
+    MENUITEM "Ikon Besar",    ID_VIEW_LARGE
+    MENUITEM "Ikon Kecil",    ID_VIEW_SMALL
+    MENUITEM "Daftar",        ID_VIEW_LIST
+    MENUITEM "Detil",         ID_VIEW_DETAILS
+    MENUITEM SEPARATOR
+    MENUITEM "Kustomisasi...",ID_VIEW_CUST, GRAYED
+  END
+  POPUP "Bantuan"
+  BEGIN
+    MENUITEM "Bantuan",       ID_HELP
+    MENUITEM "Tentang",       ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+    MENUITEM "Mulai",         ID_START, GRAYED
+    MENUITEM "Hentikan",      ID_STOP, GRAYED
+    MENUITEM "Istirahat",     ID_PAUSE, GRAYED
+    MENUITEM "Lanjutkan",     ID_RESUME, GRAYED
+    MENUITEM "Mulai lagi",    ID_RESTART, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Segarkan",      ID_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "Edit...",       ID_EDIT, GRAYED
+    MENUITEM "Hapus...",      ID_DELETE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Properti...",   ID_PROP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Bantuan...",    ID_HELP
+  END
+END
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "Tentang Manajer Layanan"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "Manajer Layanan v0.5.1\nHak Cipta (C) 2005-2006\noleh Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  PUSHBUTTON "Tutup", IDOK, 75, 162, 44, 15
+  ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+IDD_DLG_GENERAL DIALOGEX 6,6,253,225
+CAPTION "Umum"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+  EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
+  EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+  COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
+  PUSHBUTTON "Mulai", IDC_START, 6, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "Hentikan", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "Istirahat", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "Lanjutkan", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+  LTEXT "Nama Layanan:", IDC_STATIC, 4, 11, 53, 11
+  LTEXT "Nama Tampilan:", IDC_STATIC, 4, 29, 53, 11
+  LTEXT "Deskripsi:", IDC_STATIC, 4, 51, 53, 11
+  LTEXT "Path ke executable:", IDC_STATIC, 6, 73, 82, 9
+  LTEXT "Tipe Startup:", IDC_STATIC, 6, 108, 53, 11
+  LTEXT "Status Layanan:", IDC_STATIC, 4, 138, 53, 11
+  LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
+  LTEXT "Anda menetapkan parameter mulai yang diterapkan ketika anda memulai layanan dari sini.",IDC_STATIC, 6,177,240,15
+  LTEXT "Parameter Mulai:", IDC_STATIC, 6, 200, 58, 11
+  EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_DLG_DEPEND DIALOGEX 6,6,253,225
+CAPTION "Ketergantungan"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" ,0x50010007, 8, 70, 236, 68, 0x00000200
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", 0x50010007, 8, 151, 234, 67, 0x00000200
+  LTEXT "Beberapa layanan bergantung pada layanan lainnya, driver sistem dan grup urutan pengambilan. Jika komponen sistem dihentikan atau tidak berjalan dengan benar, layanan yang bergantung akan dipengaruhi.", IDC_STATIC,8, 7, 238, 26
+  LTEXT "Layanan ini tergantun pada komponen berikut", IDC_STATIC, 8, 57, 236, 9
+  LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
+END
+
+IDD_DLG_CREATE DIALOGEX 6,6,225,209
+CAPTION "Buat layanan"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
+  EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_PATH, 8, 62, 214, 13, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
+  LTEXT "*Nama Layanan :", IDC_STATIC, 12, 12, 54, 9
+  LTEXT "*Nama Tampilan:", IDC_STATIC, 12, 33, 54, 9
+  LTEXT "*Path ke executable :", IDC_STATIC, 10, 51, 68, 9
+  LTEXT "Deskripsi :", IDC_STATIC, 12, 86, 44, 9
+  PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
+  PUSHBUTTON "Batal", IDCANCEL, 176, 192, 46, 13
+  LTEXT "Opsi tambahan (klik bantuan untuk lengkapnya)", IDC_STATIC, 10, 151, 134, 9
+  PUSHBUTTON "Bantuan", ID_CREATE_HELP, 6, 192, 44, 13
+END
+
+IDD_DLG_DELETE DIALOGEX 6,6,185,148
+CAPTION "Hapus layanan"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "Anda yakin ingin menghapus layanann berikut? Ini tidak bisa dibatalkan sekali dihapus!", IDC_STATIC, 50, 6, 125, 25
+  LTEXT "Nama Layanan:",IDC_STATIC, 6, 40, 80, 9
+  LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
+  EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
+  PUSHBUTTON "Ya", IDOK, 26, 129, 54, 13
+  PUSHBUTTON "Tidak", IDCANCEL, 102, 129, 54, 13
+END
+
+IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
+CAPTION "Opsi"
+FONT 8, "MS Shell Dlg",0,0
+STYLE 0x10CF0000
+BEGIN
+  LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
+  PUSHBUTTON "Ok", IDOK, 75, 130, 44, 13
+END
+
+IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
+CAPTION "Kontrol Layanan"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+BEGIN
+  CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
+  LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
+  LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
+  PUSHBUTTON "&Tutup", IDOK, 100, 70, 54, 13
+END
+
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_FIRSTCOLUMN  "Nama"
+  IDS_SECONDCOLUMN "Deskripsi"
+  IDS_THIRDCOLUMN  "Status"
+  IDS_FOURTHCOLUMN "Tipe Startup"
+  IDS_FITHCOLUMN   "Masuk Sebagai"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_SERVICES_STARTED "Dimulai"
+  IDS_SERVICES_STOPPED "Dihentikan"
+  IDS_SERVICES_AUTO    "Otomatis"
+  IDS_SERVICES_MAN     "Manual"
+  IDS_SERVICES_DIS     "Dimatikan"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_NUM_SERVICES "Jumlah Layanan: %d"
+  IDS_LICENSE "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROP    "Properti"
+  IDS_TOOLTIP_REFRESH "Segarkan"
+  IDS_TOOLTIP_EXPORT  "Ekspor daftar"
+  IDS_TOOLTIP_CREATE  "Buat layanan baru"
+  IDS_TOOLTIP_DELETE  "Menghapus layanan yang ada"
+  IDS_TOOLTIP_START   "Memulai layanan"
+  IDS_TOOLTIP_STOP    "Menghentikan layanan"
+  IDS_TOOLTIP_PAUSE   "Mengistirahatkan layanan"
+  IDS_TOOLTIP_RESTART "Memulai lagi layanan"
+  IDS_TOOLTIP_HELP    "Bantuan"
+  IDS_TOOLTIP_EXIT    "Keluar"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_PROGRESS_INFO_START "ReactOS sedang mencoba untuk memulai layanan berikut"
+  IDS_PROGRESS_INFO_STOP  "ReactOS sedang mencoba untuk menghentikan layanan berikut"
+  IDS_CREATE_SUCCESS      "Layanan Dibuat Dengan Sukses"
+  IDS_CREATE_REQ          "Field yang ditandai dengan\nbintang adalah mandatori"
+  IDS_DELETE_STOP         "Anda harus menghentikan layanan sebelum menghapus!"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HELP_OPTIONS "OPSI BUAT:\r\nCATATAN: Nama opsi termasuk tanda sama dengan.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (standar = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (standar = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (standar = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(dipisahkan oleh / (garis miring))>\r\n obj= <AccountName|ObjectName>\r\n       (standar = LocalSystem)\r\n password= <password>\r\n"
+END
+#define IDS_HINT_BLANK          20000
+#define IDS_HINT_EXPORT         20001
+#define IDS_HINT_EXIT           20002
+
+#define IDS_HINT_CONNECT        20011
+#define IDS_HINT_START          20012
+#define IDS_HINT_STOP           21013
+#define IDS_HINT_PAUSE          21014
+#define IDS_HINT_RESUME         20015
+#define IDS_HINT_RESTART        20016
+#define IDS_HINT_REFRESH        20017
+#define IDS_HINT_EDIT           20018
+#define IDS_HINT_CREATE         20019
+#define IDS_HINT_DELETE         20020
+#define IDS_HINT_PROP           20021
+
+#define IDS_HINT_LARGE          20030
+#define IDS_HINT_SMALL          20031
+#define IDS_HINT_LIST           20032
+#define IDS_HINT_DETAILS        20033
+#define IDS_HINT_CUST           20034
+
+#define IDS_HINT_HELP           20040
+#define IDS_HINT_ABOUT          20041
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_EXPORT       " Mengekspor daftar sekarang ke file."
+  IDS_HINT_EXIT         " Keluar program."
+
+  IDS_HINT_CONNECT      " Mengatur komputer yang berbeda."
+  IDS_HINT_START        " Memulai layanan yang dipilih."
+  IDS_HINT_STOP         " Menghentikan layanan yang dipilih."
+  IDS_HINT_PAUSE        " Mengistirahatkan layanan yang dipilih."
+  IDS_HINT_RESUME       " Melanjutkan layanan yang pilih."
+  IDS_HINT_RESTART      " Menghentikan dan memulai layanan yang dipilih."
+  IDS_HINT_REFRESH      " Menyegarkan daftar layanan."
+  IDS_HINT_EDIT         " Mengedit properti layanan yang dipilih."
+  IDS_HINT_CREATE       " Membuat layanan baru."
+  IDS_HINT_DELETE       " Menghapus layanan yang dipilih."
+  IDS_HINT_PROP         " Membuka lembar properti untuk pilihan saat ini."
+
+  IDS_HINT_LARGE        " Menampilkan item dengan menggunakan ikon besar."
+  IDS_HINT_SMALL        " Menampilkan item dengan menggunakan ikon kecil."
+  IDS_HINT_LIST         " Menampilkanitem dalam sebuah daftar."
+  IDS_HINT_DETAILS      " Menampilkan informasi mengenai setiap item dalam jendela."
+  IDS_HINT_CUST         " Mengkustomisasi tampilan."
+
+  IDS_HINT_HELP         " Menampilkan jendela bantuan."
+  IDS_HINT_ABOUT        " Tentang Manajer Layanan ReactOS."
+
+  IDS_HINT_SYS_RESTORE  " Mengembalikan jendela ini ke ukuran normal."
+  IDS_HINT_SYS_MOVE     " Memindahkan jendela ini."
+  IDS_HINT_SYS_SIZE     " Mengukur ulang jendela ini."
+  IDS_HINT_SYS_MINIMIZE " Menyempitkan jendela menjadi ikon."
+  IDS_HINT_SYS_MAXIMIZE " Melebarkan jendela ini memenuhi layar ini."
+  IDS_HINT_SYS_CLOSE    " Menutup jendela ini."
+END

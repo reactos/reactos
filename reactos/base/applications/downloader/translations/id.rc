@@ -1,0 +1,35 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+IDD_DOWNLOAD DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
+STYLE DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Download..."
+FONT 8, "MS Shell Dlg"
+{
+  CONTROL "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER|PBS_SMOOTH,10,10,200,12
+  LTEXT "", IDC_STATUS, 10, 30, 200, 10, SS_CENTER
+  PUSHBUTTON "Batal", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+  IDS_WINDOW_TITLE 		"Download ! - ReactOS Downloader"
+  IDS_WELCOME_TITLE		"Selamat datang di ReactOS Downloader"
+  IDS_WELCOME 			"Silahkan pilih kategori di sebelah kanan. Ini versi 1.0."
+  IDS_NO_APP_TITLE		"Tidak ada aplikasi yang dipilih"
+  IDS_NO_APP	  		"Silahkan pilih Aplikasi sebelum anda mengklik tombol download, jika anda membutuhkan asistensi silahkan klik pada tombol di sudut kanan atas."
+  IDS_UPDATE_TITLE 		"Mutakhirkan"
+  IDS_UPDATE			"Maaf fitur ini belum diimplementasikan."
+  IDS_HELP_TITLE 		"Bantuan"
+  IDS_HELP			"Pilih kategori di sisi kiri, lalu pilih aplikasi dan klik tombol download. Untuk memutakhirkan informasi aplikasi klik tombol disebelah tombol bantuan."
+  IDS_NO_APPS			"Maaf, belum ada aplikasi dalam kategori ini. Anda dapat membantu dan menambahkan aplikasi lebih banyak."
+  IDS_CHOOSE_APP		"Silahkan pilih aplikasi."
+  IDS_CHOOSE_SUB		"Silahkan pilih subkategori."
+  IDS_CHOOSE_CATEGORY		"Silahkan pilih kategori."
+  IDS_CHOOSE_BOTH		"Silahkan pilih subkategori atau aplikasi."
+  IDS_XMLERROR_1		"Tidak dapat menemukan file xml !"
+  IDS_XMLERROR_2		"Tidak dapat mengurai file xml !"
+  IDS_DOWNLOAD_ERROR		"Tidak bisa mendownload file.\nSilahkan periksa koneksi internet anda."
+  IDS_VERSION			"Versi: "
+  IDS_LICENCE			"Lisensi: "
+  IDS_MAINTAINER		"Pemelihara: "
+END

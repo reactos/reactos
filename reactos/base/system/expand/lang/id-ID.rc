@@ -1,0 +1,18 @@
+/*
+ * Translated into Indonesian.
+ * By Zaenal Mutaqin 2007 ade999@gmail.com
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_Copy, "Utilitas Ekspansi File ReactOS Versi 1.0\n\
+Hak Cipta Victor Schneider 1997\n\n\
+Pemakaian: %s infile [outfile]\n"
+
+IDS_FAILS "LZCopy gagal: hasilnya adalah %ld\n"
+}

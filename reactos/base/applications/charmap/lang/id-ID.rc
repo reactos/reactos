@@ -1,0 +1,35 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+IDD_CHARMAP DIALOGEX 6, 6, 293, 205 //233
+CAPTION "Peta Karakter"
+FONT 8,"MS Sans Serif",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_SYSMENU | WS_MINIMIZEBOX
+BEGIN
+  LTEXT         "Font :", IDC_STATIC, 6, 7, 24, 9
+  COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
+  PUSHBUTTON    "Bantuan", IDC_CMHELP, 249, 5, 35, 13
+  CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156
+  LTEXT         "Karakter untuk di-copy :", IDC_STATIC, 6, 188, 66, 9
+  EDITTEXT       IDC_TEXTBOX, 74, 186, 114, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  DEFPUSHBUTTON "Pilih", IDC_SELECT, 194, 186, 46, 13
+  PUSHBUTTON    "Copy", IDC_COPY, 244, 186, 46, 13, WS_DISABLED
+  //AUTOCHECKBOX  "Advanced view", IDC_ADVVIEW, 10, 204, 64, 9, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  //EDITTEXT      IDC_DISPLAY,  8, 217, 278, 13, WS_VISIBLE | WS_TABSTOP | ES_READONLY
+END
+
+IDD_ABOUTBOX DIALOGEX 22,16,210,182
+CAPTION "Tentang Peta Karakter"
+FONT 8,"MS Sans Serif",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT         "Character Map v0.1\nHak Cipta (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON    "Tutup", IDOK, 75, 162, 44, 15
+  ICON          IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE   "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_ABOUT     "Te&ntang..."
+END

@@ -1,0 +1,10 @@
+#include "resource.h"
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+STRING_USERINIT_FAIL, "Userinit gagal untuk memulai shell!\n"
+
+}
