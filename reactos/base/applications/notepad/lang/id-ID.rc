@@ -115,7 +115,7 @@ EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD |
 
 DEFPUSHBUTTON "OK",        IDOK,                   180,  3, 40, 15, WS_TABSTOP
 PUSHBUTTON    "Batal",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&Bantuan",  0x153,                  180, 39, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Bantuan",  IDHELP,                  180, 39, 40, 15, WS_TABSTOP
 }
 
 /* Dialog `Encoding' */
