@@ -435,34 +435,20 @@ IopLoadServiceModule(
       return Status;
    }
 
-   /*
-    * Load the module.
-    */
-
-   *ModuleObject = LdrGetModuleObject(&ServiceImagePath);
-
-   if (*ModuleObject == NULL)
-   {
       /*
        * Case for disabled drivers
        */
 
-      if (ServiceStart >= 4)
-      {
-         /* FIXME: Check if it is the right status code */
-         Status = STATUS_PLUGPLAY_NO_DEVICE;
-      }
-      else
-      {
-         DPRINT("Loading module\n");
-         Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, NULL);
-      }
-   }
-   else
-   {
-      DPRINT("Module already loaded\n");
-      Status = STATUS_IMAGE_ALREADY_LOADED;
-   }
+  if (ServiceStart >= 4)
+  {
+     /* FIXME: Check if it is the right status code */
+     Status = STATUS_PLUGPLAY_NO_DEVICE;
+  }
+  else
+  {
+     DPRINT("Loading module\n");
+     Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, NULL);
+  }
 
    ExFreePool(ServiceImagePath.Buffer);
 
@@ -1062,7 +1048,6 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    UNICODE_STRING ServiceName;
    UNICODE_STRING ObjectName;
    PDRIVER_OBJECT DriverObject;
-   PLDR_DATA_TABLE_ENTRY ModuleObject;
    NTSTATUS Status;
    LPWSTR Start;
 
@@ -1146,16 +1131,6 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    }
 
    /*
-    * ... and check if it's loaded
-    */
-
-   ModuleObject = LdrGetModuleObject(&ImagePath);
-   if (ModuleObject == NULL)
-   {
-      return STATUS_UNSUCCESSFUL;
-   }
-
-   /*
     * Free the service path
     */
 
@@ -1169,7 +1144,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
       (*DriverObject->DriverUnload)(DriverObject);
    ObDereferenceObject(DriverObject);
    ObDereferenceObject(DriverObject);
-   MmUnloadSystemImage(ModuleObject);
+   MmUnloadSystemImage(DriverObject->DriverSection);
 
    return STATUS_SUCCESS;
 }
@@ -1691,18 +1666,6 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 
    DPRINT("FullImagePath: '%wZ'\n", &ImagePath);
    DPRINT("Type: %lx\n", Type);
-
-   /*
-    * See, if the driver module isn't already loaded
-    */
-
-   ModuleObject = LdrGetModuleObject(&ImagePath);
-   if (ModuleObject != NULL)
-   {
-      DPRINT("Image already loaded\n");
-      Status = STATUS_IMAGE_ALREADY_LOADED;
-      goto ReleaseCapturedString;
-   }
 
    /*
     * Create device node

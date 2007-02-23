@@ -38,15 +38,6 @@ PVOID PspSystemDllBase;
 PVOID PspSystemDllSection;
 PVOID PspSystemDllEntryPoint;
 
-ANSI_STRING ThunkName = RTL_CONSTANT_STRING("LdrInitializeThunk");
-ANSI_STRING ApcName = RTL_CONSTANT_STRING("KiUserApcDispatcher");
-ANSI_STRING ExceptName = RTL_CONSTANT_STRING("KiUserExceptionDispatcher");
-ANSI_STRING CallbackName = RTL_CONSTANT_STRING("KiUserCallbackDispatcher");
-ANSI_STRING RaiseName = RTL_CONSTANT_STRING("KiRaiseUserExceptionDispatcher");
-ANSI_STRING FastName = RTL_CONSTANT_STRING("KiFastSystemCall");
-ANSI_STRING FastReturnName = RTL_CONSTANT_STRING("KiFastSystemCallRet");
-ANSI_STRING InterruptName = RTL_CONSTANT_STRING("KiIntSystemCall");
-
 UNICODE_STRING PsNtDllPathName =
     RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
 
@@ -67,13 +58,106 @@ BOOLEAN PspDoingGiveBacks;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+ULONG
+NTAPI
+NameToOrdinal(IN PCHAR Name,
+              IN PVOID DllBase,
+              IN ULONG NumberOfNames,
+              IN PULONG NameTable,
+              IN PUSHORT OrdinalTable)
+{
+    ULONG Mid;
+    LONG Ret;
+
+    /* Fail if no names */
+    if (!NumberOfNames) return -1;
+
+    /* Do binary search */
+    Mid = NumberOfNames >> 1;
+    Ret = strcmp(Name, (PCHAR)((ULONG_PTR)DllBase + NameTable[Mid]));
+
+    /* Check if we found it */
+    if (!Ret) return OrdinalTable[Mid];
+
+    /* We didn't. Check if we only had one name to check */
+    if (NumberOfNames == 1) return -1;
+
+    /* Check if we should look up or down */
+    if (Ret < 0)
+    {
+        /* Loop down */
+        NumberOfNames = Mid;
+    }
+    else
+    {
+        /* Look up, update tables */
+        NameTable = &NameTable[Mid + 1];
+        OrdinalTable = &OrdinalTable[Mid + 1];
+        NumberOfNames -= (Mid - 1);
+    }
+
+    /* Call us recursively */
+    return NameToOrdinal(Name, DllBase, NumberOfNames, NameTable, OrdinalTable);
+}
+
 NTSTATUS
 NTAPI
-PspLookupSystemDllEntryPoint(IN PANSI_STRING Name,
+LookupEntryPoint(IN PVOID DllBase,
+                 IN PCHAR Name,
+                 OUT PVOID *EntryPoint)
+{
+    PULONG NameTable;
+    PUSHORT OrdinalTable;
+    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
+    ULONG ExportSize;
+    CHAR Buffer[64];
+    USHORT Ordinal;
+    PULONG ExportTable;
+
+    /* Get the export directory */
+    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
+                                                   TRUE,
+                                                   IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                                   &ExportSize);
+
+    /* Validate the name and copy it */
+    if (strlen(Name) > sizeof(Buffer) - 2) return STATUS_INVALID_PARAMETER;
+    strcpy(Buffer, Name);
+
+    /* Setup name tables */
+    NameTable = (PULONG)((ULONG_PTR)DllBase +
+                         ExportDirectory->AddressOfNames);
+    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
+                             ExportDirectory->AddressOfNameOrdinals);
+
+    /* Get the ordinal */
+    Ordinal = NameToOrdinal(Buffer,
+                            DllBase,
+                            ExportDirectory->NumberOfNames,
+                            NameTable,
+                            OrdinalTable);
+
+    /* Make sure the ordinal is valid */
+    if (Ordinal >= ExportDirectory->NumberOfFunctions)
+    {
+        /* It's not, fail */
+        return STATUS_PROCEDURE_NOT_FOUND;
+    }
+
+    /* Resolve the address and write it */
+    ExportTable = (PULONG)((ULONG_PTR)DllBase +
+                           ExportDirectory->AddressOfFunctions);
+    *EntryPoint = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PspLookupSystemDllEntryPoint(IN PCHAR Name,
                              IN PVOID *EntryPoint)
 {
     /* Call the LDR Routine */
-    return LdrGetProcedureAddress(PspSystemDllBase, Name, 0, EntryPoint);
+    return LookupEntryPoint(PspSystemDllBase, Name, EntryPoint);
 }
 
 NTSTATUS
@@ -83,22 +167,22 @@ PspLookupKernelUserEntryPoints(VOID)
     NTSTATUS Status;
 
     /* Get user-mode APC trampoline */
-    Status = PspLookupSystemDllEntryPoint(&ApcName,
+    Status = PspLookupSystemDllEntryPoint("KiUserApcDispatcher",
                                           &KeUserApcDispatcher);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get user-mode exception dispatcher */
-    Status = PspLookupSystemDllEntryPoint(&ExceptName,
+    Status = PspLookupSystemDllEntryPoint("KiUserExceptionDispatcher",
                                           &KeUserExceptionDispatcher);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get user-mode callback dispatcher */
-    Status = PspLookupSystemDllEntryPoint(&CallbackName,
+    Status = PspLookupSystemDllEntryPoint("KiUserCallbackDispatcher",
                                           &KeUserCallbackDispatcher);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get user-mode exception raise trampoline */
-    Status = PspLookupSystemDllEntryPoint(&RaiseName,
+    Status = PspLookupSystemDllEntryPoint("KiRaiseUserExceptionDispatcher",
                                           &KeRaiseUserExceptionDispatcher);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -106,20 +190,20 @@ PspLookupKernelUserEntryPoints(VOID)
     if (KeFeatureBits & KF_FAST_SYSCALL)
     {
         /* Get user-mode sysenter stub */
-        Status = PspLookupSystemDllEntryPoint(&FastName,
+        Status = PspLookupSystemDllEntryPoint("KiFastSystemCall",
                                               (PVOID)&SharedUserData->
                                               SystemCall);
         if (!NT_SUCCESS(Status)) return Status;
 
         /* Get user-mode sysenter return stub */
-        Status = PspLookupSystemDllEntryPoint(&FastReturnName,
+        Status = PspLookupSystemDllEntryPoint("KiFastSystemCallRet",
                                               (PVOID)&SharedUserData->
                                               SystemCallReturn);
     }
     else
     {
         /* Get the user-mode interrupt stub */
-        Status = PspLookupSystemDllEntryPoint(&InterruptName,
+        Status = PspLookupSystemDllEntryPoint("KiIntSystemCall",
                                               (PVOID)&SharedUserData->
                                               SystemCall);
     }
@@ -250,7 +334,8 @@ PspInitializeSystemDll(VOID)
     NTSTATUS Status;
 
     /* Get user-mode startup thunk */
-    Status = PspLookupSystemDllEntryPoint(&ThunkName, &PspSystemDllEntryPoint);
+    Status = PspLookupSystemDllEntryPoint("LdrInitializeThunk",
+                                          &PspSystemDllEntryPoint);
     if (!NT_SUCCESS(Status))
     {
         /* Failed, bugcheck */

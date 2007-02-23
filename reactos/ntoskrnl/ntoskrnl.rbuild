@@ -227,10 +227,6 @@
             <file>kdio.c</file>
             <file>kdmain.c</file>
     </directory>
-    <directory name="ldr">
-            <file>loader.c</file>
-            <file>rtl.c</file>
-    </directory>
     <directory name="lpc">
             <file>close.c</file>
             <file>complete.c</file>

@@ -58,6 +58,77 @@ MiClearImports(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 
 PVOID
 NTAPI
+MiFindExportedRoutineByName(IN PVOID DllBase,
+                            IN PANSI_STRING ExportName)
+{
+    PULONG NameTable;
+    PUSHORT OrdinalTable;
+    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
+    LONG Low = 0, Mid = 0, High, Ret;
+    USHORT Ordinal;
+    PVOID Function;
+    ULONG ExportSize;
+    PULONG ExportTable;
+    PAGED_CODE();
+
+    /* Get the export directory */
+    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
+                                                   TRUE,
+                                                   IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                                   &ExportSize);
+    if (!ExportDirectory) return NULL;
+
+    /* Setup name tables */
+    NameTable = (PULONG)((ULONG_PTR)DllBase +
+                         ExportDirectory->AddressOfNames);
+    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
+                             ExportDirectory->AddressOfNameOrdinals);
+
+    /* Do a binary search */
+    High = ExportDirectory->NumberOfNames - 1;
+    while (High >= Low)
+    {
+        /* Get new middle value */
+        Mid = (Low + High) >> 1;
+
+        /* Compare name */
+        Ret = strcmp(ExportName->Buffer, (PCHAR)DllBase + NameTable[Mid]);
+        if (Ret < 0)
+        {
+            /* Update high */
+            High = Mid - 1;
+        }
+        else if (Ret > 0)
+        {
+            /* Update low */
+            Low = Mid + 1;
+        }
+        else
+        {
+            /* We got it */
+            break;
+        }
+    }
+
+    /* Check if we couldn't find it */
+    if (High < Low) return NULL;
+
+    /* Otherwise, this is the ordinal */
+    Ordinal = OrdinalTable[Mid];
+
+    /* Resolve the address and write it */
+    ExportTable = (PULONG)((ULONG_PTR)DllBase +
+                           ExportDirectory->AddressOfFunctions);
+    Function = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
+
+    /* We found it! */
+    ASSERT((Function > (PVOID)ExportDirectory) &&
+           (Function < (PVOID)((ULONG_PTR)ExportDirectory + ExportSize)));
+    return Function;
+}
+
+PVOID
+NTAPI
 MiLocateExportName(IN PVOID DllBase,
                    IN PCHAR ExportName)
 {
@@ -1710,5 +1781,79 @@ Quickie:
     /* Free the name buffer and return status */
     ExFreePool(Buffer);
     return Status;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
+{
+    PVOID ProcAddress = NULL;
+    ANSI_STRING AnsiRoutineName;
+    NTSTATUS Status;
+    PLIST_ENTRY NextEntry;
+    extern LIST_ENTRY PsLoadedModuleList;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    BOOLEAN Found = FALSE;
+    UNICODE_STRING KernelName = RTL_CONSTANT_STRING(L"ntoskrnl.exe");
+    UNICODE_STRING HalName = RTL_CONSTANT_STRING(L"hal.dll");
+    ULONG Modules = 0;
+
+    /* Convert routine to ansi name */
+    Status = RtlUnicodeStringToAnsiString(&AnsiRoutineName,
+                                          SystemRoutineName,
+                                          TRUE);
+    if (!NT_SUCCESS(Status)) return NULL;
+
+    /* Lock the list */
+    KeEnterCriticalRegion();
+
+    /* Loop the loaded module list */
+    NextEntry = PsLoadedModuleList.Flink;
+    while (NextEntry != &PsLoadedModuleList)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+
+        /* Check if it's the kernel or HAL */
+        if (RtlEqualUnicodeString(&KernelName, &LdrEntry->BaseDllName, TRUE))
+        {
+            /* Found it */
+            Found = TRUE;
+            Modules++;
+        }
+        else if (RtlEqualUnicodeString(&HalName, &LdrEntry->BaseDllName, TRUE))
+        {
+            /* Found it */
+            Found = TRUE;
+            Modules++;
+        }
+
+        /* Check if we found a valid binary */
+        if (Found)
+        {
+            /* Find the procedure name */
+            ProcAddress = MiFindExportedRoutineByName(LdrEntry->DllBase,
+                                                      &AnsiRoutineName);
+
+            /* Break out if we found it or if we already tried both modules */
+            if (ProcAddress) break;
+            if (Modules == 2) break;
+        }
+
+        /* Keep looping */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Release the lock */
+    KeLeaveCriticalRegion();
+
+    /* Free the string and return */
+    RtlFreeAnsiString(&AnsiRoutineName);
+    return ProcAddress;
 }
 

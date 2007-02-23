@@ -608,7 +608,7 @@ KdbSymProcessBootSymbols(IN PUNICODE_STRING FileName)
       IsRaw = FALSE;
     }
 
-  ModuleObject = LdrGetModuleObject(ModuleName);
+  ModuleObject = NULL;
 
   if (ModuleObject != NULL)
   {
