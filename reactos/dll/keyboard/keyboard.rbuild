@@ -29,8 +29,8 @@
 	<directory name="kbdru">
 		<xi:include href="kbdru/kbdru.rbuild" />
 	</directory>
-	<directory name="kbdse">
-		<xi:include href="kbdse/kbdse.rbuild" />
+	<directory name="kbdsw">
+		<xi:include href="kbdsw/kbdsw.rbuild" />
 	</directory>
 	<directory name="kbdsg">
 		<xi:include href="kbdsg/kbdsg.rbuild" />
