@@ -1576,7 +1576,7 @@ LoaderScan:
         /* Setup image attributes */
         InitializeObjectAttributes(&ObjectAttributes,
                                    FileName,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    NULL,
                                    NULL);
 
@@ -1586,7 +1586,7 @@ LoaderScan:
                             &ObjectAttributes,
                             &IoStatusBlock,
                             FILE_SHARE_READ | FILE_SHARE_DELETE,
-                            FILE_SYNCHRONOUS_IO_NONALERT);
+                            0);
         if (!NT_SUCCESS(Status)) goto Quickie;
 
         /* Validate it */
