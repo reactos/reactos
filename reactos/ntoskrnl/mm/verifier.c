@@ -164,7 +164,7 @@ MmIsDriverVerifying(IN PDRIVER_OBJECT DriverObject)
     if (!LdrEntry) return FALSE;
 
     /* Check if we're verifying or not */
-    return (LdrEntry->Flags & LDRP_DRIVER_VERIFYING) ? TRUE: FALSE;
+    return (LdrEntry->Flags & LDRP_IMAGE_VERIFYING) ? TRUE: FALSE;
 }
 
 /*
