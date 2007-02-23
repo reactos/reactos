@@ -18,8 +18,101 @@ LIST_ENTRY PsLoadedModuleList;
 KSPIN_LOCK PsLoadedModuleSpinLock;
 PVOID PsNtosImageBase;
 KMUTANT MmSystemLoadLock;
+extern ULONG NtGlobalFlag;
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+NTAPI
+MiLoadImageSection(IN OUT PVOID *SectionPtr,
+                   OUT PVOID *ImageBase,
+                   IN PUNICODE_STRING FileName,
+                   IN BOOLEAN SessionLoad,
+                   IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PROS_SECTION_OBJECT Section = *SectionPtr;
+    NTSTATUS Status;
+    PEPROCESS Process;
+    PVOID Base = NULL;
+    SIZE_T ViewSize = 0;
+    KAPC_STATE ApcState;
+    LARGE_INTEGER SectionOffset = {{0}};
+    BOOLEAN LoadSymbols = FALSE;
+    ULONG DriverSize;
+    PVOID DriverBase;
+    PAGED_CODE();
+
+    /* Detect session load */
+    if (SessionLoad)
+    {
+        /* Fail */
+        DPRINT1("Session loading not yet supported!\n");
+        while (TRUE);
+    }
+
+    /* Not session load, shouldn't have an entry */
+    ASSERT(LdrEntry == NULL);
+
+    /* Attach to the system process */
+    KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
+
+    /* Check if we need to load symbols */
+    if (NtGlobalFlag & FLG_ENABLE_KDEBUG_SYMBOL_LOAD)
+    {
+        /* Yes we do */
+        LoadSymbols = TRUE;
+        NtGlobalFlag &= ~FLG_ENABLE_KDEBUG_SYMBOL_LOAD;
+    }
+
+    /* Map the driver */
+    Process = PsGetCurrentProcess();
+    Status = MmMapViewOfSection(Section,
+                                Process,
+                                &Base,
+                                0,
+                                0,
+                                &SectionOffset,
+                                &ViewSize,
+                                ViewUnmap,
+                                0,
+                                PAGE_EXECUTE);
+
+    /* Re-enable the flag */
+    if (LoadSymbols) NtGlobalFlag |= FLG_ENABLE_KDEBUG_SYMBOL_LOAD;
+
+    /* Check if we failed with distinguished status code */
+    if (Status == STATUS_IMAGE_MACHINE_TYPE_MISMATCH)
+    {
+        /* Change it to something more generic */
+        Status = STATUS_INVALID_IMAGE_FORMAT;
+    }
+
+    /* Now check if we failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Detach and return */
+        KeUnstackDetachProcess(&ApcState);
+        return Status;
+    }
+
+    /* Get the driver size */
+    DriverSize = Section->ImageSection->ImageSize;
+
+    /*  Allocate a virtual section for the module  */
+    DriverBase = MmAllocateSection(DriverSize, NULL);
+    *ImageBase = DriverBase;
+
+    /* Copy the image */
+    RtlCopyMemory(DriverBase, Base, DriverSize);
+
+    /* Now unmap the view */
+    Status = MmUnmapViewOfSection(Process, Base);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Detach and return status */
+    KeUnstackDetachProcess(&ApcState);
+    return Status;
+}
 
 NTSTATUS
 NTAPI
@@ -1331,11 +1424,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     NTSTATUS Status;
     HANDLE FileHandle = NULL;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    FILE_STANDARD_INFORMATION FileStdInfo;
     IO_STATUS_BLOCK IoStatusBlock;
-    ULONG DriverSize = 0, Size, i;
-    PVOID DriverBase;
-    PIMAGE_SECTION_HEADER SectionHeaders;
     PIMAGE_NT_HEADERS NtHeader;
     UNICODE_STRING BaseName, BaseDirectory, PrefixName;
     PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
@@ -1510,31 +1599,6 @@ LoaderScan:
             goto Quickie;
         }
 
-        /* Get image size */
-        Status = ZwQueryInformationFile(FileHandle,
-                                        &IoStatusBlock,
-                                        &FileStdInfo,
-                                        sizeof(FileStdInfo),
-                                        FileStandardInformation);
-        if (!NT_SUCCESS(Status)) goto Quickie;
-
-        /* Allocate memory for image */
-        ModuleLoadBase = ExAllocatePoolWithTag(NonPagedPool,
-                                               FileStdInfo.EndOfFile.u.LowPart,
-                                               TAG_DRIVER_MEM);
-
-        /* Read the image */
-        Status = ZwReadFile(FileHandle,
-                            0,
-                            0,
-                            0,
-                            &IoStatusBlock,
-                            ModuleLoadBase,
-                            FileStdInfo.EndOfFile.u.LowPart,
-                            0,
-                            0);
-        if (!NT_SUCCESS(Status)) goto Quickie;
-
         /* Check if this is a session-load */
         if (Flags)
         {
@@ -1591,61 +1655,19 @@ LoaderScan:
         LdrEntry = NULL;
     }
 
-    /* We should have a valid module base */
-    ASSERT(ModuleLoadBase != NULL);
+    /* Load the image */
+    Status = MiLoadImageSection(&Section,
+                                &ModuleLoadBase,
+                                FileName,
+                                FALSE,
+                                NULL);
+    ASSERT(Status != STATUS_ALREADY_COMMITTED);
 
-    /*  Get header pointers  */
+    /* Get the NT Header */
     NtHeader = RtlImageNtHeader(ModuleLoadBase);
 
-    /* Get header pointers */
-    SectionHeaders = IMAGE_FIRST_SECTION(NtHeader);
-
-    /*  Determine the size of the module  */
-    for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
-    {
-        /* Skip this section if we're not supposed to load it */
-        if (!(SectionHeaders[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
-        {
-            /* Add the size of this section into the total size */
-            Size = SectionHeaders[i].VirtualAddress +
-                   SectionHeaders[i].Misc.VirtualSize;
-            DriverSize = max(DriverSize, Size);
-        }
-    }
-
-    /* Round up the driver size to section alignment */
-    DriverSize = ROUND_UP(DriverSize, NtHeader->OptionalHeader.SectionAlignment);
-
-    /*  Allocate a virtual section for the module  */
-    DriverBase = MmAllocateSection(DriverSize, NULL);
-
-    /* Copy headers over */
-    RtlCopyMemory(DriverBase,
-                  ModuleLoadBase,
-                  NtHeader->OptionalHeader.SizeOfHeaders);
-
-    /*  Copy image sections into virtual section  */
-    for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
-    {
-        /* Get the size of this section and check if it's valid and on-disk */
-        Size = SectionHeaders[i].VirtualAddress +
-               SectionHeaders[i].Misc.VirtualSize;
-        if ((Size <= DriverSize) && (SectionHeaders[i].SizeOfRawData))
-        {
-            /* Copy the data from the disk to the image */
-            RtlCopyMemory((PVOID)((ULONG_PTR)DriverBase +
-                                  SectionHeaders[i].VirtualAddress),
-                          (PVOID)((ULONG_PTR)ModuleLoadBase +
-                                  SectionHeaders[i].PointerToRawData),
-                          SectionHeaders[i].Misc.VirtualSize >
-                          SectionHeaders[i].SizeOfRawData ?
-                          SectionHeaders[i].SizeOfRawData :
-                          SectionHeaders[i].Misc.VirtualSize);
-        }
-    }
-
     /* Relocate the driver */
-    Status = LdrRelocateImageWithBias(DriverBase,
+    Status = LdrRelocateImageWithBias(ModuleLoadBase,
                                       0,
                                       "SYSLDR",
                                       STATUS_SUCCESS,
@@ -1682,10 +1704,10 @@ LoaderScan:
     }
 
     /* Setup the rest of the entry */
-    LdrEntry->DllBase = DriverBase;
-    LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)DriverBase +
+    LdrEntry->DllBase = ModuleLoadBase;
+    LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)ModuleLoadBase +
                                    NtHeader->OptionalHeader.AddressOfEntryPoint);
-    LdrEntry->SizeOfImage = DriverSize;
+    LdrEntry->SizeOfImage = ((PROS_SECTION_OBJECT)Section)->ImageSection->ImageSize;
     LdrEntry->CheckSum = NtHeader->OptionalHeader.CheckSum;
     LdrEntry->SectionPointer = LdrEntry;
 
@@ -1729,7 +1751,7 @@ LoaderScan:
 
     /* Resolve imports */
     MissingApiName = Buffer;
-    Status = MiResolveImageReferences(DriverBase,
+    Status = MiResolveImageReferences(ModuleLoadBase,
                                       &BaseDirectory,
                                       NULL,
                                       &MissingApiName,
@@ -1762,9 +1784,6 @@ LoaderScan:
 Quickie:
     /* If we have a file handle, close it */
     if (FileHandle) ZwClose(FileHandle);
-
-    /* Cleanup */
-    if (ModuleLoadBase) ExFreePool(ModuleLoadBase);
 
     /* Check if we have the lock acquired */
     if (LockOwned)

@@ -191,6 +191,7 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
     USHORT Machine;
     BOOLEAN Executable;
     ULONG NrSegments;
+    ULONG ImageSize;
     PMM_SECTION_SEGMENT Segments;
 } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 

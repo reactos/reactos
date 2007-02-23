@@ -4560,6 +4560,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
          }
       }
 
+      ImageSectionObject->ImageSize = ImageSize;
+
       /* Check there is enough space to map the section at that point. */
       if (MmLocateMemoryAreaByRegion(AddressSpace, (PVOID)ImageBase,
                                      PAGE_ROUND_UP(ImageSize)) != NULL)
