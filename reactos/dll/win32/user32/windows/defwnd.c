@@ -1537,9 +1537,9 @@ User32DefWindowProc(HWND hWnd,
           
             //FIXME: What to do with INPUTLANGCHANGE_SYSCHARSET ?
           
-            if(wParam & INPUTLANGCHANGE_BACKWARD) NewHkl = HKL_PREV;
-            else if(wParam & INPUTLANGCHANGE_FORWARD) NewHkl = HKL_NEXT;
-            else NewHkl = lParam;
+            if(wParam & INPUTLANGCHANGE_BACKWARD) NewHkl = (HKL) HKL_PREV;
+            else if(wParam & INPUTLANGCHANGE_FORWARD) NewHkl = (HKL) HKL_NEXT;
+            else NewHkl = (HKL) lParam;
           
             NtUserActivateKeyboardLayout(NewHkl, 0);
             
