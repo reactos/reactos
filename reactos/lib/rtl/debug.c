@@ -348,4 +348,25 @@ DbgLoadImageSymbols(IN PANSI_STRING Name,
     DebugService2(Name, &SymbolInfo, BREAKPOINT_LOAD_SYMBOLS);
     return STATUS_SUCCESS;
 }
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+DbgUnLoadImageSymbols(IN PANSI_STRING Name,
+                      IN PVOID Base,
+                      IN ULONG_PTR ProcessId)
+{
+    KD_SYMBOLS_INFO SymbolInfo;
+
+    /* Setup the symbol data */
+    SymbolInfo.BaseOfDll = Base;
+    SymbolInfo.ProcessId = (PVOID)ProcessId;
+    SymbolInfo.CheckSum = SymbolInfo.SizeOfImage = 0;
+
+    /* Load the symbols */
+    DebugService2(Name, &SymbolInfo, BREAKPOINT_UNLOAD_SYMBOLS);
+}
+
 /* EOF */

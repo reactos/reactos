@@ -332,16 +332,6 @@ typedef VOID
     BOOLEAN Dirty
 );
 
-
-/* FUNCTIONS */
-
-NTSTATUS
-NTAPI
-MmCheckSystemImage(
-    IN HANDLE ImageHandle,
-    IN BOOLEAN PurgeSection
-);
-
 /* aspace.c ******************************************************************/
 
 VOID 
@@ -1429,6 +1419,8 @@ MiQueryVirtualMemory(
     OUT PULONG ResultLength
 );
 
+/* sysldr.c ******************************************************************/
+
 VOID
 NTAPI
 MiReloadBootLoadedDrivers(
@@ -1441,5 +1433,28 @@ MiInitializeLoadedModuleList(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+NTSTATUS
+NTAPI
+MmLoadSystemImage(
+    IN PUNICODE_STRING FileName,
+    IN PUNICODE_STRING NamePrefix OPTIONAL,
+    IN PUNICODE_STRING LoadedName OPTIONAL,
+    IN ULONG Flags,
+    OUT PVOID *ModuleObject,
+    OUT PVOID *ImageBaseAddress
+);
+
+NTSTATUS
+NTAPI
+MmUnloadSystemImage(
+    IN PVOID ImageHandle
+);
+
+NTSTATUS
+NTAPI
+MmCheckSystemImage(
+    IN HANDLE ImageHandle,
+    IN BOOLEAN PurgeSection
+);
 
 #endif

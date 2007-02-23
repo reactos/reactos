@@ -2514,6 +2514,14 @@ DbgLoadImageSymbols(
     IN ULONG ProcessId
 );
 
+VOID
+NTAPI
+DbgUnLoadImageSymbols(
+    IN PANSI_STRING Name,
+    IN PVOID Base,
+    IN ULONG_PTR ProcessId
+);
+
 //
 // Generic Table Functions
 //

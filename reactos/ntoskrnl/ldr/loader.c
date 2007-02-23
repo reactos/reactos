@@ -133,30 +133,4 @@ LdrGetModuleObject ( PUNICODE_STRING ModuleName )
     return(NULL);
 }
 
-//
-// Used when unloading drivers
-//
-NTSTATUS
-NTAPI
-LdrUnloadModule ( PLDR_DATA_TABLE_ENTRY ModuleObject )
-{
-    KIRQL Irql;
-
-    /* Remove the module from the module list */
-    KeAcquireSpinLock(&PsLoadedModuleSpinLock,&Irql);
-    RemoveEntryList(&ModuleObject->InLoadOrderLinks);
-    KeReleaseSpinLock(&PsLoadedModuleSpinLock, Irql);
-
-    /* Hook for KDB on unloading a driver. */
-    KDB_UNLOADDRIVER_HOOK(ModuleObject);
-
-    /* Free module section */
-    //  MmFreeSection(ModuleObject->DllBase);
-
-    ExFreePool(ModuleObject->FullDllName.Buffer);
-    ExFreePool(ModuleObject);
-
-    return(STATUS_SUCCESS);
-}
-
 /* EOF */

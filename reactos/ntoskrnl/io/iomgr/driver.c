@@ -1169,7 +1169,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
       (*DriverObject->DriverUnload)(DriverObject);
    ObDereferenceObject(DriverObject);
    ObDereferenceObject(DriverObject);
-   LdrUnloadModule(ModuleObject);
+   MmUnloadSystemImage(ModuleObject);
 
    return STATUS_SUCCESS;
 }
@@ -1750,7 +1750,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    if (!NT_SUCCESS(Status))
    {
       DPRINT("IopInitializeDriver() failed (Status %lx)\n", Status);
-      LdrUnloadModule(ModuleObject);
+      MmUnloadSystemImage(ModuleObject);
       IopFreeDeviceNode(DeviceNode);
       goto ReleaseCapturedString;
    }

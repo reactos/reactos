@@ -1495,7 +1495,7 @@ SSI_DEF(SystemExtendServiceTableInformation)
     if (!NtHeader)
     {
         /* Fail */
-        LdrUnloadModule(ModuleObject);
+        MmUnloadSystemImage(ModuleObject);
         return STATUS_INVALID_IMAGE_FORMAT;
     }
 
@@ -1514,7 +1514,7 @@ SSI_DEF(SystemExtendServiceTableInformation)
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
     /* Unload if we failed */
-    if (!NT_SUCCESS(Status)) LdrUnloadModule(ModuleObject);
+    if (!NT_SUCCESS(Status)) MmUnloadSystemImage(ModuleObject);
     return Status;
 }
 

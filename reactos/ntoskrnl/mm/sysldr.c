@@ -21,6 +21,135 @@ KMUTANT MmSystemLoadLock;
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+MiDereferenceImports(IN PLOAD_IMPORTS ImportList)
+{
+    /* Check if there's no imports or if we're a boot driver */
+    if ((ImportList == (PVOID)-1) || (ImportList == (PVOID)-2))
+    {
+        /* Then there's nothing to do */
+        return STATUS_SUCCESS;
+    }
+
+    /* Otherwise, FIXME */
+    DPRINT1("Imports not dereferenced!\n");
+    return STATUS_UNSUCCESSFUL;
+}
+
+VOID
+NTAPI
+MiClearImports(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PAGED_CODE();
+
+    /* Check if there's no imports or we're a boot driver or only one entry */
+    if ((LdrEntry->LoadedImports == (PVOID)-1) ||
+        (LdrEntry->LoadedImports == (PVOID)-2) ||
+        ((ULONG_PTR)LdrEntry->LoadedImports & 1))
+    {
+        /* Nothing to do */
+        return;
+    }
+
+    /* Otherwise, free the import list */
+    ExFreePool(LdrEntry->LoadedImports);
+}
+
+PVOID
+NTAPI
+MiLocateExportName(IN PVOID DllBase,
+                   IN PCHAR ExportName)
+{
+    PULONG NameTable;
+    PUSHORT OrdinalTable;
+    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
+    LONG Low = 0, Mid = 0, High, Ret;
+    USHORT Ordinal;
+    PVOID Function;
+    ULONG ExportSize;
+    PULONG ExportTable;
+    PAGED_CODE();
+
+    /* Get the export directory */
+    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
+                                                   TRUE,
+                                                   IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                                   &ExportSize);
+    if (!ExportDirectory) return NULL;
+
+    /* Setup name tables */
+    NameTable = (PULONG)((ULONG_PTR)DllBase +
+                         ExportDirectory->AddressOfNames);
+    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
+                             ExportDirectory->AddressOfNameOrdinals);
+
+    /* Do a binary search */
+    High = ExportDirectory->NumberOfNames - 1;
+    while (High >= Low)
+    {
+        /* Get new middle value */
+        Mid = (Low + High) >> 1;
+
+        /* Compare name */
+        Ret = strcmp(ExportName, (PCHAR)DllBase + NameTable[Mid]);
+        if (Ret < 0)
+        {
+            /* Update high */
+            High = Mid - 1;
+        }
+        else if (Ret > 0)
+        {
+            /* Update low */
+            Low = Mid + 1;
+        }
+        else
+        {
+            /* We got it */
+            break;
+        }
+    }
+
+    /* Check if we couldn't find it */
+    if (High < Low) return NULL;
+
+    /* Otherwise, this is the ordinal */
+    Ordinal = OrdinalTable[Mid];
+
+    /* Resolve the address and write it */
+    ExportTable = (PULONG)((ULONG_PTR)DllBase +
+                           ExportDirectory->AddressOfFunctions);
+    Function = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
+
+    /* Check if the function is actually a forwarder */
+    if (((ULONG_PTR)Function > (ULONG_PTR)ExportDirectory) &&
+        ((ULONG_PTR)Function < ((ULONG_PTR)ExportDirectory + ExportSize)))
+    {
+        /* It is, fail */
+        return NULL;
+    }
+
+    /* We found it */
+    return Function;
+}
+
+NTSTATUS
+NTAPI
+MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
+                    IN PLIST_ENTRY ListHead)
+{
+    PMM_DLL_INITIALIZE DllInit;
+
+    /* Try to see if the image exports a DllInitialize routine */
+    DllInit = (PMM_DLL_INITIALIZE)MiLocateExportName(LdrEntry->DllBase,
+                                                     "DllInitialize");
+    if (!DllInit) return STATUS_SUCCESS;
+
+    /* FIXME: TODO */
+    DPRINT1("DllInitialize not called!\n");
+    return STATUS_UNSUCCESSFUL;
+}
+
 VOID
 NTAPI
 MiProcessLoaderEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
@@ -321,6 +450,92 @@ MiSnapThunk(IN PVOID DllBase,
 
 NTSTATUS
 NTAPI
+MmUnloadSystemImage(IN PVOID ImageHandle)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry = ImageHandle;
+    PVOID BaseAddress = LdrEntry->DllBase;
+    NTSTATUS Status;
+    ANSI_STRING TempName;
+    BOOLEAN HadEntry = FALSE;
+
+    /* Acquire the loader lock */
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&MmSystemLoadLock,
+                          WrVirtualMemory,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+
+    /* Check if this driver was loaded at boot and didn't get imports parsed */
+    if (LdrEntry->LoadedImports == (PVOID)-1) goto Done;
+
+    /* We should still be alive */
+    ASSERT(LdrEntry->LoadCount != 0);
+    LdrEntry->LoadCount--;
+
+    /* Check if we're still loaded */
+    if (LdrEntry->LoadCount) goto Done;
+
+    /* We should cleanup... are symbols loaded */
+    if (LdrEntry->Flags & LDRP_DEBUG_SYMBOLS_LOADED)
+    {
+        /* Create the ANSI name */
+        Status = RtlUnicodeStringToAnsiString(&TempName,
+                                              &LdrEntry->BaseDllName,
+                                              TRUE);
+        if (NT_SUCCESS(Status))
+        {
+            /* Unload the symbols */
+            DbgUnLoadImageSymbols(&TempName, BaseAddress, -1);
+            RtlFreeAnsiString(&TempName);
+        }
+    }
+
+    /* FIXME: Free the driver */
+    //MmFreeSection(LdrEntry->DllBase);
+
+    /* Check if we're linked in */
+    if (LdrEntry->InLoadOrderLinks.Flink)
+    {
+        /* Remove us */
+        MiProcessLoaderEntry(LdrEntry, FALSE);
+        HadEntry = TRUE;
+    }
+
+    /* Dereference and clear the imports */
+    MiDereferenceImports(LdrEntry->LoadedImports);
+    MiClearImports(LdrEntry);
+
+    /* Check if the entry needs to go away */
+    if (HadEntry)
+    {
+        /* Check if it had a name */
+        if (LdrEntry->FullDllName.Buffer)
+        {
+            /* Free it */
+            ExFreePool(LdrEntry->FullDllName.Buffer);
+        }
+
+        /* Check if we had a section */
+        if (LdrEntry->SectionPointer)
+        {
+            /* Dereference it */
+            ObDereferenceObject(LdrEntry->SectionPointer);
+        }
+
+        /* Free the entry */
+        ExFreePool(LdrEntry);
+    }
+
+    /* Release the system lock and return */
+Done:
+    KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+    KeLeaveCriticalRegion();
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 MiResolveImageReferences(IN PVOID ImageBase,
                          IN PUNICODE_STRING ImageFileDirectory,
                          IN PUNICODE_STRING NamePrefix OPTIONAL,
@@ -406,8 +621,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
         if ((GdiLink) && (NormalLink))
         {
             /* It's not, it's importing stuff it shouldn't be! */
-            DPRINT1("Invalid driver!\n");
-            //MiDereferenceImports(LoadedImports);
+            MiDereferenceImports(LoadedImports);
             if (LoadedImports) ExFreePool(LoadedImports);
             return STATUS_PROCEDURE_NOT_FOUND;
         }
@@ -432,7 +646,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
         if (!NT_SUCCESS(Status))
         {
             /* Failed */
-            //MiDereferenceImports(LoadedImports);
+            MiDereferenceImports(LoadedImports);
             if (LoadedImports) ExFreePool(LoadedImports);
             return Status;
         }
@@ -517,7 +731,6 @@ CheckDllState:
                 else
                 {
                     /* Fill out the information for the error */
-                    DPRINT1("Failed to import: %S\n", DllName.Buffer);
                     *MissingDriver = DllName.Buffer;
                     *(PULONG)MissingDriver |= 1;
                     *MissingApi = NULL;
@@ -539,7 +752,6 @@ CheckDllState:
                 ASSERT(DllBase = DllEntry->DllBase);
 
                 /* Call the initialization routines */
-#if 0
                 Status = MmCallDllInitialize(DllEntry, &PsLoadedModuleList);
                 if (!NT_SUCCESS(Status))
                 {
@@ -548,16 +760,14 @@ CheckDllState:
                     while (TRUE);
                     Loaded = FALSE;
                 }
-#endif
             }
 
             /* Check if we failed by here */
             if (!NT_SUCCESS(Status))
             {
                 /* Cleanup and return */
-                DPRINT1("Failed loading import\n");
                 RtlFreeUnicodeString(&NameString);
-                //MiDereferenceImports(LoadedImports);
+                MiDereferenceImports(LoadedImports);
                 if (LoadedImports) ExFreePool(LoadedImports);
                 return Status;
             }
@@ -590,8 +800,7 @@ CheckDllState:
         if (!ExportDirectory)
         {
             /* Cleanup and return */
-            DPRINT1("Invalid driver: %wZ\n", &LdrEntry->BaseDllName);
-            //MiDereferenceImports(LoadedImports);
+            MiDereferenceImports(LoadedImports);
             if (LoadedImports) ExFreePool(LoadedImports);
             return STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
         }
@@ -620,7 +829,7 @@ CheckDllState:
                 if (!NT_SUCCESS(Status))
                 {
                     /* Cleanup and return */
-                    //MiDereferenceImports(LoadedImports);
+                    MiDereferenceImports(LoadedImports);
                     if (LoadedImports) ExFreePool(LoadedImports);
                     return Status;
                 }
