@@ -23,6 +23,24 @@ KMUTANT MmSystemLoadLock;
 
 VOID
 NTAPI
+MiProcessLoaderEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
+                     IN BOOLEAN Insert)
+{
+    KIRQL OldIrql;
+
+    /* Acquire the lock */
+    KeAcquireSpinLock(&PsLoadedModuleSpinLock, &OldIrql);
+
+    /* Insert or remove from the list */
+    Insert ? InsertTailList(&PsLoadedModuleList, &LdrEntry->InLoadOrderLinks) :
+             RemoveEntryList(&LdrEntry->InLoadOrderLinks);
+
+    /* Release the lock */
+    KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
+}
+
+VOID
+NTAPI
 MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                IN PVOID OldBase,
                IN PVOID NewBase,
@@ -1019,3 +1037,469 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
     ZwClose(SectionHandle);
     return Status;
 }
+
+NTSTATUS
+NTAPI
+MmLoadSystemImage(IN PUNICODE_STRING FileName,
+                  IN PUNICODE_STRING NamePrefix OPTIONAL,
+                  IN PUNICODE_STRING LoadedName OPTIONAL,
+                  IN ULONG Flags,
+                  OUT PVOID *ModuleObject,
+                  OUT PVOID *ImageBaseAddress)
+{
+    PVOID ModuleLoadBase = NULL;
+    NTSTATUS Status;
+    HANDLE FileHandle = NULL;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    FILE_STANDARD_INFORMATION FileStdInfo;
+    IO_STATUS_BLOCK IoStatusBlock;
+    ULONG DriverSize = 0, Size, i;
+    PVOID DriverBase;
+    PIMAGE_SECTION_HEADER SectionHeaders;
+    PIMAGE_NT_HEADERS NtHeader;
+    UNICODE_STRING BaseName, BaseDirectory, PrefixName;
+    PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
+    ULONG EntrySize;
+    PLOAD_IMPORTS LoadedImports = (PVOID)-2;
+    PCHAR MissingApiName, Buffer;
+    PWCHAR MissingDriverName;
+    HANDLE SectionHandle;
+    ACCESS_MASK DesiredAccess;
+    PVOID Section = NULL;
+    BOOLEAN LockOwned = FALSE;
+    PLIST_ENTRY NextEntry;
+    PAGED_CODE();
+
+    /* Detect session-load */
+    if (Flags)
+    {
+        /* Sanity checks */
+        ASSERT(NamePrefix == NULL);
+        ASSERT(LoadedName == NULL);
+
+        /* Make sure the process is in session too */
+        if (!PsGetCurrentProcess()->ProcessInSession) return STATUS_NO_MEMORY;
+    }
+
+    if (ModuleObject) *ModuleObject = NULL;
+    if (ImageBaseAddress) *ImageBaseAddress = NULL;
+
+    /* Allocate a buffer we'll use for names */
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, TAG_LDR_WSTR);
+    if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Check for a separator */
+    if (FileName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
+    {
+        PWCHAR p;
+        ULONG BaseLength;
+
+        /* Loop the path until we get to the base name */
+        p = &FileName->Buffer[FileName->Length / sizeof(WCHAR)];
+        while (*(p - 1) != OBJ_NAME_PATH_SEPARATOR) p--;
+
+        /* Get the length */
+        BaseLength = (ULONG)(&FileName->Buffer[FileName->Length / sizeof(WCHAR)] - p);
+        BaseLength *= sizeof(WCHAR);
+
+        /* Setup the string */
+        BaseName.Length = (USHORT)BaseLength;
+        BaseName.Buffer = p;
+    }
+    else
+    {
+        /* Otherwise, we already have a base name */
+        BaseName.Length = FileName->Length;
+        BaseName.Buffer = FileName->Buffer;
+    }
+
+    /* Setup the maximum length */
+    BaseName.MaximumLength = BaseName.Length;
+
+    /* Now compute the base directory */
+    BaseDirectory = *FileName;
+    BaseDirectory.Length -= BaseName.Length;
+    BaseDirectory.MaximumLength = BaseDirectory.Length;
+
+    /* And the prefix, which for now is just the name itself */
+    PrefixName = *FileName;
+
+    /* Check if we have a prefix */
+    if (NamePrefix) DPRINT1("Prefixed images are not yet supported!\n");
+
+    /* Check if we already have a name, use it instead */
+    if (LoadedName) BaseName = *LoadedName;
+
+    /* Acquire the load lock */
+LoaderScan:
+    ASSERT(LockOwned == FALSE);
+    LockOwned = TRUE;
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&MmSystemLoadLock,
+                          WrVirtualMemory,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+
+    /* Scan the module list */
+    NextEntry = PsLoadedModuleList.Flink;
+    while (NextEntry != &PsLoadedModuleList)
+    {
+        /* Get the entry and compare the names */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+        if (RtlEqualUnicodeString(&PrefixName, &LdrEntry->FullDllName, TRUE))
+        {
+            /* Found it, break out */
+            break;
+        }
+
+        /* Keep scanning */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Check if we found the image */
+    if (NextEntry != &PsLoadedModuleList)
+    {
+        /* Check if we had already mapped a section */
+        if (Section)
+        {
+            /* Dereference and clear */
+            ObDereferenceObject(Section);
+            Section = NULL;
+        }
+
+        /* Check if this was supposed to be a session load */
+        if (!Flags)
+        {
+            /* It wasn't, so just return the data */
+            *ModuleObject = LdrEntry;
+            *ImageBaseAddress = LdrEntry->DllBase;
+            Status = STATUS_IMAGE_ALREADY_LOADED;
+        }
+        else
+        {
+            /* We don't support session loading yet */
+            DPRINT1("Unsupported Session-Load!\n");
+            while (TRUE);
+        }
+
+        /* Do cleanup */
+        goto Quickie;
+    }
+    else if (!Section)
+    {
+        /* It wasn't loaded, and we didn't have a previous attempt */
+        KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+        KeLeaveCriticalRegion();
+        LockOwned = FALSE;
+
+        /* Check if KD is enabled */
+        if ((KdDebuggerEnabled) && !(KdDebuggerNotPresent))
+        {
+            /* FIXME: Attempt to get image from KD */
+        }
+
+        /* We don't have a valid entry */
+        LdrEntry = NULL;
+
+        /* Setup image attributes */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   FileName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+
+        /* Open the image */
+        Status = ZwOpenFile(&FileHandle,
+                            FILE_EXECUTE,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_DELETE,
+                            FILE_SYNCHRONOUS_IO_NONALERT);
+        if (!NT_SUCCESS(Status)) goto Quickie;
+
+        /* Validate it */
+        Status = MmCheckSystemImage(FileHandle, FALSE);
+        if ((Status == STATUS_IMAGE_CHECKSUM_MISMATCH) ||
+            (Status == STATUS_IMAGE_MP_UP_MISMATCH) ||
+            (Status == STATUS_INVALID_IMAGE_FORMAT))
+        {
+            /* Fail loading */
+            goto Quickie;
+        }
+
+        /* Get image size */
+        Status = ZwQueryInformationFile(FileHandle,
+                                        &IoStatusBlock,
+                                        &FileStdInfo,
+                                        sizeof(FileStdInfo),
+                                        FileStandardInformation);
+        if (!NT_SUCCESS(Status)) goto Quickie;
+
+        /* Allocate memory for image */
+        ModuleLoadBase = ExAllocatePoolWithTag(NonPagedPool,
+                                               FileStdInfo.EndOfFile.u.LowPart,
+                                               TAG_DRIVER_MEM);
+
+        /* Read the image */
+        Status = ZwReadFile(FileHandle,
+                            0,
+                            0,
+                            0,
+                            &IoStatusBlock,
+                            ModuleLoadBase,
+                            FileStdInfo.EndOfFile.u.LowPart,
+                            0,
+                            0);
+        if (!NT_SUCCESS(Status)) goto Quickie;
+
+        /* Check if this is a session-load */
+        if (Flags)
+        {
+            /* Then we only need read and execute */
+            DesiredAccess = SECTION_MAP_READ | SECTION_MAP_EXECUTE;
+        }
+        else
+        {
+            /* Otherwise, we can allow write access */
+            DesiredAccess = SECTION_ALL_ACCESS;
+        }
+
+        /* Initialize the attributes for the section */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   NULL,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   NULL,
+                                   NULL);
+
+        /* Create the section */
+        Status = ZwCreateSection(&SectionHandle,
+                                 DesiredAccess,
+                                 &ObjectAttributes,
+                                 NULL,
+                                 PAGE_EXECUTE,
+                                 SEC_IMAGE,
+                                 FileHandle);
+        if (!NT_SUCCESS(Status)) goto Quickie;
+
+        /* Now get the section pointer */
+        Status = ObReferenceObjectByHandle(SectionHandle,
+                                           SECTION_MAP_EXECUTE,
+                                           MmSectionObjectType,
+                                           KernelMode,
+                                           &Section,
+                                           NULL);
+        ZwClose(SectionHandle);
+        if (!NT_SUCCESS(Status)) goto Quickie;
+
+        /* Check if this was supposed to be a session-load */
+        if (Flags)
+        {
+            /* We don't support session loading yet */
+            DPRINT1("Unsupported Session-Load!\n");
+            while (TRUE);
+        }
+
+        /* Check the loader list again, we should end up in the path below */
+        goto LoaderScan;
+    }
+    else
+    {
+        /* We don't have a valid entry */
+        LdrEntry = NULL;
+    }
+
+    /* We should have a valid module base */
+    ASSERT(ModuleLoadBase != NULL);
+
+    /*  Get header pointers  */
+    NtHeader = RtlImageNtHeader(ModuleLoadBase);
+
+    /* Get header pointers */
+    SectionHeaders = IMAGE_FIRST_SECTION(NtHeader);
+
+    /*  Determine the size of the module  */
+    for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
+    {
+        /* Skip this section if we're not supposed to load it */
+        if (!(SectionHeaders[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+        {
+            /* Add the size of this section into the total size */
+            Size = SectionHeaders[i].VirtualAddress +
+                   SectionHeaders[i].Misc.VirtualSize;
+            DriverSize = max(DriverSize, Size);
+        }
+    }
+
+    /* Round up the driver size to section alignment */
+    DriverSize = ROUND_UP(DriverSize, NtHeader->OptionalHeader.SectionAlignment);
+
+    /*  Allocate a virtual section for the module  */
+    DriverBase = MmAllocateSection(DriverSize, NULL);
+
+    /* Copy headers over */
+    RtlCopyMemory(DriverBase,
+                  ModuleLoadBase,
+                  NtHeader->OptionalHeader.SizeOfHeaders);
+
+    /*  Copy image sections into virtual section  */
+    for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
+    {
+        /* Get the size of this section and check if it's valid and on-disk */
+        Size = SectionHeaders[i].VirtualAddress +
+               SectionHeaders[i].Misc.VirtualSize;
+        if ((Size <= DriverSize) && (SectionHeaders[i].SizeOfRawData))
+        {
+            /* Copy the data from the disk to the image */
+            RtlCopyMemory((PVOID)((ULONG_PTR)DriverBase +
+                                  SectionHeaders[i].VirtualAddress),
+                          (PVOID)((ULONG_PTR)ModuleLoadBase +
+                                  SectionHeaders[i].PointerToRawData),
+                          SectionHeaders[i].Misc.VirtualSize >
+                          SectionHeaders[i].SizeOfRawData ?
+                          SectionHeaders[i].SizeOfRawData :
+                          SectionHeaders[i].Misc.VirtualSize);
+        }
+    }
+
+    /* Relocate the driver */
+    Status = LdrRelocateImageWithBias(DriverBase,
+                                      0,
+                                      "SYSLDR",
+                                      STATUS_SUCCESS,
+                                      STATUS_CONFLICTING_ADDRESSES,
+                                      STATUS_INVALID_IMAGE_FORMAT);
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Calculate the size we'll need for the entry and allocate it */
+    EntrySize = sizeof(LDR_DATA_TABLE_ENTRY) +
+                BaseName.Length +
+                sizeof(UNICODE_NULL);
+
+    /* Allocate the entry */
+    LdrEntry = ExAllocatePoolWithTag(NonPagedPool, EntrySize, TAG_MODULE_OBJECT);
+    if (!LdrEntry)
+    {
+        /* Fail */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    /* Setup the entry */
+    LdrEntry->Flags = LDRP_LOAD_IN_PROGRESS;
+    LdrEntry->LoadCount = 1;
+    LdrEntry->LoadedImports = LoadedImports;
+    LdrEntry->PatchInformation = NULL;
+
+    /* Check the version */
+    if ((NtHeader->OptionalHeader.MajorOperatingSystemVersion >= 5) &&
+        (NtHeader->OptionalHeader.MajorImageVersion >= 5))
+    {
+        /* Mark this image as a native image */
+        LdrEntry->Flags |= 0x80000000;
+    }
+
+    /* Setup the rest of the entry */
+    LdrEntry->DllBase = DriverBase;
+    LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)DriverBase +
+                                   NtHeader->OptionalHeader.AddressOfEntryPoint);
+    LdrEntry->SizeOfImage = DriverSize;
+    LdrEntry->CheckSum = NtHeader->OptionalHeader.CheckSum;
+    LdrEntry->SectionPointer = LdrEntry;
+
+    /* Now write the DLL name */
+    LdrEntry->BaseDllName.Buffer = (PVOID)(LdrEntry + 1);
+    LdrEntry->BaseDllName.Length = BaseName.Length;
+    LdrEntry->BaseDllName.MaximumLength = BaseName.Length;
+
+    /* Copy and null-terminate it */
+    RtlCopyMemory(LdrEntry->BaseDllName.Buffer,
+                  BaseName.Buffer,
+                  BaseName.Length);
+    LdrEntry->BaseDllName.Buffer[BaseName.Length / 2] = UNICODE_NULL;
+
+    /* Now allocate the full name */
+    LdrEntry->FullDllName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                         PrefixName.Length +
+                                                         sizeof(UNICODE_NULL),
+                                                         TAG_LDR_WSTR);
+    if (!LdrEntry->FullDllName.Buffer)
+    {
+        /* Don't fail, just set it to zero */
+        LdrEntry->FullDllName.Length = 0;
+        LdrEntry->FullDllName.MaximumLength = 0;
+    }
+    else
+    {
+        /* Set it up */
+        LdrEntry->FullDllName.Length = PrefixName.Length;
+        LdrEntry->FullDllName.MaximumLength = PrefixName.Length;
+
+        /* Copy and null-terminate */
+        RtlCopyMemory(LdrEntry->FullDllName.Buffer,
+                      PrefixName.Buffer,
+                      PrefixName.Length);
+        LdrEntry->FullDllName.Buffer[PrefixName.Length / 2] = UNICODE_NULL;
+    }
+
+    /* Add the entry */
+    MiProcessLoaderEntry(LdrEntry, TRUE);
+
+    /* Resolve imports */
+    MissingApiName = Buffer;
+    Status = MiResolveImageReferences(DriverBase,
+                                      &BaseDirectory,
+                                      NULL,
+                                      &MissingApiName,
+                                      &MissingDriverName,
+                                      &LoadedImports);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        MiProcessLoaderEntry(LdrEntry, FALSE);
+
+        /* Check if we need to free the name */
+        if (LdrEntry->FullDllName.Buffer)
+        {
+            /* Free it */
+            ExFreePool(LdrEntry->FullDllName.Buffer);
+        }
+
+        /* Free the entry itself */
+        ExFreePool(LdrEntry);
+        LdrEntry = NULL;
+        goto Quickie;
+    }
+
+    if (ModuleObject) *ModuleObject = LdrEntry;
+    if (ImageBaseAddress) *ImageBaseAddress = LdrEntry->DllBase;
+
+    /* Hook for KDB on loading a driver. */
+    KDB_LOADDRIVER_HOOK(FileName, LdrEntry);
+
+Quickie:
+    /* If we have a file handle, close it */
+    if (FileHandle) ZwClose(FileHandle);
+
+    /* Cleanup */
+    if (ModuleLoadBase) ExFreePool(ModuleLoadBase);
+
+    /* Check if we have the lock acquired */
+    if (LockOwned)
+    {
+        /* Release the lock */
+        KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+        KeLeaveCriticalRegion();
+        LockOwned = FALSE;
+    }
+
+    /* Check if we had a prefix */
+    if (NamePrefix) ExFreePool(PrefixName.Buffer);
+
+    /* Free the name buffer and return status */
+    ExFreePool(Buffer);
+    return Status;
+}
+
