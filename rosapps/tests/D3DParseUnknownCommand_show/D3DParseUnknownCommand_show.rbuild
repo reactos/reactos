@@ -1,4 +1,4 @@
-<module name="D3DParseUnknownCommand_show" type="win32cui" installbase="bin" installname="D3DParseUnknownCommand_show" allowwarnings="true">
+<module name="D3DParseUnknownCommand_show" type="win32cui" installbase="bin" installname="D3DParseUnknownCommand_show.exe" allowwarnings="true">
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="__USE_W32API" />
