@@ -12,6 +12,8 @@
 #include <dll/directx/d3d8thk.h>
 #include "test.h"
 
+BOOL dumping_on =FALSE;
+
 /* we using d3d8thk.dll it is doing the real syscall in windows 2000 
  * in ReactOS and Windows XP and higher d3d8thk.dll it linking to
  * gdi32.dll instead doing syscall, gdi32.dll export DdEntry1-56 
@@ -23,6 +25,14 @@
 int main(int argc, char **argv)
 {
     HANDLE hDirectDrawLocal;
+
+    if (argc == 2)
+    {
+        if (stricmp(argv[1],"-dump")==0)
+        {
+            dumping_on = TRUE;
+        }
+    }
 
     hDirectDrawLocal = test_NtGdiDdCreateDirectDrawObject();
 
@@ -162,11 +172,14 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     if ((pHalInfo->dwSize != sizeof(DD_HALINFO)) &&
         (pHalInfo->dwSize != sizeof(DD_HALINFO_V4)))
     {
-        printf("10. if this show for NT 2000/XP/2003 ignore it, NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, NULL, ...);\n");
+        printf("10. if this show for NT 2000/XP/2003 ignore it, NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, NULL, ...);\n");
         fails++;
     }
 
-    /* FIXME dump pHalInfo */
+    if (dumping_on == TRUE)
+    {
+        dump_halinfo(pHalInfo,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, NULL, ...)");
+    }
 
     /* testing  OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, pCallBackFlags, NULL, ....  */
     printf("testing  DdQueryDirectDrawObject( hDD, pHalInfo, pCallBackFlags, NULL, ....)\n");
@@ -199,8 +212,11 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
         fails++;
     }
 
-    /* FIXME dump pHalInfo */
-    /* FIXME dump pCallBackFlags */
+    if (dumping_on == TRUE)
+    {
+        dump_halinfo(pHalInfo,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, NULL, ...)");
+        dump_CallBackFlags(pCallBackFlags,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, NULL, ...)");
+    }
 
     /* testing  OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, pCallBackFlags, NULL, ....  */
     printf("testing  DdQueryDirectDrawObject( hDD, pHalInfo, pCallBackFlags, puD3dCallbacks, NULL, ....)\n");
@@ -236,9 +252,12 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
         fails++;
     }
 
-    /* FIXME dump pHalInfo */
-    /* FIXME dump pCallBackFlags */
-    /* FIXME dump puD3dCallbacks */
+    if (dumping_on == TRUE)
+    {
+        dump_halinfo(pHalInfo,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, NULL, ...)");
+        dump_CallBackFlags(pCallBackFlags,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, NULL, ...)");
+        /* FIXME dump puD3dCallbacks */
+    }
 
    /* testing  OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, pCallBackFlags, NULL, ....  */
     printf("testing  DdQueryDirectDrawObject( hDD, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, NULL, ....)\n");
@@ -277,14 +296,13 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
         fails++;
     }
 
-    /* FIXME dump pHalInfo */
-    /* FIXME dump pCallBackFlags */
-    /* FIXME dump puD3dCallbacks */
-    /* FIXME dump puD3dDriverData */
-
-
-
-
+    if (dumping_on == TRUE)
+    {
+        dump_halinfo(pHalInfo,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, NULL, ...)");
+        dump_CallBackFlags(pCallBackFlags,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, NULL, ...)");
+        /* FIXME dump puD3dCallbacks */
+        /* FIXME dump puD3dDriverData */
+    }
 
     show_status(fails, "NtGdiDdQueryDirectDrawObject\0");
 }

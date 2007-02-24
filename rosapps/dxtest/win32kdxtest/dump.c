@@ -11,6 +11,15 @@
 
 
 void
+dump_CallBackFlags(DWORD *pCallBackFlags, char *text)
+{
+    printf("dumping the CallBackFlags from %s\n",text);
+    printf("pCallBackFlags[0] : 0x%08lx\n",pCallBackFlags[0]);
+    printf("pCallBackFlags[1] : 0x%08lx\n",pCallBackFlags[1]);
+    printf("pCallBackFlags[2] : 0x%08lx\n",pCallBackFlags[2]);
+}
+
+void
 dump_halinfo(DD_HALINFO *pHalInfo, char *text)
 {
     printf("dumping the DD_HALINFO from %s\n",text);
