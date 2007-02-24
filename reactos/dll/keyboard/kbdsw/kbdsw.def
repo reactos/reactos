@@ -1,7 +1,7 @@
 ;
 ; ReactOS Operating System
 ;
-LIBRARY kbdse.dll
+LIBRARY kbdsw.dll
 
 EXPORTS
 KbdLayerDescriptor
