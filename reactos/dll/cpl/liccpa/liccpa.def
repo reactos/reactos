@@ -1,6 +1,0 @@
-LIBRARY liccpa.cpl
-
-EXPORTS
-CPlApplet
-
-; EOF

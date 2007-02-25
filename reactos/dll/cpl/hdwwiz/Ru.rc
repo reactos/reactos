@@ -1,8 +1,0 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_NEUTRAL
-
-STRINGTABLE
-BEGIN
-	IDS_CPLNAME "Добавить оборудование"
-	IDS_CPLDESCRIPTION "Добавить оборудование в компьютер"
-END
-

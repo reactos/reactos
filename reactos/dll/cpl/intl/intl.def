@@ -1,6 +1,0 @@
-LIBRARY intl.cpl
-
-EXPORTS
-CPlApplet
-
-; EOF

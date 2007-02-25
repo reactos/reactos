@@ -1,7 +1,0 @@
-/* $Id$ */
-
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS TCP/IPv4 Win32 Ping\0"
-#define REACTOS_STR_INTERNAL_NAME	"ping\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"ping.exe\0"
-#define REACTOS_STR_ORIGINAL_COPYRIGHT	"Casper S. Hornstrup (chorns@users.sourceforge.net)\0"
-#include <reactos/version.rc>

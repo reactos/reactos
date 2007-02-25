@@ -1,7 +1,0 @@
-; ks.sys - Kernel Streaming
-
-LIBRARY ks.sys
-
-EXPORTS
-KsInitializeDriver@12
-

@@ -1,7 +1,0 @@
-/* $Id$ */
-
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"Security Account Manager interface DLL\0"
-#define REACTOS_STR_INTERNAL_NAME	"samlib\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"samlib.dll\0"
-#include <reactos/version.rc>

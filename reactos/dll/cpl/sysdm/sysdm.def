@@ -1,6 +1,0 @@
-LIBRARY sysdm.cpl
-
-EXPORTS
-CPlApplet
-
-; EOF

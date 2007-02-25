@@ -1,7 +1,0 @@
-LIBRARY SMDLL.DLL
-EXPORTS
-SmCompleteSession@12
-SmConnectApiPort@16
-SmExecuteProgram@8
-SmQueryInformation@20
-SmLookupSubsystem@20

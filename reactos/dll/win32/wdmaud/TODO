@@ -1,4 +1,0 @@
-To-Do:
-- Globally store the heap handle
-- Ensure cleanups are... clean...
-- Clone device info in OPEN/close?

@@ -1,7 +1,0 @@
-Makefile
-config.*
-depends.*
-int.*
-bin.*
-*.win32
-*.win32.zip

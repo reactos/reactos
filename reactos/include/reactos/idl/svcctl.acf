@@ -1,6 +1,0 @@
-[
-   explicit_handle
-]
-interface svcctl
-{
-}
