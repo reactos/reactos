@@ -1,0 +1,651 @@
+/*
+ *  Indonesian language file by Zaenal Mutaqin <ade999 at gmail dot com> 2007-02-15
+ */
+
+#include "windows.h"
+#include "resource.h"
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+STRING_ATTRIB_HELP,    "Menampilkan atau mengubah atribut file.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
+       [/S [/D]]\n\n\
+  +   Menyetel atribut\n\
+  -   Membersihkan atribut\n\
+  R   Atribut file Hanya-baca\n\
+  A   Atribut file Arsip\n\
+  S   Atribut file Sistem\n\
+  H   Atribut file Tersembunyi\n\
+  /S  Proses file yang sama dalam direktori dan semua subdirektori\n\
+      saat ini\n\
+  /D  Proses direktori juga\n\n\
+Ketik ATTRIB tanpa parameter untuk menampilkan atribut dari semua file.\n"
+
+STRING_ALIAS_HELP,  "Menyetel, menghapus atau menampilkan alias.\n\n\
+ALIAS [alias=[command]]\n\n\
+  alias    Nama untuk alias.\n\
+  command  Teks yang disubstitusi untuk alias.\n\n\
+Untuk mendaftar semua alias:\n\
+  ALIAS\n\n\
+Untuk menyetel alias baru atau menimpa yang sudah ada:\n\
+  ALIAS da=dir a:\n\n\
+Untuk menghapus alias dari daftar alias:\n\
+  ALIAS da="
+
+STRING_BEEP_HELP, "Bunyikan speaker.\n\nBEEP\n"
+
+STRING_CALL_HELP, "Memanggil satu program batch dari yang lainnya.\n\n\
+CALL [drive:][path]filename [batch-parameter]\n\n\
+  batch-parameter  Specifies any command-line information required by the\n\
+                   batch program."
+
+STRING_CD_HELP,      "Mengubah direktori saat ini atau menampilkan namanya\n\n\
+CHDIR [/D][drive:][path]\n\
+CHDIR[..|.]\n\
+CD [/D][drive:][path]\n\
+CD[..|.]\n\n\
+  ..   direktori leluhurnya\n\
+  .    direktori saat ini\n\
+  /D   Akan mengubah drive dan direktori saat ini.\n\n\
+Ketik CD drive: untuk menampilkan direktori saat ini pada drive tertentu.\n\
+Ketik CD tanpa parameter untuk menampilkan drive dan direktori saat ini.\n"
+
+STRING_CHCP_HELP,   "Menampilkan atau menyetel nomor halaman kode aktif.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Menetapkan nomor halaman kode yang aktif.\n\n\
+Ketik CHCP tanpa parameter untuk menampilkan nomor halaman kode yang aktif.\n"
+
+STRING_CHOICE_HELP, "Menunggu pengguna untuk memilih satu dari set pilihan.\n\n\
+CHOICE  [/C[:]pilihan][/N][/S][/T[:]c,nn][text]\n\n\
+  /C[:]pilihan  Menetapkan tombol yang dibolehkan. Standarnya YT.\n\
+  /N            Jangan tampilkan pilihan dan ? di akhir prompt string.\n\
+  /S            Perlakukan tombol pilihan sebagai sensitif huruf.\n\
+  /T[:]c,nn     Pilihan standar untuk c setelah nn detik.\n\
+  text          Prompt string untuk ditampilkan.\n\n\
+ERRORLEVEL disetel ke ofset tombol yang ditekan pengguna dalam pilihan.\n"
+
+STRING_CLS_HELP, "Membersihkan layar.\n\nCLS\n"
+
+STRING_CMD_HELP1, "\nPerintah internal yang tersedia:\n"
+
+STRING_CMD_HELP2, "\nFitur yang tersedia:"
+
+STRING_CMD_HELP3,"  [alias]"
+
+STRING_CMD_HELP4,"  [histori]"
+
+STRING_CMD_HELP5,"  [pelengkapan nama file unix]"
+
+STRING_CMD_HELP6,"  [tumpukan direktori]"
+
+STRING_CMD_HELP7,"  [pengalihan dan piping]"
+
+STRING_CMD_HELP8, "Memulai instan baru dari interpreter baris perintah ReactOS.\n\n\
+CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
+  /C command  Menjalankan perintah yang ditetapkan dan mengakhiri.\n\
+  /K command  Menjalankan perintah yang ditetapkan dan tetap tinggal.\n\
+  /P          CMD menjadi permanen dan menjalankan autoexec.bat\n\
+              (tidak bisa diakhiri).\n\
+  /T:bf       Menyetel warna latar belakang/depan (lihat perintah COLOR).\n"
+
+STRING_COLOR_HELP1, "Menyetel warna standar latar belakang dan depan.\n\n\
+COLOR [attr [/-F]] \n\n\
+  attr        Menetapkan atribut warna output konsol\n\
+  /-F         Tidak memenuhi ruang kosong konsol dengan atribut warna\n\n\
+Ada tiga cara untuk menetapkan warna:\n\
+1) [bright] nama pada [bright] nama  (hanya tiga huruf pertama yang dipakai)\n\
+2) desimal pada desimal\n\
+3) dua digit heksa\n\n\
+Warna adalah:\n\
+des heksa nama       des  hex  nama\n\
+0    0    Black       8   8    Abu-Abu(Hitam terang)\n\
+1    1    Blue        9   9    Biru Terang\n\
+2    2    Green      10   A    Hijau Terang\n\
+3    3    Cyan       11   B    Biru Muda Terang\n\
+4    4    Red        12   C    Merah Terang\n\
+5    5    Magenta    13   D    Magenta Terang\n\
+6    6    Yellow     14   E    Kuning Terang\n\
+7    7    White      15   F    Putih Terang\n"
+
+STRING_COPY_HELP1,  "Timpa %s (Ya/Tidak/Semua)? "
+
+STRING_COPY_HELP2, "Mengcopy satu atau lebih file ke lokasi lain.\n\n\
+COPY [/V][/Y|/-Y][/A|/B] sumber [/A|/B]\n\
+     [+ sumber [/A|/B] [+ ...]] [tujuan [/A|/B]]\n\n\
+  sumber       Menetapkan file yang akan dicopy.\n\
+  /A           Menunjukan file teks ASCII.\n\
+  /B           Menunjukan file biner.\n\
+  tujuan       Menetapkan direktori dan/atau nama file untuk file baru.\n\
+  /V           Verifikasi bahwa file yang baru ditulis dengan benar.\n\
+  /Y           Hilangkan pertanyaan untuk konfirmasi anda menimpa\n\
+               file tujuan yang sudah ada.\n\
+  /-Y          Menyebabkan pertanyaan untuk konfirmasi anda menimpa\n\
+               file tujuan yang sudah ada.\n\n\
+Saklar /Y mungkin ada dalam variabel lingkungan COPYCMD.\n\
+...\n"
+
+STRING_DATE_HELP1, "\nMasukkan tanggal baru (mm%cdd%cyyyy): "
+
+STRING_DATE_HELP2, "\nMasukkan tanggal baru (dd%cmm%cyyyy): "
+
+STRING_DATE_HELP3, "\nMasukkan tanggal baru (yyyy%cmm%cdd): "
+
+STRING_DATE_HELP4, "Menampilkan atau menyetel tanggal.\n\n\
+DATE [/T][date]\n\n\
+  /T    hanya menampilkan\n\n\
+Ketik DATE tanpa parameter untuk menampilkan setelan tanggal saat ini dan\n\
+meminta yang baru.  Tekan ENTER untuk membiarkan tanggal tetap sama.\n"
+				
+STRING_DEL_HELP1,  "Menghapus satu atau lebih file.\n\n\
+DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
+DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
+ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
+      file  Menetapkan file yang dihapus.\n\n\
+  /N    Tidak ada.\n\
+  /P    Tanya. Menanyakan sebelum menghapus setiap file.\n\
+  /T    Total. Tampilkan total file dihapus dan ruang disk yang dibebaskan.\n\
+  /Q    Tenang.\n\
+  /W    Hapus. Timpa file dengan angka acak sebelum penghapusan.\n\
+  /Y    Ya. Matikan bahkan *.* tanpa bertanya.\n\
+  /F    Paksa hapus file yang tersembunyi, hanya-baca dan sistem.\n\
+  /S    Hapus file dari semua subdirektori\n\
+  /A    Pilih file yang dihapus berdasarkan atribut.\n\
+        attributes\n\
+        R     File Hanya Baca\n\
+        S     File Sistem\n\
+        A     File Bisa Diarsipkan\n\
+        H     File Tersembunyi\n\
+        -     prefiks berarti tidak\n"
+
+STRING_DEL_HELP2, "Semua file dalam direktori akan dihapus!\nAnda yakin (Y/T)?"
+STRING_DEL_HELP3, "    %lu file dihapus\n"
+STRING_DEL_HELP4, "    %lu file dihapus\n"
+
+STRING_DELAY_HELP, "menunda n detik atau milidetik\n\
+DELAY [/m]n\n\n\
+  /m          menetapkan bahwa n adalah milidetik\n\
+              sebaliknya n adalah detik\n"
+
+STRING_DIR_HELP1, "DIR [drive:][path][filename] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]sortorder]] [/P] [/Q] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
+  [drive:][path][filename]\n\
+              Menetapkan drive, direktori, dan/atau files ke daftar.\n\n\
+  /A          Menampilkan file dengan atribut yang ditetapkan.\n\
+  attributes   D  Direktori                  R  File Hanya-baca\n\
+               H  File tersemunyi            A  File siap diarsipkan\n\
+               S  File Sistem                -  Prefiks berarti tidak\n\
+  /B          Menggunakan format sembarang (tanpa info heading atau ringkasan).\n\
+  /C          Menampikan pemisah ribuan dalam ukuran file.  Ini adlah\n\
+              standar.  Gunakan /-C untuk mematikan tampilan pemisah.\n\
+  /D          Sama seperti lebar tapi file adalah daftar diurut oleh kolom.\n\
+  /L          Menggunakan huruf kecil.\n\
+  /N          Format daftar panjang baru dimana nama file berada jauh di kanan.\n\
+  /O          Daftar file yang diurut berdasarkan sortorder.\n\
+  sortorder    N  Nama (Alfabetik)           S  Ukuran (terkecil pertama)\n\
+               E  Ekstensi (Alfabetik)       D  Tanggal/Jam (terlama pertama)\n\
+               G  Grup direktori pertama     -  Prefiks untuk membalik urutan\n\
+  /P          Menunda setelah setiap layar penuh informasi.\n\
+  /Q          Menampilkan pemilik file.\n\
+  /S          Menampilkan file dalam direktori dan semua subdirektorinya.\n\
+  /T          Mengontrol field waktu mana atau dipakai untuk mengurut\n\
+  timefield   C  Pembuatan\n\
+              A  Terakhir Diakses\n\
+              W  Terakhir Ditulis\n\
+  /W          Menggunakan format daftar lebar.\n\
+  /X          Ini menampilkan nama pendek yang dibuat untuk nama file\n\
+              non-8dot3.  Format yakni /N dengan nama pendek disisipkan\n\
+              sebelum nama panjang. Jika tidak ada nama pendek, kosng\n\
+              ditampilkan dalam tempatnya.\n\
+  /4          Menampilkan tahun empat-digit\n\n\
+Saklar mungkin ada dalam variabel lingkungan DIRCMD.  Membatalkan saklar\n\
+preset dengan mengawali setiap saklar dengan - (minus)--contohnya, /-W.\n"
+
+STRING_DIR_HELP2, " Volume di drive %c adalah %s\n"
+STRING_DIR_HELP3, " Volume di drive %c tidak berlabel.\n"
+STRING_DIR_HELP4, " Nomor Seri Volume adalah %04X-%04X\n"
+STRING_DIR_HELP5, "\n     Total File Didaftar:\n%16i File% 14s byte\n"
+STRING_DIR_HELP6, "%16i Dir% 15s byte\n"
+STRING_DIR_HELP7, "\n Direktori %s\n\n"
+STRING_DIR_HELP8, "%16i File% 14s byte\n"
+
+STRING_DIRSTACK_HELP1, "Menyimpan direktori sekarang untuk digunakan oleh perintah POPD, lalu\n\
+mengubah ke direktori yang ditetapkan.\n\n\
+PUSHD [path | ..]\n\n\
+  path        Menetapkan direktori menjadi direktori sekarang\n"
+
+STRING_DIRSTACK_HELP2, "Mengubah ke direktori yang disimpan oleh perintah PUSHD.\n\nPOPD"
+
+STRING_DIRSTACK_HELP3, "Menampilkan isi tumpukan direktori.\n\nDIRS"
+
+STRING_DIRSTACK_HELP4, "Tumpukan direktori kosong"
+
+STRING_ECHO_HELP1,  "Menampilkan pesan tanpa diakhiri carriage return dan line feed.\n\n\
+  ECHOS pesan"
+
+STRING_ECHO_HELP2,  "Menampilkan pesan ke output kesalahan standar.\n\n\
+  ECHOERR pesan\n\
+  ECHOERR.           menampilkan baris kosong"
+
+STRING_ECHO_HELP3, "Menampilkan pesan ke output kesalahan standar tanpa diakhiri carriage return dan line feed.\n\n\
+  ECHOSERR pesan"
+
+STRING_ECHO_HELP4, "Menampilkan pesan atau menukar perintah echoing on atau off.\n\n\
+  ECHO [ON | OFF]\n\
+  ECHO [pesan]\n\
+  ECHO.             Menampilkan baris kosong\n\n\
+Ketik ECHO tanpa parameter untuk menampilkan setelan ECHO saat ini."
+
+STRING_ECHO_HELP5, "ECHO adalah %s\n"
+
+STRING_EXIT_HELP, "Keluar dari interpreter baris perintah.\n\nEXIT [/b] [ExitCode]\n\n\
+  /B            Keluar dari hanya file batch.  \n\
+                Jika dijalankan di luar file batch ia akan keluar dari cmd.exe\n\
+  ExitCode      Nilai ini akan ditempatkan ke ERRORLEVEL saat keluar\n"
+
+STRING_FOR_HELP1, "Menjalankan perintah yang ditetapkan untuk setiap file dalam set file\n\n\
+FOR %variabel IN (set) DO perintah [parameter]\n\n\
+  %variabel  Menetapkan parameter yang bisa diganti.\n\
+  (set)      Mentetapkan sebuah set dari satu atau lebih file. Wildcards boleh dipakai.\n\
+  perintah   Menetapkan perintah yang dilakukan untuk setiap file.\n\
+  parameter  Menetapkan parameter atau saklar untuk perintah yang dieteapkan.\n\n\
+Untuk menggunakan perintah FOR dalam program batch, tetapkan %%variable daripada\n\
+%variabel.\n"
+
+STRING_FREE_HELP1, "\nVolume di drive %s adalah %-11s\n\
+ Nomor Seri adalah %s\n\
+  %16s byte total ruang disk\n\
+  %16s byte dipakai\n\
+  %16s byte tersisa\n"
+
+STRING_FREE_HELP2, "Menampilkan informasi drive.\n\nFREE [drive: ...]\n"
+
+STRING_IF_HELP1, "Melakukan pemrosesan kondisional dalam program batch.\n\n\
+  IF [NOT] ERRORLEVEL nomor perintah\n\
+  IF [NOT] string1==string2 perintah\n\
+  IF [NOT] EXIST filename perintah\n\
+  IF [NOT] DEFINED variabel perintah\n\n\
+NOT               Menetapkan bahwa CMD harus melakukan hanya perintah jika\n\
+                  kondisi adalah salah\n\
+ERRORLEVEL nomor  Menetapkan kondisi benar jika program terakhir menghasilkan\n\
+                  kode exit sama dengan nomor yang ditetapkan.\n\
+perintah          Menetapkan perintah untuk dilakukan jika kondisi dipenuhi.\n\
+string1==string2  Menetapkan kondisi benar jika string teks yang ditetapkan\n\
+                  sama.\n\
+EXIST filename    Menetapkan kondisi benar jika nama file ada.\n\
+DEFINED variable  Menetapkan kondisi benar jika variabel didefinisikan.\n"
+
+STRING_GOTO_HELP1,  "Mengarahkan CMD ke baris berlabel dalam naskah batch.\n\n\
+GOTO label\n\n\
+  label  Menetapkan string teks yang digunakan dalam naskah batch sebagai label.\n\n\
+Anda mengetik label pada sebuah baris, dimulai dengan titik dua."
+
+STRING_LABEL_HELP1, "Menampilkan atau mengubah label drive.\n\nLABEL [drive:][label]\n"
+
+STRING_LABEL_HELP2, "Volume di drive %c: adalah %s\n"
+STRING_LABEL_HELP3, "Volume di drive %c: tidak berlabel\n"
+STRING_LABEL_HELP4, "Nomor Seri Volume adalah %04X-%04X\n"
+STRING_LABEL_HELP5, "Label Drive (11 Karakter, ENTER jika sudah)? "
+
+STRING_LOCALE_HELP1, "Waktu saat ini"
+
+STRING_MKDIR_HELP,   "Membuat direktori.\n\n\
+MKDIR [drive:]path\nMD [drive:]path"
+
+STRING_MEMMORY_HELP1, "Menampilkan jumlah memori sistem.\n\nMEMORY"
+
+STRING_MEMMORY_HELP2, "\n  %12s%% beban memori.\n\n\
+  %13s byte total fisik RAM.\n\
+  %13s byte fisik RAM tersedia.\n\n\
+  %13s byte total file page.\n\
+  %13s byte file page tersedia.\n\n\
+  %13s byte total memori virtual.\n\
+  %13s byte memori virtual tersedia.\n"
+
+STRING_MISC_HELP1, "Tekan tombol untuk melanjutkan...\n"
+
+STRING_MOVE_HELP1, "Timpa %s (Ya/Tidak/Semua)? "
+
+STRING_MOVE_HELP2, "Memindahkan file dan mengganti nama file dan direktori.\n\n\
+Untuk memindahkan satu atau lebih file:\n\
+MOVE [/N][drive:][path]filename1[,...] tujuan\n\n\
+Untuk mengganti nama direktori:\n\
+MOVE [/N][drive:][path]dirname1 dirname2\n\n\
+  [drive:][path]filename1  Menetapkan lokasi dan nama file\n\
+                           yang ingin anda pindahkan.\n\
+  /N                    Tidak apapun. Lakukan apapun kecuali memindahkan file dan direktori.\n\n\
+Batasan saat ini:\n\
+  - Anda tidak bisa memindahkan file atau direktori dari satu drive ke lainnya.\n"
+
+STRING_MSGBOX_HELP, "menampilkan kotak pesan dan menghasilkan respon pengguna\n\n\
+MSGBOX type ['title'] prompt\n\n\
+type          tombol ditampilkan\n\
+              nilai yang mungkin adalah: OK, OKCANCEL,\n\
+              YESNO, YESNOCANCEL\n\
+title         judul kotak pesan\n\
+prompt        teks ditampilkan dengan kotak pesan\n\n\n\
+ERRORLEVEL disetel berdasarkan tombol yang ditekan:\n\n\
+YA   :  10    |  TIDAK   :  11\n\
+OK   :  10    |  BATAL   :  12\n"
+
+STRING_PATH_HELP1, "Menampilkan atau menyetel path pencarian untuk file executable.\n\n\
+PATH [[drive:]path[;...]]\nPATH ;\n\n\
+Ketik PATH ; untuk membersihkan semua setelan path-pencarian dan shell\n\
+perintah langsung untuk mencari hanya dalam direktori saat ini.\n\
+Ketik PATH tanpa parameter untuk menampilkan path saat ini.\n"
+
+STRING_PROMPT_HELP1, "Mengubah prompt perintah.\n\n\
+PROMPT [teks]\n\n\
+  teks    Menetapkan prompt perintah baru.\n\n\
+Prompt bisa dibuat dari karakter normal dan kode spesial berikut:\n\n\
+  $A   & (Ampersand)\n\
+  $B   | (pipe)\n\
+  $C   ( (Tanda kurung Kiri)\n\
+  $D   Tanggal saat ini\n\
+  $E   Kode Escape (ASCII code 27)\n\
+  $F   ) (Tanda kurung Kanan)\n\
+  $G   > (Tanda lebih-dari)\n\
+  $H   Backspace (menghapus karakter sebelumnya)\n\
+  $L   < (tanda kurang-dari)\n\
+  $N   Drive saat ini\n\
+  $P   Drive dan path saat ini\n\
+  $Q   = (tanda sama dengan)\n\
+  $T   Jam saat ini\n\
+  $V   Nomor versi OS\n\
+  $_   Carriage return dan linefeed\n\
+  $$   $ (tanda dolar)\n"
+
+STRING_PAUSE_HELP1, "Menunda eksekusi file batch dan menampilkan pesan berikut:\n\
+'Tekan tombol untuk melanjutkan...' atau pesan yang dibuat pengguna.\n\n\
+PAUSE [pesan]"
+
+STRING_PROMPT_HELP2, "  $+   Menampilkan kedalaman tumpukan direktori saat ini"
+
+STRING_PROMPT_HELP3, "\nKetik PROMPT tanpa parameter untuk mereset prompt ke setelan standar."
+
+STRING_REM_HELP, "Memulai baris komentar dalam file batch.\n\nREM [Komentar]"
+
+STRING_RMDIR_HELP,   "Menghapus direktori.\n\n\
+RMDIR [drive:]path\nRD [drive:]path\n\
+/S			Menghapus semua file dan folder di dalam target\n\
+/Q			Tidak bertanya pada pengguna\n"
+STRING_RMDIR_HELP2,	"Direktori tidak kosong!\n"
+
+STRING_REN_HELP1, "Mengganti nama file/direktori.\n\n\
+RENAME [/E /N /P /Q /S /T] nama_lama ... nama_baru\n\
+REN [/E /N /P /Q /S /T] nama_lama ... nama_baru\n\n\
+  /E    Tidak ada pesan.\n\
+  /N    Tidak.\n\
+  /P    Menanyakan konfirmasi sebelum mengganti nama setiap file.\n\
+        (Belum diimplementasikan!)\n\
+  /Q    Diam-diam.\n\
+  /S    Mengganti nama subdirektori.\n\
+  /T    Menampilkan jumlah total dari file yang diganti nama.\n\n\
+Catatan bahwa anda tidak bisa menetapkan drive baru atau path untuk\n\
+tujuan anda. Gunakan perintah MOVE untuk keperluan itu.\n"
+
+STRING_REN_HELP2, "    %lu file diganti nama\n"
+
+STRING_REN_HELP3, "    %lu file diganti nama\n"
+		 
+STRING_SHIFT_HELP, "Mengubah posisi parameter yang bisa diganti dalam file batch.\n\n\
+SHIFT [DOWN]"
+
+STRING_SCREEN_HELP, "memindahkan kursor dan secara opsional mencetak teks\n\n\
+SCREEN row col [text]\n\n\
+  row         baris ke mana kursor dipindahkan\n\
+  col         kolom ke mana kursor dipindahkan"
+
+STRING_SET_HELP, "Menampilkan, menyetel, atau menghapus variabel lingkungan.\n\n\
+SET [variable[=][string]]\n\n\
+  variable  Menetapkan nama variabel-lingkungan.\n\
+  string    Menetapkan deretan karakter untuk ditempatkan ke variabel.\n\n\
+Ketik SET tanpa parameter untuk menampilkan variabel lingkungan sekarang.\n"
+
+STRING_START_HELP1, "Memulai sebuah perintah.\n\n\
+START command\n\n\
+  command     Menetapkab perintah yang dilaksanakan.\n\n\
+Untuk saat ini semua perintah dimulai secara asinkronos.\n"
+
+STRING_TITLE_HELP, "Menyetel judul jendela untuk jendela prompt perintah.\n\n\
+TITLE [string]\n\n\
+string       Menetapkan judul untuk jendela prompt perintah.\n"
+
+STRING_TIME_HELP1, "Menampilkan atau menyetel jam sistem.\n\n\
+TIME [/T][time]\n\n\
+  /T    hanya menampilkan\n\n\
+Ketik TIME tanpa parameter untuk menampilkan setelan jam saat ini dan\n\
+meminta yang baru.  Tekan ENTER untuk membiarkan jam tetap sama.\n"
+
+STRING_TIME_HELP2, "Masukkan jam baru: "
+
+STRING_TIMER_HELP1, "Berlalu %d mdetik\n"
+
+STRING_TIMER_HELP2, "Berlalu %02d%c%02d%c%02d%c%02d\n"
+
+STRING_TIMER_HELP3, "mengijinkan penggunaan sepuluh stopwatch.\n\n\
+TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
+  ON          menyetel stopwatch ON\n\
+  OFF         menyetel stopwatch OFF\n\
+  /S          Memisahkan jam. Mengembalikan pemisahan jam stopwatch\n\
+              tanpa mengubah nilainya\n\
+  /n          Menetapkan nomor stopwatch.\n\
+              Stopwatch yang tersedia adalah 0 sampai 9\n\
+              Jika tidak ditetapkan standarnya adalah 1\n\
+  /Fn         Format output\n\
+              n bisa berupa:\n\
+                    0    milidetik\n\
+                    1    hh%cmm%css%cdd\n\n\
+jika tidak ada yang ON, OFF atau /S ditetapkan dalam perintah\n\
+akan menghidupkan/mematikan keadaan stopwatch\n\n"
+
+STRING_TYPE_HELP1, "Menampilkan isi dari file teks.\n\nTYPE [drive:][path]filename \n\
+  /P 		  Menampilkan satu layar output sekali waktu.\n"
+
+STRING_VERIFY_HELP1, "Perintah ini hanya dummy!!\n\
+Menyetel apakah memverifikasi bawa file anda ditulis dengan benar ke\n\
+disk.\n\n\
+VERIFY [ON | OFF]\n\n\
+Ketik VERIFY tanpa parameter untuk menampilkan setelan VERIFY sekarang.\n"
+
+STRING_VERIFY_HELP2, "VERIFY adalah %s.\n"
+
+STRING_VERIFY_HELP3, "Harus menetapkan ON atau OFF."
+
+STRING_VERSION_HELP1, "Menampilkan Displays shell version information\n\n\
+VER [/C][/R][/W]\n\n\
+  /C  Menampilkan penghargaan.\n\
+  /R  Menampilkan informasi redistribusi.\n\
+  /W  menampilkan informasi jaminan."
+
+STRING_VERSION_HELP2, " datang dengan MUTLAK TANPA JAMINAN; untuk lengkapnya\n\
+ketik: 'ver /w'. Program ini adalah software bebas; anda bisa membagikannya\n\
+di bawah kondisi tertentu; ketik 'ver /r' untuk lengkapnya. Ketik 'ver /c'\n\
+untuk daftar penghargaan."
+
+STRING_VERSION_HELP3, "\n Program ini didistribusikan dengan harapan berguna,\n\
+ tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari\n\
+ MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat \n\
+ GNU General Public License untuk lebih jelasnya."
+
+STRING_VERSION_HELP4, "\n Program ini adalah software bebas; anda dapat mendistribusikan dan/atau\n\
+ mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\n"
+
+STRING_VERSION_HELP5, "\nKirim laporan bug ke <ros-dev@reactos.org>.\n\
+Pemutakiran tersedia di: http://www.reactos.org"
+
+STRING_VERSION_HELP6, "\nVersi FreeDOS ditulis oleh:\n"
+
+STRING_VERSION_HELP7, "\nVersi ReactOS ditulis oleh:\n"
+
+STRING_VOL_HELP1, " Volume dalam drive %c: adalah %s"
+STRING_VOL_HELP2, " Volume dalam drive %c: tidak berlabel"
+STRING_VOL_HELP3, " Nomor Seri Volume adalah %04X-%04X\n"
+STRING_VOL_HELP4, "Menampilkan label dan nomor seri volume disk, jika ada.\n\nVOL [drive:]"
+
+STRING_WINDOW_HELP1, "mengubah aspek jendela konsol\n\n\
+WINDOW [/POS[=]left,top,width,heigth]\n\
+              [MIN|MAX|RESTORE] ['title']\n\n\
+/POS          menetapkan penempatan dan dimensi jendela\n\
+MIN           mengecilkan jendela\n\
+MAX           memaksimalkan jendela\n\
+RESTORE       mengembalikan jendela"
+
+STRING_WINDOW_HELP2, "mengubah aspek jendela konsol\n\n\
+ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
+              [MIN|MAX|RESTORE] ['title']\n\n\
+window        tile jendela yang melakukan aksi\n\
+/POS          menetapkan penempatan dan dimensi jendela\n\
+MIN           mengecilkan jendela\n\
+MAX           memaksimalkan jendela\n\
+RESTORE       mengembalikan jendela\n\
+title         judul baru\n"
+
+
+STRING_HELP1, "Daftar semua perintah yang tersedia (+ deskripsi)\n\n\
+  command /?     Untuk informasi lengkap pada perintah tertentu\n\n\
+?        Daftar semua perintah yang tersedia tanpa deskripsi.\n\
+ALIAS    Menyetel, menghapus atau menampilkan alias.\n\
+ATTRIB   Menampilkan atau mengubah atribut file.\n\
+BEEP     Membunyikan speaker.\n\
+CALL     Memanggil program batch dari yang lain.\n\
+CD       Menampilkan nama atau mengubah direktori saat ini.\n\
+CHCP     Menampilkan atau menyetel nomor halaman kode aktif.\n\
+CHOICE   Menunggu pengguna untuk memilih satu dari set pilihan.\n\
+CLS      Membersihkan layar.\n\
+CMD      Memulai instan interpreter perintah ReactOS baru.\n\
+COLOR    Menyetel warna standar latar belakang dan depan konsol.\n\
+COPY     Mengcopy satu atau lebih file ke lokasi lain.\n\
+DATE     Menampilkan atau menyetel tanggal.\n\
+DELETE   Menghapus satu atau lebih file.\n\
+DIR      Menampilkan daftar file dan subdirektori dalam sebuah direktori.\n\
+ECHO     Menampilkan pesan, atau menghidupkan/mematikan echo perintah.\n\
+ERASE    Menghapus satu atau lebih file.\n\
+EXIT     Keluar dari program CMD.EXE (interpreter perintah).\n\
+FOR      Menjalankan perintah tertentu untuk setiap file atau set  file.\n\
+FREE     (bebas) ruang disc.\n\
+GOTO     Melangsungkan interpreter perintah ReactOS ke baris berlabel dalam\n\
+         program batch.\n\
+HELP     Menyediakan informasi Bantuan untuk perintah ReactOS.\n\
+HISTORY  Mendaftarkan semua perintah yang sudah digunakan\n\
+IF       Melakukan pemrosesan kondisional dalam program batch.\n\
+LABEL    Membuat, mengubah, atau menghapus label volume disk.\n\
+MD       Membuat sebuah direktori.\n\
+MKDIR    Membuat sebuah direktori.\n\
+MOVE     Memindahkan satu atau lebih file dari satu direktori ke yang lainnya\n\
+         directory.\n\
+PATH     Menampilkan atau menyetel path pencarian untuk file executable.\n\
+PAUSE    Menunda proses file batch dan menampilkan pesan.\n\
+POPD     Mengembalikan nilai sebelumnya dari direktori saat ini yang\n\
+         disimpan oleh PUSHD.\n\
+PROMPT   Mengubah prompt perintah.\n\
+PUSHD    Menyimpan direktori saat ini lalu mengubahnya.\n\
+RD       Menghapus direktori.\n\
+REM      Merekam komentar (remarks) dalam file batch.\n\
+REN      Mengganti nama file.\n\
+RENAME   Mengganti nama file.\n\
+RMDIR    Menghapus direktori.\n\
+SCREEN   Memindahkan kursor dan secara opsional mencetak teks.\n\
+SET      Menampilkan, menyetel, atau menghapus variabel lingkungan ReactOS.\n\
+SHIFT    Mengangkat posisi parameter yang bisa diganti dalam file batch.\n"
+STRING_HELP2, "START    Memulai jendela terpisah untuk menjalankan perintah atau program tertentu.\n\
+         Menjalankan perintah.\n\
+TIME     Menampilkan atau menyetel jam sistem.\n\
+TIMER    Mengijinkan penggunaan sepuluh stopwatch.\n\
+TITLE    Menyetel judul jendela untuk ses CMD.EXE.\n\
+TYPE     Menampilkan isi dari file teks.\n\
+VER      Menampilkan versi ReactOS.\n\
+VERIFY   Memberitahu ReactOS apakah memverifikasi bahwa file anda ditulis\n\
+         dengan benar ke sebuah disk.\n\
+VOL      Menampilkan label volume disk dan nomor seri.\n"
+
+
+STRING_CHOICE_OPTION,         "YT"
+STRING_COPY_OPTION,           "YTS"
+
+
+STRING_ALIAS_ERROR,          "Baris perintah terlalu panjang setelah ekspansi alias!\n"
+STRING_BATCH_ERROR,          "Kesalaham membuka file batch\n"
+STRING_CHCP_ERROR1,          "Halaman kode aktif: %u\n"
+STRING_CHCP_ERROR4,          "Halaman kode tidak benar\n"
+STRING_CHOICE_ERROR,         "Opsi tidak benar. Format diharapkan: /C[:]options"
+STRING_CHOICE_ERROR_TXT,     "Opsi tidak benar. Format diharapkan: /T[:]c,nn"
+STRING_CHOICE_ERROR_OPTION,  "Opsi tidak benar: %s"
+STRING_MD_ERROR,			 "Subdirektori atau file sudah ada.\n"
+STRING_MD_ERROR2,			 "Path ke folder baru tidak ada.\n"
+STRING_CMD_ERROR1,           "Tidak bisa mengalihkan input dari file %s\n"
+STRING_CMD_ERROR2,           "Kesalahan membuat file termporal untuk pipe data\n"
+STRING_CMD_ERROR3,           "Tidak bisa mengalihkan ke file %s\n"
+STRING_CMD_ERROR4,           "Menjalankan %s...\n"
+STRING_CMD_ERROR5,           "Menjalankan cmdexit.bat...\n"
+STRING_COLOR_ERROR1,         "Warna sama salah! (Latar belakang dan latar depan tidak bisa berwarna sama)"
+STRING_COLOR_ERROR2,         "Kesalahan dalam spesifikasi warna"
+STRING_COLOR_ERROR3,         "Warna %x\n"
+STRING_COLOR_ERROR4,         "warna sama salah!"
+STRING_CONSOLE_ERROR,        "Kesalahan tidak dikenal: %d\n"
+STRING_COPY_ERROR1,          "Salah: Tidak dapat membuka sumber - %s!\n"
+STRING_COPY_ERROR2,          "Salah: Tidak dapat mengcopy ke dirinya sendiri!\n"
+STRING_COPY_ERROR3,          "Kesalahan menulis tujuan!\n"
+STRING_COPY_ERROR4,          "Salah: Belum diimplementasikan!\n"
+STRING_DATE_ERROR,           "Tanggal tidak benar."
+STRING_DEL_ERROR5,           "File %s akan dihapus! "
+STRING_DEL_ERROR6,           "Anda yakin (Y/N)?"
+STRING_DEL_ERROR7,           "Menghapus: %s\n"
+STRING_ERROR_ERROR1,         "Kesalahan tidak dikenal! Kode kesalahan: 0x%lx\n"
+STRING_ERROR_ERROR2,         "Sintaks salah"
+STRING_FOR_ERROR1,           "'in' kurang dalam pernyataan for."
+STRING_FOR_ERROR2,           "tidak ada kurung ditemukan."
+STRING_FOR_ERROR3,           "'do' hilang." 
+STRING_FOR_ERROR4,           "tidak ada perintah setelah 'do'."
+STRING_FREE_ERROR1,          "Drive tidak benar"
+STRING_FREE_ERROR2,          "tak berlabel"
+STRING_GOTO_ERROR1,          "Tidak ada label ditetapkan untuk GOTO"
+STRING_GOTO_ERROR2,          "Label '%s' tidak ditemukan\n"
+
+STRING_MOVE_ERROR1,          "[OK]\n"
+STRING_MOVE_ERROR2,          "[Salah]\n"
+
+STRING_REN_ERROR1,           "MoveFile() gagal. Kesalahan: %lu\n"
+
+STRING_START_ERROR1,         "Tidak ada dukungan batch untuk saat ini!"
+
+STRING_TIME_ERROR1,          "Jam tidak benar."
+
+STRING_TYPE_ERROR1,          "Opsi tidak benar '/%s'\n"
+
+STRING_WINDOW_ERROR1,        "jendela tidak ditemukan"
+
+
+STRING_ERROR_PARAMETERF_ERROR,     "Format parameter tidak benar - %c\n"
+STRING_ERROR_INVALID_SWITCH,       "Saklar tidak benar - /%c\n"
+STRING_ERROR_TOO_MANY_PARAMETERS,  "Terlalu banyak parameter - %s\n"
+STRING_ERROR_PATH_NOT_FOUND,       "Path tidak ditemukan\n"
+STRING_ERROR_FILE_NOT_FOUND,       "File tidak ditemukan\n"
+STRING_ERROR_REQ_PARAM_MISSING,    "Parameter yang diperlukan kurang\n"
+STRING_ERROR_INVALID_DRIVE,        "Spesifikasi drive tidak benar\n"
+STRING_ERROR_INVALID_PARAM_FORMAT, "Format parameter tidak benar - %s\n"
+STRING_ERROR_BADCOMMAND,           "Perintah atau nama file salah\n"
+STRING_ERROR_OUT_OF_MEMORY,        "Kesalahan kekurangan memori.\n"
+STRING_ERROR_CANNOTPIPE,           "Salah!  Tidak bisa melakukan pipe!  Tidak bisa membuka file temporal!\n"
+STRING_ERROR_D_PAUSEMSG,           "Tekan tombol untuk melanjutkan . . ."
+STRING_ERROR_DRIVER_NOT_READY,     "Drive tidak siap"
+
+STRING_PATH_ERROR,                 "CMD: Tidak dalam lingkungan '%s'\n"
+
+STRING_CMD_SHELLINFO,              "\nInterpreter Baris Perintah ReactOS"
+STRING_VERSION_RUNVER,             " berjalan pada %s"
+STRING_COPY_FILE ,                 "        %d file di-copy\n"
+STRING_DELETE_WIPE,                "dihapus"
+STRING_FOR_ERROR,                  "spesifikasi variabel tidak baik."
+STRING_SCREEN_COL,                 "Nilai untuk kolom tidak benar"
+STRING_SCREEN_ROW,                 "Nilai untuk baris tidak benar"
+STRING_TIMER_TIME                  "Timer %d adalah %s: "
+
+STRING_INVALID_OPERAND,            "Operand tidak benar."
+STRING_EXPECTED_CLOSE_PAREN,       "Diharapkan ')'."
+STRING_EXPECTED_NUMBER_OR_VARIABLE,"Nomor  atau nama variabel diharapkan."
+STRING_SYNTAX_COMMAND_INCORRECT,   "Sintaks perintah tidak benar."
+
+}

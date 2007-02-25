@@ -1545,8 +1545,8 @@ LoaderScan:
         if (!Flags)
         {
             /* It wasn't, so just return the data */
-            *ModuleObject = LdrEntry;
-            *ImageBaseAddress = LdrEntry->DllBase;
+            if (ModuleObject) *ModuleObject = LdrEntry;
+            if (ImageBaseAddress) *ImageBaseAddress = LdrEntry->DllBase;
             Status = STATUS_IMAGE_ALREADY_LOADED;
         }
         else

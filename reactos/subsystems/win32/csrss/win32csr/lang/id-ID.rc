@@ -1,0 +1,48 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+IDD_END_NOW DIALOG DISCARDABLE  0, 0, 200, 95
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Akhir Program - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Mengakhiri Program... Harap menunggu",IDC_STATIC,7,7,186,11
+    CONTROL         "Progres",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    7,20,186,13
+    LTEXT           "Jika anda memilih untuk segera mengakhiri program, anda akan kehilangan data yang belum disimpan. Untuk mengakhiri program sekarang, klik Akhiri Sekarang.",
+                    IDC_STATIC,7,40,186,26
+    DEFPUSHBUTTON   "&Akhiri Sekarang",IDC_END_NOW,150,71,43,17
+END
+
+IDD_NOT_RESPONDING DIALOG DISCARDABLE 0, 0, 192, 122
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Mengakhiri Program - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Batal",IDCANCEL,142,98,43,17
+    PUSHBUTTON      "&Akhiri Sekarang",IDC_END_NOW,78,98,43,17
+    LTEXT           "Program ini tidak merespon",IDC_STATIC,7,7,178,8
+    LTEXT           "Untuk kembali ke ReactOS dan memeriksa status program, klik Batal",
+                    IDC_STATIC,7,26,178,16
+    LTEXT           "Jika anda memilih untuk segera mengakhiri program, anda akan kehilangan data yang belum disimpan. Untuk mengakhiri program sekarang, klik Akhiri Sekarang.",
+                    IDC_STATIC,7,53,178,26
+END
+
+STRINGTABLE
+BEGIN
+  IDS_EDIT "Edit"
+  IDS_MARK "Tandai"
+  IDS_COPY "Copy\tEnter"
+  IDS_PASTE "Paste"
+  IDS_SELECTALL "Pilih Semua"
+  IDS_SCROLL "Gulung"
+  IDS_FIND "Cari..."
+  IDS_DEFAULTS "Standar"
+  IDS_PROPERTIES "Properti"
+  IDS_SCROLLHERE "Gulung ke Sini"
+  IDS_SCROLLTOP "Gulung ke Atas"
+  IDS_SCROLLBOTTOM "Gulung ke Bawah"
+  IDS_SCROLLPAGE_UP "Halaman Naik"
+  IDS_SCROLLPAGE_DOWN "Halaman Turun"
+  IDS_SCROLLUP "Gulung Naik"
+  IDS_SCROLLDOWN "Gulung Turun"
+END

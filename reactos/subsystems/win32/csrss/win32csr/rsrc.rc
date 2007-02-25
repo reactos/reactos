@@ -6,4 +6,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1	ICON	DISCARDABLE	res/terminal.ico
 
 #include "lang/en-US.rc"
+#include "lang/id-ID.rc"
 #include "lang/uk-UA.rc"
