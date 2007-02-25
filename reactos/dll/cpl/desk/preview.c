@@ -343,7 +343,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     /* Draw the menu bar */
     DrawMenuBarTemp(hwnd, hdc, &pPreviewData->rcActiveMenuBar,
                     pPreviewData->hMenu,
-                    pPreviewData->hMessageFont);
+                    pPreviewData->hMenuFont);
 
     /* Draw the client area */
     CopyRect(&rc, &pPreviewData->rcActiveClient);
@@ -556,6 +556,30 @@ PreviewWndProc(HWND hwnd,
                 CalculateItemSize(pPreviewData);
                 InvalidateRect(hwnd, NULL, FALSE);
             }
+            break;
+
+        case PVM_SETCAPTIONFONT:
+            CopyMemory(&pPreviewData->lfCaptionFont, (LOGFONT*)lParam, sizeof(LOGFONT));
+            DeleteObject(pPreviewData->hCaptionFont);
+            pPreviewData->hCaptionFont = CreateFontIndirect(&pPreviewData->lfCaptionFont);
+            CalculateItemSize(pPreviewData);
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+
+        case PVM_SETMENUFONT:
+            CopyMemory(&pPreviewData->lfMenuFont, (LOGFONT*)lParam, sizeof(LOGFONT));
+            DeleteObject(pPreviewData->hMenuFont);
+            pPreviewData->hMenuFont = CreateFontIndirect(&pPreviewData->lfMenuFont);
+            CalculateItemSize(pPreviewData);
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+
+        case PVM_SETDIALOGFONT:
+            CopyMemory(&pPreviewData->lfMessageFont, (LOGFONT*)lParam, sizeof(LOGFONT));
+            DeleteObject(pPreviewData->hMessageFont);
+            pPreviewData->hMessageFont = CreateFontIndirect(&pPreviewData->lfMessageFont);
+            CalculateItemSize(pPreviewData);
+            InvalidateRect(hwnd, NULL, FALSE);
             break;
 
         default:

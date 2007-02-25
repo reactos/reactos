@@ -431,6 +431,28 @@ SelectComboByElement(HWND hwnd, INT id, LPARAM lParam)
 }
 
 
+static VOID
+GetSelectedComboText(HWND hwnd, INT id, LPWSTR lpStr)
+{
+    INT nCount;
+//    INT i;
+
+    nCount = SendDlgItemMessage(hwnd, id, CB_GETCURSEL, 0, 0);
+    if (nCount == CB_ERR)
+    {
+        *lpStr = 0;
+        return;
+    }
+
+    nCount = SendDlgItemMessage(hwnd, id, CB_GETLBTEXT, (WPARAM)nCount, (LPARAM)lpStr);
+    if (nCount == CB_ERR)
+    {
+        *lpStr = 0;
+    }
+}
+
+
+
 INT_PTR CALLBACK
 AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -506,6 +528,39 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							case IDX_ACTIVE_BORDER:
 								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCYSIZEFRAME, 0, i);
 								break;
+						}
+					}
+					break;
+
+				case IDC_ADVAPPEARANCE_FONT_C:
+					if (g && HIWORD(wParam) == CBN_SELCHANGE)
+					{
+//						MessageBeep(-1);
+
+						switch (g->CurrentElement)
+						{
+							case IDX_INACTIVE_CAPTION:
+							case IDX_ACTIVE_CAPTION:
+								GetSelectedComboText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C,
+									g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfFaceName);
+								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCAPTIONFONT, 0,
+									(LPARAM)&g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font]);
+								break;
+
+							case IDX_MENU:
+								GetSelectedComboText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C,
+									g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfFaceName);
+								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETMENUFONT, 0,
+									(LPARAM)&g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font]);
+								break;
+
+							case IDX_DIALOG:
+								GetSelectedComboText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C,
+									g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfFaceName);
+								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETDIALOGFONT, 0,
+									(LPARAM)&g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font]);
+								break;
+
 						}
 					}
 					break;
