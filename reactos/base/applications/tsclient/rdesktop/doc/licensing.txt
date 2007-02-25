@@ -1,0 +1,56 @@
+
+To be able to connect to Microsoft Windows 2000 Terminal Services (and
+probably later versions), you'll need to deal with licensing. This is
+complicated. This file is supposed to contain some information about
+how rdesktop works with Microsofts license systems.
+
+There's a lot of information on the MS web site, for example,
+http://support.microsoft.com/default.aspx?scid=kb;EN-US;287687.
+
+From the rdesktop mailing list:
+
+Peter Åstrand <peter@cendio.se>, 2003-02-06
+
+> We are running rdesktop 1.2 on machine A and connects to a Windows 2000
+> Server (machine B). The W2K machine has 5 real licenses installed ("Windows
+> 2000 Terminal Services Client Access License", "Open" type). This can be
+> verifier by using "Terminal Services Licensing". The problem is that all
+> issued licenses have an expire-date. The expire date for the license issued
+> to A was reached today, and no more connections could be made until we
+> changed the client name (by using -n).
+> 
+> We also have another similiar systems, with Linux machine C and W2K server 
+> D. This server has 200 licenses installed of the type "Select". On this 
+> server, the issued licenses seems to be permanent: The expire date is set 
+> to "-", and we have no problem with this system. 
+> 
+> The question of course is why the first system issues license with
+> expiration date, while the second system issues permanent licenses.
+
+
+Darryn Capes-Davis, 2003-02-07
+
+> I have been through the problems and can tell you what is going
+> on. The main difference of Machine B (Server 1) and Machine D (Server
+> 2) is that from what I see Machine B has Service Pack 3 installed and
+> Machine D does not.  You see in Service Pack 3 there was a change made
+> to TS Licencing in that Microsoft introduced a licence recovery
+> mechanism. To cut to the point (I don't know the details) rdesktop 1.2
+> with SAVE_LICENCE defined works fine.  In the new lic method the
+> terminal server expects a valid licence to be presented to renew
+> it. Otherwise it just expires it - and a day later you will see it
+> actually gone (it does housekeeping once a day)! So if SAVE_LICENCE
+> code is not enabled then it just expires and you can't use the licence
+> until it cleans it away - and this is where a little gotcha is - if
+> you move from using an rdesktop without SAVE_LICENCE to one with
+> SAVE_LICENCE then it still won't recover an 'expired' licence. You
+> have to wait for the daily housekeeping to clean it up - this really
+> had me going for half a day or so! This is exactly what happened to
+> you.
+> 
+> The Server pre Spk 3 has the old model where licences never expire. To
+> recover a licence that you never wanted to use again you have to call
+> the Microsoft Clearing House. That's why they introduced the new
+> method. And if you upgrade a Pre Spk3 server to Spk3 then the licences
+> granted still stay with the old method - only new licences granted
+> will use the new expiry method.

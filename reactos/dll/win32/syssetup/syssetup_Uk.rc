@@ -1,0 +1,211 @@
+/*
+ * PROJECT:     System setup
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/win32/syssetup/syssetup_Uk.rc
+ * PURPOSE:     Ukraianian Language File for syssetup
+ * TRANSLATOR:  Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+
+IDD_WELCOMEPAGE DIALOG DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Установка ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ласкаво просимо до майстра установки ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Цей майстер встановлює ReactOS на Ваш комп'ютер. Йому "\
+          "потрібно зібрати деякі відомості про Вас і Ваш комп'ютер "\
+          "щоб установити ReactOS належним чином.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Натисніть 'Далі', щоб продовжити установку.", IDC_STATIC, 115, 169, 195, 17
+END
+
+
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Установка ReactOS"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "Розробники ReactOS хотіли б подякувати наступним Open Source проектам, "\
+                    "що (частково) використовувалися при створенні ReactOS:",
+                    IDC_STATIC,15,7,286,19
+    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL
+    LTEXT           "ReactOS ліцензується по GPL, так що якщо Ви хочете повторно використовувати "\
+                    "або поширювати його (частини), Ви маєте поважати GPL",
+                    IDC_STATIC,15,110,227,19
+    PUSHBUTTON      "&Перегляд GPL...",IDC_VIEWGPL,251,110,50,19
+    LTEXT           "Натисніть 'Далі', щоб продовжити установку.",IDC_STATIC,15,136,
+                    195,17
+END
+
+
+IDD_OWNERPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Установка ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Введіть своє повне ім'я і назву вашої компанії або організації.",
+          IDC_STATIC, 54, 7, 242, 21
+    LTEXT "&Ім'я:", IDC_STATIC, 54, 37, 44, 8
+    EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&Організація:", IDC_STATIC, 54, 57, 44, 8
+    EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+END
+
+
+IDD_COMPUTERPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Установка ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Введіть ім'я Вашого комп'ютера довжиною до 63 символів. "\
+          "Якщо Ви працює в мережі, ім'я Вашого комп'ютера має бути унікальним.",
+          IDC_STATIC, 54, 7, 250, 24
+    LTEXT "&Ім'я комп'ютера:", IDC_STATIC, 54, 38, 75, 8
+    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    LTEXT "Програма установки створить обліковий запис користувача 'Адміністратор', "\
+          "який дає повні права доступу до Вашого комп'ютера.",
+          IDC_STATIC, 54, 57, 250, 25
+    LTEXT "Введіть пароль адміністратора довжиною до 14 символів.",
+          IDC_STATIC, 54, 87, 250, 8
+    LTEXT "&Пароль адміністратора:", IDC_STATIC, 54, 104, 75, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Пі&дтвердження:", IDC_STATIC, 54, 123, 75, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+END
+
+
+IDD_LOCALEPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Установка ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Мова системи має відповідати мові додатків, які ви хочете "\
+          "використовувати. Мова користувача задає формат виведення, "\
+          "чисел, грошових одиниць і дат.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "Для зміни мови системи або мови користувача натисніть 'Налаштувати'.",
+          IDC_STATIC, 53, 60, 184, 8
+    PUSHBUTTON "На&лаштувати...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "Розкладка клавіатури задає символи, що вводяться при натисненні клавіш.",
+          IDC_STATIC, 53, 86, 253, 8
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "Для зміни розкладки клавіатури натисніть 'Налаштувати'.",
+          IDC_STATIC, 53, 126, 184, 8
+    PUSHBUTTON "Нал&аштувати...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+END
+
+
+IDD_DATETIMEPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Установка ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Дата й час", IDC_STATIC, 53, 7, 253, 8
+    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
+            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
+            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    LTEXT "Часовий пояс", IDC_STATIC, 53, 42, 253, 8
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
+             CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "Автомати&чне переведення годинника на літний/зимовий час",
+                 IDC_AUTODAYLIGHT, 53, 124, 201, 10
+END
+
+
+IDD_PROCESSPAGE DIALOG 0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Установка ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
+    LTEXT "", IDC_ITEM, 53, 29, 253, 20
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
+            PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+END
+
+
+IDD_FINISHPAGE DIALOG DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Завершення установки ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Завершення установки ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Ви успішно завершили установку ReactOS.\n\n" \
+          "Після натиснення кнопки 'Завершити' комп'ютер буде перезавантажений.", IDC_STATIC, 115, 40, 195, 100
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
+    LTEXT "Якщо в дисковод вставлений компакт-диск, вийміть його. Потім "\
+          "для перезавантаження Вашого комп'ютера натистніть 'Завершити'.", IDC_STATIC, 115, 169, 195, 17
+END
+
+
+IDD_GPL DIALOG 0, 0, 333, 230
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "GNU General Public License"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL | 
+                    ES_READONLY | WS_VSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,141,209,50,14
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_ACKTITLE         "Підтвердження"
+    IDS_ACKSUBTITLE      "The shoulders ReactOS stands on and license information"
+    IDS_OWNERTITLE       "Налаштування приналежності програм"
+    IDS_OWNERSUBTITLE    "Ці особисті відомості вказують на приналежність програм ReactOS."
+    IDS_COMPUTERTITLE    "Ім'я комп'ютера та пароль адміністратора"
+    IDS_COMPUTERSUBTITLE "Ви маєте вказати ім'я та пароль адміністратора Вашого комп'ютера."
+    IDS_LOCALETITLE      "Мова і стандарти"
+    IDS_LOCALESUBTITLE   "Ви можете налаштувати ReactOS для різних регіонів і мов."
+    IDS_DATETIMETITLE    "Дата й час"
+    IDS_DATETIMESUBTITLE "Встановити правильні дату і час для Вашого комп'ютера."
+    IDS_PROCESSTITLE     "Process page title"
+    IDS_PROCESSSUBTITLE  "Process page subtitle"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMT_WINEFILE    "Запустити Winefile"
+    IDS_CMT_IBROWSER	"Запустити iBrowser"
+    IDS_CMT_GETFIREFOX	"Завантажити/встановити Firefox"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ACCESSORIES     "Допоміжні програми"
+    IDS_CMT_CALC        "Запустити Калькулятор"
+    IDS_CMT_CMD         "Відкрити командний рядок"
+    IDS_CMT_EXPLORER    "Запустити Провідник"
+    IDS_CMT_NOTEPAD     "Запустити Текстовий редактор"
+    IDS_CMT_REGEDIT     "Запустити Редактор реєстра"
+    IDS_CMT_WORDPAD     "Запустити Редактор документів"
+    IDS_CMT_SCREENSHOT  "Зробити знімок екрана"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GAMES		    "Ігри"
+    IDS_CMT_SOLITAIRE	"Solitaire"
+    IDS_CMT_WINEMINE	"Сапер"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_REACTOS_SETUP		    "Установка ReactOS"
+    IDS_UNKNOWN_ERROR           "Невідома помилка"
+    IDS_REGISTERING_COMPONENTS  "Реєстрація компонентів..."
+    IDS_LOADLIBRARY_FAILED	    "LoadLibrary failed: "
+    IDS_GETPROCADDR_FAILED	    "GetProcAddr failed: "
+    IDS_REGSVR_FAILED           "DllRegisterServer failed: "
+    IDS_DLLINSTALL_FAILED	    "DllInstall failed: "
+    IDS_TIMEOUT			        "Timeout during registration"
+    IDS_REASON_UNKNOWN          ""
+END
+
+/* EOF */

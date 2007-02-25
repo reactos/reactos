@@ -1,0 +1,55 @@
+;
+; Exports definition file for portcls.sys
+;
+EXPORTS
+DllInitialize@4
+DllUnload@0
+
+; Adapters (adapter.c)
+PcAddAdapterDevice@20
+PcInitializeAdapterDriver@12
+
+; Factories
+PcNewDmaChannel@20
+PcNewInterruptSync@20
+PcNewMiniport@8
+PcNewPort@8
+PcNewRegistryKey@36
+PcNewResourceList@20
+PcNewResourceSublist@20
+PcNewServiceGroup@8
+
+; Digital Rights Management (drm.c)
+PcAddContentHandlers@12
+PcCreateContentMixed@12
+PcDestroyContent@4
+PcForwardContentToDeviceObject@12
+PcForwardContentToFileObject@8
+PcForwardContentToInterface@12
+PcGetContentRights@8
+
+; IRP Helpers
+PcCompleteIrp@12
+PcDispatchIrp@8
+PcForwardIrpSynchronous@8
+
+; Misc
+PcGetTimeInterval@8
+PcRegisterSubdevice@12
+
+; Physical Connections
+PcRegisterPhysicalConnection@20
+PcRegisterPhysicalConnectionFromExternal@20
+PcRegisterPhysicalConnectionToExternal@20
+
+; Power Management
+PcRegisterAdapterPowerManagement@8
+PcRequestNewPowerState@8
+
+; Properties
+PcCompletePendingPropertyRequest@8
+PcGetDeviceProperty@20
+
+; Timeouts
+PcRegisterIoTimeout@12
+PcUnregisterIoTimeout@12

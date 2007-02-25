@@ -1,0 +1,396 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Bengali resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_BENGALI, LANG_NEUTRAL
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MDIFRAME MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Execute...",                 ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
+        MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
+        MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "S&ide Bar",                   ID_VIEW_SIDE_BAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh\tF5",                ID_REFRESH
+        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "SDI",                         ID_VIEW_SDI
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "New &Window",                 ID_WINDOW_NEW
+        MENUITEM "Cascading\tShift+F5",         ID_WINDOW_CASCADE
+        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
+        MENUITEM "Tile &Vertically\tShift+F4",  ID_WINDOW_TILE_VERT
+        MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
+        MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "&Options",                    ID_TOOLS_OPTIONS
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_DESKTOPBAR MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Settings...",                ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Task Manager...",            ID_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_VOLUME MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Open Volume Control",         ID_TRAY_VOLUME
+        MENUITEM "Adjust Audio Properties",     ID_VOLUME_PROPERTIES
+    END
+END
+
+IDM_NOTIFYAREA MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Show hidden icons",          ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Show Icon &Button",           ID_SHOW_ICON_BUTTON
+        MENUITEM "&Configure Notifications...", ID_CONFIG_NOTIFYAREA
+        MENUITEM "Adjust Date/&Time...",        ID_CONFIG_TIME
+        MENUITEM SEPARATOR
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_SDIFRAME MENU DISCARDABLE 
+BEGIN
+    POPUP "&ev·"
+    BEGIN
+        MENUITEM "&cwiPvjbv...",                ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "&eÜ Kiv",                     ID_FILE_EXIT
+    END
+    POPUP "&cÖ`k©b"
+    BEGIN
+        MENUITEM "&mnvqK ev·",                  ID_VIEW_TOOL_BAR
+        MENUITEM "cvk¦© ev·",                   ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Ae¯’v wb‡`©kK ev·",          ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&cyY:m‡ZR Kiv",               ID_REFRESH
+        MENUITEM "m¤ú~Y© c`©vq",                ID_VIEW_FULLSCREEN
+        MENUITEM "&eûgyLx Kg©‡¶Î",              ID_VIEW_MDI
+    END
+    POPUP "&mnvqK"
+    BEGIN
+        MENUITEM "&wba©vib",                    ID_TOOLS_OPTIONS
+    END
+    POPUP "&mvnvh¨"
+    BEGIN
+        MENUITEM "&we¯—viK m¤ú©‡K...",          ID_ABOUT_EXPLORER
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EXECUTE DIALOG DISCARDABLE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Execute"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,150,10
+    CONTROL         "&Command:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+                    18,60,10
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+                    45,71,12
+    DEFPUSHBUTTON   "&OK",1,158,6,47,14
+    PUSHBUTTON      "&Cancel",2,158,23,47,14
+    PUSHBUTTON      "&Help",254,158,43,47,14
+END
+
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Search Program in Startmenu"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
+    EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
+                    WS_TABSTOP,7,25,186,33
+    PUSHBUTTON      "&Check Entries",IDC_CHECK_ENTRIES,143,7,50,14
+END
+
+IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Desktop Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Please select your prefered icon alignment algorithm:",
+                    IDC_STATIC,7,7,166,8
+    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,25,46,44
+    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,25,46,44
+    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,25,46,44
+    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,25,46,44
+    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,73,46,44
+    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,73,46,44
+    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,73,46,44
+    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,73,46,44
+    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,121,46,44
+    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,121,46,44
+    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,121,46,44
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
+                    WS_TABSTOP,159,121,46,44
+    CONTROL         "Display &Version Number",ID_DESKTOP_VERSION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
+END
+
+IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Taskbar Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "show &clock",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,152,52,10
+    CONTROL         "&hide inactive notification icons",
+                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,174,111,10
+    PUSHBUTTON      "&Notifications...",ID_CONFIG_NOTIFYAREA,153,173,50,14
+END
+
+IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Startmenu Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Configure Notification Icons"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
+                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
+    LTEXT           "&Tooltip Text:",IDC_LABEL1,7,44,40,8
+    EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
+    LTEXT           "W&indow Title:",IDC_LABEL2,7,63,44,8
+    EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
+    LTEXT           "&Module Path:",IDC_LABEL3,7,81,43,8
+    EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
+    GROUPBOX        "&Display Mode",IDC_LABEL4,7,96,157,28
+    CONTROL         "&show",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,15,108,33,10
+    CONTROL         "&hide",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
+                    108,29,10
+    CONTROL         "a&utohide",IDC_NOTIFY_AUTOHIDE,"Button",
+                    BS_AUTORADIOBUTTON,112,108,43,10
+    ICON            "",IDC_PICTURE,173,101,21,20
+    LTEXT           "&Last Change:",IDC_LABEL6,7,132,43,8
+    EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    CONTROL         "sho&w hidden",ID_SHOW_HIDDEN_ICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,56,10
+    DEFPUSHBUTTON   "&OK",IDOK,91,153,50,14,WS_GROUP
+    PUSHBUTTON      "&Cancel",IDCANCEL,151,153,50,14
+END
+
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "cQ›`gZ Kg©‡¶Î wbqš¿b"
+FONT 12, "SutonnyMJ", 0, 0, 0x1
+BEGIN
+    LTEXT           "Avcbvi cQ›`gZ Kg©‡¶Î wba©vib Ki“b :-",IDC_STATIC,23,7,
+                    160,8
+    CONTROL         "&eûgyLx Kg©‡¶Î",IDC_MDI,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,23,31,124,10
+    CONTROL         "&GKgyLx Kg©‡¶Î",IDC_SDI,"Button",BS_AUTORADIOBUTTON,23,
+                    61,118,10
+    CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
+    CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
+    CONTROL         "GKwU Kg©‡¶†Î Dcev· ‡Lvjv",IDC_SEPARATE_SUBFOLDERS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,23,90,135,10
+    LTEXT           "GB wbqgvejx mKj Kg©‡¶‡Îi Rb¨ wbw`©ó n‡e",IDC_STATIC,23,
+                    118,174,22
+    DEFPUSHBUTTON   "&OK",IDOK,48,140,50,10,WS_GROUP
+    PUSHBUTTON      "&evwZj",IDCANCEL,106,140,50,10
+END
+
+IDD_ABOUT_EXPLORER DIALOG DISCARDABLE  0, 0, 199, 106
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About ReactOS Explorer"
+FONT 10, "MS Sans Serif"
+BEGIN
+    LTEXT           "ReactOS Explorer",IDC_ROS_EXPLORER,91,13,104,11
+    LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,104,8
+    LTEXT           "(c) 2003-2005 Martin Fuchs",IDC_STATIC,91,42,104,8
+    LTEXT           "",IDC_WIN_VERSION,91,58,98,22
+    LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,17,84,129,
+                    8
+    CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
+                    154,90,38,12
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "we¯—viK"
+    IDS_START               "Kvh©Kvix ZvwjKv"
+    IDS_LOGOFF              "Log Off..."
+    IDS_SHUTDOWN            "eÜ Kiv..."
+    IDS_LAUNCH              "cwiPvjbv..."
+    IDS_START_HELP          "mvnvh¨"
+    IDS_SEARCH_FILES        "AbymÜvb..."
+    IDS_DOCUMENTS           "Z_¨ fvÛvi"
+    IDS_FAVORITES           "fvj jvMv"
+    IDS_PROGRAMS            "Kg©"
+    IDS_SETTINGS            "wbqš¿b"
+    IDS_EXPLORE             "we¯—vi Kiv"
+    IDS_EMPTY               "(Empty)"
+    IDS_RECENT              "mgmvgwqK Z_¨"
+    IDS_ADMIN               "cÖkvmwbK"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Kvh©Kvix ZvwjKv"
+    IDS_MINIMIZE_ALL        "mKj ev· A`„k¨ Kiv"
+    IDS_DESKTOP_NUM         "‡W¯‹Uc %d"
+    IDS_VOLUME              "AvIqvR"
+    IDS_ITEMS_CUR           "Pjgvb ch©vq"
+    IDS_ITEMS_CONFIGURED    "MVb ˆkwj"
+    IDS_ITEMS_VISIBLE       "m`„k"
+    IDS_ITEMS_HIDDEN        "A`„k¨"
+    IDS_NOTIFY_SHOW         "‡`Lv‡bv"
+    IDS_NOTIFY_HIDE         "jyKv‡bv"
+    IDS_NOTIFY_AUTOHIDE     "Avcbv Avcwb jywK‡q hvIqv"
+    IDS_SHOW_HIDDEN_ICONS   "A`„k¨ cÖwZK ‡`Lv‡bv"
+    IDS_HIDE_ICONS          "cÖwZK jyKv‡bv "
+    IDS_TERMINATE           "‡ivm we¯—viK eÜ Kiv"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "RvjK"
+    IDS_CONNECTIONS         "Rvj‡Ki m¤ú©K"
+    IDS_DRIVES              "wefvM"
+    IDS_SEARCH_COMPUTER     "Kw¤úDUvi AbymÜvb..."
+    IDS_SETTINGS_MENU       "ZvwjKv wba©vib"
+    IDS_CONTROL_PANEL       "wbqš¿b †K›`ª"
+    IDS_PRINTERS            "wcÖ›Uvi (Qvcv hš¿)"
+    IDS_BROWSE              "dvBj wb‡q bvovPvov Kiv"
+    IDS_SEARCH_PRG          "Kg© AbymÜvb...."
+    IDS_ALL_USERS           "mKj e¨enviKvix\\"
+    IDS_SEARCH              "AbymÜvb\n"
+    IDS_ABOUT_EXPLORER      "&we¯—viK m¤ú©‡K..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "You have selected more than one program.\nAre you sure you want to launch all of them?"
+    IDS_DESKTOPBAR_SETTINGS "‡W¯‹Uc wbqš¿b"
+    IDS_DESKTOP             "‡W¯‹Uc"
+    IDS_TASKBAR             "Kvh©Kvix `Û"
+END
+
+#endif    // Bengali resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

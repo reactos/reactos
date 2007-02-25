@@ -1,0 +1,19 @@
+; WSHIRDA.DLL - Windows Sockets 2 IRDA Helper DLL
+
+LIBRARY wshirda.dll
+
+EXPORTS
+
+WSHEnumProtocols@16
+WSHGetProviderGuid@8
+WSHGetSockaddrType@12
+WSHGetSocketInformation@32
+WSHGetWSAProtocolInfo@12
+WSHGetWildcardSockaddr@12
+WSHGetWinsockMapping@8
+WSHIoctl@52
+WSHNotify@20
+WSHOpenSocket@24
+WSHSetSocketInformation@32
+
+; EOF

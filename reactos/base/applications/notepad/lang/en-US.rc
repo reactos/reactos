@@ -1,0 +1,204 @@
+/*
+ *  Notepad (English resources)
+ *
+ *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
+ *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+ID_ACCEL ACCELERATORS
+{
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL 
+    "^O", CMD_OPEN
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+}
+
+MAIN_MENU MENU
+BEGIN
+	POPUP "&File"
+	BEGIN
+		MENUITEM "&New...",           CMD_NEW
+		MENUITEM "&Open\tCtrl+O",     CMD_OPEN
+		MENUITEM "&Save\tCtrl+S",     CMD_SAVE
+		MENUITEM "Save &as...",       CMD_SAVE_AS
+		MENUITEM SEPARATOR
+		MENUITEM "Page Se&tup...",    CMD_PAGE_SETUP
+		MENUITEM "&Print",            CMD_PRINT
+		MENUITEM "P&rinter Setup...", CMD_PRINTER_SETUP
+		MENUITEM SEPARATOR
+		MENUITEM "E&xit",             CMD_EXIT
+	END
+	POPUP "&Edit"
+	BEGIN
+		MENUITEM "&Undo\tCtrl+Z",     CMD_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "Cu&t\tCtrl+X",      CMD_CUT
+		MENUITEM "&Copy\tCtrl+C",     CMD_COPY
+		MENUITEM "&Paste\tCtrl+V",    CMD_PASTE
+		MENUITEM "&Delete\tDel",      CMD_DELETE
+		MENUITEM SEPARATOR
+		MENUITEM "&Find...\tCtrl+F",  CMD_SEARCH
+		MENUITEM "Find &next\tF3",    CMD_SEARCH_NEXT
+		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
+		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
+		MENUITEM SEPARATOR
+		MENUITEM "Select &all\tCtrl+A",       CMD_SELECT_ALL
+		MENUITEM "&Time/Date\tF5",    CMD_TIME_DATE
+	END
+	POPUP "F&ormat"
+	BEGIN
+		MENUITEM "&Wrap long lines",  CMD_WRAP
+		MENUITEM "&Font...",          CMD_FONT
+	END
+	POPUP "&View"
+	BEGIN
+		MENUITEM "Status&bar",    CMD_STATUSBAR
+	END
+	POPUP "&Help"
+	BEGIN
+		MENUITEM "&Contents",         CMD_HELP_CONTENTS
+		MENUITEM "&Search...",        CMD_HELP_SEARCH
+		MENUITEM "&Help on help",     CMD_HELP_ON_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "&About"             CMD_ABOUT
+		MENUITEM "Inf&o",      CMD_ABOUT_WINE
+	END
+END
+
+/* Dialog `Page setup' */
+
+DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Page Setup"
+{
+LTEXT    "&Header:",  0x140,   10, 07, 40, 15
+EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "&Footer:",  0x142,   10, 24, 40, 15
+EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
+
+GROUPBOX "&Margins:",      0x144,     10, 43,160, 45
+LTEXT    "&Left:",        0x145,   20, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Top:",         0x148,    20, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Right:",       0x14B, 100, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Bottom:",      0x14E,100, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+
+DEFPUSHBUTTON "OK",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Cancel",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Help",       0x153,                180, 39, 40, 15, WS_TABSTOP
+}
+
+/* Dialog `Encoding' */
+DIALOG_ENCODING DIALOG 0, 0, 256, 44
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Encoding"
+{
+COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Encoding:",0x155,5,2,41,12
+COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Endlines:",0x156,5,20,41,12
+}
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOG 0,0,165,50
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Goto line"
+{
+EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Line number:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+}
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About ReactOS Notepad"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n",
+                    -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
+    CONTROL         " ",
+                    -1,"Static",0x50000000,8,48,272,11
+    DEFPUSHBUTTON   "Close",IDOK,114,149,44,15,WS_GROUP
+    ICON            IDI_NPICON,-1,12,9,20,30
+    EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
+                    ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+END
+
+STRINGTABLE DISCARDABLE
+{
+STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "Page &s"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
+
+STRING_NOTEPAD,                                 "Notepad"
+STRING_ERROR,                                   "ERROR"
+STRING_WARNING,                                 "WARNING"
+STRING_INFO,                                    "Information"
+
+STRING_UNTITLED,                                "(untitled)"
+
+STRING_ALL_FILES,                               "All files (*.*)"
+STRING_TEXT_FILES_TXT,                  "Text files (*.txt)"
+
+STRING_TOOLARGE,                                "File '%s' is too large for notepad.\n \
+Please use a different editor."
+STRING_NOTEXT,                                  "You didn't enter any text. \
+\nPlease type something and try again"
+STRING_DOESNOTEXIST,                            "File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?"
+STRING_NOTSAVED,                                "File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
+STRING_NOTFOUND,                                        "'%s' can not be found."
+STRING_OUT_OF_MEMORY,                   "Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree \
+memory."
+STRING_CANNOTFIND                               "Cannot find '%s'"
+STRING_ANSI,                                    "ANSI"
+STRING_UNICODE,                                 "Unicode"
+STRING_UNICODE_BE,                              "Unicode (big endian)"
+STRING_UTF8,                                    "UTF-8"
+STRING_CRLF,                                    "Windows"
+STRING_LF,                                      "Unix"
+STRING_CR,                                      "Mac"
+}

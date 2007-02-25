@@ -1,0 +1,47 @@
+/*
+ * Copyright (C) 2004 Eric Kohl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH    "%SystemDrive%\\Dokumente und Einstellungen"
+    IDS_APPDATA        "Anwendungsdaten"
+    IDS_DESKTOP        "Desktop"
+    IDS_FAVORITES      "Favoriten"
+    IDS_STARTMENU      "Startmenü"
+    IDS_PROGRAMS       "Startmenü\\Programme"
+    IDS_ADMINTOOLS     "Startmenü\\Programme\\Verwaltung"
+    IDS_STARTUP        "Startmenü\\Programme\\Autostart"
+    IDS_MYDOCUMENTS    "Eigene Dateien"
+    IDS_MYPICTURES     "Eigene Dateien\\Eigene Bilder"
+    IDS_MYMUSIC        "Eigene Dateien\\Eigene Musik"
+    IDS_MYVIDEOS       "Eigene Dateien\\Eigene Videos"
+    IDS_TEMPLATES      "Vorlagen"
+    IDS_RECENT         "Recent"
+    IDS_SENDTO         "SendTo"
+    IDS_PRINTHOOD      "Druckumgebung"
+    IDS_NETHOOD        "Netzwerkumgebung"
+    IDS_LOCALSETTINGS  "Lokale Einstellungen"
+    IDS_LOCALAPPDATA   "Lokale Einstellungen\\Anwendungsdaten"
+    IDS_TEMP           "Lokale Einstellungen\\Temp"
+    IDS_CACHE          "Lokale Einstellungen\\Temporary Internet Files"
+    IDS_HISTORY        "Lokale Einstellungen\\Verlauf"
+    IDS_COOKIES        "Cookies"
+    IDS_PROGRAMFILES   "%SystemDrive%\\Programme"
+END

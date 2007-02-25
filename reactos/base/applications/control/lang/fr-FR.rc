@@ -1,0 +1,28 @@
+// French language resource file (Heis Spiter, 2006-11-28)
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Fichier"
+    BEGIN
+        MENUITEM "&Fermer",                      IDM_CLOSE
+    END
+    POPUP "&Affichage"
+    BEGIN
+        MENUITEM "Grandes Icônes",                 IDM_LARGEICONS
+        MENUITEM "Petites Icônes",                 IDM_SMALLICONS
+        MENUITEM "Liste",                        IDM_LIST
+        MENUITEM "Détails",                     IDM_DETAILS
+    END
+    POPUP "Aide"
+    BEGIN
+        MENUITEM "À propos",                       IDM_ABOUT
+    END
+END
+

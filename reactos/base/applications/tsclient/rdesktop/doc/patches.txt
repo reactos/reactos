@@ -1,0 +1,340 @@
+This file documents some of all patches for rdesktop, floating around
+the net, and how they are related to the current (CVS) version of
+rdesktop. Things left to do are marked with TBD (To Be Done). 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/Makefile.diff
+Description:
+Makefile changes which makes it possible to compile rdesktop on SunOS
+and OSF1.
+Status:
+Applied (slightly modified)
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/assar_19-7-2.hostlen.patch
+Description:
+Fix for hostnames longer than 30 chars. 
+Status:
+Applied (revision 1.11 of secure.c) 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/backingstore+privatecolormap-for-19-3-9.patch
+Description:
+This adds support for 1) Private color maps (useful for 8 bpp mode)
+and 2) backingstore selection. 
+Status:
+1) is not needed anymore; rdesktop automatically uses Private color
+map in 8 bpp mode. 2) is, as far as I understand, also not
+need. rdesktop automatically uses a software backing store if the
+Xserver does not provide one. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/ben_xwin.c.diff
+Description:
+Fixes for CapsLock and NumLock. 
+Status:
+Not needed anymore, with the new keyboard mapping implementation. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/ctrl1nohang.diff
+Description:
+Fixes problem with ctrl1 hangs. 
+Status:
+Not needed anymore, with the new keyboard mapping implementation. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/downkeypatch.diff
+Description:
+Seems to keep track of the remote modifier status. 
+Status:
+Not needed anymore, with the new keyboard mapping implementation. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/fasttext2+nobackpixmap.patch
+Description:
+(From http://mail.rdesktop.org/archive/2001/msg00218.html):
+
+1) Added --no-backpixmap option to disable the ugly double drawing in
+xwin.c (I have a very robust backing storage in my X, so I don't need
+it ;)
+
+2) More optimizations to text draw (previous fast-text patch was
+included in 192-3-6-2). In text drawing with solid background the
+glyphs are drawn with stippled fill instead of XCopyPlane (runs faster
+on my S3Trio64 with XFree 3.3.6, please test it on other
+configurations to validate this). The WinTach not show any improvement
+with this change, it seems to use all transparent background text
+draws, but with a old PC Magazine Winbench (3.1) doing the scroll text
+test the speed gain is significative.
+
+3) My Previous patch to disable backing storage in fullscreen
+
+Status:
+1) is not relevant any more, since rdesktop only uses backing store if
+the Xserver does not provide backing store. 
+Need to examine if 2) and 3) are still useful. TBD. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/francisco_fix_patblt.html
+Description:
+The colors in patterns drawn with "pattern blt" order was inverted (fg
+& bg). (See the background of the yellow help banners)
+Status:
+Applied (in revision 1.29, 2002/07/14)
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/frank_1linerfix.html
+Description:
+ui_create_glyph was not called with ipattern. 
+Status:
+Applied (in revision 1.29, 2002/07/14). 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/frank_fasttext.patch.txt
+Description:
+Some kind of performence improvements. 
+Status:
+From what I can tell, this patch is no longer necessary. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/hostname-patch
+Description:
+(From http://mail.rdesktop.org/archive/2001/msg00163.html):
+
+rdesktop uses gethostname to figure out the hostname, but gethostname
+under linux returns an error when the hostname is longer than the
+buffer.  This hack gives gethostname a 64 char buffer and then strips
+the first 16 chars or upto the first '.' and puts the result in
+hostname[16].
+
+Status:
+Applied in version 1.10 of rdesktop.c. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/hove-19-7-2endian.diff
+Description:
+Includes a program for testing endianness. 
+Status:
+rdesktop determines endianness at runtime. This patch is not needed
+anymore. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/mmihalik_19-7-3-keyfix-4.patch
+Description:
+Some kind of new alternative keyboard mapping imlementation. 
+Status:
+Not needed anymore, with the new keyboard mapping implementation. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/norbert_fullscreen.patch
+Description:
+Fullscreen mode. 
+Status:
+Applied. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/norbert_percent.txt
+Description:
+Makes is possible to specify RDP geometry based a percent value of the
+current desktop size. 
+Status:
+Not applied. I don't think many people will need this. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/norbert_rdp_tcp_port.diff
+Description:
+Command line tcp port argument. 
+Status:
+Applied. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/patch19-7-2.xyPos.emptyPassword.patch
+Description:
+This patch adds:
+1) Support for empty passwords
+2) Support for asking for password interactively
+3) Support for +<xoff>+<yoff> geometry. 
+
+Status:
+1) and 2) can be solved by the -P parameter; patch not needed. 
+Functionality for 3) is currently missing. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/rdesktop-1.0.0-19-7-1-mmihalik-3.diff
+Description:
+Defines DO_GLYPH() etc. 
+Status:
+As far as I understand, this patch is applied. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/rdesktop-1.0.0-mmihalik-1.diff
+Description:
+Misc drawing changes. 
+Status:
+As far as I understand, this patch is applied. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/rdesktop-1.0.0-pl19-7-2-mmihalik-1.diff
+Description:
+Some kind of new alternative keyboard mapping implementation. 
+Status:
+Not needed anymore, with the new keyboard mapping implementation. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/rdesktop-gmp.patch
+Description:
+Use GMP for RSA crypto. 
+Status:
+Not needed since rdesktop now use OpenSSL for all of the crypto.
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/rdesktop-new_kb.patch
+Description:
+Modifies one of the old keyboard mapping implementations in some way. 
+Status:
+Not needed anymore, with the new keyboard mapping implementation. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/rdesktop-openssl.patch
+Description:
+Support for linking rdesktop with OpenSSL. 
+Status:
+Not needed anymore, rdesktop can optionally use system 
+OpenSSL. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/rdesktop.vncviewer_patch
+Description:
+Hack for making the old (broken) keyboard mapping implementation work
+with the VNC Xserver. 
+Status:
+Not needed anymore, with the new keyboard mapping implementation. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/rdesktop_keymap.patch
+Description:
+Some kind of new alternative keyboard mapping implementation. 
+Status:
+Not needed anymore, with the new keyboard mapping implementation. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/rdp-srvr-19-6-6.diff
+Description:
+Basic RDP server. 
+Status:
+Not applied. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/scroll-to-death-patch.txt
+Description:
+Fixes scroll-to-death problem in Excel and other applications. 
+Status:
+Not needed; fixed in another way in recent versions of rdesktop. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/spark-manpage-patch-19.4
+Description:
+Adds a manual page. 
+Status:
+Not needed; rdesktop contains a manual page now. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/spark-manpage-patch-19.4-1
+Description:
+Adds a manual page. 
+Status:
+Not needed; rdesktop contains a manual page now. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/spark_xinerama-patch2
+Description:
+Adds XINERAMA support to rdesktop. 
+Status:
+Not applied yet. TBD. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/svenni_dis_wmkeybnds.patch
+Description:
+Commandline flag to disable keyboard grabbing. 
+Status:
+Applied. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/svenni_disable_bs_in_x-tiny-patch
+Description:
+Disables backing store for TinyX. 
+Status:
+As far as I understand, this patch is not need any longer. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/vincent_19-7-2.license.patch
+Description:
+TBD
+Status:
+Not yet examined. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/vincent_19-7-2.secure.patch
+Description:
+Fixes a problem during the connection to a French NT4 TSE (a French
+NT4 TSE doesn't use encryptation).
+Status:
+Applied. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/vincent_19-7-3_excel.patch
+Description:
+Makes matrixes appear better, such as those found in Excel/toad etc.
+Status:
+Applied. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/vincent_8bpp.patch
+Description:
+Support a 8bpp display (256 colours). 
+Status:
+An enhanced version is included in rdesktop; this patch is not needed any more. 
+
+
+URL:
+http://bibl4.oru.se/projects/rdesktop/patch19/patches/vpypatch.txt
+Description:
+Various changes for one of the old keyboard stuff. 
+Status:
+Not needed anymore, with the new keyboard mapping implementation. 

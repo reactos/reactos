@@ -1,0 +1,13 @@
+#include "resource.h"
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
+ * Translation done by Vertaald door Eric Janssen
+ */
+
+LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
+STRINGTABLE DISCARDABLE
+{
+IDS_DllNotLoaded,   "LoadLibrary kon '%s' niet laden"
+IDS_MissingEntry, "Entry point:%s\n niet gevonden In %s"
+}

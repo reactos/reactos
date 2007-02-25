@@ -1,0 +1,26 @@
+#include <windows.h>
+#include <commctrl.h>
+#include "resource.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Document Editor\0"
+#define REACTOS_STR_INTERNAL_NAME	  "wordpad\0"
+#define REACTOS_STR_ORIGINAL_FILENAME "wordpad.exe\0"
+//#include <reactos/version.rc>
+
+1 24 DISCARDABLE "manifest.xml"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME   "WordPad"
+  IDS_VERSION   "v0.1"
+END
+
+IDI_ICON ICON "res/wordpad.ico"
+
+/* main toolbar icons */
+IDB_TEXTTOOLBAR BITMAP DISCARDABLE "res/toolbar.bmp"
+
+#include "rsrc.rc"
+
+
+

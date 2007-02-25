@@ -1,0 +1,399 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Ukrainian resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_UKR)
+#ifdef _WIN32
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+#pragma code_page(1251)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MDIFRAME MENU DISCARDABLE 
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Виконати...",                ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "В&ихід",                      ID_FILE_EXIT
+    END
+    POPUP "&Вигляд"
+    BEGIN
+        MENUITEM "&Панель інструментів",        ID_VIEW_TOOL_BAR
+        MENUITEM "&Додаткова панель",           ID_VIEW_EXTRA_BAR
+        MENUITEM "Д&иски",                      ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Вибране",                    ID_VIEW_SIDE_BAR
+        MENUITEM "&Рядок стану",                ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Оновити\tF5",                ID_REFRESH
+        MENUITEM "Повний &екран\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "SDI",                         ID_VIEW_SDI
+    END
+    POPUP "В&ікна"
+    BEGIN
+        MENUITEM "&Нове вікно",                 ID_WINDOW_NEW
+        MENUITEM "&Каскадом\tShift+F5",         ID_WINDOW_CASCADE
+        MENUITEM "&Горизонтально",              ID_WINDOW_TILE_HORZ
+        MENUITEM "&Вертикально\tShift+F4",      ID_WINDOW_TILE_VERT
+        MENUITEM "Упорядкувати автоматично",    ID_WINDOW_AUTOSORT
+        MENUITEM "Упорядкувати &значки",        ID_WINDOW_ARRANGE
+    END
+    POPUP "&Інструменти"
+    BEGIN
+        MENUITEM "&Опції",                      ID_TOOLS_OPTIONS
+    END
+    POPUP "&Довідка"
+    BEGIN
+        MENUITEM "&FAQ(ЧаПи) по Провіднику...", ID_EXPLORER_FAQ
+        MENUITEM "Про &Провідник...",           ID_ABOUT_EXPLORER
+        MENUITEM "Про &ОС...",                  ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_DESKTOPBAR MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Настройки...",               ID_DESKTOPBAR_SETTINGS
+        MENUITEM "Д&испетчер завдань...",       ID_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&Про Провідник...",           ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_VOLUME MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Гучність",                    ID_TRAY_VOLUME
+        MENUITEM "&Властивості звуку",          ID_VOLUME_PROPERTIES
+    END
+END
+
+IDM_NOTIFYAREA MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Відображати приховані значки",  ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Відображати значки на &кнопках", ID_SHOW_ICON_BUTTON
+        MENUITEM "&Н&астройка сповіщень...",       ID_CONFIG_NOTIFYAREA
+        MENUITEM "&Настройка дати й часу...",      ID_CONFIG_TIME
+        MENUITEM SEPARATOR
+        MENUITEM "&Про Провідник...",              ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_SDIFRAME MENU DISCARDABLE 
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Виконати...",                ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "В&ихід",                      ID_FILE_EXIT
+    END
+    POPUP "&Вигляд"
+    BEGIN
+        MENUITEM "&Панель інструментів",        ID_VIEW_TOOL_BAR
+        MENUITEM "&Вибране",                    ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Рядок стану",                ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Оновити\tF5",                ID_REFRESH
+        MENUITEM "Повний &екран\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI",                        ID_VIEW_MDI
+    END
+    POPUP "&Інструменти"
+    BEGIN
+        MENUITEM "&Опції",                      ID_TOOLS_OPTIONS
+    END
+    POPUP "&Довідка"
+    BEGIN
+        MENUITEM "&FAQ(ЧаПи) по Провіднику...", ID_EXPLORER_FAQ
+        MENUITEM "Про &Провідник...",           ID_ABOUT_EXPLORER
+        MENUITEM "Про &ОС...",                  ID_ABOUT_WINDOWS
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EXECUTE DIALOG DISCARDABLE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Виконати"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,150,10
+    CONTROL         "&Команда:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+                    18,60,10
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+                    45,71,12
+    DEFPUSHBUTTON   "&OK",1,158,6,47,14
+    PUSHBUTTON      "&Скасувати",2,158,23,47,14
+    PUSHBUTTON      "&Довідка",254,158,43,47,14
+END
+
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Пошук програми в меню Пуск"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Фільтр:",IDC_STATIC,7,9,18,8
+    EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
+                    WS_TABSTOP,7,25,186,33
+    PUSHBUTTON      "&Перевірити",IDC_CHECK_ENTRIES,143,7,50,14
+END
+
+IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Властивості робочого стола"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Оберіть найбільш зручний для вас алгоритм вирівнювання значків:",
+                    IDC_STATIC,7,7,166,8
+    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,25,46,44
+    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,25,46,44
+    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,25,46,44
+    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,25,46,44
+    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,73,46,44
+    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,73,46,44
+    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,73,46,44
+    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,73,46,44
+    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,121,46,44
+    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,121,46,44
+    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,121,46,44
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
+                    WS_TABSTOP,159,121,46,44
+    CONTROL         "Відображати Номер &Версії",ID_DESKTOP_VERSION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
+END
+
+IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Властивості панелі завдань"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Відобра&жати годинник",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,152,52,10
+    CONTROL         "При&ховувати невикористовувані значки",
+                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,174,111,10
+    PUSHBUTTON      "&Сповіщення...",ID_CONFIG_NOTIFYAREA,153,173,50,14
+END
+
+IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Властивості меню Пуск"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Конфігурація значків сповіщень"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
+                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
+    LTEXT           "&Текст Підказки:",IDC_LABEL1,7,44,40,8
+    EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
+    LTEXT           "Заголовок В&ікна:",IDC_LABEL2,7,63,44,8
+    EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
+    LTEXT           "&Шлях до Модуля:",IDC_LABEL3,7,81,43,8
+    EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
+    GROUPBOX        "&Режим Відображення",IDC_LABEL4,7,96,157,28
+    CONTROL         "&показати",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,15,108,33,10
+    CONTROL         "&сховати",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
+                    108,29,10
+    CONTROL         "а&втоприховання",IDC_NOTIFY_AUTOHIDE,"Button",
+                    BS_AUTORADIOBUTTON,112,108,43,10
+    ICON            "",IDC_PICTURE,173,101,21,20
+    LTEXT           "&Остання зміна:",IDC_LABEL6,7,132,43,8
+    EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    CONTROL         "пока&зати приховане",ID_SHOW_HIDDEN_ICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,56,10
+    DEFPUSHBUTTON   "&OK",IDOK,91,153,50,14,WS_GROUP
+    PUSHBUTTON      "&Скасувати",IDCANCEL,151,153,50,14
+END
+
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Оберіть режим вікон Провідника"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LTEXT           "Оберіть найбільш зручний для вас інтерфейс провідника:",
+                    IDC_STATIC,7,7,160,8
+    CONTROL         "&MDI (багатодокументний)",IDC_MDI,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10
+    CONTROL         "&SDI (однодокументний)",IDC_SDI,"Button",
+                    BS_AUTORADIOBUTTON,7,62,118,10
+    CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
+    CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
+    CONTROL         "Відкривати підпапки в о&кремих вікнах",
+                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,90,135,10
+    LTEXT           "Ці настройки будуть використані як значення за замовчуванням для всіх вікон провідника в майбутньому.",
+                    IDC_STATIC,7,111,174,22
+    DEFPUSHBUTTON   "&OK",IDOK,29,136,50,14,WS_GROUP
+    PUSHBUTTON      "&Скасувати",IDCANCEL,106,136,50,14
+END
+
+IDD_ABOUT_EXPLORER DIALOG DISCARDABLE  0, 0, 199, 106
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Про Провідник ReactOS"
+FONT 10, "MS Sans Serif"
+BEGIN
+    LTEXT           "Провідник ReactOS",IDC_ROS_EXPLORER,91,13,104,11
+    LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,104,8
+    LTEXT           "(c) 2003-2005 Martin Fuchs",IDC_STATIC,91,42,104,8
+    LTEXT           "",IDC_WIN_VERSION,91,58,98,22
+    LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,17,84,129,
+                    8
+    CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
+                    154,90,38,12
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "Провідник ReactOS"
+    IDS_START               "Пуск"
+    IDS_LOGOFF              "Вихід із системи..."
+    IDS_SHUTDOWN            "Вимкнення..."
+    IDS_LAUNCH              "Виконати..."
+    IDS_START_HELP          "Довідка"
+    IDS_SEARCH_FILES        "Пошук..."
+    IDS_DOCUMENTS           "Документи"
+    IDS_FAVORITES           "Вибране"
+    IDS_PROGRAMS            "Програми"
+    IDS_SETTINGS            "Настройки"
+    IDS_EXPLORE             "Огляд"
+    IDS_EMPTY               "(Порожньо)"
+    IDS_RECENT              "Недавні документи"
+    IDS_ADMIN               "Адміністрування"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Меню Пуск"
+    IDS_MINIMIZE_ALL        "згорнути всі вікна"
+    IDS_DESKTOP_NUM         "Робочий Стіл %d"
+    IDS_VOLUME              "Гучність"
+    IDS_ITEMS_CUR           "поточні елементи"
+    IDS_ITEMS_CONFIGURED    "конфігурація"
+    IDS_ITEMS_VISIBLE       "видимий"
+    IDS_ITEMS_HIDDEN        "прихований"
+    IDS_NOTIFY_SHOW         "показати"
+    IDS_NOTIFY_HIDE         "сховати"
+    IDS_NOTIFY_AUTOHIDE     "автоприховання"
+    IDS_SHOW_HIDDEN_ICONS   "Показати приховані значки"
+    IDS_HIDE_ICONS          "Сховати значки"
+    IDS_TERMINATE           "Завершити роботу Провідника"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "Мережа"
+    IDS_CONNECTIONS         "Мережні підключення"
+    IDS_DRIVES              "Диски"
+    IDS_SEARCH_COMPUTER     "Пошук комп’ютера..."
+    IDS_SETTINGS_MENU       "Меню Настройка"
+    IDS_CONTROL_PANEL       "Панель керування"
+    IDS_PRINTERS            "Принтери"
+    IDS_BROWSE              "Огляд файлів"
+    IDS_SEARCH_PRG          "Пошук програми..."
+    IDS_ALL_USERS           "Всі користувачі\\"
+    IDS_SEARCH              "Пошук"
+    IDS_ABOUT_EXPLORER      "&Про Провідник..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "Ви обрали більше однієї програми.\nВи впевнені, що хочете запустити їх всі?"
+    IDS_DESKTOPBAR_SETTINGS "Настройки робочого стола"
+    IDS_DESKTOP             "Робочий Стіл"
+    IDS_TASKBAR             "Панель завдань"
+END
+
+#endif    // Ukrainian resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

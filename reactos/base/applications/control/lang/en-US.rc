@@ -1,0 +1,28 @@
+// English language resource file (frik85, 2005-03-08)
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Close",                      IDM_CLOSE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Large Icons",                 IDM_LARGEICONS
+        MENUITEM "Small Icons",                 IDM_SMALLICONS
+        MENUITEM "List",                        IDM_LIST
+        MENUITEM "Details",                     IDM_DETAILS
+    END
+    POPUP "Help"
+    BEGIN
+        MENUITEM "About",                       IDM_ABOUT
+    END
+END
+

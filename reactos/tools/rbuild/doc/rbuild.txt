@@ -1,0 +1,538 @@
+ReactOS Build System Documentation
+==================================
+
+Building ReactOS
+----------------
+To generate GNU make makefiles and building ReactOS do the following:
+
+	1) Go to the top-level reactos directory
+	2) Run the command: mingw32-make
+
+This will start building ReactOS.
+
+To build a bootable CD run the following command:
+
+	mingw32-make bootcd
+
+This will create ReactOS.iso in the top-level reactos directory.
+
+
+Top-level XML Build File
+------------------------
+The top-level xml build file (ReactOS.rbuild) is processed by rbuild. The following is an example of how it could look like:
+
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<project name="ReactOS" makefile="Makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<xi:include href="config.rbuild">
+		<xi:fallback>
+			<xi:include href="config.template.rbuild" />
+		</xi:fallback>
+	</xi:include>
+
+	<define name="_M_IX86" />
+	<if property="DBG" value="1">
+		<define name="DBG" value="1" />
+		<property name="DBG_OR_KDBG" value="true" />
+	</if>
+
+	<include base="ReactOS">include</include>
+
+	<directory name="boot">
+		<xi:include href="boot/boot.rbuild" />
+	</directory>
+
+	<module name="bootcd" type="iso">
+	</module>
+</project>
+
+
+xi:include
+----------
+It is possible to split an xml build file over several files. The include element in the xi namespace is used to accomplish this.
+
+Syntax:
+	<xi:include href="config.rbuild">
+		<xi:fallback>
+			<xi:include href="config.template.rbuild" />
+		</xi:fallback>
+	</xi:include>
+
+Attributes:
+	href - Name of xml build file to include. The filename is relative to the location of the current xml build file.
+
+Value:
+	None.
+
+Elements:
+	xi:fallback
+
+
+xi:fallback
+-----------
+This element is used to provide the name of an alternate file that is to be included if the first include file did not exists.
+
+Attributes:
+	None.
+
+Value:
+	None.
+
+Elements:
+	xi:include.
+
+
+Project element
+---------------
+There can be one project per top-level XML build file. A project can only be defined in a top-level xml build file.
+
+Syntax:
+	<project name="ReactOS" makefile="Makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
+		...
+	</project>
+
+Attributes:
+	name - Name of the project.
+	makefile - Filename of the GNU makefile that is to be created.
+
+Value:
+	None.
+
+Elements:
+	define, directory, if, include, module, property
+
+
+Module element
+--------------
+There can be zero or more modules per xml build file.
+
+Syntax:
+	<module if="${MP}" ifnot="${MP}" name="msvcrt" type="win32dll" extension=".dll" entrypoint="_DllMain@12" baseaddress="0x70000000" mangledsymbols="true" installbase="system32" installname="msvcrt.dll" usewrc="false" allowwarnings="true" aliasof="module1">
+		...
+	</module>
+
+Attributes:
+	if - If the value is 1, then the module is enabled, otherwise it is disabled. A disabled module is not processed.
+	ifnot - If the value is 1, then the module is disabled, otherwise it is enabled. A disabled module is not processed.
+	name - Name of the module. Also the base name of the generated file if such file is generated for the particular module type.
+	type - Type of module. See below for an explanation of module types.
+	extension - Extension of the generated file if such file is generated for the particular module type.
+	entrypoint - Entrypoint symbol of the generated file if such file is generated for the particular module type.
+	baseaddress - Base address of the generated file if such file is generated for the particular module type.
+	mangledsymbols - Controls wether or not to pass --kill-at to dlltool. If this attribute has the value false then --kill-at is passed to dlltool. If the value is true, then --kill-at is not passed to dlltool. If the generated file exports C++ classes then this need to be true.
+	installbase - Base directory of the generated file in the installation directory. This attribute is optional.
+	installname - Name of generated file in the installation directory. This attribute is optional, but if not specified, the generated file is not copied to the installation directory.
+	usewrc - Use WRC to compile resources if true. If false, windres is used. This attribute is optional. If not specified, WRC will be used.
+	allowwarnings - Error out if false and at least one warning is emitted during building of this module. This attribute is optional. If not specified, it is assumed to be false.
+	aliasof - Name of module that is aliased.
+Value:
+	None.
+
+Elements:
+	autoregister, bootstrap, component, compilationunit, define, dependency, directory, file, if, importlibrary, include, invoke, library, linkerscript, property.
+
+
+Module types
+------------
+The module type determines the actions that is to be carried out to process the module. The defined module types are seen below:
+	buildtool - Builds a tool that can be run (invoked) when building ReactOS. Default extension is .exe when building on Windows and nothing when building on Linux. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+	staticlibrary - Builds a static library containing object files that can be linked together with other modules. Default extension is .a. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+	objectlibrary - Builds object files that can be linked together with other modules. Default extension is .o. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+	kernel - Builds ntoskrnl.exe. Default extension is .exe. Default entrypoint is _NtProcessStartup. 
+	kernelmodedll - Builds a kernel-mode DLL. Default extension is .dll. Default entrypoint is _DriverEntry@8.
+	kernelmodedriver - Builds a kernel-mode driver. Default extension is .sys. Default entrypoint is _DriverEntry@8.
+	nativedll - Builds a native DLL. Default extension is .dll. Default entrypoint is _DllMainCRTStartup@12.
+	win32dll - Builds a Win32 DLL. Default extension is .dll. Default entrypoint is _DllMain@12.
+	win32cui - Builds a Win32 console executable. Default extension is .exe. Default entrypoint is _mainCRTStartup. The baseaddress module attribute is not applicable for this module type.
+	win32gui - Builds a Win32 GUI executable. Default extension is .exe. Default entrypoint is _WinMainCRTStartup. The baseaddress module attribute is not applicable for this module type.
+	bootloader - Builds a bootloader. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+	bootsector - Builds one or more bootsector binaries. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+	iso - Builds a bootable CD. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+	test - Builds a testsuite. Default extension is .exe. Default entrypoint is _mainCRTStartup. The baseaddress module attribute is not applicable for this module type.
+	rpcserver - Generates and builds server code for an RPC interface. Default extension is .o. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+	rpcclient - Generates and builds client code for an RPC interface. Default extension is .o. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+	alias - Module is an alias for another module. This module type is the only module type for which the aliasof attribute is applicable. Only the module install functionality is aliased.
+
+
+Autoregister element
+--------------------
+An autoregister element specifies that the generated executable should be registered in the registry during second stage setup.
+
+Syntax:
+	<autoregister infsection="OleControlDlls" type="Both" />
+
+Attributes:
+	infsection - Name of section in syssetup.inf.
+	type - Type of registration. Can be either DllRegisterServer, DllInstall, or Both.
+
+Value:
+	None.
+
+Elements:
+	None.
+
+
+Bootstrap element
+-----------------
+A bootstrap element specifies that the generated file should be put on the bootable CD as a bootstrap file.
+
+Syntax:
+	<bootstrap base="reactos" nameoncd="halmp.dll" />
+
+Attributes:
+	base - Put file in this directory on the bootable CD. This attribute is optional.
+	nameoncd - Name of file on the bootable CD. This attribute is optional.
+
+Value:
+	None.
+
+Elements:
+	None.
+
+
+CDFile element
+--------------
+A cdfile element specifies the name of a file that is to be put on the bootable CD.
+
+Syntax:
+	<cdfile base="reactos" nameoncd="ReadMe.txt">ReadMe.txt</cdfile>
+
+Attributes:
+	base - Put file in this directory on the bootable CD. This attribute is optional.
+	nameoncd - Name of file on the bootable CD. This attribute is optional.
+
+Value:
+	Name of file.
+
+Elements:
+	None.
+
+
+CompilationUnit element
+-----------------------
+A compilationunit element specifies that one or more source code files are to be compiled as a single compilation unit.
+
+Syntax:
+	<compilationunit name="kernel32.c">
+		...
+	</compilationunit>
+
+Attributes:
+	name - Name of generated source code file.
+
+Value:
+	None.
+
+Elements:
+	directory, file, if.
+
+
+Component element
+-----------------
+A component element specifies that imports from a library are to be stubbed so tests can be run without actually calling the functions in the library. This element can only be used for modules of type test.
+
+Syntax:
+	<component name="ntdll.dll">
+		...
+	</component>
+
+Attributes:
+	name - Name of library.
+
+Value:
+	None.
+
+Elements:
+	Symbol.
+
+
+Symbol element
+--------------
+A symbol element specifies an imported function from a library that is to be stubbed so tests can be run without actually calling the function in the library.
+
+Syntax:
+	<symbol newname="RtlAllocateHeap">HeapAlloc@12</symbol>
+
+Attributes:
+	newname - New name of symbol. This attribute is optional.
+
+Value:
+	Name of symbol.
+
+Elements:
+	None.
+
+
+Define element
+--------------
+A define element specifies the name and (optionally) value of a define for the C/C++ compiler and resource compiler.
+
+Syntax:
+	<define name="WINVER">0x501</define>
+
+Attributes:
+	name - Name of define.
+
+Value:
+	Value of define. The value is optional.
+
+Elements:
+	None.
+
+
+Dependency element
+------------------
+A dependency element specifies the name of a module (usually of type buildtool) that is to be processed before the current module.
+
+Syntax:
+	<dependency>OtherModule</dependency>
+
+Attributes:
+	None.
+
+Value:
+	Name of module.
+
+Elements:
+	None.
+
+
+Directory element
+-----------------
+A directory element specifies the name of a subdirectory.
+
+Syntax:
+	<directory name="MyDirectory">
+		...
+	</directory>
+
+Attributes:
+	name - Name of directory.
+
+Value:
+	None.
+
+Elements:
+	cdfile, directory, file, if, property.
+
+
+File element
+------------
+A file element specifies the name of a file that is to be processed.
+
+Syntax:
+	<file>MyFile.c</file>
+
+Attributes:
+	None.
+
+Value:
+	Name of file.
+
+Elements:
+	None.
+
+
+If element
+----------
+An if element allows for conditional processing of other elements.
+
+Syntax:
+	<if property="DBG" value="1">
+		...
+	</if>
+
+Attributes:
+	property - Name of the property that is to be evaluated.
+	value - Value to compare to the value of the property. If the property has the specified value, then the subelements are processed.
+
+Value:
+	None.
+
+Elements:
+	compilationunit, compilerflag, define, directory, file, if, include, property.
+
+
+Importlibrary element
+---------------------
+An importlibrary element specifies that an import library should be generated which other modules can use to link with the current module.
+
+Syntax:
+	<importlibrary definition="MyModule.def" />
+
+Attributes:
+	definition - Filename of definition file (.def) used to generate the import library. The filename is relative to the current module.
+
+Value:
+	None.
+
+Elements:
+	None.
+
+
+Include element
+---------------
+An include element specifies an include directory for the C/C++ compiler and resource compiler.
+
+Syntax:
+	<include base="MyLibraryModule">include</include>
+
+Attributes:
+	base - Module or project which the value of this element is relative to. This attribute is optional. If left out, the include directory is relative to the position of the top-level xml build file.
+
+Value:
+	Relative include directory.
+
+Elements:
+	None.
+
+
+Installfile element
+-------------------
+An installfile element specifies the name of a file that is to be installed when using 'make install'.
+
+Syntax:
+	<installfile base="reactos" newname="ReadMe.txt">ReadMe.txt</installfile>
+
+Attributes:
+	base - Put file in this directory within the install directory. This attribute is optional.
+	newname - Name of file within the install directory. This attribute is optional.
+
+Value:
+	Name of file.
+
+Elements:
+	None.
+
+
+Invoke element
+--------------
+An invoke element specifies the name of a module which is to be executed before the current module is processed.
+
+Syntax:
+	<invoke module="wmc">
+		<input>
+			<inputfile>ntoskrnl.mc</inputfile>
+		</input>
+		<output>
+			<outputfile switches="-H">../include/reactos/bugcodes.h</outputfile>
+			<outputfile switches="-o">bugcodes.rc</outputfile>
+		</output>
+	</invoke>
+
+Attributes:
+	None.
+
+Value:
+	Name of the module to execute.
+
+Elements:
+	input, output.
+
+
+Input element
+-------------
+An input element specifies a group of filenames that is to be passed as parameters to a build tool. Input filename parameters are located after output filename parameters on the command line. 
+
+Attributes:
+	None.
+
+Value:
+	None.
+
+Elements:
+	inputfile.
+
+
+Inputfile element
+-----------------
+An inputfile element specifies a filename that is to be passed as a parameter to a build tool.
+
+Attributes:
+	switches - Switches that is passed as parameters just before the filename. This attribute is optional.
+
+Value:
+	Name of file that is to be passed as a parameter to the build tool.
+
+Elements:
+	None.
+
+
+Output element
+--------------
+An output element specifies a group of filenames that is to be passed as parameters to a build tool. Output filename parameters are located before input filename parameters on the command line. 
+
+Attributes:
+	None.
+
+Value:
+	None.
+
+Elements:
+	outputfile.
+
+
+Outputfile element
+------------------
+An outputfile element specifies a filename that is to be passed as a parameter to a build tool.
+
+Attributes:
+	switches - Switches that is passed as parameters just before the filename. This attribute is optional.
+
+Value:
+	Name of file that is to be passed as a parameter to the build tool.
+
+Elements:
+	None.
+
+
+Library
+-------
+An importlibrary element specifies the name of another module which is to be linked with the current module.
+
+Syntax:
+	<library>MyLibraryModule</library>
+
+Attributes:
+	None.
+
+Value:
+	Name of the module to link with.
+
+Elements:
+	None.
+
+
+Linkerscript
+------------
+A linkerscript element specifies the filename of a binutils linker script.
+
+Syntax:
+	<linkerscript base="mymodule">MyLinkerScript</linkerscript>
+
+Attributes:
+	base - Module which the value of this element is relative to. This attribute is optional. If left out, the linker script is relative to the position of the top-level xml build file.
+
+Value:
+	Relative linker script filename.
+
+Elements:
+	None.
+
+
+Property
+--------
+A property element specifies the name and value of a property that can be used for conditional processing of the xml build file.
+
+Syntax:
+	<property name="mypropertyname" value="mypropertyvalue" />
+
+Attributes:
+	name - Name of property.
+	value - Value of property.
+
+Value:
+	None.
+
+Elements:
+	None.

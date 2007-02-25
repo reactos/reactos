@@ -1,0 +1,14 @@
+LIBRARY mstscax.dll
+
+EXPORTS
+	; OLE inproc server
+	DllGetClassObject PRIVATE
+	DllCanUnloadNow   PRIVATE
+	
+	; OLE self-registration
+	; TODO
+	
+	; Private APIs
+	DllGetTscCtlVer
+
+; EOF

@@ -1,0 +1,86 @@
+rdesktop (1.?.?)
+  * SeamlessRDP - seamless windows support
+  * Keymap fixes
+  * Fix connection issues with Windows XP RTM
+  * Keyboard handling improvements and fixes
+  * SGI/Irix sound-driver fixes
+  * Support for clipboard INCR protocol
+  * Session Directory support (patch from Brian Chapeau <lheria@users.sourceforge.net>)
+  * Support for long filenames on redirected drives
+  * XOR ellipse drawing fix
+  * Clipboard unicode support (Ilya Konstantinov)
+  * Refactoring of color depth code (Ilya Konstantinov)
+
+rdesktop (1.4.1)
+   * persistent bitmap cache optimisations
+   * support for more RDP-orders (ellipse, polygon)
+   * libao sound-driver (for Mac OSX and others)
+   * Unicode support for transmitted strings/filenames
+   * Added korean keymap
+   * Xembed fixes to work with krdc correctly
+   * Portability fixes
+   * Support for RDP-compression (all bpps)
+   * process RDP recv queue if send queue is full (Debian bug #246461)
+   * SGI/Irix sound-driver fixes
+
+  -- Michael Gernoth <michael@gernoth.net>  Sun, 8 May 2005 19:55:35 +0200 (CEST)
+
+rdesktop (1.4.0)
+   * Basic disk-, parallel-, printer- and serial-redirection
+   * Fix timezone-redirection
+   * Backing-store fixes
+   * Fix client-IP sent to TS
+   * XEmbed support for embedding rdesktop in other applications (KRDC)
+   * Support for setting the RDP5 experience
+   * Keyboard and keymap fixes
+   * Performance improvements
+   * Report disconnect-reason
+   * Support for RDP-compression (currently only for 8bpp)
+   * Support for persistent bitmap caching
+   * Sound-driver for SGI/Irix
+
+  -- Michael Gernoth <michael@gernoth.net>  Sun, 6 Mar 2005 22:09:55 +0100 (CET)
+
+rdesktop (1.3.1)
+   * Crypto fixes for RDP5
+   * Keyboard and keymap fixes
+   * some endianess fixes for high color
+   * portability enhancements
+
+  -- Matthew Chapman <matthewc@cse.unsw.edu.au>  Tue, 21 Jan 2004 20:34
+
+rdesktop (1.3.0)
+
+   * RDP5
+   * 15, 16 and 24 bit color depths
+   * Basic clipboard redirection
+   * Sound
+   * IPv6
+   * Attaching to console on Windows 2003
+
+  -- Peter Astrand <peter@cendio.se>  Wed, 29 Oct 2003 16:40:58 +0100 (CET)
+
+rdesktop (1.2.0)
+
+   * new - more portable - key mapping code
+   * support for "high" (128-bit) encryption
+   * toggling out of full-screen mode with Ctrl-Alt-Enter
+   * a few extra options including host:port syntax
+   * many, many bug fixes and optimisations
+
+  -- Matthew Chapman <matthewc@cse.unsw.edu.au>  Thu, 30 Jan 2003 04:29
+
+rdesktop (1.1.0)
+
+   * solves arith.c licensing issue by taking big number routines from
+     OpenSSL
+   * keyboard support not merged from unified patches yet
+   * still no manpage
+
+  -- Matthew Chapman <matthewc@cse.unsw.edu.au>  Mon, 17 Sep 2001 23:14:28 +1000 (AEST)
+
+rdesktop (1.0.0)
+
+   * initial release
+
+  -- Matthew Chapman <matthewc@cse.unsw.edu.au>

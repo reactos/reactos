@@ -1,0 +1,10 @@
+Index: D:/reactos/dll/win32/powrprof/powrprof.spec
+===================================================================
+--- D:/reactos/dll/win32/powrprof/powrprof.spec	(revision 22834)
++++ D:/reactos/dll/win32/powrprof/powrprof.spec	(revision 22835)
+@@ -18,3 +18,4 @@
+ @ stdcall WriteGlobalPwrPolicy (ptr)
+ @ stdcall WriteProcessorPwrScheme (long ptr)
+ @ stdcall WritePwrScheme (ptr str str ptr)
++@ stdcall ValidatePowerPolicies (ptr ptr)
+\ No newline at end of file

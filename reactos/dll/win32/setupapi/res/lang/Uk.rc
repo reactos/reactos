@@ -1,0 +1,28 @@
+/*
+ * PROJECT:     Setup API
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/win32/setupapi/Uk.rc
+ * PURPOSE:     Ukraianian Language File for setupapi
+ * TRANSLATOR:  Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+COPYFILEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 20, 20, 208, 105
+STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Копіювання Файлів..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+	PUSHBUTTON "Скасувати", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	LTEXT "Джерело:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+	LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+	LTEXT "Призначення:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+	LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
+	CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_QUERY_REBOOT_TEXT        "Для закінчення установки необхідно перезапустити Ваш комп'ютер. Продовжити?"
+	IDS_QUERY_REBOOT_CAPTION     "Перезапустити"
+END

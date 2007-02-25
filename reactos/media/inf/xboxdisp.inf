@@ -1,0 +1,53 @@
+; xboxdisp.inf
+
+; Installation file for the Xbox display card
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = Display
+ClassGUID  = {4D36E968-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 11/11/2005,1.00
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[Manufacturer]
+%nVidiaMfg% = nVidiaMfg
+
+[nVidiaMfg]
+%PCI\VEN_10DE&DEV_02A0.DeviceDesc% = XboxVmp_Inst,PCI\VEN_10DE&DEV_02A0
+
+;---------------------------- XboxVmp DRIVER ----------------------------
+
+[XboxVmp_Inst.NT]
+CopyFiles = XboxVmp_CopyFiles.NT
+
+[XboxVmp_CopyFiles.NT]
+xboxvmp.sys
+
+[XboxVmp_Inst.NT.Services]
+AddService = xboxvmp, 0x00000002, xboxvmp_Service_Inst
+
+[xboxvmp_Service_Inst]
+ServiceType   = 1
+StartType     = 1
+ErrorControl  = 0
+ServiceBinary = %12%\xboxvmp.sys
+LoadOrderGroup = Video
+
+[xboxvmp.SoftwareSettings]
+AddReg = xboxvmp_SoftwareDeviceSettings
+
+[xboxvmp_SoftwareDeviceSettings]
+HKR,,InstalledDisplayDrivers,0x00010000,framebuf
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+
+nVidiaMfg = "nVidia Corporation"
+PCI\VEN_10DE&DEV_02A0.DeviceDesc = "NV2A Xbox Graphics Processing Unit"

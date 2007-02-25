@@ -1,0 +1,3 @@
+LIBRARY kbdpo.dll
+EXPORTS
+KbdLayerDescriptor

@@ -1,0 +1,34 @@
+/*
+ * French resources for MSI
+ *
+ * Copyright 2005 Jonathan Ernst
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+	4 "The specified installation package could not be opened.  Please check the file path and try again."
+	5 "Le chemin %s est introuvable"
+	9 "insérez le disque %s"
+	10 "mauvais paramètres"
+	11 "saisissez le nom du dossier contenant %s"
+	12 "source d'installation pour la fonctionnalité manquante"
+	13 "lecteur réseau pour la fonctionnalité manquant"
+	14 "fonctionnalité depuis:"
+	15 "sélectionnez le dossier contenant %s"
+}

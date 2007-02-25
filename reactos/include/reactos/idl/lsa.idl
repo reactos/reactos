@@ -1,0 +1,44 @@
+/*
+ * Local Security Authority interface definition
+ */
+
+#include "include/reactos/idl/wtypes.idl"
+
+#define LSA_HANDLE unsigned long
+
+[
+  uuid(12345778-1234-abcd-ef00-0123456789ab),
+  version(0.0),
+  pointer_default(unique)
+  #ifndef __midl
+  ,explicit_handle
+  #endif
+]
+interface lsarpc
+{
+/*
+    cpp_quote("#if 0")
+    typedef [handle, unique] wchar_t *LPWSTR;
+    typedef [handle, unique] char *LPSTR;
+    cpp_quote("#endif")
+    typedef [context_handle] void *LSA_HANDLE;
+    typedef LSA_HANDLE *PLSA_HANDLE;
+    typedef unsigned int NTSTATUS;
+*/
+
+    cpp_quote("#if 0")
+    typedef struct _LSA_UNICODE_STRING {
+	    unsigned short Length;
+	    unsigned short MaximumLength;
+	    [size_is(MaximumLength)] wchar_t *Buffer;
+    } LSA_UNICODE_STRING, *PLSA_UNICODE_STRING;
+    cpp_quote("#endif")
+
+    /* Function 0 */
+    NTSTATUS LsarClose(handle_t BindingHandle,
+                       [in] LSA_HANDLE ObjectHandle);
+
+    /* Function 1 */
+    NTSTATUS LsarDelete(handle_t BindingHandle,
+                        [in] LSA_HANDLE ObjectHandle);
+}

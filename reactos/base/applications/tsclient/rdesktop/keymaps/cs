@@ -1,0 +1,87 @@
+# Czech keymap
+include common
+map 0x405
+
+# AltGr
+ISO_Level3_Shift 0xb8
+
+#
+# Top row
+#
+
+# `
+grave 0x29
+asciitilde 0x29 shift
+# 1
+exclam 0x2 shift
+# 2
+at 0x3 shift
+ecaron 0x3 altgr
+# 3
+numbersign 0x4 shift
+# 4
+dollar 0x5 shift
+# 5
+percent 0x6 shift
+# 6
+asciicircum 0x7 shift
+# 7
+ampersand 0x8 shift
+# 8
+asterisk 0x9 shift
+# 9
+parenleft 0xa shift
+# 0
+parenright 0xb shift
+# -
+minus 0xc
+underscore 0xc shift
+# =
+equal 0xd
+plus 0xd shift
+
+
+#
+# QWERTZ first row
+#
+
+# q
+q 0x10 altgr
+# e
+e 0x12 altgr
+# [
+bracketleft 0x1a
+braceleft 0x1a shift
+# ]
+bracketright 0x1b
+braceright 0x1b shift
+
+#
+# QWERTZ second row
+#
+
+# ;
+semicolon 0x27
+# ;
+colon 0x27 shift
+# '
+apostrophe 0x28
+# '
+quotedbl 0x28 shift
+
+#
+# QWERTZ third row
+#
+
+# v
+v 0x2f altgr
+# ,
+comma 0x33
+less 0x33 shift
+# .
+period 0x34
+greater 0x34 shift
+# /
+slash 0x35
+question 0x35 shift
+

@@ -1,0 +1,12 @@
+; beepmidi.def
+;
+; BeepMidi driver by Andrew Greenwood
+;
+; For ReactOS Operating System
+;
+
+LIBRARY beepmidi.dll
+
+EXPORTS
+DriverProc@20
+modMessage@20

@@ -1,0 +1,161 @@
+/*
+ * WineFile
+ * Simplified Chinese Language Support
+ *
+ * Copyright 2002 liuspider <liuspider@yahoo.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+/* Menu */
+
+IDM_WINEFILE MENU FIXED IMPURE
+{
+    POPUP "文件（&F）"  {
+        MENUITEM "打开（&O）\tEnter",           ID_ACTIVATE
+        MENUITEM "移动（&M）...\tF7",           ID_FILE_MOVE
+        MENUITEM "复制（&C）...\tF8",           ID_FILE_COPY
+        MENUITEM "位于剪贴板（&I）...\tF9",     118
+        MENUITEM "删除（&D）\tDel",             ID_FILE_DELETE
+        MENUITEM "改名（&N）...",               109
+        MENUITEM "属性（&I）...\tAlt+Enter",    ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "压缩（&O）...",               119
+        MENUITEM "解压缩（&O）...",             120
+        MENUITEM SEPARATOR
+        MENUITEM "运行（&R）...",               ID_EXECUTE
+        MENUITEM "打印（&P）...",               102
+        MENUITEM "配置文件相关...",             103
+        MENUITEM SEPARATOR
+        MENUITEM "建立目录（&E）...",           111
+        MENUITEM "查找（&H）...",               104
+        MENUITEM "选择文件（&S）...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "退出（&X）\tAlt+X",           ID_FILE_EXIT
+#else
+        MENUITEM "退出（&X）",                  ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "磁盘（&D）"  {
+        MENUITEM "复制（&C）...",               201
+        MENUITEM "命名（&L）...",               202
+        MENUITEM SEPARATOR
+        MENUITEM "格式化（&）...",              ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "建立系统盘（&M）...", -1  /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "连接网络驱动器（&N）",        ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "断开网络驱动器连接（&D）",    ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "共享为...",                   254
+        MENUITEM "删除共享（&R）...",           255
+        MENUITEM SEPARATOR
+        MENUITEM "选择驱动器（&S）...",         251
+    }
+
+    POPUP "目录（&D）"  {
+        MENUITEM "下一层（&N）\t+",             301
+        MENUITEM "展开（&T）\t*",               302
+        MENUITEM "全部展开（&A）\tStrg+*",      303
+        MENUITEM "折叠（&R）\t-",               304
+        MENUITEM SEPARATOR
+        MENUITEM "标记子目录（&M）",            505
+    }
+
+    POPUP "视图（&V）"  {
+        MENUITEM "目录树机器内容（&R）",        413
+        MENUITEM "仅显示目录树（&E）",          411
+        MENUITEM "仅显示目录内容（&O）",        412
+        MENUITEM SEPARATOR
+        MENUITEM "分割（&L）",                  ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "文件名名（&N）",              ID_VIEW_NAME
+        MENUITEM "文件详悉列表（&A）",          ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "部分属性（&P）...",           ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "按文件名排序（&S）",          ID_VIEW_SORT_NAME
+        MENUITEM "按类型排序（&B）",            ID_VIEW_SORT_TYPE
+        MENUITEM "按大小排序（&Z）",            ID_VIEW_SORT_SIZE
+        MENUITEM "按日期排序（&D）",            ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "定制排序...",                 ID_VIEW_FILTER
+    }
+
+    POPUP "选项（&O）"  {
+        MENUITEM "确定方式（&C）...",           501
+        MENUITEM "字体（&F）...",               ID_SELECT_FONT
+        MENUITEM "定制工具条（&B）...",         512
+        MENUITEM SEPARATOR
+        MENUITEM "工具条（&T）",                ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "驱动器列表（&D）",            ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "状态栏（&S）",                ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "全屏（&U）\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Minimize on run",            504
+        MENUITEM "&Save settings on exit",      511
+    }
+
+
+    POPUP "安全（&S）"  {
+        MENUITEM "访问（&A）...",               605
+        MENUITEM "登录（&L）...",               606
+        MENUITEM "所有者（&O）...",             607
+    }
+
+    POPUP "窗口（&W）"  {
+        MENUITEM "新建（&W)",                   ID_WINDOW_NEW
+        MENUITEM "层叠\tCtrl+F5",               ID_WINDOW_CASCADE
+        MENUITEM "水平平铺（&H）",              ID_WINDOW_TILE_HORZ
+        MENUITEM "垂直平铺（&）\tCtrl+F4",      ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "自动排列",                    ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "自动排列图标（&S）",          ID_WINDOW_ARRANGE
+        MENUITEM "刷新（&R）\tF5",              ID_REFRESH
+    }
+
+    POPUP "&?"  {
+        MENUITEM "帮助主题（&H）\tF1",          ID_HELP
+        MENUITEM "搜索帮助（&S）...\tF1",       ID_HELP
+        MENUITEM "使用帮助（&U）\tF1",          ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&关于 Winefile...",           ID_ABOUT
+#ifdef __WINE__
+        MENUITEM "关于 &Wine...",               ID_ABOUT_WINE
+#endif
+    }
+}
+
+
+IDD_EXECUTE DIALOG FIXED IMPURE 15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "运行"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "命令（&C）：", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    CONTROL         "作为连接（&S）", 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
+    DEFPUSHBUTTON   "确定", 1, 158, 6, 47, 14
+    PUSHBUTTON      "取消", 2, 158, 23, 47, 14
+    PUSHBUTTON      "帮助（&H）", 254, 158, 43, 47, 14
+}

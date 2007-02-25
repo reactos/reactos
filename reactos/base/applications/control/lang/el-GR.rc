@@ -1,0 +1,28 @@
+// Greek language resource file (Dj_Apal®, 2005-11-14)
+
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Αρχείο"
+    BEGIN
+        MENUITEM "&Κλείσιμο",                      IDM_CLOSE
+    END
+    POPUP "&Εμφάνιση"
+    BEGIN
+        MENUITEM "Μεγάλα εικονίδια",               IDM_LARGEICONS
+        MENUITEM "Μικρά εικονίδια",                IDM_SMALLICONS
+        MENUITEM "Λίστα",                          IDM_LIST
+        MENUITEM "Λεπτομέρειες",                   IDM_DETAILS
+    END
+    POPUP "Βοήθεια"
+    BEGIN
+        MENUITEM "Σχετικά",                       IDM_ABOUT
+    END
+END
+

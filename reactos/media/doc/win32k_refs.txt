@@ -1,0 +1,79 @@
+References:
+-----------
+
+window -> desktop
+window -> class
+
+thread_input -> thread
+
+thread -> process
+process -> winsta
+thread -> desktop
+desktop -> winsta
+winsta -> session
+
+NOTE: 	Message queue has 1:1 relationship with (w32)thread and need no ref. count.
+      	-If the (w32)thread is destroyed, so is the message queue.
+	-If the (w32)thread exist, so does the message queue.
+	So if you want the queue to hang around, you reference the thread instead.
+
+^ This is wrong, one can attach message queue to different thread using
+AttachThreadInput. The number of threads sharing a queue is stored in the
+message queue structure and can be considered a reference count. Also on
+Windows systems there is maintained a global list of thread attachments.
+
+Above references create following dependencies:
+-----------------------------------------------
+
+window -> desktop -> winsta -> session
+window -> class
+
+thread -> process -> winsta -> session
+thread -> desktop -> winsta -> session
+
+process -> winsta -> session
+
+NtUser/NtGdi/win32k syscalls
+----------------------------
+
+A process and/or thread automatically gets converted to a GUI thread /
+process when the first syscall from the shadow service table is called (ie.
+any NtUser* or NtGdi* call). GUI threads have bigger kernel stack (FIXME:
+not the case on ReactOS yet) and have associated storage for the Win32
+structures. The conversion itself happens in the syscall handler and the
+win32k callbacks (registered with PsEstablishWin32Callouts) are called
+accordingly.
+
+A process automatically establishes a connection to a window station on the
+GUI thread conversion.  The Win32 process initialization callback routine
+also creates and initializes the W32PROCESS structure and associates it with
+the process.
+
+Similary for thread the callback routine automatically assigns a desktop
+when the thread is converted to GUI thread. The thread also gets a W32THREAD
+structure, a message queue and a thread input structures.
+
+Beware that there is an exception to these rules and that's WinLogon. Since
+at the time the process starts no window stations or desktops exist, none
+are assigned to the the initial thread / process. The first Win32k calls
+the thread does are to create the window station and desktop and to associate
+them with itself.
+
+FIXME: At the time of this writing there's a second exception, a "primitive
+message queue" thread in CSRSS that is created before any window stations
+exist and is used to capture keyboard input in console mode. Eventually we
+should get rid of it and replace is with hidden window w/ focus or something
+similar.
+
+Generally this means that when you are in a Win32k syscall function (other
+than the window station or desktop functions) you can be 100% sure that the
+following exists:
+
+- Process window station
+- Win32 process structure
+- Win32 thread structure
+- Thread message queue
+- Thread input
+- Thread desktop
+
+There is no need to validate any of these values, because they MUST EXIST!

@@ -1,0 +1,29 @@
+
+IPv6 support in rdesktop
+========================
+The IPv6 support was developed by Mike Dawson <mike@dexy.mine.nu>:
+
+    Attached is a patch to tcp.c to enable IPv6 support.  Build with
+    'IPv6' defined to enable it.  It's so far only been tested on
+    Linux 2.4.21 connecting to Windows XP SP1.
+    
+    Since terminal services doesn't seem to bind to the ipv6 interface
+    on XP I had to run 'netsh interface portproxy add v6tov4
+    listenport=3389 connectport=3389' from the windows command prompt
+    to get it to work.
+    
+
+rdesktop now supports numeric IPv6 addresses:
+
+    It checks for two or more colons in an address to decide what it's
+    dealing with so you can now do:
+
+    rdesktop 2001:1:2:3::4
+    
+    without it getting confused with an ipv4:port specification.  I've
+    also followed the square bracket convention used by browsers
+    (http://www.ietf.org/rfc/rfc2732.txt) so if you want to specify a
+    non-standard port with an ipv6 address you can use the format:
+    
+    rdesktop [2001:1:2:3::4]:3390
+

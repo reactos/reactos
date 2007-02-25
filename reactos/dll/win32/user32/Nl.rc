@@ -1,0 +1,75 @@
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL  //vertaald door Lionel Lowie
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs
+//
+
+SELWINDOW DIALOG DISCARDABLE 20, 20, 220, 140
+STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Selecteer venster"
+BEGIN
+  LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+  PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&Cancel", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menus
+//
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  POPUP "DUMMY"
+  BEGIN
+    MENUITEM "&Ongedaan maken", EM_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "K&nippen", WM_CUT
+    MENUITEM "&Kopiëren", WM_COPY
+    MENUITEM "&Plakken", WM_PASTE
+    MENUITEM "&Verwijderen", WM_CLEAR
+    MENUITEM SEPARATOR
+    MENUITEM "&Alles Selecteren", EM_SETSEL
+  END
+}
+
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  MENUITEM "&Herstellen", 61728
+  MENUITEM "&Verplaatsen", 61456
+  MENUITEM "&Grootte", 61440
+  MENUITEM "Mi&nimaliseren", 61472
+  MENUITEM "Ma&ximaliseren", 61488
+  MENUITEM SEPARATOR
+  MENUITEM "&Afsluiten\tAlt-F4", 61536
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE
+{
+  IDS_ERROR,    "Fout"
+  IDS_OK,       "OK"
+  IDS_CANCEL,   "Annuleren"
+  IDS_ABORT,    "&Afbreken"
+  IDS_RETRY,    "&Herhalen"
+  IDS_IGNORE,   "&Negeren"
+  IDS_YES,      "&Ja"
+  IDS_NO,       "&Nee"
+  IDS_HELP,     "Help"
+  IDS_TRYAGAIN, "&Probeer opnieuw"
+  IDS_CONTINUE, "&Verder"
+}
+
+STRINGTABLE
+{
+  IDS_MDI_MOREWINDOWS, "&Meer vensters..."
+}
+

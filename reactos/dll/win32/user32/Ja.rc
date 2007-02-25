@@ -1,0 +1,75 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs
+//
+
+SELWINDOW DIALOG DISCARDABLE 20, 20, 220, 140
+STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 9, "MS UI Gothic"
+CAPTION "ウィンドウ選択"
+BEGIN
+  LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+  PUSHBUTTON "OK (&O)", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "キャンセル(&C)", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menus
+//
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  POPUP "DUMMY"
+  BEGIN
+    MENUITEM "元に戻す(&U)", EM_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "切り取り(&T)", WM_CUT
+    MENUITEM "コピー(&C)", WM_COPY
+    MENUITEM "貼\り付け(&P)", WM_PASTE
+    MENUITEM "削除(&D)", WM_CLEAR
+    MENUITEM SEPARATOR
+    MENUITEM "すべて選択(&A)", EM_SETSEL
+  END
+}
+
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  MENUITEM "元のサイズに戻す(&R)", 61728
+  MENUITEM "移動(&M)", 61456
+  MENUITEM "サイズ変更(&S)", 61440
+  MENUITEM "最小化(&N)", 61472
+  MENUITEM "最大化(&X)", 61488
+  MENUITEM SEPARATOR
+  MENUITEM "閉じる(&C)\tAlt-F4", 61536
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE
+{
+  IDS_ERROR,    "エラー"
+  IDS_OK,       "OK"
+  IDS_CANCEL,   "キャンセル"
+  IDS_ABORT,    "中止(&A)"
+  IDS_RETRY,    "再試行(&R)"
+  IDS_IGNORE,   "無視(&I)"
+  IDS_YES,      "はい(&Y)"
+  IDS_NO,       "いいえ(&N)"
+  IDS_HELP,     "ヘルプ"
+  IDS_TRYAGAIN, "再試行する(&T)"
+  IDS_CONTINUE, "続ける(&C)"
+}
+
+STRINGTABLE
+{
+  IDS_MDI_MOREWINDOWS, "その他のウィンドウ(M)..."
+}
+

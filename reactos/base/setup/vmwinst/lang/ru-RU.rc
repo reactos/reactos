@@ -1,0 +1,131 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Установка видеодрайвера"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Программа установки обнаружила, что ReactOS работает под управлением виртуальной машины VMware(r).", -1, 100, 8, 160, 24
+  LTEXT "Для установки SVGA-драйвера VMware(r) нажмите кнопку ""Далее"", иначе нажмите ""Отмена"".", -1, 100, 140, 160, 17
+END
+
+IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Установка видеодрайвера"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Программа установки ReactOS не включает в себя SVGA-драйвер VMware(r).\n\nСледуйте в меню 'VM' программы VMware(r) Workstation и выберите 'Install VMware tools...'\n\n\nДля продолжения нажмите кнопку ""Далее"", или ""Отмена"", чтобы пропустить установку SVGA-драйвера.",-1,25,25,225,85
+END
+
+IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Установка видеодрайвера"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "{STATUS}",IDC_INSTALLINGSTATUS,25,68,225,8
+  CONTROL "", IDC_INSTALLINGPROGRESS, "msctls_progress32", PBS_MARQUEE | WS_CHILD | WS_VISIBLE | WS_BORDER, 25, 80, 225, 8
+END
+
+IDD_CONFIG DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Установка видеодрайвера"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Установка SVGA-драйвера VMware(r) завершена успешно. Выберите предпочтительное разрешение экрана:",-1,25,5,225,20
+  PUSHBUTTON "640x480", 540, 25, 30, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1152x864", 2016, 25, 75, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1280x960", 2240, 110, 30, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1280x1024", 2304, 110, 45, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1400x1050", 2450, 110, 60, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1600x1200", 2800, 110, 75, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1792x1344", 3136, 195, 30, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1856x1392", 3248, 195, 45, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1920x1440", 3360, 195, 60, 50, 15, BS_AUTORADIOBUTTON
+  LTEXT "Выберите качество передачи цвета:", -1, 25, 93, 225, 12
+  COMBOBOX IDC_COLORQUALITY, 25, 105, 75, 80, CBS_DROPDOWNLIST | WS_TABSTOP
+END
+
+IDD_INSTALLATION_FAILED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Установка видеодрайвера"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Программа установки ReactOS не смогла установить SVGA-драйвер VMware(r).\n\n\nНажмите кнопку ""Завершить"" для продолжения процесса установки.",-1,25,25,225,85
+END
+
+IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Установка видеодрайвера"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "SVGA-драйвер VMware(r) уже установлен.\n\nВыберите дальнейшее действие:",-1,25,5,225,30
+  PUSHBUTTON "Настроить параметры экрана", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "Установить другой графический драйвер", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "Удалить SVGA-драйвер VMware(r)", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
+  LTEXT "Нажмите кнопку ""Далее"" для продолжения или ""Отмена"" для выхода из мастера установки.", -1, 25, 93, 225, 20
+END
+
+IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Установка видеодрайвера"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Выберите графический драйвер, который Вы хотели бы использовать:",-1,25,25,225,15
+  PUSHBUTTON "ReactOS VGA драйвер", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "ReactOS VBE драйвер (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
+  LTEXT "Нажмите кнопку ""Завершить"" для выполнения операции или ""Отмена"" для выхода из программы установки без сохранения изменений.", -1, 25, 93, 225, 30
+END
+
+IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Установка видеодрайвера"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Программа установки ОС ReactOS готова произвести удаление SVGA-драйвера VMWare(r)!\n\n\nНажмите кнопку ""Завершить"" для удаления драйвера или ""Отмена"" чтобы оставить драйвер.",-1,25,25,225,85
+END
+
+STRINGTABLE
+BEGIN
+  IDS_WIZARD_NAME "Обнаружен VMware(r)"
+  IDS_FAILEDTOLOCATEDRIVERS "Программа установки ReactOS не смогла найти необходимые файлы.\nУбедитесь, что VMware(r) tools CD-ROM вставлен в привод."
+  IDS_FAILEDTOCOPYFILES "Программа установки ReactOS не смогла скопировать необходимые файлы.\nУбедитесь, что VMware(r) tools CD-ROM вставлен в привод.\n"
+  IDS_FAILEDTOACTIVATEDRIVER "Не удалось запустить SVGA-драйвер VMware(r)!"
+  IDS_FAILEDTOSELVGADRIVER "Не удалось запустить ReactOS VGA драйвер!"
+  IDS_FAILEDTOSELVBEDRIVER "Не удалось запустить ReactOS VBE драйвер!"
+  IDS_UNINSTNOTICE "Файлы SVGA-драйвера VMware(r) не были удалены.\nУдалите их самостоятельно после перезагрузки системы."
+  IDS_FAILEDTOADDREGENTRIES "Не удалось создать записи в реестре для SVGA-драйвера VMware(r)!"
+END
+
+STRINGTABLE
+BEGIN
+  10001 "Низкое (8BPP)"
+  10002 "Среднее (16BPP)"
+  10003 "Самое высокое (32BPP)"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_SEARCHINGFORCDROM "Поиск компакт-диска VMware(r) Tools..."
+  IDS_COPYINGFILES      "Копирование файлов..."
+  IDS_ENABLINGDRIVER    "Запуск SVGA-драйвера VMware(r)..."
+END
+
+STRINGTABLE
+BEGIN
+  IDD_INSERT_VMWARE_TOOLSTITLE     	"Мастер установки SVGA-драйвера VMware (r)"
+  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Вставьте диск VMware tools."
+  IDD_INSTALLING_VMWARE_TOOLSTITLE      "Мастер установки SVGA-драйвера VMware (r)"
+  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Поиск и копирование SVGA-драйвера VMware (r)."
+  IDD_CONFIGTITLE     			"Мастер установки SVGA-драйвера VMware (r)"
+  IDD_CONFIGSUBTITLE     		"Выберите предпочитаемое разрешение экрана."
+  IDD_INSTALLATION_FAILEDTITLE     	"Мастер установки SVGA-драйвера VMware (r)"
+  IDD_INSTALLATION_FAILEDSUBTITLE       "Установка SVGA-драйвера VMware (r) не удалась."
+  IDD_CHOOSEACTIONTITLE    	        "Мастер установки SVGA-драйвера VMware (r)"
+  IDD_CHOOSEACTIONSUBTITLE              "Выберите действие."
+  IDD_SELECTDRIVERTITLE                 "Мастер установки SVGA-драйвера VMware (r)"
+  IDD_SELECTDRIVERSUBTITLE              "Выберите драйвер."
+  IDD_DOUNINSTALLTITLE                  "Мастер установки SVGA-драйвера VMware (r)"
+  IDD_DOUNINSTALLSUBTITLE               "Удаление драйвера."
+END

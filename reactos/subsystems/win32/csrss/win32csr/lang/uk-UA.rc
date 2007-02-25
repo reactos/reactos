@@ -1,0 +1,49 @@
+/*
+ * PROJECT:         ReactOS CSRSS subsystem
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            subsys/csrss/win32csr/uk.rc
+ * PURPOSE:         Ukraianian resource file
+ * TRANSLATOR:      Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDD_END_NOW DIALOG DISCARDABLE  0, 0, 200, 95
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Завершення програми - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Завершення програми... Зачекайте",IDC_STATIC,7,7,186,11
+    CONTROL         "Прогрес",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    7,20,186,13
+    LTEXT           "Якщо завершити програму негайно, то можна втратити всі незбережені дані. Щоб завершити програму зараз, натисніть 'Завершити зараз'",
+                    IDC_STATIC,7,40,186,26
+    DEFPUSHBUTTON   "&Завершити зараз",IDC_END_NOW,150,71,43,17
+END
+
+IDD_NOT_RESPONDING DIALOG DISCARDABLE 0, 0, 192, 122
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Завершення програми - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Скасувати",IDCANCEL,142,98,43,17
+    PUSHBUTTON      "&Завершити зараз",IDC_END_NOW,78,98,43,17
+    LTEXT           "Ця програма не відповідає",IDC_STATIC,7,7,178,8
+    LTEXT           "Щоб повернутися у ReactOS і перевірити стан програми, натисніть 'Скасувати'",
+                    IDC_STATIC,7,26,178,16
+    LTEXT           "Якщо завершити програму негайно, то можна втратити всі незбережені дані. Щоб завершити програму зараз, натисніть 'Завершити зараз'",
+                    IDC_STATIC,7,53,178,26
+END
+
+STRINGTABLE
+BEGIN
+  IDS_EDIT "Редагувати"
+  IDS_MARK "Виділити"
+  IDS_COPY "Копіювати\tEnter"
+  IDS_PASTE "Вставити"
+  IDS_SELECTALL "Виділити все"
+  IDS_SCROLL "Прокрутити"
+  IDS_FIND "Знайти..."
+  IDS_DEFAULTS "Замовчування"
+  IDS_PROPERTIES "Властивості"
+END

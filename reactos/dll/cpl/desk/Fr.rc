@@ -1,0 +1,169 @@
+/* French translation by Benoit Plante 2005 (cmoibenlepro AT hotmail DOT com) */
+/* Updated French translation by Pierre Schweitzer 2007 (heis_spiter AT hotmail DOT com) */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 188
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Fond d'écran"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW,78,10,
+                    90,65,WS_EX_STATICEDGE
+    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
+                    WS_BORDER | WS_TABSTOP,7,99,173,71
+    LTEXT           "Sélectionnez une image à utiliser comme fond d'écran:",
+                    IDC_STATIC,8,87,180,8
+    PUSHBUTTON      "&Parcourir...",IDC_BROWSE_BUTTON,187,135,50,14
+    PUSHBUTTON      "&Couleur...",IDC_COLOR_BUTTON,187,155,50,14
+    LTEXT           "Position:",IDC_STATIC,187,98,36,8
+    COMBOBOX        IDC_PLACEMENT_COMBO,187,108,50,90,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_SCREENSAVER DIALOGEX DISCARDABLE  0, 0, 246, 188
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Écran de veille"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "É&cran de veille",IDC_SCREENS_DUMMY, 5, 7, 238, 136
+    
+    LTEXT           "Liste des écrans de veille:",IDC_STATIC,13, 24, 150, 9
+    CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
+                    LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,13, 34, 170, 69
+
+    PUSHBUTTON      "Paramè&tres...",IDC_SCREENS_SETTINGS,188, 34, 50, 15,WS_GROUP
+    PUSHBUTTON      "&Aperçu",IDC_SCREENS_TESTSC,188, 52, 50, 15
+
+    CONTROL         "À la reprise, protéger par mot de passe",IDC_SCREENS_USEPASSCHK,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13, 121, 119, 18
+
+    LTEXT           "Dé&lai:",IDC_STATIC,13, 110, 20, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY,33, 109, 31, 12,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP,52, 109, 12, 12
+    LTEXT           "Minutes avant d'afficher l'écran de veille.",IDC_STATIC,70, 111, 147, 9
+
+    GROUPBOX        "Gestion de l'alimentation du moniteur",IDC_SCREENS_DUMMY2,5, 146, 238, 50
+    LTEXT           "Pour modifier les paramètres de l'alimentation du moniteur et économiser de l'énergie, cliquez sur Gestion de l'alimentation.",
+                    IDC_STATIC,16, 159, 145, 35
+    PUSHBUTTON      "&Gestion de l'alimentation",IDC_SCREENS_POWER_BUTTON,165, 162, 73, 15
+END
+
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Apparence"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
+                    WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
+    LTEXT           "Item:", IDC_STATIC, 7, 159, 26, 9
+    COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Size:", IDC_STATIC, 142, 159, 16, 9
+    EDITTEXT        IDC_APPEAR_SIZE, 142, 169, 38, 13, ES_RIGHT | WS_GROUP
+    CONTROL         "", IDC_APPEAR_SIZE_UPDOWN, UPDOWN_CLASS, WS_BORDER | WS_GROUP |
+                    UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT,
+                    172, 169, 10, 13
+END
+
+IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Paramètres"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Affichage:",1820,3,100,30,8
+    LTEXT           "<aucun>",IDC_SETTINGS_DEVICE,9,109,224,8
+    GROUPBOX        "&Région de l'affichage",1818,3,120,115,43
+    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
+                    30,130,58,17
+    LTEXT           "Moins",1815,9,130,15,8,NOT WS_GROUP
+    LTEXT           "Plus",1816,93,130,21,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
+    GROUPBOX        "Qualité &Couleur",1817,125,120,115,43
+    COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
+                    131,148,103,9
+    PUSHBUTTON      "A&vancé...",IDC_SETTINGS_ADVANCED,306,165,56,14
+END
+
+IDR_POPUP_MENU MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "&Configurer",     ID_MENU_CONFIG
+	MENUITEM "A&perçu",       ID_MENU_PREVIEW
+	MENUITEM SEPARATOR
+	MENUITEM "&Ajouer",           ID_MENU_ADD
+	MENUITEM "Supprimer\tSuppr",   ID_MENU_DELETE
+  END
+END
+
+IDR_PREVIEW_MENU MENU
+BEGIN
+    MENUITEM "Normal",           ID_MENU_NORMAL
+    MENUITEM "Désactivé",         ID_MENU_DISABLED
+    MENUITEM "Sélectionné",         ID_MENU_SELECTED
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLNAME "Affichage"
+    IDS_CPLDESCRIPTION "Personalise l'affichage du bureau et de l'écran de veille."
+    
+    IDS_NONE "(Aucun)"
+    IDS_CENTER "Centre"
+    IDS_STRETCH "Étirer"
+    IDS_TILE "Mosaïque"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_COLOR_4BIT "16 Couleurs"
+    IDS_COLOR_8BIT "256 Couleurs"
+    IDS_COLOR_16BIT "Moyenne (16 Bits)"
+    IDS_COLOR_24BIT "Vraies couleurs (24 Bits)"
+    IDS_COLOR_32BIT "Optimale (32 Bits)"
+    IDS_PIXEL "%lux%lu Pixel"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BACKGROUND_COMDLG_FILTER "Images (*.bmp;*.dib)\0*.bmp;*.dib\0"
+    IDS_SUPPORTED_EXT "*.bmp;*.dib"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INACTWIN "Fenêtre inactive"
+    IDS_ACTWIN   "Fenêtre active"
+    IDS_WINTEXT  "Texte de la fenêtre"
+    IDS_MESSBOX  "Boîte de message"
+    IDS_MESSTEXT "Texte de message"
+    IDS_BUTTEXT  "OK"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ITEM_3D_OBJECTS      "Objets 3D"
+    IDS_ITEM_SCROLLBAR       "Barre de défilement"
+    IDS_ITEM_DESKTOP         "Bureau"
+    IDS_ITEM_MESSAGE_BOX     "Boîte de message"
+    IDS_ITEM_WINDOW          "Fenêtre"
+    IDS_ITEM_APP_BACKGROUND  "Espace de travail de l'application"
+    IDS_ITEM_SELECTED_ITEMS  "Éléments sélectionnés"
+    IDS_ITEM_MENU            "Menu"
+    IDS_ITEM_PALETTE_TITLE   "Tite de palette"
+    IDS_ITEM_TOOLTIP         "Info-bulle"
+    IDS_ITEM_INACTIVE_WINDOW "Bordure de fenêtre inactive"
+    IDS_ITEM_ACTIVE_WINDOW   "Bordure de fenêtre active"
+    IDS_ITEM_ICON            "Icône"
+    IDS_ITEM_ICON_SPACE_HORZ "Espacement des icônes (horizontal)"
+    IDS_ITEM_ICON_SPACE_VERT "Espacement des icônes (vertical)"
+    IDS_ITEM_INACTIVE_TITLE  "Barre de titre inactive"
+    IDS_ITEM_ACTIVE_TITLE    "Barre de titre active"
+    IDS_ITEM_CAPTION_BUTTONS "Boutons de barre de titre"
+END

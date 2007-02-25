@@ -1,0 +1,6 @@
+LIBRARY powercfg.cpl
+
+EXPORTS
+CPlApplet
+
+; EOF

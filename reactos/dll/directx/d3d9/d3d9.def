@@ -1,0 +1,8 @@
+LIBRARY d3d9
+EXPORTS
+	Direct3DShaderValidatorCreate9
+	PSGPError
+	PSGPSampleTexture
+	DebugSetLevel
+	DebugSetMute
+	Direct3DCreate9

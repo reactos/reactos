@@ -1,0 +1,53 @@
+  Special notes to Unix users
+  ===========================
+
+  Please  read  the file  "docs/UPGRADE.UNX".   It contains  important
+  information regarding the installation  of FreeType on Unix systems,
+  especially GNU based operating systems like GNU/Linux.
+
+  FreeType 2's  library is called `libfreetype',  FreeType 1's library
+  is called `libttf'.  They are *not* compatible!
+
+
+  FreeType 2.1.10
+  ===============
+
+  Please read the docs/CHANGES file, it contains IMPORTANT INFORMATION.
+
+  Read the files "docs/INSTALL" for installation instructions.
+
+  Note  that  the FreeType  2  documentation  is  now available  as  a
+  separate package from our sites.  See:
+
+    ftp://ftp.freetype.org/freetype/freetype2/ftdocs-2.1.10.tar.bz2
+    ftp://ftp.freetype.org/freetype/freetype2/ftdocs-2.1.10.tar.gz
+    ftp://ftp.freetype.org/freetype/freetype2/ftdoc2110.zip
+
+
+  Bugs
+  ====
+
+  Please report bugs by  e-mail to `devel@freetype.org'.  Don't forget
+  to send  a detailed explanation of  the problem --  there is nothing
+  worse  than receiving  a terse  message that  only says  "it doesn't
+  work".
+
+
+  Enjoy!
+
+
+    The FreeType Team
+
+----------------------------------------------------------------------
+
+Copyright 2001, 2002, 2003, 2004 by
+David Turner, Robert Wilhelm, and Werner Lemberg.
+
+This file  is part  of the  FreeType project,  and may  only be  used,
+modified,  and distributed  under the  terms of  the FreeType  project
+license,  LICENSE.TXT.  By  continuing to  use, modify,  or distribute
+this file you  indicate that you have read  the license and understand
+and accept it fully.
+
+
+--- end of README ---

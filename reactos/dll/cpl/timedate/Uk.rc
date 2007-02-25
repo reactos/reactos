@@ -1,0 +1,76 @@
+/*
+ * PROJECT:     Timedate Control Panel Applet
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/cpl/timedate/Uk.rc
+ * PURPOSE:     Ukraianian Language File for Timedate Control Panel Applet
+ * PROGRAMMERS: Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Дата й час"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+EXSTYLE DS_SHELLFONT
+BEGIN
+    GROUPBOX "&Дата", -1, 4, 2, 122, 125
+    COMBOBOX IDC_MONTHCB, 11, 17, 50, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT IDC_YEARTEXT,65, 17, 55, 12, ES_RIGHT | WS_GROUP | ES_READONLY
+	CONTROL "", IDC_YEAR, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP, 120, 17, 50, 12
+
+    CONTROL "", IDC_MONTHCALENDAR, "MonthCalWnd",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+            11, 37, 108, 80, WS_EX_CLIENTEDGE
+    GROUPBOX "&Час", -1, 132, 2, 113, 125
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
+            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+            144, 105, 90, 12
+    LTEXT "", IDC_TIMEZONE, 4, 136, 241, 8
+END
+
+
+IDD_TIMEZONEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Часовий пояс"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+EXSTYLE DS_SHELLFONT
+BEGIN
+    COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "Автомати&чне переведення годинника на літний/зимовий час",
+                 IDC_AUTODAYLIGHT, 5, 136, 241, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+END
+
+
+IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Час Інтернету"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+EXSTYLE DS_SHELLFONT
+BEGIN
+    COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX    "Автоматично синхронізувати з сервером часу в Інтернеті", IDC_AUTOSYNC,
+                    11 ,7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+    LTEXT           "Сервер:", IDC_SERVERTEXT, 34, 22, 28, 13
+    PUSHBUTTON      "Оновити", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    LTEXT           "", IDC_SUCSYNC, 12, 54, 214, 23
+    LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
+    LTEXT           "Синхронізація можлива, лише коли комп'ютер підключений до Інтернету.", -1, 12, 114, 225, 25
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Дата й час"
+    IDS_CPLDESCRIPTION "Установлення дати, часу й часового поясу для цього комп'ютера."
+    IDS_TIMEZONETEXT "Поточний часовий пояс: %s"
+    IDS_TIMEZONEINVALID "Недійсний"
+    IDS_TIMEZONEUNKNOWN "Невідомий"
+    IDS_INETTIMESUCSYNC "Час було успішно синхронізовано з %s на %s в %s"
+    IDS_INETTIMENEXTSYNC "Наступна синхронізація: %s в %s"
+    IDS_INETTIMESYNCING "Будь ласка зачекайте, поки ReactOS синхронізує час з %s"
+    IDS_INETTIMEERROR "Помилка під час синхронізації з %s"
+END

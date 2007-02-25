@@ -1,0 +1,109 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Instalación de Dispositivos"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Bienvenido",IDC_WELCOMETITLE,120,8,195,24
+    LTEXT           "Este asistente lo ayudará a instalar un nuevo controlador de dispositivos para:",
+                    IDC_STATIC,120,21,195,16
+    LTEXT           "Haga click en Siguiente para continuar.",IDC_STATIC,120,169,195,17
+    LTEXT           "DISPOSITIVO DESCONOCIDO",IDC_DEVICE,134,36,164,11
+    LTEXT           "WARNING! INSTALLING A CUSTOM DEVICE MAY FREEZE YOUR COMPUTER OR RENDER IT UNBOOTABLE!",IDC_STATIC,120,59,195,16
+    CONTROL         "Instalar controlador automáticamente",IDC_RADIO_AUTO,"Button",
+                    BS_AUTORADIOBUTTON,120,112,178,13
+    CONTROL         "Instalar controlador desde una ubicación específica",IDC_RADIO_MANUAL,
+                    "Button",BS_AUTORADIOBUTTON,120,133,164,14
+END
+
+IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Instalación de Dispositivos"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "La instalación ha fallado",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "El dispositivo no pudo ser instalado porque el controlador no fue encontrado.",
+                    IDC_STATIC,120,40,195,19
+    LTEXT           "Haga click en Atrás si tiene un CDROM del controlador o conoce dónde encontrar el controlador.",
+                    IDC_STATIC,120,98,181,24
+    CONTROL         "No volver a mostrar esta ventana",IDC_DONOTSHOWDLG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
+END
+
+IDD_INSTALLFAILED DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Device installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Installation failed",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "The device could not be installed because an unexpected error happened.",
+                    IDC_STATIC,120,40,195,19
+    LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,134,55,164,11
+END
+
+IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalación de Dispositivos"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Buscar en controlador en estas ubicaciones",IDC_RADIO_SEARCHHERE,"Button",
+                    BS_AUTORADIOBUTTON,27,11,239,13
+    CONTROL         "Seleccionar el controlador manualmente",IDC_RADIO_CHOOSE,"Button",
+                    BS_AUTORADIOBUTTON,27,98,171,12
+    CONTROL         "Buscar en medios extraíbles",IDC_CHECK_MEDIA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
+    CONTROL         "Incluir esta ubicación de búsqueda",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,47,54,162,10
+    PUSHBUTTON      "Examinar",IDC_BROWSE,248,69,50,14
+    COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
+END
+
+IDD_SEARCHDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Device installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "DISPOSITIVO DESCONOCIDO",IDC_DEVICE,51,20,169,16
+END
+
+IDD_INSTALLDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Device installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "DISPOSITIVO DESCONOCIDO",IDC_DEVICE,51,20,169,16
+END
+
+IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Device installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Installation complete",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "You need to reboot to finish the install of:",
+                    IDC_STATIC,120,32,195,19
+    LTEXT           "Click Finish to close the wizard.",IDC_STATIC,120,174,
+                    179,11
+    LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,148,53,147,12
+END
+
+IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Device installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Instalación completa.",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "El asistente ha finalizado la instalación del controlador para el dispositivo:",
+                    IDC_STATIC,120,32,195,19
+    LTEXT           "Haga click en Finalizar parar cerrar el asistente.",IDC_STATIC,120,174,
+                    179,11
+    LTEXT           "DISPOSITIVO DESCONOCIDO",IDC_DEVICE,148,53,147,12
+END
+

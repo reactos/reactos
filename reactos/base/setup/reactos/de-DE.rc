@@ -1,0 +1,13 @@
+/* $Id$ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+
+/* String Tables */
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAPTION  "ReactOS Setup"
+    IDS_TEXT     "ReactOS kann nicht direkt von dieser CD installiert werden!\n\nBitte starten Sie Ihren Computer mit dieser CD um ReactOS zu installieren."
+END
+
+/* EOF */

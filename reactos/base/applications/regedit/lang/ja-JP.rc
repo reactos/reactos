@@ -1,0 +1,389 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * AUTHOR:          Robert Dickenson
+ */
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+{
+    VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
+    "^F", ID_EDIT_FIND
+    VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+}
+
+/*
+ * Menu
+ */
+
+IDC_REGEDIT MENU DISCARDABLE
+BEGIN
+    POPUP "ファイル(&F)"
+    BEGIN
+        MENUITEM "レジストリ エディタの終了(&X)",   ID_REGISTRY_EXIT
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "バージョン情報(&A)...",           ID_HELP_ABOUT
+    END
+END
+
+IDR_REGEDIT_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "レジストリ(&R)"
+    BEGIN
+        MENUITEM "レジストリ ファイルのインポート(&I)...",    ID_REGISTRY_IMPORTREGISTRYFILE
+
+        MENUITEM "レジストリ ファイルのエクスポート(&E)...",  ID_REGISTRY_EXPORTREGISTRYFILE
+
+        MENUITEM SEPARATOR
+        MENUITEM "ネットワーク レジストリへの接続(&C)...",    ID_REGISTRY_CONNECTNETWORKREGISTRY
+
+        MENUITEM "ネットワーク レジストリの切断(&D)...",      ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "印刷(&P)\tCtrl+P",                ID_REGISTRY_PRINT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "レジストリ エディタの終了(&X)",   ID_REGISTRY_EXIT
+    END
+    POPUP "編集(&E)"
+    BEGIN
+        MENUITEM "修正(&M)",                    ID_EDIT_MODIFY
+        MENUITEM SEPARATOR
+        POPUP "新規(&N)"
+        BEGIN
+            MENUITEM "キー(&K)",                ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "文字列値(&S)",            ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "アクセス許可(&P)...",         ID_EDIT_PERMISSIONS
+        MENUITEM SEPARATOR
+        MENUITEM "削除(&D)\tDel",               ID_EDIT_DELETE
+        MENUITEM "名前の変更(&R)",              ID_EDIT_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "キー名のコピー(&C)",          ID_EDIT_COPYKEYNAME
+        MENUITEM SEPARATOR
+        MENUITEM "検索(&F)\tCtrl+F",            ID_EDIT_FIND, GRAYED
+        MENUITEM "次を検索(&X)\tF3",            ID_EDIT_FINDNEXT, GRAYED
+    END
+    POPUP "表\示(&V)"
+    BEGIN
+        MENUITEM "ステータス バー(&B)",         ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "境界の変更(&L)",              ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "最新の情報に更新(&R)\tF5",    ID_VIEW_REFRESH
+    END
+    POPUP "お気に入り(&F)"
+    BEGIN
+        MENUITEM "お気に入りに追加(&A)",        ID_FAVOURITES_ADDTOFAVOURITES
+        , GRAYED
+        MENUITEM "お気に入りの削除(&R)",        ID_FAVOURITES_REMOVEFAVOURITE
+        , GRAYED
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "トピックの検索(&H)\tF1",      ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "バージョン情報(&A)",          ID_HELP_ABOUT
+    END
+END
+
+IDR_POPUP_MENUS MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "修正(&M)",                        ID_EDIT_MODIFY
+	MENUITEM "バイナリ データの修正",           ID_EDIT_MODIFY_BIN
+	MENUITEM SEPARATOR
+	MENUITEM "削除(&D)\tDel",                   ID_EDIT_DELETE
+	MENUITEM "名前の変更(&R)",                  ID_EDIT_RENAME
+  END
+  POPUP ""
+  BEGIN
+        POPUP "新規(&N)"
+        BEGIN
+            MENUITEM "キー(&K)",                ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "文字列値(&S)",            ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
+        END
+  END
+  POPUP ""
+  BEGIN
+        MENUITEM "展開する/閉じる",             ID_TREE_EXPANDBRANCH
+        POPUP "新規(&N)"
+        BEGIN
+            MENUITEM "キー(&K)",                ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "文字列値(&S)",            ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM "検索(&F)",                    ID_EDIT_FIND, GRAYED
+        MENUITEM "削除(&D)",                    ID_TREE_DELETE
+        MENUITEM "名前の変更(&R)",              ID_TREE_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "キー名のコピー(&C)",          ID_EDIT_COPYKEYNAME, GRAYED
+  END
+END
+
+
+/*
+ * Dialog
+ */
+
+IDD_EDIT_STRING DIALOG  32, 24, 252, 84
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "文字列の編集"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT           "値の名前(&N):",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "値のデータ(&V):",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
+    PUSHBUTTON      "キャンセル",IDCANCEL,196,64,50,14
+END
+
+IDD_EDIT_MULTI_STRING DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "複数行文字列の編集"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT           "値の名前(&N):",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "値のデータ(&V):",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "キャンセル",IDCANCEL,196,154,50,14
+END
+
+IDD_EDIT_BIN_DATA DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "バイナリ値の編集"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT           "値の名前(&N):",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "値のデータ(&V):",IDC_STATIC,6,35,161,8
+    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "キャンセル",IDCANCEL,196,154,50,14
+END
+
+
+IDD_EDIT_DWORD DIALOG  32, 24, 252, 104
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "DWORD 値の編集"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT           "値の名前(&N):",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "値のデータ(&V):",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
+    GROUPBOX        "表\記の基数",IDC_STATIC,130,35,116,39
+    AUTORADIOBUTTON "16 進(&H)",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
+    AUTORADIOBUTTON "10 進(&D)",IDC_FORMAT_DEC,141,59,60,10
+    DEFPUSHBUTTON   "OK",IDOK,142,82,50,14
+    PUSHBUTTON      "キャンセル",IDCANCEL,196,82,50,14
+END
+
+/*
+ * String Table
+ */
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LIST_COLUMN_NAME    "名前"
+    IDS_LIST_COLUMN_TYPE    "種類"
+    IDS_LIST_COLUMN_DATA    "データ"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_TITLE           "レジストリ エディタ"
+    IDC_REGEDIT             "REGEDIT"
+    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_MENU        "レジストリ全体で使用するコマンドです。"
+    ID_EDIT_MENU            "値やキーを編集するコマンドです。"
+    ID_VIEW_MENU            "レジストリ ウィンドウをカスタマイズするコマンドです。"
+    ID_FAVOURITES_MENU      "頻繁に使用されるキーにアクセルするコマンドです。"
+    ID_HELP_MENU            "ヘルプとレジストリ エディタのバージョン情報を表\示するコマンドです。"
+    ID_EDIT_NEW_MENU        "新しいキーや値を作成するコマンドです。"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_EDIT_MODIFY          "値のデータを変更します。"
+    ID_EDIT_NEW_KEY         "新しいキーを追加します。"
+    ID_EDIT_NEW_STRINGVALUE "新しい文字列値を追加します。"
+    ID_EDIT_NEW_BINARYVALUE "新しいバイナリ値を追加します。"
+    ID_EDIT_NEW_DWORDVALUE  "新しい複数行文字列値を追加します。"
+    ID_REGISTRY_IMPORTREGISTRYFILE "テキスト ファイルをレジストリにインポートします。"
+    ID_REGISTRY_EXPORTREGISTRYFILE
+                            "レジストリの一部または全体をテキスト ファイルにエクスポートします。"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY
+                            "リモート コンピュータのレジストリに接続します。"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+                            "リモート コンピュータのレジストリを切断します。"
+    ID_REGISTRY_PRINT       "レジストリの一部または全体を印刷します。"
+/*    ID_HELP_HELPTOPICS      "レジストリ エディタのヘルプを開きます。" */
+    ID_HELP_ABOUT           "プログラムの情報、バージョン番号および著作権を表\示します。"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_EXIT        "レジストリ エディタを終了します。"
+    ID_FAVOURITES_ADDTOFAVOURITES "お気に入りの一覧にキーを追加します。"
+    ID_FAVOURITES_REMOVEFAVOURITE "お気に入りの一覧からキーを削除します。"
+    ID_VIEW_STATUSBAR       "ステータス バーの表\示/非表\示を切り替えます。"
+    ID_VIEW_SPLIT           "2 つのパネルの境界の位置を変更します。"
+    ID_VIEW_REFRESH         "ウィンドウの内容を最新の情報に更新します。"
+    ID_EDIT_DELETE          "選択範囲を削除します。"
+    ID_EDIT_RENAME          "名前を変更します。"
+    ID_EDIT_COPYKEYNAME     "選択されたキー名をクリップボードにコピーします。"
+    ID_EDIT_FIND            "キー、値、データの中のテキストを検索します。"
+    ID_EDIT_FINDNEXT        "前回と同じ条件で次の項目を検索します。"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR		    "エラー"
+    IDS_WARNING		    "警告"
+    IDS_BAD_VALUE           "'%s' の値を照会できません。"
+    IDS_UNSUPPORTED_TYPE    "この種類のキーは編集できません (%ld)。"
+    IDS_TOO_BIG_VALUE       "値が大きすぎます (%ld)。"
+    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 型のデータに空白文字列を含むことはできません。\nレジストリ エディタは検出した空白文字列を削除します。"
+    IDS_QUERY_DELETE_KEY_ONE    "このキーを削除してもよろしいですか?"
+    IDS_QUERY_DELETE_KEY_MORE   "これらのキーをすべて削除してもよろしいですか?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "キーの削除の確認"
+    IDS_QUERY_DELETE_ONE    "この値を削除してもよろしいですか?"
+    IDS_QUERY_DELETE_MORE   "これらの値をすべて削除してもよろしいですか?"
+    IDS_QUERY_DELETE_CONFIRM "値の削除の確認"
+    IDS_ERR_DELVAL_CAPTION  "値の削除をするときにエラーが発生しました。"
+    IDS_ERR_DELETEVALUE     "指定された値のすべてを削除できません!"
+    IDS_ERR_RENVAL_CAPTION  "値の名前を変更するときにエラーが発生しました。"
+    IDS_ERR_RENVAL_TOEMPTY  "%s の名前を変更できません。指定された値の名前には文字が含まれていません。別の名前でやり直してください。"
+    IDS_NEW_KEY             "新しいキー #%d"
+    IDS_NEW_VALUE           "新しい値 #%d"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BINARY_EMPTY	    "(長さ 0 のバイナリ値)"
+    IDS_DEFAULT_VALUE_NAME  "(既定値)"
+    IDS_VALUE_NOT_SET       "(値の設定なし)"
+    IDS_UNKNOWN_TYPE        "種類不明: (0x%lx)"
+    IDS_MY_COMPUTER         "マイ コンピュータ"
+    IDS_IMPORT_REG_FILE     "レジストリ ファイルのインポート"
+    IDS_EXPORT_REG_FILE     "レジストリ ファイルのエクスポート"
+    IDS_INVALID_DWORD       "(無効な DWORD 値)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FLT_REGFILES        "登録ファイル"
+    IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 登録ファイル (REGEDIT4)"
+    IDS_FLT_REGEDIT4_FLT    "*.reg"
+    IDS_FLT_ALLFILES        "すべてのファイル (*.*)"
+    IDS_FLT_ALLFILES_FLT    "*.*"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_ACCESS_FULLCONTROL        "フル コントロール"
+  IDS_ACCESS_READ               "読み取り"
+  IDS_ACCESS_QUERYVALUE         "値の照会"
+  IDS_ACCESS_SETVALUE           "値の設定"
+  IDS_ACCESS_CREATESUBKEY       "サブキーの作成"
+  IDS_ACCESS_ENUMERATESUBKEYS   "サブキーの列挙"
+  IDS_ACCESS_NOTIFY             "通知"
+  IDS_ACCESS_CREATELINK         "リンクの作成"
+  IDS_ACCESS_DELETE             "削除"
+  IDS_ACCESS_WRITEDAC           "DAC の書き込み"
+  IDS_ACCESS_WRITEOWNER         "所有者の書き込み"
+  IDS_ACCESS_READCONTROL        "読み取り制御"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_INHERIT_THISKEYONLY        "このキーのみ"
+  IDS_INHERIT_THISKEYANDSUBKEYS  "このキーとサブキー"
+  IDS_INHERIT_SUBKEYSONLY        "サブキーのみ"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_EXPAND                     "展開する(&E)"
+  IDS_COLLAPSE                   "折り畳む(&C)"
+  IDS_GOTO_SUGGESTED_KEY         "'%s' へ移動する(&G)"
+END
+
+/*****************************************************************/
+
+
+/*
+ * Dialog
+ */
+
+IDD_EXPORTRANGE DIALOG DISCARDABLE  50, 50, 370, 50
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
+    WS_BORDER
+FONT 9, "MS UI Gothic"
+BEGIN
+   GROUPBOX "エクスポート範囲",IDC_STATIC,2,0,366,48
+   CONTROL "すべて(&A)",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "選択された部分(&E)",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
+END
+
+IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 187, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ダイアログ"
+FONT 9, "MS UI Gothic"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14
+    PUSHBUTTON      "キャンセル",IDCANCEL,130,24,50,14
+END
+
+
+/*
+ * TEXTINCLUDE
+ */
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+
+
+/*
+ * String Table
+ */
+
+/*
+ *STRINGTABLE DISCARDABLE
+ *BEGIN
+ *    ID_HELP_HELPTOPICS      "レジストリ エディタのヘルプを開きます。"
+ *    ID_HELP_ABOUT           "プログラムの情報、バージョン番号および著作権を表\示します。"
+ *END
+ */
+
+/*****************************************************************/

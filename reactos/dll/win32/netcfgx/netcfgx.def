@@ -1,0 +1,6 @@
+LIBRARY netcfgx.dll
+
+EXPORTS
+NetClassInstaller@12
+
+;EOF

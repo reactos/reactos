@@ -1,0 +1,474 @@
+/*
+ * Copyright 1996 Tristan Tarrant
+ * Copyright 2004 Ivan Leo Puoti
+ * Copyright 2006 Antonio Codazzi
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/*
+ * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
+ */
+
+LANGUAGE LANG_ITALIAN, SUBLANG_DEFAULT
+
+OPEN_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Apri"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Nome file:", 1090, 6, 6, 76, 9
+ EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Percorso:", -1, 110, 6, 92, 9
+ LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "File di &Tipo:", 1089, 6, 104, 90, 9
+ COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&Unita':", 1091, 110, 104, 92, 9
+ COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Apri", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annulla", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Aiuto", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "Solo &Lettura", 1040, 208, 68, 52, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Salva con nome ..."
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Nome file:", 1090, 6, 6, 76, 9
+ EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Percorso:", -1, 110, 6, 92, 9
+ LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "Files di &Tipo:", 1089, 6, 104, 90, 9
+ COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&Unita':", 1091, 110, 104, 92, 9
+ COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Salva come", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annulla", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Help", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Sola lettura", 1040, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Stampa"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Stampante:", 1088, 6, 6, 40, 9
+ LTEXT "", 1089, 60, 6, 150, 9
+ GROUPBOX "Pagine da stampare", 1072, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "&Tutte", 1056, 16, 45, 60, 12
+ RADIOBUTTON "S&elezione", 1057, 16, 60, 60, 12
+ RADIOBUTTON "&Pagine", 1058, 16, 75, 60, 12
+ DEFPUSHBUTTON "Stampa", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annulla", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Configura", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "&Da:", 1090, 60, 80, 30, 9
+ LTEXT "&A:", 1091, 120, 80, 30, 9
+ LTEXT "&Qualita' di Stampa:", 1092, 6, 100, 76, 9
+ COMBOBOX 1136, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ CHECKBOX "Stampa su Fi&le", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Condensato", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 274, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Configurazione Stampante"
+FONT 8, "MS Shell Dlg"
+{
+ GROUPBOX "Stampante", 1072, 6, 10, 180, 72, BS_GROUPBOX
+ RADIOBUTTON "Stampante &Preferita", 1056, 16, 20, 78, 12
+ LTEXT "[none]", 1088, 35, 35, 120, 9
+ RADIOBUTTON "Stampante &Specifica", 1057, 16, 50, 78, 12
+ COMBOBOX 1136, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Ok", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annulla", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Installa", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "Orientamento", 1073, 6, 85, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "&Verticale", 1058, 50, 100, 42, 12
+ RADIOBUTTON "&Orizzontale", 1059, 50, 115, 50, 12
+ ICON "LANDSCAP", 1097, 10, 95, 32, 32
+ ICON "PORTRAIT", 1098, 10, 95, 32, 32
+ GROUPBOX "Carta", 1074, 120, 85, 150, 50, BS_GROUPBOX
+ LTEXT "&Dimensione", 1089, 130, 100, 30, 9
+ LTEXT "&Sorgente", 1090, 130, 115, 30, 9
+ COMBOBOX 1137, 168, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ COMBOBOX 1138, 168, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_FONT DIALOG DISCARDABLE  13, 54, 264, 147
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Font"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "&Font:",1088 ,6,3,40,9
+    COMBOBOX        1136 ,6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "St&ile:",1089 ,108,3,42,9
+    COMBOBOX        1137,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "&Dimensione:",1090,175,3,38,9
+    COMBOBOX        1138,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
+    DEFPUSHBUTTON   "OK",IDOK,220,6,38,14,WS_GROUP
+    PUSHBUTTON      "Annulla",IDCANCEL,220,23,38,14,WS_GROUP
+    PUSHBUTTON      "A&pplica", 1026,220,40,38,14,WS_GROUP
+    PUSHBUTTON      "&Aiuto" , 1038,220,57,38,14,WS_GROUP
+    GROUPBOX        "Effetti",1072,6,72,84,34,WS_GROUP
+    CHECKBOX	    "&Barrato", 1040, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "&Sottolineato", 1041, 10,94,50,10, BS_AUTOCHECKBOX
+    LTEXT           "&Colore:", 1091 ,6,110,30,9
+    COMBOBOX        1139,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Esempio",grp2,98,72,120,36,WS_GROUP
+    CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "Scr&ipt (translate):",stc7 ,98,114,80,9
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_COLOR DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 300, 185
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Colore"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Colori di &Base:",   1088, 4,    4,  140, 10
+ LTEXT "Colori &Utente:",  1089, 4,   106, 140, 10
+ LTEXT "Colore |  Sol&ido",  1090, 150, 151,  48, 10
+ LTEXT   "&Rosso:", 726 /*1094*/,249,126,24,10
+ EDITTEXT 706, 275,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Verde:",727/*1095*/,249,140,24,10
+ EDITTEXT 707, 275,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Blu:",728 /*1096*/,249,154,24,10
+ EDITTEXT 708, 275,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Tinta:" ,723 /*1091*/,202,126,22,10
+ EDITTEXT 703, 226,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Sat:" ,724 /*1092*/,202,140,22,10
+ EDITTEXT 704, 226,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Lum:" ,725 /*1093*/,202,154,22,10
+ EDITTEXT 705, 226,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
+ CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
+ CONTROL "" ,710,"STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
+ CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
+ CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
+ DEFPUSHBUTTON "Ok",  IDOK,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annulla", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Aiuto", 1038,100,166, 44, 14
+ PUSHBUTTON "&Aggiungi ai Colori Utente",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Definisci Colori Utente >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i in "sol&id"  */
+}
+
+
+FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 236, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Trova"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Tro&va:", -1, 4, 8, 42, 8
+ EDITTEXT 1152, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Parola Intera", 1040, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Maiuscole/Minuscole", 1041, 4, 42, 74, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "Direzione", 1072, 107, 26, 68, 28
+ CONTROL "&Su", 1056, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 111, 38, 24, 12
+ CONTROL "&Giu'", 1057, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 142, 38, 28, 12
+
+ DEFPUSHBUTTON "&Trova Prossimo", IDOK, 180, 5, 54, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annulla", IDCANCEL, 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Aiuto", 1038, 182, 45, 50, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+REPLACEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 230, 94
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sostituisci"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Tro&va:", -1, 4, 9, 48, 8
+ EDITTEXT 1152, 54, 7, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT "Ca&mbia con:", -1, 4, 26, 48, 8
+ EDITTEXT 1153, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Parola Intera", 1040, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Maiuscole/Minuscole", 1041, 5, 62, 59, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ DEFPUSHBUTTON "&Trova Prossimo", IDOK, 174, 4, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Cambia", 1024, 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cambia &Tutto", 1025, 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annulla", IDCANCEL, 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Aiuto", 1038, 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT32 DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Stampa"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Annulla", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "&Aiuto",  pshHelp,  50, 161, 48,14, WS_GROUP
+
+    GROUPBOX        "Stampante",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "Stampa su fi&le", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
+    PUSHBUTTON      "&Proprietà",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Nome:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Stato:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Tipo:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Su:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy Location", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Commento:",       stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy Remark",   stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Copie",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "Numero di &copie:",stc5,168,108,140,8
+    ICON            "",               ico3, 162,124,  76,24, WS_GROUP | SS_CENTERIMAGE
+    CONTROL         "&Fascicola",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,233,130,43,12
+    EDITTEXT                          edt3, 240,106,  32,12, WS_GROUP | ES_NUMBER
+
+    GROUPBOX        "Selezione pagine",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "&Tutto",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "Pa&gine",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    CONTROL         "&Selezione",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    EDITTEXT                          edt1,  74,122,  26,12, WS_GROUP | ES_NUMBER
+    EDITTEXT                          edt2, 118,122,  26,12, WS_GROUP | ES_NUMBER
+    RTEXT           "&da:",         stc2,  52,124,  20,8
+    RTEXT           "&a:",           stc3, 100,124,  16,8
+}
+
+PRINT32_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 178
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Configurazione Stampante"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
+    PUSHBUTTON      "Annulla",IDCANCEL,232,156,48,14
+/*    PUSHBUTTON      "Rete...", psh5, 284,156,48,14 */
+
+    GROUPBOX        "Stampante",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Proprietà",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Nome:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Stato:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Tipo:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Su:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy Location", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Commento:",       stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy Remark",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Carta",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "Di&mensione:",         stc2,  13,108,  38, 8
+    COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Origine:",       stc3,  13,128,  38, 8
+    COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Orientazione",    grp1, 180, 92, 100,56, WS_GROUP
+    ICON            "",               ico1, 195,112,  18,20, WS_GROUP
+    CONTROL         "O&rizzontale",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "V&erticale",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+END
+
+PAGESETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 32, 32, 240, 240
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Setup di Pagina"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "Carta", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "&Dimensione:", stc2, 13, 112, 38, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "V&assoio:", stc3, 13, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Orientazione", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "&Orizzontale", rad1, 13, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Verticale", rad2, 13, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Bordi", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "&Sinistro:", stc15, 88, 172, 21, 8
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Destro:", stc16, 159, 172, 27, 8
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Superiore:", stc17, 88, 192, 21, 8
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Inferiore:", stc18, 159, 192, 23, 8
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "Annulla", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "S&tampante...", psh3, 184, 220, 48, 14
+END
+
+NEWFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 280, 164
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "Apri"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT	"Cerca &in:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
+
+    LTEXT	"Nome &file:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
+    EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
+
+    LTEXT	"File del &tipo:",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
+    COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    CONTROL	"Apri in &sola lettura",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
+
+    DEFPUSHBUTTON	"&Apri",		 IDOK,222,110,50,14
+    PUSHBUTTON		"Annulla",		 IDCANCEL,222,128,50,14
+    PUSHBUTTON		"&Aiuto",		 pshHelp,222,145,50,14
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_ABOUTBOX            "&Informazioni sul Test FolderPicker"
+    IDS_DOCUMENTFOLDERS     "Cartelle Documenti"
+    IDS_PERSONAL            "Documenti"
+    IDS_FAVORITES           "Preferiti"
+    IDS_PATH                "Percorso di Sistema"
+    IDS_DESKTOP             "Desktop"
+    IDS_FONTS               "Font"
+    IDS_MYCOMPUTER          "Risorse del Computer"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_SYSTEMFOLDERS       "Cartelle di Sistema"
+    IDS_LOCALHARDRIVES      "Dischi Rigidi Locali"
+    IDS_FILENOTFOUND        "File non trovato"
+    IDS_VERIFYFILE          "Controllare che il nome del file fornito sia corretto"
+    IDS_CREATEFILE          "Il file non esiste\nCreare il file"
+    IDS_OVERWRITEFILE       "Il file esiste già.\nSovrascriverlo?"
+    IDS_INVALID_FILENAME_TITLE "Caratteri invalidi nel percorso"
+    IDS_INVALID_FILENAME    "Il nome di un file non può contenere i seguenrti caratteri: \n                          / : < > |"
+    IDS_PATHNOTEXISTING     "Il percorso specificato non esiste"
+    IDS_FILENOTEXISTING     "Il file non esiste"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_UPFOLDER         "Su di un livello"
+    IDS_NEWFOLDER        "Crea nuova directory"
+    IDS_LISTVIEW         "Lista"
+    IDS_REPORTVIEW       "Dettagli"
+    IDS_TODESKTOP        "Vai al Desktop"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    PD32_PRINT_TITLE       "Stampa"
+
+    PD32_VALUE_UREADABLE                  "Entry non leggibile"
+    PD32_INVALID_PAGE_RANGE "Questo valore non si trova all'interno della pagina.\n\
+Usare un valore compreso tra %d e %d."
+    PD32_FROM_NOT_ABOVE_TO                "La voce 'da' non può eccedere la voce 'a'."
+    PD32_MARGINS_OVERLAP                  "I margini si sovrappongono o si trovano oltre \
+il limite della carta.\nPer favore ridefinire i margini."
+    PD32_NR_OF_COPIES_EMPTY               "Il valore del numero 'Numero di copie' \
+non può essere vuoto."
+    PD32_TOO_LARGE_COPIES                 "Questo alto numero di copie non è \
+supportato dalla stampante.\nInserire un valore compreso tra 1 e %d"
+    PD32_PRINT_ERROR                      "Si è verificato un errore della stampante."
+    PD32_NO_DEFAULT_PRINTER               "Non è stata impostata una stampante predefinita."
+    PD32_CANT_FIND_PRINTER                "Stampante non trovata."
+    PD32_OUT_OF_MEMORY                    "Memoria esaurita."
+    PD32_GENERIC_ERROR                    "Si è verificato un errore."
+    PD32_DRIVER_UNKNOWN                   "Driver della stampante sconosciuto."
+    PD32_NO_DEVICES                       "Prima di svolgere compiti relativi alla stampante \
+come impostare una pagina o stampare un documento, bisogna installare una stampante. \
+Si consiglia di installare la stampante e poi ritentare."
+
+    PD32_DEFAULT_PRINTER                  "Stampante predefinita; "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Ci sono %d documenti nella coda di stampa"
+    PD32_MARGINS_IN_INCHES                "Margini [pollici]"
+    PD32_MARGINS_IN_MILIMETERS            "Margini [mm]"
+    PD32_MILIMETERS                       "mm"
+
+    PD32_PRINTER_STATUS_READY             "Pronto"
+    PD32_PRINTER_STATUS_PAUSED            "In pausa; "
+    PD32_PRINTER_STATUS_ERROR             "Errore; "
+    PD32_PRINTER_STATUS_PENDING_DELETION  "In attesa di annullamento; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Carta inceppata; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Carta esaurita; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Alimentazione manuale della carta; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Si è verificato un problema con la carta; "
+    PD32_PRINTER_STATUS_OFFLINE           "Stampante offline; "
+    PD32_PRINTER_STATUS_IO_ACTIVE         "I/O Attivo; "
+    PD32_PRINTER_STATUS_BUSY              "Stampante occupata; "
+    PD32_PRINTER_STATUS_PRINTING          "Stampa in corso; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Il vassoio di uscita è pieno; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Non disponibile; "
+    PD32_PRINTER_STATUS_WAITING           "Attesa; "
+    PD32_PRINTER_STATUS_PROCESSING        "Elaborazione; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Inizializazione; "
+    PD32_PRINTER_STATUS_WARMING_UP        "La stampante si sta riscaldando; "
+    PD32_PRINTER_STATUS_TONER_LOW         "Il livello del toner è basso; "
+    PD32_PRINTER_STATUS_NO_TONER          "Manca il toner; "
+    PD32_PRINTER_STATUS_PAGE_PUNT         "Punt della pagina; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "Interrotto dall'utente; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Memoria esaurita; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "La porta stampante è aperta; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Server di stampa sconosciuto; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Modalità risparmio energetico; "
+}
+
+STRINGTABLE DISCARDABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "Nero"
+    IDS_COLOR_MAROON    "Marrone rossiccio"
+    IDS_COLOR_GREEN     "Verde"
+    IDS_COLOR_OLIVE     "Verde oliva"
+    IDS_COLOR_NAVY      "Blu oltremare"
+    IDS_COLOR_PURPLE    "Propora"
+    IDS_COLOR_TEAL      "Teal"
+    IDS_COLOR_GRAY      "Grigio"
+    IDS_COLOR_SILVER    "Argento"
+    IDS_COLOR_RED       "Rosso"
+    IDS_COLOR_LIME      "Verde cedro"
+    IDS_COLOR_YELLOW    "Giallo"
+    IDS_COLOR_BLUE      "Blu"
+    IDS_COLOR_FUCHSIA   "Fucsia"
+    IDS_COLOR_AQUA      "Aqua"
+    IDS_COLOR_WHITE     "Bianco"
+}
+
+STRINGTABLE DISCARDABLE
+{
+IDS_FONT_SIZE   "Scegli la dimesione del carattere tra %d e %d punti."
+IDS_SAVE_BUTTON "Salva"
+IDS_SAVE_IN     "Salva &in:"
+IDS_SAVE        "Salva"
+IDS_SAVE_AS     "Salva come..."
+IDS_OPEN_FILE   "Apri file"
+}

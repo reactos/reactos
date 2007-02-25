@@ -1,0 +1,76 @@
+#include "resource.h"
+
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+STRINGTABLE DISCARDABLE
+{
+
+
+
+
+
+
+
+
+
+STRING_HELP,  "Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+  [Datenträger:]   Legt das Laufwerk zum Formatieren fest.\n\
+  -FS:file-system  Legt das Dateisystem fest (%s).\n\
+  -V:label         Legt den Datentraegernamen fest.\n\
+  -Q               Fuehre Schnellformatierung durch.\n\
+  -A:size          Ueberschreibe Anweisung fuer Standartblockgroesse. Es wird dringend\n\
+                   empfohlen, grundsaetzlich Standarteinstellungen zu verwenden!\n\
+                   NTFS unterstuetzt 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   FAT unterstuetzt 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   NTFS-Kompression wird fuer Blockgroessen ueber 4096 nicht\n\
+                   unterstuetzt.\n\
+  -C               Auf dem neuen Datentraeger erstellte Dateien werden\n\
+                   standartmaessig komprimiert.\n\n"
+
+STRING_COMPLETE   "%lu Prozent komplett.\r"
+
+STRING_FORMAT_FAIL "FormatEx konnte Operation nich erfolgreich beenden.\n\n"
+
+STRING_NO_SUPPORT  "Operation nicht unterstützt"
+
+STRING_FMIFS_FAIL  "Kann FMIFS-Eingangspunkte nicht lokalisieren.\n\n"
+
+STRING_UNKNOW_ARG  "Unbekanntes Argument: %S\n"
+
+STRING_DRIVE_PARM  "Benötigter Laufwerkparameter fehlt.\n\n"
+
+STRING_ERROR_DRIVE_TYPE  "Konnte den Laufwerkstyp nicht erhalten"
+
+STRING_INSERT_DISK       "Legen Sie eine neue Diskette in Laufwerk %C: ein\nund drücken Sie Enter wenn das Laufwerk bereit ist"
+
+STRING_NO_VOLUME         "Kann Medium nich abfragen"
+
+STRING_NO_VOLUME_SIZE    "Kann Mediumsgröße nich abfragen"
+
+STRING_FILESYSTEM        "Der Typ des Dateisystems ist %S.\n"
+
+STRING_LABEL_NAME_EDIT  "Geben Sie die aktuelle Volumebezeichnung für Datenträger %C: ein"
+
+STRING_ERROR_LABEL     "Eine unzulässige Volumebezeichnung wurde für diesen Datenträger eingegeben.\n"
+
+STRING_YN_FORMAT       "\nACHTUNG, beim Formatieren werden ALLE Daten auf dem Datenträger %C: gelöscht!\nMit Formatierung fortfahren? (Ja/Nein)? "
+
+STRING_YES_NO_FAQ      "J/N"
+
+STRING_VERIFYING       "Prüfen"
+
+STRING_FAST_FMT        "Schnellformatierung"
+
+STRING_CREATE_FSYS     "Erzeuge Dateisystem Strukturen.\n"
+
+STRING_FMT_COMPLETE    "Formatierung abgeschlossen.\n"
+
+STRING_VOL_COMPRESS    "Medium unterstützt keine Kompression.\n"
+
+STRING_ENTER_LABEL     "Volumebezeichnung (11 Zeichen, Enter für keine)? "
+
+STRING_NO_LABEL        "Konnte Datenträger nicht benennen"
+
+STRING_FREE_SPACE     "\n%I64d bytes Speicherkapazitaet.\n%I64d bytes freier Speicher.\n"
+
+STRING_SERIAL_NUMBER   "\nVolume Seriennummer ist %04X-%04X\n"
+}

@@ -1,0 +1,216 @@
+# American Dvorak
+map 0x10409
+
+# Note: we are not including the common section
+include modifiers
+
+#
+# Top row
+#
+1 0x2
+2 0x3
+3 0x4
+4 0x5
+5 0x6
+6 0x7
+7 0x8
+8 0x9
+9 0xa
+0 0xb
+BackSpace 0xe
+
+#
+# QWERTY first row
+
+# QWERTY:
+# q w e r t y u i o p
+
+# Dvorak:
+# ' , . p y f g c r l
+
+Tab 0xf localstate
+ISO_Left_Tab 0xf shift
+q 0x2d addupper
+w 0x33 addupper
+e 0x20 addupper
+r 0x18 addupper
+t 0x25 addupper
+y 0x14 addupper
+u 0x21 addupper
+i 0x22 addupper
+o 0x1f addupper
+p 0x13 addupper
+
+#
+# QWERTY second row
+
+# QUERTY:
+# a s d f g h j k l
+
+# Dvorak:
+# a o e u i d h t n
+ 
+a 0x1e addupper
+s 0x27 addupper
+d 0x23 addupper
+f 0x15 addupper
+g 0x16 addupper
+h 0x24 addupper
+j 0x2e addupper
+k 0x2f addupper
+l 0x19 addupper
+Return 0x1c localstate
+
+#
+# QWERTY third row
+
+# QUERTY:
+# z x c v b n m
+
+# Dvorak:
+# ; q j k x b m
+
+z 0x35 addupper
+x 0x30 addupper
+c 0x17 addupper
+v 0x34 addupper
+b 0x31 addupper
+n 0x26 addupper
+m 0x32 addupper
+
+space 0x39 localstate
+
+less 0x56
+greater 0x56 shift
+bar 0x56 altgr
+brokenbar 0x56 shift altgr
+
+#
+# Esc and Function keys
+#
+Escape 0x1 localstate
+F1 0x3b localstate
+F2 0x3c localstate
+F3 0x3d localstate
+F4 0x3e localstate
+F5 0x3f localstate
+F6 0x40 localstate
+F7 0x41 localstate
+F8 0x42 localstate
+F9 0x43 localstate
+F10 0x44 localstate
+F11 0x57 localstate
+SunF36 0x57 localstate
+F12 0x58 localstate
+SunF37 0x58 localstate
+
+# Printscreen, Scrollock and Pause
+# Printscreen really requires four scancodes (0xe0, 0x2a, 0xe0, 0x37),
+# but (0xe0, 0x37) seems to work. 
+Print 0xb7 localstate
+Sys_Req 0xb7 localstate
+Execute 0xb7 localstate
+F22 0xb7 localstate
+Scroll_Lock 0x46
+F23 0x46
+
+#
+# Insert - PgDown
+#
+Insert 0xd2 localstate
+Delete 0xd3 localstate
+Home 0xc7 localstate
+End 0xcf localstate
+Page_Up 0xc9 localstate
+Page_Down 0xd1 localstate
+
+#
+# Arrow keys
+#
+Left 0xcb localstate
+Up 0xc8 localstate
+Down 0xd0 localstate
+Right 0xcd localstate
+
+#
+# Numpad
+#
+Num_Lock 0x45
+KP_Divide 0xb5
+KP_Multiply 0x37
+KP_Subtract 0x4a
+KP_Add 0x4e
+KP_Enter 0x9c
+
+KP_Decimal 0x53 numlock
+KP_Separator 0x53 numlock
+KP_Delete 0x53
+
+KP_0 0x52 numlock
+KP_Insert 0x52
+
+KP_1 0x4f numlock
+KP_End 0x4f
+
+KP_2 0x50 numlock
+KP_Down 0x50
+
+KP_3 0x51 numlock
+KP_Next 0x51
+
+KP_4 0x4b numlock
+KP_Left 0x4b
+
+KP_5 0x4c numlock
+KP_Begin 0x4c
+
+KP_6 0x4d numlock
+KP_Right 0x4d
+
+KP_7 0x47 numlock
+KP_Home 0x47
+
+KP_8 0x48 numlock
+KP_Up 0x48
+
+KP_9 0x49 numlock
+KP_Prior 0x49
+
+#
+# Inhibited keys
+#
+Caps_Lock 0x0 inhibit
+Multi_key 0x0 inhibit
+
+exclam 0x02 shift
+at 0x03 shift
+numbersign 0x04 shift
+dollar 0x05 shift
+percent 0x06 shift
+asciicircum 0x07 shift
+ampersand 0x08 shift
+asterisk 0x09 shift
+parenleft 0x0a shift
+parenright 0x0b shift
+minus 0x28
+underscore 0x28 shift
+equal 0x1b
+plus 0x1b shift
+bracketleft 0x0c
+braceleft 0x0c shift
+bracketright 0x0d
+braceright 0x0d shift
+semicolon 0x2c
+colon 0x2c shift
+apostrophe 0x10
+quotedbl 0x10 shift
+grave 0x29
+asciitilde 0x29 shift
+backslash 0x2b
+bar 0x2b shift
+comma 0x11
+less 0x11 shift
+period 0x12
+greater 0x12 shift
+slash 0x1a
+question 0x1a shift

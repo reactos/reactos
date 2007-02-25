@@ -1,0 +1,23 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = twain_32.dll
+IMPORTS   = user32 gdi32 kernel32
+EXTRALIBS = @SANELIBS@
+EXTRAINCL = @SANEINCL@
+
+LDDLLFLAGS = @LDDLLFLAGS@
+SYMBOLFILE = $(MODULE).tmp.o
+
+C_SRCS = \
+	capability.c \
+	ds_audio.c \
+	ds_ctrl.c \
+	ds_image.c \
+	dsm_ctrl.c \
+	twain32_main.c
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

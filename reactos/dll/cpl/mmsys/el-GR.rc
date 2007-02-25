@@ -1,0 +1,15 @@
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+IDD_HARDWARE DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Συσκευές"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLNAME "Συσκευές ήχου"
+    IDS_CPLDESCRIPTION "Αλλάζει το σχήμα ήχου του υπολογιστή ή τροποποιεί τις ρυθμίσεις για τα ηχεία και τις συσκευές εγγραφής ήχου."
+END
+

@@ -1,0 +1,6 @@
+LIBRARY access.cpl
+
+EXPORTS
+CPlApplet
+
+; EOF

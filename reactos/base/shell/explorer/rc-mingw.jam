@@ -1,0 +1,53 @@
+import type ;
+import generators ;
+import feature ;
+
+type.register RC : rc ;
+
+rule init ( )
+{
+}
+
+rule resource-compile ( target : sources * : properties * )
+{
+#    local OS = [ feature.get-values <os> : $(properties) ] ;
+    resource-compile-mingw $(target) : $(sources[1]) ;
+#    switch $(OS)
+#    {
+#        case "NT" :
+#            resource-compile-nt $(target) : $(sources[1]) ;
+#        case "CYGWIN" :
+#            resource-compile-cygwin $(target) : $(sources[1]) ;
+#        case "FREEBSD" :
+#            create-empty-object $(target) : $(sources[1]) ;
+#        case "*" :
+#            errors.error "Cannot process RC files for OS=$(OS)" ;
+#    }
+}
+
+
+actions quietly resource-compile-nt
+{
+    rc /i "$(>:D)" /fo "$(<)" "$(>)"
+}
+
+actions quietly resource-compile-mingw
+{
+    windres -D__WINDRES__ -o "$(<)" -i "$(>)"
+}
+
+actions quietly resource-compile-cygwin
+{
+    windres -D__WINDRES__ --include-dir "$(>:D)" -o "$(<)" -i "$(>)"
+}
+
+actions quietly create-empty-object
+{
+    as /dev/null -o "$(<)"
+}
+
+# Since it's a common practice to write
+# exe hello : hello.cpp hello.rc
+# we change the name of object created from RC file, to
+# avoid conflict with hello.cpp.
+generators.register-standard rc-mingw.resource-compile : RC : OBJ(%_res) ;

@@ -1,0 +1,124 @@
+
+0x0436 af Afrikaans
+0x041C sq Albanian
+0x0001 ar Arabic
+0x0401 ar-sa Arabic (Saudi Arabia)
+0x0801 ar-iq Arabic (Iraq)
+0x0C01 ar-eg Arabic (Egypt)
+0x1001 ar-ly Arabic (Libya)
+0x1401 ar-dz Arabic (Algeria)
+0x1801 ar-ma Arabic (Morocco)
+0x1C01 ar-tn Arabic (Tunisia)
+0x2001 ar-om Arabic (Oman)
+0x2401 ar-ye Arabic (Yemen)
+0x2801 ar-sy Arabic (Syria)
+0x2C01 ar-jo Arabic (Jordan)
+0x3001 ar-lb Arabic (Lebanon)
+0x3401 ar-kw Arabic (Kuwait)
+0x3801 ar-ae Arabic (U.A.E.)
+0x3C01 ar-bh Arabic (Bahrain)
+0x4001 ar-qa Arabic (Qatar)
+0x042D eu Basque
+0x0402 bg Bulgarian
+0x0423 be Belarusian
+0x0403 ca Catalan
+0x0004 zh Chinese
+0x0404 zh-tw Chinese (Taiwan)
+0x0804 zh-cn Chinese (China)
+0x0C04 zh-hk Chinese (Hong Kong SAR)
+0x1004 zh-sg Chinese (Singapore)
+0x041A hr Croatian
+0x0405 cs Czech
+0x0406 da Danish
+0x0413 nl Dutch (Netherlands)
+0x0813 nl-be Dutch (Belgium)
+0x0009 en English
+0x0409 en-us English (United States)
+0x0809 en-gb English (United Kingdom)
+0x0C09 en-au English (Australia)
+0x1009 en-ca English (Canada)
+0x1409 en-nz English (New Zealand)
+0x1809 en-ie English (Ireland)
+0x1C09 en-za English (South Africa)
+0x2009 en-jm English (Jamaica)
+0x2809 en-bz English (Belize)
+0x2C09 en-tt English (Trinidad)
+0x0425 et Estonian
+0x0438 fo Faeroese
+0x0429 fa Farsi
+0x040B fi Finnish
+0x040C fr French (France)
+0x080C fr-be French (Belgium)
+0x0C0C fr-ca French (Canada)
+0x100C fr-ch French (Switzerland)
+0x140C fr-lu French (Luxembourg)
+0x043C gd Gaelic
+0x0407 de German (Germany)
+0x0807 de-ch German (Switzerland)
+0x0C07 de-at German (Austria)
+0x1007 de-lu German (Luxembourg)
+0x1407 de-li German (Liechtenstein)
+0x0408 el Greek
+0x040D he Hebrew
+0x0439 hi Hindi
+0x040E hu Hungarian
+0x040F is Icelandic
+0x0421 in Indonesian
+0x0410 it Italian (Italy)
+0x0810 it-ch Italian (Switzerland)
+0x0411 ja Japanese
+0x0412 ko Korean
+0x0426 lv Latvian
+0x0427 lt Lithuanian
+0x042F mk FYRO Macedonian
+0x043E ms Malay (Malaysia)
+0x043A mt Maltese
+0x0414 no Norwegian (Bokmal)
+0x0814 no Norwegian (Nynorsk)
+0x0415 pl Polish
+0x0416 pt-br Portuguese (Brazil)
+0x0816 pt Portuguese (Portugal)
+0x0417 rm Rhaeto-Romanic
+0x0418 ro Romanian
+0x0818 ro-mo Romanian (Moldova)
+0x0419 ru Russian
+0x0819 ru-mo Russian (Moldova)
+0x0C1A sr Serbian (Cyrillic)
+0x081A sr Serbian (Latin)
+0x041B sk Slovak
+0x0424 sl Slovenian
+0x042E sb Sorbian
+0x040A es Spanish (Traditional Sort)
+0x080A es-mx Spanish (Mexico)
+0x0C0A es Spanish (International Sort)
+0x100A es-gt Spanish (Guatemala)
+0x140A es-cr Spanish (Costa Rica)
+0x180A es-pa Spanish (Panama)
+0x1C0A es-do Spanish (Dominican Republic)
+0x200A es-ve Spanish (Venezuela)
+0x240A es-co Spanish (Colombia)
+0x280A es-pe Spanish (Peru)
+0x2C0A es-ar Spanish (Argentina)
+0x300A es-ec Spanish (Ecuador)
+0x340A es-cl Spanish (Chile)
+0x380A es-uy Spanish (Uruguay)
+0x3C0A es-py Spanish (Paraguay)
+0x400A es-bo Spanish (Bolivia)
+0x440A es-sv Spanish (El Salvador)
+0x480A es-hn Spanish (Honduras)
+0x4C0A es-ni Spanish (Nicaragua)
+0x500A es-pr Spanish (Puerto Rico)
+0x0430 sx Sutu
+0x041D sv Swedish
+0x081D sv-fi Swedish (Finland)
+0x041E th Thai
+0x0431 ts Tsonga
+0x0432 tn Tswana
+0x041F tr Turkish
+0x0422 uk Ukrainian
+0x0420 ur Urdu
+0x042A vi Vietnamese
+0x0434 xh Xhosa
+0x043D ji Yiddish
+0x0435 zu Zulu
+

@@ -1,0 +1,205 @@
+/*
+ * Copyright 1998 Juergen Schmied
+ * Copyright 2003 Marcelo Duarte
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_DEFAULT
+
+MENU_001 MENU DISCARDABLE
+BEGIN
+	MENUITEM "Ícones &grandes",	FCIDM_SHVIEW_BIGICON
+	MENUITEM "Ícones &pequenos",	FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Lista",		FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "&Detalhes",		FCIDM_SHVIEW_REPORTVIEW
+END
+
+/*
+ shellview background menu
+*/
+MENU_002 MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+	  POPUP "&Exibir"
+	  BEGIN
+	    MENUITEM "Ícones &grandes",	FCIDM_SHVIEW_BIGICON
+	    MENUITEM "Ícones &pequenos",	FCIDM_SHVIEW_SMALLICON
+	    MENUITEM "&Lista",		FCIDM_SHVIEW_LISTVIEW
+	    MENUITEM "&Detalhes",	FCIDM_SHVIEW_REPORTVIEW
+	  END
+	  MENUITEM SEPARATOR
+	  POPUP "O&rganizar ícones"
+	  BEGIN
+	    MENUITEM "Por &nome",	0x30	/* column 0 */
+	    MENUITEM "Por &tipo",	0x32	/* column 2 */
+	    MENUITEM "Por ta&manho",	0x31	/* ... */
+	    MENUITEM "Por &data",	0x33
+	    MENUITEM SEPARATOR
+	    MENUITEM "Auto organi&zar",	FCIDM_SHVIEW_AUTOARRANGE
+	  END
+	  MENUITEM "Alin&har ícones",	FCIDM_SHVIEW_SNAPTOGRID
+	  MENUITEM SEPARATOR
+	  MENUITEM "&Atualizar",		FCIDM_SHVIEW_REFRESH
+	  MENUITEM SEPARATOR
+	  MENUITEM "Co&lar",		FCIDM_SHVIEW_INSERT
+	  MENUITEM "Colar a&talho",	FCIDM_SHVIEW_INSERTLINK
+	  MENUITEM SEPARATOR
+	  POPUP "Novo"
+	  BEGIN
+	    MENUITEM "&Pasta",	FCIDM_SHVIEW_NEWFOLDER
+	    MENUITEM "&Atalho",	FCIDM_SHVIEW_NEWLINK
+	    MENUITEM SEPARATOR
+	  END
+	  MENUITEM SEPARATOR
+	  MENUITEM "Propriedades",	FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+/*
+ shellview item menu
+*/
+MENU_SHV_FILE MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+	  MENUITEM "&Explorar",		FCIDM_SHVIEW_EXPLORE
+	  MENUITEM "A&brir",		FCIDM_SHVIEW_OPEN
+	  MENUITEM SEPARATOR
+	  MENUITEM "C&ortar",		FCIDM_SHVIEW_CUT
+	  MENUITEM "&Copiar",		FCIDM_SHVIEW_COPY
+	  MENUITEM SEPARATOR
+	  MENUITEM "Criar a&talho",	FCIDM_SHVIEW_CREATELINK
+	  MENUITEM "E&xcluir",		FCIDM_SHVIEW_DELETE
+	  MENUITEM "&Renomear",		FCIDM_SHVIEW_RENAME
+	  MENUITEM SEPARATOR
+	  MENUITEM "&Propriedades",	FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+SHBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
+CAPTION "Procurar pasta"
+FONT 8, "MS Shell Dlg"
+{
+ DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancelar", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+ LTEXT "", IDD_TITLE, 4, 4, 180, 12
+ LTEXT "", IDD_STATUS, 4, 25, 180, 12
+ CONTROL "", IDD_TREEVIEW, "SysTreeView32",
+ 	TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
+	WS_BORDER | WS_TABSTOP,
+	4, 40, 180, 120
+}
+
+SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Sobre %s"
+FONT 10, "MS Shell Dlg"
+{
+ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+ LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+ ICON "", 1088, 10, 10, 14, 16
+ LTEXT "", 100, 30, 10, 137, 10
+ LTEXT "", 101, 30, 22, 137, 10
+ LTEXT "ReactOS foi disponibilizado por:", 98, 8, 55, 137, 10
+}
+
+SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+ ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+ LTEXT "Digite o nome do programa, pasta, documento, ou endereço Internet, que o ReactOS irá abrí-lo para você.", 12289, 36, 11, 182, 18
+ LTEXT "&Abrir:", 12305, 7, 39, 24, 10
+ CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+ DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "Cancelar", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "&Procurar...", 12288, 170, 63, 50, 14, WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE
+{
+        /* columns in the shellview */
+	IDS_SHV_COLUMN1		"Arquivo"
+	IDS_SHV_COLUMN2		"Tamanho"
+	IDS_SHV_COLUMN3		"Tipo"
+	IDS_SHV_COLUMN4		"Modificado"
+	IDS_SHV_COLUMN5		"Atributos"
+	IDS_SHV_COLUMN6		"Tamanho"
+	IDS_SHV_COLUMN7		"Disponível"
+	IDS_SHV_COLUMN8		"Nome"
+	IDS_SHV_COLUMN9		"Comentários"
+	IDS_SHV_COLUMN10	"Dono"
+	IDS_SHV_COLUMN11	"Grupo"
+
+        /* special folders */
+	IDS_DESKTOP		"Área de trabalho"
+	IDS_MYCOMPUTER		"Meu computador"
+
+        /* context menus */
+	IDS_VIEW_LARGE		"Ícones &grandes"
+	IDS_VIEW_SMALL		"Ícones &pequenos"
+	IDS_VIEW_LIST		"&Lista"
+	IDS_VIEW_DETAILS	"&Detalhes"
+	IDS_SELECT		"Selecionar"
+	IDS_OPEN		"Abrir"
+
+	IDS_CREATEFOLDER_DENIED "Não pode criar nova pasta: Permissão negada."
+	IDS_CREATEFOLDER_CAPTION "Erro durante a criação da nova pasta"
+	IDS_DELETEITEM_CAPTION "Confirmar exclusão de arquivo"
+	IDS_DELETEFOLDER_CAPTION "Confirmar exclusão de pasta"
+	IDS_DELETEITEM_TEXT "Você tem certeza que deseja excluir '%1'?"
+	IDS_DELETEMULTIPLE_TEXT "Você tem certeza que deseja excluir estes %1 itens?"
+	IDS_OVERWRITEFILE_TEXT "Sobreescrever arquivo %1?"
+	IDS_OVERWRITEFILE_CAPTION "Confirmar sobreescrever arquivo"
+
+        /* message box strings */
+	IDS_RESTART_TITLE       "Reiniciar"
+	IDS_RESTART_PROMPT      "Você quer simular a reinicialização do Windows?"
+	IDS_SHUTDOWN_TITLE      "Desligar"
+	IDS_SHUTDOWN_PROMPT     "Você quer finalizar a sessão no ReactOS?"
+
+        /* shell folder path default values */
+	IDS_PROGRAMS                "Menu Iniciar\\Programas"
+	IDS_PERSONAL                "Meus Documentos"
+	IDS_FAVORITES               "Favoritos"
+	IDS_STARTUP                 "Menu Iniciar\\Programas\\Iniciar"
+	IDS_RECENT                  "Recent"
+	IDS_SENDTO                  "SendTo"
+	IDS_STARTMENU               "Menu Iniciar"
+	IDS_MYMUSIC                 "Meus Documentos\\Minhas Músicas"
+	IDS_MYVIDEO                 "Meus Documentos\\Meus Vídeos"
+	IDS_DESKTOPDIRECTORY        "Desktop"
+	IDS_NETHOOD                 "NetHood"
+	IDS_TEMPLATES               "Templates"
+	IDS_APPDATA                 "Application Data"
+	IDS_PRINTHOOD               "PrintHood"
+	IDS_LOCAL_APPDATA           "Configurações locais\\Dados de aplicativos"
+	IDS_INTERNET_CACHE          "Configurações locais\\Temporary Internet Files"
+	IDS_COOKIES                 "Cookies"
+	IDS_HISTORY                 "Configurações locais\\Histórico"
+	IDS_PROGRAM_FILES           "Arquivos de programas"
+	IDS_MYPICTURES              "Meus Documentos\\Minhas Imagens"
+	IDS_PROGRAM_FILES_COMMON    "Arquivos de programas\\Arquivos comuns"
+	IDS_COMMON_DOCUMENTS        "Documentos"
+	IDS_ADMINTOOLS              "Menu Iniciar\\Programas\\Ferramentas Administrativas"
+	IDS_COMMON_MUSIC            "Documentos\\Minhas Músicas"
+	IDS_COMMON_PICTURES         "Documentos\\Minhas Imagens"
+	IDS_COMMON_VIDEO            "Documentos\\Meus Vídeos"
+	IDS_CDBURN_AREA             "Configurações locais\\Dados de aplicativos\\Microsoft\\CD Burning"
+}

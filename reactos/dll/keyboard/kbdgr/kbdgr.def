@@ -1,0 +1,8 @@
+;
+; ReactOS Operating System
+;
+LIBRARY kbdgr.dll
+
+EXPORTS
+KbdLayerDescriptor
+;EOF

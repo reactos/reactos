@@ -1,0 +1,471 @@
+/*
+ * Copyright 2005 Alexander N. Sørnes
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/*
+ * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
+ */
+
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
+
+OPEN_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Åpne"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Fil&navn:", 1090, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Kateloger:", -1, 110, 6, 92, 9
+ LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "Vis filer av &typen:", 1089, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&Stasjoner:", 1091, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Åpne", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Avbryt", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Hjelp", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "Sk&rivebeskyttet", chx1, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Lagre som . . ."
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Fil&navn:", 1090, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Kataloger:", -1, 110, 6, 92, 9
+ LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "Vis filer av &typen:", 1089, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&Stasjoner:", 1091, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Lagre som", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Avbryt", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Hjelp", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "Sk&rivebeskyttet", chx1, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Skriv ut"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Skriver:", 1088, 6, 6, 40, 9
+ LTEXT "", 1089, 60, 6, 150, 9
+ GROUPBOX "Utskriftsområde", grp1, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "&Alt", rad1, 16, 45, 60, 12
+ RADIOBUTTON "M&erket område", rad2, 16, 60, 60, 12
+ RADIOBUTTON "&Sider", rad3, 16, 75, 60, 12
+ DEFPUSHBUTTON "Skriv ut", 1, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Avbryt", 2, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Opp&sett", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "&Fra:", 1090, 60, 80, 30, 9
+ LTEXT "&Til:", 1091, 120, 80, 30, 9
+ LTEXT "&Utskriftskvalitet:", 1092, 6, 100, 76, 9
+ COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ CHECKBOX "Skriv til fi&l", chx1, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Kondensert", chx2, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Utskriftsinnstillinger"
+FONT 8, "MS Shell Dlg"
+{
+ GROUPBOX "Skriver", grp1, 6, 10, 180, 65, BS_GROUPBOX
+ RADIOBUTTON "Stan&dardskriver", rad1, 16, 20, 80, 12
+ LTEXT "(Ingen)", 1088, 35, 35, 120, 9
+ RADIOBUTTON "S&pesifik skriver", rad2, 16, 50, 80, 12
+ COMBOBOX cmb1, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Avbryt", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Opp&sett", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "Orientering", grp2, 6, 85, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "&Stående", rad3, 50, 100, 40, 12
+ RADIOBUTTON "&Liggende", rad4, 50, 115, 40, 12
+ ICON "LANDSCAP", stc10, 10, 95, 32, 32
+ ICON "PORTRAIT", stc11, 10, 95, 32, 32
+ GROUPBOX "Papir", grp3, 120, 85, 180, 50, BS_GROUPBOX
+ LTEXT "Størr&else", 1089, 130, 95, 30, 9
+ LTEXT "&Kilde", 1090, 130, 110, 30, 9
+ COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_FONT DIALOG DISCARDABLE  13, 54, 264, 147
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Skrift"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "&Skrift:",stc1 ,6,3,40,9
+    COMBOBOX        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "Skriftst&il:",stc2 ,108,3,44,9
+    COMBOBOX        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "&Størrelse:",stc3,179,3,30,9
+    COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
+    DEFPUSHBUTTON   "OK",IDOK,218,6,40,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Avbryt",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Bruk", psh3,218,40,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Hjelp" , pshHelp,218,57,40,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Effekter",grp1,6,72,84,34,WS_GROUP
+    CHECKBOX	    "Gjennomstre&ket", chx1, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "&Understreket", chx2, 10,94,50,10, BS_AUTOCHECKBOX
+    LTEXT           "&Farge:", stc4 ,6,110,30,9
+    COMBOBOX        cmb4,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Forhåndsvisning",grp2,98,72,120,36,WS_GROUP
+    CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "Skr&ipt:",stc7 ,98,114,40,9
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_COLOR DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 300, 185
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Farge"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Basisfarger:",   1088, 4,    4,  140, 10
+ LTEXT "&Egendefinerte farger:",  1089, 4,   106, 140, 10
+ LTEXT "Farge |  Sol&id",  1090, 150, 151,  48, 10
+ LTEXT   "&Rød:", 726 /*1094*/,249,126,24,10
+ EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Grønn:",727/*1095*/,249,140,24,10
+ EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Blå:",728 /*1096*/,249,154,24,10
+ EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Nyanse:" ,723 /*1091*/,202,126,22,10
+ EDITTEXT 703, 226,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Metning:" ,724 /*1092*/,202,140,22,10
+ EDITTEXT 704, 226,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Lum:" ,725 /*1093*/,202,154,22,10
+ EDITTEXT 705, 226,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
+ CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
+ CONTROL "" ,710,"STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
+ CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
+ CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
+ DEFPUSHBUTTON "OK",  1,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Avbryt", 2, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Hjelp", pshHelp,100,166, 44, 14
+ PUSHBUTTON "Legg til i egendefinerte f&arger",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Definer egendefinerte farger >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
+}
+
+
+FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 236, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Finn"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Fi&nn:", -1, 4, 8, 42, 8
+ EDITTEXT edt1, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Finn &kun hele ord", chx1, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Skill &mellom store/små bokstaver", chx2, 4, 42, 64, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "Retning", grp1, 107, 26, 68, 28
+ CONTROL "&Opp", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 111, 38, 20, 12
+ CONTROL "&Ned", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 138, 38, 30, 12
+
+ DEFPUSHBUTTON "&Finn neste", IDOK, 182,  5, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Avbryt", IDCANCEL	 , 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Hjelp", pshHelp	 , 182, 45, 50, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+REPLACEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 230, 94
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Erstatt"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Fi&nn:", -1, 4, 9, 48, 8
+ EDITTEXT edt1, 54, 7, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT "&Erstatt med:", -1, 4, 26, 48, 8
+ EDITTEXT edt2, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Finn kun &hele ord", chx1, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Skill mellom store og små bokstaver", chx2, 5, 62, 59, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+
+ DEFPUSHBUTTON "&Finn neste", IDOK, 174,  4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "E&rsatt", psh1	 , 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Erstatt &alle", psh2 , 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Avbryt", IDCANCEL	 , 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Hjelp", pshHelp	 , 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT32 DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Skriv ut"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Avbryt", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "&Hjelp",  pshHelp,  50, 161, 48,14, WS_GROUP
+
+    GROUPBOX        "Skriver",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "Skriv ti&l fil", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
+    PUSHBUTTON      "&Egenskaper",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Navn:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Status:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Tullestatus",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Type:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Tulletype",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Hvor:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Tulleplassering", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Kommentar:",       stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Tullekommentar",   stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Kopier",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "Antall &kopier:",stc5,168,108,68,8
+    ICON            "",               ico3, 162,124,  76,24, WS_GROUP | SS_CENTERIMAGE
+    CONTROL         "S&orter",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,240,130,36,12
+    EDITTEXT                          edt3, 240,106,  32,12, WS_GROUP | ES_NUMBER
+
+    GROUPBOX        "Utskriftsområde",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "&Alt",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "&Sider",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    CONTROL         "&Merket område",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    EDITTEXT                          edt1,  74,122,  26,12, WS_GROUP | ES_NUMBER
+    EDITTEXT                          edt2, 118,122,  26,12, WS_GROUP | ES_NUMBER
+    RTEXT           "&Fra:",         stc2,  52,124,  20,8
+    RTEXT           "&Til:",           stc3, 100,124,  16,8
+}
+
+PRINT32_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 178
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Utskriftoppsett"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
+    PUSHBUTTON      "Avbryt",IDCANCEL,232,156,48,14
+/*    PUSHBUTTON      "Nettverk . . .", psh5, 284,156,48,14 */
+
+    GROUPBOX        "Skriver",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Egenskaper",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Navn:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Status:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Tullestatus",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Type:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Tulletype",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Plassering:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Tulleplassering", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Kommentar:",       stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Tullekommentar",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Papir",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "&Størrelse:",         stc2,  16,108,  36, 8
+    COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Kilde:",       stc3,  16,128,  36, 8
+    COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Orientering",    grp1, 180, 92, 100,56, WS_GROUP
+    ICON            "",               ico1, 195,112,  18,20, WS_GROUP
+    CONTROL         "S&tående",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "&Liggende",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+END
+
+PAGESETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 32, 32, 240, 240
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Sideoppsett"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "Paper", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "&Størrelse:", stc2, 16, 112, 36, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "Sku&ff:", stc3, 16, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Orientering", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "S&tående", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Liggende", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Rammer", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "V&enstre:", stc15, 88, 172, 21, 8
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  LTEXT "Høy&re:", stc16, 159, 172, 27, 8
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  LTEXT "T&opp:", stc17, 88, 192, 21, 8
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  LTEXT "&Bunn:", stc18, 159, 192, 23, 8
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "Avbryt", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "Sk&river . . .", psh3, 184, 220, 48, 14
+END
+
+NEWFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 280, 164
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "Åpne"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT	"Se &i:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
+
+    LTEXT	"Fil&navn:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
+    EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
+
+    LTEXT	"Fil&type:",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
+    COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    CONTROL	"Åpne som sk&rivebeskyttet",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
+
+    DEFPUSHBUTTON	"&Åpne",		 IDOK,222,110,50,14
+    PUSHBUTTON		"Avbryt",		 IDCANCEL,222,128,50,14
+    PUSHBUTTON		"&Hjelp",		 pshHelp,222,145,50,14
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_ABOUTBOX            "Om k&atalogvelger-test"
+    IDS_DOCUMENTFOLDERS     "Dokumentmapper"
+    IDS_PERSONAL            "Mine dokumenter"
+    IDS_FAVORITES           "Mine favoritter"
+    IDS_PATH                "Systemsti"
+    IDS_DESKTOP             "Skrivebord"
+    IDS_FONTS               "Skrifter"
+    IDS_MYCOMPUTER          "Min datamaskin"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_SYSTEMFOLDERS       "Systemkataloger"
+    IDS_LOCALHARDRIVES      "Lokale harddisker"
+    IDS_FILENOTFOUND        "Fant ikke filen"
+    IDS_VERIFYFILE          "Kontroller at filnavnet som ble oppgitt er korrekt"
+    IDS_CREATEFILE          "Filen finnes ikke.\nSkal den opprettes?"
+    IDS_OVERWRITEFILE       "Filen finnes fra før.\nSkal den overskrives?"
+    IDS_INVALID_FILENAME_TITLE "Ugyldige tegn i filnavnet"
+    IDS_INVALID_FILENAME    "Et filnavn kan ikke inneholder følgende tegn:\n                          / : < > |"
+    IDS_PATHNOTEXISTING     "Stien finnes ikke"
+    IDS_FILENOTEXISTING     "Filen finnes ikke"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_UPFOLDER         "Opp ett nivå"
+    IDS_NEWFOLDER        "Lag ny katalog"
+    IDS_LISTVIEW         "Liste"
+    IDS_REPORTVIEW       "Detaljer"
+    IDS_TODESKTOP        "Bla til skrivebordet"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    PD32_PRINT_TITLE       "Skriv ut"
+
+    PD32_VALUE_UREADABLE                  "Uleselig oppføring"
+    PD32_INVALID_PAGE_RANGE "Denne verdien er ikke innenfor antall sider.\n\
+Oppgi en verdi mellom %d og %d."
+    PD32_FROM_NOT_ABOVE_TO                "'Fra'-verdien kan ikke være større en 'til'-verdien."
+    PD32_MARGINS_OVERLAP                  "Margene overlapper hverandre eller faller utenfor siden.\nSkriv inn andre verdier."
+    PD32_NR_OF_COPIES_EMPTY               "Feltet 'Antall kopier' kan ikke være tomt."
+    PD32_TOO_LARGE_COPIES                 "Et så høyt antall kopier støttes ikke av den valgte skriveren.\nVelg en verdi mellom 1 og %d."
+    PD32_PRINT_ERROR                      "En skriverfeil har oppstått."
+    PD32_NO_DEFAULT_PRINTER               "Ingen standardskriver er definert."
+    PD32_CANT_FIND_PRINTER                "Kunne ikke finne skriveren."
+    PD32_OUT_OF_MEMORY                    "Ikke mer minne."
+    PD32_GENERIC_ERROR                    "En feil har oppstått."
+    PD32_DRIVER_UNKNOWN                   "Ukjent skriverdriver."
+    PD32_NO_DEVICES                       "Du må installere en skriver før du \
+    kan gjøre skriver-relaterte oppgaver som å endre \
+    sideoppsettet og skrive ut et dokument. \
+    Installer en og prøv på nytt."
+
+    PD32_DEFAULT_PRINTER                  "Standardskriver; "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Det er %d dokumenter i køen"
+    PD32_MARGINS_IN_INCHES                "Marger (tommer)"
+    PD32_MARGINS_IN_MILIMETERS            "Marger (mm)"
+    PD32_MILIMETERS                       "mm"
+
+    PD32_PRINTER_STATUS_READY             "Klar"
+    PD32_PRINTER_STATUS_PAUSED            "Satt på pause; "
+    PD32_PRINTER_STATUS_ERROR             "Feil; "
+    PD32_PRINTER_STATUS_PENDING_DELETION  "Venter på sletting; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Papir sitter fast; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Tom for papir; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Fyll på papir manuelt; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Papirproblem; "
+    PD32_PRINTER_STATUS_OFFLINE           "Skriver frakoblet; "
+    PD32_PRINTER_STATUS_IO_ACTIVE         "Inn/Ut aktiv; "
+    PD32_PRINTER_STATUS_BUSY              "Opptatt; "
+    PD32_PRINTER_STATUS_PRINTING          "Skriver ut; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Utskuffen er full; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Ikke tilgjengelig; "
+    PD32_PRINTER_STATUS_WAITING           "Venter; "
+    PD32_PRINTER_STATUS_PROCESSING        "Behandler; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Initaliserer; "
+    PD32_PRINTER_STATUS_WARMING_UP        "Varmer opp; "
+    PD32_PRINTER_STATUS_TONER_LOW         "Toner lav; "
+    PD32_PRINTER_STATUS_NO_TONER          "Ingen toner; "
+    PD32_PRINTER_STATUS_PAGE_PUNT         "Page punt; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "Avbrutt av bruker; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Ikke mer minne; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "Skriverdøren er åpen; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Ukjent skrivertjener; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Strømsparingsmodus; "
+}
+
+STRINGTABLE DISCARDABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "Svart"
+    IDS_COLOR_MAROON    "Rødbrun"
+    IDS_COLOR_GREEN     "Grønn"
+    IDS_COLOR_OLIVE     "Oliven"
+    IDS_COLOR_NAVY      "Marineblå"
+    IDS_COLOR_PURPLE    "Purpur"
+    IDS_COLOR_TEAL      "Teal"
+    IDS_COLOR_GRAY      "Grå"
+    IDS_COLOR_SILVER    "Sølv"
+    IDS_COLOR_RED       "Rød"
+    IDS_COLOR_LIME      "Lime-grønn"
+    IDS_COLOR_YELLOW    "Gul"
+    IDS_COLOR_BLUE      "Blå"
+    IDS_COLOR_FUCHSIA   "Fuchsia"
+    IDS_COLOR_AQUA      "Aqua"
+    IDS_COLOR_WHITE     "Hvit"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Velg en skriftstørrelse mellom %d og %d punkter."
+    IDS_SAVE_BUTTON "&Lagre"
+    IDS_SAVE_IN     "Lagre &i:"
+    IDS_SAVE        "Lagre"
+    IDS_SAVE_AS     "Lagre som"
+    IDS_OPEN_FILE   "Åpne fil"
+}

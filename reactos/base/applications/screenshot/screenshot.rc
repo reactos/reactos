@@ -1,0 +1,10 @@
+#include <windows.h>
+
+#define REACTOS_STR_FILE_DESCRIPTION	"desktop screenshot app\0"
+#define REACTOS_STR_INTERNAL_NAME	"screenshot\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"screenshot.exe\0"
+#include <reactos/version.rc>
+
+#define IDI_ICON 1
+
+IDI_ICON ICON "snap.ico"

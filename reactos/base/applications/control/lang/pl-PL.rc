@@ -1,0 +1,28 @@
+// Polish language resource file (Sebastian Gasiorek, 2005-07-06)
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Plik"
+    BEGIN
+        MENUITEM "&Zamknij",                    IDM_CLOSE
+    END
+    POPUP "&Widok"
+    BEGIN
+        MENUITEM "Du¿e ikony",                  IDM_LARGEICONS
+        MENUITEM "Ma³e ikony",                  IDM_SMALLICONS
+        MENUITEM "Lista",                       IDM_LIST
+        MENUITEM "Szczegó³y",                   IDM_DETAILS
+    END
+    POPUP "Pomoc"
+    BEGIN
+        MENUITEM "O programie",                 IDM_ABOUT
+    END
+END
+

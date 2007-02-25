@@ -1,0 +1,8 @@
+Makefile
+capture.ok
+ds3d.ok
+ds3d8.ok
+dsound.ok
+dsound8.ok
+propset.ok
+testlist.c

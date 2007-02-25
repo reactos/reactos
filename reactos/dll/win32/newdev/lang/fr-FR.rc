@@ -1,0 +1,109 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Installation de matériel"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Bienvenue",IDC_WELCOMETITLE,115,8,195,24
+    LTEXT           "Cet assistant installe un nouveau pilote pour :",
+                    IDC_STATIC,115,21,195,16
+    LTEXT           "Cliquer sur Suivant pour continuer.",IDC_STATIC,115,169,195,17
+    LTEXT           "MATERIEL INCONNU",IDC_DEVICE,129,36,164,11
+    LTEXT           "ATTENTION ! L'INSTALLATION D'UN PILOTE PEUT ENTRAINER LE BLOCAGE DE VOTRE ORDINATEUR OU LE RENDRE INDEMARRABLE !",IDC_STATIC,105,59,210,16
+    CONTROL         "Installer le pilote automatiquement",IDC_RADIO_AUTO,"Button",
+                    BS_AUTORADIOBUTTON,115,112,178,13
+    CONTROL         "Installer le pilote depuis un endroit spécifié",IDC_RADIO_MANUAL,
+                    "Button",BS_AUTORADIOBUTTON,115,133,164,14
+END
+
+IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Installation de matériel"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "L'installation a échoué",IDC_FINISHTITLE,115,8,195,24
+    LTEXT           "Le périphérique n'a pu être installé car aucun pilote adapté n'a pu être trouvé.",
+                    IDC_STATIC,115,40,195,19
+    LTEXT           "Cliquer sur Précédent si vous avez un disque pilote ou vous connaissez le chemin du pilote.",
+                    IDC_STATIC,113,98,181,24
+    CONTROL         "Ne plus afficher ce message",IDC_DONOTSHOWDLG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,114,170,180,11
+END
+
+IDD_INSTALLFAILED DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Installation de matériel"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "L'installation a échoué",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Le matériel n'a pu etre installé en raison d'une erreur inattendue.",
+                    IDC_STATIC,120,40,195,19
+    LTEXT           "Matériel inconnu",IDC_DEVICE,134,55,164,11
+END
+
+IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation de matériel"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Rechercher à cet endroit",IDC_RADIO_SEARCHHERE,"Button",
+                    BS_AUTORADIOBUTTON,27,11,239,13
+    CONTROL         "Choisir le pilote manuellement",IDC_RADIO_CHOOSE,"Button",
+                    BS_AUTORADIOBUTTON,27,98,171,12
+    CONTROL         "Rechercher un disque amovible",IDC_CHECK_MEDIA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
+    CONTROL         "Inclure cet endroit",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,47,54,162,10
+    PUSHBUTTON      "Parcourir",IDC_BROWSE,248,69,45,14
+    COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
+END
+
+IDD_SEARCHDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation de matériel"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "MATERIEL INCONNU",IDC_DEVICE,51,20,169,16
+END
+
+IDD_INSTALLDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation de matériel"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "MATERIEL INCONNU",IDC_DEVICE,51,20,169,16
+END
+
+IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Device installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Installation terminée",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Vous devez redémarrer l'ordinateur avant d'utiliser :",
+                    IDC_STATIC,120,32,195,19
+    LTEXT           "Cliquer sur Terminer pour fermer l'assistant.",IDC_STATIC,120,174,
+                    179,11
+    LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,148,53,147,12
+END
+
+IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Installation de matériel"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Installation terminée",IDC_FINISHTITLE,115,8,195,11
+    LTEXT           "L'assistant a fini d'installer le pilote pour :",
+                    IDC_STATIC,115,32,195,19
+    LTEXT           "Cliquer sur Terminer pour fermer l'assistant.",IDC_STATIC,115,174,
+                    179,11
+    LTEXT           "MATERIEL INCONNU",IDC_DEVICE,148,53,147,12
+END
+

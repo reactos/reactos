@@ -1,0 +1,6 @@
+LIBRARY main.cpl
+
+EXPORTS
+CPlApplet
+
+; EOF

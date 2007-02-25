@@ -1,0 +1,62 @@
+/* It.rc by Roberto 'Speekix' Pellegrino */
+
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APPTITLE            "ReactOS - Benvenuto"
+    IDS_DEFAULTTOPICTITLE   "ReactOS"
+    IDS_DEFAULTTOPICDESC    "Benvenuto nel React Operating System.\n\nClicca su un argomento a sinistra."
+//    IDS_CHECKTEXT           "Mostra ancora questa finestra"
+//    IDS_CLOSETEXT           "Esci"
+END
+
+/* Topic buttons */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICBUTTON0        "Installa ReactOS"
+    IDS_TOPICBUTTON1        "Esplora il CD"
+    IDS_TOPICBUTTON2        "Esci"
+//    IDS_TOPICBUTTON3        "Argomento Vuoto 3"
+//    IDS_TOPICBUTTON4        "Argomento Vuoto 4"
+//    IDS_TOPICBUTTON5        "Argomento Vuoto 5"
+//    IDS_TOPICBUTTON6        "Argomento Vuoto 6"
+//    IDS_TOPICBUTTON7        "Argomento Vuoto 7"
+//    IDS_TOPICBUTTON8        "Argomento Vuoto 8"
+//    IDS_TOPICBUTTON9        "Argomento Vuoto 9"
+END
+
+/* Topic Titolos */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICTITLE0         "Installa ReactOS"
+    IDS_TOPICTITLE1         "Esplora il CD"
+    IDS_TOPICTITLE2         "Esci"
+//    IDS_TOPICTITLE3         "Argomento Vuoto Titolo 3"
+//    IDS_TOPICTITLE4         "Argomento Vuoto Titolo 4"
+//    IDS_TOPICTITLE5         "Argomento Vuoto Titolo 5"
+//    IDS_TOPICTITLE6         "Argomento Vuoto Titolo 6"
+//    IDS_TOPICTITLE7         "Argomento Vuoto Titolo 7"
+//    IDS_TOPICTITLE8         "Argomento Vuoto Titolo 8"
+//    IDS_TOPICTITLE9         "Argomento Vuoto Titolo 9"
+END
+
+/* Descrizione argomentos */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICDESC0          "Crea una nuova installazione di ReactOS sul tuo computer o aggiorna l'installazione esistente."
+    IDS_TOPICDESC1          "Esplora il CD."
+    IDS_TOPICDESC2          "Clicca per uscire dall'applicazione."
+//    IDS_TOPICDESC3          "Descrizione argomento 3.\n\nDescrivi l'argomento 3 qui."
+//    IDS_TOPICDESC4          "Descrizione argomento 4.\n\nDescrivi l'argomento 4 qui."
+//    IDS_TOPICDESC5          "Descrizione argomento 5.\n\nDescrivi l'argomento 5 qui."
+//    IDS_TOPICDESC6          "Descrizione argomento 6.\n\nDescrivi l'argomento 6 qui."
+//    IDS_TOPICDESC7          "Descrizione argomento 7.\n\nDescrivi l'argomento 7 qui."
+//    IDS_TOPICDESC8          "Descrizione argomento 8.\n\nDescrivi l'argomento 8 qui."
+//    IDS_TOPICDESC9          "Descrizione argomento 9.\n\nDescrivi l'argomento 9 qui."
+END
+
+/* EOF */

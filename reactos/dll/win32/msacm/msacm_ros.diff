@@ -1,0 +1,64 @@
+Index: msacm_Uk.rc
+===================================================================
+--- msacm_Uk.rc	(revision 25687)
++++ msacm_Uk.rc	(working copy)
+@@ -0,0 +1,44 @@
++/*
++ * PROJECT:         OLE User Interface Support
++ * LICENSE:         GPL - See COPYING in the top level directory
++ * FILE:            dll/win32/msacm/msacm_Uk.rc
++ * PURPOSE:         Ukraianian resource file for MS ACM
++ * TRANSLATOR:      Artem Reznikov
++ */
++
++LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
++
++DLG_ACMFORMATCHOOSE_ID DIALOG DISCARDABLE  10, 20, 225, 100
++STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
++CAPTION "Sound Selection"
++FONT 8, "MS Shell Dlg"
++BEGIN
++
++    LTEXT           "&Ім'я:", -1, 5, 5, 115, 8, NOT WS_GROUP
++
++    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 115, 60,
++                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
++
++    PUSHBUTTON      "Зберегти &як...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
++    PUSHBUTTON      "&Видалити", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
++
++    LTEXT           "&Формат:", -1, 5, 41, 44, 8, NOT WS_GROUP
++
++    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 39, 170, 60,
++                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
++
++    LTEXT           "&Властивості:", -1, 5, 59, 44, 8, NOT WS_GROUP
++
++#if 0
++    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
++                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP |
++                    CBS_OWNERDRAWFIXED | CBS_HASSTRINGS
++#else
++    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
++                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
++#endif
++    DEFPUSHBUTTON   "OK", IDOK, 48, 80, 40, 14
++    PUSHBUTTON      "Скасувати", IDCANCEL, 92, 80, 40, 14
++    PUSHBUTTON      "&Довідка", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
++
++END
+
+Property changes on: msacm_Uk.rc
+___________________________________________________________________
+Name: svn:eol-style
+   + native
+
+Index: msacm.rc
+===================================================================
+--- msacm.rc	(revision 25687)
++++ msacm.rc	(working copy)
+@@ -34,3 +34,4 @@
+ #include "msacm_Ru.rc"
+ #include "msacm_Sv.rc"
+ #include "msacm_Hu.rc"
++#include "msacm_Uk.rc"

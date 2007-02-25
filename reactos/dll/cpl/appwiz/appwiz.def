@@ -1,0 +1,6 @@
+LIBRARY appwiz.cpl
+
+EXPORTS
+CPlApplet
+
+; EOF

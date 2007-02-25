@@ -1,0 +1,8 @@
+LIBRARY intl.cpl
+
+EXPORTS
+CPlApplet
+RegOptsProc
+ExtraOptsProc
+
+; EOF

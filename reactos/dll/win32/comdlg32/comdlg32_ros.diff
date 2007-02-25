@@ -1,0 +1,439 @@
+Index: colordlg.c
+===================================================================
+--- colordlg.c	(revision 25649)
++++ colordlg.c	(working copy)
+@@ -23,20 +23,7 @@
+    sometimes, especially when 2 instances of the
+    dialog are loaded at the same time */
+ 
+-#include <ctype.h>
+-#include <stdlib.h>
+-#include <stdarg.h>
+-#include <stdio.h>
+-#include <string.h>
+-#include "windef.h"
+-#include "winbase.h"
+-#include "wingdi.h"
+-#include "winuser.h"
+-#include "commdlg.h"
+-#include "dlgs.h"
+-#include "wine/debug.h"
+-#include "cderr.h"
+-#include "cdlg.h"
++#include <precomp.h>
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+ 
+Index: filedlgbrowser.c
+===================================================================
+--- filedlgbrowser.c	(revision 25649)
++++ filedlgbrowser.c	(working copy)
+@@ -19,29 +19,8 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
+-#include <stdarg.h>
+-#include <stdio.h>
+-#include <string.h>
++#include <precomp.h>
+ 
+-#define COBJMACROS
+-#define NONAMELESSUNION
+-#define NONAMELESSSTRUCT
+-
+-#include "windef.h"
+-#include "winbase.h"
+-#include "winnls.h"
+-#include "wingdi.h"
+-#include "winuser.h"
+-#include "winreg.h"
+-
+-#define NO_SHLWAPI_STREAM
+-#include "shlwapi.h"
+-#include "filedlgbrowser.h"
+-#include "cdlg.h"
+-#include "shlguid.h"
+-#include "servprov.h"
+-#include "wine/debug.h"
+-
+ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+ 
+ typedef struct
+Index: precomp.h
+===================================================================
+--- precomp.h	(revision 0)
++++ precomp.h	(revision 0)
+@@ -0,0 +1,76 @@
++#ifndef PRECOMP_H__
++#define PRECOMP_H__
++
++#include <ctype.h>
++#include <stdlib.h>
++#include <stdarg.h>
++#include <stdio.h>
++#include <string.h>
++
++#define COBJMACROS
++#define NONAMELESSUNION
++#define NONAMELESSSTRUCT
++#define NO_SHLWAPI_STREAM
++#define COM_NO_WINDOWS_H
++#define _COMDLG32_
++
++#if defined (_MSC_VER)
++#include <windef.h>
++#include <winbase.h>
++#include <wingdi.h>
++#include <winuser.h>
++#include <commdlg.h>
++#include <shellapi.h>
++#include <shlguid.h>
++#include <shlobj.h>
++#include <shlwapi.h>
++#include <guiddef.h>
++#include <dlgs.h>
++#include <cderr.h>
++#endif
++
++#include "wine/windef.h"
++#include "winbase.h"
++#include "wine/wingdi.h"
++#include "wine/winuser.h"
++#include "wine/commdlg.h"
++#include "wine/shellapi.h"
++
++#if !defined (_MSC_VER)
++#include "psdk/shlguid.h"
++#include "psdk/shlobj.h"
++#endif
++
++#include "wine/shlguid.h"
++#include "wine/shlobj.h"
++
++#if !defined (_MSC_VER)
++#include "psdk/shlguid.h"
++#include "psdk/shlwapi.h"
++#include "wine/shlwapi.h"
++#endif
++
++#include "wine/winbase16.h"
++#include "wine/winuser16.h"
++#include "wine/guiddef.h"
++#include "wine/dlgs.h"
++#include "wine/debug.h"
++#include "wine/unicode.h"
++
++#include <cderr.h>
++#include <cdlg.h>
++#include <winspool.h>
++#include <winerror.h>
++#include <winnls.h>
++#include <winreg.h>
++#include <winternl.h>
++
++//local headers
++#include "cdlg.h"
++#include "printdlg.h"
++#include "filedlgbrowser.h"
++#include "cdlg.h"
++#include "servprov.h"
++#include "filedlg31.h"
++
++#endif
+
+Property changes on: precomp.h
+___________________________________________________________________
+Name: svn:eol-style
+   + native
+
+Index: finddlg32.c
+===================================================================
+--- finddlg32.c	(revision 25649)
++++ finddlg32.c	(working copy)
+@@ -19,23 +19,10 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
+-#include <stdarg.h>
+-#include <string.h>
+-#include "windef.h"
+-#include "winbase.h"
+-#include "winnls.h"
+-#include "wingdi.h"
+-#include "winuser.h"
+-#include "commdlg.h"
+-#include "cderr.h"
+-#include "dlgs.h"
+-#include "wine/debug.h"
++#include <precomp.h>
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+ 
+-#include "cdlg.h"
+-
+-
+ /*-----------------------------------------------------------------------*/
+ 
+ static UINT		FindReplaceMessage;
+Index: cdlg.h
+===================================================================
+--- cdlg.h	(revision 25649)
++++ cdlg.h	(working copy)
+@@ -21,9 +21,7 @@
+ #ifndef _WINE_DLL_CDLG_H
+ #define _WINE_DLL_CDLG_H
+ 
+-#define COM_NO_WINDOWS_H
+-#include "dlgs.h"
+-#include "wownt32.h"
++#include <wownt32.h>
+ 
+ /* Common dialogs implementation globals */
+ #define COMDLG32_Atom	((ATOM)0xa000)	/* MS uses this one to identify props */
+@@ -155,15 +153,6 @@
+ 
+ #define IDS_FAKEDOCTEXT  1300
+ 
+-#include "windef.h"
+-#include "winbase.h"
+-#include "wingdi.h"
+-#include "winuser.h"
+-#include "winnls.h"
+-#include "commctrl.h"
+-#include "shlobj.h"
+-#include "shellapi.h"
+-
+ /* ITEMIDLIST */
+ 
+ extern LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILClone) (LPCITEMIDLIST);
+Index: cdlg32.c
+===================================================================
+--- cdlg32.c	(revision 25649)
++++ cdlg32.c	(working copy)
+@@ -19,21 +19,10 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
+-#include <stdarg.h>
++#include <precomp.h>
+ 
+-#include "windef.h"
+-#include "winbase.h"
+-#include "wingdi.h"
+-#include "winuser.h"
+-#include "commdlg.h"
+-#include "cderr.h"
+-#include "wine/debug.h"
+-
+ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+ 
+-#include "cdlg.h"
+-
+-
+ HINSTANCE	COMDLG32_hInstance = 0;
+ 
+ static DWORD COMDLG32_TlsIndex = TLS_OUT_OF_INDEXES;
+Index: printdlg.c
+===================================================================
+--- printdlg.c	(revision 25649)
++++ printdlg.c	(revision 25650)
+@@ -20,32 +20,11 @@
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+-#include <ctype.h>
+-#include <stdlib.h>
+-#include <stdarg.h>
+-#include <stdio.h>
+-#include <string.h>
+ 
+-#define NONAMELESSUNION
+-#define NONAMELESSSTRUCT
+-#include "windef.h"
+-#include "winbase.h"
+-#include "wingdi.h"
+-#include "winuser.h"
+-#include "winspool.h"
+-#include "winerror.h"
++#include <precomp.h>
+ 
+-#include "wine/debug.h"
+-
+-#include "commdlg.h"
+-#include "dlgs.h"
+-#include "cderr.h"
+-
+ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+ 
+-#include "cdlg.h"
+-#include "printdlg.h"
+-
+ /* Yes these constants are the same, but we're just copying win98 */
+ #define UPDOWN_ID 0x270f
+ #define MAX_COPIES 9999
+Index: fontdlg.c
+===================================================================
+--- fontdlg.c	(revision 25649)
++++ fontdlg.c	(working copy)
+@@ -19,20 +19,7 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
+-#include <ctype.h>
+-#include <stdlib.h>
+-#include <stdarg.h>
+-#include <stdio.h>
+-#include <string.h>
+-#include "windef.h"
+-#include "winbase.h"
+-#include "winnls.h"
+-#include "wingdi.h"
+-#include "winuser.h"
+-#include "commdlg.h"
+-#include "dlgs.h"
+-#include "wine/debug.h"
+-#include "cderr.h"
++#include <precomp.h>
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+ 
+Index: filedlg.c
+===================================================================
+--- filedlg.c	(revision 25649)
++++ filedlg.c	(working copy)
+@@ -46,40 +46,11 @@
+  *
+  */
+ 
+-#include "config.h"
+-#include "wine/port.h"
++//#include "config.h"
++//#include "wine/port.h"
+ 
+-#include <ctype.h>
+-#include <stdlib.h>
+-#include <stdarg.h>
+-#include <stdio.h>
+-#include <string.h>
++#include <precomp.h>
+ 
+-#define COBJMACROS
+-#define NONAMELESSUNION
+-#define NONAMELESSSTRUCT
+-
+-#include "windef.h"
+-#include "winbase.h"
+-#include "winreg.h"
+-#include "winternl.h"
+-#include "winnls.h"
+-#include "wine/unicode.h"
+-#include "wingdi.h"
+-#include "winuser.h"
+-#include "winreg.h"
+-#include "commdlg.h"
+-#include "dlgs.h"
+-#include "cdlg.h"
+-#include "filedlg31.h"
+-#include "wine/debug.h"
+-#include "cderr.h"
+-#include "shellapi.h"
+-#include "shlguid.h"
+-#include "shlobj.h"
+-#include "filedlgbrowser.h"
+-#include "shlwapi.h"
+-
+ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+ 
+ #define UNIMPLEMENTED_FLAGS \
+Index: comdlg32.rbuild
+===================================================================
+--- comdlg32.rbuild	(revision 25649)
++++ comdlg32.rbuild	(working copy)
+@@ -30,4 +30,5 @@
+ 	<file>printdlg.c</file>
+ 	<file>rsrc.rc</file>
+ 	<file>comdlg32.spec</file>
++	<pch>precomp.h</pch>
+ </module>
+Index: filedlg31.c
+===================================================================
+--- filedlg31.c	(revision 25649)
++++ filedlg31.c	(working copy)
+@@ -18,33 +18,11 @@
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+-#include <ctype.h>
+-#include <stdlib.h>
+-#include <stdarg.h>
+-#include <stdio.h>
+-#include <string.h>
+-#include "windef.h"
+-#include "winbase.h"
+-#include "winnls.h"
+-#include "wingdi.h"
+-#include "winuser.h"
+-#include "wine/unicode.h"
+-#include "wine/debug.h"
+-#include "cderr.h"
+-#include "winreg.h"
+-#include "winternl.h"
+-#include "winuser.h"
+-#include "commdlg.h"
+-#include "cderr.h"
+-#include "winreg.h"
+-#include "winternl.h"
+-#include "shlwapi.h"
+ 
++#include <precomp.h>
++
+ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+ 
+-#include "cdlg.h"
+-#include "filedlg31.h"
+-
+ #define BUFFILE 512
+ #define BUFFILEALLOC 512 * sizeof(WCHAR)
+ 
+Index: filetitle.c
+===================================================================
+--- filetitle.c	(revision 25649)
++++ filetitle.c	(working copy)
+@@ -19,22 +19,8 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
+-#include <stdarg.h>
+-#include <string.h>
++#include <precomp.h>
+ 
+-#include "windef.h"
+-#include "winbase.h"
+-#include "winnls.h"
+-#include "winreg.h"
+-#include "winternl.h"
+-#include "wingdi.h"
+-#include "winuser.h"
+-#include "commdlg.h"
+-#include "cdlg.h"
+-#include "cdlg16.h"
+-#include "wine/unicode.h"
+-#include "wine/debug.h"
+-
+ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+ 
+ /***********************************************************************
+@@ -49,11 +35,11 @@
+     LPWSTR lpWTitle;
+ 
+     RtlCreateUnicodeStringFromAsciiz(&strWFile, lpFile);
+-    lpWTitle = RtlAllocateHeap( GetProcessHeap(), 0, cbBuf*sizeof(WCHAR));
++    lpWTitle = HeapAlloc( GetProcessHeap(), 0, cbBuf*sizeof(WCHAR));
+     ret = GetFileTitleW(strWFile.Buffer, lpWTitle, cbBuf);
+     if (!ret) WideCharToMultiByte( CP_ACP, 0, lpWTitle, -1, lpTitle, cbBuf, NULL, NULL );
+     RtlFreeUnicodeString( &strWFile );
+-    RtlFreeHeap( GetProcessHeap(), 0, lpWTitle );
++    HeapFree( GetProcessHeap(), 0, lpWTitle );
+     return ret;
+ }
+ 

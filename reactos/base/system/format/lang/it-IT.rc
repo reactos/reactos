@@ -1,0 +1,72 @@
+#include "resource.h"
+
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005
+ */
+
+STRINGTABLE DISCARDABLE
+{
+STRING_HELP,  "Uso: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+  [drive:]         Specifica l'unità disco da formattare.\n\
+  -FS:file-system  Specifica il tipo di filesystem (%s).\n\
+  -V:label         Specifica l'etichetta del volume.\n\
+  -Q               Esegue una formattazione rapida.\n\
+  -A:size          Altera la dimensione predefinita della unità di allocazione.\n\
+                   Le impostazioni predefinite sono fortemente consigliate per un uso normale\n\
+                   NTFS supporta 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   FAT supporta 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   NTFS compresso non è supportato per unità di allocazione\n\
+                   maggiori di 4096.\n\
+  -C               I file creati sul nuovo volume saranno compressi.\n\n"
+
+STRING_COMPLETE   "%lu percento completato.\r"
+
+STRING_FORMAT_FAIL "FormatEx non ha completato l'operazione in modo regolare.\n\n"
+
+STRING_NO_SUPPORT  "Operazione non supportata"
+
+STRING_FMIFS_FAIL  "Impossibile trovare 'FMIFS entry points'.\n\n"
+
+STRING_UNKNOW_ARG  "Parametro sconosciuto: %S\n"
+
+STRING_DRIVE_PARM  "Manca il parametro 'drive'.\n\n"
+
+STRING_ERROR_DRIVE_TYPE  "Impossibile rilevare il tipo di drive"
+
+STRING_INSERT_DISK       "Inserire un floppy nuovo nel drive %C:\n e successivamente premere Invio..."
+
+STRING_NO_VOLUME         "Impossibile rilevare il volume"
+
+STRING_NO_VOLUME_SIZE    "Impossibile rilevare la dimensione del volume"
+
+STRING_FILESYSTEM        "Il tipo di file system è %S.\n"
+
+STRING_LABEL_NAME_EDIT  "Inserire l'etichetta attuale del volume del drive %C: "
+
+STRING_ERROR_LABEL     "L'etichetta del volume inserita per questo drive è sbagliata.\n"
+
+STRING_YN_FORMAT       "\nATTENZIONE, TUTTI I DATI SUL DISCO FISSO %C: SARANNO PERSI!\nVuoi procedere (S/N)? "
+
+STRING_YES_NO_FAQ      "SN"
+
+STRING_VERIFYING       "Verifica in corso"
+
+STRING_FAST_FMT        "Formattazione rapida"
+
+STRING_CREATE_FSYS     "Allestimento delle strutture del file system.\n"
+
+STRING_FMT_COMPLETE    "Formattazione completa.\n"
+
+STRING_VOL_COMPRESS    "Il Volume non supporta la compressione.\n"
+
+STRING_ENTER_LABEL     "Etichetta (11 caratteri, Invio per nessuna)? "
+
+STRING_NO_LABEL        "Impossibile applicare l'etichetta al volume"
+
+STRING_FREE_SPACE     "\n%I64d bytes totali sul disco.\n%I64d bytes sono liberi.\n"
+
+STRING_SERIAL_NUMBER   "\nVolume Serial Number è %04X-%04X\n"
+}

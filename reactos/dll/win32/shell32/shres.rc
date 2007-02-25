@@ -1,0 +1,91 @@
+/*
+ * Top level resource file for shell stuff
+ *
+ * Copyright 1998 Juergen Schmied
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "wingdi.h"
+#include "shlobj.h"
+#include "shresdef.h"
+
+#include "version.rc"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+shv_accel ACCELERATORS
+BEGIN
+	VK_F5, FCIDM_SHVIEW_REFRESH, VIRTKEY
+END
+
+
+
+/*
+ * Everything that does not depend on language,
+ * like textless bitmaps etc, go into the
+ * neutral language. This will prevent them from
+ * being duplicated for each language.
+ */
+#include "shell32_xx.rc"
+
+
+/*
+ * This include a set of Shell32 icons, 
+ * bitmaps and avi files. Licence's can be
+ * found in the corresponding directorys
+ */
+#include "icon_res.rc"
+//#include "bitmap_res.rc"
+#include "avi_res.rc"
+
+
+/*
+ * Everything specific to any language goes
+ * in one of the specific files.
+ * Note that you can and may override resources
+ * which also have a neutral version. This is to
+ * get localized bitmaps for example.
+ */
+#include "shell32_Bg.rc"
+#include "shell32_Ca.rc"
+#include "shell32_Cn.rc"
+#include "shell32_Cs.rc"
+#include "shell32_Da.rc"
+#include "shell32_De.rc"
+#include "shell32_En.rc"
+#include "shell32_Eo.rc"
+#include "shell32_Es.rc"
+#include "shell32_Fi.rc"
+#include "shell32_Fr.rc"
+#include "shell32_Hu.rc"
+#include "shell32_It.rc"
+#include "shell32_Ja.rc"
+#include "shell32_Ko.rc"
+#include "shell32_Nl.rc"
+#include "shell32_No.rc"
+#include "shell32_Pl.rc"
+#include "shell32_Pt.rc"
+#include "shell32_Ru.rc"
+#include "shell32_Si.rc"
+#include "shell32_Sk.rc"
+#include "shell32_Sv.rc"
+#include "shell32_Uk.rc"
+#include "shell32_Wa.rc"
+#include "shell32_Zh.rc"

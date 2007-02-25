@@ -1,0 +1,39 @@
+Next-Gen (NT 5.2) Executive Locks in NTOSKRNL.
+------------------------------
+1a. Rundown Protection
+USED IN: Thread/Process Ps* Code.
+EXAMPLES: NtSetInformationProcess/Thread, PspCreateThread/Process, PspSuspend/ResumeThread...
+REPLACES: Unlocked access and/or PsLock/UnlockProcess.
+ROS STATUS: Implemented. Code needs cleanup. Not yet tested. Not yet used.
+
+1b. Cache-Aware Rundown Protection
+USED IN: Unknown. Functions exported for drivers.
+EXAMPLES: None.
+REPLACES: Nothing.
+ROS STATUS: Unimplemented.
+
+2. Guarded Mutex
+USED IN: Configuration Manager, MCB Functions (FsRtl), Binary Hive Module (Hv), PnP (Notifications), LPC, Jobs (Ps), Device Map (Ob), and Memory Management (Address Space/Virtual Memory).
+EXAMPLES: Too many.
+REPLACES: Anything that used FAST_MUTEX.
+ROS STATUS: Implemented, slightly tested; appears to still contain a bug.
+
+3. Fast Referencing
+USED IN: Tokens.
+EXAMPLES: R: PsReferencePrimary/EffectiveToken. D: Failure code of anything that calls those two functions.
+REPLACES: Normal referencing.
+ROS STATUS: Hackplemented stubs.
+
+4a. Pushlocks
+USED IN: Configuration Manager (Cm), Handle Table (Ex), Binary Hive Module (Hv), Memory Management (Address Space/Virtual Memory), Object Namespace (Directories/Names) (Ob), Impersonation (Ps).
+EXAMPLES: Too many.
+REPLACES: Anything that used ERESOURCE.
+ROS STATUS: Implemented (missing Block/([Timed]Wait)Unblock) and slightly tested.
+
+4b. Cache-Aware Pushlocks
+USED IN: AWE (Mm).
+EXAMPLES: None.
+REPLACES: Executive Resources.
+ROS STATUS: Unimplemented.
+
+TODO: Kernel Locks (Queued and In-Stack Spinlocks)

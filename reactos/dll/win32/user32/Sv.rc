@@ -1,0 +1,95 @@
+/////////////////////////////////////////////////////////////////////////////
+// Swedish (SE) resources
+/*
+ * Copyright 2005 David Nordenberg
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+ 
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs
+//
+
+SELWINDOW DIALOG DISCARDABLE 20, 20, 220, 140
+STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Välj fönster"
+BEGIN
+  LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+  PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&Avbryt", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menus
+//
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  POPUP "DUMMY"
+  BEGIN
+    MENUITEM "&Ångra", EM_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "&Klipp ut", WM_CUT
+    MENUITEM "K&opiera", WM_COPY
+    MENUITEM "K&listra in", WM_PASTE
+    MENUITEM "&Ta bort", WM_CLEAR
+    MENUITEM SEPARATOR
+    MENUITEM "&Markera allt", EM_SETSEL
+  END
+}
+
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  MENUITEM "&Återställ", 61728
+  MENUITEM "&Flytta", 61456
+  MENUITEM "S&torlek", 61440
+  MENUITEM "&Minimera", 61472
+  MENUITEM "Ma&ximera", 61488
+  MENUITEM SEPARATOR
+  MENUITEM "&Stäng\tAlt-F4", 61536
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE
+{
+  IDS_ERROR,    "Fel"
+  IDS_OK,       "OK"
+  IDS_CANCEL,   "Avbryt"
+  IDS_ABORT,    "&Avbryt"
+  IDS_RETRY,    "&Försök igen"
+  IDS_IGNORE,   "&Ignorera"
+  IDS_YES,      "&Ja"
+  IDS_NO,       "&Nej"
+  IDS_HELP,     "Hjälp"
+  IDS_TRYAGAIN, "&Försök igen"
+  IDS_CONTINUE, "F&ortsätt"
+}
+
+STRINGTABLE
+{
+  IDS_MDI_MOREWINDOWS, "&Fler fönster..."
+}
+

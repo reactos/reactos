@@ -1,0 +1,69 @@
+# generated from XKB map br
+include common
+map 0x416
+exclam 0x02 shift
+onesuperior 0x02 altgr
+exclamdown 0x02 shift altgr
+at 0x03 shift
+twosuperior 0x03 altgr
+onehalf 0x03 shift altgr
+numbersign 0x04 shift
+threesuperior 0x04 altgr
+threequarters 0x04 shift altgr
+dollar 0x05 shift
+sterling 0x05 altgr
+onequarter 0x05 shift altgr
+percent 0x06 shift
+cent 0x06 altgr
+dead_diaeresis 0x07 shift
+notsign 0x07 altgr
+diaeresis 0x07 shift altgr
+ampersand 0x08 shift
+braceleft 0x08 altgr
+asterisk 0x09 shift
+bracketleft 0x09 altgr
+parenleft 0x0a shift
+bracketright 0x0a altgr
+parenright 0x0b shift
+braceright 0x0b altgr
+minus 0x0c
+underscore 0x0c shift
+backslash 0x0c altgr
+equal 0x0d
+plus 0x0d shift
+section 0x0d altgr
+EuroSign 0x12 altgr
+registered 0x13 altgr
+dead_acute 0x1a
+dead_grave 0x1a shift
+acute 0x1a altgr
+grave 0x1a shift altgr
+bracketleft 0x1b
+braceleft 0x1b shift
+ordfeminine 0x1b altgr
+ccedilla 0x27
+Ccedilla 0x27 shift
+dead_tilde 0x28
+dead_circumflex 0x28 shift
+asciitilde 0x28 altgr
+asciicircum 0x28 shift altgr
+apostrophe 0x29
+quotedbl 0x29 shift
+bracketright 0x2b
+braceright 0x2b shift
+masculine 0x2b altgr
+copyright 0x2e altgr
+mu 0x32 altgr
+comma 0x33
+less 0x33 shift
+period 0x34
+greater 0x34 shift
+semicolon 0x35
+colon 0x35 shift
+comma 0x53 numlock
+backslash 0x56
+bar 0x56 shift
+slash 0x73
+question 0x73 shift
+degree 0x73 altgr
+KP_Decimal 0x34

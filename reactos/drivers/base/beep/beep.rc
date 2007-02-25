@@ -1,0 +1,7 @@
+/* $Id$ */
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"PC Speaker Device Driver\0"
+#define REACTOS_STR_INTERNAL_NAME	"beep\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"beep.sys\0"
+#include <reactos/version.rc>

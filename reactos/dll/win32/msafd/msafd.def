@@ -1,0 +1,8 @@
+; MSAFD.DLL - Ancillary Function Driver DLL
+
+LIBRARY msafd.dll
+
+EXPORTS
+WSPStartup@76
+
+; EOF

@@ -1,0 +1,169 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&File"
+  BEGIN
+    MENUITEM "&New...",         ID_NEW
+    MENUITEM "&Open...",        ID_OPEN
+    MENUITEM SEPARATOR
+    MENUITEM "&Close\tCtrl+F4", ID_CLOSE, GRAYED
+    MENUITEM "C&lose all",      ID_CLOSEALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Save",           ID_SAVE, GRAYED
+    MENUITEM "Save &As...",     ID_SAVEAS, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Print Pre&view",  ID_PRINTPRE, GRAYED
+    MENUITEM "&Print...",       ID_PRINT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Page Set&up...",  ID_PAGESETUP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "E&xit\tAlt+F4",   ID_EXIT
+  END
+  POPUP "&Edit"
+  BEGIN
+    MENUITEM "&Undo",           ID_UNDO, GRAYED
+    MENUITEM "&Redo",           ID_REDO, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t",            ID_CUT, GRAYED
+    MENUITEM "&Copy",           ID_COPY, GRAYED
+    MENUITEM "&Paste",          ID_PASTE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Clear",           -1, GRAYED
+    MENUITEM "Select &All",     ID_SELALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Find...\tCtrl+F",-1, GRAYED
+    MENUITEM "Find Next",       -1, GRAYED
+    MENUITEM "Replace\tCtrl+H", -1, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Object Properties",-1, GRAYED
+    MENUITEM "Object",          -1, GRAYED
+  END
+  POPUP "&View"
+  BEGIN
+    MENUITEM "&Toolbar",        -1, CHECKED
+    MENUITEM "&Format Bar",     -1, CHECKED
+    MENUITEM "&Ruler",          -1, CHECKED
+    MENUITEM "&Status Bar",     ID_STATUSBAR, CHECKED
+  END
+  POPUP "&Insert"
+  BEGIN
+    MENUITEM "&Date and Time...",-1, GRAYED
+    MENUITEM "&Object...",       -1, GRAYED
+  END
+  POPUP "&Format"
+  BEGIN
+    MENUITEM "&Font...",        -1 GRAYED
+    MENUITEM "Bulletstyle",     -1, GRAYED
+    MENUITEM "Paragraph...",    -1, GRAYED
+    MENUITEM "tabs...",         -1, GRAYED
+  END
+  POPUP "&Window"
+  BEGIN
+    MENUITEM "&Cascade",           ID_WINDOW_CASCADE
+    MENUITEM "Tile &Horizontally", ID_WINDOW_TILE_HORZ
+    MENUITEM "Tile &Vertically",   ID_WINDOW_TILE_VERT
+    MENUITEM "&Arrange Icons",     ID_WINDOW_ARRANGE
+    MENUITEM SEPARATOR
+    MENUITEM "Nex&t\tCtrl+F6",     ID_WINDOW_NEXT
+  END
+  POPUP "&Help"
+  BEGIN
+    MENUITEM "&About...",       ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+
+    MENUITEM SEPARATOR
+
+  END
+END
+
+
+IDD_NEWDOCSEL DIALOGEX 6,6,159,67
+CAPTION "New"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  LTEXT "New document Type:", IDC_STATIC, 4, 3, 72, 9
+  LISTBOX IDC_LIST, 4, 16, 104, 46, WS_TABSTOP
+  PUSHBUTTON "&OK", IDOK, 112, 16, 44, 13
+  PUSHBUTTON "&Cancel", IDCANCEL, 112, 33, 44, 13
+END
+
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "About WordPad"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "WordPad II v0.1\nCopyright (C) 2006\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON "Close", IDOK, 65, 162, 44, 15
+  ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 40, 174, 110, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE           "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_DEFAULT_NAME      "Document %1!u!"
+  IDS_READY             " Ready."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_DOC_TYPE_RICH_TEXT    "Rich Text Document"
+  IDS_DOC_TYPE_UNICODE_TEXT "Text Document"
+  IDS_DOC_TYPE_TEXT         "Unicode Text Document"
+END
+
+
+
+/* Tooltips */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_NEW       "New"
+  IDS_TOOLTIP_OPEN      "Open"
+  IDS_TOOLTIP_SAVE      "Save"
+  IDS_TOOLTIP_PRINTPRE  "Print preview"
+  IDS_TOOLTIP_PRINT     "Print"
+  IDS_TOOLTIP_CUT       "Cut"
+  IDS_TOOLTIP_COPY      "Copy"
+  IDS_TOOLTIP_PASTE     "Paste"
+  IDS_TOOLTIP_UNDO      "Undo"
+  IDS_TOOLTIP_REDO      "Redo"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_NEW          " Creates a new document."
+  IDS_HINT_OPEN         " Opens an existing document."
+  IDS_HINT_CLOSE        " Closes this window."
+  IDS_HINT_CLOSEALL     " Closes all windows."
+  IDS_HINT_SAVE         " Saves the active document."
+  IDS_HINT_SAVEAS       " Saves the active document with a new name."
+  IDS_HINT_PRINT        " Prints the active document."
+  IDS_HINT_PRINTPRE     " Previews the printed document."
+  IDS_HINT_PAGESETUP    " Changes page layout settings."
+  IDS_HINT_EXIT         " Exits this application."
+
+  IDS_HINT_CASCADE      " Arrange windows so they overlap."
+  IDS_HINT_TILE_HORZ    " Arrange windows as non-overlapping tiles."
+  IDS_HINT_TILE_VERT    " Arrange windows as non-overlapping tiles."
+  IDS_HINT_ARRANGE      " Arrange icons at the bottom of the window."
+  IDS_HINT_NEXT         " Activates the next window."
+
+  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
+  IDS_HINT_SYS_MOVE     " Moves this window."
+  IDS_HINT_SYS_SIZE     " Resizes this window."
+  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
+  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
+END
+

@@ -1,0 +1,205 @@
+/*
+ * Copyright 2005 Milko Krachounov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+MENU_001 MENU DISCARDABLE
+BEGIN
+	MENUITEM "&Големи икони",	FCIDM_SHVIEW_BIGICON
+	MENUITEM "&Малки икони",	FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Списък",		FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "&Подробности",	FCIDM_SHVIEW_REPORTVIEW
+END
+
+/*
+ shellview background menu
+*/
+MENU_002 MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+	  POPUP "&Изглед"
+	  BEGIN
+	    MENUITEM "&Големи икони",	FCIDM_SHVIEW_BIGICON
+	    MENUITEM "&Малки икони",	FCIDM_SHVIEW_SMALLICON
+	    MENUITEM "&Списък",		FCIDM_SHVIEW_LISTVIEW
+	    MENUITEM "&Подробности",	FCIDM_SHVIEW_REPORTVIEW
+	  END
+	  MENUITEM SEPARATOR
+	  POPUP "Подреди &иконите"
+	  BEGIN
+	    MENUITEM "По &име",		0x30	/* column 0 */
+	    MENUITEM "По &тип",		0x32	/* column 2 */
+	    MENUITEM "По &размер",	0x31	/* ... */
+	    MENUITEM "По &дата",	0x33
+	    MENUITEM SEPARATOR
+	    MENUITEM "&Автоматично подреждане",	FCIDM_SHVIEW_AUTOARRANGE
+	  END
+	  MENUITEM "Подравни иконите",		FCIDM_SHVIEW_SNAPTOGRID
+	  MENUITEM SEPARATOR
+	  MENUITEM "Опресни",			FCIDM_SHVIEW_REFRESH
+	  MENUITEM SEPARATOR
+	  MENUITEM "Вмъкни",			FCIDM_SHVIEW_INSERT
+	  MENUITEM "Вмъкни като връзка",	FCIDM_SHVIEW_INSERTLINK
+	  MENUITEM SEPARATOR
+	  POPUP "Създай"
+	  BEGIN
+	    MENUITEM "Нова &папка",		FCIDM_SHVIEW_NEWFOLDER
+	    MENUITEM "Нова &връзка",		FCIDM_SHVIEW_NEWLINK
+	    MENUITEM SEPARATOR
+	  END
+	  MENUITEM SEPARATOR
+	  MENUITEM "Свойства",			FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+/*
+ shellview item menu
+*/
+MENU_SHV_FILE MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+	  MENUITEM "&Разгледай",	FCIDM_SHVIEW_EXPLORE
+	  MENUITEM "&Отвори",		FCIDM_SHVIEW_OPEN
+	  MENUITEM SEPARATOR
+	  MENUITEM "&Изрежи",		FCIDM_SHVIEW_CUT
+	  MENUITEM "&Копирай",		FCIDM_SHVIEW_COPY
+	  MENUITEM SEPARATOR
+	  MENUITEM "Създай &връзка",	FCIDM_SHVIEW_CREATELINK
+	  MENUITEM "Из&трий",		FCIDM_SHVIEW_DELETE
+	  MENUITEM "&Преименувай",	FCIDM_SHVIEW_RENAME
+	  MENUITEM SEPARATOR
+	  MENUITEM "&Свойства",		FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+SHBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
+CAPTION "Избор на папка"
+FONT 8, "MS Shell Dlg"
+{
+ DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Отмени", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+ LTEXT "", IDD_TITLE, 4, 4, 180, 12
+ LTEXT "", IDD_STATUS, 4, 25, 180, 12
+ CONTROL "", IDD_TREEVIEW, "SysTreeView32",
+ 	TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
+	WS_BORDER | WS_TABSTOP,
+	4, 40, 180, 120
+}
+
+SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Относно %s"
+FONT 10, "MS Shell Dlg"
+{
+ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+ LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+ ICON "", 1088, 10, 10, 14, 16
+ LTEXT "", 100, 30, 10, 137, 10
+ LTEXT "", 101, 30, 22, 137, 10
+ LTEXT "Wine беше създаден за вас от:", 98, 8, 55, 137, 10
+}
+
+SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+ ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+ LTEXT "Въведете име на програма, папка, документ или Интернет ресурс и Wine ще го отвори за вас.", 12289, 36, 11, 182, 18
+ LTEXT "&Open:", 12305, 7, 39, 24, 10
+ CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+ DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "Отмени", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "&Избери...", 12288, 170, 63, 50, 14, WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE
+{
+        /* columns in the shellview */
+	IDS_SHV_COLUMN1		"Файл"
+	IDS_SHV_COLUMN2		"Размер"
+	IDS_SHV_COLUMN3		"Тип"
+	IDS_SHV_COLUMN4		"Променен"
+	IDS_SHV_COLUMN5		"Атрибути"
+	IDS_SHV_COLUMN6		"Размер"
+	IDS_SHV_COLUMN7		"Оставащ размер" /* Size available, Квооооооооооооо!? */
+	IDS_SHV_COLUMN8		"Име"
+	IDS_SHV_COLUMN9		"Коментар"
+	IDS_SHV_COLUMN10	"Собственик"
+	IDS_SHV_COLUMN11	"Група"
+
+        /* special folders */
+	IDS_DESKTOP		"Работен плот"
+	IDS_MYCOMPUTER		"Моят компютър"
+
+        /* context menus */
+	IDS_VIEW_LARGE		"&Големи икони"
+	IDS_VIEW_SMALL		"&Малки икони"
+	IDS_VIEW_LIST		"&Списък"
+	IDS_VIEW_DETAILS	"&Подробности"
+	IDS_SELECT		"Избери"
+	IDS_OPEN		"Отвори"
+
+	IDS_CREATEFOLDER_DENIED "Папката не може да бъде създадена: Достъпът отказан."
+	IDS_CREATEFOLDER_CAPTION "Грешка при създаването на нова папка."
+	IDS_DELETEITEM_CAPTION "Потвърдете изтриването на файла"
+	IDS_DELETEFOLDER_CAPTION "Потвърдете изтриването на папката"
+	IDS_DELETEITEM_TEXT "Наистина ли искате да изтриете '%1'?"
+	IDS_DELETEMULTIPLE_TEXT "Наистина ли искате да изтриете тези %1 елемента?"
+	IDS_OVERWRITEFILE_TEXT "Наистина ли искате да презапишете %1?"
+	IDS_OVERWRITEFILE_CAPTION "Потвърдете презаписа на файла"
+
+        /* message box strings */
+        IDS_RESTART_TITLE       "Рестартиране"
+        IDS_RESTART_PROMPT      "Искате ли да симулирате рестартиране на Windows?"
+        IDS_SHUTDOWN_TITLE      "Изключване"
+        IDS_SHUTDOWN_PROMPT     "Искате ли да прекратите вашата Wine сесия?"
+
+        /* shell folder path default values */
+        /* Тези може би е добра идея да останат непреведени ? */
+	IDS_PROGRAMS                "Start Menu\\Programs"
+	IDS_PERSONAL                "My Documents"
+	IDS_FAVORITES               "Favorites"
+	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
+	IDS_RECENT                  "Recent"
+	IDS_SENDTO                  "SendTo"
+	IDS_STARTMENU               "Start Menu"
+	IDS_MYMUSIC                 "My Documents\\My Music"
+	IDS_MYVIDEO                 "My Documents\\My Video"
+	IDS_DESKTOPDIRECTORY        "Desktop"
+	IDS_NETHOOD                 "NetHood"
+	IDS_TEMPLATES               "Templates"
+	IDS_APPDATA                 "Application Data"
+	IDS_PRINTHOOD               "PrintHood"
+	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
+	IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
+	IDS_COOKIES                 "Cookies"
+	IDS_HISTORY                 "Local Settings\\History"
+	IDS_PROGRAM_FILES           "Program Files"
+	IDS_MYPICTURES              "My Documents\\My Pictures"
+	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
+	IDS_COMMON_DOCUMENTS        "Documents"
+	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
+	IDS_COMMON_MUSIC            "Documents\\My Music"
+	IDS_COMMON_PICTURES         "Documents\\My Pictures"
+	IDS_COMMON_VIDEO            "Documents\\My Video"
+	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
+}

@@ -1,0 +1,6 @@
+LIBRARY timedate.cpl
+
+EXPORTS
+CPlApplet
+
+; EOF

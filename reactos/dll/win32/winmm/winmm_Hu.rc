@@ -1,0 +1,127 @@
+/*
+ * Copyright 1999 Eric Pouech
+ * Hungarian version Copyright 2005 by Adam Medveczky ( grizzly@villanykar.hu )
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+STRINGTABLE LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
+BEGIN
+
+/* MMSYS errors */
+MMSYSERR_NOERROR, 		"A megadott parancs végrehajtva."
+MMSYSERR_ERROR, 		"Ismeretlen külsõ hiba."
+MMSYSERR_BADDEVICEID, 		"Nem létezõ eszközazonosító (id) lett használva."
+MMSYSERR_NOTENABLED, 		"A meghajtóprogram le van tiltva."
+MMSYSERR_ALLOCATED, 		"A megadott eszköz már használatban van. Próbáld kicsit késõbb."
+MMSYSERR_INVALHANDLE, 		"A megadott eszközazonosító (handle) nem valódi."
+MMSYSERR_NODRIVER, 		"Nincs meghajtóprogram telepítve a gépedre.\n"
+MMSYSERR_NOMEM, 		"Nincs elég memória. Lépj ki pár programból, szabadíts fel minél többet, majd próbáld újra."
+MMSYSERR_NOTSUPPORTED, 		"Ez sajnos nem támogatott. Nézd meg a támogatottságot, hogy megtudd milyen függvényeket és üzeneteket ismer a driver."
+MMSYSERR_BADERRNUM, 		"A rendszer számára ismeretlen hibakóddal találkozott :("
+MMSYSERR_INVALFLAG, 		"Egy rendszerfüggvény ismeretlen flaget kapott."
+MMSYSERR_INVALPARAM, 		"Egy rendszerfüggvény ismeretlen paramétert kapott."
+
+/* WAVE errors */
+WAVERR_BADFORMAT, 		"A megadott formátum nem támogatott vagy nem átalakítható. Használd a támogatottság funkciót, hogy a támogatott formátumokat megismerd."
+WAVERR_STILLPLAYING, 		"Amíg az eszköz használatban van ez nem elérhetõ. Indítsd újra, vagy próbáld a lejátszást leállítani, esetleg várd meg amíg vége."
+WAVERR_UNPREPARED, 		"A hanghullám fejléce(header) nincs elõkészítve. Ezt tedd meg majd próbáld újra."
+WAVERR_SYNC, 			"Nem tudom megnyitni az eszközt a WAVE_ALLOWSYNC engedélyezése nélkül. Ikszeld be."
+
+/* MIDI errors */
+MIDIERR_UNPREPARED, 		"A MIDI fejléce(header) nincs elõkészítve. Ezt tedd meg majd próbáld újra."
+MIDIERR_STILLPLAYING, 		"Amíg az eszköz használatban van ez nem elérhetõ. Indítsd újra, vagy próbáld a lejátszást leállítani, esetleg várd meg amíg vége."
+MIDIERR_NOMAP, 			"A MIDI térképet nem találom. Probléma lehet a meghajtóprogrammal, vagy a MIDIMAP.CFG fájl hiányzik, vagy sérült."
+MIDIERR_NOTREADY, 		"Az adat küldése az eszköz felé folyamatban van. Várd meg amíg minden megérkezik, és csak utána próbáld újra."
+MIDIERR_NODEVICE, 		"A jelenlegi MIDI Mapper beállítások egy olyan MIDI eszközre hivatkoznak ami nincs a rendszerben jelenleg. Használd a MIDI Mappert az új beállításokhoz."
+MIDIERR_INVALIDSETUP, 		"A mostani MIDI beállítások megsérültek. Másold az eredeti MIDIMAP.CFG fájlt a ReactOS SYSTEM könyvtárába, majd próbáld újra."
+
+/* MCI errors */
+MCIERR_INVALID_DEVICE_ID, 	"Valótlan MCI ID. Használd az MCI eszköz megnyitásakor kapott ID-t."
+MCIERR_UNRECOGNIZED_KEYWORD, 	"A meghajtóprogram nem ismeri fel a megadott paramétert."
+MCIERR_UNRECOGNIZED_COMMAND,	"A meghajtóprogram nem ismeri fel a megadott parancsot."
+MCIERR_HARDWARE, 		"Valami van az MCI eszközöddel. Ellenõrizd hogy jól mûködik-e."
+MCIERR_INVALID_DEVICE_NAME, 	"A megadott eszköz nincs megnyitva, vagy nem ismeri fel az MCI."
+MCIERR_OUT_OF_MEMORY, 		"Nincs elég memória. Lépj ki pár programból, szabadíts fel minél többet, majd próbáld újra."
+MCIERR_DEVICE_OPEN, 		"Az eszköznév már használatban van aliasként ebben az alkalmazásban. Használj egyedi azonosítót!"
+MCIERR_CANNOT_LOAD_DRIVER, 	"Ismeretlen probléma lépett fel az eszközmeghajtó betöltése közben."
+MCIERR_MISSING_COMMAND_STRING, 	"Nem volt utasítás megadva."
+MCIERR_PARAM_OVERFLOW, 		"A kimenet nem fér bele a bufferbe, növeld a méretét."
+MCIERR_MISSING_STRING_ARGUMENT, "A megadott utasítás egy karakter/sztring paramétert vár. Légyszíves add meg neki."
+MCIERR_BAD_INTEGER, 		"A megadott szám valótlan ehhez a mûvelethez."
+MCIERR_PARSER_INTERNAL, 	"A meghajtóprogram hibás visszatérési típust adott. Próbáld meg egy újabbal."
+MCIERR_DRIVER_INTERNAL, 	"Valami probléma van az eszközmeghajtóval. Próbáld meg egy újabbal."
+MCIERR_MISSING_PARAMETER, 	"A megadott utasítás paramétert vár."
+MCIERR_UNSUPPORTED_FUNCTION, 	"Az eszköz nem támogatja ezt a parancsot."
+MCIERR_FILE_NOT_FOUND, 		"Nem találom a megadott fájlt. Ellenõrizd az elérési útvonalat, és a fájl létezését."
+MCIERR_DEVICE_NOT_READY, 	"A meghajtóprogram nem áll készen."
+MCIERR_INTERNAL, 		"MCI inicializálása közben hiba történt. Próbáld újraindítani a ReactOS -t."
+MCIERR_DRIVER, 			"Valami gond van a meghajtóprogrammal. Kilépett, a hibát nem sikerült kiderítenem."
+MCIERR_CANNOT_USE_ALL, 		"Nem használhatod 'all'-t mint eszköznevet a megadott paranccsal."
+MCIERR_MULTIPLE, 		"Több eszköznél is hibák léptek fel. Az eszközöknek egyesével küldd ki a parancsokat, hogy megtudd melyiknél áll fenn a probléma."
+MCIERR_EXTENSION_NOT_FOUND, 	"Az eszköz típusát nemtudom meghatározni a kiterjesztés alapján."
+MCIERR_OUTOFRANGE, 		"A megadott paraméter kívül esik a határokon."
+MCIERR_FLAGS_NOT_COMPATIBLE, 	"A megadott paramétereket nem lehet együtt használni."
+MCIERR_FILE_NOT_SAVED, 		"Nem tudtam elmenteni a megadott fájlt. Ellenõrizd van-e elég szabad hely, vagy még mindig kapcsolatban vagy."
+MCIERR_DEVICE_TYPE_REQUIRED, 	"Nem találom a megadott eszközt. Ellenõrizd hogy telepítve van-e, és hogy nem írtad el a nevét."
+MCIERR_DEVICE_LOCKED, 		"A megadott eszköz épp bezárás alatt áll. Várj pár másodpercet, majd próbáld újra."
+MCIERR_DUPLICATE_ALIAS, 	"A megadott alias/név már használva van ezen az alkalmazáson belül. Használj egyedit."
+MCIERR_BAD_CONSTANT, 		"A megadott paraméter nem megengedett ennél a parancsnál."
+MCIERR_MUST_USE_SHAREABLE, 	"A meghajtóprogram használatban van. Ahhoz, hogy megoszd, használd a 'shareable' paramétert minden megnyitásnál."
+MCIERR_MISSING_DEVICE_NAME, 	"A megadott parancs kér egy alias, fájl, meghajtóprogram, vagy eszköznevet.."
+MCIERR_BAD_TIME_FORMAT, 	"A megadott érték az idõformátumhoz hibás. Nézd meg az MCI doksit a helyes használathoz."
+MCIERR_NO_CLOSING_QUOTE, 	"Egy záró idézõjel hiányzik a paraméter végérõl."
+MCIERR_DUPLICATE_FLAGS, 	"Egy paraméter vagy érték kétszer szerepelt. Csak egyszer add meg."
+MCIERR_INVALID_FILE, 		"A megadott fájlt nem lehet lejátszani a megadott MCI eszközzel. A fájl hibás lehet, vagy nincs megfelelõ formában."
+MCIERR_NULL_PARAMETER_BLOCK, 	"Egy NULL paraméter-blokkot kapott az MCI."
+MCIERR_UNNAMED_RESOURCE, 	"Névtelen fájlt nem tudok menteni. Nevezd el valamire. (Tipp: asdf)"
+MCIERR_NEW_REQUIRES_ALIAS, 	"Egy aliast kell létrehoznod ha megadod a 'new' paramétert."
+MCIERR_NOTIFY_ON_AUTO_OPEN, 	"Nem használhatod a 'notify' beállítást automatikusan megnyitott eszközöknél."
+MCIERR_NO_ELEMENT_ALLOWED, 	"Nem használhatok fájlnevet a megadott eszköznél."
+MCIERR_NONAPPLICABLE_FUNCTION, 	"A megadott sorrendben nem tudom kiadni a parancsokat. Javítsd ki a sorrendet, majd próbáld újra."
+MCIERR_ILLEGAL_FOR_AUTO_OPEN, 	"Egy automatikusan megnyitott eszköznél nem használható a megadott parancs. Várd meg amíg bezárod, majd próbáld újra."
+MCIERR_FILENAME_REQUIRED, 	"A fájlnév helytelen. Biztosítsd, hogy a filenév ne legyen hosszabb 8 karakternél, pont, majd kiterjesztés."
+MCIERR_EXTRA_CHARACTERS, 	"Idézõjelbe zárt sztring mögé ne írj karaktereket."
+MCIERR_DEVICE_NOT_INSTALLED, 	"A megadött eszköz nincs telepítve. Használd a vezérlõpultban a meghajtóprogram telepítéséhez."
+MCIERR_GET_CD, 			"Nem tudom elérni a megadott fájlt vagy MCI eszközt. Próbálj mappát váltani vagy újraindítani a számítógéped."
+MCIERR_SET_CD, 			"Nem tudom elérni a megadott fájlt vagy MCI eszközt mert az alkalmazás nem tud mappát váltani."
+MCIERR_SET_DRIVE, 		"Nem tudom elérni a megadott fájlt vagy MCI eszközt mert az alkalmazás nem tud meghajtót váltani."
+MCIERR_DEVICE_LENGTH, 		"79 karakternél rövidebb nevet adj meg az eszköznek vagy a meghajtóprogramnak."
+MCIERR_DEVICE_ORD_LENGTH, 	"69 karakternél rövidebb nevet adj meg az eszköznek vagy a meghajtóprogramnak."
+MCIERR_NO_INTEGER, 		"A megadott parancs vár egy egész értéket, amit te nem adtál meg neki."
+MCIERR_WAVE_OUTPUTSINUSE, 	"Az összes eszköz ami a megadott wave formátumot le tudja játszani foglalt. Várj amíg felszabadul egy."
+MCIERR_WAVE_SETOUTPUTINUSE, 	"Nem tudom lejátszásra állítani a megadott wave eszközzel, mivel használatban van. Várj amíg felszabadul egy."
+MCIERR_WAVE_INPUTSINUSE, 	"Az összes eszköz ami a megadott wave formátumban tud rögzíteni foglalt. Várj amíg felszabadul egy, majd próbáld újra."
+MCIERR_WAVE_SETINPUTINUSE, 	"Nem tudom a rögzítést beállítani, mivel a wave eszköz használatban van. Várj amíg felszabadul egy, majd próbáld újra."
+MCIERR_WAVE_OUTPUTUNSPECIFIED,	"Bármilyen kompatibilis lejátszó eszköz használható."
+MCIERR_WAVE_INPUTUNSPECIFIED, 	"Bármilyen kompatibilis rögzítõ eszköz használható."
+MCIERR_WAVE_OUTPUTSUNSUITABLE, 	"Nincs olyan eszköz ami le tudná játszani a megadott wave formátumot. Telepíts egyet, majd próbáld újra."
+MCIERR_WAVE_SETOUTPUTUNSUITABLE,"Az eszköz amivel le próbálod játszani a fájlt nem ismeri fel annak formátumát."
+MCIERR_WAVE_INPUTSUNSUITABLE, 	"Nincs olyan eszköz ami rögzíteni tudna a megadott wave formátumba. Telepíts egyet, majd próbáld újra."
+MCIERR_WAVE_SETINPUTUNSUITABLE, "Az eszköz amivel rögzíteni szeretnél nem ismeri fel a fájlformátumot."
+MCIERR_NO_WINDOW, 		"Nincs megjelenítõ ablak."
+MCIERR_CREATEWINDOW, 		"Nem tudtam ablakot létrehozni, vagy használni."
+MCIERR_FILE_READ, 		"A megadott fájl nem olvasható. Ellenõrizd, hogy még mindig létezik, esetleg a hálozaton elérhetõ."
+MCIERR_FILE_WRITE, 		"Nem tudok írni a megadott fájlba. Ellenõrizd, hogy legyen elég hely, vagy a hálozati kapcsolatokat."
+MCIERR_SEQ_DIV_INCOMPATIBLE, 	"Az idõformátumok a ""song pointer"" -hez és az SMPTE -hez kizárják egymást, egyszerre nem használhatod õket."
+MCIERR_SEQ_NOMIDIPRESENT, 	"A rendszer nem rendelkezik telepített MIDI eszközökkel. Használd a Vezérlõpultbeli Meghajtóprogramokat egy telepítéséhez."
+MCIERR_SEQ_PORT_INUSE, 		"A megadott MIDI port használatban van. Várj amíg felszabadul!"
+MCIERR_SEQ_PORT_MAPNODEVICE, 	"A mostani MIDI Mapper beállítás olyan MIDI eszközre utal, ami nincs telepítve.Használd a MIDI Mapper opciót a Vezérlõpultban a beállításokhoz."
+MCIERR_SEQ_PORT_MISCERROR, 	"Hiba történt a megadott porttal."
+MCIERR_SEQ_PORT_NONEXISTENT, 	"A megadott MIDI eszköz nincs telepítve. Használd a Vezérlõpultbeli Meghajtóprogramokat a telepítéséhez."
+MCIERR_SEQ_PORTUNSPECIFIED, 	"Nincs jelenlegi MIDI port kiválasztva."
+MCIERR_SEQ_TIMER, 		"Minden multimédia idõzítõ (mmtimer) használatban van. Lépj ki egyikbõl, majd próbáld újra."
+
+END

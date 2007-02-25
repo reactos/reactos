@@ -1,0 +1,12 @@
+#include "resource.h"
+/* Start move all hard code string to En.rc 
+ * By Magnus Olsen  2005
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH_MODERN
+STRINGTABLE DISCARDABLE
+{
+
+STRING_USERINIT_FAIL, "Userinit falló al empezar la capa(shell)!\n"
+
+}

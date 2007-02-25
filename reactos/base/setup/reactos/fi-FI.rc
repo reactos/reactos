@@ -1,0 +1,10 @@
+LANGUAGE LANG_FINNISH, SUBLANG_NEUTRAL
+
+/* String Tables */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAPTION  "ReactOS Asennus"
+    IDS_TEXT     "Et voi asentaa ReactOS:ä suoraan tältä CDlevyltä!\n\nKäynnistä tietokoneesi tältä CD levyltä asentaaksesi ReactOS:ä."
+END
+
+/* EOF */

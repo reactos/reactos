@@ -1,0 +1,8 @@
+;
+; ReactOS Operating System
+;
+LIBRARY kbdhe.dll
+
+EXPORTS
+KbdLayerDescriptor
+;EOF

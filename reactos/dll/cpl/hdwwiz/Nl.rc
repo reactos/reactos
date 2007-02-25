@@ -1,0 +1,7 @@
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+   IDS_CPLNAME "Hardware toevoegen"
+   IDS_CPLDESCRIPTION "Voeg hardware toe aan uw computer."
+END 

@@ -1,0 +1,34 @@
+/*
+ * Spanish resources for MSI
+ *
+ * Copyright 2005, 2006 José Manuel Ferrer Ortiz
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+	4 "No se ha podido abrir el paquete de instalación especificado. Por favor, compruebe la ruta del archivo y vuelva a intentarlo."
+	5 "ruta %s no encontrada"
+	9 "inserte el disco %s"
+	10 "parámetros incorrectos"
+	11 "introduzca qué carpeta contiene %s"
+	12 "instalar fuente para característica ausente"
+	13 "unidad de red para característica ausente"
+	14 "característica de:"
+	15 "elija qué carpeta contiene %s"
+}

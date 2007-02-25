@@ -1,0 +1,75 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs
+//
+
+SELWINDOW DIALOG DISCARDABLE 20, 20, 220, 140
+STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Select Window"
+BEGIN
+  LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+  PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&Cancel", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menus
+//
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  POPUP "DUMMY"
+  BEGIN
+    MENUITEM "&Undo", EM_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t", WM_CUT
+    MENUITEM "&Copy", WM_COPY
+    MENUITEM "&Paste", WM_PASTE
+    MENUITEM "&Delete", WM_CLEAR
+    MENUITEM SEPARATOR
+    MENUITEM "Select &All", EM_SETSEL
+  END
+}
+
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  MENUITEM "&Restore", 61728
+  MENUITEM "&Move", 61456
+  MENUITEM "&Size", 61440
+  MENUITEM "Mi&nimize", 61472
+  MENUITEM "Ma&ximize", 61488
+  MENUITEM SEPARATOR
+  MENUITEM "&Close\tAlt-F4", 61536
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE
+{
+  IDS_ERROR,    "Error"
+  IDS_OK,       "OK"
+  IDS_CANCEL,   "Cancel"
+  IDS_ABORT,    "&Abort"
+  IDS_RETRY,    "&Retry"
+  IDS_IGNORE,   "&Ignore"
+  IDS_YES,      "&Yes"
+  IDS_NO,       "&No"
+  IDS_HELP,     "Help"
+  IDS_TRYAGAIN, "&Try Again"
+  IDS_CONTINUE, "&Continue"
+}
+
+STRINGTABLE
+{
+  IDS_MDI_MOREWINDOWS, "&More Windows..."
+}
+

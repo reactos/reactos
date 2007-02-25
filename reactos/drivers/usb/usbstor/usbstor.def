@@ -1,0 +1,2 @@
+LIBRARY usbstor.sys
+EXPORTS
