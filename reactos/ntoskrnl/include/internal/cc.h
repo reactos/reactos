@@ -70,10 +70,10 @@ CcMdlReadComplete2(
 
 VOID
 NTAPI
-CcMdlWriteCompleteDev(
+CcMdlWriteComplete2(
+    IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER FileOffset,
-    IN PMDL MdlChain,
-    IN PFILE_OBJECT FileObject
+    IN PMDL MdlChain
 );
 
 NTSTATUS
