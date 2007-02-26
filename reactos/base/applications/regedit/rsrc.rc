@@ -33,6 +33,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
 #include "lang/fr-FR.rc"
+#include "lang/hu-HU.rc"
+#include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
 #include "lang/nl-NL.rc"
@@ -41,6 +43,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/ru-RU.rc"
 #include "lang/sl-SI.rc"
 #include "lang/sv-SE.rc"
-#include "lang/hu-HU.rc"
 #include "lang/uk-UA.rc"
-

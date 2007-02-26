@@ -12,9 +12,10 @@
 
 IDC_CPLICON_1 ICON "resources/cpl_icon1.ico"
 
-#include "En.rc"
 #include "De.rc"
-#include "Ja.rc"
+#include "En.rc"
 #include "Es.rc"
-#include "Ru.rc"
+#include "Id.rc"
 #include "It.rc"
+#include "Ja.rc"
+#include "Ru.rc"

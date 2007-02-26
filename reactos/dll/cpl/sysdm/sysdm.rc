@@ -22,9 +22,11 @@ IDB_ROSBMP      BITMAP "resources/rosbitmap.bmp"
 
 RC_LICENSE RTDATA "resources/gpl.txt"
 
-#include "en.rc"
 #include "de.rc"
+#include "en.rc"
 #include "fr.rc"
+#include "id-ID.rc"
+
 /*
 #include "cz.rc"
 #include "dk.rc"

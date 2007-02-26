@@ -31,5 +31,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "lang/en-US.rc"
 #include "lang/ja-JP.rc"
+#include "lang/id-ID.rc"
 #include "lang/nb-NO.rc"
 
