@@ -26,63 +26,63 @@ global _SEHSetJmp
 global __SEHSetJmp@4
 _SEHSetJmp:
 __SEHSetJmp@4:
- ; jump buffer
- mov eax, [esp+4]
+	; jump buffer
+	mov eax, [esp+4]
 
- ; program counter
- mov ecx, [esp+0]
+	; program counter
+	mov ecx, [esp+0]
 
- ; stack pointer
- lea edx, [esp+8]
+	; stack pointer
+	lea edx, [esp+8]
 
- ; fill the jump buffer
- mov [eax+0], ebp
- mov [eax+4], edx
- mov [eax+8], ecx
- mov [eax+12], ebx
- mov [eax+16], esi
- mov [eax+20], edi
+	; fill the jump buffer
+	mov [eax+0], ebp
+	mov [eax+4], edx
+	mov [eax+8], ecx
+	mov [eax+12], ebx
+	mov [eax+16], esi
+	mov [eax+20], edi
 
- xor eax, eax
- ret 4
+	xor eax, eax
+	ret 4
 
 global _SEHLongJmp
 global __SEHLongJmp@8
 _SEHLongJmp:
 __SEHLongJmp@8:
- ; return value
- mov eax, [esp+8]
+	; return value
+	mov eax, [esp+8]
 
- ; jump buffer
- mov ecx, [esp+4]
+	; jump buffer
+	mov ecx, [esp+4]
 
- ; restore the saved context
- mov ebp, [ecx+0]
- mov esp, [ecx+4]
- mov edx, [ecx+8]
- mov ebx, [ecx+12]
- mov esi, [ecx+16]
- mov edi, [ecx+20]
- jmp edx
+	; restore the saved context
+	mov ebp, [ecx+0]
+	mov esp, [ecx+4]
+	mov edx, [ecx+8]
+	mov ebx, [ecx+12]
+	mov esi, [ecx+16]
+	mov edi, [ecx+20]
+	jmp edx
 
 global _SEHLongJmp_KeepEsp
 global __SEHLongJmp_KeepEsp@8
 _SEHLongJmp_KeepEsp:
 __SEHLongJmp_KeepEsp@8:
- ; return value
- mov eax, [esp+8]
+	; return value
+	mov eax, [esp+8]
 
- ; jump buffer
- mov ecx, [esp+4]
+	; jump buffer
+	mov ecx, [esp+4]
 
- ; restore the saved context
- mov ebp, [ecx+0]
-; don't restore esp 
+	; restore the saved context
+	mov ebp, [ecx+0]
+; don't restore esp
 ; mov esp, [ecx+4]
- mov edx, [ecx+8]
- mov ebx, [ecx+12]
- mov esi, [ecx+16]
- mov edi, [ecx+20]
- jmp edx
+	mov edx, [ecx+8]
+	mov ebx, [ecx+12]
+	mov esi, [ecx+16]
+	mov edi, [ecx+20]
+	jmp edx
 
 ; EOF
