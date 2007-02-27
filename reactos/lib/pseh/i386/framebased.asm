@@ -22,51 +22,51 @@ segment .text use32
 
 global __SEHCleanHandlerEnvironment
 __SEHCleanHandlerEnvironment:
- cld
- ret
+	cld
+	ret
 
 global __SEHCurrentRegistration
 __SEHCurrentRegistration:
- mov eax, [fs:0]
- ret
+	mov eax, [fs:0]
+	ret
 
 global __SEHRegisterFrame
 __SEHRegisterFrame:
- mov ecx, [esp+4]
- mov eax, [fs:0]
- mov [ecx+0], eax
- mov [fs:0], ecx
- ret
+	mov ecx, [esp+4]
+	mov eax, [fs:0]
+	mov [ecx+0], eax
+	mov [fs:0], ecx
+	ret
 
 global __SEHUnregisterFrame
 __SEHUnregisterFrame:
- mov ecx, [fs:0]
- mov ecx, [ecx+0]
- mov [fs:0], ecx
- ret
+	mov ecx, [fs:0]
+	mov ecx, [ecx+0]
+	mov [fs:0], ecx
+	ret
 
 global __SEHGlobalUnwind
 __SEHGlobalUnwind:
 
- extern __SEHRtlUnwind
+	extern __SEHRtlUnwind
 
 ; RtlUnwind clobbers all the "don't clobber" registers, so we save them
- push ebx
- mov ebx, [esp+8]
- push esi
- push edi
+	push ebx
+	mov ebx, [esp+8]
+	push esi
+	push edi
 
- push dword 0x0 ; ReturnValue
- push dword 0x0 ; ExceptionRecord
- push dword .RestoreRegisters ; TargetIp
- push ebx ; TargetFrame
- call [__SEHRtlUnwind]
+	push dword 0x0 ; ReturnValue
+	push dword 0x0 ; ExceptionRecord
+	push dword .RestoreRegisters ; TargetIp
+	push ebx ; TargetFrame
+	call [__SEHRtlUnwind]
 
 .RestoreRegisters:
- pop edi
- pop esi
- pop ebx
+	pop edi
+	pop esi
+	pop ebx
 
- ret
+	ret
 
 ; EOF

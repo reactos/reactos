@@ -1,23 +1,23 @@
 /*
- Copyright (c) 2004 KJK::Hyperion
- 
- Permission is hereby granted, free of charge, to any person obtaining a copy of
- this software and associated documentation files (the "Software"), to deal in
- the Software without restriction, including without limitation the rights to
- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- of the Software, and to permit persons to whom the Software is furnished to do
- so, subject to the following conditions:
- 
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
- 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
+	Copyright (c) 2004/2005 KJK::Hyperion
+
+	Permission is hereby granted, free of charge, to any person obtaining a
+	copy of this software and associated documentation files (the "Software"),
+	to deal in the Software without restriction, including without limitation
+	the rights to use, copy, modify, merge, publish, distribute, sublicense,
+	and/or sell copies of the Software, and to permit persons to whom the
+	Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in
+	all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+	FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+	DEALINGS IN THE SOFTWARE.
 */
 
 #define STRICT
@@ -44,194 +44,194 @@ void const * _SEHRtlUnwind = RtlUnwind;
 
 static void __stdcall _SEHLocalUnwind
 (
- _SEHPortableFrame_t * frame,
- _SEHPortableTryLevel_t * dsttrylevel
+	_SEHPortableFrame_t * frame,
+	_SEHPortableTryLevel_t * dsttrylevel
 )
 {
- _SEHPortableTryLevel_t * trylevel;
+	_SEHPortableTryLevel_t * trylevel;
 
- for
- (
-  trylevel = frame->SPF_TopTryLevel;
-  trylevel != dsttrylevel;
-  trylevel = trylevel->SPT_Next
- )
- {
-  _SEHFinally_t pfnFinally;
+	for
+	(
+		trylevel = frame->SPF_TopTryLevel;
+		trylevel != dsttrylevel;
+		trylevel = trylevel->SPT_Next
+	)
+	{
+		_SEHFinally_t pfnFinally;
 
-  /* ASSERT(trylevel); */
+		/* ASSERT(trylevel); */
 
-  pfnFinally = trylevel->SPT_Handlers->SH_Finally;
+		pfnFinally = trylevel->SPT_Handlers->SH_Finally;
 
-  if(pfnFinally)
-   pfnFinally(frame);
- }
+		if(pfnFinally)
+			pfnFinally(frame);
+	}
 }
 
 static void __cdecl _SEHCallHandler
 (
- _SEHPortableFrame_t * frame,
- _SEHPortableTryLevel_t * trylevel
+	_SEHPortableFrame_t * frame,
+	_SEHPortableTryLevel_t * trylevel
 )
 {
- _SEHGlobalUnwind(frame);
- _SEHLocalUnwind(frame, trylevel);
- frame->SPF_Handler(trylevel);
+	_SEHGlobalUnwind(frame);
+	_SEHLocalUnwind(frame, trylevel);
+	frame->SPF_Handler(trylevel);
 }
 
 static int __cdecl _SEHFrameHandler
 (
- struct _EXCEPTION_RECORD * ExceptionRecord,
- void * EstablisherFrame,
- struct _CONTEXT * ContextRecord,
- void * DispatcherContext
+	struct _EXCEPTION_RECORD * ExceptionRecord,
+	void * EstablisherFrame,
+	struct _CONTEXT * ContextRecord,
+	void * DispatcherContext
 )
 {
- _SEHPortableFrame_t * frame;
+	_SEHPortableFrame_t * frame;
 
- _SEHCleanHandlerEnvironment();
+	_SEHCleanHandlerEnvironment();
 
- frame = EstablisherFrame;
+	frame = EstablisherFrame;
 
- /* Unwinding */
- if(ExceptionRecord->ExceptionFlags & (4 | 2))
-  _SEHLocalUnwind(frame, NULL);
- /* Handling */
- else
- {
-  int ret;
-  _SEHPortableTryLevel_t * trylevel;
+	/* Unwinding */
+	if(ExceptionRecord->ExceptionFlags & (4 | 2))
+		_SEHLocalUnwind(frame, NULL);
+	/* Handling */
+	else
+	{
+		int ret;
+		_SEHPortableTryLevel_t * trylevel;
 
-  if(ExceptionRecord->ExceptionCode)
-   frame->SPF_Code = ExceptionRecord->ExceptionCode;
-  else
-   frame->SPF_Code = 0xC0000001;
+		if(ExceptionRecord->ExceptionCode)
+			frame->SPF_Code = ExceptionRecord->ExceptionCode;
+		else
+			frame->SPF_Code = 0xC0000001;
 
-  for
-  (
-   trylevel = frame->SPF_TopTryLevel;
-   trylevel != NULL;
-   trylevel = trylevel->SPT_Next
-  )
-  {
-   _SEHFilter_t pfnFilter = trylevel->SPT_Handlers->SH_Filter;
+		for
+		(
+			trylevel = frame->SPF_TopTryLevel;
+			trylevel != NULL;
+			trylevel = trylevel->SPT_Next
+		)
+		{
+			_SEHFilter_t pfnFilter = trylevel->SPT_Handlers->SH_Filter;
 
-   switch((UINT_PTR)pfnFilter)
-   {
-    case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER):
-    case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_CONTINUE_SEARCH):
-    case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_CONTINUE_EXECUTION):
-    {
-     ret = (int)((UINT_PTR)pfnFilter) - 2;
-     break;
-    }
+			switch((UINT_PTR)pfnFilter)
+			{
+				case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER):
+				case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_CONTINUE_SEARCH):
+				case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_CONTINUE_EXECUTION):
+				{
+					ret = (int)((UINT_PTR)pfnFilter) - 2;
+					break;
+				}
 
-    default:
-    {
-     if(trylevel->SPT_Handlers->SH_Filter)
-     {
-      EXCEPTION_POINTERS ep;
+				default:
+				{
+					if(trylevel->SPT_Handlers->SH_Filter)
+					{
+						EXCEPTION_POINTERS ep;
 
-      ep.ExceptionRecord = ExceptionRecord;
-      ep.ContextRecord = ContextRecord;
+						ep.ExceptionRecord = ExceptionRecord;
+						ep.ContextRecord = ContextRecord;
 
-      ret = pfnFilter(&ep, frame);
-     }
-     else
-      ret = _SEH_CONTINUE_SEARCH;
+						ret = pfnFilter(&ep, frame);
+					}
+					else
+						ret = _SEH_CONTINUE_SEARCH;
 
-     break;
-    }
-   }
+					break;
+				}
+			}
 
-   /* _SEH_CONTINUE_EXECUTION */
-   if(ret < 0)
-    return ExceptionContinueExecution;
-   /* _SEH_EXECUTE_HANDLER */
-   else if(ret > 0)
-    _SEHCallHandler(frame, trylevel);
-   /* _SEH_CONTINUE_SEARCH */
-   else
-    continue;
-  }
+			/* _SEH_CONTINUE_EXECUTION */
+			if(ret < 0)
+				return ExceptionContinueExecution;
+			/* _SEH_EXECUTE_HANDLER */
+			else if(ret > 0)
+				_SEHCallHandler(frame, trylevel);
+			/* _SEH_CONTINUE_SEARCH */
+			else
+				continue;
+		}
 
-  /* FALLTHROUGH */
- }
+		/* FALLTHROUGH */
+	}
 
- return ExceptionContinueSearch;
+	return ExceptionContinueSearch;
 }
 
 void __stdcall _SEHEnterFrame_s
 (
- _SEHPortableFrame_t * frame,
- _SEHPortableTryLevel_t * trylevel
+	_SEHPortableFrame_t * frame,
+	_SEHPortableTryLevel_t * trylevel
 )
 {
- _SEHEnterFrame_f(frame, trylevel);
+	_SEHEnterFrame_f(frame, trylevel);
 }
 
 void __stdcall _SEHEnterTry_s(_SEHPortableTryLevel_t * trylevel)
 {
- _SEHEnterTry_f(trylevel);
+	_SEHEnterTry_f(trylevel);
 }
 
 void __stdcall _SEHLeave_s(void)
 {
- _SEHLeave_f();
+	_SEHLeave_f();
 }
 
 void _SEH_FASTCALL _SEHEnterFrame_f
 (
- _SEHPortableFrame_t * frame,
- _SEHPortableTryLevel_t * trylevel
+	_SEHPortableFrame_t * frame,
+	_SEHPortableTryLevel_t * trylevel
 )
 {
- /* ASSERT(frame); */
- /* ASSERT(trylevel); */
- frame->SPF_Registration.SER_Handler = _SEHFrameHandler;
- frame->SPF_Code = 0;
- frame->SPF_TopTryLevel = trylevel;
- trylevel->SPT_Next = NULL;
- _SEHRegisterFrame(&frame->SPF_Registration);
+	/* ASSERT(frame); */
+	/* ASSERT(trylevel); */
+	frame->SPF_Registration.SER_Handler = _SEHFrameHandler;
+	frame->SPF_Code = 0;
+	frame->SPF_TopTryLevel = trylevel;
+	trylevel->SPT_Next = NULL;
+	_SEHRegisterFrame(&frame->SPF_Registration);
 }
 
 void _SEH_FASTCALL _SEHEnterTry_f(_SEHPortableTryLevel_t * trylevel)
 {
- _SEHPortableFrame_t * frame;
+	_SEHPortableFrame_t * frame;
 
- frame = _SEH_CONTAINING_RECORD
- (
-  _SEHCurrentRegistration(),
-  _SEHPortableFrame_t,
-  SPF_Registration
- );
+	frame = _SEH_CONTAINING_RECORD
+	(
+		_SEHCurrentRegistration(),
+		_SEHPortableFrame_t,
+		SPF_Registration
+	);
 
- trylevel->SPT_Next = frame->SPF_TopTryLevel;
- frame->SPF_TopTryLevel = trylevel;
+	trylevel->SPT_Next = frame->SPF_TopTryLevel;
+	frame->SPF_TopTryLevel = trylevel;
 }
 
 void _SEH_FASTCALL _SEHLeave_f(void)
 {
- _SEHPortableFrame_t * frame;
- _SEHPortableTryLevel_t * trylevel;
+	_SEHPortableFrame_t * frame;
+	_SEHPortableTryLevel_t * trylevel;
 
- frame = _SEH_CONTAINING_RECORD
- (
-  _SEHCurrentRegistration(),
-  _SEHPortableFrame_t,
-  SPF_Registration
- );
+	frame = _SEH_CONTAINING_RECORD
+	(
+		_SEHCurrentRegistration(),
+		_SEHPortableFrame_t,
+		SPF_Registration
+	);
 
- /* ASSERT(frame); */
+	/* ASSERT(frame); */
 
- trylevel = frame->SPF_TopTryLevel;
+	trylevel = frame->SPF_TopTryLevel;
 
- /* ASSERT(trylevel); */
+	/* ASSERT(trylevel); */
 
- if(trylevel->SPT_Next)
-  frame->SPF_TopTryLevel = trylevel->SPT_Next;
- else
-  _SEHUnregisterFrame();
+	if(trylevel->SPT_Next)
+		frame->SPF_TopTryLevel = trylevel->SPT_Next;
+	else
+		_SEHUnregisterFrame();
 }
 
 /* EOF */
