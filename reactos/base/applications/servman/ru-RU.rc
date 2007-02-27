@@ -4,60 +4,61 @@ IDR_MAINMENU MENU
 BEGIN
   POPUP "&Файл"
   BEGIN
-    MENUITEM "&Экспорт...",   ID_EXPORT
+    MENUITEM "&Экспорт...", ID_EXPORT
     MENUITEM SEPARATOR
-    MENUITEM "&Выход",       ID_EXIT
+    MENUITEM "&Выход",      ID_EXIT
   END
   POPUP "Действие"
   BEGIN
-    MENUITEM "Соединение с...", ID_NET_CON, GRAYED
+    MENUITEM "Соединение с...", ID_CONNECT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Пуск",       ID_START, GRAYED
+    MENUITEM "Пуск",        ID_START, GRAYED
     MENUITEM "Стоп",        ID_STOP, GRAYED
     MENUITEM "Пауза",       ID_PAUSE, GRAYED
-    MENUITEM "Продолжить",      ID_RESUME, GRAYED
-    MENUITEM "Перезапуск",     ID_RESTART, GRAYED
+    MENUITEM "Продолжить",  ID_RESUME, GRAYED
+    MENUITEM "Перезапуск",  ID_RESTART, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Обновить",     ID_REFRESH
+    MENUITEM "Обновить",    ID_REFRESH
     MENUITEM SEPARATOR
     MENUITEM "Изменить...", ID_EDIT, GRAYED
-    MENUITEM "Создать...",   ID_CREATE
-    MENUITEM "Удалить...",   ID_DELETE, GRAYED
+    MENUITEM "Создать...",  ID_CREATE
+    MENUITEM "Удалить...",  ID_DELETE, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Свойства...", ID_PROP, GRAYED
   END
   POPUP "Вид"
   BEGIN
-    MENUITEM "Крупные", ID_VIEW_LARGE
-    MENUITEM "Мелкие", ID_VIEW_SMALL
-    MENUITEM "Список",        ID_VIEW_LIST
+    MENUITEM "Крупные",     ID_VIEW_LARGE
+    MENUITEM "Мелкие",      ID_VIEW_SMALL
+    MENUITEM "Список",      ID_VIEW_LIST
     MENUITEM "Таблица",     ID_VIEW_DETAILS
     MENUITEM SEPARATOR
-    MENUITEM "Настроить...",ID_VIEW_CUSTOMIZE, GRAYED
+    MENUITEM "Настроить...",ID_VIEW_CUST, GRAYED
   END
   POPUP "Справка"
   BEGIN
-    MENUITEM "О программе",    ID_ABOUT
+    MENUITEM "Содержание",  ID_HELP
+    MENUITEM "О программе", ID_ABOUT
   END
 END
 IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Пуск",       ID_START, GRAYED
+    MENUITEM "Пуск",        ID_START, GRAYED
     MENUITEM "Стоп",        ID_STOP, GRAYED
     MENUITEM "Пауза",       ID_PAUSE, GRAYED
-    MENUITEM "Продолжить",      ID_RESUME, GRAYED
-    MENUITEM "Перезапуск",     ID_RESTART, GRAYED
+    MENUITEM "Продолжить",  ID_RESUME, GRAYED
+    MENUITEM "Перезапуск",  ID_RESTART, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Обновить",     ID_REFRESH
+    MENUITEM "Обновить",    ID_REFRESH
     MENUITEM SEPARATOR
     MENUITEM "Изменить...", ID_EDIT, GRAYED
-    MENUITEM "Удалить...",   ID_DELETE, GRAYED
+    MENUITEM "Удалить...",  ID_DELETE, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Свойства...", ID_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Справка...",     ID_HELP
+    MENUITEM "Справка...",  ID_HELP
   END
 END
 
@@ -81,7 +82,7 @@ BEGIN
   EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
   EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
   EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
-  CONTROL "",IDC_START_TYPE,"ComboBox",0x50010003,70,107,176,40
+  COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
   PUSHBUTTON "Пуск", IDC_START, 6, 155, 54, 15, WS_DISABLED
   PUSHBUTTON "Стоп", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
   PUSHBUTTON "Пауза", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
@@ -92,7 +93,7 @@ BEGIN
   LTEXT "Исполняемый файл:", IDC_STATIC, 6, 73, 82, 9
   LTEXT "Тип запуска:", IDC_STATIC, 6, 108, 53, 11
   LTEXT "Состояние службы:", IDC_STATIC, 4, 138, 53, 11
-  CONTROL "",IDC_SERV_STATUS,"Static",0x50000000,70,138,176,11
+  LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
   LTEXT "Можно указать параметры запуска, применяемые при запуске службы из этого каталога.",IDC_STATIC, 6,177,240,15
   LTEXT "Параметры запуска:", IDC_STATIC, 6, 200, 58, 11
   EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -115,19 +116,19 @@ CAPTION "Создать службу"
 FONT 8, "MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
-  CONTROL "",IDC_CREATE_SERVNAME,"Edit",0x50010000,72,12,150,11,0x00000200
-  CONTROL "",IDC_CREATE_DISPNAME,"Edit",0x50010000,72,31,150,11,0x00000200
-  CONTROL "",IDC_CREATE_PATH,"Edit",0x50010000,8,62,214,13,0x00000200
-  CONTROL "",IDC_CREATE_DESC,"Edit",0x50010000,10,97,210,48,0x00000200
-  CONTROL "",IDC_CREATE_OPTIONS,"Edit",0x50010000,10,162,210,13,0x00000200
-  CONTROL "*Имя службы :",IDC_STATIC,"Static",0x50000202,12,12,54,9
-  CONTROL "*Отображаемое имя :",IDC_STATIC,"Static",0x50000202,12,33,54,9
-  CONTROL "*Исполняемый файл :",IDC_STATIC,"Static",0x50000000,10,51,68,9
-  CONTROL "Описание :",IDC_STATIC,"Static",0x50000000,12,86,44,9
-  CONTROL "OK",IDOK,"Button",0x50010000,126,192,44,13
-  CONTROL "Отмена",IDCANCEL,"Button",0x50010000,176,192,46,13
-  CONTROL "Дополнительные опции (нажмите справку для уточнения)",IDC_STATIC,"Static",0x50000000,10,151,134,9
-  CONTROL "Справка",ID_CREATE_HELP,"Button",0x50010000,6,192,44,13
+  EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
+  EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_PATH, 8, 62, 214, 13, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
+  LTEXT "*Имя службы :", IDC_STATIC, 12, 12, 54, 9
+  LTEXT "*Отображаемое имя :", IDC_STATIC, 12, 33, 54, 9
+  LTEXT "*Исполняемый файл :", IDC_STATIC, 10, 51, 68, 9
+  LTEXT "Описание :", IDC_STATIC, 12, 86, 44, 9
+  PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
+  PUSHBUTTON "Отмена", IDCANCEL, 176, 192, 46, 13
+  LTEXT "Дополнительные опции (нажмите справку для уточнения)", IDC_STATIC, 10, 151, 134, 9
+  PUSHBUTTON "Справка", ID_CREATE_HELP, 6, 192, 44, 13
 END
 
 IDD_DLG_DELETE DIALOGEX 6,6,185,148
@@ -166,8 +167,6 @@ BEGIN
 END
 
 
-IDB_BUTTONS BITMAP DISCARDABLE "res/toolbar.bmp"
-
 
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -190,7 +189,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_NUM_SERVICES "Номер службы: %d"
-  IDS_LICENSE "Эта программа является свободным программным обеспечением; Вы можете распространять и/или изменять ее в соответствии с лицензией GNU General Public License версии 2 или более поздней, опубликованной Free Software Foundation.\r\n\r\nЭта программа распространяется с надеждой, что она может быть полезна, но БЕЗ ВСЯКОЙ ГАРАНТИИ;не подразумевается даже РАБОТОСПОСОБНОСТЬ или ПРИГОДНОСТЬ ДЛЯ ВЫПОЛНЕНИЯ НЕОБХОДИМЫХ ЗАДАЧЬ. См. GNU General Public License для получения дополнительных сведений.\r\n\r\nВы должны получить копию лицензии GNU вместе с этой программой, в противном случае обращайтесь в Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_LICENSE "Эта программа является свободным программным обеспечением; Вы можете распространять и/или изменять ее в соответствии с лицензией GNU General Public License версии 2 или более поздней, опубликованной Free Software Foundation.\r\n\r\nЭта программа распространяется с надеждой, что она может быть полезна, но БЕЗ ВСЯКОЙ ГАРАНТИИ; не подразумевается даже РАБОТОСПОСОБНОСТЬ или ПРИГОДНОСТЬ ДЛЯ ВЫПОЛНЕНИЯ НЕОБХОДИМЫХ ЗАДАЧ. См. GNU General Public License для получения дополнительных сведений.\r\n\r\nВы должны получить копию лицензии GNU вместе с этой программой, в противном случае обращайтесь в Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -198,11 +197,12 @@ BEGIN
   IDS_TOOLTIP_PROP "Свойства"
   IDS_TOOLTIP_REFRESH "Обновить"
   IDS_TOOLTIP_EXPORT "Экспортировать список"
+  IDS_TOOLTIP_CREATE "Создание новой службы"
+  IDS_TOOLTIP_DELETE "Удаление существующей службы"
   IDS_TOOLTIP_START "Запустить службу"
   IDS_TOOLTIP_STOP "Остановить службу"
   IDS_TOOLTIP_PAUSE "Приостановить службу"
   IDS_TOOLTIP_RESTART "Перезапуск службы"
-  IDS_TOOLTIP_NEW "Создание новой службы"
   IDS_TOOLTIP_HELP "Справка"
   IDS_TOOLTIP_EXIT "Выход"
 END
@@ -219,4 +219,65 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HELP_OPTIONS "ОПЦИИ СОЗДАНИЯ:\r\nПримечание: Имя опции включает знак ""равно"".\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (по умолчанию = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (по умолчанию = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (по умолчанию = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(отделяется / (наклонная черта))>\r\n obj= <AccountName|ObjectName>\r\n       (по умолчанию = LocalSystem)\r\n password= <password>\r\n"
+END
+
+#define IDS_HINT_BLANK          20000
+#define IDS_HINT_EXPORT         20001
+#define IDS_HINT_EXIT           20002
+
+#define IDS_HINT_CONNECT        20011
+#define IDS_HINT_START          20012
+#define IDS_HINT_STOP           21013
+#define IDS_HINT_PAUSE          21014
+#define IDS_HINT_RESUME         20015
+#define IDS_HINT_RESTART        20016
+#define IDS_HINT_REFRESH        20017
+#define IDS_HINT_EDIT           20018
+#define IDS_HINT_CREATE         20019
+#define IDS_HINT_DELETE         20020
+#define IDS_HINT_PROP           20021
+
+#define IDS_HINT_LARGE          20030
+#define IDS_HINT_SMALL          20031
+#define IDS_HINT_LIST           20032
+#define IDS_HINT_DETAILS        20033
+#define IDS_HINT_CUST           20034
+
+#define IDS_HINT_HELP           20040
+#define IDS_HINT_ABOUT          20041
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_EXPORT       " Exports the current list to a file."
+  IDS_HINT_EXIT         " Exits the program."
+
+  IDS_HINT_CONNECT      " Manage a different computer."
+  IDS_HINT_START        " Start the selected service."
+  IDS_HINT_STOP         " Stop the selected service."
+  IDS_HINT_PAUSE        " Pause the selected service."
+  IDS_HINT_RESUME       " Resume the selected service."
+  IDS_HINT_RESTART      " Stop and start the selected service."
+  IDS_HINT_REFRESH      " Refresh the service list."
+  IDS_HINT_EDIT         " Edit the properties of the selected service."
+  IDS_HINT_CREATE       " Create a new service."
+  IDS_HINT_DELETE       " Delete the selected service."
+  IDS_HINT_PROP         " Open property sheet for the current selection."
+
+  IDS_HINT_LARGE        " Display items by using large icons."
+  IDS_HINT_SMALL        " Display items by using small icons."
+  IDS_HINT_LIST         " Display item in a list."
+  IDS_HINT_DETAILS      " Display information about each item in a window."
+  IDS_HINT_CUST         " Customizes the view."
+
+  IDS_HINT_HELP         " Display help window."
+  IDS_HINT_ABOUT        " About ReactOS Service Manager."
+
+  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
+  IDS_HINT_SYS_MOVE     " Moves this window."
+  IDS_HINT_SYS_SIZE     " Resizes this window."
+  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
+  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
+  IDS_HINT_SYS_CLOSE    " Closes this window."
 END

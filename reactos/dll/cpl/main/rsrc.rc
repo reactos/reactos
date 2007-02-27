@@ -19,5 +19,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "It.rc"
 #include "Ja.rc"
 #include "Nl.rc"
-#include "Ru.rc"
+#include "ru-RU.rc"
 #include "Uk.rc"
