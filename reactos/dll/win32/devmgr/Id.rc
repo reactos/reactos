@@ -1,0 +1,171 @@
+// Indonesian language resource file (Zaenal Mutaqin, 2007-02-16)
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_NAME "Nama"
+    IDS_TYPE "Tipe"
+    IDS_MANUFACTURER "Manufakturer: %1"
+    IDS_LOCATION "Lokasi: %1"
+    IDS_STATUS "Device Status: %1"
+    IDS_UNKNOWN "Tidak dikenal"
+    IDS_LOCATIONSTR "Lokasi %1!u! (%2)"
+    IDS_DEVCODE " (Kode %1!u!)"
+    IDS_DEVCODE2 " (Kode %2!u!)"
+    IDS_ENABLEDEVICE "Gunakan device ini (hidupkan)"
+    IDS_DISABLEDEVICE "Jangan gunakan device ini (matikan)"
+    IDS_UNKNOWNDEVICE "Device tidak dikenal"
+    IDS_NODRIVERLOADED "Driver tidak diinstalasi untuk device ini."
+    IDS_DEVONPARENT "pada %1"
+    IDS_TROUBLESHOOTDEV "&Pecahkan Masalah..."
+    IDS_ENABLEDEV "Hidupka&n Device"
+    IDS_REINSTALLDRV "Re&instalasi Driver"
+    IDS_PROPERTIES "P&roperti"
+    IDS_UPDATEDRV "&Mutakhirkan Driver..."
+    IDS_REBOOT "Mulai lagi &Komputer..."
+    IDS_NOTAVAILABLE "Tidak tersedia"
+    IDS_NOTDIGITALLYSIGNED "Tidak ditandatangan secara digital"
+    IDS_NODRIVERS "File driver tidak diperlukan atau sudah diambil untuk device ini."
+END
+
+/* error messages, source: http://www.z123.org/techsupport/medm.htm */
+STRINGTABLE
+BEGIN
+    IDS_DEV_NO_PROBLEM "Device ini bekerja dengan baik."
+    IDS_DEV_NOT_CONFIGURED "Device ini tidak dikonfigurasi dengan baik."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS  tidak bisa mengambil driver untuk device ini karena komputer melaporkan dua $1 tipe bus."
+    IDS_DEV_DEVLOADER_FAILED2 "Pengambil device $1 untuk device ini tidak mengambil device driver."
+    IDS_DEV_OUT_OF_MEMORY "Driver untuk device ini mungkin rusak, sistem anda bisa berjalan lambat pada memori atau sumber daya lain."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Device ini tidak bekerja dengan baik karena salah satu driver-nya mungkin rusak, atau registri anda mungkin rusak."
+    IDS_DEV_LACKED_ARBITRATOR "Driver untuk device ini meminta resource dimana ReactOS tidak mengetahui bagaimana menanganinya."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Device lain sedang menggunakan resources yang dibutuhkan device ini."
+    IDS_DEV_FAILED_FILTER "Drivers untuk device ini perlu diinstalasi ulang."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Device ini tidak bekerja dengan baik karena ReactOS tida dapat mengambil file $1 yang mengambil driver untuk device ini."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Device ini tidak bekerja dengan baik karena file $1 yang mengambil driver untuk device ini rusak."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Kegagalan device: Coba mengubah driver untuk device ini. Jika itu tidak bekerja, lihat dokumentasi hardware anda."
+    IDS_DEV_INVALID_DATA "Device ini tidak bekerja dengan baik karena BIOS dalam komputer anda melaporkan resources untuk device secara tidak benar."
+    IDS_DEV_INVALID_DATA2 "Device ini tidak bekerja dengan baik karena BIOS dalam komputer anda melaporkan resources untuk device secara tidak benar."
+    IDS_DEV_FAILED_START "Device ini baik tidak ada, tidak bekerja dengan baik, ataupun drivernya tidak semua terinstalasi."
+    IDS_DEV_LIAR "ReactOS berhenti merespon ketika mencoba untuk memulai device ini, dan karenanya tidak akan pernah mecoba untuk memulai lagi device ini."
+    IDS_DEV_NORMAL_CONFLICT "Device ini tidak menemukan $1 resources bebas untuk digunakan."
+    IDS_DEV_NOT_VERIFIED "Device ini baik tidak ada, tidak bekerja dengan baik, ataupun drivernya tidak semua terinstalasi."
+    IDS_DEV_NEED_RESTART "Device ini tidak akan bekerja denganbaik sampai anda memulai lagi komputer anda."
+    IDS_DEV_REENUMERATION "Device ini menyebabkan konflik resource."
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS tidak mengenali semua resources yang dipakai device ini."
+    IDS_DEV_UNKNOWN_RESOURCE "File informasi driver $1 memberitahu device anak ini untuk memakai resource yang tidak dimiliki atau dikenal device leluhurnya."
+    IDS_DEV_REINSTALL "Driver untuk device ini perlu diinstalasi ulang."
+    IDS_DEV_REGISTRY "Registri anda mungkin rusak."
+    IDS_DEV_WILL_BE_REMOVED "ReactOS menghapus device ini."
+    IDS_DEV_DISABLED "Device ini tidak dimulai."
+    IDS_DEV_DISABLED2 "Device ini dimatikan."
+    IDS_DEV_DEVLOADER_NOT_READY "Pengambil device ini tidak bisa mengambil driver yang dibutuhkan."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Adapter tampilan ini berfungsi dengan baik."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Pengambil device ini tidak bisa mengambil driver yang dibutuhkan."
+    IDS_DEV_DEVICE_NOT_THERE "Device ini baik tidak ada, tidak bekerja dengan baik, ataupun drivernya tidak semua terinstalasi."
+    IDS_DEV_MOVED "ReactOS sedang dalam proses menyiapkan device ini."
+    IDS_DEV_TOO_EARLY "ReactOS sedang dalam proses menyiapkan device ini."
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS tidak bisa menetapkan resources untuk device ini."
+    IDS_DEV_FAILED_INSTALL "Driver untuk device ini tidak diinstalasi."
+    IDS_DEV_HARDWARE_DISABLED "Device ini dimatikan karena BIOS untuk device ini tidak memberikan resource-nya."
+    IDS_DEV_CANT_SHARE_IRQ "Device ini menggunakan Interrupt Request (IRQ) resource yang dipakai oleh device lain dan tidak bisa berbagi.\nAnda harus mengubah setelan yang konflik atau menghapus real-mode driver penyebab konflik."
+    IDS_DEV_FAILED_ADD "Device ini tidak bekerja dengan benar karena $1 tidak bekerja dengan baik."
+    IDS_DEV_DISABLED_SERVICE "ReactOS tidak bisa menginstalasi driver untuk device ini karena ia tidak bisa mengakses drive atau lokasi jaringan dimana file setup berada di dalamnya."
+    IDS_DEV_TRANSLATION_FAILED "Device ini tidak merespon terhadap driver-nya."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS tidak bisa memeriksa setelan untuk device ini. Lihat dokumentasi yang datang dengan device ini dan gunakan tab Resource untuk menyetel konfigurasi."
+    IDS_DEV_BIOS_TABLE "Firmware sistem komputer anda tidak menyertakan informasi cukup untuk dikonfigurasi dengan benar dan memakai device ini. \nUntuk menggunakan device ini, lihat manufakturer komputer anda guna mendapatkan pemutakhiran firmware atau BIOS."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Device ini meminta interupsi PCI tapi dikonfigurasi untuk interupsi ISA (atau sebaliknya). \nSilahkan gunakan program setup sistem komputer anda untuk mengkonfigurasi ulang pada device ini."
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS tidak bisa menginisialisasi device driver untuk hardware ini."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS tidak bisa mengambil device driver untuk hardware ini karena instan sebelumnya pada device driver masih dalam memori."
+    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS tidak bisa mengambil device driver untuk hardware ini. Driver mungkin rusak atau hilang."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS tidak bisa mengakses hardware ini karena informasi kunci layanan dalam registri hilang atau direkam secara tidak benar."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS mengambil device driver untuk hardware dengan sukses tapi tidak bisa menemukan hardware device."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS tidak bisa mengambil device driver untuk hardware ini karena ada duplikasi device yang sudah berjalan dalam sistem."
+    IDS_DEV_FAILED_POST_START "ReactOS telah menghentikan device ini karena dilaporkan bermasalah."
+    IDS_DEV_HALTED "Aplikasi atau layanan telah mematikan hardware device ini."
+    IDS_DEV_PHANTOM "Saat ini, hardware device ini tidak disambungkan ke komputer."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS tidak mendapatkan akses terhadap hardware device ini karena sistem operasi masih dalam proses dimatikan."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS tidak bisa memakai hardware device ini karena ia disiapkan untuk penghapusan aman, tapi ia tidak dihapus dari komputer"
+    IDS_DEV_DRIVER_BLOCKED "Software untuk device ini telah diblok dari awal karena ia dikenal mempunyai masalah dengan ReactOS. Hubungi vendor hardware untuk meminta driver baru."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS tidak bisa memulai hardware devices baru karena hive sistem terlalu besar (melebihi Batas Ukuran Registri)."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS tidak bisa mengubah setelan device ini."
+END
+
+IDD_HARDWARE DIALOG DISCARDABLE  0, 0, 300, 400
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Device:",IDC_DEVICES,7,6,196,10
+    CONTROL         "",IDC_LV_DEVICES,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | 
+                    LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,16,196,50
+    GROUPBOX        "Properti Device",IDC_PROPERTIESGROUP,7,76,196,105
+    LTEXT           "",IDC_MANUFACTURER,14,88,183,10,SS_ENDELLIPSIS
+    LTEXT           "",IDC_LOCATION,14,100,183,10,SS_ENDELLIPSIS
+    LTEXT           "",IDC_STATUS,14,112,183,30
+    PUSHBUTTON      "Pecahkan &Maslah...",IDC_TROUBLESHOOT,85,140,54,14,
+                    BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON      "P&roperti",IDC_PROPERTIES,146,140,50,14
+END
+
+IDD_DEVICEGENERAL DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Umum"
+FONT 8, "MS Shell Dlg"
+BEGIN
+     ICON "", IDC_DEVICON, 7, 7, 20, 20
+     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+     LTEXT "Tipe Device:", -1, 37, 39, 60, 8, SS_NOPREFIX
+     EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+     LTEXT "Manufakturer:", -1, 37, 53, 60, 8, SS_NOPREFIX
+     EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+     LTEXT "Lokasi:", -1, 37, 67, 60, 8, SS_NOPREFIX
+     EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+     GROUPBOX "Status Device", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+     EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+     PUSHBUTTON "Pecahkan &Masalah...", IDC_DEVPROBLEM, 148, 163, 90, 15
+     LTEXT "Penggunaan &Device:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+     COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
+END
+
+IDD_DEVICEDRIVER DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Driver"
+FONT 8, "MS Shell Dlg"
+BEGIN
+     ICON "", IDC_DEVICON, 7, 7, 20, 20
+     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+     LTEXT "Penyedia Driver:", -1, 37, 39, 60, 8, SS_NOPREFIX
+     EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+     LTEXT "Tanggal driver:", -1, 37, 53, 60, 8, SS_NOPREFIX
+     EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+     LTEXT "Versi driver:", -1, 37, 67, 60, 8, SS_NOPREFIX
+     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+     LTEXT "Penanda tangan Digital:", -1, 37, 81, 60, 8, SS_NOPREFIX
+     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+     PUSHBUTTON "Rincian &Driver...", IDC_DRIVERDETAILS, 7, 106, 70, 15
+     LTEXT "Untuk melihat rincian tetang file driver.", -1, 91, 110, 154, 17, SS_NOPREFIX
+END
+
+IDD_DRIVERDETAILS DIALOG DISCARDABLE  0, 0, 224, 250
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Rincian File Driver"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "File &Driver:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
+    LTEXT "Penyedia:", -1, 14, 134, 50, 8
+    LTEXT "", IDC_FILEPROVIDER, 66, 134, 155, 8
+    LTEXT "Versi File:", -1, 14, 150, 50, 8
+    LTEXT "", IDC_FILEVERSION, 66, 150, 155, 8
+    LTEXT "Hak Cipta:", -1, 14, 166, 50, 8
+    LTEXT "", IDC_FILECOPYRIGHT, 66, 166, 155, 8
+    LTEXT "Penanda tangan Digital:", -1, 14, 182, 50, 8
+    LTEXT "", IDC_DIGITALSIGNER, 66, 182, 155, 8
+    PUSHBUTTON "OK", IDOK, 167, 228, 50, 14
+END
+

@@ -33,6 +33,7 @@
 #include "res/lang/Fi.rc"
 #include "res/lang/Fr.rc"
 #include "res/lang/Hu.rc"
+#include "res/lang/Id.rc"
 #include "res/lang/It.rc"
 #include "res/lang/Ja.rc"
 #include "res/lang/Ko.rc"

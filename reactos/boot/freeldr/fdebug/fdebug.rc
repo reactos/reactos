@@ -5,12 +5,13 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDI_FDEBUG ICON "fdebug.ico"
 
-#include "En.rc"
 #include "De.rc"
+#include "En.rc"
 #include "Fr.rc"
 #include "Hu.rc"
+#include "Id.rc"
 #include "Ja.rc"
+#include "No.rc"
 #include "Pl.rc"
 #include "Tr.rc"
-#include "No.rc"
 

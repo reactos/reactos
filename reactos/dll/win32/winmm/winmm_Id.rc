@@ -1,0 +1,127 @@
+/*
+ * Copyright 2007 Zaenal Mutaqin (Indonesian translation)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+STRINGTABLE LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+BEGIN
+
+/* MMSYS errors */
+MMSYSERR_NOERROR, 		"Perintah yang ditetapkan telah dilaksanakan."
+MMSYSERR_ERROR, 		"Kesalahan eksternal tidak terdefinisi."
+MMSYSERR_BADDEVICEID, 		"Device ID yang sudah digunakan diluar jangkauan sistem anda."
+MMSYSERR_NOTENABLED, 		"Driver tidak dihidupkan."
+MMSYSERR_ALLOCATED, 		"Device yang ditetapkan sedang dipakai. Tunggu sampai ia bebas, dan lalu coba lagi."
+MMSYSERR_INVALHANDLE, 		"Kendali device yang ditetapkan tidak benar."
+MMSYSERR_NODRIVER, 		"Tidak ada driver terinstalasi pada sistem anda !\n"
+MMSYSERR_NOMEM, 		"Memori tidak cukup tersedia untuk tugas ini. Keluar dari satu atau lebih aplikasi untuk menaikkan memori yang tersedia, dan kemudian coba lagi."
+MMSYSERR_NOTSUPPORTED, 		"Fungsi ini tidak didukung. Gunakan fungsi Kapabilitas untuk memeriksa fungsi dan pesan yang mana yang didukung oleh driver."
+MMSYSERR_BADERRNUM, 		"Nomor kesalahan ditetapkan yang tidak didefinisikan dalam sistem."
+MMSYSERR_INVALFLAG, 		"Flag tidak benar yang dioper ke fungsi sistem."
+MMSYSERR_INVALPARAM, 		"Parameter tidak benar yang dioper ke fungsi sistem."
+
+/* WAVE errors */
+WAVERR_BADFORMAT, 		"Format yang ditetapkan tidak didukung atau tidak bisa diterjemahkan. Gunakan fungsi Kapabilitas untuk memeriksa format yang didukung"
+WAVERR_STILLPLAYING, 		"Tidak bisa melakukan operasi ini sementara data media masih dimainkan. Reset device, atau tunggu sampai data selesai dimainkan."
+WAVERR_UNPREPARED, 		"Header wave tidak disiapkan. Gunakan fungsi Prepare untuk menyiapkan header, dan kemudian coba lagi."
+WAVERR_SYNC, 			"Tidak bisa membuka device tanpa menggunakan flag WAVE_ALLOWSYNC. Gunakan flag, dan kemudian coba lagi."
+
+/* MIDI errors */
+MIDIERR_UNPREPARED, 		"Header MIDI tidak disiapkan. Gunakan fungsi Prepare untuk menyiapkan header, dan kemudian coba lagi."
+MIDIERR_STILLPLAYING, 		"Tidak bisa melakukan operasi ini sementara data media masih dimainkan. Reset device, atau tunggu sampai data selesai dimainkan."
+MIDIERR_NOMAP, 			"Peta MIDI tidak ditemukan. Mungkin ada masalah dengan driver, atau file MIDIMAP.CFG rusak atau hilang."
+MIDIERR_NOTREADY, 		"Gerbang sedang mengirimkan data ke device. Tunggu sampai data selesai dikirim, dan kemudian coba lagi."
+MIDIERR_NODEVICE, 		"Setup MIDI Mapper saat ini merujuk ke MIDI device yang tidak terinstalasi pada sistem. Gunakan MIDI Mapper untuk mengedit setup."
+MIDIERR_INVALIDSETUP, 		"Setup MIDI saat ini rusak. Copy file original MIDIMAP.CFG ke direktori ReactOS SYSTEM, dan kemudian coba lagi."
+
+/* MCI errors */
+MCIERR_INVALID_DEVICE_ID, 	"MCI device ID tidak benar. Gunakan ID yang dihasilkan saat membuka MCI device."
+MCIERR_UNRECOGNIZED_KEYWORD, 	"Driver tidak dapat mengenali parameter perintah yang ditetapkan."
+MCIERR_UNRECOGNIZED_COMMAND,	"Driver todal dapat mengenali perintah yang ditetapkan."
+MCIERR_HARDWARE, 		"Ada masalah dengan device media anda. Pastikan ia bekerja dengan baik atau hubungi manufakturer device."
+MCIERR_INVALID_DEVICE_NAME, 	"Device yang ditetapkan tidak dibuka atau tidak dikenal oleh MCI."
+MCIERR_OUT_OF_MEMORY, 		"Memori tidak cukup tersedia untuk tugas ini. \nKeluar satu atau lebih aplikasi untuk menaikkan ketersediaan memori, dan kemudian coba lagi."
+MCIERR_DEVICE_OPEN, 		"Nama device sudah digunakan sebagai alias oleh aplikasi ini. Gunakan alias unik."
+MCIERR_CANNOT_LOAD_DRIVER, 	"Ada masalah tidak terdeteksi dalam pengambilan device driver yang ditetapkan."
+MCIERR_MISSING_COMMAND_STRING, 	"Tidak ada perintah yang ditetapkan."
+MCIERR_PARAM_OVERFLOW, 		"Output string terlalu besar untuk mencukupi bufer. Naikkan ukuran bufer."
+MCIERR_MISSING_STRING_ARGUMENT, "Perintah yang ditetapkan memerlukan parameter karakter-string. Silahkan lengkapi."
+MCIERR_BAD_INTEGER, 		"Integer yang ditetapkan tidak benar untuk perintah ini."
+MCIERR_PARSER_INTERNAL, 	"Device driver menghasilkan tipe balik tidak benar. Periksa dengan device manufakturer tentang mendapatkan driver baru."
+MCIERR_DRIVER_INTERNAL, 	"Ada masalah dengan device driver. Periksa device manufakturer tentang mendapatkan driver baru."
+MCIERR_MISSING_PARAMETER, 	"Perintah yang ditetapkan memerlukan parameter. Silahkan lengkapi."
+MCIERR_UNSUPPORTED_FUNCTION, 	"Device MCI yang anda gunakan tidak mendukung perintah yang ditetapkan."
+MCIERR_FILE_NOT_FOUND, 		"Tidak bisa menemukan file yang ditetapkan. Pastikan path dan nama file sudah benar."
+MCIERR_DEVICE_NOT_READY, 	"Device driver tidak siap."
+MCIERR_INTERNAL, 		"Masalah terjadi dalam menginisialisasi MCI. Coba ulang lagi ReactOS."
+MCIERR_DRIVER, 			"Ada masalah dengan device driver. Driver sudah ditutup. Tidak bisa mengakses kesalahan."
+MCIERR_CANNOT_USE_ALL, 		"Tidak bisa menggunakan 'all' sebagai nama device dengan perintah yang ditetapkan."
+MCIERR_MULTIPLE, 		"Kesalahan terjadi di lebih dari satu device. Tetapkan setiap perintah dan device secara terpisah untuk menguji device mana yang menyebabkan kesaslahan"
+MCIERR_EXTENSION_NOT_FOUND, 	"Tidak bisa menguji tipe device dari ekstensi nama file yang diberikan."
+MCIERR_OUTOFRANGE, 		"Parameter yang ditetapkan di luar jangkauan untuk perintah itu."
+MCIERR_FLAGS_NOT_COMPATIBLE, 	"Parameter yang ditetapkan tidak bisa digunakan bersamaan."
+MCIERR_FILE_NOT_SAVED, 		"Tidak bisa menyimpan file yang ditetapkan. Pastikan anda mempunyai ruang disk cukup atau masih tersambung ke jaringan."
+MCIERR_DEVICE_TYPE_REQUIRED, 	"Tidak bisa menemukan device yang ditetapkan. Pastikan ia diinisialisasi atau nama device itu dieja dengan benar."
+MCIERR_DEVICE_LOCKED, 		"Device yang ditetapkan sekarang ditutup. Tunggu beberapa detik, dan kemudian coba lagi."
+MCIERR_DUPLICATE_ALIAS, 	"Alias yang ditetapkan sudah dipakai dalam aplikasi ini. Gunakan alias yang unik."
+MCIERR_BAD_CONSTANT, 		"Parameter yang ditetapkan tidak benar untuk perintah ini."
+MCIERR_MUST_USE_SHAREABLE, 	"Device driver sudah digunakan. Untuk membaginya, gunakan parameter 'shareable' dengan setiap perintah 'open'."
+MCIERR_MISSING_DEVICE_NAME, 	"Perintah yang ditetapkan memerlukan alias, file, driver, atau nama device. Silahkan lengkapi."
+MCIERR_BAD_TIME_FORMAT, 	"Nilai yang ditetapkan untuk format waktu tidak benar. Rujuk ke dokumentasi MCI untuk format yang benar."
+MCIERR_NO_CLOSING_QUOTE, 	"Tanda kutip penutup hilang dari nilai parameter. Silahkan lengkapi."
+MCIERR_DUPLICATE_FLAGS, 	"Parameter atau nilai ditetapkan dua kali. Tetapkan hanya sekali saja."
+MCIERR_INVALID_FILE, 		"File yang ditetapkan tidak bisa dimainkan pada device MCI yang ditunjuk. File bisa rusak, atau tidak dalam format yang benar."
+MCIERR_NULL_PARAMETER_BLOCK, 	"Blok parameter null dioperkan ke MCI."
+MCIERR_UNNAMED_RESOURCE, 	"Tidak bisa menyimpan file tidak bernama. Lengkapi nama file."
+MCIERR_NEW_REQUIRES_ALIAS, 	"Anda harus menetapkan alias saat menggunakan parameter 'new'."
+MCIERR_NOTIFY_ON_AUTO_OPEN, 	"Tidak bisa menggunakan flag 'notify' dengan auto-opened devices."
+MCIERR_NO_ELEMENT_ALLOWED, 	"Tidak bisa memakai nama file dengan device yang ditetapkan."
+MCIERR_NONAPPLICABLE_FUNCTION, 	"Tidak bisa melakukan perintah dalam urutan yang ditetapkan. Betulkan urutan perintah, dan lalu coba lagi."
+MCIERR_ILLEGAL_FOR_AUTO_OPEN, 	"Tidak bisa melakukan perintah pada auto-opened device. Tunggu sampai device ditutup, dan lalu coba lagi."
+MCIERR_FILENAME_REQUIRED, 	"Nama file tidak benar. Pastikan nama file tidak lebih panjang dari 8 karakter, diikuti oleh titik dan ekstensi."
+MCIERR_EXTRA_CHARACTERS, 	"Tidak bisa menetapkan karakter ekstra setelah string ditutupi oleh tanda kutip."
+MCIERR_DEVICE_NOT_INSTALLED, 	"Device yang ditetapkan tidak diinstalasi pada sistem. Gunakan opsi Drivers dalam Panel Kontrol untuk menginstalasi device."
+MCIERR_GET_CD, 			"Tidak bisa mengakses file atau MCI deviceyang ditetapkan. Coba mengubah direktori atau memulai lagi komputer anda."
+MCIERR_SET_CD, 			"Tidak bisa mengakses file atau MCI device yang ditetapkan karena aplikasi tidak dapat mengubah direktori."
+MCIERR_SET_DRIVE, 		"Tidak bisa mengakses file atau MCI device yang ditetapkan karena aplikasi tidak dapat mengubah drive."
+MCIERR_DEVICE_LENGTH, 		"Tetapkan device atau nama driver yang kurang dari 79 karakter."
+MCIERR_DEVICE_ORD_LENGTH, 	"Tetapkan device atau nama driver yang kurang dari 69 karakter."
+MCIERR_NO_INTEGER, 		"Perintah yang ditetapkan memerlukan parameter integer. Silahkan lengkapi."
+MCIERR_WAVE_OUTPUTSINUSE, 	"Semua wave device yang dapat memainkan file dalam format saat ini sedang dipakai. Tunggu sampai wave device bebas, dan lalu coba lagi."
+MCIERR_WAVE_SETOUTPUTINUSE, 	"Tidak bisa menyetel wave device saat ini untuk memainkan karena sedang dipakai. Tunggu sampai wave device bebas, dan lalu coba lagi."
+MCIERR_WAVE_INPUTSINUSE, 	"Semua wave device yang bisa merekam file dalam format saat ini sedang digunakan. Tunggu sampai wave device bebas, dan lalu coba lagi."
+MCIERR_WAVE_SETINPUTINUSE, 	"Tidak dapat menyetel wave device saat ini untuk perekaman karena sedang dipakai. Tunggu sampai wave device bebas, dan lalu coba lagi."
+MCIERR_WAVE_OUTPUTUNSPECIFIED,	"Setiap waveform playback device kompatibel bisa dipakai."
+MCIERR_WAVE_INPUTUNSPECIFIED, 	"Setiap device perekaman waveform kompatibel bisa dipakai."
+MCIERR_WAVE_OUTPUTSUNSUITABLE, 	"Tidak ada wave device yang bisa memainkan file dalam format saat ini terinstalasi. Gunakan opsi Drivers untuk menginstalasi wave device."
+MCIERR_WAVE_SETOUTPUTUNSUITABLE,"Device yang anda coba mainkan tidak bisa mengenali format file saat ini."
+MCIERR_WAVE_INPUTSUNSUITABLE, 	"Tidak ada wave device yang dapat merekam file dalam format saat ini yang terinstalasi. Gunakan opsi Drivers untuk menginstalasi wave device."
+MCIERR_WAVE_SETINPUTUNSUITABLE, "Device yang sedang anda coba untuk merekam tidak dapat mengenali format file saat ini."
+MCIERR_NO_WINDOW, 		"Tidak ada jendela tampilan."
+MCIERR_CREATEWINDOW, 		"Tidak bisa membuat atau menggunakan jendela."
+MCIERR_FILE_READ, 		"Tidak bisa membaca file yang ditetapkan. Pastikan file masih ada, atau periksa disk atau koneksi jaringan anda."
+MCIERR_FILE_WRITE, 		"Tidak bisa menulis ke file yang ditetapkan. Pastikan anda mempunyai ruang disk cukup atau masih tersambung ke jaringan."
+MCIERR_SEQ_DIV_INCOMPATIBLE, 	"Format waktu ""song pointer"" dan SMPTE adalah mutual eksklusif. Anda tidak bisa menggunakannya secara bersamaan."
+MCIERR_SEQ_NOMIDIPRESENT, 	"Sistem tidak mempunyai MIDI device terinstalasi. Gunakan opsi Drivers dari Panel Kontrol untuk menginstalasi MIDI driver."
+MCIERR_SEQ_PORT_INUSE, 		"Gerbang MIDI yang ditetapkan sudah terpakai. Tunggu sampai ia bebas; lalu coba lagi."
+MCIERR_SEQ_PORT_MAPNODEVICE, 	"Penyiapan MIDI Mapper saat ini merujuk ke MIDI device yang tidak diinstalasi pada sistem. Gunakan opsi MIDI Mapper dari Panel Kontrol untuk mengedit setup."
+MCIERR_SEQ_PORT_MISCERROR, 	"An error occurred with the specified port."
+MCIERR_SEQ_PORT_NONEXISTENT, 	"Device MIDI yang ditetapkan tidak diinstalasi pada sistem. Gunakan opsi Driver dari Panel Kontrol untuk menginstalasi MIDI device."
+MCIERR_SEQ_PORTUNSPECIFIED, 	"Sistem tidak mempunyai gerbang MIDI terinstalasi."
+MCIERR_SEQ_TIMER, 		"Semua timer multimedia sedang dipakai oleh aplikasi lain. Keluar dari satu atau lebih aplikasi ini; lalu coba lagi."
+
+END

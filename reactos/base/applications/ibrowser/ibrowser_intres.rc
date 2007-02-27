@@ -63,13 +63,14 @@ BEGIN
     "#include ""en-US.rc""\r\n"
     "#include ""es-ES.rc""\r\n"
     "#include ""fr-FR.rc""\r\n"
-    "#include ""it-IT.rc""\r\n"
-    "#include ""sv-SE.rc""\r\n"
     "#include ""hu-HU.rc""\r\n"
-    "#include ""ro-RO.rc""\r\n"
-    "#include ""nl-NL.rc""\r\n"
+    "#include ""id-ID.rc""\r\n"
+    "#include ""it-IT.rc""\r\n"
+    "#include ""ja-JP.rc""\r\n"
     "#include ""nb-NO.rc""\r\n"
-    "#include ""ja-JP.rc""\0"
+    "#include ""nl-NL.rc""\r\n"
+    "#include ""ro-RO.rc""\r\n"
+    "#include ""sv-SE.rc""\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -102,13 +103,14 @@ IDI_IBROWSER            ICON    DISCARDABLE     "res/ibrowser.ico"
 #include "en-US.rc"
 #include "es-ES.rc"
 #include "fr-FR.rc"
-#include "it-IT.rc"
-#include "sv-SE.rc"
 #include "hu-HU.rc"
-#include "ro-RO.rc"
-#include "nl-NL.rc"
+#include "id-ID.rc"
+#include "it-IT.rc"
 #include "ja-JP.rc"
 #include "nb-NO.rc"
+#include "nl-NL.rc"
+#include "ro-RO.rc"
+#include "sv-SE.rc"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

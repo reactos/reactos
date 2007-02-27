@@ -1,0 +1,22 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Nama Komputer"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT       "ReactOS menggunakan informasi berikut guna mengidentifikasi komputer anda pada jaringan.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT       "Deskripsi Komputer:", IDC_STATIC, 6, 40, 70, 9
+    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT       "Nama lengkap komputer:", IDC_STATIC, 6, 68, 64, 9
+    LTEXT       "(Standar)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    LTEXT       "Workgroup:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    LTEXT       "(kosong)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    LTEXT       "Untuk menggunakan Bimbingan Identifikasi Jaringan untuk bergabung dengan domain dan membuat pengguna lokal, klik ""Network ID"".", IDC_STATIC, 6, 108, 172, 24
+    PUSHBUTTON  "&Network ID...", IDC_NETWORK_ID, 190, 114, 58, 15
+    LTEXT       "Untuk mengganti nama komputer ini atau bergabung dengan domain, klik ""Ubah"".", IDC_STATIC, 6, 149, 170, 17
+    PUSHBUTTON  "&Ubah...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
+    LTEXT       "Catatan: Hanya Administrator yang bisa mengubah identifikasi komputer ini.", IDC_STATIC, 6, 179, 300, 9
+END
+
