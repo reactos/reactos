@@ -1564,8 +1564,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
          DbgPrint("ExFreePool of non-allocated address %x (magic %x)\n",
                   block, blk->hdr.Magic);
       }
-      // KEBUGCHECK(0);
-      KeReleaseSpinLock(&MmNpoolLock, oldIrql);
+      KEBUGCHECK(0);
       return;
    }
 
