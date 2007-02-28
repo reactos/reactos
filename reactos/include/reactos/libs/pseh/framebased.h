@@ -46,6 +46,12 @@
 #	define _SEHJmpBuf_t jmp_buf
 #endif
 
+#ifdef __cplusplus
+#	define _SEH_INIT_CONST static const
+#else
+#	define _SEH_INIT_CONST register const
+#endif
+
 typedef struct __SEHFrame
 {
 	_SEHPortableFrame_t SEH_Header;
@@ -193,7 +199,7 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 				_SEHEnterTry(&_SEHTryLevel.ST_Header); \
 	\
 			{ \
-				static const int _SEHScopeKind = 0; \
+				_SEH_INIT_CONST int _SEHScopeKind = 0; \
 				(void)_SEHScopeKind; \
 	\
 				if(_SEHSetJmp(_SEHTryLevel.ST_JmpBuf) == 0) \
@@ -232,35 +238,29 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 
 /* New syntax */
 
-#ifdef __cplusplus
-#	define _SEH2_INIT_CONST static const
-#else
-#	define _SEH2_INIT_CONST register const
-#endif
-
 #define _SEH_LEAVE break
 
 #define _SEH_TRY \
 	{ \
-		_SEH2_INIT_CONST int _SEH2TopTryLevel = (_SEHScopeKind != 0); \
-		_SEHPortableFrame_t * const _SEH2CurPortableFrame = _SEHPortableFrame; \
+		_SEH_INIT_CONST int _SEHTopTryLevel = (_SEHScopeKind != 0); \
+		_SEHPortableFrame_t * const _SEHCurPortableFrame = _SEHPortableFrame; \
 	 \
 		{ \
-			static const int _SEHScopeKind = 0; \
-			register int _SEH2State = 0; \
-			register int _SEH2Handle = 0; \
-			_SEHFrame_t _SEH2Frame; \
-			_SEHTryLevel_t _SEH2TryLevel; \
+			_SEH_INIT_CONST int _SEHScopeKind = 0; \
+			register int _SEHState = 0; \
+			register int _SEHHandle = 0; \
+			_SEHFrame_t _SEHFrame; \
+			_SEHTryLevel_t _SEHTryLevel; \
 			_SEHPortableFrame_t * const _SEHPortableFrame = \
-				_SEH2TopTryLevel ? &_SEH2Frame.SEH_Header : _SEH2CurPortableFrame; \
+				_SEHTopTryLevel ? &_SEHFrame.SEH_Header : _SEHCurPortableFrame; \
 	\
 			(void)_SEHScopeKind; \
 			(void)_SEHPortableFrame; \
-			(void)_SEH2Handle; \
+			(void)_SEHHandle; \
 	\
 			for(;;) \
 			{ \
-				if(_SEH2State) \
+				if(_SEHState) \
 				{ \
 					for(;;) \
 					{ \
@@ -278,21 +278,23 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 				{ \
 					_SEH_DECLARE_HANDLERS((FILTER_), 0); \
 	\
-					_SEH2TryLevel.ST_Header.SPT_Handlers = &_SEHHandlers; \
+					_SEHTryLevel.ST_Header.SPT_Handlers = &_SEHHandlers; \
 	\
-					if(_SEH2TopTryLevel) \
+					if(_SEHTopTryLevel) \
 					{ \
 						if(&_SEHLocals != _SEHDummyLocals) \
-							_SEH2Frame.SEH_Locals = &_SEHLocals; \
+							_SEHFrame.SEH_Locals = &_SEHLocals; \
 	\
-						_SEH2Frame.SEH_Header.SPF_Handler = _SEHCompilerSpecificHandler; \
-						_SEHEnterFrame(&_SEH2Frame.SEH_Header, &_SEH2TryLevel.ST_Header); \
+						_SEH_InitializeTracing(); \
+						_SEHFrame.SEH_Header.SPF_Handler = _SEHCompilerSpecificHandler; \
+						_SEHEnterFrame(&_SEHFrame.SEH_Header, &_SEHTryLevel.ST_Header); \
 					} \
 					else \
-						_SEHEnterTry(&_SEH2TryLevel.ST_Header); \
+						_SEHEnterTry(&_SEHTryLevel.ST_Header); \
 	\
-					if((_SEH2Handle = _SEHSetJmp(_SEH2TryLevel.ST_JmpBuf)) == 0) \
+					if((_SEHHandle = _SEHSetJmp(_SEHTryLevel.ST_JmpBuf)) == 0) \
 					{ \
+						++ _SEHState; \
 						continue; \
 					} \
 					else \
@@ -306,7 +308,7 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 	\
 			_SEHLeave(); \
 	\
-			if(_SEH2Handle) \
+			if(_SEHHandle) \
 			{
 
 #define _SEH_FINALLY(FINALLY_) \
@@ -322,27 +324,29 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 				{ \
 					_SEH_DECLARE_HANDLERS(0, (FINALLY_)); \
 	\
-					_SEH2TryLevel.ST_Header.SPT_Handlers = &_SEHHandlers; \
+					_SEHTryLevel.ST_Header.SPT_Handlers = &_SEHHandlers; \
 	\
-					if(_SEH2TopTryLevel) \
+					if(_SEHTopTryLevel) \
 					{ \
 						if(&_SEHLocals != _SEHDummyLocals) \
-							_SEH2Frame.SEH_Locals = &_SEHLocals; \
+							_SEHFrame.SEH_Locals = &_SEHLocals; \
 	\
-						_SEH2Frame.SEH_Header.SPF_Handler = 0; \
-						_SEHEnterFrame(&_SEH2Frame.SEH_Header, &_SEH2TryLevel.ST_Header); \
+						_SEH_InitializeTracing(); \
+						_SEHFrame.SEH_Header.SPF_Handler = 0; \
+						_SEHEnterFrame(&_SEHFrame.SEH_Header, &_SEHTryLevel.ST_Header); \
 					} \
 					else \
-						_SEHEnterTry(&_SEH2TryLevel.ST_Header); \
+						_SEHEnterTry(&_SEHTryLevel.ST_Header); \
 	\
-					++ _SEH2State; \
+					++ _SEHState; \
 					continue; \
 				} \
 	\
 				break; \
 			} \
 	\
-			(FINALLY_)(&_SEH2Frame.SEH_Header); \
+			(FINALLY_)(&_SEHFrame.SEH_Header); \
+	\
 			if(0) \
 			{
 
@@ -356,6 +360,15 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 #define _SEH_GetExceptionCode     _SEHX_GetExceptionCode
 #define _SEH_GetExceptionPointers _SEHX_GetExceptionPointers
 #define _SEH_AbnormalTermination  _SEHX_AbnormalTermination
+
+#define _SEH_EnableTracing(LEVEL_) ((void)(_SEHPortableFrame->SPF_Tracing = (LEVEL_)))
+#define _SEH_DisableTracing() ((void)(_SEHPortableFrame->SPF_Tracing = _SEH_DO_TRACE_NONE))
+
+#ifdef _SEH_ENABLE_TRACE
+#define _SEH_InitializeTracing() (_SEH_EnableTracing(_SEH_DO_DEFAULT_TRACING))
+#else
+#define _SEH_InitializeTracing() ((void)0)
+#endif
 
 #endif
 

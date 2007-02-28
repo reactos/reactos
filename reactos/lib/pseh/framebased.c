@@ -31,6 +31,248 @@
 
 #include <excpt.h>
 
+/* Tracing */
+#ifdef _SEH_ENABLE_TRACE_LIB
+extern unsigned long __cdecl DbgPrint(const char * format, ...);
+
+#define _SEH_TRACE_HEADER_(FRAME_) \
+	DbgPrint("[PSEH:%p]%s:%d:", FRAME_, __FILE__, __LINE__);
+
+#define _SEH_TRACE_TRAILER_ \
+	DbgPrint("\n");
+
+#define _SEH_FILTER_RET_STRING_(RET_) \
+	(((int)(RET_) < 0) ? "_SEH_CONTINUE_EXECUTION" : (((int)(RET_) > 0) ? "_SEH_EXECUTE_HANDLER" : "_SEH_CONTINUE_SEARCH"))
+
+#define _SEH_TRACE_LINE_(FRAME_, ARGS_) \
+{ \
+	_SEH_TRACE_HEADER_(FRAME_); \
+	DbgPrint ARGS_; \
+	_SEH_TRACE_TRAILER_; \
+}
+
+#define _SEH_TRACE_ENTER(FRAME_, FUNCNAME_, ARGS_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_ENTER_LEAVE) \
+	{ \
+		_SEH_TRACE_HEADER_(FRAME_); \
+		DbgPrint(">>> %s(", (FUNCNAME_)); \
+		DbgPrint ARGS_; \
+		DbgPrint(")"); \
+		_SEH_TRACE_TRAILER_; \
+	} \
+}
+
+#define _SEH_TRACE_LEAVE(FRAME_, FUNCNAME_, ARGS_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_ENTER_LEAVE) \
+	{ \
+		_SEH_TRACE_HEADER_(FRAME_); \
+		DbgPrint("<<< %s => ", (FUNCNAME_)); \
+		DbgPrint ARGS_; \
+		_SEH_TRACE_TRAILER_; \
+	} \
+}
+
+#define _SEH_TRACE_EXCEPTION_RECORD(FRAME_, ER_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_EXCEPTION_RECORD) \
+	{ \
+		_SEH_TRACE_LINE_ \
+		( \
+			(FRAME_), \
+			( \
+				"ExceptionRecord %p = { ExceptionCode : %08X, ExceptionFlags : %08X, ExceptionRecord : %p, ExceptionAddress : %p }", \
+				(ER_), \
+				(ER_)->ExceptionCode, \
+				(ER_)->ExceptionFlags, \
+				(ER_)->ExceptionRecord, \
+				(ER_)->ExceptionAddress \
+			) \
+		); \
+	} \
+}
+
+#ifdef _X86_
+#define _SEH_TRACE_CONTEXT(FRAME_, CONTEXT_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_CONTEXT) \
+	{ \
+		if(((CONTEXT_)->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER) \
+		{ \
+			_SEH_TRACE_LINE_ \
+			( \
+				(FRAME_), \
+				( \
+					"eax=%08X ebx=%08X ecx=%08X edx=%08X esi=%08X edi=%08X", \
+					(CONTEXT_)->Eax, \
+					(CONTEXT_)->Ebx, \
+					(CONTEXT_)->Ecx, \
+					(CONTEXT_)->Edx, \
+					(CONTEXT_)->Esi, \
+					(CONTEXT_)->Edi \
+				) \
+			); \
+		} \
+	\
+		if(((CONTEXT_)->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL) \
+		{ \
+			_SEH_TRACE_LINE_ \
+			( \
+				(FRAME_), \
+				( \
+					"eip=%08X esp=%08X ebp=%08X efl=%08X cs=%08X ss=%08X", \
+					(CONTEXT_)->Eip, \
+					(CONTEXT_)->Esp, \
+					(CONTEXT_)->Ebp, \
+					(CONTEXT_)->EFlags, \
+					(CONTEXT_)->SegCs, \
+					(CONTEXT_)->SegSs \
+				) \
+			); \
+		} \
+	\
+		if(((CONTEXT_)->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS) \
+		{ \
+			_SEH_TRACE_LINE_ \
+			( \
+				(FRAME_), \
+				( \
+					"ds=%08X es=%08X fs=%08X gs=%08X", \
+					(CONTEXT_)->SegDs, \
+					(CONTEXT_)->SegEs, \
+					(CONTEXT_)->SegFs, \
+					(CONTEXT_)->SegGs \
+				) \
+			); \
+		} \
+	} \
+}
+#else
+#error Unsupported platform.
+#endif
+
+#define _SEH_TRACE_UNWIND(FRAME_, ARGS_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_UNWIND) \
+	{ \
+		_SEH_TRACE_LINE_((FRAME_), ARGS_); \
+	} \
+}
+
+#define _SEH_TRACE_TRYLEVEL(FRAME_, TRYLEVEL_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_TRYLEVEL) \
+	{ \
+		_SEH_TRACE_LINE_((FRAME_), ("trylevel %p, filter %p", (TRYLEVEL_), (TRYLEVEL_)->SPT_Handlers->SH_Filter)); \
+	} \
+}
+
+#define _SEH_TRACE_ENTER_CALL_FILTER(FRAME_, TRYLEVEL_, ER_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_CALL_FILTER) \
+	{ \
+		_SEH_TRACE_LINE_ \
+		( \
+			(FRAME_), \
+			( \
+				"trylevel %p, calling filter %p, ExceptionCode %08X", \
+				(TRYLEVEL_), \
+				(TRYLEVEL_)->SPT_Handlers->SH_Filter, \
+				(ER_)->ExceptionCode \
+			) \
+		); \
+	} \
+}
+
+#define _SEH_TRACE_LEAVE_CALL_FILTER(FRAME_, TRYLEVEL_, RET_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_CALL_FILTER) \
+	{ \
+		_SEH_TRACE_LINE_ \
+		( \
+			(FRAME_), \
+			( \
+				"trylevel %p, filter %p => %s", \
+				(TRYLEVEL_), \
+				(TRYLEVEL_)->SPT_Handlers->SH_Filter, \
+				_SEH_FILTER_RET_STRING_(RET_) \
+			) \
+		); \
+	} \
+}
+
+#define _SEH_TRACE_FILTER(FRAME_, TRYLEVEL_, RET_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_FILTER) \
+	{ \
+		_SEH_TRACE_LINE_ \
+		( \
+			(FRAME_), \
+			( \
+				"trylevel %p => %s", \
+				(TRYLEVEL_), \
+				_SEH_FILTER_RET_STRING_(RET_) \
+			) \
+		); \
+	} \
+}
+
+#define _SEH_TRACE_ENTER_CALL_HANDLER(FRAME_, TRYLEVEL_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_CALL_HANDLER) \
+	{ \
+		_SEH_TRACE_LINE_((FRAME_), ("trylevel %p, handling", (TRYLEVEL_))); \
+	} \
+}
+
+#define _SEH_TRACE_ENTER_CALL_FINALLY(FRAME_, TRYLEVEL_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_CALL_FINALLY) \
+	{ \
+		_SEH_TRACE_LINE_ \
+		( \
+			(FRAME_), \
+			( \
+				"trylevel %p, calling exit routine %p", \
+				(TRYLEVEL_), \
+				(TRYLEVEL_)->SPT_Handlers->SH_Finally \
+			) \
+		); \
+	} \
+}
+
+#define _SEH_TRACE_LEAVE_CALL_FINALLY(FRAME_, TRYLEVEL_) \
+{ \
+	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_CALL_FINALLY) \
+	{ \
+		_SEH_TRACE_LINE_ \
+		( \
+			(FRAME_), \
+			( \
+				"trylevel %p, exit routine %p returned", \
+				(TRYLEVEL_), \
+				(TRYLEVEL_)->SPT_Handlers->SH_Finally \
+			) \
+		); \
+	} \
+}
+
+#else
+#define _SEH_TRACE_ENTER(FRAME_, FUNCNAME_, ARGS_)
+#define _SEH_TRACE_LEAVE(FRAME_, FUNCNAME_, ARGS_)
+#define _SEH_TRACE_EXCEPTION_RECORD(FRAME_, ER_)
+#define _SEH_TRACE_CONTEXT(FRAME_, CONTEXT_)
+#define _SEH_TRACE_UNWIND(FRAME_, ARGS_)
+#define _SEH_TRACE_TRYLEVEL(FRAME_, TRYLEVEL_)
+#define _SEH_TRACE_ENTER_CALL_FILTER(FRAME_, TRYLEVEL_, ER_)
+#define _SEH_TRACE_LEAVE_CALL_FILTER(FRAME_, TRYLEVEL_, RET_)
+#define _SEH_TRACE_FILTER(FRAME_, TRYLEVEL_, RET_)
+#define _SEH_TRACE_ENTER_CALL_HANDLER(FRAME_, TRYLEVEL_)
+#define _SEH_TRACE_ENTER_CALL_FINALLY(FRAME_, TRYLEVEL_)
+#define _SEH_TRACE_LEAVE_CALL_FINALLY(FRAME_, TRYLEVEL_)
+#endif
+
 /* Assembly helpers, see i386/framebased.asm */
 extern void __cdecl _SEHCleanHandlerEnvironment(void);
 extern struct __SEHRegistration * __cdecl _SEHRegisterFrame(_SEHRegistration_t *);
@@ -50,6 +292,8 @@ static void __stdcall _SEHLocalUnwind
 {
 	_SEHPortableTryLevel_t * trylevel;
 
+	_SEH_TRACE_UNWIND(frame, ("enter local unwind from %p to %p", frame->SPF_TopTryLevel, dsttrylevel));
+
 	for
 	(
 		trylevel = frame->SPF_TopTryLevel;
@@ -64,8 +308,14 @@ static void __stdcall _SEHLocalUnwind
 		pfnFinally = trylevel->SPT_Handlers->SH_Finally;
 
 		if(pfnFinally)
+		{
+			_SEH_TRACE_ENTER_CALL_FINALLY(frame, trylevel);
 			pfnFinally(frame);
+			_SEH_TRACE_LEAVE_CALL_FINALLY(frame, trylevel);
+		}
 	}
+
+	_SEH_TRACE_UNWIND(frame, ("leave local unwind from %p to %p", frame->SPF_TopTryLevel, dsttrylevel));
 }
 
 static void __cdecl _SEHCallHandler
@@ -76,7 +326,9 @@ static void __cdecl _SEHCallHandler
 {
 	_SEHGlobalUnwind(frame);
 	_SEHLocalUnwind(frame, trylevel);
+	_SEH_TRACE_ENTER_CALL_HANDLER(frame, trylevel);
 	frame->SPF_Handler(trylevel);
+	/* ASSERT(0); */
 }
 
 static int __cdecl _SEHFrameHandler
@@ -93,9 +345,29 @@ static int __cdecl _SEHFrameHandler
 
 	frame = EstablisherFrame;
 
+	_SEH_TRACE_ENTER
+	(
+		frame,
+		"_SEHFrameHandler",
+		(
+			"%p, %p, %p, %p",
+			ExceptionRecord,
+			EstablisherFrame,
+			ContextRecord,
+			DispatcherContext
+		)
+	);
+
+	_SEH_TRACE_EXCEPTION_RECORD(frame, ExceptionRecord);
+	_SEH_TRACE_CONTEXT(frame, ContextRecord);
+
 	/* Unwinding */
 	if(ExceptionRecord->ExceptionFlags & (4 | 2))
+	{
+		_SEH_TRACE_UNWIND(frame, ("enter forced unwind"));
 		_SEHLocalUnwind(frame, NULL);
+		_SEH_TRACE_UNWIND(frame, ("leave forced unwind"));
+	}
 	/* Handling */
 	else
 	{
@@ -116,6 +388,8 @@ static int __cdecl _SEHFrameHandler
 		{
 			_SEHFilter_t pfnFilter = trylevel->SPT_Handlers->SH_Filter;
 
+			_SEH_TRACE_TRYLEVEL(frame, trylevel);
+
 			switch((UINT_PTR)pfnFilter)
 			{
 				case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER):
@@ -135,7 +409,9 @@ static int __cdecl _SEHFrameHandler
 						ep.ExceptionRecord = ExceptionRecord;
 						ep.ContextRecord = ContextRecord;
 
+						_SEH_TRACE_ENTER_CALL_FILTER(frame, trylevel, ExceptionRecord);
 						ret = pfnFilter(&ep, frame);
+						_SEH_TRACE_LEAVE_CALL_FILTER(frame, trylevel, ret);
 					}
 					else
 						ret = _SEH_CONTINUE_SEARCH;
@@ -144,9 +420,14 @@ static int __cdecl _SEHFrameHandler
 				}
 			}
 
+			_SEH_TRACE_FILTER(frame, trylevel, ret);
+
 			/* _SEH_CONTINUE_EXECUTION */
 			if(ret < 0)
+			{
+				_SEH_TRACE_LEAVE(frame, "_SEHFrameHandler", ("ExceptionContinueExecution"));
 				return ExceptionContinueExecution;
+			}
 			/* _SEH_EXECUTE_HANDLER */
 			else if(ret > 0)
 				_SEHCallHandler(frame, trylevel);
@@ -158,6 +439,7 @@ static int __cdecl _SEHFrameHandler
 		/* FALLTHROUGH */
 	}
 
+	_SEH_TRACE_LEAVE(frame, "_SEHFrameHandler", ("ExceptionContinueSearch"));
 	return ExceptionContinueSearch;
 }
 

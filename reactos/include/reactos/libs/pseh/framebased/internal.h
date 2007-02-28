@@ -23,6 +23,23 @@
 #ifndef KJK_PSEH_FRAMEBASED_INTERNAL_H_
 #define KJK_PSEH_FRAMEBASED_INTERNAL_H_
 
+#define _SEH_DO_TRACE_ENTER_LEAVE      (1 <<  0)
+#define _SEH_DO_TRACE_EXCEPTION_RECORD (1 <<  1)
+#define _SEH_DO_TRACE_CONTEXT          (1 <<  2)
+#define _SEH_DO_TRACE_UNWIND           (1 <<  3)
+#define _SEH_DO_TRACE_TRYLEVEL         (1 <<  4)
+#define _SEH_DO_TRACE_CALL_FILTER      (1 <<  5)
+#define _SEH_DO_TRACE_FILTER           (1 <<  6)
+#define _SEH_DO_TRACE_CALL_HANDLER     (1 <<  7)
+#define _SEH_DO_TRACE_CALL_FINALLY     (1 <<  8)
+
+#define _SEH_DO_TRACE_NONE (0)
+#define _SEH_DO_TRACE_ALL (-1)
+
+#ifndef _SEH_DO_DEFAULT_TRACING
+#define _SEH_DO_DEFAULT_TRACING _SEH_DO_TRACE_NONE
+#endif
+
 struct _EXCEPTION_RECORD;
 struct _EXCEPTION_POINTERS;
 struct _CONTEXT;
@@ -81,6 +98,7 @@ typedef struct __SEHPortableFrame
 	unsigned long SPF_Code;
 	_SEHHandler_t SPF_Handler;
 	_SEHPortableTryLevel_t * SPF_TopTryLevel;
+	int SPF_Tracing;
 }
 _SEHPortableFrame_t;
 
