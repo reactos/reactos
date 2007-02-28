@@ -80,7 +80,7 @@ void UpdateData(HWND hDlg)
 	int n, i,j;
 
 	GetKeyboardLayoutName(buf);
-	swprintf(buf2, L"Active layout: %s (%x)", buf, GetKeyboardLayout(0));
+	swprintf(buf2, L"Active: %s (%x)", buf, GetKeyboardLayout(0));
 	SetWindowText(GetDlgItem(hDlg, IDC_ACTIVE), buf2);
 
 	hList = GetDlgItem(hDlg, IDC_LIST);
@@ -194,6 +194,18 @@ DWORD GetLoadFlags(HWND hDlg)
 	return ret;
 }
 
+UINT GetDelayMilliseconds(HWND hDlg)
+{
+	WCHAR Buf[255];
+	UINT ret;
+
+	GetWindowText(GetDlgItem(hDlg, IDC_DELAY), Buf, sizeof(Buf));
+
+	swscanf(Buf, L"%d", &ret);
+
+	return ret*1000;
+}
+
 HKL GetSelectedLayout(HWND hDlg)
 {
 	int n;
@@ -251,6 +263,8 @@ LRESULT MainDialogProc(HWND hDlg,
 			swprintf(Buf, L"Current thread id: %d", GetCurrentThreadId());
 			SetWindowText(GetDlgItem(hDlg, IDC_CURTHREAD), Buf);
 
+			SetWindowText(GetDlgItem(hDlg, IDC_DELAY), L"0");
+
 			return 0;
 		} /* WM_INITDIALOG */
 
@@ -268,6 +282,7 @@ LRESULT MainDialogProc(HWND hDlg,
 				{
 					if((hKl = GetActivateHandle(hDlg)) != INVALID_HANDLE_VALUE)
 					{
+						Sleep(GetDelayMilliseconds(hDlg));
 						if(!(hKl = ActivateKeyboardLayout(hKl, GetActivateFlags(hDlg))))
 							FormatBox(hDlg, MB_ICONERROR, L"Error", 
 								L"ActivateKeyboardLayout() failed. %d", GetLastError());
@@ -283,6 +298,7 @@ LRESULT MainDialogProc(HWND hDlg,
 				{
 					if((hKl = GetSelectedLayout(hDlg)) != INVALID_HANDLE_VALUE)
 					{
+						Sleep(GetDelayMilliseconds(hDlg));
 						if(!UnloadKeyboardLayout(hKl))
 							FormatBox(hDlg, MB_ICONERROR, L"Error", 
 								L"UnloadKeyboardLayout() failed. %d", 
@@ -297,6 +313,7 @@ LRESULT MainDialogProc(HWND hDlg,
 				{
 					WCHAR buf[255];
 					GetWindowText(GetDlgItem(hDlg, IDC_KLID), buf, sizeof(buf));
+					Sleep(GetDelayMilliseconds(hDlg));
 					if(!LoadKeyboardLayout(buf, GetLoadFlags(hDlg)))
 						FormatBox(hDlg, MB_ICONERROR, L"Error", 
 							L"LoadKeyboardLayout() failed. %d",

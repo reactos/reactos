@@ -8,6 +8,7 @@
 #define IDC_LIST                        1022
 #define IDC_ACTIVE                      1023
 #define IDC_EDIT2                       1024
+#define IDC_DELAY                       1024
 #define IDC_UNLOAD                      1025
 #define IDC_ACTIVATE                    1026
 #define IDC_KLF_REORDER                 1027

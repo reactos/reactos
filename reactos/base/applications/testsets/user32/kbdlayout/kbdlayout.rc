@@ -33,10 +33,10 @@ FONT 8, "MS Sans Serif"
 BEGIN
     PUSHBUTTON      "Close",ID_CANCEL,215,172,105,14
     EDITTEXT        IDC_EDIT1,7,140,199,47,ES_MULTILINE | ES_AUTOHSCROLL
-    LISTBOX         IDC_LIST,124,17,84,89,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
+    LISTBOX         IDC_LIST,124,60,84,46,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Loaded layouts",IDC_STATIC,128,7,49,8
-    LTEXT           "Active layout:",IDC_ACTIVE,7,127,114,10,SS_SUNKEN
+    LTEXT           "Loaded layouts",IDC_STATIC,124,50,49,8
+    LTEXT           "Active:",IDC_ACTIVE,7,127,114,10,SS_SUNKEN
     PUSHBUTTON      "Unload",IDC_UNLOAD,124,109,41,14
     PUSHBUTTON      "Activate",IDC_ACTIVATE,166,109,41,14
     GROUPBOX        "Activate Flags",IDC_STATIC,215,7,103,67
@@ -75,6 +75,9 @@ BEGIN
     GROUPBOX        "Multithreading",IDC_STATIC,216,130,104,39
     LTEXT           "Current thread ID:",IDC_CURTHREAD,219,141,93,8
     PUSHBUTTON      "Create new thread",IDC_NEWTHREAD,234,152,71,12
+    GROUPBOX        "Load\\Activate delay",IDC_STATIC,124,7,85,40
+    LTEXT           "Delay (seconds):",IDC_STATIC,130,17,75,8
+    EDITTEXT        IDC_DELAY,128,29,59,14,ES_AUTOHSCROLL
 END
 
 
