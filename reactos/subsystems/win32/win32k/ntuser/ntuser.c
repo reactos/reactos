@@ -33,25 +33,16 @@
 #define NDEBUG
 #include <debug.h>
 
-
-FAST_MUTEX UserLock;
-
-char* _file;
-DWORD _line;
-DWORD _locked=0;
+ERESOURCE UserLock;
 
 /* FUNCTIONS **********************************************************/
 
 
 NTSTATUS FASTCALL InitUserImpl(VOID)
 {
-   //PVOID mem;
    NTSTATUS Status;
 
-   //   DPRINT("Enter InitUserImpl\n");
-   //   ExInitializeResourceLite(&UserLock);
-
-   ExInitializeFastMutex(&UserLock);
+   ExInitializeResourceLite(&UserLock);
 
    if (!ObmCreateHandleTable())
    {
@@ -75,41 +66,31 @@ RETURN
 */
 BOOL FASTCALL UserIsEntered()
 {
-   return (UserLock.Owner == KeGetCurrentThread());
+   return ExIsResourceAcquiredExclusiveLite(&UserLock) 
+      || ExIsResourceAcquiredSharedLite(&UserLock);
 }
 
-
-VOID FASTCALL CleanupUser(VOID)
+BOOL FASTCALL UserIsEnteredExclusive()
 {
-   //   ExDeleteResourceLite(&UserLock);
+   return ExIsResourceAcquiredExclusiveLite(&UserLock);
 }
 
-VOID FASTCALL UUserEnterShared(VOID)
+VOID FASTCALL CleanupUserImpl(VOID)
 {
-   //   DPRINT("Enter IntLockUserShared\n");
-   //   KeDumpStackFrames((PULONG)__builtin_frame_address(0));
-   //DPRINT("%x\n",__builtin_return_address(0));
-   //   KeEnterCriticalRegion();
-   //   ExAcquireResourceSharedLite(&UserLock, TRUE);
-   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&UserLock);
+   ExDeleteResourceLite(&UserLock);
 }
 
-VOID FASTCALL UUserEnterExclusive(VOID)
+VOID FASTCALL UserEnterShared(VOID)
 {
-   //   DPRINT("Enter UserEnterExclusive\n");
-   //   KeDumpStackFrames((PULONG)__builtin_frame_address(0));
-   //DPRINT("%x\n",__builtin_return_address(0));
-   //   KeEnterCriticalRegion();
-   //   ExAcquireResourceExclusiveLite(&UserLock, TRUE);
-   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&UserLock);
+   ExAcquireResourceSharedLite(&UserLock, TRUE);
 }
 
-VOID FASTCALL UUserLeave(VOID)
+VOID FASTCALL UserEnterExclusive(VOID)
 {
-   //   DPRINT("Enter UserLeave\n");
-   //   KeDumpStackFrames((PULONG)__builtin_frame_address(0));
-   //DPRINT("%x\n",__builtin_return_address(0));
-   //  ExReleaseResourceLite(&UserLock);
-   //   KeLeaveCriticalRegion();
-   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&UserLock);
+   ExAcquireResourceExclusiveLite(&UserLock, TRUE);
+}
+
+VOID FASTCALL UserLeave(VOID)
+{
+   ExReleaseResourceLite(&UserLock);
 }

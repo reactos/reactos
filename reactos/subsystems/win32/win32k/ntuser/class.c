@@ -220,8 +220,8 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
                    IN BOOL Ansi,
                    IN BOOL UseCallProc2)
 {
-    /* FIXME - assert for exclusive lock! */
-
+    ASSERT(UserIsEnteredExclusive() == TRUE);
+    
     if (Class->System)
     {
         return (Ansi ? Class->WndProcExtra : Class->WndProc);
