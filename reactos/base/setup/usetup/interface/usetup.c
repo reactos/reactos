@@ -2885,6 +2885,42 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   return FILE_COPY_PAGE;
 }
 
+VOID
+NTAPI
+SetupUpdateMemoryInfo(IN PCOPYCONTEXT CopyContext,
+                      IN BOOLEAN First)
+{
+    SYSTEM_PERFORMANCE_INFORMATION PerfInfo;
+
+    /* Get the memory information from the system */
+    NtQuerySystemInformation(SystemPerformanceInformation,
+                             &PerfInfo,
+                             sizeof(PerfInfo),
+                             NULL);
+
+    /* Check if this is initial setup */
+    if (First)
+    {
+        /* Set maximum limits to be total RAM pages */
+        ProgressSetStepCount(CopyContext->MemoryBars[0], PerfInfo.CommitLimit);
+        ProgressSetStepCount(CopyContext->MemoryBars[1], PerfInfo.CommitLimit);
+        ProgressSetStepCount(CopyContext->MemoryBars[2], PerfInfo.CommitLimit);
+    }
+
+    /* Set current values */
+    ProgressSetStep(CopyContext->MemoryBars[0], PerfInfo.PagedPoolPages);
+    ProgressSetStep(CopyContext->MemoryBars[1], PerfInfo.NonPagedPoolPages);
+    ProgressSetStep(CopyContext->MemoryBars[2], PerfInfo.AvailablePages);
+
+    /* Check if memory dropped below 40%! */
+    if (CopyContext->MemoryBars[2]->Percent <= 40)
+    {
+        /* Wait a while until Mm does its thing */
+        LARGE_INTEGER Interval;
+        Interval.QuadPart = -1 * 15 * 1000 * 100;
+        NtDelayExecution(FALSE, &Interval);
+    }
+}
 
 static UINT CALLBACK
 FileCopyCallback(PVOID Context,
@@ -2902,56 +2938,101 @@ FileCopyCallback(PVOID Context,
 	CopyContext->TotalOperations = (ULONG)Param2;
 	ProgressSetStepCount(CopyContext->ProgressBar,
 			     CopyContext->TotalOperations);
+    SetupUpdateMemoryInfo(CopyContext, TRUE);
 	break;
 
       case SPFILENOTIFY_STARTCOPY:
 	/* Display copy message */
     CONSOLE_SetStatusText("                                                   \xB3 Copying file: %S", (PWSTR)Param1);
+    SetupUpdateMemoryInfo(CopyContext, FALSE);
 	break;
 
       case SPFILENOTIFY_ENDCOPY:
 	CopyContext->CompletedOperations++;
 	ProgressNextStep(CopyContext->ProgressBar);
+    SetupUpdateMemoryInfo(CopyContext, FALSE);
 	break;
     }
 
   return 0;
 }
 
-
-static PAGE_NUMBER
+static
+PAGE_NUMBER
 FileCopyPage(PINPUT_RECORD Ir)
 {
-  COPYCONTEXT CopyContext;
+    COPYCONTEXT CopyContext;
 
-  CONSOLE_SetStatusText("                                                           \xB3 Please wait...    ");
+    /* Display status text */
+    CONSOLE_SetStatusText("                                                           \xB3 Please wait...    ");
 
-  CONSOLE_SetTextXY(11, 12, "Please wait while ReactOS Setup copies files to your ReactOS");
-  CONSOLE_SetTextXY(30, 13, "installation folder.");
-  CONSOLE_SetTextXY(20, 14, "This may take several minutes to complete.");
+    /* Displey information text */
+    CONSOLE_SetTextXY(11, 12, "Please wait while ReactOS Setup copies files to your ReactOS");
+    CONSOLE_SetTextXY(30, 13, "installation folder.");
+    CONSOLE_SetTextXY(20, 14, "This may take several minutes to complete.");
 
-  CopyContext.DestinationRootPath = DestinationRootPath.Buffer;
-  CopyContext.InstallPath = InstallPath.Buffer;
-  CopyContext.TotalOperations = 0;
-  CopyContext.CompletedOperations = 0;
-  CopyContext.ProgressBar = CreateProgressBar(13,
-					      26,
-					      xScreen - 13,
-					      yScreen - 20,
-                          "Setup is copying files...");
+    /* Create context for the copy process */
+    CopyContext.DestinationRootPath = DestinationRootPath.Buffer;
+    CopyContext.InstallPath = InstallPath.Buffer;
+    CopyContext.TotalOperations = 0;
+    CopyContext.CompletedOperations = 0;
 
-  SetupCommitFileQueueW(NULL,
-		       SetupFileQueue,
-		       FileCopyCallback,
-		       &CopyContext);
+    /* Create the progress bar as well */
+    CopyContext.ProgressBar = CreateProgressBar(13,
+                                                26,
+                                                xScreen - 13,
+                                                yScreen - 20,
+                                                10,
+                                                24,
+                                                TRUE,
+                                                "Setup is copying files...");
 
-  SetupCloseFileQueue(SetupFileQueue);
+    /* Create the paged pool progress bar */
+    CopyContext.MemoryBars[0] = CreateProgressBar(13,
+                                                  40,
+                                                  18,
+                                                  43,
+                                                  10,
+                                                  44,
+                                                  FALSE,
+                                                  "Paged Memory");
 
-  DestroyProgressBar(CopyContext.ProgressBar);
+    /* Create the non paged pool progress bar */
+    CopyContext.MemoryBars[1] = CreateProgressBar(28,
+                                                  40,
+                                                  33,
+                                                  43,
+                                                  24,
+                                                  44,
+                                                  FALSE,
+                                                  "Nonpaged Memory");
 
-  return REGISTRY_PAGE;
+    /* Create the global memory progress bar */
+    CopyContext.MemoryBars[2] = CreateProgressBar(43,
+                                                  40,
+                                                  48,
+                                                  43,
+                                                  40,
+                                                  44,
+                                                  FALSE,
+                                                  "Free Memory");
+
+    /* Do the file copying */
+    SetupCommitFileQueueW(NULL,
+                          SetupFileQueue,
+                          FileCopyCallback,
+                          &CopyContext);
+
+    /* If we get here, we're done, so cleanup the queue and progress bar */
+    SetupCloseFileQueue(SetupFileQueue);
+    DestroyProgressBar(CopyContext.ProgressBar);
+    DestroyProgressBar(CopyContext.MemoryBars[0]);
+    DestroyProgressBar(CopyContext.MemoryBars[1]);
+    DestroyProgressBar(CopyContext.MemoryBars[2]);
+
+    /* Go display the next page */
+    return REGISTRY_PAGE;
 }
-
 
 static PAGE_NUMBER
 RegistryPage(PINPUT_RECORD Ir)

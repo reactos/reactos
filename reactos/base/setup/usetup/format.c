@@ -96,6 +96,9 @@ FormatPartition(
                                           yScreen - 14,
                                           xScreen - 7,
                                           yScreen - 10,
+                                          10,
+                                          24,
+                                          TRUE,
                                           "Setup is formatting your disk");
 
     ProgressSetStepCount(FormatProgressBar, 100);

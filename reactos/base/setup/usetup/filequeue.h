@@ -65,6 +65,7 @@ typedef struct _COPYCONTEXT
   ULONG TotalOperations;
   ULONG CompletedOperations;
   PPROGRESSBAR ProgressBar;
+  PPROGRESSBAR MemoryBars[4];
 } COPYCONTEXT, *PCOPYCONTEXT;
 
 /* FUNCTIONS ****************************************************************/
