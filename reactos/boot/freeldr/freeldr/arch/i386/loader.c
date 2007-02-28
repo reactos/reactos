@@ -678,26 +678,17 @@ FrLdrMapImage(IN FILE *Image,
     /* Set the file pointer to zero */
     FsSetFilePointer(Image, 0);
 
-    if (ImageType != 2)
-    {
-        /* Allocate a temporary buffer for the read */
-        ReadBuffer = MmAllocateMemory(ImageSize);
+    /* Allocate a temporary buffer for the read */
+    ReadBuffer = MmAllocateMemory(ImageSize);
 
-        /* Load the file image */
-        FsReadFile(Image, ImageSize, NULL, ReadBuffer);
+    /* Load the file image */
+    FsReadFile(Image, ImageSize, NULL, ReadBuffer);
 
-        /* Map it into virtual memory */
-        ImageSize = FrLdrReMapImage(ReadBuffer, LoadBase);
+    /* Map it into virtual memory */
+    ImageSize = FrLdrReMapImage(ReadBuffer, LoadBase);
 
-        /* Free the temporary buffer */
-        MmFreeMemory(ReadBuffer);
-    }
-    else
-    {
-        /* Load the file image */
-        FsReadFile(Image, ImageSize, NULL, LoadBase);
-        ImageSize = RtlImageNtHeader(LoadBase)->OptionalHeader.SizeOfImage;
-    }
+    /* Free the temporary buffer */
+    MmFreeMemory(ReadBuffer);
 
     /* Calculate Difference between Real Base and Compiled Base*/
     if (ImageType != 2) LdrRelocateImageWithBias(LoadBase,

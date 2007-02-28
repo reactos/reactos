@@ -1063,10 +1063,6 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PIMAGE_DATA_DIRECTORY DataDirectory;
     PVOID DllBase, NewImageAddress;
     NTSTATUS Status;
-#if 1 // Disable for FreeLDR 2.5
-    ULONG DriverSize = 0, Size;
-    PIMAGE_SECTION_HEADER Section;
-#endif
 
     /* Loop driver list */
     for (NextEntry = LoaderBlock->LoadOrderListHead.Flink;
@@ -1093,26 +1089,6 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Skip non-drivers */
         if (!NtHeader) continue;
 
-#if 1 // Disable for FreeLDR 2.5
-        /*  Get header pointers  */
-        Section = IMAGE_FIRST_SECTION(NtHeader);
-
-        /*  Determine the size of the module  */
-        for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
-        {
-            /* Skip this section if we're not supposed to load it */
-            if (!(Section[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
-            {
-                /* Add the size of this section into the total size */
-                Size = Section[i].VirtualAddress + Section[i].Misc.VirtualSize;
-                DriverSize = max(DriverSize, Size);
-            }
-        }
-
-        /* Round up the driver size to section alignment */
-        DriverSize = ROUND_UP(DriverSize, NtHeader->OptionalHeader.SectionAlignment);
-#endif
-
         /* Get the file header and make sure we can relocate */
         FileHeader = &NtHeader->FileHeader;
         if (FileHeader->Characteristics & IMAGE_FILE_RELOCS_STRIPPED) continue;
@@ -1134,7 +1110,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 LdrEntry->SizeOfImage)
             {
                 /* They're not, skip */
-                 continue;
+                continue;
             }
 
             /* We have relocations */
@@ -1145,7 +1121,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         DllBase = LdrEntry->DllBase;
 
         /*  Allocate a virtual section for the module  */
-        NewImageAddress = MmAllocateSection(DriverSize, NULL);
+        NewImageAddress = MmAllocateSection(LdrEntry->SizeOfImage, NULL);
         if (!NewImageAddress)
         {
             /* Shouldn't happen */
@@ -1157,34 +1133,8 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         DPRINT("[Mm0]: Copying from: %p to: %p\n", DllBase, NewImageAddress);
         ASSERT(ExpInitializationPhase == 0);
 
-#if 0 // Enable for FreeLDR 2.5
         /* Now copy the entire driver over */
         RtlCopyMemory(NewImageAddress, DllBase, LdrEntry->SizeOfImage);
-#else
-        /* Copy headers over */
-        RtlCopyMemory(NewImageAddress,
-                      DllBase,
-                      NtHeader->OptionalHeader.SizeOfHeaders);
-
-        /*  Copy image sections into virtual section  */
-        for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
-        {
-            /* Get the size of this section and check if it's valid and on-disk */
-            Size = Section[i].VirtualAddress + Section[i].Misc.VirtualSize;
-            if ((Size <= DriverSize) && (Section[i].SizeOfRawData))
-            {
-                /* Copy the data from the disk to the image */
-                RtlCopyMemory((PVOID)((ULONG_PTR)NewImageAddress +
-                                      Section[i].VirtualAddress),
-                              (PVOID)((ULONG_PTR)DllBase +
-                                      Section[i].PointerToRawData),
-                              Section[i].Misc.VirtualSize >
-                              Section[i].SizeOfRawData ?
-                              Section[i].SizeOfRawData :
-                              Section[i].Misc.VirtualSize);
-            }
-        }
-#endif
 
         /* Sanity check */
         ASSERT(*(PULONG)NewImageAddress == *(PULONG)DllBase);
@@ -1224,7 +1174,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         LdrEntry->Flags |= 0x01000000;
         LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)NewImageAddress +
                                 NtHeader->OptionalHeader.AddressOfEntryPoint);
-        LdrEntry->SizeOfImage = DriverSize;
+        LdrEntry->SizeOfImage = LdrEntry->SizeOfImage;
     }
 }
 
