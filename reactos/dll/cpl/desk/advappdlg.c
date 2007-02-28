@@ -390,8 +390,7 @@ AdvAppearanceDlg_Init(HWND hwndDlg, GLOBALS *g)
 	/* Fill font size combo */
 	for (i = 6; i <= 24; i++)
 	{
-		SetDlgItemInt(hwndDlg, IDC_CONVERT, i, FALSE);
-		GetDlgItemText(hwndDlg, IDC_CONVERT, (LPTSTR)&Size, 3);
+		wsprintf(Size, TEXT("%d"), i);
 		SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E, CB_ADDSTRING, 0, (LPARAM)&Size);
 	}
 
@@ -435,7 +434,6 @@ static VOID
 GetSelectedComboText(HWND hwnd, INT id, LPWSTR lpStr)
 {
     INT nCount;
-//    INT i;
 
     nCount = SendDlgItemMessage(hwnd, id, CB_GETCURSEL, 0, 0);
     if (nCount == CB_ERR)
@@ -535,8 +533,6 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case IDC_ADVAPPEARANCE_FONT_C:
 					if (g && HIWORD(wParam) == CBN_SELCHANGE)
 					{
-//						MessageBeep(-1);
-
 						switch (g->CurrentElement)
 						{
 							case IDX_INACTIVE_CAPTION:
