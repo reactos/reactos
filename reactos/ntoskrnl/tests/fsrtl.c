@@ -42,6 +42,8 @@ BOOLEAN FsRtlTest_StartTest() {
     PLARGE_INTEGER ValidDataLength;
     PLARGE_INTEGER   FileSize;
 
+    PDEVICE_OBJECT pRelatedDo = NULL;
+    
     /* Allocate a 100KB buffer to do IOs */
     Buffer = ExAllocatePool(PagedPool,100*_1KB);
     
@@ -275,6 +277,188 @@ BOOLEAN FsRtlTest_StartTest() {
         Fh = NULL;
      }
 
+    /*  ------------------------------------------------------------------------
+            TESTING:
+                BOOLEAN
+                NTAPI
+                FsRtlPrepareMdlWriteDev(IN PFILE_OBJECT FileObject,
+                                        IN PLARGE_INTEGER FileOffset,
+                                        IN ULONG Length,
+                                        IN ULONG LockKey,
+                                        OUT PMDL *MdlChain,
+                                        OUT PIO_STATUS_BLOCK IoStatus,
+                                        IN PDEVICE_OBJECT DeviceObject)
+
+        ------------------------------------------------------------------------  */
+
+    /* We are going to repeat the same bunch of tests but with Wait = FALSE. So we exercise the second part of the function. */
+    FsRtlTest_OpenTestFile(&Fh, &Pfo);
+
+    /* Extract the test variable from the FCB struct */
+    FcbHeader = (PFSRTL_COMMON_FCB_HEADER)Pfo->FsContext;
+    AllocationSize = &FcbHeader->AllocationSize;
+    ValidDataLength = &FcbHeader->ValidDataLength;
+    FileSize = &FcbHeader->FileSize;
+    
+    /* Try to cache without caching having been initialized. This should fail.*/
+    Length = 10*_1KB;
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - No cache map test. Wait = FALSE",
+        !FsRtlPrepareMdlWriteDev(Pfo,AllocationSize,Length,0,MdlChain,&IoStatus,NULL));
+        
+    /* We are going to build a 100k file */
+    /* This will inititate caching and build some size */
+    Offset.QuadPart = 0;
+    Length = 100*_1KB;
+    Return = FsRltTest_WritefileZw(Fh,&Offset,Length, Buffer, &IoStatus);
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Building 100k filesize. Wait = FALSE",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
+    Return = TRUE;
+
+    /* Extending the file by 1/2 sector, 256 bytes. */
+    Offset.QuadPart = 0x7fffffffffff;
+    Length = 0x100;
+    Return = FsRltTest_WritefileZw(Fh,NULL,Length, Buffer, &IoStatus);
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Extending by 1/2 sector. Wait = FALSE",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
+    Return = TRUE;
+
+
+    pRelatedDo = IoGetRelatedDeviceObject(Pfo);
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Did we get related DO ?",pRelatedDo);
+    
+    
+    /* Append to the file past the allocation size*/
+    Offset.QuadPart = FileSize->QuadPart;
+    OldSize.QuadPart = FileSize->QuadPart;
+    Length = (ULONG) (AllocationSize->QuadPart -ValidDataLength->QuadPart);
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Testing extending past allocation size.",
+        !FsRtlPrepareMdlWriteDev(Pfo,&Offset,Length+1,0,&MdlChain,&IoStatus,pRelatedDo));
+        
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Testing extending not past allocation size.",
+          FsRtlPrepareMdlWriteDev(Pfo,&Offset,Length,0,&MdlChain,&IoStatus,pRelatedDo));
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Check filesize",(FileSize->QuadPart = (OldSize.QuadPart+Length)));
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Release the MDL.",FsRtlMdlWriteCompleteDev(Pfo,&Offset,MdlChain,pRelatedDo));
+        
+    
+    /* Try do write a 65kb IO and check that if fails. Maximum IO size for thus function is 64KB */
+    Offset.QuadPart = 0;
+    MdlChain = NULL;
+    Length = 65*_1KB;
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - 65KB IO Test.",
+        FsRtlPrepareMdlWriteDev(Pfo,&Offset,Length,0,&MdlChain,&IoStatus,pRelatedDo));
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Release the MDL.",FsRtlMdlWriteCompleteDev(Pfo,&Offset,MdlChain,pRelatedDo));
+     
+     /* Try do write a 64kb IO. Maximum IO size for thus function is 64KB */
+    Length = 64*_1KB;
+    MdlChain = NULL;
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - 64KB IO Test.",
+        FsRtlPrepareMdlWriteDev(Pfo,&Offset,Length,0,&MdlChain,&IoStatus,NULL))
+    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Release the MDL.",FsRtlMdlWriteCompleteDev(Pfo,&Offset,MdlChain,NULL));
+     
+     /* Test the fast Io not possible flag */
+   FcbHeader->IsFastIoPossible = FastIoIsNotPossible;
+   FSRTL_TEST("FsRtlPrepareMdlWriteDev() - FastIo is not possible flag.",
+       !FsRtlPrepareMdlWriteDev(Pfo,&Offset,Length,0,&MdlChain,&IoStatus,NULL))
+        
+    if (Pfo) 
+    {
+        ObDereferenceObject(Pfo);
+        Pfo = NULL;
+    }
+
+    if (Fh)
+    {
+        ZwClose(Fh);
+        Fh = NULL;
+     }
+
+    /*  ------------------------------------------------------------------------
+            TESTING:
+                BOOLEAN
+                NTAPI
+                FsRtlPrepareMdlWrite(   IN PFILE_OBJECT FileObject,
+                                        IN PLARGE_INTEGER FileOffset,
+                                        IN ULONG Length,
+                                        IN ULONG LockKey,
+                                        OUT PMDL *MdlChain,
+                                        OUT PIO_STATUS_BLOCK IoStatus,
+                                        IN PDEVICE_OBJECT DeviceObject)
+
+        ------------------------------------------------------------------------  */
+
+    /* We are going to repeat the same bunch of tests but with Wait = FALSE. So we exercise the second part of the function. */
+    FsRtlTest_OpenTestFile(&Fh, &Pfo);
+
+    /* Extract the test variable from the FCB struct */
+    FcbHeader = (PFSRTL_COMMON_FCB_HEADER)Pfo->FsContext;
+    AllocationSize = &FcbHeader->AllocationSize;
+    ValidDataLength = &FcbHeader->ValidDataLength;
+    FileSize = &FcbHeader->FileSize;
+    
+    /* Try to cache without caching having been initialized. This should fail.*/
+    Length = 10*_1KB;
+    FSRTL_TEST("FsRtlPrepareMdlWrite() - No cache map test. Wait = FALSE",
+        !FsRtlPrepareMdlWrite(Pfo,AllocationSize,Length,0,MdlChain,&IoStatus));
+        
+    /* We are going to build a 100k file */
+    /* This will inititate caching and build some size */
+    Offset.QuadPart = 0;
+    Length = 100*_1KB;
+    Return = FsRltTest_WritefileZw(Fh,&Offset,Length, Buffer, &IoStatus);
+    FSRTL_TEST("FsRtlPrepareMdlWrite() - Building 100k filesize. Wait = FALSE",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
+    Return = TRUE;
+
+    /* Extending the file by 1/2 sector, 256 bytes. */
+    Offset.QuadPart = 0x7fffffffffff;
+    Length = 0x100;
+    Return = FsRltTest_WritefileZw(Fh,NULL,Length, Buffer, &IoStatus);
+    FSRTL_TEST("FsRtlPrepareMdlWrite() - Extending by 1/2 sector. Wait = FALSE",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
+    Return = TRUE;
+
+
+    /* Append to the file past the allocation size*/
+    MdlChain = NULL;
+    Offset.QuadPart = FileSize->QuadPart;
+    OldSize.QuadPart = FileSize->QuadPart;
+    Length = (ULONG) (AllocationSize->QuadPart -ValidDataLength->QuadPart);
+    FSRTL_TEST("FsRtlPrepareMdlWrite() - Testing extending past allocation size.",
+        !FsRtlPrepareMdlWrite(Pfo,&Offset,Length+1,0,&MdlChain,&IoStatus));
+        
+    FSRTL_TEST("FsRtlPrepareMdlWrite() - Testing extending not past allocation size.",
+          FsRtlPrepareMdlWrite(Pfo,&Offset,Length,0,&MdlChain,&IoStatus));
+    FSRTL_TEST("FsRtlPrepareMdlWrite() - Check filesize",(FileSize->QuadPart = (OldSize.QuadPart+Length)));
+    FSRTL_TEST("FsRtlPrepareMdlWrite() - Release the MDL.",FsRtlMdlWriteComplete(Pfo,&Offset,MdlChain));
+        
+    
+    /* Try do write a 65kb IO and check that if fails. Maximum IO size for thus function is 64KB */
+    Offset.QuadPart = 0;
+    MdlChain = NULL;
+    Length = 65*_1KB;
+    FSRTL_TEST("FsRtlPrepareMdlWrite() - 65KB IO Test.",
+        !FsRtlPrepareMdlWrite(Pfo,&Offset,Length,0,&MdlChain,&IoStatus));
+    //FSRTL_TEST("FsRtlPrepareMdlWrite() - Release the MDL.",FsRtlMdlWriteComplete(Pfo,&Offset,MdlChain));
+     
+     /* Try do write a 64kb IO. Maximum IO size for thus function is 64KB */
+    Length = 64*_1KB;
+    MdlChain = NULL;
+    FSRTL_TEST("FsRtlPrepareMdlWrite() - 64KB IO Test.",
+        FsRtlPrepareMdlWrite(Pfo,&Offset,Length,0,&MdlChain,&IoStatus))
+    FSRTL_TEST("FsRtlPrepareMdlWrite() - Release the MDL.",FsRtlMdlWriteComplete(Pfo,&Offset,MdlChain));
+     
+     /* Test the fast Io not possible flag */
+   FcbHeader->IsFastIoPossible = FastIoIsNotPossible;
+   FSRTL_TEST("FsRtlPrepareMdlWrite() - FastIo is not possible flag.",
+       !FsRtlPrepareMdlWrite(Pfo,&Offset,Length,0,&MdlChain,&IoStatus))
+        
+    if (Pfo) 
+    {
+        ObDereferenceObject(Pfo);
+        Pfo = NULL;
+    }
+
+    if (Fh)
+    {
+        ZwClose(Fh);
+        Fh = NULL;
+     }
     
     /*  ------------------------------------------------------------------------------------------
         TESTING:
