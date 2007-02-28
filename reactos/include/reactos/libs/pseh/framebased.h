@@ -367,7 +367,7 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 #ifdef _SEH_ENABLE_TRACE
 #define _SEH_InitializeTracing() (_SEH_EnableTracing(_SEH_DO_DEFAULT_TRACING))
 #else
-#define _SEH_InitializeTracing() ((void)0)
+#define _SEH_InitializeTracing() (_SEH_DisableTracing())
 #endif
 
 #endif
