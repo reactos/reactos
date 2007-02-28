@@ -18,7 +18,11 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#define _NTSYSTEM_
 #include <freeldr.h>
+
+#define NDEBUG
+#include <debug.h>
 
 ROS_LOADER_PARAMETER_BLOCK LoaderBlock;
 char					reactos_kernel_cmdline[255];	// Command line passed to kernel
@@ -28,16 +32,10 @@ unsigned long			reactos_memory_map_descriptor_size;
 memory_map_t			reactos_memory_map[32];		// Memory map
 char szBootPath[256];
 char szHalName[256];
+extern ULONG_PTR KernelBase, KernelEntry;
+
 
 #define USE_UI
-
-BOOLEAN
-NTAPI
-FrLdrMapImage(
-    IN FILE *Image,
-    IN PCHAR ShortName,
-    IN ULONG ImageType
-);
 
 BOOLEAN
 NTAPI
@@ -47,6 +45,8 @@ static FrLdrLoadKernel(IN PCHAR szFileName,
     PFILE FilePointer;
     PCHAR szShortName;
     CHAR szBuffer[256];
+    PVOID LoadBase;
+    PIMAGE_NT_HEADERS NtHeader;
 
     /* Extract Kernel filename without path */
     szShortName = strrchr(szFileName, '\\');
@@ -78,7 +78,13 @@ static FrLdrLoadKernel(IN PCHAR szFileName,
     UiDrawStatusText(szBuffer);
 
     /* Do the actual loading */
-    FrLdrMapImage(FilePointer, szShortName, 1);
+    LoadBase = FrLdrMapImage(FilePointer, szShortName, 1);
+
+    /* Get the NT header, kernel base and kernel entry */
+    NtHeader = RtlImageNtHeader(LoadBase);
+    KernelBase = NtHeader->OptionalHeader.ImageBase;
+    KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
+    LoaderBlock.KernelBase = KernelBase;
 
     /* Update Processbar and return success */
     return TRUE;

@@ -22,6 +22,25 @@ extern ULONG NtGlobalFlag;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+NTAPI
+MiFreeBootDriverMemory(PVOID BaseAddress,
+                       ULONG Length)
+{
+    ULONG i;
+
+    /* Loop each page */
+    for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)
+    {
+        /* Free the page */
+        MmDeleteVirtualMapping(NULL,
+                               (PVOID)((ULONG_PTR)BaseAddress + i * PAGE_SIZE),
+                               TRUE,
+                               NULL,
+                               NULL);
+    }
+}
+
 NTSTATUS
 NTAPI
 MiLoadImageSection(IN OUT PVOID *SectionPtr,
@@ -1175,6 +1194,9 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)NewImageAddress +
                                 NtHeader->OptionalHeader.AddressOfEntryPoint);
         LdrEntry->SizeOfImage = LdrEntry->SizeOfImage;
+
+        /* Free the old copy */
+        MiFreeBootDriverMemory(DllBase, LdrEntry->SizeOfImage);
     }
 }
 

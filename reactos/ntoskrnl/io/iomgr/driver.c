@@ -31,15 +31,6 @@ POBJECT_TYPE IoDriverObjectType = NULL;
 
 extern BOOLEAN ExpInTextModeSetup;
 
-/* DECLARATIONS ***************************************************************/
-
-NTSTATUS
-NTAPI
-LdrTemporaryDriverHack(
-    PLDR_DATA_TABLE_ENTRY ModuleObject,
-    PUNICODE_STRING ModuleName
-);
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 NTSTATUS STDCALL
@@ -810,13 +801,7 @@ LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
                                       &MissingApiName,
                                       &MissingDriverName,
                                       &LoadedImports);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Fail */
-        ExFreePool(LdrEntry->FullDllName.Buffer);
-        ExFreePool(LdrEntry);
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Return */
     *ModuleObject = LdrEntry;

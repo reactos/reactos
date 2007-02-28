@@ -24,42 +24,6 @@
 #include <debug.h>
 #undef DbgPrint
 
-/* Base Addres of Kernel in Physical Memory */
-#define KERNEL_BASE_PHYS 0x200000
-
-/* Bits to shift to convert a Virtual Address into an Offset in the Page Table */
-#define PFN_SHIFT 12
-
-/* Bits to shift to convert a Virtual Address into an Offset in the Page Directory */
-#define PDE_SHIFT 22
-#define PDE_SHIFT_PAE 18
-
-/* Converts a Relative Address read from the Kernel into a Physical Address */
-#define RaToPa(p) \
-    (ULONG_PTR)((ULONG_PTR)p + KERNEL_BASE_PHYS)
-
-/* Converts a Physical Address Pointer into a Page Frame Number */
-#define PaPtrToPfn(p) \
-    (((ULONG_PTR)&p) >> PFN_SHIFT)
-
-/* Converts a Physical Address into a Page Frame Number */
-#define PaToPfn(p) \
-    ((p) >> PFN_SHIFT)
-
-#define STARTUP_BASE                0xC0000000
-#define HYPERSPACE_BASE             0xC0400000
-#define HYPERSPACE_PAE_BASE         0xC0800000
-#define APIC_BASE                   0xFEC00000
-#define KPCR_BASE                   0xFF000000
-
-#define LowMemPageTableIndex        0
-#define StartupPageTableIndex       (STARTUP_BASE >> 22)
-#define HyperspacePageTableIndex    (HYPERSPACE_BASE >> 22)
-#define KpcrPageTableIndex          (KPCR_BASE >> 22)
-#define ApicPageTableIndex          (APIC_BASE >> 22)
-
-#define KernelEntryPoint            (KernelEntry - KERNEL_BASE_PHYS) + KernelBase
-
 /* Load Address of Next Module */
 ULONG_PTR NextModuleBase = KERNEL_BASE_PHYS;
 
@@ -72,60 +36,13 @@ ULONG_PTR KernelBase;
 /* Kernel Entrypoint in Physical Memory */
 ULONG_PTR KernelEntry;
 
-typedef struct _HARDWARE_PTE_X64 {
-    ULONG Valid             : 1;
-    ULONG Write             : 1;
-    ULONG Owner             : 1;
-    ULONG WriteThrough      : 1;
-    ULONG CacheDisable      : 1;
-    ULONG Accessed          : 1;
-    ULONG Dirty             : 1;
-    ULONG LargePage         : 1;
-    ULONG Global            : 1;
-    ULONG CopyOnWrite       : 1;
-    ULONG Prototype         : 1;
-    ULONG reserved          : 1;
-    ULONG PageFrameNumber   : 20;
-    ULONG reserved2         : 31;
-    ULONG NoExecute         : 1;
-} HARDWARE_PTE_X64, *PHARDWARE_PTE_X64;
-
-typedef struct _PAGE_DIRECTORY_X86 {
-    HARDWARE_PTE Pde[1024];
-} PAGE_DIRECTORY_X86, *PPAGE_DIRECTORY_X86;
-
-typedef struct _PAGE_DIRECTORY_X64 {
-    HARDWARE_PTE_X64 Pde[2048];
-} PAGE_DIRECTORY_X64, *PPAGE_DIRECTORY_X64;
-
-typedef struct _PAGE_DIRECTORY_TABLE_X64 {
-    HARDWARE_PTE_X64 Pde[4];
-} PAGE_DIRECTORY_TABLE_X64, *PPAGE_DIRECTORY_TABLE_X64;
-
 /* Page Directory and Tables for non-PAE Systems */
 extern PAGE_DIRECTORY_X86 startup_pagedirectory;
 extern PAGE_DIRECTORY_X86 lowmem_pagetable;
 extern PAGE_DIRECTORY_X86 kernel_pagetable;
 extern ULONG_PTR hyperspace_pagetable;
-extern ULONG_PTR _pae_pagedirtable;
 extern PAGE_DIRECTORY_X86 apic_pagetable;
 extern PAGE_DIRECTORY_X86 kpcr_pagetable;
-
-/* Page Directory and Tables for PAE Systems */
-extern PAGE_DIRECTORY_TABLE_X64 startup_pagedirectorytable_pae;
-extern PAGE_DIRECTORY_X64 startup_pagedirectory_pae;
-extern PAGE_DIRECTORY_X64 lowmem_pagetable_pae;
-extern PAGE_DIRECTORY_X64 kernel_pagetable_pae;
-extern ULONG_PTR hyperspace_pagetable_pae;
-extern ULONG_PTR pagedirtable_pae;
-extern PAGE_DIRECTORY_X64 apic_pagetable_pae;
-extern PAGE_DIRECTORY_X64 kpcr_pagetable_pae;
-
-BOOLEAN
-NTAPI
-FrLdrLoadImage(IN PCHAR szFileName,
-               IN INT nPos,
-               IN BOOLEAN IsKernel);
 
 PVOID
 NTAPI
@@ -269,8 +186,8 @@ FrLdrSetupPageDirectory(VOID)
 
     /* Set up Low Memory PTEs */
     PageDir = (PPAGE_DIRECTORY_X86)&lowmem_pagetable;
-    for (i=0; i<1024; i++) {
-
+    for (i=0; i<1024; i++)
+    {
         PageDir->Pde[i].Valid = 1;
         PageDir->Pde[i].Write = 1;
         PageDir->Pde[i].Owner = 1;
@@ -279,8 +196,8 @@ FrLdrSetupPageDirectory(VOID)
 
     /* Set up Kernel PTEs */
     PageDir = (PPAGE_DIRECTORY_X86)&kernel_pagetable;
-    for (i=0; i<1536; i++) {
-
+    for (i=0; i<1536; i++)
+    {
         PageDir->Pde[i].Valid = 1;
         PageDir->Pde[i].Write = 1;
         PageDir->Pde[i].PageFrameNumber = PaToPfn(KERNEL_BASE_PHYS + i * PAGE_SIZE);
@@ -658,7 +575,7 @@ FrLdrReMapImage(IN PVOID Base,
     return DriverSize;
 }
 
-BOOLEAN
+PVOID
 NTAPI
 FrLdrMapImage(IN FILE *Image,
               IN PCHAR Name,
@@ -713,21 +630,13 @@ FrLdrMapImage(IN FILE *Image,
     //DbgPrint("Image: %s loaded at: %p\n", Name, ImageBase);
 
     /* Load HAL if this is the kernel */
-    if (ImageType == 1)
-    {
-        PIMAGE_NT_HEADERS NtHeader;
-        NtHeader = RtlImageNtHeader(LoadBase);
-        KernelBase = NtHeader->OptionalHeader.ImageBase;
-        KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
-        FrLdrLoadImage("hal.dll", 10, FALSE);
-        LoaderBlock.KernelBase = KernelBase;
-    }
+    if (ImageType == 1) FrLdrLoadImage("hal.dll", 10, FALSE);
 
     /* Perform import fixups */
     if (ImageType != 2) LdrPEFixupImports(LoadBase, Name);
 
-    /* Return Success */
-    return TRUE;
+    /* Return the final mapped address */
+    return LoadBase;
 }
 
 ULONG_PTR

@@ -37,16 +37,9 @@ CHAR szHalName[255];
 CHAR szBootPath[255];
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
 BOOLEAN FrLdrBootType;
+extern ULONG_PTR KernelBase, KernelEntry;
 
-BOOLEAN
-NTAPI
-FrLdrMapImage(
-    IN FILE *Image,
-    IN PCHAR ShortName,
-    IN ULONG ImageType
-);
-
-BOOLEAN
+PVOID
 NTAPI
 FrLdrLoadImage(IN PCHAR szFileName,
                IN INT nPos,
@@ -55,6 +48,7 @@ FrLdrLoadImage(IN PCHAR szFileName,
     PFILE FilePointer;
     PCHAR szShortName;
     CHAR szBuffer[256], szFullPath[256];
+    PVOID LoadBase;
 
     /* Check if this the HAL being loaded */
     if (!_stricmp(szFileName, "hal.dll"))
@@ -107,11 +101,11 @@ FrLdrLoadImage(IN PCHAR szFileName,
     UiDrawStatusText(szBuffer);
 
     /* Do the actual loading */
-    FrLdrMapImage(FilePointer, szShortName, ImageType);
+    LoadBase = FrLdrMapImage(FilePointer, szShortName, ImageType);
 
     /* Update Processbar and return success */
     if (!FrLdrBootType) UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);
-    return TRUE;
+    return LoadBase;
 }
 
 static BOOLEAN
@@ -497,6 +491,8 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	CHAR szFileName[255];
 	CHAR  MsgBuffer[256];
 	ULONG SectionId;
+    PIMAGE_NT_HEADERS NtHeader;
+    PVOID LoadBase;
 
 	ULONG_PTR Base;
 	ULONG Size;
@@ -682,7 +678,14 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	}
 
     /* Load the kernel */
-    if (!FrLdrLoadImage(szKernelName, 5, 1)) return;
+    LoadBase = FrLdrLoadImage(szKernelName, 5, 1);
+    if (!LoadBase) return;
+
+    /* Get the NT header, kernel base and kernel entry */
+    NtHeader = RtlImageNtHeader(LoadBase);
+    KernelBase = NtHeader->OptionalHeader.ImageBase;
+    KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
+    LoaderBlock.KernelBase = KernelBase;
 
 	/*
 	 * Load the System hive from disk
