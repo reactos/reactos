@@ -318,10 +318,9 @@ static PKBL UserHklToKbl(HKL hKl)
    return NULL;
 }
 
-static PKBL UserActivateKbl(PW32THREAD Thread, PKBL pKbl)
+static PKBL co_UserActivateKbl(PW32THREAD Thread, PKBL pKbl)
 {
    PKBL Prev;
-   MSG Msg;
    
    Prev = Thread->KeyboardLayout;
    Prev->RefCount--;
@@ -329,13 +328,10 @@ static PKBL UserActivateKbl(PW32THREAD Thread, PKBL pKbl)
    pKbl->RefCount++;
    
    // Send WM_INPUTLANGCHANGE to thread's focus window
-         
-   Msg.hwnd = Thread->MessageQueue->FocusWindow;
-   Msg.message = WM_INPUTLANGCHANGE;
-   Msg.wParam = 0;   // Charset. FIXME: what is this?
-   Msg.lParam = (LPARAM)pKbl->hkl; // klid
-         
-   MsqPostMessage(Thread->MessageQueue, &Msg, FALSE, QS_POSTMESSAGE);
+   co_IntSendMessage(Thread->MessageQueue->FocusWindow, 
+      WM_INPUTLANGCHANGE, 
+      0, // FIXME: put charset here (what is this?)
+      (LPARAM)pKbl->hkl); //klid
          
    return Prev;
 }
@@ -489,7 +485,7 @@ NtUserLoadKeyboardLayoutEx(
    
    if(Flags & KLF_ACTIVATE) 
    {
-      UserActivateKbl(PsGetCurrentThreadWin32Thread(), pKbl);
+      co_UserActivateKbl(PsGetCurrentThreadWin32Thread(), pKbl);
    }
 
    Ret = pKbl->hkl;
@@ -547,7 +543,7 @@ NtUserActivateKeyboardLayout(
       }
       else
       {
-         pKbl = UserActivateKbl(pWThread, pKbl);
+         pKbl = co_UserActivateKbl(pWThread, pKbl);
          Ret = pKbl->hkl;
       }
    }

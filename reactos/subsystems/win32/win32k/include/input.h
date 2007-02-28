@@ -7,7 +7,7 @@ typedef struct _KBL
 {
   LIST_ENTRY List;
   DWORD Flags; 
-  WCHAR Name[9];              // used w GetKeyboardLayoutName same as wszKLID.
+  WCHAR Name[KL_NAMELENGTH];    // used w GetKeyboardLayoutName same as wszKLID.
   struct _KBDTABLES* KBTables;  // KBDTABLES in ntoskrnl/include/internal/kbd.h
   HANDLE hModule;
   ULONG RefCount;
