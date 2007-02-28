@@ -312,6 +312,20 @@ OnSize(INT cx, INT cy, PPREVIEW_DATA pPreviewData)
     CalculateItemSize(pPreviewData);
 }
 
+#ifdef _MSC_VER
+
+#if _UNICODE
+typedef BOOL (WINAPI * DCT_PROC)(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon, LPCWSTR str, UINT uFlags);
+#define DCT_ORD 178
+#else
+typedef BOOL (WINAPI * DCT_PROC)(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon, LPCSTR str, UINT uFlags);
+#define DCT_ORD 177
+#endif
+
+typedef DWORD (WINAPI * DMBT_PROC)(HWND hwnd, HDC hDC, LPRECT lprect, HMENU hMenu, HFONT hFont);
+#define DMBT_ORD 186
+
+#endif
 
 static VOID
 OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
@@ -320,6 +334,19 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     HFONT hOldFont;
     HDC hdc;
     RECT rc;
+
+#ifdef _MSC_VER
+    DCT_PROC DrawCaptionTemp;
+    DMBT_PROC DrawMenuBarTemp;
+    HMODULE hUser32;
+
+    hUser32 = LoadLibrary(_T("user32.dll"));
+    if(hUser32 == NULL)
+        return FALSE;
+
+    DrawCaptionTemp = (DCT_PROC)GetProcAddress(hUser32, (LPCSTR)DCT_ORD);
+    DrawMenuBarTemp = (DMBT_PROC)GetProcAddress(hUser32, (LPCSTR)DMBT_ORD);
+#endif
 
     hdc = BeginPaint(hwnd, &ps);
 
