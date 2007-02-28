@@ -1178,18 +1178,12 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	/* %DATE% */
 	else if (_tcsicmp(varName,_T("date")) ==0)
 	{
-		LPTSTR tmp;
 
-		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+		if ( !GrowIfNecessary ( GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, NULL, 0), &ret, &retlen ) )
 			return NULL;
-		size = GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, _T("ddd"), ret, retlen );
-		/* TODO FIXME - test whether GetDateFormat() can return a value indicating the buffer wasn't big enough */
-		if ( !size )
-			return NULL;
-		tmp = ret + _tcslen(ret);
-		*tmp++ = _T(' ');
-		size = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, tmp, retlen-(tmp-ret));
-		/* TODO FIXME - test whether GetDateFormat() can return a value indicating the buffer wasn't big enough */
+
+		size = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, ret, retlen);
+
 		if ( !size )
 			return NULL;
 		return ret;
