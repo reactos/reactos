@@ -32,7 +32,7 @@
 #include <excpt.h>
 
 /* Tracing */
-#ifdef _SEH_ENABLE_TRACE_LIB
+#ifdef _SEH_ENABLE_TRACE
 extern unsigned long __cdecl DbgPrint(const char * format, ...);
 
 #define _SEH_TRACE_HEADER_(FRAME_) \

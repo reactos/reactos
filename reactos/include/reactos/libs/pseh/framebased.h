@@ -285,7 +285,7 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 						if(&_SEHLocals != _SEHDummyLocals) \
 							_SEHFrame.SEH_Locals = &_SEHLocals; \
 	\
-						_SEH_InitializeTracing(); \
+						_SEH_EnableTracing(_SEH_DO_DEFAULT_TRACING); \
 						_SEHFrame.SEH_Header.SPF_Handler = _SEHCompilerSpecificHandler; \
 						_SEHEnterFrame(&_SEHFrame.SEH_Header, &_SEHTryLevel.ST_Header); \
 					} \
@@ -331,7 +331,7 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 						if(&_SEHLocals != _SEHDummyLocals) \
 							_SEHFrame.SEH_Locals = &_SEHLocals; \
 	\
-						_SEH_InitializeTracing(); \
+						_SEH_EnableTracing(_SEH_DO_DEFAULT_TRACING); \
 						_SEHFrame.SEH_Header.SPF_Handler = 0; \
 						_SEHEnterFrame(&_SEHFrame.SEH_Header, &_SEHTryLevel.ST_Header); \
 					} \
@@ -363,12 +363,6 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 
 #define _SEH_EnableTracing(LEVEL_) ((void)(_SEHPortableFrame->SPF_Tracing = (LEVEL_)))
 #define _SEH_DisableTracing() ((void)(_SEHPortableFrame->SPF_Tracing = _SEH_DO_TRACE_NONE))
-
-#ifdef _SEH_ENABLE_TRACE
-#define _SEH_InitializeTracing() (_SEH_EnableTracing(_SEH_DO_DEFAULT_TRACING))
-#else
-#define _SEH_InitializeTracing() (_SEH_DisableTracing())
-#endif
 
 #endif
 
