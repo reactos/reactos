@@ -1126,6 +1126,42 @@ NtUserAlterWindowStyle(DWORD Unknown0,
    return(0);
 }
 
+STATIC
+ULONG
+STDCALL
+IntBuildHwndList(
+   PWINDOW_OBJECT Window,
+   BOOLEAN bChildren,
+   HWND* pWnd,
+   ULONG nBufSize)
+{
+   NTSTATUS Status;
+   PWINDOW_OBJECT Child;
+   ULONG dwInc, dwCount = 0;
+
+   for(Child = Window->FirstChild; Child != NULL; Child = Child->NextSibling)
+   {
+      if(dwCount++ < nBufSize && pWnd)
+      {
+         Status = MmCopyToCaller(pWnd++, &Child->hSelf, sizeof(HWND));
+         if(!NT_SUCCESS(Status))
+         {
+            SetLastNtError(Status);
+            break;
+         }
+      }
+      if (bChildren)
+      {
+         dwInc = IntBuildHwndList(Child,
+                                     bChildren,
+                                     pWnd,
+                                     nBufSize > dwCount ? nBufSize - dwCount : 0);
+         dwCount += dwInc;
+         pWnd += dwInc;
+      }
+   }
+  return dwCount;
+}
 
 /*
  * As best as I can figure, this function is used by EnumWindows,
@@ -1152,30 +1188,55 @@ NtUserBuildHwndList(
    NTSTATUS Status;
    ULONG dwCount = 0;
 
-   /* FIXME handle bChildren */
-
-   if(hwndParent)
+   if (hwndParent || !dwThreadId)
    {
-      PWINDOW_OBJECT Window, Child;
+      PDESKTOP_OBJECT Desktop;
+      PWINDOW_OBJECT Window;
+
+      if(!hwndParent)
+      {
+         if(hDesktop == NULL && !(Desktop = IntGetActiveDesktop()))
+         {
+            SetLastWin32Error(ERROR_INVALID_HANDLE);
+            return 0;
+         }
+
+         if(hDesktop)
+         {
+            Status = IntValidateDesktopHandle(hDesktop,
+                                              UserMode,
+                                              0,
+                                              &Desktop);
+            if(!NT_SUCCESS(Status))
+            {
+               SetLastWin32Error(ERROR_INVALID_HANDLE);
+               return 0;
+            }
+         }
+         hwndParent = Desktop->DesktopWindow;
+      }
+      else
+      {
+         hDesktop = 0;
+      }
+
       if(!(Window = UserGetWindowObject(hwndParent)))
       {
+         if(hDesktop)
+         {
+             ObDereferenceObject(Desktop);
+         }
          return 0;
       }
 
-      for(Child = Window->FirstChild; Child != NULL; Child = Child->NextSibling)
+      dwCount = IntBuildHwndList(Window, bChildren, pWnd, nBufSize);
+
+      if(hDesktop)
       {
-         if(dwCount++ < nBufSize && pWnd)
-         {
-            Status = MmCopyToCaller(pWnd++, &Child->hSelf, sizeof(HWND));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               break;
-            }
-         }
+         ObDereferenceObject(Desktop);
       }
    }
-   else if(dwThreadId)
+   else
    {
       PETHREAD Thread;
       PW32THREAD W32Thread;
@@ -1216,50 +1277,6 @@ NtUserBuildHwndList(
       }
 
       ObDereferenceObject(Thread);
-   }
-   else
-   {
-      PDESKTOP_OBJECT Desktop;
-      PWINDOW_OBJECT Window, Child;
-
-      if(hDesktop == NULL && !(Desktop = IntGetActiveDesktop()))
-      {
-         SetLastWin32Error(ERROR_INVALID_HANDLE);
-         return 0;
-      }
-
-      if(hDesktop)
-      {
-         Status = IntValidateDesktopHandle(hDesktop,
-                                           UserMode,
-                                           0,
-                                           &Desktop);
-         if(!NT_SUCCESS(Status))
-         {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            return 0;
-         }
-      }
-      if(!(Window = UserGetWindowObject(Desktop->DesktopWindow)))
-      {
-         if(hDesktop) ObDereferenceObject(Desktop);
-         return 0;
-      }
-
-      for(Child = Window->FirstChild; Child != NULL; Child = Child->NextSibling)
-      {
-         if(dwCount++ < nBufSize && pWnd)
-         {
-            Status = MmCopyToCaller(pWnd++, &Child->hSelf, sizeof(HWND));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               break;
-            }
-         }
-      }
-
-      if(hDesktop) ObDereferenceObject(Desktop);
    }
 
    return dwCount;
