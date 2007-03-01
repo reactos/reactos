@@ -247,7 +247,7 @@ _HalEnableSystemInterrupt@12:
     mov edx, 0x4D1
     in al, dx
     shl ax, 8
-    mov eax, 0x4D0
+    mov edx, 0x4D0
     in al, dx
     mov dx, 1
     shl dx, cl
