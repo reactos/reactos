@@ -102,9 +102,9 @@ EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD 
 LTEXT    "ล่าง:",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
-DEFPUSHBUTTON "ตกลง",         0x151,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "ยกเลิก",     0x152,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "ช่วยเหลีอ",       0x153,                180, 39, 40, 15, WS_TABSTOP
+DEFPUSHBUTTON "ตกลง",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "ยกเลิก",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "ช่วยเหลีอ",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
 }
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170

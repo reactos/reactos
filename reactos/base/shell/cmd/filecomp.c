@@ -43,7 +43,7 @@ VOID CompleteFilename (LPTSTR str, UINT charcount)
 	LPCOMMAND cmds_ptr;
 
 	/* expand current file name */
-	count = charcount - 1;
+        count = charcount - 1;
 	if (count < 0)
 		count = 0;
 
@@ -89,6 +89,7 @@ VOID CompleteFilename (LPTSTR str, UINT charcount)
 	_tcscpy (path, directory);
 
 	while (curplace >= 0 && directory[curplace] != _T('\\') &&
+                   directory[curplace] != _T('/') &&
 		   directory[curplace] != _T(':'))
 	{
 		directory[curplace] = 0;
@@ -205,7 +206,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 	BOOL  found_dot = FALSE;
 	INT   curplace = 0;
 	INT   start;
-	UINT   count;
+	INT   count;
 	TCHAR path[MAX_PATH];
 	TCHAR fname[MAX_PATH];
 	TCHAR directory[MAX_PATH];
@@ -361,6 +362,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	TCHAR * szSearch;	
 	TCHAR * szSearch1;
 	TCHAR * szSearch2;
+	TCHAR * szSearch3;
 	/* number of quotes in the string */
 	INT nQuotes = 0;
 	/* used in for loops */
@@ -394,9 +396,12 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 		_tcscpy(szSuffix,szSearch);
 		/* Find the one closest to end */
 		szSearch1 = _tcsrchr(str, _T('\"'));
-		szSearch2 = _tcsrchr(str, _T('\\'));		
+		szSearch2 = _tcsrchr(str, _T('\\'));
+		szSearch3 = _tcsrchr(str, _T('.'));
 		if(szSearch2 != NULL && _tcslen(szSearch1) > _tcslen(szSearch2))
 			szSearch = szSearch2;
+		else if(szSearch3 != NULL && _tcslen(szSearch1) > _tcslen(szSearch3))
+			szSearch = szSearch3;
 		else
 			szSearch = szSearch1;
 		/* Move one char past */
@@ -436,9 +441,12 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 		/* Find the closest to the end space or \ */
 		_tcscpy(str,strIN);
 		szSearch1 = _tcsrchr(str, _T(' '));
-		szSearch2 = _tcsrchr(str, _T('\\'));		
+		szSearch2 = _tcsrchr(str, _T('\\'));
+		szSearch3 = _tcsrchr(str, _T('/'));
 		if(szSearch2 != NULL && _tcslen(szSearch1) > _tcslen(szSearch2))
 			szSearch = szSearch2;
+		else if(szSearch3 != NULL && _tcslen(szSearch1) > _tcslen(szSearch3))
+			szSearch = szSearch3;
 		else
 			szSearch = szSearch1;
 		szSearch++;		

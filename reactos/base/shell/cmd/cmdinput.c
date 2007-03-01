@@ -139,8 +139,10 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 	TCHAR  ch;
 	BOOL bContinue=FALSE;/*is TRUE the second case will not be executed*/
     BOOL bReturn = FALSE;
-	TCHAR szPath[MAX_PATH];
     BOOL bCharInput;
+    #ifdef FEATURE_4NT_FILENAME_COMPLETION
+    TCHAR szPath[MAX_PATH];
+    #endif
 
 	/* get screen size */
 	GetScreenSize (&maxx, &maxy);
