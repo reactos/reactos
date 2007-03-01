@@ -99,6 +99,10 @@ PEN_GetObject(PGDIBRUSHOBJ PenObject, INT Count, PLOGPEN Buffer)
    LOGPEN LogPen;
 
    if( Buffer == NULL ) return sizeof(LOGPEN);
+   if (Count < sizeof(LOGPEN)) return 0;
+   if (Count > sizeof(LOGPEN)) Count = sizeof(LOGPEN);
+
+   if( Buffer == NULL ) return sizeof(LOGPEN);
 
    LogPen.lopnWidth = PenObject->ptPenWidth;
    LogPen.lopnStyle = PenObject->ulPenStyle;   

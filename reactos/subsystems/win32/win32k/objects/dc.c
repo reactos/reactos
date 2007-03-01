@@ -1787,23 +1787,23 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
 INT STDCALL
 NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
 {
-  INT Ret;
+  INT Ret = 0;
   LPVOID SafeBuf;
   NTSTATUS Status = STATUS_SUCCESS;
+  INT RetCount = 0;
 
   /* From Wine: GetObject does not SetLastError() on a null object */
-  if (!handle) return 0;
+  if (!handle) return Ret;
 
-  if (count <= 0)
+  RetCount = IntGdiGetObject(handle, 0, NULL);
+  if ((count <= 0) || (!buffer))
   {
-    return 0;
+    return RetCount;
   }
 
   _SEH_TRY
   {
-    ProbeForWrite(buffer,
-                  count,
-                  1);
+    ProbeForWrite(buffer, count, 1);
   }
   _SEH_HANDLE
   {
@@ -1814,36 +1814,37 @@ NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
-    return 0;
+    return Ret;
   }
 
-  SafeBuf = ExAllocatePoolWithTag(PagedPool, count, TAG_GDIOBJ);
-  if(!SafeBuf)
+  if (RetCount >= count)
   {
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-    return 0;
-  }
+    SafeBuf = ExAllocatePoolWithTag(PagedPool, count, TAG_GDIOBJ);
+    if(!SafeBuf)
+    {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return Ret;
+    }
+    Ret = IntGdiGetObject(handle, count, SafeBuf);
 
-  Ret = IntGdiGetObject(handle, count, SafeBuf);
+    _SEH_TRY
+    {
+        /* pointer already probed! */
+        RtlCopyMemory(buffer, SafeBuf, count);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
 
-  _SEH_TRY
-  {
-    /* pointer already probed! */
-    RtlCopyMemory(buffer,
-                  SafeBuf,
-                  count);
-  }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
+    ExFreePool(SafeBuf);
 
-  ExFreePool(SafeBuf);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return 0;
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return 0;
+    }
   }
 
   return Ret;

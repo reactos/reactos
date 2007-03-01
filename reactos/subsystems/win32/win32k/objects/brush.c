@@ -51,62 +51,62 @@ BRUSH_Cleanup(PVOID ObjectBody)
 
 INT FASTCALL
 BRUSH_GetObject (PGDIBRUSHOBJ BrushObject, INT Count, LPLOGBRUSH Buffer)
-{	
-	if (Buffer)
-	{
+{
+   if( Buffer == NULL ) return sizeof(BRUSHOBJ);
+   if (Count < sizeof(BRUSHOBJ)) return 0;
+   if (Count > sizeof(BRUSHOBJ)) Count = sizeof(BRUSHOBJ);
 
-		/* Set colour */
-	    Buffer->lbColor =  BrushObject->BrushAttr.lbColor;
+   /* Set colour */
+    Buffer->lbColor =  BrushObject->BrushAttr.lbColor;
 
-		/* set Hatch */
-		if ((BrushObject->flAttrs & GDIBRUSH_IS_HATCH)!=0)
-		{
-			 /* FIXME : is this right value */
-             Buffer->lbHatch = (LONG)BrushObject->hbmPattern;
-		}
-		else
-		{
-			 Buffer->lbHatch = 0;
-		}
+    /* set Hatch */
+    if ((BrushObject->flAttrs & GDIBRUSH_IS_HATCH)!=0)
+    {
+        /* FIXME : is this right value */
+        Buffer->lbHatch = (LONG)BrushObject->hbmPattern;
+    }
+    else
+    {
+        Buffer->lbHatch = 0;
+    }
 
-		Buffer->lbStyle = 0;
+    Buffer->lbStyle = 0;
 
-		/* Get the type of style */
-		if ((BrushObject->flAttrs & GDIBRUSH_IS_SOLID)!=0)
-		{
-			Buffer->lbStyle = BS_SOLID;
-		}
-		else if ((BrushObject->flAttrs & GDIBRUSH_IS_NULL)!=0)
-		{
-			Buffer->lbStyle = BS_NULL; // BS_HOLLOW
-		}
-		else if ((BrushObject->flAttrs & GDIBRUSH_IS_HATCH)!=0)
-		{
-			Buffer->lbStyle = BS_HATCHED;
-		}
-		else if ((BrushObject->flAttrs & GDIBRUSH_IS_BITMAP)!=0)
-		{
-			Buffer->lbStyle = BS_PATTERN;
-		}
-		else if ((BrushObject->flAttrs & GDIBRUSH_IS_DIB)!=0)
-		{
-			Buffer->lbStyle = BS_DIBPATTERN; 
-		}
+    /* Get the type of style */
+    if ((BrushObject->flAttrs & GDIBRUSH_IS_SOLID)!=0)
+    {
+        Buffer->lbStyle = BS_SOLID;
+    }
+    else if ((BrushObject->flAttrs & GDIBRUSH_IS_NULL)!=0)
+    {
+        Buffer->lbStyle = BS_NULL; // BS_HOLLOW
+    }
+    else if ((BrushObject->flAttrs & GDIBRUSH_IS_HATCH)!=0)
+    {
+        Buffer->lbStyle = BS_HATCHED;
+    }
+    else if ((BrushObject->flAttrs & GDIBRUSH_IS_BITMAP)!=0)
+    {
+        Buffer->lbStyle = BS_PATTERN;
+    }
+    else if ((BrushObject->flAttrs & GDIBRUSH_IS_DIB)!=0)
+    {
+        Buffer->lbStyle = BS_DIBPATTERN; 
+    }
 
-		/* FIXME 
-		else if ((BrushObject->flAttrs & )!=0)
-		{
-			Buffer->lbStyle = BS_INDEXED;
-		}
-		
-		else if ((BrushObject->flAttrs & )!=0)
-		{
-			Buffer->lbStyle = BS_DIBPATTERNPT;
-		}
-		*/
-				        
-	}
-	return sizeof(BRUSHOBJ);
+    /* FIXME 
+    else if ((BrushObject->flAttrs & )!=0)
+    {
+        Buffer->lbStyle = BS_INDEXED;
+    }
+    else if ((BrushObject->flAttrs & )!=0)
+    {
+        Buffer->lbStyle = BS_DIBPATTERNPT;
+    }
+    */
+
+    /* FIXME */
+    return sizeof(BRUSHOBJ);
 }
 
 

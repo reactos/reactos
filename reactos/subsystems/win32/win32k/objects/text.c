@@ -4093,17 +4093,13 @@ TextIntRealizeFont(HFONT FontHandle)
 INT FASTCALL
 FontGetObject(PTEXTOBJ Font, INT Count, PVOID Buffer)
 {
-  if (Buffer)
-  {
-     if (Count < sizeof(LOGFONTW))
-     {
-         SetLastWin32Error(ERROR_BUFFER_OVERFLOW);
-         return 0;
-     }
+  if( Buffer == NULL ) return sizeof(LOGFONTW);
 
-     RtlCopyMemory(Buffer, &Font->logfont, sizeof(LOGFONTW));
-  }
+  /* fixme  SetLastWin32Error(ERROR_BUFFER_OVERFLOW); in count<0*/
+  if (Count < sizeof(LOGFONTW)) return 0;
+  if (Count > sizeof(LOGFONTW)) Count = sizeof(LOGFONTW);
 
+  RtlCopyMemory(Buffer, &Font->logfont, sizeof(LOGFONTW));
   return sizeof(LOGFONTW);
 }
 
