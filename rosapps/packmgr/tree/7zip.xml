@@ -1,7 +1,0 @@
-<package>
-  <name>7Zip</name>
-  <version>4.32</version>
-  <description>Utility to create and open zip, tar, rar and other archive files.</description>
-  <scripts inst="7zip.inst.rps"/>
-</package>
-
