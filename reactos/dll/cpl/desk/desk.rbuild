@@ -26,8 +26,9 @@
 	<file>desk.c</file>
 	<file>dibitmap.c</file>
 	<file>misc.c</file>
-	<file>preview.c</file>
+        <file>preview.c</file>
 	<file>screensaver.c</file>
+	<file>advappdlg.c</file>
 	<file>settings.c</file>
 	<file>desk.rc</file>
 </module>

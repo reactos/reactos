@@ -17,6 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
@@ -39,42 +40,51 @@ MAIN_MENU MENU
 BEGIN
 	POPUP "&Файл" 
 	BEGIN
-		MENUITEM "Созд&ать",           CMD_NEW
+		MENUITEM "Созд&ать",                CMD_NEW
 		MENUITEM "&Открыть...",             CMD_OPEN
-		MENUITEM "&Сохранить",             CMD_SAVE
+		MENUITEM "&Сохранить",              CMD_SAVE
 		MENUITEM "Сохранить &как...",       CMD_SAVE_AS
 		MENUITEM SEPARATOR
-		MENUITEM "Пара&метры страницы...",    CMD_PAGE_SETUP
-		MENUITEM "&Настройка принтера...", CMD_PRINTER_SETUP
-		MENUITEM "&Печатать",            CMD_PRINT
+		MENUITEM "Пара&метры страницы...",  CMD_PAGE_SETUP
+		MENUITEM "&Печатать",               CMD_PRINT
+		MENUITEM "&Настройка принтера...",  CMD_PRINTER_SETUP
 		MENUITEM SEPARATOR
-		MENUITEM "В&ыход",             CMD_EXIT
+		MENUITEM "В&ыход",                  CMD_EXIT
 	END
 	POPUP "&Правка"
 	BEGIN
-		MENUITEM "&Отменить\tCtrl+Z",     CMD_UNDO
+		MENUITEM "&Отменить\tCtrl+Z",       CMD_UNDO
 		MENUITEM SEPARATOR
-		MENUITEM "&Вырезать\tCtrl+X",      CMD_CUT
+		MENUITEM "&Вырезать\tCtrl+X",       CMD_CUT
 		MENUITEM "&Копировать\tCtrl+C",     CMD_COPY
-		MENUITEM "Вст&авить\tCtrl+V",    CMD_PASTE
-		MENUITEM "&Удалить\tDel",      CMD_DELETE
+		MENUITEM "Вст&авить\tCtrl+V",       CMD_PASTE
+		MENUITEM "&Удалить\tDel",           CMD_DELETE
 		MENUITEM SEPARATOR
-		MENUITEM "&Найти",           CMD_SEARCH
-		MENUITEM "Найти &далее\tF3",  CMD_SEARCH_NEXT
+		MENUITEM "&Найти",                  CMD_SEARCH
+		MENUITEM "Найти &далее\tF3",        CMD_SEARCH_NEXT
+		MENUITEM "Заменить\tCtrl+H",        CMD_REPLACE
+		MENUITEM "Перейти к...\tCtrl+G",    CMD_GOTO
 		MENUITEM SEPARATOR
-		MENUITEM "Выделить в&се",       CMD_SELECT_ALL
-		MENUITEM "Врем&я и дата\tF5",    CMD_TIME_DATE
-		MENUITEM SEPARATOR
-		MENUITEM "&Перенос по словам",  CMD_WRAP
+		MENUITEM "Выделить в&се",           CMD_SELECT_ALL
+		MENUITEM "Врем&я и дата\tF5",       CMD_TIME_DATE
+	END
+	POPUP "Фо&рмат"
+	BEGIN
+		MENUITEM "&Перенос по словам",      CMD_WRAP
+		MENUITEM "&Шрифт...",               CMD_FONT
+	END
+	POPUP "&Вид"
+	BEGIN
+		MENUITEM "Строка &состояния",       CMD_STATUSBAR
 	END
 	POPUP "&Справка" 
 	BEGIN
-		MENUITEM "&Содержание",         CMD_HELP_CONTENTS
-		MENUITEM "&Поиск...",        CMD_HELP_SEARCH
-		MENUITEM "&Использование справки",     CMD_HELP_ON_HELP
+		MENUITEM "&Содержание",             CMD_HELP_CONTENTS
+		MENUITEM "&Поиск...",               CMD_HELP_SEARCH
+		MENUITEM "&Использование справки",  CMD_HELP_ON_HELP
 		MENUITEM SEPARATOR
-		MENUITEM "&About"             CMD_ABOUT
-		MENUITEM "&Сведения...",      CMD_ABOUT_WINE
+		MENUITEM "&О программе"             CMD_ABOUT
+		MENUITEM "&Сведения...",            CMD_ABOUT_WINE
 	END
 END
 
@@ -102,19 +112,46 @@ EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD |
 
 DEFPUSHBUTTON "OK",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
 PUSHBUTTON    "Отмена",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&Справка",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Справка",   IDHELP,                 180, 39, 40, 15, WS_TABSTOP
+}
+
+/* Dialog `Encoding' */
+
+DIALOG_ENCODING DIALOG 0, 0, 256, 44
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Кодировка символов"
+{
+COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Кодировка:",0x155,5,2,41,12
+COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Вариант:",0x156,5,20,41,12
+}
+
+/* Dialog 'Go To' */
+
+DIALOG_GOTO DIALOG 0,0,165,50
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Перейти к строке"
+{
+EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Номер строки:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Отмена", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 }
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "About ReactOS Notepad"
+CAPTION "О программе ReactOS Notepad"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n ",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Close",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "Закрыть",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
@@ -127,12 +164,12 @@ END
 
 STRINGTABLE DISCARDABLE 
 {
-STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
+STRING_PAGESETUP_HEADERVALUE,   "&n"            /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Страница &s"   /* FIXME */
-STRING_PAGESETUP_LEFTVALUE,             "20 мм"     /* FIXME */
-STRING_PAGESETUP_RIGHTVALUE,    "20 мм"     /* FIXME */
-STRING_PAGESETUP_TOPVALUE,              "25 мм"     /* FIXME */
-STRING_PAGESETUP_BOTTOMVALUE,   "25 мм"     /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,             "20 мм" /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,    "20 мм"         /* FIXME */
+STRING_PAGESETUP_TOPVALUE,              "25 мм" /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,   "25 мм"         /* FIXME */
 
 STRING_NOTEPAD,                                 "Блокнот"
 STRING_ERROR,                                   "ОШИБКА"
@@ -142,7 +179,7 @@ STRING_INFO,                                    "Информация"
 STRING_UNTITLED,                                "(без заголовка)"
 
 STRING_ALL_FILES,                               "Все файлы (*.*)"
-STRING_TEXT_FILES_TXT,                  "Текстовые файлы (*.txt)"
+STRING_TEXT_FILES_TXT,                          "Текстовые файлы (*.txt)"
 
 STRING_TOOLARGE,                                "Файл '%s' слишком большой для блокнота.\n \
 Используйте другой редактор."
@@ -152,8 +189,15 @@ STRING_DOESNOTEXIST,                            "Файл '%s'\nне существует\n\n \
 Хотите создать новый файл?"
 STRING_NOTSAVED,                                "Файл '%s'\nбыл изменен\n\n \
 Хотите сохранить изменения?"
-STRING_NOTFOUND,                                        "'%s' не найден."
-STRING_OUT_OF_MEMORY,                   "Недостаточно памяти для завершения этой операции \
+STRING_NOTFOUND,                                "'%s' не найден."
+STRING_OUT_OF_MEMORY,                           "Недостаточно памяти для завершения этой операции. \
 \nЗакройте одно или несколько приложений и повторите попытку."
-
+STRING_CANNOTFIND                               "Не найду '%s'"
+STRING_ANSI,                                    "ANSI"
+STRING_UNICODE,                                 "Юникод"
+STRING_UNICODE_BE,                              "Юникод (big endian)"
+STRING_UTF8,                                    "UTF-8"
+STRING_CRLF,                                    "Форточки"
+STRING_LF,                                      "Юникс"
+STRING_CR,                                      "Макинтош"
 }
