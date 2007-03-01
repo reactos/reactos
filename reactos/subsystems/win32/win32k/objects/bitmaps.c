@@ -1559,29 +1559,29 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 }
 
 INT STDCALL
-BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer)
+BITMAP_GetObject(BITMAPOBJ * bmp, INT Count, LPVOID buffer)
 {
-	if( !buffer ) return sizeof(BITMAP);
-    if (count < sizeof(BITMAP)) return 0;
+	if( buffer == NULL ) return sizeof(BITMAP);
+	if (Count < sizeof(BITMAP)) return 0;
 
 	if(bmp->dib)
 	{
 
-		if(count < (INT) sizeof(DIBSECTION))
+		if(Count < (INT) sizeof(DIBSECTION))
 		{
-			if (count > (INT) sizeof(BITMAP)) count = sizeof(BITMAP);
+			if (Count > (INT) sizeof(BITMAP)) Count = sizeof(BITMAP);
 		}
 		else
 		{
-			if (count > (INT) sizeof(DIBSECTION)) count = sizeof(DIBSECTION);
+			if (Count > (INT) sizeof(DIBSECTION)) Count = sizeof(DIBSECTION);
 		}
-		memcpy(buffer, bmp->dib, count);
-		return count;
+		memcpy(buffer, bmp->dib, Count);
+		return Count;
 	}
 	else
 	{
 		BITMAP Bitmap;
-		if (count > (INT) sizeof(BITMAP)) count = sizeof(BITMAP);
+		if (Count > (INT) sizeof(BITMAP)) Count = sizeof(BITMAP);
 		Bitmap.bmType = 0;
 		Bitmap.bmWidth = bmp->SurfObj.sizlBitmap.cx;
 		Bitmap.bmHeight = bmp->SurfObj.sizlBitmap.cy;
@@ -1590,8 +1590,8 @@ BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer)
 		Bitmap.bmBitsPixel = BitsPerFormat(bmp->SurfObj.iBitmapFormat);
 		//Bitmap.bmBits = bmp->SurfObj.pvBits;
 		Bitmap.bmBits = NULL; /* not set accoring wine test confirm in win2k */
-		memcpy(buffer, &Bitmap, count);
-		return count;
+		memcpy(buffer, &Bitmap, Count);
+		return Count;
 	}
 }
 /* EOF */
