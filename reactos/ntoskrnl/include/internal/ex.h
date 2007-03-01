@@ -17,9 +17,13 @@ extern FAST_MUTEX ExpEnvironmentLock;
 extern ERESOURCE ExpFirmwareTableResource;
 extern LIST_ENTRY ExpFirmwareTableProviderListHead;
 extern BOOLEAN ExpIsWinPEMode;
+extern LIST_ENTRY ExpSystemResourcesList;
 ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 PVOID ExpNlsSectionPointer;
+extern CHAR NtBuildLab[];
+extern ULONG CmNtCSDVersion;
+extern ULONG NtGlobalFlag;
 extern ULONG ExpInitializationPhase;
 
 typedef struct _EXHANDLE
@@ -911,7 +915,7 @@ ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
 
     /* Unlock the pushlock */
     OldValue.Value = InterlockedExchangeAddSizeT((PLONG)PushLock,
-                                                 -EX_PUSH_LOCK_LOCK);
+                                                 -(LONG)EX_PUSH_LOCK_LOCK);
 
     /* Sanity checks */
     ASSERT(OldValue.Locked);
@@ -989,6 +993,19 @@ ExfpInterlockedExchange64(
 
 NTSTATUS
 ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation);
+
+BOOLEAN
+NTAPI
+ExAcquireTimeRefreshLock(BOOLEAN Wait);
+
+VOID
+NTAPI
+ExReleaseTimeRefreshLock(VOID);
+
+VOID
+NTAPI
+ExUpdateSystemTimeFromCmos(IN BOOLEAN UpdateInterruptTime,
+                           IN ULONG MaxSepInSeconds);
 
 NTSTATUS
 NTAPI

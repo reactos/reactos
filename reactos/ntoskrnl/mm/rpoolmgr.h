@@ -143,7 +143,7 @@ RiPrintLastOwner ( PR_USED Block )
 		if ( Block->LastOwnerStack[i] != 0xDEADBEEF )
 		{
 			R_DEBUG(" ");
-			if (!R_PRINT_ADDRESS ((PVOID)Block->LastOwnerStack[i]) )
+			//if (!R_PRINT_ADDRESS ((PVOID)Block->LastOwnerStack[i]) )
 			{
 				R_DEBUG("<%X>", Block->LastOwnerStack[i] );
 			}

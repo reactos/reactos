@@ -18,7 +18,6 @@ BOOLEAN KdEnteredDebugger = FALSE;
 BOOLEAN KdDebuggerNotPresent = TRUE;
 BOOLEAN KiEnableTimerWatchdog = FALSE;
 BOOLEAN KdBreakAfterSymbolLoad = FALSE;
-ULONG KiBugCheckData;
 BOOLEAN KdpBreakPending;
 VOID STDCALL PspDumpThreads(BOOLEAN SystemThreads);
 

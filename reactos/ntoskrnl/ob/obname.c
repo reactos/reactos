@@ -16,7 +16,7 @@
 #include <debug.h>
 
 BOOLEAN ObpCaseInsensitive = TRUE;
-POBJECT_DIRECTORY NameSpaceRoot;
+POBJECT_DIRECTORY ObpRootDirectoryObject;
 POBJECT_DIRECTORY ObpTypeDirectoryObject;
 
 /* DOS Device Prefix \??\ and \?? */
@@ -407,7 +407,7 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
                 {
                     /* Reparsed to the root directory, so start over */
                     ObDereferenceObject(RootDirectory);
-                    RootDirectory = NameSpaceRoot;
+                    RootDirectory = ObpRootDirectoryObject;
 
                     /* Don't use this anymore, since we're starting at root */
                     RootHandle = NULL;
@@ -448,7 +448,7 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
     else
     {
         /* We did not get a Root Directory, so use the root */
-        RootDirectory = NameSpaceRoot;
+        RootDirectory = ObpRootDirectoryObject;
 
         /* It must start with a path separator */
         if (!(ObjectName->Length) ||
@@ -811,7 +811,7 @@ ReparseObject:
 
                         /* Start at Root */
                         ParentDirectory = NULL;
-                        RootDirectory = NameSpaceRoot;
+                        RootDirectory = ObpRootDirectoryObject;
 
                         /* Check for reparse status */
                         if (Status == STATUS_REPARSE_OBJECT)
@@ -838,7 +838,7 @@ ReparseObject:
                             goto ParseFromRoot;
                         }
                     }
-                    else if (RootDirectory == NameSpaceRoot)
+                    else if (RootDirectory == ObpRootDirectoryObject)
                     {
                         /* We got STATUS_REPARSE but are at the Root Directory */
                         Object = NULL;
@@ -1025,7 +1025,7 @@ ObQueryNameString(IN PVOID Object,
      * enough right at the beginning, not work our way through
      * and find out at the end
      */
-    if (Object == NameSpaceRoot)
+    if (Object == ObpRootDirectoryObject)
     {
         /* Size of the '\' string */
         NameSize = sizeof(OBJ_NAME_PATH_SEPARATOR);
@@ -1037,7 +1037,7 @@ ObQueryNameString(IN PVOID Object,
         NameSize = sizeof(OBJ_NAME_PATH_SEPARATOR) + LocalInfo->Name.Length;
 
         /* Loop inside the directory to get the top-most one (meaning root) */
-        while ((ParentDirectory != NameSpaceRoot) && (ParentDirectory))
+        while ((ParentDirectory != ObpRootDirectoryObject) && (ParentDirectory))
         {
             /* Get the Name Information */
             LocalInfo = OBJECT_HEADER_TO_NAME_INFO(
@@ -1080,7 +1080,7 @@ ObQueryNameString(IN PVOID Object,
     *--ObjectName = UNICODE_NULL;
 
     /* Check if the object is actually the Root directory */
-    if (Object == NameSpaceRoot)
+    if (Object == ObpRootDirectoryObject)
     {
         /* This is already the Root Directory, return "\\" */
         *--ObjectName = OBJ_NAME_PATH_SEPARATOR;
@@ -1101,7 +1101,7 @@ ObQueryNameString(IN PVOID Object,
 
         /* Now parse the Parent directories until we reach the top */
         ParentDirectory = LocalInfo->Directory;
-        while ((ParentDirectory != NameSpaceRoot) && (ParentDirectory))
+        while ((ParentDirectory != ObpRootDirectoryObject) && (ParentDirectory))
         {
             /* Get the name information */
             LocalInfo = OBJECT_HEADER_TO_NAME_INFO(

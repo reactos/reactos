@@ -2511,7 +2511,7 @@ NTAPI
 DbgLoadImageSymbols(
     IN PANSI_STRING Name,
     IN PVOID Base,
-    IN ULONG ProcessId
+    IN ULONG_PTR ProcessId
 );
 
 VOID

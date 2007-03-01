@@ -14,18 +14,30 @@
 #include <debug.h>
 //#include <ntoskrnl/cm/newcm.h>
 #include "ntoskrnl/cm/cm.h"
+#include <ntverp.h>
 
 /* DATA **********************************************************************/
 
-#define BUILD_OSCSDVERSION(major, minor) (((major & 0xFF) << 8) | (minor & 0xFF))
-
 /* NT Version Info */
-ULONG NtMajorVersion = 5;
-ULONG NtMinorVersion = 0;
-ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(4, 0);
-ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
+ULONG NtMajorVersion = VER_PRODUCTMAJORVERSION;
+ULONG NtMinorVersion = VER_PRODUCTMINORVERSION;
+#if DBG
+ULONG NtBuildNumber = VER_PRODUCTBUILD | 0xC0000000;
+#else
+ULONG NtBuildNumber = VER_PRODUCTBUILD;
+#endif
+
+/* NT System Info */
 ULONG NtGlobalFlag;
 ULONG ExSuiteMask;
+
+/* Cm Version Info */
+ULONG CmNtSpBuildNumber;
+ULONG CmNtCSDVersion;
+ULONG CmNtCSDReleaseType;
+UNICODE_STRING CmVersionString;
+UNICODE_STRING CmCSDVersionString;
+CHAR NtBuildLab[] = KERNEL_VERSION_BUILD_STR;
 
 /* Init flags and settings */
 ULONG ExpInitializationPhase;
@@ -671,11 +683,12 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 else
                 {
                     /* Copy the name */
-                    for (Count = 0; Count < Length; Count++, Name++)
+                    Count = 0;
+                    do
                     {
                         /* Copy the character */
-                        NameBuffer[Count] = (CHAR)*Name;
-                    }
+                        NameBuffer[Count++] = (CHAR)*Name++;
+                    } while (Count < Length);
 
                     /* Null-terminate */
                     NameBuffer[Count] = ANSI_NULL;
@@ -692,13 +705,14 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 {
                     /* Buffer too small */
                     OverFlow = TRUE;
+                    while (TRUE);
                 }
                 else
                 {
                     /* Otherwise build the name. HACKED for GCC :( */
                     sprintf(NameBuffer,
-                            "%c\\System32\\Drivers\\%S",
-                            SharedUserData->NtSystemRoot[2],
+                            "%S\\System32\\Drivers\\%S",
+                            &SharedUserData->NtSystemRoot[2],
                             LdrEntry->BaseDllName.Buffer);
                 }
             }

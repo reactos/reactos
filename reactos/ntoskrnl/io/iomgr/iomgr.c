@@ -70,7 +70,7 @@ extern LIST_ENTRY DriverBootReinitListHead;
 extern LIST_ENTRY DriverReinitListHead;
 extern LIST_ENTRY PnpNotifyListHead;
 extern LIST_ENTRY FsChangeNotifyListHead;
-extern LIST_ENTRY IopLogListHead;
+extern LIST_ENTRY IopErrorLogListHead;
 extern LIST_ENTRY IopTimerQueueHead;
 extern KDPC IopTimerDpc;
 extern KTIMER IopTimer;
@@ -467,7 +467,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     InitializeListHead(&PnpNotifyListHead);
     InitializeListHead(&ShutdownListHead);
     InitializeListHead(&FsChangeNotifyListHead);
-    InitializeListHead(&IopLogListHead);
+    InitializeListHead(&IopErrorLogListHead);
     KeInitializeSpinLock(&CancelSpinLock);
     KeInitializeSpinLock(&IoVpbLock);
     KeInitializeSpinLock(&IoStatisticsLock);

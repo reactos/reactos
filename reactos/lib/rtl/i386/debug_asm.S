@@ -16,6 +16,7 @@
 .globl _DebugService@20
 .globl _DebugService2@12
 .globl _DbgBreakPointNoBugCheck@0
+.globl _RtlpBreakWithStatusInstruction@0
 
 /* FUNCTIONS ***************************************************************/
 
@@ -35,6 +36,8 @@ _DbgUserBreakPoint@0:
 .func DbgBreakPointWithStatus@4
 _DbgBreakPointWithStatus@4:
     mov eax, [esp+4]
+
+_RtlpBreakWithStatusInstruction@0:
     int 3
     ret 4
 .endfunc

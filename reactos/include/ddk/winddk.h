@@ -637,6 +637,28 @@ typedef IO_ALLOCATION_ACTION
   IN PVOID  MapRegisterBase,
   IN PVOID  Context);
 
+
+typedef struct _EXCEPTION_RECORD32
+{
+    NTSTATUS ExceptionCode;
+    ULONG ExceptionFlags;
+    ULONG ExceptionRecord;
+    ULONG ExceptionAddress;
+    ULONG NumberParameters;
+    ULONG ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD32, *PEXCEPTION_RECORD32;
+
+typedef struct _EXCEPTION_RECORD64
+{
+    NTSTATUS ExceptionCode;
+    ULONG ExceptionFlags;
+    ULONG64 ExceptionRecord;
+    ULONG64 ExceptionAddress;
+    ULONG NumberParameters;
+    ULONG __unusedAlignment;
+    ULONG64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD64, *PEXCEPTION_RECORD64;
+
 typedef EXCEPTION_DISPOSITION
 (DDKAPI *PEXCEPTION_ROUTINE)(
   IN struct _EXCEPTION_RECORD *ExceptionRecord,
@@ -5424,6 +5446,13 @@ FASTCALL
 KfReleaseSpinLock(
   IN PKSPIN_LOCK SpinLock,
   IN KIRQL NewIrql);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+KeTryToAcquireSpinLockAtDpcLevel(
+    IN OUT PKSPIN_LOCK SpinLock
+);
 
 #define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
 #define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)

@@ -350,7 +350,6 @@ typedef struct _KSPECIAL_REGISTERS
 //
 // Processor State Data
 //
-#pragma pack(push,4)
 typedef struct _KPROCESSOR_STATE
 {
     CONTEXT ContextFrame;
@@ -360,6 +359,7 @@ typedef struct _KPROCESSOR_STATE
 //
 // Processor Region Control Block
 //
+#pragma pack(push,4)
 typedef struct _KPRCB
 {
     USHORT MinorVersion;

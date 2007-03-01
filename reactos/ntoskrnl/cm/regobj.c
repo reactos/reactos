@@ -172,11 +172,11 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 
     if (ObjectCreateInfo->RootDirectory == NULL)
     {
-        ObReferenceObjectByPointer(NameSpaceRoot,
+        ObReferenceObjectByPointer(ObpRootDirectoryObject,
             DIRECTORY_TRAVERSE,
             CmiKeyType,
             ObjectCreateInfo->ProbeMode);
-        CurrentObject = NameSpaceRoot;
+        CurrentObject = ObpRootDirectoryObject;
     }
     else
     {
@@ -312,7 +312,7 @@ Next:
         if (Status == STATUS_REPARSE)
         {
             /* reparse the object path */
-            NextObject = NameSpaceRoot;
+            NextObject = ObpRootDirectoryObject;
             current = PathString.Buffer;
 
             ObReferenceObjectByPointer(NextObject,

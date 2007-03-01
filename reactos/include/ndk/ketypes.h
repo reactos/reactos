@@ -98,6 +98,12 @@ Author:
 #define KF_NX_ENABLED                   0x80000000
 
 //
+// Internal Exception Codes
+//
+#define KI_EXCEPTION_INTERNAL           0x10000000
+#define KI_EXCEPTION_ACCESS_VIOLATION   (KI_EXCEPTION_INTERNAL | 0x04)
+
+//
 // KPCR Access for non-IA64 builds
 //
 #define K0IPCR                          ((ULONG_PTR)(KIP0PCRADDRESS))
@@ -296,6 +302,17 @@ typedef enum _ADJUST_REASON
     AdjustUnwait = 1,
     AdjustBoost = 2
 } ADJUST_REASON;
+
+//
+// Continue Status
+//
+typedef enum _KCONTINUE_STATUS
+{
+    ContinueError = 0,
+    ContinueSuccess,
+    ContinueProcessorReselected,
+    ContinueNextProcessor
+} KCONTINUE_STATUS;
 
 //
 // Process States

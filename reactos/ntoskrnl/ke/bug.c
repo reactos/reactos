@@ -18,8 +18,8 @@
 
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY BugcheckCallbackListHead;
-LIST_ENTRY BugcheckReasonCallbackListHead;
+LIST_ENTRY KeBugcheckCallbackListHead;
+LIST_ENTRY KeBugcheckReasonCallbackListHead;
 KSPIN_LOCK BugCheckCallbackLock;
 ULONG KeBugCheckActive, KeBugCheckOwner;
 LONG KeBugCheckOwnerRecursionCount;
@@ -209,7 +209,7 @@ KiDoBugCheckCallbacks(VOID)
     ULONG_PTR Checksum;
 
     /* First make sure that the list is Initialized... it might not be */
-    ListHead = &BugcheckCallbackListHead;
+    ListHead = &KeBugcheckCallbackListHead;
     if ((ListHead->Flink) && (ListHead->Blink))
     {
         /* Loop the list */
@@ -427,13 +427,27 @@ KiDisplayBlueScreen(IN ULONG MessageId,
 {
     CHAR AnsiName[75];
 
+    /* Check if bootvid is installed */
+    if (InbvIsBootDriverInstalled())
+    {
+        /* Acquire ownership and reset the display */
+        InbvAcquireDisplayOwnership();
+        InbvResetDisplay();
+
+        /* Display blue screen */
+        InbvSolidColorFill(0, 0, 639, 479, 4);
+        InbvSetTextColor(15);
+        InbvInstallDisplayStringFilter(NULL);
+        InbvEnableDisplayString(TRUE);
+        InbvSetScrollRegion(0, 0, 639, 479);
+    }
+
     /* Check if this is a hard error */
     if (IsHardError)
     {
         /* Display caption and message */
         if (HardErrCaption) InbvDisplayString(HardErrCaption);
         if (HardErrMessage) InbvDisplayString(HardErrMessage);
-        return;
     }
 
     /* Begin the display */
@@ -514,7 +528,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     CONTEXT Context;
     ULONG MessageId;
     CHAR AnsiName[128];
-    BOOLEAN IsSystem, IsHardError = FALSE;
+    BOOLEAN IsSystem, IsHardError = FALSE, Reboot = FALSE;
     PCHAR HardErrCaption = NULL, HardErrMessage = NULL;
     PVOID Eip = NULL, Memory;
     PVOID DriverBase;
@@ -543,9 +557,10 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 
     /* Capture the CPU Context */
     RtlCaptureContext(&Prcb->ProcessorState.ContextFrame);
+    KiSaveProcessorControlState(&Prcb->ProcessorState);
     Context = Prcb->ProcessorState.ContextFrame;
 
-    /* FIXME: Call the Watchdog if it's regsitered */
+    /* FIXME: Call the Watchdog if it's registered */
 
     /* Check which bugcode this is */
     switch (BugCheckCode)
@@ -560,7 +575,6 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         case FAT_FILE_SYSTEM:
         case NO_MORE_SYSTEM_PTES:
         case INACCESSIBLE_BOOT_DEVICE:
-        case KMODE_EXCEPTION_NOT_HANDLED:
 
             /* Keep the same code */
             MessageId = BugCheckCode;
@@ -568,33 +582,40 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 
         /* Check if this is a kernel-mode exception */
         case KERNEL_MODE_EXCEPTION_NOT_HANDLED:
+        //case SYSTEM_THREAD_EXCEPTION_NOT_HANDLED:
+        case KMODE_EXCEPTION_NOT_HANDLED:
 
             /* Use the generic text message */
             MessageId = KMODE_EXCEPTION_NOT_HANDLED;
+            break;
 
         /* File-system errors */
         case NTFS_FILE_SYSTEM:
 
             /* Use the generic message for FAT */
             MessageId = FAT_FILE_SYSTEM;
+            break;
 
         /* Check if this is a coruption of the Mm's Pool */
         case DRIVER_CORRUPTED_MMPOOL:
 
             /* Use generic corruption message */
             MessageId = DRIVER_CORRUPTED_EXPOOL;
+            break;
 
         /* Check if this is a signature check failure */
         case STATUS_SYSTEM_IMAGE_BAD_SIGNATURE:
 
             /* Use the generic corruption message */
             MessageId = BUGCODE_PSS_MESSAGE_SIGNATURE;
+            break;
 
         /* All other codes */
         default:
 
             /* Use the default bugcheck message */
             MessageId = BUGCODE_PSS_MESSAGE;
+            break;
     }
 
     /* Save bugcheck data */
@@ -721,9 +742,13 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
             {
                 /* Get EIP */
                 Eip = (PVOID)TrapFrame->Eip;
+                KiBugCheckData[3] = (ULONG)Eip;
 
                 /* Find out if was in the kernel or drivers */
-                DriverBase = KiPcToFileHeader(Eip, &LdrEntry, FALSE, &IsSystem);
+                DriverBase = KiPcToFileHeader(Eip,
+                                              &LdrEntry,
+                                              FALSE,
+                                              &IsSystem);
             }
 
             /*
@@ -732,8 +757,8 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
              * and update the bugcheck code appropriately.
              */
 
-            /* Check if we had a driver base */
-            if (DriverBase)
+            /* Check if we didn't have a driver base */
+            if (!DriverBase)
             {
                 /* Find the driver that unloaded at this address */
                 KiBugCheckDriver = NULL; // FIXME: ROS can't locate
@@ -757,10 +782,9 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         /* Check if the driver consumed too many PTEs */
         case DRIVER_USED_EXCESSIVE_PTES:
 
-            /* Driver base is in parameter 1 */
-            DriverBase = (PVOID)BugCheckParameter1;
-            /* FIXME: LdrEntry is uninitialized for god's sake!!!
-               KiBugCheckDriver = &LdrEntry->BaseDllName; */
+            /* Loader entry is in parameter 1 */
+            LdrEntry = (PVOID)BugCheckParameter1;
+            KiBugCheckDriver = &LdrEntry->BaseDllName;
             break;
 
         /* Check if the driver has a stuck thread */
@@ -794,7 +818,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         }
     }
 
-    /* FIXME: Check if we need to save the context for KD */
+    /* Check if we need to save the context for KD */
 
     /* Check if a debugger is connected */
     if ((BugCheckCode != MANUALLY_INITIATED_CRASH) && (KdDebuggerEnabled))
@@ -840,24 +864,11 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         }
     }
 
-    /* Use the boot video driver to clear, fill and write to screen. */
-    if (InbvIsBootDriverInstalled())
-    {
-        /* FIXME: This should happen in KiDisplayBlueScreen!!! */
-        InbvAcquireDisplayOwnership();
-        InbvResetDisplay();
-        InbvSolidColorFill(0, 0, 639, 479, 4);
-        InbvSetTextColor(15);
-        InbvInstallDisplayStringFilter(NULL);
-        InbvEnableDisplayString(TRUE);
-        InbvSetScrollRegion(0, 0, 639, 479);
-    }
-
     /* Raise IRQL to HIGH_LEVEL */
     _disable();
     KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 
-    /* Unlock the Kernel Adress Space if we own it */
+    /* ROS HACK: Unlock the Kernel Address Space if we own it */
     if (KernelAddressSpaceLock.Owner == KeGetCurrentThread())
     {
         MmUnlockAddressSpace(MmGetKernelAddressSpace());
@@ -866,10 +877,10 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     /* Avoid recursion */
     if (!InterlockedDecrement((PLONG)&KeBugCheckCount))
     {
+#ifdef CONFIG_SMP
         /* Set CPU that is bug checking now */
         KeBugCheckOwner = Prcb->Number;
 
-#ifdef CONFIG_SMP
         /* Freeze the other CPUs */
         for (i = 0; i < KeNumberProcessors; i++)
         {
@@ -889,10 +900,17 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
                             HardErrMessage,
                             AnsiName);
 
-        /* FIXME: Enable debugger if it was pending */
-
-        /* Print the last line */
-        InbvDisplayString("\r\n");
+        /* Check if the debugger is disabled but we can enable it */
+        //if (!(KdDebuggerEnabled) && !(KdPitchDebugger))
+        {
+            /* Enable it */
+            //KdEnableDebuggerWithLock(FALSE);
+        }
+        //else
+        {
+            /* Otherwise, print the last line */
+            InbvDisplayString("\r\n");
+        }
 
         /* Save the context */
         Prcb->ProcessorState.ContextFrame = Context;
@@ -907,24 +925,34 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
                            KiBugCheckData[3],
                            TrapFrame);
     }
-
-    /* Increase recursioun count */
-    KeBugCheckOwnerRecursionCount++;
-    if (KeBugCheckOwnerRecursionCount == 2)
+    else
     {
-        /* Break in the debugger */
-        KiBugCheckDebugBreak(DBG_STATUS_BUGCHECK_SECOND);
-    }
-    else if (KeBugCheckOwnerRecursionCount > 2)
-    {
-        /* Halt the CPU */
-        for (;;) Ke386HaltProcessor();
+        /* Increase recursion count */
+        KeBugCheckOwnerRecursionCount++;
+        if (KeBugCheckOwnerRecursionCount == 2)
+        {
+            /* Break in the debugger */
+            KiBugCheckDebugBreak(DBG_STATUS_BUGCHECK_SECOND);
+        }
+        else if (KeBugCheckOwnerRecursionCount > 2)
+        {
+            /* Halt the CPU */
+            for (;;) Ke386HaltProcessor();
+        }
     }
 
     /* Call the Callbacks */
     KiDoBugCheckCallbacks();
 
     /* FIXME: Call Watchdog if enabled */
+
+    /* Check if we have to reboot */
+    if (Reboot)
+    {
+        /* Unload symbols */
+        DbgUnLoadImageSymbols(NULL, NtCurrentProcess(), 0);
+        HalReturnToFirmware(HalRebootRoutine);
+    }
 
     /* Attempt to break in the debugger (otherwise halt CPU) */
     KiBugCheckDebugBreak(DBG_STATUS_BUGCHECK_SECOND);
@@ -1013,7 +1041,7 @@ KeRegisterBugCheckCallback(IN PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
         CallbackRecord->Component = Component;
         CallbackRecord->CallbackRoutine = CallbackRoutine;
         CallbackRecord->State = BufferInserted;
-        InsertTailList(&BugcheckCallbackListHead, &CallbackRecord->Entry);
+        InsertTailList(&KeBugcheckCallbackListHead, &CallbackRecord->Entry);
         Status = TRUE;
     }
 
@@ -1047,7 +1075,7 @@ KeRegisterBugCheckReasonCallback(
         CallbackRecord->CallbackRoutine = CallbackRoutine;
         CallbackRecord->State = BufferInserted;
         CallbackRecord->Reason = Reason;
-        InsertTailList(&BugcheckReasonCallbackListHead,
+        InsertTailList(&KeBugcheckReasonCallbackListHead,
                        &CallbackRecord->Entry);
         Status = TRUE;
     }

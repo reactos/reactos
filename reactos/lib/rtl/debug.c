@@ -328,7 +328,7 @@ DbgLoadImageSymbols(IN PANSI_STRING Name,
 
     /* Setup the symbol data */
     SymbolInfo.BaseOfDll = Base;
-    SymbolInfo.ProcessId = UlongToPtr(ProcessId);
+    SymbolInfo.ProcessId = (ULONG)ProcessId;
 
     /* Get NT Headers */
     NtHeader = NULL; //RtlImageNtHeader(Base);
@@ -362,7 +362,7 @@ DbgUnLoadImageSymbols(IN PANSI_STRING Name,
 
     /* Setup the symbol data */
     SymbolInfo.BaseOfDll = Base;
-    SymbolInfo.ProcessId = (PVOID)ProcessId;
+    SymbolInfo.ProcessId = (ULONG)ProcessId;
     SymbolInfo.CheckSum = SymbolInfo.SizeOfImage = 0;
 
     /* Load the symbols */

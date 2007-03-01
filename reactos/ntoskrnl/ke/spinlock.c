@@ -168,6 +168,40 @@ KiReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
 /*
  * @implemented
  */
+BOOLEAN
+FASTCALL
+KeTryToAcquireSpinLockAtDpcLevel(IN OUT PKSPIN_LOCK SpinLock)
+{
+#ifdef CONFIG_SMP
+    /* Check if it's already acquired */
+    if (!(*SpinLock))
+    {
+        /* Try to acquire it */
+        if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
+        {
+            /* Someone else acquired it */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* It was already acquired */
+        return FALSE;
+    }
+
+#ifdef DBG
+    /* On debug builds, we OR in the KTHREAD */
+    *SpinLock = (ULONG_PTR)KeGetCurrentThread() | 1;
+#endif
+#endif
+
+    /* All is well, return TRUE */
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock,

@@ -15,8 +15,8 @@
 
 extern ULONG NtMajorVersion;
 extern ULONG NtMinorVersion;
-extern ULONG NtOSCSDVersion;
-extern ULONG NtGlobalFlag;
+extern ULONG CmNtCSDVersion;
+extern ULONG NtBuildNumber;
 extern MM_SYSTEMSIZE MmSystemSize;
 
 #define MM_HIGHEST_VAD_ADDRESS \
@@ -329,9 +329,9 @@ MmCreatePeb(PEPROCESS Process)
     /* Default Version Data (could get changed below) */
     Peb->OSMajorVersion = NtMajorVersion;
     Peb->OSMinorVersion = NtMinorVersion;
-    Peb->OSBuildNumber = 2195;
+    Peb->OSBuildNumber = (USHORT)(NtBuildNumber & 0x3FFF);
     Peb->OSPlatformId = 2; /* VER_PLATFORM_WIN32_NT */
-    Peb->OSCSDVersion = NtOSCSDVersion;
+    Peb->OSCSDVersion = CmNtCSDVersion;
 
     /* Heap and Debug Data */
     Peb->NumberOfProcessors = KeNumberProcessors;

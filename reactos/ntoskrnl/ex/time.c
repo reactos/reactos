@@ -23,8 +23,44 @@ ULONG ExpLastTimeZoneBias = -1;
 LARGE_INTEGER ExpTimeZoneBias;
 ULONG ExpTimeZoneId;
 ULONG ExpTickCountMultiplier;
+ERESOURCE ExpTimeRefreshLock;
 
 /* FUNCTIONS ****************************************************************/
+
+BOOLEAN
+NTAPI
+ExAcquireTimeRefreshLock(BOOLEAN Wait)
+{
+    /* Simply acquire the Resource */
+    KeEnterCriticalRegion();
+    if (!(ExAcquireResourceExclusiveLite(&ExpTimeRefreshLock, Wait)))
+    {
+        /* We failed! */
+        KeLeaveCriticalRegion();
+        return FALSE;
+    }
+
+    /* Success */
+    return TRUE;
+}
+
+VOID
+NTAPI
+ExReleaseTimeRefreshLock(VOID)
+{
+    /* Simply release the Resource */
+    ExReleaseResourceLite(&ExpTimeRefreshLock);
+    KeLeaveCriticalRegion();
+}
+
+VOID
+NTAPI
+ExUpdateSystemTimeFromCmos(IN BOOLEAN UpdateInterruptTime,
+                           IN ULONG MaxSepInSeconds)
+{
+    /* FIXME: TODO */
+    return;
+}
 
 BOOLEAN
 NTAPI

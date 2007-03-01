@@ -74,6 +74,10 @@ KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
 
+/* Freeze data */
+KIRQL KiOldIrql;
+ULONG KiFreezeFlag;
+
 /* CPU Signatures */
 static const CHAR CmpIntelID[]       = "GenuineIntel";
 static const CHAR CmpAmdID[]         = "AuthenticAMD";
@@ -672,13 +676,43 @@ KeFlushCurrentTb(VOID)
 
 VOID
 NTAPI
-KiSaveProcessorControlState(IN PKPROCESSOR_STATE ProcessorState)
+KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
+{
+    /* Restore the CR registers */
+    __writecr0(ProcessorState->SpecialRegisters.Cr0);
+    Ke386SetCr2(ProcessorState->SpecialRegisters.Cr2);
+    __writecr3(ProcessorState->SpecialRegisters.Cr3);
+    if (KeFeatureBits & KF_CR4) __writecr4(ProcessorState->SpecialRegisters.Cr4);
+
+    //
+    // Restore the DR registers
+    //
+    Ke386SetDr0(ProcessorState->SpecialRegisters.KernelDr0);
+    Ke386SetDr1(ProcessorState->SpecialRegisters.KernelDr1);
+    Ke386SetDr2(ProcessorState->SpecialRegisters.KernelDr2);
+    Ke386SetDr3(ProcessorState->SpecialRegisters.KernelDr3);
+    Ke386SetDr6(ProcessorState->SpecialRegisters.KernelDr6);
+    Ke386SetDr7(ProcessorState->SpecialRegisters.KernelDr7);
+
+    //
+    // Restore GDT, IDT, LDT and TSS
+    //
+    Ke386SetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr.Base);
+    Ke386SetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr.Base);
+    Ke386SetTr(ProcessorState->SpecialRegisters.Tr);
+    Ke386SetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
+}
+
+VOID
+NTAPI
+KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
 {
     /* Save the CR registers */
     ProcessorState->SpecialRegisters.Cr0 = __readcr0();
     ProcessorState->SpecialRegisters.Cr2 = __readcr2();
     ProcessorState->SpecialRegisters.Cr3 = __readcr3();
-    ProcessorState->SpecialRegisters.Cr4 = __readcr4();
+    ProcessorState->SpecialRegisters.Cr4 = (KeFeatureBits & KF_CR4) ?
+                                           __readcr4() : 0;
 
     /* Save the DR registers */
     ProcessorState->SpecialRegisters.KernelDr0 = Ke386GetDr0();
@@ -690,8 +724,8 @@ KiSaveProcessorControlState(IN PKPROCESSOR_STATE ProcessorState)
     Ke386SetDr7(0);
 
     /* Save GDT, IDT, LDT and TSS */
-    Ke386GetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr);
-    Ke386GetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr);
+    Ke386GetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr.Base);
+    Ke386GetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr.Base);
     Ke386GetTr(ProcessorState->SpecialRegisters.Tr);
     Ke386GetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
 }
@@ -805,6 +839,39 @@ KiI386PentiumLockErrataFixup(VOID)
 
     /* Set the first 7 entries as read-only to produce a fault */
     MmSetPageProtect(NULL, NewIdt, PAGE_READONLY);
+}
+
+BOOLEAN
+NTAPI
+KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
+                  IN PKEXCEPTION_FRAME ExceptionFrame)
+{
+    ULONG Flags;
+
+    /* Disable interrupts and get previous state */
+    Ke386SaveFlags(Flags);
+    //Flags = __getcallerseflags();
+    _disable();
+
+    /* Save freeze flag */
+    KiFreezeFlag = 4;
+
+    /* Save the old IRQL */
+    KiOldIrql = KeGetCurrentIrql();
+
+    /* Return whether interrupts were enabled */
+    return (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
+}
+
+VOID
+NTAPI
+KeThawExecution(IN BOOLEAN Enable)
+{
+    /* Cleanup CPU caches */
+    KeFlushCurrentTb();
+
+    /* Re-enable interrupts */
+    if (Enable) _enable();
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

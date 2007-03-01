@@ -90,7 +90,7 @@ KiUpdateDr7(IN ULONG Dr7)
     ULONG DebugMask = KeGetCurrentThread()->DispatcherHeader.DebugActive;
 
     /* Check if debugging is enabled */
-    if (DebugMask & DR_ACTIVE_MASK)
+    if (DebugMask & DR_MASK(DR7_OVERRIDE_V))
     {
         /* Sanity checks */
         ASSERT((DebugMask & DR_REG_MASK) != 0);
@@ -133,11 +133,11 @@ KiRecordDr7(OUT PULONG Dr7Ptr,
         Result = FALSE;
 
         /* Check the DR mask */
-        NewMask &= 0x7F;
+        NewMask &= ~(DR_MASK(7));
         if (NewMask & DR_REG_MASK)
         {
             /* Set the active mask */
-            NewMask |= DR_ACTIVE_MASK;
+            NewMask |= DR_MASK(DR7_OVERRIDE_V);
 
             /* Set DR7 override */
             *DrMask = DR7_OVERRIDE_MASK;
@@ -154,8 +154,8 @@ KiRecordDr7(OUT PULONG Dr7Ptr,
         Result = NewMask ? TRUE: FALSE;
 
         /* Update the mask to disable debugging */
-        NewMask &= ~DR_ACTIVE_MASK;
-        NewMask |= 0x80;
+        NewMask &= ~(DR_MASK(DR7_OVERRIDE_V));
+        NewMask |= DR_MASK(7);
     }
 
     /* Check if caller wants the new mask */
