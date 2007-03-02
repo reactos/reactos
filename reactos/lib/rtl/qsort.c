@@ -41,7 +41,7 @@
 
 /* FIXME: these types should be from the default includes */
 
-typedef int (* 	_pfunccmp_t) (const void *, const void *);
+typedef int (__cdecl* 	_pfunccmp_t) (const void *, const void *);
 
 /*
  * Qsort routine from Bentley & McIlroy's "Engineering a Sort Function".
@@ -100,6 +100,7 @@ med3 (
 
 /* EXPORTED */
 void
+__cdecl
 qsort (
 	void		* a,
 	size_t		n,

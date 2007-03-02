@@ -12,6 +12,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#define NOEXTAPI
 #include <ntddk.h>
 #define NDEBUG
 #include <halfuncs.h>

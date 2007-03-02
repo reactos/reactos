@@ -383,7 +383,7 @@ stringw(char* buf, char* end, const wchar_t* sw, int len, int field_width, int p
 /*
  * @implemented
  */
-int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
+int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 {
 	int len;
 	unsigned long long num;
@@ -742,7 +742,7 @@ int _snprintf(char * buf, size_t cnt, const char *fmt, ...)
 /*
  * @implemented
  */
-int vsprintf(char *buf, const char *fmt, va_list args)
+int __cdecl vsprintf(char *buf, const char *fmt, va_list args)
 {
 	return _vsnprintf(buf,MAXLONG,fmt,args);
 }

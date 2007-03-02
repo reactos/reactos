@@ -8,7 +8,7 @@
 #ifndef CMLIB_H
 #define CMLIB_H
 
-#define WIN32_NO_STATUS
+//#define WIN32_NO_STATUS
 #include <ntddk.h>
 #include "hivedata.h"
 #include "cmdata.h"

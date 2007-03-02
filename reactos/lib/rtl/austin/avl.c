@@ -21,7 +21,7 @@
 /*
  * Modified for use in ReactOS by arty
  */
-
+#include "rtl.h"
 #include "udict.h"
 #include "tree.h"
 #include "macros.h"

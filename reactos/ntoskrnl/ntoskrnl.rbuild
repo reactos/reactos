@@ -299,7 +299,7 @@
             <file>debug.c</file>
             <file>job.c</file>
             <file>kill.c</file>
-            <file>notify.c</file>
+            <file>psnotify.c</file>
             <file>process.c</file>
             <file>psmgr.c</file>
             <file>query.c</file>
