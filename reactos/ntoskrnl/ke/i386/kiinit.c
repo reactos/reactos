@@ -606,9 +606,9 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                          IN PKIPCR *Pcr,
                          IN PKTSS *Tss)
 {
-    KDESCRIPTOR GdtDescriptor = {0}, IdtDescriptor;
+    KDESCRIPTOR GdtDescriptor = {0}, IdtDescriptor = {0};
     KGDTENTRY TssSelector, PcrSelector;
-    USHORT Tr, Fs;
+    USHORT Tr = 0, Fs;
 
     /* Get GDT and IDT descriptors */
     Ke386GetGlobalDescriptorTable(GdtDescriptor);

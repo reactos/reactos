@@ -1,6 +1,5 @@
 /* $Id$
 */
-#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>

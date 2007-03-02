@@ -9,6 +9,7 @@
     <define name="__NO_CTYPE_INLINES" />
     <define name="__USE_W32API" />
     <define name="WIN9X_COMPAT_SPINLOCK" />
+    <define name="_IN_KERNEL_" />
     <include base="cmlib">.</include>
     <include base="ntoskrnl">include</include>
     <include base="ReactOS">include/reactos/drivers</include>
@@ -32,14 +33,14 @@
                 <file>abios.c</file>
                 <file>cpu.c</file>
                 <file>ctxswitch.S</file>
-                <file>clock.S</file>
                 <file>exp.c</file>
-                <file>irq.c</file>
+                <file>irqobj.c</file>
                 <file>kiinit.c</file>
                 <file>ldt.c</file>
                 <file>mtrr.c</file>
                 <file>patpge.c</file>
-                <file>thread.c</file>
+                <file>systimer.S</file>
+                <file>thrdini.c</file>
                 <file>trap.s</file>
                 <file>usercall_asm.S</file>
                 <file>usercall.c</file>
@@ -54,7 +55,7 @@
             <file>config.c</file>
             <file>devqueue.c</file>
             <file>dpc.c</file>
-            <file>event.c</file>
+            <file>eventobj.c</file>
             <file>except.c</file>
             <file>freeldr.c</file>
             <file>gate.c</file>
@@ -62,14 +63,14 @@
             <file>ipi.c</file>
             <file>krnlinit.c</file>
             <file>mutex.c</file>
-            <file>process.c</file>
-            <file>profile.c</file>
+            <file>procobj.c</file>
+            <file>profobj.c</file>
             <file>queue.c</file>
-            <file>sem.c</file>
+            <file>semphobj.c</file>
             <file>spinlock.c</file>
             <file>thrdschd.c</file>
             <file>thrdobj.c</file>
-            <file>timer.c</file>
+            <file>timerobj.c</file>
             <file>wait.c</file>
     </directory>
     <directory name="cc">
@@ -116,7 +117,7 @@
     </directory>
     <directory name="dbgk">
         <file>dbgkutil.c</file>
-        <file>debug.c</file>
+        <file>dbgkobj.c</file>
     </directory>
     <directory name="ex">
         <if property="ARCH" value="i386">
@@ -129,23 +130,23 @@
             <file>atom.c</file>
             <file>callback.c</file>
             <file>dbgctrl.c</file>
-            <file>error.c</file>
             <file>efi.c</file>
             <file>event.c</file>
             <file>evtpair.c</file>
             <file>fmutex.c</file>
             <file>handle.c</file>
+            <file>harderr.c</file>
             <file>init.c</file>
             <file>keyedevt.c</file>
             <file>locale.c</file>
             <file>lookas.c</file>
             <file>mutant.c</file>
-            <file>power.c</file>
             <file>pushlock.c</file>
             <file>profile.c</file>
             <file>resource.c</file>
             <file>rundown.c</file>
             <file>sem.c</file>
+            <file>shutdown.c</file>
             <file>sysinfo.c</file>
             <file>time.c</file>
             <file>timer.c</file>
@@ -192,21 +193,21 @@
             <file>driver.c</file>
             <file>drvrlist.c</file>
             <file>error.c</file>
-            <file>event.c</file>
             <file>file.c</file>
             <file>iocomp.c</file>
+            <file>ioevent.c</file>
             <file>iofunc.c</file>
+            <file>iomdl.c</file>
             <file>iomgr.c</file>
+            <file>iorsrce.c</file>
+            <file>iotimer.c</file>
             <file>iowork.c</file>
             <file>irp.c</file>
             <file>irq.c</file>
-            <file>mdl.c</file>
             <file>rawfs.c</file>
             <file>remlock.c</file>
-            <file>resource.c</file>
             <file>util.c</file>
             <file>symlink.c</file>
-            <file>timer.c</file>
             <file>volume.c</file>
         </directory>
         <directory name="pnpmgr">
@@ -252,9 +253,8 @@
             <file>iospace.c</file>
             <file>kmap.c</file>
             <file>marea.c</file>
-            <file>mdl.c</file>
+            <file>mdlsup.c</file>
             <file>mm.c</file>
-            <file>process.c</file>
             <file>mminit.c</file>
             <file>mpw.c</file>
             <file>ncache.c</file>
@@ -268,6 +268,7 @@
             <file>physical.c</file>
             <file>pool.c</file>
             <file>ppool.c</file>
+            <file>procsup.c</file>
             <file>region.c</file>
             <file>rmap.c</file>
             <file>section.c</file>
@@ -287,7 +288,7 @@
             <file>obref.c</file>
             <file>sdcache.c</file>
             <file>obsecure.c</file>
-            <file>symlink.c</file>
+            <file>oblink.c</file>
             <file>obwait.c</file>
     </directory>
     <directory name="po">

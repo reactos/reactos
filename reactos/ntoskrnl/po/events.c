@@ -11,7 +11,8 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
-NTSTATUS CALLBACK
+NTSTATUS
+NTAPI
 PopAddRemoveSysCapsCallback(
 	IN PVOID NotificationStructure,
 	IN PVOID Context)

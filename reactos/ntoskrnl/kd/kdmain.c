@@ -244,8 +244,8 @@ KdPowerTransition(ULONG PowerState)
 /*
  * @unimplemented
  */
-VOID
-STDCALL
+NTSTATUS
+NTAPI
 KdChangeOption(IN KD_OPTION Option,
                IN ULONG InBufferLength OPTIONAL,
                IN PVOID InBuffer,
@@ -254,6 +254,7 @@ KdChangeOption(IN KD_OPTION Option,
                OUT PULONG OutBufferRequiredLength OPTIONAL)
 {
     UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
