@@ -40,9 +40,10 @@ ULONG_PTR KernelEntry;
 extern PAGE_DIRECTORY_X86 startup_pagedirectory;
 extern PAGE_DIRECTORY_X86 lowmem_pagetable;
 extern PAGE_DIRECTORY_X86 kernel_pagetable;
-extern ULONG_PTR hyperspace_pagetable;
+extern PAGE_DIRECTORY_X86 hyperspace_pagetable;
 extern PAGE_DIRECTORY_X86 apic_pagetable;
 extern PAGE_DIRECTORY_X86 kpcr_pagetable;
+extern PAGE_DIRECTORY_X86 kuser_pagetable;
 
 PVOID
 NTAPI
@@ -184,6 +185,11 @@ FrLdrSetupPageDirectory(VOID)
     PageDir->Pde[KpcrPageTableIndex].Write = 1;
     PageDir->Pde[KpcrPageTableIndex].PageFrameNumber = PaPtrToPfn(kpcr_pagetable);
 
+    /* Set up the KUSER PDE */
+    PageDir->Pde[KuserPageTableIndex].Valid = 1;
+    PageDir->Pde[KuserPageTableIndex].Write = 1;
+    PageDir->Pde[KuserPageTableIndex].PageFrameNumber = PaPtrToPfn(kuser_pagetable);
+
     /* Set up Low Memory PTEs */
     PageDir = (PPAGE_DIRECTORY_X86)&lowmem_pagetable;
     for (i=0; i<1024; i++)
@@ -221,6 +227,17 @@ FrLdrSetupPageDirectory(VOID)
     PageDir->Pde[0].Valid = 1;
     PageDir->Pde[0].Write = 1;
     PageDir->Pde[0].PageFrameNumber = 1;
+
+    /* Setup KUSER PTEs */
+    PageDir = (PPAGE_DIRECTORY_X86)&kuser_pagetable;
+    for (i = 0; i < 1024; i++)
+    {
+        /* SEetup each entry */
+        PageDir->Pde[i].Valid = 1;
+        PageDir->Pde[i].Write = 1;
+        PageDir->Pde[i].Owner = 1;
+        PageDir->Pde[i].PageFrameNumber = PaToPfn(KI_USER_SHARED_DATA + i * PAGE_SIZE);
+    }
 }
 
 PLOADER_MODULE

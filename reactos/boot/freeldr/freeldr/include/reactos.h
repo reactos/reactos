@@ -53,6 +53,7 @@
 #define HyperspacePageTableIndex    (HYPERSPACE_BASE >> 22)
 #define KpcrPageTableIndex          (KPCR_BASE >> 22)
 #define ApicPageTableIndex          (APIC_BASE >> 22)
+#define KuserPageTableIndex         (KI_USER_SHARED_DATA >> 22)
 
 #define KernelEntryPoint            (KernelEntry - KERNEL_BASE_PHYS) + KernelBase
 

@@ -37,15 +37,8 @@
     .globl _hyperspace_pagetable
     .globl _apic_pagetable
     .globl _kpcr_pagetable
+    .globl _kuser_pagetable
 
-    .globl _startup_pagedirectorytable_pae
-    .globl _startup_pagedirectory_pae
-    .globl _lowmem_pagetable_pae
-    .globl _kernel_pagetable_pae
-    .globl _hyperspace_pagetable_pae
-    .globl _apic_pagetable_pae
-    .globl _kpcr_pagetable_pae
-    
     .globl _PageDirectoryEnd
 
 	//
@@ -80,24 +73,7 @@ _apic_pagetable:
 _kpcr_pagetable:
 	.fill 4096, 1, 0   
 
-_startup_pagedirectory_pae:
-	.fill 4 * 4096, 1, 0
+_kuser_pagetable:
+	.fill 4096, 1, 0   
 
-_lowmem_pagetable_pae:
-	.fill 2 * 4096, 1, 0
-
-_kernel_pagetable_pae:
-	.fill 3*4096, 1, 0
-
-_hyperspace_pagetable_pae:
-	.fill 2*4096, 1, 0
-	
-_apic_pagetable_pae:
-	.fill 2*4096, 1, 0
-
-_kpcr_pagetable_pae:
-	.fill 4*4096, 1, 0   
-	
-_startup_pagedirectorytable_pae:
-	.fill 4096, 1, 0	
 _PageDirectoryEnd:

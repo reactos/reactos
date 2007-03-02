@@ -381,7 +381,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ULONG FeatureBits;
     LARGE_INTEGER PageDirectory;
     PVOID DpcStack;
-    ULONG NXSupportPolicy;
     ULONG Vendor[3];
 
     /* Detect and set the CPU Type */
@@ -403,19 +402,19 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     FeatureBits = KiGetFeatureBits();
 
     /* Set the default NX policy (opt-in) */
-    NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
+    SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
 
     /* Check if NPX is always on */
     if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=ALWAYSON"))
     {
         /* Set it always on */
-        NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSON;
+        SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSON;
         FeatureBits |= KF_NX_ENABLED;
     }
     else if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTOUT"))
     {
         /* Set it in opt-out mode */
-        NXSupportPolicy = NX_SUPPORT_POLICY_OPTOUT;
+        SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTOUT;
         FeatureBits |= KF_NX_ENABLED;
     }
     else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTIN")) ||
@@ -428,7 +427,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
              (strstr(KeLoaderBlock->LoadOptions, "EXECUTE")))
     {
         /* Set disabled mode */
-        NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSOFF;
+        SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSOFF;
         FeatureBits |= KF_NX_DISABLED;
     }
 
@@ -532,9 +531,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
             NULL,
             0,
             4096);
-
-    /* Set the NX Support policy */
-    SharedUserData->NXSupportPolicy = (UCHAR)NXSupportPolicy;
 
     /* Set basic CPU Features that user mode can read */
     SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
