@@ -124,6 +124,8 @@ RtlAssert(
 #define ASM_BREAKPOINT "\ncall_pal bpt\n"
 #elif defined(_M_MIPS)
 #define ASM_BREAKPOINT "\nbreak\n"
+#elif defined(__x86_64__)
+#define ASM_BREAKPOINT "\nint $3\n"
 #else
 #error Unsupported architecture.
 #endif

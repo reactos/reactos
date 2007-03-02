@@ -951,7 +951,7 @@ static __inline__ __attribute__((always_inline)) void __wbinvd(void)
 
 #else
 /* TODO: the x64 architecture shares most of the intrinsics. It should be easy to support */
-#error Unsupported architecture
+#warning Unsupported architecture
 #endif
 
 

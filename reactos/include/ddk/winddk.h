@@ -5281,6 +5281,12 @@ KeGetCurrentProcessorNumber(VOID)
 #error Unknown compiler
 #endif
 }
+#elif __x86_64__
+
+typedef struct _KFLOATING_SAVE {
+  ULONG Dummy;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
 #endif /* _X86_ */
 
 #define PAGE_SIZE                         0x1000
