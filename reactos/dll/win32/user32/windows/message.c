@@ -1143,7 +1143,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
   if (WndProc == NULL)
   {
-      DPRINT1("IntCallWindowsProcW() called with WndProc = NULL!\n");
+      DPRINT("IntCallWindowsProcW() called with WndProc = NULL!\n");
       return FALSE;
   }
 
