@@ -14,28 +14,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-NTAPI
-DebugService(IN ULONG Service,
-             IN PVOID Buffer,
-             IN ULONG Length,
-             IN PVOID Argument1,
-             IN PVOID Argument2);
-
-NTSTATUS
-NTAPI
-DebugPrint(IN PANSI_STRING DebugString,
-           IN ULONG ComponentId,
-           IN ULONG Level)
-{
-    /* Call the INT2D Service */
-    return DebugService(BREAKPOINT_PRINT,
-                        DebugString->Buffer,
-                        DebugString->Length,
-                        UlongToPtr(ComponentId),
-                        UlongToPtr(Level));
-}
-
 /*
  * @implemented
  */

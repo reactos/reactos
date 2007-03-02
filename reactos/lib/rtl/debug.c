@@ -16,7 +16,6 @@
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
-#if 0
 NTSTATUS
 NTAPI
 DebugPrint(IN PANSI_STRING DebugString,
@@ -28,15 +27,8 @@ DebugPrint(IN PANSI_STRING DebugString,
                         DebugString->Buffer,
                         DebugString->Length,
                         UlongToPtr(ComponentId),
-                        UlongToPtr(Level)); 
+                        UlongToPtr(Level));
 }
-#else
-NTSTATUS
-NTAPI
-DebugPrint(IN PANSI_STRING DebugString,
-           IN ULONG ComponentId,
-           IN ULONG Level);
-#endif
 
 NTSTATUS
 NTAPI
