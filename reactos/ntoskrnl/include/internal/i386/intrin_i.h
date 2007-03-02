@@ -168,28 +168,28 @@ Ke386HaltProcessor(VOID)
 
 VOID
 FORCEINLINE
-Ke386GetInterruptDescriptorTable(OUT USHORT Descriptor)
+Ke386GetInterruptDescriptorTable(OUT KDESCRIPTOR Descriptor)
 {
     __asm sidt Descriptor;
 }
 
 VOID
 FORCEINLINE
-Ke386SetInterruptDescriptorTable(IN USHORT Descriptor)
+Ke386SetInterruptDescriptorTable(IN KDESCRIPTOR Descriptor)
 {
     __asm lidt Descriptor;
 }
 
 VOID
 FORCEINLINE
-Ke386GetGlobalDescriptorTable(OUT USHORT Descriptor)
+Ke386GetGlobalDescriptorTable(OUT KDESCRIPTOR Descriptor)
 {
     __asm sgdt Descriptor;
 }
 
 VOID
 FORCEINLINE
-Ke386SetGlobalDescriptorTable(IN USHORT Descriptor)
+Ke386SetGlobalDescriptorTable(IN KDESCRIPTOR Descriptor)
 {
     __asm lgdt Descriptor;
 }
