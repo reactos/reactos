@@ -29,6 +29,7 @@ BEGIN
   IDS_XMLERROR_1		"File xml non trovato !"
   IDS_XMLERROR_2		"Impossibile trattare il contenuto del file xml !"
   IDS_DOWNLOAD_ERROR		"Download del file impossibile.\nVerifica la connessione a Internet."
+  IDS_UNZIP_ERROR		"7-Zip not found.\nPlease install 7-Zip"
   IDS_VERSION			"Version: "
   IDS_LICENCE			"Licence: "
   IDS_MAINTAINER		"Maintainer: "

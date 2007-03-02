@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<installfile base="system32">downloader.xml</installfile>    
+<directory name="packagetree">
+	<xi:include href="packagetree/packagetree.rbuild" />
+</directory>
 <module name="downloader" type="win32gui" installbase="system32" installname="downloader.exe">
 	<include base="downloader">.</include>
 	<include base="expat">.</include>
@@ -27,5 +29,6 @@
 	<file>main.c</file>
 	<file>xml.c</file>
 	<file>download.c</file>
+	<file>script.c</file>
 	<file>downloader.rc</file>
 </module>

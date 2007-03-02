@@ -29,6 +29,7 @@ BEGIN
   IDS_XMLERROR_1		"Tidak dapat menemukan file xml !"
   IDS_XMLERROR_2		"Tidak dapat mengurai file xml !"
   IDS_DOWNLOAD_ERROR		"Tidak bisa mendownload file.\nSilahkan periksa koneksi internet anda."
+  IDS_UNZIP_ERROR		"7-Zip not found.\nPlease install 7-Zip"
   IDS_VERSION			"Versi: "
   IDS_LICENCE			"Lisensi: "
   IDS_MAINTAINER		"Pemelihara: "

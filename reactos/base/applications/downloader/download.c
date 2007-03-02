@@ -221,31 +221,11 @@ ThreadFunc(LPVOID Context)
 {
   //static const WCHAR szUrl[] = DownloadUrl;
   IBindStatusCallback *dl;
-  WCHAR path[MAX_PATH];
-  LPWSTR p;
-  STARTUPINFOW si;
-  PROCESS_INFORMATION pi;
-  HWND Dlg = (HWND) Context;
+  HWND Dlg = ((struct lParamDownload*)Context)->Dlg;
   DWORD r;
   BOOL bCancelled = FALSE;
-  BOOL bTempfile = FALSE;
-
-  /* built the path for the download */
-  p = wcsrchr(SelectedApplication->Location, L'/');
-  if (NULL == p)
-    {
-      goto end;
-    }
-  if (! GetTempPathW(MAX_PATH, path))
-    {
-      goto end;
-    }
-  wcscat(path, p + 1);
-
-  /* download it */
-  bTempfile = TRUE;
-  dl = CreateDl(Context, &bCancelled);
-  r = URLDownloadToFileW(NULL, SelectedApplication->Location, path, 0, dl);
+  dl = CreateDl(Dlg, &bCancelled);
+  r = URLDownloadToFileW(NULL, ((struct lParamDownload*)Context)->URL, ((struct lParamDownload*)Context)->File, 0, dl);
   if (NULL != dl)
     {
       IBindStatusCallback_Release(dl);
@@ -253,30 +233,6 @@ ThreadFunc(LPVOID Context)
   if (S_OK != r)
     {
 	  MessageBoxW(0,Strings[IDS_DOWNLOAD_ERROR],0,0);
-      goto end;
-    }
-  else if (bCancelled)
-    {
-      goto end;
-    }
-  ShowWindow(Dlg, SW_HIDE);
-
-  /* run it */
-  memset(&si, 0, sizeof(si));
-  si.cb = sizeof(si);
-  r = CreateProcessW(path, NULL, NULL, NULL, 0, 0, NULL, NULL, &si, &pi);
-  if (0 == r)
-    {
-      goto end;
-    }
-  CloseHandle(pi.hThread);
-  WaitForSingleObject(pi.hProcess, INFINITE);
-  CloseHandle(pi.hProcess);
-
-end:
-  if (bTempfile)
-    {
-      DeleteFileW(path);
     }
   EndDialog(Dlg, 0);
   return 0;
@@ -287,7 +243,7 @@ DownloadProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   HANDLE Thread;
   DWORD ThreadId;
-  HWND Item;
+  HWND Item;;
 
   switch (Msg)
     {
@@ -320,7 +276,8 @@ DownloadProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
               ShowWindow(Item, SW_HIDE);
             }
         }*/
-      Thread = CreateThread(NULL, 0, ThreadFunc, Dlg, 0, &ThreadId);
+      ((struct lParamDownload*)lParam)->Dlg = Dlg;
+      Thread = CreateThread(NULL, 0, ThreadFunc, (LPVOID)lParam, 0, &ThreadId);
       if (NULL == Thread)
         {
           return FALSE;

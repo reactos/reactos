@@ -9,6 +9,8 @@ struct Application
 	WCHAR Description[0x400];
 	WCHAR Location[0x100];
 	struct Application* Next;
+	struct ScriptElement* InstallScript;
+	struct ScriptElement* UninstallScript;
 };
 
 struct Category
@@ -21,4 +23,18 @@ struct Category
 	struct Category* Next;
 	struct Category* Children;
 	struct Category* Parent;
+};
+
+struct ScriptElement
+{
+	WCHAR Func[0x100];
+	WCHAR Arg[2][0x100];
+	struct ScriptElement* Next;
+};
+
+struct lParamDownload
+{
+	HWND Dlg;
+	WCHAR* URL;
+	WCHAR* File;
 };
