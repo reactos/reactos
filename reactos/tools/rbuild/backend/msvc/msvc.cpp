@@ -224,7 +224,7 @@ void MSVCBackend::OutputFolders()
 std::string
 MSVCBackend::OptFileName ( const Module& module ) const
 {
-	return DosSeparator(
+	return FixSeparatorForSystemCommand(
 		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.opt" )
 		);
 }
@@ -232,7 +232,7 @@ MSVCBackend::OptFileName ( const Module& module ) const
 std::string
 MSVCBackend::SuoFileName ( const Module& module ) const
 {
-	return DosSeparator(
+	return FixSeparatorForSystemCommand(
 		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.suo" )
 		);
 }
@@ -240,7 +240,7 @@ MSVCBackend::SuoFileName ( const Module& module ) const
 std::string
 MSVCBackend::DswFileName ( const Module& module ) const
 {
-	return DosSeparator(
+	return FixSeparatorForSystemCommand(
 		ReplaceExtension ( module.GetPath(), "_auto.dsw" )
 		);
 }
@@ -248,7 +248,7 @@ MSVCBackend::DswFileName ( const Module& module ) const
 std::string
 MSVCBackend::SlnFileName ( const Module& module ) const
 {
-	return DosSeparator(
+	return FixSeparatorForSystemCommand(
 		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.sln" )
 		);
 }
@@ -256,7 +256,7 @@ MSVCBackend::SlnFileName ( const Module& module ) const
 std::string
 MSVCBackend::NcbFileName ( const Module& module ) const
 {
-	return DosSeparator(
+	return FixSeparatorForSystemCommand(
 		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.ncb" )
 		);
 }
@@ -264,7 +264,7 @@ MSVCBackend::NcbFileName ( const Module& module ) const
 std::string
 MSVCBackend::DspFileName ( const Module& module ) const
 {
-	return DosSeparator(
+	return FixSeparatorForSystemCommand(
 		ReplaceExtension ( module.GetPath(), "_auto.dsp" )
 		);
 }
@@ -272,7 +272,7 @@ MSVCBackend::DspFileName ( const Module& module ) const
 std::string
 MSVCBackend::VcprojFileName ( const Module& module ) const
 {
-	return DosSeparator(
+	return FixSeparatorForSystemCommand(
 			ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.vcproj" )
 			);
 }
@@ -297,13 +297,13 @@ MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) cons
 	string basepath = module.GetBasePath ();
 	string vcdir = _get_vc_dir ();
 	size_t i;
-	string intenv = Environment::GetIntermediatePath () + "\\" + basepath + "\\";
-	string outenv = Environment::GetOutputPath () + "\\" + basepath + "\\";
+	string intenv = Environment::GetIntermediatePath () + DEF_SSEP + basepath + DEF_SSEP;
+	string outenv = Environment::GetOutputPath () + DEF_SSEP + basepath + DEF_SSEP;
 	
 	if ( configuration.UseVSVersionInPath )
 	{
-		intenv += vcdir + "\\";
-		outenv += vcdir + "\\";
+		intenv += vcdir + DEF_SSEP;
+		outenv += vcdir + DEF_SSEP;
 	}
 
 	string dbg = vcdir.substr ( 0, 3 );
@@ -336,7 +336,7 @@ MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) cons
 		for ( i = 0; i < files.size (); i++ )
 		{
 			string file = files[i]->name;
-			string::size_type pos = file.find_last_of ("\\");
+			string::size_type pos = file.find_last_of (DEF_SSEP);
 			if ( pos != string::npos )
 				file.erase ( 0, pos+1 );
 			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
@@ -379,7 +379,7 @@ MSVCBackend::_get_def_files ( const Module& module, vector<string>& out) const
 		{
 			file.insert (pos, "_msvc");
 		}
-		modulename += "\\" + file;
+		modulename += DEF_SSEP + file;
 		out.push_back (modulename);
 	}
 }
@@ -460,8 +460,8 @@ MSVCBackend::_install_files (const std::string& vcdir, const::string& config)
 		if ( module.installBase == "" || module.installName == "" )
 			continue;
 
-		string inputname = Environment::GetOutputPath () + "\\" + module.GetBasePath () + "\\" + vcdir + "\\" + config + "\\" + module.GetTargetName ();
-		string installdir = Environment::GetInstallPath () + "\\" + module.installBase + "\\" + module.installName;
+		string inputname = Environment::GetOutputPath () + DEF_SSEP + module.GetBasePath () + DEF_SSEP + vcdir + DEF_SSEP + config + DEF_SSEP + module.GetTargetName ();
+		string installdir = Environment::GetInstallPath () + DEF_SSEP + module.installBase + DEF_SSEP + module.installName;
 		if ( _copy_file( inputname, installdir ) )
 			printf ("Installed File :'%s'\n",installdir.c_str () );
 	}

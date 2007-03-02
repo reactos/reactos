@@ -112,7 +112,7 @@ class MSVCBackend : public Backend
 
 		// functions in vcprojmaker.cpp:
 
-		std::string _get_solution_verion ( void );
+		std::string _get_solution_version ( void );
 		std::string _gen_guid();
 		std::string _replace_str(
 			std::string string1,

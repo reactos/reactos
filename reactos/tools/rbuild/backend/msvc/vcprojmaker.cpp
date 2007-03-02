@@ -116,7 +116,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	if ( configuration.UseVSVersionInPath )
 	{
-		vcdir = "\\" + _get_vc_dir();
+		vcdir = DEF_SSEP + _get_vc_dir();
 	}
 	// TODO FIXME - need more checks here for 'sys' and possibly 'drv'?
 
@@ -758,7 +758,7 @@ MSVCBackend::_replace_str(std::string string1, const std::string &find_str, cons
 }
 
 std::string
-MSVCBackend::_get_solution_verion ( void )
+MSVCBackend::_get_solution_version ( void )
 {
 	string version;
 
@@ -780,7 +780,7 @@ MSVCBackend::_get_solution_verion ( void )
 void
 MSVCBackend::_generate_sln_header ( FILE* OUT )
 {
-	fprintf ( OUT, "Microsoft Visual Studio Solution File, Format Version %s\r\n", _get_solution_verion().c_str() );
+	fprintf ( OUT, "Microsoft Visual Studio Solution File, Format Version %s\r\n", _get_solution_version().c_str() );
 	fprintf ( OUT, "# Visual Studio 2005\r\n" );
 	fprintf ( OUT, "\r\n" );
 }
