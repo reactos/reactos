@@ -1153,7 +1153,7 @@ MmZeroPageThreadMain(PVOID Ignored)
    ULONG Count;
 
    /* Free initial kernel memory */
-   MiFreeInitMemory();
+   //MiFreeInitMemory();
 
    /* Set our priority to 0 */
    KeGetCurrentThread()->BasePriority = 0;

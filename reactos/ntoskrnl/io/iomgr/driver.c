@@ -1305,7 +1305,7 @@ IoCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
 
     /* Null-terminate it and set it */
     ServiceKeyName.Buffer[ServiceKeyName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    DriverObject->DriverExtension->ServiceKeyName =  ServiceKeyName;
+    DriverObject->DriverExtension->ServiceKeyName = ServiceKeyName;
 
     /* Also store it in the Driver Object. This is a bit of a hack. */
     RtlCopyMemory(&DriverObject->DriverName,

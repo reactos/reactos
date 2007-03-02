@@ -10,11 +10,13 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* DATA **********************************************************************/
 
 ULONG ExPushLockSpinCount;
+#undef EX_PUSH_LOCK
+#undef PEX_PUSH_LOCK
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -439,10 +441,10 @@ VOID
 FASTCALL
 ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
 {
-    DEFINE_WAIT_BLOCK(WaitBlock);
     EX_PUSH_LOCK OldValue = *PushLock, NewValue, TempValue;
     BOOLEAN NeedWake;
     ULONG i;
+    DEFINE_WAIT_BLOCK(WaitBlock);
 
     /* Start main loop */
     for (;;)
@@ -605,10 +607,10 @@ VOID
 FASTCALL
 ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 {
-    DEFINE_WAIT_BLOCK(WaitBlock);
     EX_PUSH_LOCK OldValue = *PushLock, NewValue;
     BOOLEAN NeedWake;
     ULONG i;
+    DEFINE_WAIT_BLOCK(WaitBlock);
 
     /* Start main loop */
     for (;;)

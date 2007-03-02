@@ -19,6 +19,7 @@
 /*
  * Compiler defined symbols
  */
+#if 0
 extern unsigned int _image_base__;
 extern unsigned int _text_start__;
 extern unsigned int _text_end__;
@@ -27,7 +28,7 @@ extern unsigned int _init_start__;
 extern unsigned int _init_end__;
 
 extern unsigned int _bss_end__;
-
+#endif
 
 static BOOLEAN IsThisAnNtAsSystem = FALSE;
 MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
@@ -38,13 +39,6 @@ PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
 
 VOID INIT_FUNCTION NTAPI MmInitVirtualMemory(ULONG_PTR LastKernelAddress, ULONG KernelLength);
-
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitVirtualMemory)
-#pragma alloc_text(INIT, MmInit1)
-#pragma alloc_text(INIT, MmInit2)
-#pragma alloc_text(INIT, MmInit3)
-#endif
 
 /* FUNCTIONS ****************************************************************/
 
@@ -83,7 +77,7 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
 {
    PVOID BaseAddress;
    ULONG Length;
-   ULONG ParamLength = KernelLength;
+   //ULONG ParamLength = KernelLength;
    NTSTATUS Status;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
    PFN_TYPE Pfn;
@@ -159,7 +153,24 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
                       0,
                       BoundaryAddressMultiple);
 
+#if 0
+   DPRINT1("LD Vars: %lx %lx %lx %lx %lx %lx. Last: %lx\n",
+           &_image_base__,
+           &_text_start__,
+           &_text_end__,
+           &_init_start__,
+           &_init_end__,
+           &_bss_end__,
+           LastKernelAddress);
    BaseAddress = (PVOID)&_image_base__;
+   DPRINT1("Non-LD Vars: %lx %lx %lx %lx %lx %lx. Last: %lx\n",
+           0,
+           0,
+           0,
+           0,
+           0,
+           0,
+           LastKernelAddress);
    Length = PAGE_ROUND_UP(((ULONG_PTR)&_text_end__)) - (ULONG_PTR)&_image_base__;
    ParamLength = ParamLength - Length;
 
@@ -225,6 +236,7 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
                       TRUE,
                       0,
                       BoundaryAddressMultiple);
+#endif
 
    BaseAddress = MiNonPagedPoolStart;
    MmCreateMemoryArea(MmGetKernelAddressSpace(),
@@ -515,6 +527,8 @@ MmInitSystem(IN ULONG Phase,
     return TRUE;
 }
 
+#if 0
+
 VOID static
 MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                      PFN_TYPE Page, SWAPENTRY SwapEntry,
@@ -538,3 +552,4 @@ MiFreeInitMemory(VOID)
                          NULL);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
+#endif

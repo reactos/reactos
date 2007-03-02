@@ -92,7 +92,7 @@ typedef struct
 //
 #define LOW_LEVEL_ENTRIES   (PAGE_SIZE / sizeof(HANDLE_TABLE_ENTRY))
 #define MID_LEVEL_ENTRIES   (PAGE_SIZE / sizeof(PHANDLE_TABLE_ENTRY))
-#define HIGH_LEVEL_ENTRIES  (65535 / (LOW_LEVEL_ENTRIES * MID_LEVEL_ENTRIES))
+#define HIGH_LEVEL_ENTRIES  (16777216 / (LOW_LEVEL_ENTRIES * MID_LEVEL_ENTRIES))
 
 //
 // Maximum index in each table level before we need another table

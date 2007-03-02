@@ -13,7 +13,10 @@
 //
 // Global:
 //  - TODO: Complete the list of bufxies
-//  - Fix atapi.sys or serial.sys loading one more time at each boot.
+//  - Fix boot on VMWare.
+//  - Fix weird crash on boot with 0x867-0x872 EIP.
+//  - Fix trap.s AMD64 VMWare "Greatlord Issue".
+//  - Support SSE/MMX.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
