@@ -71,9 +71,16 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	size_t i;
 
 	string vcproj_file = VcprojFileName(module);
+	string computername;
+	string username;
 
-	string username = getenv ( "USERNAME" );
-	string computername = getenv ( "COMPUTERNAME" );
+	if (getenv ( "USERNAME" ) != NULL)
+		username = getenv ( "USERNAME" );
+	if (getenv ( "COMPUTERNAME" ) != NULL)
+		computername = getenv ( "COMPUTERNAME" );
+	else if (getenv ( "HOSTNAME" ) != NULL)
+		computername = getenv ( "HOSTNAME" );
+
 	string vcproj_file_user = "";
 
 	if ((computername != "") && (username != ""))
