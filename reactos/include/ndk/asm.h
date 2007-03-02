@@ -144,7 +144,7 @@ Author:
 #define KPRCB_DR2                               0x300
 #define KPRCB_DR3                               0x304
 #define KPRCB_DR6                               0x308
-#define KPRCB_DR7                               0x20C
+#define KPRCB_DR7                               0x30C
 
 //
 // KPCR Offsets

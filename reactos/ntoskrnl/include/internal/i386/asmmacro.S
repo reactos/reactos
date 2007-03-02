@@ -265,9 +265,9 @@ _KiUnexpectedInterrupt&Number:
     mov [ebp+KTRAP_FRAME_DR2], edi
 
     /* Get DR3, 6, 7 */
-    mov ebx, dr0
-    mov ecx, dr1
-    mov edi, dr2
+    mov ebx, dr3
+    mov ecx, dr6
+    mov edi, dr7
 
     /* Save them */
     mov [ebp+KTRAP_FRAME_DR3], ebx
