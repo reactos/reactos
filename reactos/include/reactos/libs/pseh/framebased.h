@@ -30,6 +30,8 @@
 #	include <stddef.h>
 #endif
 
+unsigned long __cdecl DbgPrint(const char * format, ...);
+
 /*
 	Fall back to non-optimal, non-native NLG implementation for environments
 	without their own (e.g., currently, kernel-mode ReactOS/Windows). THIS IS NOT
@@ -71,6 +73,13 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 	_SEHPortableTryLevel_t * trylevel
 )
 {
+	/*
+	* help detetct if pseh going into endless loop
+	* if we see this debug msg repet never break
+	* we known something cause pseh going into 
+	*  endless loop, but it should never happen
+	*/
+	DbgPrint("_SEHCompilerSpecificHandler(%p)\n", trylevel);
 	_SEHTryLevel_t * mytrylevel;
 	mytrylevel = _SEH_CONTAINING_RECORD(trylevel, _SEHTryLevel_t, ST_Header);
 	_SEHLongJmp(mytrylevel->ST_JmpBuf, 1);
