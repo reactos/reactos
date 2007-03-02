@@ -108,7 +108,7 @@ WRMSR(IN ULONG Register,
 LONGLONG
 RDMSR(IN ULONG Register)
 {
-    LARGE_INTEGER LargeVal;
+    LARGE_INTEGER LargeVal = {{0}};
     Ke386Rdmsr(Register, LargeVal.HighPart, LargeVal.LowPart);
     return LargeVal.QuadPart;
 }
@@ -119,7 +119,7 @@ VOID
 NTAPI
 KiSetProcessorType(VOID)
 {
-    ULONG EFlags, NewEFlags;
+    ULONG EFlags = 0, NewEFlags;
     ULONG Reg[4];
     ULONG Stepping, Type;
 
@@ -671,7 +671,7 @@ NTAPI
 KeFlushCurrentTb(VOID)
 {
     /* Flush the TLB by resetting CR3 */
-    __writecr3((ULONGLONG)__readcr3());
+    __writecr3(__readcr3());
 }
 
 VOID
@@ -744,10 +744,10 @@ KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
 {
     /* Set CS and ESP */
     Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
-    Ke386Wrmsr(0x175, KeGetCurrentPrcb()->DpcStack, 0);
+    Ke386Wrmsr(0x175, (ULONG)KeGetCurrentPrcb()->DpcStack, 0);
 
     /* Set LSTAR */
-    Ke386Wrmsr(0x176, KiFastCallEntry, 0);
+    Ke386Wrmsr(0x176, (ULONG)KiFastCallEntry, 0);
     return 0;
 }
 
@@ -811,7 +811,7 @@ VOID
 NTAPI
 KiI386PentiumLockErrataFixup(VOID)
 {
-    KDESCRIPTOR IdtDescriptor;
+    KDESCRIPTOR IdtDescriptor = {0};
     PKIDTENTRY NewIdt, NewIdt2;
 
     /* Allocate memory for a new IDT */
@@ -846,7 +846,7 @@ NTAPI
 KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
                   IN PKEXCEPTION_FRAME ExceptionFrame)
 {
-    ULONG Flags;
+    ULONG Flags = 0;
 
     /* Disable interrupts and get previous state */
     Ke386SaveFlags(Flags);

@@ -8,18 +8,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#ifdef _WINDOWS_TESTING
-#include <ntifs.h>
-#include "ntndk.h"
-#include "fsrtl_glue.h"
-#else
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include <ntifs.h>
-#include <cctypes.h>
-#endif /* _WINDOWS_TESTING */
-
 
 /* PUBLIC FUNCTIONS **********************************************************/
 

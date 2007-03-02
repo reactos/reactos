@@ -3429,7 +3429,6 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define FO_RANDOM_ACCESS                  0x00100000
 #define FO_FILE_OPEN_CANCELLED            0x00200000
 #define FO_VOLUME_OPEN                    0x00400000
-#define FO_FILE_OBJECT_HAS_EXTENSION      0x00800000
 #define FO_REMOTE_ORIGIN                  0x01000000
 
 typedef struct _FILE_OBJECT
@@ -9280,19 +9279,6 @@ VOID
 NTAPI
 MmBuildMdlForNonPagedPool(
   IN OUT PMDL  MemoryDescriptorList);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmCreateSection(
-  OUT PVOID *SectionObject,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
-  IN PLARGE_INTEGER  MaximumSize,
-  IN ULONG  SectionPageProtection,
-  IN ULONG  AllocationAttributes,
-  IN HANDLE  FileHandle  OPTIONAL,
-  IN PFILE_OBJECT  File  OPTIONAL);
 
 typedef enum _MMFLUSH_TYPE {
   MmFlushForDelete,

@@ -114,11 +114,6 @@ Author:
 #define PSP_VARIABLE_QUANTUMS                   4
 #define PSP_LONG_QUANTUMS                       16
 
-//
-// Number of TLS expansion slots
-//
-#define TLS_EXPANSION_SLOTS                     64
-
 #ifndef NTOS_MODE_USER
 
 //
@@ -152,6 +147,20 @@ Author:
 #define PROCESS_ALL_ACCESS                      (STANDARD_RIGHTS_REQUIRED | \
                                                  SYNCHRONIZE | \
                                                  0xFFF)
+
+//
+// Thread Base Priorities
+//
+#define THREAD_BASE_PRIORITY_LOWRT              15
+#define THREAD_BASE_PRIORITY_MAX                2
+#define THREAD_BASE_PRIORITY_MIN                -2
+#define THREAD_BASE_PRIORITY_IDLE               -15
+
+//
+// TLS Slots
+//
+#define TLS_MINIMUM_AVAILABLE                   64
+#define TLS_EXPANSION_SLOTS                     1024
 #endif
 
 //

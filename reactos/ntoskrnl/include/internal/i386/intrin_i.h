@@ -116,6 +116,44 @@ static inline void Ki386Cpuid(ULONG Op, PULONG Eax, PULONG Ebx, PULONG Ecx, PULO
 
 VOID
 FORCEINLINE
+Ke386Wrmsr(IN ULONG Register,
+           IN ULONG Var1,
+           IN ULONG Var2)
+{
+    __asm mov eax, Var1;
+    __asm mov edx, Var2;
+    __asm wrmsr;
+}
+
+ULONGLONG
+FORCEINLINE
+Ke386Rdmsr(IN ULONG Register,
+           IN ULONG Var1,
+           IN ULONG Var2)
+{
+    __asm mov eax, Var1;
+    __asm mov edx, Var2;
+    __asm rdmsr;
+}
+
+VOID
+FORCEINLINE
+Ki386Cpuid(IN ULONG Operation,
+           OUT PULONG Var1,
+           OUT PULONG Var2,
+           OUT PULONG Var3,
+           OUT PULONG Var4)
+{
+    __asm mov eax, Operation;
+    __asm cpuid;
+    __asm mov [Var1], eax;
+    __asm mov [Var2], ebx;
+    __asm mov [Var3], ecx;
+    __asm mov [Var4], edx;
+}
+
+VOID
+FORCEINLINE
 Ke386FnInit(VOID)
 {
     __asm fninit;
@@ -130,28 +168,28 @@ Ke386HaltProcessor(VOID)
 
 VOID
 FORCEINLINE
-Ke386GetInterruptDescriptorTable(OUT KDESCRIPTOR Descriptor)
+Ke386GetInterruptDescriptorTable(OUT USHORT Descriptor)
 {
     __asm sidt Descriptor;
 }
 
 VOID
 FORCEINLINE
-Ke386SetInterruptDescriptorTable(IN KDESCRIPTOR Descriptor)
+Ke386SetInterruptDescriptorTable(IN USHORT Descriptor)
 {
     __asm lidt Descriptor;
 }
 
 VOID
 FORCEINLINE
-Ke386GetGlobalDescriptorTable(OUT KDESCRIPTOR Descriptor)
+Ke386GetGlobalDescriptorTable(OUT USHORT Descriptor)
 {
     __asm sgdt Descriptor;
 }
 
 VOID
 FORCEINLINE
-Ke386SetGlobalDescriptorTable(IN KDESCRIPTOR Descriptor)
+Ke386SetGlobalDescriptorTable(IN USHORT Descriptor)
 {
     __asm lgdt Descriptor;
 }

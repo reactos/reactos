@@ -31,6 +31,19 @@ Author:
 //
 NTSTATUS
 NTAPI
+MmCreateSection(
+    OUT PVOID *SectionObject,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+    IN PLARGE_INTEGER MaximumSize,
+    IN ULONG SectionPageProtection,
+    IN ULONG AllocationAttributes,
+    IN HANDLE FileHandle OPTIONAL,
+    IN PFILE_OBJECT File OPTIONAL
+);
+
+NTSTATUS
+NTAPI
 MmMapViewOfSection(
     IN PVOID SectionObject,
     IN PEPROCESS Process,

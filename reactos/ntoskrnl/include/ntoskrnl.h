@@ -36,6 +36,7 @@
 #include <diskdump/diskdump.h>
 
 /* C Headers */
+#include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <malloc.h>

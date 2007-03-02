@@ -606,7 +606,7 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                          IN PKIPCR *Pcr,
                          IN PKTSS *Tss)
 {
-    KDESCRIPTOR GdtDescriptor, IdtDescriptor;
+    KDESCRIPTOR GdtDescriptor = {0}, IdtDescriptor;
     KGDTENTRY TssSelector, PcrSelector;
     USHORT Tr, Fs;
 
