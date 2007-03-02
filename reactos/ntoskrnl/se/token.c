@@ -444,94 +444,77 @@ SeCopyClientToken(PACCESS_TOKEN Token,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
-SeCreateClientSecurity(IN struct _ETHREAD *Thread,
-		       IN PSECURITY_QUALITY_OF_SERVICE Qos,
-		       IN BOOLEAN RemoteClient,
-		       OUT PSECURITY_CLIENT_CONTEXT ClientContext)
+NTSTATUS
+NTAPI
+SeCreateClientSecurity(IN PETHREAD Thread,
+                       IN PSECURITY_QUALITY_OF_SERVICE Qos,
+                       IN BOOLEAN RemoteClient,
+                       OUT PSECURITY_CLIENT_CONTEXT ClientContext)
 {
-   TOKEN_TYPE TokenType;
-   UCHAR b;
-   SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-   PACCESS_TOKEN Token;
-   ULONG g;
-   PACCESS_TOKEN NewToken;
+    TOKEN_TYPE TokenType;
+    BOOLEAN ThreadEffectiveOnly;
+    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+    PACCESS_TOKEN Token;
+    NTSTATUS Status;
+    PACCESS_TOKEN NewToken;
+    PAGED_CODE();
 
-   PAGED_CODE();
-
-   Token = PsReferenceEffectiveToken(Thread,
-				     &TokenType,
-				     &b,
-				     &ImpersonationLevel);
-   if (TokenType != TokenImpersonation)
-     {
-	ClientContext->DirectAccessEffectiveOnly = Qos->EffectiveOnly;
-     }
-   else
-     {
-	if (Qos->ImpersonationLevel > ImpersonationLevel)
-	  {
-	     if (Token != NULL)
-	       {
-		  ObDereferenceObject(Token);
-	       }
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	if (ImpersonationLevel == SecurityAnonymous ||
-	    ImpersonationLevel == SecurityIdentification ||
-	    (RemoteClient != FALSE && ImpersonationLevel != SecurityDelegation))
-	  {
-	     if (Token != NULL)
-	       {
-		  ObDereferenceObject(Token);
-	       }
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	if (b != 0 ||
-	    Qos->EffectiveOnly != 0)
-	  {
-	     ClientContext->DirectAccessEffectiveOnly = TRUE;
-	  }
-	else
-	  {
-	     ClientContext->DirectAccessEffectiveOnly = FALSE;
-	  }
-     }
-
-   if (Qos->ContextTrackingMode == 0)
-     {
-	ClientContext->DirectlyAccessClientToken = FALSE;
-	g = SeCopyClientToken(Token, ImpersonationLevel, 0, &NewToken);
-	if (g >= 0)
-	  {
-//	     ObDeleteCapturedInsertInfo(NewToken);
-	  }
-	if (TokenType == TokenPrimary || Token != NULL)
-	  {
-	     ObDereferenceObject(Token);
-	  }
-	if (g < 0)
-	  {
-	     return(g);
-	  }
-    }
-  else
+    Token = PsReferenceEffectiveToken(Thread,
+                                      &TokenType,
+                                      &ThreadEffectiveOnly,
+                                      &ImpersonationLevel);
+    if (TokenType != TokenImpersonation)
     {
-	ClientContext->DirectlyAccessClientToken = TRUE;
-	if (RemoteClient != FALSE)
-	  {
-//	     SeGetTokenControlInformation(Token, &ClientContext->Unknown11);
-	  }
-	NewToken = Token;
+        ClientContext->DirectAccessEffectiveOnly = Qos->EffectiveOnly;
     }
-  ClientContext->SecurityQos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
-  ClientContext->SecurityQos.ImpersonationLevel = Qos->ImpersonationLevel;
-  ClientContext->SecurityQos.ContextTrackingMode = Qos->ContextTrackingMode;
-  ClientContext->SecurityQos.EffectiveOnly = Qos->EffectiveOnly;
-  ClientContext->ServerIsRemote = RemoteClient;
-  ClientContext->ClientToken = NewToken;
+    else
+    {
+        if (Qos->ImpersonationLevel > ImpersonationLevel)
+        {
+            if (Token) ObDereferenceObject(Token);
+            return STATUS_BAD_IMPERSONATION_LEVEL;
+        }
 
-  return(STATUS_SUCCESS);
+        if ((ImpersonationLevel == SecurityAnonymous) ||
+            (ImpersonationLevel == SecurityIdentification) ||
+            ((RemoteClient) && (ImpersonationLevel != SecurityDelegation)))
+        {
+            if (Token) ObDereferenceObject(Token);
+            return STATUS_BAD_IMPERSONATION_LEVEL;
+        }
+
+        ClientContext->DirectAccessEffectiveOnly = ((ThreadEffectiveOnly) ||
+                                                    (Qos->EffectiveOnly)) ?
+                                                    TRUE : FALSE;
+    }
+
+    if (Qos->ContextTrackingMode == SECURITY_STATIC_TRACKING)
+    {
+        ClientContext->DirectlyAccessClientToken = FALSE;
+        Status = SeCopyClientToken(Token, ImpersonationLevel, 0, &NewToken);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+    else
+    {
+        ClientContext->DirectlyAccessClientToken = TRUE;
+        if (RemoteClient != FALSE)
+        {
+#if 0
+            SeGetTokenControlInformation(Token,
+                                         &ClientContext->ClientTokenControl);
+#endif
+        }
+
+        NewToken = Token;
+    }
+
+    ClientContext->SecurityQos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+    ClientContext->SecurityQos.ImpersonationLevel = Qos->ImpersonationLevel;
+    ClientContext->SecurityQos.ContextTrackingMode = Qos->ContextTrackingMode;
+    ClientContext->SecurityQos.EffectiveOnly = Qos->EffectiveOnly;
+    ClientContext->ServerIsRemote = RemoteClient;
+    ClientContext->ClientToken = NewToken;
+    return STATUS_SUCCESS;
 }
 
 /*
