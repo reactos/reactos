@@ -1,3 +1,5 @@
+/* $Id$ */
+
 #include <windows.h>
 #include "vmwinst.h"
 
@@ -6,4 +8,29 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"vmwinst.exe\0"
 #include <reactos/version.rc>
 
-#include "rsrc.rc"
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+1 24 DISCARDABLE "manifest.xml"
+
+/* Bitmaps */
+IDB_WATERMARK BITMAP "resources/watermark.bmp"
+IDB_HEADER    BITMAP "resources/header.bmp"
+
+/* The vmware.inf file */
+IDR_VMWARE_INF RT_INF "vmware.inf"
+
+
+/*
+ * Everything specific to any language goes in one of the specific
+ * files. Note that you can and may override resources which also have
+ * a neutral version. This is to get localized bitmaps for example.
+ */
+#include "Cz.rc"
+#include "En.rc"
+#include "De.rc"
+#include "Dk.rc"
+#include "Es.rc"
+#include "Ja.rc"
+#include "Hu.rc"
+#include "Ru.rc"
+#include "Uk.rc"
