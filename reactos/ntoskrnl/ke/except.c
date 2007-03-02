@@ -144,9 +144,8 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
     }
     _SEH_END;
 
-    /* Make sure we didn't crash in SEH */
-    if (NT_SUCCESS(Status))
-    {
+    if (!NT_SUCCESS(Status)) return Status;
+
         /* Convert the context record */
         KeContextToTrapFrame(Context,
                              ExceptionFrame,
@@ -155,12 +154,13 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
                              PreviousMode);
 
         /* Dispatch the exception */
+        ExceptionRecord->ExceptionCode &= ~KI_EXCEPTION_INTERNAL;
+
         KiDispatchException(ExceptionRecord,
                             ExceptionFrame,
                             TrapFrame,
                             PreviousMode,
                             SearchFrames);
-    }
 
     /* Return the status */
     return Status;

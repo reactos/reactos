@@ -484,7 +484,7 @@ _KiDebugService:
     /* Call debug service dispatcher */
     mov eax, [ebp+KTRAP_FRAME_EAX]
     mov ecx, [ebp+KTRAP_FRAME_ECX]
-    mov edx, [ebp+KTRAP_FRAME_EAX]
+    mov edx, [ebp+KTRAP_FRAME_EDX]
 
     /* Check for V86 mode */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -639,7 +639,7 @@ _CommonDispatchException:
     mov [esp+EXCEPTION_RECORD_NUMBER_PARAMETERS], ecx
 
     /* Check parameter count */
-    cmp eax, 0
+    cmp ecx, 0
     jz NoParams
 
     /* Get information */
@@ -841,7 +841,6 @@ PrepInt3:
     /* Setup EIP, NTSTATUS and parameter count, then dispatch */
     mov ebx, [ebp+KTRAP_FRAME_EIP]
     dec ebx
-    mov eax, STATUS_BREAKPOINT
     mov ecx, 3
     call _CommonDispatchException
 
