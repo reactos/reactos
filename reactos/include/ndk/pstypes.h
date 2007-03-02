@@ -160,8 +160,8 @@ Author:
 // TLS Slots
 //
 #define TLS_MINIMUM_AVAILABLE                   64
-#define TLS_EXPANSION_SLOTS                     1024
 #endif
+#define TLS_EXPANSION_SLOTS                     1024
 
 //
 // Job Access Types
