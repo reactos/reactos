@@ -161,7 +161,6 @@ Author:
 //
 #define TLS_MINIMUM_AVAILABLE                   64
 #endif
-#define TLS_EXPANSION_SLOTS                     1024
 
 //
 // Job Access Types
@@ -204,6 +203,7 @@ Author:
 #define STA_ADDRESS_SPACE_OWNER_BIT             0x4
 #endif
 
+#define TLS_EXPANSION_SLOTS                     1024
 //
 // Process Flags
 //
