@@ -65,9 +65,9 @@ RtlpCreateCriticalSectionSem(PRTL_CRITICAL_SECTION CriticalSection)
         }
         DPRINT("Created Event: %p \n", hNewEvent);
 
-        if ((hEvent = _InterlockedCompareExchangePointer((PVOID*)&CriticalSection->LockSemaphore,
-                                                         (PVOID)hNewEvent,
-                                                         0))) {
+        if ((hEvent = (HANDLE)_InterlockedCompareExchange((PLONG)&CriticalSection->LockSemaphore,
+                                                  (LONG)hNewEvent,
+                                                  0))) {
 
             /* Some just created an event */
             DPRINT("Closing already created event: %p\n", hNewEvent);

@@ -75,7 +75,7 @@ RtlEnlargedUnsignedDivide (
 )
 {
    if (Remainder)
-      *Remainder = Dividend.QuadPart % Divisor;
+      *Remainder = (ULONG)(Dividend.QuadPart % Divisor);
 
    return (ULONG)(Dividend.QuadPart / Divisor);
 }
@@ -128,7 +128,7 @@ RtlExtendedLargeIntegerDivide (
    LARGE_INTEGER RC;
 
    if (Remainder)
-      *Remainder = Dividend.QuadPart % Divisor;
+      *Remainder = (ULONG)(Dividend.QuadPart % Divisor);
 
    RC.QuadPart = Dividend.QuadPart / Divisor;
 

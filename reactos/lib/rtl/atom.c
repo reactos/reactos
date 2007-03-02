@@ -366,7 +366,7 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
                   Entry->ReferenceCount = 1;
                   Entry->Flags = 0x0;
 
-                  Entry->NameLength = AtomNameLen;
+                  Entry->NameLength = (UCHAR)AtomNameLen;
                   RtlCopyMemory(Entry->Name,
                                 AtomName,
                                 (AtomNameLen + 1) * sizeof(WCHAR));

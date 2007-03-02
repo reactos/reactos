@@ -111,7 +111,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     }
 
     /* Update length */
-    DebugString.Length += Length;
+    DebugString.Length += (USHORT)Length;
 
     /* First, let the debugger know as well */
     if (RtlpCheckForActiveDebugger(FALSE))
@@ -270,11 +270,11 @@ DbgPrompt(IN PCCH Prompt,
     STRING Input;
 
     /* Setup the input string */
-    Input.MaximumLength = MaximumResponseLength;
+    Input.MaximumLength = (USHORT)MaximumResponseLength;
     Input.Buffer = Response;
 
     /* Setup the output string */
-    Output.Length = strlen (Prompt);
+    Output.Length = strlen(Prompt);
     Output.Buffer = Prompt;
 
     /* Call the system service */
@@ -284,7 +284,7 @@ DbgPrompt(IN PCCH Prompt,
 /*
  * @implemented
  */
-BOOLEAN
+NTSTATUS
 NTAPI
 DbgQueryDebugFilterState(IN ULONG ComponentId,
                          IN ULONG Level)
