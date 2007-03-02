@@ -191,7 +191,7 @@ CcInitializeCacheMap (IN PFILE_OBJECT FileObject,
         {
             KEBUGCHECK (0);
         }
-        memset (Bcb, 0, sizeof (BCB));
+        RtlZeroMemory(Bcb, sizeof (BCB));
 
         Bcb->FileObject = FileObject;
         Bcb->FileSizes = *FileSizes;
