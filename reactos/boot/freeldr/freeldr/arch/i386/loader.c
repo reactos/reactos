@@ -628,7 +628,7 @@ FrLdrMapImage(IN FILE *Image,
     NextModuleBase = ROUND_UP(NextModuleBase + ImageSize, PAGE_SIZE);
 
     /* Successful load! */
-    DbgPrint("Image: %s loaded at: %p\n", Name, ImageBase);
+    //DbgPrint("Image: %s loaded at: %p\n", Name, ImageBase);
 
     /* Load HAL if this is the kernel */
     if (ImageType == 1) FrLdrLoadImage("hal.dll", 10, FALSE);

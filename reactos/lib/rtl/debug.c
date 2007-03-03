@@ -324,7 +324,7 @@ DbgLoadImageSymbols(IN PANSI_STRING Name,
     SymbolInfo.ProcessId = (ULONG)ProcessId;
 
     /* Get NT Headers */
-    NtHeader = NULL; //RtlImageNtHeader(Base);
+    NtHeader = RtlImageNtHeader(Base);
     if (NtHeader)
     {
         /* Get the rest of the data */
