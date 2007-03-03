@@ -71,8 +71,8 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 	_SEHPortableTryLevel_t * trylevel
 )
 {
-        // DbgPrint("_SEHCompilerSpecificHandler(%p)\n", trylevel);
         _SEHTryLevel_t * mytrylevel;
+        DbgPrint("_SEHCompilerSpecificHandler(%p)\n", trylevel);
         mytrylevel = _SEH_CONTAINING_RECORD(trylevel, _SEHTryLevel_t, ST_Header);
         _SEHLongJmp(mytrylevel->ST_JmpBuf, 1);
 }
