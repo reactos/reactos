@@ -545,29 +545,13 @@ FrLdrReMapImage(IN PVOID Base,
     NtHeader = RtlImageNtHeader(Base);
     Section = IMAGE_FIRST_SECTION(NtHeader);
 
-    /*  Determine the size of the module  */
-    for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
-    {
-        /* Skip this section if we're not supposed to load it */
-        if (!(Section[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
-        {
-            /* Add the size of this section into the total size */
-            Size = Section[i].VirtualAddress + Section[i].Misc.VirtualSize;
-            DriverSize = max(DriverSize, Size);
-        }
-    }
-
-    /* Round up the driver size to section alignment */
-    DriverSize = ROUND_UP(DriverSize, NtHeader->OptionalHeader.SectionAlignment);
-
     /* Allocate memory for the driver */
+    DriverSize = NtHeader->OptionalHeader.SizeOfImage;
     LoadBase = MmAllocateMemoryAtAddress(DriverSize, LoadBase);
     ASSERT(LoadBase);
 
     /* Copy headers over */
-    RtlMoveMemory(LoadBase,
-                  Base,
-                  NtHeader->OptionalHeader.SizeOfHeaders);
+    RtlMoveMemory(LoadBase, Base, NtHeader->OptionalHeader.SizeOfHeaders);
 
     /*  Copy image sections into virtual section  */
     for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
@@ -644,7 +628,7 @@ FrLdrMapImage(IN FILE *Image,
     NextModuleBase = ROUND_UP(NextModuleBase + ImageSize, PAGE_SIZE);
 
     /* Successful load! */
-    //DbgPrint("Image: %s loaded at: %p\n", Name, ImageBase);
+    DbgPrint("Image: %s loaded at: %p\n", Name, ImageBase);
 
     /* Load HAL if this is the kernel */
     if (ImageType == 1) FrLdrLoadImage("hal.dll", 10, FALSE);
