@@ -468,6 +468,20 @@ GetSelectedComboInt(HWND hwnd, INT id)
 }
 
 
+static INT
+GetEditedComboInt(HWND hwnd, INT id)
+{
+    INT nCount;
+    BOOL bTranslated;
+
+    nCount = GetDlgItemInt(hwnd, id, &bTranslated, FALSE);
+    if (bTranslated == FALSE)
+        return 12;
+
+    return nCount;
+}
+
+
 
 INT_PTR CALLBACK
 AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -605,6 +619,41 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 							case IDX_DIALOG:
 								i = GetSelectedComboInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E);
+								g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight =
+									-MulDiv(i , GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
+								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETDIALOGFONT, 0,
+									(LPARAM)&g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font]);
+								break;
+						}
+
+						ReleaseDC(hwndDlg, hdcDlg);
+					}
+					else if (g && HIWORD(wParam) == CBN_EDITCHANGE)
+					{
+						HDC hdcDlg = GetDC(hwndDlg);
+						INT i;
+
+						switch (g->CurrentElement)
+						{
+							case IDX_INACTIVE_CAPTION:
+							case IDX_ACTIVE_CAPTION:
+								i = GetEditedComboInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E);
+								g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight =
+									-MulDiv(i , GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
+								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCAPTIONFONT, 0,
+									(LPARAM)&g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font]);
+								break;
+
+							case IDX_MENU:
+								i = GetEditedComboInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E);
+								g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight =
+									-MulDiv(i , GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
+								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETMENUFONT, 0,
+									(LPARAM)&g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font]);
+								break;
+
+							case IDX_DIALOG:
+								i = GetEditedComboInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E);
 								g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight =
 									-MulDiv(i , GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
 								SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETDIALOGFONT, 0,
