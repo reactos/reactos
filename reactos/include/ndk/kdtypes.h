@@ -52,6 +52,7 @@ Author:
 #define BREAKPOINT_PROMPT                   2
 #define BREAKPOINT_LOAD_SYMBOLS             3
 #define BREAKPOINT_UNLOAD_SYMBOLS           4
+#define BREAKPOINT_COMMAND_STRING           5
 
 //
 // Debug Control Codes for NtSystemDebugcontrol
