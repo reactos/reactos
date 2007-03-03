@@ -462,7 +462,7 @@ NtGdiDdQueryDirectDrawObject(
         return Ret;
     }
 
-        /*
+    /*
      * Get puD3dBufferCallbacks
      */
     if (puD3dBufferCallbacks != NULL)
@@ -539,6 +539,58 @@ NtGdiDdQueryDirectDrawObject(
     }
     return Ret;
 }
+
+BOOL STDCALL NtGdiDdReenableDirectDrawObject(
+    HANDLE hDirectDrawLocal,
+    BOOL *pubNewMode
+)
+{
+    BOOL Ret=FALSE;
+    NTSTATUS Status = FALSE;
+    PDD_DIRECTDRAW pDirectDraw;
+
+    if (hDirectDrawLocal == NULL)
+    {
+       return Ret;
+    }
+
+    pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal,
+                                 GDI_OBJECT_TYPE_DIRECTDRAW);
+
+    if (!pDirectDraw)
+    {
+        return Ret;
+    }
+
+    /* 
+     * FIXME detect mode change thic code maybe are not correct
+     * if we call on intEnableDriver it will cause some memory leak
+     * we need free the alloc memory before we call on it
+     */
+    Ret = intEnableDriver(pDirectDraw);
+
+    _SEH_TRY
+    {
+        ProbeForWrite(pubNewMode, sizeof(BOOL), 1);
+        *pubNewMode = Ret;
+    }
+    _SEH_HANDLE 
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return Ret;
+    }
+
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+
+    return Ret;
+
+}
+
 
 
 DWORD STDCALL NtGdiDdGetDriverInfo(

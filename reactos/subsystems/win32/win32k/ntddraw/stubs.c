@@ -304,15 +304,6 @@ DWORD STDCALL NtGdiDdQueryMoCompStatus(
 	return 0;
 }
 
-BOOL STDCALL NtGdiDdReenableDirectDrawObject(
-    HANDLE hDirectDrawLocal,
-    BOOL *pubNewMode
-)
-{
-	UNIMPLEMENTED
-
-	return FALSE;
-}
 
 BOOL STDCALL NtGdiDdReleaseDC(
     HANDLE hSurface
