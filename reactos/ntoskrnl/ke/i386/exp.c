@@ -140,7 +140,7 @@ KiRecordDr7(OUT PULONG Dr7Ptr,
             NewMask |= DR_MASK(DR7_OVERRIDE_V);
 
             /* Set DR7 override */
-            *DrMask = DR7_OVERRIDE_MASK;
+            *DrMask |= DR7_OVERRIDE_MASK;
         }
         else
         {
@@ -210,10 +210,19 @@ NTAPI
 KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
                  IN ULONG Esp)
 {
-    ULONG Previous = KiEspFromTrapFrame(TrapFrame);
+    KIRQL OldIrql;
+    ULONG Previous;
+
+    /* Raise to APC_LEVEL if needed */
+    OldIrql = KeGetCurrentIrql();
+    if (OldIrql < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
+
+    /* Get the old ESP */
+    Previous = KiEspFromTrapFrame(TrapFrame);
 
     /* Check if this is user-mode or V86 */
-    if ((TrapFrame->SegCs & MODE_MASK) || (TrapFrame->EFlags & EFLAGS_V86_MASK))
+    if ((TrapFrame->SegCs & MODE_MASK) ||
+        (TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
         /* Write it directly */
         TrapFrame->HardwareEsp = Esp;
@@ -221,7 +230,11 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     else
     {
         /* Don't allow ESP to be lowered, this is illegal */
-        if (Esp < Previous) KeBugCheck(SET_OF_INVALID_CONTEXT);
+        if (Esp < Previous) KeBugCheckEx(SET_OF_INVALID_CONTEXT,
+                                         Esp,
+                                         Previous,
+                                         (ULONG_PTR)TrapFrame,
+                                         0);
 
         /* Create an edit frame, check if it was alrady */
         if (!(TrapFrame->SegCs & FRAME_EDITED))
@@ -243,6 +256,9 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
             }
         }
     }
+
+    /* Restore IRQL */
+    if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
 }
 
 ULONG
@@ -316,12 +332,13 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     PFX_SAVE_AREA FxSaveArea;
     ULONG i;
     BOOLEAN V86Switch = FALSE;
-    KIRQL OldIrql = APC_LEVEL;
+    KIRQL OldIrql;
     ULONG DrMask = 0;
     PVOID SafeDr;
 
     /* Do this at APC_LEVEL */
-    if (KeGetCurrentIrql() < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
+    OldIrql = KeGetCurrentIrql();
+    if (OldIrql < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
 
     /* Start with the basic Registers */
     if ((ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
@@ -544,7 +561,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         else
         {
             /* FIXME: Handle FPU Emulation */
-            ASSERT(FALSE);
+            //ASSERT(FALSE);
         }
     }
 
@@ -600,11 +617,12 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         FLOATING_SAVE_AREA UnalignedArea;
     } FloatSaveBuffer;
     FLOATING_SAVE_AREA *FloatSaveArea;
-    KIRQL OldIrql = APC_LEVEL;
+    KIRQL OldIrql;
     ULONG i;
 
     /* Do this at APC_LEVEL */
-    if (KeGetCurrentIrql() < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
+    OldIrql = KeGetCurrentIrql();
+    if (OldIrql < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
 
     /* Start with the Control flags */
     if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
@@ -817,11 +835,26 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Get a Context */
     KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
 
-    /* Fix up EIP */
-    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
+    /* Look at our exception code */
+    switch (ExceptionRecord->ExceptionCode)
     {
-        /* Decrement EIP by one */
-        Context.Eip--;
+        /* Breapoint */
+        case STATUS_BREAKPOINT:
+
+            /* Decrement EIP by one */
+            Context.Eip--;
+            break;
+
+        /* Internal exception */
+        case KI_EXCEPTION_ACCESS_VIOLATION:
+
+            /* Set correct code */
+            ExceptionRecord->ExceptionCode = STATUS_ACCESS_VIOLATION;
+            if (PreviousMode == UserMode)
+            {
+                /* FIXME: Handle no execute */
+            }
+            break;
     }
 
     /* Sanity check */
@@ -866,8 +899,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         KeBugCheckEx(KMODE_EXCEPTION_NOT_HANDLED,
                      ExceptionRecord->ExceptionCode,
                      (ULONG_PTR)ExceptionRecord->ExceptionAddress,
-                     ExceptionRecord->ExceptionInformation[0],
-                     ExceptionRecord->ExceptionInformation[1]);
+                     (ULONG_PTR)TrapFrame,
+                     0);
     }
     else
     {
@@ -989,8 +1022,8 @@ DispatchToUser:
         KeBugCheckEx(KMODE_EXCEPTION_NOT_HANDLED,
                      ExceptionRecord->ExceptionCode,
                      (ULONG_PTR)ExceptionRecord->ExceptionAddress,
-                     ExceptionRecord->ExceptionInformation[0],
-                     ExceptionRecord->ExceptionInformation[1]);
+                     (ULONG_PTR)TrapFrame,
+                     0);
     }
 
 Handled:

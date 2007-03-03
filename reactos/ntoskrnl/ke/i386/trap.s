@@ -473,43 +473,8 @@ _KiDebugService:
     mov ecx, [ebp+KTRAP_FRAME_ECX]
     mov edx, [ebp+KTRAP_FRAME_EDX]
 
-    /* Check for V86 mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz NotUserMode
-
-    /* Check if this is kernel or user-mode */
-    test byte ptr [ebp+KTRAP_FRAME_CS], 1
-    jz CallDispatch
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
-    jnz NotUserMode
-
-    /* Re-enable interrupts */
-VdmProc:
-    sti
-
-    /* Call the debug routine */
-CallDispatch:
-    mov esi, ecx
-    mov edi, edx
-    mov edx, eax
-    mov ecx, 3
-    push edi
-    push esi
-    push edx
-    call _KdpServiceDispatcher@12
-
-NotUserMode:
-
-    /* Get the current process */
-    mov ebx, [fs:KPCR_CURRENT_THREAD]
-    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
-
-    /* Check if this is a VDM Process */
-    //cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
-    //jz VdmProc
-
-    /* Exit through common routine */
-    jmp _Kei386EoiHelper@0
+    /* Jump to INT3 handler */
+    jmp PrepareInt3
 .endfunc
 
 .func NtRaiseException@12

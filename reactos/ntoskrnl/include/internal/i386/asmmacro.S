@@ -304,7 +304,7 @@ _KiUnexpectedInterrupt&Number:
     /* Set them */
     mov dr6, ebx
     mov dr7, ecx
-    jz 3f
+    jmp 3f
 .endm
 
 //
@@ -482,12 +482,12 @@ _KiUnexpectedInterrupt&Number:
     /* Flush DR7 */
     and dword ptr [ebp+KTRAP_FRAME_DR7], 0
 
-3:
     /* Check if the thread was being debugged */
     test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF
     jnz Dr_&Label
 
     /* Set the Trap Frame Debug Header */
+3:
     SET_TF_DEBUG_HEADER
 .endm
 
@@ -1171,7 +1171,7 @@ FastExit:
     mov dr3, esi
     mov dr6, edi
     mov dr7, ebx
-    jz 4b
+    jmp 4b
 
 7:
     /* Restore real CS value */

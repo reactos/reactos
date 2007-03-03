@@ -106,9 +106,28 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                           IN BOOLEAN SecondChance)
 {
     KD_CONTINUE_TYPE Return;
+    ULONG ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
 
-    /* HACK (just like all this routine */
-    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) Context->Eip++;
+    /* Check if this was a breakpoint due to DbgPrint or Load/UnloadSymbols */
+    if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
+        (ExceptionRecord->NumberParameters > 0) &&
+        ((ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS) ||
+         (ExceptionCommand == BREAKPOINT_UNLOAD_SYMBOLS) ||
+         (ExceptionCommand == BREAKPOINT_COMMAND_STRING) ||
+         (ExceptionCommand == BREAKPOINT_PRINT)))
+    {
+        /* Check if this is a debug print */
+        if (ExceptionCommand == BREAKPOINT_PRINT)
+        {
+            /* Print the string */
+            KdpServiceDispatcher(BREAKPOINT_PRINT,
+                                 (PVOID)ExceptionRecord->ExceptionInformation[1],
+                                 ExceptionRecord->ExceptionInformation[2]);
+        }
+
+        /* This we can handle: simply bump EIP */
+        Context->Eip++;
+    }
 
     /* Get out of here if the Debugger isn't connected */
     if (KdDebuggerNotPresent) return FALSE;
