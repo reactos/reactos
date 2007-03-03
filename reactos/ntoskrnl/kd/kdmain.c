@@ -127,6 +127,7 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
 
         /* This we can handle: simply bump EIP */
         Context->Eip++;
+        return TRUE;
     }
 
     /* Get out of here if the Debugger isn't connected */

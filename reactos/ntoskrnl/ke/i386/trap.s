@@ -604,7 +604,7 @@ NoParams:
 
     /* Set the record in ECX and check if this was V86 */
     mov ecx, esp
-    test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jz SetPreviousMode
 
     /* Set V86 mode */
@@ -791,6 +791,7 @@ EnableInterrupts3:
     sti
 
 PrepInt3:
+
     /* Prepare the exception */
     mov esi, ecx
     mov edi, edx

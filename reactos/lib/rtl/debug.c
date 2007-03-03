@@ -23,7 +23,6 @@ DebugPrint(IN PANSI_STRING DebugString,
            IN ULONG Level)
 {
     /* Call the INT2D Service */
-    return STATUS_SUCCESS;
     return DebugService(BREAKPOINT_PRINT,
                         DebugString->Buffer,
                         DebugString->Length,
