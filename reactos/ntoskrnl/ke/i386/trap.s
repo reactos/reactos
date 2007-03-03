@@ -228,22 +228,6 @@ CopyParams:
     /* Copy the parameters */
     rep movsd
 
-#ifdef DBG
-    /*
-     * The following lines are for the benefit of GDB. It will see the return
-     * address of the "call ebx" below, find the last label before it and
-     * thinks that that's the start of the function. It will then check to see
-     * if it starts with a standard function prolog (push ebp, mov ebp,esp1).
-     * When that standard function prolog is not found, it will stop the
-     * stack backtrace. Since we do want to backtrace into usermode, let's
-     * make GDB happy and create a standard prolog.
-     */
-KiSystemService:
-    push ebp
-    mov ebp,esp
-    pop ebp
-#endif
-
     /* Do the System Call */
     call ebx
 
@@ -482,7 +466,7 @@ _KiDebugService:
     TRAP_PROLOG kids
 
     /* Increase EIP so we skip the INT3 */
-    //inc dword ptr [ebp+KTRAP_FRAME_EIP]
+    inc dword ptr [ebp+KTRAP_FRAME_EIP]
 
     /* Call debug service dispatcher */
     mov eax, [ebp+KTRAP_FRAME_EAX]
@@ -821,7 +805,11 @@ _KiTrap3:
     /* Enter trap */
     TRAP_PROLOG kit3
 
+    /* Set status code */
+    mov eax, 0 //STATUS_SUCCESS
+
     /* Check for V86 */
+PrepareInt3:
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz V86Int3
 

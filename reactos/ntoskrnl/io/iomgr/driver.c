@@ -874,9 +874,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    }
 #endif
 
-   /* Load symbols */
-   KDB_SYMBOLFILE_HOOK(ModuleName);
-
    /*
     * Strip the file extension from ServiceName
     */
@@ -926,9 +923,6 @@ IopInitializeBootDrivers(VOID)
 {
     PLIST_ENTRY ListHead, NextEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-#ifdef DBG
-    UNICODE_STRING NtosSymName = RTL_CONSTANT_STRING(L"ntoskrnl.sym");
-#endif
     PDEVICE_NODE DeviceNode;
     PDRIVER_OBJECT DriverObject;
     LDR_DATA_TABLE_ENTRY ModuleObject;
@@ -973,9 +967,6 @@ IopInitializeBootDrivers(VOID)
         IopFreeDeviceNode(DeviceNode);
         return;
     }
-
-    /* Hack for NTOSKRNL.SYM */
-    KDB_SYMBOLFILE_HOOK(&NtosSymName);
 
     /* Loop the boot modules */
     ListHead = &KeLoaderBlock->LoadOrderListHead;

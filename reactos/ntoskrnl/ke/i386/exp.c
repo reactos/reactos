@@ -800,7 +800,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Set the context flags */
     Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
 
-    /* Check if User Mode or if the debugger isenabled */
+    /* Check if User Mode or if the debugger is enabled */
     if ((PreviousMode == UserMode) || (KdDebuggerEnabled))
     {
         /* Add the FPU Flag */
@@ -846,9 +846,6 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                 goto Handled;
             }
 
-            /* HACK: GDB Entry */
-            if (KdpCallGdb(TrapFrame, ExceptionRecord, &Context)) goto Handled;
-
             /* If the Debugger couldn't handle it, dispatch the exception */
             if (RtlDispatchException(ExceptionRecord, &Context)) goto Handled;
         }
@@ -893,9 +890,6 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                 /* Exception was handled */
                 goto Handled;
             }
-
-            /* HACK: GDB Entry */
-            if (KdpCallGdb(TrapFrame, ExceptionRecord, &Context)) goto Handled;
 
             /* Forward exception to user mode debugger */
             if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) goto Exit;
@@ -1045,4 +1039,3 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
     /* Return the old EIP */
     return (NTSTATUS)OldEip;
 }
-

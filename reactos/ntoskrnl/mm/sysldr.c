@@ -1752,9 +1752,6 @@ LoaderScan:
     if (ModuleObject) *ModuleObject = LdrEntry;
     if (ImageBaseAddress) *ImageBaseAddress = LdrEntry->DllBase;
 
-    /* Hook for KDB on loading a driver. */
-    KDB_LOADDRIVER_HOOK(FileName, LdrEntry);
-
 Quickie:
     /* If we have a file handle, close it */
     if (FileHandle) ZwClose(FileHandle);

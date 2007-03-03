@@ -432,9 +432,9 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
       {
           DbgPrint("MmInsertRmap tries to add a second rmap entry for address %p\n    current caller ", 
                    current_entry->Address);
-          KeRosPrintAddress(new_entry->Caller);
+          DbgPrint("%p", new_entry->Caller);
           DbgPrint("\n    previous caller ");
-          KeRosPrintAddress(current_entry->Caller);
+          DbgPrint("%p", current_entry->Caller);
           DbgPrint("\n");
           KeBugCheck(0);
       }

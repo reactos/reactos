@@ -73,14 +73,8 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 	_SEHPortableTryLevel_t * trylevel
 )
 {
-	/*
-	* help detetct if pseh going into endless loop
-	* if we see this debug msg repet never break
-	* we known something cause pseh going into 
-	*  endless loop, but it should never happen
-	*/
-	DbgPrint("_SEHCompilerSpecificHandler(%p)\n", trylevel);
 	_SEHTryLevel_t * mytrylevel;
+	DbgPrint("_SEHCompilerSpecificHandler(%p)\n", trylevel);
 	mytrylevel = _SEH_CONTAINING_RECORD(trylevel, _SEHTryLevel_t, ST_Header);
 	_SEHLongJmp(mytrylevel->ST_JmpBuf, 1);
 }

@@ -54,7 +54,7 @@ _DebugService2@12:
     mov ecx, [ebp+8]
     mov edx, [ebp+12]
     int 0x2D
-    //int 3
+    int 3
 
     /* Restore stack */
     pop ebp
@@ -82,7 +82,7 @@ _DebugService@20:
     mov ebx, [ebp+20]
     mov edi, [ebp+24]
     int 0x2D
-    //int 3
+    int 3
 
     /* Restore registers */
     pop ebx
