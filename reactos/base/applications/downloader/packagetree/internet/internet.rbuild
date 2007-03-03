@@ -3,4 +3,4 @@
 <directory name="browser">
 	<xi:include href="browser/browser.rbuild" />
 </directory>
-<installfile base="packagetree\internet">category.xml</installfile>
+<installfile base="packagetree/internet">category.xml</installfile>
