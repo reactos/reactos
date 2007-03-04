@@ -142,7 +142,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
         if (Status == STATUS_BREAKPOINT)
         {
             /* Breakpoint */
-            DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+            //DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
             Status = STATUS_SUCCESS;
         }
     }

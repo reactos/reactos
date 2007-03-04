@@ -237,7 +237,7 @@ KiInitMachineDependent(VOID)
             if (KeFeatureBits & KF_MTRR)
             {
                 /* Then manually initialize MTRR for the CPU */
-                KiInitializeMTRR((BOOLEAN)i ? FALSE : TRUE);
+                KiInitializeMTRR(i ? FALSE : TRUE);
             }
 
             /* Check if we have AMD MTRR and initialize it for the CPU */

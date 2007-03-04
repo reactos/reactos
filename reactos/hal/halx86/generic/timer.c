@@ -48,6 +48,7 @@ HalpInitializeClock(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Increment;
     USHORT RollOver;
+    ULONG Flags = 0;
 
     /* Check the CPU Type */
     if (Prcb->CpuType <= 4)
@@ -66,6 +67,7 @@ HalpInitializeClock(VOID)
     KeSetTimeIncrement(Increment, HalpRolloverTable[0].HighPart);
 
     /* Disable interrupts */
+    Ke386SaveFlags(Flags);
     _disable();
 
     /* Set the rollover */
@@ -73,8 +75,8 @@ HalpInitializeClock(VOID)
     __outbyte(TIMER_DATA_PORT0, RollOver & 0xFF);
     __outbyte(TIMER_DATA_PORT0, RollOver >> 8);
 
-    /* Restore interrupts */
-    _enable();
+    /* Restore interrupts if they were previously enabled */
+    Ke386RestoreFlags(Flags);
 
     /* Save rollover and return */
     HalpCurrentRollOver = RollOver;
@@ -90,18 +92,20 @@ NTAPI
 HalCalibratePerformanceCounter(IN volatile PLONG Count,
                                IN ULONGLONG NewCount)
 {
+    ULONG Flags = 0;
+
     /* Disable interrupts */
+    Ke386SaveFlags(Flags);
     _disable();
 
     /* Do a decrement for this CPU */
-    //_InterlockedDecrement(Count);
-    InterlockedDecrement(Count);
+    _InterlockedDecrement(Count);
 
     /* Wait for other CPUs */
     while (*Count);
 
-    /* Bring interrupts back */
-    _enable();
+    /* Restore interrupts if they were previously enabled */
+    Ke386RestoreFlags(Flags);
 }
 
 /*

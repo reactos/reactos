@@ -100,9 +100,9 @@ LoopPostInt:
 
     /* Check if someone updated the counter */
     cmp eax, ebx
-    jne LoopPostInt
+    jnz LoopPostInt
     cmp edx, esi
-    jne LoopPostInt
+    jnz LoopPostInt
 
     /* Check if the current 8254 value causes rollover */
     neg ecx
@@ -180,21 +180,35 @@ BelowHigh:
     or ecx, esi
     jz BelowLow
 
+    /* Make sure that the count is still valid */
+    sub ebx, eax
+    sbb esi, edx
+    jnz InvalidCount
+    cmp ebx, _HalpCurrentRollOver
+    jg InvalidCount
+
     /* Fixup the count with the last known value */
     sub eax, ebx
     sbb edx, esi
 
     /* We might have an incoming interrupt, save EFLAGS */
-    mov esi, [esp]
+    mov ecx, [esp]
     popf
 
     /* Check if interrupts were enabled and try again */
-    test esi, EFLAGS_INTERRUPT_MASK
+    test ecx, EFLAGS_INTERRUPT_MASK
     jnz LoopPreInt
 
     /* They're not, continue where we left */
     pushf
     jmp BelowLow
+
+InvalidCount:
+    popf
+    xor eax, eax
+    mov _HalpLastPerfCounterLow, eax
+    mov _HalpLastPerfCounterHigh, eax
+    jmp LoopPreInt
 .endfunc
 
 .globl _HalpClockInterrupt@0

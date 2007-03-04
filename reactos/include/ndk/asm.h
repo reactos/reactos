@@ -202,6 +202,7 @@ Author:
 #define KPCR_PRCB_DEBUG_DPC_TIME                0x654
 #define KPCR_PRCB_INTERRUPT_TIME                0x658
 #define KPCR_PRCB_ADJUST_DPC_THRESHOLD          0x65C
+#define KPCR_PRCB_SKIP_TICK                     0x664
 #define KPCR_SYSTEM_CALLS                       0x6B8
 #define KPCR_PRCB_DPC_QUEUE_DEPTH               0xA4C
 #define KPCR_PRCB_DPC_COUNT                     0xA50
