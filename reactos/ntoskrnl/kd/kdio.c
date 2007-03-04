@@ -239,43 +239,6 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
 
 /* GENERAL FUNCTIONS *********************************************************/
 
-BOOLEAN
-STDCALL
-KdpDetectConflicts(PCM_RESOURCE_LIST DriverList)
-{
-    ULONG ComPortBase = 0;
-    ULONG i;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
-
-    /* Select the COM Port Base */
-    switch (KdpPort)
-    {
-        case 1: ComPortBase = 0x3f8; break;
-        case 2: ComPortBase = 0x2f8; break;
-        case 3: ComPortBase = 0x3e8; break;
-        case 4: ComPortBase = 0x2e8; break;
-    }
-
-    /* search for this port address in DriverList */
-    for (i = 0; i < DriverList->List[0].PartialResourceList.Count; i++)
-    {
-        ResourceDescriptor = &DriverList->List[0].PartialResourceList.PartialDescriptors[i];
-        if (ResourceDescriptor->Type == CmResourceTypePort)
-        {
-            if ((ResourceDescriptor->u.Port.Start.u.LowPart <= ComPortBase) &&
-                (ResourceDescriptor->u.Port.Start.u.LowPart +
-                 ResourceDescriptor->u.Port.Length > ComPortBase))
-            {
-                /* Conflict found */
-                return TRUE;
-            }
-        }
-    }
-
-    /* No Conflicts */
-    return FALSE;
-}
-
 ULONG
 STDCALL
 KdpPrintString(LPSTR String,
