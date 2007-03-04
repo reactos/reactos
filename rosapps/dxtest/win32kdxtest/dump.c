@@ -13,10 +13,109 @@
 void
 dump_CallBackFlags(DWORD *pCallBackFlags, char *text)
 {
+    UINT flag=pCallBackFlags[0];
+    INT count=0;
+
     printf("dumping the CallBackFlags from %s\n",text);
-    printf("pCallBackFlags[0] : 0x%08lx\n",pCallBackFlags[0]);
-    printf("pCallBackFlags[1] : 0x%08lx\n",pCallBackFlags[1]);
-    printf("pCallBackFlags[2] : 0x%08lx\n",pCallBackFlags[2]);
+    printf("pCallBackFlags[0] : ");
+    if (flag & DDHAL_CB32_CANCREATESURFACE)
+    {
+        if (count!=0)
+        {
+            printf("| ");
+        }
+        flag = flag - DDHAL_CB32_CANCREATESURFACE;
+        printf("DDHAL_CB32_CANCREATESURFACE ");
+        count++;
+    }
+    if (flag & DDHAL_CB32_CREATEPALETTE)
+    {
+        if (count!=0)
+        {
+            printf("| ");
+        }
+        flag = flag - DDHAL_CB32_CREATEPALETTE;
+        printf("DDHAL_CB32_CREATEPALETTE ");
+        count++;
+    }
+    if (flag & DDHAL_CB32_CREATESURFACE)
+    {
+        if (count!=0)
+        {
+            printf("| ");
+        }
+        flag = flag - DDHAL_CB32_CREATESURFACE;
+        printf("DDHAL_CB32_CREATESURFACE ");
+        count++;
+    }
+    if (flag & DDHAL_CB32_GETSCANLINE)
+    {
+        if (count!=0)
+        {
+            printf("| ");
+        }
+        flag = flag - DDHAL_CB32_GETSCANLINE;
+        printf("DDHAL_CB32_GETSCANLINE ");
+        count++;
+    }
+    if (flag & DDHAL_CB32_MAPMEMORY)
+    {
+        if (count!=0)
+        {
+            printf("| ");
+        }
+        flag = flag - DDHAL_CB32_MAPMEMORY;
+        printf("DDHAL_CB32_MAPMEMORY ");
+        count++;
+    }
+    if (flag & DDHAL_CB32_SETCOLORKEY)
+    {
+        if (count!=0)
+        {
+            printf("| ");
+        }
+        flag = flag - DDHAL_CB32_SETCOLORKEY;
+        printf("DDHAL_CB32_SETCOLORKEY ");
+        count++;
+    }
+    if (flag & DDHAL_CB32_SETMODE)
+    {
+        if (count!=0)
+        {
+            printf("| ");
+        }
+        flag = flag - DDHAL_CB32_SETMODE;
+        printf("DDHAL_CB32_SETMODE ");
+        count++;
+    }
+    if (flag & DDHAL_CB32_WAITFORVERTICALBLANK)
+    {
+        if (count!=0)
+        {
+            printf("| ");
+        }
+        flag = flag - DDHAL_CB32_WAITFORVERTICALBLANK;
+        printf("DDHAL_CB32_WAITFORVERTICALBLANK ");
+        count++;
+    }
+
+    if (count==0)
+    {
+        printf("0x%04lx\n",pCallBackFlags[0]);
+    }
+    else
+    {
+        printf("\n");
+    }
+
+
+    if (flag != 0)
+    {
+        printf("undoc value in DD_CALLBACKS flags value %04lx\n",flag);
+    }
+
+    printf("pCallBackFlags[1] : 0x%04lx\n",pCallBackFlags[1]);
+    printf("pCallBackFlags[2] : 0x%04lx\n",pCallBackFlags[2]);
 }
 
 void
@@ -225,7 +324,14 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
     }
     else
     {
-        printf("unkonwn dwSize DD_HALINFO : the size found is 0x%8lx\n",pHalInfo->dwSize);
+        if (pHalInfo->dwSize !=0)
+        {
+            printf("unkonwn dwSize DD_HALINFO : the size found is 0x%08lx\n",pHalInfo->dwSize);
+        }
+        else
+        {
+            printf("none pHalInfo from the driver\n",pHalInfo->dwSize);
+        }
     }
 }
 
