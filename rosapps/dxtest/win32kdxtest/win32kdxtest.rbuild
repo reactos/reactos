@@ -9,5 +9,8 @@
 	<library>gdi32</library>
 	<library>d3d8thk</library>
 	<file>main.c</file>
+	<file>NtGdiDdCreateDirectDrawObject.c</file>
+	<file>NtGdiDdDeleteDirectDrawObject.c</file>
+	<file>NtGdiDdQueryDirectDrawObject.c</file>
 	<file>dump.c</file>	
 </module>
