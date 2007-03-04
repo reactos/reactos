@@ -519,7 +519,6 @@ IoWriteTransferCount DATA
 @IofCompleteRequest@8
 IoIsWdmVersionAvailable@8
 KdChangeOption@24
-KdComPortInUse DATA
 KdDebuggerEnabled=_KdDebuggerEnabled
 KdDebuggerNotPresent=_KdDebuggerNotPresent
 KdDisableDebugger@0
@@ -527,7 +526,6 @@ KdEnableDebugger@0
 KdEnteredDebugger
 KdPollBreakIn@0
 KdPowerTransition@4
-KdpServiceDispatcher@12
 KdSystemDebugControl@28
 Ke386CallBios@8
 @KeAcquireGuardedMutex@4

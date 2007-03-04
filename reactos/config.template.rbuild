@@ -86,11 +86,17 @@
 <property name="NSWPAT" value="0" />
 
 <!--
-  Whether to compile with NT-compatible LPC Semantics. At the moment, this will
-  cause all LPC-related functionality to fail and should only be used if you're
-  working on the \ntlpc directory. Leave this disabled unless you really know
-  what you're doing.
+  Whether to compile with NT-compatible LPC Semantics. This should always be 1.
 -->
 <property name="NTLPC" value="1" />
+
+<!--
+  Whether to compile with the KD protocol. This will disable support for KDBG
+  as well as rossym and symbol lookups, and allow WinDBG to connect to ReactOS.
+  This is currently not fully working, and requires kdcom from Windows 2003 or
+  TinyKRNL. Booting into debug mode with this flag enabled will result in a
+  failure to enter GUI mode. Do not enable unless you know what you're doing.
+-->
+<property name="_WINKD_" value="0" />
 
 </rbuild>
