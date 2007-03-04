@@ -20,6 +20,10 @@ _KeUpdateRunTime@4:
     /* Get KPCR */
     mov eax, [fs:KPCR_SELF]
 
+    /* Check if this tick is getting skipped */
+    cmp byte ptr [eax+KPCR_PRCB_SKIP_TICK], 0
+    jnz SkipTick
+
     /* Save EBX */
     push ebx
 
@@ -45,11 +49,12 @@ _KeUpdateRunTime@4:
     ja AboveDispatch
 
     /* Check if the DPC routine is active */
-    cmp dword ptr[eax+KPCR_PRCB_DPC_ROUTINE_ACTIVE], 0
+    cmp byte ptr fs:[KPCR_PRCB_DPC_ROUTINE_ACTIVE], 0
     jz BelowDispatch
 
     /* At dispatch, increase DPC time */
     inc dword ptr [eax+KPCR_PRCB_DPC_TIME]
+    inc dword ptr [eax+KPCR_PRCB_DEBUG_DPC_TIME]
     jmp AfterSet
 
 AboveDispatch:
@@ -146,11 +151,20 @@ QuantumNotEmpty:
     /* Restore ebx and return */
     pop ebx
     ret 4
+
+SkipTick:
+    /* Disable skipping the next tick and return */
+    mov byte ptr [eax+KPCR_PRCB_SKIP_TICK], 0
+    ret 4
 .endfunc
 
 .globl _KeUpdateSystemTime@0
 .func KeUpdateSystemTime@0
 _KeUpdateSystemTime@0:
+
+    /* Check if this tick is getting skipped */
+    cmp byte ptr fs:[KPCR_PRCB_SKIP_TICK], 0
+    jnz SkipTickSys
 
     /* Get shared data in ECX */
     mov ecx, USER_SHARED_DATA
@@ -222,7 +236,13 @@ IncompleteTick:
     push offset _KiExpireTimerDpc
     call _KeInsertQueueDpc@12
 
+DebugCheck:
+    /* Check if the debugger is enabled */
+    cmp dword ptr __KdDebuggerEnabled, 0
+    jnz DebuggerEnabled
+
     /* Check if this was a full tick */
+NoDebug:
     cmp dword ptr _KiTickOffset, 0
     jg IncompleteTick2
 
@@ -244,4 +264,20 @@ Done:
     cli
     call _HalEndSystemInterrupt@8
     jmp _Kei386EoiHelper@0
+
+DebuggerEnabled:
+    /* Check for break-in request */
+    call _KdPollBreakIn@0
+    or al, al
+    jz NoDebug
+
+    /* Break-in requested! */
+    push 1
+    call _DbgBreakPointWithStatus@4
+    jmp NoDebug
+
+SkipTickSys:
+    /* Disable skipping the next tick and return */
+    mov byte ptr fs:[KPCR_PRCB_SKIP_TICK], 0
+    jmp IncompleteTick2
 .endfunc
