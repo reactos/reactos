@@ -328,6 +328,20 @@ NtSetDebugFilterState(IN ULONG ComponentId,
 	return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+KdSystemDebugControl(IN SYSDBG_COMMAND Command,
+                     IN PVOID InputBuffer,
+                     IN ULONG InputBufferLength,
+                     OUT PVOID OutputBuffer,
+                     IN ULONG OutputBufferLength,
+                     IN OUT PULONG ReturnLength,
+                     IN KPROCESSOR_MODE PreviousMode)
+{
+    /* HACK */
+    return KdpServiceDispatcher(Command, InputBuffer, InputBufferLength);
+}
+
 PKDEBUG_ROUTINE KiDebugRoutine = KdpEnterDebuggerException;
 
  /* EOF */

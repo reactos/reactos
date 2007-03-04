@@ -528,6 +528,7 @@ KdEnteredDebugger
 KdPollBreakIn@0
 KdPowerTransition@4
 KdpServiceDispatcher@12
+KdSystemDebugControl@28
 Ke386CallBios@8
 @KeAcquireGuardedMutex@4
 @KeAcquireGuardedMutexUnsafe@4
