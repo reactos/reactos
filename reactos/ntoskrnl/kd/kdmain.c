@@ -328,6 +328,9 @@ NtSetDebugFilterState(IN ULONG ComponentId,
 	return STATUS_SUCCESS;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 NTAPI
 KdSystemDebugControl(IN SYSDBG_COMMAND Command,

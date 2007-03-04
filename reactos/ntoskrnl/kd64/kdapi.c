@@ -1156,3 +1156,37 @@ KdEnableDebugger(VOID)
     return KdEnableDebuggerWithLock(TRUE);
 }
 
+/*
+* @unimplemented
+*/
+NTSTATUS
+NTAPI
+KdSystemDebugControl(IN SYSDBG_COMMAND Command,
+                     IN PVOID InputBuffer,
+                     IN ULONG InputBufferLength,
+                     OUT PVOID OutputBuffer,
+                     IN ULONG OutputBufferLength,
+                     IN OUT PULONG ReturnLength,
+                     IN KPROCESSOR_MODE PreviousMode)
+{
+    /* HACK */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+NtQueryDebugFilterState(ULONG ComponentId,
+                        ULONG Level)
+{
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+NtSetDebugFilterState(ULONG ComponentId,
+                      ULONG Level,
+                      BOOLEAN State)
+{
+    return STATUS_SUCCESS;
+}
+

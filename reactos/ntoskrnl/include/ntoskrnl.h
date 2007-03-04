@@ -50,7 +50,6 @@
 #include <reactos/bugcodes.h>
 #define ExRaiseStatus RtlRaiseStatus
 #include <reactos/probe.h>
-#include <reactos/rossym.h>
 
 /* SetupLDR Support */
 #include <arc/setupblk.h>
@@ -59,6 +58,9 @@
 #include <windbgkd.h>
 #include <wdbgexts.h>
 #include <kddll.h>
+#ifndef _WINKD_
+#include <reactos/rossym.h>
+#endif
 
 /* PNP GUIDs */
 #include <umpnpmgr/sysguid.h>
