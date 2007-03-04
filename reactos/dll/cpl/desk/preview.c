@@ -186,14 +186,13 @@ OnCreate(HWND hwnd, PPREVIEW_DATA pPreviewData)
 
     /* Load and modify the menu */
     pPreviewData->hMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDR_PREVIEW_MENU));
-    EnableMenuItem(pPreviewData->hMenu, ID_MENU_DISABLED,
-                   MF_BYCOMMAND | MF_DISABLED);
+    EnableMenuItem(pPreviewData->hMenu,
+                   1, MF_BYPOSITION | MF_GRAYED);
     HiliteMenuItem(hwnd, pPreviewData->hMenu,
-                   ID_MENU_SELECTED, MF_BYCOMMAND | MF_HILITE);
+                   2, MF_BYPOSITION | MF_HILITE);
 
 //    GetMenuItemRect(hwnd, pPreviewData->hMenu,
-//                    ID_MENU_SELECTED, &pPreviewData->rcSelectedMenuItem);
-
+//                    2, &pPreviewData->rcSelectedMenuItem);
 
     AllocAndLoadString(&pPreviewData->lpInAct, hApplet, IDS_INACTWIN);
     AllocAndLoadString(&pPreviewData->lpAct, hApplet, IDS_ACTWIN);
@@ -382,7 +381,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     rc.left += 4;
     rc.top += 2;
     SetTextColor(hdc, pPreviewData->clrWindowText);
-    hOldFont = SelectObject(hdc, pPreviewData->hMessageFont);
+    hOldFont = SelectObject(hdc, pPreviewData->hCaptionFont);
     DrawText(hdc, pPreviewData->lpWinTxt, lstrlen(pPreviewData->lpWinTxt), &rc, DT_LEFT);
     SelectObject(hdc, hOldFont);
 
@@ -444,11 +443,11 @@ OnLButtonDown(HWND hwnd, int xPos, int yPos, PPREVIEW_DATA pPreviewData)
     if (PtInRect(&pPreviewData->rcActiveCaptionButtons, pt))
         type = IDX_CAPTION_BUTTON;
 
-    if (PtInRect(&pPreviewData->rcActiveMenuBar, pt))
-        type = IDX_MENU;
-
 //    if (PtInRect(&pPreviewData->rcSelectedMenuItem, pt))
 //        type = IDX_SELECTION;
+
+    if (PtInRect(&pPreviewData->rcActiveMenuBar, pt))
+        type = IDX_MENU;
 
     if (PtInRect(&pPreviewData->rcActiveClient, pt))
         type = IDX_WINDOW;
