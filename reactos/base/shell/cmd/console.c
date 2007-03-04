@@ -240,7 +240,7 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 {
 	INT len;
-	PTCHAR pBuf;
+	PCHAR pBuf;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	DWORD dwWritten;
@@ -281,12 +281,17 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 	//make sure they didnt make the screen to small 
 	if(ScreenLines<4)
 	{
-	ConPrintf(szFormat, arg_ptr, nStdHandle);
+		ConPrintf(szFormat, arg_ptr, nStdHandle);
 		return 0;
 	}
 
 	len = _vstprintf (szOut, szFormat, arg_ptr);
+#ifdef _UNICODE
+	pBuf = malloc(len + 1);
+	len = WideCharToMultiByte( OutputCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+#else
 	pBuf = szOut;
+#endif
 
 	for(i = 0; i < len; i++)
 	{
@@ -300,11 +305,14 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 
 		if(LineCount >= ScreenLines)
 		{
-			if(_tcsnicmp(&pBuf[i], _T("\n"), 2)!=0)
+			if(_strnicmp(&pBuf[i], "\n", 2)!=0)
 				WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(CHAR),&dwWritten,NULL); 
 
 			if(PagePrompt() != PROMPT_YES)
 			{
+#ifdef _UNICODE
+				free(pBuf);
+#endif
 				return 1;
 			}
 			//reset the number of lines being printed         
