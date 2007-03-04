@@ -303,7 +303,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     Type = RtlDetermineDosPathNameType_U(lpNamedPipeName);
  
     /* Check if this was a device path, ie : "\\.\pipe\name" */
-    if (Type == DEVICE_PATH)
+    if (Type == RtlPathTypeLocalDevice)
     {
         /* Make sure it's a valid prefix */
         RtlInitUnicodeString(&PipePrefix, L"\\\\.\\pipe\\");
@@ -317,7 +317,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         DPRINT("NewName: %wZ\n", &NewName);
         RtlInitUnicodeString(&DevicePath, L"\\DosDevices\\pipe\\");
     }
-    else if (Type == UNC_PATH)
+    else if (Type == RtlPathTypeRootLocalDevice)
     {
         /* The path is \\server\\pipe\name; find the pipename itself */
         p = &NewName.Buffer[2];
