@@ -140,8 +140,8 @@ END
 IDR_PREVIEW_MENU MENU
 BEGIN
     MENUITEM "Normal",           ID_MENU_NORMAL
-    MENUITEM "Disabled",         ID_MENU_DISABLED
-    MENUITEM "Selected",         ID_MENU_SELECTED
+    MENUITEM "Deaktiviert",      ID_MENU_DISABLED
+    MENUITEM "Ausgewählt",       ID_MENU_SELECTED
 END
 
 STRINGTABLE
@@ -172,11 +172,11 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_INACTWIN "Inactive Window"
-    IDS_ACTWIN   "Active Window"
-    IDS_WINTEXT  "Window Text"
-    IDS_MESSBOX  "Message Box"
-    IDS_MESSTEXT "Message Text"
+    IDS_INACTWIN "Inaktives Fenster"
+    IDS_ACTWIN   "Aktives Fenster"
+    IDS_WINTEXT  "Fenstertext"
+    IDS_MESSBOX  "Dialogfeld"
+    IDS_MESSTEXT "Dialogfeldtext"
     IDS_BUTTEXT  "OK"
 END
 
@@ -185,8 +185,8 @@ BEGIN
     IDS_ELEMENT_1 "Desktop"
     IDS_ELEMENT_2 "Titelleiste der inaktiven Fenster"
     IDS_ELEMENT_3 "Rahmen der inaktiven Fenster"
-    IDS_ELEMENT_4 "Titelleiste der aktiven Fenster"
-    IDS_ELEMENT_5 "Rahmen der Aktiven Fenster"
+    IDS_ELEMENT_4 "Titelleiste des aktiven Fensters"
+    IDS_ELEMENT_5 "Rahmen des aktiven Fensters"
     IDS_ELEMENT_6 "Menü"
     IDS_ELEMENT_7 "Markierte Elemente"
     IDS_ELEMENT_8 "Fenster"
