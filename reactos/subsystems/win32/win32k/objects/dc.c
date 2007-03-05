@@ -813,21 +813,21 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   if (Driver != NULL)
   {
-    DPRINT1("NAME Driver: %wZ\n", Driver);
+    DPRINT("NAME Driver: %wZ\n", Driver);
   }
   else
   {
-      DPRINT1("NAME Driver: NULL\n", Driver);
+    DPRINT("NAME Driver: NULL\n", Driver);
   }
 
 
   if (Driver != NULL)
   {
-    DPRINT1("NAME Device: %wZ\n", Device);
+    DPRINT("NAME Device: %wZ\n", Device);
   }
   else
   {
-      DPRINT1("NAME Device: NULL\n", Device);
+    DPRINT("NAME Device: NULL\n", Device);
   }
 
 
