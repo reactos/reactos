@@ -305,12 +305,12 @@ CreateFreeLoaderIniForDos(PWCHAR IniPath,
 		    L"SystemPath",
 		    ArcPath);
 
-  /* Options=/DEBUGPORT=SCREEN /NOGUIBOOT /SOS*/
+  /* Options=/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS*/
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
 		    L"Options",
-		    L"/DEBUGPORT=SCREEN /SOS");
+		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
 
   /* Create "DOS" section */
   IniSection = IniCacheAppendSection(IniCache,
@@ -423,12 +423,12 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"SystemPath",
 		    ArcPath);
 
-  /* Options=/DEBUGPORT=COM1 /NOGUIBOOT /SOS*/
+  /* Options=/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS*/
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
 		    L"Options",
-		    L"/DEBUGPORT=COM1 /SOS");
+		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
 
   /* Save the ini file */
   IniCacheSave(IniCache, IniPath);

@@ -734,9 +734,6 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         i++;
         NextEntry = NextEntry->Flink;
     }
-
-    /* Check if we should break after symbol load */
-    if (KdBreakAfterSymbolLoad) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 }
 
 VOID
@@ -915,6 +912,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* Load boot symbols */
     ExpLoadBootSymbols(LoaderBlock);
+
+    /* Check if we should break after symbol load */
+    if (KdBreakAfterSymbolLoad) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 
     /* Set system ranges */
     SharedUserData->Reserved1 = (ULONG_PTR)MmHighestUserAddress;

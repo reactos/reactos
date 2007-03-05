@@ -20,10 +20,9 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 // Debugger State
 //
 KD_CONTEXT KdpContext;
-BOOLEAN KdpControlCPressed;
-BOOLEAN KdpControlCWaiting;
 BOOLEAN KdpPortLocked;
 KSPIN_LOCK KdpDebuggerLock;
+BOOLEAN KdpControlCPressed;
 
 //
 // Debug Trap Handlers

@@ -86,12 +86,12 @@ KdPollBreakIn(VOID)
         _disable();
 
         /* Check if a CTRL-C is in the queue */
-        if (KdpControlCWaiting)
+        if (KdpContext.KdpControlCPending)
         {
             /* Set it and prepare for break */
             KdpControlCPressed = TRUE;
             DoBreak = TRUE;
-            KdpControlCWaiting = FALSE;
+            KdpContext.KdpControlCPending = FALSE;
         }
         else
         {
