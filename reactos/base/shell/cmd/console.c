@@ -89,7 +89,6 @@ VOID ConInKey (PINPUT_RECORD lpBuffer)
 }
  
  
- 
 VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 {
 	DWORD dwOldMode;
@@ -238,7 +237,7 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 {
 	INT len;
-	PTCHAR pBuf;
+	PCHAR pBuf;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	DWORD dwWritten;
@@ -261,30 +260,35 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 		LineCount = 0;
  
   /* rest LineCount and return if no string have been given */
-        if (szFormat == NULL)
-                return 0;
+	if (szFormat == NULL)
+		return 0;
  
  
 	//get the size of the visual screen that can be printed too
 	if (!GetConsoleScreenBufferInfo(hConsole, &csbi))
-        {
-                // we assuming its a file handle
-                ConPrintf(szFormat, arg_ptr, nStdHandle);
-                return 0;
-        }
+	{
+		// we assuming its a file handle
+		ConPrintf(szFormat, arg_ptr, nStdHandle);
+		return 0;
+	}
 	//subtract 2 to account for "press any key..." and for the blank line at the end of PagePrompt()
 	ScreenLines = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
 	ScreenCol = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
  
 	//make sure they didnt make the screen to small 
 	if(ScreenLines<4)
-        {
-	        ConPrintf(szFormat, arg_ptr, nStdHandle);
-                return 0;
-        }
+	{
+		ConPrintf(szFormat, arg_ptr, nStdHandle);
+		return 0;
+	}
  
 	len = _vstprintf (szOut, szFormat, arg_ptr);
+#ifdef _UNICODE
+	pBuf = malloc(len + 1);
+	len = WideCharToMultiByte( OutputCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+#else
 	pBuf = szOut;
+#endif
  
 	for(i = 0; i < len; i++)
 	{ 
@@ -309,19 +313,22 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
  
                 /* FIXME : write more that one char at time */
                 WriteFile (GetStdHandle (nStdHandle),&pBuf[i],sizeof(CHAR),&dwWritten,NULL);
-	        if(LineCount >= ScreenLines)
-	        {
-                        if(_tcsnicmp(&pBuf[i], _T("\n"), 2)!=0)
+		if(LineCount >= ScreenLines)
+		{
+			if(_strnicmp(&pBuf[i], "\n", 2)!=0)
                         WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(CHAR),&dwWritten,NULL); 
  
-		        if(PagePrompt() != PROMPT_YES)
-		        {
-			        return 1;
-		        }
-		        //reset the number of lines being printed         
-		        LineCount = 0;
+			if(PagePrompt() != PROMPT_YES)
+			{
+#ifdef _UNICODE
+				free(pBuf);
+#endif
+				return 1;
+			}
+			//reset the number of lines being printed         
+			LineCount = 0;
                         CharEL=0;
-	        }
+		}
  
 	}
  
