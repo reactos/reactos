@@ -16,13 +16,62 @@
 
 VOID
 NTAPI
+KdpQueryMemory(IN PDBGKD_MANIPULATE_STATE64 State,
+               IN PCONTEXT Context)
+{
+    PDBGKD_QUERY_MEMORY Memory = &State->u.QueryMemory;
+    STRING Header;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Validate the address space */
+    if (Memory->AddressSpace == DBGKD_QUERY_MEMORY_VIRTUAL)
+    {
+        /* Check if this is process memory */
+        if ((PVOID)(LONG_PTR)Memory->Address < MmHighestUserAddress)
+        {
+            /* It is */
+            Memory->AddressSpace = DBGKD_QUERY_MEMORY_PROCESS;
+        }
+        else
+        {
+            /* FIXME: Check if it's session space */
+            Memory->AddressSpace = DBGKD_QUERY_MEMORY_KERNEL;
+        }
+
+        /* Set flags */
+        Memory->Flags = DBGKD_QUERY_MEMORY_READ |
+                        DBGKD_QUERY_MEMORY_WRITE |
+                        DBGKD_QUERY_MEMORY_EXECUTE;
+    }
+    else
+    {
+        /* Invalid */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
+    /* Return structure */
+    State->ReturnStatus = Status;
+    Memory->Reserved = 0;
+
+    /* Build header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Send the packet */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
 KdpWriteBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
                    IN PSTRING Data,
                    IN PCONTEXT Context)
 {
     PDBGKD_WRITE_BREAKPOINT64 Breakpoint = &State->u.WriteBreakPoint;
     STRING Header;
-    NTSTATUS Status;
 
     /* Build header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
@@ -35,7 +84,12 @@ KdpWriteBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
     if (!Breakpoint->BreakPointHandle)
     {
         /* We failed */
-        Status = STATUS_UNSUCCESSFUL;
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+        /* Success! */
+        State->ReturnStatus = STATUS_SUCCESS;
     }
 
     /* Send the packet */
@@ -816,9 +870,8 @@ SendPacket:
 
             case DbgKdQueryMemoryApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdQueryMemoryApi);
-                while (TRUE);
+                /* Query memory */
+                KdpQueryMemory(&ManipulateState, Context);
                 break;
 
             case DbgKdSwitchPartition:

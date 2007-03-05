@@ -126,6 +126,22 @@
 #define DBGKD_64BIT_PROTOCOL_VERSION2       6
 
 //
+// Query Memory Address Spaces
+//
+#define DBGKD_QUERY_MEMORY_VIRTUAL          0
+#define DBGKD_QUERY_MEMORY_PROCESS          0
+#define DBGKD_QUERY_MEMORY_SESSION          1
+#define DBGKD_QUERY_MEMORY_KERNEL           2
+
+//
+// Query Memory Flags
+//
+#define DBGKD_QUERY_MEMORY_READ             0x01
+#define DBGKD_QUERY_MEMORY_WRITE            0x02
+#define DBGKD_QUERY_MEMORY_EXECUTE          0x04
+#define DBGKD_QUERY_MEMORY_FIXED            0x08
+
+//
 // KD Packet Structure
 //
 typedef struct _KD_PACKET
