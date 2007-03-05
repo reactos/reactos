@@ -811,6 +811,26 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   RtlInitUnicodeString(&StdDriver, L"DISPLAY");
 
+  if (Driver != NULL)
+  {
+    DPRINT1("NAME Driver: %wZ\n", Driver);
+  }
+  else
+  {
+      DPRINT1("NAME Driver: NULL\n", Driver);
+  }
+
+
+  if (Driver != NULL)
+  {
+    DPRINT1("NAME Device: %wZ\n", Device);
+  }
+  else
+  {
+      DPRINT1("NAME Device: NULL\n", Device);
+  }
+
+
   if (NULL == Driver || 0 == RtlCompareUnicodeString(Driver, &StdDriver, TRUE))
     {
       if (CreateAsIC)
@@ -853,7 +873,8 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   if (Driver != NULL && Driver->Buffer != NULL)
   {
-    DPRINT("NAME: %wZ\n", Driver); // FIXME: Should not crash if NULL
+    if (Driver!=NULL)
+        DPRINT1("NAME: %wZ\n", Driver);
   }
 
   /*  Allocate a DC object  */
@@ -962,9 +983,12 @@ NtGdiCreateDC(PUNICODE_STRING Driver,
     Status = IntSafeCopyUnicodeString(&SafeDevice, Device);
     if(!NT_SUCCESS(Status))
     {
-      RtlFreeUnicodeString(&SafeDriver);
-      SetLastNtError(Status);
-      return NULL;
+      /* FIXME workaround for a real bug */
+      // RtlFreeUnicodeString(&SafeDriver);
+      // SetLastNtError(Status);
+      // DPRINT1("fail3\n");
+      // return NULL;
+      Device = NULL;
     }
   }
 
