@@ -78,10 +78,6 @@ typedef struct _KD_PORT_INFORMATION
 
 
 /* GLOBAL VARIABLES *********************************************************/
-#define KdComPortInUse _KdComPortInUse
-
-ULONG KdComPortInUse = 0;
-
 
 /* STATIC VARIABLES *********************************************************/
 
@@ -272,7 +268,7 @@ KdPortInitialize (
         /*
          * set global info
          */
-        KdComPortInUse = (ULONG)PortBase;
+        *KdComPortInUse = PortBase;
 
         /*
          * print message to blue screen

@@ -12,6 +12,19 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GCC's incompetence strikes again */
+FORCEINLINE
+VOID
+sprintf_nt(IN PCHAR Buffer,
+           IN PCHAR Format,
+           IN ...)
+{
+    va_list ap;
+    va_start(ap, Format);
+    sprintf(Buffer, Format, ap);
+    va_end(ap);
+}
+
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY PsLoadedModuleList;
@@ -21,6 +34,33 @@ KMUTANT MmSystemLoadLock;
 extern ULONG NtGlobalFlag;
 
 /* FUNCTIONS *****************************************************************/
+
+PVOID
+NTAPI
+MiCacheImageSymbols(IN PVOID BaseAddress)
+{
+    ULONG DebugSize;
+    PVOID DebugDirectory = NULL;
+    PAGED_CODE();
+
+    /* Make sure it's safe to access the image */
+    _SEH_TRY
+    {
+        /* Get the debug directory */
+        DebugDirectory = RtlImageDirectoryEntryToData(BaseAddress,
+                                                      TRUE,
+                                                      IMAGE_DIRECTORY_ENTRY_DEBUG,
+                                                      &DebugSize);
+    }
+    _SEH_HANDLE
+    {
+        /* Nothing */
+    }
+    _SEH_END;
+
+    /* Return the directory */
+    return DebugDirectory;
+}
 
 VOID
 NTAPI
@@ -729,7 +769,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
     PCHAR MissingApiBuffer = *MissingApi, ImportName;
     PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor, CurrentImport;
     ULONG ImportSize, ImportCount = 0, LoadedImportsSize, ExportSize;
-    PLOAD_IMPORTS LoadedImports;
+    PLOAD_IMPORTS LoadedImports, NewImports;
     ULONG GdiLink, NormalLink, i;
     BOOLEAN ReferenceNeeded, Loaded;
     ANSI_STRING TempString;
@@ -1056,9 +1096,32 @@ CheckDllState:
         }
         else if (ImportCount != LoadedImports->Count)
         {
-            /* FIXME: Can this happen? */
-            DPRINT1("Unhandled scenario\n");
-            while (TRUE);
+            /* Allocate a new list */
+            LoadedImportsSize = ImportCount * sizeof(PVOID) + sizeof(SIZE_T);
+            NewImports = ExAllocatePoolWithTag(PagedPool,
+                                               LoadedImportsSize,
+                                               TAG_LDR_WSTR);
+            if (NewImports)
+            {
+                /* Set count */
+                NewImports->Count = ImportCount;
+
+                /* Loop all the imports */
+                for (i = 0, ImportCount = 0; i < LoadedImports->Count; i++)
+                {
+                    /* Make sure it's valid */
+                    if (LoadedImports->Entry[i])
+                    {
+                        /* Copy it */
+                        NewImports->Entry[i] = LoadedImports->Entry[i];
+                        ImportCount++;
+                    }
+                }
+
+                /* Free the old copy */
+                ExFreePool(LoadedImports);
+                LoadedImports = NewImports;
+            }
         }
 
         /* Return the list */
@@ -1400,9 +1463,9 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     PIMAGE_NT_HEADERS NtHeader;
-    UNICODE_STRING BaseName, BaseDirectory, PrefixName;
+    UNICODE_STRING BaseName, BaseDirectory, PrefixName, UnicodeTemp;
     PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
-    ULONG EntrySize;
+    ULONG EntrySize, DriverSize;
     PLOAD_IMPORTS LoadedImports = (PVOID)-2;
     PCHAR MissingApiName, Buffer;
     PWCHAR MissingDriverName;
@@ -1411,6 +1474,8 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     PVOID Section = NULL;
     BOOLEAN LockOwned = FALSE;
     PLIST_ENTRY NextEntry;
+    IMAGE_INFO ImageInfo;
+    ANSI_STRING AnsiTemp;
     PAGED_CODE();
 
     /* Detect session-load */
@@ -1637,6 +1702,23 @@ LoaderScan:
                                 NULL);
     ASSERT(Status != STATUS_ALREADY_COMMITTED);
 
+    /* Get the size of the driver */
+    DriverSize = ((PROS_SECTION_OBJECT)Section)->ImageSection->ImageSize;
+
+    /* Make sure we're not being loaded into session space */
+    if (!Flags)
+    {
+        /* Check for success */
+        if (NT_SUCCESS(Status))
+        {
+            /* FIXME: Support large pages for drivers */
+        }
+
+        /* Dereference the section */
+        ObDereferenceObject(Section);
+        Section = NULL;
+    }
+
     /* Get the NT Header */
     NtHeader = RtlImageNtHeader(ModuleLoadBase);
 
@@ -1681,7 +1763,7 @@ LoaderScan:
     LdrEntry->DllBase = ModuleLoadBase;
     LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)ModuleLoadBase +
                                    NtHeader->OptionalHeader.AddressOfEntryPoint);
-    LdrEntry->SizeOfImage = ((PROS_SECTION_OBJECT)Section)->ImageSection->ImageSize;
+    LdrEntry->SizeOfImage = DriverSize;
     LdrEntry->CheckSum = NtHeader->OptionalHeader.CheckSum;
     LdrEntry->SectionPointer = LdrEntry;
 
@@ -1749,6 +1831,66 @@ LoaderScan:
         goto Quickie;
     }
 
+    /* Update the loader entry */
+    LdrEntry->Flags |= (LDRP_SYSTEM_MAPPED |
+                        LDRP_ENTRY_PROCESSED |
+                        LDRP_MM_LOADED);
+    LdrEntry->Flags &= ~LDRP_LOAD_IN_PROGRESS;
+    LdrEntry->LoadedImports = LoadedImports;
+
+    /* FIXME: Apply driver verifier */
+
+    /* FIXME: Write-protect the system image */
+
+    /* Check if notifications are enabled */
+    if (PsImageNotifyEnabled)
+    {
+        /* Fill out the notification data */
+        ImageInfo.Properties = 0;
+        ImageInfo.ImageAddressingMode = IMAGE_ADDRESSING_MODE_32BIT;
+        ImageInfo.SystemModeImage = TRUE;
+        ImageInfo.ImageSize = LdrEntry->SizeOfImage;
+        ImageInfo.ImageBase = LdrEntry->DllBase;
+        ImageInfo.ImageSectionNumber = ImageInfo.ImageSelector = 0;
+
+        /* Send the notification */
+        PspRunLoadImageNotifyRoutines(FileName, NULL, &ImageInfo);
+    }
+
+    /* Check if there's symbols */
+    if (MiCacheImageSymbols(LdrEntry->DllBase))
+    {
+        /* Check if the system root is present */
+        if ((PrefixName.Length > (11 * sizeof(WCHAR))) &&
+            !(_wcsnicmp(PrefixName.Buffer, L"\\SystemRoot", 11)))
+        {
+            /* Add the system root */
+            UnicodeTemp = PrefixName;
+            UnicodeTemp.Buffer += 11;
+            UnicodeTemp.Length -= (11 * sizeof(WCHAR));
+            sprintf_nt(Buffer,
+                       "%ws%wZ",
+                       &SharedUserData->NtSystemRoot[2],
+                       &UnicodeTemp);
+        }
+        else
+        {
+            /* Build the name */
+            sprintf_nt(Buffer, "%wZ", &BaseName);
+        }
+
+        /* Setup the ansi string */
+        RtlInitString(&AnsiTemp, Buffer);
+
+        /* Notify the debugger */
+        DbgLoadImageSymbols(&AnsiTemp, LdrEntry->DllBase, -1);
+        LdrEntry->Flags |= LDRP_DEBUG_SYMBOLS_LOADED;
+    }
+
+    /* FIXME: Page the driver */
+    ASSERT(Section == NULL);
+
+    /* Return pointers */
     if (ModuleObject) *ModuleObject = LdrEntry;
     if (ImageBaseAddress) *ImageBaseAddress = LdrEntry->DllBase;
 
