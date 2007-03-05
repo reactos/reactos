@@ -221,6 +221,13 @@ KdpDeleteBreakpoint(
     IN ULONG BpEntry
 );
 
+BOOLEAN
+NTAPI
+KdpDeleteBreakpointRange(
+    IN PVOID Base,
+    IN PVOID Limit
+);
+
 //
 // Global KD Data
 //
@@ -262,3 +269,5 @@ extern BOOLEAN KdpOweBreakpoint;
 extern BOOLEAN BreakpointsSuspended;
 extern ULONG KdpNumInternalBreakpoints;
 extern ULONG KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
+extern ULONG TraceDataBuffer[40];
+extern ULONG TraceDataBufferPosition;

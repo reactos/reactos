@@ -56,6 +56,12 @@ ULONG KdpNumInternalBreakpoints;
 ULONG KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
 
 //
+// Tracepoint Data
+//
+ULONG TraceDataBuffer[40];
+ULONG TraceDataBufferPosition = 1;
+
+//
 // Time Slip Support
 //
 KDPC KdpTimeSlipDpc;

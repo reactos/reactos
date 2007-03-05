@@ -16,6 +16,21 @@
 
 VOID
 NTAPI
+DumpTraceData(IN PSTRING TraceData)
+{
+    /* Update the buffer */
+    TraceDataBuffer[0] = TraceDataBufferPosition;
+
+    /* Setup the trace data */
+    TraceData->Length = TraceDataBufferPosition * sizeof(ULONG);
+    TraceData->Buffer = (PCHAR)TraceDataBuffer;
+
+    /* Reset the buffer location */
+    TraceDataBufferPosition = 1;
+}
+
+VOID
+NTAPI
 KdpGetStateChange(IN PDBGKD_MANIPULATE_STATE64 State,
                   IN PCONTEXT Context)
 {
@@ -87,13 +102,10 @@ KdpSetCommonState(IN ULONG NewState,
     WaitStateChange->ControlReport.InstructionCount = InstructionCount;
 
     /* Clear all the breakpoints in this region */
-    HadBreakpoints = FALSE;
-#if 0
-        KdpDeleteBreakpointRange((PVOID)WaitStateChange->ProgramCounter,
-                                 (PVOID)(WaitStateChange->ProgramCounter +
-                                         WaitStateChange->ControlReport.
-                                         InstructionCount - 1));
-#endif
+    HadBreakpoints =
+        KdpDeleteBreakpointRange((PVOID)(LONG_PTR)WaitStateChange->ProgramCounter,
+                                 (PVOID)((ULONG)WaitStateChange->ProgramCounter +
+                                         WaitStateChange->ControlReport.InstructionCount - 1));
     if (HadBreakpoints)
     {
         /* Copy the instruction stream again, this time without breakpoints */
@@ -190,12 +202,7 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
     }
 #endif
 
-    if ((ULONG_PTR)State->u.ReadMemory.TargetBaseAddress < KSEG0_BASE)
-    {
-        Length = 0;
-        Status = STATUS_UNSUCCESSFUL;
-    }
-    else if ((ULONG_PTR)State->u.ReadMemory.TargetBaseAddress >= (ULONG_PTR)SharedUserData)
+    if (!State->u.ReadMemory.TargetBaseAddress)
     {
         Length = 0;
         Status = STATUS_UNSUCCESSFUL;
@@ -900,6 +907,9 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
         Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64);
         Header.Buffer = (PCHAR)&WaitStateChange;
 
+        /* Setup the trace data */
+        DumpTraceData(&Data);
+
         /* Send State Change packet and wait for a reply */
         Status = KdpSendWaitContinue(PACKET_TYPE_KD_STATE_CHANGE64,
                                      &Header,
@@ -971,13 +981,9 @@ KdpSwitchProcessor(IN PEXCEPTION_RECORD ExceptionRecord,
     KdSave(FALSE);
 
     /* Report a state change */
-#if 0
     Status = KdpReportExceptionStateChange(ExceptionRecord,
                                            ContextRecord,
                                            SecondChanceException);
-#else
-    Status = FALSE;
-#endif
 
     /* Restore the port data and return */
     KdRestore(FALSE);
