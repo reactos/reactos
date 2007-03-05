@@ -17,6 +17,7 @@
 KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 LARGE_INTEGER KiTimeIncrementReciprocal;
 UCHAR KiTimeIncrementShiftCount;
+BOOLEAN KiEnableTimerWatchdog;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

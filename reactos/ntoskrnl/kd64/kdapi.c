@@ -1157,8 +1157,8 @@ KdEnableDebugger(VOID)
 }
 
 /*
-* @unimplemented
-*/
+ * @unimplemented
+ */
 NTSTATUS
 NTAPI
 KdSystemDebugControl(IN SYSDBG_COMMAND Command,
@@ -1173,11 +1173,50 @@ KdSystemDebugControl(IN SYSDBG_COMMAND Command,
     return STATUS_SUCCESS;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+KdChangeOption(IN KD_OPTION Option,
+               IN ULONG InBufferBytes OPTIONAL,
+               IN PVOID InBuffer,
+               IN ULONG OutBufferBytes OPTIONAL,
+               OUT PVOID OutBuffer,
+               OUT PULONG OutBufferNeeded OPTIONAL)
+{
+    /* HACK */
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+KdPowerTransition(IN DEVICE_POWER_STATE NewState)
+{
+    /* HACK */
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+KdDisableDebugger(VOID)
+{
+    /* HACK */
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 NtQueryDebugFilterState(ULONG ComponentId,
                         ULONG Level)
 {
+    /* HACK */
     return STATUS_SUCCESS;
 }
 
@@ -1187,6 +1226,7 @@ NtSetDebugFilterState(ULONG ComponentId,
                       ULONG Level,
                       BOOLEAN State)
 {
+    /* HACK */
     return STATUS_SUCCESS;
 }
 

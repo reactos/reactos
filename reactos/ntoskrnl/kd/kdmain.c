@@ -19,6 +19,7 @@ BOOLEAN KdDebuggerNotPresent = TRUE;
 BOOLEAN KiEnableTimerWatchdog = FALSE;
 BOOLEAN KdBreakAfterSymbolLoad = FALSE;
 BOOLEAN KdpBreakPending;
+BOOLEAN KdPitchDebugger = TRUE;
 VOID STDCALL PspDumpThreads(BOOLEAN SystemThreads);
 
 typedef struct
@@ -232,22 +233,6 @@ STDCALL
 KdPollBreakIn(VOID)
 {
     return KdpBreakPending;
-}
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-KeEnterKernelDebugger(VOID)
-{
-    HalDisplayString("\n\n *** Entered kernel debugger ***\n");
-
-    /* Set the Variable */
-    KdEnteredDebugger = TRUE;
-
-    /* Halt the CPU */
-    for (;;) Ke386HaltProcessor();
 }
 
 /*

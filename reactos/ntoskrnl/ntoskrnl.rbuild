@@ -10,6 +10,9 @@
     <define name="__USE_W32API" />
     <define name="WIN9X_COMPAT_SPINLOCK" />
     <define name="_IN_KERNEL_" />
+    <if property="_WINKD_" value="1">
+        <define name="_WINKD_" />
+    </if>
     <include base="cmlib">.</include>
     <include base="ntoskrnl">include</include>
     <include base="ReactOS">include/reactos/drivers</include>

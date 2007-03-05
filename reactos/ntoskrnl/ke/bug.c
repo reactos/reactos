@@ -99,7 +99,7 @@ KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
         }
 
         /* Print it out */
-        if (!KeRosPrintAddress((PVOID)Addr)) DbgPrint("<%X>", Addr);
+        KiRosPrintAddress((PVOID)Addr);
 
         /* Go to the next frame */
         DbgPrint("\n");
@@ -148,7 +148,7 @@ KiInitializeBugCheck(VOID)
     }
 }
 
-VOID
+BOOLEAN
 NTAPI
 KeGetBugMessageText(IN ULONG BugCheckCode,
                     OUT PANSI_STRING OutputString OPTIONAL)
@@ -157,6 +157,10 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
     ULONG IdOffset;
     ULONG_PTR MessageEntry;
     PCHAR BugCode;
+    BOOLEAN Result = FALSE;
+
+    /* Make sure we're not bugchecking too early */
+    if (!KiBugCodeMessages) return Result;
 
     /* Find the message. This code is based on RtlFindMesssage */
     for (i = 0; i < KiBugCodeMessages->NumberOfBlocks; i++)
@@ -164,7 +168,7 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
         /* Check if the ID Matches */
         if ((BugCheckCode >= KiBugCodeMessages->Blocks[i].LowId) &&
             (BugCheckCode <= KiBugCodeMessages->Blocks[i].HighId))
-            {
+        {
             /* Get Offset to Entry */
             MessageEntry = KiBugCodeMessages->Blocks[i].OffsetToEntries +
                            (ULONG_PTR)KiBugCodeMessages;
@@ -182,22 +186,39 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
             BugCode = ((PRTL_MESSAGE_RESOURCE_ENTRY)MessageEntry)->Text;
             i = strlen(BugCode);
 
-            /* Return it in the OutputString */
+            /* Handle newlines */
+            while ((i > 0) && ((BugCode[i] == '\n') ||
+                               (BugCode[i] == '\r') ||
+                               (BugCode[i] == ANSI_NULL)))
+            {
+                /* Check if we have a string to return */
+                if (!OutputString) BugCode[i] = ANSI_NULL;
+                i--;
+            }
+
+            /* Check if caller wants an output string */
             if (OutputString)
             {
+                /* Return it in the OutputString */
                 OutputString->Buffer = BugCode;
-                OutputString->Length = i + 1;
-                OutputString->MaximumLength = i + 1;
+                OutputString->Length = (USHORT)i + 1;
+                OutputString->MaximumLength = (USHORT)i + 1;
             }
             else
             {
                 /* Direct Output to Screen */
                 InbvDisplayString(BugCode);
                 InbvDisplayString("\r");
-                break;
             }
+
+            /* We're done */
+            Result = TRUE;
+            break;
         }
     }
+
+    /* Return the result */
+    return Result;
 }
 
 VOID
@@ -489,7 +510,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     /* Print message for technical information */
     KeGetBugMessageText(BUGCHECK_TECH_INFO, NULL);
 
-    /* Show the techincal Data */
+    /* Show the technical Data */
     sprintf(AnsiName,
             "\r\n\r\n*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\r\n\r\n",
             KiBugCheckData[0],
@@ -819,6 +840,9 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     }
 
     /* Check if we need to save the context for KD */
+#ifdef _WINKD_
+    if (!KdPitchDebugger) KdDebuggerDataBlock.SavedContext = (ULONG)&Context;
+#endif
 
     /* Check if a debugger is connected */
     if ((BugCheckCode != MANUALLY_INITIATED_CRASH) && (KdDebuggerEnabled))
@@ -901,12 +925,14 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
                             AnsiName);
 
         /* Check if the debugger is disabled but we can enable it */
-        //if (!(KdDebuggerEnabled) && !(KdPitchDebugger))
+        if (!(KdDebuggerEnabled) && !(KdPitchDebugger))
         {
             /* Enable it */
-            //KdEnableDebuggerWithLock(FALSE);
+#ifdef _WINKD_
+            KdEnableDebuggerWithLock(FALSE);
+#endif
         }
-        //else
+        else
         {
             /* Otherwise, print the last line */
             InbvDisplayString("\r\n");
@@ -1114,6 +1140,32 @@ KeBugCheck(ULONG BugCheckCode)
 {
     /* Call the internal API */
     KeBugCheckWithTf(BugCheckCode, 0, 0, 0, 0, NULL);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeEnterKernelDebugger(VOID)
+{
+    /* Disable interrupts */
+    KiHardwareTrigger = 1;
+    _disable();
+
+    /* Check the bugcheck count */
+    if (!InterlockedDecrement(&KeBugCheckCount))
+    {
+        /* There was only one, is the debugger disabled? */
+        if (!(KdDebuggerEnabled) && !(KdPitchDebugger))
+        {
+            /* Enable the debugger */
+            KdInitSystem(0, NULL);
+        }
+    }
+
+    /* Bugcheck */
+    KiBugCheckDebugBreak(DBG_STATUS_FATAL);
 }
 
 /* EOF */
