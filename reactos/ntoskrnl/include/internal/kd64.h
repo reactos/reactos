@@ -228,6 +228,12 @@ KdpDeleteBreakpointRange(
     IN PVOID Limit
 );
 
+ULONG
+NTAPI
+KdpAddBreakpoint(
+    IN PVOID Address
+);
+
 //
 // Global KD Data
 //

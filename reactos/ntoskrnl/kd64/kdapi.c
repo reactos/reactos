@@ -16,6 +16,37 @@
 
 VOID
 NTAPI
+KdpWriteBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
+                   IN PSTRING Data,
+                   IN PCONTEXT Context)
+{
+    PDBGKD_WRITE_BREAKPOINT64 Breakpoint = &State->u.WriteBreakPoint;
+    STRING Header;
+    NTSTATUS Status;
+
+    /* Build header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /* Create the breakpoint */
+    Breakpoint->BreakPointHandle =
+        KdpAddBreakpoint((PVOID)(LONG_PTR)Breakpoint->BreakPointAddress);
+    if (!Breakpoint->BreakPointHandle)
+    {
+        /* We failed */
+        Status = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Send the packet */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
 DumpTraceData(IN PSTRING TraceData)
 {
     /* Update the buffer */
@@ -545,9 +576,8 @@ SendPacket:
 
             case DbgKdWriteBreakPointApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteBreakPointApi);
-                while (TRUE);
+                /* Write the breakpoint */
+                KdpWriteBreakpoint(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdRestoreBreakPointApi:

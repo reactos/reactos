@@ -14,6 +14,54 @@
 
 /* FUNCTIONS *****************************************************************/
 
+ULONG
+NTAPI
+KdpAddBreakpoint(IN PVOID Address)
+{
+    UCHAR Content;
+    ULONG i;
+
+    /* Loop current breakpoints */
+    for (i = 0; i < 20; i++)
+    {
+        /* Check if the breakpoint is valid */
+        if ((KdpBreakpointTable[i].Flags & KdpBreakpointActive) &&
+            (KdpBreakpointTable[i].Address == Address))
+        {
+            /* Check if it's pending */
+            if ((KdpBreakpointTable[i].Flags & KdpBreakpointPending))
+            {
+                /* It's not pending anymore now */
+                KdpBreakpointTable[i].Flags &= ~KdpBreakpointPending;
+                return i + 1;
+            }
+            else
+            {
+                /* Fail */
+                return 0;
+            }
+        }
+    }
+
+    /* Find a free entry */
+    for (i = 0; i < 20; i++) if (!(KdpBreakpointTable[i].Flags)) break;
+
+    /* Fail if no free entry was found */
+    if (i == 20) return 0;
+
+    /* Save the old instruction */
+    RtlCopyMemory(&Content, Address, sizeof(UCHAR));
+
+    /* Write the entry */
+    KdpBreakpointTable[i].Address = Address;
+    KdpBreakpointTable[i].Content = Content;
+    KdpBreakpointTable[i].Flags = KdpBreakpointActive;
+
+    /* Write the INT3 and return the handle */
+    RtlCopyMemory(Address, &KdpBreakpointInstruction, sizeof(UCHAR));
+    return i + 1;
+}
+
 BOOLEAN
 NTAPI
 KdpLowWriteContent(IN ULONG BpIndex)
