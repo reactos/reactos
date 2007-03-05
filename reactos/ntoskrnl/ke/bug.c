@@ -1154,7 +1154,7 @@ KeEnterKernelDebugger(VOID)
     _disable();
 
     /* Check the bugcheck count */
-    if (!InterlockedDecrement(&KeBugCheckCount))
+    if (!InterlockedDecrement((PLONG)&KeBugCheckCount))
     {
         /* There was only one, is the debugger disabled? */
         if (!(KdDebuggerEnabled) && !(KdPitchDebugger))
