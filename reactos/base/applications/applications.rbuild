@@ -13,9 +13,6 @@
 <directory name="cmdutils">
 	<xi:include href="cmdutils/cmdutils.rbuild" />
 </directory>
-<directory name="devmgmt">
-	<xi:include href="devmgmt/devmgmt.rbuild" />
-</directory>
 <directory name="devmgr">
 	<xi:include href="devmgr/devmgr.rbuild" />
 </directory>
@@ -66,9 +63,6 @@
 </directory>
 <directory name="screenshot">
 	<xi:include href="screenshot/screenshot.rbuild" />
-</directory>
-<directory name="servman">
-	<xi:include href="servman/servman.rbuild" />
 </directory>
 <directory name="shutdown">
 	<xi:include href="shutdown/shutdown.rbuild" />
