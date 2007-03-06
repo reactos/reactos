@@ -131,6 +131,3 @@
 	<linkerflag>-nostdlib</linkerflag>
 	<file>kernel32.rc</file>
 </module>
-<directory name="tests">
-	<xi:include href="tests/kernel32.rbuild" />
-</directory>
