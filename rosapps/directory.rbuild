@@ -13,9 +13,6 @@
 <directory name="dflat32">
 	<xi:include href="dflat32/dflat32.rbuild" />
 </directory>
-<directory name="dxtest">
-	<xi:include href="dxtest/directory.rbuild" />
-</directory>
 <!--
 <directory name="lib">
 	<xi:include href="lib/directory.rbuild" />
@@ -45,9 +42,6 @@
 
 <directory name="templates">
 	<xi:include href="templates/directory.rbuild" />
-</directory>
-<directory name="tests">
-	<xi:include href="tests/directory.rbuild" />
 </directory>
 
 
