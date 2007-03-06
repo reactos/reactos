@@ -1,0 +1,8 @@
+/* Automatically generated -- do not edit! */
+#include "resource.h"
+STRINGTABLE {
+0 "advapi32_test.exe"
+1 "comctl32_test.exe"
+}
+0 TESTRES "../../../../../output-i386/regtests/winetest/advapi32/advapi32_test.exe"
+1 TESTRES "output-i386/regtests/winetest/comctl32/comctl32_test.exe"
