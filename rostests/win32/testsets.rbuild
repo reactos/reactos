@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <group>
+<directory name="cmd">
+	<xi:include href="cmd/cmd_test.rbuild" />
+</directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/directory.rbuild" />
 </directory>
@@ -12,5 +15,8 @@
 </directory>
 <directory name="user32">
 	<xi:include href="user32/user32.rbuild" />
+</directory>
+<directory name="win32k">
+	<xi:include href="win32k/win32k.rbuild" />
 </directory>
 </group>
