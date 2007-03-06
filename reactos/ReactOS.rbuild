@@ -98,9 +98,6 @@
   <directory name="ntoskrnl">
     <xi:include href="ntoskrnl/ntoskrnl.rbuild" />
   </directory>
-  <directory name="regtests">
-    <xi:include href="regtests/directory.rbuild" />
-  </directory>  
   <directory name="subsystems">
     <xi:include href="subsystems/subsystems.rbuild" />
   </directory>
