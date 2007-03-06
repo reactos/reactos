@@ -1,4 +1,10 @@
-/* Compile with gcc -o queuetest.exe queuetest.c */
+/*
+ * PROJECT:         ReactOS Tests
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            queuetest.c
+ * PURPOSE:         Usermode QueueUserWorkItem() testing
+ * PROGRAMMERS:     Thomas Weidenmueller (w3seek@reactos.org)
+ */
 
 #include <windows.h>
 #include <stdio.h>
