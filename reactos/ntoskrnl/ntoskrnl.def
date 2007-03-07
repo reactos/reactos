@@ -845,8 +845,8 @@ NtWriteFile@36
 ;
 ; Object Manager
 ObAssignSecurity@16
-;ObCheckCreateObjectAccess@28
-;ObCheckObjectAccess@20
+ObCheckCreateObjectAccess@28
+ObCheckObjectAccess@20
 ObCloseHandle@8
 ObCreateObject@36
 ObCreateObjectType@16
