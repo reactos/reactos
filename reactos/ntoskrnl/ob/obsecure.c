@@ -217,7 +217,7 @@ ObpCheckObjectReference(IN PVOID Object,
 /*++
 * @name ObCheckObjectAccess
 *
-*     The ObAssignSecurity routine <FILLMEIN>
+*     The ObCheckObjectAccess routine <FILLMEIN>
 *
 * @param Object
 *        <FILLMEIN>
