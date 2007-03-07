@@ -30,8 +30,6 @@
 #	include <stddef.h>
 #endif
 
-unsigned long __cdecl DbgPrint(const char * format, ...);
-
 /*
 	Fall back to non-optimal, non-native NLG implementation for environments
 	without their own (e.g., currently, kernel-mode ReactOS/Windows). THIS IS NOT
@@ -74,7 +72,6 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 )
 {
 	_SEHTryLevel_t * mytrylevel;
-	DbgPrint("_SEHCompilerSpecificHandler(%p)\n", trylevel);
 	mytrylevel = _SEH_CONTAINING_RECORD(trylevel, _SEHTryLevel_t, ST_Header);
 	_SEHLongJmp(mytrylevel->ST_JmpBuf, 1);
 }
