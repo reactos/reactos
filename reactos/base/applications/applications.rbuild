@@ -40,6 +40,9 @@
 <directory name="msconfig">
 	<xi:include href="msconfig/msconfig.rbuild" />
 </directory>
+<directory name="mscutils">
+	<xi:include href="mscutils/directory.rbuild" />
+</directory>
 <directory name="network">
 	<xi:include href="network/network.rbuild" />
 </directory>

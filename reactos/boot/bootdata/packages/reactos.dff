@@ -37,7 +37,7 @@ base\applications\cmdutils\find\find.exe            1
 base\applications\cmdutils\more\more.exe            1
 base\applications\control\control.exe               1
 base\applications\devmgr\devmgrapp.exe              1
-base\applications\devmgmt\devmgmt.exe               1
+base\applications\mscutils\devmgmt\devmgmt.exe      1
 base\applications\downloader\downloader.exe         1
 base\applications\games\solitaire\sol.exe           1
 base\applications\games\winemine\winemine.exe       1
@@ -64,7 +64,7 @@ base\applications\regedit\clb\clb.dll               1
 base\applications\sc\sc.exe                         1
 base\applications\screenshot\screenshot.exe         1
 base\applications\screensavers\matrix\matrix.scr    1
-base\applications\servman\servman.exe               1
+base\applications\mscutils\servman\servman.exe      1
 base\applications\shutdown\shutdown.exe             1
 base\applications\sm\sm.exe                         1
 base\applications\sndvol32\sndvol32.exe             1
@@ -420,25 +420,6 @@ subsystems\win\winsrv\winsrv.dll                    1   optional
 subsystems\ntvdm\ntvdm.exe                          1
 subsystems\win32\win32k\win32k.sys                  1
 
-
-; Winetests
-regtests\winetests\advapi32\advapi32_winetest.exe   7
-regtests\winetests\cabinet\cabinet_winetest.exe     7
-regtests\winetests\comctl32\comctl32_winetest.exe   7
-regtests\winetests\gdi32\gdi32_winetest.exe         7
-regtests\winetests\icmp\icmp_winetest.exe           7 
-regtests\winetests\kernel32\kernel32_winetest.exe   7
-regtests\winetests\lz32\lz32_winetest.exe           7
-regtests\winetests\msi\msi_winetest.exe             7
-regtests\winetests\msvcrt\msvcrt_winetest.exe       7
-regtests\winetests\ntdll\ntdll_winetest.exe         7
-regtests\winetests\powrprof\powrprof_winetest.exe   7
-regtests\winetests\psapi\psapi_winetest.exe         7
-regtests\winetests\setupapi\setupapi_winetest.exe   7
-regtests\winetests\shell32\shell32_winetest.exe     7
-regtests\winetests\shlwapi\shlwapi_winetest.exe     7
-regtests\winetests\user32\user32_winetest.exe       7
-regtests\winetests\version\version_winetest.exe     7
 boot\bootdata\bootcdregtest\testboot.bat            7   optional
 tools\dbgprint\dbgprint.exe                         7   optional
 
@@ -471,3 +452,21 @@ modules\rosapps\sysutils\pedump\pedump.exe          1   optional
 modules\rosapps\sysutils\regexpl\regexpl.exe        1   optional
 modules\rosapps\sysutils\tcat\cat.exe               1   optional
 modules\rosapps\sysutils\tlist\tlist.exe            1   optional
+modules\rostests\winetests\advapi32\advapi32_winetest.exe   7   optional
+modules\rostests\winetests\cabinet\cabinet_winetest.exe     7   optional
+modules\rostests\winetests\comctl32\comctl32_winetest.exe   7   optional
+modules\rostests\winetests\gdi32\gdi32_winetest.exe         7   optional
+modules\rostests\winetests\icmp\icmp_winetest.exe           7   optional
+modules\rostests\winetests\kernel32\kernel32_winetest.exe   7   optional
+modules\rostests\winetests\lz32\lz32_winetest.exe           7   optional
+modules\rostests\winetests\msi\msi_winetest.exe             7   optional
+modules\rostests\winetests\msvcrt\msvcrt_winetest.exe       7   optional
+modules\rostests\winetests\ntdll\ntdll_winetest.exe         7   optional
+modules\rostests\winetests\powrprof\powrprof_winetest.exe   7   optional
+modules\rostests\winetests\psapi\psapi_winetest.exe         7   optional
+modules\rostests\winetests\setupapi\setupapi_winetest.exe   7   optional
+modules\rostests\winetests\shell32\shell32_winetest.exe     7   optional
+modules\rostests\winetests\shlwapi\shlwapi_winetest.exe     7   optional
+modules\rostests\winetests\user32\user32_winetest.exe       7   optional
+modules\rostests\winetests\usp10\usp10_winetest.exe         7   optional
+modules\rostests\winetests\version\version_winetest.exe     7   optional
