@@ -984,7 +984,31 @@ static void DefWndPrint( HWND hwnd, HDC hdc, ULONG uFlags)
 VOID FASTCALL
 DefWndScreenshot(HWND hWnd)
 {
-
+    RECT rect;
+    
+    OpenClipboard(hWnd);
+    EmptyClipboard();
+    
+    HDC hdc = GetWindowDC(hWnd);
+    GetWindowRect(hWnd, &rect);
+    INT w = rect.right - rect.left;
+    INT h = rect.bottom - rect.top;
+    
+    HBITMAP hbitmap = CreateCompatibleBitmap(hdc, w, h);
+    HDC hdc2 = CreateCompatibleDC(hdc);
+    SelectObject(hdc2, hbitmap);
+    
+    BitBlt(hdc2, 0, 0, w, h,
+           hdc, 0, 0,
+           SRCCOPY);
+           
+    SetClipboardData(CF_BITMAP, hbitmap);
+    
+    ReleaseDC(hWnd, hdc);
+    ReleaseDC(hWnd, hdc2);
+    
+    CloseClipboard();
+    
 }
 
 
@@ -1349,7 +1373,12 @@ User32DefWindowProc(HWND hWnd,
                 }
                 else if (wParam == VK_SNAPSHOT)
                 {
-                    DefWndScreenshot(hWnd);
+                    HWND hwnd = hWnd;
+                    while (GetParent(hwnd) != NULL)
+                    {
+                        hwnd = GetParent(hwnd);
+                    }
+                    DefWndScreenshot(hwnd);
                 }
             }
             else if( wParam == VK_F10 )

@@ -342,6 +342,7 @@ NtUserEnableScrollBar                   3
 NtUserEndDeferWindowPosEx               2
 NtUserEndMenu                           0
 NtUserEndPaint                          2
+NtUserEnumClipboardFormats              1 
 NtUserEnumDisplayDevices                4
 NtUserEnumDisplayMonitors               5
 NtUserEnumDisplaySettings               4
@@ -461,6 +462,7 @@ NtUserReleaseDC				2
 NtUserRealChildWindowFromPoint          3
 NtUserRedrawWindow                      4
 NtUserRegisterClassEx                   6
+NtUserRegisterClipboardFormat           1 
 NtUserRegisterHotKey                    4
 NtUserRegisterTasklist                  1
 NtUserRegisterWindowMessage             1

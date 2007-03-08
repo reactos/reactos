@@ -30,7 +30,7 @@
 
 #include <w32k.h>
 
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 
 /* dialog resources appear to pass this in 16 bits, handle them properly */
@@ -460,6 +460,8 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
    RtlFreeUnicodeString(&Window->WindowName);
 
    UserDerefObject(Window);
+
+   IntClipboardFreeWindow(Window); 
 
    return 0;
 }
@@ -1888,16 +1890,18 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    /* Calculate the non-client size. */
    MaxPos.x = Window->WindowRect.left;
    MaxPos.y = Window->WindowRect.top;
+
+   
    DPRINT("IntCreateWindowEx(): About to get non-client size.\n");
    /* WinPosGetNonClientSize SENDS THE WM_NCCALCSIZE message */
    Result = co_WinPosGetNonClientSize(Window,
                                       &Window->WindowRect,
                                       &Window->ClientRect);
 
-                                      
    IntGdiOffsetRect(&Window->WindowRect,
                     MaxPos.x - Window->WindowRect.left,
                     MaxPos.y - Window->WindowRect.top);
+
 
    if (NULL != ParentWindow)
    {

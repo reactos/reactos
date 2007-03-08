@@ -517,7 +517,13 @@ NtUserCreateWindowStation(
    CurInfo->DblClickHeight = 4;
 
    WindowStationObject->SystemCursor = CurInfo;
-
+    
+    
+   if (!IntSetupClipboard(WindowStationObject))
+   {
+       DPRINT1("WindowStation: Error Setting up the clipboard!!!\n");
+   }   
+    
    if (!IntSetupCurIconHandles(WindowStationObject))
    {
       DPRINT1("Setting up the Cursor/Icon Handle table failed!\n");

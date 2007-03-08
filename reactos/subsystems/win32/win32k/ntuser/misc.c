@@ -308,10 +308,10 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
          RETURN( (DWORD)IntSetCaretBlinkTime((UINT)Param));
-
+/*
       case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
-         RETURN( (DWORD)IntEnumClipboardFormats((UINT)Param));
-
+         RETURN( (DWORD)NtUserEnumClipboardFormats((UINT)Param));
+*/
       case ONEPARAM_ROUTINE_GETWINDOWINSTANCE:
          {
             PWINDOW_OBJECT Window;

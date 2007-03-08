@@ -969,6 +969,8 @@ co_WinPosSetWindowPos(
    }
 
    WvrFlags = co_WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect, &NewClientRect);
+    
+    //DPRINT1("co_WinPosDoNCCALCSize");
 
    /* Relink windows. (also take into account shell window in hwndShellWindow) */
    if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != UserGetShellWindow())
@@ -1385,7 +1387,8 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
          break;
 
       case SW_SHOWNOACTIVATE:
-         Swp |= SWP_NOZORDER;
+         //Swp |= SWP_NOZORDER;
+         Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          /* Fall through. */
       case SW_SHOWNORMAL:
       case SW_SHOWDEFAULT:
@@ -1408,6 +1411,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    }
 
    ShowFlag = (Cmd != SW_HIDE);
+   
    if (ShowFlag != WasVisible)
    {
       co_IntSendMessage(Window->hSelf, WM_SHOWWINDOW, ShowFlag, 0);
@@ -1477,6 +1481,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
                         MAKELONG(Window->ClientRect.left,
                                  Window->ClientRect.top));
       IntEngWindowChanged(Window, WOC_RGN_CLIENT);
+      
    }
 
    /* Activate the window if activation is not requested and the window is not minimized */

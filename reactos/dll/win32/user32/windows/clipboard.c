@@ -1,36 +1,24 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/clipboard.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Pablo Borobia <pborobia@gmail.com>
  * UPDATE HISTORY:
  *      09-05-2001  CSH  Created
+ *
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
 
+#define NDEBUG
+
 #include <wine/debug.h>
+
+#define QUERY_SIZE 0
 
 /* FUNCTIONS *****************************************************************/
 
@@ -40,7 +28,8 @@
 BOOL STDCALL
 OpenClipboard(HWND hWndNewOwner)
 {
-   return NtUserOpenClipboard(hWndNewOwner, 0);
+	BOOL ret = NtUserOpenClipboard(hWndNewOwner, 0);
+    return ret;
 }
 
 /*
@@ -49,7 +38,9 @@ OpenClipboard(HWND hWndNewOwner)
 BOOL STDCALL
 CloseClipboard(VOID)
 {
-   return NtUserCloseClipboard();
+    BOOL ret;
+    ret = NtUserCloseClipboard();
+    return ret;
 }
 
 /*
@@ -58,7 +49,8 @@ CloseClipboard(VOID)
 INT STDCALL
 CountClipboardFormats(VOID)
 {
-   return NtUserCountClipboardFormats();
+    INT ret = NtUserCountClipboardFormats();
+    return ret;
 }
 
 /*
@@ -67,7 +59,7 @@ CountClipboardFormats(VOID)
 BOOL STDCALL
 EmptyClipboard(VOID)
 {
-   return NtUserEmptyClipboard();
+    return NtUserEmptyClipboard();
 }
 
 /*
@@ -76,7 +68,8 @@ EmptyClipboard(VOID)
 UINT STDCALL
 EnumClipboardFormats(UINT format)
 {
-   return NtUserEnumClipboardFormats(format);
+    UINT ret = NtUserEnumClipboardFormats(format); 
+    return ret;
 }
 
 /*
@@ -85,7 +78,31 @@ EnumClipboardFormats(UINT format)
 HANDLE STDCALL
 GetClipboardData(UINT uFormat)
 {
-   return NtUserGetClipboardData(uFormat, 0);
+    HGLOBAL hGlobal = NULL;
+    PVOID pGlobal = NULL;
+    DWORD size = 0;
+    
+    /* dealing with bitmap object */
+    if (uFormat != CF_BITMAP)
+    {
+        size = (DWORD)NtUserGetClipboardData(uFormat, QUERY_SIZE);
+        
+        if (size)
+        {
+            hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, size);
+            pGlobal = GlobalLock(hGlobal);
+          
+            size = (DWORD)NtUserGetClipboardData(uFormat, (DWORD)pGlobal);
+    
+            GlobalUnlock(hGlobal);
+        }
+    }
+    else
+    {
+        hGlobal = NtUserGetClipboardData(CF_BITMAP, !QUERY_SIZE);
+    }
+    
+    return hGlobal;
 }
 
 /*
@@ -94,28 +111,32 @@ GetClipboardData(UINT uFormat)
 INT STDCALL
 GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
 {
-   LPWSTR lpBuffer;
-   UNICODE_STRING FormatName;
-   INT Length;
+    LPWSTR lpBuffer;
+    UNICODE_STRING FormatName;
+    INT Length;
+    ANSI_STRING ClassName;
+    
+    ClassName.MaximumLength = cchMaxCount;
+    ClassName.Buffer = lpszFormatName;
 
-   lpBuffer = HEAP_alloc(cchMaxCount * sizeof(WCHAR));
-   if (!lpBuffer)
-   {
-      SetLastError(ERROR_OUTOFMEMORY);
-      return 0;
-   }
+    lpBuffer = HEAP_alloc(cchMaxCount * sizeof(WCHAR));
+    
+    if (!lpBuffer)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return 0;
+    }
 
    FormatName.Length = 0;
    FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
    FormatName.Buffer = lpBuffer;
 
+    /* we need a UNICODE string */
    Length = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
-   DPRINT("GetClipboardFormatNameA(%x): %S\n", format, lpBuffer);
-   HEAP_strcpyWtoA(lpszFormatName, lpBuffer, Length);
-   HEAP_free(lpBuffer);
-   DPRINT("GetClipboardFormatNameA(%x): returning %s\n", format, lpszFormatName);
 
-   return Length;
+   HEAP_strcpyWtoA(lpszFormatName, FormatName.Buffer, Length);
+   
+   return strlen(lpszFormatName);
 }
 
 /*
@@ -124,15 +145,15 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
 INT STDCALL
 GetClipboardFormatNameW(UINT format, LPWSTR lpszFormatName, INT cchMaxCount)
 {
-   UNICODE_STRING FormatName;
-   ULONG Ret;
+    UNICODE_STRING FormatName;
+    ULONG Ret;
 
-   FormatName.Length = 0;
-   FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
-   FormatName.Buffer = (PWSTR)lpszFormatName;
-   Ret = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
-   DPRINT("GetClipboardFormatNameW(%x): returning %S\n", format, lpszFormatName);
-   return Ret;
+    FormatName.Length = 0;
+    FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
+    FormatName.Buffer = (PWSTR)lpszFormatName;
+    Ret = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
+    return Ret;
+   
 }
 
 /*
@@ -177,7 +198,8 @@ GetOpenClipboardWindow(VOID)
 INT STDCALL
 GetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 {
-   return NtUserGetPriorityClipboardFormat(paFormatPriorityList, cFormats);
+    INT ret = NtUserGetPriorityClipboardFormat(paFormatPriorityList, cFormats);
+    return ret;
 }
 
 /*
@@ -186,18 +208,41 @@ GetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 BOOL STDCALL
 IsClipboardFormatAvailable(UINT format)
 {
-   return NtUserIsClipboardFormatAvailable(format);
+    BOOL ret = NtUserIsClipboardFormatAvailable(format);
+    return ret;
 }
 
 /*
  * @implemented
  */
+    
 UINT STDCALL
 RegisterClipboardFormatA(LPCSTR lpszFormat)
 {
-   ULONG Ret = RegisterWindowMessageA(lpszFormat);
-   DPRINT("RegisterClipboardFormatA(%s) - %x\n", lpszFormat, Ret);
-   return Ret;
+    UINT ret = 0;
+    UNICODE_STRING usFormat = {0};
+    
+    if (lpszFormat == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    /* check for "" */
+    if (*lpszFormat == 0) //NULL
+    {
+        SetLastError(ERROR_INVALID_NAME);
+        return 0;
+    }
+    
+    ret = RtlCreateUnicodeStringFromAsciiz(&usFormat, lpszFormat);
+    if (ret)
+    {
+        ret = NtUserRegisterClipboardFormat(&usFormat); //(LPCWSTR)
+        RtlFreeUnicodeString(&usFormat);
+    }
+
+    return ret;
 }
 
 /*
@@ -206,9 +251,48 @@ RegisterClipboardFormatA(LPCSTR lpszFormat)
 UINT STDCALL
 RegisterClipboardFormatW(LPCWSTR lpszFormat)
 {
-   ULONG Ret = RegisterWindowMessageW(lpszFormat);
-   DPRINT("RegisterClipboardFormatW(%S) - %x\n", lpszFormat, Ret);
-   return Ret;
+    UINT ret = 0;
+    UNICODE_STRING usFormat = {0};
+    
+    if (lpszFormat == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+    
+    /* check for "" */
+    if (*lpszFormat == 0) //NULL
+    {
+        SetLastError(ERROR_INVALID_NAME);
+        return 0;
+    }
+
+    RtlInitUnicodeString(&usFormat, lpszFormat);
+    ret = NtUserRegisterClipboardFormat(&usFormat);
+    RtlFreeUnicodeString(&usFormat);
+  
+    return ret;
+}
+
+HGLOBAL renderLocale (DWORD Locale)
+{
+	DWORD* pLocale;
+	HGLOBAL hGlobal;
+
+	hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, sizeof(DWORD));
+	
+	if(!hGlobal)
+	{
+	    return hGlobal;
+	}
+     
+    pLocale = (DWORD*)GlobalLock(hGlobal);
+    
+	*pLocale = Locale;
+	
+	GlobalUnlock(hGlobal);
+	
+	return hGlobal;
 }
 
 /*
@@ -217,7 +301,54 @@ RegisterClipboardFormatW(LPCWSTR lpszFormat)
 HANDLE STDCALL
 SetClipboardData(UINT uFormat, HANDLE hMem)
 {
-   return NtUserSetClipboardData(uFormat, hMem, 0);
+	DWORD size;
+	LPVOID pMem;
+	HANDLE ret = NULL;
+	
+	if (hMem == NULL)
+	{
+	    return NtUserSetClipboardData(uFormat, 0, 0); 
+    }
+    
+	if (uFormat == CF_BITMAP)
+	{
+	    /* GlobalLock should return 0 for GDI handles
+	    pMem = GlobalLock(hMem);
+	    if (pMem)
+	    {
+	        // not a  GDI handle
+	        GlobalUnlock(hMem);
+	        return ret;
+	    }
+	    else
+	    {
+	        */
+	        /* check if this GDI handle is a HBITMAP */
+	        /* GetObject for HBITMAP not implemented in ReactOS */
+    	    //if (GetObject(hMem, 0, NULL) == sifeof(BITMAP))
+    	    //{
+    	        return NtUserSetClipboardData(CF_BITMAP, hMem, 0); 
+    	    //}
+    	/*}*/
+	}
+
+    size = GlobalSize(hMem);
+    pMem = GlobalLock(hMem);
+	
+	if ((pMem) && (size)) 
+	{
+    	size = GlobalSize(hMem);
+    	ret = NtUserSetClipboardData(uFormat, pMem, size); 
+        //should i unlock hMem?
+        GlobalUnlock(hMem);
+    }
+    else
+    {
+        DPRINT1("SetClipboardData failed\n");
+    }
+            
+    return ret;
+    
 }
 
 /*
@@ -236,4 +367,36 @@ BOOL STDCALL
 ChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 {
    return NtUserChangeClipboardChain(hWndRemove, hWndNewNext);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+AddClipboardFormatListener(HWND hwnd)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+RemoveClipboardFormatListener(HWND hwnd)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+GetUpdatedClipboardFormats(
+    PUINT lpuiFormats,
+    UINT cFormats,
+    PUINT pcFormatsOut)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
