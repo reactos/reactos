@@ -25,9 +25,6 @@
 <directory name="route">
     <xi:include href="route/route.rbuild" />
 </directory>
-<directory name="roshttpd">
-    <xi:include href="roshttpd/roshttpd.rbuild" />
-</directory>
 <directory name="telnet">
     <xi:include href="telnet/telnet.rbuild" />
 </directory>
