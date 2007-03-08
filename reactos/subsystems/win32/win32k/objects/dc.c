@@ -874,7 +874,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   if (Driver != NULL && Driver->Buffer != NULL)
   {
     if (Driver!=NULL)
-        DPRINT1("NAME: %wZ\n", Driver);
+        DPRINT("NAME: %wZ\n", Driver);
   }
 
   /*  Allocate a DC object  */
