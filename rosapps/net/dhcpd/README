@@ -1,0 +1,19 @@
+Disclaimer:
+This project is released under GPL, see COPYING to get an idea of what this means.
+
+Building:
+To build this you need a C compiler (i used gcc 2.95-3), and some luck.
+Just type make, i'm working on autoconf and automake but is not finished yet.
+
+Running:
+For some reason in some circumstances you have to add the following to your route table:
+route add -host 255.255.255.255 dev eth0
+That is needed to allow the distribution of packets to the address 255.255.255.255 (as said in RFC 1531).
+
+NOTE FOR WINDOWS USERS:
+I don't know how to add that route in MSW systems, looku yourself for help on that.
+
+
+Comments:
+Well, comments are always welcome. It doesn't matter if you want to tell me that i suck. If you find some bug and want to report it please do it to my email at:
+carlos@embedded.cl with subject [ecl-dhcp]. If the circumstances allow that i will create a mail list.
