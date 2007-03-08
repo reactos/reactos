@@ -40,6 +40,9 @@ typedef struct _CLIPBOARDSYSTEM
     
 } CLIPBOARDSYSTEM, *PCLIPBOARDSYSTEM;
 
+VOID FASTCALL 
+IntClipboardFreeWindow(PWINDOW_OBJECT window);
+
 /*
 UINT FASTCALL
 IntEnumClipboardFormats(UINT format);

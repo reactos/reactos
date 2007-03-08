@@ -1202,17 +1202,6 @@ NtUserGetClipboardSequenceNumber(VOID)
     return sn;
 }
 
-BOOL FASTCALL
-IntSetupClipboard(PWINSTATION_OBJECT WinStaObj)
-{
-    WinStaObj->Clipboard = ExAllocatePool(PagedPool, sizeof(CLIPBOARDSYSTEM));
-    if (WinStaObj->Clipboard)
-    {
-        RtlZeroMemory(WinStaObj->Clipboard, sizeof(CLIPBOARDSYSTEM));
-        return TRUE;
-    }
-    return FALSE;
-}
 
 /**************** VISTA FUNCTIONS******************/
 
