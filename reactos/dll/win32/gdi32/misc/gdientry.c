@@ -412,7 +412,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                 ghDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
 
                 /* Delete our DC */                
-				NtGdiDeleteObjectApp(hdc);
+                NtGdiDeleteObjectApp(hdc);
             }
         }
 
@@ -465,8 +465,14 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     D3DNTHAL_GLOBALDRIVERDATA D3dDriverData;
     DD_D3DBUFCALLBACKS D3dBufferCallbacks;
     DWORD CallbackFlags[3];
-    DWORD dwNumHeaps=0, FourCCs;
+    DWORD dwNumHeaps=0, FourCCs=0;
     DWORD Flags;
+
+    /* Clear the structures */
+    RtlZeroMemory(&HalInfo, sizeof(DD_HALINFO));
+    RtlZeroMemory(&D3dCallbacks, sizeof(D3DNTHAL_CALLBACKS));
+    RtlZeroMemory(&D3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
+    RtlZeroMemory(&D3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS));
 
     /* Check if we got a list pointer */
     if (pvmList)
@@ -477,13 +483,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                                 pHalInfo->vmiData.dwNumHeaps);
     }
 
-    /* Clear the structures */
-    RtlZeroMemory(&HalInfo, sizeof(DD_HALINFO));
-    RtlZeroMemory(&D3dCallbacks, sizeof(D3DNTHAL_CALLBACKS));
-    RtlZeroMemory(&D3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
-    RtlZeroMemory(&D3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS));
-
-    //* Do the query */
+    /* Do the query */
     if (!NtGdiDdQueryDirectDrawObject(GetDdHandle(pDirectDrawGlobal->hDD),
                                       &HalInfo,
                                       CallbackFlags,
@@ -531,7 +531,11 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     pHalInfo->vmiData.dwDisplayHeight = HalInfo.vmiData.dwDisplayHeight;
     pHalInfo->vmiData.lDisplayPitch = HalInfo.vmiData.lDisplayPitch;
     pHalInfo->vmiData.fpPrimary = 0;
-    pHalInfo->vmiData.ddpfDisplay = HalInfo.vmiData.ddpfDisplay;
+
+    RtlCopyMemory( &pHalInfo->vmiData.ddpfDisplay,
+                   &HalInfo.vmiData.ddpfDisplay,
+                   sizeof(DDPIXELFORMAT));
+
     pHalInfo->vmiData.dwOffscreenAlign = HalInfo.vmiData.dwOffscreenAlign;
     pHalInfo->vmiData.dwOverlayAlign = HalInfo.vmiData.dwOverlayAlign;
     pHalInfo->vmiData.dwTextureAlign = HalInfo.vmiData.dwTextureAlign;
@@ -539,11 +543,15 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     pHalInfo->vmiData.dwAlphaAlign = HalInfo.vmiData.dwAlphaAlign;
     pHalInfo->vmiData.dwNumHeaps = dwNumHeaps;
     pHalInfo->vmiData.pvmList = pvmList;
-    // pHalInfo->ddCaps = HalInfo.ddCaps;
-    //  pHalInfo->ddCaps.dwNumFourCCCodes = FourCCs;
+
+    RtlCopyMemory( &pHalInfo->ddCaps, &HalInfo.ddCaps,sizeof(DDCORECAPS ));
+
+    pHalInfo->ddCaps.dwNumFourCCCodes = FourCCs;
     pHalInfo->lpdwFourCC = pdwFourCC;
     pHalInfo->ddCaps.dwRops[6] = 0x1000;
-    pHalInfo->dwFlags = HalInfo.dwFlags | DDHALINFO_GETDRIVERINFOSET;
+
+    /* FIXME implement DdGetDriverInfo */
+    //  pHalInfo->dwFlags = HalInfo.dwFlags | DDHALINFO_GETDRIVERINFOSET;
     //  pHalInfo->GetDriverInfo = DdGetDriverInfo;
 
     /* Now check if we got any DD callbacks */
@@ -557,8 +565,8 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
         /* Write the header */
         pDDCallbacks->dwSize = sizeof(DDHAL_DDCALLBACKS);
-		pDDCallbacks->dwFlags = Flags;
-        
+        pDDCallbacks->dwFlags = Flags;
+
         /* Now write the pointers, if applicable */
         if (Flags & DDHAL_CB32_CREATESURFACE)
         {
@@ -586,13 +594,12 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
         /* Set the flags for this one */
         Flags = CallbackFlags[1];
-		
 
         /* Write the header, note that some functions are always exposed */
         pDDSurfaceCallbacks->dwSize  = sizeof(DDHAL_DDSURFACECALLBACKS);
-		
-		pDDSurfaceCallbacks->dwFlags = Flags;
-		/*
+
+        pDDSurfaceCallbacks->dwFlags = Flags;
+        /*
         pDDSurfaceCallBacks->dwFlags = (DDHAL_SURFCB32_LOCK |
                                         DDHAL_SURFCB32_UNLOCK |
                                         DDHAL_SURFCB32_SETCOLORKEY |
@@ -652,7 +659,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
     /* Check for D3D Callbacks */
     if (pD3dCallbacks)
-  {       
+    {
         /* Zero the struct */
         RtlZeroMemory(pD3dCallbacks, sizeof(D3DHAL_CALLBACKS));
 
@@ -665,9 +672,9 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
             /* Now check for each callback */
             if (D3dCallbacks.ContextCreate)
             {
-				 /* FIXME
+                /* FIXME
                  pD3dCallbacks->ContextCreate = D3dContextCreate; 
-				 */
+                 */
             }
             if (D3dCallbacks.ContextDestroy)
             {
@@ -675,9 +682,9 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
             }
             if (D3dCallbacks.ContextDestroyAll)
             {
-				/* FIXME 
+                /* FIXME 
                 pD3dCallbacks->ContextDestroyAll = (LPD3DHAL_CONTEXTDESTROYALLCB) NtGdiD3dContextDestroyAll;
-				*/
+                */
             }
         }
     }
