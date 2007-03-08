@@ -82,15 +82,18 @@ VOID FASTCALL CleanupUserImpl(VOID)
 
 VOID FASTCALL UserEnterShared(VOID)
 {
+   KeEnterCriticalRegion();
    ExAcquireResourceSharedLite(&UserLock, TRUE);
 }
 
 VOID FASTCALL UserEnterExclusive(VOID)
 {
+   KeEnterCriticalRegion();
    ExAcquireResourceExclusiveLite(&UserLock, TRUE);
 }
 
 VOID FASTCALL UserLeave(VOID)
 {
    ExReleaseResourceLite(&UserLock);
+   KeLeaveCriticalRegion();
 }
