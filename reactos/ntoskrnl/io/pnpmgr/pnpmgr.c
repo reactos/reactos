@@ -2887,6 +2887,7 @@ IopEnumerateDetectedDevices(
             DPRINT("ZwQueryValueKey() failed with status 0x%08lx\n", Status);
             goto nextdevice;
          }
+         ValueName.Length = ValueName.MaximumLength = 0;
       }
       else if (pValueInformation->Type != REG_SZ)
       {
