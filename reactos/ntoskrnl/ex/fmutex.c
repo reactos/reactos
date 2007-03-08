@@ -28,13 +28,13 @@ ExEnterCriticalRegionAndAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
 
     /* Enter the Critical Region */
     KeEnterCriticalRegion();
-    /*
+  
     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
            (Thread == NULL) ||
            (Thread->CombinedApcDisable != 0) ||
            (Thread->Teb == NULL) ||
            (Thread->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
-    */
+
     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
            (Thread == NULL) ||
            (Thread->CombinedApcDisable != 0));
@@ -59,14 +59,14 @@ VOID
 FASTCALL
 ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(PFAST_MUTEX FastMutex)
 {
-    /*
+
     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
            (KeGetCurrentThread() == NULL) ||
            (KeGetCurrentThread()->CombinedApcDisable != 0) ||
            (KeGetCurrentThread()->Teb == NULL) ||
            (KeGetCurrentThread()->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
    
-    */
+
      ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
            (KeGetCurrentThread() == NULL) ||
            (KeGetCurrentThread()->CombinedApcDisable != 0));
