@@ -1250,7 +1250,6 @@ ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UINT cidl,
                 PathAddBackslashA (szDstPath);
                 _ILSimpleGetText (apidl[i], szDstPath + strlen (szDstPath),
                  MAX_PATH);
-                _ILSimpleGetText (apidl[i], szDstPath + strlen (szDstPath), MAX_PATH);
                 DPRINT1 ("copy %s to %s\n", szSrcPath, szDstPath);
                 
                 if (fileMoving)
