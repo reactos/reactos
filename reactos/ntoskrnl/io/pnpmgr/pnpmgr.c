@@ -3248,6 +3248,13 @@ IopUpdateRootKey(VOID)
    }
 }
 
+static NTSTATUS INIT_FUNCTION
+NTAPI
+PnpDriverInitializeEmpty(IN struct _DRIVER_OBJECT *DriverObject, IN PUNICODE_STRING RegistryPath)
+{
+   return STATUS_SUCCESS;
+}
+
 VOID INIT_FUNCTION
 PnpInit(VOID)
 {
@@ -3275,7 +3282,7 @@ PnpInit(VOID)
     * Create root device node
     */
 
-    Status = IopCreateDriverObject(&IopRootDriverObject, NULL, 0, FALSE, NULL, 0);
+    Status = IopCreateDriver(NULL, PnpDriverInitializeEmpty, &IopRootDriverObject);
     if (!NT_SUCCESS(Status))
     {
         CPRINT("IoCreateDriverObject() failed\n");

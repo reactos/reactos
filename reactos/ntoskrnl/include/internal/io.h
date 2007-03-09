@@ -799,21 +799,16 @@ IopInitializeSystemDrivers(
     VOID
 );
 
+NTSTATUS
+NTAPI
+IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
+                IN PDRIVER_INITIALIZE InitializationFunction,
+                OUT PDRIVER_OBJECT *pDriverObject);
+
 VOID
 NTAPI
 IopDeleteDriver(
     IN PVOID ObjectBody
-);
-
-NTSTATUS
-FASTCALL
-IopCreateDriverObject(
-    OUT PDRIVER_OBJECT *DriverObject,
-    IN PUNICODE_STRING ServiceName,
-    IN ULONG CreateAttributes,
-    IN BOOLEAN FileSystemDriver,
-    IN PVOID DriverImageStart,
-    IN ULONG DriverImageSize
 );
 
 NTSTATUS

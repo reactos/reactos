@@ -83,7 +83,7 @@ IopDeleteDriver(IN PVOID ObjectBody)
     if (DriverObject->DriverExtension->ServiceKeyName.Buffer)
     {
         /* Free it */
-        ExFreePool(DriverObject->DriverExtension->ServiceKeyName.Buffer);
+        //ExFreePool(DriverObject->DriverExtension->ServiceKeyName.Buffer);
     }
 }
 
@@ -96,7 +96,6 @@ IopGetDriverObject(
    PDRIVER_OBJECT Object;
    WCHAR NameBuffer[MAX_PATH];
    UNICODE_STRING DriverName;
-   OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
 
    DPRINT("IopOpenDriverObject(%p '%wZ' %x)\n",
@@ -121,18 +120,10 @@ IopGetDriverObject(
 
    DPRINT("Driver name: '%wZ'\n", &DriverName);
 
-   /* Initialize ObjectAttributes for driver object */
-   InitializeObjectAttributes(
-      &ObjectAttributes,
-      &DriverName,
-      OBJ_OPENIF | OBJ_KERNEL_HANDLE,
-      NULL,
-      NULL);
-
    /* Open driver object */
    Status = ObReferenceObjectByName(
       &DriverName,
-      0, /* Attributes */
+      OBJ_OPENIF | OBJ_KERNEL_HANDLE, /* Attributes */
       NULL, /* PassedAccessState */
       0, /* DesiredAccess */
       IoDriverObjectType,
@@ -142,116 +133,6 @@ IopGetDriverObject(
 
    if (!NT_SUCCESS(Status))
       return Status;
-
-   *DriverObject = Object;
-
-   return STATUS_SUCCESS;
-}
-
-NTSTATUS FASTCALL
-IopCreateDriverObject(
-   PDRIVER_OBJECT *DriverObject,
-   PUNICODE_STRING ServiceName,
-   ULONG CreateAttributes,
-   BOOLEAN FileSystem,
-   PVOID DriverImageStart,
-   ULONG DriverImageSize)
-{
-   PDRIVER_OBJECT Object;
-   WCHAR NameBuffer[MAX_PATH];
-   UNICODE_STRING DriverName;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   NTSTATUS Status;
-   ULONG i;
-   PWSTR Buffer = NULL;
-
-   DPRINT("IopCreateDriverObject(%p '%wZ' %x %p %x)\n",
-      DriverObject, ServiceName, FileSystem, DriverImageStart, DriverImageSize);
-
-   *DriverObject = NULL;
-
-   /* Create ModuleName string */
-   if (ServiceName != NULL && ServiceName->Buffer != NULL)
-   {
-      if (FileSystem == TRUE)
-         wcscpy(NameBuffer, FILESYSTEM_ROOT_NAME);
-      else
-         wcscpy(NameBuffer, DRIVER_ROOT_NAME);
-      wcscat(NameBuffer, ServiceName->Buffer);
-
-      RtlInitUnicodeString(&DriverName, NameBuffer);
-      DPRINT("Driver name: '%wZ'\n", &DriverName);
-
-      Buffer = (PWSTR)ExAllocatePool(PagedPool, DriverName.Length + sizeof(WCHAR));
-      /* If we don't success, it is not a problem. Our driver
-       * object will not have associated driver name... */
-   }
-   else
-   {
-      RtlInitUnicodeString(&DriverName, NULL);
-   }
-
-   /* Initialize ObjectAttributes for driver object */
-   InitializeObjectAttributes(
-      &ObjectAttributes,
-      &DriverName,
-      CreateAttributes | OBJ_PERMANENT,
-      NULL,
-      NULL);
-
-   /* Create driver object */
-   Status = ObCreateObject(
-      KernelMode,
-      IoDriverObjectType,
-      &ObjectAttributes,
-      KernelMode,
-      NULL,
-      sizeof(DRIVER_OBJECT),
-      0,
-      0,
-      (PVOID*)&Object);
-
-   if (!NT_SUCCESS(Status))
-   {
-      return Status;
-   }
-
-   /* Create driver extension */
-   Object->DriverExtension = (PDRIVER_EXTENSION)
-      ExAllocatePoolWithTag(
-         NonPagedPool,
-         sizeof(EXTENDED_DRIVER_EXTENSION),
-         TAG_DRIVER_EXTENSION);
-
-   if (Object->DriverExtension == NULL)
-   {
-      return STATUS_NO_MEMORY;
-   }
-
-   RtlZeroMemory(Object->DriverExtension, sizeof(EXTENDED_DRIVER_EXTENSION));
-
-   Object->Type = IO_TYPE_DRIVER;
-
-   for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
-      Object->MajorFunction[i] = IopInvalidDeviceRequest;
-
-   Object->HardwareDatabase = &IopHardwareDatabaseKey;
-
-   Object->DriverStart = DriverImageStart;
-   Object->DriverSize = DriverImageSize;
-   if (Buffer)
-   {
-      if (!Object->DriverName.Buffer)
-      {
-         Object->DriverName.Buffer = Buffer;
-         Object->DriverName.Length = DriverName.Length;
-         Object->DriverName.MaximumLength = DriverName.Length + sizeof(WCHAR);
-         RtlCopyMemory(Object->DriverName.Buffer, DriverName.Buffer, DriverName.Length);
-         Object->DriverName.Buffer[Object->DriverName.Length / sizeof(WCHAR)] = L'\0';
-      }
-      else
-         ExFreePool(Buffer);
-   }
 
    *DriverObject = Object;
 
@@ -457,6 +338,13 @@ IopLoadServiceModule(
    return Status;
 }
 
+static NTSTATUS
+NTAPI
+IopDriverInitializeEmpty(IN struct _DRIVER_OBJECT *DriverObject, IN PUNICODE_STRING RegistryPath)
+{
+   return STATUS_SUCCESS;
+}
+
 /*
  * IopInitializeDriverModule
  *
@@ -490,6 +378,8 @@ IopInitializeDriverModule(
    OUT PDRIVER_OBJECT *DriverObject)
 {
    const WCHAR ServicesKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\";
+   WCHAR NameBuffer[MAX_PATH];
+   UNICODE_STRING DriverName;
    UNICODE_STRING RegistryKey;
    PDRIVER_INITIALIZE DriverEntry;
    PDRIVER_OBJECT Driver;
@@ -515,19 +405,34 @@ IopInitializeDriverModule(
       RtlInitUnicodeString(&RegistryKey, NULL);
    }
 
-   Status = IopCreateDriverObject(
-      &Driver,
-      ServiceName,
-      0,
-      FileSystemDriver,
-      ModuleObject->DllBase,
-      ModuleObject->SizeOfImage);
+   /* Create ModuleName string */
+   if (ServiceName && ServiceName->Length > 0)
+   {
+      if (FileSystemDriver == TRUE)
+         wcscpy(NameBuffer, FILESYSTEM_ROOT_NAME);
+      else
+         wcscpy(NameBuffer, DRIVER_ROOT_NAME);
+      wcscat(NameBuffer, ServiceName->Buffer);
+
+      RtlInitUnicodeString(&DriverName, NameBuffer);
+      DPRINT("Driver name: '%wZ'\n", &DriverName);
+      Status = IopCreateDriver(&DriverName, IopDriverInitializeEmpty, &Driver);
+   }
+   else
+   {
+      Status = IopCreateDriver(NULL, IopDriverInitializeEmpty, &Driver);
+   }
+
    *DriverObject = Driver;
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("IopCreateDriverObject failed (Status %x)\n", Status);
+      DPRINT("IopCreateDriver() failed (Status 0x%08lx)\n", Status);
       return Status;
    }
+
+   Driver->HardwareDatabase = &IopHardwareDatabaseKey;
+   Driver->DriverStart = ModuleObject->DllBase;
+   Driver->DriverSize = ModuleObject->SizeOfImage;
 
    DPRINT("RegistryKey: %wZ\n", &RegistryKey);
    DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
@@ -1202,15 +1107,11 @@ IopReinitializeBootDrivers(VOID)
     }
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-/*
- * @implemented
- */
 NTSTATUS
 NTAPI
-IoCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
-               IN PDRIVER_INITIALIZE InitializationFunction)
+IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
+                IN PDRIVER_INITIALIZE InitializationFunction,
+                OUT PDRIVER_OBJECT *pDriverObject)
 {
     WCHAR NameBuffer[100];
     USHORT NameLength;
@@ -1338,9 +1239,28 @@ IoCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
         ObMakeTemporaryObject(DriverObject);
         ObDereferenceObject(DriverObject);
     }
+    else
+    {
+        /* Returns to caller the object */
+        *pDriverObject = DriverObject;
+    }
 
     /* Return the Status */
     return Status;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+IoCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
+               IN PDRIVER_INITIALIZE InitializationFunction)
+{
+   PDRIVER_OBJECT DriverObject;
+   return IopCreateDriver(DriverName, InitializationFunction, &DriverObject);
 }
 
 /*
