@@ -36,16 +36,10 @@ base\applications\charmap\charmap.exe               1
 base\applications\cmdutils\find\find.exe            1
 base\applications\cmdutils\more\more.exe            1
 base\applications\control\control.exe               1
-base\applications\devmgr\devmgrapp.exe              1
 base\applications\mscutils\devmgmt\devmgmt.exe      1
-base\applications\downloader\downloader.exe         1
 base\applications\games\solitaire\sol.exe           1
 base\applications\games\winemine\winemine.exe       1
-base\applications\getfirefox\getfirefox.exe         1
-;base\applications\gettype\gettype.exe              1
 base\applications\hostname\hostname.exe             1
-base\applications\ibrowser\ibrowser.exe             1
-base\applications\imagesoft\imagesoft.exe           1
 base\applications\msconfig\msconfig.exe             1
 base\applications\network\arp\arp.exe               1
 base\applications\network\route\route.exe           1
@@ -60,19 +54,13 @@ base\applications\network\whois\whois.exe           1
 base\applications\notepad\notepad.exe               1
 base\applications\regedit\regedit.exe               4
 base\applications\regedit\clb\clb.dll               1
-;base\applications\reporterror\reporterror.exe      1
 base\applications\sc\sc.exe                         1
-base\applications\screenshot\screenshot.exe         1
 base\applications\screensavers\matrix\matrix.scr    1
 base\applications\mscutils\servman\servman.exe      1
 base\applications\shutdown\shutdown.exe             1
-base\applications\sm\sm.exe                         1
 base\applications\sndvol32\sndvol32.exe             1
 base\applications\taskmgr\taskmgr.exe               1
-;base\applications\utils\rosperf\rosperf.exe        1
-;base\applications\utils\ps\ps.exe                  1
-base\applications\winefile\winefile.exe             1
-;base\applications\winver\winver.exe                1
+base\applications\winver\winver.exe                 1
 base\applications\wordpad\wordpad.exe               1
 
 base\services\dhcp\dhcp.exe                         1
