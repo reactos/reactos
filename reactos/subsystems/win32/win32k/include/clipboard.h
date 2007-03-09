@@ -3,7 +3,7 @@
 
 #include "window.h"
 
-VOID FASTCALL IntIncrementSecuenceNumber(VOID);
+VOID FASTCALL IntIncrementSequenceNumber(VOID);
 
 typedef struct _ClipboardChainElement
 {

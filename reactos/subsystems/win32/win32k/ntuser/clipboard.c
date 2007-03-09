@@ -200,7 +200,7 @@ intAddFormatedData(UINT format, HANDLE hData, DWORD size)
         
         ClipboardData = ce;
         
-        IntIncrementSecuenceNumber();
+        IntIncrementSequenceNumber();
     }
        
     return ce;
@@ -567,7 +567,7 @@ NtUserEmptyClipboard(VOID)
         ClipboardOwnerWindow = ClipboardWindow;
         ClipboardOwnerThread = ClipboardThread;
         
-        IntIncrementSecuenceNumber();
+        IntIncrementSequenceNumber();
         
         ret = TRUE;
     }
@@ -1160,7 +1160,7 @@ NtUserEnumClipboardFormats(UINT uFormat)
 // If clipboard rendering is delayed, 
 // the sequence number is not incremented until the changes are rendered.
 VOID FASTCALL
-IntIncrementSecuenceNumber(VOID)
+IntIncrementSequenceNumber(VOID)
 {
 
     USE_WINSTA
