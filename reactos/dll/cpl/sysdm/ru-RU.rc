@@ -1,0 +1,270 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Общие"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CONTROL     "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
+    LTEXT       "Операционная система:", IDC_STATIC, 4, 132, 32, 9
+    LTEXT       REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
+    LTEXT       "Версия ", IDC_STATIC, 10, 153, 25, 9
+    LTEXT       REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
+    LTEXT       "Компьютер:", IDC_STATIC, 124, 132, 34, 9
+    LTEXT       "", IDC_MACHINELINE1, 130, 144, 118, 9
+    LTEXT       "", IDC_MACHINELINE2, 130, 153, 118, 9
+    LTEXT       "", IDC_MACHINELINE3, 130, 162, 118, 9
+    LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
+    LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
+    CONTROL     "Посетите <A HREF=""http://www.reactos.org/"">домашнюю страницу РеактОС</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 93, 8
+    PUSHBUTTON  "View &licence...", IDC_LICENCE, 170, 199, 78, 13
+END
+
+
+IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Оборудование"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX    "Диспетчер устройств", IDC_STATIC, 6, 7, 244, 61
+    ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
+    LTEXT       "Диспетчер устройств приводит список всего установленного оборудования на данном компьютере и позволяет изменить свойства любого устройства.", IDC_STATIC, 42, 18, 204, 24
+    PUSHBUTTON  "&Диспетчер устройств...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
+
+    GROUPBOX    "Мастер оборудования", IDC_STATIC, 6, 79, 244, 61
+    ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    LTEXT       "Мастер оборудования помогает установить, востановить, отключить или извлечь любое устройство, а также настроить его.", IDC_STATIC, 42, 90, 204, 24
+    PUSHBUTTON  "&Мастер оборудования...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
+
+    GROUPBOX    "Профили оборудования", IDC_STATIC, 6, 149, 244, 61
+    ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
+    LTEXT       "Профили оборудования помогают устанавливать и хранить различные конфигурации оборудования.", IDC_STATIC, 42, 160, 204, 24
+    PUSHBUTTON  "&Профили оборудования...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
+END
+
+
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Дополнительно"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT       "Administrator privileges are required for most of these settings.", IDC_STATIC, 12, 5, 236, 8
+    GROUPBOX    "Быстродействие", IDC_STATIC, 6, 18, 244, 50
+    LTEXT       "Параметры бестродействия определяют, как приложения используют память, что влияет на скорость работы компьютера.", IDC_STATIC, 16, 29, 210, 17
+    PUSHBUTTON  "&Параметры быстродействия...", IDC_PERFOR, 194, 48, 50, 15
+
+    GROUPBOX    "Профили пользователей", IDC_STATIC, 6,75,244,48
+    LTEXT       "Desktop settings related to your logon", IDC_STATIC, 16, 88, 210, 20
+    PUSHBUTTON  "Settings", IDC_USERPROFILE, 194, 103, 50, 15
+
+    GROUPBOX    "Загрузка и востановление", IDC_STATIC, 6, 131, 244, 52
+    LTEXT       "Параметры загрузки и востановления определяют действия, выполняемые при запуске компьютера или при остановке, вызванной какой-нибудь ошибкой.", IDC_STATIC, 16, 144, 210, 19
+    PUSHBUTTON  "&Загрузка и востановление...", IDC_STAREC, 194, 162, 50, 15
+
+    PUSHBUTTON  "П&еременные среды...", IDC_ENVVAR, 84, 192, 80, 15
+    PUSHBUTTON  "Error Reporting", IDC_ERRORREPORT, 170, 192, 80, 15
+END
+
+
+IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Профили оборудования"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON        IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
+    LTEXT       "You can set up hardware profiles for different hardware configurations. At startup, you can choose the profile you want to use.", IDC_STATIC, 46, 11, 188, 25
+    LTEXT       "Доступные профили оборудования:", IDC_STATIC, 8, 41, 120, 8
+    LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
+    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 15
+    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 15
+    PUSHBUTTON  "Свойства", IDC_HRDPROFPROP, 8, 106, 50, 14
+    PUSHBUTTON  "Копировать", IDC_HRDPROFCOPY, 63, 106, 50, 14
+    PUSHBUTTON  "Переименовать", IDC_HRDPROFRENAME, 118, 106, 50, 14
+    PUSHBUTTON  "Удалить", IDC_HRDPROFDEL, 173, 106, 50, 14
+
+    GROUPBOX    "Hardware profiles selection", IDC_STATIC, 7, 130, 240, 75
+    LTEXT       "When ReactOS starts:", IDC_STATIC, 14, 142, 210, 8
+    //RADIOBUTTON "&Wait until I select a hardware profile", IDC_HRDPROFWAIT, 14, 158, 133, 8
+    //RADIOBUTTON "&Select the first profile listed if I don't select a profile in", IDC_HRDPROFSELECT, 14, 173, 190, 8
+    CONTROL     "&Wait until I select a hardware profile", IDC_HRDPROFWAIT, "button", BS_AUTORADIOBUTTON, 14, 158, 133, 8
+    CONTROL     "&Select the first profile listed if I don't select a profile in", IDC_HRDPROFSELECT, "button", BS_AUTORADIOBUTTON, 14, 173, 190, 8
+    LTEXT       "секунд", IDC_STATIC, 65, 187, 35, 8
+    EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
+    CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
+
+    DEFPUSHBUTTON "OK", IDOK, 143, 213, 50, 14
+    PUSHBUTTON  "Отмена", IDCANCEL, 197, 213, 50, 14
+END
+
+
+IDD_RENAMEPROFILE DIALOGEX 12, 26, 256, 52
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Переименовать профиль"
+FONT 8, "MS Shell Dlg"
+BEGIN
+   LTEXT        "From:", IDC_STATIC, 5, 10, 20, 8
+   LTEXT        "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
+   LTEXT        "To:", IDC_STATIC, 5, 30, 20, 8
+   EDITTEXT     IDC_RENPROFEDITTO, 30, 30, 160, 12
+
+   DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
+   PUSHBUTTON   "Отмена", IDCANCEL, 196, 24, 50, 14
+END
+
+
+IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Профили пользователей"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
+    LTEXT       "Профиль пользователя содержит настройки рабочего стола и другие сведения, используемые при входе в систему. Можно создать различные профили на разных компьютерах для одного пользователя или использовать один общий профиль.",
+                    IDC_STATIC, 40, 11, 204, 35
+    LTEXT       "Профили, хранящиеся на этом компьютере:", IDC_STATIC, 16, 51, 204, 9
+    CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
+                    6, 66, 244, 85, WS_EX_CLIENTEDGE
+    PUSHBUTTON  "Сменить тип", IDC_USERPROFILE_CHANGE, 90, 156, 50, 13
+    PUSHBUTTON  "Удалить", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
+    PUSHBUTTON  "Копировать", IDC_USERPROFILE_COPY, 200, 156, 50, 13
+
+    CONTROL     "To create new user accounts, open <A>User Accounts</A> in Control Panel.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 228, 8
+
+    DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 13
+    PUSHBUTTON  "Отмена", IDCANCEL, 196, 200, 54, 13
+END
+
+
+IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Загрузка и востановление"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX    "Загрузка системы", IDC_STATIC, 7, 12, 238, 95
+    LTEXT       "Операционная система по умолчанию:", IDC_STATIC, 14, 26, 100, 8
+    COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
+    //CHECKBOX    "&Time to display list of operating systems:", IDC_STRECLIST, 14, 56, 150, 8
+    CONTROL     "&Time to display list of operating systems:", IDC_STRECLIST, "button", BS_AUTOCHECKBOX, 14, 56, 150, 8
+    EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12
+    CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
+    LTEXT       "секунд", IDC_STATIC, 215, 56, 25, 8
+    CONTROL     "Time to &display recovery options when needed:", IDC_STRRECREC, "button", BS_AUTOCHECKBOX, 14, 70, 163, 8
+    EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12
+    CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
+    LTEXT       "секунд", IDC_STATIC, 215, 70, 25, 8
+    LTEXT       "To edit the startup options file manually, click Edit.", IDC_STATIC, 14, 89, 187, 8
+    PUSHBUTTON  "&Edit", IDC_STRRECEDIT, 188, 87, 50, 14
+
+    GROUPBOX    "System failure", IDC_STATIC, 7, 111, 238, 140
+    CONTROL     "&Write an event to the system log", IDC_STRRECWRITEEVENT, "button", BS_AUTOCHECKBOX, 14, 124, 148, 10
+    CONTROL     "Se&nd an administrative alert", IDC_STRRECSENDALERT, "button", BS_AUTOCHECKBOX, 14, 138, 148, 10
+    CONTROL     "Automatically &restart", IDC_STRRECRESTART, "button", BS_AUTOCHECKBOX, 14, 152, 145, 10
+
+    GROUPBOX    "Write debugging information", IDC_STATIC, 12, 167, 227, 76
+    COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    LTEXT       "Dump &file:", IDC_STATIC, 17, 202, 150, 8
+    EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
+    CONTROL     "&Overwrite any existing file", IDC_STRRECOVERWRITE, "button", BS_AUTOCHECKBOX, 17, 228, 125, 10
+
+    DEFPUSHBUTTON  "OK", IDOK, 141, 259, 50, 14
+    PUSHBUTTON  "Отмена", IDCANCEL, 195, 259, 50, 14
+END
+
+
+IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Виртуальная память"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT       "Диск [метка тома]", IDC_STATIC, 12, 5, 96, 9
+    LTEXT       "Файл подкачки (MB)", IDC_STATIC, 115, 5, 96, 9
+    CONTROL     "", IDC_PAGEFILELIST, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP,
+                      10, 16, 204, 52, WS_EX_CLIENTEDGE
+
+    GROUPBOX    "Размер файла подкачки для выбранного диска", IDC_DRIVEGROUP, 10, 70, 204, 104
+    LTEXT       "Диск:", IDC_STATIC, 20, 80, 20, 8
+    LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT       "Доступное пространство:", IDC_STATIC, 20, 92, 56, 9
+    LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT       "Исходный размер (MB):", -1, 22, 118, 54, 9
+    LTEXT       "Максимальный размер (MB):", -1, 22, 131, 64, 9
+    CONTROL     "&Custom size", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 54, 9
+    CONTROL     "Размер по выбору системы", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 88, 9
+    CONTROL     "Без файла подкачки", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 78,9
+    EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    PUSHBUTTON  "Установить", IDC_SET, 158, 155, 50, 13
+
+    GROUPBOX    "Общий объем файла подкачки на всех дисках", IDC_TOTALGROUP, 10, 177, 204, 46
+    LTEXT       "Minimum allowed:", IDC_STATIC, 18, 188, 58, 9
+    LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT       "Recommended:", IDC_STATIC, 18, 199, 52, 9
+    LTEXT       "", IDC_RECOMMENDED, 88, 197, 100, 9
+    LTEXT       "Currently allocated:", IDC_STATIC, 18, 210, 66, 9
+    LTEXT       "", IDC_CURRENT, 88, 208, 100, 9
+
+    DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 13
+    PUSHBUTTON  "Отмена", IDCANCEL, 168, 232, 48, 13
+END
+
+
+IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Перемнные среды"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX    "Переменные пользователя", IDC_STATIC, 7, 12, 238, 100
+
+    CONTROL     "", IDC_USER_VARIABLE_LIST, "SysListView32",
+                    LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
+    PUSHBUTTON  "&Создать...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
+    PUSHBUTTON  "&Изменить...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
+    PUSHBUTTON  "&Удалить", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
+    GROUPBOX    "Системные переменные", IDC_STATIC, 7, 116, 238, 100
+
+    CONTROL     "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32",
+                    LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
+    PUSHBUTTON  "С&оздать...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
+    PUSHBUTTON  "И&зменить...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
+    PUSHBUTTON  "У&далить", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
+    DEFPUSHBUTTON  "OK", IDOK, 141, 224, 50, 14, WS_GROUP
+    PUSHBUTTON  "Отмена", IDCANCEL, 195, 224, 50, 14
+END
+
+
+IDD_EDIT_VARIABLE DIALOGEX 10, 15, 227, 71
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Изменение переменной"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT       "Им&я переменной:", IDC_STATIC, 7, 14, 50, 8
+    EDITTEXT    IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
+    LTEXT       "Значение перемен&ной:", IDC_STATIC, 7, 32, 50, 8
+    EDITTEXT    IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON  "OK", IDOK, 116, 50, 50, 14
+    PUSHBUTTON  "Отмена", IDCANCEL, 170, 50, 50, 14
+END
+
+
+IDD_LICENCE DIALOGEX 6, 5, 267, 159
+CAPTION "Лицензионное соглашение"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+STYLE WS_BORDER | WS_THICKFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+    EDITTEXT    IDC_LICENCEEDIT, 6, 3, 255, 131, WS_VSCROLL | ES_READONLY | ES_MULTILINE
+    DEFPUSHBUTTON  "OK", IDOK, 106, 142, 54, 13
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Система"
+    IDS_CPLSYSTEMDESCRIPTION "Просмотр информации о вашем компьютере и изменение различных системных и аппаратных параметров."
+    IDS_MEGABYTE "Мб ОЗУ"
+    IDS_GIGABYTE "Гб ОЗУ"
+    IDS_TERABYTE "Тб ОЗУ"
+    IDS_PETABYTE "Пб ОЗУ"
+    IDS_VARIABLE "Переменная"
+    IDS_VALUE    "Значение"
+END
