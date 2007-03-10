@@ -30,7 +30,7 @@
 
 #include <w32k.h>
 
-//#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* dialog resources appear to pass this in 16 bits, handle them properly */
