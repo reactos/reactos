@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        lib/cpl/desk/preview.c
  * PURPOSE:     Draws the preview control
- * COPYRIGHT:   Copyright 2006, 2007 Eric Kohl (email?)
+ * COPYRIGHT:   Copyright 2006, 2007 Eric Kohl
  */
 
 #include "desk.h"
@@ -15,19 +15,11 @@ typedef struct _PREVIEW_DATA
 {
     HWND hwndParent;
 
-    DWORD clrDesktop;
-    HBRUSH hbrDesktop;
+    DWORD clrSysColor[COLOR_MENUBAR];
 
-    DWORD clrWindow;
-    HBRUSH hbrWindow;
-
-    DWORD clrScrollbar;
     HBRUSH hbrScrollbar;
-
-    DWORD clrActiveCaptionText;
-    DWORD clrInactiveCaptionText;
-    DWORD clrWindowText;
-    DWORD clrButtonText;
+    HBRUSH hbrDesktop;
+    HBRUSH hbrWindow;
 
     INT cxEdge;
     INT cyEdge;
@@ -148,19 +140,16 @@ static VOID
 OnCreate(HWND hwnd, PPREVIEW_DATA pPreviewData)
 {
     NONCLIENTMETRICS NonClientMetrics;
+    INT i;
 
-    pPreviewData->clrScrollbar = GetSysColor(COLOR_SCROLLBAR);
-    pPreviewData->hbrScrollbar = CreateSolidBrush(pPreviewData->clrScrollbar);
+    for (i = 0; i < COLOR_MENUBAR + 1; i++)
+    {
+        pPreviewData->clrSysColor[i] = GetSysColor(i);
+    }
 
-    pPreviewData->clrDesktop = GetSysColor(COLOR_DESKTOP);
-    pPreviewData->hbrDesktop = CreateSolidBrush(pPreviewData->clrDesktop);
-    pPreviewData->clrWindow = GetSysColor(COLOR_WINDOW);
-    pPreviewData->hbrWindow = CreateSolidBrush(pPreviewData->clrWindow);
-
-    pPreviewData->clrActiveCaptionText = GetSysColor(COLOR_CAPTIONTEXT);
-    pPreviewData->clrInactiveCaptionText = GetSysColor(COLOR_INACTIVECAPTIONTEXT);
-    pPreviewData->clrWindowText = GetSysColor(COLOR_WINDOWTEXT);
-    pPreviewData->clrButtonText = GetSysColor(COLOR_BTNTEXT);
+    pPreviewData->hbrScrollbar = CreateSolidBrush(pPreviewData->clrSysColor[COLOR_SCROLLBAR]);
+    pPreviewData->hbrDesktop = CreateSolidBrush(pPreviewData->clrSysColor[COLOR_DESKTOP]);
+    pPreviewData->hbrWindow = CreateSolidBrush(pPreviewData->clrSysColor[COLOR_WINDOW]);
 
     pPreviewData->cxEdge = GetSystemMetrics(SM_CXEDGE) - 2;
     pPreviewData->cyEdge = GetSystemMetrics(SM_CXEDGE) - 2;
@@ -354,14 +343,14 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
 
     /* Inactive Window */
     DrawEdge(hdc, &pPreviewData->rcInactiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
-    SetTextColor(hdc, pPreviewData->clrInactiveCaptionText);
+    SetTextColor(hdc, pPreviewData->clrSysColor[COLOR_INACTIVECAPTIONTEXT]);
     DrawCaptionTemp(NULL, hdc, &pPreviewData->rcInactiveCaption,  pPreviewData->hCaptionFont,
                     NULL, pPreviewData->lpInAct, DC_GRADIENT | DC_ICON | DC_TEXT);
     DrawCaptionButtons(hdc, &pPreviewData->rcInactiveCaption, TRUE, pPreviewData->cyCaption - 2);
 
     /* Active Window */
     DrawEdge(hdc, &pPreviewData->rcActiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
-    SetTextColor(hdc, pPreviewData->clrActiveCaptionText);
+    SetTextColor(hdc, pPreviewData->clrSysColor[COLOR_CAPTIONTEXT]);
     DrawCaptionTemp(NULL, hdc, &pPreviewData->rcActiveCaption, pPreviewData->hCaptionFont,
                     NULL, pPreviewData->lpAct, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT);
     DrawCaptionButtons(hdc, &pPreviewData->rcActiveCaption, TRUE, pPreviewData->cyCaption - 2);
@@ -380,7 +369,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     CopyRect(&rc, &pPreviewData->rcActiveClient);
     rc.left += 4;
     rc.top += 2;
-    SetTextColor(hdc, pPreviewData->clrWindowText);
+    SetTextColor(hdc, pPreviewData->clrSysColor[COLOR_WINDOWTEXT]);
     hOldFont = SelectObject(hdc, pPreviewData->hCaptionFont);
     DrawText(hdc, pPreviewData->lpWinTxt, lstrlen(pPreviewData->lpWinTxt), &rc, DT_LEFT);
     SelectObject(hdc, hOldFont);
@@ -390,7 +379,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
 
     /* Dialog Window */
     DrawEdge(hdc, &pPreviewData->rcDialogFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE);
-    SetTextColor(hdc, pPreviewData->clrActiveCaptionText);
+    SetTextColor(hdc, pPreviewData->clrSysColor[COLOR_WINDOW]);
     DrawCaptionTemp(NULL, hdc, &pPreviewData->rcDialogCaption, pPreviewData->hCaptionFont,
                     NULL, pPreviewData->lpMessBox, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT);
     DrawCaptionButtons(hdc, &pPreviewData->rcDialogCaption, FALSE, pPreviewData->cyCaption - 2);
@@ -407,7 +396,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     /* Draw Button */
     DrawFrameControl(hdc, &pPreviewData->rcDialogButton, DFC_BUTTON, DFCS_BUTTONPUSH);
     CopyRect(&rc, &pPreviewData->rcDialogButton);
-    SetTextColor(hdc, pPreviewData->clrButtonText);
+    SetTextColor(hdc, pPreviewData->clrSysColor[COLOR_BTNTEXT]);
     hOldFont = SelectObject(hdc, pPreviewData->hMessageFont);
     DrawText(hdc, pPreviewData->lpButText, lstrlen(pPreviewData->lpButText), &rc, DT_VCENTER | DT_CENTER | DT_SINGLELINE);
     SelectObject(hdc, hOldFont);
@@ -605,6 +594,28 @@ PreviewWndProc(HWND hwnd,
             DeleteObject(pPreviewData->hMessageFont);
             pPreviewData->hMessageFont = CreateFontIndirect(&pPreviewData->lfMessageFont);
             CalculateItemSize(pPreviewData);
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+
+        case PVM_SETCOLOR:
+            pPreviewData->clrSysColor[(INT)wParam] = (DWORD)lParam;
+            switch((INT)wParam)
+            {
+                case COLOR_SCROLLBAR:
+                    DeleteObject(pPreviewData->hbrScrollbar);
+                    pPreviewData->hbrScrollbar = CreateSolidBrush(pPreviewData->clrSysColor[COLOR_SCROLLBAR]);
+                    break;
+
+                case COLOR_DESKTOP:
+                    DeleteObject(pPreviewData->hbrDesktop);
+                    pPreviewData->hbrDesktop = CreateSolidBrush(pPreviewData->clrSysColor[COLOR_DESKTOP]);
+                    break;
+
+                case COLOR_WINDOW:
+                    DeleteObject(pPreviewData->hbrWindow);
+                    pPreviewData->hbrWindow = CreateSolidBrush(pPreviewData->clrSysColor[COLOR_WINDOW]);
+                    break;
+            }
             InvalidateRect(hwnd, NULL, FALSE);
             break;
 

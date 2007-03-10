@@ -39,5 +39,7 @@
 #define PVM_SETMENUFONT      (WM_USER+10)
 #define PVM_SETDIALOGFONT    (WM_USER+11)
 
+#define PVM_SETCOLOR         (WM_USER+12)
+
 BOOL RegisterPreviewControl(IN HINSTANCE hInstance);
 VOID UnregisterPreviewControl(IN HINSTANCE hInstance);

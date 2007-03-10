@@ -29,7 +29,7 @@ UpdateButtonColor(HWND hwndDlg, GLOBALS* g, INT ID, INT nButton, INT nColor)
 	if (nColor != -1)
 	{
 		/* Create a DC to draw on */
-		hwndColorButton = GetDlgItem(hwndDlg, IDC_ADVAPPEARANCE_COLOR1_B);
+		hwndColorButton = GetDlgItem(hwndDlg, ID);
 		hdcColorButton = GetDC(hwndColorButton);
 		hdcCompat = CreateCompatibleDC(hdcColorButton);
 		ReleaseDC(hwndColorButton, hdcColorButton);
@@ -294,6 +294,7 @@ GetColor(HWND hwndDlg, GLOBALS* g, INT nButton)
 		if (crColor != cc.rgbResult)
 		{
 			UpdateButtonColor(hwndDlg, g, ID, nButton, ColorIndex);
+			SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCOLOR, ColorIndex, cc.rgbResult);
 			return TRUE;
 		}
 	}
