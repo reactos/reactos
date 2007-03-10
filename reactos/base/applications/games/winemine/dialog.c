@@ -97,7 +97,7 @@ BOOL CALLBACK TimesDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
         for( i = 0; i < 3; i++ )
             SetDlgItemText( hDlg, (IDC_NAME1) + i, p_board->best_name[i] );
 
-    	/* set best times */
+        /* set best times */
         for( i = 0; i < 3; i++ )
             SetDlgItemInt( hDlg, (IDC_TIME1) + i, p_board->best_time[i], FALSE );
         return TRUE;
@@ -105,6 +105,7 @@ BOOL CALLBACK TimesDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
     case WM_COMMAND:
         switch( LOWORD( wParam ) ) {
         case IDOK:
+        case IDCANCEL:
             EndDialog( hDlg, 0 );
             return TRUE;
         }
@@ -122,6 +123,7 @@ BOOL CALLBACK AboutDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
     case WM_COMMAND:
         switch( LOWORD( wParam ) ) {
         case IDOK:
+        case IDCANCEL:
             EndDialog( hDlg, 0 );
             return TRUE;
         }
