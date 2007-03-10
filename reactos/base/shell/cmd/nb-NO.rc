@@ -1,9 +1,5 @@
 #include "windows.h"
 #include "resource.h"
-/*
- * Moved all hardcoded strings to En.rc.
- * By Magnus Olsen  2005
- */
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 STRINGTABLE DISCARDABLE
@@ -203,12 +199,12 @@ Brytere kan kanskje bli forhåndssatt i DIRCMD miljø variabel.  Tilsidesette\n\
 forhåndsinnstilt brytere etter retningsnummer noen bryter med - (hyphen)--for eksempel, /-W.\n"
 
 STRING_DIR_HELP2, " Volumet i stasjon %c er %s\n"
-STRING_DIR_HELP3, " Volumet i stasjon %c har ingen merke.\n"
-STRING_DIR_HELP4, " Volumet Serie nummer er %04X-%04X\n"
-STRING_DIR_HELP5, "\n     Totalt filer listet:\n%16i File(r)% 14s bytes\n"
-STRING_DIR_HELP6, "%16i Dir(s)% 15s bytes\n"
+STRING_DIR_HELP3, " Volumet i Stasjon %c har ingen navn.\n"
+STRING_DIR_HELP4, " Volumets serienummer er %04X-%04X\n"
+STRING_DIR_HELP5, "\n     Totalt filer listet:\n%16i Fil(er)% 14s byte\n"
+STRING_DIR_HELP6, "%16i mappe(r)% 15s byte\n"
 STRING_DIR_HELP7, "\n Katalog av %s\n\n"
-STRING_DIR_HELP8, "%16i File(r)% 14s bytes\n"
+STRING_DIR_HELP8, "%16i Fil(er)% 14s byte\n"
 
 STRING_DIRSTACK_HELP1, "lagringsenheter aktuelle katalog for bruk av POPD kommando, inntil da\n\
 den endres til spesifiserte katalog.\n\n\
@@ -282,7 +278,7 @@ Din skriv et merke på en linje etter i seg selv, begynner med en kolon."
 STRING_LABEL_HELP1, "Vis eller endre stasjon merke.\n\nMERKE [stasjon:][merke]\n"
 
 STRING_LABEL_HELP2, "Volumet i stasjon %c: er %s\n"
-STRING_LABEL_HELP3, "Volumet i stasjon %c: har ingen merke\n"
+STRING_LABEL_HELP3, "Volumet i stasjon %c: har ingen navn\n"
 STRING_LABEL_HELP4, "Volumet Serie Nummer er %04X-%04X\n"
 STRING_LABEL_HELP5, "Stasjon merke (11 tegn, innføre hvis ingen)? "
 
@@ -480,7 +476,7 @@ STRING_VERSION_HELP6, "\nFreeDOS versjon skrivet av:\n"
 STRING_VERSION_HELP7, "\nReactOS versjon skrivet av:\n"
 
 STRING_VOL_HELP1, " Volumet i stasjon %c: er %s"
-STRING_VOL_HELP2, " Volumet i stasjon %c: har ingen merke"
+STRING_VOL_HELP2, " Volumet i stasjon %c: har ingen navn"
 STRING_VOL_HELP3, " Volumet Serie nummer er %04X-%04X\n"
 STRING_VOL_HELP4, "Vis disk volumet merke og serie nummer, hvis det eksisterer.\n\nVOL [stasjon:]"
 
@@ -625,7 +621,7 @@ STRING_ERROR_FILE_NOT_FOUND,       "Filen ble ikke funnet\n"
 STRING_ERROR_REQ_PARAM_MISSING,    "Required parameter missing\n"
 STRING_ERROR_INVALID_DRIVE,        "Ugyldig driver spesifikasjon\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "Ugyldig parameter format - %s\n"
-STRING_ERROR_BADCOMMAND,           "Feil kommando eller filenavn\n"
+STRING_ERROR_BADCOMMAND,           "Feil kommando eller filnavn\n"
 STRING_ERROR_OUT_OF_MEMORY,        "Ute av minne feil.\n"
 STRING_ERROR_CANNOTPIPE,           "Feil!  Kan ikke pipe!  kan ikke åpne temporære filer!\n"
 STRING_ERROR_D_PAUSEMSG,           "Trykk en tast for å fortsette . . ."

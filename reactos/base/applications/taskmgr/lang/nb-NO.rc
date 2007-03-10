@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// Norwegian resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -59,8 +59,8 @@ BEGIN
     END
     POPUP "&Vindu"
     BEGIN
-        MENUITEM "Hele &horisontalt",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Hele &vertikalt",            ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "Sorter &horisontalt",          ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Sorter &vertikalt",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimer",                   ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ksimer",                   ID_WINDOWS_MAXIMIZE
         MENUITEM "&Overlappet",                    ID_WINDOWS_CASCADE
@@ -76,8 +76,8 @@ END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "Hele &horisontalt",          ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "Hele &vertikalt",            ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "Sorter &horisontalt",          ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "Sorter &vertikalt",            ID_WINDOWS_TILEVERTICALLY
     MENUITEM "&Minimer",                   ID_WINDOWS_MINIMIZE
     MENUITEM "Ma&ksimer",                   ID_WINDOWS_MAXIMIZE
     MENUITEM "&Cascade",                    ID_WINDOWS_CASCADE
@@ -103,8 +103,8 @@ BEGIN
         MENUITEM "&Bytt til",                  ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Plasser lengst frem",             ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "Hele &horisontalt",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Hele &vertikalt",            ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "Sorter &horisontalt",          ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Sorter &vertikalt",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimer",                   ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ksimer",                   ID_WINDOWS_MAXIMIZE
         MENUITEM "&Overlappet",                    ID_WINDOWS_CASCADE
@@ -220,7 +220,7 @@ BEGIN
     GROUPBOX        "Tildelt minne (kb)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Fysisk minne (kb)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Kjerne minne (kb)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
-    LTEXT           "Referanser",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
+    LTEXT           "Referanser",IDS_TOTALS_HANDLE_COUNT,12,131,50,8
     LTEXT           "Tråder",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "Prosesser",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
@@ -230,7 +230,7 @@ BEGIN
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     LTEXT           "Totalt",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Begrensning",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8
+    LTEXT           "Begrensninger",IDS_COMMIT_CHARGE_LIMIT,12,184,50,8
     LTEXT           "Topp",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
@@ -239,7 +239,7 @@ BEGIN
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     LTEXT           "Totalt",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
-    LTEXT           "Tilgjengelig",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
+    LTEXT           "Tilgjengelig",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,40,8
     LTEXT           "Systembuffer",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
@@ -248,8 +248,8 @@ BEGIN
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     LTEXT           "Totalt",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
-    LTEXT           "Sidevekslet",IDS_KERNEL_MEMORY_PAGED,137,184,21,8
-    LTEXT           "Ikke sidevekslet",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
+    LTEXT           "Sidevekslet",IDS_KERNEL_MEMORY_PAGED,137,184,50,8
+    LTEXT           "Ikke sidevekslet",IDS_KERNEL_MEMORY_NONPAGED,137,193,75,8
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
@@ -669,7 +669,7 @@ BEGIN
 END
 
 
-#endif    // English (U.S.) resources
+#endif    // Norwegian resources
 /////////////////////////////////////////////////////////////////////////////
 
 
