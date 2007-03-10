@@ -1,0 +1,35 @@
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+
+IDD_CHARMAP DIALOGEX 6, 6, 293, 205 //233
+CAPTION "Table des Caractères"
+FONT 8,"MS Sans Serif",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_SYSMENU | WS_MINIMIZEBOX
+BEGIN
+  LTEXT         "Police :", IDC_STATIC, 6, 7, 24, 9
+  COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
+  PUSHBUTTON    "Aide", IDC_CMHELP, 249, 5, 35, 13
+  CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156
+  LTEXT         "Caractères à copier :", IDC_STATIC, 6, 188, 66, 9
+  EDITTEXT       IDC_TEXTBOX, 74, 186, 114, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  DEFPUSHBUTTON "Sélectionner", IDC_SELECT, 194, 186, 46, 13
+  PUSHBUTTON    "Copier", IDC_COPY, 244, 186, 46, 13, WS_DISABLED
+  //AUTOCHECKBOX  "Vue avancée", IDC_ADVVIEW, 10, 204, 64, 9, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  //EDITTEXT      IDC_DISPLAY,  8, 217, 278, 13, WS_VISIBLE | WS_TABSTOP | ES_READONLY
+END
+
+IDD_ABOUTBOX DIALOGEX 22,16,210,182
+CAPTION "À propos de la Table des Caractères"
+FONT 8,"MS Sans Serif",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT         "Table des Caractères v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON    "Fermer", IDOK, 75, 162, 44, 15
+  ICON          IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE   "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_ABOUT     "À propos..."
+END
