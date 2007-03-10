@@ -620,6 +620,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
     }
     else
     {
+#if 0 /* FIXME */
        if (Fcb->LastCluster > 0)
        {
           if (Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize == Fcb->LastOffset)
@@ -656,6 +657,12 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
        Status = OffsetToCluster(DeviceExt, Cluster,
 	                        ROUND_DOWN(NewSize - 1, ClusterSize) - Fcb->LastOffset,
                                 &NCluster, TRUE);
+#else
+       Status = OffsetToCluster(DeviceExt, FirstCluster,
+	                        ROUND_DOWN(NewSize - 1, ClusterSize),
+                                &Cluster, TRUE);
+       NCluster = Cluster;
+#endif
        if (NCluster == 0xffffffff || !NT_SUCCESS(Status))
        {
 	  /* disk is full */
@@ -678,7 +685,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   {
     AllocSizeChanged = TRUE;
     /* FIXME: Use the cached cluster/offset better way. */
-    Fcb->LastCluster = Fcb->LastCluster = 0;
+    Fcb->LastCluster = Fcb->LastOffset = 0;
     UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
     if (NewSize > 0)
     {
