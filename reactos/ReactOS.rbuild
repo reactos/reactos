@@ -18,13 +18,14 @@
   </if>
   <if property="DBG" value="1">
     <define name="DBG" value="1" />
+	<define name="_SEH_ENABLE_TRACE" />
     <property name="DBG_OR_KDBG" value="true" />
   </if>
   <if property="KDBG" value="1">
     <define name="KDBG" value="1" />
     <property name="DBG_OR_KDBG" value="true" />
   </if>
-  
+
   <if property="GDB" value="0">
     <if property="OPTIMIZE" value="1">
         <compilerflag>-Os</compilerflag>
