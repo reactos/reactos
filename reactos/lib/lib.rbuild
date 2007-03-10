@@ -64,5 +64,8 @@
 <directory name="wdmguid">
 	<xi:include href="wdmguid/wdmguid.rbuild" />
 </directory>
+<directory name="debugsup">
+	<xi:include href="debugsup/debugsup.rbuild" />
+</directory>
 </group>
 

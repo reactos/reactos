@@ -418,7 +418,7 @@ MingwModuleHandler::GetModuleDependencies (
 
 	if ( iend == 0 )
 		return;
-	
+
 	for ( size_t i = 0; i < iend; i++ )
 	{
 		const Dependency& dependency = *module.dependencies[i];
@@ -506,7 +506,7 @@ MingwModuleHandler::GetObjectFilename (
 	}
 	else
 		newExtension = ".o";
-	
+
 	if ( module.type == BootSector )
 		directoryTree = backend->outputDirectory;
 	else
@@ -547,7 +547,7 @@ MingwModuleHandler::GenerateCleanTarget () const
 {
 	if ( module.type == Alias )
 		return;
-	
+
 	fprintf ( fMakefile,
 	          ".PHONY: %s_clean\n",
 	          module.name.c_str() );
@@ -604,7 +604,7 @@ MingwModuleHandler::GetObjectFilenames ()
 	const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
 	if ( compilationUnits.size () == 0 )
 		return "";
-	
+
 	string objectFilenames ( "" );
 	for ( size_t i = 0; i < compilationUnits.size (); i++ )
 	{
@@ -636,7 +636,7 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector (
 	return parameters;
 }
 
-string  
+string
 MingwModuleHandler::GenerateGccDefineParameters () const
 {
 	string parameters = GenerateGccDefineParametersFromVector ( module.project.non_if_data.defines );
@@ -824,7 +824,7 @@ MingwModuleHandler::GenerateMacros (
 	GenerateMacro ( assignmentOperation,
 	                windresflagsMacro,
 	                data );
-	
+
 	if ( linkerFlags != NULL )
 	{
 		string linkerParameters = GenerateLinkerParametersFromVector ( *linkerFlags );
@@ -874,7 +874,7 @@ MingwModuleHandler::GenerateMacros (
 				"+=",
 				rIf.data,
 				NULL );
-			fprintf ( 
+			fprintf (
 				fMakefile,
 				"endif\n\n" );
 		}
@@ -957,7 +957,7 @@ MingwModuleHandler::GenerateObjectMacros (
 				"+=",
 				rIf.data,
 				NULL );
-			fprintf ( 
+			fprintf (
 				fMakefile,
 				"endif\n\n" );
 		}
@@ -997,7 +997,7 @@ MingwModuleHandler::GenerateGccCommand (
 		dependencies += " " + extraDependencies;
 	if ( module.pch && use_pch )
 		dependencies += " " + GetPrecompiledHeaderFilename ();
-	
+
 	/* WIDL generated headers may be used */
 	vector<string> rpcDependencies;
 	GetRpcHeaderDependencies ( rpcDependencies );
@@ -1172,7 +1172,7 @@ MingwModuleHandler::GetRpcServerHeaderFilename ( string basename ) const
 	return PassThruCacheDirectory ( basename + "_s.h",
 	                                backend->intermediateDirectory );
 }
-		
+
 void
 MingwModuleHandler::GenerateWidlCommandsServer (
 	const CompilationUnit& compilationUnit,
@@ -1397,7 +1397,7 @@ MingwModuleHandler::GenerateBuildMapCode ( const char *mapTarget )
 		GetBasename ( module.GetPath () ) + ".map",
 		backend->outputDirectory );
 	CLEAN_FILE ( mapFilename );
-	
+
 	fprintf ( fMakefile,
 	          "\t$(ECHO_OBJDUMP)\n" );
 	fprintf ( fMakefile,
@@ -1438,14 +1438,14 @@ MingwModuleHandler::GenerateBuildNonSymbolStrippedCode ()
 		GetBasename ( filename ) + ".nostrip" + GetExtension ( filename ),
 		backend->outputDirectory );
 	CLEAN_FILE ( nostripFilename );
-	
+
 	fprintf ( fMakefile,
 	          "\t$(ECHO_CP)\n" );
 	fprintf ( fMakefile,
 			  "\t${cp} %s %s 1>$(NUL)\n",
 			  outputFilename.c_str (),
 	          nostripFilename.c_str () );
-	
+
 	fprintf ( fMakefile,
 	          "endif\n" );
 }
@@ -1562,14 +1562,14 @@ MingwModuleHandler::GenerateLinkerCommand (
 	{
 		string temp_exp = ros_temp + module.name + ".temp.exp";
 		CLEAN_FILE ( temp_exp );
-		
+
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-exp %s %s\n",
 		          targetName.c_str (),
 		          definitionFilename.c_str (),
 		          temp_exp.c_str (),
 		          killAt.c_str () );
-	
+
 		fprintf ( fMakefile,
 		          "\t%s %s %s %s -o %s %s %s %s\n",
 		          linker.c_str (),
@@ -1580,7 +1580,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          objectsMacro.c_str (),
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str () );
-	
+
 		fprintf ( fMakefile,
 		          "\t$(Q)$(PEFIXUP_TARGET) %s -exports %s\n",
 		          target.c_str (),
@@ -1601,7 +1601,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          objectsMacro.c_str (),
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str () );
-		          
+
 #if 0 // causes crashes sometimes
 		fprintf ( fMakefile,
 		          "\t${objcopy} -R .edata %s\n",
@@ -1639,7 +1639,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const string& widlflagsMacro )
 {
 	size_t i;
-	
+
 	const vector<CompilationUnit*>& compilationUnits = data.compilationUnits;
 	for ( i = 0; i < compilationUnits.size (); i++ )
 	{
@@ -1728,7 +1728,7 @@ MingwModuleHandler::GenerateArchiveTarget ( const string& ar,
                                             const string& objs_macro ) const
 {
 	string archiveFilename ( GetModuleArchiveFilename () );
-	
+
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
 	          archiveFilename.c_str (),
@@ -1908,7 +1908,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 	// Always force disabling of sibling calls optimisation for GCC
 	// (TODO: Move to version-specific once this bug is fixed in GCC)
 	globalCflags += " -fno-optimize-sibling-calls";
-	
+
 	fprintf (
 		fMakefile,
 		"%s += $(PROJECT_CFLAGS) %s\n",
@@ -2047,7 +2047,7 @@ MingwModuleHandler::GenerateInvocations () const
 {
 	if ( module.invocations.size () == 0 )
 		return;
-	
+
 	size_t iend = module.invocations.size ();
 	for ( size_t i = 0; i < iend; i++ )
 	{
@@ -2122,7 +2122,7 @@ MingwModuleHandler::GeneratePreconditionDependencies ()
 	GetModuleDependencies ( dependencies );
 
 	GetInvocationDependencies ( module, dependencies );
-	
+
 	if ( dependencies.size() )
 	{
 		fprintf ( fMakefile,
@@ -2179,7 +2179,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 		string library_target (
 			GetImportLibraryFilename ( module, &clean_files ) );
 		string defFilename = GetDefinitionFilename ();
-	
+
 		string_list deps;
 		GetDefinitionDependencies ( deps );
 
@@ -2256,6 +2256,33 @@ MingwModuleHandler::GetDefinitionDependencies (
 	}
 }
 
+enum DebugSupportType
+{
+	DebugKernelMode,
+	DebugUserMode
+};
+
+static void
+MingwAddDebugSupportLibraries ( Module& module, DebugSupportType type )
+{
+	Library* pLibrary;
+
+	switch(type)
+	{
+		case DebugKernelMode:
+			pLibrary = new Library ( module, "debugsup_ntoskrnl" );
+			break;
+
+		case DebugUserMode:
+			pLibrary = new Library ( module, "debugsup_ntdll" );
+			break;
+
+		default:
+			assert(0);
+	}
+
+	module.non_if_data.libraries.push_back(pLibrary);
+}
 
 MingwBuildToolModuleHandler::MingwBuildToolModuleHandler ( const Module& module_ )
 	: MingwModuleHandler ( module_ )
@@ -2283,7 +2310,7 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ()
 		linker = "${host_gpp}";
 	else
 		linker = "${host_gcc}";
-	
+
 	fprintf ( fMakefile, "%s: %s %s | %s\n",
 	          targetMacro.c_str (),
 	          objectsMacro.c_str (),
@@ -2396,6 +2423,12 @@ MingwKernelModeDLLModuleHandler::MingwKernelModeDLLModuleHandler (
 }
 
 void
+MingwKernelModeDLLModuleHandler::AddImplicitLibraries ( Module& module )
+{
+	MingwAddDebugSupportLibraries ( module, DebugKernelMode );
+}
+
+void
 MingwKernelModeDLLModuleHandler::Process ()
 {
 	GenerateKernelModeDLLModuleTarget ();
@@ -2440,6 +2473,12 @@ MingwKernelModeDriverModuleHandler::MingwKernelModeDriverModuleHandler (
 
 	: MingwModuleHandler ( module_ )
 {
+}
+
+void
+MingwKernelModeDriverModuleHandler::AddImplicitLibraries ( Module& module )
+{
+	MingwAddDebugSupportLibraries ( module, DebugKernelMode );
 }
 
 void
@@ -2491,6 +2530,12 @@ MingwNativeDLLModuleHandler::MingwNativeDLLModuleHandler (
 }
 
 void
+MingwNativeDLLModuleHandler::AddImplicitLibraries ( Module& module )
+{
+	MingwAddDebugSupportLibraries ( module, DebugUserMode );
+}
+
+void
 MingwNativeDLLModuleHandler::Process ()
 {
 	GenerateNativeDLLModuleTarget ();
@@ -2504,7 +2549,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ()
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
 	string libsMacro = GetLibsMacro ();
-	
+
 	GenerateImportLibraryTargetIfNeeded ();
 
 	if ( module.non_if_data.compilationUnits.size () > 0 )
@@ -2538,6 +2583,12 @@ MingwNativeCUIModuleHandler::MingwNativeCUIModuleHandler (
 }
 
 void
+MingwNativeCUIModuleHandler::AddImplicitLibraries ( Module& module )
+{
+	MingwAddDebugSupportLibraries ( module, DebugUserMode );
+}
+
+void
 MingwNativeCUIModuleHandler::Process ()
 {
 	GenerateNativeCUIModuleTarget ();
@@ -2551,7 +2602,7 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ()
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
 	string libsMacro = GetLibsMacro ();
-	
+
 	GenerateImportLibraryTargetIfNeeded ();
 
 	if ( module.non_if_data.compilationUnits.size () > 0 )
@@ -2618,6 +2669,7 @@ void
 MingwWin32DLLModuleHandler::AddImplicitLibraries ( Module& module )
 {
 	MingwAddImplicitLibraries ( module );
+	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
 void
@@ -2677,6 +2729,7 @@ void
 MingwWin32CUIModuleHandler::AddImplicitLibraries ( Module& module )
 {
 	MingwAddImplicitLibraries ( module );
+	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
 void
@@ -2736,6 +2789,7 @@ void
 MingwWin32GUIModuleHandler::AddImplicitLibraries ( Module& module )
 {
 	MingwAddImplicitLibraries ( module );
+	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
 void
@@ -2901,7 +2955,7 @@ MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
 	          linkDepsMacro.c_str (),
 		  payload->name.c_str (),
 	          GetDirectory(GetTargetFilename(module,NULL)).c_str () );
-	
+
 	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
 
 	fprintf ( fMakefile, "\t$(BOOTPROG_PREPARE) $(OUTPUT)$(SEP)%s %s\n",

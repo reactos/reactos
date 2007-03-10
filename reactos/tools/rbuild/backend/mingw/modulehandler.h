@@ -104,7 +104,7 @@ protected:
 	                                string_list* pclean_files ) const;
 
 	std::string GetObjectFilenames ();
-	
+
 	std::string GetPreconditionDependenciesName () const;
 	std::string GetCFlagsMacro () const;
 	static std::string GetObjectsMacro ( const Module& );
@@ -280,6 +280,7 @@ public:
 	virtual void Process ();
 	std::string TypeSpecificCFlags() { return "-D_SEH_NO_NATIVE_NLG"; }
 	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
+	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateKernelModeDLLModuleTarget ();
 };
@@ -293,6 +294,7 @@ public:
 	virtual void Process ();
 	std::string TypeSpecificCFlags() { return "-D__NTDRIVER__ -D_SEH_NO_NATIVE_NLG"; }
 	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
+	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateKernelModeDriverModuleTarget ();
 };
@@ -306,6 +308,7 @@ public:
 	virtual void Process ();
 	std::string TypeSpecificCFlags() { return "-D_SEH_NO_NATIVE_NLG"; }
 	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
+	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateNativeDLLModuleTarget ();
 };
@@ -319,6 +322,7 @@ public:
 	virtual void Process ();
 	std::string TypeSpecificCFlags() { return "-D__NTAPP__ -D_SEH_NO_NATIVE_NLG"; }
 	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
+	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateNativeCUIModuleTarget ();
 };
