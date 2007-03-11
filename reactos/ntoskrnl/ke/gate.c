@@ -75,6 +75,9 @@ KeWaitForGate(IN PKGATE Gate,
                 KiReleaseDispatcherObject(&Gate->Header);
                 KiReleaseThreadLock(Thread);
 
+                /* Release the gate lock */
+                if (Queue) KiReleaseDispatcherLockFromDpcLevel();
+
                 /* Release the APC lock and return */
                 KiReleaseApcLock(&ApcLock);
                 break;
