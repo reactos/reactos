@@ -92,32 +92,54 @@ DWORD STDCALL NtGdiDdCreateSurface(
 
 DWORD STDCALL NtGdiDdWaitForVerticalBlank(
     HANDLE hDirectDrawLocal,
-    PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
-)
+    PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData)
 {
-	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
-    PDD_DIRECTDRAW pDirectDraw;
+    DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
+    PDD_DIRECTDRAW pDirectDraw = NULL;
+    NTSTATUS Status = FALSE;
+    DD_WAITFORVERTICALBLANKDATA WaitForVerticalBlankData;
 
-	DPRINT1("NtGdiDdWaitForVerticalBlank\n");
+    DPRINT1("NtGdiDdWaitForVerticalBlank\n");
 
-	pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-	
-	if (pDirectDraw != NULL) 
-	{	
-		if (pDirectDraw->DD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)
-		{
-			lgpl = puWaitForVerticalBlankData->lpDD;	
-			puWaitForVerticalBlankData->lpDD = &pDirectDraw->Global;        	
+    _SEH_TRY
+    {
+            ProbeForRead(puWaitForVerticalBlankData, sizeof(DD_WAITFORVERTICALBLANKDATA), 1);
+            RtlCopyMemory(&WaitForVerticalBlankData,puWaitForVerticalBlankData, sizeof(DD_WAITFORVERTICALBLANKDATA));
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
 
-  	        ddRVal = pDirectDraw->DD.WaitForVerticalBlank(puWaitForVerticalBlankData);
-	
-	        puWaitForVerticalBlankData->lpDD = lgpl;            
-	     }
-		 GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-	}
+    if(NT_SUCCESS(Status))
+    {
+        pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 
-	return ddRVal;
+        if (pDirectDraw != NULL) 
+        {
+            if (pDirectDraw->DD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)
+            {
+                WaitForVerticalBlankData.ddRVal = DDERR_GENERIC;
+                WaitForVerticalBlankData.lpDD =  &pDirectDraw->Global;;
+                ddRVal = pDirectDraw->DD.WaitForVerticalBlank(&WaitForVerticalBlankData);
+            }
+            _SEH_TRY
+            {
+                ProbeForWrite(puWaitForVerticalBlankData,  sizeof(DD_WAITFORVERTICALBLANKDATA), 1);
+                puWaitForVerticalBlankData->ddRVal  = WaitForVerticalBlankData.ddRVal;
+                puWaitForVerticalBlankData->bIsInVB = WaitForVerticalBlankData.bIsInVB;
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+
+            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+        }
+    }
+    return ddRVal;
 }
 
 
@@ -182,8 +204,8 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
                 }
                 _SEH_END;
             }
+            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
         }
-        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     }
 
   return ddRVal;
@@ -220,6 +242,7 @@ NtGdiDdGetScanLine( HANDLE hDirectDrawLocal, PDD_GETSCANLINEDATA puGetScanLineDa
         {
             if (pDirectDraw->DD.dwFlags & DDHAL_CB32_GETSCANLINE)
             {
+                GetScanLineData.ddRVal = DDERR_GENERIC;
                 GetScanLineData.lpDD = &pDirectDraw->Global;
                 ddRVal = pDirectDraw->DD.GetScanLine(&GetScanLineData);
 
@@ -235,8 +258,8 @@ NtGdiDdGetScanLine( HANDLE hDirectDrawLocal, PDD_GETSCANLINEDATA puGetScanLineDa
                 }
                 _SEH_END;
             }
+            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
         }
-        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     }
 
   return ddRVal;
