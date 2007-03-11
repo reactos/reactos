@@ -131,28 +131,44 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
     PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
 )
 {
-	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	PDD_DIRECTDRAW_GLOBAL lgpl;	
+    DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
+    DD_CANCREATESURFACEDATA CanCreateSurfaceData;
+    DDSURFACEDESC           desc;
+    NTSTATUS Status = FALSE;
+    PDD_DIRECTDRAW pDirectDraw = NULL;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+    DPRINT1("NtGdiDdCanCreateSurface\n");
 
-	DPRINT1("NtGdiDdCanCreateSurface\n");
+    _SEH_TRY
+    {
+            ProbeForRead(puCanCreateSurfaceData,  sizeof(DD_CANCREATESURFACEDATA), 1);
+            RtlCopyMemory(&CanCreateSurfaceData,puCanCreateSurfaceData, sizeof(DD_CANCREATESURFACEDATA));
 
-	if (pDirectDraw != NULL)
-	{
+            /* FIXME can be version 2 of DDSURFACEDESC */
+            ProbeForRead(&CanCreateSurfaceData.lpDDSurfaceDesc, sizeof(DDSURFACEDESC), 1);
+            RtlCopyMemory(&desc,&CanCreateSurfaceData.lpDDSurfaceDesc, sizeof(DD_CANCREATESURFACEDATA));
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
 
-		if (pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
-		{	
-			lgpl = puCanCreateSurfaceData->lpDD;	
-			puCanCreateSurfaceData->lpDD = &pDirectDraw->Global;
-
-	        ddRVal = pDirectDraw->DD.CanCreateSurface(puCanCreateSurfaceData);	
-
-	        puCanCreateSurfaceData->lpDD = lgpl;
-		}
-
-		GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-	}
+    if(NT_SUCCESS(Status))
+    {
+        pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+        if (pDirectDraw != NULL)
+        {
+            if (pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
+            {
+                CanCreateSurfaceData.ddRVal = DDERR_GENERIC;
+                CanCreateSurfaceData.lpDD = &pDirectDraw->Global;
+                CanCreateSurfaceData.lpDDSurfaceDesc = &desc;
+                ddRVal = pDirectDraw->DD.CanCreateSurface(&CanCreateSurfaceData);
+            }
+        }
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+    }
 
   return ddRVal;
 }
