@@ -145,8 +145,8 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
             RtlCopyMemory(&CanCreateSurfaceData,puCanCreateSurfaceData, sizeof(DD_CANCREATESURFACEDATA));
 
             /* FIXME can be version 2 of DDSURFACEDESC */
-            ProbeForRead(&CanCreateSurfaceData.lpDDSurfaceDesc, sizeof(DDSURFACEDESC), 1);
-            RtlCopyMemory(&desc,&CanCreateSurfaceData.lpDDSurfaceDesc, sizeof(DD_CANCREATESURFACEDATA));
+            ProbeForRead(puCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC), 1);
+            RtlCopyMemory(&desc,puCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC));
     }
     _SEH_HANDLE
     {
@@ -165,6 +165,22 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
                 CanCreateSurfaceData.lpDD = &pDirectDraw->Global;
                 CanCreateSurfaceData.lpDDSurfaceDesc = &desc;
                 ddRVal = pDirectDraw->DD.CanCreateSurface(&CanCreateSurfaceData);
+
+                _SEH_TRY
+                {
+                     ProbeForWrite(puCanCreateSurfaceData, sizeof(DD_CANCREATESURFACEDATA), 1);
+                     puCanCreateSurfaceData->ddRVal = CanCreateSurfaceData.ddRVal;
+
+                     /* FIXME can be version 2 of DDSURFACEDESC */
+                     ProbeForWrite(puCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC), 1);
+                     RtlCopyMemory(puCanCreateSurfaceData->lpDDSurfaceDesc,&desc, sizeof(DDSURFACEDESC));
+
+                }
+                _SEH_HANDLE
+                {
+                    Status = _SEH_GetExceptionCode();
+                }
+                _SEH_END;
             }
         }
         GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
@@ -180,28 +196,48 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 DWORD STDCALL 
 NtGdiDdGetScanLine( HANDLE hDirectDrawLocal, PDD_GETSCANLINEDATA puGetScanLineData)
 {
-	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	PDD_DIRECTDRAW_GLOBAL lgpl;	
+    DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
+    DD_GETSCANLINEDATA GetScanLineData;
+    PDD_DIRECTDRAW pDirectDraw;
+    NTSTATUS Status = FALSE;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+    DPRINT1("NtGdiDdGetScanLine\n");
 
-	DPRINT1("NtGdiDdGetScanLine\n");
+    _SEH_TRY
+    {
+            ProbeForRead(puGetScanLineData,  sizeof(DD_GETSCANLINEDATA), 1);
+            RtlCopyMemory(&GetScanLineData,puGetScanLineData, sizeof(DD_GETSCANLINEDATA));
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(NT_SUCCESS(Status))
+    {
+        pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);;
+        if (pDirectDraw != NULL)
+        {
+            if (pDirectDraw->DD.dwFlags & DDHAL_CB32_GETSCANLINE)
+            {
+                GetScanLineData.lpDD = &pDirectDraw->Global;
+                ddRVal = pDirectDraw->DD.GetScanLine(&GetScanLineData);
 
-	if (pDirectDraw != NULL)
-	{
-
-		if (pDirectDraw->DD.dwFlags & DDHAL_CB32_GETSCANLINE)
-		{	
-			lgpl = puGetScanLineData->lpDD;	
-			puGetScanLineData->lpDD = &pDirectDraw->Global;
-
-	        ddRVal = pDirectDraw->DD.GetScanLine(puGetScanLineData);	
-
-	        puGetScanLineData->lpDD = lgpl;
-		}
-
-		GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-	}
+                _SEH_TRY
+                {
+                    ProbeForWrite(puGetScanLineData,  sizeof(DD_GETSCANLINEDATA), 1);
+                    puGetScanLineData->dwScanLine = GetScanLineData.dwScanLine;
+                    puGetScanLineData->ddRVal     = GetScanLineData.ddRVal;
+                }
+                _SEH_HANDLE
+                {
+                    Status = _SEH_GetExceptionCode();
+                }
+                _SEH_END;
+            }
+        }
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+    }
 
   return ddRVal;
 }
