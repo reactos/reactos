@@ -473,6 +473,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     RtlZeroMemory(&D3dCallbacks, sizeof(D3DNTHAL_CALLBACKS));
     RtlZeroMemory(&D3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
     RtlZeroMemory(&D3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS));
+    RtlZeroMemory(CallbackFlags, sizeof(DWORD)*3);
 
     /* Check if we got a list pointer */
     if (pvmList)
