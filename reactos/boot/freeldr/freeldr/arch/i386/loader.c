@@ -556,19 +556,29 @@ FrLdrReMapImage(IN PVOID Base,
     /*  Copy image sections into virtual section  */
     for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
     {
-        /* Get the size of this section and check if it's valid and on-disk */
+        /* Get the size of this section and check if it's valid */
         Size = Section[i].VirtualAddress + Section[i].Misc.VirtualSize;
-        if ((Size <= DriverSize) && (Section[i].SizeOfRawData))
+        if (Size <= DriverSize)
         {
-            /* Copy the data from the disk to the image */
-            RtlCopyMemory((PVOID)((ULONG_PTR)LoadBase +
-                                  Section[i].VirtualAddress),
-                          (PVOID)((ULONG_PTR)Base +
-                                  Section[i].PointerToRawData),
-                          Section[i].Misc.VirtualSize >
-                          Section[i].SizeOfRawData ?
-                          Section[i].SizeOfRawData :
-                          Section[i].Misc.VirtualSize);
+            if (Section[i].SizeOfRawData)
+            {
+                /* Copy the data from the disk to the image */
+                RtlCopyMemory((PVOID)((ULONG_PTR)LoadBase +
+                                      Section[i].VirtualAddress),
+                              (PVOID)((ULONG_PTR)Base +
+                                      Section[i].PointerToRawData),
+                              Section[i].Misc.VirtualSize >
+                              Section[i].SizeOfRawData ?
+                              Section[i].SizeOfRawData :
+                              Section[i].Misc.VirtualSize);
+            }
+            else
+            {
+                /* BSS */
+                RtlZeroMemory((PVOID)((ULONG_PTR)LoadBase +
+                                      Section[i].VirtualAddress),
+                              Section[i].Misc.VirtualSize);
+            }
         }
     }
 
