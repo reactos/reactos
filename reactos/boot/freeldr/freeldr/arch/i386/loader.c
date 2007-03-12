@@ -521,7 +521,6 @@ LdrPEFixupImports(IN PVOID DllBase,
         Status = LdrPEGetOrLoadModule(DllName, ImportedName, &ImportedModule);
         if (!NT_SUCCESS(Status)) return Status;
 
-        //DbgPrint("Import Base: %p\n", ImportedModule->ModStart);
         Status = LdrPEProcessImportDirectoryEntry(DllBase, ImportedModule, ImportModuleDirectory);
         if (!NT_SUCCESS(Status)) return Status;
 
@@ -574,7 +573,7 @@ FrLdrReMapImage(IN PVOID Base,
             }
             else
             {
-                /* BSS */
+                /* Clear the BSS area */
                 RtlZeroMemory((PVOID)((ULONG_PTR)LoadBase +
                                       Section[i].VirtualAddress),
                               Section[i].Misc.VirtualSize);
@@ -595,6 +594,7 @@ FrLdrMapImage(IN FILE *Image,
     PVOID ImageBase, LoadBase, ReadBuffer;
     ULONG ImageId = LoaderBlock.ModsCount;
     ULONG ImageSize;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     /* Set the virtual (image) and physical (load) addresses */
     LoadBase = (PVOID)NextModuleBase;
@@ -619,13 +619,19 @@ FrLdrMapImage(IN FILE *Image,
     MmFreeMemory(ReadBuffer);
 
     /* Calculate Difference between Real Base and Compiled Base*/
-    if (ImageType != 2) LdrRelocateImageWithBias(LoadBase,
-                                                 (ULONG_PTR)ImageBase -
-                                                 (ULONG_PTR)LoadBase,
-                                                 "FreeLdr",
-                                                 STATUS_SUCCESS,
-                                                 STATUS_UNSUCCESSFUL,
-                                                 STATUS_UNSUCCESSFUL);
+    Status = LdrRelocateImageWithBias(LoadBase,
+                                      (ULONG_PTR)ImageBase -
+                                      (ULONG_PTR)LoadBase,
+                                      "FreeLdr",
+                                      STATUS_SUCCESS,
+                                      STATUS_UNSUCCESSFUL,
+                                      STATUS_UNSUCCESSFUL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        DbgPrint("Failed to relocate image: %s\n", Name);
+        return NULL;
+    }
 
     /* Fill out Module Data Structure */
     reactos_modules[ImageId].ModStart = (ULONG_PTR)ImageBase;
@@ -637,14 +643,11 @@ FrLdrMapImage(IN FILE *Image,
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP(NextModuleBase + ImageSize, PAGE_SIZE);
 
-    /* Successful load! */
-    //DbgPrint("Image: %s loaded at: %p\n", Name, ImageBase);
-
     /* Load HAL if this is the kernel */
     if (ImageType == 1) FrLdrLoadImage("hal.dll", 10, FALSE);
 
     /* Perform import fixups */
-    if (ImageType != 2) LdrPEFixupImports(LoadBase, Name);
+    LdrPEFixupImports(LoadBase, Name);
 
     /* Return the final mapped address */
     return LoadBase;

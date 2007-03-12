@@ -1221,7 +1221,9 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Sanity check */
         ASSERT(*(PULONG)NewImageAddress == *(PULONG)DllBase);
 
-        /* Set the image base to the old address */
+        /* Set the image base to the address where the loader put it */
+        NtHeader->OptionalHeader.ImageBase = (ULONG_PTR)DllBase;
+        NtHeader = RtlImageNtHeader(NewImageAddress);
         NtHeader->OptionalHeader.ImageBase = (ULONG_PTR)DllBase;
 
         /* Check if we had relocations */

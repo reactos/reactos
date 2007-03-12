@@ -157,7 +157,7 @@ IopDisplayLoadingMessage(PVOID ServiceName,
     if (ExpInTextModeSetup) return;
     if (Unicode)
     {
-        if (wcsstr(ServiceName, L".sys")) Extra = "";
+        if (wcsstr(_wcsupr(ServiceName), L".SYS")) Extra = "";
         sprintf(TextBuffer,
                 "%s%s%s\\%S%s\n",
                 KeLoaderBlock->ArcBootDeviceName,
@@ -168,7 +168,7 @@ IopDisplayLoadingMessage(PVOID ServiceName,
     }
     else
     {
-        if (strstr(ServiceName, ".sys")) Extra = "";
+        if (strstr(_strupr(ServiceName), ".SYS")) Extra = "";
         sprintf(TextBuffer,
                 "%s%s%s\\%s%s\n",
                 KeLoaderBlock->ArcBootDeviceName,
@@ -733,7 +733,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     PLDR_DATA_TABLE_ENTRY ModuleObject;
 #endif
 
-
    /*
     * Display 'Loading XXX...' message
     */
@@ -887,7 +886,7 @@ IopInitializeBootDrivers(VOID)
          * HACK: Make sure we're loading a driver
          * (we should be using BootDriverListHead!)
          */
-        if (wcsstr(LdrEntry->BaseDllName.Buffer, L".sys"))
+        if (wcsstr(_wcsupr(LdrEntry->BaseDllName.Buffer), L".SYS"))
         {
             /* Make sure we didn't load this driver already */
             if (!(LdrEntry->Flags & LDRP_ENTRY_INSERTED))
