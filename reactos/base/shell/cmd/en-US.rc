@@ -137,7 +137,7 @@ DATE [/T][date]\n\n\
   /T    display only\n\n\
 Type DATE without parameters to display the current date setting and\n\
 a prompt for a new one.  Press ENTER to keep the same date.\n"
-				
+
 STRING_DEL_HELP1,  "Deletes one or more files.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
@@ -389,14 +389,14 @@ the MOVE command for that purpose.\n"
 STRING_REN_HELP2, "    %lu file renamed\n"
 
 STRING_REN_HELP3, "    %lu files renamed\n"
-		 
+
 STRING_SHIFT_HELP, "Changes the position of replaceable parameters in a batch file.\n\n\
 SHIFT [DOWN]"
 
 STRING_SCREEN_HELP, "move cursor and optionally print text\n\n\
 SCREEN row col [text]\n\n\
-  row         row to wich move the cursor\n\
-  col         column to wich move the cursor"
+  row         row to which move the cursor\n\
+  col         column to which move the cursor"
 
 STRING_SET_HELP, "Displays, sets, or removes environment variables.\n\n\
 SET [variable[=][string]]\n\n\
@@ -498,7 +498,7 @@ RESTORE       restore the window"
 STRING_WINDOW_HELP2, "change console window aspect\n\n\
 ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
-window        tile of window on wich perform actions\n\
+window        tile of window on which perform actions\n\
 /POS          specify window placement and dimensions\n\
 MIN           minimize the window\n\
 MAX           maximize the window\n\
@@ -531,7 +531,7 @@ FREE     (free) disc space.\n\
 GOTO     Directs the ReactOS command interpreter to a labeled line in\n\
          a batch program.\n\
 HELP     Provides Help information for ReactOS commands.\n\
-HISTORY  List alle commands which has been used\n\
+HISTORY  List all commands which has been used\n\
 IF       Performs conditional processing in batch programs.\n\
 LABEL    Creates, changes, or deletes the volume label of a disk.\n\
 MD       Creates a directory.\n\
@@ -599,7 +599,7 @@ STRING_ERROR_ERROR1,         "Unknown error! Error code: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Syntax error"
 STRING_FOR_ERROR1,           "'in' missing in for statement."
 STRING_FOR_ERROR2,           "no brackets found."
-STRING_FOR_ERROR3,           "'do' missing." 
+STRING_FOR_ERROR3,           "'do' missing."
 STRING_FOR_ERROR4,           "no command after 'do'."
 STRING_FREE_ERROR1,          "Invalid drive"
 STRING_FREE_ERROR2,          "unlabeled"
