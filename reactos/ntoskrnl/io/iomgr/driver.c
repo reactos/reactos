@@ -1203,6 +1203,14 @@ IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                   &ServiceKeyName,
                   sizeof(UNICODE_STRING));
 
+    if (!DriverName)
+    {
+        /* HACK: Something goes wrong in next lines in this case.
+         * Just leave to prevent a freeze */
+        *pDriverObject = DriverObject;
+        return Status;
+    }
+
     /* Add the Object and get its handle */
     Status = ObInsertObject(DriverObject,
                             NULL,
