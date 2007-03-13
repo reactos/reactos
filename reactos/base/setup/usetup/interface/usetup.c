@@ -3497,6 +3497,9 @@ RunUSetup(VOID)
 {
   INPUT_RECORD Ir;
   PAGE_NUMBER Page;
+  LARGE_INTEGER Time;
+
+  NtQuerySystemTime(&Time);
 
   if (!CONSOLE_Init())
     {
@@ -3661,8 +3664,13 @@ RunUSetup(VOID)
   /// DO NOT REMOVE!!!
   DPRINT1("SYSREG_CHECKPOINT:USETUP_COMPLETE\n");
 
-  /* Reboot */
   FreeConsole();
+
+  /* Avoid bugcheck */
+  Time.QuadPart += 50000000;
+  NtDelayExecution(FALSE, &Time);
+
+  /* Reboot */
   NtShutdownSystem(ShutdownReboot);
   NtTerminateProcess(NtCurrentProcess(), 0);
 }
