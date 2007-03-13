@@ -569,13 +569,13 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 				Result = strcmp(VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),
 					(PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])));
 
-				DbgPrint((DPRINT_WINDOWS, "Binary search: comparing Import '__', Export '%s'\n",
+				/*DbgPrint((DPRINT_WINDOWS, "Binary search: comparing Import '__', Export '%s'\n",*/
 					/*VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),*/
-					(PCHAR)VaToPa(RVA(DllBase, NameTable[Middle]))));
+					/*(PCHAR)VaToPa(RVA(DllBase, NameTable[Middle]))));*/
 
-				DbgPrint((DPRINT_WINDOWS, "TE->u1.AOD %p, fulladdr %p\n",
+				/*DbgPrint((DPRINT_WINDOWS, "TE->u1.AOD %p, fulladdr %p\n",
 					ThunkData->u1.AddressOfData,
-					((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name ));
+					((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name ));*/
 
 
 				/* Depending on result of strcmp, perform different actions */
