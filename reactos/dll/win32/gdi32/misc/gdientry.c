@@ -209,16 +209,20 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     DD_SURFACE_LOCAL DdSurfaceLocal;
     DD_SURFACE_MORE DdSurfaceMore;
     DD_SURFACE_GLOBAL DdSurfaceGlobal;
+
     HANDLE hPrevSurface, hSurface;
-    DD_SURFACE_LOCAL* pDdSurfaceLocal;
-    DD_SURFACE_MORE* pDdSurfaceMore;
-    DD_SURFACE_GLOBAL* pDdSurfaceGlobal;
-    LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal;
-    //LPDDRAWI_DDRAWSURFACE_MORE pSurfaceMore;
-    LPDDRAWI_DDRAWSURFACE_GBL pSurfaceGlobal;
+
+
+    PDD_SURFACE_LOCAL pDdSurfaceLocal = NULL;
+    PDD_SURFACE_MORE pDdSurfaceMore = NULL;
+    PDD_SURFACE_GLOBAL pDdSurfaceGlobal = NULL;
+
+    PDD_SURFACE_LOCAL ptmpDdSurfaceLocal = NULL;
+    PDD_SURFACE_MORE ptmpDdSurfaceMore = NULL;
+    PDD_SURFACE_GLOBAL ptmpDdSurfaceGlobal = NULL;
     PHANDLE phSurface = NULL, puhSurface = NULL;
     ULONG i;
-    LPDDSURFACEDESC pSurfaceDesc;
+    LPDDSURFACEDESC pSurfaceDesc = NULL;
 
     /* Check how many surfaces there are */
     if (SurfaceCount != 1)
@@ -241,67 +245,142 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
         RtlZeroMemory(&DdSurfaceMore, sizeof(DdSurfaceMore));  
     }
 
-    /* Loop for each surface */
-    for (i = 0; i < pCreateSurface->dwSCnt; i++)
+    /* check if we got a surface or not */
+    if (SurfaceCount!=0)
     {
-        /* Get data */
-        pSurfaceLocal = pCreateSurface->lplpSList[i];
-        pSurfaceGlobal = pSurfaceLocal->lpGbl;
+        /* Loop for each surface */
+        ptmpDdSurfaceGlobal = pDdSurfaceGlobal;
+        ptmpDdSurfaceLocal = pDdSurfaceLocal;
+        ptmpDdSurfaceMore = pDdSurfaceMore;
         pSurfaceDesc = pCreateSurface->lpDDSurfaceDesc;
 
-        /* Check if it has pixel data */
-        if (pSurfaceDesc->dwFlags & DDRAWISURF_HASPIXELFORMAT)
+        for (i = 0; i < SurfaceCount; i++)
         {
-            /* Use its pixel data */
-            DdSurfaceGlobal.ddpfSurface = pSurfaceDesc->ddpfPixelFormat;
-            DdSurfaceGlobal.ddpfSurface.dwSize = sizeof(DDPIXELFORMAT);
+            LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[i];
+            LPDDRAWI_DDRAWSURFACE_GBL gpl = pCreateSurface->lplpSList[i]->lpGbl;
+
+            phSurface[i] = (HANDLE)lcl->hDDSurface;
+            ptmpDdSurfaceLocal->ddsCaps.dwCaps = lcl->ddsCaps.dwCaps;
+
+            ptmpDdSurfaceLocal->dwFlags = (ptmpDdSurfaceLocal->dwFlags & 
+                                          (0xB0000000 | DDRAWISURF_INMASTERSPRITELIST |
+                                           DDRAWISURF_HELCB | DDRAWISURF_FRONTBUFFER |
+                                           DDRAWISURF_BACKBUFFER | DDRAWISURF_INVALID |
+                                           DDRAWISURF_DCIBUSY | DDRAWISURF_DCILOCK)) |
+                                          (lcl->dwFlags & DDRAWISURF_DRIVERMANAGED);
+
+            ptmpDdSurfaceGlobal->wWidth = gpl->wWidth;
+            ptmpDdSurfaceGlobal->wHeight = gpl->wHeight;
+            ptmpDdSurfaceGlobal->lPitch = gpl->fpVidMem;
+            ptmpDdSurfaceGlobal->fpVidMem = gpl->fpVidMem;
+            ptmpDdSurfaceGlobal->dwBlockSizeX = gpl->dwBlockSizeX;
+            ptmpDdSurfaceGlobal->dwBlockSizeY = gpl->dwBlockSizeY;
+
+            if (lcl->dwFlags & DDRAWISURF_HASPIXELFORMAT)
+            {
+                RtlCopyMemory( &ptmpDdSurfaceGlobal->ddpfSurface ,
+                               &gpl->ddpfSurface, 
+                               sizeof(DDPIXELFORMAT));
+
+                ptmpDdSurfaceGlobal->ddpfSurface.dwSize = sizeof(DDPIXELFORMAT);
+            }
+            else
+            {
+                RtlCopyMemory( &ptmpDdSurfaceGlobal->ddpfSurface ,
+                               &gpl->lpDD->vmiData.ddpfDisplay,
+                               sizeof(DDPIXELFORMAT));
+            }
+
+            if (lcl->lpSurfMore)
+            {
+                ptmpDdSurfaceMore->ddsCapsEx.dwCaps2 = lcl->lpSurfMore->ddsCapsEx.dwCaps2;
+                ptmpDdSurfaceMore->ddsCapsEx.dwCaps3 = lcl->lpSurfMore->ddsCapsEx.dwCaps3;
+                ptmpDdSurfaceMore->ddsCapsEx.dwCaps4 = lcl->lpSurfMore->ddsCapsEx.dwCaps4;
+                ptmpDdSurfaceMore->dwSurfaceHandle = (DWORD) pCreateSurface->lplpSList[i]->dbnOverlayNode.object_int;
+            }
+
+            /* FIXME count to next SurfaceCount for 
+               ptmpDdSurfaceGlobal = pDdSurfaceGlobal;
+               ptmpDdSurfaceLocal = pDdSurfaceLocal;
+               ptmpDdSurfaceMore = pDdSurfaceMore;
+
+               we only support one surface create at moment
+             */
         }
-        else
-        {
-            /* Use the one from the global surface */
-            DdSurfaceGlobal.ddpfSurface = pSurfaceGlobal->lpDD->vmiData.ddpfDisplay;
-        }
+    }
 
-        /* Convert data */
-        DdSurfaceGlobal.wWidth = pSurfaceGlobal->wWidth;
-        DdSurfaceGlobal.wHeight = pSurfaceGlobal->wHeight;
-        DdSurfaceGlobal.lPitch = pSurfaceGlobal->lPitch;
-        DdSurfaceGlobal.fpVidMem = pSurfaceGlobal->fpVidMem;
-        DdSurfaceGlobal.dwBlockSizeX = pSurfaceGlobal->dwBlockSizeX;
-        DdSurfaceGlobal.dwBlockSizeY = pSurfaceGlobal->dwBlockSizeY;
-        // DdSurfaceGlobal.ddsCaps = pSurfaceLocal->ddsCaps | 0xBF0000;
+    /* Call win32k now */
+    pCreateSurface->ddRVal = DDERR_GENERIC;
 
-        /* FIXME: Ddscapsex stuff missing */
-
-        /* Call win32k now */
-        pCreateSurface->ddRVal = E_FAIL;
-		
-        Return = NtGdiDdCreateSurface(GetDdHandle(pCreateSurface->lpDD->hDD),
-                                     (HANDLE *)phSurface,
+    Return = NtGdiDdCreateSurface(GetDdHandle(pCreateSurface->lpDD->hDD),
+                                    (HANDLE *)phSurface,
                                      pSurfaceDesc,
-                                     &DdSurfaceGlobal,
-                                     &DdSurfaceLocal,
-                                     &DdSurfaceMore,
+                                     pDdSurfaceGlobal,
+                                     pDdSurfaceLocal,
+                                     pDdSurfaceMore,
                                      (PDD_CREATESURFACEDATA)pCreateSurface,
                                      puhSurface);
-          
-	   
-        /* FIXME: Ddscapsex stuff missing */
-        
-        /* Convert the data back */
-        pSurfaceGlobal->lPitch = DdSurfaceGlobal.lPitch;
-        pSurfaceGlobal->fpVidMem = DdSurfaceGlobal.fpVidMem;
-        pSurfaceGlobal->dwBlockSizeX = DdSurfaceGlobal.dwBlockSizeX;
-        pSurfaceGlobal->dwBlockSizeY = DdSurfaceGlobal.dwBlockSizeY;
-        pCreateSurface->lplpSList[i]->hDDSurface = (DWORD) hSurface;
 
-        /* FIXME: Ddscapsex stuff missing */
+    if (SurfaceCount == 0)
+    {
+        pCreateSurface->ddRVal = DDERR_GENERIC;
     }
-    
+    else
+    {
+        ptmpDdSurfaceMore = pDdSurfaceMore;
+        ptmpDdSurfaceGlobal = pDdSurfaceGlobal;
+        ptmpDdSurfaceLocal = pDdSurfaceLocal;
+
+        for (i=0;i<SurfaceCount;i++)
+        {
+            LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[i];
+            LPDDRAWI_DDRAWSURFACE_GBL gpl = pCreateSurface->lplpSList[i]->lpGbl;
+
+            gpl->lPitch = ptmpDdSurfaceGlobal->lPitch;
+            gpl->fpVidMem = ptmpDdSurfaceGlobal->fpVidMem;
+            gpl->dwBlockSizeX = ptmpDdSurfaceGlobal->dwBlockSizeX;
+            gpl->dwBlockSizeY = ptmpDdSurfaceGlobal->dwBlockSizeY;
+
+            if (lcl->dwFlags & DDRAWISURF_HASPIXELFORMAT)
+            {
+                RtlCopyMemory( &gpl->ddpfSurface, &ptmpDdSurfaceGlobal->ddpfSurface , sizeof(DDPIXELFORMAT));
+            }
+
+            if (pCreateSurface->ddRVal != DD_OK)
+            {
+                gpl->fpVidMem = 0;
+                if (lcl->hDDSurface)
+                {
+                    NtGdiDdDeleteSurfaceObject( (HANDLE)lcl->hDDSurface);
+                }
+                lcl->hDDSurface = 0;
+            }
+            else
+            {
+
+                lcl->hDDSurface = (ULONG_PTR) puhSurface[i];
+            }
+
+            lcl->ddsCaps.dwCaps = ptmpDdSurfaceLocal->ddsCaps.dwCaps;
+            if (lcl->lpSurfMore)
+            {
+                lcl->lpSurfMore->ddsCapsEx.dwCaps2 = ptmpDdSurfaceMore->ddsCapsEx.dwCaps2;
+                lcl->lpSurfMore->ddsCapsEx.dwCaps3 = ptmpDdSurfaceMore->ddsCapsEx.dwCaps3;
+                lcl->lpSurfMore->ddsCapsEx.dwCaps4 = ptmpDdSurfaceMore->ddsCapsEx.dwCaps4;
+            }
+            /* FIXME count to next SurfaceCount for 
+               ptmpDdSurfaceGlobal = pDdSurfaceGlobal;
+               ptmpDdSurfaceLocal = pDdSurfaceLocal;
+               ptmpDdSurfaceMore = pDdSurfaceMore;
+               we only support one surface create at moment
+             */
+        }
+    }
+
     /* Check if we have to free all our local allocations */
     if (SurfaceCount > 1)
     {
-     /* FIXME: */
+        /* FIXME: */
     }
 
     /* Return */
