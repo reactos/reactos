@@ -1553,6 +1553,7 @@ static inline ULONG WINAPI IMAPIProp_fnRelease(LPMAPIPROP iface)
             This->lpFree(current->value);
             This->lpFree(current);
         }
+        This->cs.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->cs);
         This->lpFree(This);
     }
@@ -2543,6 +2544,7 @@ SCODE WINAPI CreateIProp(LPCIID iid, ALLOCATEBUFFER *lpAlloc,
         lpPropData->ulNumValues = 0;
         list_init(&lpPropData->values);
         InitializeCriticalSection(&lpPropData->cs);
+        lpPropData->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": IPropDataImpl.cs");
         *lppPropData = (LPPROPDATA)lpPropData;
     }
     return scode;
