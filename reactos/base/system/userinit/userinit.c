@@ -119,7 +119,7 @@ BOOL GetShell(WCHAR *CommandLine, HKEY hRootKey)
   BOOL ConsoleShell = IsConsoleShell();
 
   if(RegOpenKeyEx(hRootKey,
-                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", /* FIXME: should be REGSTR_PATH_WINLOGON */
+                  REGSTR_PATH_WINLOGON,
                   0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
   {
     Size = MAX_PATH * sizeof(WCHAR);

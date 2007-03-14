@@ -902,7 +902,7 @@ CreateNestedKey(PHKEY KeyHandle,
       LocalKeyName.Length = wcslen (LocalKeyName.Buffer) * sizeof(WCHAR);
 
       Status = NtCreateKey (&LocalKeyHandle,
-			    KEY_ALL_ACCESS,
+			    KEY_CREATE_SUB_KEY,
 			    &LocalObjectAttributes,
 			    0,
 			    NULL,
