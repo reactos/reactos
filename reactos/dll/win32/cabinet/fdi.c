@@ -363,8 +363,8 @@ HFDI __cdecl FDICreate(
 {
   HFDI rv;
 
-  TRACE("(pfnalloc == ^%p, pfnfree == ^%p, pfnopen == ^%p, pfnread == ^%p, pfnwrite == ^%p, \
-        pfnclose == ^%p, pfnseek == ^%p, cpuType == %d, perf == ^%p)\n", 
+  TRACE("(pfnalloc == ^%p, pfnfree == ^%p, pfnopen == ^%p, pfnread == ^%p, pfnwrite == ^%p, "
+        "pfnclose == ^%p, pfnseek == ^%p, cpuType == %d, perf == ^%p)\n",
         pfnalloc, pfnfree, pfnopen, pfnread, pfnwrite, pfnclose, pfnseek,
         cpuType, perf);
 
@@ -865,8 +865,21 @@ static int QTMfdi_init(int window, int level, fdi_decomp_state *decomp_state) {
  * LZXfdi_init (internal)
  */
 static int LZXfdi_init(int window, fdi_decomp_state *decomp_state) {
+  static const cab_UBYTE bits[]  =
+                        { 0,  0,  0,  0,  1,  1,  2,  2,  3,  3,  4,  4,  5,  5,  6,  6,
+                          7,  7,  8,  8,  9,  9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14,
+                         15, 15, 16, 16, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+                         17, 17, 17};
+  static const cab_ULONG base[] =
+                {      0,       1,       2,       3,       4,       6,       8,      12,
+                      16,      24,      32,      48,      64,      96,     128,     192,
+                     256,     384,     512,     768,    1024,    1536,    2048,    3072,
+                    4096,    6144,    8192,   12288,   16384,   24576,   32768,   49152,
+                   65536,   98304,  131072,  196608,  262144,  393216,  524288,  655360,
+                  786432,  917504, 1048576, 1179648, 1310720, 1441792, 1572864, 1703936,
+                 1835008, 1966080, 2097152};
   cab_ULONG wndsize = 1 << window;
-  int i, j, posn_slots;
+  int posn_slots;
 
   /* LZX supports window sizes of 2^15 (32Kb) through 2^21 (2Mb) */
   /* if a previously allocated window is big enough, keep it     */
@@ -882,14 +895,8 @@ static int LZXfdi_init(int window, fdi_decomp_state *decomp_state) {
   LZX(window_size) = wndsize;
 
   /* initialize static tables */
-  for (i=0, j=0; i <= 50; i += 2) {
-    CAB(extra_bits)[i] = CAB(extra_bits)[i+1] = j; /* 0,0,0,0,1,1,2,2,3,3... */
-    if ((i != 0) && (j < 17)) j++; /* 0,0,1,2,3,4...15,16,17,17,17,17... */
-  }
-  for (i=0, j=0; i <= 50; i++) {
-    CAB(lzx_position_base)[i] = j; /* 0,1,2,3,4,6,8,12,16,24,32,... */
-    j += 1 << CAB(extra_bits)[i]; /* 1,1,1,1,2,2,4,4,8,8,16,16,32,32,... */
-  }
+  memcpy(CAB(extra_bits), bits, sizeof(bits));
+  memcpy(CAB(lzx_position_base), base, sizeof(base));
 
   /* calculate required position slots */
        if (window == 20) posn_slots = 42;
@@ -909,8 +916,8 @@ static int LZXfdi_init(int window, fdi_decomp_state *decomp_state) {
   LZX(window_posn)     = 0;
 
   /* initialize tables to 0 (because deltas will be applied to them) */
-  for (i = 0; i < LZX_MAINTREE_MAXSYMBOLS; i++) LZX(MAINTREE_len)[i] = 0;
-  for (i = 0; i < LZX_LENGTH_MAXSYMBOLS; i++)   LZX(LENGTH_len)[i]   = 0;
+  memset(LZX(MAINTREE_len), 0, sizeof(LZX(MAINTREE_len)));
+  memset(LZX(LENGTH_len), 0, sizeof(LZX(LENGTH_len)));
 
   return DECR_OK;
 }
@@ -2439,7 +2446,7 @@ BOOL __cdecl FDICopy(
 { 
   FDICABINETINFO    fdici;
   FDINOTIFICATION   fdin;
-  int               cabhf, filehf, idx;
+  int               cabhf, filehf = 0, idx;
   unsigned int      i;
   char              fullpath[MAX_PATH];
   size_t            pathlen, filenamelen;
@@ -2450,8 +2457,8 @@ BOOL __cdecl FDICopy(
   fdi_decomp_state _decomp_state;
   fdi_decomp_state *decomp_state = &_decomp_state;
 
-  TRACE("(hfdi == ^%p, pszCabinet == ^%p, pszCabPath == ^%p, flags == %0d, \
-        pfnfdin == ^%p, pfnfdid == ^%p, pvUser == ^%p)\n",
+  TRACE("(hfdi == ^%p, pszCabinet == ^%p, pszCabPath == ^%p, flags == %0d, "
+        "pfnfdin == ^%p, pfnfdid == ^%p, pvUser == ^%p)\n",
         hfdi, pszCabinet, pszCabPath, flags, pfnfdin, pfnfdid, pvUser);
 
   if (!REALLY_IS_FDI(hfdi)) {
@@ -2809,6 +2816,18 @@ BOOL __cdecl FDICopy(
       err = fdi_decomp(file, 1, decomp_state, pszCabPath, pfnfdin, pvUser);
       if (err) CAB(current) = NULL; else CAB(offset) += file->length;
 
+      /* fdintCLOSE_FILE_INFO notification */
+      ZeroMemory(&fdin, sizeof(FDINOTIFICATION));
+      fdin.pv = pvUser;
+      fdin.psz1 = (char *)file->filename;
+      fdin.hf = filehf;
+      fdin.cb = (file->attribs & cffile_A_EXEC) ? TRUE : FALSE; /* FIXME: is that right? */
+      fdin.date = file->date;
+      fdin.time = file->time;
+      fdin.attribs = file->attribs; /* FIXME: filter _A_EXEC? */
+      ((*pfnfdin)(fdintCLOSE_FILE_INFO, &fdin));
+      filehf = 0;
+
       switch (err) {
         case DECR_OK:
           break;
@@ -2828,28 +2847,6 @@ BOOL __cdecl FDICopy(
           PFDI_INT(hfdi)->perf->erfOper = 0;
           PFDI_INT(hfdi)->perf->fError = TRUE;
           goto bail_and_fail;
-      }
-
-      /* fdintCLOSE_FILE_INFO notification */
-      ZeroMemory(&fdin, sizeof(FDINOTIFICATION));
-      fdin.pv = pvUser;
-      fdin.psz1 = (char *)file->filename;
-      fdin.hf = filehf;
-      fdin.cb = (file->attribs & cffile_A_EXEC) ? TRUE : FALSE; /* FIXME: is that right? */
-      fdin.date = file->date;
-      fdin.time = file->time;
-      fdin.attribs = file->attribs; /* FIXME: filter _A_EXEC? */
-      err = ((*pfnfdin)(fdintCLOSE_FILE_INFO, &fdin));
-      if (err == FALSE || err == -1) {
-        /*
-         * SDK states that even though they indicated failure,
-         * we are not supposed to try and close the file, so we
-         * just treat this like all the others
-         */
-        PFDI_INT(hfdi)->perf->erfOper = FDIERROR_USER_ABORT;
-        PFDI_INT(hfdi)->perf->erfType = 0;
-        PFDI_INT(hfdi)->perf->fError = TRUE;
-        goto bail_and_fail;
       }
     }
   }
@@ -2917,6 +2914,8 @@ BOOL __cdecl FDICopy(
     }
     break;
   }
+
+  if (filehf) PFDI_CLOSE(hfdi, filehf);
 
   while (decomp_state) {
     fdi_decomp_state *prev_fds;

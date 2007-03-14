@@ -1343,7 +1343,7 @@ static BOOL fci_flush_folder(
       return FALSE;
     }
 
-    /* Skip a few lines of code. This is catched by the next if. */
+    /* Skip a few lines of code. This is caught by the next if. */
     p_fci_internal->fGetNextCabInVain=TRUE;
   }
 
@@ -2251,7 +2251,7 @@ static BOOL fci_flush_cabinet(
         fci_set_error( FCIERR_NONE, ERROR_FUNCTION_FAILED, TRUE );
         return FALSE;
       }
-      /* Skip a few lines of code. This is catched by the next if. */
+      /* Skip a few lines of code. This is caught by the next if. */
       p_fci_internal->fGetNextCabInVain=TRUE;
     }
 
@@ -2480,7 +2480,7 @@ BOOL __cdecl FCIAddFile(
       fci_set_error( FCIERR_NONE, ERROR_FUNCTION_FAILED, TRUE );
       return FALSE;
     }
-    /* Skip a few lines of code. This is catched by the next if. */
+    /* Skip a few lines of code. This is caught by the next if. */
     p_fci_internal->fGetNextCabInVain=TRUE;
   }
 
@@ -2647,7 +2647,7 @@ BOOL __cdecl FCIAddFile(
       fci_set_error( FCIERR_NONE, ERROR_FUNCTION_FAILED, TRUE );
       return FALSE;
     }
-    /* Skip a few lines of code. This is catched by the next if. */
+    /* Skip a few lines of code. This is caught by the next if. */
     p_fci_internal->fGetNextCabInVain=TRUE;
   }
 
