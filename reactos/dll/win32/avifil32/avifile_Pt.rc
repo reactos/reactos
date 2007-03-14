@@ -1,5 +1,6 @@
 /*
  * Copyright 2003 Marcelo Duarte
+ * Copyright 2006 Américo José Melo
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_DEFAULT
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 IDD_SAVEOPTIONS DIALOG FIXED IMPURE  43, 37, 196, 82
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -36,6 +37,29 @@ BEGIN
     PUSHBUTTON      "Cancelar",IDCANCEL,145,61,45,14
 END
 
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+IDD_SAVEOPTIONS DIALOG FIXED IMPURE  43, 37, 196, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Opções de compressão"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Escolha a stream:",-1,2,5,114,10
+    COMBOBOX        IDC_STREAM,2,18,134,61,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "&Opções...",IDC_OPTIONS,145,17,45,14
+    AUTOCHECKBOX    "&Interlaçar a todos os",IDC_INTERLEAVE,3,42,60,11,WS_TABSTOP
+    EDITTEXT        IDC_INTERLEAVEEVERY,66,41,32,12,ES_AUTOHSCROLL
+    LTEXT           "molduras",-1,104,43,36,9
+    LTEXT           "Formato actual:",-1,3,56,53,9
+    LTEXT           "This space for rent",IDC_FORMATTEXT,55,56,90,26
+    DEFPUSHBUTTON   "OK",IDOK,145,42,45,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,145,61,45,14
+END
+
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
 STRINGTABLE DISCARDABLE
 {
   IDS_WAVESTREAMFORMAT	"Formato wave: %s"
@@ -46,5 +70,20 @@ STRINGTABLE DISCARDABLE
   IDS_AUDIO		"áudio"
   IDS_AVISTREAMFORMAT	"%s %s #%d"
   IDS_AVIFILETYPE	"Wine AVI-manipulador padrão de arquivo"
+  IDS_UNCOMPRESSED      "sem compressão"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_WAVESTREAMFORMAT	"Formato wave: %s"
+  IDS_WAVEFILETYPE	"Formato wave"
+  IDS_ALLMULTIMEDIA	"Todos os ficheiros multimédia"
+  IDS_ALLFILES		"Todos os ficheiros (*.*)@*.*"
+  IDS_VIDEO		"vídeo"
+  IDS_AUDIO		"áudio"
+  IDS_AVISTREAMFORMAT	"%s %s #%d"
+  IDS_AVIFILETYPE	"Manipulador AVI Wine predefinido"
   IDS_UNCOMPRESSED      "sem compressão"
 }

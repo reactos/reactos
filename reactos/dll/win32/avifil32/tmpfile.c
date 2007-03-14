@@ -112,7 +112,7 @@ PAVIFILE AVIFILE_CreateAVITempFile(int nStreams, PAVISTREAM *ppStreams) {
     {
       register DWORD tmp;
 
-      tmp = MulDiv(AVIStreamSampleToTime(ppStreams[i], sInfo.dwLength), \
+      tmp = MulDiv(AVIStreamSampleToTime(ppStreams[i], sInfo.dwLength),
 		   tmpFile->fInfo.dwScale, tmpFile->fInfo.dwRate * 1000);
       if (tmpFile->fInfo.dwLength < tmp)
 	tmpFile->fInfo.dwLength = tmp;

@@ -185,7 +185,7 @@ void WINAPI AVIFileInit(void) {
  */
 void WINAPI AVIFileExit(void) {
   /* need to free ole32.dll if we are the last exit call */
-  /* OleUnitialize() */
+  /* OleUninitialize() */
   FIXME("(): stub!\n");
 }
 

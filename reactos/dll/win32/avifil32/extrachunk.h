@@ -35,10 +35,10 @@ typedef struct _EXTRACHUNKS {
 } EXTRACHUNKS, *LPEXTRACHUNKS;
 
 /* reads a chunk outof the extrachunk-structure */
-HRESULT ReadExtraChunk(LPEXTRACHUNKS extra,FOURCC ckid,LPVOID lp,LPLONG size);
+HRESULT ReadExtraChunk(const LPEXTRACHUNKS extra,FOURCC ckid,LPVOID lp,LPLONG size);
 
 /* writes a chunk into the extrachunk-structure */
-HRESULT WriteExtraChunk(LPEXTRACHUNKS extra,FOURCC ckid,LPVOID lp,LONG size);
+HRESULT WriteExtraChunk(LPEXTRACHUNKS extra,FOURCC ckid,LPCVOID lp,LONG size);
 
 /* reads a chunk fomr the HMMIO into the extrachunk-structure */
 HRESULT ReadChunkIntoExtra(LPEXTRACHUNKS extra,HMMIO hmmio,MMCKINFO *lpck);

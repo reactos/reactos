@@ -40,8 +40,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 
 HMODULE AVIFILE_hModule   = NULL;
 
-BOOL    AVIFILE_bLocked   = FALSE;
-UINT    AVIFILE_uUseCount = 0;
+static BOOL    AVIFILE_bLocked;
+static UINT    AVIFILE_uUseCount;
 
 static HRESULT WINAPI IClassFactory_fnQueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj);
 static ULONG   WINAPI IClassFactory_fnAddRef(LPCLASSFACTORY iface);
