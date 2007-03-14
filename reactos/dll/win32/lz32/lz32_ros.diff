@@ -1,0 +1,9 @@
+Index: lz32.rbuild
+===================================================================
+--- lz32.rbuild	(revision 23782)
++++ lz32.rbuild	(working copy)
+@@ -1,3 +1,3 @@
++<module name="lz32" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_LZ32}" installbase="system32" installname="lz32.dll" allowwarnings="true">
+-<module name="lz32" type="win32dll" baseaddress="${BASEADDRESS_LZ32}" installbase="system32" installname="lz32.dll" allowwarnings="true">
+ 	<importlibrary definition="lz32.spec.def" />
+ 	<include base="lz32">.</include>

@@ -12,5 +12,6 @@
 	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>lzexpand_main.c</file>
+	<file>version.rc</file>
 	<file>lz32.spec</file>
 </module>
