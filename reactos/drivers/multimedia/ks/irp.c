@@ -66,12 +66,38 @@ KsAddObjectCreateItemToObjectHeader(
 */
 KSDDKAPI NTSTATUS NTAPI
 KsAllocateDeviceHeader(
-    OUT PVOID Header,
+    OUT KSDEVICE_HEADER* Header,
     IN  ULONG ItemsCount,
     IN  PKSOBJECT_CREATE_ITEM ItemsList OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    /* Allocates memory for the KSDEVICE_HEADER structure */
+
+    if ( ! Header )
+        return STATUS_INVALID_PARAMETER;
+
+    Header = ExAllocatePoolWithTag(PagedPool, sizeof(KSDEVICE_HEADER), 'HDSK');
+
+    if ( ! Header )
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* TODO: Actually do something with the header, perhaps? */
+
+    return STATUS_SUCCESS;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI VOID NTAPI
+KsFreeDeviceHeader(
+    IN  KSDEVICE_HEADER Header)
+{
+    if ( ! Header )
+        return;
+
+    /* TODO: Free content first */
+
+    ExFreePoolWithTag(Header, 'HDSK');
 }
 
 /*
@@ -89,6 +115,8 @@ KsAllocateExtraData(
 
 /*
     @unimplemented
+
+    http://www.osronline.com/DDKx/stream/ksfunc_3sc3.htm
 */
 KSDDKAPI NTSTATUS NTAPI
 KsAllocateObjectCreateItem(
@@ -103,6 +131,13 @@ KsAllocateObjectCreateItem(
 
 /*
     @unimplemented
+
+    Initialize the required file context header.
+    Allocates KSOBJECT_HEADER structure.
+    Irp is an IRP_MJ_CREATE structure.
+    Driver must allocate KSDISPATCH_TABLE and initialize it first.
+
+    http://www.osronline.com/DDKx/stream/ksfunc_0u2b.htm
 */
 KSDDKAPI NTSTATUS NTAPI
 KsAllocateObjectHeader(
@@ -112,8 +147,40 @@ KsAllocateObjectHeader(
     IN  PIRP Irp,
     IN  KSDISPATCH_TABLE* Table)
 {
+    /* NOTE: PKSOBJECT_HEADER is not defined yet */
+#if 0
+    PKSOBJECT_HEADER object_header;
+
+    /* TODO: Validate parameters */
+
+    object_header = ExAllocatePoolWithTag(PagedPool, sizeof(KSOBJECT_HEADER), 'HOSK');
+
+    if ( ! object_header )
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    (PVOID)(*Header) = object_header;
+
+    /* TODO ... */
+#endif
+
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI VOID NTAPI
+KsFreeObjectHeader(
+    IN  PVOID Header)
+{
+    ExFreePoolWithTag(Header, 'HOSK');
+
+    /* TODO */
+
+    UNIMPLEMENTED;
 }
 
 /*
@@ -186,15 +253,18 @@ KsDispatchFastReadFailure(
 }
 
 /*
-    @unimplemented
+    Used in dispatch table entries that aren't handled and need to return
+    STATUS_INVALID_DEVICE_REQUEST.
 */
 KSDDKAPI NTSTATUS NTAPI
 KsDispatchInvalidDeviceRequest(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_INVALID_DEVICE_REQUEST;
 }
 
 /*
@@ -205,6 +275,7 @@ KsDispatchIrp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    /* Calls a dispatch routine corresponding to the function code of the IRP */
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
@@ -258,26 +329,6 @@ KsForwardIrp(
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI VOID NTAPI
-KsFreeDeviceHeader(
-    IN  PVOID Header)
-{
-    UNIMPLEMENTED;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI VOID NTAPI
-KsFreeObjectHeader(
-    IN  PVOID Header)
-{
-    UNIMPLEMENTED;
 }
 
 /*
@@ -427,6 +478,122 @@ KsSetInformationFile(
     return STATUS_UNSUCCESSFUL;
 }
 
+
+
+/*
+    IRP handlers
+    NOT USED
+*/
+#if 0
+static NTAPI
+NTSTATUS
+KsCreate(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT1("KS / Create\n");
+    return STATUS_UNSUCCESSFUL;
+}
+
+static NTAPI
+NTSTATUS
+KsClose(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT1("KS / Close\n");
+    return STATUS_UNSUCCESSFUL;
+}
+
+static NTAPI
+NTSTATUS
+KsDeviceControl(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT1("KS / DeviceControl\n");
+    return STATUS_UNSUCCESSFUL;
+}
+
+static NTAPI
+NTSTATUS
+KsRead(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT1("KS / Read\n");
+    return STATUS_UNSUCCESSFUL;
+}
+
+static NTAPI
+NTSTATUS
+KsWrite(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT1("KS / Write\n");
+    return STATUS_UNSUCCESSFUL;
+}
+
+static NTAPI
+NTSTATUS
+KsFlushBuffers(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT1("KS / FlushBuffers\n");
+    return STATUS_UNSUCCESSFUL;
+}
+
+static NTAPI
+NTSTATUS
+KsQuerySecurity(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT1("KS / QuerySecurity\n");
+    return STATUS_UNSUCCESSFUL;
+}
+
+static NTAPI
+NTSTATUS
+KsSetSecurity(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT1("KS / SetSecurity\n");
+    return STATUS_UNSUCCESSFUL;
+}
+#endif
+
+
+static NTAPI
+NTSTATUS
+KsInternalIrpDispatcher(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    /* TODO - Nothing implemented really yet! */
+
+    DPRINT1("KS IRP dispatch function called\n");
+
+    PKSDISPATCH_TABLE ks_dispatch_table = NULL;
+
+    /* ks_dispatch_table is the first element in a structure pointed to by FsContext */
+
+    switch ( IoGetCurrentIrpStackLocation(Irp)->MajorFunction )
+    {
+        case IRP_MJ_CREATE :
+/*            return ks_dispatch_table->Create(DeviceObject, Irp);*/
+
+        /* TODO ... */
+
+        default :
+            return STATUS_INVALID_PARAMETER;
+    };
+}
+
+
 /*
     @unimplemented
 */
@@ -435,8 +602,31 @@ KsSetMajorFunctionHandler(
     IN  PDRIVER_OBJECT DriverObject,
     IN  ULONG MajorFunction)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    /*
+        Sets a DriverObject's major function handler to point to an internal
+        function we implement.
+
+        TODO: Deal with KSDISPATCH_FASTIO
+    */
+
+    switch ( MajorFunction )
+    {
+        case IRP_MJ_CREATE :
+        case IRP_MJ_CLOSE :
+        case IRP_MJ_DEVICE_CONTROL :
+        case IRP_MJ_READ :
+        case IRP_MJ_WRITE :
+        case IRP_MJ_FLUSH_BUFFERS :
+        case IRP_MJ_QUERY_SECURITY :
+        case IRP_MJ_SET_SECURITY :
+            DriverObject->MajorFunction[MajorFunction] = KsInternalIrpDispatcher;
+            break;
+
+        default :
+            return STATUS_INVALID_PARAMETER;    /* is this right? */
+    };
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -464,7 +654,7 @@ KsStreamIo(
     @unimplemented
 */
 KSDDKAPI NTSTATUS NTAPI
-  KsWriteFile(
+KsWriteFile(
     IN  PFILE_OBJECT FileObject,
     IN  PKEVENT Event OPTIONAL,
     IN  PVOID PortContext OPTIONAL,

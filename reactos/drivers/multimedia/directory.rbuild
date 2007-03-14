@@ -23,3 +23,21 @@
 <!--<directory name="avtest">
 	<xi:include href="avtest/avtest.rbuild" />
 </directory-->
+
+
+<!--
+	Drivers (experimental)
+-->
+
+<directory name="mpu401_ks">
+	<xi:include href="mpu401_ks/mpu401.rbuild" />
+</directory>
+
+<directory name="sb16_nt4">
+	<xi:include href="sb16_nt4/sb16_nt4.rbuild" />
+</directory>
+
+<!--directory name="sb16_ks">
+	<xi:include href="sb16_ks/sb16.rbuild" />
+</directory-->
+

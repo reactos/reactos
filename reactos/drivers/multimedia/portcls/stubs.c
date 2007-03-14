@@ -1,7 +1,13 @@
 /*
-    Port Class API
-    Stubbed functions
-*/
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS
+ * FILE:            drivers/multimedia/portcls/stubs.c
+ * PURPOSE:         Port Class driver / Stubs
+ * PROGRAMMER:      Andrew Greenwood
+ *
+ * HISTORY:
+ *                  27 Jan 07   Created
+ */
 
 #include <portcls.h>
 
@@ -55,18 +61,6 @@ PcNewMiniport(
  * @unimplemented
  */
 PORTCLASSAPI NTSTATUS NTAPI
-PcNewPort(
-    OUT PPORT* OutPort,
-    IN  REFCLSID ClassId)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-PORTCLASSAPI NTSTATUS NTAPI
 PcNewRegistryKey(
     OUT PREGISTRYKEY* OutRegistryKey,
     IN  PUNKNOWN OuterUnknown OPTIONAL,
@@ -86,81 +80,9 @@ PcNewRegistryKey(
  * @unimplemented
  */
 PORTCLASSAPI NTSTATUS NTAPI
-PcNewResourceList(
-    OUT PRESOURCELIST* OutResourceList,
-    IN  PUNKNOWN OuterUnknown OPTIONAL,
-    IN  POOL_TYPE PoolType,
-    IN  PCM_RESOURCE_LIST TranslatedResources,
-    IN  PCM_RESOURCE_LIST UntranslatedResources)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-PORTCLASSAPI NTSTATUS NTAPI
-PcNewResourceSublist(
-    OUT PRESOURCELIST* OutResourceList,
-    IN  PUNKNOWN OuterUnknown OPTIONAL,
-    IN  POOL_TYPE PoolType,
-    IN  PRESOURCELIST ParentList,
-    IN  ULONG MaximumEntries)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-PORTCLASSAPI NTSTATUS NTAPI
 PcNewServiceGroup(
     OUT PSERVICEGROUP* OutServiceGroup,
     IN  PUNKNOWN OuterUnknown OPTIONAL)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-
-/* ===============================================================
-    IRP Handling
-*/
-
-/*
- * @unimplemented
- */
-PORTCLASSAPI NTSTATUS NTAPI
-PcDispatchIrp(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-PORTCLASSAPI NTSTATUS NTAPI
-PcCompleteIrp(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp,
-    IN  NTSTATUS Status)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-PORTCLASSAPI NTSTATUS NTAPI
-PcForwardIrpSynchronous(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
