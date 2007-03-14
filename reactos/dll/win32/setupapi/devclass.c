@@ -51,50 +51,29 @@ SETUP_PropertyChangeHandler(
     IN PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
     IN DWORD ClassInstallParamsSize);
 
-static const UPDATE_CLASS_PARAM_HANDLER UpdateClassInstallParamHandlers[] = {
-    NULL, /* DIF_SELECTDEVICE */
-    NULL, /* DIF_INSTALLDEVICE */
-    NULL, /* DIF_ASSIGNRESOURCES */
-    NULL, /* DIF_PROPERTIES */
-    NULL, /* DIF_REMOVE */
-    NULL, /* DIF_FIRSTTIMESETUP */
-    NULL, /* DIF_FOUNDDEVICE */
-    NULL, /* DIF_SELECTCLASSDRIVERS */
-    NULL, /* DIF_VALIDATECLASSDRIVERS */
-    NULL, /* DIF_INSTALLCLASSDRIVERS */
-    NULL, /* DIF_CALCDISKSPACE */
-    NULL, /* DIF_DESTROYPRIVATEDATA */
-    NULL, /* DIF_VALIDATEDRIVER */
-    NULL, /* DIF_MOVEDEVICE */
-    NULL, /* DIF_DETECT */
-    NULL, /* DIF_INSTALLWIZARD */
-    NULL, /* DIF_DESTROYWIZARDDATA */
-    SETUP_PropertyChangeHandler, /* DIF_PROPERTYCHANGE */
-    NULL, /* DIF_ENABLECLASS */
-    NULL, /* DIF_DETECTVERIFY */
-    NULL, /* DIF_INSTALLDEVICEFILES */
-    NULL, /* DIF_UNREMOVE */
-    NULL, /* DIF_SELECTBESTCOMPATDRV */
-    NULL, /* DIF_ALLOW_INSTALL */
-    NULL, /* DIF_REGISTERDEVICE */
-    NULL, /* DIF_NEWDEVICEWIZARD_PRESELECT */
-    NULL, /* DIF_NEWDEVICEWIZARD_SELECT */
-    NULL, /* DIF_NEWDEVICEWIZARD_PREANALYZE */
-    NULL, /* DIF_NEWDEVICEWIZARD_POSTANALYZE */
-    NULL, /* DIF_NEWDEVICEWIZARD_FINISHINSTALL */
-    NULL, /* DIF_UNUSED1 */
-    NULL, /* DIF_INSTALLINTERFACES */
-    NULL, /* DIF_DETECTCANCEL */
-    NULL, /* DIF_REGISTER_COINSTALLERS */
-    NULL, /* DIF_ADDPROPERTYPAGE_ADVANCED */
-    NULL, /* DIF_ADDPROPERTYPAGE_BASIC */
-    NULL, /* DIF_RESERVED1 */
-    NULL, /* DIF_TROUBLESHOOTER */
-    NULL, /* DIF_POWERMESSAGEWAKE */
-    NULL, /* DIF_ADDREMOTEPROPERTYPAGE_ADVANCED */
-    NULL, /* DIF_UPDATEDRIVER_UI */
-    NULL  /* DIF_RESERVED2 */
+static BOOL
+SETUP_PropertyAddPropertyAdvancedHandler(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
+    IN DWORD ClassInstallParamsSize);
+
+typedef struct _INSTALL_PARAMS_DATA
+{
+    DI_FUNCTION Function;
+    UPDATE_CLASS_PARAM_HANDLER UpdateHandler;
+    ULONG ParamsSize;
+    LONG FieldOffset;
+} INSTALL_PARAMS_DATA;
+
+#define ADD_PARAM_HANDLER(Function, UpdateHandler, ParamsType, ParamsField) \
+    { Function, UpdateHandler, sizeof(ParamsType), FIELD_OFFSET(struct ClassInstallParams, ParamsField) },
+
+static const INSTALL_PARAMS_DATA InstallParamsData[] = {
+    ADD_PARAM_HANDLER(DIF_PROPERTYCHANGE, SETUP_PropertyChangeHandler, SP_PROPCHANGE_PARAMS, PropChangeParams)
+    ADD_PARAM_HANDLER(DIF_ADDPROPERTYPAGE_ADVANCED, SETUP_PropertyAddPropertyAdvancedHandler, SP_ADDPROPERTYPAGE_DATA, AddPropertyPageData)
 };
+#undef ADD_PARAM_HANDLER
 
 
 /***********************************************************************
@@ -1499,6 +1478,38 @@ cleanup:
 }
 
 /***********************************************************************
+ *		SetupDiGetClassInstallParamsA(SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiGetClassInstallParamsA(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    OUT PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
+    IN DWORD ClassInstallParamsSize,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    FIXME("SetupDiGetClassInstallParamsA(%p %p %p %lu %p) Stub\n",
+        DeviceInfoSet, DeviceInfoData, ClassInstallParams, ClassInstallParamsSize, RequiredSize);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		SetupDiGetClassInstallParamsW(SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiGetClassInstallParamsW(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    OUT PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
+    IN DWORD ClassInstallParamsSize,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    FIXME("SetupDiGetClassInstallParamsW(%p %p %p %lu %p) Stub\n",
+        DeviceInfoSet, DeviceInfoData, ClassInstallParams, ClassInstallParamsSize, RequiredSize);
+    return FALSE;
+}
+
+/***********************************************************************
  *		SetupDiLoadClassIcon(SETUPAPI.@)
  */
 BOOL WINAPI
@@ -2106,16 +2117,9 @@ SETUP_PropertyChangeHandler(
     else
     {
         PSP_PROPCHANGE_PARAMS *CurrentPropChangeParams;
-        if (!DeviceInfoData)
-        {
-            struct DeviceInfoSet *list = (struct DeviceInfoSet *)DeviceInfoSet;
-            CurrentPropChangeParams = &list->ClassInstallParams.PropChange;
-        }
-        else
-        {
-            struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
-            CurrentPropChangeParams = &deviceInfo->ClassInstallParams.PropChange;
-        }
+        struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+        CurrentPropChangeParams = &deviceInfo->ClassInstallParams.PropChangeParams;
+
         if (*CurrentPropChangeParams)
         {
             MyFree(*CurrentPropChangeParams);
@@ -2123,13 +2127,64 @@ SETUP_PropertyChangeHandler(
         }
         if (PropChangeParams)
         {
-            *CurrentPropChangeParams = MyMalloc(sizeof(SP_PROPCHANGE_PARAMS));
+            *CurrentPropChangeParams = MyMalloc(ClassInstallParamsSize);
             if (!*CurrentPropChangeParams)
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 goto done;
             }
-            memcpy(*CurrentPropChangeParams, PropChangeParams, sizeof(SP_PROPCHANGE_PARAMS));
+            memcpy(*CurrentPropChangeParams, PropChangeParams, ClassInstallParamsSize);
+        }
+        ret = TRUE;
+    }
+
+done:
+    return ret;
+}
+
+static BOOL
+SETUP_PropertyAddPropertyAdvancedHandler(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
+    IN DWORD ClassInstallParamsSize)
+{
+    PSP_ADDPROPERTYPAGE_DATA AddPropertyPageData = (PSP_ADDPROPERTYPAGE_DATA)ClassInstallParams;
+    BOOL ret = FALSE;
+
+    if (ClassInstallParamsSize != sizeof(SP_PROPCHANGE_PARAMS))
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (AddPropertyPageData && AddPropertyPageData->Flags != 0)
+        SetLastError(ERROR_INVALID_FLAGS);
+    else if (AddPropertyPageData && AddPropertyPageData->NumDynamicPages >= MAX_INSTALLWIZARD_DYNAPAGES)
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        PSP_ADDPROPERTYPAGE_DATA *CurrentAddPropertyPageData;
+        if (!DeviceInfoData)
+        {
+            struct DeviceInfoSet *list = (struct DeviceInfoSet *)DeviceInfoSet;
+            CurrentAddPropertyPageData = &list->ClassInstallParams.AddPropertyPageData;
+        }
+        else
+        {
+            struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+            CurrentAddPropertyPageData = &deviceInfo->ClassInstallParams.AddPropertyPageData;
+        }
+        if (*CurrentAddPropertyPageData)
+        {
+            MyFree(*CurrentAddPropertyPageData);
+            *CurrentAddPropertyPageData = NULL;
+        }
+        if (AddPropertyPageData)
+        {
+            *CurrentAddPropertyPageData = MyMalloc(ClassInstallParamsSize);
+            if (!*CurrentAddPropertyPageData)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto done;
+            }
+            memcpy(*CurrentAddPropertyPageData, AddPropertyPageData, ClassInstallParamsSize);
         }
         ret = TRUE;
     }
@@ -2180,30 +2235,34 @@ SetupDiSetClassInstallParamsW(
 
         if (ClassInstallParams)
         {
+            DWORD i;
             /* Check parameters in ClassInstallParams */
-            if (ClassInstallParams->InstallFunction < DIF_SELECTDEVICE
-                || ClassInstallParams->InstallFunction - DIF_SELECTDEVICE >= sizeof(UpdateClassInstallParamHandlers)/sizeof(UpdateClassInstallParamHandlers[0]))
+            for (i = 0; i < sizeof(InstallParamsData) / sizeof(InstallParamsData[0]); i++)
             {
-                SetLastError(ERROR_INVALID_USER_BUFFER);
-                goto done;
+                if (InstallParamsData[i].Function == ClassInstallParams->InstallFunction)
+                {
+                    ret = InstallParamsData[i].UpdateHandler(
+                        DeviceInfoSet,
+                        DeviceInfoData,
+                        ClassInstallParams,
+                        ClassInstallParamsSize);
+                    if (ret)
+                    {
+                        InstallParams.Flags |= DI_CLASSINSTALLPARAMS;
+                        ret = SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
+                    }
+                    goto done;
+                }
             }
-            else if (UpdateClassInstallParamHandlers[ClassInstallParams->InstallFunction - DIF_SELECTDEVICE] == NULL)
-            {
-                ERR("InstallFunction %u is valid, but has no associated update handler\n", ClassInstallParams->InstallFunction);
-                SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-                goto done;
-            }
-            ret = UpdateClassInstallParamHandlers[ClassInstallParams->InstallFunction - DIF_SELECTDEVICE](DeviceInfoSet, DeviceInfoData, ClassInstallParams, ClassInstallParamsSize);
-            if (!ret)
-                goto done;
-            InstallParams.Flags |= DI_CLASSINSTALLPARAMS;
+            ERR("InstallFunction %u has no associated update handler\n", ClassInstallParams->InstallFunction);
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+            goto done;
         }
         else
         {
             InstallParams.Flags &= ~DI_CLASSINSTALLPARAMS;
+            ret = SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
         }
-
-        ret = SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
     }
 
 done:

@@ -318,8 +318,8 @@
 @ stdcall SetupDiGetClassImageList(ptr)
 @ stdcall SetupDiGetClassImageListExA(ptr str ptr)
 @ stdcall SetupDiGetClassImageListExW(ptr wstr ptr)
-@ stub SetupDiGetClassInstallParamsA
-@ stub SetupDiGetClassInstallParamsW
+@ stdcall SetupDiGetClassInstallParamsA(ptr ptr ptr long ptr)
+@ stdcall SetupDiGetClassInstallParamsW(ptr ptr ptr long ptr)
 @ stdcall SetupDiGetDeviceInfoListClass(ptr ptr)
 @ stdcall SetupDiGetDeviceInfoListDetailA(ptr ptr)
 @ stdcall SetupDiGetDeviceInfoListDetailW(ptr ptr)

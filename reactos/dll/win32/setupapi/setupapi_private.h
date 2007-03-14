@@ -108,7 +108,8 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
 
 struct ClassInstallParams
 {
-    PSP_PROPCHANGE_PARAMS PropChange;
+    PSP_PROPCHANGE_PARAMS PropChangeParams;
+    PSP_ADDPROPERTYPAGE_DATA AddPropertyPageData;
 };
 
 struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
