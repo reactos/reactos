@@ -25,9 +25,6 @@
     <directory name="inflib">
         <xi:include href="inflib/inflib.rbuild" />
     </directory>
-    <directory name="libcntpr">
-        <xi:include href="libcntpr/libcntpr.rbuild" />
-    </directory>
     <directory name="pseh">
         <xi:include href="pseh/pseh.rbuild" />
     </directory>

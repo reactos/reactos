@@ -7,6 +7,9 @@
     <directory name="dxguid">
         <xi:include href="dxguid/dxguid.rbuild" />
     </directory>
+    <directory name="libcntpr">
+        <xi:include href="libcntpr/libcntpr.rbuild" />
+    </directory>
     <directory name="nt">
         <xi:include href="nt/nt.rbuild" />
     </directory>
