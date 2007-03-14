@@ -1,0 +1,6 @@
+;
+; Exports definition file for sb16_ks.sys
+;
+EXPORTS
+DriverEntry@8
+
