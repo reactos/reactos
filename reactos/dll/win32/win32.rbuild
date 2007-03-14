@@ -151,6 +151,9 @@
 <directory name="objsel">
 	<xi:include href="objsel/objsel.rbuild" />
 </directory>
+<directory name="odbccp32">
+	<xi:include href="odbccp32/odbccp32.rbuild" />
+</directory>
 <directory name="ole32">
 	<xi:include href="ole32/ole32.rbuild" />
 </directory>

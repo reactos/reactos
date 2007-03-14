@@ -139,6 +139,15 @@ __inline static void list_init( struct list *list )
     list->next = list->prev = list;
 }
 
+/* count the elements of a list */
+inline static unsigned int list_count( const struct list *list )
+{
+    unsigned count = 0;
+    const struct list *ptr;
+    for (ptr = list->next; ptr != list; ptr = ptr->next) count++;
+    return count;
+}
+
 /* iterate through the list */
 #define LIST_FOR_EACH(cursor,list) \
     for ((cursor) = (list)->next; (cursor) != (list); (cursor) = (cursor)->next)
