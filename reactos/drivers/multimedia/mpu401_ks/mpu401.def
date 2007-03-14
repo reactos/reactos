@@ -1,0 +1,6 @@
+;
+; Exports definition file for mpu401_ks.sys
+;
+EXPORTS
+DriverEntry@8
+
