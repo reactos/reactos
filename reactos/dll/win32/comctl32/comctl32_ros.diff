@@ -2,7 +2,7 @@ Index: listview.c
 ===================================================================
 --- listview.c	(revision 23123)
 +++ listview.c	(working copy)
-@@ -3777,9 +3777,8 @@
+@@ -3804,9 +3804,8 @@
      if (himl && lvItem.iImage >= 0 && !IsRectEmpty(&rcIcon))
      {
          TRACE("iImage=%d\n", lvItem.iImage);
@@ -18,7 +18,7 @@ Index: propsheet.c
 ===================================================================
 --- propsheet.c	(revision 25766)
 +++ propsheet.c	(working copy)
-@@ -2422,6 +2422,28 @@
+@@ -2429,6 +2429,28 @@
    return FALSE;
  }
  
@@ -47,7 +47,7 @@ Index: propsheet.c
  /******************************************************************************
   *            PROPSHEET_SetWizButtons
   *
-@@ -2444,17 +2466,6 @@
+@@ -2451,17 +2473,6 @@
    EnableWindow(hwndNext, FALSE);
    EnableWindow(hwndFinish, FALSE);
  
@@ -65,7 +65,7 @@ Index: propsheet.c
    if (dwFlags & PSWIZB_BACK)
      EnableWindow(hwndBack, TRUE);
  
-@@ -2484,6 +2495,32 @@
+@@ -2491,6 +2502,32 @@
    }
    else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
      EnableWindow(hwndFinish, TRUE);
@@ -98,21 +98,11 @@ Index: propsheet.c
  }
  
  /******************************************************************************
-@@ -3548,7 +3585,7 @@
- 
-       return FALSE;
-     }
--  
-+
-     case WM_SYSCOLORCHANGE:
-       COMCTL32_RefreshSysColors();
-       return FALSE;
-
 Index: tooltips.c
 ===================================================================
 --- tooltips.c	(revision 25790)
 +++ tooltips.c	(working copy)
-@@ -2450,7 +2450,34 @@
+@@ -2446,7 +2446,34 @@
  TOOLTIPS_NotifyFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
  {
      FIXME ("hwnd=%p wParam=%x lParam=%lx\n", hwnd, wParam, lParam);

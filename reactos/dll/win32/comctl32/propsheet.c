@@ -276,11 +276,13 @@ static INT PROPSHEET_FindPageByResId(PropSheetInfo * psInfo, LRESULT resId)
 static void PROPSHEET_AtoW(LPCWSTR *tostr, LPCSTR frstr)
 {
     INT len;
+    WCHAR *to;
 
     TRACE("<%s>\n", frstr);
     len = MultiByteToWideChar(CP_ACP, 0, frstr, -1, 0, 0);
-    *tostr = Alloc(len * sizeof(WCHAR));
-    MultiByteToWideChar(CP_ACP, 0, frstr, -1, (LPWSTR)*tostr, len);
+    to = Alloc(len * sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, frstr, -1, to, len);
+    *tostr = to;
 }
 
 /******************************************************************************
@@ -314,8 +316,10 @@ static BOOL PROPSHEET_CollectSheetInfoA(LPCPROPSHEETHEADERA lppsh,
      if (HIWORD(lppsh->pszCaption))
      {
         int len = MultiByteToWideChar(CP_ACP, 0, lppsh->pszCaption, -1, NULL, 0);
-        psInfo->ppshheader.pszCaption = Alloc( len*sizeof (WCHAR) );
-        MultiByteToWideChar(CP_ACP, 0, lppsh->pszCaption, -1, (LPWSTR) psInfo->ppshheader.pszCaption, len);
+        WCHAR *caption = Alloc( len*sizeof (WCHAR) );
+
+        MultiByteToWideChar(CP_ACP, 0, lppsh->pszCaption, -1, caption, len);
+        psInfo->ppshheader.pszCaption = caption;
      }
   }
   psInfo->nPages = lppsh->nPages;
@@ -356,7 +360,7 @@ static BOOL PROPSHEET_CollectSheetInfoW(LPCPROPSHEETHEADERW lppsh,
   psInfo->isModeless = dwFlags & PSH_MODELESS;
 
   memcpy(&psInfo->ppshheader,lppsh,dwSize);
-  TRACE("\n** PROPSHEETHEADER **\ndwSize\t\t%d\ndwFlags\t\t%08x\nhwndParent\t%p\nhInstance\t%p\npszCaption\t'%s'\nnPages\t\t%d\npfnCallback\t%p\n",
+  TRACE("\n** PROPSHEETHEADER **\ndwSize\t\t%d\ndwFlags\t\t%08x\nhwndParent\t%p\nhInstance\t%p\npszCaption\t%s\nnPages\t\t%d\npfnCallback\t%p\n",
       lppsh->dwSize, lppsh->dwFlags, lppsh->hwndParent, lppsh->hInstance, debugstr_w(lppsh->pszCaption), lppsh->nPages, lppsh->pfnCallback);
 
   PROPSHEET_UnImplementedFlags(lppsh->dwFlags);
@@ -368,8 +372,9 @@ static BOOL PROPSHEET_CollectSheetInfoW(LPCPROPSHEETHEADERW lppsh,
      if (HIWORD(lppsh->pszCaption))
      {
         int len = strlenW(lppsh->pszCaption);
-        psInfo->ppshheader.pszCaption = Alloc( (len+1)*sizeof(WCHAR) );
-        strcpyW( (WCHAR *)psInfo->ppshheader.pszCaption, lppsh->pszCaption );
+        WCHAR *caption = Alloc( (len+1)*sizeof(WCHAR) );
+
+        psInfo->ppshheader.pszCaption = strcpyW( caption, lppsh->pszCaption );
      }
   }
   psInfo->nPages = lppsh->nPages;
@@ -402,7 +407,7 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
                                PropSheetInfo * psInfo,
                                int index)
 {
-  DLGTEMPLATE* pTemplate;
+  const DLGTEMPLATE* pTemplate;
   const WORD*  p;
   DWORD dwFlags;
   int width, height;
@@ -431,7 +436,7 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
    * Process page template.
    */
   if (dwFlags & PSP_DLGINDIRECT)
-    pTemplate = (DLGTEMPLATE*)lppsp->u.pResource;
+    pTemplate = lppsp->u.pResource;
   else if(dwFlags & PSP_INTERNAL_UNICODE )
   {
     HRSRC hResource = FindResourceW(lppsp->hInstance,
@@ -459,7 +464,7 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
 
   p = (const WORD *)pTemplate;
 
-  if (((MyDLGTEMPLATEEX*)pTemplate)->signature == 0xFFFF)
+  if (((const MyDLGTEMPLATEEX*)pTemplate)->signature == 0xFFFF)
   {
     /* DLGTEMPLATEEX (not defined in any std. header file) */
 
@@ -545,6 +550,7 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
     WCHAR szTitle[256];
     const WCHAR *pTitle;
     static const WCHAR pszNull[] = { '(','n','u','l','l',')',0 };
+    WCHAR *text;
     int len;
 
     if ( !HIWORD( lppsp->pszTitle ) )
@@ -561,8 +567,8 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
       pTitle = lppsp->pszTitle;
 
     len = strlenW(pTitle);
-    psInfo->proppage[index].pszText = Alloc( (len+1)*sizeof (WCHAR) );
-    strcpyW( (LPWSTR)psInfo->proppage[index].pszText,pTitle);
+    text = Alloc( (len+1)*sizeof (WCHAR) );
+    psInfo->proppage[index].pszText = strcpyW( text, pTitle);
   }
 
   /*
@@ -1238,11 +1244,11 @@ PROPSHEET_WizardSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
  * See also dialog.c/DIALOG_ParseTemplate32().
  */
 
-static UINT GetTemplateSize(DLGTEMPLATE* pTemplate)
+static UINT GetTemplateSize(const DLGTEMPLATE* pTemplate)
 
 {
   const WORD*  p = (const WORD *)pTemplate;
-  BOOL  istemplateex = (((MyDLGTEMPLATEEX*)pTemplate)->signature == 0xFFFF);
+  BOOL  istemplateex = (((const MyDLGTEMPLATEEX*)pTemplate)->signature == 0xFFFF);
   WORD nrofitems;
   UINT ret;
 
@@ -1307,7 +1313,7 @@ static UINT GetTemplateSize(DLGTEMPLATE* pTemplate)
   p += lstrlenW((LPCWSTR)p) + 1;
 
   /* font, if DS_SETFONT set */
-  if ((DS_SETFONT & ((istemplateex)?  ((MyDLGTEMPLATEEX*)pTemplate)->style :
+  if ((DS_SETFONT & ((istemplateex)?  ((const MyDLGTEMPLATEEX*)pTemplate)->style :
 		     pTemplate->style)))
     {
       p+=(istemplateex)?3:1;
@@ -1332,7 +1338,7 @@ static UINT GetTemplateSize(DLGTEMPLATE* pTemplate)
 	  p++;
 	  break;
 	case 0xffff:
-          TRACE("class ordinal 0x%08x\n",*(DWORD*)p);
+          TRACE("class ordinal 0x%08x\n",*(const DWORD*)p);
 	  p += 2;
 	  break;
 	default:
@@ -1348,7 +1354,7 @@ static UINT GetTemplateSize(DLGTEMPLATE* pTemplate)
 	  p++;
 	  break;
 	case 0xffff:
-          TRACE("text ordinal 0x%08x\n",*(DWORD*)p);
+          TRACE("text ordinal 0x%08x\n",*(const DWORD*)p);
 	  p += 2;
 	  break;
 	default:
@@ -1360,7 +1366,7 @@ static UINT GetTemplateSize(DLGTEMPLATE* pTemplate)
       --nrofitems;
     }
   
-  ret = (p - (WORD*)pTemplate) * sizeof(WORD);
+  ret = (p - (const WORD*)pTemplate) * sizeof(WORD);
   TRACE("%p %p size 0x%08x\n", p, pTemplate, ret);
   return ret;
 }
@@ -1488,8 +1494,7 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 					ppshpage->pfnDlgProc,
 					(LPARAM)ppshpage);
   /* Free a no more needed copy */
-  if(temp)
-      Free(temp);
+  Free(temp);
 
   psInfo->proppage[index].hwndPage = hwndPage;
 
@@ -1703,6 +1708,8 @@ static BOOL PROPSHEET_Finish(HWND hwndDlg)
   if (msgResult != 0)
     return FALSE;
 
+  if (psInfo->result == 0)
+      psInfo->result = IDOK;
   if (psInfo->isModeless)
     psInfo->activeValid = FALSE;
   else
@@ -2148,7 +2155,7 @@ static void PROPSHEET_SetTitleW(HWND hwndDlg, DWORD dwStyle, LPCWSTR lpszText)
   PropSheetInfo*	psInfo = (PropSheetInfo*) GetPropW(hwndDlg, PropSheetInfoStr);
   WCHAR			szTitle[256];
 
-  TRACE("'%s' (style %08x)\n", debugstr_w(lpszText), dwStyle);
+  TRACE("%s (style %08x)\n", debugstr_w(lpszText), dwStyle);
   if (HIWORD(lpszText) == 0) {
     if (!LoadStringW(psInfo->ppshheader.hInstance,
                      LOWORD(lpszText), szTitle, sizeof(szTitle)-sizeof(WCHAR)))
@@ -2208,7 +2215,7 @@ static void PROPSHEET_SetFinishTextW(HWND hwndDlg, LPCWSTR lpszText)
   PropSheetInfo* psInfo = (PropSheetInfo*) GetPropW(hwndDlg, PropSheetInfoStr);
   HWND hwndButton = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
 
-  TRACE("'%s'\n", debugstr_w(lpszText));
+  TRACE("%s\n", debugstr_w(lpszText));
   /* Set text, show and enable the Finish button */
   SetWindowTextW(hwndButton, lpszText);
   ShowWindow(hwndButton, SW_SHOW);
@@ -2397,7 +2404,7 @@ static BOOL PROPSHEET_RemovePage(HWND hwndDlg,
   {
      PROPSHEETPAGEW* psp = (PROPSHEETPAGEW*)psInfo->proppage[index].hpage;
 
-     if ((psp->dwFlags & PSP_USETITLE) && psInfo->proppage[index].pszText)
+     if (psp->dwFlags & PSP_USETITLE)
         Free ((LPVOID)psInfo->proppage[index].pszText);
 
      DestroyPropertySheetPage(psInfo->proppage[index].hpage);
@@ -2749,7 +2756,7 @@ static void PROPSHEET_CleanUp(HWND hwndDlg)
 
      if(psp)
      {
-        if ((psp->dwFlags & PSP_USETITLE) && psInfo->proppage[i].pszText)
+        if (psp->dwFlags & PSP_USETITLE)
            Free ((LPVOID)psInfo->proppage[i].pszText);
 
         DestroyPropertySheetPage(psInfo->proppage[i].hpage);
@@ -2823,7 +2830,7 @@ INT_PTR WINAPI PropertySheetA(LPCPROPSHEETHEADERA lppsh)
   PropSheetInfo* psInfo = (PropSheetInfo*) GlobalAlloc(GPTR,
                                                        sizeof(PropSheetInfo));
   UINT i, n;
-  BYTE* pByte;
+  const BYTE* pByte;
 
   TRACE("(%p)\n", lppsh);
 
@@ -2831,7 +2838,7 @@ INT_PTR WINAPI PropertySheetA(LPCPROPSHEETHEADERA lppsh)
 
   psInfo->proppage = (PropPageInfo*) Alloc(sizeof(PropPageInfo) *
                                                     lppsh->nPages);
-  pByte = (BYTE*) psInfo->ppshheader.u3.ppsp;
+  pByte = (const BYTE*) psInfo->ppshheader.u3.ppsp;
 
   for (n = i = 0; i < lppsh->nPages; i++, n++)
   {
@@ -2840,7 +2847,7 @@ INT_PTR WINAPI PropertySheetA(LPCPROPSHEETHEADERA lppsh)
     else
     {
        psInfo->proppage[n].hpage = CreatePropertySheetPageA((LPCPROPSHEETPAGEA)pByte);
-       pByte += ((LPPROPSHEETPAGEA)pByte)->dwSize;
+       pByte += ((LPCPROPSHEETPAGEA)pByte)->dwSize;
     }
 
     if (!PROPSHEET_CollectPageInfo((LPCPROPSHEETPAGEW)psInfo->proppage[n].hpage,
@@ -2852,6 +2859,9 @@ INT_PTR WINAPI PropertySheetA(LPCPROPSHEETHEADERA lppsh)
 	psInfo->nPages--;
     }
   }
+
+  if (psInfo->active_page >= psInfo->nPages) psInfo->active_page = 0;
+  TRACE("startpage: %d of %d pages\n", psInfo->active_page, psInfo->nPages);
 
   psInfo->unicode = FALSE;
   psInfo->ended = FALSE;
@@ -2874,7 +2884,7 @@ INT_PTR WINAPI PropertySheetW(LPCPROPSHEETHEADERW lppsh)
   PropSheetInfo* psInfo = (PropSheetInfo*) GlobalAlloc(GPTR,
                                                        sizeof(PropSheetInfo));
   UINT i, n;
-  BYTE* pByte;
+  const BYTE* pByte;
 
   TRACE("(%p)\n", lppsh);
 
@@ -2882,7 +2892,7 @@ INT_PTR WINAPI PropertySheetW(LPCPROPSHEETHEADERW lppsh)
 
   psInfo->proppage = (PropPageInfo*) Alloc(sizeof(PropPageInfo) *
                                                     lppsh->nPages);
-  pByte = (BYTE*) psInfo->ppshheader.u3.ppsp;
+  pByte = (const BYTE*) psInfo->ppshheader.u3.ppsp;
 
   for (n = i = 0; i < lppsh->nPages; i++, n++)
   {
@@ -2891,7 +2901,7 @@ INT_PTR WINAPI PropertySheetW(LPCPROPSHEETHEADERW lppsh)
     else
     {
        psInfo->proppage[n].hpage = CreatePropertySheetPageW((LPCPROPSHEETPAGEW)pByte);
-       pByte += ((LPPROPSHEETPAGEW)pByte)->dwSize;
+       pByte += ((LPCPROPSHEETPAGEW)pByte)->dwSize;
     }
 
     if (!PROPSHEET_CollectPageInfo((LPCPROPSHEETPAGEW)psInfo->proppage[n].hpage,
@@ -2903,6 +2913,9 @@ INT_PTR WINAPI PropertySheetW(LPCPROPSHEETHEADERW lppsh)
 	psInfo->nPages--;
     }
   }
+
+  if (psInfo->active_page >= psInfo->nPages) psInfo->active_page = 0;
+  TRACE("startpage: %d of %d pages\n", psInfo->active_page, psInfo->nPages);
 
   psInfo->unicode = TRUE;
   psInfo->ended = FALSE;
@@ -2978,8 +2991,9 @@ HPROPSHEETPAGE WINAPI CreatePropertySheetPageA(
         if (HIWORD( ppsp->u.pszTemplate ))
         {
             int len = strlen(lpPropSheetPage->u.pszTemplate) + 1;
-            ppsp->u.pszTemplate = Alloc( len );
-            strcpy( (LPSTR)ppsp->u.pszTemplate, lpPropSheetPage->u.pszTemplate );
+            char *template = Alloc( len );
+
+            ppsp->u.pszTemplate = (LPWSTR)strcpy( template, lpPropSheetPage->u.pszTemplate );
         }
     }
 
@@ -3043,8 +3057,9 @@ HPROPSHEETPAGE WINAPI CreatePropertySheetPageW(LPCPROPSHEETPAGEW lpPropSheetPage
         if (HIWORD( ppsp->u.pszTemplate ))
         {
             int len = strlenW(lpPropSheetPage->u.pszTemplate) + 1;
-            ppsp->u.pszTemplate = Alloc( len * sizeof (WCHAR) );
-            strcpyW( (WCHAR *)ppsp->u.pszTemplate, lpPropSheetPage->u.pszTemplate );
+            WCHAR *template = Alloc( len * sizeof (WCHAR) );
+
+            ppsp->u.pszTemplate = strcpyW( template, lpPropSheetPage->u.pszTemplate );
         }
     }
 
@@ -3053,8 +3068,9 @@ HPROPSHEETPAGE WINAPI CreatePropertySheetPageW(LPCPROPSHEETPAGEW lpPropSheetPage
         if (HIWORD( ppsp->u2.pszIcon ))
         {
             int len = strlenW(lpPropSheetPage->u2.pszIcon) + 1;
-            ppsp->u2.pszIcon = Alloc( len * sizeof (WCHAR) );
-            strcpyW( (WCHAR *)ppsp->u2.pszIcon, lpPropSheetPage->u2.pszIcon );
+            WCHAR *icon = Alloc( len * sizeof (WCHAR) );
+
+            ppsp->u2.pszIcon = strcpyW( icon, lpPropSheetPage->u2.pszIcon );
         }
     }
 
@@ -3585,7 +3601,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
       return FALSE;
     }
-
+  
     case WM_SYSCOLORCHANGE:
       COMCTL32_RefreshSysColors();
       return FALSE;

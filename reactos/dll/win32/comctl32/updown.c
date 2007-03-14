@@ -831,7 +831,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    break;
 
 	case WM_DESTROY:
-	    if(infoPtr->AccelVect) Free (infoPtr->AccelVect);
+	    Free (infoPtr->AccelVect);
 
 	    if(infoPtr->Buddy) RemovePropW(infoPtr->Buddy, BUDDY_UPDOWN_HWND);
 

@@ -1038,6 +1038,8 @@ MONTHCAL_SetCurSel(MONTHCAL_INFO *infoPtr, LPARAM lParam)
   if((infoPtr==NULL) ||(lpSel==NULL)) return FALSE;
   if(GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & MCS_MULTISELECT) return FALSE;
 
+  if(!MONTHCAL_ValidateTime(*lpSel)) return FALSE;
+
   infoPtr->currentMonth=lpSel->wMonth;
   infoPtr->currentYear=lpSel->wYear;
 
@@ -1891,6 +1893,10 @@ MONTHCAL_Create(HWND hwnd, WPARAM wParam, LPARAM lParam)
   infoPtr->bk          = GetSysColor(COLOR_WINDOW);
   infoPtr->txt	       = GetSysColor(COLOR_WINDOWTEXT);
 
+  /* set the current day for highlighing */
+  infoPtr->minSel.wDay = infoPtr->todaysDate.wDay;
+  infoPtr->maxSel.wDay = infoPtr->todaysDate.wDay;
+
   /* call MONTHCAL_UpdateSize to set all of the dimensions */
   /* of the control */
   MONTHCAL_UpdateSize(infoPtr);
@@ -1905,10 +1911,9 @@ static LRESULT
 MONTHCAL_Destroy(MONTHCAL_INFO *infoPtr)
 {
   /* free month calendar info data */
-  if(infoPtr->monthdayState)
-      Free(infoPtr->monthdayState);
+  Free(infoPtr->monthdayState);
   SetWindowLongPtrW(infoPtr->hwndSelf, 0, 0);
-  
+
   CloseThemeData (GetWindowTheme (infoPtr->hwndSelf));
   
   Free(infoPtr);

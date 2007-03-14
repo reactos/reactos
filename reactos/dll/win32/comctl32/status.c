@@ -433,6 +433,8 @@ static BOOL
 STATUSBAR_GetRect (STATUS_INFO *infoPtr, INT nPart, LPRECT rect)
 {
     TRACE("part %d\n", nPart);
+    if(nPart >= infoPtr->numParts || nPart < 0)
+      return FALSE;
     if (infoPtr->simple)
 	*rect = infoPtr->part0.bound;
     else
@@ -660,7 +662,7 @@ STATUSBAR_SetParts (STATUS_INFO *infoPtr, INT count, LPINT parts)
     infoPtr->numParts = count;
     if (oldNumParts > infoPtr->numParts) {
 	for (i = infoPtr->numParts ; i < oldNumParts; i++) {
-	    if (infoPtr->parts[i].text && !(infoPtr->parts[i].style & SBT_OWNERDRAW))
+	    if (!(infoPtr->parts[i].style & SBT_OWNERDRAW))
 		Free (infoPtr->parts[i].text);
 	}
     } else if (oldNumParts < infoPtr->numParts) {
@@ -669,8 +671,7 @@ STATUSBAR_SetParts (STATUS_INFO *infoPtr, INT count, LPINT parts)
 	for (i = 0; i < oldNumParts; i++) {
 	    tmp[i] = infoPtr->parts[i];
 	}
-	if (infoPtr->parts)
-	    Free (infoPtr->parts);
+        Free (infoPtr->parts);
 	infoPtr->parts = tmp;
     }
     if (oldNumParts == infoPtr->numParts) {
@@ -749,10 +750,9 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
     oldStyle = part->style;
     part->style = style;
     if (style & SBT_OWNERDRAW) {
-        if (!(oldStyle & SBT_OWNERDRAW)) {
-            if (part->text)
-                Free (part->text);
-        } else if (part->text == text)
+        if (!(oldStyle & SBT_OWNERDRAW))
+            Free (part->text);
+        else if (part->text == text)
             return TRUE;
         part->text = (LPWSTR)text;
     } else {
@@ -781,7 +781,7 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
 		return TRUE;
 	}
 
-	if (part->text && !(oldStyle & SBT_OWNERDRAW))
+	if (!(oldStyle & SBT_OWNERDRAW))
 	    Free (part->text);
 	part->text = ntext;
     }
@@ -868,10 +868,10 @@ STATUSBAR_WMDestroy (STATUS_INFO *infoPtr)
 
     TRACE("\n");
     for (i = 0; i < infoPtr->numParts; i++) {
-	if (infoPtr->parts[i].text && !(infoPtr->parts[i].style & SBT_OWNERDRAW))
+	if (!(infoPtr->parts[i].style & SBT_OWNERDRAW))
 	    Free (infoPtr->parts[i].text);
     }
-    if (infoPtr->part0.text && !(infoPtr->part0.style & SBT_OWNERDRAW))
+    if (!(infoPtr->part0.style & SBT_OWNERDRAW))
 	Free (infoPtr->part0.text);
     Free (infoPtr->parts);
 
@@ -1136,8 +1136,7 @@ STATUSBAR_WMSetText (STATUS_INFO *infoPtr, LPCSTR text)
 
     part = &infoPtr->parts[0];
     /* duplicate string */
-    if (part->text)
-        Free (part->text);
+    Free (part->text);
     part->text = 0;
     if (infoPtr->bUnicode) {
 	if (text && (len = strlenW((LPCWSTR)text))) {

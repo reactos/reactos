@@ -82,7 +82,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(tab);
 
 typedef struct
 {
-  UINT   mask;
   DWORD  dwState;
   LPWSTR pszText;
   INT    iImage;
@@ -96,7 +95,7 @@ typedef struct
 } TAB_ITEM;
 
 /* The size of a tab item depends on how much extra data is requested */
-#define TAB_ITEM_SIZE(infoPtr) (sizeof(TAB_ITEM) - sizeof(BYTE) + infoPtr->cbInfo)
+#define TAB_ITEM_SIZE(infoPtr) (FIELD_OFFSET(TAB_ITEM, extra[(infoPtr)->cbInfo]))
 
 typedef struct
 {
@@ -217,9 +216,8 @@ TAB_DumpItemInternal(TAB_INFO *infoPtr, UINT iItem)
 	TAB_ITEM *ti;
 
 	ti = TAB_GetItem(infoPtr, iItem);
-	TRACE("tab %d, mask=0x%08x, dwState=0x%08x, pszText=%s, iImage=%d\n",
-	      iItem, ti->mask, ti->dwState, debugstr_w(ti->pszText),
-	      ti->iImage);
+	TRACE("tab %d, dwState=0x%08x, pszText=%s, iImage=%d\n",
+	      iItem, ti->dwState, debugstr_w(ti->pszText), ti->iImage);
 	TRACE("tab %d, rect.left=%d, rect.top(row)=%d\n",
 	      iItem, ti->rect.left, ti->rect.top);
     }
@@ -1737,7 +1735,7 @@ TAB_DrawItemInterior
      *
      * Draw the icon.
      */
-    if (infoPtr->himl && (item->mask & TCIF_IMAGE))
+    if (infoPtr->himl && item->iImage != -1)
     {
       INT cx;
       INT cy;
@@ -2639,7 +2637,6 @@ TAB_InsertItemT (TAB_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL bUnicode)
 
   item = TAB_GetItem(infoPtr, iItem);
 
-  item->mask = pti->mask;
   item->pszText = NULL;
 
   if (pti->mask & TCIF_TEXT)
@@ -2771,11 +2768,8 @@ TAB_SetItemT (TAB_INFO *infoPtr, INT iItem, LPTCITEMW tabItem, BOOL bUnicode)
 
   if (tabItem->mask & TCIF_TEXT)
   {
-    if (wineItem->pszText)
-    {
-      Free(wineItem->pszText);
-      wineItem->pszText = NULL;
-    }
+    Free(wineItem->pszText);
+    wineItem->pszText = NULL;
     if (bUnicode)
       Str_SetPtrW(&wineItem->pszText, tabItem->pszText);
     else
@@ -2843,12 +2837,9 @@ static LRESULT TAB_DeleteItem (TAB_INFO *infoPtr, INT iItem)
     {
         TAB_ITEM *item = TAB_GetItem(infoPtr, iItem);
         LPBYTE oldItems = (LPBYTE)infoPtr->items;
-	
+
 	TAB_InvalidateTabArea(infoPtr);
-
-	if ((item->mask & TCIF_TEXT) && item->pszText)
-            Free(item->pszText);
-
+        Free(item->pszText);
 	infoPtr->uNumItem--;
 
 	if (!infoPtr->uNumItem)
@@ -2939,6 +2930,8 @@ static inline LRESULT TAB_SetImageList (TAB_INFO *infoPtr, HIMAGELIST himlNew)
     HIMAGELIST himlPrev = infoPtr->himl;
     TRACE("\n");
     infoPtr->himl = himlNew;
+    TAB_SetItemBounds(infoPtr);
+    InvalidateRect(infoPtr->hwnd, NULL, TRUE);
     return (LRESULT)himlPrev;
 }
 

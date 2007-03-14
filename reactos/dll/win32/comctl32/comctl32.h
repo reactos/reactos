@@ -38,6 +38,9 @@
 extern HMODULE COMCTL32_hModule;
 extern HBRUSH  COMCTL32_hPattern55AABrush;
 
+/* has a value of: 0, CCS_TOP, CCS_NOMOVEY, CCS_BOTTOM */
+#define CCS_LAYOUT_MASK 0x3
+
 /* Property sheet / Wizard */
 #define IDD_PROPSHEET 1006
 #define IDD_WIZARD    1020

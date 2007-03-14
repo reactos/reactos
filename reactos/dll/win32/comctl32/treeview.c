@@ -820,8 +820,7 @@ TREEVIEW_UpdateDispInfo(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 				     (LPSTR)callback.item.pszText, -1,
 				     wineItem->pszText, buflen/sizeof(WCHAR));
 		wineItem->cchTextMax = buflen/sizeof(WCHAR);
-		if (oldText)
-		    Free(oldText);
+		Free(oldText);
 	    }
 	}
     }
@@ -1010,8 +1009,12 @@ TREEVIEW_AllocateItem(TREEVIEW_INFO *infoPtr)
     if (!newItem)
 	return NULL;
 
-    newItem->iImage = -1;
-    newItem->iSelectedImage = -1;
+    /* I_IMAGENONE would make more sense but this is neither what is
+     * documented (MSDN doesn't specify) nor what Windows actually does
+     * (it sets it to zero)... and I can so imagine an application using
+     * inc/dec to toggle the images. */
+    newItem->iImage = 0;
+    newItem->iSelectedImage = 0;
 
     if (DPA_InsertPtr(infoPtr->items, INT_MAX, newItem) == -1)
     {
@@ -1480,7 +1483,7 @@ TREEVIEW_RemoveItem(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem)
 
     infoPtr->uNumItems--;
 
-    if (wineItem->pszText && wineItem->pszText != LPSTR_TEXTCALLBACKW)
+    if (wineItem->pszText != LPSTR_TEXTCALLBACKW)
 	Free(wineItem->pszText);
 
     TREEVIEW_FreeItem(infoPtr, wineItem);
@@ -1727,6 +1730,11 @@ TREEVIEW_NaturalHeight(TREEVIEW_INFO *infoPtr)
         height = tm.tmHeight + tm.tmExternalLeading + TVHEIGHT_FONT_ADJUST;
     if (height < infoPtr->normalImageHeight)
         height = infoPtr->normalImageHeight;
+
+    /* Round down, unless we support odd ("non even") heights. */
+    if (!(infoPtr->dwStyle & TVS_NONEVENHEIGHT))
+        height &= ~1;
+
     return height;
 }
 
@@ -1822,7 +1830,7 @@ TREEVIEW_SetItemHeight(TREEVIEW_INFO *infoPtr, INT newHeight)
     }
 
     /* Round down, unless we support odd ("non even") heights. */
-    if (!(infoPtr->dwStyle) & TVS_NONEVENHEIGHT)
+    if (!(infoPtr->dwStyle & TVS_NONEVENHEIGHT))
 	infoPtr->uItemHeight &= ~1;
 
     if (infoPtr->uItemHeight != prevHeight)
@@ -2322,13 +2330,15 @@ TREEVIEW_DrawItemLines(TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *item)
 	HTREEITEM parent;
         LOGBRUSH lb;
 
-	/*
-	 * Get a dotted grey pen
-	 */
+	/* Get a dotted grey pen */
         lb.lbStyle = BS_SOLID;
         lb.lbColor = infoPtr->clrLine;
         hNewPen = ExtCreatePen(PS_COSMETIC|PS_ALTERNATE, 1, &lb, 0, NULL);
 	hOldPen = SelectObject(hdc, hNewPen);
+
+        /* Make sure the center is on a dot (using +2 instead
+         * of +1 gives us pixel-by-pixel compat with native) */
+        centery = (centery + 2) & ~1;
 
 	MoveToEx(hdc, item->stateOffset, centery, NULL);
 	LineTo(hdc, centerx - 1, centery);
@@ -2698,7 +2708,7 @@ TREEVIEW_UpdateScrollBars(TREEVIEW_INFO *infoPtr)
 	    > infoPtr->clientWidth - GetSystemMetrics(SM_CXVSCROLL))
 	    horz = TRUE;
     }
-    else if (infoPtr->treeWidth > infoPtr->clientWidth)
+    else if (infoPtr->treeWidth > infoPtr->clientWidth || infoPtr->scrollX > 0)
 	horz = TRUE;
 
     if (!vert && horz && infoPtr->treeHeight
@@ -2756,6 +2766,8 @@ TREEVIEW_UpdateScrollBars(TREEVIEW_INFO *infoPtr)
 	infoPtr->uInternalStatus |= TV_HSCROLL;
 
 	SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
+	TREEVIEW_HScroll(infoPtr,
+	                MAKEWPARAM(SB_THUMBPOSITION, scrollX));
     }
     else
     {
@@ -2764,12 +2776,11 @@ TREEVIEW_UpdateScrollBars(TREEVIEW_INFO *infoPtr)
 	infoPtr->uInternalStatus &= ~TV_HSCROLL;
 
 	scrollX = 0;
-    }
-
-    if (infoPtr->scrollX != scrollX)
-    {
-	TREEVIEW_HScroll(infoPtr,
-	                 MAKEWPARAM(SB_THUMBPOSITION, scrollX));
+        if (infoPtr->scrollX != 0)
+        {
+	    TREEVIEW_HScroll(infoPtr,
+	                    MAKEWPARAM(SB_THUMBPOSITION, scrollX));
+        }
     }
 
     if (!horz)
@@ -4649,9 +4660,6 @@ TREEVIEW_VScroll(TREEVIEW_INFO *infoPtr, WPARAM wParam)
     if (!(infoPtr->uInternalStatus & TV_VSCROLL))
 	return 0;
 
-    if (infoPtr->hwndEdit)
-	SetFocus(infoPtr->hwnd);
-
     if (!oldFirstVisible)
     {
 	assert(infoPtr->root->firstChild == NULL);
@@ -4721,9 +4729,6 @@ TREEVIEW_HScroll(TREEVIEW_INFO *infoPtr, WPARAM wParam)
 
     if (!(infoPtr->uInternalStatus & TV_HSCROLL))
 	return FALSE;
-
-    if (infoPtr->hwndEdit)
-	SetFocus(infoPtr->hwnd);
 
     maxWidth = infoPtr->treeWidth - infoPtr->clientWidth;
     /* shall never occur */
@@ -4823,7 +4828,6 @@ TREEVIEW_MouseWheel(TREEVIEW_INFO *infoPtr, WPARAM wParam)
 static LRESULT
 TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
 {
-    static const WCHAR szDisplayW[] = { 'D','I','S','P','L','A','Y','\0' };
     RECT rcClient;
     TREEVIEW_INFO *infoPtr;
     LOGFONTW lf;
@@ -4931,7 +4935,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
 	infoPtr->himlState =
 	    ImageList_Create(16, 16, ILC_COLOR | ILC_MASK, 3, 0);
 
-	hdcScreen = CreateDCW(szDisplayW, NULL, NULL, NULL);
+	hdcScreen = GetDC(0);
 
 	/* Create a coloured bitmap compatible with the screen depth
 	   because checkboxes are not black&white */
@@ -4959,7 +4963,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
 
 	DeleteObject(hbm);
 	DeleteDC(hdc);
-	DeleteDC(hdcScreen);
+	ReleaseDC(0, hdcScreen);
 
 	infoPtr->stateImageWidth = 16;
 	infoPtr->stateImageHeight = 16;
@@ -5614,6 +5618,11 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return TREEVIEW_MouseMove(infoPtr, wParam, lParam);
         else
             return 0;
+
+    case WM_NCLBUTTONDOWN:
+        if (infoPtr->hwndEdit)
+            SetFocus(infoPtr->hwnd);
+        goto def;
 
     case WM_NCPAINT:
         if (nc_paint (infoPtr, (HRGN)wParam))

@@ -160,6 +160,17 @@ DATETIME_SetSystemTime (DATETIME_INFO *infoPtr, DWORD flag, SYSTEMTIME *lprgSysT
           lprgSysTimeArray->wYear, lprgSysTimeArray->wMonth, lprgSysTimeArray->wDay,
           lprgSysTimeArray->wHour, lprgSysTimeArray->wMinute, lprgSysTimeArray->wSecond);
 
+    if (lprgSysTimeArray->wYear < 1601 || lprgSysTimeArray->wYear > 30827 ||
+	lprgSysTimeArray->wMonth < 1 || lprgSysTimeArray->wMonth > 12 ||
+	lprgSysTimeArray->wDayOfWeek > 6 ||
+	lprgSysTimeArray->wDay < 1 || lprgSysTimeArray->wDay > 31 ||
+	lprgSysTimeArray->wHour > 23 ||
+	lprgSysTimeArray->wMinute > 59 ||
+	lprgSysTimeArray->wSecond > 59 ||
+	lprgSysTimeArray->wMilliseconds > 999
+	)
+      return 0;
+
     if (flag == GDT_VALID) {
         infoPtr->dateValid = TRUE;
         MONTHCAL_CopyTime (lprgSysTimeArray, &infoPtr->date);

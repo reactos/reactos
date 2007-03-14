@@ -378,7 +378,7 @@ static BOOL IPADDRESS_ConstrainField (IPADDRESS_INFO *infoPtr, int currentfield)
     if (newValue == curValue) return FALSE;
 
     wsprintfW (field, fmt, newValue);
-    TRACE("  field='%s'\n", debugstr_w(field));
+    TRACE("  field=%s\n", debugstr_w(field));
     return SetWindowTextW (part->EditHwnd, field);
 }
 

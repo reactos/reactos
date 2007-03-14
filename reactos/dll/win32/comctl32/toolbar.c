@@ -2664,33 +2664,7 @@ TOOLBAR_AddBitmapToImageList(TOOLBAR_INFO *infoPtr, HIMAGELIST himlDef, const TB
     TRACE("adding hInst=%p nID=%d nButtons=%d\n", bitmap->hInst, bitmap->nID, bitmap->nButtons);
     /* Add bitmaps to the default image list */
     if (bitmap->hInst == NULL)         /* a handle was passed */
-    {
-       BITMAP  bmp;
-       HBITMAP hOldBitmapBitmap, hOldBitmapLoad;
-       HDC     hdcImage, hdcBitmap;
-
-       /* copy the bitmap before adding it so that the user's bitmap
-        * doesn't get modified.
-        */
-       GetObjectW ((HBITMAP)bitmap->nID, sizeof(BITMAP), (LPVOID)&bmp);
-
-       hdcImage  = CreateCompatibleDC(0);
-       hdcBitmap = CreateCompatibleDC(0);
-
-       /* create new bitmap */
-       hbmLoad = CreateBitmap (bmp.bmWidth, bmp.bmHeight, bmp.bmPlanes, bmp.bmBitsPixel, NULL);
-       hOldBitmapBitmap = SelectObject(hdcBitmap, (HBITMAP)bitmap->nID);
-       hOldBitmapLoad = SelectObject(hdcImage, hbmLoad);
-
-       /* Copy the user's image */
-       BitBlt (hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight,
-               hdcBitmap, 0, 0, SRCCOPY);
-
-       SelectObject (hdcImage, hOldBitmapLoad);
-       SelectObject (hdcBitmap, hOldBitmapBitmap);
-       DeleteDC (hdcImage);
-       DeleteDC (hdcBitmap);
-    }
+        hbmLoad = (HBITMAP)CopyImage((HBITMAP)bitmap->nID, IMAGE_BITMAP, 0, 0, 0);
     else
         hbmLoad = CreateMappedBitmap(bitmap->hInst, bitmap->nID, 0, NULL, 0);
 
@@ -4175,7 +4149,6 @@ TOOLBAR_ReplaceBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
     LPTBREPLACEBITMAP lpReplace = (LPTBREPLACEBITMAP) lParam;
     HBITMAP hBitmap;
-    HBITMAP hbmLoad = NULL;
     int i = 0, nOldButtons = 0, pos = 0;
     int nOldBitmaps, nNewBitmaps = 0;
     HIMAGELIST himlDef = 0;
@@ -4191,16 +4164,6 @@ TOOLBAR_ReplaceBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
     }
     else if (lpReplace->hInstOld != 0)
         FIXME("resources not in the current module not implemented\n");
-
-    if (lpReplace->hInstNew)
-    {
-        hbmLoad = LoadBitmapW(lpReplace->hInstNew,(LPWSTR)lpReplace->nIDNew);
-        hBitmap = hbmLoad;
-    }
-    else
-    {
-        hBitmap = (HBITMAP) lpReplace->nIDNew;
-    }
 
     TRACE("To be replaced hInstOld %p nIDOld %x\n", lpReplace->hInstOld, lpReplace->nIDOld);
     for (i = 0; i < infoPtr->nNumBitmapInfos; i++) {
@@ -4222,11 +4185,17 @@ TOOLBAR_ReplaceBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (nOldButtons == 0)
     {
         WARN("No hinst/bitmap found! hInst %p nID %x\n", lpReplace->hInstOld, lpReplace->nIDOld);
-        if (hbmLoad)
-            DeleteObject (hbmLoad);
         return FALSE;
     }
     
+    /* copy the bitmap before adding it as ImageList_AddMasked modifies the
+    * bitmap
+    */
+    if (lpReplace->hInstNew)
+        hBitmap = LoadBitmapW(lpReplace->hInstNew,(LPWSTR)lpReplace->nIDNew);
+    else
+        hBitmap = CopyImage((HBITMAP)lpReplace->nIDNew, IMAGE_BITMAP, 0, 0, 0);
+
     himlDef = GETDEFIMAGELIST(infoPtr, 0); /* fixme: correct? */
     nOldBitmaps = ImageList_GetImageCount(himlDef);
 
@@ -4237,35 +4206,9 @@ TOOLBAR_ReplaceBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if (hBitmap)
     {
-       BITMAP  bmp;
-       HBITMAP hOldBitmapBitmap, hOldBitmapLoad, hbmLoad;
-       HDC     hdcImage, hdcBitmap;
-
-       /* copy the bitmap before adding it so that the user's bitmap
-        * doesn't get modified.
-        */
-       GetObjectW (hBitmap, sizeof(BITMAP), (LPVOID)&bmp);
-
-       hdcImage  = CreateCompatibleDC(0);
-       hdcBitmap = CreateCompatibleDC(0);
-
-       /* create new bitmap */
-       hbmLoad = CreateBitmap (bmp.bmWidth, bmp.bmHeight, bmp.bmPlanes, bmp.bmBitsPixel, NULL);
-       hOldBitmapBitmap = SelectObject(hdcBitmap, hBitmap);
-       hOldBitmapLoad = SelectObject(hdcImage, hbmLoad);
-
-       /* Copy the user's image */
-       BitBlt (hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight,
-               hdcBitmap, 0, 0, SRCCOPY);
-
-       SelectObject (hdcImage, hOldBitmapLoad);
-       SelectObject (hdcBitmap, hOldBitmapBitmap);
-       DeleteDC (hdcImage);
-       DeleteDC (hdcBitmap);
-
-       ImageList_AddMasked (himlDef, hbmLoad, comctl32_color.clrBtnFace);
+       ImageList_AddMasked (himlDef, hBitmap, comctl32_color.clrBtnFace);
        nNewBitmaps = ImageList_GetImageCount(himlDef);
-       DeleteObject (hbmLoad);
+       DeleteObject(hBitmap);
     }
 
     infoPtr->nNumBitmaps = infoPtr->nNumBitmaps - nOldBitmaps + nNewBitmaps;
@@ -4274,9 +4217,6 @@ TOOLBAR_ReplaceBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
             pos, nOldBitmaps, nNewBitmaps);
 
     InvalidateRect(hwnd, NULL, TRUE);
-
-    if (hbmLoad)
-        DeleteObject (hbmLoad);
     return TRUE;
 }
 
@@ -4489,8 +4429,11 @@ TOOLBAR_SetBitmapSize (HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (wParam != 0)
         FIXME("wParam is %d. Perhaps image list index?\n", wParam);
 
-    if ((LOWORD(lParam) <= 0) || (HIWORD(lParam)<=0))
-        lParam = MAKELPARAM(16, 15);
+    if (LOWORD(lParam) == 0)
+        lParam = MAKELPARAM(1, HIWORD(lParam));
+
+    if (HIWORD(lParam)==0)
+        lParam = MAKELPARAM(LOWORD(lParam), 1);
 
     if (infoPtr->nNumButtons > 0)
         WARN("%d buttons, undoc increase to bitmap size : %d-%d -> %d-%d\n",
@@ -4910,6 +4853,7 @@ TOOLBAR_SetImageList (HWND hwnd, WPARAM wParam, LPARAM lParam)
         infoPtr->nBitmapHeight = 1;
     }
     infoPtr->nVBitmapHeight = infoPtr->nBitmapHeight;
+    TOOLBAR_CalcToolbar(hwnd);
 
     TRACE("hwnd %p, new himl=%p, id = %d, count=%d, bitmap w=%d, h=%d\n",
 	  hwnd, infoPtr->himlDef, id, infoPtr->nNumBitmaps,
@@ -5441,8 +5385,7 @@ TOOLBAR_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
     Free (infoPtr->bitmaps);            /* bitmaps list */
 
     /* delete button data */
-    if (infoPtr->buttons)
-	Free (infoPtr->buttons);
+    Free (infoPtr->buttons);
 
     /* delete strings */
     if (infoPtr->strings) {
