@@ -94,6 +94,7 @@
   <property name="BASEADDRESS_LSASRV" value="0x76540000" />
   <property name="BASEADDRESS_MIDIMAP" value="0x76600000" />
   <property name="BASEADDRESS_ODBC32" value="0x76660000" />
+  <property name="BASEADDRESS_ODBCCP32" value="0x76380000" />
   <property name="BASEADDRESS_WAVEMAP" value="0x76610000" />
   <property name="BASEADDRESS_MPR" value="0x76620000" />
   <property name="BASEADDRESS_SETUPAPI" value="0x76660000" />
