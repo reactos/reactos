@@ -191,7 +191,7 @@ HRESULT WINAPI CloseINFEngine(HINF hInf)
  */
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    TRACE("(%p, %ld, %p)\n", hinstDLL, fdwReason, lpvReserved);
+    TRACE("(%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
 
     if (fdwReason == DLL_PROCESS_ATTACH)
         DisableThreadLibraryCalls(hinstDLL);
@@ -220,7 +220,7 @@ BOOL WINAPI IsNTAdmin(DWORD reserved, LPDWORD pReserved)
     HANDLE hToken;
     PSID pSid;
 
-    TRACE("(%ld, %p)\n", reserved, pReserved);
+    TRACE("(%d, %p)\n", reserved, pReserved);
 
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
         return FALSE;
@@ -302,7 +302,7 @@ DWORD WINAPI NeedRebootInit(VOID)
  */
 BOOL WINAPI NeedReboot(DWORD dwRebootCheck)
 {
-    FIXME("(%ld): stub\n", dwRebootCheck);
+    FIXME("(%d): stub\n", dwRebootCheck);
     return FALSE;
 }
 
@@ -317,7 +317,7 @@ HRESULT WINAPI OpenINFEngineA(LPCSTR pszInfFilename, LPCSTR pszInstallSection,
     UNICODE_STRING filenameW, installW;
     HRESULT res;
 
-    TRACE("(%s, %s, %ld, %p, %p)\n", debugstr_a(pszInfFilename),
+    TRACE("(%s, %s, %d, %p, %p)\n", debugstr_a(pszInfFilename),
           debugstr_a(pszInstallSection), dwFlags, phInf, pvReserved);
 
     if (!pszInfFilename || !phInf)
@@ -355,7 +355,7 @@ HRESULT WINAPI OpenINFEngineA(LPCSTR pszInfFilename, LPCSTR pszInstallSection,
 HRESULT WINAPI OpenINFEngineW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSection,
                               DWORD dwFlags, HINF *phInf, PVOID pvReserved)
 {
-    TRACE("(%s, %s, %ld, %p, %p)\n", debugstr_w(pszInfFilename),
+    TRACE("(%s, %s, %d, %p, %p)\n", debugstr_w(pszInfFilename),
           debugstr_w(pszInstallSection), dwFlags, phInf, pvReserved);
 
     if (!pszInfFilename || !phInf)
@@ -376,12 +376,12 @@ HRESULT WINAPI OpenINFEngineW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSection,
  * See RebootCheckOnInstallW.
  */
 HRESULT WINAPI RebootCheckOnInstallA(HWND hWnd, LPCSTR pszINF,
-                                     LPSTR pszSec, DWORD dwReserved)
+                                     LPCSTR pszSec, DWORD dwReserved)
 {
     UNICODE_STRING infW, secW;
     HRESULT res;
 
-    TRACE("(%p, %s, %s, %ld)\n", hWnd, debugstr_a(pszINF),
+    TRACE("(%p, %s, %s, %d)\n", hWnd, debugstr_a(pszINF),
           debugstr_a(pszSec), dwReserved);
 
     if (!pszINF || !pszSec)
@@ -422,9 +422,9 @@ HRESULT WINAPI RebootCheckOnInstallA(HWND hWnd, LPCSTR pszINF,
  *   Unimplemented.
  */
 HRESULT WINAPI RebootCheckOnInstallW(HWND hWnd, LPCWSTR pszINF,
-                                     LPWSTR pszSec, DWORD dwReserved)
+                                     LPCWSTR pszSec, DWORD dwReserved)
 {
-    FIXME("(%p, %s, %s, %ld): stub\n", hWnd, debugstr_w(pszINF),
+    FIXME("(%p, %s, %s, %d): stub\n", hWnd, debugstr_w(pszINF),
           debugstr_w(pszSec), dwReserved);
 
     return E_FAIL;
@@ -635,7 +635,7 @@ HRESULT WINAPI TranslateInfStringA(LPCSTR pszInfFilename, LPCSTR pszInstallSecti
     HRESULT res;
     DWORD len = 0;
 
-    TRACE("(%s, %s, %s, %s, %p, %ld, %p, %p)\n",
+    TRACE("(%s, %s, %s, %s, %p, %d, %p, %p)\n",
           debugstr_a(pszInfFilename), debugstr_a(pszInstallSection),
           debugstr_a(pszTranslateSection), debugstr_a(pszTranslateKey),
           pszBuffer, dwBufferSize,pdwRequiredSize, pvReserved);
@@ -710,8 +710,9 @@ HRESULT WINAPI TranslateInfStringW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSec
                 DWORD dwBufferSize, PDWORD pdwRequiredSize, PVOID pvReserved)
 {
     HINF hInf;
+    HRESULT hret = S_OK;
 
-    TRACE("(%s, %s, %s, %s, %p, %ld, %p, %p)\n",
+    TRACE("(%s, %s, %s, %s, %p, %d, %p, %p)\n",
           debugstr_w(pszInfFilename), debugstr_w(pszInstallSection),
           debugstr_w(pszTranslateSection), debugstr_w(pszTranslateKey),
           pszBuffer, dwBufferSize,pdwRequiredSize, pvReserved);
@@ -730,13 +731,13 @@ HRESULT WINAPI TranslateInfStringW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSec
                            pszBuffer, dwBufferSize, pdwRequiredSize))
     {
         if (dwBufferSize < *pdwRequiredSize)
-            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-
-        return SPAPI_E_LINE_NOT_FOUND;
+            hret = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        else
+            hret = SPAPI_E_LINE_NOT_FOUND;
     }
 
     SetupCloseInfFile(hInf);
-    return S_OK;
+    return hret;
 }
 
 /***********************************************************************
@@ -754,7 +755,7 @@ HRESULT WINAPI TranslateInfStringExA(HINF hInf, LPCSTR pszInfFilename,
     HRESULT res;
     DWORD len = 0;
 
-    TRACE("(%p, %s, %s, %s, %s, %ld, %p, %p)\n", hInf, debugstr_a(pszInfFilename),
+    TRACE("(%p, %s, %s, %s, %s, %d, %p, %p)\n", hInf, debugstr_a(pszInfFilename),
           debugstr_a(pszTranslateSection), debugstr_a(pszTranslateKey),
           debugstr_a(pszBuffer), dwBufferSize, pdwRequiredSize, pvReserved);
 
@@ -834,7 +835,7 @@ HRESULT WINAPI TranslateInfStringExW(HINF hInf, LPCWSTR pszInfFilename,
                                      LPWSTR pszBuffer, DWORD dwBufferSize,
                                      PDWORD pdwRequiredSize, PVOID pvReserved)
 {
-    TRACE("(%p, %s, %s, %s, %s, %ld, %p, %p)\n", hInf, debugstr_w(pszInfFilename),
+    TRACE("(%p, %s, %s, %s, %s, %d, %p, %p)\n", hInf, debugstr_w(pszInfFilename),
           debugstr_w(pszTranslateSection), debugstr_w(pszTranslateKey),
           debugstr_w(pszBuffer), dwBufferSize, pdwRequiredSize, pvReserved);
 

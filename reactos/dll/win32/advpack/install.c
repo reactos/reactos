@@ -214,14 +214,14 @@ LPWSTR get_parameter(LPWSTR *params, WCHAR separator)
     return token;
 }
 
-static BOOL is_full_path(LPWSTR path)
+static BOOL is_full_path(LPCWSTR path)
 {
     const int MIN_PATH_LEN = 3;
 
     if (!path || lstrlenW(path) < MIN_PATH_LEN)
         return FALSE;
 
-    if (path[1] == ':' || (path[0] == '\\' && path[1] == '\\'))
+    if ((path[1] == ':' && path[2] == '\\') || (path[0] == '\\' && path[1] == '\\'))
         return TRUE;
 
     return FALSE;
@@ -229,7 +229,7 @@ static BOOL is_full_path(LPWSTR path)
 
 /* retrieves the contents of a field, dynamically growing the buffer if necessary */
 static WCHAR *get_field_string(INFCONTEXT *context, DWORD index, WCHAR *buffer,
-                               WCHAR *static_buffer, DWORD *size)
+                               const WCHAR *static_buffer, DWORD *size)
 {
     DWORD required;
 
@@ -425,8 +425,8 @@ static HRESULT get_working_dir(ADVInfo *info, LPCWSTR inf_filename, LPCWSTR work
 }
 
 /* loads the INF file and performs checks on it */
-HRESULT install_init(LPCWSTR inf_filename, LPCWSTR install_sec,
-                     LPCWSTR working_dir, DWORD flags, ADVInfo *info)
+static HRESULT install_init(LPCWSTR inf_filename, LPCWSTR install_sec,
+                            LPCWSTR working_dir, DWORD flags, ADVInfo *info)
 {
     DWORD len;
     HRESULT hr;
@@ -500,7 +500,7 @@ HRESULT install_init(LPCWSTR inf_filename, LPCWSTR install_sec,
 }
 
 /* release the install instance information */
-void install_release(ADVInfo *info)
+static void install_release(ADVInfo *info)
 {
     if (info->hinf && info->hinf != INVALID_HANDLE_VALUE)
         SetupCloseInfFile(info->hinf);
@@ -833,7 +833,7 @@ HRESULT WINAPI LaunchINFSectionExW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, I
     LPWSTR cmdline_copy, cmdline_ptr;
     LPWSTR flags, ptr;
     CABINFOW cabinfo;
-    HRESULT hr = S_OK;
+    HRESULT hr;
 
     TRACE("(%p, %p, %s, %d)\n", hWnd, hInst, debugstr_w(cmdline), show);
 
@@ -853,22 +853,26 @@ HRESULT WINAPI LaunchINFSectionExW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, I
     if (flags)
         cabinfo.dwFlags = atolW(flags);
 
+    if (!is_full_path(cabinfo.pszCab) && !is_full_path(cabinfo.pszInf))
+    {
+        HeapFree(GetProcessHeap(), 0, cmdline_copy);
+        return E_INVALIDARG;
+    }
+
     /* get the source path from the cab filename */
     if (cabinfo.pszCab && *cabinfo.pszCab)
     {
         if (!is_full_path(cabinfo.pszCab))
-            goto done;
+            lstrcpyW(cabinfo.szSrcPath, cabinfo.pszInf);
+        else
+            lstrcpyW(cabinfo.szSrcPath, cabinfo.pszCab);
 
-        lstrcpyW(cabinfo.szSrcPath, cabinfo.pszCab);
         ptr = strrchrW(cabinfo.szSrcPath, '\\');
         *(++ptr) = '\0';
     }
 
     hr = ExecuteCabW(hWnd, &cabinfo, NULL);
-
-done:
     HeapFree(GetProcessHeap(), 0, cmdline_copy);
-
     return SUCCEEDED(hr) ? ADV_SUCCESS : ADV_FAILURE;
 }
 
@@ -919,7 +923,7 @@ HRESULT WINAPI RunSetupCommandA(HWND hWnd, LPCSTR szCmdName,
     UNICODE_STRING dir, title;
     HRESULT hr;
 
-    TRACE("(%p, %s, %s, %s, %s, %p, %ld, %p)\n",
+    TRACE("(%p, %s, %s, %s, %s, %p, %d, %p)\n",
           hWnd, debugstr_a(szCmdName), debugstr_a(szInfSection),
           debugstr_a(szDir), debugstr_a(lpszTitle),
           phEXE, dwFlags, pvReserved);
@@ -976,7 +980,7 @@ HRESULT WINAPI RunSetupCommandW(HWND hWnd, LPCWSTR szCmdName,
     ADVInfo info;
     HRESULT hr;
 
-    TRACE("(%p, %s, %s, %s, %s, %p, %ld, %p)\n",
+    TRACE("(%p, %s, %s, %s, %s, %p, %d, %p)\n",
           hWnd, debugstr_w(szCmdName), debugstr_w(szInfSection),
           debugstr_w(szDir), debugstr_w(lpszTitle),
           phEXE, dwFlags, pvReserved);
