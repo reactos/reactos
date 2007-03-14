@@ -3,22 +3,17 @@
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Rtl registry functions
  * FILE:              lib/rtl/registry.c
- * PROGRAMER:         Eric Kohl
- */
-
-/*
- * TODO:
- *   - finish RtlQueryRegistryValues()
+ * PROGRAMER:         Alex Ionescu (alex.ionescu@reactos.org)
+ *                    Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <rtl.h>
-
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_RTLREGISTRY TAG('R', 't', 'l', 'R')
+#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v')
 
 /* DATA **********************************************************************/
 
@@ -33,6 +28,411 @@ PCWSTR RtlpRegPaths[RTL_REGISTRY_MAXIMUM] =
 };
 
 /* PRIVATE FUNCTIONS *********************************************************/
+
+NTSTATUS
+NTAPI
+RtlpQueryRegistryDirect(IN ULONG ValueType,
+                        IN PVOID ValueData,
+                        IN ULONG ValueLength,
+                        IN PVOID Buffer)
+{
+    USHORT ActualLength = (USHORT)ValueLength;
+    PUNICODE_STRING ReturnString = Buffer;
+    PULONG Length = Buffer;
+    ULONG RealLength;
+
+    /* Check if this is a string */
+    if ((ValueType == REG_SZ) ||
+        (ValueType == REG_EXPAND_SZ) ||
+        (ValueType == REG_MULTI_SZ))
+    {
+        /* Normalize the length */
+        if (ValueLength > MAXUSHORT) ValueLength = MAXUSHORT;
+
+        /* Check if the return string has been allocated */
+        if (!ReturnString->Buffer)
+        {
+            /* Allocate it */
+            ReturnString->Buffer = RtlpAllocateMemory(ActualLength, TAG_RTLREGISTRY);
+            if (!ReturnString->Buffer) return STATUS_NO_MEMORY;
+            ReturnString->MaximumLength = ActualLength;
+        }
+        else if (ActualLength > ReturnString->MaximumLength)
+        {
+            /* The string the caller allocated is too small */
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
+        /* Copy the data */
+        RtlCopyMemory(ReturnString->Buffer, ValueData, ActualLength);
+        ReturnString->Length = ActualLength - sizeof(UNICODE_NULL);
+    }
+    else if (ValueLength <= sizeof(ULONG))
+    {
+        /* Check if we can just copy the data */
+        if ((Buffer != ValueData) && (ValueLength))
+        {
+            /* Copy it */
+            RtlCopyMemory(Buffer, ValueData, ValueLength);
+        }
+    }
+    else
+    {
+        /* Check if the length is negative */
+        if ((LONG)*Length < 0)
+        {
+            /* Get the real length and copy the buffer */
+            RealLength = -(LONG)*Length;
+            if (RealLength < ValueLength) return STATUS_BUFFER_TOO_SMALL;
+            RtlCopyMemory(Buffer, ValueData, ValueLength);
+        }
+        else
+        {
+            /* Check if there's space for the length and type, plus data */
+            if (*Length < (2 * sizeof(ULONG) + ValueLength))
+            {
+                /* Nope, fail */
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+
+            /* Return the data */
+            *Length++ = ValueLength;
+            *Length++ = ValueType;
+            RtlCopyMemory(Length, ValueData, ValueLength);
+        }
+    }
+
+    /* All done */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
+                             IN PKEY_VALUE_FULL_INFORMATION KeyValueInfo,
+                             IN OUT PULONG InfoSize,
+                             IN PVOID Context,
+                             IN PVOID Environment)
+{
+    ULONG InfoLength, Length, c;
+    LONG RequiredLength, SpareLength;
+    PCHAR SpareData, DataEnd;
+    ULONG Type;
+    PWCHAR Name, p, ValueEnd;
+    PVOID Data;
+    NTSTATUS Status;
+    BOOLEAN FoundExpander = FALSE;
+    UNICODE_STRING Source, Destination;
+
+    /* Setup defaults */
+    InfoLength = *InfoSize;
+    *InfoSize = 0;
+
+    /* Check if there's no data */
+    if (KeyValueInfo->DataOffset == (ULONG)-1)
+    {
+        /* Return proper status code */
+        return (QueryTable->Flags & RTL_QUERY_REGISTRY_REQUIRED) ?
+                STATUS_OBJECT_NAME_NOT_FOUND : STATUS_SUCCESS;
+    }
+
+    /* Setup spare data pointers */
+    SpareData = (PCHAR)KeyValueInfo;
+    SpareLength = InfoLength;
+    DataEnd = SpareData + SpareLength;
+
+    /* Check if there's no value or data */
+    if ((KeyValueInfo->Type == REG_NONE) ||
+        (!(KeyValueInfo->DataLength) &&
+          (KeyValueInfo->Type == QueryTable->DefaultType)))
+    {
+        /* Check if there's no value */
+        if (QueryTable->DefaultType == REG_NONE)
+        {
+            /* Return proper status code */
+            return (QueryTable->Flags & RTL_QUERY_REGISTRY_REQUIRED) ?
+                    STATUS_OBJECT_NAME_NOT_FOUND : STATUS_SUCCESS;
+        }
+
+        /* We can setup a default value... capture the defaults */
+        Name = QueryTable->Name;
+        Type = QueryTable->DefaultType;
+        Data = QueryTable->DefaultData;
+        Length = QueryTable->DefaultLength;
+        if (!Length)
+        {
+            /* No default length given, try to calculate it */
+            p = Data;
+            if ((Type == REG_SZ) || (Type == REG_EXPAND_SZ))
+            {
+                /* This is a string, count the characters */
+                while (*p++);
+                Length = (ULONG_PTR)p - (ULONG_PTR)Data;
+            }
+            else if (Type == REG_MULTI_SZ)
+            {
+                /* This is a multi-string, calculate all characters */
+                while (*p) while (*p++);
+                Length = (ULONG_PTR)p - (ULONG_PTR)Data + sizeof(UNICODE_NULL);
+            }
+        }
+    }
+    else
+    {
+        /* Check if this isn't a direct return */
+        if (!(QueryTable->Flags & RTL_QUERY_REGISTRY_DIRECT))
+        {
+            /* Check if we have length */
+            if (KeyValueInfo->DataLength)
+            {
+                /* Increase the spare data */
+                SpareData += KeyValueInfo->DataOffset +
+                             KeyValueInfo->DataLength;
+            }
+            else
+            {
+                /* Otherwise, the spare data only has the name data */
+                SpareData += FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name) +
+                             KeyValueInfo->NameLength;
+            }
+
+            /* Align the pointer and get new size of spare data */
+            SpareData = (PVOID)(((ULONG_PTR)SpareData + 7) & ~7);
+            SpareLength = DataEnd - SpareData;
+
+            /* Check if we have space to copy the data */
+            RequiredLength = KeyValueInfo->NameLength + sizeof(UNICODE_NULL);
+            if (SpareLength < RequiredLength)
+            {
+                /* Fail and return the missing length */
+                *InfoSize = SpareData - (PCHAR)KeyValueInfo + RequiredLength;
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+
+            /* Copy the data and null-terminate it */
+            Name = (PWCHAR)SpareData;
+            RtlCopyMemory(Name, KeyValueInfo->Name, KeyValueInfo->NameLength);
+            Name[KeyValueInfo->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
+
+            /* Update the spare data information */
+            SpareData += RequiredLength;
+            SpareData = (PVOID)(((ULONG_PTR)SpareData + 7) & ~7);
+            SpareLength = DataEnd - SpareData;
+        }
+        else
+        {
+            /* Just return the name */
+            Name = QueryTable->Name;
+        }
+
+        /* Capture key data */
+        Type = KeyValueInfo->Type;
+        Data = (PVOID)((ULONG_PTR)KeyValueInfo + KeyValueInfo->DataOffset);
+        Length = KeyValueInfo->DataLength;
+    }
+
+    /* Check if we're expanding */
+    if (!(QueryTable->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
+    {
+        /* Check if it's a multi-string */
+        if (Type == REG_MULTI_SZ)
+        {
+            /* Prepare defaults */
+            Status = STATUS_SUCCESS;
+            ValueEnd = (PWSTR)((ULONG_PTR)Data + Length) - sizeof(UNICODE_NULL);
+            p = Data;
+
+            /* Loop all strings */
+            while (p < ValueEnd)
+            {
+                /* Go to the next string */
+                while (*p++);
+
+                /* Get the length and check if this is direct */
+                Length = (ULONG_PTR)p - (ULONG_PTR)Data;
+                if (QueryTable->Flags & RTL_QUERY_REGISTRY_DIRECT)
+                {
+                    /* Do the query */
+                    Status = RtlpQueryRegistryDirect(REG_SZ,
+                                                     Data,
+                                                     Length,
+                                                     QueryTable->EntryContext);
+                    QueryTable->EntryContext = (PVOID)((ULONG_PTR)QueryTable->
+                                                       EntryContext +
+                                                       sizeof(UNICODE_STRING));
+                }
+                else
+                {
+                    /* Call the custom routine */
+                    Status = QueryTable->QueryRoutine(Name,
+                                                      REG_SZ,
+                                                      Data,
+                                                      Length,
+                                                      Context,
+                                                      QueryTable->EntryContext);
+                }
+
+                /* Normalize status */
+                if (Status == STATUS_BUFFER_TOO_SMALL) Status = STATUS_SUCCESS;
+                if (!NT_SUCCESS(Status)) break;
+
+                /* Update data pointer */
+                Data = p;
+            }
+
+            /* Return */
+            return Status;
+        }
+
+        /* Check if this is an expand string */
+        if ((Type == REG_EXPAND_SZ) && (Length >= sizeof(WCHAR)))
+        {
+            /* Try to find the expander */
+            c = Length - sizeof(UNICODE_NULL);
+            p = (PWCHAR)Data;
+            while (c)
+            {
+                /* Check if this is one */
+                if (*p == L'%')
+                {
+                    /* Yup! */
+                    FoundExpander = TRUE;
+                    break;
+                }
+
+                /* Continue in the buffer */
+                p++;
+                c -= sizeof(WCHAR);
+            }
+
+            /* So check if we have one */
+            if (FoundExpander)
+            {
+                /* Setup the source string */
+                RtlInitEmptyUnicodeString(&Source, Data, Length);
+                Source.Length = Source.MaximumLength - sizeof(UNICODE_NULL);
+
+                /* Setup the desination string */
+                RtlInitEmptyUnicodeString(&Destination, (PWCHAR)SpareData, 0);
+
+                /* Check if we're out of space */
+                if (SpareLength <= 0)
+                {
+                    /* Then we don't have any space in our string */
+                    Destination.MaximumLength = 0;
+                }
+                else if (SpareLength <= MAXUSHORT)
+                {
+                    /* This is the good case, where we fit into a string */
+                    Destination.MaximumLength = SpareLength;
+                    Destination.Buffer[SpareLength / 2 - 1] = UNICODE_NULL;
+                }
+                else
+                {
+                    /* We can't fit into a string, so truncate */
+                    Destination.MaximumLength = MAXUSHORT;
+                    Destination.Buffer[MAXUSHORT / 2 - 1] = UNICODE_NULL;
+                }
+
+                /* Expand the strings and set our type as one string */
+                Status = RtlExpandEnvironmentStrings_U(Environment,
+                                                       &Source,
+                                                       &Destination,
+                                                       (PULONG)&RequiredLength);
+                Type = REG_SZ;
+
+                /* Check for success */
+                if (NT_SUCCESS(Status))
+                {
+                    /* Set the value name and length to our string */
+                    Data = Destination.Buffer;
+                    Length = Destination.Length + sizeof(UNICODE_NULL);
+                }
+                else
+                {
+                    /* Check if our buffer is too small */
+                    if (Status == STATUS_BUFFER_TOO_SMALL)
+                    {
+                        /* Set the required missing length */
+                        *InfoSize = SpareData -
+                                    (PCHAR)KeyValueInfo +
+                                    RequiredLength;
+
+                        /* Notify debugger */
+                        DPRINT1("RTL: Expand variables for %wZ failed - "
+                                "Status == %lx Size %x > %x <%x>\n",
+                                &Source,
+                                Status,
+                                *InfoSize,
+                                InfoLength,
+                                Destination.MaximumLength);
+                    }
+                    else
+                    {
+                        /* Notify debugger */
+                        DPRINT1("RTL: Expand variables for %wZ failed - "
+                                "Status == %lx\n",
+                                &Source,
+                                Status);
+                    }
+
+                    /* Return the status */
+                    return Status;
+                }
+            }
+        }
+    }
+
+    /* Check if this is a direct query */
+    if (QueryTable->Flags & RTL_QUERY_REGISTRY_DIRECT)
+    {
+        /* Return the data */
+        Status = RtlpQueryRegistryDirect(Type,
+                                         Data,
+                                         Length,
+                                         QueryTable->EntryContext);
+    }
+    else
+    {
+        /* Call the query routine */
+        Status = QueryTable->QueryRoutine(Name,
+                                          Type,
+                                          Data,
+                                          Length,
+                                          Context,
+                                          QueryTable->EntryContext);
+    }
+
+    /* Normalize and return status */
+    return (Status == STATUS_BUFFER_TOO_SMALL) ? STATUS_SUCCESS : Status;
+}
+
+PVOID
+NTAPI
+RtlpAllocDeallocQueryBuffer(IN OUT PSIZE_T BufferSize,
+                            IN PVOID OldBuffer,
+                            IN SIZE_T OldBufferSize,
+                            OUT PNTSTATUS Status)
+{
+    PVOID Buffer = NULL;
+
+    /* Assume success */
+    if (Status) *Status = STATUS_SUCCESS;
+
+    /* Free the old buffer */
+    if (OldBuffer) RtlpFreeMemory(OldBuffer, TAG_RTLREGISTRY);
+
+    /* Check if we need to allocate a new one */
+    if (BufferSize)
+    {
+        /* Allocate */
+        Buffer = RtlpAllocateMemory(*BufferSize, TAG_RTLREGISTRY);
+        if (!(Buffer) && (Status)) *Status = STATUS_NO_MEMORY;
+    }
+
+    /* Return the pointer */
+    return Buffer;
+}
 
 NTSTATUS
 NTAPI
@@ -557,507 +957,345 @@ RtlpNtSetValueKey(IN HANDLE KeyHandle,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 RtlQueryRegistryValues(IN ULONG RelativeTo,
-		       IN PCWSTR Path,
-		       IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
-		       IN PVOID Context,
-		       IN PVOID Environment OPTIONAL)
+                       IN PCWSTR Path,
+                       IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
+                       IN PVOID Context,
+                       IN PVOID Environment OPTIONAL)
 {
-  NTSTATUS Status;
-  HANDLE BaseKeyHandle;
-  HANDLE CurrentKeyHandle;
-  PRTL_QUERY_REGISTRY_TABLE QueryEntry;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
-  PKEY_VALUE_FULL_INFORMATION FullValueInfo;
-  ULONG BufferSize;
-  ULONG ResultSize;
-  ULONG Index;
-  ULONG StringLen;
-  ULONG ValueNameSize;
-  PWSTR StringPtr;
-  PWSTR ExpandBuffer;
-  PWSTR ValueName;
-  UNICODE_STRING EnvValue;
-  UNICODE_STRING EnvExpandedValue;
-  ULONG DataSize = 0;
+    NTSTATUS Status;
+    PKEY_VALUE_FULL_INFORMATION KeyValueInfo = NULL;
+    HANDLE KeyHandle, CurrentKey;
+    SIZE_T BufferSize = 128, InfoSize;
+    UNICODE_STRING KeyPath, KeyValueName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG i, Value;
+    ULONG ResultLength;
 
-  PAGED_CODE_RTL();
+    /* Get the registry handle */
+    Status = RtlpGetRegistryHandle(RelativeTo, Path, FALSE, &KeyHandle);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  DPRINT("RtlQueryRegistryValues() called\n");
+    /* Initialize the path */
+    RtlInitUnicodeString(&KeyPath,
+                         (RelativeTo & RTL_REGISTRY_HANDLE) ? NULL : Path);
 
-  Status = RtlpGetRegistryHandle(RelativeTo,
-				 (PWSTR)Path,
-				 FALSE,
-				 &BaseKeyHandle);
-  if (!NT_SUCCESS(Status))
+    /* Allocate a query buffer */
+    KeyValueInfo = RtlpAllocDeallocQueryBuffer(&BufferSize, NULL, 0, &Status);
+    if (!KeyValueInfo)
     {
-      DPRINT("RtlpGetRegistryHandle() failed (Status %lx)\n", Status);
-      return(Status);
+        /* Close the handle if we have one and fail */
+        if (!(RelativeTo & RTL_REGISTRY_HANDLE)) ZwClose(KeyHandle);
+        return Status;
     }
 
-  CurrentKeyHandle = BaseKeyHandle;
-  QueryEntry = QueryTable;
-  while ((QueryEntry->QueryRoutine != NULL) ||
-	 (QueryEntry->Name != NULL))
+    /* Set defaults */
+    KeyValueInfo->DataOffset = 0;
+    InfoSize = BufferSize - sizeof(UNICODE_NULL);
+    CurrentKey = KeyHandle;
+
+    /* Loop the query table */
+    while ((QueryTable->QueryRoutine) ||
+           (QueryTable->Flags & (RTL_QUERY_REGISTRY_SUBKEY |
+                                 RTL_QUERY_REGISTRY_DIRECT)))
     {
-      if (((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_TOPKEY)) != 0) &&
-	  (BaseKeyHandle != CurrentKeyHandle))
-	{
-	  ZwClose(CurrentKeyHandle);
-	  CurrentKeyHandle = BaseKeyHandle;
-	}
+        /* Check if the request is invalid */
+        if ((QueryTable->Flags & RTL_QUERY_REGISTRY_DIRECT) &&
+            (!(QueryTable->Name) ||
+             (QueryTable->Flags & RTL_QUERY_REGISTRY_SUBKEY) ||
+             (QueryTable->QueryRoutine)))
+        {
+            /* Fail */
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+        }
 
-      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY)
-	{
-	  DPRINT("Open new subkey: %S\n", QueryEntry->Name);
+        /* Check if we want a specific key */
+        if (QueryTable->Flags & (RTL_QUERY_REGISTRY_TOPKEY |
+                                 RTL_QUERY_REGISTRY_SUBKEY))
+        {
+            /* Check if we're working with another handle */
+            if (CurrentKey != KeyHandle)
+            {
+                /* Close our current key and use the top */
+                NtClose(CurrentKey);
+                CurrentKey = KeyHandle;
+            }
+        }
 
-	  RtlInitUnicodeString(&KeyName,
-			       QueryEntry->Name);
-	  InitializeObjectAttributes(&ObjectAttributes,
-				     &KeyName,
-				     OBJ_CASE_INSENSITIVE,
-				     BaseKeyHandle,
-				     NULL);
-	  Status = ZwOpenKey(&CurrentKeyHandle,
-			     KEY_ALL_ACCESS,
-			     &ObjectAttributes);
-	  if (!NT_SUCCESS(Status))
-	    break;
-	}
-      else if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DIRECT)
-	{
-	  DPRINT("Query value directly: %S\n", QueryEntry->Name);
+        /* Check if we're querying the subkey */
+        if (QueryTable->Flags & RTL_QUERY_REGISTRY_SUBKEY)
+        {
+            /* Make sure we have a name */
+            if (!QueryTable->Name)
+            {
+                /* Fail */
+                Status = STATUS_INVALID_PARAMETER;
+            }
+            else
+            {
+                /* Initialize the name */
+                RtlInitUnicodeString(&KeyPath, QueryTable->Name);
 
-	  RtlInitUnicodeString(&KeyName,
-			       QueryEntry->Name);
+                /* Get the key handle */
+                InitializeObjectAttributes(&ObjectAttributes,
+                                           &KeyPath,
+                                           OBJ_CASE_INSENSITIVE |
+                                           OBJ_KERNEL_HANDLE,
+                                           KeyHandle,
+                                           NULL);
+                Status = ZwOpenKey(&CurrentKey,
+                                   MAXIMUM_ALLOWED,
+                                   &ObjectAttributes);
+                if (NT_SUCCESS(Status))
+                {
+                    /* If we have a query routine, go enumerate values */
+                    if (QueryTable->QueryRoutine) goto ProcessValues;
+                }
+            }
+        }
+        else if (QueryTable->Name)
+        {
+            /* Initialize the path */
+            RtlInitUnicodeString(&KeyValueName, QueryTable->Name);
 
-	  BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + 4096;
-	  ValueInfo = RtlpAllocateMemory(BufferSize, TAG_RTLREGISTRY);
-	  if (ValueInfo == NULL)
-	    {
-	      Status = STATUS_NO_MEMORY;
-	      break;
-	    }
+            /* Start query loop */
+            i = 0;
+            while (TRUE)
+            {
+                /* Make sure we didn't retry too many times */
+                if (i++ > 4)
+                {
+                    /* Fail */
+                    DPRINT1("RtlQueryRegistryValues: Miscomputed buffer size "
+                            "at line %d\n", __LINE__);
+                    break;
+                }
 
-	  Status = ZwQueryValueKey(CurrentKeyHandle,
-				   &KeyName,
-				   KeyValuePartialInformation,
-				   ValueInfo,
-				   BufferSize,
-				   &ResultSize);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_REQUIRED)
-		{
-		  RtlpFreeMemory(ValueInfo, TAG_RTLREGISTRY);
-		  Status = STATUS_OBJECT_NAME_NOT_FOUND;
-		  break;
-		}
+                /* Query key information */
+                Status = ZwQueryValueKey(CurrentKey,
+                                         &KeyValueName,
+                                         KeyValueFullInformation,
+                                         KeyValueInfo,
+                                         InfoSize,
+                                         &ResultLength);
+                if (Status == STATUS_BUFFER_OVERFLOW)
+                {
+                    /* Normalize status code */
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                }
 
-	      if (QueryEntry->DefaultType == REG_SZ)
-		{
-		  PUNICODE_STRING ValueString;
-		  PUNICODE_STRING SourceString;
+                /* Check for failure */
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Check if we didn't find it */
+                    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+                    {
+                        /* Setup a default */
+                        KeyValueInfo->Type = REG_NONE;
+                        KeyValueInfo->DataLength = 0;
+                        ResultLength = InfoSize;
 
-		  SourceString = (PUNICODE_STRING)QueryEntry->DefaultData;
-		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
-		  if (ValueString->Buffer == NULL)
-		    {
-		      ValueString->Length = SourceString->Length;
-		      ValueString->MaximumLength = SourceString->MaximumLength;
-		      ValueString->Buffer = RtlpAllocateMemory(BufferSize, TAG_RTLREGISTRY);
-		      if (!ValueString->Buffer)
-			break;
-		      ValueString->Buffer[0] = 0;
-		      memcpy(ValueString->Buffer,
-			     SourceString->Buffer,
-			     SourceString->MaximumLength);
-		    }
-		  else
-		    {
-		      ValueString->Length = min(SourceString->Length,
-						ValueString->MaximumLength - sizeof(WCHAR));
-		      memcpy(ValueString->Buffer,
-			     SourceString->Buffer,
-			     ValueString->Length);
-		      ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
-		    }
-		}
-	      else
-		{
-		  memcpy(QueryEntry->EntryContext,
-			 QueryEntry->DefaultData,
-			 QueryEntry->DefaultLength);
-		}
-	      Status = STATUS_SUCCESS;
-	    }
-	  else
-	    {
-	      if ((ValueInfo->Type == REG_SZ) ||
-		  (ValueInfo->Type == REG_MULTI_SZ) ||
-		  (ValueInfo->Type == REG_EXPAND_SZ && (QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND)))
-		{
-		  PUNICODE_STRING ValueString;
+                        /* Call the query routine */
+                        Status = RtlpCallQueryRegistryRoutine(QueryTable,
+                                                              KeyValueInfo,
+                                                              &ResultLength,
+                                                              Context,
+                                                              Environment);
+                    }
 
-		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
-		  if (ValueString->Buffer == NULL)
-		    {
-		      ValueString->MaximumLength = ValueInfo->DataLength;
-		      ValueString->Buffer = RtlpAllocateMemory(ValueString->MaximumLength, TAG_RTLREGISTRY);
-		      if (ValueString->Buffer == NULL)
-			{
-			  Status = STATUS_INSUFFICIENT_RESOURCES;
-			  break;
-			}
-		      ValueString->Buffer[0] = 0;
-		     }
-		  ValueString->Length = min(ValueInfo->DataLength,
-					    ValueString->MaximumLength) - sizeof(WCHAR);
-		  memcpy(ValueString->Buffer,
-			 ValueInfo->Data,
-			 ValueString->Length);
-		  ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
-		}
-	      else if (ValueInfo->Type == REG_EXPAND_SZ)
-		{
-		  PUNICODE_STRING ValueString;
+                    /* Check for buffer being too small */
+                    if (Status == STATUS_BUFFER_TOO_SMALL)
+                    {
+                        /* Increase allocation size */
+                        BufferSize = ResultLength +
+                                     sizeof(ULONG_PTR) +
+                                     sizeof(UNICODE_NULL);
+                        KeyValueInfo = RtlpAllocDeallocQueryBuffer(&BufferSize,
+                                                                   KeyValueInfo,
+                                                                   BufferSize,
+                                                                   &Status);
+                        if (!KeyValueInfo) break;
 
-		  DPRINT("Expand REG_EXPAND_SZ type\n");
+                        /* Update the data */
+                        KeyValueInfo->DataOffset = 0;
+                        InfoSize = BufferSize - sizeof(UNICODE_NULL);
+                        continue;
+                    }
+                }
+                else
+                {
+                    /* Check if this is a multi-string */
+                    if (KeyValueInfo->Type == REG_MULTI_SZ)
+                    {
+                        /* Add a null-char */
+                        ((PWCHAR)KeyValueInfo)[ResultLength / 2] = UNICODE_NULL;
+                        KeyValueInfo->DataLength += sizeof(UNICODE_NULL);
+                    }
 
-		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
+                    /* Call the query routine */
+                    ResultLength = InfoSize;
+                    Status = RtlpCallQueryRegistryRoutine(QueryTable,
+                                                          KeyValueInfo,
+                                                          &ResultLength,
+                                                          Context,
+                                                          Environment);
 
-		  ExpandBuffer = RtlpAllocateMemory(ValueInfo->DataLength * 2, TAG_RTLREGISTRY);
-		  if (ExpandBuffer == NULL)
-		    {
-		      Status = STATUS_NO_MEMORY;
-		      break;
-		    }
+                    /* Check for buffer being too small */
+                    if (Status == STATUS_BUFFER_TOO_SMALL)
+                    {
+                        /* Increase allocation size */
+                        BufferSize = ResultLength +
+                                     sizeof(ULONG_PTR) +
+                                     sizeof(UNICODE_NULL);
+                        KeyValueInfo = RtlpAllocDeallocQueryBuffer(&BufferSize,
+                                                                   KeyValueInfo,
+                                                                   BufferSize,
+                                                                   &Status);
+                        if (!KeyValueInfo) break;
 
-		  RtlInitUnicodeString(&EnvValue,
-				       (PWSTR)ValueInfo->Data);
-		  EnvExpandedValue.Length = 0;
-		  EnvExpandedValue.MaximumLength = ValueInfo->DataLength * 2;
-		  EnvExpandedValue.Buffer = ExpandBuffer;
-		  *ExpandBuffer = 0;
+                        /* Update the data */
+                        KeyValueInfo->DataOffset = 0;
+                        InfoSize = BufferSize - sizeof(UNICODE_NULL);
+                        continue;
+                    }
 
-		  RtlExpandEnvironmentStrings_U(Environment,
-						&EnvValue,
-						&EnvExpandedValue,
-						&StringLen);
+                    /* Check if we need to delete the key */
+                    if ((NT_SUCCESS(Status)) &&
+                        (QueryTable->Flags & RTL_QUERY_REGISTRY_DELETE))
+                    {
+                        /* Delete it */
+                        ZwDeleteValueKey(CurrentKey, &KeyValueName);
+                    }
+                }
 
-		  if (ValueString->Buffer == NULL)
-		    {
-		      ValueString->MaximumLength = EnvExpandedValue.Length + sizeof(WCHAR);
-		      ValueString->Length = EnvExpandedValue.Length;
-		      ValueString->Buffer = RtlpAllocateMemory(ValueString->MaximumLength, TAG_RTLREGISTRY);
-		      if (ValueString->Buffer == NULL)
-			{
-			  Status = STATUS_INSUFFICIENT_RESOURCES;
-			  break;
-			}
-		    }
-		  else
-		    {
-		      ValueString->Length = min(EnvExpandedValue.Length,
-						ValueString->MaximumLength - sizeof(WCHAR));
-		    }
+                /* We're done, break out */
+                break;
+            }
+        }
+        else if (QueryTable->Flags & RTL_QUERY_REGISTRY_NOVALUE)
+        {
+            /* Just call the query routine */
+            Status = QueryTable->QueryRoutine(NULL,
+                                              REG_NONE,
+                                              NULL,
+                                              0,
+                                              Context,
+                                              QueryTable->EntryContext);
+        }
+        else
+        {
+ProcessValues:
+            /* Loop every value */
+            i = Value = 0;
+            while (TRUE)
+            {
+                /* Enumerate the keys */
+                Status = ZwEnumerateValueKey(CurrentKey,
+                                             Value,
+                                             KeyValueFullInformation,
+                                             KeyValueInfo,
+                                             InfoSize,
+                                             &ResultLength);
+                if (Status == STATUS_BUFFER_OVERFLOW)
+                {
+                    /* Normalize the status */
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                }
 
-		  memcpy(ValueString->Buffer,
-			 EnvExpandedValue.Buffer,
-			 ValueString->Length);
-		  ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
+                /* Check if we found all the entries */
+                if (Status == STATUS_NO_MORE_ENTRIES)
+                {
+                    /* Check if this was the first entry and caller needs it */
+                    if (!(Value) &&
+                         (QueryTable->Flags & RTL_QUERY_REGISTRY_REQUIRED))
+                    {
+                        /* Fail */
+                        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+                    }
+                    else
+                    {
+                        /* Otherwise, it's ok */
+                        Status = STATUS_SUCCESS;
+                    }
+                    break;
+                }
 
-		  RtlpFreeMemory(ExpandBuffer, TAG_RTLREGISTRY);
-		}
-	      else
-		{
-		  memcpy(QueryEntry->EntryContext,
-			 ValueInfo->Data,
-			 ValueInfo->DataLength);
-		}
-	    }
+                /* Check if enumeration worked */
+                if (NT_SUCCESS(Status))
+                {
+                    /* Call the query routine */
+                    ResultLength = InfoSize;
+                    Status = RtlpCallQueryRegistryRoutine(QueryTable,
+                                                          KeyValueInfo,
+                                                          &ResultLength,
+                                                          Context,
+                                                          Environment);
+                }
 
-	  if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
-	    {
-		  Status = ZwDeleteValueKey(CurrentKeyHandle, &KeyName);
+                /* Check if the query failed */
+                if (Status == STATUS_BUFFER_TOO_SMALL)
+                {
+                    /* Increase allocation size */
+                    BufferSize = ResultLength +
+                                 sizeof(ULONG_PTR) +
+                                 sizeof(UNICODE_NULL);
+                    KeyValueInfo = RtlpAllocDeallocQueryBuffer(&BufferSize,
+                                                               KeyValueInfo,
+                                                               BufferSize,
+                                                               &Status);
+                    if (!KeyValueInfo) break;
 
-	    }
+                    /* Update the data */
+                    KeyValueInfo->DataOffset = 0;
+                    InfoSize = BufferSize - sizeof(UNICODE_NULL);
 
-	  RtlpFreeMemory(ValueInfo, TAG_RTLREGISTRY);
-	}
-      else
-	{
-	  DPRINT("Query value via query routine: %S\n", QueryEntry->Name);
-	  if (QueryEntry->Name != NULL)
-	    {
-	      RtlInitUnicodeString(&KeyName,
-				   QueryEntry->Name);
+                    /* Try the value again unless it's been too many times */
+                    if (i++ <= 4) continue;
+                    break;
+                }
 
-	      BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + 4096;
-	      ValueInfo = RtlpAllocateMemory(BufferSize, TAG_RTLREGISTRY);
-	      if (ValueInfo == NULL)
-		{
-		  Status = STATUS_NO_MEMORY;
-		  break;
-		}
+                /* Break out if we failed */
+                if (!NT_SUCCESS(Status)) break;
 
-	      Status = ZwQueryValueKey(CurrentKeyHandle,
-				       &KeyName,
-				       KeyValuePartialInformation,
-				       ValueInfo,
-				       BufferSize,
-				       &ResultSize);
-	      if (!NT_SUCCESS(Status))
-		{
-		  if (!(QueryEntry->Flags & RTL_QUERY_REGISTRY_REQUIRED))
-		    {
-		      Status = QueryEntry->QueryRoutine(QueryEntry->Name,
-							QueryEntry->DefaultType,
-							QueryEntry->DefaultData,
-							QueryEntry->DefaultLength,
-							Context,
-							QueryEntry->EntryContext);
-		    }
-		}
-	      else if ((ValueInfo->Type == REG_MULTI_SZ) &&
-		       !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
-		{
-		  DPRINT("Expand REG_MULTI_SZ type\n");
-		  StringPtr = (PWSTR)ValueInfo->Data;
-		  while (DataSize < (ValueInfo->DataLength-2))
-		    {
-		      StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
-		      Status = QueryEntry->QueryRoutine(QueryEntry->Name,
-							REG_SZ,
-							(PVOID)StringPtr,
-							StringLen,
-							Context,
-							QueryEntry->EntryContext);
-		      if(!NT_SUCCESS(Status))
-			break;
-		      StringPtr = (PWSTR)((PUCHAR)StringPtr + StringLen);
-			  DataSize += StringLen;
-		    }
-		}
-	      else if ((ValueInfo->Type == REG_EXPAND_SZ) &&
-		       !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
-		{
-		  DPRINT("Expand REG_EXPAND_SZ type\n");
+                /* Reset the number of retries and check if we need to delete */
+                i = 0;
+                if (QueryTable->Flags & RTL_QUERY_REGISTRY_DELETE)
+                {
+                    /* Build the name */
+                    RtlInitEmptyUnicodeString(&KeyValueName,
+                                              KeyValueInfo->Name,
+                                              (USHORT)KeyValueInfo->NameLength);
+                    KeyValueName.Length = KeyValueName.MaximumLength;
 
-		  ExpandBuffer = RtlpAllocateMemory(ValueInfo->DataLength * 2, TAG_RTLREGISTRY);
-		  if (ExpandBuffer == NULL)
-		    {
-		      Status = STATUS_NO_MEMORY;
-		      break;
-		    }
+                    /* Delete the key */
+                    Status = ZwDeleteValueKey(CurrentKey, &KeyValueName);
+                    if (NT_SUCCESS(Status)) Value--;
+                }
 
-		  RtlInitUnicodeString(&EnvValue,
-				       (PWSTR)ValueInfo->Data);
-		  EnvExpandedValue.Length = 0;
-		  EnvExpandedValue.MaximumLength = ValueInfo->DataLength * 2 * sizeof(WCHAR);
-		  EnvExpandedValue.Buffer = ExpandBuffer;
-		  *ExpandBuffer = 0;
+                /* Go to the next value */
+                Value++;
+            }
+        }
 
-		  RtlExpandEnvironmentStrings_U(Environment,
-						&EnvValue,
-						&EnvExpandedValue,
-						&StringLen);
+        /* Check if we failed anywhere along the road */
+        if (!NT_SUCCESS(Status)) break;
 
-		  StringLen = (wcslen(ExpandBuffer) + 1) * sizeof(WCHAR);
-		  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
-						    REG_SZ,
-						    (PVOID)ExpandBuffer,
-						    StringLen,
-						    Context,
-						    QueryEntry->EntryContext);
-
-		  RtlpFreeMemory(ExpandBuffer, TAG_RTLREGISTRY);
-		}
-	      else
-		{
-		  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
-						    ValueInfo->Type,
-						    ValueInfo->Data,
-						    ValueInfo->DataLength,
-						    Context,
-						    QueryEntry->EntryContext);
-		}
-
-	      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
-		{
-			Status = ZwDeleteValueKey(CurrentKeyHandle, &KeyName);
-		}
-
-	      RtlpFreeMemory(ValueInfo, TAG_RTLREGISTRY);
-	      if (!NT_SUCCESS(Status))
-		break;
-	    }
-	  else if (QueryEntry->Flags & RTL_QUERY_REGISTRY_NOVALUE)
-	    {
-	      DPRINT("Simple callback\n");
-	      Status = QueryEntry->QueryRoutine(NULL,
-						REG_NONE,
-						NULL,
-						0,
-						Context,
-						QueryEntry->EntryContext);
-	      if (!NT_SUCCESS(Status))
-		break;
-	    }
-	  else
-	    {
-	      DPRINT("Enumerate values\n");
-
-	      BufferSize = sizeof(KEY_VALUE_FULL_INFORMATION) + 4096;
-	      FullValueInfo = RtlpAllocateMemory(BufferSize, TAG_RTLREGISTRY);
-	      if (FullValueInfo == NULL)
-		{
-		  Status = STATUS_NO_MEMORY;
-		  break;
-		}
-	      ValueNameSize = 256 * sizeof(WCHAR);
-	      ValueName = RtlpAllocateMemory(ValueNameSize, TAG_RTLREGISTRY);
-	      if (ValueName == NULL)
-	        {
-		  Status = STATUS_NO_MEMORY;
-		  break;
-		}
-	      Index = 0;
-	      while (TRUE)
-		{
-		  Status = ZwEnumerateValueKey(CurrentKeyHandle,
-					       Index,
-					       KeyValueFullInformation,
-					       FullValueInfo,
-					       BufferSize,
-					       &ResultSize);
-		  if (!NT_SUCCESS(Status))
-		    {
-		      if ((Status == STATUS_NO_MORE_ENTRIES) &&
-			  (Index == 0) &&
-			  (QueryEntry->Flags & RTL_QUERY_REGISTRY_REQUIRED))
-			{
-			  Status = STATUS_OBJECT_NAME_NOT_FOUND;
-			}
-		      else if (Status == STATUS_NO_MORE_ENTRIES)
-			{
-			  Status = STATUS_SUCCESS;
-			}
-		      break;
-		    }
-
-		  if (FullValueInfo->NameLength > ValueNameSize - sizeof(WCHAR))
-		    {
-		      /* Should not happen, because the name length is limited to 255 characters */
-		      RtlpFreeMemory(ValueName, TAG_RTLREGISTRY);
-		      ValueNameSize = FullValueInfo->NameLength + sizeof(WCHAR);
-		      ValueName = RtlpAllocateMemory(ValueNameSize, TAG_RTLREGISTRY);
-		      if (ValueName == NULL)
-		        {
-		          Status = STATUS_NO_MEMORY;
-		          break;
-		        }
-		    }
-
-		  memcpy(ValueName,
-			 FullValueInfo->Name,
-			 FullValueInfo->NameLength);
-		  ValueName[FullValueInfo->NameLength / sizeof(WCHAR)] = 0;
-
-		  DPRINT("FullValueInfo->Type: %lu\n", FullValueInfo->Type);
-		  if ((FullValueInfo->Type == REG_MULTI_SZ) &&
-		      !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
-		    {
-		      DPRINT("Expand REG_MULTI_SZ type\n");
-		      StringPtr = (PWSTR)((ULONG_PTR)FullValueInfo + FullValueInfo->DataOffset);
-		      while (*StringPtr != 0)
-			{
-			  StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
-			  Status = QueryEntry->QueryRoutine(ValueName,
-							    REG_SZ,
-							    (PVOID)StringPtr,
-							    StringLen,
-							    Context,
-							    QueryEntry->EntryContext);
-			  if(!NT_SUCCESS(Status))
-			    break;
-			  StringPtr = (PWSTR)((PUCHAR)StringPtr + StringLen);
-			}
-		    }
-		  else if ((FullValueInfo->Type == REG_EXPAND_SZ) &&
-			   !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
-		    {
-		      DPRINT("Expand REG_EXPAND_SZ type\n");
-
-		      StringPtr = (PWSTR)((ULONG_PTR)FullValueInfo + FullValueInfo->DataOffset);
-		      ExpandBuffer = RtlpAllocateMemory(FullValueInfo->DataLength * 2, TAG_RTLREGISTRY);
-		      if (ExpandBuffer == NULL)
-			{
-			  Status = STATUS_NO_MEMORY;
-			  break;
-			}
-
-		      RtlInitUnicodeString(&EnvValue,
-					   StringPtr);
-		      EnvExpandedValue.Length = 0;
-		      EnvExpandedValue.MaximumLength = FullValueInfo->DataLength * 2;
-		      EnvExpandedValue.Buffer = ExpandBuffer;
-		      *ExpandBuffer = 0;
-
-		      RtlExpandEnvironmentStrings_U(Environment,
-						    &EnvValue,
-						    &EnvExpandedValue,
-						    &StringLen);
-
-		      StringLen = (wcslen(ExpandBuffer) + 1) * sizeof(WCHAR);
-		      Status = QueryEntry->QueryRoutine(ValueName,
-							REG_SZ,
-							(PVOID)ExpandBuffer,
-							StringLen,
-							Context,
-							QueryEntry->EntryContext);
-
-		       RtlpFreeMemory(ExpandBuffer, TAG_RTLREGISTRY);
-		    }
-		  else
-		    {
-		      Status = QueryEntry->QueryRoutine(ValueName,
-							FullValueInfo->Type,
-							(PVOID)((ULONG_PTR)FullValueInfo + FullValueInfo->DataOffset),
-							FullValueInfo->DataLength,
-							Context,
-							QueryEntry->EntryContext);
-		    }
-
-		  if (!NT_SUCCESS(Status))
-		    break;
-
-		  /* FIXME: How will these be deleted? */
-
-		  Index++;
-		}
-
-	      RtlpFreeMemory(FullValueInfo, TAG_RTLREGISTRY);
-	      RtlpFreeMemory(ValueName, TAG_RTLREGISTRY);
-	      if (!NT_SUCCESS(Status))
-		break;
-	    }
-	}
-
-      QueryEntry++;
+        /* Continue */
+        QueryTable++;
     }
 
-  if (CurrentKeyHandle != BaseKeyHandle)
-    ZwClose(CurrentKeyHandle);
+    /* Check if we need to close our handle */
+    if ((KeyHandle) && !(RelativeTo & RTL_REGISTRY_HANDLE)) ZwClose(KeyHandle);
+    if ((CurrentKey) && (CurrentKey != KeyHandle)) ZwClose(CurrentKey);
 
-  ZwClose(BaseKeyHandle);
-
-  return(Status);
+    /* Free our buffer and return status */
+    RtlpAllocDeallocQueryBuffer(NULL, KeyValueInfo, BufferSize, NULL);
+    return Status;
 }
 
 /* EOF */

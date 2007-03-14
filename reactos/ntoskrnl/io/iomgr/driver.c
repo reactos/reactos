@@ -542,7 +542,7 @@ IopAttachFilterDrivers(
    PDEVICE_NODE DeviceNode,
    BOOLEAN Lower)
 {
-   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
    PWCHAR KeyBuffer;
    UNICODE_STRING Class;
    WCHAR ClassBuffer[40];
@@ -557,10 +557,7 @@ IopAttachFilterDrivers(
      QueryTable[0].Name = L"LowerFilters";
    else
      QueryTable[0].Name = L"UpperFilters";
-   QueryTable[0].EntryContext = NULL;
    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED;
-   QueryTable[1].QueryRoutine = NULL;
-   QueryTable[1].Name = NULL;
 
    KeyBuffer = ExAllocatePool(
       PagedPool,
