@@ -43,10 +43,10 @@
 @ stub ImmGetIMCCSize
 @ stub ImmGetIMCLockCount
 @ stdcall ImmGetIMEFileNameA(long ptr long)
-@ stdcall ImmGetIMEFileNameW(long ptr long) 
+@ stdcall ImmGetIMEFileNameW(long ptr long)
 @ stub ImmGetImeInfoEx
-@ stub ImmGetImeMenuItemsA
-@ stub ImmGetImeMenuItemsW
+@ stdcall ImmGetImeMenuItemsA(long long long ptr ptr long)
+@ stdcall ImmGetImeMenuItemsW(long long long ptr ptr long)
 @ stdcall ImmGetOpenStatus(long)
 @ stdcall ImmGetProperty(long long)
 @ stdcall ImmGetRegisterWordStyleA(long long ptr)
