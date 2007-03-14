@@ -2,9 +2,9 @@ Index: mpr.rc
 ===================================================================
 --- mpr.rc	(revision 23782)
 +++ mpr.rc	(working copy)
-@@ -38,4 +38,7 @@
- #include "mpr_Nl.rc"
+@@ -39,4 +39,7 @@
  #include "mpr_No.rc"
+ #include "mpr_Pl.rc"
  #include "mpr_Pt.rc"
 +#include "mpr_Ru.rc"
 +#include "mpr_Sv.rc"
