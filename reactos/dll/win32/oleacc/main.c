@@ -31,7 +31,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(oleacc);
 HRESULT WINAPI CreateStdAccessibleObject( HWND hwnd, LONG idObject,
                              REFIID riidInterface, void** ppvObject )
 {
-    FIXME("%p %ld %s %p\n", hwnd, idObject,
+    FIXME("%p %d %s %p\n", hwnd, idObject,
           debugstr_guid( riidInterface ), ppvObject );
     return E_NOTIMPL;
 }
@@ -45,7 +45,7 @@ HRESULT WINAPI LresultFromObject( REFIID riid, WPARAM wParam, LPUNKNOWN pAcc )
 HRESULT WINAPI AccessibleObjectFromWindow( HWND hwnd, DWORD dwObjectID,
                              REFIID riid, void** ppvObject )
 {
-    FIXME("%p %ld %s %p\n", hwnd, dwObjectID,
+    FIXME("%p %d %s %p\n", hwnd, dwObjectID,
           debugstr_guid( riid ), ppvObject );
     return E_NOTIMPL;
 }
