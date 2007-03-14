@@ -22,7 +22,7 @@
     <library>cmlib</library>
     <library>rtl</library>
     <library>rossym</library>
-    <library>string</library>
+    <library>libcntpr</library>
     <library>kdcom</library>
     <library>bootvid</library>
     <library>wdmguid</library>

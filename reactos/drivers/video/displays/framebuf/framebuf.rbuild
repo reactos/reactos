@@ -3,7 +3,7 @@
 	<include base="framebuf">.</include>
 	<define name="__USE_W32API" />
 	<library>win32k</library>
-	<library>string</library>
+	<library>libcntpr</library>
 	<file>enable.c</file>
 	<file>palette.c</file>
 	<file>pointer.c</file>

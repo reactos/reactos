@@ -9,7 +9,6 @@
 	<define name="USE_MSVCRT_PREFIX" />
 	<define name="_MT" />
 	<library>wine</library>
-	<library>string</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>msvcrt</library>

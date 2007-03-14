@@ -1,169 +1,139 @@
-/* $Id$
- * 
- * MORE.C - external command.
- *
- * clone from 4nt more command
- *
- * 26 Sep 1999 - Paolo Pantaleo <paolopan@freemail.it>
- *     started
- * Oct 2003 - Timothy Schepens <tischepe at fastmail dot fm>
- *     use window size instead of buffer size.
- */
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <unistd.h>
 
-#include <windows.h>
-#include <malloc.h>
-#include <tchar.h>
+#define rdtscll(val) __asm__ __volatile__ ("rdtsc" : "=A" (val))
 
+const int SELECTMODE = 14;
+const int BIGDATA = 10000; // Relying on int = long
+const int MHZ = 2160;
+int *data;
 
-DWORD len;
-LPTSTR msg = _T("--- continue ---");
-
-
-/*handle for file and console*/
-HANDLE hStdIn;
-HANDLE hStdOut;
-HANDLE hStdErr;
-HANDLE hKeyboard;
-
-
-static VOID
-GetScreenSize (PSHORT maxx, PSHORT maxy)
-{
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-	GetConsoleScreenBufferInfo (hStdOut, &csbi);
-		*maxx = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
-		*maxy = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
-
-}
-
-
-static
-VOID ConOutPuts (LPTSTR szText)
-{
-	DWORD dwWritten;
-
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\n", 1, &dwWritten, NULL);
-}
-
-
-static VOID
-ConInKey (VOID)
-{
-	INPUT_RECORD ir;
-	DWORD dwRead;
-
-	do
-	{
-		ReadConsoleInput (hKeyboard, &ir, 1, &dwRead);
-		if ((ir.EventType == KEY_EVENT) &&
-			(ir.Event.KeyEvent.bKeyDown == TRUE))
-			return;
+void SelectionSort(int data[], int left, int right) {
+    int i, j;
+	for(i = left; i < right; i++) {
+		int min = i;
+		for(j=i+1; j <= right; j++)
+			if(data[j] < data[min]) min = j;
+		int temp = data[min];
+		data[min] = data[i];
+		data[i] = temp;
 	}
-	while (TRUE);
 }
 
-
-static VOID
-WaitForKey (VOID)
+int Partition( int d[], int left, int right)
 {
-	DWORD dwWritten;
+	int val =d[left];
+	int lm = left-1;
+	int rm = right+1;
+	for(;;) {
+		do
+			rm--;
+		while (d[rm] > val);
+		
+		do 
+			lm++;
+		while( d[lm] < val);
 
-	WriteFile (hStdErr,msg , len, &dwWritten, NULL);
-
-	ConInKey();
-
-	WriteFile (hStdErr, _T("\n"), 1, &dwWritten, NULL);
-
-//	FlushConsoleInputBuffer (hConsoleIn);
-}
-
-
-//INT CommandMore (LPTSTR cmd, LPTSTR param)
-int main (int argc, char **argv)
-{
-	SHORT maxx,maxy;
-	SHORT line_count=0,ch_count=0;
-	DWORD i, last;
-	HANDLE hFile = INVALID_HANDLE_VALUE;
-	TCHAR szFullPath[MAX_PATH];
-
-	/*reading/writing buffer*/
-	TCHAR *buff;
-
-	/*bytes written by WriteFile and ReadFile*/
-	DWORD dwRead,dwWritten;
-
-	/*ReadFile() return value*/
-	BOOL bRet;
-
-	len = _tcslen (msg);
-	hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	hStdErr = GetStdHandle(STD_ERROR_HANDLE);
-
-	if (argc > 1 && _tcsncmp (argv[1], _T("/?"), 2) == 0)
-	{
-		ConOutPuts(_T("Help text still missing!!"));
-		return 0;
-	}
-
-	hKeyboard = CreateFile (_T("CONIN$"), GENERIC_READ,
-	                        0,NULL,OPEN_ALWAYS,0,0);
-
-	GetScreenSize(&maxx,&maxy);
-
-	buff=malloc(4096);
-
-	FlushConsoleInputBuffer (hKeyboard);	
-
-	if(argc > 1)
-	{
-		GetFullPathName(argv[1], MAX_PATH, szFullPath, NULL);
-		hFile = CreateFile (szFullPath, GENERIC_READ,
-	                        0,NULL,OPEN_ALWAYS,0,0);
-	}
-
-	do
-	{
-		if(hFile != INVALID_HANDLE_VALUE)
-		{			
-			bRet = ReadFile(hFile,buff,4096,&dwRead,NULL);
-		}
-		else
-		{
-			bRet = ReadFile(hStdIn,buff,4096,&dwRead,NULL);
-		}
-
-		for(last=i=0;i<dwRead && bRet;i++)
-		{
-			ch_count++;
-			if(buff[i] == _T('\n') || ch_count == maxx)
-			{
-				ch_count=0;
-				line_count++;
-				if (line_count == maxy)
-				{
-					line_count = 0;
-					WriteFile(hStdOut,&buff[last], i-last+1, &dwWritten, NULL);
-					last=i+1;
-					FlushFileBuffers (hStdOut);
-					WaitForKey ();
-				}
+		if(lm < rm) {
+			int tempr = d[rm];
+			d[rm] = d[lm];
+			d[lm] = tempr;
 			}
+		else 
+			return rm;
 		}
-		if (last<dwRead && bRet)
-			WriteFile(hStdOut,&buff[last], dwRead-last, &dwWritten, NULL);
+}
 
+void Quicksort( int d[], int left, int right)
+{
+	if(left < (right-SELECTMODE)) {
+		int split_pt = Partition(d,left, right);
+		Quicksort(d, left, split_pt);
+		Quicksort(d, split_pt+1, right);
+		}
+	else SelectionSort(d, left, right);
+}
+
+int main(int argc, char* argv[]) {
+
+	data = (int*)calloc(BIGDATA,4);
+	unsigned long int timeStart;
+
+	unsigned long int timeReadLoopStart;
+	unsigned long int timeReadLoopEnd;
+
+	unsigned long int timeSortLoopStart;
+	unsigned long int timeSortLoopEnd;
+
+	unsigned long int timeWriteLoopStart;
+	unsigned long int timeWriteLoopEnd;
+
+	unsigned long int timeEnd;
+
+	FILE *randfile;
+	FILE *sortfile;
+	int i,j,thisInt,dataSize = 0;
+	long sumUnsorted = 0;
+
+	rdtscll(timeStart);
+
+	randfile = fopen(argv[1],"r");
+	sortfile = fopen(argv[2],"w");
+	if (randfile == NULL || sortfile == NULL) {
+		fprintf(stderr,"Could not open all files.\n");
+		return 1;
 	}
-	while(dwRead>0 && bRet);
 
-	free (buff);
-	CloseHandle (hKeyboard);
-	CloseHandle (hFile);
+	rdtscll(timeReadLoopStart);
+
+	i = 0;
+	while (!feof(randfile)) {
+		fscanf(randfile,"%d",&thisInt);
+		if (feof(randfile)) { break; }
+		data[i] = thisInt;
+		sumUnsorted += thisInt;
+		//fprintf(stdout,"[%d] Read item: %d\n",i,thisInt);
+		i++;
+		if (i >= BIGDATA) { 
+			break;
+		}
+	}
+	fclose(randfile);
+	dataSize = i;
+
+	rdtscll(timeReadLoopEnd);
+	rdtscll(timeSortLoopStart);
+	
+	Quicksort(data, 0, dataSize-1);
+
+	rdtscll(timeSortLoopEnd);
+	rdtscll(timeWriteLoopStart);
+
+	int last = -1;
+	for(j = 0; j < dataSize; j++) {
+		if (data[j] < last) {
+			fprintf(stderr,"The data is not in order\n");
+			fprintf(stderr,"Noticed the problem at j = %d\n",j);
+			fclose(sortfile);
+			return 1;
+		} else {
+			fprintf(sortfile,"%d\n",data[j]);
+		}
+	}
+	fclose(sortfile);	
+
+	rdtscll(timeWriteLoopEnd);
+
+	rdtscll(timeEnd);
+
+	fprintf(stdout,"Sorted %d items.\n",dataSize);
+	fprintf(stdout,"Open Files   : %ldt.\n",(long)timeReadLoopStart - (long)timeStart);
+	fprintf(stdout,"Read Data    : %ldt.\n",(long)timeReadLoopEnd - (long)timeReadLoopStart);
+	fprintf(stdout,"Sort Data    : %ldt.\n",(long)timeSortLoopEnd - (long)timeSortLoopStart);
+	fprintf(stdout,"Write Data   : %ldt.\n",(long)timeWriteLoopEnd - (long)timeWriteLoopStart);
+	fprintf(stdout,"Total Time   : %ldt.\n",(long)timeEnd - (long)timeStart);
 
 	return 0;
 }
-
-/* EOF */
