@@ -577,7 +577,7 @@ KsInternalIrpDispatcher(
 
     DPRINT1("KS IRP dispatch function called\n");
 
-    PKSDISPATCH_TABLE ks_dispatch_table = NULL;
+    //PKSDISPATCH_TABLE ks_dispatch_table = NULL;
 
     /* ks_dispatch_table is the first element in a structure pointed to by FsContext */
 

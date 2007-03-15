@@ -14,7 +14,7 @@ CheckIrq(
     return TRUE;
 }
 
-BOOLEAN
+BOOLEAN NTAPI
 ServiceSoundBlasterInterrupt(
     IN  PKINTERRUPT Interrupt,
     IN  PVOID Context)
@@ -42,7 +42,7 @@ EnableIrq(
 
     DPRINT("Vector is 0x%x\n", vector);
 
-    status = IoConnectInterrupt(parameters->interrupt,
+    status = IoConnectInterrupt(&parameters->interrupt,
                                 ServiceSoundBlasterInterrupt,
                                 DeviceObject,
                                 (PKSPIN_LOCK) NULL,

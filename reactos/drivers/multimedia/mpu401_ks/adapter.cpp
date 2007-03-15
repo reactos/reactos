@@ -14,6 +14,7 @@
 
 #define PUT_GUIDS_HERE
 
+#define INITGUID
 #include <portcls.h>
 
 extern "C"

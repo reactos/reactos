@@ -141,7 +141,7 @@ typedef PVOID CM_RESOURCE_TYPE;
     Class IDs - TODO
 */
 //#define CLSID_PortDMus    /* dmusicks.h */
-#define CLSID_PortMidi
+DEFINE_GUID(CLSID_PortMidi,0xb4c90a43L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 #define CLSID_PortTopology
 #define CLSID_PortWaveCyclic
 #define CLSID_PortWavePci
@@ -151,7 +151,7 @@ typedef PVOID CM_RESOURCE_TYPE;
 #define CLSID_MiniportDriverDMusUARTCapture
 #define CLSID_MiniportDriverFmSynth
 #define CLSID_MiniportDriverFmSynthWithVol
-#define CLSID_MiniportDriverUart
+DEFINE_GUID(CLSID_MiniportDriverUart,0xb4c90ae1L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 
 
 /* ===============================================================
