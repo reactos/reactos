@@ -943,4 +943,6 @@ static __inline__ __attribute__((always_inline)) void __wbinvd(void)
 	__asm__ __volatile__("wbinvd");
 }
 
+#endif /* KJK_INTRIN_X86_H_ */
+
 /* EOF */
