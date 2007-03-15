@@ -45,16 +45,16 @@
 		<file>abnorter.c</file>
 		<file>exhand2.c</file>
 		<file>matherr.c</file>
-            <if property="ARCH" value="i386">
-                      <directory name="i386">
-                            <file>seh.s</file> 
-                            <file>unwind.c</file>
-                      </directory>
-            </if>                 				
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>seh.s</file>
+				<file>unwind.c</file>
+			</directory>
+		</if>
 		<file>xcptfil.c</file>
 	</directory>
 	<directory name="float">
-		<file>chgsign.c</file>				
+		<file>chgsign.c</file>
 		<file>copysign.c</file>
 		<file>fpclass.c</file>
 		<file>fpecode.c</file>
@@ -62,15 +62,14 @@
 		<file>isnan.c</file>
 		<file>nafter.c</file>
 		<file>scalb.c</file>
-		
-            <if property="ARCH" value="i386">
-                      <directory name="i386">
-                             <file>clearfp.c</file>
-                             <file>cntrlfp.c</file>
-                             <file>logb.c</file>
-                             <file>statfp.c</file>
-                      </directory>
-            </if> 
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>clearfp.c</file>
+				<file>cntrlfp.c</file>
+				<file>logb.c</file>
+				<file>statfp.c</file>
+			</directory>
+		</if>
 	</directory>
 	<directory name="io">
 		<file>access.c</file>
@@ -118,35 +117,35 @@
 	<directory name="math">
 		<file>acos.c</file>
 		<file>adjust.c</file>
-		<file>asin.c</file>		
+		<file>asin.c</file>
 		<file>cabs.c</file>
-		<file>cosh.c</file>				
+		<file>cosh.c</file>
 		<file>frexp.c</file>
 		<file>huge_val.c</file>
 		<file>hypot.c</file>
 		<file>j0_y0.c</file>
 		<file>j1_y1.c</file>
-		<file>jn_yn.c</file>		
-            <file>modf.c</file>
+		<file>jn_yn.c</file>
+		<file>modf.c</file>
 		<file>s_modf.c</file>
 		<file>sinh.c</file>
 		<file>stubs.c</file>
 		<file>tanh.c</file>
-            <file>pow_asm.c</file>
+		<file>pow_asm.c</file>
 
-            <if property="ARCH" value="i386">                                           
-                      <directory name="i386"> 	
-                            <file>atan2.c</file>
-                            <file>exp.c</file>
-                            <file>fmod.c</file>
- 		                <file>ldexp.c</file>
-                            <file>atan_asm.s</file>	                                                                
-                            <file>pow_asm.s</file>
-                            <file>log10_asm.s</file>                                    
-	                </directory>
-            </if>
-            <ifnot property="ARCH" value="i386">
-            </ifnot>                       
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>atan2.c</file>
+				<file>exp.c</file>
+				<file>fmod.c</file>
+				<file>ldexp.c</file>
+				<file>atan_asm.s</file>
+				<file>pow_asm.s</file>
+				<file>log10_asm.s</file>
+			</directory>
+		</if>
+		<ifnot property="ARCH" value="i386">
+		</ifnot>
 	</directory>
 
 	<directory name="mbstring">
@@ -233,15 +232,13 @@
 		<file>lfind.c</file>
 		<file>lsearch.c</file>
 	</directory>
-      
 	<directory name="setjmp">
-            <if property="ARCH" value="i386">                      
-		         <directory name="i386">
-			         <file>setjmp.s</file>
-		         </directory>
-            </if>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>setjmp.s</file>
+			</directory>
+		</if>
 	</directory>
-       
 	<directory name="signal">
 		<file>signal.c</file>
 		<file>xcptinfo.c</file>
@@ -357,11 +354,71 @@
 		<file>wmakpath.c</file>
 	</directory>
 	<directory name="string">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>memchr_asm.s</file>
+				<file>memcpy_asm.s</file>
+				<file>memmove_asm.s</file>
+				<file>memset_asm.s</file>
+				<file>strcat_asm.s</file>
+				<file>strchr_asm.s</file>
+				<file>strcmp_asm.s</file>
+				<file>strcpy_asm.s</file>
+				<file>strlen_asm.s</file>
+				<file>strncat_asm.s</file>
+				<file>strncmp_asm.s</file>
+				<file>strncpy_asm.s</file>
+				<file>strnlen_asm.s</file>
+				<file>strrchr_asm.s</file>
+				<file>wcscat_asm.s</file>
+				<file>wcschr_asm.s</file>
+				<file>wcscmp_asm.s</file>
+				<file>wcscpy_asm.s</file>
+				<file>wcslen_asm.s</file>
+				<file>wcsncat_asm.s</file>
+				<file>wcsncmp_asm.s</file>
+				<file>wcsncpy_asm.s</file>
+				<file>wcsnlen_asm.s</file>
+				<file>wcsrchr_asm.s</file>
+			</directory>
+		</if>
+		<ifnot property="ARCH" value="i386">
+			<file>memchr.c</file>
+			<file>memcpy.c</file>
+			<file>memmove.c</file>
+			<file>memset.c</file>
+			<file>strcat.c</file>
+			<file>strchr.c</file>
+			<file>strcmp.c</file>
+			<file>strcpy.c</file>
+			<file>strlen.c</file>
+			<file>strncat.c</file>
+			<file>strncmp.c</file>
+			<file>strncpy.c</file>
+			<file>strnlen.c</file>
+			<file>strrchr.c</file>
+			<file>wcscat.c</file>
+			<file>wcschr.c</file>
+			<file>wcscmp.c</file>
+			<file>wcscpy.c</file>
+			<file>wcslen.c</file>
+			<file>wcsncat.c</file>
+			<file>wcsncmp.c</file>
+			<file>wcsncpy.c</file>
+			<file>wcsnlen.c</file>
+			<file>wcsrchr.c</file>
+		</ifnot>
 		<file>lasttok.c</file>
+		<file>memcmp.c</file>
+		<file>memicmp.c</file>
 		<file>strcoll.c</file>
 		<file>strdup.c</file>
 		<file>strerror.c</file>
+		<file>stricmp.c</file>
+		<file>strlwr.c</file>
 		<file>strncoll.c</file>
+		<file>strnicmp.c</file>
+		<file>strpbrk.c</file>
 		<file>strrev.c</file>
 		<file>strset.c</file>
 		<file>strstr.c</file>
