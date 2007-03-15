@@ -11,8 +11,8 @@
 	<define name="_MSVCRT_LIB_" />
 	<define name="_MSVCRT_" />
 	<define name="_MT" />
-    <define name="__NO_CTYPE_INLINES" />
-    <pch>precomp.h</pch>
+	<define name="__NO_CTYPE_INLINES" />
+	<pch>precomp.h</pch>
 	<directory name="conio">
 		<file>cgets.c</file>
 		<file>cprintf.c</file>
@@ -22,6 +22,9 @@
 		<file>kbhit.c</file>
 		<file>putch.c</file>
 		<file>ungetch.c</file>
+	</directory>
+	<directory name="ctype">
+		<file>ctype.c</file>
 	</directory>
 	<directory name="direct">
 		<file>chdir.c</file>
