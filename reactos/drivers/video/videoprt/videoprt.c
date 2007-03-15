@@ -654,6 +654,7 @@ VideoPortInitialize(
          }
 
          RtlCopyUnicodeString(&DriverExtension->RegistryPath, RegistryPath);
+         DPRINT("RegistryPath: %wZ\n", &DriverExtension->RegistryPath);
       }
       else
       {
@@ -662,7 +663,7 @@ VideoPortInitialize(
    }
 
    /*
-    * Copy the correct miniport initializtation data to the device extension.
+    * Copy the correct miniport initialization data to the device extension.
     */
 
    RtlCopyMemory(
@@ -825,7 +826,7 @@ VideoPortGetRegistryParameters(
    IN PMINIPORT_GET_REGISTRY_ROUTINE GetRegistryRoutine,
    IN PVOID HwContext)
 {
-   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+   RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
    QUERY_REGISTRY_CALLBACK_CONTEXT Context;
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
@@ -840,13 +841,6 @@ VideoPortGetRegistryParameters(
    QueryTable[0].QueryRoutine = QueryRegistryCallback;
    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED;
    QueryTable[0].Name = ParameterName;
-   QueryTable[0].EntryContext = NULL;
-   QueryTable[0].DefaultType = REG_NONE;
-   QueryTable[0].DefaultData = NULL;
-   QueryTable[0].DefaultLength = 0;
-
-   QueryTable[1].QueryRoutine = NULL;
-   QueryTable[1].Name = NULL;
 
    if (!NT_SUCCESS(RtlQueryRegistryValues(
       RTL_REGISTRY_ABSOLUTE,
