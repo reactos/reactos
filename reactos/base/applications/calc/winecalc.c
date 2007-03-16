@@ -2293,7 +2293,7 @@ void InitCalc (CALC *calc)
         // Buttons
 
         calc->cb[60].id       = ID_CALC_NS_HEX;
-        _tcscpy(calc->cb[60].label,TEXT("Hex"));
+        LoadString( hInst, IDS_BTN_SHRT_HEX, calc->cb[60].label, sizeof(calc->cb[60].label) / sizeof(calc->cb[60].label[0]));
         calc->cb[60].color    = CALC_COLOR_GRAY;
         calc->cb[60].r.left   = CALC_NS_HEX_LEFT;
         calc->cb[60].r.top    = CALC_NS_HEX_TOP;
@@ -2302,7 +2302,7 @@ void InitCalc (CALC *calc)
         calc->cb[60].enable   = 1;
 
         calc->cb[61].id       = ID_CALC_NS_DEC;
-        _tcscpy(calc->cb[61].label,TEXT("Dec"));
+        LoadString( hInst, IDS_BTN_SHRT_DEC, calc->cb[61].label, sizeof(calc->cb[61].label) / sizeof(calc->cb[61].label[0]));
         calc->cb[61].color    = CALC_COLOR_GRAY;
         calc->cb[61].r.left   = CALC_NS_DEC_LEFT;
         calc->cb[61].r.top    = CALC_NS_DEC_TOP;
@@ -2311,7 +2311,7 @@ void InitCalc (CALC *calc)
         calc->cb[61].enable   = 1;
 
         calc->cb[62].id       = ID_CALC_NS_OCT;
-        _tcscpy(calc->cb[62].label,TEXT("Oct"));
+        LoadString( hInst, IDS_BTN_SHRT_OCT, calc->cb[62].label, sizeof(calc->cb[62].label) / sizeof(calc->cb[62].label[0]));
         calc->cb[62].color    = CALC_COLOR_GRAY;
         calc->cb[62].r.left   = CALC_NS_OCT_LEFT;
         calc->cb[62].r.top    = CALC_NS_OCT_TOP;
@@ -2320,7 +2320,7 @@ void InitCalc (CALC *calc)
         calc->cb[62].enable   = 1;
 
         calc->cb[63].id       = ID_CALC_NS_BIN;
-        _tcscpy(calc->cb[63].label,TEXT("Bin"));
+        LoadString( hInst, IDS_BTN_SHRT_BIN, calc->cb[63].label, sizeof(calc->cb[63].label) / sizeof(calc->cb[63].label[0]));
         calc->cb[63].color    = CALC_COLOR_GRAY;
         calc->cb[63].r.left   = CALC_NS_BIN_LEFT;
         calc->cb[63].r.top    = CALC_NS_BIN_TOP;
@@ -2329,7 +2329,7 @@ void InitCalc (CALC *calc)
         calc->cb[63].enable   = 1;
 
         calc->cb[64].id       = ID_CALC_MS_DEGREES;
-        _tcscpy(calc->cb[64].label,TEXT("Degrees"));
+        LoadString( hInst, IDS_BTN_DEGREES, calc->cb[64].label, sizeof(calc->cb[64].label) / sizeof(calc->cb[64].label[0]));
         calc->cb[64].color    = CALC_COLOR_GRAY;
         calc->cb[64].r.left   = CALC_MS_DEGREES_LEFT;
         calc->cb[64].r.top    = CALC_MS_DEGREES_TOP;
@@ -2338,7 +2338,7 @@ void InitCalc (CALC *calc)
         calc->cb[64].enable   = 1;
 
         calc->cb[65].id       = ID_CALC_MS_RADIANS;
-        _tcscpy(calc->cb[65].label,TEXT("Radians"));
+        LoadString( hInst, IDS_BTN_RADIANS, calc->cb[65].label, sizeof(calc->cb[65].label) / sizeof(calc->cb[65].label[0]));
         calc->cb[65].color    = CALC_COLOR_GRAY;
         calc->cb[65].r.left   = CALC_MS_RADIANS_LEFT;
         calc->cb[65].r.top    = CALC_MS_RADIANS_TOP;
@@ -2347,7 +2347,7 @@ void InitCalc (CALC *calc)
         calc->cb[65].enable   = 1;
 
         calc->cb[66].id       = ID_CALC_MS_GRADS;
-        _tcscpy(calc->cb[66].label,TEXT("Grads"));
+        LoadString( hInst, IDS_BTN_GRADS, calc->cb[66].label, sizeof(calc->cb[66].label) / sizeof(calc->cb[66].label[0]));
         calc->cb[66].color    = CALC_COLOR_GRAY;
         calc->cb[66].r.left   = CALC_MS_GRADS_LEFT;
         calc->cb[66].r.top    = CALC_MS_GRADS_TOP;

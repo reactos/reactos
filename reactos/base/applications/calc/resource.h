@@ -47,6 +47,14 @@
 #define IDS_BTN_MEM_PLUS       1107
 #define IDS_BTN_MEM_STATUS_M   1108
 #define IDS_BTN_SQRT           1109
+#define IDS_BTN_DEGREES        1110
+#define IDS_BTN_RADIANS        1111
+#define IDS_BTN_GRADS          1112
+#define IDS_BTN_SHRT_HEX       1113
+#define IDS_BTN_SHRT_DEC       1114
+#define IDS_BTN_SHRT_OCT       1115
+#define IDS_BTN_SHRT_BIN       1116
+
 
 #define IDS_ERR_INVALID_INPUT  1120
 #define IDS_ERR_DIVIDE_BY_ZERO 1121

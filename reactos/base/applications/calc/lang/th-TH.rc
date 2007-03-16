@@ -43,6 +43,13 @@ STRINGTABLE DISCARDABLE
     IDS_BTN_MEM_PLUS,		"M+"
     IDS_BTN_MEM_STATUS_M,	"M"
     IDS_BTN_SQRT,		"รากที่สอง"
+    IDS_BTN_DEGREES,            "องศา"
+    IDS_BTN_RADIANS,            "เรเดียน"
+    IDS_BTN_GRADS,              "เกรเดียน"
+    IDS_BTN_SHRT_HEX            "ฐานสิบหก"
+    IDS_BTN_SHRT_DEC            "ฐานสิบ"
+    IDS_BTN_SHRT_OCT            "ฐานแปด"
+    IDS_BTN_SHRT_BIN            "ฐานสอง"
     IDS_ERR_INVALID_INPUT,	"ค่าที่ป้อนให้ไม่สามารถใช้ในกรณีนี้ได้"
     IDS_ERR_DIVIDE_BY_ZERO,	"ไม่สามารถหารด้วยศูนย์"
     IDS_ERR_UNDEFINED,		"ไม่สามารถแสดงผลได้"
@@ -63,7 +70,7 @@ MAIN_MENU MENU DISCARDABLE
     POPUP "&ช่วยเหลือ" {
         MENUITEM "ข้อมูลช่วยเหลือ",	IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "เกี่ยวกับ GNU WineCalc",    IDM_ABOUT
+        MENUITEM "เกี่ยวกับ GNU WineCalc", IDM_ABOUT
     }
 }
 
@@ -77,21 +84,21 @@ SCIMS_MENU MENU DISCARDABLE
         MENUITEM "แบบมาตรฐาน",		IDM_MODE_STANDARD
         MENUITEM "แบบวิทยาศาสตร์",      IDM_MODE_SCIENTIFIC
         MENUITEM SEPARATOR
-        MENUITEM "ฐานสิบหก\tF5",		ID_CALC_NS_HEX
+        MENUITEM "ฐานสิบหก\tF5",	ID_CALC_NS_HEX
         MENUITEM "ฐานสิบ\tF6",		ID_CALC_NS_DEC
         MENUITEM "ฐานแปด\tF7",		ID_CALC_NS_OCT
         MENUITEM "ฐานสอง\tF8",		ID_CALC_NS_BIN
         MENUITEM SEPARATOR
         MENUITEM "องศา\tF2",		ID_CALC_MS_DEGREES
         MENUITEM "เรเดียน\tF3",		ID_CALC_MS_RADIANS
-        MENUITEM "เกรเดียน\tF4",		ID_CALC_MS_GRADS
+        MENUITEM "เกรเดียน\tF4",	ID_CALC_MS_GRADS
         MENUITEM SEPARATOR
         MENUITEM "แสดงหลักตัวเลข",      IDM_DIGIT_GROUPING
     }
     POPUP "ช่วยเหลือ" {
         MENUITEM "ข้อมูลช่วยเหลือ",	IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "เกี่ยวกับ GNU WineCalc",    IDM_ABOUT
+        MENUITEM "เกี่ยวกับ GNU WineCalc", IDM_ABOUT
     }
 }
 
@@ -105,7 +112,7 @@ SCIWS_MENU MENU DISCARDABLE
         MENUITEM "แบบมาตรฐาน",		IDM_MODE_STANDARD
         MENUITEM "แบบวิทยาศาสตร์",      IDM_MODE_SCIENTIFIC
         MENUITEM SEPARATOR
-        MENUITEM "ฐานสิบหก\tF5",		ID_CALC_NS_HEX
+        MENUITEM "ฐานสิบหก\tF5",	ID_CALC_NS_HEX
         MENUITEM "ฐานสิบ\tF6",		ID_CALC_NS_DEC
         MENUITEM "ฐานแปด\tF7",		ID_CALC_NS_OCT
         MENUITEM "ฐานสอง\tF8",		ID_CALC_NS_BIN
@@ -120,7 +127,7 @@ SCIWS_MENU MENU DISCARDABLE
     POPUP "ช่วยเหลือ" {
         MENUITEM "ข้อมูลช่วยเหลือ",	IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "เกี่ยวกับ GNU WineCalc",    IDM_ABOUT
+        MENUITEM "เกี่ยวกับ GNU WineCalc", IDM_ABOUT
     }
 }
 
