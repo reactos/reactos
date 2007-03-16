@@ -965,12 +965,13 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
    ListHead = &MessageQueue->SentMessagesListHead;
    while (CurrentEntry != ListHead)
    {
-      CurrentEntry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
       SentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
                                       ListEntry);
       if(SentMessage->Msg.hwnd == Window->hSelf)
       {
          DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
+
+	 RemoveEntryList(&SentMessage->ListEntry);
 
          /* remove the message from the dispatching list */
          if(SentMessage->DispatchingListEntry.Flink != NULL)
