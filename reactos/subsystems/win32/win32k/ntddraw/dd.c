@@ -40,48 +40,165 @@ DWORD STDCALL NtGdiDdCreateSurface(
     HANDLE *puhSurface
 )
 {
-	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
+    DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
+    NTSTATUS Status = FALSE;
     PDD_DIRECTDRAW pDirectDraw;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
+    HANDLE hsurface;
+    PDD_SURFACE phsurface;
 
-	DPRINT1("NtGdiDdCreateSurface\n");
+    DPRINT1("NtGdiDdCreateSurface\n");
 
-	pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+    /* Create a surface */
+    hsurface =  GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DD_SURFACE);
+      if (!hsurface)
+    {
+        return ddRVal;
+    }
 
-	if (pDirectDraw != NULL) 
-	{       					
-	
-		/* 
-		   FIXME Get the darn surface handle and and put all 
-		   surface struct to it 
+    phsurface = GDIOBJ_LockObj(DdHandleTable, hsurface, GDI_OBJECT_TYPE_DD_SURFACE);
+    if (!phsurface)
+    {
+        return ddRVal;
+    }
 
-		   FIXME rewrite the darn code complete 
+    DPRINT1("Copy puCreateSurfaceData to kmode CreateSurfaceData\n");
+    _SEH_TRY
+    {
+        ProbeForRead(puCreateSurfaceData,  sizeof(DD_CREATESURFACEDATA), 1);
+        RtlCopyMemory( &phsurface->CreateSurfaceData, puCreateSurfaceData,
+                       sizeof( DD_CREATESURFACEDATA ) );
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, phsurface);
+        SetLastNtError(Status);
+        return ddRVal;
+    }
 
-		   FIXME fill the puCreateSurfaceData correct
+    DPRINT1("Copy puSurfaceGlobalData to kmode phsurface->Global\n");
+    _SEH_TRY
+    {
+        ProbeForRead(puSurfaceGlobalData,  sizeof(DD_SURFACE_GLOBAL), 1);
+        RtlCopyMemory( &phsurface->Global, puSurfaceGlobalData,
+                       sizeof( DD_SURFACE_GLOBAL ) );
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, phsurface);
+        SetLastNtError(Status);
+        return ddRVal;
+    }
 
-		   FIXME loading back info from it right 
-	     */
+    DPRINT1("Copy puSurfaceMoreData to kmode phsurface->More\n");
+    _SEH_TRY
+    {
+        ProbeForRead(puSurfaceMoreData,  sizeof(DD_SURFACE_MORE), 1);
+        RtlCopyMemory( &phsurface->More, puSurfaceMoreData,
+                       sizeof( DD_SURFACE_MORE ) );
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, phsurface);
+        SetLastNtError(Status);
+        return ddRVal;
+    }
 
-		if ((pDirectDraw->DD.dwFlags & DDHAL_CB32_CREATESURFACE))
-		{					        	        
-           /* backup the orignal PDev and info */
-		   lgpl = puCreateSurfaceData->lpDD;
+    DPRINT1("Copy puSurfaceLocalData to kmode phsurface->Local\n");
+    _SEH_TRY
+    {
+        ProbeForRead(puSurfaceLocalData,  sizeof(DD_SURFACE_LOCAL), 1);
+        RtlCopyMemory( &phsurface->Local, puSurfaceLocalData,
+                       sizeof( DD_SURFACE_LOCAL ) );
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, phsurface);
+        SetLastNtError(Status);
+        return ddRVal;
+    }
 
-		   /* use our cache version instead */
-		   puCreateSurfaceData->lpDD = &pDirectDraw->Global;
+    DPRINT1("Copy puSurfaceDescription to kmode phsurface->desc\n");
+    _SEH_TRY
+    {
+        ProbeForRead(puSurfaceDescription,  sizeof(DDSURFACEDESC), 1);
+        RtlCopyMemory( &phsurface->desc, puSurfaceDescription,
+                       sizeof( DDSURFACEDESC ) );
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, phsurface);
+        SetLastNtError(Status);
+        return ddRVal;
+    }
 
-		   /* make the call */
-		   ddRVal = pDirectDraw->DD.CreateSurface(puCreateSurfaceData);	
+    phsurface->hDirectDrawLocal = hDirectDrawLocal;
 
-		   /* But back the orignal PDev */
-	       puCreateSurfaceData->lpDD = lgpl;
+    pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+    if (!phsurface)
+    {
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, phsurface);
+        return ddRVal;
+    }
 
-	    }
-	       
-	    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);	
-	}
-	
-	return ddRVal;
+
+    /* FIXME unlock phsurface free phsurface at fail*/
+    /* FIXME unlock hsurface free phsurface at fail*/
+    /* FIXME add support for more that one surface create */
+
+    /* setup DD_CREATESURFACEDATA CreateSurfaceData for the driver */
+    phsurface->lcl.lpGbl = &phsurface->gpl;
+    phsurface->lcl.lpSurfMore = &phsurface->more;
+
+    /* FIXME all phsurface->lcl should be in a array then add to lplpSList */
+    phsurface->CreateSurfaceData.lplpSList = (PDD_SURFACE_LOCAL  *)&phsurface->lcl;
+    phsurface->CreateSurfaceData.lpDDSurfaceDesc = &phsurface->desc;
+    phsurface->CreateSurfaceData.CreateSurface = NULL;
+    phsurface->CreateSurfaceData.dwSCnt = 1;
+    phsurface->CreateSurfaceData.ddRVal = DDERR_GENERIC;
+    phsurface->CreateSurfaceData.lpDD = &pDirectDraw->Global;
+
+    /* FIXME copy data from DD_ sturct to DDRAWI_ struct */
+
+
+    if ((pDirectDraw->DD.dwFlags & DDHAL_CB32_CREATESURFACE))
+    {
+        ddRVal = pDirectDraw->DD.CreateSurface(&phsurface->CreateSurfaceData);
+    }
+
+    /* FIXME copy data from DDRAWI_  sturct to DD_ struct */
+
+    /* FIXME fillin the return handler */
+
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, phsurface);
+
+
+    return ddRVal;
 }
 
 /************************************************************************/

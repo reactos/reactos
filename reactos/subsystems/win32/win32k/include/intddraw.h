@@ -13,19 +13,31 @@
 
 typedef struct
 {
-    HANDLE hDirectDrawLocal;
+    /* for the driver */
+    DDRAWI_DDRAWSURFACE_LCL lcl;
+
+    DDRAWI_DDRAWSURFACE_GBL gpl;
+    DDRAWI_DDRAWSURFACE_MORE more;
+
+    /* DD_CREATESURFACEDATA CreateSurfaceData */
+    DD_CREATESURFACEDATA CreateSurfaceData;
+
+    /* for win32k stuff */
     DD_SURFACE_LOCAL Local;
     DD_SURFACE_MORE More;
     DD_SURFACE_GLOBAL Global;
+    DDSURFACEDESC desc;
+
     DD_ATTACHLIST AttachList;
     DD_ATTACHLIST AttachListFrom;
     BOOL bComplete;
+
+    HANDLE hDirectDrawLocal;
+
 } DD_SURFACE, *PDD_SURFACE;
 
 typedef struct
 {
-    DD_SURFACE Surface;
-
     DD_DIRECTDRAW_LOCAL Local;
     DD_DIRECTDRAW_GLOBAL Global;
 
