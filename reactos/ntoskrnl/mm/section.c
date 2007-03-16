@@ -3716,7 +3716,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
        if(SectionOffset != NULL)
        {
          ProbeForWriteLargeInteger(SectionOffset);
-         SafeSectionOffset = *SectionOffset;
+         SafeSectionOffset.QuadPart = PAGE_ROUND_DOWN(SectionOffset->QuadPart);
        }
        ProbeForWriteSize_t(ViewSize);
        SafeViewSize = *ViewSize;
@@ -3735,7 +3735,8 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    else
    {
      SafeBaseAddress = (BaseAddress != NULL ? *BaseAddress : NULL);
-     SafeSectionOffset.QuadPart = (SectionOffset != NULL ? SectionOffset->QuadPart : 0);
+     SafeSectionOffset.QuadPart =
+          (SectionOffset != NULL ? PAGE_ROUND_DOWN(SectionOffset->QuadPart) : 0);
      SafeViewSize = (ViewSize != NULL ? *ViewSize : 0);
    }
 
