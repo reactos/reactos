@@ -1650,8 +1650,8 @@ static __inline__ __attribute__((always_inline)) unsigned short __readfsword(con
 
 static __inline__ __attribute__((always_inline)) unsigned long __readfsdword(const unsigned long Offset)
 {
-    unsigned long result;
-    char *addr;
+    unsigned long result = 0;
+    char *addr = 0;
     __asm__("\tadd %2,13,%1\n"
 	    "\tlwz %0,0(%2)\n"
 	    : "=b" (result)

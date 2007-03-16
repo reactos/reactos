@@ -115,7 +115,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
                   IN ULONG Count,
                   IN ULONG Flags)
 {
-    PULONG Stack, NewStack;
+    PULONG Stack = 0, NewStack;
     ULONG Eip;
     ULONG_PTR StackBegin, StackEnd;
     BOOLEAN Result, StopSearch = FALSE;

@@ -62,7 +62,11 @@ extern "C" {
 #elif (_MSC_VER)
 #define FORCEINLINE __inline
 #else
+#ifdef _PPC_
+#define FORCEINLINE __inline
+#else
 #define FORCEINLINE static __attribute__((unused))
+#endif
 #endif
 #endif
 
@@ -3788,7 +3792,7 @@ static __inline__ PVOID GetCurrentFiber(void)
 #ifndef __NTDDK_H
 static __inline__ struct _TEB * NtCurrentTeb(void)
 {
-    struct _TEB *ret;
+    struct _TEB *ret = 0;
 
 #ifndef _M_PPC
     __asm__ __volatile__ (
@@ -3869,7 +3873,7 @@ InterlockedBitTestAndSet(IN LONG volatile *Base,
 		             :"Ir" (Bit)
 			     : "memory");
 #elif defined(_M_PPC)
-	LONG scratch;
+	LONG scratch = 0;
 
 	Bit = 1 << Bit;
 	/* %0 - OldBit
@@ -3909,7 +3913,7 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 		             :"Ir" (Bit)
 			     : "memory");
 #elif defined(_M_PPC)
-	LONG scratch;
+	LONG scratch = 0;
 
 	Bit = ~(1 << Bit);
 	/* %0 - OldBit

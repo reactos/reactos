@@ -28,7 +28,7 @@ static int char2digit(char c, int base) {
 
 int sscanf(const char *str, const char *format, ...)
 {
-    int res;
+    int res = 0;
 #if 0
     va_list valist;
 

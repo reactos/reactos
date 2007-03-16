@@ -28,7 +28,6 @@
   <define name="MB_CUR_MAX">1</define>
   <compilerflag>-fshort-wchar</compilerflag>
   <compilerflag>-fsigned-char</compilerflag>
-  <compilerflag>-map</compilerflag>
   <compilerflag>-mfull-toc</compilerflag>
   <compilerflag>-meabi</compilerflag>
   <compilerflag>-O2</compilerflag>
