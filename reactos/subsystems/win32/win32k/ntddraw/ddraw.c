@@ -300,7 +300,7 @@ NtGdiDdQueryDirectDrawObject(
     DPRINT1("NtGdiDdQueryDirectDrawObject\n");
     if (hDirectDrawLocal == NULL)
     {
-       return Ret;
+       return FALSE;
     }
 
     pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal,
@@ -308,7 +308,7 @@ NtGdiDdQueryDirectDrawObject(
 
     if (!pDirectDraw)
     {
-        return Ret;
+        return FALSE;
     }
 
     /*
@@ -332,14 +332,14 @@ NtGdiDdQueryDirectDrawObject(
             DPRINT1("GDIOBJ_UnlockObjByPtr and SetLastNtError\n");
             SetLastNtError(Status);
             GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-            return Ret;
+            return FALSE;
         }
     }
     else
     {
         DPRINT1("GDIOBJ_UnlockObjByPtr\n");
         GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        return Ret;
+        return FALSE;
     }
 
 
@@ -366,14 +366,14 @@ NtGdiDdQueryDirectDrawObject(
             DPRINT1("GDIOBJ_UnlockObjByPtr and SetLastNtError\n");
             SetLastNtError(Status);
             GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-            return Ret;
+            return FALSE;
         }
     }
     else
     {
         DPRINT1("GDIOBJ_UnlockObjByPtr\n");
         GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        return Ret;
+        return FALSE;
     }
 
     /*
@@ -400,7 +400,7 @@ NtGdiDdQueryDirectDrawObject(
                 DPRINT1("GDIOBJ_UnlockObjByPtr and SetLastNtError\n");
                 SetLastNtError(Status);
                 GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-                return Ret;
+                return FALSE;
             }
         }
     }
@@ -408,7 +408,7 @@ NtGdiDdQueryDirectDrawObject(
     {
         DPRINT1("GDIOBJ_UnlockObjByPtr\n");
         GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        return Ret;
+        return FALSE;
     }
 
     /*
@@ -451,7 +451,7 @@ NtGdiDdQueryDirectDrawObject(
                 DPRINT1("GDIOBJ_UnlockObjByPtr and SetLastNtError\n");
                 SetLastNtError(Status);
                 GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-                return Ret;
+                return FALSE;
             }
         }
     }
@@ -459,7 +459,7 @@ NtGdiDdQueryDirectDrawObject(
     {
         DPRINT1("GDIOBJ_UnlockObjByPtr\n");
         GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        return Ret;
+        return FALSE;
     }
 
     /*
@@ -487,7 +487,7 @@ NtGdiDdQueryDirectDrawObject(
                 DPRINT1("GDIOBJ_UnlockObjByPtr and SetLastNtError\n");
                 SetLastNtError(Status);
                 GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-                return Ret;
+                return FALSE;
             }
         }
     }
@@ -495,10 +495,8 @@ NtGdiDdQueryDirectDrawObject(
     {
         DPRINT1("GDIOBJ_UnlockObjByPtr\n");
         GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        return Ret;
+        return FALSE;
     }
-
-    DPRINT1("next\n");
 
     _SEH_TRY
     {
