@@ -271,7 +271,7 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
 
             ptmpDdSurfaceGlobal->wWidth = gpl->wWidth;
             ptmpDdSurfaceGlobal->wHeight = gpl->wHeight;
-            ptmpDdSurfaceGlobal->lPitch = gpl->fpVidMem;
+            ptmpDdSurfaceGlobal->lPitch = gpl->lPitch;
             ptmpDdSurfaceGlobal->fpVidMem = gpl->fpVidMem;
             ptmpDdSurfaceGlobal->dwBlockSizeX = gpl->dwBlockSizeX;
             ptmpDdSurfaceGlobal->dwBlockSizeY = gpl->dwBlockSizeY;
