@@ -1905,7 +1905,7 @@ KsAddObjectCreateItemToObjectHeader(
 
 KSDDKAPI NTSTATUS NTAPI
 KsAllocateDeviceHeader(
-    OUT PVOID Header,
+    OUT KSDEVICE_HEADER* Header,
     IN  ULONG ItemsCount,
     IN  PKSOBJECT_CREATE_ITEM ItemsList OPTIONAL);
 

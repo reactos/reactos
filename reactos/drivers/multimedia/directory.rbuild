@@ -16,9 +16,9 @@
 	<xi:include href="drmk/drmk.rbuild" />
 </directory>
 
-<directory name="portcls">
+<!--<directory name="portcls">
 	<xi:include href="portcls/portcls.rbuild" />
-</directory>
+</directory>-->
 
 <!--<directory name="avtest">
 	<xi:include href="avtest/avtest.rbuild" />
@@ -29,9 +29,9 @@
 	Drivers (experimental)
 -->
 
-<directory name="mpu401_ks">
+<!--<directory name="mpu401_ks">
 	<xi:include href="mpu401_ks/mpu401.rbuild" />
-</directory>
+</directory>-->
 
 <directory name="sb16_nt4">
 	<xi:include href="sb16_nt4/sb16_nt4.rbuild" />

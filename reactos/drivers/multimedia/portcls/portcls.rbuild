@@ -15,7 +15,7 @@
     <file>stubs.c</file>
 
     <!-- Probably not the best idea to have this separate -->
-    <file>../stdunk/stdunk.c</file>
+    <!--<file>../stdunk/stdunk.c</file>-->
 
     <file>helper/ResourceList.c</file>
 

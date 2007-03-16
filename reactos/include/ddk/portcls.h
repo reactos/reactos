@@ -135,7 +135,7 @@
 /* HACK */
 typedef PVOID CM_RESOURCE_TYPE;
 
-
+#define PORT_CLASS_DEVICE_EXTENSION_SIZE (64 * sizeof(ULONG_PTR))
 
 /* ===============================================================
     Class IDs - TODO
