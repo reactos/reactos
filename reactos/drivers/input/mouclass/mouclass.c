@@ -188,7 +188,7 @@ ReadRegistryEntries(
 
 	ULONG DefaultConnectMultiplePorts = 1;
 	ULONG DefaultDataQueueSize = 0x64;
-	UNICODE_STRING DefaultDeviceBaseName = RTL_CONSTANT_STRING(L"PointerClass");
+	PCWSTR DefaultDeviceBaseName = L"PointerClass";
 
 	ParametersRegistryKey.Length = 0;
 	ParametersRegistryKey.MaximumLength = RegistryPath->Length + sizeof(L"\\Parameters") + sizeof(UNICODE_NULL);
@@ -222,7 +222,7 @@ ReadRegistryEntries(
 	Parameters[2].Name = L"PointerDeviceBaseName";
 	Parameters[2].EntryContext = &DriverExtension->DeviceBaseName;
 	Parameters[2].DefaultType = REG_SZ;
-	Parameters[2].DefaultData = &DefaultDeviceBaseName;
+	Parameters[2].DefaultData = (PVOID)DefaultDeviceBaseName;
 	Parameters[2].DefaultLength = 0;
 
 	Status = RtlQueryRegistryValues(
@@ -250,10 +250,10 @@ ReadRegistryEntries(
 		/* Registry path doesn't exist. Set defaults */
 		DriverExtension->ConnectMultiplePorts = DefaultConnectMultiplePorts;
 		DriverExtension->DataQueueSize = DefaultDataQueueSize;
-		Status = RtlDuplicateUnicodeString(
-			RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
-			&DefaultDeviceBaseName,
-			&DriverExtension->DeviceBaseName);
+		if (RtlCreateUnicodeString(&DriverExtension->DeviceBaseName, DefaultDeviceBaseName))
+			Status = STATUS_SUCCESS;
+		else
+			Status = STATUS_NO_MEMORY;
 	}
 
 	return Status;
