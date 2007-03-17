@@ -53,7 +53,11 @@ DWORD STDCALL NtGdiDdCreateSurface(
 
     /* FIXME alloc so mayne we need */
     PHANDLE *myhSurface[1];
-    
+
+    /* GCC4  warnns on value are unisitaed,
+       but they are initated in seh 
+    */
+    myhSurface[0] = 0;
 
     DPRINT1("NtGdiDdCreateSurface\n");
 
