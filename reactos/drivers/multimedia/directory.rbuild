@@ -16,9 +16,9 @@
 	<xi:include href="drmk/drmk.rbuild" />
 </directory>
 
-<!--<directory name="portcls">
+<directory name="portcls">
 	<xi:include href="portcls/portcls.rbuild" />
-</directory>-->
+</directory>
 
 <!--<directory name="avtest">
 	<xi:include href="avtest/avtest.rbuild" />
