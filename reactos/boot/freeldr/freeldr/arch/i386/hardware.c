@@ -1890,6 +1890,12 @@ PS2ControllerWait(VOID)
 static BOOLEAN
 DetectPS2AuxPort(VOID)
 {
+#if 1
+  /* Current detection is too unreliable. Just do as if
+   * the PS/2 aux port is always present
+   */
+   return TRUE;
+#else
   ULONG Loops;
   UCHAR Status;
 
@@ -1920,6 +1926,7 @@ DetectPS2AuxPort(VOID)
   READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
 
   return (Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL);
+#endif
 }
 
 
