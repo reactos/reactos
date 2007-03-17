@@ -14,6 +14,8 @@
 typedef struct
 {
     /* for the driver */
+    PDD_SURFACE_LOCAL lcllist[2];
+
     DDRAWI_DDRAWSURFACE_LCL lcl;
 
     DDRAWI_DDRAWSURFACE_GBL gpl;

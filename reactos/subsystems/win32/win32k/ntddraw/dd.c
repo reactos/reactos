@@ -40,13 +40,40 @@ DWORD STDCALL NtGdiDdCreateSurface(
     HANDLE *puhSurface
 )
 {
+    INT i;
     DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
     NTSTATUS Status = FALSE;
     PDD_DIRECTDRAW pDirectDraw;
     HANDLE hsurface;
     PDD_SURFACE phsurface;
 
+    PDD_SURFACE_LOCAL pLocal;
+    PDD_SURFACE_MORE pMore;
+    PDD_SURFACE_GLOBAL pGlobal;
+
+    /* FIXME alloc so mayne we need */
+    PHANDLE *myhSurface[1];
+    
+
     DPRINT1("NtGdiDdCreateSurface\n");
+
+    _SEH_TRY
+    {
+        ProbeForRead(hSurface,  sizeof(HANDLE), 1);
+        ProbeForRead(hSurface[0],  sizeof(HANDLE), 1);
+        myhSurface[0] = hSurface[0];
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return ddRVal;
+    }
+
 
     /* Create a surface */
     hsurface =  GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DD_SURFACE);
@@ -156,11 +183,12 @@ DWORD STDCALL NtGdiDdCreateSurface(
         return ddRVal;
     }
 
+    DPRINT1("Lock hDirectDrawLocal \n");
     phsurface->hDirectDrawLocal = hDirectDrawLocal;
-
     pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-    if (!phsurface)
+    if (!pDirectDraw)
     {
+        DPRINT1("fail \n");
         GDIOBJ_UnlockObjByPtr(DdHandleTable, phsurface);
         return ddRVal;
     }
@@ -169,35 +197,88 @@ DWORD STDCALL NtGdiDdCreateSurface(
     /* FIXME unlock phsurface free phsurface at fail*/
     /* FIXME unlock hsurface free phsurface at fail*/
     /* FIXME add support for more that one surface create */
+    /* FIXME alloc memory if it more that one surface */
 
+    pLocal = &phsurface->Local;
+    pMore = &phsurface->More;
+    pGlobal = &phsurface->Global;
+
+    /* FIXME we only support one surface for now */
+    phsurface->CreateSurfaceData.dwSCnt = 1;
+
+    
+    phsurface->lcllist[0] = 0;
+    phsurface->lcllist[1] = 0;
+    phsurface->CreateSurfaceData.lplpSList = (PDD_SURFACE_LOCAL *) &phsurface->lcllist;
+
+    i = 0;
+    // for (i = 0; i < phsurface->CreateSurfaceData.dwSCnt; i++)
+    //{
+        phsurface->lcl.hDDSurface = (ULONG_PTR)myhSurface[i];
+        phsurface->lcl.ddsCaps.dwCaps = pLocal->ddsCaps.dwCaps;
+        phsurface->lcl.dwFlags =pLocal->dwFlags;
+
+        phsurface->gpl.wWidth = pGlobal->wWidth;
+        phsurface->gpl.wHeight = pGlobal->wHeight;
+        phsurface->gpl.lPitch = pGlobal->lPitch;
+        phsurface->gpl.fpVidMem = pGlobal->fpVidMem;
+        phsurface->gpl.dwBlockSizeX = pGlobal->dwBlockSizeX;
+        phsurface->gpl.dwBlockSizeY = pGlobal->dwBlockSizeY;
+        RtlCopyMemory( &phsurface->gpl.ddpfSurface , &pGlobal->ddpfSurface, sizeof(DDPIXELFORMAT));
+
+        /* FIXME more ?? */
+        if (pMore)
+        {
+            phsurface->more.ddsCapsEx.dwCaps2 = pMore->ddsCapsEx.dwCaps2;
+            phsurface->more.ddsCapsEx.dwCaps3 = pMore->ddsCapsEx.dwCaps3;
+            phsurface->more.ddsCapsEx.dwCaps4 = pMore->ddsCapsEx.dwCaps4;
+            phsurface->lcl.dbnOverlayNode.object_int = (LPDDRAWI_DDRAWSURFACE_INT)pMore->dwSurfaceHandle;
+        }
+
+        phsurface->lcllist[0] = (PDD_SURFACE_LOCAL)&phsurface->lcl;
+        /* FIXME count up everthing to next position */
+   // }
+
+
+    /* FIXME support for more that one surface */
+
+    DPRINT1("setup CreateSurfaceData \n");
     /* setup DD_CREATESURFACEDATA CreateSurfaceData for the driver */
     phsurface->lcl.lpGbl = &phsurface->gpl;
     phsurface->lcl.lpSurfMore = &phsurface->more;
 
     /* FIXME all phsurface->lcl should be in a array then add to lplpSList */
-    phsurface->CreateSurfaceData.lplpSList = (PDD_SURFACE_LOCAL  *)&phsurface->lcl;
+    //phsurface->CreateSurfaceData.lplpSList = (PDD_SURFACE_LOCAL  *)&phsurface->lcl;
     phsurface->CreateSurfaceData.lpDDSurfaceDesc = &phsurface->desc;
     phsurface->CreateSurfaceData.CreateSurface = NULL;
-    phsurface->CreateSurfaceData.dwSCnt = 1;
     phsurface->CreateSurfaceData.ddRVal = DDERR_GENERIC;
     phsurface->CreateSurfaceData.lpDD = &pDirectDraw->Global;
 
-    /* FIXME copy data from DD_ sturct to DDRAWI_ struct */
+    /* is this correct the 3d drv whant this data */
+    // phsurface->lcl.lpGbl->lpDD = &pDirectDraw->Global;
 
 
+
+
+    /* the CreateSurface crash with lcl convering */
+    DPRINT1("DDHAL_CB32_CREATESURFACE\n");
     if ((pDirectDraw->DD.dwFlags & DDHAL_CB32_CREATESURFACE))
     {
+        DPRINT1("0x%04x",pDirectDraw->DD.CreateSurface);
+
         ddRVal = pDirectDraw->DD.CreateSurface(&phsurface->CreateSurfaceData);
     }
 
     /* FIXME copy data from DDRAWI_  sturct to DD_ struct */
 
     /* FIXME fillin the return handler */
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+    DPRINT1("GDIOBJ_UnlockObjByPtr\n");
     GDIOBJ_UnlockObjByPtr(DdHandleTable, phsurface);
+    DPRINT1("GDIOBJ_UnlockObjByPtr\n");
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 
 
+    DPRINT1("Retun value is %04x and driver return code is %04x\n",ddRVal,phsurface->CreateSurfaceData.ddRVal);
     return ddRVal;
 }
 
