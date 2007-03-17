@@ -7,8 +7,9 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define NDEBUG
 #include "serial.h"
+
+static IO_WORKITEM_ROUTINE SerialReadWorkItem;
 
 static PVOID
 SerialGetUserBuffer(IN PIRP Irp)
@@ -40,7 +41,7 @@ ReadBytes(
 	ASSERT(WorkItemData);
 
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
+	ComPortBase = ULongToPtr(DeviceExtension->BaseAddress);
 	Length = IoGetCurrentIrpStackLocation(Irp)->Parameters.Read.Length;
 	Buffer = SerialGetUserBuffer(Irp);
 
@@ -228,7 +229,7 @@ SerialRead(
 
 	/* insufficient resources, we can't pend the Irp */
 	CHECKPOINT;
-	Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+	Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, ULongToPtr(DeviceExtension->ComPort));
 	if (!NT_SUCCESS(Status))
 	{
 		ExFreePoolWithTag(WorkItemData, SERIAL_TAG);
@@ -237,7 +238,7 @@ SerialRead(
 	ReadBytes(DeviceObject, Irp, WorkItemData);
 	Status = Irp->IoStatus.Status;
 
-	IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+	IoReleaseRemoveLock(&DeviceExtension->RemoveLock, ULongToPtr(DeviceExtension->ComPort));
 
 ByeBye:
 	Irp->IoStatus.Status = Status;
@@ -268,7 +269,7 @@ SerialWrite(
 	Length = Stack->Parameters.Write.Length;
 	Buffer = SerialGetUserBuffer(Irp);
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
+	ComPortBase = ULongToPtr(DeviceExtension->BaseAddress);
 
 	if (Stack->Parameters.Write.ByteOffset.QuadPart != 0 || Buffer == NULL)
 	{
@@ -276,7 +277,7 @@ SerialWrite(
 		goto ByeBye;
 	}
 
-	Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+	Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, ULongToPtr(DeviceExtension->ComPort));
 	if (!NT_SUCCESS(Status))
 		goto ByeBye;
 
@@ -304,7 +305,7 @@ SerialWrite(
 		Information++;
 	}
 	KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
-	IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+	IoReleaseRemoveLock(&DeviceExtension->RemoveLock, ULongToPtr(DeviceExtension->ComPort));
 
 	/* send bytes */
 	SerialSendByte(NULL, DeviceExtension, NULL, NULL);

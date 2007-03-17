@@ -8,8 +8,9 @@
  */
 /* FIXME: call IoAcquireRemoveLock/IoReleaseRemoveLock around each I/O operation */
 
-#define NDEBUG
 #include "serial.h"
+
+static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
 
 static NTSTATUS NTAPI
 ForwardIrpAndWaitCompletion(
@@ -36,7 +37,7 @@ ForwardIrpAndWait(
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 
-	DPRINT("Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
+	DPRINT("Calling lower device %p\n", LowerDevice);
 	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
 
 	Status = IoCallDriver(LowerDevice, Irp);
@@ -78,7 +79,7 @@ SerialReceiveByte(
 	NTSTATUS Status;
 
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)pDeviceExtension;
-	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
+	ComPortBase = ULongToPtr(DeviceExtension->BaseAddress);
 
 	KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
 	while (READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_DATA_RECEIVED)
@@ -115,7 +116,7 @@ SerialSendByte(
 	NTSTATUS Status;
 
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)pDeviceExtension;
-	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
+	ComPortBase = ULongToPtr(DeviceExtension->BaseAddress);
 
 	KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql);
 	while (!IsCircularBufferEmpty(&DeviceExtension->OutputBuffer)
@@ -164,7 +165,7 @@ SerialInterruptService(
 
 	DeviceObject = (PDEVICE_OBJECT)ServiceContext;
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
+	ComPortBase = ULongToPtr(DeviceExtension->BaseAddress);
 
 	Iir = READ_PORT_UCHAR(SER_IIR(ComPortBase));
 	if (Iir == 0xff)

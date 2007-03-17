@@ -9,7 +9,6 @@
 /* FIXME: call IoAcquireRemoveLock/IoReleaseRemoveLock around each I/O operation */
 
 #define INITGUID
-#define NDEBUG
 #include "serial.h"
 
 NTSTATUS NTAPI
@@ -216,7 +215,7 @@ SerialPnpStartDevice(
 		return STATUS_INSUFFICIENT_RESOURCES;
 	if (!Dirql)
 		return STATUS_INSUFFICIENT_RESOURCES;
-	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
+	ComPortBase = ULongToPtr(DeviceExtension->BaseAddress);
 
 	/* Test if we are trying to start the serial port used for debugging */
     DPRINT1("KdComPort: %p\n", KdComPortInUse);

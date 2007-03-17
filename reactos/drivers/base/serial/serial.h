@@ -227,31 +227,19 @@ IncreaseCircularBufferSize(
 
 /************************************ cleanup.c */
 
-NTSTATUS NTAPI
-SerialCleanup(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SerialCleanup;
 
 /************************************ close.c */
 
-NTSTATUS NTAPI
-SerialClose(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SerialClose;
 
 /************************************ create.c */
 
-NTSTATUS NTAPI
-SerialCreate(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SerialCreate;
 
 /************************************ devctrl.c */
 
-NTSTATUS NTAPI
-SerialDeviceControl(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SerialDeviceControl;
 
 NTSTATUS NTAPI
 SerialSetBaudRate(
@@ -265,10 +253,7 @@ SerialSetLineControl(
 
 /************************************ info.c */
 
-NTSTATUS NTAPI
-SerialQueryInformation(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SerialQueryInformation;
 
 /************************************ legacy.c */
 
@@ -283,10 +268,7 @@ ForwardIrpAndWait(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
-NTSTATUS NTAPI
-ForwardIrpAndForget(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH ForwardIrpAndForget;
 
 VOID NTAPI
 SerialReceiveByte(
@@ -309,10 +291,7 @@ SerialCompleteIrp(
 	IN PVOID pIrp, // real type PIRP
 	IN PVOID Unused);
 
-BOOLEAN NTAPI
-SerialInterruptService(
-	IN PKINTERRUPT Interrupt,
-	IN OUT PVOID ServiceContext);
+KSERVICE_ROUTINE SerialInterruptService;
 
 /************************************ pnp.c */
 
@@ -324,10 +303,7 @@ SerialAddDeviceInternal(
 	IN PULONG pComPortNumber OPTIONAL,
 	OUT PDEVICE_OBJECT* pFdo OPTIONAL);
 
-NTSTATUS NTAPI
-SerialAddDevice(
-	IN PDRIVER_OBJECT DriverObject,
-	IN PDEVICE_OBJECT Pdo);
+DRIVER_ADD_DEVICE SerialAddDevice;
 
 NTSTATUS NTAPI
 SerialPnpStartDevice(
@@ -335,26 +311,13 @@ SerialPnpStartDevice(
 	IN PCM_RESOURCE_LIST ResourceList,
 	IN PCM_RESOURCE_LIST ResourceListTranslated);
 
-NTSTATUS NTAPI
-SerialPnp(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SerialPnp;
 
 /************************************ power.c */
 
-NTSTATUS NTAPI
-SerialPower(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SerialPower;
 
 /************************************ rw.c */
 
-NTSTATUS NTAPI
-SerialRead(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
-
-NTSTATUS NTAPI
-SerialWrite(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SerialRead;
+DRIVER_DISPATCH SerialWrite;

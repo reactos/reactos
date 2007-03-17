@@ -7,8 +7,10 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-//#define NDEBUG
 #include "serial.h"
+
+static DRIVER_UNLOAD DriverUnload;
+DRIVER_INITIALIZE DriverEntry;
 
 static VOID NTAPI
 DriverUnload(IN PDRIVER_OBJECT DriverObject)

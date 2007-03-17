@@ -1,5 +1,6 @@
 <module name="serial" type="kernelmodedriver" installbase="system32/drivers" installname="serial.sys">
 	<define name="__USE_W32API" />
+	<define name="NDEBUG" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>circularbuffer.c</file>

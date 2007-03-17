@@ -7,7 +7,6 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define NDEBUG
 #include "serial.h"
 
 NTSTATUS

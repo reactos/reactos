@@ -8,7 +8,6 @@
  *                  Mark Junker (mjscod@gmx.de)
  */
 
-#define NDEBUG
 #include "serial.h"
 
 UART_TYPE
