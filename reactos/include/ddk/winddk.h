@@ -674,20 +674,23 @@ typedef VOID
   IN PVOID  Context);
 
 typedef NTSTATUS
-(DDKAPI *PDRIVER_ADD_DEVICE)(
+(DDKAPI DRIVER_ADD_DEVICE)(
   IN struct _DRIVER_OBJECT  *DriverObject,
   IN struct _DEVICE_OBJECT  *PhysicalDeviceObject);
+typedef DRIVER_ADD_DEVICE *PDRIVER_ADD_DEVICE;
 
 typedef NTSTATUS
-(DDKAPI *PIO_COMPLETION_ROUTINE)(
+(DDKAPI IO_COMPLETION_ROUTINE)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp,
   IN PVOID  Context);
+typedef IO_COMPLETION_ROUTINE *PIO_COMPLETION_ROUTINE;
 
 typedef VOID
-(DDKAPI *PDRIVER_CANCEL)(
+(DDKAPI DRIVER_CANCEL)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
+typedef DRIVER_CANCEL *PDRIVER_CANCEL;
 
 typedef VOID
 (DDKAPI *PKDEFERRED_ROUTINE)(
@@ -697,9 +700,10 @@ typedef VOID
   IN PVOID  SystemArgument2);
 
 typedef NTSTATUS
-(DDKAPI *PDRIVER_DISPATCH)(
+(DDKAPI DRIVER_DISPATCH)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
+typedef DRIVER_DISPATCH *PDRIVER_DISPATCH;
 
 typedef VOID
 (DDKAPI *PIO_DPC_ROUTINE)(
@@ -722,14 +726,16 @@ typedef NTSTATUS
   IN PUNICODE_STRING  RegistryPath);
 
 typedef NTSTATUS
-(DDKAPI *PDRIVER_INITIALIZE)(
+(DDKAPI DRIVER_INITIALIZE)(
   IN struct _DRIVER_OBJECT  *DriverObject,
   IN PUNICODE_STRING  RegistryPath);
+typedef DRIVER_INITIALIZE *PDRIVER_INITIALIZE;
 
 typedef BOOLEAN
-(DDKAPI *PKSERVICE_ROUTINE)(
+(DDKAPI KSERVICE_ROUTINE)(
   IN struct _KINTERRUPT  *Interrupt,
   IN PVOID  ServiceContext);
+typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
 
 typedef VOID
 (DDKAPI *PIO_TIMER_ROUTINE)(
@@ -743,17 +749,19 @@ typedef VOID
   IN ULONG  Count);
 
 typedef VOID
-(DDKAPI *PDRIVER_STARTIO)(
+(DDKAPI DRIVER_STARTIO)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
+typedef DRIVER_STARTIO *PDRIVER_STARTIO;
 
 typedef BOOLEAN
 (DDKAPI *PKSYNCHRONIZE_ROUTINE)(
   IN PVOID  SynchronizeContext);
 
 typedef VOID
-(DDKAPI *PDRIVER_UNLOAD)(
+(DDKAPI DRIVER_UNLOAD)(
   IN struct _DRIVER_OBJECT  *DriverObject);
+typedef DRIVER_UNLOAD *PDRIVER_UNLOAD;
 
 
 
@@ -4467,9 +4475,10 @@ typedef struct _IO_REMOVE_LOCK {
 typedef struct _IO_WORKITEM *PIO_WORKITEM;
 
 typedef VOID
-(DDKAPI *PIO_WORKITEM_ROUTINE)(
+(DDKAPI IO_WORKITEM_ROUTINE)(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PVOID  Context);
+typedef IO_WORKITEM_ROUTINE *PIO_WORKITEM_ROUTINE;
 
 typedef struct _SHARE_ACCESS {
   ULONG  OpenCount;
@@ -5281,13 +5290,16 @@ KeGetCurrentProcessorNumber(VOID)
 #error Unknown compiler
 #endif
 }
-#elif __x86_64__
+
+#elif defined(__x86_64__)
 
 typedef struct _KFLOATING_SAVE {
   ULONG Dummy;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
-#endif /* _X86_ */
+#else
+#error Unknown architecture
+#endif
 
 #define PAGE_SIZE                         0x1000
 #define PAGE_SHIFT                        12L
@@ -9217,13 +9229,20 @@ NTKERNELAPI
 KIRQL
 NTAPI
 KeRaiseIrql(
-  IN KIRQL  NewIrql);
+  IN KIRQL  NewIrql,
+  OUT PKIRQL  OldIrql);
 
 NTKERNELAPI
 KIRQL
 NTAPI
 KeRaiseIrqlToDpcLevel(
   VOID);
+
+NTKERNELAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToSynchLevel(
+    VOID);
 
 #endif
 
