@@ -123,6 +123,8 @@
 #ifndef PORTCLS_H
 #define PORTCLS_H
 
+#include <wdm.h>
+
 /*#include <windef.h>*/
 #include <ks.h>
 #include <drmk.h>
@@ -133,13 +135,14 @@
 #define PCFILTER_NODE ((ULONG) -1)
 
 /* HACK */
-typedef PVOID CM_RESOURCE_TYPE;
+/* typedef PVOID CM_RESOURCE_TYPE; */
 
-#define PORT_CLASS_DEVICE_EXTENSION_SIZE (64 * sizeof(ULONG_PTR))
+#define PORT_CLASS_DEVICE_EXTENSION_SIZE ( 64 * sizeof(ULONG_PTR) )
 
 /* ===============================================================
-    Class IDs - TODO
+    Class IDs - TODO (put these elsewhere!!!)
 */
+#if 0
 //#define CLSID_PortDMus    /* dmusicks.h */
 DEFINE_GUID(CLSID_PortMidi,0xb4c90a43L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 #define CLSID_PortTopology
@@ -152,6 +155,7 @@ DEFINE_GUID(CLSID_PortMidi,0xb4c90a43L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 
 #define CLSID_MiniportDriverFmSynth
 #define CLSID_MiniportDriverFmSynthWithVol
 DEFINE_GUID(CLSID_MiniportDriverUart,0xb4c90ae1L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+#endif
 
 
 /* ===============================================================
@@ -370,6 +374,9 @@ typedef struct
     IResourceList Interface
 */
 
+#undef INTERFACE
+#define INTERFACE IResourceList
+
 DECLARE_INTERFACE_(IResourceList, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -440,7 +447,103 @@ typedef IResourceList *PRESOURCELIST;
 #define AddPortFromParent(p, n) \
     AddEntryFromParent((p), CmResourceTypePort, (n))
 
-/* TODO ... */
+#define NumberOfInterrupts() \
+    NumberOfEntriesOfType(CmResourceTypeInterrupt)
+
+#define FindTranslatedInterrupt(n) \
+    FindTranslatedEntry(CmResourceTypeInterrupt, (n))
+
+#define FindUntranslatedInterrupt(n) \
+    FindUntranslatedEntry(CmResourceTypeInterrupt, (n))
+
+#define AddInterruptFromParent(p, n) \
+    AddEntryFromParent((p), CmResourceTypeInterrupt, (n))
+
+#define NumberOfMemories() \
+    NumberOfEntriesOfType(CmResourceTypeMemory)
+
+#define FindTranslatedMemory(n) \
+    FindTranslatedEntry(CmResourceTypeMemory, (n))
+
+#define FindUntranslatedMemory(n) \
+    FindUntranslatedEntry(CmResourceTypeMemory, (n))
+
+#define AddMemoryFromParent(p, n) \
+    AddEntryFromParent((p), CmResourceTypeMemory, (n))
+
+#define NumberOfDmas() \
+    NumberOfEntriesOfType(CmResourceTypeDma)
+
+#define FindTranslatedDma(n) \
+    FindTranslatedEntry(CmResourceTypeDma, (n))
+
+#define FindUntranslatedDma(n) \
+    FindUntranslatedEntry(CmResourceTypeDma, (n))
+
+#define AddDmaFromParent(p, n) \
+    AddEntryFromParent(p), CmResourceTypeInterrupt, (n))
+
+#define NumberOfDeviceSpecifics() \
+    NumberOfEntriesOfType(CmResourceTypeDeviceSpecific)
+
+#define FindTranslatedDeviceSpecific(n) \
+    FindTranslatedEntry(CmResourceTypeDeviceSpecific, (n))
+
+#define FindUntranslatedDeviceSpecific(n) \
+    FindUntranslatedEntry(CmResourceTypeDeviceSpecific, (n))
+
+#define AddDeviceSpecificFromParent(p, n) \
+    AddEntryFromParent((p), CmResourceTypeDeviceSpecific, (n))
+
+#define NumberOfBusNumbers() \
+    NumberOfEntriesOfType(CmResourceTypeBusNumber)
+
+#define FindTranslatedBusNumber(n) \
+    FindTranslatedEntry(CmResourceTypeBusNumber, (n))
+
+#define FindUntranslatedBusNumber(n) \
+    FindUntranslatedEntry(CmResourceTypeBusNumber, (n))
+
+#define AddBusNumberFromParent(p, n) \
+    AddEntryFromParent((p), CmResourceTypeBusNumber, (n))
+
+#define NumberOfDevicePrivates() \
+    NumberOfEntriesOfType(CmResourceTypeDevicePrivate)
+
+#define FindTranslatedDevicePrivate(n) \
+    FindTranslatedEntry(CmResourceTypeDevicePrivate, (n))
+
+#define FindUntranslatedDevicePrivate(n) \
+    FindUntranslatedEntry(CmResourceTypeDevicePrivate, (n))
+
+#define AddDevicePrivateFromParent(p, n) \
+    AddEntryFromParent((p), CmResourceTypeDevicePrivate, (n))
+
+#define NumberOfAssignedResources() \
+    NumberOfEntriesOfType(CmResourceTypeAssignedResource)
+
+#define FindTranslatedAssignedResource(n) \
+    FindTranslatedEntry(CmResourceTypeAssignedResource, (n))
+
+#define FindUntranslatedAssignedResource(n) \
+    FindUntranslatedEntry(CmResourceTypeAssignedResource, (n))
+
+#define AddAssignedResourceFromParent(p, n) \
+    AddEntryFromParent((p), CmResourceTypeAssignedResource, (n))
+
+#define NumberOfSubAllocateFroms() \
+    NumberOfEntriesOfType(CmResourceTypeSubAllocateFrom)
+
+#define FindTranslatedSubAllocateFrom(n) \
+    FindTranslatedEntry(CmResourceTypeSubAllocateFrom, (n))
+
+#define FindUntranslatedSubAllocateFrom(n) \
+    FindUntranslatedEntry(CmResourceTypeSubAllocateFrom, (n))
+
+#define AddSubAllocateFromFromParent(p, n) \
+    AddEntryFromParent((p), CmResourceTypeSubAllocateFrom, (n))
+
+#undef INTERFACE
 
 
 /* ===============================================================
@@ -500,228 +603,6 @@ DECLARE_INTERFACE_(IServiceGroup, IUnknown)
     STDMETHODIMP_(void) CancelDelayedService(void);
 
 typedef IServiceGroup *PSERVICEGROUP;
-
-
-/* ===============================================================
-    IRegistryKey Interface
-*/
-
-DECLARE_INTERFACE_(IRegistryKey, IUnknown)
-{
-    DEFINE_ABSTRACT_UNKNOWN()
-
-    STDMETHOD_(NTSTATUS, QueryKey)( THIS_
-        IN  KEY_INFORMATION_CLASS KeyInformationClass,
-        OUT PVOID KeyInformation,
-        IN  ULONG Length,
-        OUT PULONG ResultLength) PURE;
-
-    STDMETHOD_(NTSTATUS, EnumerateKey)( THIS_
-        IN  ULONG Index,
-        IN  KEY_INFORMATION_CLASS KeyInformationClass,
-        OUT PVOID KeyInformation,
-        IN  ULONG Length,
-        OUT PULONG ResultLength) PURE;
-
-    STDMETHOD_(NTSTATUS, QueryValueKey)( THIS_
-        IN  PUNICODE_STRING ValueName,
-        IN  KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-        OUT PVOID KeyValueInformation,
-        IN  ULONG Length,
-        OUT PULONG ResultLength) PURE;
-
-    STDMETHOD_(NTSTATUS, EnumerateValueKey)( THIS_
-        IN  ULONG Index,
-        IN  KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-        OUT PVOID KeyValueInformation,
-        IN  ULONG Length,
-        OUT PULONG ResultLength) PURE;
-
-    STDMETHOD_(NTSTATUS, SetValueKey)( THIS_
-        IN  PUNICODE_STRING ValueName OPTIONAL,
-        IN  ULONG Type,
-        IN  PVOID Data,
-        IN  ULONG DataSize) PURE;
-
-    STDMETHOD_(NTSTATUS, QueryRegistryValues)( THIS_
-        IN  PRTL_QUERY_REGISTRY_TABLE QueryTable,
-        IN  PVOID Context OPTIONAL) PURE;
-
-    STDMETHOD_(NTSTATUS, NewSubKey)( THIS_
-        OUT IRegistryKey** RegistrySubKey,
-        IN  PUNKNOWN OuterUnknown,
-        IN  ACCESS_MASK DesiredAccess,
-        IN  PUNICODE_STRING SubKeyName,
-        IN  ULONG CreateOptions,
-        OUT PULONG Disposition OPTIONAL) PURE;
-
-    STDMETHOD_(NTSTATUS, DeleteKey)( THIS ) PURE;
-};
-
-#define IMP_IRegistryKey \
-    STDMETHODIMP_(NTSTATUS) QueryKey( \
-        IN  KEY_INFORMATION_CLASS KeyInformationClass, \
-        OUT PVOID KeyInformation, \
-        IN  ULONG Length, \
-        OUT PULONG ResultLength); \
-\
-    STDMETHODIMP_(NTSTATUS) EnumerateKey( \
-        IN  ULONG Index, \
-        IN  KEY_INFORMATION_CLASS KeyInformationClass, \
-        OUT PVOID KeyInformation, \
-        IN  ULONG Length, \
-        OUT PULONG ResultLength); \
-\
-    STDMETHODIMP_(NTSTATUS) QueryValueKey( \
-        IN  PUNICODE_STRING ValueName, \
-        IN  KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass, \
-        OUT PVOID KeyValueInformation, \
-        IN  ULONG Length, \
-        OUT PULONG ResultLength); \
-\
-    STDMETHODIMP_(NTSTATUS) EnumerateValueKey( \
-        IN  ULONG Index, \
-        IN  KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass, \
-        OUT PVOID KeyValueInformation, \
-        IN  ULONG Length, \
-        OUT PULONG ResultLength); \
-\
-    STDMETHODIMP_(NTSTATUS) SetValueKey( \
-        IN  PUNICODE_STRING ValueName OPTIONAL, \
-        IN  ULONG Type, \
-        IN  PVOID Data, \
-        IN  ULONG DataSize); \
-\
-    STDMETHODIMP_(NTSTATUS) QueryRegistryValues( \
-        IN  PRTL_QUERY_REGISTRY_TABLE QueryTable, \
-        IN  PVOID Context OPTIONAL); \
-\
-    STDMETHODIMP_(NTSTATUS) NewSubKey( \
-        OUT IRegistryKey** RegistrySubKey, \
-        IN  PUNKNOWN OuterUnknown, \
-        IN  ACCESS_MASK DesiredAccess, \
-        IN  PUNICODE_STRING SubKeyName, \
-        IN  ULONG CreateOptions, \
-        OUT PULONG Disposition OPTIONAL); \
-\
-    STDMETHODIMP_(NTSTATUS) DeleteKey(void);
-
-typedef IRegistryKey *PREGISTRYKEY;
-
-
-/* ===============================================================
-    IMusicTechnology Interface
-*/
-
-DECLARE_INTERFACE_(IMusicTechnology, IUnknown)
-{
-    DEFINE_ABSTRACT_UNKNOWN()
-
-    STDMETHOD_(NTSTATUS, SetTechnology)( THIS_
-        IN  const GUID* Technology) PURE;
-};
-
-#define IMP_IMusicTechnology \
-    STDMETHODIMP_(NTSTATUS) SetTechnology( \
-        IN  const GUID* Technology);
-
-typedef IMusicTechnology *PMUSICTECHNOLOGY;
-
-
-/* ===============================================================
-    IPort Interface
-*/
-
-#define DEFINE_ABSTRACT_PORT() \
-    STDMETHOD_(NTSTATUS, Init)( THIS_ \
-        IN  PDEVICE_OBJECT DeviceObject, \
-        IN  PIRP Irp, \
-        IN  PUNKNOWN UnknownMiniport, \
-        IN  PUNKNOWN UnknownAdapter OPTIONAL, \
-        IN  PRESOURCELIST ResourceList) PURE; \
-\
-    STDMETHOD_(NTSTATUS, GetDeviceProperty)( THIS_ \
-        IN  DEVICE_REGISTRY_PROPERTY DeviceProperty, \
-        IN  ULONG BufferLength, \
-        OUT PVOID PropertyBuffer, \
-        OUT PULONG ResultLength) PURE; \
-\
-    STDMETHOD_(NTSTATUS, NewRegistryKey)( THIS_ \
-        OUT PREGISTRYKEY* OutRegistryKey, \
-        IN  PUNKNOWN OuterUnknown OPTIONAL, \
-        IN  ULONG RegistryKeyType, \
-        IN  ACCESS_MASK DesiredAccess, \
-        IN  POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL, \
-        IN  ULONG CreateOptiona OPTIONAL, \
-        OUT PULONG Disposition OPTIONAL) PURE;
-
-#define IMP_IPort() \
-    STDMETHODIMP_(NTSTATUS) Init( \
-        IN  PDEVICE_OBJECT DeviceObject, \
-        IN  PIRP Irp, \
-        IN  PUNKNOWN UnknownMiniport, \
-        IN  PUNKNOWN UnknownAdapter OPTIONAL, \
-        IN  PRESOURCELIST ResourceList); \
-\
-    STDMETHODIMP_(NTSTATUS) GetDeviceProperty( \
-        IN  DEVICE_REGISTRY_PROPERTY DeviceProperty, \
-        IN  ULONG BufferLength, \
-        OUT PVOID PropertyBuffer, \
-        OUT PULONG ResultLength); \
-\
-    STDMETHOD_(NTSTATUS) NewRegistryKey( \
-        OUT PREGISTRYKEY* OutRegistryKey, \
-        IN  PUNKNOWN OuterUnknown OPTIONAL, \
-        IN  ULONG RegistryKeyType, \
-        IN  ACCESS_MASK DesiredAccess, \
-        IN  POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL, \
-        IN  ULONG CreateOptiona OPTIONAL, \
-        OUT PULONG Disposition OPTIONAL);
-
-DECLARE_INTERFACE_(IPort, IUnknown)
-{
-    DEFINE_ABSTRACT_UNKNOWN()
-    DEFINE_ABSTRACT_PORT()
-};
-
-typedef IPort *PPORT;
-
-
-/* ===============================================================
-    IMiniPort Interface
-*/
-
-#define DEFINE_ABSTRACT_MINIPORT() \
-    STDMETHOD_(NTSTATUS, GetDescription)( THIS_ \
-        OUT  PPCFILTER_DESCRIPTOR* Description) PURE; \
-\
-    STDMETHOD_(NTSTATUS, DataRangeIntersection)( THIS_ \
-        IN  ULONG PinId, \
-        IN  PKSDATARANGE DataRange, \
-        IN  PKSDATARANGE MatchingDataRange, \
-        IN  ULONG OutputBufferLength, \
-        OUT PVOID ResultantFormat OPTIONAL, \
-        OUT PULONG ResultantFormatLength) PURE;
-
-#define IMP_IMiniport \
-    STDMETHODIMP_(NTSTATUS) GetDescription( \
-        OUT  PPCFILTER_DESCRIPTOR* Description); \
-\
-    STDMETHODIMP_(NTSTATUS) DataRangeIntersection( \
-        IN  ULONG PinId, \
-        IN  PKSDATARANGE DataRange, \
-        IN  PKSDATARANGE MatchingDataRange, \
-        IN  ULONG OutputBufferLength, \
-        OUT PVOID ResultantFormat OPTIONAL, \
-        OUT PULONG ResultantFormatLength);
-
-DECLARE_INTERFACE_(IMiniport, IUnknown)
-{
-    DEFINE_ABSTRACT_UNKNOWN()
-    DEFINE_ABSTRACT_MINIPORT()
-};
-
-typedef IMiniport *PMINIPORT;
 
 
 /* ===============================================================
@@ -865,7 +746,7 @@ DECLARE_INTERFACE_(IInterruptSync, IUnknown)
 };
 
 #define IMP_IInterruptSync \
-    STDMETHODIMP_(NTSTATUS) CallSynchronizedRoutine)( \
+    STDMETHODIMP_(NTSTATUS, CallSynchronizedRoutine)( \
         IN  PINTERRUPTSYNCROUTINE Routine, \
         IN  PVOID DynamicContext); \
 \
@@ -882,27 +763,394 @@ typedef IInterruptSync *PINTERRUPTSYNC;
 
 
 /* ===============================================================
+    IRegistryKey Interface
+*/
+
+DECLARE_INTERFACE_(IRegistryKey, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS, QueryKey)( THIS_
+        IN  KEY_INFORMATION_CLASS KeyInformationClass,
+        OUT PVOID KeyInformation,
+        IN  ULONG Length,
+        OUT PULONG ResultLength) PURE;
+
+    STDMETHOD_(NTSTATUS, EnumerateKey)( THIS_
+        IN  ULONG Index,
+        IN  KEY_INFORMATION_CLASS KeyInformationClass,
+        OUT PVOID KeyInformation,
+        IN  ULONG Length,
+        OUT PULONG ResultLength) PURE;
+
+    STDMETHOD_(NTSTATUS, QueryValueKey)( THIS_
+        IN  PUNICODE_STRING ValueName,
+        IN  KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+        OUT PVOID KeyValueInformation,
+        IN  ULONG Length,
+        OUT PULONG ResultLength) PURE;
+
+    STDMETHOD_(NTSTATUS, EnumerateValueKey)( THIS_
+        IN  ULONG Index,
+        IN  KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+        OUT PVOID KeyValueInformation,
+        IN  ULONG Length,
+        OUT PULONG ResultLength) PURE;
+
+    STDMETHOD_(NTSTATUS, SetValueKey)( THIS_
+        IN  PUNICODE_STRING ValueName OPTIONAL,
+        IN  ULONG Type,
+        IN  PVOID Data,
+        IN  ULONG DataSize) PURE;
+
+    STDMETHOD_(NTSTATUS, QueryRegistryValues)( THIS_
+        IN  PRTL_QUERY_REGISTRY_TABLE QueryTable,
+        IN  PVOID Context OPTIONAL) PURE;
+
+    STDMETHOD_(NTSTATUS, NewSubKey)( THIS_
+        OUT IRegistryKey** RegistrySubKey,
+        IN  PUNKNOWN OuterUnknown,
+        IN  ACCESS_MASK DesiredAccess,
+        IN  PUNICODE_STRING SubKeyName,
+        IN  ULONG CreateOptions,
+        OUT PULONG Disposition OPTIONAL) PURE;
+
+    STDMETHOD_(NTSTATUS, DeleteKey)( THIS ) PURE;
+};
+
+#define IMP_IRegistryKey \
+    STDMETHODIMP_(NTSTATUS) QueryKey( \
+        IN  KEY_INFORMATION_CLASS KeyInformationClass, \
+        OUT PVOID KeyInformation, \
+        IN  ULONG Length, \
+        OUT PULONG ResultLength); \
+\
+    STDMETHODIMP_(NTSTATUS) EnumerateKey( \
+        IN  ULONG Index, \
+        IN  KEY_INFORMATION_CLASS KeyInformationClass, \
+        OUT PVOID KeyInformation, \
+        IN  ULONG Length, \
+        OUT PULONG ResultLength); \
+\
+    STDMETHODIMP_(NTSTATUS) QueryValueKey( \
+        IN  PUNICODE_STRING ValueName, \
+        IN  KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass, \
+        OUT PVOID KeyValueInformation, \
+        IN  ULONG Length, \
+        OUT PULONG ResultLength); \
+\
+    STDMETHODIMP_(NTSTATUS) EnumerateValueKey( \
+        IN  ULONG Index, \
+        IN  KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass, \
+        OUT PVOID KeyValueInformation, \
+        IN  ULONG Length, \
+        OUT PULONG ResultLength); \
+\
+    STDMETHODIMP_(NTSTATUS) SetValueKey( \
+        IN  PUNICODE_STRING ValueName OPTIONAL, \
+        IN  ULONG Type, \
+        IN  PVOID Data, \
+        IN  ULONG DataSize); \
+\
+    STDMETHODIMP_(NTSTATUS) QueryRegistryValues( \
+        IN  PRTL_QUERY_REGISTRY_TABLE QueryTable, \
+        IN  PVOID Context OPTIONAL); \
+\
+    STDMETHODIMP_(NTSTATUS) NewSubKey( \
+        OUT IRegistryKey** RegistrySubKey, \
+        IN  PUNKNOWN OuterUnknown, \
+        IN  ACCESS_MASK DesiredAccess, \
+        IN  PUNICODE_STRING SubKeyName, \
+        IN  ULONG CreateOptions, \
+        OUT PULONG Disposition OPTIONAL); \
+\
+    STDMETHODIMP_(NTSTATUS) DeleteKey(void);
+
+typedef IRegistryKey *PREGISTRYKEY;
+
+
+/* ===============================================================
+    IMusicTechnology Interface
+*/
+
+DECLARE_INTERFACE_(IMusicTechnology, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS, SetTechnology)( THIS_
+        IN  const GUID* Technology) PURE;
+};
+
+#define IMP_IMusicTechnology \
+    STDMETHODIMP_(NTSTATUS) SetTechnology( \
+        IN  const GUID* Technology);
+
+typedef IMusicTechnology *PMUSICTECHNOLOGY;
+
+
+/* ===============================================================
+    IPort Interface
+*/
+
+DEFINE_GUID(IID_IPort,
+    0xb4c90a25L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
+#define DEFINE_ABSTRACT_PORT() \
+    STDMETHOD_(NTSTATUS, Init)( THIS_ \
+        IN  PDEVICE_OBJECT DeviceObject, \
+        IN  PIRP Irp, \
+        IN  PUNKNOWN UnknownMiniport, \
+        IN  PUNKNOWN UnknownAdapter OPTIONAL, \
+        IN  PRESOURCELIST ResourceList) PURE; \
+\
+    STDMETHOD_(NTSTATUS, GetDeviceProperty)( THIS_ \
+        IN  DEVICE_REGISTRY_PROPERTY DeviceProperty, \
+        IN  ULONG BufferLength, \
+        OUT PVOID PropertyBuffer, \
+        OUT PULONG ResultLength) PURE; \
+\
+    STDMETHOD_(NTSTATUS, NewRegistryKey)( THIS_ \
+        OUT PREGISTRYKEY* OutRegistryKey, \
+        IN  PUNKNOWN OuterUnknown OPTIONAL, \
+        IN  ULONG RegistryKeyType, \
+        IN  ACCESS_MASK DesiredAccess, \
+        IN  POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL, \
+        IN  ULONG CreateOptiona OPTIONAL, \
+        OUT PULONG Disposition OPTIONAL) PURE;
+
+#define IMP_IPort() \
+    STDMETHODIMP_(NTSTATUS) Init( \
+        IN  PDEVICE_OBJECT DeviceObject, \
+        IN  PIRP Irp, \
+        IN  PUNKNOWN UnknownMiniport, \
+        IN  PUNKNOWN UnknownAdapter OPTIONAL, \
+        IN  PRESOURCELIST ResourceList); \
+\
+    STDMETHODIMP_(NTSTATUS) GetDeviceProperty( \
+        IN  DEVICE_REGISTRY_PROPERTY DeviceProperty, \
+        IN  ULONG BufferLength, \
+        OUT PVOID PropertyBuffer, \
+        OUT PULONG ResultLength); \
+\
+    STDMETHODIMP_(NTSTATUS) NewRegistryKey( \
+        OUT PREGISTRYKEY* OutRegistryKey, \
+        IN  PUNKNOWN OuterUnknown OPTIONAL, \
+        IN  ULONG RegistryKeyType, \
+        IN  ACCESS_MASK DesiredAccess, \
+        IN  POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL, \
+        IN  ULONG CreateOptiona OPTIONAL, \
+        OUT PULONG Disposition OPTIONAL);
+
+DECLARE_INTERFACE_(IPort, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_PORT()
+};
+
+typedef IPort *PPORT;
+
+
+/* ===============================================================
     IPortMidi Interface
 */
+
+DEFINE_GUID(CLSID_PortMidi,
+    0xb4c90a43L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
+DECLARE_INTERFACE_(IPortMidi, IPort)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_PORT()
+
+    STDMETHOD_(VOID, Notify)(THIS_
+        IN  PSERVICEGROUP ServiceGroup OPTIONAL) PURE;
+
+    STDMETHOD_(NTSTATUS, RegisterServiceGroup)(THIS_
+        IN  PSERVICEGROUP ServiceGroup) PURE;
+};
+
+typedef IPortMidi *PPORTMIDI;
+
+#define IMP_IPortMidi() \
+    STDMETHODIMP_(VOID) Notify( \
+        IN  PSERVICEGROUP ServiceGroup OPTIONAL); \
+\
+    STDMETHODIMP_(NTSTATUS) RegisterServiceGroup( \
+        IN  PSERVICEGROUP ServiceGroup);
+
+
+
+/* ===============================================================
+    IPortWaveCyclic Interface
+*/
+
+DECLARE_INTERFACE_(IPortWaveCyclic, IPort)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_PORT()
+
+    STDMETHOD_(NTSTATUS, NewMasterDmaChannel)(THIS_
+        OUT PDMACHANNEL* DmaChannel,
+        IN  PUNKNOWN OuterUnknown,
+        IN  PRESOURCELIST ResourceList OPTIONAL,
+        IN  ULONG MaximumLength,
+        IN  BOOL Dma32BitAddresses,
+        IN  BOOL Dma64BitAddresses,
+        IN  DMA_WIDTH DmaWidth,
+        IN  DMA_SPEED DmaSpeed) PURE;
+
+    STDMETHOD_(NTSTATUS, NewSlaveDmaChannel)(THIS_
+        OUT PDMACHANNELSLAVE* DmaChannel,
+        IN  PUNKNOWN OuterUnknown,
+        IN  PRESOURCELIST ResourceList OPTIONAL,
+        IN  ULONG DmaIndex,
+        IN  ULONG MaximumLength,
+        IN  BOOL DemandMode,
+        IN  DMA_SPEED DmaSpeed) PURE;
+
+    STDMETHOD_(VOID, Notify)(THIS_
+        IN  PSERVICEGROUP ServiceGroup) PURE;
+};
+
+/* TODO ... */
+
+
+/* ===============================================================
+    IPortWavePci Interface
+*/
+
+DECLARE_INTERFACE_(IPortWavePci, IPort)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_PORT()
+
+    STDMETHOD_(NTSTATUS, NewMasterDmaChannel)(THIS_
+        OUT PDMACHANNEL* DmaChannel,
+        IN  PUNKNOWN OuterUnknown,
+        IN  POOL_TYPE PoolType,
+        IN  PRESOURCELIST ResourceList OPTIONAL,
+        IN  BOOL ScatterGather,
+        IN  BOOL Dma32BitAddresses,
+        IN  BOOL Dma64BitAddresses,
+        IN  DMA_WIDTH DmaWidth,
+        IN  DMA_SPEED DmaSpeed,
+        IN  ULONG MaximumLength,
+        IN  ULONG DmaPort) PURE;
+
+    STDMETHOD_(VOID, Notify)(THIS_
+        IN  PSERVICEGROUP ServiceGroup) PURE;
+};
+
+/* TODO ... */
+
+
+/* ===============================================================
+    IPortWavePciStream Interface
+*/
+
+
+/* ===============================================================
+    IMiniPort Interface
+*/
+
+DEFINE_GUID(IID_IMiniPort,
+    0xb4c90a24L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
+#define DEFINE_ABSTRACT_MINIPORT() \
+    STDMETHOD_(NTSTATUS, GetDescription)( THIS_ \
+        OUT  PPCFILTER_DESCRIPTOR* Description) PURE; \
+\
+    STDMETHOD_(NTSTATUS, DataRangeIntersection)( THIS_ \
+        IN  ULONG PinId, \
+        IN  PKSDATARANGE DataRange, \
+        IN  PKSDATARANGE MatchingDataRange, \
+        IN  ULONG OutputBufferLength, \
+        OUT PVOID ResultantFormat OPTIONAL, \
+        OUT PULONG ResultantFormatLength) PURE;
+
+#define IMP_IMiniport \
+    STDMETHODIMP_(NTSTATUS) GetDescription( \
+        OUT  PPCFILTER_DESCRIPTOR* Description); \
+\
+    STDMETHODIMP_(NTSTATUS) DataRangeIntersection( \
+        IN  ULONG PinId, \
+        IN  PKSDATARANGE DataRange, \
+        IN  PKSDATARANGE MatchingDataRange, \
+        IN  ULONG OutputBufferLength, \
+        OUT PVOID ResultantFormat OPTIONAL, \
+        OUT PULONG ResultantFormatLength);
+
+DECLARE_INTERFACE_(IMiniport, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_MINIPORT()
+};
+
+typedef IMiniport *PMINIPORT;
+
 
 /* ===============================================================
     IMiniportMidiStream Interface
 */
 
+DECLARE_INTERFACE_(IMiniportMidiStream, IUnknown)
+{
+    /* TODO - Read, SetFormat, SetState, Write */
+};
+
+typedef IMiniportMidiStream* PMINIPORTMIDISTREAM;
+
+
 /* ===============================================================
     IMiniportMidi Interface
 */
+
+DECLARE_INTERFACE_(IMiniportMidi, IMiniport)
+{
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+    IN  PUNKNOWN UnknownAdapter,
+    IN  PRESOURCELIST ResourceList,
+    IN  PPORTMIDI Port,
+    OUT PSERVICEGROUP* ServiceGroup) PURE;
+
+    STDMETHOD_(NTSTATUS, NewStream)(THIS_
+        OUT PMINIPORTMIDISTREAM Stream,
+        IN  PUNKNOWN OuterUnknown OPTIONAL,
+        IN  POOL_TYPE PoolType,
+        IN  ULONG Pin,
+        IN  BOOLEAN Capture,
+        IN  PKSDATAFORMAT DataFormat,
+        OUT PSERVICEGROUP* ServiceGroup) PURE;
+
+    STDMETHOD_(void, Service)(THIS) PURE;
+};
+
+/* TODO ... */
+
+
+/* ===============================================================
+    IMiniportDriverUart Interface
+*/
+
+DEFINE_GUID(CLSID_MiniportDriverUart,
+    0xb4c90ae1L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 
 /* ===============================================================
     IPortTopology Interface
 */
 
-/* ===============================================================
-    IMiniportTopology Interface
-*/
+DECLARE_INTERFACE_(IPortTopology, IPort)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_PORT()
+};
+
+typedef IPortTopology *PPORTTOPOLOGY;
+
+#define IMP_IPortTopology IMP_IPort
 
 /* ===============================================================
-    IPortWaveCyclic Interface
+    IMiniportTopology Interface
 */
 
 /* ===============================================================
@@ -911,14 +1159,6 @@ typedef IInterruptSync *PINTERRUPTSYNC;
 
 /* ===============================================================
     IMiniportWaveCyclic Interface
-*/
-
-/* ===============================================================
-    IPortWavePci Interface
-*/
-
-/* ===============================================================
-    IPortWavePciStream Interface
 */
 
 /* ===============================================================
@@ -933,6 +1173,12 @@ typedef IInterruptSync *PINTERRUPTSYNC;
     IAdapterPowerManagement Interface
 */
 
+DECLARE_INTERFACE_(IAdapterPowerManagement, IUnknown)
+{
+};
+
+#define IMP_IAdapterPowerManagement
+
 /* ===============================================================
     IPowerNotify Interface
 */
@@ -945,10 +1191,33 @@ typedef IInterruptSync *PINTERRUPTSYNC;
     IPortEvents Interface
 */
 
+DECLARE_INTERFACE_(IPortEvents, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+    /* TODO */
+};
+
+typedef IPortEvents *PPORTEVENTS;
+
+
 /* ===============================================================
     IDrmPort / IDrmPort2 Interfaces
     These are almost identical, except for the addition of two extra methods.
 */
+
+#define DEFINE_ABSTRACT_DRMPORT()
+/* TODO */
+
+DECLARE_INTERFACE_(IDrmPort, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_DRMPORT()
+};
+
+typedef IDrmPort *PDRMPORT;
+
+/* TODO */
+
 
 /* ===============================================================
     IPortClsVersion Interface
