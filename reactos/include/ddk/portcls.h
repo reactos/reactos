@@ -481,7 +481,7 @@ typedef IResourceList *PRESOURCELIST;
     FindUntranslatedEntry(CmResourceTypeDma, (n))
 
 #define AddDmaFromParent(p, n) \
-    AddEntryFromParent(p), CmResourceTypeInterrupt, (n))
+    AddEntryFromParent((p), CmResourceTypeInterrupt, (n))
 
 #define NumberOfDeviceSpecifics() \
     NumberOfEntriesOfType(CmResourceTypeDeviceSpecific)
