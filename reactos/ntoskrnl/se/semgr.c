@@ -912,7 +912,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	      OUT PNTSTATUS AccessStatus)
 {
   LUID_AND_ATTRIBUTES Privilege;
-  ACCESS_MASK CurrentAccess;
+  ACCESS_MASK CurrentAccess, AccessMask;
   PACCESS_TOKEN Token;
   ULONG i;
   PACL Dacl;
@@ -923,6 +923,11 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   NTSTATUS Status;
 
   PAGED_CODE();
+
+  /* Map given accesses */
+  RtlMapGenericMask(&DesiredAccess, GenericMapping);
+  if (PreviouslyGrantedAccess)
+    RtlMapGenericMask(&PreviouslyGrantedAccess, GenericMapping);
 
   /* Check if we didn't get an SD */
   if (!SecurityDescriptor)
@@ -1048,30 +1053,32 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     {
       Sid = (PSID)(CurrentAce + 1);
       if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
-	{
-	  if (SepSidInToken(Token, Sid))
-	    {
-	      if (SubjectContextLocked == FALSE)
-		{
-		  SeUnlockSubjectContext(SubjectSecurityContext);
-		}
+        {
+          if (SepSidInToken(Token, Sid))
+            {
+              if (SubjectContextLocked == FALSE)
+                {
+                  SeUnlockSubjectContext(SubjectSecurityContext);
+                }
 
-	      *GrantedAccess = 0;
-	      *AccessStatus = STATUS_ACCESS_DENIED;
-	      return FALSE;
-	    }
-	}
+              *GrantedAccess = 0;
+              *AccessStatus = STATUS_ACCESS_DENIED;
+              return FALSE;
+            }
+        }
 
       else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
-	{
-	  if (SepSidInToken(Token, Sid))
-	    {
-	      CurrentAccess |= CurrentAce->AccessMask;
-	    }
-	}
-	else
-	  DPRINT1("Unknown Ace type 0x%lx\n", CurrentAce->Header.AceType);
-	CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
+        {
+          if (SepSidInToken(Token, Sid))
+            {
+              AccessMask = CurrentAce->AccessMask;
+              RtlMapGenericMask(&AccessMask, GenericMapping);
+              CurrentAccess |= AccessMask;
+            }
+        }
+        else
+          DPRINT1("Unknown Ace type 0x%lx\n", CurrentAce->Header.AceType);
+        CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
     }
 
   if (SubjectContextLocked == FALSE)
@@ -1084,17 +1091,30 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
   *GrantedAccess = CurrentAccess & DesiredAccess;
 
-  if (*GrantedAccess == DesiredAccess)
+  if (DesiredAccess & MAXIMUM_ALLOWED)
+    {
+      *GrantedAccess = CurrentAccess;
+      *AccessStatus = STATUS_SUCCESS;
+      return TRUE;
+    }
+  else if (*GrantedAccess == DesiredAccess)
     {
       *AccessStatus = STATUS_SUCCESS;
       return TRUE;
     }
   else
     {
+#if 1
       *AccessStatus = STATUS_SUCCESS;
-      DPRINT("FIX caller rights (granted 0x%lx, desired 0x%lx)!\n",
-        *GrantedAccess, DesiredAccess);
-      return TRUE; /* FIXME: should be FALSE */
+      DPRINT1("FIX caller rights (granted 0x%lx, desired 0x%lx, generic mapping %p)!\n",
+        *GrantedAccess, DesiredAccess, GenericMapping);
+      return TRUE;
+#else
+      DPRINT1("Denying access for caller: granted 0x%lx, desired 0x%lx (generic mapping %p)\n",
+        *GrantedAccess, DesiredAccess, GenericMapping);
+      *AccessStatus = STATUS_ACCESS_DENIED;
+      return FALSE;
+#endif
     }
 }
 
