@@ -1540,6 +1540,37 @@ typedef struct _KSFILTER_DISPATCH
     PFNKSFILTERVOID Reset;
 } KSFILTER_DISPATCH, *PKSFILTER_DISPATCH;
 
+typedef struct {
+  const KSAUTOMATION_TABLE*  AutomationTable;
+  const GUID*  Type;
+  const GUID*  Name;
+} KSNODE_DESCRIPTOR, *PKSNODE_DESCRIPTOR;
+
+typedef struct {
+  const KSFILTER_DISPATCH*  Dispatch;
+  const KSAUTOMATION_TABLE*  AutomationTable;
+  ULONG  Version;
+  ULONG  Flags;
+  const GUID*  ReferenceGuid;
+  ULONG  PinDescriptorsCount;
+  ULONG  PinDescriptorSize;
+  const KSPIN_DESCRIPTOR_EX*  PinDescriptors;
+  ULONG  CategoriesCount;
+  const GUID*  Categories;
+  ULONG  NodeDescriptorsCount;
+  ULONG  NodeDescriptorSize;
+  const KSNODE_DESCRIPTOR*  NodeDescriptors;
+  ULONG  ConnectionsCount;
+  const KSTOPOLOGY_CONNECTION*  Connections;
+  const KSCOMPONENTID*  ComponentId;
+} KSFILTER_DESCRIPTOR, *PKSFILTER_DESCRIPTOR;
+
+typedef struct
+{
+  const KSDEVICE_DISPATCH*  Dispatch;
+  ULONG  FilterDescriptorsCount;
+  const  KSFILTER_DESCRIPTOR*const* FilterDescriptors;
+} KSDEVICE_DESCRIPTOR, *PKSDEVICE_DESCRIPTOR;
 
 /* ===============================================================
     Minidriver Callbacks
@@ -2286,6 +2317,13 @@ KsSynchronousIoControlDevice(
     NOT IMPLEMENTED YET
     http://www.osronline.com/ddkx/stream/avstream_5q9f.htm
 */
+
+KSDDKAPI NTSTATUS NTAPI
+KsInitializeDriver(
+    IN PDRIVER_OBJECT  DriverObject,
+    IN PUNICODE_STRING  RegistryPath,
+    IN const KSDEVICE_DESCRIPTOR  *Descriptor OPTIONAL
+    );
 
 #if 0
 typedef void (*PFNKSFILTERFACTORYPOWER)(

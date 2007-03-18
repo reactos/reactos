@@ -109,3 +109,4 @@ KsRecalculateStackDepth@8
 KsSetTargetDeviceObject@8
 KsSetTargetState@8
 KsSynchronousIoControlDevice@32
+KsInitializeDriver@12
