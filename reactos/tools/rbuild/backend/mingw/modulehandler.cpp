@@ -3153,7 +3153,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 		NormalizeFilename ( "boot" + sSep + "freeldr" + sSep + "bootsect" + sSep + bootloader.c_str() ),
 		backend->outputDirectory );
 
-	string bootcdReactosNoFixup = bootcdDirectory + sSep + "reactos";
+	string bootcdReactosNoFixup = bootcdDirectory + sSep + Environment::GetCdOutputPath ();
 	string bootcdReactos = PassThruCacheDirectory (
 		NormalizeFilename ( bootcdReactosNoFixup + sSep ),
 		backend->outputDirectory );

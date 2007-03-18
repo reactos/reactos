@@ -326,7 +326,15 @@ DBGKD_GET_VERSION64 KdVersionBlock =
     DBGKD_64BIT_PROTOCOL_VERSION2,
     KD_SECONDARY_VERSION_DEFAULT,
     DBGKD_VERS_FLAG_DATA,
+#if defined(_M_IX86)
     IMAGE_FILE_MACHINE_I386,
+#elif defined(_M_PPC)
+    IMAGE_FILE_MACHINE_POWERPC,
+#elif defined(_M_MIPS)
+    IMAGE_FILE_MACHINE_R4000,
+#else
+#error Unknown platform
+#endif
     PACKET_TYPE_MAX,
     0,
     0,

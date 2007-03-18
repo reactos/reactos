@@ -1,12 +1,12 @@
 <module name="halup" type="kernelmodedll" entrypoint="0">
 	<importlibrary definition="../../hal/hal.def" />
-	<bootstrap base="reactos" nameoncd="hal.dll" />
+	<bootstrap base="$(CDOUTPUT)" nameoncd="hal.dll" />
 	<include base="hal_generic">../include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__USE_W32API" />
 	<define name="_NTHAL_" />
-    <linkerflag>-enable-stdcall-fixup</linkerflag>
+	<linkerflag>-enable-stdcall-fixup</linkerflag>
 	<library>hal_generic</library>
 	<library>hal_generic_up</library>
 	<library>hal_generic_pc</library>

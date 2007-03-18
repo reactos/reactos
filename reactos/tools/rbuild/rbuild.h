@@ -155,6 +155,7 @@ public:
 	static std::string GetVariable ( const std::string& name );
 	static std::string GetIntermediatePath ();
 	static std::string GetOutputPath ();
+	static std::string GetCdOutputPath ();
 	static std::string GetInstallPath ();
 	static std::string GetEnvironmentVariablePathOrDefault ( const std::string& name,
 	                                                         const std::string& defaultValue );
@@ -296,7 +297,7 @@ public:
 	ImportLibrary* importLibrary;
 	bool mangledSymbols;
 	bool isUnicode;
-    bool isDefaultEntryPoint;
+	bool isDefaultEntryPoint;
 	Bootstrap* bootstrap;
 	AutoRegister* autoRegister;
 	IfableData non_if_data;
@@ -761,6 +762,9 @@ public:
 private:
 	bool IsSupportedModuleType ( ModuleType type );
 	void Initialize();
+	static std::string ReplaceVariable ( const std::string& name,
+	                                     const std::string& value,
+	                                     std::string path );
 };
 
 
@@ -780,6 +784,10 @@ public:
 	~CDFile ();
 	void ProcessXML();
 	std::string GetPath () const;
+private:
+	static std::string ReplaceVariable ( const std::string& name,
+	                                     const std::string& value,
+	                                     std::string path );
 };
 
 

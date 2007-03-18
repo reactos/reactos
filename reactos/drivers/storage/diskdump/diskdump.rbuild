@@ -1,5 +1,5 @@
 <module name="diskdump" type="exportdriver" installbase="system32/drivers" installname="diskdump.sys">
-	<bootstrap base="reactos" />
+	<bootstrap base="$(CDOUTPUT)" />
 	<define name="__USE_W32API" />
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library definition="diskdump.def" />

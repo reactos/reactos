@@ -1,5 +1,5 @@
 <module name="kbdclass" type="kernelmodedriver" installbase="system32/drivers" installname="kbdclass.sys">
-	<bootstrap base="reactos" />
+	<bootstrap base="$(CDOUTPUT)" />
 	<define name="__USE_W32API" />
 	<define name="NDEBUG" />
 	<library>pseh</library>

@@ -73,6 +73,18 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 	                                  __LINE__ );
 }
 
+string
+Bootstrap::ReplaceVariable ( const string& name,
+                             const string& value,
+                             string path )
+{
+	size_t i = path.find ( name );
+	if ( i != string::npos )
+		return path.replace ( i, name.length (), value );
+	else
+		return path;
+}
+
 void
 Bootstrap::Initialize ()
 {
@@ -85,7 +97,7 @@ Bootstrap::Initialize ()
 
 	const XMLAttribute* att = node.GetAttribute ( "base", false );
 	if ( att != NULL )
-		base = att->value;
+		base = ReplaceVariable ( "$(CDOUTPUT)", Environment::GetCdOutputPath (), att->value );
 	else
 		base = "";
 

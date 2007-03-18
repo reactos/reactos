@@ -69,6 +69,11 @@
 #        Examples of output files include *.exe, *.dll, and *.sys. N.B. Don't
 #        put a path separator at the end. The variable defaults to .\output-i386.
 #
+#    ROS_CDOUTPUT
+#        This variable controls the name of the ReactOS directory on cdrom.
+#        The variable defaults to reactos.
+#        Warning: setting this value may lead to a not bootable/installable cdrom.
+#
 #    ROS_TEMPORARY
 #        This variable controls where to put temporary files. Temporary files
 #        are (usually small) generated files that are needed to generate the
@@ -321,16 +326,31 @@ endif
 ifneq ($(ROS_INTERMEDIATE),)
   INTERMEDIATE := $(ROS_INTERMEDIATE)
 else
-  INTERMEDIATE := obj-i386
+  ifneq ($(ROS_CDOUTPUT),)
+    INTERMEDIATE := obj-$(ROS_CDOUTPUT)
+  else
+    INTERMEDIATE := obj-i386
+  endif
 endif
 INTERMEDIATE_ := $(INTERMEDIATE)$(SEP)
 
 ifneq ($(ROS_OUTPUT),)
   OUTPUT := $(ROS_OUTPUT)
 else
-  OUTPUT := output-i386
+  ifneq ($(ROS_CDOUTPUT),)
+    OUTPUT := output-$(ROS_CDOUTPUT)
+  else
+    OUTPUT := output-i386
+  endif
 endif
 OUTPUT_ := $(OUTPUT)$(SEP)
+
+ifneq ($(ROS_CDOUTPUT),)
+  CDOUTPUT := $(ROS_CDOUTPUT)
+else
+  CDOUTPUT := reactos
+endif
+CDOUTPUT_ := $(CDOUTPUT)$(SEP)
 
 ifneq ($(ROS_TEMPORARY),)
   TEMPORARY := $(ROS_TEMPORARY)
@@ -342,7 +362,11 @@ TEMPORARY_ := $(TEMPORARY)$(SEP)
 ifneq ($(ROS_INSTALL),)
   INSTALL := $(ROS_INSTALL)
 else
-  INSTALL := reactos
+  ifneq ($(ROS_CDOUTPUT),)
+    INSTALL := reactos.$(ROS_CDOUTPUT)
+  else
+    INSTALL := reactos
+  endif
 endif
 INSTALL_ := $(INSTALL)$(SEP)
 

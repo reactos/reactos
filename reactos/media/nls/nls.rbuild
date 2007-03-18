@@ -1,7 +1,7 @@
 <group>
-<cdfile base="reactos">c_437.nls</cdfile>
-<cdfile base="reactos">c_1252.nls</cdfile>
-<cdfile base="reactos">l_intl.nls</cdfile>
+<cdfile base="$(CDOUTPUT)">c_437.nls</cdfile>
+<cdfile base="$(CDOUTPUT)">c_1252.nls</cdfile>
+<cdfile base="$(CDOUTPUT)">l_intl.nls</cdfile>
 
 <installfile base="system32">c_037.nls</installfile>
 <installfile base="system32">c_424.nls</installfile>

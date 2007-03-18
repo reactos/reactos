@@ -1,6 +1,6 @@
 <module name="halmp" type="kernelmodedll" entrypoint="0">
 	<importlibrary definition="../../hal/hal.def" />
-	<bootstrap base="reactos" />
+	<bootstrap base="$(CDOUTPUT)" />
 	<include base="hal_generic">../include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
@@ -11,7 +11,7 @@
 	<library>hal_generic_pc</library>
 	<library>ntoskrnl</library>
 	<file>apic.c</file>
-    <file>halinit.c</file>
+	<file>halinit.c</file>
 	<file>halinit_mp.c</file>
 	<file>ioapic.c</file>
 	<file>ipi_mp.c</file>

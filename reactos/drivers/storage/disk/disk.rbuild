@@ -1,5 +1,5 @@
 <module name="disk" type="kernelmodedriver" installbase="system32/drivers" installname="disk.sys" allowwarnings="true">
-	<bootstrap base="reactos" />
+	<bootstrap base="$(CDOUTPUT)" />
 	<define name="__USE_W32API" />
 	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>

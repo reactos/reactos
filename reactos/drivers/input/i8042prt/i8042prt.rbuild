@@ -1,5 +1,5 @@
 <module name="i8042prt" type="kernelmodedriver" installbase="system32/drivers" installname="i8042prt.sys">
-	<bootstrap base="reactos" />
+	<bootstrap base="$(CDOUTPUT)" />
 	<include base="i8042prt">.</include>
 	<define name="__USE_W32API" />
 	<define name="__REACTOS__" />

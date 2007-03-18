@@ -1,5 +1,5 @@
 <module name="floppy" type="kernelmodedriver" installbase="system32/drivers" installname="floppy.sys">
-	<bootstrap base="reactos" />
+	<bootstrap base="$(CDOUTPUT)" />
 	<define name="__USE_W32API" />
 	<include base="floppy">.</include>
 	<library>ntoskrnl</library>

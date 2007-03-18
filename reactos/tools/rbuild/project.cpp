@@ -49,21 +49,34 @@ Environment::GetEnvironmentVariablePathOrDefault ( const string& name,
 /* static */ string
 Environment::GetIntermediatePath ()
 {
+	string defaultIntermediate =
+		string( "obj-" ) + GetEnvironmentVariablePathOrDefault ( "ROS_CDOUTPUT", "i386" );
 	return GetEnvironmentVariablePathOrDefault ( "ROS_INTERMEDIATE",
-	                                             "obj-i386" );
+	                                             defaultIntermediate );
 }
 
 /* static */ string
 Environment::GetOutputPath ()
 {
+	string defaultOutput =
+		string( "output-" ) + GetEnvironmentVariablePathOrDefault ( "ROS_CDOUTPUT", "i386" );
 	return GetEnvironmentVariablePathOrDefault ( "ROS_OUTPUT",
-	                                             "output-i386" );
+	                                             defaultOutput );
 }
 
 /* static */ string
 Environment::GetInstallPath ()
 {
+	string defaultInstall =
+		string( "reactos." ) + GetEnvironmentVariablePathOrDefault ( "ROS_CDOUTPUT", "" );
 	return GetEnvironmentVariablePathOrDefault ( "ROS_INSTALL",
+	                                             defaultInstall );
+}
+
+/* static */ string
+Environment::GetCdOutputPath ()
+{
+	return GetEnvironmentVariablePathOrDefault ( "ROS_CDOUTPUT",
 	                                             "reactos" );
 }
 

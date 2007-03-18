@@ -1,5 +1,5 @@
 <module name="cdfs" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs.sys">
-	<bootstrap base="reactos" />
+	<bootstrap base="$(CDOUTPUT)" />
 	<include base="cdfs">.</include>
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>

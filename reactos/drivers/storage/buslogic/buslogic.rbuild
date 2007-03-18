@@ -1,5 +1,5 @@
 <module name="buslogic" type="kernelmodedriver" installbase="system32/drivers" installname="buslogic.sys">
-	<bootstrap base="reactos" />
+	<bootstrap base="$(CDOUTPUT)" />
 	<define name="__USE_W32API" />
 	<include base="buslogic">.</include>
 	<library>ntoskrnl</library>

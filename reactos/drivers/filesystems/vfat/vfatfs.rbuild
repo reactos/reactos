@@ -1,5 +1,5 @@
 <module name="vfatfs" type="kernelmodedriver" installbase="system32/drivers" installname="vfatfs.sys">
-	<bootstrap base="reactos" />
+	<bootstrap base="$(CDOUTPUT)" />
 	<include base="vfatfs">.</include>
 	<define name="__USE_W32API" />
 	<linkerflag>-lgcc</linkerflag>

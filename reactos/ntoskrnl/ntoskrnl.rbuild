@@ -1,5 +1,5 @@
 <module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe">
-    <bootstrap base="reactos" />
+    <bootstrap base="$(CDOUTPUT)" />
     <importlibrary definition="ntoskrnl.def" />
     <define name="_SEH_NO_NATIVE_NLG" />
     <define name="_DISABLE_TIDENTS" />

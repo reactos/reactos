@@ -1,5 +1,5 @@
 <module name="atapi" type="kernelmodedriver" installbase="system32/drivers" installname="atapi.sys">
-	<bootstrap base="reactos" />
+	<bootstrap base="$(CDOUTPUT)" />
 	<define name="__USE_W32API" />
 	<include base="atapi">.</include>
 	<library>ntoskrnl</library>
