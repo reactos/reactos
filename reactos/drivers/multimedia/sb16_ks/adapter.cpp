@@ -114,6 +114,12 @@ CAdapterSB16::ResetMixer()
 }
 
 
+STDMETHODIMP_(void)
+SetWaveMiniport(
+     IN  PWAVEMINIPORTSB16 Miniport)
+{
+}
+
 /*
 STDMETHODIMP_(void)
 CAdapterSB16::PowerChangeState(

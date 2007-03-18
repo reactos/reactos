@@ -31,6 +31,7 @@ DetectPlatform(
 {
     /* ASSERT(Port); */
 
+#if 0
     PPORTCLSVERSION portcls_version;
     PDRMPORT drm_port;
     PPORTEVENTS port_events;
@@ -70,6 +71,9 @@ DetectPlatform(
     }
 
     return version;
+#else
+    return kVersionWin98;
+#endif
 }
 
 
@@ -102,6 +106,7 @@ DetectFeatures(
             }
 
             break;
+        }
 
         case 2 :
         {
@@ -198,26 +203,26 @@ AssignResources(
 
     /* Wave I/O resources */
 
-    status = PcNewResourceSublist(Resources->Wave,
+    status = PcNewResourceSublist(&Resources->Wave,
                                   NULL,
                                   PagedPool,
                                   ResourceList,
                                   ResourceList->NumberOfDmas() +
-                                      ResourceList->NumberOfInterrupts + 1);
+                                      ResourceList->NumberOfInterrupts() + 1);
 
     if ( NT_SUCCESS(status) )
     {
         ULONG i;
 
         /* Base port address */
-        status = (*Resources->Wave)->AddPortFromParent(ResourceList, 0);
+        status = (*Resources->Wave).AddPortFromParent(ResourceList, 0);
 
         /* DMA channels */
         if ( NT_SUCCESS(status) )
         {
             for ( i = 0; i < ResourceList->NumberOfDmas(); i ++ )
             {
-                status = (*Resources->Wave)->AddDmaFromParent(ResourceList, i);
+                status = (*Resources->Wave).AddDmaFromParent(ResourceList, i);
 
                 if ( ! NT_SUCCESS(status) )
                     break;
@@ -229,7 +234,7 @@ AssignResources(
         {
             for ( i = 0; i < ResourceList->NumberOfInterrupts(); i ++ )
             {
-                status = (*Resources->Wave)->AddInterruptFromParent(ResourceList, i);
+                status = (*Resources->Wave).AddInterruptFromParent(ResourceList, i);
 
                 if ( ! NT_SUCCESS(status) )
                     break;
@@ -255,7 +260,7 @@ AssignResources(
 
     if ( NT_SUCCESS(status) )
     {
-        status = PcNewResourceSublist(Resources->Adapter,
+        status = PcNewResourceSublist(&Resources->Adapter,
                                       NULL,
                                       PagedPool,
                                       ResourceList,
@@ -263,12 +268,12 @@ AssignResources(
 
         if ( NT_SUCCESS(status) )
         {
-            status = (*Resources->Adapter)->AddInterruptFromParent(ResourceList, 0);
+            status = (*Resources->Adapter).AddInterruptFromParent(ResourceList, 0);
         }
 
         if ( NT_SUCCESS(status) )
         {
-            status = (*Resources->Adapter)->AddPortFromParent(ResourceList, 0);
+            status = (*Resources->Adapter).AddPortFromParent(ResourceList, 0);
         }
 
         if ( NT_SUCCESS(status) && HasUart )
@@ -281,16 +286,16 @@ AssignResources(
 
     if ( ! NT_SUCCESS(status) )
     {
-        if ( *Resources->Wave )
+        if ( (*Resources).Wave != NULL )
         {
-            (*Resources->Wave)->Release();
-            *Resources->Wave = NULL;
+            (*Resources->Wave).Release();
+            (*Resources).Wave = NULL;
         }
 
-        if ( *Resources->Adapter )
+        if ( (*Resources).Adapter != NULL )
         {
-            (*Resources->Adapter)->Release();
-            *Resources->Adapter = NULL;
+            (*Resources->Adapter).Release();
+            (*Resources).Adapter = NULL;
         }
     }
 
@@ -310,10 +315,10 @@ StartDevice(
 
     PUNKNOWN UnknownTopology = NULL;
     PUNKNOWN UnknownWave = NULL;
-    PUNKNOWN UnknownWaveTable = NUL;
+    PUNKNOWN UnknownWaveTable = NULL;
     PUNKNOWN UnknownFmSynth = NULL;
 
-    PADAPTERCOMMON AdapterCommon = NULL;
+//    PADAPTERCOMMON AdapterCommon = NULL;
     PUNKNOWN UnknownCommon = NULL;
 
     status = AssignResources(ResourceList, &DeviceResources);
@@ -326,7 +331,7 @@ StartDevice(
 }
 
 extern "C"
-NSTATUS
+NTSTATUS
 AddDevice(
     IN  PDRIVER_OBJECT DriverObject,
     IN  PDEVICE_OBJECT PhysicalDeviceObject)
@@ -348,9 +353,10 @@ DriverEntry(
 
     status = PcInitializeAdapterDriver(DriverObject,
                                        RegistryPathName,
-                                       AddDevice);
+                                       (PDRIVER_ADD_DEVICE) AddDevice);
 
     /* TODO: Add our own IRP handlers here */
 
     return status;
 }
+
