@@ -1,8 +1,23 @@
 #include <ntifs.h>
 #include <kbdmou.h>
-#include <ntddmou.h>
-#include <pseh/pseh.h>
+#include <ntddkbd.h>
 #include <stdio.h>
+
+#if defined(__GNUC__)
+  #include <pseh/pseh.h>
+  #include <debug.h>
+#elif defined(_MSC_VER)
+  #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
+  #define CHECKPOINT1 DbgPrint("(%s:%d)\n", __FILE__, __LINE__)
+  #define DPRINT
+  #define CHECKPOINT
+  #define _SEH_TRY __try
+  #define _SEH_HANDLE __except(1)
+  #define _SEH_END
+  #define _SEH_GetExceptionCode() GetExceptionCode()
+#else
+  #error Unknown compiler!
+#endif
 
 #define MAX_PATH 260
 
@@ -56,7 +71,7 @@ typedef struct _CLASS_DEVICE_EXTENSION
 	KSPIN_LOCK ListSpinLock;
 	KSPIN_LOCK SpinLock;
 	BOOLEAN ReadIsPending;
-	ULONG InputCount;
+	SIZE_T InputCount;
 	PMOUSE_INPUT_DATA PortData;
 	LPCWSTR DeviceName;
 } CLASS_DEVICE_EXTENSION, *PCLASS_DEVICE_EXTENSION;
@@ -72,3 +87,9 @@ NTSTATUS NTAPI
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
+
+NTSTATUS
+DuplicateUnicodeString(
+	IN ULONG Flags,
+	IN PCUNICODE_STRING SourceString,
+	OUT PUNICODE_STRING DestinationString);

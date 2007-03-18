@@ -7,9 +7,6 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define NDEBUG
-#include <debug.h>
-
 #define INITGUID
 #include "kbdclass.h"
 
@@ -328,7 +325,7 @@ CreateClassDeviceObject(
 	DeviceIdW = &DeviceNameU.Buffer[PrefixLength / sizeof(WCHAR)];
 	while (DeviceId < 9999)
 	{
-		DeviceNameU.Length = PrefixLength + swprintf(DeviceIdW, L"%lu", DeviceId) * sizeof(WCHAR);
+		DeviceNameU.Length = (USHORT)(PrefixLength + swprintf(DeviceIdW, L"%lu", DeviceId) * sizeof(WCHAR));
 		Status = IoCreateDevice(
 			DriverObject,
 			sizeof(CLASS_DEVICE_EXTENSION),
@@ -438,7 +435,7 @@ FillEntries(
 	return Status;
 }
 
-static BOOLEAN CALLBACK
+static BOOLEAN NTAPI
 ClassCallback(
 	IN PDEVICE_OBJECT ClassDeviceObject,
 	IN OUT PKEYBOARD_INPUT_DATA DataStart,
@@ -448,8 +445,8 @@ ClassCallback(
 	PCLASS_DEVICE_EXTENSION ClassDeviceExtension = ClassDeviceObject->DeviceExtension;
 	PIRP Irp = NULL;
 	KIRQL OldIrql;
-	ULONG InputCount = DataEnd - DataStart;
-	ULONG ReadSize;
+	SIZE_T InputCount = DataEnd - DataStart;
+	SIZE_T ReadSize;
 
 	ASSERT(ClassDeviceExtension->Common.IsClassDO);
 
@@ -489,7 +486,7 @@ ClassCallback(
 
 			/* Skip the packet we just sent away */
 			DataStart += NumberOfEntries;
-			(*ConsumedCount) += NumberOfEntries;
+			(*ConsumedCount) += (ULONG)NumberOfEntries;
 			InputCount -= NumberOfEntries;
 		}
 	}
@@ -520,7 +517,7 @@ ClassCallback(
 		/* Move the counter up */
 		ClassDeviceExtension->InputCount += ReadSize;
 
-		(*ConsumedCount) += ReadSize;
+		(*ConsumedCount) += (ULONG)ReadSize;
 	}
 	else
 	{
@@ -827,13 +824,13 @@ SearchForLegacyDrivers(
 	DriverExtension = (PCLASS_DRIVER_EXTENSION)Context;
 
 	/* Create port base name, by replacing Class by Port at the end of the class base name */
-	Status = RtlDuplicateUnicodeString(
+	Status = DuplicateUnicodeString(
 		RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
 		&DriverExtension->DeviceBaseName,
 		&PortBaseName);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("RtlDuplicateUnicodeString() failed with status 0x%08lx\n", Status);
+		DPRINT("DuplicateUnicodeString() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 	PortBaseName.Length -= (sizeof(L"Class") - sizeof(UNICODE_NULL));
@@ -886,7 +883,7 @@ SearchForLegacyDrivers(
 		PDEVICE_OBJECT PortDeviceObject = NULL;
 		PFILE_OBJECT FileObject = NULL;
 
-		PortName.Length = PortName.MaximumLength = KeyValueInformation->NameLength;
+		PortName.Length = PortName.MaximumLength = (USHORT)KeyValueInformation->NameLength;
 		PortName.Buffer = KeyValueInformation->Name;
 
 		/* Open the device object pointer */
@@ -939,13 +936,13 @@ DriverEntry(
 	}
 	RtlZeroMemory(DriverExtension, sizeof(CLASS_DRIVER_EXTENSION));
 
-	Status = RtlDuplicateUnicodeString(
+	Status = DuplicateUnicodeString(
 		RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
 		RegistryPath,
 		&DriverExtension->RegistryPath);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("RtlDuplicateUnicodeString() failed with status 0x%08lx\n", Status);
+		DPRINT("DuplicateUnicodeString() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 

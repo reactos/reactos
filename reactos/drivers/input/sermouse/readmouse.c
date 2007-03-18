@@ -8,9 +8,6 @@
                 Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define NDEBUG
-#include <debug.h>
-
 #include "sermouse.h"
 
 static NTSTATUS
@@ -55,7 +52,7 @@ SermouseDeviceIoControl(
 
 	if (OutputBufferSize)
 	{
-		*OutputBufferSize = IoStatus.Information;
+		*OutputBufferSize = (ULONG)IoStatus.Information;
 	}
 
 	return Status;
@@ -126,6 +123,7 @@ SermouseDeviceWorker(
 	if (!NT_SUCCESS(Status)) PsTerminateSystemThread(Status);
 
 	/* main read loop */
+	RtlZeroMemory(Buffer, PACKET_BUFFER_SIZE);
 	while (TRUE)
 	{
 		Status = KeWaitForSingleObject(

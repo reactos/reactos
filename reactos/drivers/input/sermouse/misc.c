@@ -6,10 +6,9 @@
  * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define NDEBUG
-#include <debug.h>
-
 #include "sermouse.h"
+
+static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
 
 static NTSTATUS NTAPI
 ForwardIrpAndWaitCompletion(
@@ -34,7 +33,7 @@ ForwardIrpAndWait(
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 
-	DPRINT("Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
+	DPRINT("Calling lower device %p\n", LowerDevice);
 	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
 
 	Status = IoCallDriver(LowerDevice, Irp);

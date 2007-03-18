@@ -3,13 +3,15 @@
 #include <ntddser.h>
 #include <ntddmou.h>
 
-#if defined(_MSC_VER)
-  /* Missing prototype */
-  NTSTATUS NTAPI
-  IoAttachDeviceToDeviceStackSafe(
-    IN PDEVICE_OBJECT SourceDevice,
-    IN PDEVICE_OBJECT TargetDevice,
-    OUT PDEVICE_OBJECT *AttachedToDeviceObject);
+#if defined(__GNUC__)
+  #include <debug.h>
+#elif defined(_MSC_VER)
+  #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
+  #define CHECKPOINT1 DbgPrint("(%s:%d)\n", __FILE__, __LINE__)
+  #define DPRINT
+  #define CHECKPOINT
+#else
+  #error Unknown compiler!
 #endif
 
 typedef enum
@@ -79,20 +81,11 @@ typedef struct _SERMOUSE_DEVICE_EXTENSION
 
 /************************************ createclose.c */
 
-NTSTATUS NTAPI
-SermouseCreate(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SermouseCreate;
 
-NTSTATUS NTAPI
-SermouseClose(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SermouseClose;
 
-NTSTATUS NTAPI
-SermouseCleanup(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SermouseCleanup;
 
 /************************************ detect.c */
 
@@ -102,22 +95,13 @@ SermouseDetectLegacyDevice(
 
 /************************************ fdo.c */
 
-NTSTATUS NTAPI
-SermouseAddDevice(
-	IN PDRIVER_OBJECT DriverObject,
-	IN PDEVICE_OBJECT Pdo);
+DRIVER_ADD_DEVICE SermouseAddDevice;
 
-NTSTATUS NTAPI
-SermousePnp(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SermousePnp;
 
 /************************************ internaldevctl.c */
 
-NTSTATUS NTAPI
-SermouseInternalDeviceControl(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH SermouseInternalDeviceControl;
 
 /************************************ misc.c */
 

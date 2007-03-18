@@ -6,9 +6,6 @@
  * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define NDEBUG
-#include <debug.h>
-
 #include "sermouse.h"
 
 NTSTATUS NTAPI
