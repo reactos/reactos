@@ -364,11 +364,13 @@ GetSwapLock:
     jnz WmiTrace
 
 AfterTrace:
+#ifdef CONFIG_SMP
 #ifdef DBG
     /* Assert that we're on the right CPU */
     mov cl, [esi+KTHREAD_NEXT_PROCESSOR]
     cmp cl, [ebx+KPCR_PROCESSOR_NUMBER]
     jnz WrongCpu
+#endif
 #endif
 
     /* Get CR0 and save it */

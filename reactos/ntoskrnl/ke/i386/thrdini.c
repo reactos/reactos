@@ -74,6 +74,10 @@ Ke386InitThreadWithContext(IN PKTHREAD Thread,
         Context = &LocalContext;
         ContextFlags = CONTEXT_CONTROL;
 
+        /* Zero out the trap frame and save area */
+        RtlZeroMemory(&InitFrame->TrapFrame,
+                      KTRAP_FRAME_LENGTH + sizeof(FX_SAVE_AREA));
+
         /* Setup the Fx Area */
         FxSaveArea = &InitFrame->FxSaveArea;
 
@@ -114,7 +118,7 @@ Ke386InitThreadWithContext(IN PKTHREAD Thread,
             FxSaveArea->NpxSavedCpu = 0;
 
             /* Now set the context flags depending on XMM support */
-            ContextFlags |= (KeI386XMMIPresent) ? CONTEXT_EXTENDED_REGISTERS :
+            ContextFlags |= (KeI386FxsrPresent) ? CONTEXT_EXTENDED_REGISTERS :
                                                   CONTEXT_FLOATING_POINT;
 
             /* Set the Thread's NPX State */
@@ -154,7 +158,7 @@ Ke386InitThreadWithContext(IN PKTHREAD Thread,
         TrapFrame->PreviousPreviousMode = UserMode;
 
         /* Terminate the Exception Handler List */
-        TrapFrame->ExceptionList = (PVOID)0xFFFFFFFF;
+        TrapFrame->ExceptionList = EXCEPTION_CHAIN_END;
 
         /* Setup the Stack for KiThreadStartup and Context Switching */
         StartFrame = &InitFrame->StartFrame;
