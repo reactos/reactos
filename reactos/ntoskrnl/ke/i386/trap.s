@@ -2165,7 +2165,7 @@ _KiDispatchInterrupt@0:
 
     /* Save the stack and switch to the DPC Stack */
     mov edx, esp
-    //mov esp, [ebx+KPCR_PRCB_DPC_STACK]
+    mov esp, [ebx+KPCR_PRCB_DPC_STACK]
     push edx
 
     /* Deliver DPCs */

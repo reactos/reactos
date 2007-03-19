@@ -570,7 +570,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         /* Allocate the DPC Stack */
         DpcStack = MmCreateKernelStack(FALSE);
         if (!DpcStack) KeBugCheckEx(NO_PAGES_AVAILABLE, 1, 0, 0, 0);
-        Prcb->DpcStack = DpcStack;
+        Prcb->DpcStack = (PVOID)((ULONG_PTR)DpcStack + KERNEL_STACK_SIZE);
 
         /* Allocate the IOPM save area. */
         Ki386IopmSaveArea = ExAllocatePoolWithTag(PagedPool,
@@ -715,7 +715,7 @@ AppCpuInit:
     do
     {
         /* Loop until execution can continue */
-        while ((volatile KSPIN_LOCK)KiFreezeExecutionLock == 1);
+        while (*(volatile PKSPIN_LOCK*)&KiFreezeExecutionLock == (PVOID)1);
     } while(InterlockedBitTestAndSet((PLONG)&KiFreezeExecutionLock, 0));
 
     /* Setup CPU-related fields */
@@ -745,17 +745,19 @@ AppCpuInit:
     KfRaiseIrql(HIGH_LEVEL);
 
     /* Align stack and make space for the trap frame and NPX frame */
-    InitialStack &= ~KTRAP_FRAME_ALIGN;
+    InitialStack &= -KTRAP_FRAME_ALIGN;
 #ifdef __GNUC__
+    __asm__ __volatile__("xorl %ebp, %ebp");
     __asm__ __volatile__("movl %0,%%esp" : :"r" (InitialStack));
     __asm__ __volatile__("subl %0,%%esp" : :"r" (NPX_FRAME_LENGTH +
                                                  KTRAP_FRAME_LENGTH +
                                                  KTRAP_FRAME_ALIGN));
     __asm__ __volatile__("push %0" : :"r" (CR0_EM + CR0_TS + CR0_MP));
 #else
+    __asm xor ebp, ebp;
     __asm mov esp, InitialStack;
     __asm sub esp, NPX_FRAME_LENGTH + KTRAP_FRAME_ALIGN + KTRAP_FRAME_LENGTH;
-    __asm push CR0_EM + CR0_TS + CR0_MP
+    __asm push CR0_EM + CR0_TS + CR0_MP;
 #endif
 
     /* Call main kernel initialization */

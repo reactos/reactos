@@ -289,6 +289,3 @@ KeInitSystem(VOID)
     KiInitMachineDependent();
     return TRUE;
 }
-
-
-
