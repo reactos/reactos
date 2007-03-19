@@ -911,38 +911,87 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	      OUT PACCESS_MASK GrantedAccess,
 	      OUT PNTSTATUS AccessStatus)
 {
-  LUID_AND_ATTRIBUTES Privilege;
-  ACCESS_MASK CurrentAccess, AccessMask;
-  PACCESS_TOKEN Token;
-  ULONG i;
-  PACL Dacl;
-  BOOLEAN Present;
-  BOOLEAN Defaulted;
-  PACE CurrentAce;
-  PSID Sid;
-  NTSTATUS Status;
+    LUID_AND_ATTRIBUTES Privilege;
+    ACCESS_MASK CurrentAccess, AccessMask;
+    PACCESS_TOKEN Token;
+    ULONG i;
+    PACL Dacl;
+    BOOLEAN Present;
+    BOOLEAN Defaulted;
+    PACE CurrentAce;
+    PSID Sid;
+    NTSTATUS Status;
+    PAGED_CODE();
 
-  PAGED_CODE();
+    /* Check if this is kernel mode */
+    if (AccessMode == KernelMode)
+    {
+        /* Check if kernel wants everything */
+        if (DesiredAccess & MAXIMUM_ALLOWED)
+        {
+            /* Give it */
+            *GrantedAccess = GenericMapping->GenericAll;
+            *GrantedAccess |= (DesiredAccess &~ MAXIMUM_ALLOWED);
+            *GrantedAccess |= PreviouslyGrantedAccess;
+        }
+        else
+        {
+            /* Give the desired and previous access */
+            *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
+        }
+
+        /* Success */
+        *AccessStatus = STATUS_SUCCESS;
+        return TRUE;
+    }
+
+    /* Check if we didn't get an SD */
+    if (!SecurityDescriptor)
+    {
+        /* Automatic failure */
+        *AccessStatus = STATUS_ACCESS_DENIED;
+        return FALSE;
+    }
+
+    /* Check for invalid impersonation */
+    if ((SubjectSecurityContext->ClientToken) &&
+        (SubjectSecurityContext->ImpersonationLevel < SecurityImpersonation))
+    {
+        *AccessStatus = STATUS_BAD_IMPERSONATION_LEVEL;
+        return FALSE;
+    }
+
+    /* Check for no access desired */
+    if (!DesiredAccess)
+    {
+        /* Check if we had no previous access */
+        if (!PreviouslyGrantedAccess)
+        {
+            /* Then there's nothing to give */
+            *AccessStatus = STATUS_ACCESS_DENIED;
+            return FALSE;
+        }
+
+        /* Return the previous access only */
+        *GrantedAccess = PreviouslyGrantedAccess;
+        *AccessStatus = STATUS_SUCCESS;
+        *Privileges = NULL;
+        return TRUE;
+    }
+
+    /* Acquire the lock if needed */
+    if (!SubjectContextLocked) SeLockSubjectContext(SubjectSecurityContext);
 
   /* Map given accesses */
   RtlMapGenericMask(&DesiredAccess, GenericMapping);
   if (PreviouslyGrantedAccess)
     RtlMapGenericMask(&PreviouslyGrantedAccess, GenericMapping);
 
-  /* Check if we didn't get an SD */
-  if (!SecurityDescriptor)
-  {
-      /* Automatic failure */
-      *AccessStatus = STATUS_ACCESS_DENIED;
-      return FALSE;
-  }
+
 
   CurrentAccess = PreviouslyGrantedAccess;
 
-  if (SubjectContextLocked == FALSE)
-    {
-      SeLockSubjectContext(SubjectSecurityContext);
-    }
+
 
   Token = SubjectSecurityContext->ClientToken ?
 	    SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
@@ -1077,7 +1126,9 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
             }
         }
         else
+        {
           DPRINT1("Unknown Ace type 0x%lx\n", CurrentAce->Header.AceType);
+      }
         CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
     }
 

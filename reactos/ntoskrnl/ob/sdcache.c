@@ -371,11 +371,13 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
 {
     /* HACK: Return the same descriptor back */
     PISECURITY_DESCRIPTOR SdCopy;
-    DPRINT1("ObLogSecurityDescriptor is not implemented!\n",
-            InputSecurityDescriptor);
+    ULONG Length;
+    DPRINT("ObLogSecurityDescriptor is not implemented!\n",
+           InputSecurityDescriptor);
 
-    SdCopy = ExAllocatePool(PagedPool, sizeof(*SdCopy));
-    RtlCopyMemory(SdCopy, InputSecurityDescriptor, sizeof(*SdCopy));
+    Length = RtlLengthSecurityDescriptor(InputSecurityDescriptor);
+    SdCopy = ExAllocatePool(PagedPool, Length);
+    RtlCopyMemory(SdCopy, InputSecurityDescriptor, Length);
     *OutputSecurityDescriptor = SdCopy;
     return STATUS_SUCCESS;
 }

@@ -550,7 +550,7 @@ NewCr0:
     /* Assert NPX State */
     test byte ptr [esi+KTHREAD_NPX_STATE], ~(NPX_STATE_NOT_LOADED)
     jnz InvalidNpx
-    test dword ptr [eax - (NPX_FRAME_LENGTH - FN_CR0_NPX_STATE)], ~(CR0_MP + CR0_EM + CR0_TS)
+    test dword ptr [eax - (NPX_FRAME_LENGTH - FN_CR0_NPX_STATE)], ~(CR0_PE + CR0_MP + CR0_EM + CR0_TS)
     jnz InvalidNpx
 #endif
 
