@@ -136,22 +136,22 @@ _KiRaiseAssertion:
     UNHANDLED_PATH
 
 .func KiSystemService
-Dr_kss: DR_TRAP_FIXUP
+TRAP_FIXUPS kss_a, kss_t, DoNotFixupV86, DoNotFixupAbios
 _KiSystemService:
 
     /* Enter the shared system call prolog */
-    SYSCALL_PROLOG kss
+    SYSCALL_PROLOG kss_a, kss_t
 
     /* Jump to the actual handler */
     jmp SharedCode
 .endfunc
 
 .func KiFastCallEntry
-Dr_FastCallDrSave: DR_TRAP_FIXUP
+TRAP_FIXUPS FastCallDrSave, FastCallDrReturn, DoNotFixupV86, DoNotFixupAbios
 _KiFastCallEntry:
 
     /* Enter the fast system call prolog */
-    FASTCALL_PROLOG FastCallDrSave
+    FASTCALL_PROLOG FastCallDrSave, FastCallDrReturn
 
 SharedCode:
 
@@ -461,15 +461,14 @@ AbiosExit:
     UNHANDLED_PATH
 
 .func KiDebugService
-Dr_kids:    DR_TRAP_FIXUP
-V86_kids:   V86_TRAP_FIXUP
+TRAP_FIXUPS kids_a, kids_t, DoFixupV86, DoFixupAbios
 _KiDebugService:
 
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kids
+    TRAP_PROLOG kids_a, kids_t
 
     /* Increase EIP so we skip the INT3 */
     inc dword ptr [ebp+KTRAP_FRAME_EIP]
@@ -672,14 +671,13 @@ _KiFixupFrame:
 .endfunc
 
 .func KiTrap0
-Dr_kit0:    DR_TRAP_FIXUP
-V86_kit0:   V86_TRAP_FIXUP
+TRAP_FIXUPS kit0_a, kit0_t, DoFixupV86, DoNotFixupAbios
 _KiTrap0:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kit0
+    TRAP_PROLOG kit0_a, kit0_t
 
     /* Check for V86 */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -714,14 +712,13 @@ V86Int0:
 .endfunc
 
 .func KiTrap1
-Dr_kit1:    DR_TRAP_FIXUP
-V86_kit1:   V86_TRAP_FIXUP
+TRAP_FIXUPS kit1_a, kit1_t, DoFixupV86, DoNotFixupAbios
 _KiTrap1:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kit1
+    TRAP_PROLOG kit1_a, kit1_t
 
     /* Check for V86 */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -767,14 +764,13 @@ _KiTrap2:
 .endfunc
 
 .func KiTrap3
-Dr_kit3:    DR_TRAP_FIXUP
-V86_kit3:   V86_TRAP_FIXUP
+TRAP_FIXUPS kit3_a, kit3_t, DoFixupV86, DoNotFixupAbios
 _KiTrap3:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kit3
+    TRAP_PROLOG kit3_a, kit3_t
 
     /* Set status code */
     mov eax, 0 //STATUS_SUCCESS
@@ -822,14 +818,13 @@ V86Int3:
 .endfunc
 
 .func KiTrap4
-Dr_kit4:    DR_TRAP_FIXUP
-V86_kit4:   V86_TRAP_FIXUP
+TRAP_FIXUPS kit4_a, kit4_t, DoFixupV86, DoNotFixupAbios
 _KiTrap4:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kit4
+    TRAP_PROLOG kit4_a, kit4_t
 
     /* Check for V86 */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -864,14 +859,13 @@ V86Int4:
 .endfunc
 
 .func KiTrap5
-Dr_kit5:    DR_TRAP_FIXUP
-V86_kit5:   V86_TRAP_FIXUP
+TRAP_FIXUPS kit5_a, kit5_t, DoFixupV86, DoNotFixupAbios
 _KiTrap5:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kit5
+    TRAP_PROLOG kit5_a, kit5_t
 
     /* Check for V86 */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -910,8 +904,7 @@ V86Int5:
 .endfunc
 
 .func KiTrap6
-Dr_kit6:    DR_TRAP_FIXUP
-V86_kit6:   V86_TRAP_FIXUP
+TRAP_FIXUPS kit6_a, kit6_t, DoFixupV86, DoNotFixupAbios
 _KiTrap6:
 
     /* It this a V86 GPF? */
@@ -919,7 +912,7 @@ _KiTrap6:
     jz NotV86UD
 
     /* Enter V86 Trap */
-    V86_TRAP_PROLOG kit6
+    V86_TRAP_PROLOG kit6_a, kit6_v
 
     /* Not yet supported (Invalid OPCODE from V86) */
     UNHANDLED_PATH
@@ -929,7 +922,7 @@ NotV86UD:
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kit6
+    TRAP_PROLOG kit6_a, kit6_t
 
     /* Check if this happened in kernel mode */
     test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
@@ -1025,14 +1018,13 @@ OpcodeSEH:
 .endfunc
 
 .func KiTrap7
-Dr_kit7:    DR_TRAP_FIXUP
-V86_kit7:   V86_TRAP_FIXUP
+TRAP_FIXUPS kit7_a, kit7_t, DoFixupV86, DoNotFixupAbios
 _KiTrap7:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kit7
+    TRAP_PROLOG kit7_a, kit7_t
 
     /* Get the current thread and stack */
 StartTrapHandle:
@@ -1345,14 +1337,13 @@ _KiTrap8:
 .endfunc
 
 .func KiTrap9
-Dr_kit9:    DR_TRAP_FIXUP
-V86_kit9:   V86_TRAP_FIXUP
+TRAP_FIXUPS kit9_a, kit9_t, DoFixupV86, DoNotFixupAbios
 _KiTrap9:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kit9
+    TRAP_PROLOG kit9_a, kit9_t
 
     /* Enable interrupts and bugcheck */
     sti
@@ -1361,11 +1352,10 @@ _KiTrap9:
 .endfunc
 
 .func KiTrap10
-Dr_kit10:   DR_TRAP_FIXUP
-V86_kit10:  V86_TRAP_FIXUP
+TRAP_FIXUPS kita_a, kita_t, DoFixupV86, DoNotFixupAbios
 _KiTrap10:
     /* Enter trap */
-    TRAP_PROLOG kit10
+    TRAP_PROLOG kita_a, kita_t
 
     /* Check for V86 */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
@@ -1392,11 +1382,10 @@ Fatal:
 .endfunc
 
 .func KiTrap11
-Dr_kit11:   DR_TRAP_FIXUP
-V86_kit11:  V86_TRAP_FIXUP
+TRAP_FIXUPS kitb_a, kitb_t, DoFixupV86, DoNotFixupAbios
 _KiTrap11:
     /* Enter trap */
-    TRAP_PROLOG kit11
+    TRAP_PROLOG kitb_a, kitb_t
 
     /* FIXME: ROS Doesn't handle segment faults yet */
     mov eax, 11
@@ -1404,11 +1393,10 @@ _KiTrap11:
 .endfunc
 
 .func KiTrap12
-Dr_kit12:   DR_TRAP_FIXUP
-V86_kit12:  V86_TRAP_FIXUP
+TRAP_FIXUPS kitc_a, kitc_t, DoFixupV86, DoNotFixupAbios
 _KiTrap12:
     /* Enter trap */
-    TRAP_PROLOG kit12
+    TRAP_PROLOG kitc_a, kitc_t
 
     /* FIXME: ROS Doesn't handle stack faults yet */
     mov eax, 12
@@ -1439,8 +1427,7 @@ _KiTrapExceptHandler:
 .endfunc
 
 .func KiTrap13
-Dr_kitd:    DR_TRAP_FIXUP
-V86_kitd:   V86_TRAP_FIXUP
+TRAP_FIXUPS kitd_a, kitd_t, DoFixupV86, DoNotFixupAbios
 _KiTrap13:
 
     /* It this a V86 GPF? */
@@ -1448,7 +1435,7 @@ _KiTrap13:
     jz NotV86
 
     /* Enter V86 Trap */
-    V86_TRAP_PROLOG kitd
+    V86_TRAP_PROLOG kitd_a, kitd_v
 
     /* Make sure that this is a V86 process */
     mov ecx, PCR[KPCR_CURRENT_THREAD]
@@ -1504,7 +1491,7 @@ NotV86Trap:
 
 NotV86:
     /* Enter trap */
-    TRAP_PROLOG kitd
+    TRAP_PROLOG kitd_a, kitd_t
 
     /* Check if this was from kernel-mode */
     test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
@@ -1822,12 +1809,11 @@ DispatchV86Gpf:
 .endfunc
 
 .func KiTrap14
-Dr_kit14:   DR_TRAP_FIXUP
-V86_kit14:  V86_TRAP_FIXUP
+TRAP_FIXUPS kite_a, kite_t, DoFixupV86, DoNotFixupAbios
 _KiTrap14:
 
     /* Enter trap */
-    TRAP_PROLOG kit14
+    TRAP_PROLOG kite_a, kite_t
 
     /* Check if we have a VDM alert */
     cmp dword ptr PCR[KPCR_VDM_ALERT], 0
@@ -1986,14 +1972,13 @@ VdmAlertGpf:
 .endfunc
 
 .func KiTrap0F
-Dr_kit15:   DR_TRAP_FIXUP
-V86_kit15:  V86_TRAP_FIXUP
+TRAP_FIXUPS kitf_a, kitf_t, DoFixupV86, DoNotFixupAbios
 _KiTrap0F:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kit15
+    TRAP_PROLOG kitf_a, kitf_t
     sti
 
     /* Raise a fatal exception */
@@ -2002,14 +1987,13 @@ _KiTrap0F:
 .endfunc
 
 .func KiTrap16
-Dr_kit16:   DR_TRAP_FIXUP
-V86_kit16:  V86_TRAP_FIXUP
+TRAP_FIXUPS kit10_a, kit10_t, DoFixupV86, DoNotFixupAbios
 _KiTrap16:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kit16
+    TRAP_PROLOG kit10_a, kit10_t
 
     /* Check if this is the NPX Thread */
     mov eax, PCR[KPCR_CURRENT_THREAD]
@@ -2029,14 +2013,13 @@ _KiTrap16:
 .endfunc
 
 .func KiTrap17
-Dr_kit17:   DR_TRAP_FIXUP
-V86_kit17:  V86_TRAP_FIXUP
+TRAP_FIXUPS kit11_a, kit11_t, DoFixupV86, DoNotFixupAbios
 _KiTrap17:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG kit17
+    TRAP_PROLOG kit11_a, kit11_t
 
     /* FIXME: ROS Doesn't handle alignment faults yet */
     mov eax, 17
@@ -2110,12 +2093,11 @@ _KiEndUnexpectedRange@0:
     jmp _KiUnexpectedInterruptTail
 
 .func KiUnexpectedInterruptTail
-V86_kui: V86_TRAP_FIXUP
-Dr_kui:  DR_TRAP_FIXUP
+TRAP_FIXUPS kui_a, kui_t, DoFixupV86, DoFixupAbios
 _KiUnexpectedInterruptTail:
 
     /* Enter interrupt trap */
-    INT_PROLOG kui, DoNotPushFakeErrorCode
+    INT_PROLOG kui_a, kui_t, DoNotPushFakeErrorCode
 
     /* Increase interrupt count */
     inc dword ptr PCR[KPCR_PRCB_INTERRUPT_COUNT]
@@ -2257,13 +2239,10 @@ QuantumEnd:
 .endfunc
 
 .func KiInterruptTemplate
-V86_kit: V86_TRAP_FIXUP
-Dr_kit:  DR_TRAP_FIXUP
 _KiInterruptTemplate:
 
     /* Enter interrupt trap */
-    INT_PROLOG kit, DoPushFakeErrorCode
-.endfunc
+    INT_PROLOG kit_a, kit_t, DoPushFakeErrorCode
 
 _KiInterruptTemplate2ndDispatch:
     /* Dummy code, will be replaced by the address of the KINTERRUPT */
@@ -2275,6 +2254,9 @@ _KiInterruptTemplateObject:
 
 _KiInterruptTemplateDispatch:
     /* Marks the end of the template so that the jump above can be edited */
+
+TRAP_FIXUPS kit_a, kit_t, DoFixupV86, DoFixupAbios
+.endfunc
 
 .func KiChainedDispatch2ndLvl@0
 _KiChainedDispatch2ndLvl@0:

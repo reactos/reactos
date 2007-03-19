@@ -17,12 +17,16 @@
 #define DoRestoreSegments           1
 #define DoRestoreVolatiles          1
 #define DoPushFakeErrorCode         1
+#define DoFixupV86                  1
+#define DoFixupAbios                1
 #define NotFromSystemCall           0
 #define DoNotRestorePreviousMode    0
 #define DoNotRestoreEverything      0
 #define DoNotRestoreSegments        0
 #define DoNotRestoreVolatiles       0
 #define DoNotPushFakeErrorCode      0
+#define DoNotFixupV86               0
+#define DoNotFixupAbios             0
 
 // Arguments for idt
 #define INT_32_DPL0                 0x8E00
@@ -210,48 +214,28 @@ _KiUnexpectedInterrupt&Number:
 .endm
 
 //
-// @name V86_TRAP_FIXUP
+// @name TRAP_FIXUPS
 //
-// This macro sets up the debug header in the trap frame.
+// This macro contains out-of-line code for various Trap Frame Fixups, such as:
 //
-// @param None.
-//
-// @remark ebp = PKTRAP_FRAME
-//
-.macro V86_TRAP_FIXUP
-    /* Get V86 segment registers */
-    mov eax, [ebp+KTRAP_FRAME_V86_FS]
-    mov ebx, [ebp+KTRAP_FRAME_V86_GS]
-    mov ecx, [ebp+KTRAP_FRAME_V86_ES]
-    mov edx, [ebp+KTRAP_FRAME_V86_DS]
-
-    /* Restore them into Protected Mode trap frame */
-    mov [ebp+KTRAP_FRAME_FS], ax
-    mov [ebp+KTRAP_FRAME_GS], bx
-    mov [ebp+KTRAP_FRAME_ES], cx
-    mov [ebp+KTRAP_FRAME_DS], dx
-
-    /* Go back to mainline code */
-    jmp 1f
-.endm
-
-//
-// @name DR_TRAP_FIXUP
-//
-// This macro sets up the debug header in the trap frame.
+//  - DR Fixup: Loads and restores DR registers.
+//  - V86 Fixup: Loads and restores V86 segments.
+//  - ABIOS Fixup: Loads and restores the ABIOS state and stack.
 //
 // @param None.
 //
 // @remark ebp = PKTRAP_FRAME
 //
-.macro DR_TRAP_FIXUP
+.macro TRAP_FIXUPS Label, EndLabel, V86Fix, AbiosFix
+Dr_&Label:
+
     /* Check if this was V86 mode */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz 2f
 
     /* Check if it was user mode */
     test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz 3f
+    jz Dr_&EndLabel
 
 2:
     /* Get DR0, 1, 2 */
@@ -304,7 +288,31 @@ _KiUnexpectedInterrupt&Number:
     /* Set them */
     mov dr6, ebx
     mov dr7, ecx
-    jmp 3f
+    jmp Dr_&EndLabel
+
+.if \AbiosFix
+Abios_&Label:
+    UNHANDLED_PATH
+.endif
+
+.if \V86Fix
+V86_&Label:
+
+    /* Get V86 segment registers */
+    mov eax, [ebp+KTRAP_FRAME_V86_FS]
+    mov ebx, [ebp+KTRAP_FRAME_V86_GS]
+    mov ecx, [ebp+KTRAP_FRAME_V86_ES]
+    mov edx, [ebp+KTRAP_FRAME_V86_DS]
+
+    /* Restore them into Protected Mode trap frame */
+    mov [ebp+KTRAP_FRAME_FS], ax
+    mov [ebp+KTRAP_FRAME_GS], bx
+    mov [ebp+KTRAP_FRAME_ES], cx
+    mov [ebp+KTRAP_FRAME_DS], dx
+
+    /* Go back to mainline code */
+    jmp V86_&EndLabel
+.endif
 .endm
 
 //
@@ -423,7 +431,7 @@ _KiUnexpectedInterrupt&Number:
 //              /* Handle trap */
 //              <Your Trap Code Here>
 //
-.macro TRAP_PROLOG Label
+.macro TRAP_PROLOG Label EndLabel
     /* Just to be safe, clear out the HIWORD, since it's reserved */
     mov word ptr [esp+2], 0
 
@@ -474,7 +482,7 @@ _KiUnexpectedInterrupt&Number:
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz V86_&Label
 
-1:
+V86_&EndLabel:
     /* Get current thread */
     mov ecx, PCR[KPCR_CURRENT_THREAD]
     cld
@@ -487,7 +495,7 @@ _KiUnexpectedInterrupt&Number:
     jnz Dr_&Label
 
     /* Set the Trap Frame Debug Header */
-3:
+Dr_&EndLabel:
     SET_TF_DEBUG_HEADER
 .endm
 
@@ -503,7 +511,7 @@ _KiUnexpectedInterrupt&Number:
 //
 // @remark For software interrupts, make sure that a fake INT stack is created.
 //
-.macro INT_PROLOG Label FakeErrorCode
+.macro INT_PROLOG Label EndLabel FakeErrorCode
 
 .if \FakeErrorCode
     /* Save fake error code */
@@ -533,7 +541,7 @@ _KiUnexpectedInterrupt&Number:
     jnz V86_&Label
 
     /* Check if this was kernel mode */
-1:
+V86_&EndLabel:
     cmp word ptr [esp+KTRAP_FRAME_CS], KGDT_R0_CODE
     jz 1f
 
@@ -597,7 +605,7 @@ _KiUnexpectedInterrupt&Number:
     jnz Dr_&Label
 
     /* Set the trap frame debug header */
-3:
+Dr_&EndLabel:
     SET_TF_DEBUG_HEADER
 .endm
 
@@ -616,7 +624,7 @@ _KiUnexpectedInterrupt&Number:
 //
 // @remark None.
 //
-.macro SYSCALL_PROLOG Label
+.macro SYSCALL_PROLOG Label EndLabel
     /* Create a trap frame */
     push 0
     push ebp
@@ -671,7 +679,7 @@ _KiUnexpectedInterrupt&Number:
     jnz Dr_&Label
 
     /* Set the trap frame debug header */
-3:
+Dr_&EndLabel:
     SET_TF_DEBUG_HEADER
 
     /* Enable interrupts */
@@ -690,7 +698,7 @@ _KiUnexpectedInterrupt&Number:
 //
 // @remark None.
 //
-.macro FASTCALL_PROLOG Label
+.macro FASTCALL_PROLOG Label EndLabel
     /* Set FS to PCR */
     mov ecx, KGDT_R0_PCR
     mov fs, cx
@@ -769,7 +777,7 @@ _KiUnexpectedInterrupt&Number:
     jnz Dr_&Label
 
     /* Set the trap frame debug header */
-3:
+Dr_&EndLabel:
     SET_TF_DEBUG_HEADER
 
     /* Enable interrupts */
@@ -791,7 +799,7 @@ _KiUnexpectedInterrupt&Number:
 //
 // @remark None.
 //
-.macro V86_TRAP_PROLOG Label
+.macro V86_TRAP_PROLOG Label EndLabel
 
     /* Skip everything to the error code */
     sub esp, KTRAP_FRAME_ERROR_CODE
@@ -838,7 +846,9 @@ _KiUnexpectedInterrupt&Number:
     mov eax, dr7
     test eax, ~DR7_RESERVED_MASK
     mov [esp+KTRAP_FRAME_DR7], eax
-    // jnz Dr_&Label
+    jnz Dr_&Label
+
+Dr_&EndLabel:
 .endm
 
 //
@@ -869,9 +879,10 @@ ExitBegin:
 
     /* Check if DR registers should be restored */
     test dword ptr [ebp+KTRAP_FRAME_DR7], ~DR7_RESERVED_MASK
-    //jnz V86DebugRestore
+    jnz V86DebugRestore
 
     /* Finish popping the rest of the frame, and return to P-mode */
+V86DebugContinue:
     add esp, 12
     pop edi
     pop esi
@@ -879,6 +890,33 @@ ExitBegin:
     pop ebp
     add esp, 4
     iretd
+
+V86DebugRestore:
+
+    /* Get DR0, 1 */
+    xor ebx, ebx
+    mov esi, [ebp+KTRAP_FRAME_DR0]
+    mov edi, [ebp+KTRAP_FRAME_DR1]
+
+    /* Clear DR 7 */
+    mov dr7, ebx
+
+    /* Get DR2 and load DR0-2 */
+    mov ebx, [ebp+KTRAP_FRAME_DR2]
+    mov dr0, esi
+    mov dr1, edi
+    mov dr2, ebx
+
+    /* Get DR3-7 */
+    mov esi, [ebp+KTRAP_FRAME_DR0]
+    mov edi, [ebp+KTRAP_FRAME_DR1]
+    mov ebx, [ebp+KTRAP_FRAME_DR7]
+
+    /* Load them */
+    mov dr3, esi
+    mov dr6, edi
+    mov dr7, ebx
+    jmp V86DebugContinue
 
 PendingUserApc:
 
@@ -1006,7 +1044,7 @@ PendingUserApc:
 
     /* Check for debug registers */
     test dword ptr [esp+KTRAP_FRAME_DR7], ~DR7_RESERVED_MASK
-    //jnz 2f
+    jnz 2f
 
     /* Check for V86 */
 4:

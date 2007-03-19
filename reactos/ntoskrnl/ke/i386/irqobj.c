@@ -19,6 +19,7 @@
 
 ULONG KiISRTimeout = 55;
 USHORT KiISROverflow = 30000;
+extern ULONG KiChainedDispatch2ndLvl;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -188,11 +189,7 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
     }
 
     /* Sanity check */
-    DPRINT1("Template Size: %lx. Code Size: %lx\n",
-            (ULONG_PTR)&KiInterruptTemplateDispatch -
-            (ULONG_PTR)KiInterruptTemplate,
-            KINTERRUPT_DISPATCH_CODES * 4);
-    ASSERT((ULONG_PTR)&KiInterruptTemplateDispatch -
+    ASSERT((ULONG_PTR)&KiChainedDispatch2ndLvl -
            (ULONG_PTR)KiInterruptTemplate <= (KINTERRUPT_DISPATCH_CODES * 4));
 
     /* Jump to the last 4 bytes */

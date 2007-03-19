@@ -104,6 +104,9 @@ SoftIntHandlerTable2:
     .long _HalpApcInterrupt2ndEntry     /* APC_LEVEL */
     .long _HalpDispatchInterrupt2ndEntry /* DISPATCH_LEVEL */
 
+_UnhandledMsg:
+    .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
+
 /* FUNCTIONS *****************************************************************/
 
 .globl _HalpInitPICs@0
@@ -630,8 +633,7 @@ InvalidSyRaise:
 
 .globl _HalpApcInterrupt
 .func HalpApcInterrupt
-Dr_hapc:    DR_TRAP_FIXUP
-V86_hapc:   V86_TRAP_FIXUP
+TRAP_FIXUPS hapc_a, hapc_t, DoFixupV86, DoFixupAbios
 _HalpApcInterrupt:
 
     /* Create fake interrupt stack */
@@ -641,7 +643,7 @@ _HalpApcInterrupt:
     push eax
 
     /* Enter interrupt */
-    INT_PROLOG hapc, DoPushFakeErrorCode
+    INT_PROLOG hapc_a, hapc_t, DoPushFakeErrorCode
 .endfunc
 
 .globl _HalpApcInterrupt2ndEntry
@@ -679,8 +681,7 @@ DeliverApc:
 
 .globl _HalpDispatchInterrupt
 .func HalpDispatchInterrupt
-Dr_hdpc:    DR_TRAP_FIXUP
-V86_hdpc:   V86_TRAP_FIXUP
+TRAP_FIXUPS hdpc_a, hdpc_t, DoFixupV86, DoFixupAbios
 _HalpDispatchInterrupt:
 
     /* Create fake interrupt stack */
@@ -690,7 +691,7 @@ _HalpDispatchInterrupt:
     push eax
 
     /* Enter interrupt */
-    INT_PROLOG hdpc, DoPushFakeErrorCode
+    INT_PROLOG hdpc_a, hdpc_t, DoPushFakeErrorCode
 .endfunc
 
 .globl _HalpDispatchInterrupt2ndEntry

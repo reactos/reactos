@@ -18,6 +18,9 @@ _HalpLastPerfCounterHigh:   .long 0
 _HalpPerfCounterLow:        .long 0
 _HalpPerfCounterHigh:       .long 0
 
+_UnhandledMsg:
+    .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
+
 /* FUNCTIONS *****************************************************************/
 
 .globl _KeStallExecutionProcessor@4
@@ -213,12 +216,11 @@ InvalidCount:
 
 .globl _HalpClockInterrupt@0
 .func HalpClockInterrupt@0
-V86_hci: V86_TRAP_FIXUP
-Dr_hci:  DR_TRAP_FIXUP
+TRAP_FIXUPS hci_a, hci_t, DoFixupV86, DoFixupAbios
 _HalpClockInterrupt@0:
 
     /* Enter trap */
-    INT_PROLOG hci, DoPushFakeErrorCode
+    INT_PROLOG hci_a, hci_t, DoPushFakeErrorCode
 
     /* Push vector and make stack for IRQL */
     push 0x30
