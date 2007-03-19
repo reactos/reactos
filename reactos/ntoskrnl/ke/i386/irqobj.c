@@ -9,11 +9,16 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES ****************************************************************/
+/* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+
+/* GLOBALS *******************************************************************/
+
+ULONG KiISRTimeout = 55;
+USHORT KiISROverflow = 30000;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -172,6 +177,8 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
     Interrupt->ShareVector = ShareVector;
     Interrupt->Number = ProcessorNumber;
     Interrupt->FloatingSave = FloatingSave;
+    Interrupt->TickCount = (ULONG)-1;
+    Interrupt->DispatchCount = (ULONG)-1;
 
     /* Loop the template in memory */
     for (i = 0; i < KINTERRUPT_DISPATCH_CODES; i++)
@@ -179,6 +186,14 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
         /* Copy the dispatch code */
         *DispatchCode++ = KiInterruptTemplate[i];
     }
+
+    /* Sanity check */
+    DPRINT1("Template Size: %lx. Code Size: %lx\n",
+            (ULONG_PTR)&KiInterruptTemplateDispatch -
+            (ULONG_PTR)KiInterruptTemplate,
+            KINTERRUPT_DISPATCH_CODES * 4);
+    ASSERT((ULONG_PTR)&KiInterruptTemplateDispatch -
+           (ULONG_PTR)KiInterruptTemplate <= (KINTERRUPT_DISPATCH_CODES * 4));
 
     /* Jump to the last 4 bytes */
     Patch = (PULONG)((ULONG_PTR)Patch +
@@ -216,7 +231,6 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
         (Interrupt->SynchronizeIrql < Irql) ||
         (Interrupt->FloatingSave))
     {
-        DPRINT1("Invalid interrupt object\n");
         return FALSE;
     }
 
@@ -254,7 +268,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
                 (Dispatch.Interrupt->Mode == Interrupt->Mode))
         {
             /* The vector is shared and the interrupts are compatible */
-            ASSERT(FALSE); // FIXME: NOT YET SUPPORTED/TESTED
+            while (TRUE); // FIXME: NOT YET SUPPORTED/TESTED
             Interrupt->Connected = Connected = TRUE;
             ASSERT(Irql <= SYNCH_LEVEL);
 
@@ -274,6 +288,14 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     /* Unlock the dispatcher and revert affinity */
     KiReleaseDispatcherLock(OldIrql);
     KeRevertToUserAffinityThread();
+
+    /* Check if we failed while trying to connect */
+    if ((Connected) && (Error))
+    {
+        DPRINT1("HalEnableSystemInterrupt failed\n");
+        KeDisconnectInterrupt(Interrupt);
+        Connected = FALSE;
+    }
 
     /* Return to caller */
     return Connected;

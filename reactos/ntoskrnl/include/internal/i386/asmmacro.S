@@ -353,7 +353,7 @@ _KiUnexpectedInterrupt&Number:
 
     /* Get the current thread */
 1:
-    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, PCR[KPCR_CURRENT_THREAD]
 
     /* Make it non-alerted */
     mov byte ptr [ebx+KTHREAD_ALERTED], 0
@@ -440,7 +440,7 @@ _KiUnexpectedInterrupt&Number:
     mov fs, bx
 
     /* Save exception list and bogus previous mode */
-    push fs:[KPCR_EXCEPTION_LIST]
+    push PCR[KPCR_EXCEPTION_LIST]
     push -1
 
     /* Save volatiles and segment registers */
@@ -476,7 +476,7 @@ _KiUnexpectedInterrupt&Number:
 
 1:
     /* Get current thread */
-    mov ecx, [fs:KPCR_CURRENT_THREAD]
+    mov ecx, PCR[KPCR_CURRENT_THREAD]
     cld
 
     /* Flush DR7 */
@@ -555,10 +555,10 @@ _KiUnexpectedInterrupt&Number:
 
 1: 
     /* Get the previous exception list */
-    mov ebx, [fs:KPCR_EXCEPTION_LIST]
+    mov ebx, PCR[KPCR_EXCEPTION_LIST]
 
     /* Set the exception handler chain terminator */
-    mov dword ptr [fs:KPCR_EXCEPTION_LIST], -1
+    mov dword ptr PCR[KPCR_EXCEPTION_LIST], -1
 
     /* Save the previous exception list */
     mov [esp+KTRAP_FRAME_EXCEPTION_LIST], ebx
@@ -579,7 +579,7 @@ _KiUnexpectedInterrupt&Number:
     and dword ptr [esp+KTRAP_FRAME_ERROR_CODE], 0
 
     /* Get the current thread and clear direction flag */
-    mov ecx, [fs:KPCR_CURRENT_THREAD]
+    mov ecx, PCR[KPCR_CURRENT_THREAD]
     cld
 
     /* Flush DR7 */
@@ -631,13 +631,13 @@ _KiUnexpectedInterrupt&Number:
     mov fs, bx
 
     /* Get a pointer to the current thread */
-    mov esi, [fs:KPCR_CURRENT_THREAD]
+    mov esi, PCR[KPCR_CURRENT_THREAD]
 
     /* Save the previous exception list */
-    push [fs:KPCR_EXCEPTION_LIST]
+    push PCR[KPCR_EXCEPTION_LIST]
 
     /* Set the exception handler chain terminator */
-    mov dword ptr [fs:KPCR_EXCEPTION_LIST], -1
+    mov dword ptr PCR[KPCR_EXCEPTION_LIST], -1
 
     /* Save the old previous mode */
     push [esi+KTHREAD_PREVIOUS_MODE]
@@ -705,7 +705,7 @@ _KiUnexpectedInterrupt&Number:
     mov es, cx
 
     /* Set the current stack to Kernel Stack */
-    mov ecx, [fs:KPCR_TSS]
+    mov ecx, PCR[KPCR_TSS]
     mov esp, [ecx+KTSS_ESP0]
 
     /* Set up a fake INT Stack. */
@@ -728,7 +728,7 @@ _KiUnexpectedInterrupt&Number:
     push KGDT_R3_TEB + RPL_MASK
 
     /* Save pointer to our PCR */
-    mov ebx, [fs:KPCR_SELF]
+    mov ebx, PCR[KPCR_SELF]
 
     /* Get a pointer to the current thread */
     mov esi, [ebx+KPCR_CURRENT_THREAD]
@@ -831,7 +831,7 @@ _KiUnexpectedInterrupt&Number:
     cld
 
     /* Save the exception list */
-    mov eax, [fs:KPCR_EXCEPTION_LIST]
+    mov eax, PCR[KPCR_EXCEPTION_LIST]
     mov [esp+KTRAP_FRAME_EXCEPTION_LIST], eax
 
     /* Check if we need debugging */
@@ -854,7 +854,7 @@ _KiUnexpectedInterrupt&Number:
 
     /* Get the current thread and make it unalerted */
 ExitBegin:
-    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, PCR[KPCR_CURRENT_THREAD]
     mov byte ptr [ebx+KTHREAD_ALERTED], 0
 
     /* Check if it has User-mode APCs pending */
@@ -954,7 +954,7 @@ PendingUserApc:
     jnz 1f
 
     /* Assert exception list */
-    cmp dword ptr fs:[KPCR_EXCEPTION_LIST], 0
+    cmp dword ptr PCR[KPCR_EXCEPTION_LIST], 0
     jnz 2f
 
 1:
@@ -975,7 +975,7 @@ PendingUserApc:
 #endif
 
     /* Restore it */
-    mov [fs:KPCR_EXCEPTION_LIST], edx
+    mov PCR[KPCR_EXCEPTION_LIST], edx
 
 .if \RestorePreviousMode
     /* Get previous mode */
@@ -990,7 +990,7 @@ PendingUserApc:
 #endif
 
     /* Restore the previous mode */
-    mov esi, [fs:KPCR_CURRENT_THREAD]
+    mov esi, PCR[KPCR_CURRENT_THREAD]
     mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], cl
 .else
 
@@ -1210,4 +1210,118 @@ FastExit:
     mov esp, [esp]
     iret
 .endm
+
+//
+// @name INT_EPILOG
+// 
+// This macro creates an epilogue for leaving any system trap.
+// It is used for exiting system calls, exceptions, interrupts and generic
+// traps.
+//
+// @param Spurious - TRUE if the interrupt was unexpected and spurious.
+//
+// @remark None.
+//
+.macro INT_EPILOG Spurious
+
+.if \Spurious
+    /* Just exit the trap */
+    jmp _Kei386EoiHelper@0
+.else
+    /* Disable interrupts */
+    cli
+
+    /* End the interrupt and do EOI */
+    call _HalEndSystemInterrupt@8
+    jmp _Kei386EoiHelper@0
+.endif
+.endm
+
+#ifdef DBG
+
+.macro VERIFY_INT Label
+    /* Get the current time and mask it to 192 ticks */
+    mov eax, _KeTickCount
+    and eax, 0xC0
+
+    /* Check if we're in the same tick area */
+    cmp eax, dword ptr [edi+KINTERRUPT_TICK_COUNT]
+    jg VfRst_&Label
+    jl VfWrap_&Label
+
+    /* If we got here, then our count is too large */
+    dec word ptr [edi+KINTERRUPT_DISPATCH_COUNT]
+    jz VfOvr_&Label
+Vf_&Label:
+.endm
+
+.macro VERIFY_INT_END Label, Info
+VfOvr_&Label:
+
+    /* Decrement the dispatch count and check if we should bug check */
+    dec word ptr [edi+KINTERRUPT_DISPATCH_COUNT+2]
+    jz 1f
+
+    /* Update the tick count */
+    add eax, 0x40
+    mov [edi+KINTERRUPT_TICK_COUNT], eax
+    jmp VfRstDef_&Label
+
+.1:
+    /* Check if the debugger is enabled */
+    cmp byte ptr __KdDebuggerEnabled, 0
+    jnz 1f
+
+    /* It isn't, bugcheck */
+    push Info
+    push edi
+    push [edi+KINTERRUPT_SERVICE_CONTEXT]
+    push [edi+KINTERRUPT_SERVICE_ROUTINE]
+    push HARDWARE_INTERRUPT_STORM
+    call _KeBugCheckEx@20
+
+1:
+    /* Debugger enabled, do a debug print + break instead */
+    push [edi+KINTERRUPT_SERVICE_ROUTINE]
+    push offset _IsrOverflowMsg
+    call _DbgPrint
+    add esp, 8
+    int 3
+
+    /* Breakpoint handled, get the new tick count */
+    mov eax, _KeTickCount
+    and eax, 0xC0
+
+VfRst_&Label:
+    /* Reset tick count */
+    mov dword ptr [edi+KINTERRUPT_TICK_COUNT], eax
+    mov word ptr [edi+KINTERRUPT_DISPATCH_COUNT+2], 64
+
+VfRstDef_&Label:
+    /* Put default overflow count and continue */
+    mov ax, _KiISROverflow
+    mov word ptr [edi+KINTERRUPT_DISPATCH_COUNT], ax
+    jmp Vf_&Label
+
+VfWrap_&Label:
+    /* Check if we wrapped */
+    add eax, 0x40
+    cmp eax, [edi+KINTERRUPT_TICK_COUNT]
+    je Vf_&Label
+
+    /* We did, start over */
+    mov eax, _KeTickCount
+    jmp VfRst_&Label
+.endm
+
+#else
+
+/* We don't verify interrupts on retail builds */
+.macro VERIFY_INT Label
+.endm
+.macro VERIFY_INT_END Label, Info
+.endm
+
+#endif
+
 

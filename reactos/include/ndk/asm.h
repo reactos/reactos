@@ -222,10 +222,12 @@ Author:
 //
 #define KINTERRUPT_SERVICE_ROUTINE              0x0C
 #define KINTERRUPT_SERVICE_CONTEXT              0x10
+#define KINTERRUPT_TICK_COUNT                   0x18
 #define KINTERRUPT_ACTUAL_LOCK                  0x1C
 #define KINTERRUPT_IRQL                         0x20
 #define KINTERRUPT_VECTOR                       0x24
 #define KINTERRUPT_SYNCHRONIZE_IRQL             0x29
+#define KINTERRUPT_DISPATCH_COUNT               0x38
 
 //
 // KGDTENTRY Offsets
@@ -546,6 +548,7 @@ Author:
 #define IRQL_GT_ZERO_AT_SYSTEM_SERVICE          0x4A
 #define UNEXPECTED_KERNEL_MODE_TRAP             0x7F
 #define ATTEMPTED_SWITCH_FROM_DPC               0xB8
+#define HARDWARE_INTERRUPT_STORM                0xF2
 
 //
 // IRQL Levels
@@ -606,4 +609,5 @@ Author:
 #define PRIMARY_VECTOR_BASE                     0x30 // FIXME: HACK
 #define MAXIMUM_IDTVECTOR                       0xFF
 #endif // !_ASM_H
+
 

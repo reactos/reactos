@@ -622,14 +622,14 @@ typedef struct _KINTERRUPT
     KSPIN_LOCK SpinLock;
     ULONG TickCount;
     PKSPIN_LOCK ActualLock;
-    PVOID DispatchAddress;
+    PKINTERRUPT_ROUTINE DispatchAddress;
     ULONG Vector;
     KIRQL Irql;
     KIRQL SynchronizeIrql;
     BOOLEAN FloatingSave;
     BOOLEAN Connected;
-    CHAR Number;
-    UCHAR ShareVector;
+    CCHAR Number;
+    BOOLEAN ShareVector;
     KINTERRUPT_MODE Mode;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     KINTERRUPT_POLARITY Polarity;
