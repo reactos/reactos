@@ -11,6 +11,11 @@
 #include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
 
+/* GLOBALS *******************************************************************/
+
+_DpcTimeoutMsg:
+    .asciz "\n*** DPC routine > 1 sec --- This is not a break in KeUpdateSystemTime\n"
+
 /* FUNCTIONS ******************************************************************/
 
 .globl _KiComputeTimerTableIndex@8
@@ -93,7 +98,32 @@ _KeUpdateRunTime@4:
 
     /* At dispatch, increase DPC time */
     inc dword ptr [eax+KPCR_PRCB_DPC_TIME]
+#ifdef DBG
+    /* Update the DPC time */
     inc dword ptr [eax+KPCR_PRCB_DEBUG_DPC_TIME]
+
+    /* Check if we've timed out */
+    mov edx, _KiDPCTimeout
+    cmp dword ptr [eax+KPCR_PRCB_DEBUG_DPC_TIME], edx
+    jc AfterSet
+
+    /* We did, print out a message */
+    push offset _DpcTimeoutMsg
+    call _DbgPrint
+    add esp, 4
+
+    /* Check if the debugger is enabled */
+    cmp byte ptr __KdDebuggerEnabled, 0
+    je ResetDpcTime
+
+    /* Breakpoint */
+    call _DbgBreakPoint@0
+
+ResetDpcTime:
+    /* Restore state */
+    mov eax, PCR[KPCR_SELF]
+    mov dword ptr [eax+KPCR_PRCB_DEBUG_DPC_TIME], 0
+#endif
     jmp AfterSet
 
 AboveDispatch:

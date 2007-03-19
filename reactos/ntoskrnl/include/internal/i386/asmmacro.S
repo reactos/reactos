@@ -700,10 +700,8 @@ Dr_&EndLabel:
 //
 .macro FASTCALL_PROLOG Label EndLabel
     /* Set FS to PCR */
-    mov ecx, KGDT_R0_PCR
-    mov fs, cx
-    //push KGDT_R0_PCR
-    //pop fs
+    push KGDT_R0_PCR
+    pop fs
 
     /* Set user selector */
     mov ecx, KGDT_R3_DATA | RPL_MASK

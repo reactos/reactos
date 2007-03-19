@@ -23,6 +23,22 @@ extern ULONG KiChainedDispatch2ndLvl;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+BOOLEAN
+NTAPI
+KeDisableInterrupts(VOID)
+{
+    ULONG Flags = 0;
+    BOOLEAN Return;
+
+    /* Get EFLAGS and check if the interrupt bit is set */
+    Ke386SaveFlags(Flags);
+    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
+
+    /* Disable interrupts */
+    _disable();
+    return Return;
+}
+
 VOID
 NTAPI
 KiGetVectorDispatch(IN ULONG Vector,
