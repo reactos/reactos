@@ -23,7 +23,8 @@ IDS_SwitchN_NoI,     "Parametro errato: /n va usato con /i"
 
 IDS_DllNotLoaded,    "LoadLibrary('%s') fallita.\nGetLastError restituisce 0x%08x."
 
-IDS_MissingEntry,    "%s èstato caricato, ma manca %s.\n\n%s potrebbe essere non esportato, oppure si trova in memoria una versione corrotta della versione di %s. Valutate l'uso di PView per individuarla e rimuoverla."
+IDS_MissingEntry,    "%s è stato caricato, ma manca %s.\n\n%s potrebbe essere \
+non esportato, oppure si trova in memoria una versione corrotta della versione di %s. Valutate l'uso di PView per individuarla e rimuoverla."
 
 IDS_FailureMessage,  "%s in %s è fallita.\nIl codice di ritorno è: 0x%08x"
 

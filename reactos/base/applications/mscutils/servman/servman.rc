@@ -33,5 +33,9 @@ IDB_HELP    BITMAP DISCARDABLE "res/help.bmp"
 IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
 
 
+//#include "de-DE.rc"
 #include "en-US.rc"
+#include "id-ID.rc"
+#include "it-IT.rc"
+#include "ru-RU.rc"
 

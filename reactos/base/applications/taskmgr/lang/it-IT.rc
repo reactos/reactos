@@ -76,7 +76,7 @@ END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "Affianca &Orizontalmente",    ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "Affianca &Orizzontalmente",   ID_WINDOWS_TILEHORIZONTALLY
     MENUITEM "Affianca &Verticalmente",     ID_WINDOWS_TILEVERTICALLY
     MENUITEM "&Minimizza",                  ID_WINDOWS_MINIMIZE
     MENUITEM "Ma&ssimizza",                 ID_WINDOWS_MAXIMIZE
@@ -103,7 +103,7 @@ BEGIN
         MENUITEM "&Passa a",                    ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Porta in primo piano",       ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "Affianca &Orizontalmente",    ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Affianca &Orizzontalmente",   ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Affianca &Verticalmente",     ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimizza",                  ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ssimizza",                 ID_WINDOWS_MAXIMIZE
@@ -543,8 +543,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_FILE_NEW             "Esegue  un nuovo programma"
-    ID_OPTIONS_ALWAYSONTOP  "Task Manager rimane di fronta a ogni altra finestra a meno che sia minimizzato"
+    ID_FILE_NEW             "Esegue un nuovo programma"
+    ID_OPTIONS_ALWAYSONTOP  "Task Manager rimane di fronte a ogni altra finestra a meno che sia minimizzato"
     ID_OPTIONS_MINIMIZEONUSE
                             "Task Manager è minimizzato quando viene eseguita una operazione PassaA"
     ID_OPTIONS_HIDEWHENMINIMIZED "Nasconde Task Manager Quando è minimizzato"
@@ -572,13 +572,13 @@ BEGIN
     ID_FILE_EXIT            "Esce da Task Manager"
     ID_OPTIONS_SHOW16BITTASKS
                             "Mostra i task a 16-bit con ntvdm.exe associato"
-    ID_VIEW_SELECTCOLUMNS   "Seleziona quali colonne saranno visibili njella pagina dei processi"
+    ID_VIEW_SELECTCOLUMNS   "Seleziona quali colonne saranno visibili nella pagina dei processi"
     ID_VIEW_SHOWKERNELTIMES "Mostra il tempo di kernel nel grafico delle prestazioni"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
                             "Un singolo grafico mostra l'uso di cpu totale"
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Ogni CPU ha il suo grafico"
     ID_APPLICATION_PAGE_SWITCHTO
-                            "Porta un task in vista e gli da il focus"
+                            "Porta un task in vista e gli dà il focus"
 END
 
 STRINGTABLE DISCARDABLE
@@ -602,7 +602,7 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Assegna al processo la classe di priorità BELOW NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Assegna al processo la classe di priorità LOW"
-  IDS_LICENSE "Questo programma è software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma è distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di VENDIBILITA' o ADEGUATEZZA PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non è cosi' scrivete a 'Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA'."
+  IDS_LICENSE "Questo programma è software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma è distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di COMMERCIABILITÀ o UTILIZZABILITÀ PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non è cosi' scrivete a 'Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA'."
 END
 
 
@@ -659,7 +659,7 @@ BEGIN
     IDS_MSG_WARNINGTERMINATING    "ATTENZIONE: Arrestare un processo può provocare\n effetti indesiderati compresa la perdita di dati o l'instabilità del sistema. \nIl processo non potrà salvare il prorio stato o i dati\nprima del suo arresto.\nSei sicuro di voler procedere?"
     IDS_MSG_UNABLETERMINATEPRO    "Impossibile arrestare il Processo"
     IDS_MSG_UNABLECHANGEPRIORITY  "Impossibile cambiare la Priorità"
-    IDS_MSG_WARNINGCHANGEPRIORITY "ATTENZIONE: La modifica della classe di prioritàpuò provocare \n effetti indesiderati compresa la perdita di dati o l'instabilità del sistema.\nSei sicuro di voler procedere?"
+    IDS_MSG_WARNINGCHANGEPRIORITY "ATTENZIONE: La modifica della classe di priorità può provocare\n effetti indesiderati compresa la perdita di dati o l'instabilità del sistema.\nSei sicuro di voler procedere?"
     IDS_MSG_TRAYICONCPUUSAGE      "Uso CPU: %d%%"
     IDS_STATUS_MEMUSAGE           "Uso Mem: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "Uso CPU: %3d%%"

@@ -58,21 +58,29 @@ BEGIN
 	END
 	POPUP "&Modifica" 
 	BEGIN
-		MENUITEM "&Anulla\tCtrl+Z",     CMD_UNDO
+		MENUITEM "&Annulla\tCtrl+Z",      CMD_UNDO
 		MENUITEM SEPARATOR
-		MENUITEM "&Taglia\tCtrl+X",      CMD_CUT
-		MENUITEM "&Copia\tCtrl+C",     CMD_COPY
-		MENUITEM "I&ncolla\tCtrl+V",    CMD_PASTE
-		MENUITEM "E&limina\tDel",      CMD_DELETE
+		MENUITEM "&Taglia\tCtrl+X",       CMD_CUT
+		MENUITEM "&Copia\tCtrl+C",        CMD_COPY
+		MENUITEM "I&ncolla\tCtrl+V",      CMD_PASTE
+		MENUITEM "E&limina\tDel",         CMD_DELETE
 		MENUITEM SEPARATOR
-		MENUITEM "Tr&ova\tCtrl+F",   CMD_SEARCH
-		MENUITEM "T&rova successivo\tF3",  CMD_SEARCH_NEXT
+		MENUITEM "Tr&ova\tCtrl+F",   	  CMD_SEARCH
+		MENUITEM "T&rova successivo\tF3", CMD_SEARCH_NEXT
+		MENUITEM "Sostituisci\tCtrl+H",   CMD_REPLACE
+		MENUITEM "Vai a...\tCtrl+G",      CMD_GOTO
 		MENUITEM SEPARATOR
 		MENUITEM "Sele&ziona tutto\tCtrl+A",       CMD_SELECT_ALL
 		MENUITEM "Ora/&Data\tF5",    CMD_TIME_DATE
-		MENUITEM SEPARATOR
-		MENUITEM "&A campo automatico",  CMD_WRAP
-		MENUITEM "&Imposta carattere...",          CMD_FONT
+	END
+	POPUP "F&ormato"
+	BEGIN
+		MENUITEM "&A capo automatico",    CMD_WRAP
+		MENUITEM "&Imposta carattere...", CMD_FONT
+	END
+	POPUP "&Visualizza"
+	BEGIN
+		MENUITEM "&Barra di stato",    CMD_STATUSBAR
 	END
 	POPUP "&?" 
 	BEGIN
@@ -110,6 +118,31 @@ EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD |
 DEFPUSHBUTTON "OK",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
 PUSHBUTTON    "Annulla",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "&Aiuto",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
+}
+
+/* Dialog `Encoding' */
+DIALOG_ENCODING DIALOG 0, 0, 256, 44
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Codifica"
+{
+COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Codifica:",0x155,5,2,41,12
+COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Fine linea:",0x156,5,20,41,12
+}
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOG 0,0,165,50
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Vai a riga"
+{
+EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Numero di riga:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Annulla", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 }
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
@@ -155,9 +188,20 @@ STRING_TOOLARGE,                                "Il file '%s' è troppo grande pe
 Per favore usare un altro editore."
 STRING_NOTEXT,                                  "Non è stato inserito alcun testo. \
 \nPer favore digitare qualcosa e riprovare"
-STRING_DOESNOTEXIST,                            "Il file '%s'\nnon esiste\nCreare un nuovo file ?"
-STRING_NOTSAVED,                                "Il file '%s'\nè stato modificato\nSalvare le modifiche ?"
+STRING_DOESNOTEXIST,                            "Il file '%s'\nnon esiste\n\n \
+Creare un nuovo file ?"
+STRING_NOTSAVED,                                "Il file '%s'\nè stato modificato\n \
+Salvare le modifiche ?"
 STRING_NOTFOUND,                                        "'%s' non è stato trovato."
-STRING_OUT_OF_MEMORY,                   "Memoria insufficente per completare questa operazione.\nChiudere una o più applicazioni per aumentare la quantità\n di memoria libera."
-
+STRING_OUT_OF_MEMORY,                   "Memoria insufficente per completare \
+questa operazione. \nChiudere una o più applicazioni per aumentare la quantità \
+di memoria libera."
+STRING_CANNOTFIND                               "Impossibile trovare '%s'"
+STRING_ANSI,                                    "ANSI"
+STRING_UNICODE,                                 "Unicode"
+STRING_UNICODE_BE,                              "Unicode (big endian)"
+STRING_UTF8,                                    "UTF-8"
+STRING_CRLF,                                    "Windows"
+STRING_LF,                                      "Unix"
+STRING_CR,                                      "Mac"
 }
