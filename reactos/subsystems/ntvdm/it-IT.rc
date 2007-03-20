@@ -1,0 +1,17 @@
+#include "resource.h"
+/*
+* PROJECT:     ReactOS Virtual DOS Machine
+* LICENSE:     GPL - See COPYING in the top level directory
+* FILE:        subsystems/ntvdm/it-IT.rc
+* PURPOSE:     Italian Translation of subsystems/ntvdm/en-US.rc
+* PROGRAMMERS: Copyright (C) 2005 Magnus Olsen
+*              Copyright (C) 2007 Daniele Forsi (dforsi at gmail.com) Italian Translation
+*/
+
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+STRINGTABLE DISCARDABLE
+{
+
+STRING_WelcomeMsg,      "Supporto di ReactOS per la macchina virtuale DOS.\n"
+STRING_PromptMsg,       "Digitare r<invio> per avviare, s<invio> per arrestare o q<invio> per abbandonare ora."
+}
