@@ -1,0 +1,160 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+
+IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 250, 220
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Gestione risparmio energia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  ICON IDI_ACDC, IDI_ACDC, 7,7,28,22
+  LTEXT "Sgegli lo schema di gestione dell'energia con le impostazioni piu' appropriate per questo computer. La modifica delle impostazioni seguenti altera lo schema selezionato.",
+	-1,45,13,194,36
+  GROUPBOX "Schema di gestione dell'energia", -1, 7,57,240,46
+  COMBOBOX IDC_ENERGYLIST, 14,70,224,92, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  PUSHBUTTON "&Salva come...", -1, 100,85,75,15,WS_DISABLED
+  PUSHBUTTON "&Cancella", -1, 180,85,55,15,WS_DISABLED
+  GROUPBOX "sconosciuto", IDC_GRPDETAIL, 7,108,240,105
+  LTEXT "Quando il computer è:",IDC_SAT,15,120,60,10
+  LTEXT "Alimentazione da rete",IDC_SAC,100,120,45,15
+  ICON IDI_AC, IDC_IAC, 75,115,25,15
+  LTEXT "Alimentazione a batterie",IDC_SDC,197,120,45,15
+  ICON IDI_DC, IDC_IDC, 165,115,25,15
+  LTEXT "Spegni il &monitor:",IDC_MONITOR,15,145,80,10
+  COMBOBOX IDC_MONITORACLIST, 100,140,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_MONITORDCLIST, 175,140,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Spegni i d&ischi fissi:",IDC_DISK,15,160,80,10
+  COMBOBOX IDC_DISKACLIST, 100,155,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_DISKDCLIST, 175,155,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Stadby:",IDC_STANDBY,15,180,80,10
+  COMBOBOX IDC_STANDBYACLIST, 100,175,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_STANDBYDCLIST, 175,175,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Sospensione:",IDC_HYBERNATE,15,195,80,10
+  COMBOBOX IDC_HYBERNATEACLIST, 100,190,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_HYBERNATEDCLIST, 175,190,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEALARMS DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Allarmi"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Allarme di batteria bassa",-1,10,15,235,95
+    CONTROL         "Attiva l'Allarme di batteria bassa quando il livello batteria è:",IDC_ALARM1,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,25,180,15
+    LTEXT           "sconosciuto",IDC_ALARMVALUE1,200,25,40,10
+    LTEXT           "0%",-1,20,40,15,15
+    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ | 
+                    TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
+    LTEXT           "100%",-1,215,40,25,10
+    PUSHBUTTON      "Azione allarmi...",-1,20,70,70,15,WS_DISABLED
+    LTEXT           "Notifiche:",-1,95,70,50,10
+    LTEXT           "Unknown",IDC_ALARMMSG1,145,70,95,10
+    LTEXT           "Azione:",-1,95,80,45,10
+    LTEXT           "Unknown",IDC_ALARMAKTION1,145,80,95,10
+    LTEXT           "Esegui:",-1,95,90,50,10
+    LTEXT           "Unknown",IDC_ALARMPROG1,150,90,40,10
+
+    GROUPBOX        "Allarme critico di batteria",-1,10,115,235,95
+    CONTROL         "Attiva l'Allarme di batteria bassa quando il livello batteria è:",IDC_ALARM2,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,125,180,15
+    LTEXT           "unknown",IDC_ALARMVALUE2,200,125,40,10
+    LTEXT           "0%",-1,20,140,15,15
+    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ | 
+                    TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
+    LTEXT           "100%",-1,215,140,25,10
+    PUSHBUTTON      "Azione allarmi...",-1,20,170,70,15,WS_DISABLED
+    LTEXT           "Notifiche:",-1,95,170,50,10
+    LTEXT           "Unknown",IDC_ALARMMSG2,145,170,95,10
+    LTEXT           "Azione:",-1,95,180,45,10
+    LTEXT           "Unknown",IDC_ALARMAKTION2,145,180,95,10
+    LTEXT           "Esegui:",-1,95,190,50,10
+    LTEXT           "Unknown",IDC_ALARMPROG2,150,190,40,10
+END
+
+IDD_PROPPAGEADVANCED DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_ACDC,IDI_ACDC,5,5,20,20
+    LTEXT           "Scegli le impostazioni di risparmi energia che intendi usare.",-1,30,5,205,20
+    GROUPBOX        "Opzioni",-1,5,35,225,55
+    CONTROL         "Mostra sempre l'icona nella barra dei task",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,45,200,10
+    CONTROL         "Chiedi la password al ripristino dallo standby",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,55,200,10
+    CONTROL         "Attenua il video durante il funzionamento a batteria.",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,65,200,10
+    GROUPBOX        "Pulsanti di gestione",-1,5,100,230,105
+    LTEXT           "Quando chiudo lo schermo del computer portatile:", IDC_SLIDCLOSE,10,110,210,10
+    COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Quando premo il pulsante di alimentazione del computer:", IDC_SPOWERBUTTON,10,135,210,10
+    COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Quando premo il pulsante di sospensione del computer:", IDC_SSLEEPBUTTON,10,165,210,10
+    COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEHIBERNATE DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Hibernate"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
+    LTEXT           "quando il computer viene sospeso viene salvato il contenuto della ram su disco e poi si spegne. Alla riaccensione si ripresenta nello stato in cui si trovava. ",
+                    -1,35,5,195,35
+    GROUPBOX        "Sospensione",-1,5,45,235,25
+    CONTROL         "Abilita la Sospensione",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,55,210,10
+    GROUPBOX        "Spazio su disco per la Sospensione",-1,5,80,240,60
+    LTEXT           "Spazio su disco libero:",-1,10,90,100,10
+    LTEXT           "Unknown",IDC_FREESPACE,120,90,70,10
+    LTEXT           "Spazio su disco richiesto per la sospensione:",-1,10,100,115,10
+    LTEXT           "Unknown",IDC_SPACEFORHIBERNATEFILE,120,100,55,10
+    LTEXT           "Deve essere liberato dello spazio su disco prima che il computer possa essere sospeso. ",IDC_TOLESSFREESPACE,10,115,220,20
+END
+
+STRINGTABLE
+BEGIN
+  IDS_CPLNAME_1 "Opzioni di gestione dell'energia"
+  IDS_CPLDESCRIPTION_1 "Configura le impostazioni per il risparmio enegetico su questo computer."
+  IDS_PROCENT "%i%%"
+  IDS_SOUND "Suoni"
+  IDS_TEXT "Testo"
+  IDS_CONFIG1 "Impostazioni per lo schema %1 "
+  IDS_CONFIG2 "Impostazioni avanzate per %1"
+
+  IDS_SIZEBYTS "%i bytes"
+  IDS_SIZEMB "%i MB"
+
+  IDS_NOACTION "Nessuna azione"
+
+  IDS_PowerActionNone1 "Nessuna azione"
+  IDS_PowerActionUnknown "Unknown"
+  IDS_PowerActionSleep "Stand by"
+  IDS_PowerActionHibernate "Sospendi"
+  IDS_PowerActionShutdown "Ferma"
+  IDS_PowerActionRestart "Riavvia"
+  IDS_PowerActionShutdownOff "Ferma e spegni"
+  IDS_PowerActionWarmEject "Chiedimi cosa fare"
+  IDS_PowerActionNone2 "Nessuna"
+
+  IDS_TIMEOUT1 "Dopo 1 minuto"
+  IDS_TIMEOUT2 "Dopo 2 minuti"
+  IDS_TIMEOUT3 "Dopo 3 minuti"
+  IDS_TIMEOUT4 "Dopo 5 minuti"
+  IDS_TIMEOUT5 "Dopo 10 minuti"
+  IDS_TIMEOUT6 "Dopo 15 minuti"
+  IDS_TIMEOUT7 "Dopo 20 minuti"
+  IDS_TIMEOUT8 "Dopo 25 minuti"
+  IDS_TIMEOUT9 "Dopo 30 minuti"
+  IDS_TIMEOUT10 "Dopo 45 minuti"
+  IDS_TIMEOUT11 "Dopo 1 hour"
+  IDS_TIMEOUT12 "Dopo 2 hours"
+  IDS_TIMEOUT13 "Dopo 3 hours"
+  IDS_TIMEOUT14 "Dopo 4 hours"
+  IDS_TIMEOUT15 "Dopo 5 hours"
+  IDS_TIMEOUT16 "Mai"
+END
+

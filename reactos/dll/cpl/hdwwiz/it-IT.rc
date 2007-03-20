@@ -1,0 +1,7 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+
+STRINGTABLE
+BEGIN
+	IDS_CPLNAME "Aggiungi hardware"
+	IDS_CPLDESCRIPTION "Aggiungi hardware al computer."
+END

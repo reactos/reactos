@@ -10,7 +10,7 @@ BEGIN
     CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
                     WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
-    LTEXT           "Seleziona un immagina da usare come sfondo per il tuo desktop:",
+    LTEXT           "Seleziona un immagine da usare come sfondo per il tuo desktop:",
                     IDC_STATIC, 8, 103, 180, 9
     PUSHBUTTON      "&Esplora...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
     PUSHBUTTON      "&Colore...", IDC_COLOR_BUTTON, 188, 177, 50, 15
@@ -47,7 +47,7 @@ BEGIN
     LTEXT           "minuti prima di mostrare lo screen saver.",
                     IDC_STATIC,70, 111, 147, 9
 
-    GROUPBOX        "&Impostazioni del monitore per il risparmio energetico",
+    GROUPBOX        "&Impostazioni del monitor per il risparmio energetico",
                     IDC_SCREENS_DUMMY2, 5, 146, 238, 50
     LTEXT           "Per regolare l'alimentazione di risparmio energia, scegliere Alimentazione.",
                     IDC_STATIC, 16, 159, 145, 35

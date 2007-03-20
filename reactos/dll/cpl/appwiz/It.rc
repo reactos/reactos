@@ -12,7 +12,7 @@ BEGIN
   
   ICON            IDI_CPLSYSTEM,-1,PROPSHEETPADDING,76,16,16
   CONTROL "&Mostra aggiornamenti",IDC_SHOWUPDATES,"button",BS_AUTOCHECKBOX | WS_TABSTOP,PROPSHEETPADDING, 105, 119, 18
-  LTEXT "Il Software seguente può essere rimosso automaticamente. Per rimuovere un programma o modifarne i componenti installati, selezionalo dalla lista e clicca su Aggiungi/Rimuovi.",-1,36,72,PROPSHEETWIDTH-48,32
+  LTEXT "Il Software seguente può essere rimosso automaticamente. Per rimuovere un programma o modificarne i componenti installati, selezionalo dalla lista e clicca su Aggiungi/Rimuovi.",-1,36,72,PROPSHEETWIDTH-48,32
   LISTBOX IDC_SOFTWARELIST, PROPSHEETPADDING, 123, PROPSHEETWIDTH-12, 75, LBS_STANDARD | WS_TABSTOP | LBS_NOINTEGRALHEIGHT
   PUSHBUTTON "Modifica/&Rimuovi", IDC_ADDREMOVE, PROPSHEETWIDTH-72, 200, 60, 14
 END

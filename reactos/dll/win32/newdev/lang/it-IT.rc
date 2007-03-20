@@ -1,0 +1,118 @@
+/*
+* PROJECT:     ReactOS New device installer (newdev.dll)
+* LICENSE:     GPL - See COPYING in the top level directory
+* FILE:        dll/win32/newdev/lang/it-IT.rc
+* PURPOSE:     Italian Translation of dll/win32/newdev/lang/en-US.rc
+* PROGRAMMERS: 
+*              Copyright (C) 2007 Daniele Forsi (dforsi at gmail.com) Italian Translation
+*/
+
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+
+IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Installazione dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Benvenuto",IDC_WELCOMETITLE,120,8,195,24
+    LTEXT           "Questa procedura guidata installa un nuovo driver di dispositivi per:",
+                    IDC_STATIC,120,21,195,16
+    LTEXT           "Selezionare Successivo per continuare.",IDC_STATIC,120,169,195,17
+    LTEXT           "DISPOSITIVO SCONOSCIUTO",IDC_DEVICE,134,36,164,11
+    LTEXT           "ATTENZIONE! INSTALLARE UN DISPOSITIVO PERSONALIZZATO PUÒ BLOCCARE IL COMPUTER O IMPEDIRNE L'AVVIO!",IDC_STATIC,120,59,195,16
+    CONTROL         "Installa il driver automaticamente",IDC_RADIO_AUTO,"Button",
+                    BS_AUTORADIOBUTTON,120,112,178,13
+    CONTROL         "Installa il driver da una posizione specifica",IDC_RADIO_MANUAL,
+                    "Button",BS_AUTORADIOBUTTON,120,133,164,14
+END
+
+IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Installazione dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "L'installazione è fallita",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Impossibile installare il dispositivo perché il driver non è stato trovato.",
+                    IDC_STATIC,120,40,195,19
+    LTEXT           "Selezionare Indietro se si ha un disco di driver o si conosce il percorso per trovare il driver.",
+                    IDC_STATIC,120,98,181,24
+    CONTROL         "Non mostrare più questo dialogo",IDC_DONOTSHOWDLG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
+END
+
+IDD_INSTALLFAILED DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+    CAPTION "Installazione dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "L'installazione è fallita",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Impossibile installare il dispositivo perché si è verificato un errore inatteso.",
+                    IDC_STATIC,120,40,195,19
+    LTEXT           "DISPOSITIVO SCONOSCIUTO",IDC_DEVICE,134,55,164,11
+END
+
+IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installazione dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Cerca in queste posizioni",IDC_RADIO_SEARCHHERE,"Button",
+                    BS_AUTORADIOBUTTON,27,11,239,13
+    CONTROL         "Scegli il driver manualmente",IDC_RADIO_CHOOSE,"Button",
+                    BS_AUTORADIOBUTTON,27,98,171,12
+    CONTROL         "Cerca in supporti rimuovibili",IDC_CHECK_MEDIA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
+    CONTROL         "Includi questo percorso",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,47,54,162,10
+    PUSHBUTTON      "Sfoglia",IDC_BROWSE,248,69,50,14
+    COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP  | CBS_AUTOHSCROLL
+END
+
+IDD_SEARCHDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installazione dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "DISPOSITIVO SCONOSCIUTO",IDC_DEVICE,51,20,169,16
+END
+
+IDD_INSTALLDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installazione dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "DISPOSITIVO SCONOSCIUTO",IDC_DEVICE,51,20,169,16
+END
+
+IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Installazione dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Installazione completata",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "È necessario riavviare per terminare l'installazione di:",
+                    IDC_STATIC,120,32,195,19
+    LTEXT           "Selezionare Fine per chiudere questa procedura guidata.",IDC_STATIC,120,174,
+                    179,11
+    LTEXT           "DISPOSITIVO SCONOSCIUTO",IDC_DEVICE,148,53,147,12
+END
+
+IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Installazione dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Installazione completata",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "La procedura guidata ha terminato l'installazione del driver per:",
+                    IDC_STATIC,120,32,195,19
+    LTEXT           "Selezionare Fine per chiudere questa procedura guidata.",IDC_STATIC,120,174,
+                    179,11
+    LTEXT           "DISPOSITIVO SCONOSCIUTO",IDC_DEVICE,148,53,147,12
+END
+

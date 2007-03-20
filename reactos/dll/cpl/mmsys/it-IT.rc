@@ -1,0 +1,15 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+
+IDD_HARDWARE DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLNAME "Suoni e Dispositivi audio"
+    IDS_CPLDESCRIPTION "Cambia lo schema dei suoni per il tuo computer o configura le impostazioni per gli altoparlanti e i dispositivi di registrazione."
+END
+

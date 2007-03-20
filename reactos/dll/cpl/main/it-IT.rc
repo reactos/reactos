@@ -52,12 +52,12 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
 CAPTION "Bottoni"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Configurazione dei botton", -1, 5, 5, 230, 70
+  GROUPBOX "Configurazione dei bottoni", -1, 5, 5, 230, 70
   CHECKBOX "&Scambia il bottone secondario e primario", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
   CONTROL  "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_OWNERDRAW, 155, 15, 75, 57, WS_EX_STATICEDGE
   LTEXT "Assegna al tasto destro del mouse le funzioni principali come ad esempio la selezione e il trascinamento", -1, 10, 30, 140, 30
   GROUPBOX "Velocità del doppio clic", -1, 5, 75, 230, 70
-  LTEXT "Fai doppio clic sulla cartella ver verificare le impostazioni. Se la cartella non si apre o chiude, prova a usare una velocità minore.", -1, 10, 85, 160, 30
+  LTEXT "Fai doppio clic sulla cartella per verificare le impostazioni. Se la cartella non si apre o chiude, prova a usare una velocità minore.", -1, 10, 85, 160, 30
   LTEXT "Velocità:   Lenta", -1, 10, 120, 90, 8
   LTEXT "Veloce", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
@@ -65,7 +65,7 @@ BEGIN
   GROUPBOX "Blocca clic", -1, 5, 150, 230, 70
   CHECKBOX "&Abilita Blocca Clic", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
   PUSHBUTTON "&Impostazioni...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 
-  LTEXT "Permette di selezionare e trascinare senza tenere premuto il tasto del mouse . Per attivare premere brevemente il tasto del mouse. Per disattivare, cliccare di nuovo", -1, 10, 180, 190, 30
+  LTEXT "Permette di selezionare e trascinare senza tenere premuto il tasto del mouse. Per attivare premere brevemente il tasto del mouse. Per disattivare, cliccare di nuovo", -1, 10, 180, 190, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
@@ -103,7 +103,7 @@ CAPTION "Opzioni del puntatore"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Motion", -1, 5, 5, 230, 60
-  LTEXT "Scegli una volocità per il puntatore:", -1, 60, 15, 110, 10
+  LTEXT "Scegli una velocità per il puntatore:", -1, 60, 15, 110, 10
   LTEXT "Lento", -1, 60, 30, 20, 10
   CONTROL "",IDC_SLIDER_MOUSE_SENSITIVITY, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
   LTEXT "Veloce", -1, 170, 30, 20, 10
