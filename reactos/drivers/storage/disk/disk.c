@@ -919,6 +919,8 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   if (PartitionList != NULL)
     ExFreePool(PartitionList);
 
+  DiskDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
   DPRINT("DiskClassCreateDeviceObjects() done\n");
 
   return(STATUS_SUCCESS);
@@ -2056,6 +2058,8 @@ DiskClassUpdatePartitionDeviceObjects(IN PDEVICE_OBJECT DiskDeviceObject,
 	  DiskData->NextPartition = DeviceExtension;
 	  DiskData = (PDISK_DATA)(DeviceExtension + 1);
 	  DiskData->NextPartition = NULL;
+
+	  DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 	}
       else
 	{

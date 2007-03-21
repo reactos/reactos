@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            services/storage/cdrom/cdrom.c
@@ -924,6 +923,8 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 		    CdromTimerRoutine,
 		    NULL);
   IoStartTimer(DiskDeviceObject);
+
+  DiskDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
   DPRINT("CdromClassCreateDeviceObjects() done\n");
 
