@@ -679,6 +679,9 @@ MainLoop:
 #endif
     jz CheckSchedule
 
+    mov cl, DISPATCH_LEVEL
+    call @HalClearSoftwareInterrupt@4
+    
     /* Handle the above */
     lea ecx, [ebx+KPCR_PRCB_DATA]
     call @KiRetireDpcList@4
