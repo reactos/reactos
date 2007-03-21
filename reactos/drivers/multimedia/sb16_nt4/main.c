@@ -9,8 +9,10 @@
         Compatible with NT4
 */
 
+#define NDEBUG
 #include <sndblst.h>
 
+#define TAG(A, B, C, D) (IN ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 /*
     IRP DISPATCH ROUTINES
@@ -41,7 +43,7 @@ CloseSoundBlaster(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PSOUND_BLASTER_PARAMETERS sb_device = DeviceObject->DeviceExtension;
+    //PSOUND_BLASTER_PARAMETERS sb_device = DeviceObject->DeviceExtension;
 
     DPRINT("CloseSoundBlaster() called\n");
 
@@ -58,7 +60,7 @@ CleanupSoundBlaster(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PSOUND_BLASTER_PARAMETERS sb_device = DeviceObject->DeviceExtension;
+    //PSOUND_BLASTER_PARAMETERS sb_device = DeviceObject->DeviceExtension;
 
     DPRINT("CleanupSoundBlaster() called\n");
 
@@ -76,7 +78,7 @@ ControlSoundBlaster(
     PIRP Irp)
 {
     PIO_STACK_LOCATION stack;
-    PSOUND_BLASTER_PARAMETERS sb_device = DeviceObject->DeviceExtension;
+    //PSOUND_BLASTER_PARAMETERS sb_device = DeviceObject->DeviceExtension;
 
     DPRINT("ControlSoundBlaster() called\n");
 
@@ -100,7 +102,7 @@ WriteSoundBlaster(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PSOUND_BLASTER_PARAMETERS sb_device = DeviceObject->DeviceExtension;
+    //PSOUND_BLASTER_PARAMETERS sb_device = DeviceObject->DeviceExtension;
 
     DPRINT("WriteSoundBlaster() called\n");
 
@@ -205,8 +207,8 @@ AllocateRegistryPathInfo(
     ExFreePool(ptr)
 
 
-#define TAG_REG_INFO (ULONG)'IgeR'
-#define TAG_REG_NAME (ULONG)'NgeR'
+#define TAG_REG_INFO TAG('I','g','e','R')
+#define TAG_REG_NAME TAG('N','g','e','R')
 
 NTSTATUS STDCALL
 EnumerateSubkey(
