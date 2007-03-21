@@ -105,7 +105,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderNlsData;
             MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
-            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            MdEntry->PageCount = (ModSize + PAGE_SIZE - 1)>> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
             continue;
@@ -120,7 +120,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderNlsData;
             MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
-            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
             continue;
@@ -135,7 +135,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderNlsData;
             MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
-            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
             continue;
@@ -157,7 +157,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderRegistryData;
             MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
-            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
             continue;
@@ -172,7 +172,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderRegistryData;
             MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
-            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
             continue;
@@ -185,7 +185,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderSystemCode;
             MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
-            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
         }
@@ -195,7 +195,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderHalCode;
             MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
-            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
         }
@@ -205,7 +205,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderBootDriver;
             MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
-            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
         }

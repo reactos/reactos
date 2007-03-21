@@ -191,6 +191,8 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     LARGE_INTEGER SectionOffset = {{0}};
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    ULONG NlsTablesEncountered = 0;
+    ULONG NlsTableSizes[3]; /* 3 NLS tables */
 
     /* Check if this is boot-time phase 0 initialization */
     if (!ExpInitializationPhase)
@@ -210,17 +212,16 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             {
                 /* Increase the table size */
                 ExpNlsTableSize += MdBlock->PageCount * PAGE_SIZE;
+
+                /* FreeLdr-specific */
+                NlsTableSizes[NlsTablesEncountered] = MdBlock->PageCount * PAGE_SIZE;
+                NlsTablesEncountered++;
+                ASSERT(NlsTablesEncountered < 4);
             }
 
             /* Go to the next block */
             NextEntry = MdBlock->ListEntry.Flink;
         }
-
-        /*
-         * In NT, the memory blocks are contiguous, but in ReactOS they aren't,
-         * so unless someone fixes FreeLdr, we'll have to use this icky hack.
-         */
-        ExpNlsTableSize += 2 * PAGE_SIZE; // BIAS FOR FREELDR. HACK!
 
         /* Allocate the a new buffer since loader memory will be freed */
         ExpNlsTableBase = ExAllocatePoolWithTag(NonPagedPool,
@@ -229,9 +230,27 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (!ExpNlsTableBase) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
         /* Copy the codepage data in its new location. */
+        //RtlCopyMemory(ExpNlsTableBase,
+        //              LoaderBlock->NlsData->AnsiCodePageData,
+        //              ExpNlsTableSize);
+
+        /*
+         * In NT, the memory blocks are contiguous, but in ReactOS they aren't,
+         * so unless someone fixes FreeLdr, we'll have to use this icky hack.
+         */
         RtlCopyMemory(ExpNlsTableBase,
                       LoaderBlock->NlsData->AnsiCodePageData,
-                      ExpNlsTableSize);
+                      NlsTableSizes[0]);
+
+        RtlCopyMemory((PVOID)((ULONG_PTR)ExpNlsTableBase + NlsTableSizes[0]),
+                      LoaderBlock->NlsData->OemCodePageData,
+                      NlsTableSizes[1]);
+
+        RtlCopyMemory((PVOID)((ULONG_PTR)ExpNlsTableBase + NlsTableSizes[0] +
+                      NlsTableSizes[1]),
+                      LoaderBlock->NlsData->UnicodeCodePageData,
+                      NlsTableSizes[2]);
+        /* End of Hack */
 
         /* Initialize and reset the NLS TAbles */
         RtlInitNlsTables((PVOID)((ULONG_PTR)ExpNlsTableBase +
