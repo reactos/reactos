@@ -45,8 +45,12 @@ IoReportDetectedDevice(
     Pdo = *DeviceObject;
   else
   {
+    UNICODE_STRING ServiceName;
+    ServiceName.Buffer = DriverObject->DriverName.Buffer + sizeof(DRIVER_ROOT_NAME) / sizeof(WCHAR) - 1;
+    ServiceName.Length = ServiceName.MaximumLength = DriverObject->DriverName.Length - sizeof(DRIVER_ROOT_NAME) + sizeof(WCHAR);
+    
     /* create a new PDO and return it in *DeviceObject */
-    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
+    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
     if (!NT_SUCCESS(Status))
     {
       DPRINT("IopCreateDeviceNode() failed (Status 0x%08lx)\n", Status);

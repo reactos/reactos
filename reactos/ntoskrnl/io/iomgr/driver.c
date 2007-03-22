@@ -726,7 +726,9 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     PWCHAR FileNameWithoutPath;
     LPWSTR FileExtension;
     PUNICODE_STRING ModuleName = &LdrEntry->BaseDllName;
+    UNICODE_STRING ServiceName;
 #if 1 // Disable for FreeLDR 2.5
+    UNICODE_STRING ServiceNameWithExtension;
     PLDR_DATA_TABLE_ENTRY ModuleObject;
 #endif
 
@@ -734,18 +736,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     * Display 'Loading XXX...' message
     */
    IopDisplayLoadingMessage(ModuleName->Buffer, TRUE);
-
-   /*
-    * Determine the right device object
-    */
-      /* Use IopRootDeviceNode for now */
-      Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
-      if (!NT_SUCCESS(Status))
-      {
-         CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
-         return(Status);
-      }
-
 
    /*
     * Generate filename without path (not needed by freeldr)
@@ -763,13 +753,11 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    /*
     * Load the module. 
     */
-   RtlCreateUnicodeString(&DeviceNode->ServiceName, FileNameWithoutPath);
-
 #if 1 // Remove for FreeLDR 2.5.
-   Status = LdrProcessDriverModule(LdrEntry, &DeviceNode->ServiceName, &ModuleObject);
+   RtlCreateUnicodeString(&ServiceNameWithExtension, FileNameWithoutPath);
+   Status = LdrProcessDriverModule(LdrEntry, &ServiceNameWithExtension, &ModuleObject);
    if (!NT_SUCCESS(Status))
    {
-           IopFreeDeviceNode(DeviceNode);
        CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
        return Status;
    }
@@ -778,12 +766,25 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    /*
     * Strip the file extension from ServiceName
     */
-   FileExtension = wcsrchr(DeviceNode->ServiceName.Buffer, '.');
+   RtlCreateUnicodeString(&ServiceName, FileNameWithoutPath);
+   FileExtension = wcsrchr(ServiceName.Buffer, '.');
    if (FileExtension != NULL)
    {
-      DeviceNode->ServiceName.Length -= wcslen(FileExtension) * sizeof(WCHAR);
+      ServiceName.Length -= wcslen(FileExtension) * sizeof(WCHAR);
       FileExtension[0] = 0;
    }
+
+   /*
+    * Determine the right device object
+    */
+   /* Use IopRootDeviceNode for now */
+   Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
+   if (!NT_SUCCESS(Status))
+   {
+      CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
+      return(Status);
+   }
+   DeviceNode->ServiceName = ServiceName;
 
    /*
     * Initialize the driver
@@ -793,7 +794,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 
    if (!NT_SUCCESS(Status))
    {
-         IopFreeDeviceNode(DeviceNode);
+      IopFreeDeviceNode(DeviceNode);
       CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
       return Status;
    }
@@ -830,7 +831,7 @@ IopInitializeBootDrivers(VOID)
     NTSTATUS Status;
 
     /* Use IopRootDeviceNode for now */
-    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
+    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, NULL, &DeviceNode);
     if (!NT_SUCCESS(Status)) return;
 
     /* Setup the module object for the RAW FS Driver */
@@ -1577,7 +1578,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
     */
 
    /* Use IopRootDeviceNode for now */
-   Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
+   Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
 
    if (!NT_SUCCESS(Status))
    {

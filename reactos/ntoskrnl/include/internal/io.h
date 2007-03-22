@@ -480,6 +480,7 @@ NTSTATUS
 IopCreateDeviceNode(
     IN PDEVICE_NODE ParentNode,
     IN PDEVICE_OBJECT PhysicalDeviceObject,
+    IN PUNICODE_STRING ServiceName,
     OUT PDEVICE_NODE *DeviceNode
 );
 
@@ -781,6 +782,7 @@ PnpRootDriverEntry(
 
 NTSTATUS
 PnpRootCreateDevice(
+    IN PUNICODE_STRING ServiceName,
     IN OUT PDEVICE_OBJECT *PhysicalDeviceObject
 );
 

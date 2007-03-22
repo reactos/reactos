@@ -789,14 +789,15 @@ Quickie:
 NTSTATUS
 IopCreateDeviceNode(PDEVICE_NODE ParentNode,
                     PDEVICE_OBJECT PhysicalDeviceObject,
+                    PUNICODE_STRING ServiceName,
                     PDEVICE_NODE *DeviceNode)
 {
    PDEVICE_NODE Node;
    NTSTATUS Status;
    KIRQL OldIrql;
 
-   DPRINT("ParentNode 0x%p PhysicalDeviceObject 0x%p\n",
-      ParentNode, PhysicalDeviceObject);
+   DPRINT("ParentNode 0x%p PhysicalDeviceObject 0x%p ServiceName %wZ\n",
+      ParentNode, PhysicalDeviceObject, ServiceName);
 
    Node = (PDEVICE_NODE)ExAllocatePool(NonPagedPool, sizeof(DEVICE_NODE));
    if (!Node)
@@ -808,7 +809,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 
    if (!PhysicalDeviceObject)
    {
-      Status = PnpRootCreateDevice(&PhysicalDeviceObject);
+      Status = PnpRootCreateDevice(ServiceName, &PhysicalDeviceObject);
       if (!NT_SUCCESS(Status))
       {
          ExFreePool(Node);
@@ -2386,7 +2387,8 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
               DeviceNode->ServiceName.Buffer, Status);
          }
       }
-   } else
+   }
+   else
    {
       DPRINT("Service %S is disabled or already initialized\n",
          DeviceNode->ServiceName.Buffer);
@@ -2531,6 +2533,7 @@ IopInvalidateDeviceRelations(
         Status = IopCreateDeviceNode(
             DeviceNode,
             DeviceRelations->Objects[i],
+            NULL,
             &ChildDeviceNode);
         DeviceNode->Flags |= DNF_ENUMERATED;
         if (!NT_SUCCESS(Status))
@@ -3297,7 +3300,7 @@ PnpInit(VOID)
         KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
-    Status = IopCreateDeviceNode(NULL, Pdo, &IopRootDeviceNode);
+    Status = IopCreateDeviceNode(NULL, Pdo, NULL, &IopRootDeviceNode);
     if (!NT_SUCCESS(Status))
     {
         CPRINT("Insufficient resources\n");
