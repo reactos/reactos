@@ -2210,7 +2210,6 @@ FormatPartitionPage (PINPUT_RECORD Ir)
                         PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32_XINT13;
                     }
                 }
-                break;
             }
             else if (!FileSystemList->Selected->FormatFunc)
                 return QUIT_PAGE;
