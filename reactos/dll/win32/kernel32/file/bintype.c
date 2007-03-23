@@ -157,7 +157,7 @@ InternalGetBinaryType(HANDLE hFile)
     {
       IMAGE_FILE_HEADER FileHeader;
       if(!ReadFile(hFile, &FileHeader, sizeof(IMAGE_FILE_HEADER), &Read, NULL) ||
-         (Read == sizeof(IMAGE_FILE_HEADER)))
+         (Read != sizeof(IMAGE_FILE_HEADER)))
       {
         return BINARY_DOS;
       }
@@ -179,7 +179,7 @@ InternalGetBinaryType(HANDLE hFile)
       IMAGE_OS2_HEADER ne;
       if((SetFilePointer(hFile, Header.mz.e_lfanew, NULL, FILE_BEGIN) == 1) ||
          !ReadFile(hFile, &ne, sizeof(IMAGE_OS2_HEADER), &Read, NULL) ||
-         (Read == sizeof(IMAGE_OS2_HEADER)))
+         (Read != sizeof(IMAGE_OS2_HEADER)))
       {
         /* Couldn't read header, so abort. */
         return BINARY_DOS;
