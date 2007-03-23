@@ -16,6 +16,107 @@
 #define DdHandleTable GdiHandleTable
 
 
+
+DWORD STDCALL NtGdiDdBlt(
+    HANDLE hSurfaceDest,
+    HANDLE hSurfaceSrc,
+    PDD_BLTDATA puBltData
+)
+{
+    NTSTATUS Status = FALSE;
+    DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
+    DD_BLTDATA  Blt;
+    PDD_SURFACE pDstSurface = NULL;
+    PDD_SURFACE pSrcSurface = NULL;
+    PDD_DIRECTDRAW pDirectDraw;
+
+    DPRINT1("NtGdiDdBlt\n");
+
+    _SEH_TRY
+    {
+        ProbeForRead(puBltData,  sizeof(DD_BLTDATA), 1);
+        RtlCopyMemory( &Blt, puBltData, sizeof( DD_BLTDATA ) );
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return ddRVal;
+    }
+
+    pDstSurface = GDIOBJ_LockObj(DdHandleTable, hSurfaceDest, GDI_OBJECT_TYPE_DD_SURFACE);
+    if (!pDstSurface)
+    {
+        DPRINT1("Fail\n");
+        return ddRVal;
+    }
+
+    pDirectDraw = GDIOBJ_LockObj(DdHandleTable, pDstSurface->hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+    if (!pDirectDraw)
+    {
+        DPRINT1("Fail\n");
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, pSrcSurface);
+        return ddRVal;
+    }
+
+    if (pSrcSurface)
+    {
+        pSrcSurface = GDIOBJ_LockObj(DdHandleTable, pSrcSurface, GDI_OBJECT_TYPE_DD_SURFACE);
+        if (!pSrcSurface)
+        {
+            DPRINT1("Fail\n");
+            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDstSurface);
+            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+            return ddRVal;
+        }
+    }
+
+    Blt.lpDDDestSurface = &pDstSurface->Local;
+    if (pDstSurface)
+    {
+        Blt.lpDDSrcSurface = &pDstSurface->Local;
+    }
+
+    Blt.ddRVal = DDERR_GENERIC;
+
+    if (pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_BLT)
+    {
+        Blt.lpDD = &pDirectDraw->Global;
+        Blt.Blt = NULL;
+        ddRVal = pDirectDraw->Surf.Blt(&Blt);
+    }
+
+    DPRINT1("Retun value is %04x and driver return code is %04x\n",ddRVal,Blt.ddRVal);
+
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDstSurface);
+
+    if(pSrcSurface)
+    {
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, pSrcSurface);
+    }
+
+    _SEH_TRY
+    {
+        ProbeForWrite(puBltData,  sizeof(DD_BLTDATA), 1);
+        puBltData->ddRVal = Blt.ddRVal;
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    DPRINT1("Retun value is %04x and driver return code is %04x\n",ddRVal,Blt.ddRVal);
+    return ddRVal;
+   }
+
+
+
 /************************************************************************/
 /* NtGdiDdCreateSurface                                                 */
 /* status : untested                                                    */

@@ -667,40 +667,7 @@ DWORD STDCALL NtGdiDdUnlock(
 	return ddRVal;
 }
 
-DWORD STDCALL NtGdiDdBlt(
-    HANDLE hSurfaceDest,
-    HANDLE hSurfaceSrc,
-    PDD_BLTDATA puBltData
-)
-{
-    DWORD  ddRVal;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurfaceDest, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
-    DPRINT1("NtGdiDdBlt\n");
-#endif
-	if (pDirectDraw == NULL) 
-		return DDHAL_DRIVER_NOTHANDLED;
-
-	/* backup the orignal PDev and info */
-	lgpl = puBltData->lpDD;
-
-	/* use our cache version instead */
-	puBltData->lpDD = &pDirectDraw->Global;
-
-	/* make the call */
-	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_BLT))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else
-        ddRVal = pDirectDraw->Surf.Blt(puBltData);
-
-	/* But back the orignal PDev */
-	puBltData->lpDD = lgpl;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    return ddRVal;
-   }
 
 DWORD STDCALL NtGdiDdSetColorKey(
     HANDLE hSurface,

@@ -44,28 +44,29 @@ DWORD STDCALL NtGdiDdCreateSurface(
     DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
     NTSTATUS Status = FALSE;
     PDD_DIRECTDRAW pDirectDraw;
-    HANDLE hsurface;
     PDD_SURFACE phsurface;
 
     PDD_SURFACE_LOCAL pLocal;
     PDD_SURFACE_MORE pMore;
     PDD_SURFACE_GLOBAL pGlobal;
 
+    DD_CREATESURFACEDATA CreateSurfaceData;
+
     /* FIXME alloc so mayne we need */
-    PHANDLE *myhSurface[1];
+    PHANDLE *myhSurface;
 
     /* GCC4  warnns on value are unisitaed,
        but they are initated in seh 
     */
-    myhSurface[0] = 0;
 
     DPRINT1("NtGdiDdCreateSurface\n");
 
+    DPRINT1("Copy puCreateSurfaceData to kmode CreateSurfaceData\n");
     _SEH_TRY
     {
-        ProbeForRead(hSurface,  sizeof(HANDLE), 1);
-        ProbeForRead(hSurface[0],  sizeof(HANDLE), 1);
-        myhSurface[0] = hSurface[0];
+        ProbeForRead(puCreateSurfaceData,  sizeof(DD_CREATESURFACEDATA), 1);
+        RtlCopyMemory( &CreateSurfaceData, puCreateSurfaceData,
+                       sizeof( DD_CREATESURFACEDATA ) );
     }
     _SEH_HANDLE
     {
@@ -78,15 +79,63 @@ DWORD STDCALL NtGdiDdCreateSurface(
         return ddRVal;
     }
 
-
-    /* Create a surface */
-    hsurface =  GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DD_SURFACE);
-      if (!hsurface)
+    /* FIXME we only support one surface at moment 
+       this is a hack to prevent more that one surface being create 
+     */
+    if (CreateSurfaceData.dwSCnt > 1)
     {
+        CreateSurfaceData.dwSCnt = 1;
+    }
+
+
+    DPRINT1("Setup surface in put handler\n");
+    myhSurface = ExAllocatePoolWithTag( PagedPool, CreateSurfaceData.dwSCnt * sizeof(HANDLE), 0);
+
+    _SEH_TRY
+    {
+        ProbeForRead(hSurface,  CreateSurfaceData.dwSCnt * sizeof(HANDLE), 1);
+        for (i=0;i<CreateSurfaceData.dwSCnt;i++)
+        {
+            myhSurface[i] = hSurface[i];
+        }
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
         return ddRVal;
     }
 
-    phsurface = GDIOBJ_LockObj(DdHandleTable, hsurface, GDI_OBJECT_TYPE_DD_SURFACE);
+    /* see if a surface have been create or not */
+    
+    for (i=0;i<CreateSurfaceData.dwSCnt;i++)
+    {
+        if (!myhSurface[i])
+        {
+            myhSurface[i] = GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DD_SURFACE);
+            if (!myhSurface[i])
+            {
+                /* FIXME lock myhSurface*/
+                /* FIXME free myhSurface, and the contain */
+                /* add to attach list */
+                return ddRVal;
+            }
+            else
+            {
+                /* FIXME lock myhSurface*/
+                /* FIXME add to attach list */
+            }
+        }
+    }
+
+    /* FIXME we need continue fix more that one createsurface */
+    /* FIXME we need release  myhSurface before any exits*/
+
+    phsurface = GDIOBJ_LockObj(DdHandleTable, myhSurface[0], GDI_OBJECT_TYPE_DD_SURFACE);
     if (!phsurface)
     {
         return ddRVal;
@@ -96,7 +145,7 @@ DWORD STDCALL NtGdiDdCreateSurface(
     _SEH_TRY
     {
         ProbeForRead(puCreateSurfaceData,  sizeof(DD_CREATESURFACEDATA), 1);
-        RtlCopyMemory( &phsurface->CreateSurfaceData, puCreateSurfaceData,
+        RtlCopyMemory( &CreateSurfaceData, puCreateSurfaceData,
                        sizeof( DD_CREATESURFACEDATA ) );
     }
     _SEH_HANDLE
@@ -206,12 +255,8 @@ DWORD STDCALL NtGdiDdCreateSurface(
     pLocal = &phsurface->Local;
     pMore = &phsurface->More;
     pGlobal = &phsurface->Global;
-    
 
-    /* FIXME we only support one surface for now */
-    phsurface->CreateSurfaceData.dwSCnt = 1;
-
-    for (i = 0; i < phsurface->CreateSurfaceData.dwSCnt; i++)
+    for (i = 0; i < CreateSurfaceData.dwSCnt; i++)
     {
         phsurface->lcllist[i] = (PDD_SURFACE_LOCAL)pLocal;
         pLocal->lpGbl = pGlobal;
@@ -226,34 +271,104 @@ DWORD STDCALL NtGdiDdCreateSurface(
 
     }
 
-
-    /* FIXME support for more that one surface */
-
     /* setup DD_CREATESURFACEDATA CreateSurfaceData for the driver */
-    phsurface->CreateSurfaceData.lplpSList = (PDD_SURFACE_LOCAL *) &phsurface->lcllist;
-    phsurface->CreateSurfaceData.lpDDSurfaceDesc = &phsurface->desc;
-    phsurface->CreateSurfaceData.CreateSurface = NULL;
-    phsurface->CreateSurfaceData.ddRVal = DDERR_GENERIC;
-    phsurface->CreateSurfaceData.lpDD = &pDirectDraw->Global;
+    CreateSurfaceData.lplpSList = (PDD_SURFACE_LOCAL *) &phsurface->lcllist;
+    CreateSurfaceData.lpDDSurfaceDesc = &phsurface->desc;
+    CreateSurfaceData.CreateSurface = NULL;
+    CreateSurfaceData.ddRVal = DDERR_GENERIC;
+    CreateSurfaceData.lpDD = &pDirectDraw->Global;
 
     /* the CreateSurface crash with lcl convering */
     if ((pDirectDraw->DD.dwFlags & DDHAL_CB32_CREATESURFACE))
     {
         DPRINT1("0x%04x",pDirectDraw->DD.CreateSurface);
 
-        ddRVal = pDirectDraw->DD.CreateSurface(&phsurface->CreateSurfaceData);
+        ddRVal = pDirectDraw->DD.CreateSurface(&CreateSurfaceData);
     }
 
-    /* FIXME copy data from DDRAWI_  sturct to DD_ struct */
+    DPRINT1("Retun value is %04x and driver return code is %04x\n",ddRVal,CreateSurfaceData.ddRVal);
+
+    /* FIXME support for more that one surface */
+    _SEH_TRY
+    {
+        ProbeForWrite(puSurfaceDescription,  sizeof(DDSURFACEDESC), 1);
+        RtlCopyMemory( puSurfaceDescription, &phsurface->desc, sizeof( DDSURFACEDESC ) );
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    _SEH_TRY
+    {
+        ProbeForWrite(puCreateSurfaceData,  sizeof(DD_CREATESURFACEDATA), 1);
+        puCreateSurfaceData->ddRVal =  CreateSurfaceData.ddRVal;
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    for (i = 0; i < CreateSurfaceData.dwSCnt; i++)
+    {
+        _SEH_TRY
+        {
+            ProbeForWrite(puSurfaceGlobalData,  sizeof(DD_SURFACE_GLOBAL), 1);
+            RtlCopyMemory( puSurfaceGlobalData, &phsurface->Global, sizeof( DD_SURFACE_GLOBAL ) );
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        _SEH_TRY
+        {
+            ProbeForWrite(puSurfaceLocalData,  sizeof(DD_SURFACE_LOCAL), 1);
+            RtlCopyMemory( puSurfaceLocalData, &phsurface->Local, sizeof( DD_SURFACE_LOCAL ) );
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        _SEH_TRY
+        {
+            ProbeForWrite(puSurfaceMoreData,  sizeof(DD_SURFACE_MORE), 1);
+            RtlCopyMemory( puSurfaceMoreData, &phsurface->More, sizeof( DD_SURFACE_MORE ) );
+
+            puSurfaceLocalData->lpGbl = puSurfaceGlobalData;
+            puSurfaceLocalData->lpSurfMore = puSurfaceMoreData;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        DPRINT1("GDIOBJ_UnlockObjByPtr\n");
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, phsurface);
+        _SEH_TRY
+        {
+            ProbeForWrite(puhSurface, sizeof(HANDLE), 1);
+            puhSurface[i] = myhSurface[i];
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
+
 
     /* FIXME fillin the return handler */
     DPRINT1("GDIOBJ_UnlockObjByPtr\n");
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, phsurface);
-    DPRINT1("GDIOBJ_UnlockObjByPtr\n");
     GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 
-
-    DPRINT1("Retun value is %04x and driver return code is %04x\n",ddRVal,phsurface->CreateSurfaceData.ddRVal);
+    DPRINT1("Retun value is %04x and driver return code is %04x\n",ddRVal,CreateSurfaceData.ddRVal);
     return ddRVal;
 }
 
