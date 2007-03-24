@@ -448,7 +448,7 @@ V86_&Label:
     mov fs, bx
 
     /* Save exception list and bogus previous mode */
-    push PCR[KPCR_EXCEPTION_LIST]
+    push fs:[KPCR_EXCEPTION_LIST]
     push -1
 
     /* Save volatiles and segment registers */
@@ -484,7 +484,7 @@ V86_&Label:
 
 V86_&EndLabel:
     /* Get current thread */
-    mov ecx, PCR[KPCR_CURRENT_THREAD]
+    mov ecx, fs:[KPCR_CURRENT_THREAD]
     cld
 
     /* Flush DR7 */
