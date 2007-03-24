@@ -13,10 +13,10 @@ HINSTANCE hInstance;
 HANDLE ProcessHeap;
 
 int WINAPI
-WinMain(HINSTANCE hThisInstance,
-        HINSTANCE hPrevInstance,
-        LPSTR lpCmdLine,
-        int nCmdShow)
+_tWinMain(HINSTANCE hThisInstance,
+          HINSTANCE hPrevInstance,
+          LPTSTR lpCmdLine,
+          int nCmdShow)
 {
     LPTSTR lpAppName;
     HWND hMainWnd;
