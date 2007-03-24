@@ -1,0 +1,34 @@
+#include <windows.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+1 24 DISCARDABLE "manifest.xml"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME "ReactOS Service Manager"
+END
+
+IDI_SM_ICON ICON "res/system.ico"
+
+/* main toolbar icons */
+IDB_PROP    BITMAP DISCARDABLE "res/properties.bmp"
+IDB_REFRESH BITMAP DISCARDABLE "res/refresh.bmp"
+IDB_EXPORT  BITMAP DISCARDABLE "res/export.bmp"
+IDB_CREATE  BITMAP DISCARDABLE "res/create.bmp"
+IDB_DELETE  BITMAP DISCARDABLE "res/delete.bmp"
+IDB_START   BITMAP DISCARDABLE "res/start.bmp"
+IDB_STOP    BITMAP DISCARDABLE "res/stop.bmp"
+IDB_PAUSE   BITMAP DISCARDABLE "res/pause.bmp"
+IDB_RESTART BITMAP DISCARDABLE "res/restart.bmp"
+IDB_HELP    BITMAP DISCARDABLE "res/help.bmp"
+IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
+
+
+//#include "lang/de-DE.rc"
+#include "lang/en-US.rc"
+#include "lang/id-ID.rc"
+#include "lang/it-IT.rc"
+#include "lang/ru-RU.rc"
+
