@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-	<module name="devmgmt" type="win32gui" installbase="system32" installname="devmgmt.exe">
+	<module name="devmgmt" type="win32gui" installbase="system32" installname="devmgmt.exe" unicode="yes">
 	<include base="devmgmt">.</include>
-		<define name="UNICODE" />
-		<define name="_UNICODE" />
 		<define name="__REACTOS__" />
 		<define name="__USE_W32API" />
 		<define name="_WIN32_IE">0x600</define>
