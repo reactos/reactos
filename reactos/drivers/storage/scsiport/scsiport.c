@@ -1207,7 +1207,7 @@ ByeBye:
 VOID STDCALL
 ScsiPortIoMapTransfer(IN PVOID HwDeviceExtension,
 		      IN PSCSI_REQUEST_BLOCK Srb,
-		      IN ULONG LogicalAddress,
+		      IN PVOID LogicalAddress,
 		      IN ULONG Length)
 {
   DPRINT1("ScsiPortIoMapTransfer()\n");
