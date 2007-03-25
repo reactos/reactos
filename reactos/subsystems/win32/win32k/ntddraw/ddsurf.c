@@ -83,6 +83,12 @@ DWORD STDCALL NtGdiDdBlt(
 
     Blt.ddRVal = DDERR_GENERIC;
 
+    /* MSDN say this member is always set to FALSE in windows 2000 or higher */
+    Blt.IsClipped = FALSE;
+
+    /* MSDN say this member is always unuse in windows 2000 or higher */
+    Blt.dwROPFlags = 0;
+
     if (pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_BLT)
     {
         Blt.lpDD = &pDirectDraw->Global;
