@@ -568,11 +568,11 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	}
 	/* Terminate the parameters */
 	if(ptrStart && ptrEnd)
-	{		
-		temp = malloc((ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
+	{
+		temp = malloc((ptrEnd - ptrStart + 2) * sizeof(TCHAR));
 		if(!temp)
 			return FALSE;
-		memcpy(temp, ptrStart, (ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
+		memcpy(temp, ptrStart, (ptrEnd - ptrStart + 1) * sizeof(TCHAR));
 		temp[(ptrEnd - ptrStart + 1)] = _T('\0');
 		if(!add_entry(entries, params, temp))
 		{
