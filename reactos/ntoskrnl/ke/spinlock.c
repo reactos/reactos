@@ -250,31 +250,6 @@ KeAcquireInterruptSpinLock(IN PKINTERRUPT Interrupt)
 /*
  * @implemented
  */
-BOOLEAN
-NTAPI
-KeSynchronizeExecution(IN PKINTERRUPT Interrupt,
-                       IN PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
-                       IN PVOID SynchronizeContext)
-{
-    KIRQL OldIrql;
-    BOOLEAN Status;
-
-    /* Raise IRQL and acquire lock on MP */
-    OldIrql = KeAcquireInterruptSpinLock(Interrupt);
-
-    /* Call the routine */
-    Status = SynchronizeRoutine(SynchronizeContext);
-
-    /* Release lock and lower IRQL */
-    KeReleaseInterruptSpinLock(Interrupt, OldIrql);
-
-    /* Return routine status */
-    return Status;
-}
-
-/*
- * @implemented
- */
 VOID
 NTAPI
 KeReleaseInterruptSpinLock(IN PKINTERRUPT Interrupt,

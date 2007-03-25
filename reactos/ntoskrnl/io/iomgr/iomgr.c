@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-ULONG IopTraceLevel = 0; //IO_API_DEBUG | IO_FILE_DEBUG;
+ULONG IopTraceLevel = 0;
 
 // should go into a proper header
 VOID

@@ -2379,3 +2379,31 @@ IsrTimeout:
     /* Cleanup verification */
     VERIFY_INT_END kid, 0
 .endfunc
+
+.globl _KeSynchronizeExecution@12
+.func KeSynchronizeExecution@12
+_KeSynchronizeExecution@12:
+
+    /* Save EBX and put the interrupt object in it */
+    push ebx
+    mov ebx, [esp+8]
+
+    /* Go to DIRQL */
+    mov cl, [ebx+KINTERRUPT_SYNCHRONIZE_IRQL]
+    call @KfRaiseIrql@4
+
+    /* Call the routine */
+    push eax
+    push [esp+20]
+    call [esp+20]
+
+    /* Lower IRQL */
+    mov ebx, eax
+    pop ecx
+    call @KfLowerIrql@4
+
+    /* Return status */
+    mov eax, ebx
+    pop ebx
+    ret 12
+.endfunc

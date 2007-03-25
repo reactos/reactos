@@ -44,7 +44,7 @@ GENERIC_MAPPING ObpSymbolicLinkMapping =
 };
 
 PDEVICE_MAP ObSystemDeviceMap = NULL;
-ULONG ObpTraceLevel = OB_HANDLE_DEBUG | OB_REFERENCE_DEBUG;
+ULONG ObpTraceLevel = 0;
 
 VOID
 NTAPI

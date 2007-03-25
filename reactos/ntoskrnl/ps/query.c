@@ -17,7 +17,7 @@
 #include "internal/ps_i.h"
 
 /* Debugging Level */
-ULONG PspTraceLevel = 0;//PS_KILL_DEBUG | PS_REF_DEBUG;
+ULONG PspTraceLevel = 0;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
