@@ -165,6 +165,11 @@ typedef PHYSICAL_ADDRESS SCSI_PHYSICAL_ADDRESS, *PSCSI_PHYSICAL_ADDRESS;
 #define SRB_FLAGS_PORT_DRIVER_RESERVED      0x0F000000
 #define SRB_FLAGS_CLASS_DRIVER_RESERVED     0xF0000000
 
+/* Asynchronous events */
+#define SRBEV_BUS_RESET               0x0001
+#define SRBEV_SCSI_ASYNC_NOTIFICATION 0x0002
+
+
 typedef struct _SCSI_REQUEST_BLOCK {
   USHORT  Length;
   UCHAR  Function;
@@ -496,7 +501,7 @@ DDKAPI
 ScsiPortIoMapTransfer(
   IN PVOID  HwDeviceExtension,
   IN PSCSI_REQUEST_BLOCK  Srb,
-  IN ULONG  LogicalAddress,
+  IN PVOID  LogicalAddress,
   IN ULONG  Length);
 
 SCSIPORTAPI

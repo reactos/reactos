@@ -324,6 +324,10 @@ typedef struct _STORAGE_PROPERTY_QUERY {
   UCHAR  AdditionalParameters[1];
 } STORAGE_PROPERTY_QUERY, *PSTORAGE_PROPERTY_QUERY;
 
+typedef struct _PREVENT_MEDIA_REMOVAL {
+    BOOLEAN PreventMediaRemoval;
+} PREVENT_MEDIA_REMOVAL, *PPREVENT_MEDIA_REMOVAL;
+
 #ifdef __cplusplus
 }
 #endif
