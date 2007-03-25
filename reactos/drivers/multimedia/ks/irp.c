@@ -5,6 +5,8 @@
 
 #include <ks.h>
 
+#define TAG(A, B, C, D) (IN ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+
 /*
     @unimplemented
 */
@@ -75,7 +77,7 @@ KsAllocateDeviceHeader(
     if ( ! Header )
         return STATUS_INVALID_PARAMETER;
 
-    Header = ExAllocatePoolWithTag(PagedPool, sizeof(KSDEVICE_HEADER), 'HDSK');
+    Header = ExAllocatePoolWithTag(PagedPool, sizeof(KSDEVICE_HEADER), TAG('H','D','S','K'));
 
     if ( ! Header )
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -97,7 +99,7 @@ KsFreeDeviceHeader(
 
     /* TODO: Free content first */
 
-    ExFreePoolWithTag(Header, 'HDSK');
+    ExFreePoolWithTag(Header, TAG('H','D','S','K'));
 }
 
 /*
@@ -153,7 +155,7 @@ KsAllocateObjectHeader(
 
     /* TODO: Validate parameters */
 
-    object_header = ExAllocatePoolWithTag(PagedPool, sizeof(KSOBJECT_HEADER), 'HOSK');
+    object_header = ExAllocatePoolWithTag(PagedPool, sizeof(KSOBJECT_HEADER), TAG('H','O','S','K'));
 
     if ( ! object_header )
     {
@@ -176,7 +178,7 @@ KSDDKAPI VOID NTAPI
 KsFreeObjectHeader(
     IN  PVOID Header)
 {
-    ExFreePoolWithTag(Header, 'HOSK');
+    ExFreePoolWithTag(Header, TAG('H','O','S','K'));
 
     /* TODO */
 
