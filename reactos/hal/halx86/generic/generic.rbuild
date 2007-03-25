@@ -6,13 +6,13 @@
 	<define name="_NTHAL_" />
 	<file>beep.c</file>
 	<file>bus.c</file>
-    <file>cmos.c</file>
-    <file>dma.c</file>
+	<file>cmos.c</file>
+	<file>dma.c</file>
 	<file>drive.c</file>
 	<file>misc.c</file>
 	<file>pci.c</file>
 	<file>portio.c</file>
-    <file>profil.c</file>
+	<file>profil.c</file>
 	<file>reboot.c</file>
 	<file>sysinfo.c</file>
 	<file>timer.c</file>
@@ -26,7 +26,7 @@
 	<define name="_NTHAL_" />
 	<define name="__USE_W32API" />
 	<file>irq.S</file>
-    <file>halinit.c</file>
+	<file>halinit.c</file>
 	<file>processor.c</file>
 	<file>spinlock.c</file>
 </module>
