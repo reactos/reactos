@@ -263,7 +263,7 @@ Dr_&Label:
     mov dr7, ebx
 
     /* Get the PRCB */
-    mov edi, PCR[KPCR_PRCB]
+    mov edi, fs:[KPCR_PRCB]
 
     /* Get DR0, 1 */
     mov ebx, [edi+KPRCB_DR0]
@@ -563,10 +563,10 @@ V86_&EndLabel:
 
 1: 
     /* Get the previous exception list */
-    mov ebx, PCR[KPCR_EXCEPTION_LIST]
+    mov ebx, fs:[KPCR_EXCEPTION_LIST]
 
     /* Set the exception handler chain terminator */
-    mov dword ptr PCR[KPCR_EXCEPTION_LIST], -1
+    mov dword ptr fs:[KPCR_EXCEPTION_LIST], -1
 
     /* Save the previous exception list */
     mov [esp+KTRAP_FRAME_EXCEPTION_LIST], ebx
@@ -838,7 +838,7 @@ Dr_&EndLabel:
     cld
 
     /* Save the exception list */
-    mov eax, PCR[KPCR_EXCEPTION_LIST]
+    mov eax, fs:[KPCR_EXCEPTION_LIST]
     mov [esp+KTRAP_FRAME_EXCEPTION_LIST], eax
 
     /* Check if we need debugging */
