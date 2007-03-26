@@ -500,7 +500,7 @@ IntPrepareDriver()
             /*  Call DDI driver's EnableDriver function  */
             RtlZeroMemory(&DED, sizeof(DED));
 
-            if (! GDEnableDriver(DDI_DRIVER_VERSION_NT5_01, sizeof(DED), &DED))
+            if (! GDEnableDriver(DDI_DRIVER_VERSION_NT5, sizeof(DED), &DED))
             {
                DPRINT("DrvEnableDriver failed for %S\n", CurrentName);
             }
@@ -2602,7 +2602,7 @@ IntEnumDisplaySettings(
         /*  Call DDI driver's EnableDriver function  */
         RtlZeroMemory(&DrvEnableData, sizeof (DrvEnableData));
 
-        if (!GDEnableDriver(DDI_DRIVER_VERSION_NT5_01, sizeof (DrvEnableData), &DrvEnableData))
+        if (!GDEnableDriver(DDI_DRIVER_VERSION_NT5, sizeof (DrvEnableData), &DrvEnableData))
         {
           DPRINT("DrvEnableDriver failed for %S\n", CurrentName);
           continue;
