@@ -321,6 +321,7 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
                              IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
+#if defined(_M_IX86)
     PKTSS Tss;
     PKGDTENTRY TssEntry;
 
@@ -337,6 +338,7 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
     TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
     TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
+#endif
 
     /* Save pointer to ROS Block */
     KeRosLoaderBlock = LoaderBlock;
@@ -351,8 +353,10 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress -
                                 KSEG0_BASE + 0x200000;
 
+#if defined(_M_IX86)
     /* Set up the VDM Data */
     NtEarlyInitVdm();
+#endif
 
     /* Convert the loader block */
     KiRosFrldrLpbToNtLpb(KeRosLoaderBlock, &NtLoaderBlock);

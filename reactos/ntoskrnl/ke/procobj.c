@@ -157,7 +157,9 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
     Process->QuantumReset = 6;
     Process->DirectoryTableBase = *DirectoryTableBase;
     Process->AutoAlignment = Enable;
+#if defined(_M_IX86)
     Process->IopmOffset = KiComputeIopmOffset(IO_ACCESS_MAP_NONE);
+#endif
 
     /* Initialize the lists */
     InitializeListHead(&Process->ThreadListHead);

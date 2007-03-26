@@ -74,7 +74,7 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
         KiInitializeUserApc(NULL,
                             (PVOID)((ULONG_PTR)Thread->Tcb.InitialStack -
                             sizeof(KTRAP_FRAME) -
-                            sizeof(FX_SAVE_AREA)),
+                            SIZEOF_FX_SAVE_AREA),
                             PspSystemDllEntryPoint,
                             NULL,
                             PspSystemDllBase,
@@ -320,8 +320,16 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         }
 
         /* Set the Start Addresses */
+#if defined(_M_IX86)
         Thread->StartAddress = (PVOID)ThreadContext->Eip;
         Thread->Win32StartAddress = (PVOID)ThreadContext->Eax;
+#elif defined(_M_PPC)
+#error Not implemented yet for PPC architecture!
+#elif defined(_M_MIPS)
+        for (;;);
+#else
+#error Unknown architecture
+#endif
 
         /* Let the kernel intialize the Thread */
         Status = KeInitThread(&Thread->Tcb,

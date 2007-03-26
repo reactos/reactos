@@ -21,6 +21,10 @@
 
 #ifdef _M_IX86
 #include "../i386/ke.h"
+#elif defined(_M_PPC)
+#include "../powerpc/ke.h"
+#elif defined(_M_MIPS)
+#include "../mips/ke.h"
 #else
 #error "Unknown processor"
 #endif

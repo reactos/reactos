@@ -13,6 +13,7 @@
 #define DR_ACTIVE_MASK                          0x10
 #define DR_REG_MASK                             0x4F
 
+#ifdef _M_IX86
 //
 // Sanitizes a selector
 //
@@ -85,6 +86,7 @@ Ke386SanitizeDr(IN PVOID DrAddress,
     return ((Mode == KernelMode) ? DrAddress :
             (DrAddress <= MM_HIGHEST_USER_ADDRESS) ? DrAddress : 0);
 }
+#endif /* _M_IX86 */
 
 //
 // Enters a Guarded Region

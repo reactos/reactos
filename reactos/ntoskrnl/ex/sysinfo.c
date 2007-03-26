@@ -1895,7 +1895,16 @@ NtFlushInstructionCache (
 {
     PAGED_CODE();
 
+#if defined(_M_IX86)
     __wbinvd();
+#elif defined(_M_PPC)
+#error Needs to be implemented for PPC architecture!
+#elif defined(_M_MIPS)
+    DPRINT1("NtFlushInstructionCache() is not implemented\n");
+    for (;;);
+#else
+#error Unknown architecture
+#endif
     return STATUS_SUCCESS;
 }
 

@@ -406,7 +406,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    new_entry->Address = Address;
    new_entry->Process = (PEPROCESS)Process;
 #ifdef DBG
-#ifdef _GNUC_
+#ifdef __GNUC__
    new_entry->Caller = __builtin_return_address(0);
 #else
    new_entry->Caller = _ReturnAddress();

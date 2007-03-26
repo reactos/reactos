@@ -461,7 +461,9 @@ KeStartThread(IN OUT PKTHREAD Thread)
 
     /* Setup static fields from parent */
     Thread->DisableBoost = Process->DisableBoost;
+#if defined(_M_IX86)
     Thread->Iopl = Process->Iopl;
+#endif
     Thread->Quantum = Process->QuantumReset;
     Thread->QuantumReset = Process->QuantumReset;
     Thread->SystemAffinityActive = FALSE;
@@ -815,6 +817,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
                     KERNEL_STACK_SIZE);
     MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
 
+#if defined(_M_IX86)
     /* Enter SEH to avoid crashes due to user mode */
     Status = STATUS_SUCCESS;
     _SEH_TRY
@@ -840,6 +843,9 @@ KeInitThread(IN OUT PKTHREAD Thread,
         }
     }
     _SEH_END;
+#else
+    Status = STATUS_SUCCESS;
+#endif
 
     /* Set the Thread to initalized */
     Thread->State = Initialized;

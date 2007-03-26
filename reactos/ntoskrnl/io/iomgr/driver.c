@@ -1400,7 +1400,7 @@ IoAllocateDriverObjectExtension(IN PDRIVER_OBJECT DriverObject,
     }
 
     /* Release the lock */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 
     /* Check if insertion failed */
     if (!Inserted)
@@ -1446,7 +1446,7 @@ IoGetDriverObjectExtension(IN PDRIVER_OBJECT DriverObject,
     }
 
     /* Release lock */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 
     /* Return nothing or the extension */
     if (!DriverExtensions) return NULL;

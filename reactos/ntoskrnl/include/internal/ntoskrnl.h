@@ -22,7 +22,7 @@
 #undef  PsGetCurrentProcess
 #define PsGetCurrentProcess _PsGetCurrentProcess
 
-#include "i386/intrin_i.h"
+#include "arch/intrin_i.h"
 #include "ke.h"
 #include "i386/mm.h"
 #include "i386/fpu.h"
@@ -281,7 +281,7 @@ DefaultQueryInfoBufferCheck(ULONG Class,
  * Use IsPointerOffset to test whether a pointer should be interpreted as an offset
  * or as a pointer
  */
-#if defined(_X86_) || defined(_M_AMD64)
+#if defined(_X86_) || defined(_M_AMD64) || defined(_MIPS_)
 
 /* for x86 and x86-64 the MSB is 1 so we can simply test on that */
 #define IsPointerOffset(Ptr) ((LONG_PTR)(Ptr) >= 0)
@@ -309,11 +309,6 @@ C_ASSERT(FIELD_OFFSET(KTHREAD, TrapFrame) == KTHREAD_TRAP_FRAME);
 C_ASSERT(FIELD_OFFSET(KTHREAD, CallbackStack) == KTHREAD_CALLBACK_STACK);
 C_ASSERT(FIELD_OFFSET(KTHREAD, ApcState.Process) == KTHREAD_APCSTATE_PROCESS);
 C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
-C_ASSERT(FIELD_OFFSET(KPROCESS, IopmOffset) == KPROCESS_IOPM_OFFSET);
-C_ASSERT(FIELD_OFFSET(KPROCESS, LdtDescriptor) == KPROCESS_LDT_DESCRIPTOR0);
-C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, SavedExceptionStack) == TF_SAVED_EXCEPTION_STACK);
-C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
-C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
 //C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
 //C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
 C_ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
@@ -321,9 +316,18 @@ C_ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);
 C_ASSERT(FIELD_OFFSET(KPCR, Irql) == KPCR_IRQL);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
-C_ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
-C_ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcStack) == KPCR_PRCB_DPC_STACK);
 C_ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
+
+/* Platform specific checks */
+#ifdef _M_IX86
+C_ASSERT(FIELD_OFFSET(KPROCESS, IopmOffset) == KPROCESS_IOPM_OFFSET);
+C_ASSERT(FIELD_OFFSET(KPROCESS, LdtDescriptor) == KPROCESS_LDT_DESCRIPTOR0);
+C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, SavedExceptionStack) == TF_SAVED_EXCEPTION_STACK);
+C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
+C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
+C_ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
+C_ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
+#endif
 
 #endif /* INCLUDE_INTERNAL_NTOSKRNL_H */

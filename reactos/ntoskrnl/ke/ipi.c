@@ -151,7 +151,7 @@ KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
 
     /* Raise to DPC level if required */
     OldIrql = KeGetCurrentIrql();
-    if (OldIrql <= DISPATCH_LEVEL) KfRaiseIrql(DISPATCH_LEVEL);
+    if (OldIrql < DISPATCH_LEVEL) OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
 
     /* Acquire the IPI lock */
     KefAcquireSpinLockAtDpcLevel(&KiIpiLock);
