@@ -22,8 +22,22 @@
 		<file>stubs.c</file>
 		<file>stubsa.c</file>
 		<file>stubsw.c</file>
-		<file>win32k.S</file>
 		<file>wingl.c</file>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>win32k.S</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="powerpc">
+			<directory name="powerpc">
+				<file>win32k.S</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="mips">
+			<directory name="mips">
+				<file>win32k.S</file>
+			</directory>
+		</if>
 	</directory>
 	<directory name="objects">
 		<file>bitmap.c</file>

@@ -103,6 +103,17 @@
                 <file>interlck_asm.S</file>
                 <file>fastinterlck_asm.S</file>
                 <file>ioport.S</file>
+                <file>zw.S</file>
+            </directory>
+        </if>
+        <if property="ARCH" value="powerpc">
+            <directory name="powerpc">
+                <file>zw.S</file>
+            </directory>
+        </if>
+        <if property="ARCH" value="mips">
+            <directory name="mips">
+                <file>zw.S</file>
             </directory>
         </if>
             <file>atom.c</file>
@@ -132,7 +143,6 @@
             <file>win32k.c</file>
             <file>work.c</file>
             <file>zone.c</file>
-        <file>zw.S</file>
     </directory>
     <directory name="fsrtl">
             <file>dbcsname.c</file>

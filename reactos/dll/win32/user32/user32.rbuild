@@ -43,10 +43,24 @@
 		<file>strpool.c</file>
 		<file>stubs.c</file>
 		<file>timer.c</file>
-		<file>win32k.S</file>
 		<file>winhelp.c</file>
 		<file>winsta.c</file>
 		<file>wsprintf.c</file>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>win32k.S</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="powerpc">
+			<directory name="powerpc">
+				<file>win32k.S</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="mips">
+			<directory name="mips">
+				<file>win32k.S</file>
+			</directory>
+		</if>
 	</directory>
 	<directory name="windows">
 		<file>accel.c</file>

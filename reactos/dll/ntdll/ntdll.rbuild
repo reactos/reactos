@@ -47,5 +47,19 @@
     <directory name="inc">
         <pch>ntdll.h</pch>
     </directory>
-    <file>napi.S</file>
+    <if property="ARCH" value="i386">
+        <directory name="i386">
+            <file>napi.S</file>
+        </directory>
+    </if>
+    <if property="ARCH" value="powerpc">
+        <directory name="powerpc">
+            <file>napi.S</file>
+        </directory>
+    </if>
+    <if property="ARCH" value="mips">
+        <directory name="mips">
+            <file>napi.S</file>
+        </directory>
+    </if>
 </module>

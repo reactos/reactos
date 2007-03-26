@@ -53,6 +53,16 @@
                             "    movl $KUSER_SHARED_SYSCALL, %%ecx\n" \
                             "    call *(%%ecx)\n" \
                             "    ret $0x%x\n\n"
+
+#define UserModeStub_ppc    "    mflr 0\n" \
+			    "    addi 1,1,-16\n" \
+			    "	 li   0,%x\n" \
+			    "    stw  0,1(0)\n" \
+			    "    sc\n" \
+			    "    lwz  0,1(0)\n" \
+			    "    mtlr 0\n" \
+			    "    addi 1,1,16\n" \
+			    "    blr\n"
 #elif defined(_MSC_VER)
 #define UserModeStub_x86    "    asm { \n" \
                             "        mov eax, %xh\n" \
@@ -75,6 +85,9 @@
                             "    pushl $KGDT_R0_CODE\n" \
                             "    call _KiSystemService\n" \
                             "    ret $0x%x\n\n"
+
+#define KernelModeStub_ppc  "    bl KiSystemService\n" \
+			    "    rfi\n"
 #elif defined(_MSC_VER)
 #define KernelModeStub_x86  "    asm { \n" \
                             "        mov eax, %xh\n" \
@@ -89,14 +102,28 @@
 #endif
 
 /***** Arch Dependent Stuff ******/
-//#ifdef _M_IX86
-#define ARGS_TO_BYTES(x) x*4
-#define UserModeStub UserModeStub_x86
-#define KernelModeStub KernelModeStub_x86
+struct ncitool_data_t {
+	const char *arch;
+	int args_to_bytes;
+	const char *km_stub;
+	const char *um_stub;
+	const char *global_header;
+	const char *declaration;
+};
 
-//#elseif
-//#error Unsupported Architecture
-//#endif
+struct ncitool_data_t ncitool_data[] = {
+	{ "i386", 4, KernelModeStub_x86, UserModeStub_x86,
+	  ".global _%s@%d\n", "_%s@%d:\n" },
+	{ "powerpc", 4, KernelModeStub_ppc, UserModeStub_ppc,
+	  "\t.globl %s\n", "%s:\n" },
+	{ 0, }
+};
+int arch_sel = 0;
+#define ARGS_TO_BYTES(x) 4*(ncitool_data[arch_sel].args_to_bytes)
+#define UserModeStub ncitool_data[arch_sel].um_stub
+#define KernelModeStub ncitool_data[arch_sel].km_stub
+#define GlobalHeader ncitool_data[arch_sel].global_header
+#define Declaration ncitool_data[arch_sel].declaration
 
 /* FUNCTIONS ****************************************************************/
 
@@ -162,10 +189,10 @@ WriteStubHeader(FILE* StubFile,
                 unsigned StackBytes)
 {
     /* Export the function */
-    fprintf(StubFile, ".global _%s@%d\n", SyscallName, StackBytes);
+    fprintf(StubFile, GlobalHeader, SyscallName, StackBytes);
     
     /* Define it */
-    fprintf(StubFile, "_%s@%d:\n\n", SyscallName, StackBytes);
+    fprintf(StubFile, Declaration, SyscallName, StackBytes);
 }
 
     
@@ -489,7 +516,7 @@ CreateSystemServiceTable(FILE *SyscallDb,
 
 void usage(char * argv0)
 {
-    printf("Usage: %s sysfuncs.lst w32ksvc.db napi.h ssdt.h napi.S zw.S win32k.S win32k.S\n"
+    printf("Usage: %s [-arch <arch>] sysfuncs.lst w32ksvc.db napi.h ssdt.h napi.S zw.S win32k.S win32k.S\n"
            "  sysfuncs.lst  native system functions database\n"
            "  w32ksvc.db    native graphic functions database\n"
            "  napi.h        NTOSKRNL service table\n"
@@ -497,19 +524,33 @@ void usage(char * argv0)
            "  napi.S        NTDLL stubs\n"
            "  zw.S          NTOSKRNL Zw stubs\n"
            "  win32k.S      GDI32 stubs\n"
-           "  win32k.S      USER32 stubs\n",
-           argv0
+           "  win32k.S      USER32 stubs\n"
+           "  -arch is optional, default is %s\n",
+           argv0,
+           ncitool_data[0].arch
            );
 }
 
 int main(int argc, char* argv[])
 {
-    FILE * Files[Arguments];
-    int FileNumber;
+    FILE * Files[Arguments] = { };
+    int FileNumber, ArgOffset = 1;
     char * OpenType = "r";
 
+    /* Catch architecture argument */
+    if (argc > 3 && !strcmp(argv[1],"-arch")) {
+        for( arch_sel = 0; ncitool_data[arch_sel].arch; arch_sel++ )
+            if (strcmp(argv[2],ncitool_data[arch_sel].arch) == 0)
+                break;
+        if (!ncitool_data[arch_sel].arch) {
+            printf("Invalid arch '%s'\n", argv[2]);
+            usage(argv[0]);
+            return 1;
+        }
+        ArgOffset = 3;
+    }
     /* Make sure all arguments all there */
-    if (argc != Arguments + 1) {
+    if (argc != Arguments + ArgOffset) {
         usage(argv[0]);
         return(1);
     }
@@ -519,33 +560,32 @@ int main(int argc, char* argv[])
     
         /* Open the File */
         if (FileNumber == 2) OpenType = "wb";
-        Files[FileNumber] = fopen(argv[FileNumber + 1], OpenType);
+        Files[FileNumber] = fopen(argv[FileNumber + ArgOffset], OpenType);
         
         /* Check for failure and error out if so */
         if (!Files[FileNumber]) {
-            perror(argv[FileNumber + 1]);
+            perror(argv[FileNumber + ArgOffset]);
             return (1);
         }
-    
     }
 
     /* Write the File Headers */
     WriteFileHeader(Files[NtosUserStubs], 
                     "System Call Stubs for Native API", 
-                    argv[NtosUserStubs + 1]);
+                    argv[NtosUserStubs + ArgOffset]);
     
     WriteFileHeader(Files[NtosKernelStubs], 
                     "System Call Stubs for Native API", 
-                    argv[NtosKernelStubs + 1]);
+                    argv[NtosKernelStubs + ArgOffset]);
     fputs("#include <ndk/asm.h>\n\n", Files[NtosKernelStubs]);
 
     WriteFileHeader(Files[Win32kGdiStubs], 
                     "System Call Stubs for Native API", 
-                    argv[Win32kGdiStubs + 1]);
+                    argv[Win32kGdiStubs + ArgOffset]);
     
     WriteFileHeader(Files[Win32kUserStubs], 
                     "System Call Stubs for Native API", 
-                    argv[Win32kUserStubs + 1]);
+                    argv[Win32kUserStubs + ArgOffset]);
 
 
     /* Create the System Stubs */
@@ -572,15 +612,15 @@ int main(int argc, char* argv[])
     CreateSystemServiceTable(Files[NativeSystemDb], 
                             Files[NtosServiceTable],
                             "Main",
-                            argv[NtosServiceTable + 1]);
+                            argv[NtosServiceTable + ArgOffset]);
     
     CreateSystemServiceTable(Files[NativeGuiDb], 
                             Files[Win32kServiceTable],
                             "Win32k",
-                            argv[Win32kServiceTable + 1]);
+                            argv[Win32kServiceTable + ArgOffset]);
 
     /* Close all files */
-    for (FileNumber = 0; FileNumber < Arguments; FileNumber++) {
+    for (FileNumber = 0; FileNumber < Arguments-ArgOffset; FileNumber++) {
     
         /* Close the File */
         fclose(Files[FileNumber]);
