@@ -12,7 +12,6 @@
 
 //#define NDEBUG
 #include <debug.h>
-GDIDEVICE IntGetPrimarySurface(VOID);
 
 /* swtich this off to get rid of all dx debug msg */
 #define DX_DEBUG
@@ -107,9 +106,11 @@ intEnableDriver(PDD_DIRECTDRAW pDirectDraw)
          */
         if (pDirectDraw->dwNumHeaps != 0)
         {
+            DPRINT1("Setup pvmList\n");
             pDirectDraw->pvmList = (PVIDEOMEMORY) ExAllocatePoolWithTag(PagedPool, pDirectDraw->dwNumHeaps * sizeof(VIDEOMEMORY), TAG_DXPVMLIST);
             if (pDirectDraw->pvmList == NULL)
             {
+                DPRINT1("pvmList memmery alloc fail\n");
                 return FALSE;
             }
         }
@@ -120,10 +121,12 @@ intEnableDriver(PDD_DIRECTDRAW pDirectDraw)
 
         if (pDirectDraw->dwNumFourCC != 0)
         {
+            DPRINT1("Setup pdwFourCC\n");
             pDirectDraw->pdwFourCC = (LPDWORD) ExAllocatePoolWithTag(PagedPool, pDirectDraw->dwNumFourCC * sizeof(DWORD), TAG_DXFOURCC);
 
             if (pDirectDraw->pdwFourCC == NULL)
             {
+                DPRINT1("pdwFourCC memmery alloc fail\n");
                 return FALSE;
             }
         }
@@ -170,15 +173,15 @@ intEnableDriver(PDD_DIRECTDRAW pDirectDraw)
             {
                 /* Unknown version found */
                 DPRINT1(" Fail : did not get DD_HALINFO size \n");
-
                 GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
                 return FALSE;
             }
-
-            /* Copy it to user mode pointer the data */
-            RtlCopyMemory(&pDirectDraw->Hal, &HalInfo, sizeof(DD_HALINFO));
         }
+        /* Copy it to user mode pointer the data */
+        RtlCopyMemory(&pDirectDraw->Hal, &HalInfo, sizeof(DD_HALINFO));
     }
+
+    DPRINT1("Trying EnableDirectDraw the driver\n");
 
     success = pDirectDraw->EnableDirectDraw( pDirectDraw->Global.dhpdev, 
                                              &pDirectDraw->DD, 
