@@ -119,7 +119,7 @@ struct ncitool_data_t ncitool_data[] = {
 	{ 0, }
 };
 int arch_sel = 0;
-#define ARGS_TO_BYTES(x) 4*(ncitool_data[arch_sel].args_to_bytes)
+#define ARGS_TO_BYTES(x) (x)*(ncitool_data[arch_sel].args_to_bytes)
 #define UserModeStub ncitool_data[arch_sel].um_stub
 #define KernelModeStub ncitool_data[arch_sel].km_stub
 #define GlobalHeader ncitool_data[arch_sel].global_header

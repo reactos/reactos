@@ -310,7 +310,7 @@ else # mingw32-windows
 		strip = $(Q)strip
 		windres = $(Q)windres
 	else
-		gcc = $(ROS_PREFIX)-gcc
+		gcc = $(Q)$(ROS_PREFIX)-gcc
 		gpp = $(Q)$(ROS_PREFIX)-g++
 		ld = $(Q)$(ROS_PREFIX)-ld
 		nm = $(Q)$(ROS_PREFIX)-nm
@@ -391,6 +391,7 @@ include lib/lib.mak
 include tools/tools.mak
 include boot/freeldr/bootsect/bootsect.mak
 -include $(ROS_AUTOMAKE)
+include tools/nci/nci.mak
 
 PREAUTO := \
 	$(BIN2C_TARGET) \
@@ -400,7 +401,6 @@ PREAUTO := \
 	$(BUGCODES_RC) \
 	$(ERRCODES_H) \
 	$(ERRCODES_RC) \
-	$(NCI_SERVICE_FILES) \
 	$(GENDIB_DIB_FILES)
 
 $(ROS_AUTOMAKE): $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)

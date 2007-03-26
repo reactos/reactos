@@ -48,7 +48,6 @@ include tools/cdmake/cdmake.mak
 include tools/dbgprint/dbgprint.mak
 include tools/gendib/gendib.mak
 include tools/mkhive/mkhive.mak
-include tools/nci/nci.mak
 include tools/pefixup.mak
 include tools/raddr2line.mak
 include tools/rbuild/rbuild.mak
