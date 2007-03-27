@@ -87,7 +87,7 @@ HalpGetSystemInterruptVector(IN ULONG BusNumber,
                              OUT PKIRQL Irql,
                              OUT PKAFFINITY Affinity)
 {
-    ULONG Vector = IRQ2VECTOR(BusInterruptVector);
+    ULONG Vector = IRQ2VECTOR(BusInterruptLevel);
     *Irql = (KIRQL)VECTOR2IRQL(Vector);
     *Affinity = 0xFFFFFFFF;
     return Vector;
