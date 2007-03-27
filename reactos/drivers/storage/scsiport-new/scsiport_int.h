@@ -16,6 +16,12 @@
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
+/* Defines how many logical unit arrays will be in a device extension */
+#define LUS_NUMBER 8
+
+/* Flags */
+#define SCSI_PORT_SCAN_IN_PROGRESS 0x8000
+
 typedef enum _SCSI_PORT_TIMER_STATES
 {
   IDETimerIdle,
@@ -35,14 +41,20 @@ typedef struct _SCSI_PORT_DEVICE_BASE
   ULONG SystemIoBusNumber;
 } SCSI_PORT_DEVICE_BASE, *PSCSI_PORT_DEVICE_BASE;
 
+typedef struct _SCSI_REQUEST_BLOCK_INFO
+{
+    LIST_ENTRY Requests;
+} SCSI_REQUEST_BLOCK_INFO, *PSCSI_REQUEST_BLOCK_INFO;
 
 typedef struct _SCSI_PORT_LUN_EXTENSION
 {
-  LIST_ENTRY List;
-
   UCHAR PathId;
   UCHAR TargetId;
   UCHAR Lun;
+
+  ULONG Flags;
+
+  struct _SCSI_PORT_LUN_EXTENSION *Next;
 
   BOOLEAN DeviceClaimed;
   PDEVICE_OBJECT DeviceObject;
@@ -51,11 +63,39 @@ typedef struct _SCSI_PORT_LUN_EXTENSION
 
   KDEVICE_QUEUE DeviceQueue;
 
+  SCSI_REQUEST_BLOCK_INFO SrbInfo;
+
   /* More data? */
 
   UCHAR MiniportLunExtension[1]; /* must be the last entry */
 } SCSI_PORT_LUN_EXTENSION, *PSCSI_PORT_LUN_EXTENSION;
 
+/* Structures for inquiries support */
+
+typedef struct _SCSI_LUN_INFO
+{
+    UCHAR PathId;
+    UCHAR TargetId;
+    UCHAR Lun;
+    BOOLEAN DeviceClaimed;
+    PVOID DeviceObject;
+    struct _SCSI_LUN_INFO *Next;
+    UCHAR InquiryData[INQUIRYDATABUFFERSIZE];
+} SCSI_LUN_INFO, *PSCSI_LUN_INFO;
+
+typedef struct _SCSI_BUS_SCAN_INFO
+{
+    USHORT Length;
+    UCHAR LogicalUnitsCount;
+    UCHAR BusIdentifier;
+    PSCSI_LUN_INFO LunInfo;
+} SCSI_BUS_SCAN_INFO, *PSCSI_BUS_SCAN_INFO;
+
+typedef struct _BUSES_CONFIGURATION_INFORMATION
+{
+    UCHAR NumberOfBuses;
+    PSCSI_BUS_SCAN_INFO BusScanInfo[1];
+} BUSES_CONFIGURATION_INFORMATION, *PBUSES_CONFIGURATION_INFORMATION;
 
 /*
  * SCSI_PORT_DEVICE_EXTENSION
@@ -70,6 +110,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   ULONG Length;
   ULONG MiniPortExtensionSize;
   PPORT_CONFIGURATION_INFORMATION PortConfig;
+  PBUSES_CONFIGURATION_INFORMATION BusesConfig;
   ULONG PortNumber;
 
   KSPIN_LOCK IrpLock;
@@ -84,7 +125,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   LIST_ENTRY DeviceBaseListHead;
 
   ULONG LunExtensionSize;
-  LIST_ENTRY LunExtensionListHead;
+  PSCSI_PORT_LUN_EXTENSION LunExtensionList[LUS_NUMBER];
 
   ULONG SrbExtensionSize;
 

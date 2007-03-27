@@ -80,13 +80,7 @@ ScsiPortStartPacket(IN OUT PVOID Context);
 
 
 static PSCSI_PORT_LUN_EXTENSION
-SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-			 IN UCHAR PathId,
-			 IN UCHAR TargetId,
-			 IN UCHAR Lun);
-
-static VOID
-SpiRemoveLunExtension (IN PSCSI_PORT_LUN_EXTENSION LunExtension);
+SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 
 static PSCSI_PORT_LUN_EXTENSION
 SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
@@ -96,14 +90,14 @@ SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
 static NTSTATUS
 SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
-		IN OUT PSCSI_REQUEST_BLOCK Srb);
+		IN PSCSI_LUN_INFO LunInfo);
 
 static VOID
 SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 
-static ULONG
+static NTSTATUS
 SpiGetInquiryData (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-		   OUT PSCSI_ADAPTER_BUS_INFO AdapterBusInfo);
+		   IN PIRP Irp);
 
 static BOOLEAN STDCALL
 ScsiPortIsr(IN PKINTERRUPT Interrupt,
@@ -246,7 +240,7 @@ ScsiPortFreeDeviceBase(IN PVOID HwDeviceExtension,
   PSCSI_PORT_DEVICE_BASE DeviceBase;
   PLIST_ENTRY Entry;
 
-  DPRINT("ScsiPortFreeDeviceBase() called\n");
+  //DPRINT("ScsiPortFreeDeviceBase() called\n");
 
   DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
 				      SCSI_PORT_DEVICE_EXTENSION,
@@ -311,7 +305,7 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
   ULONG AddressSpace;
   PVOID MappedAddress;
 
-  DPRINT ("ScsiPortGetDeviceBase() called\n");
+  //DPRINT ("ScsiPortGetDeviceBase() called\n");
 
   AddressSpace = (ULONG)InIoSpace;
   if (HalTranslateBusAddress(BusType,
@@ -359,6 +353,8 @@ ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
 		       IN UCHAR TargetId,
 		       IN UCHAR Lun)
 {
+    UNIMPLEMENTED;
+#if 0
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
   PSCSI_PORT_LUN_EXTENSION LunExtension;
   PLIST_ENTRY Entry;
@@ -386,7 +382,7 @@ ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
 
       Entry = Entry->Flink;
     }
-
+#endif
   return NULL;
 }
 
@@ -748,9 +744,6 @@ ScsiPortInitialize(IN PVOID Argument1,
       /* Initialize the device base list */
       InitializeListHead (&DeviceExtension->DeviceBaseListHead);
 
-      /* Initialize LUN-Extension list */
-      InitializeListHead (&DeviceExtension->LunExtensionListHead);
-
       /* Initialize the spin lock in the controller extension */
       KeInitializeSpinLock (&DeviceExtension->IrpLock);
       KeInitializeSpinLock (&DeviceExtension->SpinLock);
@@ -791,7 +784,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 //  PortConfig->DmaSpeed =
 //  PortConfig->AlignmentMask =
       PortConfig->NumberOfAccessRanges = HwInitializationData->NumberOfAccessRanges;
-//  PortConfig->NumberOfBuses =
+    PortConfig->NumberOfBuses = MaxBus;
 
       for (i = 0; i < SCSI_MAXIMUM_BUSES; i++)
 	PortConfig->InitiatorBusId[i] = 255;
@@ -915,6 +908,26 @@ ScsiPortInitialize(IN PVOID Argument1,
 	  PortCapabilities->AdapterScansDown =
 	    PortConfig->AdapterScansDown;
 	  PortCapabilities->AdapterUsesPio = TRUE; /* FIXME */
+
+          /* Initialize bus scanning information */
+          DeviceExtension->BusesConfig = ExAllocatePool(PagedPool,
+              sizeof(PSCSI_BUS_SCAN_INFO) * DeviceExtension->PortConfig->NumberOfBuses
+              + sizeof(ULONG));
+
+          if (!DeviceExtension->BusesConfig)
+          {
+              DPRINT1("Out of resources!\n");
+              Status = STATUS_INSUFFICIENT_RESOURCES;
+              goto ByeBye;
+          }
+
+          /* Zero it */
+          RtlZeroMemory(DeviceExtension->BusesConfig,
+              sizeof(PSCSI_BUS_SCAN_INFO) * DeviceExtension->PortConfig->NumberOfBuses
+              + sizeof(ULONG));
+
+          /* Store number of buses there */
+          DeviceExtension->BusesConfig->NumberOfBuses = DeviceExtension->PortConfig->NumberOfBuses;
 
 	  /* Scan the adapter for devices */
 	  SpiScanAdapter (DeviceExtension);
@@ -1552,10 +1565,7 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	  DPRINT("  IOCTL_SCSI_GET_INQUIRY_DATA\n");
 
 	  /* Copy inquiry data to the port device extension */
-	  Irp->IoStatus.Information =
-	    SpiGetInquiryData(DeviceExtension,
-			      Irp->AssociatedIrp.SystemBuffer);
-	  DPRINT("Inquiry data size: %lu\n", Irp->IoStatus.Information);
+	  Irp->IoStatus.Status = SpiGetInquiryData(DeviceExtension, Irp);
 	}
 	break;
 
@@ -1723,64 +1733,41 @@ ScsiPortStartPacket(IN OUT PVOID Context)
 
 
 static PSCSI_PORT_LUN_EXTENSION
-SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-			 IN UCHAR PathId,
-			 IN UCHAR TargetId,
-			 IN UCHAR Lun)
+SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 {
-  PSCSI_PORT_LUN_EXTENSION LunExtension;
-  ULONG LunExtensionSize;
+    PSCSI_PORT_LUN_EXTENSION LunExtension;
+    ULONG LunExtensionSize;
 
-  DPRINT("SpiAllocateLunExtension (%p %u %u %u)\n",
-	 DeviceExtension, PathId, TargetId, Lun);
+    DPRINT("SpiAllocateLunExtension (%p)\n",
+        DeviceExtension);
 
-  LunExtensionSize =
-    sizeof(SCSI_PORT_LUN_EXTENSION) + DeviceExtension->LunExtensionSize;
-  DPRINT("LunExtensionSize %lu\n", LunExtensionSize);
+    /* Round LunExtensionSize first to the sizeof LONGLONG */
+    LunExtensionSize = (DeviceExtension->LunExtensionSize +
+        sizeof(LONGLONG) - 1) & ~(sizeof(LONGLONG) - 1);
 
-  LunExtension = ExAllocatePool(NonPagedPool,
-				LunExtensionSize);
-  if (LunExtension == NULL)
+    LunExtensionSize += sizeof(SCSI_PORT_LUN_EXTENSION);
+    DPRINT("LunExtensionSize %lu\n", LunExtensionSize);
+
+    LunExtension = ExAllocatePool(NonPagedPool, LunExtensionSize);
+    if (LunExtension == NULL)
     {
-      return NULL;
+        DPRINT1("Out of resources!\n");
+        return NULL;
     }
 
-  RtlZeroMemory(LunExtension,
-		LunExtensionSize);
+    /* Zero everything */
+    RtlZeroMemory(LunExtension, LunExtensionSize);
 
-  InsertTailList(&DeviceExtension->LunExtensionListHead,
-		 &LunExtension->List);
+    /* Initialize a list of requests */
+    InitializeListHead(&LunExtension->SrbInfo.Requests);
 
-  LunExtension->PathId = PathId;
-  LunExtension->TargetId = TargetId;
-  LunExtension->Lun = Lun;
+    /* TODO: Initialize other fields */
 
-  KeInitializeDeviceQueue (&LunExtension->DeviceQueue);
+    /* Initialize request queue */
+    KeInitializeDeviceQueue (&LunExtension->DeviceQueue);
 
-  return LunExtension;
+    return LunExtension;
 }
-
-
-static VOID
-SpiRemoveLunExtension (IN PSCSI_PORT_LUN_EXTENSION LunExtension)
-{
-  DPRINT("SpiRemoveLunExtension(%p) called\n",
-	 LunExtension);
-
-  if (LunExtension == NULL)
-    return;
-
-  RemoveEntryList (&LunExtension->List);
-
-
-  /* Release LUN extersion data */
-
-
-  ExFreePool (LunExtension);
-
-  return;
-}
-
 
 static PSCSI_PORT_LUN_EXTENSION
 SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
@@ -1788,248 +1775,519 @@ SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		    IN UCHAR TargetId,
 		    IN UCHAR Lun)
 {
-  PSCSI_PORT_LUN_EXTENSION LunExtension;
-  PLIST_ENTRY Entry;
+    PSCSI_PORT_LUN_EXTENSION LunExtension;
 
-  DPRINT("SpiGetLunExtension(%p %u %u %u) called\n",
-	 DeviceExtension, PathId, TargetId, Lun);
+    DPRINT("SpiGetLunExtension(%p %u %u %u) called\n",
+        DeviceExtension, PathId, TargetId, Lun);
 
-  if (IsListEmpty(&DeviceExtension->LunExtensionListHead))
-    return NULL;
+    /* Get appropriate list */
+    LunExtension = DeviceExtension->LunExtensionList[(TargetId + Lun) % LUS_NUMBER];
 
-  Entry = DeviceExtension->LunExtensionListHead.Flink;
-  while (Entry != &DeviceExtension->LunExtensionListHead)
+    /* Iterate it until we find what we need */
+    while (!LunExtension)
     {
-      LunExtension = CONTAINING_RECORD(Entry,
-				       SCSI_PORT_LUN_EXTENSION,
-				       List);
-      if (LunExtension->PathId == PathId &&
-	  LunExtension->TargetId == TargetId &&
-	  LunExtension->Lun == Lun)
-	{
-	  return LunExtension;
-	}
+        if (LunExtension->TargetId == TargetId &&
+            LunExtension->Lun == Lun &&
+            LunExtension->PathId == PathId)
+        {
+            /* All matches, return */
+            return LunExtension;
+        }
 
-      Entry = Entry->Flink;
+        /* Advance to the next item */
+        LunExtension = LunExtension->Next;
     }
 
-  return NULL;
+    /* We did not find anything */
+    DPRINT("Nothing found\n");
+    return NULL;
 }
 
 
 static NTSTATUS
 SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
-		IN OUT PSCSI_REQUEST_BLOCK Srb)
+		IN PSCSI_LUN_INFO LunInfo)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  PIO_STACK_LOCATION IrpStack;
-  PKEVENT Event;
-  PIRP Irp;
-  NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIO_STACK_LOCATION IrpStack;
+    KEVENT Event;
+    PIRP Irp;
+    NTSTATUS Status;
+    PINQUIRYDATA InquiryBuffer;
+    PSENSE_DATA SenseBuffer;
+    BOOLEAN KeepTrying = TRUE;
+    ULONG RetryCount = 0;
+    SCSI_REQUEST_BLOCK Srb;
+    PCDB Cdb;
 
-  DPRINT ("SpiSendInquiry() called\n");
+    DPRINT ("SpiSendInquiry() called\n");
 
-  Event = ExAllocatePool (NonPagedPool,
-			  sizeof(KEVENT));
-  if (Event == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
+    InquiryBuffer = ExAllocatePool (NonPagedPool, INQUIRYDATABUFFERSIZE);
+    if (InquiryBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-  KeInitializeEvent (Event,
-		     NotificationEvent,
-		     FALSE);
+    SenseBuffer = ExAllocatePool (NonPagedPool, SENSE_BUFFER_SIZE);
+    if (SenseBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-  Irp = IoBuildDeviceIoControlRequest (IOCTL_SCSI_EXECUTE_OUT,
-				       DeviceObject,
-				       NULL,
-				       0,
-				       Srb->DataBuffer,
-				       Srb->DataTransferLength,
-				       TRUE,
-				       Event,
-				       &IoStatusBlock);
-  if (Irp == NULL)
+    while (KeepTrying)
     {
-      DPRINT("IoBuildDeviceIoControlRequest() failed\n");
-      ExFreePool (Event);
-      return STATUS_INSUFFICIENT_RESOURCES;
+        /* Initialize event for waiting */
+        KeInitializeEvent(&Event,
+                          NotificationEvent,
+                          FALSE);
+
+        /* Create an IRP */
+        Irp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_EXECUTE_IN,
+            DeviceObject,
+            NULL,
+            0,
+            InquiryBuffer,
+            INQUIRYDATABUFFERSIZE,
+            TRUE,
+            &Event,
+            &IoStatusBlock);
+        if (Irp == NULL)
+        {
+            DPRINT("IoBuildDeviceIoControlRequest() failed\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Prepare SRB */
+        RtlZeroMemory(&Srb, sizeof(SCSI_REQUEST_BLOCK));
+
+        Srb.Length = sizeof(SCSI_REQUEST_BLOCK);
+        Srb.OriginalRequest = Irp;
+        Srb.PathId = LunInfo->PathId;
+        Srb.TargetId = LunInfo->TargetId;
+        Srb.Lun = LunInfo->Lun;
+        Srb.Function = SRB_FUNCTION_EXECUTE_SCSI;
+        Srb.SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
+        Srb.TimeOutValue = 4;
+        Srb.CdbLength = 6;
+
+        Srb.SenseInfoBuffer = SenseBuffer;
+        Srb.SenseInfoBufferLength = SENSE_BUFFER_SIZE;
+
+        Srb.DataBuffer = InquiryBuffer;
+        Srb.DataTransferLength = INQUIRYDATABUFFERSIZE;
+
+        /* Attach Srb to the Irp */
+        IrpStack = IoGetNextIrpStackLocation (Irp);
+        IrpStack->Parameters.Scsi.Srb = &Srb;
+
+        /* Fill in CDB */
+        Cdb = (PCDB)Srb.Cdb;
+        Cdb->CDB6INQUIRY.LogicalUnitNumber = LunInfo->Lun;
+        Cdb->CDB6INQUIRY.AllocationLength = INQUIRYDATABUFFERSIZE;
+
+        /* Call the driver */
+        Status = IoCallDriver(DeviceObject, Irp);
+
+        /* Wait for it to complete */
+        if (Status == STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&Event,
+                Executive,
+                KernelMode,
+                FALSE,
+                NULL);
+            Status = IoStatusBlock.Status;
+        }
+
+        if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_SUCCESS)
+        {
+            /* All fine, copy data over */
+            RtlCopyMemory(LunInfo->InquiryData,
+                          InquiryBuffer,
+                          INQUIRYDATABUFFERSIZE);
+
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Check if queue is frozen */
+            if (Srb.SrbStatus & SRB_STATUS_QUEUE_FROZEN)
+            {
+                /* Something weird happeend */
+                ASSERT(FALSE);
+            }
+
+            /* Check if data overrun happened */
+            if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_DATA_OVERRUN)
+            {
+                /* TODO: Implement */
+                ASSERT(FALSE);
+            }
+            else if ((Srb.SrbStatus & SRB_STATUS_AUTOSENSE_VALID) &&
+                SenseBuffer->SenseKey == SCSI_SENSE_ILLEGAL_REQUEST)
+            {
+                /* LUN is not valid, but some device responds there.
+                   Mark it as invalid anyway */
+
+                Status = STATUS_INVALID_DEVICE_REQUEST;
+            }
+            else
+            {
+                /* Retry a couple of times if no timeout happened */
+                if ((RetryCount < 2) &&
+                    (SRB_STATUS(Srb.SrbStatus) != SRB_STATUS_NO_DEVICE) &&
+                    (SRB_STATUS(Srb.SrbStatus) != SRB_STATUS_SELECTION_TIMEOUT))
+                {
+                    RetryCount++;
+                    KeepTrying = TRUE;
+                }
+                else
+                {
+                    /* That's all, go to exit */
+                    KeepTrying = FALSE;
+
+                    /* Set status according to SRB status */
+                    if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_BAD_FUNCTION ||
+                        SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_BAD_SRB_BLOCK_LENGTH)
+                    {
+                          Status = STATUS_INVALID_DEVICE_REQUEST;
+                    }
+                    else
+                    {
+                        Status = STATUS_IO_DEVICE_ERROR;
+                    }
+                }
+            }
+        }
     }
 
-  /* Attach Srb to the Irp */
-  IrpStack = IoGetNextIrpStackLocation (Irp);
-  IrpStack->Parameters.Scsi.Srb = Srb;
-  Srb->OriginalRequest = Irp;
+    /* Free buffers */
+    ExFreePool(InquiryBuffer);
+    ExFreePool(SenseBuffer);
 
-  /* Call the driver */
-  Status = IoCallDriver (DeviceObject,
-			 Irp);
-  if (Status == STATUS_PENDING)
-    {
-      KeWaitForSingleObject (Event,
-			     Suspended,
-			     KernelMode,
-			     FALSE,
-			     NULL);
-      Status = IoStatusBlock.Status;
-    }
-
-  ExFreePool (Event);
-
-  return Status;
+    return Status;
 }
 
 
+/* Scans all SCSI buses */
 static VOID
-SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
+SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 {
-  PSCSI_PORT_LUN_EXTENSION LunExtension;
-  SCSI_REQUEST_BLOCK Srb;
-  PCDB Cdb;
-  ULONG Bus;
-  ULONG Target;
-  ULONG Lun;
-  NTSTATUS Status;
+    PSCSI_PORT_LUN_EXTENSION LunExtension;
+    ULONG Bus;
+    ULONG Target;
+    ULONG Lun;
+    PSCSI_BUS_SCAN_INFO BusScanInfo;
+    PSCSI_LUN_INFO LastLunInfo, LunInfo, LunInfoExists;
+    BOOLEAN DeviceExists;
+    ULONG Hint;
+    NTSTATUS Status;
+    ULONG DevicesFound;
 
-  DPRINT ("SpiScanAdapter() called\n");
+    DPRINT ("SpiScanAdapter() called\n");
 
-  RtlZeroMemory(&Srb,
-		sizeof(SCSI_REQUEST_BLOCK));
-  Srb.SrbFlags = SRB_FLAGS_DATA_IN;
-  Srb.DataBuffer = ExAllocatePool(NonPagedPool, 256);
-  Srb.Function = SRB_FUNCTION_EXECUTE_SCSI;
-  Srb.DataTransferLength = 255; //256;
-  Srb.CdbLength = 6;
-
-  Cdb = (PCDB) &Srb.Cdb;
-
-  Cdb->CDB6INQUIRY.OperationCode = SCSIOP_INQUIRY;
-  Cdb->CDB6INQUIRY.AllocationLength = 255;
-
-  for (Bus = 0; Bus < DeviceExtension->PortConfig->NumberOfBuses; Bus++)
+    /* Scan all buses */
+    for (Bus = 0; Bus < DeviceExtension->PortConfig->NumberOfBuses; Bus++)
     {
-      Srb.PathId = Bus;
+        DevicesFound = 0;
 
-      for (Target = 0; Target < DeviceExtension->PortConfig->MaximumNumberOfTargets; Target++)
-	{
-	  Srb.TargetId = Target;
+        /* Get pointer to the scan information */
+        BusScanInfo = DeviceExtension->BusesConfig->BusScanInfo[Bus];
 
-	  for (Lun = 0; Lun < SCSI_MAXIMUM_LOGICAL_UNITS; Lun++)
-	    {
-	      Srb.Lun = Lun;
-	      Srb.SrbStatus = SRB_STATUS_SUCCESS;
+        if (BusScanInfo)
+        {
+            /* Find the last LUN info in the list */
+            LunInfo = DeviceExtension->BusesConfig->BusScanInfo[Bus]->LunInfo;
+            LastLunInfo = LunInfo;
 
-	      Cdb->CDB6INQUIRY.LogicalUnitNumber = Lun;
+            while (LunInfo != NULL)
+            {
+                LastLunInfo = LunInfo;
+                LunInfo = LunInfo->Next;
+            }
+        }
+        else
+        {
+            /* We need to allocate this buffer */
+            BusScanInfo = ExAllocatePool(NonPagedPool, sizeof(SCSI_BUS_SCAN_INFO));
 
-	      LunExtension = SpiAllocateLunExtension (DeviceExtension,
-						      Bus,
-						      Target,
-						      Lun);
-	      if (LunExtension == NULL)
-		{
-		  DPRINT("Failed to allocate the LUN extension!\n");
-		  ExFreePool(Srb.DataBuffer);
-		  return;
-		}
+            if (!BusScanInfo)
+            {
+                DPRINT1("Out of resources!\n");
+                return;
+            }
 
-	      Status = SpiSendInquiry (DeviceExtension->DeviceObject,
-				       &Srb);
-	      DPRINT ("Status %lx  Srb.SrbStatus %x\n", Status, Srb.SrbStatus);
+            /* Fill this struct (length and bus ids for now) */
+            BusScanInfo->Length = sizeof(SCSI_BUS_SCAN_INFO);
+            BusScanInfo->LogicalUnitsCount = 0;
+            BusScanInfo->BusIdentifier = DeviceExtension->PortConfig->InitiatorBusId[Bus];
+            BusScanInfo->LunInfo = NULL;
 
-	      if (NT_SUCCESS(Status) &&
-		  (Srb.SrbStatus == SRB_STATUS_SUCCESS ||
-		   Srb.SrbStatus == SRB_STATUS_DATA_OVERRUN) &&
-		  ((PINQUIRYDATA)Srb.DataBuffer)->DeviceTypeQualifier == 0)
-		{
-		  /* Copy inquiry data */
-		  RtlCopyMemory (&LunExtension->InquiryData,
-				 Srb.DataBuffer,
-				 sizeof(INQUIRYDATA));
-		}
-	      else
-		{
-		  SpiRemoveLunExtension (LunExtension);
-		}
-	    }
-	}
+            /* Set pointer to the last LUN info to NULL */
+            LastLunInfo = NULL;
+        }
+
+        /* Create LUN information structure */
+        LunInfo = ExAllocatePool(PagedPool, sizeof(SCSI_LUN_INFO));
+
+        if (LunInfo == NULL)
+        {
+            DPRINT1("Out of resources!\n");
+            return;
+        }
+
+        RtlZeroMemory(LunInfo, sizeof(SCSI_LUN_INFO));
+
+        /* Create LunExtension */
+        LunExtension = SpiAllocateLunExtension (DeviceExtension);
+
+        /* And send INQUIRY to every target */
+        for (Target = 0; Target < DeviceExtension->PortConfig->MaximumNumberOfTargets; Target++)
+        {
+            /* TODO: Support scan bottom-up */
+
+            /* Skip if it's the same address */
+            if (Target == BusScanInfo->BusIdentifier)
+                continue;
+
+            /* Try to find an existing device here */
+            DeviceExists = FALSE;
+            LunInfoExists = BusScanInfo->LunInfo;
+
+            /* Find matching address on this bus */
+            while (LunInfoExists)
+            {
+                if (LunInfoExists->TargetId == Target)
+                {
+                    DeviceExists = TRUE;
+                    break;
+                }
+
+                /* Advance to the next one */
+                LunInfoExists = LunInfoExists->Next;
+            }
+
+            /* No need to bother rescanning, since we already did that before */
+            if (DeviceExists)
+                continue;
+
+            /* Scan all logical units */
+            for (Lun = 0; Lun < SCSI_MAXIMUM_LOGICAL_UNITS; Lun++)
+            {
+                if (!LunExtension)
+                    break;
+
+                /* Add extension to the list */
+                Hint = (Target + Lun) % LUS_NUMBER;
+                LunExtension->Next = DeviceExtension->LunExtensionList[Hint];
+                DeviceExtension->LunExtensionList[Hint] = LunExtension;
+
+                /* Fill Path, Target, Lun fields */
+                LunExtension->PathId = LunInfo->PathId = Bus;
+                LunExtension->TargetId = LunInfo->TargetId = Target;
+                LunExtension->Lun = LunInfo->Lun = Lun;
+
+                /* Set flag to prevent race conditions */
+                LunExtension->Flags |= SCSI_PORT_SCAN_IN_PROGRESS;
+
+                /* Zero LU extension contents */
+                if (DeviceExtension->LunExtensionSize)
+                {
+                    RtlZeroMemory(LunExtension + 1,
+                                  DeviceExtension->LunExtensionSize);
+                }
+
+                /* Finally send the inquiry command */
+                Status = SpiSendInquiry(DeviceExtension->DeviceObject, LunInfo);
+
+                if (NT_SUCCESS(Status))
+                {
+                    /* Let's see if we really found a device */
+                    PINQUIRYDATA InquiryData = (PINQUIRYDATA)LunInfo->InquiryData;
+
+                    /* Check if this device is unsupported */
+                    if (InquiryData->DeviceTypeQualifier == DEVICE_QUALIFIER_NOT_SUPPORTED)
+                    {
+                        DeviceExtension->LunExtensionList[Hint] = 
+                            DeviceExtension->LunExtensionList[Hint]->Next;
+
+                        continue;
+                    }
+
+                    /* Clear the "in scan" flag */
+                    LunExtension->Flags &= ~SCSI_PORT_SCAN_IN_PROGRESS;
+
+                    DPRINT("SpiScanAdapter(): Found device of type %d at bus %d tid %d lun %d\n",
+                        InquiryData->DeviceType, Bus, Target, Lun);
+
+                    /* Add this info to the linked list */
+                    LunInfo->Next = NULL;
+                    if (LastLunInfo)
+                        LastLunInfo->Next = LunInfo;
+                    else
+                        BusScanInfo->LunInfo = LunInfo;
+
+                    /* Store the last LUN info */
+                    LastLunInfo = LunInfo;
+
+                    /* Store DeviceObject */
+                    LunInfo->DeviceObject = DeviceExtension->DeviceObject;
+
+                    /* Allocate another buffer */
+                    LunInfo = ExAllocatePool(PagedPool, sizeof(SCSI_LUN_INFO));
+
+                    if (!LunInfo)
+                    {
+                        DPRINT1("Out of resources!\n");
+                        break;
+                    }
+
+                    RtlZeroMemory(LunInfo, sizeof(SCSI_LUN_INFO));
+
+                    /* Create a new LU extension */
+                    LunExtension = SpiAllocateLunExtension(DeviceExtension);
+
+                    DevicesFound++;
+                }
+                else
+                {
+                    /* Remove this LUN from the list */
+                    DeviceExtension->LunExtensionList[Hint] = 
+                        DeviceExtension->LunExtensionList[Hint]->Next;
+
+                    /* Decide whether we are continuing or not */
+                    if (Status == STATUS_INVALID_DEVICE_REQUEST)
+                        continue;
+                    else
+                        break;
+                }
+            }
+        }
+
+        /* Free allocated buffers */
+        if (LunExtension)
+            ExFreePool(LunExtension);
+
+        if (LunInfo)
+            ExFreePool(LunInfo);
+
+        /* Sum what we found */
+        BusScanInfo->LogicalUnitsCount += DevicesFound;
     }
 
-  ExFreePool(Srb.DataBuffer);
-
-  DPRINT ("SpiScanAdapter() done\n");
+    DPRINT ("SpiScanAdapter() done\n");
 }
 
 
-static ULONG
+static NTSTATUS
 SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-		  OUT PSCSI_ADAPTER_BUS_INFO AdapterBusInfo)
+		  PIRP Irp)
 {
-  PSCSI_PORT_LUN_EXTENSION LunExtension;
-  PSCSI_INQUIRY_DATA UnitInfo, PrevUnit;
-  ULONG Bus;
-  ULONG Target;
-  ULONG Lun;
-  ULONG UnitCount;
+    ULONG InquiryDataSize;
+    PSCSI_LUN_INFO LunInfo;
+    ULONG BusCount, LunCount, Length;
+    PIO_STACK_LOCATION IrpStack;
+    PSCSI_ADAPTER_BUS_INFO AdapterBusInfo;
+    PSCSI_INQUIRY_DATA InquiryData;
+    PSCSI_BUS_DATA BusData;
+    ULONG Bus;
+    PUCHAR Buffer;
 
-  DPRINT("SpiGetInquiryData() called\n");
+    DPRINT("SpiGetInquiryData() called\n");
 
-  /* Copy inquiry data to the port device extension */
-  AdapterBusInfo->NumberOfBuses = DeviceExtension->PortConfig->NumberOfBuses;
+    /* Get pointer to the buffer */
+    IrpStack = IoGetCurrentIrpStackLocation(Irp);
+    Buffer = Irp->AssociatedIrp.SystemBuffer;
 
-  UnitInfo = (PSCSI_INQUIRY_DATA)
-	((PUCHAR)AdapterBusInfo + sizeof(SCSI_ADAPTER_BUS_INFO) +
-	 (sizeof(SCSI_BUS_DATA) * (AdapterBusInfo->NumberOfBuses - 1)));
+    /* Initialize bus and LUN counters */
+    BusCount = DeviceExtension->BusesConfig->NumberOfBuses;
+    LunCount = 0;
 
-  for (Bus = 0; Bus < AdapterBusInfo->NumberOfBuses; Bus++)
+    /* Calculate total number of LUNs */
+    for (Bus = 0; Bus < BusCount; Bus++)
+        LunCount += DeviceExtension->BusesConfig->BusScanInfo[Bus]->LogicalUnitsCount;
+
+    /* Calculate size of inquiry data, rounding up to sizeof(ULONG) */
+    InquiryDataSize =
+        ((sizeof(SCSI_INQUIRY_DATA) - 1 + INQUIRYDATABUFFERSIZE +
+        sizeof(ULONG) - 1) & ~(sizeof(ULONG) - 1));
+
+    /* Calculate data size */
+    Length = sizeof(SCSI_ADAPTER_BUS_INFO) + (BusCount - 1) *
+        sizeof(SCSI_BUS_DATA);
+    
+    Length += InquiryDataSize * LunCount;
+
+    /* Check, if all data is going to fit into provided buffer */
+    if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < Length)
     {
-      AdapterBusInfo->BusData[Bus].InitiatorBusId =
-	DeviceExtension->PortConfig->InitiatorBusId[Bus];
-      AdapterBusInfo->BusData[Bus].InquiryDataOffset =
-	(ULONG)((PUCHAR)UnitInfo - (PUCHAR)AdapterBusInfo);
-
-      PrevUnit = NULL;
-      UnitCount = 0;
-
-      for (Target = 0; Target < DeviceExtension->PortConfig->MaximumNumberOfTargets; Target++)
-	{
-	  for (Lun = 0; Lun < SCSI_MAXIMUM_LOGICAL_UNITS; Lun++)
-	    {
-	      LunExtension = SpiGetLunExtension(DeviceExtension,
-						Bus,
-						Target,
-						Lun);
-	      if (LunExtension != NULL)
-		{
-		  DPRINT("(Bus %lu Target %lu Lun %lu)\n",
-			 Bus, Target, Lun);
-
-		  UnitInfo->PathId = Bus;
-		  UnitInfo->TargetId = Target;
-		  UnitInfo->Lun = Lun;
-		  UnitInfo->InquiryDataLength = INQUIRYDATABUFFERSIZE;
-		  RtlCopyMemory (&UnitInfo->InquiryData,
-				 &LunExtension->InquiryData,
-				 INQUIRYDATABUFFERSIZE);
-		  if (PrevUnit != NULL)
-		    {
-		      PrevUnit->NextInquiryDataOffset =
-			(ULONG)((ULONG_PTR)UnitInfo-(ULONG_PTR)AdapterBusInfo);
-		    }
-		  PrevUnit = UnitInfo;
-		  UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)UnitInfo + sizeof(SCSI_INQUIRY_DATA)+INQUIRYDATABUFFERSIZE-1);
-		  UnitCount++;
-		}
-	    }
-	}
-      DPRINT("UnitCount: %lu\n", UnitCount);
-      AdapterBusInfo->BusData[Bus].NumberOfLogicalUnits = UnitCount;
-      if (UnitCount == 0)
-	{
-	  AdapterBusInfo->BusData[Bus].InquiryDataOffset = 0;
-	}
+        Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+        return STATUS_BUFFER_TOO_SMALL;
     }
 
-  DPRINT("Data size: %lu\n", (ULONG)UnitInfo - (ULONG)AdapterBusInfo);
+    /* Store data size in the IRP */
+    Irp->IoStatus.Information = Length;
 
-  return (ULONG)((PUCHAR)UnitInfo-(PUCHAR)AdapterBusInfo);
+    DPRINT("Data size: %lu\n", Length);
+
+    AdapterBusInfo = (PSCSI_ADAPTER_BUS_INFO)Buffer;
+
+    AdapterBusInfo->NumberOfBuses = (UCHAR)BusCount;
+
+    /* Point InquiryData to the corresponding place inside Buffer */
+    InquiryData = (PSCSI_INQUIRY_DATA)(Buffer + sizeof(SCSI_ADAPTER_BUS_INFO) +
+        (BusCount - 1) * sizeof(SCSI_BUS_DATA));
+
+    /* Loop each bus */
+    for (Bus = 0; Bus < BusCount; Bus++)
+    {
+        BusData = &AdapterBusInfo->BusData[Bus];
+
+        /* Calculate and save an offset of the inquiry data */
+        BusData->InquiryDataOffset = (PUCHAR)InquiryData - Buffer;
+
+        /* Get a pointer to the LUN information structure */
+        LunInfo = DeviceExtension->BusesConfig->BusScanInfo[Bus]->LunInfo;
+
+        /* Store Initiator Bus Id */
+        BusData->InitiatorBusId =
+            DeviceExtension->BusesConfig->BusScanInfo[Bus]->BusIdentifier;
+
+        /* Store LUN count */
+        BusData->NumberOfLogicalUnits =
+            DeviceExtension->BusesConfig->BusScanInfo[Bus]->LogicalUnitsCount;
+
+        /* Loop all LUNs */
+        while (LunInfo != NULL)
+        {
+            DPRINT("(Bus %lu Target %lu Lun %lu)\n",
+                Bus, LunInfo->TargetId, LunInfo->Lun);
+
+            /* Fill InquiryData with values */
+            InquiryData->PathId = LunInfo->PathId;
+            InquiryData->TargetId = LunInfo->TargetId;
+            InquiryData->Lun = LunInfo->Lun;
+            InquiryData->InquiryDataLength = INQUIRYDATABUFFERSIZE;
+            InquiryData->DeviceClaimed = LunInfo->DeviceClaimed;
+            InquiryData->NextInquiryDataOffset =
+                (PUCHAR)InquiryData + InquiryDataSize - Buffer;
+
+            /* Copy data in it */
+            RtlCopyMemory(InquiryData->InquiryData,
+                          LunInfo->InquiryData,
+                          INQUIRYDATABUFFERSIZE);
+
+            /* Move to the next LUN */
+            LunInfo = LunInfo->Next;
+            InquiryData = (PSCSI_INQUIRY_DATA) ((PCHAR)InquiryData + InquiryDataSize);
+        }
+
+        /* Either mark the end, or set offset to 0 */
+        if (BusData->NumberOfLogicalUnits != 0)
+            ((PSCSI_INQUIRY_DATA) ((PCHAR) InquiryData - InquiryDataSize))->NextInquiryDataOffset = 0;
+        else
+            BusData->InquiryDataOffset = 0;
+    }
+
+    /* Finish with success */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
