@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.52 2004/04/02 15:43:01 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,19 +27,20 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/srb.h>
-#include <ddk/scsi.h>
-#include <ddk/ntddscsi.h>
-#include <rosrtl/string.h>
+#include <ntddk.h>
+#include <srb.h>
+#include <scsi.h>
+#include <ntddscsi.h>
+#include <ntddstor.h>
+#include <ntdddisk.h>
+#include <stdio.h>
+#include <stdarg.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
-
-#define VERSION "0.0.1"
-
 #include "scsiport_int.h"
+
 
 /* #define USE_DEVICE_QUEUES */
 
@@ -222,18 +223,6 @@ ScsiPortCompleteRequest(IN PVOID HwDeviceExtension,
   DPRINT("ScsiPortCompleteRequest()\n");
   UNIMPLEMENTED;
 }
-
-
-/*
- * @implemented
- */
-ULONG STDCALL
-ScsiPortConvertPhysicalAddressToUlong(IN SCSI_PHYSICAL_ADDRESS Address)
-{
-  DPRINT("ScsiPortConvertPhysicalAddressToUlong()\n");
-  return(Address.u.LowPart);
-}
-
 
 /*
  * @unimplemented
@@ -448,7 +437,7 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
     }
   else
     {
-      EndAddress = Srb->DataBuffer + Srb->DataTransferLength;
+      EndAddress = (PVOID)((ULONG_PTR)Srb->DataBuffer + Srb->DataTransferLength);
       if (VirtualAddress == NULL)
 	{
 	  VirtualAddress = Srb->DataBuffer;
@@ -475,18 +464,18 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
       PhysicalAddress.u.LowPart = (PhysicalAddress.u.LowPart & ~(PAGE_SIZE - 1)) + Offset;
 #endif
       BufferLength += PAGE_SIZE - Offset;
-      while (VirtualAddress + BufferLength < EndAddress)
+      while ((ULONG_PTR)VirtualAddress + BufferLength < (ULONG_PTR)EndAddress)
 	{
-	  NextPhysicalAddress = MmGetPhysicalAddress(VirtualAddress + BufferLength);
+	  NextPhysicalAddress = MmGetPhysicalAddress((PVOID)((ULONG_PTR)VirtualAddress + BufferLength));
 	  if (PhysicalAddress.QuadPart + (ULONGLONG)BufferLength != NextPhysicalAddress.QuadPart)
 	    {
 	      break;
 	    }
 	  BufferLength += PAGE_SIZE;
 	}
-      if (VirtualAddress + BufferLength >= EndAddress)
+      if ((ULONG_PTR)VirtualAddress + BufferLength >= (ULONG_PTR)EndAddress)
 	{
-	  BufferLength = EndAddress - VirtualAddress;
+	  BufferLength = (ULONG_PTR)EndAddress - (ULONG_PTR)VirtualAddress;
 	}
     }
 
@@ -817,7 +806,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 //  PortConfig->DemandMode =
       PortConfig->MapBuffers = HwInitializationData->MapBuffers;
       PortConfig->NeedPhysicalAddresses = HwInitializationData->NeedPhysicalAddresses;
-      PortConfig->TaggedQueuing = HwInitializationData->TaggedQueueing;
+      PortConfig->TaggedQueuing = HwInitializationData->TaggedQueuing;
       PortConfig->AutoRequestSense = HwInitializationData->AutoRequestSense;
       PortConfig->MultipleRequestPerLu = HwInitializationData->MultipleRequestPerLu;
       PortConfig->ReceiveEvent = HwInitializationData->ReceiveEvent;
@@ -828,7 +817,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 
       PortConfig->SlotNumber = SlotNumber.u.AsULONG;
 
-      PortConfig->AccessRanges = (PACCESS_RANGE)(PortConfig + 1);
+      PortConfig->AccessRanges = (ACCESS_RANGE(*)[])(PortConfig + 1);
 
       /* Search for matching PCI device */
       if ((HwInitializationData->AdapterInterfaceType == PCIBus) &&
@@ -1011,7 +1000,7 @@ ByeBye:
 VOID STDCALL
 ScsiPortIoMapTransfer(IN PVOID HwDeviceExtension,
 		      IN PSCSI_REQUEST_BLOCK Srb,
-		      IN ULONG LogicalAddress,
+		      IN PVOID LogicalAddress,
 		      IN ULONG Length)
 {
   DPRINT1("ScsiPortIoMapTransfer()\n");
@@ -1254,9 +1243,9 @@ SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
 
 		  for (i = 0; i < PortConfig->NumberOfAccessRanges; i++)
 		    {
-		      PortConfig->AccessRanges[i].RangeStart.QuadPart =
+		      (*PortConfig->AccessRanges)[i].RangeStart.QuadPart =
 			PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_ADDRESS_MASK;
-		      if (PortConfig->AccessRanges[i].RangeStart.QuadPart != 0)
+		      if ((*PortConfig->AccessRanges)[i].RangeStart.QuadPart != 0)
 			{
 			  RangeLength = (ULONG)-1;
 			  HalSetBusDataByOffset (PCIConfiguration,
@@ -1281,9 +1270,9 @@ SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
 						 sizeof(ULONG));
 			  if (RangeLength != 0)
 			    {
-			      PortConfig->AccessRanges[i].RangeLength =
+			      (*PortConfig->AccessRanges)[i].RangeLength =
 			        -(RangeLength & PCI_ADDRESS_IO_ADDRESS_MASK);
-			      PortConfig->AccessRanges[i].RangeInMemory =
+			      (*PortConfig->AccessRanges)[i].RangeInMemory =
 				!(PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_SPACE);
 
 			      DPRINT("RangeStart 0x%lX  RangeLength 0x%lX  RangeInMemory %s\n",
@@ -2300,8 +2289,8 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     }
 
   /* Open or create the 'Scsi' subkey */
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\Hardware\\DeviceMap\\Scsi");
+  RtlInitUnicodeString(&KeyName,
+			  L"\\Registry\\Machine\\Hardware\\DeviceMap\\Scsi");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
@@ -2406,7 +2395,7 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     }
 
   /* Set 'IOAddress' (REG_DWORD) value (NT4 only) */
-  UlongData = ScsiPortConvertPhysicalAddressToUlong(DeviceExtension->PortConfig->AccessRanges[0].RangeStart);
+  UlongData = ScsiPortConvertPhysicalAddressToUlong((*DeviceExtension->PortConfig->AccessRanges)[0].RangeStart);
   DPRINT("  IOAddress = %lx\n", UlongData);
   RtlInitUnicodeString(&ValueName,
 		       L"IOAddress");
@@ -2665,5 +2654,18 @@ ByeBye:
 
   return Status;
 }
+
+
+#undef ScsiPortConvertPhysicalAddressToUlong
+/*
+ * @implemented
+ */
+ULONG STDCALL
+ScsiPortConvertPhysicalAddressToUlong(IN SCSI_PHYSICAL_ADDRESS Address)
+{
+  DPRINT("ScsiPortConvertPhysicalAddressToUlong()\n");
+  return(Address.u.LowPart);
+}
+
 
 /* EOF */
