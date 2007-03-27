@@ -22,7 +22,7 @@ POBJECT_DIRECTORY ObpTypeDirectoryObject;
 /* DOS Device Prefix \??\ and \?? */
 ALIGNEDNAME ObpDosDevicesShortNamePrefix = {{L'\\',L'?',L'?',L'\\'}};
 ALIGNEDNAME ObpDosDevicesShortNameRoot = {{L'\\',L'?',L'?',L'\0'}};
-static UNICODE_STRING ObpDosDevicesShortName =
+UNICODE_STRING ObpDosDevicesShortName =
 {
     sizeof(ObpDosDevicesShortNamePrefix),
     sizeof(ObpDosDevicesShortNamePrefix),
