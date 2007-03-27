@@ -251,7 +251,6 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	LPTSTR temp;
 
 	/* Initialize parameter array */
-	*params = malloc(sizeof(LPTSTR));
 	if(!params)
 		return FALSE;
 	*params = NULL;
