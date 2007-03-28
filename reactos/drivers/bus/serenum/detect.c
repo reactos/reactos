@@ -9,7 +9,6 @@
  *                  Hervé Poussineau (hpoussin@reactos.com)
  */
 
-#define NDEBUG
 #include "serenum.h"
 
 static NTSTATUS
@@ -129,15 +128,15 @@ ReportDetectedDevice(
 	FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	RtlZeroMemory(PdoDeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
 	PdoDeviceExtension->Common.IsFDO = FALSE;
-	Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, DeviceDescription, &PdoDeviceExtension->DeviceDescription);
+	Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, DeviceDescription, &PdoDeviceExtension->DeviceDescription);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, DeviceId, &PdoDeviceExtension->DeviceId);
+	Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, DeviceId, &PdoDeviceExtension->DeviceId);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, InstanceId, &PdoDeviceExtension->InstanceId);
+	Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, InstanceId, &PdoDeviceExtension->InstanceId);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, HardwareIds, &PdoDeviceExtension->HardwareIds);
+	Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, HardwareIds, &PdoDeviceExtension->HardwareIds);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, CompatibleIds, &PdoDeviceExtension->CompatibleIds);
+	Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, CompatibleIds, &PdoDeviceExtension->CompatibleIds);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Device attached to serial port (Pdo) may delegate work to

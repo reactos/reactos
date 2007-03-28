@@ -7,7 +7,6 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
-#define NDEBUG
 #include "serenum.h"
 
 NTSTATUS NTAPI

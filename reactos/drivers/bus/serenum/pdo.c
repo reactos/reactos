@@ -7,7 +7,6 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
-#define NDEBUG
 #include "serenum.h"
 
 static NTSTATUS
@@ -70,7 +69,7 @@ SerenumPdoQueryId(
 			return STATUS_NOT_SUPPORTED;
 	}
 
-	Status = RtlDuplicateUnicodeString(
+	Status = DuplicateUnicodeString(
 		RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
 		SourceString,
 		&String);

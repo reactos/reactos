@@ -86,10 +86,7 @@ SerenumDetectLegacyDevice(
 
 /************************************ fdo.c */
 
-NTSTATUS NTAPI
-SerenumAddDevice(
-	IN PDRIVER_OBJECT DriverObject,
-	IN PDEVICE_OBJECT Pdo);
+DRIVER_ADD_DEVICE SerenumAddDevice;
 
 NTSTATUS
 SerenumFdoPnp(
@@ -122,6 +119,12 @@ NTSTATUS NTAPI
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
+
+NTSTATUS
+DuplicateUnicodeString(
+	IN ULONG Flags,
+	IN PCUNICODE_STRING SourceString,
+	OUT PUNICODE_STRING DestinationString);
 
 /************************************ pdo.c */
 

@@ -7,9 +7,13 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
-#define NDEBUG
 #define INITGUID
 #include "serenum.h"
+
+static DRIVER_DISPATCH SerenumPnp;
+static DRIVER_DISPATCH IrpStub;
+static DRIVER_UNLOAD DriverUnload;
+DRIVER_INITIALIZE DriverEntry;
 
 static NTSTATUS NTAPI
 SerenumPnp(
