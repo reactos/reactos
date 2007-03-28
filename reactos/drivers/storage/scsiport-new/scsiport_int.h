@@ -20,8 +20,19 @@
 #define LUS_NUMBER 8
 
 /* Flags */
-#define SCSI_PORT_NEXT_REQUEST_READY 0x0008
-#define SCSI_PORT_SCAN_IN_PROGRESS   0x8000
+#define SCSI_PORT_DEVICE_BUSY         0x0001
+#define SCSI_PORT_LU_ACTIVE           0x0002
+#define SCSI_PORT_NOTIFICATION_NEEDED 0x0004
+#define SCSI_PORT_NEXT_REQUEST_READY  0x0008
+#define SCSI_PORT_RESET               0x0080
+#define SCSI_PORT_RESET_REQUEST       0x0100
+#define SCSI_PORT_DISCONNECT_IN_PROGRESS 0x1000
+#define SCSI_PORT_DISABLE_INTERRUPTS  0x4000
+#define SCSI_PORT_SCAN_IN_PROGRESS    0x8000
+
+
+
+
 
 typedef enum _SCSI_PORT_TIMER_STATES
 {
@@ -46,6 +57,7 @@ typedef struct _SCSI_REQUEST_BLOCK_INFO
 {
     LIST_ENTRY Requests;
     PSCSI_REQUEST_BLOCK Srb;
+    PCHAR DataOffset;
     struct _SCSI_REQUEST_BLOCK_INFO *CompletedRequests;
 } SCSI_REQUEST_BLOCK_INFO, *PSCSI_REQUEST_BLOCK_INFO;
 
@@ -65,6 +77,9 @@ typedef struct _SCSI_PORT_LUN_EXTENSION
   INQUIRYDATA InquiryData;
 
   KDEVICE_QUEUE DeviceQueue;
+  ULONG QueueCount;
+
+  LONG RequestTimeout;
 
   SCSI_REQUEST_BLOCK_INFO SrbInfo;
 
@@ -125,6 +140,10 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   PBUSES_CONFIGURATION_INFORMATION BusesConfig;
   ULONG PortNumber;
 
+  LONG ActiveRequestCounter;
+  ULONG Flags;
+  LONG TimeOutCount;
+
   KSPIN_LOCK IrpLock;
   KSPIN_LOCK SpinLock;
   PKINTERRUPT Interrupt;
@@ -158,10 +177,15 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   /* DMA related stuff */
   PADAPTER_OBJECT AdapterObject;
   ULONG MapRegisterCount;
+  BOOLEAN MapBuffers;
+  BOOLEAN MapRegisters;
 
   PHYSICAL_ADDRESS PhysicalAddress;
   PVOID VirtualAddress;
   ULONG CommonBufferLength;
+
+  BOOLEAN NeedSrbExtensionAlloc;
+  BOOLEAN NeedSrbDataAlloc;
 
   UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
