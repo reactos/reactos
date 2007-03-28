@@ -764,7 +764,7 @@ PdoQueryResources(
       Descriptor->ShareDisposition = CmResourceShareShared;
       Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
       Descriptor->u.Interrupt.Level = PciConfig.u.type0.InterruptLine;
-      Descriptor->u.Interrupt.Vector = PciConfig.u.type0.InterruptLine;
+      Descriptor->u.Interrupt.Vector = 0;
       Descriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
     }
   }
