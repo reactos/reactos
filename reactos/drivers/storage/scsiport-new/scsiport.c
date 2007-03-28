@@ -638,54 +638,60 @@ ScsiPortInitialize(IN PVOID Argument1,
 		   IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
 		   IN PVOID HwContext)
 {
-  PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)Argument1;
-//  PUNICODE_STRING RegistryPath = (PUNICODE_STRING)Argument2;
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  PCONFIGURATION_INFORMATION SystemConfig;
-  PPORT_CONFIGURATION_INFORMATION PortConfig;
-  ULONG DeviceExtensionSize;
-  ULONG PortConfigSize;
-  BOOLEAN Again;
-  BOOLEAN DeviceFound = FALSE;
-  ULONG i;
-  ULONG Result;
-  NTSTATUS Status;
-  ULONG MaxBus;
-  ULONG BusNumber;
-  PCI_SLOT_NUMBER SlotNumber;
+    PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)Argument1;
+    //  PUNICODE_STRING RegistryPath = (PUNICODE_STRING)Argument2;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    PCONFIGURATION_INFORMATION SystemConfig;
+    PPORT_CONFIGURATION_INFORMATION PortConfig;
+    ULONG DeviceExtensionSize;
+    ULONG PortConfigSize;
+    BOOLEAN Again;
+    BOOLEAN DeviceFound = FALSE;
+    ULONG i;
+    ULONG Result;
+    NTSTATUS Status;
+    ULONG MaxBus;
+    ULONG BusNumber;
+    PCI_SLOT_NUMBER SlotNumber;
 
-  PDEVICE_OBJECT PortDeviceObject;
-  WCHAR NameBuffer[80];
-  UNICODE_STRING DeviceName;
-  WCHAR DosNameBuffer[80];
-  UNICODE_STRING DosDeviceName;
-  PIO_SCSI_CAPABILITIES PortCapabilities;
-  ULONG MappedIrq;
-  KIRQL Dirql;
-  KAFFINITY Affinity;
+    PDEVICE_OBJECT PortDeviceObject;
+    WCHAR NameBuffer[80];
+    UNICODE_STRING DeviceName;
+    WCHAR DosNameBuffer[80];
+    UNICODE_STRING DosDeviceName;
+    PIO_SCSI_CAPABILITIES PortCapabilities;
+    ULONG MappedIrq;
+    KIRQL Dirql;
+    KAFFINITY Affinity;
 
 
-  DPRINT ("ScsiPortInitialize() called!\n");
+    DPRINT ("ScsiPortInitialize() called!\n");
 
-  if ((HwInitializationData->HwInitialize == NULL) ||
-      (HwInitializationData->HwStartIo == NULL) ||
-      (HwInitializationData->HwInterrupt == NULL) ||
-      (HwInitializationData->HwFindAdapter == NULL) ||
-      (HwInitializationData->HwResetBus == NULL))
-    return(STATUS_INVALID_PARAMETER);
+    /* Check params for validity */
+    if ((HwInitializationData->HwInitialize == NULL) ||
+        (HwInitializationData->HwStartIo == NULL) ||
+        (HwInitializationData->HwInterrupt == NULL) ||
+        (HwInitializationData->HwFindAdapter == NULL) ||
+        (HwInitializationData->HwResetBus == NULL))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
-  DriverObject->DriverStartIo = ScsiPortStartIo;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiPortCreateClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiPortCreateClose;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiPortDeviceControl;
-  DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiPortDispatchScsi;
+    /* Set handlers */
+    DriverObject->DriverStartIo = ScsiPortStartIo;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiPortCreateClose;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiPortCreateClose;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiPortDeviceControl;
+    DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiPortDispatchScsi;
 
-  SystemConfig = IoGetConfigurationInformation();
+    /* Obtain configuration information */
+    SystemConfig = IoGetConfigurationInformation();
 
-  DeviceExtensionSize = sizeof(SCSI_PORT_DEVICE_EXTENSION) +
-    HwInitializationData->DeviceExtensionSize;
-  PortConfigSize = sizeof(PORT_CONFIGURATION_INFORMATION) + 
-    HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE);
+    /* Calculate sizes of DeviceExtension and PortConfig */
+    DeviceExtensionSize = sizeof(SCSI_PORT_DEVICE_EXTENSION) +
+        HwInitializationData->DeviceExtensionSize;
+    PortConfigSize = sizeof(PORT_CONFIGURATION_INFORMATION) + 
+        HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE);
 
 
   MaxBus = (HwInitializationData->AdapterInterfaceType == PCIBus) ? 8 : 1;
@@ -762,7 +768,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 
       /* Initialize the device timer */
       DeviceExtension->TimerState = IDETimerIdle;
-      DeviceExtension->TimerCount = 0;
+      DeviceExtension->TimerCount = -1;
       IoInitializeTimer (PortDeviceObject,
 			 ScsiPortIoTimer,
 			 DeviceExtension);
@@ -884,6 +890,9 @@ ScsiPortInitialize(IN PVOID Argument1,
 		       PortConfig->BusInterruptVector);
 	      goto ByeBye;
 	    }
+
+          /* Set flag that it's allowed to disconnect during this command */
+          DeviceExtension->Flags |= SCSI_PORT_DISCONNECT_ALLOWED;
 
           /* Initialize counter of active requests (-1 means there are none) */
           DeviceExtension->ActiveRequestCounter = -1;
@@ -1187,6 +1196,9 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
     }
 
   va_end(ap);
+
+    /* Request a DPC after we're done with the interrupt */
+    DeviceExtension->InterruptData.Flags |= SCSI_PORT_NOTIFICATION_NEEDED;
 }
 
 
@@ -1836,7 +1848,7 @@ ScsiPortStartPacket(IN OUT PVOID Context)
     }
 
     /* Set the time out value */
-    DeviceExtension->TimeOutCount = Srb->TimeOutValue;
+    DeviceExtension->TimerCount = Srb->TimeOutValue;
 
     /* We are busy */
     DeviceExtension->Flags |= SCSI_PORT_DEVICE_BUSY;
@@ -1863,7 +1875,7 @@ ScsiPortStartPacket(IN OUT PVOID Context)
         if (Srb->SrbFlags & SRB_FLAGS_DISABLE_DISCONNECT)
         {
             /* It's a disconnect, so no more requests can go */
-            DeviceExtension->Flags &= ~SCSI_PORT_DISCONNECT_IN_PROGRESS;
+            DeviceExtension->Flags &= ~SCSI_PORT_DISCONNECT_ALLOWED;
         }
 
         LunExtension->Flags |= SCSI_PORT_LU_ACTIVE;
@@ -2051,6 +2063,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
         /* Wait for it to complete */
         if (Status == STATUS_PENDING)
         {
+            DPRINT("SpiSendInquiry(): Waiting for the driver to process request...\n");
             KeWaitForSingleObject(&Event,
                 Executive,
                 KernelMode,
@@ -2058,6 +2071,8 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
                 NULL);
             Status = IoStatusBlock.Status;
         }
+
+        DPRINT("SpiSendInquiry(): Request processed by driver, status = 0x%08X\n", Status);
 
         if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_SUCCESS)
         {
@@ -2133,6 +2148,8 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
     /* Free buffers */
     ExFreePool(InquiryBuffer);
     ExFreePool(SenseBuffer);
+
+    DPRINT("SpiSendInquiry() done\n");
 
     return Status;
 }
