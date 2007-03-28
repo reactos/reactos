@@ -744,6 +744,10 @@ ScsiPortInitialize(IN PVOID Argument1,
       /* Initialize the device base list */
       InitializeListHead (&DeviceExtension->DeviceBaseListHead);
 
+      /* Initialize array of LUNs */
+      RtlZeroMemory(DeviceExtension->LunExtensionList,
+          sizeof(PSCSI_PORT_LUN_EXTENSION) * LUS_NUMBER);
+
       /* Initialize the spin lock in the controller extension */
       KeInitializeSpinLock (&DeviceExtension->IrpLock);
       KeInitializeSpinLock (&DeviceExtension->SpinLock);
@@ -1001,7 +1005,8 @@ ByeBye:
       IoDeleteDevice (PortDeviceObject);
     }
 
-  DPRINT("ScsiPortInitialize() done!\n");
+  DPRINT("ScsiPortInitialize() done, Status = 0x%08X, DeviceFound = %b!\n",
+      Status, DeviceFound);
 
   return (DeviceFound == FALSE) ? Status : STATUS_SUCCESS;
 }
@@ -1784,7 +1789,7 @@ SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     LunExtension = DeviceExtension->LunExtensionList[(TargetId + Lun) % LUS_NUMBER];
 
     /* Iterate it until we find what we need */
-    while (!LunExtension)
+    while (LunExtension)
     {
         if (LunExtension->TargetId == TargetId &&
             LunExtension->Lun == Lun &&
@@ -1903,6 +1908,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
                           INQUIRYDATABUFFERSIZE);
 
             Status = STATUS_SUCCESS;
+            KeepTrying = FALSE;
         }
         else
         {
@@ -1910,14 +1916,21 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
             if (Srb.SrbStatus & SRB_STATUS_QUEUE_FROZEN)
             {
                 /* Something weird happeend */
+                KeepTrying = FALSE;
                 ASSERT(FALSE);
             }
 
             /* Check if data overrun happened */
             if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_DATA_OVERRUN)
             {
-                /* TODO: Implement */
-                ASSERT(FALSE);
+                /* Nothing dramatic, just copy data, but limiting the size */
+                RtlCopyMemory(LunInfo->InquiryData,
+                              InquiryBuffer,
+                              (Srb.DataTransferLength > INQUIRYDATABUFFERSIZE) ?
+                              INQUIRYDATABUFFERSIZE : Srb.DataTransferLength);
+
+                Status = STATUS_SUCCESS;
+                KeepTrying = FALSE;
             }
             else if ((Srb.SrbStatus & SRB_STATUS_AUTOSENSE_VALID) &&
                 SenseBuffer->SenseKey == SCSI_SENSE_ILLEGAL_REQUEST)
@@ -1926,6 +1939,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
                    Mark it as invalid anyway */
 
                 Status = STATUS_INVALID_DEVICE_REQUEST;
+                KeepTrying = FALSE;
             }
             else
             {
@@ -1946,7 +1960,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
                     if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_BAD_FUNCTION ||
                         SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_BAD_SRB_BLOCK_LENGTH)
                     {
-                          Status = STATUS_INVALID_DEVICE_REQUEST;
+                        Status = STATUS_INVALID_DEVICE_REQUEST;
                     }
                     else
                     {
