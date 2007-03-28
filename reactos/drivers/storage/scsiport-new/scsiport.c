@@ -41,9 +41,6 @@
 
 #include "scsiport_int.h"
 
-
-/* #define USE_DEVICE_QUEUES */
-
 /* TYPES *********************************************************************/
 
 #define IRP_FLAG_COMPLETE	0x00000001
@@ -98,6 +95,13 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 static NTSTATUS
 SpiGetInquiryData (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		   IN PIRP Irp);
+
+static PSCSI_REQUEST_BLOCK_INFO
+SpiGetSrbData(IN PVOID DeviceExtension,
+              IN UCHAR PathId,
+              IN UCHAR TargetId,
+              IN UCHAR Lun,
+              IN UCHAR QueueTag);
 
 static BOOLEAN STDCALL
 ScsiPortIsr(IN PKINTERRUPT Interrupt,
@@ -1073,36 +1077,79 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 		     IN PVOID HwDeviceExtension,
 		     ...)
 {
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  va_list ap;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    va_list ap;
 
-  DPRINT("ScsiPortNotification() called\n");
+    DPRINT("ScsiPortNotification() called\n");
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
+    DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+        SCSI_PORT_DEVICE_EXTENSION,
+        MiniPortDeviceExtension);
 
-  DPRINT("DeviceExtension %p\n", DeviceExtension);
+    DPRINT("DeviceExtension %p\n", DeviceExtension);
 
-  va_start(ap, HwDeviceExtension);
+    va_start(ap, HwDeviceExtension);
 
-  switch (NotificationType)
+    switch (NotificationType)
     {
-      case RequestComplete:
-	{
-	  PSCSI_REQUEST_BLOCK Srb;
+    case RequestComplete:
+        {
+            PSCSI_REQUEST_BLOCK Srb;
+            PSCSI_REQUEST_BLOCK_INFO SrbData;
 
-	  Srb = (PSCSI_REQUEST_BLOCK) va_arg (ap, PSCSI_REQUEST_BLOCK);
+            Srb = (PSCSI_REQUEST_BLOCK) va_arg (ap, PSCSI_REQUEST_BLOCK);
 
-	  DPRINT("Notify: RequestComplete (Srb %p)\n", Srb);
-	  DeviceExtension->IrpFlags |= IRP_FLAG_COMPLETE;
-	}
-	break;
+            DPRINT("Notify: RequestComplete (Srb %p)\n", Srb);
+            //	  DeviceExtension->IrpFlags |= IRP_FLAG_COMPLETE;
 
-      case NextRequest:
-	DPRINT("Notify: NextRequest\n");
-	DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
-	break;
+            /* Make sure Srb is allright */
+            ASSERT(Srb->SrbStatus != SRB_STATUS_PENDING);
+            ASSERT(Srb->Function != SRB_FUNCTION_EXECUTE_SCSI || Srb->SrbStatus != SRB_STATUS_SUCCESS || Srb->ScsiStatus == SCSISTAT_GOOD);
+
+            if (!(Srb->SrbFlags & SRB_FLAGS_IS_ACTIVE))
+            {
+                /* It's been already completed */
+                va_end(ap);
+                return;
+            }
+
+            /* It's not active anymore */
+            Srb->SrbFlags &= ~SRB_FLAGS_IS_ACTIVE;
+
+            if (Srb->Function == SRB_FUNCTION_ABORT_COMMAND)
+            {
+                /* TODO: Treat it specially */
+                ASSERT(FALSE);
+            }
+            else
+            {
+                /* Get the SRB data */
+                SrbData = SpiGetSrbData(DeviceExtension,
+                                        Srb->PathId,
+                                        Srb->TargetId,
+                                        Srb->Lun,
+                                        Srb->QueueTag);
+
+                /* Make sure there are no CompletedRequests and there is a Srb */
+                ASSERT(SrbData->CompletedRequests == NULL && SrbData->Srb != NULL);
+
+                /* If it's a read/write request, make sure it has data inside it */
+                if ((Srb->SrbStatus == SRB_STATUS_SUCCESS) &&
+                    ((Srb->Cdb[0] == SCSIOP_READ) || (Srb->Cdb[0] == SCSIOP_WRITE)))
+                {
+                        ASSERT(Srb->DataTransferLength);
+                }
+
+                SrbData->CompletedRequests = DeviceExtension->InterruptData.CompletedRequests;
+                DeviceExtension->InterruptData.CompletedRequests = SrbData;
+            }
+        }
+        break;
+
+    case NextRequest:
+        DPRINT("Notify: NextRequest\n");
+        DeviceExtension->InterruptData.Flags |= SCSI_PORT_NEXT_REQUEST_READY;
+        break;
 
       case NextLuRequest:
 	{
@@ -1381,130 +1428,135 @@ static NTSTATUS STDCALL
 ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 		     IN PIRP Irp)
 {
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  PSCSI_PORT_LUN_EXTENSION LunExtension;
-  PIO_STACK_LOCATION Stack;
-  PSCSI_REQUEST_BLOCK Srb;
-  NTSTATUS Status = STATUS_SUCCESS;
-  ULONG DataSize = 0;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    PSCSI_PORT_LUN_EXTENSION LunExtension;
+    PIO_STACK_LOCATION Stack;
+    PSCSI_REQUEST_BLOCK Srb;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-  DPRINT("ScsiPortDispatchScsi(DeviceObject %p  Irp %p)\n",
-	 DeviceObject, Irp);
+    DPRINT("ScsiPortDispatchScsi(DeviceObject %p  Irp %p)\n",
+        DeviceObject, Irp);
 
-  DeviceExtension = DeviceObject->DeviceExtension;
-  Stack = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = DeviceObject->DeviceExtension;
+    Stack = IoGetCurrentIrpStackLocation(Irp);
 
-  Srb = Stack->Parameters.Scsi.Srb;
-  if (Srb == NULL)
+    Srb = Stack->Parameters.Scsi.Srb;
+    if (Srb == NULL)
     {
-      Status = STATUS_UNSUCCESSFUL;
+        DPRINT1("ScsiPortDispatchScsi() called with Srb = NULL!\n");
+        Status = STATUS_UNSUCCESSFUL;
 
-      Irp->IoStatus.Status = Status;
-      Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
 
-      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-      return(Status);
+        return(Status);
     }
 
-  DPRINT("Srb: %p\n", Srb);
-  DPRINT("Srb->Function: %lu\n", Srb->Function);
-  DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
+    DPRINT("Srb: %p\n", Srb);
+    DPRINT("Srb->Function: %lu\n", Srb->Function);
+    DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
 
-  LunExtension = SpiGetLunExtension(DeviceExtension,
-				    Srb->PathId,
-				    Srb->TargetId,
-				    Srb->Lun);
-  if (LunExtension == NULL)
+    LunExtension = SpiGetLunExtension(DeviceExtension,
+        Srb->PathId,
+        Srb->TargetId,
+        Srb->Lun);
+    if (LunExtension == NULL)
     {
-      Status = STATUS_NO_SUCH_DEVICE;
+        DPRINT("ScsiPortDispatchScsi() called with an invalid LUN\n");
+        Status = STATUS_NO_SUCH_DEVICE;
 
-      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
-      Irp->IoStatus.Status = Status;
-      Irp->IoStatus.Information = 0;
+        Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
 
-      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-      return(Status);
+        return(Status);
     }
 
-  switch (Srb->Function)
+    switch (Srb->Function)
     {
-      case SRB_FUNCTION_EXECUTE_SCSI:
-      case SRB_FUNCTION_IO_CONTROL:
-#ifdef USE_DEVICE_QUEUES
-	if (Srb->SrbFlags & SRB_FLAGS_BYPASS_FROZEN_QUEUE)
-	  {
-	    IoMarkIrpPending(Irp);
-	    IoStartPacket (DeviceObject, Irp, NULL, NULL);
-	  }
-	else
-	  {
-	    KIRQL oldIrql;
+    case SRB_FUNCTION_SHUTDOWN:
+    case SRB_FUNCTION_FLUSH:
+        DPRINT ("  SRB_FUNCTION_SHUTDOWN or FLUSH\n");
+        if (DeviceExtension->PortConfig->CachesData == FALSE)
+        {
+            /* All success here */
+            Srb->SrbStatus = SRB_STATUS_SUCCESS;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        }
+        /* Fall through to a usual execute operation */
 
-	    KeRaiseIrql (DISPATCH_LEVEL,
-			 &oldIrql);
-
-	    if (!KeInsertByKeyDeviceQueue (&LunExtension->DeviceQueue,
-					   &Irp->Tail.Overlay.DeviceQueueEntry,
-					   Srb->QueueSortKey))
-	      {
-		Srb->SrbStatus = SRB_STATUS_SUCCESS;
-		IoMarkIrpPending(Irp);
-		IoStartPacket (DeviceObject, Irp, NULL, NULL);
-	      }
-
-	    KeLowerIrql (oldIrql);
-	  }
-#else
+    case SRB_FUNCTION_EXECUTE_SCSI:
+    case SRB_FUNCTION_IO_CONTROL:
+        /* Mark IRP as pending in all cases */
         IoMarkIrpPending(Irp);
-        IoStartPacket (DeviceObject, Irp, NULL, NULL);
-#endif
-	return(STATUS_PENDING);
 
-      case SRB_FUNCTION_SHUTDOWN:
-      case SRB_FUNCTION_FLUSH:
-	if (DeviceExtension->PortConfig->CachesData == TRUE)
-	  {
-            IoMarkIrpPending(Irp);
-	    IoStartPacket(DeviceObject, Irp, NULL, NULL);
-	    return(STATUS_PENDING);
-	  }
-	break;
+        if (Srb->SrbFlags & SRB_FLAGS_BYPASS_FROZEN_QUEUE)
+        {
+            /* Start IO directly */
+            IoStartPacket(DeviceObject, Irp, NULL, NULL);
+        }
+        else
+        {
+            KIRQL oldIrql;
 
-      case SRB_FUNCTION_CLAIM_DEVICE:
-	DPRINT ("  SRB_FUNCTION_CLAIM_DEVICE\n");
+            /* We need to be at DISPATCH_LEVEL */
+            KeRaiseIrql (DISPATCH_LEVEL, &oldIrql);
 
-	/* Reference device object and keep the device object */
-	ObReferenceObject(DeviceObject);
-	LunExtension->DeviceObject = DeviceObject;
-	LunExtension->DeviceClaimed = TRUE;
-	Srb->DataBuffer = DeviceObject;
-	break;
+            /* Insert IRP into the queue */
+            if (!KeInsertByKeyDeviceQueue (&LunExtension->DeviceQueue,
+                &Irp->Tail.Overlay.DeviceQueueEntry,
+                Srb->QueueSortKey))
+            {
+                /* It means queue is empty, and we just start this request */
+                IoStartPacket(DeviceObject, Irp, NULL, NULL);
+            }
 
-      case SRB_FUNCTION_RELEASE_DEVICE:
-	DPRINT ("  SRB_FUNCTION_RELEASE_DEVICE\n");
-	DPRINT ("PathId: %lu  TargetId: %lu  Lun: %lu\n",
-		Srb->PathId, Srb->TargetId, Srb->Lun);
+            /* Back to the old IRQL */
+            KeLowerIrql (oldIrql);
+        }
+        return STATUS_PENDING;
 
-	/* Dereference device object and clear the device object */
-	ObDereferenceObject(LunExtension->DeviceObject);
-	LunExtension->DeviceObject = NULL;
-	LunExtension->DeviceClaimed = FALSE;
-	break;
+    case SRB_FUNCTION_CLAIM_DEVICE:
+    case SRB_FUNCTION_ATTACH_DEVICE:
+        DPRINT ("  SRB_FUNCTION_CLAIM_DEVICE or ATTACH\n");
 
-      default:
-	DPRINT1("SRB function not implemented (Function %lu)\n", Srb->Function);
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
+        /* Reference device object and keep the device object */
+        /* TODO: Check if it's OK */
+        ObReferenceObject(DeviceObject);
+        LunExtension->DeviceObject = DeviceObject;
+        LunExtension->DeviceClaimed = TRUE;
+        Srb->DataBuffer = DeviceObject;
+        break;
+
+    case SRB_FUNCTION_RELEASE_DEVICE:
+        DPRINT ("  SRB_FUNCTION_RELEASE_DEVICE\n");
+        /* TODO: Check if it's OK */
+        DPRINT ("PathId: %lu  TargetId: %lu  Lun: %lu\n",
+            Srb->PathId, Srb->TargetId, Srb->Lun);
+
+        /* Dereference device object and clear the device object */
+        ObDereferenceObject(LunExtension->DeviceObject);
+        LunExtension->DeviceObject = NULL;
+        LunExtension->DeviceClaimed = FALSE;
+        break;
+
+    default:
+        DPRINT1("SRB function not implemented (Function %lu)\n", Srb->Function);
+        Status = STATUS_NOT_IMPLEMENTED;
+        break;
     }
 
-  Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = DataSize;
+    Irp->IoStatus.Status = Status;
 
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return(Status);
+    return(Status);
 }
 
 
@@ -2304,6 +2356,37 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     return STATUS_SUCCESS;
 }
 
+static PSCSI_REQUEST_BLOCK_INFO
+SpiGetSrbData(IN PVOID DeviceExtension,
+              IN UCHAR PathId,
+              IN UCHAR TargetId,
+              IN UCHAR Lun,
+              IN UCHAR QueueTag)
+{
+    PSCSI_PORT_LUN_EXTENSION LunExtension;
+
+    if (QueueTag == SP_UNTAGGED)
+    {
+        /* Untagged request, get LU and return pointer to SrbInfo */
+        LunExtension = SpiGetLunExtension(DeviceExtension,
+                                          PathId,
+                                          TargetId,
+                                          Lun);
+
+        /* Return NULL in case of error */
+        if (!LunExtension)
+            return(NULL);
+
+        /* Return the pointer to SrbInfo */
+        return &LunExtension->SrbInfo;
+    }
+    else
+    {
+        /* TODO: Implement when we have it */
+        ASSERT(FALSE);
+        return NULL;
+    }
+}
 
 static BOOLEAN STDCALL
 ScsiPortIsr(IN PKINTERRUPT Interrupt,

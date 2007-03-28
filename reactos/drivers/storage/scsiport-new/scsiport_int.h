@@ -20,7 +20,8 @@
 #define LUS_NUMBER 8
 
 /* Flags */
-#define SCSI_PORT_SCAN_IN_PROGRESS 0x8000
+#define SCSI_PORT_NEXT_REQUEST_READY 0x0008
+#define SCSI_PORT_SCAN_IN_PROGRESS   0x8000
 
 typedef enum _SCSI_PORT_TIMER_STATES
 {
@@ -44,6 +45,8 @@ typedef struct _SCSI_PORT_DEVICE_BASE
 typedef struct _SCSI_REQUEST_BLOCK_INFO
 {
     LIST_ENTRY Requests;
+    PSCSI_REQUEST_BLOCK Srb;
+    struct _SCSI_REQUEST_BLOCK_INFO *CompletedRequests;
 } SCSI_REQUEST_BLOCK_INFO, *PSCSI_REQUEST_BLOCK_INFO;
 
 typedef struct _SCSI_PORT_LUN_EXTENSION
@@ -97,6 +100,15 @@ typedef struct _BUSES_CONFIGURATION_INFORMATION
     PSCSI_BUS_SCAN_INFO BusScanInfo[1];
 } BUSES_CONFIGURATION_INFORMATION, *PBUSES_CONFIGURATION_INFORMATION;
 
+
+typedef struct _SCSI_PORT_INTERRUPT_DATA
+{
+    ULONG Flags; /* Interrupt-time flags */
+    PSCSI_REQUEST_BLOCK_INFO CompletedRequests; /* Linked list of Srb info data */
+
+} SCSI_PORT_INTERRUPT_DATA, *PSCSI_PORT_INTERRUPT_DATA;
+
+
 /*
  * SCSI_PORT_DEVICE_EXTENSION
  *
@@ -126,6 +138,8 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
   ULONG LunExtensionSize;
   PSCSI_PORT_LUN_EXTENSION LunExtensionList[LUS_NUMBER];
+
+  SCSI_PORT_INTERRUPT_DATA InterruptData;
 
   ULONG SrbExtensionSize;
 
