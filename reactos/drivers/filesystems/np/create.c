@@ -390,6 +390,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
        if (Fcb == NULL)
          {
            KeUnlockMutex(&DeviceExt->PipeListLock);
+           ExFreePool(Ccb);
            Irp->IoStatus.Status = STATUS_NO_MEMORY;
            Irp->IoStatus.Information = 0;
            IoCompleteRequest(Irp, IO_NO_INCREMENT);
