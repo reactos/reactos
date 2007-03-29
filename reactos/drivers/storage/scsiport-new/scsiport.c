@@ -2012,6 +2012,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
     IO_STATUS_BLOCK IoStatusBlock;
     PIO_STACK_LOCATION IrpStack;
     KEVENT Event;
+    KIRQL Irql;
     PIRP Irp;
     NTSTATUS Status;
     PINQUIRYDATA InquiryBuffer;
@@ -2020,8 +2021,12 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
     ULONG RetryCount = 0;
     SCSI_REQUEST_BLOCK Srb;
     PCDB Cdb;
+    PSCSI_PORT_LUN_EXTENSION LunExtension;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 
     DPRINT ("SpiSendInquiry() called\n");
+
+    DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     InquiryBuffer = ExAllocatePool (NonPagedPool, INQUIRYDATABUFFERSIZE);
     if (InquiryBuffer == NULL)
@@ -2114,9 +2119,27 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
             /* Check if the queue is frozen */
             if (Srb.SrbStatus & SRB_STATUS_QUEUE_FROZEN)
             {
-                /* Something weird happeend */
+                /* Something weird happened, deal with it (unfreeze the queue) */
                 KeepTrying = FALSE;
-                ASSERT(FALSE);
+
+                DPRINT("SpiSendInquiry(): the queue is frozen at TargetId %d\n", Srb.TargetId);
+
+                LunExtension = SpiGetLunExtension(DeviceExtension,
+                                                  LunInfo->PathId,
+                                                  LunInfo->TargetId,
+                                                  LunInfo->Lun);
+
+                /* Clear frozen flag */
+                LunExtension->Flags &= ~LUNEX_FROZEN_QUEUE;
+
+                /* Acquire the spinlock */
+                KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
+
+                /* Process the request */
+                SpiGetNextRequestFromLun(DeviceObject->DeviceExtension, LunExtension);
+
+                /* Lower irql back */
+                KeLowerIrql(Irql);
             }
 
             /* Check if data overrun happened */
