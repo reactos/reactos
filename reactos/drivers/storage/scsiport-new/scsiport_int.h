@@ -24,13 +24,25 @@
 #define SCSI_PORT_LU_ACTIVE           0x0002
 #define SCSI_PORT_NOTIFICATION_NEEDED 0x0004
 #define SCSI_PORT_NEXT_REQUEST_READY  0x0008
+#define SCSI_PORT_FLUSH_ADAPTERS      0x0010
+#define SCSI_PORT_MAP_TRANSFER        0x0020
 #define SCSI_PORT_RESET               0x0080
 #define SCSI_PORT_RESET_REQUEST       0x0100
+#define SCSI_PORT_RESET_REPORTED      0x0200
+#define SCSI_PORT_REQUEST_PENDING     0x0800
 #define SCSI_PORT_DISCONNECT_ALLOWED  0x1000
+#define SCSI_PORT_DISABLE_INT_REQUESET 0x2000
 #define SCSI_PORT_DISABLE_INTERRUPTS  0x4000
+#define SCSI_PORT_ENABLE_INT_REQUEST  0x8000
+#define SCIS_PORT_TIMER_NEEDED        0x10000
+
+/* LUN Extension flags*/
+#define LUNEX_FROZEN_QUEUE        0x0001
+#define LUNEX_NEED_REQUEST_SENSE  0x0004
+#define LUNEX_BUSY                0x0008
+#define LUNEX_FULL_QUEUE          0x0010
+#define LUNEX_REQUEST_PENDING     0x0020
 #define SCSI_PORT_SCAN_IN_PROGRESS    0x8000
-
-
 
 
 
@@ -58,6 +70,14 @@ typedef struct _SCSI_REQUEST_BLOCK_INFO
     LIST_ENTRY Requests;
     PSCSI_REQUEST_BLOCK Srb;
     PCHAR DataOffset;
+    PVOID SaveSenseRequest;
+
+    ULONG SequenceNumber;
+
+    /* DMA stuff */
+    PVOID BaseOfMapRegister;
+    ULONG NumberOfMapRegisters;
+
     struct _SCSI_REQUEST_BLOCK_INFO *CompletedRequests;
 } SCSI_REQUEST_BLOCK_INFO, *PSCSI_REQUEST_BLOCK_INFO;
 
@@ -77,9 +97,18 @@ typedef struct _SCSI_PORT_LUN_EXTENSION
   INQUIRYDATA InquiryData;
 
   KDEVICE_QUEUE DeviceQueue;
+  ULONG SortKey;
   ULONG QueueCount;
+  ULONG MaxQueueCount;
 
+  ULONG AttemptCount;
   LONG RequestTimeout;
+
+  PIRP BusyRequest;
+  PIRP PendingRequest;
+
+  struct _SCSI_PORT_LUN_EXTENSION *ReadyLun;
+  struct _SCSI_PORT_LUN_EXTENSION *CompletedAbortRequests;
 
   SCSI_REQUEST_BLOCK_INFO SrbInfo;
 
@@ -120,9 +149,17 @@ typedef struct _SCSI_PORT_INTERRUPT_DATA
 {
     ULONG Flags; /* Interrupt-time flags */
     PSCSI_REQUEST_BLOCK_INFO CompletedRequests; /* Linked list of Srb info data */
-
+    PSCSI_PORT_LUN_EXTENSION CompletedAbort;
+    PSCSI_PORT_LUN_EXTENSION ReadyLun;
 } SCSI_PORT_INTERRUPT_DATA, *PSCSI_PORT_INTERRUPT_DATA;
 
+
+/* Only for interrupt data saving function */
+typedef struct _SCSI_PORT_SAVE_INTERRUPT
+{
+    PSCSI_PORT_INTERRUPT_DATA InterruptData;
+    struct _SCSI_PORT_DEVICE_EXTENSION *DeviceExtension;
+} SCSI_PORT_SAVE_INTERRUPT, *PSCSI_PORT_SAVE_INTERRUPT;
 
 /*
  * SCSI_PORT_DEVICE_EXTENSION
@@ -159,7 +196,14 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
   SCSI_PORT_INTERRUPT_DATA InterruptData;
 
+  /* SRB extension stuff*/
   ULONG SrbExtensionSize;
+  PVOID SrbExtensionBuffer;
+  PVOID FreeSrbExtensions;
+
+  /* SRB information */
+  PSCSI_REQUEST_BLOCK_INFO SrbInfo;
+  PSCSI_REQUEST_BLOCK_INFO FreeSrbInfo;
 
   PIO_SCSI_CAPABILITIES PortCapabilities;
 
@@ -178,6 +222,12 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   ULONG MapRegisterCount;
   BOOLEAN MapBuffers;
   BOOLEAN MapRegisters;
+  PVOID MapRegisterBase;
+
+  /* Features */
+  BOOLEAN SupportsTaggedQueuing;
+  BOOLEAN SupportsAutoSense;
+
 
   PHYSICAL_ADDRESS PhysicalAddress;
   PVOID VirtualAddress;
