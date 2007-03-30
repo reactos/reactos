@@ -20,10 +20,13 @@
  *
  */
 
-#ifndef _INC_NEWDEV
-#define _INC_NEWDEV
+#ifndef __NEWDEV_H
+#define __NEWDEV_H
 
-#include <pshpack1.h> 
+#if __GNUC__ >=3
+#pragma GCC system_header
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,8 +45,6 @@ UpdateDriverForPlugAndPlayDevicesA(
   DWORD  InstallFlags,
   PBOOL  bRebootRequired  OPTIONAL);
 
-
-
 BOOL WINAPI
 UpdateDriverForPlugAndPlayDevicesW(
   HWND  hwndParent,
@@ -61,7 +62,5 @@ UpdateDriverForPlugAndPlayDevicesW(
 #ifdef __cplusplus
 }
 #endif
-
-#include <poppack.h>
 
 #endif /* __NEWDEV_H */
