@@ -148,10 +148,42 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                            IN PSCSI_REQUEST_BLOCK_INFO SrbInfo,
                            OUT PBOOLEAN NeedToCallStartIo);
 
-VOID
-STDCALL
+VOID STDCALL
 SpiGetNextRequestFromLun(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                          IN PSCSI_PORT_LUN_EXTENSION LunExtension);
+
+VOID STDCALL
+SpiMiniportTimerDpc(IN struct _KDPC *Dpc,
+                    IN PVOID DeviceObject,
+                    IN PVOID SystemArgument1,
+                    IN PVOID SystemArgument2);
+
+static NTSTATUS
+SpiCreatePortConfig(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+                    PHW_INITIALIZATION_DATA HwInitData,
+                    PCONFIGURATION_INFO InternalConfigInfo,
+                    PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+                    BOOLEAN FirstCall);
+
+NTSTATUS STDCALL
+SpQueryDeviceCallout(IN PVOID  Context,
+                     IN PUNICODE_STRING  PathName,
+                     IN INTERFACE_TYPE  BusType,
+                     IN ULONG  BusNumber,
+                     IN PKEY_VALUE_FULL_INFORMATION  *BusInformation,
+                     IN CONFIGURATION_TYPE  ControllerType,
+                     IN ULONG  ControllerNumber,
+                     IN PKEY_VALUE_FULL_INFORMATION  *ControllerInformation,
+                     IN CONFIGURATION_TYPE  PeripheralType,
+                     IN ULONG  PeripheralNumber,
+                     IN PKEY_VALUE_FULL_INFORMATION  *PeripheralInformation);
+
+static VOID
+SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+                   IN HANDLE Key,
+                   IN PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+                   IN PCONFIGURATION_INFO InternalConfigInfo,
+                   IN PUCHAR Buffer);
 
 
 /* FUNCTIONS *****************************************************************/
@@ -181,8 +213,8 @@ NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
 	    IN PUNICODE_STRING RegistryPath)
 {
-  DPRINT("ScsiPort Driver %s\n", VERSION);
-  return(STATUS_SUCCESS);
+    DPRINT("ScsiPort Driver %s\n", VERSION);
+    return(STATUS_SUCCESS);
 }
 
 
@@ -627,6 +659,69 @@ ScsiPortGetVirtualAddress(IN PVOID HwDeviceExtension,
   return (PVOID)((ULONG_PTR)DeviceExtension->VirtualAddress + Offset);
 }
 
+static VOID
+SpiInitOpenKeys(PCONFIGURATION_INFO ConfigInfo, PUNICODE_STRING RegistryPath)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    NTSTATUS Status;
+
+    /* Open the service key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               RegistryPath,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = ZwOpenKey(&ConfigInfo->ServiceKey,
+                       KEY_READ,
+                       &ObjectAttributes);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Unable to open driver's registry key %ws, status 0x%08x\n", RegistryPath, Status);
+        ConfigInfo->ServiceKey = NULL;
+    }
+
+    /* If we could open driver's service key, then proceed to the Parameters key */
+    if (ConfigInfo->ServiceKey != NULL)
+    {
+        RtlInitUnicodeString(&KeyName, L"Parameters");
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ConfigInfo->ServiceKey,
+                                   (PSECURITY_DESCRIPTOR) NULL);
+
+        /* Try to open it */
+        Status = ZwOpenKey(&ConfigInfo->DeviceKey,
+                           KEY_READ,
+                           &ObjectAttributes);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* Yes, Parameters key exist, and it must be used instead of
+               the Service key */
+            ZwClose(ConfigInfo->ServiceKey);
+            ConfigInfo->ServiceKey = ConfigInfo->DeviceKey;
+            ConfigInfo->DeviceKey = NULL;
+        }
+    }
+
+    /* Open the Device key */
+    RtlInitUnicodeString(&KeyName, L"Device");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ConfigInfo->ServiceKey,
+                               NULL);
+
+    /* We don't check for failure here - not needed */
+    ZwOpenKey(&ConfigInfo->DeviceKey,
+              KEY_READ,
+              &ObjectAttributes);
+}
+
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -668,10 +763,13 @@ ScsiPortInitialize(IN PVOID Argument1,
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
     PCONFIGURATION_INFORMATION SystemConfig;
     PPORT_CONFIGURATION_INFORMATION PortConfig;
+    PORT_CONFIGURATION_INFORMATION InitialPortConfig;
+    CONFIGURATION_INFO ConfigInfo;
     ULONG DeviceExtensionSize;
     ULONG PortConfigSize;
     BOOLEAN Again;
     BOOLEAN DeviceFound = FALSE;
+    BOOLEAN FirstConfigCall = TRUE;
     ULONG i;
     ULONG Result;
     NTSTATUS Status;
@@ -712,12 +810,30 @@ ScsiPortInitialize(IN PVOID Argument1,
     /* Obtain configuration information */
     SystemConfig = IoGetConfigurationInformation();
 
+    /* Zero the internal configuration info structure */
+    RtlZeroMemory(&ConfigInfo, sizeof(CONFIGURATION_INFO));
+
+    /* Allocate space for access ranges */
+    if (HwInitializationData->NumberOfAccessRanges)
+    {
+        ConfigInfo.AccessRanges =
+            ExAllocatePool(PagedPool,
+            HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE));
+
+        /* Fail if failed */
+        if (ConfigInfo.AccessRanges == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Open registry keys */
+    SpiInitOpenKeys(&ConfigInfo, (PUNICODE_STRING)Argument2);
+
+    /* Last adapter number = not known */
+    ConfigInfo.LastAdapterNumber = SP_UNINITIALIZED_VALUE;
+
     /* Calculate sizes of DeviceExtension and PortConfig */
     DeviceExtensionSize = sizeof(SCSI_PORT_DEVICE_EXTENSION) +
         HwInitializationData->DeviceExtensionSize;
-    PortConfigSize = sizeof(PORT_CONFIGURATION_INFORMATION) + 
-        HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE);
-
 
   MaxBus = (HwInitializationData->AdapterInterfaceType == PCIBus) ? 8 : 1;
   DPRINT("MaxBus: %lu\n", MaxBus);
@@ -725,56 +841,122 @@ ScsiPortInitialize(IN PVOID Argument1,
   PortDeviceObject = NULL;
   BusNumber = 0;
   SlotNumber.u.AsULONG = 0;
-  while (TRUE)
+
+    while (TRUE)
     {
-      /* Create a unicode device name */
-      swprintf (NameBuffer,
-		L"\\Device\\ScsiPort%lu",
-		SystemConfig->ScsiPortCount);
-      RtlInitUnicodeString (&DeviceName,
-			    NameBuffer);
+        /* Create a unicode device name */
+        swprintf(NameBuffer,
+                 L"\\Device\\ScsiPort%lu",
+                 SystemConfig->ScsiPortCount);
+        RtlInitUnicodeString(&DeviceName, NameBuffer);
 
-      DPRINT("Creating device: %wZ\n", &DeviceName);
+        DPRINT("Creating device: %wZ\n", &DeviceName);
 
-      /* Create the port device */
-      Status = IoCreateDevice (DriverObject,
-			       DeviceExtensionSize,
-			       &DeviceName,
-			       FILE_DEVICE_CONTROLLER,
-			       0,
-			       FALSE,
-			       &PortDeviceObject);
-      if (!NT_SUCCESS(Status))
-	{
-	  DbgPrint ("IoCreateDevice call failed! (Status 0x%lX)\n", Status);
-	  PortDeviceObject = NULL;
-	  goto ByeBye;
-	}
+        /* Create the port device */
+        Status = IoCreateDevice(DriverObject,
+                                DeviceExtensionSize,
+                                &DeviceName,
+                                FILE_DEVICE_CONTROLLER,
+                                0,
+                                FALSE,
+                                &PortDeviceObject);
 
-      DPRINT ("Created device: %wZ (%p)\n", &DeviceName, PortDeviceObject);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("IoCreateDevice call failed! (Status 0x%lX)\n", Status);
+            PortDeviceObject = NULL;
+            break;
+        }
 
-      /* Set the buffering strategy here... */
-      PortDeviceObject->Flags |= DO_DIRECT_IO;
-      PortDeviceObject->AlignmentRequirement = FILE_WORD_ALIGNMENT;
+        DPRINT ("Created device: %wZ (%p)\n", &DeviceName, PortDeviceObject);
 
-      DeviceExtension = PortDeviceObject->DeviceExtension;
-      DeviceExtension->Length = DeviceExtensionSize;
-      DeviceExtension->DeviceObject = PortDeviceObject;
-      DeviceExtension->PortNumber = SystemConfig->ScsiPortCount;
+        /* Set the buffering strategy here... */
+        PortDeviceObject->Flags |= DO_DIRECT_IO;
+        PortDeviceObject->AlignmentRequirement = FILE_WORD_ALIGNMENT; /* FIXME: Is this really needed? */
 
-      DeviceExtension->MiniPortExtensionSize = HwInitializationData->DeviceExtensionSize;
-      DeviceExtension->LunExtensionSize = HwInitializationData->SpecificLuExtensionSize;
-      DeviceExtension->SrbExtensionSize = HwInitializationData->SrbExtensionSize;
-      DeviceExtension->HwStartIo = HwInitializationData->HwStartIo;
-      DeviceExtension->HwInterrupt = HwInitializationData->HwInterrupt;
+        /* Fill Device Extension */
+        DeviceExtension = PortDeviceObject->DeviceExtension;
 
-#if 0
-      DeviceExtension->AdapterObject = NULL;
-      DeviceExtension->MapRegisterCount = 0;
-      DeviceExtension->PhysicalAddress.QuadPart = 0ULL;
-      DeviceExtension->VirtualAddress = NULL;
-      DeviceExtension->CommonBufferLength = 0;
-#endif
+        DeviceExtension->Length = DeviceExtensionSize;
+        DeviceExtension->DeviceObject = PortDeviceObject;
+        DeviceExtension->PortNumber = SystemConfig->ScsiPortCount;
+
+        /* Driver's routines... */
+        DeviceExtension->HwStartIo = HwInitializationData->HwStartIo;
+        DeviceExtension->HwInterrupt = HwInitializationData->HwInterrupt;
+        DeviceExtension->HwResetBus = HwInitializationData->HwResetBus;
+        DeviceExtension->HwDmaStarted = HwInitializationData->HwDmaStarted;
+
+        /* Extensions sizes */
+        DeviceExtension->MiniPortExtensionSize = HwInitializationData->DeviceExtensionSize;
+        DeviceExtension->LunExtensionSize = HwInitializationData->SpecificLuExtensionSize;
+        DeviceExtension->SrbExtensionSize = HwInitializationData->SrbExtensionSize;
+
+        /* Round Srb extension size to the quadword */
+        DeviceExtension->SrbExtensionSize =
+            ~(sizeof(LONGLONG) - 1) & (DeviceExtension->SrbExtensionSize +
+            sizeof(LONGLONG) - 1);
+
+        /* Fill some numbers (bus count, lun count, etc) */
+        DeviceExtension->MaxLunCount = SCSI_MAXIMUM_LOGICAL_UNITS;
+        DeviceExtension->RequestsNumber = 16;
+
+        /* Initialize the spin lock in the controller extension */
+        KeInitializeSpinLock(&DeviceExtension->IrqLock);
+        KeInitializeSpinLock(&DeviceExtension->SpinLock);
+
+        /* Initialize the DPC object */
+        IoInitializeDpcRequest(PortDeviceObject,
+                               ScsiPortDpcForIsr);
+
+        /* Initialize the device timer */
+        DeviceExtension->TimerCount = -1;
+        IoInitializeTimer(PortDeviceObject,
+                          ScsiPortIoTimer,
+                          DeviceExtension);
+
+        /* Initialize miniport timer */
+        KeInitializeTimer(&DeviceExtension->MiniportTimer);
+        KeInitializeDpc(&DeviceExtension->MiniportTimerDpc,
+                        SpiMiniportTimerDpc,
+                        PortDeviceObject);
+
+//CreatePortConfig:
+
+        Status = SpiCreatePortConfig(DeviceExtension,
+                                     HwInitializationData,
+                                     &ConfigInfo,
+                                     &InitialPortConfig,
+                                     FirstConfigCall);
+
+        if (!NT_SUCCESS(Status))
+            break;
+
+        /* Allocate and initialize port configuration info */
+        PortConfigSize = (sizeof(PORT_CONFIGURATION_INFORMATION) +
+                          HwInitializationData->NumberOfAccessRanges *
+                          sizeof(ACCESS_RANGE) + 7) & ~7;
+        DeviceExtension->PortConfig = ExAllocatePool(NonPagedPool, PortConfigSize);
+
+        /* Fail if failed */
+        if (DeviceExtension->PortConfig == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            break;
+        }
+
+        PortConfig = DeviceExtension->PortConfig;
+
+        /* Copy information here */
+        RtlCopyMemory(PortConfig,
+                      &InitialPortConfig,
+                      sizeof(PORT_CONFIGURATION_INFORMATION));
+
+
+
+
+
+
 
       /* Initialize the device base list */
       InitializeListHead (&DeviceExtension->DeviceBaseListHead);
@@ -783,29 +965,7 @@ ScsiPortInitialize(IN PVOID Argument1,
       RtlZeroMemory(DeviceExtension->LunExtensionList,
           sizeof(PSCSI_PORT_LUN_EXTENSION) * LUS_NUMBER);
 
-      /* Initialize the spin lock in the controller extension */
-      KeInitializeSpinLock (&DeviceExtension->IrpLock);
-      KeInitializeSpinLock (&DeviceExtension->SpinLock);
 
-      /* Initialize the DPC object */
-      IoInitializeDpcRequest (PortDeviceObject,
-			      ScsiPortDpcForIsr);
-
-      /* Initialize the device timer */
-      DeviceExtension->TimerState = IDETimerIdle;
-      DeviceExtension->TimerCount = -1;
-      IoInitializeTimer (PortDeviceObject,
-			 ScsiPortIoTimer,
-			 DeviceExtension);
-
-      /* Allocate and initialize port configuration info */
-      DeviceExtension->PortConfig = ExAllocatePool (NonPagedPool,
-						    PortConfigSize);
-      if (DeviceExtension->PortConfig == NULL)
-	{
-	  Status = STATUS_INSUFFICIENT_RESOURCES;
-	  goto ByeBye;
-	}
       RtlZeroMemory (DeviceExtension->PortConfig,
 		     PortConfigSize);
 
@@ -1698,7 +1858,8 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 
     Srb = IrpStack->Parameters.Scsi.Srb;
 
-    /* FIXME: Apply standard flags to Srb->SrbFlags ? */
+    /* Apply "default" flags */
+    Srb->SrbFlags |= DeviceExtension->SrbFlags;
 
     /* Get LUN extension */
     LunExtension = SpiGetLunExtension(DeviceExtension,
@@ -1819,7 +1980,7 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
     }
 
 
-    KeAcquireSpinLockAtDpcLevel(&DeviceExtension->IrpLock);
+    KeAcquireSpinLockAtDpcLevel(&DeviceExtension->SpinLock);
 
     if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
                                 ScsiPortStartPacket,
@@ -1829,12 +1990,12 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 
         Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
         Irp->IoStatus.Information = 0;
-        KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
+        KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
-    KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
+    KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 
     DPRINT("ScsiPortStartIo() done\n");
 }
@@ -2813,7 +2974,7 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
             KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
         }
 
-        DPRINT("IoCompleting request IRP 0x%08X", Irp);
+        DPRINT("IoCompleting request IRP 0x%08X\n", Irp);
 
         IoCompleteRequest(Irp, IO_DISK_INCREMENT);
 
@@ -3967,6 +4128,618 @@ ByeBye:
 
   return Status;
 }
+
+VOID
+STDCALL
+SpiMiniportTimerDpc(IN struct _KDPC *Dpc,
+                    IN PVOID DeviceObject,
+                    IN PVOID SystemArgument1,
+                    IN PVOID SystemArgument2)
+{
+    DPRINT1("Miniport timer DPC\n");
+}
+
+static NTSTATUS
+SpiCreatePortConfig(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+                    PHW_INITIALIZATION_DATA HwInitData,
+                    PCONFIGURATION_INFO InternalConfigInfo,
+                    PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+                    BOOLEAN ZeroStruct)
+{
+    UNICODE_STRING UnicodeString;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PCONFIGURATION_INFORMATION DdkConfigInformation;
+    HANDLE RootKey, Key;
+    BOOLEAN Found;
+    WCHAR DeviceBuffer[16];
+    WCHAR StrBuffer[512];
+    ULONG Bus;
+    NTSTATUS Status;
+
+    /* Zero out the struct if told so */
+    if (ZeroStruct)
+    {
+        /* First zero the portconfig */
+        RtlZeroMemory(ConfigInfo, sizeof(PORT_CONFIGURATION_INFORMATION));
+
+        /* Then access ranges */
+        RtlZeroMemory(InternalConfigInfo->AccessRanges,
+                      HwInitData->NumberOfAccessRanges * sizeof(ACCESS_RANGE));
+
+        /* Initialize the struct */
+        ConfigInfo->Length = sizeof(PORT_CONFIGURATION_INFORMATION);
+        ConfigInfo->AdapterInterfaceType = HwInitData->AdapterInterfaceType;
+        ConfigInfo->InterruptMode = Latched;
+        ConfigInfo->DmaChannel = SP_UNINITIALIZED_VALUE;
+        ConfigInfo->DmaPort = SP_UNINITIALIZED_VALUE;
+        ConfigInfo->MaximumTransferLength = SP_UNINITIALIZED_VALUE;
+        ConfigInfo->NumberOfAccessRanges = HwInitData->NumberOfAccessRanges;
+        ConfigInfo->MaximumNumberOfTargets = 8;
+
+        /* Store parameters */
+        ConfigInfo->NeedPhysicalAddresses = HwInitData->NeedPhysicalAddresses;
+        ConfigInfo->MapBuffers = HwInitData->MapBuffers;
+        ConfigInfo->AutoRequestSense = HwInitData->AutoRequestSense;
+        ConfigInfo->ReceiveEvent = HwInitData->ReceiveEvent;
+        ConfigInfo->TaggedQueuing = HwInitData->TaggedQueuing;
+        ConfigInfo->MultipleRequestPerLu = HwInitData->MultipleRequestPerLu;
+
+        /* Get the disk usage */
+        DdkConfigInformation = IoGetConfigurationInformation();
+        ConfigInfo->AtdiskPrimaryClaimed = DdkConfigInformation->AtDiskPrimaryAddressClaimed;
+        ConfigInfo->AtdiskSecondaryClaimed = DdkConfigInformation->AtDiskSecondaryAddressClaimed;
+
+        /* Initiator bus id is not set */
+        for (Bus = 0; Bus < 8; Bus++)
+            ConfigInfo->InitiatorBusId[Bus] = (CCHAR)SP_UNINITIALIZED_VALUE;
+    }
+
+    ConfigInfo->NumberOfPhysicalBreaks = 17;
+
+    /* Clear this information */
+    InternalConfigInfo->DisableTaggedQueueing = FALSE;
+    InternalConfigInfo->DisableMultipleLun = FALSE;
+
+    /* Store Bus Number */
+    ConfigInfo->SystemIoBusNumber = InternalConfigInfo->BusNumber;
+
+TryNextAd:
+
+    if (ConfigInfo->AdapterInterfaceType == Internal)
+    {
+        /* Open registry key for HW database */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   DeviceExtension->DeviceObject->DriverObject->HardwareDatabase,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+
+        Status = ZwOpenKey(&RootKey,
+                           KEY_READ,
+                           &ObjectAttributes);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* Create name for it */
+            swprintf(StrBuffer, L"ScsiAdapter\\%lu",
+                InternalConfigInfo->AdapterNumber);
+
+            RtlInitUnicodeString(&UnicodeString, StrBuffer);
+
+            /* Open device key */
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &UnicodeString,
+                                       OBJ_CASE_INSENSITIVE,
+                                       RootKey,
+                                       NULL);
+
+            Status = ZwOpenKey(&Key,
+                               KEY_READ,
+                               &ObjectAttributes);
+
+            ZwClose(RootKey);
+
+            if (NT_SUCCESS(Status))
+            {
+                if (InternalConfigInfo->LastAdapterNumber != InternalConfigInfo->AdapterNumber)
+                {
+                    DPRINT("Hardware info found at %S\n", StrBuffer);
+
+                    /* Parse it */
+                    SpiParseDeviceInfo(DeviceExtension,
+                                       Key,
+                                       ConfigInfo,
+                                       InternalConfigInfo,
+                                       (PUCHAR)StrBuffer);
+
+                     InternalConfigInfo->BusNumber = 0;
+                }
+                else
+                {
+                    /* Try the next adapter */
+                    InternalConfigInfo->AdapterNumber++;
+                    goto TryNextAd;
+                }
+            }
+            else
+            {
+                /* Info was not found, exit */
+                return STATUS_DEVICE_DOES_NOT_EXIST;
+            }
+        }
+    }
+
+
+    /* Look at device params */
+    Key = NULL;
+    if (InternalConfigInfo->Parameter)
+    {
+        ExFreePool(InternalConfigInfo->Parameter);
+        InternalConfigInfo->Parameter = NULL;
+    }
+
+    if (InternalConfigInfo->ServiceKey != NULL)
+    {
+        swprintf(DeviceBuffer, L"Device%lu", InternalConfigInfo->AdapterNumber);
+        RtlInitUnicodeString(&UnicodeString, DeviceBuffer);
+
+        /* Open the service key */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &UnicodeString,
+                                   OBJ_CASE_INSENSITIVE,
+                                   InternalConfigInfo->ServiceKey,
+                                   NULL);
+
+        Status = ZwOpenKey(&Key,
+                           KEY_READ,
+                           &ObjectAttributes);
+    }
+
+    /* Parse device key */
+    if (InternalConfigInfo->DeviceKey != NULL)
+    {
+        SpiParseDeviceInfo(DeviceExtension,
+                           InternalConfigInfo->DeviceKey,
+                           ConfigInfo,
+                           InternalConfigInfo,
+                           (PUCHAR)StrBuffer);
+    }
+
+    /* Then parse hw info */
+    if (Key != NULL)
+    {
+        if (InternalConfigInfo->LastAdapterNumber != InternalConfigInfo->AdapterNumber)
+        {
+            SpiParseDeviceInfo(DeviceExtension,
+                               Key,
+                               ConfigInfo,
+                               InternalConfigInfo,
+                               (PUCHAR)StrBuffer);
+
+            /* Close the key */
+            ZwClose(Key);
+        }
+        else
+        {
+            /* Adapter not found, go try the next one */
+            InternalConfigInfo->AdapterNumber++;
+
+            /* Close the key */
+            ZwClose(Key);
+
+            goto TryNextAd;
+        }
+    }
+
+    /* Update the last adapter number */
+    InternalConfigInfo->LastAdapterNumber = InternalConfigInfo->AdapterNumber;
+
+    /* Do we have this kind of bus at all? */
+    Found = FALSE;
+    Status = IoQueryDeviceDescription(&HwInitData->AdapterInterfaceType,
+                                      &InternalConfigInfo->BusNumber,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      SpQueryDeviceCallout,
+                                      &Found);
+
+    /* This bus was not found */
+    if (!Found)
+    {
+        INTERFACE_TYPE InterfaceType = Eisa;
+
+        /* Check for EISA */
+        if (HwInitData->AdapterInterfaceType == Isa)
+        {
+            Status = IoQueryDeviceDescription(&InterfaceType,
+                                              &InternalConfigInfo->BusNumber,
+                                              NULL,
+                                              NULL,
+                                              NULL,
+                                              NULL,
+                                              SpQueryDeviceCallout,
+                                              &Found);
+
+            /* Return respectively */
+            if (Found)
+                return STATUS_SUCCESS;
+            else
+                return STATUS_DEVICE_DOES_NOT_EXIST;
+        }
+        else
+        {
+            return STATUS_DEVICE_DOES_NOT_EXIST;
+        }
+    }
+    else
+    {
+        return STATUS_SUCCESS;
+    }
+}
+
+static VOID
+SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+                   IN HANDLE Key,
+                   IN PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+                   IN PCONFIGURATION_INFO InternalConfigInfo,
+                   IN PUCHAR Buffer)
+{
+    PKEY_VALUE_FULL_INFORMATION KeyValueInformation;
+    PCM_FULL_RESOURCE_DESCRIPTOR FullResource;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PCM_SCSI_DEVICE_DATA ScsiDeviceData;
+    ULONG Length, Count;
+    ULONG Index = 0, RangeCount = 0;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+
+    KeyValueInformation = (PKEY_VALUE_FULL_INFORMATION) Buffer;
+
+    /* Loop through all values in the device node */
+    while(TRUE)
+    {
+        Status = ZwEnumerateValueKey(Key,
+                                     Index,
+                                     KeyValueFullInformation,
+                                     Buffer,
+                                     512,
+                                     &Length);
+
+        if (!NT_SUCCESS(Status))
+            return;
+
+        Index++;
+
+        /* Length for DWORD is ok? */
+        if (KeyValueInformation->Type == REG_DWORD &&
+            KeyValueInformation->DataLength != sizeof(ULONG))
+        {
+            continue;
+        }
+
+        /* Get MaximumLogicalUnit */
+        if (_wcsnicmp(KeyValueInformation->Name, L"MaximumLogicalUnit",
+            KeyValueInformation->NameLength/2) == 0)
+        {
+
+            if (KeyValueInformation->Type != REG_DWORD)
+            {
+                DPRINT("Bad data type for MaximumLogicalUnit\n");
+                continue;
+            }
+
+            DeviceExtension->MaxLunCount = *((PUCHAR)
+                (Buffer + KeyValueInformation->DataOffset));
+
+            /* Check / reset if needed */
+            if (DeviceExtension->MaxLunCount > SCSI_MAXIMUM_LOGICAL_UNITS)
+                DeviceExtension->MaxLunCount = SCSI_MAXIMUM_LOGICAL_UNITS;
+
+            DPRINT("MaximumLogicalUnit = %d\n", DeviceExtension->MaxLunCount);
+        }
+
+        /* Get InitiatorTargetId */
+        if (_wcsnicmp(KeyValueInformation->Name, L"InitiatorTargetId",
+            KeyValueInformation->NameLength / 2) == 0)
+        {
+
+            if (KeyValueInformation->Type != REG_DWORD)
+            {
+                DPRINT("Bad data type for InitiatorTargetId\n");
+                continue;
+            }
+
+            ConfigInfo->InitiatorBusId[0] = *((PUCHAR)
+                (Buffer + KeyValueInformation->DataOffset));
+
+            /* Check / reset if needed */
+            if (ConfigInfo->InitiatorBusId[0] > ConfigInfo->MaximumNumberOfTargets - 1)
+                ConfigInfo->InitiatorBusId[0] = (CCHAR)-1;
+
+            DPRINT("InitiatorTargetId = %d\n", ConfigInfo->InitiatorBusId[0]);
+        }
+
+        /* Get ScsiDebug */
+        if (_wcsnicmp(KeyValueInformation->Name, L"ScsiDebug",
+            KeyValueInformation->NameLength/2) == 0)
+        {
+            DPRINT("ScsiDebug key not supported\n");
+        }
+
+        /* Check for a breakpoint */
+        if (_wcsnicmp(KeyValueInformation->Name, L"BreakPointOnEntry",
+            KeyValueInformation->NameLength/2) == 0)
+        {
+            DPRINT1("Breakpoint on entry requested!\n");
+            DbgBreakPoint();
+        }
+
+        /* Get DisableSynchronousTransfers */
+        if (_wcsnicmp(KeyValueInformation->Name, L"DisableSynchronousTransfers",
+            KeyValueInformation->NameLength/2) == 0)
+        {
+            DeviceExtension->SrbFlags |= SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
+            DPRINT("Synch transfers disabled\n");
+        }
+
+        /* Get DisableDisconnects */
+        if (_wcsnicmp(KeyValueInformation->Name, L"DisableDisconnects",
+            KeyValueInformation->NameLength/2) == 0)
+        {
+            DeviceExtension->SrbFlags |= SRB_FLAGS_DISABLE_DISCONNECT;
+            DPRINT("Disconnects disabled\n");
+        }
+
+        /* Get DisableTaggedQueuing */
+        if (_wcsnicmp(KeyValueInformation->Name, L"DisableTaggedQueuing",
+            KeyValueInformation->NameLength/2) == 0)
+        {
+            InternalConfigInfo->DisableTaggedQueueing = TRUE;
+            DPRINT("Tagged queueing disabled\n");
+        }
+
+        /* Get DisableMultipleRequests */
+        if (_wcsnicmp(KeyValueInformation->Name, L"DisableMultipleRequests",
+            KeyValueInformation->NameLength/2) == 0)
+        {
+            InternalConfigInfo->DisableMultipleLun = TRUE;
+            DPRINT("Multiple requests disabled\n");
+        }
+
+        /* Get DriverParameters */
+        if (_wcsnicmp(KeyValueInformation->Name, L"DriverParameters",
+            KeyValueInformation->NameLength/2) == 0)
+        {
+            /* Skip if nothing */
+            if (KeyValueInformation->DataLength == 0)
+                continue;
+
+            /* If there was something previously allocated - free it */
+            if (InternalConfigInfo->Parameter != NULL)
+                ExFreePool(InternalConfigInfo->Parameter);
+
+            /* Allocate it */
+            InternalConfigInfo->Parameter = ExAllocatePool(NonPagedPool,
+                                                           KeyValueInformation->DataLength);
+
+            if (InternalConfigInfo->Parameter != NULL)
+            {
+                if (KeyValueInformation->Type != REG_SZ)
+                {
+                    /* Just copy */
+                    RtlCopyMemory(
+                        InternalConfigInfo->Parameter,
+                        (PCCHAR)KeyValueInformation + KeyValueInformation->DataOffset,
+                        KeyValueInformation->DataLength);
+                }
+                else
+                {
+                    /* If it's a unicode string, convert it to ansi */
+                    UnicodeString.Length = (USHORT)KeyValueInformation->DataLength;
+                    UnicodeString.MaximumLength = (USHORT)KeyValueInformation->DataLength;
+                    UnicodeString.Buffer =
+                        (PWSTR)((PCCHAR)KeyValueInformation + KeyValueInformation->DataOffset);
+
+                    AnsiString.Length = 0;
+                    AnsiString.MaximumLength = (USHORT)KeyValueInformation->DataLength;
+                    AnsiString.Buffer = (PCHAR)InternalConfigInfo->Parameter;
+
+                    Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                                          &UnicodeString,
+                                                          FALSE);
+
+                    /* In case of error, free the allocated space */
+                    if (!NT_SUCCESS(Status))
+                    {
+                        ExFreePool(InternalConfigInfo->Parameter);
+                        InternalConfigInfo->Parameter = NULL;
+                    }
+
+                }
+            }
+
+            DPRINT("Found driver parameter\n");
+        }
+
+        /* Get MaximumSGList */
+        if (_wcsnicmp(KeyValueInformation->Name, L"MaximumSGList",
+            KeyValueInformation->NameLength/2) == 0)
+        {
+            if (KeyValueInformation->Type != REG_DWORD)
+            {
+                DPRINT("Bad data type for MaximumSGList\n");
+                continue;
+            }
+
+            ConfigInfo->NumberOfPhysicalBreaks = *((PUCHAR)(Buffer + KeyValueInformation->DataOffset));
+
+            /* Check / fix */
+            if (ConfigInfo->NumberOfPhysicalBreaks > SCSI_MAXIMUM_PHYSICAL_BREAKS)
+            {
+                ConfigInfo->NumberOfPhysicalBreaks = SCSI_MAXIMUM_PHYSICAL_BREAKS;
+            }
+            else if (ConfigInfo->NumberOfPhysicalBreaks < SCSI_MINIMUM_PHYSICAL_BREAKS)
+            {
+                ConfigInfo->NumberOfPhysicalBreaks = SCSI_MINIMUM_PHYSICAL_BREAKS;
+            }
+
+            DPRINT("MaximumSGList = %d\n", ConfigInfo->NumberOfPhysicalBreaks);
+        }
+
+        /* Get NumberOfRequests */
+        if (_wcsnicmp(KeyValueInformation->Name, L"NumberOfRequests",
+            KeyValueInformation->NameLength/2) == 0)
+        {
+            if (KeyValueInformation->Type != REG_DWORD)
+            {
+                DPRINT("NumberOfRequests has wrong data type\n");
+                continue;
+            }
+
+            DeviceExtension->RequestsNumber = *((PUCHAR)(Buffer + KeyValueInformation->DataOffset));
+
+            /* Check / fix */
+            if (DeviceExtension->RequestsNumber < 16)
+            {
+                DeviceExtension->RequestsNumber = 16;
+            }
+            else if (DeviceExtension->RequestsNumber > 512)
+            {
+                DeviceExtension->RequestsNumber = 512;
+            }
+
+            DPRINT("Number Of Requests = %d\n", DeviceExtension->RequestsNumber);
+        }
+
+        /* Get resource list */
+        if (_wcsnicmp(KeyValueInformation->Name, L"ResourceList",
+                KeyValueInformation->NameLength/2) == 0 ||
+            _wcsnicmp(KeyValueInformation->Name, L"Configuration Data",
+                KeyValueInformation->NameLength/2) == 0 )
+        {
+            if (KeyValueInformation->Type != REG_FULL_RESOURCE_DESCRIPTOR ||
+                KeyValueInformation->DataLength < sizeof(REG_FULL_RESOURCE_DESCRIPTOR))
+            {
+                DPRINT("Bad data type for ResourceList\n");
+                continue;
+            }
+            else
+            {
+                DPRINT("Found ResourceList\n");
+            }
+
+            FullResource = (PCM_FULL_RESOURCE_DESCRIPTOR)(Buffer + KeyValueInformation->DataOffset);
+
+            /* Copy some info from it */
+            InternalConfigInfo->BusNumber = FullResource->BusNumber;
+            ConfigInfo->SystemIoBusNumber = FullResource->BusNumber;
+
+            /* Loop through it */
+            for (Count = 0; Count < FullResource->PartialResourceList.Count; Count++)
+            {
+                /* Get partial descriptor */
+                PartialDescriptor =
+                    &FullResource->PartialResourceList.PartialDescriptors[Count];
+
+                /* Check datalength */
+                if ((ULONG)((PCHAR)(PartialDescriptor + 1) -
+                    (PCHAR)FullResource) > KeyValueInformation->DataLength)
+                {
+                    DPRINT("Resource data is of incorrect size\n");
+                    break;
+                }
+
+                switch (PartialDescriptor->Type)
+                {
+                case CmResourceTypePort:
+                    if (RangeCount >= ConfigInfo->NumberOfAccessRanges)
+                    {
+                        DPRINT("Too many access ranges\n");
+                        continue;
+                    }
+
+                    InternalConfigInfo->AccessRanges[RangeCount].RangeInMemory = FALSE;
+                    InternalConfigInfo->AccessRanges[RangeCount].RangeStart = PartialDescriptor->u.Port.Start;
+                    InternalConfigInfo->AccessRanges[RangeCount].RangeLength = PartialDescriptor->u.Port.Length;
+                    RangeCount++;
+
+                    break;
+
+                case CmResourceTypeMemory:
+                    if (RangeCount >= ConfigInfo->NumberOfAccessRanges)
+                    {
+                        DPRINT("Too many access ranges\n");
+                        continue;
+                    }
+
+                    InternalConfigInfo->AccessRanges[RangeCount].RangeInMemory = TRUE;
+                    InternalConfigInfo->AccessRanges[RangeCount].RangeStart = PartialDescriptor->u.Memory.Start;
+                    InternalConfigInfo->AccessRanges[RangeCount].RangeLength = PartialDescriptor->u.Memory.Length;
+                    RangeCount++;
+
+                    break;
+
+                case CmResourceTypeInterrupt:
+                    ConfigInfo->BusInterruptLevel =
+                        PartialDescriptor->u.Interrupt.Level;
+
+                    ConfigInfo->BusInterruptVector =
+                        PartialDescriptor->u.Interrupt.Vector;
+                    break;
+
+                case CmResourceTypeDma:
+                    ConfigInfo->DmaChannel = PartialDescriptor->u.Dma.Channel;
+                    ConfigInfo->DmaPort = PartialDescriptor->u.Dma.Port;
+                    break;
+
+                case CmResourceTypeDeviceSpecific:
+                    if (PartialDescriptor->u.DeviceSpecificData.DataSize <
+                        sizeof(CM_SCSI_DEVICE_DATA) ||
+                        (PCHAR) (PartialDescriptor + 1) - (PCHAR)FullResource +
+                        PartialDescriptor->u.DeviceSpecificData.DataSize >
+                        KeyValueInformation->DataLength)
+                    {
+                        DPRINT("Resource data length is incorrect");
+                        break;
+                    }
+
+                    /* Set only one field from it */
+                    ScsiDeviceData = (PCM_SCSI_DEVICE_DATA) (PartialDescriptor+1);
+                    ConfigInfo->InitiatorBusId[0] = ScsiDeviceData->HostIdentifier;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+
+NTSTATUS
+STDCALL
+SpQueryDeviceCallout(IN PVOID  Context,
+                     IN PUNICODE_STRING  PathName,
+                     IN INTERFACE_TYPE  BusType,
+                     IN ULONG  BusNumber,
+                     IN PKEY_VALUE_FULL_INFORMATION  *BusInformation,
+                     IN CONFIGURATION_TYPE  ControllerType,
+                     IN ULONG  ControllerNumber,
+                     IN PKEY_VALUE_FULL_INFORMATION  *ControllerInformation,
+                     IN CONFIGURATION_TYPE  PeripheralType,
+                     IN ULONG  PeripheralNumber,
+                     IN PKEY_VALUE_FULL_INFORMATION  *PeripheralInformation)
+{
+    PBOOLEAN Found = (PBOOLEAN)Context;
+    /* We just set our Found variable to TRUE */
+
+    *Found = TRUE;
+    return STATUS_SUCCESS;
+}
+
+
 
 static
 NTSTATUS

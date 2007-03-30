@@ -45,7 +45,6 @@
 #define SCSI_PORT_SCAN_IN_PROGRESS    0x8000
 
 
-
 typedef enum _SCSI_PORT_TIMER_STATES
 {
   IDETimerIdle,
@@ -54,6 +53,26 @@ typedef enum _SCSI_PORT_TIMER_STATES
   IDETimerResetWaitForDrdyAssert
 } SCSI_PORT_TIMER_STATES;
 
+typedef struct _CONFIGURATION_INFO
+{
+    /* Identify info */
+    ULONG AdapterNumber;
+    ULONG LastAdapterNumber;
+    ULONG BusNumber;
+
+    /* Registry related */
+    HANDLE BusKey;
+    HANDLE ServiceKey;
+    HANDLE DeviceKey;
+
+    /* Features */
+    BOOLEAN DisableTaggedQueueing;
+    BOOLEAN DisableMultipleLun;
+
+    /* Parameters */
+    PVOID Parameter;
+    PACCESS_RANGE AccessRanges;
+} CONFIGURATION_INFO, *PCONFIGURATION_INFO;
 
 typedef struct _SCSI_PORT_DEVICE_BASE
 {
@@ -178,9 +197,14 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   ULONG PortNumber;
 
   LONG ActiveRequestCounter;
+  ULONG SrbFlags;
   ULONG Flags;
 
-  KSPIN_LOCK IrpLock;
+  ULONG BusNum;
+  ULONG MaxTargedIds;
+  ULONG MaxLunCount;
+
+  KSPIN_LOCK IrqLock; /* Used when there are 2 irqs */
   KSPIN_LOCK SpinLock;
   PKINTERRUPT Interrupt;
   PIRP                   CurrentIrp;
@@ -188,6 +212,9 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
   SCSI_PORT_TIMER_STATES TimerState;
   LONG                   TimerCount;
+
+  KTIMER MiniportTimer;
+  KDPC MiniportTimerDpc;
 
   LIST_ENTRY DeviceBaseListHead;
 
@@ -212,6 +239,8 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
   PHW_STARTIO HwStartIo;
   PHW_INTERRUPT HwInterrupt;
+  PHW_RESET_BUS HwResetBus;
+  PHW_DMA_STARTED HwDmaStarted;
 
   PSCSI_REQUEST_BLOCK OriginalSrb;
   SCSI_REQUEST_BLOCK InternalSrb;
@@ -235,6 +264,8 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
   BOOLEAN NeedSrbExtensionAlloc;
   BOOLEAN NeedSrbDataAlloc;
+
+  ULONG RequestsNumber;
 
   UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
