@@ -216,7 +216,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   KTIMER MiniportTimer;
   KDPC MiniportTimerDpc;
 
-  LIST_ENTRY DeviceBaseListHead;
+  PMAPPED_ADDRESS MappedAddressList;
 
   ULONG LunExtensionSize;
   PSCSI_PORT_LUN_EXTENSION LunExtensionList[LUS_NUMBER];

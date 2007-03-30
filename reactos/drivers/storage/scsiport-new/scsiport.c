@@ -306,35 +306,45 @@ VOID STDCALL
 ScsiPortFreeDeviceBase(IN PVOID HwDeviceExtension,
 		       IN PVOID MappedAddress)
 {
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  PSCSI_PORT_DEVICE_BASE DeviceBase;
-  PLIST_ENTRY Entry;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    PMAPPED_ADDRESS NextMa, LastMa;
 
-  //DPRINT("ScsiPortFreeDeviceBase() called\n");
+    //DPRINT("ScsiPortFreeDeviceBase() called\n");
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
-  if (IsListEmpty(&DeviceExtension->DeviceBaseListHead))
-    return;
+    DeviceExtension = ((PSCSI_PORT_DEVICE_EXTENSION)HwDeviceExtension) - 1;
 
-  Entry = DeviceExtension->DeviceBaseListHead.Flink;
-  while (Entry != &DeviceExtension->DeviceBaseListHead)
+    /* Initialize our pointers */
+    NextMa = DeviceExtension->MappedAddressList;
+    LastMa = NextMa;
+
+    while (NextMa)
     {
-      DeviceBase = CONTAINING_RECORD(Entry,
-				     SCSI_PORT_DEVICE_BASE,
-				     List);
-      if (DeviceBase->MappedAddress == MappedAddress)
-	{
-	  MmUnmapIoSpace(DeviceBase->MappedAddress,
-			 DeviceBase->NumberOfBytes);
-	  RemoveEntryList(Entry);
-	  ExFreePool(DeviceBase);
+        if (NextMa->MappedAddress == MappedAddress)
+        {
+            /* Unmap it first */
+            MmUnmapIoSpace(MappedAddress, NextMa->NumberOfBytes);
 
-	  return;
-	}
+            /* Remove it from the list */
+            if (NextMa == DeviceExtension->MappedAddressList)
+            {
+                /* Remove the first entry */
+                DeviceExtension->MappedAddressList = NextMa->NextMappedAddress;
+            }
+            else
+            {
+                LastMa->NextMappedAddress = NextMa->NextMappedAddress;
+            }
 
-      Entry = Entry->Flink;
+            /* Free the resources and quit */
+            ExFreePool(NextMa);
+
+            return;
+        }
+        else
+        {
+            LastMa = NextMa;
+            NextMa = NextMa->NextMappedAddress;
+        }
     }
 }
 
@@ -369,50 +379,51 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
 		      IN ULONG NumberOfBytes,
 		      IN BOOLEAN InIoSpace)
 {
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  PHYSICAL_ADDRESS TranslatedAddress;
-  PSCSI_PORT_DEVICE_BASE DeviceBase;
-  ULONG AddressSpace;
-  PVOID MappedAddress;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    PHYSICAL_ADDRESS TranslatedAddress;
+    PMAPPED_ADDRESS DeviceBase;
+    ULONG AddressSpace;
+    PVOID MappedAddress;
 
-  //DPRINT ("ScsiPortGetDeviceBase() called\n");
+    //DPRINT ("ScsiPortGetDeviceBase() called\n");
 
-  AddressSpace = (ULONG)InIoSpace;
-  if (HalTranslateBusAddress(BusType,
-			     SystemIoBusNumber,
-			     IoAddress,
-			     &AddressSpace,
-			     &TranslatedAddress) == FALSE)
-    return NULL;
+    DeviceExtension = ((PSCSI_PORT_DEVICE_EXTENSION)HwDeviceExtension) - 1;
 
-  /* i/o space */
-  if (AddressSpace != 0)
-    return((PVOID)TranslatedAddress.u.LowPart);
+    AddressSpace = (ULONG)InIoSpace;
+    if (HalTranslateBusAddress(BusType,
+                               SystemIoBusNumber,
+                               IoAddress,
+                               &AddressSpace,
+                               &TranslatedAddress) == FALSE)
+    {
+        return NULL;
+    }
 
-  MappedAddress = MmMapIoSpace(TranslatedAddress,
-			       NumberOfBytes,
-			       FALSE);
+    /* i/o space */
+    if (AddressSpace != 0)
+        return((PVOID)TranslatedAddress.u.LowPart);
 
-  DeviceBase = ExAllocatePool(NonPagedPool,
-			      sizeof(SCSI_PORT_DEVICE_BASE));
-  if (DeviceBase == NULL)
-    return(MappedAddress);
+    MappedAddress = MmMapIoSpace(TranslatedAddress,
+                                 NumberOfBytes,
+                                 FALSE);
 
-  DeviceBase->MappedAddress = MappedAddress;
-  DeviceBase->NumberOfBytes = NumberOfBytes;
-  DeviceBase->IoAddress = IoAddress;
-  DeviceBase->SystemIoBusNumber = SystemIoBusNumber;
+    DeviceBase = ExAllocatePool(NonPagedPool,
+                                sizeof(MAPPED_ADDRESS));
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
+    if (DeviceBase == NULL)
+        return MappedAddress;
 
-  InsertHeadList(&DeviceExtension->DeviceBaseListHead,
-		 &DeviceBase->List);
+    DeviceBase->MappedAddress = MappedAddress;
+    DeviceBase->NumberOfBytes = NumberOfBytes;
+    DeviceBase->IoAddress = IoAddress;
+    DeviceBase->BusNumber = SystemIoBusNumber;
 
-  return(MappedAddress);
+    /* Link it to the Device Extension list */
+    DeviceBase->NextMappedAddress = DeviceExtension->MappedAddressList;
+    DeviceExtension->MappedAddressList = DeviceBase;
+
+    return MappedAddress;
 }
-
 
 /*
  * @implemented
