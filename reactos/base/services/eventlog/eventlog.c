@@ -218,18 +218,18 @@ INT main()
 		LoadLogFiles(elogKey);
 	}
 
-    StartServiceCtrlDispatcher(ServiceTable);
+	StartServiceCtrlDispatcher(ServiceTable);
 
 bye_bye:
-	DeleteCriticalSection(&LogListCs);
-	
 	// Close all log files.
 	for(pLogf = LogListHead; pLogf; pLogf = ((PLOGFILE)pLogf)->Next)
 		LogfClose(pLogf);
-	 
+
+	DeleteCriticalSection(&LogListCs);
+
 	if(MyHeap) HeapDestroy(MyHeap);
 
-    return RetCode;
+	return RetCode;
 }
 
 VOID EventTimeToSystemTime(DWORD EventTime, 
