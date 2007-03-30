@@ -5,34 +5,15 @@
 #ifndef __DD_INCLUDED__
 #define __DD_INCLUDED__
 
-#ifndef _NO_DDRAWINT_NO_COM
-#ifndef _NO_COM
-#define _NO_COM
-#include <ddraw.h>
-#include <ddrawi.h> /* FIXME: We shouldn't include this header. */
-#undef _NO_COM
-#else
-#include <ddraw.h>
-#include <ddrawi.h> /* FIXME: We shouldn't include this header. */
-#endif
-#else
-#include <ddraw.h>
-#include <ddrawi.h> /* FIXME: We shouldn't include this header. */
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 
 DEFINE_GUID( GUID_MiscellaneousCallbacks,  0xEFD60CC0, 0x49e7, 0x11d0, 0x88, 0x9d, 0x0, 0xaa, 0x0, 0xbb, 0xb7, 0x6a);
 DEFINE_GUID( GUID_Miscellaneous2Callbacks, 0x406B2F00, 0x3E5A, 0x11D1, 0xB6, 0x40, 0x00, 0xAA, 0x00, 0xA1, 0xF9, 0x6A);
 DEFINE_GUID( GUID_VideoPortCallbacks,      0xefd60cc1, 0x49e7, 0x11d0, 0x88, 0x9d, 0x0, 0xaa, 0x0, 0xbb, 0xb7, 0x6a);
 DEFINE_GUID( GUID_ColorControlCallbacks,   0xefd60cc2, 0x49e7, 0x11d0, 0x88, 0x9d, 0x0, 0xaa, 0x0, 0xbb, 0xb7, 0x6a);
-DEFINE_GUID( GUID_MotionCompCallbacks,    0xb1122b40, 0x5dA5, 0x11d1, 0x8f, 0xcF, 0x00, 0xc0, 0x4f, 0xc2, 0x9b, 0x4e);
+DEFINE_GUID( GUID_MotionCompCallbacks,     0xb1122b40, 0x5dA5, 0x11d1, 0x8f, 0xcF, 0x00, 0xc0, 0x4f, 0xc2, 0x9b, 0x4e);
 DEFINE_GUID( GUID_VideoPortCaps,           0xefd60cc3, 0x49e7, 0x11d0, 0x88, 0x9d, 0x0, 0xaa, 0x0, 0xbb, 0xb7, 0x6a);
 DEFINE_GUID( GUID_D3DCaps,                 0x7bf06991, 0x8794, 0x11d0, 0x91, 0x39, 0x08, 0x00, 0x36, 0xd2, 0xef, 0x02);
-DEFINE_GUID( GUID_D3DExtendedCaps, 	 	   0x7de41f80, 0x9d93, 0x11d0, 0x89, 0xab, 0x00, 0xa0, 0xc9, 0x05, 0x41, 0x29);
+DEFINE_GUID( GUID_D3DExtendedCaps,         0x7de41f80, 0x9d93, 0x11d0, 0x89, 0xab, 0x00, 0xa0, 0xc9, 0x05, 0x41, 0x29);
 DEFINE_GUID( GUID_D3DCallbacks,            0x7bf06990, 0x8794, 0x11d0, 0x91, 0x39, 0x08, 0x00, 0x36, 0xd2, 0xef, 0x02);
 DEFINE_GUID( GUID_D3DCallbacks2,           0xba584e1, 0x70b6, 0x11d0, 0x88, 0x9d, 0x0, 0xaa, 0x0, 0xbb, 0xb7, 0x6a);
 DEFINE_GUID( GUID_D3DCallbacks3,           0xddf41230, 0xec0a, 0x11d0, 0xa9, 0xb6, 0x00, 0xaa, 0x00, 0xc0, 0x99, 0x3e);
@@ -51,6 +32,32 @@ DEFINE_GUID( GUID_DDStereoMode,            0xf828169c, 0xa8e8, 0x11d2, 0xa1, 0xf
 DEFINE_GUID( GUID_VPE2Callbacks,            0x52882147, 0x2d47, 0x469a, 0xa0, 0xd1, 0x3, 0x45, 0x58, 0x90, 0xf6, 0xc8);
 
 
+#ifndef GUID_DEFS_ONLY
+
+#ifndef _NO_DDRAWINT_NO_COM
+#ifndef _NO_COM
+#define _NO_COM
+#include <ddraw.h>
+#include <dvp.h>
+#undef _NO_COM
+#else
+#include <ddraw.h>
+#include <dvp.h>
+#endif
+#else
+#include <ddraw.h>
+#include <dvp.h>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef MAKE_HRESULT // fixme this if statment should not be here, but MAKE_HRESULT should be here
+#define MAKE_HRESULT(sev,fac,code) ((HRESULT) (((unsigned long)(sev)<<31) | ((unsigned long)(fac)<<16) | ((unsigned long)(code))) )
+#endif
+
+typedef ULONG_PTR FLATPTR;
 
 typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; 
 
@@ -64,103 +71,93 @@ typedef struct _DD_GETHEAPALIGNMENTDATA *PDD_GETHEAPALIGNMENTDATA;
 /* Video memory info structures                                         */
 /************************************************************************/
 
-
-typedef ULONG_PTR FLATPTR;
-
 typedef struct _VIDEOMEMORY
 {
-	DWORD          dwFlags;
-	FLATPTR        fpStart;
-	union
-	{
-		FLATPTR    fpEnd;
-		DWORD      dwWidth;
-	};
-	DDSCAPS        ddsCaps;
-	DDSCAPS        ddsCapsAlt;
-	union
-	{
-		LPVMEMHEAP lpHeap;
-		DWORD      dwHeight;
-	};
+    DWORD          dwFlags;
+    FLATPTR        fpStart;
+    union
+    {
+        FLATPTR    fpEnd;
+        DWORD      dwWidth;
+    };
+    DDSCAPS        ddsCaps;
+    DDSCAPS        ddsCapsAlt;
+    union
+    {
+        struct _VMEMHEAP *lpHeap;
+        DWORD      dwHeight;
+    };
 } VIDEOMEMORY, *PVIDEOMEMORY;
 
 typedef struct _VIDEOMEMORYINFO
 {
-	FLATPTR       fpPrimary;
-	DWORD         dwFlags;
-	DWORD         dwDisplayWidth;
-	DWORD         dwDisplayHeight;
-	LONG          lDisplayPitch;
-	DDPIXELFORMAT ddpfDisplay;
-	DWORD         dwOffscreenAlign;
-	DWORD         dwOverlayAlign;
-	DWORD         dwTextureAlign;
-	DWORD         dwZBufferAlign;
-	DWORD         dwAlphaAlign;
-	PVOID         pvPrimary;
+    FLATPTR       fpPrimary;
+    DWORD         dwFlags;
+    DWORD         dwDisplayWidth;
+    DWORD         dwDisplayHeight;
+    LONG          lDisplayPitch;
+    DDPIXELFORMAT ddpfDisplay;
+    DWORD         dwOffscreenAlign;
+    DWORD         dwOverlayAlign;
+    DWORD         dwTextureAlign;
+    DWORD         dwZBufferAlign;
+    DWORD         dwAlphaAlign;
+    PVOID         pvPrimary;
 } VIDEOMEMORYINFO;
 typedef VIDEOMEMORYINFO *LPVIDEOMEMORYINFO;
 
-/************************************************************************/
-/* DDI representation of the DirectDraw object                          */
-/************************************************************************/
-
 typedef struct _DD_DIRECTDRAW_GLOBAL
 {
-	PVOID             dhpdev;
-	ULONG_PTR         dwReserved1;
-	ULONG_PTR         dwReserved2;
-	LPDDVIDEOPORTCAPS lpDDVideoPortCaps;
+    PVOID             dhpdev;
+    ULONG_PTR         dwReserved1;
+    ULONG_PTR         dwReserved2;
+    LPDDVIDEOPORTCAPS lpDDVideoPortCaps;
 } DD_DIRECTDRAW_GLOBAL, *PDD_DIRECTDRAW_GLOBAL;
 
 typedef struct _DD_DIRECTDRAW_LOCAL
 {
-	PDD_DIRECTDRAW_GLOBAL lpGbl;
+    PDD_DIRECTDRAW_GLOBAL lpGbl;
 } DD_DIRECTDRAW_LOCAL, *PDD_DIRECTDRAW_LOCAL;
 
-/************************************************************************/
-/* DDI representation of the DirectDrawSurface object                   */
-/************************************************************************/
 
 typedef struct _DD_SURFACE_GLOBAL
 {
-	union 
-	{
-		DWORD        dwBlockSizeY;
-		LONG         lSlicePitch;
-	};
+    union 
+    {
+        DWORD        dwBlockSizeY;
+        LONG         lSlicePitch;
+    };
 
-	union 
-	{
-		PVIDEOMEMORY lpVidMemHeap;
-		DWORD        dwBlockSizeX;
-		DWORD        dwUserMemSize;
-	};
+    union 
+    {
+        PVIDEOMEMORY lpVidMemHeap;
+        DWORD        dwBlockSizeX;
+        DWORD        dwUserMemSize;
+    };
 
-	FLATPTR          fpVidMem;
-	union
-	{
-		LONG         lPitch;
-		DWORD        dwLinearSize;
-	};
-	LONG             yHint;
-	LONG             xHint;
-	DWORD            wHeight;
-	DWORD            wWidth;
-	ULONG_PTR        dwReserved1;
-	DDPIXELFORMAT    ddpfSurface;
-	FLATPTR          fpHeapOffset;
-	HANDLE           hCreatorProcess;
+    FLATPTR          fpVidMem;
+    union
+    {
+        LONG         lPitch;
+        DWORD        dwLinearSize;
+    };
+    LONG             yHint;
+    LONG             xHint;
+    DWORD            wHeight;
+    DWORD            wWidth;
+    ULONG_PTR        dwReserved1;
+    DDPIXELFORMAT    ddpfSurface;
+    FLATPTR          fpHeapOffset;
+    HANDLE           hCreatorProcess;
 } DD_SURFACE_GLOBAL, *PDD_SURFACE_GLOBAL;
 
 typedef struct _DD_SURFACE_MORE
 {
-	DWORD               dwMipMapCount;
-	PDD_VIDEOPORT_LOCAL lpVideoPort;
-	DWORD               dwOverlayFlags;
-	DDSCAPSEX           ddsCapsEx;
-	DWORD               dwSurfaceHandle;
+    DWORD               dwMipMapCount;
+    PDD_VIDEOPORT_LOCAL lpVideoPort;
+    DWORD               dwOverlayFlags;
+    DDSCAPSEX           ddsCapsEx;
+    DWORD               dwSurfaceHandle;
 } DD_SURFACE_MORE, *PDD_SURFACE_MORE;
 
 typedef struct _DD_ATTACHLIST *PDD_ATTACHLIST;
@@ -1361,8 +1358,6 @@ typedef struct DD_KERNELCALLBACKS
     PDD_KERNELCB_SYNCSURFACE   SyncSurfaceData;
     PDD_KERNELCB_SYNCVIDEOPORT SyncVideoPortData;
 } DD_KERNELCALLBACKS, *PDD_KERNELCALLBACKS;
-typedef DWORD (STDCALL *PDD_KERNELCB_SYNCVIDEOPORT)(PDD_SYNCVIDEOPORTDATA);
-
 
 
 #define MAX_AUTOFLIP_BUFFERS                  10
@@ -1391,11 +1386,11 @@ typedef DWORD (STDCALL *PDD_KERNELCB_SYNCVIDEOPORT)(PDD_SYNCVIDEOPORTDATA);
 #define D3DFORMAT_OP_SRGBWRITE                0x00100000L
 #define D3DFORMAT_OP_NOALPHABLEND             0x00200000L
 #define D3DFORMAT_OP_AUTOGENMIPMAP            0x00400000L
-#define D3DFORMAT_OP_VERTEXTEXTURE            0x00800000L 
+#define D3DFORMAT_OP_VERTEXTEXTURE            0x00800000L
 #define D3DFORMAT_OP_NOTEXCOORDWRAPNORMIP	  0x01000000L
-
 #define DDHAL_PLEASEALLOC_BLOCKSIZE           0x00000002l
 #define DDHAL_PLEASEALLOC_USERMEM             0x00000004l
+
 
 #define VIDMEM_ISLINEAR                       0x00000001l 
 #define VIDMEM_ISRECTANGULAR                  0x00000002l 
@@ -1457,5 +1452,7 @@ typedef DWORD (STDCALL *PDD_KERNELCB_SYNCVIDEOPORT)(PDD_SYNCVIDEOPORTDATA);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
+
+#endif /* GUID_DEFS_ONLY */
 
 #endif /* __DD_INCLUDED__ */
