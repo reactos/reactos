@@ -2512,15 +2512,7 @@ FONTOBJ_vGetInfo(
   IN ULONG  cjSize,
   OUT FONTINFO  *pfi);
 
-WIN32KAPI
-FLATPTR
-APIENTRY
-HeapVidMemAllocAligned(
-  IN LPVIDMEM  lpVidMem,
-  IN DWORD  dwWidth,
-  IN DWORD  dwHeight,
-  IN LPSURFACEALIGNMENT  lpAlignment,
-  OUT LPLONG  lpNewPitch);
+
 
 WIN32KAPI
 LONG
@@ -2683,13 +2675,6 @@ VOID
 APIENTRY
 STROBJ_vEnumStart(
   IN STROBJ  *pstro);
-
-WIN32KAPI
-VOID
-APIENTRY
-VidMemFree(
-  IN LPVMEMHEAP  pvmh,
-  IN FLATPTR  ptr);
 
 WIN32KAPI
 BOOL
