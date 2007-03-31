@@ -81,6 +81,9 @@ static NTSTATUS
 NpfsConnectPipe(PIRP Irp,
                 PNPFS_CCB Ccb)
 {
+  PIO_STACK_LOCATION IoStack;
+  PFILE_OBJECT FileObject;
+  ULONG Flags;
   PLIST_ENTRY current_entry;
   PNPFS_FCB Fcb;
   PNPFS_CCB ClientCcb;
@@ -100,6 +103,9 @@ NpfsConnectPipe(PIRP Irp,
   DPRINT("Waiting for connection...\n");
 
   Fcb = Ccb->Fcb;
+  IoStack = IoGetCurrentIrpStackLocation(Irp);
+  FileObject = IoStack->FileObject;
+  Flags = FileObject->Flags;
 
   /* search for a listening client fcb */
   KeLockMutex(&Fcb->CcbListLock);
@@ -157,17 +163,13 @@ NpfsConnectPipe(PIRP Irp,
 
   KeUnlockMutex(&Fcb->CcbListLock);
 
+  if (Flags & FO_SYNCHRONOUS_IO)
   {
-      PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
-      PFILE_OBJECT FileObject = IoStack->FileObject;
-      if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-      {
-	  KeWaitForSingleObject(&Ccb->ConnectEvent,
-				 UserRequest,
-				 KernelMode,
-				 FALSE,
-				 NULL);
-      }
+      KeWaitForSingleObject(&Ccb->ConnectEvent,
+			    UserRequest,
+			    KernelMode,
+			    FALSE,
+			    NULL);
   }
 
   DPRINT("NpfsConnectPipe() done (Status %lx)\n", Status);
