@@ -290,6 +290,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
       ServerCcb->OtherSide = ClientCcb;
       ClientCcb->PipeState = FILE_PIPE_CONNECTED_STATE;
       ServerCcb->PipeState = FILE_PIPE_CONNECTED_STATE;
+      KeSetEvent(&ServerCcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
     }
 
   KeUnlockMutex(&Fcb->CcbListLock);

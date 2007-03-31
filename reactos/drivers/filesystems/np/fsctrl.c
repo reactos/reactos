@@ -157,6 +157,19 @@ NpfsConnectPipe(PIRP Irp,
 
   KeUnlockMutex(&Fcb->CcbListLock);
 
+  {
+      PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
+      PFILE_OBJECT FileObject = IoStack->FileObject;
+      if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+      {
+	  KeWaitForSingleObject(&Ccb->ConnectEvent,
+				 UserRequest,
+				 KernelMode,
+				 FALSE,
+				 NULL);
+      }
+  }
+
   DPRINT("NpfsConnectPipe() done (Status %lx)\n", Status);
 
   return Status;
