@@ -194,6 +194,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   ULONG MiniPortExtensionSize;
   PPORT_CONFIGURATION_INFORMATION PortConfig;
   PBUSES_CONFIGURATION_INFORMATION BusesConfig;
+  PVOID NonCachedExtension;
   ULONG PortNumber;
 
   LONG ActiveRequestCounter;
@@ -223,6 +224,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
   SCSI_PORT_INTERRUPT_DATA InterruptData;
 
+  ULONG CommonBufferSize;
   /* SRB extension stuff*/
   ULONG SrbExtensionSize;
   PVOID SrbExtensionBuffer;
@@ -231,12 +233,14 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   /* SRB information */
   PSCSI_REQUEST_BLOCK_INFO SrbInfo;
   PSCSI_REQUEST_BLOCK_INFO FreeSrbInfo;
+  ULONG SrbDataCount;
 
-  PIO_SCSI_CAPABILITIES PortCapabilities;
+  IO_SCSI_CAPABILITIES PortCapabilities;
 
   PDEVICE_OBJECT DeviceObject;
   PCONTROLLER_OBJECT ControllerObject;
 
+  PHW_INITIALIZE HwInitialize;
   PHW_STARTIO HwStartIo;
   PHW_INTERRUPT HwInterrupt;
   PHW_RESET_BUS HwResetBus;
@@ -254,13 +258,17 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   PVOID MapRegisterBase;
 
   /* Features */
+  BOOLEAN CachesData;
   BOOLEAN SupportsTaggedQueuing;
   BOOLEAN SupportsAutoSense;
-
+  BOOLEAN MultipleReqsPerLun;
+  BOOLEAN ReceiveEvent;
 
   PHYSICAL_ADDRESS PhysicalAddress;
   PVOID VirtualAddress;
   ULONG CommonBufferLength;
+  ULONG InterruptLevel;
+  ULONG IoAddress;
 
   BOOLEAN NeedSrbExtensionAlloc;
   BOOLEAN NeedSrbDataAlloc;
