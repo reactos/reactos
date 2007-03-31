@@ -4221,6 +4221,74 @@ TryAgain:
     DPRINT("ScsiPortDpcForIsr() done\n");
 }
 
+BOOLEAN
+STDCALL
+SpiProcessTimeout(PVOID ServiceContext)
+{
+    PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)ServiceContext;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    ULONG Bus;
+
+    DPRINT("SpiProcessTimeout() entered\n");
+
+    DeviceExtension->TimerCount = -1;
+
+    if (DeviceExtension->InterruptData.Flags & SCSI_PORT_RESET)
+    {
+        DeviceExtension->InterruptData.Flags &= ~SCSI_PORT_RESET;
+
+        if (DeviceExtension->InterruptData.Flags & SCSI_PORT_RESET_REQUEST)
+        {
+            DeviceExtension->InterruptData.Flags &=  ~SCSI_PORT_RESET_REQUEST;
+            ScsiPortStartPacket(ServiceContext);
+        }
+
+        return FALSE;
+    }
+    else
+    {
+        DPRINT("Resetting the bus\n");
+
+        for (Bus = 0; Bus < DeviceExtension->BusNum; Bus++)
+        {
+            DeviceExtension->HwResetBus(DeviceExtension->MiniPortDeviceExtension, Bus);
+
+            /* Reset flags and set reset timeout to 4 seconds */
+            DeviceExtension->InterruptData.Flags |= SCSI_PORT_RESET;
+            DeviceExtension->TimerCount = 4;
+        }
+
+        /* If miniport requested - request a dpc for it */
+        if (DeviceExtension->InterruptData.Flags & SCSI_PORT_NOTIFICATION_NEEDED)
+            IoRequestDpc(DeviceExtension->DeviceObject, NULL, NULL);
+    }
+
+    return TRUE;
+}
+
+
+BOOLEAN
+STDCALL
+SpiResetBus(PVOID ServiceContext)
+{
+    PRESETBUS_PARAMS ResetParams = (PRESETBUS_PARAMS)ServiceContext;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+
+    /* Perform the bus reset */
+    DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)ResetParams->DeviceExtension;
+    DeviceExtension->HwResetBus(DeviceExtension->MiniPortDeviceExtension,
+                                ResetParams->PathId);
+
+    /* Set flags and start the timer */
+    DeviceExtension->InterruptData.Flags |= SCSI_PORT_RESET;
+    DeviceExtension->TimerCount = 4;
+
+    /* If miniport requested - give him a DPC */
+    if (DeviceExtension->InterruptData.Flags & SCSI_PORT_NOTIFICATION_NEEDED)
+        IoRequestDpc(DeviceExtension->DeviceObject, NULL, NULL);
+
+    return TRUE;
+}
 
 //    ScsiPortIoTimer
 //  DESCRIPTION:
@@ -4235,9 +4303,102 @@ TryAgain:
 //
 static VOID STDCALL
 ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
-		PVOID Context)
+                PVOID Context)
 {
-  DPRINT1("ScsiPortIoTimer()\n");
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    PSCSI_PORT_LUN_EXTENSION LunExtension;
+    ULONG Lun;
+    PIRP Irp;
+
+    DPRINT("ScsiPortIoTimer()\n");
+
+    DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* Protect with the spinlock */
+    KeAcquireSpinLockAtDpcLevel(&DeviceExtension->SpinLock);
+
+    /* Check timeouts */
+    if (DeviceExtension->TimerCount > 0)
+    {
+        /* Decrease the timeout counter */
+        DeviceExtension->TimerCount--;
+
+        if (DeviceExtension->TimerCount == 0)
+        {
+            /* Timeout, process it */
+            if (KeSynchronizeExecution(DeviceExtension->Interrupt,
+                                       SpiProcessTimeout,
+                                       DeviceExtension->DeviceObject))
+            {
+                DPRINT("Error happened during processing timeout, but nothing critical\n");
+            }
+        }
+
+        KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+
+        /* We should exit now, since timeout is processed */
+        return;
+    }
+
+    /* Per-Lun scanning of timeouts is needed... */
+    for (Lun = 0; Lun < LUS_NUMBER; Lun++)
+    {
+        LunExtension = DeviceExtension->LunExtensionList[Lun];
+
+        while (LunExtension)
+        {
+            if (LunExtension->Flags & LUNEX_BUSY)
+            {
+                if (!(LunExtension->Flags &
+                    (LUNEX_NEED_REQUEST_SENSE | LUNEX_FROZEN_QUEUE)))
+                {
+                    DPRINT("Retrying busy request\n");
+
+                    /* Clear flags, and retry busy request */
+                    LunExtension->Flags &= ~(LUNEX_BUSY | LUNEX_FULL_QUEUE);
+                    Irp = LunExtension->BusyRequest;
+
+                    /* Clearing busy request */
+                    LunExtension->BusyRequest = NULL;
+
+                    KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+
+                    IoStartPacket(DeviceObject, Irp, (PULONG)NULL, NULL);
+
+                    KeAcquireSpinLockAtDpcLevel(&DeviceExtension->SpinLock);
+                }
+            }
+            else if (LunExtension->RequestTimeout == 0)
+            {
+                RESETBUS_PARAMS ResetParams;
+
+                LunExtension->RequestTimeout = -1;
+
+                DPRINT("Request timed out, resetting bus\n");
+
+                /* Pass params to the bus reset routine */
+                ResetParams.PathId = LunExtension->PathId;
+                ResetParams.DeviceExtension = DeviceExtension;
+
+                if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
+                                            SpiResetBus,
+                                            &ResetParams))
+                {
+                    DPRINT1("Reset failed\n");
+                }
+            }
+            else if (LunExtension->RequestTimeout > 0)
+            {
+                /* Decrement the timeout counter */
+                LunExtension->RequestTimeout--;
+            }
+
+            LunExtension = LunExtension->Next;
+        }
+    }
+
+    /* Release the spinlock */
+    KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 }
 
 #if 0

@@ -277,3 +277,9 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
   UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
+
+typedef struct _RESETBUS_PARAMS
+{
+    ULONG PathId;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+} RESETBUS_PARAMS, *PRESETBUS_PARAMS;
