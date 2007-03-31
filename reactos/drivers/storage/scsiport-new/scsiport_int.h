@@ -206,6 +206,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   ULONG MaxLunCount;
 
   KSPIN_LOCK IrqLock; /* Used when there are 2 irqs */
+  ULONG SequenceNumber; /* Global sequence number for packets */
   KSPIN_LOCK SpinLock;
   PKINTERRUPT Interrupt;
   PIRP                   CurrentIrp;

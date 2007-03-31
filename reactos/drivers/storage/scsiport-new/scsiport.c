@@ -318,7 +318,10 @@ ScsiPortFreeDeviceBase(IN PVOID HwDeviceExtension,
 
     //DPRINT("ScsiPortFreeDeviceBase() called\n");
 
-    DeviceExtension = ((PSCSI_PORT_DEVICE_EXTENSION)HwDeviceExtension) - 1;
+    DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                        SCSI_PORT_DEVICE_EXTENSION,
+                                        MiniPortDeviceExtension);
+
 
     /* Initialize our pointers */
     NextMa = DeviceExtension->MappedAddressList;
@@ -394,7 +397,9 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
 
     //DPRINT ("ScsiPortGetDeviceBase() called\n");
 
-    DeviceExtension = ((PSCSI_PORT_DEVICE_EXTENSION)HwDeviceExtension) - 1;
+    DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                        SCSI_PORT_DEVICE_EXTENSION,
+                                        MiniPortDeviceExtension);
 
     AddressSpace = (ULONG)InIoSpace;
     if (HalTranslateBusAddress(BusType,
@@ -901,7 +906,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 
         /* Fill Device Extension */
         DeviceExtension = PortDeviceObject->DeviceExtension;
-
+        DPRINT1("DeviceExtension: %p\n", DeviceExtension);
         DeviceExtension->Length = DeviceExtensionSize;
         DeviceExtension->DeviceObject = PortDeviceObject;
         DeviceExtension->PortNumber = SystemConfig->ScsiPortCount;
@@ -1656,7 +1661,6 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
             Srb = (PSCSI_REQUEST_BLOCK) va_arg (ap, PSCSI_REQUEST_BLOCK);
 
             DPRINT("Notify: RequestComplete (Srb %p)\n", Srb);
-            //	  DeviceExtension->IrpFlags |= IRP_FLAG_COMPLETE;
 
             /* Make sure Srb is allright */
             ASSERT(Srb->SrbStatus != SRB_STATUS_PENDING);
@@ -2456,7 +2460,15 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
         Srb->QueueTag = SP_UNTAGGED;
     }
 
-    /* FIXME: Increase sequence number here of SRB, if it's ever needed */
+    /* Increase sequence number of SRB */
+    if (!SrbInfo->SequenceNumber)
+    {
+        /* Increase global sequence number */
+        DeviceExtension->SequenceNumber++;
+
+        /* Assign it */
+        SrbInfo->SequenceNumber = DeviceExtension->SequenceNumber;
+    }
 
     /* Check some special SRBs */
     if (Srb->Function == SRB_FUNCTION_ABORT_COMMAND)
@@ -2656,7 +2668,7 @@ ScsiPortStartPacket(IN OUT PVOID Context)
 
     /* Call HwStartIo routine */
     Result = DeviceExtension->HwStartIo(&DeviceExtension->MiniPortDeviceExtension,
-                                             Srb);
+                                        Srb);
 
     /* If notification is needed, then request a DPC */
     if (DeviceExtension->InterruptData.Flags & SCSI_PORT_NOTIFICATION_NEEDED)
@@ -2697,7 +2709,8 @@ SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
     /* Initialize timeout counter */
     LunExtension->RequestTimeout = -1;
 
-    /* TODO: Initialize other fields */
+    /* Set maximum queue size */
+    LunExtension->MaxQueueCount = 256;
 
     /* Initialize request queue */
     KeInitializeDeviceQueue (&LunExtension->DeviceQueue);
