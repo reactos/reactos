@@ -37,17 +37,14 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "scsiport_int.h"
 
+ULONG InternalDebugLevel = 0;
+
 /* TYPES *********************************************************************/
-
-#define IRP_FLAG_COMPLETE	0x00000001
-#define IRP_FLAG_NEXT		0x00000002
-#define IRP_FLAG_NEXT_LU	0x00000004
-
 
 /* GLOBALS *******************************************************************/
 
@@ -201,6 +198,10 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 static VOID
 SpiCleanupAfterInit(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 
+static NTSTATUS
+SpiHandleAttachRelease(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+                       PIRP Irp);
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -265,19 +266,17 @@ ScsiDebugPrint(IN ULONG DebugPrintLevel,
 	       IN PCHAR DebugMessage,
 	       ...)
 {
-  char Buffer[256];
-  va_list ap;
+    char Buffer[256];
+    va_list ap;
 
-#if 0
-  if (DebugPrintLevel > InternalDebugLevel)
-    return;
-#endif
+    if (DebugPrintLevel > InternalDebugLevel)
+        return;
 
-  va_start(ap, DebugMessage);
-  vsprintf(Buffer, DebugMessage, ap);
-  va_end(ap);
+    va_start(ap, DebugMessage);
+    vsprintf(Buffer, DebugMessage, ap);
+    va_end(ap);
 
-  DbgPrint(Buffer);
+    DbgPrint(Buffer);
 }
 
 
@@ -1726,12 +1725,13 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 	  DPRINT1 ("Notify: NextLuRequest(PathId %u  TargetId %u  Lun %u)\n",
 		   PathId, TargetId, Lun);
 	  /* FIXME: Implement it! */
+          ASSERT(FALSE);
 
-	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
+//	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
 //	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT_LU;
 
 	  /* Hack! */
-	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
+//	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
 	}
 	break;
 
@@ -2186,6 +2186,88 @@ ScsiPortCreateClose(IN PDEVICE_OBJECT DeviceObject,
   return(STATUS_SUCCESS);
 }
 
+static NTSTATUS
+SpiHandleAttachRelease(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+                       PIRP Irp)
+{
+    PSCSI_LUN_INFO LunInfo;
+    PIO_STACK_LOCATION IrpStack;
+    PDEVICE_OBJECT DeviceObject;
+    PSCSI_REQUEST_BLOCK Srb;
+    KIRQL Irql;
+
+    /* Get pointer to the SRB */
+    IrpStack = IoGetCurrentIrpStackLocation(Irp);
+    Srb = (PSCSI_REQUEST_BLOCK)IrpStack->Parameters.Others.Argument1;
+
+    /* Check if PathId matches number of buses */
+    if (DeviceExtension->BusesConfig == NULL ||
+        DeviceExtension->BusesConfig->NumberOfBuses <= Srb->PathId)
+    {
+        Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+        return STATUS_DEVICE_DOES_NOT_EXIST;
+    }
+
+    /* Get pointer to LunInfo */
+    LunInfo = DeviceExtension->BusesConfig->BusScanInfo[Srb->PathId]->LunInfo;
+
+    /* Find matching LunInfo */
+    while (LunInfo)
+    {
+        if (LunInfo->PathId == Srb->PathId &&
+            LunInfo->TargetId == Srb->TargetId &&
+            LunInfo->Lun == Srb->Lun)
+        {
+            break;
+        }
+
+        LunInfo = LunInfo->Next;
+    }
+
+    /* If we couldn't find it - exit */
+    if (LunInfo == NULL)
+        return STATUS_DEVICE_DOES_NOT_EXIST;
+
+
+    /* Get spinlock */
+    KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
+
+    /* Release, if asked */
+    if (Srb->Function == SRB_FUNCTION_RELEASE_DEVICE)
+    {
+        LunInfo->DeviceClaimed = FALSE;
+        KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+        Srb->SrbStatus = SRB_STATUS_SUCCESS;
+
+        return STATUS_SUCCESS;
+    }
+
+    /* Attach, if not already claimed */
+    if (LunInfo->DeviceClaimed)
+    {
+        KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+        Srb->SrbStatus = SRB_STATUS_BUSY;
+
+        return STATUS_DEVICE_BUSY;
+    }
+
+    /* Save the device object */
+    DeviceObject = LunInfo->DeviceObject;
+
+    if (Srb->Function == SRB_FUNCTION_CLAIM_DEVICE)
+        LunInfo->DeviceClaimed = TRUE;
+
+    if (Srb->Function == SRB_FUNCTION_ATTACH_DEVICE)
+        LunInfo->DeviceObject = Srb->DataBuffer;
+
+    Srb->DataBuffer = DeviceObject;
+
+    KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+    Srb->SrbStatus = SRB_STATUS_SUCCESS;
+
+    return STATUS_SUCCESS;
+}
+
 
 /**********************************************************************
  * NAME							INTERNAL
@@ -2212,7 +2294,10 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
     PSCSI_PORT_LUN_EXTENSION LunExtension;
     PIO_STACK_LOCATION Stack;
     PSCSI_REQUEST_BLOCK Srb;
+    KIRQL Irql;
     NTSTATUS Status = STATUS_SUCCESS;
+    PIRP NextIrp, IrpList;
+    PKDEVICE_QUEUE_ENTRY Entry;
 
     DPRINT("ScsiPortDispatchScsi(DeviceObject %p  Irp %p)\n",
         DeviceObject, Irp);
@@ -2239,9 +2324,9 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
     DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
 
     LunExtension = SpiGetLunExtension(DeviceExtension,
-        Srb->PathId,
-        Srb->TargetId,
-        Srb->Lun);
+                                      Srb->PathId,
+                                      Srb->TargetId,
+                                      Srb->Lun);
     if (LunExtension == NULL)
     {
         DPRINT("ScsiPortDispatchScsi() called with an invalid LUN\n");
@@ -2261,7 +2346,7 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
     case SRB_FUNCTION_SHUTDOWN:
     case SRB_FUNCTION_FLUSH:
         DPRINT ("  SRB_FUNCTION_SHUTDOWN or FLUSH\n");
-        if (DeviceExtension->PortConfig->CachesData == FALSE)
+        if (DeviceExtension->CachesData == FALSE)
         {
             /* All success here */
             Srb->SrbStatus = SRB_STATUS_SUCCESS;
@@ -2289,11 +2374,11 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
             KeRaiseIrql (DISPATCH_LEVEL, &oldIrql);
 
             /* Insert IRP into the queue */
-            if (!KeInsertByKeyDeviceQueue (&LunExtension->DeviceQueue,
+            if (!KeInsertByKeyDeviceQueue(&LunExtension->DeviceQueue,
                 &Irp->Tail.Overlay.DeviceQueueEntry,
                 Srb->QueueSortKey))
             {
-                /* It means queue is empty, and we just start this request */
+                /* It means the queue is empty, and we just start this request */
                 IoStartPacket(DeviceObject, Irp, NULL, NULL);
             }
 
@@ -2307,23 +2392,106 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
         DPRINT ("  SRB_FUNCTION_CLAIM_DEVICE or ATTACH\n");
 
         /* Reference device object and keep the device object */
-        /* TODO: Check if it's OK */
-        ObReferenceObject(DeviceObject);
-        LunExtension->DeviceObject = DeviceObject;
-        LunExtension->DeviceClaimed = TRUE;
-        Srb->DataBuffer = DeviceObject;
+        Status = SpiHandleAttachRelease(DeviceExtension, Irp);
         break;
 
     case SRB_FUNCTION_RELEASE_DEVICE:
         DPRINT ("  SRB_FUNCTION_RELEASE_DEVICE\n");
-        /* TODO: Check if it's OK */
-        DPRINT ("PathId: %lu  TargetId: %lu  Lun: %lu\n",
-            Srb->PathId, Srb->TargetId, Srb->Lun);
 
         /* Dereference device object and clear the device object */
-        ObDereferenceObject(LunExtension->DeviceObject);
-        LunExtension->DeviceObject = NULL;
-        LunExtension->DeviceClaimed = FALSE;
+        Status = SpiHandleAttachRelease(DeviceExtension, Irp);
+        break;
+
+    case SRB_FUNCTION_RELEASE_QUEUE:
+        DPRINT("  SRB_FUNCTION_RELEASE_QUEUE\n");
+
+        /* Guard with the spinlock */
+        KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
+
+        if (!(LunExtension->Flags & LUNEX_FROZEN_QUEUE))
+        {
+            DPRINT("Queue is not frozen really\n");
+
+            KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+            Srb->SrbStatus = SRB_STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
+            break;
+
+        }
+
+        /* Unfreeze the queue */
+        LunExtension->Flags &= ~LUNEX_FROZEN_QUEUE;
+
+        if (LunExtension->SrbInfo.Srb == NULL)
+        {
+            /* Get next logical unit request */
+            SpiGetNextRequestFromLun(DeviceExtension, LunExtension);
+            KeLowerIrql(Irql);
+        }
+        else
+        {
+            DPRINT("The queue has active request\n");
+            KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+        }
+
+
+        Srb->SrbStatus = SRB_STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
+        break;
+
+    case SRB_FUNCTION_FLUSH_QUEUE:
+        DPRINT("  SRB_FUNCTION_FLUSH_QUEUE\n");
+
+        /* Guard with the spinlock */
+        KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
+
+        if (!(LunExtension->Flags & LUNEX_FROZEN_QUEUE))
+        {
+            DPRINT("Queue is not frozen really\n");
+
+            KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            break;
+        }
+
+        /* Make sure there is no active request */
+        ASSERT(LunExtension->SrbInfo.Srb == NULL);
+
+        /* Compile a list from the device queue */
+        IrpList = NULL;
+        while ((Entry = KeRemoveDeviceQueue(&LunExtension->DeviceQueue)) != NULL)
+        {
+                NextIrp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DeviceQueueEntry);
+
+                /* Get the Srb */
+                Stack = IoGetCurrentIrpStackLocation(NextIrp);
+                Srb = Stack->Parameters.Scsi.Srb;
+
+                /* Set statuse */
+                Srb->SrbStatus = SRB_STATUS_REQUEST_FLUSHED;
+                NextIrp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+
+                /* Add then to the list */
+                NextIrp->Tail.Overlay.ListEntry.Flink = (PLIST_ENTRY)IrpList;
+                IrpList = NextIrp;
+        }
+
+        /* Unfreeze the queue */
+        LunExtension->Flags &= ~LUNEX_FROZEN_QUEUE;
+
+        /* Release the spinlock */
+        KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+
+        /* Complete those requests */
+        while (IrpList)
+        {
+            NextIrp = IrpList;
+            IrpList = (PIRP)NextIrp->Tail.Overlay.ListEntry.Flink;
+
+            IoCompleteRequest(NextIrp, 0);
+        }
+
+        Status = STATUS_SUCCESS;
         break;
 
     default:
