@@ -30,15 +30,14 @@
 #	include <stddef.h>
 #endif
 
-/*
-	Fall back to non-optimal, non-native NLG implementation for environments
-	without their own (e.g., currently, kernel-mode ReactOS/Windows). THIS IS NOT
-	RECOMMENDED AND IT WILL BE DROPPED IN A FUTURE VERSION BECAUSE IT MAY CAUSE
-	SEVERE STACK CORRUPTION. REIMPLEMENT OR PORT YOUR COMPILER'S NATIVE NLG
-	IMPLEMENTATION INSTEAD.
-*/
-#ifdef _SEH_NO_NATIVE_NLG
-#	include <pseh/setjmp.h>
+#if defined(_SEH_NO_NATIVE_NLG)
+#	error PSEH setjmp/longjmp fallback is no longer supported
+#endif
+
+#if defined(__GNUC__)
+#	define _SEHLongJmp __builtin_longjmp
+#	define _SEHSetJmp __builtin_setjmp
+	typedef void * _SEHJmpBuf_t[5];
 #else
 #	include <setjmp.h>
 #	define _SEHLongJmp longjmp
@@ -55,7 +54,7 @@
 typedef struct __SEHFrame
 {
 	_SEHPortableFrame_t SEH_Header;
-	void * SEH_Locals;
+	void * volatile SEH_Locals;
 }
 _SEHFrame_t;
 
@@ -78,6 +77,7 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 
 static const int _SEHScopeKind = 1;
 static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
+static _SEHPortableTryLevel_t * const _SEHPortableTryLevel = 0;
 
 /* SHARED LOCALS */
 /* Access the locals for the current frame */
@@ -139,28 +139,6 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 	}
 
 /* SAFE BLOCKS */
-#define _SEHX_TRY_FINALLY(FINALLY_) \
-	_SEH_TRY_FILTER_FINALLY \
-	( \
-		_SEH_STATIC_FILTER(_SEH_CONTINUE_SEARCH), \
-		(FINALLY_) \
-	)
-
-#define _SEHX_END_FINALLY _SEH_HANDLE _SEH_END
-
-#define _SEHX_TRY_FILTER(FILTER_) \
-	_SEH_TRY_FILTER_FINALLY((FILTER_), 0)
-
-#define _SEHX_TRY_HANDLE_FINALLY(FINALLY_) \
-	_SEH_TRY_FILTER_FINALLY \
-	( \
-		_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER), \
-		(FINALLY_) \
-	)
-
-#define _SEHX_TRY \
-	_SEH_TRY_HANDLE_FINALLY(0)
-
 #ifdef __cplusplus
 #	define _SEH_DECLARE_HANDLERS(FILTER_, FINALLY_) \
 		static const _SEHHandlers_t _SEHHandlers = { (FILTER_), (FINALLY_) };
@@ -171,79 +149,30 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 		_SEHHandlers.SH_Finally = (FINALLY_);
 #endif
 
-#define _SEHX_TRY_FILTER_FINALLY(FILTER_, FINALLY_) \
-	{ \
-		_SEHPortableFrame_t * const _SEHCurPortableFrame = _SEHPortableFrame; \
-	\
-		{ \
-			_SEHFrame_t _SEHFrame; \
-			_SEHTryLevel_t _SEHTryLevel; \
-			_SEHPortableFrame_t * const _SEHPortableFrame = \
-				_SEHScopeKind ? &_SEHFrame.SEH_Header : _SEHCurPortableFrame; \
-	\
-			(void)_SEHPortableFrame; \
-	\
-			_SEH_DECLARE_HANDLERS((FILTER_), (FINALLY_)); \
-	\
-			_SEHTryLevel.ST_Header.SPT_Handlers = &_SEHHandlers; \
-	\
-			if(_SEHScopeKind) \
-			{ \
-				if(&_SEHLocals != _SEHDummyLocals) \
-					_SEHFrame.SEH_Locals = &_SEHLocals; \
-	\
-				_SEHFrame.SEH_Header.SPF_Handler = _SEHCompilerSpecificHandler; \
-				_SEHEnterFrame(&_SEHFrame.SEH_Header, &_SEHTryLevel.ST_Header); \
-			} \
-			else \
-				_SEHEnterTry(&_SEHTryLevel.ST_Header); \
-	\
-			{ \
-				_SEH_INIT_CONST int _SEHScopeKind = 0; \
-				(void)_SEHScopeKind; \
-	\
-				if(_SEHSetJmp(_SEHTryLevel.ST_JmpBuf) == 0) \
-				{ \
-					for(;;) \
-					{
+#define _SEH_GetExceptionCode() (unsigned long)(_SEHPortableFrame->SPF_Code)
 
-#define _SEHX_HANDLE \
-	\
-						break; \
-					} \
-	\
-					_SEHLeave(); \
-				} \
-				else \
-				{ \
-					_SEHLeave();
-
-#define _SEHX_END \
-				} \
-	\
-				if(_SEHHandlers.SH_Finally) \
-					_SEHHandlers.SH_Finally(_SEHPortableFrame); \
-			} \
-		} \
-	}
-
-#define _SEHX_LEAVE break
-
-#define _SEHX_GetExceptionCode() (unsigned long)(_SEHPortableFrame->SPF_Code)
-
-#define _SEHX_GetExceptionPointers() \
+#define _SEH_GetExceptionPointers() \
 	((struct _EXCEPTION_POINTERS *)_SEHExceptionPointers)
 
-#define _SEHX_AbnormalTermination() (_SEHPortableFrame->SPF_Code != 0)
-
-/* New syntax */
+#define _SEH_AbnormalTermination() (_SEHPortableFrame->SPF_Code != 0)
 
 #define _SEH_LEAVE break
 
+#define _SEH_YIELD(STMT_) \
+	for(;;) \
+	{ \
+		if(!_SEHScopeKind) \
+			_SEHReturn(); \
+	\
+		STMT_; \
+	}
+
 #define _SEH_TRY \
+	for(;;) \
 	{ \
 		_SEH_INIT_CONST int _SEHTopTryLevel = (_SEHScopeKind != 0); \
 		_SEHPortableFrame_t * const _SEHCurPortableFrame = _SEHPortableFrame; \
+		_SEHPortableTryLevel_t * const _SEHPrevPortableTryLevel = _SEHPortableTryLevel; \
 	 \
 		{ \
 			_SEH_INIT_CONST int _SEHScopeKind = 0; \
@@ -253,9 +182,11 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 			_SEHTryLevel_t _SEHTryLevel; \
 			_SEHPortableFrame_t * const _SEHPortableFrame = \
 				_SEHTopTryLevel ? &_SEHFrame.SEH_Header : _SEHCurPortableFrame; \
+			_SEHPortableTryLevel_t * const _SEHPortableTryLevel = &_SEHTryLevel.ST_Header; \
 	\
 			(void)_SEHScopeKind; \
 			(void)_SEHPortableFrame; \
+			(void)_SEHPortableTryLevel; \
 			(void)_SEHHandle; \
 	\
 			for(;;) \
@@ -276,24 +207,24 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 				} \
 				else \
 				{ \
-					_SEH_DECLARE_HANDLERS((FILTER_), 0); \
-	\
-					_SEHTryLevel.ST_Header.SPT_Handlers = &_SEHHandlers; \
-	\
-					if(_SEHTopTryLevel) \
-					{ \
-						if(&_SEHLocals != _SEHDummyLocals) \
-							_SEHFrame.SEH_Locals = &_SEHLocals; \
-	\
-						_SEH_EnableTracing(_SEH_DO_DEFAULT_TRACING); \
-						_SEHFrame.SEH_Header.SPF_Handler = _SEHCompilerSpecificHandler; \
-						_SEHEnterFrame(&_SEHFrame.SEH_Header, &_SEHTryLevel.ST_Header); \
-					} \
-					else \
-						_SEHEnterTry(&_SEHTryLevel.ST_Header); \
-	\
 					if((_SEHHandle = _SEHSetJmp(_SEHTryLevel.ST_JmpBuf)) == 0) \
 					{ \
+						_SEHTryLevel.ST_Header.SPT_Handlers.SH_Filter = (FILTER_); \
+						_SEHTryLevel.ST_Header.SPT_Handlers.SH_Finally = 0; \
+	\
+						_SEHTryLevel.ST_Header.SPT_Next = _SEHPrevPortableTryLevel; \
+						_SEHFrame.SEH_Header.SPF_TopTryLevel = &_SEHTryLevel.ST_Header; \
+	\
+						if(_SEHTopTryLevel) \
+						{ \
+							if(&_SEHLocals != _SEHDummyLocals) \
+								_SEHFrame.SEH_Locals = &_SEHLocals; \
+	\
+							_SEH_EnableTracing(_SEH_DO_DEFAULT_TRACING); \
+							_SEHFrame.SEH_Header.SPF_Handler = _SEHCompilerSpecificHandler; \
+							_SEHEnterFrame(&_SEHFrame.SEH_Header); \
+						} \
+	\
 						++ _SEHState; \
 						continue; \
 					} \
@@ -306,7 +237,7 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 				break; \
 			} \
 	\
-			_SEHLeave(); \
+			_SEHPortableFrame->SPF_TopTryLevel = _SEHPrevPortableTryLevel; \
 	\
 			if(_SEHHandle) \
 			{
@@ -317,14 +248,16 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 						break; \
 					} \
 	\
-					_SEHLeave(); \
+					_SEHPortableFrame->SPF_TopTryLevel = _SEHPrevPortableTryLevel; \
 					break; \
 				} \
 				else \
 				{ \
-					_SEH_DECLARE_HANDLERS(0, (FINALLY_)); \
+					_SEHTryLevel.ST_Header.SPT_Handlers.SH_Filter = 0; \
+					_SEHTryLevel.ST_Header.SPT_Handlers.SH_Finally = (FINALLY_); \
 	\
-					_SEHTryLevel.ST_Header.SPT_Handlers = &_SEHHandlers; \
+					_SEHTryLevel.ST_Header.SPT_Next = _SEHPrevPortableTryLevel; \
+					_SEHFrame.SEH_Header.SPF_TopTryLevel = &_SEHTryLevel.ST_Header; \
 	\
 					if(_SEHTopTryLevel) \
 					{ \
@@ -332,11 +265,9 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 							_SEHFrame.SEH_Locals = &_SEHLocals; \
 	\
 						_SEH_EnableTracing(_SEH_DO_DEFAULT_TRACING); \
-						_SEHFrame.SEH_Header.SPF_Handler = 0; \
-						_SEHEnterFrame(&_SEHFrame.SEH_Header, &_SEHTryLevel.ST_Header); \
+						_SEHFrame.SEH_Header.SPF_Handler = _SEHCompilerSpecificHandler; \
+						_SEHEnterFrame(&_SEHFrame.SEH_Header); \
 					} \
-					else \
-						_SEHEnterTry(&_SEHTryLevel.ST_Header); \
 	\
 					++ _SEHState; \
 					continue; \
@@ -353,13 +284,14 @@ static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 #define _SEH_END \
 			} \
 		} \
+	\
+		if(_SEHTopTryLevel) \
+			_SEHLeaveFrame(); \
+	\
+		break; \
 	}
 
 #define _SEH_HANDLE _SEH_EXCEPT(_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER))
-
-#define _SEH_GetExceptionCode     _SEHX_GetExceptionCode
-#define _SEH_GetExceptionPointers _SEHX_GetExceptionPointers
-#define _SEH_AbnormalTermination  _SEHX_AbnormalTermination
 
 #define _SEH_EnableTracing(LEVEL_) ((void)(_SEHPortableFrame->SPF_Tracing = (LEVEL_)))
 #define _SEH_DisableTracing() ((void)(_SEHPortableFrame->SPF_Tracing = _SEH_DO_TRACE_NONE))

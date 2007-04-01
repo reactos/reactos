@@ -1,7 +1,7 @@
 <module name="win32k_base" type="objectlibrary">
 	<include base="win32k">.</include>
 	<include base="win32k">include</include>
-	<include base="ntoskrnl">include</include>      
+	<include base="ntoskrnl">include</include>
 	<include base="freetype">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/drivers</include>
@@ -9,7 +9,6 @@
 	<define name="__USE_W32API" />
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="WINVER">0x600</define>
-	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_WIN32K_" />
 	<pch>w32k.h</pch>
 
@@ -33,14 +32,14 @@
                       </directory>
             </if>
 
-            <ifnot property="ARCH" value="i386">                      
+            <ifnot property="ARCH" value="i386">
                       <file>dib24bppc.c</file>
                       <file>dib32bppc.c</file>
-            </ifnot> 
+            </ifnot>
 
 	</directory>
 
-      
+
 
 
 	<directory name="eng">
@@ -93,7 +92,7 @@
 			        <file>floor_asm.s</file>
 			        <file>ceil_asm.s</file>
 		       </directory>
-            </if>            
+            </if>
 	</directory>
 	<directory name="ntddraw">
 		<compilationunit name="ntddraw.c">
@@ -127,7 +126,7 @@
 			<file>misc.c</file>
 			<file>monitor.c</file>
 			<file>msgqueue.c</file>
-			<file>ntuser.c</file>		
+			<file>ntuser.c</file>
 			<file>painting.c</file>
 			<file>prop.c</file>
 			<file>scrollbar.c</file>

@@ -87,8 +87,8 @@ _SEHHandlers_t;
 
 typedef struct __SEHPortableTryLevel
 {
-	struct __SEHPortableTryLevel * SPT_Next;
-	const _SEHHandlers_t * SPT_Handlers;
+	struct __SEHPortableTryLevel * volatile SPT_Next;
+	volatile _SEHHandlers_t SPT_Handlers;
 }
 _SEHPortableTryLevel_t;
 
@@ -96,9 +96,9 @@ typedef struct __SEHPortableFrame
 {
 	_SEHRegistration_t SPF_Registration;
 	unsigned long SPF_Code;
-	_SEHHandler_t SPF_Handler;
-	_SEHPortableTryLevel_t * SPF_TopTryLevel;
-	int SPF_Tracing;
+	volatile _SEHHandler_t SPF_Handler;
+	_SEHPortableTryLevel_t * volatile SPF_TopTryLevel;
+	volatile int SPF_Tracing;
 }
 _SEHPortableFrame_t;
 
@@ -107,14 +107,9 @@ extern "C"
 {
 #endif
 
-extern void __stdcall _SEHEnterFrame_s
-(
-	_SEHPortableFrame_t *,
-	_SEHPortableTryLevel_t *
-);
-
-extern void __stdcall _SEHEnterTry_s(_SEHPortableTryLevel_t *);
-extern void __stdcall _SEHLeave_s(void);
+extern void __stdcall _SEHEnterFrame_s(_SEHPortableFrame_t *);
+extern void __stdcall _SEHLeaveFrame_s(void);
+extern void __stdcall _SEHReturn_s(void);
 
 #if !defined(_SEH_NO_FASTCALL)
 # ifdef _M_IX86
@@ -123,22 +118,17 @@ extern void __stdcall _SEHLeave_s(void);
 #  define _SEH_FASTCALL __stdcall
 # endif
 
-extern void _SEH_FASTCALL _SEHEnterFrame_f
-(
-	_SEHPortableFrame_t *,
-	_SEHPortableTryLevel_t *
-);
-
-extern void _SEH_FASTCALL _SEHEnterTry_f(_SEHPortableTryLevel_t *);
-extern void _SEH_FASTCALL _SEHLeave_f(void);
+extern void _SEH_FASTCALL _SEHEnterFrame_f(_SEHPortableFrame_t *);
+extern void _SEH_FASTCALL _SEHLeaveFrame_f(void);
+extern void _SEH_FASTCALL _SEHReturn_f(void);
 
 # define _SEHEnterFrame _SEHEnterFrame_f
-# define _SEHEnterTry   _SEHEnterTry_f
-# define _SEHLeave      _SEHLeave_f
+# define _SEHLeaveFrame _SEHLeaveFrame_f
+# define _SEHReturn     _SEHReturn_f
 #else
 # define _SEHEnterFrame _SEHEnterFrame_s
-# define _SEHEnterTry   _SEHEnterTry_s
-# define _SEHLeave      _SEHLeave_s
+# define _SEHLeaveFrame _SEHLeaveFrame_s
+# define _SEHReturn     _SEHReturn_s
 #endif
 
 #ifdef __cplusplus

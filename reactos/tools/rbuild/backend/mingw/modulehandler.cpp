@@ -1556,19 +1556,18 @@ MingwModuleHandler::GenerateLinkerCommand (
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 	string targetName ( module.GetTargetName () );
 
-	string killAt = module.mangledSymbols ? "" : "--kill-at";
-
 	if ( module.IsDLL () )
 	{
 		string temp_exp = ros_temp + module.name + ".temp.exp";
 		CLEAN_FILE ( temp_exp );
 
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-exp %s %s\n",
+		          "\t${dlltool} --dllname %s --def %s --output-exp %s %s %s\n",
 		          targetName.c_str (),
 		          definitionFilename.c_str (),
 		          temp_exp.c_str (),
-		          killAt.c_str () );
+		          module.mangledSymbols ? "" : "--kill-at",
+		          module.underscoreSymbols ? "--add-underscore" : "" );
 
 		fprintf ( fMakefile,
 		          "\t%s %s %s %s -o %s %s %s %s\n",
@@ -1741,10 +1740,11 @@ MingwModuleHandler::GenerateArchiveTarget ( const string& ar,
 		string definitionFilename ( GetDefinitionFilename () );
 
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib $@ %s -U\n",
+		          "\t${dlltool} --dllname %s --def %s --output-lib $@ %s %s\n",
 		          module.importLibrary->dllname.c_str (),
 		          definitionFilename.c_str (),
-		          module.mangledSymbols ? "" : "--kill-at" );
+		          module.mangledSymbols ? "" : "--kill-at",
+		          module.underscoreSymbols ? "--add-underscore" : "" );
 	}
 
 	fprintf ( fMakefile, "\t$(ECHO_AR)\n" );
@@ -2199,13 +2199,13 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 
 		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
 
-		string killAt = module.mangledSymbols ? "" : "--kill-at";
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib %s %s\n\n",
+		          "\t${dlltool} --dllname %s --def %s --output-lib %s %s %s\n\n",
 		          module.GetTargetName ().c_str (),
 		          defFilename.c_str (),
 		          library_target.c_str (),
-		          killAt.c_str () );
+		          module.mangledSymbols ? "" : "--kill-at",
+		          module.underscoreSymbols ? "--add-underscore" : "" );
 	}
 }
 

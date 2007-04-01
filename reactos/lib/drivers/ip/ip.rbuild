@@ -1,6 +1,5 @@
 <module name="ip" type="staticlibrary" allowwarnings="true">
 	<define name="__NTDRIVER__"/>
-	<define name="_SEH_NO_NATIVE_NLG"/>
 	<define name="__USE_W32API"/>
 	<include base="tcpip">include</include>
 	<include base="oskittcp">include</include>

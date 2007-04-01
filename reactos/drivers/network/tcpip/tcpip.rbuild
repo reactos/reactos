@@ -2,7 +2,6 @@
 	<importlibrary definition="tcpip.def"></importlibrary>
 	<include base="tcpip">include</include>
 	<include base="oskittcp">include</include>
-	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="NDIS40" />
 	<define name="__USE_W32API" />
 	<define name="_NTDRIVER_" />

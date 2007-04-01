@@ -5,7 +5,6 @@
     <define name="NO_RTL_INLINES" />
     <define name="_NTSYSTEM_" />
     <define name="_NTDLLBUILD_" />
-    <define name="_SEH_NO_NATIVE_NLG" />
     <include base="rtl">.</include>
     <if property="ARCH" value="i386">
         <directory name="i386">

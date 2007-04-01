@@ -977,7 +977,7 @@ NTSTATUS TdiReceiveDatagram(
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
         IoFreeIrp(*Irp);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        _SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH_END;
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
@@ -1066,7 +1066,7 @@ NTSTATUS TdiSendDatagram(
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
         IoFreeIrp(*Irp);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        _SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH_END;
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));

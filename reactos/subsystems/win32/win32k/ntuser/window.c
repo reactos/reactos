@@ -70,7 +70,7 @@ CleanupWindowImpl(VOID)
 PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
 {
    PWINDOW_OBJECT Window;
-   
+
    if (!hWnd) return NULL;
 
    Window = UserGetWindowObject(hWnd);
@@ -100,11 +100,11 @@ PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd)
    }
 
    if (!hWnd)
-   { 
+   {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return NULL;
    }
-   
+
    Window = (PWINDOW_OBJECT)UserGetObject(gHandleTable, hWnd, otWindow);
    if (!Window || 0 != (Window->Status & WINDOWSTATUS_DESTROYED))
    {
@@ -146,7 +146,7 @@ IntIsWindow(HWND hWnd)
 
 
 
-/* 
+/*
   Caller must NOT dereference retval!
   But if caller want the returned value to persist spanning a co_ call,
   it must reference the value (because the owner is not garanteed to
@@ -168,7 +168,7 @@ IntGetParent(PWINDOW_OBJECT Wnd)
 }
 
 
-/* 
+/*
   Caller must NOT dereference retval!
   But if caller want the returned value to persist spanning a co_ call,
   it must reference the value (because the owner is not garanteed to
@@ -243,7 +243,7 @@ static void IntSendDestroyMsg(HWND hWnd)
    {
 //      USER_REFERENCE_ENTRY Ref;
 //      UserRefObjectCo(Window, &Ref);
-      
+
       if (!IntGetOwner(Window) && !IntGetParent(Window))
       {
          co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM) hWnd);
@@ -299,7 +299,7 @@ static void IntSendDestroyMsg(HWND hWnd)
  *
  * This is the "functional" DestroyWindows function ei. all stuff
  * done in CreateWindow is undone here and not in DestroyWindow:-P
-  
+
  */
 static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
                                    PW32PROCESS ProcessData,
@@ -351,7 +351,7 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
             }
             else
                co_UserFreeWindow(Child, ProcessData, ThreadData, SendMessages);
-            
+
             UserDerefObject(Child);
          }
       }
@@ -461,7 +461,7 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
 
    UserDerefObject(Window);
 
-   IntClipboardFreeWindow(Window); 
+   IntClipboardFreeWindow(Window);
 
    return 0;
 }
@@ -641,7 +641,7 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
    PWINDOW_OBJECT Wnd;
    USER_REFERENCE_ENTRY Ref;
    WThread = (PW32THREAD)Thread->Tcb.Win32Thread;
-   
+
    while (!IsListEmpty(&WThread->WindowListHead))
    {
       Current = WThread->WindowListHead.Flink;
@@ -650,14 +650,14 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
       DPRINT("thread cleanup: while destroy wnds, wnd=0x%x\n",Wnd);
 
       /* window removes itself from the list */
-      
+
       /*
       fixme: it is critical that the window removes itself! if now, we will loop
       here forever...
       */
-      
+
       //ASSERT(co_UserDestroyWindow(Wnd));
-      
+
       UserRefObjectCo(Wnd, &Ref);//faxme: temp hack??
       if (!co_UserDestroyWindow(Wnd))
       {
@@ -973,9 +973,9 @@ co_IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
       return NULL;
 
    WndOldParent = Wnd->Parent;
-   
+
    if (WndOldParent) UserRefObject(WndOldParent); /* caller must deref */
-   
+
    if (WndNewParent != WndOldParent)
    {
       IntUnlinkWindow(Wnd);
@@ -1032,7 +1032,7 @@ co_IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
          of IntSetParent() */
 //      return WndOldParent;
 //   }
-   
+
    return WndOldParent;//NULL;
 }
 
@@ -1583,7 +1583,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    Window->MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
    IntReferenceMessageQueue(Window->MessageQueue);
    Window->Parent = ParentWindow;
-   
+
    if((OwnerWindow = UserGetWindowObject(OwnerWindowHandle)))
    {
       Window->hOwner = OwnerWindowHandle;
@@ -1594,7 +1594,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       Window->hOwner = NULL;
       HasOwner = FALSE;
    }
-   
+
    Window->UserData = 0;
 
    Window->IsSystem = Window->Class->System;
@@ -1755,11 +1755,11 @@ co_IntCreateWindowEx(DWORD dwExStyle,
             Pos.y = rc.top;
          }
 
-/* 
+/*
    According to wine, the ShowMode is set to y if x == CW_USEDEFAULT(16) and
    y is something else. and Quote!
  */
-       
+
 /* Never believe Microsoft's documentation... CreateWindowEx doc says
  * that if an overlapped window is created with WS_VISIBLE style bit
  * set and the x parameter is set to CW_USEDEFAULT, the system ignores
@@ -1891,7 +1891,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    MaxPos.x = Window->WindowRect.left;
    MaxPos.y = Window->WindowRect.top;
 
-   
+
    DPRINT("IntCreateWindowEx(): About to get non-client size.\n");
    /* WinPosGetNonClientSize SENDS THE WM_NCCALCSIZE message */
    Result = co_WinPosGetNonClientSize(Window,
@@ -1909,9 +1909,9 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       if ((dwStyle & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
       {
          PWINDOW_OBJECT PrevSibling;
-         
+
          PrevSibling = ParentWindow->LastChild;
-         
+
          /* link window as bottom sibling */
          IntLinkWindow(Window, ParentWindow, PrevSibling /*prev sibling*/);
       }
@@ -1933,7 +1933,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
          {
             InsertAfter = NULL;
          }
-         
+
          IntLinkWindow(Window, ParentWindow, InsertAfter /* prev sibling */);
 
       }
@@ -1943,7 +1943,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    DPRINT("IntCreateWindowEx(): about to send CREATE message.\n");
    Result = co_IntSendMessage(Window->hSelf, WM_CREATE, 0, (LPARAM) &Cs);
 
-   
+
    if (Result == (LRESULT)-1)
    {
       /* FIXME: Cleanup. */
@@ -1987,14 +1987,14 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                             Window->ClientRect.top);
       }
 
-      
+
       co_IntSendMessage(Window->hSelf, WM_MOVE, 0, lParam);
 
 
       /* Call WNDOBJ change procs */
       IntEngWindowChanged(Window, WOC_RGN_CLIENT);
 
-      
+
    }
 
    /* Show or maybe minimize or maximize the window. */
@@ -2329,7 +2329,7 @@ NtUserDestroyWindow(HWND Wnd)
    UserDerefObjectCo(Window);//faxme: dunno if win should be reffed during destroy..
 
    RETURN(ret);
-   
+
 CLEANUP:
    DPRINT("Leave NtUserDestroyWindow, ret=%i\n",_ret_);
    UserLeave();
@@ -2513,7 +2513,7 @@ NtUserFindWindowEx(HWND hwndParent,
        _SEH_HANDLE
        {
            SetLastNtError(_SEH_GetExceptionCode());
-           RETURN(NULL);
+           _SEH_YIELD(RETURN(NULL));
        }
        _SEH_END;
 
@@ -2710,7 +2710,7 @@ PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
             for (;;)
             {
                PWINDOW_OBJECT Parent, Old;
-               
+
                Old = WndAncestor;
                Parent = IntGetParent(WndAncestor);
 
@@ -2718,10 +2718,10 @@ PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
                {
                   break;
                }
-               
+
                //temp hack
 //               UserDerefObject(Parent);
-               
+
                WndAncestor = Parent;
             }
             break;
@@ -2749,7 +2749,7 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
 
    DPRINT("Enter NtUserGetAncestor\n");
    UserEnterExclusive();
-   
+
    if (!(Window = UserGetWindowObject(hWnd)))
    {
       RETURN(NULL);
@@ -2757,7 +2757,7 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
 
    Ancestor = UserGetAncestor(Window, Type);
    /* faxme: can UserGetAncestor ever return NULL for a valid window? */
-   
+
    RETURN(Ancestor ? Ancestor->hSelf : NULL);
 
 CLEANUP:
@@ -2956,9 +2956,9 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 
    UserRefObjectCo(Wnd, &Ref);
    UserRefObjectCo(WndParent, &ParentRef);
-   
+
    WndOldParent = co_IntSetParent(Wnd, WndParent);
-   
+
    UserDerefObjectCo(WndParent);
    UserDerefObjectCo(Wnd);
 
@@ -3931,12 +3931,12 @@ NtUserMoveWindow(
 
 /*
  QueryWindow based on KJK::Hyperion and James Tabor.
- 
+
  0 = QWUniqueProcessId
  1 = QWUniqueThreadId
  4 = QWIsHung            Implements IsHungAppWindow found
                                 by KJK::Hyperion.
- 
+
         9 = QWKillWindow        When I called this with hWnd ==
                                 DesktopWindow, it shutdown the system
                                 and rebooted.
@@ -4475,13 +4475,13 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       //hmm... threads live on desktops thus we have a reference on the desktop and indirectly the desktop window
       //its possible this referencing is useless, thou it shouldnt hurt...
       UserRefObjectCo(DesktopWindow, &Ref);
-      
+
       Hit = co_WinPosWindowFromPoint(DesktopWindow, PsGetCurrentThreadWin32Thread()->MessageQueue, &pt, &Window);
-      
+
       if(Window)
       {
          Ret = Window->hSelf;
-         
+
          RETURN( Ret);
       }
    }

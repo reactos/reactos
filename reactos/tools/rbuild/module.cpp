@@ -142,7 +142,7 @@ GetExtension ( const string& filename )
 	if (index == string::npos) index = 0;
 	string tmp = filename.substr( index, filename.size() - index );
 	size_t ext_index = tmp.find_last_of( '.' );
-	if (ext_index != string::npos) 
+	if (ext_index != string::npos)
 		return filename.substr ( index + ext_index, filename.size() );
 	return "";
 }
@@ -373,6 +373,12 @@ Module::Module ( const Project& project,
 	else
 		mangledSymbols = false;
 
+	att = moduleNode.GetAttribute ( "underscoresymbols", false );
+	if ( att != NULL )
+		underscoreSymbols = att->value == "true";
+	else
+		underscoreSymbols = false;
+
 	att = moduleNode.GetAttribute ( "host", false );
 	if ( att != NULL )
 	{
@@ -424,7 +430,7 @@ Module::Module ( const Project& project,
 		installName = att->value;
 	else
 		installName = "";
-	
+
 	att = moduleNode.GetAttribute ( "usewrc", false );
 	if ( att != NULL )
 		useWRC = att->value == "true";
@@ -1451,7 +1457,7 @@ If::~If ()
 void
 If::ProcessXML()
 {
-	
+
 }
 
 

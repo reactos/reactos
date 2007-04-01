@@ -109,7 +109,7 @@ CsrCheckRequestThreads(VOID)
  * communications with the Session Manager (SM) and initializes the static
  * thread that will handle connection requests and APIs.
  *
- * @param None 
+ * @param None
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
  *         othwerwise.
@@ -192,7 +192,7 @@ CsrSbApiPortInitialize(VOID)
  * communications with the Client/Server Runtime (CSR) and initializes the
  * static thread that will handle connection requests and APIs.
  *
- * @param None 
+ * @param None
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
  *         othwerwise.
@@ -311,7 +311,7 @@ CsrApiPortInitialize(VOID)
  * requests on the CSR API LPC Port.
  *
  * @param Parameter
- *        System-default user-defined parameter. Unused.  
+ *        System-default user-defined parameter. Unused.
  *
  * @return The thread exit code, if the thread is terminated.
  *
@@ -462,7 +462,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                         }
                     }
                 }
-                    
+
                 /* Increase the thread count */
                 InterlockedIncrement(&CsrpStaticThreadCount);
 
@@ -625,7 +625,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                         }
                     }
                 }
-                    
+
                 /* Increase the thread count */
                 InterlockedIncrement(&CsrpStaticThreadCount);
 
@@ -791,7 +791,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
  * requests on the SM API LPC Port.
  *
  * @param Parameter
- *        System-default user-defined parameter. Unused.  
+ *        System-default user-defined parameter. Unused.
  *
  * @return The thread exit code, if the thread is terminated.
  *
@@ -848,7 +848,7 @@ CsrSbApiRequestThread(IN PVOID Parameter)
         {
             /* Close the handle if we have one */
             if (PortContext) NtClose((HANDLE)PortContext);
-            
+
             /* Client died, start over */
             ReplyMsg = NULL;
             continue;
@@ -1026,7 +1026,7 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
  *
  * The CsrConnectToUser connects to the User subsystem.
  *
- * @param None   
+ * @param None
  *
  * @return A pointer to the CSR Thread
  *
@@ -1145,7 +1145,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
         {
             /* Return failure */
             ApiMessage->Status = STATUS_INVALID_PARAMETER;
-            return FALSE;
+            _SEH_YIELD(return FALSE);
         }
 
         /* Check if the Length is valid */
@@ -1154,14 +1154,14 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
         {
             /* Return failure */
             ApiMessage->Status = STATUS_INVALID_PARAMETER;
-            return FALSE;
+            _SEH_YIELD(return FALSE);
         }
     }
     _SEH_HANDLE
     {
         /* Return failure */
         ApiMessage->Status = STATUS_INVALID_PARAMETER;
-        return FALSE;
+        _SEH_YIELD(return FALSE);
     } _SEH_END;
 
     /* We validated the incoming buffer, now allocate the remote one */
@@ -1226,7 +1226,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
         RemoteCaptureBuffer->PreviousCaptureBuffer = LocalCaptureBuffer;
         ApiMessage->CsrCaptureData = RemoteCaptureBuffer;
     }
-     
+
     /* Success */
     return TRUE;
 }
@@ -1267,7 +1267,7 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
 
     /* Find out the difference between the two buffers */
     BufferDistance = (ULONG_PTR)LocalCaptureBuffer - (ULONG_PTR)RemoteCaptureBuffer;
-  
+
     /* Save the pointer count and offset pointer */
     PointerCount = RemoteCaptureBuffer->PointerCount;
     PointerOffsets = (ULONG_PTR**)(RemoteCaptureBuffer + 1);
@@ -1284,7 +1284,7 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
             /* Modify the pointer to take into account its new position */
             *CurrentPointer += BufferDistance;
         }
-                
+
         /* Move to the next Pointer */
         PointerCount--;
     }

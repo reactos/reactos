@@ -17,7 +17,7 @@
 
 #define USE_WINSTA \
     PWINSTATION_OBJECT WinStaObj; \
-    WinStaObj = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation; 
+    WinStaObj = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
 
 #define WINSTA_ClipboardThread WinStaObj->Clipboard->ClipboardThread
 #define WINSTA_ClipboardOwnerThread WinStaObj->Clipboard->ClipboardOwnerThread
@@ -54,13 +54,13 @@ DWORD synthesizedDataSize;
 
 /*==============================================================*/
 
-/* return the pointer to the prev window of the finded window, 
+/* return the pointer to the prev window of the finded window,
    if NULL does not exists in the chain */
 PCLIPBOARDCHAINELEMENT FASTCALL
 IntIsWindowInChain(PWINDOW_OBJECT window)
 {
     PCLIPBOARDCHAINELEMENT wce = WindowsChain;
-    
+
     while (wce)
     {
         if (wce->window == window)
@@ -68,8 +68,8 @@ IntIsWindowInChain(PWINDOW_OBJECT window)
             break;
         }
         wce = wce->next;
-    }        
-    
+    }
+
     return wce;
 }
 
@@ -81,7 +81,7 @@ VOID FASTCALL printChain()
     {
         DPRINT1("chain: %p\n", wce2->window->hSelf);
         wce2 = wce2->next;
-    }             
+    }
 }
 
 /* the new window always have to be the first in the chain */
@@ -89,27 +89,27 @@ PCLIPBOARDCHAINELEMENT FASTCALL
 IntAddWindowToChain(PWINDOW_OBJECT window)
 {
     PCLIPBOARDCHAINELEMENT wce = NULL;
-    
+
     if (!IntIsWindowInChain(window))
     {
         wce = WindowsChain;
-        
+
         wce = ExAllocatePool(PagedPool, sizeof(CLIPBOARDCHAINELEMENT));
         if (wce == NULL)
         {
             SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
             goto exit_addChain;
-        }   
-        
+        }
+
         wce->window = window;
         wce->next = WindowsChain;
-        
+
         WindowsChain = wce;
 
         //printChain();
     }
-exit_addChain:    
-    
+exit_addChain:
+
     /* return the next window to beremoved later */
     return wce;
 }
@@ -133,17 +133,17 @@ IntRemoveWindowFromChain(PWINDOW_OBJECT window)
             link = &wce->next;
             wce = wce->next;
         }
-        
-        //printChain();    
-        
+
+        //printChain();
+
         return wce;
-    }	
+    }
     else
     {
         return NULL;
     }
 }
-    
+
 
 /*==============================================================*/
 /* if format exists, returns a non zero value (pointing to format object) */
@@ -152,7 +152,7 @@ intIsFormatAvailable(format)
 {
     PCLIPBOARDELEMENT ret = NULL;
     PCLIPBOARDELEMENT ce = ClipboardData;
-    
+
     while(ce)
     {
 	    if (ce->format == format)
@@ -171,7 +171,7 @@ IntCountClipboardFormats()
 {
     DWORD ret = 0;
     PCLIPBOARDELEMENT ce = ClipboardData;
-    
+
     while(ce)
     {
         ret++;
@@ -190,19 +190,19 @@ intAddFormatedData(UINT format, HANDLE hData, DWORD size)
     if (ce == NULL)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-    }   
+    }
     else
-    {    
+    {
         ce->format = format;
         ce->size = size;
         ce->hData = hData;
         ce->next = ClipboardData;
-        
+
         ClipboardData = ce;
-        
+
         IntIncrementSequenceNumber();
     }
-       
+
     return ce;
 }
 
@@ -211,9 +211,9 @@ BOOL FASTCALL
 intRemoveFormatedData(UINT format)
 {
     BOOL ret = FALSE;
-    PCLIPBOARDELEMENT ce = ClipboardData;   
+    PCLIPBOARDELEMENT ce = ClipboardData;
     PCLIPBOARDELEMENT *link = &ClipboardData;
-    
+
     if (intIsFormatAvailable(format))
     {
         while (ce != NULL)
@@ -223,19 +223,19 @@ intRemoveFormatedData(UINT format)
                 *link = ce->next;
                 break;
             }
-                        
+
             link = &ce->next;
             ce = ce->next;
         }
-        
+
         if (ce->hData)
         {
             ExFreePool(ce->hData);
         }
-        ExFreePool(ce);   
+        ExFreePool(ce);
         ret = TRUE;
     }
-    
+
     return ret;
 }
 
@@ -244,7 +244,7 @@ IntEmptyClipboardData()
 {
     PCLIPBOARDELEMENT ce = ClipboardData;
     PCLIPBOARDELEMENT tmp;
-    
+
     while(ce)
     {
         tmp = ce->next;
@@ -252,13 +252,13 @@ IntEmptyClipboardData()
 	    ExFreePool(ce);
 	    ce = tmp;
     }
-    
+
     ClipboardData = NULL;
 }
 
 /*==============================================================*/
 
-HANDLE FASTCALL 
+HANDLE FASTCALL
 renderBITMAPfromDIB(LPBYTE hDIB)
 {
     HDC hdc;
@@ -268,7 +268,7 @@ renderBITMAPfromDIB(LPBYTE hDIB)
 
     //hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
     hdc = UserGetDCEx(ClipboardWindow, NULL, DCX_USESTYLE);
-    
+
     ih = (BITMAPINFOHEADER *)hDIB;
 
     offset = sizeof(BITMAPINFOHEADER) + ((ih->biBitCount <= 8) ? (sizeof(RGBQUAD) * (1 << ih->biBitCount)) : 0);
@@ -279,56 +279,56 @@ renderBITMAPfromDIB(LPBYTE hDIB)
     UserReleaseDC(ClipboardWindow, hdc, FALSE);
 
     return hbitmap;
-}  
+}
 
 BOOL FASTCALL
 canSinthesize(UINT format)
 {
     BOOL ret = FALSE;
-    
+
     switch(format)
     {
         case CF_BITMAP:
         case CF_METAFILEPICT:
             ret = TRUE;
     }
-    
+
     return ret;
 }
 
 /* returns the size of the sinthesized data */
-DWORD FASTCALL 
+DWORD FASTCALL
 synthesizeData(UINT format)
 {
     DWORD ret = 0;
-    
+
     synthesizedData = NULL;
     synthesizedDataSize = 0;
-    
+
     if (!canSinthesize(format))
     {
         return 0;
     }
-    
+
     switch (format)
     {
         case CF_BITMAP:
         {
-            break;    
+            break;
         }
-        
+
         case CF_METAFILEPICT:
         {
-            break;    
+            break;
         }
     }
-    
+
     ret = 1;
-    
-    return ret;    
+
+    return ret;
 }
 
-VOID FASTCALL 
+VOID FASTCALL
 freeSynthesizedData()
 {
     ExFreePool(synthesizedData);
@@ -336,7 +336,7 @@ freeSynthesizedData()
 
 /*==============================================================*/
 
-BOOL FASTCALL 
+BOOL FASTCALL
 intIsClipboardOpenByMe()
 {
     /* check if we open the clipboard */
@@ -347,11 +347,11 @@ intIsClipboardOpenByMe()
 
     }
     /* will fail if not thread (closed) or not open by me*/
-    return FALSE;    
-}    
+    return FALSE;
+}
 
 /* IntClipboardFreeWindow it's called when a window was destroyed */
-VOID FASTCALL 
+VOID FASTCALL
 IntClipboardFreeWindow(PWINDOW_OBJECT window)
 {
     /* called from co_UserFreeWindow in window.c */
@@ -375,8 +375,8 @@ IntClipboardFreeWindow(PWINDOW_OBJECT window)
 		PCLIPBOARDCHAINELEMENT w = IntRemoveWindowFromChain(window);
 		if (w)
 		{
-            ExFreePool(w);   
-		}        
+            ExFreePool(w);
+		}
     }
 }
 
@@ -388,10 +388,10 @@ NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
     BOOL ret = FALSE;
 
     UserEnterExclusive();
-    
+
     sendDrawClipboardMsg = FALSE;
     recentlySetClipboard = FALSE;
-    
+
     if (ClipboardThread)
     {
         /* clipboard is already open */
@@ -415,17 +415,17 @@ NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
     }
     else
     {
-    
+
         if (hWnd != NULL)
         {
             Window = UserGetWindowObject(hWnd);
-            
+
             if (Window != NULL)
             {
                 ClipboardWindow =  Window;
                 ClipboardThread = PsGetCurrentThreadWin32Thread();
-                ret = TRUE; 
-            } 
+                ret = TRUE;
+            }
             else
             {
                 ClipboardWindow = NULL;
@@ -438,12 +438,12 @@ NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
         {
             ClipboardWindow =  NULL;
             ClipboardThread = PsGetCurrentThreadWin32Thread();
-            ret = TRUE; 
+            ret = TRUE;
         }
     }
 
     UserLeave();
-   
+
     return ret;
 }
 
@@ -451,50 +451,50 @@ BOOL STDCALL
 NtUserCloseClipboard(VOID)
 {
     BOOL ret = FALSE;
-       
+
     UserEnterExclusive();
-    
+
     if (intIsClipboardOpenByMe())
     {
         ClipboardWindow = NULL;
         ClipboardThread = NULL;
-        ret = TRUE; 
+        ret = TRUE;
     }
     else
     {
         SetLastWin32Error(ERROR_CLIPBOARD_NOT_OPEN);
     }
-    
+
     recentlySetClipboard = FALSE;
-    
+
     UserLeave();
-    
+
     if (sendDrawClipboardMsg && WindowsChain)
     {
         /* only send message to the first window in the chain, then they'll do the chain */
-        /* commented because it makes a crash in co_MsqSendMessage 
+        /* commented because it makes a crash in co_MsqSendMessage
         ASSERT(WindowsChain->window);
         ASSERT(WindowsChain->window->hSelf);
         DPRINT1("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", WindowsChain->window->hSelf);
         co_IntSendMessage(WindowsChain->window->hSelf, WM_DRAWCLIPBOARD, 0, 0);
         */
     }
-    
+
     return ret;
 }
 
 HWND STDCALL
 NtUserGetOpenClipboardWindow(VOID)
 {
-    HWND ret = NULL;   
+    HWND ret = NULL;
 
     UserEnterShared();
-         
+
     if (ClipboardWindow)
     {
         ret = ClipboardWindow->hSelf;
     }
-    
+
     UserLeave();
 
     return ret;
@@ -505,11 +505,11 @@ NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 {
     BOOL ret = FALSE;
     PCLIPBOARDCHAINELEMENT w = NULL;
-    
+
     UserEnterExclusive();
-    
-    PWINDOW_OBJECT removeWindow = UserGetWindowObject(hWndRemove);       
-    
+
+    PWINDOW_OBJECT removeWindow = UserGetWindowObject(hWndRemove);
+
     if (removeWindow)
     {
 		if ((ret = !!IntIsWindowInChain(removeWindow)))
@@ -517,21 +517,21 @@ NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 			w = IntRemoveWindowFromChain(removeWindow);
 			if (w)
 			{
-                ExFreePool(w);   
+                ExFreePool(w);
 			}
         }
     }
-    
+
     if (ret && WindowsChain)
     {
-        // only send message to the first window in the chain, 
-        // then they do the chain 
+        // only send message to the first window in the chain,
+        // then they do the chain
         DPRINT1("Message: WM_CHANGECBCHAIN to %p", WindowsChain->window->hSelf);
         /* WindowsChain->window may be NULL */
         LPARAM lparam = WindowsChain->window == NULL ? 0 : (LPARAM)WindowsChain->window->hSelf;
         co_IntSendMessage(WindowsChain->window->hSelf, WM_CHANGECBCHAIN, (WPARAM)hWndRemove, lparam);
-    }    
-    
+    }
+
     UserLeave();
 
     return ret;
@@ -540,8 +540,8 @@ NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 DWORD STDCALL
 NtUserCountClipboardFormats(VOID)
 {
-    DWORD ret = 0; 
-    
+    DWORD ret = 0;
+
     if (ClipboardData)
     {
        ret = IntCountClipboardFormats();
@@ -554,36 +554,36 @@ DWORD STDCALL
 NtUserEmptyClipboard(VOID)
 {
     BOOL ret = FALSE;
-    
+
     UserEnterExclusive();
-    
+
     if (intIsClipboardOpenByMe())
     {
         if (ClipboardData)
         {
             IntEmptyClipboardData();
         }
-        
+
         ClipboardOwnerWindow = ClipboardWindow;
         ClipboardOwnerThread = ClipboardThread;
-        
+
         IntIncrementSequenceNumber();
-        
+
         ret = TRUE;
     }
     else
     {
         SetLastWin32Error(ERROR_CLIPBOARD_NOT_OPEN);
-    }    
-    
+    }
+
     if (ret && ClipboardOwnerWindow)
     {
         DPRINT1("Clipboard: WM_DESTROYCLIPBOARD to %p", ClipboardOwnerWindow->hSelf);
-        co_IntSendMessage( ClipboardOwnerWindow->hSelf, WM_DESTROYCLIPBOARD, 0, 0);        
+        co_IntSendMessage( ClipboardOwnerWindow->hSelf, WM_DESTROYCLIPBOARD, 0, 0);
     }
-    
+
     UserLeave();
-    
+
     return ret;
 }
 
@@ -592,16 +592,16 @@ NtUserGetClipboardData(UINT uFormat, DWORD Unknown1)
 {
     HANDLE ret = NULL;
     PCHAR buffer;
-    
+
     UserEnterShared();
-    
+
     if (intIsClipboardOpenByMe())
     {
         /* when Unknown1 is zero, we returns to user32 the data size */
         if (Unknown1 == 0)
         {
             PCLIPBOARDELEMENT data = intIsFormatAvailable(uFormat);
-            
+
             if (data)
             {
                 /* format exists in clipboard */
@@ -611,19 +611,19 @@ NtUserGetClipboardData(UINT uFormat, DWORD Unknown1)
                     if (ClipboardOwnerWindow)
                     {
                         ASSERT(ClipboardOwnerWindow->hSelf);
-                        co_IntSendMessage(ClipboardOwnerWindow->hSelf, WM_RENDERFORMAT, (WPARAM)uFormat, 0);        
+                        co_IntSendMessage(ClipboardOwnerWindow->hSelf, WM_RENDERFORMAT, (WPARAM)uFormat, 0);
                         data = intIsFormatAvailable(uFormat);
                         ASSERT(data->size);
                         ret = (HANDLE)data->size;
                     }
                 }
                 else
-                { 
+                {
                     if (data->size == DATA_SYNTHESIZED_RENDER)
                     {
                         data->size = synthesizeData(uFormat);
                     }
-                    
+
                 }
                 ret = (HANDLE)data->size;
             }
@@ -636,7 +636,7 @@ NtUserGetClipboardData(UINT uFormat, DWORD Unknown1)
         else
         {
             PCLIPBOARDELEMENT data = intIsFormatAvailable(uFormat);
-            
+
             if (data)
             {
                 if (data->size == DATA_DELAYED_RENDER)
@@ -659,18 +659,18 @@ NtUserGetClipboardData(UINT uFormat, DWORD Unknown1)
                         else
                         {
                             buffer = (PCHAR)Unknown1;
-                            memcpy(buffer, (PCHAR)synthesizedData, synthesizedDataSize); 
-                            
+                            memcpy(buffer, (PCHAR)synthesizedData, synthesizedDataSize);
+
                             freeSynthesizedData();
-                            
+
                             ret = (HANDLE)Unknown1;
                         }
                     }
                     else
                     {
                         buffer = (PCHAR)Unknown1;
-                        memcpy(buffer, (PCHAR)data->hData, data->size); 
-                        
+                        memcpy(buffer, (PCHAR)data->hData, data->size);
+
                         ret = (HANDLE)Unknown1;
                     }
                 }
@@ -682,10 +682,10 @@ NtUserGetClipboardData(UINT uFormat, DWORD Unknown1)
     else
     {
         SetLastWin32Error(ERROR_CLIPBOARD_NOT_OPEN);
-    }    
+    }
 
     UserLeave();
-    
+
     return ret;
 }
 
@@ -695,28 +695,28 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
 {
     UNICODE_STRING sFormatName;
     INT ret = 0;
-    
+
     /* if the format is built-in we fail */
     if (format < 0xc000)
     {
         /* registetrated formats are >= 0xc000 */
         return 0;
     }
-    
+
     if((cchMaxCount < 1) || !FormatName)
     {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return 0;
     }
-   
+
     _SEH_TRY
     {
         ProbeForWriteUnicodeString(FormatName);
         sFormatName = *(volatile UNICODE_STRING *)FormatName;
         ProbeForWrite(sFormatName.Buffer, sFormatName.MaximumLength, 1);
-        
+
         ret = IntGetAtomName((RTL_ATOM)format, sFormatName.Buffer, cchMaxCount * sizeof(WCHAR));
-        
+
         if (ret >= 0)
         {
             ret = ret / sizeof(WCHAR);
@@ -732,7 +732,7 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
         SetLastNtError(_SEH_GetExceptionCode());
     }
     _SEH_END;
-    
+
     return ret;
 }
 
@@ -741,20 +741,20 @@ NtUserRegisterClipboardFormat(PUNICODE_STRING FormatName)
 {
     UINT ret = 0;
     UNICODE_STRING cFormatName = {0};
-    
+
     if (FormatName == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return ret;
     }
-    
+
     UserEnterExclusive();
-    
+
     _SEH_TRY
     {
-        cFormatName = ProbeForReadUnicodeString(FormatName);    
-      
-        if (cFormatName.Length > 0) 
+        cFormatName = ProbeForReadUnicodeString(FormatName);
+
+        if (cFormatName.Length > 0)
         {
             ret = (UINT)IntAddAtom(cFormatName.Buffer);
             //RtlFreeUnicodeString(&cFormatName);
@@ -762,9 +762,9 @@ NtUserRegisterClipboardFormat(PUNICODE_STRING FormatName)
         else
         {
             SetLastWin32Error(ERROR_INVALID_NAME);
-            _SEH_LEAVE;        
+            _SEH_LEAVE;
         }
-        
+
     }
     _SEH_HANDLE
     {
@@ -773,42 +773,42 @@ NtUserRegisterClipboardFormat(PUNICODE_STRING FormatName)
     _SEH_END;
 
     UserLeave();
-    
+
     return ret;
 }
-                             
+
 
 HWND STDCALL
 NtUserGetClipboardOwner(VOID)
 {
-    HWND ret = NULL;   
-    
+    HWND ret = NULL;
+
     UserEnterShared();
-     
+
     if (ClipboardOwnerWindow)
     {
         ret = ClipboardOwnerWindow->hSelf;
     }
-    
+
     UserLeave();
-    
+
     return ret;
 }
 
 HWND STDCALL
 NtUserGetClipboardViewer(VOID)
 {
-    HWND ret = NULL;   
-    
+    HWND ret = NULL;
+
     UserEnterShared();
-     
+
     if (WindowsChain)
     {
         ret = WindowsChain->window->hSelf;
     }
-    
+
     UserLeave();
-    
+
     return ret;
 }
 
@@ -823,18 +823,18 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 
     _SEH_TRY
     {
-        if (IntCountClipboardFormats() == 0) 
+        if (IntCountClipboardFormats() == 0)
         {
             ret = 0;
         }
         else
         {
             ProbeForRead(paFormatPriorityList, cFormats, sizeof(UINT));
-          
+
             priorityList = paFormatPriorityList;
-          
+
             ret = -1;
-            
+
             for (i = 0; i < cFormats; i++)
             {
                 if (intIsFormatAvailable(priorityList[i]))
@@ -843,7 +843,7 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
                     break;
                 }
             }
-            
+
         }
     }
     _SEH_HANDLE
@@ -855,20 +855,20 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
     UserLeave();
 
     return ret;
-   
+
 }
 
 BOOL STDCALL
 NtUserIsClipboardFormatAvailable(UINT format)
 {
     BOOL ret = FALSE;
-    
+
     UserEnterShared();
-    
+
     ret = (intIsFormatAvailable(format) != NULL);
-    
+
     UserLeave();
-    
+
     return ret;
 }
 
@@ -881,16 +881,16 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
     UNICODE_STRING unicodeString;
     OEM_STRING oemString;
     ANSI_STRING ansiString;
-    
+
     UserEnterExclusive();
-    
+
     /* to place data here the we need to be the owner */
     if (ClipboardOwnerThread == PsGetCurrentThreadWin32Thread())
     {
         PCLIPBOARDELEMENT data = intIsFormatAvailable(uFormat);
         if (data)
         {
-            
+
             if (data->size == DATA_DELAYED_RENDER)
             {
                 intRemoveFormatedData(uFormat);
@@ -901,7 +901,7 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                 goto exit_setCB;
             }
         }
-        
+
         if (hMem)
         {
             _SEH_TRY
@@ -911,19 +911,19 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
             _SEH_HANDLE
             {
                 SetLastNtError(_SEH_GetExceptionCode());
-                goto exit_setCB;
+                _SEH_YIELD(goto exit_setCB);
             }
             _SEH_END;
-            
+
             if (intIsClipboardOpenByMe())
             {
-                delayedRender = FALSE;    
+                delayedRender = FALSE;
             }
 
             if (!canSinthesize(uFormat))
             {
                 hCBData = ExAllocatePool(PagedPool, size);
-                memcpy(hCBData, hMem, size); 
+                memcpy(hCBData, hMem, size);
                 intAddFormatedData(uFormat, hCBData, size);
                 DPRINT1("Data stored\n");
             }
@@ -931,13 +931,13 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
             sendDrawClipboardMsg = TRUE;
             recentlySetClipboard = TRUE;
             lastEnumClipboardFormats = uFormat;
-            
+
             /* conversions */
             switch (uFormat)
             {
-                case CF_TEXT: 
+                case CF_TEXT:
                     {
-                        //TODO : sinthesize CF_UNICODETEXT & CF_OEMTEXT  
+                        //TODO : sinthesize CF_UNICODETEXT & CF_OEMTEXT
                         // CF_TEXT -> CF_UNICODETEXT
                         RtlAnsiStringToUnicodeString(&unicodeString, hCBData, TRUE);
                         intAddFormatedData(CF_UNICODETEXT, unicodeString.Buffer, unicodeString.Length * sizeof(WCHAR));
@@ -976,16 +976,16 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                 }
                 case CF_BITMAP:
                 {
-                    // we need to render the DIB or DIBV5 format as soon as possible   
+                    // we need to render the DIB or DIBV5 format as soon as possible
                     // because pallette information may change
-                    
+
                     HDC hdc;
                     INT ret;
                     BITMAP bm;
                     BITMAPINFO bi;
-                    
+
                     hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
-                     
+
                     BITMAPOBJ *BitmapObj;
                     BitmapObj = BITMAPOBJ_LockBitmap(hMem);
                     BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (LPSTR)&bm);
@@ -993,7 +993,7 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                     {
                         BITMAPOBJ_UnlockBitmap(BitmapObj);
                     }
-                    
+
                 	bi.bmiHeader.biSize	= sizeof(BITMAPINFOHEADER);
                 	bi.bmiHeader.biWidth = bm.bmWidth;
                 	bi.bmiHeader.biHeight = bm.bmHeight;
@@ -1003,24 +1003,24 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                 	bi.bmiHeader.biSizeImage = 0;
                 	bi.bmiHeader.biXPelsPerMeter = 0;
                 	bi.bmiHeader.biYPelsPerMeter = 0;
-                	bi.bmiHeader.biClrUsed = 0;                         
-                    
+                	bi.bmiHeader.biClrUsed = 0;
+
                     ret = NtGdiGetDIBits(hdc, hMem, 0, bm.bmHeight,  NULL, &bi, DIB_RGB_COLORS);
-                    
+
                     size = bi.bmiHeader.biSizeImage + sizeof(BITMAPINFOHEADER);
-                    
+
                     hCBData = ExAllocatePool(PagedPool, size);
-                    memcpy(hCBData, &bi, sizeof(BITMAPINFOHEADER)); 
-                    
+                    memcpy(hCBData, &bi, sizeof(BITMAPINFOHEADER));
+
                     ret = NtGdiGetDIBits(hdc, hMem, 0, bm.bmHeight, (LPBYTE)hCBData + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS);
-                    
+
                     UserReleaseDC(NULL, hdc, FALSE);
-                    
+
                     intAddFormatedData(CF_DIB, hCBData, size);
                     intAddFormatedData(CF_BITMAP, 0, DATA_SYNTHESIZED_RENDER);
                     // intAddFormatedData(CF_DIBV5, hCBData, size);
-                    
-                    break;    
+
+                    break;
                 }
                 case CF_DIB:
                 {
@@ -1028,21 +1028,21 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                     // intAddFormatedData(CF_DIBV5, hCBData, size);
                     /* investigate */
                     // intAddFormatedData(CF_PALETTE, hCBData, size);
-                    break;    
+                    break;
                 }
                 case CF_DIBV5:
                     // intAddFormatedData(CF_BITMAP, hCBData, size);
                     // intAddFormatedData(CF_PALETTE, hCBData, size);
                     // intAddFormatedData(CF_DIB, hCBData, size);
-                    break;    
+                    break;
                 case CF_ENHMETAFILE:
                     // intAddFormatedData(CF_METAFILEPICT, hCBData, size);
-                    break;    
+                    break;
                 case CF_METAFILEPICT:
                     // intAddFormatedData(CF_ENHMETAFILE, hCBData, size);
-                    break;    
-            } 
-                
+                    break;
+            }
+
         }
         else
         {
@@ -1052,14 +1052,14 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
             intAddFormatedData(uFormat, NULL, 0);
             DPRINT1("SetClipboardData delayed format: %d\n", uFormat);
         }
-        
-        
+
+
     }
 
-exit_setCB:    
-    
+exit_setCB:
+
     UserLeave();
-   
+
     return hMem;
 }
 
@@ -1068,21 +1068,21 @@ NtUserSetClipboardViewer(HWND hWndNewViewer)
 {
     HWND ret = NULL;
     PCLIPBOARDCHAINELEMENT newWC = NULL;
-    
+
     UserEnterExclusive();
 
-    PWINDOW_OBJECT window = UserGetWindowObject(hWndNewViewer);    
-    
+    PWINDOW_OBJECT window = UserGetWindowObject(hWndNewViewer);
+
     if (window)
     {
         if ((newWC = IntAddWindowToChain(window)))
         {
             if (newWC)
             {
-                // newWC->next may be NULL if we are the first window in the chain 
+                // newWC->next may be NULL if we are the first window in the chain
                 if (newWC->next)
                 {
-                    // return the next HWND available window in the chain 
+                    // return the next HWND available window in the chain
                     ret = newWC->next->window->hSelf;
                 }
             }
@@ -1098,9 +1098,9 @@ UINT STDCALL
 NtUserEnumClipboardFormats(UINT uFormat)
 {
     UINT ret = 0;
-    
+
     UserEnterShared();
-    
+
     if (intIsClipboardOpenByMe())
     {
             if (uFormat == 0)
@@ -1131,7 +1131,7 @@ NtUserEnumClipboardFormats(UINT uFormat)
 
                     if (data)
                     {
-                        if (data->next) 
+                        if (data->next)
                         {
                             ret = data->next->format;
                         }
@@ -1142,29 +1142,29 @@ NtUserEnumClipboardFormats(UINT uFormat)
                         }
                     }
                 }
-                
+
             }
     }
     else
     {
-        SetLastWin32Error(ERROR_CLIPBOARD_NOT_OPEN);            
+        SetLastWin32Error(ERROR_CLIPBOARD_NOT_OPEN);
     }
-    
+
     UserLeave();
-    
+
     return ret;
 }
 
-// This number is incremented whenever the contents of the clipboard change 
+// This number is incremented whenever the contents of the clipboard change
 // or the clipboard is emptied.
-// If clipboard rendering is delayed, 
+// If clipboard rendering is delayed,
 // the sequence number is not incremented until the changes are rendered.
 VOID FASTCALL
 IntIncrementSequenceNumber(VOID)
 {
 
     USE_WINSTA
-    
+
     WINSTA_ClipboardSequenceNumber++;
 
 }
@@ -1173,16 +1173,16 @@ DWORD STDCALL
 NtUserGetClipboardSequenceNumber(VOID)
 {
     //windowstation sequence number
-    //if no WINSTA_ACCESSCLIPBOARD access to the window station, 
+    //if no WINSTA_ACCESSCLIPBOARD access to the window station,
     //the function returns zero.
-    DWORD sn; 
-    
+    DWORD sn;
+
     HWINSTA WinSta;
     PWINSTATION_OBJECT WinStaObj;
     NTSTATUS Status;
-           
+
     WinSta = UserGetProcessWindowStation();
-    
+
     Status = IntValidateWindowStationHandle(WinSta, UserMode, WINSTA_ACCESSCLIPBOARD, &WinStaObj);
 
     if (!NT_SUCCESS(Status))
@@ -1191,14 +1191,14 @@ NtUserGetClipboardSequenceNumber(VOID)
         SetLastNtError(Status);
         return 0;
     }
-    
+
     sn = WinStaObj->ClipboardSequenceNumber;
-    
+
     ObDereferenceObject(WinStaObj);
-    
+
     //local copy
     //sn = ClipboardSequenceNumber;
-    
+
     return sn;
 }
 
@@ -1213,7 +1213,7 @@ BOOL STDCALL NtUserAddClipboardFormatListener(
     return FALSE;
 }
 
-BOOL STDCALL NtUserRemoveClipboardFormatListener(      
+BOOL STDCALL NtUserRemoveClipboardFormatListener(
     HWND hwnd
 )
 {
@@ -1221,7 +1221,7 @@ BOOL STDCALL NtUserRemoveClipboardFormatListener(
     return FALSE;
 }
 
-BOOL STDCALL NtUserGetUpdatedClipboardFormats(      
+BOOL STDCALL NtUserGetUpdatedClipboardFormats(
     PUINT lpuiFormats,
     UINT cFormats,
     PUINT pcFormatsOut

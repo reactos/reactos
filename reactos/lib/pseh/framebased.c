@@ -164,7 +164,7 @@ extern unsigned long __cdecl DbgPrint(const char * format, ...);
 { \
 	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_TRYLEVEL) \
 	{ \
-		_SEH_TRACE_LINE_((FRAME_), ("trylevel %p, filter %p", (TRYLEVEL_), (TRYLEVEL_)->SPT_Handlers->SH_Filter)); \
+		_SEH_TRACE_LINE_((FRAME_), ("trylevel %p, filter %p", (TRYLEVEL_), (TRYLEVEL_)->SPT_Handlers.SH_Filter)); \
 	} \
 }
 
@@ -178,7 +178,7 @@ extern unsigned long __cdecl DbgPrint(const char * format, ...);
 			( \
 				"trylevel %p, calling filter %p, ExceptionCode %08X", \
 				(TRYLEVEL_), \
-				(TRYLEVEL_)->SPT_Handlers->SH_Filter, \
+				(TRYLEVEL_)->SPT_Handlers.SH_Filter, \
 				(ER_)->ExceptionCode \
 			) \
 		); \
@@ -195,7 +195,7 @@ extern unsigned long __cdecl DbgPrint(const char * format, ...);
 			( \
 				"trylevel %p, filter %p => %s", \
 				(TRYLEVEL_), \
-				(TRYLEVEL_)->SPT_Handlers->SH_Filter, \
+				(TRYLEVEL_)->SPT_Handlers.SH_Filter, \
 				_SEH_FILTER_RET_STRING_(RET_) \
 			) \
 		); \
@@ -236,7 +236,7 @@ extern unsigned long __cdecl DbgPrint(const char * format, ...);
 			( \
 				"trylevel %p, calling exit routine %p", \
 				(TRYLEVEL_), \
-				(TRYLEVEL_)->SPT_Handlers->SH_Finally \
+				(TRYLEVEL_)->SPT_Handlers.SH_Finally \
 			) \
 		); \
 	} \
@@ -252,7 +252,7 @@ extern unsigned long __cdecl DbgPrint(const char * format, ...);
 			( \
 				"trylevel %p, exit routine %p returned", \
 				(TRYLEVEL_), \
-				(TRYLEVEL_)->SPT_Handlers->SH_Finally \
+				(TRYLEVEL_)->SPT_Handlers.SH_Finally \
 			) \
 		); \
 	} \
@@ -305,7 +305,7 @@ static void __stdcall _SEHLocalUnwind
 
 		/* ASSERT(trylevel); */
 
-		pfnFinally = trylevel->SPT_Handlers->SH_Finally;
+		pfnFinally = trylevel->SPT_Handlers.SH_Finally;
 
 		if(pfnFinally)
 		{
@@ -386,7 +386,7 @@ static int __cdecl _SEHFrameHandler
 			trylevel = trylevel->SPT_Next
 		)
 		{
-			_SEHFilter_t pfnFilter = trylevel->SPT_Handlers->SH_Filter;
+			_SEHFilter_t pfnFilter = trylevel->SPT_Handlers.SH_Filter;
 
 			_SEH_TRACE_TRYLEVEL(frame, trylevel);
 
@@ -402,7 +402,7 @@ static int __cdecl _SEHFrameHandler
 
 				default:
 				{
-					if(trylevel->SPT_Handlers->SH_Filter)
+					if(trylevel->SPT_Handlers.SH_Filter)
 					{
 						EXCEPTION_POINTERS ep;
 
@@ -443,59 +443,33 @@ static int __cdecl _SEHFrameHandler
 	return ExceptionContinueSearch;
 }
 
-void __stdcall _SEHEnterFrame_s
-(
-	_SEHPortableFrame_t * frame,
-	_SEHPortableTryLevel_t * trylevel
-)
+void __stdcall _SEHEnterFrame_s(_SEHPortableFrame_t * frame)
 {
-	_SEHEnterFrame_f(frame, trylevel);
+	_SEHEnterFrame_f(frame);
 }
 
-void __stdcall _SEHEnterTry_s(_SEHPortableTryLevel_t * trylevel)
+void __stdcall _SEHLeaveFrame_s(void)
 {
-	_SEHEnterTry_f(trylevel);
+	_SEHLeaveFrame_f();
 }
 
-void __stdcall _SEHLeave_s(void)
+void __stdcall _SEHReturn_s(void)
 {
-	_SEHLeave_f();
+	_SEHReturn_f();
 }
 
-void _SEH_FASTCALL _SEHEnterFrame_f
-(
-	_SEHPortableFrame_t * frame,
-	_SEHPortableTryLevel_t * trylevel
-)
+void _SEH_FASTCALL _SEHEnterFrame_f(_SEHPortableFrame_t * frame)
 {
 	/* ASSERT(frame); */
 	/* ASSERT(trylevel); */
 	frame->SPF_Registration.SER_Handler = _SEHFrameHandler;
 	frame->SPF_Code = 0;
-	frame->SPF_TopTryLevel = trylevel;
-	trylevel->SPT_Next = NULL;
 	_SEHRegisterFrame(&frame->SPF_Registration);
 }
 
-void _SEH_FASTCALL _SEHEnterTry_f(_SEHPortableTryLevel_t * trylevel)
+void _SEH_FASTCALL _SEHLeaveFrame_f(void)
 {
 	_SEHPortableFrame_t * frame;
-
-	frame = _SEH_CONTAINING_RECORD
-	(
-		_SEHCurrentRegistration(),
-		_SEHPortableFrame_t,
-		SPF_Registration
-	);
-
-	trylevel->SPT_Next = frame->SPF_TopTryLevel;
-	frame->SPF_TopTryLevel = trylevel;
-}
-
-void _SEH_FASTCALL _SEHLeave_f(void)
-{
-	_SEHPortableFrame_t * frame;
-	_SEHPortableTryLevel_t * trylevel;
 
 	frame = _SEH_CONTAINING_RECORD
 	(
@@ -505,15 +479,24 @@ void _SEH_FASTCALL _SEHLeave_f(void)
 	);
 
 	/* ASSERT(frame); */
+	/* ASSERT(frame->SPF_TopTryLevel == NULL) */
 
-	trylevel = frame->SPF_TopTryLevel;
+	_SEHUnregisterFrame();
+}
 
-	/* ASSERT(trylevel); */
+void _SEH_FASTCALL _SEHReturn_f(void)
+{
+	_SEHPortableFrame_t * frame;
 
-	if(trylevel->SPT_Next)
-		frame->SPF_TopTryLevel = trylevel->SPT_Next;
-	else
-		_SEHUnregisterFrame();
+	frame = _SEH_CONTAINING_RECORD
+	(
+		_SEHCurrentRegistration(),
+		_SEHPortableFrame_t,
+		SPF_Registration
+	);
+
+	_SEHLocalUnwind(frame, NULL);
+	_SEHUnregisterFrame();
 }
 
 /* EOF */

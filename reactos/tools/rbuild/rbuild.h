@@ -296,6 +296,7 @@ public:
 	ModuleType type;
 	ImportLibrary* importLibrary;
 	bool mangledSymbols;
+	bool underscoreSymbols;
 	bool isUnicode;
 	bool isDefaultEntryPoint;
 	Bootstrap* bootstrap;

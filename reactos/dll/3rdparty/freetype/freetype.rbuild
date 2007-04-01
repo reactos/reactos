@@ -2,7 +2,6 @@
 	<importlibrary definition="freetype.def" />
 	<include base="freetype">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="__NTDRIVER__" />
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="__USE_W32API" />
