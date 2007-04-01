@@ -1322,6 +1322,9 @@ SSI_DEF(SystemUnloadGdiDriverInformation)
     if(Size != sizeof(PVOID)) 
         return STATUS_INFO_LENGTH_MISMATCH;
    
+    if(KeGetPreviousMode() != KernelMode) 
+        return STATUS_PRIVILEGE_NOT_HELD;
+    
     // Scan the module list 
     NextEntry = PsLoadedModuleList.Flink;
     while(NextEntry != &PsLoadedModuleList)
