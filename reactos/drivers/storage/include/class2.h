@@ -16,6 +16,34 @@
 #define MAXIMUM_RETRIES    15
 #define RETRY_WAIT         2000000 /* 200 ms in units of 100 ns */
 
+//
+// Indicates that the device has write caching enabled.
+//
+
+#define DEV_WRITE_CACHE     0x00000001
+
+
+//
+// Build SCSI 1 or SCSI 2 CDBs
+//
+
+#define DEV_USE_SCSI1       0x00000002
+
+//
+// Indicates whether is is safe to send StartUnit commands
+// to this device. It will only be off for some removeable devices.
+//
+
+#define DEV_SAFE_START_UNIT 0x00000004
+
+//
+// Indicates whether it is unsafe to send SCSIOP_MECHANISM_STATUS commands to
+// this device.  Some devices don't like these 12 byte commands
+//
+
+#define DEV_NO_12BYTE_CDB 0x00000008
+
+
 struct _CLASS_INIT_DATA;
 
 typedef VOID 
@@ -227,6 +255,15 @@ VOID STDCALL
 ScsiClassSplitRequest(IN PDEVICE_OBJECT DeviceObject,
 		      IN PIRP Irp,
 		      IN ULONG MaximumBytes);
+
+NTSTATUS
+STDCALL
+ScsiClassCheckVerifyComplete(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context
+    );
+
 
 #endif /* __INCLUDE_DDK_CLASS2_H */
 

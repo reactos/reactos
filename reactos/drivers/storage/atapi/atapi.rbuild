@@ -1,4 +1,4 @@
-<module name="atapi" type="kernelmodedriver" installbase="system32/drivers" installname="atapi.sys">
+<module name="atapi" type="kernelmodedriver" installbase="system32/drivers" installname="atapi.sys" allowwarnings="true">
 	<bootstrap base="$(CDOUTPUT)" />
 	<define name="__USE_W32API" />
 	<include base="atapi">.</include>

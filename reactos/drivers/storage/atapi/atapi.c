@@ -1,3550 +1,6541 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2001, 2002, 2003, 2004, 2005 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * PROJECT:         ReactOS Storage Stack
+ * LICENSE:         DDK - see license.txt in the root dir
+ * FILE:            drivers/storage/atapi/atapi.c
+ * PURPOSE:         ATAPI IDE miniport driver
+ * PROGRAMMERS:     Based on a source code sample from Microsoft NT4 DDK
  */
-/* $Id$
- *
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS ATAPI miniport driver
- * FILE:        drivers/storage/atapi/atapi.c
- * PURPOSE:     ATAPI miniport driver
- * PROGRAMMERS: Eric Kohl (ekohl@rz-online.de)
- * REVISIONS:
- *              09-09-2001 Created
- */
-
-/*
- * Note:
- *   This driver is derived from Rex Jolliff's ide driver. Lots of his
- *   routines are still in here although they belong into the higher level
- *   drivers. They will be moved away as soon as possible.
- */
-
-/*
- * TODO:
- *	- implement sending of atapi commands
- *	- handle removable atapi non-cdrom drives
- */
-
-#define ENABLE_PCI
-#define ENABLE_NATIVE_PCI
-#define ENABLE_ISA
-#define ENABLE_DMA
-
-//  -------------------------------------------------------------------------
 
 #include <ntddk.h>
-#include <srb.h>
-#include <scsi.h>
+#include "atapi.h"               // includes scsi.h
 #include <ntddscsi.h>
 #include <ntdddisk.h>
 #include <ntddstor.h>
 
-#include "atapi.h"
-
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
-#define VERSION  "0.0.1"
-
-
-NTSTATUS NTAPI
-DriverEntry(IN PDRIVER_OBJECT DriverObject,
-            IN PUNICODE_STRING RegistryPath);
-
-//  -------------------------------------------------------  File Static Data
-
-#ifdef ENABLE_DMA
-typedef struct _PRD
-{
-  ULONG PhysAddress;
-  ULONG Length;
-} PRD, *PPRD;
-#endif
-
-//    ATAPI_MINIPORT_EXTENSION
 //
-//  DESCRIPTION:
-//    Extension to be placed in each port device object
-//
-//  ACCESS:
-//    Allocated from NON-PAGED POOL
-//    Available at any IRQL
+// Device extension
 //
 
-typedef struct _ATAPI_MINIPORT_EXTENSION
+typedef struct _HW_DEVICE_EXTENSION {
+
+    //
+    // Current request on controller.
+    //
+
+    PSCSI_REQUEST_BLOCK CurrentSrb;
+
+    //
+    // Base register locations
+    //
+
+    PIDE_REGISTERS_1 BaseIoAddress1[2];
+    PIDE_REGISTERS_2 BaseIoAddress2[2];
+
+    //
+    // Interrupt level
+    //
+
+    ULONG InterruptLevel;
+
+    //
+    // Interrupt Mode (Level or Edge)
+    //
+
+    ULONG InterruptMode;
+
+    //
+    // Data buffer pointer.
+    //
+
+    PUSHORT DataBuffer;
+
+    //
+    // Data words left.
+    //
+
+    ULONG WordsLeft;
+
+    //
+    // Number of channels being supported by one instantiation
+    // of the device extension. Normally (and correctly) one, but
+    // with so many broken PCI IDE controllers being sold, we have
+    // to support them.
+    //
+
+    ULONG NumberChannels;
+
+    //
+    // Count of errors. Used to turn off features.
+    //
+
+    ULONG ErrorCount;
+
+    //
+    // Indicates number of platters on changer-ish devices.
+    //
+
+    ULONG DiscsPresent[4];
+
+    //
+    // Flags word for each possible device.
+    //
+
+    USHORT DeviceFlags[4];
+
+    //
+    // Indicates the number of blocks transferred per int. according to the
+    // identify data.
+    //
+
+    UCHAR MaximumBlockXfer[4];
+
+    //
+    // Indicates expecting an interrupt
+    //
+
+    BOOLEAN ExpectingInterrupt;
+
+    //
+    // Indicate last tape command was DSC Restrictive.
+    //
+
+    BOOLEAN RDP;
+
+    //
+    // Driver is being used by the crash dump utility or ntldr.
+    //
+
+    BOOLEAN DriverMustPoll;
+
+    //
+    // Indicates use of 32-bit PIO
+    //
+
+    BOOLEAN DWordIO;
+
+    //
+    // Indicates whether '0x1f0' is the base address. Used
+    // in SMART Ioctl calls.
+    //
+
+    BOOLEAN PrimaryAddress;
+
+    //
+    // Placeholder for the sub-command value of the last
+    // SMART command.
+    //
+
+    UCHAR SmartCommand;
+
+    //
+    // Placeholder for status register after a GET_MEDIA_STATUS command
+    //
+
+    UCHAR ReturningMediaStatus;
+
+    UCHAR Reserved[1];
+
+    //
+    // Identify data for device
+    //
+
+    IDENTIFY_DATA FullIdentifyData;
+    IDENTIFY_DATA2 IdentifyData[4];
+
+    //
+    // Mechanism Status Srb Data
+    //
+    PSCSI_REQUEST_BLOCK OriginalSrb;
+    SCSI_REQUEST_BLOCK InternalSrb;
+    MECHANICAL_STATUS_INFORMATION_HEADER MechStatusData;
+    SENSE_DATA MechStatusSense;
+    ULONG MechStatusRetryCount;
+
+} HW_DEVICE_EXTENSION, *PHW_DEVICE_EXTENSION;
+
+//
+// Logical unit extension
+//
+
+typedef struct _HW_LU_EXTENSION {
+   ULONG Reserved;
+} HW_LU_EXTENSION, *PHW_LU_EXTENSION;
+
+PSCSI_REQUEST_BLOCK
+STDCALL
+BuildMechanismStatusSrb (
+    IN PVOID HwDeviceExtension,
+    IN ULONG PathId,
+    IN ULONG TargetId
+    );
+
+PSCSI_REQUEST_BLOCK
+STDCALL
+BuildRequestSenseSrb (
+    IN PVOID HwDeviceExtension,
+    IN ULONG PathId,
+    IN ULONG TargetId
+    );
+
+VOID
+STDCALL
+AtapiHwInitializeChanger (
+    IN PVOID HwDeviceExtension,
+    IN ULONG TargetId,
+    IN PMECHANICAL_STATUS_INFORMATION_HEADER MechanismStatus
+    );
+
+ULONG
+STDCALL
+AtapiSendCommand(
+    IN PVOID HwDeviceExtension,
+    IN PSCSI_REQUEST_BLOCK Srb
+    );
+
+VOID
+STDCALL
+AtapiZeroMemory(
+    IN PCHAR Buffer,
+    IN ULONG Count
+    );
+
+VOID
+STDCALL
+AtapiHexToString (
+    ULONG Value,
+    PCHAR *Buffer
+    );
+
+LONG
+STDCALL
+AtapiStringCmp (
+    PCHAR FirstStr,
+    PCHAR SecondStr,
+    ULONG Count
+    );
+
+BOOLEAN
+STDCALL
+AtapiInterrupt(
+    IN PVOID HwDeviceExtension
+    );
+
+BOOLEAN
+STDCALL
+AtapiHwInitialize(
+    IN PVOID HwDeviceExtension
+        );
+
+ULONG
+STDCALL
+IdeBuildSenseBuffer(
+    IN PVOID HwDeviceExtension,
+    IN PSCSI_REQUEST_BLOCK Srb
+    );
+
+VOID
+STDCALL
+IdeMediaStatus(
+    IN BOOLEAN EnableMSN,
+    IN PVOID HwDeviceExtension,
+    IN ULONG Channel
+    );
+
+
+
+BOOLEAN
+STDCALL
+IssueIdentify(
+    IN PVOID HwDeviceExtension,
+    IN ULONG DeviceNumber,
+    IN ULONG Channel,
+    IN UCHAR Command
+    )
+
+/*++
+
+Routine Description:
+
+    Issue IDENTIFY command to a device.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    DeviceNumber - Indicates which device.
+    Command - Either the standard (EC) or the ATAPI packet (A1) IDENTIFY.
+
+Return Value:
+
+    TRUE if all goes well.
+
+--*/
+
 {
-  IDE_DRIVE_IDENTIFY DeviceParams[2];
-  ULONG DeviceFlags[2];
-  ULONG TransferSize[2];
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PIDE_REGISTERS_1     baseIoAddress1 = deviceExtension->BaseIoAddress1[Channel] ;
+    PIDE_REGISTERS_2     baseIoAddress2 = deviceExtension->BaseIoAddress2[Channel];
+    ULONG                waitCount = 20000;
+    ULONG                i,j;
+    UCHAR                statusByte;
+    UCHAR                signatureLow,
+                         signatureHigh;
 
-  ULONG CommandPortBase;
-  ULONG ControlPortBase;
-  ULONG BusMasterRegisterBase;
+    //
+    // Select device 0 or 1.
+    //
 
-  PSCSI_REQUEST_BLOCK CurrentSrb;
+    ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                           (UCHAR)((DeviceNumber << 4) | 0xA0));
 
-  PUCHAR DataBuffer;
-  ULONG DataTransferLength;
+    //
+    // Check that the status register makes sense.
+    //
 
-  BOOLEAN (FASTCALL *Handler)(IN struct _ATAPI_MINIPORT_EXTENSION* DevExt);
-#ifdef ENABLE_DMA
-  BOOLEAN UseDma;
-  ULONG PRDCount;
-  ULONG PRDMaxCount;
-  PPRD PRDTable;
-  SCSI_PHYSICAL_ADDRESS PRDTablePhysicalAddress;
-#endif
-} ATAPI_MINIPORT_EXTENSION, *PATAPI_MINIPORT_EXTENSION;
+    GetBaseStatus(baseIoAddress1, statusByte);
 
-/* DeviceFlags */
-#define DEVICE_PRESENT           0x00000001
-#define DEVICE_ATAPI             0x00000002
-#define DEVICE_MULTI_SECTOR_CMD  0x00000004
-#define DEVICE_DWORD_IO          0x00000008
-#define DEVICE_48BIT_ADDRESS     0x00000010
-#define DEVICE_MEDIA_STATUS      0x00000020
-#define DEVICE_DMA_CMD           0x00000040
-#define DEVICE_NO_FLUSH          0x00000080
+    if (Command == IDE_COMMAND_IDENTIFY) {
+
+        //
+        // Mask status byte ERROR bits.
+        //
+
+        statusByte &= ~(IDE_STATUS_ERROR | IDE_STATUS_INDEX);
+
+        DebugPrint((1,
+                    "IssueIdentify: Checking for IDE. Status (%x)\n",
+                    statusByte));
+
+        //
+        // Check if register value is reasonable.
+        //
+
+        if (statusByte != IDE_STATUS_IDLE) {
+
+            //
+            // Reset the controller.
+            //
+
+            AtapiSoftReset(baseIoAddress1,DeviceNumber);
+
+            ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                                   (UCHAR)((DeviceNumber << 4) | 0xA0));
+
+            WaitOnBusy(baseIoAddress2,statusByte);
+
+            signatureLow = ScsiPortReadPortUchar(&baseIoAddress1->CylinderLow);
+            signatureHigh = ScsiPortReadPortUchar(&baseIoAddress1->CylinderHigh);
+
+            if (signatureLow == 0x14 && signatureHigh == 0xEB) {
+
+                //
+                // Device is Atapi.
+                //
+
+                return FALSE;
+            }
+
+            DebugPrint((1,
+                        "IssueIdentify: Resetting controller.\n"));
+
+            ScsiPortWritePortUchar(&baseIoAddress2->AlternateStatus,IDE_DC_RESET_CONTROLLER );
+            ScsiPortStallExecution(500 * 1000);
+            ScsiPortWritePortUchar(&baseIoAddress2->AlternateStatus,IDE_DC_REENABLE_CONTROLLER);
 
 
-typedef struct _UNIT_EXTENSION
-{
-  ULONG Dummy;
-} UNIT_EXTENSION, *PUNIT_EXTENSION;
+            // We really should wait up to 31 seconds
+            // The ATA spec. allows device 0 to come back from BUSY in 31 seconds!
+            // (30 seconds for device 1)
+            do {
 
-PCI_SLOT_NUMBER LastSlotNumber;
+                //
+                // Wait for Busy to drop.
+                //
 
-#ifdef ENABLE_NATIVE_PCI
-typedef struct _PCI_NATIVE_CONTROLLER
-{
-  USHORT VendorID;
-  USHORT DeviceID;
-}
-PCI_NATIVE_CONTROLLER, *PPCI_NATIVE_CONTROLLER;
+                ScsiPortStallExecution(100);
+                GetStatus(baseIoAddress2, statusByte);
 
-PCI_NATIVE_CONTROLLER const PciNativeController[] =
-{
-    {
-	0x105A,		    // Promise
-	0x4D68,		    // PDC20268, Ultra100TX2
-    },
-    {
-	0x105A,		    // Promise
-	0x4D30,		    // PDC20267, Ultra100
+            } while ((statusByte & IDE_STATUS_BUSY) && waitCount--);
+
+            ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                                   (UCHAR)((DeviceNumber << 4) | 0xA0));
+
+            //
+            // Another check for signature, to deal with one model Atapi that doesn't assert signature after
+            // a soft reset.
+            //
+
+            signatureLow = ScsiPortReadPortUchar(&baseIoAddress1->CylinderLow);
+            signatureHigh = ScsiPortReadPortUchar(&baseIoAddress1->CylinderHigh);
+
+            if (signatureLow == 0x14 && signatureHigh == 0xEB) {
+
+                //
+                // Device is Atapi.
+                //
+
+                return FALSE;
+            }
+
+            statusByte &= ~IDE_STATUS_INDEX;
+
+            if (statusByte != IDE_STATUS_IDLE) {
+
+                //
+                // Give up on this.
+                //
+
+                return FALSE;
+            }
+
+        }
+
+    } else {
+
+        DebugPrint((1,
+                    "IssueIdentify: Checking for ATAPI. Status (%x)\n",
+                    statusByte));
+
     }
-};
-#endif
+
+    //
+    // Load CylinderHigh and CylinderLow with number bytes to transfer.
+    //
+
+    ScsiPortWritePortUchar(&baseIoAddress1->CylinderHigh, (0x200 >> 8));
+    ScsiPortWritePortUchar(&baseIoAddress1->CylinderLow,  (0x200 & 0xFF));
+
+    for (j = 0; j < 2; j++) {
+
+        //
+        // Send IDENTIFY command.
+        //
+
+        WaitOnBusy(baseIoAddress2,statusByte);
+
+        ScsiPortWritePortUchar(&baseIoAddress1->Command, Command);
+
+        //
+        // Wait for DRQ.
+        //
+
+        for (i = 0; i < 4; i++) {
+
+            WaitForDrq(baseIoAddress2, statusByte);
+
+            if (statusByte & IDE_STATUS_DRQ) {
+
+                //
+                // Read status to acknowledge any interrupts generated.
+                //
+
+                GetBaseStatus(baseIoAddress1, statusByte);
+
+                //
+                // One last check for Atapi.
+                //
 
 
-//  -----------------------------------------------  Discardable Declarations
+                signatureLow = ScsiPortReadPortUchar(&baseIoAddress1->CylinderLow);
+                signatureHigh = ScsiPortReadPortUchar(&baseIoAddress1->CylinderHigh);
 
-#ifdef  ALLOC_PRAGMA
+                if (signatureLow == 0x14 && signatureHigh == 0xEB) {
 
-//  make the initialization routines discardable, so that they
-//  don't waste space
+                    //
+                    // Device is Atapi.
+                    //
 
-#pragma  alloc_text(init, DriverEntry)
+                    return FALSE;
+                }
 
-//  make the PASSIVE_LEVEL routines pageable, so that they don't
-//  waste nonpaged memory
+                break;
+            }
 
-#endif  /*  ALLOC_PRAGMA  */
+            if (Command == IDE_COMMAND_IDENTIFY) {
 
-//  ---------------------------------------------------- Forward Declarations
+                //
+                // Check the signature. If DRQ didn't come up it's likely Atapi.
+                //
 
-#ifdef ENABLE_DMA
-static BOOLEAN
-AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
-	     PSCSI_REQUEST_BLOCK Srb,
-	     UCHAR cmd);
-#endif
+                signatureLow = ScsiPortReadPortUchar(&baseIoAddress1->CylinderLow);
+                signatureHigh = ScsiPortReadPortUchar(&baseIoAddress1->CylinderHigh);
 
-static ULONG STDCALL
-AtapiFindCompatiblePciController(PVOID DeviceExtension,
-				 PVOID HwContext,
-				 PVOID BusInformation,
-				 PCHAR ArgumentString,
-				 PPORT_CONFIGURATION_INFORMATION ConfigInfo,
-				 PBOOLEAN Again);
+                if (signatureLow == 0x14 && signatureHigh == 0xEB) {
 
-static ULONG STDCALL
-AtapiFindIsaBusController(PVOID DeviceExtension,
-			  PVOID HwContext,
-			  PVOID BusInformation,
-			  PCHAR ArgumentString,
-			  PPORT_CONFIGURATION_INFORMATION ConfigInfo,
-			  PBOOLEAN Again);
+                    //
+                    // Device is Atapi.
+                    //
 
-static ULONG STDCALL
-AtapiFindNativePciController(PVOID DeviceExtension,
-			     PVOID HwContext,
-			     PVOID BusInformation,
-			     PCHAR ArgumentString,
-			     PPORT_CONFIGURATION_INFORMATION ConfigInfo,
-			     PBOOLEAN Again);
+                    return FALSE;
+                }
+            }
 
-static BOOLEAN STDCALL
-AtapiInitialize(IN PVOID DeviceExtension);
+            WaitOnBusy(baseIoAddress2,statusByte);
+        }
 
-static BOOLEAN STDCALL
-AtapiResetBus(IN PVOID DeviceExtension,
-	      IN ULONG PathId);
+        if (i == 4 && j == 0) {
 
-static BOOLEAN STDCALL
-AtapiStartIo(IN PVOID DeviceExtension,
-	     IN PSCSI_REQUEST_BLOCK Srb);
+            //
+            // Device didn't respond correctly. It will be given one more chances.
+            //
 
-static VOID
-AtapiExecuteCommand(PATAPI_MINIPORT_EXTENSION DevExt,
-		    UCHAR command,
-		    BOOLEAN (FASTCALL *Handler)(PATAPI_MINIPORT_EXTENSION));
+            DebugPrint((1,
+                        "IssueIdentify: DRQ never asserted (%x). Error reg (%x)\n",
+                        statusByte,
+                         ScsiPortReadPortUchar((PUCHAR)baseIoAddress1 + 1)));
 
-static BOOLEAN STDCALL
-AtapiInterrupt(IN PVOID DeviceExtension);
+            AtapiSoftReset(baseIoAddress1,DeviceNumber);
 
-static BOOLEAN FASTCALL
-AtapiNoDataInterrupt(PATAPI_MINIPORT_EXTENSION DevExt);
+            GetStatus(baseIoAddress2,statusByte);
 
-static BOOLEAN FASTCALL
-AtapiPacketInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
+            DebugPrint((1,
+                       "IssueIdentify: Status after soft reset (%x)\n",
+                       statusByte));
 
-static BOOLEAN FASTCALL
-AtapiSmartInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
+        } else {
 
-static BOOLEAN FASTCALL
-AtapiReadInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
+            break;
 
-#ifdef ENABLE_DMA
-static BOOLEAN FASTCALL
-AtapiDmaPacketInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
-
-static BOOLEAN FASTCALL
-AtapiDmaInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
-#endif
-
-static BOOLEAN FASTCALL
-AtapiWriteInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
-
-static BOOLEAN
-AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		 PPORT_CONFIGURATION_INFORMATION ConfigInfo);
-
-static BOOLEAN
-AtapiIdentifyDevice(IN ULONG CommandPort,
-		    IN ULONG ControlPort,
-		    IN ULONG DriveNum,
-		    IN BOOLEAN Atapi,
-		    OUT PIDE_DRIVE_IDENTIFY DrvParms);
-
-static BOOLEAN
-AtapiPolledRead(IN ULONG CommandPort,
-		IN ULONG ControlPort,
-		IN UCHAR PreComp,
-		IN UCHAR SectorCnt,
-		IN UCHAR SectorNum,
-		IN UCHAR CylinderLow,
-		IN UCHAR CylinderHigh,
-		IN UCHAR DrvHead,
-		IN UCHAR Command,
-		OUT PUCHAR Buffer);
-
-static ULONG
-AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		      IN PSCSI_REQUEST_BLOCK Srb);
-
-static ULONG
-AtapiSendIdeCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		    IN PSCSI_REQUEST_BLOCK Srb);
-
-static ULONG
-AtapiSendSmartCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
-                      IN PSCSI_REQUEST_BLOCK Srb);
-
-static ULONG
-AtapiInquiry(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
-	     IN PSCSI_REQUEST_BLOCK Srb);
-
-static ULONG
-AtapiReadCapacity(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		  IN PSCSI_REQUEST_BLOCK Srb);
-
-static ULONG
-AtapiReadWrite(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
-	       IN PSCSI_REQUEST_BLOCK Srb);
-
-static ULONG
-AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		PSCSI_REQUEST_BLOCK Srb);
-
-static ULONG
-AtapiTestUnitReady(PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		   PSCSI_REQUEST_BLOCK Srb);
-
-static UCHAR
-AtapiErrorToScsi(PVOID DeviceExtension,
-		 PSCSI_REQUEST_BLOCK Srb);
-
-static VOID
-AtapiScsiSrbToAtapi (PSCSI_REQUEST_BLOCK Srb);
-
-//  ----------------------------------------------------------------  Inlines
-
-void
-IDESwapBytePairs(UCHAR *Buf,
-                 int Cnt)
-{
-  UCHAR  t;
-  int   i;
-
-  for (i = 0; i < Cnt; i += 2)
-    {
-      t = Buf[i];
-      Buf[i] = Buf[i+1];
-      Buf[i+1] = t;
+        }
     }
-}
+
+    //
+    // Check for error on really stupid master devices that assert random
+    // patterns of bits in the status register at the slave address.
+    //
+
+    if ((Command == IDE_COMMAND_IDENTIFY) && (statusByte & IDE_STATUS_ERROR)) {
+        return FALSE;
+    }
+
+    DebugPrint((1,
+               "IssueIdentify: Status before read words %x\n",
+               statusByte));
+
+    //
+    // Suck out 256 words. After waiting for one model that asserts busy
+    // after receiving the Packet Identify command.
+    //
+
+    WaitOnBusy(baseIoAddress2,statusByte);
+
+    if (!(statusByte & IDE_STATUS_DRQ)) {
+        return FALSE;
+    }
+
+    ReadBuffer(baseIoAddress1,
+               (PUSHORT)&deviceExtension->FullIdentifyData,
+               256);
+
+    //
+    // Check out a few capabilities / limitations of the device.
+    //
+
+    if (deviceExtension->FullIdentifyData.SpecialFunctionsEnabled & 1) {
+
+        //
+        // Determine if this drive supports the MSN functions.
+        //
+
+        DebugPrint((2,"IssueIdentify: Marking drive %d as removable. SFE = %d\n",
+                    Channel * 2 + DeviceNumber,
+                    deviceExtension->FullIdentifyData.SpecialFunctionsEnabled));
 
 
-//  -------------------------------------------------------  Public Interface
+        deviceExtension->DeviceFlags[(Channel * 2) + DeviceNumber] |= DFLAGS_REMOVABLE_DRIVE;
+    }
 
-//    DriverEntry
-//
-//  DESCRIPTION:
-//    This function initializes the driver, locates and claims
-//    hardware resources, and creates various NT objects needed
-//    to process I/O requests.
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN  PDRIVER_OBJECT   DriverObject  System allocated Driver Object
-//                                       for this driver
-//    IN  PUNICODE_STRING  RegistryPath  Name of registry driver service
-//                                       key
-//
-//  RETURNS:
-//    NTSTATUS
+    if (deviceExtension->FullIdentifyData.MaximumBlockTransfer) {
 
-NTSTATUS NTAPI
-DriverEntry(IN PDRIVER_OBJECT DriverObject,
-            IN PUNICODE_STRING RegistryPath)
+        //
+        // Determine max. block transfer for this device.
+        //
+
+        deviceExtension->MaximumBlockXfer[(Channel * 2) + DeviceNumber] =
+            (UCHAR)(deviceExtension->FullIdentifyData.MaximumBlockTransfer & 0xFF);
+    }
+
+    ScsiPortMoveMemory(&deviceExtension->IdentifyData[(Channel * 2) + DeviceNumber],&deviceExtension->FullIdentifyData,sizeof(IDENTIFY_DATA2));
+
+    if (deviceExtension->IdentifyData[(Channel * 2) + DeviceNumber].GeneralConfiguration & 0x20 &&
+        Command != IDE_COMMAND_IDENTIFY) {
+
+        //
+        // This device interrupts with the assertion of DRQ after receiving
+        // Atapi Packet Command
+        //
+
+        deviceExtension->DeviceFlags[(Channel * 2) + DeviceNumber] |= DFLAGS_INT_DRQ;
+
+        DebugPrint((2,
+                    "IssueIdentify: Device interrupts on assertion of DRQ.\n"));
+
+    } else {
+
+        DebugPrint((2,
+                    "IssueIdentify: Device does not interrupt on assertion of DRQ.\n"));
+    }
+
+    if (((deviceExtension->IdentifyData[(Channel * 2) + DeviceNumber].GeneralConfiguration & 0xF00) == 0x100) &&
+        Command != IDE_COMMAND_IDENTIFY) {
+
+        //
+        // This is a tape.
+        //
+
+        deviceExtension->DeviceFlags[(Channel * 2) + DeviceNumber] |= DFLAGS_TAPE_DEVICE;
+
+        DebugPrint((2,
+                    "IssueIdentify: Device is a tape drive.\n"));
+
+    } else {
+
+        DebugPrint((2,
+                    "IssueIdentify: Device is not a tape drive.\n"));
+    }
+
+    //
+    // Work around for some IDE and one model Atapi that will present more than
+    // 256 bytes for the Identify data.
+    //
+
+    WaitOnBusy(baseIoAddress2,statusByte);
+
+    for (i = 0; i < 0x10000; i++) {
+
+        GetStatus(baseIoAddress2,statusByte);
+
+        if (statusByte & IDE_STATUS_DRQ) {
+
+            //
+            // Suck out any remaining bytes and throw away.
+            //
+
+            ScsiPortReadPortUshort(&baseIoAddress1->Data);
+
+        } else {
+
+            break;
+
+        }
+    }
+
+    DebugPrint((3,
+               "IssueIdentify: Status after read words (%x)\n",
+               statusByte));
+
+    return TRUE;
+
+} // end IssueIdentify()
+
+
+BOOLEAN
+STDCALL
+SetDriveParameters(
+    IN PVOID HwDeviceExtension,
+    IN ULONG DeviceNumber,
+    IN ULONG Channel
+    )
+
+/*++
+
+Routine Description:
+
+    Set drive parameters using the IDENTIFY data.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    DeviceNumber - Indicates which device.
+
+Return Value:
+
+    TRUE if all goes well.
+
+
+--*/
+
 {
-  HW_INITIALIZATION_DATA InitData;
-  NTSTATUS Status;
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PIDE_REGISTERS_1     baseIoAddress1 = deviceExtension->BaseIoAddress1[Channel];
+    PIDE_REGISTERS_2     baseIoAddress2 = deviceExtension->BaseIoAddress2[Channel];
+    PIDENTIFY_DATA2      identifyData   = &deviceExtension->IdentifyData[(Channel * 2) + DeviceNumber];
+    ULONG i;
+    UCHAR statusByte;
 
-  DPRINT("ATAPI Driver %s\n", VERSION);
-  DPRINT("RegistryPath: '%wZ'\n", RegistryPath);
+    DebugPrint((1,
+               "SetDriveParameters: Number of heads %x\n",
+               identifyData->NumberOfHeads));
 
-  /* Initialize data structure */
-  RtlZeroMemory(&InitData,
-		sizeof(HW_INITIALIZATION_DATA));
-  InitData.HwInitializationDataSize = sizeof(HW_INITIALIZATION_DATA);
-  InitData.HwInitialize = AtapiInitialize;
-  InitData.HwResetBus = AtapiResetBus;
-  InitData.HwStartIo = AtapiStartIo;
-  InitData.HwInterrupt = AtapiInterrupt;
+    DebugPrint((1,
+               "SetDriveParameters: Sectors per track %x\n",
+                identifyData->SectorsPerTrack));
 
-  InitData.DeviceExtensionSize = sizeof(ATAPI_MINIPORT_EXTENSION);
-  InitData.SpecificLuExtensionSize = sizeof(UNIT_EXTENSION);
+    //
+    // Set up registers for SET PARAMETER command.
+    //
 
-  InitData.MapBuffers = TRUE;
+    ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                           (UCHAR)(((DeviceNumber << 4) | 0xA0) | (identifyData->NumberOfHeads - 1)));
 
-  /* Search the PCI bus for compatibility mode ide controllers */
-#ifdef ENABLE_PCI
-  InitData.NeedPhysicalAddresses = TRUE;
+    ScsiPortWritePortUchar(&baseIoAddress1->BlockCount,
+                           (UCHAR)identifyData->SectorsPerTrack);
 
-  InitData.HwFindAdapter = AtapiFindCompatiblePciController;
-  InitData.NumberOfAccessRanges = 3;
-  InitData.AdapterInterfaceType = PCIBus;
+    //
+    // Send SET PARAMETER command.
+    //
 
-  InitData.VendorId = NULL;
-  InitData.VendorIdLength = 0;
-  InitData.DeviceId = NULL;
-  InitData.DeviceIdLength = 0;
+    ScsiPortWritePortUchar(&baseIoAddress1->Command,
+                           IDE_COMMAND_SET_DRIVE_PARAMETERS);
 
-  Status = ScsiPortInitialize(DriverObject,
-			      RegistryPath,
-			      &InitData,
-			      NULL);
-//  if (newStatus < statusToReturn)
-//    statusToReturn = newStatus;
-#endif
+    //
+    // Wait for up to 30 milliseconds for ERROR or command complete.
+    //
 
-  /* Search the PCI bus for all ide controllers */
-#ifdef ENABLE_NATIVE_PCI
-  InitData.NeedPhysicalAddresses = TRUE;
+    for (i=0; i<30 * 1000; i++) {
 
-  InitData.HwFindAdapter = AtapiFindNativePciController;
-  InitData.NumberOfAccessRanges = 3;
-  InitData.AdapterInterfaceType = PCIBus;
+        UCHAR errorByte;
 
-  InitData.VendorId = 0;
-  InitData.VendorIdLength = 0;
-  InitData.DeviceId = 0;
-  InitData.DeviceIdLength = 0;
+        GetStatus(baseIoAddress2, statusByte);
 
-  LastSlotNumber.u.AsULONG = 0xFFFFFFFF;
+        if (statusByte & IDE_STATUS_ERROR) {
+            errorByte = ScsiPortReadPortUchar((PUCHAR)baseIoAddress1 + 1);
+            DebugPrint((1,
+                        "SetDriveParameters: Error bit set. Status %x, error %x\n",
+                        errorByte,
+                        statusByte));
 
-  Status = ScsiPortInitialize(DriverObject,
-			      RegistryPath,
-			      &InitData,
-			      NULL);
-//  if (newStatus < statusToReturn)
-//    statusToReturn = newStatus;
-#endif
+            return FALSE;
+        } else if ((statusByte & ~IDE_STATUS_INDEX ) == IDE_STATUS_IDLE) {
+            break;
+        } else {
+            ScsiPortStallExecution(100);
+        }
+    }
 
-  /* Search the ISA bus for ide controllers */
-#ifdef ENABLE_ISA
-  InitData.HwFindAdapter = AtapiFindIsaBusController;
-  InitData.NumberOfAccessRanges = 2;
-  InitData.AdapterInterfaceType = Isa;
+    //
+    // Check for timeout.
+    //
 
-  InitData.VendorId = NULL;
-  InitData.VendorIdLength = 0;
-  InitData.DeviceId = NULL;
-  InitData.DeviceIdLength = 0;
+    if (i == 30 * 1000) {
+        return FALSE;
+    } else {
+        return TRUE;
+    }
 
-  Status = ScsiPortInitialize(DriverObject,
-			      RegistryPath,
-			      &InitData,
-			      NULL);
-//      if (newStatus < statusToReturn)
-//        statusToReturn = newStatus;
-#endif
+} // end SetDriveParameters()
 
-  DPRINT("Returning from DriverEntry\n");
+
+BOOLEAN
+STDCALL
+AtapiResetController(
+    IN PVOID HwDeviceExtension,
+    IN ULONG PathId
+    )
 
-  return(Status);
-}
+/*++
+
+Routine Description:
+
+    Reset IDE controller and/or Atapi device.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+
+Return Value:
+
+    Nothing.
+
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    ULONG                numberChannels  = deviceExtension->NumberChannels;
+    PIDE_REGISTERS_1 baseIoAddress1;
+    PIDE_REGISTERS_2 baseIoAddress2;
+    BOOLEAN result = FALSE;
+    ULONG i,j;
+    UCHAR statusByte;
+
+    DebugPrint((2,"AtapiResetController: Reset IDE\n"));
+
+    //
+    // Check and see if we are processing an internal srb
+    //
+    if (deviceExtension->OriginalSrb) {
+        deviceExtension->CurrentSrb = deviceExtension->OriginalSrb;
+        deviceExtension->OriginalSrb = NULL;
+    }
+
+    //
+    // Check if request is in progress.
+    //
+
+    if (deviceExtension->CurrentSrb) {
+
+        //
+        // Complete outstanding request with SRB_STATUS_BUS_RESET.
+        //
+
+        ScsiPortCompleteRequest(deviceExtension,
+                                deviceExtension->CurrentSrb->PathId,
+                                deviceExtension->CurrentSrb->TargetId,
+                                deviceExtension->CurrentSrb->Lun,
+                                (ULONG)SRB_STATUS_BUS_RESET);
+
+        //
+        // Clear request tracking fields.
+        //
+
+        deviceExtension->CurrentSrb = NULL;
+        deviceExtension->WordsLeft = 0;
+        deviceExtension->DataBuffer = NULL;
+
+        //
+        // Indicate ready for next request.
+        //
+
+        ScsiPortNotification(NextRequest,
+                             deviceExtension,
+                             NULL);
+    }
+
+    //
+    // Clear expecting interrupt flag.
+    //
+
+    deviceExtension->ExpectingInterrupt = FALSE;
+    deviceExtension->RDP = FALSE;
+
+    for (j = 0; j < numberChannels; j++) {
+
+        baseIoAddress1 = deviceExtension->BaseIoAddress1[j];
+        baseIoAddress2 = deviceExtension->BaseIoAddress2[j];
+
+        //
+        // Do special processing for ATAPI and IDE disk devices.
+        //
+
+        for (i = 0; i < 2; i++) {
+
+            //
+            // Check if device present.
+            //
+
+            if (deviceExtension->DeviceFlags[i + (j * 2)] & DFLAGS_DEVICE_PRESENT) {
+
+                //
+                // Check for ATAPI disk.
+                //
+
+                if (deviceExtension->DeviceFlags[i + (j * 2)] & DFLAGS_ATAPI_DEVICE) {
+
+                    //
+                    // Issue soft reset and issue identify.
+                    //
+
+                    GetStatus(baseIoAddress2,statusByte);
+                    DebugPrint((1,
+                                "AtapiResetController: Status before Atapi reset (%x).\n",
+                                statusByte));
+
+                    AtapiSoftReset(baseIoAddress1,i);
+
+                    GetStatus(baseIoAddress2,statusByte);
+
+                    if (statusByte == 0x0) {
+
+                        IssueIdentify(HwDeviceExtension,
+                                      i,
+                                      j,
+                                      IDE_COMMAND_ATAPI_IDENTIFY);
+                    } else {
+
+                        DebugPrint((1,
+                                   "AtapiResetController: Status after soft reset %x\n",
+                                   statusByte));
+                    }
+
+                } else {
+
+                    //
+                    // Write IDE reset controller bits.
+                    //
+
+                    IdeHardReset(baseIoAddress2,result);
+
+                    if (!result) {
+                        return FALSE;
+                    }
+
+                    //
+                    // Set disk geometry parameters.
+                    //
+
+                    if (!SetDriveParameters(HwDeviceExtension,
+                                            i,
+                                            j)) {
+
+                        DebugPrint((1,
+                                   "AtapiResetController: SetDriveParameters failed\n"));
+                    }
+                }
+            }
+        }
+    }
+
+    //
+    // Call the HwInitialize routine to setup multi-block.
+    //
+
+    AtapiHwInitialize(HwDeviceExtension);
+
+    return TRUE;
+
+} // end AtapiResetController()
+
+
+
+ULONG
+STDCALL
+MapError(
+    IN PVOID HwDeviceExtension,
+    IN PSCSI_REQUEST_BLOCK Srb
+    )
+
+/*++
+
+Routine Description:
+
+    This routine maps ATAPI and IDE errors to specific SRB statuses.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    Srb - IO request packet
+
+Return Value:
+
+    SRB status
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PIDE_REGISTERS_1     baseIoAddress1  = deviceExtension->BaseIoAddress1[Srb->TargetId >> 1];
+    PIDE_REGISTERS_2     baseIoAddress2  = deviceExtension->BaseIoAddress2[Srb->TargetId >> 1];
+    ULONG i;
+    UCHAR errorByte;
+    UCHAR srbStatus;
+    UCHAR scsiStatus;
+
+    //
+    // Read the error register.
+    //
+
+    errorByte = ScsiPortReadPortUchar((PUCHAR)baseIoAddress1 + 1);
+    DebugPrint((1,
+               "MapError: Error register is %x\n",
+               errorByte));
+
+    if (deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_ATAPI_DEVICE) {
+
+        switch (errorByte >> 4) {
+        case SCSI_SENSE_NO_SENSE:
+
+            DebugPrint((1,
+                       "ATAPI: No sense information\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+            break;
+
+        case SCSI_SENSE_RECOVERED_ERROR:
+
+            DebugPrint((1,
+                       "ATAPI: Recovered error\n"));
+            scsiStatus = 0;
+            srbStatus = SRB_STATUS_SUCCESS;
+            break;
+
+        case SCSI_SENSE_NOT_READY:
+
+            DebugPrint((1,
+                       "ATAPI: Device not ready\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+            break;
+
+        case SCSI_SENSE_MEDIUM_ERROR:
+
+            DebugPrint((1,
+                       "ATAPI: Media error\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+            break;
+
+        case SCSI_SENSE_HARDWARE_ERROR:
+
+            DebugPrint((1,
+                       "ATAPI: Hardware error\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+            break;
+
+        case SCSI_SENSE_ILLEGAL_REQUEST:
+
+            DebugPrint((1,
+                       "ATAPI: Illegal request\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+            break;
+
+        case SCSI_SENSE_UNIT_ATTENTION:
+
+            DebugPrint((1,
+                       "ATAPI: Unit attention\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+            break;
+
+        case SCSI_SENSE_DATA_PROTECT:
+
+            DebugPrint((1,
+                       "ATAPI: Data protect\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+            break;
+
+        case SCSI_SENSE_BLANK_CHECK:
+
+            DebugPrint((1,
+                       "ATAPI: Blank check\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+            break;
+
+        case SCSI_SENSE_ABORTED_COMMAND:
+            DebugPrint((1,
+                        "Atapi: Command Aborted\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+            break;
+
+        default:
+
+            DebugPrint((1,
+                       "ATAPI: Invalid sense information\n"));
+            scsiStatus = 0;
+            srbStatus = SRB_STATUS_ERROR;
+            break;
+        }
+
+    } else {
+
+        scsiStatus = 0;
+
+        //
+        // Save errorByte,to be used by SCSIOP_REQUEST_SENSE.
+        //
+
+        deviceExtension->ReturningMediaStatus = errorByte;
+
+        if (errorByte & IDE_ERROR_MEDIA_CHANGE_REQ) {
+            DebugPrint((1,
+                       "IDE: Media change\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+
+        } else if (errorByte & IDE_ERROR_COMMAND_ABORTED) {
+            DebugPrint((1,
+                       "IDE: Command abort\n"));
+            srbStatus = SRB_STATUS_ABORTED;
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+
+            if (Srb->SenseInfoBuffer) {
+
+                PSENSE_DATA  senseBuffer = (PSENSE_DATA)Srb->SenseInfoBuffer;
+
+                senseBuffer->ErrorCode = 0x70;
+                senseBuffer->Valid     = 1;
+                senseBuffer->AdditionalSenseLength = 0xb;
+                senseBuffer->SenseKey =  SCSI_SENSE_ABORTED_COMMAND;
+                senseBuffer->AdditionalSenseCode = 0;
+                senseBuffer->AdditionalSenseCodeQualifier = 0;
+
+                srbStatus |= SRB_STATUS_AUTOSENSE_VALID;
+            }
+
+            deviceExtension->ErrorCount++;
+
+        } else if (errorByte & IDE_ERROR_END_OF_MEDIA) {
+
+            DebugPrint((1,
+                       "IDE: End of media\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+            if (!(deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_MEDIA_STATUS_ENABLED)){
+                deviceExtension->ErrorCount++;
+            }
+
+        } else if (errorByte & IDE_ERROR_ILLEGAL_LENGTH) {
+
+            DebugPrint((1,
+                       "IDE: Illegal length\n"));
+            srbStatus = SRB_STATUS_INVALID_REQUEST;
+
+        } else if (errorByte & IDE_ERROR_BAD_BLOCK) {
+
+            DebugPrint((1,
+                       "IDE: Bad block\n"));
+            srbStatus = SRB_STATUS_ERROR;
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            if (Srb->SenseInfoBuffer) {
+
+                PSENSE_DATA  senseBuffer = (PSENSE_DATA)Srb->SenseInfoBuffer;
+
+                senseBuffer->ErrorCode = 0x70;
+                senseBuffer->Valid     = 1;
+                senseBuffer->AdditionalSenseLength = 0xb;
+                senseBuffer->SenseKey =  SCSI_SENSE_MEDIUM_ERROR;
+                senseBuffer->AdditionalSenseCode = 0;
+                senseBuffer->AdditionalSenseCodeQualifier = 0;
+
+                srbStatus |= SRB_STATUS_AUTOSENSE_VALID;
+            }
+
+        } else if (errorByte & IDE_ERROR_ID_NOT_FOUND) {
+
+            DebugPrint((1,
+                       "IDE: Id not found\n"));
+            srbStatus = SRB_STATUS_ERROR;
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+
+            if (Srb->SenseInfoBuffer) {
+
+                PSENSE_DATA  senseBuffer = (PSENSE_DATA)Srb->SenseInfoBuffer;
+
+                senseBuffer->ErrorCode = 0x70;
+                senseBuffer->Valid     = 1;
+                senseBuffer->AdditionalSenseLength = 0xb;
+                senseBuffer->SenseKey =  SCSI_SENSE_MEDIUM_ERROR;
+                senseBuffer->AdditionalSenseCode = 0;
+                senseBuffer->AdditionalSenseCodeQualifier = 0;
+
+                srbStatus |= SRB_STATUS_AUTOSENSE_VALID;
+            }
+
+            deviceExtension->ErrorCount++;
+
+        } else if (errorByte & IDE_ERROR_MEDIA_CHANGE) {
+
+            DebugPrint((1,
+                       "IDE: Media change\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+
+            if (Srb->SenseInfoBuffer) {
+
+                PSENSE_DATA  senseBuffer = (PSENSE_DATA)Srb->SenseInfoBuffer;
+
+                senseBuffer->ErrorCode = 0x70;
+                senseBuffer->Valid     = 1;
+                senseBuffer->AdditionalSenseLength = 0xb;
+                senseBuffer->SenseKey =  SCSI_SENSE_UNIT_ATTENTION;
+                senseBuffer->AdditionalSenseCode = SCSI_ADSENSE_MEDIUM_CHANGED;
+                senseBuffer->AdditionalSenseCodeQualifier = 0;
+
+                srbStatus |= SRB_STATUS_AUTOSENSE_VALID;
+            }
+
+        } else if (errorByte & IDE_ERROR_DATA_ERROR) {
+
+            DebugPrint((1,
+                   "IDE: Data error\n"));
+            scsiStatus = SCSISTAT_CHECK_CONDITION;
+            srbStatus = SRB_STATUS_ERROR;
+
+            if (!(deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_MEDIA_STATUS_ENABLED)){
+                deviceExtension->ErrorCount++;
+            }
+
+            //
+            // Build sense buffer
+            //
+
+            if (Srb->SenseInfoBuffer) {
+
+                PSENSE_DATA  senseBuffer = (PSENSE_DATA)Srb->SenseInfoBuffer;
+
+                senseBuffer->ErrorCode = 0x70;
+                senseBuffer->Valid     = 1;
+                senseBuffer->AdditionalSenseLength = 0xb;
+                senseBuffer->SenseKey =  SCSI_SENSE_MEDIUM_ERROR;
+                senseBuffer->AdditionalSenseCode = 0;
+                senseBuffer->AdditionalSenseCodeQualifier = 0;
+
+                srbStatus |= SRB_STATUS_AUTOSENSE_VALID;
+            }
+        }
+
+        if (deviceExtension->ErrorCount >= MAX_ERRORS) {
+            deviceExtension->DWordIO = FALSE;
+            deviceExtension->MaximumBlockXfer[Srb->TargetId] = 0;
+
+            DebugPrint((1,
+                        "MapError: Disabling 32-bit PIO and Multi-sector IOs\n"));
+
+            //
+            // Log the error.
+            //
+
+            ScsiPortLogError( HwDeviceExtension,
+                              Srb,
+                              Srb->PathId,
+                              Srb->TargetId,
+                              Srb->Lun,
+                              SP_BAD_FW_WARNING,
+                              4);
+            //
+            // Reprogram to not use Multi-sector.
+            //
+
+            for (i = 0; i < 4; i++) {
+                UCHAR statusByte;
+
+                if (deviceExtension->DeviceFlags[i] & DFLAGS_DEVICE_PRESENT &&
+                     !(deviceExtension->DeviceFlags[i] & DFLAGS_ATAPI_DEVICE)) {
+
+                    //
+                    // Select the device.
+                    //
+
+                    ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                                           (UCHAR)(((i & 0x1) << 4) | 0xA0));
+
+                    //
+                    // Setup sector count to reflect the # of blocks.
+                    //
+
+                    ScsiPortWritePortUchar(&baseIoAddress1->BlockCount,
+                                           0);
+
+                    //
+                    // Issue the command.
+                    //
+
+                    ScsiPortWritePortUchar(&baseIoAddress1->Command,
+                                           IDE_COMMAND_SET_MULTIPLE);
+
+                    //
+                    // Wait for busy to drop.
+                    //
+
+                    WaitOnBaseBusy(baseIoAddress1,statusByte);
+
+                    //
+                    // Check for errors. Reset the value to 0 (disable MultiBlock) if the
+                    // command was aborted.
+                    //
+
+                    if (statusByte & IDE_STATUS_ERROR) {
+
+                        //
+                        // Read the error register.
+                        //
+
+                        errorByte = ScsiPortReadPortUchar((PUCHAR)baseIoAddress1 + 1);
+
+                        DebugPrint((1,
+                                    "AtapiHwInitialize: Error setting multiple mode. Status %x, error byte %x\n",
+                                    statusByte,
+                                    errorByte));
+                        //
+                        // Adjust the devExt. value, if necessary.
+                        //
+
+                        deviceExtension->MaximumBlockXfer[i] = 0;
+
+                    }
+                }
+            }
+        }
+    }
+
+
+    //
+    // Set SCSI status to indicate a check condition.
+    //
+
+    Srb->ScsiStatus = scsiStatus;
+
+    return srbStatus;
+
+} // end MapError()
 
 
 BOOLEAN
-AtapiClaimHwResources(PATAPI_MINIPORT_EXTENSION DevExt,
-		      PPORT_CONFIGURATION_INFORMATION ConfigInfo,
-		      INTERFACE_TYPE InterfaceType,
-		      ULONG CommandPortBase,
-		      ULONG ControlPortBase,
-		      ULONG BusMasterPortBase,
-		      ULONG InterruptVector)
+STDCALL
+AtapiHwInitialize(
+    IN PVOID HwDeviceExtension
+    )
+
+/*++
+
+Routine Description:
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+
+Return Value:
+
+    TRUE - if initialization successful.
+    FALSE - if initialization unsuccessful.
+
+--*/
+
 {
-   SCSI_PHYSICAL_ADDRESS IoAddress;
-   PVOID IoBase;
-#ifdef ENABLE_DMA
-   ULONG Length;
-#endif
-   IoAddress = ScsiPortConvertUlongToPhysicalAddress(CommandPortBase);
-   IoBase = ScsiPortGetDeviceBase((PVOID)DevExt,
-                                  InterfaceType,
-				  ConfigInfo->SystemIoBusNumber,
-				  IoAddress,
-				  8,
-				  TRUE);
-   if (IoBase == NULL)
-   {
-      return FALSE;
-   }
-   DevExt->Handler = NULL;
-   DevExt->CommandPortBase = (ULONG)IoBase;
-   (*ConfigInfo->AccessRanges)[0].RangeStart = IoAddress;
-   (*ConfigInfo->AccessRanges)[0].RangeLength = 8;
-   (*ConfigInfo->AccessRanges)[0].RangeInMemory = FALSE;
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PIDE_REGISTERS_1     baseIoAddress;
+    ULONG i;
+    UCHAR statusByte, errorByte;
 
-   if (ControlPortBase)
-   {
-      IoAddress = ScsiPortConvertUlongToPhysicalAddress(ControlPortBase + 2);
-      IoBase = ScsiPortGetDeviceBase((PVOID)DevExt,
-                                     InterfaceType,
-				     ConfigInfo->SystemIoBusNumber,
-				     IoAddress,
-				     1,
-				     TRUE);
-      if (IoBase == NULL)
-      {
-         ScsiPortFreeDeviceBase((PVOID)DevExt,
-	                        (PVOID)DevExt->CommandPortBase);
-         return FALSE;
-      }
-      DevExt->ControlPortBase = (ULONG)IoBase;
-      (*ConfigInfo->AccessRanges)[1].RangeStart = IoAddress;
-      (*ConfigInfo->AccessRanges)[1].RangeLength = 1;
-      (*ConfigInfo->AccessRanges)[1].RangeInMemory = FALSE;
-   }
-   if (BusMasterPortBase)
-   {
-      IoAddress = ScsiPortConvertUlongToPhysicalAddress(BusMasterPortBase);
-      IoBase = ScsiPortGetDeviceBase((PVOID)DevExt,
-                                     InterfaceType,
-				     ConfigInfo->SystemIoBusNumber,
-				     IoAddress,
-				     8,
-				     TRUE);
-      if (IoBase == NULL)
-      {
-         ScsiPortFreeDeviceBase((PVOID)DevExt, (PVOID)DevExt->CommandPortBase);
-         ScsiPortFreeDeviceBase((PVOID)DevExt, (PVOID)DevExt->ControlPortBase);
-         return FALSE;
-      }
-      DevExt->BusMasterRegisterBase = (ULONG)IoBase;
-      (*ConfigInfo->AccessRanges)[2].RangeStart = IoAddress;
-      (*ConfigInfo->AccessRanges)[2].RangeLength = 8;
-      (*ConfigInfo->AccessRanges)[2].RangeInMemory = FALSE;
-#ifdef ENABLE_DMA
-//      ConfigInfo->DmaChannel = SP_UNINITIALIZED_VALUE;
-//      ConfigInfo->DmaPort = SP_UNINITIALIZED_VALUE;
-      ConfigInfo->DmaWidth = Width32Bits;
-//      ConfigInfo->DmaSpeed = Compatible;
-      ConfigInfo->ScatterGather = TRUE;
-      ConfigInfo->Master = TRUE;
-      ConfigInfo->NumberOfPhysicalBreaks = 0x10000 / PAGE_SIZE + 1;
-      ConfigInfo->Dma32BitAddresses = TRUE;
-      ConfigInfo->NeedPhysicalAddresses = TRUE;
-      ConfigInfo->MapBuffers = TRUE;
 
-      DevExt->PRDMaxCount = PAGE_SIZE / sizeof(PRD);
-      DevExt->PRDTable = ScsiPortGetUncachedExtension(DevExt, ConfigInfo, sizeof(PRD) * DevExt->PRDMaxCount);
-      if (DevExt->PRDTable != NULL)
-        {
-	  DevExt->PRDTablePhysicalAddress = ScsiPortGetPhysicalAddress(DevExt, NULL, DevExt->PRDTable, &Length);
-	}
-      if (DevExt->PRDTable == NULL ||
-	  DevExt->PRDTablePhysicalAddress.QuadPart == 0LL ||
-	  Length < sizeof(PRD) * DevExt->PRDMaxCount)
-      {
-         ScsiPortFreeDeviceBase((PVOID)DevExt, (PVOID)DevExt->CommandPortBase);
-         ScsiPortFreeDeviceBase((PVOID)DevExt, (PVOID)DevExt->ControlPortBase);
-         ScsiPortFreeDeviceBase((PVOID)DevExt, (PVOID)DevExt->BusMasterRegisterBase);
-	 return FALSE;
-      }
-#endif
-   }
-   ConfigInfo->BusInterruptLevel = InterruptVector;
-   ConfigInfo->BusInterruptVector = InterruptVector;
-   ConfigInfo->InterruptMode = (InterfaceType == Isa) ? Latched : LevelSensitive;
+    for (i = 0; i < 4; i++) {
+        if (deviceExtension->DeviceFlags[i] & DFLAGS_DEVICE_PRESENT) {
 
-   if ((CommandPortBase == 0x1F0 || ControlPortBase == 0x3F4) && !ConfigInfo->AtdiskPrimaryClaimed)
-   {
-      ConfigInfo->AtdiskPrimaryClaimed = TRUE;
-   }
-   if ((CommandPortBase == 0x170 || ControlPortBase == 0x374) && !ConfigInfo->AtdiskSecondaryClaimed)
-   {
-      ConfigInfo->AtdiskSecondaryClaimed = TRUE;
-   }
-   return TRUE;
+            if (!(deviceExtension->DeviceFlags[i] & DFLAGS_ATAPI_DEVICE)) {
+
+                //
+                // Enable media status notification
+                //
+
+                baseIoAddress = deviceExtension->BaseIoAddress1[i >> 1];
+
+                IdeMediaStatus(TRUE,HwDeviceExtension,i);
+
+                //
+                // If supported, setup Multi-block transfers.
+                //
+                if (deviceExtension->MaximumBlockXfer[i]) {
+
+                    //
+                    // Select the device.
+                    //
+
+                    ScsiPortWritePortUchar(&baseIoAddress->DriveSelect,
+                                           (UCHAR)(((i & 0x1) << 4) | 0xA0));
+
+                    //
+                    // Setup sector count to reflect the # of blocks.
+                    //
+
+                    ScsiPortWritePortUchar(&baseIoAddress->BlockCount,
+                                           deviceExtension->MaximumBlockXfer[i]);
+
+                    //
+                    // Issue the command.
+                    //
+
+                    ScsiPortWritePortUchar(&baseIoAddress->Command,
+                                           IDE_COMMAND_SET_MULTIPLE);
+
+                    //
+                    // Wait for busy to drop.
+                    //
+
+                    WaitOnBaseBusy(baseIoAddress,statusByte);
+
+                    //
+                    // Check for errors. Reset the value to 0 (disable MultiBlock) if the
+                    // command was aborted.
+                    //
+
+                    if (statusByte & IDE_STATUS_ERROR) {
+
+                        //
+                        // Read the error register.
+                        //
+
+                        errorByte = ScsiPortReadPortUchar((PUCHAR)baseIoAddress + 1);
+
+                        DebugPrint((1,
+                                    "AtapiHwInitialize: Error setting multiple mode. Status %x, error byte %x\n",
+                                    statusByte,
+                                    errorByte));
+                        //
+                        // Adjust the devExt. value, if necessary.
+                        //
+
+                        deviceExtension->MaximumBlockXfer[i] = 0;
+
+                    } else {
+                        DebugPrint((2,
+                                    "AtapiHwInitialize: Using Multiblock on Device %d. Blocks / int - %d\n",
+                                    i,
+                                    deviceExtension->MaximumBlockXfer[i]));
+                    }
+                }
+            } else if (!(deviceExtension->DeviceFlags[i] & DFLAGS_CHANGER_INITED)){
+
+                ULONG j;
+                BOOLEAN isSanyo = FALSE;
+                UCHAR vendorId[26];
+
+                //
+                // Attempt to identify any special-case devices - psuedo-atapi changers, atapi changers, etc.
+                //
+
+                for (j = 0; j < 13; j += 2) {
+
+                    //
+                    // Build a buffer based on the identify data.
+                    //
+
+                    vendorId[j] = ((PUCHAR)deviceExtension->IdentifyData[i].ModelNumber)[j + 1];
+                    vendorId[j+1] = ((PUCHAR)deviceExtension->IdentifyData[i].ModelNumber)[j];
+                }
+
+                if (!AtapiStringCmp (vendorId, "CD-ROM  CDR", 11)) {
+
+                    //
+                    // Inquiry string for older model had a '-', newer is '_'
+                    //
+
+                    if (vendorId[12] == 'C') {
+
+                        //
+                        // Torisan changer. Set the bit. This will be used in several places
+                        // acting like 1) a multi-lun device and 2) building the 'special' TUR's.
+                        //
+
+                        deviceExtension->DeviceFlags[i] |= (DFLAGS_CHANGER_INITED | DFLAGS_SANYO_ATAPI_CHANGER);
+                        deviceExtension->DiscsPresent[i] = 3;
+                        isSanyo = TRUE;
+                    }
+                }
+            }
+
+            //
+            // We need to get our device ready for action before
+            // returning from this function
+            //
+            // According to the atapi spec 2.5 or 2.6, an atapi device
+            // clears its status BSY bit when it is ready for atapi commands.
+            // However, some devices (Panasonic SQ-TC500N) are still
+            // not ready even when the status BSY is clear.  They don't react
+            // to atapi commands.
+            //
+            // Since there is really no other indication that tells us
+            // the drive is really ready for action.  We are going to check BSY
+            // is clear and then just wait for an arbitrary amount of time!
+            //
+            if (deviceExtension->DeviceFlags[i] & DFLAGS_ATAPI_DEVICE) {
+                PIDE_REGISTERS_1     baseIoAddress1 = deviceExtension->BaseIoAddress1[i >> 1];
+                PIDE_REGISTERS_2     baseIoAddress2 = deviceExtension->BaseIoAddress2[i >> 1];
+                ULONG waitCount;
+
+                // have to get out of the loop sometime!
+                // 10000 * 100us = 1000,000us = 1000ms = 1s
+                waitCount = 10000;
+                GetStatus(baseIoAddress2, statusByte);
+                while ((statusByte & IDE_STATUS_BUSY) && waitCount) {
+                    //
+                    // Wait for Busy to drop.
+                    //
+                    ScsiPortStallExecution(100);
+                    GetStatus(baseIoAddress2, statusByte);
+                    waitCount--;
+                }
+
+                // 5000 * 100us = 500,000us = 500ms = 0.5s
+                waitCount = 5000;
+                do {
+                    ScsiPortStallExecution(100);
+                } while (waitCount--);
+            }
+        }
+    }
+
+    return TRUE;
+
+} // end AtapiHwInitialize()
+
+
+VOID
+STDCALL
+AtapiHwInitializeChanger (
+    IN PVOID HwDeviceExtension,
+    IN ULONG TargetId,
+    IN PMECHANICAL_STATUS_INFORMATION_HEADER MechanismStatus)
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+
+    if (MechanismStatus) {
+        deviceExtension->DiscsPresent[TargetId] = MechanismStatus->NumberAvailableSlots;
+        if (deviceExtension->DiscsPresent[TargetId] > 1) {
+            deviceExtension->DeviceFlags[TargetId] |= DFLAGS_ATAPI_CHANGER;
+        }
+    }
+    return;
 }
 
 
-#ifdef ENABLE_PCI
-static ULONG STDCALL
-AtapiFindCompatiblePciController(PVOID DeviceExtension,
-				 PVOID HwContext,
-				 PVOID BusInformation,
-				 PCHAR ArgumentString,
-				 PPORT_CONFIGURATION_INFORMATION ConfigInfo,
-				 PBOOLEAN Again)
+
+BOOLEAN
+STDCALL
+FindDevices(
+    IN PVOID HwDeviceExtension,
+    IN BOOLEAN AtapiOnly,
+    IN ULONG   Channel
+    )
+
+/*++
+
+Routine Description:
+
+    This routine is called from AtapiFindController to identify
+    devices attached to an IDE controller.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    AtapiOnly - Indicates that routine should return TRUE only if
+        an ATAPI device is attached to the controller.
+
+Return Value:
+
+    TRUE - True if devices found.
+
+--*/
+
 {
-  PATAPI_MINIPORT_EXTENSION DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
-  PCI_SLOT_NUMBER SlotNumber;
-  PCI_COMMON_CONFIG PciConfig;
-  ULONG DataSize;
-  ULONG StartDeviceNumber;
-  ULONG DeviceNumber;
-  ULONG StartFunctionNumber;
-  ULONG FunctionNumber;
-  BOOLEAN ChannelFound;
-  BOOLEAN DeviceFound;
-  ULONG BusMasterBasePort = 0;
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PIDE_REGISTERS_1     baseIoAddress1 = deviceExtension->BaseIoAddress1[Channel];
+    PIDE_REGISTERS_2     baseIoAddress2 = deviceExtension->BaseIoAddress2[Channel];
+    BOOLEAN              deviceResponded = FALSE,
+                         skipSetParameters = FALSE;
+    ULONG                waitCount = 10000;
+    ULONG                deviceNumber;
+    ULONG                i;
+    UCHAR                signatureLow,
+                         signatureHigh;
+    UCHAR                statusByte;
 
-  DPRINT("AtapiFindCompatiblePciController() Bus: %lu  Slot: %lu\n",
-	  ConfigInfo->SystemIoBusNumber,
-	  ConfigInfo->SlotNumber);
+    //
+    // Clear expecting interrupt flag and current SRB field.
+    //
 
-  *Again = FALSE;
+    deviceExtension->ExpectingInterrupt = FALSE;
+    deviceExtension->CurrentSrb = NULL;
 
-  /* both channels were claimed: exit */
-  if (ConfigInfo->AtdiskPrimaryClaimed == TRUE &&
-      ConfigInfo->AtdiskSecondaryClaimed == TRUE)
+    //
+    // Search for devices.
+    //
+
+    for (deviceNumber = 0; deviceNumber < 2; deviceNumber++) {
+
+        //
+        // Select the device.
+        //
+
+        ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                               (UCHAR)((deviceNumber << 4) | 0xA0));
+
+        //
+        // Check here for some SCSI adapters that incorporate IDE emulation.
+        //
+
+        GetStatus(baseIoAddress2, statusByte);
+        if (statusByte == 0xFF) {
+            continue;
+        }
+
+        AtapiSoftReset(baseIoAddress1,deviceNumber);
+        WaitOnBusy(baseIoAddress2,statusByte);
+
+        signatureLow = ScsiPortReadPortUchar(&baseIoAddress1->CylinderLow);
+        signatureHigh = ScsiPortReadPortUchar(&baseIoAddress1->CylinderHigh);
+
+        if (signatureLow == 0x14 && signatureHigh == 0xEB) {
+
+            //
+            // ATAPI signature found.
+            // Issue the ATAPI identify command if this
+            // is not for the crash dump utility.
+            //
+
+atapiIssueId:
+
+            if (!deviceExtension->DriverMustPoll) {
+
+                //
+                // Issue ATAPI packet identify command.
+                //
+
+                if (IssueIdentify(HwDeviceExtension,
+                                  deviceNumber,
+                                  Channel,
+                                  IDE_COMMAND_ATAPI_IDENTIFY)) {
+
+                    //
+                    // Indicate ATAPI device.
+                    //
+
+                    DebugPrint((1,
+                               "FindDevices: Device %x is ATAPI\n",
+                               deviceNumber));
+
+                    deviceExtension->DeviceFlags[deviceNumber + (Channel * 2)] |= DFLAGS_ATAPI_DEVICE;
+                    deviceExtension->DeviceFlags[deviceNumber + (Channel * 2)] |= DFLAGS_DEVICE_PRESENT;
+
+                    deviceResponded = TRUE;
+
+                    GetStatus(baseIoAddress2, statusByte);
+                    if (statusByte & IDE_STATUS_ERROR) {
+                        AtapiSoftReset(baseIoAddress1, deviceNumber);
+                    }
+
+
+                } else {
+
+                    //
+                    // Indicate no working device.
+                    //
+
+                    DebugPrint((1,
+                               "FindDevices: Device %x not responding\n",
+                               deviceNumber));
+
+                    deviceExtension->DeviceFlags[deviceNumber + (Channel * 2)] &= ~DFLAGS_DEVICE_PRESENT;
+                }
+
+            }
+
+        } else {
+
+            //
+            // Issue IDE Identify. If an Atapi device is actually present, the signature
+            // will be asserted, and the drive will be recognized as such.
+            //
+
+            if (IssueIdentify(HwDeviceExtension,
+                              deviceNumber,
+                              Channel,
+                              IDE_COMMAND_IDENTIFY)) {
+
+                //
+                // IDE drive found.
+                //
+
+
+                DebugPrint((1,
+                           "FindDevices: Device %x is IDE\n",
+                           deviceNumber));
+
+                deviceExtension->DeviceFlags[deviceNumber + (Channel * 2)] |= DFLAGS_DEVICE_PRESENT;
+
+                if (!AtapiOnly) {
+                    deviceResponded = TRUE;
+                }
+
+                //
+                // Indicate IDE - not ATAPI device.
+                //
+
+                deviceExtension->DeviceFlags[deviceNumber + (Channel * 2)] &= ~DFLAGS_ATAPI_DEVICE;
+
+
+            } else {
+
+                //
+                // Look to see if an Atapi device is present.
+                //
+
+                AtapiSoftReset(baseIoAddress1,deviceNumber);
+
+                WaitOnBusy(baseIoAddress2,statusByte);
+
+                signatureLow = ScsiPortReadPortUchar(&baseIoAddress1->CylinderLow);
+                signatureHigh = ScsiPortReadPortUchar(&baseIoAddress1->CylinderHigh);
+
+                if (signatureLow == 0x14 && signatureHigh == 0xEB) {
+                    goto atapiIssueId;
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < 2; i++) {
+        if ((deviceExtension->DeviceFlags[i + (Channel * 2)] & DFLAGS_DEVICE_PRESENT) &&
+            (!(deviceExtension->DeviceFlags[i + (Channel * 2)] & DFLAGS_ATAPI_DEVICE)) && deviceResponded) {
+
+            //
+            // This hideous hack is to deal with ESDI devices that return
+            // garbage geometry in the IDENTIFY data.
+            // This is ONLY for the crashdump environment as
+            // these are ESDI devices.
+            //
+
+            if (deviceExtension->IdentifyData[i].SectorsPerTrack ==
+                    0x35 &&
+                deviceExtension->IdentifyData[i].NumberOfHeads ==
+                    0x07) {
+
+                DebugPrint((1,
+                           "FindDevices: Found nasty Compaq ESDI!\n"));
+
+                //
+                // Change these values to something reasonable.
+                //
+
+                deviceExtension->IdentifyData[i].SectorsPerTrack =
+                    0x34;
+                deviceExtension->IdentifyData[i].NumberOfHeads =
+                    0x0E;
+            }
+
+            if (deviceExtension->IdentifyData[i].SectorsPerTrack ==
+                    0x35 &&
+                deviceExtension->IdentifyData[i].NumberOfHeads ==
+                    0x0F) {
+
+                DebugPrint((1,
+                           "FindDevices: Found nasty Compaq ESDI!\n"));
+
+                //
+                // Change these values to something reasonable.
+                //
+
+                deviceExtension->IdentifyData[i].SectorsPerTrack =
+                    0x34;
+                deviceExtension->IdentifyData[i].NumberOfHeads =
+                    0x0F;
+            }
+
+
+            if (deviceExtension->IdentifyData[i].SectorsPerTrack ==
+                    0x36 &&
+                deviceExtension->IdentifyData[i].NumberOfHeads ==
+                    0x07) {
+
+                DebugPrint((1,
+                           "FindDevices: Found nasty UltraStor ESDI!\n"));
+
+                //
+                // Change these values to something reasonable.
+                //
+
+                deviceExtension->IdentifyData[i].SectorsPerTrack =
+                    0x3F;
+                deviceExtension->IdentifyData[i].NumberOfHeads =
+                    0x10;
+                skipSetParameters = TRUE;
+            }
+
+
+            if (!skipSetParameters) {
+
+                WaitOnBusy(baseIoAddress2,statusByte);
+
+                //
+                // Select the device.
+                //
+
+                ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                                       (UCHAR)((i << 4) | 0xA0));
+
+                GetStatus(baseIoAddress2, statusByte);
+
+                if (statusByte & IDE_STATUS_ERROR) {
+
+                    //
+                    // Reset the device.
+                    //
+
+                    DebugPrint((2,
+                                "FindDevices: Resetting controller before SetDriveParameters.\n"));
+
+                    ScsiPortWritePortUchar(&baseIoAddress2->AlternateStatus,IDE_DC_RESET_CONTROLLER );
+                    ScsiPortStallExecution(500 * 1000);
+                    ScsiPortWritePortUchar(&baseIoAddress2->AlternateStatus,IDE_DC_REENABLE_CONTROLLER);
+                    ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                                           (UCHAR)((i << 4) | 0xA0));
+
+                    do {
+
+                        //
+                        // Wait for Busy to drop.
+                        //
+
+                        ScsiPortStallExecution(100);
+                        GetStatus(baseIoAddress2, statusByte);
+
+                    } while ((statusByte & IDE_STATUS_BUSY) && waitCount--);
+                }
+
+                WaitOnBusy(baseIoAddress2,statusByte);
+                DebugPrint((2,
+                            "FindDevices: Status before SetDriveParameters: (%x) (%x)\n",
+                            statusByte,
+                            ScsiPortReadPortUchar(&baseIoAddress1->DriveSelect)));
+
+                //
+                // Use the IDENTIFY data to set drive parameters.
+                //
+
+                if (!SetDriveParameters(HwDeviceExtension,i,Channel)) {
+
+                    DebugPrint((0,
+                               "AtapHwInitialize: Set drive parameters for device %d failed\n",
+                               i));
+
+                    //
+                    // Don't use this device as writes could cause corruption.
+                    //
+
+                    deviceExtension->DeviceFlags[i + Channel] = 0;
+                    continue;
+
+                }
+                if (deviceExtension->DeviceFlags[deviceNumber + (Channel * 2)] & DFLAGS_REMOVABLE_DRIVE) {
+
+                    //
+                    // Pick up ALL IDE removable drives that conform to Yosemite V0.2...
+                    //
+
+                    AtapiOnly = FALSE;
+                }
+
+
+                //
+                // Indicate that a device was found.
+                //
+
+                if (!AtapiOnly) {
+                    deviceResponded = TRUE;
+                }
+            }
+        }
+    }
+
+    //
+    // Make sure master device is selected on exit.
+    //
+
+    ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect, 0xA0);
+
+    //
+    // Reset the controller. This is a feeble attempt to leave the ESDI
+    // controllers in a state that ATDISK driver will recognize them.
+    // The problem in ATDISK has to do with timings as it is not reproducible
+    // in debug. The reset should restore the controller to its poweron state
+    // and give the system enough time to settle.
+    //
+
+    if (!deviceResponded) {
+
+        ScsiPortWritePortUchar(&baseIoAddress2->AlternateStatus,IDE_DC_RESET_CONTROLLER );
+        ScsiPortStallExecution(50 * 1000);
+        ScsiPortWritePortUchar(&baseIoAddress2->AlternateStatus,IDE_DC_REENABLE_CONTROLLER);
+    }
+
+    return deviceResponded;
+
+} // end FindDevices()
+
+
+ULONG
+STDCALL
+AtapiParseArgumentString(
+    IN PCHAR String,
+    IN PCHAR KeyWord
+    )
+
+/*++
+
+Routine Description:
+
+    This routine will parse the string for a match on the keyword, then
+    calculate the value for the keyword and return it to the caller.
+
+Arguments:
+
+    String - The ASCII string to parse.
+    KeyWord - The keyword for the value desired.
+
+Return Values:
+
+    Zero if value not found
+    Value converted from ASCII to binary.
+
+--*/
+
+{
+    PCHAR cptr;
+    PCHAR kptr;
+    ULONG value;
+    ULONG stringLength = 0;
+    ULONG keyWordLength = 0;
+    ULONG index;
+
+    if (!String) {
+        return 0;
+    }
+    if (!KeyWord) {
+        return 0;
+    }
+
+    //
+    // Calculate the string length and lower case all characters.
+    //
+
+    cptr = String;
+    while (*cptr) {
+        if (*cptr >= 'A' && *cptr <= 'Z') {
+            *cptr = *cptr + ('a' - 'A');
+        }
+        cptr++;
+        stringLength++;
+    }
+
+    //
+    // Calculate the keyword length and lower case all characters.
+    //
+
+    cptr = KeyWord;
+    while (*cptr) {
+
+        if (*cptr >= 'A' && *cptr <= 'Z') {
+            *cptr = *cptr + ('a' - 'A');
+        }
+        cptr++;
+        keyWordLength++;
+    }
+
+    if (keyWordLength > stringLength) {
+
+        //
+        // Can't possibly have a match.
+        //
+
+        return 0;
+    }
+
+    //
+    // Now setup and start the compare.
+    //
+
+    cptr = String;
+
+ContinueSearch:
+
+    //
+    // The input string may start with white space.  Skip it.
+    //
+
+    while (*cptr == ' ' || *cptr == '\t') {
+        cptr++;
+    }
+
+    if (*cptr == '\0') {
+
+        //
+        // end of string.
+        //
+
+        return 0;
+    }
+
+    kptr = KeyWord;
+    while (*cptr++ == *kptr++) {
+
+        if (*(cptr - 1) == '\0') {
+
+            //
+            // end of string
+            //
+
+            return 0;
+        }
+    }
+
+    if (*(kptr - 1) == '\0') {
+
+        //
+        // May have a match backup and check for blank or equals.
+        //
+
+        cptr--;
+        while (*cptr == ' ' || *cptr == '\t') {
+            cptr++;
+        }
+
+        //
+        // Found a match.  Make sure there is an equals.
+        //
+
+        if (*cptr != '=') {
+
+            //
+            // Not a match so move to the next semicolon.
+            //
+
+            while (*cptr) {
+                if (*cptr++ == ';') {
+                    goto ContinueSearch;
+                }
+            }
+            return 0;
+        }
+
+        //
+        // Skip the equals sign.
+        //
+
+        cptr++;
+
+        //
+        // Skip white space.
+        //
+
+        while ((*cptr == ' ') || (*cptr == '\t')) {
+            cptr++;
+        }
+
+        if (*cptr == '\0') {
+
+            //
+            // Early end of string, return not found
+            //
+
+            return 0;
+        }
+
+        if (*cptr == ';') {
+
+            //
+            // This isn't it either.
+            //
+
+            cptr++;
+            goto ContinueSearch;
+        }
+
+        value = 0;
+        if ((*cptr == '0') && (*(cptr + 1) == 'x')) {
+
+            //
+            // Value is in Hex.  Skip the "0x"
+            //
+
+            cptr += 2;
+            for (index = 0; *(cptr + index); index++) {
+
+                if (*(cptr + index) == ' ' ||
+                    *(cptr + index) == '\t' ||
+                    *(cptr + index) == ';') {
+                     break;
+                }
+
+                if ((*(cptr + index) >= '0') && (*(cptr + index) <= '9')) {
+                    value = (16 * value) + (*(cptr + index) - '0');
+                } else {
+                    if ((*(cptr + index) >= 'a') && (*(cptr + index) <= 'f')) {
+                        value = (16 * value) + (*(cptr + index) - 'a' + 10);
+                    } else {
+
+                        //
+                        // Syntax error, return not found.
+                        //
+                        return 0;
+                    }
+                }
+            }
+        } else {
+
+            //
+            // Value is in Decimal.
+            //
+
+            for (index = 0; *(cptr + index); index++) {
+
+                if (*(cptr + index) == ' ' ||
+                    *(cptr + index) == '\t' ||
+                    *(cptr + index) == ';') {
+                     break;
+                }
+
+                if ((*(cptr + index) >= '0') && (*(cptr + index) <= '9')) {
+                    value = (10 * value) + (*(cptr + index) - '0');
+                } else {
+
+                    //
+                    // Syntax error return not found.
+                    //
+                    return 0;
+                }
+            }
+        }
+
+        return value;
+    } else {
+
+        //
+        // Not a match check for ';' to continue search.
+        //
+
+        while (*cptr) {
+            if (*cptr++ == ';') {
+                goto ContinueSearch;
+            }
+        }
+
+        return 0;
+    }
+}
+
+
+
+
+
+ULONG
+STDCALL
+AtapiFindController(
+    IN PVOID HwDeviceExtension,
+    IN PVOID Context,
+    IN PVOID BusInformation,
+    IN PCHAR ArgumentString,
+    IN OUT PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+    OUT PBOOLEAN Again
+    )
+/*++
+
+Routine Description:
+
+    This function is called by the OS-specific port driver after
+    the necessary storage has been allocated, to gather information
+    about the adapter's configuration.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    Context - Address of adapter count
+    ArgumentString - Used to determine whether driver is client of ntldr or crash dump utility.
+    ConfigInfo - Configuration information structure describing HBA
+    Again - Indicates search for adapters to continue
+
+Return Value:
+
+    ULONG
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PULONG               adapterCount    = (PULONG)Context;
+    PUCHAR               ioSpace;
+    ULONG                i,j;
+    ULONG                irq;
+    ULONG                portBase;
+    ULONG                retryCount;
+    PCI_SLOT_NUMBER      slotData;
+    PPCI_COMMON_CONFIG   pciData;
+    ULONG                pciBuffer;
+    BOOLEAN              atapiOnly;
+    UCHAR                statusByte;
+    BOOLEAN              preConfig = FALSE;
+    //
+    // The following table specifies the ports to be checked when searching for
+    // an IDE controller.  A zero entry terminates the search.
+    //
+
+    CONST ULONG AdapterAddresses[5] = {0x1F0, 0x170, 0x1e8, 0x168, 0};
+
+    //
+    // The following table specifies interrupt levels corresponding to the
+    // port addresses in the previous table.
+    //
+
+    CONST ULONG InterruptLevels[5] = {14, 15, 11, 10, 0};
+
+    if (!deviceExtension) {
+        return SP_RETURN_ERROR;
+    }
+
+    //
+    // Check to see if this is a special configuration environment.
+    //
+
+    portBase = irq = 0;
+    if (ArgumentString) {
+
+        irq = AtapiParseArgumentString(ArgumentString, "Interrupt");
+        if (irq ) {
+
+            //
+            // Both parameters must be present to proceed
+            //
+
+            portBase = AtapiParseArgumentString(ArgumentString, "BaseAddress");
+            if (!portBase) {
+
+                //
+                // Try a default search for the part.
+                //
+
+                irq = 0;
+            }
+        }
+    }
+
+
+
+    //
+    // Scan though the adapter address looking for adapters.
+    //
+    if (ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[0].RangeStart) != 0) {
+        ioSpace =  ScsiPortGetDeviceBase(HwDeviceExtension,
+                                         ConfigInfo->AdapterInterfaceType,
+                                         ConfigInfo->SystemIoBusNumber,
+                                         (*ConfigInfo->AccessRanges)[0].RangeStart,
+                                         (*ConfigInfo->AccessRanges)[0].RangeLength,
+                                         (BOOLEAN) !((*ConfigInfo->AccessRanges)[0].RangeInMemory));
+        *Again = FALSE;
+        //
+        // Since we have pre-configured information we only need to go through this loop once
+        //
+        preConfig = TRUE;
+        portBase = ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[0].RangeStart);
+
+    }
+
+
+
+    while (AdapterAddresses[*adapterCount] != 0) {
+
+        retryCount = 4;
+
+        for (i = 0; i < 4; i++) {
+
+            //
+            // Zero device fields to ensure that if earlier devices were found,
+            // but not claimed, the fields are cleared.
+            //
+
+            deviceExtension->DeviceFlags[i] &= ~(DFLAGS_ATAPI_DEVICE | DFLAGS_DEVICE_PRESENT | DFLAGS_TAPE_DEVICE);
+        }
+
+        //
+        // Get the system physical address for this IO range.
+        //
+
+
+        //
+        // Check if configInfo has the default information
+        // if not, we go and find ourselves
+        //
+
+        if (preConfig == FALSE) {
+
+            if (portBase) {
+                ioSpace = ScsiPortGetDeviceBase(HwDeviceExtension,
+                                                ConfigInfo->AdapterInterfaceType,
+                                                ConfigInfo->SystemIoBusNumber,
+                                                ScsiPortConvertUlongToPhysicalAddress(portBase),
+                                                8,
+                                                TRUE);
+            } else {
+                ioSpace = ScsiPortGetDeviceBase(HwDeviceExtension,
+                                                ConfigInfo->AdapterInterfaceType,
+                                                ConfigInfo->SystemIoBusNumber,
+                                                ScsiPortConvertUlongToPhysicalAddress(AdapterAddresses[*adapterCount]),
+                                                8,
+                                                TRUE);
+            }
+
+        }// ConfigInfo check
+        //
+        // Update the adapter count.
+        //
+
+        (*adapterCount)++;
+
+        //
+        // Check if ioSpace accessible.
+        //
+
+        if (!ioSpace) {
+            continue;
+        }
+
+retryIdentifier:
+
+        //
+        // Select master.
+        //
+
+        ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->DriveSelect, 0xA0);
+
+        //
+        // Check if card at this address.
+        //
+
+        ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow, 0xAA);
+
+        //
+        // Check if indentifier can be read back.
+        //
+
+        if ((statusByte = ScsiPortReadPortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow)) != 0xAA) {
+
+            DebugPrint((2,
+                        "AtapiFindController: Identifier read back from Master (%x)\n",
+                        statusByte));
+
+            statusByte = ScsiPortReadPortUchar(&((PATAPI_REGISTERS_2)ioSpace)->AlternateStatus);
+
+            if (statusByte & IDE_STATUS_BUSY) {
+
+                i = 0;
+
+                //
+                // Could be the TEAC in a thinkpad. Their dos driver puts it in a sleep-mode that
+                // warm boots don't clear.
+                //
+
+                do {
+                    ScsiPortStallExecution(1000);
+                    statusByte = ScsiPortReadPortUchar(&((PATAPI_REGISTERS_1)ioSpace)->Command);
+                    DebugPrint((3,
+                                "AtapiFindController: First access to status %x\n",
+                                statusByte));
+                } while ((statusByte & IDE_STATUS_BUSY) && ++i < 10);
+
+                if (retryCount-- && (!(statusByte & IDE_STATUS_BUSY))) {
+                    goto retryIdentifier;
+                }
+            }
+
+            //
+            // Select slave.
+            //
+
+            ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->DriveSelect, 0xB0);
+
+            //
+            // See if slave is present.
+            //
+
+            ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow, 0xAA);
+
+            if ((statusByte = ScsiPortReadPortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow)) != 0xAA) {
+
+                DebugPrint((2,
+                            "AtapiFindController: Identifier read back from Slave (%x)\n",
+                            statusByte));
+
+                //
+                //
+                // No controller at this base address.
+                //
+
+                ScsiPortFreeDeviceBase(HwDeviceExtension,
+                                       ioSpace);
+
+                continue;
+            }
+        }
+
+        //
+        // Record base IO address.
+        //
+
+        deviceExtension->BaseIoAddress1[0] = (PIDE_REGISTERS_1)(ioSpace);
+
+        //
+        // Fill in the access array information only if default params are not in there.
+        //
+        if (preConfig == FALSE) {
+
+            //
+            // An adapter has been found request another call, only if we didn't get preconfigured info.
+            //
+            *Again = TRUE;
+
+                if (portBase) {
+                (*ConfigInfo->AccessRanges)[0].RangeStart = ScsiPortConvertUlongToPhysicalAddress(portBase);
+            } else {
+                (*ConfigInfo->AccessRanges)[0].RangeStart =
+                    ScsiPortConvertUlongToPhysicalAddress(AdapterAddresses[*adapterCount - 1]);
+            }
+
+            (*ConfigInfo->AccessRanges)[0].RangeLength = 8;
+            (*ConfigInfo->AccessRanges)[0].RangeInMemory = FALSE;
+
+            //
+            // Indicate the interrupt level corresponding to this IO range.
+            //
+
+            if (irq) {
+                ConfigInfo->BusInterruptLevel = irq;
+            } else {
+                ConfigInfo->BusInterruptLevel = InterruptLevels[*adapterCount - 1];
+            }
+
+            if (ConfigInfo->AdapterInterfaceType == MicroChannel) {
+                ConfigInfo->InterruptMode = LevelSensitive;
+            } else {
+                ConfigInfo->InterruptMode = Latched;
+            }
+        }
+        //
+        // Get the system physical address for the second IO range.
+        //
+
+
+        if (portBase) {
+            ioSpace = ScsiPortGetDeviceBase(HwDeviceExtension,
+                                            ConfigInfo->AdapterInterfaceType,
+                                            ConfigInfo->SystemIoBusNumber,
+                                            ScsiPortConvertUlongToPhysicalAddress(portBase + 0x206),
+                                            1,
+                                            TRUE);
+        } else {
+            ioSpace = ScsiPortGetDeviceBase(HwDeviceExtension,
+                                            ConfigInfo->AdapterInterfaceType,
+                                            ConfigInfo->SystemIoBusNumber,
+                                            ScsiPortConvertUlongToPhysicalAddress(AdapterAddresses[*adapterCount - 1] + 0x206),
+                                            1,
+                                            TRUE);
+        }
+
+        deviceExtension->BaseIoAddress2[0] = (PIDE_REGISTERS_2)(ioSpace);
+
+        deviceExtension->NumberChannels = 1;
+
+        ConfigInfo->NumberOfBuses = 1;
+        ConfigInfo->MaximumNumberOfTargets = 2;
+
+        //
+        // Indicate maximum transfer length is 64k.
+        //
+
+        ConfigInfo->MaximumTransferLength = 0x10000;
+
+        DebugPrint((1,
+                   "AtapiFindController: Found IDE at %x\n",
+                   deviceExtension->BaseIoAddress1[0]));
+
+
+        //
+        // For Daytona, the atdisk driver gets the first shot at the
+        // primary and secondary controllers.
+        //
+
+        if (preConfig == FALSE) {
+
+
+            if (*adapterCount - 1 < 2) {
+
+                //
+                // Determine whether this driver is being initialized by the
+                // system or as a crash dump driver.
+                //
+
+                if (ArgumentString) {
+
+                    if (AtapiParseArgumentString(ArgumentString, "dump") == 1) {
+                        DebugPrint((3,
+                                   "AtapiFindController: Crash dump\n"));
+                        atapiOnly = FALSE;
+                        deviceExtension->DriverMustPoll = TRUE;
+                    } else {
+                        DebugPrint((3,
+                                   "AtapiFindController: Atapi Only\n"));
+                        atapiOnly = TRUE;
+                        deviceExtension->DriverMustPoll = FALSE;
+                    }
+                } else {
+
+                    DebugPrint((3,
+                               "AtapiFindController: Atapi Only\n"));
+                    atapiOnly = TRUE;
+                    deviceExtension->DriverMustPoll = FALSE;
+                }
+
+            } else {
+                atapiOnly = FALSE;
+            }
+
+            //
+            // If this is a PCI machine, pick up all devices.
+            //
+
+
+            pciData = (PPCI_COMMON_CONFIG)&pciBuffer;
+
+            slotData.u.bits.DeviceNumber = 0;
+            slotData.u.bits.FunctionNumber = 0;
+
+            if (ScsiPortGetBusData(deviceExtension,
+                                   PCIConfiguration,
+                                   0,                  // BusNumber
+                                   slotData.u.AsULONG,
+                                   pciData,
+                                   sizeof(ULONG))) {
+
+                atapiOnly = FALSE;
+
+                //
+                // Wait on doing this, until a reliable method
+                // of determining support is found.
+                //
+
+    #if 0
+                deviceExtension->DWordIO = TRUE;
+    #endif
+
+            } else {
+                deviceExtension->DWordIO = FALSE;
+            }
+
+        } else {
+
+            atapiOnly = FALSE;
+            deviceExtension->DriverMustPoll = FALSE;
+
+        }// preConfig check
+
+        //
+        // Save the Interrupe Mode for later use
+        //
+        deviceExtension->InterruptMode = ConfigInfo->InterruptMode;
+
+        //
+        // Search for devices on this controller.
+        //
+
+        if (FindDevices(HwDeviceExtension,
+                        atapiOnly,
+                        0)) {
+
+            //
+            // Claim primary or secondary ATA IO range.
+            //
+
+            if (portBase) {
+                switch (portBase) {
+                case 0x170:
+                    ConfigInfo->AtdiskSecondaryClaimed = TRUE;
+                    deviceExtension->PrimaryAddress = FALSE;
+                    break;
+                case 0x1f0:
+                    ConfigInfo->AtdiskPrimaryClaimed = TRUE;
+                    deviceExtension->PrimaryAddress = TRUE;
+                    break;
+                default:
+                    break;
+                }
+            } else {
+                if (*adapterCount == 1) {
+                    ConfigInfo->AtdiskPrimaryClaimed = TRUE;
+                    deviceExtension->PrimaryAddress = TRUE;
+                } else if (*adapterCount == 2) {
+                    ConfigInfo->AtdiskSecondaryClaimed = TRUE;
+                    deviceExtension->PrimaryAddress = FALSE;
+                }
+            }
+
+            return(SP_RETURN_FOUND);
+        }
+    }
+
+    //
+    // The entire table has been searched and no adapters have been found.
+    // There is no need to call again and the device base can now be freed.
+    // Clear the adapter count for the next bus.
+    //
+
+    *Again = FALSE;
+    *(adapterCount) = 0;
+
     return(SP_RETURN_NOT_FOUND);
 
-  SlotNumber.u.AsULONG = ConfigInfo->SlotNumber;
-  StartDeviceNumber = SlotNumber.u.bits.DeviceNumber;
-  StartFunctionNumber = SlotNumber.u.bits.FunctionNumber;
-  for (DeviceNumber = StartDeviceNumber; DeviceNumber < PCI_MAX_DEVICES; DeviceNumber++)
-  {
-     SlotNumber.u.bits.DeviceNumber = DeviceNumber;
-     for (FunctionNumber = StartFunctionNumber; FunctionNumber < PCI_MAX_FUNCTION; FunctionNumber++)
-     {
-	SlotNumber.u.bits.FunctionNumber = FunctionNumber;
-	ChannelFound = FALSE;
-	DeviceFound = FALSE;
-
-        DataSize = ScsiPortGetBusData(DeviceExtension,
-				      PCIConfiguration,
-				      ConfigInfo->SystemIoBusNumber,
-				      SlotNumber.u.AsULONG,
-				      &PciConfig,
-				      PCI_COMMON_HDR_LENGTH);
-        if (DataSize != PCI_COMMON_HDR_LENGTH)
-	{
-	   if (FunctionNumber == 0)
-	   {
-	      break;
-	   }
-	   else
-	   {
-	      continue;
-	   }
-	}
-
-	DPRINT("%x %x\n", PciConfig.BaseClass, PciConfig.SubClass);
-	if (PciConfig.BaseClass == 0x01 &&
-	    PciConfig.SubClass == 0x01) // &&
-//	    (PciConfig.ProgIf & 0x05) == 0)
-	{
-	   /* both channels are in compatibility mode */
-	   DPRINT("Bus %1lu  Device %2lu  Func %1lu  VenID 0x%04hx  DevID 0x%04hx\n",
-		  ConfigInfo->SystemIoBusNumber,
-		  SlotNumber.u.bits.DeviceNumber,
-		  SlotNumber.u.bits.FunctionNumber,
-		  PciConfig.VendorID,
-		  PciConfig.DeviceID);
-	   DPRINT("ProgIF 0x%02hx\n", PciConfig.ProgIf);
-
-	   DPRINT("Found IDE controller in compatibility mode!\n");
-
-	   ConfigInfo->NumberOfBuses = 1;
-	   ConfigInfo->MaximumNumberOfTargets = 2;
-	   ConfigInfo->MaximumTransferLength = 0x10000; /* max 64Kbyte */
-
-	   if (PciConfig.ProgIf & 0x80)
-	   {
-	      DPRINT("Found IDE Bus Master controller!\n");
-	      if (PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_SPACE)
-	      {
-		  BusMasterBasePort = PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_ADDRESS_MASK;
-		  DPRINT("  IDE Bus Master Registers at IO %lx\n", BusMasterBasePort);
-	      }
-	   }
-	   if (ConfigInfo->AtdiskPrimaryClaimed == FALSE)
-	   {
-	      /* Both channels unclaimed: Claim primary channel */
-	      DPRINT("Primary channel!\n");
-              ChannelFound = AtapiClaimHwResources(DevExt,
-		                                   ConfigInfo,
-		                                   PCIBus,
-		                                   0x1F0,
-			                           0x3F4,
-			                           BusMasterBasePort,
-			                           14);
-              *Again = TRUE;
-	   }
-	   else if (ConfigInfo->AtdiskSecondaryClaimed == FALSE)
-	   {
-	      /* Primary channel already claimed: claim secondary channel */
-	      DPRINT("Secondary channel!\n");
-
-              ChannelFound = AtapiClaimHwResources(DevExt,
-		                                   ConfigInfo,
-		                                   PCIBus,
-		                                   0x170,
-			                           0x374,
-						   BusMasterBasePort ? BusMasterBasePort + 8 : 0,
-			                           15);
-	      *Again = FALSE;
-	   }
-	   /* Find attached devices */
-	   if (ChannelFound)
-	   {
-	      DeviceFound = AtapiFindDevices(DevExt, ConfigInfo);
-	      ConfigInfo->SlotNumber = SlotNumber.u.AsULONG;
-	      DPRINT("AtapiFindCompatiblePciController() returns: SP_RETURN_FOUND\n");
-	      return(SP_RETURN_FOUND);
-	   }
-	}
-	if (FunctionNumber == 0 && !(PciConfig.HeaderType & PCI_MULTIFUNCTION))
-	{
-	   break;
-	}
-     }
-     StartFunctionNumber = 0;
-  }
-  DPRINT("AtapiFindCompatiblePciController() returns: SP_RETURN_NOT_FOUND\n");
-
-  return(SP_RETURN_NOT_FOUND);
-}
-#endif
+} // end AtapiFindController()
 
 
-#ifdef ENABLE_ISA
-static ULONG STDCALL
-AtapiFindIsaBusController(PVOID DeviceExtension,
-			  PVOID HwContext,
-			  PVOID BusInformation,
-			  PCHAR ArgumentString,
-			  PPORT_CONFIGURATION_INFORMATION ConfigInfo,
-			  PBOOLEAN Again)
+
+
+
+BOOLEAN
+STDCALL
+FindBrokenController(
+    IN PVOID  DeviceExtension,
+    IN PUCHAR VendorID,
+    IN ULONG  VendorIDLength,
+    IN PUCHAR DeviceID,
+    IN ULONG  DeviceIDLength,
+    IN OUT PULONG FunctionNumber,
+    IN OUT PULONG SlotNumber,
+    IN ULONG  BusNumber,
+    OUT PBOOLEAN LastSlot
+    )
+
+/*++
+
+Routine Description:
+
+    Walk PCI slot information looking for Vendor and Product ID matches.
+
+Arguments:
+
+Return Value:
+
+    TRUE if card found.
+
+--*/
 {
-  PATAPI_MINIPORT_EXTENSION DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
-  BOOLEAN ChannelFound = FALSE;
-  BOOLEAN DeviceFound = FALSE;
+    PHW_DEVICE_EXTENSION deviceExtension = DeviceExtension;
+    ULONG               rangeNumber = 0;
+    ULONG               pciBuffer;
+    ULONG               slotNumber;
+    ULONG               functionNumber;
+    ULONG               status;
+    PCI_SLOT_NUMBER     slotData;
+    PPCI_COMMON_CONFIG  pciData;
+    UCHAR               vendorString[5];
+    UCHAR               deviceString[5];
+    PUCHAR              vendorStrPtr;
+    PUCHAR              deviceStrPtr;
 
-  DPRINT("AtapiFindIsaBusController() called!\n");
+    pciData = (PPCI_COMMON_CONFIG)&pciBuffer;
 
-  *Again = FALSE;
+    slotData.u.AsULONG = 0;
 
-  ConfigInfo->NumberOfBuses = 1;
-  ConfigInfo->MaximumNumberOfTargets = 2;
-  ConfigInfo->MaximumTransferLength = 0x10000; /* max 64Kbyte */
+    //
+    // Look at each device.
+    //
 
-  if (ConfigInfo->AtdiskPrimaryClaimed == FALSE)
-    {
-      /* Both channels unclaimed: Claim primary channel */
-      DPRINT("Primary channel!\n");
+    for (slotNumber = *SlotNumber;
+         slotNumber < 32;
+         slotNumber++) {
 
-      ChannelFound = AtapiClaimHwResources(DevExt,
-		                           ConfigInfo,
-		                           Isa,
-		                           0x1F0,
-			                   0x3F4,
-			                   0,
-			                   14);
-      *Again = TRUE;
-    }
-  else if (ConfigInfo->AtdiskSecondaryClaimed == FALSE)
-    {
-      /* Primary channel already claimed: claim secondary channel */
-      DPRINT("Secondary channel!\n");
+        slotData.u.bits.DeviceNumber = slotNumber;
 
-      ChannelFound = AtapiClaimHwResources(DevExt,
-		                           ConfigInfo,
-		                           Isa,
-		                           0x170,
-			                   0x374,
-			                   0,
-			                   15);
-      *Again = FALSE;
-    }
-  else
-    {
-      DPRINT("AtapiFindIsaBusController() both channels claimed. Returns: SP_RETURN_NOT_FOUND\n");
-      *Again = FALSE;
-      return(SP_RETURN_NOT_FOUND);
-    }
+        //
+        // Look at each function.
+        //
 
-  /* Find attached devices */
-  if (ChannelFound)
-    {
-      DeviceFound = AtapiFindDevices(DevExt,
-				     ConfigInfo);
-      DPRINT("AtapiFindIsaBusController() returns: SP_RETURN_FOUND\n");
-      return(SP_RETURN_FOUND);
-    }
-  *Again = FALSE;
-  return SP_RETURN_NOT_FOUND;
-}
-#endif
+        for (functionNumber= *FunctionNumber;
+             functionNumber < 8;
+             functionNumber++) {
 
+            slotData.u.bits.FunctionNumber = functionNumber;
 
-#ifdef ENABLE_NATIVE_PCI
-static ULONG STDCALL
-AtapiFindNativePciController(PVOID DeviceExtension,
-			     PVOID HwContext,
-			     PVOID BusInformation,
-			     PCHAR ArgumentString,
-			     PPORT_CONFIGURATION_INFORMATION ConfigInfo,
-			     PBOOLEAN Again)
-{
-  PATAPI_MINIPORT_EXTENSION DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
-  PCI_COMMON_CONFIG PciConfig;
-  PCI_SLOT_NUMBER SlotNumber;
-  ULONG DataSize;
-  ULONG DeviceNumber;
-  ULONG StartDeviceNumber;
-  ULONG FunctionNumber;
-  ULONG StartFunctionNumber;
-  ULONG BusMasterBasePort;
-  ULONG Count;
-  BOOLEAN ChannelFound;
+            if (!ScsiPortGetBusData(DeviceExtension,
+                                    PCIConfiguration,
+                                    BusNumber,
+                                    slotData.u.AsULONG,
+                                    pciData,
+                                    sizeof(ULONG))) {
 
-  DPRINT("AtapiFindNativePciController() called!\n");
+                //
+                // Out of PCI data.
+                //
 
-  SlotNumber.u.AsULONG = ConfigInfo->SlotNumber;
-  StartDeviceNumber = SlotNumber.u.bits.DeviceNumber;
-  StartFunctionNumber = SlotNumber.u.bits.FunctionNumber;
-  for (DeviceNumber = StartDeviceNumber; DeviceNumber < PCI_MAX_DEVICES; DeviceNumber++)
-  {
-     SlotNumber.u.bits.DeviceNumber = DeviceNumber;
-     for (FunctionNumber = StartFunctionNumber; FunctionNumber < PCI_MAX_FUNCTION; FunctionNumber++)
-     {
-	SlotNumber.u.bits.FunctionNumber = FunctionNumber;
-	DataSize = ScsiPortGetBusData(DeviceExtension,
-				      PCIConfiguration,
-				      ConfigInfo->SystemIoBusNumber,
-				      SlotNumber.u.AsULONG,
-				      &PciConfig,
-				      PCI_COMMON_HDR_LENGTH);
-	if (DataSize != PCI_COMMON_HDR_LENGTH)
-	{
-	   break;
-	}
-	for (Count = 0; Count < sizeof(PciNativeController)/sizeof(PCI_NATIVE_CONTROLLER); Count++)
-	{
-	   if (PciConfig.VendorID == PciNativeController[Count].VendorID &&
-	       PciConfig.DeviceID == PciNativeController[Count].DeviceID)
-	   {
-	      break;
-	   }
-	}
-	if (Count < sizeof(PciNativeController)/sizeof(PCI_NATIVE_CONTROLLER))
-	{
-	   /* We have found a known native pci ide controller */
-	   if ((PciConfig.ProgIf & 0x80) && (PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_SPACE))
-	   {
-	      DPRINT("Found IDE Bus Master controller!\n");
-	      BusMasterBasePort = PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_ADDRESS_MASK;
-	      DPRINT("  IDE Bus Master Registers at IO %lx\n", BusMasterBasePort);
-	   }
-	   else
-	   {
-	      BusMasterBasePort = 0;
-	   }
-
-	   DPRINT("VendorID: %04x, DeviceID: %04x\n", PciConfig.VendorID, PciConfig.DeviceID);
-	   ConfigInfo->NumberOfBuses = 1;
-	   ConfigInfo->MaximumNumberOfTargets = 2;
-	   ConfigInfo->MaximumTransferLength = 0x10000; /* max 64Kbyte */
-
-	   /* FIXME:
-	        We must not store and use the last tested slot number. If there is a recall
-		to the some device and we will claim the primary channel again than the call
-		to ScsiPortGetDeviceBase in AtapiClaimHwResource will fail and we can try to
-		claim the secondary channel.
-	    */
-	   ChannelFound = FALSE;
-	   if (LastSlotNumber.u.AsULONG != SlotNumber.u.AsULONG)
-	   {
-	      /* try to claim primary channel */
-	      if ((PciConfig.u.type0.BaseAddresses[0] & PCI_ADDRESS_IO_SPACE) &&
-		  (PciConfig.u.type0.BaseAddresses[1] & PCI_ADDRESS_IO_SPACE))
-	      {
-		 /* primary channel is enabled */
-		 ChannelFound = AtapiClaimHwResources(DevExt,
-		                                      ConfigInfo,
-		                                      PCIBus,
-		                                      PciConfig.u.type0.BaseAddresses[0] & PCI_ADDRESS_IO_ADDRESS_MASK,
-			                              PciConfig.u.type0.BaseAddresses[1] & PCI_ADDRESS_IO_ADDRESS_MASK,
-			                              BusMasterBasePort,
-			                              PciConfig.u.type0.InterruptLine);
-	         if (ChannelFound)
-		 {
-                    AtapiFindDevices(DevExt, ConfigInfo);
-                    *Again = TRUE;
-		    ConfigInfo->SlotNumber = LastSlotNumber.u.AsULONG = SlotNumber.u.AsULONG;
-                    return SP_RETURN_FOUND;
-		 }
-	      }
-	   }
-	   if (!ChannelFound)
-	   {
-	      /* try to claim secondary channel */
-	      if ((PciConfig.u.type0.BaseAddresses[2] & PCI_ADDRESS_IO_SPACE) &&
-		  (PciConfig.u.type0.BaseAddresses[3] & PCI_ADDRESS_IO_SPACE))
-	      {
-	         /* secondary channel is enabled */
-	         ChannelFound = AtapiClaimHwResources(DevExt,
-		                                      ConfigInfo,
-		                                      PCIBus,
-		                                      PciConfig.u.type0.BaseAddresses[2] & PCI_ADDRESS_IO_ADDRESS_MASK,
-			                              PciConfig.u.type0.BaseAddresses[3] & PCI_ADDRESS_IO_ADDRESS_MASK,
-						      BusMasterBasePort ? BusMasterBasePort + 8 : 0,
-			                              PciConfig.u.type0.InterruptLine);
-		 if (ChannelFound)
-		 {
-		    AtapiFindDevices(DevExt, ConfigInfo);
-                    *Again = FALSE;
-		    LastSlotNumber.u.AsULONG = 0xFFFFFFFF;
-                    return SP_RETURN_FOUND;
-		 }
-	      }
-	   }
-	}
-     }
-     StartFunctionNumber = 0;
-  }
-  *Again = FALSE;
-  LastSlotNumber.u.AsULONG = 0xFFFFFFFF;
-  DPRINT("AtapiFindNativePciController() done!\n");
-
-  return(SP_RETURN_NOT_FOUND);
-}
-#endif
-
-
-static BOOLEAN STDCALL
-AtapiInitialize(IN PVOID DeviceExtension)
-{
-  return(TRUE);
-}
-
-
-static BOOLEAN STDCALL
-AtapiResetBus(IN PVOID DeviceExtension,
-	      IN ULONG PathId)
-{
-  return(TRUE);
-}
-
-
-static BOOLEAN STDCALL
-AtapiStartIo(IN PVOID DeviceExtension,
-	     IN PSCSI_REQUEST_BLOCK Srb)
-{
-  PATAPI_MINIPORT_EXTENSION DevExt;
-  ULONG Result;
-
-  DPRINT("AtapiStartIo() called\n");
-
-  DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
-
-  switch (Srb->Function)
-    {
-      case SRB_FUNCTION_EXECUTE_SCSI:
-	DevExt->CurrentSrb = Srb;
-	if (DevExt->DeviceFlags[Srb->TargetId] & DEVICE_ATAPI)
-	  {
-	    Result = AtapiSendAtapiCommand(DevExt,
-					   Srb);
-	  }
-	else
-	  {
-	    Result = AtapiSendIdeCommand(DevExt,
-					 Srb);
-	  }
-	break;
-
-      case SRB_FUNCTION_ABORT_COMMAND:
-	if (DevExt->CurrentSrb != NULL)
-	  {
-	    Result = SRB_STATUS_ABORT_FAILED;
-	  }
-	else
-	  {
-	    Result = SRB_STATUS_SUCCESS;
-	  }
-	break;
-
-      case SRB_FUNCTION_IO_CONTROL:
-        {
-          PSRB_IO_CONTROL SrbIoControl = (PSRB_IO_CONTROL)Srb->DataBuffer;
-          if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) ||
-              Srb->DataTransferLength < SrbIoControl->Length + sizeof(SRB_IO_CONTROL))
-            {
-              Result = SRB_STATUS_INVALID_REQUEST;
+                *LastSlot = TRUE;
+                return FALSE;
             }
-          else
-            {
-              if (!_strnicmp((char*)SrbIoControl->Signature, "ScsiDisk", 8))
-                {
-                  switch (SrbIoControl->ControlCode)
-                    {
-                      default:
-                        Result = SRB_STATUS_INVALID_REQUEST;
-                        break;
 
-                      case IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE:
-                      case IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES:
-                      case IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS:
-                      case IOCTL_SCSI_MINIPORT_ENABLE_SMART:
-                      case IOCTL_SCSI_MINIPORT_DISABLE_SMART:
-                      case IOCTL_SCSI_MINIPORT_RETURN_STATUS:
-                      case IOCTL_SCSI_MINIPORT_READ_SMART_ATTRIBS:
-                      case IOCTL_SCSI_MINIPORT_READ_SMART_THRESHOLDS:
-                      case IOCTL_SCSI_MINIPORT_READ_SMART_LOG:
-#if 0
-                      case IOCTL_SCSI_MINIPORT_WRITE_SMART_LOG:
-#endif
-                        Result = AtapiSendSmartCommand(DevExt, Srb);
-                        break;
+            if (pciData->VendorID == PCI_INVALID_VENDORID) {
 
-                      case IOCTL_SCSI_MINIPORT_SMART_VERSION:
-                        {
-                          GETVERSIONINPARAMS Version;      
-                          ULONG i;
+                //
+                // No PCI device, or no more functions on device
+                // move to next PCI device.
+                //
 
-                          DPRINT("IOCTL_SCSI_MINIPORT_SMART_VERSION\n");
+                break;
+            }
 
-                          RtlZeroMemory(&Version, sizeof(GETVERSIONINPARAMS));
-                          Version.bVersion = 1;
-                          Version.bRevision = 1;
-                          for (i = 0; i < 2; i++)
-                            {
-                              switch (DevExt->DeviceFlags[i] & (DEVICE_PRESENT|DEVICE_ATAPI))
-                                {
-                                  case DEVICE_PRESENT:
-                                    Version.bIDEDeviceMap |= 0x01 << i;
-                                    break;
-/*
-                                  case DEVICE_PRESENT|DEVICE_ATAPI:
-                                    Version.bIDEDeviceMap |= 0x11 << i;
-                                    break;
-*/
-                                }
+            //
+            // Translate hex ids to strings.
+            //
+
+            vendorStrPtr = vendorString;
+            deviceStrPtr = deviceString;
+            AtapiHexToString(pciData->VendorID, &vendorStrPtr);
+            AtapiHexToString(pciData->DeviceID, &deviceStrPtr);
+
+            DebugPrint((2,
+                       "FindBrokenController: Bus %x Slot %x Function %x Vendor %s Product %s\n",
+                       BusNumber,
+                       slotNumber,
+                       functionNumber,
+                       vendorString,
+                       deviceString));
+
+            //
+            // Compare strings.
+            //
+
+            if (AtapiStringCmp(vendorString,
+                        VendorID,
+                        VendorIDLength) ||
+                AtapiStringCmp(deviceString,
+                        DeviceID,
+                        DeviceIDLength)) {
+
+                //
+                // Not our PCI device. Try next device/function
+                //
+
+                continue;
+            }
+
+            *FunctionNumber = functionNumber;
+            *SlotNumber     = slotNumber;
+            return TRUE;
+
+        }   // next PCI function
+
+        *FunctionNumber = 0;
+
+    }   // next PCI slot
+
+    *LastSlot = TRUE;
+    return FALSE;
+} // end FindBrokenController
+
+
+ULONG
+STDCALL
+AtapiFindNativeModeController(
+    IN PVOID HwDeviceExtension,
+    IN PVOID Context,
+    IN PVOID BusInformation,
+    IN PCHAR ArgumentString,
+    IN OUT PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+    OUT PBOOLEAN Again
+    )
+/*++
+
+Routine Description:
+
+    This function is called by the OS-specific port driver after
+    the necessary storage has been allocated, to gather information
+    about the adapter's configuration.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    Context - Address of adapter count
+    BusInformation -
+    ArgumentString - Used to determine whether driver is client of ntldr or crash dump utility.
+    ConfigInfo - Configuration information structure describing HBA
+    Again - Indicates search for adapters to continue
+
+Return Value:
+
+    ULONG
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION  deviceExtension = HwDeviceExtension;
+    ULONG                 nativeModeAdapterTableIndex = (ULONG)Context;
+    ULONG                 channel;
+    PUCHAR                ioSpace;
+    BOOLEAN               atapiOnly,
+                          deviceFound = FALSE;
+    UCHAR                 statusByte;
+    PCI_SLOT_NUMBER       slotData;
+    PCI_COMMON_CONFIG     pciData;
+    ULONG                 funcNumber;
+    ULONG                 busDataRead;
+    UCHAR                 vendorString[5];
+    UCHAR                 deviceString[5];
+    PUCHAR                vendorStrPtr;
+    PUCHAR                deviceStrPtr;
+    SCSI_PHYSICAL_ADDRESS IoBasePort1;
+    SCSI_PHYSICAL_ADDRESS IoBasePort2;
+
+    //
+    // The following table specifies the ports to be checked when searching for
+    // an IDE controller.  A zero entry terminates the search.
+    //
+
+    CONST ULONG AdapterAddresses[3] = {0x1F0, 0x170, 0};
+
+    if (!deviceExtension) {
+        return SP_RETURN_ERROR;
+    }
+
+    *Again = FALSE;
+
+    slotData.u.AsULONG = 0;
+    slotData.u.bits.DeviceNumber = ConfigInfo->SlotNumber;
+
+    for (funcNumber= 0; funcNumber < 8; funcNumber++) {
+
+        slotData.u.bits.FunctionNumber = funcNumber;
+
+        busDataRead = ScsiPortGetBusData(HwDeviceExtension,
+                                         PCIConfiguration,
+                                         ConfigInfo->SystemIoBusNumber,
+                                         slotData.u.AsULONG,
+                                         &pciData,
+                                         sizeof (pciData));
+        if (busDataRead != sizeof (pciData)) {
+            return SP_RETURN_ERROR;
+        }
+        if (pciData.VendorID == PCI_INVALID_VENDORID) {
+            return SP_RETURN_ERROR;
+        }
+
+        //
+        // Translate hex ids to strings.
+        //
+
+        vendorStrPtr = vendorString;
+        deviceStrPtr = deviceString;
+        AtapiHexToString(pciData.VendorID, &vendorStrPtr);
+        AtapiHexToString(pciData.DeviceID, &deviceStrPtr);
+
+        //
+        // Compare strings.
+        //
+
+        if (AtapiStringCmp(vendorString,
+                    NativeModeAdapters[nativeModeAdapterTableIndex].VendorId,
+                    NativeModeAdapters[nativeModeAdapterTableIndex].VendorIdLength) ||
+            AtapiStringCmp(deviceString,
+                    NativeModeAdapters[nativeModeAdapterTableIndex].DeviceId,
+                    NativeModeAdapters[nativeModeAdapterTableIndex].DeviceIdLength)) {
+            continue;
+        }
+
+        if (pciData.ProgIf & ((1 << 2) | (1 << 0))) {
+            // both primary and secondary channel are in native mode
+
+            // Found our device
+            *Again = TRUE;
+
+            break;
+        }
+    }
+
+    if (*Again == TRUE) {
+
+        for (channel = 0; channel < 2; channel++) {
+
+            IoBasePort1 = (*ConfigInfo->AccessRanges)[channel * 2 + 0].RangeStart;
+            IoBasePort2 = (*ConfigInfo->AccessRanges)[channel * 2 + 1].RangeStart;
+            IoBasePort2 = ScsiPortConvertUlongToPhysicalAddress(ScsiPortConvertPhysicalAddressToUlong(IoBasePort2) + 2);
+
+            //
+            // Get the system physical address for this IO range.
+            //
+
+            ioSpace = ScsiPortGetDeviceBase(HwDeviceExtension,
+                                            ConfigInfo->AdapterInterfaceType,
+                                            ConfigInfo->SystemIoBusNumber,
+                                            IoBasePort1,
+                                            8,
+                                            TRUE);
+
+            //
+            // Check if ioSpace accessible.
+            //
+
+            if (!ioSpace) {
+                continue;
+            }
+
+            //
+            // Select master.
+            //
+
+            ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->DriveSelect, 0xA0);
+
+            //
+            // Check if card at this address.
+            //
+
+            ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow, 0xAA);
+
+            //
+            // Check if indentifier can be read back.
+            //
+
+            if ((statusByte = ScsiPortReadPortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow)) != 0xAA) {
+
+                DebugPrint((2,
+                            "AtapiFindPciController: Identifier read back from Master (%x)\n",
+                            statusByte));
+
+
+                //
+                // Select slave.
+                //
+
+                ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->DriveSelect, 0xB0);
+
+                //
+                // See if slave is present.
+                //
+
+                ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow, 0xAA);
+
+                if ((statusByte = ScsiPortReadPortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow)) != 0xAA) {
+
+                    DebugPrint((2,
+                                "AtapiFindPciController: Identifier read back from Slave (%x)\n",
+                                statusByte));
+
+                    //
+                    //
+                    // No controller at this base address.
+                    //
+
+                    ScsiPortFreeDeviceBase(HwDeviceExtension,
+                                           ioSpace);
+
+                    //
+                    // If the chip is there, but we couldn't find the primary channel, try the secondary.
+                    // If we couldn't find a secondary, who cares.
+                    //
+
+                    if (channel == 1) {
+
+                        goto setStatusAndExit;
+
+                    } else {
+                        continue;
+                    }
+                }
+            }
+
+            //
+            // Record base IO address.
+            //
+
+            deviceExtension->BaseIoAddress1[channel] = (PIDE_REGISTERS_1)(ioSpace);
+
+            //
+            // Get the system physical address for the second IO range.
+            //
+
+            ioSpace = ScsiPortGetDeviceBase(HwDeviceExtension,
+                                            ConfigInfo->AdapterInterfaceType,
+                                            ConfigInfo->SystemIoBusNumber,
+                                            IoBasePort2,
+                                            1,
+                                            TRUE);
+
+            deviceExtension->BaseIoAddress2[channel] = (PIDE_REGISTERS_2)(ioSpace);
+
+            deviceExtension->NumberChannels = 2;
+
+            //
+            // Indicate only one bus.
+            //
+
+            ConfigInfo->NumberOfBuses = 1;
+
+            //
+            // Indicate four devices can be attached to the adapter, since we
+            // have to serialize access to the two channels.
+            //
+
+            ConfigInfo->MaximumNumberOfTargets = 4;
+
+            //
+            // Indicate maximum transfer length is 64k.
+            //
+
+            ConfigInfo->MaximumTransferLength = 0x10000;
+
+            DebugPrint((1,
+                       "AtapiFindPciController: Found native mode IDE at %x\n",
+                       deviceExtension->BaseIoAddress1[channel]));
+
+            //
+            // Since we will always pick up this part, and not atdisk, so indicate.
+            //
+
+            atapiOnly = FALSE;
+
+            //
+            // Save the Interrupe Mode for later use
+            //
+            deviceExtension->InterruptMode = ConfigInfo->InterruptMode;
+
+            //
+            // Search for devices on this controller.
+            //
+
+            if (FindDevices(HwDeviceExtension,
+                        atapiOnly,
+                        channel)){
+                deviceFound = TRUE;
+            }
+
+            //
+            // Claim primary or secondary ATA IO range.
+            //
+
+            if (ScsiPortConvertPhysicalAddressToUlong(IoBasePort1) == AdapterAddresses[0]) {
+                ConfigInfo->AtdiskPrimaryClaimed = TRUE;
+                deviceExtension->PrimaryAddress = TRUE;
+
+            } else if (ScsiPortConvertPhysicalAddressToUlong(IoBasePort2) == AdapterAddresses[1]) {
+                ConfigInfo->AtdiskSecondaryClaimed = TRUE;
+                deviceExtension->PrimaryAddress = FALSE;
+            }
+        }
+    }
+
+setStatusAndExit:
+
+    if (deviceFound) {
+
+        *Again = TRUE;
+        return SP_RETURN_FOUND;
+    }
+
+    *Again = FALSE;
+    return SP_RETURN_NOT_FOUND;
+
+} // end AtapiFindNativeModeController()
+
+
+ULONG
+STDCALL
+AtapiFindPCIController(
+    IN PVOID HwDeviceExtension,
+    IN PVOID Context,
+    IN PVOID BusInformation,
+    IN PCHAR ArgumentString,
+    IN OUT PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+    OUT PBOOLEAN Again
+    )
+/*++
+
+Routine Description:
+
+    This function is called by the OS-specific port driver after
+    the necessary storage has been allocated, to gather information
+    about the adapter's configuration.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    Context - Address of adapter count
+    BusInformation -
+    ArgumentString - Used to determine whether driver is client of ntldr or crash dump utility.
+    ConfigInfo - Configuration information structure describing HBA
+    Again - Indicates search for adapters to continue
+
+Return Value:
+
+    ULONG
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PULONG               adapterCount    = (PULONG)Context;
+    ULONG                channel         = 0;
+    static ULONG         functionNumber,
+                         slotNumber,
+                         controllers;
+    ULONG                i,j;
+    PUCHAR               ioSpace;
+    BOOLEAN              atapiOnly,
+                         lastSlot,
+                         controllerFound = FALSE,
+                         deviceFound = FALSE;
+    UCHAR                statusByte;
+
+    //
+    // The following table specifies the ports to be checked when searching for
+    // an IDE controller.  A zero entry terminates the search.
+    //
+
+    CONST ULONG AdapterAddresses[5] = {0x1F0, 0x170, 0x1e8, 0x168, 0};
+
+    //
+    // The following table specifies interrupt levels corresponding to the
+    // port addresses in the previous table.
+    //
+
+    CONST ULONG InterruptLevels[5] = {14, 15, 11, 10, 0};
+
+    if (!deviceExtension) {
+        return SP_RETURN_ERROR;
+    }
+
+    //
+    // Since scsiport will call this function first before it calls AtapiFindController
+    // we need to bypass it if we have data installed in ConfigInfo, by the pcmcia driver.
+    // In that case atapifindcontroller should be called first.
+    // Instead of modifying atapi  driverEntry to search of PCIBus first (now its ISA)
+    // the check is put here.
+    //
+
+    if (ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[0].RangeStart) != 0) {
+
+        return AtapiFindController(HwDeviceExtension,
+                                   Context,
+                                   BusInformation,
+                                   ArgumentString,
+                                   ConfigInfo,
+                                   Again);
+    }
+
+
+    //
+    // Gronk PCI config space looking for the broken PCI IDE controllers that have only
+    // one FIFO for both channels.
+    // Don't do this. It's incorrect and nasty. It has to be done to work around these
+    // broken parts, no other reason can justify this.
+    //
+
+    for (i = controllers; i < BROKEN_ADAPTERS; i++) {
+
+        //
+        // Determine if both channels are enabled and have devices.
+        //
+
+        lastSlot = FALSE;
+
+        if (FindBrokenController(deviceExtension,
+                                 BrokenAdapters[i].VendorId,
+                                 BrokenAdapters[i].VendorIdLength,
+                                 BrokenAdapters[i].DeviceId,
+                                 BrokenAdapters[i].DeviceIdLength,
+                                 &functionNumber,
+                                 &slotNumber,
+                                 ConfigInfo->SystemIoBusNumber,
+                                 &lastSlot)) {
+
+            slotNumber++;
+            functionNumber = 0;
+            controllerFound = TRUE;
+
+            DebugPrint((1,
+                        "Found broken PCI IDE controller: VendorId %s, DeviceId %s\n",
+                        BrokenAdapters[i].VendorId,
+                        BrokenAdapters[i].DeviceId));
+
+            if (AdapterAddresses[*adapterCount] != 0) {
+
+                for (j = 0; j < 2; j++) {
+
+                    //
+                    // Get the system physical address for this IO range.
+                    //
+
+                    ioSpace = ScsiPortGetDeviceBase(HwDeviceExtension,
+                                                    ConfigInfo->AdapterInterfaceType,
+                                                    ConfigInfo->SystemIoBusNumber,
+                                                    ScsiPortConvertUlongToPhysicalAddress(AdapterAddresses[*adapterCount]),
+                                                    8,
+                                                    TRUE);
+
+                    //
+                    // Update the adapter count.
+                    //
+
+                    (*adapterCount)++;
+
+                    //
+                    // Check if ioSpace accessible.
+                    //
+
+                    if (!ioSpace) {
+                        continue;
+                    }
+
+                    //
+                    // Select master.
+                    //
+
+                    ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->DriveSelect, 0xA0);
+
+                    //
+                    // Check if card at this address.
+                    //
+
+                    ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow, 0xAA);
+
+                    //
+                    // Check if indentifier can be read back.
+                    //
+
+                    if ((statusByte = ScsiPortReadPortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow)) != 0xAA) {
+
+                        DebugPrint((2,
+                                    "AtapiFindPciController: Identifier read back from Master (%x)\n",
+                                    statusByte));
+
+
+                        //
+                        // Select slave.
+                        //
+
+                        ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->DriveSelect, 0xB0);
+
+                        //
+                        // See if slave is present.
+                        //
+
+                        ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow, 0xAA);
+
+                        if ((statusByte = ScsiPortReadPortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow)) != 0xAA) {
+
+                            DebugPrint((2,
+                                        "AtapiFindPciController: Identifier read back from Slave (%x)\n",
+                                        statusByte));
+
+                            //
+                            //
+                            // No controller at this base address.
+                            //
+
+                            ScsiPortFreeDeviceBase(HwDeviceExtension,
+                                                   ioSpace);
+
+                            //
+                            // If the chip is there, but we couldn't find the primary channel, try the secondary.
+                            // If we couldn't find a secondary, who cares.
+                            //
+
+                            if (j == 1) {
+
+                                goto setStatusAndExit;
+
+                            } else {
+                                continue;
                             }
-                          Version.fCapabilities = CAP_ATA_ID_CMD/*|CAP_ATAPI_ID_CMD|CAP_SMART_CMD*/;
-                          SrbIoControl->Length = min(sizeof(GETVERSIONINPARAMS), Srb->DataTransferLength - sizeof(SRB_IO_CONTROL));
-                          memcpy(SrbIoControl + 1, &Version, SrbIoControl->Length);
-                          Result = SRB_STATUS_SUCCESS;
-                          break;
+                        }
+                    }
+
+                    if (controllerFound) {
+
+                        //
+                        // Record base IO address.
+                        //
+
+                        deviceExtension->BaseIoAddress1[channel] = (PIDE_REGISTERS_1)(ioSpace);
+
+                        //
+                        // Fill in the access array information.
+                        //
+
+                        (*ConfigInfo->AccessRanges)[channel].RangeStart =
+                                ScsiPortConvertUlongToPhysicalAddress(AdapterAddresses[*adapterCount - 1]);
+
+                        (*ConfigInfo->AccessRanges)[channel].RangeLength = 8;
+                        (*ConfigInfo->AccessRanges)[channel].RangeInMemory = FALSE;
+
+                        //
+                        // Indicate the interrupt level corresponding to this IO range.
+                        //
+
+                        if (channel == 0) {
+                            ConfigInfo->BusInterruptLevel = InterruptLevels[*adapterCount - 1];
+                            ConfigInfo->InterruptMode = Latched;
+                        } else {
+                            ConfigInfo->BusInterruptLevel2 = InterruptLevels[*adapterCount - 1];
+                            ConfigInfo->InterruptMode2 = Latched;
                         }
 
-                      case IOCTL_SCSI_MINIPORT_IDENTIFY:
-                        {
-                          SENDCMDOUTPARAMS OutParams;
-                          SENDCMDINPARAMS InParams = *(PSENDCMDINPARAMS)(SrbIoControl + 1);
+                        //
+                        // Get the system physical address for the second IO range.
+                        //
 
-                          DPRINT("IOCTL_SCSI_MINIPORT_IDENTIFY\n");
+                        ioSpace = ScsiPortGetDeviceBase(HwDeviceExtension,
+                                                        ConfigInfo->AdapterInterfaceType,
+                                                        ConfigInfo->SystemIoBusNumber,
+                                                        ScsiPortConvertUlongToPhysicalAddress(AdapterAddresses[*adapterCount - 1] + 0x206),
+                                                        1,
+                                                        TRUE);
 
-                          if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDINPARAMS) - 1)
-                            {
-                              Result = SRB_STATUS_INVALID_REQUEST;
-                              break;
-                            }
-                  
-                          RtlZeroMemory(&OutParams, sizeof(SENDCMDOUTPARAMS));
+                        deviceExtension->BaseIoAddress2[channel] = (PIDE_REGISTERS_2)(ioSpace);
 
-                          if (InParams.irDriveRegs.bCommandReg != IDE_CMD_IDENT_ATA_DRV)
-                            {
-                              DPRINT("bCommandReg: %x\n", InParams.irDriveRegs.bCommandReg);
-                              OutParams.DriverStatus.bIDEError = 1;
-                              Result = SRB_STATUS_INVALID_REQUEST;
-                            }
-                          else if (InParams.bDriveNumber > 1 ||
-                                   (DevExt->DeviceFlags[InParams.bDriveNumber] & (DEVICE_PRESENT|DEVICE_ATAPI)) != DEVICE_PRESENT)
-                            {
-                              OutParams.DriverStatus.bIDEError = 1;
-                              Result = SRB_STATUS_NO_DEVICE;
-                            }
-                          else
-                            {
-                              Result = SRB_STATUS_SUCCESS;
-                            }
-                          if (Result == SRB_STATUS_SUCCESS)
-                            {
-                              SrbIoControl->Length = min(sizeof(SENDCMDOUTPARAMS) - 1 + IDENTIFY_BUFFER_SIZE, Srb->DataTransferLength - sizeof(SRB_IO_CONTROL));
-                            }
-                          else
-                            {
-                              SrbIoControl->Length = min(sizeof(SENDCMDOUTPARAMS) - 1, Srb->DataTransferLength - sizeof(SRB_IO_CONTROL));
-                            }
+                        deviceExtension->NumberChannels = 2;
 
-                          if (SrbIoControl->Length >= sizeof(SENDCMDOUTPARAMS) - 1)
-                            {
-                              OutParams.cBufferSize = min(SrbIoControl->Length, IDENTIFY_BUFFER_SIZE);
-                            }
-                          
-                          memcpy(SrbIoControl + 1, &OutParams, min (SrbIoControl->Length, sizeof(SENDCMDOUTPARAMS) - 1));
-                         
-                          if (SrbIoControl->Length > sizeof(SENDCMDOUTPARAMS) - 1)
-                            {
-                              RtlCopyMemory((PVOID)((ULONG_PTR)(SrbIoControl + 1) + sizeof(SENDCMDOUTPARAMS) - 1), &DevExt->DeviceParams[InParams.bDriveNumber], OutParams.cBufferSize);
-                            }
-                          break;
+                        //
+                        // Indicate only one bus.
+                        //
+
+                        ConfigInfo->NumberOfBuses = 1;
+
+                        //
+                        // Indicate four devices can be attached to the adapter, since we
+                        // have to serialize access to the two channels.
+                        //
+
+                        ConfigInfo->MaximumNumberOfTargets = 4;
+
+                        //
+                        // Indicate maximum transfer length is 64k.
+                        //
+
+                        ConfigInfo->MaximumTransferLength = 0x10000;
+
+                        DebugPrint((1,
+                                   "AtapiFindPciController: Found broken IDE at %x\n",
+                                   deviceExtension->BaseIoAddress1[channel]));
+
+                        //
+                        // Since we will always pick up this part, and not atdisk, so indicate.
+                        //
+
+                        atapiOnly = FALSE;
+
+                        //
+                        // Save the Interrupe Mode for later use
+                        //
+                        deviceExtension->InterruptMode = ConfigInfo->InterruptMode;
+
+                        //
+                        // Search for devices on this controller.
+                        //
+
+                        if (FindDevices(HwDeviceExtension,
+                                    atapiOnly,
+                                    channel++)){
+                            deviceFound = TRUE;
+                        }
+
+                        //
+                        // Claim primary or secondary ATA IO range.
+                        //
+
+                        if (*adapterCount == 1) {
+                            ConfigInfo->AtdiskPrimaryClaimed = TRUE;
+                            deviceExtension->PrimaryAddress = TRUE;
+
+                        } else if (*adapterCount == 2) {
+                            ConfigInfo->AtdiskSecondaryClaimed = TRUE;
+                            deviceExtension->PrimaryAddress = FALSE;
                         }
                     }
                 }
-              else
-                {
-                  Result = SRB_STATUS_INVALID_REQUEST;
-                  SrbIoControl->Length = 0;
-                }
             }
-          break;
         }
 
-      default:
-	Result = SRB_STATUS_INVALID_REQUEST;
-	break;
-    }
+setStatusAndExit:
 
-  Srb->SrbStatus = Result;
-
-
-  if (Result != SRB_STATUS_PENDING)
-    {
-      DevExt->CurrentSrb = NULL;
-
-      ScsiPortNotification(RequestComplete,
-			   DeviceExtension,
-			   Srb);
-      ScsiPortNotification(NextRequest,
-			   DeviceExtension,
-			   NULL);
-    }
-  else
-    {
-      DPRINT("SrbStatus = SRB_STATUS_PENDING\n");
-    }
-
-  DPRINT("AtapiStartIo() done\n");
-
-  return(TRUE);
-}
-
-static BOOLEAN STDCALL
-AtapiInterrupt(IN PVOID DeviceExtension)
-{
-  PATAPI_MINIPORT_EXTENSION DevExt;
-  UCHAR Status;
-  DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
-
-  if (DevExt->Handler == NULL)
-    {
-      Status =  IDEReadAltStatus(DevExt->ControlPortBase);
-      if ((Status & (IDE_SR_DRDY|IDE_SR_BUSY|IDE_SR_ERR|IDE_SR_DRQ)) != IDE_SR_DRDY)
-        {
-	  static ULONG Count = 0;
-	  Count++;
-	  DPRINT1("Unexpected Interrupt, CommandPort=%04x, Status=%02x, Count=%ld\n",
-	          DevExt->CommandPortBase, Status, Count);
-	}
-      return FALSE;
-    }
-#ifdef ENABLE_DMA
-  if (DevExt->UseDma)
-    {
-      Status = IDEReadDMAStatus(DevExt->BusMasterRegisterBase);
-      if (!(Status & 0x04))
-        {
-	  return FALSE;
-	}
-    }
-  else
-#endif
-    {
-      Status = IDEReadAltStatus(DevExt->ControlPortBase);
-      if (Status & IDE_SR_BUSY)
-        {
-	  return FALSE;
-	}
-    }
-  return DevExt->Handler(DevExt);
-}
-
-//  ----------------------------------------------------  Discardable statics
-
-#ifdef ENABLE_DMA
-static BOOLEAN
-AtapiConfigDma(PATAPI_MINIPORT_EXTENSION DeviceExtension, ULONG UnitNumber)
-{
-  BOOLEAN Result = FALSE;
-  UCHAR Status;
-
-  if (UnitNumber < 2)
-    {
-      if (DeviceExtension->PRDTable)
-        {
-          if (DeviceExtension->DeviceParams[UnitNumber].Capabilities & IDE_DRID_DMA_SUPPORTED)
-            {
-              if ((DeviceExtension->DeviceParams[UnitNumber].TMFieldsValid & 0x0004) &&
-                  (DeviceExtension->DeviceParams[UnitNumber].UltraDmaModes & 0x7F00))
-                {
-                  Result = TRUE;
-                }
-              else if (DeviceExtension->DeviceParams[UnitNumber].TMFieldsValid & 0x0002)
-	        {
-	          if ((DeviceExtension->DeviceParams[UnitNumber].MultiDmaModes & 0x0404) == 0x0404)
-	            {
-                      Result = TRUE;
-                    }
-#if 0
-                  /* FIXME:
-	           *   should we support single mode dma ?
-	           */
-	          else if ((DeviceExtension->DeviceParams[UnitNumber].DmaModes & 0x0404) == 0x0404)
-	            {
-                      Result = TRUE;
-	            }
-#endif
-                }
-              Status = IDEReadDMAStatus(DeviceExtension->BusMasterRegisterBase);
-              if (Result)
-                {
-                  IDEWriteDMAStatus(DeviceExtension->BusMasterRegisterBase, Status | (UnitNumber ? 0x40 : 0x20));
-	        }
-              else
-                {
-                  IDEWriteDMAStatus(DeviceExtension->BusMasterRegisterBase, Status & (UnitNumber ? ~0x40 : ~0x20));
-                }
-	    }
-	}
-    }
-  return Result;
-}
-#endif
-
-/**********************************************************************
- * NAME							INTERNAL
- *	AtapiFindDevices
- *
- * DESCRIPTION
- *	Searches for devices on the given port.
- *
- * RUN LEVEL
- *	PASSIVE_LEVEL
- *
- * ARGUMENTS
- *	DeviceExtension
- *		Port device specific information.
- *
- *	ConfigInfo
- *		Port configuration information.
- *
- * RETURN VALUE
- *	TRUE: At least one device is attached to the port.
- *	FALSE: No device is attached to the port.
- */
-
-static BOOLEAN
-AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		 PPORT_CONFIGURATION_INFORMATION ConfigInfo)
-{
-  BOOLEAN DeviceFound = FALSE;
-  ULONG CommandPortBase;
-  ULONG ControlPortBase;
-  ULONG UnitNumber;
-  ULONG Retries;
-  UCHAR High;
-  UCHAR Low;
-
-  DPRINT("AtapiFindDevices() called\n");
-
-  CommandPortBase = ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[0].RangeStart);
-  DPRINT("  CommandPortBase: %x\n", CommandPortBase);
-
-  ControlPortBase = ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[1].RangeStart);
-  DPRINT("  ControlPortBase: %x\n", ControlPortBase);
-
-  for (UnitNumber = 0; UnitNumber < 2; UnitNumber++)
-    {
-      /* Select drive */
-      IDEWriteDriveHead(CommandPortBase,
-			IDE_DH_FIXED | (UnitNumber ? IDE_DH_DRV1 : 0));
-      ScsiPortStallExecution(500);
-
-      /* Disable interrupts */
-      IDEWriteDriveControl(ControlPortBase,
-			   IDE_DC_nIEN);
-      ScsiPortStallExecution(500);
-
-      /* Check if a device is attached to the interface */
-      IDEWriteCylinderHigh(CommandPortBase, 0xaa);
-      IDEWriteCylinderLow(CommandPortBase, 0x55);
-
-      High = IDEReadCylinderHigh(CommandPortBase);
-      Low = IDEReadCylinderLow(CommandPortBase);
-
-      IDEWriteCylinderHigh(CommandPortBase, 0);
-      IDEWriteCylinderLow(CommandPortBase, 0);
-
-      if (Low != 0x55 || High != 0xaa)
-	{
-	  DPRINT("No Drive found. UnitNumber %d CommandPortBase %x\n", UnitNumber, CommandPortBase);
-	  continue;
-	}
-
-      AtapiExecuteCommand(DeviceExtension, IDE_CMD_RESET, NULL);
-
-      for (Retries = 0; Retries < 20000; Retries++)
-	{
-	  if (!(IDEReadStatus(CommandPortBase) & IDE_SR_BUSY))
-	    {
-	      break;
-	    }
-	  ScsiPortStallExecution(150);
-	}
-      if (Retries >= 20000)
-	{
-	  DPRINT("Timeout on drive %lu\n", UnitNumber);
-	  DeviceExtension->DeviceFlags[UnitNumber] &= ~DEVICE_PRESENT;
-	  continue;
-	}
-
-      High = IDEReadCylinderHigh(CommandPortBase);
-      Low = IDEReadCylinderLow(CommandPortBase);
-
-      DPRINT("  Check drive %lu: High 0x%x Low 0x%x\n",
-	     UnitNumber,
-	     High,
-	     Low);
-
-      if (High == 0xEB && Low == 0x14)
-	{
-	  if (AtapiIdentifyDevice(CommandPortBase,
-				  ControlPortBase,
-				  UnitNumber,
-				  TRUE,
-				  &DeviceExtension->DeviceParams[UnitNumber]))
-	    {
-	      DPRINT("  ATAPI drive found!\n");
-	      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_PRESENT;
-	      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_ATAPI;
-	      DeviceExtension->TransferSize[UnitNumber] =
-		DeviceExtension->DeviceParams[UnitNumber].BytesPerSector;
-#ifdef ENABLE_DMA
-              if (AtapiConfigDma(DeviceExtension, UnitNumber))
-	        {
-		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;
-		}
-#endif
-              if (!(DeviceExtension->DeviceParams[UnitNumber].SupportedFeatures83 & 0x1000) ||
-		  !(DeviceExtension->DeviceParams[UnitNumber].EnabledFeatures86 & 0x1000))
-                {
-                  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;                      
-                }
-
-              /* Don't flush CD/DVD drives */
-              if (((DeviceExtension->DeviceParams[UnitNumber].ConfigBits >> 8) & 0x1F) == READ_ONLY_DIRECT_ACCESS_DEVICE)
-	        {
-	          DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;
-	        }
-	      DeviceFound = TRUE;
-	    }
-	  else
-	    {
-	      DPRINT("  No ATAPI drive found!\n");
-	    }
-	}
-      else
-	{
-	  if (AtapiIdentifyDevice(CommandPortBase,
-				  ControlPortBase,
-				  UnitNumber,
-				  FALSE,
-				  &DeviceExtension->DeviceParams[UnitNumber]))
-	    {
-	      DPRINT("  IDE drive found!\n");
-	      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_PRESENT;
-	      DeviceExtension->TransferSize[UnitNumber] = DeviceExtension->DeviceParams[UnitNumber].BytesPerSector;
-	      if ((DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0x8000) &&
-		  (DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0xff) &&
-		  (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0x100) &&
-		  (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0xff))
-		{
-		  DeviceExtension->TransferSize[UnitNumber] *= (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0xff);
-		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_MULTI_SECTOR_CMD;
-		}
-	      if (DeviceExtension->DeviceParams[UnitNumber].SupportedFeatures83 & 0x0400 &&
-		  DeviceExtension->DeviceParams[UnitNumber].EnabledFeatures86 & 0x0400)
-	        {
-		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_48BIT_ADDRESS;
-		}
-	      if (DeviceExtension->DeviceParams[UnitNumber].DWordIo)
-		{
-		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DWORD_IO;
-		}
-#ifdef ENABLE_DMA
-	      if (AtapiConfigDma(DeviceExtension, UnitNumber))
-	        {
-		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;
-		}
-#endif
-              if (DeviceExtension->DeviceFlags[UnitNumber] & DEVICE_48BIT_ADDRESS)
-                {
-                  if (!(DeviceExtension->DeviceParams[UnitNumber].SupportedFeatures83 & 0x2000) ||
-		      !(DeviceExtension->DeviceParams[UnitNumber].EnabledFeatures86 & 0x2000))
-                    {
-                      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;                      
-                    }
-                }
-              else
-                {
-                  if (!(DeviceExtension->DeviceParams[UnitNumber].SupportedFeatures83 & 0x1000) ||
-		      !(DeviceExtension->DeviceParams[UnitNumber].EnabledFeatures86 & 0x1000))
-                    {
-                      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;                      
-                    }
-                }
-	      DeviceFound = TRUE;
-	    }
-	  else
-	    {
-	      DPRINT("  No IDE drive found!\n");
-	    }
-	}
-    }
-
-  /* Reset pending interrupts */
-  IDEReadStatus(CommandPortBase);
-  /* Reenable interrupts */
-  IDEWriteDriveControl(ControlPortBase, 0);
-  ScsiPortStallExecution(500);
-  /* Return with drive 0 selected */
-  IDEWriteDriveHead(CommandPortBase, IDE_DH_FIXED);
-  ScsiPortStallExecution(500);
-
-  DPRINT("AtapiFindDrives() done (DeviceFound %s)\n", (DeviceFound) ? "TRUE" : "FALSE");
-
-  return(DeviceFound);
-}
-
-
-/*
- *  AtapiIdentifyDevice
- *
- *  DESCRIPTION:
- *	Get the identification block from the drive
- *
- *  RUN LEVEL:
- *	PASSIVE_LEVEL
- *
- *  ARGUMENTS:
- *	CommandPort
- *		Address of the command port
- *	ControlPort
- *		Address of the control port
- *	DriveNum
- *		The drive index (0,1)
- *	Atapi
- *		Send an ATA(FALSE) or an ATAPI(TRUE) identify comand
- *	DrvParms
- *		Address to write drive ident block
- *
- *  RETURNS:
- *	TRUE: The drive identification block was retrieved successfully
- *	FALSE: an error ocurred
- */
-
-static BOOLEAN
-AtapiIdentifyDevice(IN ULONG CommandPort,
-		    IN ULONG ControlPort,
-		    IN ULONG DriveNum,
-		    IN BOOLEAN Atapi,
-		    OUT PIDE_DRIVE_IDENTIFY DrvParms)
-{
-  LONG i;
-  ULONG mode;
-  char SerialNumber[20];
-  char FirmwareRev[8];
-  char ModelNumber[40];
-
-  /*  Get the Drive Identify block from drive or die  */
-  if (AtapiPolledRead(CommandPort,
-		      ControlPort,
-		      0,
-		      1,
-		      0,
-		      0,
-		      0,
-		      (DriveNum ? IDE_DH_DRV1 : 0),
-		      (Atapi ? IDE_CMD_IDENT_ATAPI_DRV : IDE_CMD_IDENT_ATA_DRV),
-		      (PUCHAR)DrvParms) == FALSE)
-    {
-      DPRINT("AtapiPolledRead() failed\n");
-      return FALSE;
-    }
-
-  /*  Report on drive parameters if debug mode  */
-  memcpy(SerialNumber, DrvParms->SerialNumber, 20);
-  memcpy(FirmwareRev, DrvParms->FirmwareRev, 8);
-  memcpy(ModelNumber, DrvParms->ModelNumber, 40);
-  IDESwapBytePairs((PUCHAR)SerialNumber, 20);
-  IDESwapBytePairs((PUCHAR)FirmwareRev, 8);
-  IDESwapBytePairs((PUCHAR)ModelNumber, 40);
-  DPRINT("Config:%04x  Cyls:%5d  Heads:%2d  Sectors/Track:%3d  Gaps:%02d %02d\n",
-         DrvParms->ConfigBits,
-         DrvParms->LogicalCyls,
-         DrvParms->LogicalHeads,
-         DrvParms->SectorsPerTrack,
-         DrvParms->InterSectorGap,
-         DrvParms->InterSectorGapSize);
-  DPRINT("Bytes/PLO:%3d  Vendor Cnt:%2d  Serial number:[%.20s]\n",
-         DrvParms->BytesInPLO,
-         DrvParms->VendorUniqueCnt,
-         SerialNumber);
-  DPRINT("Cntlr type:%2d  BufSiz:%5d  ECC bytes:%3d  Firmware Rev:[%.8s]\n",
-         DrvParms->ControllerType,
-         DrvParms->BufferSize * IDE_SECTOR_BUF_SZ,
-         DrvParms->ECCByteCnt,
-         FirmwareRev);
-  DPRINT("Model:[%.40s]\n", ModelNumber);
-  DPRINT("RWMultMax?:%04x  RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n",
-         (DrvParms->RWMultImplemented),
-	 (DrvParms->RWMultCurrent) & 0xff,
-         (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0,
-         (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0,
-         DrvParms->MinPIOTransTime,
-         DrvParms->MinDMATransTime);
-  DPRINT("TM:Cyls:%d  Heads:%d  Sectors/Trk:%d Capacity:%ld\n",
-         DrvParms->TMCylinders,
-         DrvParms->TMHeads,
-         DrvParms->TMSectorsPerTrk,
-         (ULONG)(DrvParms->TMCapacityLo + (DrvParms->TMCapacityHi << 16)));
-  DPRINT("TM:SectorCount: 0x%04x%04x = %lu\n",
-         DrvParms->TMSectorCountHi,
-         DrvParms->TMSectorCountLo,
-         (ULONG)((DrvParms->TMSectorCountHi << 16) + DrvParms->TMSectorCountLo));
-  DPRINT("SupportedFeatures83: %x, EnabledFeatures86 %x\n", DrvParms->SupportedFeatures83, DrvParms->EnabledFeatures86);
-  DPRINT("Max48BitAddress: %I64d\n", *(PULONGLONG)DrvParms->Max48BitAddress);
-  if (DrvParms->TMFieldsValid & 0x0004)
-    {
-      if ((DrvParms->UltraDmaModes >> 8) && (DrvParms->UltraDmaModes & 0xff))
-        {
-	  mode = 7;
-	  while (!(DrvParms->UltraDmaModes & (0x0100 << mode)))
-	    {
-	      mode--;
-	    }
-	  DPRINT("Ultra DMA mode %d is selected\n", mode);
-	}
-      else if ((DrvParms->MultiDmaModes >> 8) & (DrvParms->MultiDmaModes & 0x07))
-        {
-	  mode = 2;
-	  while(!(DrvParms->MultiDmaModes & (0x01 << mode)))
-	    {
-	      mode--;
-	    }
-	  DPRINT("Multi DMA mode %d is selected\n", mode);
-	}
-    }
-
-  if (! Atapi && 0 != (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED))
-    {
-      /* LBA ATA drives always have a sector size of 512 */
-      DrvParms->BytesPerSector = 512;
-    }
-  else
-    {
-      DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
-      if (DrvParms->BytesPerSector == 0)
-        {
-          DrvParms->BytesPerSector = 512;
+        if (lastSlot) {
+            slotNumber = 0;
+            functionNumber = 0;
         }
-      else
-        {
-          for (i = 15; i >= 0; i--)
-            {
-              if (DrvParms->BytesPerSector & (1 << i))
-                {
-                  DrvParms->BytesPerSector = 1 << i;
-                  break;
-                }
+
+        controllers = i;
+
+        if (controllerFound && deviceFound) {
+
+            *Again = TRUE;
+            return SP_RETURN_FOUND;
+        }
+    }
+
+
+    //
+    // The entire table has been searched and no adapters have been found.
+    //
+
+    *Again = FALSE;
+
+    return SP_RETURN_NOT_FOUND;
+
+} // end AtapiFindPCIController()
+
+
+ULONG
+STDCALL
+Atapi2Scsi(
+    IN PSCSI_REQUEST_BLOCK Srb,
+    IN char *DataBuffer,
+    IN ULONG ByteCount
+    )
+{
+    ULONG bytesAdjust = 0;
+    if (Srb->Cdb[0] == ATAPI_MODE_SENSE) {
+
+        PMODE_PARAMETER_HEADER_10 header_10 = (PMODE_PARAMETER_HEADER_10)DataBuffer;
+        PMODE_PARAMETER_HEADER header = (PMODE_PARAMETER_HEADER)DataBuffer;
+
+        header->ModeDataLength = header_10->ModeDataLengthLsb;
+        header->MediumType = header_10->MediumType;
+
+        //
+        // ATAPI Mode Parameter Header doesn't have these fields.
+        //
+
+        header->DeviceSpecificParameter = header_10->Reserved[0];
+        header->BlockDescriptorLength = header_10->Reserved[1];
+
+        ByteCount -= sizeof(MODE_PARAMETER_HEADER_10);
+        if (ByteCount > 0)
+            ScsiPortMoveMemory(DataBuffer+sizeof(MODE_PARAMETER_HEADER),
+                               DataBuffer+sizeof(MODE_PARAMETER_HEADER_10),
+                               ByteCount);
+
+        //
+        // Change ATAPI_MODE_SENSE opcode back to SCSIOP_MODE_SENSE
+        // so that we don't convert again.
+        //
+
+        Srb->Cdb[0] = SCSIOP_MODE_SENSE;
+
+        bytesAdjust = sizeof(MODE_PARAMETER_HEADER_10) -
+                      sizeof(MODE_PARAMETER_HEADER);
+
+
+    }
+
+    //
+    // Convert to words.
+    //
+
+    return bytesAdjust >> 1;
+}
+
+
+VOID
+STDCALL
+AtapiCallBack(
+    IN PVOID HwDeviceExtension
+    )
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PSCSI_REQUEST_BLOCK  srb = deviceExtension->CurrentSrb;
+    PATAPI_REGISTERS_2   baseIoAddress2;
+    UCHAR statusByte;
+
+    //
+    // If the last command was DSC restrictive, see if it's set. If so, the device is
+    // ready for a new request. Otherwise, reset the timer and come back to here later.
+    //
+
+    if (srb && (!(deviceExtension->ExpectingInterrupt))) {
+#if DBG
+        if (!IS_RDP((srb->Cdb[0]))) {
+            DebugPrint((1,
+                        "AtapiCallBack: Invalid CDB marked as RDP - %x\n",
+                        srb->Cdb[0]));
+        }
+#endif
+
+        baseIoAddress2 = (PATAPI_REGISTERS_2)deviceExtension->BaseIoAddress2[srb->TargetId >> 1];
+        if (deviceExtension->RDP) {
+            GetStatus(baseIoAddress2, statusByte);
+            if (statusByte & IDE_STATUS_DSC) {
+
+                ScsiPortNotification(RequestComplete,
+                                     deviceExtension,
+                                     srb);
+
+                //
+                // Clear current SRB.
+                //
+
+                deviceExtension->CurrentSrb = NULL;
+                deviceExtension->RDP = FALSE;
+
+                //
+                // Ask for next request.
+                //
+
+                ScsiPortNotification(NextRequest,
+                                     deviceExtension,
+                                     NULL);
+
+
+                return;
+
+            } else {
+
+                DebugPrint((3,
+                            "AtapiCallBack: Requesting another timer for Op %x\n",
+                            deviceExtension->CurrentSrb->Cdb[0]));
+
+                ScsiPortNotification(RequestTimerCall,
+                                     HwDeviceExtension,
+                                     AtapiCallBack,
+                                     1000);
+                return;
             }
         }
     }
-  DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
 
-  return TRUE;
+    DebugPrint((2,
+                "AtapiCallBack: Calling ISR directly due to BUSY\n"));
+    AtapiInterrupt(HwDeviceExtension);
 }
 
+
+BOOLEAN
+STDCALL
+AtapiInterrupt(
+    IN PVOID HwDeviceExtension
+    )
 
-//    AtapiPolledRead
-//
-//  DESCRIPTION:
-//    Read a sector of data from the drive in a polled fashion.
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN   ULONG  CommandPort   Address of command port for drive
-//    IN   ULONG  ControlPort   Address of control port for drive
-//    IN   UCHAR  PreComp       Value to write to precomp register
-//    IN   UCHAR  SectorCnt     Value to write to sectorCnt register
-//    IN   UCHAR  SectorNum     Value to write to sectorNum register
-//    IN   UCHAR  CylinderLow   Value to write to CylinderLow register
-//    IN   UCHAR  CylinderHigh  Value to write to CylinderHigh register
-//    IN   UCHAR  DrvHead       Value to write to Drive/Head register
-//    IN   UCHAR  Command       Value to write to Command register
-//    OUT  PUCHAR Buffer        Buffer for output data
-//
-//  RETURNS:
-//    BOOLEAN: TRUE success, FALSE error
-//
+/*++
 
-static BOOLEAN
-AtapiPolledRead(IN ULONG CommandPort,
-		IN ULONG ControlPort,
-		IN UCHAR PreComp,
-		IN UCHAR SectorCnt,
-		IN UCHAR SectorNum,
-		IN UCHAR CylinderLow,
-		IN UCHAR CylinderHigh,
-		IN UCHAR DrvHead,
-		IN UCHAR Command,
-		OUT PUCHAR Buffer)
+Routine Description:
+
+    This is the interrupt service routine for ATAPI IDE miniport driver.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+
+Return Value:
+
+    TRUE if expecting an interrupt.
+
+--*/
+
 {
-  ULONG SectorCount = 0;
-  ULONG RetryCount;
-  BOOLEAN Junk = FALSE;
-  UCHAR Status;
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PSCSI_REQUEST_BLOCK srb              = deviceExtension->CurrentSrb;
+    PATAPI_REGISTERS_1 baseIoAddress1;
+    PATAPI_REGISTERS_2 baseIoAddress2;
+    ULONG wordCount = 0, wordsThisInterrupt = 256;
+    ULONG status;
+    ULONG i;
+    UCHAR statusByte,interruptReason;
+    BOOLEAN commandComplete = FALSE;
+    BOOLEAN atapiDev = FALSE;
 
-  /* Wait for BUSY to clear */
-  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
-    {
-      Status = IDEReadStatus(CommandPort);
-      if (!(Status & IDE_SR_BUSY))
-        {
-          break;
+    if (srb) {
+        baseIoAddress1 =    (PATAPI_REGISTERS_1)deviceExtension->BaseIoAddress1[srb->TargetId >> 1];
+        baseIoAddress2 =    (PATAPI_REGISTERS_2)deviceExtension->BaseIoAddress2[srb->TargetId >> 1];
+    } else {
+        DebugPrint((2,
+                    "AtapiInterrupt: CurrentSrb is NULL\n"));
+        //
+        // We can only support one ATAPI IDE master on Carolina, so find
+        // the base address that is non NULL and clear its interrupt before
+        // returning.
+        //
+
+#ifdef _PPC_
+
+        if ((PATAPI_REGISTERS_1)deviceExtension->BaseIoAddress1[0] != NULL) {
+           baseIoAddress1 = (PATAPI_REGISTERS_1)deviceExtension->BaseIoAddress1[0];
+        } else {
+           baseIoAddress1 = (PATAPI_REGISTERS_1)deviceExtension->BaseIoAddress1[1];
         }
-      ScsiPortStallExecution(10);
-    }
-  DPRINT("status=%02x\n", Status);
-  DPRINT("waited %ld usecs for busy to clear\n", RetryCount * 10);
-  if (RetryCount >= IDE_MAX_BUSY_RETRIES)
-    {
-      DPRINT("Drive is BUSY for too long\n");
-      return FALSE;
-    }
 
-  /*  Write Drive/Head to select drive  */
-  IDEWriteDriveHead(CommandPort, IDE_DH_FIXED | DrvHead);
-  ScsiPortStallExecution(500);
-
-  /* Disable interrupts */
-  IDEWriteDriveControl(ControlPort, IDE_DC_nIEN);
-  ScsiPortStallExecution(500);
-
-#if 0
-  /*  Wait for STATUS.BUSY and STATUS.DRQ to clear  */
-  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
-    {
-      Status = IDEReadStatus(CommandPort);
-      if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
-	{
-	  break;
-	}
-      ScsiPortStallExecution(10);
-    }
-  if (RetryCount >= IDE_MAX_BUSY_RETRIES)
-    {
-      return FALSE;
-    }
-#endif
-
-  /*  Issue command to drive  */
-  if (DrvHead & IDE_DH_LBA)
-    {
-      DPRINT("READ:DRV=%d:LBA=1:BLK=%08d:SC=%02x:CM=%02x\n",
-	     DrvHead & IDE_DH_DRV1 ? 1 : 0,
-	     ((DrvHead & 0x0f) << 24) + (CylinderHigh << 16) + (CylinderLow << 8) + SectorNum,
-	     SectorCnt,
-	     Command);
-    }
-  else
-    {
-      DPRINT("READ:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
-	     DrvHead & IDE_DH_DRV1 ? 1 : 0,
-	     CylinderHigh,
-	     CylinderLow,
-	     DrvHead & 0x0f,
-	     SectorNum,
-	     SectorCnt,
-	     Command);
-    }
-
-  /*  Setup command parameters  */
-  IDEWritePrecomp(CommandPort, PreComp);
-  IDEWriteSectorCount(CommandPort, SectorCnt);
-  IDEWriteSectorNum(CommandPort, SectorNum);
-  IDEWriteCylinderHigh(CommandPort, CylinderHigh);
-  IDEWriteCylinderLow(CommandPort, CylinderLow);
-  IDEWriteDriveHead(CommandPort, IDE_DH_FIXED | DrvHead);
-
-  /*  Issue the command  */
-  IDEWriteCommand(CommandPort, Command);
-  ScsiPortStallExecution(50);
-
-  /*  wait for DRQ or error  */
-  for (RetryCount = 0; RetryCount < IDE_MAX_POLL_RETRIES; RetryCount++)
-    {
-      Status = IDEReadStatus(CommandPort);
-      if (!(Status & IDE_SR_BUSY))
-	{
-	  if (Status & IDE_SR_ERR)
-	    {
-	      IDEWriteDriveControl(ControlPort, 0);
-	      ScsiPortStallExecution(50);
-	      IDEReadStatus(CommandPort);
-
-	      return FALSE;
-	    }
-
-	  if (Status & IDE_SR_DRQ)
-	    {
-	      break;
-	    }
-	  else
-	    {
-	      IDEWriteDriveControl(ControlPort, 0);
-	      ScsiPortStallExecution(50);
-	      IDEReadStatus(CommandPort);
-
-	      return FALSE;
-	    }
-	}
-      ScsiPortStallExecution(10);
-    }
-
-  /*  timed out  */
-  if (RetryCount >= IDE_MAX_POLL_RETRIES)
-    {
-      IDEWriteDriveControl(ControlPort, 0);
-      ScsiPortStallExecution(50);
-      IDEReadStatus(CommandPort);
-
-      return FALSE;
-    }
-
-  while (1)
-    {
-      /*  Read data into buffer  */
-      if (Junk == FALSE)
-	{
-	  IDEReadBlock(CommandPort, Buffer, IDE_SECTOR_BUF_SZ);
-	  Buffer += IDE_SECTOR_BUF_SZ;
-	}
-      else
-	{
-	  UCHAR JunkBuffer[IDE_SECTOR_BUF_SZ];
-	  IDEReadBlock(CommandPort, JunkBuffer, IDE_SECTOR_BUF_SZ);
-	}
-      SectorCount++;
-
-      /*  Check for error or more sectors to read  */
-      for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
-	{
-	  Status = IDEReadStatus(CommandPort);
-	  if (!(Status & IDE_SR_BUSY))
-	    {
-	      if (Status & IDE_SR_ERR)
-		{
-		  IDEWriteDriveControl(ControlPort, 0);
-		  ScsiPortStallExecution(50);
-		  IDEReadStatus(CommandPort);
-
-		  return FALSE;
-		}
-	      if (Status & IDE_SR_DRQ)
-		{
-		  if (SectorCount >= SectorCnt)
-		    {
-		      DPRINT("Buffer size exceeded!\n");
-		      Junk = TRUE;
-		    }
-		  break;
-		}
-	      else
-		{
-		  if (SectorCount > SectorCnt)
-		    {
-		      DPRINT("Read %lu sectors of junk!\n",
-			     SectorCount - SectorCnt);
-		    }
-		  IDEWriteDriveControl(ControlPort, 0);
-		  ScsiPortStallExecution(50);
-		  IDEReadStatus(CommandPort);
-
-		  return TRUE;
-		}
-	    }
-	}
-    }
-}
-
-
-//  -------------------------------------------  Nondiscardable statics
-
-static ULONG
-AtapiSendSmartCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		      IN PSCSI_REQUEST_BLOCK Srb)
-{
-  PSRB_IO_CONTROL SrbIoControl = (PSRB_IO_CONTROL)Srb->DataBuffer;
-  SENDCMDINPARAMS InParams;
-  PSENDCMDOUTPARAMS OutParams = (PSENDCMDOUTPARAMS)(SrbIoControl + 1);
-  ULONG Retries;
-  UCHAR Status;
-
-  if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDOUTPARAMS) - 1 ||
-      SrbIoControl->Length < sizeof(SENDCMDOUTPARAMS) - 1)
-    {
-      return SRB_STATUS_INVALID_REQUEST;
-    }
-  InParams = *(PSENDCMDINPARAMS)(SrbIoControl + 1);
-
-  DPRINT("%02x %02x %02x %02x %02x %02x %02x %02x\n",
-         InParams.irDriveRegs.bFeaturesReg,
-         InParams.irDriveRegs.bSectorCountReg,
-         InParams.irDriveRegs.bSectorNumberReg,
-         InParams.irDriveRegs.bCylLowReg,
-         InParams.irDriveRegs.bCylHighReg,
-         InParams.irDriveRegs.bDriveHeadReg,
-         InParams.irDriveRegs.bCommandReg,
-         InParams.irDriveRegs.bReserved);
-
-  if (InParams.bDriveNumber > 1 ||
-      (DeviceExtension->DeviceFlags[InParams.bDriveNumber] & (DEVICE_PRESENT|DEVICE_ATAPI)) != DEVICE_PRESENT)
-    {
-      RtlZeroMemory(&OutParams, sizeof(SENDCMDOUTPARAMS));
-      OutParams->DriverStatus.bIDEError = 1;
-      return SRB_STATUS_NO_DEVICE;
-    }
-
-  DeviceExtension->DataTransferLength = 0;
-
-  switch (SrbIoControl->ControlCode)
-    {
-      case IOCTL_SCSI_MINIPORT_READ_SMART_ATTRIBS:
-        DPRINT("IOCTL_SCSI_MINIPORT_READ_SMART_ATTRIBS\n");
-
-        if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDOUTPARAMS) - 1 + READ_ATTRIBUTE_BUFFER_SIZE ||
-            SrbIoControl->Length < sizeof(SENDCMDOUTPARAMS) - 1 + READ_ATTRIBUTE_BUFFER_SIZE ||
-            InParams.irDriveRegs.bFeaturesReg != READ_ATTRIBUTES ||
-            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
-            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
-            InParams.irDriveRegs.bCommandReg != SMART_CMD)
-          {
-            return SRB_STATUS_INVALID_REQUEST;            
-          }
-        InParams.irDriveRegs.bSectorCountReg = 0; 
-        InParams.irDriveRegs.bSectorNumberReg = 0;
-        DeviceExtension->DataTransferLength = READ_ATTRIBUTE_BUFFER_SIZE;
-        break;
-      
-      case IOCTL_SCSI_MINIPORT_READ_SMART_THRESHOLDS:
-        DPRINT("IOCTL_SCSI_MINIPORT_READ_SMART_THRESHOLDS\n");
-
-        if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDOUTPARAMS) - 1 + READ_THRESHOLD_BUFFER_SIZE ||
-            SrbIoControl->Length < sizeof(SENDCMDOUTPARAMS) - 1 + READ_THRESHOLD_BUFFER_SIZE ||
-            InParams.irDriveRegs.bFeaturesReg != READ_THRESHOLDS ||
-            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
-            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
-            InParams.irDriveRegs.bCommandReg != SMART_CMD)
-          {
-            return SRB_STATUS_INVALID_REQUEST;            
-          }
-        InParams.irDriveRegs.bSectorCountReg = 0; 
-        InParams.irDriveRegs.bSectorNumberReg = 0;
-        DeviceExtension->DataTransferLength = READ_THRESHOLD_BUFFER_SIZE;
-        break;
-
-      case IOCTL_SCSI_MINIPORT_READ_SMART_LOG:
-        DPRINT("IOCTL_SCSI_MINIPORT_READ_SMART_LOG\n");
-
-        if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDOUTPARAMS) - 1 + max(1, InParams.irDriveRegs.bSectorCountReg) * SMART_LOG_SECTOR_SIZE ||
-            SrbIoControl->Length < sizeof(SENDCMDOUTPARAMS) - 1 + max(1, InParams.irDriveRegs.bSectorCountReg) * SMART_LOG_SECTOR_SIZE ||
-            InParams.irDriveRegs.bFeaturesReg != SMART_READ_LOG ||
-            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
-            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
-            InParams.irDriveRegs.bCommandReg != SMART_CMD)
-          {
-            return SRB_STATUS_INVALID_REQUEST;            
-          }
-        DeviceExtension->DataTransferLength = max(1, InParams.irDriveRegs.bSectorCountReg) * SMART_LOG_SECTOR_SIZE;
-        break;
-
-      case IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE:
-        DPRINT("IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE\n");
-
-        if (InParams.irDriveRegs.bFeaturesReg != ENABLE_DISABLE_AUTOSAVE ||
-            (InParams.irDriveRegs.bSectorCountReg != 0 && InParams.irDriveRegs.bSectorCountReg != 1) || 
-            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
-            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
-            InParams.irDriveRegs.bCommandReg != SMART_CMD)
-          {
-            return SRB_STATUS_INVALID_REQUEST;            
-          }
-        InParams.irDriveRegs.bSectorNumberReg = 0;
-        break;
-
-      case IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES:
-        DPRINT("IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES\n");
-
-        if (InParams.irDriveRegs.bFeaturesReg != SAVE_ATTRIBUTE_VALUES ||
-            (InParams.irDriveRegs.bSectorCountReg != 0 && InParams.irDriveRegs.bSectorCountReg != 0xf1) || 
-            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
-            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
-            InParams.irDriveRegs.bCommandReg != SMART_CMD)
-          {
-            return SRB_STATUS_INVALID_REQUEST;            
-          }
-        InParams.irDriveRegs.bSectorNumberReg = 0;
-        break;
-
-      case IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS:
-        DPRINT("IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS\n");
-
-        if (InParams.irDriveRegs.bFeaturesReg != EXECUTE_OFFLINE_DIAGS ||
-            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
-            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
-            InParams.irDriveRegs.bCommandReg != SMART_CMD)
-          {
-            return SRB_STATUS_INVALID_REQUEST;            
-          }
-        InParams.irDriveRegs.bSectorCountReg = 0; 
-        break;
-
-      case IOCTL_SCSI_MINIPORT_ENABLE_SMART:
-        DPRINT("IOCTL_SCSI_MINIPORT_ENABLE_SMART\n");
-
-        if (InParams.irDriveRegs.bFeaturesReg != ENABLE_SMART ||
-            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
-            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
-            InParams.irDriveRegs.bCommandReg != SMART_CMD)
-          {
-            return SRB_STATUS_INVALID_REQUEST;            
-          }
-        InParams.irDriveRegs.bSectorCountReg = 0; 
-        InParams.irDriveRegs.bSectorNumberReg = 0;
-        break;
-
-      case IOCTL_SCSI_MINIPORT_DISABLE_SMART:
-        DPRINT("IOCTL_SCSI_MINIPORT_DISABLE_SMART\n");
-
-        if (InParams.irDriveRegs.bFeaturesReg != DISABLE_SMART ||
-            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
-            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
-            InParams.irDriveRegs.bCommandReg != SMART_CMD)
-          {
-            return SRB_STATUS_INVALID_REQUEST;            
-          }
-        InParams.irDriveRegs.bSectorCountReg = 0; 
-        InParams.irDriveRegs.bSectorNumberReg = 0;
-        break;
-
-      case IOCTL_SCSI_MINIPORT_RETURN_STATUS:
-        DPRINT("IOCTL_SCSI_MINIPORT_RETURN_STATUS\n");
-
-        if (InParams.irDriveRegs.bFeaturesReg != RETURN_SMART_STATUS ||
-            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
-            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
-            InParams.irDriveRegs.bCommandReg != SMART_CMD)
-          {
-            return SRB_STATUS_INVALID_REQUEST;            
-          }
-        InParams.irDriveRegs.bSectorCountReg = 0; 
-        InParams.irDriveRegs.bSectorNumberReg = 0;
-        break;
-    }
-
-  Srb->TargetId = InParams.bDriveNumber;
-  
-  /* Set pointer to data buffer. */
-  DeviceExtension->DataBuffer = (PUCHAR)OutParams->bBuffer;
-
-  DeviceExtension->CurrentSrb = Srb;
-
-  /*  wait for BUSY to clear  */
-  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
-    {
-      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-      if (!(Status & IDE_SR_BUSY))
-        {
-          break;
-        }
-      ScsiPortStallExecution(10);
-    }
-  if (Retries >= IDE_MAX_BUSY_RETRIES)
-    {
-      DPRINT ("Drive is BUSY for too long\n");
-      return(SRB_STATUS_BUSY);
-    }
-
-  /*  Select the desired drive  */
-  InParams.irDriveRegs.bDriveHeadReg = (InParams.bDriveNumber ? IDE_DH_DRV1 : IDE_DH_DRV0) | IDE_DH_FIXED;
-  IDEWriteDriveHead(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bDriveHeadReg);
-  ScsiPortStallExecution(2);
-
-  IDEWritePrecomp(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bFeaturesReg);
-  IDEWriteSectorCount(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bSectorCountReg);
-  IDEWriteSectorNum(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bSectorNumberReg);
-  IDEWriteCylinderLow(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bCylLowReg);
-  IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bCylHighReg);
-
-  AtapiExecuteCommand(DeviceExtension, InParams.irDriveRegs.bCommandReg, AtapiSmartInterrupt);
-
-  /* Wait for interrupt. */
-  return SRB_STATUS_PENDING;
-
-}
-
-static ULONG
-AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		      IN PSCSI_REQUEST_BLOCK Srb)
-{
-  UCHAR ByteCountHigh;
-  UCHAR ByteCountLow;
-  ULONG Retries;
-  ULONG CdbSize;
-  UCHAR Status;
-
-  DPRINT("AtapiSendAtapiCommand() called!\n");
-
-  if (Srb->PathId != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
-      return(SRB_STATUS_INVALID_PATH_ID);
-    }
-
-  if (Srb->TargetId > 1)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
-      return(SRB_STATUS_INVALID_TARGET_ID);
-    }
-
-  if (Srb->Lun != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
-      return(SRB_STATUS_INVALID_LUN);
-    }
-
-  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
-    {
-      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
-      return(SRB_STATUS_NO_DEVICE);
-    }
-
-  if (Srb->Cdb[0] == SCSIOP_MODE_SENSE)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_REQUEST;
-      return (SRB_STATUS_INVALID_REQUEST);
-    }
-
-  DPRINT("AtapiSendAtapiCommand(): TargetId: %lu\n",
-	 Srb->TargetId);
-
-  if (Srb->Cdb[0] == SCSIOP_INQUIRY)
-    return(AtapiInquiry(DeviceExtension,
-			Srb));
-
-  /* Set pointer to data buffer. */
-  DeviceExtension->DataBuffer = (PUCHAR)Srb->DataBuffer;
-  DeviceExtension->DataTransferLength = Srb->DataTransferLength;
-  DeviceExtension->CurrentSrb = Srb;
-
-  DPRINT("BufferAddress %x, BufferLength %d\n", Srb->DataBuffer, Srb->DataTransferLength);
-
-  /* Wait for BUSY to clear */
-  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
-    {
-      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-      if (!(Status & IDE_SR_BUSY))
-        {
-          break;
-        }
-      ScsiPortStallExecution(10);
-    }
-  DPRINT("status=%02x\n", Status);
-  DPRINT("waited %ld usecs for busy to clear\n", Retries * 10);
-  if (Retries >= IDE_MAX_BUSY_RETRIES)
-    {
-      DPRINT("Drive is BUSY for too long\n");
-      return(SRB_STATUS_BUSY);
-    }
-
-  /* Select the desired drive */
-  IDEWriteDriveHead(DeviceExtension->CommandPortBase,
-		    IDE_DH_FIXED | (Srb->TargetId ? IDE_DH_DRV1 : 0));
-
-  /* Wait a little while */
-  ScsiPortStallExecution(50);
-
-#if 0
-  /* Wait for BUSY to clear and DRDY to assert */
-  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
-    {
-      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-      if (!(Status & IDE_SR_BUSY) && (Status & IDE_SR_DRDY))
-	{
-	  break;
-	}
-      ScsiPortStallExecution(10);
-    }
-  DPRINT("waited %ld usecs for busy to clear after drive select\n", Retries * 10);
-  if (Retries >= IDE_MAX_BUSY_RETRIES)
-    {
-      DPRINT("Drive is BUSY for too long after drive select\n");
-      return(SRB_STATUS_BUSY);
-    }
-#endif
-
-#ifdef ENABLE_DMA
-  if ((DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_DMA_CMD) &&
-      (Srb->Cdb[0] == SCSIOP_READ || Srb->Cdb[0] == SCSIOP_WRITE))
-    {
-      DeviceExtension->UseDma = AtapiInitDma(DeviceExtension, Srb, Srb->SrbFlags & SRB_FLAGS_DATA_IN ? 1 << 3 : 0);
-    }
-  else
-    {
-      DeviceExtension->UseDma = FALSE;
-    }
-#endif
-
-  if (DeviceExtension->DataTransferLength < 0x10000)
-    {
-      ByteCountLow = (UCHAR)(DeviceExtension->DataTransferLength & 0xFF);
-      ByteCountHigh = (UCHAR)(DeviceExtension->DataTransferLength >> 8);
-    }
-  else
-    {
-      ByteCountLow = 0xFF;
-      ByteCountHigh = 0xFF;
-    }
-
-  /* Set feature register */
-#ifdef ENABLE_DMA
-  IDEWritePrecomp(DeviceExtension->CommandPortBase, DeviceExtension->UseDma ? 1 : 0);
+        GetBaseStatus(baseIoAddress1, statusByte);
 #else
-  IDEWritePrecomp(DeviceExtension->CommandPortBase, 0);
-#endif
 
-  /* Set command packet length */
-  IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, ByteCountHigh);
-  IDEWriteCylinderLow(DeviceExtension->CommandPortBase, ByteCountLow);
-
-  /* Issue command to drive */
-#ifdef ENABLE_DMA
-  if (DeviceExtension->UseDma)
-    {
-      AtapiExecuteCommand(DeviceExtension, IDE_CMD_PACKET, AtapiDmaPacketInterrupt);
-    }
-  else
-#endif
-    {
-      AtapiExecuteCommand(DeviceExtension, IDE_CMD_PACKET, AtapiPacketInterrupt);
-    }
-
-  /* Wait for DRQ to assert */
-  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
-    {
-      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-      if ((Status & IDE_SR_DRQ))
-	{
-	  break;
-	}
-      ScsiPortStallExecution(10);
-    }
-
-  /* Convert special SCSI SRBs to ATAPI format */
-  switch (Srb->Cdb[0])
-    {
-      case SCSIOP_FORMAT_UNIT:
-      case SCSIOP_MODE_SELECT:
-	AtapiScsiSrbToAtapi (Srb);
-	break;
-    }
-
-  CdbSize = ((DeviceExtension->DeviceParams[Srb->TargetId].ConfigBits & 0x3) == 1) ? 16 : 12;
-  DPRINT("CdbSize: %lu\n", CdbSize);
-
-  /* Write command packet */
-  IDEWriteBlock(DeviceExtension->CommandPortBase,
-		(PUSHORT)Srb->Cdb,
-		CdbSize);
-
-#ifdef ENABLE_DMA
-  if (DeviceExtension->UseDma)
-    {
-      UCHAR DmaCommand;
-      /* start DMA */
-      DmaCommand = IDEReadDMACommand(DeviceExtension->BusMasterRegisterBase);
-      IDEWriteDMACommand(DeviceExtension->BusMasterRegisterBase, DmaCommand|0x01);
-    }
-#endif
-  DPRINT("AtapiSendAtapiCommand() done\n");
-
-  return(SRB_STATUS_PENDING);
-}
-
-
-static ULONG
-AtapiSendIdeCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		    IN PSCSI_REQUEST_BLOCK Srb)
-{
-  ULONG SrbStatus = SRB_STATUS_SUCCESS;
-
-  DPRINT("AtapiSendIdeCommand() called!\n");
-
-  DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n",
-	 Srb->PathId,
-	 Srb->TargetId,
-	 Srb->Lun);
-
-  if (Srb->PathId != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
-      return(SRB_STATUS_INVALID_PATH_ID);
-    }
-
-  if (Srb->TargetId > 1)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
-      return(SRB_STATUS_INVALID_TARGET_ID);
-    }
-
-  if (Srb->Lun != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
-      return(SRB_STATUS_INVALID_LUN);
-    }
-
-  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
-    {
-      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
-      return(SRB_STATUS_NO_DEVICE);
-    }
-
-  switch (Srb->Cdb[0])
-    {
-      case SCSIOP_INQUIRY:
-	SrbStatus = AtapiInquiry(DeviceExtension,
-				 Srb);
-	break;
-
-      case SCSIOP_READ_CAPACITY:
-	SrbStatus = AtapiReadCapacity(DeviceExtension,
-				      Srb);
-	break;
-
-      case SCSIOP_READ:
-      case SCSIOP_WRITE:
-	SrbStatus = AtapiReadWrite(DeviceExtension,
-				   Srb);
-	break;
-
-      case SCSIOP_SYNCHRONIZE_CACHE:
-	SrbStatus = AtapiFlushCache(DeviceExtension,
-				    Srb);
-	break;
-
-      case SCSIOP_TEST_UNIT_READY:
-	SrbStatus = AtapiTestUnitReady(DeviceExtension,
-				       Srb);
-	break;
-
-      case SCSIOP_MODE_SENSE:
-
-      case SCSIOP_VERIFY:
-      case SCSIOP_START_STOP_UNIT:
-      case SCSIOP_REQUEST_SENSE:
-	break;
-
-     default:
-	DbgPrint("AtapiSendIdeCommand():unknown command %x\n",
-		 Srb->Cdb[0]);
-	SrbStatus = SRB_STATUS_INVALID_REQUEST;
-	break;
-    }
-
-  DPRINT("AtapiSendIdeCommand() done!\n");
-
-  return(SrbStatus);
-}
-
-
-static ULONG
-AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
-	     PSCSI_REQUEST_BLOCK Srb)
-{
-  PIDE_DRIVE_IDENTIFY DeviceParams;
-  PINQUIRYDATA InquiryData;
-
-  DPRINT("SCSIOP_INQUIRY: DeviceExtension %p  TargetId: %lu\n",
-	 DeviceExtension, Srb->TargetId);
-
-  InquiryData = Srb->DataBuffer;
-  DeviceParams = &DeviceExtension->DeviceParams[Srb->TargetId];
-
-  /* clear buffer */
-  memset(Srb->DataBuffer, 0, Srb->DataTransferLength);
-
-  /* set device class */
-  if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_ATAPI)
-    {
-      /* get it from the ATAPI configuration word */
-      InquiryData->DeviceType = (DeviceParams->ConfigBits >> 8) & 0x1F;
-      DPRINT("Device class: %u\n", InquiryData->DeviceType);
-    }
-  else
-    {
-      /* hard-disk */
-      InquiryData->DeviceType = DIRECT_ACCESS_DEVICE;
-    }
-
-  DPRINT("ConfigBits: 0x%x\n", DeviceParams->ConfigBits);
-  if (DeviceParams->ConfigBits & 0x80)
-    {
-      DPRINT("Removable media!\n");
-      InquiryData->RemovableMedia = 1;
-    }
-
-  memcpy(InquiryData->VendorId, DeviceParams->ModelNumber, 20);
-  IDESwapBytePairs(InquiryData->VendorId, 20);
-
-  memcpy(&InquiryData->ProductId[12], "    ", 4);
-
-  memcpy(InquiryData->ProductRevisionLevel, DeviceParams->FirmwareRev, 4);
-  IDESwapBytePairs(InquiryData->ProductRevisionLevel, 4);
-
-  InquiryData->AdditionalLength = 31;
-
-  DPRINT("VendorId: '%.20s'\n", InquiryData->VendorId);
-
-  Srb->SrbStatus = SRB_STATUS_SUCCESS;
-  return(SRB_STATUS_SUCCESS);
-}
-
-
-static ULONG
-AtapiReadCapacity(PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		  PSCSI_REQUEST_BLOCK Srb)
-{
-  PREAD_CAPACITY_DATA CapacityData;
-  PIDE_DRIVE_IDENTIFY DeviceParams;
-  LARGE_INTEGER LastSector;
-
-  DPRINT("SCSIOP_READ_CAPACITY: TargetId: %lu\n", Srb->TargetId);
-  CapacityData = (PREAD_CAPACITY_DATA)Srb->DataBuffer;
-  DeviceParams = &DeviceExtension->DeviceParams[Srb->TargetId];
-
-  /* Set sector (block) size to 512 bytes (big-endian). */
-  CapacityData->BytesPerBlock = 0x20000;
-
-  /* Calculate last sector (big-endian). */
-  if (DeviceParams->Capabilities & IDE_DRID_LBA_SUPPORTED)
-    {
-      if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
-        {
-	  ((PUSHORT)&LastSector)[0] = DeviceParams->Max48BitAddress[0];
-	  ((PUSHORT)&LastSector)[1] = DeviceParams->Max48BitAddress[1];
-	  ((PUSHORT)&LastSector)[2] = DeviceParams->Max48BitAddress[2];
-	  ((PUSHORT)&LastSector)[3] = DeviceParams->Max48BitAddress[3];
-	  LastSector.QuadPart -= 1;
-
-	}
-      else
-        {
-	  LastSector.u.HighPart = 0;
-          LastSector.u.LowPart = (ULONG)((DeviceParams->TMSectorCountHi << 16) +
-			                 DeviceParams->TMSectorCountLo)-1;
-	}
-    }
-  else
-    {
-      LastSector.u.HighPart = 0;
-      LastSector.u.LowPart = (ULONG)(DeviceParams->LogicalCyls *
-			             DeviceParams->LogicalHeads *
-			             DeviceParams->SectorsPerTrack)-1;
-    }
-  if (LastSector.u.HighPart)
-    {
-      DPRINT1("Disk is too large for our implementation (%I64d sectors\n", LastSector.QuadPart);
-      KEBUGCHECK(0);
-    }
-
-  CapacityData->LogicalBlockAddress = (((PUCHAR)&LastSector)[0] << 24) |
-				      (((PUCHAR)&LastSector)[1] << 16) |
-				      (((PUCHAR)&LastSector)[2] << 8) |
-				      ((PUCHAR)&LastSector)[3];
-
-  DPRINT("LastCount: %lu (%08lx / %08lx)\n",
-	 LastSector,
-	 LastSector,
-	 CapacityData->LogicalBlockAddress);
-
-  Srb->SrbStatus = SRB_STATUS_SUCCESS;
-  return(SRB_STATUS_SUCCESS);
-}
-
-
-static ULONG
-AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
-	       PSCSI_REQUEST_BLOCK Srb)
-{
-  PIDE_DRIVE_IDENTIFY DeviceParams;
-  ULONG StartingSector;
-  ULONG SectorCount;
-  UCHAR CylinderHigh[2];
-  UCHAR CylinderLow[2];
-  UCHAR DrvHead;
-  UCHAR SectorNumber[2];
-  UCHAR Command;
-  ULONG Retries;
-  UCHAR Status;
-  BOOLEAN (FASTCALL *Handler)(PATAPI_MINIPORT_EXTENSION DevExt);
-
-  DPRINT("AtapiReadWrite() called!\n");
-  DPRINT("SCSIOP_WRITE: TargetId: %lu\n",
-	 Srb->TargetId);
-
-  DeviceParams = &DeviceExtension->DeviceParams[Srb->TargetId];
-
-  /* Get starting sector number from CDB. */
-  StartingSector = ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte3 |
-		   ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte2 << 8 |
-		   ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte1 << 16 |
-		   ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte0 << 24;
-
-  SectorCount = (Srb->DataTransferLength + DeviceParams->BytesPerSector - 1) /
-		DeviceParams->BytesPerSector;
-
-  DPRINT("Starting sector %lu  Number of bytes %lu  Sectors %lu\n",
-	 StartingSector,
-	 Srb->DataTransferLength,
-	 SectorCount);
-
-  if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
-    {
-      SectorNumber[0] = StartingSector & 0xff;
-      CylinderLow[0] = (StartingSector >> 8) & 0xff;
-      CylinderHigh[0] = (StartingSector >> 16) & 0xff;
-      SectorNumber[1] = (StartingSector >> 24) & 0xff;
-      CylinderLow[1] = 0;
-      CylinderHigh[1] = 0;
-      DrvHead = (Srb->TargetId ? IDE_DH_DRV1 : 0) | IDE_DH_LBA;
-#if 0
-      DPRINT("%s:BUS=%04x:DRV=%d:LBA48=1:BLK=%08d:SC=%02x:CM=%02x\n",
-	     (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "READ" : "WRITE",
-	     DeviceExtension->CommandPortBase,
-	     DrvHead & IDE_DH_DRV1 ? 1 : 0,
-	     (SectorNumber[1] << 24) +
-	     (CylinderHigh[0] << 16) + (CylinderLow[0] << 8) + DectorNumberLow[0],
-	     SectorCount,
-	     Command);
-#endif
-    }
-  else if (DeviceParams->Capabilities & IDE_DRID_LBA_SUPPORTED)
-    {
-      SectorNumber[0] = StartingSector & 0xff;
-      CylinderLow[0] = (StartingSector >> 8) & 0xff;
-      CylinderHigh[0] = (StartingSector >> 16) & 0xff;
-      SectorNumber[1] = 0;
-      CylinderLow[1] = 0;
-      CylinderHigh[1] = 0;
-      DrvHead = ((StartingSector >> 24) & 0x0f) |
-                 (Srb->TargetId ? IDE_DH_DRV1 : 0) |
-		 IDE_DH_LBA;
-
-      DPRINT("%s:BUS=%04x:DRV=%d:LBA=1:BLK=%08d:SC=%02x:CM=%02x\n",
-	     (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "READ" : "WRITE",
-	     DeviceExtension->CommandPortBase,
-	     DrvHead & IDE_DH_DRV1 ? 1 : 0,
-	     ((DrvHead & 0x0f) << 24) +
-	     (CylinderHigh[0] << 16) + (CylinderLow[0] << 8) + SectorNumber[0],
-	     SectorCount,
-	     Command);
-    }
-  else
-    {
-      SectorNumber[0] = (StartingSector % DeviceParams->SectorsPerTrack) + 1;
-      StartingSector /= DeviceParams->SectorsPerTrack;
-      DrvHead = (StartingSector % DeviceParams->LogicalHeads) |
-          (Srb->TargetId ? IDE_DH_DRV1 : 0);
-      StartingSector /= DeviceParams->LogicalHeads;
-      CylinderLow[0] = StartingSector & 0xff;
-      CylinderHigh[0] = StartingSector >> 8;
-      SectorNumber[1] = 0;
-      CylinderLow[1] = 0;
-      CylinderHigh[1] = 0;
-
-      DPRINT("%s:BUS=%04x:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
-             (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "READ" : "WRITE",
-             DeviceExtension->CommandPortBase,
-             DrvHead & IDE_DH_DRV1 ? 1 : 0,
-             CylinderHigh[0],
-             CylinderLow[0],
-             DrvHead & 0x0f,
-             SectorNumber[0],
-             SectorCount,
-             Command);
-    }
-
-  /* Set pointer to data buffer. */
-  DeviceExtension->DataBuffer = (PUCHAR)Srb->DataBuffer;
-  DeviceExtension->DataTransferLength = Srb->DataTransferLength;
-
-  DeviceExtension->CurrentSrb = Srb;
-
-  /*  wait for BUSY to clear  */
-  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
-    {
-      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-      if (!(Status & IDE_SR_BUSY))
-        {
-          break;
+        if (deviceExtension->InterruptMode == LevelSensitive) {
+            if (deviceExtension->BaseIoAddress1[0] != NULL) {
+               baseIoAddress1 = (PATAPI_REGISTERS_1)deviceExtension->BaseIoAddress1[0];
+               GetBaseStatus(baseIoAddress1, statusByte);
+            }
+            if (deviceExtension->BaseIoAddress1[1] != NULL) {
+               baseIoAddress1 = (PATAPI_REGISTERS_1)deviceExtension->BaseIoAddress1[1];
+               GetBaseStatus(baseIoAddress1, statusByte);
+            }
         }
-      ScsiPortStallExecution(10);
-    }
-  DPRINT("status=%02x\n", Status);
-  DPRINT("waited %ld usecs for busy to clear\n", Retries * 10);
-  if (Retries >= IDE_MAX_BUSY_RETRIES)
-    {
-      DPRINT ("Drive is BUSY for too long\n");
-      return(SRB_STATUS_BUSY);
-    }
-
-  /*  Select the desired drive  */
-  IDEWriteDriveHead(DeviceExtension->CommandPortBase,
-		    IDE_DH_FIXED | DrvHead);
-
-  ScsiPortStallExecution(10);
-#if 0
-  /*  wait for BUSY to clear and DRDY to assert */
-  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
-    {
-      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-      if (!(Status & IDE_SR_BUSY) && (Status & IDE_SR_DRDY))
-	{
-	  break;
-	}
-      ScsiPortStallExecution(10);
-    }
-  DPRINT("waited %ld usecs for busy to clear after drive select\n", Retries * 10);
-  if (Retries >= IDE_MAX_BUSY_RETRIES)
-    {
-      DPRINT("Drive is BUSY for too long after drive select\n");
-      return(SRB_STATUS_BUSY);
-    }
 #endif
-
-  /* Setup command parameters */
-  if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
-    {
-      IDEWritePrecomp(DeviceExtension->CommandPortBase, 0);
-      IDEWriteSectorCount(DeviceExtension->CommandPortBase, SectorCount >> 8);
-      IDEWriteSectorNum(DeviceExtension->CommandPortBase, SectorNumber[1]);
-      IDEWriteCylinderLow(DeviceExtension->CommandPortBase, CylinderLow[1]);
-      IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, CylinderHigh[1]);
+        return FALSE;
     }
 
-  IDEWritePrecomp(DeviceExtension->CommandPortBase, 0);
-  IDEWriteSectorCount(DeviceExtension->CommandPortBase, SectorCount & 0xff);
-  IDEWriteSectorNum(DeviceExtension->CommandPortBase, SectorNumber[0]);
-  IDEWriteCylinderLow(DeviceExtension->CommandPortBase, CylinderLow[0]);
-  IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, CylinderHigh[0]);
+    if (!(deviceExtension->ExpectingInterrupt)) {
 
-#ifdef ENABLE_DMA
-  if (DeviceExtension->PRDTable &&
-      DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_DMA_CMD)
-    {
-      DeviceExtension->UseDma = AtapiInitDma(DeviceExtension, Srb, Srb->SrbFlags & SRB_FLAGS_DATA_IN ? 1 << 3 : 0);
-    }
-  if (DeviceExtension->UseDma)
-    {
-      Handler = AtapiDmaInterrupt;
-      if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
-        {
-	  Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_DMA_EXT : IDE_CMD_WRITE_DMA_EXT;
-	}
-      else
-        {
-          Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_DMA : IDE_CMD_WRITE_DMA;
-	}
-    }
-  else
-#endif
-    {
-      Handler = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? AtapiReadInterrupt : AtapiWriteInterrupt;
-      if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_MULTI_SECTOR_CMD)
-        {
-          if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
-	    {
-              Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_MULTIPLE_EXT : IDE_CMD_WRITE_MULTIPLE_EXT;
-	    }
-	  else
-	    {
-              Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_MULTIPLE : IDE_CMD_WRITE_MULTIPLE;
-	    }
-	}
-      else
-        {
-          if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
-	    {
-	      Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_EXT : IDE_CMD_WRITE_EXT;
-	    }
-	  else
-	    {
-	      Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ : IDE_CMD_WRITE;
-	    }
-	}
+        DebugPrint((3,
+                    "AtapiInterrupt: Unexpected interrupt.\n"));
+        return FALSE;
     }
 
-  AtapiExecuteCommand(DeviceExtension, Command, Handler);
+    //
+    // Clear interrupt by reading status.
+    //
 
-#ifdef ENABLE_DMA
-  if (DeviceExtension->UseDma)
-    {
-      UCHAR DmaCommand;
-      /* start DMA */
-      DmaCommand = IDEReadDMACommand(DeviceExtension->BusMasterRegisterBase);
-      IDEWriteDMACommand(DeviceExtension->BusMasterRegisterBase, DmaCommand|0x01);
-    }
-  else
-#endif
-    {
-      if (Srb->SrbFlags & SRB_FLAGS_DATA_OUT)
-        {
-          /* Write data block */
-          PUCHAR TargetAddress;
-          ULONG TransferSize;
+    GetBaseStatus(baseIoAddress1, statusByte);
 
-          /* Wait for controller ready */
-          for (Retries = 0; Retries < IDE_MAX_WRITE_RETRIES; Retries++)
-	    {
-	      UCHAR  Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-	      if (!(Status & IDE_SR_BUSY) || (Status & IDE_SR_ERR))
-	        {
-	          break;
-	        }
-	      ScsiPortStallExecution(10);
-	    }
-          if (Retries >= IDE_MAX_WRITE_RETRIES)
-	    {
-	      DPRINT1("Drive is BUSY for too long after sending write command\n");
-	      return(SRB_STATUS_BUSY);
-	    }
+    DebugPrint((3,
+                "AtapiInterrupt: Entered with status (%x)\n",
+                statusByte));
 
-          /* Update DeviceExtension data */
-          TransferSize = DeviceExtension->TransferSize[Srb->TargetId];
-          if (DeviceExtension->DataTransferLength < TransferSize)
-	    {
-	      TransferSize = DeviceExtension->DataTransferLength;
-	    }
 
-          TargetAddress = DeviceExtension->DataBuffer;
-          DeviceExtension->DataBuffer += TransferSize;
-          DeviceExtension->DataTransferLength -= TransferSize;
+    if (statusByte & IDE_STATUS_BUSY) {
+        if (deviceExtension->DriverMustPoll) {
 
-          /* Write data block */
-          if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_DWORD_IO)
-	    {
-	      IDEWriteBlock32(DeviceExtension->CommandPortBase,
-			      TargetAddress,
-			      TransferSize);
-	    }
-          else
-	    {
-	      IDEWriteBlock(DeviceExtension->CommandPortBase,
-			    TargetAddress,
-			    TransferSize);
-	    }
-	}
-    }
+            //
+            // Crashdump is polling and we got caught with busy asserted.
+            // Just go away, and we will be polled again shortly.
+            //
 
-  DPRINT("AtapiReadWrite() done!\n");
+            DebugPrint((3,
+                        "AtapiInterrupt: Hit BUSY while polling during crashdump.\n"));
 
-  /* Wait for interrupt. */
-  return(SRB_STATUS_PENDING);
-}
-
-
-static ULONG
-AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		PSCSI_REQUEST_BLOCK Srb)
-{
-  ULONG Retries;
-  UCHAR Status;
-
-  DPRINT("AtapiFlushCache() called!\n");
-  DPRINT("SCSIOP_SYNCRONIZE_CACHE: TargetId: %lu\n",
-	 Srb->TargetId);
-
-  if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_NO_FLUSH)
-    {
-      /*
-       * NOTE: Don't flush the cache for CD/DVD drives. Although
-       * the ATAPI-6 standard allows that, it has been experimentally
-       * proved that it can damage some broken LG drives. Afterall
-       * it doesn't make sense to flush cache on devices we don't
-       * write to.
-       */
-       
-      /* The device states it doesn't support the command or it is disabled */      
-      DPRINT("The drive doesn't support FLUSH_CACHE\n");
-      return SRB_STATUS_INVALID_REQUEST;
-    }
-
-  /* Wait for BUSY to clear */
-  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
-    {
-      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-      if (!(Status & IDE_SR_BUSY))
-        {
-          break;
-        }
-      ScsiPortStallExecution(10);
-    }
-  DPRINT("Status=%02x\n", Status);
-  DPRINT("Waited %ld usecs for busy to clear\n", Retries * 10);
-  if (Retries >= IDE_MAX_BUSY_RETRIES)
-    {
-      DPRINT1("Drive is BUSY for too long\n");
-      return(SRB_STATUS_BUSY);
-    }
-
-  /* Select the desired drive */
-  IDEWriteDriveHead(DeviceExtension->CommandPortBase,
-		    IDE_DH_FIXED | (Srb->TargetId ? IDE_DH_DRV1 : 0));
-  ScsiPortStallExecution(10);
-
-  /* Issue command to drive */
-  AtapiExecuteCommand(DeviceExtension,
-	              DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS ? IDE_CMD_FLUSH_CACHE_EXT : IDE_CMD_FLUSH_CACHE,
-		      AtapiNoDataInterrupt);
-
-
-  DPRINT("AtapiFlushCache() done!\n");
-
-  /* Wait for interrupt. */
-  return(SRB_STATUS_PENDING);
-}
-
-
-static ULONG
-AtapiTestUnitReady(PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		   PSCSI_REQUEST_BLOCK Srb)
-{
-  ULONG Retries;
-  UCHAR Status;
-  UCHAR Error;
-
-  DPRINT1("AtapiTestUnitReady() called!\n");
-
-  DPRINT1("SCSIOP_TEST_UNIT_READY: TargetId: %lu\n",
-	 Srb->TargetId);
-
-  /* Return success if media status is not supported */
-  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_MEDIA_STATUS))
-    {
-      Srb->SrbStatus = SRB_STATUS_SUCCESS;
-      return(SRB_STATUS_SUCCESS);
-    }
-
-  /* Wait for BUSY to clear */
-  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
-    {
-      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-      if (!(Status & IDE_SR_BUSY))
-        {
-          break;
-        }
-      ScsiPortStallExecution(10);
-    }
-  DPRINT1("Status=%02x\n", Status);
-  DPRINT1("Waited %ld usecs for busy to clear\n", Retries * 10);
-  if (Retries >= IDE_MAX_BUSY_RETRIES)
-    {
-      DPRINT1("Drive is BUSY for too long\n");
-      return(SRB_STATUS_BUSY);
-    }
-
-  /* Select the desired drive */
-  IDEWriteDriveHead(DeviceExtension->CommandPortBase,
-		    IDE_DH_FIXED | (Srb->TargetId ? IDE_DH_DRV1 : 0));
-  ScsiPortStallExecution(10);
-
-  /* Issue command to drive */
-  AtapiExecuteCommand(DeviceExtension, IDE_CMD_GET_MEDIA_STATUS, AtapiNoDataInterrupt);
-
-  /* Wait for controller ready */
-  for (Retries = 0; Retries < IDE_MAX_WRITE_RETRIES; Retries++)
-    {
-      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-      if (!(Status & IDE_SR_BUSY) || (Status & IDE_SR_ERR))
-	{
-	  break;
-	}
-      ScsiPortStallExecution(10);
-    }
-  if (Retries >= IDE_MAX_WRITE_RETRIES)
-    {
-      DPRINT1("Drive is BUSY for too long after sending write command\n");
-      DeviceExtension->Handler = NULL;
-      return(SRB_STATUS_BUSY);
-    }
-
-  if (Status & IDE_SR_ERR)
-    {
-      Error = IDEReadError(DeviceExtension->CommandPortBase);
-      if (Error == IDE_ER_UNC)
-	{
-CHECKPOINT1;
-	  /* Handle write protection 'error' */
-	  Srb->SrbStatus = SRB_STATUS_SUCCESS;
-          DeviceExtension->Handler = NULL;
-	  return(SRB_STATUS_SUCCESS);
-	}
-      else
-	{
-CHECKPOINT1;
-	  /* Indicate expecting an interrupt. */
-	  return(SRB_STATUS_PENDING);
-	}
-    }
-
-  DeviceExtension->Handler = NULL;
-
-  DPRINT1("AtapiTestUnitReady() done!\n");
-
-  Srb->SrbStatus = SRB_STATUS_SUCCESS;
-  return(SRB_STATUS_SUCCESS);
-}
-
-
-static UCHAR
-AtapiErrorToScsi(PVOID DeviceExtension,
-		 PSCSI_REQUEST_BLOCK Srb)
-{
-  PATAPI_MINIPORT_EXTENSION DevExt;
-  ULONG CommandPortBase;
-  ULONG ControlPortBase;
-  UCHAR ErrorReg;
-  UCHAR ScsiStatus;
-  UCHAR SrbStatus;
-
-  DPRINT("AtapiErrorToScsi() called\n");
-
-  DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
-
-  CommandPortBase = DevExt->CommandPortBase;
-  ControlPortBase = DevExt->ControlPortBase;
-
-  ErrorReg = IDEReadError(CommandPortBase);
-
-  if (DevExt->DeviceFlags[Srb->TargetId] & DEVICE_ATAPI)
-    {
-      switch (ErrorReg >> 4)
-	{
-	  case SCSI_SENSE_NO_SENSE:
-	    DPRINT("ATAPI error: SCSI_SENSE_NO_SENSE\n");
-	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
-	    SrbStatus = SRB_STATUS_ERROR;
-	    break;
-
-	  case SCSI_SENSE_RECOVERED_ERROR:
-	    DPRINT("ATAPI error: SCSI_SENSE_RECOVERED_SENSE\n");
-	    ScsiStatus = 0;
-	    SrbStatus = SRB_STATUS_SUCCESS;
-	    break;
-
-	  case SCSI_SENSE_NOT_READY:
-	    DPRINT("ATAPI error: SCSI_SENSE_NOT_READY\n");
-	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
-	    SrbStatus = SRB_STATUS_ERROR;
-	    break;
-
-	  case SCSI_SENSE_MEDIUM_ERROR:
-	    DPRINT("ATAPI error: SCSI_SENSE_MEDIUM_ERROR\n");
-	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
-	    SrbStatus = SRB_STATUS_ERROR;
-	    break;
-
-	  case SCSI_SENSE_HARDWARE_ERROR:
-	    DPRINT("ATAPI error: SCSI_SENSE_HARDWARE_ERROR\n");
-	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
-	    SrbStatus = SRB_STATUS_ERROR;
-	    break;
-
-	  case SCSI_SENSE_ILLEGAL_REQUEST:
-	    DPRINT("ATAPI error: SCSI_SENSE_ILLEGAL_REQUEST\n");
-	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
-	    SrbStatus = SRB_STATUS_ERROR;
-	    break;
-
-	  case SCSI_SENSE_UNIT_ATTENTION:
-	    DPRINT("ATAPI error: SCSI_SENSE_UNIT_ATTENTION\n");
-	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
-	    SrbStatus = SRB_STATUS_ERROR;
-	    break;
-
-	  case SCSI_SENSE_DATA_PROTECT:
-	    DPRINT("ATAPI error: SCSI_SENSE_DATA_PROTECT\n");
-	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
-	    SrbStatus = SRB_STATUS_ERROR;
-	    break;
-
-	  case SCSI_SENSE_BLANK_CHECK:
-	    DPRINT("ATAPI error: SCSI_SENSE_BLANK_CHECK\n");
-	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
-	    SrbStatus = SRB_STATUS_ERROR;
-	    break;
-
-	  case SCSI_SENSE_ABORTED_COMMAND:
-	    DPRINT("ATAPI error: SCSI_SENSE_ABORTED_COMMAND\n");
-	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
-	    SrbStatus = SRB_STATUS_ERROR;
-	    break;
-
-	  default:
-	    DPRINT("ATAPI error: Invalid sense key\n");
-	    ScsiStatus = 0;
-	    SrbStatus = SRB_STATUS_ERROR;
-	    break;
-	}
-    }
-  else
-    {
-      DPRINT1("IDE error: %02x\n", ErrorReg);
-
-      ScsiStatus = 0;
-      SrbStatus = SRB_STATUS_ERROR;
-
-#if 0
-      UCHAR SectorCount, SectorNum, CylinderLow, CylinderHigh;
-      UCHAR DriveHead;
-
-      CylinderLow = IDEReadCylinderLow(CommandPortBase);
-      CylinderHigh = IDEReadCylinderHigh(CommandPortBase);
-      DriveHead = IDEReadDriveHead(CommandPortBase);
-      SectorCount = IDEReadSectorCount(CommandPortBase);
-      SectorNum = IDEReadSectorNum(CommandPortBase);
-
-      DPRINT1("IDE Error: ERR:%02x CYLLO:%02x CYLHI:%02x SCNT:%02x SNUM:%02x\n",
-	      ErrorReg,
-	      CylinderLow,
-	      CylinderHigh,
-	      SectorCount,
-	      SectorNum);
-#endif
-    }
-
-
-
-  Srb->ScsiStatus = ScsiStatus;
-
-  DPRINT("AtapiErrorToScsi() done\n");
-
-  return(SrbStatus);
-}
-
-
-static VOID
-AtapiScsiSrbToAtapi (PSCSI_REQUEST_BLOCK Srb)
-{
-  DPRINT("AtapiConvertScsiToAtapi() called\n");
-
-  Srb->CdbLength = 12;
-
-  switch (Srb->Cdb[0])
-    {
-      case SCSIOP_FORMAT_UNIT:
-	Srb->Cdb[0] = ATAPI_FORMAT_UNIT;
-	break;
-
-      case SCSIOP_MODE_SELECT:
-	  {
-	    PATAPI_MODE_SELECT12 AtapiModeSelect;
-	    UCHAR Length;
-
-	    AtapiModeSelect = (PATAPI_MODE_SELECT12)Srb->Cdb;
-	    Length = ((PCDB)Srb->Cdb)->MODE_SELECT.ParameterListLength;
-
-	    RtlZeroMemory (Srb->Cdb,
-			   MAXIMUM_CDB_SIZE);
-	    AtapiModeSelect->OperationCode = ATAPI_MODE_SELECT;
-	    AtapiModeSelect->PFBit = 1;
-	    AtapiModeSelect->ParameterListLengthMsb = 0;
-	    AtapiModeSelect->ParameterListLengthLsb = Length;
-	  }
-	break;
-    }
-}
-
-static VOID FASTCALL
-AtapiCompleteRequest(PATAPI_MINIPORT_EXTENSION DevExt,
-		     UCHAR SrbStatus)
-{
-  PSCSI_REQUEST_BLOCK Srb;
-  Srb = DevExt->CurrentSrb;
-
-  DPRINT("AtapiCompleteRequest(DevExt %x, SrbStatus %x)\n", DevExt, SrbStatus);
-
-  Srb->SrbStatus = SrbStatus;
-  if (SrbStatus == SRB_STATUS_ERROR)
-    {
-      Srb->SrbStatus = AtapiErrorToScsi((PVOID)DevExt, Srb);
-    }
-  else if (SrbStatus == SRB_STATUS_DATA_OVERRUN)
-    {
-      Srb->DataTransferLength -= DevExt->DataTransferLength;
-    }
-
-  DevExt->Handler = NULL;
-  ScsiPortNotification(RequestComplete, (PVOID)DevExt, Srb);
-  ScsiPortNotification(NextRequest, (PVOID)DevExt, NULL);
-}
-
-#ifdef ENABLE_DMA
-static BOOLEAN FASTCALL
-AtapiDmaPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
-{
-  UCHAR SrbStatus;
-  UCHAR DmaCommand;
-  UCHAR DmaStatus;
-  UCHAR Status;
-  UCHAR Error;
-  UCHAR SensKey;
-
-  DPRINT("AtapiPacketDmaInterrupt\n");
-
-  DevExt->UseDma = FALSE;
-
-  /* stop DMA */
-  DmaCommand = IDEReadDMACommand(DevExt->BusMasterRegisterBase);
-  IDEWriteDMACommand(DevExt->BusMasterRegisterBase, DmaCommand & 0xfe);
-  /* get DMA status */
-  DmaStatus = IDEReadDMAStatus(DevExt->BusMasterRegisterBase);
-  /* clear the INTR & ERROR bits */
-  IDEWriteDMAStatus(DevExt->BusMasterRegisterBase, DmaStatus | 0x06);
-
-  Status = IDEReadStatus(DevExt->CommandPortBase);
-  DPRINT("DriveStatus: %x\n", Status);
-
-  if (Status & (IDE_SR_BUSY|IDE_SR_ERR))
-    {
-      if (Status & IDE_SR_ERR)
-        {
-	  Error = IDEReadError(DevExt->CommandPortBase);
-	  SensKey = Error >> 4;
-	  DPRINT("DriveError: %x, SenseKey: %x\n", Error, SensKey);
-	}
-      SrbStatus = SRB_STATUS_ERROR;
-    }
-  else
-    {
-      if ((DmaStatus & 0x07) != 0x04)
-        {
-          DPRINT("DmaStatus: %02x\n", DmaStatus);
-          SrbStatus = SRB_STATUS_ERROR;
-	}
-      else
-        {
-	  SrbStatus = STATUS_SUCCESS;
-	}
-    }
-  AtapiCompleteRequest(DevExt, SrbStatus);
-  DPRINT("AtapiDmaPacketInterrupt() done\n");
-  return TRUE;
-}
-#endif
-
-static BOOLEAN FASTCALL
-AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
-{
-  PSCSI_REQUEST_BLOCK Srb;
-  UCHAR Status;
-  UCHAR IntReason;
-  ULONG TransferSize;
-  ULONG JunkSize = 0;
-  BOOLEAN IsLastBlock;
-  PUCHAR TargetAddress;
-  ULONG Retries;
-  UCHAR SrbStatus;
-  UCHAR Error;
-  UCHAR SensKey;
-
-  DPRINT("AtapiPacketInterrupt()\n");
-
-  Srb = DevExt->CurrentSrb;
-
-  Status = IDEReadStatus(DevExt->CommandPortBase);
-  DPRINT("DriveStatus: %x\n", Status);
-
-  if (Status & (IDE_SR_BUSY|IDE_SR_ERR))
-    {
-      if (Status & IDE_SR_ERR)
-        {
-	  Error = IDEReadError(DevExt->CommandPortBase);
-	  SensKey = Error >> 4;
-	  DPRINT("DriveError: %x, SenseKey: %x\n", Error, SensKey);
-	}
-
-      AtapiCompleteRequest(DevExt, SRB_STATUS_ERROR);
-      DPRINT("AtapiPacketInterrupt() done\n");
-      return TRUE;
-    }
-
-  IntReason = IDEReadSectorCount(DevExt->CommandPortBase);
-  TransferSize = IDEReadCylinderLow(DevExt->CommandPortBase);
-  TransferSize += IDEReadCylinderHigh(DevExt->CommandPortBase) << 8;
-
-  if (!(Status & IDE_SR_DRQ))
-    {
-      if (DevExt->DataTransferLength > 0)
-        {
-	  DPRINT1("AtapiPacketInterrupt: data underrun (%d bytes), command was %02x\n",
-	          DevExt->DataTransferLength, Srb->Cdb[0]);
-	  SrbStatus = SRB_STATUS_DATA_OVERRUN;
-	}
-      else
-        {
-	  SrbStatus = SRB_STATUS_SUCCESS;
-	}
-      AtapiCompleteRequest(DevExt, SrbStatus);
-      DPRINT("AtapiPacketInterrupt() done\n");
-      return TRUE;
-    }
-
-  TargetAddress = DevExt->DataBuffer;
-
-  if (Srb->SrbFlags & SRB_FLAGS_DATA_IN)
-    {
-      DPRINT("read data\n");
-      if (DevExt->DataTransferLength <= TransferSize)
-        {
-	  JunkSize = TransferSize - DevExt->DataTransferLength;
-	  TransferSize = DevExt->DataTransferLength;
-
-	  DevExt->DataTransferLength = 0;
-	  IsLastBlock = TRUE;
-	}
-      else
-	{
-	  DevExt->DataTransferLength -= TransferSize;
-	  IsLastBlock = FALSE;
-	}
-
-      DPRINT("TargetAddress %x, TransferSize %d\n", TargetAddress, TransferSize);
-
-      DevExt->DataBuffer += TransferSize;
-
-      IDEReadBlock(DevExt->CommandPortBase, TargetAddress, TransferSize);
-
-      /* check DRQ */
-      if (IsLastBlock)
-        {
-	  /* Read remaining junk from device */
-	  while (JunkSize > 0)
-	    {
-	      IDEReadWord(DevExt->CommandPortBase);
-	      JunkSize -= 2;
-	    }
-
-	  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES && (IDEReadStatus(DevExt->CommandPortBase) & IDE_SR_BUSY); Retries++)
-	    {
-	      ScsiPortStallExecution(10);
-	    }
-
-	  /* Check for data overrun */
-	  while (IDEReadStatus(DevExt->CommandPortBase) & IDE_SR_DRQ)
-	    {
-	      DPRINT1("AtapiInterrupt(): reading overrun data!\n");
-	      IDEReadWord(DevExt->CommandPortBase);
-	    }
-	}
-
-      SrbStatus = SRB_STATUS_SUCCESS;
-    }
-  else if (Srb->SrbFlags & SRB_FLAGS_DATA_OUT)
-    {
-      DPRINT("write data\n");
-      if (DevExt->DataTransferLength < TransferSize)
-        {
-	  TransferSize = DevExt->DataTransferLength;
-	}
-
-      TargetAddress = DevExt->DataBuffer;
-
-      DPRINT("TargetAddress %x, TransferSize %x\n", TargetAddress, TransferSize);
-
-      DevExt->DataBuffer += TransferSize;
-      DevExt->DataTransferLength -= TransferSize;
-
-      /* Write the sector */
-      IDEWriteBlock(DevExt->CommandPortBase, TargetAddress, TransferSize);
-      SrbStatus = SRB_STATUS_SUCCESS;
-      IsLastBlock = FALSE;
-    }
-  else
-    {
-      DPRINT("Unspecified transfer direction!\n");
-      SrbStatus = SRB_STATUS_SUCCESS;
-      IsLastBlock = TRUE;
-    }
-  if (IsLastBlock)
-    {
-      AtapiCompleteRequest(DevExt, SrbStatus);
-    }
-  DPRINT("AtapiPacketInterrupt() done\n");
-  return TRUE;
-}
-
-static BOOLEAN FASTCALL
-AtapiNoDataInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
-{
-  UCHAR Status;
-
-  DPRINT("AtapiNoDataInterrupt()\n");
-
-  Status = IDEReadStatus(DevExt->CommandPortBase);
-  AtapiCompleteRequest(DevExt,
-                       (Status & (IDE_SR_DRDY|IDE_SR_BUSY|IDE_SR_ERR|IDE_SR_DRQ)) == IDE_SR_DRDY ? SRB_STATUS_SUCCESS : SRB_STATUS_ERROR);
-
-  DPRINT("AtapiNoDatanterrupt() done!\n");
-  return TRUE;
-}
-
-#ifdef ENABLE_DMA
-static BOOLEAN FASTCALL
-AtapiDmaInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
-{
-  UCHAR DmaCommand;
-  UCHAR DmaStatus;
-  UCHAR Status;
-
-  DPRINT("AtapiDmaInterrupt()\n");
-
-  DevExt->UseDma = FALSE;
-  /* stop DMA */
-  DmaCommand = IDEReadDMACommand(DevExt->BusMasterRegisterBase);
-  IDEWriteDMACommand(DevExt->BusMasterRegisterBase, DmaCommand & 0xfe);
-  /* get DMA status */
-  DmaStatus = IDEReadDMAStatus(DevExt->BusMasterRegisterBase);
-  /* clear the INTR & ERROR bits */
-  IDEWriteDMAStatus(DevExt->BusMasterRegisterBase, DmaStatus | 0x06);
-
-  /* read the drive status */
-  Status = IDEReadStatus(DevExt->CommandPortBase);
-  if ((Status & (IDE_SR_DRDY|IDE_SR_BUSY|IDE_SR_ERR|IDE_SR_WERR|IDE_SR_DRQ)) == IDE_SR_DRDY &&
-      (DmaStatus & 0x07) == 4)
-    {
-      AtapiCompleteRequest(DevExt, SRB_STATUS_SUCCESS);
-      DPRINT("AtapiDmaInterrupt() done\n");
-      return TRUE;
-    }
-  DPRINT1("Status %x\n", Status);
-  DPRINT1("%x\n", DmaStatus);
-  AtapiCompleteRequest(DevExt, SRB_STATUS_ERROR);
-  DPRINT1("AtapiDmaReadInterrupt() done\n");
-  return TRUE;
-}
-#endif
-
-static BOOLEAN FASTCALL
-AtapiSmartInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
-{
-  PSCSI_REQUEST_BLOCK Srb;
-  UCHAR DeviceStatus;
-  PSRB_IO_CONTROL SrbIoControl;
-  PSENDCMDOUTPARAMS OutParams;
-  PIDEREGS IdeRegs;
-
-  DPRINT("AtapiSmartInterrupt() called!\n");
-
-  Srb = DevExt->CurrentSrb;
-
-
-  DeviceStatus = IDEReadStatus(DevExt->CommandPortBase);
-  if ((DeviceStatus & (IDE_SR_DRQ|IDE_SR_BUSY|IDE_SR_ERR)) != (DevExt->DataTransferLength ? IDE_SR_DRQ : 0))
-    {
-      if (DeviceStatus & (IDE_SR_ERR|IDE_SR_DRQ))
-        {
-	  AtapiCompleteRequest(DevExt, SRB_STATUS_ERROR);
-          DPRINT("AtapiSmartInterrupt() done!\n");
-	  return TRUE;
-        }
-      DPRINT("AtapiSmartInterrupt() done!\n");
-      return FALSE;
-    }
-
-  DPRINT("CommandPortBase: %lx  ControlPortBase: %lx\n", DevExt->CommandPortBase, DevExt->ControlPortBase);
-
-  if (DevExt->DataTransferLength)
-    {
-      IDEReadBlock(DevExt->CommandPortBase, DevExt->DataBuffer, 512);
-      DevExt->DataTransferLength -= 512;
-      DevExt->DataBuffer += 512;
-    }
-
-  if (DevExt->DataTransferLength == 0)
-    {
-      SrbIoControl = (PSRB_IO_CONTROL)Srb->DataBuffer;
-      OutParams = (PSENDCMDOUTPARAMS)(SrbIoControl + 1);
-
-      OutParams->DriverStatus.bDriverError = 0;
-      OutParams->DriverStatus.bIDEError = 0;
-
-      if (SrbIoControl->ControlCode == IOCTL_SCSI_MINIPORT_RETURN_STATUS)
-        {
-          IdeRegs = (PIDEREGS)OutParams->bBuffer;
-
-          IdeRegs->bFeaturesReg = RETURN_SMART_STATUS;
-          IdeRegs->bSectorCountReg = IDEReadSectorCount(DevExt->CommandPortBase);
-          IdeRegs->bSectorNumberReg = IDEReadSectorNum(DevExt->CommandPortBase);
-          IdeRegs->bCylLowReg = IDEReadCylinderLow(DevExt->CommandPortBase);
-          IdeRegs->bCylHighReg = IDEReadCylinderHigh(DevExt->CommandPortBase);
-          IdeRegs->bDriveHeadReg = IDEReadDriveHead(DevExt->CommandPortBase);
-          IdeRegs->bCommandReg = SMART_CMD;
-          IdeRegs->bReserved = 0;
-
-          OutParams->cBufferSize = 8;
-        }
-      else
-        {
-          OutParams->cBufferSize = DevExt->DataBuffer - OutParams->bBuffer;
+            return TRUE;
         }
 
-      AtapiCompleteRequest(DevExt, SRB_STATUS_SUCCESS);
-    }
+        //
+        // Ensure BUSY is non-asserted.
+        //
 
-  DPRINT("AtapiSmartInterrupt() done!\n");
+        for (i = 0; i < 10; i++) {
 
-  return(TRUE);
-}
-
-
-static BOOLEAN FASTCALL
-AtapiReadInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
-{
-  PSCSI_REQUEST_BLOCK Srb;
-  UCHAR DeviceStatus;
-  BOOLEAN IsLastBlock;
-  PUCHAR TargetAddress;
-  ULONG TransferSize;
-
-  DPRINT("AtapiReadInterrupt() called!\n");
-
-  Srb = DevExt->CurrentSrb;
-
-  DeviceStatus = IDEReadStatus(DevExt->CommandPortBase);
-  if ((DeviceStatus & (IDE_SR_DRQ|IDE_SR_BUSY|IDE_SR_ERR)) != IDE_SR_DRQ)
-    {
-      if (DeviceStatus & (IDE_SR_ERR|IDE_SR_DRQ))
-        {
-	  AtapiCompleteRequest(DevExt, SRB_STATUS_ERROR);
-          DPRINT("AtapiReadInterrupt() done!\n");
-	  return TRUE;
+            GetBaseStatus(baseIoAddress1, statusByte);
+            if (!(statusByte & IDE_STATUS_BUSY)) {
+                break;
+            }
+            ScsiPortStallExecution(5000);
         }
-      DPRINT("AtapiReadInterrupt() done!\n");
-      return FALSE;
-    }
 
-  DPRINT("CommandPortBase: %lx  ControlPortBase: %lx\n", DevExt->CommandPortBase, DevExt->ControlPortBase);
+        if (i == 10) {
 
-  /* Update controller/device state variables */
-  TargetAddress = DevExt->DataBuffer;
-  TransferSize = DevExt->TransferSize[Srb->TargetId];
+            DebugPrint((2,
+                        "AtapiInterrupt: BUSY on entry. Status %x, Base IO %x\n",
+                        statusByte,
+                        baseIoAddress1));
 
-  DPRINT("TransferLength: %lu\n", Srb->DataTransferLength);
-  DPRINT("TransferSize: %lu\n", TransferSize);
-
-  if (DevExt->DataTransferLength <= TransferSize)
-    {
-       TransferSize = DevExt->DataTransferLength;
-       DevExt->DataTransferLength = 0;
-       IsLastBlock = TRUE;
-    }
-  else
-    {
-      DevExt->DataTransferLength -= TransferSize;
-      IsLastBlock = FALSE;
-    }
-  DevExt->DataBuffer += TransferSize;
-  DPRINT("IsLastBlock == %s\n", (IsLastBlock) ? "TRUE" : "FALSE");
-
-  /* Copy the block of data */
-  if (DevExt->DeviceFlags[Srb->TargetId] & DEVICE_DWORD_IO)
-    {
-      IDEReadBlock32(DevExt->CommandPortBase, TargetAddress, TransferSize);
-    }
-  else
-    {
-      IDEReadBlock(DevExt->CommandPortBase, TargetAddress, TransferSize);
-    }
-
-  if (IsLastBlock)
-    {
-      AtapiCompleteRequest(DevExt, SRB_STATUS_SUCCESS);
-    }
-
-  DPRINT("AtapiReadInterrupt() done!\n");
-
-  return(TRUE);
-}
-
-static BOOLEAN FASTCALL
-AtapiWriteInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt)
-{
-  PSCSI_REQUEST_BLOCK Srb;
-  UCHAR DeviceStatus;
-  BOOLEAN IsLastBlock;
-  PUCHAR TargetAddress;
-  ULONG TransferSize;
-
-  DPRINT("AtapiWriteInterrupt() called!\n");
-
-  DeviceStatus = IDEReadStatus(DevExt->CommandPortBase);
-  if ((DeviceStatus & (IDE_SR_DRDY|IDE_SR_BUSY|IDE_SR_ERR|IDE_SR_WERR)) != IDE_SR_DRDY)
-    {
-      if (DeviceStatus & (IDE_SR_DRDY|IDE_SR_ERR|IDE_SR_WERR))
-        {
-	  AtapiCompleteRequest(DevExt, SRB_STATUS_ERROR);
-          DPRINT("AtapiWriteInterrupt() done!\n");
-	  return TRUE;
+            ScsiPortNotification(RequestTimerCall,
+                                 HwDeviceExtension,
+                                 AtapiCallBack,
+                                 500);
+            return TRUE;
         }
-      DPRINT("AtapiWriteInterrupt() done!\n");
-      return FALSE;
     }
-  else
-    {
-     Srb = DevExt->CurrentSrb;
-     TransferSize = DevExt->TransferSize[Srb->TargetId];
-      if (DevExt->DataTransferLength < TransferSize)
-        {
-	  TransferSize = DevExt->DataTransferLength;
-	}
-      if (TransferSize > 0 && (DeviceStatus & IDE_SR_DRQ))
-        {
-	  IsLastBlock = FALSE;
-	  TargetAddress = DevExt->DataBuffer;
-          DevExt->DataBuffer += TransferSize;
-	  DevExt->DataTransferLength -= TransferSize;
 
-          DPRINT("TransferLength: %lu\n", Srb->DataTransferLength);
-          DPRINT("TransferSize: %lu\n", TransferSize);
-	  /* Write the sector */
-	  if (DevExt->DeviceFlags[Srb->TargetId] & DEVICE_DWORD_IO)
-	    {
-	      IDEWriteBlock32(DevExt->CommandPortBase, TargetAddress, TransferSize);
-	    }
-	  else
-	    {
-	      IDEWriteBlock(DevExt->CommandPortBase, TargetAddress, TransferSize);
-	    }
-	}
-      else if (DeviceStatus & IDE_SR_DRQ)
-        {
-          DPRINT("AtapiWriteInterrupt(): data overrun error!\n");
-          IsLastBlock = TRUE;
-	}
-      else if (TransferSize > 0 && !(DeviceStatus & IDE_SR_DRQ))
-        {
-	  DPRINT1("%d !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", TransferSize);
-	  IsLastBlock = TRUE;
+
+    //
+    // Check for error conditions.
+    //
+
+    if (statusByte & IDE_STATUS_ERROR) {
+
+        if (srb->Cdb[0] != SCSIOP_REQUEST_SENSE) {
+
+            //
+            // Fail this request.
+            //
+
+            status = SRB_STATUS_ERROR;
+            goto CompleteRequest;
         }
-      else
-        {
-	  IsLastBlock = TRUE;
-	}
-      if (IsLastBlock)
-        {
-          AtapiCompleteRequest(DevExt, SRB_STATUS_SUCCESS);
+    }
+
+    //
+    // check reason for this interrupt.
+    //
+
+    if (deviceExtension->DeviceFlags[srb->TargetId] & DFLAGS_ATAPI_DEVICE) {
+
+        interruptReason = (ScsiPortReadPortUchar(&baseIoAddress1->InterruptReason) & 0x3);
+        atapiDev = TRUE;
+        wordsThisInterrupt = 256;
+
+    } else {
+
+        if (statusByte & IDE_STATUS_DRQ) {
+
+            if (deviceExtension->MaximumBlockXfer[srb->TargetId]) {
+                wordsThisInterrupt = 256 * deviceExtension->MaximumBlockXfer[srb->TargetId];
+
+            }
+
+            if (srb->SrbFlags & SRB_FLAGS_DATA_IN) {
+
+                interruptReason =  0x2;
+
+            } else if (srb->SrbFlags & SRB_FLAGS_DATA_OUT) {
+                interruptReason = 0x0;
+
+            } else {
+                status = SRB_STATUS_ERROR;
+                goto CompleteRequest;
+            }
+
+        } else if (statusByte & IDE_STATUS_BUSY) {
+
+            return FALSE;
+
+        } else {
+
+            if (deviceExtension->WordsLeft) {
+
+                ULONG k;
+
+                //
+                // Funky behaviour seen with PCI IDE (not all, just one).
+                // The ISR hits with DRQ low, but comes up later.
+                //
+
+                for (k = 0; k < 5000; k++) {
+                    GetStatus(baseIoAddress2,statusByte);
+                    if (!(statusByte & IDE_STATUS_DRQ)) {
+                        ScsiPortStallExecution(100);
+                    } else {
+                        break;
+                    }
+                }
+
+                if (k == 5000) {
+
+                    //
+                    // reset the controller.
+                    //
+
+                    DebugPrint((1,
+                                "AtapiInterrupt: Resetting due to DRQ not up. Status %x, Base IO %x\n",
+                                statusByte,
+                                baseIoAddress1));
+
+                    AtapiResetController(HwDeviceExtension,srb->PathId);
+                    return TRUE;
+                } else {
+
+                    interruptReason = (srb->SrbFlags & SRB_FLAGS_DATA_IN) ? 0x2 : 0x0;
+                }
+
+            } else {
+
+                //
+                // Command complete - verify, write, or the SMART enable/disable.
+                //
+                // Also get_media_status
+
+                interruptReason = 0x3;
+            }
         }
-      DPRINT("AtapiWriteInterrupt() done!\n");
-      return TRUE;
     }
-}
 
-static VOID
-AtapiExecuteCommand(PATAPI_MINIPORT_EXTENSION DevExt,
-		    UCHAR command,
-		    BOOLEAN (FASTCALL *Handler)(PATAPI_MINIPORT_EXTENSION))
+    if (interruptReason == 0x1 && (statusByte & IDE_STATUS_DRQ)) {
+
+        //
+        // Write the packet.
+        //
+
+        DebugPrint((2,
+                    "AtapiInterrupt: Writing Atapi packet.\n"));
+
+        //
+        // Send CDB to device.
+        //
+
+        WriteBuffer(baseIoAddress1,
+                    (PUSHORT)srb->Cdb,
+                    6);
+
+        return TRUE;
+
+    } else if (interruptReason == 0x0 && (statusByte & IDE_STATUS_DRQ)) {
+
+        //
+        // Write the data.
+        //
+
+        if (deviceExtension->DeviceFlags[srb->TargetId] & DFLAGS_ATAPI_DEVICE) {
+
+            //
+            // Pick up bytes to transfer and convert to words.
+            //
+
+            wordCount =
+                ScsiPortReadPortUchar(&baseIoAddress1->ByteCountLow);
+
+            wordCount |=
+                ScsiPortReadPortUchar(&baseIoAddress1->ByteCountHigh) << 8;
+
+            //
+            // Covert bytes to words.
+            //
+
+            wordCount >>= 1;
+
+            if (wordCount != deviceExtension->WordsLeft) {
+                DebugPrint((3,
+                           "AtapiInterrupt: %d words requested; %d words xferred\n",
+                           deviceExtension->WordsLeft,
+                           wordCount));
+            }
+
+            //
+            // Verify this makes sense.
+            //
+
+            if (wordCount > deviceExtension->WordsLeft) {
+                wordCount = deviceExtension->WordsLeft;
+            }
+
+        } else {
+
+            //
+            // IDE path. Check if words left is at least 256.
+            //
+
+            if (deviceExtension->WordsLeft < wordsThisInterrupt) {
+
+               //
+               // Transfer only words requested.
+               //
+
+               wordCount = deviceExtension->WordsLeft;
+
+            } else {
+
+               //
+               // Transfer next block.
+               //
+
+               wordCount = wordsThisInterrupt;
+            }
+        }
+
+        //
+        // Ensure that this is a write command.
+        //
+
+        if (srb->SrbFlags & SRB_FLAGS_DATA_OUT) {
+
+           DebugPrint((3,
+                      "AtapiInterrupt: Write interrupt\n"));
+
+           WaitOnBusy(baseIoAddress2,statusByte);
+
+           if (atapiDev || !deviceExtension->DWordIO) {
+
+               WriteBuffer(baseIoAddress1,
+                           deviceExtension->DataBuffer,
+                           wordCount);
+           } else {
+
+               PIDE_REGISTERS_3 address3 = (PIDE_REGISTERS_3)baseIoAddress1;
+
+               WriteBuffer2(address3,
+                           (PULONG)(deviceExtension->DataBuffer),
+                           wordCount / 2);
+           }
+        } else {
+
+            DebugPrint((1,
+                        "AtapiInterrupt: Int reason %x, but srb is for a write %x.\n",
+                        interruptReason,
+                        srb));
+
+            //
+            // Fail this request.
+            //
+
+            status = SRB_STATUS_ERROR;
+            goto CompleteRequest;
+        }
+
+
+        //
+        // Advance data buffer pointer and bytes left.
+        //
+
+        deviceExtension->DataBuffer += wordCount;
+        deviceExtension->WordsLeft -= wordCount;
+
+        return TRUE;
+
+    } else if (interruptReason == 0x2 && (statusByte & IDE_STATUS_DRQ)) {
+
+
+        if (deviceExtension->DeviceFlags[srb->TargetId] & DFLAGS_ATAPI_DEVICE) {
+
+            //
+            // Pick up bytes to transfer and convert to words.
+            //
+
+            wordCount =
+                ScsiPortReadPortUchar(&baseIoAddress1->ByteCountLow);
+
+            wordCount |=
+                ScsiPortReadPortUchar(&baseIoAddress1->ByteCountHigh) << 8;
+
+            //
+            // Covert bytes to words.
+            //
+
+            wordCount >>= 1;
+
+            if (wordCount != deviceExtension->WordsLeft) {
+                DebugPrint((3,
+                           "AtapiInterrupt: %d words requested; %d words xferred\n",
+                           deviceExtension->WordsLeft,
+                           wordCount));
+            }
+
+            //
+            // Verify this makes sense.
+            //
+
+            if (wordCount > deviceExtension->WordsLeft) {
+                wordCount = deviceExtension->WordsLeft;
+            }
+
+        } else {
+
+            //
+            // Check if words left is at least 256.
+            //
+
+            if (deviceExtension->WordsLeft < wordsThisInterrupt) {
+
+               //
+               // Transfer only words requested.
+               //
+
+               wordCount = deviceExtension->WordsLeft;
+
+            } else {
+
+               //
+               // Transfer next block.
+               //
+
+               wordCount = wordsThisInterrupt;
+            }
+        }
+
+        //
+        // Ensure that this is a read command.
+        //
+
+        if (srb->SrbFlags & SRB_FLAGS_DATA_IN) {
+
+           DebugPrint((3,
+                      "AtapiInterrupt: Read interrupt\n"));
+
+           WaitOnBusy(baseIoAddress2,statusByte);
+
+           if (atapiDev || !deviceExtension->DWordIO) {
+               ReadBuffer(baseIoAddress1,
+                         deviceExtension->DataBuffer,
+                         wordCount);
+
+           } else {
+               PIDE_REGISTERS_3 address3 = (PIDE_REGISTERS_3)baseIoAddress1;
+
+               ReadBuffer2(address3,
+                          (PULONG)(deviceExtension->DataBuffer),
+                          wordCount / 2);
+           }
+        } else {
+
+            DebugPrint((1,
+                        "AtapiInterrupt: Int reason %x, but srb is for a read %x.\n",
+                        interruptReason,
+                        srb));
+
+            //
+            // Fail this request.
+            //
+
+            status = SRB_STATUS_ERROR;
+            goto CompleteRequest;
+        }
+
+        //
+        // Translate ATAPI data back to SCSI data if needed
+        //
+
+        if (srb->Cdb[0] == ATAPI_MODE_SENSE &&
+            deviceExtension->DeviceFlags[srb->TargetId] & DFLAGS_ATAPI_DEVICE) {
+
+            //
+            //convert and adjust the wordCount
+            //
+
+            wordCount -= Atapi2Scsi(srb, (char *)deviceExtension->DataBuffer,
+                                     wordCount << 1);
+        }
+        //
+        // Advance data buffer pointer and bytes left.
+        //
+
+        deviceExtension->DataBuffer += wordCount;
+        deviceExtension->WordsLeft -= wordCount;
+
+        //
+        // Check for read command complete.
+        //
+
+        if (deviceExtension->WordsLeft == 0) {
+
+            if (deviceExtension->DeviceFlags[srb->TargetId] & DFLAGS_ATAPI_DEVICE) {
+
+                //
+                // Work around to make many atapi devices return correct sector size
+                // of 2048. Also certain devices will have sector count == 0x00, check
+                // for that also.
+                //
+
+                if ((srb->Cdb[0] == 0x25) &&
+                    ((deviceExtension->IdentifyData[srb->TargetId].GeneralConfiguration >> 8) & 0x1f) == 0x05) {
+
+                    deviceExtension->DataBuffer -= wordCount;
+                    if (deviceExtension->DataBuffer[0] == 0x00) {
+
+                        *((ULONG *) &(deviceExtension->DataBuffer[0])) = 0xFFFFFF7F;
+
+                    }
+
+                    *((ULONG *) &(deviceExtension->DataBuffer[2])) = 0x00080000;
+                    deviceExtension->DataBuffer += wordCount;
+                }
+            } else {
+
+                //
+                // Completion for IDE drives.
+                //
+
+
+                if (deviceExtension->WordsLeft) {
+
+                    status = SRB_STATUS_DATA_OVERRUN;
+
+                } else {
+
+                    status = SRB_STATUS_SUCCESS;
+
+                }
+
+                goto CompleteRequest;
+
+            }
+        }
+
+        return TRUE;
+
+    } else if (interruptReason == 0x3  && !(statusByte & IDE_STATUS_DRQ)) {
+
+        //
+        // Command complete.
+        //
+
+        if (deviceExtension->WordsLeft) {
+
+            status = SRB_STATUS_DATA_OVERRUN;
+
+        } else {
+
+            status = SRB_STATUS_SUCCESS;
+
+        }
+
+CompleteRequest:
+
+        //
+        // Check and see if we are processing our secret (mechanism status/request sense) srb
+        //
+        if (deviceExtension->OriginalSrb) {
+
+            ULONG srbStatus;
+
+            if (srb->Cdb[0] == SCSIOP_MECHANISM_STATUS) {
+
+                if (status == SRB_STATUS_SUCCESS) {
+                    // Bingo!!
+                    AtapiHwInitializeChanger (HwDeviceExtension,
+                                              srb->TargetId,
+                                              (PMECHANICAL_STATUS_INFORMATION_HEADER) srb->DataBuffer);
+
+                    // Get ready to issue the original srb
+                    srb = deviceExtension->CurrentSrb = deviceExtension->OriginalSrb;
+                    deviceExtension->OriginalSrb = NULL;
+
+                } else {
+                    // failed!  Get the sense key and maybe try again
+                    srb = deviceExtension->CurrentSrb = BuildRequestSenseSrb (
+                                                          HwDeviceExtension,
+                                                          deviceExtension->OriginalSrb->PathId,
+                                                          deviceExtension->OriginalSrb->TargetId);
+                }
+
+                srbStatus = AtapiSendCommand(HwDeviceExtension, deviceExtension->CurrentSrb);
+                if (srbStatus == SRB_STATUS_PENDING) {
+                    return TRUE;
+                }
+
+            } else { // srb->Cdb[0] == SCSIOP_REQUEST_SENSE)
+
+                PSENSE_DATA senseData = (PSENSE_DATA) srb->DataBuffer;
+
+                if (status == SRB_STATUS_DATA_OVERRUN) {
+                    // Check to see if we at least get mininum number of bytes
+                    if ((srb->DataTransferLength - deviceExtension->WordsLeft) >
+                        (FIELD_OFFSET (SENSE_DATA, AdditionalSenseLength) + sizeof(senseData->AdditionalSenseLength))) {
+                        status = SRB_STATUS_SUCCESS;
+                    }
+                }
+
+                if (status == SRB_STATUS_SUCCESS) {
+                    if ((senseData->SenseKey != SCSI_SENSE_ILLEGAL_REQUEST) &&
+                        deviceExtension->MechStatusRetryCount) {
+
+                        // The sense key doesn't say the last request is illegal, so try again
+                        deviceExtension->MechStatusRetryCount--;
+                        srb = deviceExtension->CurrentSrb = BuildMechanismStatusSrb (
+                                                              HwDeviceExtension,
+                                                              deviceExtension->OriginalSrb->PathId,
+                                                              deviceExtension->OriginalSrb->TargetId);
+                    } else {
+
+                        // last request was illegal.  No point trying again
+
+                        AtapiHwInitializeChanger (HwDeviceExtension,
+                                                  srb->TargetId,
+                                                  (PMECHANICAL_STATUS_INFORMATION_HEADER) NULL);
+
+                        // Get ready to issue the original srb
+                        srb = deviceExtension->CurrentSrb = deviceExtension->OriginalSrb;
+                        deviceExtension->OriginalSrb = NULL;
+                    }
+
+                    srbStatus = AtapiSendCommand(HwDeviceExtension, deviceExtension->CurrentSrb);
+                    if (srbStatus == SRB_STATUS_PENDING) {
+                        return TRUE;
+                    }
+                }
+            }
+
+            // If we get here, it means AtapiSendCommand() has failed
+            // Can't recover.  Pretend the original srb has failed and complete it.
+
+            if (deviceExtension->OriginalSrb) {
+                AtapiHwInitializeChanger (HwDeviceExtension,
+                                          srb->TargetId,
+                                          (PMECHANICAL_STATUS_INFORMATION_HEADER) NULL);
+                srb = deviceExtension->CurrentSrb = deviceExtension->OriginalSrb;
+                deviceExtension->OriginalSrb = NULL;
+            }
+
+            // fake an error and read no data
+            status = SRB_STATUS_ERROR;
+            srb->ScsiStatus = 0;
+            deviceExtension->DataBuffer = srb->DataBuffer;
+            deviceExtension->WordsLeft = srb->DataTransferLength;
+            deviceExtension->RDP = FALSE;
+
+        } else if (status == SRB_STATUS_ERROR) {
+
+            //
+            // Map error to specific SRB status and handle request sense.
+            //
+
+            status = MapError(deviceExtension,
+                              srb);
+
+            deviceExtension->RDP = FALSE;
+
+        } else {
+
+            //
+            // Wait for busy to drop.
+            //
+
+            for (i = 0; i < 30; i++) {
+                GetStatus(baseIoAddress2,statusByte);
+                if (!(statusByte & IDE_STATUS_BUSY)) {
+                    break;
+                }
+                ScsiPortStallExecution(500);
+            }
+
+            if (i == 30) {
+
+                //
+                // reset the controller.
+                //
+
+                DebugPrint((1,
+                            "AtapiInterrupt: Resetting due to BSY still up - %x. Base Io %x\n",
+                            statusByte,
+                            baseIoAddress1));
+                AtapiResetController(HwDeviceExtension,srb->PathId);
+                return TRUE;
+            }
+
+            //
+            // Check to see if DRQ is still up.
+            //
+
+            if (statusByte & IDE_STATUS_DRQ) {
+
+                for (i = 0; i < 500; i++) {
+                    GetStatus(baseIoAddress2,statusByte);
+                    if (!(statusByte & IDE_STATUS_DRQ)) {
+                        break;
+                    }
+                    ScsiPortStallExecution(100);
+
+                }
+
+                if (i == 500) {
+
+                    //
+                    // reset the controller.
+                    //
+
+                    DebugPrint((1,
+                                "AtapiInterrupt: Resetting due to DRQ still up - %x\n",
+                                statusByte));
+                    AtapiResetController(HwDeviceExtension,srb->PathId);
+                    return TRUE;
+                }
+
+            }
+        }
+
+
+        //
+        // Clear interrupt expecting flag.
+        //
+
+        deviceExtension->ExpectingInterrupt = FALSE;
+
+        //
+        // Sanity check that there is a current request.
+        //
+
+        if (srb != NULL) {
+
+            //
+            // Set status in SRB.
+            //
+
+            srb->SrbStatus = (UCHAR)status;
+
+            //
+            // Check for underflow.
+            //
+
+            if (deviceExtension->WordsLeft) {
+
+                //
+                // Subtract out residual words and update if filemark hit,
+                // setmark hit , end of data, end of media...
+                //
+
+                if (!(deviceExtension->DeviceFlags[srb->TargetId] & DFLAGS_TAPE_DEVICE)) {
+                if (status == SRB_STATUS_DATA_OVERRUN) {
+                    srb->DataTransferLength -= deviceExtension->WordsLeft;
+                } else {
+                    srb->DataTransferLength = 0;
+                }
+                } else {
+                    srb->DataTransferLength -= deviceExtension->WordsLeft;
+                }
+            }
+
+            if (srb->Function != SRB_FUNCTION_IO_CONTROL) {
+
+                //
+                // Indicate command complete.
+                //
+
+                if (!(deviceExtension->RDP)) {
+                    ScsiPortNotification(RequestComplete,
+                                         deviceExtension,
+                                         srb);
+
+                }
+            } else {
+
+                PSENDCMDOUTPARAMS cmdOutParameters = (PSENDCMDOUTPARAMS)(((PUCHAR)srb->DataBuffer) + sizeof(SRB_IO_CONTROL));
+                UCHAR             error = 0;
+
+                if (status != SRB_STATUS_SUCCESS) {
+                    error = ScsiPortReadPortUchar((PUCHAR)baseIoAddress1 + 1);
+                }
+
+                //
+                // Build the SMART status block depending upon the completion status.
+                //
+
+                cmdOutParameters->cBufferSize = wordCount;
+                cmdOutParameters->DriverStatus.bDriverError = (error) ? SMART_IDE_ERROR : 0;
+                cmdOutParameters->DriverStatus.bIDEError = error;
+
+                //
+                // If the sub-command is return smart status, jam the value from cylinder low and high, into the
+                // data buffer.
+                //
+
+                if (deviceExtension->SmartCommand == RETURN_SMART_STATUS) {
+                    cmdOutParameters->bBuffer[0] = RETURN_SMART_STATUS;
+                    cmdOutParameters->bBuffer[1] = ScsiPortReadPortUchar(&baseIoAddress1->InterruptReason);
+                    cmdOutParameters->bBuffer[2] = ScsiPortReadPortUchar(&baseIoAddress1->Unused1);
+                    cmdOutParameters->bBuffer[3] = ScsiPortReadPortUchar(&baseIoAddress1->ByteCountLow);
+                    cmdOutParameters->bBuffer[4] = ScsiPortReadPortUchar(&baseIoAddress1->ByteCountHigh);
+                    cmdOutParameters->bBuffer[5] = ScsiPortReadPortUchar(&baseIoAddress1->DriveSelect);
+                    cmdOutParameters->bBuffer[6] = SMART_CMD;
+                    cmdOutParameters->cBufferSize = 8;
+                }
+
+                //
+                // Indicate command complete.
+                //
+
+                ScsiPortNotification(RequestComplete,
+                                     deviceExtension,
+                                     srb);
+
+            }
+
+        } else {
+
+            DebugPrint((1,
+                       "AtapiInterrupt: No SRB!\n"));
+        }
+
+        //
+        // Indicate ready for next request.
+        //
+
+        if (!(deviceExtension->RDP)) {
+
+            //
+            // Clear current SRB.
+            //
+
+            deviceExtension->CurrentSrb = NULL;
+
+            ScsiPortNotification(NextRequest,
+                                 deviceExtension,
+                                 NULL);
+        } else {
+
+            ScsiPortNotification(RequestTimerCall,
+                                 HwDeviceExtension,
+                                 AtapiCallBack,
+                                 2000);
+        }
+
+        return TRUE;
+
+    } else {
+
+        //
+        // Unexpected int.
+        //
+
+        DebugPrint((3,
+                    "AtapiInterrupt: Unexpected interrupt. InterruptReason %x. Status %x.\n",
+                    interruptReason,
+                    statusByte));
+        return FALSE;
+    }
+
+    return TRUE;
+
+} // end AtapiInterrupt()
+
+
+ULONG
+STDCALL
+IdeSendSmartCommand(
+    IN PVOID HwDeviceExtension,
+    IN PSCSI_REQUEST_BLOCK Srb
+    )
+
+/*++
+
+Routine Description:
+
+    This routine handles SMART enable, disable, read attributes and threshold commands.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    Srb - IO request packet
+
+Return Value:
+
+    SRB status
+
+--*/
+
 {
-  if (DevExt->Handler != NULL)
-    {
-      DPRINT1("DevExt->Handler is already set!!\n");
-    }
-  DevExt->Handler = Handler;
-  IDEWriteCommand(DevExt->CommandPortBase, command);
-  ScsiPortStallExecution(1);
-}
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PIDE_REGISTERS_1     baseIoAddress1  = deviceExtension->BaseIoAddress1[Srb->TargetId >> 1];
+    PIDE_REGISTERS_2     baseIoAddress2  = deviceExtension->BaseIoAddress2[Srb->TargetId >> 1];
+    PSENDCMDOUTPARAMS    cmdOutParameters = (PSENDCMDOUTPARAMS)(((PUCHAR)Srb->DataBuffer) + sizeof(SRB_IO_CONTROL));
+    SENDCMDINPARAMS      cmdInParameters = *(PSENDCMDINPARAMS)(((PUCHAR)Srb->DataBuffer) + sizeof(SRB_IO_CONTROL));
+    PIDEREGS             regs = &cmdInParameters.irDriveRegs;
+    ULONG                i;
+    UCHAR                statusByte,targetId;
 
-#ifdef ENABLE_DMA
-static BOOLEAN
-AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
-	     PSCSI_REQUEST_BLOCK Srb,
-	     UCHAR cmd)
+
+    if (cmdInParameters.irDriveRegs.bCommandReg == SMART_CMD) {
+
+        targetId = cmdInParameters.bDriveNumber;
+
+        //TODO optimize this check
+
+        if ((!(deviceExtension->DeviceFlags[targetId] & DFLAGS_DEVICE_PRESENT)) ||
+             (deviceExtension->DeviceFlags[targetId] & DFLAGS_ATAPI_DEVICE)) {
+
+            return SRB_STATUS_SELECTION_TIMEOUT;
+        }
+
+        deviceExtension->SmartCommand = cmdInParameters.irDriveRegs.bFeaturesReg;
+
+        //
+        // Determine which of the commands to carry out.
+        //
+
+        if ((cmdInParameters.irDriveRegs.bFeaturesReg == READ_ATTRIBUTES) ||
+            (cmdInParameters.irDriveRegs.bFeaturesReg == READ_THRESHOLDS)) {
+
+            WaitOnBusy(baseIoAddress2,statusByte);
+
+            if (statusByte & IDE_STATUS_BUSY) {
+                DebugPrint((1,
+                            "IdeSendSmartCommand: Returning BUSY status\n"));
+                return SRB_STATUS_BUSY;
+            }
+
+            //
+            // Zero the ouput buffer as the input buffer info. has been saved off locally (the buffers are the same).
+            //
+
+            for (i = 0; i < (sizeof(SENDCMDOUTPARAMS) + READ_ATTRIBUTE_BUFFER_SIZE - 1); i++) {
+                ((PUCHAR)cmdOutParameters)[i] = 0;
+            }
+
+            //
+            // Set data buffer pointer and words left.
+            //
+
+            deviceExtension->DataBuffer = (PUSHORT)cmdOutParameters->bBuffer;
+            deviceExtension->WordsLeft = READ_ATTRIBUTE_BUFFER_SIZE / 2;
+
+            //
+            // Indicate expecting an interrupt.
+            //
+
+            deviceExtension->ExpectingInterrupt = TRUE;
+
+            ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,(UCHAR)(((targetId & 0x1) << 4) | 0xA0));
+            ScsiPortWritePortUchar((PUCHAR)baseIoAddress1 + 1,regs->bFeaturesReg);
+            ScsiPortWritePortUchar(&baseIoAddress1->BlockCount,regs->bSectorCountReg);
+            ScsiPortWritePortUchar(&baseIoAddress1->BlockNumber,regs->bSectorNumberReg);
+            ScsiPortWritePortUchar(&baseIoAddress1->CylinderLow,regs->bCylLowReg);
+            ScsiPortWritePortUchar(&baseIoAddress1->CylinderHigh,regs->bCylHighReg);
+            ScsiPortWritePortUchar(&baseIoAddress1->Command,regs->bCommandReg);
+
+            //
+            // Wait for interrupt.
+            //
+
+            return SRB_STATUS_PENDING;
+
+        } else if ((cmdInParameters.irDriveRegs.bFeaturesReg == ENABLE_SMART) ||
+                   (cmdInParameters.irDriveRegs.bFeaturesReg == DISABLE_SMART) ||
+                   (cmdInParameters.irDriveRegs.bFeaturesReg == RETURN_SMART_STATUS) ||
+                   (cmdInParameters.irDriveRegs.bFeaturesReg == ENABLE_DISABLE_AUTOSAVE) ||
+                   (cmdInParameters.irDriveRegs.bFeaturesReg == EXECUTE_OFFLINE_DIAGS) ||
+                   (cmdInParameters.irDriveRegs.bFeaturesReg == SAVE_ATTRIBUTE_VALUES)) {
+
+            WaitOnBusy(baseIoAddress2,statusByte);
+
+            if (statusByte & IDE_STATUS_BUSY) {
+                DebugPrint((1,
+                            "IdeSendSmartCommand: Returning BUSY status\n"));
+                return SRB_STATUS_BUSY;
+            }
+
+            //
+            // Zero the ouput buffer as the input buffer info. has been saved off locally (the buffers are the same).
+            //
+
+            for (i = 0; i < (sizeof(SENDCMDOUTPARAMS) - 1); i++) {
+                ((PUCHAR)cmdOutParameters)[i] = 0;
+            }
+
+            //
+            // Set data buffer pointer and indicate no data transfer.
+            //
+
+            deviceExtension->DataBuffer = (PUSHORT)cmdOutParameters->bBuffer;
+            deviceExtension->WordsLeft = 0;
+
+            //
+            // Indicate expecting an interrupt.
+            //
+
+            deviceExtension->ExpectingInterrupt = TRUE;
+
+            ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,(UCHAR)(((targetId & 0x1) << 4) | 0xA0));
+            ScsiPortWritePortUchar((PUCHAR)baseIoAddress1 + 1,regs->bFeaturesReg);
+            ScsiPortWritePortUchar(&baseIoAddress1->BlockCount,regs->bSectorCountReg);
+            ScsiPortWritePortUchar(&baseIoAddress1->BlockNumber,regs->bSectorNumberReg);
+            ScsiPortWritePortUchar(&baseIoAddress1->CylinderLow,regs->bCylLowReg);
+            ScsiPortWritePortUchar(&baseIoAddress1->CylinderHigh,regs->bCylHighReg);
+            ScsiPortWritePortUchar(&baseIoAddress1->Command,regs->bCommandReg);
+
+            //
+            // Wait for interrupt.
+            //
+
+            return SRB_STATUS_PENDING;
+        }
+    }
+
+    return SRB_STATUS_INVALID_REQUEST;
+
+} // end IdeSendSmartCommand()
+
+
+ULONG
+STDCALL
+IdeReadWrite(
+    IN PVOID HwDeviceExtension,
+    IN PSCSI_REQUEST_BLOCK Srb
+    )
+
+/*++
+
+Routine Description:
+
+    This routine handles IDE read and writes.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    Srb - IO request packet
+
+Return Value:
+
+    SRB status
+
+--*/
+
 {
-  PVOID StartAddress;
-  PVOID EndAddress;
-  PPRD PRDEntry = DevExt->PRDTable;
-  SCSI_PHYSICAL_ADDRESS PhysicalAddress;
-  ULONG Length;
-  ULONG tmpLength;
-  UCHAR Status;
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PIDE_REGISTERS_1     baseIoAddress1  = deviceExtension->BaseIoAddress1[Srb->TargetId >> 1];
+    PIDE_REGISTERS_2     baseIoAddress2  = deviceExtension->BaseIoAddress2[Srb->TargetId >> 1];
+    ULONG                startingSector,i;
+    ULONG                wordCount;
+    UCHAR                statusByte,statusByte2;
+    UCHAR                cylinderHigh,cylinderLow,drvSelect,sectorNumber;
 
-  DPRINT("AtapiInitDma()\n");
+    //
+    // Select device 0 or 1.
+    //
 
-  StartAddress = Srb->DataBuffer;
-  EndAddress = (PVOID)((ULONG_PTR)StartAddress + Srb->DataTransferLength);
-  DevExt->PRDCount = 0;
+    ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                            (UCHAR)(((Srb->TargetId & 0x1) << 4) | 0xA0));
 
-  while (StartAddress < EndAddress)
-    {
-      PhysicalAddress = ScsiPortGetPhysicalAddress(DevExt, Srb, StartAddress, &Length);
-      if (PhysicalAddress.QuadPart == 0LL || Length == 0)
-        {
-	  return FALSE;
-	}
+    WaitOnBusy(baseIoAddress2,statusByte2);
 
-      while (Length)
-        {
-	  /* calculate the length up to the next 64k boundary */
-	  tmpLength = 0x10000 - (PhysicalAddress.u.LowPart & 0xffff);
-	  if (tmpLength > Length)
-	    {
-	      tmpLength = Length;
-	    }
-	  DevExt->PRDCount++;
-	  if (DevExt->PRDCount > DevExt->PRDMaxCount)
-	    {
-	      return FALSE;
-	    }
-	  if (tmpLength == 0x10000)
-	    {
-	      /* Some dirty controllers cannot handle 64k transfers. We split a 64k transfer in two 32k. */
-	      tmpLength = 0x8000;
-	      DPRINT("PRD Nr. %d VirtualAddress %08x PhysicalAddress %08x, Length %04x\n",
-		     DevExt->PRDCount - 1, StartAddress, PhysicalAddress.u.LowPart, tmpLength);
-	      PRDEntry->PhysAddress = PhysicalAddress.u.LowPart;
-	      PRDEntry->Length = tmpLength;
-	      PRDEntry++;
-	      DevExt->PRDCount++;
-	      if (DevExt->PRDCount > DevExt->PRDMaxCount)
-	        {
-	          return FALSE;
-	        }
-              PhysicalAddress.u.LowPart += tmpLength;
-	      StartAddress = (PVOID)((ULONG_PTR)StartAddress + tmpLength);
-	      Length -= tmpLength;
-	      PRDEntry->PhysAddress = PhysicalAddress.u.LowPart;
-	    }
-	  DPRINT("PRD Nr. %d VirtualAddress %08x PhysicalAddress %08x, Length %04x\n",
-		 DevExt->PRDCount - 1, StartAddress, PhysicalAddress.u.LowPart, tmpLength);
-	  PRDEntry->PhysAddress = PhysicalAddress.u.LowPart;
-          PRDEntry->Length = tmpLength;
-          PRDEntry++;
-          StartAddress = (PVOID)((ULONG_PTR)StartAddress + tmpLength);
-          PhysicalAddress.u.LowPart += tmpLength;
-	  Length -= tmpLength;
-	}
+    if (statusByte2 & IDE_STATUS_BUSY) {
+        DebugPrint((1,
+                    "IdeReadWrite: Returning BUSY status\n"));
+        return SRB_STATUS_BUSY;
     }
-  /* set the end marker in the last PRD */
-  PRDEntry--;
-  PRDEntry->Length |= 0x80000000;
-  /* set the PDR table */
-  IDEWritePRDTable(DevExt->BusMasterRegisterBase, DevExt->PRDTablePhysicalAddress.u.LowPart);
-  /* write the DMA command */
-  IDEWriteDMACommand(DevExt->BusMasterRegisterBase, cmd);
-  /* reset the status and interrupt bit */
-  Status = IDEReadDMAStatus(DevExt->BusMasterRegisterBase);
-  IDEWriteDMAStatus(DevExt->BusMasterRegisterBase, Status | 0x06);
-  return TRUE;
-}
-#endif
 
-/* EOF */
+    //
+    // Set data buffer pointer and words left.
+    //
+
+    deviceExtension->DataBuffer = (PUSHORT)Srb->DataBuffer;
+    deviceExtension->WordsLeft = Srb->DataTransferLength / 2;
+
+    //
+    // Indicate expecting an interrupt.
+    //
+
+    deviceExtension->ExpectingInterrupt = TRUE;
+
+    //
+    // Set up sector count register. Round up to next block.
+    //
+
+    ScsiPortWritePortUchar(&baseIoAddress1->BlockCount,
+                           (UCHAR)((Srb->DataTransferLength + 0x1FF) / 0x200));
+
+    //
+    // Get starting sector number from CDB.
+    //
+
+    startingSector = ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte3 |
+                     ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte2 << 8 |
+                     ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte1 << 16 |
+                     ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte0 << 24;
+
+    DebugPrint((2,
+               "IdeReadWrite: Starting sector is %x, Number of bytes %x\n",
+               startingSector,
+               Srb->DataTransferLength));
+
+    //
+    // Set up sector number register.
+    //
+
+    sectorNumber =  (UCHAR)((startingSector % deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack) + 1);
+    ScsiPortWritePortUchar(&baseIoAddress1->BlockNumber,sectorNumber);
+
+    //
+    // Set up cylinder low register.
+    //
+
+    cylinderLow =  (UCHAR)(startingSector / (deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack *
+                           deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads));
+    ScsiPortWritePortUchar(&baseIoAddress1->CylinderLow,cylinderLow);
+
+    //
+    // Set up cylinder high register.
+    //
+
+    cylinderHigh = (UCHAR)((startingSector / (deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack *
+                           deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads)) >> 8);
+    ScsiPortWritePortUchar(&baseIoAddress1->CylinderHigh,cylinderHigh);
+
+    //
+    // Set up head and drive select register.
+    //
+
+    drvSelect = (UCHAR)(((startingSector / deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack) %
+                      deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads) |((Srb->TargetId & 0x1) << 4) | 0xA0);
+    ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,drvSelect);
+
+    DebugPrint((2,
+               "IdeReadWrite: Cylinder %x Head %x Sector %x\n",
+               startingSector /
+               (deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack *
+               deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads),
+               (startingSector /
+               deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack) %
+               deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads,
+               startingSector %
+               deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack + 1));
+
+    //
+    // Check if write request.
+    //
+
+    if (Srb->SrbFlags & SRB_FLAGS_DATA_IN) {
+
+        //
+        // Send read command.
+        //
+
+        if (deviceExtension->MaximumBlockXfer[Srb->TargetId]) {
+            ScsiPortWritePortUchar(&baseIoAddress1->Command,
+                                   IDE_COMMAND_READ_MULTIPLE);
+
+        } else {
+            ScsiPortWritePortUchar(&baseIoAddress1->Command,
+                                   IDE_COMMAND_READ);
+        }
+    } else {
+
+
+        //
+        // Send write command.
+        //
+
+        if (deviceExtension->MaximumBlockXfer[Srb->TargetId]) {
+            wordCount = 256 * deviceExtension->MaximumBlockXfer[Srb->TargetId];
+
+            if (deviceExtension->WordsLeft < wordCount) {
+
+               //
+               // Transfer only words requested.
+               //
+
+               wordCount = deviceExtension->WordsLeft;
+
+            }
+            ScsiPortWritePortUchar(&baseIoAddress1->Command,
+                                   IDE_COMMAND_WRITE_MULTIPLE);
+
+        } else {
+            wordCount = 256;
+            ScsiPortWritePortUchar(&baseIoAddress1->Command,
+                                   IDE_COMMAND_WRITE);
+        }
+
+        //
+        // Wait for BSY and DRQ.
+        //
+
+        WaitOnBaseBusy(baseIoAddress1,statusByte);
+
+        if (statusByte & IDE_STATUS_BUSY) {
+
+            DebugPrint((1,
+                        "IdeReadWrite 2: Returning BUSY status %x\n",
+                        statusByte));
+            return SRB_STATUS_BUSY;
+        }
+
+        for (i = 0; i < 1000; i++) {
+            GetBaseStatus(baseIoAddress1, statusByte);
+            if (statusByte & IDE_STATUS_DRQ) {
+                break;
+            }
+            ScsiPortStallExecution(200);
+
+        }
+
+        if (!(statusByte & IDE_STATUS_DRQ)) {
+
+            DebugPrint((1,
+                       "IdeReadWrite: DRQ never asserted (%x) original status (%x)\n",
+                       statusByte,
+                       statusByte2));
+
+            deviceExtension->WordsLeft = 0;
+
+            //
+            // Clear interrupt expecting flag.
+            //
+
+            deviceExtension->ExpectingInterrupt = FALSE;
+
+            //
+            // Clear current SRB.
+            //
+
+            deviceExtension->CurrentSrb = NULL;
+
+            return SRB_STATUS_TIMEOUT;
+        }
+
+        //
+        // Write next 256 words.
+        //
+
+        WriteBuffer(baseIoAddress1,
+                    deviceExtension->DataBuffer,
+                    wordCount);
+
+        //
+        // Adjust buffer address and words left count.
+        //
+
+        deviceExtension->WordsLeft -= wordCount;
+        deviceExtension->DataBuffer += wordCount;
+
+    }
+
+    //
+    // Wait for interrupt.
+    //
+
+    return SRB_STATUS_PENDING;
+
+} // end IdeReadWrite()
+
+
+
+ULONG
+STDCALL
+IdeVerify(
+    IN PVOID HwDeviceExtension,
+    IN PSCSI_REQUEST_BLOCK Srb
+    )
+
+/*++
+
+Routine Description:
+
+    This routine handles IDE Verify.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    Srb - IO request packet
+
+Return Value:
+
+    SRB status
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PIDE_REGISTERS_1     baseIoAddress1  = deviceExtension->BaseIoAddress1[Srb->TargetId >> 1];
+    PIDE_REGISTERS_2     baseIoAddress2  = deviceExtension->BaseIoAddress2[Srb->TargetId >> 1];
+    ULONG                startingSector;
+    ULONG                sectors;
+    ULONG                endSector;
+    USHORT               sectorCount;
+
+    //
+    // Drive has these number sectors.
+    //
+
+    sectors = deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack *
+              deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads *
+              deviceExtension->IdentifyData[Srb->TargetId].NumberOfCylinders;
+
+    DebugPrint((3,
+                "IdeVerify: Total sectors %x\n",
+                sectors));
+
+    //
+    // Get starting sector number from CDB.
+    //
+
+    startingSector = ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte3 |
+                     ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte2 << 8 |
+                     ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte1 << 16 |
+                     ((PCDB)Srb->Cdb)->CDB10.LogicalBlockByte0 << 24;
+
+    DebugPrint((3,
+                "IdeVerify: Starting sector %x. Number of blocks %x\n",
+                startingSector,
+                ((PCDB)Srb->Cdb)->CDB10.TransferBlocksLsb));
+
+    sectorCount = (USHORT)(((PCDB)Srb->Cdb)->CDB10.TransferBlocksMsb << 8 |
+                           ((PCDB)Srb->Cdb)->CDB10.TransferBlocksLsb );
+    endSector = startingSector + sectorCount;
+
+    DebugPrint((3,
+                "IdeVerify: Ending sector %x\n",
+                endSector));
+
+    if (endSector > sectors) {
+
+        //
+        // Too big, round down.
+        //
+
+        DebugPrint((1,
+                    "IdeVerify: Truncating request to %x blocks\n",
+                    sectors - startingSector - 1));
+
+        ScsiPortWritePortUchar(&baseIoAddress1->BlockCount,
+                               (UCHAR)(sectors - startingSector - 1));
+
+    } else {
+
+        //
+        // Set up sector count register. Round up to next block.
+        //
+
+        if (sectorCount > 0xFF) {
+            sectorCount = (USHORT)0xFF;
+        }
+
+        ScsiPortWritePortUchar(&baseIoAddress1->BlockCount,(UCHAR)sectorCount);
+    }
+
+    //
+    // Set data buffer pointer and words left.
+    //
+
+    deviceExtension->DataBuffer = (PUSHORT)Srb->DataBuffer;
+    deviceExtension->WordsLeft = Srb->DataTransferLength / 2;
+
+    //
+    // Indicate expecting an interrupt.
+    //
+
+    deviceExtension->ExpectingInterrupt = TRUE;
+
+    //
+    // Set up sector number register.
+    //
+
+    ScsiPortWritePortUchar(&baseIoAddress1->BlockNumber,
+                           (UCHAR)((startingSector %
+                           deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack) + 1));
+
+    //
+    // Set up cylinder low register.
+    //
+
+    ScsiPortWritePortUchar(&baseIoAddress1->CylinderLow,
+                           (UCHAR)(startingSector /
+                           (deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack *
+                           deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads)));
+
+    //
+    // Set up cylinder high register.
+    //
+
+    ScsiPortWritePortUchar(&baseIoAddress1->CylinderHigh,
+                           (UCHAR)((startingSector /
+                           (deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack *
+                           deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads)) >> 8));
+
+    //
+    // Set up head and drive select register.
+    //
+
+    ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                           (UCHAR)(((startingSector /
+                           deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack) %
+                           deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads) |
+                           ((Srb->TargetId & 0x1) << 4) | 0xA0));
+
+    DebugPrint((2,
+               "IdeVerify: Cylinder %x Head %x Sector %x\n",
+               startingSector /
+               (deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack *
+               deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads),
+               (startingSector /
+               deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack) %
+               deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads,
+               startingSector %
+               deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack + 1));
+
+
+    //
+    // Send verify command.
+    //
+
+    ScsiPortWritePortUchar(&baseIoAddress1->Command,
+                           IDE_COMMAND_VERIFY);
+
+    //
+    // Wait for interrupt.
+    //
+
+    return SRB_STATUS_PENDING;
+
+} // end IdeVerify()
+
+
+VOID
+STDCALL
+Scsi2Atapi(
+    IN PSCSI_REQUEST_BLOCK Srb
+    )
+
+/*++
+
+Routine Description:
+
+    Convert SCSI packet command to Atapi packet command.
+
+Arguments:
+
+    Srb - IO request packet
+
+Return Value:
+
+    None
+
+--*/
+{
+    //
+    // Change the cdb length
+    //
+
+    Srb->CdbLength = 12;
+
+    switch (Srb->Cdb[0]) {
+        case SCSIOP_MODE_SENSE: {
+            PMODE_SENSE_10 modeSense10 = (PMODE_SENSE_10)Srb->Cdb;
+            UCHAR PageCode = ((PCDB)Srb->Cdb)->MODE_SENSE.PageCode;
+            UCHAR Length = ((PCDB)Srb->Cdb)->MODE_SENSE.AllocationLength;
+
+            AtapiZeroMemory(Srb->Cdb,MAXIMUM_CDB_SIZE);
+
+            modeSense10->OperationCode = ATAPI_MODE_SENSE;
+            modeSense10->PageCode = PageCode;
+            modeSense10->ParameterListLengthMsb = 0;
+            modeSense10->ParameterListLengthLsb = Length;
+            break;
+        }
+
+        case SCSIOP_MODE_SELECT: {
+            PMODE_SELECT_10 modeSelect10 = (PMODE_SELECT_10)Srb->Cdb;
+            UCHAR Length = ((PCDB)Srb->Cdb)->MODE_SELECT.ParameterListLength;
+
+            //
+            // Zero the original cdb
+            //
+
+            AtapiZeroMemory(Srb->Cdb,MAXIMUM_CDB_SIZE);
+
+            modeSelect10->OperationCode = ATAPI_MODE_SELECT;
+            modeSelect10->PFBit = 1;
+            modeSelect10->ParameterListLengthMsb = 0;
+            modeSelect10->ParameterListLengthLsb = Length;
+            break;
+        }
+
+        case SCSIOP_FORMAT_UNIT:
+        Srb->Cdb[0] = ATAPI_FORMAT_UNIT;
+        break;
+    }
+}
+
+
+
+ULONG
+STDCALL
+AtapiSendCommand(
+    IN PVOID HwDeviceExtension,
+    IN PSCSI_REQUEST_BLOCK Srb
+    )
+
+/*++
+
+Routine Description:
+
+    Send ATAPI packet command to device.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    Srb - IO request packet
+
+Return Value:
+
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PATAPI_REGISTERS_1   baseIoAddress1  = (PATAPI_REGISTERS_1)deviceExtension->BaseIoAddress1[Srb->TargetId >> 1];
+    PATAPI_REGISTERS_2   baseIoAddress2 =  (PATAPI_REGISTERS_2)deviceExtension->BaseIoAddress2[Srb->TargetId >> 1];
+    ULONG i;
+    ULONG flags;
+    UCHAR statusByte,byteCountLow,byteCountHigh;
+
+    //
+    // We need to know how many platters our atapi cd-rom device might have.
+    // Before anyone tries to send a srb to our target for the first time,
+    // we must "secretly" send down a separate mechanism status srb in order to
+    // initialize our device extension changer data.  That's how we know how
+    // many platters our target has.
+    //
+    if (!(deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_CHANGER_INITED) &&
+        !deviceExtension->OriginalSrb) {
+
+        ULONG srbStatus;
+
+        //
+        // Set this flag now. If the device hangs on the mech. status
+        // command, we will not have the change to set it.
+        //
+        deviceExtension->DeviceFlags[Srb->TargetId] |= DFLAGS_CHANGER_INITED;
+
+        deviceExtension->MechStatusRetryCount = 3;
+        deviceExtension->CurrentSrb = BuildMechanismStatusSrb (
+                                        HwDeviceExtension,
+                                        Srb->PathId,
+                                        Srb->TargetId);
+        deviceExtension->OriginalSrb = Srb;
+
+        srbStatus = AtapiSendCommand(HwDeviceExtension, deviceExtension->CurrentSrb);
+        if (srbStatus == SRB_STATUS_PENDING) {
+            return srbStatus;
+        } else {
+            deviceExtension->CurrentSrb = deviceExtension->OriginalSrb;
+            deviceExtension->OriginalSrb = NULL;
+            AtapiHwInitializeChanger (HwDeviceExtension,
+                                      Srb->TargetId,
+                                      (PMECHANICAL_STATUS_INFORMATION_HEADER) NULL);
+            // fall out
+        }
+    }
+
+    DebugPrint((2,
+               "AtapiSendCommand: Command %x to TargetId %d lun %d\n",
+               Srb->Cdb[0],
+               Srb->TargetId,
+               Srb->Lun));
+
+    //
+    // Make sure command is to ATAPI device.
+    //
+
+    flags = deviceExtension->DeviceFlags[Srb->TargetId];
+    if (flags & (DFLAGS_SANYO_ATAPI_CHANGER | DFLAGS_ATAPI_CHANGER)) {
+        if ((Srb->Lun) > (deviceExtension->DiscsPresent[Srb->TargetId] - 1)) {
+
+            //
+            // Indicate no device found at this address.
+            //
+
+            return SRB_STATUS_SELECTION_TIMEOUT;
+        }
+    } else if (Srb->Lun > 0) {
+        return SRB_STATUS_SELECTION_TIMEOUT;
+    }
+
+    if (!(flags & DFLAGS_ATAPI_DEVICE)) {
+        return SRB_STATUS_SELECTION_TIMEOUT;
+    }
+
+    //
+    // Select device 0 or 1.
+    //
+
+    ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                           (UCHAR)(((Srb->TargetId & 0x1) << 4) | 0xA0));
+
+    //
+    // Verify that controller is ready for next command.
+    //
+
+    GetStatus(baseIoAddress2,statusByte);
+
+    DebugPrint((2,
+                "AtapiSendCommand: Entered with status %x\n",
+                statusByte));
+
+    if (statusByte & IDE_STATUS_BUSY) {
+        DebugPrint((1,
+                    "AtapiSendCommand: Device busy (%x)\n",
+                    statusByte));
+        return SRB_STATUS_BUSY;
+
+    }
+
+    if (statusByte & IDE_STATUS_ERROR) {
+        if (Srb->Cdb[0] != SCSIOP_REQUEST_SENSE) {
+
+            DebugPrint((1,
+                        "AtapiSendCommand: Error on entry: (%x)\n",
+                        statusByte));
+            //
+            // Read the error reg. to clear it and fail this request.
+            //
+
+            return MapError(deviceExtension,
+                            Srb);
+        }
+    }
+
+    //
+    // If a tape drive has doesn't have DSC set and the last command is restrictive, don't send
+    // the next command. See discussion of Restrictive Delayed Process commands in QIC-157.
+    //
+
+    if ((!(statusByte & IDE_STATUS_DSC)) &&
+          (flags & DFLAGS_TAPE_DEVICE) && deviceExtension->RDP) {
+        ScsiPortStallExecution(1000);
+        DebugPrint((2,"AtapiSendCommand: DSC not set. %x\n",statusByte));
+        return SRB_STATUS_BUSY;
+    }
+
+    if (IS_RDP(Srb->Cdb[0])) {
+
+        deviceExtension->RDP = TRUE;
+
+        DebugPrint((3,
+                    "AtapiSendCommand: %x mapped as DSC restrictive\n",
+                    Srb->Cdb[0]));
+
+    } else {
+
+        deviceExtension->RDP = FALSE;
+    }
+
+    if (statusByte & IDE_STATUS_DRQ) {
+
+        DebugPrint((1,
+                    "AtapiSendCommand: Entered with status (%x). Attempting to recover.\n",
+                    statusByte));
+        //
+        // Try to drain the data that one preliminary device thinks that it has
+        // to transfer. Hopefully this random assertion of DRQ will not be present
+        // in production devices.
+        //
+
+        for (i = 0; i < 0x10000; i++) {
+
+           GetStatus(baseIoAddress2, statusByte);
+
+           if (statusByte & IDE_STATUS_DRQ) {
+
+              ScsiPortReadPortUshort(&baseIoAddress1->Data);
+
+           } else {
+
+              break;
+           }
+        }
+
+        if (i == 0x10000) {
+
+            DebugPrint((1,
+                        "AtapiSendCommand: DRQ still asserted.Status (%x)\n",
+                        statusByte));
+
+            AtapiSoftReset(baseIoAddress1,Srb->TargetId);
+
+            DebugPrint((1,
+                         "AtapiSendCommand: Issued soft reset to Atapi device. \n"));
+
+            //
+            // Re-initialize Atapi device.
+            //
+
+            IssueIdentify(HwDeviceExtension,
+                          (Srb->TargetId & 0x1),
+                          (Srb->TargetId >> 1),
+                          IDE_COMMAND_ATAPI_IDENTIFY);
+
+            //
+            // Inform the port driver that the bus has been reset.
+            //
+
+            ScsiPortNotification(ResetDetected, HwDeviceExtension, 0);
+
+            //
+            // Clean up device extension fields that AtapiStartIo won't.
+            //
+
+            deviceExtension->ExpectingInterrupt = FALSE;
+            deviceExtension->RDP = FALSE;
+
+            return SRB_STATUS_BUS_RESET;
+
+        }
+    }
+
+    if (flags & (DFLAGS_SANYO_ATAPI_CHANGER | DFLAGS_ATAPI_CHANGER)) {
+
+        //
+        // As the cdrom driver sets the LUN field in the cdb, it must be removed.
+        //
+
+        Srb->Cdb[1] &= ~0xE0;
+
+        if ((Srb->Cdb[0] == SCSIOP_TEST_UNIT_READY) && (flags & DFLAGS_SANYO_ATAPI_CHANGER)) {
+
+            //
+            // Torisan changer. TUR's are overloaded to be platter switches.
+            //
+
+            Srb->Cdb[7] = Srb->Lun;
+
+        }
+    }
+
+    //
+    // Convert SCSI to ATAPI commands if needed
+    //
+
+    switch (Srb->Cdb[0]) {
+        case SCSIOP_MODE_SENSE:
+        case SCSIOP_MODE_SELECT:
+        case SCSIOP_FORMAT_UNIT:
+            if (!(flags & DFLAGS_TAPE_DEVICE)) {
+                Scsi2Atapi(Srb);
+            }
+
+            break;
+    }
+
+    //
+    // Set data buffer pointer and words left.
+    //
+
+    deviceExtension->DataBuffer = (PUSHORT)Srb->DataBuffer;
+    deviceExtension->WordsLeft = Srb->DataTransferLength / 2;
+
+    WaitOnBusy(baseIoAddress2,statusByte);
+
+    //
+    // Write transfer byte count to registers.
+    //
+
+    byteCountLow = (UCHAR)(Srb->DataTransferLength & 0xFF);
+    byteCountHigh = (UCHAR)(Srb->DataTransferLength >> 8);
+
+    if (Srb->DataTransferLength >= 0x10000) {
+        byteCountLow = byteCountHigh = 0xFF;
+    }
+
+    ScsiPortWritePortUchar(&baseIoAddress1->ByteCountLow,byteCountLow);
+    ScsiPortWritePortUchar(&baseIoAddress1->ByteCountHigh, byteCountHigh);
+
+    ScsiPortWritePortUchar((PUCHAR)baseIoAddress1 + 1,0);
+
+
+    if (flags & DFLAGS_INT_DRQ) {
+
+        //
+        // This device interrupts when ready to receive the packet.
+        //
+        // Write ATAPI packet command.
+        //
+
+        ScsiPortWritePortUchar(&baseIoAddress1->Command,
+                               IDE_COMMAND_ATAPI_PACKET);
+
+        DebugPrint((3,
+                   "AtapiSendCommand: Wait for int. to send packet. Status (%x)\n",
+                   statusByte));
+
+        deviceExtension->ExpectingInterrupt = TRUE;
+
+        return SRB_STATUS_PENDING;
+
+    } else {
+
+        //
+        // Write ATAPI packet command.
+        //
+
+        ScsiPortWritePortUchar(&baseIoAddress1->Command,
+                               IDE_COMMAND_ATAPI_PACKET);
+
+        //
+        // Wait for DRQ.
+        //
+
+        WaitOnBusy(baseIoAddress2, statusByte);
+        WaitForDrq(baseIoAddress2, statusByte);
+
+        if (!(statusByte & IDE_STATUS_DRQ)) {
+
+            DebugPrint((1,
+                       "AtapiSendCommand: DRQ never asserted (%x)\n",
+                       statusByte));
+            return SRB_STATUS_ERROR;
+        }
+    }
+
+    //
+    // Need to read status register.
+    //
+
+    GetBaseStatus(baseIoAddress1, statusByte);
+
+    //
+    // Send CDB to device.
+    //
+
+    WaitOnBusy(baseIoAddress2,statusByte);
+
+    WriteBuffer(baseIoAddress1,
+                (PUSHORT)Srb->Cdb,
+                6);
+
+    //
+    // Indicate expecting an interrupt and wait for it.
+    //
+
+    deviceExtension->ExpectingInterrupt = TRUE;
+
+    return SRB_STATUS_PENDING;
+
+} // end AtapiSendCommand()
+
+ULONG
+STDCALL
+IdeSendCommand(
+    IN PVOID HwDeviceExtension,
+    IN PSCSI_REQUEST_BLOCK Srb
+    )
+
+/*++
+
+Routine Description:
+
+    Program ATA registers for IDE disk transfer.
+
+Arguments:
+
+    HwDeviceExtension - ATAPI driver storage.
+    Srb - System request block.
+
+Return Value:
+
+    SRB status (pending if all goes well).
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PIDE_REGISTERS_1     baseIoAddress1  = deviceExtension->BaseIoAddress1[Srb->TargetId >> 1];
+    PIDE_REGISTERS_2     baseIoAddress2  = deviceExtension->BaseIoAddress2[Srb->TargetId >> 1];
+    PCDB cdb;
+
+    UCHAR statusByte,errorByte;
+    ULONG status;
+    ULONG i;
+    PMODE_PARAMETER_HEADER   modeData;
+
+    DebugPrint((2,
+               "IdeSendCommand: Command %x to device %d\n",
+               Srb->Cdb[0],
+               Srb->TargetId));
+
+
+
+    switch (Srb->Cdb[0]) {
+    case SCSIOP_INQUIRY:
+
+        //
+        // Filter out all TIDs but 0 and 1 since this is an IDE interface
+        // which support up to two devices.
+        //
+
+        if ((Srb->Lun != 0) ||
+            (!deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_DEVICE_PRESENT)) {
+
+            //
+            // Indicate no device found at this address.
+            //
+
+            status = SRB_STATUS_SELECTION_TIMEOUT;
+            break;
+
+        } else {
+
+            PINQUIRYDATA    inquiryData  = Srb->DataBuffer;
+            PIDENTIFY_DATA2 identifyData = &deviceExtension->IdentifyData[Srb->TargetId];
+
+            //
+            // Zero INQUIRY data structure.
+            //
+
+            for (i = 0; i < Srb->DataTransferLength; i++) {
+               ((PUCHAR)Srb->DataBuffer)[i] = 0;
+            }
+
+            //
+            // Standard IDE interface only supports disks.
+            //
+
+            inquiryData->DeviceType = DIRECT_ACCESS_DEVICE;
+
+            //
+            // Set the removable bit, if applicable.
+            //
+
+            if (deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_REMOVABLE_DRIVE) {
+                inquiryData->RemovableMedia = 1;
+            }
+
+            //
+            // Fill in vendor identification fields.
+            //
+
+            for (i = 0; i < 20; i += 2) {
+               inquiryData->VendorId[i] =
+                   ((PUCHAR)identifyData->ModelNumber)[i + 1];
+               inquiryData->VendorId[i+1] =
+                   ((PUCHAR)identifyData->ModelNumber)[i];
+            }
+
+            //
+            // Initialize unused portion of product id.
+            //
+
+            for (i = 0; i < 4; i++) {
+               inquiryData->ProductId[12+i] = ' ';
+            }
+
+            //
+            // Move firmware revision from IDENTIFY data to
+            // product revision in INQUIRY data.
+            //
+
+            for (i = 0; i < 4; i += 2) {
+               inquiryData->ProductRevisionLevel[i] =
+                   ((PUCHAR)identifyData->FirmwareRevision)[i+1];
+               inquiryData->ProductRevisionLevel[i+1] =
+                   ((PUCHAR)identifyData->FirmwareRevision)[i];
+            }
+
+            status = SRB_STATUS_SUCCESS;
+        }
+
+        break;
+
+    case SCSIOP_MODE_SENSE:
+
+        //
+        // This is used to determine of the media is write-protected.
+        // Since IDE does not support mode sense then we will modify just the portion we need
+        // so the higher level driver can determine if media is protected.
+        //
+
+        if (deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_MEDIA_STATUS_ENABLED) {
+
+            ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                             (UCHAR)(((Srb->TargetId & 0x1) << 4) | 0xA0));
+            ScsiPortWritePortUchar(&baseIoAddress1->Command,IDE_COMMAND_GET_MEDIA_STATUS);
+            WaitOnBusy(baseIoAddress2,statusByte);
+
+            if (!(statusByte & IDE_STATUS_ERROR)){
+
+                //
+                // no error occured return success, media is not protected
+                //
+
+                deviceExtension->ExpectingInterrupt = FALSE;
+                status = SRB_STATUS_SUCCESS;
+
+            } else {
+
+                //
+                // error occured, handle it locally, clear interrupt
+                //
+
+                errorByte = ScsiPortReadPortUchar((PUCHAR)baseIoAddress1 + 1);
+
+                GetBaseStatus(baseIoAddress1, statusByte);
+                deviceExtension->ExpectingInterrupt = FALSE;
+                status = SRB_STATUS_SUCCESS;
+
+                if (errorByte & IDE_ERROR_DATA_ERROR) {
+
+                   //
+                   //media is write-protected, set bit in mode sense buffer
+                   //
+
+                   modeData = (PMODE_PARAMETER_HEADER)Srb->DataBuffer;
+
+                   Srb->DataTransferLength = sizeof(MODE_PARAMETER_HEADER);
+                   modeData->DeviceSpecificParameter |= MODE_DSP_WRITE_PROTECT;
+                }
+            }
+            status = SRB_STATUS_SUCCESS;
+        } else {
+            status = SRB_STATUS_INVALID_REQUEST;
+        }
+        break;
+
+    case SCSIOP_TEST_UNIT_READY:
+
+        if (deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_MEDIA_STATUS_ENABLED) {
+
+            //
+            // Select device 0 or 1.
+            //
+
+            ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                            (UCHAR)(((Srb->TargetId & 0x1) << 4) | 0xA0));
+            ScsiPortWritePortUchar(&baseIoAddress1->Command,IDE_COMMAND_GET_MEDIA_STATUS);
+
+            //
+            // Wait for busy. If media has not changed, return success
+            //
+
+            WaitOnBusy(baseIoAddress2,statusByte);
+
+            if (!(statusByte & IDE_STATUS_ERROR)){
+                deviceExtension->ExpectingInterrupt = FALSE;
+                status = SRB_STATUS_SUCCESS;
+            } else {
+                errorByte = ScsiPortReadPortUchar((PUCHAR)baseIoAddress1 + 1);
+                if (errorByte == IDE_ERROR_DATA_ERROR){
+
+                    //
+                    // Special case: If current media is write-protected,
+                    // the 0xDA command will always fail since the write-protect bit
+                    // is sticky,so we can ignore this error
+                    //
+
+                   GetBaseStatus(baseIoAddress1, statusByte);
+                   deviceExtension->ExpectingInterrupt = FALSE;
+                   status = SRB_STATUS_SUCCESS;
+
+                } else {
+
+                    //
+                    // Request sense buffer to be build
+                    //
+                    deviceExtension->ExpectingInterrupt = TRUE;
+                    status = SRB_STATUS_PENDING;
+               }
+            }
+        } else {
+            status = SRB_STATUS_SUCCESS;
+        }
+
+        break;
+
+    case SCSIOP_READ_CAPACITY:
+
+        //
+        // Claim 512 byte blocks (big-endian).
+        //
+
+        ((PREAD_CAPACITY_DATA)Srb->DataBuffer)->BytesPerBlock = 0x20000;
+
+       //
+       // Calculate last sector.
+       //
+
+
+       i = (deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads *
+            deviceExtension->IdentifyData[Srb->TargetId].NumberOfCylinders *
+            deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack) - 1;
+
+       ((PREAD_CAPACITY_DATA)Srb->DataBuffer)->LogicalBlockAddress =
+           (((PUCHAR)&i)[0] << 24) |  (((PUCHAR)&i)[1] << 16) |
+           (((PUCHAR)&i)[2] << 8) | ((PUCHAR)&i)[3];
+
+       DebugPrint((1,
+                  "IDE disk %x - #sectors %x, #heads %x, #cylinders %x\n",
+                  Srb->TargetId,
+                  deviceExtension->IdentifyData[Srb->TargetId].SectorsPerTrack,
+                  deviceExtension->IdentifyData[Srb->TargetId].NumberOfHeads,
+                  deviceExtension->IdentifyData[Srb->TargetId].NumberOfCylinders));
+
+
+       status = SRB_STATUS_SUCCESS;
+       break;
+
+    case SCSIOP_VERIFY:
+       status = IdeVerify(HwDeviceExtension,Srb);
+
+       break;
+
+    case SCSIOP_READ:
+    case SCSIOP_WRITE:
+
+       status = IdeReadWrite(HwDeviceExtension,
+                                  Srb);
+       break;
+
+    case SCSIOP_START_STOP_UNIT:
+
+       //
+       //Determine what type of operation we should perform
+       //
+       cdb = (PCDB)Srb->Cdb;
+
+       if (cdb->START_STOP.LoadEject == 1){
+
+           //
+           // Eject media,
+           // first select device 0 or 1.
+           //
+           ScsiPortWritePortUchar(&baseIoAddress1->DriveSelect,
+                            (UCHAR)(((Srb->TargetId & 0x1) << 4) | 0xA0));
+           ScsiPortWritePortUchar(&baseIoAddress1->Command,IDE_COMMAND_MEDIA_EJECT);
+       }
+       status = SRB_STATUS_SUCCESS;
+       break;
+
+    case SCSIOP_REQUEST_SENSE:
+       // this function makes sense buffers to report the results
+       // of the original GET_MEDIA_STATUS command
+
+       if (deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_MEDIA_STATUS_ENABLED) {
+           status = IdeBuildSenseBuffer(HwDeviceExtension,Srb);
+           break;
+       }
+
+    default:
+
+       DebugPrint((1,
+                  "IdeSendCommand: Unsupported command %x\n",
+                  Srb->Cdb[0]));
+
+       status = SRB_STATUS_INVALID_REQUEST;
+
+    } // end switch
+
+    return status;
+
+} // end IdeSendCommand()
+
+VOID
+STDCALL
+IdeMediaStatus(
+    BOOLEAN EnableMSN,
+    IN PVOID HwDeviceExtension,
+    ULONG Channel
+    )
+/*++
+
+Routine Description:
+
+    Enables disables media status notification
+
+Arguments:
+
+HwDeviceExtension - ATAPI driver storage.
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PIDE_REGISTERS_1     baseIoAddress = deviceExtension->BaseIoAddress1[Channel >> 1];
+    UCHAR statusByte,errorByte;
+
+
+    if (EnableMSN == TRUE){
+
+        //
+        // If supported enable Media Status Notification support
+        //
+
+        if ((deviceExtension->DeviceFlags[Channel] & DFLAGS_REMOVABLE_DRIVE)) {
+
+            //
+            // enable
+            //
+            ScsiPortWritePortUchar((PUCHAR)baseIoAddress + 1,(UCHAR) (0x95));
+            ScsiPortWritePortUchar(&baseIoAddress->Command,
+                                   IDE_COMMAND_ENABLE_MEDIA_STATUS);
+
+            WaitOnBaseBusy(baseIoAddress,statusByte);
+
+            if (statusByte & IDE_STATUS_ERROR) {
+                //
+                // Read the error register.
+                //
+                errorByte = ScsiPortReadPortUchar((PUCHAR)baseIoAddress + 1);
+
+                DebugPrint((1,
+                            "IdeMediaStatus: Error enabling media status. Status %x, error byte %x\n",
+                             statusByte,
+                             errorByte));
+            } else {
+                deviceExtension->DeviceFlags[Channel] |= DFLAGS_MEDIA_STATUS_ENABLED;
+                DebugPrint((1,"IdeMediaStatus: Media Status Notification Supported\n"));
+                deviceExtension->ReturningMediaStatus = 0;
+
+            }
+
+        }
+    } else { // end if EnableMSN == TRUE
+
+        //
+        // disable if previously enabled
+        //
+        if ((deviceExtension->DeviceFlags[Channel] & DFLAGS_MEDIA_STATUS_ENABLED)) {
+
+            ScsiPortWritePortUchar((PUCHAR)baseIoAddress + 1,(UCHAR) (0x31));
+            ScsiPortWritePortUchar(&baseIoAddress->Command,
+                                   IDE_COMMAND_ENABLE_MEDIA_STATUS);
+
+            WaitOnBaseBusy(baseIoAddress,statusByte);
+            deviceExtension->DeviceFlags[Channel] &= ~DFLAGS_MEDIA_STATUS_ENABLED;
+        }
+
+
+    }
+
+
+
+}
+
+ULONG
+STDCALL
+IdeBuildSenseBuffer(
+    IN PVOID HwDeviceExtension,
+    IN PSCSI_REQUEST_BLOCK Srb
+    )
+
+/*++
+
+Routine Description:
+
+    Builts an artificial sense buffer to report the results of a GET_MEDIA_STATUS
+    command. This function is invoked to satisfy the SCSIOP_REQUEST_SENSE.
+Arguments:
+
+    HwDeviceExtension - ATAPI driver storage.
+    Srb - System request block.
+
+Return Value:
+
+    SRB status (ALWAYS SUCCESS).
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    ULONG status;
+    PSENSE_DATA  senseBuffer = (PSENSE_DATA)Srb->DataBuffer;
+
+
+    if (senseBuffer){
+
+
+        if(deviceExtension->ReturningMediaStatus & IDE_ERROR_MEDIA_CHANGE) {
+
+            senseBuffer->ErrorCode = 0x70;
+            senseBuffer->Valid     = 1;
+            senseBuffer->AdditionalSenseLength = 0xb;
+            senseBuffer->SenseKey =  SCSI_SENSE_UNIT_ATTENTION;
+            senseBuffer->AdditionalSenseCode = SCSI_ADSENSE_MEDIUM_CHANGED;
+            senseBuffer->AdditionalSenseCodeQualifier = 0;
+        } else if(deviceExtension->ReturningMediaStatus & IDE_ERROR_MEDIA_CHANGE_REQ) {
+
+            senseBuffer->ErrorCode = 0x70;
+            senseBuffer->Valid     = 1;
+            senseBuffer->AdditionalSenseLength = 0xb;
+            senseBuffer->SenseKey =  SCSI_SENSE_UNIT_ATTENTION;
+            senseBuffer->AdditionalSenseCode = SCSI_ADSENSE_MEDIUM_CHANGED;
+            senseBuffer->AdditionalSenseCodeQualifier = 0;
+        } else if(deviceExtension->ReturningMediaStatus & IDE_ERROR_END_OF_MEDIA) {
+
+            senseBuffer->ErrorCode = 0x70;
+            senseBuffer->Valid     = 1;
+            senseBuffer->AdditionalSenseLength = 0xb;
+            senseBuffer->SenseKey =  SCSI_SENSE_NOT_READY;
+            senseBuffer->AdditionalSenseCode = SCSI_ADSENSE_NO_MEDIA_IN_DEVICE;
+            senseBuffer->AdditionalSenseCodeQualifier = 0;
+        } else if(deviceExtension->ReturningMediaStatus & IDE_ERROR_DATA_ERROR) {
+
+            senseBuffer->ErrorCode = 0x70;
+            senseBuffer->Valid     = 1;
+            senseBuffer->AdditionalSenseLength = 0xb;
+            senseBuffer->SenseKey =  SCSI_SENSE_DATA_PROTECT;
+            senseBuffer->AdditionalSenseCode = 0;
+            senseBuffer->AdditionalSenseCodeQualifier = 0;
+        }
+        return SRB_STATUS_SUCCESS;
+    }
+    return SRB_STATUS_ERROR;
+
+}// End of IdeBuildSenseBuffer
+
+
+
+
+BOOLEAN
+STDCALL
+AtapiStartIo(
+    IN PVOID HwDeviceExtension,
+    IN PSCSI_REQUEST_BLOCK Srb
+    )
+
+/*++
+
+Routine Description:
+
+    This routine is called from the SCSI port driver synchronized
+    with the kernel to start an IO request.
+
+Arguments:
+
+    HwDeviceExtension - HBA miniport driver's adapter data storage
+    Srb - IO request packet
+
+Return Value:
+
+    TRUE
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    ULONG status;
+
+    //
+    // Determine which function.
+    //
+
+    switch (Srb->Function) {
+
+    case SRB_FUNCTION_EXECUTE_SCSI:
+
+        //
+        // Sanity check. Only one request can be outstanding on a
+        // controller.
+        //
+
+        if (deviceExtension->CurrentSrb) {
+
+            DebugPrint((1,
+                       "AtapiStartIo: Already have a request!\n"));
+            Srb->SrbStatus = SRB_STATUS_BUSY;
+            ScsiPortNotification(RequestComplete,
+                                 deviceExtension,
+                                 Srb);
+            return FALSE;
+        }
+
+        //
+        // Indicate that a request is active on the controller.
+        //
+
+        deviceExtension->CurrentSrb = Srb;
+
+        //
+        // Send command to device.
+        //
+
+        if (deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_ATAPI_DEVICE) {
+
+           status = AtapiSendCommand(HwDeviceExtension,
+                                     Srb);
+
+        } else if (deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_DEVICE_PRESENT) {
+
+           status = IdeSendCommand(HwDeviceExtension,
+                                   Srb);
+        } else {
+
+            status = SRB_STATUS_SELECTION_TIMEOUT;
+        }
+
+        break;
+
+    case SRB_FUNCTION_ABORT_COMMAND:
+
+        //
+        // Verify that SRB to abort is still outstanding.
+        //
+
+        if (!deviceExtension->CurrentSrb) {
+
+            DebugPrint((1, "AtapiStartIo: SRB to abort already completed\n"));
+
+            //
+            // Complete abort SRB.
+            //
+
+            status = SRB_STATUS_ABORT_FAILED;
+
+            break;
+        }
+
+        //
+        // Abort function indicates that a request timed out.
+        // Call reset routine. Card will only be reset if
+        // status indicates something is wrong.
+        // Fall through to reset code.
+        //
+
+    case SRB_FUNCTION_RESET_BUS:
+
+        //
+        // Reset Atapi and SCSI bus.
+        //
+
+        DebugPrint((1, "AtapiStartIo: Reset bus request received\n"));
+
+        if (!AtapiResetController(deviceExtension,
+                             Srb->PathId)) {
+
+              DebugPrint((1,"AtapiStartIo: Reset bus failed\n"));
+
+            //
+            // Log reset failure.
+            //
+
+            ScsiPortLogError(
+                HwDeviceExtension,
+                NULL,
+                0,
+                0,
+                0,
+                SP_INTERNAL_ADAPTER_ERROR,
+                5 << 8
+                );
+
+              status = SRB_STATUS_ERROR;
+
+        } else {
+
+              status = SRB_STATUS_SUCCESS;
+        }
+
+        break;
+
+    case SRB_FUNCTION_IO_CONTROL:
+
+        if (deviceExtension->CurrentSrb) {
+
+            DebugPrint((1,
+                       "AtapiStartIo: Already have a request!\n"));
+            Srb->SrbStatus = SRB_STATUS_BUSY;
+            ScsiPortNotification(RequestComplete,
+                                 deviceExtension,
+                                 Srb);
+            return FALSE;
+        }
+
+        //
+        // Indicate that a request is active on the controller.
+        //
+
+        deviceExtension->CurrentSrb = Srb;
+
+        if (AtapiStringCmp( ((PSRB_IO_CONTROL)(Srb->DataBuffer))->Signature,"SCSIDISK",strlen("SCSIDISK"))) {
+
+            DebugPrint((1,
+                        "AtapiStartIo: IoControl signature incorrect. Send %s, expected %s\n",
+                        ((PSRB_IO_CONTROL)(Srb->DataBuffer))->Signature,
+                        "SCSIDISK"));
+
+            status = SRB_STATUS_INVALID_REQUEST;
+            break;
+        }
+
+        switch (((PSRB_IO_CONTROL)(Srb->DataBuffer))->ControlCode) {
+
+            case IOCTL_SCSI_MINIPORT_SMART_VERSION: {
+
+                PGETVERSIONINPARAMS versionParameters = (PGETVERSIONINPARAMS)(((PUCHAR)Srb->DataBuffer) + sizeof(SRB_IO_CONTROL));
+                UCHAR deviceNumber;
+
+                //
+                // Version and revision per SMART 1.03
+                //
+
+                versionParameters->bVersion = 1;
+                versionParameters->bRevision = 1;
+                versionParameters->bReserved = 0;
+
+                //
+                // Indicate that support for IDE IDENTIFY, ATAPI IDENTIFY and SMART commands.
+                //
+
+                versionParameters->fCapabilities = (CAP_ATA_ID_CMD | CAP_ATAPI_ID_CMD | CAP_SMART_CMD);
+
+                //
+                // This is done because of how the IOCTL_SCSI_MINIPORT
+                // determines 'targetid's'. Disk.sys places the real target id value
+                // in the DeviceMap field. Once we do some parameter checking, the value passed
+                // back to the application will be determined.
+                //
+
+                deviceNumber = versionParameters->bIDEDeviceMap;
+
+                if (!(deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_DEVICE_PRESENT) ||
+                    (deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_ATAPI_DEVICE)) {
+
+                    status = SRB_STATUS_SELECTION_TIMEOUT;
+                    break;
+                }
+
+                //
+                // NOTE: This will only set the bit
+                // corresponding to this drive's target id.
+                // The bit mask is as follows:
+                //
+                //     Sec Pri
+                //     S M S M
+                //     3 2 1 0
+                //
+
+                if (deviceExtension->NumberChannels == 1) {
+                    if (deviceExtension->PrimaryAddress) {
+                        deviceNumber = 1 << Srb->TargetId;
+                    } else {
+                        deviceNumber = 4 << Srb->TargetId;
+                    }
+                } else {
+                    deviceNumber = 1 << Srb->TargetId;
+                }
+
+                versionParameters->bIDEDeviceMap = deviceNumber;
+
+                status = SRB_STATUS_SUCCESS;
+                break;
+            }
+
+            case IOCTL_SCSI_MINIPORT_IDENTIFY: {
+
+                PSENDCMDOUTPARAMS cmdOutParameters = (PSENDCMDOUTPARAMS)(((PUCHAR)Srb->DataBuffer) + sizeof(SRB_IO_CONTROL));
+                SENDCMDINPARAMS   cmdInParameters = *(PSENDCMDINPARAMS)(((PUCHAR)Srb->DataBuffer) + sizeof(SRB_IO_CONTROL));
+                ULONG             i;
+                UCHAR             targetId;
+
+
+                if (cmdInParameters.irDriveRegs.bCommandReg == ID_CMD) {
+
+                    //
+                    // Extract the target.
+                    //
+
+                    targetId = cmdInParameters.bDriveNumber;
+
+                if (!(deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_DEVICE_PRESENT) ||
+                     (deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_ATAPI_DEVICE)) {
+
+                        status = SRB_STATUS_SELECTION_TIMEOUT;
+                        break;
+                    }
+
+                    //
+                    // Zero the output buffer
+                    //
+
+                    for (i = 0; i < (sizeof(SENDCMDOUTPARAMS) + IDENTIFY_BUFFER_SIZE - 1); i++) {
+                        ((PUCHAR)cmdOutParameters)[i] = 0;
+                    }
+
+                    //
+                    // Build status block.
+                    //
+
+                    cmdOutParameters->cBufferSize = IDENTIFY_BUFFER_SIZE;
+                    cmdOutParameters->DriverStatus.bDriverError = 0;
+                    cmdOutParameters->DriverStatus.bIDEError = 0;
+
+                    //
+                    // Extract the identify data from the device extension.
+                    //
+
+                    ScsiPortMoveMemory (cmdOutParameters->bBuffer, &deviceExtension->IdentifyData[targetId], IDENTIFY_DATA_SIZE);
+
+                    status = SRB_STATUS_SUCCESS;
+
+
+                } else {
+                    status = SRB_STATUS_INVALID_REQUEST;
+                }
+                break;
+            }
+
+            case  IOCTL_SCSI_MINIPORT_READ_SMART_ATTRIBS:
+            case  IOCTL_SCSI_MINIPORT_READ_SMART_THRESHOLDS:
+            case  IOCTL_SCSI_MINIPORT_ENABLE_SMART:
+            case  IOCTL_SCSI_MINIPORT_DISABLE_SMART:
+            case  IOCTL_SCSI_MINIPORT_RETURN_STATUS:
+            case  IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE:
+            case  IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES:
+            case  IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS:
+
+                status = IdeSendSmartCommand(HwDeviceExtension,Srb);
+                break;
+
+            default :
+
+                status = SRB_STATUS_INVALID_REQUEST;
+                break;
+
+        }
+
+        break;
+
+    default:
+
+        //
+        // Indicate unsupported command.
+        //
+
+        status = SRB_STATUS_INVALID_REQUEST;
+
+        break;
+
+    } // end switch
+
+    //
+    // Check if command complete.
+    //
+
+    if (status != SRB_STATUS_PENDING) {
+
+        DebugPrint((2,
+                   "AtapiStartIo: Srb %x complete with status %x\n",
+                   Srb,
+                   status));
+
+        //
+        // Clear current SRB.
+        //
+
+        deviceExtension->CurrentSrb = NULL;
+
+        //
+        // Set status in SRB.
+        //
+
+        Srb->SrbStatus = (UCHAR)status;
+
+        //
+        // Indicate command complete.
+        //
+
+        ScsiPortNotification(RequestComplete,
+                             deviceExtension,
+                             Srb);
+
+        //
+        // Indicate ready for next request.
+        //
+
+        ScsiPortNotification(NextRequest,
+                             deviceExtension,
+                             NULL);
+    }
+
+    return TRUE;
+
+} // end AtapiStartIo()
+
+
+ULONG
+STDCALL
+DriverEntry(
+    IN PVOID DriverObject,
+    IN PVOID Argument2
+    )
+
+/*++
+
+Routine Description:
+
+    Installable driver initialization entry point for system.
+
+Arguments:
+
+    Driver Object
+
+Return Value:
+
+    Status from ScsiPortInitialize()
+
+--*/
+
+{
+    HW_INITIALIZATION_DATA hwInitializationData;
+    ULONG                  adapterCount;
+    ULONG                  i;
+    ULONG                  statusToReturn, newStatus;
+
+    DebugPrint((1,"\n\nATAPI IDE MiniPort Driver\n"));
+
+    statusToReturn = 0xffffffff;
+
+    //
+    // Zero out structure.
+    //
+
+    AtapiZeroMemory(((PUCHAR)&hwInitializationData), sizeof(HW_INITIALIZATION_DATA));
+
+    //
+    // Set size of hwInitializationData.
+    //
+
+    hwInitializationData.HwInitializationDataSize =
+      sizeof(HW_INITIALIZATION_DATA);
+
+    //
+    // Set entry points.
+    //
+
+    hwInitializationData.HwInitialize = AtapiHwInitialize;
+    hwInitializationData.HwResetBus = AtapiResetController;
+    hwInitializationData.HwStartIo = AtapiStartIo;
+    hwInitializationData.HwInterrupt = AtapiInterrupt;
+
+    //
+    // Specify size of extensions.
+    //
+
+    hwInitializationData.DeviceExtensionSize = sizeof(HW_DEVICE_EXTENSION);
+    hwInitializationData.SpecificLuExtensionSize = sizeof(HW_LU_EXTENSION);
+
+    //
+    // Indicate PIO device.
+    //
+
+    hwInitializationData.MapBuffers = TRUE;
+
+    //
+    // Native Mode Devices
+    //
+    for (i=0; i <NUM_NATIVE_MODE_ADAPTERS; i++) {
+        hwInitializationData.HwFindAdapter = AtapiFindNativeModeController;
+        hwInitializationData.NumberOfAccessRanges = 4;
+        hwInitializationData.AdapterInterfaceType = PCIBus;
+
+        hwInitializationData.VendorId             = NativeModeAdapters[i].VendorId;
+        hwInitializationData.VendorIdLength       = (USHORT) NativeModeAdapters[i].VendorIdLength;
+        hwInitializationData.DeviceId             = NativeModeAdapters[i].DeviceId;
+        hwInitializationData.DeviceIdLength       = (USHORT) NativeModeAdapters[i].DeviceIdLength;
+
+        newStatus = ScsiPortInitialize(DriverObject,
+                                       Argument2,
+                                       &hwInitializationData,
+                                       (PVOID) i);
+        if (newStatus < statusToReturn)
+            statusToReturn = newStatus;
+    }
+
+    hwInitializationData.VendorId             = 0;
+    hwInitializationData.VendorIdLength       = 0;
+    hwInitializationData.DeviceId             = 0;
+    hwInitializationData.DeviceIdLength       = 0;
+
+    //
+    // The adapter count is used by the find adapter routine to track how
+    // which adapter addresses have been tested.
+    //
+
+    adapterCount = 0;
+
+    hwInitializationData.HwFindAdapter = AtapiFindPCIController;
+    hwInitializationData.NumberOfAccessRanges = 4;
+    hwInitializationData.AdapterInterfaceType = Isa;
+
+    newStatus = ScsiPortInitialize(DriverObject,
+                                   Argument2,
+                                   &hwInitializationData,
+                                   &adapterCount);
+    if (newStatus < statusToReturn)
+        statusToReturn = newStatus;
+
+    //
+    // Indicate 2 access ranges and reset FindAdapter.
+    //
+
+    hwInitializationData.NumberOfAccessRanges = 2;
+    hwInitializationData.HwFindAdapter = AtapiFindController;
+
+    //
+    // Indicate ISA bustype.
+    //
+
+    hwInitializationData.AdapterInterfaceType = Isa;
+
+    //
+    // Call initialization for ISA bustype.
+    //
+
+    newStatus =  ScsiPortInitialize(DriverObject,
+                                    Argument2,
+                                    &hwInitializationData,
+                                    &adapterCount);
+    if (newStatus < statusToReturn)
+        statusToReturn = newStatus;
+
+    //
+    // Set up for MCA
+    //
+
+    hwInitializationData.AdapterInterfaceType = MicroChannel;
+    adapterCount = 0;
+
+    newStatus =  ScsiPortInitialize(DriverObject,
+                                    Argument2,
+                                    &hwInitializationData,
+                                    &adapterCount);
+    if (newStatus < statusToReturn)
+        statusToReturn = newStatus;
+
+    return statusToReturn;
+
+} // end DriverEntry()
+
+
+
+LONG
+STDCALL
+AtapiStringCmp (
+    PCHAR FirstStr,
+    PCHAR SecondStr,
+    ULONG Count
+    )
+{
+    UCHAR  first ,last;
+
+    if (Count) {
+        do {
+
+            //
+            // Get next char.
+            //
+
+            first = *FirstStr++;
+            last = *SecondStr++;
+
+            if (first != last) {
+
+                //
+                // If no match, try lower-casing.
+                //
+
+                if (first>='A' && first<='Z') {
+                    first = first - 'A' + 'a';
+                }
+                if (last>='A' && last<='Z') {
+                    last = last - 'A' + 'a';
+                }
+                if (first != last) {
+
+                    //
+                    // No match
+                    //
+
+                    return first - last;
+                }
+            }
+        }while (--Count && first);
+    }
+
+    return 0;
+}
+
+
+VOID
+STDCALL
+AtapiZeroMemory(
+    IN PCHAR Buffer,
+    IN ULONG Count
+    )
+{
+    ULONG i;
+
+    for (i = 0; i < Count; i++) {
+        Buffer[i] = 0;
+    }
+}
+
+
+VOID
+STDCALL
+AtapiHexToString (
+    IN ULONG Value,
+    IN OUT PCHAR *Buffer
+    )
+{
+    PCHAR  string;
+    PCHAR  firstdig;
+    CHAR   temp;
+    ULONG i;
+    USHORT digval;
+
+    string = *Buffer;
+
+    firstdig = string;
+
+    for (i = 0; i < 4; i++) {
+        digval = (USHORT)(Value % 16);
+        Value /= 16;
+
+        //
+        // convert to ascii and store. Note this will create
+        // the buffer with the digits reversed.
+        //
+
+        if (digval > 9) {
+            *string++ = (char) (digval - 10 + 'a');
+        } else {
+            *string++ = (char) (digval + '0');
+        }
+
+    }
+
+    //
+    // Reverse the digits.
+    //
+
+    *string-- = '\0';
+
+    do {
+        temp = *string;
+        *string = *firstdig;
+        *firstdig = temp;
+        --string;
+        ++firstdig;
+    } while (firstdig < string);
+}
+
+
+
+PSCSI_REQUEST_BLOCK
+STDCALL
+BuildMechanismStatusSrb (
+    IN PVOID HwDeviceExtension,
+    IN ULONG PathId,
+    IN ULONG TargetId
+    )
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PSCSI_REQUEST_BLOCK srb;
+    PCDB cdb;
+
+    srb = &deviceExtension->InternalSrb;
+
+    AtapiZeroMemory((PUCHAR) srb, sizeof(SCSI_REQUEST_BLOCK));
+
+    srb->PathId     = (UCHAR) PathId;
+    srb->TargetId   = (UCHAR) TargetId;
+    srb->Function   = SRB_FUNCTION_EXECUTE_SCSI;
+    srb->Length     = sizeof(SCSI_REQUEST_BLOCK);
+
+    //
+    // Set flags to disable synchronous negociation.
+    //
+    srb->SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
+
+    //
+    // Set timeout to 2 seconds.
+    //
+    srb->TimeOutValue = 4;
+
+    srb->CdbLength          = 6;
+    srb->DataBuffer         = &deviceExtension->MechStatusData;
+    srb->DataTransferLength = sizeof(MECHANICAL_STATUS_INFORMATION_HEADER);
+
+    //
+    // Set CDB operation code.
+    //
+    cdb = (PCDB)srb->Cdb;
+    cdb->MECH_STATUS.OperationCode       = SCSIOP_MECHANISM_STATUS;
+    cdb->MECH_STATUS.AllocationLength[1] = sizeof(MECHANICAL_STATUS_INFORMATION_HEADER);
+
+    return srb;
+}
+
+
+PSCSI_REQUEST_BLOCK
+STDCALL
+BuildRequestSenseSrb (
+    IN PVOID HwDeviceExtension,
+    IN ULONG PathId,
+    IN ULONG TargetId
+    )
+{
+    PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
+    PSCSI_REQUEST_BLOCK srb;
+    PCDB cdb;
+
+    srb = &deviceExtension->InternalSrb;
+
+    AtapiZeroMemory((PUCHAR) srb, sizeof(SCSI_REQUEST_BLOCK));
+
+    srb->PathId     = (UCHAR) PathId;
+    srb->TargetId   = (UCHAR) TargetId;
+    srb->Function   = SRB_FUNCTION_EXECUTE_SCSI;
+    srb->Length     = sizeof(SCSI_REQUEST_BLOCK);
+
+    //
+    // Set flags to disable synchronous negociation.
+    //
+    srb->SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
+
+    //
+    // Set timeout to 2 seconds.
+    //
+    srb->TimeOutValue = 4;
+
+    srb->CdbLength          = 6;
+    srb->DataBuffer         = &deviceExtension->MechStatusSense;
+    srb->DataTransferLength = sizeof(SENSE_DATA);
+
+    //
+    // Set CDB operation code.
+    //
+    cdb = (PCDB)srb->Cdb;
+    cdb->CDB6INQUIRY.OperationCode    = SCSIOP_REQUEST_SENSE;
+    cdb->CDB6INQUIRY.AllocationLength = sizeof(SENSE_DATA);
+
+    return srb;
+}
+
+
+
+
+

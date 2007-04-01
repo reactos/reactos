@@ -22,8 +22,8 @@
 <directory name="pciidex">
 	<xi:include href="pciidex/pciidex.rbuild" />
 </directory>
-<directory name="scsiport">
-	<xi:include href="scsiport/scsiport.rbuild" />
+<directory name="scsiport-new">
+	<xi:include href="scsiport-new/scsiport.rbuild" />
 </directory>
 <directory name="diskdump">
 	<xi:include href="diskdump/diskdump.rbuild" />

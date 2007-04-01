@@ -1,267 +1,459 @@
-//
-//  ATAPI.H - defines and typedefs for the IDE Driver module.
-//
+/*
+ * PROJECT:         ReactOS Storage Stack
+ * LICENSE:         DDK - see license.txt in the root dir
+ * FILE:            drivers/storage/atapi/atapi.h
+ * PURPOSE:         ATAPI IDE miniport driver
+ * PROGRAMMERS:     Based on a source code sample from Microsoft NT4 DDK
+ */
 
-#ifndef __ATAPI_H
-#define __ATAPI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define  IDE_MAXIMUM_DEVICES    8
-
-#define IDE_MAX_NAME_LENGTH     50
-
-#define  IDE_SECTOR_BUF_SZ         512
-#define  IDE_MAX_SECTORS_PER_XFER  256
-#define  IDE_MAX_RESET_RETRIES     10000
-#define  IDE_MAX_POLL_RETRIES      100000
-#define  IDE_MAX_WRITE_RETRIES     1000
-#define  IDE_MAX_BUSY_RETRIES      50000
-#define  IDE_MAX_DRQ_RETRIES       10000
-//#define  IDE_MAX_CMD_RETRIES       1
-#define  IDE_MAX_CMD_RETRIES       0
-#define  IDE_CMD_TIMEOUT           5
-#define  IDE_RESET_PULSE_LENGTH    500  /* maybe a little too long */
-#define  IDE_RESET_BUSY_TIMEOUT    120
-#define  IDE_RESET_DRDY_TIMEOUT    120
-
-// Control Block offsets and masks
-#define  IDE_REG_ALT_STATUS     0x0000
-#define  IDE_REG_DEV_CNTRL      0x0000  /* device control register */
-#define    IDE_DC_SRST            0x04  /* drive reset (both drives) */
-#define    IDE_DC_nIEN            0x02  /* IRQ enable (active low) */
-#define  IDE_REG_DRV_ADDR       0x0001
-
-// Command Block offsets and masks
-#define  IDE_REG_DATA_PORT      0x0000
-#define  IDE_REG_ERROR          0x0001  /* error register */
-#define    IDE_ER_AMNF            0x01  /* addr mark not found */
-#define    IDE_ER_TK0NF           0x02  /* track 0 not found */
-#define    IDE_ER_ABRT            0x04  /* command aborted */
-#define    IDE_ER_MCR             0x08  /* media change requested */
-#define    IDE_ER_IDNF            0x10  /* ID not found */
-#define    IDE_ER_MC              0x20  /* Media changed */
-#define    IDE_ER_UNC             0x40  /* Uncorrectable data error */
-#define  IDE_REG_PRECOMP        0x0001
-#define  IDE_REG_SECTOR_CNT     0x0002
-#define  IDE_REG_SECTOR_NUM     0x0003
-#define  IDE_REG_CYL_LOW        0x0004
-#define  IDE_REG_CYL_HIGH       0x0005
-#define  IDE_REG_DRV_HEAD       0x0006
-#define    IDE_DH_FIXED           0xA0
-#define    IDE_DH_LBA             0x40
-#define    IDE_DH_HDMASK          0x0F
-#define    IDE_DH_DRV0            0x00
-#define    IDE_DH_DRV1            0x10
-#define  IDE_REG_STATUS           0x0007
-#define    IDE_SR_BUSY              0x80
-#define    IDE_SR_DRDY              0x40
-#define    IDE_SR_WERR              0x20
-#define    IDE_SR_DRQ               0x08
-#define    IDE_SR_ERR               0x01
-#define  IDE_REG_COMMAND          0x0007
-
-/* IDE/ATA commands */
-#define    IDE_CMD_RESET		0x08
-#define    IDE_CMD_READ			0x20
-#define    IDE_CMD_READ_ONCE		0x21
-#define    IDE_CMD_READ_EXT		0x24	/* 48 bit */
-#define    IDE_CMD_READ_DMA_EXT		0x25	/* 48 bit */
-#define    IDE_CMD_READ_MULTIPLE_EXT	0x29	/* 48 bit */
-#define    IDE_CMD_WRITE		0x30
-#define    IDE_CMD_WRITE_ONCE		0x31
-#define    IDE_CMD_WRITE_EXT		0x34	/* 48 bit */
-#define    IDE_CMD_WRITE_DMA_EXT	0x35	/* 48 bit */
-#define    IDE_CMD_WRITE_MULTIPLE_EXT	0x39	/* 48 bit */
-#define    IDE_CMD_PACKET		0xA0
-#define    IDE_CMD_READ_MULTIPLE	0xC4
-#define    IDE_CMD_WRITE_MULTIPLE	0xC5
-#define    IDE_CMD_READ_DMA		0xC8
-#define    IDE_CMD_WRITE_DMA		0xCA
-#define    IDE_CMD_FLUSH_CACHE		0xE7
-#define    IDE_CMD_FLUSH_CACHE_EXT	0xEA	/* 48 bit */
-#define    IDE_CMD_IDENT_ATA_DRV	0xEC
-#define    IDE_CMD_IDENT_ATAPI_DRV	0xA1
-#define    IDE_CMD_GET_MEDIA_STATUS	0xDA
+#include <srb.h>
+#include <scsi.h>
 
 //
-//  Access macros for command registers
-//  Each macro takes an address of the command port block, and data
+// IDE register definition
 //
-#define IDEReadError(Address) \
-  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_ERROR)))
-#define IDEWritePrecomp(Address, Data) \
-  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_PRECOMP), (Data)))
-#define IDEReadSectorCount(Address) \
-  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_SECTOR_CNT)))
-#define IDEWriteSectorCount(Address, Data) \
-  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_SECTOR_CNT), (Data)))
-#define IDEReadSectorNum(Address) \
-  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_SECTOR_NUM)))
-#define IDEWriteSectorNum(Address, Data) \
-  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_SECTOR_NUM), (Data)))
-#define IDEReadCylinderLow(Address) \
-  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_CYL_LOW)))
-#define IDEWriteCylinderLow(Address, Data) \
-  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_CYL_LOW), (Data)))
-#define IDEReadCylinderHigh(Address) \
-  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_CYL_HIGH)))
-#define IDEWriteCylinderHigh(Address, Data) \
-  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_CYL_HIGH), (Data)))
-#define IDEReadDriveHead(Address) \
-  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_DRV_HEAD)))
-#define IDEWriteDriveHead(Address, Data) \
-  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_DRV_HEAD), (Data)))
-#define IDEReadStatus(Address) \
-  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_STATUS)))
-#define IDEWriteCommand(Address, Data) \
-  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_COMMAND), (Data)))
-#define IDEReadDMACommand(Address) \
-  (ScsiPortReadPortUchar((PUCHAR)((Address))))
-#define IDEWriteDMACommand(Address, Data) \
-  (ScsiPortWritePortUchar((PUCHAR)((Address)), (Data)))
-#define IDEReadDMAStatus(Address) \
-  (ScsiPortReadPortUchar((PUCHAR)((Address) + 2)))
-#define IDEWriteDMAStatus(Address, Data) \
-  (ScsiPortWritePortUchar((PUCHAR)((Address) + 2), (Data)))
-#define IDEWritePRDTable(Address, Data) \
-  (ScsiPortWritePortUlong((PULONG)((Address) + 4), (Data)))
 
+typedef struct _IDE_REGISTERS_1 {
+    USHORT Data;
+    UCHAR BlockCount;
+    UCHAR BlockNumber;
+    UCHAR CylinderLow;
+    UCHAR CylinderHigh;
+    UCHAR DriveSelect;
+    UCHAR Command;
+} IDE_REGISTERS_1, *PIDE_REGISTERS_1;
+
+typedef struct _IDE_REGISTERS_2 {
+    UCHAR AlternateStatus;
+    UCHAR DriveAddress;
+} IDE_REGISTERS_2, *PIDE_REGISTERS_2;
+
+typedef struct _IDE_REGISTERS_3 {
+    ULONG Data;
+    UCHAR Others[4];
+} IDE_REGISTERS_3, *PIDE_REGISTERS_3;
 
 //
-//  Data block read and write commands
+// Device Extension Device Flags
 //
-#define IDEReadBlock(Address, Buffer, Count) \
-  (ScsiPortReadPortBufferUshort((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
-#define IDEWriteBlock(Address, Buffer, Count) \
-  (ScsiPortWritePortBufferUshort((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 
-#define IDEReadBlock32(Address, Buffer, Count) \
-  (ScsiPortReadPortBufferUlong((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
-#define IDEWriteBlock32(Address, Buffer, Count) \
-  (ScsiPortWritePortBufferUlong((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
+#define DFLAGS_DEVICE_PRESENT        0x0001    // Indicates that some device is present.
+#define DFLAGS_ATAPI_DEVICE          0x0002    // Indicates whether Atapi commands can be used.
+#define DFLAGS_TAPE_DEVICE           0x0004    // Indicates whether this is a tape device.
+#define DFLAGS_INT_DRQ               0x0008    // Indicates whether device interrupts as DRQ is set after
+                                               // receiving Atapi Packet Command
+#define DFLAGS_REMOVABLE_DRIVE       0x0010    // Indicates that the drive has the 'removable' bit set in
+                                               // identify data (offset 128)
+#define DFLAGS_MEDIA_STATUS_ENABLED  0x0020    // Media status notification enabled
+#define DFLAGS_ATAPI_CHANGER         0x0040    // Indicates atapi 2.5 changer present.
+#define DFLAGS_SANYO_ATAPI_CHANGER   0x0080    // Indicates multi-platter device, not conforming to the 2.5 spec.
+#define DFLAGS_CHANGER_INITED        0x0100    // Indicates that the init path for changers has already been done.
+//
+// Used to disable 'advanced' features.
+//
 
-#define IDEReadWord(Address) \
-  (ScsiPortReadPortUshort((PUSHORT)((Address) + IDE_REG_DATA_PORT)))
+#define MAX_ERRORS                     4
 
 //
-//  Access macros for control registers
-//  Each macro takes an address of the control port blank and data
+// ATAPI command definitions
 //
-#define IDEReadAltStatus(Address) \
-  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_ALT_STATUS)))
-#define IDEWriteDriveControl(Address, Data) \
-  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_DEV_CNTRL), (Data)))
+
+#define ATAPI_MODE_SENSE   0x5A
+#define ATAPI_MODE_SELECT  0x55
+#define ATAPI_FORMAT_UNIT  0x24
+
+//
+// ATAPI Command Descriptor Block
+//
+
+typedef struct _MODE_SENSE_10 {
+        UCHAR OperationCode;
+        UCHAR Reserved1;
+        UCHAR PageCode : 6;
+        UCHAR Pc : 2;
+        UCHAR Reserved2[4];
+        UCHAR ParameterListLengthMsb;
+        UCHAR ParameterListLengthLsb;
+        UCHAR Reserved3[3];
+} MODE_SENSE_10, *PMODE_SENSE_10;
+
+typedef struct _MODE_SELECT_10 {
+        UCHAR OperationCode;
+        UCHAR Reserved1 : 4;
+        UCHAR PFBit : 1;
+        UCHAR Reserved2 : 3;
+        UCHAR Reserved3[5];
+        UCHAR ParameterListLengthMsb;
+        UCHAR ParameterListLengthLsb;
+        UCHAR Reserved4[3];
+} MODE_SELECT_10, *PMODE_SELECT_10;
+
+typedef struct _MODE_PARAMETER_HEADER_10 {
+    UCHAR ModeDataLengthMsb;
+    UCHAR ModeDataLengthLsb;
+    UCHAR MediumType;
+    UCHAR Reserved[5];
+}MODE_PARAMETER_HEADER_10, *PMODE_PARAMETER_HEADER_10;
+
+//
+// IDE command definitions
+//
+
+#define IDE_COMMAND_ATAPI_RESET      0x08
+#define IDE_COMMAND_RECALIBRATE      0x10
+#define IDE_COMMAND_READ             0x20
+#define IDE_COMMAND_WRITE            0x30
+#define IDE_COMMAND_VERIFY           0x40
+#define IDE_COMMAND_SEEK             0x70
+#define IDE_COMMAND_SET_DRIVE_PARAMETERS 0x91
+#define IDE_COMMAND_ATAPI_PACKET     0xA0
+#define IDE_COMMAND_ATAPI_IDENTIFY   0xA1
+#define IDE_COMMAND_READ_MULTIPLE    0xC4
+#define IDE_COMMAND_WRITE_MULTIPLE   0xC5
+#define IDE_COMMAND_SET_MULTIPLE     0xC6
+#define IDE_COMMAND_READ_DMA         0xC8
+#define IDE_COMMAND_WRITE_DMA             0xCA
+#define IDE_COMMAND_GET_MEDIA_STATUS      0xDA
+#define IDE_COMMAND_ENABLE_MEDIA_STATUS   0xEF
+#define IDE_COMMAND_IDENTIFY              0xEC
+#define IDE_COMMAND_MEDIA_EJECT           0xED
+
+//
+// IDE status definitions
+//
+
+#define IDE_STATUS_ERROR             0x01
+#define IDE_STATUS_INDEX             0x02
+#define IDE_STATUS_CORRECTED_ERROR   0x04
+#define IDE_STATUS_DRQ               0x08
+#define IDE_STATUS_DSC               0x10
+#define IDE_STATUS_DRDY              0x40
+#define IDE_STATUS_IDLE              0x50
+#define IDE_STATUS_BUSY              0x80
+
+//
+// IDE drive select/head definitions
+//
+
+#define IDE_DRIVE_SELECT_1           0xA0
+#define IDE_DRIVE_SELECT_2           0x10
+
+//
+// IDE drive control definitions
+//
+
+#define IDE_DC_DISABLE_INTERRUPTS    0x02
+#define IDE_DC_RESET_CONTROLLER      0x04
+#define IDE_DC_REENABLE_CONTROLLER   0x00
+
+//
+// IDE error definitions
+//
+
+#define IDE_ERROR_BAD_BLOCK          0x80
+#define IDE_ERROR_DATA_ERROR         0x40
+#define IDE_ERROR_MEDIA_CHANGE       0x20
+#define IDE_ERROR_ID_NOT_FOUND       0x10
+#define IDE_ERROR_MEDIA_CHANGE_REQ   0x08
+#define IDE_ERROR_COMMAND_ABORTED    0x04
+#define IDE_ERROR_END_OF_MEDIA       0x02
+#define IDE_ERROR_ILLEGAL_LENGTH     0x01
+
+//
+// ATAPI register definition
+//
+
+typedef struct _ATAPI_REGISTERS_1 {
+    USHORT Data;
+    UCHAR InterruptReason;
+    UCHAR Unused1;
+    UCHAR ByteCountLow;
+    UCHAR ByteCountHigh;
+    UCHAR DriveSelect;
+    UCHAR Command;
+} ATAPI_REGISTERS_1, *PATAPI_REGISTERS_1;
+
+typedef struct _ATAPI_REGISTERS_2 {
+    UCHAR AlternateStatus;
+    UCHAR DriveAddress;
+} ATAPI_REGISTERS_2, *PATAPI_REGISTERS_2;
+
+//
+// ATAPI interrupt reasons
+//
+
+#define ATAPI_IR_COD 0x01
+#define ATAPI_IR_IO  0x02
+
+//
+// IDENTIFY data
+//
+
+typedef struct _IDENTIFY_DATA {
+    USHORT GeneralConfiguration;            // 00 00
+    USHORT NumberOfCylinders;               // 02  1
+    USHORT Reserved1;                       // 04  2
+    USHORT NumberOfHeads;                   // 06  3
+    USHORT UnformattedBytesPerTrack;        // 08  4
+    USHORT UnformattedBytesPerSector;       // 0A  5
+    USHORT SectorsPerTrack;                 // 0C  6
+    USHORT VendorUnique1[3];                // 0E  7-9
+    USHORT SerialNumber[10];                // 14  10-19
+    USHORT BufferType;                      // 28  20
+    USHORT BufferSectorSize;                // 2A  21
+    USHORT NumberOfEccBytes;                // 2C  22
+    USHORT FirmwareRevision[4];             // 2E  23-26
+    USHORT ModelNumber[20];                 // 36  27-46
+    UCHAR  MaximumBlockTransfer;            // 5E  47
+    UCHAR  VendorUnique2;                   // 5F
+    USHORT DoubleWordIo;                    // 60  48
+    USHORT Capabilities;                    // 62  49
+    USHORT Reserved2;                       // 64  50
+    UCHAR  VendorUnique3;                   // 66  51
+    UCHAR  PioCycleTimingMode;              // 67
+    UCHAR  VendorUnique4;                   // 68  52
+    UCHAR  DmaCycleTimingMode;              // 69
+    USHORT TranslationFieldsValid:1;        // 6A  53
+    USHORT Reserved3:15;
+    USHORT NumberOfCurrentCylinders;        // 6C  54
+    USHORT NumberOfCurrentHeads;            // 6E  55
+    USHORT CurrentSectorsPerTrack;          // 70  56
+    ULONG  CurrentSectorCapacity;           // 72  57-58
+    USHORT CurrentMultiSectorSetting;       //     59
+    ULONG  UserAddressableSectors;          //     60-61
+    USHORT SingleWordDMASupport : 8;        //     62
+    USHORT SingleWordDMAActive : 8;
+    USHORT MultiWordDMASupport : 8;         //     63
+    USHORT MultiWordDMAActive : 8;
+    USHORT AdvancedPIOModes : 8;            //     64
+    USHORT Reserved4 : 8;
+    USHORT MinimumMWXferCycleTime;          //     65
+    USHORT RecommendedMWXferCycleTime;      //     66
+    USHORT MinimumPIOCycleTime;             //     67
+    USHORT MinimumPIOCycleTimeIORDY;        //     68
+    USHORT Reserved5[2];                    //     69-70
+    USHORT ReleaseTimeOverlapped;           //     71
+    USHORT ReleaseTimeServiceCommand;       //     72
+    USHORT MajorRevision;                   //     73
+    USHORT MinorRevision;                   //     74
+    USHORT Reserved6[50];                   //     75-126
+    USHORT SpecialFunctionsEnabled;         //     127
+    USHORT Reserved7[128];                  //     128-255
+} IDENTIFY_DATA, *PIDENTIFY_DATA;
+
+//
+// Identify data without the Reserved4.
+//
+
+typedef struct _IDENTIFY_DATA2 {
+    USHORT GeneralConfiguration;            // 00
+    USHORT NumberOfCylinders;               // 02
+    USHORT Reserved1;                       // 04
+    USHORT NumberOfHeads;                   // 06
+    USHORT UnformattedBytesPerTrack;        // 08
+    USHORT UnformattedBytesPerSector;       // 0A
+    USHORT SectorsPerTrack;                 // 0C
+    USHORT VendorUnique1[3];                // 0E
+    USHORT SerialNumber[10];                // 14
+    USHORT BufferType;                      // 28
+    USHORT BufferSectorSize;                // 2A
+    USHORT NumberOfEccBytes;                // 2C
+    USHORT FirmwareRevision[4];             // 2E
+    USHORT ModelNumber[20];                 // 36
+    UCHAR  MaximumBlockTransfer;            // 5E
+    UCHAR  VendorUnique2;                   // 5F
+    USHORT DoubleWordIo;                    // 60
+    USHORT Capabilities;                    // 62
+    USHORT Reserved2;                       // 64
+    UCHAR  VendorUnique3;                   // 66
+    UCHAR  PioCycleTimingMode;              // 67
+    UCHAR  VendorUnique4;                   // 68
+    UCHAR  DmaCycleTimingMode;              // 69
+    USHORT TranslationFieldsValid:1;        // 6A
+    USHORT Reserved3:15;
+    USHORT NumberOfCurrentCylinders;        // 6C
+    USHORT NumberOfCurrentHeads;            // 6E
+    USHORT CurrentSectorsPerTrack;          // 70
+    ULONG  CurrentSectorCapacity;           // 72
+} IDENTIFY_DATA2, *PIDENTIFY_DATA2;
+
+#define IDENTIFY_DATA_SIZE sizeof(IDENTIFY_DATA)
+
+//
+// IDENTIFY capability bit definitions.
+//
+
+#define IDENTIFY_CAPABILITIES_DMA_SUPPORTED 0x0100
+#define IDENTIFY_CAPABILITIES_LBA_SUPPORTED 0x0200
+
+//
+// IDENTIFY DMA timing cycle modes.
+//
+
+#define IDENTIFY_DMA_CYCLES_MODE_0 0x00
+#define IDENTIFY_DMA_CYCLES_MODE_1 0x01
+#define IDENTIFY_DMA_CYCLES_MODE_2 0x02
+
+
+typedef struct _BROKEN_CONTROLLER_INFORMATION {
+    PCHAR   VendorId;
+    ULONG   VendorIdLength;
+    PCHAR   DeviceId;
+    ULONG   DeviceIdLength;
+}BROKEN_CONTROLLER_INFORMATION, *PBROKEN_CONTROLLER_INFORMATION;
+
+BROKEN_CONTROLLER_INFORMATION const BrokenAdapters[] = {
+    { "1095", 4, "0640", 4},
+    { "1039", 4, "0601", 4}
+};
+
+#define BROKEN_ADAPTERS (sizeof(BrokenAdapters) / sizeof(BROKEN_CONTROLLER_INFORMATION))
+
+typedef struct _NATIVE_MODE_CONTROLLER_INFORMATION {
+    PCHAR   VendorId;
+    ULONG   VendorIdLength;
+    PCHAR   DeviceId;
+    ULONG   DeviceIdLength;
+}NATIVE_MODE_CONTROLLER_INFORMATION, *PNATIVE_MODE_CONTROLLER_INFORMATION;
+
+NATIVE_MODE_CONTROLLER_INFORMATION const NativeModeAdapters[] = {
+    { "10ad", 4, "0105", 4}
+};
+#define NUM_NATIVE_MODE_ADAPTERS (sizeof(NativeModeAdapters) / sizeof(NATIVE_MODE_CONTROLLER_INFORMATION))
+
+//
+// Beautification macros
+//
+
+#define GetStatus(BaseIoAddress, Status) \
+    Status = ScsiPortReadPortUchar(&BaseIoAddress->AlternateStatus);
+
+#define GetBaseStatus(BaseIoAddress, Status) \
+    Status = ScsiPortReadPortUchar(&BaseIoAddress->Command);
+
+#define WriteCommand(BaseIoAddress, Command) \
+    ScsiPortWritePortUchar(&BaseIoAddress->Command, Command);
 
 
 
-//    IDE_DRIVE_IDENTIFY
+#define ReadBuffer(BaseIoAddress, Buffer, Count) \
+    ScsiPortReadPortBufferUshort(&BaseIoAddress->Data, \
+                                 Buffer, \
+                                 Count);
 
-typedef struct _IDE_DRIVE_IDENTIFY
-{
-  USHORT ConfigBits;          /*00*/
-  USHORT LogicalCyls;         /*01*/
-  USHORT Reserved02;          /*02*/
-  USHORT LogicalHeads;        /*03*/
-  USHORT BytesPerTrack;       /*04*/
-  USHORT BytesPerSector;      /*05*/
-  USHORT SectorsPerTrack;     /*06*/
-  UCHAR  InterSectorGap;      /*07*/
-  UCHAR  InterSectorGapSize;
-  UCHAR  Reserved08H;         /*08*/
-  UCHAR  BytesInPLO;
-  USHORT VendorUniqueCnt;     /*09*/
-  UCHAR  SerialNumber[20];    /*10*/
-  USHORT ControllerType;      /*20*/
-  USHORT BufferSize;          /*21*/
-  USHORT ECCByteCnt;          /*22*/
-  UCHAR  FirmwareRev[8];      /*23*/
-  UCHAR  ModelNumber[40];     /*27*/
-  USHORT RWMultImplemented;   /*47*/
-  USHORT DWordIo;             /*48*/
-  USHORT Capabilities;        /*49*/
-#define IDE_DRID_STBY_SUPPORTED   0x2000
-#define IDE_DRID_IORDY_SUPPORTED  0x0800
-#define IDE_DRID_IORDY_DISABLE    0x0400
-#define IDE_DRID_LBA_SUPPORTED    0x0200
-#define IDE_DRID_DMA_SUPPORTED    0x0100
-  USHORT Reserved50;          /*50*/
-  USHORT MinPIOTransTime;     /*51*/
-  USHORT MinDMATransTime;     /*52*/
-  USHORT TMFieldsValid;       /*53*/
-  USHORT TMCylinders;         /*54*/
-  USHORT TMHeads;             /*55*/
-  USHORT TMSectorsPerTrk;     /*56*/
-  USHORT TMCapacityLo;        /*57*/
-  USHORT TMCapacityHi;        /*58*/
-  USHORT RWMultCurrent;       /*59*/
-  USHORT TMSectorCountLo;     /*60*/
-  USHORT TMSectorCountHi;     /*61*/
-  USHORT DmaModes;            /*62*/
-  USHORT MultiDmaModes;       /*63*/
-  USHORT Reserved64[5];       /*64*/
-  USHORT Reserved69[2];       /*69*/
-  USHORT Reserved71[4];       /*71*/
-  USHORT MaxQueueDepth;       /*75*/
-  USHORT Reserved76[4];       /*76*/
-  USHORT MajorRevision;       /*80*/
-  USHORT MinorRevision;       /*81*/
-  USHORT SupportedFeatures82; /*82*/
-  USHORT SupportedFeatures83; /*83*/
-  USHORT SupportedFeatures84; /*84*/
-  USHORT EnabledFeatures85;   /*85*/
-  USHORT EnabledFeatures86;   /*86*/
-  USHORT EnabledFeatures87;   /*87*/
-  USHORT UltraDmaModes;       /*88*/
-  USHORT Reserved89[11];      /*89*/
-  USHORT Max48BitAddress[4];  /*100*/
-  USHORT Reserved104[151];    /*104*/
-  USHORT Checksum;            /*255*/
-} IDE_DRIVE_IDENTIFY, *PIDE_DRIVE_IDENTIFY;
+#define WriteBuffer(BaseIoAddress, Buffer, Count) \
+    ScsiPortWritePortBufferUshort(&BaseIoAddress->Data, \
+                                  Buffer, \
+                                  Count);
 
+#define ReadBuffer2(BaseIoAddress, Buffer, Count) \
+    ScsiPortReadPortBufferUlong(&BaseIoAddress->Data, \
+                             Buffer, \
+                             Count);
 
-/* Special ATAPI commands */
+#define WriteBuffer2(BaseIoAddress, Buffer, Count) \
+    ScsiPortWritePortBufferUlong(&BaseIoAddress->Data, \
+                              Buffer, \
+                              Count);
 
-#define ATAPI_FORMAT_UNIT	0x24
-#define ATAPI_MODE_SELECT	0x55
-#define ATAPI_MODE_SENSE	0x5A
-
-
-/* Special ATAPI_MODE_SELECT (12 bytes) command block */
-
-typedef struct _ATAPI_MODE_SELECT12
-{
-  UCHAR OperationCode;
-  UCHAR Reserved1:4;
-  UCHAR PFBit:1;
-  UCHAR Reserved2:3;
-  UCHAR Reserved3[5];
-  UCHAR ParameterListLengthMsb;
-  UCHAR ParameterListLengthLsb;
-  UCHAR Reserved4[3];
-} ATAPI_MODE_SELECT12, *PATAPI_MODE_SELECT12;
-
-
-/* Special ATAPI_MODE_SENSE (12 bytes) command block */
-
-typedef struct _ATAPI_MODE_SENSE12
-{
-  UCHAR OperationCode;
-  UCHAR Reserved1;
-  UCHAR PageCode:6;
-  UCHAR Pc:2;
-  UCHAR Reserved2[4];
-  UCHAR ParameterListLengthMsb;
-  UCHAR ParameterListLengthLsb;
-  UCHAR Reserved3[3];
-} ATAPI_MODE_SENSE12, *PATAPI_MODE_SENSE12;
-
-#ifdef __cplusplus
+#define WaitOnBusy(BaseIoAddress, Status) \
+{ \
+    ULONG i; \
+    for (i=0; i<20000; i++) { \
+        GetStatus(BaseIoAddress, Status); \
+        if (Status & IDE_STATUS_BUSY) { \
+            ScsiPortStallExecution(150); \
+            continue; \
+        } else { \
+            break; \
+        } \
+    } \
 }
-#endif
 
-#endif  /*  __ATAPT_H  */
+#define WaitOnBaseBusy(BaseIoAddress, Status) \
+{ \
+    ULONG i; \
+    for (i=0; i<20000; i++) { \
+        GetBaseStatus(BaseIoAddress, Status); \
+        if (Status & IDE_STATUS_BUSY) { \
+            ScsiPortStallExecution(150); \
+            continue; \
+        } else { \
+            break; \
+        } \
+    } \
+}
 
+#define WaitForDrq(BaseIoAddress, Status) \
+{ \
+    ULONG i; \
+    for (i=0; i<1000; i++) { \
+        GetStatus(BaseIoAddress, Status); \
+        if (Status & IDE_STATUS_BUSY) { \
+            ScsiPortStallExecution(100); \
+        } else if (Status & IDE_STATUS_DRQ) { \
+            break; \
+        } else { \
+            ScsiPortStallExecution(200); \
+        } \
+    } \
+}
+
+
+#define WaitShortForDrq(BaseIoAddress, Status) \
+{ \
+    ULONG i; \
+    for (i=0; i<2; i++) { \
+        GetStatus(BaseIoAddress, Status); \
+        if (Status & IDE_STATUS_BUSY) { \
+            ScsiPortStallExecution(100); \
+        } else if (Status & IDE_STATUS_DRQ) { \
+            break; \
+        } else { \
+            ScsiPortStallExecution(100); \
+        } \
+    } \
+}
+
+#define AtapiSoftReset(BaseIoAddress,DeviceNumber) \
+{\
+    UCHAR statusByte; \
+    ScsiPortWritePortUchar(&BaseIoAddress->DriveSelect,(UCHAR)(((DeviceNumber & 0x1) << 4) | 0xA0)); \
+    ScsiPortStallExecution(500);\
+    ScsiPortWritePortUchar(&BaseIoAddress->Command, IDE_COMMAND_ATAPI_RESET); \
+    ScsiPortStallExecution(1000*1000);\
+    ScsiPortWritePortUchar(&BaseIoAddress->DriveSelect,(UCHAR)((DeviceNumber << 4) | 0xA0)); \
+    WaitOnBusy( ((PIDE_REGISTERS_2)((PUCHAR)BaseIoAddress + 0x206)), statusByte); \
+    ScsiPortStallExecution(500);\
+}
+
+#define IdeHardReset(BaseIoAddress,result) \
+{\
+    UCHAR statusByte;\
+    ULONG i;\
+    ScsiPortWritePortUchar(&BaseIoAddress->AlternateStatus,IDE_DC_RESET_CONTROLLER );\
+    ScsiPortStallExecution(50 * 1000);\
+    ScsiPortWritePortUchar(&BaseIoAddress->AlternateStatus,IDE_DC_REENABLE_CONTROLLER);\
+    for (i = 0; i < 1000 * 1000; i++) {\
+        statusByte = ScsiPortReadPortUchar(&BaseIoAddress->AlternateStatus);\
+        if (statusByte != IDE_STATUS_IDLE && statusByte != 0x0) {\
+            ScsiPortStallExecution(5);\
+        } else {\
+            break;\
+        }\
+    }\
+    if (i == 1000*1000) {\
+        result = FALSE;\
+    }\
+    result = TRUE;\
+}
+
+#define IS_RDP(OperationCode)\
+    ((OperationCode == SCSIOP_ERASE)||\
+    (OperationCode == SCSIOP_LOAD_UNLOAD)||\
+    (OperationCode == SCSIOP_LOCATE)||\
+    (OperationCode == SCSIOP_REWIND) ||\
+    (OperationCode == SCSIOP_SPACE)||\
+    (OperationCode == SCSIOP_SEEK)||\
+    (OperationCode == SCSIOP_WRITE_FILEMARKS))
 
