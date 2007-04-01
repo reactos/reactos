@@ -839,6 +839,7 @@ ScsiPortInitialize(IN PVOID Argument1,
     DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiPortCreateClose;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiPortCreateClose;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiPortDeviceControl;
+    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = ScsiPortDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiPortDispatchScsi;
 
     /* Obtain configuration information */
@@ -1421,10 +1422,10 @@ CreatePortConfig:
           + sizeof(ULONG));
 
       /* Store number of buses there */
-      DeviceExtension->BusesConfig->NumberOfBuses = DeviceExtension->PortConfig->NumberOfBuses;
+      DeviceExtension->BusesConfig->NumberOfBuses = DeviceExtension->BusNum;
 
       /* Scan the adapter for devices */
-      SpiScanAdapter (DeviceExtension);
+      SpiScanAdapter(DeviceExtension);
 
       /* Build the registry device map */
       SpiBuildDeviceMap(DeviceExtension,
@@ -1572,6 +1573,7 @@ SpiCleanupAfterInit(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
     }
 
     /* Finally delete the device object */
+    DPRINT("Deleting device %p\n", DeviceExtension->DeviceObject);
     IoDeleteDevice(DeviceExtension->DeviceObject);
 }
 
@@ -2359,19 +2361,18 @@ static NTSTATUS STDCALL
 ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 		      IN PIRP Irp)
 {
-  PIO_STACK_LOCATION Stack;
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    PIO_STACK_LOCATION Stack;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status = STATUS_SUCCESS;;
 
-  DPRINT("ScsiPortDeviceControl()\n");
+    DPRINT("ScsiPortDeviceControl()\n");
 
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Information = 0;
 
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = DeviceObject->DeviceExtension;
 
-  Stack = IoGetCurrentIrpStackLocation(Irp);
-  DeviceExtension = DeviceObject->DeviceExtension;
-
-  switch (Stack->Parameters.DeviceIoControl.IoControlCode)
+    switch (Stack->Parameters.DeviceIoControl.IoControlCode)
     {
       case IOCTL_SCSI_GET_DUMP_POINTERS:
 	{
@@ -2385,24 +2386,36 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	break;
 
       case IOCTL_SCSI_GET_CAPABILITIES:
-	{
-	  DPRINT("  IOCTL_SCSI_GET_CAPABILITIES\n");
+        DPRINT("  IOCTL_SCSI_GET_CAPABILITIES\n");
+        if (Stack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(PVOID))
+        {
+            *((PVOID *)Irp->AssociatedIrp.SystemBuffer) = &DeviceExtension->PortCapabilities;
 
-	  *((PIO_SCSI_CAPABILITIES *)Irp->AssociatedIrp.SystemBuffer) =
-	    &DeviceExtension->PortCapabilities;
+            Irp->IoStatus.Information = sizeof(PVOID);
+            Status = STATUS_SUCCESS;
+            break;
+        }
 
-	  Irp->IoStatus.Information = sizeof(PIO_SCSI_CAPABILITIES);
-	}
-	break;
+        if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(IO_SCSI_CAPABILITIES))
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+            break;
+        }
+
+        RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                      &DeviceExtension->PortCapabilities,
+                      sizeof(IO_SCSI_CAPABILITIES));
+
+        Irp->IoStatus.Information = sizeof(IO_SCSI_CAPABILITIES);
+        Status = STATUS_SUCCESS;
+        break;
 
       case IOCTL_SCSI_GET_INQUIRY_DATA:
-	{
-	  DPRINT("  IOCTL_SCSI_GET_INQUIRY_DATA\n");
+          DPRINT("  IOCTL_SCSI_GET_INQUIRY_DATA\n");
 
-	  /* Copy inquiry data to the port device extension */
-	  Irp->IoStatus.Status = SpiGetInquiryData(DeviceExtension, Irp);
-	}
-	break;
+          /* Copy inquiry data to the port device extension */
+          Status = SpiGetInquiryData(DeviceExtension, Irp);
+          break;
 
       default:
 	DPRINT1("  unknown ioctl code: 0x%lX\n",
@@ -2410,9 +2423,11 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	break;
     }
 
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    /* Complete the request with the given status */
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return(STATUS_SUCCESS);
+    return Status;
 }
 
 
@@ -2832,6 +2847,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
 
         /* Fill in CDB */
         Cdb = (PCDB)Srb.Cdb;
+        Cdb->CDB6INQUIRY.OperationCode = SCSIOP_INQUIRY;
         Cdb->CDB6INQUIRY.LogicalUnitNumber = LunInfo->Lun;
         Cdb->CDB6INQUIRY.AllocationLength = INQUIRYDATABUFFERSIZE;
 
@@ -2864,6 +2880,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
         }
         else
         {
+            DPRINT("Inquiry SRB failed with SrbStatus 0x%08X\n", Srb.SrbStatus);
             /* Check if the queue is frozen */
             if (Srb.SrbStatus & SRB_STATUS_QUEUE_FROZEN)
             {
@@ -2893,6 +2910,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
             /* Check if data overrun happened */
             if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_DATA_OVERRUN)
             {
+                DPRINT("Data overrun at TargetId %d\n", LunInfo->TargetId);
                 /* Nothing dramatic, just copy data, but limiting the size */
                 RtlCopyMemory(LunInfo->InquiryData,
                               InquiryBuffer,
@@ -2945,7 +2963,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
     ExFreePool(InquiryBuffer);
     ExFreePool(SenseBuffer);
 
-    DPRINT("SpiSendInquiry() done\n");
+    DPRINT("SpiSendInquiry() done with Status 0x%08X\n", Status);
 
     return Status;
 }
@@ -2966,11 +2984,12 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
     NTSTATUS Status;
     ULONG DevicesFound;
 
-    DPRINT ("SpiScanAdapter() called\n");
+    DPRINT("SpiScanAdapter() called\n");
 
     /* Scan all buses */
-    for (Bus = 0; Bus < DeviceExtension->PortConfig->NumberOfBuses; Bus++)
+    for (Bus = 0; Bus < DeviceExtension->BusNum; Bus++)
     {
+        DPRINT("    Scanning bus %d\n", Bus);
         DevicesFound = 0;
 
         /* Get pointer to the scan information */
@@ -2998,6 +3017,9 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
                 DPRINT1("Out of resources!\n");
                 return;
             }
+
+            /* Store the pointer in the BusScanInfo array */
+            DeviceExtension->BusesConfig->BusScanInfo[Bus] = BusScanInfo;
 
             /* Fill this struct (length and bus ids for now) */
             BusScanInfo->Length = sizeof(SCSI_BUS_SCAN_INFO);
@@ -3155,6 +3177,7 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
         /* Sum what we found */
         BusScanInfo->LogicalUnitsCount += DevicesFound;
+        DPRINT("    Found %d devices on bus %d\n", DevicesFound, Bus);
     }
 
     DPRINT ("SpiScanAdapter() done\n");
