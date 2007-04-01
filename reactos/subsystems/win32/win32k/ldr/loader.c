@@ -213,10 +213,28 @@ EngLoadModule(LPWSTR ModuleName)
   // FIXME: should load as readonly
 
   RtlInitUnicodeString (&GdiDriverInfo.DriverName, ModuleName);
-  Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation, &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
+  Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation, 
+    &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
   if (!NT_SUCCESS(Status)) return NULL;
 
   return (HANDLE)GdiDriverInfo.ImageAddress;
+}
+
+VOID
+STDCALL
+EngUnloadImage ( IN HANDLE hModule )
+{
+  NTSTATUS Status;
+  
+  DPRINT1("hModule=%x\n", hModule);
+  Status = ZwSetSystemInformation(SystemUnloadGdiDriverInformation, 
+    &hModule, sizeof(HANDLE));
+  
+  if(!NT_SUCCESS(Status))
+  {
+    DPRINT1("%s: ZwSetSystemInformation failed with status %x.", 
+      __FUNCTION__, Status);
+  }  
 }
 
 /* EOF */
