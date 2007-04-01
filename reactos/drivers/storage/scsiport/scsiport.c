@@ -710,7 +710,7 @@ SpiInitOpenKeys(PCONFIGURATION_INFO ConfigInfo, PUNICODE_STRING RegistryPath)
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Unable to open driver's registry key %ws, status 0x%08x\n", RegistryPath, Status);
+        DPRINT1("Unable to open driver's registry key %wZ, status 0x%08x\n", RegistryPath, Status);
         ConfigInfo->ServiceKey = NULL;
     }
 
@@ -2426,7 +2426,7 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
         {
             /* Get next logical unit request */
             SpiGetNextRequestFromLun(DeviceExtension, LunExtension);
-            KeLowerIrql(Irql);
+            KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
         }
         else
         {
@@ -3071,8 +3071,8 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
                 /* Process the request */
                 SpiGetNextRequestFromLun(DeviceObject->DeviceExtension, LunExtension);
 
-                /* Lower irql back */
-                KeLowerIrql(Irql);
+                /* Release spinlock */
+                KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
             }
 
             /* Check if data overrun happened */
