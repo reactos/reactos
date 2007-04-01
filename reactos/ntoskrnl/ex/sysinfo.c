@@ -1314,10 +1314,42 @@ SSI_DEF(SystemLoadGdiDriverInformation)
 
 /* Class 27 - Unload Image */
 SSI_DEF(SystemUnloadGdiDriverInformation)
-{
-    /* FIXME: TODO */
-    if (Size != sizeof(PVOID)) return STATUS_INFO_LENGTH_MISMATCH;
-    return STATUS_NOT_IMPLEMENTED;
+{  
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PLIST_ENTRY NextEntry;
+    PVOID BaseAddr = *((PVOID*)Buffer);
+     
+    if(Size != sizeof(PVOID)) 
+        return STATUS_INFO_LENGTH_MISMATCH;
+   
+    // Scan the module list 
+    NextEntry = PsLoadedModuleList.Flink;
+    while(NextEntry != &PsLoadedModuleList)
+    {
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+        
+        if (LdrEntry->DllBase == BaseAddr)
+        {
+            // Found it.
+            break;
+        }
+
+        NextEntry = NextEntry->Flink;
+    }
+
+    // Check if we found the image
+    if(NextEntry != &PsLoadedModuleList)
+    {
+        return MmUnloadSystemImage(LdrEntry);
+    }
+    else
+    {
+        DPRINT1("Image 0x%x not found.\n", BaseAddr);
+        return STATUS_DLL_NOT_FOUND;
+    }
+    
 }
 
 /* Class 28 - Time Adjustment Information */
