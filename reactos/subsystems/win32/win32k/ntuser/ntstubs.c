@@ -616,16 +616,6 @@ NtUserTrackMouseEvent(
    return 0;
 }
 
-DWORD
-STDCALL
-NtUserUnloadKeyboardLayout(
-   DWORD Unknown0)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
 
 DWORD
 STDCALL

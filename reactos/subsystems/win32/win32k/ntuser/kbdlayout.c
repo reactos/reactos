@@ -156,7 +156,7 @@ static BOOL UserLoadKbdDll(WCHAR *wsKLID,
    RtlFreeUnicodeString(&LayoutFile);
 
    *phModule = EngLoadImage(FullLayoutPath.Buffer);
-   
+
    if(*phModule) 
    {
       DPRINT("Loaded %wZ\n", &FullLayoutPath);
@@ -262,6 +262,8 @@ BOOL UserInitDefaultKeyboardLayout()
       }
    }
    
+   KBLList->Flags |= KBL_PRELOAD;
+   
    InitializeListHead(&KBLList->List);
    return TRUE;
 }
@@ -318,17 +320,56 @@ static PKBL UserHklToKbl(HKL hKl)
    return NULL;
 }
 
-static PKBL co_UserActivateKbl(PW32THREAD Thread, PKBL pKbl)
+BOOL UserUnloadKbl(PKBL pKbl)
+{
+   /* According to msdn, UnloadKeyboardLayout can fail
+      if the keyboard layout identifier was preloaded. */
+      
+   if(pKbl->Flags & KBL_PRELOAD)
+   {
+      DPRINT1("Attempted to unload preloaded keyboard layout.\n");
+      return FALSE;
+   }
+   
+   if(pKbl->RefCount > 0)
+   {
+      /* Layout is used by other threads.
+         Mark it as unloaded and don't do anything else. */
+      pKbl->Flags |= KBL_UNLOAD;
+   }
+   else
+   {
+      //Unload the layout
+      EngUnloadImage(pKbl->hModule);
+      RemoveEntryList(&pKbl->List);
+      ExFreePool(pKbl);
+   }
+   
+   return TRUE;
+}
+
+static PKBL co_UserActivateKbl(PW32THREAD w32Thread, PKBL pKbl, UINT Flags)
 {
    PKBL Prev;
    
-   Prev = Thread->KeyboardLayout;
+   Prev = w32Thread->KeyboardLayout;
    Prev->RefCount--;
-   Thread->KeyboardLayout = pKbl;
+   w32Thread->KeyboardLayout = pKbl;
    pKbl->RefCount++;
    
+   if(Flags & KLF_SETFORPROCESS)
+   {
+      //FIXME
+      
+   }
+   
+   if(Prev->Flags & KBL_UNLOAD && Prev->RefCount == 0)
+   {
+      UserUnloadKbl(Prev);
+   }
+   
    // Send WM_INPUTLANGCHANGE to thread's focus window
-   co_IntSendMessage(Thread->MessageQueue->FocusWindow, 
+   co_IntSendMessage(w32Thread->MessageQueue->FocusWindow, 
       WM_INPUTLANGCHANGE, 
       0, // FIXME: put charset here (what is this?)
       (LPARAM)pKbl->hkl); //klid
@@ -394,10 +435,13 @@ NtUserGetKeyboardLayoutList(
          
          while(Ret < nItems)
          {
-            pHklBuff[Ret] = pKbl->hkl;
-            Ret++;
-            pKbl = (PKBL) pKbl->List.Flink;
-            if(pKbl == KBLList) break;
+            if(!(pKbl->Flags & KBL_UNLOAD))
+            {
+               pHklBuff[Ret] = pKbl->hkl;
+               Ret++;
+               pKbl = (PKBL) pKbl->List.Flink;
+               if(pKbl == KBLList) break;
+            }
          }
       
       }
@@ -457,18 +501,21 @@ NtUserLoadKeyboardLayoutEx(
    
    UserEnterExclusive();
    
+   //Let's see if layout was already loaded.
    Cur = KBLList;
    do
    {
       if(Cur->klid == dwKLID)
       {
          pKbl = Cur;
+         pKbl->Flags &= ~KBL_UNLOAD;
          break;
       }
       
       Cur = (PKBL) Cur->List.Flink;
    } while(Cur != KBLList);
    
+   //It wasn't, so load it.
    if(!pKbl) 
    {
       pKbl = UserLoadDllAndCreateKbl(dwKLID);
@@ -485,14 +532,14 @@ NtUserLoadKeyboardLayoutEx(
    
    if(Flags & KLF_ACTIVATE) 
    {
-      co_UserActivateKbl(PsGetCurrentThreadWin32Thread(), pKbl);
+      co_UserActivateKbl(PsGetCurrentThreadWin32Thread(), pKbl, Flags);
    }
 
    Ret = pKbl->hkl;
    
-   //FIXME: Respect Flags!
-   //       KLF_NOTELLSHELL KLF_SETFORPROCESS
-   //       KLF_REPLACELANG KLF_SUBSTITUTE_OK 
+   //FIXME: KLF_NOTELLSHELL
+   //       KLF_REPLACELANG
+   //       KLF_SUBSTITUTE_OK 
    
 the_end:
    UserLeave();
@@ -530,7 +577,6 @@ NtUserActivateKeyboardLayout(
    else pKbl = UserHklToKbl(hKl);
    
    //FIXME:  KLF_RESET, KLF_SHIFTLOCK
-   //FIXME:  KLF_SETFORPROCESS
    
    if(pKbl)
    {
@@ -543,9 +589,13 @@ NtUserActivateKeyboardLayout(
       }
       else
       {
-         pKbl = co_UserActivateKbl(pWThread, pKbl);
+         pKbl = co_UserActivateKbl(pWThread, pKbl, Flags);
          Ret = pKbl->hkl;
       }
+   }
+   else
+   {
+      DPRINT1("%s: Invalid HKL %x!\n", __FUNCTION__, hKl);
    }
    
 the_end:
@@ -553,5 +603,27 @@ the_end:
    return Ret;
 }
 
+BOOL
+STDCALL
+NtUserUnloadKeyboardLayout(
+   HKL hKl)
+{
+   PKBL pKbl;
+   BOOL Ret = FALSE;
+   
+   UserEnterExclusive();
+   
+   if((pKbl = UserHklToKbl(hKl)))
+   {
+      Ret = UserUnloadKbl(pKbl);
+   }
+   else 
+   {
+      DPRINT1("%s: Invalid HKL %x!\n", __FUNCTION__, hKl);   
+   }
+   
+   UserLeave();
+   return Ret;
+}
 
 /* EOF */

@@ -1923,10 +1923,10 @@ NTAPI
 NtUserUnhookWinEvent(
   DWORD Unknown0);
 
-DWORD
+BOOL
 NTAPI
 NtUserUnloadKeyboardLayout(
-  DWORD Unknown0);
+  HKL hKl);
 
 BOOL
 NTAPI

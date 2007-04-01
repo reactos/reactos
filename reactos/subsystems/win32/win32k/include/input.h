@@ -15,8 +15,9 @@ typedef struct _KBL
   DWORD klid; // Low word - language id. High word - device id.
 } KBL, *PKBL;
 
-#define KBL_UNLOADED 0x20000000
-#define KBL_RESET    0x40000000
+#define KBL_UNLOAD 1
+#define KBL_PRELOAD 2
+#define KBL_RESET 4
 
 NTSTATUS FASTCALL
 InitInputImpl(VOID);
