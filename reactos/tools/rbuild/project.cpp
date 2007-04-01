@@ -80,6 +80,13 @@ Environment::GetCdOutputPath ()
 	                                             "reactos" );
 }
 
+/* static */ string
+Environment::GetAutomakeFile ( const std::string& defaultFile )
+{
+	return GetEnvironmentVariablePathOrDefault ( "ROS_AUTOMAKE",
+	                                             defaultFile );
+}
+
 ParseContext::ParseContext ()
 	: ifData (NULL),
 	  compilationUnit (NULL)
@@ -284,7 +291,7 @@ Project::ProcessXML ( const string& path )
 
 	att = node->GetAttribute ( "makefile", true );
 	assert(att);
-	makefile = att->value;
+	makefile = Environment::GetAutomakeFile ( att->value );
 
 	size_t i;
 	for ( i = 0; i < node->subElements.size (); i++ )
@@ -465,7 +472,7 @@ Project::LocateModule ( const string& name ) const
 	return NULL;
 }
 
-std::string
+const std::string&
 Project::GetProjectFilename () const
 {
 	return xmlfile;

@@ -157,6 +157,7 @@ public:
 	static std::string GetOutputPath ();
 	static std::string GetCdOutputPath ();
 	static std::string GetInstallPath ();
+	static std::string GetAutomakeFile ( const std::string& defaultFile );
 	static std::string GetEnvironmentVariablePathOrDefault ( const std::string& name,
 	                                                         const std::string& defaultValue );
 };
@@ -224,7 +225,7 @@ public:
 	void ProcessXML ( const std::string& path );
 	Module* LocateModule ( const std::string& name );
 	const Module* LocateModule ( const std::string& name ) const;
-	std::string GetProjectFilename () const;
+	const std::string& GetProjectFilename () const;
 	std::string ResolveProperties ( const std::string& s ) const;
 private:
 	std::string ResolveNextProperty ( std::string& s ) const;
