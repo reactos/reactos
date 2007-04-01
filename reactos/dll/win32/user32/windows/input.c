@@ -517,27 +517,6 @@ ToUnicodeEx(UINT wVirtKey,
 }
 
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-UnloadKeyboardLayout(HKL hkl)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
-UnregisterHotKey(HWND hWnd,
-		 int id)
-{
-  return (BOOL)NtUserUnregisterHotKey(hWnd, id);
-}
-
 
 /*
  * @implemented

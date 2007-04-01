@@ -697,13 +697,13 @@ UnhookWinEvent@4
 UnhookWindowsHook@8
 UnhookWindowsHookEx@4
 UnionRect@12
-UnloadKeyboardLayout@4
+UnloadKeyboardLayout@4=NtUserUnloadKeyboardLayout@4
 UnlockWindowStation@4
 UnpackDDElParam@16
 UnregisterClassA@8
 UnregisterClassW@8
 UnregisterDeviceNotification@4
-UnregisterHotKey@8
+UnregisterHotKey@8=NtUserUnregisterHotKey@8
 UnregisterMessagePumpHook@0
 UnregisterUserApiHook@0
 UpdateLayeredWindow@36
