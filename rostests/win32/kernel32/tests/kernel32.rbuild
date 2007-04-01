@@ -11,7 +11,7 @@
 	<library>regtests</library>
 	<library>kernel32_base</library>
 	<library>pseh</library>
-	<library>intrlck</library>
+	<library>libcntpr</library>
 	<library>msvcrt</library>
 	<linkerflag>-lgcc</linkerflag>
 	<linkerflag>-nostartfiles</linkerflag>
