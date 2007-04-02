@@ -1137,7 +1137,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                   IN DWORD dwFlags)
 {
     PW32THREADINFO ti;
-    PW32PROCESSINFO pi;
+    PW32PROCESSINFO pi = NULL;
     PWINDOWCLASS Class;
     RTL_ATOM ClassAtom;
     RTL_ATOM Ret = (RTL_ATOM)0;
@@ -1484,7 +1484,7 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
     if (MenuName->Length != 0)
     {
         ANSI_STRING AnsiString;
-        PWSTR strBufW;
+        PWSTR strBufW = NULL;
 
         AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(MenuName);
 

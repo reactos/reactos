@@ -292,7 +292,7 @@ NtGdiDdQueryDirectDrawObject(
     DWORD *puFourCC
 )
 {
-    PDD_DIRECTDRAW pDirectDraw;
+    PDD_DIRECTDRAW pDirectDraw = NULL;
     NTSTATUS Status = FALSE;
     BOOL Ret=FALSE;
 
@@ -549,7 +549,7 @@ BOOL STDCALL NtGdiDdReenableDirectDrawObject(
 {
     BOOL Ret=FALSE;
     NTSTATUS Status = FALSE;
-    PDD_DIRECTDRAW pDirectDraw;
+    PDD_DIRECTDRAW pDirectDraw = NULL;
 
     if (hDirectDrawLocal == NULL)
     {

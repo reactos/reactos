@@ -827,8 +827,8 @@ NtGdiPolygon(HDC          hDC,
              CONST PPOINT UnsafePoints,
              int          Count)
 {
-  DC *dc;
-  LPPOINT Safept;
+  DC *dc = NULL;
+  LPPOINT Safept = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret = FALSE;
 
@@ -906,9 +906,9 @@ NtGdiPolyPolygon(HDC           hDC,
                  CONST LPINT   PolyCounts,
                  int           Count)
 {
-  DC *dc;
-  LPPOINT Safept;
-  LPINT SafePolyPoints;
+  DC *dc = NULL;
+  LPPOINT Safept = NULL;
+  LPINT SafePolyPoints = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
@@ -1559,11 +1559,11 @@ NtGdiGradientFill(
   ULONG uMesh,
   ULONG ulMode)
 {
-  DC *dc;
+  DC *dc = NULL;
   BOOL Ret;
-  PTRIVERTEX SafeVertex;
-  PVOID SafeMesh;
-  ULONG SizeMesh;
+  PTRIVERTEX SafeVertex = NULL;
+  PVOID SafeMesh = NULL;
+  ULONG SizeMesh = 0;
   NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc(hdc);

@@ -27,9 +27,9 @@
 UINT STDCALL
 NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors)
 {
-   PDC dc;
-   PBITMAPOBJ BitmapObj;
-   PPALGDI PalGDI;
+   PDC dc = NULL;
+   PBITMAPOBJ BitmapObj = NULL;
+   PPALGDI PalGDI = NULL;
    UINT Index;
 
    if (!(dc = DC_LockDc(hDC))) return 0;
@@ -92,9 +92,9 @@ NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Col
 UINT STDCALL
 NtGdiGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
 {
-   PDC dc;
-   PBITMAPOBJ BitmapObj;
-   PPALGDI PalGDI;
+   PDC dc = NULL;
+   PBITMAPOBJ BitmapObj = NULL;
+   PPALGDI PalGDI = NULL;
    UINT Index;
 
    if (!(dc = DC_LockDc(hDC))) return 0;

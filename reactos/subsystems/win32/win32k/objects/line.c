@@ -501,7 +501,7 @@ NtGdiMoveToEx(HDC      hDC,
              int      Y,
              LPPOINT  Point)
 {
-  DC *dc;
+  DC *dc = NULL;
   POINT SafePoint;
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
@@ -554,8 +554,8 @@ NtGdiPolyBezier(HDC           hDC,
                CONST LPPOINT  pt,
                DWORD          Count)
 {
-  DC *dc;
-  LPPOINT Safept;
+  DC *dc = NULL;
+  LPPOINT Safept = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
@@ -642,8 +642,8 @@ NtGdiPolyBezierTo(HDC  hDC,
                  CONST LPPOINT  pt,
                  DWORD  Count)
 {
-  DC *dc;
-  LPPOINT Safept;
+  DC *dc = NULL;
+  LPPOINT Safept = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
@@ -732,7 +732,7 @@ NtGdiPolyDraw(
     IN LPBYTE lpbTypes,
     IN ULONG cCount)
 {
-    PDC dc;
+    PDC dc = NULL;
     BOOL result = FALSE;
     POINT lastmove;
     unsigned int i;
@@ -806,8 +806,8 @@ NtGdiPolyline(HDC            hDC,
              CONST LPPOINT  pt,
              int            Count)
 {
-  DC *dc;
-  LPPOINT Safept;
+  DC *dc = NULL;
+  LPPOINT Safept = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
@@ -894,8 +894,8 @@ NtGdiPolylineTo(HDC            hDC,
                CONST LPPOINT  pt,
                DWORD          Count)
 {
-  DC *dc;
-  LPPOINT Safept;
+  DC *dc = NULL;
+  LPPOINT Safept = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
@@ -983,9 +983,9 @@ NtGdiPolyPolyline(HDC            hDC,
                  CONST LPDWORD  PolyPoints,
                  DWORD          Count)
 {
-  DC *dc;
-  LPPOINT Safept;
-  LPDWORD SafePolyPoints;
+  DC *dc = NULL;
+  LPPOINT Safept = NULL;
+  LPDWORD SafePolyPoints = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 

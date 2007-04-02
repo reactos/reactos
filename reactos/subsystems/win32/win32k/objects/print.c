@@ -160,7 +160,7 @@ NtGdiExtEscape(
    LPVOID   SafeInData = NULL;
    LPVOID   SafeOutData = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
-   INT      Result;
+   INT      Result = 0;
 
    if ( pDC == NULL )
    {

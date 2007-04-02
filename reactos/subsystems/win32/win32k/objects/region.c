@@ -2253,8 +2253,8 @@ NtGdiExtCreateRegion(OPTIONAL LPXFORM Xform,
                           DWORD Count,
                           LPRGNDATA RgnData)
 {
-   HRGN hRgn;
-   PROSRGNDATA Region;
+   HRGN hRgn = 0;
+   PROSRGNDATA Region = NULL;
    DWORD nCount = 0;
    NTSTATUS Status = STATUS_SUCCESS;
 
@@ -2404,7 +2404,7 @@ NtGdiGetRgnBox(HRGN  hRgn,
 {
   PROSRGNDATA  Rgn;
   RECT SafeRect;
-  DWORD ret;
+  DWORD ret = 0;
   NTSTATUS Status = STATUS_SUCCESS;
 
   if (!(Rgn = RGNDATA_LockRgn(hRgn)))
@@ -2637,7 +2637,7 @@ STDCALL
 NtGdiRectInRegion(HRGN  hRgn,
                        CONST LPRECT  unsaferc)
 {
-  PROSRGNDATA Rgn;
+  PROSRGNDATA Rgn = NULL;
   RECT rc = {0};
   BOOL Ret;
   NTSTATUS Status = STATUS_SUCCESS;
@@ -2713,7 +2713,7 @@ HRGN STDCALL
 NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
 {
   RECT SafeRect;
-  PROSRGNDATA Rgn;
+  PROSRGNDATA Rgn = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
 
   if(!(Rgn = (PROSRGNDATA)RGNDATA_LockRgn(hDest)))
@@ -2759,7 +2759,7 @@ NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
  */
 DWORD STDCALL NtGdiGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
 {
-    DWORD size;
+    DWORD size = 0;
     PROSRGNDATA obj = RGNDATA_LockRgn( hrgn );
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -3399,7 +3399,7 @@ NtGdiCreatePolygonRgn(CONST PPOINT  pt,
                       INT  Count,
                       INT  PolyFillMode)
 {
-   POINT *SafePoints;
+   POINT *SafePoints = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
    HRGN hRgn;
 
@@ -3495,9 +3495,9 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
                           INT  Count,
                           INT  PolyFillMode)
 {
-   POINT *Safept;
-   INT *SafePolyCounts;
-   INT nPoints, nEmpty, nInvalid, i;
+   POINT *Safept = NULL;
+   INT *SafePolyCounts = NULL;
+   INT nPoints = 0, nEmpty, nInvalid, i;
    HRGN hRgn;
    NTSTATUS Status = STATUS_SUCCESS;
 

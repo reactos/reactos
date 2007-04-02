@@ -188,7 +188,7 @@ NtGdiUnionRect(PRECT UnsafeDest, const RECT* UnsafeSrc1, const RECT* UnsafeSrc2)
 {
     RECT Dest, Src1 = {0}, Src2 = {0};
   NTSTATUS Status = STATUS_SUCCESS;
-  BOOL Ret;
+  BOOL Ret = FALSE;
 
   _SEH_TRY
   {
@@ -300,7 +300,7 @@ NtGdiIntersectRect(PRECT UnsafeDest, const RECT* UnsafeSrc1, const RECT* UnsafeS
 {
   RECT Dest, Src1, Src2 = {0};
   NTSTATUS Status = STATUS_SUCCESS;
-  BOOL Ret;
+  BOOL Ret = FALSE;
 
   _SEH_TRY
   {
