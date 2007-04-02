@@ -1265,9 +1265,9 @@ NTSTATUS DispTdiQueryInformationEx(
  *     Status of operation
  */
 {
-    PTCP_REQUEST_QUERY_INFORMATION_EX InputBuffer;
+    PTCP_REQUEST_QUERY_INFORMATION_EX InputBuffer = NULL;
     PTRANSPORT_CONTEXT TranContext;
-    PTI_QUERY_CONTEXT QueryContext;
+    PTI_QUERY_CONTEXT QueryContext = NULL;
     PVOID OutputBuffer;
     TDI_REQUEST Request;
     UINT Size;
