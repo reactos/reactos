@@ -42,7 +42,7 @@
 
 #include "scsiport_int.h"
 
-ULONG InternalDebugLevel = 0;
+ULONG InternalDebugLevel = 0x00;
 
 /* TYPES *********************************************************************/
 
@@ -117,15 +117,6 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
 static VOID STDCALL
 ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
 		PVOID Context);
-
-#if 0
-static PSCSI_REQUEST_BLOCK
-ScsiPortInitSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-			    PSCSI_REQUEST_BLOCK OriginalSrb);
-
-static VOID
-ScsiPortFreeSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
-#endif
 
 static NTSTATUS
 SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
@@ -2174,16 +2165,14 @@ SpiGetPciConfigData(IN PDRIVER_OBJECT DriverObject,
 
 static NTSTATUS STDCALL
 ScsiPortCreateClose(IN PDEVICE_OBJECT DeviceObject,
-		    IN PIRP Irp)
+                   IN PIRP Irp)
 {
-  DPRINT("ScsiPortCreateClose()\n");
+    DPRINT("ScsiPortCreateClose()\n");
 
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = FILE_OPENED;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-  return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 static NTSTATUS
@@ -2824,8 +2813,68 @@ ScsiPortStartPacket(IN OUT PVOID Context)
 
     if (Srb->SrbFlags & SRB_FLAGS_BYPASS_FROZEN_QUEUE)
     {
-        /* TODO: Handle bypass-requests */
-        ASSERT(FALSE);
+        /* Handle bypass-requests */
+
+        /* Is this an abort request? */
+        if (Srb->Function == SRB_FUNCTION_ABORT_COMMAND)
+        {
+            PSCSI_REQUEST_BLOCK_INFO SrbInfo;
+
+            /* Get pointer to SRB info structure */
+            SrbInfo = SpiGetSrbData(DeviceExtension,
+                                    Srb->PathId,
+                                    Srb->TargetId,
+                                    Srb->Lun,
+                                    Srb->QueueTag);
+
+            /* Check if the request is still "active" */
+            if (SrbInfo == NULL ||
+                SrbInfo->Srb == NULL ||
+                !(SrbInfo->Srb->SrbFlags & SRB_FLAGS_IS_ACTIVE))
+            {
+                /* It's not, mark it as active then */
+                Srb->SrbFlags |= SRB_FLAGS_IS_ACTIVE;
+
+                if (StartTimer)
+                    LunExtension->RequestTimeout = -1;
+
+                DPRINT("Request has been already completed, but abort request came\n");
+                Srb->SrbStatus = SRB_STATUS_ABORT_FAILED;
+
+                /* Notify about request complete */
+                ScsiPortNotification(RequestComplete,
+                                     DeviceExtension->MiniPortDeviceExtension,
+                                     Srb);
+
+                /* and about readiness for the next request */
+                ScsiPortNotification(NextRequest,
+                                     DeviceExtension->MiniPortDeviceExtension);
+
+                /* They might ask for some work, so queue the DPC for them */
+                IoRequestDpc(DeviceExtension->DeviceObject, NULL, NULL);
+
+                /* We're done in this branch */
+                return TRUE;
+            }
+        }
+        else
+        {
+            /* Add number of queued requests */
+            LunExtension->QueueCount++;
+        }
+
+        /* Bypass requests don't need request sense */
+        LunExtension->Flags &= ~LUNEX_NEED_REQUEST_SENSE;
+
+        /* Is disconnect disabled for this request? */
+        if (Srb->SrbFlags & SRB_FLAGS_DISABLE_DISCONNECT)
+        {
+            /* Set the corresponding flag */
+            DeviceExtension->Flags &= ~SCSI_PORT_DISCONNECT_ALLOWED;
+        }
+
+        /* Transfer timeout value from Srb to Lun */
+        LunExtension->RequestTimeout = Srb->TimeOutValue;
     }
     else
     {
@@ -3513,7 +3562,7 @@ SpiSendRequestSense(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     LARGE_INTEGER LargeInt;
     PVOID *Ptr;
 
-    DPRINT("SpiSendRequestSense() entered\n");
+    DPRINT("SpiSendRequestSense() entered, InitialSrb %p\n", InitialSrb);
 
     /* Allocate Srb */
     Srb = ExAllocatePool(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK) + sizeof(PVOID));
@@ -3546,7 +3595,7 @@ SpiSendRequestSense(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
     /* Save Srb */
     Ptr = (PVOID *)(Srb+1);
-    *Ptr = Srb;
+    *Ptr = InitialSrb;
 
     /* Build CDB for REQUEST SENSE */
     Srb->CdbLength = 6;
@@ -4607,46 +4656,6 @@ ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
     /* Release the spinlock */
     KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 }
-
-#if 0
-static PSCSI_REQUEST_BLOCK
-ScsiPortInitSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-			    PSCSI_REQUEST_BLOCK OriginalSrb)
-{
-  PSCSI_REQUEST_BLOCK Srb;
-  PCDB Cdb;
-
-  Srb = &DeviceExtension->InternalSrb;
-
-  RtlZeroMemory(Srb,
-		sizeof(SCSI_REQUEST_BLOCK));
-
-  Srb->PathId = OriginalSrb->PathId;
-  Srb->TargetId = OriginalSrb->TargetId;
-  Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
-  Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
-  Srb->SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
-
-  Srb->TimeOutValue = 4;
-
-  Srb->CdbLength = 6;
-  Srb->DataBuffer = &DeviceExtension->InternalSenseData;
-  Srb->DataTransferLength = sizeof(SENSE_DATA);
-
-  Cdb = (PCDB)Srb->Cdb;
-  Cdb->CDB6INQUIRY.OperationCode = SCSIOP_REQUEST_SENSE;
-  Cdb->CDB6INQUIRY.AllocationLength = sizeof(SENSE_DATA);
-
-  return(Srb);
-}
-
-
-static VOID
-ScsiPortFreeSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
-{
-  DeviceExtension->OriginalSrb = NULL;
-}
-#endif
 
 /**********************************************************************
  * NAME							INTERNAL
