@@ -184,7 +184,7 @@ SeCaptureLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Src,
 				 PLUID_AND_ATTRIBUTES* Dest,
 				 PULONG Length)
 {
-    ULONG BufferSize;
+    ULONG BufferSize = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
@@ -300,7 +300,7 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
   ULONG PrivilegeControl = 0;
   ULONG Length;
   BOOLEAN CheckResult;
-  KPROCESSOR_MODE PreviousMode;
+  KPROCESSOR_MODE PreviousMode = {0};
   NTSTATUS Status = STATUS_SUCCESS;
 
   PAGED_CODE();

@@ -275,7 +275,7 @@ SepCaptureAcl(IN PACL InputAcl,
               IN BOOLEAN CaptureIfKernel,
               OUT PACL *CapturedAcl)
 {
-  PACL NewAcl;
+  PACL NewAcl = NULL;
   ULONG AclSize = 0;
   NTSTATUS Status = STATUS_SUCCESS;
 

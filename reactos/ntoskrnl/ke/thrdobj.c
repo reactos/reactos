@@ -723,7 +723,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     ULONG i;
     PKWAIT_BLOCK TimerWaitBlock;
     PKTIMER Timer;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     /* Initalize the Dispatcher Header */
     KeInitializeDispatcherHeader(&Thread->DispatcherHeader,

@@ -669,8 +669,8 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
     ULONG Ulong;
   } Unused;
   PTOKEN Token;
-  ULONG RequiredLength;
-  KPROCESSOR_MODE PreviousMode;
+  ULONG RequiredLength = 0;
+  KPROCESSOR_MODE PreviousMode = {0};
   NTSTATUS Status = STATUS_SUCCESS;
 
   PAGED_CODE();
@@ -1253,7 +1253,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 		      IN ULONG TokenInformationLength)
 {
   PTOKEN Token;
-  KPROCESSOR_MODE PreviousMode;
+  KPROCESSOR_MODE PreviousMode = {0};
   ULONG NeededAccess = TOKEN_ADJUST_DEFAULT;
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1496,7 +1496,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
                  IN TOKEN_TYPE TokenType,
                  OUT PHANDLE NewTokenHandle)
 {
-  KPROCESSOR_MODE PreviousMode;
+    KPROCESSOR_MODE PreviousMode = {0};
   HANDLE hToken;
   PTOKEN Token;
   PTOKEN NewToken;
@@ -2134,7 +2134,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
   PVOID EndMem;
   ULONG uLength;
   ULONG i;
-  KPROCESSOR_MODE PreviousMode;
+  KPROCESSOR_MODE PreviousMode = {0};
   ULONG nTokenPrivileges = 0;
   LARGE_INTEGER LocalExpirationTime = {{0}};
   NTSTATUS Status = STATUS_SUCCESS;
@@ -2464,7 +2464,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
   OBJECT_ATTRIBUTES ObjectAttributes;
   SECURITY_DESCRIPTOR SecurityDescriptor;
   PACL Dacl = NULL;
-  KPROCESSOR_MODE PreviousMode;
+  KPROCESSOR_MODE PreviousMode = {0};
   NTSTATUS Status = STATUS_SUCCESS;
 
   PAGED_CODE();
@@ -2661,7 +2661,7 @@ NtCompareTokens(IN HANDLE FirstTokenHandle,
                 IN HANDLE SecondTokenHandle,
                 OUT PBOOLEAN Equal)
 {
-    KPROCESSOR_MODE PreviousMode;
+    KPROCESSOR_MODE PreviousMode = {0};
     PTOKEN FirstToken, SecondToken;
     BOOLEAN IsEqual;
     NTSTATUS Status = STATUS_SUCCESS;

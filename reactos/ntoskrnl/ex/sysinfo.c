@@ -232,10 +232,10 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   ANSI_STRING AName;
   UNICODE_STRING WName;
   BOOLEAN Result;
-  PCH Value;
+  PCH Value = NULL;
   ANSI_STRING AValue;
   UNICODE_STRING WValue;
-  KPROCESSOR_MODE PreviousMode;
+  KPROCESSOR_MODE PreviousMode = {0};
   NTSTATUS Status = STATUS_SUCCESS;
 
   PAGED_CODE();
@@ -378,7 +378,7 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
 {
   UNICODE_STRING CapturedName, CapturedValue;
   ANSI_STRING AName, AValue;
-  KPROCESSOR_MODE PreviousMode;
+  KPROCESSOR_MODE PreviousMode = {0};
   NTSTATUS Status;
 
   PAGED_CODE();

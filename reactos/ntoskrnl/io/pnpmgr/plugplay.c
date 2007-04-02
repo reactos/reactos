@@ -443,7 +443,7 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
     UNICODE_STRING DeviceInstance;
     ULONG BufferSize;
     ULONG Property = 0;
-    PVOID Buffer;
+    PVOID Buffer = NULL;
 
     DPRINT("IopGetDeviceProperty() called\n");
     DPRINT("Device name: %wZ\n", &PropertyData->DeviceInstance);

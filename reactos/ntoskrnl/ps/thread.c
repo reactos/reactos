@@ -141,7 +141,7 @@ NTAPI
 PspSystemThreadStartup(IN PKSTART_ROUTINE StartRoutine,
                        IN PVOID StartContext)
 {
-    PETHREAD Thread;
+    PETHREAD Thread = NULL;
     PSTRACE(PS_THREAD_DEBUG,
             "StartRoutine: %p StartContext: %p\n", StartRoutine, StartContext);
 

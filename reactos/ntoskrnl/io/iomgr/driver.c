@@ -1475,7 +1475,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    UNICODE_STRING ImagePath;
    UNICODE_STRING ServiceName;
    UNICODE_STRING CapturedDriverServiceName = {0};
-   KPROCESSOR_MODE PreviousMode;
+   KPROCESSOR_MODE PreviousMode = {0};
    NTSTATUS Status;
    ULONG Type;
    PDEVICE_NODE DeviceNode;

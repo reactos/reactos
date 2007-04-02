@@ -299,7 +299,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   unsigned i;
   REG_PRE_CREATE_KEY_INFORMATION PreCreateKeyInfo;
   REG_POST_CREATE_KEY_INFORMATION PostCreateKeyInfo;
-  KPROCESSOR_MODE PreviousMode;
+  KPROCESSOR_MODE PreviousMode = {0};
   UNICODE_STRING CapturedClass = {0};
   HANDLE hKey;
 
@@ -1308,7 +1308,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 	  IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
   UNICODE_STRING RemainingPath;
-  KPROCESSOR_MODE PreviousMode;
+  KPROCESSOR_MODE PreviousMode = {0};
   PVOID Object = NULL;
   HANDLE hKey = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
@@ -2145,7 +2145,7 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
   NTSTATUS Status;
   REG_DELETE_VALUE_KEY_INFORMATION DeleteValueKeyInfo;
   REG_POST_OPERATION_INFORMATION PostOperationInfo;
-  KPROCESSOR_MODE PreviousMode;
+  KPROCESSOR_MODE PreviousMode = {0};
   UNICODE_STRING CapturedValueName;
 
   PAGED_CODE();

@@ -198,12 +198,12 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject;
-    PDEVICE_OBJECT DeviceObject;
-    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    PIRP Irp = NULL;
     PIO_STACK_LOCATION StackPtr;
     PKEVENT EventObject = NULL;
     BOOLEAN LockedForSynch = FALSE;
-    ULONG AccessType;
+    ULONG AccessType = 0;
     OBJECT_HANDLE_INFORMATION HandleInformation;
     ACCESS_MASK DesiredAccess;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
@@ -1212,9 +1212,9 @@ NtLockFile(IN HANDLE FileHandle,
 {
     PFILE_OBJECT FileObject;
     PLARGE_INTEGER LocalLength = NULL;
-    PIRP Irp;
-    PIO_STACK_LOCATION StackPtr;
-    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp = NULL;
+    PIO_STACK_LOCATION StackPtr = NULL;
+    PDEVICE_OBJECT DeviceObject = NULL;
     PKEVENT Event = NULL;
     BOOLEAN LockedForSync = FALSE;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
@@ -1386,8 +1386,8 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                      IN PUNICODE_STRING FileName OPTIONAL,
                      IN BOOLEAN RestartScan)
 {
-    PIRP Irp;
-    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp = NULL;
+    PDEVICE_OBJECT DeviceObject = NULL;
     PFILE_OBJECT FileObject;
     PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
@@ -1627,9 +1627,9 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     OBJECT_HANDLE_INFORMATION HandleInformation;
     PFILE_OBJECT FileObject;
     NTSTATUS Status = STATUS_SUCCESS;
-    PIRP Irp;
-    PDEVICE_OBJECT DeviceObject;
-    PIO_STACK_LOCATION StackPtr;
+    PIRP Irp = NULL;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    PIO_STACK_LOCATION StackPtr = NULL;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PKEVENT Event = NULL;
     BOOLEAN LocalEvent = FALSE;
@@ -1938,8 +1938,8 @@ NtReadFile(IN HANDLE FileHandle,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject;
-    PIRP Irp;
-    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp = NULL;
+    PDEVICE_OBJECT DeviceObject = NULL;
     PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PKEVENT EventObject = NULL;
@@ -2197,9 +2197,9 @@ NtSetInformationFile(IN HANDLE FileHandle,
 {
     PFILE_OBJECT FileObject;
     NTSTATUS Status = STATUS_SUCCESS;
-    PIRP Irp;
-    PDEVICE_OBJECT DeviceObject;
-    PIO_STACK_LOCATION StackPtr;
+    PIRP Irp = NULL;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    PIO_STACK_LOCATION StackPtr = NULL;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PKEVENT Event = NULL;
     BOOLEAN LocalEvent = FALSE;
@@ -2576,9 +2576,9 @@ NtUnlockFile(IN HANDLE FileHandle,
 {
     PFILE_OBJECT FileObject;
     PLARGE_INTEGER LocalLength = NULL;
-    PIRP Irp;
-    PIO_STACK_LOCATION StackPtr;
-    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp = NULL;
+    PIO_STACK_LOCATION StackPtr = NULL;
+    PDEVICE_OBJECT DeviceObject = NULL;
     PKEVENT Event = NULL;
     BOOLEAN LocalEvent = FALSE;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
@@ -2760,8 +2760,8 @@ NtWriteFile(IN HANDLE FileHandle,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject;
-    PIRP Irp;
-    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp = NULL;
+    PDEVICE_OBJECT DeviceObject = NULL;
     PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PKEVENT EventObject = NULL;
@@ -3027,9 +3027,9 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
                              IN FS_INFORMATION_CLASS FsInformationClass)
 {
     PFILE_OBJECT FileObject;
-    PIRP Irp;
-    PIO_STACK_LOCATION StackPtr;
-    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp = NULL;
+    PIO_STACK_LOCATION StackPtr = NULL;
+    PDEVICE_OBJECT DeviceObject = NULL;
     PKEVENT Event = NULL;
     BOOLEAN LocalEvent = FALSE;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
@@ -3190,9 +3190,9 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
                            IN FS_INFORMATION_CLASS FsInformationClass)
 {
     PFILE_OBJECT FileObject;
-    PIRP Irp;
-    PIO_STACK_LOCATION StackPtr;
-    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp = NULL;
+    PIO_STACK_LOCATION StackPtr = NULL;
+    PDEVICE_OBJECT DeviceObject = NULL;
     PKEVENT Event = NULL;
     BOOLEAN LocalEvent = FALSE;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();

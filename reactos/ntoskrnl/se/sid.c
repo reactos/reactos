@@ -236,7 +236,7 @@ SepCaptureSid(IN PSID InputSid,
               OUT PSID *CapturedSid)
 {
   ULONG SidSize = 0;
-  PISID NewSid, Sid = (PISID)InputSid;
+  PISID NewSid = NULL, Sid = (PISID)InputSid;
   NTSTATUS Status = STATUS_SUCCESS;
 
   PAGED_CODE();

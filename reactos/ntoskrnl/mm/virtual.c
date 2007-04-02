@@ -554,10 +554,10 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
                     IN ULONG NumberOfBytesToRead,
                     OUT PULONG NumberOfBytesRead OPTIONAL)
 {
-   PMDL Mdl;
+   PMDL Mdl = NULL;
    PVOID SystemAddress;
-   KPROCESSOR_MODE PreviousMode;
-   PEPROCESS Process, CurrentProcess;
+   KPROCESSOR_MODE PreviousMode = {0};
+   PEPROCESS Process, CurrentProcess = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
 
    PAGED_CODE();
@@ -769,11 +769,11 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
                      IN ULONG NumberOfBytesToWrite,
                      OUT PULONG NumberOfBytesWritten  OPTIONAL)
 {
-   PMDL Mdl;
-   PVOID SystemAddress;
+   PMDL Mdl = NULL;
+   PVOID SystemAddress = NULL;
    PEPROCESS Process;
-   KPROCESSOR_MODE PreviousMode;
-   NTSTATUS CopyStatus, Status = STATUS_SUCCESS;
+   KPROCESSOR_MODE PreviousMode = {0};
+   NTSTATUS CopyStatus = STATUS_SUCCESS, Status = STATUS_SUCCESS;
 
    DPRINT("NtWriteVirtualMemory(ProcessHandle %x, BaseAddress %x, "
           "Buffer %x, NumberOfBytesToWrite %d)\n",ProcessHandle,BaseAddress,

@@ -484,7 +484,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     PEPROCESS Process;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ACCESS_MASK Access;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
     HANDLE PortHandle = NULL;
     HANDLE TokenHandle = NULL;
     PROCESS_SESSION_INFORMATION SessionInfo = {0};
@@ -719,7 +719,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
     PETHREAD Thread;
     ULONG Access;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
     HANDLE TokenHandle = NULL;
     KPRIORITY Priority = 0;
     KAFFINITY Affinity = 0, CombinedAffinity;

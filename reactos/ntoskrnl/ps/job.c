@@ -225,8 +225,8 @@ NtCreateJobObject (
 {
     HANDLE hJob;
     PEJOB Job;
-    KPROCESSOR_MODE PreviousMode;
-    PEPROCESS CurrentProcess;
+    KPROCESSOR_MODE PreviousMode = {0};
+    PEPROCESS CurrentProcess = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
@@ -396,7 +396,7 @@ NtOpenJobObject (
     ACCESS_MASK DesiredAccess,
     POBJECT_ATTRIBUTES ObjectAttributes)
 {
-    KPROCESSOR_MODE PreviousMode;
+    KPROCESSOR_MODE PreviousMode = {0};
     HANDLE hJob;
     NTSTATUS Status = STATUS_SUCCESS;
 
