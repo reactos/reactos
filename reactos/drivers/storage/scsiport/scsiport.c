@@ -2426,7 +2426,9 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
         {
             /* Get next logical unit request */
             SpiGetNextRequestFromLun(DeviceExtension, LunExtension);
-            KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+
+            /* SpiGetNextRequestFromLun() releases the spinlock */
+            KeLowerIrql(Irql);
         }
         else
         {
@@ -3071,8 +3073,9 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
                 /* Process the request */
                 SpiGetNextRequestFromLun(DeviceObject->DeviceExtension, LunExtension);
 
-                /* Release spinlock */
-                KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+                /* SpiGetNextRequestFromLun() releases the spinlock,
+                   so we just lower irql back to what it was before */
+                KeLowerIrql(Irql);
             }
 
             /* Check if data overrun happened */
