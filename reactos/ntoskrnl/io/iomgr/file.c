@@ -1629,7 +1629,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
              IN PVOID ExtraCreateParameters OPTIONAL,
              IN ULONG Options)
 {
-    KPROCESSOR_MODE AccessMode = {0};
+    KPROCESSOR_MODE AccessMode;
     HANDLE LocalHandle = 0;
     LARGE_INTEGER SafeAllocationSize;
     PVOID SystemEaBuffer = NULL;

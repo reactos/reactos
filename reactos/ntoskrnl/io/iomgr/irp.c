@@ -610,8 +610,8 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
                               IN PLARGE_INTEGER StartingOffset,
                               IN PIO_STATUS_BLOCK IoStatusBlock)
 {
-    PIRP Irp = NULL;
-    PIO_STACK_LOCATION StackPtr = NULL;
+    PIRP Irp;
+    PIO_STACK_LOCATION StackPtr;
 
     /* Allocate IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
@@ -745,7 +745,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                               IN PKEVENT Event,
                               IN PIO_STATUS_BLOCK IoStatusBlock)
 {
-    PIRP Irp = NULL;
+    PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     ULONG BufferLength;
 

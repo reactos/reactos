@@ -466,7 +466,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG SkipEntries = 0;
     NTSTATUS Status = STATUS_SUCCESS;
-    PVOID LocalBuffer = NULL;
+    PVOID LocalBuffer;
     POBJECT_DIRECTORY_INFORMATION DirectoryInfo;
     ULONG Length, TotalLength;
     ULONG Count, CurrentEntry;

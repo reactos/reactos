@@ -203,7 +203,7 @@ IntGdiGetClipBox(HDC hDC, LPRECT rc)
 int STDCALL NtGdiGetClipBox(HDC  hDC,
 			   LPRECT  rc)
 {
-  int Ret = FALSE;
+  int Ret;
   NTSTATUS Status = STATUS_SUCCESS;
   RECT Saferect;
 

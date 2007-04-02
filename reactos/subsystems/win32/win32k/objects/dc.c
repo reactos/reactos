@@ -1249,8 +1249,8 @@ IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
 BOOL STDCALL
 NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point)
 {
-  BOOL Ret = FALSE;
-  DC *dc = NULL;
+  BOOL Ret;
+  DC *dc;
   POINT SafePoint;
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1812,7 +1812,7 @@ INT STDCALL
 NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
 {
   INT Ret = 0;
-  LPVOID SafeBuf = NULL;
+  LPVOID SafeBuf;
   NTSTATUS Status = STATUS_SUCCESS;
   INT RetCount = 0;
 

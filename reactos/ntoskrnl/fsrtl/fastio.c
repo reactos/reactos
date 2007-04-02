@@ -83,7 +83,7 @@ FsRtlCopyRead(IN PFILE_OBJECT FileObject,
               IN PDEVICE_OBJECT DeviceObject)
 {
 
-    PFSRTL_COMMON_FCB_HEADER FcbHeader = NULL;
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
     LARGE_INTEGER Offset;
     PFAST_IO_DISPATCH FastIoDispatch;
     PDEVICE_OBJECT Device;
@@ -258,7 +258,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
     BOOLEAN Result = TRUE;
     PFAST_IO_DISPATCH FastIoDispatch;
     PDEVICE_OBJECT Device;
-    PFSRTL_COMMON_FCB_HEADER FcbHeader = NULL;
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
 
     /* WDK doc. Offset=0xffffffffffffffff indicates append to the end of file */
     BOOLEAN FileOffsetAppend = ((FileOffset->HighPart == 0xffffffff) && (FileOffset->LowPart == 0xffffffff));
@@ -915,7 +915,7 @@ FsRtlMdlReadDev(IN PFILE_OBJECT FileObject,
                 OUT PIO_STATUS_BLOCK IoStatus,
                 IN PDEVICE_OBJECT DeviceObject)
 {
-    PFSRTL_COMMON_FCB_HEADER FcbHeader = NULL;
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
     BOOLEAN Result = TRUE;
     LARGE_INTEGER Offset;
     PFAST_IO_DISPATCH FastIoDispatch;
@@ -1159,7 +1159,7 @@ FsRtlPrepareMdlWriteDev(IN PFILE_OBJECT FileObject,
     BOOLEAN Result = TRUE;
     PFAST_IO_DISPATCH FastIoDispatch;
     PDEVICE_OBJECT Device;
-    PFSRTL_COMMON_FCB_HEADER FcbHeader = NULL;
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
     
     LARGE_INTEGER OldFileSize;
     LARGE_INTEGER OldValidDataLength;

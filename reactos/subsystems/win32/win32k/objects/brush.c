@@ -628,7 +628,7 @@ NtGdiCreateDIBBrush(
    IN BOOL bPen,
    IN PVOID PackedDIB)
 {
-   BITMAPINFO *SafeBitmapInfoAndData = NULL;
+   BITMAPINFO *SafeBitmapInfoAndData;
    NTSTATUS Status = STATUS_SUCCESS;
    HBRUSH hBrush;
 

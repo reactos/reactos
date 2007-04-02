@@ -56,7 +56,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     ULONG i = 0, ReferencedObjects = 0, j;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     LARGE_INTEGER SafeTimeOut;
-    BOOLEAN LockInUse = FALSE;
+    BOOLEAN LockInUse;
     PHANDLE_TABLE_ENTRY HandleEntry;
     POBJECT_HEADER ObjectHeader;
     PHANDLE_TABLE HandleTable;
@@ -457,7 +457,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     POBJECT_TYPE Type;
-    PVOID SignalObj, WaitObj, WaitableObject = NULL;
+    PVOID SignalObj, WaitObj, WaitableObject;
     LARGE_INTEGER SafeTimeOut;
     OBJECT_HANDLE_INFORMATION HandleInfo;
     NTSTATUS Status = STATUS_SUCCESS;

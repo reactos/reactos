@@ -3150,7 +3150,7 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
                   IN ULONG HandleAttributes,
                   IN ULONG Options)
 {
-    PEPROCESS SourceProcess, TargetProcess, Target = NULL;
+    PEPROCESS SourceProcess, TargetProcess, Target;
     HANDLE hTarget;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;

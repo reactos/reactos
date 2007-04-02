@@ -148,8 +148,8 @@ KeUserModeCallback(IN ULONG RoutineIndex,
                    OUT PVOID *Result,
                    OUT PULONG ResultLength)
 {
-    ULONG_PTR NewStack =0, OldStack = 0;
-    PULONG UserEsp = NULL;
+    ULONG_PTR NewStack, OldStack;
+    PULONG UserEsp;
     NTSTATUS CallbackStatus = STATUS_SUCCESS;
     PEXCEPTION_REGISTRATION_RECORD ExceptionList;
     PTEB Teb;

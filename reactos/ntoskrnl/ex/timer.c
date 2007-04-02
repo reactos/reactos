@@ -510,7 +510,7 @@ NtQueryTimer(IN HANDLE TimerHandle,
 {
     PETIMER Timer;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
     PTIMER_BASIC_INFORMATION BasicInfo = TimerInformation;
     PAGED_CODE();
 

@@ -82,7 +82,7 @@ BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
   XFORM  xformTemp;
   XFORM  xform1 = {0}, xform2 = {0};
   NTSTATUS Status = STATUS_SUCCESS;
-  BOOL Ret = FALSE;
+  BOOL Ret;
 
   _SEH_TRY
   {
@@ -170,10 +170,10 @@ NtGdiDPtoLP(HDC  hDC,
 	   LPPOINT  UnsafePoints,
 	   int  Count)
 {
-   PDC dc = NULL;
+   PDC dc;
    NTSTATUS Status = STATUS_SUCCESS;
-   LPPOINT Points = NULL;
-   ULONG Size = 0;
+   LPPOINT Points;
+   ULONG Size;
 
    dc = DC_LockDc(hDC);
    if (!dc)
@@ -320,7 +320,7 @@ STDCALL
 NtGdiGetWorldTransform(HDC  hDC,
                       LPXFORM  XForm)
 {
-  PDC  dc = NULL;
+  PDC  dc;
   NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc ( hDC );
@@ -393,10 +393,10 @@ IntLPtoDP ( PDC dc, LPPOINT Points, INT Count )
 BOOL STDCALL
 NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 {
-   PDC dc = NULL;
+   PDC dc;
    NTSTATUS Status = STATUS_SUCCESS;
-   LPPOINT Points = NULL;
-   ULONG Size = 0;
+   LPPOINT Points;
+   ULONG Size;
 
    dc = DC_LockDc(hDC);
    if (!dc)
@@ -479,7 +479,7 @@ NtGdiModifyWorldTransform(HDC hDC,
                           CONST LPXFORM  UnsafeXForm,
                           DWORD Mode)
 {
-   PDC dc = NULL;
+   PDC dc;
    XFORM SafeXForm;
    BOOL Ret = FALSE;
 
@@ -520,7 +520,7 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
                         int YOffset,
                         LPPOINT UnsafePoint)
 {
-  PDC      dc = NULL;
+  PDC      dc;
   NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc ( hDC );
@@ -569,7 +569,7 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
                       int  YOffset,
                       LPPOINT  Point)
 {
-  PDC dc = NULL;
+  PDC dc;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -758,7 +758,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
                       int  YExtent,
                       LPSIZE  Size)
 {
-  PDC dc = NULL;
+  PDC dc;
 
   dc = DC_LockDc(hDC);
   if ( !dc )
@@ -830,7 +830,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
                      int  Y,
                      LPPOINT  Point)
 {
-  PDC dc = NULL;
+  PDC dc;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -881,7 +881,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
                    int  YExtent,
                    LPSIZE  Size)
 {
-  PDC dc = NULL;
+  PDC dc;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -944,7 +944,7 @@ NtGdiSetWindowOrgEx(HDC  hDC,
                    int  Y,
                    LPPOINT  Point)
 {
-  PDC dc = NULL;
+  PDC dc;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -993,7 +993,7 @@ STDCALL
 NtGdiSetWorldTransform(HDC  hDC,
                       CONST LPXFORM  XForm)
 {
-  PDC  dc = NULL;
+  PDC  dc;
   NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc (hDC);

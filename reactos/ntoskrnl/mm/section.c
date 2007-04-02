@@ -3670,7 +3670,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    SIZE_T SafeViewSize;
    PROS_SECTION_OBJECT Section;
    PEPROCESS Process;
-   KPROCESSOR_MODE PreviousMode = {0};
+   KPROCESSOR_MODE PreviousMode;
    PMADDRESS_SPACE AddressSpace;
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG tmpProtect;

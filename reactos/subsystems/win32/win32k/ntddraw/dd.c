@@ -40,11 +40,11 @@ DWORD STDCALL NtGdiDdCreateSurface(
     HANDLE *puhSurface
 )
 {
-    INT i = 0;
+    INT i;
     DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
     NTSTATUS Status = FALSE;
-    PDD_DIRECTDRAW pDirectDraw = NULL;
-    PDD_SURFACE phsurface = NULL;
+    PDD_DIRECTDRAW pDirectDraw;
+    PDD_SURFACE phsurface;
 
     PDD_SURFACE_LOCAL pLocal;
     PDD_SURFACE_MORE pMore;
@@ -53,7 +53,7 @@ DWORD STDCALL NtGdiDdCreateSurface(
     DD_CREATESURFACEDATA CreateSurfaceData;
 
     /* FIXME alloc so mayne we need */
-    PHANDLE *myhSurface = NULL;
+    PHANDLE *myhSurface;
 
     /* GCC4  warnns on value are unisitaed,
        but they are initated in seh 
@@ -508,7 +508,7 @@ NtGdiDdGetScanLine( HANDLE hDirectDrawLocal, PDD_GETSCANLINEDATA puGetScanLineDa
 {
     DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
     DD_GETSCANLINEDATA GetScanLineData;
-    PDD_DIRECTDRAW pDirectDraw = NULL;
+    PDD_DIRECTDRAW pDirectDraw;
     NTSTATUS Status = FALSE;
 
     DPRINT1("NtGdiDdGetScanLine\n");
