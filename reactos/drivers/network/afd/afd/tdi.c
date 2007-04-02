@@ -766,9 +766,9 @@ NTSTATUS TdiSend
   PIO_COMPLETION_ROUTINE CompletionRoutine,
   PVOID CompletionContext )
 {
-    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_OBJECT DeviceObject = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    PMDL Mdl;
+    PMDL Mdl = NULL;
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
@@ -843,8 +843,8 @@ NTSTATUS TdiReceive(
     PVOID CompletionContext)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PDEVICE_OBJECT DeviceObject;
-    PMDL Mdl;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    PMDL Mdl = NULL;
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
