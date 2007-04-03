@@ -31,7 +31,7 @@
 #include <scsi.h>
 #include <ntdddisk.h>
 #include <ntddscsi.h>
-#include <include/class2.h>
+#include <../class/include/class2.h>
 #include <diskdump/diskdump.h>
 #include <ndk/rtlfuncs.h>
 
