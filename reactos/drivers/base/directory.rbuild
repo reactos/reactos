@@ -13,9 +13,3 @@
 <directory name="null">
 	<xi:include href="null/null.rbuild" />
 </directory>
-<directory name="parallel">
-	<xi:include href="parallel/parallel.rbuild" />
-</directory>
-<directory name="serial">
-	<xi:include href="serial/serial.rbuild" />
-</directory>

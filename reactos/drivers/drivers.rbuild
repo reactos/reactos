@@ -17,6 +17,12 @@
 <directory name="network">
 	<xi:include href="network/directory.rbuild" />
 </directory>
+<directory name="parallel">
+	<xi:include href="parallel/directory.rbuild" />
+</directory>
+<directory name="serial">
+	<xi:include href="serial/directory.rbuild" />
+</directory>
 <directory name="storage">
 	<xi:include href="storage/directory.rbuild" />
 </directory>
