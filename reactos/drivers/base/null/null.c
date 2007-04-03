@@ -1,205 +1,207 @@
-/* $Id$
- *
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             services/null/null.c
- * PURPOSE:          NULL device driver
- * PROGRAMMER:       David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *              13/08/1998: Created
- *              29/04/2002: Fixed bugs, added zero-stream device
- *              28/06/2004: Compile against the DDK, use PSEH where necessary
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            drivers/base/null/null.c
+ * PURPOSE:         Beep Device Driver
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  David Welch (welch@mcmail.com)
  */
 
-/* INCLUDES */
+/* INCLUDES ******************************************************************/
+
 #include <ntddk.h>
 
-#include <pseh/pseh.h>
+/* FUNCTIONS *****************************************************************/
 
-#include "null.h"
-
-/* OBJECTS */
-static const NULL_EXTENSION nxNull = NullBitBucket;
-static const NULL_EXTENSION nxZero = NullZeroStream;
-
-/* FUNCTIONS */
-static NTSTATUS STDCALL
-NullDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS
+NTAPI
+NullQueryFileInformation(OUT PVOID Buffer,
+                         IN PULONG Length,
+                         IN FILE_INFORMATION_CLASS InformationClass)
 {
-    PIO_STACK_LOCATION piosStack = IoGetCurrentIrpStackLocation(Irp);
-    NTSTATUS nErrCode;
+    PFILE_STANDARD_INFORMATION StandardInfo = Buffer;
+    PAGED_CODE();
 
-    nErrCode = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
-
-    switch(piosStack->MajorFunction)
+    /* We only support one class */
+    if (InformationClass != FileStandardInformation)
     {
-        /* opening and closing handles to the device */
-        case IRP_MJ_CREATE:
-        case IRP_MJ_CLOSE:
-            switch(NULL_DEVICE_TYPE(DeviceObject))
-            {
-                case NullBitBucket:
-                case NullZeroStream:
-                    break;
-
-                default:
-                    ASSERT(FALSE);
-            }
-
-            break;
-
-        /* write data */
-        case IRP_MJ_WRITE:
-            {
-                switch(NULL_DEVICE_TYPE(DeviceObject))
-                {
-                    case NullBitBucket:
-                        Irp->IoStatus.Information = piosStack->Parameters.Write.Length;
-                        break;
-
-                    case NullZeroStream:
-                        nErrCode = STATUS_INVALID_DEVICE_REQUEST;
-                        break;
-
-                    default:
-                        ASSERT(FALSE);
-                }
-
-                break;
-            }
-
-        /* read data */
-        case IRP_MJ_READ:
-            {
-                switch(NULL_DEVICE_TYPE(DeviceObject))
-                {
-                    case NullBitBucket:
-                        nErrCode = STATUS_END_OF_FILE;
-                        break;
-
-                    case NullZeroStream:
-                        _SEH_TRY
-                        {
-                            RtlZeroMemory(Irp->AssociatedIrp.SystemBuffer, piosStack->Parameters.Read.Length);
-                            Irp->IoStatus.Information = piosStack->Parameters.Read.Length;
-                        }
-                        _SEH_HANDLE
-                        {
-                            nErrCode = _SEH_GetExceptionCode();
-                        }
-                        _SEH_END;
-
-                        break;
-
-                    default:
-                        ASSERT(FALSE);
-
-                }
-
-                break;
-            }
-
-        case IRP_MJ_QUERY_VOLUME_INFORMATION:
-            switch(piosStack->Parameters.QueryVolume.FsInformationClass)
-            {
-                case FileFsDeviceInformation:
-                    {
-                        ULONG BufferLength = piosStack->Parameters.QueryVolume.Length;
-                        PFILE_FS_DEVICE_INFORMATION FsDeviceInfo = (PFILE_FS_DEVICE_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
-
-                        if (BufferLength >= sizeof(FILE_FS_DEVICE_INFORMATION))
-                        {
-                            FsDeviceInfo->DeviceType = FILE_DEVICE_NULL;
-                            FsDeviceInfo->Characteristics = 0; /* FIXME: fix this !! */
-                            Irp->IoStatus.Information = sizeof(FILE_FS_DEVICE_INFORMATION);
-                            nErrCode = STATUS_SUCCESS;
-                        }
-                        else
-                        {   
-                            Irp->IoStatus.Information  = 0;
-                            nErrCode = STATUS_BUFFER_OVERFLOW;
-                        }
-                    }
-                    break;
-
-                default:
-                    Irp->IoStatus.Information = 0;
-                    nErrCode = STATUS_NOT_IMPLEMENTED;
-            }
-            break;
-
-        default:
-            Irp->IoStatus.Information = 0;
-            nErrCode = STATUS_NOT_IMPLEMENTED;
-
+        /* Fail */
+        return STATUS_INVALID_INFO_CLASS;
     }
 
-    Irp->IoStatus.Status = nErrCode;
+    /* Fill out the information */
+    RtlZeroMemory(StandardInfo, sizeof(FILE_STANDARD_INFORMATION));
+    StandardInfo->NumberOfLinks = 1;
+
+    /* Return the length and success */
+    *Length = sizeof(FILE_STANDARD_INFORMATION);
+    return STATUS_SUCCESS;
+}
+
+BOOLEAN
+NTAPI
+NullRead(IN PFILE_OBJECT FileObject,
+         IN PLARGE_INTEGER FileOffset,
+         IN ULONG Length,
+         IN BOOLEAN Wait,
+         IN ULONG LockKey,
+         OUT PVOID Buffer,
+         OUT PIO_STATUS_BLOCK IoStatus,
+         IN PDEVICE_OBJECT DeviceObject)
+{
+    PAGED_CODE();
+
+    /* Complete successfully */
+    IoStatus->Status = STATUS_END_OF_FILE;
+    IoStatus->Information = 0;
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+NullWrite(IN PFILE_OBJECT FileObject,
+          IN PLARGE_INTEGER FileOffset,
+          IN ULONG Length,
+          IN BOOLEAN Wait,
+          IN ULONG LockKey,
+          IN PVOID Buffer,
+          OUT PIO_STATUS_BLOCK IoStatus,
+          IN PDEVICE_OBJECT DeviceObject)
+{
+    PAGED_CODE();
+
+    /* Complete successfully */
+    IoStatus->Status = STATUS_SUCCESS;
+    IoStatus->Information = Length;
+    return TRUE;
+}
+
+NTSTATUS
+STDCALL
+NullDispatch(IN PDEVICE_OBJECT DeviceObject,
+             IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
+    NTSTATUS Status;
+    PFILE_OBJECT FileObject;
+    ULONG Length;
+    PAGED_CODE();
+
+    /* Get the file object and check what kind of request this is */
+    FileObject = IoStack->FileObject;
+    switch (IoStack->MajorFunction)
+    {
+        case IRP_MJ_CREATE:
+        case IRP_MJ_CLOSE:
+
+            /* Check if this is synch I/O */
+            if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+            {
+                /* Set distinguished value for Cc */
+                FileObject->PrivateCacheMap = (PVOID)1;
+            }
+
+            /* Complete successfully */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = 0;
+            break;
+
+         case IRP_MJ_READ:
+
+            /* Return as if we read the entire file */
+            Irp->IoStatus.Status = STATUS_END_OF_FILE;
+            Irp->IoStatus.Information = 0;
+            break;
+
+        case IRP_MJ_WRITE:
+
+            /* Return as if we wrote the entire request */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = IoStack->Parameters.Write.Length;
+            break;
+
+        case IRP_MJ_LOCK_CONTROL:
+
+            /* Dummy */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = 0;
+            break;
+
+        case IRP_MJ_QUERY_INFORMATION:
+
+            /* Get the length inputted and do the request */
+            Length = IoStack->Parameters.QueryFile.Length;
+            Irp->IoStatus.Status = NullQueryFileInformation(Irp->AssociatedIrp.
+                                                            SystemBuffer,
+                                                            &Length,
+                                                            IoStack->
+                                                            Parameters.
+                                                            QueryFile.
+                                                            FileInformationClass);
+
+            /* Return the actual length */
+            Irp->IoStatus.Information = Length;
+            break;
+    }
+
+    /* Complete the request */
+    Status = Irp->IoStatus.Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return (nErrCode);
+    return Status;
 }
 
-static VOID STDCALL
-NullUnload(PDRIVER_OBJECT DriverObject)
+NTSTATUS
+STDCALL
+DriverEntry(IN PDRIVER_OBJECT DriverObject,
+            IN PUNICODE_STRING RegistryPath)
 {
-}
+    PDEVICE_OBJECT DeviceObject;
+    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\Null");
+    NTSTATUS Status;
+    PFAST_IO_DISPATCH FastIoDispatch;
+    PAGED_CODE();
 
-/* TODO: \Device\Zero should be memory-mappable */
-NTSTATUS STDCALL
-DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
-{
-    PDEVICE_OBJECT pdoNullDevice;
-    PDEVICE_OBJECT pdoZeroDevice;
-    UNICODE_STRING wstrNullDeviceName = RTL_CONSTANT_STRING(L"\\Device\\Null");
-    UNICODE_STRING wstrZeroDeviceName = RTL_CONSTANT_STRING(L"\\Device\\Zero");
-    NTSTATUS nErrCode;
+    /* Page the driver */
+    MmPageEntireDriver(DriverEntry);
 
-    /* register driver routines */
+    /* Create null device */
+    Status = IoCreateDevice(DriverObject,
+                            0,
+                            &DeviceName,
+                            FILE_DEVICE_NULL,
+                            0,
+                            FALSE,
+                            &DeviceObject);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Register driver routines */
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = NullDispatch;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = NullDispatch;
     DriverObject->MajorFunction[IRP_MJ_WRITE] = NullDispatch;
     DriverObject->MajorFunction[IRP_MJ_READ] = NullDispatch;
-    DriverObject->DriverUnload = NullUnload;
+    DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = NullDispatch;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = NullDispatch;
 
-    /* create null device */
-    nErrCode = IoCreateDevice(DriverObject,
-                              sizeof(NULL_EXTENSION),
-                              &wstrNullDeviceName,
-                              FILE_DEVICE_NULL,
-                              0,
-                              FALSE,
-                              &pdoNullDevice);
-
-    /* failure */
-    if(!NT_SUCCESS(nErrCode))
+    /* Allocate the fast I/O dispatch table */
+    FastIoDispatch = ExAllocatePool(NonPagedPool, sizeof(FAST_IO_DISPATCH));
+    if (!FastIoDispatch)
     {
-        return (nErrCode);
+        /* Failed, cleanup */
+        IoDeleteDevice(DeviceObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    pdoNullDevice->DeviceExtension = (PVOID)&nxNull;
+    /* Initialize it */
+    RtlZeroMemory(FastIoDispatch, sizeof(FAST_IO_DISPATCH));
+    FastIoDispatch->SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
 
-    /* create zero device */
-    nErrCode = IoCreateDevice(DriverObject,
-                              sizeof(NULL_EXTENSION),   
-                              &wstrZeroDeviceName,
-                              FILE_DEVICE_NULL,
-                              FILE_READ_ONLY_DEVICE, /* zero device is read-only */
-                              FALSE,
-                              &pdoZeroDevice);
+    /* Setup our pointers */
+    FastIoDispatch->FastIoRead = NullRead;
+    FastIoDispatch->FastIoWrite = NullWrite;
+    DriverObject->FastIoDispatch = FastIoDispatch;
 
-    /* failure */
-    if(!NT_SUCCESS(nErrCode))
-    {
-        IoDeleteDevice(pdoNullDevice);
-        return (nErrCode);
-    }
-
-    pdoZeroDevice->DeviceExtension = (PVOID)&nxZero;
-    pdoZeroDevice->Flags |= DO_BUFFERED_IO;
-
-    return (nErrCode);
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
