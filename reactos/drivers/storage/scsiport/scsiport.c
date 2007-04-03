@@ -897,7 +897,6 @@ ScsiPortInitialize(IN PVOID Argument1,
 
         /* Fill Device Extension */
         DeviceExtension = PortDeviceObject->DeviceExtension;
-        DPRINT1("DeviceExtension: %p\n", DeviceExtension);
         DeviceExtension->Length = DeviceExtensionSize;
         DeviceExtension->DeviceObject = PortDeviceObject;
         DeviceExtension->PortNumber = SystemConfig->ScsiPortCount;
