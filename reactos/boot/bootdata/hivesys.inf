@@ -490,7 +490,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Group",0x00000000,"Video Init"
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","ImagePath",0x00020000,"system32\drivers\blue.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Type",0x00010001,0x00000001
 
 ; Cdfs (ISO96660) filesystem driver
@@ -593,7 +593,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE103
 HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ServiceType",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ImagePath",0x00020000,"system32\drivers\sndblst.sys"
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","DmaChannel",0x00010001,0x00000001
@@ -608,7 +608,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0\Devices","SBW
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ServiceType",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ImagePath",0x00020000,"system32\drivers\mpu401.sys"
 

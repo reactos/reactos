@@ -1,282 +1,396 @@
-/* $Id$
- *
- * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
- * FILE:                 services/dd/beep/beep.c
- * PURPOSE:              BEEP device driver
- * PROGRAMMER:           Eric Kohl (ekohl@rz-online.de)
- * UPDATE HISTORY:
- *                       30/01/99 Created
- *                       16/10/99 Minor fixes
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            drivers/base/beep/beep.c
+ * PURPOSE:         Beep Device Driver
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Eric Kohl (ekohl@rz-online.de)
  */
 
-/* INCLUDES ****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntddk.h>
 #include <ntddbeep.h>
-
 #define NDEBUG
 #include <debug.h>
 
-NTSTATUS STDCALL
-DriverEntry(PDRIVER_OBJECT DriverObject,
-            PUNICODE_STRING RegistryPath);
-
-/* TYEPEDEFS ***************************************************************/
+/* TYPES *********************************************************************/
 
 typedef struct _BEEP_DEVICE_EXTENSION
 {
-  KDPC Dpc;
-  KTIMER Timer;
-  KEVENT Event;
-  BOOLEAN BeepOn;
+    LONG ReferenceCount;
+    FAST_MUTEX Mutex;
+    KTIMER Timer;
+    LONG TimerActive;
+    PVOID SectionHandle;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
+/* FUNCTIONS *****************************************************************/
 
-/* FUNCTIONS ***************************************************************/
-
-static VOID STDCALL
-BeepDPC(PKDPC Dpc,
-	PVOID DeferredContext,
-	PVOID SystemArgument1,
-	PVOID SystemArgument2)
+VOID
+NTAPI
+BeepDPC(IN PKDPC Dpc,
+        IN PDEVICE_OBJECT DeviceObject,
+        IN PVOID SystemArgument1,
+        IN PVOID SystemArgument2)
 {
-  PDEVICE_EXTENSION DeviceExtension = DeferredContext;
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
-  DPRINT("BeepDPC() called!\n");
+    /* Stop the beep */
+    HalMakeBeep(0);
 
-  HalMakeBeep(0);
-  DeviceExtension->BeepOn = FALSE;
-  KeSetEvent(&DeviceExtension->Event,
-	     0,
-	     FALSE);
-
-  DPRINT("BeepDPC() finished!\n");
+    /* Disable the timer */
+    InterlockedDecrement(&DeviceExtension->TimerActive);
 }
 
-
-static NTSTATUS STDCALL
-BeepCreate(
-   PDEVICE_OBJECT DeviceObject,
-	 PIRP Irp)
-/*
- * FUNCTION: Handles user mode requests
- * ARGUMENTS:
- *                       DeviceObject = Device for request
- *                       Irp = I/O request packet describing request
- * RETURNS: Success or failure
- */
+NTSTATUS
+NTAPI
+BeepCreate(IN PDEVICE_OBJECT DeviceObject,
+           IN PIRP Irp)
 {
-  DPRINT("BeepCreate() called!\n");
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
-
-  return(STATUS_SUCCESS);
-}
-
-
-static NTSTATUS STDCALL
-BeepClose(PDEVICE_OBJECT DeviceObject,
-	  PIRP Irp)
-/*
- * FUNCTION: Handles user mode requests
- * ARGUMENTS:
- *                       DeviceObject = Device for request
- *                       Irp = I/O request packet describing request
- * RETURNS: Success or failure
- */
-{
-  PDEVICE_EXTENSION DeviceExtension;
-  NTSTATUS Status;
-
-  DPRINT("BeepClose() called!\n");
-
-  DeviceExtension = DeviceObject->DeviceExtension;
-  if (DeviceExtension->BeepOn == TRUE)
+    /* Acquire the mutex and increase reference count */
+    ExAcquireFastMutex(&DeviceExtension->Mutex);
+    if (++DeviceExtension->ReferenceCount == 1)
     {
-      HalMakeBeep(0);
-      DeviceExtension->BeepOn = FALSE;
-      KeCancelTimer(&DeviceExtension->Timer);
+        /* First reference, lock the data section */
+        DeviceExtension->SectionHandle = MmLockPagableDataSection(BeepCreate);
     }
 
-  Status = STATUS_SUCCESS;
+    /* Release it */
+    ExReleaseFastMutex(&DeviceExtension->Mutex);
 
-  Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
-
-  return(Status);
+    /* Complete the request */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
 }
 
-
-static NTSTATUS STDCALL
-BeepCleanup(PDEVICE_OBJECT DeviceObject,
-	    PIRP Irp)
-/*
- * FUNCTION: Handles user mode requests
- * ARGUMENTS:
- *                       DeviceObject = Device for request
- *                       Irp = I/O request packet describing request
- * RETURNS: Success or failure
- */
+NTSTATUS
+NTAPI
+BeepClose(IN PDEVICE_OBJECT DeviceObject,
+          IN PIRP Irp)
 {
-  DPRINT("BeepCleanup() called!\n");
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
+    /* Acquire the mutex and decrease reference count */
+    ExAcquireFastMutex(&DeviceExtension->Mutex);
+    if (!(--DeviceExtension->ReferenceCount))
+    {
+        /* Check for active timer */
+        if (DeviceExtension->TimerActive)
+        {
+            /* Cancel it */
+            if (KeCancelTimer(&DeviceExtension->Timer))
+            {
+                /* Mark it as cancelled */
+                InterlockedDecrement(&DeviceExtension->TimerActive);
+            }
+        }
 
-  return(STATUS_SUCCESS);
+        /* Page the driver */
+        MmUnlockPagableImageSection(DeviceExtension->SectionHandle);
+    }
+
+    /* Release the lock */
+    ExReleaseFastMutex(&DeviceExtension->Mutex);
+
+    /* Complete the request */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
 }
 
-
-static NTSTATUS STDCALL
-BeepDeviceControl(PDEVICE_OBJECT DeviceObject,
-		  PIRP Irp)
-/*
- * FUNCTION: Handles user mode requests
- * ARGUMENTS:
- *                       DeviceObject = Device for request
- *                       Irp = I/O request packet describing request
- * RETURNS: Success or failure
- */
+VOID
+NTAPI
+BeepCancel(IN PDEVICE_OBJECT DeviceObject,
+           IN PIRP Irp)
 {
-  PIO_STACK_LOCATION Stack;
-  PDEVICE_EXTENSION DeviceExtension;
-  PBEEP_SET_PARAMETERS BeepParam;
-  LARGE_INTEGER DueTime;
-
-  DPRINT("BeepDeviceControl() called!\n");
-
-  DeviceExtension = DeviceObject->DeviceExtension;
-  Stack = IoGetCurrentIrpStackLocation(Irp);
-  BeepParam = (PBEEP_SET_PARAMETERS)Irp->AssociatedIrp.SystemBuffer;
-
-  Irp->IoStatus.Information = 0;
-
-  if (Stack->Parameters.DeviceIoControl.IoControlCode != IOCTL_BEEP_SET)
+    /* Check if this is the current request */
+    if (Irp == DeviceObject->CurrentIrp)
     {
-      Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-      IoCompleteRequest(Irp,
-			IO_NO_INCREMENT);
-      return(STATUS_NOT_IMPLEMENTED);
+        /* Clear it */
+        DeviceObject->CurrentIrp = NULL;
+
+        /* Release the cancel lock and start the next packet */
+        IoReleaseCancelSpinLock(Irp->CancelIrql);
+        IoStartNextPacket(DeviceObject, TRUE);
+    }
+    else
+    {
+        /* Otherwise, remove the packet from the queue and relelase the lock */
+        KeRemoveEntryDeviceQueue(&DeviceObject->DeviceQueue,
+                                 &Irp->Tail.Overlay.DeviceQueueEntry);
+        IoReleaseCancelSpinLock(Irp->CancelIrql);
     }
 
-  if ((Stack->Parameters.DeviceIoControl.InputBufferLength != sizeof(BEEP_SET_PARAMETERS))
-      || (BeepParam->Frequency < BEEP_FREQUENCY_MINIMUM)
-      || (BeepParam->Frequency > BEEP_FREQUENCY_MAXIMUM))
-    {
-      Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-      IoCompleteRequest(Irp,
-			IO_NO_INCREMENT);
-      return(STATUS_INVALID_PARAMETER);
-    }
-
-  DueTime.QuadPart = 0;
-
-  /* do the beep!! */
-  DPRINT("Beep:\n  Freq: %lu Hz\n  Dur: %lu ms\n",
-	 BeepParam->Frequency,
-	 BeepParam->Duration);
-  if (BeepParam->Duration > 0)
-    {
-      DueTime.QuadPart = (LONGLONG)BeepParam->Duration * -10000;
-
-      KeSetTimer(&DeviceExtension->Timer,
-		 DueTime,
-		 &DeviceExtension->Dpc);
-
-      HalMakeBeep(BeepParam->Frequency);
-      DeviceExtension->BeepOn = TRUE;
-      KeWaitForSingleObject(&DeviceExtension->Event,
-			    Executive,
-			    KernelMode,
-			    FALSE,
-			    NULL);
-    }
-  else if (BeepParam->Duration == MAXULONG)
-    {
-      if (DeviceExtension->BeepOn == TRUE)
-	{
-	  HalMakeBeep(0);
-	  DeviceExtension->BeepOn = FALSE;
-	}
-      else
-	{
-	  HalMakeBeep(BeepParam->Frequency);
-	  DeviceExtension->BeepOn = TRUE;
-	}
-    }
-
-  DPRINT("Did the beep!\n");
-
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
-  return(STATUS_SUCCESS);
+    /* Complete the request */
+    Irp->IoStatus.Status = STATUS_CANCELLED;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest (Irp, IO_NO_INCREMENT);
 }
 
-
-static VOID STDCALL
-BeepUnload(PDRIVER_OBJECT DriverObject)
+NTSTATUS
+NTAPI
+BeepCleanup(IN PDEVICE_OBJECT DeviceObject,
+            IN PIRP Irp)
 {
-  DPRINT("BeepUnload() called!\n");
+    KIRQL OldIrql, CancelIrql;
+    PKDEVICE_QUEUE_ENTRY Packet;
+    PIRP CurrentIrp;
+
+    /* Raise IRQL and acquire the cancel lock */
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    IoAcquireCancelSpinLock(&CancelIrql);
+
+    /* Get the current IRP */
+    CurrentIrp = DeviceObject->CurrentIrp;
+    DeviceObject->CurrentIrp = NULL;
+    while (CurrentIrp)
+    {
+        /* Clear its cancel routine */
+        (VOID)IoSetCancelRoutine(CurrentIrp, NULL);
+
+        /* Cancel the IRP */
+        CurrentIrp->IoStatus.Status = STATUS_CANCELLED;
+        CurrentIrp->IoStatus.Information = 0;
+
+        /* Release the cancel lock and complete it */
+        IoReleaseCancelSpinLock(CancelIrql);
+        IoCompleteRequest(CurrentIrp, IO_NO_INCREMENT);
+
+        /* Reacquire the lock and get the next queue packet */
+        IoAcquireCancelSpinLock(&CancelIrql);
+        Packet = KeRemoveDeviceQueue(&DeviceObject->DeviceQueue);
+        if (Packet)
+        {
+            /* Get the IRP */
+            CurrentIrp = CONTAINING_RECORD(Packet,
+                                           IRP,
+                                           Tail.Overlay.DeviceQueueEntry);
+        }
+        else
+        {
+            /* No more IRPs */
+            CurrentIrp = NULL;
+        }
+    }
+
+    /* Release lock and go back to low IRQL */
+    IoReleaseCancelSpinLock(CancelIrql);
+    KeLowerIrql(OldIrql);
+
+    /* Complete the IRP */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    /* Stop and beep and return */
+    HalMakeBeep(0);
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS STDCALL
-DriverEntry(PDRIVER_OBJECT DriverObject,
-	    PUNICODE_STRING RegistryPath)
-/*
- * FUNCTION:  Called by the system to initalize the driver
- * ARGUMENTS:
- *            DriverObject = object describing this driver
- *            RegistryPath = path to our configuration entries
- * RETURNS:   Success or failure
- */
+NTSTATUS
+NTAPI
+BeepDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+                  IN PIRP Irp)
 {
-  PDEVICE_EXTENSION DeviceExtension;
-  PDEVICE_OBJECT DeviceObject;
-  UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\Beep");
-  NTSTATUS Status;
+    PIO_STACK_LOCATION Stack;
+    PBEEP_SET_PARAMETERS BeepParam;
+    NTSTATUS Status;
 
-  DPRINT("Beep Device Driver 0.0.3\n");
+    /* Get the stack location and parameters */
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    BeepParam = (PBEEP_SET_PARAMETERS)Irp->AssociatedIrp.SystemBuffer;
 
-  DriverObject->Flags = 0;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = BeepCreate;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = BeepClose;
-  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = BeepCleanup;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = BeepDeviceControl;
-  DriverObject->DriverUnload = BeepUnload;
+    /* We only support one IOCTL */
+    if (Stack->Parameters.DeviceIoControl.IoControlCode != IOCTL_BEEP_SET)
+    {
+        /* Unsupported command */
+        Status = STATUS_NOT_IMPLEMENTED;
+    }
+    else
+    {
+        /* Validate the input buffer length */
+        if (Stack->Parameters.DeviceIoControl.InputBufferLength <
+            sizeof(BEEP_SET_PARAMETERS))
+        {
+            /* Invalid buffer */
+            Status = STATUS_INVALID_PARAMETER;
+        }
+        else if ((BeepParam->Frequency != 0) && !(BeepParam->Duration))
+        {
+            /* No duration, return imemdiately */
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* We'll queue this request */
+            Status = STATUS_PENDING;
+        }
+    }
 
-  Status = IoCreateDevice(DriverObject,
-			  sizeof(DEVICE_EXTENSION),
-			  &DeviceName,
-			  FILE_DEVICE_BEEP,
-			  0,
-			  FALSE,
-			  &DeviceObject);
-  if (!NT_SUCCESS(Status))
+    /* Set packet information */
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+
+    /* Check if we're completing or queuing a packet */
+    if (Status == STATUS_PENDING)
+    {
+        /* Start the queue */
+        IoMarkIrpPending(Irp);
+        IoStartPacket(DeviceObject, Irp, NULL, BeepCancel);
+    }
+    else
+    {
+        /* Complete the request */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
+    /* Return */
     return Status;
+}
 
-  /* set up device extension */
-  DeviceExtension = DeviceObject->DeviceExtension;
-  DeviceExtension->BeepOn = FALSE;
+VOID
+NTAPI
+BeepUnload(IN PDRIVER_OBJECT DriverObject)
+{
+    PDEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT DeviceObject;
 
-  KeInitializeDpc(&DeviceExtension->Dpc,
-		  BeepDPC,
-		  DeviceExtension);
-  KeInitializeTimer(&DeviceExtension->Timer);
-  KeInitializeEvent(&DeviceExtension->Event,
-		    SynchronizationEvent,
-		    FALSE);
+    /* Get DO and DE */
+    DeviceObject = DriverObject->DeviceObject;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
-  return(STATUS_SUCCESS);
+    /* Check if the timer is active */
+    if (DeviceExtension->TimerActive)
+    {
+        /* Cancel it */
+        if (KeCancelTimer(&DeviceExtension->Timer))
+        {
+            /* All done */
+            InterlockedDecrement(&DeviceExtension->TimerActive);
+        }
+    }
+
+    /* Delete the object */
+    IoDeleteDevice(DeviceObject);
+}
+
+VOID
+NTAPI
+BeepStartIo(IN PDEVICE_OBJECT DeviceObject,
+            IN PIRP Irp)
+{
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    KIRQL CancelIrql;
+    PIO_STACK_LOCATION IoStack;
+    PBEEP_SET_PARAMETERS BeepParam;
+    LARGE_INTEGER DueTime;
+    NTSTATUS Status;
+
+    /* Acquire the cancel lock and make sure the IRP is valid */
+    IoAcquireCancelSpinLock(&CancelIrql);
+    if (!Irp)
+    {
+        /* It's not, release the lock and quit */
+        IoReleaseCancelSpinLock(CancelIrql);
+        return;
+    }
+
+    /* Remove the cancel routine and release the lock */
+    (VOID)IoSetCancelRoutine(Irp, NULL);
+    IoReleaseCancelSpinLock(CancelIrql);
+
+    /* Get the I/O Stack and make sure the request is valid */
+    BeepParam = (PBEEP_SET_PARAMETERS)Irp->AssociatedIrp.SystemBuffer;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_BEEP_SET)
+    {
+        /* Check if we have an active timer */
+        if (DeviceExtension->TimerActive)
+        {
+            /* Cancel it */
+            if (KeCancelTimer(&DeviceExtension->Timer))
+            {
+                /* Set the state */
+                InterlockedDecrement(&DeviceExtension->TimerActive);
+            }
+        }
+
+        /* Make the beep */
+        if (HalMakeBeep(BeepParam->Frequency))
+        {
+            /* Beep successful, queue a DPC to stop it */
+            Status = STATUS_SUCCESS;
+            DueTime.QuadPart = BeepParam->Duration * -10000;
+            InterlockedIncrement(&DeviceExtension->TimerActive);
+            KeSetTimer(&DeviceExtension->Timer, DueTime, &DeviceObject->Dpc);
+        }
+        else
+        {
+            /* Beep has failed */
+            Status = STATUS_INVALID_PARAMETER;
+        }
+    }
+    else
+    {
+        /* Invalid request */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
+    /* Complete the request and start the next packet */
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    IoStartNextPacket(DeviceObject, TRUE);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+}
+
+NTSTATUS
+NTAPI
+DriverEntry(IN PDRIVER_OBJECT DriverObject,
+            IN PUNICODE_STRING RegistryPath)
+{
+    PDEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT DeviceObject;
+    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\Beep");
+    NTSTATUS Status;
+
+    /* Create the device */
+    Status = IoCreateDevice(DriverObject,
+                            sizeof(DEVICE_EXTENSION),
+                            &DeviceName,
+                            FILE_DEVICE_BEEP,
+                            0,
+                            FALSE,
+                            &DeviceObject);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Make it use buffered I/O */
+    DeviceObject->Flags |= DO_BUFFERED_IO;
+
+    /* Setup the Driver Object */
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = BeepCreate;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = BeepClose;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = BeepCleanup;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = BeepDeviceControl;
+    DriverObject->DriverUnload = BeepUnload;
+    DriverObject->DriverStartIo = BeepStartIo;
+
+    /* Set up device extension */
+    DeviceExtension = DeviceObject->DeviceExtension;
+    DeviceExtension->ReferenceCount = 0;
+    DeviceExtension->TimerActive = FALSE;
+    IoInitializeDpcRequest(DeviceObject, BeepDPC);
+    KeInitializeTimer(&DeviceExtension->Timer);
+    ExInitializeFastMutex(&DeviceExtension->Mutex);
+
+    /* Page the entire driver */
+    MmPageEntireDriver(DriverEntry);
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
