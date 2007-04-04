@@ -269,8 +269,7 @@ RegisterClipboardFormatW(LPCWSTR lpszFormat)
 
     RtlInitUnicodeString(&usFormat, lpszFormat);
     ret = NtUserRegisterClipboardFormat(&usFormat);
-    RtlFreeUnicodeString(&usFormat);
-  
+
     return ret;
 }
 
