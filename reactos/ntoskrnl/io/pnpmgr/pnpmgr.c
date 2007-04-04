@@ -3320,6 +3320,7 @@ PnpInit(VOID)
 
     IopRootDeviceNode->PhysicalDeviceObject->Flags |= DO_BUS_ENUMERATED_DEVICE;
     PnpRootDriverEntry(IopRootDriverObject, NULL);
+    IopRootDeviceNode->PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
     IopRootDriverObject->DriverExtension->AddDevice(
         IopRootDriverObject,
         IopRootDeviceNode->PhysicalDeviceObject);
