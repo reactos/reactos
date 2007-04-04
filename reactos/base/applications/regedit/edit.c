@@ -242,7 +242,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     case WM_CHAR:
         if (dwordEditMode == EDIT_MODE_DEC)
         {
-            if (isdigit((int) wParam & 0xff))
+            if (isdigit((int) wParam & 0xff) || iscntrl((int) wParam & 0xff))
             {
                 break;
             }
@@ -253,7 +253,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
         }
         else if (dwordEditMode == EDIT_MODE_HEX)
         {
-            if (isxdigit((int) wParam & 0xff))
+            if (isxdigit((int) wParam & 0xff) || iscntrl((int) wParam & 0xff))
             {
                 break;
             }
