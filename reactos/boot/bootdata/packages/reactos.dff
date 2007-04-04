@@ -240,9 +240,9 @@ drivers\bus\pci\pci.sys                             2
 drivers\bus\serenum\serenum.sys                     2
 
 drivers\filesystems\fs_rec\fs_rec.sys               2
-drivers\filesystems\ms\msfs.sys                     2
+drivers\filesystems\msfs\msfs.sys                   2
 drivers\filesystems\mup\mup.sys                     2
-drivers\filesystems\np\npfs.sys                     2
+drivers\filesystems\npfs\npfs.sys                   2
 
 drivers\input\mouclass\mouclass.sys                 2
 drivers\input\sermouse\sermouse.sys                 2
