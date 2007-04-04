@@ -12,10 +12,5 @@
 	<library>comctl32</library>
 	<library>msvcrt</library>
 	<file>odbccp32.c</file>
-	<file>dsn.c</file>
-	<file>trace.c</file>
-	<file>pool.c</file>
-	<file>about.c</file>
-	<file>drivers.c</file>
 	<file>odbccp32.rc</file>
 </module>

@@ -7,7 +7,3 @@
 #define REACTOS_STR_INTERNAL_NAME	"odbccp32\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"odbccp32.cpl\0"
 #include <reactos/version.rc>
-
-
-
-#include "rsrc.rc"

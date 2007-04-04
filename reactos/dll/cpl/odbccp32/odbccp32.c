@@ -8,59 +8,9 @@
 
 #include "odbccp32.h"
 
-HINSTANCE hApplet = 0;
-
-VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
-{
-	ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-	
-	psp->dwSize = sizeof(PROPSHEETPAGE);
-	psp->dwFlags = PSP_DEFAULT;
-	psp->hInstance = hApplet;
-	psp->pszTemplate = MAKEINTRESOURCE(idDlg);
-	psp->pfnDlgProc = DlgProc;
-}
-
-
-LONG
-APIENTRY
-AppletProc(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
-{
-	PROPSHEETPAGE psp[7];
-	PROPSHEETHEADER psh;
-	TCHAR szBuffer[256];
-
-	UNREFERENCED_PARAMETER(lParam);
-	UNREFERENCED_PARAMETER(wParam);
-	UNREFERENCED_PARAMETER(uMsg);
-	UNREFERENCED_PARAMETER(hwnd);
-
-	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-	psh.dwFlags =  PSH_PROPSHEETPAGE;
-	psh.dwSize = sizeof(PROPSHEETHEADER);
-	psh.hwndParent = NULL;
-	psh.hInstance = hApplet;
-	psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
-	psh.nStartPage = 0;
-	psh.ppsp = psp;
-	psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
-
-	if (LoadString(hApplet, IDS_CPLNAME, szBuffer, sizeof(szBuffer) / sizeof(TCHAR)) < 256)
-	{
-		psh.dwFlags |= PSH_PROPTITLE;
-		psh.pszCaption = szBuffer;
-	}
-
-	InitPropSheetPage(&psp[0], IDD_USERDSN, UserDSNProc);
-	InitPropSheetPage(&psp[1], IDD_SYSTEMDSN, SystemDSNProc);
-	InitPropSheetPage(&psp[2], IDD_FILEDSN, FileDSNProc);
-	InitPropSheetPage(&psp[3], IDD_DRIVERS, DriversProc);
-	InitPropSheetPage(&psp[4], IDD_CONNTRACE, TraceProc);
-	InitPropSheetPage(&psp[5], IDD_CONNPOOL, PoolProc);
-	InitPropSheetPage(&psp[6], IDD_ABOUT, AboutProc);
-	return (LONG)(PropertySheet(&psh) != -1);
-}
+HINSTANCE hApplet = NULL;
+APPLET_PROC ODBCProc = NULL;
+HMODULE hLibrary = NULL;
 
 
 LONG
@@ -70,32 +20,36 @@ CPlApplet(HWND hwndCpl,
 		  LPARAM lParam1,
 		  LPARAM lParam2)
 {
-	switch(uMsg)
+	if (ODBCProc == NULL)
 	{
-		case CPL_INIT:
-			return TRUE;
+		TCHAR szBuffer[MAX_PATH];
 
-		case CPL_GETCOUNT:
-			return 1;
-
-		case CPL_INQUIRE:
+		if (ExpandEnvironmentStrings(_T("%systemroot%\\system32\\odbccp32.dll"),
+									 szBuffer,
+									 sizeof(szBuffer) / sizeof(TCHAR)) > 0)
 		{
-			CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-
-			CPlInfo->lData = lParam1;
-			CPlInfo->idIcon = CPL_ICON;
-			CPlInfo->idName = CPL_NAME;
-			CPlInfo->idInfo = CPL_INFO;
-			break;
-		}
-
-		case CPL_DBLCLK:
-		{
-			AppletProc(hwndCpl, uMsg, lParam1, lParam2);
-			break;
+			hLibrary = LoadLibrary(szBuffer);
+			if (hLibrary)
+			{
+				ODBCProc = (APPLET_PROC)GetProcAddress(hLibrary, "ODBCCPlApplet");
+			}
 		}
 	}
-	return FALSE;
+
+	if (ODBCProc)
+	{
+		return ODBCProc(hwndCpl, uMsg, lParam1, lParam2);
+	}
+	else
+	{
+		if(hLibrary)
+		{
+			FreeLibrary(hLibrary);
+		}
+
+		TerminateProcess(GetCurrentProcess(), -1);
+		return (LONG)-1;
+	}
 }
 
 
