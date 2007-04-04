@@ -37,9 +37,18 @@ IopAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
     SourceDeviceExtension = IoGetDevObjExtension(SourceDevice);
     ASSERT(SourceDeviceExtension->AttachedTo == NULL);
 
+    /* FIXME: ROS HACK */
+    if (AttachedDevice->Flags & DO_DEVICE_INITIALIZING)
+    {
+        DPRINT1("Io: CRITICAL: Allowing attach to device which hasn't "
+                "cleared its DO_DEVICE_INITIALIZING flag. Fix the damn "
+                "thing: %p %wZ\n",
+                AttachedDevice,
+                &AttachedDevice->DriverObject->DriverName);
+    }
+
     /* Make sure that it's in a correct state */
-    if ((AttachedDevice->Flags & DO_DEVICE_INITIALIZING) ||
-        (IoGetDevObjExtension(AttachedDevice)->ExtensionFlags &
+    if ((IoGetDevObjExtension(AttachedDevice)->ExtensionFlags &
          (DOE_UNLOAD_PENDING |
           DOE_DELETE_PENDING |
           DOE_REMOVE_PENDING |
@@ -629,16 +638,10 @@ NTAPI
 IoAttachDeviceToDeviceStack(IN PDEVICE_OBJECT SourceDevice,
                             IN PDEVICE_OBJECT TargetDevice)
 {
-    NTSTATUS Status;
-    PDEVICE_OBJECT LocalAttach;
-
     /* Attach it safely */
-    Status = IoAttachDeviceToDeviceStackSafe(SourceDevice,
-                                             TargetDevice,
-                                             &LocalAttach);
-
-    /* Return it */
-    return LocalAttach;
+    return IopAttachDeviceToDeviceStackSafe(SourceDevice,
+                                            TargetDevice,
+                                            NULL);
 }
 
 /*
@@ -650,41 +653,16 @@ IoAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
                                 IN PDEVICE_OBJECT TargetDevice,
                                 IN OUT PDEVICE_OBJECT *AttachedToDeviceObject)
 {
-    PDEVICE_OBJECT AttachedDevice;
-    PEXTENDED_DEVOBJ_EXTENSION SourceDeviceExtension;
-
-    /* Get the Attached Device and source extension */
-    AttachedDevice = IoGetAttachedDevice(TargetDevice);
-    SourceDeviceExtension = IoGetDevObjExtension(SourceDevice);
-
-    /* Make sure that it's in a correct state */
-    if (!IoGetDevObjExtension(AttachedDevice)->ExtensionFlags &
-        (DOE_UNLOAD_PENDING |
-         DOE_DELETE_PENDING |
-         DOE_REMOVE_PENDING |
-         DOE_REMOVE_PROCESSED))
+    /* Call the internal function */
+    if (!IopAttachDeviceToDeviceStackSafe(SourceDevice,
+                                          TargetDevice,
+                                          AttachedToDeviceObject))
     {
-        /* Update atached device fields */
-        AttachedDevice->AttachedDevice = SourceDevice;
-        AttachedDevice->Spare1++;
-
-        /* Update the source with the attached data */
-        SourceDevice->StackSize = AttachedDevice->StackSize + 1;
-        SourceDevice->AlignmentRequirement = AttachedDevice->
-                                             AlignmentRequirement;
-        SourceDevice->SectorSize = AttachedDevice->SectorSize;
-
-        /* Set the attachment in the device extension */
-        SourceDeviceExtension->AttachedTo = AttachedDevice;
-    }
-    else
-    {
-        /* Device was unloading or being removed */
-        AttachedDevice = NULL;
+        /* Nothing found */
+        return STATUS_NO_SUCH_DEVICE;
     }
 
-    /* Return the attached device */
-    *AttachedToDeviceObject = AttachedDevice;
+    /* Success! */
     return STATUS_SUCCESS;
 }
 
