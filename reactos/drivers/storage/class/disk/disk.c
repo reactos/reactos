@@ -448,8 +448,6 @@ Return Value:
     PSCSI_ADAPTER_BUS_INFO  adapterInfo;
     PINQUIRYDATA inquiryData;
     ULONG scsiBus;
-    ULONG size;
-    ULONG sizeElement;
     ULONG adapterDisk;
     NTSTATUS status;
     BOOLEAN foundOne = FALSE;
@@ -638,7 +636,7 @@ Return Value:
     PDEVICE_OBJECT physicalDevice;
     PDISK_GEOMETRY diskGeometry = NULL;
     PDRIVE_LAYOUT_INFORMATION partitionList;
-    PDEVICE_EXTENSION deviceExtension;
+    PDEVICE_EXTENSION deviceExtension = NULL;
     PDEVICE_EXTENSION physicalDeviceExtension;
     PDISK_DATA     diskData;
     ULONG          bytesPerSector;
@@ -649,7 +647,7 @@ Return Value:
     BOOLEAN        writeCache;
     PVOID          senseData = NULL;
     ULONG          srbFlags;
-    ULONG          dmByteSkew;
+    ULONG          dmByteSkew = 0;
     PULONG         dmSkew;
     BOOLEAN        dmActive = FALSE;
     ULONG          timeOut = 0;
@@ -665,7 +663,7 @@ Return Value:
     //
 
     sprintf(ntNameBuffer,
-            "\\Device\\Harddisk%d",
+            "\\Device\\Harddisk%lu",
             *DeviceCount);
 
     RtlInitString(&ntNameString,
@@ -723,7 +721,7 @@ Return Value:
     //
 
     sprintf(ntNameBuffer,
-            "\\Device\\Harddisk%d\\Partition0",
+            "\\Device\\Harddisk%lu\\Partition0",
             *DeviceCount);
 
 
@@ -1042,7 +1040,7 @@ Return Value:
     HalExamineMBR(deviceExtension->DeviceObject,
                   deviceExtension->DiskGeometry->BytesPerSector,
                   (ULONG)0x54,
-                  &dmSkew);
+                  (PVOID)&dmSkew);
 
     if (dmSkew) {
 
@@ -1179,7 +1177,7 @@ Return Value:
             //
 
             sprintf(ntNameBuffer,
-                    "\\Device\\Harddisk%d\\Partition%d",
+                    "\\Device\\Harddisk%lu\\Partition%lu",
                     *DeviceCount,
                     partitionNumber + 1);
 
@@ -1425,9 +1423,6 @@ Return Value:
     PIO_STACK_LOCATION currentIrpStack = IoGetCurrentIrpStackLocation(Irp);
     ULONG transferByteCount = currentIrpStack->Parameters.Read.Length;
     LARGE_INTEGER startingOffset;
-    ULONG maximumTransferLength =
-        deviceExtension->PortCapabilities->MaximumTransferLength;
-    ULONG transferPages;
 
     //
     // Verify parameters of this request.
@@ -1533,7 +1528,7 @@ Return Value:
 
     case SMART_GET_VERSION: {
 
-        PUCHAR buffer;
+        ULONG_PTR buffer;
         PSRB_IO_CONTROL  srbControl;
         PGETVERSIONINPARAMS versionParams;
 
@@ -1572,8 +1567,7 @@ Return Value:
         // Point to the 'buffer' portion of the SRB_CONTROL
         //
 
-        buffer = (PUCHAR)srbControl;
-        buffer = (ULONG)buffer + srbControl->HeaderLength;
+        buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
 
         //
         // Ensure correct target is set in the cmd parameters.
@@ -1586,7 +1580,7 @@ Return Value:
         // Copy the IOCTL parameters to the srb control buffer area.
         //
 
-        RtlMoveMemory(buffer, Irp->AssociatedIrp.SystemBuffer, sizeof(GETVERSIONINPARAMS));
+        RtlMoveMemory((PVOID)buffer, Irp->AssociatedIrp.SystemBuffer, sizeof(GETVERSIONINPARAMS));
 
 
         irp2 = IoBuildDeviceIoControlRequest(IOCTL_SCSI_MINIPORT,
@@ -1622,10 +1616,9 @@ Return Value:
 
         if (NT_SUCCESS(status)) {
 
-            buffer = (PUCHAR)srbControl;
-            buffer = (ULONG)buffer + srbControl->HeaderLength;
+            buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
 
-            RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, buffer, sizeof(GETVERSIONINPARAMS));
+            RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, (PVOID)buffer, sizeof(GETVERSIONINPARAMS));
             Irp->IoStatus.Information = sizeof(GETVERSIONINPARAMS);
         }
 
@@ -1638,7 +1631,7 @@ Return Value:
         PSENDCMDINPARAMS cmdInParameters = ((PSENDCMDINPARAMS)Irp->AssociatedIrp.SystemBuffer);
         ULONG            controlCode = 0;
         PSRB_IO_CONTROL  srbControl;
-        PUCHAR           buffer;
+        ULONG_PTR        buffer;
 
         if (irpStack->Parameters.DeviceIoControl.InputBufferLength <
             (sizeof(SENDCMDINPARAMS) - 1)) {
@@ -1709,8 +1702,7 @@ Return Value:
         // Point to the 'buffer' portion of the SRB_CONTROL
         //
 
-        buffer = (PUCHAR)srbControl;
-        buffer = (ULONG)buffer + srbControl->HeaderLength;
+        buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
 
         //
         // Ensure correct target is set in the cmd parameters.
@@ -1722,7 +1714,7 @@ Return Value:
         // Copy the IOCTL parameters to the srb control buffer area.
         //
 
-        RtlMoveMemory(buffer, Irp->AssociatedIrp.SystemBuffer, sizeof(SENDCMDINPARAMS) - 1);
+        RtlMoveMemory((PVOID)buffer, Irp->AssociatedIrp.SystemBuffer, sizeof(SENDCMDINPARAMS) - 1);
 
         irp2 = IoBuildDeviceIoControlRequest(IOCTL_SCSI_MINIPORT,
                                             deviceExtension->PortDeviceObject,
@@ -1754,17 +1746,16 @@ Return Value:
         // If successful, copy the data received into the output buffer
         //
 
-        buffer = (PUCHAR)srbControl;
-        buffer = (ULONG)buffer + srbControl->HeaderLength;
+        buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
 
         if (NT_SUCCESS(status)) {
 
-            RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, buffer, length - 1);
+            RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, (PVOID)buffer, length - 1);
             Irp->IoStatus.Information = length - 1;
 
         } else {
 
-            RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, buffer, (sizeof(SENDCMDOUTPARAMS) - 1));
+            RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, (PVOID)buffer, (sizeof(SENDCMDOUTPARAMS) - 1));
             Irp->IoStatus.Information = sizeof(SENDCMDOUTPARAMS) - 1;
 
         }
@@ -1779,7 +1770,7 @@ Return Value:
         PSENDCMDINPARAMS cmdInParameters = ((PSENDCMDINPARAMS)Irp->AssociatedIrp.SystemBuffer);
         PSRB_IO_CONTROL  srbControl;
         ULONG            controlCode = 0;
-        PUCHAR           buffer;
+        ULONG_PTR        buffer;
 
         if (irpStack->Parameters.DeviceIoControl.InputBufferLength <
                (sizeof(SENDCMDINPARAMS) - 1)) {
@@ -1877,8 +1868,7 @@ Return Value:
         // Point to the 'buffer' portion of the SRB_CONTROL
         //
 
-        buffer = (PUCHAR)srbControl;
-        buffer = (ULONG)buffer + srbControl->HeaderLength;
+        buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
 
         //
         // Ensure correct target is set in the cmd parameters.
@@ -1890,7 +1880,7 @@ Return Value:
         // Copy the IOCTL parameters to the srb control buffer area.
         //
 
-        RtlMoveMemory(buffer, Irp->AssociatedIrp.SystemBuffer, sizeof(SENDCMDINPARAMS) - 1);
+        RtlMoveMemory((PVOID)buffer, Irp->AssociatedIrp.SystemBuffer, sizeof(SENDCMDINPARAMS) - 1);
 
         srbControl->ControlCode = controlCode;
 
@@ -1926,8 +1916,7 @@ Return Value:
         // either pass this back to the app, or zero it, in case of error.
         //
 
-        buffer = (PUCHAR)srbControl;
-        buffer = (ULONG)buffer + srbControl->HeaderLength;
+        buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
 
         //
         // Update the return buffer size based on the sub-command.
@@ -1939,7 +1928,7 @@ Return Value:
             length = sizeof(SENDCMDOUTPARAMS) - 1;
         }
 
-        RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, buffer, length);
+        RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, (PVOID)buffer, length);
         Irp->IoStatus.Information = length;
 
         ExFreePool(srbControl);
@@ -2532,7 +2521,7 @@ Return Value:
         RtlZeroMemory(modeData, MODE_DATA_SIZE);
 
         length = ScsiClassModeSense(DeviceObject,
-                                    (PUCHAR) modeData,
+                                    (PCHAR) modeData,
                                     MODE_DATA_SIZE,
                                     MODE_SENSE_RETURN_ALL);
 
@@ -2543,7 +2532,7 @@ Return Value:
             //
 
             length = ScsiClassModeSense(DeviceObject,
-                                        (PUCHAR) modeData,
+                                        (PCHAR) modeData,
                                         MODE_DATA_SIZE,
                                         MODE_SENSE_RETURN_ALL);
 
@@ -3004,7 +2993,7 @@ Return Value:
     ULONG retries = 1;
     ULONG length2;
     NTSTATUS status;
-    PULONG buffer;
+    ULONG_PTR buffer;
     PMODE_PARAMETER_BLOCK blockDescriptor;
 
     PAGED_CODE();
@@ -3015,9 +3004,9 @@ Return Value:
     // Allocate buffer for mode select header, block descriptor, and mode page.
     //
 
-    buffer = ExAllocatePool(NonPagedPoolCacheAligned,length2);
+    buffer = (ULONG_PTR)ExAllocatePool(NonPagedPoolCacheAligned,length2);
 
-    RtlZeroMemory(buffer, length2);
+    RtlZeroMemory((PVOID)buffer, length2);
 
     //
     // Set length in header to size of mode page.
@@ -3025,7 +3014,7 @@ Return Value:
 
     ((PMODE_PARAMETER_HEADER)buffer)->BlockDescriptorLength = sizeof(MODE_PARAMETER_BLOCK);
 
-    blockDescriptor = (PULONG)(buffer + 1);
+    blockDescriptor = (PMODE_PARAMETER_BLOCK)(buffer + 1);
 
     //
     // Set size
@@ -3037,7 +3026,7 @@ Return Value:
     // Copy mode page to buffer.
     //
 
-    RtlCopyMemory(buffer + 3, ModeSelectBuffer, Length);
+    RtlCopyMemory((PVOID)(buffer + 3), ModeSelectBuffer, Length);
 
     //
     // Zero SRB.
@@ -3067,7 +3056,7 @@ Retry:
 
     status = ScsiClassSendSrbSynchronous(DeviceObject,
                                          &srb,
-                                         buffer,
+                                         (PVOID)buffer,
                                          length2,
                                          TRUE);
 
@@ -3092,7 +3081,7 @@ Retry:
         status = STATUS_SUCCESS;
     }
 
-    ExFreePool(buffer);
+    ExFreePool((PVOID)buffer);
 
     if (NT_SUCCESS(status)) {
         return(TRUE);
@@ -3122,7 +3111,7 @@ DisableWriteCache(
 
         controller = &ScsiDiskBadControllers[j];
 
-        if (!controller->DisableWriteCache || strncmp(controller->InquiryString, InquiryData->VendorId, strlen(controller->InquiryString))) {
+        if (!controller->DisableWriteCache || strncmp(controller->InquiryString, (PCCHAR)InquiryData->VendorId, strlen(controller->InquiryString))) {
             continue;
         }
 
@@ -3234,7 +3223,7 @@ DisableWriteCache(
                 //
 
                 if (ScsiDiskModeSelect(DeviceObject,
-                                       pageData,
+                                       (PCHAR)pageData,
                                        length,
                                        savePage)) {
 
@@ -3246,7 +3235,7 @@ DisableWriteCache(
 
                 } else {
                     if (ScsiDiskModeSelect(DeviceObject,
-                                           pageData,
+                                           (PCHAR)pageData,
                                            length,
                                            savePage)) {
 
@@ -3488,12 +3477,12 @@ Return Value:
         // Open controller name key.
         //
 
-        sprintf(buffer,
-                "%d",
+        sprintf((PCHAR)buffer,
+                "%lu",
                 busNumber);
 
         RtlInitString(&string,
-                      buffer);
+                      (PCSZ)buffer);
 
         status = RtlAnsiStringToUnicodeString(&unicodeString,
                                               &string,
@@ -3549,12 +3538,12 @@ Return Value:
             // Open disk key.
             //
 
-            sprintf(buffer,
-                    "%d\\DiskPeripheral",
+            sprintf((PCHAR)buffer,
+                    "%lu\\DiskPeripheral",
                     adapterNumber);
 
             RtlInitString(&string,
-                          buffer);
+                          (PCSZ)buffer);
 
             status = RtlAnsiStringToUnicodeString(&unicodeString,
                                                   &string,
@@ -3582,12 +3571,12 @@ Return Value:
 
             for (diskNumber = 0; ; diskNumber++) {
 
-                sprintf(buffer,
-                        "%d",
+                sprintf((PCHAR)buffer,
+                        "%lu",
                         diskNumber);
 
                 RtlInitString(&string,
-                              buffer);
+                              (PCSZ)buffer);
 
                 status = RtlAnsiStringToUnicodeString(&unicodeString,
                                                       &string,
@@ -3675,7 +3664,7 @@ Return Value:
                     // Convert checksum to ansi string.
                     //
 
-                    sprintf(buffer, "%08x", diskData->MbrCheckSum);
+                    sprintf((PCHAR)buffer, "%08lx", diskData->MbrCheckSum);
 
                 } else {
 
@@ -3683,7 +3672,7 @@ Return Value:
                     // Convert signature to ansi string.
                     //
 
-                    sprintf(buffer, "%08x", diskData->Signature);
+                    sprintf((PCHAR)buffer, "%08lx", diskData->Signature);
 
                     //
                     // Make string point at signature. Can't use scan
@@ -3698,7 +3687,7 @@ Return Value:
                 //
 
                 RtlInitString(&string,
-                              buffer);
+                              (PCSZ)buffer);
 
 
                 //
@@ -4314,15 +4303,13 @@ Return Value:
     PDEVICE_EXTENSION          deviceExtension = DeviceObject->DeviceExtension;
     PINQUIRYDATA               InquiryData     = (PINQUIRYDATA)LunInfo->InquiryData;
     BAD_CONTROLLER_INFORMATION const *controller;
-    ULONG                      j,length;
-    PVOID                      modeData;
-    PUCHAR                     pageData;
+    ULONG                      j;
 
     for (j = 0; j <  NUMBER_OF_BAD_CONTROLLERS; j++) {
 
         controller = &ScsiDiskBadControllers[j];
 
-        if (strncmp(controller->InquiryString, InquiryData->VendorId, strlen(controller->InquiryString))) {
+        if (strncmp(controller->InquiryString, (PCCHAR)InquiryData->VendorId, strlen(controller->InquiryString))) {
             continue;
         }
 
@@ -4376,7 +4363,7 @@ Return Value:
         deviceExtension->DeviceFlags |= DEV_SAFE_START_UNIT;
 
         if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) {
-            if (_strnicmp(InquiryData->VendorId, "iomega", strlen("iomega"))) {
+            if (_strnicmp((PCCHAR)InquiryData->VendorId, "iomega", strlen("iomega"))) {
                 deviceExtension->DeviceFlags &= ~DEV_SAFE_START_UNIT;
             }
         }
@@ -4798,7 +4785,7 @@ Return Value:
             //
 
             sprintf(ntNameBuffer,
-                    "\\Device\\Harddisk%d\\Partition%d",
+                    "\\Device\\Harddisk%lu\\Partition%lu",
                     physicalExtension->DeviceNumber,
                     partitionNumber);
 

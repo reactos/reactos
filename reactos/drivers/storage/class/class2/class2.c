@@ -210,7 +210,7 @@ Return Value:
 
     do {
 
-        sprintf(deviceNameBuffer, "\\Device\\ScsiPort%d", portNumber);
+        sprintf(deviceNameBuffer, "\\Device\\ScsiPort%lu", portNumber);
 
         DebugPrint((2, "ScsiClassInitialize: Open Port %s\n", deviceNameBuffer));
 
@@ -334,7 +334,6 @@ Return Value:
     PIO_STACK_LOCATION  currentIrpStack = IoGetCurrentIrpStackLocation(Irp);
     ULONG               transferPages;
     ULONG               transferByteCount = currentIrpStack->Parameters.Read.Length;
-    LARGE_INTEGER       startingOffset = currentIrpStack->Parameters.Read.ByteOffset;
     ULONG               maximumTransferLength = deviceExtension->PortCapabilities->MaximumTransferLength;
     NTSTATUS            status;
 
@@ -1513,7 +1512,7 @@ Return Value:
             retry = TRUE;
         }
 
-        if (retry && (irpStack->Parameters.Others.Argument4 = (ULONG)irpStack->Parameters.Others.Argument4-1)) {
+        if (retry && (irpStack->Parameters.Others.Argument4 = (PVOID)((ULONG)irpStack->Parameters.Others.Argument4-1))) {
 
             //
             // Retry request.
@@ -1665,7 +1664,7 @@ Return Value:
             retry = TRUE;
         }
 
-        if (retry && (irpStack->Parameters.Others.Argument4 = (ULONG)irpStack->Parameters.Others.Argument4-1)) {
+        if (retry && (irpStack->Parameters.Others.Argument4 = (PVOID)((ULONG)irpStack->Parameters.Others.Argument4-1))) {
 
             //
             // Retry request. If the class driver has supplied a StartIo,
@@ -2115,7 +2114,7 @@ Return Value:
     BOOLEAN           retry = TRUE;
     BOOLEAN           logError = FALSE;
     ULONG             badSector = 0;
-    ULONG             uniqueId;
+    ULONG             uniqueId = 0;
     NTSTATUS          logStatus;
     ULONG             readSector;
     ULONG             index;
@@ -2885,7 +2884,7 @@ Return Value:
     // Pass the request to the port driver.
     //
 
-    (PVOID)IoCallDriver(deviceExtension->PortDeviceObject, Irp);
+    (VOID)IoCallDriver(deviceExtension->PortDeviceObject, Irp);
 
 } // end RetryRequest()
 
@@ -3246,7 +3245,7 @@ Return Value:
     PUCHAR limit;
     ULONG  parameterHeaderLength;
 
-    limit = ModeSenseBuffer + Length;
+    limit = (PUCHAR)ModeSenseBuffer + Length;
     parameterHeaderLength = (Use6Byte) ? sizeof(MODE_PARAMETER_HEADER) : sizeof(MODE_PARAMETER_HEADER10);
 
 
@@ -3269,7 +3268,7 @@ Return Value:
     //
 
 
-    while (ModeSenseBuffer < limit) {
+    while ((PUCHAR)ModeSenseBuffer < limit) {
 
         if (((PMODE_DISCONNECT_PAGE) ModeSenseBuffer)->PageCode == PageMode) {
             return(ModeSenseBuffer);
@@ -4603,7 +4602,7 @@ Return Value:
                                     NULL,
                                     NonPagedPoolMustSucceed,
                                     SCSI_REQUEST_BLOCK_SIZE,
-                                    'HscS',
+                                    TAG('H','s','c','S'),
                                     (USHORT)NumberElements);
 
 }

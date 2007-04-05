@@ -1,4 +1,4 @@
-<module name="class2" type="exportdriver" installbase="system32/drivers" installname="class2.sys" allowwarnings="true">
+<module name="class2" type="exportdriver" installbase="system32/drivers" installname="class2.sys">
 	<bootstrap base="$(CDOUTPUT)" />
 	<define name="__USE_W32API" />
 	<importlibrary definition="class2.def" />
