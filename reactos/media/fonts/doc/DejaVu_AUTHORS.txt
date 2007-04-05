@@ -34,5 +34,6 @@ Tavmjong Bah
 Tim May
 Valentin Stoykov
 Vasek Stodulka
+Wesley Transue
 
-$Id: AUTHORS 1491 2007-01-12 20:40:12Z ben_laenen $
+$Id: AUTHORS 1647 2007-03-11 12:31:55Z remyoudompheng $

@@ -1,4 +1,83 @@
+Changes from 2.15 to 2.16
+
+-  fixed hinting instructions for digits in DejaVu Sans Oblique, Bold Oblique,
+   and Serif Book to not change glyph width (by Eugeniy  Meshcheryakov)
+- added instructions for U+0404, U+0411, U+0413, U+0414, U+0417-U+041B, U+041F,
+  U+0423, U+0424, U+0426-U+0429, U+042C, U+042E, U+042F, U+0490 in Serif Bold
+  (by Eugeniy  Meshcheryakov)
+- added U+0220 and Eng.alt to Serif fonts (by Denis Jacquerye)
+- added U+232C, U+2394, U+23E3 to Sans fonts (by John Karp)
+- added U+230C-U+230F, U+231C-U+231F to Sans fonts, fixing bug:9547
+  (by John Karp)
+- adjusted dot below, dot above, dieresis above, dieresis below in Sans fonts
+  (by Denis Jacquerye)
+- added U+2300, U+2301, U+2303, U+2304, U+2305, U+2307, U+2326, U+2327, U+232B,
+  arrow.base to Sans fonts (by John Karp)
+- adjusted dot and dieresis below and above in Serif fonts (by Denis Jacquerye)
+- added U+1E1C-U+1E1D to Serif fonts (by Denis Jacquerye)
+- added U+22BE, U+22BF (by Wesley Transue)
+- added U+2324; modified U+2325: more standard proportions, and matches U+2324 
+  and U+2387; added U+2387 : flipped U+2325 with standard arrowhead 
+  (by John Karp)
+- added Lao digits U+0ED0-0ED7, U+0ED9 (by Remy Oudompheng)
+- added to Mono in Arabic block : U+060C, U+0615, U+061B, U+061F, 
+  U+0621-U+063A, U+0640-0655, U+065A, U+0660-066F, U+0674, U+0679-0687, U+0691, 
+  U+0692, U+0698, U+06A1, U+06A4, U+06A9, U+06AF, U+06B5, U+06BA, U+06BE, 
+  U+06C6, U+06CC, U+06CE, U+06D5, U+06F0-06F9 (by Remy Oudompheng)
+- added to Mono in Arabic Presentations Forms-A : U+FB52-FB81, U+FB8A-FB95, 
+  U+FB9E, U+FB9F, U+FBAA-FBAD, U+FBE8, U+FBE9, U+FBFC-FBFF (by Remy Oudompheng)
+- added to Mono in Arabic Presentations Forms-B : U+FE70-FE74, U+FE76-FEFC, 
+  U+FEFF (by Remy Oudompheng)
+- added U+05BA, U+05BE, U+05F3, U+05F4, U+FB1E, U+FB21-U+FB28, U+FB4F to Sans 
+  (by Eugeniy  Meshcheryakov)
+- added U+2102 to Mono (by Eugeniy  Meshcheryakov)
+- added U+2983-U+2984 to Sans (by Gee Fung Sit)
+- added U+2A2F to Sans, Serif and Mono (by Gee Fung Sit)
+- added U+2373-2375, U+237A to Sans (by John Karp)
+- converted kern pairs to kern classes with Tavmjong Bah's scripts 
+  (by Denis Jacquerye)
+- set ScriptLang of kerning classes to just latn because of Pango bug
+  (by Denis Jacquerye)
+- added DNK to ScriptLang latn otherwise it is excluded, and SRB and MDK to
+  cyrl (by Denis Jacquerye)
+- removed flag 0x80 in generate.pe, otherwise it generates kerning tables some
+  systems don't like; thus loosing Apple tables (by Denis Jacquerye)
+- removed ligature for precomposed legacy characters of Sans Oblique fonts
+  (by Denis Jacquerye)
+- added bearings to en dash U+2013, em dash U+2014 and figure dash U+2012
+  by making dashes shorter, preserving character width (by Denis Jacquerye)
+- reduced U+031C, U+0325 (ring below), U+0339 to be entirely visible; 
+  added instructions in Sans Book; changed U+1e00-U+1e01 to use new ring below
+  (by Denis Jacquerye)
+- adjusted circumflex below on U+1E12-U+1E13, U+1E18-U+1E19, U+1E3C-U+1E3D,
+  U+1E4A-U+1E4B, U+1E70-U+1E71, U+1E76-U+1E77 in Sans fonts (by Denis Jacquerye)
+- Added U+0ED4, U+0ED5 to DejaVu Sans (by Remy Oudompheng)
+- Lao-specific anchors (by Remy Oudompheng)
+- added alternate I to match the small capital in Sans (by Gee Fung Sit)
+
+Changes from 2.14 to 2.15
+
+- improved hinting in Sans Oblique to deal with some spacing and inconsistency
+  issues (by Ben Laenen)
+- added anchors to Mono Book, and added GPOS rules for combining diacritics to
+  show up as zero width glyphs (by Ben Laenen)
+- removed U+F21C (PUA), it was copy of U+2C64 from Latin Extended C (by Eugeniy
+  Meshcheryakov)
+- added U+27E6-U+27E7 to Sans (by Gee Fung Sit)
+- added U+1407, U+1409, U+140C-U+141B, U+141D-U+1425, U+1427-U+142E,
+  U+1435-U+1438, U+143A-U+1449, U+1452, U+1454, U+1457-U+1465, U+1467-U+146A,
+  U+1471, U+1474-U+1482, U+1484-U+1488, U+148F, U+1492, U+14A0, U+14A2, U+14A9,
+  U+14AC-U+14BA, U+14BC, U+14BD, U+14C6, U+14C9-U+14CF, U+14D1, U+14D2, U+14D9,
+  U+14DC-U+14E9, U+14EC, U+14F3, U+14F6-U+1504, U+1506, U+1507, U+1510-U+1525,
+  U+152C, U+152F-U+153D, U+1540, U+1541, U+154E, U+154F, U+1552, U+155B, U+155C,
+  U+1568, U+1569, U+1574-U+157B, U+157D, U+15A7-U+15AE, U+1646, U+1647 (by
+  Eugeniy Meshcheryakov)
+- fixed several contours to not intersect, use horizontal or vertical tangents,
+  use integer coordinates, etc in Sans Book (by Denis Jacquerye)
+- added U+0496-U+0497 in Serif (by Andrey V. Panov)
+
 Changes from 2.13 to 2.14
+
 - added Philippine peso glyph U+20B1 (by Clayborne Arevalo)
 - made U+2012 have the same width as digits, according to Unicode 5.0, 
   page 206 (by Roozbeh Pournader)
@@ -10,7 +89,7 @@ Changes from 2.13 to 2.14
   U+0268 (Sans ExtraLight, Serif and Serif Condensed), and U+029D (Serif 
   and Serif Condensed) respect the Soft_Dotted property (by Roozbeh 
   Pournader)
-- added U+223E, U+223F, U+2240, U+22C2, U+22C3 to Sans (by Rémy Oudompheng)
+- added U+223E, U+223F, U+2240, U+22C2, U+22C3 to Sans (by Remy Oudompheng)
 - added U+203D to Serif (by Gee Fung Sit)
 - added zero-width glyphs for U+2061-U+2063 to Sans and Serif (by Gee 
   Fung Sit)
@@ -18,7 +97,7 @@ Changes from 2.13 to 2.14
   (by Ben Laenen)
 - added Lao consonants U+0E81, U+0E82, U+0E84, U+0E87, U+0E88, U+0E8A, 
   U+0E8D, U+0E94-0E97, U+0E99-0E9F, U+0EA1-0EA3, U+0EA5, U+0EA7, U+0EAA, 
-  U+0EAB, U+0EAD-0EAF to Sans Mono (by Rémy Oudompheng)
+  U+0EAB, U+0EAD-0EAF to Sans Mono (by Remy Oudompheng)
 - added U+0200-U+0217, U+0226-U+0229, U+02F3, U+1E00-U+1E07, 
   U+1E0A-U+1E0B, U+1E18-U+1E1F, U+1E22-U+1E23, U+1E28-U+1E2D, 
   U+1E3A-U+1E3B, U+1E40, U+1E48-U+1E49, U+1E56, U+1E58-U+1E59, 
@@ -54,6 +133,7 @@ Changes from 2.13 to 2.14
   U+2388-U+238B, U+2395 in Mono (by Ben Laenen)
 
 Changes from 2.12 to 2.13
+
 - adjusted U+0198B, U+01B3-U+01B4 in Sans, hinted U+01B4 in Sans Book 
   (by Denis Jacquerye)
 - added U+27F0-U+27FF, U+2906-U+2907, U+290A-U+290B, U+2940-U+2941 to Sans 
@@ -164,9 +244,9 @@ Changes from 2.9 to 2.10:
 - added Lao glyphs : U+0E81-0E82, U+E084, U+0E87-0E88, U+0E8A, U+0E8D, 
   U+0E94-0E97, U+0E99-0E9F, U+0EA1-0EA3, U+0EA5, U+0EA7, U+0EAA-0EAB, 
   U+0EAD-0EB9, U+0EBB-0EBD, U+0EC0-0EC4, U+0EC6, U+0EC8-0ECD, U+0EDC-0EDD 
-  (by Rémy Oudompheng)
+  (by Remy Oudompheng)
 - fixed U+0193 not showing in Windows (bug #7897) (by Ben Laenen)
-- changes to U+222B-222D in Sans Mono (by Rémy Oudompheng)
+- changes to U+222B-222D in Sans Mono (by Remy Oudompheng)
 - ported the three remaining currency symbols from Arev (U+20B0, 
   U+20B2-U+20B3), and replaced one (U+20AF) in Sans (by Lars Naesbye 
   Christensen)
@@ -763,4 +843,4 @@ Changes from 0.9 to 0.9.1:
 - proper caron shape for dcaron and tcaron
 - minor visual changes
 
-$Id: NEWS 1507 2007-01-21 16:47:57Z moyogo $
+$Id: NEWS 1718 2007-04-01 15:30:22Z moyogo $
