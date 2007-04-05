@@ -1,139 +1,145 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2002,2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/fs_rec/ntfs.c
- * PURPOSE:          Filesystem recognizer driver
- * PROGRAMMER:       Eric Kohl
+ * PROJECT:          ReactOS File System Recognizer
+ * FILE:             drivers/filesystems/fs_rec/ntfs.c
+ * PURPOSE:          NTFS Recognizer
+ * PROGRAMMER:       Alex Ionescu (alex.ionescu@reactos.org)
+ *                   Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
 
+#include "fs_rec.h"
 #define NDEBUG
 #include <debug.h>
 
-#include "fs_rec.h"
-
-
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS
-FsRecIsNtfsVolume(IN PDEVICE_OBJECT DeviceObject)
+BOOLEAN
+NTAPI
+FsRecIsNtfsVolume(IN PPACKED_BOOT_SECTOR BootSector,
+                  IN ULONG BytesPerSector,
+                  IN PLARGE_INTEGER  NumberOfSectors)
 {
-  DISK_GEOMETRY DiskGeometry;
-  PUCHAR Buffer;
-  ULONG Size;
-  NTSTATUS Status;
+    PAGED_CODE();
+    BOOLEAN Result;
 
-  Size = sizeof(DISK_GEOMETRY);
-  Status = FsRecDeviceIoControl(DeviceObject,
-				IOCTL_DISK_GET_DRIVE_GEOMETRY,
-				NULL,
-				0,
-				&DiskGeometry,
-				&Size);
-  if (!NT_SUCCESS(Status))
+    /* Assume success */
+    Result = TRUE;
+
+    if ((BootSector->Oem[0] == 'N') &&
+        (BootSector->Oem[1] == 'T') &&
+        (BootSector->Oem[2] == 'F') &&
+        (BootSector->Oem[3] == 'S') &&
+        (BootSector->Oem[4] == ' ') &&
+        (BootSector->Oem[5] == ' ') &&
+        (BootSector->Oem[6] == ' ') &&
+        (BootSector->Oem[7] == ' '))
     {
-      DPRINT("FsRecDeviceIoControl() failed (Status %lx)\n", Status);
-      return(Status);
+        /* Fail */
+        Result = FALSE;
     }
 
-  DPRINT("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
-  Buffer = ExAllocatePool(NonPagedPool,
-			  DiskGeometry.BytesPerSector);
-  if (Buffer == NULL)
-    {
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-  Status = FsRecReadSectors(DeviceObject,
-			    0, /* Partition boot sector */
-			    1,
-			    DiskGeometry.BytesPerSector,
-			    Buffer);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("FsRecReadSectors() failed (Status %lx)\n", Status);
-      ExFreePool(Buffer);
-      return(Status);
-    }
-
-  DPRINT("NTFS-identifier: [%.8s]\n", &Buffer[3]);
-  if (RtlCompareMemory(&Buffer[3], "NTFS    ", 8) == 8)
-    {
-      Status = STATUS_SUCCESS;
-    }
-  else
-    {
-      Status = STATUS_UNRECOGNIZED_VOLUME;
-    }
-
-  ExFreePool(Buffer);
-
-  return(Status);
+    /* Return the result */
+    return Result;
 }
 
-
 NTSTATUS
+NTAPI
 FsRecNtfsFsControl(IN PDEVICE_OBJECT DeviceObject,
-		   IN PIRP Irp)
+                   IN PIRP Irp)
 {
-  PIO_STACK_LOCATION Stack;
-  static UNICODE_STRING RegistryPath =
-    RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Ntfs");
-  NTSTATUS Status;
+    PIO_STACK_LOCATION Stack;
+    NTSTATUS Status;
+    PDEVICE_OBJECT MountDevice;
+    PPACKED_BOOT_SECTOR Bpb = NULL;
+    ULONG SectorSize;
+    LARGE_INTEGER Offset = {{0}}, Offset2, Offset3, SectorCount;
+    PAGED_CODE();
 
-  Stack = IoGetCurrentIrpStackLocation(Irp);
-
-  switch (Stack->MinorFunction)
+    /* Get the I/O Stack and check the function type */
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    switch (Stack->MinorFunction)
     {
-      case IRP_MN_MOUNT_VOLUME:
-	DPRINT("NTFS: IRP_MN_MOUNT_VOLUME\n");
+        case IRP_MN_MOUNT_VOLUME:
 
-	Status = FsRecIsNtfsVolume(Stack->Parameters.MountVolume.DeviceObject);
-	if (NT_SUCCESS(Status))
-	  {
-	    DPRINT("Identified NTFS volume\n");
-	    Status = STATUS_FS_DRIVER_REQUIRED;
-	  }
-	break;
+            /* Assume failure */
+            Status = STATUS_UNRECOGNIZED_VOLUME;
 
-      case IRP_MN_LOAD_FILE_SYSTEM:
-	DPRINT("NTFS: IRP_MN_LOAD_FILE_SYSTEM\n");
-	Status = ZwLoadDriver(&RegistryPath);
-	if (!NT_SUCCESS(Status))
-	  {
-	    DPRINT("ZwLoadDriver failed (Status %x)\n", Status);
-	  }
-	else
-	  {
-	    IoUnregisterFileSystem(DeviceObject);
-	  }
-	break;
+            /* Get the device object and request the sector size */
+            MountDevice = Stack->Parameters.MountVolume.DeviceObject;
+            if ((FsRecGetDeviceSectorSize(MountDevice, &SectorSize)) &&
+                (FsRecGetDeviceSectors(MountDevice, SectorSize, &SectorCount)))
+            {
+                /* Setup other offsets to try */
+                Offset2.QuadPart = SectorCount.QuadPart >> 1;
+                Offset2.QuadPart *= SectorSize;
+                Offset3.QuadPart = (SectorCount.QuadPart - 1) * SectorSize;
 
-      default:
-	DPRINT("NTFS: Unknown minor function %lx\n", Stack->MinorFunction);
-	Status = STATUS_INVALID_DEVICE_REQUEST;
-	break;
+                /* Try to read the BPB */
+                if (FsRecReadBlock(MountDevice,
+                                   &Offset,
+                                   512,
+                                   SectorSize,
+                                   (PVOID)&Bpb,
+                                   NULL))
+                {
+                    /* Check if it's an actual FAT volume */
+                    if (FsRecIsNtfsVolume(Bpb, SectorSize, &SectorCount))
+                    {
+                        /* It is! */
+                        Status = STATUS_FS_DRIVER_REQUIRED;
+                    }
+                }
+                else if (FsRecReadBlock(MountDevice,
+                                        &Offset2,
+                                        512,
+                                        SectorSize,
+                                        (PVOID)&Bpb,
+                                        NULL))
+                {
+                    /* Check if it's an actual FAT volume */
+                    if (FsRecIsNtfsVolume(Bpb, SectorSize, &SectorCount))
+                    {
+                        /* It is! */
+                        Status = STATUS_FS_DRIVER_REQUIRED;
+                    }
+                }
+                else if (FsRecReadBlock(MountDevice,
+                                        &Offset3,
+                                        512,
+                                        SectorSize,
+                                        (PVOID)&Bpb,
+                                        NULL))
+                {
+                    /* Check if it's an actual FAT volume */
+                    if (FsRecIsNtfsVolume(Bpb, SectorSize, &SectorCount))
+                    {
+                        /* It is! */
+                        Status = STATUS_FS_DRIVER_REQUIRED;
+                    }
+                }
+
+                /* Free the boot sector if we have one */
+                ExFreePool(Bpb);
+            }
+            break;
+
+        case IRP_MN_LOAD_FILE_SYSTEM:
+
+            /* Load the file system */
+            Status = FsRecLoadFileSystem(DeviceObject,
+                                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Ntfs");
+            break;
+
+        default:
+
+            /* Invalid request */
+            Status = STATUS_INVALID_DEVICE_REQUEST;
     }
-  return(Status);
+
+    /* Return Status */
+    return Status;
 }
 
 /* EOF */

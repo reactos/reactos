@@ -1,162 +1,224 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             services/fs/fs_rec/blockdev.c
- * PURPOSE:          Filesystem recognizer driver
- * PROGRAMMER:       Eric Kohl
+ * PROJECT:          ReactOS File System Recognizer
+ * FILE:             drivers/filesystems/fs_rec/blockdev.c
+ * PURPOSE:          Generic Helper Functions
+ * PROGRAMMER:       Alex Ionescu (alex.ionescu@reactos.org)
+ *                   Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
 
+#include "fs_rec.h"
 #define NDEBUG
 #include <debug.h>
 
-#include "fs_rec.h"
-
-
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS
-FsRecReadSectors(IN PDEVICE_OBJECT DeviceObject,
-		 IN ULONG DiskSector,
-		 IN ULONG SectorCount,
-		 IN ULONG SectorSize,
-		 IN OUT PUCHAR Buffer)
+BOOLEAN
+NTAPI
+FsRecGetDeviceSectors(IN PDEVICE_OBJECT DeviceObject,
+                      IN ULONG SectorSize,
+                      OUT PLARGE_INTEGER SectorCount)
 {
-  IO_STATUS_BLOCK IoStatus;
-  LARGE_INTEGER Offset;
-  ULONG BlockSize;
-  PKEVENT Event;
-  PIRP Irp;
-  NTSTATUS Status;
+    PARTITION_INFORMATION PartitionInfo;
+    IO_STATUS_BLOCK IoStatusBlock;
+    KEVENT Event;
+    PIRP Irp;
+    NTSTATUS Status;
+    ULONG Remainder;
+    PAGED_CODE();
 
-  Event = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
-  if (Event == NULL)
+    /* Only needed for disks */
+    if (DeviceObject->DeviceType != FILE_DEVICE_DISK) return FALSE;
+
+    /* Build the information IRP */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_PARTITION_INFO,
+                                        DeviceObject,
+                                        NULL,
+                                        0,
+                                        &PartitionInfo,
+                                        sizeof(PARTITION_INFORMATION),
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+    if (!Irp) return FALSE;
+
+    /* Override verification */
+    IoGetNextIrpStackLocation(Irp)->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+
+    /* Do the request */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
     {
-      return(STATUS_INSUFFICIENT_RESOURCES);
+        /* Wait for completion */
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
     }
 
-  KeInitializeEvent(Event,
-		    NotificationEvent,
-		    FALSE);
+    /* Fail if we couldn't get the data */
+    if (!NT_SUCCESS(Status)) return FALSE;
 
-  Offset.QuadPart = (LONGLONG)DiskSector * (LONGLONG)SectorSize;
-  BlockSize = SectorCount * SectorSize;
-
-  DPRINT("FsrecReadSectors(DeviceObject %x, DiskSector %d, Buffer %x)\n",
-	 DeviceObject, DiskSector, Buffer);
-  DPRINT("Offset %I64x BlockSize %ld\n",
-	 Offset.QuadPart,
-	 BlockSize);
-
-  DPRINT("Building synchronous FSD Request...\n");
-  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-				     DeviceObject,
-				     Buffer,
-				     BlockSize,
-				     &Offset,
-				     Event,
-				     &IoStatus);
-  if (Irp == NULL)
-    {
-      DPRINT("IoBuildSynchronousFsdRequest failed\n");
-      ExFreePool(Event);
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-  DPRINT("Calling IO Driver... with irp %x\n", Irp);
-  Status = IoCallDriver(DeviceObject, Irp);
-  if (Status == STATUS_PENDING)
-    {
-      DPRINT("Operation pending\n");
-      KeWaitForSingleObject(Event, Suspended, KernelMode, FALSE, NULL);
-      Status = IoStatus.Status;
-    }
-
-  ExFreePool(Event);
-
-  return(STATUS_SUCCESS);
+    /* Otherwise, return the number of sectors */
+    *SectorCount = RtlExtendedLargeIntegerDivide(PartitionInfo.PartitionLength,
+                                                 SectorSize,
+                                                 &Remainder);
+    return TRUE;
 }
 
-
-NTSTATUS
-FsRecDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
-		     IN ULONG ControlCode,
-		     IN PVOID InputBuffer,
-		     IN ULONG InputBufferSize,
-		     IN OUT PVOID OutputBuffer,
-		     IN OUT PULONG OutputBufferSize)
+BOOLEAN
+NTAPI
+FsRecGetDeviceSectorSize(IN PDEVICE_OBJECT DeviceObject,
+                         OUT PULONG SectorSize)
 {
-  ULONG BufferSize = 0;
-  PKEVENT Event;
-  PIRP Irp;
-  IO_STATUS_BLOCK IoStatus;
-  NTSTATUS Status;
+    DISK_GEOMETRY DiskGeometry;
+    IO_STATUS_BLOCK IoStatusBlock;
+    KEVENT Event;
+    PIRP Irp;
+    NTSTATUS Status;
+    ULONG ControlCode;
+    PAGED_CODE();
 
-  if (OutputBufferSize != NULL)
+    /* Check what device we have */
+    switch (DeviceObject->DeviceType)
     {
-      BufferSize = *OutputBufferSize;
+        case FILE_DEVICE_CD_ROM:
+
+            /* Use the CD IOCTL */
+            ControlCode = IOCTL_CDROM_GET_DRIVE_GEOMETRY;
+            break;
+
+        case FILE_DEVICE_DISK:
+
+            /* Use the Disk IOCTL */
+            ControlCode = IOCTL_DISK_GET_DRIVE_GEOMETRY;
+            break;
+
+        default:
+
+            /* Invalid device type */
+            return FALSE;
     }
 
-  Event = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
-  if (Event == NULL)
+    /* Build the information IRP */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+    Irp = IoBuildDeviceIoControlRequest(ControlCode,
+                                        DeviceObject,
+                                        NULL,
+                                        0,
+                                        &DiskGeometry,
+                                        sizeof(DISK_GEOMETRY),
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+    if (!Irp) return FALSE;
+
+    /* Override verification */
+    IoGetNextIrpStackLocation(Irp)->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+
+    /* Do the request */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
     {
-      return(STATUS_INSUFFICIENT_RESOURCES);
+        /* Wait for completion */
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
     }
 
-  KeInitializeEvent(Event, NotificationEvent, FALSE);
+    /* Fail if we couldn't get the data */
+    if (!NT_SUCCESS(Status)) return FALSE;
 
-  DPRINT("Building device I/O control request ...\n");
-  Irp = IoBuildDeviceIoControlRequest(ControlCode,
-				      DeviceObject,
-				      InputBuffer,
-				      InputBufferSize,
-				      OutputBuffer,
-				      BufferSize,
-				      FALSE,
-				      Event,
-				      &IoStatus);
-  if (Irp == NULL)
-    {
-      DPRINT("IoBuildDeviceIoControlRequest() failed\n");
-      ExFreePool(Event);
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-  DPRINT("Calling IO Driver... with irp %x\n", Irp);
-  Status = IoCallDriver(DeviceObject, Irp);
-  if (Status == STATUS_PENDING)
-    {
-      KeWaitForSingleObject(Event, Suspended, KernelMode, FALSE, NULL);
-      Status = IoStatus.Status;
-    }
-
-  if (OutputBufferSize != NULL)
-    {
-      *OutputBufferSize = IoStatus.Information;
-    }
-
-  ExFreePool(Event);
-
-  return(Status);
+    /* Return the sector size if it's valid */
+    if (!DiskGeometry.BytesPerSector) return FALSE;
+    *SectorSize = DiskGeometry.BytesPerSector;
+    return TRUE;
 }
 
-/* EOF */
+BOOLEAN
+NTAPI
+FsRecReadBlock(IN PDEVICE_OBJECT DeviceObject,
+               IN PLARGE_INTEGER Offset,
+               IN ULONG Length,
+               IN ULONG SectorSize,
+               IN OUT PVOID *Buffer,
+               OUT PBOOLEAN DeviceError OPTIONAL)
+{
+    IO_STATUS_BLOCK IoStatusBlock;
+    KEVENT Event;
+    PIRP Irp;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Assume failure */
+    if (DeviceError) *DeviceError = FALSE;
+
+    /* Check if the caller requested too little */
+    if (Length < SectorSize)
+    {
+        /* Read at least the sector size */
+        Length = SectorSize;
+    }
+    else
+    {
+        /* Otherwise, just round up the request to sector size */
+        Length = ROUND_UP(Length, SectorSize);
+    }
+
+    /* Check if the caller gave us a buffer */
+    if (!*Buffer)
+    {
+        /* He didn't, allocate one */
+        *Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                        PAGE_ROUND_UP(Length),
+                                        FSREC_TAG);
+        if (!*Buffer) return FALSE;
+    }
+
+    /* Build the IRP */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+                                       DeviceObject,
+                                       *Buffer,
+                                       Length,
+                                       Offset,
+                                       &Event,
+                                       &IoStatusBlock);
+    if (!Irp) return FALSE;
+
+    /* Override verification */
+    IoGetNextIrpStackLocation(Irp)->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+
+    /* Do the request */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait for completion */
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    /* Check if we couldn't get the data */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Check if caller wanted to know about the device and fail */
+        if (DeviceError) *DeviceError = TRUE;
+        return FALSE;
+    }
+
+    /* All went well */
+    return TRUE;
+}
+

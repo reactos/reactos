@@ -1,254 +1,362 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2002,2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/fs_rec/fs_rec.c
- * PURPOSE:          Filesystem recognizer driver
- * PROGRAMMER:       Eric Kohl
+ * PROJECT:          ReactOS File System Recognizer
+ * FILE:             drivers/filesystems/fs_rec/fs_rec.c
+ * PURPOSE:          Main Driver Entrypoint and FS Registration
+ * PROGRAMMER:       Alex Ionescu (alex.ionescu@reactos.org)
+ *                   Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
 
+#include "fs_rec.h"
 #define NDEBUG
 #include <debug.h>
 
-#include "fs_rec.h"
-
+PKEVENT FsRecLoadSync;
 
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS STDCALL
-FsRecCreate(IN PDEVICE_OBJECT DeviceObject,
-	    IN PIRP Irp)
+NTSTATUS
+NTAPI
+FsRecLoadFileSystem(IN PDEVICE_OBJECT DeviceObject,
+                    IN PWCHAR DriverServiceName)
 {
-  NTSTATUS Status;
+    UNICODE_STRING DriverName;
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    NTSTATUS Status = STATUS_IMAGE_ALREADY_LOADED;
+    PAGED_CODE();
 
-
-  Status = STATUS_SUCCESS;
-
-
-  Irp->IoStatus.Status = Status;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
-
-  return(Status);
-}
-
-
-static NTSTATUS STDCALL
-FsRecClose(IN PDEVICE_OBJECT DeviceObject,
-	   IN PIRP Irp)
-{
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
-
-  return(STATUS_SUCCESS);
-}
-
-
-static NTSTATUS STDCALL
-FsRecFsControl(IN PDEVICE_OBJECT DeviceObject,
-	       IN PIRP Irp)
-{
-  PDEVICE_EXTENSION DeviceExt;
-  NTSTATUS Status;
-
-  DeviceExt = DeviceObject->DeviceExtension;
-  switch (DeviceExt->FsType)
+    /* Make sure we haven't already been called */
+    if (DeviceExtension->State != Loaded)
     {
-      case FS_TYPE_VFAT:
-	Status = FsRecVfatFsControl(DeviceObject, Irp);
-	break;
+        /* Acquire the load lock */
+        KeWaitForSingleObject(FsRecLoadSync,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        KeEnterCriticalRegion();
 
-      case FS_TYPE_NTFS:
-	Status = FsRecNtfsFsControl(DeviceObject, Irp);
-	break;
+        /* Make sure we're active */
+        if (DeviceExtension->State == Pending)
+        {
+            /* Load the FS driver */
+            RtlInitUnicodeString(&DriverName, DriverServiceName);
+            Status = ZwLoadDriver(&DriverName);
 
-      case FS_TYPE_CDFS:
-	Status = FsRecCdfsFsControl(DeviceObject, Irp);
-	break;
+            /* Loop all the linked recognizer objects */
+            while (DeviceExtension->State != Unloading)
+            {
+                /* Set them to the unload state */
+                DeviceExtension->State = Unloading;
 
-      case FS_TYPE_UDFS:
-	Status = FsRecUdfsFsControl(DeviceObject, Irp);
-	break;
+                /* Go to the next one */
+                DeviceObject = DeviceExtension->Alternate;
+                DeviceExtension = DeviceObject->DeviceExtension;
+            }
+        }
 
-      default:
-	Status = STATUS_INVALID_DEVICE_REQUEST;
+        /* Make sure that we haven't already loaded the FS */
+        if (DeviceExtension->State != Loaded)
+        {
+            /* Unregiser us, and set us as loaded */
+            IoUnregisterFileSystem(DeviceObject);
+            DeviceExtension->State = Loaded;
+        }
+
+        /* Release the lock */
+        KeSetEvent(FsRecLoadSync, 0, FALSE);
+        KeLeaveCriticalRegion();
     }
 
-  Irp->IoStatus.Status = Status;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
-
-  return(Status);
+    /* Return */
+    return Status;
 }
 
+NTSTATUS
+STDCALL
+FsRecCreate(IN PDEVICE_OBJECT DeviceObject,
+            IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
+    NTSTATUS Status;
+    PAGED_CODE();
 
-static VOID STDCALL
+    /* Make sure we have a file name */
+    if (IoStack->FileObject->FileName.Length)
+    {
+        /* Fail the request */
+        Status = STATUS_OBJECT_PATH_NOT_FOUND;
+    }
+    else
+    {
+        /* Let it through */
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Complete the IRP */
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = FILE_OPENED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+STDCALL
+FsRecClose(IN PDEVICE_OBJECT DeviceObject,
+           IN PIRP Irp)
+{
+    PAGED_CODE();
+
+    /* Just complete the IRP and return success */
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+STDCALL
+FsRecFsControl(IN PDEVICE_OBJECT DeviceObject,
+               IN PIRP Irp)
+{
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Check the file system type */
+    switch (DeviceExtension->FsType)
+    {
+        case FS_TYPE_VFAT:
+
+            /* Send FAT command */
+            Status = FsRecVfatFsControl(DeviceObject, Irp);
+            break;
+
+        case FS_TYPE_NTFS:
+
+            /* Send NTFS command */
+            Status = FsRecNtfsFsControl(DeviceObject, Irp);
+            break;
+
+        case FS_TYPE_CDFS:
+
+            /* Send CDFS command */
+            Status = FsRecCdfsFsControl(DeviceObject, Irp);
+            break;
+
+        case FS_TYPE_UDFS:
+
+            /* Send UDFS command */
+            Status = FsRecUdfsFsControl(DeviceObject, Irp);
+            break;
+
+        default:
+
+            /* Unrecognized FS */
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    /* Complete the IRP */
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+VOID
+STDCALL
 FsRecUnload(IN PDRIVER_OBJECT DriverObject)
 {
-  PDEVICE_OBJECT NextDevice;
-  PDEVICE_OBJECT ThisDevice;
+    PAGED_CODE();
 
-  /* Delete all remaining device objects */
-  NextDevice = DriverObject->DeviceObject;
-  while (NextDevice != NULL)
+    /* Loop all driver device objects */
+    while (DriverObject->DeviceObject)
     {
-      ThisDevice = NextDevice;
-      NextDevice = NextDevice->NextDevice;
-      IoDeleteDevice(ThisDevice);
+        /* Delete this device */
+        IoDeleteDevice(DriverObject->DeviceObject);
     }
+
+    /* Free the lock */
+    ExFreePool(FsRecLoadSync);
 }
 
-
-static NTSTATUS
-FsRecRegisterFs(PDRIVER_OBJECT DriverObject,
-		PCWSTR FsName,
-		PCWSTR RecognizerName,
-		ULONG DeviceType,
-		ULONG FsType)
+NTSTATUS
+STDCALL
+FsRecRegisterFs(IN PDRIVER_OBJECT DriverObject,
+                IN PDEVICE_OBJECT ParentObject OPTIONAL,
+                OUT PDEVICE_OBJECT *NewDeviceObject OPTIONAL,
+                IN PCWSTR FsName,
+                IN PCWSTR RecognizerName,
+                IN ULONG FsType,
+                IN DEVICE_TYPE DeviceType)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatus;
-  PDEVICE_EXTENSION DeviceExt;
-  UNICODE_STRING DeviceName;
-  UNICODE_STRING FileName;
-  PDEVICE_OBJECT DeviceObject;
-  HANDLE FileHandle;
-  NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatus;
+    PDEVICE_EXTENSION DeviceExtension;
+    UNICODE_STRING DeviceName;
+    PDEVICE_OBJECT DeviceObject;
+    HANDLE FileHandle;
+    NTSTATUS Status;
 
-  RtlInitUnicodeString(&FileName,
-		       FsName);
+    /* Assume failure */
+    if (NewDeviceObject) *NewDeviceObject = NULL;
 
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &FileName,
-			     OBJ_CASE_INSENSITIVE,
-			     0,
-			     NULL);
+    /* Setup the attributes */
+    RtlInitUnicodeString(&DeviceName, FsName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DeviceName,
+                               OBJ_CASE_INSENSITIVE,
+                               0,
+                               NULL);
 
-  Status = ZwCreateFile(&FileHandle,
-			0x100000,
-			&ObjectAttributes,
-			&IoStatus,
-			NULL,
-			0,
-			FILE_SHARE_READ | FILE_SHARE_WRITE,
-			FILE_OPEN,
-			0,
-			NULL,
-			0);
-  if (NT_SUCCESS(Status))
+    /* Open the device */
+    Status = ZwCreateFile(&FileHandle,
+                          SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatus,
+                          NULL,
+                          0,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          FILE_OPEN,
+                          0,
+                          NULL,
+                          0);
+    if (NT_SUCCESS(Status))
     {
-      ZwClose(FileHandle);
-      return(STATUS_IMAGE_ALREADY_LOADED);
+        /* We suceeded, close the handle */
+        ZwClose(FileHandle);
+    }
+    else if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        /* We failed with anything else then what we want to fail with */
+        Status = STATUS_SUCCESS;
     }
 
-  /* Create recognizer device object */
-  RtlInitUnicodeString(&DeviceName,
-		       RecognizerName);
+    /* If we succeeded, there's no point in trying this again */
+    if (NT_SUCCESS(Status)) return STATUS_IMAGE_ALREADY_LOADED;
 
-  Status = IoCreateDevice(DriverObject,
-			  sizeof(DEVICE_EXTENSION),
-			  &DeviceName,
-			  DeviceType,
-			  0,
-			  FALSE,
-			  &DeviceObject);
-
-  if (NT_SUCCESS(Status))
+    /* Create recognizer device object */
+    RtlInitUnicodeString(&DeviceName, RecognizerName);
+    Status = IoCreateDevice(DriverObject,
+                            sizeof(DEVICE_EXTENSION),
+                            &DeviceName,
+                            DeviceType,
+                            0,
+                            FALSE,
+                            &DeviceObject);
+    if (NT_SUCCESS(Status))
     {
-      DeviceExt = DeviceObject->DeviceExtension;
-      DeviceExt->FsType = FsType;
-      IoRegisterFileSystem(DeviceObject);
-      DPRINT("Created recognizer device '%wZ'\n", &DeviceName);
+        /* Get the device extension and set it up */
+        DeviceExtension = DeviceObject->DeviceExtension;
+        DeviceExtension->FsType = FsType;
+        DeviceExtension->State = Pending;
+
+        /* Do we have a parent? */
+        if (ParentObject)
+        {
+            /* Link it in */
+            DeviceExtension->Alternate =
+                ((PDEVICE_EXTENSION)ParentObject->DeviceExtension)->Alternate;
+            ((PDEVICE_EXTENSION)ParentObject->DeviceExtension)->Alternate =
+                DeviceObject;
+        }
+        else
+        {
+            /* Otherwise, we're the only one */
+            DeviceExtension->Alternate = DeviceObject;
+        }
+
+        /* Return the DO if needed */
+        if (NewDeviceObject) *NewDeviceObject = DeviceObject;
+
+        /* Register the file system */
+        IoRegisterFileSystem(DeviceObject);
     }
 
-  return(Status);
+    /* Return Status */
+    return Status;
 }
 
-
-NTSTATUS STDCALL
-DriverEntry(PDRIVER_OBJECT DriverObject,
-	    PUNICODE_STRING RegistryPath)
+NTSTATUS
+NTAPI
+DriverEntry(IN PDRIVER_OBJECT DriverObject,
+            IN PUNICODE_STRING RegistryPath)
 {
-  PCONFIGURATION_INFORMATION ConfigInfo;
-  ULONG DeviceCount;
-  NTSTATUS Status;
+    ULONG DeviceCount = 0;
+    NTSTATUS Status;
+    PDEVICE_OBJECT UdfsObject;
+    PAGED_CODE();
 
-  DPRINT("FileSystem recognizer 0.0.2\n");
+    /* Page the entire driver */
+    MmPageEntireDriver(DriverEntry);
 
-  DeviceCount = 0;
+    /* Allocate the lock */
+    FsRecLoadSync = ExAllocatePoolWithTag(NonPagedPool,
+                                          sizeof(KEVENT),
+                                          FSREC_TAG);
+    if (!FsRecLoadSync) return STATUS_INSUFFICIENT_RESOURCES;
 
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = FsRecCreate;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = FsRecClose;
-  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = FsRecClose;
-  DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = FsRecFsControl;
-  DriverObject->DriverUnload = FsRecUnload;
+    /* Initialize it */
+    KeInitializeEvent(FsRecLoadSync, SynchronizationEvent, TRUE);
 
-  ConfigInfo = IoGetConfigurationInformation();
+    /* Setup the major functions */
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = FsRecCreate;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = FsRecClose;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = FsRecClose;
+    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = FsRecFsControl;
+    DriverObject->DriverUnload = FsRecUnload;
 
-  if (ConfigInfo->CdRomCount > 0)
-    {
-      Status = FsRecRegisterFs(DriverObject,
-			       L"\\Cdfs",
-			       L"\\FileSystem\\CdfsRecognizer",
-			       FILE_DEVICE_CD_ROM_FILE_SYSTEM,
-			       FS_TYPE_CDFS);
-      if (NT_SUCCESS(Status))
-	{
-	  DeviceCount++;
-	}
+    /* Register CDFS */
+    Status = FsRecRegisterFs(DriverObject,
+                             NULL,
+                             NULL,
+                             L"\\Cdfs",
+                             L"\\FileSystem\\CdfsRecognizer",
+                             FS_TYPE_CDFS,
+                             FILE_DEVICE_CD_ROM_FILE_SYSTEM);
+    if (NT_SUCCESS(Status)) DeviceCount++;
 
-      Status = FsRecRegisterFs(DriverObject,
-			       L"\\Udfs",
-			       L"\\FileSystem\\UdfsRecognizer",
-			       FILE_DEVICE_CD_ROM_FILE_SYSTEM,
-			       FS_TYPE_UDFS);
-      if (NT_SUCCESS(Status))
-	{
-	  DeviceCount++;
-	}
-    }
+    /* Register UDFS for CDs */
+    Status = FsRecRegisterFs(DriverObject,
+                             NULL,
+                             &UdfsObject,
+                             L"\\UdfsCdRom",
+                             L"\\FileSystem\\UdfsCdRomRecognizer",
+                             FS_TYPE_UDFS,
+                             FILE_DEVICE_CD_ROM_FILE_SYSTEM);
+    if (NT_SUCCESS(Status)) DeviceCount++;
 
-  Status = FsRecRegisterFs(DriverObject,
-			   L"\\Fat",
-			   L"\\FileSystem\\FatRecognizer",
-			   FILE_DEVICE_DISK_FILE_SYSTEM,
-			   FS_TYPE_VFAT);
-  if (NT_SUCCESS(Status))
-    {
-      DeviceCount++;
-    }
+    /* Register UDFS for HDDs */
+    Status = FsRecRegisterFs(DriverObject,
+                             UdfsObject,
+                             NULL,
+                             L"\\UdfsDisk",
+                             L"\\FileSystem\\UdfsDiskRecognizer",
+                             FS_TYPE_UDFS,
+                             FILE_DEVICE_DISK_FILE_SYSTEM);
+    if (NT_SUCCESS(Status)) DeviceCount++;
 
-  Status = FsRecRegisterFs(DriverObject,
-			   L"\\Ntfs",
-			   L"\\FileSystem\\NtfsRecognizer",
-			   FILE_DEVICE_DISK_FILE_SYSTEM,
-			   FS_TYPE_NTFS);
-  if (NT_SUCCESS(Status))
-    {
-      DeviceCount++;
-    }
+    /* Register FAT */
+    Status = FsRecRegisterFs(DriverObject,
+                             NULL,
+                             NULL,
+                             L"\\Fat",
+                             L"\\FileSystem\\FatRecognizer",
+                             FS_TYPE_VFAT,
+                             FILE_DEVICE_DISK_FILE_SYSTEM);
+    if (NT_SUCCESS(Status)) DeviceCount++;
 
-  return((DeviceCount > 0) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
+    /* Register NTFS */
+    Status = FsRecRegisterFs(DriverObject,
+                             NULL,
+                             NULL,
+                             L"\\Ntfs",
+                             L"\\FileSystem\\NtfsRecognizer",
+                             FS_TYPE_NTFS,
+                             FILE_DEVICE_DISK_FILE_SYSTEM);
+    if (NT_SUCCESS(Status)) DeviceCount++;
+
+    /* Return appropriate Status */
+    return (DeviceCount > 0) ? STATUS_SUCCESS : STATUS_IMAGE_ALREADY_LOADED;
 }
 
 /* EOF */
