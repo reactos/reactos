@@ -847,4 +847,17 @@ NtGdiPatBlt(
    return ret;
 }
 
+VOID FASTCALL
+IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color)
+{
+  PGDIBRUSHOBJ BrushObject;
+
+  BrushObject = BRUSHOBJ_LockBrush(hBrush);
+  if (BrushObject->flAttrs & GDIBRUSH_IS_SOLID)
+  {
+      BrushObject->BrushAttr.lbColor = Color & 0xFFFFFF;
+  }
+  BRUSHOBJ_UnlockBrush(BrushObject);
+}
+
 /* EOF */

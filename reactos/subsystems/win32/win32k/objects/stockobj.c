@@ -177,14 +177,16 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
 
   for(i = 0; i < nColors; i++)
   {
-    if((*Elements) >= 0 && (*Elements) < NUM_SYSCOLORS)
+    if((UINT)(*Elements) < NUM_SYSCOLORS)
     {
       SysColors[*Elements] = *Colors;
-      /* FIXME - update the syscolor pens and brushes */
+      IntGdiSetSolidBrushColor(SysColorBrushes[*Elements], *Colors);
+      IntGdiSetSolidPenColor(SysColorPens[*Elements], *Colors);
     }
     Elements++;
     Colors++;
   }
+  UserPostMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
 
   return nColors > 0;
 }
@@ -263,7 +265,7 @@ IntGetSysColors(COLORREF *Colors, UINT nColors)
 DWORD FASTCALL
 IntGetSysColor(INT nIndex)
 {
-  return ((nIndex < 0) || (NUM_SYSCOLORS <= nIndex)) ? 0 : SysColors[nIndex];
+  return (NUM_SYSCOLORS <= (UINT)nIndex) ? 0 : SysColors[nIndex];
 }
 
 VOID FASTCALL
