@@ -502,17 +502,18 @@ NtGdiDdQueryDirectDrawObject(
         return FALSE;
     }
 
+    /* FIXME puD3dTextureFormats */
+
     _SEH_TRY
     {
-        ProbeForWrite(puNumHeaps,  sizeof(DWORD), 1);
-        *puNumHeaps = pDirectDraw->dwNumHeaps;
-
-        if ((pDirectDraw->pvmList != NULL) && (puvmList != NULL))
-        {
-            ProbeForWrite(puvmList, sizeof(VIDEOMEMORY) * pDirectDraw->dwNumHeaps, 1);
-            RtlCopyMemory( puvmList, pDirectDraw->pvmList, sizeof(VIDEOMEMORY) * pDirectDraw->dwNumHeaps);
-        }
-
+        /* Waring :
+         * In Windows 2000 puvmList and puNumHeaps does not export from 
+         * NtGdiDdQueryDirectDrawObject
+         * FIXME remove alloc code for puvmList and puNumHeaps in GDI32.dll 
+         * so I remove the puvmList code I wrote. See MSDN and my 
+         * private note about this matter, the private note will be in 
+         * my book as well when it comes.
+         */
         ProbeForWrite(puNumFourCC, sizeof(DWORD), 1);
         *puNumFourCC = pDirectDraw->dwNumFourCC;
 
