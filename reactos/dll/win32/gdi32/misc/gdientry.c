@@ -554,14 +554,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     RtlZeroMemory(&D3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS));
     RtlZeroMemory(CallbackFlags, sizeof(DWORD)*3);
 
-    /* Check if we got a list pointer */
-    if (pvmList)
-    {
-        /* Allocate memory for it */
-        VidMemList = LocalAlloc(LMEM_ZEROINIT,
-                                sizeof(VIDEOMEMORY) *
-                                pHalInfo->vmiData.dwNumHeaps);
-    }
+    pvmList = NULL;
 
     /* Do the query */
     if (!NtGdiDdQueryDirectDrawObject(GetDdHandle(pDirectDrawGlobal->hDD),
@@ -577,7 +570,6 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                                       pdwFourCC))
     {
         /* We failed, free the memory and return */
-        if (VidMemList) LocalFree(VidMemList);
         return FALSE;
     }
 
@@ -621,7 +613,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     pHalInfo->vmiData.dwTextureAlign = HalInfo.vmiData.dwTextureAlign;
     pHalInfo->vmiData.dwZBufferAlign = HalInfo.vmiData.dwZBufferAlign;
     pHalInfo->vmiData.dwAlphaAlign = HalInfo.vmiData.dwAlphaAlign;
-    pHalInfo->vmiData.dwNumHeaps = dwNumHeaps;
+    pHalInfo->vmiData.dwNumHeaps = 0;
     pHalInfo->vmiData.pvmList = pvmList;
 
     RtlCopyMemory( &pHalInfo->ddCaps, &HalInfo.ddCaps,sizeof(DDCORECAPS ));
@@ -783,33 +775,6 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
     /* FIXME: Check for D3D Buffer Callbacks */
 
-    /* Check if we have a video memory list */
-    if (VidMemList)
-    {
-        /* Start a loop here */
-        PVIDEOMEMORY VidMem = VidMemList;
-
-        /* Loop all the heaps we have */
-        while (dwNumHeaps--)
-        {
-            /* Copy from one format to the other */
-            pvmList->dwFlags = VidMem->dwFlags;
-            pvmList->fpStart = VidMem->fpStart;
-            pvmList->fpEnd = VidMem->fpEnd;
-            pvmList->ddsCaps = VidMem->ddsCaps;
-            pvmList->ddsCapsAlt = VidMem->ddsCapsAlt;
-            pvmList->dwHeight = VidMem->dwHeight;
-
-            /* Advance in both structures */
-            pvmList++;
-            VidMem++;
-        }
-
-        /* Free our structure */
-        LocalFree(VidMemList);
-    }
-
-  
   return TRUE;
 }
 
