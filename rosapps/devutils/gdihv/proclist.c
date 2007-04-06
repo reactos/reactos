@@ -32,11 +32,11 @@ ProcessList_Create(HWND hListCtrl)
 
 	column.pszText = L"Process";
 	column.cx = 90;
-	ListView_InsertColumn(hListCtrl, 0, &column);
+	(void)ListView_InsertColumn(hListCtrl, 0, &column);
 
 	column.pszText = L"ProcessID";
 	column.cx = 90;
-	ListView_InsertColumn(hListCtrl, 1, &column);
+	(void)ListView_InsertColumn(hListCtrl, 1, &column);
 	ProcessList_Update(hListCtrl);
 }
 
@@ -49,7 +49,7 @@ ProcessList_Update(HWND hListCtrl)
 	WCHAR strText[MAX_PATH] = L"<unknown>";
 	INT i;
 
-	ListView_DeleteAllItems(hListCtrl);
+	(void)ListView_DeleteAllItems(hListCtrl);
 	memset(&item, 0, sizeof(LV_ITEM));
 	item.mask = LVIF_TEXT|LVIF_PARAM;
 	item.pszText = strText;
@@ -58,7 +58,7 @@ ProcessList_Update(HWND hListCtrl)
 	item.iItem = 0;
 	item.lParam = 0;
 	item.pszText = L"<Kernel>";
-	ListView_InsertItem(hListCtrl, &item);
+	(void)ListView_InsertItem(hListCtrl, &item);
 	item.pszText = strText;
 	wsprintf(strText, L"%#08x", 0);
 	ListView_SetItemText(hListCtrl, 0, 1, strText);
@@ -80,13 +80,13 @@ ProcessList_Update(HWND hListCtrl)
 
 		hProcess = 0;
 		/* FIXME: HACK: ROS crashes when using OpenProcess with PROCESS_VM_READ */
-//		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessIds[i]);
+		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessIds[i]);
 		if (hProcess)
 		{
 			GetModuleBaseName(hProcess, NULL, (LPWSTR)strText, MAX_PATH );
 			CloseHandle(hProcess);
 		}
-		ListView_InsertItem(hListCtrl, &item);
+		(void)ListView_InsertItem(hListCtrl, &item);
 
 		wsprintf(strText, L"%#08x", ProcessIds[i]);
 		ListView_SetItemText(hListCtrl, item.iItem, 1, strText);

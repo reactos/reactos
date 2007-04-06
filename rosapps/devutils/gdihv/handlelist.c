@@ -32,31 +32,31 @@ HandleList_Create(HWND hListCtrl)
 
 	column.pszText = L"Number";
 	column.cx = 50;
-	ListView_InsertColumn(hListCtrl, 0, &column);
+	(void)ListView_InsertColumn(hListCtrl, 0, &column);
 
 	column.pszText = L"Index";
-	column.cx = 50;
-	ListView_InsertColumn(hListCtrl, 1, &column);
+	column.cx = 45;
+	(void)ListView_InsertColumn(hListCtrl, 1, &column);
 
 	column.pszText = L"Handle";
 	column.cx = 90;
-	ListView_InsertColumn(hListCtrl, 2, &column);
+	(void)ListView_InsertColumn(hListCtrl, 2, &column);
 
 	column.pszText = L"Type";
-	column.cx = 90;
-	ListView_InsertColumn(hListCtrl, 3, &column);
+	column.cx = 80;
+	(void)ListView_InsertColumn(hListCtrl, 3, &column);
 
 	column.pszText = L"Process";
-	column.cx = 90;
-	ListView_InsertColumn(hListCtrl, 4, &column);
+	column.cx = 80;
+	(void)ListView_InsertColumn(hListCtrl, 4, &column);
 
 	column.pszText = L"KernelData";
-	column.cx = 90;
-	ListView_InsertColumn(hListCtrl, 5, &column);
+	column.cx = 80;
+	(void)ListView_InsertColumn(hListCtrl, 5, &column);
 
 	column.pszText = L"UserData";
-	column.cx = 90;
-	ListView_InsertColumn(hListCtrl, 6, &column);
+	column.cx = 80;
+	(void)ListView_InsertColumn(hListCtrl, 6, &column);
 
 	HandleList_Update(hListCtrl, 0);
 }
@@ -70,7 +70,7 @@ HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 	TCHAR strText[80];
 	TCHAR* str2;
 
-	ListView_DeleteAllItems(hHandleListCtrl);
+	(void)ListView_DeleteAllItems(hHandleListCtrl);
 	item.mask = LVIF_TEXT|LVIF_PARAM;
 	item.pszText = strText;
 	item.cchTextMax = 80;
@@ -86,7 +86,7 @@ HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 				item.iSubItem = 0;
 
 				wsprintf(strText, L"%d", index);
-				ListView_InsertItem(hHandleListCtrl, &item);
+				(void)ListView_InsertItem(hHandleListCtrl, &item);
 
 				wsprintf(strText, L"%d", i);
 				ListView_SetItemText(hHandleListCtrl, index, 1, strText);

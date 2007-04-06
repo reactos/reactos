@@ -64,7 +64,7 @@ MainWindow_WndProc(HWND hMainWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					memset(&item, 0, sizeof(LV_ITEM));
 					item.mask = LVIF_PARAM;
 					item.iItem = ListView_GetSelectionMark(hProcessListCtrl);
-					ListView_GetItem(hProcessListCtrl, &item);
+					(void)ListView_GetItem(hProcessListCtrl, &item);
 					HandleList_Update(GetDlgItem(hMainWnd, IDC_HANDLELIST), (HANDLE)item.lParam);
 					break;
 				}
@@ -91,7 +91,7 @@ MainWindow_WndProc(HWND hMainWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				memset(&item, 0, sizeof(LV_ITEM));
 				item.mask = LVIF_PARAM;
 				item.iItem = ((LPNMLISTVIEW)lParam)->iItem;
-				ListView_GetItem(GetDlgItem(hMainWnd, IDC_PROCESSLIST), &item);
+				(void)ListView_GetItem(GetDlgItem(hMainWnd, IDC_PROCESSLIST), &item);
 				HandleList_Update(GetDlgItem(hMainWnd, IDC_HANDLELIST), (HANDLE)item.lParam);
 				return TRUE;
 				break;
