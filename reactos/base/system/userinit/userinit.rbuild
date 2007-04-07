@@ -11,7 +11,7 @@
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>shell32</library>
-    <library>shlwapi</library>
+	<library>shlwapi</library>
 	<file>userinit.c</file>
 	<file>userinit.rc</file>
 </module>
