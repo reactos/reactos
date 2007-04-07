@@ -27,6 +27,7 @@
 #include <cfgmgr32.h>
 #include <regstr.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 #include "resource.h"
 
 #define CMP_MAGIC  0x01234567
@@ -119,7 +120,7 @@ BOOL GetShell(WCHAR *CommandLine, HKEY hRootKey)
   BOOL ConsoleShell = IsConsoleShell();
 
   if(RegOpenKeyEx(hRootKey,
-                  REGSTR_PATH_WINLOGON,
+                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", /* FIXME: should be REGSTR_PATH_WINLOGON */
                   0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
   {
     Size = MAX_PATH * sizeof(WCHAR);
@@ -252,8 +253,169 @@ void StartShell(void)
   }
 }
 
+WCHAR g_RegColorNames[][32] =
+  {L"Scrollbar",            /* 00 = COLOR_SCROLLBAR */
+  L"Background",            /* 01 = COLOR_DESKTOP */
+  L"ActiveTitle",           /* 02 = COLOR_ACTIVECAPTION  */
+  L"InactiveTitle",         /* 03 = COLOR_INACTIVECAPTION */
+  L"Menu",                  /* 04 = COLOR_MENU */
+  L"Window",                /* 05 = COLOR_WINDOW */
+  L"WindowFrame",           /* 06 = COLOR_WINDOWFRAME */
+  L"MenuText",              /* 07 = COLOR_MENUTEXT */
+  L"WindowText",            /* 08 = COLOR_WINDOWTEXT */
+  L"TitleText",             /* 09 = COLOR_CAPTIONTEXT */
+  L"ActiveBorder",          /* 10 = COLOR_ACTIVEBORDER */
+  L"InactiveBorder",        /* 11 = COLOR_INACTIVEBORDER */
+  L"AppWorkSpace",          /* 12 = COLOR_APPWORKSPACE */
+  L"Hilight",               /* 13 = COLOR_HIGHLIGHT */
+  L"HilightText",           /* 14 = COLOR_HIGHLIGHTTEXT */
+  L"ButtonFace",            /* 15 = COLOR_BTNFACE */
+  L"ButtonShadow",          /* 16 = COLOR_BTNSHADOW */
+  L"GrayText",              /* 17 = COLOR_GRAYTEXT */
+  L"ButtonText",            /* 18 = COLOR_BTNTEXT */
+  L"InactiveTitleText",     /* 19 = COLOR_INACTIVECAPTIONTEXT */
+  L"ButtonHilight",         /* 20 = COLOR_BTNHIGHLIGHT */
+  L"ButtonDkShadow",        /* 21 = COLOR_3DDKSHADOW */
+  L"ButtonLight",           /* 22 = COLOR_3DLIGHT */
+  L"InfoText",              /* 23 = COLOR_INFOTEXT */
+  L"InfoWindow",            /* 24 = COLOR_INFOBK */
+  L"ButtonAlternateFace",   /* 25 = COLOR_ALTERNATEBTNFACE */
+  L"HotTrackingColor",      /* 26 = COLOR_HOTLIGHT */
+  L"GradientActiveTitle",   /* 27 = COLOR_GRADIENTACTIVECAPTION */
+  L"GradientInactiveTitle", /* 28 = COLOR_GRADIENTINACTIVECAPTION */
+  L"MenuHilight",           /* 29 = COLOR_MENUHILIGHT */
+  L"MenuBar"                /* 30 = COLOR_MENUBAR */
+};
+#define NUM_SYSCOLORS (sizeof(g_RegColorNames) / sizeof(g_RegColorNames[0]))
+
 static
-void SetUserSettings(void)
+COLORREF StrToColorref(LPWSTR lpszCol)
+{
+  BYTE rgb[3];
+
+  rgb[0] = StrToIntW(lpszCol);
+  lpszCol = StrChrW(lpszCol, L' ') + 1;
+  rgb[1] = StrToIntW(lpszCol);
+  lpszCol = StrChrW(lpszCol, L' ') + 1;
+  rgb[2] = StrToIntW(lpszCol);
+  return RGB(rgb[0], rgb[1], rgb[2]);
+}
+
+static
+void SetUserSysColors(void)
+{
+  HKEY hKey;
+  INT i;
+  WCHAR szColor[20];
+  DWORD Type, Size;
+  COLORREF crColor;
+
+  if(!RegOpenKeyEx(HKEY_CURRENT_USER,
+                  L"Control Panel\\Colors",
+                  0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+  {
+    return;
+  }
+  for(i = 0; i < NUM_SYSCOLORS; i++)
+  {
+    Size = sizeof(szColor);
+    if(RegQueryValueEx(hKey, g_RegColorNames[i], NULL, &Type,
+        (LPBYTE)szColor, &Size) == ERROR_SUCCESS && Type == REG_SZ)
+    {
+      crColor = StrToColorref(szColor);
+      SetSysColors(1, &i, &crColor);
+    }
+  }
+  RegCloseKey(hKey);
+  return;
+}
+
+static
+void LoadUserFontSetting(LPWSTR lpValueName, PLOGFONTW pFont)
+{
+  HKEY hKey;
+  LOGFONTW lfTemp;
+  DWORD Type, Size;
+  INT error;
+
+  Size = sizeof(LOGFONTW);
+  if(!RegOpenKeyEx(HKEY_CURRENT_USER,
+                  L"Control Panel\\Desktop\\WindowMetrics",
+                  0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+  {
+    return;
+  }
+  error = RegQueryValueEx(hKey, lpValueName, NULL, &Type, (LPBYTE)&lfTemp, &Size);
+  if ((error != ERROR_SUCCESS) || (Type != REG_BINARY))
+  {
+    return;
+  }
+  RegCloseKey(hKey);
+  /* FIXME: Check if lfTemp is a valid font */
+  *pFont = lfTemp;
+  return;
+}
+
+static
+void LoadUserMetricSetting(LPWSTR lpValueName, INT *pValue)
+{
+  HKEY hKey;
+  DWORD Type, Size;
+  INT ret;
+  WCHAR strValue[8];
+
+  Size = sizeof(strValue);
+  if(!RegOpenKeyEx(HKEY_CURRENT_USER,
+                  L"Control Panel\\Desktop\\WindowMetrics",
+                  0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+  {
+    return;
+  }
+  ret = RegQueryValueEx(hKey, lpValueName, NULL, &Type, (LPBYTE)&strValue, &Size);
+  if ((ret != ERROR_SUCCESS) || (Type != REG_SZ))
+  {
+    return;
+  }
+  RegCloseKey(hKey);
+  *pValue = StrToInt(strValue);
+  return;
+}
+
+static
+void SetUserMetrics(void)
+{
+  NONCLIENTMETRICSW ncmetrics;
+  MINIMIZEDMETRICS mmmetrics;
+
+  ncmetrics.cbSize = sizeof(NONCLIENTMETRICSW);
+  mmmetrics.cbSize = sizeof(MINIMIZEDMETRICS);
+  SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &ncmetrics, 0);
+  SystemParametersInfoW(SPI_GETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS), &mmmetrics, 0);
+
+  LoadUserFontSetting(L"CaptionFont", &ncmetrics.lfCaptionFont);
+  LoadUserFontSetting(L"SmCaptionFont", &ncmetrics.lfSmCaptionFont);
+  LoadUserFontSetting(L"MenuFont", &ncmetrics.lfMenuFont);
+  LoadUserFontSetting(L"StatusFont", &ncmetrics.lfStatusFont);
+  LoadUserFontSetting(L"MessageFont", &ncmetrics.lfMessageFont);
+  /* FIXME: load icon font ? */
+
+  LoadUserMetricSetting(L"BorderWidth", &ncmetrics.iBorderWidth);
+  LoadUserMetricSetting(L"ScrollWidth", &ncmetrics.iScrollWidth);
+  LoadUserMetricSetting(L"ScrollHeight", &ncmetrics.iScrollHeight);
+  LoadUserMetricSetting(L"CaptionWidth", &ncmetrics.iCaptionWidth);
+  LoadUserMetricSetting(L"CaptionHeight", &ncmetrics.iCaptionHeight);
+  LoadUserMetricSetting(L"SmCaptionWidth", &ncmetrics.iSmCaptionWidth);
+  LoadUserMetricSetting(L"SmCaptionHeight", &ncmetrics.iSmCaptionHeight);
+  LoadUserMetricSetting(L"Menuwidth", &ncmetrics.iMenuWidth);
+  LoadUserMetricSetting(L"MenuHeight", &ncmetrics.iMenuHeight);
+
+  SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &ncmetrics, 0);
+
+  return;
+}
+
+static
+void SetUserWallpaper(void)
 {
   HKEY hKey;
   DWORD Type, Size;
@@ -284,6 +446,13 @@ void SetUserSettings(void)
   }
 }
 
+static
+void SetUserSettings(void)
+{
+  SetUserSysColors();
+  SetUserMetrics();
+  SetUserWallpaper();
+}
 
 typedef DWORD (WINAPI *PCMP_REPORT_LOGON)(DWORD, DWORD);
 
