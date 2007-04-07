@@ -365,27 +365,24 @@ NtGdiDdQueryDirectDrawObject(
     /*
      * Get puD3dCallbacks
      */
-    if (puD3dCallbacks != NULL)
+    if ((puD3dCallbacks) && 
+        (pDirectDraw->Hal.lpD3DHALCallbacks))
     {
-        if (pDirectDraw->Hal.lpD3DHALCallbacks != NULL)
+        _SEH_TRY
         {
-            _SEH_TRY
-            {
-                ProbeForWrite(puD3dCallbacks,  sizeof(D3DNTHAL_CALLBACKS), 1);
-                RtlCopyMemory( puD3dCallbacks, pDirectDraw->Hal.lpD3DHALCallbacks,
-                               sizeof( D3DNTHAL_CALLBACKS ) );
-            }
-            _SEH_HANDLE
-            {
-                Status = _SEH_GetExceptionCode();
-            }
-            _SEH_END;
-            if(!NT_SUCCESS(Status))
-            {
-                SetLastNtError(Status);
-                GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-                return FALSE;
-            }
+            ProbeForWrite(puD3dCallbacks,  sizeof(D3DNTHAL_CALLBACKS), 1);
+            RtlCopyMemory( puD3dCallbacks, pDirectDraw->Hal.lpD3DHALCallbacks, sizeof( D3DNTHAL_CALLBACKS ) );
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        if(!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+            return FALSE;
         }
     }
     else
@@ -397,34 +394,45 @@ NtGdiDdQueryDirectDrawObject(
     /*
      * Get lpD3DGlobalDriverData
      */
-    if (puD3dDriverData != NULL)
+    if ((puD3dDriverData) && 
+        (pDirectDraw->Hal.lpD3DGlobalDriverData != NULL))
     {
-        if (pDirectDraw->Hal.lpD3DGlobalDriverData != NULL)
+        /* Get D3dDriverData */
+        _SEH_TRY
         {
+            ProbeForWrite(puD3dDriverData,  sizeof(D3DNTHAL_GLOBALDRIVERDATA), 1);
+            RtlCopyMemory( puD3dDriverData, pDirectDraw->Hal.lpD3DGlobalDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        if(!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+            return FALSE;
+        }
+
+        /* Get TextureFormats */
+        pD3dDriverData =pDirectDraw->Hal.lpD3DGlobalDriverData;
+        if ((puD3dTextureFormats) && 
+            (pD3dDriverData->dwNumTextureFormats>0) && 
+            (pD3dDriverData->lpTextureFormats))
+        {
+            DWORD Size = sizeof(DDSURFACEDESC) * pD3dDriverData->dwNumTextureFormats;
             _SEH_TRY
             {
-                /* Get puD3dDriverData */
-                ProbeForWrite(puD3dDriverData,  sizeof(D3DNTHAL_GLOBALDRIVERDATA), 1);
-                RtlCopyMemory( puD3dDriverData, pDirectDraw->Hal.lpD3DGlobalDriverData,
-                               sizeof(D3DNTHAL_GLOBALDRIVERDATA));
-
-                /* Get puD3dTextureFormats */
-                pD3dDriverData =pDirectDraw->Hal.lpD3DGlobalDriverData;
-                if (puD3dTextureFormats != NULL)
-                {
-                    if ((pD3dDriverData->dwNumTextureFormats) && (pD3dDriverData->lpTextureFormats))
-                    {
-                        DWORD Size =sizeof(DDSURFACEDESC) * pD3dDriverData->dwNumTextureFormats;
-                        ProbeForWrite(puD3dTextureFormats, Size, 1);
-                        RtlCopyMemory( puD3dTextureFormats, pD3dDriverData->lpTextureFormats, Size);
-                    }
-                }
+                ProbeForWrite(puD3dTextureFormats, Size, 1);
+                RtlCopyMemory( puD3dTextureFormats, pD3dDriverData->lpTextureFormats, Size);
             }
             _SEH_HANDLE
             {
                 Status = _SEH_GetExceptionCode();
             }
             _SEH_END;
+
             if(!NT_SUCCESS(Status))
             {
                 SetLastNtError(Status);
@@ -439,30 +447,25 @@ NtGdiDdQueryDirectDrawObject(
         return FALSE;
     }
 
-    /*
-     * Get puD3dBufferCallbacks
-     */
-    if (puD3dBufferCallbacks != NULL)
+    /*Get D3dBufferCallbacks */
+    if ( (puD3dBufferCallbacks) && 
+         (pDirectDraw->Hal.lpD3DBufCallbacks))
     {
-        if (pDirectDraw->Hal.lpD3DBufCallbacks != NULL)
+        _SEH_TRY
         {
-            _SEH_TRY
-            {
-                ProbeForWrite(puD3dBufferCallbacks,  sizeof(DD_D3DBUFCALLBACKS), 1);
-                RtlCopyMemory( puD3dBufferCallbacks, pDirectDraw->Hal.lpD3DBufCallbacks,
-                               sizeof(DD_D3DBUFCALLBACKS));
-            }
-            _SEH_HANDLE
-            {
-                Status = _SEH_GetExceptionCode();
-            }
-            _SEH_END;
-            if(!NT_SUCCESS(Status))
-            {
-                SetLastNtError(Status);
-                GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-                return FALSE;
-            }
+            ProbeForWrite(puD3dBufferCallbacks,  sizeof(DD_D3DBUFCALLBACKS), 1);
+            RtlCopyMemory( puD3dBufferCallbacks, pDirectDraw->Hal.lpD3DBufCallbacks, sizeof(DD_D3DBUFCALLBACKS));
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        if(!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+            return FALSE;
         }
     }
     else
@@ -471,21 +474,17 @@ NtGdiDdQueryDirectDrawObject(
         return FALSE;
     }
 
+    /* Get puNumFourCC and dwNumFourCC */
     _SEH_TRY
     {
-        /* Waring :
-         * In Windows 2000 puvmList and puNumHeaps does not export from 
-         * NtGdiDdQueryDirectDrawObject, I did remove the puvmList code 
-         * I wrote. See MSDN and my private note about this matter, 
-         * the private note will be in  my book as well when it comes.
-         */
         ProbeForWrite(puNumFourCC, sizeof(DWORD), 1);
         *puNumFourCC = pDirectDraw->dwNumFourCC;
 
-        if ((pDirectDraw->pdwFourCC != NULL) && (puFourCC != NULL))
+        if ((pDirectDraw->pdwFourCC) && 
+            (puFourCC))
         {
             ProbeForWrite(puFourCC, sizeof(DWORD) * pDirectDraw->dwNumFourCC, 1);
-            RtlCopyMemory( puFourCC,  pDirectDraw->pdwFourCC, sizeof(DWORD) *  pDirectDraw->dwNumFourCC);
+            RtlCopyMemory( puFourCC, pDirectDraw->pdwFourCC, sizeof(DWORD) * pDirectDraw->dwNumFourCC);
         }
     }
     _SEH_HANDLE
@@ -511,6 +510,11 @@ BOOL STDCALL
 NtGdiDdDeleteDirectDrawObject( HANDLE hDirectDrawLocal)
 {
     DPRINT1("NtGdiDdDeleteDirectDrawObject\n");
+    if (hDirectDrawLocal == NULL)
+    {
+        return FALSE;
+    }
+
     return GDIOBJ_FreeObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 }
 

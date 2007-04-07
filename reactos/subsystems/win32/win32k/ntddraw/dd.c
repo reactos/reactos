@@ -453,8 +453,6 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
     {
             ProbeForRead(puCanCreateSurfaceData,  sizeof(DD_CANCREATESURFACEDATA), 1);
             RtlCopyMemory(&CanCreateSurfaceData,puCanCreateSurfaceData, sizeof(DD_CANCREATESURFACEDATA));
-
-            /* FIXME can be version 2 of DDSURFACEDESC */
             ProbeForRead(puCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC), 1);
             RtlCopyMemory(&desc,puCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC));
     }
@@ -481,7 +479,6 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
                      ProbeForWrite(puCanCreateSurfaceData, sizeof(DD_CANCREATESURFACEDATA), 1);
                      puCanCreateSurfaceData->ddRVal = CanCreateSurfaceData.ddRVal;
 
-                     /* FIXME can be version 2 of DDSURFACEDESC */
                      ProbeForWrite(puCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC), 1);
                      RtlCopyMemory(puCanCreateSurfaceData->lpDDSurfaceDesc,&desc, sizeof(DDSURFACEDESC));
 
@@ -501,53 +498,55 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 
 /************************************************************************/
 /* GetScanLine                                                          */
-/* status : not implement, was undoc in msdn now it is doc              */
+/* status : is now documented in MSDN and I checked the code it works   */
+/*          like windows 2000                                           */
 /************************************************************************/
 DWORD STDCALL 
 NtGdiDdGetScanLine( HANDLE hDirectDrawLocal, PDD_GETSCANLINEDATA puGetScanLineData)
 {
     DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
     DD_GETSCANLINEDATA GetScanLineData;
-    PDD_DIRECTDRAW pDirectDraw;
+    PDD_DIRECTDRAW pDirectDraw = NULL;
     NTSTATUS Status = FALSE;
+    LPDDHAL_GETSCANLINEDATA ourpuGetScanLineData;
 
-    DPRINT1("NtGdiDdGetScanLine\n");
-
-    _SEH_TRY
-    {
-            ProbeForRead(puGetScanLineData,  sizeof(DD_GETSCANLINEDATA), 1);
-            RtlCopyMemory(&GetScanLineData,puGetScanLineData, sizeof(DD_GETSCANLINEDATA));
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-    if(NT_SUCCESS(Status))
+    if (hDirectDrawLocal)
     {
         pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);;
-        if (pDirectDraw != NULL)
-        {
-            if (pDirectDraw->DD.dwFlags & DDHAL_CB32_GETSCANLINE)
-            {
-                GetScanLineData.ddRVal = DDERR_GENERIC;
-                GetScanLineData.lpDD = &pDirectDraw->Global;
-                ddRVal = pDirectDraw->DD.GetScanLine(&GetScanLineData);
+    }
 
-                _SEH_TRY
-                {
-                    ProbeForWrite(puGetScanLineData,  sizeof(DD_GETSCANLINEDATA), 1);
-                    puGetScanLineData->dwScanLine = GetScanLineData.dwScanLine;
-                    puGetScanLineData->ddRVal     = GetScanLineData.ddRVal;
-                }
-                _SEH_HANDLE
-                {
-                    Status = _SEH_GetExceptionCode();
-                }
-                _SEH_END;
+    if (pDirectDraw != NULL)
+    {
+        DPRINT1("GetScanLine\n");
+        if (pDirectDraw->DD.dwFlags & DDHAL_CB32_GETSCANLINE)
+        {
+            RtlZeroMemory(&GetScanLineData,sizeof(DD_GETSCANLINEDATA));
+            GetScanLineData.ddRVal = DDERR_GENERIC;
+            GetScanLineData.lpDD = &pDirectDraw->Global;
+            ddRVal = pDirectDraw->DD.GetScanLine(&GetScanLineData);
+
+            DPRINT1("GetScanLine\n");
+            _SEH_TRY
+            {
+                ProbeForWrite(puGetScanLineData,  sizeof(DD_GETSCANLINEDATA), 1);
+                ourpuGetScanLineData = (LPDDHAL_GETSCANLINEDATA)puGetScanLineData;
+                ourpuGetScanLineData->dwScanLine = GetScanLineData.dwScanLine;
+                ourpuGetScanLineData->ddRVal     = GetScanLineData.ddRVal;
             }
-            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("GetScanLine\n");
+                ddRVal = DDHAL_DRIVER_NOTHANDLED;
+            }
         }
+
+        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     }
 
   return ddRVal;
