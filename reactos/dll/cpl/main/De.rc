@@ -7,7 +7,23 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Geschwindigkeit"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Tastaturgeschwindigkeit",-1,73,74,130,8
+  GROUPBOX "Zeichenwiederholung", -1, 5, 5, 230, 130
+  ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
+  LTEXT "&Verzögerung:", -1, 40, 15, 50, 10
+  LTEXT "Lang", -1, 40, 30, 24, 10
+  LTEXT "Kurz", -1, 200, 30, 24, 10
+  CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
+  ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
+  LTEXT "&Wiederholrate:", -1, 40, 70, 50, 10
+  LTEXT "Niedrig", -1, 40, 85, 24, 10
+  LTEXT "Hoch", -1, 200, 85, 24, 10
+  CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
+  LTEXT "&Klicken Sie hier, und drücken Sie zum Testen eine Taste:", -1, 15, 105, 180, 10
+  EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
+  GROUPBOX "&Cursorblinkgeschwindgkeit", -1, 5, 145, 230, 50
+  LTEXT "Langsam", -1, 35, 165, 33, 10
+  LTEXT "Schnell", -1, 200, 165, 33, 10
+  CONTROL "",IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228

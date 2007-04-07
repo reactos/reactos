@@ -5,7 +5,23 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Velocidad"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Velocidad del teclado",-1,73,74,90,8
+  GROUPBOX "Character repeat", -1, 5, 5, 230, 130
+  ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
+  LTEXT "Repeat &delay", -1, 40, 15, 50, 10
+  LTEXT "Long", -1, 40, 30, 20, 10
+  LTEXT "Short", -1, 200, 30, 20, 10
+  CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
+  ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
+  LTEXT "&Repeat rate", -1, 40, 70, 50, 10
+  LTEXT "Slow", -1, 40, 85, 20, 10
+  LTEXT "Fast", -1, 200, 85, 20, 10
+  CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
+  LTEXT "Click here and hold down a key to &test repeat rate:", -1, 15, 105, 150, 10
+  EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
+  GROUPBOX "Cursor &blink rate:", -1, 5, 145, 230, 50
+  LTEXT "None", -1, 40, 165, 30, 10
+  LTEXT "Fast", -1, 200, 165, 30, 10
+  CONTROL "",IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
