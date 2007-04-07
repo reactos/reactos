@@ -32,7 +32,7 @@
 
   See GCC manual for more CPU names and which CPUs GCC can optimize for.
 -->
-<property name="OARCH" value="i486" />
+<property name="OARCH" value="pentium" />
 
 
 <!--

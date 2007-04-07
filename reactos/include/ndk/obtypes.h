@@ -19,6 +19,9 @@ Author:
 #ifndef _OBTYPES_H
 #define _OBTYPES_H
 
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WS03SP1
+
 //
 // Dependencies
 //
@@ -26,9 +29,6 @@ Author:
 #ifndef NTOS_MODE_USER
 #include <extypes.h>
 #endif
-
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WS03SP1
 
 #ifdef NTOS_MODE_USER
 //

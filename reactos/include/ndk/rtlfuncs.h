@@ -2768,7 +2768,17 @@ RtlCheckRegistryKey(
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath);
+RtlCreateRegistryKey(
+    IN ULONG RelativeTo,
+    IN PWSTR Path
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlFormatCurrentUserKeyPath(
+    IN OUT PUNICODE_STRING KeyPath
+);
 
 NTSYSAPI
 NTSTATUS

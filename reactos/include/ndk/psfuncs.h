@@ -131,6 +131,12 @@ PsLookupProcessThreadByCid(
     OUT PETHREAD *Thread
 );
 
+BOOLEAN
+NTAPI
+PsIsProtectedProcess(
+    IN PEPROCESS Process
+);
+
 #endif
 
 //

@@ -31,6 +31,9 @@ Author:
 #include <ketypes.h>
 #include <potypes.h>
 #include <lpctypes.h>
+#ifdef NTOS_MODE_USER
+#include <obtypes.h>
+#endif
 
 //
 // GCC compatibility

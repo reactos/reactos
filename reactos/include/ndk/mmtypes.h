@@ -24,6 +24,7 @@ Author:
 //
 #include <umtypes.h>
 #include <arch/mmtypes.h>
+#include <extypes.h>
 
 //
 // Page-Rounding Macros
@@ -576,20 +577,42 @@ typedef struct _MMSUPPORT_FLAGS
 //
 typedef struct _MMSUPPORT
 {
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    LIST_ENTRY WorkingSetExpansionLinks;
+    USHORT LastTrimpStamp;
+    USHORT NextPageColor;
+#else
     LARGE_INTEGER LastTrimTime;
+#endif
     MMSUPPORT_FLAGS Flags;
     ULONG PageFaultCount;
     ULONG PeakWorkingSetSize;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG Spare0;
+#else
     ULONG WorkingSetSize;
+#endif
     ULONG MinimumWorkingSetSize;
     ULONG MaximumWorkingSetSize;
     PMMWSL MmWorkingSetList;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     LIST_ENTRY WorkingSetExpansionLinks;
+#endif
     ULONG Claim;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG Spare;
+    ULONG WorkingSetPrivateSize;
+    ULONG WorkingSetSizeOverhead;
+    ULONG WorkingSetSize;
+    PKEVENT ExitEvent;
+    EX_PUSH_LOCK WorkingSetMutex;
+    PVOID AccessLog;
+#else
     ULONG NextEstimationSlot;
     ULONG NextAgingSlot;
     ULONG EstimatedAvailable;
     ULONG GrowthSinceLastEstimate;
+#endif
 } MMSUPPORT, *PMMSUPPORT;
 
 //

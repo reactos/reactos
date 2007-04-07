@@ -277,7 +277,7 @@ int WINAPI WinMain (HINSTANCE hInst,
                     LPSTR lpCmdLine,
                     int iCmdShow)
 {
-	HWND	hwndParent;
+	HWND	hwndParent = 0;
 	int	chOption = 0;
 	MSG	Message;
 

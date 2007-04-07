@@ -160,6 +160,15 @@ typedef struct _OBJECT_ATTRIBUTES
     PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
+//
+// ClientID Structure
+//
+typedef struct _CLIENT_ID
+{
+    HANDLE UniqueProcess;
+    HANDLE UniqueThread;
+} CLIENT_ID, *PCLIENT_ID;
+
 typedef const UNICODE_STRING* PCUNICODE_STRING;
 typedef STRING ANSI_STRING;
 typedef PSTRING PANSI_STRING;
