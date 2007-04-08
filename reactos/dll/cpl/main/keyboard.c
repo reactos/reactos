@@ -1,6 +1,6 @@
 /*
  *  ReactOS
- *  Copyright (C) 2004 ReactOS Team
+ *  Copyright (C) 2004, 2007 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,12 +33,17 @@
 #include "main.h"
 #include "resource.h"
 
+#define ID_BLINK_TIMER 345
+
+
 typedef struct _SPEED_DATA
 {
     INT nKeyboardDelay;
     DWORD dwKeyboardSpeed;
     UINT uCaretBlinkTime;
-
+    UINT uOrigCaretBlinkTime;
+    BOOL fShowCursor;
+    RECT rcCursor;
 } SPEED_DATA, *PSPEED_DATA;
 
 
@@ -77,8 +82,14 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                 pSpeedData->dwKeyboardSpeed = 31;
             }
 
-            /* Get the caret blink time */
-            pSpeedData->uCaretBlinkTime = GetCaretBlinkTime();
+            pSpeedData->fShowCursor = TRUE;
+            GetWindowRect(GetDlgItem(hwndDlg, IDC_TEXT_CURSOR_BLINK), &pSpeedData->rcCursor);
+            ScreenToClient(hwndDlg, (LPPOINT)&pSpeedData->rcCursor.left);
+            ScreenToClient(hwndDlg, (LPPOINT)&pSpeedData->rcCursor.right);
+
+            /* Get the caret blink time and save its original value */
+            pSpeedData->uOrigCaretBlinkTime = GetCaretBlinkTime();
+            pSpeedData->uCaretBlinkTime = pSpeedData->uOrigCaretBlinkTime;
 
             SendDlgItemMessage(hwndDlg, IDC_SLIDER_REPEAT_DELAY, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 3));
             SendDlgItemMessage(hwndDlg, IDC_SLIDER_REPEAT_DELAY, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(3 - pSpeedData->nKeyboardDelay));
@@ -89,6 +100,8 @@ KeyboardSpeedProc(IN HWND hwndDlg,
             SendDlgItemMessage(hwndDlg, IDC_SLIDER_CURSOR_BLINK, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 10));
             SendDlgItemMessage(hwndDlg, IDC_SLIDER_CURSOR_BLINK, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(12 - (pSpeedData->uCaretBlinkTime / 100)));
 
+            /* Start the blink timer */
+            SetTimer(hwndDlg, ID_BLINK_TIMER, pSpeedData->uCaretBlinkTime, NULL);
             break;
 
         case WM_HSCROLL:
@@ -146,14 +159,40 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                         case TB_BOTTOM:
                         case TB_ENDTRACK:
                             pSpeedData->uCaretBlinkTime = (12 - (UINT)SendDlgItemMessage(hwndDlg, IDC_SLIDER_CURSOR_BLINK, TBM_GETPOS, 0, 0)) * 100;
+                            KillTimer(hwndDlg, ID_BLINK_TIMER);
+                            SetTimer(hwndDlg, ID_BLINK_TIMER, pSpeedData->uCaretBlinkTime, NULL);
+                            SetCaretBlinkTime(pSpeedData->uCaretBlinkTime);
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
 
                         case TB_THUMBTRACK:
                             pSpeedData->uCaretBlinkTime = (12 - (UINT)HIWORD(wParam)) * 100;
+                            KillTimer(hwndDlg, ID_BLINK_TIMER);
+                            SetTimer(hwndDlg, ID_BLINK_TIMER, pSpeedData->uCaretBlinkTime, NULL);
+                            SetCaretBlinkTime(pSpeedData->uCaretBlinkTime);
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
                 }
+            }
+            break;
+
+        case WM_TIMER:
+            if (wParam == ID_BLINK_TIMER)
+            {
+                if (pSpeedData->fShowCursor)
+                {
+                    HDC hDC = GetDC(hwndDlg);
+                    HBRUSH hBrush = GetSysColorBrush(COLOR_BTNTEXT);
+                    FillRect(hDC, &pSpeedData->rcCursor, hBrush);
+                    DeleteObject(hBrush);
+                    ReleaseDC(hwndDlg, hDC);
+                }
+                else
+                {
+                    InvalidateRect(hwndDlg, &pSpeedData->rcCursor, TRUE);
+                }
+
+                pSpeedData->fShowCursor = !pSpeedData->fShowCursor;
             }
             break;
 
@@ -164,8 +203,6 @@ KeyboardSpeedProc(IN HWND hwndDlg,
             switch(lpnm->code)
             {
                 case PSN_APPLY:
-                    SetCaretBlinkTime(pSpeedData->uCaretBlinkTime);
-
                     SystemParametersInfo(SPI_SETKEYBOARDDELAY,
                                          pSpeedData->nKeyboardDelay,
                                          0,
@@ -177,6 +214,10 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                                          SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
                     return TRUE;
 
+                case PSN_RESET:
+                    SetCaretBlinkTime(pSpeedData->uOrigCaretBlinkTime);
+                    break;
+
                 default:
                     break;
             }
@@ -184,6 +225,7 @@ KeyboardSpeedProc(IN HWND hwndDlg,
         break;
 
         case WM_DESTROY:
+            KillTimer(hwndDlg, ID_BLINK_TIMER);
             HeapFree(GetProcessHeap(), 0, pSpeedData);
             break;
     }
