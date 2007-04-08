@@ -37,6 +37,7 @@ typedef struct _SPEED_DATA
 {
     INT nKeyboardDelay;
     DWORD dwKeyboardSpeed;
+    UINT uCaretBlinkTime;
 
 } SPEED_DATA, *PSPEED_DATA;
 
@@ -76,11 +77,17 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                 pSpeedData->dwKeyboardSpeed = 31;
             }
 
+            /* Get the caret blink time */
+            pSpeedData->uCaretBlinkTime = GetCaretBlinkTime();
+
             SendDlgItemMessage(hwndDlg, IDC_SLIDER_REPEAT_DELAY, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 3));
             SendDlgItemMessage(hwndDlg, IDC_SLIDER_REPEAT_DELAY, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(3 - pSpeedData->nKeyboardDelay));
 
             SendDlgItemMessage(hwndDlg, IDC_SLIDER_REPEAT_RATE, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 31));
             SendDlgItemMessage(hwndDlg, IDC_SLIDER_REPEAT_RATE, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pSpeedData->dwKeyboardSpeed);
+
+            SendDlgItemMessage(hwndDlg, IDC_SLIDER_CURSOR_BLINK, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 10));
+            SendDlgItemMessage(hwndDlg, IDC_SLIDER_CURSOR_BLINK, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(12 - (pSpeedData->uCaretBlinkTime / 100)));
 
             break;
 
@@ -127,7 +134,27 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                             break;
                 }
             }
+            else if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_SLIDER_CURSOR_BLINK))
+            {
+                switch (LOWORD(wParam))
+                {
+                        case TB_LINEUP:
+                        case TB_LINEDOWN:
+                        case TB_PAGEUP:
+                        case TB_PAGEDOWN:
+                        case TB_TOP:
+                        case TB_BOTTOM:
+                        case TB_ENDTRACK:
+                            pSpeedData->uCaretBlinkTime = (12 - (UINT)SendDlgItemMessage(hwndDlg, IDC_SLIDER_CURSOR_BLINK, TBM_GETPOS, 0, 0)) * 100;
+                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                            break;
 
+                        case TB_THUMBTRACK:
+                            pSpeedData->uCaretBlinkTime = (12 - (UINT)HIWORD(wParam)) * 100;
+                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                            break;
+                }
+            }
             break;
 
         case WM_NOTIFY:
@@ -137,10 +164,13 @@ KeyboardSpeedProc(IN HWND hwndDlg,
             switch(lpnm->code)
             {
                 case PSN_APPLY:
+                    SetCaretBlinkTime(pSpeedData->uCaretBlinkTime);
+
                     SystemParametersInfo(SPI_SETKEYBOARDDELAY,
                                          pSpeedData->nKeyboardDelay,
                                          0,
                                          0);
+
                     SystemParametersInfo(SPI_SETKEYBOARDSPEED,
                                          pSpeedData->dwKeyboardSpeed,
                                          0,
