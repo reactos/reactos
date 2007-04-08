@@ -120,10 +120,8 @@ CmpCreateHandle(PVOID ObjectBody,
             Handle = ObMarkHandleAsKernelHandle(Handle);
         }
 
-        if(InterlockedIncrement(&ObjectHeader->HandleCount) == 1)
-        {
-            ObReferenceObject(ObjectBody);
-        }
+        InterlockedIncrement(&ObjectHeader->HandleCount);
+        ObReferenceObject(ObjectBody);
 
         *HandleReturn = Handle;
 
@@ -578,7 +576,7 @@ Cleanup:
   }
   if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
   if (FreeRemainingPath) RtlFreeUnicodeString(&RemainingPath);
-  //if (Object != NULL) ObDereferenceObject(Object);
+  if (Object != NULL) ObDereferenceObject(Object);
 
   return Status;
 }
