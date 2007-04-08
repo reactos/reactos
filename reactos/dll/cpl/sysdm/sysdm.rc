@@ -5,9 +5,9 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 #define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS System Applet\0"
-#define REACTOS_STR_INTERNAL_NAME	  "sysdm\0"
-#define REACTOS_STR_ORIGINAL_FILENAME "sysdm.cpl\0"
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS System Applet\0"
+#define REACTOS_STR_INTERNAL_NAME	"sysdm\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"sysdm.cpl\0"
 #include <reactos/version.rc>
 
 123 24 DISCARDABLE "manifest.xml"
@@ -22,20 +22,20 @@ IDB_ROSBMP      BITMAP "resources/rosbitmap.bmp"
 
 RC_LICENSE RTDATA "resources/gpl.txt"
 
-#include "de.rc"
-#include "en.rc"
-#include "fr.rc"
-#include "id-ID.rc"
-#include "it-IT.rc"
-#include "ru-RU.rc"
+#include "lang/de-DE.rc"
+#include "lang/en-US.rc"
+#include "lang/fr-FR.rc"
+#include "lang/id-ID.rc"
+#include "lang/it-IT.rc"
+#include "lang/ru-RU.rc"
 
 /*
-#include "cz.rc"
-#include "dk.rc"
-#include "es.rc"
-#include "hu.rc"
-#include "Ja.rc"
-#include "nl.rc"
-#include "sv.rc"
-#include "uk.rc"
+#include "lang/cs-CZ.rc"
+#include "lang/da-DK.rc"
+#include "lang/es-ES.rc"
+#include "lang/hu-HU.rc"
+#include "lang/ja-JP.rc"
+#include "lang/nl-NL.rc"
+#include "lang/sv-SE.rc"
+#include "lang/uk-UA.rc"
 */
