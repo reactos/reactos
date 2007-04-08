@@ -386,45 +386,52 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
     PDD_DIRECTDRAW pDirectDraw = NULL;
     NTSTATUS Status = FALSE;
     DD_WAITFORVERTICALBLANKDATA WaitForVerticalBlankData;
+    LPDDHAL_WAITFORVERTICALBLANKDATA pWaitForVerticalBlankData = (LPDDHAL_WAITFORVERTICALBLANKDATA)puWaitForVerticalBlankData;
 
-    DPRINT1("NtGdiDdWaitForVerticalBlank\n");
-
-    _SEH_TRY
+    if ((hDirectDrawLocal) &&
+        (puWaitForVerticalBlankData))
     {
-            ProbeForRead(puWaitForVerticalBlankData, sizeof(DD_WAITFORVERTICALBLANKDATA), 1);
-            RtlCopyMemory(&WaitForVerticalBlankData,puWaitForVerticalBlankData, sizeof(DD_WAITFORVERTICALBLANKDATA));
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
+        RtlZeroMemory(&WaitForVerticalBlankData,sizeof(DD_WAITFORVERTICALBLANKDATA));
 
-    if(NT_SUCCESS(Status))
-    {
-        pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-
-        if (pDirectDraw != NULL) 
+        _SEH_TRY
         {
-            if (pDirectDraw->DD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)
-            {
-                WaitForVerticalBlankData.ddRVal = DDERR_GENERIC;
-                WaitForVerticalBlankData.lpDD =  &pDirectDraw->Global;;
-                ddRVal = pDirectDraw->DD.WaitForVerticalBlank(&WaitForVerticalBlankData);
-            }
-            _SEH_TRY
-            {
-                ProbeForWrite(puWaitForVerticalBlankData,  sizeof(DD_WAITFORVERTICALBLANKDATA), 1);
-                puWaitForVerticalBlankData->ddRVal  = WaitForVerticalBlankData.ddRVal;
-                puWaitForVerticalBlankData->bIsInVB = WaitForVerticalBlankData.bIsInVB;
-            }
-            _SEH_HANDLE
-            {
-                Status = _SEH_GetExceptionCode();
-            }
-            _SEH_END;
+            ProbeForRead(pWaitForVerticalBlankData, sizeof(DDHAL_WAITFORVERTICALBLANKDATA), 1);
+            WaitForVerticalBlankData.dwFlags = pWaitForVerticalBlankData->dwFlags;
+            WaitForVerticalBlankData.bIsInVB = pWaitForVerticalBlankData->bIsInVB;
+            WaitForVerticalBlankData.hEvent = pWaitForVerticalBlankData->hEvent;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 
-            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+        if(NT_SUCCESS(Status))
+        {
+            pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+
+            if (pDirectDraw != NULL) 
+            {
+                if (pDirectDraw->DD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)
+                {
+                    WaitForVerticalBlankData.ddRVal = DDERR_GENERIC;
+                    WaitForVerticalBlankData.lpDD =  &pDirectDraw->Global;;
+                    ddRVal = pDirectDraw->DD.WaitForVerticalBlank(&WaitForVerticalBlankData);
+                }
+                _SEH_TRY
+                {
+                    ProbeForWrite(pWaitForVerticalBlankData,  sizeof(DDHAL_WAITFORVERTICALBLANKDATA), 1);
+                    pWaitForVerticalBlankData->ddRVal  = WaitForVerticalBlankData.ddRVal;
+                    pWaitForVerticalBlankData->bIsInVB = WaitForVerticalBlankData.bIsInVB;
+                }
+                _SEH_HANDLE
+                {
+                    Status = _SEH_GetExceptionCode();
+                }
+                _SEH_END;
+
+                GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+            }
         }
     }
     return ddRVal;
