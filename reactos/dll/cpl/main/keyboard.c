@@ -39,7 +39,9 @@
 typedef struct _SPEED_DATA
 {
     INT nKeyboardDelay;
+    INT nOrigKeyboardDelay;
     DWORD dwKeyboardSpeed;
+    DWORD dwOrigKeyboardSpeed;
     UINT uCaretBlinkTime;
     UINT uOrigCaretBlinkTime;
     BOOL fShowCursor;
@@ -73,6 +75,8 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                 pSpeedData->nKeyboardDelay = 2;
             }
 
+            pSpeedData->nOrigKeyboardDelay = pSpeedData->nKeyboardDelay;
+
             /* Get current keyboard delay */
             if (!SystemParametersInfo(SPI_GETKEYBOARDSPEED,
                                       sizeof(DWORD),
@@ -81,6 +85,8 @@ KeyboardSpeedProc(IN HWND hwndDlg,
             {
                 pSpeedData->dwKeyboardSpeed = 31;
             }
+
+            pSpeedData->dwOrigKeyboardSpeed = pSpeedData->dwKeyboardSpeed;
 
             pSpeedData->fShowCursor = TRUE;
             GetWindowRect(GetDlgItem(hwndDlg, IDC_TEXT_CURSOR_BLINK), &pSpeedData->rcCursor);
@@ -117,11 +123,19 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                         case TB_BOTTOM:
                         case TB_ENDTRACK:
                             pSpeedData->nKeyboardDelay = 3 - (INT)SendDlgItemMessage(hwndDlg, IDC_SLIDER_REPEAT_DELAY, TBM_GETPOS, 0, 0);
+                            SystemParametersInfo(SPI_SETKEYBOARDDELAY,
+                                                 pSpeedData->nKeyboardDelay,
+                                                 0,
+                                                 0);
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
 
                         case TB_THUMBTRACK:
                             pSpeedData->nKeyboardDelay = 3 - (INT)HIWORD(wParam);
+                            SystemParametersInfo(SPI_SETKEYBOARDDELAY,
+                                                 pSpeedData->nKeyboardDelay,
+                                                 0,
+                                                 0);
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
                 }
@@ -138,11 +152,19 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                         case TB_BOTTOM:
                         case TB_ENDTRACK:
                             pSpeedData->dwKeyboardSpeed = (DWORD)SendDlgItemMessage(hwndDlg, IDC_SLIDER_REPEAT_RATE, TBM_GETPOS, 0, 0);
+                            SystemParametersInfo(SPI_SETKEYBOARDSPEED,
+                                                 pSpeedData->dwKeyboardSpeed,
+                                                 0,
+                                                 0);
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
 
                         case TB_THUMBTRACK:
                             pSpeedData->dwKeyboardSpeed = (DWORD)HIWORD(wParam);
+                            SystemParametersInfo(SPI_SETKEYBOARDSPEED,
+                                                 pSpeedData->dwKeyboardSpeed,
+                                                 0,
+                                                 0);
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
                 }
@@ -203,11 +225,11 @@ KeyboardSpeedProc(IN HWND hwndDlg,
             switch(lpnm->code)
             {
                 case PSN_APPLY:
+                    /* Set the new keyboard settings */
                     SystemParametersInfo(SPI_SETKEYBOARDDELAY,
                                          pSpeedData->nKeyboardDelay,
                                          0,
                                          0);
-
                     SystemParametersInfo(SPI_SETKEYBOARDSPEED,
                                          pSpeedData->dwKeyboardSpeed,
                                          0,
@@ -215,7 +237,16 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                     return TRUE;
 
                 case PSN_RESET:
+                    /* Restore the original settings */
                     SetCaretBlinkTime(pSpeedData->uOrigCaretBlinkTime);
+                    SystemParametersInfo(SPI_SETKEYBOARDDELAY,
+                                         pSpeedData->nOrigKeyboardDelay,
+                                         0,
+                                         0);
+                    SystemParametersInfo(SPI_SETKEYBOARDSPEED,
+                                         pSpeedData->dwOrigKeyboardSpeed,
+                                         0,
+                                         0);
                     break;
 
                 default:
