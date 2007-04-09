@@ -9,14 +9,14 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   ICON            IDI_CPLSYSTEM,-1,PROPSHEETPADDING,18,16,16
   LTEXT "Pour installer un nouveau programme, cliquez sur Installer",-1,36,18,PROPSHEETWIDTH-48,8
-  PUSHBUTTON "&Installer...", IDC_INSTALL, PROPSHEETWIDTH-(72), 36, 60, 14
+  PUSHBUTTON "&Installer...", IDC_INSTALL, PROPSHEETWIDTH-(72), 36, 65, 14
   LTEXT "", -1, PROPSHEETPADDING, 63, PROPSHEETWIDTH-12, 1, NOT WS_GROUP | SS_SUNKEN
   
   ICON            IDI_CPLSYSTEM,-1,PROPSHEETPADDING,76,16,16
-  CONTROL "&Show updates",IDC_SHOWUPDATES,"button",BS_AUTOCHECKBOX | WS_TABSTOP,PROPSHEETPADDING, 105, 119, 18
-  LTEXT "Les logiciels suivant peuvent être supprimés automatiquement. Pour supprimer un programme ou modifier ses composantes installées, sélectionnez-le dans la liste et cliquez sur Ajouter/Supprimer.",-1,36,72,PROPSHEETWIDTH-48,32
+  CONTROL "&Afficher les mises à jour",IDC_SHOWUPDATES,"button",BS_AUTOCHECKBOX | WS_TABSTOP,PROPSHEETPADDING, 105, 119, 18
+  LTEXT "Les logiciels suivant peuvent être supprimés automatiquement. Pour supprimer un programme ou modifier ses composantes installées, sélectionnez-le dans la liste et cliquez sur Modifier/Supprimer.",-1,36,72,PROPSHEETWIDTH-48,32
   LISTBOX IDC_SOFTWARELIST, PROPSHEETPADDING, 123, PROPSHEETWIDTH-12, 75, LBS_STANDARD | WS_TABSTOP | LBS_NOINTEGRALHEIGHT
-  PUSHBUTTON "Ajouter/Supp&rimer", IDC_ADDREMOVE, PROPSHEETWIDTH-72, 200, 60, 14
+  PUSHBUTTON "Ajouter/Supp&rimer", IDC_ADDREMOVE, PROPSHEETWIDTH-72, 200, 65, 14
 END
 
 IDD_PROPPAGEROSSETUP DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
