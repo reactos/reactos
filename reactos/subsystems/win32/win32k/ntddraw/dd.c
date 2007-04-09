@@ -449,41 +449,60 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 )
 {
     DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
-    DD_CANCREATESURFACEDATA CanCreateSurfaceData;
-    DDSURFACEDESC           desc;
-    NTSTATUS Status = FALSE;
-    PDD_DIRECTDRAW pDirectDraw = NULL;
+    
 
-    DPRINT1("NtGdiDdCanCreateSurface\n");
 
-    _SEH_TRY
+    if ((puCanCreateSurfaceData) && 
+        (hDirectDrawLocal))
     {
-            ProbeForRead(puCanCreateSurfaceData,  sizeof(DD_CANCREATESURFACEDATA), 1);
-            RtlCopyMemory(&CanCreateSurfaceData,puCanCreateSurfaceData, sizeof(DD_CANCREATESURFACEDATA));
-            ProbeForRead(puCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC), 1);
-            RtlCopyMemory(&desc,puCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC));
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
+        DDSURFACEDESC desc;
+        DWORD descSize = 0;
+        NTSTATUS Status = FALSE;
+        PDD_DIRECTDRAW pDirectDraw = NULL;
+        DD_CANCREATESURFACEDATA CanCreateSurfaceData;
+        LPDDHAL_CANCREATESURFACEDATA pCanCreateSurfaceData = (LPDDHAL_CANCREATESURFACEDATA)puCanCreateSurfaceData;
 
-    if(NT_SUCCESS(Status))
-    {
-        pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-        if (pDirectDraw != NULL)
+        RtlZeroMemory(&CanCreateSurfaceData,sizeof(DDSURFACEDESC));
+        RtlZeroMemory(&desc,sizeof(DDSURFACEDESC));
+
+        _SEH_TRY
         {
-            if (pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
+            ProbeForRead(pCanCreateSurfaceData, sizeof(DDHAL_CANCREATESURFACEDATA), 1);
+            CanCreateSurfaceData.bIsDifferentPixelFormat = pCanCreateSurfaceData->bIsDifferentPixelFormat;
+
+            if (pCanCreateSurfaceData->lpDDSurfaceDesc)
+            {
+                ProbeForRead(pCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC), 1);
+                RtlCopyMemory(&desc,pCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC));
+
+                /*if it was DDSURFACEDESC2 been pass down */
+                descSize = desc.dwSize;
+                desc.dwSize = sizeof(DDSURFACEDESC);
+            }
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if ((NT_SUCCESS(Status)) && 
+            (desc.dwSize != 0))
+        {
+            pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+            if ((pDirectDraw) && 
+                (pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE))
             {
                 CanCreateSurfaceData.ddRVal = DDERR_GENERIC;
                 CanCreateSurfaceData.lpDD = &pDirectDraw->Global;
                 CanCreateSurfaceData.lpDDSurfaceDesc = &desc;
                 ddRVal = pDirectDraw->DD.CanCreateSurface(&CanCreateSurfaceData);
 
+                /*if it was DDSURFACEDESC2 been pass down */
+                desc.dwSize = descSize;
                 _SEH_TRY
                 {
-                     ProbeForWrite(puCanCreateSurfaceData, sizeof(DD_CANCREATESURFACEDATA), 1);
+                     ProbeForWrite(puCanCreateSurfaceData, sizeof(DDHAL_CANCREATESURFACEDATA), 1);
                      puCanCreateSurfaceData->ddRVal = CanCreateSurfaceData.ddRVal;
 
                      ProbeForWrite(puCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC), 1);
@@ -499,7 +518,6 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
             GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
         }
     }
-
   return ddRVal;
 }
 
