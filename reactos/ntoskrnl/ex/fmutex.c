@@ -9,37 +9,32 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 VOID
 FASTCALL
-KiAcquireFastMutex(IN PFAST_MUTEX FastMutex);
+KiAcquireFastMutex(
+    IN PFAST_MUTEX FastMutex
+);
 
-/* FUNCTIONS *****************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
-/*
- * @implemented
- */
 VOID
-FASTCALL
-ExEnterCriticalRegionAndAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
+FORCEINLINE
+ExiAcquireFastMutexUnsafe(IN PFAST_MUTEX FastMutex)
 {
     PKTHREAD Thread = KeGetCurrentThread();
 
-    /* Enter the Critical Region */
-    KeEnterCriticalRegion();
-  
+    DPRINT("Sanity print: %d %d %p\n",
+            KeGetCurrentIrql(), Thread->CombinedApcDisable, Thread->Teb);
+
+    /* Sanity check */
     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
-           (Thread == NULL) ||
            (Thread->CombinedApcDisable != 0) ||
            (Thread->Teb == NULL) ||
            (Thread->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
-
-    ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
-           (Thread == NULL) ||
-           (Thread->CombinedApcDisable != 0));
-           
-    ASSERT((Thread == NULL) || (FastMutex->Owner != Thread));
+    ASSERT(FastMutex->Owner != Thread);
 
     /* Decrease the count */
     if (InterlockedDecrement(&FastMutex->Count))
@@ -52,26 +47,16 @@ ExEnterCriticalRegionAndAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
     FastMutex->Owner = Thread;
 }
 
-/*
- * @implemented
- */
 VOID
-FASTCALL
-ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(PFAST_MUTEX FastMutex)
+FORCEINLINE
+ExiReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
 {
-
     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
-           (KeGetCurrentThread() == NULL) ||
            (KeGetCurrentThread()->CombinedApcDisable != 0) ||
            (KeGetCurrentThread()->Teb == NULL) ||
            (KeGetCurrentThread()->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
-   
+    ASSERT(FastMutex->Owner == KeGetCurrentThread());
 
-     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
-           (KeGetCurrentThread() == NULL) ||
-           (KeGetCurrentThread()->CombinedApcDisable != 0));
-     ASSERT(FastMutex->Owner == KeGetCurrentThread());        
-  
     /* Erase the owner */
     FastMutex->Owner = NULL;
 
@@ -79,8 +64,35 @@ ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(PFAST_MUTEX FastMutex)
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
         /* Someone was waiting for it, signal the waiter */
-        KeSetEventBoostPriority(&FastMutex->Gate, IO_NO_INCREMENT);
+        KeSetEventBoostPriority(&FastMutex->Gate, NULL);
     }
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+VOID
+FASTCALL
+ExEnterCriticalRegionAndAcquireFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
+{
+    /* Enter the Critical Region */
+    KeEnterCriticalRegion();
+
+    /* Acquire the mutex unsafely */
+    ExiAcquireFastMutexUnsafe(FastMutex);
+}
+
+/*
+ * @implemented
+ */
+VOID
+FASTCALL
+ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(IN OUT PFAST_MUTEX FastMutex)
+{
+    /* Release the mutex unsafely */
+    ExiReleaseFastMutexUnsafe(FastMutex);
 
     /* Leave the critical region */
     KeLeaveCriticalRegion();
@@ -91,16 +103,16 @@ ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(PFAST_MUTEX FastMutex)
  */
 VOID
 FASTCALL
-ExAcquireFastMutex(PFAST_MUTEX FastMutex)
+ExAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex)
 {
     KIRQL OldIrql;
-    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
     /* Raise IRQL to APC */
     OldIrql = KfRaiseIrql(APC_LEVEL);
-   
+
     /* Decrease the count */
-    if (InterlockedDecrement(&FastMutex->Count))
+    if (InterlockedDecrement(&FastMutex->Count) != 0)
     {
         /* Someone is still holding it, use slow path */
         KiAcquireFastMutex(FastMutex);
@@ -116,7 +128,7 @@ ExAcquireFastMutex(PFAST_MUTEX FastMutex)
  */
 VOID
 FASTCALL
-ExReleaseFastMutex (PFAST_MUTEX FastMutex)
+ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex)
 {
     KIRQL OldIrql;
     ASSERT_IRQL(APC_LEVEL);
@@ -141,25 +153,10 @@ ExReleaseFastMutex (PFAST_MUTEX FastMutex)
  */
 VOID
 FASTCALL
-ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
+ExAcquireFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
 {
-    PKTHREAD Thread = KeGetCurrentThread();
-    ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
-           (Thread == NULL) ||
-           (Thread->CombinedApcDisable != 0) ||
-           (Thread->Teb == NULL) ||
-           (Thread->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
-    ASSERT((Thread == NULL) || (FastMutex->Owner != Thread));
-
-    /* Decrease the count */
-    if (InterlockedDecrement(&FastMutex->Count))
-    {
-        /* Someone is still holding it, use slow path */
-        KiAcquireFastMutex(FastMutex);
-    }
-
-    /* Set the owner */
-    FastMutex->Owner = Thread;
+    /* Acquire the mutex unsafely */
+    ExiAcquireFastMutexUnsafe(FastMutex);
 }
 
 /*
@@ -167,24 +164,10 @@ ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
  */
 VOID
 FASTCALL
-ExReleaseFastMutexUnsafe(PFAST_MUTEX FastMutex)
+ExReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
 {
-    ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
-           (KeGetCurrentThread() == NULL) ||
-           (KeGetCurrentThread()->CombinedApcDisable != 0) ||
-           (KeGetCurrentThread()->Teb == NULL) ||
-           (KeGetCurrentThread()->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
-    ASSERT(FastMutex->Owner == KeGetCurrentThread());
-  
-    /* Erase the owner */
-    FastMutex->Owner = NULL;
-
-    /* Increase the count */
-    if (InterlockedIncrement(&FastMutex->Count) <= 0)
-    {
-        /* Someone was waiting for it, signal the waiter */
-        KeSetEventBoostPriority(&FastMutex->Gate, IO_NO_INCREMENT);
-    }
+    /* Release the mutex unsafely */
+    ExiReleaseFastMutexUnsafe(FastMutex);
 }
 
 /*
@@ -192,10 +175,10 @@ ExReleaseFastMutexUnsafe(PFAST_MUTEX FastMutex)
  */
 BOOLEAN
 FASTCALL
-ExTryToAcquireFastMutex(PFAST_MUTEX FastMutex)
+ExTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex)
 {
     KIRQL OldIrql;
-    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
     /* Raise to APC_LEVEL */
     OldIrql = KfRaiseIrql(APC_LEVEL);

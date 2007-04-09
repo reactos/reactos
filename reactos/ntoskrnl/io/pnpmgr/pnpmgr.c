@@ -141,11 +141,20 @@ IopStartDevice(
    Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->ResourceList;
    Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->ResourceListTranslated;
 
+   /*
+    * Windows NT Drivers receive IRP_MN_START_DEVICE in a critical region and
+    * actually _depend_ on this!. This is because NT will lock the Device Node
+    * with an ERESOURCE, which of course requires APCs to be disabled.
+    */
+   KeEnterCriticalRegion();
+
    Status = IopInitiatePnpIrp(
       Fdo,
       &IoStatusBlock,
       IRP_MN_START_DEVICE,
       &Stack);
+
+    KeLeaveCriticalRegion();
 
    if (!NT_SUCCESS(Status))
    {

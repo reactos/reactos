@@ -572,7 +572,6 @@ IoWriteErrorLogEntry(IN PVOID ElEntry)
     KIRQL Irql;
 
     /* Get the main header */
-    KEBUGCHECK(0);
     LogEntry = (PERROR_LOG_ENTRY)((ULONG_PTR)ElEntry -
                                   sizeof(ERROR_LOG_ENTRY));
 
@@ -586,12 +585,14 @@ IoWriteErrorLogEntry(IN PVOID ElEntry)
     /* Check if the worker is runnign */
     if (!IopLogWorkerRunning)
     {
+#if 0
         /* It's not, initialize it and queue it */
         ExInitializeWorkItem(&IopErrorLogWorkItem,
                              IopLogWorker,
                              &IopErrorLogWorkItem);
         ExQueueWorkItem(&IopErrorLogWorkItem, DelayedWorkQueue);
         IopLogWorkerRunning = TRUE;
+#endif
     }
 
     /* Release the lock and return */
