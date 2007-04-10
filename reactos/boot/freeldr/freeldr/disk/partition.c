@@ -199,9 +199,7 @@ BOOLEAN DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord,
 BOOLEAN DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
 {
 	char		ErrMsg[64];
-#ifdef DEBUG
 	ULONG		Index;
-#endif
 
 	// Read master boot record
 	if (!MachDiskReadLogicalSectors(DriveNumber, LogicalSectorNumber, 1, (PVOID)DISKREADBUFFER))
@@ -210,8 +208,6 @@ BOOLEAN DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMA
 	}
 	RtlCopyMemory(BootRecord, (PVOID)DISKREADBUFFER, sizeof(MASTER_BOOT_RECORD));
 
-
-#ifdef DEBUG
 
 	DbgPrint((DPRINT_DISK, "Dumping partition table for drive 0x%x:\n", DriveNumber));
 	DbgPrint((DPRINT_DISK, "Boot record logical start sector = %d\n", LogicalSectorNumber));
@@ -232,8 +228,6 @@ BOOLEAN DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMA
 		DbgPrint((DPRINT_DISK, "SectorCountBeforePartition: 0x%x\n", BootRecord->PartitionTable[Index].SectorCountBeforePartition));
 		DbgPrint((DPRINT_DISK, "PartitionSectorCount: 0x%x\n", BootRecord->PartitionTable[Index].PartitionSectorCount));
 	}
-
-#endif // defined DEBUG
 
 	// Check the partition table magic value
 	if (BootRecord->MasterBootRecordMagic != 0xaa55)

@@ -78,8 +78,6 @@ BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG Partitio
 	// Get the FAT type
 	FatType = FatDetermineFatType(FatVolumeBootSector, PartitionSectorCount);
 
-#ifdef DEBUG
-
 	DbgPrint((DPRINT_FILESYSTEM, "Dumping boot sector:\n"));
 
 	if (ISFATX(FatType))
@@ -155,9 +153,7 @@ BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG Partitio
 		DbgPrint((DPRINT_FILESYSTEM, "BootSectorMagic: 0x%x\n", FatVolumeBootSector->BootSectorMagic));
 	}
 
-#endif // defined DEBUG
-
-        //
+	//
 	// Set the correct partition offset
 	//
 	FatVolumeStartSector = VolumeStartSector;

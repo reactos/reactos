@@ -23,7 +23,7 @@
 
 /* MACROS *******************************************************************/
 
-#ifdef DEBUG
+#ifdef DBG
 
 #define DEFAULT_BAUD_RATE    19200
 
@@ -275,11 +275,11 @@ VOID Rs232PortPutByte(UCHAR ByteToSend)
 	WRITE_PORT_UCHAR (SER_THR(Rs232PortBase), ByteToSend);
 }
 
-#endif
+#endif /* defined DBG */
 
 BOOLEAN Rs232PortInUse(ULONG Base)
 {
-#ifdef DEBUG
+#ifdef DBG
     return PortInitialized && Rs232PortBase == (PUCHAR)Base ? TRUE : FALSE;
 #else
     return FALSE;

@@ -534,7 +534,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	DbgPrint((DPRINT_WINDOWS, "Memory Descriptor List prepared, printing PDE\n"));
 	List_PaToVa(&LoaderBlock->MemoryDescriptorListHead);
 
-	#if DEBUG
+#ifdef DBG
 	{
 		ULONG *PDE_Addr=(ULONG *)PDE;//0xC0300000;
 		int j;
@@ -553,7 +553,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 			DbgPrint((DPRINT_WINDOWS, "\n"));
 		}
 	}
-	#endif
+#endif
 
 
 	// Enable paging

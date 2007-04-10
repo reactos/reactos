@@ -152,7 +152,6 @@ PFILE FsOpenFile(PCSTR FileName)
 		break;
 	}
 
-#ifdef DEBUG
 	//
 	// Check return value
 	//
@@ -164,7 +163,6 @@ PFILE FsOpenFile(PCSTR FileName)
 	{
 		DbgPrint((DPRINT_FILESYSTEM, "FsOpenFile() failed.\n"));
 	}
-#endif // defined DEBUG
 
 	return FileHandle;
 }

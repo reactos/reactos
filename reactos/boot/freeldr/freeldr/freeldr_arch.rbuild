@@ -6,9 +6,6 @@
 				<include base="freeldr_base">cache</include>
 				<include base="ntoskrnl">include</include>
 				<define name="__USE_W32API" />
-<!--	
-				<define name="DEBUG" />
--->
 				<define name="_NTHAL_" />
 				<compilerflag>-ffreestanding</compilerflag>
 				<compilerflag>-fno-builtin</compilerflag>
@@ -52,9 +49,6 @@
 				<include base="freeldr_base">cache</include>
 				<include base="ntoskrnl">include</include>
 				<define name="__USE_W32API" />
-<!--	
-				<define name="DEBUG" />
--->
 				<define name="_NTHAL_" />
 				<compilerflag>-ffreestanding</compilerflag>
 				<compilerflag>-fno-builtin</compilerflag>
@@ -64,6 +58,25 @@
 				<file>boot.s</file>
 				<file>mach.c</file>
 				<file>mboot.c</file>
+			</module>
+		</if>
+	</directory>
+	<directory name="mips">
+		<if property="ARCH" value="mips">
+			<module name="freeldr_arch" type="objectlibrary">
+				<include base="freeldr_base">include</include>
+				<include base="freeldr_base">cache</include>
+				<include base="ntoskrnl">include</include>
+				<define name="__USE_W32API" />
+				<define name="DEBUG" />
+				<define name="_NTHAL_" />
+				<file>boot.s</file>
+				<file>console.c</file>
+				<file>disk.c</file>
+				<file>hardware.c</file>
+				<file>loader.c</file>
+				<file>mach.c</file>
+				<file>video.c</file>
 			</module>
 		</if>
 	</directory>

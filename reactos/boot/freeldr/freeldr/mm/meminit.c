@@ -22,7 +22,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#ifdef DEBUG
+#ifdef DBG
 typedef struct
 {
 	ULONG		Type;
@@ -49,7 +49,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 {
 	BIOS_MEMORY_MAP	BiosMemoryMap[32];
 	ULONG		BiosMemoryMapEntryCount;
-#ifdef DEBUG
+#ifdef DBG
 	ULONG		Index;
 #endif
 
@@ -59,7 +59,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 
 	BiosMemoryMapEntryCount = MachGetMemoryMap(BiosMemoryMap, sizeof(BiosMemoryMap) / sizeof(BIOS_MEMORY_MAP));
 
-#ifdef DEBUG
+#ifdef DBG
 	// Dump the system memory map
 	if (BiosMemoryMapEntryCount != 0)
 	{
@@ -101,7 +101,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	return TRUE;
 }
 
-#ifdef DEBUG
+#ifdef DBG
 PUCHAR MmGetSystemMemoryMapTypeString(ULONG Type)
 {
 	ULONG		Index;
