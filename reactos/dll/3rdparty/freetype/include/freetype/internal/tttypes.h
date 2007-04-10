@@ -864,7 +864,7 @@ FT_BEGIN_HEADER
    *
    *   USHORT   version      `BDF ' table version number, should be 0x0001.
    *   USHORT   strikeCount  Number of strikes (bitmap sizes) in this table.
-   *   ULONG    stringTable  Offset (froms start of BDF table) to string
+   *   ULONG    stringTable  Offset (from start of BDF table) to string
    *                         table.
    *
    * This is followed by an array of `strikeCount' descriptors, having the
@@ -1445,7 +1445,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*     max_points   :: The maximal size in points of the zone.           */
   /*                                                                       */
-  /*     max_contours :: Max size in links contours of thez one.           */
+  /*     max_contours :: Max size in links contours of the zone.           */
   /*                                                                       */
   /*     n_points     :: The current number of points in the zone.         */
   /*                                                                       */

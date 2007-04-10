@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType name ID definitions (specification only).                   */
 /*                                                                         */
-/*  Copyright 1996-2002, 2003, 2004, 2006 by                               */
+/*  Copyright 1996-2002, 2003, 2004, 2006, 2007 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -606,7 +606,7 @@ FT_BEGIN_HEADER
 #define TT_MS_LANGID_CROATIAN_BOSNIA_HERZEGOVINA       0x101a
 #define TT_MS_LANGID_BOSNIAN_BOSNIA_HERZEGOVINA        0x141a
        /* and XPsp2 Platform SDK added (2004-07-26) */
-       /* Names are shortened to be signifiant within 40 chars. */
+       /* Names are shortened to be significant within 40 chars. */
 #define TT_MS_LANGID_SERBIAN_BOSNIA_HERZ_LATIN         0x181a
 #define TT_MS_LANGID_SERBIAN_BOSNIA_HERZ_CYRILLIC      0x181a
 #endif
@@ -660,7 +660,7 @@ FT_BEGIN_HEADER
   /* ... and we also keep our old identifier... */
 #define TT_MS_LANGID_SAAMI_LAPONIA                     0x043b
 
-#if 0 /* this seems to be a previous invertion */
+#if 0 /* this seems to be a previous inversion */
 #define TT_MS_LANGID_IRISH_GAELIC_IRELAND              0x043c
 #define TT_MS_LANGID_SCOTTISH_GAELIC_UNITED_KINGDOM    0x083c
 #else
@@ -698,6 +698,15 @@ FT_BEGIN_HEADER
 #define TT_MS_LANGID_MONGOLIAN_MONGOLIA /* Cyrillic */ 0x0450
 #define TT_MS_LANGID_MONGOLIAN_MONGOLIA_MONGOLIAN      0x0850
 #define TT_MS_LANGID_TIBETAN_CHINA                     0x0451
+  /* Don't use the next constant!  It has            */
+  /*   (1) the wrong spelling (Dzonghka)             */
+  /*   (2) Microsoft doesn't officially define it -- */
+  /*       at least it is not in the List of Local   */
+  /*       ID Values.                                */
+  /*   (3) Dzongkha is not the same language as      */
+  /*       Tibetan, so merging it is wrong anyway.   */
+  /*                                                 */
+  /* TT_MS_LANGID_TIBETAN_BHUTAN is correct, BTW.    */
 #define TT_MS_LANGID_DZONGHKA_BHUTAN                   0x0851
 
 #if 0

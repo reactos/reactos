@@ -1,6 +1,7 @@
 /*
  * Copyright 2000 Computing Research Labs, New Mexico State University
- * Copyright 2001, 2002, 2003, 2004, 2005, 2006 Francesco Zappa Nardelli
+ * Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007
+ *   Francesco Zappa Nardelli
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -384,8 +385,10 @@
   } _bdf_parse_t;
 
 
-#define setsbit( m, cc )  ( m[(cc) >> 3] |= (FT_Byte)( 1 << ( (cc) & 7 ) ) )
-#define sbitset( m, cc )  ( m[(cc) >> 3]  & ( 1 << ( (cc) & 7 ) ) )
+#define setsbit( m, cc ) \
+          ( m[(FT_Byte)(cc) >> 3] |= (FT_Byte)( 1 << ( (cc) & 7 ) ) )
+#define sbitset( m, cc ) \
+          ( m[(FT_Byte)(cc) >> 3]  & ( 1 << ( (cc) & 7 ) ) )
 
 
   static void
@@ -1129,7 +1132,7 @@
                             bdf_options_t*  opts )
   {
     unsigned long  len;
-    char           name[128];
+    char           name[256];
     _bdf_list_t    list;
     FT_Memory      memory;
     FT_Error       error = BDF_Err_Ok;
@@ -1148,6 +1151,13 @@
     font->spacing = opts->font_spacing;
 
     len = (unsigned long)( ft_strlen( font->name ) + 1 );
+    /* Limit ourselves to 256 characters in the font name. */
+    if ( len >= 256 )
+    {
+      error = BDF_Err_Invalid_Argument;
+      goto Exit;
+    }
+
     FT_MEM_COPY( name, font->name, len );
 
     error = _bdf_list_split( &list, (char *)"-", name, len );
@@ -1253,7 +1263,6 @@
   {
     unsigned long   propid;
     hashnode        hn;
-    int             len;
     bdf_property_t  *prop, *fp;
     FT_Memory       memory = font->memory;
     FT_Error        error = BDF_Err_Ok;
@@ -1272,19 +1281,11 @@
         /* Delete the current atom if it exists. */
         FT_FREE( fp->value.atom );
 
-        if ( value == 0 )
-          len = 1;
-        else
-          len = ft_strlen( value ) + 1;
-
-        if ( len > 1 )
+        if ( value && value[0] != 0 )
         {
-          if ( FT_NEW_ARRAY( fp->value.atom, len ) )
+          if ( FT_STRDUP( fp->value.atom, value ) )
             goto Exit;
-          FT_MEM_COPY( fp->value.atom, value, len );
         }
-        else
-          fp->value.atom = 0;
         break;
 
       case BDF_INTEGER:
@@ -1349,19 +1350,12 @@
     switch ( prop->format )
     {
     case BDF_ATOM:
-      if ( value == 0 )
-        len = 1;
-      else
-        len = ft_strlen( value ) + 1;
-
-      if ( len > 1 )
+      fp->value.atom = 0;
+      if ( value != 0 && value[0] )
       {
-        if ( FT_NEW_ARRAY( fp->value.atom, len ) )
+        if ( FT_STRDUP( fp->value.atom, value ) )
           goto Exit;
-        FT_MEM_COPY( fp->value.atom, value, len );
       }
-      else
-        fp->value.atom = 0;
       break;
 
     case BDF_INTEGER:
@@ -1481,6 +1475,14 @@
       /* Make sure the number of glyphs is non-zero. */
       if ( p->cnt == 0 )
         font->glyphs_size = 64;
+
+      /* Limit ourselves to 1,114,112 glyphs in the font (this is the */
+      /* number of code points available in Unicode).                 */
+      if ( p->cnt >= 1114112UL )
+      {
+        error = BDF_Err_Invalid_Argument;
+        goto Exit;
+      }
 
       if ( FT_NEW_ARRAY( font->glyphs, font->glyphs_size ) )
         goto Exit;

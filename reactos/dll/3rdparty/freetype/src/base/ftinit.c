@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType initialization layer (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2005 by                                     */
+/*  Copyright 1996-2001, 2002, 2005, 2007 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -124,7 +124,9 @@
     /* default drivers.                                        */
 
     error = FT_New_Library( memory, alibrary );
-    if ( !error )
+    if ( error )
+      FT_Done_Memory( memory );
+    else
     {
       (*alibrary)->version_major = FREETYPE_MAJOR;
       (*alibrary)->version_minor = FREETYPE_MINOR;

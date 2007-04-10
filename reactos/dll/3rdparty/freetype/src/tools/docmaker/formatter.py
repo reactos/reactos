@@ -1,14 +1,17 @@
+#  Formatter (c) 2002, 2004, 2007 David Turner <david@freetype.org>
+#
+
 from sources import *
 from content import *
 from utils   import *
 
-# This is the base Formatter class. its purpose is to convert
-# a content processor's data into specific documents (i.e. table of
+# This is the base Formatter class.  Its purpose is to convert
+# a content processor's data into specific documents (i.e., table of
 # contents, global index, and individual API reference indices).
 #
-# You'll need to sub-class it to output anything sensible.  For example,
+# You need to sub-class it to output anything sensible.  For example,
 # the file tohtml.py contains the definition of the HtmlFormatter sub-class
-# used to output, you guessed it, HTML.
+# used to output -- you guessed it -- HTML.
 #
 
 class Formatter:
@@ -198,6 +201,4 @@ class Formatter:
     #  Formatting a block
     #
 
-
-
-
+# eof

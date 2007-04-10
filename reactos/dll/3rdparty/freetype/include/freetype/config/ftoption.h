@@ -468,7 +468,7 @@ FT_BEGIN_HEADER
   /* FT_PARAM_TAG_UNPATENTED_HINTING; or when the debug hook               */
   /* FT_DEBUG_HOOK_UNPATENTED_HINTING is globally activated.               */
   /*                                                                       */
-//#define TT_CONFIG_OPTION_UNPATENTED_HINTING
+/* #define TT_CONFIG_OPTION_UNPATENTED_HINTING */
 
 
   /*************************************************************************/
@@ -605,7 +605,7 @@ FT_BEGIN_HEADER
    * is recommended to disable the macro since it reduces the library's code
    * size and activates a few memory-saving optimizations as well.
    */
-// #define FT_CONFIG_OPTION_OLD_INTERNALS
+#define FT_CONFIG_OPTION_OLD_INTERNALS
 
 
   /*

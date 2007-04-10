@@ -5,7 +5,7 @@
 /*    ANSI-specific library and header configuration file (specification   */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006 by                              */
+/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -101,6 +101,7 @@
 #define ft_strncmp  strncmp
 #define ft_strncpy  strncpy
 #define ft_strrchr  strrchr
+#define ft_strstr   strstr
 
 
   /**********************************************************************/

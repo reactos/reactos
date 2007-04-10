@@ -1359,7 +1359,7 @@
   /*                      decomposition.                                   */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    Error code.  0 means sucess.                                       */
+  /*    Error code.  0 means success.                                      */
   /*                                                                       */
   static
   int  FT_Outline_Decompose( const FT_Outline*        outline,

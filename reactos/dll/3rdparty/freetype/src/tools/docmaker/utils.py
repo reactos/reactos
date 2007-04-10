@@ -1,3 +1,6 @@
+#  Utils (c) 2002, 2004, 2007  David Turner <david@freetype.org>
+#
+
 import string, sys, os, glob
 
 # current output directory
@@ -126,3 +129,4 @@ def make_file_list( args = None ):
 
     return file_list
 
+# eof

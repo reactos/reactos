@@ -263,6 +263,7 @@
 
 
   /* documentation is in ftobjs.h */
+
   FT_BASE_DEF( FT_Memory )
   FT_New_Memory( void )
   {
@@ -295,8 +296,6 @@
 #endif
     memory->free( memory, memory );
   }
-
-
 
 
 /* END */

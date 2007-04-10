@@ -806,8 +806,8 @@
   /*    tt_face_load_cmap                                                  */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Loads the cmap directory in a face object.  The cmaps itselves are */
-  /*    loaded on demand in the `ttcmap.c' module.                         */
+  /*    Loads the cmap directory in a face object.  The cmaps themselves   */
+  /*    are loaded on demand in the `ttcmap.c' module.                     */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face   :: A handle to the target face object.                      */

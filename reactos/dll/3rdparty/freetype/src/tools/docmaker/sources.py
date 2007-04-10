@@ -1,3 +1,6 @@
+#  Sources (c) 2002, 2003, 2004, 2006, 2007
+#    David Turner <david@freetype.org>
+#
 #
 # this file contains definitions of classes needed to decompose
 # C sources files into a series of multi-line "blocks". There are
@@ -68,7 +71,7 @@ column = r'''
   /\*{1}   # followed by '/' and precisely one asterisk
   ([^*].*) # followed by anything (group 1)
   \*{1}/   # followed by one asterisk and a '/'
-  \s*$     # enventually followed by whitespace
+  \s*$     # eventually followed by whitespace
 '''
 
 re_source_block_format1 = SourceBlockFormat( 1, start, column, start )
@@ -312,7 +315,7 @@ class SourceProcessor:
                     self.lines.append( line )
 
                 else:
-                    # humm.. this is an unexcepted block end,
+                    # humm.. this is an unexpected block end,
                     # create a new block, but don't process the line
                     self.add_block_lines()
 

@@ -543,13 +543,58 @@
               /* the stem is less than one pixel; we will center it
                * around the nearest pixel center
                */
-#if 1
-              pos = FT_PIX_FLOOR( pos + ( len >> 1 ) );
-#else
-             /* this seems to be a bug! */
-              pos = pos + FT_PIX_FLOOR( len >> 1 );
-#endif
-              len = 64;
+              if ( len >= 32 )
+              {
+                /* This is a special case where we also widen the stem
+                 * and align it to the pixel grid.
+                 *
+                 *   stem_center          = pos + (len/2)
+                 *   nearest_pixel_center = FT_ROUND(stem_center-32)+32
+                 *   new_pos              = nearest_pixel_center-32
+                 *                        = FT_ROUND(stem_center-32)
+                 *                        = FT_FLOOR(stem_center-32+32)
+                 *                        = FT_FLOOR(stem_center)
+                 *   new_len              = 64
+                 */
+                pos = FT_PIX_FLOOR( pos + ( len >> 1 ) );
+                len = 64;
+              }
+              else if ( len > 0 )
+              {
+                /* This is a very small stem; we simply align it to the
+                 * pixel grid, trying to find the minimal displacement.
+                 *
+                 * left               = pos
+                 * right              = pos + len
+                 * left_nearest_edge  = ROUND(pos)
+                 * right_nearest_edge = ROUND(right)
+                 *
+                 * if ( ABS(left_nearest_edge - left) <=
+                 *      ABS(right_nearest_edge - right) )
+                 *    new_pos = left
+                 * else
+                 *    new_pos = right
+                 */
+                FT_Pos  left_nearest  = FT_PIX_ROUND( pos );
+                FT_Pos  right_nearest = FT_PIX_ROUND( pos + len );
+                FT_Pos  left_disp     = left_nearest - pos;
+                FT_Pos  right_disp    = right_nearest - ( pos + len );
+
+
+                if ( left_disp < 0 )
+                  left_disp = -left_disp;
+                if ( right_disp < 0 )
+                  right_disp = -right_disp;
+                if ( left_disp <= right_disp )
+                  pos = left_nearest;
+                else
+                  pos = right_nearest;
+              }
+              else
+              {
+                /* this is a ghost stem; we simply round it */
+                pos = FT_PIX_ROUND( pos );
+              }
             }
             else
             {
@@ -2175,11 +2220,11 @@
       PSH_Dimension  dim_x = &glyph->globals->dimension[0];
       PSH_Dimension  dim_y = &glyph->globals->dimension[1];
 
-      FT_Fixed x_scale = dim_x->scale_mult;
-      FT_Fixed y_scale = dim_y->scale_mult;
+      FT_Fixed  x_scale = dim_x->scale_mult;
+      FT_Fixed  y_scale = dim_y->scale_mult;
 
-      FT_Fixed scaled;
-      FT_Fixed fitted;
+      FT_Fixed  scaled;
+      FT_Fixed  fitted;
 
 
       scaled = FT_MulFix( globals->blues.normal_top.zones->org_ref, y_scale );

@@ -220,17 +220,8 @@
     /* now, lookup the name itself */
     gname = cff_index_get_sid_string( &font->string_index, sid, psnames );
 
-    if ( gname && buffer_max > 0 )
-    {
-      FT_UInt  len = (FT_UInt)ft_strlen( gname );
-
-
-      if ( len >= buffer_max )
-        len = buffer_max - 1;
-
-      FT_MEM_COPY( buffer, gname, len );
-      ((FT_Byte*)buffer)[len] = 0;
-    }
+    if ( gname )
+      FT_STRCPYN( buffer, gname, buffer_max );
 
     FT_FREE( gname );
     error = CFF_Err_Ok;
@@ -269,6 +260,9 @@
         name = cff_index_get_name( &cff->string_index, sid - 391 );
       else
         name = (FT_String *)psnames->adobe_std_strings( sid );
+
+      if ( !name )
+        continue;
 
       result = ft_strcmp( glyph_name, name );
 

@@ -103,75 +103,82 @@
     FT_Error        error;
     int             pitch;
     int             new_pitch;
-    FT_UInt         ppb;
-    FT_Int          i, width;
+    FT_UInt         bpp;
+    FT_Int          i, width, height;
     unsigned char*  buffer;
 
 
-    width = bitmap->width;
-    pitch = bitmap->pitch;
+    width  = bitmap->width;
+    height = bitmap->rows;
+    pitch  = bitmap->pitch;
     if ( pitch < 0 )
       pitch = -pitch;
 
     switch ( bitmap->pixel_mode )
     {
     case FT_PIXEL_MODE_MONO:
-      ppb = 8;
+      bpp       = 1;
+      new_pitch = ( width + xpixels + 7 ) >> 3;
       break;
     case FT_PIXEL_MODE_GRAY2:
-      ppb = 4;
+      bpp       = 2;
+      new_pitch = ( width + xpixels + 3 ) >> 2;
       break;
     case FT_PIXEL_MODE_GRAY4:
-      ppb = 2;
+      bpp       = 4;
+      new_pitch = ( width + xpixels + 1 ) >> 1;
       break;
     case FT_PIXEL_MODE_GRAY:
     case FT_PIXEL_MODE_LCD:
     case FT_PIXEL_MODE_LCD_V:
-      ppb = 1;
+      bpp       = 8;
+      new_pitch = ( width + xpixels );
       break;
     default:
       return FT_Err_Invalid_Glyph_Format;
     }
 
     /* if no need to allocate memory */
-    if ( ypixels == 0 && pitch * ppb >= bitmap->width + xpixels )
+    if ( ypixels == 0 && new_pitch <= pitch )
     {
       /* zero the padding */
-      for ( i = 0; i < bitmap->rows; i++ )
+      FT_Int  bit_width = pitch * 8;
+      FT_Int  bit_last  = ( width + xpixels ) * bpp;
+
+
+      if ( bit_last < bit_width )
       {
-        unsigned char*  last_byte;
-        int             bits = xpixels * ( 8 / ppb );
-        int             mask = 0;
+        FT_Byte*  line  = bitmap->buffer + ( bit_last >> 3 );
+        FT_Byte*  end   = bitmap->buffer + pitch;
+        FT_Int    shift = bit_last & 7;
+        FT_UInt   mask  = 0xFF00U >> shift;
+        FT_Int    count = height;
 
 
-        last_byte = bitmap->buffer + i * pitch + ( bitmap->width - 1 ) / ppb;
-
-        if ( bits >= 8 )
+        for ( ; count > 0; count--, line += pitch, end += pitch )
         {
-          FT_MEM_ZERO( last_byte + 1, bits / 8 );
-          bits %= 8;
-        }
+          FT_Byte*  write = line;
 
-        if ( bits > 0 )
-        {
-          while ( bits-- > 0 )
-            mask |= 1 << bits;
 
-          *last_byte &= ~mask;
+          if ( shift > 0 )
+          {
+            write[0] = (FT_Byte)( write[0] & mask );
+            write++;
+          }
+          if ( write < end )
+            FT_MEM_ZERO( write, end-write );
         }
       }
 
       return FT_Err_Ok;
     }
 
-    new_pitch = ( bitmap->width + xpixels + ppb - 1 ) / ppb;
-
     if ( FT_QALLOC_MULT( buffer, new_pitch, bitmap->rows + ypixels ) )
       return error;
 
     if ( bitmap->pitch > 0 )
     {
-      FT_Int  len = ( width + ppb - 1 ) / ppb;
+      FT_Int  len = ( width * bpp + 7 ) >> 3;
 
 
       for ( i = 0; i < bitmap->rows; i++ )
@@ -180,7 +187,7 @@
     }
     else
     {
-      FT_Int  len = ( width + ppb - 1 ) / ppb;
+      FT_Int  len = ( width * bpp + 7 ) >> 3;
 
 
       for ( i = 0; i < bitmap->rows; i++ )
@@ -194,7 +201,7 @@
     if ( bitmap->pitch < 0 )
       new_pitch = -new_pitch;
 
-    /* set pitch only */
+    /* set pitch only, width and height are left untouched */
     bitmap->pitch = new_pitch;
 
     return FT_Err_Ok;
@@ -244,8 +251,8 @@
           align = ( bitmap->width + xstr + 1 ) / 2;
 
         FT_Bitmap_New( &tmp );
-        error = FT_Bitmap_Convert( library, bitmap, &tmp, align );
 
+        error = FT_Bitmap_Convert( library, bitmap, &tmp, align );
         if ( error )
           return error;
 

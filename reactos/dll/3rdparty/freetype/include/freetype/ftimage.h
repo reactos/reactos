@@ -5,7 +5,7 @@
 /*    FreeType glyph image formats and default raster interface            */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -381,8 +381,7 @@ FT_BEGIN_HEADER
   /*                                 the outline uses the opposite         */
   /*                                 direction (typically for Type 1       */
   /*                                 fonts).  This flag is ignored by the  */
-  /*                                 scan-converter.  However, it is very  */
-  /*                                 important for the auto-hinter.        */
+  /*                                 scan-converter.                       */
   /*                                                                       */
   /*   FT_OUTLINE_IGNORE_DROPOUTS :: By default, the scan converter will   */
   /*                                 try to detect drop-outs in an outline */
@@ -724,7 +723,7 @@ FT_BEGIN_HEADER
   /*    ft_glyph_format_xxx                                                */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A list of decprecated constants.  Use the corresponding            */
+  /*    A list of deprecated constants.  Use the corresponding             */
   /*    @FT_Glyph_Format values instead.                                   */
   /*                                                                       */
   /* <Values>                                                              */

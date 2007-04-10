@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF token stream parser (body)                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2007 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -159,7 +159,7 @@
     for (;;)
     {
       /* If we entered this iteration with phase == 4, we need to */
-      /* read a new byte.  This also skips past the intial 0x1E.  */
+      /* read a new byte.  This also skips past the initial 0x1E. */
       if ( phase )
       {
         p++;

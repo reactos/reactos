@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 driver interface (body).                                      */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -59,22 +59,7 @@
                      FT_Pointer  buffer,
                      FT_UInt     buffer_max )
   {
-    FT_String*  gname;
-
-
-    gname = face->type1.glyph_names[glyph_index];
-
-    if ( buffer_max > 0 )
-    {
-      FT_UInt  len = (FT_UInt)( ft_strlen( gname ) );
-
-
-      if (len >= buffer_max)
-        len = buffer_max - 1;
-
-      FT_MEM_COPY( buffer, gname, len );
-      ((FT_Byte*)buffer)[len] = 0;
-    }
+    FT_STRCPYN( buffer, face->type1.glyph_names[glyph_index], buffer_max );
 
     return T1_Err_Ok;
   }

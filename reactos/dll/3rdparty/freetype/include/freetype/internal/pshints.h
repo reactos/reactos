@@ -6,7 +6,7 @@
 /*    recorders (specification only).  These are used to support native    */
 /*    T1/T2 hints in the `type1', `cid', and `cff' font drivers.           */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2005, 2006 by                              */
+/*  Copyright 2001, 2002, 2003, 2005, 2006, 2007 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -452,9 +452,9 @@ FT_BEGIN_HEADER
    *   Use vertical coordinates (y) for horizontal stems (dim=0).  Use
    *   horizontal coordinates (x) for vertical stems (dim=1).
    *
-   *   There are `2*count' elements in the `coords' aray.  Each even element
-   *   is an absolute position in font units, each odd element is a length
-   *   in font units.
+   *   There are `2*count' elements in the `coords' array.  Each even
+   *   element is an absolute position in font units, each odd element is a
+   *   length in font units.
    *
    *   A length can be negative, in which case it must be either -20 or
    *   -21.  It is interpreted as a `ghost' stem, according to the Type 1

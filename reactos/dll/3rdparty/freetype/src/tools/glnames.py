@@ -6,7 +6,7 @@
 #
 
 
-# Copyright 1996-2000, 2003, 2005 by
+# Copyright 1996-2000, 2003, 2005, 2007 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -4821,7 +4821,7 @@ class StringTable:
 #     name         bitsize     description
 #     -----------------------------------------
 #     hasvalue           1     Set to 1 if a 16-bit Unicode value follows.
-#     num_children       7     Number of childrens.  Can be 0 only if
+#     num_children       7     Number of children.  Can be 0 only if
 #                              `hasvalue' is set to 1.
 #     value             16     Optional Unicode value.
 #

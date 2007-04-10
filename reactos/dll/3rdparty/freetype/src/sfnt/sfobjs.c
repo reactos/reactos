@@ -828,7 +828,7 @@
         /*      - otherwise, the correct typographic values are in the    */
         /*        sTypoAscender, sTypoDescender & sTypoLineGap fields.    */
         /*                                                                */
-        /*        However, certains fonts have these fields set to 0.     */
+        /*        However, certain fonts have these fields set to 0.      */
         /*        Rather, they have usWinAscent & usWinDescent correctly  */
         /*        set (but with different values).                        */
         /*                                                                */

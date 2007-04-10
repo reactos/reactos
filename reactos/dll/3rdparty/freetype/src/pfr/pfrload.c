@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR loader (body).                                          */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005 by                                    */
+/*  Copyright 2002, 2003, 2004, 2005, 2007 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -743,7 +743,7 @@
     phy_font->bbox.yMax          = PFR_NEXT_SHORT( p );
     phy_font->flags      = flags = PFR_NEXT_BYTE( p );
 
-    /* get the standard advance for non-proprotional fonts */
+    /* get the standard advance for non-proportional fonts */
     if ( !(flags & PFR_PHY_PROPORTIONAL) )
     {
       PFR_CHECK( 2 );

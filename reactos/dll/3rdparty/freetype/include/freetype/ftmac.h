@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Additional Mac-specific API.                                         */
 /*                                                                         */
-/*  Copyright 1996-2001, 2004, 2006 by                                     */
+/*  Copyright 1996-2001, 2004, 2006, 2007 by                               */
 /*  Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -33,6 +33,17 @@
 
 
 FT_BEGIN_HEADER
+
+
+/* gcc-3.4.1 and later can warn about functions tagged as deprecated */
+#ifndef FT_DEPRECATED_ATTRIBUTE
+#if defined(__GNUC__)                                               && \
+    ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
+#define FT_DEPRECATED_ATTRIBUTE  __attribute__((deprecated))
+#else
+#define FT_DEPRECATED_ATTRIBUTE
+#endif
+#endif
 
 
   /*************************************************************************/
@@ -105,9 +116,11 @@ FT_BEGIN_HEADER
   /*                  Bold).                                               */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    pathSpec   :: FSSpec to the file.  For passing to @FT_New_Face.    */
+  /*    pathSpec   :: FSSpec to the file.  For passing to                  */
+  /*                  @FT_New_Face_From_FSSpec.                            */
   /*                                                                       */
-  /*    face_index :: Index of the face.  For passing to @FT_New_Face.     */
+  /*    face_index :: Index of the face.  For passing to                   */
+  /*                  @FT_New_Face_From_FSSpec.                            */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
@@ -115,7 +128,8 @@ FT_BEGIN_HEADER
   FT_EXPORT( FT_Error )
   FT_GetFile_From_Mac_Name( const char*  fontName,
                             FSSpec*      pathSpec,
-                            FT_Long*     face_index );
+                            FT_Long*     face_index )
+                          FT_DEPRECATED_ATTRIBUTE;
 
 
   /*************************************************************************/
@@ -130,9 +144,11 @@ FT_BEGIN_HEADER
   /*    fontName   :: Mac OS name of the font in ATS framework.            */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    pathSpec   :: FSSpec to the file.  For passing to @FT_New_Face.    */
+  /*    pathSpec   :: FSSpec to the file. For passing to                   */
+  /*                  @FT_New_Face_From_FSSpec.                            */
   /*                                                                       */
-  /*    face_index :: Index of the face.  For passing to @FT_New_Face.     */
+  /*    face_index :: Index of the face. For passing to                    */
+  /*                  @FT_New_Face_From_FSSpec.                            */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
@@ -140,7 +156,39 @@ FT_BEGIN_HEADER
   FT_EXPORT( FT_Error )
   FT_GetFile_From_Mac_ATS_Name( const char*  fontName,
                                 FSSpec*      pathSpec,
-                                FT_Long*     face_index );
+                                FT_Long*     face_index )
+                              FT_DEPRECATED_ATTRIBUTE;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_GetFilePath_From_Mac_ATS_Name                                   */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Return a pathname of the disk file and face index for given font   */
+  /*    name which is handled by ATS framework.                            */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    fontName    :: Mac OS name of the font in ATS framework.           */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    path        :: Buffer to store pathname of the file.  For passing  */
+  /*                   to @FT_New_Face.  The client must allocate this     */
+  /*                   buffer before calling this function.                */
+  /*                                                                       */
+  /*    maxPathSize :: Lengths of the buffer `path' that client allocated. */
+  /*                                                                       */
+  /*    face_index  :: Index of the face.  For passing to @FT_New_Face.    */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.                             */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_GetFilePath_From_Mac_ATS_Name( const char*  fontName,
+                                    UInt8*       path,
+                                    UInt32       maxPathSize,
+                                    FT_Long*     face_index );
 
 
   /*************************************************************************/
@@ -174,7 +222,8 @@ FT_BEGIN_HEADER
   FT_New_Face_From_FSSpec( FT_Library     library,
                            const FSSpec  *spec,
                            FT_Long        face_index,
-                           FT_Face       *aface );
+                           FT_Face       *aface )
+                         FT_DEPRECATED_ATTRIBUTE;
 
 
   /*************************************************************************/
@@ -208,7 +257,8 @@ FT_BEGIN_HEADER
   FT_New_Face_From_FSRef( FT_Library    library,
                           const FSRef  *ref,
                           FT_Long       face_index,
-                          FT_Face      *aface );
+                          FT_Face      *aface )
+                        FT_DEPRECATED_ATTRIBUTE;
 
   /* */
 

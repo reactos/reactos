@@ -283,8 +283,8 @@
         /* be worth to do more checks for a few special cases.           */
         for ( nn = 0; trick_names[nn] != NULL; nn++ )
         {
-          if ( ttface->family_name                                    &&
-               ft_strcmp( ttface->family_name, trick_names[nn] ) == 0 )
+          if ( ttface->family_name                               &&
+               ft_strstr( ttface->family_name, trick_names[nn] ) )
           {
             unpatented_hinting = 1;
             break;
@@ -595,9 +595,8 @@
 
     /* Set default metrics */
     {
-      FT_Size_Metrics*  metrics  = &size->root.metrics;
+      FT_Size_Metrics*  metrics  = &size->metrics;
       TT_Size_Metrics*  metrics2 = &size->ttmetrics;
-
 
       metrics->x_ppem = 0;
       metrics->y_ppem = 0;
@@ -704,7 +703,7 @@
   FT_LOCAL_DEF( FT_Error )
   tt_size_ready_bytecode( TT_Size  size )
   {
-    FT_UNUSED( ftsize );
+    FT_UNUSED( size );
     return 0;
   }
 

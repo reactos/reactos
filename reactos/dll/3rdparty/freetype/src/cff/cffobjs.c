@@ -285,17 +285,10 @@
               const FT_String*  source )
   {
     FT_Error    error;
-    FT_String*  result = 0;
-    FT_Int      len = (FT_Int)ft_strlen( source );
+    FT_String*  result;
 
 
-    if ( !FT_ALLOC( result, len + 1 ) )
-    {
-      FT_MEM_COPY( result, source, len );
-      result[len] = 0;
-    }
-
-    FT_UNUSED( error );
+    result = ft_mem_strdup( memory, source, &error );
 
     return result;
   }

@@ -126,7 +126,7 @@
   /*   optimize performance (see technical note on the sweep below).       */
   /*                                                                       */
   /*   Of course, the raster detects whether the two stacks collide and    */
-  /*   handles the situation propertly.                                    */
+  /*   handles the situation properly.                                     */
   /*                                                                       */
   /*************************************************************************/
 
@@ -486,7 +486,7 @@
 
     Byte      dropOutControl;       /* current drop_out control method     */
 
-    Bool      second_pass;          /* indicates wether a horizontal pass  */
+    Bool      second_pass;          /* indicates whether a horizontal pass */
                                     /* should be performed to control      */
                                     /* drop-out accurately when calling    */
                                     /* Render_Glyph.  Note that there is   */
@@ -1646,7 +1646,7 @@ static const char  count_table[256] =
   /*    Decompose_Curve                                                    */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Scans the outline arays in order to emit individual segments and   */
+  /*    Scans the outline arrays in order to emit individual segments and  */
   /*    Beziers by calling Line_To() and Bezier_To().  It handles all      */
   /*    weird cases, like when the first point is off the curve, or when   */
   /*    there are simply no `on' points in the contour!                    */

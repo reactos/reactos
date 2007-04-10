@@ -8,7 +8,7 @@
 /*  This file is for Mac OS X only; see builds/mac/ftoldmac.c for          */
 /*  classic platforms built by MPW.                                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -72,14 +72,17 @@
   /* This is for Mac OS X.  Without redefinition, OS_INLINE */
   /* expands to `static inline' which doesn't survive the   */
   /* -ansi compilation flag of GCC.                         */
+#if !HAVE_ANSI_OS_INLINE
 #undef  OS_INLINE
-#define OS_INLINE   static __inline__
+#define OS_INLINE  static __inline__
+#endif
 #include <Carbon/Carbon.h>
 
 #ifndef HFS_MAXPATHLEN
 #define HFS_MAXPATHLEN  1024
 #endif
 
+#define FT_DEPRECATED_ATTRIBUTE
 
 #include FT_MAC_H
 
@@ -106,10 +109,31 @@
   }
 
 
-  FT_EXPORT_DEF( FT_Error )
-  FT_GetFile_From_Mac_ATS_Name( const char*  fontName,
-                                FSSpec*      pathSpec,
-                                FT_Long*     face_index )
+  /* Private function.                                         */
+  /* The FSSpec type has been discouraged for a long time,     */
+  /* but for some reason, there is no FSRef version of         */
+  /* ATSFontGetFileSpecification(), so we made our own.        */
+  /* Apple will provide one eventually.                        */
+  static OSStatus
+  FT_ATSFontGetFileReference( ATSFontRef  ats_font_id,
+                              FSRef*      ats_font_ref )
+  {
+    OSStatus  err;
+    FSSpec    spec;
+
+
+    err = ATSFontGetFileSpecification( ats_font_id, &spec );
+    if ( noErr == err )
+      err = FSpMakeFSRef( &spec, ats_font_ref );
+
+    return err;
+  }
+
+
+  static FT_Error
+  FT_GetFileRef_From_Mac_ATS_Name( const char*  fontName,
+                                   FSRef*       ats_font_ref,
+                                   FT_Long*     face_index )
   {
     CFStringRef  cf_fontName;
     ATSFontRef   ats_font_id;
@@ -121,35 +145,85 @@
                                              kCFStringEncodingMacRoman );
     ats_font_id = ATSFontFindFromName( cf_fontName,
                                        kATSOptionFlagsUnRestrictedScope );
+    CFRelease( cf_fontName );
 
     if ( ats_font_id == 0 || ats_font_id == 0xFFFFFFFFUL )
       return FT_Err_Unknown_File_Format;
 
-    if ( 0 != ATSFontGetFileSpecification( ats_font_id, pathSpec ) )
+    if ( noErr != FT_ATSFontGetFileReference( ats_font_id, ats_font_ref ) )
       return FT_Err_Unknown_File_Format;
 
     /* face_index calculation by searching preceding fontIDs */
     /* with same FSRef                                       */
     {
-      int     i;
-      FSSpec  f;
+      ATSFontRef  id2 = ats_font_id - 1;
+      FSRef       ref2;
 
 
-      for ( i = 1; i < ats_font_id; i++ )
+      while ( id2 > 0 )
       {
-        if ( 0 != ATSFontGetFileSpecification( ats_font_id - i,
-                                               &f               ) ||
-             f.vRefNum != pathSpec->vRefNum                       ||
-             f.parID   != pathSpec->parID                         ||
-             f.name[0] != pathSpec->name[0]                       ||
-             0 != ft_strncmp( (char *)f.name + 1,
-                              (char *)pathSpec->name + 1,
-                              f.name[0]                           ) )
+        if ( noErr != FT_ATSFontGetFileReference( id2, &ref2 ) )
           break;
+        if ( noErr != FSCompareFSRefs( ats_font_ref, &ref2 ) )
+          break;
+
+        id2 --;
       }
-      *face_index = ( i - 1 );
+      *face_index = ats_font_id - ( id2 + 1 );
     }
+
     return FT_Err_Ok;
+  }
+
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_GetFilePath_From_Mac_ATS_Name( const char*  fontName,
+                                    UInt8*       path,
+                                    UInt32       maxPathSize,
+                                    FT_Long*     face_index )
+  {
+    FSRef     ref;
+    FT_Error  err;
+
+
+    err = FT_GetFileRef_From_Mac_ATS_Name( fontName, &ref, face_index );
+    if ( FT_Err_Ok != err )
+      return err;
+
+    if ( noErr != FSRefMakePath( &ref, path, maxPathSize ) )
+      return FT_Err_Unknown_File_Format;
+
+    return FT_Err_Ok;
+  }
+
+
+  /* This function is deprecated because FSSpec is deprecated in Mac OS X  */
+  FT_EXPORT_DEF( FT_Error )
+  FT_GetFile_From_Mac_ATS_Name( const char*  fontName,
+                                FSSpec*      pathSpec,
+                                FT_Long*     face_index )
+  {
+#if __LP64__
+
+    return FT_Err_Unimplemented_Feature;
+
+#else
+
+    FSRef     ref;
+    FT_Error  err;
+
+
+    err = FT_GetFileRef_From_Mac_ATS_Name( fontName, &ref, face_index );
+    if ( FT_Err_Ok != err )
+      return err;
+
+    if ( noErr != FSGetCatalogInfo( &ref, kFSCatInfoNone, NULL, NULL,
+                                    pathSpec, NULL ) )
+      return FT_Err_Unknown_File_Format;
+
+    return FT_Err_Ok;
+
+#endif
   }
 
 

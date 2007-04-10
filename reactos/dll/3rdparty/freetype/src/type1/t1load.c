@@ -1885,7 +1885,7 @@
               /* Font Installation for ATM Software) a `begin' */
               /* must be followed by exactly one `end', and    */
               /* `begin' -- `end' pairs must be accurately     */
-              /* paired.  We could use this to dinstinguish    */
+              /* paired.  We could use this to distinguish     */
               /* between the global Private and the Private    */
               /* dict that is a member of the Blend dict.      */
 

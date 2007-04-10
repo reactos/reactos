@@ -727,6 +727,9 @@
     hints->x_delta = x_delta;
     hints->y_delta = y_delta;
 
+    hints->xmin_delta = 0;
+    hints->xmax_delta = 0;
+
     points = hints->points;
     if ( hints->num_points == 0 )
       goto Exit;

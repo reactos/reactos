@@ -5,7 +5,7 @@
 /*    Postcript name table processing for TrueType and OpenType fonts      */
 /*    (body).                                                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2006 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2006, 2007 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -240,7 +240,7 @@
       }
     }
 
-    /* all right, set table fields and exit successfuly */
+    /* all right, set table fields and exit successfully */
     {
       TT_Post_20  table = &face->postscript_names.names.format_20;
 
@@ -314,7 +314,7 @@
       }
     }
 
-    /* OK, set table fields and exit successfuly */
+    /* OK, set table fields and exit successfully */
     {
       TT_Post_25  table = &face->postscript_names.names.format_25;
 

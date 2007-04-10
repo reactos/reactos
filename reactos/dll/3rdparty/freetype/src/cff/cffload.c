@@ -403,8 +403,11 @@
         if ( !offset )
           offset = old_offset;
 
-        /* sanity check for invalid offset tables */
-        else if ( offset < old_offset || offset - 1 >= idx->data_size )
+        /* two sanity checks for invalid offset tables */
+        else if ( offset < old_offset )
+          offset = old_offset;
+
+        else if ( offset - 1 >= idx->data_size && n < idx->count )
           offset = old_offset;
 
         t[n] = idx->bytes + offset - 1;
@@ -567,7 +570,6 @@
     {
       FT_String*   name       = 0;
       const char*  adobe_name = psnames->adobe_std_strings( sid );
-      FT_UInt      len;
 
 
       if ( adobe_name )
@@ -576,12 +578,7 @@
         FT_Error   error;
 
 
-        len = (FT_UInt)ft_strlen( adobe_name );
-        if ( !FT_ALLOC( name, len + 1 ) )
-        {
-          FT_MEM_COPY( name, adobe_name, len );
-          name[len] = 0;
-        }
+        (void)FT_STRDUP( name, adobe_name );
 
         FT_UNUSED( error );
       }

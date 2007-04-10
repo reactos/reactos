@@ -2,7 +2,7 @@
 
     FreeType font driver for bdf files
 
-    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006 by
+    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007 by
     Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -194,10 +194,9 @@ THE SOFTWARE.
     bdf_font_t*      font   = bdf->bdffont;
     bdf_property_t*  prop;
 
-    char  *istr = NULL, *bstr = NULL;
-    char  *sstr = NULL, *astr = NULL;
-
-    int  parts = 0, len = 0;
+    int    nn, len;
+    char*  strings[4] = { NULL, NULL, NULL, NULL };
+    int    lengths[4];
 
 
     face->style_flags = 0;
@@ -209,11 +208,9 @@ THE SOFTWARE.
            *(prop->value.atom) == 'I' || *(prop->value.atom) == 'i' ) )
     {
       face->style_flags |= FT_STYLE_FLAG_ITALIC;
-      istr = ( *(prop->value.atom) == 'O' || *(prop->value.atom) == 'o' )
-               ? (char *)"Oblique"
-               : (char *)"Italic";
-      len += ft_strlen( istr );
-      parts++;
+      strings[2] = ( *(prop->value.atom) == 'O' || *(prop->value.atom) == 'o' )
+                   ? (char *)"Oblique"
+                   : (char *)"Italic";
     }
 
     prop = bdf_get_font_property( font, (char *)"WEIGHT_NAME" );
@@ -222,80 +219,80 @@ THE SOFTWARE.
          ( *(prop->value.atom) == 'B' || *(prop->value.atom) == 'b' ) )
     {
       face->style_flags |= FT_STYLE_FLAG_BOLD;
-      bstr = (char *)"Bold";
-      len += ft_strlen( bstr );
-      parts++;
+      strings[1] = (char *)"Bold";
     }
 
     prop = bdf_get_font_property( font, (char *)"SETWIDTH_NAME" );
     if ( prop && prop->format == BDF_ATOM                              &&
          prop->value.atom && *(prop->value.atom)                       &&
          !( *(prop->value.atom) == 'N' || *(prop->value.atom) == 'n' ) )
-    {
-      sstr = (char *)(prop->value.atom);
-      len += ft_strlen( sstr );
-      parts++;
-    }
+      strings[3] = (char *)(prop->value.atom);
 
     prop = bdf_get_font_property( font, (char *)"ADD_STYLE_NAME" );
     if ( prop && prop->format == BDF_ATOM                              &&
          prop->value.atom && *(prop->value.atom)                       &&
          !( *(prop->value.atom) == 'N' || *(prop->value.atom) == 'n' ) )
+      strings[0] = (char *)(prop->value.atom);
+
+    len = 0;
+
+    for ( len = 0, nn = 0; nn < 4; nn++ )
     {
-      astr = (char *)(prop->value.atom);
-      len += ft_strlen( astr );
-      parts++;
+      lengths[nn] = 0;
+      if ( strings[nn] )
+      {
+        lengths[nn] = ft_strlen( strings[nn] );
+        len        += lengths[nn] + 1;
+      }
     }
 
-    if ( !parts || !len )
+    if ( len == 0 )
     {
-      if ( FT_ALLOC( face->style_name, ft_strlen( "Regular" ) + 1 ) )
-        return error;
-
-      ft_strcpy( face->style_name, "Regular" );
+      strings[0] = (char *)"Regular";
+      lengths[0] = ft_strlen( strings[0] );
+      len        = lengths[0] + 1;
     }
-    else
+
     {
-      char          *style, *s;
-      unsigned int  i;
+      char*  s;
 
 
-      if ( FT_ALLOC( style, len + parts ) )
+      if ( FT_ALLOC( face->style_name, len ) )
         return error;
 
-      s = style;
+      s = face->style_name;
 
-      if ( astr )
+      for ( nn = 0; nn < 4; nn++ )
       {
-        ft_strcpy( s, astr );
-        for ( i = 0; i < ft_strlen( astr ); i++, s++ )
-          if ( *s == ' ' )
-            *s = '-';                     /* replace spaces with dashes */
-        *(s++) = ' ';
-      }
-      if ( bstr )
-      {
-        ft_strcpy( s, bstr );
-        s += ft_strlen( bstr );
-        *(s++) = ' ';
-      }
-      if ( istr )
-      {
-        ft_strcpy( s, istr );
-        s += ft_strlen( istr );
-        *(s++) = ' ';
-      }
-      if ( sstr )
-      {
-        ft_strcpy( s, sstr );
-        for ( i = 0; i < ft_strlen( sstr ); i++, s++ )
-          if ( *s == ' ' )
-            *s = '-';                     /* replace spaces with dashes */
-        *(s++) = ' ';
-      }
-      *(--s) = '\0';        /* overwrite last ' ', terminate the string */
+        char*  src = strings[nn];
 
-      face->style_name = style;                     /* allocated string */
+
+        len = lengths[nn];
+
+        if ( src == NULL )
+          continue;
+
+        /* separate elements with a space */
+        if ( s != face->style_name )
+          *s++ = ' ';
+
+        ft_memcpy( s, src, len );
+
+        /* need to convert spaces to dashes for */
+        /* add_style_name and setwidth_name     */
+        if ( nn == 0 || nn == 3 )
+        {
+          int  mm;
+
+
+          for ( mm = 0; mm < len; mm++ )
+            if ( s[mm] == ' ' )
+              s[mm] = '-';
+        }
+
+        s += len;
+      }
+      *s = 0;
     }
 
     return error;
@@ -394,12 +391,8 @@ THE SOFTWARE.
       prop = bdf_get_font_property( font, "FAMILY_NAME" );
       if ( prop && prop->value.atom )
       {
-        int  l = ft_strlen( prop->value.atom ) + 1;
-
-
-        if ( FT_NEW_ARRAY( bdfface->family_name, l ) )
+        if ( FT_STRDUP( bdfface->family_name, prop->value.atom ) )
           goto Exit;
-        ft_strcpy( bdfface->family_name, prop->value.atom );
       }
       else
         bdfface->family_name = 0;
@@ -503,18 +496,14 @@ THE SOFTWARE.
             const char*  s;
 
 
-            if ( FT_NEW_ARRAY( face->charset_encoding,
-                               ft_strlen( charset_encoding->value.atom ) + 1 ) )
-              goto Exit;
-            if ( FT_NEW_ARRAY( face->charset_registry,
-                               ft_strlen( charset_registry->value.atom ) + 1 ) )
+            if ( FT_STRDUP( face->charset_encoding,
+                            charset_encoding->value.atom ) ||
+                 FT_STRDUP( face->charset_registry,
+                            charset_registry->value.atom ) )
               goto Exit;
 
-            ft_strcpy( face->charset_registry, charset_registry->value.atom );
-            ft_strcpy( face->charset_encoding, charset_encoding->value.atom );
-
-            /* Uh, oh, compare first letters manually to avoid dependency
-               on locales. */
+            /* Uh, oh, compare first letters manually to avoid dependency */
+            /* on locales.                                                */
             s = face->charset_registry;
             if ( ( s[0] == 'i' || s[0] == 'I' ) &&
                  ( s[1] == 's' || s[1] == 'S' ) &&

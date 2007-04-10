@@ -1528,7 +1528,7 @@
   /*   NAME        OFFSET         TYPE        DESCRIPTION                  */
   /*                                                                       */
   /*   format      0              USHORT      must be 8                    */
-  /*   reseved     2              USHORT      reserved                     */
+  /*   reserved    2              USHORT      reserved                     */
   /*   length      4              ULONG       length in bytes              */
   /*   language    8              ULONG       Mac language code            */
   /*   is32        12             BYTE[8192]  32-bitness bitmap            */

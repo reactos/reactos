@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for latin script (specification).       */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006 by                                    */
+/*  Copyright 2003, 2004, 2005, 2006, 2007 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -102,6 +102,8 @@ FT_BEGIN_HEADER
     FT_UInt          width_count;
     AF_WidthRec      widths[AF_LATIN_MAX_WIDTHS];
     FT_Pos           edge_distance_threshold;
+    FT_Pos           standard_width;
+    FT_Bool          extra_light;
 
     /* ignored for horizontal metrics */
     FT_Bool          control_overshoot;

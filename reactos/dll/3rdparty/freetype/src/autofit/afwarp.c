@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter warping algorithm (body).                                */
 /*                                                                         */
-/*  Copyright 2006 by                                                      */
+/*  Copyright 2006, 2007 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -24,11 +24,11 @@
   static const AF_WarpScore
   af_warper_weights[64] =
   {
-    35, 20, 20, 20, 15, 12, 10,  5,  2,  1,  0,  0,  0,  0,  0,  0,
+    35, 32, 30, 25, 20, 15, 12, 10,  5,  1,  0,  0,  0,  0,  0,  0,
      0,  0,  0,  0,  0,  0, -1, -2, -5, -8,-10,-10,-20,-20,-30,-30,
 
    -30,-30,-20,-20,-10,-10, -8, -5, -2, -1,  0,  0,  0,  0,  0,  0,
-     0,  0,  0,  0,  0,  0,  0,  1,  2,  5, 10, 12, 15, 20, 20, 20,
+     0,  0,  0,  0,  0,  0,  0,  1,  5, 10, 12, 15, 20, 25, 30, 32,
   };
 #else
   static const AF_WarpScore
@@ -55,10 +55,10 @@
   {
     FT_Int        idx_min, idx_max, idx0;
     FT_UInt       nn;
-    AF_WarpScore  scores[64];
+    AF_WarpScore  scores[65];
 
 
-    for ( nn = 0; nn < 64; nn++ )
+    for ( nn = 0; nn < 65; nn++ )
       scores[nn] = 0;
 
     idx0 = xx1 - warper->t1;
@@ -71,16 +71,16 @@
 
 
       if ( xx1min + w < warper->x2min )
-        xx1min = warper->x2min - ( xx2 - xx1 );
+        xx1min = warper->x2min - w;
 
       xx1max = warper->x1max;
       if ( xx1max + w > warper->x2max )
-        xx1max = warper->x2max - ( xx2 - xx1 );
+        xx1max = warper->x2max - w;
 
       idx_min = xx1min - warper->t1;
       idx_max = xx1max - warper->t1;
 
-      if ( idx_min > idx_max )
+      if ( idx_min < 0 || idx_min > idx_max || idx_max > 64 )
       {
         AF_LOG(( "invalid indices:\n"
                  "  min=%d max=%d, xx1=%ld xx2=%ld,\n"
@@ -97,7 +97,6 @@
       FT_Pos  len = segments[nn].max_coord - segments[nn].min_coord;
       FT_Pos  y0  = FT_MulFix( segments[nn].pos, scale ) + delta;
       FT_Pos  y   = y0 + ( idx_min - idx0 );
-
       FT_Int  idx;
 
 
@@ -165,7 +164,7 @@
 
     warper->best_scale   = org_scale;
     warper->best_delta   = org_delta;
-    warper->best_score   = 0;
+    warper->best_score   = INT_MIN;
     warper->best_distort = 0;
 
     axis         = &hints->axis[dim];
@@ -178,7 +177,7 @@
     *a_delta = org_delta;
 
     /* get X1 and X2, minimum and maximum in original coordinates */
-    if ( axis->num_segments < 1 )
+    if ( num_segments < 1 )
       return;
 
 #if 1
@@ -238,19 +237,34 @@
     warper->wmin = warper->x2min - warper->x1max;
     warper->wmax = warper->x2max - warper->x1min;
 
-    if ( warper->wmin < warper->w0 - 32 )
-      warper->wmin = warper->w0 - 32;
+#if 1
+    {
+      int  margin = 16;
 
-    if ( warper->wmax > warper->w0 + 32 )
-      warper->wmax = warper->w0 + 32;
+
+      if ( warper->w0 <= 128 )
+      {
+         margin = 8;
+         if ( warper->w0 <= 96 )
+           margin = 4;
+      }
+
+      if ( warper->wmin < warper->w0 - margin )
+        warper->wmin = warper->w0 - margin;
+
+      if ( warper->wmax > warper->w0 + margin )
+        warper->wmax = warper->w0 + margin;
+    }
 
     if ( warper->wmin < warper->w0 * 3 / 4 )
       warper->wmin = warper->w0 * 3 / 4;
 
     if ( warper->wmax > warper->w0 * 5 / 4 )
       warper->wmax = warper->w0 * 5 / 4;
-
-    /* warper->wmin = warper->wmax = warper->w0; */
+#else
+    /* no scaling, just translation */
+    warper->wmin = warper->wmax = warper->w0;
+#endif
 
     for ( w = warper->wmin; w <= warper->wmax; w++ )
     {
@@ -300,8 +314,19 @@
                                    segments, num_segments );
     }
 
-    *a_scale = warper->best_scale;
-    *a_delta = warper->best_delta;
+    {
+      FT_Fixed  best_scale = warper->best_scale;
+      FT_Pos    best_delta = warper->best_delta;
+     
+
+      hints->xmin_delta = FT_MulFix( X1, best_scale - org_scale )
+                          + best_delta;
+      hints->xmax_delta = FT_MulFix( X2, best_scale - org_scale )
+                          + best_delta;
+
+      *a_scale = best_scale;
+      *a_delta = best_delta;
+    }
   }
 
 #else /* !AF_USE_WARPER */

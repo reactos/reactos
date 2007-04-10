@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType utility file for memory and list management (body).         */
 /*                                                                         */
-/*  Copyright 2002, 2004, 2005, 2006 by                                    */
+/*  Copyright 2002, 2004, 2005, 2006, 2007 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -169,6 +169,54 @@
   {
     if ( P )
       memory->free( memory, (void*)P );
+  }
+
+
+  FT_BASE_DEF( FT_Pointer )
+  ft_mem_dup( FT_Memory    memory,
+              const void*  address,
+              FT_ULong     size,
+              FT_Error    *p_error )
+  {
+    FT_Error    error;
+    FT_Pointer  p = ft_mem_qalloc( memory, size, &error );
+
+
+    if ( !error && address )
+      ft_memcpy( p, address, size );
+
+    *p_error = error;
+    return p;
+  }
+
+
+  FT_BASE_DEF( FT_Pointer )
+  ft_mem_strdup( FT_Memory    memory,
+                 const char*  str,
+                 FT_Error    *p_error )
+  {
+    FT_ULong  len = str ? (FT_ULong)ft_strlen( str ) + 1
+                        : 0;
+
+
+    return ft_mem_dup( memory, str, len, p_error );
+  }
+
+
+  FT_BASE_DEF( FT_Int )
+  ft_mem_strcpyn( char*        dst,
+                  const char*  src,
+                  FT_ULong     size )
+  {
+    while ( size > 1 && *src != 0 )
+    {
+      *dst++ = *src++;
+      size--;
+    }
+
+    *dst = 0;  /* always zero-terminate */
+
+    return *src != 0;
   }
 
 

@@ -118,7 +118,7 @@ gxvalid: TrueType GX validator
     this `State  Machine' in a  `StateTable' data structure.   While the
     State  Machine receives  a series  of glyph  IDs, the  State Machine
     starts with `start  of text' state, walks around  various states and
-    generates various  layout informations to the  renderer, and finally
+    generates various  layout information  to the  renderer, and finally
     reaches the `end of text' state.
 
     gxvalid can check essential errors like:
@@ -401,8 +401,8 @@ gxvalid: TrueType GX validator
       but the Apple TrueType specification does not mention the subtable
       formats available in the classic version.
 
-    5-2-2. Avaibale subtable formats in classic version
-    ---------------------------------------------------
+    5-2-2. Available subtable formats in classic version
+    ----------------------------------------------------
 
       Although the  Apple TrueType  specification recommends to  use the
       classic version in  the case if the font is  designed for both the
@@ -518,7 +518,7 @@ gxvalid: TrueType GX validator
 
 ------------------------------------------------------------------------
 
-Copyright 2004, 2005 by
+Copyright 2004, 2005, 2007 by
 suzuki toshiya, Masatake YAMATO, Red hat K.K.,
 David Turner, Robert Wilhelm, and Werner Lemberg.
 

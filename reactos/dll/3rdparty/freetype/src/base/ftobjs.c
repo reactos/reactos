@@ -922,7 +922,7 @@
      */
 
     /* Since the `interesting' table, with IDs (3,10), is normally the */
-    /* last one, we loop backwards.  This looses with type1 fonts with */
+    /* last one, we loop backwards.  This loses with type1 fonts with  */
     /* non-BMP characters (<.0001%), this wins with .ttf with non-BMP  */
     /* chars (.01% ?), and this is the same about 99.99% of the time!  */
 
@@ -2425,6 +2425,11 @@
     else if ( !char_height )
       char_height = char_width;
 
+    if ( !horz_resolution )
+      horz_resolution = vert_resolution;
+    else if ( !vert_resolution )
+      vert_resolution = horz_resolution;
+
     if ( char_width  < 1 * 64 )
       char_width  = 1 * 64;
     if ( char_height < 1 * 64 )
@@ -2460,7 +2465,7 @@
     if ( pixel_height < 1 )
       pixel_height = 1;
 
-    /* use `>=' to avoid potention compiler warning on 16bit platforms */
+    /* use `>=' to avoid potential compiler warning on 16bit platforms */
     if ( pixel_width  >= 0xFFFFU )
       pixel_width  = 0xFFFFU;
     if ( pixel_height >= 0xFFFFU )

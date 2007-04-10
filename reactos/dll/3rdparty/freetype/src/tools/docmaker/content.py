@@ -1,6 +1,7 @@
+#  Content (c) 2002, 2004, 2006, 2007 David Turner <david@freetype.org>
 #
-#  this file contains routines used to parse the content of documentation
-#  comment block and build a more structured objects out of them
+#  This file contains routines used to parse the content of documentation
+#  comment blocks and build more structured objects out of them.
 #
 
 from sources import *
@@ -8,7 +9,7 @@ from utils import *
 import string, re
 
 
-# this regular expresion is used to detect code sequences. these
+# this regular expression is used to detect code sequences. these
 # are simply code fragments embedded in '{' and '}' like in:
 #
 #  {
@@ -19,7 +20,7 @@ import string, re
 #    }
 #  }
 #
-# note that identation of the starting and ending accolades must be
+# note that indentation of the starting and ending accolades must be
 # exactly the same. the code sequence can contain accolades at greater
 # indentation
 #
@@ -583,3 +584,5 @@ class DocBlock:
             return m.fields[0].items
         except:
             return None
+
+# eof

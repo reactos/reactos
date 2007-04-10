@@ -275,7 +275,7 @@
       goto NextTable;
 
     Found:
-      if ( coverage & 8 ) /* overide or add */
+      if ( coverage & 8 ) /* override or add */
         result = value;
       else
         result += value;

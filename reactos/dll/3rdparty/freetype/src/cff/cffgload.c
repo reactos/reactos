@@ -1563,7 +1563,7 @@
                  check_points( builder, 6 )               )
               goto Fail;
 
-            /* Record the starting point's y postion for later use */
+            /* Record the starting point's y position for later use */
             start_y = y;
 
             /* first control point */
@@ -1666,7 +1666,7 @@
                  check_points( builder, 6 )               )
               goto Fail;
 
-            /* record the starting point's x, y postion for later use */
+            /* record the starting point's x, y position for later use */
             start_x = x;
             start_y = y;
 
@@ -2089,7 +2089,7 @@
             zone->limit  = decoder->locals[idx + 1];
             zone->cursor = zone->base;
 
-            if ( !zone->base )
+            if ( !zone->base || zone->limit == zone->base )
             {
               FT_ERROR(( "cff_decoder_parse_charstrings:"
                          " invoking empty subrs!\n" ));
@@ -2131,7 +2131,7 @@
             zone->limit  = decoder->globals[idx + 1];
             zone->cursor = zone->base;
 
-            if ( !zone->base )
+            if ( !zone->base || zone->limit == zone->base )
             {
               FT_ERROR(( "cff_decoder_parse_charstrings:"
                          " invoking empty subrs!\n" ));

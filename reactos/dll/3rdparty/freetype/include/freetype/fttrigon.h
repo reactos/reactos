@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType trigonometric functions (specification).                    */
 /*                                                                         */
-/*  Copyright 2001, 2003, 2005 by                                          */
+/*  Copyright 2001, 2003, 2005, 2007 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -210,7 +210,7 @@ FT_BEGIN_HEADER
    *     Second angle.
    *
    * @return:
-   *   Contrainted value of `value2-value1'.
+   *   Constrained value of `value2-value1'.
    *
    */
   FT_EXPORT( FT_Angle )

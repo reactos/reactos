@@ -108,7 +108,7 @@
     if ( face->vertical_info )
       ( (SFNT_Service)face->sfnt )->get_metrics( face, 1, idx, tsb, ah );
 
-#if 1             /* Emperically determined, at variance with what MS said */
+#if 1             /* Empirically determined, at variance with what MS said */
 
     else
     {
@@ -616,7 +616,7 @@
       translate_array( zone->n_points, zone->cur, origin, 0 );
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
-    /* save original point positioin in org */
+    /* save original point position in org */
     if ( n_ins > 0 )
       FT_ARRAY_COPY( zone->org, zone->cur, zone->n_points );
 #endif
@@ -934,7 +934,7 @@
   /*                                                                       */
   /* <Description>                                                         */
   /*    This is slightly different from TT_Process_Simple_Glyph, in that   */
-  /*    it's sole purpose is to hint the glyph.  Thus this function is     */
+  /*    its sole purpose is to hint the glyph.  Thus this function is      */
   /*    only available when bytecode interpreter is enabled.               */
   /*                                                                       */
   static FT_Error
@@ -1377,6 +1377,8 @@
         FT_UInt      num_subglyphs  = gloader->current.num_subglyphs;
         FT_UInt      num_base_subgs = gloader->base.num_subglyphs;
 
+        FT_Stream    old_stream     = loader->stream;
+
 
         FT_GlyphLoader_Add( gloader );
 
@@ -1430,6 +1432,7 @@
                                           num_base_points );
         }
 
+        loader->stream = old_stream;
 
         /* process the glyph */
         loader->ins_pos = ins_pos;

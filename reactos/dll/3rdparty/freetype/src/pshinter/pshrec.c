@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PostScript hints recorder (body).                           */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004 by                                    */
+/*  Copyright 2001, 2002, 2003, 2004, 2007 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -730,7 +730,7 @@
         break;
     }
 
-    /* creat a new counter when needed */
+    /* create a new counter when needed */
     if ( count == 0 )
     {
       error = ps_mask_table_alloc( &dim->counters, memory, &counter );

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType incremental loading (specification).                        */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2006 by                                          */
+/*  Copyright 2002, 2003, 2006, 2007 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -149,7 +149,7 @@ FT_BEGIN_HEADER
   *   FreeType error code.  0 means success.
   *
   * @note:
-  *   If this function returns succesfully the method
+  *   If this function returns successfully the method
   *   @FT_Incremental_FreeGlyphDataFunc will be called later to release
   *   the data bytes.
   *

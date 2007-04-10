@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level SFNT driver interface (body).                             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -144,17 +144,8 @@
 
 
     error = tt_face_get_ps_name( face, glyph_index, &gname );
-    if ( !error && buffer_max > 0 )
-    {
-      FT_UInt  len = (FT_UInt)( ft_strlen( gname ) );
-
-
-      if ( len >= buffer_max )
-        len = buffer_max - 1;
-
-      FT_MEM_COPY( buffer, gname, len );
-      ((FT_Byte*)buffer)[len] = 0;
-    }
+    if ( !error )
+      FT_STRCPYN( buffer, gname, buffer_max );
 
     return error;
   }

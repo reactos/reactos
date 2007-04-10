@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Support functions for X11.                                           */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2006 by                                    */
+/*  Copyright 2002, 2003, 2004, 2006, 2007 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -47,7 +47,7 @@ FT_BEGIN_HEADER
   /*   The single function in this section can be used to get the font     */
   /*   format.  Note that this information is not needed normally;         */
   /*   however, there are special cases (like in PDF devices) where it is  */
-  /*   important to differentiate, inspite of FreeType's uniform API.      */
+  /*   important to differentiate, in spite of FreeType's uniform API.     */
   /*                                                                       */
   /*************************************************************************/
 

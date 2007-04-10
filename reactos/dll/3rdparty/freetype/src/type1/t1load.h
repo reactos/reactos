@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 font loader (specification).                                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2006 by                               */
+/*  Copyright 1996-2001, 2002, 2004, 2006, 2007 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -54,7 +54,7 @@ FT_BEGIN_HEADER
 
 
   /* treatment of some keywords differs depending on whether */
-  /* they preceed or follow certain other keywords           */
+  /* they precede or follow certain other keywords           */
 
 #define T1_PRIVATE                ( 1 << 0 )
 #define T1_FONTDIR_AFTER_PRIVATE  ( 1 << 1 )

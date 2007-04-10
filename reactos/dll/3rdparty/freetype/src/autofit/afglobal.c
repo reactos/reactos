@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter routines to compute global hinting values (body).        */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006 by                                    */
+/*  Copyright 2003, 2004, 2005, 2006, 2007 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -131,7 +131,7 @@
   Exit:
     /*
      *  By default, all uncovered glyphs are set to the latin script.
-     *  XXX: Shouldnt' we disable hinting or do something similar?
+     *  XXX: Shouldn't we disable hinting or do something similar?
      */
     {
       FT_UInt  nn;

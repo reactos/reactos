@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Generic list support for FreeType (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003 by                                           */
+/*  Copyright 1996-2001, 2003, 2007 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -199,8 +199,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Input>                                                               */
   /*    list     :: A handle to the list.                                  */
-  /*    iterator :: An interator function, called on each node of the      */
-  /*                list.                                                  */
+  /*    iterator :: An iterator function, called on each node of the list. */
   /*    user     :: A user-supplied field which is passed as the second    */
   /*                argument to the iterator.                              */
   /*                                                                       */

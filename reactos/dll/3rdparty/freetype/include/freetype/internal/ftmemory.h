@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType memory management macros (specification).               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2005, 2006 by                         */
+/*  Copyright 1996-2001, 2002, 2004, 2005, 2006, 2007 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -209,7 +209,7 @@ FT_BEGIN_HEADER
 
 
   /*
-   *  Return the maximum number of adressable elements in an array.
+   *  Return the maximum number of addressable elements in an array.
    *  We limit ourselves to INT_MAX, rather than UINT_MAX, to avoid
    *  any problems.
    */
@@ -321,6 +321,41 @@ FT_BEGIN_HEADER
 
 #endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
+
+  FT_BASE( FT_Pointer )
+  ft_mem_strdup( FT_Memory    memory,
+                 const char*  str,
+                 FT_Error    *p_error );
+
+  FT_BASE( FT_Pointer )
+  ft_mem_dup( FT_Memory    memory,
+              const void*  address,
+              FT_ULong     size,
+              FT_Error    *p_error );
+
+#define FT_MEM_STRDUP( dst, str )                                     \
+          (dst) = ft_mem_strdup( memory, (const char*)(str), &error )
+
+#define FT_STRDUP( dst, str )                           \
+          FT_MEM_SET_ERROR( FT_MEM_STRDUP( dst, str ) )
+
+#define FT_MEM_DUP( dst, address, size )                                    \
+          (dst) = ft_mem_dup( memory, (address), (FT_ULong)(size), &error )
+
+#define FT_DUP( dst, address, size )                           \
+          FT_MEM_SET_ERROR( FT_MEM_DUP( dst, address, size ) )
+
+
+  /* Return >= 1 if a truncation occurs.            */
+  /* Return 0 if the source string fits the buffer. */
+  /* This is *not* the same as strlcpy().           */
+  FT_BASE( FT_Int )
+  ft_mem_strcpyn( char*        dst,
+                  const char*  src,
+                  FT_ULong     size );
+
+#define FT_STRCPYN( dst, src, size )                                         \
+          ft_mem_strcpyn( (char*)dst, (const char*)(src), (FT_ULong)(size) )
 
  /* */
 
