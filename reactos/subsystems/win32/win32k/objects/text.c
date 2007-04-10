@@ -284,7 +284,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    PFONT_ENTRY Entry;
    PSECTION_OBJECT SectionObject;
    ULONG ViewSize = 0;
-   //FT_Fixed XScale, YScale;
+   FT_Fixed XScale, YScale;
 
 
    /* Open the font file */
