@@ -2117,7 +2117,7 @@ DetectDisplayController(FRLDRHKEY BusKey)
       DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
       return;
     }
-  DbgPrint((DPRINT_HWDETECT, "Created key: PointerController\\0\n"));
+  DbgPrint((DPRINT_HWDETECT, "Created key: DisplayController\\0\n"));
 
   /* Set 'ComponentInformation' value */
   SetComponentInformation(ControllerKey,
