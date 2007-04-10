@@ -387,6 +387,18 @@ BUGCODES_RC = ntoskrnl$(SEP)bugcodes.rc
 ERRCODES_H = include$(SEP)reactos$(SEP)errcodes.h
 ERRCODES_RC = dll$(SEP)win32$(SEP)kernel32$(SEP)errcodes.rc
 
+
+# Hack getting ReactOS trunk Build again
+# the reail ARCH are not avail until we run 
+# rbuild and rbuild genreate makefile.auto
+# only in makefile.auto we got the 
+# ARCH avail not before. So FIX THIS
+# ISSSUE ASAP, other wise the ntapi.h
+# will not be autogenretaed for right 
+# platforms. 
+
+$ARCH :=i386
+
 include lib/lib.mak
 include tools/tools.mak
 include boot/freeldr/bootsect/bootsect.mak
