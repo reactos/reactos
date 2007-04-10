@@ -5,7 +5,9 @@ _start:
 	.long	0
 	.long	0
 	
-	.globl _begin
+	.globl	_begin
+	.globl	call_ofw
+	.globl	ofw_functions
 _begin:
 	sync                    
 	isync
@@ -33,11 +35,10 @@ _begin:
 	addi	%r3,%r3,0xe17000@l
 
 	mtlr	%r3
+	lis	%r3,0xe00000@ha
+	addi	%r3,%r3,call_ofw - _start@l
 
-	lis	%r3,call_ofw@ha
-	addi	%r3,%r3,call_ofw - _start
-
-	b	call_freeldr
+	blr
 
 zero_registers:
 	xor	%r2,%r2,%r2

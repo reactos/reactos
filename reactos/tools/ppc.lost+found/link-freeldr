@@ -2,7 +2,7 @@
 
 export PATH=$PATH:/usr/local/pkg/reactos-powerpc/bin
 powerpc-unknown-linux-gnu-ld \
-	-EL -g -nostartfiles -nostdlib -N -Ttext=0xe17000 \
+	-g -nostartfiles -nostdlib -N -Ttext=0xe17000 \
 	-o freeldr.elf \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/boot.o \
 	obj-ppc/boot/freeldr/freeldr/cache/blocklist.o \
@@ -63,8 +63,7 @@ powerpc-unknown-linux-gnu-ld \
 	obj-ppc/lib/string/string.a \
 	obj-ppc/lib/rtl/rtl.a \
 	/usr/local/pkg/reactos-powerpc/lib/libgcc.a
-powerpc-unknown-linux-gnu-objcopy -O binary freeldr.elf freeldr.tmp.le
-output-ppc/tools/ppc-le2be freeldr.tmp.le freeldr.tmp
+powerpc-unknown-linux-gnu-objcopy -O binary freeldr.elf freeldr.tmp
 (dd if=/dev/zero bs=4k count=16 ; echo 'byebye') >> freeldr.tmp
 powerpc-unknown-linux-gnu-objcopy -I binary -B powerpc:common -O elf32-powerpc freeldr.tmp ofwldr.payload
 reactos-powerpc-as -mbig -o ofwboot.o boot/freeldr/bootsect/ofwboot.s boot/freeldr/bootsect/ofw_util.s boot/freeldr/bootsect/ofw.s

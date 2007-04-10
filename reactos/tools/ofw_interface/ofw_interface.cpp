@@ -49,10 +49,6 @@ public:
 	return *this;
     }
 
-    bool need_swap() const {
-	return c_type.find('*') != std::string::npos;
-    }
-
     std::string c_type;
     std::string len;
     std::string lit_value;
@@ -205,41 +201,20 @@ void populate_definition( ofw_wrappers &wrapper, const std::string &line ) {
 	    le_stub << "\t" << argtypes[i].c_type << " arg" << i << " = " 
 		    << argtypes[i].lit_value << ";\n";
 	}
-	if( argtypes[i].need_swap() ) {
-	    le_stub << "\tint len" << i << " = ";
-	    if( argtypes[i].len.size() ) 
-		le_stub << argtypes[i].len << ";\n";
-	    else {
-		le_stub << "strlen(arg" << i << ");\n";
-	    }
-	    le_stub << "\tle_swap("
-		    << "arg" << i << "," 
-		    << "arg" << i << "+len" << i << ","
-		    << "arg" << i << ");\n";
-	}
     }
 
     le_stub << "\t";
     if( rettype != "void" ) le_stub << "ret = (" << rettype << ")";
 
     le_stub << "ofproxy(" << 
-	(method_call ? (wrapper.method_ctindex * 4) : (wrapper.ctindex * 4));
-    
+      (method_call ? (wrapper.method_ctindex * 4) : (wrapper.ctindex * 4));
+
     for( i = 0; i < 6; i++ ) {
 	if( i < args ) le_stub << ",(void *)arg" << i;
 	else le_stub << ",NULL";
     }
 
     le_stub << ");\n";
-
-    for( i = args-1; i >= 0; i-- ) {
-	if( argtypes[i].need_swap() ) {
-	    le_stub << "\tle_swap("
-		    << "arg" << i << "," 
-		    << "arg" << i << "+len" << i << ","
-		    << "arg" << i << ");\n";
-	}
-    }
 
     if( rettype != "void" ) 
 	le_stub << "\treturn ret;\n";
