@@ -284,6 +284,8 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    PFONT_ENTRY Entry;
    PSECTION_OBJECT SectionObject;
    ULONG ViewSize = 0;
+   //FT_Fixed XScale, YScale;
+
 
    /* Open the font file */
 
@@ -363,10 +365,21 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    FontGDI->face = Face;
 
    /* FIXME: Complete text metrics */
-   FontGDI->TextMetric.tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
-   FontGDI->TextMetric.tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
-   FontGDI->TextMetric.tmHeight = (Face->size->metrics.ascender -
-                                   Face->size->metrics.descender) >> 6;
+    XScale = Face->size->metrics.x_scale;
+    YScale = Face->size->metrics.y_scale;
+
+#if 0 /* This (Wine) code doesn't seem to work correctly for us */
+    FontGDI->TextMetric.tmAscent =  (FT_MulFix(Face->size->metrics.ascender, YScale) + 32) >> 6;
+    FontGDI->TextMetric.tmDescent = (FT_MulFix(Face->size->metrics.descender, YScale) + 32) >> 6;
+    FontGDI->TextMetric.tmHeight =  (FT_MulFix(Face->size->metrics.ascender, YScale) - 
+                                     FT_MulFix(Face->size->metrics.descender, YScale)) >> 6;
+#else
+    FontGDI->TextMetric.tmAscent  = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
+    FontGDI->TextMetric.tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
+    FontGDI->TextMetric.tmHeight = (Face->size->metrics.ascender - Face->size->metrics.descender) >> 6;
+#endif
+
+
 
    DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
    DPRINT("Num glyphs: %u\n", Face->num_glyphs);
@@ -490,8 +503,8 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
       memcpy(&TextObj->logfont, lf, sizeof(LOGFONTW));
       if (lf->lfEscapement != lf->lfOrientation)
       {
-	/* this should really depend on whether GM_ADVANCED is set */
-	TextObj->logfont.lfOrientation = TextObj->logfont.lfEscapement;
+        /* this should really depend on whether GM_ADVANCED is set */
+        TextObj->logfont.lfOrientation = TextObj->logfont.lfEscapement;
       }
       TEXTOBJ_UnlockText(TextObj);
     }
@@ -596,7 +609,7 @@ NtGdiCreateScalableFontResource(DWORD  Hidden,
                                      LPCWSTR  FontFile,
                                      LPCWSTR  CurrentPath)
 {
-	DPRINT1("NtGdiCreateScalableFontResource - is unimplemented, have a nice day and keep going");
+    DPRINT1("NtGdiCreateScalableFontResource - is unimplemented, have a nice day and keep going");
   return FALSE;
 }
 
@@ -702,17 +715,16 @@ FillTM(TEXTMETRICW *TM, FT_Face Face, TT_OS2 *pOS2, TT_HoriHeader *pHori)
       Descent = pOS2->usWinDescent;
     }
 
-#if 0 /* This (Wine) code doesn't seem to work correctly for us */
+#if 0 /* This (Wine) code doesn't seem to work correctly for us, cmd issue */
   TM->tmAscent = (FT_MulFix(Ascent, YScale) + 32) >> 6;
   TM->tmDescent = (FT_MulFix(Descent, YScale) + 32) >> 6;
-#else
+#else /* This (ros) code doesn't seem to work correctly for us for it miss 2-3 pixel draw of the font*/
   TM->tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
   TM->tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
 #endif
-  TM->tmInternalLeading = (FT_MulFix(Ascent + Descent
-                                     - Face->units_per_EM, YScale) + 32) >> 6;
 
-  TM->tmHeight = TM->tmAscent + TM->tmDescent;
+  TM->tmInternalLeading = (FT_MulFix(Ascent + Descent - Face->units_per_EM, YScale) + 32) >> 6;
+  TM->tmHeight = TM->tmAscent + TM->tmDescent; // we need add 1 height more after scale it right
 
   /* MSDN says:
    *  el = MAX(0, LineGap - ((WinAscent + WinDescent) - (Ascender - Descender)))
@@ -727,8 +739,10 @@ FillTM(TEXTMETRICW *TM, FT_Face Face, TT_OS2 *pOS2, TT_HoriHeader *pHori)
     {
       TM->tmAveCharWidth = 1;
     }
-  TM->tmMaxCharWidth = (FT_MulFix(Face->bbox.xMax - Face->bbox.xMin,
-                                  XScale) + 32) >> 6;
+
+  /* Correct forumla to get the maxcharwidth from unicode and ansi font */
+  TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
+
   TM->tmWeight = pOS2->usWeightClass;
   TM->tmOverhang = 0;
   TM->tmDigitizedAspectX = 300;

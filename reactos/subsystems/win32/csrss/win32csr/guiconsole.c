@@ -599,7 +599,7 @@ GuiConsoleUseDefaults(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_
    * init guidata with default properties
    */
 
-  wcscpy(GuiData->FontName, L"Bitstream Vera Sans Mono");
+  wcscpy(GuiData->FontName, L"DejaVu Sans Mono");
   GuiData->FontSize = 0x0008000C; // font is 8x12
   GuiData->FontWeight = FW_NORMAL;
   GuiData->HistoryNoDup = FALSE;
