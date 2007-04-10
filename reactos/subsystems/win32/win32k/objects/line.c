@@ -519,14 +519,16 @@ NtGdiMoveToEx(HDC      hDC,
     return TRUE;
   }
 
+  Ret = IntGdiMoveToEx(dc, X, Y, (Point ? &SafePoint : NULL));
+
   if(Point)
   {
     _SEH_TRY
     {
-      ProbeForRead(Point,
+      ProbeForWrite(Point,
                    sizeof(POINT),
                    1);
-      SafePoint = *Point;
+      *Point = SafePoint;
     }
     _SEH_HANDLE
     {
@@ -541,8 +543,6 @@ NtGdiMoveToEx(HDC      hDC,
       return FALSE;
     }
   }
-
-  Ret = IntGdiMoveToEx(dc, X, Y, (Point ? &SafePoint : NULL));
 
   DC_UnlockDc(dc);
   return Ret;
