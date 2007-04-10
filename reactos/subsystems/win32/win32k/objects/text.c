@@ -367,12 +367,11 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    /* FIXME: Complete text metrics */
     XScale = Face->size->metrics.x_scale;
     YScale = Face->size->metrics.y_scale;
-
-#if 0 /* This (Wine) code doesn't seem to work correctly for us */
-    FontGDI->TextMetric.tmAscent =  (FT_MulFix(Face->size->metrics.ascender, YScale) + 32) >> 6;
-    FontGDI->TextMetric.tmDescent = (FT_MulFix(Face->size->metrics.descender, YScale) + 32) >> 6;
-    FontGDI->TextMetric.tmHeight =  (FT_MulFix(Face->size->metrics.ascender, YScale) - 
-                                     FT_MulFix(Face->size->metrics.descender, YScale)) >> 6;
+#if 1 /* This (Wine) code doesn't seem to work correctly for us */
+    FontGDI->TextMetric.tmAscent =  (FT_MulFix(Face->ascender, YScale) + 32) >> 6;
+    FontGDI->TextMetric.tmDescent = (FT_MulFix(Face->descender, YScale) + 32) >> 6;
+    FontGDI->TextMetric.tmHeight =  (FT_MulFix(Face->ascender, YScale) - 
+                                     FT_MulFix(Face->descender, YScale)) >> 6;
 #else
     FontGDI->TextMetric.tmAscent  = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
     FontGDI->TextMetric.tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
@@ -715,7 +714,7 @@ FillTM(TEXTMETRICW *TM, FT_Face Face, TT_OS2 *pOS2, TT_HoriHeader *pHori)
       Descent = pOS2->usWinDescent;
     }
 
-#if 0 /* This (Wine) code doesn't seem to work correctly for us, cmd issue */
+#if 1 /* This (Wine) code doesn't seem to work correctly for us, cmd issue */
   TM->tmAscent = (FT_MulFix(Ascent, YScale) + 32) >> 6;
   TM->tmDescent = (FT_MulFix(Descent, YScale) + 32) >> 6;
 #else /* This (ros) code doesn't seem to work correctly for us for it miss 2-3 pixel draw of the font*/
