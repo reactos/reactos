@@ -21,7 +21,7 @@ KeInitializeGate(IN PKGATE Gate)
     /* Initialize the Dispatcher Header */
     KeInitializeDispatcherHeader(&Gate->Header,
                                  GateObject,
-                                 sizeof(Gate) / sizeof(ULONG),
+                                 sizeof(KGATE) / sizeof(ULONG),
                                  0);
 }
 
@@ -170,7 +170,7 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
             WaitThread = WaitBlock->Thread;
 
             /* Check to see if the waiting thread is locked */
-            if (!KiTryThreadLock(WaitThread))
+            if (KiTryThreadLock(WaitThread))
             {
                 /* Unlock the gate */
                 KiReleaseDispatcherObject(&Gate->Header);

@@ -104,7 +104,7 @@ typedef struct
 //
 // Detect GCC 4.1.2+
 //
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40102
+#if 1 // (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40102
 
 //
 // Broken GCC with Alignment Bug. We'll do alignment ourselves at higher cost.
@@ -963,7 +963,7 @@ ExReleasePushLock(PEX_PUSH_LOCK PushLock)
     if (OldValue.Shared > 1)
     {
         /* Decrease the share count */
-        NewValue.Value = OldValue.Value &~ EX_PUSH_LOCK_SHARE_INC;
+        NewValue.Value = OldValue.Value - EX_PUSH_LOCK_SHARE_INC;
     }
     else
     {
