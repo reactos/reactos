@@ -36,23 +36,6 @@ jmp_buf jmp;
 volatile char *video_mem = 0;
 boot_infos_t BootInfo;
 
-void le_swap( void *start_addr_v, 
-              void *end_addr_v, 
-              void *target_addr_v ) {
-    long 
-	*start_addr = (long *)ROUND_DOWN((long)start_addr_v,8), 
-        *end_addr = (long *)ROUND_UP((long)end_addr_v,8), 
-        *target_addr = (long *)ROUND_DOWN((long)target_addr_v,8);
-    long tmp;
-    while( start_addr <= end_addr ) {
-        tmp = start_addr[0];
-        target_addr[0] = REV(start_addr[1]);
-        target_addr[1] = REV(tmp);
-        start_addr += 2;
-        target_addr += 2;
-    }
-}
-
 void PpcPutChar( int ch ) {
     char buf[3];
     if( ch == 0x0a ) { buf[0] = 0x0d; buf[1] = 0x0a; } 
@@ -266,10 +249,10 @@ VOID PpcVideoPrepareForReactOS() {
     ofw_getprop(display_package, "linebytes",
 		(void *)&BootInfo.dispDeviceRowBytes, sizeof(int));
 
-    BootInfo.dispDeviceRect[2] = REV(BootInfo.dispDeviceRect[2]);
-    BootInfo.dispDeviceRect[3] = REV(BootInfo.dispDeviceRect[3]);
-    BootInfo.dispDeviceDepth = REV(BootInfo.dispDeviceDepth);
-    BootInfo.dispDeviceRowBytes = REV(BootInfo.dispDeviceRowBytes);
+    BootInfo.dispDeviceRect[2] = BootInfo.dispDeviceRect[2];
+    BootInfo.dispDeviceRect[3] = BootInfo.dispDeviceRect[3];
+    BootInfo.dispDeviceDepth = BootInfo.dispDeviceDepth;
+    BootInfo.dispDeviceRowBytes = BootInfo.dispDeviceRowBytes;
 
     if(ofw_getprop
        (display_package,
@@ -280,7 +263,7 @@ VOID PpcVideoPrepareForReactOS() {
 	return;
     }
 
-    BootInfo.dispDeviceBase = (PVOID)(REV(device_address));
+    BootInfo.dispDeviceBase = (PVOID)(device_address);
 
     display_size = BootInfo.dispDeviceRowBytes * BootInfo.dispDeviceRect[3];
 
@@ -334,8 +317,8 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 
     for( i = 0; i < returned / 2; i++ ) {
 	BiosMemoryMap[slots].Type = 1/*MEMTYPE_USABLE*/;
-	BiosMemoryMap[slots].BaseAddress = REV(memdata[i*2]);
-	BiosMemoryMap[slots].Length = REV(memdata[i*2+1]);
+	BiosMemoryMap[slots].BaseAddress = memdata[i*2];
+	BiosMemoryMap[slots].Length = memdata[i*2+1];
 	printf("MemoryMap[%d] = (%x:%x)\n", 
 	       i, 
 	       (int)BiosMemoryMap[slots].BaseAddress,
@@ -527,8 +510,8 @@ void PpcInit( of_proxy the_ofproxy ) {
     ofw_print_number(stdin_handle_chosen);
     ofw_print_string("\r\n");
 
-    stdin_handle = REV(stdin_handle_chosen);
-    mmu_handle = REV(mmu_handle_chosen);
+    stdin_handle = stdin_handle_chosen;
+    mmu_handle = mmu_handle_chosen;
 
     MachVtbl.ConsPutChar = PpcPutChar;
     MachVtbl.ConsKbHit   = PpcConsKbHit;

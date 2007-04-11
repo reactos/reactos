@@ -18,7 +18,6 @@ __asm__("\t.globl GetPhys\n"
 	"mflr  0\n\t"
 	"stwu  0,-16(1)\n\t"
 	"mfmsr 5\n\t"
-	"xori  3,3,4\n\t"     /* Undo effects of LE without swapping */
 	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
 	"mtmsr 6\n\t"
 	"isync\n\t"
@@ -38,7 +37,6 @@ __asm__("\t.globl SetPhys\n"
 	"mflr  0\n\t"
 	"stwu  0,-16(1)\n\t"
 	"mfmsr 5\n\t"
-	"xori  3,3,4\n\t"     /* Undo effects of LE without swapping */
 	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
 	"mtmsr 6\n\t"
 	"sync\n\t"
@@ -60,7 +58,6 @@ __asm__("\t.globl SetPhysByte\n"
 	"mflr  0\n\t"
 	"stwu  0,-16(1)\n\t"
 	"mfmsr 5\n\t"
-	"xori  3,3,7\n\t"     /* Undo effects of LE without swapping */
 	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
 	"mtmsr 6\n\t"
 	"sync\n\t"
