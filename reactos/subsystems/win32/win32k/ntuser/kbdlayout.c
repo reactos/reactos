@@ -144,7 +144,7 @@ static BOOL UserLoadKbdDll(WCHAR *wsKLID,
    
    if(!NT_SUCCESS(Status))
    {
-      DPRINT1("Can't get layout filename for %wZ. (%08lx)\n", klid, Status);
+      DPRINT("Can't get layout filename for %wZ. (%08lx)\n", klid, Status);
       return FALSE;
    }
    
@@ -210,7 +210,7 @@ static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
    
    if(!UserLoadKbdDll(NewKbl->Name, &NewKbl->hModule, &NewKbl->KBTables))
    {
-      DPRINT1("%s: failed to load %x dll!\n", __FUNCTION__, LocaleId);
+      DPRINT("%s: failed to load %x dll!\n", __FUNCTION__, LocaleId);
       ExFreePool(NewKbl);
       return NULL;
    }
@@ -300,7 +300,7 @@ PKBL W32kGetDefaultKeyLayout(VOID)
    
    if(!pKbl)
    {
-      DPRINT1("Failed to load %x!!! Returning any availableKL.\n", LocaleId);
+      DPRINT("Failed to load %x!!! Returning any availableKL.\n", LocaleId);
       return KBLList;
    }
    
