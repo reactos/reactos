@@ -32,6 +32,7 @@
   <compilerflag>-meabi</compilerflag>
   <compilerflag>-O2</compilerflag>
   <compilerflag>-Wno-strict-aliasing</compilerflag>
+  <compilerflag>-Wno-trampolines</compilerflag>
   <if property="MP" value="1">
     <define name="CONFIG_SMP" value="1" />
   </if>

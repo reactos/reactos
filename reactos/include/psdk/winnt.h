@@ -63,7 +63,7 @@ extern "C" {
 #define FORCEINLINE __inline
 #else
 #ifdef _PPC_
-#define FORCEINLINE __inline
+#define FORCEINLINE __inline __attribute__((unused)) __attribute__((weak))
 #else
 #define FORCEINLINE static __attribute__((unused))
 #endif
