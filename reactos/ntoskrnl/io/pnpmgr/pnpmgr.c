@@ -57,6 +57,15 @@ IoSynchronousInvalidateDeviceRelations(
 
 /* FUNCTIONS *****************************************************************/
 
+static NTSTATUS
+IopAssignDeviceResources(
+   IN PDEVICE_NODE DeviceNode,
+   OUT ULONG *pRequiredSize);
+static NTSTATUS
+IopTranslateDeviceResources(
+   IN PDEVICE_NODE DeviceNode,
+   IN ULONG RequiredSize);
+
 PDEVICE_NODE
 FASTCALL
 IopGetDeviceNode(PDEVICE_OBJECT DeviceObject)
@@ -132,12 +141,46 @@ IopStartDevice(
 {
    IO_STATUS_BLOCK IoStatusBlock;
    IO_STACK_LOCATION Stack;
+   ULONG RequiredLength;
    PDEVICE_OBJECT Fdo;
    NTSTATUS Status;
 
-   DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
-
    Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
+
+   IopDeviceNodeSetFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
+   DPRINT("Sending IRP_MN_FILTER_RESOURCE_REQUIREMENTS to device stack\n");
+   Stack.Parameters.FilterResourceRequirements.IoResourceRequirementList = DeviceNode->ResourceRequirements;
+   Status = IopInitiatePnpIrp(
+      Fdo,
+      &IoStatusBlock,
+      IRP_MN_FILTER_RESOURCE_REQUIREMENTS,
+      &Stack);
+   /* FIXME: Take care of return code */
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
+   }
+
+   Status = IopAssignDeviceResources(DeviceNode, &RequiredLength);
+   if (NT_SUCCESS(Status))
+   {
+      Status = IopTranslateDeviceResources(DeviceNode, RequiredLength);
+      if (NT_SUCCESS(Status))
+      {
+         IopDeviceNodeSetFlag(DeviceNode, DNF_RESOURCE_ASSIGNED);
+      }
+      else
+      {
+         DPRINT("IopTranslateDeviceResources() failed (Status 0x08lx)\n", Status);
+      }
+   }
+   else
+   {
+      DPRINT("IopAssignDeviceResources() failed (Status 0x08lx)\n", Status);
+   }
+   IopDeviceNodeClearFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
+
+   DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
    Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->ResourceList;
    Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->ResourceListTranslated;
 
@@ -948,7 +991,7 @@ IopInitiatePnpIrp(PDEVICE_OBJECT DeviceObject,
 
    /* PNP IRPs are always initialized with a status code of
    STATUS_NOT_IMPLEMENTED */
-   Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+   Irp->IoStatus.Status = MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS ? STATUS_SUCCESS : STATUS_NOT_IMPLEMENTED; // hpoussin's hack of doom
    Irp->IoStatus.Information = 0;
 
    IrpSp = IoGetNextIrpStackLocation(Irp);
@@ -1270,8 +1313,6 @@ IopAssignDeviceResources(
     * Actually, use the BootResources if provided, else the resource list #0
     */
 
-   IopDeviceNodeSetFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
-
    if (DeviceNode->BootResources)
    {
       /* Browse the boot resources to know if we have some custom structures */
@@ -1306,8 +1347,6 @@ IopAssignDeviceResources(
    }
 
    /* Ok, here, we have to use the device requirement list */
-   IopDeviceNodeSetFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
-
    ResourceList = &DeviceNode->ResourceRequirements->List[0];
    if (ResourceList->Version != 1 || ResourceList->Revision != 1)
    {
@@ -2126,26 +2165,6 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
 
    ZwClose(InstanceKey);
 
-   IopDeviceNodeSetFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
-   Status = IopAssignDeviceResources(DeviceNode, &RequiredLength);
-   if (NT_SUCCESS(Status))
-   {
-      Status = IopTranslateDeviceResources(DeviceNode, RequiredLength);
-      if (NT_SUCCESS(Status))
-      {
-         IopDeviceNodeSetFlag(DeviceNode, DNF_RESOURCE_ASSIGNED);
-      }
-      else
-      {
-         DPRINT("IopTranslateDeviceResources() failed (Status 0x08lx)\n", Status);
-      }
-   }
-   else
-   {
-      DPRINT("IopAssignDeviceResources() failed (Status 0x08lx)\n", Status);
-   }
-   IopDeviceNodeClearFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
-
    DeviceNode->Flags |= DNF_PROCESSED;
 
    /* Report the device to the user-mode pnp manager */
@@ -2344,10 +2363,6 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
    {
       PLDR_DATA_TABLE_ENTRY ModuleObject;
       PDRIVER_OBJECT DriverObject;
-
-      /* FIXME: Remove this once the bug is fixed */
-      if (DeviceNode->ServiceName.Buffer == NULL)
-          DPRINT1("Weird DeviceNode %p having ServiceName->Buffer==NULL. Probable stack corruption or memory overwrite.\n", DeviceNode);
 
       Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
       if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
