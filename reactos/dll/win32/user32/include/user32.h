@@ -40,4 +40,4 @@
 /* FIXME: Use ntgdi.h then cleanup... */
 HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
 BOOL STDCALL NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
-DWORD STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, DWORD *);
+LONG STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
