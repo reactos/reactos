@@ -1,0 +1,160 @@
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+
+IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 250, 220
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Power Schemes"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  ICON IDI_ACDC, IDI_ACDC, 7,7,28,22
+  LTEXT "Select the power scheme with the most appropriate settings for this computer. Note that changing the settings below will modify the selected scheme.",
+	-1,45,13,194,36
+  GROUPBOX "P&ower schemes", -1, 7,57,240,46
+  COMBOBOX IDC_ENERGYLIST, 14,70,224,92, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  PUSHBUTTON "&บันทึกเป็น...", -1, 100,85,75,15,WS_DISABLED
+  PUSHBUTTON "&ลบ", -1, 180,85,55,15,WS_DISABLED
+  GROUPBOX "ไม่ทราบค่า", IDC_GRPDETAIL, 7,108,240,105
+  LTEXT "เมื่อคอมพิวเตอร์เป็น:",IDC_SAT,15,120,60,10
+  LTEXT "Plugged in",IDC_SAC,100,120,45,15
+  ICON IDI_AC, IDC_IAC, 75,115,25,15
+  LTEXT "กำลังใช้งานอุปกรณ์จ่ายไฟฟ้า",IDC_SDC,197,120,45,15
+  ICON IDI_DC, IDC_IDC, 165,115,25,15
+  LTEXT "ปิด&จอภาพ:",IDC_MONITOR,15,145,80,10
+  COMBOBOX IDC_MONITORACLIST, 100,140,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_MONITORDCLIST, 175,140,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Turn off hard d&isks:",IDC_DISK,15,160,80,10
+  COMBOBOX IDC_DISKACLIST, 100,155,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_DISKDCLIST, 175,155,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "System s&tandby:",IDC_STANDBY,15,180,80,10
+  COMBOBOX IDC_STANDBYACLIST, 100,175,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_STANDBYDCLIST, 175,175,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "System &hibernates:",IDC_HYBERNATE,15,195,80,10
+  COMBOBOX IDC_HYBERNATEACLIST, 100,190,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_HYBERNATEDCLIST, 175,190,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEALARMS DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Alarms"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Low battery alarm",-1,10,15,235,95
+    CONTROL         "Activate &low battery alarm when power level reaches:",IDC_ALARM1,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,25,180,15
+    LTEXT           "unknown",IDC_ALARMVALUE1,200,25,40,10
+    LTEXT           "0%",-1,20,40,15,15
+    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ | 
+                    TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
+    LTEXT           "100%",-1,215,40,25,10
+    PUSHBUTTON      "Alar&m Action...",-1,20,70,70,15,WS_DISABLED
+    LTEXT           "Notification:",-1,95,70,50,10
+    LTEXT           "Unknown",IDC_ALARMMSG1,145,70,95,10
+    LTEXT           "Action:",-1,95,80,45,10
+    LTEXT           "Unknown",IDC_ALARMAKTION1,145,80,95,10
+    LTEXT           "Run Program:",-1,95,90,50,10
+    LTEXT           "Unknown",IDC_ALARMPROG1,150,90,40,10
+
+    GROUPBOX        "Critical battery alarm",-1,10,115,235,95
+    CONTROL         "Activate &low battery alarm when power level reaches:",IDC_ALARM2,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,125,180,15
+    LTEXT           "unknown",IDC_ALARMVALUE2,200,125,40,10
+    LTEXT           "0%",-1,20,140,15,15
+    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ | 
+                    TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
+    LTEXT           "100%",-1,215,140,25,10
+    PUSHBUTTON      "Alar&m Action...",-1,20,170,70,15,WS_DISABLED
+    LTEXT           "Notification:",-1,95,170,50,10
+    LTEXT           "Unknown",IDC_ALARMMSG2,145,170,95,10
+    LTEXT           "Action:",-1,95,180,45,10
+    LTEXT           "Unknown",IDC_ALARMAKTION2,145,180,95,10
+    LTEXT           "Run Program:",-1,95,190,50,10
+    LTEXT           "Unknown",IDC_ALARMPROG2,150,190,40,10
+END
+
+IDD_PROPPAGEADVANCED DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_ACDC,IDI_ACDC,5,5,20,20
+    LTEXT           "Select the power-saving settings you want to use.",-1,30,5,205,20
+    GROUPBOX        "Options",-1,5,35,225,55
+    CONTROL         "Alway&s show icon on the taskbar",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,45,200,10
+    CONTROL         "&Prompt for password when computer resumes from standby",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,55,200,10
+    CONTROL         "&Dim display when running on batteries.",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,65,200,10
+    GROUPBOX        "Power buttons",-1,5,100,230,105
+    LTEXT           "&When I close the lid of my portable computer:", IDC_SLIDCLOSE,10,110,210,10
+    COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Wh&en I press the power button on my computer:", IDC_SPOWERBUTTON,10,135,210,10
+    COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Whe&n I press the sleep button on my computer:", IDC_SSLEEPBUTTON,10,165,210,10
+    COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEHIBERNATE DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Hibernate"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
+    LTEXT           "When your computer hibernates, it stores whatever it has in memory on your hard disk and then shuts down. When your computer comes out of hibernation, it returns to its previous state. ",
+                    -1,35,5,195,35
+    GROUPBOX        "Hibernate",-1,5,45,235,25
+    CONTROL         "Enable &hibernation",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,55,210,10
+    GROUPBOX        "Disk space for hibernation",-1,5,80,240,60
+    LTEXT           "Free disk space:",-1,10,90,100,10
+    LTEXT           "Unknown",IDC_FREESPACE,120,90,70,10
+    LTEXT           "Disk space required to hibernate:",-1,10,100,115,10
+    LTEXT           "Unknown",IDC_SPACEFORHIBERNATEFILE,120,100,55,10
+    LTEXT           "You must free some disk space before your computer can hibernate. ",IDC_TOLESSFREESPACE,10,115,220,20
+END
+
+STRINGTABLE
+BEGIN
+  IDS_CPLNAME_1 "ตัวเลือกค่าพลังงาน"
+  IDS_CPLDESCRIPTION_1 "ปรับค่าพลังงาน-กำลังบันทึกการตั้งค่าให้กับคอมพิวเตอร์ของคุณ"
+  IDS_PROCENT "%i%%"
+  IDS_SOUND "เสียง"
+  IDS_TEXT "ข้อความ"
+  IDS_CONFIG1 "ตั้งค่าให้กับ %1 ค่าพลังงาน"
+  IDS_CONFIG2 "การตั้งค่าแบบขั้นสูงเป็น %1"
+
+  IDS_SIZEBYTS "%i bytes"
+  IDS_SIZEMB "%i MB"
+
+  IDS_NOACTION "ไม่เปลี่ยนค่า"
+
+  IDS_PowerActionNone1 "ไม่เปลี่ยนค่า"
+  IDS_PowerActionUnknown "ไม่ทราบ"
+  IDS_PowerActionSleep "สภาวะพร้อมทำงาน"
+  IDS_PowerActionHibernate "สภาวะหยุดพัก"
+  IDS_PowerActionShutdown "ปิดเครื่อง"
+  IDS_PowerActionRestart "เริ่มเปิดใหม่"
+  IDS_PowerActionShutdownOff "ปิดเครื่องและปิดระบบพลังงาน"
+  IDS_PowerActionWarmEject "โปรดถามฉันก่อนว่าจะทำอะไร"
+  IDS_PowerActionNone2 "ไม่ตั้งค่า"
+
+  IDS_TIMEOUT1 "หลังจาก 1 นาที"
+  IDS_TIMEOUT2 "หลังจาก 2 นาที"
+  IDS_TIMEOUT3 "หลังจาก 3 นาที"
+  IDS_TIMEOUT4 "หลังจาก 5 นาที"
+  IDS_TIMEOUT5 "หลังจาก 10 นาที"
+  IDS_TIMEOUT6 "หลังจาก 15 นาที"
+  IDS_TIMEOUT7 "หลังจาก 20 นาที"
+  IDS_TIMEOUT8 "หลังจาก 25 นาที"
+  IDS_TIMEOUT9 "หลังจาก 30 นาที"
+  IDS_TIMEOUT10 "หลังจาก 45 นาที"
+  IDS_TIMEOUT11 "หลังจาก 1 ชั่วโมง"
+  IDS_TIMEOUT12 "หลังจาก 2 ชั่วโมง"
+  IDS_TIMEOUT13 "หลังจาก 3 ชั่วโมง"
+  IDS_TIMEOUT14 "หลังจาก 4 ชั่วโมง"
+  IDS_TIMEOUT15 "หลังจาก 5 ชั่วโมง"
+  IDS_TIMEOUT16 "ไม่ตั้งค่า"
+END
+

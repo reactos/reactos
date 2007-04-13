@@ -21,4 +21,5 @@ IDI_SCREEN ICON "resources/screen.ico"
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
 #include "lang/ru-RU.rc"
+#include "lang/th-TH.rc"
 
