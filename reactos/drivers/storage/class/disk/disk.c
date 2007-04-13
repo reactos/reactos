@@ -2129,7 +2129,8 @@ Return Value:
 
             outputBuffer->PartitionType = diskData->PartitionType;
             outputBuffer->StartingOffset = deviceExtension->StartingOffset;
-            outputBuffer->PartitionLength = deviceExtension->PartitionLength;
+            outputBuffer->PartitionLength.QuadPart = (diskData->PartitionNumber) ?
+                deviceExtension->PartitionLength.QuadPart : 2305843009213693951LL; // HACK
             outputBuffer->HiddenSectors = diskData->HiddenSectors;
             outputBuffer->PartitionNumber = diskData->PartitionNumber;
             outputBuffer->BootIndicator = diskData->BootIndicator;
