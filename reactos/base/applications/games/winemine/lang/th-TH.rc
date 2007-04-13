@@ -1,0 +1,87 @@
+#include "resource.h"
+
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+
+STRINGTABLE {
+     IDS_APPNAME, "WineMine"
+
+}
+
+MENU_WINEMINE MENU DISCARDABLE
+{
+    POPUP "&ตัวเลือก" {
+        MENUITEM "ใ&หม่",               IDM_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "เ&ครื่องหมายคำถาม",   IDM_MARKQ
+        MENUITEM SEPARATOR
+        MENUITEM "เ&ริ่มต้น",           IDM_BEGINNER
+        MENUITEM "&ขั้นสูงขึ้น",        IDM_ADVANCED
+        MENUITEM "&ผู้ชำนาญ",           IDM_EXPERT
+        MENUITEM "&คนทั่วไป",           IDM_CUSTOM
+        MENUITEM SEPARATOR
+        MENUITEM "&ออก",                IDM_EXIT
+    }
+    POPUP "แ&จ้งให้ทราบ" {
+        MENUITEM "เ&วลาที่เร็วที่สุด",  IDM_TIMES
+        MENUITEM "เ&กี่ยวกับ",          IDM_ABOUT
+    }
+}
+
+DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 160, 80
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+CAPTION "เวลาที่เร็วที่สุด"
+FONT 8, "MS Shell Dlg"
+EXSTYLE DS_SHELLFONT
+{
+    GROUPBOX        "เวลาที่เร็วที่สุด", IDNONE,  10,  10, 140,  45
+    LTEXT           "เริ่มต้น",          IDNONE,  20,  20,  40,   8
+    LTEXT           "ขั้นสูงขึ้น",       IDNONE,  20,  30,  40,   8
+    LTEXT           "ผู้ชำนาญ",          IDNONE,  20,  40,  40,   8
+    LTEXT           "999",            IDC_TIME1,  70,  20,  15,   8
+    LTEXT           "999",            IDC_TIME2,  70,  30,  15,   8
+    LTEXT           "999",            IDC_TIME3,  70,  40,  15,   8
+    LTEXT           "",               IDC_NAME1,  90,  20,  55,   8
+    LTEXT           "",               IDC_NAME2,  90,  30,  55,   8
+    LTEXT           "",               IDC_NAME3,  90,  40,  55,   8
+    DEFPUSHBUTTON   "ตกลง",                IDOK,  55,  60,  50,  15
+}
+
+DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+CAPTION "ขอแสดงความยินดีด้วย!"
+FONT 8, "MS Shell Dlg"
+EXSTYLE DS_SHELLFONT
+{
+    LTEXT           "โปรดกรอกชื่อของคุณ",     IDIGNORE,  10,  10, 150,  10
+    EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
+    DEFPUSHBUTTON   "ตกลง",                       IDOK,  60,  40,  40,  15
+}
+
+DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 100, 100
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+CAPTION "เกมระดับคนทั่วไป"
+FONT 8, "MS Shell Dlg"
+EXSTYLE DS_SHELLFONT
+{
+    LTEXT           "แถว",       IDNONE,   5,   5,  30,  10
+    LTEXT           "หลัก",      IDNONE,   5,  35,  30,  10
+    LTEXT           "กับระเบิด", IDNONE,   5,  65,  30,  10
+    EDITTEXT               IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
+    EDITTEXT               IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
+    EDITTEXT              IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
+    DEFPUSHBUTTON   "ตกลง",        IDOK,  40,  30,  50,  15
+    PUSHBUTTON      "ยกเลิก",  IDCANCEL,  40,  50,  50,  15
+}
+
+DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+CAPTION "เกี่ยวกับ"
+FONT 8, "MS Shell Dlg"
+EXSTYLE DS_SHELLFONT
+{
+    LTEXT                               "Winemine", IDNONE,  10,  10,  35,  10
+    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
+    LTEXT                "ภายใต้ลิขสิทธิ์ของ WINE", IDNONE,  35,  35, 100,  10
+    ICON                                "WINEMINE", IDNONE,  10,  25,  20,  20
+    DEFPUSHBUTTON                           "ตกลง",   IDOK,  50,  60,  55,  15
+}

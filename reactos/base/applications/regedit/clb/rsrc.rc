@@ -33,4 +33,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
 #include "lang/nb-NO.rc"
+#include "lang/th-TH.rc"
 

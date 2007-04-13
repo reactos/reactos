@@ -1,0 +1,463 @@
+/*
+ * Regedit Thai language resources
+ *
+ * Copyright 2006 Sumath Aowsakulsutthi
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+{
+    VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
+    "^F", ID_EDIT_FIND
+    VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+}
+
+/*
+ * Menu
+ */
+
+IDC_REGEDIT MENU DISCARDABLE
+BEGIN
+    POPUP "แ&ฟ้ม"
+    BEGIN
+        MENUITEM "&ออกจากโปรแกรม",              ID_REGISTRY_EXIT
+    END
+    POPUP "&ช่วยเหลือ"
+    BEGIN
+        MENUITEM "เ&กี่ยวกับ ...",              ID_HELP_ABOUT
+    END
+END
+
+IDR_REGEDIT_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "แ&ฟ้ม"
+    BEGIN
+        MENUITEM "&นำเข้า...",    ID_REGISTRY_IMPORTREGISTRYFILE
+
+        MENUITEM "&ส่งออก...",    ID_REGISTRY_EXPORTREGISTRYFILE
+
+        MENUITEM SEPARATOR
+		MENUITEM "Load Hive...",	ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "Unload Hive...",	ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM SEPARATOR
+        MENUITEM "&Connect Network Registry...",
+                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
+
+        MENUITEM "&Disconnect Network Registry...",
+                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&พิมพ์\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&ออกจากโปรแกรม",              ID_REGISTRY_EXIT
+    END
+    POPUP "แ&ก้ไข"
+    BEGIN
+        MENUITEM "&ปรับปรุง",                   ID_EDIT_MODIFY
+        MENUITEM SEPARATOR
+        POPUP "ใ&หม่"
+        BEGIN
+            MENUITEM "&Key",                    ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&String Value",           ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binary Value",           ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Value",            ID_EDIT_NEW_DWORDVALUE
+			MENUITEM "&Multi-String Value",		ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "&Expandable String Value",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Permissions...",		ID_EDIT_PERMISSIONS
+        MENUITEM SEPARATOR
+        MENUITEM "&Delete\tDel",                ID_EDIT_DELETE
+        MENUITEM "&Rename",                     ID_EDIT_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Copy Key Name",              ID_EDIT_COPYKEYNAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Find\tCtrl+F",               ID_EDIT_FIND
+        MENUITEM "Find Ne&xt\tF3",              ID_EDIT_FINDNEXT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Status &Bar",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Sp&lit",                      ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
+    END
+    POPUP "&Favorites"
+    BEGIN
+        MENUITEM "&Add to Favorites",           ID_FAVOURITES_ADDTOFAVOURITES
+        , GRAYED
+        MENUITEM "&Remove Favorite",            ID_FAVOURITES_REMOVEFAVOURITE
+        , GRAYED
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics\tF1",            ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About Registry Editor",      ID_HELP_ABOUT
+    END
+END
+
+IDR_POPUP_MENUS MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "&Modify",                     ID_EDIT_MODIFY
+	MENUITEM "Modify Binary Data",          ID_EDIT_MODIFY_BIN
+	MENUITEM SEPARATOR
+	MENUITEM "&Delete\tDel",                ID_EDIT_DELETE
+	MENUITEM "&Rename",                     ID_EDIT_RENAME
+  END
+  POPUP ""
+  BEGIN
+        POPUP "&New"
+        BEGIN
+            MENUITEM "&Key",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&String Value",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binary Value",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
+        END
+  END
+  POPUP ""
+  BEGIN
+        MENUITEM "Expand/Collapse",                 ID_TREE_EXPANDBRANCH
+        POPUP "&New"
+        BEGIN
+            MENUITEM "&Key",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&String Value",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binary Value",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM "&Find",                           ID_EDIT_FIND
+        MENUITEM SEPARATOR
+        MENUITEM "&Delete",                         ID_TREE_DELETE
+        MENUITEM "&Rename",                         ID_TREE_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Export",                         ID_TREE_EXPORT
+        MENUITEM "&Permissions...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Copy Key Name",                  ID_EDIT_COPYKEYNAME
+  END
+END
+
+
+/*
+ * Dialog
+ */
+
+IDD_EDIT_STRING DIALOG  32, 24, 252, 84
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit String"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Value &name:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Value data:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,196,64,50,14
+END
+
+IDD_EDIT_MULTI_STRING DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Multi-String"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Value &name:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Value data:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,196,154,50,14
+END
+
+IDD_EDIT_BIN_DATA DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Binary Value"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Value &name:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Value data:",IDC_STATIC,6,35,161,8
+    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,196,154,50,14
+END
+
+
+IDD_EDIT_DWORD DIALOG  32, 24, 252, 104
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit DWORD"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Value &name:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Value data:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
+    GROUPBOX        "Base",IDC_STATIC,130,35,116,39
+    AUTORADIOBUTTON "&Hexadecimal",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
+    AUTORADIOBUTTON "&Decimal",IDC_FORMAT_DEC,141,59,60,10
+    DEFPUSHBUTTON   "OK",IDOK,142,82,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,196,82,50,14
+END
+
+/*
+ * String Table
+ */
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LIST_COLUMN_NAME    "Name"
+    IDS_LIST_COLUMN_TYPE    "Type"
+    IDS_LIST_COLUMN_DATA    "Data"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_TITLE           "Registry Editor"
+    IDC_REGEDIT             "REGEDIT"
+    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_MENU        "Contains commands for working with the whole registry"
+    ID_EDIT_MENU            "Contains commands for editing values or keys"
+    ID_VIEW_MENU            "Contains commands for customising the registry window"
+    ID_FAVOURITES_MENU      "Contains commands for accessing frequently used keys"
+    ID_HELP_MENU            "Contains commands for displaying help and information about registry editor"
+    ID_EDIT_NEW_MENU        "Contains commands for creating new keys or values"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_EDIT_MODIFY          "Modifies the value's data"
+    ID_EDIT_NEW_KEY         "Adds a new key"
+    ID_EDIT_NEW_STRINGVALUE "Adds a new string value"
+    ID_EDIT_NEW_BINARYVALUE "Adds a new binary value"
+    ID_EDIT_NEW_DWORDVALUE  "Adds a new double word value"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Imports a text file into the registry"
+    ID_REGISTRY_EXPORTREGISTRYFILE
+                            "Exports all or part of the registry to a text file"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY
+                            "Connects to a remote computer's registry"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+                            "Disconnects from a remote computer's registry"
+    ID_REGISTRY_PRINT       "Prints all or part of the registry"
+/*    ID_HELP_HELPTOPICS      "Opens registry editor help" */
+    ID_HELP_ABOUT           "Displays program information, version number and copyright"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_EXIT        "Quits the registry editor"
+    ID_FAVOURITES_ADDTOFAVOURITES "Adds keys to the favourites list"
+    ID_FAVOURITES_REMOVEFAVOURITE "Removes keys from the favourites list"
+    ID_VIEW_STATUSBAR       "Shows or hides the status bar"
+    ID_VIEW_SPLIT           "Change position of split between two panes"
+    ID_VIEW_REFRESH         "Refreshes the window"
+    ID_EDIT_DELETE          "Deletes the selection"
+    ID_EDIT_RENAME          "Renames the selection"
+    ID_EDIT_COPYKEYNAME     "Copies the name of the selected key to the clipboard"
+    ID_EDIT_FIND            "Finds a text string in a key, value or data"
+    ID_EDIT_FINDNEXT        "Finds next occurrence of text specified in previous search"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR		    "Error"
+    IDS_WARNING		    "Warning"
+    IDS_BAD_KEY             "Can't query key '%s'"
+    IDS_BAD_VALUE           "Can't query value '%s'"
+    IDS_UNSUPPORTED_TYPE    "Can't edit keys of this type (%ld)"
+    IDS_TOO_BIG_VALUE       "Value is too big (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "Data of type REG_MULTI_SZ cannot contain empty strings.\nThe empty strings have been removed from the list."
+    IDS_QUERY_DELETE_KEY_ONE    "Are you sure you want to delete this key?"
+    IDS_QUERY_DELETE_KEY_MORE   "Are you sure you want to delete these keys?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Confirm Key Delete"
+    IDS_QUERY_DELETE_ONE    "Are you sure you want to delete this value?"
+    IDS_QUERY_DELETE_MORE   "Are you sure you want to delete these values?"
+    IDS_QUERY_DELETE_CONFIRM "Confirm Value Delete"
+    IDS_ERR_DELVAL_CAPTION  "Error Deleting Values"
+    IDS_ERR_DELETEVALUE     "Unable to delete all specified values!"
+    IDS_ERR_RENVAL_CAPTION  "Error Renaming Value"
+    IDS_ERR_RENVAL_TOEMPTY  "Cannot rename %s. The specified value name is empty. Try another name and try again."
+    IDS_NEW_KEY             "New Key #%d"
+    IDS_NEW_VALUE           "New Value #%d"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BINARY_EMPTY	    "(zero-length binary value)"
+    IDS_DEFAULT_VALUE_NAME  "(Default)"
+    IDS_VALUE_NOT_SET       "(value not set)"
+    IDS_UNKNOWN_TYPE        "Unknown type: (0x%lx)"
+    IDS_MY_COMPUTER         "My Computer"
+    IDS_IMPORT_REG_FILE     "Import Registry File"
+    IDS_EXPORT_REG_FILE     "Export Registry File"
+    IDS_INVALID_DWORD       "(invalid DWORD value)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FLT_REGFILES        "Registration Files"
+    IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 Registration Files (REGEDIT4)"
+    IDS_FLT_REGEDIT4_FLT    "*.reg"
+    IDS_FLT_ALLFILES        "All Files (*.*)"
+    IDS_FLT_ALLFILES_FLT    "*.*"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_ACCESS_FULLCONTROL        "Full Control"
+  IDS_ACCESS_READ               "Read"
+  IDS_ACCESS_QUERYVALUE         "Query Value"
+  IDS_ACCESS_SETVALUE           "Set Value"
+  IDS_ACCESS_CREATESUBKEY       "Create Subkey"
+  IDS_ACCESS_ENUMERATESUBKEYS   "Enumerate Subkeys"
+  IDS_ACCESS_NOTIFY             "Notify"
+  IDS_ACCESS_CREATELINK         "Create Link"
+  IDS_ACCESS_DELETE             "Delete"
+  IDS_ACCESS_WRITEDAC           "Write DAC"
+  IDS_ACCESS_WRITEOWNER         "Write Owner"
+  IDS_ACCESS_READCONTROL        "Read Control"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_INHERIT_THISKEYONLY        "This key only"
+  IDS_INHERIT_THISKEYANDSUBKEYS  "This key and subkeys"
+  IDS_INHERIT_SUBKEYSONLY        "Subkeys only"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_EXPAND                     "&Expand"
+  IDS_COLLAPSE                   "&Collapse"
+  IDS_GOTO_SUGGESTED_KEY         "&Go to '%s'"
+  IDS_FINISHEDFIND               "Finished searching through the registry."
+END
+
+/*****************************************************************/
+
+
+/*
+ * Dialog
+ */
+
+IDD_EXPORTRANGE DIALOG DISCARDABLE  50, 50, 370, 50
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
+    WS_BORDER
+FONT 8, "MS Shell Dlg"
+BEGIN
+   GROUPBOX "Export Range",IDC_STATIC,2,0,366,48
+   CONTROL "&All",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "S&elected Branch",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
+END
+
+IDD_ADDFAVORITES DIALOG DISCARDABLE  0, 0, 186, 46
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add to Favorites"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
+    LTEXT           "&Favorite Name:",IDC_STATIC,7,7,70,10
+    EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
+END
+
+IDD_REMOVEFAVORITES DIALOG DISCARDABLE  0, 0, 164, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Remove Favorites"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,7,114,50,14
+    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST | 
+                    WS_BORDER | WS_TABSTOP,7,20,150,90
+    LTEXT           "Select Favorite(s):",IDC_STATIC,7,7,99,12
+END
+
+IDD_FIND DIALOG DISCARDABLE  0, 0, 254, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Find Next",IDOK,197,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,197,24,50,14
+    GROUPBOX        "Look at",IDC_STATIC,7,25,63,51
+    LTEXT           "Fi&nd what:",IDC_STATIC,7,8,37,10
+    EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
+    CONTROL         "&Keys",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,36,35,8
+    CONTROL         "&Values",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,48,36,8
+    CONTROL         "&Data",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,60,42,8
+    CONTROL         "Match &whole string only",IDC_MATCHSTRING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
+    CONTROL         "Match &case",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,83,48,90,12
+END
+
+IDD_FINDING DIALOGEX 0, 0, 145, 50
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
+    PUSHBUTTON      "&Cancel",IDCANCEL,93,29,45,14
+    LTEXT           "Searching the registry...",IDC_STATIC,33,12,83,8
+END
+
+/*
+ * TEXTINCLUDE
+ */
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+
+
+/*
+ * String Table
+ */
+
+/*
+ *STRINGTABLE DISCARDABLE
+ *BEGIN
+ *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
+ *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
+ *END
+ */
+
+/*****************************************************************/

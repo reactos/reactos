@@ -1,0 +1,291 @@
+/*
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/mscutils/servman/lang/th-TH.rc
+ * PURPOSE:     Thai resources
+ * COPYRIGHT:   Copyright 2007 Sumath Aowsakulsutthi
+ *
+ */
+
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "แ&ฟ้ม"
+  BEGIN
+    MENUITEM "ส่งออก...",         ID_EXPORT
+    MENUITEM SEPARATOR
+    MENUITEM "&ออกจากโปรแกรม",    ID_EXIT
+  END
+  POPUP "เริ่มทำทันที"
+  BEGIN
+    MENUITEM "เชื่อมต่อไปยัง...", ID_CONNECT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "เริ่มต้น",          ID_START, GRAYED
+    MENUITEM "หยุด",              ID_STOP, GRAYED
+    MENUITEM "พัก",               ID_PAUSE, GRAYED
+    MENUITEM "เริ่มทำต่อ",        ID_RESUME, GRAYED
+    MENUITEM "เริ่มใหม่",         ID_RESTART, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "ฟื้นฟู",            ID_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "แก้ไข...",          ID_EDIT, GRAYED
+    MENUITEM "สร้าง...",          ID_CREATE
+    MENUITEM "ลบ...",             ID_DELETE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "คุณสมบัติ...",      ID_PROP, GRAYED
+  END
+  POPUP "มุมมอง"
+  BEGIN
+    MENUITEM "สัญรูปขนาดใหญ่",    ID_VIEW_LARGE
+    MENUITEM "สัญรูปขนาดเล็ก",    ID_VIEW_SMALL
+    MENUITEM "รายการ",            ID_VIEW_LIST
+    MENUITEM "รายละเอียด",        ID_VIEW_DETAILS
+    MENUITEM SEPARATOR
+    MENUITEM "ตามปกติ...",        ID_VIEW_CUST, GRAYED
+  END
+  POPUP "ช่วยเหลือ"
+  BEGIN
+    MENUITEM "ช่วยเหลือ",         ID_HELP
+    MENUITEM "เกี่ยวกับ",         ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "เปิดหน้าต่างทำงาน"
+  BEGIN
+    MENUITEM "เริ่มต้น",          ID_START, GRAYED
+    MENUITEM "หยุด",              ID_STOP, GRAYED
+    MENUITEM "พัก",               ID_PAUSE, GRAYED
+    MENUITEM "เริ่มทำต่อ",        ID_RESUME, GRAYED
+    MENUITEM "เริ่มใหม่",         ID_RESTART, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "ฟื้นฟู",            ID_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "แก้ไข...",          ID_EDIT, GRAYED
+    MENUITEM "ลบ...",             ID_DELETE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "คุณสมบัติ...",      ID_PROP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "ช่วยเหลือ...",      ID_HELP
+  END
+END
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "เกี่ยวกับการบริการจัดการ"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "โปรแกรมการบริการจัดการ รุ่น 0.5.1\nลิขสิทธิ์ (C) 2005-2006\nโดย เก้ด เมอร์ฟี่ (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  PUSHBUTTON "ปิด", IDOK, 75, 162, 44, 15
+  ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+IDD_DLG_GENERAL DIALOGEX 6,6,253,225
+CAPTION "ทั่วไป"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+  EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
+  EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+  COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
+  PUSHBUTTON "เริ่มต้น", IDC_START, 6, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "หยุด", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "พัก", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "เริ่มทำต่อ", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+  LTEXT "ชื่อบริการ:", IDC_STATIC, 4, 11, 53, 11
+  LTEXT "แสดงชื่อ:", IDC_STATIC, 4, 29, 53, 11
+  LTEXT "คำบรรยาย:", IDC_STATIC, 4, 51, 53, 11
+  LTEXT "เส้นทางไปการประมวลผล:", IDC_STATIC, 6, 73, 82, 9
+  LTEXT "รูปแบบการเริ่มต้น:", IDC_STATIC, 6, 108, 53, 11
+  LTEXT "สถานะบริการ:", IDC_STATIC, 4, 138, 53, 11
+  LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
+  LTEXT "คุณสามารถกำหนดค่าตัวแปรต่างๆในตอนเริ่มต้นการใช้งาน เมื่อคุณเริ่มให้บริการที่ตรงนี้.",IDC_STATIC, 6,177,240,15
+  LTEXT "เริ่มต้นค่าตัวแปรต่างๆ:", IDC_STATIC, 6, 200, 58, 11
+  EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_DLG_DEPEND DIALOGEX 6,6,253,225
+CAPTION "แบบไม่กำหนดเอง"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" ,0x50010007, 8, 70, 236, 68, 0x00000200
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", 0x50010007, 8, 151, 234, 67, 0x00000200
+  LTEXT "การให้บริการบางอย่างขึ้นกับบริการอื่นๆด้วย, ตัวขับเคลื่อนของระบบ และการดึงข้อมูลตามลำดับกลุ่ม ถ้าส่วนประกอบต่างๆของระบบหยุดทำงานลง หรือไม่ทำงานตามสมควร การให้บริการแบบไม่กำหนดเองจะมีผลทันที", IDC_STATIC,8, 7, 238, 26
+  LTEXT "การให้บริการนี้ขึ้นอยู่กับส่วนประกอบอื่นๆที่ตามมาด้วย", IDC_STATIC, 8, 57, 236, 9
+  LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
+END
+
+IDD_DLG_CREATE DIALOGEX 6,6,225,209
+CAPTION "สร้างการให้บริการ"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
+  EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_PATH, 8, 62, 214, 13, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
+  LTEXT "*ชื่อบริการ :", IDC_STATIC, 12, 12, 54, 9
+  LTEXT "*แสดงชื่อ :", IDC_STATIC, 12, 33, 54, 9
+  LTEXT "*เส้นทางไปการประมวลผล :", IDC_STATIC, 10, 51, 68, 9
+  LTEXT "คำบรรยาย :", IDC_STATIC, 12, 86, 44, 9
+  PUSHBUTTON "ตกลง", IDOK, 126, 192, 44, 13
+  PUSHBUTTON "ยกเลิก", IDCANCEL, 176, 192, 46, 13
+  LTEXT "เพิ่มเติมทางเลือก(กดเลือกที่ช่วยเหลือเพื่อต้องการรายละเอียดเพิ่มเติม)", IDC_STATIC, 10, 151, 134, 9
+  PUSHBUTTON "ช่วยเหลือ", ID_CREATE_HELP, 6, 192, 44, 13
+END
+
+IDD_DLG_DELETE DIALOGEX 6,6,185,148
+CAPTION "ลบการให้บริการ"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "คุณแน่ใจว่าต้องการลบการให้บริการต่อไปนี้ใช่ไหม ? สิ่งนี้ไม่สามารถยกเลิกออกไปแค่ครั้งเดียว !", IDC_STATIC, 50, 6, 125, 25
+  LTEXT "ชื่อบริการ:",IDC_STATIC, 6, 40, 80, 9
+  LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
+  EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
+  PUSHBUTTON "ใช่", IDOK, 26, 129, 54, 13
+  PUSHBUTTON "ไม่ใช่", IDCANCEL, 102, 129, 54, 13
+END
+
+IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
+CAPTION "ตัวเลือก"
+FONT 8, "MS Shell Dlg",0,0
+STYLE 0x10CF0000
+BEGIN
+  LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
+  PUSHBUTTON "ตกลง", IDOK, 75, 130, 44, 13
+END
+
+IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
+CAPTION "ตัวควบคุมบริการ"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+BEGIN
+  CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
+  LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
+  LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
+  PUSHBUTTON "&ปิด", IDOK, 100, 70, 54, 13
+END
+
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_FIRSTCOLUMN "ชื่อ"
+  IDS_SECONDCOLUMN "คำบรรยาย"
+  IDS_THIRDCOLUMN "สถานะ"
+  IDS_FOURTHCOLUMN "รูปแบบเริ่มต้น"
+  IDS_FITHCOLUMN "ป้อนค่าเข้าระบบเป็น"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_SERVICES_STARTED "เริ่มต้น"
+  IDS_SERVICES_STOPPED "หยุด"
+  IDS_SERVICES_AUTO "แบบอัตโนมัติ"
+  IDS_SERVICES_MAN "แบบกำหนดเอง"
+  IDS_SERVICES_DIS "ไม่มี"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_NUM_SERVICES "Num Services: %d"
+  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROP "Properties"
+  IDS_TOOLTIP_REFRESH "Refresh"
+  IDS_TOOLTIP_EXPORT "Export list"
+  IDS_TOOLTIP_CREATE "Create a new service"
+  IDS_TOOLTIP_DELETE "Deletes an existing service"
+  IDS_TOOLTIP_START "Start service"
+  IDS_TOOLTIP_STOP "Stop service"
+  IDS_TOOLTIP_PAUSE "Pause service"
+  IDS_TOOLTIP_RESTART "Restart service"
+  IDS_TOOLTIP_HELP "Help"
+  IDS_TOOLTIP_EXIT "Exit"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_PROGRESS_INFO_START "ReactOS is attempting to start the following service"
+  IDS_PROGRESS_INFO_STOP  "ReactOS is attempting to stop the following service"
+  IDS_CREATE_SUCCESS "Service Created Succesfully"
+  IDS_CREATE_REQ "Fields marked with an\nasterix are mandatory"
+  IDS_DELETE_STOP "You must manually stop the service before deleting!"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HELP_OPTIONS "CREATE OPTIONS:\r\nNOTE: The option name includes the equal sign.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
+END
+#define IDS_HINT_BLANK          20000
+#define IDS_HINT_EXPORT         20001
+#define IDS_HINT_EXIT           20002
+
+#define IDS_HINT_CONNECT        20011
+#define IDS_HINT_START          20012
+#define IDS_HINT_STOP           21013
+#define IDS_HINT_PAUSE          21014
+#define IDS_HINT_RESUME         20015
+#define IDS_HINT_RESTART        20016
+#define IDS_HINT_REFRESH        20017
+#define IDS_HINT_EDIT           20018
+#define IDS_HINT_CREATE         20019
+#define IDS_HINT_DELETE         20020
+#define IDS_HINT_PROP           20021
+
+#define IDS_HINT_LARGE          20030
+#define IDS_HINT_SMALL          20031
+#define IDS_HINT_LIST           20032
+#define IDS_HINT_DETAILS        20033
+#define IDS_HINT_CUST           20034
+
+#define IDS_HINT_HELP           20040
+#define IDS_HINT_ABOUT          20041
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_EXPORT       " Exports the current list to a file."
+  IDS_HINT_EXIT         " Exits the program."
+
+  IDS_HINT_CONNECT      " Manage a different computer."
+  IDS_HINT_START        " Start the selected service."
+  IDS_HINT_STOP         " Stop the selected service."
+  IDS_HINT_PAUSE        " Pause the selected service."
+  IDS_HINT_RESUME       " Resume the selected service."
+  IDS_HINT_RESTART      " Stop and start the selected service."
+  IDS_HINT_REFRESH      " Refresh the service list."
+  IDS_HINT_EDIT         " Edit the properties of the selected service."
+  IDS_HINT_CREATE       " Create a new service."
+  IDS_HINT_DELETE       " Delete the selected service."
+  IDS_HINT_PROP         " Open property sheet for the current selection."
+
+  IDS_HINT_LARGE        " Display items by using large icons."
+  IDS_HINT_SMALL        " Display items by using small icons."
+  IDS_HINT_LIST         " Display item in a list."
+  IDS_HINT_DETAILS      " Display information about each item in a window."
+  IDS_HINT_CUST         " Customizes the view."
+
+  IDS_HINT_HELP         " Display help window."
+  IDS_HINT_ABOUT        " About ReactOS Service Manager."
+
+  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
+  IDS_HINT_SYS_MOVE     " Moves this window."
+  IDS_HINT_SYS_SIZE     " Resizes this window."
+  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
+  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
+  IDS_HINT_SYS_CLOSE    " Closes this window."
+END
