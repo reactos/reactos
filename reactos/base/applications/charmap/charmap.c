@@ -262,8 +262,11 @@ DlgProc(HWND hDlg,
 
                     ch = SendMessage(hMap, FM_GETCHAR, 0, 0);
 
-                    AddCharToSelection(GetDlgItem(hDlg, IDC_TEXTBOX),
-                                       ch);
+                    if (ch)
+                    {
+                        AddCharToSelection(GetDlgItem(hDlg, IDC_TEXTBOX),
+                                           ch);
+                    }
 
                     break;
                 }
