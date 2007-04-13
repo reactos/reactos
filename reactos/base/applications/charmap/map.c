@@ -492,7 +492,7 @@ MapWndProc(HWND hwnd,
 
         case FM_GETCHAR:
         {
-            if (!infoPtr->pActiveCell) return NULL;
+            if (!infoPtr->pActiveCell) return 0;
             return infoPtr->pActiveCell->ch;
         }
 
