@@ -38,15 +38,19 @@
 
 /* Screensaver Page */
 #define IDC_SCREENS_PREVIEW             1010
-#define IDC_SCREENS_CHOICES             1011
+#define IDC_SCREENS_LIST                1011
 #define IDC_SCREENS_POWER_BUTTON        1012
 #define IDC_SCREENS_SETTINGS            1013
 #define IDC_SCREENS_TESTSC              1014
 #define IDC_SCREENS_USEPASSCHK          1015
 #define IDC_SCREENS_TIMEDELAY           1016
 #define IDC_SCREENS_TIME                1017
+#define IDC_WAITTEXT                    1018
+#define IDC_MINTEXT                     1019
 #define IDC_SCREENS_DUMMY               5000
 #define IDC_SCREENS_DUMMY2              5001
+
+#define IDC_SCREENS_CHOICES -1
 
 #define IDS_CPLNAME                 2000
 #define IDS_CPLDESCRIPTION          2001
@@ -61,12 +65,6 @@
 #define IDC_SETTINGS_RESOLUTION      203
 #define IDC_SETTINGS_RESOLUTION_TEXT 204
 #define IDC_SETTINGS_ADVANCED        205
-
-#define IDR_POPUP_MENU				2010
-#define ID_MENU_CONFIG				2011
-#define ID_MENU_PREVIEW				2012
-#define ID_MENU_ADD					2013
-#define ID_MENU_DELETE				2014
 
 #define IDR_PREVIEW_MENU     2100
 #define ID_MENU_NORMAL       2101
