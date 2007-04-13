@@ -24,27 +24,27 @@ END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Screensaver"
+CAPTION "Écran de veille"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "&Screensaver",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "É&cran de veille",IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Se&ttings",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON      "Pre&view",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&Wait",IDC_WAITTEXT, 14, 125, 16, 9
+    PUSHBUTTON      "Paramè&tres",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
+    PUSHBUTTON      "&Aperçu",IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    LTEXT           "Dé&lai",IDC_WAITTEXT, 14, 125, 16, 9
     EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
     LTEXT           "minutes", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "Ask for &password on resume.",IDC_SCREENS_USEPASSCHK,"button",
+    CONTROL         "À la reprise, demander un mot de &passe.",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
-    GROUPBOX        "&Energy Saving features of monitor", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "To adjust the power settings for your monitor, click on Power Settings.",
+    GROUPBOX        "G&estion de l'alimentation du moniteur", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    LTEXT           "Pour modifier les paramètres de l'alimentation du moniteur, cliquez sur Gestion de l'alimentation.",
                     IDC_STATIC, 14, 166, 146 ,20
-    PUSHBUTTON      "P&ower...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+    PUSHBUTTON      "&Gestion de l'alimentation...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
