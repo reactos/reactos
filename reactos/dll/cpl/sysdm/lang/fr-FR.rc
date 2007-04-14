@@ -189,11 +189,11 @@ BEGIN
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
     LTEXT       "Espace disponible :", IDC_STATIC, 20, 92, 66, 9
     LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT       "Taille &Initiale (MB):", -1, 22, 118, 54, 9
-    LTEXT       "Taille Ma&ximum (MB):", -1, 22, 131, 64, 9
+    LTEXT       "Taille &Initiale (MB):", -1, 22, 118, 72, 9
+    LTEXT       "Taille Ma&ximum (MB):", -1, 22, 131, 72, 9
     CONTROL     "&Taille personnalisée", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 75, 9
-    CONTROL     "&Taille &gérée par le système", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 98, 9
-    CONTROL     "&Pas de mémoire virtuelle", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 90,9
+    CONTROL     "&Taille &gérée par le système", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 100, 9
+    CONTROL     "&Pas de mémoire virtuelle", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 100,9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Régler", IDC_SET, 158, 155, 50, 13
