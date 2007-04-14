@@ -490,7 +490,8 @@ InstallReactOS (HINSTANCE hInstance)
 {
   TCHAR sAccessories[256];
   TCHAR sGames[256];
-  TCHAR szBuffer[MAX_PATH];  
+  TCHAR szBuffer[MAX_PATH];
+  TCHAR Path[MAX_PATH];
 
 # if 0
   OutputDebugStringA ("InstallReactOS() called\n");
@@ -527,14 +528,24 @@ InstallReactOS (HINSTANCE hInstance)
   /* create desktop shortcuts */
   CreateShortcut(CSIDL_DESKTOP, NULL, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
 
-  /* create program startmenu shortcuts */  
-  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("winefile.lnk"), _T("winefile.exe"), IDS_CMT_WINEFILE);
-  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("ibrowser.lnk"), _T("ibrowser.exe"), IDS_CMT_IBROWSER);
-  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("Get Firefox.lnk"), _T("getfirefox.exe"), IDS_CMT_GETFIREFOX);
-  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("Download !.lnk"), _T("downloader.exe"), IDS_CMT_DOWNLOADER);
+  /* create program startmenu shortcuts */
+  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("ReactOS Explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
+  /* workaround to stop empty links for trunk builds */
+  if(GetSystemDirectory(szBuffer, MAX_PATH)) 
+  {
+    _tcscpy(Path, szBuffer);
+    if((_taccess(_tcscat(Path, _T("\\downloader.exe")), 0 )) != -1)
+        CreateShortcut(CSIDL_PROGRAMS, NULL, _T("Download !.lnk"), _T("downloader.exe"), IDS_CMT_DOWNLOADER);
+
+    _tcscpy(Path, szBuffer);
+    if((_taccess(_tcscat(Path, _T("\\getfirefox.exe")), 0 )) != -1)
+      CreateShortcut(CSIDL_PROGRAMS, NULL, _T("Get Firefox.lnk"), _T("getfirefox.exe"), IDS_CMT_GETFIREFOX);
+  }
+
 
   /* create administritive tools startmenu shortcuts */
-  CreateShortcut(CSIDL_ADMINTOOLS, NULL, _T("Services.lnk"), _T("servman.exe"), IDS_CMT_SERVMAN);
+  CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, _T("Service Manager.lnk"), _T("servman.exe"), IDS_CMT_SERVMAN);
+  CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, _T("Device Manager.lnk"), _T("devmgmt.exe"), IDS_CMT_DEVMGMT);
 
   /* create and fill Accessories subfolder */
   if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) 
@@ -542,12 +553,15 @@ InstallReactOS (HINSTANCE hInstance)
 	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Calculator.lnk"), _T("calc.exe"), IDS_CMT_CALC);
 	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Notepad.lnk"), _T("notepad.exe"), IDS_CMT_NOTEPAD);
-    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("ReactOS Explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Regedit.lnk"), _T("regedit.exe"), IDS_CMT_REGEDIT);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("WordPad.lnk"), _T("wordpad.exe"), IDS_CMT_WORDPAD);
-    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("SnapShot.lnk"), _T("screenshot.exe"), IDS_CMT_SCREENSHOT);
+    if(GetSystemDirectory(szBuffer, MAX_PATH)) 
+    {
+      _tcscpy(Path, szBuffer);
+      if((_taccess(_tcscat(Path, _T("\\screenshot.exe")), 0 )) != -1)
+        CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("SnapShot.lnk"), _T("screenshot.exe"), IDS_CMT_SCREENSHOT);
+    }
   }
-
 
   /* create Games subfolder and fill if the exe is available */
   if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, sGames, 256)) 
