@@ -1128,43 +1128,6 @@ NtUserAlterWindowStyle(DWORD Unknown0,
    return(0);
 }
 
-STATIC
-ULONG
-STDCALL
-IntBuildHwndList(
-   PWINDOW_OBJECT Window,
-   BOOLEAN bChildren,
-   HWND* pWnd,
-   ULONG nBufSize)
-{
-   NTSTATUS Status;
-   PWINDOW_OBJECT Child;
-   ULONG dwInc, dwCount = 0;
-
-   for(Child = Window->FirstChild; Child != NULL; Child = Child->NextSibling)
-   {
-      if(dwCount++ < nBufSize && pWnd)
-      {
-         Status = MmCopyToCaller(pWnd++, &Child->hSelf, sizeof(HWND));
-         if(!NT_SUCCESS(Status))
-         {
-            SetLastNtError(Status);
-            break;
-         }
-      }
-      if (bChildren)
-      {
-         dwInc = IntBuildHwndList(Child,
-                                     bChildren,
-                                     pWnd,
-                                     nBufSize > dwCount ? nBufSize - dwCount : 0);
-         dwCount += dwInc;
-         pWnd += dwInc;
-      }
-   }
-  return dwCount;
-}
-
 /*
  * As best as I can figure, this function is used by EnumWindows,
  * EnumChildWindows, EnumDesktopWindows, & EnumThreadWindows.
@@ -1193,7 +1156,7 @@ NtUserBuildHwndList(
    if (hwndParent || !dwThreadId)
    {
       PDESKTOP_OBJECT Desktop;
-      PWINDOW_OBJECT Window;
+      PWINDOW_OBJECT Parent, Window;
 
       if(!hwndParent)
       {
@@ -1222,16 +1185,55 @@ NtUserBuildHwndList(
          hDesktop = 0;
       }
 
-      if(!(Window = UserGetWindowObject(hwndParent)))
+      if((Parent = UserGetWindowObject(hwndParent)) &&
+         (Window = Parent->FirstChild))
       {
-         if(hDesktop)
-         {
-             ObDereferenceObject(Desktop);
-         }
-         return 0;
-      }
+         BOOL bGoDown = TRUE;
 
-      dwCount = IntBuildHwndList(Window, bChildren, pWnd, nBufSize);
+         Status = STATUS_SUCCESS;
+         while(TRUE)
+         {
+            if (bGoDown)
+            {
+               if(dwCount++ < nBufSize && pWnd)
+               {
+                  _SEH_TRY
+                  {
+                     ProbeForWrite(pWnd, sizeof(HWND), 1);
+                     *pWnd = Window->hSelf;
+                     pWnd++;
+                  }
+                  _SEH_HANDLE
+                  {
+                     Status = _SEH_GetExceptionCode();
+                  }
+                  _SEH_END
+                  if(!NT_SUCCESS(Status))
+                  {
+                     SetLastNtError(Status);
+                     break;
+                  }
+               }
+               if (Window->FirstChild && bChildren)
+               {
+                  Window = Window->FirstChild;
+                  continue;
+               }
+               bGoDown = FALSE;
+            }
+            if (Window->NextSibling)
+            {
+               Window = Window->NextSibling;
+               bGoDown = TRUE;
+               continue;
+            }
+            Window = Window->Parent;
+            if (Window == Parent)
+            {
+               break;
+            }
+         }
+      }
 
       if(hDesktop)
       {
