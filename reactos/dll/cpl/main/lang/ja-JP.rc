@@ -53,14 +53,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Button configuration", -1, 5, 5, 230, 70
   CHECKBOX "&Switch primary and secondary buttons", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
-  CONTROL  "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_OWNERDRAW, 155, 15, 75, 57, WS_EX_STATICEDGE
-  LTEXT "Select this checkbox to make the button the right one the one you use for primary functions such as selecting and dragging", -1, 10, 30, 140, 30
+  CONTROL  "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
+  LTEXT "Select this checkbox to make the button the right one the one you use for primary functions such as selecting and dragging", -1, 10, 30, 150, 30
   GROUPBOX "Double-click speed", -1, 5, 75, 230, 70
-  LTEXT "Double-click the folder to test your settings. If the folder does not open or close, try using a slower setting.", -1, 10, 85, 160, 30
+  LTEXT "Double-click the folder to test your settings. If the folder does not open or close, try using a slower setting.", -1, 10, 85, 150, 30
   LTEXT "Spee&d:   Slow", -1, 10, 120, 90, 8
   LTEXT "Fast", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
-  CONTROL  "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_OWNERDRAW, 165, 85, 65, 57, WS_EX_STATICEDGE
+  CONTROL  "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "ClickLock", -1, 5, 150, 230, 70
   CHECKBOX "&Turn on ClickLock", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
   PUSHBUTTON "&Settings...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 

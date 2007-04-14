@@ -1,9 +1,14 @@
 #ifndef __CPL_RESOURCE_H
 #define __CPL_RESOURCE_H
 
-
+/* Icons */
 #define IDC_CPLICON_1	100
 #define IDC_CPLICON_2	200
+
+#define IDI_FOLDER_OPEN   201
+#define IDI_FOLDER_CLOSED 202
+#define IDI_MOUSE_LEFT    203
+#define IDI_MOUSE_RIGHT   204
 
 #define IDD_PAGE_BUTTON				101
 #define IDD_PAGE_POINTER			102

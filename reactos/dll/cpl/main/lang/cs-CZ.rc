@@ -53,14 +53,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Nastavení tlaèítek", -1, 5, 5, 230, 70
   CHECKBOX "Z&amìnit levé a pravé tlaèítko", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
-  CONTROL  "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_OWNERDRAW, 155, 15, 75, 57, WS_EX_STATICEDGE
-  LTEXT "Zaškrtnutím toto políèka nastavíte pravé tlaèítko jako primární pro funkce jako výbìr nebo pøetažení.", -1, 10, 30, 140, 30
+  CONTROL  "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
+  LTEXT "Zaškrtnutím toto políèka nastavíte pravé tlaèítko jako primární pro funkce jako výbìr nebo pøetažení.", -1, 10, 30, 150, 30
   GROUPBOX "Rychlost poklepání", -1, 5, 75, 230, 70
-  LTEXT "Poklepejte na složku pro otestování nastavení. Pokud se složka neotevøe, zkuste nižší rychlost.", -1, 10, 85, 160, 30
+  LTEXT "Poklepejte na složku pro otestování nastavení. Pokud se složka neotevøe, zkuste nižší rychlost.", -1, 10, 85, 150, 30
   LTEXT "&Rychlost:   Malá", -1, 10, 120, 90, 8
   LTEXT "Velká", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
-  CONTROL  "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_OWNERDRAW, 165, 85, 65, 57, WS_EX_STATICEDGE
+  CONTROL  "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Funkce ClickLock", -1, 5, 150, 230, 70
   CHECKBOX "&Zapnout funkci ClickLock", IDC_CHECK_CLICK_LOCK, 10, 160, 100, 20
   PUSHBUTTON "&Nastavení...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 

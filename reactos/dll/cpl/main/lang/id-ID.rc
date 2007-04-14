@@ -53,14 +53,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Konfigurasi tombol", -1, 5, 5, 230, 70
   CHECKBOX "&Saklar primer dan tombol sekunder", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
-  CONTROL  "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_OWNERDRAW, 155, 15, 75, 57, WS_EX_STATICEDGE
-  LTEXT "Pilih kotak centang ini untuk membuat tombol yang benar yang biasa anda pakai fungsi primer seperi memilih dan menggeser", -1, 10, 30, 140, 30
+  CONTROL  "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
+  LTEXT "Pilih kotak centang ini untuk membuat tombol yang benar yang biasa anda pakai fungsi primer seperi memilih dan menggeser", -1, 10, 30, 150, 30
   GROUPBOX "Kecepatan klik-dobel", -1, 5, 75, 230, 70
-  LTEXT "Klik-dobel folder untuk menguji setelan anda. Jika folder tidak membuka atau menutup, coba menggunakan setelan lebih lambat.", -1, 10, 85, 160, 30
+  LTEXT "Klik-dobel folder untuk menguji setelan anda. Jika folder tidak membuka atau menutup, coba menggunakan setelan lebih lambat.", -1, 10, 85, 150, 30
   LTEXT "Ke&cepatan:   Lambat", -1, 10, 120, 90, 8
   LTEXT "Cepat", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
-  CONTROL  "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_OWNERDRAW, 165, 85, 65, 57, WS_EX_STATICEDGE
+  CONTROL  "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Kunci Klik", -1, 5, 150, 230, 70
   CHECKBOX "&Hidupkan KunciKlik", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
   PUSHBUTTON "&Setelan...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 

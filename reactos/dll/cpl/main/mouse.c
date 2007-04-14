@@ -1,6 +1,6 @@
 /*
  *  ReactOS
- *  Copyright (C) 2004 ReactOS Team
+ *  Copyright (C) 2004, 2007 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@
 
 //TODO:
 //detect slider changes - for apply stuff
-//implement Double-Click Speed measuring
 //          cursor icon shows - may need overriden items
 //			implement Pointer-APPLY
 //			implement Pointer-Browser
@@ -57,15 +56,30 @@
 #define MAX_DOUBLE_CLICK_SPEED		900
 #define DEFAULT_WHEEL_SCROLL_LINES	3
 
+
+typedef struct _BUTTON_DATA
+{
+    ULONG g_SwapMouseButtons;
+    ULONG g_OrigSwapMouseButtons;
+    ULONG g_DoubleClickSpeed; // = DEFAULT_DOUBLE_CLICK_SPEED;
+    ULONG g_OrigDoubleClickSpeed;
+    BOOL g_ClickLockEnabled; // = 0;
+    DWORD g_ClickLockTime; // = DEFAULT_CLICK_LOCK_TIME;
+
+    HICON hButtonLeft;
+    HICON hButtonRight;
+
+    HICON hIcon1;
+    HICON hIcon2;
+    BOOL bClicked;
+} BUTTON_DATA, *PBUTTON_DATA;
+
+
 ULONG g_Initialized = 0;
 
 UINT g_WheelScrollLines = 5;
-ULONG g_SwapMouseButtons = 0;
-ULONG g_DoubleClickSpeed = DEFAULT_DOUBLE_CLICK_SPEED;
-BOOL g_ClickLockEnabled = 0;
 BOOL g_DropShadow = 0;
 
-DWORD g_ClickLockTime = DEFAULT_CLICK_LOCK_TIME; 
 ULONG g_MouseSensitivity = DEFAULT_MOUSE_SENSITIVITY;
 ULONG g_MouseSpeed = 1;
 ULONG g_MouseThreshold1 = DEFAULT_MOUSE_THRESHOLD1;
@@ -96,12 +110,13 @@ TCHAR g_szHand[MAX_PATH];
 
 TCHAR g_szNewScheme[MAX_PATH];
 
+
 /* Property page dialog callback */
 static INT_PTR CALLBACK
 MouseHardwareProc(IN HWND hwndDlg,
-	          IN UINT uMsg,
-	          IN WPARAM wParam,
-	          IN LPARAM lParam)
+                  IN UINT uMsg,
+                  IN WPARAM wParam,
+                  IN LPARAM lParam)
 {
     GUID Guids[1];
     Guids[0] = GUID_DEVCLASS_MOUSE;
@@ -112,21 +127,20 @@ MouseHardwareProc(IN HWND hwndDlg,
     switch(uMsg)
     {
         case WM_INITDIALOG:
-        {
             /* create the hardware page */
             DeviceCreateHardwarePageEx(hwndDlg,
                                        Guids,
                                        sizeof(Guids) / sizeof(Guids[0]),
                                        HWPD_STANDARDLIST);
             break;
-        }
     }
 
     return FALSE;
 }
 
 
-BOOL InitializeMouse()
+static BOOL
+InitializeMouse(VOID)
 {
     /* mouse trails */
     SystemParametersInfo(SPI_GETMOUSETRAILS, 0, &g_MouseTrails, 0);
@@ -147,12 +161,6 @@ BOOL InitializeMouse()
     /* hide pointer while typing */
     SystemParametersInfo(SPI_GETMOUSEVANISH, 0, &g_HidePointer, 0);
 
-    /* click lock time */
-    SystemParametersInfo(SPI_GETMOUSECLICKLOCK, 0, &g_ClickLockEnabled, 0);
-    SystemParametersInfo(SPI_GETMOUSECLICKLOCKTIME, 0, &g_ClickLockTime, 0);
-
-    g_DoubleClickSpeed = GetDoubleClickTime();
-    g_SwapMouseButtons = GetSystemMetrics(SM_SWAPBUTTON);
 
 
     /* show pointer with Ctrl-Key */
@@ -163,184 +171,235 @@ BOOL InitializeMouse()
 
 static INT_PTR CALLBACK
 ClickLockProc(IN HWND hwndDlg,
-	          IN UINT uMsg,
-	          IN WPARAM wParam,
-	          IN LPARAM lParam)
+              IN UINT uMsg,
+              IN WPARAM wParam,
+              IN LPARAM lParam)
 {
     HWND hDlgCtrl;
     int pos;
-    UNREFERENCED_PARAMETER(lParam);
+
+    PBUTTON_DATA pButtonData;
+
+    pButtonData = (PBUTTON_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch(uMsg)
     {
         case WM_INITDIALOG:
-        {
+            pButtonData = (PBUTTON_DATA)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pButtonData);
+
             hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_CLICK_LOCK);
             SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 10));
-            pos = (g_ClickLockTime-200) / 200; 
+            pos = (pButtonData->g_ClickLockTime - 200) / 200;
             SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pos);
             return TRUE;
-        }
+
         case WM_COMMAND:
-        {
             if (LOWORD(wParam) == IDOK)
             {
                 hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_CLICK_LOCK);
-                g_ClickLockTime = (DWORD) (SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0) * 200) + 200;
+                pButtonData->g_ClickLockTime = (DWORD) (SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0) * 200) + 200;
                 EndDialog(hwndDlg, TRUE);
             }
             else if (LOWORD(wParam) == IDCANCEL)
             {
                 EndDialog(hwndDlg, FALSE);
             }
-        }
+            break;
     }
 
     return FALSE;
 }
 
+
 static INT_PTR CALLBACK
 ButtonProc(IN HWND hwndDlg,
-	          IN UINT uMsg,
-	          IN WPARAM wParam,
-	          IN LPARAM lParam)
+           IN UINT uMsg,
+           IN WPARAM wParam,
+           IN LPARAM lParam)
 {
     HWND hDlgCtrl;
     LRESULT lResult;
-    float pos;
     LPPSHNOTIFY lppsn;
 
-    switch(uMsg)
+    PBUTTON_DATA pButtonData;
+
+    pButtonData = (PBUTTON_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            if (InitializeMouse())
+            pButtonData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(BUTTON_DATA));
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pButtonData);
+
+            pButtonData->g_SwapMouseButtons = GetSystemMetrics(SM_SWAPBUTTON);
+            pButtonData->g_OrigSwapMouseButtons = pButtonData->g_SwapMouseButtons;
+            pButtonData->g_DoubleClickSpeed = GetDoubleClickTime();
+            pButtonData->g_OrigDoubleClickSpeed = pButtonData->g_DoubleClickSpeed;
+
+            /* Click lock time */
+            SystemParametersInfo(SPI_GETMOUSECLICKLOCK, 0, &pButtonData->g_ClickLockEnabled, 0);
+            SystemParametersInfo(SPI_GETMOUSECLICKLOCKTIME, 0, &pButtonData->g_ClickLockTime, 0);
+
+            /* Load mouse button icons */
+            pButtonData->hButtonLeft = LoadImage(hApplet, MAKEINTRESOURCE(IDI_MOUSE_LEFT), IMAGE_ICON, 48, 48, LR_DEFAULTCOLOR);
+            pButtonData->hButtonRight = LoadImage(hApplet, MAKEINTRESOURCE(IDI_MOUSE_RIGHT), IMAGE_ICON, 48, 48, LR_DEFAULTCOLOR);
+
+            /* Load folder icons */
+            pButtonData->hIcon1 = LoadImage(hApplet, MAKEINTRESOURCE(IDI_FOLDER_CLOSED), IMAGE_ICON, 48, 48, LR_DEFAULTCOLOR);
+            pButtonData->hIcon2 = LoadImage(hApplet, MAKEINTRESOURCE(IDI_FOLDER_OPEN), IMAGE_ICON, 48, 48, LR_DEFAULTCOLOR);
+
+            if (pButtonData->g_SwapMouseButtons)
             {
-                if (g_SwapMouseButtons)
-                {
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_SWAP_MOUSE_BUTTONS);
-                    SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-                }
-                if (g_ClickLockEnabled)
-                {
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_CLICK_LOCK);
-                    SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-                }
-                else
-                {
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_BUTTON_CLICK_LOCK);
-                    EnableWindow(hDlgCtrl, FALSE);
-                }
-                hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_DOUBLE_CLICK_SPEED);
-                SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 14));
-                pos = ((float)g_DoubleClickSpeed / MAX_DOUBLE_CLICK_SPEED);
-                pos /= (1.0f/11.0f);
-                SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(INT)ceil(pos));
-
-
+                SendDlgItemMessage(hwndDlg, IDC_SWAP_MOUSE_BUTTONS, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                SendDlgItemMessage(hwndDlg, IDC_IMAGE_SWAP_MOUSE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pButtonData->hButtonRight);
             }
+            else
+            {
+                SendDlgItemMessage(hwndDlg, IDC_IMAGE_SWAP_MOUSE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pButtonData->hButtonLeft);
+            }
+
+            if (pButtonData->g_ClickLockEnabled)
+            {
+                hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_CLICK_LOCK);
+                SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+            }
+            else
+            {
+                hDlgCtrl = GetDlgItem(hwndDlg, IDC_BUTTON_CLICK_LOCK);
+                EnableWindow(hDlgCtrl, FALSE);
+            }
+
+            hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_DOUBLE_CLICK_SPEED);
+            SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 14));
+            SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, 14 - ((pButtonData->g_DoubleClickSpeed - 200) / 50));
+
+
+            SendDlgItemMessage(hwndDlg, IDC_IMAGE_DOUBLE_CLICK_SPEED, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pButtonData->hIcon1);
+            pButtonData->bClicked = TRUE;
             return TRUE;
-        }
+
+        case WM_DESTROY:
+            DestroyIcon(pButtonData->hButtonLeft);
+            DestroyIcon(pButtonData->hButtonRight);
+            DestroyIcon(pButtonData->hIcon1);
+            DestroyIcon(pButtonData->hIcon2);
+            HeapFree(GetProcessHeap(), 0, pButtonData);
+            break;
+
         case WM_COMMAND:
-        {
             switch(LOWORD(wParam))
             {
                 case IDC_SWAP_MOUSE_BUTTONS:
-                {
                     lResult = SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
                     if (lResult == BST_CHECKED)
                     {
-                        g_SwapMouseButtons = FALSE;
+                        pButtonData->g_SwapMouseButtons = FALSE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
+                        SendDlgItemMessage(hwndDlg, IDC_IMAGE_SWAP_MOUSE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pButtonData->hButtonLeft);
                     }
                     else if (lResult == BST_UNCHECKED)
                     {
-                        g_SwapMouseButtons = TRUE;
+                        pButtonData->g_SwapMouseButtons = TRUE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                        SendDlgItemMessage(hwndDlg, IDC_IMAGE_SWAP_MOUSE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pButtonData->hButtonRight);
                     }
+                    SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, pButtonData->g_SwapMouseButtons, NULL, SPIF_SENDCHANGE);
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
-                }
+
                 case IDC_CHECK_CLICK_LOCK:
-                {
                     lResult = SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_BUTTON_CLICK_LOCK);
                     if (lResult == BST_CHECKED)
                     {
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
-                        g_ClickLockEnabled = FALSE;
+                        pButtonData->g_ClickLockEnabled = FALSE;
                         EnableWindow(hDlgCtrl, FALSE);
                     }
                     else if (lResult == BST_UNCHECKED)
                     {
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                         EnableWindow(hDlgCtrl, TRUE);
-                        g_ClickLockEnabled = TRUE;
+                        pButtonData->g_ClickLockEnabled = TRUE;
+                    }
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+
+                case IDC_BUTTON_CLICK_LOCK:
+                    DialogBoxParam(hApplet, MAKEINTRESOURCE(IDD_CLICK_LOCK), hwndDlg, ClickLockProc, (LPARAM)pButtonData);
+                    break;
+
+                case IDC_IMAGE_DOUBLE_CLICK_SPEED:
+                    if (HIWORD(wParam) == STN_DBLCLK)
+                    {
+                        pButtonData->bClicked = !pButtonData->bClicked;
+                        SendDlgItemMessage(hwndDlg, IDC_IMAGE_DOUBLE_CLICK_SPEED, STM_SETIMAGE, IMAGE_ICON,
+                                           (LPARAM)(pButtonData->bClicked ? pButtonData->hIcon1 : pButtonData->hIcon2));
                     }
                     break;
-                }
-                case IDC_BUTTON_CLICK_LOCK:
-                {
-                    lResult = DialogBox(hApplet, MAKEINTRESOURCE(IDD_CLICK_LOCK), hwndDlg, ClickLockProc);
-                    if ((INT)lResult == FALSE)
-                        return FALSE; // no need to enable apply button
-                    break;
-                }
             }
-            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             break;
-        }
+
         case WM_NOTIFY:
-        {
-            lppsn = (LPPSHNOTIFY) lParam; 
+            lppsn = (LPPSHNOTIFY) lParam;
             if (lppsn->hdr.code == PSN_APPLY)
             {
-                /* apply swap mouse button */
-                SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, g_SwapMouseButtons, NULL, SPIF_SENDCHANGE);
-
-                /* apply double click speed */
-                hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_DOUBLE_CLICK_SPEED);
-                lResult = SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0);
-                g_DoubleClickSpeed = (INT)lResult * 50 + 200;
-                SystemParametersInfo(SPI_SETDOUBLECLICKTIME, g_DoubleClickSpeed, NULL, SPIF_SENDCHANGE);
-
 #if (WINVER >= 0x0500)
-                SystemParametersInfo(SPI_SETMOUSECLICKLOCK, g_ClickLockEnabled, NULL, SPIF_SENDCHANGE);
-                if (g_ClickLockEnabled)
-                   SystemParametersInfo(SPI_SETMOUSECLICKLOCKTIME, g_ClickLockTime, NULL, SPIF_SENDCHANGE);
-#endif	
+                SystemParametersInfo(SPI_SETMOUSECLICKLOCK, pButtonData->g_ClickLockEnabled, NULL, SPIF_SENDCHANGE);
+                if (pButtonData->g_ClickLockEnabled)
+                   SystemParametersInfo(SPI_SETMOUSECLICKLOCKTIME, pButtonData->g_ClickLockTime, NULL, SPIF_SENDCHANGE);
+#endif
                 SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
-                return TRUE;
             }
+            else if (lppsn->hdr.code == PSN_RESET)
+            {
+                /* Reset swap mouse button setting */
+                SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, pButtonData->g_OrigSwapMouseButtons, NULL, SPIF_SENDCHANGE);
 
-        }
-        case WM_DRAWITEM:
-        {
-            LPDRAWITEMSTRUCT drawItem;
-            drawItem = (LPDRAWITEMSTRUCT)lParam;
-            if(drawItem->CtlID == IDC_IMAGE_SWAP_MOUSE)
-            {
-                //FIXME
-                //show mouse with left/right button highlighted
-                // depending on val g_SwapMouseButtons
-                return TRUE;
+                /* Reset double click speed setting */
+//                SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_OrigDoubleClickSpeed, NULL, SPIF_SENDCHANGE);
+                SetDoubleClickTime(pButtonData->g_OrigDoubleClickSpeed);
             }
-            else if (drawItem->CtlID == IDC_IMAGE_DOUBLE_CLICK_SPEED)
-            {
-                //FIXME
-                //measure click speed && draw item
-            }
-            break;
-        }
+            return TRUE;
+
         case WM_HSCROLL:
-        {
-            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_SLIDER_DOUBLE_CLICK_SPEED))
+            {
+                switch (LOWORD(wParam))
+                {
+                    case TB_LINEUP:
+                    case TB_LINEDOWN:
+                    case TB_PAGEUP:
+                    case TB_PAGEDOWN:
+                    case TB_TOP:
+                    case TB_BOTTOM:
+                    case TB_ENDTRACK:
+                        lResult = SendDlgItemMessage(hwndDlg, IDC_SLIDER_DOUBLE_CLICK_SPEED, TBM_GETPOS, 0, 0);
+                        pButtonData->g_DoubleClickSpeed = (14 - (INT)lResult) * 50 + 200;
+//                        SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_DoubleClickSpeed, NULL, SPIF_SENDCHANGE);
+                        SetDoubleClickTime(pButtonData->g_DoubleClickSpeed);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        break;
+
+                    case TB_THUMBTRACK:
+                        pButtonData->g_DoubleClickSpeed = (14 - (INT)HIWORD(wParam)) * 50 + 200;
+//                        SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_DoubleClickSpeed, NULL, SPIF_SENDCHANGE);
+                        SetDoubleClickTime(pButtonData->g_DoubleClickSpeed);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        break;
+                }
+            }
             break;
-        }
     }
+
     return FALSE;
 }
 
-BOOL ReadActiveCursorScheme()
+
+#if 0
+static BOOL
+ReadActiveCursorScheme(VOID)
 {
     HKEY hCuKey;
     HKEY hCuCursorKey;
@@ -359,7 +418,7 @@ BOOL ReadActiveCursorScheme()
         RegCloseKey(hCuKey);
         return FALSE;
     }
-	
+
     memset(g_szArrow, 0x0, sizeof(g_szArrow));
     memset(g_szHelp, 0x0, sizeof(g_szHelp));
     memset(g_szAppStarting, 0x0, sizeof(g_szAppStarting));
@@ -377,12 +436,11 @@ BOOL ReadActiveCursorScheme()
     memset(g_szHand, 0x0, sizeof(g_szHand));
 
     dwIndex = 0;
-    do
+    for (;;)
     {
         dwValueName = sizeof(szValueName) / sizeof(TCHAR);
         dwValueData = sizeof(szValueData) / sizeof(TCHAR);
         dwResult = RegEnumValue(hCuCursorKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (LPBYTE)szValueData, &dwValueData);
-		
         if (dwResult == ERROR_NO_MORE_ITEMS)
             break;
 
@@ -418,15 +476,18 @@ BOOL ReadActiveCursorScheme()
             _tcsncpy(g_szHand, szValueData, MAX_PATH);
 
         dwIndex++;
-    }while(1);
+    }
 
     RegCloseKey(hCuCursorKey);
     RegCloseKey(hCuKey);
-	
+
     return TRUE;
 }
+#endif
 
-BOOL EnumerateCursorSchemes(HWND hwndDlg)
+
+static BOOL
+EnumerateCursorSchemes(HWND hwndDlg)
 {
     HKEY hCuKey;
     HKEY hCuCursorKey;
@@ -442,9 +503,8 @@ BOOL EnumerateCursorSchemes(HWND hwndDlg)
     BOOL ProcessedHKLM = FALSE;
 
     if (RegOpenCurrentUser(KEY_READ, &hCuKey) != ERROR_SUCCESS)
-    {
         return FALSE;
-    }
+
     if (RegOpenKeyEx(hCuKey, _T("Control Panel\\Cursors\\Schemes"), 0, KEY_READ, &hCuCursorKey) != ERROR_SUCCESS)
     {
         RegCloseKey(hCuKey);
@@ -455,12 +515,12 @@ BOOL EnumerateCursorSchemes(HWND hwndDlg)
     SendMessage(hDlgCtrl, CB_RESETCONTENT, 0, 0);
     dwIndex = 0;
 
-    do
+    for (;;)
     {
         dwValueName = sizeof(szValueName) / sizeof(TCHAR);
         dwValueData = sizeof(szValueData) / sizeof(TCHAR);
         dwResult = RegEnumValue(hCuCursorKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (LPBYTE)szValueData, &dwValueData);
-		
+
         if (dwResult == ERROR_NO_MORE_ITEMS)
         {
             if(!ProcessedHKLM)
@@ -479,30 +539,36 @@ BOOL EnumerateCursorSchemes(HWND hwndDlg)
             }
             break;
         }
+
         if(_tcslen(szValueData) > 0)
         {
             TCHAR * copy = _tcsdup(szValueData);
             if (ProcessedHKLM)
+            {
+               _tcscat(szValueName, TEXT(" "));
                _tcscat(szValueName, szSystemScheme);
-               lResult = SendMessage(hDlgCtrl, CB_ADDSTRING, (WPARAM)0, (LPARAM)szValueName);
-               SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)copy);
+            }
+            lResult = SendMessage(hDlgCtrl, CB_ADDSTRING, (WPARAM)0, (LPARAM)szValueName);
+            SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)copy);
         }
 
         dwIndex++;
-    }while(1);
+    }
 
     RegCloseKey(hCuCursorKey);
     RegCloseKey(hCuKey);
 
     LoadString(hApplet, IDS_NONE, szSystemScheme, MAX_PATH);
-    SendMessage(hDlgCtrl, CB_ADDSTRING, (WPARAM)0, (LPARAM)szSystemScheme);
+    lResult = SendMessage(hDlgCtrl, CB_ADDSTRING, (WPARAM)0, (LPARAM)szSystemScheme);
+    SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)NULL);
     SendMessage(hDlgCtrl, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
 
     return TRUE;
 }
 
 
-void RefreshCursorList(HWND hwndDlg)
+static VOID
+RefreshCursorList(HWND hwndDlg)
 {
     TCHAR szCursorName[MAX_PATH];
     HWND hDlgCtrl;
@@ -517,12 +583,11 @@ void RefreshCursorList(HWND hwndDlg)
     column.mask      = LVCF_SUBITEM | LVCF_WIDTH;
     column.iSubItem  = 0;
     column.cx        = 200;
-    
+
     (void)ListView_InsertColumn(hDlgCtrl, 0, &column);
 
-
     LoadString(hApplet, IDS_ARROW, szCursorName, MAX_PATH);
-		
+
     ZeroMemory(&listItem, sizeof(LV_ITEM));
     listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
     listItem.pszText    = szCursorName;
@@ -534,7 +599,7 @@ void RefreshCursorList(HWND hwndDlg)
     (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_HELP, szCursorName, MAX_PATH);
-    listItem.iItem      = index++;	
+    listItem.iItem      = index++;
     (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_APPSTARTING, szCursorName, MAX_PATH);
@@ -587,32 +652,37 @@ void RefreshCursorList(HWND hwndDlg)
     (void)ListView_InsertItem(hDlgCtrl, &listItem);
 }
 
-BOOL DeleteUserCursorScheme(TCHAR * szScheme)
+
+static BOOL
+DeleteUserCursorScheme(TCHAR * szScheme)
 {
     HKEY hCuKey;
     HKEY hCuCursorKey;
     LONG Result;
+
     if (RegOpenCurrentUser(KEY_READ | KEY_SET_VALUE, &hCuKey) != ERROR_SUCCESS)
-    {
         return FALSE;
-    }
+
     if (RegOpenKeyEx(hCuKey, _T("Control Panel\\Cursors\\Schemes"), 0, KEY_READ | KEY_SET_VALUE, &hCuCursorKey) != ERROR_SUCCESS)
     {
         RegCloseKey(hCuKey);
         return FALSE;
     }
+
     Result = RegDeleteValue(hCuCursorKey, szScheme);
 
     RegCloseKey(hCuCursorKey);
     RegCloseKey(hCuKey);
+
     return (Result == ERROR_SUCCESS);
 }
 
+
 static INT_PTR CALLBACK
 SaveSchemeProc(IN HWND hwndDlg,
-	          IN UINT uMsg,
-	          IN WPARAM wParam,
-	          IN LPARAM lParam)
+               IN UINT uMsg,
+               IN WPARAM wParam,
+               IN LPARAM lParam)
 {
     HWND hDlgCtrl;
     UNREFERENCED_PARAMETER(lParam);
@@ -620,7 +690,6 @@ SaveSchemeProc(IN HWND hwndDlg,
     switch(uMsg)
     {
         case WM_COMMAND:
-        {
             if (LOWORD(wParam) == IDOK)
             {
                 hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_SCHEME_NAME);
@@ -631,13 +700,15 @@ SaveSchemeProc(IN HWND hwndDlg,
             {
                 EndDialog(hwndDlg, FALSE);
             }
-        }
+            break;
     }
 
     return FALSE;
 }
 
-BOOL BrowseCursor(TCHAR * szFileName, HWND hwndDlg)
+
+static BOOL
+BrowseCursor(TCHAR * szFileName, HWND hwndDlg)
 {
     //FIXME load text resources from string
     OPENFILENAME ofn;
@@ -662,11 +733,100 @@ BOOL BrowseCursor(TCHAR * szFileName, HWND hwndDlg)
 }
 
 
+static VOID
+LoadCurrentCursorScheme(LPTSTR lpName, BOOL bSystem)
+{
+    HKEY hCursorKey;
+    TCHAR szValue[2048];
+    TCHAR szRaw[256];
+    DWORD dwValueLen;
+    LONG lError;
+    LPTSTR ptrStart, ptrEnd;
+    INT_PTR len;
+    int i;
+
+    if (lpName == NULL)
+    {
+        memset(g_szArrow, 0x0, sizeof(g_szArrow));
+        memset(g_szHelp, 0x0, sizeof(g_szHelp));
+        memset(g_szAppStarting, 0x0, sizeof(g_szAppStarting));
+        memset(g_szWait, 0x0, sizeof(g_szWait));
+        memset(g_szCrosshair, 0x0, sizeof(g_szCrosshair));
+        memset(g_szIBeam, 0x0, sizeof(g_szIBeam));
+        memset(g_szNWPen, 0x0, sizeof(g_szNWPen));
+        memset(g_szNo, 0x0, sizeof(g_szNo));
+        memset(g_szSizeNS, 0x0, sizeof(g_szSizeNS));
+        memset(g_szSizeWE, 0x0, sizeof(g_szSizeWE));
+        memset(g_szSizeNWSE, 0x0, sizeof(g_szSizeNWSE));
+        memset(g_szSizeNESW, 0x0, sizeof(g_szSizeNESW));
+        memset(g_szSizeAll, 0x0, sizeof(g_szSizeAll));
+        memset(g_szUpArrow, 0x0, sizeof(g_szUpArrow));
+        memset(g_szHand, 0x0, sizeof(g_szHand));
+    }
+    else
+    {
+        if (bSystem)
+        {
+            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                             _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cursors\\Schemes"),
+                             0, KEY_READ, &hCursorKey))
+                return;
+        }
+        else
+        {
+            if (RegOpenKeyEx(HKEY_CURRENT_USER,
+                             _T("Control Panel\\Cursors\\Schemes"),
+                             0, KEY_READ, &hCursorKey) != ERROR_SUCCESS)
+                return;
+        }
+
+        dwValueLen = 2048 * sizeof(TCHAR);
+        lError = RegQueryValueEx(hCursorKey, lpName, NULL, NULL, (LPBYTE)szValue, &dwValueLen);
+
+        RegCloseKey(hCursorKey);
+
+        if (lError == ERROR_SUCCESS)
+        {
+            ptrStart = szValue;
+            for (i = 0; ; i++)
+            {
+                ptrEnd = _tcschr(ptrStart, TEXT(','));
+                if (ptrEnd != NULL)
+                {
+                    len = (ptrEnd - ptrStart) / sizeof(TCHAR);
+                    _tcsncpy(szRaw, ptrStart, len);
+                    szRaw[len] = 0;
+                }
+                else
+                {
+                    _tcscpy(szRaw, ptrStart);
+                }
+
+                switch (i)
+                {
+                    case 0:
+                        ExpandEnvironmentStrings(szRaw, g_szArrow, MAX_PATH);
+                        break;
+
+                }
+
+
+
+                if (ptrEnd == NULL)
+                    break;
+
+                ptrStart = ptrEnd + 1;
+            }
+        }
+    }
+}
+
+
 static INT_PTR CALLBACK
 PointerProc(IN HWND hwndDlg,
-	          IN UINT uMsg,
-	          IN WPARAM wParam,
-	          IN LPARAM lParam)
+            IN UINT uMsg,
+            IN WPARAM wParam,
+            IN LPARAM lParam)
 {
     LPPSHNOTIFY lppsn;
     TCHAR buffer[MAX_PATH];
@@ -679,7 +839,6 @@ PointerProc(IN HWND hwndDlg,
     switch(uMsg)
     {
         case WM_INITDIALOG:
-        {
             EnumerateCursorSchemes(hwndDlg);
             RefreshCursorList(hwndDlg);
             /* drop shadow */
@@ -693,9 +852,8 @@ PointerProc(IN HWND hwndDlg,
                 return TRUE;
             else
                 return FALSE;
-        }
+
         case WM_NOTIFY:
-        {
             lppsn = (LPPSHNOTIFY) lParam; 
             if (lppsn->hdr.code == PSN_APPLY)
             {
@@ -706,46 +864,46 @@ PointerProc(IN HWND hwndDlg,
                 return TRUE;
             }
             break;
-        }
+
         case WM_COMMAND:
-        {
             switch(HIWORD(wParam))
             {
                 case CBN_SELENDOK:
                 {
                     BOOL bEnable;
+                    LPTSTR lpName;
+
                     wParam = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
                     if(wParam == CB_ERR)
                         break;
                     SendMessage((HWND)lParam, CB_GETLBTEXT, wParam, (LPARAM)buffer);
                     LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
                     if(_tcsstr(buffer, szSystemScheme) || wParam == 0) //avoid the default scheme can be deleted
-                        bEnable = 0;
+                        bEnable = FALSE;
                     else
-                        bEnable = 1;
-						
+                        bEnable = TRUE;
+
                     /* delete button */
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_BUTTON_DELETE_SCHEME);
                     EnableWindow(hDlgCtrl, bEnable);
-				
+
+                    lpName = (LPTSTR)SendMessage((HWND)lParam, CB_GETITEMDATA, wParam, 0);
+                    LoadCurrentCursorScheme(lpName, !bEnable);
                     break;
                 }
             }
 
-            switch(LOWORD(wParam))
+            switch (LOWORD(wParam))
             {
                 case IDC_BUTTON_SAVEAS_SCHEME:
-                {
-                    if(DialogBox(hApplet, MAKEINTRESOURCE(IDD_CURSOR_SCHEME_SAVEAS), hwndDlg, SaveSchemeProc))
+                    if (DialogBox(hApplet, MAKEINTRESOURCE(IDD_CURSOR_SCHEME_SAVEAS), hwndDlg, SaveSchemeProc))
                     {
                         //FIXME
-                        //save cursor scheme	
-
+                        //save cursor scheme
                     }
                     break;
-                }
+
                 case IDC_BUTTON_USE_DEFAULT_CURSOR:
-                {
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTVIEW_CURSOR);
                     lResult = SendMessage(hDlgCtrl, CB_GETCURSEL, 0, 0);
                     if (lResult != CB_ERR)
@@ -782,9 +940,8 @@ PointerProc(IN HWND hwndDlg,
                             memset(g_szHand, 0x0, MAX_PATH * sizeof(TCHAR));
                     }
                     break;
-                }
+
                 case IDC_BUTTON_BROWSE_CURSOR:
-                {
                     memset(buffer, 0x0, sizeof(buffer));
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTVIEW_CURSOR);
                     lResult = SendMessage(hDlgCtrl, CB_GETCURSEL, 0, 0);
@@ -792,7 +949,6 @@ PointerProc(IN HWND hwndDlg,
                     MessageBox(hwndDlg, _T("CB_ERR"), _T(""),MB_ICONERROR);
                     if (BrowseCursor(buffer, hwndDlg))
                     {
-
                         if ((INT)lResult == 0)
                             _tcsncpy(g_szArrow, buffer, MAX_PATH);
                         else if ((INT)lResult == 1)
@@ -838,9 +994,8 @@ PointerProc(IN HWND hwndDlg,
                         ReleaseDC(hDlgCtrl, memDC);
                     }
                     break;
-                }
+
                 case IDC_BUTTON_DELETE_SCHEME:
-                {
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMBO_CURSOR_SCHEME);
                     wParam = SendMessage(hDlgCtrl, CB_GETCURSEL, 0, 0);
                     if(wParam == CB_ERR)
@@ -852,9 +1007,8 @@ PointerProc(IN HWND hwndDlg,
                         SendMessage(hDlgCtrl, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
                     }
                     break;
-                }
+
                 case IDC_CHECK_DROP_SHADOW:
-                {
                     if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_DROP_SHADOW))
                     {
                         g_DropShadow = 0;
@@ -864,22 +1018,20 @@ PointerProc(IN HWND hwndDlg,
                     {
                         g_DropShadow = 1;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-                    }					
-                }
+                    }
             }
             break;
-        }
-
     }
 
     return FALSE;
 }
 
+
 static INT_PTR CALLBACK
 OptionProc(IN HWND hwndDlg,
-	          IN UINT uMsg,
-	          IN WPARAM wParam,
-	          IN LPARAM lParam)
+           IN UINT uMsg,
+           IN WPARAM wParam,
+           IN LPARAM lParam)
 {
     HWND hDlgCtrl;
     LPPSHNOTIFY lppsn;
@@ -888,14 +1040,13 @@ OptionProc(IN HWND hwndDlg,
     switch(uMsg)
     {
         case WM_INITDIALOG:
-        {
             if (InitializeMouse())
             {
                 /* set mouse sensitivity */
                 hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_MOUSE_SENSITIVITY);
                 SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 19));
                 SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)g_MouseSensitivity-1);
-				
+
                 if (g_MouseSpeed)
                 {
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_POINTER_PRECISION);
@@ -921,23 +1072,19 @@ OptionProc(IN HWND hwndDlg,
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_SHOW_POINTER);
                     SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                 }
-				
+
                 if (g_HidePointer)
                 {
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_HIDE_POINTER);
                     SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                 }
-
             }
-
             break;
-        }
+
         case WM_COMMAND:
-        {
             switch(LOWORD(wParam))
             {
                 case IDC_CHECK_POINTER_PRECISION:
-                {
                     if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_POINTER_PRECISION))
                     {
                         g_MouseSpeed = 0;
@@ -953,9 +1100,8 @@ OptionProc(IN HWND hwndDlg,
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
                     break;
-                }
+
                 case IDC_CHECK_SNAP_TO:
-                {
                     if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_SNAP_TO))
                     {
                         g_SnapToDefaultButton = 0;
@@ -967,9 +1113,8 @@ OptionProc(IN HWND hwndDlg,
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
                     break;
-                }
+
                 case IDC_CHECK_POINTER_TRAIL:
-                {
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_POINTER_TRAIL);
                     if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_POINTER_TRAIL))
                     {
@@ -983,10 +1128,9 @@ OptionProc(IN HWND hwndDlg,
                         EnableWindow(hDlgCtrl, TRUE);
                         g_MouseTrails = (ULONG) SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0) + 2;
                     }
-                    break;					
-                }
+                    break;
+
                 case IDC_CHECK_SHOW_POINTER:
-                {
                     if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_SHOW_POINTER))
                     {
                         g_ShowPointer = 0;
@@ -998,9 +1142,8 @@ OptionProc(IN HWND hwndDlg,
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
                     break;
-                }
+
                 case IDC_CHECK_HIDE_POINTER:
-                {
                     if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_HIDE_POINTER))
                     {
                         g_HidePointer = 0;
@@ -1012,27 +1155,27 @@ OptionProc(IN HWND hwndDlg,
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
                     break;
-                }
             }
             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             break;
-        }
+
         case WM_NOTIFY:
-        {
             lppsn = (LPPSHNOTIFY) lParam; 
             if (lppsn->hdr.code == PSN_APPLY)
             {
                 /* set snap to default button */
                 SystemParametersInfo(SPI_SETSNAPTODEFBUTTON, g_SnapToDefaultButton, 0, SPIF_SENDCHANGE);
-	
+
                 /* set mouse trails */
                 if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_POINTER_TRAIL))
                 {
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_POINTER_TRAIL);
                     lResult = SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0);
                 }
-                else 
+                else
+                {
                     lResult = 0;
+                }
 
                 SystemParametersInfo(SPI_SETMOUSETRAILS, (UINT) lResult, 0, SPIF_SENDCHANGE);
 
@@ -1044,7 +1187,6 @@ OptionProc(IN HWND hwndDlg,
                 hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_MOUSE_SENSITIVITY);
                 lResult = SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0) + 1;
                 SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)g_MouseSensitivity, SPIF_SENDCHANGE);
-	
 
                 /* hide pointer while typing */
                 SystemParametersInfo(SPI_SETMOUSEVANISH, 0, (PVOID)g_HidePointer, SPIF_SENDCHANGE);
@@ -1055,17 +1197,18 @@ OptionProc(IN HWND hwndDlg,
                 return TRUE;
             }
             break;
-        }
+
         case WM_HSCROLL:
-        {
             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             break;
-        }
     }
+
     return FALSE;
 }
 
-static void ShowDialogWheelControls(HWND hwndDlg)
+
+static VOID
+ShowDialogWheelControls(HWND hwndDlg)
 {
     HWND hDlgCtrl;
 
@@ -1073,7 +1216,7 @@ static void ShowDialogWheelControls(HWND hwndDlg)
     {
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_WHEEL_SCROLL_LINES);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-				
+
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_WHEEL_SCROLL_LINES);
         EnableWindow(hDlgCtrl, TRUE);
 
@@ -1097,25 +1240,24 @@ static void ShowDialogWheelControls(HWND hwndDlg)
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_WHEEL_SCROLL_PAGE);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
     }
-
 }
+
 
 static INT_PTR CALLBACK
 WheelProc(IN HWND hwndDlg,
-	          IN UINT uMsg,
-	          IN WPARAM wParam,
-	          IN LPARAM lParam)
+          IN UINT uMsg,
+          IN WPARAM wParam,
+          IN LPARAM lParam)
 {
     HWND hDlgCtrl;
     WCHAR buffer[MAX_PATH];
     LPPSHNOTIFY lppsn;
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             ShowDialogWheelControls(hwndDlg);
-			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WHEEL_SCROLL_LINES), UDM_SETRANGE, 0, MAKELONG ((short) 100, (short) 0));
+            SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WHEEL_SCROLL_LINES), UDM_SETRANGE, 0, MAKELONG ((short) 100, (short) 0));
             if (g_WheelScrollLines != UINT_MAX)
             {
                 hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_WHEEL_SCROLL_LINES);
@@ -1123,10 +1265,9 @@ WheelProc(IN HWND hwndDlg,
                 SendMessage(hDlgCtrl, WM_SETTEXT, (WPARAM)0, (LPARAM)buffer);
             }
             return TRUE;
-        }
+
         case WM_COMMAND:
-        {
-            switch(LOWORD(wParam))
+            switch (LOWORD(wParam))
             {
                 case IDC_RADIO_WHEEL_SCROLL_LINES:
                 {
@@ -1145,9 +1286,8 @@ WheelProc(IN HWND hwndDlg,
             }
             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             break;
-        }
+
         case WM_NOTIFY:
-        {
             lppsn = (LPPSHNOTIFY) lParam; 
             if (lppsn->hdr.code == PSN_APPLY)
             {
@@ -1155,17 +1295,16 @@ WheelProc(IN HWND hwndDlg,
                 SendMessageW(hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)buffer);
                 g_WheelScrollLines = _wtoi(buffer);
                 SystemParametersInfo(SPI_SETWHEELSCROLLLINES, g_WheelScrollLines, 0, SPIF_SENDCHANGE);
-				
+
                 SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
-
-        }
-
+            break;
     }
 
     return FALSE;
 }
+
 
 LONG APIENTRY
 MouseApplet(HWND hwnd, UINT uMsg, LONG lParam1, LONG lParam2)

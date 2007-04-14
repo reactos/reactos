@@ -55,17 +55,17 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Tastenkonfiguration", -1, 5, 5, 230, 70
   CHECKBOX "&Primäre und sekundäre Taste umschalten", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 145, 10
-  CONTROL  "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_OWNERDRAW, 155, 15, 75, 57, WS_EX_STATICEDGE
-  LTEXT "Aktivieren Sie dieses Kontrollkästchen, um die rechte Maustaste für primäre Funktionen, wie Auswählen und Ziehen zu verwenden.", -1, 10, 30, 140, 31
+  CONTROL  "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
+  LTEXT "Aktivieren Sie dieses Kontrollkästchen, um die rechte Maustaste für primäre Funktionen, wie Auswählen und Ziehen zu verwenden.", -1, 10, 30, 150, 31
   GROUPBOX "Doppelklickgeschwindigkeit", -1, 5, 75, 230, 70
-  LTEXT "Doppelklicken Sie auf den Ordner, um die Einstellung zu testen. Verwenden Sie eine langsamere Einstellung, wenn der Ordner sich nicht öffnen oder schließen lässt.", -1, 10, 85, 160, 32
+  LTEXT "Doppelklicken Sie auf den Ordner, um die Einstellung zu testen. Verwenden Sie eine langsamere Einstellung, wenn der Ordner sich nicht öffnen oder schließen lässt.", -1, 10, 85, 150, 32
   LTEXT "Langsam", -1, 10, 120, 90, 8
   LTEXT "Schnell", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
-  CONTROL  "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_OWNERDRAW, 165, 85, 65, 57, WS_EX_STATICEDGE
+  CONTROL  "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "KlickEinrasten", -1, 5, 150, 230, 70
   CHECKBOX "&KlickEinrasten aktivieren", IDC_CHECK_CLICK_LOCK, 10, 160, 91, 20
-  PUSHBUTTON "&Einstellungen...", IDC_BUTTON_CLICK_LOCK, 167, 160, 53, 10 
+  PUSHBUTTON "&Einstellungen...", IDC_BUTTON_CLICK_LOCK, 167, 160, 60, 14
   LTEXT "Ermöglicht das Markieren oder Ziehen, ohne die Maustaste ständig gedrückt zu halten. Drücken Sie die Maustaste kurzzeitig, um die Funktion zu verwenden. Klicken Sie die Maustaste erneut, um die Tastenfeststellung zu beenden.", -1, 10, 180, 190, 33
 END
 

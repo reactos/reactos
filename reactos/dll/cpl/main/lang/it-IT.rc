@@ -55,14 +55,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Configurazione dei bottoni", -1, 5, 5, 230, 70
   CHECKBOX "&Scambia il bottone secondario e primario", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
-  CONTROL  "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_OWNERDRAW, 155, 15, 75, 57, WS_EX_STATICEDGE
-  LTEXT "Assegna al tasto destro del mouse le funzioni principali come ad esempio la selezione e il trascinamento", -1, 10, 30, 140, 30
+  CONTROL  "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
+  LTEXT "Assegna al tasto destro del mouse le funzioni principali come ad esempio la selezione e il trascinamento", -1, 10, 30, 150, 30
   GROUPBOX "Velocità del doppio clic", -1, 5, 75, 230, 70
-  LTEXT "Fai doppio clic sulla cartella per verificare le impostazioni. Se la cartella non si apre o chiude, prova a usare una velocità minore.", -1, 10, 85, 160, 30
+  LTEXT "Fai doppio clic sulla cartella per verificare le impostazioni. Se la cartella non si apre o chiude, prova a usare una velocità minore.", -1, 10, 85, 150, 30
   LTEXT "Velocità:   Lenta", -1, 10, 120, 90, 8
   LTEXT "Veloce", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
-  CONTROL  "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_OWNERDRAW, 165, 85, 65, 57, WS_EX_STATICEDGE
+  CONTROL  "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Blocca clic", -1, 5, 150, 230, 70
   CHECKBOX "&Abilita Blocca Clic", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
   PUSHBUTTON "&Impostazioni...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 
