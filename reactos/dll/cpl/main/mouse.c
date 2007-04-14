@@ -75,6 +75,25 @@ typedef struct _BUTTON_DATA
 } BUTTON_DATA, *PBUTTON_DATA;
 
 
+typedef struct _OPTION_DATA
+{
+    ULONG ulMouseSensitivity;
+    ULONG ulOrigMouseSensitivity;
+
+    ULONG ulMouseSpeed; // = 1;
+    ULONG ulMouseThreshold1; // = DEFAULT_MOUSE_THRESHOLD1;
+    ULONG ulMouseThreshold2; // = DEFAULT_MOUSE_THRESHOLD2;
+
+    ULONG ulSnapToDefaultButton; // = 0;
+
+    UINT uMouseTrails;
+
+    ULONG ulShowPointer; // = 0;
+    ULONG ulHidePointer; // = 0;
+
+} OPTION_DATA, *POPTION_DATA;
+
+
 typedef struct _WHEEL_DATA
 {
     UINT uWheelScrollLines;
@@ -85,14 +104,6 @@ ULONG g_Initialized = 0;
 
 BOOL g_DropShadow = 0;
 
-ULONG g_MouseSensitivity = DEFAULT_MOUSE_SENSITIVITY;
-ULONG g_MouseSpeed = 1;
-ULONG g_MouseThreshold1 = DEFAULT_MOUSE_THRESHOLD1;
-ULONG g_MouseThreshold2 = DEFAULT_MOUSE_THRESHOLD2;
-ULONG g_SnapToDefaultButton = 0;
-ULONG g_MouseTrails = 0;
-ULONG g_ShowPointer = 0;
-ULONG g_HidePointer = 0;
 ULONG g_ApplyCount = 0;
 
 
@@ -141,33 +152,6 @@ MouseHardwareProc(IN HWND hwndDlg,
     }
 
     return FALSE;
-}
-
-
-static BOOL
-InitializeMouse(VOID)
-{
-    /* mouse trails */
-    SystemParametersInfo(SPI_GETMOUSETRAILS, 0, &g_MouseTrails, 0);
-
-    /* snap to default button */
-    SystemParametersInfo(SPI_GETSNAPTODEFBUTTON, 0, &g_SnapToDefaultButton, 0);
-
-    //FIXME
-    //pointer precision
-    // SPI_GETMOUSE?
-
-    /* mouse sensitivity */
-    SystemParametersInfo(SPI_GETMOUSESPEED, 0, &g_MouseSensitivity, 0);
-
-    /* hide pointer while typing */
-    SystemParametersInfo(SPI_GETMOUSEVANISH, 0, &g_HidePointer, 0);
-
-
-
-    /* show pointer with Ctrl-Key */
-    SystemParametersInfo(SPI_GETMOUSESONAR, 0, &g_ShowPointer, 0);
-    return TRUE;
 }
 
 
@@ -1029,6 +1013,42 @@ PointerProc(IN HWND hwndDlg,
 }
 
 
+static BOOL
+InitializeMouse(POPTION_DATA pOptionData)
+{
+    //FIXME
+    //pointer precision
+    // SPI_GETMOUSE?
+
+    /* Get mouse sensitivity */
+    if (!SystemParametersInfo(SPI_GETMOUSESPEED, 0, &pOptionData->ulMouseSensitivity, 0))
+        pOptionData->ulMouseSensitivity = DEFAULT_MOUSE_SENSITIVITY;
+    pOptionData->ulOrigMouseSensitivity = pOptionData->ulMouseSensitivity;
+
+    pOptionData->ulMouseSpeed = 1;
+    pOptionData->ulMouseThreshold1 = DEFAULT_MOUSE_THRESHOLD1;
+    pOptionData->ulMouseThreshold2 = DEFAULT_MOUSE_THRESHOLD2;
+
+    /* snap to default button */
+    if (SystemParametersInfo(SPI_GETSNAPTODEFBUTTON, 0, &pOptionData->ulSnapToDefaultButton, 0))
+        pOptionData->ulSnapToDefaultButton = 0;
+
+    /* mouse trails */
+    if (!SystemParametersInfo(SPI_GETMOUSETRAILS, 0, &pOptionData->uMouseTrails, 0))
+        pOptionData->uMouseTrails = 0;
+
+    /* hide pointer while typing */
+    if (!SystemParametersInfo(SPI_GETMOUSEVANISH, 0, &pOptionData->ulHidePointer, 0))
+        pOptionData->ulHidePointer = 0;
+
+    /* show pointer with Ctrl-Key */
+    if (!SystemParametersInfo(SPI_GETMOUSESONAR, 0, &pOptionData->ulShowPointer, 0))
+        pOptionData->ulShowPointer = 0;
+
+    return TRUE;
+}
+
+
 static INT_PTR CALLBACK
 OptionProc(IN HWND hwndDlg,
            IN UINT uMsg,
@@ -1038,49 +1058,58 @@ OptionProc(IN HWND hwndDlg,
     HWND hDlgCtrl;
     LPPSHNOTIFY lppsn;
     LRESULT lResult;
+    POPTION_DATA pOptionData;
+
+    pOptionData = (POPTION_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch(uMsg)
     {
         case WM_INITDIALOG:
-            if (InitializeMouse())
+            pOptionData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(OPTION_DATA));
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pOptionData);
+
+            InitializeMouse(pOptionData);
+
+            /* set mouse sensitivity */
+            hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_MOUSE_SENSITIVITY);
+            SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 19));
+            SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pOptionData->ulMouseSensitivity - 1);
+
+            if (pOptionData->ulMouseSpeed)
             {
-                /* set mouse sensitivity */
-                hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_MOUSE_SENSITIVITY);
-                SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 19));
-                SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)g_MouseSensitivity-1);
-
-                if (g_MouseSpeed)
-                {
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_POINTER_PRECISION);
-                    SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-                }
-
-                if (g_SnapToDefaultButton)
-                {
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_SNAP_TO);
-                    SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-                }
-
-                /* set mouse trail */
-                hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_POINTER_TRAIL);
-                SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 5));
-                if (!g_MouseTrails)
-                    EnableWindow(hDlgCtrl, FALSE);
-                else
-                    SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)g_MouseTrails-2);
-
-                if (g_ShowPointer)
-                {
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_SHOW_POINTER);
-                    SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-                }
-
-                if (g_HidePointer)
-                {
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_HIDE_POINTER);
-                    SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-                }
+                hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_POINTER_PRECISION);
+                SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
             }
+
+            if (pOptionData->ulSnapToDefaultButton)
+            {
+                hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_SNAP_TO);
+                SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+            }
+
+            /* set mouse trail */
+            hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_POINTER_TRAIL);
+            SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 5));
+            if (pOptionData->uMouseTrails < 2)
+                EnableWindow(hDlgCtrl, FALSE);
+            else
+                SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pOptionData->uMouseTrails - 2);
+
+            if (pOptionData->ulShowPointer)
+            {
+                hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_SHOW_POINTER);
+                SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+            }
+
+            if (pOptionData->ulHidePointer)
+            {
+                hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_HIDE_POINTER);
+                SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+            }
+            break;
+
+        case WM_DESTROY:
+            HeapFree(GetProcessHeap(), 0, pOptionData);
             break;
 
         case WM_COMMAND:
@@ -1089,16 +1118,16 @@ OptionProc(IN HWND hwndDlg,
                 case IDC_CHECK_POINTER_PRECISION:
                     if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_POINTER_PRECISION))
                     {
-                        g_MouseSpeed = 0;
-                        g_MouseThreshold1 = 0;
-                        g_MouseThreshold2 = 0;
+                        pOptionData->ulMouseSpeed = 0;
+                        pOptionData->ulMouseThreshold1 = 0;
+                        pOptionData->ulMouseThreshold2 = 0;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
                     }
                     else
                     {
-                        g_MouseSpeed = 1;
-                        g_MouseThreshold1 = 6;
-                        g_MouseThreshold2 = 10;
+                        pOptionData->ulMouseSpeed = 1;
+                        pOptionData->ulMouseThreshold1 = 6;
+                        pOptionData->ulMouseThreshold2 = 10;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
                     break;
@@ -1106,12 +1135,12 @@ OptionProc(IN HWND hwndDlg,
                 case IDC_CHECK_SNAP_TO:
                     if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_SNAP_TO))
                     {
-                        g_SnapToDefaultButton = 0;
+                        pOptionData->ulSnapToDefaultButton = 0;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
                     }
                     else
                     {
-                        g_SnapToDefaultButton = 1;
+                        pOptionData->ulSnapToDefaultButton = 1;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
                     break;
@@ -1120,7 +1149,7 @@ OptionProc(IN HWND hwndDlg,
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_POINTER_TRAIL);
                     if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_POINTER_TRAIL))
                     {
-                        g_MouseTrails = 0;
+                        pOptionData->uMouseTrails = 0;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
                         EnableWindow(hDlgCtrl, FALSE);
                     }
@@ -1128,19 +1157,19 @@ OptionProc(IN HWND hwndDlg,
                     {
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                         EnableWindow(hDlgCtrl, TRUE);
-                        g_MouseTrails = (ULONG) SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0) + 2;
+                        pOptionData->uMouseTrails = (ULONG)SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0) + 2;
                     }
                     break;
 
                 case IDC_CHECK_SHOW_POINTER:
                     if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_SHOW_POINTER))
                     {
-                        g_ShowPointer = 0;
+                        pOptionData->ulShowPointer = 0;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
                     }
                     else
                     {
-                        g_ShowPointer = 1;
+                        pOptionData->ulShowPointer = 1;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
                     break;
@@ -1148,12 +1177,12 @@ OptionProc(IN HWND hwndDlg,
                 case IDC_CHECK_HIDE_POINTER:
                     if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_HIDE_POINTER))
                     {
-                        g_HidePointer = 0;
+                        pOptionData->ulHidePointer = 0;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
                     }
                     else
                     {
-                        g_HidePointer = 1;
+                        pOptionData->ulHidePointer = 1;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
                     break;
@@ -1162,24 +1191,26 @@ OptionProc(IN HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-            lppsn = (LPPSHNOTIFY) lParam; 
+            lppsn = (LPPSHNOTIFY)lParam;
             if (lppsn->hdr.code == PSN_APPLY)
             {
                 /* set snap to default button */
-                SystemParametersInfo(SPI_SETSNAPTODEFBUTTON, g_SnapToDefaultButton, 0, SPIF_SENDCHANGE);
+                SystemParametersInfo(SPI_SETSNAPTODEFBUTTON, pOptionData->ulSnapToDefaultButton, 0, SPIF_SENDCHANGE);
 
+#if 0
                 /* set mouse trails */
                 if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_POINTER_TRAIL))
                 {
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_POINTER_TRAIL);
-                    lResult = SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0);
+                    lResult = SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0) + 2;
                 }
                 else
                 {
                     lResult = 0;
                 }
 
-                SystemParametersInfo(SPI_SETMOUSETRAILS, (UINT) lResult, 0, SPIF_SENDCHANGE);
+                SystemParametersInfo(SPI_SETMOUSETRAILS, (UINT) lResult, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+#endif
 
                 //FIXME
                 //pointer precision
@@ -1188,20 +1219,72 @@ OptionProc(IN HWND hwndDlg,
                 /* calc pos and set mouse sensitivity */
                 hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_MOUSE_SENSITIVITY);
                 lResult = SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0) + 1;
-                SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)g_MouseSensitivity, SPIF_SENDCHANGE);
+                SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)pOptionData->ulMouseSensitivity, SPIF_SENDCHANGE);
 
                 /* hide pointer while typing */
-                SystemParametersInfo(SPI_SETMOUSEVANISH, 0, (PVOID)g_HidePointer, SPIF_SENDCHANGE);
+                SystemParametersInfo(SPI_SETMOUSEVANISH, 0, (PVOID)pOptionData->ulHidePointer, SPIF_SENDCHANGE);
 
                 /* show pointer with Ctrl-Key */
-                SystemParametersInfo(SPI_SETMOUSESONAR, 0, (PVOID)g_ShowPointer, SPIF_SENDCHANGE);
+                SystemParametersInfo(SPI_SETMOUSESONAR, 0, (PVOID)pOptionData->ulShowPointer, SPIF_SENDCHANGE);
+
                 SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
+            }
+            else if (lppsn->hdr.code == PSN_RESET)
+            {
+                /* Set the original mouse speed */
+                SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)pOptionData->ulOrigMouseSensitivity, SPIF_SENDCHANGE);
             }
             break;
 
         case WM_HSCROLL:
-            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_SLIDER_MOUSE_SENSITIVITY))
+            {
+                switch (LOWORD(wParam))
+                {
+                    case TB_LINEUP:
+                    case TB_LINEDOWN:
+                    case TB_PAGEUP:
+                    case TB_PAGEDOWN:
+                    case TB_TOP:
+                    case TB_BOTTOM:
+                    case TB_ENDTRACK:
+                        pOptionData->ulMouseSensitivity = (ULONG)SendDlgItemMessage(hwndDlg, IDC_SLIDER_MOUSE_SENSITIVITY, TBM_GETPOS, 0, 0) + 1;
+                        SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)pOptionData->ulMouseSensitivity, SPIF_SENDCHANGE);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        break;
+#if 0
+                    case TB_THUMBTRACK:
+                        pOptionData->ulMouseSensitivity = (ULONG)HIWORD(wParam) + 1;
+                        SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)pOptionData->ulMouseSensitivity, SPIF_SENDCHANGE);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        break;
+#endif
+                }
+            }
+            else if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_SLIDER_POINTER_TRAIL))
+            {
+                switch (LOWORD(wParam))
+                {
+                    case TB_LINEUP:
+                    case TB_LINEDOWN:
+                    case TB_PAGEUP:
+                    case TB_PAGEDOWN:
+                    case TB_TOP:
+                    case TB_BOTTOM:
+                    case TB_ENDTRACK:
+                        pOptionData->uMouseTrails = (ULONG)SendDlgItemMessage(hwndDlg, IDC_SLIDER_POINTER_TRAIL, TBM_GETPOS, 0, 0) + 2;
+                        SystemParametersInfo(SPI_SETMOUSETRAILS, pOptionData->uMouseTrails, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        break;
+
+                    case TB_THUMBTRACK:
+                        pOptionData->uMouseTrails = (ULONG)HIWORD(wParam) + 2;
+                        SystemParametersInfo(SPI_SETMOUSETRAILS, pOptionData->uMouseTrails, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        break;
+                }
+            }
             break;
     }
 
