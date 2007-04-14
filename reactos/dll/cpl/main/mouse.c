@@ -75,9 +75,14 @@ typedef struct _BUTTON_DATA
 } BUTTON_DATA, *PBUTTON_DATA;
 
 
+typedef struct _WHEEL_DATA
+{
+    UINT uWheelScrollLines;
+} WHEEL_DATA, *PWHEEL_DATA;
+
+
 ULONG g_Initialized = 0;
 
-UINT g_WheelScrollLines = 5;
 BOOL g_DropShadow = 0;
 
 ULONG g_MouseSensitivity = DEFAULT_MOUSE_SENSITIVITY;
@@ -147,9 +152,6 @@ InitializeMouse(VOID)
 
     /* snap to default button */
     SystemParametersInfo(SPI_GETSNAPTODEFBUTTON, 0, &g_SnapToDefaultButton, 0);
-
-    /* wheel scroll lines */
-    SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &g_WheelScrollLines, 0);
 
     //FIXME
     //pointer precision
@@ -1208,11 +1210,11 @@ OptionProc(IN HWND hwndDlg,
 
 
 static VOID
-ShowDialogWheelControls(HWND hwndDlg)
+ShowDialogWheelControls(HWND hwndDlg, UINT uWheelScrollLines, BOOL bInit)
 {
     HWND hDlgCtrl;
 
-    if (g_WheelScrollLines != -1)
+    if (uWheelScrollLines != WHEEL_PAGESCROLL)
     {
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_WHEEL_SCROLL_LINES);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
@@ -1235,10 +1237,14 @@ ShowDialogWheelControls(HWND hwndDlg)
         EnableWindow(hDlgCtrl, FALSE);
 
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_UPDOWN_WHEEL_SCROLL_LINES);
-        EnableWindow(hDlgCtrl, TRUE);
+        EnableWindow(hDlgCtrl, FALSE);
 
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_WHEEL_SCROLL_PAGE);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+
+        /* Set the default scroll lines value */
+        if (bInit == TRUE)
+            SetDlgItemInt(hwndDlg, IDC_EDIT_WHEEL_SCROLL_LINES, DEFAULT_WHEEL_SCROLL_LINES, FALSE);
     }
 }
 
@@ -1249,54 +1255,66 @@ WheelProc(IN HWND hwndDlg,
           IN WPARAM wParam,
           IN LPARAM lParam)
 {
-    HWND hDlgCtrl;
-    WCHAR buffer[MAX_PATH];
     LPPSHNOTIFY lppsn;
+    PWHEEL_DATA pWheelData;
+
+    pWheelData = (PWHEEL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            ShowDialogWheelControls(hwndDlg);
-            SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WHEEL_SCROLL_LINES), UDM_SETRANGE, 0, MAKELONG ((short) 100, (short) 0));
-            if (g_WheelScrollLines != UINT_MAX)
+            pWheelData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WHEEL_DATA));
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pWheelData);
+
+            /* Get wheel scroll lines */
+            if (!SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &pWheelData->uWheelScrollLines, 0))
             {
-                hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_WHEEL_SCROLL_LINES);
-                wsprintf(buffer, _T("%d"), g_WheelScrollLines);
-                SendMessage(hDlgCtrl, WM_SETTEXT, (WPARAM)0, (LPARAM)buffer);
+                pWheelData->uWheelScrollLines = DEFAULT_WHEEL_SCROLL_LINES;
+            }
+
+            ShowDialogWheelControls(hwndDlg, pWheelData->uWheelScrollLines, TRUE);
+            SendDlgItemMessage(hwndDlg, IDC_UPDOWN_WHEEL_SCROLL_LINES, UDM_SETRANGE, 0, MAKELONG((short)100, (short)0));
+            if (pWheelData->uWheelScrollLines != WHEEL_PAGESCROLL)
+            {
+                SetDlgItemInt(hwndDlg, IDC_EDIT_WHEEL_SCROLL_LINES, pWheelData->uWheelScrollLines, FALSE);
             }
             return TRUE;
+
+        case WM_DESTROY:
+            HeapFree(GetProcessHeap(), 0, pWheelData);
+            break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDC_RADIO_WHEEL_SCROLL_LINES:
-                {
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_WHEEL_SCROLL_LINES);
-                    SendMessageW(hDlgCtrl, WM_GETTEXT, (WPARAM)100, (LPARAM)buffer);
-                    g_WheelScrollLines = _wtoi(buffer);
-                    ShowDialogWheelControls(hwndDlg);
+                    pWheelData->uWheelScrollLines = GetDlgItemInt(hwndDlg, IDC_EDIT_WHEEL_SCROLL_LINES, NULL, FALSE);
+                    ShowDialogWheelControls(hwndDlg, pWheelData->uWheelScrollLines, FALSE);
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
-                }
+
                 case IDC_RADIO_WHEEL_SCROLL_PAGE:
-                {
-                    g_WheelScrollLines = UINT_MAX;
-                    ShowDialogWheelControls(hwndDlg);
+                    pWheelData->uWheelScrollLines = WHEEL_PAGESCROLL;
+                    ShowDialogWheelControls(hwndDlg, pWheelData->uWheelScrollLines, FALSE);
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
-                }
+
+                case IDC_EDIT_WHEEL_SCROLL_LINES:
+                    if (pWheelData && HIWORD(wParam) == EN_CHANGE)
+                    {
+                        pWheelData->uWheelScrollLines = GetDlgItemInt(hwndDlg, IDC_EDIT_WHEEL_SCROLL_LINES, NULL, FALSE);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
             }
-            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             break;
 
         case WM_NOTIFY:
-            lppsn = (LPPSHNOTIFY) lParam; 
+            lppsn = (LPPSHNOTIFY)lParam;
             if (lppsn->hdr.code == PSN_APPLY)
             {
-                hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_WHEEL_SCROLL_LINES);
-                SendMessageW(hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)buffer);
-                g_WheelScrollLines = _wtoi(buffer);
-                SystemParametersInfo(SPI_SETWHEELSCROLLLINES, g_WheelScrollLines, 0, SPIF_SENDCHANGE);
-
-                SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                SystemParametersInfo(SPI_SETWHEELSCROLLLINES, pWheelData->uWheelScrollLines,
+                                     0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
                 return TRUE;
             }
             break;
