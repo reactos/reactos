@@ -267,7 +267,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 VmCounters->PeakPagefileUsage = Process->QuotaPeak[2];
 
                 /* Set the return length */
-                *ReturnLength = sizeof(VM_COUNTERS);
+                Length = sizeof(VM_COUNTERS);
             }
             _SEH_HANDLE
             {
