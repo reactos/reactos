@@ -254,6 +254,7 @@ _HalEnableSystemInterrupt@12:
     in al, dx
     mov dx, 1
     shl dx, cl
+    and dx, 0xDEF8
 
     /* Check if this is a latched interrupt */
     cmp dword ptr [esp+12], 0
