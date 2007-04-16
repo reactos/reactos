@@ -5,7 +5,7 @@ OFW_INTERFACE_INT_ = $(OFW_INTERFACE_INT)$(SEP)
 OFW_INTERFACE_OUT = $(OUTPUT_)$(OFW_INTERFACE_BASE)
 OFW_INTERFACE_OUT_ = $(OFW_INTERFACE_OUT)$(SEP)
 
-OFW_INTERFACE_OUTPUT = boot/freeldr/bootsect/ofw.s
+OFW_INTERFACE_OUTPUT = boot/freeldr/freeldr/arch/powerpc/ofw_calls.s
 OFW_INTERFACE_SOURCE = boot/freeldr/freeldr/arch/powerpc/ofw.c
 OFW_INTERFACE_HEADER = boot/freeldr/freeldr/include/of_call.h
 OFW_INTERFACE_INPUT = $(OFW_INTERFACE_BASE_)calls.ofw

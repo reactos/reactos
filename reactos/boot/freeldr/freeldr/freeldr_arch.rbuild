@@ -66,6 +66,8 @@
 				<compilerflag>-mno-toc</compilerflag>
 				<compilerflag>-meabi</compilerflag>
 				<file>boot.s</file>
+				<file>ofw_calls.s</file>
+				<file>ofw_util.s</file>
 				<file>ofw.c</file>
 				<file>mmu.c</file>
 				<file>mach.c</file>

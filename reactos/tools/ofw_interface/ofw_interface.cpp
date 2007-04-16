@@ -131,7 +131,7 @@ void populate_definition( ofw_wrappers &wrapper, const std::string &line ) {
     local_offset = (3 + rets + args) * 4;
     total_stack = round_up(12 + local_offset, 16);
 
-    function << "ofw_" << name << ":\n"
+    function << "asm_ofw_" << name << ":\n"
 	     << "\t/* Reserve stack space */\n"
 	     << "\tsubi %r1,%r1," << total_stack << "\n"
 	     << "\t/* Store r8, r9, lr */\n"
@@ -140,8 +140,8 @@ void populate_definition( ofw_wrappers &wrapper, const std::string &line ) {
 	     << "\tmflr %r8\n"
 	     << "\tstw %r8," << (local_offset + 8) << "(%r1)\n"
 	     << "\t/* Get read name */\n"
-	     << "\tlis %r8," << wrapper.base << "@ha\n"
-	     << "\taddi %r9,%r8," << name << "_ofw_name - _start\n"
+	     << "\tlis %r8," << name << "_ofw_name@ha\n"
+	     << "\taddi %r9,%r8," << name << "_ofw_name@l\n"
 	     << "\tstw %r9,0(%r1)\n"
 	     << "\t/* " << args << " arguments and " << rets << " return */\n"
 	     << "\tli %r9," << args << "\n"
@@ -153,7 +153,8 @@ void populate_definition( ofw_wrappers &wrapper, const std::string &line ) {
 	function << "\tstw %r" << (i+3) << "," << (4 * (i + 3)) << "(%r1)\n";
 	    
     function << "\t/* Load up the call address */\n"
-	     << "\tlwz %r9,ofw_call_addr - _start(%r8)\n"
+             << "\tlis %r10,ofw_call_addr@ha\n"
+	     << "\tlwz %r9,ofw_call_addr@l(%r10)\n"
 	     << "\tmtlr %r9\n"
 	     << "\t/* Set argument */\n"
 	     << "\tmr %r3,%r1\n"
@@ -228,7 +229,7 @@ void populate_definition( ofw_wrappers &wrapper, const std::string &line ) {
     }
     if( !method_call ) {
 	wrapper.names += name + "_ofw_name:\n\t.asciz \"" + nametext + "\"\n";
-	wrapper.calltable += std::string("\t.long ofw_") + name + "\n";
+	wrapper.calltable += std::string("\t.long asm_ofw_") + name + "\n";
 	wrapper.ctindex++;
     }
 }
@@ -286,6 +287,7 @@ int main( int argc, char **argv ) {
 	<< "\t.section .text\n"
 	<< "\t.align 4\n"
 	<< "\t.globl _start\n"
+        << "\t.globl ofw_functions\n"
 	<< "\t.globl ofw_call_addr\n"
 	<< "ofw_call_addr:\n"
 	<< "\t.long 0\n"
@@ -294,6 +296,7 @@ int main( int argc, char **argv ) {
 	<< "\n/* Function Names */\n\n"
 	<< wrappers.names
 	<< "\n/* Function Call Table for Freeldr */\n\n"
+        << "\t.align 4\n"
 	<< "ofw_functions:\n"
 	<< wrappers.calltable
 	<< "\n/* End */\n";

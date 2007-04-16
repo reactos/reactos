@@ -28,7 +28,8 @@ extern PCHAR GetFreeLoaderVersionString();
 extern ULONG CacheSizeLimit;
 of_proxy ofproxy;
 void *PageDirectoryStart, *PageDirectoryEnd;
-static int chosen_package, stdin_handle, part_handle = -1, kernel_mem = 0;
+static int chosen_package, stdin_handle, stdout_handle, 
+  part_handle = -1, kernel_mem = 0;
 int mmu_handle = 0, FixedMemory = 0;
 BOOLEAN AcpiPresent = FALSE;
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { 0 };
@@ -41,7 +42,7 @@ void PpcPutChar( int ch ) {
     if( ch == 0x0a ) { buf[0] = 0x0d; buf[1] = 0x0a; } 
     else { buf[0] = ch; buf[1] = 0; }
     buf[2] = 0;
-    ofw_print_string( buf );
+    ofw_write(stdout_handle, buf, strlen(buf));
 }
 
 int PpcFindDevice( int depth, int parent, char *devname, int *nth ) {
@@ -93,7 +94,6 @@ int PpcConsGetCh() {
 }
 
 void PpcVideoClearScreen( UCHAR Attr ) {
-    ofw_print_string("ClearScreen\n");
 }
 
 VOID PpcVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth ) {
@@ -494,7 +494,7 @@ BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
 extern int _bss;
 typedef unsigned int uint32_t;
 void PpcInit( of_proxy the_ofproxy ) {
-    int len, stdin_handle_chosen, mmu_handle_chosen;
+    int len;
     ofproxy = the_ofproxy;
 
     //SetPhys(0x900, (19 << 26) | (50 << 1));
@@ -502,16 +502,11 @@ void PpcInit( of_proxy the_ofproxy ) {
     chosen_package = ofw_finddevice( "/chosen" );
 
     ofw_getprop( chosen_package, "stdin",
-		 (char *)&stdin_handle_chosen, sizeof(stdin_handle_chosen) );
+		 (char *)&stdin_handle, sizeof(stdin_handle) );
+    ofw_getprop( chosen_package, "stdout",
+		 (char *)&stdout_handle, sizeof(stdout_handle) );
     ofw_getprop( chosen_package, "mmu",
-		 (char *)&mmu_handle_chosen, sizeof(mmu_handle_chosen) );
-
-    ofw_print_string("Found stdin ");
-    ofw_print_number(stdin_handle_chosen);
-    ofw_print_string("\r\n");
-
-    stdin_handle = stdin_handle_chosen;
-    mmu_handle = mmu_handle_chosen;
+		 (char *)&mmu_handle, sizeof(mmu_handle) );
 
     MachVtbl.ConsPutChar = PpcPutChar;
     MachVtbl.ConsKbHit   = PpcConsKbHit;

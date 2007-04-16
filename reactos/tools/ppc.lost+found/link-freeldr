@@ -5,6 +5,8 @@ powerpc-unknown-linux-gnu-ld \
 	-g -nostartfiles -nostdlib -N -Ttext=0xe17000 \
 	-o freeldr.elf \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/boot.o \
+	obj-ppc/boot/freeldr/freeldr/arch/powerpc/ofw_util.o \
+	obj-ppc/boot/freeldr/freeldr/arch/powerpc/ofw_calls.o \
 	obj-ppc/boot/freeldr/freeldr/cache/blocklist.o \
 	obj-ppc/boot/freeldr/freeldr/cache/cache.o \
 	obj-ppc/boot/freeldr/freeldr/comm/rs232.o \
@@ -63,9 +65,3 @@ powerpc-unknown-linux-gnu-ld \
 	obj-ppc/lib/string/string.a \
 	obj-ppc/lib/rtl/rtl.a \
 	/usr/local/pkg/reactos-powerpc/lib/libgcc.a
-powerpc-unknown-linux-gnu-objcopy -O binary freeldr.elf freeldr.tmp
-(dd if=/dev/zero bs=4k count=16 ; echo 'byebye') >> freeldr.tmp
-powerpc-unknown-linux-gnu-objcopy -I binary -B powerpc:common -O elf32-powerpc freeldr.tmp ofwldr.payload
-reactos-powerpc-as -mbig -o ofwboot.o boot/freeldr/bootsect/ofwboot.s boot/freeldr/bootsect/ofw_util.s boot/freeldr/bootsect/ofw.s
-powerpc-unknown-linux-gnu-ld -EB -Ttext 0xe00000 -Tdata 0xe17000 -e _begin -o ofwldr.x ofwboot.o ofwldr.payload
-powerpc-unknown-linux-gnu-objcopy --only-section=.text --only-section=.data --only-section=.bss ofwldr.x ofwldr
