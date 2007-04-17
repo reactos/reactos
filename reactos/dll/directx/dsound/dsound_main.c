@@ -180,7 +180,7 @@ void setup_dsound_options(void)
 	else if (strcmp(buffer, "Emulation") == 0)
 	    ds_hw_accel = DS_HW_ACCEL_EMULATION;
     }
-	FIXME("dsound are Hardcode to software emulation until we fix it in ros");
+	FIXME("dsound is hardcoded to software emulation until we fix it in ros\n");
     ds_hw_accel = DS_HW_ACCEL_EMULATION;
 
     if (!get_config_key( hkey, appkey, "DefaultPlayback", buffer, MAX_PATH ))
