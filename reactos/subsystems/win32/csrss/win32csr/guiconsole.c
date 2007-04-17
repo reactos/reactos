@@ -860,7 +860,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
     PWCHAR To;
     BYTE LastAttribute, Attribute;
     ULONG CursorX, CursorY, CursorHeight;
-    HBRUSH CursorBrush, OldBrush;
+    HBRUSH CursorBrush, OldBrush, BackgroundBrush;
     HFONT OldFont;
 
     Buff = Console->ActiveBuffer;
@@ -881,6 +881,10 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
 
     OldFont = SelectObject(hDC,
                            GuiData->Font);
+
+	BackgroundBrush = CreateSolidBrush(GuiData->ScreenBackground);
+	FillRect(hDC, rc, BackgroundBrush);
+	DeleteObject(BackgroundBrush);
 
     for (Line = TopLine; Line <= BottomLine; Line++)
     {
