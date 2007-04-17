@@ -71,6 +71,8 @@
 				<file>ofw.c</file>
 				<file>mmu.c</file>
 				<file>mach.c</file>
+				<file>prep.c</file>
+				<file>prep_ide.c</file>
 				<file>mboot.c</file>
 			</module>
 		</if>

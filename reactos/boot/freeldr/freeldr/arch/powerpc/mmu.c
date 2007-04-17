@@ -32,6 +32,44 @@ __asm__("\t.globl GetPhys\n"
 	"blr"
     );
 
+__asm__("\t.globl GetPhysHalf\n"
+	"GetPhysHalf:\t\n"
+	"mflr  0\n\t"
+	"stwu  0,-16(1)\n\t"
+	"mfmsr 5\n\t"
+	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
+	"mtmsr 6\n\t"
+	"isync\n\t"
+	"sync\n\t"
+	"lhz   3,0(3)\n\t"    /* Get actual value at phys addr r3 */
+	"mtmsr 5\n\t"
+	"isync\n\t"
+	"sync\n\t"
+	"lwz   0,0(1)\n\t"
+	"addi  1,1,16\n\t"
+	"mtlr  0\n\t"
+	"blr"
+    );
+
+__asm__("\t.globl GetPhysByte\n"
+	"GetPhysByte:\t\n"
+	"mflr  0\n\t"
+	"stwu  0,-16(1)\n\t"
+	"mfmsr 5\n\t"
+	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
+	"mtmsr 6\n\t"
+	"isync\n\t"
+	"sync\n\t"
+	"lbz   3,0(3)\n\t"    /* Get actual value at phys addr r3 */
+	"mtmsr 5\n\t"
+	"isync\n\t"
+	"sync\n\t"
+	"lwz   0,0(1)\n\t"
+	"addi  1,1,16\n\t"
+	"mtlr  0\n\t"
+	"blr"
+    );
+
 __asm__("\t.globl SetPhys\n"
 	"SetPhys:\t\n"
 	"mflr  0\n\t"
@@ -42,6 +80,27 @@ __asm__("\t.globl SetPhys\n"
 	"sync\n\t"
 	"eieio\n\t"
 	"stw   4,0(3)\n\t"    /* Set actual value at phys addr r3 */
+	"dcbst 0,3\n\t"
+	"mtmsr 5\n\t"
+	"sync\n\t"
+	"eieio\n\t"
+	"mr    3,4\n\t"
+	"lwz   0,0(1)\n\t"
+	"addi  1,1,16\n\t"
+	"mtlr  0\n\t"
+	"blr"
+    );
+
+__asm__("\t.globl SetPhysHalf\n"
+	"SetPhysHalf:\t\n"
+	"mflr  0\n\t"
+	"stwu  0,-16(1)\n\t"
+	"mfmsr 5\n\t"
+	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
+	"mtmsr 6\n\t"
+	"sync\n\t"
+	"eieio\n\t"
+	"sth   4,0(3)\n\t"    /* Set actual value at phys addr r3 */
 	"dcbst 0,3\n\t"
 	"mtmsr 5\n\t"
 	"sync\n\t"

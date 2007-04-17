@@ -21,6 +21,7 @@
 #include "of.h"
 #include "mmu.h"
 #include "ppcboot.h"
+#include "prep.h"
 #include "compat.h"
 
 extern void BootMain( LPSTR CmdLine );
@@ -32,12 +33,12 @@ static int chosen_package, stdin_handle, stdout_handle,
   part_handle = -1, kernel_mem = 0;
 int mmu_handle = 0, FixedMemory = 0;
 BOOLEAN AcpiPresent = FALSE;
-char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { 0 };
+char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { "bootprep" };
 jmp_buf jmp;
 volatile char *video_mem = 0;
 boot_infos_t BootInfo;
 
-void PpcPutChar( int ch ) {
+void PpcOfwPutChar( int ch ) {
     char buf[3];
     if( ch == 0x0a ) { buf[0] = 0x0d; buf[1] = 0x0a; } 
     else { buf[0] = ch; buf[1] = 0; }
@@ -64,7 +65,7 @@ int PpcFindDevice( int depth, int parent, char *devname, int *nth ) {
 
     if( !nth && match ) return parent;
 
-    for( i = 0; i < depth; i++ ) PpcPutChar( ' ' );
+    for( i = 0; i < depth; i++ ) PpcOfwPutChar( ' ' );
     
     if( depth == 1 ) {
 	if( gotname > 0 ) {
@@ -97,17 +98,14 @@ void PpcVideoClearScreen( UCHAR Attr ) {
 }
 
 VOID PpcVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth ) {
-    //ofw_print_string("GetDisplaySize\n");
     *Width = 80;
     *Height = 25;
     *Depth = 16;
-    //printf("GetDisplaySize(%d,%d,%d)\n", *Width, *Height, *Depth);
 }
 
 ULONG PpcVideoGetBufferSize() {
     ULONG Width, Height, Depth;
-    //ofw_print_string("PpcVideoGetBufferSize\n");
-    PpcVideoGetDisplaySize( &Width, &Height, &Depth );
+    MachVideoGetDisplaySize( &Width, &Height, &Depth );
     return Width * Height * Depth / 8;
 }
 
@@ -137,14 +135,14 @@ VOID PpcVideoCopyOffScreenBufferToVRAM( PVOID Buffer ) {
     PCHAR ChBuf = Buffer;
     int offset = 0;
 
-    PpcVideoGetDisplaySize( &w, &h, &d );
+    MachVideoGetDisplaySize( &w, &h, &d );
 
     for( i = 0; i < h; i++ ) {
 	for( j = 0; j < w; j++ ) {
 	    offset = (j * 2) + (i * w * 2);
 	    if( ChBuf[offset] != video_mem[offset] ) {
 		video_mem[offset] = ChBuf[offset];
-		PpcVideoPutChar(ChBuf[offset],0,j+1,i+1);
+		MachVideoPutChar(ChBuf[offset],0,j+1,i+1);
 	    }
 	}
     }
@@ -380,7 +378,7 @@ BOOLEAN PpcDiskGetSystemVolume( char *SystemPath,
 	RemainingPath[0] = 0;
     }
     *Device = 0;
-    return PpcDiskGetBootVolume(DriveNumber, StartSector, SectorCount, FsType);
+    return MachDiskGetBootVolume(DriveNumber, StartSector, SectorCount, FsType);
 }
 
 BOOLEAN PpcDiskGetBootPath( char *OutBootPath, unsigned Size ) {
@@ -493,14 +491,15 @@ BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
 
 extern int _bss;
 typedef unsigned int uint32_t;
-void PpcInit( of_proxy the_ofproxy ) {
-    int len;
-    ofproxy = the_ofproxy;
 
+void PpcOfwInit()
+{
     //SetPhys(0x900, (19 << 26) | (50 << 1));
     
     chosen_package = ofw_finddevice( "/chosen" );
 
+    ofw_getprop(chosen_package, "bootargs",
+		CmdLine, sizeof(CmdLine));
     ofw_getprop( chosen_package, "stdin",
 		 (char *)&stdin_handle, sizeof(stdin_handle) );
     ofw_getprop( chosen_package, "stdout",
@@ -508,7 +507,7 @@ void PpcInit( of_proxy the_ofproxy ) {
     ofw_getprop( chosen_package, "mmu",
 		 (char *)&mmu_handle, sizeof(mmu_handle) );
 
-    MachVtbl.ConsPutChar = PpcPutChar;
+    MachVtbl.ConsPutChar = PpcOfwPutChar;
     MachVtbl.ConsKbHit   = PpcConsKbHit;
     MachVtbl.ConsGetCh   = PpcConsGetCh;
 
@@ -549,21 +548,27 @@ void PpcInit( of_proxy the_ofproxy ) {
 
     MachVtbl.HwDetect = PpcHwDetect;
 
+    // Allow forcing prep for broken OFW
+    if(!strncmp(CmdLine, "bootprep", 8))
+    {
+	printf("Going to PREP init...\n");
+	PpcPrepInit();
+	return;
+    }
+
     printf( "FreeLDR version [%s]\n", GetFreeLoaderVersionString() );
-
-    len = ofw_getprop(chosen_package, "bootargs",
-		      CmdLine, sizeof(CmdLine));
-
-    if( len < 0 ) len = 0;
-    CmdLine[len] = 0;
-
-    printf("bootargs: len %d [%s]\n", len, CmdLine);
 
     BootMain( CmdLine );
 }
 
+void PpcInit( of_proxy the_ofproxy ) {
+    ofproxy = the_ofproxy;
+    if(ofproxy) PpcOfwInit();
+    else PpcPrepInit();
+}
+
 void MachInit(const char *CmdLine) {
-    int len, i;
+    int i, len;
     char *sep;
 
     BootPart[0] = 0;

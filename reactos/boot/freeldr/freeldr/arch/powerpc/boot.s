@@ -16,17 +16,25 @@ _start:
 	stw	%r5,ofw_call_addr@l(%r10)
 
 	bl	zero_registers
-
+	
 	/* Zero CTR */
 	mtcr	%r31
 
 	lis	%r3,PpcInit@ha
 	addi	%r3,%r3,PpcInit@l
 	mtlr	%r3
-	
+
+	/* Check for ofw */
+	lis	%r3,ofw_call_addr@ha
+	lwz	%r3,ofw_call_addr@l(%r3)
+	cmpw	%r3,%r31 /* Zero? */
+	mr	%r3,%r31
+	beq	bootme
+		
 	lis	%r3,call_ofw@ha
 	addi	%r3,%r3,call_ofw@l
 
+bootme:	
 	blr
 
 zero_registers:
