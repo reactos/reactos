@@ -105,6 +105,34 @@ typedef struct _WHEEL_DATA
 } WHEEL_DATA, *PWHEEL_DATA;
 
 
+typedef struct _CURSOR_DATA
+{
+    UINT uStringId;
+    LPWSTR uDefaultCursorId;
+    HCURSOR hCursor;
+    TCHAR szCursorName[MAX_PATH];
+    TCHAR szCursorPath[MAX_PATH];
+} CURSOR_DATA, *PCURSOR_DATA;
+
+
+CURSOR_DATA g_CursorData[] =
+{{IDS_ARROW,       IDC_ARROW,       0, _T(""), _T("")},
+ {IDS_HELP,        IDC_HELP,        0, _T(""), _T("")},
+ {IDS_APPSTARTING, IDC_APPSTARTING, 0, _T(""), _T("")},
+ {IDS_WAIT,        IDC_WAIT,        0, _T(""), _T("")},
+ {IDS_CROSSHAIR,   IDC_CROSS,       0, _T(""), _T("")},
+ {IDS_IBEAM,       IDC_IBEAM,       0, _T(""), _T("")},
+ {IDS_NWPEN,       0/*IDC_NWPEN*/,       0, _T(""), _T("")},
+ {IDS_NO,          IDC_NO,          0, _T(""), _T("")},
+ {IDS_SIZENS,      IDC_SIZENS,      0, _T(""), _T("")},
+ {IDS_SIZEWE,      IDC_SIZEWE,      0, _T(""), _T("")},
+ {IDS_SIZENWSE,    IDC_SIZENWSE,    0, _T(""), _T("")},
+ {IDS_SIZENESW,    IDC_SIZENESW,    0, _T(""), _T("")},
+ {IDS_SIZEALL,     IDC_SIZEALL,     0, _T(""), _T("")},
+ {IDS_UPARROW,     IDC_UPARROW,     0, _T(""), _T("")},
+ {IDS_HAND,        IDC_HAND,        0, _T(""), _T("")}};
+
+
 TCHAR g_CurrentScheme[MAX_PATH];
 TCHAR g_szArrow[MAX_PATH];
 TCHAR g_szHelp[MAX_PATH];
@@ -123,6 +151,8 @@ TCHAR g_szUpArrow[MAX_PATH];
 TCHAR g_szHand[MAX_PATH];
 
 TCHAR g_szNewScheme[MAX_PATH];
+
+
 
 
 /* Property page dialog callback */
@@ -554,12 +584,13 @@ EnumerateCursorSchemes(HWND hwndDlg)
 static VOID
 RefreshCursorList(HWND hwndDlg)
 {
-    TCHAR szCursorName[MAX_PATH];
-    HWND hDlgCtrl;
-    LV_ITEM listItem;
-    LV_COLUMN column;
-    INT index = 0;
+//    TCHAR szCursorName[MAX_PATH];
+//    HWND hDlgCtrl;
+//    LV_ITEM listItem;
+//    LV_COLUMN column;
+    INT index = 0, i;
 
+#if 0
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTVIEW_CURSOR);
     (void)ListView_DeleteAllItems(hDlgCtrl);
 
@@ -634,6 +665,14 @@ RefreshCursorList(HWND hwndDlg)
     LoadString(hApplet, IDS_HAND, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
     (void)ListView_InsertItem(hDlgCtrl, &listItem);
+#endif
+
+    SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_RESETCONTENT, 0, 0);
+    for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+    {
+        LoadString(hApplet, index, g_CursorData[i].szCursorName, MAX_PATH);
+        SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_ADDSTRING, 0, (LPARAM)i);
+    }
 }
 
 
@@ -720,6 +759,7 @@ BrowseCursor(TCHAR * szFileName, HWND hwndDlg)
 static VOID
 LoadCurrentCursorScheme(LPTSTR lpName, BOOL bSystem)
 {
+#if 0
     HKEY hCursorKey;
     TCHAR szValue[2048];
     TCHAR szRaw[256];
@@ -803,6 +843,85 @@ LoadCurrentCursorScheme(LPTSTR lpName, BOOL bSystem)
             }
         }
     }
+#endif
+
+    UINT index, i;
+
+    for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+    {
+        if (g_CursorData[i].hCursor != NULL)
+        {
+            DestroyCursor(g_CursorData[i].hCursor);
+            g_CursorData[i].hCursor = 0;
+        }
+    }
+
+    if (lpName == NULL)
+    {
+        for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+        {
+            g_CursorData[i].hCursor = LoadCursor(NULL, g_CursorData[i].uDefaultCursorId);
+        }
+    }
+    else
+    {
+
+    }
+}
+
+
+static VOID
+OnDrawItem(UINT idCtl,
+           LPDRAWITEMSTRUCT lpdis)
+{
+    RECT rc;
+
+    if (lpdis->itemState & ODS_SELECTED)
+    {
+        FillRect(lpdis->hDC,
+                 &lpdis->rcItem,
+                 (HBRUSH)(COLOR_HIGHLIGHT + 1));
+        SetBkColor(lpdis->hDC,
+                   GetSysColor(COLOR_HIGHLIGHT));
+        SetTextColor(lpdis->hDC,
+                   GetSysColor(COLOR_HIGHLIGHTTEXT));
+    }
+    else
+    {
+        FillRect(lpdis->hDC,
+                 &lpdis->rcItem,
+                 (HBRUSH)(COLOR_WINDOW + 1));
+        SetBkColor(lpdis->hDC,
+                   GetSysColor(COLOR_WINDOW));
+        SetTextColor(lpdis->hDC,
+                   GetSysColor(COLOR_WINDOWTEXT));
+    }
+
+    if (lpdis->itemID != -1)
+    {
+        CopyRect(&rc, &lpdis->rcItem);
+        rc.left += 5;
+        DrawText(lpdis->hDC,
+                 g_CursorData[lpdis->itemData].szCursorName,
+                 -1,
+                 &rc,
+                 DT_SINGLELINE | DT_VCENTER | DT_LEFT);
+
+        if (g_CursorData[lpdis->itemData].hCursor != NULL)
+        {
+            DrawIcon(lpdis->hDC,
+                     lpdis->rcItem.right - 32 - 4,
+                     lpdis->rcItem.top + 2,
+                     g_CursorData[lpdis->itemData].hCursor);
+        }
+    }
+
+    if (lpdis->itemState & ODS_FOCUS)
+    {
+        CopyRect(&rc, &lpdis->rcItem);
+        InflateRect(&rc, -1, -1);
+        DrawFocusRect(lpdis->hDC, &rc);
+    }
 }
 
 
@@ -832,6 +951,7 @@ PointerProc(IN HWND hwndDlg,
 
             EnumerateCursorSchemes(hwndDlg);
             RefreshCursorList(hwndDlg);
+            SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_SETCURSEL, 0, 0);
 
             /* Get drop shadow setting */
             if (!SystemParametersInfo(SPI_GETDROPSHADOW, 0, &pPointerData->bDropShadow, 0))
@@ -845,10 +965,19 @@ PointerProc(IN HWND hwndDlg,
                 SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
             }
 
-            if ((INT)wParam == IDC_LISTVIEW_CURSOR)
+            if ((INT)wParam == IDC_LISTBOX_CURSOR)
                 return TRUE;
             else
                 return FALSE;
+
+        case WM_MEASUREITEM:
+            ((LPMEASUREITEMSTRUCT)lParam)->itemHeight = 32 + 4;
+            break;
+
+        case WM_DRAWITEM:
+            if (wParam == IDC_LISTBOX_CURSOR)
+                OnDrawItem((UINT)wParam, (LPDRAWITEMSTRUCT)lParam);
+            return TRUE;
 
         case WM_DESTROY:
             HeapFree(GetProcessHeap(), 0, pPointerData);
@@ -873,35 +1002,48 @@ PointerProc(IN HWND hwndDlg,
             break;
 
         case WM_COMMAND:
-            switch(HIWORD(wParam))
-            {
-                case CBN_SELENDOK:
-                {
-                    BOOL bEnable;
-                    LPTSTR lpName;
-
-                    wParam = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
-                    if(wParam == CB_ERR)
-                        break;
-                    SendMessage((HWND)lParam, CB_GETLBTEXT, wParam, (LPARAM)buffer);
-                    LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
-                    if(_tcsstr(buffer, szSystemScheme) || wParam == 0) //avoid the default scheme can be deleted
-                        bEnable = FALSE;
-                    else
-                        bEnable = TRUE;
-
-                    /* delete button */
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_BUTTON_DELETE_SCHEME);
-                    EnableWindow(hDlgCtrl, bEnable);
-
-                    lpName = (LPTSTR)SendMessage((HWND)lParam, CB_GETITEMDATA, wParam, 0);
-                    LoadCurrentCursorScheme(lpName, !bEnable);
-                    break;
-                }
-            }
-
             switch (LOWORD(wParam))
             {
+                case IDC_COMBO_CURSOR_SCHEME:
+                    switch(HIWORD(wParam))
+                    {
+                        case CBN_SELENDOK:
+                        {
+                           BOOL bEnable;
+                           LPTSTR lpName;
+
+                           wParam = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
+                           if(wParam == CB_ERR)
+                              break;
+                           SendMessage((HWND)lParam, CB_GETLBTEXT, wParam, (LPARAM)buffer);
+                           LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
+                           if(_tcsstr(buffer, szSystemScheme) || wParam == 0) //avoid the default scheme can be deleted
+                               bEnable = FALSE;
+                           else
+                               bEnable = TRUE;
+
+                           /* delete button */
+                           hDlgCtrl = GetDlgItem(hwndDlg, IDC_BUTTON_DELETE_SCHEME);
+                           EnableWindow(hDlgCtrl, bEnable);
+
+                           lpName = (LPTSTR)SendMessage((HWND)lParam, CB_GETITEMDATA, wParam, 0);
+                           LoadCurrentCursorScheme(lpName, !bEnable);
+                           break;
+                       }
+                    }
+                    break;
+
+                case IDC_LISTBOX_CURSOR:
+                    if (HIWORD(wParam) == LBN_SELCHANGE)
+                    {
+                        UINT uSel, uIndex;
+                        uSel = SendMessage((HWND)lParam, LB_GETCURSEL, 0, 0);
+                        uIndex = (UINT)SendMessage((HWND)lParam, LB_GETITEMDATA, (WPARAM)uSel, 0);
+                        SendDlgItemMessage(hwndDlg, IDC_IMAGE_CURRENT_CURSOR, STM_SETIMAGE, IMAGE_CURSOR,
+                                           (LPARAM)g_CursorData[uIndex].hCursor);
+                    }
+                    break;
+
                 case IDC_BUTTON_SAVEAS_SCHEME:
                     if (DialogBox(hApplet, MAKEINTRESOURCE(IDD_CURSOR_SCHEME_SAVEAS), hwndDlg, SaveSchemeProc))
                     {
@@ -911,7 +1053,7 @@ PointerProc(IN HWND hwndDlg,
                     break;
 
                 case IDC_BUTTON_USE_DEFAULT_CURSOR:
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTVIEW_CURSOR);
+                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTBOX_CURSOR);
                     lResult = SendMessage(hDlgCtrl, CB_GETCURSEL, 0, 0);
                     if (lResult != CB_ERR)
                     {
@@ -950,7 +1092,7 @@ PointerProc(IN HWND hwndDlg,
 
                 case IDC_BUTTON_BROWSE_CURSOR:
                     memset(buffer, 0x0, sizeof(buffer));
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTVIEW_CURSOR);
+                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTBOX_CURSOR);
                     lResult = SendMessage(hDlgCtrl, CB_GETCURSEL, 0, 0);
                     if (lResult == CB_ERR)
                     MessageBox(hwndDlg, _T("CB_ERR"), _T(""),MB_ICONERROR);
