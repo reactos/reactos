@@ -119,7 +119,7 @@ IDR_TRAY_POPUP MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Restorer",                    ID_RESTORE
+        MENUITEM "&Restaurer",                    ID_RESTORE
         MENUITEM "&Fermer",                      ID_FILE_EXIT
         MENUITEM SEPARATOR
         MENUITEM "&Toujours visible",              ID_OPTIONS_ALWAYSONTOP
@@ -191,8 +191,8 @@ STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
-                    LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Nouvelle tâche (Exécuter...)",IDC_NEWTASK,187,189,53,14
+                    LVS_SHOWSELALWAYS | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP,7,7,233,177
+    PUSHBUTTON      "&Nouvelle tâche",IDC_NEWTASK,187,189,53,14
     PUSHBUTTON      "&Basculer vers",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
     PUSHBUTTON      "F&in de tâche",IDC_ENDTASK,75,189,53,14,WS_DISABLED
 END
@@ -204,9 +204,9 @@ BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Terminer le processus",IDC_ENDPROCESS,171,189,69,14
+    PUSHBUTTON      "&Terminer le processus",IDC_ENDPROCESS,171,189,71,14
     CONTROL         "Aff&icher les processus de tous les utilisateurs",IDC_SHOWALLPROCESSES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,155,10
 END
 
 //IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
