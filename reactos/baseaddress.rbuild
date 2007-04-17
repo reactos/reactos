@@ -61,6 +61,7 @@
   <property name="BASEADDRESS_NETAPI32" value="0x71c00000" />
   <property name="BASEADDRESS_DPLAY" value="0x71e80000" />
   <property name="BASEADDRESS_SECURITY" value="0x71f10000" />
+  <property name="BASEADDRESS_CRYPTUI" value="0x720D0000" />
   <property name="BASEADDRESS_WINFAX" value="0x722C0000" />
   <property name="BASEADDRESS_WINSCARD" value="0x723d0000" />
   <property name="BASEADDRESS_DEVMGR" value="0x72a90000" />
