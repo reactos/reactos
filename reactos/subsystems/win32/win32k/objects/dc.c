@@ -1841,20 +1841,20 @@ NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
     return Ret;
   }
 
-  if ((RetCount) && (count))
+  if (RetCount)
   {
-    SafeBuf = ExAllocatePoolWithTag(PagedPool, count, TAG_GDIOBJ);
+    SafeBuf = ExAllocatePoolWithTag(PagedPool, RetCount, TAG_GDIOBJ);
     if(!SafeBuf)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         return Ret;
     }
-    Ret = IntGdiGetObject(handle, count, SafeBuf);
+    Ret = IntGdiGetObject(handle, RetCount, SafeBuf);
 
     _SEH_TRY
     {
         /* pointer already probed! */
-        RtlCopyMemory(buffer, SafeBuf, count);
+        RtlCopyMemory(buffer, SafeBuf, RetCount);
     }
     _SEH_HANDLE
     {
