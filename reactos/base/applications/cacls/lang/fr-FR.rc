@@ -3,36 +3,36 @@ LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 STRINGTABLE DISCARDABLE
 {
 
-IDS_HELP, "Affiche ou change la liste des contrôle d'accès (ACLs) de fichiers\n\n\
+IDS_HELP, "Affiche ou change la liste des contrôles d'accès (ACLs) de fichiers\n\n\
 CACLS nomfichier [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                [/P user:perm [...]] [/D user [...]]\n\
    nomfichier    Affiche les ACLs du fichier.\n\
    /T            Change les ACLs des fichiers specifiés dans\n\
                  le répertoire en cours et tous les sous-répertoires.\n\
-   /E            Edite les ACL aux lieu de les remplacer.\n\
+   /E            Édite les ACL au lieu de les remplacer.\n\
    /C            Continuer en cas de refus d'accès.\n\
-   /G user:perm  Autoriser un droit d'accès à un utilisateur.\n\
+   /G user:perm  Accorder des droit d'accès à l'utilisateur spécifié.\n\
                  Perm peut valoir: R  Lecture\n\
-                                   W  Ecriture\n\
-                                   C  Modfication (Ecditure)\n\
+                                   W  Écriture\n\
+                                   C  Modification (Écriture)\n\
                                    F  Contrôle total\n\
-   /R user       Revoles accès de l'utilisateur spécifié (valide uniquement avec /E).\n\
-   /P user:perm  Remplace les droits de l'utilisateur specifié.\n\
+   /R user       Supprime les droits d'accès de l'utilisateur spécifié (valide uniquement avec /E).\n\
+   /P user:perm  Remplace les droits d'accès de l'utilisateur specifié.\n\
                  Perm peut valoir: N  Aucun \n\
                                    R  Lecture\n\
-                                   W  Ecriture\n\
-                                   C  Modfication (Ecditure)\n\
+                                   W  Écriture\n\
+                                   C  Modification (Écriture)\n\
                                    F  Contrôle total\n\
    /D user       Interdit l'accès à l'utilisateur spécifié.\n\
 Il est possible d'utiliser des caractères joker pour sélectionner plus d'un fichier avec une commande.\n\
 Il est possible de spécifier plus d'un utilisateur dans une commande.\n\n\
-Abbreviations:\n\
-   CI - Herité du conteneurt.\n\
-        Le droit d'accès est hérité des répertoires.\n\
-   OI - Hérité d'un objet.\n\
-        Le droit d'accès est hérités des fichiers.\n\
-   IO - Heritage seul Only.\n\
-        Le droit d'accès ne s'application pas au fichier/répertoire en cours.\n"
+Abréviations:\n\
+   CI - Heritage du conteneur.\n\
+        Le ACE sera appliqué aux répertoires.\n\
+   OI - Héritage de l'objet.\n\
+        Le ACE sera appliqué aux fichiers.\n\
+   IO - Heritage seul.\n\
+        Le ACE ne sera pas appliqué au fichier/répertoire actuel.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"

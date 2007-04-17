@@ -20,7 +20,7 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "&Quitter\tAlt+F4",   ID_EXIT
   END
-  POPUP "&Edition"
+  POPUP "&Édition"
   BEGIN
     MENUITEM "&Annuler",           ID_UNDO, GRAYED
     MENUITEM "&Refaire",           ID_REDO, GRAYED
@@ -42,7 +42,7 @@ BEGIN
   POPUP "&Affichage"
   BEGIN
     MENUITEM "&Barre d'outils",        -1, CHECKED
-    MENUITEM "Barre Format",     -1, CHECKED
+    MENUITEM "Barre de format",     -1, CHECKED
     MENUITEM "Règle",          -1, CHECKED
     MENUITEM "Barre d'état",     ID_STATUSBAR, CHECKED
   END
@@ -51,25 +51,25 @@ BEGIN
     MENUITEM "&Date et Heure...",-1, GRAYED
     MENUITEM "&Objet...",       -1, GRAYED
   END
-  POPUP "&Formater"
+  POPUP "&Format"
   BEGIN
     MENUITEM "&Police...",        -1 GRAYED
-    MENUITEM "Style des puces",     -1, GRAYED
+    MENUITEM "Style de puces",     -1, GRAYED
     MENUITEM "Paragraphe...",    -1, GRAYED
-    MENUITEM "tabulations...",         -1, GRAYED
+    MENUITEM "Tabulations...",         -1, GRAYED
   END
   POPUP "&Fenêtre"
   BEGIN
-    MENUITEM "&Cascader",           ID_WINDOW_CASCADE
+    MENUITEM "En &Cascade",           ID_WINDOW_CASCADE
     MENUITEM "Mosaïque &Horizontale", ID_WINDOW_TILE_HORZ
     MENUITEM "Mosaïque &Verticale",   ID_WINDOW_TILE_VERT
-    MENUITEM "&Arrange les Icones",     ID_WINDOW_ARRANGE
+    MENUITEM "&Arrange les Icônes",     ID_WINDOW_ARRANGE
     MENUITEM SEPARATOR
     MENUITEM "Suivante\tCtrl+F6",     ID_WINDOW_NEXT
   END
   POPUP "&Aide"
   BEGIN
-    MENUITEM "&A Propos de...",       ID_ABOUT
+    MENUITEM "&À Propos de...",       ID_ABOUT
   END
 END
 
@@ -97,7 +97,7 @@ END
 
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "A propos de WordPad"
+CAPTION "À propos de WordPad"
 FONT 8, "MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
@@ -110,7 +110,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE           "Ce programme est un logiciel libre; vous ouvez le redistribuer et/ou le modifier tout en respectant les termes de la \"GNU General Public License\" publiée par la Free Software Foundation; dans sa version 2  (ou selon votre préférence) toute version suivante.\r\n\r\nCe programme est distribué dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE; sans même une garantie implicite de COMMERCIABILITE ou DE CONFORMITE A UNE UTILISATION PARTICULIERE. \r\n\r\nVoir la Licence Publique Générale GNU pour plus de détails. Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, écrivez à la Free Software Foundation Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA."
+  IDS_LICENSE           "Ce programme est un logiciel libre; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la \"GNU General Public License\" publiée par la Free Software Foundation; dans sa version 2  (ou selon votre préférence) toute version suivante.\r\n\r\nCe programme est distribué dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE; sans même une garantie implicite de COMMERCIABILITE ou DE CONFORMITE A UNE UTILISATION PARTICULIERE. \r\n\r\nVoir la Licence Publique Générale GNU pour plus de détails. Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, écrivez à la Free Software Foundation Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA."
   IDS_DEFAULT_NAME      "Document %1!u!"
   IDS_READY             " Prêt."
 END
@@ -150,19 +150,19 @@ BEGIN
   IDS_HINT_SAVE         " Enregistre le document en cours."
   IDS_HINT_SAVEAS       " Enregistre le document en cours sous un nouveau nom."
   IDS_HINT_PRINT        " Imprime le document en cours."
-  IDS_HINT_PRINTPRE     " Apercu avant impression."
+  IDS_HINT_PRINTPRE     " Aperçu avant impression."
   IDS_HINT_PAGESETUP    " Change la mise en page."
   IDS_HINT_EXIT         " Quitte cette application."
 
   IDS_HINT_CASCADE      " Arrange les fenêtres en cascade."
-  IDS_HINT_TILE_HORZ    " Arrange les fenetres en mosaïque horizontale."
-  IDS_HINT_TILE_VERT    " Arrange les fenetres en mosaïque verticale."
-  IDS_HINT_ARRANGE      " Arrange les icones en bas de la fenêtre."
+  IDS_HINT_TILE_HORZ    " Arrange les fenêtres en mosaïque horizontale."
+  IDS_HINT_TILE_VERT    " Arrange les fenêtres en mosaïque verticale."
+  IDS_HINT_ARRANGE      " Arrange les icônes en bas de la fenêtre."
   IDS_HINT_NEXT         " Affiche le document suivant."
 
   IDS_HINT_SYS_RESTORE  " Restaure la taille normale de la fenêtre."
   IDS_HINT_SYS_MOVE     " Bouge la fenêtre."
   IDS_HINT_SYS_SIZE     " Retaille la fenêtre."
-  IDS_HINT_SYS_MINIMIZE " Iconise la fenêtre."
+  IDS_HINT_SYS_MINIMIZE " Réduit la fenêtre."
   IDS_HINT_SYS_MAXIMIZE " Affiche la fenêtre en plein écran."
 END
