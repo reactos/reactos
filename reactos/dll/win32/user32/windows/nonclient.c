@@ -1116,7 +1116,9 @@ DrawCaptionTempW(
 		 UINT        uFlags
 		 )
 {
-  return NtUserDrawCaptionTemp(hWnd, hDC, rect, hFont, hIcon, str, uFlags);
+   UNICODE_STRING Text = {0};
+   RtlInitUnicodeString(&Text, str);
+   return NtUserDrawCaptionTemp(hWnd, hDC, rect, hFont, hIcon, &Text, uFlags);
 }
 
 /*

@@ -721,10 +721,10 @@ STDCALL
 NtUserDrawCaptionTemp(
   HWND hWnd,
   HDC hDC,
-  const RECT *rect,
+  LPCRECT lpRc,
   HFONT hFont,
   HICON hIcon,
-  LPCWSTR str,
+  const PUNICODE_STRING str,
   UINT uFlags);
 
 BOOL

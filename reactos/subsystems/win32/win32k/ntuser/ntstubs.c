@@ -182,21 +182,6 @@ NtUserDrawAnimatedRects(
 
 BOOL
 STDCALL
-NtUserDrawCaptionTemp(
-   HWND hWnd,
-   HDC hDC,
-   const RECT *rect,
-   HFONT hFont,
-   HICON hIcon,
-   LPCWSTR str,
-   UINT uFlags)
-{
-   UNIMPLEMENTED
-   return FALSE;
-}
-
-BOOL
-STDCALL
 NtUserEnumDisplayDevices (
    PUNICODE_STRING lpDevice, /* device name */
    DWORD iDevNum, /* display device */
