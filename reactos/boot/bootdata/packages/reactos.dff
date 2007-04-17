@@ -151,6 +151,7 @@ dll\win32\comdlg32\comdlg32.dll                     1
 dll\win32\crtdll\crtdll.dll                         1
 dll\win32\crypt32\crypt32.dll                       1
 dll\win32\cryptdll\cryptdll.dll                     1
+dll\win32\cryptui\cryptui.dll                      1
 dll\win32\dbghelp\dbghelp.dll                       1
 dll\win32\devmgr\devmgr.dll                         1
 dll\win32\dhcpcsvc\dhcpcsvc.dll                     1
