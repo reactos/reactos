@@ -21,7 +21,7 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 MENU_001 MENU DISCARDABLE
 BEGIN
 	MENUITEM "&Store ikoner",	FCIDM_SHVIEW_BIGICON
-	MENUITEM "&Små ikoner",	FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Små ikoner",		FCIDM_SHVIEW_SMALLICON
 	MENUITEM "&Liste",		FCIDM_SHVIEW_LISTVIEW
 	MENUITEM "&Detaljer",		FCIDM_SHVIEW_REPORTVIEW
 END
@@ -45,17 +45,17 @@ BEGIN
 	  BEGIN
 	    MENUITEM "Etter &navn",	0x30	/* column 0 */
 	    MENUITEM "Etter &type",	0x32	/* column 2 */
-	    MENUITEM "Etter &størrelse",	0x31	/* ... */
+	    MENUITEM "Etter &størrelse",0x31	/* ... */
 	    MENUITEM "Etter &dato",	0x33
 	    MENUITEM SEPARATOR
-	    MENUITEM "Ordne &automatisk",	FCIDM_SHVIEW_AUTOARRANGE
+	    MENUITEM "Ordne &automatisk", FCIDM_SHVIEW_AUTOARRANGE
 	  END
 	  MENUITEM "Still opp ikoner",	FCIDM_SHVIEW_SNAPTOGRID
 	  MENUITEM SEPARATOR
 	  MENUITEM "Oppdater",		FCIDM_SHVIEW_REFRESH
 	  MENUITEM SEPARATOR
 	  MENUITEM "Lim inn",		FCIDM_SHVIEW_INSERT
-	  MENUITEM "Lim inn som snarvei",	FCIDM_SHVIEW_INSERTLINK
+	  MENUITEM "Lim inn som snarvei", FCIDM_SHVIEW_INSERTLINK
 	  MENUITEM SEPARATOR
 	  POPUP "Ny"
 	  BEGIN
@@ -83,7 +83,7 @@ BEGIN
 	  MENUITEM SEPARATOR
 	  MENUITEM "&Opprett snarvei",	FCIDM_SHVIEW_CREATELINK
 	  MENUITEM "&Slett",		FCIDM_SHVIEW_DELETE
-	  MENUITEM "&Gi nytt navn",		FCIDM_SHVIEW_RENAME
+	  MENUITEM "&Gi nytt navn",	FCIDM_SHVIEW_RENAME
 	  MENUITEM SEPARATOR
 	  MENUITEM "Egenska&per",	FCIDM_SHVIEW_PROPERTIES
 	END
@@ -128,7 +128,7 @@ FONT 8, "MS Shell Dlg"
  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
  PUSHBUTTON "Avbryt", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
- PUSHBUTTON "&Bla . . .", 12288, 170, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "&Bla gjennom . . .", 12288, 170, 63, 54, 14, WS_TABSTOP
 }
 
 STRINGTABLE DISCARDABLE
@@ -169,30 +169,30 @@ STRINGTABLE DISCARDABLE
 
         /* message box strings */
         IDS_RESTART_TITLE       "Starte på nytt"
-        IDS_RESTART_PROMPT      "Vil du simulere en omstart av Windows?"
+        IDS_RESTART_PROMPT      "Vil du starte på nytt?"
         IDS_SHUTDOWN_TITLE      "Avslutt"
-        IDS_SHUTDOWN_PROMPT     "Vil du avslutte Wine-økten?"
+        IDS_SHUTDOWN_PROMPT     "Vil du slå av maskinen?"
 
         /* shell folder path default values */
 	IDS_PROGRAMS                "Start-meny\\Programmer"
 	IDS_PERSONAL                "Mine dokumenter"
 	IDS_FAVORITES               "Favoritter"
 	IDS_STARTUP                 "Start-meny\\Programmer\\Oppstart"
-	IDS_RECENT                  "Recent"
-	IDS_SENDTO                  "SendTo"
+	IDS_RECENT                  "Siste"
+	IDS_SENDTO                  "Send til"
 	IDS_STARTMENU               "Start-meny"
 	IDS_MYMUSIC                 "Mine dokumenter\\Min musikk"
 	IDS_MYVIDEO                 "Mine dokumenter\\Mine videoklipp"
 	IDS_DESKTOPDIRECTORY        "Skrivebord"
 	IDS_NETHOOD                 "NetHood"
-	IDS_TEMPLATES               "Templates"
-	IDS_APPDATA                 "Application Data"
-	IDS_PRINTHOOD               "PrintHood"
-	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
-	IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
-	IDS_COOKIES                 "Cookies"
-	IDS_HISTORY                 "Local Settings\\History"
-	IDS_PROGRAM_FILES           "Program Files"
+	IDS_TEMPLATES               "Maler"
+	IDS_APPDATA                 "Applikasjon Data"
+	IDS_PRINTHOOD               "Skrivere"
+	IDS_LOCAL_APPDATA           "Lokale innstillinger\\Applikasjon Data"
+	IDS_INTERNET_CACHE          "Lokale innstillinger\\Midlertidig Internett Filer"
+	IDS_COOKIES                 "Informasjonskapsler"
+	IDS_HISTORY                 "Lokale innstillinger\\Historie"
+	IDS_PROGRAM_FILES           "Program Filer"
 	IDS_MYPICTURES              "Mine dokumenter\\Mine bilder"
 	IDS_PROGRAM_FILES_COMMON    "Programfiler\\Fellesfiler"
 	IDS_COMMON_DOCUMENTS        "Dokumenter"
@@ -200,5 +200,5 @@ STRINGTABLE DISCARDABLE
 	IDS_COMMON_MUSIC            "Dokumenter\\Min musikk"
 	IDS_COMMON_PICTURES         "Dokumenter\\Mine bilder"
 	IDS_COMMON_VIDEO            "Dokumenter\\Mine videoklipp"
-	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
+	IDS_CDBURN_AREA             "Lokale innstillinger\\Applikasjon Data\\Microsoft\\CD Brenning"
 }
