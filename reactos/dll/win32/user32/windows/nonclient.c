@@ -1102,13 +1102,13 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 DrawCaptionTempW(
-		 HWND        hwnd,
-		 HDC         hdc,
+		 HWND        hWnd,
+		 HDC         hDC,
 		 const RECT *rect,
 		 HFONT       hFont,
 		 HICON       hIcon,
@@ -1116,12 +1116,11 @@ DrawCaptionTempW(
 		 UINT        uFlags
 		 )
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserDrawCaptionTemp(hWnd, hDC, rect, hFont, hIcon, str, uFlags);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -1135,8 +1134,21 @@ DrawCaptionTempA(
 		 UINT        uFlags
 		 )
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  LPWSTR strW;
+  INT len;
+  BOOL ret = FALSE;
+
+  if (!(uFlags & DC_TEXT) || !str)
+    return DrawCaptionTempW(hwnd, hdc, rect, hFont, hIcon, NULL, uFlags);
+
+  len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+  if ((strW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
+  {
+    MultiByteToWideChar(CP_ACP, 0, str, -1, strW, len );
+    ret = DrawCaptionTempW(hwnd, hdc, rect, hFont, hIcon, strW, uFlags);
+    HeapFree(GetProcessHeap(), 0, strW);
+  }
+  return ret;
 }
 
 /***********************************************************************

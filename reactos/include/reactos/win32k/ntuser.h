@@ -716,16 +716,16 @@ NtUserDrawCaption(
    LPCRECT lpRc,
    UINT uFlags);
 
-DWORD
+BOOL
 STDCALL
 NtUserDrawCaptionTemp(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3,
-   DWORD Unknown4,
-   DWORD Unknown5,
-   DWORD Unknown6);
+  HWND hWnd,
+  HDC hDC,
+  const RECT *rect,
+  HFONT hFont,
+  HICON hIcon,
+  LPCWSTR str,
+  UINT uFlags);
 
 BOOL
 NTAPI
