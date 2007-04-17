@@ -1841,7 +1841,7 @@ NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
     return Ret;
   }
 
-  if (RetCount <= count)
+  if ((RetCount) && (count))
   {
     SafeBuf = ExAllocatePoolWithTag(PagedPool, count, TAG_GDIOBJ);
     if(!SafeBuf)
