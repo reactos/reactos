@@ -497,7 +497,7 @@ Main_DDrawSurface_GetDC(LPDIRECTDRAWSURFACE7 iface, HDC *phDC)
 
     This = (LPDDRAWI_DDRAWSURFACE_INT)iface;        
 
-    *phDC = This->lpLcl->lpSurfMore->lpDD_lcl->hDC;
+    *phDC = (HDC)This->lpLcl->lpSurfMore->lpDD_lcl->hDC;
 
     return DD_OK;
 }

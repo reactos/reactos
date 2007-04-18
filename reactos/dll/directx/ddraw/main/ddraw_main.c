@@ -171,7 +171,8 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     LPDDRAWI_DDRAWSURFACE_LCL *lpLcl;
     DWORD dwHowManySurface = 1;
     DWORD i;
-    LPDDRAWI_DDRAWSURFACE_LCL *xlpLcl;
+    //LPDDRAWI_DDRAWSURFACE_LCL *xlpLcl;
+
     if (pUnkOuter!=NULL) 
     {
         return CLASS_E_NOAGGREGATION; 
@@ -232,7 +233,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     }
 
     /* Calc how many surface we need setup */
-    if (pDDSD->ddsCaps.dwCaps &DDSD_BACKBUFFERCOUNT)
+    if (pDDSD->ddsCaps.dwCaps & DDSD_BACKBUFFERCOUNT)
     {
        /* One primary + xx backbuffer */
        dwHowManySurface |= pDDSD->dwBackBufferCount;

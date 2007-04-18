@@ -926,7 +926,7 @@ Create_DirectDraw (LPGUID pGUID,
         }
         
         /* we need check the GUID lpGUID what type it is */
-        if (pGUID != DDCREATE_HARDWAREONLY)
+        if (pGUID != (LPGUID)DDCREATE_HARDWAREONLY)
         {
             if (pGUID !=NULL)
             {
