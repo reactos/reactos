@@ -1,26 +1,28 @@
 #include <windows.h>
 #include "d3d8.h"
 
+#include <debug.h>
+
 HRESULT DLLAPI ValidatePixelShader(void)
 {
-    OutputDebugString("ValidateVertexShader not implemented.");
+    UNIMPLEMENTED
     return 0;
 }
 
 HRESULT DLLAPI ValidateVertexShader(void)
 {
-    OutputDebugString("ValidateVertexShader not implemented.");
+    UNIMPLEMENTED
     return 0;
 }
 HRESULT DLLAPI DebugSetMute(DWORD dw1)
 {
-    OutputDebugString("DebugSetMute not implemented.");
+    UNIMPLEMENTED
     return 0;
 }
 
 DWORD DLLAPI Direct3DCreate8( UINT SDKVersion )
 {
-    OutputDebugString("Direct3DCreate8 not implemented.");
+    UNIMPLEMENTED
     return 0;
 }
 
