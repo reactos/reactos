@@ -119,7 +119,7 @@ typedef struct _LDC
     HDC hDC;
     ULONG Flags;
     INT iType;
-    PVOID pEmfDC;         /* Pointer to ENHMETAHEADER structure */
+    PVOID pvEmfDC;        /* Pointer to ENHMETAFILE structure */
     ABORTPROC pAbortProc; /* AbortProc for Printing */
 } LDC, *PLDC;
 
