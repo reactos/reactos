@@ -7,8 +7,9 @@
 
 CD=output-ppc/ppcboot
 I=$CD/install
+TOOLS=tools/ppc.lost+found
 
-tools/ppc.lost+found/link-freeldr
+$TOOLS/link-freeldr
 
 mkdir -p $I
 cp freeldr.elf $I/yaboot
@@ -16,5 +17,5 @@ cp `dirname $0`/ofboot.b $I
 
 mkisofs -chrp-boot -U -part -hfs -T -r -l -J -A "ReactOS" -sysid PPC \
 	-V "ReactOS" -volset 1 -volset-size 1 -volset-seqno 1 \
-	-hfs-volid "ReactOS" -hfs-bless $I -map hfsmap.lst \
+	-hfs-volid "ReactOS" -hfs-bless $I -map $TOOLS/hfsmap.lst \
 	-no-desktop -allow-multidot -o ppcboot.iso $CD

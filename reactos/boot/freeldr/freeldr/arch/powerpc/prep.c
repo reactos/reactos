@@ -5,7 +5,7 @@
 
 int prep_serial = 0x800003f8;
 
-void sync() { __asm__("sync\n\teieio"); }
+void sync() { __asm__("eieio\n\tsync"); }
 
 /* Simple serial */
 
@@ -63,7 +63,6 @@ void PpcPrepVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth )
 void PpcPrepVideoPrepareForReactOS()
 {
 }
-
 ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 			   ULONG MaxMemoryMapSize )
 {
@@ -77,7 +76,8 @@ ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 void PpcPrepInit()
 {
     MachVtbl.ConsPutChar = PpcPrepPutChar;
-    printf("Breathing ...\n");
+
+    printf("Serial on\n");
 
     ide_setup( &ide1_desc );
 

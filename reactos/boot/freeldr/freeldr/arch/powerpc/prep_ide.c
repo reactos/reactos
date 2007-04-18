@@ -30,12 +30,21 @@ void ide_seek( void *extension, int low, int high ) {
 /* Wait for ready */
 void ide_rdy( void *extension ) {
     idectl_desc *desc = (idectl_desc *)extension;
-    while( !(GetPhysByte(desc->port+7) & 8) ) sync(); 
+    while( !(GetPhysByte(desc->port+7) & 0x40) ) sync(); 
+}
+
+void ide_drq( void *extension ) {
+    idectl_desc *desc = (idectl_desc *)extension;
+    while( !(GetPhysByte(desc->port+7) & 0x08) ) sync(); 
 }
 
 void ide_bsy( void *extension ) {
     idectl_desc *desc = (idectl_desc *)extension;
-    while( GetPhysByte(desc->port+7) & 0x80 ) sync(); 
+    while( GetPhysByte(desc->port+7) & 0x80 ) 
+    {
+	printf("Waiting for not busy\n");
+	sync(); 
+    }
 }
 
 int ide_read( void *extension, char *buffer, int bytes ) {
@@ -52,10 +61,7 @@ int ide_read( void *extension, char *buffer, int bytes ) {
     SetPhysByte(desc->port+6, desc->seek_head | 0xa0);
     SetPhysByte(desc->port+7, 0x20);
     
-    sync();
-
     for( inwords = 0; inwords < desc->bytespersec / sizeof(short); inwords++ ) {
-	ide_rdy( extension );
 	in = GetPhysHalf(desc->port);
 	databuf[inwords] = SWAP_W(in);
 	sync();
@@ -74,14 +80,18 @@ void ide_setup( void *extension ) {
     short *databuf = (short *)identbuffer, in;
     int inwords;
 
+    ide_rdy( extension );
     ide_bsy( extension );
-    SetPhysByte(desc->port+7, 0xec);
     desc->bytespersec = 512;
-    
-    sync();
+    SetPhysByte(desc->port+2, 1);
+    SetPhysByte(desc->port+3, 0);
+    SetPhysByte(desc->port+4, 0);
+    SetPhysByte(desc->port+5, 0);
+    SetPhysByte(desc->port+6, 0);
+    SetPhysByte(desc->port+7, 0xec);
+    ide_drq( extension );
 
     for( inwords = 0; inwords < desc->bytespersec / sizeof(short); inwords++ ) {
-	ide_rdy( extension );
 	in = GetPhysHalf(desc->port);
 	databuf[inwords] = SWAP_W(in);
 	sync();
