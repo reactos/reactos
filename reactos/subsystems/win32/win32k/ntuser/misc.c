@@ -953,6 +953,7 @@ IntSystemParametersInfo(
 
    switch(uiAction)
    {
+      case SPI_GETKEYBOARDCUES:
       case SPI_SETDOUBLECLKWIDTH:
       case SPI_SETDOUBLECLKHEIGHT:
       case SPI_SETDOUBLECLICKTIME:
@@ -984,6 +985,9 @@ IntSystemParametersInfo(
 
             switch(uiAction)
             {
+               case SPI_GETKEYBOARDCUES:
+                  ASSERT(pvParam);
+                  *((BOOL*)pvParam) = TRUE;
                case SPI_GETFLATMENU:
                   ASSERT(pvParam);
                   *((UINT*)pvParam) = WinStaObject->FlatMenu;
@@ -1412,6 +1416,7 @@ UserSystemParametersInfo(
             }
             return( TRUE);
          }
+	  case SPI_GETKEYBOARDCUES:
       case SPI_GETFONTSMOOTHING:
       case SPI_GETGRADIENTCAPTIONS:
       case SPI_GETFOCUSBORDERHEIGHT:
