@@ -53,6 +53,7 @@ END
 #include "lang/ja-JP.rc"
 #include "lang/nb-NO.rc"
 #include "lang/nl-NL.rc"
+#include "lang/pl-PL.rc"
 #include "lang/sv-SE.rc"
 #include "lang/th-TH.rc"
 #include "lang/ru-RU.rc"

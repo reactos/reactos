@@ -1,0 +1,14 @@
+#include "resource.h"
+/*  
+* translated by xrogers (http://rogers.cyberdusk.pl/)
+* xxrogers@users.sourceforge.net  
+* https://sourceforge.net/projects/reactospl  
+*/ 
+
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+{
+
+STRING_WelcomeMsg,      "Wirtualna maszyna DOS dla ReactOS.\n"
+STRING_PromptMsg,       "Wciœnij r<cr> aby uruchomiæ, s<cr> aby wy³¹czyæ lub q<cr> aby zakoñczyæ."
+}

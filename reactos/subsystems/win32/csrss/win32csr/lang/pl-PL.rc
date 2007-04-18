@@ -1,0 +1,53 @@
+/*  
+* translated by xrogers (http://rogers.cyberdusk.pl/)
+* xxrogers@users.sourceforge.net  
+* https://sourceforge.net/projects/reactospl  
+*/  
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+
+IDD_END_NOW DIALOG DISCARDABLE  0, 0, 200, 95
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Zakoñcz program - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Trwa zamykanie programu... Prosze czekaæ",IDC_STATIC,7,7,186,11
+    CONTROL         "Postêp",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    7,20,186,13
+    LTEXT           "Jeœli zdecydujesz siê zamkn¹æ program natychmiastowo, utracisz wszelkie niezapisane dane. Aby zakonczyæ program, wciœnij Zakoñcz teraz.",
+                    IDC_STATIC,7,40,186,26
+    DEFPUSHBUTTON   "&Zakoñcz teraz",IDC_END_NOW,150,71,43,17
+END
+
+IDD_NOT_RESPONDING DIALOG DISCARDABLE 0, 0, 192, 122
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Zakoñcz program - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Anuluj",IDCANCEL,142,98,43,17
+    PUSHBUTTON      "&Zakoñcz teraz",IDC_END_NOW,78,98,43,17
+    LTEXT           "Podany program nie odpowiada",IDC_STATIC,7,7,178,8
+    LTEXT           "Aby powróciæ do ReactOS i sprawdziæ status program, kliknij Anuluj",
+                    IDC_STATIC,7,26,178,16
+    LTEXT           "Jeœli zdecydujesz siê zamkn¹æ natychmiastowo program, utracisz wszelkie niezapisane dane. Aby zakonczyæ program, wciœnij Zakoñcz teraz.",
+                    IDC_STATIC,7,53,178,26
+END
+
+STRINGTABLE
+BEGIN
+  IDS_EDIT "Edytuj"
+  IDS_MARK "Zaznacz"
+  IDS_COPY "Kopiuj\tWejdŸ"
+  IDS_PASTE "Wklej"
+  IDS_SELECTALL "Zaznacz wszystko"
+  IDS_SCROLL "Przewiñ"
+  IDS_FIND "ZnajdŸ..."
+  IDS_DEFAULTS "Ustawienia domyœlne"
+  IDS_PROPERTIES "W³aœciwoœci"
+  IDS_SCROLLHERE "Przewiñ tutaj"
+  IDS_SCROLLTOP "Przewiñ na pocz¹tek"
+  IDS_SCROLLBOTTOM "Przewiñ na koniec"
+  IDS_SCROLLPAGE_UP "Poprzednia strona"
+  IDS_SCROLLPAGE_DOWN "Nastêpna strona"
+  IDS_SCROLLUP "Przewiñ do góry"
+  IDS_SCROLLDOWN "Przewiñ na dó³"
+END

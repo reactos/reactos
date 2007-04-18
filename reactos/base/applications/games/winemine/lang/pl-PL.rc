@@ -1,4 +1,9 @@
 //Polish translation Emil Kaczmarek 2006
+/*
+ *        small changes by TestamenT 
+ *      testament@users.sourceforge.net
+ * https://sourceforge.net/projects/reactospl
+ */
 
 #include "resource.h"
 
@@ -17,23 +22,22 @@ MENU_WINEMINE MENU DISCARDABLE
         MENUITEM "Poz&iom", IDM_MARKQ
         MENUITEM SEPARATOR
         MENUITEM "&Pocz¹tkuj¹cy",      IDM_BEGINNER
-        MENUITEM "&Zaawansowany",      IDM_ADVANCED
+        MENUITEM "Z&aawansowany",      IDM_ADVANCED
         MENUITEM "&Ekspert",        IDM_EXPERT
         MENUITEM "&W³asny poziom",        IDM_CUSTOM
         MENUITEM SEPARATOR
-        MENUITEM "Zam&knij",          IDM_EXIT
+        MENUITEM "&Zamknij",          IDM_EXIT
     }
     POPUP "&Informacje" {
         MENUITEM "N&ajlepsze czasy",    IDM_TIMES
-        MENUITEM "O progra&mie",         IDM_ABOUT
+        MENUITEM "&Winemine - informacje",         IDM_ABOUT
     }
 }
 
-DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 160, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+DLG_TIMES DIALOG DISCARDABLE 0, 0, 160, 80
+STYLE  DS_MODALFRAME | DS_3DLOOK |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Najlepsze czasy"
-FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
     GROUPBOX        "Najlepsze czasy", IDNONE,  10,  10, 140,  45
     LTEXT           "Pocz¹tkuj¹cy",      IDNONE,  20,  20,  40,   8
@@ -48,22 +52,20 @@ EXSTYLE DS_SHELLFONT
     DEFPUSHBUTTON   "OK",                IDOK,  55,  60,  50,  15
 }
 
-DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+DLG_CONGRATS DIALOG DISCARDABLE  0, 0, 160, 60
+STYLE  DS_MODALFRAME | DS_3DLOOK |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Gratulacje!"
-FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
     LTEXT           "Wpisz swoje imiê", IDNONE,  10,  10, 150,  10
     EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
     DEFPUSHBUTTON   "Ok",                         IDOK,  60,  40,  40,  15
 }
 
-DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 100, 100
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+DLG_CUSTOM DIALOG DISCARDABLE  0, 0, 100, 100
+STYLE  DS_MODALFRAME | DS_3DLOOK |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Ustawienia gry"
-FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
     LTEXT           "Iloœæ rzêdów",   IDNONE,   5,   5,  30,  10
     LTEXT           "Iloœæ kolumn",   IDNONE,   5,  35,  30,  10
@@ -75,15 +77,14 @@ EXSTYLE DS_SHELLFONT
     PUSHBUTTON      "Wycofaj", IDCANCEL,  40,  50,  50,  15
 }
 
-DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
-CAPTION "About"
-FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
+DLG_ABOUT DIALOG DISCARDABLE  0, 0, 145, 80
+STYLE  DS_MODALFRAME | DS_3DLOOK |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+CAPTION "Winemine - informacje"
 {
     LTEXT                               "Winemine", IDNONE,  10,  10,  35,  10
     LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
-    LTEXT                 "under the Wine license", IDNONE,  35,  35, 100,  10
+    LTEXT                 "Na licencji Wine", IDNONE,  35,  35, 100,  10
     ICON                                "WINEMINE", IDNONE,  10,  25,  20,  20
     DEFPUSHBUTTON                             "Ok", IDOK,      50,  60,  55,  15
 }

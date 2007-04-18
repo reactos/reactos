@@ -1,0 +1,40 @@
+/*  
+* translated by xrogers
+* xxrogers@users.sourceforge.net  
+* https://sourceforge.net/projects/reactospl  
+*/ 
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+
+IDD_CHARMAP DIALOGEX 6, 6, 293, 205 //233
+CAPTION "Tablica znaków"
+FONT 8,"MS Sans Serif",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_SYSMENU | WS_MINIMIZEBOX
+BEGIN
+  LTEXT         "Czci&onka:", IDC_STATIC, 6, 7, 24, 9
+  COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
+  PUSHBUTTON    "Pomo&c", IDC_CMHELP, 249, 5, 35, 13
+  CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156
+  LTEXT         "&Znaki do skopiowania:", IDC_STATIC, 6, 188, 66, 9
+  EDITTEXT       IDC_TEXTBOX, 74, 186, 114, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  DEFPUSHBUTTON "Wy&bierz", IDC_SELECT, 194, 186, 46, 13
+  PUSHBUTTON    "&Kopiuj", IDC_COPY, 244, 186, 46, 13, WS_DISABLED
+  //AUTOCHECKBOX  "Widok z&aawansowany", IDC_ADVVIEW, 10, 204, 64, 9, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  //EDITTEXT      IDC_DISPLAY,  8, 217, 278, 13, WS_VISIBLE | WS_TABSTOP | ES_READONLY
+END
+
+IDD_ABOUTBOX DIALOGEX 22,16,210,182
+CAPTION "Informacje o tablicy znaków"
+FONT 8,"MS Sans Serif",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT         "Tablica znaków v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON    "Zamknij", IDOK, 75, 162, 44, 15
+  ICON          IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE   "Niniejszy program jest wolnym oprogramowaniem; mo¿esz go rozprowadzaæ dalej i/lub modyfikowaæ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego Oprogramowania - wed³ug wersji 2 tej Licencji lub (wed³ug twojego wyboru) którejœ z póŸniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziej¹, i¿ bêdzie on u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyœlnej gwarancji PRZYDATNOŒCI HANDLOWEJ albo PRZYDATNOŒCI DO OKREŒLONYCH ZASTOSOWAÑ. W celu uzyskania bli¿szych informacji siêgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoœci¹ wraz z niniejszym programem otrzyma³eœ te¿ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeœli nie - napisz do Free Software Foundation, Inc., 59 Temple Place, Fifth Floor, Boston, MA  02110-1301  USA."
+  IDS_ABOUT     "&O programie..."
+END

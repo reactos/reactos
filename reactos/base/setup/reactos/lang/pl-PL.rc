@@ -1,0 +1,17 @@
+/*  
+ * translation by xrogers
+ * xxrogers@users.sourceforge.net  
+ * https://sourceforge.net/projects/reactospl
+ * http://rogers.cyberdusk.pl/
+ */ 
+
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+
+/* String Tables */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAPTION  "Instalator ReactOS"
+    IDS_TEXT     "Nie mo¿esz zainstalowaæ ReactOS bezpoœrednio z tego CD!\n\nProszê zrestartowaæ komputer i uruchomiæ z tego CD, aby zainstalowaæ ReactOS."
+END
+
+/* EOF */

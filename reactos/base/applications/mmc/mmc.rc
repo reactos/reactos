@@ -15,3 +15,4 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDI_MAINAPP ICON DISCARDABLE resources/mmc.ico
 
 #include "lang/en-US.rc"
+#include "lang/pl-PL.rc"

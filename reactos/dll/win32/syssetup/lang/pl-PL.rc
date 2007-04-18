@@ -1,0 +1,226 @@
+/*  
+ * translated by Caemyr
+ */ 
+/*
+ * Copyright (C) 2004 Filip Navara
+ * Copyright (C) 2004 Eric Kohl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+
+
+IDD_WELCOMEPAGE DIALOG DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalator ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+   LTEXT "Witamy w programie instalacyjnym ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+   LTEXT "Ten program pomo¿e w instalacji systemu ReactOS. W tym celu "\
+         "konieczne bêdzie zebranie informacji o twoim komputerze, by "\
+         "prawid³owo skonfigurowaæ system operacyjny.", IDC_STATIC, 115, 40, 195, 100
+   LTEXT "Naciœnij Dalej by kontynuowaæ.", IDC_STATIC, 115, 169, 195, 17
+END
+
+
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalator ReactOS"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+   LTEXT           "Twórcy ReactOS chcieliby podziêkowaæ nastêpuj¹cym projektom Open Source, "\
+                   "których to fragmenty zosta³y wykorzystane do stworzenia ReactOS:",
+                   IDC_STATIC,15,7,286,19
+   LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
+                   LBS_NOINTEGRALHEIGHT | WS_VSCROLL
+   LTEXT           "ReactOS oparty jest na licencji GPL, wieæ by w ca³oœci lub czêœciowo wykorzystaæ Ÿród³a "\
+                   "ReactOS, musisz przestrzegaæ postanowieñ licencji.",
+                   IDC_STATIC,15,110,227,19
+   PUSHBUTTON      "Poka¿ &GPL..",IDC_VIEWGPL,251,110,50,19
+   LTEXT           "Naciœnij Dalej by kontynuowaæ.",IDC_STATIC,15,136,
+                   195,17
+END
+
+
+IDD_OWNERPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalator ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+   LTEXT "Podaj swoje imiê i nazwisko, a tak¿e nazwê twojej firmy b¹dŸ organizacji.",
+         IDC_STATIC, 54, 7, 242, 21
+   LTEXT "Na&zwa:", IDC_STATIC, 54, 37, 44, 8
+   EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+   LTEXT "&Organizacja:", IDC_STATIC, 54, 57, 44, 8
+   EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+END
+
+
+IDD_COMPUTERPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalator ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+   LTEXT "Podaj nazwê komputera, nie d³u¿sz¹ ni¿ 63 znaki. "\
+         "Jeœli chcesz pracowaæ w sieci, nazwa musi pozostaæ unikalna.",
+         IDC_STATIC, 54, 7, 250, 24
+   LTEXT "&Nazwa komputera:", IDC_STATIC, 54, 38, 75, 8
+   EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+   LTEXT "Program konfiguracyjny stworzy konto Administrator. "\
+         "Dziêki niemu uzyskasz, w razie potrzeby, pe³en dostêp do systemu.",
+         IDC_STATIC, 54, 57, 250, 25
+   LTEXT "Podaj Has³o Administratora, nie d³u¿sze ni¿ 14 znaków.",
+         IDC_STATIC, 54, 87, 250, 8
+   LTEXT "&Has³o Administratora:", IDC_STATIC, 54, 104, 75, 8
+   EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+   LTEXT "&Potwierdzenie Has³a:", IDC_STATIC, 54, 123, 75, 8
+   EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+END
+
+
+IDD_LOCALEPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalator ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+   LTEXT "Lokalizacja systemu powinna byæ zgodna (jêzykowo) z aplikacjami, "\
+         "których planujesz u¿ywaæ. Lokalizacja odpowiada równie¿ za wyœwietlanie "\
+         "danych, liczb i walut.", IDC_STATIC, 53, 7, 253, 20
+   LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+   LTEXT "By zmieniæ lokalizacjê systemu, naciœnij Ustaw.",
+         IDC_STATIC, 53, 60, 184, 8
+   PUSHBUTTON "&Ustaw...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+   LTEXT "Uk;ad klawiatury decyduje o przyporzadkowaniu znaków pod klawisze.",
+         IDC_STATIC, 53, 86, 253, 8
+   LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+   LTEXT "Aby zmieniæ uk³ad klawiatury, naciœnij Ustaw.",
+         IDC_STATIC, 53, 126, 184, 8
+   PUSHBUTTON "U&staw...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+END
+
+
+IDD_DATETIMEPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalator ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+   LTEXT "Data i Czas", IDC_STATIC, 53, 7, 253, 8
+   CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
+           DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
+   CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
+           DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+   LTEXT "Strefa czasowa", IDC_STATIC, 53, 42, 253, 8
+   COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
+            CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+   AUTOCHECKBOX "Automatycznie ustaw zegar przy &Zmianie Czasu(DST)",
+                IDC_AUTODAYLIGHT, 53, 124, 201, 10
+END
+
+
+IDD_PROCESSPAGE DIALOG 0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalator ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+   LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
+   LTEXT "", IDC_ITEM, 53, 29, 253, 20
+   CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
+           PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+END
+
+
+IDD_FINISHPAGE DIALOG DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Zakoñczenie instalacji ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+   LTEXT "Konfiguracja ReactOS ukoñczona.", IDC_FINISHTITLE, 115, 8, 195, 24
+   LTEXT "To ju¿ koniec ustawieñ ReactOS.\n\n" \
+         "Teraz naciœnij Koniec, by ponownie uruchomiæ komputer.", IDC_STATIC, 115, 40, 195, 100
+   CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
+   LTEXT "Upewnij siê, czy w napêdach CD/DVD nie pozosta³ ¿aden noœnik. "\
+         "Jeœli tak, to wyjmij go przed naciœniêciem Koniec.", IDC_STATIC, 115, 169, 195, 17
+END
+
+
+IDD_GPL DIALOG 0, 0, 333, 230
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Powszechna Licencja Publiczna GNU"
+FONT 8, "MS Shell Dlg"
+BEGIN
+   EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
+                   ES_READONLY | WS_VSCROLL
+   DEFPUSHBUTTON   "OK",IDOK,141,209,50,14
+END
+
+
+STRINGTABLE
+BEGIN
+   IDS_ACKTITLE         "Podziêkowania"
+   IDS_ACKSUBTITLE      "Wszyscy, bez których nie by³oby ReactOS, a tak¿e informacje o Licencji "
+   IDS_OWNERTITLE       "Personifikacja systemu"
+   IDS_OWNERSUBTITLE    "Program konfiguracyjny wykorzysta te informacje do lepszego ustawienia systemu."
+   IDS_COMPUTERTITLE    "Nazwa komputera i Has³o Administratora"
+   IDS_COMPUTERSUBTITLE "Musisz podaæ nazwê swojego komputera a tak¿e Has³o Administratora."
+   IDS_LOCALETITLE      "Ustawienia Regionalne"
+   IDS_LOCALESUBTITLE   "Mo¿esz ustawiæ ReactOS pod k¹tem jêzyka i sposobu wyœwietlania danych."
+   IDS_DATETIMETITLE    "Data i Czas"
+   IDS_DATETIMESUBTITLE "Ustaw prawid³ow¹ datê i czas."
+   IDS_PROCESSTITLE     "Tytu³ strony"
+   IDS_PROCESSSUBTITLE  "Podtytu³ strony"
+END
+
+STRINGTABLE
+BEGIN
+   IDS_CMT_WINEFILE    "Uruchom Winefile"
+   IDS_CMT_IBROWSER    "Uruchom iBrowser"
+   IDS_CMT_GETFIREFOX  "Œci¹gnij/zainstaluj Firefoxa"
+   IDS_CMT_DOWNLOADER  "Œci¹gnij i zainstaluj inne aplikacje"
+END
+
+STRINGTABLE
+BEGIN
+   IDS_ACCESSORIES     "Akcesoria"
+   IDS_CMT_CALC        "Uruchom Kalkulator"
+   IDS_CMT_CMD         "Uruchom konsolê"
+   IDS_CMT_EXPLORER    "Uruchom Explorera"
+   IDS_CMT_NOTEPAD     "Uruchom Edytor Tekstu"
+   IDS_CMT_REGEDIT     "Uruchom Edytor Rejestru"
+   IDS_CMT_WORDPAD     "Uruchom Wordpada"
+   IDS_CMT_SCREENSHOT  "Zrzut ekranu"
+END
+
+STRINGTABLE
+BEGIN
+   IDS_GAMES           "Gry"
+   IDS_CMT_SOLITAIRE   "Pasjans"
+   IDS_CMT_WINEMINE    "Saper"
+END
+
+STRINGTABLE
+BEGIN
+   IDS_REACTOS_SETUP               "Ustawienia ReactOS"
+   IDS_UNKNOWN_ERROR           "Nieznany b³¹d"
+   IDS_REGISTERING_COMPONENTS  "Rejestracja sk³adników..."
+   IDS_LOADLIBRARY_FAILED          "Nieudane LoadLibrary : "
+   IDS_GETPROCADDR_FAILED          "Nieudane GetProcAddr : "
+   IDS_REGSVR_FAILED           "Nieudane DllRegisterServer: "
+   IDS_DLLINSTALL_FAILED           "Nieudane DllInstall: "
+   IDS_TIMEOUT                         "Up³yn¹³ czas rejestracji"
+   IDS_REASON_UNKNOWN          ""
+END
+
+/* EOF */

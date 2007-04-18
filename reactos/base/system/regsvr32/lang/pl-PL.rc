@@ -1,0 +1,33 @@
+#include "resource.h"
+/*  
+* translated by xrogers (http://rogers.cyberdusk.pl/)
+* xxrogers@users.sourceforge.net  
+* https://sourceforge.net/projects/reactospl  
+*/  
+
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+{
+
+IDS_UsageMessage, "%s\n\Sposób u¿ycia: regsvr32 [/u] [/s] [/c] [/n] [/i[:wiersz_polecenia]] nazwa_pliku_dll\n\
+/u -	Wyrejestruj serwer\n\
+/s -	Tryb cichy; nie wy¶wietlaj okien komunikatów\n\
+/c -	Wyj¶cie w konsoli\n\
+/i -	Wywo³aj funkcjê DllInstall, przekazuj±c jej opcjonalny [wiersz_polecenia]; u¿ycie tej opcji razem z opcj± /u wywo³uje funkcjê dll uninstall\n\
+/n -	Nie wywo³uj serwera DllRegisterServer; tej opcji trzeba uzyæ z opcj± /i"
+
+IDS_NoDllSpecified,  "Nie okre¶lono nazwy biblioteki DLL."
+
+IDS_InvalidFlag,     "Nierozpoznana flaga: %s"
+
+IDS_SwitchN_NoI,     "Nierozpoznana flaga: /n musi byæ u¿yta z prze³±cznikiem /i"
+
+IDS_DllNotLoaded,    "LoadLibrary('%s') nie powiod³o siê.\nGetLastError zwraca 0x%08x."
+
+IDS_MissingEntry,    "%s zosta³ za³adowany, jednak punkt wej¶cia %s nie zosta³ odnaleziony.\n\n\
+%s mo¿e nie byæ eksportowany, lub uszkodzona wersja %s mo¿e byæ za³adowana w pamiêci. Proszê rozwa¿yæ u¿ycie PView aby wykryæ i usun±æ to."
+
+IDS_FailureMessage,  "%s w %s nie powiod³a siê.\nKod wynikowy: 0x%08x"
+
+IDS_SuccessMessage   "%s w %s zakoñczona sukcesem."
+}

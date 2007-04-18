@@ -1,0 +1,116 @@
+/*
+ *         translated by TestamenT
+ *      testament@users.sourceforge.net
+ * https://sourceforge.net/projects/reactospl
+ *
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+
+IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Instalacja urz¹dzenia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Witam",IDC_WELCOMETITLE,120,8,195,24
+    LTEXT           "Ten kreator zainstaluje nowe sterowniki dla tego urz¹dzenia:",
+                    IDC_STATIC,120,21,195,16
+    LTEXT           "Naciœnij dalej aby kontynuowaæ.",IDC_STATIC,120,169,195,17
+    LTEXT           "NIEZNANE URZ¥DZENIE",IDC_DEVICE,134,36,164,11
+    LTEXT           "UWAGA! ISNTALACJA WYBRANEGO U¯¥DZENIA  MO¯E ZAWIEŒIÆ TWÓJ KONPUTER B¥C UNIEMO¯LIWIÆ PONOWNE W£¥CZENIE!",IDC_STATIC,120,59,195,16
+    CONTROL         "Zainstaluj sterownik automatycznie",IDC_RADIO_AUTO,"Button",
+                    BS_AUTORADIOBUTTON,120,112,178,13
+    CONTROL         "Zainstaluj sterownik z okreœlonego miejsca",IDC_RADIO_MANUAL,
+                    "Button",BS_AUTORADIOBUTTON,120,133,164,14
+END
+
+IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Instalacja urz¹dzenia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Nie udana instalacj",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Urz¹dzenie nie mog³o zostaæ zainstalowane, poniewa¿ sterownik nie zosta³ znaleziony.",
+                    IDC_STATIC,120,40,195,19
+    LTEXT           "Naciœnij wstecz je¿eli masz sterownik na dysku lub œcie¿kê do sterownika.",
+                    IDC_STATIC,120,98,181,24
+    CONTROL         "Nie pokazuj wiêcej tej wiadomoœci",IDC_DONOTSHOWDLG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
+END
+
+IDD_INSTALLFAILED DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Instalacja urz¹dzenia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Nie udana instalacj",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Urz¹dzenie nie mog³o zostaæ zainstalowane, poniewa¿ pojawi³ siê nie spodziewany b³¹d.",
+                    IDC_STATIC,120,40,195,19
+    LTEXT           "NIEZNANE URZ¥DZENIE",IDC_DEVICE,134,55,164,11
+END
+
+IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalacja urz¹dzenia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Szukanie w wybranej lokalizacji",IDC_RADIO_SEARCHHERE,"Button",
+                    BS_AUTORADIOBUTTON,27,11,239,13
+    CONTROL         "Wybierz sterownik rêcznie",IDC_RADIO_CHOOSE,"Button",
+                    BS_AUTORADIOBUTTON,27,98,171,12
+    CONTROL         "Szukaj w noœnikach wymiennych",IDC_CHECK_MEDIA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
+    CONTROL         "Uwzglêdnij t¹ œcie¿kê",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,47,54,162,10
+    PUSHBUTTON      "Przejrzyj",IDC_BROWSE,248,69,50,14
+    COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP  | CBS_AUTOHSCROLL
+END
+
+IDD_SEARCHDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalacja urz¹dzenia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "NIEZNANE URZ¥DZENIE",IDC_DEVICE,51,20,169,16
+END
+
+IDD_INSTALLDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalacja urz¹dzenia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "NIEZNANE URZ¥DZENIE",IDC_DEVICE,51,20,169,16
+END
+
+IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Instalacja urz¹dzenia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Instalacja zakoñczona",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Potrzebujesz zrestartowaæ, by skoñczyæ instalacje z:",
+                    IDC_STATIC,120,32,195,19
+    LTEXT           "Naciœnij zakoñcz aby zamkn¹æ kreatora.",IDC_STATIC,120,174,
+                    179,11
+    LTEXT           "NIEZNANE URZ¥DZENIE",IDC_DEVICE,148,53,147,12
+END
+
+IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Instalacja urz¹dzenia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Instalacja zakoñczona",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Kreator zakoñczy³ instalacje sterownika dla:",
+                    IDC_STATIC,120,32,195,19
+    LTEXT           "Naciœnij zakoñcz aby zamkn¹æ kreatora.",IDC_STATIC,120,174,
+                    179,11
+    LTEXT           "NIEZNANE URZ¥DZENIE",IDC_DEVICE,148,53,147,12
+END
+

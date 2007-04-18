@@ -11,7 +11,6 @@ IDB_MINES BITMAP MOVEABLE "rc/mines.bmp"
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* include localised resources */
-
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"
 #include "lang/en-US.rc"

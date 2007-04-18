@@ -1,0 +1,13 @@
+#include "resource.h"
+/*  
+* translated by xrogers (http://rogers.cyberdusk.pl/)
+* xxrogers@users.sourceforge.net  
+* https://sourceforge.net/projects/reactospl  
+*/  
+
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+{
+IDS_DllNotLoaded,   "LoadLibrary nie móg³ za³adowaæ '%s'"
+IDS_MissingEntry, "Brakuj¹cy punkt wejœcia:%s\nW %s"
+}

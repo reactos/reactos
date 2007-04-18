@@ -16,6 +16,7 @@
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
+#include "lang/pl-PL.rc"
 #include "lang/nb-NO.rc"
 #include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
@@ -35,6 +36,7 @@ STRINGTABLE DISCARDABLE
 }
 
 1 ICON DISCARDABLE res/terminal.ico
+
 
 
 

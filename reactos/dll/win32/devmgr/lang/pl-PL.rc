@@ -1,4 +1,9 @@
 // Polish language resource file (Sebastian Gasiorek,Wiktor Maryniowski, 2005-12-12)
+/*
+* update by xrogers (13.04.2007)
+* xxrogers@users.sourceforge.net
+* https://sourceforge.net/projects/reactospl
+*/
 
 LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
 
@@ -127,16 +132,17 @@ END
 
 IDD_DEVICEDRIVER DIALOG DISCARDABLE  0, 0, 252, 218
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Driver"
+CAPTION "Sterownik"
 FONT 8, "MS Shell Dlg"
 BEGIN
      ICON "", IDC_DEVICON, 7, 7, 20, 20
      LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-     LTEXT "Driver provider:", -1, 37, 39, 60, 8, SS_NOPREFIX
+     LTEXT "Dostawca sterownika:", -1, 37, 39, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Driver date:", -1, 37, 53, 60, 8, SS_NOPREFIX
+     LTEXT "Data sterownika:", -1, 37, 53, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Driver version:", -1, 37, 67, 60, 8, SS_NOPREFIX
+     LTEXT "Wersja sterownika:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
 END
+
 

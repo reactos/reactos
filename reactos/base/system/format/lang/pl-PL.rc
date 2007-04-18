@@ -1,0 +1,75 @@
+#include "resource.h"
+/*
+* translated by xrogers (http://rogers.cyberdusk.pl/)
+* xxrogers@users.sourceforge.net
+* https://sourceforge.net/projects/reactospl
+*/
+
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+{
+STRING_HELP,  "Sposób u¿ycia: %S wolumin: [-FS:syst-plik] [-V:etykieta] [-Q] [-A:rozmiar] [-C]\n\n\
+  [wolumin:]      Okreœla literê dysku przeznaczonego do formatowania.\n\
+  -FS:syst-plik   Okreœla rodzaj systemu plików (%s).\n\
+  -V:etykieta     Okreœla etykietê woluminu.\n\
+  -Q              Przeprowadza szybkie formatowanie.\n\
+  -A:rozmiar      Zastêpuje domyœlny rozmiar jednostki alokacji. Dla zastosowañ\n\
+                  ogólnych zaleca siê u¿ywanie ustawieñ domyœlnych.\n\
+                  System NTFS obs³uguje rozmiary: 512, 1024, 2048, 4096, 8192,\n\
+                  16 KB, 32 KB, 64 KB.\n\
+                  System FAT obs³uguje rozmiary: 512, 1024, 2048, 4096, 8192,\n\
+                  16 KB, 32 KB, 64 KB, 128 KB, 256 KB.\n\
+                  Kompresja NTFS nie jest obs³ugiwana dla jednostek alokacji\n\
+                  wiêkszych ni¿ 4096 bajtów.\n\
+  -C              Pliki stworzone na nowym woluminie bêd¹ domyœlnie poddane\n\
+                  kompresji.\n\n"
+
+STRING_COMPLETE   "%lu procent ukoñczone.\r"
+
+STRING_FORMAT_FAIL "FormatEx nie móg³ zakonczyæ dzia³ania pomyœlnie.\n\n"
+
+STRING_NO_SUPPORT  "Opercja niewspierana"
+
+STRING_FMIFS_FAIL  "Nie mo¿na zlokalizowaæ punktów wejœciowych FMIFS.\n\n"
+
+STRING_UNKNOW_ARG  "Nieprawid³owy parametr: %S\n"
+
+STRING_DRIVE_PARM  "Brakuj¹cy wymagany parametr dysku.\n\n"
+
+STRING_ERROR_DRIVE_TYPE  "Nie mo¿na okreœliæ rodzaj dysku"
+
+STRING_INSERT_DISK       "W³ó¿ nowy dysk do napêdu %C:\ni naciœnij Enter, gdy bêdzie gotowe..."
+
+STRING_NO_VOLUME         "Nie mo¿na odczytaæ woluminu"
+
+STRING_NO_VOLUME_SIZE    "Nie mo¿na odczytaæ rozmiaru woluminu"
+
+STRING_FILESYSTEM        "Rodzaj systemu plików to %S.\n"
+
+STRING_LABEL_NAME_EDIT  "Podaj aktualn¹ etykietê woluminu dla dysku %C: "
+
+STRING_ERROR_LABEL     "Nieprawid³owa etykieta woluminu zosta³a wpisana dla tego dysku.\n"
+
+STRING_YN_FORMAT       "\OSTRZE¯ENIE, WSZYSTKIE DANE NA DYSKU NIEWYJMOWALNYM\n\
+STACJA %C: BED¥ UTRACONE!\nCzy kontynuowaæ formatowanie (T/N)? "
+
+STRING_YES_NO_FAQ      "TN"
+
+STRING_VERIFYING       "Sprawdzanie"
+
+STRING_FAST_FMT        "Szybkie formatowanie"
+
+STRING_CREATE_FSYS     "Tworzenie struktury systemu plików.\n"
+
+STRING_FMT_COMPLETE    "Formatowanie ukoñczone.\n"
+
+STRING_VOL_COMPRESS    "Wolumin nie obsluguje kompresji.\n"
+
+STRING_ENTER_LABEL     "Etykieta woluminu (11 znaków, wcisnij ENTER dla pustej)? "
+
+STRING_NO_LABEL        "Nie mo¿na zmieniæ etykiety woluminu"
+
+STRING_FREE_SPACE     "\n%I64d bajtów ca³kowitego miejsca na dysku.\n%I64d bajtów dostêpnych na dysku.\n"
+
+STRING_SERIAL_NUMBER   "\nNumer seryjny woluminu to %04X-%04X\n"
+}

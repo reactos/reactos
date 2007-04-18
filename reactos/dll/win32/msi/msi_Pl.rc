@@ -1,0 +1,21 @@
+/*
+ *         translated by TestamenT
+ *      testament@users.sourceforge.net
+ * https://sourceforge.net/projects/reactospl
+ *
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+	4 "Okreœlona paczka instalacji nie mog³aby zostaæ otwarta.  Proszê sprawdŸ œcie¿kê pliku i spróbowaæ ponownie."
+	5 "œcie¿ka %s nie znaleziona"
+	9 "wstaw dysk %s"
+	10 "z³e parametry"
+	11 "wejdŸ, który folder zawiera %s"
+	12 "zainstaluj Ÿród³o dla brakuj¹cych plików"
+	13 "napêd dyskowy sieci dla brakuj¹cych plików"
+	14 "Plik od:"
+	15 "wybierz, który folder zawiera %s"
+}

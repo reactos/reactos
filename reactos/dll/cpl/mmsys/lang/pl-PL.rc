@@ -1,0 +1,20 @@
+/*  
+* translated by xrogers
+* xxrogers@users.sourceforge.net  
+* https://sourceforge.net/projects/reactospl  
+*/ 
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+
+IDD_HARDWARE DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLNAME "DŸwiêk i urz¹dzenia audio"
+    IDS_CPLDESCRIPTION "Zmieñ schemat dŸwiêkowy dla tego komputera lub skonfiguruj ustawienia g³oœników i urz¹dzeñ nagrywaj¹cych."
+END
+
