@@ -277,6 +277,9 @@
 <directory name="wintrust">
 	<xi:include href="wintrust/wintrust.rbuild" />
 </directory>
+<directory name="wldap32">
+	<xi:include href="wldap32/wldap32.rbuild" />
+</directory>
 <directory name="ws2_32">
 	<xi:include href="ws2_32/ws2_32.rbuild" />
 </directory>

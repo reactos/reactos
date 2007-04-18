@@ -114,6 +114,7 @@ dll\directx\dsound\dsound.dll                       1
 dll\directx\dxdiagn\dxdiagn.dll                     1
 dll\directx\ddraw\ddraw.dll                         1
 dll\directx\d3d8thk\d3d8thk.dll                     1
+dll\directx\d3d8\d3d8.dll                           1
 dll\directx\d3d9\d3d9.dll                           1
 dll\directx\devenum\devenum.dll                     1
 
@@ -224,6 +225,7 @@ dll\win32\winmm\winmm.dll                           1
 dll\win32\winmm\wavemap\msacm32.drv                 1
 dll\win32\winspool\winspool.drv                     1
 dll\win32\wintrust\wintrust.dll                     1
+dll\win32\wldap32\wldap32.dll                       1
 dll\win32\ws2_32\ws2_32.dll                         1
 dll\win32\ws2help\ws2help.dll                       1
 dll\win32\wshirda\wshirda.dll                       1
