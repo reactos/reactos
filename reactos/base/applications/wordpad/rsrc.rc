@@ -9,4 +9,4 @@
 #include "lang/it-IT.rc"
 #include "lang/nb-NO.rc"
 #include "lang/th-TH.rc"
-
+#include "lang/zh-CN.rc"

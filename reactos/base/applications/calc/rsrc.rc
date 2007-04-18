@@ -41,5 +41,6 @@ IDI_CALCICON ICON "calculator.ico"
 #include "lang/sv-SE.rc"
 #include "lang/th-TH.rc"
 #include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"
 
-LANGUAGE LANG_NEUTRAL,SUBLANG_NEUTRAL
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL

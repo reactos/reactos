@@ -1,0 +1,168 @@
+/*
+ *  Calculator (Simplified Chinese resources)
+ *  计算器(简体中文资源)
+ *  Copyright 2007 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include "windows.h"
+#include "resource.h"
+#include "winecalc.h"
+
+//#define IDC_STATIC    1000
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE DISCARDABLE
+{
+   IDS_APPNAME,            "计算器"
+
+   IDS_COPYRIGHT1,         "计算器 5.0. 基于 LGPL 2 协议"
+   IDS_COPYRIGHT2          "版权 2003, James Briggs"
+   IDS_COPYRIGHT3          "San Jose, California, USA"
+   IDS_COPYRIGHT4          "james@ActionMessage.com"
+   IDS_COPYRIGHT5          "http://www.ActionMessage.com/winecalc/"
+
+   IDS_BTN_BACKSPACE,      "Backspace"
+   IDS_BTN_CLEAR_ENTRY,    "CE"
+   IDS_BTN_CLEAR_ALL,      "C"
+   IDS_BTN_MEM_CLEAR,      "MC"
+   IDS_BTN_MEM_RECALL,     "MR"
+   IDS_BTN_MEM_STORE,      "MS"
+   IDS_BTN_MEM_PLUS,       "M+"
+   IDS_BTN_MEM_STATUS_M,   "M"
+   IDS_BTN_SQRT,           "sqrt"
+   IDS_BTN_DEGREES,        "Degrees"
+   IDS_BTN_RADIANS,        "Radians"
+   IDS_BTN_GRADS,          "Grads"
+   IDS_BTN_SHRT_HEX        "Hex"
+   IDS_BTN_SHRT_DEC        "Dec"
+   IDS_BTN_SHRT_OCT        "Oct"
+   IDS_BTN_SHRT_BIN        "Bin"
+   IDS_ERR_INVALID_INPUT,  "函数输入无效。"
+   IDS_ERR_DIVIDE_BY_ZERO, "除数不能为零。"
+   IDS_ERR_UNDEFINED,      "函数结果未定义。"
+}
+
+MAIN_MENU MENU DISCARDABLE
+{
+   POPUP "编辑(&E)" {
+      MENUITEM "复制(&C) Ctrl+C",       IDM_COPY
+      MENUITEM "粘贴(&P) Ctrl+V",       IDM_PASTE
+   }
+   POPUP "查看(&V)" {
+      MENUITEM "标准型",                IDM_MODE_STANDARD
+      MENUITEM "科学型",                IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+      MENUITEM "数字分组",              IDM_DIGIT_GROUPING
+   }
+   POPUP "帮助(&H)" {
+      MENUITEM "帮助主题",              IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "关于计算器",            IDM_ABOUT
+   }
+}
+
+SCIMS_MENU MENU DISCARDABLE
+{
+   POPUP "编辑(&E)" {
+      MENUITEM "复制(&C) Ctrl+C",       IDM_COPY
+      MENUITEM "粘贴(&P) Ctrl+V",       IDM_PASTE
+   }
+   POPUP "查看(&V)" {
+      MENUITEM "标准型",                IDM_MODE_STANDARD
+      MENUITEM "科学型",                IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+	  MENUITEM "十六进制(H)\tF5",   ID_CALC_NS_HEX
+	  MENUITEM "十进制(D)\tF6",     ID_CALC_NS_DEC
+	  MENUITEM "八进制(O)\tF7",     ID_CALC_NS_OCT
+	  MENUITEM "二进制(B)\tF8",     ID_CALC_NS_BIN
+      MENUITEM SEPARATOR
+      MENUITEM "角度\tF2",              ID_CALC_MS_DEGREES
+      MENUITEM "弧度\tF3",              ID_CALC_MS_RADIANS
+	  MENUITEM "梯度\tF4",          ID_CALC_MS_GRADS
+      MENUITEM SEPARATOR
+      MENUITEM "数字分组",              IDM_DIGIT_GROUPING
+   }
+   POPUP "帮助(&H)" {
+      MENUITEM "帮助主题",              IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "关于计算器",            IDM_ABOUT
+   }
+}
+
+SCIWS_MENU MENU DISCARDABLE
+{
+   POPUP "编辑(&E)" {
+      MENUITEM "复制(&C) Ctrl+C",       IDM_COPY
+      MENUITEM "粘贴(&P) Ctrl+V",       IDM_PASTE
+   }
+   POPUP "查看(&V)" {
+      MENUITEM "标准型",                IDM_MODE_STANDARD
+      MENUITEM "科学型",                IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+	  MENUITEM "十六进制(H)\tF5",   ID_CALC_NS_HEX
+	  MENUITEM "十进制(D)\tF6",     ID_CALC_NS_DEC
+	  MENUITEM "八进制(O)\tF7",     ID_CALC_NS_OCT
+	  MENUITEM "二进制(B)\tF8",     ID_CALC_NS_BIN
+      MENUITEM SEPARATOR
+	  MENUITEM "四字\tF12",         ID_CALC_WS_QWORD
+	  MENUITEM "双字\tF2",          ID_CALC_WS_DWORD
+	  MENUITEM "单字\tF3",          ID_CALC_WS_WORD
+	  MENUITEM "字节\tF4",          ID_CALC_WS_BYTE
+      MENUITEM SEPARATOR
+      MENUITEM "数字分组",              IDM_DIGIT_GROUPING
+   }
+   POPUP "帮助(&H)" {
+      MENUITEM "帮助主题",              IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "关于计算器",            IDM_ABOUT
+   }
+}
+
+MAIN_MENU ACCELERATORS
+BEGIN
+   VK_F1, IDV_HELP,     VIRTKEY
+END
+
+
+DLG_ABOUT DIALOGEX 12, 0, 140, 95
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "关于 GNU winecalc"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    //LTEXT           "中文翻译:张冰 (e_zb@21cn.com, ezb@mail.gywb.cn)",IDC_STATIC, 5, 57, 111, 25
+    DEFPUSHBUTTON   "确定",IDOK, 55, 75, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+WHATS_THIS_MENU MENU DISCARDABLE
+{
+    POPUP "" {
+      MENUITEM "What's This?",          IDM_WHATS_THIS
+   }
+}
+
+DLG_STATS DIALOG 12,0,125,78
+CAPTION "统计框"
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+FONT 9, "MS Shell Dlg"
+BEGIN
+   DEFPUSHBUTTON "返回(&R)",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "加载(&L)", ID_STATS_LOAD,  34, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "清零(&C)"    ID_STATS_CD,  64, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "全清(&A)",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+END
