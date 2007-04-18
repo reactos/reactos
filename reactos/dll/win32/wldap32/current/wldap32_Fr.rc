@@ -1,0 +1,123 @@
+/*
+ * French resources for WLDAP32
+ *
+ * Copyright 2005 Jonathan Ernst
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+    0 "Succès"
+    1 "Erreur d'opération"
+    2 "Erreur de protocole"
+    3 "Limite de temps dépassée"
+    4 "Limite de taille dépassée"
+    5 "Comparaison Fausse"
+    6 "Comparaison Vraie"
+    7 "Méthode d'authentification non supportée"
+    8 "Authentification forte requise"
+    9 "Référant (v2)"
+    10 "Référant"
+    11 "Limite administrative dépassée"
+    12 "Extension critique indisponible"
+    13 "Confidentialité requise"
+    14 ""
+    15 ""
+    16 "Attribut inconnu"
+    17 "Type indéfini"
+    18 "Inappropriate Matching"
+    19 "Violation de contrainte"
+    20 "Attribut ou valeur existant"
+    21 "Syntaxe invalide"
+    22 ""
+    23 ""
+    24 ""
+    25 ""
+    26 ""
+    27 ""
+    28 ""
+    29 ""
+    30 ""
+    31 ""
+    32 "Objet inconnu"
+    33 "Problème d'alias"
+    34 "Synatxe DN invalide"
+    35 "Est une feuille"
+    36 "Problème de déréférencement d'alias"
+    37 ""
+    38 ""
+    39 ""
+    40 ""
+    41 ""
+    42 ""
+    43 ""
+    44 ""
+    45 ""
+    46 ""
+    47 ""
+    48 "Authentification inappropriée"
+    49 "Droits invalides"
+    50 "Droits insuffisants"
+    51 "Occupé"
+    52 "Indisponible"
+    53 "Ne souhaite pas s'exécuter"
+    54 "Boucle détectée"
+    55 ""
+    56 ""
+    57 ""
+    58 ""
+    59 ""
+    60 "Contrôle de tri manquant"
+    61 "Erreur d'intervalle d'index"
+    62 ""
+    63 ""
+    64 "Violation de nomenclature"
+    65 "Violation de classe d'objet"
+    66 "Interdit sur des non-feuilles"
+    67 "Interdit sur RDN"
+    68 "Existe déjà"
+    69 "Pas de Mods de classe d'objet"
+    70 "Résultat trop grand"
+    71 "Affecte de multiple DSAs"
+    72 ""
+    73 ""
+    74 ""
+    75 ""
+    76 ""
+    77 ""
+    78 ""
+    79 ""
+    80 "Autre"
+    81 "Serveur indisponible"
+    82 "Erreur locale"
+    83 "Erreur d'encodage"
+    84 "Erreur de décodage"
+    85 "Délai d'attente dépassé"
+    86 "Auth inconnue"
+    87 "Erreur de filtre"
+    88 "Annulation de l'utilisateur"
+    89 "Erreur de paramètre"
+    90 "Pas de mémoire"
+    91 "Impossible de se connecter au serveur LDAP"
+    92 "Opération non supportée par cette version du protocole LDAP"
+    93 "Le contrôle spécifié n'a pas été trouvé dans le message"
+    94 "Pas de résultat dans le message"
+    95 "Plusde résultats retournés"
+    96 "Boucle lors du traitement des référants"
+    97 "Limite du nombre de référents dépassée"
+}

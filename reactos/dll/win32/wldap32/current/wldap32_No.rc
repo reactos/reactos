@@ -1,0 +1,123 @@
+/*
+ * Norwegian Bokmål resources for WLDAP32
+ *
+ * Copyright 2005 Alexander N. Sørnes <alex@thehandofagony.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
+
+STRINGTABLE DISCARDABLE
+{
+    0 "Suksess"
+    1 "Operasjonsfeil"
+    2 "Protokollfeil"
+    3 "Tidsbegrensning overskredet"
+    4 "Størrelsesbegrensing overskredet"
+    5 "Sammenlikne usann"
+    6 "Sammenlikne sann"
+    7 "Autentiseringsmetoden støttes ikke"
+    8 "Sterk autentisering kreves"
+    9 "Henvisning (v2)"
+    10 "Henvisning"
+    11 "Administrasjonsbegrensing overskredet"
+    12 "Kritisk utvidelse utilgjengelig"
+    13 "Krever konfidensialitet"
+    14 ""
+    15 ""
+    16 "Ingen sånn attributt"
+    17 "Udefinert type"
+    18 "Upassende sammenlikning"
+    19 "Pressovertredelse"
+    20 "Attributt eller verdi finnes allerede"
+    21 "Ugyldig syntaks"
+    22 ""
+    23 ""
+    24 ""
+    25 ""
+    26 ""
+    27 ""
+    28 ""
+    29 ""
+    30 ""
+    31 ""
+    32 "Ikke noe sånt objekt"
+    33 "Alias-problem"
+    34 "Ugyldig DN-syntaks"
+    35 "Er blad"
+    36 "Problem med alias-dereferanse"
+    37 ""
+    38 ""
+    39 ""
+    40 ""
+    41 ""
+    42 ""
+    43 ""
+    44 ""
+    45 ""
+    46 ""
+    47 ""
+    48 "Upassende autentisering"
+    49 "Ugyldige kreditiver"
+    50 "Manglende rettigheter"
+    51 "Opptatt"
+    52 "Utilgjengelig"
+    53 "Uvillig til å utføre"
+    54 "Løkke oppdaget"
+    55 ""
+    56 ""
+    57 ""
+    58 ""
+    59 ""
+    60 "Sorteringskontroller mangler"
+    61 "Feil med indeksrekkevidde"
+    62 ""
+    63 ""
+    64 "Navngivingsovertredelse"
+    65 "Objektklasseovertredelse"
+    66 "Ikke tillatt på ikke-blad"
+    67 "Ikke tillatt på RDN"
+    68 "Finnes allerede"
+    69 "Ingen objektklassemodifiserere"
+    70 "Resultatene er for store"
+    71 "Berører flere DSA'er"
+    72 ""
+    73 ""
+    74 ""
+    75 ""
+    76 ""
+    77 ""
+    78 ""
+    79 ""
+    80 "Annen"
+    81 "Tjener nede"
+    82 "Lokal feil"
+    83 "Kodingsfeil"
+    84 "Dekodingsfeil"
+    85 "Tidsavbrudd"
+    86 "Ukjent autentisering"
+    87 "Filterfeil"
+    88 "Bruker avbrøt"
+    89 "Parameterfeil"
+    90 "Intet minne"
+    91 "Kunne ikke koble til LDAP-tjeneren"
+    92 "Operasjonen støttes ikke av denne versjonen av LDAP-protokollen"
+    93 "Den oppgitte kontrolleren ble ikke funnet i meldingen"
+    94 "Ingen resultater i melding"
+    95 "Flere resultater returnert"
+    96 "Løkke under håndtering av henvisninger"
+    97 "Grense for henvisningshopp overskredet"
+}
