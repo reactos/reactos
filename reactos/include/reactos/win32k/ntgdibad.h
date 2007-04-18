@@ -640,7 +640,7 @@ NtGdiGetMetaRgn (
 	HRGN	hrgn
 	);
 
-/* Should be done in user-mode using shared GDI Objects. */
+/* Should be NtGdiExtGetObjectW. */
 INT STDCALL  NtGdiGetObject(HGDIOBJ  hGDIObj,
                            INT  BufSize,
                            LPVOID  Object);
