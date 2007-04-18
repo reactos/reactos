@@ -575,6 +575,7 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
 {
    HBITMAP hBitmap, hOldBitmap;
    HDC hdcMem;
+   HPALETTE hPal = NULL;
 
    if (!Bits || !BitsInfo)
    {
@@ -586,6 +587,12 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
    hBitmap = NtGdiCreateCompatibleBitmap(hDC, BitsInfo->bmiHeader.biWidth,
                                          BitsInfo->bmiHeader.biHeight);
    hOldBitmap = NtGdiSelectObject(hdcMem, hBitmap);
+
+   if(Usage == DIB_PAL_COLORS)
+   {
+      hPal = NtGdiGetCurrentObject(hDC, OBJ_PAL);
+      hPal = NtGdiSelectPalette(hdcMem, hPal, FALSE);
+   }
 
    if (BitsInfo->bmiHeader.biCompression == BI_RLE4 ||
        BitsInfo->bmiHeader.biCompression == BI_RLE8)
@@ -613,6 +620,9 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
       NtGdiStretchBlt(hDC, XDest, YDest, DestWidth, DestHeight,
                       hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
                       SrcWidth, SrcHeight, ROP, 0);
+
+   if(hPal)
+      NtGdiSelectPalette(hdcMem, hPal, FALSE);
 
    NtGdiSelectObject(hdcMem, hOldBitmap);
    NtGdiDeleteObjectApp(hdcMem);
