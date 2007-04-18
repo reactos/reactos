@@ -763,7 +763,7 @@ CopyImage(
                 }
             }
             HeapFree(GetProcessHeap(), 0, bi);
-            return (HICON)res;
+            return res;
          }
       case IMAGE_ICON:
          {
