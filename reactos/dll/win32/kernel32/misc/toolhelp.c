@@ -760,11 +760,11 @@ Module32NextW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
   {
     BOOL Ret;
 
-    if(Snapshot->ModuleListCount > 0 &&
-       Snapshot->ModuleListIndex < Snapshot->ModuleListCount)
+    if((Snapshot->ModuleListCount > 0) &&
+       (Snapshot->ModuleListIndex < Snapshot->ModuleListCount))
     {
       LPMODULEENTRY32W Entries = (LPMODULEENTRY32W)OffsetToPtr(Snapshot, Snapshot->ModuleListOffset);
-      RtlCopyMemory(lpme, &Entries[Snapshot->ProcessListIndex++], sizeof(MODULEENTRY32W));
+      RtlCopyMemory(lpme, &Entries[Snapshot->ModuleListIndex++], sizeof(MODULEENTRY32W));
       Ret = TRUE;
     }
     else
