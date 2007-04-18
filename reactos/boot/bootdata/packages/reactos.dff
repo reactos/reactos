@@ -114,6 +114,7 @@ dll\directx\dsound\dsound.dll                       1
 dll\directx\dxdiagn\dxdiagn.dll                     1
 dll\directx\ddraw\ddraw.dll                         1
 dll\directx\d3d8thk\d3d8thk.dll                     1
+dll\directx\d3d9\d3d9.dll                           1
 dll\directx\devenum\devenum.dll                     1
 
 dll\keyboard\kbdbe\kbdbe.dll                        1

@@ -1,39 +1,41 @@
 #include <windows.h>
 #include "d3d9.h"
 
+#include <debug.h>
+
 HRESULT DLLAPI Direct3DShaderValidatorCreate9(void)
 {
-    OutputDebugString("Direct3DShaderValidatorCreate9 not implemented.");
+    UNIMPLEMENTED
     return 0;
 }
 
 HRESULT DLLAPI PSGPError(void)
 {
-    OutputDebugString("PSGPError not implemented.");
+    UNIMPLEMENTED
     return 0;
 }
 
 HRESULT DLLAPI PSGPSampleTexture(void)
 {
-    OutputDebugString("PSGPSampleTexture not implemented.");
+    UNIMPLEMENTED
     return 0;
 }
 
 HRESULT DLLAPI DebugSetLevel(void)
 {
-    OutputDebugString("DebugSetLevel not implemented.");
+    UNIMPLEMENTED
     return 0;
 }
 
 HRESULT DLLAPI DebugSetMute(DWORD dw1)
 {
-    OutputDebugString("DebugSetMute not implemented.");
+    UNIMPLEMENTED
     return 0;
 }
 
 DWORD DLLAPI Direct3DCreate9( UINT SDKVersion )
 {
-    OutputDebugString("Direct3DCreate9 not implemented.");
+    UNIMPLEMENTED
     return 0;
 }
 
