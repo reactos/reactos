@@ -68,45 +68,45 @@ CreateActCtxA(
     ZeroMemory(&pActCtxW, sizeof(ACTCTXW));
     pActCtxW.cbSize = sizeof(ACTCTXW);
     pActCtxW.dwFlags = pActCtx->dwFlags;
-	pActCtxW.wLangId = pActCtx->wLangId;
-	pActCtxW.hModule = pActCtx->hModule;
+    pActCtxW.wLangId = pActCtx->wLangId;
+    pActCtxW.hModule = pActCtx->hModule;
     pActCtxW.wProcessorArchitecture = pActCtx->wProcessorArchitecture;
 
     pActCtxW.hModule = pActCtx->hModule;
 
     /* Convert ActCtx Strings */
-	if (pActCtx->lpSource)
-	{
-		BasepAnsiStringToHeapUnicodeString(pActCtx->lpSource,
-											(LPWSTR*) &pActCtxW.lpSource);
-	}
-	if (pActCtx->lpAssemblyDirectory)
-	{
-		BasepAnsiStringToHeapUnicodeString(pActCtx->lpAssemblyDirectory,
-											(LPWSTR*) &pActCtxW.lpAssemblyDirectory);
-	}
-	if (HIWORD(pActCtx->lpResourceName))
-	{
-		BasepAnsiStringToHeapUnicodeString(pActCtx->lpResourceName,
-											(LPWSTR*) &pActCtxW.lpResourceName);
-	}
-	else
-	{
-		pActCtxW.lpResourceName = (LPWSTR) pActCtx->lpResourceName;
-	}
-	if (pActCtx->lpApplicationName)
-	{
-		BasepAnsiStringToHeapUnicodeString(pActCtx->lpApplicationName,
-											(LPWSTR*) &pActCtxW.lpApplicationName);
-	}
+    if (pActCtx->lpSource)
+    {
+        BasepAnsiStringToHeapUnicodeString(pActCtx->lpSource,
+                                          (LPWSTR*) &pActCtxW.lpSource);
+    } 
+    if (pActCtx->lpAssemblyDirectory)
+    {
+        BasepAnsiStringToHeapUnicodeString(pActCtx->lpAssemblyDirectory,
+                                          (LPWSTR*) &pActCtxW.lpAssemblyDirectory);
+    }
+    if (HIWORD(pActCtx->lpResourceName))
+    {
+        BasepAnsiStringToHeapUnicodeString(pActCtx->lpResourceName,
+                                          (LPWSTR*) &pActCtxW.lpResourceName);
+    }
+    else
+    {
+        pActCtxW.lpResourceName = (LPWSTR) pActCtx->lpResourceName;
+    }
+    if (pActCtx->lpApplicationName)
+    {
+        BasepAnsiStringToHeapUnicodeString(pActCtx->lpApplicationName,
+                                          (LPWSTR*) &pActCtxW.lpApplicationName);
+    }
     /* Call the Unicode function */
     hRetVal = CreateActCtxW(&pActCtxW);
 
     /* Clean up */
     RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) pActCtxW.lpSource);
     RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) pActCtxW.lpAssemblyDirectory);
-	if (HIWORD(pActCtx->lpResourceName))
-		RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) pActCtxW.lpResourceName);
+    if (HIWORD(pActCtx->lpResourceName))
+        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) pActCtxW.lpResourceName);
     RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) pActCtxW.lpApplicationName);
 
     return hRetVal;
