@@ -253,7 +253,7 @@ CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 
 
 static BOOL
-CreateToolbar(PMAIN_WND_INFO Info)
+pCreateToolbar(PMAIN_WND_INFO Info)
 {
     INT NumButtons = sizeof(Buttons) / sizeof(Buttons[0]);
 
@@ -488,7 +488,7 @@ ListViewSelectionChanged(PMAIN_WND_INFO Info,
 static VOID
 InitMainWnd(PMAIN_WND_INFO Info)
 {
-    if (!CreateToolbar(Info))
+    if (!pCreateToolbar(Info))
         DisplayString(_T("error creating toolbar"));
 
     if (!CreateListView(Info))

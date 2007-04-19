@@ -9,6 +9,8 @@
 
 #include "precomp.h"
 
+static BOOL pCreateToolbar(PMAIN_WND_INFO Info);
+
 static const TCHAR szMainWndClass[] = TEXT("DevMgmtWndClass");
 
 
@@ -98,7 +100,7 @@ UpdateMainStatusBar(PMAIN_WND_INFO Info)
 
 
 static BOOL
-CreateToolbar(PMAIN_WND_INFO Info)
+pCreateToolbar(PMAIN_WND_INFO Info)
 {
     INT NumButtons = sizeof(Buttons) / sizeof(Buttons[0]);
 
@@ -226,7 +228,7 @@ InitMainWnd(PMAIN_WND_INFO Info)
     HANDLE DevEnumThread;
     HMENU hMenu;
 
-    if (!CreateToolbar(Info))
+    if (!pCreateToolbar(Info))
         DisplayString(_T("error creating toolbar"));
 
     if (!CreateTreeView(Info))
