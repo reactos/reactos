@@ -281,16 +281,12 @@ KeybHardwareProc(IN HWND hwndDlg,
     switch(uMsg)
     {
         case WM_INITDIALOG:
-        {
-
-
-            /* create the hardware page */
+            /* Create the hardware page */
             DeviceCreateHardwarePageEx(hwndDlg,
                                        Guids,
                                        sizeof(Guids) / sizeof(Guids[0]),
                                        HWPD_STANDARDLIST);
             break;
-        }
     }
 
     return FALSE;

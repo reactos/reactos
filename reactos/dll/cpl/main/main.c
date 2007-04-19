@@ -52,77 +52,73 @@ APPLET Applets[NUM_APPLETS] =
 VOID
 InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 {
-  ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-  psp->dwSize = sizeof(PROPSHEETPAGE);
-  psp->dwFlags = PSP_DEFAULT;
-  psp->hInstance = hApplet;
-  psp->pszTemplate = MAKEINTRESOURCE(idDlg);
-  psp->pfnDlgProc = DlgProc;
+    ZeroMemory(psp, sizeof(PROPSHEETPAGE));
+    psp->dwSize = sizeof(PROPSHEETPAGE);
+    psp->dwFlags = PSP_DEFAULT;
+    psp->hInstance = hApplet;
+    psp->pszTemplate = MAKEINTRESOURCE(idDlg);
+    psp->pfnDlgProc = DlgProc;
 }
 
 
 /* Control Panel Callback */
 LONG CALLBACK
 CPlApplet(HWND hwndCpl,
-	  UINT uMsg,
-	  LPARAM lParam1,
-	  LPARAM lParam2)
+          UINT uMsg,
+          LPARAM lParam1,
+          LPARAM lParam2)
 {
-  switch(uMsg)
-  {
-    case CPL_INIT:
-      return TRUE;
-
-    case CPL_GETCOUNT:
-      return NUM_APPLETS;
-
-    case CPL_INQUIRE:
+    switch(uMsg)
     {
-      CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-      UINT uAppIndex = (UINT)lParam1;
+        case CPL_INIT:
+            return TRUE;
 
-      CPlInfo->lData = lParam1;
-      CPlInfo->idIcon = Applets[uAppIndex].idIcon;
-      CPlInfo->idName = Applets[uAppIndex].idName;
-      CPlInfo->idInfo = Applets[uAppIndex].idDescription;
-      break;
+        case CPL_GETCOUNT:
+            return NUM_APPLETS;
+
+        case CPL_INQUIRE:
+        {
+            CPLINFO *CPlInfo = (CPLINFO*)lParam2;
+            UINT uAppIndex = (UINT)lParam1;
+
+            CPlInfo->lData = lParam1;
+            CPlInfo->idIcon = Applets[uAppIndex].idIcon;
+            CPlInfo->idName = Applets[uAppIndex].idName;
+            CPlInfo->idInfo = Applets[uAppIndex].idDescription;
+            break;
+        }
+
+        case CPL_DBLCLK:
+        {
+            UINT uAppIndex = (UINT)lParam1;
+            Applets[uAppIndex].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
+            break;
+        }
     }
 
-    case CPL_DBLCLK:
-    {
-      UINT uAppIndex = (UINT)lParam1;
-      Applets[uAppIndex].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
-      break;
-    }
-  }
-
-  return FALSE;
+    return FALSE;
 }
 
 
 BOOL STDCALL
 DllMain(HINSTANCE hinstDLL,
-	DWORD dwReason,
-	LPVOID lpReserved)
+        DWORD dwReason,
+        LPVOID lpReserved)
 {
-  INITCOMMONCONTROLSEX InitControls;
-  UNREFERENCED_PARAMETER(lpReserved);
+    INITCOMMONCONTROLSEX InitControls;
+    UNREFERENCED_PARAMETER(lpReserved);
 
-  switch(dwReason)
-  {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
+    switch(dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+            InitControls.dwICC = ICC_LISTVIEW_CLASSES | ICC_UPDOWN_CLASS | ICC_BAR_CLASSES;
+            InitCommonControlsEx(&InitControls);
 
-  
+            hApplet = hinstDLL;
+            break;
+    }
 
-    InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    InitControls.dwICC = ICC_LISTVIEW_CLASSES | ICC_UPDOWN_CLASS | ICC_BAR_CLASSES;
-    InitCommonControlsEx(&InitControls);
-
-    hApplet = hinstDLL;
-    break;
-  }
-
-  return TRUE;
+    return TRUE;
 }
 
