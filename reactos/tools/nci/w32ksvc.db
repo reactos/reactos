@@ -74,6 +74,7 @@ NtGdiExtCreatePen			11
 NtGdiExtCreateRegion			3
 NtGdiExtEscape				6
 NtGdiExtFloodFill			5
+NtGdiExtGetObjectW			3
 NtGdiExtSelectClipRgn			3
 NtGdiExtTextOut				8
 NtGdiFillPath				1
@@ -136,7 +137,6 @@ NtGdiGetMetaRgn				2
 NtGdiGetMiterLimit			2
 NtGdiGetNearestColor			2
 NtGdiGetNearestPaletteIndex		2
-NtGdiGetObject				3
 NtGdiGetObjectType			1
 NtGdiGetOutlineTextMetrics		3
 NtGdiGetPaletteEntries			4

@@ -376,7 +376,7 @@ GetObjectA(HGDIOBJ Handle, int Size, LPVOID Buffer)
           SetLastError(ERROR_BUFFER_OVERFLOW);
           return 0;
         }
-      Result = NtGdiGetObject(Handle, sizeof(LOGFONTW), &LogFontW);
+      Result = NtGdiExtGetObjectW(Handle, sizeof(LOGFONTW), &LogFontW);
       if (0 == Result)
         {
           return 0;
@@ -386,7 +386,7 @@ GetObjectA(HGDIOBJ Handle, int Size, LPVOID Buffer)
     }
   else
     {
-      Result = NtGdiGetObject(Handle, Size, Buffer);
+      Result = NtGdiExtGetObjectW(Handle, Size, Buffer);
     }
 
   return Result;
@@ -400,7 +400,7 @@ int
 STDCALL 
 GetObjectW(HGDIOBJ Handle, int Size, LPVOID Buffer)
 {
-  return NtGdiGetObject(Handle, Size, Buffer);
+  return NtGdiExtGetObjectW(Handle, Size, Buffer);
 }
 
 

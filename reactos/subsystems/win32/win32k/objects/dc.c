@@ -1809,7 +1809,7 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
 }
 
 INT STDCALL
-NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
+NtGdiExtGetObjectW(HANDLE handle, INT count, LPVOID buffer)
 {
   INT Ret = 0;
   LPVOID SafeBuf;
