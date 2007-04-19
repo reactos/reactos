@@ -95,7 +95,7 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 		ULONG ptr;
 	        printf("Allocating %d bytes directly ...\n", MemorySize);
 	        ptr = ofw_claim(0,MemorySize,MM_PAGE_SIZE);
-		MemPointer = (PVOID)(REV(ptr));
+		MemPointer = (PVOID)(ptr);
 #endif
 		if( !MemPointer ) 
 		{
