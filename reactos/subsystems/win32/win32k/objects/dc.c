@@ -1808,73 +1808,26 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
   return Result;
 }
 
-
-/***********************************************************************
- * NtGdiGetObject
- *
- * Copies information of the specified gdi object to a buffer
- * and returns the size of the data.
- *
- * @param
- *   handle
- *      [in] Handle to the gdi object to retrieve the data from.
- *
- *   count
- *      [in] Size of the buffer to copy the data to.
- *
- *   buffer
- *      [out] Pointer to the buffer to copy the data to.
- *      This parameter can be NULL.
- *
- * @return
- *   Size of the data of the GDI object, if the function succeeds.
- *   0 if the function fails.
- *
- * @remarks
- *   The function will always return the complete size of the object's data,
- *   but will copy only a maximum of count bytes to the specified buffer.
- *   If the handle is invalid, the function will fail.
- *   If buffer is NULL the function will only return the size of the data.
- *   If buffer is not NULL and count is 0, the function will fail.
- */
 INT STDCALL
 NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
 {
-  INT RetCount;
+  INT Ret = 0;
   LPVOID SafeBuf;
   NTSTATUS Status = STATUS_SUCCESS;
+  INT RetCount = 0;
 
   /* From Wine: GetObject does not SetLastError() on a null object */
-  if (!handle) return 0;
+  if (!handle) return Ret;
 
   RetCount = IntGdiGetObject(handle, 0, NULL);
-  if (!buffer)
+  if ((count <= 0) || (!buffer))
   {
     return RetCount;
   }
 
-  if (!count || !RetCount)
-  {
-    return 0;
-  }
-
-  if (count > RetCount)
-  {
-    count = RetCount;
-  }
-
-  SafeBuf = ExAllocatePoolWithTag(PagedPool, RetCount, TAG_GDIOBJ);
-  if(!SafeBuf)
-  {
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-    return 0;
-  }
-  IntGdiGetObject(handle, RetCount, SafeBuf);
-
   _SEH_TRY
   {
     ProbeForWrite(buffer, count, 1);
-    RtlCopyMemory(buffer, SafeBuf, count);
   }
   _SEH_HANDLE
   {
@@ -1882,15 +1835,43 @@ NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
   }
   _SEH_END;
 
-  ExFreePool(SafeBuf);
-
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
-    return 0;
+    return Ret;
   }
 
-  return RetCount;
+  if ((RetCount) && (count))
+  {
+    SafeBuf = ExAllocatePoolWithTag(PagedPool, count, TAG_GDIOBJ);
+    if(!SafeBuf)
+    {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return Ret;
+    }
+    Ret = IntGdiGetObject(handle, count, SafeBuf);
+
+    _SEH_TRY
+    {
+        /* pointer already probed! */
+        RtlCopyMemory(buffer, SafeBuf, count);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    ExFreePool(SafeBuf);
+
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return 0;
+    }
+  }
+
+  return Ret;
 }
 
 DWORD STDCALL
