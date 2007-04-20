@@ -409,95 +409,6 @@ ButtonProc(IN HWND hwndDlg,
 }
 
 
-#if 0
-static BOOL
-ReadActiveCursorScheme(VOID)
-{
-    HKEY hCuKey;
-    HKEY hCuCursorKey;
-    DWORD dwIndex;
-    TCHAR szValueName[MAX_PATH];
-    DWORD dwValueName;
-    TCHAR szValueData[2000];
-    DWORD dwValueData;
-    LONG dwResult;
-
-    if (RegOpenCurrentUser(KEY_READ, &hCuKey) != ERROR_SUCCESS)
-        return FALSE;
-
-    if (RegOpenKeyEx(hCuKey, _T("Control Panel\\Cursors"), 0, KEY_READ, &hCuCursorKey) != ERROR_SUCCESS)
-    {
-        RegCloseKey(hCuKey);
-        return FALSE;
-    }
-
-    memset(g_szArrow, 0x0, sizeof(g_szArrow));
-    memset(g_szHelp, 0x0, sizeof(g_szHelp));
-    memset(g_szAppStarting, 0x0, sizeof(g_szAppStarting));
-    memset(g_szWait, 0x0, sizeof(g_szWait));
-    memset(g_szCrosshair, 0x0, sizeof(g_szCrosshair));
-    memset(g_szIBeam, 0x0, sizeof(g_szIBeam));
-    memset(g_szNWPen, 0x0, sizeof(g_szNWPen));
-    memset(g_szNo, 0x0, sizeof(g_szNo));
-    memset(g_szSizeNS, 0x0, sizeof(g_szSizeNS));
-    memset(g_szSizeWE, 0x0, sizeof(g_szSizeWE));
-    memset(g_szSizeNWSE, 0x0, sizeof(g_szSizeNWSE));
-    memset(g_szSizeNESW, 0x0, sizeof(g_szSizeNESW));
-    memset(g_szSizeAll, 0x0, sizeof(g_szSizeAll));
-    memset(g_szUpArrow, 0x0, sizeof(g_szUpArrow));
-    memset(g_szHand, 0x0, sizeof(g_szHand));
-
-    dwIndex = 0;
-    for (;;)
-    {
-        dwValueName = sizeof(szValueName) / sizeof(TCHAR);
-        dwValueData = sizeof(szValueData) / sizeof(TCHAR);
-        dwResult = RegEnumValue(hCuCursorKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (LPBYTE)szValueData, &dwValueData);
-        if (dwResult == ERROR_NO_MORE_ITEMS)
-            break;
-
-        if (_tcsicmp(_T("Arrow"), szValueName))
-            _tcsncpy(g_szArrow, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("Help"), szValueName))
-            _tcsncpy(g_szHelp, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("AppStarting"), szValueName))
-            _tcsncpy(g_szAppStarting, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("Wait"), szValueName))
-            _tcsncpy(g_szWait, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("Crosshair"), szValueName))
-            _tcsncpy(g_szCrosshair, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("IBeam"), szValueName))
-            _tcsncpy(g_szIBeam, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("NWPen"), szValueName))
-            _tcsncpy(g_szNWPen, szValueData, MAX_PATH);
-        else if (_tcscmp(_T("No"), szValueName))
-            _tcsncpy(g_szNo, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("SizeNS"), szValueName))
-            _tcsncpy(g_szSizeNS, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("SizeWE"), szValueName))
-            _tcsncpy(g_szSizeWE, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("SizeNWSE"), szValueName))
-            _tcsncpy(g_szSizeNWSE, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("SizeNESW"), szValueName))
-            _tcsncpy(g_szSizeNESW, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("SizeAll"), szValueName))
-            _tcsncpy(g_szSizeAll, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("UpArrow"), szValueName))
-            _tcsncpy(g_szUpArrow, szValueData, MAX_PATH);
-        else if (_tcsicmp(_T("Hand"), szValueName))
-            _tcsncpy(g_szHand, szValueData, MAX_PATH);
-
-        dwIndex++;
-    }
-
-    RegCloseKey(hCuCursorKey);
-    RegCloseKey(hCuKey);
-
-    return TRUE;
-}
-#endif
-
-
 static BOOL
 EnumerateCursorSchemes(HWND hwndDlg)
 {
@@ -638,14 +549,22 @@ RefreshCursorList(HWND hwndDlg, BOOL bInit)
 
     nSel = bInit ? 0 : SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_GETCURSEL, 0, 0);
 
-    SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_RESETCONTENT, 0, 0);
-    for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+    if (bInit)
     {
-        LoadString(hApplet, index, g_CursorData[i].szCursorName, MAX_PATH);
-        SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_ADDSTRING, 0, (LPARAM)i);
+        SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_RESETCONTENT, 0, 0);
+        for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+        {
+            LoadString(hApplet, index, g_CursorData[i].szCursorName, MAX_PATH);
+            SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_ADDSTRING, 0, (LPARAM)i);
+        }
+
+        SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_SETCURSEL, nSel, 0);
+    }
+    else
+    {
+        InvalidateRect(GetDlgItem(hwndDlg, IDC_LISTBOX_CURSOR), NULL, FALSE);
     }
 
-    SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_SETCURSEL, nSel, 0);
     SendDlgItemMessage(hwndDlg, IDC_IMAGE_CURRENT_CURSOR, STM_SETIMAGE, IMAGE_CURSOR,
                        (LPARAM)g_CursorData[nSel].hCursor);
 }
@@ -746,14 +665,18 @@ LoadCurrentCursorScheme(LPTSTR lpName, BOOL bSystem)
         g_CursorData[i].szCursorPath[0] = 0;
     }
 
+#if 0
     if (lpName == NULL)
     {
-//        for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
-//        {
-//            g_CursorData[i].hCursor = LoadCursor(NULL, g_CursorData[i].uDefaultCursorId);
-//        }
+        for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+        {
+            g_CursorData[i].hCursor = LoadCursor(NULL, g_CursorData[i].uDefaultCursorId);
+        }
     }
     else
+#endif
+
+    if (lpName != NULL)
     {
         LPTSTR pStart = lpName;
         LPTSTR pEnd = pStart;
@@ -988,17 +911,13 @@ PointerProc(IN HWND hwndDlg,
 
                 case IDC_BUTTON_USE_DEFAULT_CURSOR:
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTBOX_CURSOR);
-                    lResult = SendMessage(hDlgCtrl, CB_GETCURSEL, 0, 0);
-                    if (lResult != CB_ERR)
+                    lResult = SendMessage(hDlgCtrl, LB_GETCURSEL, 0, 0);
+                    if (lResult != LB_ERR)
                     {
-                        UINT uIndex;
-
-                        /* FIXME */
-                        uIndex = (UINT)SendMessage(hDlgCtrl, LB_GETITEMDATA, (WPARAM)lResult, 0);
-
                         /* Clean the path of the currently selected cursor */
-                        memset(g_CursorData[uIndex].szCursorPath, 0x0, MAX_PATH * sizeof(TCHAR));
+                        memset(g_CursorData[lResult].szCursorPath, 0x0, MAX_PATH * sizeof(TCHAR));
 
+                        /* Update cursor list and preview */
                         ReloadCurrentCursorScheme();
                         RefreshCursorList(hwndDlg, FALSE);
                     }
@@ -1007,19 +926,15 @@ PointerProc(IN HWND hwndDlg,
                 case IDC_BUTTON_BROWSE_CURSOR:
                     memset(buffer, 0x0, sizeof(buffer));
                     hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTBOX_CURSOR);
-                    lResult = SendMessage(hDlgCtrl, CB_GETCURSEL, 0, 0);
-                    if (lResult == CB_ERR)
-                        MessageBox(hwndDlg, _T("CB_ERR"), _T(""),MB_ICONERROR);
+                    lResult = SendMessage(hDlgCtrl, LB_GETCURSEL, 0, 0);
+                    if (lResult == LB_ERR)
+                        MessageBox(hwndDlg, _T("LB_ERR"), _T(""),MB_ICONERROR);
                     if (BrowseCursor(buffer, hwndDlg))
                     {
-                        UINT uIndex;
-
-                        /* FIXME */
-                        uIndex = (UINT)SendMessage(hDlgCtrl, LB_GETITEMDATA, (WPARAM)lResult, 0);
-
                         /* Store the new cursor file path */
-                        _tcsncpy(g_CursorData[uIndex].szCursorPath, buffer, MAX_PATH);
+                        _tcsncpy(g_CursorData[lResult].szCursorPath, buffer, MAX_PATH);
 
+                        /* Update cursor list and preview */
                         ReloadCurrentCursorScheme();
                         RefreshCursorList(hwndDlg, FALSE);
                     }
