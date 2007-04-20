@@ -325,11 +325,53 @@ GetRelAbs(
 }
 
 
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetAndSetDCDWord( HDC hDC, INT u, DWORD dwIn, DWORD Unk1, DWORD Unk2, DWORD Unk3 )
+{
+  BOOL Ret = TRUE; 
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+       return 0; //call MFDRV
+    else
+    {
+       PLDC pLDC = GdiGetLDC(hDC);
+       if ( !pLDC )
+       {
+           SetLastError(ERROR_INVALID_HANDLE);
+           return 0;
+       }
+       if (pLDC->iType == LDC_EMFLDC)
+       {
+          Ret = TRUE; //call EMFDRV
+          if (Ret)
+             return u;
+          return 0;
+       }
+    }
+  }
+// Ret = NtGdiGetAndSetDCDword( hDC, u, dwIn, (DWORD*) &u );                
+  if (Ret) 
+     return u;
+  else 
+     SetLastError(ERROR_INVALID_HANDLE);
+  return 0;
+}
+
+
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetDCDWord( HDC hDC, INT u, DWORD Result )
 {
-BOOL Ret = TRUE; //NtGdiGetDCDword( hDC, u, (DWORD*) &u );
+  BOOL Ret = TRUE; //NtGdiGetDCDword( hDC, u, (DWORD*) &u );
   if (!Ret) return Result;
   else return u;
 }
