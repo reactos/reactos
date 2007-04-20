@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 
@@ -49,156 +49,6 @@ typedef struct OleAdviseHolderImpl
   IAdviseSink** arrayOfSinks;
 
 } OleAdviseHolderImpl;
-
-static HRESULT EnumOleSTATDATA_Construct(OleAdviseHolderImpl *pOleAdviseHolder, ULONG index, IEnumSTATDATA **ppenum);
-
-typedef struct
-{
-    const IEnumSTATDATAVtbl *lpvtbl;
-    LONG ref;
-
-    ULONG index;
-    OleAdviseHolderImpl *pOleAdviseHolder;
-} EnumOleSTATDATA;
-
-static HRESULT WINAPI EnumOleSTATDATA_QueryInterface(
-    IEnumSTATDATA *iface, REFIID riid, void **ppv)
-{
-    TRACE("(%s, %p)\n", debugstr_guid(riid), ppv);
-    if (IsEqualIID(riid, &IID_IUnknown) ||
-        IsEqualIID(riid, &IID_IEnumSTATDATA))
-    {
-        IUnknown_AddRef(iface);
-        *ppv = iface;
-        return S_OK;
-    }
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI EnumOleSTATDATA_AddRef(
-    IEnumSTATDATA *iface)
-{
-    EnumOleSTATDATA *This = (EnumOleSTATDATA *)iface;
-    TRACE("()\n");
-    return InterlockedIncrement(&This->ref);
-}
-
-static ULONG WINAPI EnumOleSTATDATA_Release(
-    IEnumSTATDATA *iface)
-{
-    EnumOleSTATDATA *This = (EnumOleSTATDATA *)iface;
-    LONG refs = InterlockedDecrement(&This->ref);
-    TRACE("()\n");
-    if (!refs)
-    {
-        IOleAdviseHolder_Release((IOleAdviseHolder *)This->pOleAdviseHolder);
-        HeapFree(GetProcessHeap(), 0, This);
-    }
-    return refs;
-}
-
-static HRESULT WINAPI EnumOleSTATDATA_Next(
-    IEnumSTATDATA *iface, ULONG celt, LPSTATDATA rgelt,
-    ULONG *pceltFetched)
-{
-    EnumOleSTATDATA *This = (EnumOleSTATDATA *)iface;
-    HRESULT hr = S_OK;
-
-    TRACE("(%d, %p, %p)\n", celt, rgelt, pceltFetched);
-
-    if (pceltFetched)
-        *pceltFetched = 0;
-
-    for (; celt; celt--, rgelt++)
-    {
-        while ((This->index < This->pOleAdviseHolder->maxSinks) && 
-               !This->pOleAdviseHolder->arrayOfSinks[This->index])
-        {
-            This->index++;
-        }
-        if (This->index >= This->pOleAdviseHolder->maxSinks)
-        {
-            hr = S_FALSE;
-            break;
-        }
-
-        memset(&rgelt->formatetc, 0, sizeof(rgelt->formatetc));
-        rgelt->advf = 0;
-        rgelt->pAdvSink = This->pOleAdviseHolder->arrayOfSinks[This->index];
-        IAdviseSink_AddRef(rgelt->pAdvSink);
-        rgelt->dwConnection = This->index;
-
-        if (pceltFetched)
-            (*pceltFetched)++;
-        This->index++;
-    }
-    return hr;
-}
-
-static HRESULT WINAPI EnumOleSTATDATA_Skip(
-    IEnumSTATDATA *iface, ULONG celt)
-{
-    EnumOleSTATDATA *This = (EnumOleSTATDATA *)iface;
-
-    TRACE("(%d)\n", celt);
-
-    for (; celt; celt--)
-    {
-        while ((This->index < This->pOleAdviseHolder->maxSinks) && 
-               !This->pOleAdviseHolder->arrayOfSinks[This->index])
-        {
-            This->index++;
-        }
-        if (This->index >= This->pOleAdviseHolder->maxSinks)
-            return S_FALSE;
-        This->index++;
-    }
-    return S_OK;
-}
-
-static HRESULT WINAPI EnumOleSTATDATA_Reset(
-    IEnumSTATDATA *iface)
-{
-    EnumOleSTATDATA *This = (EnumOleSTATDATA *)iface;
-
-    TRACE("()\n");
-
-    This->index = 0;
-    return S_OK;
-}
-
-static HRESULT WINAPI EnumOleSTATDATA_Clone(
-    IEnumSTATDATA *iface,
-    IEnumSTATDATA **ppenum)
-{
-    EnumOleSTATDATA *This = (EnumOleSTATDATA *)iface;
-    return EnumOleSTATDATA_Construct(This->pOleAdviseHolder, This->index, ppenum);
-}
-
-static const IEnumSTATDATAVtbl EnumOleSTATDATA_VTable =
-{
-    EnumOleSTATDATA_QueryInterface,
-    EnumOleSTATDATA_AddRef,
-    EnumOleSTATDATA_Release,
-    EnumOleSTATDATA_Next,
-    EnumOleSTATDATA_Skip,
-    EnumOleSTATDATA_Reset,
-    EnumOleSTATDATA_Clone
-};
-
-static HRESULT EnumOleSTATDATA_Construct(OleAdviseHolderImpl *pOleAdviseHolder, ULONG index, IEnumSTATDATA **ppenum)
-{
-    EnumOleSTATDATA *This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
-    if (!This)
-        return E_OUTOFMEMORY;
-    This->lpvtbl = &EnumOleSTATDATA_VTable;
-    This->ref = 1;
-    This->index = index;
-    This->pOleAdviseHolder = pOleAdviseHolder;
-    IOleAdviseHolder_AddRef((IOleAdviseHolder *)pOleAdviseHolder);
-    *ppenum = (IEnumSTATDATA *)&This->lpvtbl;
-    return S_OK;    
-}
 
 /**************************************************************************
  *  OleAdviseHolderImpl_Destructor
@@ -277,7 +127,7 @@ static ULONG WINAPI OleAdviseHolderImpl_AddRef(
   OleAdviseHolderImpl *This = (OleAdviseHolderImpl *)iface;
   ULONG ref = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p)->(ref=%d)\n", This, ref - 1);
+  TRACE("(%p)->(ref=%ld)\n", This, ref - 1);
 
   return ref;
 }
@@ -290,7 +140,7 @@ static ULONG WINAPI OleAdviseHolderImpl_Release(
 {
   OleAdviseHolderImpl *This = (OleAdviseHolderImpl *)iface;
   ULONG ref;
-  TRACE("(%p)->(ref=%d)\n", This, This->ref);
+  TRACE("(%p)->(ref=%ld)\n", This, This->ref);
   ref = InterlockedDecrement(&This->ref);
 
   if (ref == 0) OleAdviseHolderImpl_Destructor(This);
@@ -374,7 +224,7 @@ static HRESULT WINAPI OleAdviseHolderImpl_Unadvise(
 {
   OleAdviseHolderImpl *This = (OleAdviseHolderImpl *)iface;
 
-  TRACE("(%p)->(%u)\n", This, dwConnection);
+  TRACE("(%p)->(%lu)\n", This, dwConnection);
 
   /*
    * So we don't return 0 as a cookie, the index was
@@ -408,12 +258,11 @@ static HRESULT WINAPI
 OleAdviseHolderImpl_EnumAdvise (LPOLEADVISEHOLDER iface, IEnumSTATDATA **ppenumAdvise)
 {
     OleAdviseHolderImpl *This = (OleAdviseHolderImpl *)iface;
-
-    TRACE("(%p)->(%p)\n", This, ppenumAdvise);
+    FIXME("(%p)->(%p)\n", This, ppenumAdvise);
 
     *ppenumAdvise = NULL;
 
-    return EnumOleSTATDATA_Construct(This, 0, ppenumAdvise);
+    return S_OK;
 }
 
 /******************************************************************************
@@ -422,25 +271,11 @@ OleAdviseHolderImpl_EnumAdvise (LPOLEADVISEHOLDER iface, IEnumSTATDATA **ppenumA
 static HRESULT WINAPI
 OleAdviseHolderImpl_SendOnRename (LPOLEADVISEHOLDER iface, IMoniker *pmk)
 {
-    IEnumSTATDATA *pEnum;
-    HRESULT hr;
+    OleAdviseHolderImpl *This = (OleAdviseHolderImpl *)iface;
+    FIXME("(%p)->(%p)\n", This, pmk);
 
-    TRACE("(%p)->(%p)\n", iface, pmk);
 
-    hr = IOleAdviseHolder_EnumAdvise(iface, &pEnum);
-    if (SUCCEEDED(hr))
-    {
-        STATDATA statdata;
-        while (IEnumSTATDATA_Next(pEnum, 1, &statdata, NULL) == S_OK)
-        {
-            IAdviseSink_OnRename(statdata.pAdvSink, pmk);
-
-            IAdviseSink_Release(statdata.pAdvSink);
-        }
-        IEnumSTATDATA_Release(pEnum);
-    }
-
-    return hr;
+    return S_OK;
 }
 
 /******************************************************************************
@@ -449,25 +284,10 @@ OleAdviseHolderImpl_SendOnRename (LPOLEADVISEHOLDER iface, IMoniker *pmk)
 static HRESULT WINAPI
 OleAdviseHolderImpl_SendOnSave (LPOLEADVISEHOLDER iface)
 {
-    IEnumSTATDATA *pEnum;
-    HRESULT hr;
+    OleAdviseHolderImpl *This = (OleAdviseHolderImpl *)iface;
+    FIXME("(%p)\n", This);
 
-    TRACE("(%p)->()\n", iface);
-
-    hr = IOleAdviseHolder_EnumAdvise(iface, &pEnum);
-    if (SUCCEEDED(hr))
-    {
-        STATDATA statdata;
-        while (IEnumSTATDATA_Next(pEnum, 1, &statdata, NULL) == S_OK)
-        {
-            IAdviseSink_OnSave(statdata.pAdvSink);
-
-            IAdviseSink_Release(statdata.pAdvSink);
-        }
-        IEnumSTATDATA_Release(pEnum);
-    }
-
-    return hr;
+    return S_OK;
 }
 
 /******************************************************************************
@@ -476,25 +296,11 @@ OleAdviseHolderImpl_SendOnSave (LPOLEADVISEHOLDER iface)
 static HRESULT WINAPI
 OleAdviseHolderImpl_SendOnClose (LPOLEADVISEHOLDER iface)
 {
-    IEnumSTATDATA *pEnum;
-    HRESULT hr;
+    OleAdviseHolderImpl *This = (OleAdviseHolderImpl *)iface;
+    FIXME("(%p)\n", This);
 
-    TRACE("(%p)->()\n", iface);
 
-    hr = IOleAdviseHolder_EnumAdvise(iface, &pEnum);
-    if (SUCCEEDED(hr))
-    {
-        STATDATA statdata;
-        while (IEnumSTATDATA_Next(pEnum, 1, &statdata, NULL) == S_OK)
-        {
-            IAdviseSink_OnClose(statdata.pAdvSink);
-
-            IAdviseSink_Release(statdata.pAdvSink);
-        }
-        IEnumSTATDATA_Release(pEnum);
-    }
-
-    return hr;
+    return S_OK;
 }
 
 /**************************************************************************
@@ -555,7 +361,6 @@ typedef struct DataAdviseHolder
   LONG                  ref;
   DWORD                 maxCons;
   DataAdviseConnection* Connections;
-  IDataObject*          delegate;
 } DataAdviseHolder;
 
 /* this connection has also has been advised to the delegate data object */
@@ -573,11 +378,6 @@ static void DataAdviseHolder_Destructor(DataAdviseHolder* ptrToDestroy)
   {
     if (ptrToDestroy->Connections[index].sink != NULL)
     {
-      if (ptrToDestroy->delegate && 
-          (ptrToDestroy->Connections[index].advf & WINE_ADVF_REMOTE))
-        IDataObject_DUnadvise(ptrToDestroy->delegate,
-          ptrToDestroy->Connections[index].remote_connection);
-
       IAdviseSink_Release(ptrToDestroy->Connections[index].sink);
       ptrToDestroy->Connections[index].sink = NULL;
     }
@@ -645,7 +445,7 @@ static ULONG WINAPI       DataAdviseHolder_AddRef(
   IDataAdviseHolder*      iface)
 {
   DataAdviseHolder *This = (DataAdviseHolder *)iface;
-  TRACE("(%p) (ref=%d)\n", This, This->ref);
+  TRACE("(%p) (ref=%ld)\n", This, This->ref);
   return InterlockedIncrement(&This->ref);
 }
 
@@ -659,7 +459,7 @@ static ULONG WINAPI DataAdviseHolder_Release(
 {
   DataAdviseHolder *This = (DataAdviseHolder *)iface;
   ULONG ref;
-  TRACE("(%p) (ref=%d)\n", This, This->ref);
+  TRACE("(%p) (ref=%ld)\n", This, This->ref);
 
   /*
    * Decrease the reference count on this object.
@@ -690,7 +490,7 @@ static HRESULT WINAPI DataAdviseHolder_Advise(
 
   DataAdviseHolder *This = (DataAdviseHolder *)iface;
 
-  TRACE("(%p)->(%p, %p, %08x, %p, %p)\n", This, pDataObject, pFetc, advf,
+  TRACE("(%p)->(%p, %p, %08lx, %p, %p)\n", This, pDataObject, pFetc, advf,
 	pAdvise, pdwConnection);
   /*
    * Sanity check
@@ -723,42 +523,14 @@ static HRESULT WINAPI DataAdviseHolder_Advise(
    * Store the new sink
    */
   This->Connections[index].sink = pAdvise;
-  This->Connections[index].advf = advf & ~WINE_ADVF_REMOTE;
   memcpy(&(This->Connections[index].fmat), pFetc, sizeof(FORMATETC));
-  if (pFetc->ptd)
-  {
-    This->Connections[index].fmat.ptd = CoTaskMemAlloc(pFetc->ptd->tdSize);
-    if (!This->Connections[index].fmat.ptd)
-    {
-      IDataAdviseHolder_Unadvise(iface, index + 1);
-      return E_OUTOFMEMORY;
-    }
-    memcpy(This->Connections[index].fmat.ptd, pFetc->ptd, pFetc->ptd->tdSize);
-  }
+  This->Connections[index].advf = advf & ~WINE_ADVF_REMOTE;
 
   if (This->Connections[index].sink != NULL) {
     IAdviseSink_AddRef(This->Connections[index].sink);
-
-    /* if we are already connected advise the remote object */
-    if (This->delegate)
-    {
-        HRESULT hr;
-
-        hr = IDataObject_DAdvise(This->delegate, &This->Connections[index].fmat,
-                                 This->Connections[index].advf,
-                                 This->Connections[index].sink,
-                                 &This->Connections[index].remote_connection);
-        if (FAILED(hr))
-        {
-            IDataAdviseHolder_Unadvise(iface, index + 1);
-            return hr;
-        }
-        This->Connections[index].advf |= WINE_ADVF_REMOTE;
-    }
-    else if(advf & ADVF_PRIMEFIRST)
-      /* only do this if we have no delegate, since in the above case the
-       * delegate will do the priming for us */
+    if(advf & ADVF_PRIMEFIRST) {
       IDataAdviseHolder_SendOnDataChange(iface, pDataObject, 0, advf);
+    }
   }
   /*
    * Return the index as the cookie.
@@ -779,7 +551,7 @@ static HRESULT WINAPI     DataAdviseHolder_Unadvise(
 {
   DataAdviseHolder *This = (DataAdviseHolder *)iface;
 
-  TRACE("(%p)->(%u)\n", This, dwConnection);
+  TRACE("(%p)->(%lu)\n", This, dwConnection);
 
   /*
    * So we don't return 0 as a cookie, the index was
@@ -797,16 +569,11 @@ static HRESULT WINAPI     DataAdviseHolder_Unadvise(
   if (This->Connections[dwConnection].sink == NULL)
     return OLE_E_NOCONNECTION;
 
-  if (This->delegate && This->Connections[dwConnection].advf & WINE_ADVF_REMOTE)
-    IDataObject_DUnadvise(This->delegate,
-      This->Connections[dwConnection].remote_connection);
-
   /*
    * Release the sink and mark the spot in the list as free.
    */
   IAdviseSink_Release(This->Connections[dwConnection].sink);
   memset(&(This->Connections[dwConnection]), 0, sizeof(DataAdviseConnection));
-
   return S_OK;
 }
 
@@ -834,17 +601,16 @@ static HRESULT WINAPI     DataAdviseHolder_SendOnDataChange(
   STGMEDIUM stg;
   HRESULT res;
 
-  TRACE("(%p)->(%p,%08x,%08x)\n", This, pDataObject, dwReserved, advf);
+  TRACE("(%p)->(%p,%08lx,%08lx)\n", This, pDataObject, dwReserved, advf);
 
   for(index = 0; index < This->maxCons; index++) {
     if(This->Connections[index].sink != NULL) {
-      memset(&stg, 0, sizeof(stg));
       if(!(This->Connections[index].advf & ADVF_NODATA)) {
 	TRACE("Calling IDataObject_GetData\n");
 	res = IDataObject_GetData(pDataObject,
 				  &(This->Connections[index].fmat),
 				  &stg);
-	TRACE("returns %08x\n", res);
+	TRACE("returns %08lx\n", res);
       }
       TRACE("Calling IAdviseSink_OnDataChange\n");
       IAdviseSink_OnDataChange(This->Connections[index].sink,
@@ -892,26 +658,13 @@ HRESULT DataAdviseHolder_OnConnect(IDataAdviseHolder *iface, IDataObject *pDeleg
       This->Connections[index].advf |= WINE_ADVF_REMOTE;
     }
   }
-  This->delegate = pDelegate;
+  /* FIXME: store pDelegate somewhere */
   return hr;
 }
 
 void DataAdviseHolder_OnDisconnect(IDataAdviseHolder *iface)
 {
-  DataAdviseHolder *This = (DataAdviseHolder *)iface;
-  DWORD index;
-
-  for(index = 0; index < This->maxCons; index++)
-  {
-    if((This->Connections[index].sink != NULL) &&
-       (This->Connections[index].advf & WINE_ADVF_REMOTE))
-    {
-      IDataObject_DUnadvise(This->delegate,
-        This->Connections[index].remote_connection);
-      This->Connections[index].advf &= ~WINE_ADVF_REMOTE;
-    }
-  }
-  This->delegate = NULL;
+    /* FIXME: Unadvise all remote interfaces */
 }
 
 /******************************************************************************
@@ -930,7 +683,6 @@ static IDataAdviseHolder* DataAdviseHolder_Constructor(void)
 				     HEAP_ZERO_MEMORY,
 				     newHolder->maxCons *
 				     sizeof(DataAdviseConnection));
-  newHolder->delegate = NULL;
 
   TRACE("returning %p\n", newHolder);
   return (IDataAdviseHolder*)newHolder;

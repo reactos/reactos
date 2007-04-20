@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */ 
 
 
@@ -28,8 +28,8 @@ ME_DisplayItem *ME_FindRowStart(ME_Context *c, ME_DisplayItem *item,
                                 int nRelPos) {
   ME_DisplayItem *para = ME_GetParagraph(item);
   ME_MustBeWrapped(c, para);
-  if(nRelPos<=0) { /* if this or preceding row */
-    do {
+  if(nRelPos>=0) { /* if this or preceding row */
+    while(nRelPos<=0) {
       ME_DisplayItem *item2 = ME_FindItemBack(item, diStartRowOrParagraph);
       if (item2->type == diParagraph)
       {
@@ -50,7 +50,8 @@ ME_DisplayItem *ME_FindRowStart(ME_Context *c, ME_DisplayItem *item,
       }
       assert(0 == "bug in FindItemBack(item, diStartRowOrParagraph)");
       item = item2;
-    } while(1);
+    }
+    return item;
   }
   while(nRelPos>0) { /* if one of the next rows */
     ME_DisplayItem *item2 = ME_FindItemFwd(item, diStartRowOrParagraph);

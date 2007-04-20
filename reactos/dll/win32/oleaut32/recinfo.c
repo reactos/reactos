@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include <stdarg.h>
@@ -157,7 +157,7 @@ static ULONG WINAPI IRecordInfoImpl_AddRef(IRecordInfo *iface)
 {
     IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) -> %d\n", This, ref);
+    TRACE("(%p) -> %ld\n", This, ref);
     return ref;
 }
 
@@ -166,7 +166,7 @@ static ULONG WINAPI IRecordInfoImpl_Release(IRecordInfo *iface)
     IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) -> %d\n", This, ref);
+    TRACE("(%p) -> %ld\n", This, ref);
 
     if(!ref) {
         int i;
@@ -365,7 +365,7 @@ static HRESULT WINAPI IRecordInfoImpl_PutField(IRecordInfo *iface, ULONG wFlags,
     IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
     int i;
 
-    TRACE("(%p)->(%08x %p %s %p)\n", This, wFlags, pvData, debugstr_w(szFieldName),
+    TRACE("(%p)->(%08lx %p %s %p)\n", This, wFlags, pvData, debugstr_w(szFieldName),
                                     pvarField);
 
     if(!pvData || !szFieldName || !pvarField
@@ -393,7 +393,7 @@ static HRESULT WINAPI IRecordInfoImpl_PutFieldNoCopy(IRecordInfo *iface, ULONG w
     IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
     int i;
 
-    FIXME("(%p)->(%08x %p %s %p) stub\n", This, wFlags, pvData, debugstr_w(szFieldName), pvarField);
+    FIXME("(%p)->(%08lx %p %s %p) stub\n", This, wFlags, pvData, debugstr_w(szFieldName), pvarField);
 
     if(!pvData || !szFieldName || !pvarField
             || (wFlags != INVOKE_PROPERTYPUTREF && wFlags != INVOKE_PROPERTYPUT))
@@ -512,7 +512,7 @@ HRESULT WINAPI GetRecordInfoFromGuids(REFGUID rGuidTypeLib, ULONG uVerMajor,
     ITypeLib *pTypeLib;
     HRESULT hres;
     
-    TRACE("(%p,%d,%d,%d,%p,%p)\n", rGuidTypeLib, uVerMajor, uVerMinor,
+    TRACE("(%p,%ld,%ld,%ld,%p,%p)\n", rGuidTypeLib, uVerMajor, uVerMinor,
             lcid, rGuidTypeInfo, ppRecInfo);
 
     hres = LoadRegTypeLib(rGuidTypeLib, uVerMajor, uVerMinor, lcid, &pTypeLib);
@@ -551,7 +551,7 @@ HRESULT WINAPI GetRecordInfoFromTypeInfo(ITypeInfo* pTI, IRecordInfo** ppRecInfo
     
     hres = ITypeInfo_GetTypeAttr(pTI, &typeattr);
     if(FAILED(hres) || !typeattr) {
-        WARN("GetTypeAttr failed: %08x\n", hres);
+        WARN("GetTypeAttr failed: %08lx\n", hres);
         return hres;
     }
 
@@ -560,7 +560,7 @@ HRESULT WINAPI GetRecordInfoFromTypeInfo(ITypeInfo* pTI, IRecordInfo** ppRecInfo
         memcpy(&guid, &typeattr->guid, sizeof(GUID));
         ITypeInfo_ReleaseTypeAttr(pTI, typeattr);
         if(FAILED(hres)) {
-            WARN("GetRefTypeInfo failed: %08x\n", hres);
+            WARN("GetRefTypeInfo failed: %08lx\n", hres);
             return hres;
         }
         ITypeInfo_GetTypeAttr(pTypeInfo, &typeattr);
@@ -611,7 +611,7 @@ HRESULT WINAPI GetRecordInfoFromTypeInfo(ITypeInfo* pTI, IRecordInfo** ppRecInfo
         hres = ITypeInfo_GetDocumentation(pTypeInfo, vardesc->memid, &ret->fields[i].name,
                 NULL, NULL, NULL);
         if(FAILED(hres))
-            WARN("GetDocumentation failed: %08x\n", hres);
+            WARN("GetDocumentation failed: %08lx\n", hres);
         ITypeInfo_ReleaseVarDesc(pTypeInfo, vardesc);
     }
         

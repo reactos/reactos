@@ -20,7 +20,7 @@
 @ stdcall CoFreeAllLibraries()
 @ stdcall CoFreeLibrary(long)
 @ stdcall CoFreeUnusedLibraries()
-@ stdcall CoGetCallContext(ptr ptr)
+@ stub CoGetCallContext           #@ stdcall (ptr ptr) return 0,ERR_NOTIMPLEMENTED
 @ stub CoGetCallerTID
 @ stdcall CoGetClassObject(ptr long ptr ptr ptr)
 @ stub CoGetCurrentLogicalThreadId
@@ -30,13 +30,13 @@
 @ stdcall CoGetInterfaceAndReleaseStream(ptr ptr ptr)
 @ stdcall CoGetMalloc(long ptr)
 @ stdcall CoGetMarshalSizeMax(ptr ptr ptr long ptr long)
-@ stdcall CoGetObject(wstr ptr ptr ptr)
+@ stub CoGetObject
 @ stdcall CoGetPSClsid(ptr ptr)
 @ stdcall CoGetStandardMarshal(ptr ptr long ptr long ptr)
 @ stdcall CoGetState(ptr)
 @ stub CoGetTIDFromIPID
 @ stdcall CoGetTreatAsClass(ptr ptr)
-@ stdcall CoImpersonateClient()
+@ stub CoImpersonateClient
 @ stdcall CoInitialize(ptr)
 @ stdcall CoInitializeEx(ptr long)
 @ stdcall CoInitializeSecurity(ptr long ptr ptr long long ptr long ptr)
@@ -49,19 +49,19 @@
 @ stdcall CoMarshalInterThreadInterfaceInStream(ptr ptr ptr)
 @ stdcall CoMarshalInterface(ptr ptr ptr long ptr long)
 @ stub CoQueryAuthenticationServices
-@ stdcall CoQueryClientBlanket(ptr ptr ptr ptr ptr ptr ptr)
+@ stub CoQueryClientBlanket
 @ stdcall CoQueryProxyBlanket(ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stub CoQueryReleaseObject
-@ stdcall CoRegisterChannelHook(ptr ptr)
+@ stub CoRegisterChannelHook
 @ stdcall CoRegisterClassObject(ptr ptr long long ptr)
 @ stdcall CoRegisterMallocSpy (ptr)
 @ stdcall CoRegisterMessageFilter(ptr ptr)
-@ stdcall CoRegisterPSClsid(ptr ptr)
+@ stub CoRegisterPSClsid          #@ stdcall (ptr ptr) return 0,ERR_NOTIMPLEMENTED
 @ stub CoRegisterSurrogate
 @ stdcall CoReleaseMarshalData(ptr)
 @ stdcall CoReleaseServerProcess()
 @ stdcall CoResumeClassObjects()
-@ stdcall CoRevertToSelf()
+@ stub CoRevertToSelf             #@ stdcall () return 0,ERR_NOTIMPLEMENTED
 @ stdcall CoRevokeClassObject(long)
 @ stdcall CoRevokeMallocSpy()
 @ stdcall CoSetProxyBlanket(ptr long long wstr long long ptr long)
@@ -76,7 +76,6 @@
 @ stub CoUnloadingWOW
 @ stdcall CoUnmarshalHresult(ptr ptr)
 @ stdcall CoUnmarshalInterface(ptr ptr ptr)
-@ stdcall CoWaitForMultipleHandles(long long long ptr ptr)
 @ stdcall CreateAntiMoniker(ptr)
 @ stdcall CreateBindCtx(long ptr)
 @ stdcall CreateClassMoniker(ptr ptr)
@@ -136,14 +135,14 @@
 @ stdcall HMENU_UserMarshal(ptr ptr ptr)
 @ stdcall HMENU_UserSize(ptr long ptr)
 @ stdcall HMENU_UserUnmarshal(ptr ptr ptr)
-@ stdcall HMETAFILEPICT_UserFree(ptr ptr)
-@ stdcall HMETAFILEPICT_UserMarshal(ptr ptr ptr)
-@ stdcall HMETAFILEPICT_UserSize(ptr long ptr)
-@ stdcall HMETAFILEPICT_UserUnmarshal(ptr ptr ptr)
-@ stdcall HMETAFILE_UserFree(ptr ptr)
-@ stdcall HMETAFILE_UserMarshal(ptr ptr ptr)
-@ stdcall HMETAFILE_UserSize(ptr long ptr)
-@ stdcall HMETAFILE_UserUnmarshal(ptr ptr ptr)
+@ stub HMETAFILEPICT_UserFree
+@ stub HMETAFILEPICT_UserMarshal
+@ stub HMETAFILEPICT_UserSize
+@ stub HMETAFILEPICT_UserUnmarshal
+@ stub HMETAFILE_UserFree
+@ stub HMETAFILE_UserMarshal
+@ stub HMETAFILE_UserSize
+@ stub HMETAFILE_UserUnmarshal
 @ stdcall HPALETTE_UserFree(ptr ptr)
 @ stdcall HPALETTE_UserMarshal(ptr ptr ptr)
 @ stdcall HPALETTE_UserSize(ptr long ptr)
@@ -201,7 +200,7 @@
 @ stdcall OleLoadFromStream(ptr ptr ptr)
 @ stdcall OleLockRunning(ptr long long)
 @ stdcall OleMetafilePictFromIconAndLabel(long ptr ptr long)
-@ stdcall OleNoteObjectVisible(ptr long)
+@ stub OleNoteObjectVisible
 @ stdcall OleQueryCreateFromData(ptr)
 @ stdcall OleQueryLinkFromData(ptr)
 @ stdcall OleRegEnumFormatEtc(ptr long ptr)

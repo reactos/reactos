@@ -2,7 +2,6 @@
  * RichEdit - functions working on paragraphs of text (diParagraph).
  * 
  * Copyright 2004 by Krzysztof Foltman
- * Copyright 2006 by Phil Krylov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,14 +15,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */ 
 
 #include "editor.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
-static const WCHAR wszParagraphSign[] = {0xB6, 0};
+static WCHAR wszParagraphSign[] = {0xB6, 0};
 
 void ME_MakeFirstParagraph(HDC hDC, ME_TextBuffer *text)
 {
@@ -92,15 +91,6 @@ void ME_MarkForWrapping(ME_TextEditor *editor, ME_DisplayItem *first, ME_Display
   }
 }
 
-void ME_MarkForPainting(ME_TextEditor *editor, ME_DisplayItem *first, ME_DisplayItem *last)
-{
-  while(first != last)
-  {
-    first->member.para.nFlags |= MEPF_REPAINT;
-    first = first->member.para.next_para;
-  }
-}
-
 /* split paragraph at the beginning of the run */
 ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run, ME_Style *style)
 {
@@ -143,35 +133,6 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run, ME
   new_para->member.para.nLeftMargin = run_para->member.para.nLeftMargin;
   new_para->member.para.nRightMargin = run_para->member.para.nRightMargin;
   new_para->member.para.nFirstMargin = run_para->member.para.nFirstMargin;
-
-  new_para->member.para.bTable = run_para->member.para.bTable;
-  
-  /* Inherit previous cell definitions if any */
-  new_para->member.para.pCells = NULL;
-  if (run_para->member.para.pCells)
-  {
-    ME_TableCell *pCell, *pNewCell;
-
-    for (pCell = run_para->member.para.pCells; pCell; pCell = pCell->next)
-    {
-      pNewCell = ALLOC_OBJ(ME_TableCell);
-      pNewCell->nRightBoundary = pCell->nRightBoundary;
-      pNewCell->next = NULL;
-      if (new_para->member.para.pCells)
-        new_para->member.para.pLastCell->next = pNewCell;
-      else
-        new_para->member.para.pCells = pNewCell;
-      new_para->member.para.pLastCell = pNewCell;
-    }
-  }
-    
-  /* fix paragraph properties. FIXME only needed when called from RTF reader */
-  if (run_para->member.para.pCells && !run_para->member.para.bTable)
-  {
-    /* Paragraph does not have an \intbl keyword, so any table definition
-     * stored is invalid */
-    ME_DestroyTableCellList(run_para);
-  }
   
   /* insert paragraph into paragraph double linked list */
   new_para->member.para.prev_para = run_para;
@@ -254,11 +215,6 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp)
   ME_Remove(pRun);
   ME_DestroyDisplayItem(pRun);
 
-  if (editor->pLastSelStartPara == pNext)
-    editor->pLastSelStartPara = tp;
-  if (editor->pLastSelEndPara == pNext)
-    editor->pLastSelEndPara = tp;
-    
   tp->member.para.next_para = pNext->member.para.next_para;
   pNext->member.para.next_para->member.para.prev_para = tp;
   ME_Remove(pNext);
@@ -347,37 +303,21 @@ void ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, PARAFORMAT2 *
     para->member.para.nFlags |= MEPF_REWRAP;
 }
 
-
-void
-ME_GetSelectionParas(ME_TextEditor *editor, ME_DisplayItem **para, ME_DisplayItem **para_end)
-{
-  ME_Cursor *pEndCursor = &editor->pCursors[1];
-  
-  *para = ME_GetParagraph(editor->pCursors[0].pRun);
-  *para_end = ME_GetParagraph(editor->pCursors[1].pRun);
-  if ((*para_end)->member.para.nCharOfs < (*para)->member.para.nCharOfs) {
-    ME_DisplayItem *tmp = *para;
-
-    *para = *para_end;
-    *para_end = tmp;
-    pEndCursor = &editor->pCursors[0];
-  }
-  
-  /* selection consists of chars from nFrom up to nTo-1 */
-  if ((*para_end)->member.para.nCharOfs > (*para)->member.para.nCharOfs) {
-    if (!pEndCursor->nOffset) {
-      *para_end = ME_GetParagraph(ME_FindItemBack(pEndCursor->pRun, diRun));
-    }
-  }
-}
-
-
 void ME_SetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt)
 {
-  ME_DisplayItem *para, *para_end;
+  int nFrom, nTo;
+  ME_DisplayItem *para, *para_end, *run;
+  int nOffset;
   
-  ME_GetSelectionParas(editor, &para, &para_end);
- 
+  ME_GetSelection(editor, &nFrom, &nTo);
+  if (nTo>nFrom) /* selection consists of chars from nFrom up to nTo-1 */
+    nTo--;
+  
+  ME_RunOfsFromCharOfs(editor, nFrom, &run, &nOffset);
+  para = ME_GetParagraph(run);
+  ME_RunOfsFromCharOfs(editor, nTo, &run, &nOffset);
+  para_end = ME_GetParagraph(run);
+  
   do {
     ME_SetParaFormat(editor, para, pFmt);
     if (para == para_end)
@@ -398,10 +338,19 @@ void ME_GetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, PARAFORMAT2 *
 
 void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt)
 {
-  ME_DisplayItem *para, *para_end;
+  int nFrom, nTo;
+  ME_DisplayItem *para, *para_end, *run;
+  int nOffset;
   PARAFORMAT2 tmp;
   
-  ME_GetSelectionParas(editor, &para, &para_end);
+  ME_GetSelection(editor, &nFrom, &nTo);
+  if (nTo>nFrom) /* selection consists of chars from nFrom up to nTo-1 */
+    nTo--;
+  
+  ME_RunOfsFromCharOfs(editor, nFrom, &run, &nOffset);
+  para = ME_GetParagraph(run);
+  ME_RunOfsFromCharOfs(editor, nTo, &run, &nOffset);
+  para_end = ME_GetParagraph(run);
   
   ME_GetParaFormat(editor, para, pFmt);
   if (para == para_end) return;

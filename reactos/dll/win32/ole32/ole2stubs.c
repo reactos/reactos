@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #define NONAMELESSUNION
@@ -39,7 +39,7 @@ HRESULT WINAPI  OleCreateLinkToFile(LPCOLESTR lpszFileName, REFIID riid,
 	  		DWORD renderopt, LPFORMATETC lpFormatEtc,
 			LPOLECLIENTSITE pClientSite, LPSTORAGE pStg, LPVOID* ppvObj)
 {
-    FIXME("(%p,%p,%i,%p,%p,%p,%p), stub!\n",lpszFileName, riid, renderopt, lpFormatEtc, pClientSite, pStg, ppvObj);
+    FIXME("(%p,%p,%li,%p,%p,%p,%p), stub!\n",lpszFileName, riid, renderopt, lpFormatEtc, pClientSite, pStg, ppvObj);
     return E_NOTIMPL;
 }
 
@@ -115,7 +115,7 @@ HRESULT     WINAPI OleRegEnumFormatEtc (
   DWORD    dwDirection,
   LPENUMFORMATETC* ppenumFormatetc)
 {
-    FIXME("(%p, %d, %p), stub!\n", clsid, dwDirection, ppenumFormatetc);
+    FIXME("(%p, %ld, %p), stub!\n", clsid, dwDirection, ppenumFormatetc);
 
     return E_NOTIMPL;
 }

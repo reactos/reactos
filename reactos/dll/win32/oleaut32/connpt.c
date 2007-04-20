@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * NOTES:
  * See one exported function here is CreateConnectionPoint, see
@@ -194,7 +194,7 @@ static ULONG WINAPI ConnectionPointImpl_AddRef(IConnectionPoint* iface)
   ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   ULONG refCount = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p)->(ref before=%d)\n", This, refCount - 1);
+  TRACE("(%p)->(ref before=%ld)\n", This, refCount - 1);
 
   return refCount;
 }
@@ -210,7 +210,7 @@ static ULONG WINAPI ConnectionPointImpl_Release(
   ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   ULONG refCount = InterlockedDecrement(&This->ref);
 
-  TRACE("(%p)->(ref before=%d)\n", This, refCount + 1);
+  TRACE("(%p)->(ref before=%ld)\n", This, refCount + 1);
 
   /*
    * If the reference count goes down to 0, perform suicide.
@@ -291,7 +291,7 @@ static HRESULT WINAPI ConnectionPointImpl_Unadvise(IConnectionPoint *iface,
 						   DWORD dwCookie)
 {
   ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
-  TRACE("(%p)->(%d)\n", This, dwCookie);
+  TRACE("(%p)->(%ld)\n", This, dwCookie);
 
   if(dwCookie == 0 || dwCookie > This->maxSinks) return E_INVALIDARG;
 
@@ -463,7 +463,7 @@ static ULONG WINAPI EnumConnectionsImpl_AddRef(IEnumConnections* iface)
   EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
   ULONG refCount = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p)->(ref before=%d)\n", This, refCount - 1);
+  TRACE("(%p)->(ref before=%ld)\n", This, refCount - 1);
 
   IUnknown_AddRef(This->pUnk);
   return refCount;
@@ -479,7 +479,7 @@ static ULONG WINAPI EnumConnectionsImpl_Release(IEnumConnections* iface)
   EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
   ULONG refCount = InterlockedDecrement(&This->ref);
 
-  TRACE("(%p)->(ref before=%d)\n", This, refCount + 1);
+  TRACE("(%p)->(ref before=%ld)\n", This, refCount + 1);
 
   IUnknown_Release(This->pUnk);
 
@@ -501,7 +501,7 @@ static HRESULT WINAPI EnumConnectionsImpl_Next(IEnumConnections* iface,
 {
   EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
   DWORD nRet = 0;
-  TRACE("(%p)->(%d, %p, %p)\n", This, cConn, pCD, pEnum);
+  TRACE("(%p)->(%ld, %p, %p)\n", This, cConn, pCD, pEnum);
 
   if(pEnum == NULL) {
     if(cConn != 1)
@@ -535,7 +535,7 @@ static HRESULT WINAPI EnumConnectionsImpl_Skip(IEnumConnections* iface,
 					       ULONG cSkip)
 {
   EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
-  TRACE("(%p)->(%d)\n", This, cSkip);
+  TRACE("(%p)->(%ld)\n", This, cSkip);
 
   if(This->nCur + cSkip >= This->nConns)
     return S_FALSE;

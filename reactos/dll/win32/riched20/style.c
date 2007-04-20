@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include "editor.h"
@@ -237,7 +237,6 @@ void ME_DumpStyleToBuf(CHARFORMAT2W *pFmt, char buf[2048])
   ME_DumpStyleEffect(&p, "Font italic:", pFmt, CFM_ITALIC);
   ME_DumpStyleEffect(&p, "Font underline:", pFmt, CFM_UNDERLINE);
   ME_DumpStyleEffect(&p, "Font strikeout:", pFmt, CFM_STRIKEOUT);
-  ME_DumpStyleEffect(&p, "Hidden text:", pFmt, CFM_HIDDEN);
   p += sprintf(p, "Text color:           ");
   if (pFmt->dwMask & CFM_COLOR)
   {
@@ -275,7 +274,7 @@ ME_LogFontFromStyle(HDC hDC, LOGFONTW *lf, ME_Style *s, int nZoomNumerator, int 
     lf->lfWeight = s->fmt.wWeight;
   if (s->fmt.dwEffects & s->fmt.dwMask & CFM_ITALIC)
     lf->lfItalic = 1;
-  if (s->fmt.dwEffects & s->fmt.dwMask & (CFM_UNDERLINE | CFE_LINK))
+  if (s->fmt.dwEffects & s->fmt.dwMask & CFM_UNDERLINE)
     lf->lfUnderline = 1;
   if (s->fmt.dwEffects & s->fmt.dwMask & CFM_STRIKEOUT)
     lf->lfStrikeOut = 1;
@@ -286,29 +285,8 @@ ME_LogFontFromStyle(HDC hDC, LOGFONTW *lf, ME_Style *s, int nZoomNumerator, int 
   lf->lfCharSet = s->fmt.bCharSet;
 }
 
-void ME_CharFormatFromLogFont(HDC hDC, LOGFONTW *lf, CHARFORMAT2W *fmt)
-{
-  int rx, ry;
-  
-  ME_InitCharFormat2W(fmt);
-  rx = GetDeviceCaps(hDC, LOGPIXELSX);
-  ry = GetDeviceCaps(hDC, LOGPIXELSY);
-  lstrcpyW(fmt->szFaceName, lf->lfFaceName);
-  fmt->dwEffects = 0;
-  fmt->dwMask = CFM_WEIGHT|CFM_BOLD|CFM_ITALIC|CFM_UNDERLINE|CFM_STRIKEOUT|CFM_SIZE|CFM_FACE|CFM_CHARSET;
-  fmt->wWeight = lf->lfWeight;
-  fmt->yHeight = -lf->lfHeight*1440/ry;
-  if (lf->lfWeight>400) fmt->dwEffects |= CFM_BOLD;
-  if (lf->lfItalic) fmt->dwEffects |= CFM_ITALIC;
-  if (lf->lfUnderline) fmt->dwEffects |= CFM_UNDERLINE;
-  /* notice that if a logfont was created with underline due to CFM_LINK, this
-      would add an erronious CFM_UNDERLINE. This isn't currently ever a problem */
-  if (lf->lfStrikeOut) fmt->dwEffects |= CFM_STRIKEOUT;
-  fmt->bPitchAndFamily = lf->lfPitchAndFamily;
-  fmt->bCharSet = lf->lfCharSet;
-}
 
-static BOOL ME_IsFontEqual(LOGFONTW *p1, LOGFONTW *p2)
+BOOL ME_IsFontEqual(LOGFONTW *p1, LOGFONTW *p2)
 {
   if (memcmp(p1, p2, sizeof(LOGFONTW)-sizeof(p1->lfFaceName)))
     return FALSE;
@@ -338,7 +316,7 @@ HFONT ME_SelectStyleFont(ME_TextEditor *editor, HDC hDC, ME_Style *s)
       if (item->nAge > nAge)
         nEmpty = i, nAge = item->nAge;
     }
-    if (item->hFont && ME_IsFontEqual(&item->lfSpecs, &lf))
+    if (ME_IsFontEqual(&item->lfSpecs, &lf))
       break;
   }
   if (i < HFONT_CACHE_SIZE) /* found */
@@ -393,7 +371,7 @@ void ME_UnselectStyleFont(ME_TextEditor *editor, HDC hDC, ME_Style *s, HFONT hOl
   assert(0 == "UnselectStyleFont without SelectStyleFont");
 }
 
-static void ME_DestroyStyle(ME_Style *s) {
+void ME_DestroyStyle(ME_Style *s) {
   if (s->hFont)
   {
     DeleteObject(s->hFont);

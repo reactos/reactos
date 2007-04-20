@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 
@@ -112,7 +112,6 @@ void ME_DestroyDisplayItem(ME_DisplayItem *item) {
 /*  TRACE("type=%s\n", ME_GetDITypeName(item->type)); */
   if (item->type==diParagraph || item->type == diUndoSetParagraphFormat) {
     FREE_OBJ(item->member.para.pFmt);
-    ME_DestroyTableCellList(item);
   }
   if (item->type==diRun || item->type == diUndoInsertRun) {
     ME_ReleaseStyle(item->member.run.style);
@@ -121,26 +120,7 @@ void ME_DestroyDisplayItem(ME_DisplayItem *item) {
   if (item->type==diUndoSetCharFormat || item->type==diUndoSetDefaultCharFormat) {
     ME_ReleaseStyle(item->member.ustyle);
   }
-  if (item->type==diUndoSplitParagraph)
-     FREE_OBJ(item->member.para.pFmt);
   FREE_OBJ(item);
-}
-
-void
-ME_DestroyTableCellList(ME_DisplayItem *item)
-{
-  if (item->member.para.pCells)
-  {
-    ME_TableCell *pCell = item->member.para.pCells;
-    ME_TableCell *pNext;
-
-    while (pCell) {
-      pNext = pCell->next;
-      FREE_OBJ(pCell);
-      pCell = pNext;
-    }
-    item->member.para.pCells = NULL;
-  }
 }
 
 ME_DisplayItem *ME_MakeDI(ME_DIType type) {
@@ -188,20 +168,20 @@ void ME_DumpDocument(ME_TextBuffer *buffer)
     switch(pItem->type)
     {
       case diTextStart:
-        TRACE("Start\n");
+        TRACE("Start");
         break;
       case diParagraph:
-        TRACE("Paragraph(ofs=%d)\n", pItem->member.para.nCharOfs);
+        TRACE("\nParagraph(ofs=%d)", pItem->member.para.nCharOfs);
         break;
       case diStartRow:
-        TRACE(" - StartRow\n");
+        TRACE(" - StartRow");
         break;
       case diRun:
-        TRACE(" - Run(\"%s\", %d)\n", debugstr_w(pItem->member.run.strText->szData), 
+        TRACE(" - Run(\"%s\", %d)", debugstr_w(pItem->member.run.strText->szData), 
           pItem->member.run.nCharOfs);
         break;
       case diTextEnd:
-        TRACE("End(ofs=%d)\n", pItem->member.para.nCharOfs);
+        TRACE("\nEnd(ofs=%d)\n", pItem->member.para.nCharOfs);
         break;
       default:
         break;

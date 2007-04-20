@@ -2,7 +2,6 @@
  * RichEdit - painting functions
  *
  * Copyright 2004 by Krzysztof Foltman
- * Copyright 2005 by Phil Krylov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include "editor.h"
@@ -94,48 +93,95 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, RECT *rcUpda
   ME_DestroyContext(&c);
 }
 
+static void ME_MarkParagraphRange(ME_TextEditor *editor, ME_DisplayItem *p1,
+                           ME_DisplayItem *p2, int nFlags)
+{
+  ME_DisplayItem *p3;  
+  if (p1 == p2)
+  {
+    p1->member.para.nFlags |= nFlags;
+    return;
+  }
+  if (p1->member.para.nCharOfs > p2->member.para.nCharOfs)
+    p3 = p1, p1 = p2, p2 = p3;
+    
+  p1->member.para.nFlags |= nFlags;
+  do {
+    p1 = p1->member.para.next_para;
+    p1->member.para.nFlags |= nFlags;
+  } while (p1 != p2);
+}
+
+static void ME_MarkOffsetRange(ME_TextEditor *editor, int from, int to, int nFlags)
+{
+  ME_Cursor c1, c2;
+  ME_CursorFromCharOfs(editor, from, &c1);
+  ME_CursorFromCharOfs(editor, to, &c2);
+  
+  ME_MarkParagraphRange(editor, ME_GetParagraph(c1.pRun), ME_GetParagraph(c2.pRun), nFlags);
+}
+
+static void ME_MarkSelectionForRepaint(ME_TextEditor *editor)
+{
+  int from, to, from2, to2, end;
+  
+  end = ME_GetTextLength(editor);
+  ME_GetSelection(editor, &from, &to);
+  from2 = editor->nLastSelStart;
+  to2 = editor->nLastSelEnd;
+  if (from<from2) ME_MarkOffsetRange(editor, from, from2, MEPF_REPAINT);
+  if (from>from2) ME_MarkOffsetRange(editor, from2, from, MEPF_REPAINT);
+  if (to<to2) ME_MarkOffsetRange(editor, to, to2, MEPF_REPAINT);
+  if (to>to2) ME_MarkOffsetRange(editor, to2, to, MEPF_REPAINT);
+
+  editor->nLastSelStart = from;
+  editor->nLastSelEnd = to;
+}
+
 void ME_Repaint(ME_TextEditor *editor)
 {
-  if (ME_WrapMarkedParagraphs(editor))
-  {
+  ME_Cursor *pCursor = &editor->pCursors[0];
+  ME_DisplayItem *pRun = NULL;
+  int nOffset = -1;
+  HDC hDC;
+  int nCharOfs = ME_CharOfsFromRunOfs(editor, pCursor->pRun, pCursor->nOffset);
+  
+  ME_RunOfsFromCharOfs(editor, nCharOfs, &pRun, &nOffset);
+  assert(pRun == pCursor->pRun);
+  assert(nOffset == pCursor->nOffset);
+  ME_MarkSelectionForRepaint(editor);
+  if (ME_WrapMarkedParagraphs(editor)) {
     ME_UpdateScrollBar(editor);
-    FIXME("ME_Repaint had to call ME_WrapMarkedParagraphs\n");
   }
-  ME_SendOldNotify(editor, EN_UPDATE);
-  UpdateWindow(editor->hWnd);
+  if (editor->bRedraw)
+  {
+    hDC = GetDC(editor->hWnd);
+    ME_HideCaret(editor);
+    ME_PaintContent(editor, hDC, TRUE, NULL);
+    ReleaseDC(editor->hWnd, hDC);
+    ME_ShowCaret(editor);
+    ME_EnsureVisible(editor, pCursor->pRun);
+  }
 }
 
 void ME_UpdateRepaint(ME_TextEditor *editor)
 {
-  /* Should be called whenever the contents of the control have changed */
-  ME_Cursor *pCursor;
-  
-  if (ME_WrapMarkedParagraphs(editor))
-    ME_UpdateScrollBar(editor);
-  
-  /* Ensure that the cursor is visible */
-  pCursor = &editor->pCursors[0];
-  ME_EnsureVisible(editor, pCursor->pRun);
-  
-  /* send EN_CHANGE if the event mask asks for it */
-  if(editor->nEventMask & ENM_CHANGE)
-  {
-    ME_SendOldNotify(editor, EN_CHANGE);
-  }
+/*
+  InvalidateRect(editor->hWnd, NULL, TRUE);
+  */
+  ME_SendOldNotify(editor, EN_CHANGE);
   ME_Repaint(editor);
+  ME_SendOldNotify(editor, EN_UPDATE);
   ME_SendSelChange(editor);
 }
 
+
 void
 ME_RewrapRepaint(ME_TextEditor *editor)
-{ 
-  /* RewrapRepaint should be called whenever the control has changed in
-   * looks, but not content. Like resizing. */
-  
+{
   ME_MarkAllForWrapping(editor);
   ME_WrapMarkedParagraphs(editor);
   ME_UpdateScrollBar(editor);
-  
   ME_Repaint(editor);
 }
 
@@ -148,9 +194,7 @@ static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, in
   int yOffset = 0, yTwipsOffset = 0;
   hOldFont = ME_SelectStyleFont(c->editor, hDC, s);
   rgbBack = ME_GetBackColor(c->editor);
-  if ((s->fmt.dwMask & CFM_LINK) && (s->fmt.dwEffects & CFE_LINK))
-    rgbOld = SetTextColor(hDC, RGB(0,0,255));  
-  else if ((s->fmt.dwMask & CFM_COLOR) && (s->fmt.dwEffects & CFE_AUTOCOLOR))
+  if ((s->fmt.dwMask & CFM_COLOR) && (s->fmt.dwEffects & CFE_AUTOCOLOR))
     rgbOld = SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
   else
     rgbOld = SetTextColor(hDC, s->fmt.crTextColor);
@@ -187,10 +231,7 @@ static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, in
     GetTextExtentPoint32W(hDC, szText, nSelFrom, &sz);
     x += sz.cx;
     GetTextExtentPoint32W(hDC, szText+nSelFrom, nSelTo-nSelFrom, &sz);
-    
-    /* Invert selection if not hidden by EM_HIDESELECTION */
-    if (c->editor->bHideSelection == FALSE)
-	PatBlt(hDC, x, ymin, sz.cx, cy, DSTINVERT);
+    PatBlt(hDC, x, ymin, sz.cx, cy, DSTINVERT);
   }
   SetTextColor(hDC, rgbOld);
   ME_UnselectStyleFont(c->editor, hDC, s, hOldFont);
@@ -206,8 +247,8 @@ static void ME_DebugWrite(HDC hDC, POINT *pt, WCHAR *szText) {
   SetTextColor(hDC, color);
 }
 
-static void ME_DrawGraphics(ME_Context *c, int x, int y, ME_Run *run,
-                            ME_Paragraph *para, BOOL selected) {
+void ME_DrawGraphics(ME_Context *c, int x, int y, ME_Run *run, 
+                     ME_Paragraph *para, BOOL selected) {
   SIZE sz;
   int xs, ys, xe, ye, h, ym, width, eyes;
   ME_GetGraphicsSize(c->editor, run, &sz);
@@ -234,46 +275,27 @@ static void ME_DrawGraphics(ME_Context *c, int x, int y, ME_Run *run,
   }
 }
 
-static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Paragraph *para) 
-{
+static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Paragraph *para) {
   ME_Run *run = &rundi->member.run;
-  ME_DisplayItem *start = ME_FindItemBack(rundi, diStartRow);
   int runofs = run->nCharOfs+para->nCharOfs;
-  int nSelFrom, nSelTo;
-  const WCHAR wszSpace[] = {' ', 0};
   
-  if (run->nFlags & MERF_HIDDEN)
-    return;
-
-  ME_GetSelection(c->editor, &nSelFrom, &nSelTo);
-
-  /* Draw selected end-of-paragraph mark */
-  if (run->nFlags & MERF_ENDPARA && runofs >= nSelFrom && runofs < nSelTo)
-    ME_DrawTextWithStyle(c, x, y, wszSpace, 1, run->style, NULL, 0, 1,
-                         c->pt.y + start->member.row.nYPos,
-                         start->member.row.nHeight);
-          
   /* you can always comment it out if you need visible paragraph marks */
-  if (run->nFlags & (MERF_ENDPARA | MERF_TAB | MERF_CELL)) 
+  if (run->nFlags & (MERF_ENDPARA|MERF_TAB)) 
     return;
-
-  if (run->nFlags & MERF_GRAPHICS)
-    ME_DrawGraphics(c, x, y, run, para, (runofs >= nSelFrom) && (runofs < nSelTo));
-  else
+  if (run->nFlags & MERF_GRAPHICS) {
+    int blfrom, blto;
+    ME_GetSelection(c->editor, &blfrom, &blto);
+    ME_DrawGraphics(c, x, y, run, para, (runofs >= blfrom) && (runofs < blto));
+  } else
   {
-    if (c->editor->cPasswordMask)
-    {
-      ME_String *szMasked = ME_MakeStringR(c->editor->cPasswordMask,ME_StrVLen(run->strText));
-      ME_DrawTextWithStyle(c, x, y, 
-        szMasked->szData, ME_StrVLen(szMasked), run->style, NULL, 
-	nSelFrom-runofs,nSelTo-runofs, c->pt.y+start->member.row.nYPos, start->member.row.nHeight);
-      ME_DestroyString(szMasked);
-    }
-    else
-      ME_DrawTextWithStyle(c, x, y, 
-        run->strText->szData, ME_StrVLen(run->strText), run->style, NULL, 
-	nSelFrom-runofs,nSelTo-runofs, c->pt.y+start->member.row.nYPos, start->member.row.nHeight);
-    }
+    int blfrom, blto;
+    ME_DisplayItem *start = ME_FindItemBack(rundi, diStartRow);
+    ME_GetSelection(c->editor, &blfrom, &blto);
+    
+    ME_DrawTextWithStyle(c, x, y, 
+      run->strText->szData, ME_StrVLen(run->strText), run->style, NULL, 
+        blfrom-runofs, blto-runofs, c->pt.y+start->member.row.nYPos, start->member.row.nHeight);
+  }
 }
 
 COLORREF ME_GetBackColor(ME_TextEditor *editor)
@@ -356,7 +378,7 @@ void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph) {
           rc.right = c->rcView.left+run->pt.x+run->nWidth;
           rc.top = c->pt.y+run->pt.y;
           rc.bottom = c->pt.y+run->pt.y+height;
-          TRACE("rc = (%d, %d, %d, %d)\n", rc.left, rc.top, rc.right, rc.bottom);
+          TRACE("rc = (%ld, %ld, %ld, %ld)\n", rc.left, rc.top, rc.right, rc.bottom);
           if (run->nFlags & MERF_SKIPPED)
             DrawFocusRect(c->hDC, &rc);
           else
@@ -385,118 +407,80 @@ void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph) {
   SetTextAlign(c->hDC, align);
 }
 
-void ME_ScrollAbs(ME_TextEditor *editor, int absY)
-{
-  ME_Scroll(editor, absY, 1);
-}
-
-void ME_ScrollUp(ME_TextEditor *editor, int cy)
-{
-  ME_Scroll(editor, cy, 2);
-}
-
-void ME_ScrollDown(ME_TextEditor *editor, int cy)
-{ 
-  ME_Scroll(editor, cy, 3);
-}
-
-void ME_Scroll(ME_TextEditor *editor, int value, int type)
+void ME_Scroll(ME_TextEditor *editor, int cx, int cy)
 {
   SCROLLINFO si;
-  int nOrigPos, nNewPos, nActualScroll;
+  HWND hWnd = editor->hWnd;
 
-  nOrigPos = ME_GetYScrollPos(editor);
-  
   si.cbSize = sizeof(SCROLLINFO);
   si.fMask = SIF_POS;
-  
-  switch (type)
-  {
-    case 1:
-      /*Scroll absolutly*/
-      si.nPos = value;
-      break;
-    case 2:
-      /* Scroll up - towards the beginning of the document */
-      si.nPos = nOrigPos - value;
-      break;
-    case 3:
-      /* Scroll down - towards the end of the document */
-      si.nPos = nOrigPos + value;
-      break;
-    default:
-      FIXME("ME_Scroll called incorrectly\n");
-      si.nPos = 0;
-  }
-  
-  nNewPos = SetScrollInfo(editor->hWnd, SB_VERT, &si, editor->bRedraw);
-  nActualScroll = nOrigPos - nNewPos;
+  GetScrollInfo(hWnd, SB_VERT, &si);
+  si.nPos = editor->nScrollPosY -= cy;
+  SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
   if (editor->bRedraw)
   {
-    if (abs(nActualScroll) > editor->sizeWindow.cy)
+    if (abs(cy) > editor->sizeWindow.cy)
       InvalidateRect(editor->hWnd, NULL, TRUE);
     else
-      ScrollWindowEx(editor->hWnd, 0, nActualScroll, NULL, NULL, NULL, NULL, SW_INVALIDATE);
-    ME_Repaint(editor);
+      ScrollWindowEx(hWnd, cx, cy, NULL, NULL, NULL, NULL, SW_ERASE|SW_INVALIDATE);
   }
-  
-  ME_UpdateScrollBar(editor);
 }
 
- 
- void ME_UpdateScrollBar(ME_TextEditor *editor)
-{ 
-  /* Note that this is the only funciton that should ever call SetScrolLInfo 
-   * with SIF_PAGE or SIF_RANGE. SetScrollPos and SetScrollRange should never
-   * be used at all. */
-  
-  HWND hWnd;
+void ME_UpdateScrollBar(ME_TextEditor *editor)
+{
+  HWND hWnd = editor->hWnd;
   SCROLLINFO si;
-  BOOL bScrollBarWasVisible,bScrollBarWillBeVisible;
-  
-  if (ME_WrapMarkedParagraphs(editor))
-    FIXME("ME_UpdateScrollBar had to call ME_WrapMarkedParagraphs\n");
-  
-  hWnd = editor->hWnd;
+  int nOldLen = editor->nTotalLength;
+  BOOL bScrollY = (editor->nTotalLength > editor->sizeWindow.cy);
+  BOOL bUpdateScrollBars;
   si.cbSize = sizeof(si);
-  bScrollBarWasVisible = ME_GetYScrollVisible(editor);
-  bScrollBarWillBeVisible = editor->nTotalLength > editor->sizeWindow.cy;
+  si.fMask = SIF_POS | SIF_RANGE;
+  GetScrollInfo(hWnd, SB_VERT, &si);
+  bUpdateScrollBars = (bScrollY || editor->bScrollY)&& ((si.nMax != nOldLen) || (si.nPage != editor->sizeWindow.cy));
   
-  if (bScrollBarWasVisible != bScrollBarWillBeVisible)
+  if (bScrollY != editor->bScrollY)
   {
-    ShowScrollBar(hWnd, SB_VERT, bScrollBarWillBeVisible);
+    si.fMask = SIF_RANGE | SIF_PAGE;
+    si.nMin = 0;
+    si.nPage = editor->sizeWindow.cy;
+    if (bScrollY) {
+      si.nMax = editor->nTotalLength;
+    } else {
+      si.nMax = 0;
+    }
+    SetScrollInfo(hWnd, SB_VERT, &si, FALSE);
     ME_MarkAllForWrapping(editor);
+    editor->bScrollY = bScrollY;
     ME_WrapMarkedParagraphs(editor);
+    bUpdateScrollBars = TRUE;
   }
-  
-  si.fMask = SIF_PAGE | SIF_RANGE;
-  if (GetWindowLongW(hWnd, GWL_STYLE) & ES_DISABLENOSCROLL)
-    si.fMask |= SIF_DISABLENOSCROLL;
-  
-  si.nMin = 0;  
-  si.nMax = editor->nTotalLength;
-  
-  si.nPage = editor->sizeWindow.cy;
-     
-  TRACE("min=%d max=%d page=%d\n", si.nMin, si.nMax, si.nPage);
-  SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
+  if (bUpdateScrollBars) {
+    int nScroll = 0;
+    si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
+    if (editor->nTotalLength > editor->sizeWindow.cy) {
+      si.nMax = editor->nTotalLength;
+      si.nPage = editor->sizeWindow.cy;
+      if (si.nPos > si.nMax-si.nPage) {
+        nScroll = (si.nMax-si.nPage)-si.nPos;
+        si.nPos = si.nMax-si.nPage;
+      }
+    }
+    else {
+      si.nMax = 0;
+      si.nPage = 0;
+      si.nPos = 0;
+    }
+    TRACE("min=%d max=%d page=%d pos=%d shift=%d\n", si.nMin, si.nMax, si.nPage, si.nPos, nScroll);
+    editor->nScrollPosY = si.nPos;
+    SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
+    if (nScroll)
+      ScrollWindow(hWnd, 0, -nScroll, NULL, NULL);
+  }
 }
 
 int ME_GetYScrollPos(ME_TextEditor *editor)
 {
-  SCROLLINFO si;
-  si.cbSize = sizeof(si);
-  si.fMask = SIF_POS;
-  GetScrollInfo(editor->hWnd, SB_VERT, &si);
-  return si.nPos;
-}
-
-BOOL ME_GetYScrollVisible(ME_TextEditor *editor)
-{ /* Returns true if the scrollbar is visible */
-  SCROLLBARINFO sbi;
-  sbi.cbSize = sizeof(sbi);
-  GetScrollBarInfo(editor->hWnd, OBJID_VSCROLL, &sbi);
-  return ((sbi.rgstate[0] & STATE_SYSTEM_INVISIBLE) == 0);
+  return editor->nScrollPosY;
 }
 
 void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun)
@@ -504,6 +488,7 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun)
   ME_DisplayItem *pRow = ME_FindItemBack(pRun, diStartRow);
   ME_DisplayItem *pPara = ME_FindItemBack(pRun, diParagraph);
   int y, yrel, yheight, yold;
+  HWND hWnd = editor->hWnd;
   
   assert(pRow);
   assert(pPara);
@@ -512,85 +497,26 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun)
   yheight = pRow->member.row.nHeight;
   yold = ME_GetYScrollPos(editor);
   yrel = y - yold;
-  
-  if (y < yold)
-    ME_ScrollAbs(editor,y);
-  else if (yrel + yheight > editor->sizeWindow.cy) 
-    ME_ScrollAbs(editor,y+yheight-editor->sizeWindow.cy);
-}
-
-
-void
-ME_InvalidateFromOfs(ME_TextEditor *editor, int nCharOfs)
-{
-  RECT rc;
-  int x, y, height;
-  ME_Cursor tmp;
-
-  ME_RunOfsFromCharOfs(editor, nCharOfs, &tmp.pRun, &tmp.nOffset);
-  ME_GetCursorCoordinates(editor, &tmp, &x, &y, &height);
-
-  rc.left = 0;
-  rc.top = y;
-  rc.bottom = y + height;
-  rc.right = editor->rcFormat.right;
-  InvalidateRect(editor->hWnd, &rc, FALSE);
-}
-
-
-void
-ME_InvalidateSelection(ME_TextEditor *editor)
-{
-  ME_DisplayItem *para1, *para2;
-  int nStart, nEnd;
-  int len = ME_GetTextLength(editor);
-
-  ME_GetSelection(editor, &nStart, &nEnd);
-  /* if both old and new selection are 0-char (= caret only), then
-  there's no (inverted) area to be repainted, neither old nor new */
-  if (nStart == nEnd && editor->nLastSelStart == editor->nLastSelEnd)
-    return;
-  ME_WrapMarkedParagraphs(editor);
-  ME_GetSelectionParas(editor, &para1, &para2);
-  assert(para1->type == diParagraph);
-  assert(para2->type == diParagraph);
-  /* last selection markers aren't always updated, which means
-  they can point past the end of the document */ 
-  if (editor->nLastSelStart > len)
-    editor->nLastSelEnd = len; 
-  if (editor->nLastSelEnd > len)
-    editor->nLastSelEnd = len; 
-    
-  /* if the start part of selection is being expanded or contracted... */
-  if (nStart < editor->nLastSelStart) {
-    ME_MarkForPainting(editor, para1, ME_FindItemFwd(editor->pLastSelStartPara, diParagraphOrEnd));
-  } else 
-  if (nStart > editor->nLastSelStart) {
-    ME_MarkForPainting(editor, editor->pLastSelStartPara, ME_FindItemFwd(para1, diParagraphOrEnd));
+  if (yrel < 0) {
+    editor->nScrollPosY = y;
+    SetScrollPos(hWnd, SB_VERT, y, TRUE);
+    if (editor->bRedraw)
+    {
+      ScrollWindow(hWnd, 0, -yrel, NULL, NULL);
+      UpdateWindow(hWnd);
+    }
+  } else if (yrel + yheight > editor->sizeWindow.cy) {
+    int newy = y+yheight-editor->sizeWindow.cy;
+    editor->nScrollPosY = newy;
+    SetScrollPos(hWnd, SB_VERT, newy, TRUE);
+    if (editor->bRedraw)
+    {
+      ScrollWindow(hWnd, 0, -(newy-yold), NULL, NULL);
+      UpdateWindow(hWnd);
+    }
   }
-
-  /* if the end part of selection is being contracted or expanded... */
-  if (nEnd < editor->nLastSelEnd) {
-    ME_MarkForPainting(editor, para2, ME_FindItemFwd(editor->pLastSelEndPara, diParagraphOrEnd));
-  } else 
-  if (nEnd > editor->nLastSelEnd) {
-    ME_MarkForPainting(editor, editor->pLastSelEndPara, ME_FindItemFwd(para2, diParagraphOrEnd));
-  }
-
-  ME_InvalidateMarkedParagraphs(editor);
-  /* remember the last invalidated position */
-  ME_GetSelection(editor, &editor->nLastSelStart, &editor->nLastSelEnd);
-  ME_GetSelectionParas(editor, &editor->pLastSelStartPara, &editor->pLastSelEndPara);
-  assert(editor->pLastSelStartPara->type == diParagraph);
-  assert(editor->pLastSelEndPara->type == diParagraph);
 }
-
-void
-ME_QueueInvalidateFromCursor(ME_TextEditor *editor, int nCursor)
-{
-  editor->nInvalidOfs = ME_GetCursorOfs(editor, nCursor);
-}
-
+        
 
 BOOL
 ME_SetZoom(ME_TextEditor *editor, int numerator, int denominator)

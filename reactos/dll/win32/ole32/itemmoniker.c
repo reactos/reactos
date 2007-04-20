@@ -1,4 +1,4 @@
-/*
+/***************************************************************************************
  *	                      ItemMonikers implementation
  *
  *           Copyright 1999  Noomen Hamza
@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ ***************************************************************************************/
 
 #include <assert.h>
 #include <stdarg.h>
@@ -37,6 +37,10 @@
 #include "moniker.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
+
+const CLSID CLSID_ItemMoniker = {
+  0x304, 0, 0, {0xC0, 0, 0, 0, 0, 0, 0, 0x46}
+};
 
 /* ItemMoniker data structure */
 typedef struct ItemMonikerImpl{
@@ -97,8 +101,8 @@ static HRESULT WINAPI ItemMonikerImpl_ParseDisplayName(IMoniker* iface,IBindCtx*
 static HRESULT WINAPI ItemMonikerImpl_IsSystemMoniker(IMoniker* iface,DWORD* pwdMksys);
 
 /* Local function used by ItemMoniker implementation */
-static HRESULT WINAPI ItemMonikerImpl_Construct(ItemMonikerImpl* iface, LPCOLESTR lpszDelim,LPCOLESTR lpszPathName);
-static HRESULT WINAPI ItemMonikerImpl_Destroy(ItemMonikerImpl* iface);
+HRESULT WINAPI ItemMonikerImpl_Construct(ItemMonikerImpl* iface, LPCOLESTR lpszDelim,LPCOLESTR lpszPathName);
+HRESULT WINAPI ItemMonikerImpl_Destroy(ItemMonikerImpl* iface);
 
 /********************************************************************************/
 /* IROTData prototype functions                                                 */
@@ -388,7 +392,7 @@ HRESULT WINAPI ItemMonikerImpl_GetSizeMax(IMoniker* iface,
 /******************************************************************************
  *         ItemMoniker_Construct (local function)
  *******************************************************************************/
-static HRESULT WINAPI ItemMonikerImpl_Construct(ItemMonikerImpl* This, LPCOLESTR lpszDelim,LPCOLESTR lpszItem)
+HRESULT WINAPI ItemMonikerImpl_Construct(ItemMonikerImpl* This, LPCOLESTR lpszDelim,LPCOLESTR lpszItem)
 {
 
     int sizeStr1=lstrlenW(lpszItem), sizeStr2;
@@ -426,7 +430,7 @@ static HRESULT WINAPI ItemMonikerImpl_Construct(ItemMonikerImpl* This, LPCOLESTR
 /******************************************************************************
  *        ItemMoniker_Destroy (local function)
  *******************************************************************************/
-static HRESULT WINAPI ItemMonikerImpl_Destroy(ItemMonikerImpl* This)
+HRESULT WINAPI ItemMonikerImpl_Destroy(ItemMonikerImpl* This)
 {
     TRACE("(%p)\n",This);
 
@@ -517,7 +521,7 @@ HRESULT WINAPI ItemMonikerImpl_Reduce(IMoniker* iface,
                                       IMoniker** ppmkToLeft,
                                       IMoniker** ppmkReduced)
 {
-    TRACE("(%p,%p,%d,%p,%p)\n",iface,pbc,dwReduceHowFar,ppmkToLeft,ppmkReduced);
+    TRACE("(%p,%p,%ld,%p,%p)\n",iface,pbc,dwReduceHowFar,ppmkToLeft,ppmkReduced);
 
     if (ppmkReduced==NULL)
         return E_POINTER;
@@ -657,8 +661,8 @@ HRESULT WINAPI ItemMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker
 HRESULT WINAPI ItemMonikerImpl_Hash(IMoniker* iface,DWORD* pdwHash)
 {
     ItemMonikerImpl *This = (ItemMonikerImpl *)iface;
-    DWORD h = 0;
-    int  i,len;
+
+    int  h = 0,i,skip,len;
     int  off = 0;
     LPOLESTR val;
 
@@ -668,8 +672,17 @@ HRESULT WINAPI ItemMonikerImpl_Hash(IMoniker* iface,DWORD* pdwHash)
     val =  This->itemName;
     len = lstrlenW(val);
 
-    for (i = len ; i > 0; i--)
-        h = (h * 3) ^ toupperW(val[off++]);
+    if (len < 16) {
+        for (i = len ; i > 0; i--) {
+            h = (h * 37) + val[off++];
+        }
+    } else {
+        /* only sample some characters */
+ 	skip = len / 8;
+ 	for (i = len ; i > 0; i -= skip, off += skip) {
+            h = (h * 39) + val[off];
+ 	}
+    }
 
     *pdwHash=h;
 
@@ -967,7 +980,7 @@ HRESULT WINAPI ItemMonikerROTDataImpl_GetComparisonData(IROTData* iface,
     LPWSTR pszItemName;
     LPWSTR pszItemDelimiter;
 
-    TRACE("(%p, %u, %p)\n", pbData, cbMax, pcbData);
+    TRACE("(%p, %lu, %p)\n", pbData, cbMax, pcbData);
 
     *pcbData = sizeof(CLSID) + sizeof(WCHAR) + len * sizeof(WCHAR);
     if (cbMax < *pcbData)

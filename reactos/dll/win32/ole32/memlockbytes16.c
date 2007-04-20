@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include "config.h"
@@ -43,7 +43,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 /******************************************************************************
  * HGLOBALLockBytesImpl16 definition.
  *
- * This class implements the ILockBytes interface and represents a byte array
+ * This class imlements the ILockBytes inteface and represents a byte array
  * object supported by an HGLOBAL pointer.
  */
 struct HGLOBALLockBytesImpl16
@@ -174,7 +174,7 @@ static void HGLOBALLockBytesImpl16_Destroy(HGLOBALLockBytesImpl16* This)
  * This implements the IUnknown method AddRef for this
  * class
  */
-ULONG CDECL HGLOBALLockBytesImpl16_AddRef(ILockBytes16* iface)
+ULONG HGLOBALLockBytesImpl16_AddRef(ILockBytes16* iface)
 {
   HGLOBALLockBytesImpl16* const This=(HGLOBALLockBytesImpl16*)iface;
 
@@ -188,7 +188,7 @@ ULONG CDECL HGLOBALLockBytesImpl16_AddRef(ILockBytes16* iface)
  * This implements the IUnknown method QueryInterface for this
  * class
  */
-HRESULT CDECL HGLOBALLockBytesImpl16_QueryInterface(
+HRESULT HGLOBALLockBytesImpl16_QueryInterface(
       ILockBytes16*  iface,	/* [in] SEGPTR */
       REFIID       riid,        /* [in] */
       void**       ppvObject)   /* [out][iid_is] (ptr to SEGPTR!) */
@@ -235,7 +235,7 @@ HRESULT CDECL HGLOBALLockBytesImpl16_QueryInterface(
  * This implements the IUnknown method Release for this
  * class
  */
-ULONG CDECL HGLOBALLockBytesImpl16_Release(ILockBytes16* iface)
+ULONG HGLOBALLockBytesImpl16_Release(ILockBytes16* iface)
 {
   HGLOBALLockBytesImpl16* const This=(HGLOBALLockBytesImpl16*)iface;
   ULONG ref;
@@ -260,7 +260,7 @@ ULONG CDECL HGLOBALLockBytesImpl16_Release(ILockBytes16* iface)
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT CDECL HGLOBALLockBytesImpl16_ReadAt(
+HRESULT HGLOBALLockBytesImpl16_ReadAt(
       ILockBytes16*  iface,
       ULARGE_INTEGER ulOffset,  /* [in] */
       void*          pv,        /* [out][length_is][size_is] */
@@ -273,7 +273,7 @@ HRESULT CDECL HGLOBALLockBytesImpl16_ReadAt(
   ULONG bytesReadBuffer = 0;
   ULONG bytesToReadFromBuffer;
 
-  TRACE("(%p,%d,%p,%d,%p)\n",This,ulOffset.u.LowPart,pv,cb,pcbRead);
+  TRACE("(%p,%ld,%p,%ld,%p)\n",This,ulOffset.u.LowPart,pv,cb,pcbRead);
   /*
    * If the caller is not interested in the number of bytes read,
    * we use another buffer to avoid "if" statements in the code.
@@ -332,14 +332,14 @@ HRESULT CDECL HGLOBALLockBytesImpl16_ReadAt(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT CDECL HGLOBALLockBytesImpl16_SetSize(
+HRESULT HGLOBALLockBytesImpl16_SetSize(
       ILockBytes16*   iface,
       ULARGE_INTEGER  libNewSize)   /* [in] */
 {
   HGLOBALLockBytesImpl16* const This=(HGLOBALLockBytesImpl16*)iface;
   HGLOBAL16 supportHandle;
 
-  TRACE("(%p,%d)\n",This,libNewSize.u.LowPart);
+  TRACE("(%p,%ld)\n",This,libNewSize.u.LowPart);
   /*
    * As documented.
    */
@@ -371,7 +371,7 @@ HRESULT CDECL HGLOBALLockBytesImpl16_SetSize(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT CDECL HGLOBALLockBytesImpl16_WriteAt(
+HRESULT HGLOBALLockBytesImpl16_WriteAt(
       ILockBytes16*  iface,
       ULARGE_INTEGER ulOffset,    /* [in] */
       const void*    pv,          /* [in][size_is] */
@@ -384,7 +384,7 @@ HRESULT CDECL HGLOBALLockBytesImpl16_WriteAt(
   ULARGE_INTEGER newSize;
   ULONG          bytesWritten = 0;
 
-  TRACE("(%p,%d,%p,%d,%p)\n",This,ulOffset.u.LowPart,pv,cb,pcbWritten);
+  TRACE("(%p,%ld,%p,%ld,%p)\n",This,ulOffset.u.LowPart,pv,cb,pcbWritten);
   /*
    * If the caller is not interested in the number of bytes written,
    * we use another buffer to avoid "if" statements in the code.
@@ -433,7 +433,7 @@ HRESULT CDECL HGLOBALLockBytesImpl16_WriteAt(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT CDECL HGLOBALLockBytesImpl16_Flush(ILockBytes16* iface)
+HRESULT HGLOBALLockBytesImpl16_Flush(ILockBytes16* iface)
 {
   TRACE("(%p)\n",iface);
   return S_OK;
@@ -446,7 +446,7 @@ HRESULT CDECL HGLOBALLockBytesImpl16_Flush(ILockBytes16* iface)
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT CDECL HGLOBALLockBytesImpl16_LockRegion(
+HRESULT HGLOBALLockBytesImpl16_LockRegion(
       ILockBytes16*  iface,
       ULARGE_INTEGER libOffset,   /* [in] */
       ULARGE_INTEGER cb,          /* [in] */
@@ -462,7 +462,7 @@ HRESULT CDECL HGLOBALLockBytesImpl16_LockRegion(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT CDECL HGLOBALLockBytesImpl16_UnlockRegion(
+HRESULT HGLOBALLockBytesImpl16_UnlockRegion(
       ILockBytes16*  iface,
       ULARGE_INTEGER libOffset,   /* [in] */
       ULARGE_INTEGER cb,          /* [in] */
@@ -479,7 +479,7 @@ HRESULT CDECL HGLOBALLockBytesImpl16_UnlockRegion(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT CDECL HGLOBALLockBytesImpl16_Stat(
+HRESULT HGLOBALLockBytesImpl16_Stat(
       ILockBytes16*iface,
       STATSTG16*   pstatstg,     /* [out] */
       DWORD        grfStatFlag)  /* [in] */

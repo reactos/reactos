@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include <stdarg.h>
@@ -32,8 +32,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-#define HIMETRIC_INCHES 2540
-
 /***********************************************************************
  *		OleMetafilePictFromIconAndLabel (OLE32.@)
  */
@@ -42,70 +40,27 @@ HGLOBAL WINAPI OleMetafilePictFromIconAndLabel(HICON hIcon, LPOLESTR lpszLabel,
 {
 	METAFILEPICT mfp;
 	HDC hdc;
+	UINT dy;
 	HGLOBAL hmem = NULL;
 	LPVOID mfdata;
 	static const char szIconOnly[] = "IconOnly";
-	SIZE text_size = { 0, 0 };
-	INT width;
-	INT icon_width;
-	INT icon_height;
-	INT label_offset;
-	HDC hdcScreen;
-	LOGFONTW lf;
-	HFONT font;
 
 	TRACE("%p %p %s %d\n", hIcon, lpszLabel, debugstr_w(lpszSourceFile), iIconIndex);
 
 	if( !hIcon )
 		return NULL;
 
-	if (!SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0))
-		return NULL;
-
-	font = CreateFontIndirectW(&lf);
-	if (!font)
-		return NULL;
-
 	hdc = CreateMetaFileW(NULL);
 	if( !hdc )
-	{
-		DeleteObject(font);
 		return NULL;
-	}
-
-	SelectObject(hdc, font);
 
 	ExtEscape(hdc, MFCOMMENT, sizeof(szIconOnly), szIconOnly, 0, NULL);
 
-	icon_width = GetSystemMetrics(SM_CXICON);
-	icon_height = GetSystemMetrics(SM_CYICON);
-	/* FIXME: should we give the label a bit of padding here? */
-	label_offset = icon_height;
-	if (lpszLabel)
-	{
-		HFONT screen_old_font;
-		/* metafile DCs don't support GetTextExtentPoint32, so size the font
-		 * using the desktop window DC */
-		hdcScreen = GetDC(NULL);
-		screen_old_font = SelectObject(hdcScreen, font);
-		GetTextExtentPoint32W(hdcScreen, lpszLabel, lstrlenW(lpszLabel), &text_size);
-		SelectObject(hdcScreen, screen_old_font);
-		ReleaseDC(NULL, hdcScreen);
-
-		width = 3 * icon_width;
-	}
-	else
-		width = icon_width;
-
-	SetMapMode(hdc, MM_ANISOTROPIC);
-	SetWindowOrgEx(hdc, 0, 0, NULL);
-	SetWindowExtEx(hdc, width, label_offset + text_size.cy, NULL);
-
-	/* draw the icon centred */
-	DrawIcon(hdc, (width-icon_width) / 2, 0, hIcon);
+	/* FIXME: things are drawn in the wrong place */
+	DrawIcon(hdc, 0, 0, hIcon);
+	dy = GetSystemMetrics(SM_CXICON);
 	if(lpszLabel)
-		/* draw the label centred too, if provided */
-		TextOutW(hdc, (width-text_size.cx) / 2, label_offset, lpszLabel, lstrlenW(lpszLabel));
+		TextOutW(hdc, 0, dy, lpszLabel, lstrlenW(lpszLabel));
 
 	if (lpszSourceFile)
 	{
@@ -125,13 +80,9 @@ HGLOBAL WINAPI OleMetafilePictFromIconAndLabel(HICON hIcon, LPOLESTR lpszLabel,
 		ExtEscape(hdc, MFCOMMENT, strlen(szIconIndex)+1, szIconIndex, 0, NULL);
 	}
 
-	mfp.mm = MM_ANISOTROPIC;
-	hdcScreen = GetDC(NULL);
-	mfp.xExt = MulDiv(width, HIMETRIC_INCHES, GetDeviceCaps(hdcScreen, LOGPIXELSX));
-	mfp.yExt = MulDiv(label_offset + text_size.cy, HIMETRIC_INCHES, GetDeviceCaps(hdcScreen, LOGPIXELSY));
-	ReleaseDC(NULL, hdcScreen);
+	mfp.mm = MM_ISOTROPIC;
+	mfp.xExt = mfp.yExt = 0; /* FIXME ? */
 	mfp.hMF = CloseMetaFile(hdc);
-	DeleteObject(font);
 	if( !mfp.hMF )
 		return NULL;
 

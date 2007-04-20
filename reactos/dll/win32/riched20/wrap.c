@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 
@@ -168,7 +168,7 @@ static ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem
   int i, idesp, len;
   ME_Run *run = &p->member.run;
 
-  idesp = i = ME_CharFromPoint(wc->context->editor, loc, run);
+  idesp = i = ME_CharFromPoint(wc->context->editor, loc, &ME_GetParagraph(p)->member.para, run);
   len = ME_StrVLen(run->strText);
   assert(len>0);
   assert(i<len);
@@ -380,17 +380,15 @@ void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
 
 
 void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp) {
-  ME_DisplayItem *p, *pRow;
+  ME_DisplayItem *p;
 
   /* remove all items that will be reinserted by paragraph wrapper anyway */
   tp->member.para.nRows = 0;
   for (p = tp->next; p!=tp->member.para.next_para; p = p->next) {
     switch(p->type) {
       case diStartRow:
-        pRow = p;
         p = p->prev;
-        ME_Remove(pRow);
-        ME_DestroyDisplayItem(pRow);
+        ME_Remove(p->next);
         break;
       default:
         break;
@@ -424,7 +422,6 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   ME_DisplayItem *item;
   ME_Context c;
   BOOL bModified = FALSE;
-  int yStart = -1, yEnd = -1;
 
   ME_InitContext(&c, editor, hDC);
   c.pt.x = 0;
@@ -442,17 +439,11 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
     ME_WrapTextParagraph(&c, item);
 
     if (bRedraw)
-    {
       item->member.para.nFlags |= MEPF_REPAINT;
-      if (yStart == -1)
-        yStart = c.pt.y;
-    }
 
     bModified = bModified | bRedraw;
 
     c.pt.y += item->member.para.nHeight;
-    if (bRedraw)
-      yEnd = c.pt.y;
     item = item->member.para.next_para;
   }
   editor->sizeWindow.cx = c.rcView.right-c.rcView.left;
@@ -462,40 +453,7 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
 
   ME_DestroyContext(&c);
   ReleaseDC(hWnd, hDC);
-  
-  if (bModified || editor->nTotalLength < editor->nLastTotalLength)
-    ME_InvalidateMarkedParagraphs(editor);
   return bModified;
-}
-
-void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor) {
-  ME_Context c;
-  HDC hDC = GetDC(editor->hWnd);
-
-  ME_InitContext(&c, editor, hDC);
-  if (editor->bRedraw)
-  {
-    RECT rc = c.rcView;
-    int ofs = ME_GetYScrollPos(editor); 
-     
-    ME_DisplayItem *item = editor->pBuffer->pFirst;
-    while(item != editor->pBuffer->pLast) {
-      if (item->member.para.nFlags & MEPF_REPAINT) { 
-        rc.top = item->member.para.nYPos - ofs;
-        rc.bottom = item->member.para.nYPos + item->member.para.nHeight - ofs;
-        InvalidateRect(editor->hWnd, &rc, TRUE);
-      }
-      item = item->member.para.next_para;
-    }
-    if (editor->nTotalLength < editor->nLastTotalLength)
-    {
-      rc.top = editor->nTotalLength - ofs;
-      rc.bottom = editor->nLastTotalLength - ofs;
-      InvalidateRect(editor->hWnd, &rc, TRUE);
-    }
-  }
-  ME_DestroyContext(&c);
-  ReleaseDC(editor->hWnd, hDC);
 }
 
 

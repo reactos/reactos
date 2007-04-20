@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include "config.h"
@@ -30,11 +30,9 @@
 #include "winerror.h"
 #include "objbase.h"
 
+#include "compobj_private.h"
 #include "ole2.h"
 #include "olectl.h"
-#include "initguid.h"
-#include "compobj_private.h"
-#include "moniker.h"
 
 #include "wine/debug.h"
 
@@ -68,7 +66,6 @@ struct regsvr_coclass
     LPCSTR ips;			/* can be NULL to omit */
     LPCSTR ips32;		/* can be NULL to omit */
     LPCSTR ips32_tmodel;	/* can be NULL to omit */
-    LPCSTR progid;		/* can be NULL to omit */
 };
 
 static HRESULT register_coclasses(struct regsvr_coclass const *list);
@@ -98,8 +95,6 @@ static WCHAR const ips_keyname[13] = {
 static WCHAR const ips32_keyname[15] = {
     'I', 'n', 'P', 'r', 'o', 'c', 'S', 'e', 'r', 'v', 'e', 'r',
     '3', '2', 0 };
-static WCHAR const progid_keyname[7] = {
-    'P', 'r', 'o', 'g', 'I', 'D', 0 };
 static char const tmodel_valuename[] = "ThreadingModel";
 
 /***********************************************************************
@@ -110,10 +105,7 @@ static LONG register_key_defvalueW(HKEY base, WCHAR const *name,
 				   WCHAR const *value);
 static LONG register_key_defvalueA(HKEY base, WCHAR const *name,
 				   char const *value);
-static LONG register_progid(WCHAR const *clsid, char const *progid,
-                            char const *name);
 static LONG recursive_delete_key(HKEY key);
-static LONG recursive_delete_keyA(HKEY base, char const *name);
 
 
 /***********************************************************************
@@ -145,7 +137,7 @@ static HRESULT register_interfaces(struct regsvr_interface const *list)
 	}
 
 	if (list->base_iid) {
-	    res = register_key_guid(iid_key, base_ifa_keyname, list->base_iid);
+	    register_key_guid(iid_key, base_ifa_keyname, list->base_iid);
 	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
 	}
 
@@ -167,12 +159,12 @@ static HRESULT register_interfaces(struct regsvr_interface const *list)
 	}
 
 	if (list->ps_clsid) {
-	    res = register_key_guid(iid_key, ps_clsid_keyname, list->ps_clsid);
+	    register_key_guid(iid_key, ps_clsid_keyname, list->ps_clsid);
 	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
 	}
 
 	if (list->ps_clsid32) {
-	    res = register_key_guid(iid_key, ps_clsid32_keyname, list->ps_clsid32);
+	    register_key_guid(iid_key, ps_clsid32_keyname, list->ps_clsid32);
 	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
 	}
 
@@ -274,15 +266,6 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list)
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 	}
 
-	if (list->progid) {
-	    res = register_key_defvalueA(clsid_key, progid_keyname,
-					 list->progid);
-	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
-
-	    res = register_progid(buf, list->progid, list->name);
-	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
-	}
-
     error_close_clsid_key:
 	RegCloseKey(clsid_key);
     }
@@ -321,11 +304,6 @@ static HRESULT unregister_coclasses(struct regsvr_coclass const *list)
 	res = recursive_delete_key(clsid_key);
 	RegCloseKey(clsid_key);
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
-
-	if (list->progid) {
-	    res = recursive_delete_keyA(HKEY_CLASSES_ROOT, list->progid);
-	    if (res != ERROR_SUCCESS) goto error_close_coclass_key;
-	}
     }
 
 error_close_coclass_key:
@@ -386,38 +364,6 @@ static LONG register_key_defvalueA(
 }
 
 /***********************************************************************
- *		regsvr_progid
- */
-static LONG register_progid(
-    WCHAR const *clsid,
-    char const *progid,
-    char const *name)
-{
-    LONG res;
-    HKEY progid_key;
-
-    res = RegCreateKeyExA(HKEY_CLASSES_ROOT, progid, 0,
-			  NULL, 0, KEY_READ | KEY_WRITE, NULL,
-			  &progid_key, NULL);
-    if (res != ERROR_SUCCESS) return res;
-
-    if (name) {
-	res = RegSetValueExA(progid_key, NULL, 0, REG_SZ,
-			     (CONST BYTE*)name, strlen(name) + 1);
-	if (res != ERROR_SUCCESS) goto error_close_progid_key;
-    }
-
-    if (clsid) {
-	res = register_key_defvalueW(progid_key, clsid_keyname, clsid);
-	if (res != ERROR_SUCCESS) goto error_close_progid_key;
-    }
-
-error_close_progid_key:
-    RegCloseKey(progid_key);
-    return res;
-}
-
-/***********************************************************************
  *		recursive_delete_key
  */
 static LONG recursive_delete_key(HKEY key)
@@ -450,76 +396,31 @@ static LONG recursive_delete_key(HKEY key)
 }
 
 /***********************************************************************
- *		recursive_delete_keyA
- */
-static LONG recursive_delete_keyA(HKEY base, char const *name)
-{
-    LONG res;
-    HKEY key;
-
-    res = RegOpenKeyExA(base, name, 0, KEY_READ | KEY_WRITE, &key);
-    if (res == ERROR_FILE_NOT_FOUND) return ERROR_SUCCESS;
-    if (res != ERROR_SUCCESS) return res;
-    res = recursive_delete_key(key);
-    RegCloseKey(key);
-    return res;
-}
-
-/***********************************************************************
  *		coclass list
  */
-static GUID const CLSID_StdOleLink = {
-    0x00000300, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
+static GUID const CLSID_FileMoniker = {
+    0x00000303, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
 
-static GUID const CLSID_PointerMoniker = {
-    0x00000306, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
+static GUID const CLSID_ItemMoniker = {
+    0x00000304, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
 
-static GUID const CLSID_PackagerMoniker = {
-    0x00000308, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
+/* FIXME: DfMarshal and PSFactoryBuffer are defined elsewhere too */
 
-extern GUID const CLSID_Picture_Metafile;
-extern GUID const CLSID_Picture_Dib;
+static GUID const CLSID_DfMarshal = {
+    0x0000030B, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
+
+static GUID const CLSID_PSFactoryBuffer = {
+    0x00000320, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
 
 static struct regsvr_coclass const coclass_list[] = {
-    {   &CLSID_StdOleLink,
-	"StdOleLink",
-	NULL,
-	"ole32.dll",
-	NULL
-    },
     {   &CLSID_FileMoniker,
 	"FileMoniker",
 	NULL,
 	"ole32.dll",
-	"Both",
-        "file"
+	"Both"
     },
     {   &CLSID_ItemMoniker,
 	"ItemMoniker",
-	NULL,
-	"ole32.dll",
-	"Both"
-    },
-    {   &CLSID_AntiMoniker,
-	"AntiMoniker",
-	NULL,
-	"ole32.dll",
-	"Both"
-    },
-    {   &CLSID_PointerMoniker,
-	"PointerMoniker",
-	NULL,
-	"ole32.dll",
-	"Both"
-    },
-    {   &CLSID_PackagerMoniker,
-	"PackagerMoniker",
-	NULL,
-	"ole32.dll",
-	"Both"
-    },
-    {   &CLSID_CompositeMoniker,
-	"CompositeMoniker",
 	NULL,
 	"ole32.dll",
 	"Both"
@@ -529,27 +430,6 @@ static struct regsvr_coclass const coclass_list[] = {
 	NULL,
 	"ole32.dll",
 	"Both"
-    },
-    {   &CLSID_Picture_Metafile,
-	"Picture (Metafile)",
-	NULL,
-	"ole32.dll",
-	NULL,
-	"StaticMetafile"
-    },
-    {   &CLSID_Picture_Dib,
-	"Picture (Device Independent Bitmap)",
-	NULL,
-	"ole32.dll",
-	NULL,
-	"StaticDib"
-    },
-    {   &CLSID_ClassMoniker,
-	"ClassMoniker",
-	NULL,
-	"ole32.dll",
-	"Both",
-        "CLSID"
     },
     {	&CLSID_PSFactoryBuffer,
 	"PSFactoryBuffer",
@@ -571,7 +451,6 @@ static struct regsvr_coclass const coclass_list[] = {
  */
 
 #define INTERFACE_ENTRY(interface, base, clsid32, clsid16) { &IID_##interface, #interface, base, sizeof(interface##Vtbl)/sizeof(void*), clsid16, clsid32 }
-#define BAS_INTERFACE_ENTRY(interface, base) INTERFACE_ENTRY(interface, &IID_##base, &CLSID_PSFactoryBuffer, NULL)
 #define STD_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, &CLSID_PSFactoryBuffer, NULL)
 #define LCL_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, NULL, NULL)
 
@@ -580,65 +459,31 @@ static const struct regsvr_interface interface_list[] = {
     STD_INTERFACE_ENTRY(IClassFactory),
     LCL_INTERFACE_ENTRY(IMalloc),
     LCL_INTERFACE_ENTRY(IMarshal),
-    STD_INTERFACE_ENTRY(ILockBytes),
     STD_INTERFACE_ENTRY(IStorage),
-    STD_INTERFACE_ENTRY(IStream),
-    STD_INTERFACE_ENTRY(IEnumSTATSTG),
-    STD_INTERFACE_ENTRY(IBindCtx),
-    BAS_INTERFACE_ENTRY(IMoniker, IPersistStream),
-    STD_INTERFACE_ENTRY(IRunningObjectTable),
-    STD_INTERFACE_ENTRY(IRootStorage),
     LCL_INTERFACE_ENTRY(IMessageFilter),
     LCL_INTERFACE_ENTRY(IStdMarshalInfo),
     LCL_INTERFACE_ENTRY(IExternalConnection),
     LCL_INTERFACE_ENTRY(IMallocSpy),
     LCL_INTERFACE_ENTRY(IMultiQI),
-    STD_INTERFACE_ENTRY(IEnumUnknown),
-    STD_INTERFACE_ENTRY(IEnumString),
-    STD_INTERFACE_ENTRY(IEnumMoniker),
-    STD_INTERFACE_ENTRY(IEnumFORMATETC),
-    STD_INTERFACE_ENTRY(IEnumOLEVERB),
-    STD_INTERFACE_ENTRY(IEnumSTATDATA),
-    BAS_INTERFACE_ENTRY(IPersistStream, IPersist),
-    BAS_INTERFACE_ENTRY(IPersistStorage, IPersist),
-    BAS_INTERFACE_ENTRY(IPersistFile, IPersist),
-    STD_INTERFACE_ENTRY(IPersist),
-    STD_INTERFACE_ENTRY(IViewObject),
+    STD_INTERFACE_ENTRY(IStream),
+    STD_INTERFACE_ENTRY(IPersistStorage),
     STD_INTERFACE_ENTRY(IDataObject),
     STD_INTERFACE_ENTRY(IAdviseSink),
     LCL_INTERFACE_ENTRY(IDataAdviseHolder),
     LCL_INTERFACE_ENTRY(IOleAdviseHolder),
     STD_INTERFACE_ENTRY(IOleObject),
-    BAS_INTERFACE_ENTRY(IOleInPlaceObject, IOleWindow),
-    STD_INTERFACE_ENTRY(IOleWindow),
-    BAS_INTERFACE_ENTRY(IOleInPlaceUIWindow, IOleWindow),
-    STD_INTERFACE_ENTRY(IOleInPlaceFrame),
-    BAS_INTERFACE_ENTRY(IOleInPlaceActiveObject, IOleWindow),
     STD_INTERFACE_ENTRY(IOleClientSite),
-    BAS_INTERFACE_ENTRY(IOleInPlaceSite, IOleWindow),
-    STD_INTERFACE_ENTRY(IParseDisplayName),
-    BAS_INTERFACE_ENTRY(IOleContainer, IParseDisplayName),
-    BAS_INTERFACE_ENTRY(IOleItemContainer, IOleContainer),
-    STD_INTERFACE_ENTRY(IOleLink),
-    STD_INTERFACE_ENTRY(IOleCache),
     LCL_INTERFACE_ENTRY(IDropSource),
-    STD_INTERFACE_ENTRY(IDropTarget),
-    BAS_INTERFACE_ENTRY(IAdviseSink2, IAdviseSink),
-    STD_INTERFACE_ENTRY(IRunnableObject),
-    BAS_INTERFACE_ENTRY(IViewObject2, IViewObject),
-    BAS_INTERFACE_ENTRY(IOleCache2, IOleCache),
-    STD_INTERFACE_ENTRY(IOleCacheControl),
     STD_INTERFACE_ENTRY(IRemUnknown),
     LCL_INTERFACE_ENTRY(IClientSecurity),
     LCL_INTERFACE_ENTRY(IServerSecurity),
-    STD_INTERFACE_ENTRY(ISequentialStream),
     { NULL }			/* list terminator */
 };
 
 /***********************************************************************
  *		DllRegisterServer (OLE32.@)
  */
-HRESULT WINAPI DllRegisterServer(void)
+HRESULT WINAPI DllRegisterServer()
 {
     HRESULT hr;
 
@@ -653,7 +498,7 @@ HRESULT WINAPI DllRegisterServer(void)
 /***********************************************************************
  *		DllUnregisterServer (OLE32.@)
  */
-HRESULT WINAPI DllUnregisterServer(void)
+HRESULT WINAPI DllUnregisterServer()
 {
     HRESULT hr;
 
