@@ -309,35 +309,77 @@ UINT STDCALL NtGdiGetSystemPaletteEntries(HDC  hDC,
                                   UINT  Entries,
                                   LPPALETTEENTRY  pe)
 {
-  //UINT i;
-  //PDC dc;
-/*
-  if (!(dc = AccessUserObject(hdc))) return 0;
+    PPALGDI palGDI = NULL;
+    PDC dc = NULL;
+    UINT EntriesSize = 0;
+    UINT Ret = 0;
 
-  if (!pe)
-  {
-    Entries = dc->GDIInfo->ulNumPalReg;
-    goto done;
-  }
+    if (Entries == 0)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
 
-  if (StartIndex >= dc->GDIInfo->ulNumPalReg)
-  {
-    Entries = 0;
-    goto done;
-  }
+    _SEH_TRY
+    {
+        if (pe != NULL)
+        {
+            EntriesSize = Entries * sizeof(pe[0]);
+            if (Entries != EntriesSize / sizeof(pe[0]))
+            {
+                /* Integer overflow! */
+                SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                _SEH_LEAVE;
+            }
 
-  if (StartIndex + Entries >= dc->GDIInfo->ulNumPalReg) Entries = dc->GDIInfo->ulNumPalReg - StartIndex;
+            ProbeForWrite(pe,
+                          EntriesSize,
+                          sizeof(UINT));
+        }
 
-  for (i = 0; i < Entries; i++)
-  {
-    *(COLORREF*)(entries + i) = COLOR_GetSystemPaletteEntry(StartIndex + i);
-  }
+        if (!(dc = DC_LockDc(hDC)))
+        {
+            SetLastWin32Error(ERROR_INVALID_HANDLE);
+            _SEH_LEAVE;
+        }
 
-  done:
-//    GDI_ReleaseObj(hdc);
-  return count; */
-  // FIXME UNIMPLEMENTED;
-  return 0;
+        palGDI = PALETTE_LockPalette(dc->w.hPalette);
+        if (palGDI != NULL)
+        {
+            if (pe != NULL)
+            {
+                UINT CopyEntries;
+
+                if (StartIndex + Entries < palGDI->NumColors)
+                    CopyEntries = StartIndex + Entries;
+                else
+                    CopyEntries = palGDI->NumColors - StartIndex;
+
+                memcpy(pe,
+                       palGDI->IndexedColors + StartIndex,
+                       CopyEntries * sizeof(pe[0]));
+
+                Ret = CopyEntries;
+            }
+            else
+            {
+                Ret = dc->GDIInfo->ulNumPalReg;
+            }
+        }
+    }
+    _SEH_HANDLE
+    {
+        SetLastNtError(_SEH_GetExceptionCode());
+    }
+    _SEH_END;
+
+    if (palGDI != NULL)
+        PALETTE_UnlockPalette(palGDI);
+
+    if (dc != NULL)
+        DC_UnlockDc(dc);
+
+    return Ret;
 }
 
 UINT STDCALL NtGdiGetSystemPaletteUse(HDC  hDC)
