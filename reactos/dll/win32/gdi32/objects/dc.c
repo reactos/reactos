@@ -3,6 +3,8 @@
 #define NDEBUG
 #include <debug.h>
 
+HGDIOBJ stock_objects[NB_STOCK_OBJECTS]; // temp location.
+
 HDC
 FASTCALL
 IntCreateDICW ( LPCWSTR   lpwszDriver,
@@ -576,4 +578,29 @@ GetObjectType(
   return Ret;
 }
 
+
+/*
+ * @implemented
+ */
+HGDIOBJ
+WINAPI
+GetStockObject(
+              INT h
+              )
+{
+  HGDIOBJ Ret = NULL;
+  if ((h < 0) || (h >= NB_STOCK_OBJECTS)) return Ret;
+  Ret = stock_objects[h];
+  if (!Ret)
+  {
+      HGDIOBJ Obj = NtGdiGetStockObject( h );
+
+      if (GdiIsHandleValid(Obj))
+      {
+         stock_objects[h] = Obj;
+         return Obj;
+      }// Returns Null anyway.
+  }
+  return Ret;                    
+}
 
