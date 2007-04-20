@@ -22,7 +22,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  *  The compound file implementation of IStorage used for create
@@ -62,8 +62,55 @@ WINE_DEFAULT_DEBUG_CHANNEL(storage);
 #define OLESTREAM_ID 0x501
 #define OLESTREAM_MAX_STR_LEN 255
 
+/*
+ * These are signatures to detect the type of Document file.
+ */
+static const BYTE STORAGE_magic[8]    ={0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1};
+static const BYTE STORAGE_oldmagic[8] ={0xd0,0xcf,0x11,0xe0,0x0e,0x11,0xfc,0x0d};
+
 static const char rootPropertyName[] = "Root Entry";
 
+/****************************************************************************
+ * Storage32InternalImpl definitions.
+ *
+ * Definition of the implementation structure for the IStorage32 interface.
+ * This one implements the IStorage32 interface for storage that are
+ * inside another storage.
+ */
+struct StorageInternalImpl
+{
+  struct StorageBaseImpl base;
+  /*
+   * There is no specific data for this class.
+   */
+};
+typedef struct StorageInternalImpl StorageInternalImpl;
+
+/* Method definitions for the Storage32InternalImpl class. */
+static StorageInternalImpl* StorageInternalImpl_Construct(StorageImpl* ancestorStorage,
+                                                          DWORD openFlags, ULONG rootTropertyIndex);
+static void StorageImpl_Destroy(StorageBaseImpl* iface);
+static BOOL StorageImpl_ReadBigBlock(StorageImpl* This, ULONG blockIndex, void* buffer);
+static BOOL StorageImpl_WriteBigBlock(StorageImpl* This, ULONG blockIndex, void* buffer);
+static void StorageImpl_SetNextBlockInChain(StorageImpl* This, ULONG blockIndex, ULONG nextBlock);
+static HRESULT StorageImpl_LoadFileHeader(StorageImpl* This);
+static void StorageImpl_SaveFileHeader(StorageImpl* This);
+
+static void Storage32Impl_AddBlockDepot(StorageImpl* This, ULONG blockIndex);
+static ULONG Storage32Impl_AddExtBlockDepot(StorageImpl* This);
+static ULONG Storage32Impl_GetNextExtendedBlock(StorageImpl* This, ULONG blockIndex);
+static ULONG Storage32Impl_GetExtDepotBlock(StorageImpl* This, ULONG depotIndex);
+static void Storage32Impl_SetExtDepotBlock(StorageImpl* This, ULONG depotIndex, ULONG blockIndex);
+
+static ULONG BlockChainStream_GetHeadOfChain(BlockChainStream* This);
+static ULARGE_INTEGER BlockChainStream_GetSize(BlockChainStream* This);
+static ULONG BlockChainStream_GetCount(BlockChainStream* This);
+
+static ULARGE_INTEGER SmallBlockChainStream_GetSize(SmallBlockChainStream* This);
+static BOOL StorageImpl_WriteDWordToBigBlock( StorageImpl* This,
+    ULONG blockIndex, ULONG offset, DWORD value);
+static BOOL StorageImpl_ReadDWordFromBigBlock( StorageImpl*  This,
+    ULONG blockIndex, ULONG offset, DWORD* value);
 
 /* OLESTREAM memory structure to use for Get and Put Routines */
 /* Used for OleConvertIStorageToOLESTREAM and OleConvertOLESTREAMToIStorage */
@@ -166,10 +213,78 @@ static DWORD GetCreationModeFromSTGM(DWORD stgm);
 extern const IPropertySetStorageVtbl IPropertySetStorage_Vtbl;
 
 
+/****************************************************************************
+ * IEnumSTATSTGImpl definitions.
+ *
+ * Definition of the implementation structure for the IEnumSTATSTGImpl interface.
+ * This class allows iterating through the content of a storage and to find
+ * specific items inside it.
+ */
+struct IEnumSTATSTGImpl
+{
+  const IEnumSTATSTGVtbl *lpVtbl;    /* Needs to be the first item in the struct
+				* since we want to cast this in an IEnumSTATSTG pointer */
+
+  LONG           ref;                   /* Reference count */
+  StorageImpl*   parentStorage;         /* Reference to the parent storage */
+  ULONG          firstPropertyNode;     /* Index of the root of the storage to enumerate */
+
+  /*
+   * The current implementation of the IEnumSTATSTGImpl class uses a stack
+   * to walk the property sets to get the content of a storage. This stack
+   * is implemented by the following 3 data members
+   */
+  ULONG          stackSize;
+  ULONG          stackMaxSize;
+  ULONG*         stackToVisit;
+
+#define ENUMSTATSGT_SIZE_INCREMENT 10
+};
+
+
+static IEnumSTATSTGImpl* IEnumSTATSTGImpl_Construct(StorageImpl* This, ULONG firstPropertyNode);
+static void IEnumSTATSTGImpl_Destroy(IEnumSTATSTGImpl* This);
+static void IEnumSTATSTGImpl_PushSearchNode(IEnumSTATSTGImpl* This, ULONG nodeToPush);
+static ULONG IEnumSTATSTGImpl_PopSearchNode(IEnumSTATSTGImpl* This, BOOL remove);
+static ULONG IEnumSTATSTGImpl_FindProperty(IEnumSTATSTGImpl* This, const OLECHAR* lpszPropName,
+                                           StgProperty* buffer);
+static INT IEnumSTATSTGImpl_FindParentProperty(IEnumSTATSTGImpl *This, ULONG childProperty,
+                                               StgProperty *currentProperty, ULONG *propertyId);
+
+/************************************************************************
+** Block Functions
+*/
+
+static ULONG BLOCK_GetBigBlockOffset(ULONG index)
+{
+    if (index == 0xffffffff)
+        index = 0;
+    else
+        index ++;
+
+    return index * BIG_BLOCK_SIZE;
+}
 
 /************************************************************************
 ** Storage32BaseImpl implementatiion
 */
+static HRESULT StorageImpl_ReadAt(StorageImpl* This,
+  ULARGE_INTEGER offset,
+  void*          buffer,
+  ULONG          size,
+  ULONG*         bytesRead)
+{
+    return BIGBLOCKFILE_ReadAt(This->bigBlockFile,offset,buffer,size,bytesRead);
+}
+
+static HRESULT StorageImpl_WriteAt(StorageImpl* This,
+  ULARGE_INTEGER offset,
+  void*          buffer,
+  const ULONG    size,
+  ULONG*         bytesWritten)
+{
+    return BIGBLOCKFILE_WriteAt(This->bigBlockFile,offset,buffer,size,bytesWritten);
+}
 
 /************************************************************************
  * Storage32BaseImpl_QueryInterface (IUnknown)
@@ -179,7 +294,7 @@ extern const IPropertySetStorageVtbl IPropertySetStorage_Vtbl;
  *
  * See Windows documentation for more details on IUnknown methods.
  */
-HRESULT WINAPI StorageBaseImpl_QueryInterface(
+static HRESULT WINAPI StorageBaseImpl_QueryInterface(
   IStorage*        iface,
   REFIID             riid,
   void**             ppvObject)
@@ -199,15 +314,12 @@ HRESULT WINAPI StorageBaseImpl_QueryInterface(
   /*
    * Compare the riid with the interface IDs implemented by this object.
    */
-  if (memcmp(&IID_IUnknown, riid, sizeof(IID_IUnknown)) == 0)
+  if (IsEqualGUID(&IID_IUnknown, riid) ||
+      IsEqualGUID(&IID_IStorage, riid))
   {
     *ppvObject = (IStorage*)This;
   }
-  else if (memcmp(&IID_IStorage, riid, sizeof(IID_IStorage)) == 0)
-  {
-    *ppvObject = (IStorage*)This;
-  }
-  else if (memcmp(&IID_IPropertySetStorage, riid, sizeof(IID_IPropertySetStorage)) == 0)
+  else if (IsEqualGUID(&IID_IPropertySetStorage, riid))
   {
     *ppvObject = (IStorage*)&This->pssVtbl;
   }
@@ -235,13 +347,13 @@ HRESULT WINAPI StorageBaseImpl_QueryInterface(
  *
  * See Windows documentation for more details on IUnknown methods.
  */
-ULONG WINAPI StorageBaseImpl_AddRef(
+static ULONG WINAPI StorageBaseImpl_AddRef(
             IStorage* iface)
 {
   StorageBaseImpl *This = (StorageBaseImpl *)iface;
   ULONG ref = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p) AddRef to %ld\n", This, ref);
+  TRACE("(%p) AddRef to %d\n", This, ref);
 
   return ref;
 }
@@ -254,7 +366,7 @@ ULONG WINAPI StorageBaseImpl_AddRef(
  *
  * See Windows documentation for more details on IUnknown methods.
  */
-ULONG WINAPI StorageBaseImpl_Release(
+static ULONG WINAPI StorageBaseImpl_Release(
       IStorage* iface)
 {
   StorageBaseImpl *This = (StorageBaseImpl *)iface;
@@ -263,7 +375,7 @@ ULONG WINAPI StorageBaseImpl_Release(
    */
   ULONG ref = InterlockedDecrement(&This->ref);
 
-  TRACE("(%p) ReleaseRef to %ld\n", This, ref);
+  TRACE("(%p) ReleaseRef to %d\n", This, ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.
@@ -288,7 +400,7 @@ ULONG WINAPI StorageBaseImpl_Release(
  *
  * See Windows documentation for more details on IStorage methods.
  */
-HRESULT WINAPI StorageBaseImpl_OpenStream(
+static HRESULT WINAPI StorageBaseImpl_OpenStream(
   IStorage*        iface,
   const OLECHAR*   pwcsName,  /* [string][in] */
   void*            reserved1, /* [unique][in] */
@@ -302,9 +414,8 @@ HRESULT WINAPI StorageBaseImpl_OpenStream(
   StgProperty       currentProperty;
   ULONG             foundPropertyIndex;
   HRESULT           res = STG_E_UNKNOWN;
-  DWORD             parent_grfMode;
 
-  TRACE("(%p, %s, %p, %lx, %ld, %p)\n",
+  TRACE("(%p, %s, %p, %x, %d, %p)\n",
 	iface, debugstr_w(pwcsName), reserved1, grfMode, reserved2, ppstm);
 
   /*
@@ -324,7 +435,8 @@ HRESULT WINAPI StorageBaseImpl_OpenStream(
   /*
    * Validate the STGM flags
    */
-  if ( FAILED( validateSTGM(grfMode) ))
+  if ( FAILED( validateSTGM(grfMode) ) ||
+       STGM_SHARE_MODE(grfMode) != STGM_SHARE_EXCLUSIVE)
   {
     res = STG_E_INVALIDFLAG;
     goto end;
@@ -333,22 +445,22 @@ HRESULT WINAPI StorageBaseImpl_OpenStream(
   /*
    * As documented.
    */
-  if ( STGM_SHARE_MODE(grfMode) != STGM_SHARE_EXCLUSIVE ||
-        (grfMode & STGM_DELETEONRELEASE) ||
-        (grfMode & STGM_TRANSACTED) )
+  if ( (grfMode & STGM_DELETEONRELEASE) || (grfMode & STGM_TRANSACTED) )
   {
     res = STG_E_INVALIDFUNCTION;
     goto end;
   }
 
   /*
-   * Check that we're compatible with the parent's storage mode
+   * Check that we're compatible with the parent's storage mode, but
+   * only if we are not in transacted mode
    */
-  parent_grfMode = STGM_ACCESS_MODE( This->ancestorStorage->base.openFlags );
-  if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( parent_grfMode ) )
-  {
-    res = STG_E_ACCESSDENIED;
-    goto end;
+  if(!(This->ancestorStorage->base.openFlags & STGM_TRANSACTED)) {
+    if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( This->openFlags ) )
+    {
+      res = STG_E_ACCESSDENIED;
+      goto end;
+    }
   }
 
   /*
@@ -403,7 +515,7 @@ HRESULT WINAPI StorageBaseImpl_OpenStream(
 end:
   if (res == S_OK)
     TRACE("<-- IStream %p\n", *ppstm);
-  TRACE("<-- %08lx\n", res);
+  TRACE("<-- %08x\n", res);
   return res;
 }
 
@@ -414,7 +526,7 @@ end:
  *
  * See Windows documentation for more details on IStorage methods.
  */
-HRESULT WINAPI StorageBaseImpl_OpenStorage(
+static HRESULT WINAPI StorageBaseImpl_OpenStorage(
   IStorage*        iface,
   const OLECHAR*   pwcsName,      /* [string][unique][in] */
   IStorage*        pstgPriority,  /* [unique][in] */
@@ -429,9 +541,8 @@ HRESULT WINAPI StorageBaseImpl_OpenStorage(
   StgProperty            currentProperty;
   ULONG                  foundPropertyIndex;
   HRESULT                res = STG_E_UNKNOWN;
-  DWORD                  parent_grfMode;
 
-  TRACE("(%p, %s, %p, %lx, %p, %ld, %p)\n",
+  TRACE("(%p, %s, %p, %x, %p, %d, %p)\n",
 	iface, debugstr_w(pwcsName), pstgPriority,
 	grfMode, snbExclude, reserved, ppstg);
 
@@ -472,13 +583,15 @@ HRESULT WINAPI StorageBaseImpl_OpenStorage(
   }
 
   /*
-   * Check that we're compatible with the parent's storage mode
+   * Check that we're compatible with the parent's storage mode,
+   * but only if we are not transacted
    */
-  parent_grfMode = STGM_ACCESS_MODE( This->ancestorStorage->base.openFlags );
-  if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( parent_grfMode ) )
-  {
-    res = STG_E_ACCESSDENIED;
-    goto end;
+  if(!(This->ancestorStorage->base.openFlags & STGM_TRANSACTED)) {
+    if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( This->openFlags ) )
+    {
+      res = STG_E_ACCESSDENIED;
+      goto end;
+    }
   }
 
   /*
@@ -541,7 +654,7 @@ HRESULT WINAPI StorageBaseImpl_OpenStorage(
   res = STG_E_FILENOTFOUND;
 
 end:
-  TRACE("<-- %08lx\n", res);
+  TRACE("<-- %08x\n", res);
   return res;
 }
 
@@ -553,7 +666,7 @@ end:
  *
  * See Windows documentation for more details on IStorage methods.
  */
-HRESULT WINAPI StorageBaseImpl_EnumElements(
+static HRESULT WINAPI StorageBaseImpl_EnumElements(
   IStorage*       iface,
   DWORD           reserved1, /* [in] */
   void*           reserved2, /* [size_is][unique][in] */
@@ -563,7 +676,7 @@ HRESULT WINAPI StorageBaseImpl_EnumElements(
   StorageBaseImpl *This = (StorageBaseImpl *)iface;
   IEnumSTATSTGImpl* newEnum;
 
-  TRACE("(%p, %ld, %p, %ld, %p)\n",
+  TRACE("(%p, %d, %p, %d, %p)\n",
 	iface, reserved1, reserved2, reserved3, ppenum);
 
   /*
@@ -602,7 +715,7 @@ HRESULT WINAPI StorageBaseImpl_EnumElements(
  *
  * See Windows documentation for more details on IStorage methods.
  */
-HRESULT WINAPI StorageBaseImpl_Stat(
+static HRESULT WINAPI StorageBaseImpl_Stat(
   IStorage*        iface,
   STATSTG*         pstatstg,     /* [out] */
   DWORD            grfStatFlag)  /* [in] */
@@ -612,7 +725,7 @@ HRESULT WINAPI StorageBaseImpl_Stat(
   BOOL           readSuccessful;
   HRESULT        res = STG_E_UNKNOWN;
 
-  TRACE("(%p, %p, %lx)\n",
+  TRACE("(%p, %p, %x)\n",
 	iface, pstatstg, grfStatFlag);
 
   /*
@@ -639,6 +752,8 @@ HRESULT WINAPI StorageBaseImpl_Stat(
       &curProperty,
       grfStatFlag);
 
+    pstatstg->grfMode = This->openFlags;
+
     res = S_OK;
     goto end;
   }
@@ -648,9 +763,9 @@ HRESULT WINAPI StorageBaseImpl_Stat(
 end:
   if (res == S_OK)
   {
-    TRACE("<-- STATSTG: pwcsName: %s, type: %ld, cbSize.Low/High: %ld/%ld, grfMode: %08lx, grfLocksSupported: %ld, grfStateBits: %08lx\n", debugstr_w(pstatstg->pwcsName), pstatstg->type, pstatstg->cbSize.u.LowPart, pstatstg->cbSize.u.HighPart, pstatstg->grfMode, pstatstg->grfLocksSupported, pstatstg->grfStateBits);
+    TRACE("<-- STATSTG: pwcsName: %s, type: %d, cbSize.Low/High: %d/%d, grfMode: %08x, grfLocksSupported: %d, grfStateBits: %08x\n", debugstr_w(pstatstg->pwcsName), pstatstg->type, pstatstg->cbSize.u.LowPart, pstatstg->cbSize.u.HighPart, pstatstg->grfMode, pstatstg->grfLocksSupported, pstatstg->grfStateBits);
   }
-  TRACE("<-- %08lx\n", res);
+  TRACE("<-- %08x\n", res);
   return res;
 }
 
@@ -665,7 +780,7 @@ end:
  *    of the deleted StgProperty object setting it with the new name and to
  *    perform a DestroyElement of the old StgProperty.
  */
-HRESULT WINAPI StorageBaseImpl_RenameElement(
+static HRESULT WINAPI StorageBaseImpl_RenameElement(
             IStorage*        iface,
             const OLECHAR*   pwcsOldName,  /* [in] */
             const OLECHAR*   pwcsNewName)  /* [in] */
@@ -775,13 +890,13 @@ HRESULT WINAPI StorageBaseImpl_RenameElement(
 
     /*
      * At this point the renamed property has been inserted in the tree,
-     * now, before to Destroy the old property we must zeroed it's dirProperty
+     * now, before Destroying the old property we must zero its dirProperty
      * otherwise the DestroyProperty below will zap it all and we do not want
      * this to happen.
      * Also, we fake that the old property is a storage so the DestroyProperty
      * will not do a SetSize(0) on the stream data.
      *
-     * This means that we need to tweek the StgProperty if it is a stream or a
+     * This means that we need to tweak the StgProperty if it is a stream or a
      * non empty storage.
      */
     StorageImpl_ReadProperty(This->ancestorStorage,
@@ -797,7 +912,7 @@ HRESULT WINAPI StorageBaseImpl_RenameElement(
 
     /*
      * Invoke Destroy to get rid of the ole property and automatically redo
-     * the linking of it's previous and next members...
+     * the linking of its previous and next members...
      */
     IStorage_DestroyElement((IStorage*)This->ancestorStorage, pwcsOldName);
 
@@ -820,7 +935,7 @@ HRESULT WINAPI StorageBaseImpl_RenameElement(
  *
  * See Windows documentation for more details on IStorage methods.
  */
-HRESULT WINAPI StorageBaseImpl_CreateStream(
+static HRESULT WINAPI StorageBaseImpl_CreateStream(
             IStorage*        iface,
             const OLECHAR*   pwcsName,  /* [string][in] */
             DWORD            grfMode,   /* [in] */
@@ -833,9 +948,8 @@ HRESULT WINAPI StorageBaseImpl_CreateStream(
   StgStreamImpl*    newStream;
   StgProperty       currentProperty, newStreamProperty;
   ULONG             foundPropertyIndex, newPropertyIndex;
-  DWORD             parent_grfMode;
 
-  TRACE("(%p, %s, %lx, %ld, %ld, %p)\n",
+  TRACE("(%p, %s, %x, %d, %d, %p)\n",
 	iface, debugstr_w(pwcsName), grfMode,
 	reserved1, reserved2, ppstm);
 
@@ -869,10 +983,12 @@ HRESULT WINAPI StorageBaseImpl_CreateStream(
 
   /*
    * Check that we're compatible with the parent's storage mode
+   * if not in transacted mode
    */
-  parent_grfMode = STGM_ACCESS_MODE( This->ancestorStorage->base.openFlags );
-  if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( parent_grfMode ) )
-    return STG_E_ACCESSDENIED;
+  if(!(This->ancestorStorage->base.openFlags & STGM_TRANSACTED)) {
+    if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( This->openFlags ) )
+      return STG_E_ACCESSDENIED;
+  }
 
   /*
    * Initialize the out parameter
@@ -902,6 +1018,11 @@ HRESULT WINAPI StorageBaseImpl_CreateStream(
     }
     else
       return STG_E_FILEALREADYEXISTS;
+  }
+  else if (STGM_ACCESS_MODE(This->openFlags) == STGM_READ)
+  {
+    WARN("read-only storage\n");
+    return STG_E_ACCESSDENIED;
   }
 
   /*
@@ -987,7 +1108,7 @@ HRESULT WINAPI StorageBaseImpl_CreateStream(
  *
  * See Windows documentation for more details on IStorage methods.
  */
-HRESULT WINAPI StorageBaseImpl_SetClass(
+static HRESULT WINAPI StorageBaseImpl_SetClass(
   IStorage*        iface,
   REFCLSID         clsid) /* [in] */
 {
@@ -1026,7 +1147,7 @@ HRESULT WINAPI StorageBaseImpl_SetClass(
  *
  * See Windows documentation for more details on IStorage methods.
  */
-HRESULT WINAPI StorageImpl_CreateStorage(
+static HRESULT WINAPI StorageImpl_CreateStorage(
   IStorage*      iface,
   const OLECHAR  *pwcsName, /* [string][in] */
   DWORD            grfMode,   /* [in] */
@@ -1042,9 +1163,8 @@ HRESULT WINAPI StorageImpl_CreateStorage(
   ULONG            foundPropertyIndex;
   ULONG            newPropertyIndex;
   HRESULT          hr;
-  DWORD            parent_grfMode;
 
-  TRACE("(%p, %s, %lx, %ld, %ld, %p)\n",
+  TRACE("(%p, %s, %x, %d, %d, %p)\n",
 	iface, debugstr_w(pwcsName), grfMode,
 	reserved1, reserved2, ppstg);
 
@@ -1068,15 +1188,14 @@ HRESULT WINAPI StorageImpl_CreateStorage(
   if ( FAILED( validateSTGM(grfMode) ) ||
        (grfMode & STGM_DELETEONRELEASE) )
   {
-    WARN("bad grfMode: 0x%lx\n", grfMode);
+    WARN("bad grfMode: 0x%x\n", grfMode);
     return STG_E_INVALIDFLAG;
   }
 
   /*
    * Check that we're compatible with the parent's storage mode
    */
-  parent_grfMode = STGM_ACCESS_MODE( This->base.ancestorStorage->base.openFlags );
-  if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( parent_grfMode ) )
+  if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( This->base.openFlags ) )
   {
     WARN("access denied\n");
     return STG_E_ACCESSDENIED;
@@ -1105,6 +1224,11 @@ HRESULT WINAPI StorageImpl_CreateStorage(
       WARN("file already exists\n");
       return STG_E_FILEALREADYEXISTS;
     }
+  }
+  else if (STGM_ACCESS_MODE(This->base.openFlags) == STGM_READ)
+  {
+    WARN("read-only storage\n");
+    return STG_E_ACCESSDENIED;
   }
 
   /*
@@ -1409,7 +1533,7 @@ static void updatePropertyChain(
   else
   {
     /*
-     * The root storage is empty, link the new property to it's dir property
+     * The root storage is empty, link the new property to its dir property
      */
     currentProperty.dirProperty = newPropertyIndex;
     StorageImpl_WriteProperty(storage->base.ancestorStorage,
@@ -1422,7 +1546,7 @@ static void updatePropertyChain(
 /*************************************************************************
  * CopyTo (IStorage)
  */
-HRESULT WINAPI StorageImpl_CopyTo(
+static HRESULT WINAPI StorageImpl_CopyTo(
   IStorage*   iface,
   DWORD       ciidExclude,  /* [in] */
   const IID*  rgiidExclude, /* [size_is][unique][in] */
@@ -1438,7 +1562,7 @@ HRESULT WINAPI StorageImpl_CopyTo(
   if ((ciidExclude != 0) || (rgiidExclude != NULL) || (snbExclude != NULL))
     FIXME("Exclude option not implemented\n");
 
-  TRACE("(%p, %ld, %p, %p, %p)\n",
+  TRACE("(%p, %d, %p, %p, %p)\n",
 	iface, ciidExclude, rgiidExclude,
 	snbExclude, pstgDest);
 
@@ -1572,7 +1696,7 @@ HRESULT WINAPI StorageImpl_CopyTo(
     }
     else
     {
-      WARN("unknown element type: %ld\n", curElement.type);
+      WARN("unknown element type: %d\n", curElement.type);
     }
 
   } while (hr == S_OK);
@@ -1588,14 +1712,16 @@ HRESULT WINAPI StorageImpl_CopyTo(
 /*************************************************************************
  * MoveElementTo (IStorage)
  */
-HRESULT WINAPI StorageImpl_MoveElementTo(
+static HRESULT WINAPI StorageImpl_MoveElementTo(
   IStorage*     iface,
   const OLECHAR *pwcsName,   /* [string][in] */
   IStorage      *pstgDest,   /* [unique][in] */
   const OLECHAR *pwcsNewName,/* [string][in] */
   DWORD           grfFlags)    /* [in] */
 {
-  FIXME("not implemented!\n");
+  FIXME("(%p %s %p %s %u): stub\n", iface,
+         debugstr_w(pwcsName), pstgDest,
+         debugstr_w(pwcsNewName), grfFlags);
   return E_NOTIMPL;
 }
 
@@ -1609,11 +1735,11 @@ HRESULT WINAPI StorageImpl_MoveElementTo(
  *  Wine doesn't implement transacted mode, which seems to be a basic
  *  optimization, so we can ignore this stub for now.
  */
-HRESULT WINAPI StorageImpl_Commit(
+static HRESULT WINAPI StorageImpl_Commit(
   IStorage*   iface,
   DWORD         grfCommitFlags)/* [in] */
 {
-  FIXME("(%ld): stub!\n", grfCommitFlags);
+  FIXME("(%p %d): stub\n", iface, grfCommitFlags);
   return S_OK;
 }
 
@@ -1622,25 +1748,25 @@ HRESULT WINAPI StorageImpl_Commit(
  *
  * Discard all changes that have been made since the last commit operation
  */
-HRESULT WINAPI StorageImpl_Revert(
+static HRESULT WINAPI StorageImpl_Revert(
   IStorage* iface)
 {
-  FIXME("not implemented!\n");
+  FIXME("(%p): stub\n", iface);
   return E_NOTIMPL;
 }
 
 /*************************************************************************
  * DestroyElement (IStorage)
  *
- * Stategy: This implementation is build this way for simplicity not for speed.
- *          I always delete the top most element of the enumeration and adjust
+ * Strategy: This implementation is built this way for simplicity not for speed.
+ *          I always delete the topmost element of the enumeration and adjust
  *          the deleted element pointer all the time.  This takes longer to
  *          do but allow to reinvoke DestroyElement whenever we encounter a
- *          storage object.  The optimisation reside in the usage of another
- *          enumeration stategy that would give all the leaves of a storage
+ *          storage object.  The optimisation resides in the usage of another
+ *          enumeration strategy that would give all the leaves of a storage
  *          first. (postfix order)
  */
-HRESULT WINAPI StorageImpl_DestroyElement(
+static HRESULT WINAPI StorageImpl_DestroyElement(
   IStorage*     iface,
   const OLECHAR *pwcsName)/* [string][in] */
 {
@@ -1653,7 +1779,7 @@ HRESULT WINAPI StorageImpl_DestroyElement(
   StgProperty       parentProperty;
   ULONG             foundPropertyIndexToDelete;
   ULONG             typeOfRelation;
-  ULONG             parentPropertyId;
+  ULONG             parentPropertyId = 0;
 
   TRACE("(%p, %s)\n",
 	iface, debugstr_w(pwcsName));
@@ -1686,7 +1812,7 @@ HRESULT WINAPI StorageImpl_DestroyElement(
   /*
    * Find the parent property of the property to delete (the one that
    * link to it).  If This->dirProperty == foundPropertyIndexToDelete,
-   * the parent is This. Otherwise, the parent is one of it's sibling...
+   * the parent is This. Otherwise, the parent is one of its sibling...
    */
 
   /*
@@ -1771,7 +1897,7 @@ HRESULT WINAPI StorageImpl_DestroyElement(
  *
  * See Windows documentation for more details on IStorage methods.
  */
-HRESULT WINAPI StorageImpl_Stat( IStorage* iface,
+static HRESULT WINAPI StorageImpl_Stat( IStorage* iface,
                                  STATSTG*  pstatstg,     /* [out] */
                                  DWORD     grfStatFlag)  /* [in] */
 {
@@ -1788,6 +1914,34 @@ HRESULT WINAPI StorageImpl_Stat( IStorage* iface,
   return result;
 }
 
+/******************************************************************************
+ * Internal stream list handlers
+ */
+
+void StorageBaseImpl_AddStream(StorageBaseImpl * stg, StgStreamImpl * strm)
+{
+  TRACE("Stream added (stg=%p strm=%p)\n", stg, strm);
+  list_add_tail(&stg->strmHead,&strm->StrmListEntry);
+}
+
+void StorageBaseImpl_RemoveStream(StorageBaseImpl * stg, StgStreamImpl * strm)
+{
+  TRACE("Stream removed (stg=%p strm=%p)\n", stg,strm);
+  list_remove(&(strm->StrmListEntry));
+}
+
+static void StorageBaseImpl_DeleteAll(StorageBaseImpl * stg)
+{
+  struct list *cur, *cur2;
+  StgStreamImpl *strm=NULL;
+
+  LIST_FOR_EACH_SAFE(cur, cur2, &stg->strmHead) {
+    strm = LIST_ENTRY(cur,StgStreamImpl,StrmListEntry);
+    TRACE("Streams deleted (stg=%p strm=%p next=%p prev=%p)\n", stg,strm,cur->next,cur->prev);
+    strm->parentStorage = NULL;
+    list_remove(cur);
+  }
+}
 
 
 /*********************************************************************
@@ -1815,7 +1969,7 @@ static HRESULT deleteStorageProperty(
         (IStorage*)parentStorage,
         propertyToDelete.name,
         0,
-        STGM_SHARE_EXCLUSIVE,
+        STGM_WRITE | STGM_SHARE_EXCLUSIVE,
         0,
         0,
         &childStorage);
@@ -1854,7 +2008,7 @@ static HRESULT deleteStorageProperty(
   } while ((hr == S_OK) && (destroyHr == S_OK));
 
   /*
-   * Invalidate the property by zeroing it's name member.
+   * Invalidate the property by zeroing its name member.
    */
   propertyToDelete.sizeOfNameString = 0;
 
@@ -1916,7 +2070,7 @@ static HRESULT deleteStreamProperty(
   IStream_Release(pis);
 
   /*
-   * Invalidate the property by zeroing it's name member.
+   * Invalidate the property by zeroing its name member.
    */
   propertyToDelete.sizeOfNameString = 0;
 
@@ -2179,7 +2333,7 @@ static HRESULT adjustPropertyChain(
 /******************************************************************************
  * SetElementTimes (IStorage)
  */
-HRESULT WINAPI StorageImpl_SetElementTimes(
+static HRESULT WINAPI StorageImpl_SetElementTimes(
   IStorage*     iface,
   const OLECHAR *pwcsName,/* [string][in] */
   const FILETIME  *pctime,  /* [in] */
@@ -2193,7 +2347,7 @@ HRESULT WINAPI StorageImpl_SetElementTimes(
 /******************************************************************************
  * SetStateBits (IStorage)
  */
-HRESULT WINAPI StorageImpl_SetStateBits(
+static HRESULT WINAPI StorageImpl_SetStateBits(
   IStorage*   iface,
   DWORD         grfStateBits,/* [in] */
   DWORD         grfMask)     /* [in] */
@@ -2227,7 +2381,7 @@ static const IStorageVtbl Storage32Impl_Vtbl =
     StorageImpl_Stat
 };
 
-HRESULT StorageImpl_Construct(
+static HRESULT StorageImpl_Construct(
   StorageImpl* This,
   HANDLE       hFile,
   LPCOLESTR    pwcsName,
@@ -2247,12 +2401,18 @@ HRESULT StorageImpl_Construct(
   memset(This, 0, sizeof(StorageImpl));
 
   /*
+   * Initialize stream list
+   */
+
+  list_init(&This->base.strmHead);
+
+  /*
    * Initialize the virtual function table.
    */
   This->base.lpVtbl = &Storage32Impl_Vtbl;
   This->base.pssVtbl = &IPropertySetStorage_Vtbl;
   This->base.v_destructor = &StorageImpl_Destroy;
-  This->base.openFlags = openFlags;
+  This->base.openFlags = (openFlags & ~STGM_CREATE);
 
   /*
    * This is the top-level storage so initialize the ancestor pointer
@@ -2293,7 +2453,7 @@ HRESULT StorageImpl_Construct(
   if (fileCreate)
   {
     ULARGE_INTEGER size;
-    BYTE* bigBlockBuffer;
+    BYTE bigBlockBuffer[BIG_BLOCK_SIZE];
 
     /*
      * Initialize all header variables:
@@ -2326,11 +2486,10 @@ HRESULT StorageImpl_Construct(
     /*
      * Initialize the big block depot
      */
-    bigBlockBuffer = StorageImpl_GetBigBlock(This, 0);
     memset(bigBlockBuffer, BLOCK_UNUSED, This->bigBlockSize);
     StorageUtl_WriteDWord(bigBlockBuffer, 0, BLOCK_SPECIAL);
     StorageUtl_WriteDWord(bigBlockBuffer, sizeof(ULONG), BLOCK_END_OF_CHAIN);
-    StorageImpl_ReleaseBigBlock(This, bigBlockBuffer);
+    StorageImpl_WriteBigBlock(This, 0, bigBlockBuffer);
   }
   else
   {
@@ -2370,7 +2529,7 @@ HRESULT StorageImpl_Construct(
     return STG_E_READFAULT;
 
   /*
-   * Write the root property
+   * Write the root property (memory only)
    */
   if (fileCreate)
   {
@@ -2434,10 +2593,12 @@ HRESULT StorageImpl_Construct(
   return hr;
 }
 
-void StorageImpl_Destroy(StorageBaseImpl* iface)
+static void StorageImpl_Destroy(StorageBaseImpl* iface)
 {
   StorageImpl *This = (StorageImpl*) iface;
   TRACE("(%p)\n", This);
+
+  StorageBaseImpl_DeleteAll(&This->base);
 
   HeapFree(GetProcessHeap(), 0, This->pwcsName);
 
@@ -2456,11 +2617,12 @@ void StorageImpl_Destroy(StorageBaseImpl* iface)
  * If the big block depot is filled, this method will enlarge it.
  *
  */
-ULONG StorageImpl_GetNextFreeBigBlock(
+static ULONG StorageImpl_GetNextFreeBigBlock(
   StorageImpl* This)
 {
   ULONG depotBlockIndexPos;
-  void  *depotBuffer;
+  BYTE depotBuffer[BIG_BLOCK_SIZE];
+  BOOL success;
   ULONG depotBlockOffset;
   ULONG blocksPerDepot    = This->bigBlockSize / sizeof(ULONG);
   ULONG nextBlockIndex    = BLOCK_SPECIAL;
@@ -2553,9 +2715,9 @@ ULONG StorageImpl_GetNextFreeBigBlock(
       }
     }
 
-    depotBuffer = StorageImpl_GetROBigBlock(This, depotBlockIndexPos);
+    success = StorageImpl_ReadBigBlock(This, depotBlockIndexPos, depotBuffer);
 
-    if (depotBuffer != 0)
+    if (success)
     {
       while ( ( (depotBlockOffset/sizeof(ULONG) ) < blocksPerDepot) &&
               ( nextBlockIndex != BLOCK_UNUSED))
@@ -2570,13 +2732,16 @@ ULONG StorageImpl_GetNextFreeBigBlock(
 
         depotBlockOffset += sizeof(ULONG);
       }
-
-      StorageImpl_ReleaseBigBlock(This, depotBuffer);
     }
 
     depotIndex++;
     depotBlockOffset = 0;
   }
+
+  /*
+   * make sure that the block physically exists before using it
+   */
+  BIGBLOCKFILE_EnsureExists(This->bigBlockFile, freeBlock);
 
   This->prevFreeBlock = freeBlock;
 
@@ -2589,18 +2754,15 @@ ULONG StorageImpl_GetNextFreeBigBlock(
  * This will create a depot block, essentially it is a block initialized
  * to BLOCK_UNUSEDs.
  */
-void Storage32Impl_AddBlockDepot(StorageImpl* This, ULONG blockIndex)
+static void Storage32Impl_AddBlockDepot(StorageImpl* This, ULONG blockIndex)
 {
-  BYTE* blockBuffer;
-
-  blockBuffer = StorageImpl_GetBigBlock(This, blockIndex);
+  BYTE blockBuffer[BIG_BLOCK_SIZE];
 
   /*
    * Initialize blocks as free
    */
   memset(blockBuffer, BLOCK_UNUSED, This->bigBlockSize);
-
-  StorageImpl_ReleaseBigBlock(This, blockBuffer);
+  StorageImpl_WriteBigBlock(This, blockIndex, blockBuffer);
 }
 
 /******************************************************************************
@@ -2610,7 +2772,7 @@ void Storage32Impl_AddBlockDepot(StorageImpl* This, ULONG blockIndex)
  * index. This method is only for depot indexes equal or greater than
  * COUNT_BBDEPOTINHEADER.
  */
-ULONG Storage32Impl_GetExtDepotBlock(StorageImpl* This, ULONG depotIndex)
+static ULONG Storage32Impl_GetExtDepotBlock(StorageImpl* This, ULONG depotIndex)
 {
   ULONG depotBlocksPerExtBlock = (This->bigBlockSize / sizeof(ULONG)) - 1;
   ULONG numExtBlocks           = depotIndex - COUNT_BBDEPOTINHEADER;
@@ -2631,20 +2793,8 @@ ULONG Storage32Impl_GetExtDepotBlock(StorageImpl* This, ULONG depotIndex)
   }
 
   if (extBlockIndex != BLOCK_UNUSED)
-  {
-    BYTE* depotBuffer;
-
-    depotBuffer = StorageImpl_GetROBigBlock(This, extBlockIndex);
-
-    if (depotBuffer != 0)
-    {
-      StorageUtl_ReadDWord(depotBuffer,
-                           extBlockOffset * sizeof(ULONG),
-                           &blockIndex);
-
-      StorageImpl_ReleaseBigBlock(This, depotBuffer);
-    }
-  }
+    StorageImpl_ReadDWordFromBigBlock(This, extBlockIndex,
+                        extBlockOffset * sizeof(ULONG), &blockIndex);
 
   return blockIndex;
 }
@@ -2656,9 +2806,7 @@ ULONG Storage32Impl_GetExtDepotBlock(StorageImpl* This, ULONG depotIndex)
  * This method is only for depot indexes equal or greater than
  * COUNT_BBDEPOTINHEADER.
  */
-void Storage32Impl_SetExtDepotBlock(StorageImpl* This,
-                                    ULONG depotIndex,
-                                    ULONG blockIndex)
+static void Storage32Impl_SetExtDepotBlock(StorageImpl* This, ULONG depotIndex, ULONG blockIndex)
 {
   ULONG depotBlocksPerExtBlock = (This->bigBlockSize / sizeof(ULONG)) - 1;
   ULONG numExtBlocks           = depotIndex - COUNT_BBDEPOTINHEADER;
@@ -2676,18 +2824,9 @@ void Storage32Impl_SetExtDepotBlock(StorageImpl* This,
 
   if (extBlockIndex != BLOCK_UNUSED)
   {
-    BYTE* depotBuffer;
-
-    depotBuffer = StorageImpl_GetBigBlock(This, extBlockIndex);
-
-    if (depotBuffer != 0)
-    {
-      StorageUtl_WriteDWord(depotBuffer,
-                            extBlockOffset * sizeof(ULONG),
-                            blockIndex);
-
-      StorageImpl_ReleaseBigBlock(This, depotBuffer);
-    }
+    StorageImpl_WriteDWordToBigBlock(This, extBlockIndex,
+                        extBlockOffset * sizeof(ULONG),
+                        blockIndex);
   }
 }
 
@@ -2696,11 +2835,11 @@ void Storage32Impl_SetExtDepotBlock(StorageImpl* This,
  *
  * Creates an extended depot block.
  */
-ULONG Storage32Impl_AddExtBlockDepot(StorageImpl* This)
+static ULONG Storage32Impl_AddExtBlockDepot(StorageImpl* This)
 {
   ULONG numExtBlocks           = This->extBigBlockDepotCount;
   ULONG nextExtBlock           = This->extBigBlockDepotStart;
-  BYTE* depotBuffer            = NULL;
+  BYTE  depotBuffer[BIG_BLOCK_SIZE];
   ULONG index                  = BLOCK_UNUSED;
   ULONG nextBlockOffset        = This->bigBlockSize - sizeof(ULONG);
   ULONG blocksPerDepotBlock    = This->bigBlockSize / sizeof(ULONG);
@@ -2730,17 +2869,15 @@ ULONG Storage32Impl_AddExtBlockDepot(StorageImpl* This)
     /*
      * Add the new extended block to the chain.
      */
-    depotBuffer = StorageImpl_GetBigBlock(This, nextExtBlock);
-    StorageUtl_WriteDWord(depotBuffer, nextBlockOffset, index);
-    StorageImpl_ReleaseBigBlock(This, depotBuffer);
+    StorageImpl_WriteDWordToBigBlock(This, nextExtBlock, nextBlockOffset,
+                                     index);
   }
 
   /*
    * Initialize this block.
    */
-  depotBuffer = StorageImpl_GetBigBlock(This, index);
   memset(depotBuffer, BLOCK_UNUSED, This->bigBlockSize);
-  StorageImpl_ReleaseBigBlock(This, depotBuffer);
+  StorageImpl_WriteBigBlock(This, index, depotBuffer);
 
   return index;
 }
@@ -2750,7 +2887,7 @@ ULONG Storage32Impl_AddExtBlockDepot(StorageImpl* This)
  *
  * This method will flag the specified block as free in the big block depot.
  */
-void  StorageImpl_FreeBigBlock(
+static void StorageImpl_FreeBigBlock(
   StorageImpl* This,
   ULONG          blockIndex)
 {
@@ -2784,7 +2921,7 @@ void  StorageImpl_FreeBigBlock(
  *
  * See Windows documentation for more details on IStorage methods.
  */
-HRESULT StorageImpl_GetNextBlockInChain(
+static HRESULT StorageImpl_GetNextBlockInChain(
   StorageImpl* This,
   ULONG        blockIndex,
   ULONG*       nextBlockIndex)
@@ -2792,7 +2929,8 @@ HRESULT StorageImpl_GetNextBlockInChain(
   ULONG offsetInDepot    = blockIndex * sizeof (ULONG);
   ULONG depotBlockCount  = offsetInDepot / This->bigBlockSize;
   ULONG depotBlockOffset = offsetInDepot % This->bigBlockSize;
-  void* depotBuffer;
+  BYTE depotBuffer[BIG_BLOCK_SIZE];
+  BOOL success;
   ULONG depotBlockIndexPos;
   int index;
 
@@ -2800,7 +2938,7 @@ HRESULT StorageImpl_GetNextBlockInChain(
 
   if(depotBlockCount >= This->bigBlockDepotCount)
   {
-    WARN("depotBlockCount %ld, bigBlockDepotCount %ld\n", depotBlockCount,
+    WARN("depotBlockCount %d, bigBlockDepotCount %d\n", depotBlockCount,
 	 This->bigBlockDepotCount);
     return STG_E_READFAULT;
   }
@@ -2824,9 +2962,9 @@ HRESULT StorageImpl_GetNextBlockInChain(
       depotBlockIndexPos = Storage32Impl_GetExtDepotBlock(This, depotBlockCount);
     }
 
-    depotBuffer = StorageImpl_GetROBigBlock(This, depotBlockIndexPos);
+    success = StorageImpl_ReadBigBlock(This, depotBlockIndexPos, depotBuffer);
 
-    if (!depotBuffer)
+    if (!success)
       return STG_E_READFAULT;
 
     for (index = 0; index < NUM_BLOCKS_PER_DEPOT_BLOCK; index++)
@@ -2834,7 +2972,6 @@ HRESULT StorageImpl_GetNextBlockInChain(
       StorageUtl_ReadDWord(depotBuffer, index*sizeof(ULONG), nextBlockIndex);
       This->blockDepotCached[index] = *nextBlockIndex;
     }
-    StorageImpl_ReleaseBigBlock(This, depotBuffer);
   }
 
   *nextBlockIndex = This->blockDepotCached[depotBlockOffset/sizeof(ULONG)];
@@ -2857,20 +2994,13 @@ HRESULT StorageImpl_GetNextBlockInChain(
  *    - BLOCK_UNUSED: there is no next extended block.
  *    - Any other return values denotes failure.
  */
-ULONG Storage32Impl_GetNextExtendedBlock(StorageImpl* This, ULONG blockIndex)
+static ULONG Storage32Impl_GetNextExtendedBlock(StorageImpl* This, ULONG blockIndex)
 {
   ULONG nextBlockIndex   = BLOCK_SPECIAL;
   ULONG depotBlockOffset = This->bigBlockSize - sizeof(ULONG);
-  void* depotBuffer;
 
-  depotBuffer = StorageImpl_GetROBigBlock(This, blockIndex);
-
-  if (depotBuffer!=0)
-  {
-    StorageUtl_ReadDWord(depotBuffer, depotBlockOffset, &nextBlockIndex);
-
-    StorageImpl_ReleaseBigBlock(This, depotBuffer);
-  }
+  StorageImpl_ReadDWordFromBigBlock(This, blockIndex, depotBlockOffset,
+                        &nextBlockIndex);
 
   return nextBlockIndex;
 }
@@ -2889,7 +3019,7 @@ ULONG Storage32Impl_GetNextExtendedBlock(StorageImpl* This, ULONG blockIndex)
  * Storage32Impl_SetNextBlockInChain(This, 7, BLOCK_END_OF_CHAIN);
  *
  */
-void  StorageImpl_SetNextBlockInChain(
+static void StorageImpl_SetNextBlockInChain(
           StorageImpl* This,
           ULONG          blockIndex,
           ULONG          nextBlock)
@@ -2898,7 +3028,6 @@ void  StorageImpl_SetNextBlockInChain(
   ULONG depotBlockCount  = offsetInDepot / This->bigBlockSize;
   ULONG depotBlockOffset = offsetInDepot % This->bigBlockSize;
   ULONG depotBlockIndexPos;
-  void* depotBuffer;
 
   assert(depotBlockCount < This->bigBlockDepotCount);
   assert(blockIndex != nextBlock);
@@ -2915,14 +3044,8 @@ void  StorageImpl_SetNextBlockInChain(
     depotBlockIndexPos = Storage32Impl_GetExtDepotBlock(This, depotBlockCount);
   }
 
-  depotBuffer = StorageImpl_GetBigBlock(This, depotBlockIndexPos);
-
-  if (depotBuffer!=0)
-  {
-    StorageUtl_WriteDWord(depotBuffer, depotBlockOffset, nextBlock);
-    StorageImpl_ReleaseBigBlock(This, depotBuffer);
-  }
-
+  StorageImpl_WriteDWordToBigBlock(This, depotBlockIndexPos, depotBlockOffset,
+                        nextBlock);
   /*
    * Update the cached block depot, if necessary.
    */
@@ -2937,22 +3060,24 @@ void  StorageImpl_SetNextBlockInChain(
  *
  * This method will read in the file header, i.e. big block index -1.
  */
-HRESULT StorageImpl_LoadFileHeader(
+static HRESULT StorageImpl_LoadFileHeader(
           StorageImpl* This)
 {
   HRESULT hr = STG_E_FILENOTFOUND;
-  void*   headerBigBlock = NULL;
+  BYTE    headerBigBlock[BIG_BLOCK_SIZE];
+  BOOL    success;
   int     index;
 
+  TRACE("\n");
   /*
    * Get a pointer to the big block of data containing the header.
    */
-  headerBigBlock = StorageImpl_GetROBigBlock(This, -1);
+  success = StorageImpl_ReadBigBlock(This, -1, headerBigBlock);
 
   /*
    * Extract the information from the header.
    */
-  if (headerBigBlock!=0)
+  if (success)
   {
     /*
      * Check for the "magic number" signature and return an error if it is not
@@ -2960,13 +3085,11 @@ HRESULT StorageImpl_LoadFileHeader(
      */
     if (memcmp(headerBigBlock, STORAGE_oldmagic, sizeof(STORAGE_oldmagic))==0)
     {
-      StorageImpl_ReleaseBigBlock(This, headerBigBlock);
       return STG_E_OLDFORMAT;
     }
 
     if (memcmp(headerBigBlock, STORAGE_magic, sizeof(STORAGE_magic))!=0)
     {
-      StorageImpl_ReleaseBigBlock(This, headerBigBlock);
       return STG_E_INVALIDHEADER;
     }
 
@@ -3039,11 +3162,6 @@ HRESULT StorageImpl_LoadFileHeader(
     }
     else
 	hr = S_OK;
-
-    /*
-     * Release the block.
-     */
-    StorageImpl_ReleaseBigBlock(This, headerBigBlock);
   }
 
   return hr;
@@ -3054,7 +3172,7 @@ HRESULT StorageImpl_LoadFileHeader(
  *
  * This method will save to the file the header, i.e. big block -1.
  */
-void StorageImpl_SaveFileHeader(
+static void StorageImpl_SaveFileHeader(
           StorageImpl* This)
 {
   BYTE   headerBigBlock[BIG_BLOCK_SIZE];
@@ -3160,20 +3278,20 @@ BOOL StorageImpl_ReadProperty(
 {
   BYTE           currentProperty[PROPSET_BLOCK_SIZE];
   ULARGE_INTEGER offsetInPropSet;
-  BOOL         readSuccessful;
+  HRESULT        readRes;
   ULONG          bytesRead;
 
   offsetInPropSet.u.HighPart = 0;
   offsetInPropSet.u.LowPart  = index * PROPSET_BLOCK_SIZE;
 
-  readSuccessful = BlockChainStream_ReadAt(
+  readRes = BlockChainStream_ReadAt(
                     This->rootBlockChain,
                     offsetInPropSet,
                     PROPSET_BLOCK_SIZE,
                     currentProperty,
                     &bytesRead);
 
-  if (readSuccessful)
+  if (SUCCEEDED(readRes))
   {
     /* replace the name of root entry (often "Root Entry") by the file name */
     WCHAR *propName = (index == This->base.rootPropertySetIndex) ?
@@ -3246,7 +3364,7 @@ BOOL StorageImpl_ReadProperty(
     buffer->size.u.HighPart = 0;
   }
 
-  return readSuccessful;
+  return SUCCEEDED(readRes) ? TRUE : FALSE;
 }
 
 /*********************************************************************
@@ -3259,7 +3377,7 @@ BOOL StorageImpl_WriteProperty(
 {
   BYTE           currentProperty[PROPSET_BLOCK_SIZE];
   ULARGE_INTEGER offsetInPropSet;
-  BOOL         writeSuccessful;
+  HRESULT        writeRes;
   ULONG          bytesWritten;
 
   offsetInPropSet.u.HighPart = 0;
@@ -3329,75 +3447,79 @@ BOOL StorageImpl_WriteProperty(
       OFFSET_PS_SIZE,
       buffer->size.u.LowPart);
 
-  writeSuccessful = BlockChainStream_WriteAt(This->rootBlockChain,
-                                            offsetInPropSet,
-                                            PROPSET_BLOCK_SIZE,
-                                            currentProperty,
-                                            &bytesWritten);
-  return writeSuccessful;
+  writeRes = BlockChainStream_WriteAt(This->rootBlockChain,
+                                      offsetInPropSet,
+                                      PROPSET_BLOCK_SIZE,
+                                      currentProperty,
+                                      &bytesWritten);
+  return SUCCEEDED(writeRes) ? TRUE : FALSE;
 }
 
-BOOL StorageImpl_ReadBigBlock(
+static BOOL StorageImpl_ReadBigBlock(
   StorageImpl* This,
   ULONG          blockIndex,
   void*          buffer)
 {
-  void* bigBlockBuffer;
+  ULARGE_INTEGER ulOffset;
+  DWORD  read;
 
-  bigBlockBuffer = StorageImpl_GetROBigBlock(This, blockIndex);
+  ulOffset.u.HighPart = 0;
+  ulOffset.u.LowPart = BLOCK_GetBigBlockOffset(blockIndex);
 
-  if (bigBlockBuffer!=0)
-  {
-    memcpy(buffer, bigBlockBuffer, This->bigBlockSize);
-
-    StorageImpl_ReleaseBigBlock(This, bigBlockBuffer);
-
-    return TRUE;
-  }
-
-  return FALSE;
+  StorageImpl_ReadAt(This, ulOffset, buffer, This->bigBlockSize, &read);
+  return (read == This->bigBlockSize);
 }
 
-BOOL StorageImpl_WriteBigBlock(
+static BOOL StorageImpl_ReadDWordFromBigBlock(
+  StorageImpl*  This,
+  ULONG         blockIndex,
+  ULONG         offset,
+  DWORD*        value)
+{
+  ULARGE_INTEGER ulOffset;
+  DWORD  read;
+  DWORD  tmp;
+
+  ulOffset.u.HighPart = 0;
+  ulOffset.u.LowPart = BLOCK_GetBigBlockOffset(blockIndex);
+  ulOffset.u.LowPart += offset;
+
+  StorageImpl_ReadAt(This, ulOffset, &tmp, sizeof(DWORD), &read);
+  *value = le32toh(tmp);
+  return (read == sizeof(DWORD));
+}
+
+static BOOL StorageImpl_WriteBigBlock(
   StorageImpl* This,
   ULONG          blockIndex,
   void*          buffer)
 {
-  void* bigBlockBuffer;
+  ULARGE_INTEGER ulOffset;
+  DWORD  wrote;
 
-  bigBlockBuffer = StorageImpl_GetBigBlock(This, blockIndex);
+  ulOffset.u.HighPart = 0;
+  ulOffset.u.LowPart = BLOCK_GetBigBlockOffset(blockIndex);
 
-  if (bigBlockBuffer!=0)
-  {
-    memcpy(bigBlockBuffer, buffer, This->bigBlockSize);
-
-    StorageImpl_ReleaseBigBlock(This, bigBlockBuffer);
-
-    return TRUE;
-  }
-
-  return FALSE;
+  StorageImpl_WriteAt(This, ulOffset, buffer, This->bigBlockSize, &wrote);
+  return (wrote == This->bigBlockSize);
 }
 
-void* StorageImpl_GetROBigBlock(
+static BOOL StorageImpl_WriteDWordToBigBlock(
   StorageImpl* This,
-  ULONG          blockIndex)
+  ULONG         blockIndex,
+  ULONG         offset,
+  DWORD         value)
 {
-  return BIGBLOCKFILE_GetROBigBlock(This->bigBlockFile, blockIndex);
-}
+  ULARGE_INTEGER ulOffset;
+  DWORD  wrote;
 
-void* StorageImpl_GetBigBlock(
-  StorageImpl* This,
-  ULONG          blockIndex)
-{
-  return BIGBLOCKFILE_GetBigBlock(This->bigBlockFile, blockIndex);
-}
+  ulOffset.u.HighPart = 0;
+  ulOffset.u.LowPart = BLOCK_GetBigBlockOffset(blockIndex);
+  ulOffset.u.LowPart += offset;
 
-void StorageImpl_ReleaseBigBlock(
-  StorageImpl* This,
-  void*          pBigBlock)
-{
-  BIGBLOCKFILE_ReleaseBigBlock(This->bigBlockFile, pBigBlock);
+  value = htole32(value);
+  StorageImpl_WriteAt(This, ulOffset, &value, sizeof(DWORD), &wrote);
+  return (wrote == sizeof(DWORD));
 }
 
 /******************************************************************************
@@ -3412,10 +3534,11 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
 {
   ULONG bbHeadOfChain = BLOCK_END_OF_CHAIN;
   ULARGE_INTEGER size, offset;
-  ULONG cbRead, cbWritten, cbTotalRead, cbTotalWritten;
+  ULONG cbRead, cbWritten;
+  ULARGE_INTEGER cbTotalRead;
   ULONG propertyIndex;
-  BOOL successWrite;
-  HRESULT successRead;
+  HRESULT resWrite = S_OK;
+  HRESULT resRead;
   StgProperty chainProperty;
   BYTE *buffer;
   BlockChainStream *bbTempChain = NULL;
@@ -3442,32 +3565,43 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
    */
   offset.u.LowPart = 0;
   offset.u.HighPart = 0;
-  cbTotalRead = 0;
-  cbTotalWritten = 0;
+  cbTotalRead.QuadPart = 0;
 
   buffer = HeapAlloc(GetProcessHeap(),0,DEF_SMALL_BLOCK_SIZE);
   do
   {
-    successRead = SmallBlockChainStream_ReadAt(*ppsbChain,
-                                               offset,
-                                               DEF_SMALL_BLOCK_SIZE,
-                                               buffer,
-                                               &cbRead);
-    cbTotalRead += cbRead;
+    resRead = SmallBlockChainStream_ReadAt(*ppsbChain,
+                                           offset,
+                                           This->smallBlockSize,
+                                           buffer,
+                                           &cbRead);
+    if (FAILED(resRead))
+        break;
 
-    successWrite = BlockChainStream_WriteAt(bbTempChain,
+    if (cbRead > 0)
+    {
+        cbTotalRead.QuadPart += cbRead;
+
+        resWrite = BlockChainStream_WriteAt(bbTempChain,
                                             offset,
                                             cbRead,
                                             buffer,
                                             &cbWritten);
-    cbTotalWritten += cbWritten;
 
-    offset.u.LowPart += This->smallBlockSize;
+        if (FAILED(resWrite))
+            break;
 
-  } while (SUCCEEDED(successRead) && successWrite);
+        offset.u.LowPart += This->smallBlockSize;
+    }
+  } while (cbTotalRead.QuadPart < size.QuadPart);
   HeapFree(GetProcessHeap(),0,buffer);
 
-  assert(cbTotalRead == cbTotalWritten);
+  if (FAILED(resRead) || FAILED(resWrite))
+  {
+    ERR("conversion failed: resRead = 0x%08x, resWrite = 0x%08x\n", resRead, resWrite);
+    BlockChainStream_Destroy(bbTempChain);
+    return NULL;
+  }
 
   /*
    * Destroy the small block chain.
@@ -3501,7 +3635,7 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
   return bigBlockChain;
 }
 
-void StorageInternalImpl_Destroy( StorageBaseImpl *iface)
+static void StorageInternalImpl_Destroy( StorageBaseImpl *iface)
 {
   StorageInternalImpl* This = (StorageInternalImpl*) iface;
 
@@ -3516,7 +3650,7 @@ void StorageInternalImpl_Destroy( StorageBaseImpl *iface)
 ** The non-root storages cannot be opened in transacted mode thus this function
 ** does nothing.
 */
-HRESULT WINAPI StorageInternalImpl_Commit(
+static HRESULT WINAPI StorageInternalImpl_Commit(
   IStorage*            iface,
   DWORD                  grfCommitFlags)  /* [in] */
 {
@@ -3530,20 +3664,20 @@ HRESULT WINAPI StorageInternalImpl_Commit(
 ** The non-root storages cannot be opened in transacted mode thus this function
 ** does nothing.
 */
-HRESULT WINAPI StorageInternalImpl_Revert(
+static HRESULT WINAPI StorageInternalImpl_Revert(
   IStorage*            iface)
 {
   return S_OK;
 }
 
-void IEnumSTATSTGImpl_Destroy(IEnumSTATSTGImpl* This)
+static void IEnumSTATSTGImpl_Destroy(IEnumSTATSTGImpl* This)
 {
   IStorage_Release((IStorage*)This->parentStorage);
   HeapFree(GetProcessHeap(), 0, This->stackToVisit);
   HeapFree(GetProcessHeap(), 0, This);
 }
 
-HRESULT WINAPI IEnumSTATSTGImpl_QueryInterface(
+static HRESULT WINAPI IEnumSTATSTGImpl_QueryInterface(
   IEnumSTATSTG*     iface,
   REFIID            riid,
   void**            ppvObject)
@@ -3565,7 +3699,7 @@ HRESULT WINAPI IEnumSTATSTGImpl_QueryInterface(
    * Compare the riid with the interface IDs implemented by this object.
    */
   if (IsEqualGUID(&IID_IUnknown, riid) ||
-      IsEqualGUID(&IID_IStorage, riid))
+      IsEqualGUID(&IID_IEnumSTATSTG, riid))
   {
     *ppvObject = (IEnumSTATSTG*)This;
     IEnumSTATSTG_AddRef((IEnumSTATSTG*)This);
@@ -3575,14 +3709,14 @@ HRESULT WINAPI IEnumSTATSTGImpl_QueryInterface(
   return E_NOINTERFACE;
 }
 
-ULONG   WINAPI IEnumSTATSTGImpl_AddRef(
+static ULONG   WINAPI IEnumSTATSTGImpl_AddRef(
   IEnumSTATSTG* iface)
 {
   IEnumSTATSTGImpl* const This=(IEnumSTATSTGImpl*)iface;
   return InterlockedIncrement(&This->ref);
 }
 
-ULONG   WINAPI IEnumSTATSTGImpl_Release(
+static ULONG   WINAPI IEnumSTATSTGImpl_Release(
   IEnumSTATSTG* iface)
 {
   IEnumSTATSTGImpl* const This=(IEnumSTATSTGImpl*)iface;
@@ -3602,7 +3736,7 @@ ULONG   WINAPI IEnumSTATSTGImpl_Release(
   return newRef;
 }
 
-HRESULT WINAPI IEnumSTATSTGImpl_Next(
+static HRESULT WINAPI IEnumSTATSTGImpl_Next(
   IEnumSTATSTG* iface,
   ULONG             celt,
   STATSTG*          rgelt,
@@ -3685,7 +3819,7 @@ HRESULT WINAPI IEnumSTATSTGImpl_Next(
 }
 
 
-HRESULT WINAPI IEnumSTATSTGImpl_Skip(
+static HRESULT WINAPI IEnumSTATSTGImpl_Skip(
   IEnumSTATSTG* iface,
   ULONG             celt)
 {
@@ -3737,7 +3871,7 @@ HRESULT WINAPI IEnumSTATSTGImpl_Skip(
   return S_FALSE;
 }
 
-HRESULT WINAPI IEnumSTATSTGImpl_Reset(
+static HRESULT WINAPI IEnumSTATSTGImpl_Reset(
   IEnumSTATSTG* iface)
 {
   IEnumSTATSTGImpl* const This=(IEnumSTATSTGImpl*)iface;
@@ -3771,7 +3905,7 @@ HRESULT WINAPI IEnumSTATSTGImpl_Reset(
   return S_OK;
 }
 
-HRESULT WINAPI IEnumSTATSTGImpl_Clone(
+static HRESULT WINAPI IEnumSTATSTGImpl_Clone(
   IEnumSTATSTG* iface,
   IEnumSTATSTG**    ppenum)
 {
@@ -3814,7 +3948,7 @@ HRESULT WINAPI IEnumSTATSTGImpl_Clone(
   return S_OK;
 }
 
-INT IEnumSTATSTGImpl_FindParentProperty(
+static INT IEnumSTATSTGImpl_FindParentProperty(
   IEnumSTATSTGImpl *This,
   ULONG             childProperty,
   StgProperty      *currentProperty,
@@ -3879,7 +4013,7 @@ INT IEnumSTATSTGImpl_FindParentProperty(
   return PROPERTY_NULL;
 }
 
-ULONG IEnumSTATSTGImpl_FindProperty(
+static ULONG IEnumSTATSTGImpl_FindProperty(
   IEnumSTATSTGImpl* This,
   const OLECHAR*  lpszPropName,
   StgProperty*      currentProperty)
@@ -3924,7 +4058,7 @@ ULONG IEnumSTATSTGImpl_FindProperty(
   return PROPERTY_NULL;
 }
 
-void IEnumSTATSTGImpl_PushSearchNode(
+static void IEnumSTATSTGImpl_PushSearchNode(
   IEnumSTATSTGImpl* This,
   ULONG             nodeToPush)
 {
@@ -3973,7 +4107,7 @@ void IEnumSTATSTGImpl_PushSearchNode(
   }
 }
 
-ULONG IEnumSTATSTGImpl_PopSearchNode(
+static ULONG IEnumSTATSTGImpl_PopSearchNode(
   IEnumSTATSTGImpl* This,
   BOOL            remove)
 {
@@ -4008,7 +4142,7 @@ static const IEnumSTATSTGVtbl IEnumSTATSTGImpl_Vtbl =
 ** IEnumSTATSTGImpl implementation
 */
 
-IEnumSTATSTGImpl* IEnumSTATSTGImpl_Construct(
+static IEnumSTATSTGImpl* IEnumSTATSTGImpl_Construct(
   StorageImpl* parentStorage,
   ULONG          firstPropertyNode)
 {
@@ -4079,7 +4213,7 @@ static const IStorageVtbl Storage32InternalImpl_Vtbl =
 ** Storage32InternalImpl implementation
 */
 
-StorageInternalImpl* StorageInternalImpl_Construct(
+static StorageInternalImpl* StorageInternalImpl_Construct(
   StorageImpl* ancestorStorage,
   DWORD        openFlags,
   ULONG        rootPropertyIndex)
@@ -4096,11 +4230,17 @@ StorageInternalImpl* StorageInternalImpl_Construct(
     memset(newStorage, 0, sizeof(StorageInternalImpl));
 
     /*
+     * Initialize the stream list
+     */
+
+    list_init(&newStorage->base.strmHead);
+
+    /*
      * Initialize the virtual function table.
      */
     newStorage->base.lpVtbl = &Storage32InternalImpl_Vtbl;
     newStorage->base.v_destructor = &StorageInternalImpl_Destroy;
-    newStorage->base.openFlags = openFlags;
+    newStorage->base.openFlags = (openFlags & ~STGM_CREATE);
 
     /*
      * Keep the ancestor storage pointer and nail a reference to it.
@@ -4300,7 +4440,7 @@ void BlockChainStream_Destroy(BlockChainStream* This)
  * This->headOfStreamPlaceHolder.
  *
  */
-ULONG BlockChainStream_GetHeadOfChain(BlockChainStream* This)
+static ULONG BlockChainStream_GetHeadOfChain(BlockChainStream* This)
 {
   StgProperty chainProperty;
   BOOL      readSuccessful;
@@ -4331,7 +4471,7 @@ ULONG BlockChainStream_GetHeadOfChain(BlockChainStream* This)
  * This is not the size of the stream as the last block may not be full!
  *
  */
-ULONG BlockChainStream_GetCount(BlockChainStream* This)
+static ULONG BlockChainStream_GetCount(BlockChainStream* This)
 {
   ULONG blockIndex;
   ULONG count = 0;
@@ -4359,7 +4499,7 @@ ULONG BlockChainStream_GetCount(BlockChainStream* This)
  * bytesRead may be NULL.
  * Failure will be returned if the specified number of bytes has not been read.
  */
-BOOL BlockChainStream_ReadAt(BlockChainStream* This,
+HRESULT BlockChainStream_ReadAt(BlockChainStream* This,
   ULARGE_INTEGER offset,
   ULONG          size,
   void*          buffer,
@@ -4370,7 +4510,8 @@ BOOL BlockChainStream_ReadAt(BlockChainStream* This,
   ULONG bytesToReadInBuffer;
   ULONG blockIndex;
   BYTE* bufferWalker;
-  BYTE* bigBlockBuffer;
+
+  TRACE("(%p)-> %i %p %i %p\n",This, offset.u.LowPart, buffer, size, bytesRead);
 
   /*
    * Find the first block in the stream that contains part of the buffer.
@@ -4394,12 +4535,12 @@ BOOL BlockChainStream_ReadAt(BlockChainStream* This,
   while ( (blockNoInSequence > 0) &&  (blockIndex != BLOCK_END_OF_CHAIN))
   {
     if(FAILED(StorageImpl_GetNextBlockInChain(This->parentStorage, blockIndex, &blockIndex)))
-      return FALSE;
+      return STG_E_DOCFILECORRUPT;
     blockNoInSequence--;
   }
 
   if ((blockNoInSequence > 0) && (blockIndex == BLOCK_END_OF_CHAIN))
-      return FALSE; /* We failed to find the starting block */
+      return STG_E_DOCFILECORRUPT; /* We failed to find the starting block */
 
   This->lastBlockNoInSequenceIndex = blockIndex;
 
@@ -4411,36 +4552,40 @@ BOOL BlockChainStream_ReadAt(BlockChainStream* This,
 
   while ( (size > 0) && (blockIndex != BLOCK_END_OF_CHAIN) )
   {
+    ULARGE_INTEGER ulOffset;
+    DWORD bytesReadAt;
     /*
      * Calculate how many bytes we can copy from this big block.
      */
     bytesToReadInBuffer =
       min(This->parentStorage->bigBlockSize - offsetInBlock, size);
 
-    /*
-     * Copy those bytes to the buffer
-     */
-    bigBlockBuffer =
-      StorageImpl_GetROBigBlock(This->parentStorage, blockIndex);
+     TRACE("block %i\n",blockIndex);
+     ulOffset.u.HighPart = 0;
+     ulOffset.u.LowPart = BLOCK_GetBigBlockOffset(blockIndex) +
+                             offsetInBlock;
 
-    memcpy(bufferWalker, bigBlockBuffer + offsetInBlock, bytesToReadInBuffer);
-
-    StorageImpl_ReleaseBigBlock(This->parentStorage, bigBlockBuffer);
-
+     StorageImpl_ReadAt(This->parentStorage,
+         ulOffset,
+         bufferWalker,
+         bytesToReadInBuffer,
+         &bytesReadAt);
     /*
      * Step to the next big block.
      */
-    if(FAILED(StorageImpl_GetNextBlockInChain(This->parentStorage, blockIndex, &blockIndex)))
-      return FALSE;
+    if( size > bytesReadAt && FAILED(StorageImpl_GetNextBlockInChain(This->parentStorage, blockIndex, &blockIndex)))
+      return STG_E_DOCFILECORRUPT;
 
-    bufferWalker += bytesToReadInBuffer;
-    size         -= bytesToReadInBuffer;
-    *bytesRead   += bytesToReadInBuffer;
+    bufferWalker += bytesReadAt;
+    size         -= bytesReadAt;
+    *bytesRead   += bytesReadAt;
     offsetInBlock = 0;  /* There is no offset on the next block */
 
+    if (bytesToReadInBuffer != bytesReadAt)
+        break;
   }
 
-  return (size == 0);
+  return (size == 0) ? S_OK : STG_E_READFAULT;
 }
 
 /******************************************************************************
@@ -4450,7 +4595,7 @@ BOOL BlockChainStream_ReadAt(BlockChainStream* This,
  * bytesWritten may be NULL.
  * Will fail if not all specified number of bytes have been written.
  */
-BOOL BlockChainStream_WriteAt(BlockChainStream* This,
+HRESULT BlockChainStream_WriteAt(BlockChainStream* This,
   ULARGE_INTEGER    offset,
   ULONG             size,
   const void*       buffer,
@@ -4461,7 +4606,6 @@ BOOL BlockChainStream_WriteAt(BlockChainStream* This,
   ULONG bytesToWrite;
   ULONG blockIndex;
   const BYTE* bufferWalker;
-  BYTE* bigBlockBuffer;
 
   /*
    * Find the first block in the stream that contains part of the buffer.
@@ -4486,11 +4630,19 @@ BOOL BlockChainStream_WriteAt(BlockChainStream* This,
   {
     if(FAILED(StorageImpl_GetNextBlockInChain(This->parentStorage, blockIndex,
 					      &blockIndex)))
-      return FALSE;
+      return STG_E_DOCFILECORRUPT;
     blockNoInSequence--;
   }
 
   This->lastBlockNoInSequenceIndex = blockIndex;
+
+  /* BlockChainStream_SetSize should have already been called to ensure we have
+   * enough blocks in the chain to write into */
+  if (blockIndex == BLOCK_END_OF_CHAIN)
+  {
+    ERR("not enough blocks in chain to write data\n");
+    return STG_E_DOCFILECORRUPT;
+  }
 
   /*
    * Here, I'm casting away the constness on the buffer variable
@@ -4501,34 +4653,42 @@ BOOL BlockChainStream_WriteAt(BlockChainStream* This,
 
   while ( (size > 0) && (blockIndex != BLOCK_END_OF_CHAIN) )
   {
+    ULARGE_INTEGER ulOffset;
+    DWORD bytesWrittenAt;
     /*
      * Calculate how many bytes we can copy from this big block.
      */
     bytesToWrite =
       min(This->parentStorage->bigBlockSize - offsetInBlock, size);
 
-    /*
-     * Copy those bytes to the buffer
-     */
-    bigBlockBuffer = StorageImpl_GetBigBlock(This->parentStorage, blockIndex);
+    TRACE("block %i\n",blockIndex);
+    ulOffset.u.HighPart = 0;
+    ulOffset.u.LowPart = BLOCK_GetBigBlockOffset(blockIndex) +
+                             offsetInBlock;
 
-    memcpy(bigBlockBuffer + offsetInBlock, bufferWalker, bytesToWrite);
-
-    StorageImpl_ReleaseBigBlock(This->parentStorage, bigBlockBuffer);
+    StorageImpl_WriteAt(This->parentStorage,
+         ulOffset,
+         (BYTE*)bufferWalker,
+         bytesToWrite,
+         &bytesWrittenAt);
 
     /*
      * Step to the next big block.
      */
-    if(FAILED(StorageImpl_GetNextBlockInChain(This->parentStorage, blockIndex,
+    if(size > bytesWrittenAt && FAILED(StorageImpl_GetNextBlockInChain(This->parentStorage, blockIndex,
 					      &blockIndex)))
-      return FALSE;
-    bufferWalker  += bytesToWrite;
-    size          -= bytesToWrite;
-    *bytesWritten += bytesToWrite;
+      return STG_E_DOCFILECORRUPT;
+
+    bufferWalker  += bytesWrittenAt;
+    size          -= bytesWrittenAt;
+    *bytesWritten += bytesWrittenAt;
     offsetInBlock  = 0;      /* There is no offset on the next block */
+
+    if (bytesWrittenAt != bytesToWrite)
+      break;
   }
 
-  return (size == 0);
+  return (size == 0) ? S_OK : STG_E_WRITEFAULT;
 }
 
 /******************************************************************************
@@ -4536,8 +4696,8 @@ BOOL BlockChainStream_WriteAt(BlockChainStream* This,
  *
  * Shrinks this chain in the big block depot.
  */
-BOOL BlockChainStream_Shrink(BlockChainStream* This,
-                               ULARGE_INTEGER    newSize)
+static BOOL BlockChainStream_Shrink(BlockChainStream* This,
+                                    ULARGE_INTEGER    newSize)
 {
   ULONG blockIndex, extraBlock;
   ULONG numBlocks;
@@ -4604,8 +4764,8 @@ BOOL BlockChainStream_Shrink(BlockChainStream* This,
  *
  * Grows this chain in the big block depot.
  */
-BOOL BlockChainStream_Enlarge(BlockChainStream* This,
-                                ULARGE_INTEGER    newSize)
+static BOOL BlockChainStream_Enlarge(BlockChainStream* This,
+                                     ULARGE_INTEGER    newSize)
 {
   ULONG blockIndex, currentBlock;
   ULONG newNumBlocks;
@@ -4735,21 +4895,6 @@ BOOL BlockChainStream_SetSize(
   }
   else
   {
-    ULARGE_INTEGER fileSize =
-      BIGBLOCKFILE_GetSize(This->parentStorage->bigBlockFile);
-
-    ULONG diff = newSize.u.LowPart - size.u.LowPart;
-
-    /*
-     * Make sure the file stays a multiple of blocksize
-     */
-    if ((diff % This->parentStorage->bigBlockSize) != 0)
-      diff += (This->parentStorage->bigBlockSize -
-                (diff % This->parentStorage->bigBlockSize) );
-
-    fileSize.u.LowPart += diff;
-    BIGBLOCKFILE_SetSize(This->parentStorage->bigBlockFile, fileSize);
-
     BlockChainStream_Enlarge(This, newSize);
   }
 
@@ -4762,7 +4907,7 @@ BOOL BlockChainStream_SetSize(
  * Returns the size of this chain.
  * Will return the block count if this chain doesn't have a property.
  */
-ULARGE_INTEGER BlockChainStream_GetSize(BlockChainStream* This)
+static ULARGE_INTEGER BlockChainStream_GetSize(BlockChainStream* This)
 {
   StgProperty chainProperty;
 
@@ -4826,7 +4971,7 @@ void SmallBlockChainStream_Destroy(
  *
  * Returns the head of this chain of small blocks.
  */
-ULONG SmallBlockChainStream_GetHeadOfChain(
+static ULONG SmallBlockChainStream_GetHeadOfChain(
   SmallBlockChainStream* This)
 {
   StgProperty chainProperty;
@@ -4858,7 +5003,7 @@ ULONG SmallBlockChainStream_GetHeadOfChain(
  *    - BLOCK_END_OF_CHAIN: end of this chain
  *    - BLOCK_UNUSED: small block 'blockIndex' is free
  */
-HRESULT SmallBlockChainStream_GetNextBlockInChain(
+static HRESULT SmallBlockChainStream_GetNextBlockInChain(
   SmallBlockChainStream* This,
   ULONG                  blockIndex,
   ULONG*                 nextBlockInChain)
@@ -4866,7 +5011,7 @@ HRESULT SmallBlockChainStream_GetNextBlockInChain(
   ULARGE_INTEGER offsetOfBlockInDepot;
   DWORD  buffer;
   ULONG  bytesRead;
-  BOOL success;
+  HRESULT res;
 
   *nextBlockInChain = BLOCK_END_OF_CHAIN;
 
@@ -4876,20 +5021,20 @@ HRESULT SmallBlockChainStream_GetNextBlockInChain(
   /*
    * Read those bytes in the buffer from the small block file.
    */
-  success = BlockChainStream_ReadAt(
+  res = BlockChainStream_ReadAt(
               This->parentStorage->smallBlockDepotChain,
               offsetOfBlockInDepot,
               sizeof(DWORD),
               &buffer,
               &bytesRead);
 
-  if (success)
+  if (SUCCEEDED(res))
   {
     StorageUtl_ReadDWord((BYTE *)&buffer, 0, nextBlockInChain);
     return S_OK;
   }
 
-  return STG_E_READFAULT;
+  return res;
 }
 
 /******************************************************************************
@@ -4900,7 +5045,7 @@ HRESULT SmallBlockChainStream_GetNextBlockInChain(
  * To set the end of chain use BLOCK_END_OF_CHAIN as nextBlock.
  * To flag a block as free use BLOCK_UNUSED as nextBlock.
  */
-void SmallBlockChainStream_SetNextBlockInChain(
+static void SmallBlockChainStream_SetNextBlockInChain(
   SmallBlockChainStream* This,
   ULONG                  blockIndex,
   ULONG                  nextBlock)
@@ -4930,7 +5075,7 @@ void SmallBlockChainStream_SetNextBlockInChain(
  *
  * Flag small block 'blockIndex' as free in the small block depot.
  */
-void SmallBlockChainStream_FreeBlock(
+static void SmallBlockChainStream_FreeBlock(
   SmallBlockChainStream* This,
   ULONG                  blockIndex)
 {
@@ -4944,7 +5089,7 @@ void SmallBlockChainStream_FreeBlock(
  * enlarged if necessary. The small block chain will also be enlarged if
  * necessary.
  */
-ULONG SmallBlockChainStream_GetNextFreeBlock(
+static ULONG SmallBlockChainStream_GetNextFreeBlock(
   SmallBlockChainStream* This)
 {
   ULARGE_INTEGER offsetOfBlockInDepot;
@@ -4952,7 +5097,7 @@ ULONG SmallBlockChainStream_GetNextFreeBlock(
   ULONG bytesRead;
   ULONG blockIndex = 0;
   ULONG nextBlockIndex = BLOCK_END_OF_CHAIN;
-  BOOL success = TRUE;
+  HRESULT res = S_OK;
   ULONG smallBlocksPerBigBlock;
 
   offsetOfBlockInDepot.u.HighPart = 0;
@@ -4964,7 +5109,7 @@ ULONG SmallBlockChainStream_GetNextFreeBlock(
   {
     offsetOfBlockInDepot.u.LowPart = blockIndex * sizeof(ULONG);
 
-    success = BlockChainStream_ReadAt(
+    res = BlockChainStream_ReadAt(
                 This->parentStorage->smallBlockDepotChain,
                 offsetOfBlockInDepot,
                 sizeof(DWORD),
@@ -4974,7 +5119,7 @@ ULONG SmallBlockChainStream_GetNextFreeBlock(
     /*
      * If we run out of space for the small block depot, enlarge it
      */
-    if (success)
+    if (SUCCEEDED(res))
     {
       StorageUtl_ReadDWord((BYTE *)&buffer, 0, &nextBlockIndex);
 
@@ -4988,7 +5133,7 @@ ULONG SmallBlockChainStream_GetNextFreeBlock(
 
       ULONG sbdIndex = This->parentStorage->smallBlockDepotStart;
       ULONG nextBlock, newsbdIndex;
-      BYTE* smallBlockDepot;
+      BYTE smallBlockDepot[BIG_BLOCK_SIZE];
 
       nextBlock = sbdIndex;
       while (nextBlock != BLOCK_END_OF_CHAIN)
@@ -5012,11 +5157,8 @@ ULONG SmallBlockChainStream_GetNextFreeBlock(
       /*
        * Initialize all the small blocks to free
        */
-      smallBlockDepot =
-        StorageImpl_GetBigBlock(This->parentStorage, newsbdIndex);
-
       memset(smallBlockDepot, BLOCK_UNUSED, This->parentStorage->bigBlockSize);
-      StorageImpl_ReleaseBigBlock(This->parentStorage, smallBlockDepot);
+      StorageImpl_WriteBigBlock(This->parentStorage, newsbdIndex, smallBlockDepot);
 
       if (count == 0)
       {
@@ -5166,29 +5308,29 @@ HRESULT SmallBlockChainStream_ReadAt(
      * The small block has already been identified so it shouldn't fail
      * unless the file is corrupt.
      */
-    if (!BlockChainStream_ReadAt(This->parentStorage->smallBlockRootChain,
+    rc = BlockChainStream_ReadAt(This->parentStorage->smallBlockRootChain,
       offsetInBigBlockFile,
       bytesToReadInBuffer,
       bufferWalker,
-      &bytesReadFromBigBlockFile))
-      return STG_E_DOCFILECORRUPT;
+      &bytesReadFromBigBlockFile);
 
-    assert(bytesReadFromBigBlockFile == bytesToReadInBuffer);
+    if (FAILED(rc))
+      return rc;
 
     /*
      * Step to the next big block.
      */
     rc = SmallBlockChainStream_GetNextBlockInChain(This, blockIndex, &blockIndex);
     if(FAILED(rc))
-      return rc;
+      return STG_E_DOCFILECORRUPT;
 
-    bufferWalker += bytesToReadInBuffer;
-    size         -= bytesToReadInBuffer;
-    *bytesRead   += bytesToReadInBuffer;
-    offsetInBlock = 0;  /* There is no offset on the next block */
+    bufferWalker += bytesReadFromBigBlockFile;
+    size         -= bytesReadFromBigBlockFile;
+    *bytesRead   += bytesReadFromBigBlockFile;
+    offsetInBlock = (offsetInBlock + bytesReadFromBigBlockFile) % This->parentStorage->smallBlockSize;
   }
 
-  return rc;
+  return (size == 0) ? S_OK : STG_E_READFAULT;
 }
 
 /******************************************************************************
@@ -5198,7 +5340,7 @@ HRESULT SmallBlockChainStream_ReadAt(
  * bytesWritten may be NULL.
  * Will fail if not all specified number of bytes have been written.
  */
-BOOL SmallBlockChainStream_WriteAt(
+HRESULT SmallBlockChainStream_WriteAt(
   SmallBlockChainStream* This,
   ULARGE_INTEGER offset,
   ULONG          size,
@@ -5212,8 +5354,9 @@ BOOL SmallBlockChainStream_WriteAt(
   ULONG offsetInBlock = offset.u.LowPart % This->parentStorage->smallBlockSize;
   ULONG bytesToWriteInBuffer;
   ULONG blockIndex;
-  ULONG bytesWrittenFromBigBlockFile;
+  ULONG bytesWrittenToBigBlockFile;
   const BYTE* bufferWalker;
+  HRESULT res;
 
   /*
    * This should never happen on a small block file.
@@ -5228,7 +5371,7 @@ BOOL SmallBlockChainStream_WriteAt(
   while ( (blockNoInSequence > 0) &&  (blockIndex != BLOCK_END_OF_CHAIN))
   {
     if(FAILED(SmallBlockChainStream_GetNextBlockInChain(This, blockIndex, &blockIndex)))
-      return FALSE;
+      return STG_E_DOCFILECORRUPT;
     blockNoInSequence--;
   }
 
@@ -5260,13 +5403,14 @@ BOOL SmallBlockChainStream_WriteAt(
     /*
      * Write those bytes in the buffer to the small block file.
      */
-    BlockChainStream_WriteAt(This->parentStorage->smallBlockRootChain,
+    res = BlockChainStream_WriteAt(
+      This->parentStorage->smallBlockRootChain,
       offsetInBigBlockFile,
       bytesToWriteInBuffer,
       bufferWalker,
-      &bytesWrittenFromBigBlockFile);
-
-    assert(bytesWrittenFromBigBlockFile == bytesToWriteInBuffer);
+      &bytesWrittenToBigBlockFile);
+    if (FAILED(res))
+      return res;
 
     /*
      * Step to the next big block.
@@ -5274,13 +5418,13 @@ BOOL SmallBlockChainStream_WriteAt(
     if(FAILED(SmallBlockChainStream_GetNextBlockInChain(This, blockIndex,
 							&blockIndex)))
       return FALSE;
-    bufferWalker  += bytesToWriteInBuffer;
-    size          -= bytesToWriteInBuffer;
-    *bytesWritten += bytesToWriteInBuffer;
-    offsetInBlock  = 0;     /* There is no offset on the next block */
+    bufferWalker  += bytesWrittenToBigBlockFile;
+    size          -= bytesWrittenToBigBlockFile;
+    *bytesWritten += bytesWrittenToBigBlockFile;
+    offsetInBlock  = (offsetInBlock + bytesWrittenToBigBlockFile) % This->parentStorage->smallBlockSize;
   }
 
-  return (size == 0);
+  return (size == 0) ? S_OK : STG_E_WRITEFAULT;
 }
 
 /******************************************************************************
@@ -5288,7 +5432,7 @@ BOOL SmallBlockChainStream_WriteAt(
  *
  * Shrinks this chain in the small block depot.
  */
-BOOL SmallBlockChainStream_Shrink(
+static BOOL SmallBlockChainStream_Shrink(
   SmallBlockChainStream* This,
   ULARGE_INTEGER newSize)
 {
@@ -5371,7 +5515,7 @@ BOOL SmallBlockChainStream_Shrink(
  *
  * Grows this chain in the small block depot.
  */
-BOOL SmallBlockChainStream_Enlarge(
+static BOOL SmallBlockChainStream_Enlarge(
   SmallBlockChainStream* This,
   ULARGE_INTEGER newSize)
 {
@@ -5446,30 +5590,6 @@ BOOL SmallBlockChainStream_Enlarge(
 }
 
 /******************************************************************************
- *      SmallBlockChainStream_GetCount
- *
- * Returns the number of blocks that comprises this chain.
- * This is not the size of this chain as the last block may not be full!
- */
-ULONG SmallBlockChainStream_GetCount(SmallBlockChainStream* This)
-{
-  ULONG blockIndex;
-  ULONG count = 0;
-
-  blockIndex = SmallBlockChainStream_GetHeadOfChain(This);
-
-  while (blockIndex != BLOCK_END_OF_CHAIN)
-  {
-    count++;
-
-    if(FAILED(SmallBlockChainStream_GetNextBlockInChain(This, blockIndex, &blockIndex)))
-      return 0;
-  }
-
-  return count;
-}
-
-/******************************************************************************
  *      SmallBlockChainStream_SetSize
  *
  * Sets the size of this stream.
@@ -5505,7 +5625,7 @@ BOOL SmallBlockChainStream_SetSize(
  *
  * Returns the size of this chain.
  */
-ULARGE_INTEGER SmallBlockChainStream_GetSize(SmallBlockChainStream* This)
+static ULARGE_INTEGER SmallBlockChainStream_GetSize(SmallBlockChainStream* This)
 {
   StgProperty chainProperty;
 
@@ -5519,6 +5639,22 @@ ULARGE_INTEGER SmallBlockChainStream_GetSize(SmallBlockChainStream* This)
 
 /******************************************************************************
  *    StgCreateDocfile  [OLE32.@]
+ * Creates a new compound file storage object
+ *
+ * PARAMS
+ *  pwcsName  [ I] Unicode string with filename (can be relative or NULL)
+ *  grfMode   [ I] Access mode for opening the new storage object (see STGM_ constants)
+ *  reserved  [ ?] unused?, usually 0
+ *  ppstgOpen [IO] A pointer to IStorage pointer to the new onject
+ *
+ * RETURNS
+ *  S_OK if the file was successfully created
+ *  some STG_E_ value if error
+ * NOTES
+ *  if pwcsName is NULL, create file with new unique name
+ *  the function can returns
+ *  STG_S_CONVERTED if the specified file was successfully converted to storage format
+ *  (unrealized now)
  */
 HRESULT WINAPI StgCreateDocfile(
   LPCOLESTR pwcsName,
@@ -5535,7 +5671,7 @@ HRESULT WINAPI StgCreateDocfile(
   DWORD          fileAttributes;
   WCHAR          tempFileName[MAX_PATH];
 
-  TRACE("(%s, %lx, %ld, %p)\n",
+  TRACE("(%s, %x, %d, %p)\n",
 	debugstr_w(pwcsName), grfMode,
 	reserved, ppstgOpen);
 
@@ -5553,7 +5689,7 @@ HRESULT WINAPI StgCreateDocfile(
   if ( FAILED( validateSTGM(grfMode) ))
     goto end;
 
-  /* StgCreateDocFile always opens for write */
+  /* StgCreateDocFile seems to refuse readonly access, despite MSDN */
   switch(STGM_ACCESS_MODE(grfMode))
   {
   case STGM_WRITE:
@@ -5563,20 +5699,19 @@ HRESULT WINAPI StgCreateDocfile(
     goto end;
   }
 
-  /* can't share write */
-  switch(STGM_SHARE_MODE(grfMode))
-  {
-  case STGM_SHARE_EXCLUSIVE:
-  case STGM_SHARE_DENY_WRITE:
-    break;
-  default:
-    goto end;
-  }
+  /* if no share mode given then DENY_NONE is the default */     
+  if (STGM_SHARE_MODE(grfMode) == 0)
+    grfMode |= STGM_SHARE_DENY_NONE;
 
-  /* shared reading requires transacted mode */
-  if( STGM_SHARE_MODE(grfMode) == STGM_SHARE_DENY_WRITE &&
-     !(grfMode&STGM_TRANSACTED) )
+  /* must have at least one access mode */
+  if (STGM_ACCESS_MODE(grfMode) == 0)
     goto end;
+  
+  /* in direct mode, can only use SHARE_EXCLUSIVE */
+  if (!(grfMode & STGM_TRANSACTED) && (STGM_SHARE_MODE(grfMode) != STGM_SHARE_EXCLUSIVE))
+    goto end;
+
+  /* but in transacted mode, any share mode is valid */
 
   /*
    * Generate a unique name.
@@ -5585,9 +5720,6 @@ HRESULT WINAPI StgCreateDocfile(
   {
     WCHAR tempPath[MAX_PATH];
     static const WCHAR prefix[] = { 'S', 'T', 'O', 0 };
-
-    if (STGM_SHARE_MODE(grfMode) != STGM_SHARE_EXCLUSIVE)
-      goto end;
 
     memset(tempPath, 0, sizeof(tempPath));
     memset(tempFileName, 0, sizeof(tempFileName));
@@ -5680,7 +5812,7 @@ HRESULT WINAPI StgCreateDocfile(
          (REFIID)&IID_IStorage,
          (void**)ppstgOpen);
 end:
-  TRACE("<-- %p  r = %08lx\n", *ppstgOpen, hr);
+  TRACE("<-- %p  r = %08x\n", *ppstgOpen, hr);
 
   return hr;
 }
@@ -5690,7 +5822,7 @@ end:
  */
 HRESULT WINAPI StgCreateStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD stgfmt, DWORD grfAttrs, STGOPTIONS* pStgOptions, void* reserved, REFIID riid, void** ppObjectOpen)
 {
-    TRACE("(%s, %lx, %lx, %lx, %p, %p, %p, %p)\n", debugstr_w(pwcsName),
+    TRACE("(%s, %x, %x, %x, %p, %p, %p, %p)\n", debugstr_w(pwcsName),
           grfMode, stgfmt, grfAttrs, pStgOptions, reserved, riid, ppObjectOpen);
 
     if (stgfmt != STGFMT_FILE && grfAttrs != 0)
@@ -5699,7 +5831,7 @@ HRESULT WINAPI StgCreateStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD st
         return STG_E_INVALIDPARAMETER;  
     }
 
-    if (stgfmt != STGFMT_FILE && grfAttrs != 0 && grfAttrs != FILE_FLAG_NO_BUFFERING)
+    if (stgfmt == STGFMT_FILE && grfAttrs != 0 && grfAttrs != FILE_FLAG_NO_BUFFERING)
     {
         ERR("grfAttrs must be 0 or FILE_FLAG_NO_BUFFERING if stgfmt == STGFMT_FILE\n");
         return STG_E_INVALIDPARAMETER;  
@@ -5729,7 +5861,7 @@ HRESULT WINAPI StgCreatePropSetStg(IStorage *pstg, DWORD reserved,
 {
     HRESULT hr;
 
-    TRACE("(%p, 0x%lx, %p): stub\n", pstg, reserved, ppPropSetStg);
+    TRACE("(%p, 0x%x, %p)\n", pstg, reserved, ppPropSetStg);
     if (reserved)
         hr = STG_E_INVALIDPARAMETER;
     else
@@ -5743,7 +5875,7 @@ HRESULT WINAPI StgCreatePropSetStg(IStorage *pstg, DWORD reserved,
  */
 HRESULT WINAPI StgOpenStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD stgfmt, DWORD grfAttrs, STGOPTIONS* pStgOptions, void* reserved, REFIID riid, void** ppObjectOpen)
 {
-    TRACE("(%s, %lx, %lx, %lx, %p, %p, %p, %p)\n", debugstr_w(pwcsName),
+    TRACE("(%s, %x, %x, %x, %p, %p, %p, %p)\n", debugstr_w(pwcsName),
           grfMode, stgfmt, grfAttrs, pStgOptions, reserved, riid, ppObjectOpen);
 
     if (stgfmt != STGFMT_DOCFILE && grfAttrs != 0)
@@ -5752,28 +5884,33 @@ HRESULT WINAPI StgOpenStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD stgf
         return STG_E_INVALIDPARAMETER;  
     }
 
-    if (stgfmt != STGFMT_DOCFILE && grfAttrs != 0 && grfAttrs != FILE_FLAG_NO_BUFFERING)
+    switch (stgfmt)
     {
-        ERR("grfAttrs must be 0 or FILE_FLAG_NO_BUFFERING if stgfmt == STGFMT_DOCFILE\n");
-        return STG_E_INVALIDPARAMETER;  
-    }
-
-    if (stgfmt == STGFMT_FILE)
-    {
+    case STGFMT_FILE:
         ERR("Cannot use STGFMT_FILE - this is NTFS only\n");  
+        return STG_E_INVALIDPARAMETER;
+        
+    case STGFMT_STORAGE:
+        break;
+
+    case STGFMT_DOCFILE:
+        if (grfAttrs && grfAttrs != FILE_FLAG_NO_BUFFERING)
+        {
+            ERR("grfAttrs must be 0 or FILE_FLAG_NO_BUFFERING if stgfmt == STGFMT_DOCFILE\n");
+            return STG_E_INVALIDPARAMETER;  
+        }
+        FIXME("Stub: calling StgOpenStorage, but ignoring pStgOptions and grfAttrs\n");
+        break;
+
+    case STGFMT_ANY:
+        WARN("STGFMT_ANY assuming storage\n");
+        break;
+
+    default:
         return STG_E_INVALIDPARAMETER;
     }
 
-    if (stgfmt == STGFMT_STORAGE || stgfmt == STGFMT_DOCFILE || stgfmt == STGFMT_ANY)
-    {
-        if (stgfmt == STGFMT_ANY) 
-            WARN("STGFMT_ANY assuming storage\n");
-        FIXME("Stub: calling StgOpenStorage, but ignoring pStgOptions and grfAttrs\n");
-        return StgOpenStorage(pwcsName, NULL, grfMode, (SNB)NULL, 0, (IStorage **)ppObjectOpen); 
-    }
-
-    ERR("Invalid stgfmt argument\n");
-    return STG_E_INVALIDPARAMETER;
+    return StgOpenStorage(pwcsName, NULL, grfMode, (SNB)NULL, 0, (IStorage **)ppObjectOpen); 
 }
 
 
@@ -5783,20 +5920,19 @@ HRESULT WINAPI StgOpenStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD stgf
 HRESULT WINAPI StgOpenStorage(
   const OLECHAR *pwcsName,
   IStorage      *pstgPriority,
-  DWORD           grfMode,
-  SNB           snbExclude,
-  DWORD           reserved,
-  IStorage      **ppstgOpen)
+  DWORD          grfMode,
+  SNB            snbExclude,
+  DWORD          reserved,
+  IStorage     **ppstgOpen)
 {
-  StorageImpl* newStorage = 0;
+  StorageImpl*   newStorage = 0;
   HRESULT        hr = S_OK;
-  HANDLE       hFile = 0;
+  HANDLE         hFile = 0;
   DWORD          shareMode;
   DWORD          accessMode;
   WCHAR          fullname[MAX_PATH];
-  DWORD          length;
 
-  TRACE("(%s, %p, %lx, %p, %ld, %p)\n",
+  TRACE("(%s, %p, %x, %p, %d, %p)\n",
 	debugstr_w(pwcsName), pstgPriority, grfMode,
 	snbExclude, reserved, ppstgOpen);
 
@@ -5821,10 +5957,29 @@ HRESULT WINAPI StgOpenStorage(
     goto end;
   }
 
+  if (grfMode & STGM_PRIORITY)
+  {
+    if (grfMode & (STGM_TRANSACTED|STGM_SIMPLE|STGM_NOSCRATCH|STGM_NOSNAPSHOT))
+      return STG_E_INVALIDFLAG;
+    if (grfMode & STGM_DELETEONRELEASE)
+      return STG_E_INVALIDFUNCTION;
+    if(STGM_ACCESS_MODE(grfMode) != STGM_READ)
+      return STG_E_INVALIDFLAG;
+    grfMode &= ~0xf0; /* remove the existing sharing mode */
+    grfMode |= STGM_SHARE_DENY_NONE;
+
+    /* STGM_PRIORITY stops other IStorage objects on the same file from
+     * committing until the STGM_PRIORITY IStorage is closed. it also
+     * stops non-transacted mode StgOpenStorage calls with write access from
+     * succeeding. obviously, both of these cannot be achieved through just
+     * file share flags */
+    FIXME("STGM_PRIORITY mode not implemented correctly\n");
+  }
+
   /*
    * Validate the sharing mode
    */
-  if (!(grfMode & STGM_TRANSACTED))
+  if (!(grfMode & (STGM_TRANSACTED|STGM_PRIORITY)))
     switch(STGM_SHARE_MODE(grfMode))
     {
       case STGM_SHARE_EXCLUSIVE:
@@ -5909,8 +6064,7 @@ HRESULT WINAPI StgOpenStorage(
    * Refuse to open the file if it's too small to be a structured storage file
    * FIXME: verify the file when reading instead of here
    */
-  length = GetFileSize(hFile, NULL);
-  if (length < 0x100)
+  if (GetFileSize(hFile, NULL) < 0x100)
   {
     CloseHandle(hFile);
     hr = STG_E_FILEALREADYEXISTS;
@@ -5928,15 +6082,15 @@ HRESULT WINAPI StgOpenStorage(
     goto end;
   }
 
-  /* if the file's length was zero, initialize the storage */
+  /* Initialize the storage */
   hr = StorageImpl_Construct(
          newStorage,
          hFile,
-        pwcsName,
+         pwcsName,
          NULL,
          grfMode,
          TRUE,
-	 FALSE );
+         FALSE );
 
   if (FAILED(hr))
   {
@@ -5963,7 +6117,7 @@ HRESULT WINAPI StgOpenStorage(
          (void**)ppstgOpen);
 
 end:
-  TRACE("<-- %08lx, IStorage %p\n", hr, ppstgOpen ? *ppstgOpen : NULL);
+  TRACE("<-- %08x, IStorage %p\n", hr, ppstgOpen ? *ppstgOpen : NULL);
   return hr;
 }
 
@@ -6282,7 +6436,7 @@ static HRESULT validateSTGM(DWORD stgm)
 
   if (stgm&~STGM_KNOWN_FLAGS)
   {
-    ERR("unknown flags %08lx\n", stgm);
+    ERR("unknown flags %08x\n", stgm);
     return E_FAIL;
   }
 
@@ -6880,7 +7034,7 @@ static HRESULT STREAM_ReadString( IStream *stm, LPWSTR *string )
     if( count != sizeof(len) )
         return E_OUTOFMEMORY;
 
-    TRACE("%ld bytes\n",len);
+    TRACE("%d bytes\n",len);
     
     str = CoTaskMemAlloc( len );
     if( !str )
@@ -7012,7 +7166,7 @@ HRESULT WINAPI ReadFmtUserTypeStg (LPSTORAGE pstg, CLIPFORMAT* pcf, LPOLESTR* lp
                     STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm );
     if( FAILED ( r ) )
     {
-        WARN("Failed to open stream r = %08lx\n", r);
+        WARN("Failed to open stream r = %08x\n", r);
         return r;
     }
 
@@ -7519,6 +7673,8 @@ HRESULT WINAPI OleConvertOLESTREAMToIStorage (
     HRESULT hRes=S_OK;
     OLECONVERT_OLESTREAM_DATA pOleStreamData[2];
 
+    TRACE("%p %p %p\n", pOleStream, pstg, ptd);
+
     memset(pOleStreamData, 0, sizeof(pOleStreamData));
 
     if(ptd != NULL)
@@ -7609,6 +7765,7 @@ HRESULT WINAPI OleConvertIStorageToOLESTREAM (
     OLECONVERT_OLESTREAM_DATA pOleStreamData[2];
     static const WCHAR wstrStreamName[] = {1, 'O', 'l', 'e', '1', '0', 'N', 'a', 't', 'i', 'v', 'e', 0};
 
+    TRACE("%p %p\n", pstg, pOleStream);
 
     memset(pOleStreamData, 0, sizeof(pOleStreamData));
 
@@ -7666,6 +7823,14 @@ HRESULT WINAPI GetConvertStg(IStorage *stg) {
 
 /******************************************************************************
  * StgIsStorageFile [OLE32.@]
+ * Verify if the file contains a storage object
+ *
+ * PARAMS
+ *  fn      [ I] Filename
+ *
+ * RETURNS
+ *  S_OK    if file has magic bytes as a storage object
+ *  S_FALSE if file is not storage
  */
 HRESULT WINAPI
 StgIsStorageFile(LPCOLESTR fn)
@@ -7674,7 +7839,7 @@ StgIsStorageFile(LPCOLESTR fn)
 	BYTE		magic[8];
 	DWORD		bytes_read;
 
-	TRACE("(\'%s\')\n", debugstr_w(fn));
+	TRACE("%s\n", debugstr_w(fn));
 	hf = CreateFileW(fn, GENERIC_READ,
 	                 FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
 	                 NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -7703,4 +7868,64 @@ StgIsStorageFile(LPCOLESTR fn)
 
 	WARN(" -> Invalid header.\n");
 	return S_FALSE;
+}
+
+/***********************************************************************
+ *		WriteClassStm (OLE32.@)
+ *
+ * Writes a CLSID to a stream.
+ *
+ * PARAMS
+ *  pStm   [I] Stream to write to.
+ *  rclsid [I] CLSID to write.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: HRESULT code.
+ */
+HRESULT WINAPI WriteClassStm(IStream *pStm,REFCLSID rclsid)
+{
+    TRACE("(%p,%p)\n",pStm,rclsid);
+
+    if (!pStm || !rclsid)
+        return E_INVALIDARG;
+
+    return IStream_Write(pStm,rclsid,sizeof(CLSID),NULL);
+}
+
+/***********************************************************************
+ *		ReadClassStm (OLE32.@)
+ *
+ * Reads a CLSID from a stream.
+ *
+ * PARAMS
+ *  pStm   [I] Stream to read from.
+ *  rclsid [O] CLSID to read.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: HRESULT code.
+ */
+HRESULT WINAPI ReadClassStm(IStream *pStm,CLSID *pclsid)
+{
+    ULONG nbByte;
+    HRESULT res;
+
+    TRACE("(%p,%p)\n",pStm,pclsid);
+
+    if (!pStm || !pclsid)
+        return E_INVALIDARG;
+
+    /* clear the output args */
+    memcpy(pclsid, &CLSID_NULL, sizeof(*pclsid));
+
+    res = IStream_Read(pStm,(void*)pclsid,sizeof(CLSID),&nbByte);
+
+    if (FAILED(res))
+        return res;
+
+    if (nbByte != sizeof(CLSID))
+        return STG_E_READFAULT;
+    else
+        return S_OK;
 }

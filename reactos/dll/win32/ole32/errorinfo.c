@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES:
  *
@@ -52,7 +52,7 @@ static BSTR WINAPI ERRORINFO_SysAllocString(const OLECHAR* in)
     if (in == NULL)
 	return NULL;
     /*
-     * Find the lenth of the buffer passed-in in bytes.
+     * Find the length of the buffer passed-in, in bytes.
      */
     len = strlenW(in);
     bufferSize = len * sizeof (WCHAR);
@@ -83,14 +83,10 @@ static BSTR WINAPI ERRORINFO_SysAllocString(const OLECHAR* in)
     newBuffer++;
 
     /*
-     * Copy the information in the buffer.
-     * Since it is valid to pass a NULL pointer here, we'll initialize the
-     * buffer to nul if it is the case.
+     * Copy the information in the buffer.  It is not possible to pass 
+     * a NULL pointer here. 
      */
-    if (in != 0)
-      memcpy(newBuffer, in, bufferSize);
-    else
-      memset(newBuffer, 0, bufferSize);
+    memcpy(newBuffer, in, bufferSize);
 
     /*
      * Make sure that there is a nul character at the end of the
@@ -171,7 +167,7 @@ static inline ErrorInfoImpl *impl_from_ISupportErrorInfo( ISupportErrorInfo *ifa
 #define _ICreateErrorInfo_(This)	(ICreateErrorInfo*)&(This->lpvtcei)
 #define _ISupportErrorInfo_(This)	(ISupportErrorInfo*)&(This->lpvtsei)
 
-IErrorInfo * IErrorInfoImpl_Constructor(void)
+static IErrorInfo * IErrorInfoImpl_Constructor(void)
 {
 	ErrorInfoImpl * ei = HeapAlloc(GetProcessHeap(), 0, sizeof(ErrorInfoImpl));
 	if (ei)
@@ -226,7 +222,7 @@ static ULONG WINAPI IErrorInfoImpl_AddRef(
  	IErrorInfo* iface)
 {
 	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
-	TRACE("(%p)->(count=%lu)\n",This,This->ref);
+	TRACE("(%p)->(count=%u)\n",This,This->ref);
 	return InterlockedIncrement(&This->ref);
 }
 
@@ -236,7 +232,7 @@ static ULONG WINAPI IErrorInfoImpl_Release(
 	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
         ULONG ref = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->(count=%lu)\n",This,ref+1);
+	TRACE("(%p)->(count=%u)\n",This,ref+1);
 
 	if (!ref)
 	{
@@ -252,7 +248,7 @@ static HRESULT WINAPI IErrorInfoImpl_GetGUID(
 	GUID * pGUID)
 {
 	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
-	TRACE("(%p)->(count=%lu)\n",This,This->ref);
+	TRACE("(%p)->(count=%u)\n",This,This->ref);
 	if(!pGUID )return E_INVALIDARG;
 	memcpy(pGUID, &This->m_Guid, sizeof(GUID));
 	return S_OK;
@@ -405,7 +401,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetHelpContext(
  	DWORD dwHelpContext)
 {
 	ErrorInfoImpl *This = impl_from_ICreateErrorInfo(iface);
-	TRACE("(%p,%ld)\n",This,dwHelpContext);
+	TRACE("(%p,%d)\n",This,dwHelpContext);
 	This->m_dwHelpContext = dwHelpContext;
 	return S_OK;
 }
@@ -490,10 +486,16 @@ HRESULT WINAPI CreateErrorInfo(ICreateErrorInfo **pperrinfo)
  */
 HRESULT WINAPI GetErrorInfo(ULONG dwReserved, IErrorInfo **pperrinfo)
 {
-	TRACE("(%ld, %p, %p)\n", dwReserved, pperrinfo, COM_CurrentInfo()->errorinfo);
+	TRACE("(%d, %p, %p)\n", dwReserved, pperrinfo, COM_CurrentInfo()->errorinfo);
+
+	if (dwReserved)
+	{
+		ERR("dwReserved (0x%x) != 0\n", dwReserved);
+		return E_INVALIDARG;
+	}
 
 	if(!pperrinfo) return E_INVALIDARG;
-        
+
 	if (!COM_CurrentInfo()->errorinfo)
 	{
 	   *pperrinfo = NULL;
@@ -514,8 +516,14 @@ HRESULT WINAPI SetErrorInfo(ULONG dwReserved, IErrorInfo *perrinfo)
 {
 	IErrorInfo * pei;
 
-	TRACE("(%ld, %p)\n", dwReserved, perrinfo);
-	
+	TRACE("(%d, %p)\n", dwReserved, perrinfo);
+
+	if (dwReserved)
+	{
+		ERR("dwReserved (0x%x) != 0\n", dwReserved);
+		return E_INVALIDARG;
+	}
+
 	/* release old errorinfo */
 	pei = COM_CurrentInfo()->errorinfo;
 	if (pei) IErrorInfo_Release(pei);

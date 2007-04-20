@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -69,7 +69,7 @@ typedef struct
 /******************************************************************************
  *		IMalloc16_QueryInterface	[COMPOBJ.500]
  */
-HRESULT IMalloc16_fnQueryInterface(IMalloc16* iface,REFIID refiid,LPVOID *obj) {
+HRESULT CDECL IMalloc16_fnQueryInterface(IMalloc16* iface,REFIID refiid,LPVOID *obj) {
         IMalloc16Impl *This = (IMalloc16Impl *)iface;
 
 	TRACE("(%p)->QueryInterface(%s,%p)\n",This,debugstr_guid(refiid),obj);
@@ -85,7 +85,7 @@ HRESULT IMalloc16_fnQueryInterface(IMalloc16* iface,REFIID refiid,LPVOID *obj) {
 /******************************************************************************
  *		IMalloc16_AddRef	[COMPOBJ.501]
  */
-ULONG IMalloc16_fnAddRef(IMalloc16* iface) {
+ULONG CDECL IMalloc16_fnAddRef(IMalloc16* iface) {
         IMalloc16Impl *This = (IMalloc16Impl *)iface;
 	TRACE("(%p)->AddRef()\n",This);
 	return 1; /* cannot be freed */
@@ -94,7 +94,7 @@ ULONG IMalloc16_fnAddRef(IMalloc16* iface) {
 /******************************************************************************
  *		IMalloc16_Release	[COMPOBJ.502]
  */
-ULONG IMalloc16_fnRelease(IMalloc16* iface) {
+ULONG CDECL IMalloc16_fnRelease(IMalloc16* iface) {
         IMalloc16Impl *This = (IMalloc16Impl *)iface;
 	TRACE("(%p)->Release()\n",This);
 	return 1; /* cannot be freed */
@@ -103,20 +103,20 @@ ULONG IMalloc16_fnRelease(IMalloc16* iface) {
 /******************************************************************************
  * IMalloc16_Alloc [COMPOBJ.503]
  */
-SEGPTR IMalloc16_fnAlloc(IMalloc16* iface,DWORD cb) {
+SEGPTR CDECL IMalloc16_fnAlloc(IMalloc16* iface,DWORD cb) {
         IMalloc16Impl *This = (IMalloc16Impl *)iface;
-	TRACE("(%p)->Alloc(%ld)\n",This,cb);
+	TRACE("(%p)->Alloc(%d)\n",This,cb);
         return MapLS( HeapAlloc( GetProcessHeap(), 0, cb ) );
 }
 
 /******************************************************************************
  * IMalloc16_Free [COMPOBJ.505]
  */
-VOID IMalloc16_fnFree(IMalloc16* iface,SEGPTR pv)
+VOID CDECL IMalloc16_fnFree(IMalloc16* iface,SEGPTR pv)
 {
     void *ptr = MapSL(pv);
     IMalloc16Impl *This = (IMalloc16Impl *)iface;
-    TRACE("(%p)->Free(%08lx)\n",This,pv);
+    TRACE("(%p)->Free(%08x)\n",This,pv);
     UnMapLS(pv);
     HeapFree( GetProcessHeap(), 0, ptr );
 }
@@ -124,11 +124,11 @@ VOID IMalloc16_fnFree(IMalloc16* iface,SEGPTR pv)
 /******************************************************************************
  * IMalloc16_Realloc [COMPOBJ.504]
  */
-SEGPTR IMalloc16_fnRealloc(IMalloc16* iface,SEGPTR pv,DWORD cb)
+SEGPTR CDECL IMalloc16_fnRealloc(IMalloc16* iface,SEGPTR pv,DWORD cb)
 {
     SEGPTR ret;
     IMalloc16Impl *This = (IMalloc16Impl *)iface;
-    TRACE("(%p)->Realloc(%08lx,%ld)\n",This,pv,cb);
+    TRACE("(%p)->Realloc(%08x,%d)\n",This,pv,cb);
     if (!pv) 
 	ret = IMalloc16_fnAlloc(iface, cb);
     else if (cb) {
@@ -144,17 +144,17 @@ SEGPTR IMalloc16_fnRealloc(IMalloc16* iface,SEGPTR pv,DWORD cb)
 /******************************************************************************
  * IMalloc16_GetSize [COMPOBJ.506]
  */
-DWORD IMalloc16_fnGetSize(IMalloc16* iface,SEGPTR pv)
+DWORD CDECL IMalloc16_fnGetSize(IMalloc16* iface,SEGPTR pv)
 {
 	IMalloc16Impl *This = (IMalloc16Impl *)iface;
-        TRACE("(%p)->GetSize(%08lx)\n",This,pv);
+        TRACE("(%p)->GetSize(%08x)\n",This,pv);
         return HeapSize( GetProcessHeap(), 0, MapSL(pv) );
 }
 
 /******************************************************************************
  * IMalloc16_DidAlloc [COMPOBJ.507]
  */
-INT16 IMalloc16_fnDidAlloc(IMalloc16* iface,LPVOID pv) {
+INT16 CDECL IMalloc16_fnDidAlloc(IMalloc16* iface,LPVOID pv) {
         IMalloc16 *This = (IMalloc16 *)iface;
 	TRACE("(%p)->DidAlloc(%p)\n",This,pv);
 	return (INT16)-1;
@@ -163,7 +163,7 @@ INT16 IMalloc16_fnDidAlloc(IMalloc16* iface,LPVOID pv) {
 /******************************************************************************
  * IMalloc16_HeapMinimize [COMPOBJ.508]
  */
-LPVOID IMalloc16_fnHeapMinimize(IMalloc16* iface) {
+LPVOID CDECL IMalloc16_fnHeapMinimize(IMalloc16* iface) {
         IMalloc16Impl *This = (IMalloc16Impl *)iface;
 	TRACE("(%p)->HeapMinimize()\n",This);
 	return NULL;
@@ -284,8 +284,62 @@ HRESULT WINAPI CLSIDFromString16(
 	LPCOLESTR16 idstr,	/* [in] string representation of guid */
 	CLSID *id)		/* [out] GUID converted from string */
 {
+  const BYTE *s;
+  int	i;
+  BYTE table[256];
 
-  return __CLSIDFromStringA(idstr,id);
+  if (!idstr) {
+    memset( id, 0, sizeof (CLSID) );
+    return S_OK;
+  }
+
+  /* validate the CLSID string */
+  if (strlen(idstr) != 38)
+    return CO_E_CLASSSTRING;
+
+  s = (const BYTE *) idstr;
+  if ((s[0]!='{') || (s[9]!='-') || (s[14]!='-') || (s[19]!='-') || (s[24]!='-') || (s[37]!='}'))
+    return CO_E_CLASSSTRING;
+
+  for (i=1; i<37; i++) {
+    if ((i == 9)||(i == 14)||(i == 19)||(i == 24)) continue;
+    if (!(((s[i] >= '0') && (s[i] <= '9'))  ||
+          ((s[i] >= 'a') && (s[i] <= 'f'))  ||
+          ((s[i] >= 'A') && (s[i] <= 'F'))))
+       return CO_E_CLASSSTRING;
+  }
+
+  TRACE("%s -> %p\n", s, id);
+
+  /* quick lookup table */
+  memset(table, 0, 256);
+
+  for (i = 0; i < 10; i++) {
+    table['0' + i] = i;
+  }
+  for (i = 0; i < 6; i++) {
+    table['A' + i] = i+10;
+    table['a' + i] = i+10;
+  }
+
+  /* in form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} */
+
+  id->Data1 = (table[s[1]] << 28 | table[s[2]] << 24 | table[s[3]] << 20 | table[s[4]] << 16 |
+               table[s[5]] << 12 | table[s[6]] << 8  | table[s[7]] << 4  | table[s[8]]);
+  id->Data2 = table[s[10]] << 12 | table[s[11]] << 8 | table[s[12]] << 4 | table[s[13]];
+  id->Data3 = table[s[15]] << 12 | table[s[16]] << 8 | table[s[17]] << 4 | table[s[18]];
+
+  /* these are just sequential bytes */
+  id->Data4[0] = table[s[20]] << 4 | table[s[21]];
+  id->Data4[1] = table[s[22]] << 4 | table[s[23]];
+  id->Data4[2] = table[s[25]] << 4 | table[s[26]];
+  id->Data4[3] = table[s[27]] << 4 | table[s[28]];
+  id->Data4[4] = table[s[29]] << 4 | table[s[30]];
+  id->Data4[5] = table[s[31]] << 4 | table[s[32]];
+  id->Data4[6] = table[s[33]] << 4 | table[s[34]];
+  id->Data4[7] = table[s[35]] << 4 | table[s[36]];
+
+  return S_OK;
 }
 
 /******************************************************************************
@@ -317,7 +371,7 @@ _xmalloc16(DWORD size, SEGPTR *ptr) {
       (LPVOID)args,
       (LPDWORD)ptr
   )) {
-      ERR("CallTo16 IMalloc16 (%ld) failed\n",size);
+      ERR("CallTo16 IMalloc16 (%d) failed\n",size);
       return E_FAIL;
   }
   return S_OK;
@@ -429,7 +483,7 @@ HRESULT WINAPI CoRegisterClassObject16(
 	DWORD flags,        /* [in] REGCLS flags indicating how connections are made */
 	LPDWORD lpdwRegister
 ) {
-	FIXME("(%s,%p,0x%08lx,0x%08lx,%p),stub\n",
+	FIXME("(%s,%p,0x%08x,0x%08x,%p),stub\n",
 		debugstr_guid(rclsid),pUnk,dwClsContext,flags,lpdwRegister
 	);
 	return 0;
@@ -441,7 +495,7 @@ HRESULT WINAPI CoRegisterClassObject16(
  */
 HRESULT WINAPI CoRevokeClassObject16(DWORD dwRegister) /* [in] token on class obj */
 {
-    FIXME("(0x%08lx),stub!\n", dwRegister);
+    FIXME("(0x%08x),stub!\n", dwRegister);
     return 0;
 }
 
@@ -504,7 +558,7 @@ HRESULT WINAPI CoGetState16(LPDWORD state)
  */
 BOOL WINAPI COMPOBJ_DllEntryPoint(DWORD Reason, HINSTANCE16 hInst, WORD ds, WORD HeapSize, DWORD res1, WORD res2)
 {
-        TRACE("(%08lx, %04x, %04x, %04x, %08lx, %04x)\n", Reason, hInst, ds, HeapSize, res1, res2);
+        TRACE("(%08x, %04x, %04x, %04x, %08x, %04x)\n", Reason, hInst, ds, HeapSize, res1, res2);
         return TRUE;
 }
 
@@ -516,7 +570,7 @@ SEGPTR WINAPI CoMemAlloc(DWORD size, DWORD dwMemContext, DWORD x) {
 	SEGPTR		segptr;
 
 	/* FIXME: check context handling */
-	TRACE("(%ld, 0x%08lx, 0x%08lx)\n", size, dwMemContext, x);
+	TRACE("(%d, 0x%08x, 0x%08x)\n", size, dwMemContext, x);
 	hres = _xmalloc16(size, &segptr);
 	if (hres != S_OK)
 		return (SEGPTR)0;
@@ -556,7 +610,7 @@ HRESULT WINAPI CLSIDFromProgID16(LPCOLESTR16 progid, LPCLSID riid)
                 return CO_E_CLASSSTRING;
 	}
 	RegCloseKey(xhkey);
-	return __CLSIDFromStringA(buf2,riid);
+	return CLSIDFromString16(buf2,riid);
 }
 
 /***********************************************************************
@@ -586,10 +640,19 @@ HRESULT WINAPI CoCreateInstance16(
 	REFIID iid,
 	LPVOID *ppv)
 {
-  FIXME("(%s, %p, %lx, %s, %p), stub!\n", 
+  FIXME("(%s, %p, %x, %s, %p), stub!\n",
 	debugstr_guid(rclsid), pUnkOuter, dwClsContext, debugstr_guid(iid),
 	ppv
   );
+  return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *           CoDisconnectObject [COMPOBJ.15]
+ */
+HRESULT WINAPI CoDisconnectObject16( LPUNKNOWN lpUnk, DWORD reserved )
+{
+  FIXME("(%p, 0x%08x): stub!\n", lpUnk, reserved);
   return E_NOTIMPL;
 }
 
@@ -608,6 +671,6 @@ HRESULT WINAPI DllGetClassObject16(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 HRESULT WINAPI
 GetRunningObjectTable16(DWORD reserved, LPRUNNINGOBJECTTABLE *pprot)
 {
-    FIXME("(%ld,%p),stub!\n",reserved,pprot);
+    FIXME("(%d,%p),stub!\n",reserved,pprot);
     return E_NOTIMPL;
 }

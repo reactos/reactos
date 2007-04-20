@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* Documentation on MSDN:
@@ -39,7 +39,6 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -64,8 +63,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-const CLSID CLSID_DfMarshal       = { 0x0000030b, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0, 0x46} };
-const CLSID CLSID_PSFactoryBuffer = { 0x00000320, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0, 0x46} };
+static ULONG WINAPI RURpcProxyBufferImpl_Release(LPRPCPROXYBUFFER iface);
 
 /* From: http://msdn.microsoft.com/library/en-us/com/cmi_m_4lda.asp
  *
@@ -161,7 +159,7 @@ CFStub_Invoke(
 	ULONG		res;
 
 	if (msg->cbBuffer < sizeof(IID)) {
-	    FIXME("Not enough bytes in buffer (%ld instead of %d)?\n",msg->cbBuffer,sizeof(IID));
+            FIXME("Not enough bytes in buffer (%d)?\n",msg->cbBuffer);
 	    return E_FAIL;
 	}
 	memcpy(&iid,msg->Buffer,sizeof(iid));
@@ -173,51 +171,58 @@ CFStub_Invoke(
 	}
 	hres = IClassFactory_CreateInstance(classfac,NULL,&iid,(LPVOID*)&ppv);
 	IClassFactory_Release(classfac);
+	msg->cbBuffer = 0;
 	if (hres) {
-	    msg->cbBuffer = 0;
 	    FIXME("Failed to create an instance of %s\n",debugstr_guid(&iid));
-	    return hres;
+	    goto getbuffer;
 	}
 	hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
 	if (hres) {
 	    FIXME("Failed to create stream on hglobal\n");
-	    return hres;
+	    goto getbuffer;
 	}
-	hres = CoMarshalInterface(pStm,&iid,ppv,0,NULL,0);
-	IUnknown_Release((IUnknown*)ppv);
+	hres = IStream_Write(pStm, &ppv, sizeof(ppv), NULL);
 	if (hres) {
-	    FIXME("CoMarshalInterface failed, %lx!\n",hres);
-	    msg->cbBuffer = 0;
-	    return hres;
+	   ERR("IStream_Write failed, 0x%08x\n", hres);
+	   goto getbuffer;
 	}
+	if (ppv) {
+        hres = CoMarshalInterface(pStm,&iid,ppv,0,NULL,0);
+        IUnknown_Release(ppv);
+        if (hres) {
+            FIXME("CoMarshalInterface failed, %x!\n",hres);
+            goto getbuffer;
+        }
+    }
 	hres = IStream_Stat(pStm,&ststg,0);
 	if (hres) {
 	    FIXME("Stat failed.\n");
-	    return hres;
+	    goto getbuffer;
 	}
 
 	msg->cbBuffer = ststg.cbSize.u.LowPart;
 
-        I_RpcGetBuffer((RPC_MESSAGE *)msg);
+getbuffer:
+        IRpcChannelBuffer_GetBuffer(chanbuf, msg, &IID_IClassFactory);
         if (hres) return hres;
 
 	seekto.u.LowPart = 0;seekto.u.HighPart = 0;
 	hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
 	if (hres) {
-	    FIXME("IStream_Seek failed, %lx\n",hres);
+            FIXME("IStream_Seek failed, %x\n",hres);
 	    return hres;
 	}
 	hres = IStream_Read(pStm,msg->Buffer,msg->cbBuffer,&res);
 	if (hres) {
-	    FIXME("Stream Read failed, %lx\n",hres);
+            FIXME("Stream Read failed, %x\n",hres);
 	    return hres;
 	}
 	IStream_Release(pStm);
 	return S_OK;
     }
     FIXME("(%p,%p), stub!\n",msg,chanbuf);
-    FIXME("iMethod is %ld\n",msg->iMethod);
-    FIXME("cbBuffer is %ld\n",msg->cbBuffer);
+    FIXME("iMethod is %d\n",msg->iMethod);
+    FIXME("cbBuffer is %d\n",msg->cbBuffer);
     return E_FAIL;
 }
 
@@ -346,18 +351,11 @@ static ULONG   WINAPI CFProxy_AddRef(LPCLASSFACTORY iface) {
 }
 
 static ULONG   WINAPI CFProxy_Release(LPCLASSFACTORY iface) {
-    ULONG ref;
     ICOM_THIS_MULTI(CFProxy,lpvtbl_cf,iface);
     if (This->outer_unknown)
-        ref = IUnknown_Release(This->outer_unknown);
-    else    
-        ref = InterlockedDecrement(&This->ref);
-
-    if (!ref) {
-      	if (This->chanbuf) IRpcChannelBuffer_Release(This->chanbuf);
-        HeapFree(GetProcessHeap(),0,This);
-    }
-    return ref;
+        return IUnknown_Release(This->outer_unknown);
+    else
+        return IRpcProxyBufferImpl_Release((IRpcProxyBuffer *)&This->lpvtbl_proxy);
 }
 
 static HRESULT WINAPI CFProxy_CreateInstance(
@@ -384,36 +382,48 @@ static HRESULT WINAPI CFProxy_CreateInstance(
     msg.Buffer	 = NULL;
     hres = IRpcChannelBuffer_GetBuffer(This->chanbuf,&msg,&IID_IClassFactory);
     if (hres) {
-	FIXME("IRpcChannelBuffer_GetBuffer failed with %lx?\n",hres);
+	FIXME("IRpcChannelBuffer_GetBuffer failed with %x?\n",hres);
 	return hres;
     }
     memcpy(msg.Buffer,riid,sizeof(*riid));
     hres = IRpcChannelBuffer_SendReceive(This->chanbuf,&msg,&srstatus);
     if (hres) {
-	FIXME("IRpcChannelBuffer_SendReceive failed with %lx?\n",hres);
+	FIXME("IRpcChannelBuffer_SendReceive failed with %x?\n",hres);
+	IRpcChannelBuffer_FreeBuffer(This->chanbuf,&msg);
 	return hres;
     }
 
-    if (!msg.cbBuffer) /* interface not found on remote */
+    if (!msg.cbBuffer) { /* interface not found on remote */
+	IRpcChannelBuffer_FreeBuffer(This->chanbuf,&msg);
 	return srstatus;
+    }
 
     /* We got back: [Marshalled Interface data] */
-    TRACE("got %ld bytes data.\n",msg.cbBuffer);
+    TRACE("got %d bytes data.\n",msg.cbBuffer);
     hGlobal = GlobalAlloc(GMEM_MOVEABLE|GMEM_NODISCARD|GMEM_SHARE,msg.cbBuffer);
     memcpy(GlobalLock(hGlobal),msg.Buffer,msg.cbBuffer);
     hres = CreateStreamOnHGlobal(hGlobal,TRUE,&pStream);
     if (hres) {
-	FIXME("CreateStreamOnHGlobal failed with %lx\n",hres);
+	FIXME("CreateStreamOnHGlobal failed with %x\n",hres);
+	IRpcChannelBuffer_FreeBuffer(This->chanbuf,&msg);
 	return hres;
     }
-    hres = CoUnmarshalInterface(
-	    pStream,
-	    riid,
-	    ppv
-    );
+    hres = IStream_Read(pStream, ppv, sizeof(*ppv), NULL);
+    if (hres != S_OK)
+        hres = E_FAIL;
+    else if (*ppv) {
+        hres = CoUnmarshalInterface(
+	       pStream,
+	       riid,
+	       ppv
+        );
+    }
     IStream_Release(pStream); /* Does GlobalFree hGlobal too. */
+
+    IRpcChannelBuffer_FreeBuffer(This->chanbuf,&msg);
+
     if (hres) {
-	FIXME("CoMarshalInterface failed, %lx\n",hres);
+	FIXME("CoMarshalInterface failed, %x\n",hres);
 	return hres;
     }
     return S_OK;
@@ -530,7 +540,7 @@ static HRESULT WINAPI RemUnkStub_Invoke(LPRPCSTUBBUFFER iface,
   LPBYTE buf = pMsg->Buffer;
   HRESULT hr = RPC_E_INVALIDMETHOD;
 
-  TRACE("(%p)->Invoke(%p,%p) method %ld\n", This, pMsg, pChannel, iMethod);
+  TRACE("(%p)->Invoke(%p,%p) method %d\n", This, pMsg, pChannel, iMethod);
   switch (iMethod)
   {
   case 3: /* RemQueryInterface */
@@ -555,7 +565,7 @@ static HRESULT WINAPI RemUnkStub_Invoke(LPRPCSTUBBUFFER iface,
     /* out */
     pMsg->cbBuffer = cIids * sizeof(REMQIRESULT) + sizeof(HRESULT);
 
-    I_RpcGetBuffer((RPC_MESSAGE *)pMsg);
+    IRpcChannelBuffer_GetBuffer(pChannel, pMsg, &IID_IRemUnknown);
 
     buf = pMsg->Buffer;
     *(HRESULT *)buf = hr;
@@ -585,7 +595,7 @@ static HRESULT WINAPI RemUnkStub_Invoke(LPRPCSTUBBUFFER iface,
     /* out */
     pMsg->cbBuffer = cIids * sizeof(HRESULT);
 
-    I_RpcGetBuffer((RPC_MESSAGE *)pMsg);
+    IRpcChannelBuffer_GetBuffer(pChannel, pMsg, &IID_IRemUnknown);
     if (!hr)
     {
         buf = pMsg->Buffer;
@@ -610,6 +620,7 @@ static HRESULT WINAPI RemUnkStub_Invoke(LPRPCSTUBBUFFER iface,
 
     /* out */
     pMsg->cbBuffer = 0;
+    IRpcChannelBuffer_GetBuffer(pChannel, pMsg, &IID_IRemUnknown);
     break;
   }
   }
@@ -713,19 +724,12 @@ static ULONG WINAPI RemUnkProxy_AddRef(LPREMUNKNOWN iface)
 static ULONG WINAPI RemUnkProxy_Release(LPREMUNKNOWN iface)
 {
   RemUnkProxy *This = (RemUnkProxy *)iface;
-  ULONG refs;
 
   TRACE("(%p)->Release()\n",This);
   if (This->outer_unknown)
-      refs = IUnknown_Release(This->outer_unknown);
-  else    
-      refs = InterlockedDecrement(&This->refs);
-
-  if (!refs) {
-      if (This->chan) IRpcChannelBuffer_Release(This->chan);
-      HeapFree(GetProcessHeap(),0,This);
-  }
-  return refs;
+      return IUnknown_Release(This->outer_unknown);
+  else
+      return IRpcProxyBufferImpl_Release((IRpcProxyBuffer *)&This->lpvtbl_proxy);
 }
 
 static HRESULT WINAPI RemUnkProxy_RemQueryInterface(LPREMUNKNOWN iface,
@@ -740,7 +744,7 @@ static HRESULT WINAPI RemUnkProxy_RemQueryInterface(LPREMUNKNOWN iface,
   HRESULT hr = S_OK;
   ULONG status;
 
-  TRACE("(%p)->(%s,%ld,%d,%p,%p)\n",This,
+  TRACE("(%p)->(%s,%d,%d,%p,%p)\n",This,
 	debugstr_guid(ripid),cRefs,cIids,iids,ppQIResults);
 
   *ppQIResults = NULL;
@@ -869,14 +873,14 @@ static HRESULT WINAPI RURpcProxyBufferImpl_QueryInterface(LPRPCPROXYBUFFER iface
 
 static ULONG WINAPI RURpcProxyBufferImpl_AddRef(LPRPCPROXYBUFFER iface) {
     ICOM_THIS_MULTI(RemUnkProxy,lpvtbl_proxy,iface);
-    TRACE("%p, %ld\n", iface, This->refs + 1);
+    TRACE("%p, %d\n", iface, This->refs + 1);
     return InterlockedIncrement(&This->refs);
 }
 
 static ULONG WINAPI RURpcProxyBufferImpl_Release(LPRPCPROXYBUFFER iface) {
     ICOM_THIS_MULTI(RemUnkProxy,lpvtbl_proxy,iface);
     ULONG ref = InterlockedDecrement(&This->refs);
-    TRACE("%p, %ld\n", iface, ref);
+    TRACE("%p, %d\n", iface, ref);
     if (!ref) {
         IRpcProxyBuffer_Disconnect(iface);
         HeapFree(GetProcessHeap(),0,This);
@@ -1015,6 +1019,12 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv)
         return FileMonikerCF_Create(iid, ppv);
     if (IsEqualCLSID(rclsid, &CLSID_ItemMoniker))
         return ItemMonikerCF_Create(iid, ppv);
+    if (IsEqualCLSID(rclsid, &CLSID_AntiMoniker))
+        return AntiMonikerCF_Create(iid, ppv);
+    if (IsEqualCLSID(rclsid, &CLSID_CompositeMoniker))
+        return CompositeMonikerCF_Create(iid, ppv);
+    if (IsEqualCLSID(rclsid, &CLSID_ClassMoniker))
+        return ClassMonikerCF_Create(iid, ppv);
 
     FIXME("\n\tCLSID:\t%s,\n\tIID:\t%s\n",debugstr_guid(rclsid),debugstr_guid(iid));
     return CLASS_E_CLASSNOTAVAILABLE;

@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -43,7 +43,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 /******************************************************************************
  * HGLOBALLockBytesImpl definition.
  *
- * This class imlements the ILockBytes inteface and represents a byte array
+ * This class implements the ILockBytes interface and represents a byte array
  * object supported by an HGLOBAL pointer.
  */
 struct HGLOBALLockBytesImpl
@@ -81,77 +81,15 @@ typedef struct HGLOBALLockBytesImpl HGLOBALLockBytesImpl;
 /*
  * Method definition for the HGLOBALLockBytesImpl class.
  */
-HGLOBALLockBytesImpl* HGLOBALLockBytesImpl_Construct(
+static HGLOBALLockBytesImpl* HGLOBALLockBytesImpl_Construct(
     HGLOBAL  hGlobal,
     BOOL     fDeleteOnRelease);
 
-void HGLOBALLockBytesImpl_Destroy(HGLOBALLockBytesImpl* This);
+static void HGLOBALLockBytesImpl_Destroy(HGLOBALLockBytesImpl* This);
 
-HRESULT WINAPI HGLOBALLockBytesImpl_QueryInterface(
-    ILockBytes*   iface,
-    REFIID        riid,        /* [in] */
-    void**        ppvObject);  /* [iid_is][out] */
+static HRESULT WINAPI HGLOBALLockBytesImpl_SetSize( ILockBytes* iface, ULARGE_INTEGER libNewSize );
 
-ULONG WINAPI HGLOBALLockBytesImpl_AddRef(
-    ILockBytes*   iface);
-
-ULONG WINAPI HGLOBALLockBytesImpl_Release(
-    ILockBytes*   iface);
-
-HRESULT WINAPI HGLOBALLockBytesImpl_ReadAt(
-    ILockBytes*    iface,
-    ULARGE_INTEGER ulOffset,  /* [in] */
-    void*          pv,        /* [length_is][size_is][out] */
-    ULONG          cb,        /* [in] */
-    ULONG*         pcbRead);  /* [out] */
-
-HRESULT WINAPI HGLOBALLockBytesImpl_WriteAt(
-    ILockBytes*    iface,
-    ULARGE_INTEGER ulOffset,    /* [in] */
-    const void*    pv,          /* [size_is][in] */
-    ULONG          cb,          /* [in] */
-    ULONG*         pcbWritten); /* [out] */
-
-HRESULT WINAPI HGLOBALLockBytesImpl_Flush(
-    ILockBytes*     iface);
-
-HRESULT WINAPI HGLOBALLockBytesImpl_SetSize(
-    ILockBytes*     iface,
-    ULARGE_INTEGER  libNewSize);  /* [in] */
-
-HRESULT WINAPI HGLOBALLockBytesImpl_LockRegion(
-    ILockBytes*    iface,
-    ULARGE_INTEGER libOffset,   /* [in] */
-    ULARGE_INTEGER cb,          /* [in] */
-    DWORD          dwLockType); /* [in] */
-
-HRESULT WINAPI HGLOBALLockBytesImpl_UnlockRegion(
-    ILockBytes*    iface,
-    ULARGE_INTEGER libOffset,   /* [in] */
-    ULARGE_INTEGER cb,          /* [in] */
-    DWORD          dwLockType); /* [in] */
-
-HRESULT WINAPI HGLOBALLockBytesImpl_Stat(
-    ILockBytes*    iface,
-    STATSTG*       pstatstg,     /* [out] */
-    DWORD          grfStatFlag); /* [in]  */
-
-/*
- * Virtual function table for the HGLOBALLockBytesImpl class.
- */
-static const ILockBytesVtbl HGLOBALLockBytesImpl_Vtbl =
-{
-    HGLOBALLockBytesImpl_QueryInterface,
-    HGLOBALLockBytesImpl_AddRef,
-    HGLOBALLockBytesImpl_Release,
-    HGLOBALLockBytesImpl_ReadAt,
-    HGLOBALLockBytesImpl_WriteAt,
-    HGLOBALLockBytesImpl_Flush,
-    HGLOBALLockBytesImpl_SetSize,
-    HGLOBALLockBytesImpl_LockRegion,
-    HGLOBALLockBytesImpl_UnlockRegion,
-    HGLOBALLockBytesImpl_Stat,
-};
+static const ILockBytesVtbl HGLOBALLockBytesImpl_Vtbl;
 
 /******************************************************************************
  *           CreateILockBytesOnHGlobal     [OLE32.@]
@@ -224,10 +162,10 @@ HRESULT WINAPI GetHGlobalFromILockBytes(ILockBytes* plkbyt, HGLOBAL* phglobal)
   /* It is not our lockbytes implementation, so use a more generic way */
   hres = ILockBytes_Stat(plkbyt,&stbuf,0);
   if (hres != S_OK) {
-     ERR("Cannot ILockBytes_Stat, %lx\n",hres);
+     ERR("Cannot ILockBytes_Stat, %x\n",hres);
      return hres;
   }
-  FIXME("cbSize is %ld\n",stbuf.cbSize.u.LowPart);
+  FIXME("cbSize is %d\n",stbuf.cbSize.u.LowPart);
   *phglobal = GlobalAlloc( GMEM_MOVEABLE|GMEM_SHARE, stbuf.cbSize.u.LowPart);
   if (!*phglobal)
     return E_INVALIDARG;
@@ -235,11 +173,11 @@ HRESULT WINAPI GetHGlobalFromILockBytes(ILockBytes* plkbyt, HGLOBAL* phglobal)
   hres = ILockBytes_ReadAt(plkbyt, start, GlobalLock(*phglobal), stbuf.cbSize.u.LowPart, &xread);
   GlobalUnlock(*phglobal);
   if (hres != S_OK) {
-    FIXME("%p->ReadAt failed with %lx\n",plkbyt,hres);
+    FIXME("%p->ReadAt failed with %x\n",plkbyt,hres);
     return hres;
   }
   if (stbuf.cbSize.u.LowPart != xread) {
-    FIXME("Read size is not requested size %ld vs %ld?\n",stbuf.cbSize.u.LowPart, xread);
+    FIXME("Read size is not requested size %d vs %d?\n",stbuf.cbSize.u.LowPart, xread);
   }
   return S_OK;
 }
@@ -258,8 +196,8 @@ HRESULT WINAPI GetHGlobalFromILockBytes(ILockBytes* plkbyt, HGLOBAL* phglobal)
  *    fDeleteOnRelease [ I] Flag set to TRUE if the HGLOBAL will be released
  *                          when the IStream object is destroyed.
  */
-HGLOBALLockBytesImpl* HGLOBALLockBytesImpl_Construct(HGLOBAL hGlobal,
-                                                     BOOL    fDeleteOnRelease)
+static HGLOBALLockBytesImpl* HGLOBALLockBytesImpl_Construct(HGLOBAL hGlobal,
+                                                            BOOL    fDeleteOnRelease)
 {
   HGLOBALLockBytesImpl* newLockBytes;
   newLockBytes = HeapAlloc(GetProcessHeap(), 0, sizeof(HGLOBALLockBytesImpl));
@@ -306,7 +244,7 @@ HGLOBALLockBytesImpl* HGLOBALLockBytesImpl_Construct(HGLOBAL hGlobal,
  * HGLOBALLockBytesImpl class. The pointer passed-in to this function will be
  * freed and will not be valid anymore.
  */
-void HGLOBALLockBytesImpl_Destroy(HGLOBALLockBytesImpl* This)
+static void HGLOBALLockBytesImpl_Destroy(HGLOBALLockBytesImpl* This)
 {
   /*
    * Release the HGlobal if the constructor asked for that.
@@ -327,7 +265,7 @@ void HGLOBALLockBytesImpl_Destroy(HGLOBALLockBytesImpl* This)
  * This implements the IUnknown method QueryInterface for this
  * class
  */
-HRESULT WINAPI HGLOBALLockBytesImpl_QueryInterface(
+static HRESULT WINAPI HGLOBALLockBytesImpl_QueryInterface(
       ILockBytes*  iface,
       REFIID       riid,        /* [in] */
       void**       ppvObject)   /* [iid_is][out] */
@@ -348,11 +286,8 @@ HRESULT WINAPI HGLOBALLockBytesImpl_QueryInterface(
   /*
    * Compare the riid with the interface IDs implemented by this object.
    */
-  if (memcmp(&IID_IUnknown, riid, sizeof(IID_IUnknown)) == 0)
-  {
-    *ppvObject = (ILockBytes*)This;
-  }
-  else if (memcmp(&IID_ILockBytes, riid, sizeof(IID_ILockBytes)) == 0)
+  if (IsEqualIID(riid, &IID_IUnknown) ||
+      IsEqualIID(riid, &IID_ILockBytes))
   {
     *ppvObject = (ILockBytes*)This;
   }
@@ -367,7 +302,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_QueryInterface(
    * Query Interface always increases the reference count by one when it is
    * successful
    */
-  HGLOBALLockBytesImpl_AddRef(iface);
+  IUnknown_AddRef(iface);
 
   return S_OK;
 }
@@ -376,7 +311,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_QueryInterface(
  * This implements the IUnknown method AddRef for this
  * class
  */
-ULONG WINAPI HGLOBALLockBytesImpl_AddRef(ILockBytes* iface)
+static ULONG WINAPI HGLOBALLockBytesImpl_AddRef(ILockBytes* iface)
 {
   HGLOBALLockBytesImpl* const This=(HGLOBALLockBytesImpl*)iface;
   return InterlockedIncrement(&This->ref);
@@ -386,7 +321,7 @@ ULONG WINAPI HGLOBALLockBytesImpl_AddRef(ILockBytes* iface)
  * This implements the IUnknown method Release for this
  * class
  */
-ULONG WINAPI HGLOBALLockBytesImpl_Release(ILockBytes* iface)
+static ULONG WINAPI HGLOBALLockBytesImpl_Release(ILockBytes* iface)
 {
   HGLOBALLockBytesImpl* const This=(HGLOBALLockBytesImpl*)iface;
   ULONG ref;
@@ -412,7 +347,7 @@ ULONG WINAPI HGLOBALLockBytesImpl_Release(ILockBytes* iface)
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl_ReadAt(
+static HRESULT WINAPI HGLOBALLockBytesImpl_ReadAt(
       ILockBytes*    iface,
       ULARGE_INTEGER ulOffset,  /* [in] */
       void*          pv,        /* [length_is][size_is][out] */
@@ -484,7 +419,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_ReadAt(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl_WriteAt(
+static HRESULT WINAPI HGLOBALLockBytesImpl_WriteAt(
       ILockBytes*    iface,
       ULARGE_INTEGER ulOffset,    /* [in] */
       const void*    pv,          /* [size_is][in] */
@@ -549,7 +484,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_WriteAt(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl_Flush(ILockBytes* iface)
+static HRESULT WINAPI HGLOBALLockBytesImpl_Flush(ILockBytes* iface)
 {
   return S_OK;
 }
@@ -561,7 +496,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_Flush(ILockBytes* iface)
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl_SetSize(
+static HRESULT WINAPI HGLOBALLockBytesImpl_SetSize(
       ILockBytes*     iface,
       ULARGE_INTEGER  libNewSize)   /* [in] */
 {
@@ -598,7 +533,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_SetSize(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl_LockRegion(
+static HRESULT WINAPI HGLOBALLockBytesImpl_LockRegion(
       ILockBytes*    iface,
       ULARGE_INTEGER libOffset,   /* [in] */
       ULARGE_INTEGER cb,          /* [in] */
@@ -614,7 +549,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_LockRegion(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl_UnlockRegion(
+static HRESULT WINAPI HGLOBALLockBytesImpl_UnlockRegion(
       ILockBytes*    iface,
       ULARGE_INTEGER libOffset,   /* [in] */
       ULARGE_INTEGER cb,          /* [in] */
@@ -631,7 +566,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_UnlockRegion(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl_Stat(
+static HRESULT WINAPI HGLOBALLockBytesImpl_Stat(
       ILockBytes*  iface,
       STATSTG*     pstatstg,     /* [out] */
       DWORD        grfStatFlag)  /* [in] */
@@ -646,3 +581,20 @@ HRESULT WINAPI HGLOBALLockBytesImpl_Stat(
 
   return S_OK;
 }
+
+/*
+ * Virtual function table for the HGLOBALLockBytesImpl class.
+ */
+static const ILockBytesVtbl HGLOBALLockBytesImpl_Vtbl =
+{
+    HGLOBALLockBytesImpl_QueryInterface,
+    HGLOBALLockBytesImpl_AddRef,
+    HGLOBALLockBytesImpl_Release,
+    HGLOBALLockBytesImpl_ReadAt,
+    HGLOBALLockBytesImpl_WriteAt,
+    HGLOBALLockBytesImpl_Flush,
+    HGLOBALLockBytesImpl_SetSize,
+    HGLOBALLockBytesImpl_LockRegion,
+    HGLOBALLockBytesImpl_UnlockRegion,
+    HGLOBALLockBytesImpl_Stat,
+};

@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES:
  *    This file contains the implementation for the OLE Clipboard and its
@@ -78,12 +78,7 @@
 
 #include "storage32.h"
 
-#define HANDLE_ERROR(err) { hr = err; TRACE("(HRESULT=%lx)\n", (HRESULT)err); goto CLEANUP; }
-
-/* For CoGetMalloc (MEMCTX_TASK is currently ignored) */
-#ifndef MEMCTX_TASK
-# define MEMCTX_TASK -1
-#endif
+#define HANDLE_ERROR(err) { hr = err; TRACE("(HRESULT=%x)\n", (HRESULT)err); goto CLEANUP; }
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -178,7 +173,7 @@ static OLEClipbrd* OLEClipbrd_Construct(void);
 static void OLEClipbrd_Destroy(OLEClipbrd* ptrToDestroy);
 static HWND OLEClipbrd_CreateWindow(void);
 static void OLEClipbrd_DestroyWindow(HWND hwnd);
-LRESULT CALLBACK OLEClipbrd_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK OLEClipbrd_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 static HRESULT OLEClipbrd_RenderFormat( IDataObject *pIDataObject, LPFORMATETC pFormatetc );
 static HGLOBAL OLEClipbrd_GlobalDupMem( HGLOBAL hGlobalSrc );
 
@@ -283,7 +278,7 @@ static const IEnumFORMATETCVtbl efvt =
 /*
  * Name of our registered OLE clipboard window class
  */
-CHAR OLEClipbrd_WNDCLASS[] = "CLIPBRDWNDCLASS";
+static const CHAR OLEClipbrd_WNDCLASS[] = "CLIPBRDWNDCLASS";
 
 /*
  *  If we need to store state info we can store it here.
@@ -487,7 +482,7 @@ HRESULT WINAPI OleGetClipboard(IDataObject** ppDataObj)
  *  data object exposed through OleGetClipboard must convert this TYMED_HGLOBAL
  *  back to TYMED_IStorage.
  */
-HRESULT WINAPI OleFlushClipboard()
+HRESULT WINAPI OleFlushClipboard(void)
 {
   IEnumFORMATETC* penumFormatetc = NULL;
   FORMATETC rgelt;
@@ -577,7 +572,7 @@ CLEANUP:
 /***********************************************************************
  *           OleIsCurrentClipboard [OLE32.@]
  */
-HRESULT WINAPI OleIsCurrentClipboard (  IDataObject *pDataObject)
+HRESULT WINAPI OleIsCurrentClipboard(IDataObject *pDataObject)
 {
   TRACE("()\n");
   /*
@@ -638,7 +633,7 @@ void OLEClipbrd_UnInitialize(void)
 /*********************************************************
  * Construct the OLEClipbrd class.
  */
-static OLEClipbrd* OLEClipbrd_Construct()
+static OLEClipbrd* OLEClipbrd_Construct(void)
 {
   OLEClipbrd* newObject = NULL;
   HGLOBAL hNewObject = 0;
@@ -711,7 +706,7 @@ static void OLEClipbrd_Destroy(OLEClipbrd* ptrToDestroy)
  * OLEClipbrd_CreateWindow()
  * Create the clipboard window
  */
-static HWND OLEClipbrd_CreateWindow()
+static HWND OLEClipbrd_CreateWindow(void)
 {
   HWND hwnd = 0;
   WNDCLASSEXA wcex;
@@ -776,7 +771,7 @@ static void OLEClipbrd_DestroyWindow(HWND hwnd)
  * has been placed in the clipboard via OleSetClipboard().
  * i.e. Only when OLE owns the windows clipboard.
  */
-LRESULT CALLBACK OLEClipbrd_WndProc
+static LRESULT CALLBACK OLEClipbrd_WndProc
   (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
@@ -919,7 +914,8 @@ static HRESULT OLEClipbrd_RenderFormat(IDataObject *pIDataObject, LPFORMATETC pF
   ILockBytes *ptrILockBytes = 0;
   HGLOBAL hStorage = 0;
 
-  GetClipboardFormatNameA(pFormatetc->cfFormat, szFmtName, MAX_CLIPFORMAT_NAME);
+  if (!GetClipboardFormatNameA(pFormatetc->cfFormat, szFmtName, MAX_CLIPFORMAT_NAME))
+      szFmtName[0] = '\0';
 
   /* If embed source */
   if (!strcmp(szFmtName, CF_EMBEDSOURCE))
@@ -935,7 +931,7 @@ static HRESULT OLEClipbrd_RenderFormat(IDataObject *pIDataObject, LPFORMATETC pF
 
     if (FAILED(hr = IDataObject_GetDataHere(theOleClipboard->pIDataObjectSrc, pFormatetc, &std)))
     {
-      WARN("() : IDataObject_GetDataHere failed to render clipboard data! (%lx)\n", hr);
+      WARN("() : IDataObject_GetDataHere failed to render clipboard data! (%x)\n", hr);
       GlobalFree(hStorage);
       return hr;
     }
@@ -1017,7 +1013,7 @@ static HRESULT OLEClipbrd_RenderFormat(IDataObject *pIDataObject, LPFORMATETC pF
   {
     if (FAILED(hr = IDataObject_GetData(pIDataObject, pFormatetc, &std)))
     {
-        WARN("() : IDataObject_GetData failed to render clipboard data! (%lx)\n", hr);
+        WARN("() : IDataObject_GetData failed to render clipboard data! (%x)\n", hr);
         GlobalFree(hStorage);
         return hr;
     }
@@ -1159,7 +1155,7 @@ static ULONG WINAPI OLEClipbrd_IDataObject_AddRef(
    */
   OLEClipbrd *This = (OLEClipbrd *)iface;
 
-  TRACE("(%p)->(count=%lu)\n",This, This->ref);
+  TRACE("(%p)->(count=%u)\n",This, This->ref);
 
   return InterlockedIncrement(&This->ref);
 
@@ -1179,7 +1175,7 @@ static ULONG WINAPI OLEClipbrd_IDataObject_Release(
   OLEClipbrd *This = (OLEClipbrd *)iface;
   ULONG ref;
 
-  TRACE("(%p)->(count=%lu)\n",This, This->ref);
+  TRACE("(%p)->(count=%u)\n",This, This->ref);
 
   /*
    * Decrease the reference count on this object.
@@ -1411,7 +1407,7 @@ static HRESULT WINAPI OLEClipbrd_IDataObject_EnumFormatEtc(
    */
   OLEClipbrd *This = (OLEClipbrd *)iface;
 
-  TRACE("(%p, %lx, %p)\n", iface, dwDirection, ppenumFormatEtc);
+  TRACE("(%p, %x, %p)\n", iface, dwDirection, ppenumFormatEtc);
 
   /*
    * If we have a data source placed on the clipboard (via OleSetClipboard)
@@ -1559,7 +1555,7 @@ static HRESULT WINAPI OLEClipbrd_IDataObject_EnumDAdvise(
  * NOTE: this does not AddRef the interface.
  */
 
-LPENUMFORMATETC OLEClipbrd_IEnumFORMATETC_Construct(UINT cfmt, const FORMATETC afmt[],
+static LPENUMFORMATETC OLEClipbrd_IEnumFORMATETC_Construct(UINT cfmt, const FORMATETC afmt[],
                                                     LPUNKNOWN pUnkDataObj)
 {
   IEnumFORMATETCImpl* ef;
@@ -1642,7 +1638,7 @@ static HRESULT WINAPI OLEClipbrd_IEnumFORMATETC_QueryInterface
 static ULONG WINAPI OLEClipbrd_IEnumFORMATETC_AddRef(LPENUMFORMATETC iface)
 {
   IEnumFORMATETCImpl *This = (IEnumFORMATETCImpl *)iface;
-  TRACE("(%p)->(count=%lu)\n",This, This->ref);
+  TRACE("(%p)->(count=%u)\n",This, This->ref);
 
   if (This->pUnkDataObj)
     IUnknown_AddRef(This->pUnkDataObj);
@@ -1661,7 +1657,7 @@ static ULONG WINAPI OLEClipbrd_IEnumFORMATETC_Release(LPENUMFORMATETC iface)
   LPMALLOC pIMalloc;
   ULONG ref;
 
-  TRACE("(%p)->(count=%lu)\n",This, This->ref);
+  TRACE("(%p)->(count=%u)\n",This, This->ref);
 
   if (This->pUnkDataObj)
     IUnknown_Release(This->pUnkDataObj);  /* Release parent data object */
@@ -1728,7 +1724,7 @@ static HRESULT WINAPI OLEClipbrd_IEnumFORMATETC_Next
 static HRESULT WINAPI OLEClipbrd_IEnumFORMATETC_Skip(LPENUMFORMATETC iface, ULONG celt)
 {
   IEnumFORMATETCImpl *This = (IEnumFORMATETCImpl *)iface;
-  TRACE("(%p)->(num=%lu)\n", This, celt);
+  TRACE("(%p)->(num=%u)\n", This, celt);
 
   This->posFmt += celt;
   if (This->posFmt > This->countFmt)

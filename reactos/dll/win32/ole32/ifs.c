@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -166,7 +166,7 @@ static LPVOID WINAPI IMalloc_fnAlloc(LPMALLOC iface, DWORD cb) {
 
 	LPVOID addr;
 
-	TRACE("(%ld)\n",cb);
+	TRACE("(%d)\n",cb);
 
 	if(Malloc32.pSpy) {
 	    DWORD preAllocResult;
@@ -200,7 +200,7 @@ static LPVOID WINAPI IMalloc_fnRealloc(LPMALLOC iface,LPVOID pv,DWORD cb) {
 
 	LPVOID pNewMemory;
 
-	TRACE("(%p,%ld)\n",pv,cb);
+	TRACE("(%p,%d)\n",pv,cb);
 
 	if(Malloc32.pSpy) {
 	    LPVOID pRealMemory;
@@ -396,7 +396,7 @@ static ULONG WINAPI IMallocSpy_fnAddRef (LPMALLOCSPY iface)
     _MallocSpy *This = (_MallocSpy *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE ("(%p)->(count=%lu)\n", This, ref - 1);
+    TRACE ("(%p)->(count=%u)\n", This, ref - 1);
 
     return ref;
 }
@@ -413,7 +413,7 @@ static ULONG WINAPI IMallocSpy_fnRelease (LPMALLOCSPY iface)
     _MallocSpy *This = (_MallocSpy *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE ("(%p)->(count=%lu)\n", This, ref + 1);
+    TRACE ("(%p)->(count=%u)\n", This, ref + 1);
 
     if (!ref) {
         /* our allocation list MUST be empty here */
@@ -424,7 +424,7 @@ static ULONG WINAPI IMallocSpy_fnRelease (LPMALLOCSPY iface)
 static ULONG WINAPI IMallocSpy_fnPreAlloc(LPMALLOCSPY iface, ULONG cbRequest)
 {
     _MallocSpy *This = (_MallocSpy *)iface;
-    TRACE ("(%p)->(%lu)\n", This, cbRequest);
+    TRACE ("(%p)->(%u)\n", This, cbRequest);
     return cbRequest;
 }
 static PVOID WINAPI IMallocSpy_fnPostAlloc(LPMALLOCSPY iface, void* pActual)
@@ -449,7 +449,7 @@ static void  WINAPI IMallocSpy_fnPostFree(LPMALLOCSPY iface, BOOL fSpyed)
 static ULONG WINAPI IMallocSpy_fnPreRealloc(LPMALLOCSPY iface, void* pRequest, ULONG cbRequest, void** ppNewRequest, BOOL fSpyed)
 {
     _MallocSpy *This = (_MallocSpy *)iface;
-    TRACE ("(%p)->(%p %lu %u)\n", This, pRequest, cbRequest, fSpyed);
+    TRACE ("(%p)->(%p %u %u)\n", This, pRequest, cbRequest, fSpyed);
     *ppNewRequest = pRequest;
     return cbRequest;
 }
@@ -471,7 +471,7 @@ static PVOID WINAPI IMallocSpy_fnPreGetSize(LPMALLOCSPY iface, void* pRequest, B
 static ULONG WINAPI IMallocSpy_fnPostGetSize(LPMALLOCSPY iface, ULONG cbActual, BOOL fSpyed)
 {
     _MallocSpy *This = (_MallocSpy *)iface;
-    TRACE ("(%p)->(%lu %u)\n", This, cbActual, fSpyed);
+    TRACE ("(%p)->(%u %u)\n", This, cbActual, fSpyed);
     return cbActual;
 }
 
@@ -502,7 +502,7 @@ static void WINAPI IMallocSpy_fnPostHeapMinimize(LPMALLOCSPY iface)
 }
 
 static void MallocSpyDumpLeaks(void) {
-        TRACE("leaks: %lu\n", Malloc32.SpyedAllocationsLeft);
+        TRACE("leaks: %u\n", Malloc32.SpyedAllocationsLeft);
 }
 
 static const IMallocSpyVtbl VT_IMallocSpy =
@@ -665,7 +665,7 @@ HRESULT WINAPI CoRevokeMallocSpy(void)
 	}
 
 	if (Malloc32.SpyedAllocationsLeft) {
-	    TRACE("SpyReleasePending with %lu allocations left\n", Malloc32.SpyedAllocationsLeft);
+            TRACE("SpyReleasePending with %u allocations left\n", Malloc32.SpyedAllocationsLeft);
 	    Malloc32.SpyReleasePending = TRUE;
 	    hres = E_ACCESSDENIED;
 	} else {
