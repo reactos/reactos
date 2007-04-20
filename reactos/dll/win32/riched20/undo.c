@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "editor.h"
@@ -32,7 +32,8 @@ void ME_EmptyUndoStack(ME_TextEditor *editor)
   TRACE("Emptying undo stack\n");
 
   p = editor->pUndoStack;
-  editor->pUndoStack = NULL;
+  editor->pUndoStack = editor->pUndoStackBottom = NULL;
+  editor->nUndoStackSize = 0;
   while(p) {
     pNext = p->next;
     ME_DestroyDisplayItem(p);    
@@ -49,6 +50,8 @@ void ME_EmptyUndoStack(ME_TextEditor *editor)
 
 ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, ME_DisplayItem *pdi) {
   if (editor->nUndoMode == umIgnore)
+    return NULL;
+  else if (editor->nUndoLimit == 0)
     return NULL;
   else
   {
@@ -93,10 +96,31 @@ ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, ME_DisplayIte
         TRACE("Pushing id=%s to undo stack, deleting redo stack\n", ME_GetDITypeName(type));
       else
         TRACE("Pushing id=%s to undo stack\n", ME_GetDITypeName(type));
+
       pItem->next = editor->pUndoStack;
+      if (type == diUndoEndTransaction)
+        editor->nUndoStackSize++;
       if (editor->pUndoStack)
         editor->pUndoStack->prev = pItem;
+      else
+        editor->pUndoStackBottom = pItem;
       editor->pUndoStack = pItem;
+      
+      if (editor->nUndoStackSize > editor->nUndoLimit)
+      { /* remove oldest undo from stack */
+        ME_DisplayItem *p = editor->pUndoStackBottom;
+        while (p->type !=diUndoEndTransaction)
+          p = p->prev; /*find new stack bottom */
+        editor->pUndoStackBottom = p->prev;
+          editor->pUndoStackBottom->next = NULL;
+        do
+        {
+          ME_DisplayItem *pp = p->next;
+          ME_DestroyDisplayItem(p);
+          p = pp;
+        } while (p);
+        editor->nUndoStackSize--;
+      }
       /* any new operation (not redo) clears the redo stack */
       if (editor->nUndoMode == umAddToUndo) {
         ME_DisplayItem *p = editor->pRedoStack;
@@ -124,7 +148,6 @@ ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, ME_DisplayIte
 }
 
 void ME_CommitUndo(ME_TextEditor *editor) {
-  
   if (editor->nUndoMode == umIgnore)
     return;
   
@@ -140,10 +163,9 @@ void ME_CommitUndo(ME_TextEditor *editor) {
     
   ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
   ME_SendSelChange(editor);
-  editor->nModifyStep++;
 }
 
-void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
+static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
 {
   ME_UndoItem *pUItem = (ME_UndoItem *)pItem;
 
@@ -233,10 +255,10 @@ void ME_Undo(ME_TextEditor *editor) {
   } while(p && p->type != diUndoEndTransaction);
   ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
   editor->pUndoStack = p;
+  editor->nUndoStackSize--;
   if (p)
     p->prev = NULL;
   editor->nUndoMode = nMode;
-  editor->nModifyStep--;
   ME_UpdateRepaint(editor);
 }
 
@@ -269,6 +291,5 @@ void ME_Redo(ME_TextEditor *editor) {
   if (p)
     p->prev = NULL;
   editor->nUndoMode = nMode;
-  editor->nModifyStep++;
   ME_UpdateRepaint(editor);
 }

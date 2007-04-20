@@ -1147,4 +1147,7 @@ int	BeginFile (RTF_Info *);
 
 int	RTFCharSetToCodePage(RTF_Info *info, int charset);
 
+void	LookupInit (void);
+void	LookupCleanup (void);
+
 #endif

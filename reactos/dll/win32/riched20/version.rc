@@ -1,7 +1,5 @@
 /*
- * RichEdit - Operation context functions
- *
- * Copyright 2004 by Krzysztof Foltman
+ * Copyright (c) 2006 Mike McCormack
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,20 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "editor.h"
+#define WINE_FILEDESCRIPTION_STR "Wine Richedit dll"
+#define WINE_FILENAME_STR "riched20.dll"
+#define WINE_FILEVERSION 5,30,23,1215
+#define WINE_FILEVERSION_STR "5,30,23,1215"
+#define WINE_PRODUCTVERSION 5,30,23,1215
+#define WINE_PRODUCTVERSION_STR "5,30,23,1215"
 
-void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC)
-{
-  c->nSequence = editor->nSequence++;  
-  c->hDC = hDC;
-  c->editor = editor;
-  c->pt.x = 0;
-  c->pt.y = 0;
-  c->hbrMargin = CreateSolidBrush(RGB(224,224,224));
-  c->rcView = editor->rcFormat;
-}
-
-void ME_DestroyContext(ME_Context *c)
-{
-  DeleteObject(c->hbrMargin);
-}
+#include "wine/wine_common_ver.rc"
