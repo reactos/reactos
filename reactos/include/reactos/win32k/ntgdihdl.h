@@ -25,6 +25,7 @@
 #define GDI_HANDLE_TYPE_MASK  0x007f0000
 #define GDI_HANDLE_STOCK_MASK 0x00800000
 #define GDI_HANDLE_REUSE_MASK 0xff000000
+#define GDI_HANDLE_UPPER_MASK (GDI_HANDLE_TYPE_MASK|GDI_HANDLE_STOCK_MASK|GDI_HANDLE_REUSE_MASK)
 #define GDI_HANDLE_REUSECNT_SHIFT 24
 
 /*! \defgroup GDI object types
@@ -105,6 +106,11 @@ typedef struct _GDI_TABLE_ENTRY
     LONG Type;        /* the first 16 bit is the object type including the stock obj flag, the last 16 bits is just the object type */
     PVOID UserData;   /* Points to the user mode structure, usually NULL though */
 } GDI_TABLE_ENTRY, *PGDI_TABLE_ENTRY;
+
+
+#define GDI_HANDLE_TO_ENTRY(h) \
+  ((((ULONG_PTR)(h)) & GDI_HANDLE_INDEX_MASK) * sizeof(GDI_TABLE_ENTRY))
+
 
 typedef struct _RGNATTR
 {

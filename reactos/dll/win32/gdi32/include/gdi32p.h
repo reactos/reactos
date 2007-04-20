@@ -114,6 +114,10 @@ GdiGetHandleUserData(
 PLDC
 GdiGetLDC(HDC hDC);
 
+HGDIOBJ
+STDCALL
+GdiFixUpHandle(HGDIOBJ hGO);
+
 BOOL
 WINAPI
 CalculateColorTableSize(

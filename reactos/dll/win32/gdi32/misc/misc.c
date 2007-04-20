@@ -32,6 +32,20 @@ PGDI_TABLE_ENTRY GdiHandleTable = NULL;
 HANDLE CurrentProcessId = NULL;
 DWORD GDI_BatchLimit = 1;
 
+
+/*
+ * @implemented
+ */
+HGDIOBJ 
+STDCALL
+GdiFixUpHandle(HGDIOBJ hGdiObj)
+{
+ if (((ULONG_PTR)(hGdiObj)) & GDI_HANDLE_UPPER_MASK ) return hGdiObj;
+ PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_TO_ENTRY(hGdiObj);
+ return hGdiObj = (HGDIOBJ)(((LONG_PTR)(hGdiObj)) |
+                     (Entry->Type << 16)); // Rebuild handle for Object
+}
+
 /*
  * @implemented
  */
@@ -44,7 +58,7 @@ GdiQueryTable(VOID)
 
 BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
 {
-  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
+  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_TO_ENTRY(hGdiObj);
   if(Entry->KernelData != NULL && (Entry->Type & GDI_HANDLE_TYPE_MASK) == (LONG)GDI_HANDLE_GET_TYPE(hGdiObj))
   {
     HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
@@ -58,7 +72,7 @@ BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
 
 BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData)
 {
-  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
+  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_TO_ENTRY(hGdiObj);
   if(Entry->KernelData != NULL && (Entry->Type & GDI_HANDLE_TYPE_MASK) == (LONG)GDI_HANDLE_GET_TYPE(hGdiObj))
   {
     HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
@@ -103,3 +117,5 @@ GdiGetBatchLimit()
 {
     return GDI_BatchLimit;
 }
+
+
