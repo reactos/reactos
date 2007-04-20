@@ -47,7 +47,7 @@ extern "C" {
 
 /* more DCICOMMAND escapes */
 #ifndef DCICOMMAND
-#define DCICOMMAND 3075       
+#define DCICOMMAND 3075
 #endif
 
 #define DDCREATEDRIVEROBJECT	10
@@ -55,7 +55,7 @@ extern "C" {
 #define DDNEWCALLBACKFNS	12
 #define DDVERSIONINFO		13
 
-	
+
 
 #define DDUNSUPPORTEDMODE  ((DWORD) -1)
 
@@ -93,7 +93,7 @@ DEFINE_GUID(GUID_UserModeDriverPassword, 0x97f861b6, 0x60a1, 0x11d1, 0x8c, 0xd0,
 DEFINE_GUID(GUID_D3DParseUnknownCommandCallback,  0x2e04ffa0, 0x98e4, 0x11d1, 0x8c, 0xe1, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0xa8);
 DEFINE_GUID(GUID_MotionCompCallbacks,           0xb1122b40, 0x5dA5, 0x11d1, 0x8f, 0xcF, 0x00, 0xc0, 0x4f, 0xc2, 0x9b, 0x4e);
 DEFINE_GUID(GUID_Miscellaneous2Callbacks,   0x406B2F00, 0x3E5A, 0x11D1, 0xB6, 0x40, 0x00, 0xAA, 0x00, 0xA1, 0xF9, 0x6A);
-#endif 
+#endif
 
 #ifndef _WIN32
 #undef  E_NOTIMPL
@@ -202,7 +202,7 @@ typedef struct _VIDMEM {
     union {
 	LPVMEMHEAP	lpHeap;
 	DWORD		dwHeight;
-    }; 
+    };
 } VIDMEM;
 
 
@@ -784,7 +784,7 @@ typedef struct _DDHAL_CALLBACKS {
     DDHAL_DDEXEBUFCALLBACKS	      HELDDExeBuf;
 	DDHAL_DDVIDEOPORTCALLBACKS    cbDDVideoPortCallbacks;
     DDHAL_DDVIDEOPORTCALLBACKS    HALDDVideoPort;
-    DDHAL_DDCOLORCONTROLCALLBACKS cbDDColorControlCallbacks; 
+    DDHAL_DDCOLORCONTROLCALLBACKS cbDDColorControlCallbacks;
     DDHAL_DDCOLORCONTROLCALLBACKS HALDDColorControl;
     DDHAL_DDMISCELLANEOUSCALLBACKS cbDDMiscellaneousCallbacks;
     DDHAL_DDMISCELLANEOUSCALLBACKS HALDDMiscellaneous;
@@ -933,7 +933,7 @@ typedef struct _DDHAL_CANCREATEVPORTDATA
 {
     LPDDRAWI_DIRECTDRAW_LCL            lpDD;
     LPDDVIDEOPORTDESC                  lpDDVideoPortDesc;
-    HRESULT                            ddRVal; 
+    HRESULT                            ddRVal;
     LPDDHALVPORTCB_CANCREATEVIDEOPORT  CanCreateVideoPort;
 } DDHAL_CANCREATEVPORTDATA;
 
@@ -948,25 +948,25 @@ typedef struct _DDHAL_CREATEVPORTDATA
 
 typedef struct _DDHAL_GETVPORTBANDWIDTHDATA
 {
-    LPDDRAWI_DIRECTDRAW_LCL      lpDD;          
-    LPDDRAWI_DDVIDEOPORT_LCL     lpVideoPort;    
-    LPDDPIXELFORMAT              lpddpfFormat;   
+    LPDDRAWI_DIRECTDRAW_LCL      lpDD;
+    LPDDRAWI_DDVIDEOPORT_LCL     lpVideoPort;
+    LPDDPIXELFORMAT              lpddpfFormat;
     DWORD                        dwWidth;
     DWORD                        dwHeight;
-    DWORD                        dwFlags;        
-    LPDDVIDEOPORTBANDWIDTH       lpBandwidth;       
-    HRESULT                      ddRVal;            
+    DWORD                        dwFlags;
+    LPDDVIDEOPORTBANDWIDTH       lpBandwidth;
+    HRESULT                      ddRVal;
     LPDDHALVPORTCB_GETBANDWIDTH  GetVideoPortBandwidth;
 } DDHAL_GETVPORTBANDWIDTHDATA;
 
 typedef struct _DDHAL_GETVPORTINPUTFORMATDATA
 {
-    LPDDRAWI_DIRECTDRAW_LCL         lpDD;        
-    LPDDRAWI_DDVIDEOPORT_LCL        lpVideoPort; 
-    DWORD                           dwFlags;     
+    LPDDRAWI_DIRECTDRAW_LCL         lpDD;
+    LPDDRAWI_DDVIDEOPORT_LCL        lpVideoPort;
+    DWORD                           dwFlags;
     LPDDPIXELFORMAT                 lpddpfFormat;
     DWORD                           dwNumFormats;
-    HRESULT                         ddRVal;      
+    HRESULT                         ddRVal;
     LPDDHALVPORTCB_GETINPUTFORMATS  GetVideoPortInputFormats;
 } DDHAL_GETVPORTINPUTFORMATDATA;
 
@@ -995,7 +995,7 @@ typedef struct _DDHAL_GETVPORTLINEDATA
 {
     LPDDRAWI_DIRECTDRAW_LCL  lpDD;
     LPDDRAWI_DDVIDEOPORT_LCL lpVideoPort;
-    DWORD                    dwLine; 
+    DWORD                    dwLine;
     HRESULT                  ddRVal;
     LPDDHALVPORTCB_GETLINE   GetVideoPortLine;
 } DDHAL_GETVPORTLINEDATA;
@@ -1003,7 +1003,7 @@ typedef struct _DDHAL_GETVPORTLINEDATA
 typedef struct _DDHAL_DESTROYVPORTDATA
 {
     LPDDRAWI_DIRECTDRAW_LCL      lpDD;
-    LPDDRAWI_DDVIDEOPORT_LCL     lpVideoPort; 
+    LPDDRAWI_DDVIDEOPORT_LCL     lpVideoPort;
     HRESULT                      ddRVal;
     LPDDHALVPORTCB_DESTROYVPORT  DestroyVideoPort;
 } DDHAL_DESTROYVPORTDATA;
@@ -1043,40 +1043,40 @@ typedef struct _DDHAL_WAITFORVPORTSYNCDATA
 
 typedef struct _DDHAL_GETVPORTSIGNALDATA
 {
-    LPDDRAWI_DIRECTDRAW_LCL         lpDD; 
+    LPDDRAWI_DIRECTDRAW_LCL         lpDD;
     LPDDRAWI_DDVIDEOPORT_LCL        lpVideoPort;
-    DWORD                           dwStatus; 
-    HRESULT                         ddRVal; 
+    DWORD                           dwStatus;
+    HRESULT                         ddRVal;
     LPDDHALVPORTCB_GETSIGNALSTATUS  GetVideoSignalStatus;
 } DDHAL_GETVPORTSIGNALDATA;
 
 typedef struct _DDHAL_VPORTCOLORDATA
 {
-    LPDDRAWI_DIRECTDRAW_LCL     lpDD; 
+    LPDDRAWI_DIRECTDRAW_LCL     lpDD;
     LPDDRAWI_DDVIDEOPORT_LCL    lpVideoPort;
-    DWORD                       dwFlags; 
+    DWORD                       dwFlags;
     LPDDCOLORCONTROL            lpColorData;
-    HRESULT                     ddRVal; 
+    HRESULT                     ddRVal;
     LPDDHALVPORTCB_COLORCONTROL ColorControl;
 } DDHAL_VPORTCOLORDATA;
 
 typedef struct _DDHAL_FLIPVPORTDATA
 {
-    LPDDRAWI_DIRECTDRAW_LCL   lpDD;   
+    LPDDRAWI_DIRECTDRAW_LCL   lpDD;
     LPDDRAWI_DDVIDEOPORT_LCL  lpVideoPort;
-    LPDDRAWI_DDRAWSURFACE_LCL lpSurfCurr; 
-    LPDDRAWI_DDRAWSURFACE_LCL lpSurfTarg; 
-    HRESULT                   ddRVal;     
-    LPDDHALVPORTCB_FLIP       FlipVideoPort; 
+    LPDDRAWI_DDRAWSURFACE_LCL lpSurfCurr;
+    LPDDRAWI_DDRAWSURFACE_LCL lpSurfTarg;
+    HRESULT                   ddRVal;
+    LPDDHALVPORTCB_FLIP       FlipVideoPort;
 } DDHAL_FLIPVPORTDATA;
 
 typedef struct _DDHAL_GETVPORTCONNECTDATA
 {
-    LPDDRAWI_DIRECTDRAW_LCL          lpDD; 
+    LPDDRAWI_DIRECTDRAW_LCL          lpDD;
     DWORD                            dwPortId;
     LPDDVIDEOPORTCONNECT             lpConnect;
     DWORD                            dwNumEntries;
-    HRESULT                          ddRVal; 
+    HRESULT                          ddRVal;
     LPDDHALVPORTCB_GETVPORTCONNECT   GetVideoPortConnectInfo;
 } DDHAL_GETVPORTCONNECTDATA;
 
@@ -1121,10 +1121,10 @@ typedef struct _DDHAL_DESTROYDDLOCALDATA
 } DDHAL_DESTROYDDLOCALDATA;
 
 typedef struct _DDHAL_CREATESURFACEEXDATA {
-    DWORD                      dwFlags;  
-    LPDDRAWI_DIRECTDRAW_LCL    lpDDLcl;  
-    LPDDRAWI_DDRAWSURFACE_LCL  lpDDSLcl; 
-    HRESULT                    ddRVal;   
+    DWORD                      dwFlags;
+    LPDDRAWI_DIRECTDRAW_LCL    lpDDLcl;
+    LPDDRAWI_DDRAWSURFACE_LCL  lpDDSLcl;
+    HRESULT                    ddRVal;
 } DDHAL_CREATESURFACEEXDATA;
 
 typedef struct _DDHAL_GETHEAPALIGNMENTDATA
@@ -1139,7 +1139,7 @@ typedef struct _DDHAL_GETHEAPALIGNMENTDATA
 
 typedef struct _DDMORESURFACECAPS
 {
-    DWORD     dwSize; 
+    DWORD     dwSize;
     DDSCAPSEX ddsCapsMore;
     struct    tagExtendedHeapRestrictions
     {
@@ -1150,12 +1150,12 @@ typedef struct _DDMORESURFACECAPS
 
 typedef struct _DDSTEREOMODE
 {
-    DWORD dwSize;      
+    DWORD dwSize;
     DWORD dwHeight;
     DWORD dwWidth;
     DWORD dwBpp;
     DWORD dwRefreshRate;
-    BOOL bSupported;  
+    BOOL bSupported;
 
 } DDSTEREOMODE, * LPDDSTEREOMODE;
 
@@ -1282,7 +1282,7 @@ typedef struct _DDRAWI_DIRECTDRAW_LCL {
 #define DDRAWILCL_ATTEMPTEDD3DCONTEXT	0x00040000
 #define DDRAWILCL_FPUPRESERVE		0x00080000
 #define DDRAWILCL_DX8DRIVER         0x00100000
-#define DDRAWILCL_DIRECTDRAW8       0x00200000 
+#define DDRAWILCL_DIRECTDRAW8       0x00200000
 
 
 typedef struct _DDRAWI_DIRECTDRAW_GBL {
@@ -1409,7 +1409,7 @@ typedef struct _DDRAWI_DDRAWSURFACE_GBL {
 	LPACCESSRECTLIST	lpRectList;
 	DWORD			    dwBlockSizeY;
 	LONG                lSlicePitch;
-    }; 
+    };
     union {
 	LPVMEMHEAP		lpVidMemHeap;
 	DWORD			dwBlockSizeX;
@@ -1426,7 +1426,7 @@ typedef struct _DDRAWI_DDRAWSURFACE_GBL {
     WORD			wHeight;
     WORD			wWidth;
     DWORD			dwUsageCount;
-    ULONG_PTR			dwReserved1; 
+    ULONG_PTR			dwReserved1;
     DDPIXELFORMAT		ddpfSurface;
 } DDRAWI_DDRAWSURFACE_GBL;
 
@@ -1567,7 +1567,7 @@ typedef struct _DDRAWI_DDRAWSURFACE_LCL {
     DDCOLORKEY			ddckCKDestBlt;
     DDCOLORKEY			ddckCKSrcBlt;
     ULONG_PTR			hDC;
-    ULONG_PTR			dwReserved1; 
+    ULONG_PTR			dwReserved1;
     DDCOLORKEY			ddckCKSrcOverlay;
     DDCOLORKEY			ddckCKDestOverlay;
     LPDDRAWI_DDRAWSURFACE_INT	lpSurfaceOverlaying;
@@ -1580,40 +1580,40 @@ typedef struct _DDRAWI_DDRAWSURFACE_LCL {
     LONG			lOverlayY;
 } DDRAWI_DDRAWSURFACE_LCL;
 
-#define DDRAWISURF_ATTACHED		0x00000001L 
+#define DDRAWISURF_ATTACHED		0x00000001L
 #define DDRAWISURF_IMPLICITCREATE	0x00000002L
-#define DDRAWISURF_ISFREE	0x00000004L 
-#define DDRAWISURF_ATTACHED_FROM	0x00000008L 
-#define DDRAWISURF_IMPLICITROOT		0x00000010L 
-#define DDRAWISURF_PARTOFPRIMARYCHAIN	0x00000020L 
+#define DDRAWISURF_ISFREE	0x00000004L
+#define DDRAWISURF_ATTACHED_FROM	0x00000008L
+#define DDRAWISURF_IMPLICITROOT		0x00000010L
+#define DDRAWISURF_PARTOFPRIMARYCHAIN	0x00000020L
 #define DDRAWISURF_DATAISALIASED	0x00000040L
-#define DDRAWISURF_HASDC	0x00000080L 
-#define DDRAWISURF_HASCKEYDESTOVERLAY	0x00000100L 
+#define DDRAWISURF_HASDC	0x00000080L
+#define DDRAWISURF_HASCKEYDESTOVERLAY	0x00000100L
 #define DDRAWISURF_HASCKEYDESTBLT	0x00000200L
-#define DDRAWISURF_HASCKEYSRCOVERLAY	0x00000400L 
+#define DDRAWISURF_HASCKEYSRCOVERLAY	0x00000400L
 #define DDRAWISURF_HASCKEYSRCBLT	0x00000800L
-#define DDRAWISURF_LOCKEXCLUDEDCURSOR	0x00001000L 
-#define DDRAWISURF_HASPIXELFORMAT	0x00002000L 
-#define DDRAWISURF_HASOVERLAYDATA	0x00004000L 
-#define DDRAWISURF_SETGAMMA		0x00008000L 
+#define DDRAWISURF_LOCKEXCLUDEDCURSOR	0x00001000L
+#define DDRAWISURF_HASPIXELFORMAT	0x00002000L
+#define DDRAWISURF_HASOVERLAYDATA	0x00004000L
+#define DDRAWISURF_SETGAMMA		0x00008000L
 #define DDRAWISURF_SW_CKEYDESTOVERLAY	0x00010000L
-#define DDRAWISURF_SW_CKEYDESTBLT	0x00020000L 
-#define DDRAWISURF_SW_CKEYSRCOVERLAY	0x00040000L 
+#define DDRAWISURF_SW_CKEYDESTBLT	0x00020000L
+#define DDRAWISURF_SW_CKEYSRCOVERLAY	0x00040000L
 #define DDRAWISURF_SW_CKEYSRCBLT	0x00080000L
 #define DDRAWISURF_HW_CKEYDESTOVERLAY	0x00100000L
 #define DDRAWISURF_HW_CKEYDESTBLT	0x00200000L
-#define DDRAWISURF_HW_CKEYSRCOVERLAY	0x00400000L 
+#define DDRAWISURF_HW_CKEYSRCOVERLAY	0x00400000L
 #define DDRAWISURF_HW_CKEYSRCBLT	0x00800000L
 #define DDRAWISURF_INMASTERSPRITELIST	0x01000000L
-#define DDRAWISURF_HELCB	0x02000000L 
-#define DDRAWISURF_FRONTBUFFER	0x04000000L 
-#define DDRAWISURF_BACKBUFFER	0x08000000L 
-#define DDRAWISURF_INVALID	0x10000000L 
-#define DDRAWISURF_DCIBUSY	0x20000000L  
-#define DDRAWISURF_GETDCNULL	0x40000000L   
-#define DDRAWISURF_STEREOSURFACELEFT	0x20000000L   
+#define DDRAWISURF_HELCB	0x02000000L
+#define DDRAWISURF_FRONTBUFFER	0x04000000L
+#define DDRAWISURF_BACKBUFFER	0x08000000L
+#define DDRAWISURF_INVALID	0x10000000L
+#define DDRAWISURF_DCIBUSY	0x20000000L
+#define DDRAWISURF_GETDCNULL	0x40000000L
+#define DDRAWISURF_STEREOSURFACELEFT	0x20000000L
 #define DDRAWISURF_DRIVERMANAGED	0x40000000L
-#define DDRAWISURF_DCILOCK	0x80000000L 
+#define DDRAWISURF_DCILOCK	0x80000000L
 
 /* palettes */
 typedef struct _DDRAWI_DDRAWPALETTE_INT {
@@ -1676,7 +1676,7 @@ typedef struct _DDRAWI_DDRAWPALETTE_GBL {
 #define D3DFORMAT_OP_SRGBWRITE       0x00100000L
 #define D3DFORMAT_OP_NOALPHABLEND    0x00200000L
 #define D3DFORMAT_OP_AUTOGENMIPMAP   0x00400000L
-#define D3DFORMAT_OP_VERTEXTEXTURE   0x00800000L 
+#define D3DFORMAT_OP_VERTEXTEXTURE   0x00800000L
 #define D3DFORMAT_OP_NOTEXCOORDWRAPNORMIP 0x01000000L
 #define DELETED_OK                   0
 #define DELETED_LASTONE              1
@@ -1745,22 +1745,22 @@ typedef struct _DDRAWI_DDRAWPALETTE_LCL {
 
 typedef struct _DDMCCOMPBUFFERINFO
 {
-    DWORD                       dwSize;          
-    DWORD                       dwNumCompBuffers; 
-    DWORD                       dwWidthToCreate;  
-    DWORD                       dwHeightToCreate; 
+    DWORD                       dwSize;
+    DWORD                       dwNumCompBuffers;
+    DWORD                       dwWidthToCreate;
+    DWORD                       dwHeightToCreate;
     DWORD                       dwBytesToAllocate;
-    DDSCAPS2                    ddCompCaps;       
-    DDPIXELFORMAT               ddPixelFormat;    
+    DDSCAPS2                    ddCompCaps;
+    DDPIXELFORMAT               ddPixelFormat;
 } DDMCCOMPBUFFERINFO, *LPDDMCCOMPBUFFERINFO;
 
 typedef struct _DDMCBUFFERINFO
 {
-    DWORD                       dwSize;         
-    LPDDRAWI_DDRAWSURFACE_LCL   lpCompSurface;  
-    DWORD                       dwDataOffset;   
-    DWORD                       dwDataSize;     
-    LPVOID                      lpPrivate;      
+    DWORD                       dwSize;
+    LPDDRAWI_DDRAWSURFACE_LCL   lpCompSurface;
+    DWORD                       dwDataOffset;
+    DWORD                       dwDataSize;
+    LPVOID                      lpPrivate;
 } DDMCBUFFERINFO, *LPDDMCBUFFERINFO;
 
 typedef struct _DDHAL_GETDRIVERSTATEDATA {
@@ -1789,23 +1789,23 @@ typedef struct _DDHAL_BEGINMOCOMPFRAMEDATA
 {
     LPDDRAWI_DIRECTDRAW_LCL     lpDD;
     LPDDRAWI_DDMOTIONCOMP_LCL   lpMoComp;
-    LPDDRAWI_DDRAWSURFACE_LCL   lpDestSurface;       
-	DWORD                       dwInputDataSize;      
-    LPVOID                      lpInputData;          
-    DWORD                       dwOutputDataSize;     
-    LPVOID                      lpOutputData;         
-    HRESULT                     ddRVal;               
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDestSurface;
+	DWORD                       dwInputDataSize;
+    LPVOID                      lpInputData;
+    DWORD                       dwOutputDataSize;
+    LPVOID                      lpOutputData;
+    HRESULT                     ddRVal;
     LPDDHALMOCOMPCB_BEGINFRAME  BeginMoCompFrame;
 } DDHAL_BEGINMOCOMPFRAMEDATA;
 
 typedef struct _DDHAL_COLORCONTROLDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       
-    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface; 
-    LPDDCOLORCONTROL            lpColorData; 
-    DWORD                       dwFlags;    
-    HRESULT                     ddRVal;     
-    LPDDHALCOLORCB_COLORCONTROL ColorControl; 
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface;
+    LPDDCOLORCONTROL            lpColorData;
+    DWORD                       dwFlags;
+    HRESULT                     ddRVal;
+    LPDDHALCOLORCB_COLORCONTROL ColorControl;
 } DDHAL_COLORCONTROLDATA;
 
 typedef struct _DDHAL_CREATEMOCOMPDATA
@@ -1842,52 +1842,52 @@ typedef struct _DDHAL_ENDMOCOMPFRAMEDATA
 
 typedef struct _DDHAL_FLIPTOGDISURFACEDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       
-    DWORD                       dwToGDI;      
-    DWORD                       dwReserved;     
-    HRESULT            ddRVal;      
-    LPDDHAL_FLIPTOGDISURFACE    FlipToGDISurface; 
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;
+    DWORD                       dwToGDI;
+    DWORD                       dwReserved;
+    HRESULT            ddRVal;
+    LPDDHAL_FLIPTOGDISURFACE    FlipToGDISurface;
 } DDHAL_FLIPTOGDISURFACEDATA;
 
 typedef struct _DDHAL_GETAVAILDRIVERMEMORYDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL lpDD;    
-    DDSCAPS                 DDSCaps;    
-    DWORD                   dwTotal;     
-    DWORD                   dwFree;      
-    HRESULT                 ddRVal;      
-    LPDDHAL_GETAVAILDRIVERMEMORY   GetAvailDriverMemory; 
-    DDSCAPSEX               ddsCapsEx;     
-                                               
+    LPDDRAWI_DIRECTDRAW_GBL lpDD;
+    DDSCAPS                 DDSCaps;
+    DWORD                   dwTotal;
+    DWORD                   dwFree;
+    HRESULT                 ddRVal;
+    LPDDHAL_GETAVAILDRIVERMEMORY   GetAvailDriverMemory;
+    DDSCAPSEX               ddsCapsEx;
+
 } DDHAL_GETAVAILDRIVERMEMORYDATA;
 
 typedef struct _DDHAL_GETBLTSTATUSDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL     lpDD;    
-    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface;  
-    DWORD                       dwFlags;    
-    HRESULT                     ddRVal;   
-    LPDDHALSURFCB_GETBLTSTATUS  GetBltStatus;   
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface;
+    DWORD                       dwFlags;
+    HRESULT                     ddRVal;
+    LPDDHALSURFCB_GETBLTSTATUS  GetBltStatus;
 } DDHAL_GETBLTSTATUSDATA;
 
 typedef struct _DDHAL_GETFLIPSTATUSDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       
-    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface;  
-    DWORD                       dwFlags;    
-    HRESULT                     ddRVal;   
-    LPDDHALSURFCB_GETFLIPSTATUS GetFlipStatus; 
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface;
+    DWORD                       dwFlags;
+    HRESULT                     ddRVal;
+    LPDDHALSURFCB_GETFLIPSTATUS GetFlipStatus;
 } DDHAL_GETFLIPSTATUSDATA;
 
 typedef struct _DDHAL_GETINTERNALMOCOMPDATA
 {
     LPDDRAWI_DIRECTDRAW_LCL     lpDD;
     LPGUID                      lpGuid;
-    DWORD                       dwWidth;      
-    DWORD                       dwHeight;         
-    DDPIXELFORMAT               ddPixelFormat;    
-    DWORD                       dwScratchMemAlloc; 
-    HRESULT                     ddRVal;             
+    DWORD                       dwWidth;
+    DWORD                       dwHeight;
+    DDPIXELFORMAT               ddPixelFormat;
+    DWORD                       dwScratchMemAlloc;
+    HRESULT                     ddRVal;
     LPDDHALMOCOMPCB_GETINTERNALINFO  GetInternalMoCompInfo;
 } DDHAL_GETINTERNALMOCOMPDATA;
 
@@ -1900,7 +1900,7 @@ typedef struct _DDHAL_GETMOCOMPCOMPBUFFDATA
     DDPIXELFORMAT                    ddPixelFormat;
     DWORD                           dwNumTypesCompBuffs;
     LPDDMCCOMPBUFFERINFO            lpCompBuffInfo;
-    HRESULT                         ddRVal;        
+    HRESULT                         ddRVal;
     LPDDHALMOCOMPCB_GETCOMPBUFFINFO GetMoCompBuffInfo;
 } DDHAL_GETMOCOMPCOMPBUFFDATA;
 
@@ -1925,19 +1925,19 @@ typedef struct _DDHAL_GETMOCOMPFORMATSDATA
 
 typedef struct _DDHAL_GETSCANLINEDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       
-    DWORD                       dwScanLine; 
-    HRESULT                     ddRVal;     
-    LPDDHAL_GETSCANLINE         GetScanLine;   
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;
+    DWORD                       dwScanLine;
+    HRESULT                     ddRVal;
+    LPDDHAL_GETSCANLINE         GetScanLine;
 } DDHAL_GETSCANLINEDATA;
 
 typedef struct _DDHAL_QUERYMOCOMPSTATUSDATA
 {
     LPDDRAWI_DIRECTDRAW_LCL     lpDD;
     LPDDRAWI_DDMOTIONCOMP_LCL   lpMoComp;
-    LPDDRAWI_DDRAWSURFACE_LCL   lpSurface;     
-    DWORD                       dwFlags;       
-    HRESULT                     ddRVal;         
+    LPDDRAWI_DDRAWSURFACE_LCL   lpSurface;
+    DWORD                       dwFlags;
+    HRESULT                     ddRVal;
     LPDDHALMOCOMPCB_QUERYSTATUS QueryMoCompStatus;
 } DDHAL_QUERYMOCOMPSTATUSDATA;
 
@@ -1945,59 +1945,59 @@ typedef struct _DDHAL_RENDERMOCOMPDATA
 {
     LPDDRAWI_DIRECTDRAW_LCL     lpDD;
     LPDDRAWI_DDMOTIONCOMP_LCL   lpMoComp;
-    DWORD                       dwNumBuffers;   
-    LPDDMCBUFFERINFO            lpBufferInfo; 
-    DWORD                       dwFunction;   
+    DWORD                       dwNumBuffers;
+    LPDDMCBUFFERINFO            lpBufferInfo;
+    DWORD                       dwFunction;
     LPVOID                      lpInputData;
     DWORD                       dwInputDataSize;
     LPVOID                      lpOutputData;
     DWORD                       dwOutputDataSize;
-    HRESULT                     ddRVal;    
+    HRESULT                     ddRVal;
     LPDDHALMOCOMPCB_RENDER      RenderMoComp;
 } DDHAL_RENDERMOCOMPDATA;
 
 typedef struct _DDHAL_SETCOLORKEYDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL     lpDD;      
-    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface;  
-    DWORD                       dwFlags; 
-    DDCOLORKEY                  ckNew;   
-    HRESULT                     ddRVal;   
-    LPDDHALSURFCB_SETCOLORKEY   SetColorKey;  
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface;
+    DWORD                       dwFlags;
+    DDCOLORKEY                  ckNew;
+    HRESULT                     ddRVal;
+    LPDDHALSURFCB_SETCOLORKEY   SetColorKey;
 } DDHAL_SETCOLORKEYDATA;
 
 typedef struct _DDHAL_SETOVERLAYPOSITIONDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL     lpDD;      
-    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSrcSurface; 
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSrcSurface;
     LPDDRAWI_DDRAWSURFACE_LCL   lpDDDestSurface;
-    LONG                        lXPos;    
-    LONG                        lYPos;    
-    HRESULT                     ddRVal;     
-    LPDDHALSURFCB_SETOVERLAYPOSITION SetOverlayPosition; 
+    LONG                        lXPos;
+    LONG                        lYPos;
+    HRESULT                     ddRVal;
+    LPDDHALSURFCB_SETOVERLAYPOSITION SetOverlayPosition;
 } DDHAL_SETOVERLAYPOSITIONDATA;
 
 typedef struct _DDHAL_UPDATEOVERLAYDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL     lpDD;  
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;
     LPDDRAWI_DDRAWSURFACE_LCL   lpDDDestSurface;
-    RECTL                       rDest; 
-    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSrcSurface; 
-    RECTL                       rSrc;      
-    DWORD                       dwFlags;   
-    DDOVERLAYFX                 overlayFX; 
-    HRESULT                     ddRVal;    
+    RECTL                       rDest;
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSrcSurface;
+    RECTL                       rSrc;
+    DWORD                       dwFlags;
+    DDOVERLAYFX                 overlayFX;
+    HRESULT                     ddRVal;
     LPDDHALSURFCB_UPDATEOVERLAY UpdateOverlay;
 } DDHAL_UPDATEOVERLAYDATA;
 
 typedef struct _DDHAL_WAITFORVERTICALBLANKDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL     lpDD;      
-    DWORD                       dwFlags;   
-    DWORD                       bIsInVB;   
-    ULONG_PTR                   hEvent;    
-    HRESULT                     ddRVal;    
-    LPDDHAL_WAITFORVERTICALBLANK    WaitForVerticalBlank; 
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;
+    DWORD                       dwFlags;
+    DWORD                       bIsInVB;
+    ULONG_PTR                   hEvent;
+    HRESULT                     ddRVal;
+    LPDDHAL_WAITFORVERTICALBLANK    WaitForVerticalBlank;
 } DDHAL_WAITFORVERTICALBLANKDATA;
 
 typedef struct _DDHAL_DRVSETCOLORKEYDATA
@@ -2011,11 +2011,11 @@ typedef struct _DDHAL_DRVSETCOLORKEYDATA
 
 typedef struct _DDMONITORINFO
 {
-    WORD    Manufacturer; 
-    WORD    Product;      
-    DWORD   SerialNumber; 
+    WORD    Manufacturer;
+    WORD    Product;
+    DWORD   SerialNumber;
     GUID    DeviceIdentifier;
-    int     Mode640x480;     
+    int     Mode640x480;
     int     Mode800x600;
     int     Mode1024x768;
     int     Mode1280x1024;
@@ -2035,25 +2035,25 @@ typedef struct _DDRAWI_DDRAWCLIPPER_INT
 
 typedef struct _DDHAL_UPDATENONLOCALHEAPDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL lpDD;       
-    DWORD           dwHeap;     
-    FLATPTR         fpGARTLin;  
-    FLATPTR         fpGARTDev;  
+    LPDDRAWI_DIRECTDRAW_GBL lpDD;
+    DWORD           dwHeap;
+    FLATPTR         fpGARTLin;
+    FLATPTR         fpGARTDev;
     ULONG_PTR       ulPolicyMaxBytes;
-    HRESULT         ddRVal;          
+    HRESULT         ddRVal;
     LPDDHAL_UPDATENONLOCALHEAP   UpdateNonLocalHeap;
 } DDHAL_UPDATENONLOCALHEAPDATA;
 
 typedef struct _DDHAL_SETCLIPLISTDATA
 {
-    LPDDRAWI_DIRECTDRAW_GBL    lpDD; 
+    LPDDRAWI_DIRECTDRAW_GBL    lpDD;
     LPDDRAWI_DDRAWSURFACE_LCL  lpDDSurface;
     HRESULT                    ddRVal;
     LPDDHALSURFCB_SETCLIPLIST  SetClipList;
 } DDHAL_SETCLIPLISTDATA;
 
 typedef struct _DDRAWI_DDMOTIONCOMP_LCL
-{ 
+{
     LPDDRAWI_DIRECTDRAW_LCL   lpDD;
     GUID                      guid;
     DWORD                     dwUncompWidth;
@@ -2082,58 +2082,58 @@ typedef struct _DDRAWI_DDMOTIONCOMP_INT
 
 typedef struct _DDRAWI_DDVIDEOPORT_LCL
 {
-    LPDDRAWI_DIRECTDRAW_LCL   lpDD;       
-    DDVIDEOPORTDESC           ddvpDesc;   
-    DDVIDEOPORTINFO           ddvpInfo;   
-    LPDDRAWI_DDRAWSURFACE_INT lpSurface;  
-    LPDDRAWI_DDRAWSURFACE_INT lpVBISurface;  
-    LPDDRAWI_DDRAWSURFACE_INT *lpFlipInts;   
-    DWORD                     dwNumAutoflip; 
-    DWORD                     dwProcessID;   
+    LPDDRAWI_DIRECTDRAW_LCL   lpDD;
+    DDVIDEOPORTDESC           ddvpDesc;
+    DDVIDEOPORTINFO           ddvpInfo;
+    LPDDRAWI_DDRAWSURFACE_INT lpSurface;
+    LPDDRAWI_DDRAWSURFACE_INT lpVBISurface;
+    LPDDRAWI_DDRAWSURFACE_INT *lpFlipInts;
+    DWORD                     dwNumAutoflip;
+    DWORD                     dwProcessID;
     DWORD                     dwStateFlags;
     DWORD                     dwFlags;
     DWORD                     dwRefCnt;
-    FLATPTR                   fpLastFlip;    
-    ULONG_PTR                 dwReserved1;   
-    ULONG_PTR                 dwReserved2;   
-    HANDLE                    hDDVideoPort;  
+    FLATPTR                   fpLastFlip;
+    ULONG_PTR                 dwReserved1;
+    ULONG_PTR                 dwReserved2;
+    HANDLE                    hDDVideoPort;
     DWORD                     dwNumVBIAutoflip;
-    LPDDVIDEOPORTDESC         lpVBIDesc;  
+    LPDDVIDEOPORTDESC         lpVBIDesc;
     LPDDVIDEOPORTDESC         lpVideoDesc;
     LPDDVIDEOPORTINFO         lpVBIInfo;
-    LPDDVIDEOPORTINFO         lpVideoInfo;    
-    DWORD                     dwVBIProcessID; 
+    LPDDVIDEOPORTINFO         lpVideoInfo;
+    DWORD                     dwVBIProcessID;
     LPDDRAWI_DDVIDEOPORT_INT  lpVPNotify;
 } DDRAWI_DDVIDEOPORT_LCL;
 
 
 typedef struct _DDRAWI_DDVIDEOPORT_INT
 {
-    LPVOID                      lpVtbl;    
-    LPDDRAWI_DDVIDEOPORT_LCL    lpLcl;     
-    LPDDRAWI_DDVIDEOPORT_INT    lpLink;    
+    LPVOID                      lpVtbl;
+    LPDDRAWI_DDVIDEOPORT_LCL    lpLcl;
+    LPDDRAWI_DDVIDEOPORT_INT    lpLink;
     DWORD                       dwIntRefCnt;
-    DWORD                       dwFlags; 
+    DWORD                       dwFlags;
 } DDRAWI_DDVIDEOPORT_INT;
 
 
 typedef struct _DDRAWI_DDRAWCLIPPER_LCL
 {
     DWORD                     lpClipMore;
-    LPDDRAWI_DDRAWCLIPPER_GBL lpGbl;     
-    LPDDRAWI_DIRECTDRAW_LCL   lpDD_lcl;  
+    LPDDRAWI_DDRAWCLIPPER_GBL lpGbl;
+    LPDDRAWI_DIRECTDRAW_LCL   lpDD_lcl;
     DWORD                     dwLocalRefCnt;
 #ifndef _NO_COM
     IUnknown                  *pUnkOuter;
 #else
     PVOID                     *pUnkOuter;
 #endif
-    LPDDRAWI_DIRECTDRAW_INT   lpDD_int;   
+    LPDDRAWI_DIRECTDRAW_INT   lpDD_int;
     ULONG_PTR                 dwReserved1;
 #ifndef _NO_COM
-    IUnknown *                pAddrefedThisOwner;                                                   
+    IUnknown *                pAddrefedThisOwner;
 #else
-	PVOID                     pAddrefedThisOwner;                                                   
+	PVOID                     pAddrefedThisOwner;
 #endif
 } DDRAWI_DDRAWCLIPPER_LCL;
 
@@ -2141,18 +2141,18 @@ typedef struct _DDRAWI_DDRAWCLIPPER_LCL
 
 typedef struct _DDRAWI_DDRAWCLIPPER_GBL
 {
-    DWORD                     dwRefCnt;  
-    DWORD                     dwFlags;   
-    LPDDRAWI_DIRECTDRAW_GBL   lpDD;      
+    DWORD                     dwRefCnt;
+    DWORD                     dwFlags;
+    LPDDRAWI_DIRECTDRAW_GBL   lpDD;
     DWORD                     dwProcessId;
     ULONG_PTR                 dwReserved1;
-    ULONG_PTR                 hWnd;      
-    LPRGNDATA                 lpStaticClipList; 
+    ULONG_PTR                 hWnd;
+    LPRGNDATA                 lpStaticClipList;
 } DDRAWI_DDRAWCLIPPER_GBL;
 
 typedef BOOL    (PASCAL *LPDDHEL_INIT)(LPDDRAWI_DIRECTDRAW_GBL,BOOL);
 
-extern HRESULT DDAPI 
+extern HRESULT DDAPI
        LateAllocateSurfaceMem(
                               LPDIRECTDRAWSURFACE lpSurface,
                               DWORD dwPleaseAllocType,
@@ -2186,12 +2186,12 @@ typedef DIRECTDRAWPALETTECALLBACKS FAR *LPDIRECTDRAWPALETTECALLBACKS;
 typedef DIRECTDRAWSURFACECALLBACKS FAR *LPDIRECTDRAWSURFACECALLBACKS;
 typedef DIRECTDRAWCALLBACKS FAR *LPDIRECTDRAWCALLBACKS;
 
-HRESULT CALLBACK 
+HRESULT CALLBACK
         D3DParseUnknownCommand (LPVOID lpvCommands,
                                 LPVOID *lplpvReturnedCommand);
 
 #ifdef __cplusplus
-} /* extern "C" */
+ /* extern "C" */
 #endif
 
 #endif /* __DDRAWI_INCLUDED__ */

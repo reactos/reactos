@@ -9,7 +9,6 @@
 #define _UNKNOWN_H_
 
 #include <windef.h>
-//#include <ntddk.h>
 #define COM_NO_WINDOWS_H
 #include <basetyps.h>
 

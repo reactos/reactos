@@ -8,7 +8,7 @@
  * HISTORY:
  *                  27 Jan 07   Created
  */
-#include <portcls.h>
+
 #include "private.h"
 
 /*

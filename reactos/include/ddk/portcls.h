@@ -127,8 +127,8 @@
 
 #include <windef.h>
 #include <ks.h>
-#include <drmk.h>
 #include <punknown.h>
+#include <drmk.h>
 
 /* TODO */
 #define PORTCLASSAPI EXTERN_C

@@ -7,6 +7,9 @@
 #ifndef PORTCLS_PRIVATE_H
 #define PORTCLS_PRIVATE_H
 
+#include <ntddk.h>
+#include <debug.h>
+
 #include <portcls.h>
 
 NTAPI

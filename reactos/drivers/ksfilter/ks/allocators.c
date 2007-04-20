@@ -2,6 +2,8 @@
     Allocator Functions
 */
 
+#include <ntddk.h>
+#include <debug.h>
 #include <ks.h>
 
 /*

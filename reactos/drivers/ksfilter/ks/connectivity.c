@@ -6,6 +6,8 @@
     KsHandleSizedListQuery
 */
 
+#include <ntddk.h>
+#include <debug.h>
 #include <ks.h>
 
 KSDDKAPI NTSTATUS NTAPI

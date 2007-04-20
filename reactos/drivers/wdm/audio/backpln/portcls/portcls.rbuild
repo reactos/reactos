@@ -3,6 +3,7 @@
     <linkerflag>-fno-rtti</linkerflag>
         <importlibrary definition="portcls.def" />
     <define name="__USE_W32API" />
+    <define name="_NTDDK_" />
     <include base="portcls">../include</include>
     <library>ntoskrnl</library>
     <library>ks</library>

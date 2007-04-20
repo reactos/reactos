@@ -1446,7 +1446,7 @@ typedef struct
 /* ===============================================================
     Device Dispatch
 */
-
+#if defined(_NTDDK_)
 typedef struct
 {
     /* TODO */
@@ -1508,12 +1508,12 @@ typedef struct _KSDEVICE_DISPATCH
     PFNKSDEVICEQUERYPOWER Querypower;
     PFNKSDEVICESETPOWER SetPower;
 } KSDEVICE_DISPATCH, *PKSDEVICE_DISPATCH;
-
+#endif
 
 /* ===============================================================
     Filter Dispatch
 */
-
+#if defined(_NTDDK_)
 typedef struct
 {
 } KSFILTER, *PKSFILTER;
@@ -1568,11 +1568,11 @@ typedef struct
   ULONG  FilterDescriptorsCount;
   const  KSFILTER_DESCRIPTOR*const* FilterDescriptors;
 } KSDEVICE_DESCRIPTOR, *PKSDEVICE_DESCRIPTOR;
-
+#endif
 /* ===============================================================
     Minidriver Callbacks
 */
-
+#if defined(_NTDDK_)
 typedef NTSTATUS (*KStrMethodHandler)(
     IN  PIRP Irp,
     IN  PKSIDENTIFIER Request,
@@ -1582,12 +1582,12 @@ typedef NTSTATUS (*KStrSupportHandler)(
     IN  PIRP Irp,
     IN  PKSIDENTIFIER Request,
     IN  OUT PVOID Data);
-
+#endif
 
 /* ===============================================================
     Allocator Functions
 */
-
+#if defined(_NTDDK_)
 KSDDKAPI NTSTATUS NTAPI
 KsCreateAllocator(
     IN  HANDLE ConnectionHandle,
@@ -1617,12 +1617,12 @@ KsValidateAllocatorFramingEx(
     IN  PKSALLOCATOR_FRAMING_EX Framing,
     IN  ULONG BufferSize,
     IN  const KSALLOCATOR_FRAMING_EX* PinFraming);
-
+#endif
 
 /* ===============================================================
     Clock Functions
 */
-
+#if defined(_NTDDK_)
 typedef BOOLEAN (*PFNKSSETTIMER)(
     IN  PVOID Context,
     IN  PKTIMER Timer,
@@ -1688,14 +1688,14 @@ KSDDKAPI VOID NTAPI
 KsSetDefaultClockTime(
     IN  PKSDEFAULTCLOCK DefaultClock,
     IN  LONGLONG Time);
-
+#endif
 
 /* ===============================================================
     Method Functions
 */
 
 /* Method sets - TODO: Make into macros! */
-
+#if defined(_NTDDK_)
 #if 0
 VOID
 KSMETHOD_SET_IRP_STORAGE(
@@ -1734,12 +1734,12 @@ KsFastMethodHandler(
     OUT PIO_STATUS_BLOCK IoStatus,
     IN  ULONG MethodSetsCount,
     IN  const KSMETHOD_SET* MethodSet);
-
+#endif
 
 /* ===============================================================
     Property Functions
 */
-
+#if defined(_NTDDK_)
 KSDDKAPI NTSTATUS NTAPI
 KsPropertyHandler(
     IN  PIRP Irp,
@@ -1770,12 +1770,12 @@ KsFastPropertyHandler(
     OUT PIO_STATUS_BLOCK IoStatus,
     IN  ULONG PropertySetsCount,
     IN  const KSPROPERTY_SET* PropertySet);
-
+#endif
 
 /* ===============================================================
     Event Functions
 */
-
+#if defined(_NTDDK_)
 KSDDKAPI NTSTATUS NTAPI
 KsGenerateEvent(
     IN  PKSEVENT_ENTRY EntryEvent);
@@ -1823,7 +1823,7 @@ KsFreeEventList(
     IN  OUT PLIST_ENTRY EventsList,
     IN  KSEVENTS_LOCKTYPE EVentsFlags,
     IN  PVOID EventsLock);
-
+#endif
 
 /* ===============================================================
     Topology Functions

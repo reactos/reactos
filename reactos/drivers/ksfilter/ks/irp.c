@@ -3,6 +3,8 @@
     IRP Helpers
 */
 
+#include <ntddk.h>
+#include <debug.h>
 #include <ks.h>
 
 #define TAG(A, B, C, D) (IN ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
