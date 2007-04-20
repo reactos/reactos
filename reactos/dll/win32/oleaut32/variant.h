@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
@@ -48,12 +48,12 @@
 #define VTBIT_VARIANT   (1 << VT_VARIANT)
 #define VTBIT_15        (1 << 15)        /* no variant type with this number */
 
-extern const char* wine_vtypes[];
+extern const char * const wine_vtypes[];
 #define debugstr_vt(v) (((v)&VT_TYPEMASK) <= VT_CLSID ? wine_vtypes[((v)&VT_TYPEMASK)] : \
   ((v)&VT_TYPEMASK) == VT_BSTR_BLOB ? "VT_BSTR_BLOB": "Invalid")
 #define debugstr_VT(v) (!(v) ? "(null)" : debugstr_vt(V_TYPE((v))))
 
-extern const char* wine_vflags[];
+extern const char * const wine_vflags[];
 #define debugstr_vf(v) (wine_vflags[((v)&VT_EXTRA_TYPE)>>12])
 #define debugstr_VF(v) (!(v) ? "(null)" : debugstr_vf(V_EXTRA_TYPE(v)))
 
@@ -96,13 +96,13 @@ extern const char* wine_vflags[];
 #endif
 
 /* Macros for getting at a DECIMAL's parts */
-#define DEC_SIGN(d)      ((d)->sign)
-#define DEC_SCALE(d)     ((d)->scale)
-#define DEC_SIGNSCALE(d) ((d)->signscale)
+#define DEC_SIGN(d)      ((d)->u.s.sign)
+#define DEC_SCALE(d)     ((d)->u.s.scale)
+#define DEC_SIGNSCALE(d) ((d)->u.signscale)
 #define DEC_HI32(d)      ((d)->Hi32)
-#define DEC_MID32(d)     ((d)->Mid32)
-#define DEC_LO32(d)      ((d)->Lo32)
-#define DEC_LO64(d)      ((d)->Lo64)
+#define DEC_MID32(d)     ((d)->u1.s1.Mid32)
+#define DEC_LO32(d)      ((d)->u1.s1.Lo32)
+#define DEC_LO64(d)      ((d)->u1.Lo64)
 
 #define DEC_MAX_SCALE    28 /* Maximum scale for a decimal */
 
@@ -117,11 +117,9 @@ typedef struct tagVARIANT_NUMBER_CHARS
   WCHAR cNegativeSymbol;
   WCHAR cPositiveSymbol;
   WCHAR cDecimalPoint;
-  WCHAR cDigitSeperator;
+  WCHAR cDigitSeparator;
   WCHAR cCurrencyLocal;
   WCHAR cCurrencyLocal2;
   WCHAR cCurrencyDecimalPoint;
-  WCHAR cCurrencyDigitSeperator;
+  WCHAR cCurrencyDigitSeparator;
 } VARIANT_NUMBER_CHARS;
-
-void VARIANT_GetLocalisedNumberChars(VARIANT_NUMBER_CHARS*,LCID,DWORD);

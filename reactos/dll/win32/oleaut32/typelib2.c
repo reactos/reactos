@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * --------------------------------------------------------------------------------------
  *  Known problems:
@@ -232,7 +232,7 @@ static void ctl2_init_header(
     This->typelib_header.res44 = 0x20;
     This->typelib_header.res48 = 0x80;
     This->typelib_header.dispatchpos = -1;
-    This->typelib_header.res50 = 0;
+    This->typelib_header.nimpinfos = 0;
 }
 
 /****************************************************************************
@@ -276,7 +276,7 @@ static int ctl2_hash_guid(
 	hash ^= ((const short *)guid)[i];
     }
 
-    return (hash & 0xf) | ((hash & 0x10) & (0 - !!(hash & 0xe0)));
+    return hash & 0x1f;
 }
 
 /****************************************************************************
@@ -676,6 +676,8 @@ static int ctl2_alloc_importinfo(
 	    return offset;
 	}
     }
+
+    impinfo->flags |= This->typelib_header.nimpinfos++;
 
     offset = ctl2_alloc_segment(This, MSFT_SEG_IMPORTINFO, sizeof(MSFT_ImpInfo), 0);
     if (offset == -1) return -1;
@@ -1148,7 +1150,7 @@ static ULONG WINAPI ICreateTypeInfo2_fnAddRef(ICreateTypeInfo2 *iface)
     ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->ref was %lu\n",This, ref - 1);
+    TRACE("(%p)->ref was %u\n",This, ref - 1);
 
     return ref;
 }
@@ -1163,7 +1165,7 @@ static ULONG WINAPI ICreateTypeInfo2_fnRelease(ICreateTypeInfo2 *iface)
     ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(%lu)\n",This, ref);
+    TRACE("(%p)->(%u)\n",This, ref);
 
     if (!ref) {
 	if (This->typelib) {
@@ -1252,7 +1254,6 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetTypeFlags(ICreateTypeInfo2 *iface, U
 	ctl2_alloc_importinfo(This->typelib, &impinfo);
 
 	This->typelib->typelib_header.dispatchpos = 1;
-	This->typelib->typelib_header.res50 = 1;
 
 	This->typeinfo->typekind |= 0x10;
 	This->typeinfo->typekind &= ~0x0f;
@@ -1294,7 +1295,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetHelpContext(
 {
     ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
 
-    TRACE("(%p,%ld)\n", iface, dwHelpContext);
+    TRACE("(%p,%d)\n", iface, dwHelpContext);
 
     This->typeinfo->helpcontext = dwHelpContext;
 
@@ -1379,7 +1380,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddFuncDesc(
     int decoded_size;
 
     FIXME("(%p,%d,%p), stub!\n", iface, index, pFuncDesc);
-    FIXME("{%ld,%p,%p,%d,%d,%d,%d,%d,%d,%d,{%d},%d}\n", pFuncDesc->memid, pFuncDesc->lprgscode, pFuncDesc->lprgelemdescParam, pFuncDesc->funckind, pFuncDesc->invkind, pFuncDesc->callconv, pFuncDesc->cParams, pFuncDesc->cParamsOpt, pFuncDesc->oVft, pFuncDesc->cScodes, pFuncDesc->elemdescFunc.tdesc.vt, pFuncDesc->wFuncFlags);
+    FIXME("{%d,%p,%p,%d,%d,%d,%d,%d,%d,%d,{%d},%d}\n", pFuncDesc->memid, pFuncDesc->lprgscode, pFuncDesc->lprgelemdescParam, pFuncDesc->funckind, pFuncDesc->invkind, pFuncDesc->callconv, pFuncDesc->cParams, pFuncDesc->cParamsOpt, pFuncDesc->oVft, pFuncDesc->cScodes, pFuncDesc->elemdescFunc.tdesc.vt, pFuncDesc->wFuncFlags);
 /*     FIXME("{%d, %d}\n", pFuncDesc->lprgelemdescParam[0].tdesc.vt, pFuncDesc->lprgelemdescParam[1].tdesc.vt); */
 /*     return E_OUTOFMEMORY; */
     
@@ -1457,7 +1458,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddImplType(
 {
     ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
 
-    TRACE("(%p,%d,%ld)\n", iface, index, hRefType);
+    TRACE("(%p,%d,%d)\n", iface, index, hRefType);
 
     if ((This->typeinfo->typekind & 15) == TKIND_COCLASS) {
 	int offset;
@@ -1619,7 +1620,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddVarDesc(
     int alignment;
 
     TRACE("(%p,%d,%p), stub!\n", iface, index, pVarDesc);
-    TRACE("%ld, %p, %ld, {{%lx, %d}, {%p, %x}}, 0x%x, %d\n", pVarDesc->memid, pVarDesc->lpstrSchema, pVarDesc->u.oInst,
+    TRACE("%d, %p, %d, {{%x, %d}, {%p, %x}}, 0x%x, %d\n", pVarDesc->memid, pVarDesc->lpstrSchema, pVarDesc->u.oInst,
 	  pVarDesc->elemdescVar.tdesc.u.hreftype, pVarDesc->elemdescVar.tdesc.vt,
 	  pVarDesc->elemdescVar.u.paramdesc.pparamdescex, pVarDesc->elemdescVar.u.paramdesc.wParamFlags,
 	  pVarDesc->wVarFlags, pVarDesc->varkind);
@@ -1856,7 +1857,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetFuncHelpContext(
         UINT index,
         DWORD dwHelpContext)
 {
-    FIXME("(%p,%d,%ld), stub!\n", iface, index, dwHelpContext);
+    FIXME("(%p,%d,%d), stub!\n", iface, index, dwHelpContext);
     return E_OUTOFMEMORY;
 }
 
@@ -1870,7 +1871,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetVarHelpContext(
         UINT index,
         DWORD dwHelpContext)
 {
-    FIXME("(%p,%d,%ld), stub!\n", iface, index, dwHelpContext);
+    FIXME("(%p,%d,%d), stub!\n", iface, index, dwHelpContext);
     return E_OUTOFMEMORY;
 }
 
@@ -1947,7 +1948,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnDeleteFuncDescByMemId(
         MEMBERID memid,          /* [I] The member id of the function to delete. */
         INVOKEKIND invKind)      /* [I] The invocation type of the function to delete. (?) */
 {
-    FIXME("(%p,%ld,%d), stub!\n", iface, memid, invKind);
+    FIXME("(%p,%d,%d), stub!\n", iface, memid, invKind);
     return E_OUTOFMEMORY;
 }
 
@@ -1985,7 +1986,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnDeleteVarDescByMemId(
         ICreateTypeInfo2* iface, /* [I] The typeinfo from which to delete the variable description. */
         MEMBERID memid)          /* [I] The member id of the variable description to delete. */
 {
-    FIXME("(%p,%ld), stub!\n", iface, memid);
+    FIXME("(%p,%d), stub!\n", iface, memid);
     return E_OUTOFMEMORY;
 }
 
@@ -2121,7 +2122,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetHelpStringContext(
         ICreateTypeInfo2* iface,   /* [I] The typeinfo on which to set the help string context. */
         ULONG dwHelpStringContext) /* [I] The help string context. */
 {
-    FIXME("(%p,%ld), stub!\n", iface, dwHelpStringContext);
+    FIXME("(%p,%d), stub!\n", iface, dwHelpStringContext);
     return E_OUTOFMEMORY;
 }
 
@@ -2140,7 +2141,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetFuncHelpStringContext(
         UINT index,                /* [I] The index for the function on which to set the help string context. */
         ULONG dwHelpStringContext) /* [I] The help string context. */
 {
-    FIXME("(%p,%d,%ld), stub!\n", iface, index, dwHelpStringContext);
+    FIXME("(%p,%d,%d), stub!\n", iface, index, dwHelpStringContext);
     return E_OUTOFMEMORY;
 }
 
@@ -2159,7 +2160,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetVarHelpStringContext(
         UINT index,                /* [I] The index of the variable on which to set the help string context. */
         ULONG dwHelpStringContext) /* [I] The help string context */
 {
-    FIXME("(%p,%d,%ld), stub!\n", iface, index, dwHelpStringContext);
+    FIXME("(%p,%d,%d), stub!\n", iface, index, dwHelpStringContext);
     return E_OUTOFMEMORY;
 }
 
@@ -2297,7 +2298,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetNames(
         UINT cMaxNames,
         UINT* pcNames)
 {
-    FIXME("(%p,%ld,%p,%d,%p), stub!\n", iface, memid, rgBstrNames, cMaxNames, pcNames);
+    FIXME("(%p,%d,%p,%d,%p), stub!\n", iface, memid, rgBstrNames, cMaxNames, pcNames);
     return E_OUTOFMEMORY;
 }
 
@@ -2359,7 +2360,7 @@ static HRESULT WINAPI ITypeInfo2_fnInvoke(
         EXCEPINFO* pExcepInfo,
         UINT* puArgErr)
 {
-    FIXME("(%p,%p,%ld,%x,%p,%p,%p,%p), stub!\n", iface, pvInstance, memid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+    FIXME("(%p,%p,%d,%x,%p,%p,%p,%p), stub!\n", iface, pvInstance, memid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
     return E_OUTOFMEMORY;
 }
 
@@ -2376,7 +2377,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetDocumentation(
         DWORD* pdwHelpContext,
         BSTR* pBstrHelpFile)
 {
-    FIXME("(%p,%ld,%p,%p,%p,%p), stub!\n", iface, memid, pBstrName, pBstrDocString, pdwHelpContext, pBstrHelpFile);
+    FIXME("(%p,%d,%p,%p,%p,%p), stub!\n", iface, memid, pBstrName, pBstrDocString, pdwHelpContext, pBstrHelpFile);
     return E_OUTOFMEMORY;
 }
 
@@ -2393,7 +2394,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetDllEntry(
         BSTR* pBstrName,
         WORD* pwOrdinal)
 {
-    FIXME("(%p,%ld,%d,%p,%p,%p), stub!\n", iface, memid, invKind, pBstrDllName, pBstrName, pwOrdinal);
+    FIXME("(%p,%d,%d,%p,%p,%p), stub!\n", iface, memid, invKind, pBstrDllName, pBstrName, pwOrdinal);
     return E_OUTOFMEMORY;
 }
 
@@ -2407,7 +2408,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetRefTypeInfo(
         HREFTYPE hRefType,
         ITypeInfo** ppTInfo)
 {
-    FIXME("(%p,%ld,%p), stub!\n", iface, hRefType, ppTInfo);
+    FIXME("(%p,%d,%p), stub!\n", iface, hRefType, ppTInfo);
     return E_OUTOFMEMORY;
 }
 
@@ -2422,7 +2423,7 @@ static HRESULT WINAPI ITypeInfo2_fnAddressOfMember(
         INVOKEKIND invKind,
         PVOID* ppv)
 {
-    FIXME("(%p,%ld,%d,%p), stub!\n", iface, memid, invKind, ppv);
+    FIXME("(%p,%d,%d,%p), stub!\n", iface, memid, invKind, ppv);
     return E_OUTOFMEMORY;
 }
 
@@ -2451,7 +2452,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetMops(
         MEMBERID memid,
         BSTR* pBstrMops)
 {
-    FIXME("(%p,%ld,%p), stub!\n", iface, memid, pBstrMops);
+    FIXME("(%p,%d,%p), stub!\n", iface, memid, pBstrMops);
     return E_OUTOFMEMORY;
 }
 
@@ -2564,7 +2565,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetFuncIndexOfMemId(
         INVOKEKIND invKind, /* [I] The invocation kind for the function. */
         UINT* pFuncIndex)   /* [O] The index of the function. */
 {
-    FIXME("(%p,%ld,%d,%p), stub!\n", iface, memid, invKind, pFuncIndex);
+    FIXME("(%p,%d,%d,%p), stub!\n", iface, memid, invKind, pFuncIndex);
     return E_OUTOFMEMORY;
 }
 
@@ -2583,7 +2584,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetVarIndexOfMemId(
         MEMBERID memid,    /* [I] The member id for the variable. */
         UINT* pVarIndex)   /* [O] The index of the variable. */
 {
-    FIXME("(%p,%ld,%p), stub!\n", iface, memid, pVarIndex);
+    FIXME("(%p,%d,%p), stub!\n", iface, memid, pVarIndex);
     return E_OUTOFMEMORY;
 }
 
@@ -2705,7 +2706,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetDocumentation2(
         DWORD* pdwHelpStringContext, /* [O] The help string context. */
         BSTR* pbstrHelpStringDll)    /* [O] The help file name. */
 {
-    FIXME("(%p,%ld,%ld,%p,%p,%p), stub!\n", iface, memid, lcid, pbstrHelpString, pdwHelpStringContext, pbstrHelpStringDll);
+    FIXME("(%p,%d,%d,%p,%p,%p), stub!\n", iface, memid, lcid, pbstrHelpString, pdwHelpStringContext, pbstrHelpStringDll);
     return E_OUTOFMEMORY;
 }
 
@@ -3015,7 +3016,7 @@ static ULONG WINAPI ICreateTypeLib2_fnAddRef(ICreateTypeLib2 *iface)
     ICreateTypeLib2Impl *This = (ICreateTypeLib2Impl *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->ref was %lu\n",This, ref - 1);
+    TRACE("(%p)->ref was %u\n",This, ref - 1);
 
     return ref;
 }
@@ -3030,7 +3031,7 @@ static ULONG WINAPI ICreateTypeLib2_fnRelease(ICreateTypeLib2 *iface)
     ICreateTypeLib2Impl *This = (ICreateTypeLib2Impl *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(%lu)\n",This, ref);
+    TRACE("(%p)->(%u)\n",This, ref);
 
     if (!ref) {
 	int i;
@@ -3189,7 +3190,7 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetHelpFileName(ICreateTypeLib2 * iface,
  */
 static HRESULT WINAPI ICreateTypeLib2_fnSetHelpContext(ICreateTypeLib2 * iface, DWORD dwHelpContext)
 {
-    FIXME("(%p,%ld), stub!\n", iface, dwHelpContext);
+    FIXME("(%p,%d), stub!\n", iface, dwHelpContext);
     return E_OUTOFMEMORY;
 }
 
@@ -3202,7 +3203,7 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetLcid(ICreateTypeLib2 * iface, LCID lc
 {
     ICreateTypeLib2Impl *This = (ICreateTypeLib2Impl *)iface;
 
-    TRACE("(%p,%ld)\n", iface, lcid);
+    TRACE("(%p,%d)\n", iface, lcid);
 
     This->typelib_header.lcid2 = lcid;
 
@@ -3404,7 +3405,7 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetHelpStringContext(
 	ICreateTypeLib2 * iface,   /* [I] The type library to set the help string context for. */
 	ULONG dwHelpStringContext) /* [I] The help string context. */
 {
-    FIXME("(%p,%ld), stub!\n", iface, dwHelpStringContext);
+    FIXME("(%p,%d), stub!\n", iface, dwHelpStringContext);
     return E_OUTOFMEMORY;
 }
 
@@ -3618,7 +3619,7 @@ static HRESULT WINAPI ITypeLib2_fnIsName(
     int nameoffset;
     MSFT_NameIntro *nameintro;
 
-    TRACE("(%p,%s,%lx,%p)\n", iface, debugstr_w(szNameBuf), lHashVal, pfName);
+    TRACE("(%p,%s,%x,%p)\n", iface, debugstr_w(szNameBuf), lHashVal, pfName);
 
     ctl2_encode_name(This, szNameBuf, &encoded_name);
     nameoffset = ctl2_find_name(This, encoded_name);
@@ -3652,7 +3653,7 @@ static HRESULT WINAPI ITypeLib2_fnFindName(
 {
     ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
-    FIXME("(%p,%s,%lx,%p,%p,%p), stub!\n", This, debugstr_w(szNameBuf), lHashVal, ppTInfo, rgMemId, pcFound);
+    FIXME("(%p,%s,%x,%p,%p,%p), stub!\n", This, debugstr_w(szNameBuf), lHashVal, ppTInfo, rgMemId, pcFound);
 
     return E_OUTOFMEMORY;
 }
@@ -3736,7 +3737,7 @@ static HRESULT WINAPI ITypeLib2_fnGetDocumentation2(
 {
     ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
-    FIXME("(%p,%d,%ld,%p,%p,%p), stub!\n", This, index, lcid, pbstrHelpString, pdwHelpStringContext, pbstrHelpStringDll);
+    FIXME("(%p,%d,%d,%p,%p,%p), stub!\n", This, index, lcid, pbstrHelpString, pdwHelpStringContext, pbstrHelpStringDll);
 
     return E_OUTOFMEMORY;
 }

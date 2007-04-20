@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -85,14 +85,14 @@ QueryPathOfRegTypeLib16(
        	TRACE("\n");
 
 	if (HIWORD(guid)) {
-            sprintf( typelibkey, "SOFTWARE\\Classes\\Typelib\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\\%d.%d\\%lx\\win16",
+            sprintf( typelibkey, "SOFTWARE\\Classes\\Typelib\\{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\\%d.%d\\%x\\win16",
                      guid->Data1, guid->Data2, guid->Data3,
                      guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
                      guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7],
                      wMaj,wMin,lcid);
 	} else {
-		sprintf(xguid,"<guid 0x%08lx>",(DWORD)guid);
-		FIXME("(%s,%d,%d,0x%04lx,%p),can't handle non-string guids.\n",xguid,wMaj,wMin,(DWORD)lcid,path);
+		sprintf(xguid,"<guid 0x%08x>",(DWORD)guid);
+		FIXME("(%s,%d,%d,0x%04x,%p),can't handle non-string guids.\n",xguid,wMaj,wMin,(DWORD)lcid,path);
 		return E_FAIL;
 	}
 	plen = sizeof(pathname);
@@ -120,10 +120,10 @@ QueryPathOfRegTypeLib16(
  *  Both parameters are FAR pointers.
  */
 HRESULT WINAPI LoadTypeLib16(
-    LPOLESTR szFile, /* [in] Name of file to load from */
+    LPSTR szFile, /* [in] Name of file to load from */
     ITypeLib** pptLib) /* [out] Destination for loaded ITypeLib interface */
 {
-    FIXME("(%s,%p): stub\n",debugstr_w((LPWSTR)szFile),pptLib);
+    FIXME("(%s,%p): stub\n",debugstr_a(szFile),pptLib);
 
     if (pptLib!=0)
       *pptLib=0;

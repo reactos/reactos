@@ -1,7 +1,7 @@
 /*
- * Italian resources for oleaut32
+ * Oleaut32 - Esperanto Language Support
  *
- * Copyright 2003 Jon Griffiths
+ * Copyright 2006 Antonio Codazzi
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_TRUE  "Vero"
-  IDS_FALSE "Falso"
-  IDS_YES   "Si"
-  IDS_NO    "No"
-  IDS_ON    "On"
-  IDS_OFF   "Off"
+  IDS_TRUE  "Vere"
+  IDS_FALSE "False"
+  IDS_YES   "Jes"
+  IDS_NO    "Ne"
+  IDS_ON    "Kondukta"
+  IDS_OFF   "Elkluda"
 }

@@ -13702,7 +13702,7 @@ static const MIDL_TYPE_FORMAT_STRING __MIDL_TypeFormatString =
         }
     };
 
-static const CInterfaceProxyVtbl * _oaidl_ProxyVtblList[] = 
+static const CInterfaceProxyVtbl * const _oaidl_ProxyVtblList[] = 
 {
     ( const CInterfaceProxyVtbl *) &_IDispatchProxyVtbl,
     ( const CInterfaceProxyVtbl *) &_ITypeInfoProxyVtbl,
@@ -13718,7 +13718,7 @@ static const CInterfaceProxyVtbl * _oaidl_ProxyVtblList[] =
     0
 };
 
-static const CInterfaceStubVtbl * _oaidl_StubVtblList[] = 
+static const CInterfaceStubVtbl * const _oaidl_StubVtblList[] = 
 {
     ( const CInterfaceStubVtbl *) &_IDispatchStubVtbl,
     ( const CInterfaceStubVtbl *) &_ITypeInfoStubVtbl,
