@@ -26,6 +26,7 @@
 	<include base="ReactOS">include/crt</include>
 	<include base="ReactOS">include/psdk</include>
 	<include base="mingw_common">include</include>
+	<dependency>psdk</dependency>
 	<file>binmode.c</file>
 	<file>crt1.c</file>
 	<file>main.c</file>
@@ -34,6 +35,7 @@
 	<include base="ReactOS">include/crt</include>
 	<include base="ReactOS">include/psdk</include>
 	<include base="mingw_common">include</include>
+	<dependency>psdk</dependency>
 	<file>wbinmode.c</file>
 	<file>wcrt1.c</file>
 	<file>wmain.c</file>
