@@ -24,7 +24,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #ifndef __STORAGE32_H__
 #define __STORAGE32_H__
@@ -37,6 +37,7 @@
 #include "objbase.h"
 #include "winreg.h"
 #include "winternl.h"
+#include "wine/list.h"
 
 /*
  * Definitions for the file format offsets.
@@ -111,18 +112,11 @@ static const ULONG PROPERTY_NULL             = 0xFFFFFFFF;
      STGM_NOSNAPSHOT | STGM_DIRECT_SWMR | STGM_DELETEONRELEASE | STGM_SIMPLE)
 
 /*
- * These are signatures to detect the type of Document file.
- */
-static const BYTE STORAGE_magic[8]    ={0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1};
-static const BYTE STORAGE_oldmagic[8] ={0xd0,0xcf,0x11,0xe0,0x0e,0x11,0xfc,0x0d};
-
-/*
  * Forward declarations of all the structures used by the storage
  * module.
  */
 typedef struct StorageBaseImpl     StorageBaseImpl;
 typedef struct StorageImpl         StorageImpl;
-typedef struct StorageInternalImpl StorageInternalImpl;
 typedef struct BlockChainStream      BlockChainStream;
 typedef struct SmallBlockChainStream SmallBlockChainStream;
 typedef struct IEnumSTATSTGImpl      IEnumSTATSTGImpl;
@@ -190,11 +184,12 @@ BigBlockFile*  BIGBLOCKFILE_Construct(HANDLE hFile,
                                       ULONG blocksize,
                                       BOOL fileBased);
 void           BIGBLOCKFILE_Destructor(LPBIGBLOCKFILE This);
-void*          BIGBLOCKFILE_GetBigBlock(LPBIGBLOCKFILE This, ULONG index);
-void*          BIGBLOCKFILE_GetROBigBlock(LPBIGBLOCKFILE This, ULONG index);
-void           BIGBLOCKFILE_ReleaseBigBlock(LPBIGBLOCKFILE This, void *pBlock);
+void           BIGBLOCKFILE_EnsureExists(LPBIGBLOCKFILE This, ULONG index);
 void           BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize);
-ULARGE_INTEGER BIGBLOCKFILE_GetSize(LPBIGBLOCKFILE This);
+HRESULT        BIGBLOCKFILE_ReadAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,
+           void* buffer, ULONG size, ULONG* bytesRead);
+HRESULT        BIGBLOCKFILE_WriteAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,
+           void* buffer, const ULONG size, ULONG* bytesRead);
 
 /*************************************************************************
  * Ole Convert support
@@ -218,6 +213,12 @@ struct StorageBaseImpl
 			    * since we want to cast this in a Storage32 pointer */
 
   const IPropertySetStorageVtbl *pssVtbl; /* interface for adding a properties stream */
+
+  /*
+   * Stream tracking list
+   */
+
+  struct list strmHead;
 
   /*
    * Reference count of this object
@@ -246,6 +247,12 @@ struct StorageBaseImpl
   DWORD openFlags;
 };
 
+/****************************************************************************
+ * StorageBaseImpl stream list handlers
+ */
+
+void StorageBaseImpl_AddStream(StorageBaseImpl * stg, StgStreamImpl * strm);
+void StorageBaseImpl_RemoveStream(StorageBaseImpl * stg, StgStreamImpl * strm);
 
 /****************************************************************************
  * Storage32Impl definitions.
@@ -298,63 +305,6 @@ struct StorageImpl
   BigBlockFile* bigBlockFile;
 };
 
-void StorageImpl_Destroy(
-	    StorageBaseImpl* This);
-
-HRESULT StorageImpl_Construct(
-            StorageImpl* This,
-            HANDLE       hFile,
-            LPCOLESTR    pwcsName,
-            ILockBytes*  pLkbyt,
-            DWORD        openFlags,
-            BOOL         fileBased,
-            BOOL         fileCreate);
-
-BOOL StorageImpl_ReadBigBlock(
-            StorageImpl* This,
-	    ULONG          blockIndex,
-	    void*          buffer);
-
-BOOL StorageImpl_WriteBigBlock(
-            StorageImpl* This,
-	    ULONG          blockIndex,
-	    void*          buffer);
-
-void* StorageImpl_GetROBigBlock(
-            StorageImpl* This,
-	    ULONG          blockIndex);
-
-void* StorageImpl_GetBigBlock(
-	    StorageImpl* This,
-	    ULONG          blockIndex);
-
-void StorageImpl_ReleaseBigBlock(
-            StorageImpl* This,
-            void*          pBigBlock);
-
-ULONG StorageImpl_GetNextFreeBigBlock(
-            StorageImpl* This);
-
-void StorageImpl_FreeBigBlock(
-            StorageImpl* This,
-	    ULONG blockIndex);
-
-HRESULT StorageImpl_GetNextBlockInChain(
-            StorageImpl* This,
-	    ULONG blockIndex,
-	    ULONG* nextBlockIndex);
-
-void StorageImpl_SetNextBlockInChain(
-            StorageImpl* This,
-	    ULONG blockIndex,
-	    ULONG nextBlock);
-
-HRESULT StorageImpl_LoadFileHeader(
-	    StorageImpl* This);
-
-void StorageImpl_SaveFileHeader(
-            StorageImpl* This);
-
 BOOL StorageImpl_ReadProperty(
             StorageImpl* This,
 	    ULONG          index,
@@ -369,120 +319,22 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
                       StorageImpl* This,
                       SmallBlockChainStream** ppsbChain);
 
-ULONG Storage32Impl_GetNextExtendedBlock(StorageImpl* This,
-                                         ULONG blockIndex);
-
-void Storage32Impl_AddBlockDepot(StorageImpl* This,
-                                 ULONG blockIndex);
-
-ULONG Storage32Impl_AddExtBlockDepot(StorageImpl* This);
-
-ULONG Storage32Impl_GetExtDepotBlock(StorageImpl* This,
-                                     ULONG depotIndex);
-
-void Storage32Impl_SetExtDepotBlock(StorageImpl* This,
-                                    ULONG depotIndex,
-                                    ULONG blockIndex);
-/****************************************************************************
- * Storage32InternalImpl definitions.
- *
- * Definition of the implementation structure for the IStorage32 interface.
- * This one implements the IStorage32 interface for storage that are
- * inside another storage.
- */
-struct StorageInternalImpl
-{
-  struct StorageBaseImpl base;
-
-  /*
-   * There is no specific data for this class.
-   */
-};
-
-/*
- * Method definitions for the Storage32InternalImpl class.
- */
-StorageInternalImpl* StorageInternalImpl_Construct(
-	    StorageImpl* ancestorStorage,
-            DWORD          openFlags,
-	    ULONG          rootTropertyIndex);
-
-void StorageInternalImpl_Destroy(
-       	    StorageBaseImpl* This);
-
-HRESULT WINAPI StorageInternalImpl_Commit(
-	    IStorage*            iface,
-	    DWORD                  grfCommitFlags); /* [in] */
-
-HRESULT WINAPI StorageInternalImpl_Revert(
-     	    IStorage*            iface);
-
-
-/****************************************************************************
- * IEnumSTATSTGImpl definitions.
- *
- * Definition of the implementation structure for the IEnumSTATSTGImpl interface.
- * This class allows iterating through the content of a storage and to find
- * specific items inside it.
- */
-struct IEnumSTATSTGImpl
-{
-  const IEnumSTATSTGVtbl *lpVtbl;    /* Needs to be the first item in the struct
-				* since we want to cast this in an IEnumSTATSTG pointer */
-
-  LONG		 ref;		        /* Reference count */
-  StorageImpl* parentStorage;         /* Reference to the parent storage */
-  ULONG          firstPropertyNode;     /* Index of the root of the storage to enumerate */
-
-  /*
-   * The current implementation of the IEnumSTATSTGImpl class uses a stack
-   * to walk the property sets to get the content of a storage. This stack
-   * is implemented by the following 3 data members
-   */
-  ULONG          stackSize;
-  ULONG          stackMaxSize;
-  ULONG*         stackToVisit;
-
-#define ENUMSTATSGT_SIZE_INCREMENT 10
-};
-
-IEnumSTATSTGImpl* IEnumSTATSTGImpl_Construct(
-            StorageImpl* This,
-	    ULONG          firstPropertyNode);
-
-void IEnumSTATSTGImpl_Destroy(
-            IEnumSTATSTGImpl* This);
-
-void IEnumSTATSTGImpl_PushSearchNode(
-	    IEnumSTATSTGImpl* This,
-	    ULONG             nodeToPush);
-
-ULONG IEnumSTATSTGImpl_PopSearchNode(
-            IEnumSTATSTGImpl* This,
-	    BOOL            remove);
-
-ULONG IEnumSTATSTGImpl_FindProperty(
-            IEnumSTATSTGImpl* This,
-	    const OLECHAR*  lpszPropName,
-	    StgProperty*      buffer);
-
-INT IEnumSTATSTGImpl_FindParentProperty(
-  IEnumSTATSTGImpl *This,
-  ULONG             childProperty,
-  StgProperty      *currentProperty,
-  ULONG            *propertyId);
-
-
 /****************************************************************************
  * StgStreamImpl definitions.
  *
- * This class imlements the IStream32 inteface and represents a stream
+ * This class implements the IStream32 interface and represents a stream
  * located inside a storage object.
  */
 struct StgStreamImpl
 {
   const IStreamVtbl *lpVtbl;  /* Needs to be the first item in the struct
 			 * since we want to cast this to an IStream pointer */
+
+  /*
+   * We are an entry in the storage object's stream handler list
+   */
+
+  struct list StrmListEntry;
 
   /*
    * Reference count
@@ -598,17 +450,14 @@ BlockChainStream* BlockChainStream_Construct(
 void BlockChainStream_Destroy(
 		BlockChainStream* This);
 
-ULONG BlockChainStream_GetHeadOfChain(
-		BlockChainStream* This);
-
-BOOL BlockChainStream_ReadAt(
+HRESULT BlockChainStream_ReadAt(
 		BlockChainStream* This,
 		ULARGE_INTEGER offset,
 		ULONG          size,
 		void*          buffer,
 		ULONG*         bytesRead);
 
-BOOL BlockChainStream_WriteAt(
+HRESULT BlockChainStream_WriteAt(
 		BlockChainStream* This,
 		ULARGE_INTEGER offset,
 		ULONG          size,
@@ -618,12 +467,6 @@ BOOL BlockChainStream_WriteAt(
 BOOL BlockChainStream_SetSize(
 		BlockChainStream* This,
 		ULARGE_INTEGER    newSize);
-
-ULARGE_INTEGER BlockChainStream_GetSize(
-    BlockChainStream* This);
-
-ULONG BlockChainStream_GetCount(
-    BlockChainStream* This);
 
 /****************************************************************************
  * SmallBlockChainStream definitions.
@@ -647,26 +490,6 @@ SmallBlockChainStream* SmallBlockChainStream_Construct(
 void SmallBlockChainStream_Destroy(
 	       SmallBlockChainStream* This);
 
-ULONG SmallBlockChainStream_GetHeadOfChain(
-	       SmallBlockChainStream* This);
-
-HRESULT SmallBlockChainStream_GetNextBlockInChain(
-	       SmallBlockChainStream* This,
-	       ULONG                  blockIndex,
-	       ULONG*                 nextBlockIndex);
-
-void SmallBlockChainStream_SetNextBlockInChain(
-         SmallBlockChainStream* This,
-         ULONG                  blockIndex,
-         ULONG                  nextBlock);
-
-void SmallBlockChainStream_FreeBlock(
-         SmallBlockChainStream* This,
-         ULONG                  blockIndex);
-
-ULONG SmallBlockChainStream_GetNextFreeBlock(
-         SmallBlockChainStream* This);
-
 HRESULT SmallBlockChainStream_ReadAt(
 	       SmallBlockChainStream* This,
 	       ULARGE_INTEGER offset,
@@ -674,7 +497,7 @@ HRESULT SmallBlockChainStream_ReadAt(
 	       void*          buffer,
 	       ULONG*         bytesRead);
 
-BOOL SmallBlockChainStream_WriteAt(
+HRESULT SmallBlockChainStream_WriteAt(
 	       SmallBlockChainStream* This,
 	       ULARGE_INTEGER offset,
 	       ULONG          size,
@@ -684,12 +507,6 @@ BOOL SmallBlockChainStream_WriteAt(
 BOOL SmallBlockChainStream_SetSize(
 	       SmallBlockChainStream* This,
 	       ULARGE_INTEGER          newSize);
-
-ULARGE_INTEGER SmallBlockChainStream_GetSize(
-         SmallBlockChainStream* This);
-
-ULONG SmallBlockChainStream_GetCount(
-         SmallBlockChainStream* This);
 
 
 #endif /* __STORAGE32_H__ */

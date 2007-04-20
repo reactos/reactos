@@ -662,8 +662,7 @@ WINAPI
 CM_Add_IDA(
   IN DEVINST  dnDevInst,
   IN PSTR  pszID,
-  IN ULONG  ulFlags,
-  IN HMACHINE  hMachine);
+  IN ULONG  ulFlags);
 
 CMAPI
 CONFIGRET
@@ -689,8 +688,7 @@ WINAPI
 CM_Add_IDW(
   IN DEVINST  dnDevInst,
   IN PWSTR  pszID,
-  IN ULONG  ulFlags,
-  IN HMACHINE  hMachine);
+  IN ULONG  ulFlags);
 
 #ifdef UNICODE
 #define CM_Add_ID CM_Add_IDW

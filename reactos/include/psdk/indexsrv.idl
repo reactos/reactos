@@ -1,0 +1,126 @@
+/*
+ * Copyright 2006 Mike McCormack
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "unknwn.idl";
+
+/*
+ * widl doesn't like the declaration of PFNFILLTEXTBUFFER, so work around it...
+ * Not sure that function pointers are even legal in idl.
+ */
+cpp_quote("struct tagTEXT_SOURCE;")
+cpp_quote("typedef HRESULT (WINAPI *PFNFILLTEXTBUFFER)(struct tagTEXT_SOURCE *pTextSource);")
+cpp_quote("#if 0")
+typedef void* PFNFILLTEXTBUFFER;
+cpp_quote("#endif")
+
+typedef struct tagTEXT_SOURCE
+{
+    PFNFILLTEXTBUFFER pfnFillTextBuffer;
+    const WCHAR *awcBuffer;
+    ULONG iEnd;
+    ULONG iCur;
+} TEXT_SOURCE;
+
+typedef enum tagWORDREP_BREAK_TYPE
+{
+    WORDREP_BREAK_EOW = 0,
+    WORDREP_BREAK_EOS = 1,
+    WORDREP_BREAK_EOP = 2,
+    WORDREP_BREAK_EOC = 3
+} WORDREP_BREAK_TYPE;
+
+
+/*****************************************************************************
+ *    IWordSink interface
+ */
+[
+    unique,
+    uuid(cc907054-c058-101a-b554-08002b33b0e6),
+    object,
+    local
+]
+interface IWordSink : IUnknown
+{
+    HRESULT PutWord(
+              [in] ULONG cwc,
+              [size_is(cwcSrcLen)][in] const WCHAR *pwcInBuf,
+              [in] ULONG cwcSrcLen,
+              [in] ULONG cwcSrcPos);
+    HRESULT PutAltWord(
+              [in] ULONG cwc,
+              [size_is(cwcSrcLen)][in] const WCHAR *pwcInBuf,
+              [in] ULONG cwcSrcLen,
+              [in] ULONG cwcSrcPos);
+    HRESULT StartAltPhrase(void);
+    HRESULT EndAltPhrase(void);
+    HRESULT PutBreak(
+              [in] WORDREP_BREAK_TYPE breakType);
+}
+
+/*****************************************************************************
+ *    IPhraseSink interface
+ */
+[
+    unique,
+    uuid(cc906ff0-c058-101a-b554-08002b33b0e6),
+    object,
+    local
+]
+interface IPhraseSink: IUnknown
+{
+    HRESULT PutSmallPhrase(
+              [size_is(cwcNoun)][in] const WCHAR *pwcNoun,
+              [in] ULONG cwcNoun,
+              [size_is(cwcModifier)][in] const WCHAR *pwcModifier,
+              [in] ULONG cwcModifier,
+              [in] ULONG ulAttachmentType);
+    HRESULT PutPhrase(
+              [size_is(cwcPhrase)][in] const WCHAR *pwcPhrase,
+              [in] ULONG cwcPhrase);
+}
+
+/*****************************************************************************
+ *    IWordBreaker interface
+ */
+[
+    unique,
+    uuid(d53552c8-77e3-101a-b552-08002b33b0e6),
+    object,
+    local
+]
+interface IWordBreaker: IUnknown
+{
+    HRESULT Init(
+              [in] BOOL fQuery,
+              [in] ULONG ulMaxTokenSize,
+              [out] BOOL *pfLicense);
+    HRESULT BreakText(
+              [in] TEXT_SOURCE *pTextSource,
+              [in] IWordSink *pWordSink,
+              [in] IPhraseSink *pPhraseSink);
+    HRESULT ComposePhrase(
+              [size_is(cwcNoun)][in] const WCHAR *pwcNoun,
+              [in] ULONG cwcNoun,
+              [size_is(cwcModifier)][in] const WCHAR *pwcModifier,
+              [in] ULONG cwcModifier,
+              [in] ULONG ulAttachmentType,
+              [size_is(*pcwcPhrase)][out] WCHAR *pwcPhrase,
+              [out][in] ULONG *pcwcPhrase);
+    HRESULT GetLicenseToUse(
+              [string][out] const WCHAR **ppwcsLicense);
+}

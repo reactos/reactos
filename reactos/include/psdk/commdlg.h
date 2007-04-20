@@ -9,6 +9,9 @@ extern "C" {
 #endif
 #pragma pack(push,1)
 
+#define SAVE_DIALOG  1
+#define OPEN_DIALOG  2
+
 #define LBSELCHSTRINGA  "commdlg_LBSelChangedNotify"
 #define SHAREVISTRINGA  "commdlg_ShareViolation"
 #define FILEOKSTRINGA   "commdlg_FileNameOK"
@@ -441,7 +444,6 @@ typedef struct tagPDW {
 	HANDLE hSetupTemplate;
 } PRINTDLGW,*LPPRINTDLGW;
 #if (WINVER >= 0x0500) && !defined (__OBJC__)
-#include <unknwn.h>  /* for LPUNKNOWN  */
 #include <prsht.h>   /* for HPROPSHEETPAGE  */
 typedef struct tagPRINTPAGERANGE {
    DWORD  nFromPage;
@@ -464,7 +466,7 @@ typedef struct tagPDEXA {
    DWORD nCopies;
    HINSTANCE hInstance;
    LPCSTR lpPrintTemplateName;
-   LPUNKNOWN lpCallback;
+   void* /*LPUNKNOWN*/ lpCallback;
    DWORD nPropertyPages;
    HPROPSHEETPAGE *lphPropertyPages;
    DWORD nStartPage;
@@ -487,7 +489,7 @@ typedef struct tagPDEXW {
    DWORD nCopies;
    HINSTANCE hInstance;
    LPCWSTR lpPrintTemplateName;
-   LPUNKNOWN lpCallback;
+   void* /*LPUNKNOWN*/ lpCallback;
    DWORD nPropertyPages;
    HPROPSHEETPAGE *lphPropertyPages;
    DWORD nStartPage;

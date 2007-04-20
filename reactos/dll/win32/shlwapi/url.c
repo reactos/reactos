@@ -1376,8 +1376,8 @@ INT WINAPI UrlCompareW(
  *  Success: TRUE. lpDest is filled with the computed hash value.
  *  Failure: FALSE, if any argument is invalid.
  */
-HRESULT WINAPI HashData(LPBYTE lpSrc, DWORD nSrcLen,
-                     LPBYTE lpDest, DWORD nDestLen)
+HRESULT WINAPI HashData(const unsigned char *lpSrc, DWORD nSrcLen,
+                     unsigned char *lpDest, DWORD nDestLen)
 {
   INT srcCount = nSrcLen - 1, destCount = nDestLen - 1;
 
@@ -1423,7 +1423,7 @@ HRESULT WINAPI UrlHashA(LPCSTR pszUrl, unsigned char *lpDest, DWORD nDestLen)
   if (IsBadStringPtrA(pszUrl, -1) || IsBadWritePtr(lpDest, nDestLen))
     return E_INVALIDARG;
 
-  HashData((LPSTR)pszUrl, (int)strlen(pszUrl), lpDest, nDestLen);
+  HashData((const BYTE*)pszUrl, (int)strlen(pszUrl), lpDest, nDestLen);
   return S_OK;
 }
 

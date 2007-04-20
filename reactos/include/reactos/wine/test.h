@@ -18,15 +18,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_TEST_H
-#define __WINE_TEST_H
+#ifndef __WINE_WINE_TEST_H
+#define __WINE_WINE_TEST_H
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
 
-/* prototype for dbgprint */
-ULONG CDECL DbgPrint(IN PCCH  Format,IN ...);
+#ifdef __WINE_WINE_LIBRARY_H
+#error wine/library.h should not be used in Wine tests
+#endif
+#ifdef __WINE_WINE_UNICODE_H
+#error wine/unicode.h should not be used in Wine tests
+#endif
+#ifdef __WINE_WINE_DEBUG_H
+#error wine/debug.h should not be used in Wine tests
+#endif
+
+#ifndef INVALID_FILE_ATTRIBUTES
+#define INVALID_FILE_ATTRIBUTES  ((DWORD)~0UL)
+#endif
+#ifndef INVALID_SET_FILE_POINTER
+#define INVALID_SET_FILE_POINTER ((DWORD)~0UL)
+#endif
 
 /* debug level */
 extern int winetest_debug;
@@ -55,19 +70,23 @@ extern int winetest_get_mainargs( char*** pargv );
 #ifdef __GNUC__
 
 extern int winetest_ok( int condition, const char *msg, ... ) __attribute__((format (printf,2,3) ));
+extern void winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void winetest_trace( const char *msg, ... ) __attribute__((format (printf,1,2)));
 
 #else /* __GNUC__ */
 
 extern int winetest_ok( int condition, const char *msg, ... );
+extern void winetest_skip( const char *msg, ... );
 extern void winetest_trace( const char *msg, ... );
 
 #endif /* __GNUC__ */
 
 #define ok_(file, line)     (winetest_set_location(file, line), 0) ? 0 : winetest_ok
+#define skip_(file, line)  (winetest_set_location(file, line), 0) ? (void)0 : winetest_skip
 #define trace_(file, line)  (winetest_set_location(file, line), 0) ? (void)0 : winetest_trace
 
 #define ok     ok_(__FILE__, __LINE__)
+#define skip   skip_(__FILE__, __LINE__)
 #define trace  trace_(__FILE__, __LINE__)
 
 #define todo(platform) for (winetest_start_todo(platform); \
@@ -154,6 +173,7 @@ static const struct test *current_test; /* test currently being run */
 
 static LONG successes;       /* number of successful tests */
 static LONG failures;        /* number of failures */
+static LONG skipped;         /* number of skipped test chunks */
 static LONG todo_successes;  /* number of successful tests inside todo block */
 static LONG todo_failures;   /* number of failures inside todo block */
 
@@ -244,21 +264,11 @@ int winetest_ok( int condition, const char *msg, ... )
                      data->current_file, data->current_line );
             if (msg[0])
             {
-                char string[1024];
                 va_start(valist, msg);
                 fprintf( stdout,": ");
                 vfprintf(stdout, msg, valist);
-                vsprintf(string, msg, valist);
-                DbgPrint( "%s:%d: Test failed: %s\n",
-                          data->current_file, data->current_line, string );
                 va_end(valist);
             }
-            else
-            {
-                DbgPrint( "%s:%d: Test failed\n",
-                          data->current_file, data->current_line );
-            }
-            fputc( '\n', stdout );
             InterlockedIncrement(&failures);
             return 0;
         }
@@ -280,13 +290,23 @@ void winetest_trace( const char *msg, ... )
 
     if (winetest_debug > 0)
     {
-        char string[1024];
         fprintf( stdout, "%s:%d:", data->current_file, data->current_line );
         va_start(valist, msg);
         vfprintf(stdout, msg, valist);
-        DbgPrint( "%s:%d: %s", data->current_file, data->current_line, string);
         va_end(valist);
     }
+}
+
+void winetest_skip( const char *msg, ... )
+{
+    va_list valist;
+    tls_data* data=get_tls_data();
+
+    fprintf( stdout, "%s:%d: Tests skipped: ", data->current_file, data->current_line );
+    va_start(valist, msg);
+    vfprintf(stdout, msg, valist);
+    va_end(valist);
+    skipped++;
 }
 
 void winetest_start_todo( const char* platform )
@@ -368,10 +388,11 @@ static int run_test( const char *name )
 
     if (winetest_debug)
     {
-        fprintf( stdout, "%s: %ld tests executed, %ld marked as todo, %ld %s.\n",
-                 name, successes + failures + todo_successes + todo_failures,
+        fprintf( stdout, "%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
+                 test->name, successes + failures + todo_successes + todo_failures,
                  todo_successes, failures + todo_failures,
-                 (failures + todo_failures != 1) ? "failures" : "failure" );
+                 (failures + todo_failures != 1) ? "failures" : "failure",
+                 skipped );
     }
     status = (failures + todo_failures < 255) ? failures + todo_failures : 255;
     return status;
@@ -417,4 +438,4 @@ int main( int argc, char **argv )
 
 #endif  /* STANDALONE */
 
-#endif  /* __WINE_TEST_H */
+#endif  /* __WINE_WINE_TEST_H */

@@ -148,7 +148,7 @@
 150 stdcall SysAllocStringByteLen(ptr long)
 152 stdcall VarEqv(ptr ptr ptr)
 153 stdcall VarIdiv(ptr ptr ptr)
-154 stub VarImp # stdcall (ptr ptr ptr)
+154 stdcall VarImp(ptr ptr ptr)
 155 stdcall VarMod(ptr ptr ptr)
 156 stdcall VarMul(ptr ptr ptr)
 157 stdcall VarOr(ptr ptr ptr)

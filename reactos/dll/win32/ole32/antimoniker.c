@@ -1,4 +1,4 @@
-/***************************************************************************************
+/*
  *	                      AntiMonikers implementation
  *
  *               Copyright 1999  Noomen Hamza
@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- ***************************************************************************************/
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
 
 #include <assert.h>
 #include <stdarg.h>
@@ -35,10 +35,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-const CLSID CLSID_AntiMoniker = {
-  0x305, 0, 0, {0xC0, 0, 0, 0, 0, 0, 0, 0x46}
-};
-
 /* AntiMoniker data structure */
 typedef struct AntiMonikerImpl{
 
@@ -51,6 +47,7 @@ typedef struct AntiMonikerImpl{
 
     LONG ref; /* reference counter for this object */
 
+    IUnknown *pMarshal; /* custom marshaler */
 } AntiMonikerImpl;
 
 static inline IMoniker *impl_from_IROTData( IROTData *iface )
@@ -84,6 +81,15 @@ AntiMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
         *ppvObject = iface;
     else if (IsEqualIID(&IID_IROTData, riid))
         *ppvObject = (IROTData*)&(This->lpvtbl2);
+    else if (IsEqualIID(&IID_IMarshal, riid))
+    {
+        HRESULT hr = S_OK;
+        if (!This->pMarshal)
+            hr = MonikerMarshal_Create(iface, &This->pMarshal);
+        if (hr != S_OK)
+            return hr;
+        return IUnknown_QueryInterface(This->pMarshal, riid, ppvObject);
+    }
 
     /* Check that we obtained an interface.*/
     if ((*ppvObject)==0)
@@ -122,7 +128,11 @@ AntiMonikerImpl_Release(IMoniker* iface)
     ref = InterlockedDecrement(&This->ref);
 
     /* destroy the object if there's no more reference on it */
-    if (ref == 0) HeapFree(GetProcessHeap(),0,This);
+    if (ref == 0)
+    {
+        if (This->pMarshal) IUnknown_Release(This->pMarshal);
+        HeapFree(GetProcessHeap(),0,This);
+    }
 
     return ref;
 }
@@ -133,7 +143,7 @@ AntiMonikerImpl_Release(IMoniker* iface)
 static HRESULT WINAPI
 AntiMonikerImpl_GetClassID(IMoniker* iface,CLSID *pClassID)
 {
-    TRACE("(%p,%p),stub!\n",iface,pClassID);
+    TRACE("(%p,%p)\n",iface,pClassID);
 
     if (pClassID==NULL)
         return E_POINTER;
@@ -202,7 +212,7 @@ AntiMonikerImpl_GetSizeMax(IMoniker* iface, ULARGE_INTEGER* pcbSize)
 {
     TRACE("(%p,%p)\n",iface,pcbSize);
 
-    if (pcbSize!=NULL)
+    if (!pcbSize)
         return E_POINTER;
 
     /* for more details see AntiMonikerImpl_Save coments */
@@ -248,7 +258,7 @@ static HRESULT WINAPI
 AntiMonikerImpl_Reduce(IMoniker* iface, IBindCtx* pbc, DWORD dwReduceHowFar,
                        IMoniker** ppmkToLeft, IMoniker** ppmkReduced)
 {
-    TRACE("(%p,%p,%ld,%p,%p)\n",iface,pbc,dwReduceHowFar,ppmkToLeft,ppmkReduced);
+    TRACE("(%p,%p,%d,%p,%p)\n",iface,pbc,dwReduceHowFar,ppmkToLeft,ppmkReduced);
 
     if (ppmkReduced==NULL)
         return E_POINTER;
@@ -325,7 +335,7 @@ static HRESULT WINAPI AntiMonikerImpl_Hash(IMoniker* iface,DWORD* pdwHash)
     if (pdwHash==NULL)
         return E_POINTER;
 
-    *pdwHash=0;
+    *pdwHash = 0x80000001;
 
     return S_OK;
 }
@@ -395,7 +405,7 @@ AntiMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** p
 
     IMoniker_IsSystemMoniker(pmkOther,&mkSys);
 
-    if(mkSys==MKSYS_ITEMMONIKER){
+    if(mkSys==MKSYS_ANTIMONIKER){
 
         IMoniker_AddRef(iface);
 
@@ -525,11 +535,21 @@ static ULONG WINAPI AntiMonikerROTDataImpl_Release(IROTData* iface)
  *        AntiMonikerIROTData_GetComparaisonData
  ******************************************************************************/
 static HRESULT WINAPI
-AntiMonikerROTDataImpl_GetComparaisonData(IROTData* iface, BYTE* pbData,
+AntiMonikerROTDataImpl_GetComparisonData(IROTData* iface, BYTE* pbData,
                                           ULONG cbMax, ULONG* pcbData)
 {
-    FIXME("(),stub!\n");
-    return E_NOTIMPL;
+    DWORD constant = 1;
+
+    TRACE("(%p, %u, %p)\n", pbData, cbMax, pcbData);
+
+    *pcbData = sizeof(CLSID) + sizeof(DWORD);
+    if (cbMax < *pcbData)
+        return E_OUTOFMEMORY;
+
+    memcpy(pbData, &CLSID_AntiMoniker, sizeof(CLSID));
+    memcpy(pbData+sizeof(CLSID), &constant, sizeof(DWORD));
+
+    return S_OK;
 }
 
 /********************************************************************************/
@@ -569,7 +589,7 @@ static const IROTDataVtbl VT_ROTDataImpl =
     AntiMonikerROTDataImpl_QueryInterface,
     AntiMonikerROTDataImpl_AddRef,
     AntiMonikerROTDataImpl_Release,
-    AntiMonikerROTDataImpl_GetComparaisonData
+    AntiMonikerROTDataImpl_GetComparisonData
 };
 
 /******************************************************************************
@@ -584,6 +604,7 @@ static HRESULT AntiMonikerImpl_Construct(AntiMonikerImpl* This)
     This->lpvtbl1      = &VT_AntiMonikerImpl;
     This->lpvtbl2      = &VT_ROTDataImpl;
     This->ref          = 0;
+    This->pMarshal     = NULL;
 
     return S_OK;
 }
@@ -614,4 +635,73 @@ HRESULT WINAPI CreateAntiMoniker(LPMONIKER * ppmk)
     hr = AntiMonikerImpl_QueryInterface((IMoniker*)newAntiMoniker,&riid,(void**)ppmk);
 
     return hr;
+}
+
+static HRESULT WINAPI AntiMonikerCF_QueryInterface(LPCLASSFACTORY iface,
+                                                  REFIID riid, LPVOID *ppv)
+{
+    *ppv = NULL;
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
+    {
+        *ppv = iface;
+        IUnknown_AddRef(iface);
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI AntiMonikerCF_AddRef(LPCLASSFACTORY iface)
+{
+    return 2; /* non-heap based object */
+}
+
+static ULONG WINAPI AntiMonikerCF_Release(LPCLASSFACTORY iface)
+{
+    return 1; /* non-heap based object */
+}
+
+static HRESULT WINAPI AntiMonikerCF_CreateInstance(LPCLASSFACTORY iface,
+    LPUNKNOWN pUnk, REFIID riid, LPVOID *ppv)
+{
+    IMoniker *pMoniker;
+    HRESULT  hr;
+
+    TRACE("(%p, %s, %p)\n", pUnk, debugstr_guid(riid), ppv);
+
+    *ppv = NULL;
+
+    if (pUnk)
+        return CLASS_E_NOAGGREGATION;
+
+    hr = CreateAntiMoniker(&pMoniker);
+    if (FAILED(hr))
+        return hr;
+
+  	hr = IMoniker_QueryInterface(pMoniker, riid, ppv);
+
+    if (FAILED(hr))
+        IMoniker_Release(pMoniker);
+
+    return hr;
+}
+
+static HRESULT WINAPI AntiMonikerCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
+{
+    FIXME("(%d), stub!\n",fLock);
+    return S_OK;
+}
+
+static const IClassFactoryVtbl AntiMonikerCFVtbl =
+{
+    AntiMonikerCF_QueryInterface,
+    AntiMonikerCF_AddRef,
+    AntiMonikerCF_Release,
+    AntiMonikerCF_CreateInstance,
+    AntiMonikerCF_LockServer
+};
+static const IClassFactoryVtbl *AntiMonikerCF = &AntiMonikerCFVtbl;
+
+HRESULT AntiMonikerCF_Create(REFIID riid, LPVOID *ppv)
+{
+    return IClassFactory_QueryInterface((IClassFactory *)&AntiMonikerCF, riid, ppv);
 }

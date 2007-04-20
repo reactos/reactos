@@ -1,16 +1,26 @@
-#ifndef _INITGUID_H
-#define _INITGUID_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
+/*
+ * Defines a minimum set of macros create GUID's to keep the size
+ * small
+ *
+ * This file should be included into "only GUID definition *.h" like
+ * shlguid.h
+ *
+ * Copyright (C) 1999 Juergen Schmied
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
 
-#ifndef DEFINE_GUID
-#include <basetyps.h>
-#endif
-#undef DEFINE_GUID
-#ifdef __cplusplus
-#define DEFINE_GUID(n,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) extern const GUID n GUID_SECT = {l,w1,w2,{b1,b2,b3,b4,b5,b6,b7,b8}}
-#else
-#define DEFINE_GUID(n,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) const GUID n GUID_SECT = {l,w1,w2,{b1,b2,b3,b4,b5,b6,b7,b8}}
-#endif
-#endif
+#define INITGUID
+#include <guiddef.h>

@@ -1,69 +1,74 @@
+/*
+ *    RPC interface
+ *
+ * Copyright (C) the Wine project
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
 #ifndef RPC_NO_WINDOWS_H
-#include <windows.h>
+# ifdef __WINESRC__
+#  include <windef.h>
+# else
+#  include <windows.h>
+# endif
 #endif
 
-#ifndef _RPC_H
-#define _RPC_H
-#if __GNUC__ >=3
-#pragma GCC system_header
+#ifndef __WINE_RPC_H
+#define __WINE_RPC_H
+
+#if defined(__powerpc__) || defined(_MAC) /* ? */
+# define __RPC_MAC__
+ /* Also define __RPC_WIN32__ to ensure compatibility */
+# define __RPC_WIN32__
+#elif defined(_WIN64)
+# define __RPC_WIN64__
+#else
+# define __RPC_WIN32__
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-#define __RPC_WIN32__
-#ifndef _WIN95
-#define __RPC_NT__
-#define RPC_UNICODE_SUPPORTED
-#endif
+#include <basetsd.h>
 
-#ifndef __MIDL_USER_DEFINED
-#define midl_user_allocate MIDL_user_allocate
-#define midl_user_free     MIDL_user_free
-#define __MIDL_USER_DEFINED
-#endif
-#define RPC_UNICODE_SUPPORTED
 #define __RPC_FAR
 #define __RPC_API  __stdcall
 #define __RPC_USER __stdcall
 #define __RPC_STUB __stdcall
 #define RPC_ENTRY  __stdcall
 #define RPCRTAPI
-typedef void *I_RPC_HANDLE;
 typedef long RPC_STATUS;
 
-#include <rpcdce.h>
-#include <rpcnsi.h>
-#include <rpcnterr.h>
+typedef void* I_RPC_HANDLE;
 
+#include <rpcdce.h>
+/* #include <rpcnsi.h> */
+#include <rpcnterr.h>
+#include <excpt.h>
 #include <winerror.h>
 
-/* SEH is not supported */
-#if 0
-#include <excpt.h>
-#define RpcTryExcept __try {
-#define RpcExcept(x) } __except (x) {
-#define RpcEndExcept }
-#define RpcTryFinally __try {
-#define RpcFinally } __finally {
-#define RpcEndFinally }
-#define RpcExceptionCode() GetExceptionCode()
-#define RpcAbnormalTermination() AbnormalTermination()
-#else
+/* ignore exception handling for now */
 #define RpcTryExcept if (1) {
-#define RpcExcept(x) } else {
+#define RpcExcept(expr) } else {
 #define RpcEndExcept }
-#define RpcTryFinally if (1) {
-#define RpcFinally } if (1) {
-#define RpcEndFinally }
+#define RpcTryFinally
+#define RpcFinally
+#define RpcEndFinally
 #define RpcExceptionCode() 0
-#define RpcAbnormalTermination() AbnormalTermination()
-#endif /* 0 */
+/* #define RpcAbnormalTermination() abort() */
 
 RPC_STATUS RPC_ENTRY RpcImpersonateClient(RPC_BINDING_HANDLE);
 RPC_STATUS RPC_ENTRY RpcRevertToSelf(void);
 long RPC_ENTRY I_RpcMapWin32Status(RPC_STATUS);
-#ifdef __cplusplus
-}
-#endif
-#endif
+
+#endif /*__WINE_RPC_H */

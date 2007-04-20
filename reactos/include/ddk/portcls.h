@@ -125,9 +125,10 @@
 
 #include <wdm.h>
 
-/*#include <windef.h>*/
+#include <windef.h>
 #include <ks.h>
 #include <drmk.h>
+#include <punknown.h>
 
 /* TODO */
 #define PORTCLASSAPI EXTERN_C

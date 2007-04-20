@@ -180,7 +180,9 @@ struct URB;
 #define UHCI_ITEM_FLAG_TD     	  0x0
 #define UHCI_ITEM_FLAG_QH         0x1
 
+#ifndef offsetof
 #define offsetof( s, m ) ( ( ULONG )( &( ( s* )0 )->m  ) )
+#endif
 
 #define struct_ptr( meMBER_ptr, stRUCT_name, meMBER_name ) \
 ( ( stRUCT_name* ) ( ( (CHAR*)( meMBER_ptr ) ) - offsetof( stRUCT_name, meMBER_name ) ) )

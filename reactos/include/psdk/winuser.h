@@ -2623,7 +2623,7 @@ typedef struct tagCWPSTRUCT {
 	WPARAM wParam;
 	UINT message;
 	HWND hwnd;
-} CWPSTRUCT,*PCWPSTRUCT;
+} CWPSTRUCT,*PCWPSTRUCT, *LPCWPSTRUCT;
 typedef struct tagDEBUGHOOKINFO {
 	DWORD idThread;
 	DWORD idThreadInstaller;

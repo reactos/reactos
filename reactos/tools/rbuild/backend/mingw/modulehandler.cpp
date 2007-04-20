@@ -304,14 +304,24 @@ MingwModuleHandler::GetActualSourceFilename (
 		string basename = GetBasename ( filename );
 		string newname;
 		if ( module.type == RpcServer )
+		{
 			newname = basename + "_s.c";
+			PassThruCacheDirectory ( NormalizeFilename ( newname ),
+				                     backend->intermediateDirectory );
+			return new FileLocation ( backend->intermediateDirectory, NormalizeFilename ( newname ) );
+		}
 		else if ( module.type == RpcClient )
+		{
 			newname = basename + "_c.c";
+			PassThruCacheDirectory ( NormalizeFilename ( newname ),
+				                     backend->intermediateDirectory );
+			return new FileLocation ( backend->intermediateDirectory, NormalizeFilename ( newname ) );
+		}
 		else //if ( module.type == IdlHeader )
+		{
 			newname = basename + ".h";
-		PassThruCacheDirectory ( NormalizeFilename ( newname ),
-		                         backend->intermediateDirectory );
-		return new FileLocation ( backend->intermediateDirectory, NormalizeFilename ( newname ) );
+			return new FileLocation ( fileLocation->directory, filename );
+		}
 	}
 	else
 		return new FileLocation ( fileLocation->directory, filename );
@@ -325,10 +335,10 @@ MingwModuleHandler::GetExtraDependencies (
 	if ( extension == ".idl" || extension == ".IDL" )
 	{
 		string basename = GetBasename ( filename );
-		if ( module.type == IdlHeader )
-            return GetIdlHeaderFilename ( basename );
-		else
+		if ( (module.type == RpcServer) || (module.type == RpcClient) )
 			return GetRpcServerHeaderFilename ( basename ) + " " + GetRpcClientHeaderFilename ( basename );
+		else
+			return GetIdlHeaderFilename ( basename );			
 	}
 	else
 		return "";
@@ -494,15 +504,12 @@ MingwModuleHandler::GetObjectFilename (
 		newExtension = ".stubs.o";
 	else if ( extension == ".idl" || extension == ".IDL" )
 	{
-		if ( module.type == IdlHeader )
-			newExtension = ".h";
+		if ( module.type == RpcServer )
+			newExtension = "_s.o";
+		else if ( module.type == RpcClient )
+			newExtension = "_c.o";
 		else
-		{
-			if ( module.type == RpcServer )
-				newExtension = "_s.o";
-			else
-				newExtension = "_c.o";
-		}
+			newExtension = ".h";
 	}
 	else
 		newExtension = ".o";
@@ -512,11 +519,15 @@ MingwModuleHandler::GetObjectFilename (
 	else
 		directoryTree = backend->intermediateDirectory;
 
+	if (newExtension == ".h")
+		directoryTree = NULL;
+
 	string obj_file = PassThruCacheDirectory (
 		NormalizeFilename ( ReplaceExtension (
 			RemoveVariables ( sourceFilename ),
-			                  newExtension ) ),
+							  newExtension ) ),
 			directoryTree );
+
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
@@ -1220,8 +1231,7 @@ MingwModuleHandler::GetRpcClientHeaderFilename ( string basename ) const
 string
 MingwModuleHandler::GetIdlHeaderFilename ( string basename ) const
 {
-	return PassThruCacheDirectory ( basename + ".h",
-	                                backend->intermediateDirectory );
+	return basename + ".h";
 }
 
 void
@@ -1302,7 +1312,7 @@ MingwModuleHandler::GenerateWidlCommands (
 	else if ( module.type == RpcClient )
 		GenerateWidlCommandsClient ( compilationUnit,
 		                             widlflagsMacro );
-	else if ( module.type == IdlHeader )
+	else
 		GenerateWidlCommandsIdlHeader ( compilationUnit,
 		                                widlflagsMacro );
 }
@@ -1370,7 +1380,7 @@ MingwModuleHandler::GenerateCommands (
 	{
 		GenerateWidlCommands ( compilationUnit,
 		                       widlflagsMacro );
-		if ( module.type != IdlHeader )
+		if ( (module.type == RpcServer) || (module.type == RpcClient) )
 		{
 			GenerateGccCommand ( GetActualSourceFilename ( sourceFileLocation ),
 			                     GetExtraDependencies ( filename ),
@@ -2252,7 +2262,10 @@ MingwModuleHandler::GetDefinitionDependencies (
 		if ( extension == ".spec" || extension == ".SPEC" )
 			GetSpecObjectDependencies ( dependencies, sourceFileLocation->filename );
 		if ( extension == ".idl" || extension == ".IDL" )
-			GetWidlObjectDependencies ( dependencies, sourceFileLocation->filename );
+		{
+			if ( ( module.type == RpcServer ) || ( module.type == RpcClient ) )
+				GetWidlObjectDependencies ( dependencies, sourceFileLocation->filename );
+		}
 	}
 }
 

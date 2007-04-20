@@ -1,0 +1,430 @@
+/*
+ * Copyright 2006 Juan Lang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+
+typedef enum tagTomConstants
+{
+    tomFalse       = 0,
+    tomTrue        = -1,
+    tomUndefined   = -9999999,
+    tomToggle      = -9999998,
+    tomAutoColor   = -9999997,
+    tomDefault     = -9999996,
+    tomSuspend     = -9999995,
+    tomResume      = -9999994,
+    tomApplyNow    = 0,
+    tomApplyLater  = 1,
+    tomTrackParms  = 2,
+    tomCacheParms  = 3,
+    tomBackward    = 0xc00000001,
+    tomForward     = 0x3ffffffff,
+    tomMove        = 0,
+    tomExtend      = 1,
+    tomNoSelection          = 0,
+    tomSelectionIP          = 1,
+    tomSelectionNormal      = 2,
+    tomSelectionFrame       = 3,
+    tomSelectionColumn      = 4,
+    tomSelectionRow         = 5,
+    tomSelectionBlock       = 6,
+    tomSelectionInlineShape = 7,
+    tomSelectionShape       = 8,
+    tomSelStartActive = 1,
+    tomSelAtEOL       = 2,
+    tomSelOvertype    = 4,
+    tomSelActive      = 8,
+    tomSelReplace     = 16,
+    tomEnd   = 0,
+    tomStart = 32,
+    tomCollapseEnd   = 0,
+    tomCollapseStart = 1,
+    tomClientCoord = 256,
+    tomNone       = 0,
+    tomSingle     = 1,
+    tomWords      = 2,
+    tomDouble     = 3,
+    tomDotted     = 4,
+    tomDash       = 5,
+    tomDashDot    = 6,
+    tomDashDotDot = 7,
+    tomWave       = 8,
+    tomThick      = 9,
+    tomHair       = 10,
+    tomLineSpaceSingle   = 0,
+    tomLineSpace1pt5     = 1,
+    tomLineSpaceDouble   = 2,
+    tomLineSpaceAtLeast  = 3,
+    tomLineSpaceExactly  = 4,
+    tomLineSpaceMultiple = 5,
+    tomAlignLeft        = 0,
+    tomAlignCenter      = 1,
+    tomAlignRight       = 2,
+    tomAlignJustify     = 3,
+    tomAlignDecimal     = 3,
+    tomAlignBar         = 4,
+    tomAlignInterWord   = 3,
+    tomAlignInterLetter = 4,
+    tomAlignScaled      = 5,
+    tomAlignGlyphs      = 6,
+    tomAlignSnapGrid    = 7,
+    tomSpaces     = 0,
+    tomDots       = 1,
+    tomDashes     = 2,
+    tomLines      = 3,
+    tomThickLines = 4,
+    tomEquals     = 5,
+    tomTabBack = -3,
+    tomTabNext = -2,
+    tomTabHere = -1,
+    tomListBullet           = 1,
+    tomListNumberAsArabic   = 2,
+    tomListNumberAsLCLetter = 3,
+    tomListNumberAsUCLetter = 4,
+    tomListNumberAsLCRoman  = 5,
+    tomListNumberAsUCRoman  = 6,
+    tomListNumberAsSequence = 7,
+    tomListParentheses      = 0x10000,
+    tomListPeriod           = 0x20000,
+    tomListPlain            = 0x30000,
+    tomCharacter  = 1,
+    tomWord       = 2,
+    tomSentence   = 3,
+    tomParagraph  = 4,
+    tomLine       = 5,
+    tomStory      = 6,
+    tomScreen     = 7,
+    tomSection    = 8,
+    tomColumn     = 9,
+    tomRow        = 10,
+    tomWindow     = 11,
+    tomCell       = 12,
+    tomCharFormat = 13,
+    tomParaFormat = 14,
+    tomTable      = 15,
+    tomObject     = 16,
+    tomMatchWord    = 2,
+    tomMatchCase    = 4,
+    tomMatchPattern = 8,
+    tomUnknownStory         = 0,
+    tomMainTextStory        = 1,
+    tomFootnotesStory       = 2,
+    tomEndnotesStory        = 3,
+    tomCommentsStory        = 4,
+    tomTextFrameStory       = 5,
+    tomEvenPagesHeaderStory = 6,
+    tomPrimaryHeaderStory   = 7,
+    tomEvenPagesFooterStory = 8,
+    tomPrimaryFooterStory   = 9,
+    tomFirstPageHeaderStory = 10,
+    tomFirstPageFooterStory = 11,
+    tomNoAnimation        = 0,
+    tomLasVegasLights     = 1,
+    tomBlinkingBackground = 2,
+    tomSparkleText        = 3,
+    tomMarchingBlackAnts  = 4,
+    tomMarchingRedAnts    = 5,
+    tomShimmer            = 6,
+    tomWipeDown           = 7,
+    tomWipeRight          = 8,
+    tomAnimationMax       = 8,
+    tomLowerCase     = 0,
+    tomUpperCase     = 1,
+    tomTitleCase     = 2,
+    tomSentenceCase  = 4,
+    tomToggleCase    = 5,
+    tomReadOnly         = 0x100,
+    tomShareDenyRead    = 0x200,
+    tomShareDenyWrite   = 0x400,
+    tomPasteFile        = 0x1000,
+    tomCreateNew        = 0x10,
+    tomCreateAlways     = 0x20,
+    tomOpenExisting     = 0x30,
+    tomOpenAlways       = 0x40,
+    tomTruncateExisting = 0x50,
+    tomRTF              = 0x1,
+    tomText             = 0x2,
+    tomHTML             = 0x3,
+    tomWordDocument     = 0x4,
+    tomBold      = 0x800000001,
+    tomItalic    = 0x800000002,
+    tomUnderline = 0x800000004,
+    tomStrikeout = 0x800000008,
+    tomProtected = 0x800000010,
+    tomLink      = 0x800000020,
+    tomSmallCaps = 0x800000040,
+    tomAllCaps   = 0x800000080,
+    tomHidden    = 0x800000100,
+    tomOutline   = 0x800000200,
+    tomShadow    = 0x800000400,
+    tomEmboss    = 0x800000800,
+    tomImprint   = 0x800001000,
+    tomDisabled  = 0x800002000,
+    tomRevised   = 0x800004000,
+    tomNormalCaret      = 0,
+    tomKoreanBlockCaret = 0x1,
+    tomIncludeInset = 0x1,
+    tomIgnoreCurrentFont  = 0,
+    tomMatchFontCharset   = 0x1,
+    tomMatchFontSignature = 0x2,
+    tomCharset = 0x80000000,
+    tomRE10Mode = 0x1,
+    tomNoIME   = 0x80000,
+    tomSelfIME = 0x40000
+} tomConstants;
+
+interface ITextRange;
+interface ITextSelection;
+interface ITextStoryRanges;
+
+[
+  object,
+  uuid(8cc497c0-a1df-11ce-8098-00aa0047be5d)
+]
+interface ITextDocument : IDispatch
+{
+    HRESULT GetName([retval, out]BSTR *pName);
+    HRESULT GetSelection([retval, out]ITextSelection **ppSel);
+    HRESULT GetStoryCount([retval, out]long *pCount);
+    HRESULT GetStoryRanges([retval, out]ITextStoryRanges **ppStories);
+    HRESULT GetSaved([retval, out]long *pValue);
+    HRESULT SetSaved([in]long Value);
+    HRESULT GetDefaultTabStop([retval, out]float *pValue);
+    HRESULT SetDefaultTabStop([in]float Value);
+    HRESULT New();
+    HRESULT Open([in]VARIANT *pVar, [in]long Flags, [in]long CodePage);
+    HRESULT Save([in]VARIANT *pVar, [in]long Flags, [in]long CodePage);
+    HRESULT Freeze([retval, out]long *pCount);
+    HRESULT Unfreeze([retval, out]long *pCount);
+    HRESULT BeginEditCollection();
+    HRESULT EndEditCollection();
+    HRESULT Undo([in]long Count, [retval, out]long *prop);
+    HRESULT Redo([in]long Count, [retval, out]long *prop);
+    HRESULT Range([in]long cp1, [in]long cp2, [retval, out]ITextRange**ppRange);
+    HRESULT RangeFromPoint([in]long x, [in]long y, [retval, out]ITextRange**ppRange);
+}
+
+interface ITextFont;
+interface ITextPara;
+
+[
+  object,
+  uuid(8cc497c2-a1df-11ce-8098-00aa0047be5d)
+]
+interface ITextRange : IDispatch
+{
+    HRESULT GetText([retval, out]BSTR *pbstr);
+    HRESULT SetText([in]BSTR bstr);
+    HRESULT GetChar([retval, out]long *pch);
+    HRESULT SetChar([in]long ch);
+    HRESULT GetDuplicate([retval, out]ITextRange **ppRange);
+    HRESULT GetFormattedText([retval, out]ITextRange **ppRange);
+    HRESULT SetFormattedText([in]ITextRange *pRange);
+    HRESULT GetStart([retval, out]long *pcpFirst);
+    HRESULT SetStart([in]long cpFirst);
+    HRESULT GetEnd([retval, out]long *pcpLim);
+    HRESULT SetEnd([in]long cpLim);
+    HRESULT GetFont([retval, out]ITextFont **pFont);
+    HRESULT SetFont([in]ITextFont *pFont);
+    HRESULT GetPara([retval, out]ITextPara **ppPara);
+    HRESULT SetPara([in]ITextPara *pPara);
+    HRESULT GetStoryLength([retval, out]long *pcch);
+    HRESULT GetStoryType([retval, out]long *pValue);
+    HRESULT Collapse([in]long bStart);
+    HRESULT Expand([in]long Unit, [retval, out]long *pDelta);
+    HRESULT GetIndex([in]long Unit, [retval, out]long *pIndex);
+    HRESULT SetIndex([in]long Unit, [in]long Index, [in]long Extend);
+    HRESULT SetRange([in]long cpActive, [in]long cpOther);
+    HRESULT InRange([in]ITextRange *pRange, [retval, out]long *pb);
+    HRESULT InStory([in]ITextRange *pRange, [retval, out]long *pb);
+    HRESULT IsEqual([in]ITextRange *pRange, [retval, out]long *pb);
+    HRESULT Select();
+    HRESULT StartOf([in]long Unit, [in]long Extend, [retval, out]long *pDelta);
+    HRESULT EndOf([in]long Unit, [in]long Extend, [retval, out]long *pDelta);
+    HRESULT Move([in]long Unit, [in]long Count, [retval, out]long *pDelta);
+    HRESULT MoveStart([in]long Unit, [in]long Count, [retval, out]long *pDelta);
+    HRESULT MoveEnd([in]long Unit, [in]long Count, [retval, out]long *pDelta);
+    HRESULT MoveWhile([in]VARIANT *Cset, [in]long Count, [retval, out]long *pDelta);
+    HRESULT MoveStartWhile([in]VARIANT *Cset, [in]long Count, [retval, out]long *pDelta);
+    HRESULT MoveEndWhile([in]VARIANT *Cset, [in]long Count, [retval, out]long *pDelta);
+    HRESULT MoveUntil([in]VARIANT *Cset, [in]long Count, [retval, out]long *pDelta);
+    HRESULT MoveStartUntil([in]VARIANT *Cset, [in]long Count, [retval, out]long *pDelta);
+    HRESULT MoveEndUntil([in]VARIANT *Cset, [in]long Count, [retval, out]long *pDelta);
+    HRESULT FindText([in]BSTR bstr, [in]long cch, [in]long Flags, [retval, out]long *pLength);
+    HRESULT FindTextStart([in]BSTR bstr, [in]long cch, [in]long Flags, [retval, out]long *pLength);
+    HRESULT FindTextEnd([in]BSTR bstr, [in]long cch, [in]long Flags, [retval, out]long *pLength);
+    HRESULT Delete([in]long Unit, [in]long Count, [retval, out]long *pDelta);
+    HRESULT Cut([out]VARIANT *pVar);
+    HRESULT Copy([out]VARIANT *pVar);
+    HRESULT Paste([in]VARIANT *pVar, [in]long Format);
+    HRESULT CanPaste([in]VARIANT *pVar, [in]long Format, [retval, out]long *pb);
+    HRESULT CanEdit([retval, out]long *pb);
+    HRESULT ChangeCase([in]long Type);
+    HRESULT GetPoint([in]long Type, [out]long *cx, [out]long *cy);
+    HRESULT SetPoint([in]long x, [in]long y, [in]long Type, [in]long Extend);
+    HRESULT ScrollIntoView([in]long Value);
+    HRESULT GetEmbeddedObject([retval, out]IUnknown **ppv);
+}
+
+[
+  object,
+  uuid(8cc497c1-a1df-11ce-8098-00aa0047be5d)
+]
+interface ITextSelection : ITextRange
+{
+    HRESULT GetFlags([retval, out]long *pFlags);
+    HRESULT SetFlags([in]long Flags);
+    HRESULT GetType([retval, out]long *pType);
+    HRESULT MoveLeft([in]long Unit, [in]long Count, [in]long Extend, [retval, out]long *pDelta);
+    HRESULT MoveRight([in]long Unit, [in]long Count, [in]long Extend, [retval, out]long *pDelta);
+    HRESULT MoveUp([in]long Unit, [in]long Count, [in]long Extend, [retval, out]long *pDelta);
+    HRESULT MoveDown([in]long Unit, [in]long Count, [in]long Extend, [retval, out]long *pDelta);
+    HRESULT HomeKey([in]long Unit, [in]long Extend, [retval, out]long *pDelta);
+    HRESULT EndKey([in]long Unit, [in]long Extend, [retval, out]long *pDelta);
+    HRESULT TypeText([in]BSTR bstr);
+}
+
+[
+  object,
+  uuid(8cc497c3-a1df-11ce-8098-00aa0047be5d)
+]
+interface ITextFont : IDispatch
+{
+    HRESULT GetDuplicate([retval, out]ITextFont **ppFont);
+    HRESULT SetDuplicate([in]ITextFont *pFont);
+    HRESULT CanChange([out]long *pB);
+    HRESULT IsEqual([in]ITextFont *pFont, [retval, out]long *pB);
+    HRESULT Reset([in]long Value);
+    HRESULT GetStyle([retval, out]long *pValue);
+    HRESULT SetStyle([in]long Value);
+    HRESULT GetAllCaps([retval, out]long *pValue);
+    HRESULT SetAllCaps([in]long Value);
+    HRESULT GetAnimation([retval, out]long *pValue);
+    HRESULT SetAnimation([in]long Value);
+    HRESULT GetBackColor([retval, out]long *pValue);
+    HRESULT SetBackColor([in]long Value);
+    HRESULT GetBold([retval, out]long *pValue);
+    HRESULT SetBold([in]long Value);
+    HRESULT GetEmboss([retval, out]long *pValue);
+    HRESULT SetEmboss([in]long Value);
+    HRESULT GetForeColor([retval, out]long *pValue);
+    HRESULT SetForeColor([in]long Value);
+    HRESULT GetHidden([retval, out]long *pValue);
+    HRESULT SetHidden([in]long Value);
+    HRESULT GetEngrave([retval, out]long *pValue);
+    HRESULT SetEngrave([in]long Value);
+    HRESULT GetItalic([retval, out]long *pValue);
+    HRESULT SetItalic([in]long Value);
+    HRESULT GetKerning([retval, out]long *pValue);
+    HRESULT SetKerning([in]long Value);
+    HRESULT GetLanguageID([retval, out]long *pValue);
+    HRESULT SetLanguageID([in]long Value);
+    HRESULT GetName([retval, out]BSTR *pValue);
+    HRESULT SetName([in]BSTR Value);
+    HRESULT GetOutline([retval, out]long *pValue);
+    HRESULT SetOutline([in]long Value);
+    HRESULT GetPosition([retval, out]long *pValue);
+    HRESULT SetPosition([in]long Value);
+    HRESULT GetProtected([retval, out]long *pValue);
+    HRESULT SetProtected([in]long Value);
+    HRESULT GetShadow([retval, out]long *pValue);
+    HRESULT SetShadow([in]long Value);
+    HRESULT GetSize([retval, out]long *pValue);
+    HRESULT SetSize([in]long Value);
+    HRESULT GetSmallCaps([retval, out]long *pValue);
+    HRESULT SetSmallCaps([in]long Value);
+    HRESULT GetSpacing([retval, out]float *pValue);
+    HRESULT SetSpacing([in]float Value);
+    HRESULT GetStrikeThrough([retval, out]long *pValue);
+    HRESULT SetStrikeThrough([in]long Value);
+    HRESULT GetSubscript([retval, out]long *pValue);
+    HRESULT SetSubscript([in]long Value);
+    HRESULT GetSuperscript([retval, out]long *pValue);
+    HRESULT SetSuperscript([in]long Value);
+    HRESULT GetUnderline([retval, out]long *pValue);
+    HRESULT SetUnderline([in]long Value);
+    HRESULT GetWeight([retval, out]long *pValue);
+    HRESULT SetWeight([in]long Value);
+}
+
+[
+  object,
+  uuid(8cc497c4-a1df-11ce-8098-00aa0047be5d)
+]
+interface ITextPara : IDispatch
+{
+    HRESULT GetDuplicate([retval, out]ITextPara *ppPara);
+    HRESULT SetDuplicate([in]ITextPara *pPara);
+    HRESULT CanChange([out]long *pB);
+    HRESULT IsEqual([in]ITextPara *pPara, [retval, out]long *pB);
+    HRESULT Reset([in]long Value);
+    HRESULT GetStyle([retval, out]long *pValue);
+    HRESULT SetStyle([in]long Value);
+    HRESULT GetAlignment([retval, out]long *pValue);
+    HRESULT SetAlignment([in]long Value);
+    HRESULT GetHyphenation([retval, out]long *pValue);
+    HRESULT SetHyphenation([in]long Value);
+    HRESULT GetFirstLineIndent([retval, out]float *pValue);
+    HRESULT GetKeepTogether([retval, out]long *pValue);
+    HRESULT SetKeepTogether([in]long Value);
+    HRESULT GetKeepWithNext([retval, out]long *pValue);
+    HRESULT SetKeepWithNext([in]long Value);
+    HRESULT GetLeftIndent([retval, out]float *pValue);
+    HRESULT GetLineSpacing([retval, out]float *pValue);
+    HRESULT GetLineSpacingRule([retval, out]long *pValue);
+    HRESULT GetListAlignment([retval, out]long *pValue);
+    HRESULT SetListAlignment([in]long Value);
+    HRESULT GetListLevelIndex([retval, out]long *pValue);
+    HRESULT SetListLevelIndex([in]long Value);
+    HRESULT GetListStart([retval, out]long *pValue);
+    HRESULT SetListStart([in]long Value);
+    HRESULT GetListTab([retval, out]long *pValue);
+    HRESULT SetListTab([in]long Value);
+    HRESULT GetListType([retval, out]long *pValue);
+    HRESULT SetListType([in]long Value);
+    HRESULT GetNoLineNumber([retval, out]long *pValue);
+    HRESULT SetNoLineNumber([in]long Value);
+    HRESULT GetPageBreakBefore([retval, out]long *pValue);
+    HRESULT SetPageBreakBefore([in]long Value);
+    HRESULT GetRightIndent([retval, out]float *pValue);
+    HRESULT SetRightIndent([in]float Value);
+    HRESULT SetIndents([in]float StartIndent, [in]float LeftIndent, [in]float RightIndent);
+    HRESULT SetLineSpacing([in]long LineSpacingRule, [in]float LineSpacing);
+    HRESULT GetSpaceAfter([retval, out]float *pValue);
+    HRESULT SetSpaceAfter([in]float Value);
+    HRESULT GetSpaceBefore([retval, out]float *pValue);
+    HRESULT SetSpaceBefore([in]float Value);
+    HRESULT GetWindowControl([retval, out]float *pValue);
+    HRESULT SetWindowControl([in]float Value);
+    HRESULT GetTabCount([retval, out]long *pCount);
+    HRESULT AddTab([in]float tbPos, [in]long tbAlign, [in]long tbLeader);
+    HRESULT ClearAllTabs();
+    HRESULT DeleteTab([in]float tbPos);
+    HRESULT GetTab([in]long iTab, [out]float *ptbPos, [out]long *ptbAlign, [out]long *ptbLeader);
+}
+
+[
+  object,
+  uuid(8cc497c5-a1df-11ce-8098-00aa0047be5d)
+]
+interface ITextStoryRanges : IDispatch
+{
+    HRESULT _NewEnum([retval, out]IUnknown **ppUnkEnum);
+    HRESULT Item([in]long Index, [retval, out]ITextRange **ppRange);
+    HRESULT GetCount([retval, out]long *pCount);
+}

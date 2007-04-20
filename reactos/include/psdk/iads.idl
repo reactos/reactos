@@ -1,0 +1,62 @@
+/*
+ * Copyright 2005 Francois Gouget
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+
+
+/*****************************************************************************
+ *    IADsContainer interface
+ */
+[
+    object,
+    uuid(001677d0-fd16-11ce-abc4-02608c9e7553)
+]
+interface IADsContainer: IDispatch
+{
+    [propget] HRESULT Count(
+        [out, retval] long *retval);
+    [propget, restricted] HRESULT _NewEnum(
+        [out, retval] IUnknown **retval);
+    [propget] HRESULT Filter(
+        [out, retval] VARIANT *pvFilter);
+    [propput] HRESULT Filter(
+        [in] VARIANT vFilter);
+    [propget] HRESULT Hints(
+        [out, retval] VARIANT *pvHints);
+    [propput] HRESULT Hints(
+        [in] VARIANT vHints);
+    HRESULT GetObject(
+        [in] BSTR bstrClassName,
+        [in] BSTR bstrRelativeName,
+        [out, retval] IDispatch **ppObject);
+    HRESULT Create(
+        [in] BSTR bstrClassName,
+        [in] BSTR bstrRelativeName,
+        [out, retval] IDispatch **ppObject);
+    HRESULT Delete(
+        [in] BSTR bstrClassName,
+        [in] BSTR bstrRelativeName);
+    HRESULT CopyHere(
+        [in] BSTR bstrSourceName,
+        [in] BSTR bstrNewName,
+        [out, retval] IDispatch **ppObject);
+    HRESULT MoveHere(
+        [in] BSTR bstrSourceName,
+        [in] BSTR bstrNewName,
+        [out, retval] IDispatch **ppObject);
+}

@@ -39,6 +39,7 @@
 	<file>usrmarshal.c</file>
 	<file>varformat.c</file>
 	<file>variant.c</file>
+	<file>ungif.c</file>
 	<file>vartype.c</file>
 	<file>oleaut32.spec</file>
 </module>

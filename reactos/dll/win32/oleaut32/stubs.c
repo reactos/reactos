@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -31,15 +31,6 @@
 #include "olectl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
-
-/***********************************************************************
- * OleIconToCursor (OLEAUT32.415)
- */
-HCURSOR WINAPI OleIconToCursor( HINSTANCE hinstExe, HICON hicon)
-{
-	FIXME("(%p,%p), not implemented (olepro32.dll)\n",hinstExe,hicon);
-	return S_OK;
-}
 
 /***********************************************************************
  * OleCreatePropertyFrameIndirect (OLEAUT32.416)
@@ -58,9 +49,8 @@ HRESULT WINAPI OleCreatePropertyFrame(
     LPUNKNOWN* ppUnk, ULONG cPages, LPCLSID pPageClsID, LCID lcid,
     DWORD dwReserved, LPVOID pvReserved )
 {
-	FIXME("(%p,%d,%d,%s,%ld,%p,%ld,%p,%x,%ld,%p), not implemented (olepro32.dll)\n",
+	FIXME("(%p,%d,%d,%s,%d,%p,%d,%p,%x,%d,%p), not implemented (olepro32.dll)\n",
 		hwndOwner,x,y,debugstr_w(lpszCaption),cObjects,ppUnk,cPages,
 		pPageClsID, (int)lcid,dwReserved,pvReserved);
 	return S_OK;
 }
-

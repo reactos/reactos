@@ -37,6 +37,8 @@
 #include <ntdef.h>
 #include <basetyps.h>
 
+typedef GUID UUID;
+
 /* Base types, structures and definitions */
 typedef short CSHORT;
 typedef ULONG CLONG;

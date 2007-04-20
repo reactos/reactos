@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -49,7 +49,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(storage);
 /****************************************************************************
  * HGLOBALStreamImpl definition.
  *
- * This class imlements the IStream inteface and represents a stream
+ * This class implements the IStream interface and represents a stream
  * supported by an HGLOBAL pointer.
  */
 struct HGLOBALStreamImpl
@@ -148,11 +148,9 @@ static HRESULT WINAPI HGLOBALStreamImpl_QueryInterface(
   /*
    * Compare the riid with the interface IDs implemented by this object.
    */
-  if (memcmp(&IID_IUnknown, riid, sizeof(IID_IUnknown)) == 0)
-  {
-    *ppvObject = (IStream*)This;
-  }
-  else if (memcmp(&IID_IStream, riid, sizeof(IID_IStream)) == 0)
+  if (IsEqualIID(&IID_IUnknown, riid) ||
+      IsEqualIID(&IID_ISequentialStream, riid) ||
+      IsEqualIID(&IID_IStream, riid))
   {
     *ppvObject = (IStream*)This;
   }
@@ -216,7 +214,7 @@ static HRESULT WINAPI HGLOBALStreamImpl_Read(
   ULONG bytesReadBuffer;
   ULONG bytesToReadFromBuffer;
 
-  TRACE("(%p, %p, %ld, %p)\n", iface,
+  TRACE("(%p, %p, %d, %p)\n", iface,
 	pv, cb, pcbRead);
 
   /*
@@ -255,14 +253,11 @@ static HRESULT WINAPI HGLOBALStreamImpl_Read(
   GlobalUnlock(This->supportHandle);
 
   /*
-   * The function returns S_OK if the buffer was filled completely
-   * it returns S_FALSE if the end of the stream is reached before the
+   * Always returns S_OK even if the end of the stream is reached before the
    * buffer is filled
    */
-  if(*pcbRead == cb)
-    return S_OK;
 
-  return S_FALSE;
+  return S_OK;
 }
 
 /***
@@ -287,8 +282,7 @@ static HRESULT WINAPI HGLOBALStreamImpl_Write(
   ULARGE_INTEGER newSize;
   ULONG          bytesWritten = 0;
 
-  TRACE("(%p, %p, %ld, %p)\n", iface,
-	pv, cb, pcbWritten);
+  TRACE("(%p, %p, %d, %p)\n", iface, pv, cb, pcbWritten);
 
   /*
    * If the caller is not interested in the number of bytes written,
@@ -298,14 +292,10 @@ static HRESULT WINAPI HGLOBALStreamImpl_Write(
     pcbWritten = &bytesWritten;
 
   if (cb == 0)
-  {
-    return S_OK;
-  }
-  else
-  {
-    newSize.u.HighPart = 0;
-    newSize.u.LowPart = This->currentPosition.u.LowPart + cb;
-  }
+    goto out;
+
+  newSize.u.HighPart = 0;
+  newSize.u.LowPart = This->currentPosition.u.LowPart + cb;
 
   /*
    * Verify if we need to grow the stream
@@ -316,7 +306,7 @@ static HRESULT WINAPI HGLOBALStreamImpl_Write(
     HRESULT hr = IStream_SetSize(iface, newSize);
     if (FAILED(hr))
     {
-      ERR("IStream_SetSize failed with error 0x%08lx\n", hr);
+      ERR("IStream_SetSize failed with error 0x%08x\n", hr);
       return hr;
     }
   }
@@ -334,14 +324,15 @@ static HRESULT WINAPI HGLOBALStreamImpl_Write(
   This->currentPosition.u.LowPart+=cb;
 
   /*
-   * Return the number of bytes read.
-   */
-  *pcbWritten = cb;
-
-  /*
    * Cleanup
    */
   GlobalUnlock(This->supportHandle);
+
+out:
+  /*
+   * Return the number of bytes read.
+   */
+  *pcbWritten = cb;
 
   return S_OK;
 }
@@ -364,7 +355,7 @@ static HRESULT WINAPI HGLOBALStreamImpl_Seek(
 
   ULARGE_INTEGER newPosition;
 
-  TRACE("(%p, %lx%08lx, %ld, %p)\n", iface, dlibMove.u.HighPart,
+  TRACE("(%p, %x%08x, %d, %p)\n", iface, dlibMove.u.HighPart,
 	dlibMove.u.LowPart, dwOrigin, plibNewPosition);
 
   /*
@@ -418,13 +409,11 @@ static HRESULT WINAPI HGLOBALStreamImpl_SetSize(
   HGLOBALStreamImpl* const This=(HGLOBALStreamImpl*)iface;
   HGLOBAL supportHandle;
 
-  TRACE("(%p, %ld)\n", iface, libNewSize.u.LowPart);
+  TRACE("(%p, %d)\n", iface, libNewSize.u.LowPart);
 
   /*
-   * As documented.
+   * HighPart is ignored as shown in tests
    */
-  if (libNewSize.u.HighPart != 0)
-    return STG_E_INVALIDFUNCTION;
 
   if (This->streamSize.u.LowPart == libNewSize.u.LowPart)
     return S_OK;
@@ -435,7 +424,7 @@ static HRESULT WINAPI HGLOBALStreamImpl_SetSize(
   supportHandle = GlobalReAlloc(This->supportHandle, libNewSize.u.LowPart, 0);
 
   if (supportHandle == 0)
-    return STG_E_MEDIUMFULL;
+    return E_OUTOFMEMORY;
 
   This->supportHandle = supportHandle;
   This->streamSize.u.LowPart = libNewSize.u.LowPart;
@@ -463,7 +452,7 @@ static HRESULT WINAPI HGLOBALStreamImpl_CopyTo(
   ULARGE_INTEGER totalBytesRead;
   ULARGE_INTEGER totalBytesWritten;
 
-  TRACE("(%p, %p, %ld, %p, %p)\n", iface, pstm,
+  TRACE("(%p, %p, %d, %p, %p)\n", iface, pstm,
 	cb.u.LowPart, pcbRead, pcbWritten);
 
   /*
@@ -487,21 +476,19 @@ static HRESULT WINAPI HGLOBALStreamImpl_CopyTo(
     else
       copySize = cb.u.LowPart;
 
-    IStream_Read(iface, tmpBuffer, copySize, &bytesRead);
+    hr = IStream_Read(iface, tmpBuffer, copySize, &bytesRead);
+    if (FAILED(hr))
+        break;
 
     totalBytesRead.u.LowPart += bytesRead;
 
-    IStream_Write(pstm, tmpBuffer, bytesRead, &bytesWritten);
-
-    totalBytesWritten.u.LowPart += bytesWritten;
-
-    /*
-     * Check that read & write operations were succesfull
-     */
-    if (bytesRead != bytesWritten)
+    if (bytesRead)
     {
-      hr = STG_E_MEDIUMFULL;
-      break;
+        hr = IStream_Write(pstm, tmpBuffer, bytesRead, &bytesWritten);
+        if (FAILED(hr))
+            break;
+
+        totalBytesWritten.u.LowPart += bytesWritten;
     }
 
     if (bytesRead!=copySize)
@@ -570,7 +557,7 @@ static HRESULT WINAPI HGLOBALStreamImpl_LockRegion(
 		  ULARGE_INTEGER cb,          /* [in] */
 		  DWORD          dwLockType)  /* [in] */
 {
-  return S_OK;
+  return STG_E_INVALIDFUNCTION;
 }
 
 /*
@@ -664,7 +651,7 @@ static const IStreamVtbl HGLOBALStreamImpl_Vtbl =
  *    fDeleteOnRelease - Flag set to TRUE if the HGLOBAL will be released
  *                       when the IStream object is destroyed.
  */
-HGLOBALStreamImpl* HGLOBALStreamImpl_Construct(
+static HGLOBALStreamImpl* HGLOBALStreamImpl_Construct(
 		HGLOBAL  hGlobal,
 		BOOL     fDeleteOnRelease)
 {

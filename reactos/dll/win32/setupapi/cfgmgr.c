@@ -70,7 +70,7 @@ static BOOL GuidToString(LPGUID Guid, LPWSTR String)
     String[MAX_GUID_STRING_LEN - 2] = L'}';
     String[MAX_GUID_STRING_LEN - 1] = 0;
 
-    RpcStringFree(&lpString);
+    RpcStringFreeW(&lpString);
 
     return TRUE;
 }

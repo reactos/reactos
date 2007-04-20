@@ -1,935 +1,981 @@
-#ifndef _OLEDLG_H
-#define _OLEDLG_H
-#if __GNUC__ >=3
-#pragma GCC system_header
+/*
+ * Declarations for OLEDLG
+ *
+ * Copyright (C) the Wine project
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifndef __WINE_OLEDLG_H
+#define __WINE_OLEDLG_H
+
+#ifndef __WINESRC__
+# include <windows.h>
 #endif
+#include <shellapi.h>
+#include <commdlg.h>
+#include <ole2.h>
+#ifndef __WINESRC__
+# include <string.h>
+# include <tchar.h>
+#endif
+#include <dlgs.h>
+#include <prsht.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <windows.h>
-#include <shellapi.h>
-#include <commdlg.h>
-#include <ole2.h>
-#include <string.h>
-/* #include <tchar.h> */
-#include <dlgs.h>
-#include <prsht.h>
-#define PS_MAXLINKTYPES 8
-#define OLESTDDELIM TEXT("\\")
-#define SZOLEUI_MSG_HELP TEXT("OLEUI_MSG_HELP")
-#define SZOLEUI_MSG_ENDDIALOG TEXT("OLEUI_MSG_ENDDIALOG")
-#define SZOLEUI_MSG_BROWSE TEXT("OLEUI_MSG_BROWSE")
-#define SZOLEUI_MSG_CHANGEICON TEXT("OLEUI_MSG_CHANGEICON")
-#define SZOLEUI_MSG_CLOSEBUSYDIALOG TEXT("OLEUI_MSG_CLOSEBUSYDIALOG")
-#define SZOLEUI_MSG_CONVERT TEXT("OLEUI_MSG_CONVERT")
-#define SZOLEUI_MSG_CHANGESOURCE TEXT("OLEUI_MSG_CHANGESOURCE")
-#define SZOLEUI_MSG_ADDCONTROL TEXT("OLEUI_MSG_ADDCONTROL")
-#define SZOLEUI_MSG_BROWSE_OFN TEXT("OLEUI_MSG_BROWSE_OFN")
-#define PROP_HWND_CHGICONDLG TEXT("HWND_CIDLG")
-#define IDC_OLEUIHELP 99
-#define IDC_IO_CREATENEW 2100
-#define IDC_IO_CREATEFROMFILE 2101
-#define IDC_IO_LINKFILE 2102
-#define IDC_IO_OBJECTTYPELIST 2103
-#define IDC_IO_DISPLAYASICON 2104
-#define IDC_IO_CHANGEICON 2105
-#define IDC_IO_FILE 2106
-#define IDC_IO_FILEDISPLAY 2107
-#define IDC_IO_RESULTIMAGE 2108
-#define IDC_IO_RESULTTEXT 2109
-#define IDC_IO_ICONDISPLAY 2110
-#define IDC_IO_OBJECTTYPETEXT 2111
-#define IDC_IO_FILETEXT 2112
-#define IDC_IO_FILETYPE 2113
-#define IDC_IO_INSERTCONTROL 2114
-#define IDC_IO_ADDCONTROL 2115
-#define IDC_IO_CONTROLTYPELIST 2116
-#define IDC_PS_PASTE 500
-#define IDC_PS_PASTELINK 501
-#define IDC_PS_SOURCETEXT 502
-#define IDC_PS_PASTELIST 503
-#define IDC_PS_PASTELINKLIST 504
-#define IDC_PS_DISPLAYLIST 505
-#define IDC_PS_DISPLAYASICON 506
-#define IDC_PS_ICONDISPLAY 507
-#define IDC_PS_CHANGEICON 508
-#define IDC_PS_RESULTIMAGE 509
-#define IDC_PS_RESULTTEXT 510
-#define IDC_CI_GROUP 120
-#define IDC_CI_CURRENT 121
-#define IDC_CI_CURRENTICON 122
-#define IDC_CI_DEFAULT 123
-#define IDC_CI_DEFAULTICON 124
-#define IDC_CI_FROMFILE 125
-#define IDC_CI_FROMFILEEDIT 126
-#define IDC_CI_ICONLIST 127
-#define IDC_CI_LABEL 128
-#define IDC_CI_LABELEDIT 129
-#define IDC_CI_BROWSE 130
-#define IDC_CI_ICONDISPLAY 131
-#define IDC_CV_OBJECTTYPE 150
-#define IDC_CV_DISPLAYASICON 152
-#define IDC_CV_CHANGEICON 153
-#define IDC_CV_ACTIVATELIST 154
-#define IDC_CV_CONVERTTO 155
-#define IDC_CV_ACTIVATEAS 156
-#define IDC_CV_RESULTTEXT 157
-#define IDC_CV_CONVERTLIST 158
-#define IDC_CV_ICONDISPLAY 165
-#define IDC_EL_CHANGESOURCE 201
-#define IDC_EL_AUTOMATIC 202
-#define IDC_EL_CANCELLINK 209
-#define IDC_EL_UPDATENOW 210
-#define IDC_EL_OPENSOURCE 211
-#define IDC_EL_MANUAL 212
-#define IDC_EL_LINKSOURCE 216
-#define IDC_EL_LINKTYPE 217
-#define IDC_EL_LINKSLISTBOX 206
-#define IDC_EL_COL1 220
-#define IDC_EL_COL2 221
-#define IDC_EL_COL3 222
-#define IDC_BZ_RETRY 600
-#define IDC_BZ_ICON 601
-#define IDC_BZ_MESSAGE1 602
-#define IDC_BZ_SWITCHTO 604
-#define IDC_UL_METER 1029
-#define IDC_UL_STOP 1030
-#define IDC_UL_PERCENT 1031
-#define IDC_UL_PROGRESS 1032
-#define IDC_PU_LINKS 900
-#define IDC_PU_TEXT 901
-#define IDC_PU_CONVERT 902
-#define IDC_PU_ICON 908
-#define IDC_GP_OBJECTNAME 1009
-#define IDC_GP_OBJECTTYPE 1010
-#define IDC_GP_OBJECTSIZE 1011
-#define IDC_GP_CONVERT 1013
-#define IDC_GP_OBJECTICON 1014
-#define IDC_GP_OBJECTLOCATION 1022
-#define IDC_VP_PERCENT 1000
-#define IDC_VP_CHANGEICON 1001
-#define IDC_VP_EDITABLE 1002
-#define IDC_VP_ASICON 1003
-#define IDC_VP_RELATIVE 1005
-#define IDC_VP_SPIN 1006
-#define IDC_VP_SCALETXT 1034
-#define IDC_VP_ICONDISPLAY 1021
-#define IDC_VP_RESULTIMAGE 1033
-#define IDC_LP_OPENSOURCE 1006
-#define IDC_LP_UPDATENOW 1007
-#define IDC_LP_BREAKLINK 1008
-#define IDC_LP_LINKSOURCE 1012
-#define IDC_LP_CHANGESOURCE 1015
-#define IDC_LP_AUTOMATIC 1016
-#define IDC_LP_MANUAL 1017
-#define IDC_LP_DATE 1018
-#define IDC_LP_TIME 1019
-#define IDD_INSERTOBJECT 1000
-#define IDD_CHANGEICON 1001
-#define IDD_CONVERT 1002
-#define IDD_PASTESPECIAL 1003
-#define IDD_EDITLINKS 1004
-#define IDD_BUSY 1006
-#define IDD_UPDATELINKS 1007
-#define IDD_CHANGESOURCE 1009
-#define IDD_INSERTFILEBROWSE 1010
-#define IDD_CHANGEICONBROWSE 1011
-#define IDD_CONVERTONLY 1012
-#define IDD_CHANGESOURCE4 1013
-#define IDD_GNRLPROPS 1100
-#define IDD_VIEWPROPS 1101
-#define IDD_LINKPROPS 1102
-#define IDD_CANNOTUPDATELINK 1008
-#define IDD_LINKSOURCEUNAVAILABLE 1020
-#define IDD_SERVERNOTFOUND 1023
-#define IDD_OUTOFMEMORY 1024
-#define IDD_SERVERNOTREGW 1021
-#define IDD_LINKTYPECHANGEDW 1022
-#define IDD_SERVERNOTREGA 1025
-#define IDD_LINKTYPECHANGEDA 1026
-#define ID_BROWSE_CHANGEICON 1
-#define ID_BROWSE_INSERTFILE 2
-#define ID_BROWSE_ADDCONTROL 3
-#define ID_BROWSE_CHANGESOURCE 4
-#define OLEUI_FALSE 0
-#define OLEUI_SUCCESS 1
-#define OLEUI_OK 1
-#define OLEUI_CANCEL 2
-#define OLEUI_ERR_STANDARDMIN 100
-#define OLEUI_ERR_STRUCTURENULL 101
-#define OLEUI_ERR_STRUCTUREINVALID 102
-#define OLEUI_ERR_CBSTRUCTINCORRECT 103
-#define OLEUI_ERR_HWNDOWNERINVALID 104
-#define OLEUI_ERR_LPSZCAPTIONINVALID 105
-#define OLEUI_ERR_LPFNHOOKINVALID 106
-#define OLEUI_ERR_HINSTANCEINVALID 107
-#define OLEUI_ERR_LPSZTEMPLATEINVALID 108
-#define OLEUI_ERR_HRESOURCEINVALID 109
-#define OLEUI_ERR_FINDTEMPLATEFAILURE 110
-#define OLEUI_ERR_LOADTEMPLATEFAILURE 111
-#define OLEUI_ERR_DIALOGFAILURE 112
-#define OLEUI_ERR_LOCALMEMALLOC 113
-#define OLEUI_ERR_GLOBALMEMALLOC 114
-#define OLEUI_ERR_LOADSTRING 115
-#define OLEUI_ERR_OLEMEMALLOC 116
-#define OLEUI_ERR_STANDARDMAX 116
-#define OPF_OBJECTISLINK 1
-#define OPF_NOFILLDEFAULT 2
-#define OPF_SHOWHELP 4
-#define OPF_DISABLECONVERT 8
-#define OLEUI_OPERR_SUBPROPNULL OLEUI_ERR_STANDARDMAX
-#define OLEUI_OPERR_SUBPROPINVALID (OLEUI_ERR_STANDARDMAX+1)
-#define OLEUI_OPERR_PROPSHEETNULL (OLEUI_ERR_STANDARDMAX+2)
-#define OLEUI_OPERR_PROPSHEETINVALID (OLEUI_ERR_STANDARDMAX+3)
-#define OLEUI_OPERR_SUPPROP (OLEUI_ERR_STANDARDMAX+4)
-#define OLEUI_OPERR_PROPSINVALID (OLEUI_ERR_STANDARDMAX+5)
-#define OLEUI_OPERR_PAGESINCORRECT (OLEUI_ERR_STANDARDMAX+6)
-#define OLEUI_OPERR_INVALIDPAGES (OLEUI_ERR_STANDARDMAX+7)
-#define OLEUI_OPERR_NOTSUPPORTED (OLEUI_ERR_STANDARDMAX+8)
-#define OLEUI_OPERR_DLGPROCNOTNULL (OLEUI_ERR_STANDARDMAX+9)
-#define OLEUI_OPERR_LPARAMNOTZERO (OLEUI_ERR_STANDARDMAX+10)
-#define OLEUI_GPERR_STRINGINVALID (OLEUI_ERR_STANDARDMAX+11)
-#define OLEUI_GPERR_CLASSIDINVALID (OLEUI_ERR_STANDARDMAX+12)
-#define OLEUI_GPERR_LPCLSIDEXCLUDEINVALID (OLEUI_ERR_STANDARDMAX+13)
-#define OLEUI_GPERR_CBFORMATINVALID (OLEUI_ERR_STANDARDMAX+14)
-#define OLEUI_VPERR_METAPICTINVALID (OLEUI_ERR_STANDARDMAX+15)
-#define OLEUI_VPERR_DVASPECTINVALID (OLEUI_ERR_STANDARDMAX+16)
-#define OLEUI_LPERR_LINKCNTRNULL (OLEUI_ERR_STANDARDMAX+17)
-#define OLEUI_LPERR_LINKCNTRINVALID (OLEUI_ERR_STANDARDMAX+18)
-#define OLEUI_OPERR_PROPERTYSHEET (OLEUI_ERR_STANDARDMAX+19)
-#define OLEUI_OPERR_OBJINFOINVALID (OLEUI_ERR_STANDARDMAX+20)
-#define OLEUI_OPERR_LINKINFOINVALID (OLEUI_ERR_STANDARDMAX+21)
-#define OLEUI_QUERY_GETCLASSID 65280
-#define OLEUI_QUERY_LINKBROKEN 65281
-#define IOF_SHOWHELP 1
-#define IOF_SELECTCREATENEW 2
-#define IOF_SELECTCREATEFROMFILE 4
-#define IOF_CHECKLINK 8
-#define IOF_CHECKDISPLAYASICON 16
-#define IOF_CREATENEWOBJECT 32
-#define IOF_CREATEFILEOBJECT 64
-#define IOF_CREATELINKOBJECT 128
-#define IOF_DISABLELINK 256
-#define IOF_VERIFYSERVERSEXIST 512
-#define IOF_DISABLEDISPLAYASICON 1024
-#define IOF_HIDECHANGEICON 2048
-#define IOF_SHOWINSERTCONTROL 4096
-#define IOF_SELECTCREATECONTROL 8192
-#define OLEUI_IOERR_LPSZFILEINVALID OLEUI_ERR_STANDARDMAX
-#define OLEUI_IOERR_LPSZLABELINVALID (OLEUI_ERR_STANDARDMAX+1)
-#define OLEUI_IOERR_HICONINVALID (OLEUI_ERR_STANDARDMAX+2)
-#define OLEUI_IOERR_LPFORMATETCINVALID (OLEUI_ERR_STANDARDMAX+3)
-#define OLEUI_IOERR_PPVOBJINVALID (OLEUI_ERR_STANDARDMAX+4)
-#define OLEUI_IOERR_LPIOLECLIENTSITEINVALID (OLEUI_ERR_STANDARDMAX+5)
-#define OLEUI_IOERR_LPISTORAGEINVALID (OLEUI_ERR_STANDARDMAX+6)
-#define OLEUI_IOERR_SCODEHASERROR (OLEUI_ERR_STANDARDMAX+7)
-#define OLEUI_IOERR_LPCLSIDEXCLUDEINVALID (OLEUI_ERR_STANDARDMAX+8)
-#define OLEUI_IOERR_CCHFILEINVALID (OLEUI_ERR_STANDARDMAX+9)
-#define PSF_SHOWHELP 1
-#define PSF_SELECTPASTE 2
-#define PSF_SELECTPASTELINK 4
-#define PSF_CHECKDISPLAYASICON 8
-#define PSF_DISABLEDISPLAYASICON 16
-#define PSF_HIDECHANGEICON 32
-#define PSF_STAYONCLIPBOARDCHANGE 64
-#define PSF_NOREFRESHDATAOBJECT 128
-#define OLEUI_IOERR_SRCDATAOBJECTINVALID OLEUI_ERR_STANDARDMAX
-#define OLEUI_IOERR_ARRPASTEENTRIESINVALID (OLEUI_ERR_STANDARDMAX+1)
-#define OLEUI_IOERR_ARRLINKTYPESINVALID (OLEUI_ERR_STANDARDMAX+2)
-#define OLEUI_PSERR_CLIPBOARDCHANGED (OLEUI_ERR_STANDARDMAX+3)
-#define OLEUI_PSERR_GETCLIPBOARDFAILED (OLEUI_ERR_STANDARDMAX+4)
-#define OLEUI_ELERR_LINKCNTRNULL OLEUI_ERR_STANDARDMAX
-#define OLEUI_ELERR_LINKCNTRINVALID (OLEUI_ERR_STANDARDMAX+1)
-#define ELF_SHOWHELP 1
-#define ELF_DISABLEUPDATENOW 2
-#define ELF_DISABLEOPENSOURCE 4
-#define ELF_DISABLECHANGESOURCE 8
-#define ELF_DISABLECANCELLINK 16
-#define CIF_SHOWHELP 1
-#define CIF_SELECTCURRENT 2
-#define CIF_SELECTDEFAULT 4
-#define CIF_SELECTFROMFILE 8
-#define CIF_USEICONEXE 16
-#define OLEUI_CIERR_MUSTHAVECLSID OLEUI_ERR_STANDARDMAX
-#define OLEUI_CIERR_MUSTHAVECURRENTMETAFILE (OLEUI_ERR_STANDARDMAX+1)
-#define OLEUI_CIERR_SZICONEXEINVALID (OLEUI_ERR_STANDARDMAX+2)
-#define CF_SHOWHELPBUTTON 1
-#define CF_SETCONVERTDEFAULT 2
-#define CF_SETACTIVATEDEFAULT 4
-#define CF_SELECTCONVERTTO 8
-#define CF_SELECTACTIVATEAS 16
-#define CF_DISABLEDISPLAYASICON 32
-#define CF_DISABLEACTIVATEAS 64
-#define CF_HIDECHANGEICON 128
-#define CF_CONVERTONLY 256
-#define OLEUI_CTERR_CLASSIDINVALID (OLEUI_ERR_STANDARDMAX+1)
-#define OLEUI_CTERR_DVASPECTINVALID (OLEUI_ERR_STANDARDMAX+2)
-#define OLEUI_CTERR_CBFORMATINVALID (OLEUI_ERR_STANDARDMAX+3)
-#define OLEUI_CTERR_HMETAPICTINVALID (OLEUI_ERR_STANDARDMAX+4)
-#define OLEUI_CTERR_STRINGINVALID (OLEUI_ERR_STANDARDMAX+5)
-#define BZ_DISABLECANCELBUTTON 1
-#define BZ_DISABLESWITCHTOBUTTON 2
-#define BZ_DISABLERETRYBUTTON 4
-#define BZ_NOTRESPONDINGDIALOG 8
-#define OLEUI_BZERR_HTASKINVALID OLEUI_ERR_STANDARDMAX
-#define OLEUI_BZ_SWITCHTOSELECTED (OLEUI_ERR_STANDARDMAX+1)
-#define OLEUI_BZ_RETRYSELECTED (OLEUI_ERR_STANDARDMAX+2)
-#define OLEUI_BZ_CALLUNBLOCKED (OLEUI_ERR_STANDARDMAX+3)
-#define CSF_SHOWHELP 1
-#define CSF_VALIDSOURCE 2
-#define CSF_ONLYGETSOURCE 4
-#define CSF_EXPLORER 8
-#define OLEUI_CSERR_LINKCNTRNULL OLEUI_ERR_STANDARDMAX
-#define OLEUI_CSERR_LINKCNTRINVALID (OLEUI_ERR_STANDARDMAX+1)
-#define OLEUI_CSERR_FROMNOTNULL (OLEUI_ERR_STANDARDMAX+2)
-#define OLEUI_CSERR_TONOTNULL (OLEUI_ERR_STANDARDMAX+3)
-#define OLEUI_CSERR_SOURCENULL (OLEUI_ERR_STANDARDMAX+4)
-#define OLEUI_CSERR_SOURCEINVALID (OLEUI_ERR_STANDARDMAX+5)
-#define OLEUI_CSERR_SOURCEPARSERROR (OLEUI_ERR_STANDARDMAX+6)
-#define OLEUI_CSERR_SOURCEPARSEERROR (OLEUI_ERR_STANDARDMAX+7)
-#define VPF_SELECTRELATIVE 1
-#define VPF_DISABLERELATIVE 2
-#define VPF_DISABLESCALE 4
 
-#ifndef RC_INVOKED
-#pragma pack(push, 8)
+
+typedef struct IOleUILinkContainerA *POLEUILINKCONTAINERA, *LPOLEUILINKCONTAINERA;
+typedef struct IOleUILinkContainerW *POLEUILINKCONTAINERW, *LPOLEUILINKCONTAINERW;
+
+typedef struct IOleUILinkInfoA *POLEUILINKINFOA, *LPOLEUILINKINFOA;
+typedef struct IOleUILinkInfoW *POLEUILINKINFOW, *LPOLEUILINKINFOW;
+
+typedef struct IOleUIObjInfoA *POLEUIOBJINFOA, *LPOLEUIOBJINFOA;
+typedef struct IOleUIObjInfoW *POLEUIOBJINFOW, *LPOLEUIOBJINFOW;
+
+#define IDC_OLEUIHELP                   99
+
+
+#define OLEUI_ERR_STANDARDMAX           116
+
+#define OLEUI_BZERR_HTASKINVALID        (OLEUI_ERR_STANDARDMAX+0)
+#define OLEUI_BZ_SWITCHTOSELECTED       (OLEUI_ERR_STANDARDMAX+1)
+#define OLEUI_BZ_RETRYSELECTED          (OLEUI_ERR_STANDARDMAX+2)
+#define OLEUI_BZ_CALLUNBLOCKED          (OLEUI_ERR_STANDARDMAX+3)
+
+#define OLEUI_FALSE   0
+#define OLEUI_SUCCESS 1 /* Same as OLEUI_OK */
+#define OLEUI_OK      1 /* OK button pressed */
+#define OLEUI_CANCEL  2 /* Cancel button pressed */
+
+#define OLEUI_ERR_STANDARDMIN           100
+#define OLEUI_ERR_OLEMEMALLOC           100
+#define OLEUI_ERR_STRUCTURENULL         101
+#define OLEUI_ERR_STRUCTUREINVALID      102
+#define OLEUI_ERR_CBSTRUCTINCORRECT     103
+#define OLEUI_ERR_HWNDOWNERINVALID      104
+#define OLEUI_ERR_LPSZCAPTIONINVALID    105
+#define OLEUI_ERR_LPFNHOOKINVALID       106
+#define OLEUI_ERR_HINSTANCEINVALID      107
+#define OLEUI_ERR_LPSZTEMPLATEINVALID   108
+#define OLEUI_ERR_HRESOURCEINVALID      109
+#define OLEUI_ERR_FINDTEMPLATEFAILURE   110
+#define OLEUI_ERR_LOADTEMPLATEFAILURE   111
+#define OLEUI_ERR_DIALOGFAILURE         112
+#define OLEUI_ERR_LOCALMEMALLOC         113
+#define OLEUI_ERR_GLOBALMEMALLOC        114
+#define OLEUI_ERR_LOADSTRING            115
+#define OLEUI_ERR_STANDARDMAX           116
+
 typedef UINT (CALLBACK *LPFNOLEUIHOOK)(HWND, UINT, WPARAM, LPARAM);
-typedef struct tagOLEUIINSERTOBJECTW {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCWSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCWSTR lpszTemplate;
-	HRSRC hResource;
-	CLSID clsid;
-	LPWSTR lpszFile;
-	UINT cchFile;
-	UINT cClsidExclude;
-	LPCLSID lpClsidExclude;
-	IID iid;
-	DWORD oleRender;
-	LPFORMATETC lpFormatEtc;
-	LPOLECLIENTSITE lpIOleClientSite;
-	LPSTORAGE lpIStorage;
-	PVOID *ppvObj;
-	SCODE sc;
-	HGLOBAL hMetaPict;
-} OLEUIINSERTOBJECTW,*POLEUIINSERTOBJECTW,*LPOLEUIINSERTOBJECTW;
-typedef struct tagOLEUIINSERTOBJECTA {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCSTR lpszTemplate;
-	HRSRC hResource;
-	CLSID clsid;
-	LPSTR lpszFile;
-	UINT cchFile;
-	UINT cClsidExclude;
-	LPCLSID lpClsidExclude;
-	IID iid;
-	DWORD oleRender;
-	LPFORMATETC lpFormatEtc;
-	LPOLECLIENTSITE lpIOleClientSite;
-	LPSTORAGE lpIStorage;
-	PVOID *ppvObj;
-	SCODE sc;
-	HGLOBAL hMetaPict;
-} OLEUIINSERTOBJECTA,*POLEUIINSERTOBJECTA,*LPOLEUIINSERTOBJECTA;
-STDAPI_(UINT) OleUIInsertObjectW(LPOLEUIINSERTOBJECTW);
-STDAPI_(UINT) OleUIInsertObjectA(LPOLEUIINSERTOBJECTA);
-typedef enum tagOLEUIPASTEFLAG {
-	OLEUIPASTE_PASTEONLY,
-	OLEUIPASTE_LINKTYPE1,
-	OLEUIPASTE_LINKTYPE2,
-	OLEUIPASTE_LINKTYPE3=4,
-	OLEUIPASTE_LINKTYPE4=8,
-	OLEUIPASTE_LINKTYPE5=16,
-	OLEUIPASTE_LINKTYPE6=32,
-	OLEUIPASTE_LINKTYPE7=64,
-	OLEUIPASTE_LINKTYPE8=128,
-	OLEUIPASTE_PASTE=512,
-	OLEUIPASTE_LINKANYTYPE=1024,
-	OLEUIPASTE_ENABLEICON=2048
+
+/*****************************************************************************
+ * Registered Message Names
+ */
+#define SZOLEUI_MSG_HELPA              "OLEUI_MSG_HELP"
+#define SZOLEUI_MSG_ENDDIALOGA         "OLEUI_MSG_ENDDIALOG"
+#define SZOLEUI_MSG_BROWSEA            "OLEUI_MSG_BROWSE"
+#define SZOLEUI_MSG_CHANGEICONA        "OLEUI_MSG_CHANGEICON"
+#define SZOLEUI_MSG_CLOSEBUSYDIALOGA   "OLEUI_MSG_CLOSEBUSYDIALOG"
+#define SZOLEUI_MSG_CONVERTA           "OLEUI_MSG_CONVERT"
+#define SZOLEUI_MSG_CHANGESOURCEA      "OLEUI_MSG_CHANGESOURCE"
+#define SZOLEUI_MSG_ADDCONTROLA        "OLEUI_MSG_ADDCONTROL"
+#define SZOLEUI_MSG_BROWSE_OFNA        "OLEUI_MSG_BROWSE_OFN"
+#if defined(__GNUC__)
+# define SZOLEUI_MSG_HELPW             (const WCHAR []){ 'O','L','E','U','I','_','M','S','G','_','H','E','L','P',0 }
+# define SZOLEUI_MSG_ENDDIALOGW        (const WCHAR []){ 'O','L','E','U','I','_','M','S','G','_','E','N','D','D','I','A','L','O','G',0 }
+# define SZOLEUI_MSG_BROWSEW           (const WCHAR []){ 'O','L','E','U','I','_','M','S','G','_','B','R','O','W','S','E',0 }
+# define SZOLEUI_MSG_CHANGEICONW       (const WCHAR []){ 'O','L','E','U','I','_','M','S','G','_','C','H','A','N','G','E','I','C','O','N',0 }
+# define SZOLEUI_MSG_CLOSEBUSYDIALOGW  (const WCHAR []){ 'O','L','E','U','I','_','M','S','G','_','C','L','O','S','E','B','U','S','Y','D','I','A','L','O','G',0 }
+# define SZOLEUI_MSG_CONVERTW          (const WCHAR []){ 'O','L','E','U','I','_','M','S','G','_','C','O','N','V','E','R','T',0 }
+# define SZOLEUI_MSG_CHANGESOURCEW     (const WCHAR []){ 'O','L','E','U','I','_','M','S','G','_','C','H','A','N','G','E','S','O','U','R','C','E',0 }
+# define SZOLEUI_MSG_ADDCONTROLW       (const WCHAR []){ 'O','L','E','U','I','_','M','S','G','_','A','D','D','C','O','N','T','R','O','L',0 }
+# define SZOLEUI_MSG_BROWSE_OFNW       (const WCHAR []){ 'O','L','E','U','I','_','M','S','G','_','B','R','O','W','S','E','_','O','F','N',0 }
+#elif defined(_MSC_VER)
+# define SZOLEUI_MSG_HELPW              L"OLEUI_MSG_HELP"
+# define SZOLEUI_MSG_ENDDIALOGW         L"OLEUI_MSG_ENDDIALOG"
+# define SZOLEUI_MSG_BROWSEW            L"OLEUI_MSG_BROWSE"
+# define SZOLEUI_MSG_CHANGEICONW        L"OLEUI_MSG_CHANGEICON"
+# define SZOLEUI_MSG_CLOSEBUSYDIALOGW   L"OLEUI_MSG_CLOSEBUSYDIALOG"
+# define SZOLEUI_MSG_CONVERTW           L"OLEUI_MSG_CONVERT"
+# define SZOLEUI_MSG_CHANGESOURCEW      L"OLEUI_MSG_CHANGESOURCE"
+# define SZOLEUI_MSG_ADDCONTROLW        L"OLEUI_MSG_ADDCONTROL"
+# define SZOLEUI_MSG_BROWSE_OFNW        L"OLEUI_MSG_BROWSE_OFN"
+#else
+static const WCHAR SZOLEUI_MSG_HELPW[]             = { 'O','L','E','U','I','_','M','S','G','_','H','E','L','P',0 };
+static const WCHAR SZOLEUI_MSG_ENDDIALOGW[]        = { 'O','L','E','U','I','_','M','S','G','_','E','N','D','D','I','A','L','O','G',0 };
+static const WCHAR SZOLEUI_MSG_BROWSEW[]           = { 'O','L','E','U','I','_','M','S','G','_','B','R','O','W','S','E',0 };
+static const WCHAR SZOLEUI_MSG_CHANGEICONW[]       = { 'O','L','E','U','I','_','M','S','G','_','C','H','A','N','G','E','I','C','O','N',0 };
+static const WCHAR SZOLEUI_MSG_CLOSEBUSYDIALOGW[]  = { 'O','L','E','U','I','_','M','S','G','_','C','L','O','S','E','B','U','S','Y','D','I','A','L','O','G',0 };
+static const WCHAR SZOLEUI_MSG_CONVERTW[]          = { 'O','L','E','U','I','_','M','S','G','_','C','O','N','V','E','R','T',0 };
+static const WCHAR SZOLEUI_MSG_CHANGESOURCEW[]     = { 'O','L','E','U','I','_','M','S','G','_','C','H','A','N','G','E','S','O','U','R','C','E',0 };
+static const WCHAR SZOLEUI_MSG_ADDCONTROLW[]       = { 'O','L','E','U','I','_','M','S','G','_','A','D','D','C','O','N','T','R','O','L',0 };
+static const WCHAR SZOLEUI_MSG_BROWSE_OFNW[]       = { 'O','L','E','U','I','_','M','S','G','_','B','R','O','W','S','E','_','O','F','N',0 };
+#endif
+#define SZOLEUI_MSG_HELP             WINELIB_NAME_AW(SZOLEUI_MSG_HELP)
+#define SZOLEUI_MSG_ENDDIALOG        WINELIB_NAME_AW(SZOLEUI_MSG_ENDDIALOG)
+#define SZOLEUI_MSG_BROWSE           WINELIB_NAME_AW(SZOLEUI_MSG_BROWSE)
+#define SZOLEUI_MSG_CHANGEICON       WINELIB_NAME_AW(SZOLEUI_MSG_CHANGEICON)
+#define SZOLEUI_MSG_CLOSEBUSYDIALOG  WINELIB_NAME_AW(SZOLEUI_MSG_CLOSEBUSYDIALOG)
+#define SZOLEUI_MSG_CONVERT          WINELIB_NAME_AW(SZOLEUI_MSG_CONVERT)
+#define SZOLEUI_MSG_CHANGESOURCE     WINELIB_NAME_AW(SZOLEUI_MSG_CHANGESOURCE)
+#define SZOLEUI_MSG_ADDCONTROL       WINELIB_NAME_AW(SZOLEUI_MSG_ADDCONTROL)
+#define SZOLEUI_MSG_BROWSE_OFN       WINELIB_NAME_AW(SZOLEUI_MSG_BROWSE_OFN)
+
+
+/*****************************************************************************
+ * INSERT OBJECT DIALOG
+ */
+typedef struct tagOLEUIINSERTOBJECTA
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCSTR          lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCSTR          lpszTemplate;
+    HRSRC           hResource;
+    CLSID           clsid;
+    LPSTR           lpszFile;
+    UINT            cchFile;
+    UINT            cClsidExclude;
+    LPCLSID         lpClsidExclude;
+    IID             iid;
+    DWORD           oleRender;
+    LPFORMATETC     lpFormatEtc;
+    LPOLECLIENTSITE lpIOleClientSite;
+    LPSTORAGE       lpIStorage;
+    LPVOID          *ppvObj;
+    SCODE           sc;
+    HGLOBAL         hMetaPict;
+} OLEUIINSERTOBJECTA, *POLEUIINSERTOBJECTA, *LPOLEUIINSERTOBJECTA;
+
+typedef struct tagOLEUIINSERTOBJECTW
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCWSTR         lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCWSTR         lpszTemplate;
+    HRSRC           hResource;
+    CLSID           clsid;
+    LPWSTR          lpszFile;
+    UINT            cchFile;
+    UINT            cClsidExclude;
+    LPCLSID         lpClsidExclude;
+    IID             iid;
+    DWORD           oleRender;
+    LPFORMATETC     lpFormatEtc;
+    LPOLECLIENTSITE lpIOleClientSite;
+    LPSTORAGE       lpIStorage;
+    LPVOID          *ppvObj;
+    SCODE           sc;
+    HGLOBAL         hMetaPict;
+} OLEUIINSERTOBJECTW, *POLEUIINSERTOBJECTW, *LPOLEUIINSERTOBJECTW;
+
+DECL_WINELIB_TYPE_AW(OLEUIINSERTOBJECT)
+DECL_WINELIB_TYPE_AW(POLEUIINSERTOBJECT)
+DECL_WINELIB_TYPE_AW(LPOLEUIINSERTOBJECT)
+
+#define IOF_SHOWHELP                    0x00000001L
+#define IOF_SELECTCREATENEW             0x00000002L
+#define IOF_SELECTCREATEFROMFILE        0x00000004L
+#define IOF_CHECKLINK                   0x00000008L
+#define IOF_CHECKDISPLAYASICON          0x00000010L
+#define IOF_CREATENEWOBJECT             0x00000020L
+#define IOF_CREATEFILEOBJECT            0x00000040L
+#define IOF_CREATELINKOBJECT            0x00000080L
+#define IOF_DISABLELINK                 0x00000100L
+#define IOF_VERIFYSERVERSEXIST          0x00000200L
+#define IOF_DISABLEDISPLAYASICON        0x00000400L
+#define IOF_HIDECHANGEICON              0x00000800L
+#define IOF_SHOWINSERTCONTROL           0x00001000L
+#define IOF_SELECTCREATECONTROL         0x00002000L
+
+/*****************************************************************************
+ * CONVERT DIALOG
+ */
+typedef struct tagOLEUICONVERTA
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCSTR          lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCSTR          lpszTemplate;
+    HRSRC           hResource;
+    CLSID           clsid;
+    CLSID           clsidConvertDefault;
+    CLSID           clsidActivateDefault;
+    CLSID           clsidNew;
+    DWORD           dvAspect;
+    WORD            wFormat;
+    BOOL            fIsLinkedObject;
+    HGLOBAL         hMetaPict;
+    LPSTR           lpszUserType;
+    BOOL            fObjectsIconChanged;
+    LPSTR           lpszDefLabel;
+    UINT            cClsidExclude;
+    LPCLSID         lpClsidExclude;
+} OLEUICONVERTA, *POLEUICONVERTA, *LPOLEUICONVERTA;
+
+typedef struct tagOLEUICONVERTW
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCWSTR         lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCWSTR         lpszTemplate;
+    HRSRC           hResource;
+    CLSID           clsid;
+    CLSID           clsidConvertDefault;
+    CLSID           clsidActivateDefault;
+    CLSID           clsidNew;
+    DWORD           dvAspect;
+    WORD            wFormat;
+    BOOL            fIsLinkedObject;
+    HGLOBAL         hMetaPict;
+    LPWSTR          lpszUserType;
+    BOOL            fObjectsIconChanged;
+    LPWSTR          lpszDefLabel;
+    UINT            cClsidExclude;
+    LPCLSID         lpClsidExclude;
+} OLEUICONVERTW, *POLEUICONVERTW, *LPOLEUICONVERTW;
+
+DECL_WINELIB_TYPE_AW(OLEUICONVERT)
+DECL_WINELIB_TYPE_AW(POLEUICONVERT)
+DECL_WINELIB_TYPE_AW(LPOLEUICONVERT)
+
+#define CF_SHOWHELPBUTTON               0x00000001L
+#define CF_SETCONVERTDEFAULT            0x00000002L
+#define CF_SETACTIVATEDEFAULT           0x00000004L
+#define CF_SELECTCONVERTTO              0x00000008L
+#define CF_SELECTACTIVATEAS             0x00000010L
+#define CF_DISABLEDISPLAYASICON         0x00000020L
+#define CF_DISABLEACTIVATEAS            0x00000040L
+#define CF_HIDECHANGEICON               0x00000080L
+#define CF_CONVERTONLY                  0x00000100L
+
+/*****************************************************************************
+ * CHANGE ICON DIALOG
+ */
+typedef struct tagOLEUICHANGEICONA
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCSTR          lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCSTR          lpszTemplate;
+    HRSRC           hResource;
+    HGLOBAL         hMetaPict;
+    CLSID           clsid;
+    CHAR            szIconExe[MAX_PATH];
+    INT             cchIconExe;
+} OLEUICHANGEICONA, *POLEUICHANGEICONA, *LPOLEUICHANGEICONA;
+
+typedef struct tagOLEUICHANGEICONW
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCWSTR         lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCWSTR         lpszTemplate;
+    HRSRC           hResource;
+    HGLOBAL         hMetaPict;
+    CLSID           clsid;
+    WCHAR           szIconExe[MAX_PATH];
+    INT             cchIconExe;
+} OLEUICHANGEICONW, *POLEUICHANGEICONW, *LPOLEUICHANGEICONW;
+
+DECL_WINELIB_TYPE_AW(OLEUICHANGEICON)
+DECL_WINELIB_TYPE_AW(POLEUICHANGEICON)
+DECL_WINELIB_TYPE_AW(LPOLEUICHANGEICON)
+
+
+#define CIF_SHOWHELP                    0x00000001L
+#define CIF_SELECTCURRENT               0x00000002L
+#define CIF_SELECTDEFAULT               0x00000004L
+#define CIF_SELECTFROMFILE              0x00000008L
+#define CIF_USEICONEXE                  0x00000010L
+
+/*****************************************************************************
+ * PASTE SPECIAL DIALOG
+ */
+
+typedef enum tagOLEUIPASTEFLAG
+{
+   OLEUIPASTE_ENABLEICON    = 2048,
+   OLEUIPASTE_PASTEONLY     = 0,
+   OLEUIPASTE_PASTE         = 512,
+   OLEUIPASTE_LINKANYTYPE   = 1024,
+   OLEUIPASTE_LINKTYPE1     = 1,
+   OLEUIPASTE_LINKTYPE2     = 2,
+   OLEUIPASTE_LINKTYPE3     = 4,
+   OLEUIPASTE_LINKTYPE4     = 8,
+   OLEUIPASTE_LINKTYPE5     = 16,
+   OLEUIPASTE_LINKTYPE6     = 32,
+   OLEUIPASTE_LINKTYPE7     = 64,
+   OLEUIPASTE_LINKTYPE8     = 128
 } OLEUIPASTEFLAG;
-typedef struct tagOLEUIPASTEENTRYW {
-	FORMATETC fmtetc;
-	LPCWSTR lpstrFormatName;
-	LPCWSTR lpstrResultText;
-	DWORD dwFlags;
-	DWORD dwScratchSpace;
-} OLEUIPASTEENTRYW,*POLEUIPASTEENTRYW,*LPOLEUIPASTEENTRYW;
-typedef struct tagOLEUIPASTEENTRYA {
-	FORMATETC fmtetc;
-	LPCSTR lpstrFormatName;
-	LPCSTR lpstrResultText;
-	DWORD dwFlags;
-	DWORD dwScratchSpace;
-} OLEUIPASTEENTRYA,*POLEUIPASTEENTRYA,*LPOLEUIPASTEENTRYA;
-typedef struct tagOLEUIPASTESPECIALW {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCWSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCWSTR lpszTemplate;
-	HRSRC hResource;
-	LPDATAOBJECT lpSrcDataObj;
-	LPOLEUIPASTEENTRYW arrPasteEntries;
-	int cPasteEntries;
-	UINT *arrLinkTypes;
-	int cLinkTypes;
-	UINT cClsidExclude;
-	LPCLSID lpClsidExclude;
-	int nSelectedIndex;
-	BOOL fLink;
-	HGLOBAL hMetaPict;
-	SIZEL sizel;
-} OLEUIPASTESPECIALW,*POLEUIPASTESPECIALW,*LPOLEUIPASTESPECIALW;
-typedef struct tagOLEUIPASTESPECIALA {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCSTR lpszTemplate;
-	HRSRC hResource;
-	LPDATAOBJECT lpSrcDataObj;
-	LPOLEUIPASTEENTRYA arrPasteEntries;
-	int cPasteEntries;
-	UINT *arrLinkTypes;
-	int cLinkTypes;
-	UINT cClsidExclude;
-	LPCLSID lpClsidExclude;
-	int nSelectedIndex;
-	BOOL fLink;
-	HGLOBAL hMetaPict;
-	SIZEL sizel;
-} OLEUIPASTESPECIALA,*POLEUIPASTESPECIALA,*LPOLEUIPASTESPECIALA;
-#define INTERFACE IOleUILinkContainerW
-DECLARE_INTERFACE_(IOleUILinkContainerW, IUnknown)
+
+typedef struct tagOLEUIPASTEENTRYA
 {
-	STDMETHOD(QueryInterface) (THIS_ REFIID,PVOID*) PURE;
-	STDMETHOD_(ULONG,AddRef) (THIS) PURE;
-	STDMETHOD_(ULONG,Release) (THIS) PURE;
-	STDMETHOD_(DWORD,GetNextLink) (THIS_ DWORD dwLink) PURE;
-	STDMETHOD(SetLinkUpdateOptions) (THIS_ DWORD,DWORD) PURE;
-	STDMETHOD(GetLinkUpdateOptions) (THIS_ DWORD,PDWORD) PURE;
-	STDMETHOD(SetLinkSource) (THIS_ DWORD, LPWSTR,ULONG,PULONG,BOOL) PURE;
-	STDMETHOD(GetLinkSource) (THIS_ DWORD,LPWSTR*,PULONG,LPWSTR*,LPWSTR*,BOOL*,BOOL*) PURE;
-	STDMETHOD(OpenLinkSource) (THIS_ DWORD) PURE;
-	STDMETHOD(UpdateLink) (THIS_ DWORD,BOOL,BOOL) PURE;
-	STDMETHOD(CancelLink) (THIS_ DWORD) PURE;
-};
-#undef INTERFACE
-typedef IOleUILinkContainerW *LPOLEUILINKCONTAINERW;
-#undef INTERFACE
-#define INTERFACE IOleUILinkContainerA
-DECLARE_INTERFACE_(IOleUILinkContainerA, IUnknown)
+   FORMATETC        fmtetc;
+   LPCSTR           lpstrFormatName;
+   LPCSTR           lpstrResultText;
+   DWORD            dwFlags;
+   DWORD            dwScratchSpace;
+} OLEUIPASTEENTRYA, *POLEUIPASTEENTRYA, *LPOLEUIPASTEENTRYA;
+
+typedef struct tagOLEUIPASTEENTRYW
 {
-	STDMETHOD(QueryInterface) (THIS_ REFIID,PVOID*) PURE;
-	STDMETHOD_(ULONG,AddRef) (THIS) PURE;
-	STDMETHOD_(ULONG,Release) (THIS) PURE;
-	STDMETHOD_(DWORD,GetNextLink) (THIS_ DWORD) PURE;
-	STDMETHOD(SetLinkUpdateOptions) (THIS_ DWORD,DWORD) PURE;
-	STDMETHOD(GetLinkUpdateOptions) (THIS_ DWORD,PDWORD) PURE;
-	STDMETHOD(SetLinkSource) (THIS_ DWORD, LPSTR,ULONG,PULONG,BOOL) PURE;
-	STDMETHOD(GetLinkSource) (THIS_ DWORD,LPSTR*,PULONG,LPSTR*,LPSTR*,BOOL*,BOOL*) PURE;
-	STDMETHOD(OpenLinkSource) (THIS_ DWORD) PURE;
-	STDMETHOD(UpdateLink) (THIS_ DWORD,BOOL,BOOL) PURE;
-	STDMETHOD(CancelLink) (THIS_ DWORD) PURE;
-};
-typedef IOleUILinkContainerA *LPOLEUILINKCONTAINERA;
-typedef struct tagOLEUIEDITLINKSW {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCWSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCWSTR lpszTemplate;
-	HRSRC hResource;
-	LPOLEUILINKCONTAINERW lpOleUILinkContainer;
-} OLEUIEDITLINKSW,*POLEUIEDITLINKSW,*LPOLEUIEDITLINKSW;
-typedef struct tagOLEUIEDITLINKSA {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCSTR lpszTemplate;
-	HRSRC hResource;
-	LPOLEUILINKCONTAINERA lpOleUILinkContainer;
-} OLEUIEDITLINKSA,*POLEUIEDITLINKSA,*LPOLEUIEDITLINKSA;
-typedef struct tagOLEUICHANGEICONW {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCWSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCWSTR lpszTemplate;
-	HRSRC hResource;
-	HGLOBAL hMetaPict;
-	CLSID clsid;
-	WCHAR szIconExe[MAX_PATH];
-	int cchIconExe;
-} OLEUICHANGEICONW,*POLEUICHANGEICONW,*LPOLEUICHANGEICONW;
-typedef struct tagOLEUICHANGEICONA {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCSTR lpszTemplate;
-	HRSRC hResource;
-	HGLOBAL hMetaPict;
-	CLSID clsid;
-	CHAR szIconExe[MAX_PATH];
-	int cchIconExe;
-} OLEUICHANGEICONA,*POLEUICHANGEICONA,*LPOLEUICHANGEICONA;
-typedef struct tagOLEUICONVERTW {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCWSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCWSTR lpszTemplate;
-	HRSRC hResource;
-	CLSID clsid;
-	CLSID clsidConvertDefault;
-	CLSID clsidActivateDefault;
-	CLSID clsidNew;
-	DWORD dvAspect;
-	WORD wFormat;
-	BOOL fIsLinkedObject;
-	HGLOBAL hMetaPict;
-	LPWSTR lpszUserType;
-	BOOL fObjectsIconChanged;
-	LPWSTR lpszDefLabel;
-	UINT cClsidExclude;
-	LPCLSID lpClsidExclude;
-} OLEUICONVERTW,*POLEUICONVERTW,*LPOLEUICONVERTW;
-typedef struct tagOLEUICONVERTA {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCSTR lpszTemplate;
-	HRSRC hResource;
-	CLSID clsid;
-	CLSID clsidConvertDefault;
-	CLSID clsidActivateDefault;
-	CLSID clsidNew;
-	DWORD dvAspect;
-	WORD wFormat;
-	BOOL fIsLinkedObject;
-	HGLOBAL hMetaPict;
-	LPSTR lpszUserType;
-	BOOL fObjectsIconChanged;
-	LPSTR lpszDefLabel;
-	UINT cClsidExclude;
-	LPCLSID lpClsidExclude;
-} OLEUICONVERTA,*POLEUICONVERTA,*LPOLEUICONVERTA;
-typedef struct tagOLEUIBUSYW {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCWSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCWSTR lpszTemplate;
-	HRSRC hResource;
-	HTASK hTask;
-	HWND *lphWndDialog;
-} OLEUIBUSYW,*POLEUIBUSYW,*LPOLEUIBUSYW;
-typedef struct tagOLEUIBUSYA {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCSTR lpszTemplate;
-	HRSRC hResource;
-	HTASK hTask;
-	HWND *lphWndDialog;
-} OLEUIBUSYA,*POLEUIBUSYA,*LPOLEUIBUSYA;
-typedef struct tagOLEUICHANGESOURCEW {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCWSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCWSTR lpszTemplate;
-	HRSRC hResource;
-	OPENFILENAMEW* lpOFN;
-	DWORD dwReserved1[4];
-	LPOLEUILINKCONTAINERW lpOleUILinkContainer;
-	DWORD dwLink;
-	LPWSTR lpszDisplayName;
-	ULONG nFileLength;
-	LPWSTR lpszFrom;
-	LPWSTR lpszTo;
-} OLEUICHANGESOURCEW,*POLEUICHANGESOURCEW,*LPOLEUICHANGESOURCEW;
-typedef struct tagOLEUICHANGESOURCEA {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	HWND hWndOwner;
-	LPCSTR lpszCaption;
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	HINSTANCE hInstance;
-	LPCSTR lpszTemplate;
-	HRSRC hResource;
-	OPENFILENAMEA *lpOFN;
-	DWORD dwReserved1[4];
-	LPOLEUILINKCONTAINERA lpOleUILinkContainer;
-	DWORD dwLink;
-	LPSTR lpszDisplayName;
-	ULONG nFileLength;
-	LPSTR lpszFrom;
-	LPSTR lpszTo;
-} OLEUICHANGESOURCEA,*POLEUICHANGESOURCEA,*LPOLEUICHANGESOURCEA;
-#undef INTERFACE
-#define INTERFACE IOleUIObjInfoW
-DECLARE_INTERFACE_(IOleUIObjInfoW, IUnknown)
+   FORMATETC        fmtetc;
+   LPCWSTR          lpstrFormatName;
+   LPCWSTR          lpstrResultText;
+   DWORD            dwFlags;
+   DWORD            dwScratchSpace;
+} OLEUIPASTEENTRYW, *POLEUIPASTEENTRYW, *LPOLEUIPASTEENTRYW;
+
+DECL_WINELIB_TYPE_AW(OLEUIPASTEENTRY)
+DECL_WINELIB_TYPE_AW(POLEUIPASTEENTRY)
+DECL_WINELIB_TYPE_AW(LPOLEUIPASTEENTRY)
+
+typedef struct tagOLEUIPASTESPECIALA
 {
-	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-	STDMETHOD_(ULONG,Release)(THIS) PURE;
-	STDMETHOD(GetObjectInfo)(THIS_ DWORD,PDWORD,LPWSTR*,LPWSTR*,LPWSTR*,LPWSTR*) PURE;
-	STDMETHOD(GetConvertInfo)(THIS_ DWORD,CLSID*,PWORD,CLSID*,LPCLSID*,UINT*) PURE;
-	STDMETHOD(ConvertObject)(THIS_ DWORD,REFCLSID) PURE;
-	STDMETHOD(GetViewInfo)(THIS_ DWORD,HGLOBAL*,PDWORD,int*) PURE;
-	STDMETHOD(SetViewInfo)(THIS_ DWORD,HGLOBAL,DWORD,int,BOOL) PURE;
-};
-typedef IOleUIObjInfoW *LPOLEUIOBJINFOW;
-#undef INTERFACE
-#define INTERFACE IOleUIObjInfoA
-DECLARE_INTERFACE_(IOleUIObjInfoA, IUnknown)
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCSTR          lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCSTR          lpszTemplate;
+    HRSRC           hResource;
+    LPDATAOBJECT    lpSrcDataObj;
+    LPOLEUIPASTEENTRYA arrPasteEntries;
+    INT             cPasteEntries;
+    UINT*           arrLinkTypes;
+    INT             cLinkTypes;
+    UINT            cClsidExclude;
+    LPCLSID         lpClsidExclude;
+    INT             nSelectedIndex;
+    BOOL            fLink;
+    HGLOBAL         hMetaPict;
+    SIZEL           sizel;
+} OLEUIPASTESPECIALA, *POLEUIPASTESPECIALA, *LPOLEUIPASTESPECIALA;
+
+typedef struct tagOLEUIPASTESPECIALW
 {
-	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-	STDMETHOD_(ULONG,Release)(THIS) PURE;
-	STDMETHOD(GetObjectInfo)(THIS_ DWORD,PDWORD,LPSTR*,LPSTR*,LPSTR*,LPSTR*) PURE;
-	STDMETHOD(GetConvertInfo)(THIS_ DWORD,CLSID*,PWORD,CLSID*,LPCLSID*,UINT*) PURE;
-	STDMETHOD(ConvertObject)(THIS_ DWORD,REFCLSID) PURE;
-	STDMETHOD(GetViewInfo)(THIS_ DWORD,HGLOBAL*,PDWORD,int*) PURE;
-	STDMETHOD(SetViewInfo)(THIS_ DWORD,HGLOBAL,DWORD,int,BOOL) PURE;
-};
-typedef IOleUIObjInfoA *LPOLEUIOBJINFOA;
-#undef INTERFACE
-#define INTERFACE IOleUILinkInfoW
-DECLARE_INTERFACE_(IOleUILinkInfoW, IOleUILinkContainerW)
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCWSTR         lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCWSTR         lpszTemplate;
+    HRSRC           hResource;
+    LPDATAOBJECT    lpSrcDataObj;
+    LPOLEUIPASTEENTRYW arrPasteEntries;
+    INT             cPasteEntries;
+    UINT*           arrLinkTypes;
+    INT             cLinkTypes;
+    UINT            cClsidExclude;
+    LPCLSID         lpClsidExclude;
+    INT             nSelectedIndex;
+    BOOL            fLink;
+    HGLOBAL         hMetaPict;
+    SIZEL           sizel;
+} OLEUIPASTESPECIALW, *POLEUIPASTESPECIALW, *LPOLEUIPASTESPECIALW;
+
+DECL_WINELIB_TYPE_AW(OLEUIPASTESPECIAL)
+DECL_WINELIB_TYPE_AW(POLEUIPASTESPECIAL)
+DECL_WINELIB_TYPE_AW(LPOLEUIPASTESPECIAL)
+
+#define PS_MAXLINKTYPES                 8
+
+#define PSF_SHOWHELP                    0x00000001L
+#define PSF_SELECTPASTE                 0x00000002L
+#define PSF_SELECTPASTELINK             0x00000004L
+
+#define PSF_CHECKDISPLAYASICON          0x00000008L
+#define PSF_DISABLEDISPLAYASICON        0x00000010L
+#define PSF_HIDECHANGEICON              0x00000020L
+#define PSF_STAYONCLIPBOARDCHANGE       0x00000040L
+#define PSF_NOREFRESHDATAOBJECT         0x00000080L
+
+#define OLEUI_IOERR_SRCDATAOBJECTINVALID    (OLEUI_ERR_STANDARDMAX+0)
+#define OLEUI_IOERR_ARRPASTEENTRIESINVALID  (OLEUI_ERR_STANDARDMAX+1)
+#define OLEUI_IOERR_ARRLINKTYPESINVALID     (OLEUI_ERR_STANDARDMAX+2)
+#define OLEUI_PSERR_CLIPBOARDCHANGED        (OLEUI_ERR_STANDARDMAX+3)
+#define OLEUI_PSERR_GETCLIPBOARDFAILED      (OLEUI_ERR_STANDARDMAX+4)
+
+/* Paste Special dialog resource ids */
+#define IDD_PASTESPECIAL       1003
+#define IDD_PASTESPECIAL4      1108
+
+/* Paste Special dialog control ids */
+#define IDC_PS_PASTE           500
+#define IDC_PS_PASTELINK       501
+#define IDC_PS_SOURCETEXT      502
+#define IDC_PS_PASTELIST       503
+#define IDC_PS_PASTELINKLIST   504
+#define IDC_PS_DISPLAYLIST     505
+#define IDC_PS_DISPLAYASICON   506
+#define IDC_PS_ICONDISPLAY     507
+#define IDC_PS_CHANGEICON      508
+#define IDC_PS_RESULTIMAGE     509
+#define IDC_PS_RESULTTEXT      510
+
+/*****************************************************************************
+ * EDIT LINKS DIALOG
+ */
+
+#define ELF_SHOWHELP               0x00000001L
+#define ELF_DISABLEUPDATENOW       0x00000002L
+#define ELF_DISABLEOPENSOURCE      0x00000004L
+#define ELF_DISABLECHANGESOURCE    0x00000008L
+#define ELF_DISABLECANCELLINK      0x00000010L
+
+typedef struct tagOLEUIEDITLINKSW
 {
-	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-	STDMETHOD_(ULONG,Release)(THIS) PURE;
-	STDMETHOD_(DWORD,GetNextLink)(THIS_ DWORD) PURE;
-	STDMETHOD(SetLinkUpdateOptions)(THIS_ DWORD,DWORD) PURE;
-	STDMETHOD(GetLinkUpdateOptions)(THIS_ DWORD,DWORD*) PURE;
-	STDMETHOD(SetLinkSource)(THIS_ DWORD,LPWSTR,ULONG,PULONG,BOOL) PURE;
-	STDMETHOD(GetLinkSource)(THIS_ DWORD,LPWSTR*,PULONG,LPWSTR*,LPWSTR*,BOOL*,BOOL*) PURE;
-	STDMETHOD(OpenLinkSource)(THIS_ DWORD) PURE;
-	STDMETHOD(UpdateLink)(THIS_ DWORD,BOOL,BOOL) PURE;
-	STDMETHOD(CancelLink)(THIS_ DWORD) PURE;
-	STDMETHOD(GetLastUpdate)(THIS_ DWORD,FILETIME*) PURE;
-};
-typedef IOleUILinkInfoW *LPOLEUILINKINFOW;
-#undef INTERFACE
-#define INTERFACE IOleUILinkInfoA
-DECLARE_INTERFACE_(IOleUILinkInfoA, IOleUILinkContainerA)
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCWSTR         lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCWSTR         lpszTemplate;
+    HRSRC           hResource;
+    LPOLEUILINKCONTAINERW lpOleUILinkContainer;
+} OLEUIEDITLINKSW, *POLEUIEDITLINKSW, *LPOLEUIEDITLINKSW;
+
+typedef struct tagOLEUIEDITLINKSA
 {
-	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-	STDMETHOD_(ULONG,Release)(THIS) PURE;
-	STDMETHOD_(DWORD,GetNextLink)(THIS_ DWORD) PURE;
-	STDMETHOD(SetLinkUpdateOptions)(THIS_ DWORD,DWORD) PURE;
-	STDMETHOD(GetLinkUpdateOptions)(THIS_ DWORD,DWORD*) PURE;
-	STDMETHOD(SetLinkSource)(THIS_ DWORD,LPSTR,ULONG,PULONG,BOOL) PURE;
-	STDMETHOD(GetLinkSource)(THIS_ DWORD,LPSTR*,PULONG,LPSTR*,LPSTR*,BOOL*,BOOL*) PURE;
-	STDMETHOD(OpenLinkSource)(THIS_ DWORD) PURE;
-	STDMETHOD(UpdateLink)(THIS_ DWORD,BOOL,BOOL) PURE;
-	STDMETHOD(CancelLink)(THIS_ DWORD) PURE;
-	STDMETHOD(GetLastUpdate)(THIS_ DWORD,FILETIME*) PURE;
-};
-typedef IOleUILinkInfoA* LPOLEUILINKINFOA;
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCSTR          lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCSTR          lpszTemplate;
+    HRSRC           hResource;
+    LPOLEUILINKCONTAINERA lpOleUILinkContainer;
+} OLEUIEDITLINKSA, *POLEUIEDITLINKSA, *LPOLEUIEDITLINKSA;
+
+DECL_WINELIB_TYPE_AW(OLEUIEDITLINKS)
+DECL_WINELIB_TYPE_AW(POLEUIEDITLINKS)
+DECL_WINELIB_TYPE_AW(LPOLEUIEDITLINKS)
+
+
+/***********************************************************************************
+ * BUSY DIALOG
+ */
+typedef struct tagOLEUIBUSYA
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCSTR          lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCSTR          lpszTemplate;
+    HRSRC           hResource;
+    HTASK           hTask;
+    HWND*           lphWndDialog;
+} OLEUIBUSYA, *POLEUIBUSYA, *LPOLEUIBUSYA;
+
+typedef struct tagOLEUIBUSYW
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCWSTR         lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCWSTR         lpszTemplate;
+    HRSRC           hResource;
+    HTASK           hTask;
+    HWND*           lphWndDialog;
+} OLEUIBUSYW, *POLEUIBUSYW, *LPOLEUIBUSYW;
+
+DECL_WINELIB_TYPE_AW(OLEUIBUSY)
+DECL_WINELIB_TYPE_AW(POLEUIBUSY)
+DECL_WINELIB_TYPE_AW(LPOLEUIBUSY)
+
+
+#define BZ_DISABLECANCELBUTTON          0x00000001L
+#define BZ_DISABLESWITCHTOBUTTON        0x00000002L
+#define BZ_DISABLERETRYBUTTON           0x00000004L
+#define BZ_NOTRESPONDINGDIALOG          0x00000008L
+
+/***********************************************************************************
+ * OBJECT PROPERTIES DIALOG
+ */
+
 struct tagOLEUIOBJECTPROPSW;
 struct tagOLEUIOBJECTPROPSA;
-typedef struct tagOLEUIGNRLPROPSW {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	DWORD dwReserved1[2];
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	DWORD dwReserved2[3];
-	struct tagOLEUIOBJECTPROPSW* lpOP;
-} OLEUIGNRLPROPSW,*POLEUIGNRLPROPSW,*LPOLEUIGNRLPROPSW;
-typedef struct tagOLEUIGNRLPROPSA {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	DWORD dwReserved1[2];
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	DWORD dwReserved2[3];
-	struct tagOLEUIOBJECTPROPSA* lpOP;
-} OLEUIGNRLPROPSA,*POLEUIGNRLPROPSA,*LPOLEUIGNRLPROPSA;
-typedef struct tagOLEUIVIEWPROPSW {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	DWORD dwReserved1[2];
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	DWORD dwReserved2[3];
-	struct tagOLEUIOBJECTPROPSW* lpOP;
-	int nScaleMin;
-	int nScaleMax;
-} OLEUIVIEWPROPSW,*POLEUIVIEWPROPSW,*LPOLEUIVIEWPROPSW;
-typedef struct tagOLEUIVIEWPROPSA {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	DWORD dwReserved1[2];
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	DWORD dwReserved2[3];
-	struct tagOLEUIOBJECTPROPSA *lpOP;
-	int nScaleMin;
-	int nScaleMax;
-} OLEUIVIEWPROPSA,*POLEUIVIEWPROPSA,*LPOLEUIVIEWPROPSA;
-typedef struct tagOLEUILINKPROPSW {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	DWORD dwReserved1[2];
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	DWORD dwReserved2[3];
-	struct tagOLEUIOBJECTPROPSW *lpOP;
-} OLEUILINKPROPSW, *POLEUILINKPROPSW,* LPOLEUILINKPROPSW;
-typedef struct tagOLEUILINKPROPSA {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	DWORD dwReserved1[2];
-	LPFNOLEUIHOOK lpfnHook;
-	LPARAM lCustData;
-	DWORD dwReserved2[3];
-	struct tagOLEUIOBJECTPROPSA* lpOP;
-} OLEUILINKPROPSA,*POLEUILINKPROPSA,*LPOLEUILINKPROPSA;
-typedef struct tagOLEUIOBJECTPROPSW {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	LPPROPSHEETHEADERW lpPS;
-	DWORD dwObject;
-	LPOLEUIOBJINFOW lpObjInfo;
-	DWORD dwLink;
-	LPOLEUILINKINFOW lpLinkInfo;
-	LPOLEUIGNRLPROPSW lpGP;
-	LPOLEUIVIEWPROPSW lpVP;
-	LPOLEUILINKPROPSW lpLP;
-} OLEUIOBJECTPROPSW,*POLEUIOBJECTPROPSW,*LPOLEUIOBJECTPROPSW;
-typedef struct tagOLEUIOBJECTPROPSA {
-	DWORD cbStruct;
-	DWORD dwFlags;
-	LPPROPSHEETHEADERA lpPS;
-	DWORD dwObject;
-	LPOLEUIOBJINFOA lpObjInfo;
-	DWORD dwLink;
-	LPOLEUILINKINFOA lpLinkInfo;
-	LPOLEUIGNRLPROPSA lpGP;
-	LPOLEUIVIEWPROPSA lpVP;
-	LPOLEUILINKPROPSA lpLP;
-} OLEUIOBJECTPROPSA,*POLEUIOBJECTPROPSA,*LPOLEUIOBJECTPROPSA;
 
-STDAPI_(BOOL) OleUIAddVerbMenuW(LPOLEOBJECT,LPCWSTR,HMENU,UINT,UINT,UINT,BOOL,UINT,HMENU*);
-STDAPI_(BOOL) OleUIAddVerbMenuA(LPOLEOBJECT,LPCSTR,HMENU,UINT,UINT,UINT,BOOL,UINT,HMENU*);
-STDAPI_(UINT) OleUIBusyW(LPOLEUIBUSYW);
-STDAPI_(UINT) OleUIBusyA(LPOLEUIBUSYA);
-STDAPI_(BOOL) OleUICanConvertOrActivateAs(REFCLSID,BOOL,WORD);
-STDAPI_(UINT) OleUIChangeIconW(LPOLEUICHANGEICONW);
-STDAPI_(UINT) OleUIChangeIconA(LPOLEUICHANGEICONA);
-STDAPI_(UINT) OleUIChangeSourceW(LPOLEUICHANGESOURCEW);
-STDAPI_(UINT) OleUIChangeSourceA(LPOLEUICHANGESOURCEA);
-STDAPI_(UINT) OleUIConvertW(LPOLEUICONVERTW);
-STDAPI_(UINT) OleUIConvertA(LPOLEUICONVERTA);
-STDAPI_(UINT) OleUIEditLinksW(LPOLEUIEDITLINKSW);
-STDAPI_(UINT) OleUIEditLinksA(LPOLEUIEDITLINKSA);
-STDAPI_(UINT) OleUIObjectPropertiesW(LPOLEUIOBJECTPROPSW);
-STDAPI_(UINT) OleUIObjectPropertiesA(LPOLEUIOBJECTPROPSA);
-STDAPI_(UINT) OleUIPasteSpecialW(LPOLEUIPASTESPECIALW);
-STDAPI_(UINT) OleUIPasteSpecialA(LPOLEUIPASTESPECIALA);
-int OleUIPromptUserW(int,HWND,...);
-int OleUIPromptUserA(int,HWND,...);
-STDAPI_(BOOL) OleUIUpdateLinksW(LPOLEUILINKCONTAINERW,HWND,LPWSTR,int);
-STDAPI_(BOOL) OleUIUpdateLinksA(LPOLEUILINKCONTAINERA,HWND,LPSTR,int);
+typedef struct tagOLEUIGNRLPROPSA
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    DWORD           dwReserved1[2];
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    DWORD           dwReserved2[3];
+    struct tagOLEUIOBJECTPROPSA* lpOP;
 
-#ifdef UNICODE
-#define IDD_SERVERNOTREG IDD_SERVERNOTREGW
-#define IDD_LINKTYPECHANGED IDD_LINKTYPECHANGEDW
-#define OleUIUpdateLinks OleUIUpdateLinksW
-#define OleUIAddVerbMenu OleUIAddVerbMenuW
-#define tagOLEUIOBJECTPROPS tagOLEUIOBJECTPROPSW
-#define OLEUIOBJECTPROPS OLEUIOBJECTPROPSW
-#define POLEUIOBJECTPROPS POLEUIOBJECTPROPSW
-#define LPOLEUIOBJECTPROPS LPOLEUIOBJECTPROPSW
-#define OleUIObjectProperties OleUIObjectPropertiesW
-#define tagOLEUIINSERTOBJECT tagOLEUIINSERTOBJECTW
-#define OLEUIINSERTOBJECT OLEUIINSERTOBJECTW
-#define POLEUIINSERTOBJECT POLEUIINSERTOBJECTW
-#define LPOLEUIINSERTOBJECT LPOLEUIINSERTOBJECTW
-#define OleUIInsertObject OleUIInsertObjectW
-#define OleUIPromptUser OleUIPromptUserW
-#define tagOLEUIPASTEENTRY tagOLEUIPASTEENTRYW
-#define OLEUIPASTEENTRY OLEUIPASTEENTRYW
-#define POLEUIPASTEENTRY POLEUIPASTEENTRYW
-#define LPOLEUIPASTEENTRY LPOLEUIPASTEENTRYW
-#define tagOLEUIPASTESPECIAL tagOLEUIPASTESPECIALW
-#define OLEUIPASTESPECIAL OLEUIPASTESPECIALW
-#define POLEUIPASTESPECIAL POLEUIPASTESPECIALW
-#define LPOLEUIPASTESPECIAL LPOLEUIPASTESPECIALW
-#define OleUIPasteSpecial OleUIPasteSpecialW
-#define IOleUILinkContainer IOleUILinkContainerW
-#define LPOLEUILINKCONTAINER LPOLEUILINKCONTAINERW
-#define tagOLEUIEDITLINKS tagOLEUIEDITLINKSW
-#define OLEUIEDITLINKS OLEUIEDITLINKSW
-#define POLEUIEDITLINKS POLEUIEDITLINKSW
-#define LPOLEUIEDITLINKS LPOLEUIEDITLINKSW
-#define OleUIEditLinks OleUIEditLinksW
-#define tagOLEUICHANGEICON tagOLEUICHANGEICONW
-#define OLEUICHANGEICON OLEUICHANGEICONW
-#define POLEUICHANGEICON POLEUICHANGEICONW
-#define LPOLEUICHANGEICON LPOLEUICHANGEICONW
-#define OleUIChangeIcon OleUIChangeIconW
-#define tagOLEUICONVERT tagOLEUICONVERTW
-#define OLEUICONVERT OLEUICONVERTW
-#define POLEUICONVERT POLEUICONVERTW
-#define LPOLEUICONVERT LPOLEUICONVERTW
-#define OleUIConvert OleUIConvertW
-#define tagOLEUIBUSY tagOLEUIBUSYW
-#define OLEUIBUSY OLEUIBUSYW
-#define POLEUIBUSY POLEUIBUSYW
-#define LPOLEUIBUSY LPOLEUIBUSYW
-#define OleUIBusy OleUIBusyW
-#define tagOLEUICHANGESOURCE tagOLEUICHANGESOURCEW
-#define OLEUICHANGESOURCE OLEUICHANGESOURCEW
-#define POLEUICHANGESOURCE POLEUICHANGESOURCEW
-#define LPOLEUICHANGESOURCE LPOLEUICHANGESOURCEW
-#define OleUIChangeSource OleUIChangeSourceW
-#define IOleUIObjInfo IOleUIObjInfoW
-#define LPOLEUIOBJINFO LPOLEUIOBJINFOW
-#define IOleUILinkInfo IOleUILinkInfoW
-#define IOleUILinkInfoVtbl IOleUILinkInfoWVtbl
-#define LPOLEUILINKINFO LPOLEUILINKINFOW
-#define tagOLEUIGNRLPROPS tagOLEUIGNRLPROPSW
-#define OLEUIGNRLPROPS OLEUIGNRLPROPSW
-#define POLEUIGNRLPROPS POLEUIGNRLPROPSW
-#define LPOLEUIGNRLPROPS LPOLEUIGNRLPROPSW
-#define tagOLEUIVIEWPROPS tagOLEUIVIEWPROPSW
-#define OLEUIVIEWPROPS OLEUIVIEWPROPSW
-#define POLEUIVIEWPROPS POLEUIVIEWPROPSW
-#define LPOLEUIVIEWPROPS LPOLEUIVIEWPROPSW
-#define tagOLEUILINKPROPS tagOLEUILINKPROPSW
-#define OLEUILINKPROPS OLEUILINKPROPSW
-#define POLEUILINKPROPS POLEUILINKPROPSW
-#define LPOLEUILINKPROPS LPOLEUILINKPROPSW
-#else
-#define IDD_SERVERNOTREG IDD_SERVERNOTREGA
-#define IDD_LINKTYPECHANGED IDD_LINKTYPECHANGEDA
-#define OleUIUpdateLinks OleUIUpdateLinksA
-#define OleUIAddVerbMenu OleUIAddVerbMenuA
-#define tagOLEUIOBJECTPROPS tagOLEUIOBJECTPROPSA
-#define OLEUIOBJECTPROPS OLEUIOBJECTPROPSA
-#define POLEUIOBJECTPROPS POLEUIOBJECTPROPSA
-#define LPOLEUIOBJECTPROPS LPOLEUIOBJECTPROPSA
-#define OleUIObjectProperties OleUIObjectPropertiesA
-#define tagOLEUIINSERTOBJECT tagOLEUIINSERTOBJECTA
-#define OLEUIINSERTOBJECT OLEUIINSERTOBJECTA
-#define POLEUIINSERTOBJECT POLEUIINSERTOBJECTA
-#define LPOLEUIINSERTOBJECT LPOLEUIINSERTOBJECTA
-#define OleUIInsertObject OleUIInsertObjectA
-#define OleUIPromptUser OleUIPromptUserA
-#define tagOLEUIPASTEENTRY tagOLEUIPASTEENTRYA
-#define OLEUIPASTEENTRY OLEUIPASTEENTRYA
-#define POLEUIPASTEENTRY POLEUIPASTEENTRYA
-#define LPOLEUIPASTEENTRY LPOLEUIPASTEENTRYA
-#define tagOLEUIPASTESPECIAL tagOLEUIPASTESPECIALA
-#define OLEUIPASTESPECIAL OLEUIPASTESPECIALA
-#define POLEUIPASTESPECIAL POLEUIPASTESPECIALA
-#define LPOLEUIPASTESPECIAL LPOLEUIPASTESPECIALA
-#define OleUIPasteSpecial OleUIPasteSpecialA
-#define IOleUILinkContainer IOleUILinkContainerA
-#define LPOLEUILINKCONTAINER LPOLEUILINKCONTAINERA
-#define tagOLEUIEDITLINKS tagOLEUIEDITLINKSA
-#define OLEUIEDITLINKS OLEUIEDITLINKSA
-#define POLEUIEDITLINKS POLEUIEDITLINKSA
-#define LPOLEUIEDITLINKS LPOLEUIEDITLINKSA
-#define OleUIEditLinks OleUIEditLinksA
-#define tagOLEUICHANGEICON tagOLEUICHANGEICONA
-#define OLEUICHANGEICON OLEUICHANGEICONA
-#define POLEUICHANGEICON POLEUICHANGEICONA
-#define LPOLEUICHANGEICON LPOLEUICHANGEICONA
-#define OleUIChangeIcon OleUIChangeIconA
-#define tagOLEUICONVERT tagOLEUICONVERTA
-#define OLEUICONVERT OLEUICONVERTA
-#define POLEUICONVERT POLEUICONVERTA
-#define LPOLEUICONVERT LPOLEUICONVERTA
-#define OleUIConvert OleUIConvertA
-#define tagOLEUIBUSY tagOLEUIBUSYA
-#define OLEUIBUSY OLEUIBUSYA
-#define POLEUIBUSY POLEUIBUSYA
-#define LPOLEUIBUSY LPOLEUIBUSYA
-#define OleUIBusy OleUIBusyA
-#define tagOLEUICHANGESOURCE tagOLEUICHANGESOURCEA
-#define OLEUICHANGESOURCE OLEUICHANGESOURCEA
-#define POLEUICHANGESOURCE POLEUICHANGESOURCEA
-#define LPOLEUICHANGESOURCE LPOLEUICHANGESOURCEA
-#define OleUIChangeSource OleUIChangeSourceA
-#define IOleUIObjInfo IOleUIObjInfoA
-#define LPOLEUIOBJINFO LPOLEUIOBJINFOA
-#define IOleUILinkInfo IOleUILinkInfoA
-#define IOleUILinkInfoVtbl IOleUILinkInfoAVtbl
-#define LPOLEUILINKINFO LPOLEUILINKINFOA
-#define tagOLEUIGNRLPROPS tagOLEUIGNRLPROPSA
-#define OLEUIGNRLPROPS OLEUIGNRLPROPSA
-#define POLEUIGNRLPROPS POLEUIGNRLPROPSA
-#define LPOLEUIGNRLPROPS LPOLEUIGNRLPROPSA
-#define tagOLEUIVIEWPROPS tagOLEUIVIEWPROPSA
-#define OLEUIVIEWPROPS OLEUIVIEWPROPSA
-#define POLEUIVIEWPROPS POLEUIVIEWPROPSA
-#define LPOLEUIVIEWPROPS LPOLEUIVIEWPROPSA
-#define tagOLEUILINKPROPS tagOLEUILINKPROPSA
-#define OLEUILINKPROPS OLEUILINKPROPSA
-#define POLEUILINKPROPS POLEUILINKPROPSA
-#define LPOLEUILINKPROPS LPOLEUILINKPROPSA
+} OLEUIGNRLPROPSA, *POLEUIGNRLPROPSA, *LPOLEUIGNRLPROPSA;
+
+typedef struct tagOLEUIGNRLPROPSW
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    DWORD           dwReserved1[2];
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    DWORD           dwReserved2[3];
+    struct tagOLEUIOBJECTPROPSW* lpOP;
+} OLEUIGNRLPROPSW, *POLEUIGNRLPROPSW, *LPOLEUIGNRLPROPSW;
+
+DECL_WINELIB_TYPE_AW(OLEUIGNRLPROPS)
+DECL_WINELIB_TYPE_AW(POLEUIGNRLPROPS)
+DECL_WINELIB_TYPE_AW(LPOLEUIGNRLPROPS)
+
+typedef struct tagOLEUIVIEWPROPSA
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    DWORD           dwReserved1[2];
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    DWORD           dwReserved2[3];
+    struct tagOLEUIOBJECTPROPSA* lpOP;
+    INT             nScaleMin;
+    INT             nScaleMax;
+} OLEUIVIEWPROPSA, *POLEUIVIEWPROPSA, *LPOLEUIVIEWPROPSA;
+
+typedef struct tagOLEUIVIEWPROPSW
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    DWORD           dwReserved1[2];
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    DWORD           dwReserved2[3];
+    struct tagOLEUIOBJECTPROPSW* lpOP;
+    INT             nScaleMin;
+    INT             nScaleMax;
+} OLEUIVIEWPROPSW, *POLEUIVIEWPROPSW, *LPOLEUIVIEWPROPSW;
+
+DECL_WINELIB_TYPE_AW(OLEUIVIEWPROPS)
+DECL_WINELIB_TYPE_AW(POLEUIVIEWPROPS)
+DECL_WINELIB_TYPE_AW(LPOLEUIVIEWPROPS)
+
+
+#define VPF_SELECTRELATIVE          0x00000001L
+#define VPF_DISABLERELATIVE         0x00000002L
+#define VPF_DISABLESCALE            0x00000004L
+
+typedef struct tagOLEUILINKPROPSA
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    DWORD           dwReserved1[2];
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    DWORD           dwReserved2[3];
+    struct tagOLEUIOBJECTPROPSA* lpOP;
+} OLEUILINKPROPSA, *POLEUILINKPROPSA, *LPOLEUILINKPROPSA;
+
+typedef struct tagOLEUILINKPROPSW
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    DWORD           dwReserved1[2];
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    DWORD           dwReserved2[3];
+    struct tagOLEUIOBJECTPROPSW* lpOP;
+} OLEUILINKPROPSW, *POLEUILINKPROPSW, *LPOLEUILINKPROPSW;
+
+DECL_WINELIB_TYPE_AW(OLEUILINKPROPS)
+DECL_WINELIB_TYPE_AW(POLEUILINKPROPS)
+DECL_WINELIB_TYPE_AW(LPOLEUILINKPROPS)
+
+typedef struct tagOLEUIOBJECTPROPSA
+{
+    DWORD                cbStruct;
+    DWORD                dwFlags;
+    LPPROPSHEETHEADERA   lpPS;
+    DWORD                dwObject;
+    LPOLEUIOBJINFOA      lpObjInfo;
+    DWORD                dwLink;
+    LPOLEUILINKINFOA     lpLinkInfo;
+    LPOLEUIGNRLPROPSA    lpGP;
+    LPOLEUIVIEWPROPSA    lpVP;
+    LPOLEUILINKPROPSA    lpLP;
+} OLEUIOBJECTPROPSA, *POLEUIOBJECTPROPSA, *LPOLEUIOBJECTPROPSA;
+
+typedef struct tagOLEUIOBJECTPROPSW
+{
+    DWORD                cbStruct;
+    DWORD                dwFlags;
+    LPPROPSHEETHEADERW   lpPS;
+    DWORD                dwObject;
+    LPOLEUIOBJINFOW      lpObjInfo;
+    DWORD                dwLink;
+    LPOLEUILINKINFOW     lpLinkInfo;
+    LPOLEUIGNRLPROPSW    lpGP;
+    LPOLEUIVIEWPROPSW    lpVP;
+    LPOLEUILINKPROPSW    lpLP;
+} OLEUIOBJECTPROPSW, *POLEUIOBJECTPROPSW, *LPOLEUIOBJECTPROPSW;
+
+DECL_WINELIB_TYPE_AW(OLEUIOBJECTPROPS)
+DECL_WINELIB_TYPE_AW(POLEUIOBJECTPROPS)
+DECL_WINELIB_TYPE_AW(LPOLEUIOBJECTPROPS)
+
+#define OPF_OBJECTISLINK                0x00000001L
+#define OPF_NOFILLDEFAULT               0x00000002L
+#define OPF_SHOWHELP                    0x00000004L
+#define OPF_DISABLECONVERT              0x00000008L
+
+
+/************************************************************************************
+ * CHANGE SOURCE DIALOG
+ */
+
+
+typedef struct tagOLEUICHANGESOURCEW
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCWSTR         lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCWSTR         lpszTemplate;
+    HRSRC           hResource;
+    OPENFILENAMEW*lpOFN;
+    DWORD           dwReserved1[4];
+    LPOLEUILINKCONTAINERW lpOleUILinkContainer;
+    DWORD           dwLink;
+    LPWSTR          lpszDisplayName;
+    ULONG           nFileLength;
+    LPWSTR          lpszFrom;
+    LPWSTR          lpszTo;
+} OLEUICHANGESOURCEW, *POLEUICHANGESOURCEW, *LPOLEUICHANGESOURCEW;
+
+
+typedef struct tagOLEUICHANGESOURCEA
+{
+    DWORD           cbStruct;
+    DWORD           dwFlags;
+    HWND            hWndOwner;
+    LPCSTR          lpszCaption;
+    LPFNOLEUIHOOK   lpfnHook;
+    LPARAM          lCustData;
+    HINSTANCE       hInstance;
+    LPCSTR          lpszTemplate;
+    HRSRC           hResource;
+    OPENFILENAMEA*  lpOFN;
+    DWORD           dwReserved1[4];
+    LPOLEUILINKCONTAINERA lpOleUILinkContainer;
+    DWORD           dwLink;
+    LPSTR           lpszDisplayName;
+    ULONG           nFileLength;
+    LPSTR           lpszFrom;
+    LPSTR           lpszTo;
+} OLEUICHANGESOURCEA, *POLEUICHANGESOURCEA, *LPOLEUICHANGESOURCEA;
+
+
+DECL_WINELIB_TYPE_AW(OLEUICHANGESOURCE)
+DECL_WINELIB_TYPE_AW(POLEUICHANGESOURCE)
+DECL_WINELIB_TYPE_AW(LPOLEUICHANGESOURCE)
+
+/* Change Source Dialog flags */
+#define CSF_SHOWHELP                    0x00000001L
+#define CSF_VALIDSOURCE                 0x00000002L
+#define CSF_ONLYGETSOURCE               0x00000004L
+#define CSF_EXPLORER                    0x00000008L
+
+
+/*****************************************************************************
+ * IOleUILinkContainer interface
+ */
+#define INTERFACE   IOleUILinkContainerA
+DECLARE_INTERFACE_(IOleUILinkContainerA,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IOleUILinkContainerA methods ***/
+    STDMETHOD_(DWORD,GetNextLink)(THIS_ DWORD dwLink) PURE;
+    STDMETHOD(SetLinkUpdateOptions)(THIS_ DWORD dwLink, DWORD dwUpdateOpt) PURE;
+    STDMETHOD(GetLinkUpdateOptions)(THIS_ DWORD dwLink, DWORD *lpdwUpdateOpt) PURE;
+    STDMETHOD(SetLinkSource)(THIS_ DWORD dwLink, LPSTR lpszDisplayName,
+                ULONG lenFileName, ULONG *pchEaten, BOOL fValidateSource) PURE;
+    STDMETHOD(GetLinkSource)(THIS_ DWORD dwLink, LPSTR *lplpszDisplayName, ULONG *lplenFileName,
+                LPSTR *lplpszFullLinkType,  LPSTR *lplpszShortLinkType,
+                BOOL *lpfSourceAvailable,  BOOL *lpfIsSelected) PURE;
+    STDMETHOD(OpenLinkSource)(THIS_ DWORD dwLink) PURE;
+    STDMETHOD(UpdateLink)(THIS_ DWORD dwLink, BOOL fErrorMessage, BOOL fReserved) PURE;
+    STDMETHOD(CancelLink)(THIS_ DWORD dwLink) PURE;
+};
+#undef INTERFACE
+
+#define INTERFACE   IOleUILinkContainerW
+DECLARE_INTERFACE_(IOleUILinkContainerW,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IOleUILinkContainerW methods ***/
+    STDMETHOD_(DWORD,GetNextLink)(THIS_ DWORD dwLink) PURE;
+    STDMETHOD(SetLinkUpdateOptions)(THIS_ DWORD dwLink,  DWORD dwUpdateOpt) PURE;
+    STDMETHOD(GetLinkUpdateOptions)(THIS_ DWORD dwLink,  DWORD *lpdwUpdateOpt) PURE;
+    STDMETHOD(SetLinkSource)(THIS_ DWORD dwLink,  LPWSTR lpszDisplayName,
+                ULONG lenFileName,  ULONG *pchEaten,  BOOL fValidateSource) PURE;
+    STDMETHOD(GetLinkSource)(THIS_ DWORD dwLink, LPWSTR *lplpszDisplayName, ULONG *lplenFileName,
+                LPWSTR *lplpszFullLinkType,  LPWSTR *lplpszShortLinkType,
+                BOOL *lpfSourceAvailable,  BOOL *lpfIsSelected) PURE;
+    STDMETHOD(OpenLinkSource)(THIS_ DWORD dwLink) PURE;
+    STDMETHOD(UpdateLink)(THIS_ DWORD dwLink, BOOL fErrorMessage, BOOL fReserved) PURE;
+    STDMETHOD(CancelLink)(THIS_ DWORD dwLink) PURE;
+};
+#undef INTERFACE
+
+DECL_WINELIB_TYPE_AW(IOleUILinkContainer)
+DECL_WINELIB_TYPE_AW(POLEUILINKCONTAINER)
+DECL_WINELIB_TYPE_AW(LPOLEUILINKCONTAINER)
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IOleUILinkContainer_QueryInterface(p,a,b)          (p)->lpVtbl->QueryInterface(p,a,b)
+#define IOleUILinkContainer_AddRef(p)                      (p)->lpVtbl->AddRef(p)
+#define IOleUILinkContainer_Release(p)                     (p)->lpVtbl->Release(p)
+/*** IOleUILinkContainer methods ***/
+#define IOleUILinkContainer_GetNextLink(p,a)               (p)->lpVtbl->GetNextLink(p,a)
+#define IOleUILinkContainer_SetLinkUpdateOptions(p,a,b)    (p)->lpVtbl->SetLinkUpdateOptions(p,a,b)
+#define IOleUILinkContainer_GetLinkUpdateOptions(p,a,b)    (p)->lpVtbl->GetLinkUpdateOptions(p,a,b)
+#define IOleUILinkContainer_SetLinkSource(p,a,b,c,d,e)     (p)->lpVtbl->SetLinkSource(p,a,b,c,d,e)
+#define IOleUILinkContainer_GetLinkSource(p,a,b,c,d,e,f,g) (p)->lpVtbl->GetLinkSource(p,a,b,c,d,e,f,g)
+#define IOleUILinkContainer_OpenLinkSource(p,a)            (p)->lpVtbl->OpenLinkSource(p,a)
+#define IOleUILinkContainer_UpdateLink(p,a,b,c)            (p)->lpVtbl->UpdateLink(p,a,b,c)
+#define IOleUILinkContainer_CancelLink(p,a)                (p)->lpVtbl->CancelLink(p,a)
 #endif
-#pragma pack(pop)
+
+
+/*****************************************************************************
+ * IOleUILinkInfo interface
+ */
+#define INTERFACE   IOleUILinkInfoA
+DECLARE_INTERFACE_(IOleUILinkInfoA,IOleUILinkContainerA)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IOleUILinkContainerA methods ***/
+    STDMETHOD_(DWORD,GetNextLink)(THIS_ DWORD dwLink) PURE;
+    STDMETHOD(SetLinkUpdateOptions)(THIS_ DWORD dwLink, DWORD dwUpdateOpt) PURE;
+    STDMETHOD(GetLinkUpdateOptions)(THIS_ DWORD dwLink, DWORD *lpdwUpdateOpt) PURE;
+    STDMETHOD(SetLinkSource)(THIS_ DWORD dwLink, LPSTR lpszDisplayName,
+                ULONG lenFileName, ULONG *pchEaten, BOOL fValidateSource) PURE;
+    STDMETHOD(GetLinkSource)(THIS_ DWORD dwLink, LPSTR *lplpszDisplayName, ULONG *lplenFileName,
+                LPSTR *lplpszFullLinkType,  LPSTR *lplpszShortLinkType,
+                BOOL *lpfSourceAvailable,  BOOL *lpfIsSelected) PURE;
+    STDMETHOD(OpenLinkSource)(THIS_ DWORD dwLink) PURE;
+    STDMETHOD(UpdateLink)(THIS_ DWORD dwLink, BOOL fErrorMessage, BOOL fReserved) PURE;
+    STDMETHOD(CancelLink)(THIS_ DWORD dwLink) PURE;
+    /*** IOleUILinkInfoA methods ***/
+    STDMETHOD(GetLastUpdate)(THIS_ DWORD dwLink,  FILETIME *lpLastUpdate) PURE;
+};
+#undef INTERFACE
+
+#define INTERFACE   IOleUILinkInfoW
+DECLARE_INTERFACE_(IOleUILinkInfoW,IOleUILinkContainerW)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IOleUILinkContainerW methods ***/
+    STDMETHOD_(DWORD,GetNextLink)(THIS_ DWORD dwLink) PURE;
+    STDMETHOD(SetLinkUpdateOptions)(THIS_ DWORD dwLink,  DWORD dwUpdateOpt) PURE;
+    STDMETHOD(GetLinkUpdateOptions)(THIS_ DWORD dwLink,  DWORD *lpdwUpdateOpt) PURE;
+    STDMETHOD(SetLinkSource)(THIS_ DWORD dwLink,  LPWSTR lpszDisplayName,
+                ULONG lenFileName,  ULONG *pchEaten,  BOOL fValidateSource) PURE;
+    STDMETHOD(GetLinkSource)(THIS_ DWORD dwLink, LPWSTR *lplpszDisplayName, ULONG *lplenFileName,
+                LPWSTR *lplpszFullLinkType,  LPWSTR *lplpszShortLinkType,
+                BOOL *lpfSourceAvailable,  BOOL *lpfIsSelected) PURE;
+    STDMETHOD(OpenLinkSource)(THIS_ DWORD dwLink) PURE;
+    STDMETHOD(UpdateLink)(THIS_ DWORD dwLink, BOOL fErrorMessage, BOOL fReserved) PURE;
+    STDMETHOD(CancelLink)(THIS_ DWORD dwLink) PURE;
+    /*** IOleUILinkInfoW methods ***/
+    STDMETHOD(GetLastUpdate)(THIS_ DWORD dwLink,  FILETIME *lpLastUpdate) PURE;
+};
+#undef  INTERFACE
+
+DECL_WINELIB_TYPE_AW(IOleUILinkInfo)
+DECL_WINELIB_TYPE_AW(POLEUILINKINFO)
+DECL_WINELIB_TYPE_AW(LPOLEUILINKINFO)
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IOleUILinkInfo_QueryInterface(p,a,b)          (p)->lpVtbl->QueryInterface(p,a,b)
+#define IOleUILinkInfo_AddRef(p)                      (p)->lpVtbl->AddRef(p)
+#define IOleUILinkInfo_Release(p)                     (p)->lpVtbl->Release(p)
+/*** IOleUILinkContainer methods ***/
+#define IOleUILinkInfo_GetNextLink(p,a)               (p)->lpVtbl->GetNextLink(p,a)
+#define IOleUILinkInfo_SetLinkUpdateOptions(p,a,b)    (p)->lpVtbl->SetLinkUpdateOptions(p,a,b)
+#define IOleUILinkInfo_GetLinkUpdateOptions(p,a,b)    (p)->lpVtbl->GetLinkUpdateOptions(p,a,b)
+#define IOleUILinkInfo_SetLinkSource(p,a,b,c,d,e)     (p)->lpVtbl->SetLinkSource(p,a,b,c,d,e)
+#define IOleUILinkInfo_GetLinkSource(p,a,b,c,d,e,f,g) (p)->lpVtbl->GetLinkSource(p,a,b,c,d,e,f,g)
+#define IOleUILinkInfo_OpenLinkSource(p,a)            (p)->lpVtbl->OpenLinkSource(p,a)
+#define IOleUILinkInfo_UpdateLink(p,a,b,c)            (p)->lpVtbl->UpdateLink(p,a,b,c)
+#define IOleUILinkInfo_CancelLink(p,a)                (p)->lpVtbl->CancelLink(p,a)
+/*** IOleUILinkInfo methods ***/
+#define IOleUILinkInfo_GetLastUpdate(p,a,b)           (p)->lpVtbl->GetLastUpdate(p,a,b)
 #endif
+
+
+/*****************************************************************************
+ * IOleUIObjInfo interface
+ */
+#define INTERFACE   IOleUIObjInfoA
+DECLARE_INTERFACE_(IOleUIObjInfoA,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IOleUIObjInfoA methods ***/
+    STDMETHOD(GetObjectInfo)(THIS_ DWORD dwObject, DWORD *lpdwObjSize, LPSTR *lplpszLabel,
+                LPSTR *lplpszType, LPSTR *lplpszShortType, LPSTR *lplpszLocation) PURE;
+    STDMETHOD(GetConvertInfo)(THIS_ DWORD dwObject, CLSID *lpClassID, WORD *lpwFormat,
+                CLSID *lpConvertDefaultClassID, LPCLSID *lplpClsidExclude, UINT *lpcClsidExclude) PURE;
+    STDMETHOD(ConvertObject)(THIS_ DWORD dwObject,  REFCLSID clsidNew) PURE;
+    STDMETHOD(GetViewInfo)(THIS_ DWORD dwObject, HGLOBAL *phMetaPict, DWORD *pdvAspect, INT *pnCurrentScale) PURE;
+    STDMETHOD(SetViewInfo)(THIS_ DWORD dwObject, HGLOBAL hMetaPict, DWORD dvAspect,
+                INT nCurrentScale, BOOL bRelativeToOrig) PURE;
+};
+#undef INTERFACE
+
+#define INTERFACE   IOleUIObjInfoW
+DECLARE_INTERFACE_(IOleUIObjInfoW,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IOleUIObjInfoW methods ***/
+    STDMETHOD(GetObjectInfo)(THIS_ DWORD dwObject, DWORD *lpdwObjSize, LPWSTR *lplpszLabel,
+                LPWSTR *lplpszType,  LPWSTR *lplpszShortType,  LPWSTR *lplpszLocation) PURE;
+    STDMETHOD(GetConvertInfo)(THIS_ DWORD dwObject, CLSID *lpClassID, WORD *lpwFormat,
+                CLSID *lpConvertDefaultClassID, LPCLSID *lplpClsidExclude, UINT *lpcClsidExclude) PURE;
+    STDMETHOD(ConvertObject)(THIS_ DWORD dwObject,  REFCLSID clsidNew) PURE;
+    STDMETHOD(GetViewInfo)(THIS_ DWORD dwObject, HGLOBAL *phMetaPict, DWORD *pdvAspect, INT *pnCurrentScale) PURE;
+    STDMETHOD(SetViewInfo)(THIS_ DWORD dwObject, HGLOBAL hMetaPict, DWORD dvAspect,
+                INT nCurrentScale, BOOL bRelativeToOrig) PURE;
+};
+#undef INTERFACE
+
+DECL_WINELIB_TYPE_AW(IOleUIObjInfo)
+DECL_WINELIB_TYPE_AW(POLEUIOBJINFO)
+DECL_WINELIB_TYPE_AW(LPOLEUIOBJINFO)
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IOleUIObjInfo_QueryInterface(p,a,b)            (p)->lpVtbl->QueryInterface(p,a,b)
+#define IOleUIObjInfo_AddRef(p)                        (p)->lpVtbl->AddRef(p)
+#define IOleUIObjInfo_Release(p)                       (p)->lpVtbl->Release(p)
+/*** IOleUIObjInfo methods ***/
+#define IOleUIObjInfo_GetObjectInfo(p,a,b,c,d,e,f)     (p)->lpVtbl->GetObjectInfo(p,a,b,c,d,e,f)
+#define IOleUIObjInfo_GetConvertInfo(p,a,b,c,d,e,f)    (p)->lpVtbl->GetConvertInfo(p,a,b,c,d,e,f)
+#define IOleUIObjInfo_ConvertObject(p,a,b)             (p)->lpVtbl->ConvertObject(p,a,b)
+#define IOleUIObjInfo_GetViewInfo(p,a,b,c,d)           (p)->lpVtbl->GetViewInfo(p,a,b,c,d)
+#define IOleUIObjInfo_SetViewInfo(p,a,b,c,d,e)         (p)->lpVtbl->SetViewInfo(p,a,b,c,d,e)
+#endif
+
+UINT WINAPI  OleUIInsertObjectW(LPOLEUIINSERTOBJECTW);
+UINT WINAPI  OleUIInsertObjectA(LPOLEUIINSERTOBJECTA);
+#define      OleUIInsertObject WINELIB_NAME_AW(OleUIInsertObject)
+UINT WINAPI  OleUIConvertA(LPOLEUICONVERTA);
+UINT WINAPI  OleUIConvertW(LPOLEUICONVERTW);
+#define      OleUIConvert WINELIB_NAME_AW(OleUIConvert)
+UINT WINAPI  OleUIChangeIconA(LPOLEUICHANGEICONA);
+UINT WINAPI  OleUIChangeIconW(LPOLEUICHANGEICONW);
+#define      OleUIChangeIcon WINELIB_NAME_AW(OleUIChangeIcon)
+UINT WINAPI  OleUIBusyA(LPOLEUIBUSYA);
+UINT WINAPI  OleUIBusyW(LPOLEUIBUSYW);
+#define      OleUIBusy WINELIB_NAME_AW(OleUIBusy)
+UINT WINAPI  OleUIObjectPropertiesA(LPOLEUIOBJECTPROPSA);
+UINT WINAPI  OleUIObjectPropertiesW(LPOLEUIOBJECTPROPSW);
+#define      OleUIObjectProperties WINELIB_NAME_AW(OleUIObjectProperties)
+UINT WINAPI  OleUIChangeSourceW(LPOLEUICHANGESOURCEW);
+UINT WINAPI  OleUIChangeSourceA(LPOLEUICHANGESOURCEA);
+#define      OleUIChangeSource WINELIB_NAME_AW(OleUIChangeSource)
+UINT WINAPI  OleUIEditLinksA(LPOLEUIEDITLINKSA lpOleUIEditLinks);
+UINT WINAPI  OleUIEditLinksW(LPOLEUIEDITLINKSW lpOleUIEditLinks);
+#define      OleUIEditLinks WINELIB_NAME_AW(OleUIEditLinks)
+BOOL WINAPI  OleUIUpdateLinksA(LPOLEUILINKCONTAINERA lpOleUILinkCntr, HWND hwndParent, LPSTR lpszTitle, INT cLinks);
+BOOL WINAPI  OleUIUpdateLinksW(LPOLEUILINKCONTAINERW lpOleUILinkCntr, HWND hwndParent, LPWSTR lpszTitle, INT cLinks);
+#define      OleUIUpdateLinks WINELIB_NAME_AW(OleUIUpdateLinks)
+BOOL WINAPI  OleUIAddVerbMenuA(LPOLEOBJECT lpOleObj, LPCSTR lpszShortType, HMENU hMenu, UINT uPos, UINT uIDVerbMin, UINT uIDVerbMax,
+  BOOL bAddConvert, UINT idConvert, HMENU *lphMenu);
+BOOL WINAPI  OleUIAddVerbMenuW(LPOLEOBJECT lpOleObj, LPCWSTR lpszShortType, HMENU hMenu, UINT uPos, UINT uIDVerbMin, UINT uIDVerbMax,
+  BOOL bAddConvert, UINT idConvert, HMENU *lphMenu);
+#define      OleUIAddVerbMenu WINELIB_NAME_AW(OleUIAddVerbMenu)
+UINT WINAPI  OleUIPasteSpecialA(LPOLEUIPASTESPECIALA lpOleUIPasteSpecial);
+UINT WINAPI  OleUIPasteSpecialW(LPOLEUIPASTESPECIALW lpOleUIPasteSpecial);
+#define      OleUIPasteSpecial WINELIB_NAME_AW(OleUIPasteSpecial)
+INT  __cdecl OleUIPromptUserA(INT,HWND, ...);
+INT  __cdecl OleUIPromptUserW(INT,HWND, ...);
+#define      OleUIPromptUser WINELIB_NAME_AW(OleUIPromptUser)
+
 #ifdef __cplusplus
-}
+} /* Extern "C" */
 #endif
-#endif
+
+
+#endif  /* __WINE_OLEDLG_H */

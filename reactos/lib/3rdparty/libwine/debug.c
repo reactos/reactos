@@ -211,27 +211,6 @@ const char *wine_dbgstr_wn(const WCHAR *src, int n)
     return res;
 }
 
-/***********************************************************************
- *              wine_dbgstr_guid
- */
-const char *wine_dbgstr_guid(const GUID *id)
-{
-    char *str;
-
-    if (!id) return "(null)";
-    if (!HIWORD(id)) {
-        str = gimme1(12);
-        sprintf(str, "<guid-0x%04x>", (WORD)(DWORD)(id));
-    } else {
-        str = gimme1(40);
-        sprintf(str, "{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-                id->Data1, id->Data2, id->Data3,
-                id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
-                id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7]);
-    }
-    return str;
-}
-
 const char *wine_dbgstr_longlong( unsigned long long ll )
 {
     if (ll >> 32) return wine_dbg_sprintf( "%lx%08lx", (unsigned long)(ll >> 32), (unsigned long)ll );

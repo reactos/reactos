@@ -37,13 +37,11 @@ struct _GUID;
 extern const char *wine_dbgstr_w( const WCHAR *s );
 extern const char *wine_dbgstr_an( const char * s, int n );
 extern const char *wine_dbgstr_wn( const wchar_t *s, int n );
-extern const char *wine_dbgstr_guid( const struct _GUID *id );
 extern const char *wine_dbgstr_longlong( unsigned long long ll );
 extern const char *wine_dbg_sprintf( const char *format, ... );
 
 inline static const char *debugstr_an( const char * s, int n ) { return wine_dbgstr_an( s, n ); }
 inline static const char *debugstr_wn( const wchar_t *s, int n ) { return wine_dbgstr_wn( s, n ); }
-inline static const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
 inline static const char *debugstr_a( const char *s )  { return wine_dbgstr_an( s, 80 ); }
 inline static const char *debugstr_w( const wchar_t *s ) { return wine_dbgstr_wn( s, 80 ); }
 inline static const char *debugres_a( const char *s )  { return wine_dbgstr_an( s, 80 ); }
@@ -66,6 +64,18 @@ static inline const char *wine_dbgstr_rect( const RECT *rect )
     if (!rect) return "(null)";
     return wine_dbg_sprintf( "(%ld,%ld)-(%ld,%ld)", rect->left, rect->top, rect->right, rect->bottom );
 }
+
+static inline const char *wine_dbgstr_guid( const GUID *id )
+{
+    if (!id) return "(null)";
+    if (!((INT_PTR)id >> 16)) return wine_dbg_sprintf( "<guid-0x%04x>", (INT_PTR)id & 0xffff );
+    return wine_dbg_sprintf( "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+                             id->Data1, id->Data2, id->Data3,
+                             id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
+                             id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7] );
+}
+
+static inline const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
 
 #define TRACE        DPRINT
 #define TRACE_(ch)   DPRINT

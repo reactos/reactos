@@ -14,7 +14,7 @@
 #define COM_NO_WINDOWS_H
 #define _COMDLG32_
 
-#if defined (_MSC_VER)
+//#if defined (_MSC_VER)
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
@@ -27,32 +27,23 @@
 #include <guiddef.h>
 #include <dlgs.h>
 #include <cderr.h>
-#endif
-
-#include "wine/windef.h"
-#include "winbase.h"
-#include "wine/wingdi.h"
-#include "wine/winuser.h"
-#include "wine/commdlg.h"
-#include "wine/shellapi.h"
+//#endif
 
 #if !defined (_MSC_VER)
 #include "psdk/shlguid.h"
 #include "psdk/shlobj.h"
 #endif
 
-#include "wine/shlguid.h"
-#include "wine/shlobj.h"
+#include "shlguid.h"
+#include "shlobj.h"
 
 #if !defined (_MSC_VER)
 #include "psdk/shlguid.h"
 #include "psdk/shlwapi.h"
-#include "wine/shlwapi.h"
 #endif
 
 #include "wine/winbase16.h"
 #include "wine/winuser16.h"
-#include "wine/guiddef.h"
 #include "wine/dlgs.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"

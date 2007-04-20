@@ -44,9 +44,6 @@ extern "C" {
     #define KSDDKAPI DECLSPEC_IMPORT
 #endif
 
-#include <reactos/debug.h>
-#include <ntddk.h>
-
 /* TODO */
 #define KSDDKAPI
 

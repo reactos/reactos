@@ -1,0 +1,67 @@
+/*
+ * Copyright 2002 Ove Kaaven
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "wtypes.idl";
+
+/* Interfaces */
+
+[
+  local,
+  object,
+  uuid(00000000-0000-0000-C000-000000000046),
+  pointer_default(unique)
+]
+interface IUnknown
+{
+  typedef [unique] IUnknown *LPUNKNOWN;
+
+  HRESULT QueryInterface(
+    [in] REFIID riid,
+    [out, iid_is(riid)] void **ppvObject);
+  ULONG AddRef();
+  ULONG Release();
+}
+
+[
+  object,
+  uuid(00000001-0000-0000-C000-000000000046),
+  pointer_default(unique)
+]
+interface IClassFactory : IUnknown
+{
+  typedef [unique] IClassFactory *LPCLASSFACTORY;
+
+  [local]
+  HRESULT CreateInstance(
+    [in, unique] IUnknown *pUnkOuter,
+    [in] REFIID riid,
+    [out, iid_is(riid)] void **ppvObject);
+
+  [call_as(CreateInstance)]
+  HRESULT RemoteCreateInstance(
+    [in] REFIID riid,
+    [out, iid_is(riid)] IUnknown **ppvObject);
+
+  [local]
+  HRESULT LockServer(
+    [in] BOOL fLock);
+
+  [call_as(LockServer)]
+  HRESULT RemoteLockServer(
+    [in] BOOL fLock);
+}

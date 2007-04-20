@@ -14,20 +14,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
-#ifndef __OBJSEL_H
-#define __OBJSEL_H
+#ifndef __OBJSEL_H_
+#define __OBJSEL_H_
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#include <objidl.h>
-#include <oaidl.h>
-
-/* the PSDK headers defines it as EXTERN_C const GUID CLSID_DsObjectPicker = {...},
- * but that's not a good idea when EXTERN_C is extern... */
-#ifndef DEFINE_GUID
-#include <initguid.h>
 #endif
 
 DEFINE_GUID(CLSID_DsObjectPicker, 0x17d6ccd8, 0x3b7b, 0x11d2, 0x00b9, 0xe0,0x00,0xc0,0x4f,0xd8,0xdb,0xf7);
@@ -166,8 +157,8 @@ DECLARE_INTERFACE_(IDsObjectPicker,IUnknown)
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IDsObjectPicker methods ***/
-    STDMETHOD_(HRESULT,Initialize)(THIS_ PDSOP_INIT_INFO pInitInfo) PURE;
-    STDMETHOD_(HRESULT,InvokeDialog)(THIS_ HWND hwndParent, IDataObject ** ppdoSelections) PURE;
+    STDMETHOD(Initialize)(THIS_ PDSOP_INIT_INFO pInitInfo) PURE;
+    STDMETHOD(InvokeDialog)(THIS_ HWND hwndParent, IDataObject** ppdoSelections) PURE;
 };
 #undef INTERFACE
 
@@ -175,4 +166,4 @@ DECLARE_INTERFACE_(IDsObjectPicker,IUnknown)
 #ifdef __cplusplus
 }
 #endif
-#endif /* __OBJSEL_H */
+#endif /* __OBJSEL_H_ */

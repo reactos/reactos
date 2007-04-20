@@ -1,16 +1,25 @@
-#ifndef _SHLGUID_H
-#define _SHLGUID_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
+/*
+ * Copyright (C) 1999 Juergen Schmied
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef __WINE_SHLGUID_H
+#define __WINE_SHLGUID_H
 
 #define DEFINE_SHLGUID(name, l, w1, w2) DEFINE_OLEGUID(name,l,w1,w2)
-
-DEFINE_GUID(IID_IShellFolderViewCB, 0x2047E320L, 0xF2A9, 0x11CE, 0xAE, 0x65, 0x08, 0x00, 0x2B, 0x2E, 0x12, 0x62);
 
 DEFINE_SHLGUID(CLSID_ShellDesktop,      0x00021400L, 0, 0);
 DEFINE_SHLGUID(CLSID_ShellLink,         0x00021401L, 0, 0);
@@ -32,7 +41,6 @@ DEFINE_SHLGUID(CGID_ShellServiceObject, 0x000214D2L, 0, 0);
 DEFINE_SHLGUID(CGID_ExplorerBarDoc,     0x000214D3L, 0, 0);
 
 DEFINE_SHLGUID(IID_IShellIcon,          0x000214E5L, 0, 0);
-DEFINE_SHLGUID(IID_IShellPropSheetExt,  0x000214E9L, 0, 0);
 DEFINE_SHLGUID(IID_IShellDetails,       0x000214ECL, 0, 0);
 DEFINE_SHLGUID(IID_IDelayedRelease,     0x000214EDL, 0, 0);
 DEFINE_SHLGUID(IID_IShellCopyHookA,     0x000214EFL, 0, 0);
@@ -44,23 +52,29 @@ DEFINE_SHLGUID(IID_IShellCopyHookW,     0x000214FCL, 0, 0);
 DEFINE_SHLGUID(IID_IRemoteComputer,     0x000214FEL, 0, 0);
 DEFINE_SHLGUID(IID_IQueryInfo,          0x00021500L, 0, 0);
 
-DEFINE_SHLGUID(IID_IExtractIconA,       0x000214EBL, 0, 0);
-DEFINE_SHLGUID(IID_IExtractIconW,       0x000214FAL, 0, 0);
-DEFINE_SHLGUID(IID_IContextMenu,        0x000214E4L, 0, 0);
-DEFINE_SHLGUID(IID_IContextMenu2,       0x000214F4L, 0, 0);
-DEFINE_SHLGUID(IID_ICommDlgBrowser,     0x000214F1L, 0, 0);
-DEFINE_SHLGUID(IID_IShellBrowser,       0x000214E2L, 0, 0);
-DEFINE_SHLGUID(IID_IShellView,          0x000214E3L, 0, 0);
-DEFINE_SHLGUID(IID_IShellFolder,        0x000214E6L, 0, 0);
-DEFINE_SHLGUID(IID_IShellExtInit,       0x000214E8L, 0, 0);
-DEFINE_SHLGUID(IID_IPersistFolder,      0x000214EAL, 0, 0);
-DEFINE_SHLGUID(IID_IShellLinkA,         0x000214EEL, 0, 0);
-DEFINE_SHLGUID(IID_IEnumIDList,         0x000214F2L, 0, 0);
-DEFINE_SHLGUID(IID_IShellLinkW,         0x000214F9L, 0, 0);
-DEFINE_SHLGUID(IID_IShellExecuteHookA,  0x000214F5L, 0, 0);
-DEFINE_SHLGUID(IID_IShellExecuteHookW,  0x000214FBL, 0, 0);
-DEFINE_SHLGUID(IID_INewShortcutHookA,   0x000214E1L, 0, 0);
-DEFINE_SHLGUID(IID_INewShortcutHookW,   0x000214F7L, 0, 0);
+DEFINE_GUID(IID_IACList,   0x77A130B0L,0x94FD,0x11D0,0xA5,0x44,0x00,0xC0,0x4F,0xD7,0xD0,0x62);
+DEFINE_GUID(IID_IACList2,  0x470141A0L,0x5186,0x11D2,0xBB,0xB6,0x00,0x60,0x97,0x7B,0x46,0x4C);
+DEFINE_GUID(IID_IObjMgr,   0x00BB2761L,0x6A77,0x11D0,0xA5,0x35,0x00,0xC0,0x4F,0xD7,0xD0,0x62);
+
+/* avoid duplicate definitions with shobjidl.h (FIXME) */
+/* DEFINE_SHLGUID(IID_IShellPropSheetExt,  0x000214E9L, 0, 0); */
+/* DEFINE_SHLGUID(IID_IExtractIconA,       0x000214EBL, 0, 0); */
+/* DEFINE_SHLGUID(IID_IExtractIconW,       0x000214FAL, 0, 0); */
+/* DEFINE_SHLGUID(IID_IContextMenu,        0x000214E4L, 0, 0); */
+/* DEFINE_SHLGUID(IID_IContextMenu2,       0x000214F4L, 0, 0); */
+/* DEFINE_SHLGUID(IID_ICommDlgBrowser,     0x000214F1L, 0, 0); */
+/* DEFINE_SHLGUID(IID_IShellBrowser,       0x000214E2L, 0, 0); */
+/* DEFINE_SHLGUID(IID_IShellView,          0x000214E3L, 0, 0); */
+/* DEFINE_SHLGUID(IID_IShellFolder,        0x000214E6L, 0, 0); */
+/* DEFINE_SHLGUID(IID_IShellExtInit,       0x000214E8L, 0, 0); */
+/* DEFINE_SHLGUID(IID_IPersistFolder,      0x000214EAL, 0, 0); */
+/* DEFINE_SHLGUID(IID_IShellLinkA,         0x000214EEL, 0, 0); */
+/* DEFINE_SHLGUID(IID_IEnumIDList,         0x000214F2L, 0, 0); */
+/* DEFINE_SHLGUID(IID_IShellLinkW,         0x000214F9L, 0, 0); */
+/* DEFINE_SHLGUID(IID_IShellExecuteHookA,  0x000214F5L, 0, 0); */
+/* DEFINE_SHLGUID(IID_IShellExecuteHookW,  0x000214FBL, 0, 0); */
+/* DEFINE_SHLGUID(IID_INewShortcutHookA,   0x000214E1L, 0, 0); */
+/* DEFINE_SHLGUID(IID_INewShortcutHookW,   0x000214F7L, 0, 0); */
 
 DEFINE_GUID(CLSID_CUrlHistory, 0x3c374a40, 0xbae4, 0x11cf, 0xbf, 0x7d, 0x00, 0xaa, 0x00, 0x69, 0x46, 0xee);
 #define SID_SUrlHistory       CLSID_CUrlHistory
@@ -71,21 +85,12 @@ DEFINE_GUID(SID_STopLevelBrowser, 0x4C96BE40L, 0x915C, 0x11CF, 0x99, 0xD3, 0x00,
 
 #define SID_SShellBrowser     IID_IShellBrowser
 
-#ifdef UNICODE
-#define IID_IFileViewer       IID_IFileViewerW
-#define IID_IShellLink        IID_IShellLinkW
-#define IID_IExtractIcon      IID_IExtractIconW
-#define IID_IShellCopyHook    IID_IShellCopyHookW
-#define IID_IShellExecuteHook IID_IShellExecuteHookW
-#define IID_INewShortcutHook  IID_INewShortcutHookW
-#else
-#define IID_IFileViewer       IID_IFileViewerA
-#define IID_IShellLink        IID_IShellLinkA
-#define IID_IExtractIcon      IID_IExtractIconA
-#define IID_IShellCopyHook    IID_IShellCopyHookA
-#define IID_IShellExecuteHook IID_IShellExecuteHookA
-#define IID_INewShortcutHook  IID_INewShortcutHookA
-#endif
+#define IID_IFileViewer       WINELIB_NAME_AW(IID_IFileViewer)
+#define IID_IShellLink        WINELIB_NAME_AW(IID_IShellLink)
+#define IID_IExtractIcon      WINELIB_NAME_AW(IID_IExtractIcon)
+#define IID_IShellCopyHook    WINELIB_NAME_AW(IID_IShellCopyHook)
+#define IID_IShellExecuteHook WINELIB_NAME_AW(IID_IShellExecuteHook)
+#define IID_INewShortcutHook  WINELIB_NAME_AW(IID_INewShortcutHook)
 
 DEFINE_GUID(IID_IDockingWindow,     0x012dd920L, 0x7B26, 0x11D0, 0x8C, 0xA9, 0x00, 0xA0, 0xC9, 0x2D, 0xBF, 0xE8);
 DEFINE_GUID(IID_IDockingWindowSite, 0x2A342FC2L, 0x7B26, 0x11D0, 0x8C, 0xA9, 0x00, 0xA0, 0xC9, 0x2D, 0xBF, 0xE8);
@@ -113,9 +118,7 @@ DEFINE_GUID(IID_IQueryAssociations, 0xc46ca590, 0x3c3f, 0x11d2, 0xbe, 0xe6, 0x00
 DEFINE_GUID(CLSID_DragDropHelper, 0x4657278a, 0x411b, 0x11d2, 0x83, 0x9a, 0x00, 0xc0, 0x4f, 0xd9, 0x18, 0xd0);
 
 DEFINE_GUID(CLSID_AutoComplete, 0x00bb2763, 0x6a77, 0x11d0, 0xa5, 0x35, 0x00, 0xc0, 0x4f, 0xd7, 0xd0, 0x62);
-
-DEFINE_GUID(IID_IDragSourceHelper, 0xde5bf786, 0x477a, 0x11d2, 0x83, 0x9d, 0x0, 0xc0, 0x4f, 0xd9, 0x18, 0xd0);
-DEFINE_GUID(IID_IDropTargetHelper, 0x4657278b, 0x411b, 0x11d2, 0x83, 0x9a, 0x0, 0xc0, 0x4f, 0xd9, 0x18, 0xd0);
+DEFINE_GUID(CLSID_ACLMulti,     0x00bb2765, 0x6a77, 0x11d0, 0xa5, 0x35, 0x00, 0xc0, 0x4f, 0xd7, 0xd0, 0x62);
 
 #define PSGUID_SHELLDETAILS     {0x28636aa6, 0x953d, 0x11d2, 0xb5, 0xd6, 0x0, 0xc0, 0x4f, 0xd9, 0x18, 0xd0}
 DEFINE_GUID(FMTID_ShellDetails,  0x28636aa6, 0x953d, 0x11d2, 0xb5, 0xd6, 0x0, 0xc0, 0x4f, 0xd9, 0x18, 0xd0);
@@ -135,8 +138,5 @@ DEFINE_GUID(FMTID_Displaced, 0x9b174b33, 0x40ff, 0x11d2, 0xa2, 0x7e, 0x0, 0xc0, 
 #define PID_DISPLACED_FROM 2
 #define PID_DISPLACED_DATE 3
 
-#ifdef __cplusplus
-}
-#endif
 
-#endif
+#endif /* __WINE_SHLGUID_H */

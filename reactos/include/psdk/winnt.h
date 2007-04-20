@@ -4,6 +4,7 @@
 #pragma GCC system_header
 #endif
 
+
 /* translate GCC target defines to MS equivalents. Keep this synchronized
    with windows.h. */
 #if defined(__i686__) && !defined(_M_IX86)
@@ -30,12 +31,28 @@
 #define _68K_
 #endif
 
+#ifndef DECLSPEC_ALIGN
+# if defined(_MSC_VER) && (_MSC_VER >= 1300) && !defined(MIDL_PASS)
+#  define DECLSPEC_ALIGN(x) __declspec(align(x))
+# elif defined(__GNUC__)
+#  define DECLSPEC_ALIGN(x) __attribute__((aligned(x)))
+# else
+#  define DECLSPEC_ALIGN(x)
+# endif
+#endif
+
+# define DECLSPEC_HIDDEN
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <basetsd.h>
+#include <guiddef.h>
+
 #include <ctype.h>
 #include <winerror.h>
+#include <stddef.h>
 #include <sdkddkver.h>
 
 #ifndef RC_INVOKED
@@ -111,6 +128,26 @@ typedef unsigned short wchar_t;
 #endif
 #endif
 #endif
+
+#ifdef __cplusplus
+# define EXTERN_C    extern "C"
+#else
+# define EXTERN_C    extern
+#endif
+
+#define STDMETHODCALLTYPE       __stdcall
+#define STDMETHODVCALLTYPE      __cdecl
+#define STDAPICALLTYPE          __stdcall
+#define STDAPIVCALLTYPE         __cdecl
+
+#define STDAPI                  EXTERN_C HRESULT STDAPICALLTYPE
+#define STDAPI_(type)           EXTERN_C type STDAPICALLTYPE
+#define STDMETHODIMP            HRESULT STDMETHODCALLTYPE
+#define STDMETHODIMP_(type)     type STDMETHODCALLTYPE
+#define STDAPIV                 EXTERN_C HRESULT STDAPIVCALLTYPE
+#define STDAPIV_(type)          EXTERN_C type STDAPIVCALLTYPE
+#define STDMETHODIMPV           HRESULT STDMETHODVCALLTYPE
+#define STDMETHODIMPV_(type)    type STDMETHODVCALLTYPE
 
 typedef wchar_t WCHAR;
 typedef WCHAR *PWCHAR,*LPWCH,*PWCH,*NWPSTR,*LPWSTR,*PWSTR;
@@ -1626,8 +1663,9 @@ typedef struct _GUID {
 	unsigned short Data3;
 	unsigned char  Data4[8];
 } GUID, *REFGUID, *LPGUID;
-#define SYSTEM_LUID { 0x3E7, 0x0 }
 #endif /* GUID_DEFINED */
+
+#define SYSTEM_LUID { 0x3E7, 0x0 }
 
 /* ACE Access Types, also in ntifs.h */
 #define ACCESS_MIN_MS_ACE_TYPE                  (0x0)

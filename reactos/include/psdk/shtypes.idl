@@ -1,0 +1,74 @@
+/*
+ * Type definitions for shell objects
+ *
+ * Copyright (C) 1999 Juergen Schmied
+ * Copyright (C) 2003 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "wtypes.idl";
+
+cpp_quote("#include <pshpack1.h>")
+typedef struct
+{
+    WORD cb;      /* nr of bytes in this item */
+    BYTE abID[1]; /* first byte in this item */
+} SHITEMID, *LPSHITEMID;
+typedef const SHITEMID *LPCSHITEMID;
+
+typedef struct _ITEMIDLIST
+{
+    SHITEMID mkid; /* first itemid in list */
+} ITEMIDLIST,*LPITEMIDLIST;
+typedef const ITEMIDLIST *LPCITEMIDLIST;
+cpp_quote("#include <poppack.h>")
+
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
+
+cpp_quote("#if 0")
+typedef struct { int dummy; } WIN32_FIND_DATAA, WIN32_FIND_DATAW;
+cpp_quote("#endif")
+
+typedef enum tagSTRRET_TYPE
+{
+    STRRET_WSTR = 0,
+    STRRET_OFFSET = 1,
+    STRRET_CSTR = 2
+} STRRET_TYPE;
+
+cpp_quote("#include <pshpack4.h>")
+typedef struct _STRRET
+{
+    UINT uType;			/* STRRET_xxx */
+    [switch_type(UINT), switch_is(uType)] union
+    {
+    [case(STRRET_WSTR)][string] LPWSTR    pOleStr;        /* OLESTR that will be freed */
+    [case(STRRET_OFFSET)]       UINT      uOffset;        /* Offset into SHITEMID (ANSI) */
+    [case(STRRET_CSTR)]         char      cStr[MAX_PATH]; /* ANSI Buffer */
+    } DUMMYUNIONNAME;
+} STRRET, *LPSTRRET;
+cpp_quote("#include <poppack.h>")
+
+cpp_quote("#include <pshpack1.h>")
+typedef struct
+{
+    int fmt;
+    int cxChar;
+    STRRET str;
+} SHELLDETAILS, *LPSHELLDETAILS;
+cpp_quote("#include <poppack.h>")

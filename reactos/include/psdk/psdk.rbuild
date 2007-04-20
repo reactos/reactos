@@ -1,0 +1,26 @@
+<module name="psdk" type="idlheader">
+	<file>docobj.idl</file>
+	<file>oaidl.idl</file>
+	<file>objidl.idl</file>
+	<file>objsafe.idl</file>
+	<file>ocmm.idl</file>
+	<file>oledb.idl</file>
+	<file>oleidl.idl</file>
+	<file>optary.idl</file>
+	<file>propidl.idl</file>
+	<file>pstore.idl</file>
+	<file>richole.idl</file>
+	<file>sensevts.idl</file>
+	<file>servprov.idl</file>
+	<file>shldisp.idl</file>
+	<file>shobjidl.idl</file>
+	<file>shtypes.idl</file>
+	<file>strmif.idl</file>
+	<file>tom.idl</file>
+	<file>unknwn.idl</file>
+	<file>urlhist.idl</file>
+	<file>urlmon.idl</file>
+	<file>mshtmhst.idl</file>
+	<file>exdisp.idl</file>
+	<file>wtypes.idl</file>
+</module>

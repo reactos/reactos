@@ -744,10 +744,17 @@ typedef struct _SOCKET_ADDRESS_LIST {
 
 #ifndef __BLOB_T_DEFINED /* also in wtypes.h and nspapi.h */
 #define __BLOB_T_DEFINED
+/* wine is using a diff define */
+#ifndef _tagBLOB_DEFINED
+#define _tagBLOB_DEFINED
+#define _BLOB_DEFINED
+#define _LPBLOB_DEFINED
+
 typedef struct _BLOB {
 	ULONG	cbSize;
 	BYTE	*pBlobData;
 } BLOB,*PBLOB,*LPBLOB;
+#endif
 #endif
 
 typedef struct _WSAQuerySetA

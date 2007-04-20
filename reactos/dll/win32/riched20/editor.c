@@ -3,6 +3,7 @@
  *
  * Copyright 2004 by Krzysztof Foltman
  * Copyright 2005 by Cihan Altinay
+ * Copyright 2005 by Phil Krylov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,14 +17,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* 
   API implementation status:
   
   Messages (ANSI versions not done yet)
-  - EM_AUTOURLDETECT 2.0
+  + EM_AUTOURLDETECT 2.0
   + EM_CANPASTE
   + EM_CANREDO 2.0
   + EM_CANUNDO
@@ -31,7 +32,7 @@
   - EM_DISPLAYBAND
   + EM_EMPTYUNDOBUFFER
   + EM_EXGETSEL
-  - EM_EXLIMITTEXT
+  + EM_EXLIMITTEXT
   + EM_EXLINEFROMCHAR
   + EM_EXSETSEL
   + EM_FINDTEXT (only FR_DOWN flag implemented)
@@ -39,7 +40,7 @@
   - EM_FINDWORDBREAK
   - EM_FMTLINES
   - EM_FORMATRANGE
-  - EM_GETAUTOURLDETECT 2.0
+  + EM_GETAUTOURLDETECT 2.0
   - EM_GETBIDIOPTIONS 3.0
   - EM_GETCHARFORMAT (partly done)
   - EM_GETEDITSTYLE
@@ -50,20 +51,20 @@
   - EM_GETIMEOPTIONS 1.0asian
   - EM_GETIMESTATUS
   - EM_GETLANGOPTIONS 2.0
-  - EM_GETLIMITTEXT
-  - EM_GETLINE        
+  + EM_GETLIMITTEXT
+  + EM_GETLINE
   + EM_GETLINECOUNT   returns number of rows, not of paragraphs
   + EM_GETMODIFY
   - EM_GETOLEINTERFACE
-  - EM_GETOPTIONS
+  + EM_GETOPTIONS
   + EM_GETPARAFORMAT
-  - EM_GETPASSWORDCHAR 2.0
+  + EM_GETPASSWORDCHAR 2.0
   - EM_GETPUNCTUATION 1.0asian
   + EM_GETRECT
   - EM_GETREDONAME 2.0
   + EM_GETSEL
   + EM_GETSELTEXT (ANSI&Unicode)
-  - EM_GETSCROLLPOS 3.0
+  + EM_GETSCROLLPOS 3.0 (only Y value valid)
 ! - EM_GETTHUMB
   - EM_GETTEXTEX 2.0
   + EM_GETTEXTLENGTHEX (GTL_PRECISE unimplemented)
@@ -71,12 +72,12 @@
 ? + EM_GETTEXTRANGE (ANSI&Unicode)
   - EM_GETTYPOGRAPHYOPTIONS 3.0
   - EM_GETUNDONAME
-  - EM_GETWORDBREAKPROC
+  + EM_GETWORDBREAKPROC
   - EM_GETWORDBREAKPROCEX
   - EM_GETWORDWRAPMODE 1.0asian
   + EM_GETZOOM 3.0
-  - EM_HIDESELECTION
-  - EM_LIMITTEXT
+  + EM_HIDESELECTION
+  + EM_LIMITTEXT (Also called EM_SETLIMITTEXT)
   + EM_LINEFROMCHAR
   + EM_LINEINDEX
   + EM_LINELENGTH
@@ -86,12 +87,12 @@
   + EM_REDO 2.0
   + EM_REQUESTRESIZE
   + EM_REPLACESEL (proper style?) ANSI&Unicode
-  - EM_SCROLL
-  - EM_SCROLLCARET
+  + EM_SCROLL
+  + EM_SCROLLCARET
   - EM_SELECTIONTYPE
   - EM_SETBIDIOPTIONS 3.0
   + EM_SETBKGNDCOLOR
-  - EM_SETCHARFORMAT (partly done, no ANSI)
+  + EM_SETCHARFORMAT (partly done, no ANSI)
   - EM_SETEDITSTYLE
   + EM_SETEVENTMASK (few notifications supported)
   - EM_SETFONTSIZE
@@ -101,27 +102,27 @@
   - EM_SETLIMITTEXT
   + EM_SETMODIFY (not sure if implementation is correct)
   - EM_SETOLECALLBACK
-  - EM_SETOPTIONS
+  + EM_SETOPTIONS (partially implemented)
   - EM_SETPALETTE 2.0
   + EM_SETPARAFORMAT
-  - EM_SETPASSWORDCHAR 2.0
+  + EM_SETPASSWORDCHAR 2.0
   - EM_SETPUNCTUATION 1.0asian
   + EM_SETREADONLY no beep on modification attempt
   + EM_SETRECT
   + EM_SETRECTNP (EM_SETRECT without repainting)
   + EM_SETSEL
-  - EM_SETSCROLLPOS 3.0
+  + EM_SETSCROLLPOS 3.0
   - EM_SETTABSTOPS 3.0
   - EM_SETTARGETDEVICE
   + EM_SETTEXTEX 3.0 (unicode only, no rich text insertion handling, proper style?)
   - EM_SETTEXTMODE 2.0
   - EM_SETTYPOGRAPHYOPTIONS 3.0
-  - EM_SETUNDOLIMIT 2.0
-  - EM_SETWORDBREAKPROC
+  + EM_SETUNDOLIMIT 2.0
+  + EM_SETWORDBREAKPROC (used only for word movement at the moment)
   - EM_SETWORDBREAKPROCEX
   - EM_SETWORDWRAPMODE 1.0asian
   + EM_SETZOOM 3.0
-  - EM_SHOWSCROLLBAR 2.0
+  + EM_SHOWSCROLLBAR 2.0
   - EM_STOPGROUPTYPING 2.0
   + EM_STREAMIN
   + EM_STREAMOUT
@@ -134,7 +135,7 @@
   + WM_GETTEXT (ANSI&Unicode)
   + WM_GETTEXTLENGTH (ANSI version sucks)
   + WM_PASTE
-  - WM_SETFONT
+  + WM_SETFONT
   + WM_SETTEXT (resets undo stack !) (proper style?) ANSI&Unicode
   - WM_STYLECHANGING
   - WM_STYLECHANGED (things like read-only flag)
@@ -167,7 +168,7 @@
   - ES_AUTOHSCROLL
   - ES_AUTOVSCROLL
   - ES_CENTER
-  - ES_DISABLENOSCROLL (scrollbar is always visible)
+  + ES_DISABLENOSCROLL (scrollbar is always visible)
   - ES_EX_NOCALLOLEINIT
   - ES_LEFT
   - ES_MULTILINE (currently single line controls aren't supported)
@@ -181,7 +182,7 @@
   - ES_WANTRETURN (don't know how to do WM_GETDLGCODE part)
   - WS_SETFONT
   - WS_HSCROLL
-  - WS_VSCROLL
+  + WS_VSCROLL
 */
 
 /*
@@ -191,8 +192,6 @@
  * - Undo coalescing 
  * - add remaining CHARFORMAT/PARAFORMAT fields
  * - right/center align should strip spaces from the beginning
- * - more advanced navigation (Ctrl-arrows)
- * - tabs
  * - pictures/OLE objects (not just smiling faces that lack API support ;-) )
  * - COM interface (looks like a major pain in the TODO list)
  * - calculate heights of pictures (half-done)
@@ -224,21 +223,37 @@
 
 #include "editor.h"
 #include "commdlg.h"
-#include "ole2.h"
-#include "richole.h"
 #include "winreg.h"
 #define NO_SHLWAPI_STREAM 
 #include "shlwapi.h"
-
+#include "imm.h"
+#include "textserv.h"
 #include "rtf.h"
+
+#define STACK_SIZE_DEFAULT  100
+#define STACK_SIZE_MAX     1000
+
+#define TEXT_LIMIT_DEFAULT 32767
  
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
+
+static BOOL ME_RegisterEditorClass(HINSTANCE);
+
+static const WCHAR RichEdit20W[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '2', '0', 'W', 0};
+static const WCHAR RichEdit50W[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '5', '0', 'W', 0};
+static const WCHAR REListBox20W[] = {'R','E','L','i','s','t','B','o','x','2','0','W', 0};
+static const WCHAR REComboBox20W[] = {'R','E','C','o','m','b','o','B','o','x','2','0','W', 0};
 
 int me_debug = 0;
 HANDLE me_heap = NULL;
 
 static BOOL ME_ListBoxRegistered = FALSE;
 static BOOL ME_ComboBoxRegistered = FALSE;
+
+static inline int is_version_nt(void)
+{
+    return !(GetVersion() & 0x80000000);
+}
 
 static ME_TextBuffer *ME_MakeText(void) {
   
@@ -268,7 +283,7 @@ static LRESULT ME_StreamInText(ME_TextEditor *editor, DWORD dwFormat, ME_InStrea
   WCHAR wszText[STREAMIN_BUFFER_SIZE+1];
   WCHAR *pText;
   
-  TRACE("%08lx %p\n", dwFormat, stream);
+  TRACE("%08x %p\n", dwFormat, stream);
   
   do {
     long nWideChars = 0;
@@ -300,7 +315,7 @@ static LRESULT ME_StreamInText(ME_TextEditor *editor, DWORD dwFormat, ME_InStrea
     stream->dwSize = 0;
   } while(1);
   ME_CommitUndo(editor);
-  ME_Repaint(editor);
+  ME_UpdateRepaint(editor);
   return 0;
 }
 
@@ -309,7 +324,8 @@ static void ME_RTFCharAttrHook(RTF_Info *info)
   CHARFORMAT2W fmt;
   fmt.cbSize = sizeof(fmt);
   fmt.dwMask = 0;
-  
+  fmt.dwEffects = 0;
+
   switch(info->rtfMinor)
   {
     case rtfPlain:
@@ -350,6 +366,10 @@ static void ME_RTFCharAttrHook(RTF_Info *info)
       if (info->rtfMinor == rtfSuperScrShrink) fmt.dwEffects = CFE_SUPERSCRIPT;
       if (info->rtfMinor == rtfNoSuperSub) fmt.dwEffects = 0;
       break;
+    case rtfInvisible:
+      fmt.dwMask = CFM_HIDDEN;
+      fmt.dwEffects = info->rtfParam ? fmt.dwMask : 0;
+      break;
     case rtfBackColor:
       fmt.dwMask = CFM_BACKCOLOR;
       fmt.dwEffects = 0;
@@ -369,7 +389,10 @@ static void ME_RTFCharAttrHook(RTF_Info *info)
       else if (info->rtfParam != rtfNoParam)
       {
         RTFColor *c = RTFGetColor(info, info->rtfParam);
-        fmt.crTextColor = (c->rtfCBlue<<16)|(c->rtfCGreen<<8)|(c->rtfCRed);
+        if (c)
+          fmt.crTextColor = (c->rtfCBlue<<16)|(c->rtfCGreen<<8)|(c->rtfCRed);
+        else
+          fmt.crTextColor = 0;
       }
       break;
     case rtfFontNum:
@@ -412,28 +435,35 @@ static void ME_RTFParAttrHook(RTF_Info *info)
   
   switch(info->rtfMinor)
   {
-  case rtfParDef: /* I'm not 100% sure what does it do, but I guess it restores default paragraph attributes */
+  case rtfParDef: /* restores default paragraph attributes */
     fmt.dwMask = PFM_ALIGNMENT | PFM_TABSTOPS | PFM_OFFSET | PFM_STARTINDENT;
     fmt.wAlignment = PFA_LEFT;
     fmt.cTabCount = 0;
     fmt.dxOffset = fmt.dxStartIndent = 0;
+    RTFFlushOutputBuffer(info);
+    ME_GetParagraph(info->editor->pCursors[0].pRun)->member.para.bTable = FALSE;
     break;
+  case rtfInTable:
+  {
+    ME_DisplayItem *para;
+    
+    RTFFlushOutputBuffer(info);
+    para = ME_GetParagraph(info->editor->pCursors[0].pRun);
+    assert(para->member.para.pCells);
+    para->member.para.bTable = TRUE;
+    return;
+  }
   case rtfFirstIndent:
     ME_GetSelectionParaFormat(info->editor, &fmt);
-    fmt.dwMask = PFM_STARTINDENT;
-    fmt.dxStartIndent = info->rtfParam + fmt.dxOffset;
+    fmt.dwMask = PFM_STARTINDENT | PFM_OFFSET;
+    fmt.dxStartIndent += info->rtfParam + fmt.dxOffset;
+    fmt.dxOffset = -info->rtfParam;
     break;
   case rtfLeftIndent:
-  {
-    int first, left;
     ME_GetSelectionParaFormat(info->editor, &fmt);
-    first = fmt.dxStartIndent;
-    left = info->rtfParam;
-    fmt.dwMask = PFM_STARTINDENT|PFM_OFFSET;
-    fmt.dxStartIndent = first + left;
-    fmt.dxOffset = -first;
+    fmt.dwMask = PFM_STARTINDENT;
+    fmt.dxStartIndent = -fmt.dxOffset + info->rtfParam;
     break;
-  }
   case rtfRightIndent:
     fmt.dwMask = PFM_RIGHTINDENT;
     fmt.dxRightIndent = info->rtfParam;
@@ -466,6 +496,41 @@ static void ME_RTFParAttrHook(RTF_Info *info)
     RTFFlushOutputBuffer(info);
     /* FIXME too slow ? how come ?*/
     ME_SetSelectionParaFormat(info->editor, &fmt);
+  }
+}
+
+static void ME_RTFTblAttrHook(RTF_Info *info)
+{
+  ME_DisplayItem *para;
+  
+  switch (info->rtfMinor)
+  {
+    case rtfRowDef:
+      RTFFlushOutputBuffer(info);
+      para = ME_GetParagraph(info->editor->pCursors[0].pRun);
+      
+      /* Release possibly inherited cell definitions */
+      ME_DestroyTableCellList(para);
+      
+      para->member.para.pCells = ALLOC_OBJ(ME_TableCell);
+      para->member.para.pCells->nRightBoundary = 0;
+      para->member.para.pCells->next = NULL;
+      para->member.para.pLastCell = para->member.para.pCells;
+      break;
+    case rtfCellPos:
+      RTFFlushOutputBuffer(info);
+      para = ME_GetParagraph(info->editor->pCursors[0].pRun);
+      
+      if (para->member.para.pLastCell->nRightBoundary)
+      {
+        ME_TableCell *pCell = ALLOC_OBJ(ME_TableCell);
+        
+        pCell->next = NULL;
+        para->member.para.pLastCell->next = pCell;
+        para->member.para.pLastCell = pCell;
+      }
+      para->member.para.pLastCell->nRightBoundary = info->rtfParam;
+      break;
   }
 }
 
@@ -516,6 +581,15 @@ static void ME_RTFReadHook(RTF_Info *info) {
         case rtfParAttr:
           ME_RTFParAttrHook(info);
           break;
+        case rtfTblAttr:
+          ME_RTFTblAttrHook(info);
+          break;
+        case rtfSpecialChar:
+          if (info->rtfMinor == rtfCell)
+          {
+            RTFFlushOutputBuffer(info);
+            ME_InsertTableCellFromCursor(info->editor, 0);
+          }
       }
       break;
   }
@@ -536,7 +610,6 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
   RTF_Info parser;
   ME_Style *style;
   int from, to, to2, nUndoMode;
-  ME_UndoItem *pUI;
   int nEventMask = editor->nEventMask;
   ME_InStream inStream;
 
@@ -544,7 +617,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
   editor->nEventMask = 0;
   
   ME_GetSelection(editor, &from, &to);
-  if (format & SFF_SELECTION) {
+  if ((format & SFF_SELECTION) && (editor->mode & TM_RICHTEXT)) {
     style = ME_GetSelectionInsertStyle(editor);
 
     ME_InternalDeleteText(editor, from, to-from);
@@ -558,9 +631,14 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
     ME_ClearTempStyle(editor);
     /* FIXME restore default paragraph formatting ! */
   }
-  
+
+
+  /* Back up undo mode to a local variable */
   nUndoMode = editor->nUndoMode;
-  editor->nUndoMode = umIgnore;
+
+  /* Only create an undo if SFF_SELECTION is set */
+  if (!(format & SFF_SELECTION))
+    editor->nUndoMode = umIgnore;
 
   inStream.editstream = stream;
   inStream.editstream->dwError = 0;
@@ -573,7 +651,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
     ME_StreamInFill(&inStream);
     if (!inStream.editstream->dwError)
     {
-      if (strncmp(inStream.buffer, "{\\rtf1", 6) && strncmp(inStream.buffer, "{\\urtf", 6))
+      if (strncmp(inStream.buffer, "{\\rtf", 5) && strncmp(inStream.buffer, "{\\urtf", 6))
       {
         format &= ~SF_RTF;
         format |= SF_TEXT;
@@ -611,26 +689,22 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
     /* put the cursor at the top */
     if (!(format & SFF_SELECTION))
       SendMessageA(editor->hWnd, EM_SETSEL, 0, 0);
-    else
-    {
-      /* FIXME where to put cursor now ? */
-    }
   }
-  
+
+  /* Restore saved undo mode */
   editor->nUndoMode = nUndoMode;
-  pUI = ME_AddUndoItem(editor, diUndoDeleteRun, NULL);
-  TRACE("from %d to %d\n", from, to);
-  if (pUI && from < to)
-  {
-    pUI->nStart = from;
-    pUI->nLen = to-from;
-  }
+
+  /* even if we didn't add an undo, we need to commit anything on the stack */
   ME_CommitUndo(editor);
-  ME_ReleaseStyle(style); 
+
+  /* If SFF_SELECTION isn't set, delete any undos from before we started too */
+  if (!(format & SFF_SELECTION))
+    ME_EmptyUndoStack(editor);
+
+  ME_ReleaseStyle(style);
   editor->nEventMask = nEventMask;
   if (editor->bRedraw)
   {
-    InvalidateRect(editor->hWnd, NULL, TRUE);
     ME_UpdateRepaint(editor);
   }
   if (!(format & SFF_SELECTION)) {
@@ -641,6 +715,40 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
   ME_SendRequestResize(editor, FALSE);
 
   return 0;
+}
+
+
+typedef struct tagME_RTFStringStreamStruct
+{
+  char *string;
+  int pos;
+  int length;
+} ME_RTFStringStreamStruct;
+
+static DWORD CALLBACK ME_ReadFromRTFString(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG cb, LONG *pcb)
+{
+  ME_RTFStringStreamStruct *pStruct = (ME_RTFStringStreamStruct *)dwCookie;
+  int count;
+
+  count = min(cb, pStruct->length - pStruct->pos);
+  memmove(lpBuff, pStruct->string + pStruct->pos, count);
+  pStruct->pos += count;
+  *pcb = count;
+  return 0;
+}
+
+static void
+ME_StreamInRTFString(ME_TextEditor *editor, BOOL selection, char *string)
+{
+  EDITSTREAM es;
+  ME_RTFStringStreamStruct data;
+
+  data.string = string;
+  data.length = strlen(string);
+  data.pos = 0;
+  es.dwCookie = (DWORD)&data;
+  es.pfnCallback = ME_ReadFromRTFString;
+  ME_StreamIn(editor, SF_RTF | (selection ? SFF_SELECTION : 0), &es);
 }
 
 
@@ -675,61 +783,116 @@ ME_FindItemAtOffset(ME_TextEditor *editor, ME_DIType nItemType, int nOffset, int
 
 
 static int
-ME_FindText(ME_TextEditor *editor, DWORD flags, CHARRANGE *chrg, WCHAR *text, CHARRANGE *chrgText)
+ME_FindText(ME_TextEditor *editor, DWORD flags, CHARRANGE *chrg, const WCHAR *text, CHARRANGE *chrgText)
 {
+  const int nLen = lstrlenW(text);
+  const int nTextLen = ME_GetTextLength(editor);
   int nStart, nEnd;
-  int nLen = lstrlenW(text);
   int nMin, nMax;
   ME_DisplayItem *item;
   ME_DisplayItem *para;
+  WCHAR wLastChar = ' ';
 
-  TRACE("flags==0x%08lx, chrg->cpMin==%ld, chrg->cpMax==%ld text==%s\n",
+  TRACE("flags==0x%08x, chrg->cpMin==%d, chrg->cpMax==%d text==%s\n",
         flags, chrg->cpMin, chrg->cpMax, debugstr_w(text));
   
-  if (!(flags & FR_MATCHCASE))
-    FIXME("Case-insensitive search not implemented\n");
-  if (flags & ~(FR_DOWN | FR_MATCHCASE))
-    FIXME("Flags 0x%08lx not implemented\n", flags & ~(FR_DOWN | FR_MATCHCASE));
+  if (flags & ~(FR_DOWN | FR_MATCHCASE | FR_WHOLEWORD))
+    FIXME("Flags 0x%08x not implemented\n",
+        flags & ~(FR_DOWN | FR_MATCHCASE | FR_WHOLEWORD));
 
+  nMin = chrg->cpMin;
   if (chrg->cpMax == -1)
-  {
-    nMin = chrg->cpMin;
-    nMax = ME_GetTextLength(editor);
-  }
+    nMax = nTextLen;
   else
-  {
-    nMin = min(chrg->cpMin, chrg->cpMax);
-    nMax = max(chrg->cpMin, chrg->cpMax);
-  }
+    nMax = chrg->cpMax > nTextLen ? nTextLen : chrg->cpMax;
   
-  if (!nLen)
+  /* when searching up, if cpMin < cpMax, then instead of searching
+   * on [cpMin,cpMax], we search on [0,cpMin], otherwise, search on
+   * [cpMax, cpMin]. The exception is when cpMax is -1, in which
+   * case, it is always bigger than cpMin.
+   */
+  if (!(flags & FR_DOWN))
+  {
+    int nSwap = nMax;
+
+    nMax = nMin > nTextLen ? nTextLen : nMin;
+    if (nMin < nSwap || chrg->cpMax == -1)
+      nMin = 0;
+    else
+      nMin = nSwap;
+  }
+
+  if (!nLen || nMin < 0 || nMax < 0 || nMax < nMin)
   {
     if (chrgText)
-      chrgText->cpMin = chrgText->cpMax = ((flags & FR_DOWN) ? nMin : nMax);
-    return chrgText->cpMin;
+      chrgText->cpMin = chrgText->cpMax = -1;
+    return -1;
   }
  
   if (flags & FR_DOWN) /* Forward search */
   {
+    /* If possible, find the character before where the search starts */
+    if ((flags & FR_WHOLEWORD) && nMin)
+    {
+      nStart = nMin - 1;
+      item = ME_FindItemAtOffset(editor, diRun, nStart, &nStart);
+      if (!item)
+      {
+        if (chrgText)
+          chrgText->cpMin = chrgText->cpMax = -1;
+        return -1;
+      }
+      wLastChar = item->member.run.strText->szData[nStart];
+    }
+
     nStart = nMin;
     item = ME_FindItemAtOffset(editor, diRun, nStart, &nStart);
     if (!item)
+    {
+      if (chrgText)
+        chrgText->cpMin = chrgText->cpMax = -1;
       return -1;
+    }
 
     para = ME_GetParagraph(item);
     while (item
-           && para->member.para.nCharOfs + item->member.run.nCharOfs + nStart + nLen < nMax)
+           && para->member.para.nCharOfs + item->member.run.nCharOfs + nStart + nLen <= nMax)
     {
       ME_DisplayItem *pCurItem = item;
       int nCurStart = nStart;
       int nMatched = 0;
     
-      while (pCurItem && pCurItem->member.run.strText->szData[nCurStart + nMatched] == text[nMatched])
+      while (pCurItem && ME_CharCompare(pCurItem->member.run.strText->szData[nCurStart + nMatched], text[nMatched], (flags & FR_MATCHCASE)))
       {
+        if ((flags & FR_WHOLEWORD) && isalnumW(wLastChar))
+          break;
+
         nMatched++;
         if (nMatched == nLen)
         {
-          nStart += para->member.para.nCharOfs + item->member.run.nCharOfs;
+          ME_DisplayItem *pNextItem = pCurItem;
+          int nNextStart = nCurStart;
+          WCHAR wNextChar;
+
+          /* Check to see if next character is a whitespace */
+          if (flags & FR_WHOLEWORD)
+          {
+            if (nCurStart + nMatched == ME_StrLen(pCurItem->member.run.strText))
+            {
+              pNextItem = ME_FindItemFwd(pCurItem, diRun);
+              nNextStart = -nMatched;
+            }
+
+            if (pNextItem)
+              wNextChar = pNextItem->member.run.strText->szData[nNextStart + nMatched];
+            else
+              wNextChar = ' ';
+
+            if (isalnumW(wNextChar))
+              break;
+          }
+
+          nStart += para->member.para.nCharOfs + pCurItem->member.run.nCharOfs;
           if (chrgText)
           {
             chrgText->cpMin = nStart;
@@ -745,6 +908,11 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, CHARRANGE *chrg, WCHAR *text, CH
           nCurStart = -nMatched;
         }
       }
+      if (pCurItem)
+        wLastChar = pCurItem->member.run.strText->szData[nCurStart + nMatched];
+      else
+        wLastChar = ' ';
+
       nStart++;
       if (nStart == ME_StrLen(item->member.run.strText))
       {
@@ -756,10 +924,28 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, CHARRANGE *chrg, WCHAR *text, CH
   }
   else /* Backward search */
   {
+    /* If possible, find the character after where the search ends */
+    if ((flags & FR_WHOLEWORD) && nMax < nTextLen - 1)
+    {
+      nEnd = nMax + 1;
+      item = ME_FindItemAtOffset(editor, diRun, nEnd, &nEnd);
+      if (!item)
+      {
+        if (chrgText)
+          chrgText->cpMin = chrgText->cpMax = -1;
+        return -1;
+      }
+      wLastChar = item->member.run.strText->szData[nEnd];
+    }
+
     nEnd = nMax;
     item = ME_FindItemAtOffset(editor, diRun, nEnd, &nEnd);
     if (!item)
+    {
+      if (chrgText)
+        chrgText->cpMin = chrgText->cpMax = -1;
       return -1;
+    }
     
     para = ME_GetParagraph(item);
     
@@ -770,12 +956,45 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, CHARRANGE *chrg, WCHAR *text, CH
       int nCurEnd = nEnd;
       int nMatched = 0;
       
-      while (pCurItem && pCurItem->member.run.strText->szData[nCurEnd - nMatched - 1] == text[nLen - nMatched - 1])
+      if (nCurEnd - nMatched == 0)
       {
+        pCurItem = ME_FindItemBack(pCurItem, diRun);
+        para = ME_GetParagraph(pCurItem);
+        nCurEnd = ME_StrLen(pCurItem->member.run.strText) + nMatched;
+      }
+      
+      while (pCurItem && ME_CharCompare(pCurItem->member.run.strText->szData[nCurEnd - nMatched - 1], text[nLen - nMatched - 1], (flags & FR_MATCHCASE)))
+      {
+        if ((flags & FR_WHOLEWORD) && isalnumW(wLastChar))
+          break;
+
         nMatched++;
         if (nMatched == nLen)
         {
-          nStart = para->member.para.nCharOfs + item->member.run.nCharOfs + nCurEnd - nMatched;
+          ME_DisplayItem *pPrevItem = pCurItem;
+          int nPrevEnd = nCurEnd;
+          WCHAR wPrevChar;
+
+          /* Check to see if previous character is a whitespace */
+          if (flags & FR_WHOLEWORD)
+          {
+            if (nPrevEnd - nMatched == 0)
+            {
+              pPrevItem = ME_FindItemBack(pCurItem, diRun);
+              if (pPrevItem)
+                nPrevEnd = ME_StrLen(pPrevItem->member.run.strText) + nMatched;
+            }
+
+            if (pPrevItem)
+              wPrevChar = pPrevItem->member.run.strText->szData[nPrevEnd - nMatched - 1];
+            else
+              wPrevChar = ' ';
+
+            if (isalnumW(wPrevChar))
+              break;
+          }
+
+          nStart = para->member.para.nCharOfs + pCurItem->member.run.nCharOfs + nCurEnd - nMatched;
           if (chrgText)
           {
             chrgText->cpMin = nStart;
@@ -787,10 +1006,17 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, CHARRANGE *chrg, WCHAR *text, CH
         if (nCurEnd - nMatched == 0)
         {
           pCurItem = ME_FindItemBack(pCurItem, diRun);
+          /* Don't care about pCurItem becoming NULL here; it's already taken
+           * care of in the exterior loop condition */
           para = ME_GetParagraph(pCurItem);
           nCurEnd = ME_StrLen(pCurItem->member.run.strText) + nMatched;
         }
       }
+      if (pCurItem)
+        wLastChar = pCurItem->member.run.strText->szData[nCurEnd - nMatched - 1];
+      else
+        wLastChar = ' ';
+
       nEnd--;
       if (nEnd < 0)
       {
@@ -801,9 +1027,92 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, CHARRANGE *chrg, WCHAR *text, CH
     }
   }
   TRACE("not found\n");
+  if (chrgText)
+    chrgText->cpMin = chrgText->cpMax = -1;
   return -1;
 }
 
+
+static BOOL
+ME_KeyDown(ME_TextEditor *editor, WORD nKey)
+{
+  BOOL ctrl_is_down = GetKeyState(VK_CONTROL) & 0x8000;
+  BOOL shift_is_down = GetKeyState(VK_SHIFT) & 0x8000;
+  
+  switch (nKey)
+  {
+    case VK_LEFT:
+    case VK_RIGHT:
+    case VK_UP:
+    case VK_DOWN:
+    case VK_HOME:
+    case VK_END:
+    case VK_PRIOR:
+    case VK_NEXT:
+      ME_ArrowKey(editor, nKey, shift_is_down, ctrl_is_down);
+      return TRUE;
+    case VK_BACK:
+    case VK_DELETE:
+      /* FIXME backspace and delete aren't the same, they act different wrt paragraph style of the merged paragraph */
+      if (GetWindowLongW(editor->hWnd, GWL_STYLE) & ES_READONLY)
+        return FALSE;
+      if (ME_IsSelection(editor))
+        ME_DeleteSelection(editor);
+      else if (nKey == VK_DELETE || ME_ArrowKey(editor, VK_LEFT, FALSE, FALSE))
+        ME_DeleteTextAtCursor(editor, 1, 1);
+      else
+        return TRUE;
+      ME_CommitUndo(editor);
+      ME_UpdateRepaint(editor);
+      ME_SendRequestResize(editor, FALSE);
+      return TRUE;
+
+    default:
+      if (ctrl_is_down)
+      {
+        if (nKey == 'W')
+        {
+          CHARFORMAT2W chf;
+          char buf[2048];
+          chf.cbSize = sizeof(chf);
+          
+          ME_GetSelectionCharFormat(editor, &chf);
+          ME_DumpStyleToBuf(&chf, buf);
+          MessageBoxA(NULL, buf, "Style dump", MB_OK);
+        }
+        if (nKey == 'Q')
+        {
+          ME_CheckCharOffsets(editor);
+        }
+      }
+  }
+  return FALSE;
+}
+
+static BOOL ME_ShowContextMenu(ME_TextEditor *editor, int x, int y)
+{
+  CHARRANGE selrange;
+  HMENU menu;
+  int seltype = 0;
+  if(!editor->lpOleCallback)
+    return FALSE;
+  ME_GetSelection(editor, (int *)&selrange.cpMin, (int *)&selrange.cpMax);
+  if(selrange.cpMin == selrange.cpMax)
+    seltype |= SEL_EMPTY;
+  else
+  {
+    /* FIXME: Handle objects */
+    seltype |= SEL_TEXT;
+    if(selrange.cpMax-selrange.cpMin > 1)
+      seltype |= SEL_MULTICHAR;
+  }
+  if(SUCCEEDED(IRichEditOleCallback_GetContextMenu(editor->lpOleCallback, seltype, NULL, &selrange, &menu)))
+  {
+    TrackPopupMenu(menu, TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, 0, GetParent(editor->hWnd), NULL);
+    DestroyMenu(menu);
+  }
+  return TRUE;
+}
 
 ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   ME_TextEditor *ed = ALLOC_OBJ(ME_TextEditor);
@@ -816,7 +1125,7 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   ME_MakeFirstParagraph(hDC, ed->pBuffer);
   ReleaseDC(hWnd, hDC);
   ed->bCaretShown = FALSE;
-  ed->nCursors = 3;
+  ed->nCursors = 2;
   ed->pCursors = ALLOC_N_OBJ(ME_Cursor, ed->nCursors);
   ed->pCursors[0].pRun = ME_FindItemFwd(ed->pBuffer->pFirst, diRun);
   ed->pCursors[0].nOffset = 0;
@@ -830,13 +1139,22 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   ed->bCaretAtEnd = FALSE;
   ed->nEventMask = 0;
   ed->nModifyStep = 0;
-  ed->pUndoStack = ed->pRedoStack = NULL;
+  ed->nTextLimit = TEXT_LIMIT_DEFAULT;
+  ed->pUndoStack = ed->pRedoStack = ed->pUndoStackBottom = NULL;
+  ed->nUndoStackSize = 0;
+  ed->nUndoLimit = STACK_SIZE_DEFAULT;
   ed->nUndoMode = umAddToUndo;
   ed->nParagraphs = 1;
   ed->nLastSelStart = ed->nLastSelEnd = 0;
-  ed->nScrollPosY = 0;
+  ed->pLastSelStartPara = ed->pLastSelEndPara = ME_FindItemFwd(ed->pBuffer->pFirst, diParagraph);
   ed->nZoomNumerator = ed->nZoomDenominator = 0;
   ed->bRedraw = TRUE;
+  ed->bHideSelection = FALSE;
+  ed->nInvalidOfs = -1;
+  ed->pfnWordBreak = NULL;
+  ed->lpOleCallback = NULL;
+  ed->mode = TM_RICHTEXT | TM_MULTILEVELUNDO | TM_MULTICODEPAGE;
+  ed->AutoURLDetect_bEnable = FALSE;
   GetClientRect(hWnd, &ed->rcFormat);
   for (i=0; i<HFONT_CACHE_SIZE; i++)
   {
@@ -844,7 +1162,14 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
     ed->pFontCache[i].nAge = 0;
     ed->pFontCache[i].hFont = NULL;
   }
+  
   ME_CheckCharOffsets(ed);
+  
+  if (GetWindowLongW(hWnd, GWL_STYLE) & ES_PASSWORD)
+    ed->cPasswordMask = '*';
+  else
+    ed->cPasswordMask = 0;
+  
   return ed;
 }
 
@@ -853,29 +1178,6 @@ typedef struct tagME_GlobalDestStruct
   HGLOBAL hData;
   int nLength;
 } ME_GlobalDestStruct;
-
-static DWORD CALLBACK ME_AppendToHGLOBAL(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG cb, LONG *pcb)
-{
-  ME_GlobalDestStruct *pData = (ME_GlobalDestStruct *)dwCookie;
-  int nMaxSize;
-  BYTE *pDest;
-  
-  nMaxSize = GlobalSize(pData->hData);
-  if (pData->nLength+cb+1 >= cb)
-  {
-    /* round up to 2^17 */
-    int nNewSize = (((nMaxSize+cb+1)|0x1FFFF)+1) & 0xFFFE0000;
-    pData->hData = GlobalReAlloc(pData->hData, nNewSize, 0);
-  }
-  pDest = (BYTE *)GlobalLock(pData->hData);
-  memcpy(pDest + pData->nLength, lpBuff, cb);
-  pData->nLength += cb;
-  pDest[pData->nLength] = '\0';
-  GlobalUnlock(pData->hData);
-  *pcb = cb;
-  
-  return 0;
-}
 
 static DWORD CALLBACK ME_ReadFromHGLOBALUnicode(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG cb, LONG *pcb)
 {
@@ -918,12 +1220,12 @@ void ME_DestroyEditor(ME_TextEditor *editor)
   ME_DisplayItem *pFirst = editor->pBuffer->pFirst;
   ME_DisplayItem *p = pFirst, *pNext = NULL;
   int i;
-  
+
   ME_ClearTempStyle(editor);
   ME_EmptyUndoStack(editor);
   while(p) {
     pNext = p->next;
-    ME_DestroyDisplayItem(p);    
+    ME_DestroyDisplayItem(p);
     p = pNext;
   }
   ME_ReleaseStyle(editor->pBuffer->pDefaultStyle);
@@ -933,14 +1235,14 @@ void ME_DestroyEditor(ME_TextEditor *editor)
       DeleteObject(editor->pFontCache[i].hFont);
   }
   DeleteObject(editor->hbrBackground);
+  if(editor->lpOleCallback)
+    IUnknown_Release(editor->lpOleCallback);
+
+  FREE_OBJ(editor->pBuffer);
+  FREE_OBJ(editor->pCursors);
 
   FREE_OBJ(editor);
 }
-
-static WCHAR wszClassName[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '2', '0', 'W', 0};
-static WCHAR wszClassName50[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '5', '0', 'W', 0};
-static WCHAR wszClassNameListBox[] = {'R','E','L','i','s','t','B','o','x','2','0','W', 0};
-static WCHAR wszClassNameComboBox[] = {'R','E','C','o','m','b','o','B','o','x','2','0','W', 0};
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -950,18 +1252,20 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     case DLL_PROCESS_ATTACH:
       DisableThreadLibraryCalls(hinstDLL);
       me_heap = HeapCreate (0, 0x10000, 0);
-      ME_RegisterEditorClass(hinstDLL);
+      if (!ME_RegisterEditorClass(hinstDLL)) return FALSE;
+      LookupInit();
       break;
 
     case DLL_PROCESS_DETACH:
-      UnregisterClassW(wszClassName, 0);
-      UnregisterClassW(wszClassName50, 0);
+      UnregisterClassW(RichEdit20W, 0);
+      UnregisterClassW(RichEdit50W, 0);
       UnregisterClassA("RichEdit20A", 0);
       UnregisterClassA("RichEdit50A", 0);
       if (ME_ListBoxRegistered)
-          UnregisterClassW(wszClassNameListBox, 0);
+          UnregisterClassW(REListBox20W, 0);
       if (ME_ComboBoxRegistered)
-          UnregisterClassW(wszClassNameComboBox, 0);
+          UnregisterClassW(REComboBox20W, 0);
+      LookupCleanup();
       HeapDestroy (me_heap);
       me_heap = NULL;
       break;
@@ -1032,7 +1336,7 @@ static const char * const richedit_messages[] = {
   "EM_GETOLEINTERFACE",
   "EM_GETPARAFORMAT",
   "EM_GETSELTEXT",
-  "EM_HIDESELECTION",
+  "EM_HIDESELECTION", 
   "EM_PASTESPECIAL",
   "EM_REQUESTRESIZE",
   "EM_SELECTIONTYPE",
@@ -1102,73 +1406,54 @@ static const char * const richedit_messages[] = {
 static const char *
 get_msg_name(UINT msg)
 {
-  if (msg >= EM_GETSEL && msg <= EM_SETLIMITTEXT)
+  if (msg >= EM_GETSEL && msg <= EM_CHARFROMPOS)
     return edit_messages[msg - EM_GETSEL];
   if (msg >= EM_CANPASTE && msg <= EM_GETIMEMODEBIAS)
     return richedit_messages[msg - EM_CANPASTE];
   return "";
 }
 
-/******************************************************************
- *        RichEditANSIWndProc (RICHED20.10)
- */
-LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-  SCROLLINFO si;
-  ME_TextEditor *editor = (ME_TextEditor *)GetWindowLongW(hWnd, 0);
+static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
+                                      LPARAM lParam, BOOL unicode)
+{
+  ME_TextEditor *editor = (ME_TextEditor *)GetWindowLongPtrW(hWnd, 0);
   
-  TRACE("hWnd %p msg %04x (%s) %08x %08lx\n",
-        hWnd, msg, get_msg_name(msg), wParam, lParam);
+  TRACE("hwnd %p msg %04x (%s) %x %lx, unicode %d\n",
+        hWnd, msg, get_msg_name(msg), wParam, lParam, unicode);
   
+  if (!editor && msg != WM_NCCREATE && msg != WM_NCDESTROY) {
+    ERR("called with invalid hWnd %p - application bug?\n", hWnd);
+    return 0; 
+  }
+
   switch(msg) {
   
-  UNSUPPORTED_MSG(EM_AUTOURLDETECT)
   UNSUPPORTED_MSG(EM_DISPLAYBAND)
-  UNSUPPORTED_MSG(EM_EXLIMITTEXT)
   UNSUPPORTED_MSG(EM_FINDWORDBREAK)
   UNSUPPORTED_MSG(EM_FMTLINES)
   UNSUPPORTED_MSG(EM_FORMATRANGE)
-  UNSUPPORTED_MSG(EM_GETAUTOURLDETECT)
   UNSUPPORTED_MSG(EM_GETBIDIOPTIONS)
   UNSUPPORTED_MSG(EM_GETEDITSTYLE)
   UNSUPPORTED_MSG(EM_GETIMECOMPMODE)
   /* UNSUPPORTED_MSG(EM_GETIMESTATUS) missing in Wine headers */
   UNSUPPORTED_MSG(EM_GETLANGOPTIONS)
-  UNSUPPORTED_MSG(EM_GETLIMITTEXT)
-  UNSUPPORTED_MSG(EM_GETLINE)
   /* UNSUPPORTED_MSG(EM_GETOLEINTERFACE) separate stub */
-  UNSUPPORTED_MSG(EM_GETOPTIONS)
-  UNSUPPORTED_MSG(EM_GETPASSWORDCHAR)
   UNSUPPORTED_MSG(EM_GETREDONAME)
-  UNSUPPORTED_MSG(EM_GETSCROLLPOS)
   UNSUPPORTED_MSG(EM_GETTEXTMODE)
   UNSUPPORTED_MSG(EM_GETTYPOGRAPHYOPTIONS)
   UNSUPPORTED_MSG(EM_GETUNDONAME)
-  UNSUPPORTED_MSG(EM_GETWORDBREAKPROC)
   UNSUPPORTED_MSG(EM_GETWORDBREAKPROCEX)
-  UNSUPPORTED_MSG(EM_HIDESELECTION)
-  UNSUPPORTED_MSG(EM_LIMITTEXT) /* also known as EM_SETLIMITTEXT */
   UNSUPPORTED_MSG(EM_PASTESPECIAL)
-  UNSUPPORTED_MSG(EM_SCROLL)
-  UNSUPPORTED_MSG(EM_SCROLLCARET)
   UNSUPPORTED_MSG(EM_SELECTIONTYPE)
   UNSUPPORTED_MSG(EM_SETBIDIOPTIONS)
   UNSUPPORTED_MSG(EM_SETEDITSTYLE)
   UNSUPPORTED_MSG(EM_SETFONTSIZE)
   UNSUPPORTED_MSG(EM_SETLANGOPTIONS)
-  UNSUPPORTED_MSG(EM_SETOLECALLBACK)
-  UNSUPPORTED_MSG(EM_SETOPTIONS)
   UNSUPPORTED_MSG(EM_SETPALETTE)
-  UNSUPPORTED_MSG(EM_SETPASSWORDCHAR)
-  UNSUPPORTED_MSG(EM_SETSCROLLPOS)
   UNSUPPORTED_MSG(EM_SETTABSTOPS)
   UNSUPPORTED_MSG(EM_SETTARGETDEVICE)
-  UNSUPPORTED_MSG(EM_SETTEXTMODE)
   UNSUPPORTED_MSG(EM_SETTYPOGRAPHYOPTIONS)
-  UNSUPPORTED_MSG(EM_SETUNDOLIMIT)
-  UNSUPPORTED_MSG(EM_SETWORDBREAKPROC)
   UNSUPPORTED_MSG(EM_SETWORDBREAKPROCEX)
-  UNSUPPORTED_MSG(EM_SHOWSCROLLBAR)
-  UNSUPPORTED_MSG(WM_SETFONT)
   UNSUPPORTED_MSG(WM_STYLECHANGING)
   UNSUPPORTED_MSG(WM_STYLECHANGED)
 /*  UNSUPPORTED_MSG(WM_UNICHAR) FIXME missing in Wine headers */
@@ -1182,17 +1467,28 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   case WM_GETDLGCODE:
   {
     UINT code = DLGC_WANTCHARS|DLGC_WANTARROWS;
-    if (GetWindowLongW(hWnd, GWL_STYLE)&ES_WANTRETURN)
-      code |= 0; /* FIXME what can we do here ? ask for messages and censor them ? */
+    if(lParam && (((LPMSG)lParam)->message == WM_KEYDOWN))
+    {
+      int vk = (int)((LPMSG)lParam)->wParam;
+      /* if style says we want return key */
+      if((vk == VK_RETURN) && (GetWindowLongW(hWnd, GWL_STYLE) & ES_WANTRETURN))
+      {
+        code |= DLGC_WANTMESSAGE;
+      }
+      /* we always handle ctrl-tab */
+      if((vk == VK_TAB) && (GetKeyState(VK_CONTROL) & 0x8000))
+      {
+        code |= DLGC_WANTMESSAGE;
+      }
+    }
     return code;
   }
   case WM_NCCREATE:
   {
     CREATESTRUCTW *pcs = (CREATESTRUCTW *)lParam;
-    TRACE("WM_NCCREATE: style 0x%08lx\n", pcs->style);
+    TRACE("WM_NCCREATE: style 0x%08x\n", pcs->style);
     editor = ME_MakeEditor(hWnd);
-    SetWindowLongW(hWnd, 0, (long)editor);
-    pcs = 0; /* ignore */
+    SetWindowLongPtrW(hWnd, 0, (LONG_PTR)editor);
     return TRUE;
   }
   case EM_EMPTYUNDOBUFFER:
@@ -1213,8 +1509,19 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   {
     CHARRANGE *pRange = (CHARRANGE *)lParam;
     ME_GetSelection(editor, (int *)&pRange->cpMin, (int *)&pRange->cpMax);
-    TRACE("EM_EXGETSEL = (%ld,%ld)\n", pRange->cpMin, pRange->cpMax);
+    TRACE("EM_EXGETSEL = (%d,%d)\n", pRange->cpMin, pRange->cpMax);
     return 0;
+  }
+  case EM_SETUNDOLIMIT:
+  {
+    if ((int)wParam < 0)
+      editor->nUndoLimit = STACK_SIZE_DEFAULT;
+    else
+      editor->nUndoLimit = min(wParam, STACK_SIZE_MAX);
+    /* Setting a max stack size keeps wine from getting killed 
+      for hogging memory. Windows allocates all this memory at once, so
+      no program would realistically set a value above our maxiumum. */  
+    return editor->nUndoLimit;
   }
   case EM_CANUNDO:
     return editor->pUndoStack != NULL;
@@ -1227,31 +1534,114 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   case EM_REDO:
     ME_Redo(editor);
     return 0;
+  case EM_GETOPTIONS:
+  {
+    /* these flags are equivalent to the ES_* counterparts */
+    DWORD mask = ECO_VERTICAL | ECO_AUTOHSCROLL | ECO_AUTOVSCROLL |
+                 ECO_NOHIDESEL | ECO_READONLY | ECO_WANTRETURN;
+    DWORD settings = GetWindowLongW(hWnd, GWL_STYLE) & mask;
+
+    return settings;
+  }
+  case EM_SETOPTIONS:
+  {
+    /* these flags are equivalent to ES_* counterparts                      
+     * ECO_READONLY is already implemented in the code, only requires 
+     * setting the bit to work                                        
+     */
+    DWORD mask = ECO_VERTICAL | ECO_AUTOHSCROLL | ECO_AUTOVSCROLL |
+                 ECO_NOHIDESEL | ECO_READONLY | ECO_WANTRETURN;
+    DWORD raw = GetWindowLongW(hWnd, GWL_STYLE);
+    DWORD settings = mask & raw;
+
+    switch(wParam)
+    {
+      case ECOOP_SET:
+        settings = lParam;
+        break;
+      case ECOOP_OR:
+        settings |= lParam;
+        break;
+      case ECOOP_AND:
+        settings &= lParam;
+        break;
+      case ECOOP_XOR:
+        settings ^= lParam;
+    }
+    SetWindowLongW(hWnd, GWL_STYLE, (raw & ~mask) | (settings & mask));
+
+    if (lParam & ECO_AUTOWORDSELECTION)
+      FIXME("ECO_AUTOWORDSELECTION not implemented yet!\n");
+    if (lParam & ECO_SELECTIONBAR)
+      FIXME("ECO_SELECTIONBAR not implemented yet!\n");
+    if (lParam & ECO_VERTICAL)
+      FIXME("ECO_VERTICAL not implemented yet!\n");
+    if (lParam & ECO_AUTOHSCROLL)
+      FIXME("ECO_AUTOHSCROLL not implemented yet!\n");
+    if (lParam & ECO_AUTOVSCROLL)
+      FIXME("ECO_AUTOVSCROLL not implemented yet!\n");
+    if (lParam & ECO_NOHIDESEL)
+      FIXME("ECO_NOHIDESEL not implemented yet!\n");
+    if (lParam & ECO_WANTRETURN)
+      FIXME("ECO_WANTRETURN not implemented yet!\n");
+
+    return settings;
+  }
   case EM_SETSEL:
   {
+    ME_InvalidateSelection(editor);
     ME_SetSelection(editor, wParam, lParam);
-    ME_Repaint(editor);
+    ME_InvalidateSelection(editor);
     ME_SendSelChange(editor);
     return 0;
   }
+  case EM_SETSCROLLPOS:
+  {
+    POINT *point = (POINT *)lParam;
+    ME_ScrollAbs(editor, point->y);
+    return 0;
+  }
+  case EM_AUTOURLDETECT:
+  {
+    if (wParam==1 || wParam ==0) 
+    {
+        editor->AutoURLDetect_bEnable = (BOOL)wParam;
+        return 0;
+    }
+    return E_INVALIDARG;
+  }
+  case EM_GETAUTOURLDETECT:
+  {
+    return editor->AutoURLDetect_bEnable;
+  }
   case EM_EXSETSEL:
   {
-    CHARRANGE *pRange = (CHARRANGE *)lParam;
-    TRACE("EM_EXSETSEL (%ld,%ld)\n", pRange->cpMin, pRange->cpMax);
-    ME_SetSelection(editor, pRange->cpMin, pRange->cpMax);
-    /* FIXME optimize */
-    ME_Repaint(editor);
+    int end;
+    CHARRANGE range = *(CHARRANGE *)lParam;
+
+    TRACE("EM_EXSETSEL (%d,%d)\n", range.cpMin, range.cpMax);
+
+    ME_InvalidateSelection(editor);
+    end = ME_SetSelection(editor, range.cpMin, range.cpMax);
+    ME_InvalidateSelection(editor);
     ME_SendSelChange(editor);
+
+    return end;
+  }
+  case EM_SHOWSCROLLBAR:
+  {
+    ShowScrollBar(editor->hWnd, wParam, lParam);
     return 0;
   }
   case EM_SETTEXTEX:
   {
     LPWSTR wszText = (LPWSTR)lParam;
     SETTEXTEX *pStruct = (SETTEXTEX *)wParam;
-    size_t len = lstrlenW(wszText);
+    size_t len = wszText ? lstrlenW(wszText) : 0;
     int from, to;
     ME_Style *style;
-    TRACE("EM_SETTEXEX - %s, flags %d, cp %d\n", debugstr_w(wszText), (int)pStruct->flags, pStruct->codepage);
+    int oldModify = editor->nModifyStep;
+    TRACE("EM_SETTEXTEX - %s, flags %d, cp %d\n", debugstr_w(wszText), (int)pStruct->flags, pStruct->codepage);
     if (pStruct->codepage != 1200) {
       FIXME("EM_SETTEXTEX only supports unicode right now!\n"); 
       return 0;
@@ -1266,12 +1656,15 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     }
     else {
       ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor));
-      ME_InsertTextFromCursor(editor, 0, wszText, -1, editor->pBuffer->pDefaultStyle);
+      ME_InsertTextFromCursor(editor, 0, wszText, len, editor->pBuffer->pDefaultStyle);
       len = 1;
     }
     ME_CommitUndo(editor);
     if (!(pStruct->flags & ST_KEEPUNDO))
+    {
+      editor->nModifyStep = oldModify;
       ME_EmptyUndoStack(editor);
+    }
     ME_UpdateRepaint(editor);
     return len;
   }
@@ -1302,7 +1695,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   case EM_SETMODIFY:
   {
     if (wParam)
-      editor->nModifyStep = 0x80000000;
+      editor->nModifyStep = 1;
     else
       editor->nModifyStep = 0;
     
@@ -1316,7 +1709,6 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     else
       nStyle &= ~ES_READONLY;
     SetWindowLongW(hWnd, GWL_STYLE, nStyle);
-    ME_Repaint(editor);
     return 0;
   }
   case EM_SETEVENTMASK:
@@ -1333,7 +1725,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     CHARFORMAT2W buf, *p;
     BOOL bRepaint = TRUE;
     p = ME_ToCF2W(&buf, (CHARFORMAT2W *)lParam);
-    if (!wParam)
+    if (!wParam || (editor->mode & TM_PLAINTEXT))
       ME_SetDefaultCharFormat(editor, p);
     else if (wParam == (SCF_WORD | SCF_SELECTION))
       FIXME("EM_SETCHARFORMAT: word selection not supported\n");
@@ -1345,9 +1737,10 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
       bRepaint = (from != to);
       ME_SetSelectionCharFormat(editor, p);
     }
+    editor->nModifyStep = 1;
     ME_CommitUndo(editor);
     if (bRepaint)
-      ME_UpdateRepaint(editor);
+      ME_RewrapRepaint(editor);
     return 0;
   }
   case EM_GETCHARFORMAT:
@@ -1368,7 +1761,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   }
   case EM_SETPARAFORMAT:
     ME_SetSelectionParaFormat(editor, (PARAFORMAT2 *)lParam);
-    ME_UpdateRepaint(editor);
+    ME_RewrapRepaint(editor);
     ME_CommitUndo(editor);
     return 0;
   case EM_GETPARAFORMAT:
@@ -1377,7 +1770,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   case EM_GETFIRSTVISIBLELINE:
   {
     ME_DisplayItem *p = editor->pBuffer->pFirst;
-    int y = editor->nScrollPosY;
+    int y = ME_GetYScrollPos(editor);
     int ypara = 0;
     int count = 0;
     int ystart, yend;
@@ -1398,24 +1791,15 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     }
     return count;
   }
+  case EM_HIDESELECTION:
+  {
+     editor->bHideSelection = (wParam != 0);
+     ME_InvalidateSelection(editor);
+     return 0;
+  }
   case EM_LINESCROLL:
   {
-    int nPos = editor->nScrollPosY, nEnd= editor->nTotalLength - editor->sizeWindow.cy;
-    nPos += 8 * lParam; /* FIXME follow the original */
-    if (nPos>=nEnd)
-      nPos = nEnd;
-    if (nPos<0)
-      nPos = 0;
-    if (nPos != editor->nScrollPosY) {
-      int dy = editor->nScrollPosY - nPos;
-      editor->nScrollPosY = nPos;
-      SetScrollPos(hWnd, SB_VERT, nPos, TRUE);
-      if (editor->bRedraw)
-      {
-        ScrollWindow(hWnd, 0, dy, NULL, NULL);
-        UpdateWindow(hWnd);
-      }
-    }
+    ME_ScrollDown(editor, lParam * 8); /* FIXME follow the original */
     return TRUE; /* Should return false if a single line richedit control */
   }
   case WM_CLEAR:
@@ -1431,25 +1815,66 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   {
     int from, to;
     ME_Style *style;
-    LPWSTR wszText = ME_ToUnicode(hWnd, (void *)lParam);
+    LPWSTR wszText = ME_ToUnicode(unicode, (void *)lParam);
     size_t len = lstrlenW(wszText);
     TRACE("EM_REPLACESEL - %s\n", debugstr_w(wszText));
-    
+
     ME_GetSelection(editor, &from, &to);
     style = ME_GetSelectionInsertStyle(editor);
     ME_InternalDeleteText(editor, from, to-from);
     ME_InsertTextFromCursor(editor, 0, wszText, len, style);
     ME_ReleaseStyle(style);
-    ME_EndToUnicode(hWnd, wszText);
     /* drop temporary style if line end */
-    /* FIXME question: does abc\n mean: put abc, clear temp style, put \n? (would require a change) */  
+    /*
+     * FIXME question: does abc\n mean: put abc,
+     * clear temp style, put \n? (would require a change)
+     */
     if (len>0 && wszText[len-1] == '\n')
       ME_ClearTempStyle(editor);
-      
+    ME_EndToUnicode(unicode, wszText);
     ME_CommitUndo(editor);
     if (!wParam)
       ME_EmptyUndoStack(editor);
     ME_UpdateRepaint(editor);
+    return 0;
+  }
+  case EM_SCROLLCARET:
+  {
+    int top, bottom; /* row's edges relative to document top */
+    int nPos;
+    ME_DisplayItem *para, *row;
+    
+    nPos = ME_GetYScrollPos(editor);
+    row = ME_RowStart(editor->pCursors[0].pRun);
+    para = ME_GetParagraph(row);
+    top = para->member.para.nYPos + row->member.row.nYPos;
+    bottom = top + row->member.row.nHeight;
+    
+    if (top < nPos) /* caret above window */
+      ME_ScrollAbs(editor,  top);
+    else if (nPos + editor->sizeWindow.cy < bottom) /*below*/
+      ME_ScrollAbs(editor, bottom - editor->sizeWindow.cy);
+    return 0;
+  }
+  case WM_SETFONT:
+  {
+    LOGFONTW lf;
+    CHARFORMAT2W fmt;
+    HDC hDC;
+    BOOL bRepaint = LOWORD(lParam);
+    
+    if (!wParam)
+      wParam = (WPARAM)GetStockObject(SYSTEM_FONT); 
+    GetObjectW((HGDIOBJ)wParam, sizeof(LOGFONTW), &lf);
+    hDC = GetDC(hWnd);
+    ME_CharFormatFromLogFont(hDC, &lf, &fmt); 
+    ReleaseDC(hWnd, hDC);   
+    ME_SetCharFormat(editor, 0, ME_GetTextLength(editor), &fmt);
+    ME_SetDefaultCharFormat(editor, &fmt);
+
+    ME_CommitUndo(editor);
+    if (bRepaint)
+      ME_RewrapRepaint(editor);
     return 0;
   }
   case WM_SETTEXT:
@@ -1457,15 +1882,23 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor));
     if (lParam)
     {
-      LPWSTR wszText = ME_ToUnicode(hWnd, (void *)lParam);
       TRACE("WM_SETTEXT lParam==%lx\n",lParam);
-      TRACE("WM_SETTEXT - %s\n", debugstr_w(wszText)); /* debugstr_w() */
-      if (lstrlenW(wszText) > 0)
+      if (!unicode && !strncmp((char *)lParam, "{\\rtf", 5))
       {
-        /* uses default style! */
-        ME_InsertTextFromCursor(editor, 0, wszText, -1, editor->pBuffer->pDefaultStyle);
+        /* Undocumented: WM_SETTEXT supports RTF text */
+        ME_StreamInRTFString(editor, 0, (char *)lParam);
       }
-      ME_EndToUnicode(hWnd, wszText);
+      else
+      {
+        LPWSTR wszText = ME_ToUnicode(unicode, (void *)lParam);
+        TRACE("WM_SETTEXT - %s\n", debugstr_w(wszText)); /* debugstr_w() */
+        if (lstrlenW(wszText) > 0)
+        {
+          /* uses default style! */
+          ME_InsertTextFromCursor(editor, 0, wszText, -1, editor->pBuffer->pDefaultStyle);
+        }
+        ME_EndToUnicode(unicode, wszText);
+      }
     }
     else
       TRACE("WM_SETTEXT - NULL\n");
@@ -1473,7 +1906,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     ME_EmptyUndoStack(editor);
     ME_SetSelection(editor, 0, 0);
     ME_UpdateRepaint(editor);
-    return 0;
+    return 1;
   }
   case EM_CANPASTE:
   {
@@ -1505,45 +1938,33 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     gds.nLength = 0;
     es.dwCookie = (DWORD)&gds;
     es.pfnCallback = dwFormat == SF_RTF ? ME_ReadFromHGLOBALRTF : ME_ReadFromHGLOBALUnicode;
-    SendMessageW(hWnd, EM_STREAMIN, dwFormat|SFF_SELECTION, (LPARAM)&es);
-    
+    ME_StreamIn(editor, dwFormat|SFF_SELECTION, &es);
+
     CloseClipboard();
     return 0;
   }
   case WM_CUT:
   case WM_COPY:
   {
-    int from, to, pars;
-    WCHAR *data;
-    HANDLE hData;
-    EDITSTREAM es;
-    ME_GlobalDestStruct gds;
+    LPDATAOBJECT dataObj = NULL;
+    CHARRANGE range;
+    HRESULT hr = S_OK;
     
-    if (!OpenClipboard(hWnd))
-      return 0;
-      
-    EmptyClipboard();
-    ME_GetSelection(editor, &from, &to);
-    pars = ME_CountParagraphsBetween(editor, from, to);
-    hData = GlobalAlloc(GMEM_MOVEABLE, sizeof(WCHAR)*(to-from+pars+1));
-    data = (WCHAR *)GlobalLock(hData);
-    ME_GetTextW(editor, data, from, to-from, TRUE);
-    GlobalUnlock(hData);
-
-    gds.hData = GlobalAlloc(GMEM_MOVEABLE, 0);
-    gds.nLength = 0;
-    es.dwCookie = (DWORD)&gds;
-    es.pfnCallback = ME_AppendToHGLOBAL;
-    SendMessageW(hWnd, EM_STREAMOUT, SFF_SELECTION|SF_RTF, (LPARAM)&es);
-    GlobalReAlloc(gds.hData, gds.nLength+1, 0);
+    if (editor->cPasswordMask)
+      return 0; /* Copying or Cutting masked text isn't allowed */
     
-    SetClipboardData(CF_UNICODETEXT, hData);    
-    SetClipboardData(RegisterClipboardFormatA("Rich Text Format"), gds.hData);
-    
-    CloseClipboard();
-    if (msg == WM_CUT)
+    ME_GetSelection(editor, (int*)&range.cpMin, (int*)&range.cpMax);
+    if(editor->lpOleCallback)
+        hr = IRichEditOleCallback_GetClipboardData(editor->lpOleCallback, &range, RECO_COPY, &dataObj);
+    if(FAILED(hr) || !dataObj)
+        hr = ME_GetDataObject(editor, &range, &dataObj);
+    if(SUCCEEDED(hr)) {
+        hr = OleSetClipboard(dataObj);
+        IDataObject_Release(dataObj);
+    }
+    if (SUCCEEDED(hr) && msg == WM_CUT)
     {
-      ME_InternalDeleteText(editor, from, to-from);
+      ME_InternalDeleteText(editor, range.cpMin, range.cpMax-range.cpMin);
       ME_CommitUndo(editor);
       ME_UpdateRepaint(editor);
     }
@@ -1557,9 +1978,9 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   {
     TEXTRANGEW tr; /* W and A differ only by rng->lpstrText */
     tr.chrg.cpMin = 0;
-    tr.chrg.cpMax = wParam-1;
+    tr.chrg.cpMax = wParam ? (wParam - 1) : 0;
     tr.lpstrText = (WCHAR *)lParam;
-    return RichEditANSIWndProc(hWnd, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+    return RichEditWndProc_common(hWnd, EM_GETTEXTRANGE, 0, (LPARAM)&tr, unicode);
   }
   case EM_GETTEXTEX:
   {
@@ -1567,7 +1988,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     int nStart, nCount;
 
     if (ex->flags & ~(GT_SELECTION | GT_USECRLF))
-      FIXME("GETTEXTEX flags 0x%08lx not supported\n", ex->flags & ~(GT_SELECTION | GT_USECRLF));
+      FIXME("GETTEXTEX flags 0x%08x not supported\n", ex->flags & ~(GT_SELECTION | GT_USECRLF));
 
     if (ex->flags & GT_SELECTION)
     {
@@ -1580,7 +2001,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
       nStart = 0;
       nCount = ex->cb - 1;
     }
-    if (ex->codepage == 1200 || IsWindowUnicode(hWnd))
+    if (ex->codepage == 1200 || unicode)
     {
       nCount = min(nCount, ex->cb / sizeof(WCHAR) - 1);
       return ME_GetTextW(editor, (LPWSTR)lParam, nStart, nCount, ex->flags & GT_USECRLF);
@@ -1590,15 +2011,15 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
       /* potentially each char may be a CR, why calculate the exact value with O(N) when
         we can just take a bigger buffer? :) */
       int crlfmul = (ex->flags & GT_USECRLF) ? 2 : 1;
-      LPWSTR buffer = HeapAlloc(GetProcessHeap(), 0, (crlfmul*nCount + 1) * sizeof(WCHAR));
+      LPWSTR buffer = richedit_alloc((crlfmul*nCount + 1) * sizeof(WCHAR));
       DWORD buflen = ex->cb;
       LRESULT rc;
       DWORD flags = 0;
 
       buflen = ME_GetTextW(editor, buffer, nStart, nCount, ex->flags & GT_USECRLF);
-      rc = WideCharToMultiByte(ex->codepage, flags, buffer, buflen, (LPSTR)lParam, ex->cb, ex->lpDefaultChar, ex->lpUsedDefaultChar);
+      rc = WideCharToMultiByte(ex->codepage, flags, buffer, -1, (LPSTR)lParam, ex->cb, ex->lpDefaultChar, ex->lpUsedDefaultChar);
 
-      HeapFree(GetProcessHeap(),0,buffer);
+      richedit_free(buffer);
       return rc;
     }
   }
@@ -1610,15 +2031,22 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     tr.chrg.cpMin = from;
     tr.chrg.cpMax = to;
     tr.lpstrText = (WCHAR *)lParam;
-    return RichEditANSIWndProc(hWnd, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+    return RichEditWndProc_common(hWnd, EM_GETTEXTRANGE, 0, (LPARAM)&tr, unicode);
+  }
+  case EM_GETSCROLLPOS:
+  {
+      POINT *point = (POINT *)lParam;
+      point->x = 0; /* FIXME side scrolling not implemented */
+      point->y = ME_GetYScrollPos(editor);
+      return 1;
   }
   case EM_GETTEXTRANGE:
   {
     TEXTRANGEW *rng = (TEXTRANGEW *)lParam;
-    TRACE("EM_GETTEXTRANGE min=%ld max=%ld unicode=%d emul1.0=%d length=%d\n",
-      rng->chrg.cpMin, rng->chrg.cpMax, IsWindowUnicode(hWnd), 
+    TRACE("EM_GETTEXTRANGE min=%d max=%d unicode=%d emul1.0=%d length=%d\n",
+      rng->chrg.cpMin, rng->chrg.cpMax, unicode,
       editor->bEmulateVersion10, ME_GetTextLength(editor));
-    if (IsWindowUnicode(hWnd))
+    if (unicode)
       return ME_GetTextW(editor, rng->lpstrText, rng->chrg.cpMin, rng->chrg.cpMax-rng->chrg.cpMin, editor->bEmulateVersion10);
     else
     {
@@ -1632,6 +2060,61 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
       FREE_OBJ(p);
       return nChars;
     }
+  }
+  case EM_GETLINE:
+  {
+    ME_DisplayItem *run;
+    const unsigned int nMaxChars = *(WORD *) lParam;
+    unsigned int nEndChars, nCharsLeft = nMaxChars;
+    char *dest = (char *) lParam;
+    /* rich text editor 1.0 uses \r\n for line end, 2.0 uses just \r; 
+    we need to know how if we have the extra \n or not */
+    int nLF = editor->bEmulateVersion10;
+
+    TRACE("EM_GETLINE: row=%d, nMaxChars=%d (%s)\n", (int) wParam, nMaxChars,
+          unicode ? "Unicode" : "Ansi");
+
+    run = ME_FindRowWithNumber(editor, wParam);
+    if (run == NULL)
+      return 0;
+
+    while (nCharsLeft && (run = ME_FindItemFwd(run, diRunOrStartRow))
+           && !(run->member.run.nFlags & MERF_ENDPARA))
+    {
+      unsigned int nCopy;
+      ME_String *strText;
+      if (run->type != diRun)
+        break;
+      strText = run->member.run.strText;
+      nCopy = min(nCharsLeft, strText->nLen);
+
+      if (unicode)
+        lstrcpynW((LPWSTR) dest, strText->szData, nCopy);
+      else
+        nCopy = WideCharToMultiByte(CP_ACP, 0, strText->szData, nCopy, dest,
+                                    nCharsLeft, NULL, NULL);
+      dest += nCopy * (unicode ? sizeof(WCHAR) : 1);
+      nCharsLeft -= nCopy;
+    }
+
+    /* append \r\0 (or \r\n\0 in 1.0), space allowing */
+    nEndChars = min(nCharsLeft, 2 + nLF);
+    nCharsLeft -= nEndChars;
+    if (unicode)
+    {
+      const WCHAR src[] = {'\r', '\0'};
+      const WCHAR src10[] = {'\r', '\n', '\0'};
+      lstrcpynW((LPWSTR) dest, nLF ? src10 : src, nEndChars);
+    }
+    else
+      lstrcpynA(dest, nLF ? "\r\n" : "\r", nEndChars);
+
+    TRACE("EM_GETLINE: got %u bytes\n", nMaxChars - nCharsLeft);
+
+    if (nEndChars == 2 + nLF)
+      return nMaxChars - nCharsLeft - 1; /* don't count \0 */
+    else
+      return nMaxChars - nCharsLeft;
   }
   case EM_GETLINECOUNT:
   {
@@ -1656,7 +2139,10 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   }
   case EM_EXLINEFROMCHAR:
   {
-    return ME_RowNumberFromCharOfs(editor, lParam);
+    if (lParam == -1)
+      return ME_RowNumberFromCharOfs(editor, ME_GetCursorOfs(editor,1));
+    else    
+      return ME_RowNumberFromCharOfs(editor, lParam);
   }
   case EM_LINEINDEX:
   {
@@ -1690,8 +2176,8 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     item = ME_FindItemAtOffset(editor, diRun, wParam, NULL);
     item = ME_RowStart(item);
     nThisLineOfs = ME_CharOfsFromRunOfs(editor, ME_FindItemFwd(item, diRun), 0);
-    item_end = ME_FindItemFwd(item, diStartRow);
-    if (item_end)
+    item_end = ME_FindItemFwd(item, diStartRowOrParagraphOrEnd);
+    if (item_end->type == diStartRow)
       nNextLineOfs = ME_CharOfsFromRunOfs(editor, ME_FindItemFwd(item_end, diRun), 0);
     else
       nNextLineOfs = ME_FindItemFwd(item, diParagraphOrEnd)->member.para.nCharOfs
@@ -1700,25 +2186,53 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     TRACE("EM_LINELENGTH(%d)==%d\n",wParam, nChars);
     return nChars;
   }
+  case EM_EXLIMITTEXT:
+  {
+    if ((int)lParam < 0)
+     return 0;
+    if (lParam == 0)
+      editor->nTextLimit = 65536;
+    else
+      editor->nTextLimit = (int) lParam;
+    return 0;
+  }
+  case EM_LIMITTEXT:
+  {
+    if (wParam == 0)
+      editor->nTextLimit = 65536;
+    else
+      editor->nTextLimit = (int) wParam;
+    return 0;
+  }
+  case EM_GETLIMITTEXT:
+  {
+    return editor->nTextLimit;
+  }
   case EM_FINDTEXT:
   {
     FINDTEXTA *ft = (FINDTEXTA *)lParam;
     int nChars = MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, NULL, 0);
     WCHAR *tmp;
-    
+    LRESULT r;
+
     if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
       MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, tmp, nChars);
-    return ME_FindText(editor, wParam, &ft->chrg, tmp, NULL);
+    r = ME_FindText(editor, wParam, &ft->chrg, tmp, NULL);
+    FREE_OBJ( tmp );
+    return r;
   }
   case EM_FINDTEXTEX:
   {
     FINDTEXTEXA *ex = (FINDTEXTEXA *)lParam;
     int nChars = MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, NULL, 0);
     WCHAR *tmp;
-    
+    LRESULT r;
+
     if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
       MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, tmp, nChars);
-    return ME_FindText(editor, wParam, &ex->chrg, tmp, &ex->chrgText);
+    r = ME_FindText(editor, wParam, &ex->chrg, tmp, &ex->chrgText);
+    FREE_OBJ( tmp );
+    return r;
   }
   case EM_FINDTEXTW:
   {
@@ -1768,26 +2282,41 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     return MAKELONG( pt.x, pt.y );
   }
   case WM_CREATE:
+    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_HSCROLL)
+    { /* Squelch the default horizontal scrollbar it would make */
+      ShowScrollBar(editor->hWnd, SB_HORZ, FALSE);
+    }
     ME_CommitUndo(editor);
     ME_WrapMarkedParagraphs(editor);
     ME_MoveCaret(editor);
     return 0;
   case WM_DESTROY:
     ME_DestroyEditor(editor);
-    SetWindowLongW(hWnd, 0, 0);
+    SetWindowLongPtrW(hWnd, 0, 0);
     return 0;
   case WM_LBUTTONDOWN:
     SetFocus(hWnd);
     ME_LButtonDown(editor, (short)LOWORD(lParam), (short)HIWORD(lParam));
     SetCapture(hWnd);
+    ME_LinkNotify(editor,msg,wParam,lParam);
     break;
   case WM_MOUSEMOVE:
     if (GetCapture() == hWnd)
       ME_MouseMove(editor, (short)LOWORD(lParam), (short)HIWORD(lParam));
+    ME_LinkNotify(editor,msg,wParam,lParam);
     break;
   case WM_LBUTTONUP:
     if (GetCapture() == hWnd)
       ReleaseCapture();
+    ME_LinkNotify(editor,msg,wParam,lParam);
+    break;
+  case WM_LBUTTONDBLCLK:
+    ME_LinkNotify(editor,msg,wParam,lParam);
+    ME_SelectWord(editor);
+    break;
+  case WM_CONTEXTMENU:
+    if (!ME_ShowContextMenu(editor, (short)LOWORD(lParam), (short)HIWORD(lParam)))
+      goto do_default;
     break;
   case WM_PAINT:
     if (editor->bRedraw)
@@ -1825,36 +2354,28 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     TRACE("editor wnd command = %d\n", LOWORD(wParam));
     return 0;
   case WM_KEYDOWN:
-    if (ME_ArrowKey(editor, LOWORD(wParam), GetKeyState(VK_CONTROL)<0)) {
-      ME_CommitUndo(editor);
-      ME_EnsureVisible(editor, editor->pCursors[0].pRun);
-      HideCaret(hWnd);
-      ME_MoveCaret(editor);
-      ShowCaret(hWnd);
+    if (ME_KeyDown(editor, LOWORD(wParam)))
       return 0;
-    }
-    if (GetKeyState(VK_CONTROL)<0)
-    {
-      if (LOWORD(wParam)=='W')
-      {
-        CHARFORMAT2W chf;
-        char buf[2048];
-        ME_GetSelectionCharFormat(editor, &chf);
-        ME_DumpStyleToBuf(&chf, buf);
-        MessageBoxA(NULL, buf, "Style dump", MB_OK);
-      }
-      if (LOWORD(wParam)=='Q')
-      {
-        ME_CheckCharOffsets(editor);
-      }
-    }
     goto do_default;
   case WM_CHAR: 
   {
-    WCHAR wstr = LOWORD(wParam);
+    WCHAR wstr;
 
+    if (unicode)
+        wstr = (WCHAR)wParam;
+    else
+    {
+        CHAR charA = wParam;
+        MultiByteToWideChar(CP_ACP, 0, &charA, 1, &wstr, 1);
+    }
+    if (editor->AutoURLDetect_bEnable)
+      ME_AutoURLDetect(editor, wstr);
+        
     switch (wstr)
     {
+    case 1: /* Ctrl-A */
+      ME_SetSelection(editor, 0, -1);
+      return 0;
     case 3: /* Ctrl-C */
       SendMessageW(editor->hWnd, WM_COPY, 0, 0);
       return 0;
@@ -1867,9 +2388,6 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 
     switch (wstr)
     {
-    case 1: /* Ctrl-A */
-      ME_SetSelection(editor, 0, -1);
-      return 0;
     case 22: /* Ctrl-V */
       SendMessageW(editor->hWnd, WM_PASTE, 0, 0);
       return 0;
@@ -1894,70 +2412,54 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     }
     return 0;
   }
+  case EM_SCROLL: /* fall through */
   case WM_VSCROLL: 
   {
-    int nPos = editor->nScrollPosY;
-    si.cbSize = sizeof(SCROLLINFO);
-    si.fMask = SIF_PAGE|SIF_POS|SIF_RANGE|SIF_TRACKPOS;
-    GetScrollInfo(hWnd, SB_VERT, &si);
-    switch(LOWORD(wParam)) {
-    case SB_LINEUP:
-      nPos -= 24; /* FIXME follow the original */
-      if (nPos<0) nPos = 0;
-      break;
-    case SB_LINEDOWN:
+    int origNPos;
+    int lineHeight;
+    
+    origNPos = ME_GetYScrollPos(editor);
+    lineHeight = 24;
+    
+    if (editor && editor->pBuffer && editor->pBuffer->pDefaultStyle)
+      lineHeight = editor->pBuffer->pDefaultStyle->tm.tmHeight;
+    if (lineHeight <= 0) lineHeight = 24;
+    
+    switch(LOWORD(wParam)) 
     {
-      int nEnd = editor->nTotalLength - editor->sizeWindow.cy;
-      nPos += 24; /* FIXME follow the original */
-      if (nPos>=nEnd) nPos = nEnd;
-      break;
+      case SB_LINEUP:
+        ME_ScrollUp(editor,lineHeight);
+        break;
+      case SB_LINEDOWN:
+        ME_ScrollDown(editor,lineHeight);
+        break;
+      case SB_PAGEUP:
+        ME_ScrollUp(editor,editor->sizeWindow.cy);
+        break;
+      case SB_PAGEDOWN:
+        ME_ScrollDown(editor,editor->sizeWindow.cy);
+        break;
+      case SB_THUMBTRACK:
+      case SB_THUMBPOSITION:
+        ME_ScrollAbs(editor,HIWORD(wParam));
+        break;
     }
-    case SB_PAGEUP:
-      nPos -= editor->sizeWindow.cy;
-      if (nPos<0) nPos = 0;
-      break;
-    case SB_PAGEDOWN:
-      nPos += editor->sizeWindow.cy;
-      if (nPos>=editor->nTotalLength) nPos = editor->nTotalLength-1;
-      break;
-    case SB_THUMBTRACK:
-    case SB_THUMBPOSITION:
-      nPos = si.nTrackPos;
-      break;
-    }
-    if (nPos != editor->nScrollPosY) {
-      int dy = editor->nScrollPosY - nPos;
-      editor->nScrollPosY = nPos;
-      SetScrollPos(hWnd, SB_VERT, nPos, TRUE);
-      if (editor->bRedraw)
-      {
-        ScrollWindow(hWnd, 0, dy, NULL, NULL);
-        UpdateWindow(hWnd);
-      }
-    }
+    if (msg == EM_SCROLL)
+      return 0x00010000 | (((ME_GetYScrollPos(editor) - origNPos)/lineHeight) & 0xffff);
     break;
   }
   case WM_MOUSEWHEEL:
   {
-    int gcWheelDelta = 0, nPos = editor->nScrollPosY, nEnd = editor->nTotalLength - editor->sizeWindow.cy; 
+    int gcWheelDelta;
     UINT pulScrollLines;
+    
     SystemParametersInfoW(SPI_GETWHEELSCROLLLINES,0, &pulScrollLines, 0);
-    gcWheelDelta -= GET_WHEEL_DELTA_WPARAM(wParam);
+    gcWheelDelta = -GET_WHEEL_DELTA_WPARAM(wParam);
+    
     if (abs(gcWheelDelta) >= WHEEL_DELTA && pulScrollLines)
-      nPos += pulScrollLines * (gcWheelDelta / WHEEL_DELTA) * 8; /* FIXME follow the original */
-    if (nPos>=nEnd)
-      nPos = nEnd;
-    if (nPos<0)
-      nPos = 0;
-    if (nPos != editor->nScrollPosY) {
-      int dy = editor->nScrollPosY - nPos;
-      editor->nScrollPosY = nPos;
-      SetScrollPos(hWnd, SB_VERT, nPos, TRUE);
-      if (editor->bRedraw)
-      {
-        ScrollWindow(hWnd, 0, dy, NULL, NULL);
-        UpdateWindow(hWnd);
-      }
+    {
+      /* FIXME follow the original */
+      ME_ScrollDown(editor,pulScrollLines * (gcWheelDelta / WHEEL_DELTA) * 8); 
     }
     break;
   }
@@ -2008,8 +2510,60 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   case EM_GETOLEINTERFACE:
   {
     LPVOID *ppvObj = (LPVOID*) lParam;
-    FIXME("EM_GETOLEINTERFACE %p: stub\n", ppvObj);
-    return CreateIRichEditOle(ppvObj);
+    return CreateIRichEditOle(editor, ppvObj);
+  }
+  case EM_GETPASSWORDCHAR:
+  {
+    return editor->cPasswordMask;
+  }
+  case EM_SETOLECALLBACK:
+    if(editor->lpOleCallback)
+      IUnknown_Release(editor->lpOleCallback);
+    editor->lpOleCallback = (LPRICHEDITOLECALLBACK)lParam;
+    if(editor->lpOleCallback)
+      IUnknown_AddRef(editor->lpOleCallback);
+    return TRUE;
+  case EM_GETWORDBREAKPROC:
+    return (LRESULT)editor->pfnWordBreak;
+  case EM_SETWORDBREAKPROC:
+  {
+    EDITWORDBREAKPROCW pfnOld = editor->pfnWordBreak;
+
+    editor->pfnWordBreak = (EDITWORDBREAKPROCW)lParam;
+    return (LRESULT)pfnOld;
+  }
+  case EM_SETTEXTMODE:
+  {
+    LRESULT ret;
+    int mask = 0;
+    int changes = 0;
+    ret = RichEditWndProc_common(hWnd, WM_GETTEXTLENGTH, 0, 0, unicode);
+    if (!ret)
+    {
+      /*Check for valid wParam*/
+      if ((((wParam & TM_RICHTEXT) && ((wParam & TM_PLAINTEXT) << 1))) ||
+	  (((wParam & TM_MULTILEVELUNDO) && ((wParam & TM_SINGLELEVELUNDO) << 1))) ||
+	  (((wParam & TM_MULTICODEPAGE) && ((wParam & TM_SINGLECODEPAGE) << 1))))
+	return 1;
+      else
+      {
+	if (wParam & (TM_RICHTEXT | TM_PLAINTEXT))
+	{
+	  mask |= (TM_RICHTEXT | TM_PLAINTEXT);
+	  changes |= (wParam & (TM_RICHTEXT | TM_PLAINTEXT));
+	}
+	/*FIXME: Currently no support for undo level and code page options*/ 
+	editor->mode = (editor->mode & (~mask)) | changes;
+	return 0;
+      }
+    }
+    return ret;
+  }
+  case EM_SETPASSWORDCHAR:
+  {
+    editor->cPasswordMask = wParam;
+    ME_RewrapRepaint(editor);
+    return 0;
   }
   default:
   do_default:
@@ -2018,6 +2572,29 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   return 0L;
 }
 
+static LRESULT WINAPI RichEditWndProcW(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    BOOL unicode = TRUE;
+
+    /* Under Win9x RichEdit20W returns ANSI strings, see the tests. */
+    if (msg == WM_GETTEXT && (GetVersion() & 0x80000000))
+        unicode = FALSE;
+
+    return RichEditWndProc_common(hWnd, msg, wParam, lParam, unicode);
+}
+
+static LRESULT WINAPI RichEditWndProcA(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    return RichEditWndProc_common(hWnd, msg, wParam, lParam, FALSE);
+}
+
+/******************************************************************
+ *        RichEditANSIWndProc (RICHED20.10)
+ */
+LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    return RichEditWndProcA(hWnd, msg, wParam, lParam);
+}
 
 /******************************************************************
  *        RichEdit10ANSIWndProc (RICHED20.9)
@@ -2030,7 +2607,7 @@ LRESULT WINAPI RichEdit10ANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
   result = RichEditANSIWndProc(hWnd, msg, wParam, lParam);
   if (msg == WM_NCCREATE)
   {
-    ME_TextEditor *editor = (ME_TextEditor *)GetWindowLongW(hWnd, 0);
+    ME_TextEditor *editor = (ME_TextEditor *)GetWindowLongPtrW(hWnd, 0);
     
     editor->bEmulateVersion10 = TRUE;
     editor->pBuffer->pLast->member.para.nCharOfs = 2;
@@ -2042,6 +2619,38 @@ void ME_SendOldNotify(ME_TextEditor *editor, int nCode)
 {
   HWND hWnd = editor->hWnd;
   SendMessageA(GetParent(hWnd), WM_COMMAND, (nCode<<16)|GetWindowLongW(hWnd, GWLP_ID), (LPARAM)hWnd);
+}
+
+void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  int x,y;
+  ME_Cursor tmpCursor;
+  int nCharOfs; /* The start of the clicked text. Absolute character offset */
+
+  ME_Run *tmpRun;
+
+  ENLINK info;
+  x = (short)LOWORD(lParam);
+  y = (short)HIWORD(lParam);
+  nCharOfs = ME_CharFromPos(editor, x, y);
+  if (nCharOfs < 0) return;
+
+  ME_CursorFromCharOfs(editor, nCharOfs, &tmpCursor);
+  tmpRun = &tmpCursor.pRun->member.run;
+
+  if ((tmpRun->style->fmt.dwMask & CFM_LINK)
+    && (tmpRun->style->fmt.dwEffects & CFE_LINK))
+  { /* The clicked run has CFE_LINK set */
+    info.nmhdr.hwndFrom = editor->hWnd;
+    info.nmhdr.idFrom = GetWindowLongW(editor->hWnd, GWLP_ID);
+    info.nmhdr.code = EN_LINK;
+    info.msg = msg;
+    info.wParam = wParam;
+    info.lParam = lParam;
+    info.chrg.cpMin = ME_CharOfsFromRunOfs(editor,tmpCursor.pRun,0);
+    info.chrg.cpMax = info.chrg.cpMin + ME_StrVLen(tmpRun->strText);
+    SendMessageW(GetParent(editor->hWnd), WM_NOTIFY,info.nmhdr.idFrom, (LPARAM)&info);
+  }  
 }
 
 int ME_CountParagraphsBetween(ME_TextEditor *editor, int from, int to)
@@ -2068,7 +2677,7 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, in
   WCHAR *pStart = buffer;
   
   if (!item) {
-    *buffer = L'\0';
+    *buffer = 0;
     return 0;
   }
   
@@ -2092,21 +2701,26 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, in
     int nLen = ME_StrLen(item->member.run.strText);
     if (nLen > nChars)
       nLen = nChars;
-      
+
     if (item->member.run.nFlags & MERF_ENDPARA)
     {
-      *buffer = '\r';
-      if (bCRLF)
-      {
-        *(++buffer) = '\n';
-        nWritten++;
+      if (!ME_FindItemFwd(item, diRun))
+        /* No '\r' is appended to the last paragraph. */
+        nLen = 0;
+      else {
+        *buffer = '\r';
+        if (bCRLF)
+        {
+          *(++buffer) = '\n';
+          nWritten++;
+        }
+        assert(nLen == 1);
+        /* our end paragraph consists of 2 characters now */
+        if (editor->bEmulateVersion10)
+          nChars--;
       }
-      assert(nLen == 1);
-      /* our end paragraph consists of 2 characters now */
-      if (editor->bEmulateVersion10)
-        nChars--;
     }
-    else      
+    else
       CopyMemory(buffer, item->member.run.strText->szData, sizeof(WCHAR)*nLen);
     nChars -= nLen;
     nWritten += nLen;
@@ -2115,68 +2729,62 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, in
     if (!nChars)
     {
       TRACE("nWritten=%d, actual=%d\n", nWritten, buffer-pStart);
-      *buffer = L'\0';
+      *buffer = 0;
       return nWritten;
     }
     item = ME_FindItemFwd(item, diRun);
   }
-  *buffer = L'\0';
+  *buffer = 0;
   TRACE("nWritten=%d, actual=%d\n", nWritten, buffer-pStart);
   return nWritten;  
 }
 
-void ME_RegisterEditorClass(HINSTANCE hInstance)
+static BOOL ME_RegisterEditorClass(HINSTANCE hInstance)
 {
-  BOOL bResult;
   WNDCLASSW wcW;
   WNDCLASSA wcA;
   
-  wcW.style = CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
-  wcW.lpfnWndProc = RichEditANSIWndProc;
+  wcW.style = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
+  wcW.lpfnWndProc = RichEditWndProcW;
   wcW.cbClsExtra = 0;
-  wcW.cbWndExtra = 4;
+  wcW.cbWndExtra = sizeof(ME_TextEditor *);
   wcW.hInstance = NULL; /* hInstance would register DLL-local class */
   wcW.hIcon = NULL;
-  wcW.hCursor = LoadCursorW(NULL, (LPCWSTR) IDC_IBEAM);
+  wcW.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_IBEAM));
   wcW.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
   wcW.lpszMenuName = NULL;
-  wcW.lpszClassName = wszClassName;
-  bResult = RegisterClassW(&wcW);  
-  assert(bResult);
-  wcW.lpszClassName = wszClassName50;
-  bResult = RegisterClassW(&wcW);  
-  assert(bResult);
 
-  wcA.style = CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
-  wcA.lpfnWndProc = RichEditANSIWndProc;
+  if (is_version_nt())
+  {
+    wcW.lpszClassName = RichEdit20W;
+    if (!RegisterClassW(&wcW)) return FALSE;
+    wcW.lpszClassName = RichEdit50W;
+    if (!RegisterClassW(&wcW)) return FALSE;
+  }
+  else
+  {
+    /* WNDCLASSA/W have the same layout */
+    wcW.lpszClassName = (LPCWSTR)"RichEdit20W";
+    if (!RegisterClassA((WNDCLASSA *)&wcW)) return FALSE;
+    wcW.lpszClassName = (LPCWSTR)"RichEdit50W";
+    if (!RegisterClassA((WNDCLASSA *)&wcW)) return FALSE;
+  }
+
+  wcA.style = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
+  wcA.lpfnWndProc = RichEditWndProcA;
   wcA.cbClsExtra = 0;
-  wcA.cbWndExtra = 4;
+  wcA.cbWndExtra = sizeof(ME_TextEditor *);
   wcA.hInstance = NULL; /* hInstance would register DLL-local class */
   wcA.hIcon = NULL;
-  wcA.hCursor = LoadCursorA(NULL, (LPCSTR) IDC_IBEAM);
+  wcA.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_IBEAM));
   wcA.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
   wcA.lpszMenuName = NULL;
   wcA.lpszClassName = "RichEdit20A";
-  bResult = RegisterClassA(&wcA);  
-  assert(bResult);
+  if (!RegisterClassA(&wcA)) return FALSE;
   wcA.lpszClassName = "RichEdit50A";
-  bResult = RegisterClassA(&wcA);  
-  assert(bResult);
-}
-/******************************************************************
- *        CreateTextServices (RICHED20.4)
- *
- * FIXME should be ITextHost instead of void*
- */
-HRESULT WINAPI CreateTextServices(IUnknown *punkOuter, void *pITextHost,
-    IUnknown **ppUnk)
-{
-  FIXME("stub\n");
-  /* FIXME should support aggregation */
-  if (punkOuter)
-    return CLASS_E_NOAGGREGATION;
-    
-  return E_FAIL; /* E_NOTIMPL isn't allowed by MSDN */
+  if (!RegisterClassA(&wcA)) return FALSE;
+
+  return TRUE;
 }
 
 LRESULT WINAPI REComboWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -2218,7 +2826,7 @@ LRESULT WINAPI REExtendedRegisterClass(void)
   {
       wcW.style = CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS;
       wcW.lpfnWndProc = REListWndProc;
-      wcW.lpszClassName = wszClassNameListBox;
+      wcW.lpszClassName = REListBox20W;
       if (RegisterClassW(&wcW)) ME_ListBoxRegistered = TRUE;
   }
 
@@ -2226,7 +2834,7 @@ LRESULT WINAPI REExtendedRegisterClass(void)
   {
       wcW.style = CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS | CS_VREDRAW | CS_HREDRAW;
       wcW.lpfnWndProc = REComboWndProc;
-      wcW.lpszClassName = wszClassNameComboBox;
+      wcW.lpszClassName = REComboBox20W;
       if (RegisterClassW(&wcW)) ME_ComboBoxRegistered = TRUE;  
   }
 
@@ -2237,4 +2845,95 @@ LRESULT WINAPI REExtendedRegisterClass(void)
       result += 2;
 
   return result;
+}
+
+int ME_AutoURLDetect(ME_TextEditor *editor, WCHAR curChar) 
+{
+  struct prefix_s {
+    const char *text;
+    int length;
+  } prefixes[12] = {
+    {"http:", 5},
+    {"file:", 6},
+    {"mailto:", 8},
+    {"ftp:", 5},
+    {"https:", 7},
+    {"gopher:", 8},
+    {"nntp:", 6},
+    {"prospero:", 10},
+    {"telnet:", 8},
+    {"news:", 6},
+    {"wais:", 6},
+    {"www.", 5}
+  };
+  CHARRANGE ins_pt;
+  int curf_ef, link_ef, def_ef;
+  int cur_prefx, prefx_cnt;
+  int sel_min, sel_max;
+  int car_pos = 0;
+  int text_pos=-1;
+  int URLmin, URLmax = 0;
+  CHARRANGE url;
+  FINDTEXTA ft;
+  CHARFORMAT2W cur_format;
+  CHARFORMAT2W default_format;
+  CHARFORMAT2W link;
+  RichEditANSIWndProc(editor->hWnd, EM_EXGETSEL, (WPARAM) 0, (LPARAM) &ins_pt);
+  sel_min = ins_pt.cpMin;
+  sel_max = ins_pt.cpMax;
+  if (sel_min==sel_max) 
+    car_pos = sel_min;
+  if (sel_min!=sel_max)
+    car_pos = ME_GetTextLength(editor)+1;   
+  cur_format.cbSize = sizeof(cur_format);
+  default_format.cbSize = sizeof(default_format);
+  RichEditANSIWndProc(editor->hWnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM) &cur_format);
+  RichEditANSIWndProc(editor->hWnd, EM_GETCHARFORMAT, SCF_DEFAULT, (LPARAM) &default_format);
+  link.cbSize = sizeof(link);
+  link.dwMask = CFM_LINK;
+  link.dwEffects = CFE_LINK;
+  curf_ef = cur_format.dwEffects & link.dwEffects;
+  def_ef = default_format.dwEffects & link.dwEffects;
+  link_ef = link.dwEffects & link.dwEffects;
+  if (curf_ef == link_ef) 
+  {
+    if( curChar == '\n' || curChar=='\r' || curChar==' ') 
+    {
+      ME_SetSelection(editor, car_pos, car_pos);
+      RichEditANSIWndProc(editor->hWnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM) &default_format);
+      text_pos=-1;
+      return 0;
+    }
+  }
+  if (curf_ef == def_ef)
+  {
+    cur_prefx = 0;
+    prefx_cnt = (sizeof(prefixes)/sizeof(struct prefix_s))-1;
+    while (cur_prefx<=prefx_cnt) 
+    {
+      if (text_pos == -1) 
+      {
+        ft.lpstrText = prefixes[cur_prefx].text;
+        URLmin=max(0,(car_pos-prefixes[cur_prefx].length));
+        URLmax=max(0, car_pos);
+        if ((car_pos == 0) && (ME_GetTextLength(editor) != 0))
+        {
+        URLmax = ME_GetTextLength(editor)+1;
+        }
+        ft.chrg.cpMin = URLmin;
+        ft.chrg.cpMax = URLmax;
+        text_pos=RichEditANSIWndProc(editor->hWnd, EM_FINDTEXT, FR_DOWN, (LPARAM)&ft);   
+        cur_prefx++;
+      }
+      if (text_pos != -1) 
+      {
+        url.cpMin=text_pos;
+        url.cpMax=car_pos-1;
+        ME_SetCharFormat(editor, text_pos, (URLmax-text_pos), &link);
+        ME_RewrapRepaint(editor);
+        break;
+      }
+    }
+  }
+  return 0;
 }

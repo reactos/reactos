@@ -1,8 +1,6 @@
 #ifndef __CPL_DESK_RESOURCE_H__
 #define __CPL_DESK_RESOURCE_H__
 
-#include <commctrl.h>
-
 /* metrics */
 #define PROPSHEETWIDTH      246
 #define PROPSHEETHEIGHT     228

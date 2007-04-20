@@ -21,16 +21,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
-#include <assert.h>
-#include <stdlib.h>
 #include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -42,11 +36,10 @@
 #include "objbase.h"
 #include "ole2.h"
 #include "winerror.h"
-#include "winreg.h"
-#include "winternl.h"
 
 #include "compobj_private.h" 
 
+#include "wine/list.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -65,8 +58,7 @@ typedef struct StdGITEntry
   IID iid;         /* IID of the interface */
   IStream* stream; /* Holds the marshalled interface */
 
-  struct StdGITEntry* next;
-  struct StdGITEntry* prev;  
+  struct list entry;
 } StdGITEntry;
 
 /* Class data */
@@ -75,8 +67,7 @@ typedef struct StdGlobalInterfaceTableImpl
   const IGlobalInterfaceTableVtbl *lpVtbl;
 
   ULONG ref;
-  struct StdGITEntry* firstEntry;
-  struct StdGITEntry* lastEntry;
+  struct list list;
   ULONG nextCookie;
   
 } StdGlobalInterfaceTableImpl;
@@ -94,7 +85,8 @@ static CRITICAL_SECTION git_section = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 
 /** This destroys it again. It should revoke all the held interfaces first **/
-void StdGlobalInterfaceTable_Destroy(void* self) {
+static void StdGlobalInterfaceTable_Destroy(void* self)
+{
   TRACE("(%p)\n", self);
   FIXME("Revoke held interfaces here\n");
   
@@ -115,13 +107,11 @@ StdGlobalInterfaceTable_FindEntry(IGlobalInterfaceTable* iface, DWORD cookie)
   TRACE("iface=%p, cookie=0x%x\n", iface, (UINT)cookie);
 
   EnterCriticalSection(&git_section);
-  e = self->firstEntry;
-  while (e != NULL) {
+  LIST_FOR_EACH_ENTRY(e, &self->list, StdGITEntry, entry) {
     if (e->cookie == cookie) {
       LeaveCriticalSection(&git_section);
       return e;
     }
-    e = e->next;
   }
   LeaveCriticalSection(&git_section);
   
@@ -210,7 +200,7 @@ StdGlobalInterfaceTable_RegisterInterfaceInGlobal(
   }
 
   zero.QuadPart = 0;
-  IStream_Seek(stream, zero, SEEK_SET, NULL);
+  IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
 
   entry = HeapAlloc(GetProcessHeap(), 0, sizeof(StdGITEntry));
   if (entry == NULL) return E_OUTOFMEMORY;
@@ -223,18 +213,14 @@ StdGlobalInterfaceTable_RegisterInterfaceInGlobal(
   self->nextCookie++; /* inc the cookie count */
 
   /* insert the new entry at the end of the list */
-  entry->next = NULL;
-  entry->prev = self->lastEntry;
-  if (entry->prev) entry->prev->next = entry;
-  else self->firstEntry = entry;
-  self->lastEntry = entry;
+  list_add_tail(&self->list, &entry->entry);
 
   /* and return the cookie */
   *pdwCookie = entry->cookie;
   
   LeaveCriticalSection(&git_section);
   
-  TRACE("Cookie is 0x%lx\n", entry->cookie);
+  TRACE("Cookie is 0x%x\n", entry->cookie);
   return S_OK;
 }
 
@@ -242,7 +228,6 @@ static HRESULT WINAPI
 StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(
                IGlobalInterfaceTable* iface, DWORD dwCookie)
 {
-  StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
   StdGITEntry* entry;
   HRESULT hr;
 
@@ -258,17 +243,14 @@ StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(
   hr = CoReleaseMarshalData(entry->stream);
   if (hr != S_OK)
   {
-    WARN("Failed to release marshal data, hr = 0x%08lx\n", hr);
+    WARN("Failed to release marshal data, hr = 0x%08x\n", hr);
     return hr;
   }
   IStream_Release(entry->stream);
 		    
   /* chop entry out of the list, and free the memory */
   EnterCriticalSection(&git_section);
-  if (entry->prev) entry->prev->next = entry->next;
-  else self->firstEntry = entry->next;
-  if (entry->next) entry->next->prev = entry->prev;
-  else self->lastEntry = entry->prev;
+  list_remove(&entry->entry);
   LeaveCriticalSection(&git_section);
 
   HeapFree(GetProcessHeap(), 0, entry);
@@ -285,7 +267,7 @@ StdGlobalInterfaceTable_GetInterfaceFromGlobal(
   LARGE_INTEGER move;
   LPUNKNOWN lpUnk;
   
-  TRACE("dwCookie=0x%lx, riid=%s, ppv=%p\n", dwCookie, debugstr_guid(riid), ppv);
+  TRACE("dwCookie=0x%x, riid=%s, ppv=%p\n", dwCookie, debugstr_guid(riid), ppv);
   
   entry = StdGlobalInterfaceTable_FindEntry(iface, dwCookie);
   if (entry == NULL) return E_INVALIDARG;
@@ -298,15 +280,16 @@ StdGlobalInterfaceTable_GetInterfaceFromGlobal(
   
   /* unmarshal the interface */
   hres = CoUnmarshalInterface(entry->stream, riid, ppv);
-  if (hres) {
-    WARN("Failed to unmarshal stream\n");
-    return hres;
-  }
   
   /* rewind stream, in case it's used again */
   move.u.LowPart = 0;
   move.u.HighPart = 0;
   IStream_Seek(entry->stream, move, STREAM_SEEK_SET, NULL);
+
+  if (hres) {
+    WARN("Failed to unmarshal stream\n");
+    return hres;
+  }
 
   /* addref it */
   lpUnk = *ppv;
@@ -389,7 +372,7 @@ static const IGlobalInterfaceTableVtbl StdGlobalInterfaceTableImpl_Vtbl =
 };
 
 /** This function constructs the GIT. It should only be called once **/
-void* StdGlobalInterfaceTable_Construct()
+void* StdGlobalInterfaceTable_Construct(void)
 {
   StdGlobalInterfaceTableImpl* newGIT;
 
@@ -398,8 +381,7 @@ void* StdGlobalInterfaceTable_Construct()
 
   newGIT->lpVtbl = &StdGlobalInterfaceTableImpl_Vtbl;
   newGIT->ref = 1;      /* Initialise the reference count */
-  newGIT->firstEntry = NULL; /* we start with an empty table   */
-  newGIT->lastEntry  = NULL;
+  list_init(&newGIT->list);
   newGIT->nextCookie = 0xf100; /* that's where windows starts, so that's where we start */
   TRACE("Created the GIT at %p\n", newGIT);
 

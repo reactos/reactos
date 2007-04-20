@@ -15,11 +15,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
 #include <string.h>
+#include <limits.h>
 
 #define COBJMACROS
 
@@ -37,15 +38,6 @@
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
-
-/* The OLE Automation ProxyStub Interface Class (aka Typelib Marshaler) */
-extern const GUID CLSID_PSOAInterface;
-
-extern const GUID CLSID_PSDispatch;
-extern const GUID CLSID_PSEnumVariant;
-extern const GUID CLSID_PSTypeInfo;
-extern const GUID CLSID_PSTypeLib;
-extern const GUID CLSID_PSTypeComp;
 
 static BOOL BSTR_bCache = TRUE; /* Cache allocations to minimise alloc calls? */
 
@@ -226,8 +218,11 @@ BSTR WINAPI SysAllocStringLen(const OLECHAR *str, unsigned int len)
     DWORD* newBuffer;
     WCHAR* stringBuffer;
 
+    /* Detect integer overflow. */
+    if (len >= ((UINT_MAX-sizeof(WCHAR)-sizeof(DWORD))/sizeof(WCHAR)))
+	return NULL;
     /*
-     * Find the length of the buffer passed-in in bytes.
+     * Find the length of the buffer passed-in, in bytes.
      */
     bufferSize = len * sizeof (WCHAR);
 
@@ -243,8 +238,8 @@ BSTR WINAPI SysAllocStringLen(const OLECHAR *str, unsigned int len)
     /*
      * If the memory allocation failed, return a null pointer.
      */
-    if (newBuffer==0)
-      return 0;
+    if (!newBuffer)
+      return NULL;
 
     /*
      * Copy the length of the string in the placeholder.
@@ -629,7 +624,7 @@ HRESULT WINAPI OleTranslateColor(
   COLORREF colorref;
   BYTE b = HIBYTE(HIWORD(clr));
 
-  TRACE("(%08lx, %p, %p)\n", clr, hpal, pColorRef);
+  TRACE("(%08x, %p, %p)\n", clr, hpal, pColorRef);
 
   /*
    * In case pColorRef is NULL, provide our own to simplify the code.
@@ -829,7 +824,7 @@ HRESULT WINAPI DllCanUnloadNow(void)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
 {
-  TRACE("(%p,%ld,%p)\n", hInstDll, fdwReason, lpvReserved);
+  TRACE("(%p,%d,%p)\n", hInstDll, fdwReason, lpvReserved);
 
   switch (fdwReason) {
   case DLL_PROCESS_ATTACH:
@@ -841,4 +836,14 @@ BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
   };
 
   return TRUE;
+}
+
+/***********************************************************************
+ *              OleIconToCursor (OLEAUT32.415)
+ */
+HCURSOR WINAPI OleIconToCursor( HINSTANCE hinstExe, HICON hIcon)
+{
+    FIXME("(%p,%p), partially implemented.\n",hinstExe,hIcon);
+    /* FIXME: make a extended conversation from HICON to HCURSOR */
+    return CopyCursor(hIcon);
 }

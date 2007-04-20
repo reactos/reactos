@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "windef.h"
@@ -28,13 +28,12 @@
 #include "oleaut32_De.rc"
 #include "oleaut32_Dk.rc"
 #include "oleaut32_En.rc"
+#include "oleaut32_Eo.rc"
 #include "oleaut32_Es.rc"
 #include "oleaut32_Cz.rc"
 #include "oleaut32_Fr.rc"
-#include "oleaut32_Gr.rc"
 #include "oleaut32_Hu.rc"
 #include "oleaut32_It.rc"
-#include "oleaut32_Ja.rc"
 #include "oleaut32_Ko.rc"
 #include "oleaut32_Nl.rc"
 #include "oleaut32_No.rc"
@@ -44,7 +43,6 @@
 #include "oleaut32_Sv.rc"
 #include "oleaut32_Th.rc"
 #include "oleaut32_Tr.rc"
-#include "oleaut32_Uk.rc"
 
 /*
  * FIXME:

@@ -4,11 +4,12 @@
 	<include base="ole32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />
-	<define name="__USE_W32API" />
+	<define name="__WINESRC__" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
-	<define name="_STDDEF_H" />
+	<define name="COM_NO_WINDOWS_H" />
+	<define name="NOGDI" />
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ntdll</library>
@@ -17,8 +18,10 @@
 	<library>gdi32</library>
 	<library>user32</library>
 	<library>rpcrt4</library>
+	<file>dcom.idl</file>
 	<file>antimoniker.c</file>
 	<file>bindctx.c</file>
+	<file>classmoniker.c</file>
 	<file>clipboard.c</file>
 	<file>compobj.c</file>
 	<file>compositemoniker.c</file>
@@ -49,6 +52,7 @@
 	<file>storage32.c</file>
 	<file>stubmanager.c</file>
 	<file>usrmarshal.c</file>
+	<file>enumx.c</file>
 	<file>ole32res.rc</file>
 	<file>ole32.spec</file>
 </module>

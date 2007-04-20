@@ -1,5 +1,6 @@
 #ifndef _WINGDI_H
 #define _WINGDI_H
+#define _WINGDI_
 #if __GNUC__ >= 3
 #pragma GCC system_header
 #endif
@@ -15,6 +16,13 @@ extern "C" {
 #define SYSPAL_NOSTATIC256  3
 
 #define WINGDIAPI
+
+#define NTM_NONNEGATIVE_AC  0x00010000
+#define NTM_PS_OPENTYPE     0x00020000
+#define NTM_TT_OPENTYPE     0x00040000
+#define NTM_MULTIPLEMASTER  0x00080000
+#define NTM_TYPE1           0x00100000
+#define NTM_DSIG            0x00200000
 
 #define AC_SRC_OVER 0
 #define AC_SRC_ALPHA 1
@@ -779,9 +787,7 @@ extern "C" {
 #define PC_EXPLICIT 2
 #define PC_NOCOLLAPSE 4
 #define PC_RESERVED 1
-#define CLR_NONE 0xffffffff
-#define CLR_INVALID CLR_NONE
-#define CLR_DEFAULT 0xff000000
+#define CLR_INVALID     0xFFFFFFFF
 #define PT_MOVETO 6
 #define PT_LINETO 2
 #define PT_BEZIERTO 4
@@ -1596,17 +1602,26 @@ typedef struct tagEMRCREATEMONOBRUSH {
 	DWORD offBits;
 	DWORD cbBits;
 } EMRCREATEMONOBRUSH,*PEMRCREATEMONOBRUSH;
+
+#ifndef _PALETTEENTRY_DEFINED
+#define _PALETTEENTRY_DEFINED
 typedef struct tagPALETTEENTRY {
 	BYTE peRed;
 	BYTE peGreen;
 	BYTE peBlue;
 	BYTE peFlags;
 } PALETTEENTRY,*LPPALETTEENTRY,*PPALETTEENTRY;
+#endif
+
+#ifndef _LOGPALETTE_DEFINED
+#define _LOGPALETTE_DEFINED
 typedef struct tagLOGPALETTE {
 	WORD palVersion;
 	WORD palNumEntries;
 	PALETTEENTRY palPalEntry[1];
 } LOGPALETTE,*NPLOGPALETTE,*PLOGPALETTE,*LPLOGPALETTE;
+#endif
+
 typedef struct tagEMRCREATEPALETTE {
 	EMR emr;
 	DWORD ihPal;
@@ -2105,6 +2120,9 @@ typedef struct tagENHMETARECORD {
 typedef struct tagHANDLETABLE {
 	HGDIOBJ objectHandle[1];
 } HANDLETABLE,*PHANDLETABLE, *LPHANDLETABLE;
+
+#ifndef _TEXTMETRIC_DEFINED
+#define _TEXTMETRIC_DEFINED
 typedef struct tagTEXTMETRICA {
 	LONG tmHeight;
 	LONG tmAscent;
@@ -2149,6 +2167,7 @@ typedef struct tagTEXTMETRICW {
 	BYTE tmPitchAndFamily;
 	BYTE tmCharSet;
 } TEXTMETRICW,*PTEXTMETRICW,*LPTEXTMETRICW;
+#endif
 
 typedef struct _RGNDATAHEADER {
 	DWORD dwSize;

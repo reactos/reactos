@@ -1,0 +1,438 @@
+/*
+ * Copyright 2002 Ove Kaaven
+ * Copyright 2004 Francois Gouget
+ * Copyright 2005 Juan Lang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "objidl.idl";
+import "oaidl.idl";
+
+
+/*
+ * Windows SDK braindamage alert
+ *
+ * PID_DICTIONARY and PID_CODEPAGE are defined by msidefs.h too
+ * PID_SECURITY is defined in msidefs.h with a different value!
+ * So these need to be undefined first.
+ */
+cpp_quote("#ifdef PID_DICTIONARY")
+cpp_quote("#undef PID_DICTIONARY")
+cpp_quote("#endif")
+
+cpp_quote("#ifdef PID_CODEPAGE")
+cpp_quote("#undef PID_CODEPAGE")
+cpp_quote("#endif")
+
+cpp_quote("#ifdef PID_SECURITY")
+cpp_quote("#undef PID_SECURITY")
+cpp_quote("#endif")
+
+/******************** Property Storage ********************/
+
+interface IEnumSTATPROPSTG;
+interface IEnumSTATPROPSETSTG;
+
+[
+  object,
+  uuid(00000138-0000-0000-C000-000000000046),
+  pointer_default(unique)
+]
+interface IPropertyStorage : IUnknown
+{
+  typedef [unique] IPropertyStorage *LPPROPERTYSTORAGE;
+
+  const DWORD PROPSETFLAG_DEFAULT = 0;
+  const DWORD PROPSETFLAG_NONSIMPLE = 1;
+  const DWORD PROPSETFLAG_ANSI = 2;
+  const DWORD PROPSETFLAG_UNBUFFERED = 4;
+  const DWORD PROPSETFLAG_CASE_SENSITIVE = 8;
+
+  const DWORD PROPSET_BEHAVIOR_CASE_SENSITIVE = 1;
+
+  const PROPID PID_DICTIONARY          = 0x00000000;
+  const PROPID PID_CODEPAGE            = 0x00000001;
+  const PROPID PID_FIRST_USABLE        = 0x00000002;
+  const PROPID PID_FIRST_NAME_DEFAULT  = 0x00000fff;
+  const PROPID PID_LOCALE              = 0x80000000;
+  const PROPID PID_MODIFY_TIME         = 0x80000001;
+  const PROPID PID_SECURITY            = 0x80000002;
+  const PROPID PID_BEHAVIOR            = 0x80000003;
+  const PROPID PID_ILLEGAL             = 0xffffffff;
+  const PROPID PID_MIN_READONLY        = 0x80000000;
+  const PROPID PID_MAX_READONLY        = 0xbfffffff;
+
+  typedef struct tagPROPVARIANT PROPVARIANT;
+
+#define TYPEDEF_CA(type, name) \
+    typedef struct tag##name { \
+      ULONG cElems; \
+      [size_is(cElems)] \
+      type *pElems; \
+    } name
+
+  TYPEDEF_CA(unsigned char, CAUB);
+  TYPEDEF_CA(short, CAI);
+  TYPEDEF_CA(USHORT, CAUI);
+  TYPEDEF_CA(long, CAL);
+  TYPEDEF_CA(ULONG, CAUL);
+  TYPEDEF_CA(float, CAFLT);
+  TYPEDEF_CA(double, CADBL);
+  TYPEDEF_CA(CY, CACY);
+  TYPEDEF_CA(DATE, CADATE);
+  TYPEDEF_CA(BSTR, CABSTR);
+  TYPEDEF_CA(BSTRBLOB, CABSTRBLOB);
+  TYPEDEF_CA(VARIANT_BOOL, CABOOL);
+  TYPEDEF_CA(SCODE,  CASCODE);
+  TYPEDEF_CA(PROPVARIANT, CAPROPVARIANT);
+  TYPEDEF_CA(LARGE_INTEGER, CAH);
+  TYPEDEF_CA(ULARGE_INTEGER, CAUH);
+  TYPEDEF_CA(LPSTR, CALPSTR);
+  TYPEDEF_CA(LPWSTR, CALPWSTR);
+  TYPEDEF_CA(FILETIME, CAFILETIME);
+  TYPEDEF_CA(CLIPDATA, CACLIPDATA);
+  TYPEDEF_CA(CLSID, CACLSID);
+
+  struct tagPROPVARIANT {
+    VARTYPE vt;
+    WORD wReserved1;
+    WORD wReserved2;
+    WORD wReserved3;
+    [switch_is(vt & 0x1fff)] union {
+    [case(VT_EMPTY, VT_NULL)]             ;
+    [case(VT_I1)]                         char cVal;
+    [case(VT_UI1)]                        UCHAR bVal;
+    [case(VT_I2)]                         short iVal;
+    [case(VT_UI2)]                        USHORT uiVal;
+    [case(VT_BOOL)]                       VARIANT_BOOL boolVal;
+#if 0 /* illegal in C++ */
+    [case(VT_ILLEGAL)]                    _VARIANT_BOOL bool;
+#endif
+    [case(VT_I4)]                         long lVal;
+    [case(VT_UI4)]                        ULONG ulVal;
+    [case(VT_R4)]                         float fltVal;
+    [case(VT_ERROR)]                      SCODE scode;
+    [case(VT_I8)]                         LARGE_INTEGER hVal;
+    [case(VT_UI8)]                        ULARGE_INTEGER uhVal;
+    [case(VT_R8)]                         double dblVal;
+    [case(VT_CY)]                         CY cyVal;
+    [case(VT_DATE)]                       DATE date;
+    [case(VT_FILETIME)]                   FILETIME filetime;
+    [case(VT_CLSID)]                      CLSID *puuid;
+    [case(VT_BLOB, VT_BLOB_OBJECT)]       BLOB blob;
+    [case(VT_CF)]                         CLIPDATA *pclipdata;
+    [case(VT_STREAM, VT_STREAMED_OBJECT)] IStream *pStream;
+    [case(VT_STORAGE, VT_STORED_OBJECT)]  IStorage *pStorage;
+    [case(VT_BSTR)]                       BSTR bstrVal;
+    [case(VT_BSTR_BLOB)]                  BSTRBLOB bstrblobVal;
+    [case(VT_LPSTR)]                      LPSTR pszVal;
+    [case(VT_LPWSTR)]                     LPWSTR pwszVal;
+    [case(VT_UI1|VT_VECTOR)]              CAUB caub;
+    [case(VT_I2|VT_VECTOR)]               CAI cai;
+    [case(VT_UI2|VT_VECTOR)]              CAUI caui;
+    [case(VT_BOOL|VT_VECTOR)]             CABOOL cabool;
+    [case(VT_I4|VT_VECTOR)]               CAL cal;
+    [case(VT_UI4|VT_VECTOR)]              CAUL caul;
+    [case(VT_R4|VT_VECTOR)]               CAFLT caflt;
+    [case(VT_ERROR|VT_VECTOR)]            CASCODE cascode;
+    [case(VT_I8|VT_VECTOR)]               CAH cah;
+    [case(VT_UI8|VT_VECTOR)]              CAUH cauh;
+    [case(VT_R8|VT_VECTOR)]               CADBL cadbl;
+    [case(VT_CY|VT_VECTOR)]               CACY cacy;
+    [case(VT_DATE|VT_VECTOR)]             CADATE cadate;
+    [case(VT_FILETIME|VT_VECTOR)]         CAFILETIME cafiletime;
+    [case(VT_CLSID|VT_VECTOR)]            CACLSID cauuid;
+    [case(VT_CF|VT_VECTOR)]               CACLIPDATA caclipdata;
+    [case(VT_BSTR|VT_VECTOR)]             CABSTR cabstr;
+    [case(VT_BSTR_BLOB|VT_VECTOR)]        CABSTRBLOB cabstrblob;
+    [case(VT_LPSTR|VT_VECTOR)]            CALPSTR calpstr;
+    [case(VT_LPWSTR|VT_VECTOR)]           CALPWSTR calpwstr;
+    [case(VT_VARIANT|VT_VECTOR)]          CAPROPVARIANT capropvar;
+    [case(VT_ARRAY|VT_I1,
+          VT_ARRAY|VT_UI1,
+          VT_ARRAY|VT_I2,
+          VT_ARRAY|VT_UI2,
+          VT_ARRAY|VT_I4,
+          VT_ARRAY|VT_UI4,
+          VT_ARRAY|VT_INT,
+          VT_ARRAY|VT_UINT,
+          VT_ARRAY|VT_R4,
+          VT_ARRAY|VT_R8,
+          VT_ARRAY|VT_CY,
+          VT_ARRAY|VT_DATE,
+          VT_ARRAY|VT_BSTR,
+          VT_ARRAY|VT_BOOL,
+          VT_ARRAY|VT_DECIMAL,
+          VT_ARRAY|VT_DISPATCH,
+          VT_ARRAY|VT_UNKNOWN,
+          VT_ARRAY|VT_ERROR,
+          VT_ARRAY|VT_VARIANT)]           LPSAFEARRAY parray;
+    [case(VT_BYREF|VT_I1)]                CHAR *pcVal;
+    [case(VT_BYREF|VT_UI1)]               UCHAR *pbVal;
+    [case(VT_BYREF|VT_I2)]                SHORT *piVal;
+    [case(VT_BYREF|VT_UI2)]               USHORT *puiVal;
+    [case(VT_BYREF|VT_I4)]                LONG *plVal;
+    [case(VT_BYREF|VT_UI4)]               ULONG *pulVal;
+    [case(VT_BYREF|VT_INT)]               INT *pintVal;
+    [case(VT_BYREF|VT_UINT)]              UINT *puintVal;
+    [case(VT_BYREF|VT_R4)]                FLOAT *pfltVal;
+    [case(VT_BYREF|VT_R8)]                DOUBLE *pdblVal;
+    [case(VT_BYREF|VT_BOOL)]              VARIANT_BOOL *pboolVal;
+    [case(VT_BYREF|VT_DECIMAL)]           DECIMAL *pdecVal;
+    [case(VT_BYREF|VT_ERROR)]             SCODE *pscode;
+    [case(VT_BYREF|VT_CY)]                CY *pcyVal;
+    [case(VT_BYREF|VT_DATE)]              DATE *pdate;
+    [case(VT_BYREF|VT_BSTR)]              BSTR *pbstrVal;
+    [case(VT_BYREF|VT_UNKNOWN)]           IUnknown **ppunkVal;
+    [case(VT_BYREF|VT_DISPATCH)]          IDispatch **ppdispVal;
+    [case(VT_BYREF|VT_ARRAY)]             LPSAFEARRAY *pparray;
+    [case(VT_BYREF|VT_VARIANT)]           PROPVARIANT *pvarVal;
+    };
+  };
+
+  typedef struct tagPROPVARIANT *LPPROPVARIANT;
+
+  cpp_quote("#define PIDDI_THUMBNAIL 0x00000002L /* VT_BLOB */")
+  cpp_quote("")
+  cpp_quote("#define PIDSI_TITLE        0x00000002L /* VT_LPSTR */")
+  cpp_quote("#define PIDSI_SUBJECT      0x00000003L /* VT_LPSTR */")
+  cpp_quote("#define PIDSI_AUTHOR       0x00000004L /* VT_LPSTR */")
+  cpp_quote("#define PIDSI_KEYWORDS     0x00000005L /* VT_LPSTR */")
+  cpp_quote("#define PIDSI_COMMENTS     0x00000006L /* VT_LPSTR */")
+  cpp_quote("#define PIDSI_TEMPLATE     0x00000007L /* VT_LPSTR */")
+  cpp_quote("#define PIDSI_LASTAUTHOR   0x00000008L /* VT_LPSTR */")
+  cpp_quote("#define PIDSI_REVNUMBER    0x00000009L /* VT_LPSTR */")
+  cpp_quote("#define PIDSI_EDITTIME     0x0000000AL /* VT_FILETIME (UTC) */")
+  cpp_quote("#define PIDSI_LASTPRINTED  0x0000000BL /* VT_FILETIME (UTC) */")
+  cpp_quote("#define PIDSI_CREATE_DTM   0x0000000CL /* VT_FILETIME (UTC) */")
+  cpp_quote("#define PIDSI_LASTSAVE_DTM 0x0000000DL /* VT_FILETIME (UTC) */")
+  cpp_quote("#define PIDSI_PAGECOUNT    0x0000000EL /* VT_I4 */")
+  cpp_quote("#define PIDSI_WORDCOUNT    0x0000000FL /* VT_I4 */")
+  cpp_quote("#define PIDSI_CHARCOUNT    0x00000010L /* VT_I4 */")
+  cpp_quote("#define PIDSI_THUMBNAIL    0x00000011L /* VT_CF */")
+  cpp_quote("#define PIDSI_APPNAME      0x00000012L /* VT_LPSTR */")
+  cpp_quote("#define PIDSI_DOC_SECURITY 0x00000013L /* VT_I4 */")
+  cpp_quote("")
+  cpp_quote("#define PIDDSI_CATEGORY    0x00000002L /* VT_LPSTR */")
+  cpp_quote("#define PIDDSI_PRESFORMAT  0x00000003L /* VT_LPSTR */")
+  cpp_quote("#define PIDDSI_BYTECOUNT   0x00000004L /* VT_I4 */")
+  cpp_quote("#define PIDDSI_LINECOUNT   0x00000005L /* VT_I4 */")
+  cpp_quote("#define PIDDSI_PARCOUNT    0x00000006L /* VT_I4 */")
+  cpp_quote("#define PIDDSI_SLIDECOUNT  0x00000007L /* VT_I4 */")
+  cpp_quote("#define PIDDSI_NOTECOUNT   0x00000008L /* VT_I4 */")
+  cpp_quote("#define PIDDSI_HIDDENCOUNT 0x00000009L /* VT_I4 */")
+  cpp_quote("#define PIDDSI_MMCLIPCOUNT 0x0000000AL /* VT_I4 */")
+  cpp_quote("#define PIDDSI_SCALE       0x0000000BL /* VT_BOOL */")
+  cpp_quote("#define PIDDSI_HEADINGPAIR 0x0000000CL /* VT_VARIANT|VT_VECTOR */")
+  cpp_quote("#define PIDDSI_DOCPARTS    0x0000000DL /* VT_LPSTR|VT_VECTOR */")
+  cpp_quote("#define PIDDSI_MANAGER     0x0000000EL /* VT_LPSTR */")
+  cpp_quote("#define PIDDSI_COMPANY     0x0000000FL /* VT_LPSTR */")
+  cpp_quote("#define PIDDSI_LINKSDIRTY  0x00000010L /* VT_B0OL */")
+
+  const ULONG PRSPEC_INVALID = 0xffffffff;
+  const ULONG PRSPEC_LPWSTR = 0;
+  const ULONG PRSPEC_PROPID = 1;
+
+  typedef struct tagPROPSPEC {
+    ULONG ulKind;
+    [switch_is(ulKind)] union {
+    [case(PRSPEC_PROPID)] PROPID propid;
+    [case(PRSPEC_LPWSTR)] LPOLESTR lpwstr;
+    [default]             ;
+    };
+  } PROPSPEC;
+
+  typedef struct tagSTATPROPSTG {
+    LPOLESTR lpwstrName;
+    PROPID propid;
+    VARTYPE vt;
+  } STATPROPSTG;
+
+  cpp_quote("/* Macros for dwOSVersion member of STATPROPSETSTG */")
+  cpp_quote("#define PROPSETHDR_OSVER_KIND(dwOSVer)  HIWORD((dwOSVer))")
+  cpp_quote("#define PROPSETHDR_OSVER_MAJOR(dwOSVer) LOBYTE(LOWORD((dwOSVer)))")
+  cpp_quote("#define PROPSETHDR_OSVER_MINOR(dwOSVer) HIBYTE(LOWORD((dwOSVer)))")
+  cpp_quote("#define PROPSETHDR_OSVERSION_UNKNOWN    0xffffffff")
+
+  typedef struct tagSTATPROPSETSTG {
+    FMTID fmtid;
+    CLSID clsid;
+    DWORD grfFlags;
+    FILETIME mtime;
+    FILETIME ctime;
+    FILETIME atime;
+    DWORD dwOSVersion;
+  } STATPROPSETSTG;
+
+  HRESULT ReadMultiple(
+    [in] ULONG cpspec,
+    [in, size_is(cpspec)] const PROPSPEC rgpspec[],
+    [out, size_is(cpspec)] PROPVARIANT rgpropvar[]);
+
+  HRESULT WriteMultiple(
+    [in] ULONG cpspec,
+    [in, size_is(cpspec)] const PROPSPEC rgpspec[],
+    [in, size_is(cpspec)] const PROPVARIANT rgpropvar[],
+    [in] PROPID propidNameFirst);
+
+  HRESULT DeleteMultiple(
+    [in] ULONG cpspec,
+    [in, size_is(cpspec)] const PROPSPEC rgpspec[]);
+
+  HRESULT ReadPropertyNames(
+    [in] ULONG cpropid,
+    [in, size_is(cpropid)] const PROPID rgpropid[],
+    [out, size_is(cpropid)] LPOLESTR rglpwstrName[]);
+
+  HRESULT WritePropertyNames(
+    [in] ULONG cpropid,
+    [in, size_is(cpropid)] const PROPID rgpropid[],
+    [in, size_is(cpropid)] const LPOLESTR rglpwstrName[]);
+
+  HRESULT DeletePropertyNames(
+    [in] ULONG cpropid,
+    [in, size_is(cpropid)] const PROPID rgpropid[]);
+
+  HRESULT Commit(
+    [in] DWORD grfCommitFlags);
+
+  HRESULT Revert();
+
+  HRESULT Enum(
+    [out] IEnumSTATPROPSTG **ppenum);
+
+  HRESULT SetTimes(
+    [in] const FILETIME *pctime,
+    [in] const FILETIME *patime,
+    [in] const FILETIME *pmtime);
+
+  HRESULT SetClass(
+    [in] REFCLSID clsid);
+
+  HRESULT Stat(
+    [out] STATPROPSETSTG *statpsstg);
+}
+
+[
+  object,
+  uuid(0000013A-0000-0000-C000-000000000046),
+  pointer_default(unique)
+]
+interface IPropertySetStorage : IUnknown
+{
+  typedef [unique] IPropertySetStorage *LPPROPERTYSETSTORAGE;
+
+  HRESULT Create(
+    [in] REFFMTID rfmtid,
+    [in, unique] const CLSID *pclsid,
+    [in] DWORD grfFlags,
+    [in] DWORD grfMode,
+    [out] IPropertyStorage **ppprstg);
+
+  HRESULT Open(
+    [in] REFFMTID rfmtid,
+    [in] DWORD grfMode,
+    [out] IPropertyStorage **ppprstg);
+
+  HRESULT Delete(
+    [in] REFFMTID rfmtid);
+
+  HRESULT Enum(
+    [out] IEnumSTATPROPSETSTG **ppenum);
+}
+
+[
+  object,
+  uuid(00000139-0000-0000-C000-000000000046),
+  pointer_default(unique)
+]
+interface IEnumSTATPROPSTG : IUnknown
+{
+  typedef [unique] IEnumSTATPROPSTG *LPENUMSTATPROPSTG;
+
+  [local]
+  HRESULT Next(
+    [in] ULONG celt,
+    [out, size_is(celt), length_is(*pceltFetched)]
+    STATPROPSTG *rgelt,
+    [out] ULONG *pceltFetched);
+
+  [call_as(Next)]
+  HRESULT RemoteNext(
+    [in] ULONG celt,
+    [out, size_is(celt), length_is(*pceltFetched)]
+    STATPROPSTG *rgelt,
+    [out] ULONG *pceltFetched);
+
+  HRESULT Skip(
+    [in] ULONG celt);
+
+  HRESULT Reset();
+
+  HRESULT Clone(
+    [out] IEnumSTATPROPSTG **ppenum);
+}
+
+[
+  object,
+  uuid(0000013B-0000-0000-C000-000000000046),
+  pointer_default(unique)
+]
+interface IEnumSTATPROPSETSTG : IUnknown
+{
+  typedef [unique] IEnumSTATPROPSETSTG *LPENUMSTATPROPSETSTG;
+
+  [local]
+  HRESULT Next(
+    [in] ULONG celt,
+    [out, size_is(celt), length_is(*pceltFetched)]
+    STATPROPSETSTG *rgelt,
+    [out] ULONG *pceltFetched);
+
+  [call_as(Next)]
+  HRESULT RemoteNext(
+    [in] ULONG celt,
+    [out, size_is(celt), length_is(*pceltFetched)]
+    STATPROPSETSTG *rgelt,
+    [out] ULONG *pceltFetched);
+
+  HRESULT Skip(
+    [in] ULONG celt);
+
+  HRESULT Reset();
+
+  HRESULT Clone(
+    [out] IEnumSTATPROPSETSTG **ppenum);
+}
+
+
+cpp_quote("HRESULT WINAPI FreePropVariantArray(ULONG,PROPVARIANT*);")
+cpp_quote("HRESULT WINAPI PropVariantClear(PROPVARIANT*);")
+cpp_quote("HRESULT WINAPI PropVariantCopy(PROPVARIANT*,const PROPVARIANT*);")
+cpp_quote("")
+cpp_quote("#define _PROPVARIANT_INIT_DEFINED_")
+cpp_quote("#define PropVariantInit(p) memset((p), 0, sizeof(PROPVARIANT))")
+cpp_quote("")
+cpp_quote("#ifndef _STGCREATEPROPSTG_DEFINED_")
+cpp_quote("#define _STGCREATEPROPSTG_DEFINED_")
+cpp_quote("HRESULT WINAPI StgCreatePropStg(IUnknown *, REFFMTID, const CLSID *, DWORD, DWORD, IPropertyStorage **);")
+cpp_quote("HRESULT WINAPI StgOpenPropStg(IUnknown *, REFFMTID, DWORD, DWORD, IPropertyStorage **);")
+cpp_quote("HRESULT WINAPI StgCreatePropSetStg(IStorage *, DWORD, IPropertySetStorage **);")
+cpp_quote("#define CCH_MAX_PROPSTG_NAME 31")
+cpp_quote("HRESULT WINAPI FmtIdToPropStgName(const FMTID *, LPOLESTR);")
+cpp_quote("HRESULT WINAPI PropStgNameToFmtId(const LPOLESTR, FMTID *);")
+cpp_quote("#endif /* _STGCREATEPROPSTG_DEFINED_ */")
+cpp_quote("")

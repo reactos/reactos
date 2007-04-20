@@ -4,6 +4,7 @@
  * Character/pixel conversions.
  *
  * Copyright 2004 by Krzysztof Foltman
+ * Copyright 2006 by Phil Krylov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "editor.h"
@@ -26,6 +27,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 WINE_DECLARE_DEBUG_CHANNEL(richedit_check);
 WINE_DECLARE_DEBUG_CHANNEL(richedit_lists);
 
+/******************************************************************************
+ * ME_CanJoinRuns
+ *
+ * Returns 1 if two runs can be safely merged into one, 0 otherwise.
+ */ 
 int ME_CanJoinRuns(ME_Run *run1, ME_Run *run2)
 {
   if ((run1->nFlags | run2->nFlags) & MERF_NOJOIN)
@@ -44,8 +50,18 @@ void ME_SkipAndPropagateCharOffset(ME_DisplayItem *p, int shift)
   ME_PropagateCharOffset(p, shift);
 }
 
+/******************************************************************************
+ * ME_PropagateCharOffsets
+ *
+ * Shifts (increases or decreases) character offset (relative to beginning of 
+ * the document) of the part of the text starting from given place.  
+ */ 
 void ME_PropagateCharOffset(ME_DisplayItem *p, int shift)
 {
+	/* Runs in one paragraph contain character offset relative to their owning
+	 * paragraph. If we start the shifting from the run, we need to shift
+	 * all the relative offsets until the end of the paragraph
+	 */	 	    
   if (p->type == diRun) /* propagate in all runs in this para */
   {
     TRACE("PropagateCharOffset(%s, %d)\n", debugstr_w(p->member.run.strText->szData), shift);
@@ -55,6 +71,10 @@ void ME_PropagateCharOffset(ME_DisplayItem *p, int shift)
       p = ME_FindItemFwd(p, diRunOrParagraphOrEnd);
     } while(p->type == diRun);
   }
+	/* Runs in next paragraphs don't need their offsets updated, because they, 
+	 * again, those offsets are relative to their respective paragraphs.
+	 * Instead of that, we're updating paragraphs' character offsets.	  
+	 */	 	    
   if (p->type == diParagraph) /* propagate in all next paras */
   {
     do {
@@ -63,6 +83,9 @@ void ME_PropagateCharOffset(ME_DisplayItem *p, int shift)
       p = p->member.para.next_para;
     } while(p->type == diParagraph);
   }
+  /* diTextEnd also has character offset in it, which makes finding text length
+   * easier. But it needs to be up to date first.
+   */
   if (p->type == diTextEnd)
   {
     p->member.para.nCharOfs += shift;
@@ -70,6 +93,11 @@ void ME_PropagateCharOffset(ME_DisplayItem *p, int shift)
   }
 }
 
+/******************************************************************************
+ * ME_CheckCharOffsets
+ * 
+ * Checks if editor lists' validity and optionally dumps the document structure
+ */      
 void ME_CheckCharOffsets(ME_TextEditor *editor)
 {
   ME_DisplayItem *p = editor->pBuffer->pFirst;
@@ -93,7 +121,7 @@ void ME_CheckCharOffsets(ME_TextEditor *editor)
         ofs = 0;
         break;
       case diRun:
-        TRACE_(richedit_check)("run, real ofs = %d (+ofsp = %d), counted = %d, len = %d, txt = \"%s\", flags=%08x, fx&mask = %08lx\n",
+        TRACE_(richedit_check)("run, real ofs = %d (+ofsp = %d), counted = %d, len = %d, txt = \"%s\", flags=%08x, fx&mask = %08x\n",
           p->member.run.nCharOfs, p->member.run.nCharOfs+ofsp, ofsp+ofs,
           p->member.run.strText->nLen, debugstr_w(p->member.run.strText->szData),
           p->member.run.nFlags,
@@ -110,6 +138,13 @@ void ME_CheckCharOffsets(ME_TextEditor *editor)
   } while(1);
 }
 
+/******************************************************************************
+ * ME_CharOfsFromRunOfs
+ * 
+ * Converts a character position relative to the start of the run, to a
+ * character position relative to the start of the document.
+ * Kind of a "local to global" offset conversion.   
+ */      
 int ME_CharOfsFromRunOfs(ME_TextEditor *editor, ME_DisplayItem *pRun, int nOfs)
 {
   ME_DisplayItem *pPara;
@@ -124,11 +159,25 @@ int ME_CharOfsFromRunOfs(ME_TextEditor *editor, ME_DisplayItem *pRun, int nOfs)
     + ME_VPosToPos(pRun->member.run.strText, nOfs);
 }
 
+/******************************************************************************
+ * ME_CursorFromCharOfs
+ * 
+ * Converts a character offset (relative to the start of the document) to
+ * a cursor structure (which contains a run and a position relative to that 
+ * run).   
+ */      
 void ME_CursorFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_Cursor *pCursor)
 {
   ME_RunOfsFromCharOfs(editor, nCharOfs, &pCursor->pRun, &pCursor->nOffset);
 }
 
+/******************************************************************************
+ * ME_RunOfsFromCharOfs
+ * 
+ * Find a run and relative character offset given an absolute character offset
+ * (absolute offset being an offset relative to the start of the document).
+ * Kind of a "global to local" offset conversion.    
+ */      
 void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **ppRun, int *pOfs)
 {
   ME_DisplayItem *pPara;
@@ -175,6 +224,11 @@ void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **
   assert((*ppRun)->member.run.nFlags & MERF_ENDPARA);
 }
 
+/******************************************************************************
+ * ME_JoinRuns
+ * 
+ * Merges two adjacent runs, the one given as a parameter and the next one.
+ */    
 void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p)
 {
   ME_DisplayItem *pNext = p->next;
@@ -183,8 +237,11 @@ void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p)
   assert(p->member.run.nCharOfs != -1);
   ME_GetParagraph(p)->member.para.nFlags |= MEPF_REWRAP;
 
-  if (editor->bCaretAtEnd && editor->pCursors[0].pRun == pNext)
+  /* if we were at the end of screen line, and the next run is in the new
+	 * line, then it's not the end of the line anymore */  
+	if (editor->bCaretAtEnd && editor->pCursors[0].pRun == pNext)
     editor->bCaretAtEnd = FALSE;
+	/* Update all cursors so that they don't contain the soon deleted run */
   for (i=0; i<editor->nCursors; i++) {
     if (editor->pCursors[i].pRun == pNext) {
       editor->pCursors[i].pRun = p;
@@ -204,6 +261,12 @@ void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p)
   }
 }
 
+/******************************************************************************
+ * ME_SplitRun
+ * 
+ * Splits a run into two in a given place. It also updates the screen position
+ * and size (extent) of the newly generated runs.  
+ */    
 ME_DisplayItem *ME_SplitRun(ME_Context *c, ME_DisplayItem *item, int nVChar)
 {
   ME_TextEditor *editor = c->editor;
@@ -221,7 +284,7 @@ ME_DisplayItem *ME_SplitRun(ME_Context *c, ME_DisplayItem *item, int nVChar)
 
   run = &item->member.run;
 
-  TRACE("Before split: %s(%ld, %ld)\n", debugstr_w(run->strText->szData),
+  TRACE("Before split: %s(%d, %d)\n", debugstr_w(run->strText->szData),
         run->pt.x, run->pt.y);
 
   item2 = ME_SplitRunSimple(editor, item, nVChar);
@@ -239,7 +302,7 @@ ME_DisplayItem *ME_SplitRun(ME_Context *c, ME_DisplayItem *item, int nVChar)
     TRACE("Before check after split\n");
     ME_CheckCharOffsets(editor);
     TRACE("After check after split\n");
-    TRACE("After split: %s(%ld, %ld), %s(%ld, %ld)\n",
+    TRACE("After split: %s(%d, %d), %s(%d, %d)\n",
       debugstr_w(run->strText->szData), run->pt.x, run->pt.y,
       debugstr_w(run2->strText->szData), run2->pt.x, run2->pt.y);
   }
@@ -247,7 +310,12 @@ ME_DisplayItem *ME_SplitRun(ME_Context *c, ME_DisplayItem *item, int nVChar)
   return item2;
 }
 
-/* split a run starting from voffset */
+/******************************************************************************
+ * ME_SplitRunSimple
+ * 
+ * Does the most basic job of splitting a run into two - it does not
+ * update the positions and extents.    
+ */    
 ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_DisplayItem *item, int nVChar)
 {
   ME_Run *run = &item->member.run;
@@ -256,7 +324,7 @@ ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_DisplayItem *item, i
   int i;
   assert(nVChar > 0 && nVChar < ME_StrVLen(run->strText));
   assert(item->type == diRun);
-  assert(!(item->member.run.nFlags & (MERF_GRAPHICS | MERF_TAB)));
+  assert(!(item->member.run.nFlags & MERF_NONTEXT));
   assert(item->member.run.nCharOfs != -1);
 
   item2 = ME_MakeRun(run->style,
@@ -282,6 +350,11 @@ ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_DisplayItem *item, i
   return item2;
 }
 
+/******************************************************************************
+ * ME_MakeRun
+ * 
+ * A helper function to create run structures quickly.
+ */   
 ME_DisplayItem *ME_MakeRun(ME_Style *s, ME_String *strData, int nFlags)
 {
   ME_DisplayItem *item = ME_MakeDI(diRun);
@@ -293,37 +366,80 @@ ME_DisplayItem *ME_MakeRun(ME_Style *s, ME_String *strData, int nFlags)
   return item;
 }
 
+/******************************************************************************
+ * ME_InsertRun
+ * 
+ * Inserts a run at a given character position (offset).
+ */   
 ME_DisplayItem *ME_InsertRun(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem *pItem)
 {
   ME_Cursor tmp;
   ME_DisplayItem *pDI;
-  ME_UndoItem *pUI;
 
   assert(pItem->type == diRun || pItem->type == diUndoInsertRun);
 
-  pUI = ME_AddUndoItem(editor, diUndoDeleteRun, NULL);
-  if (pUI) {
-    pUI->nStart = nCharOfs;
-    pUI->nLen = pItem->member.run.strText->nLen;
-  }
   ME_CursorFromCharOfs(editor, nCharOfs, &tmp);
-  if (tmp.nOffset) {
-    tmp.pRun = ME_SplitRunSimple(editor, tmp.pRun, tmp.nOffset);
-    tmp.nOffset = 0;
-  }
-  pDI = ME_MakeRun(pItem->member.run.style, ME_StrDup(pItem->member.run.strText), pItem->member.run.nFlags);
-  pDI->member.run.nCharOfs = tmp.pRun->member.run.nCharOfs;
-  ME_InsertBefore(tmp.pRun, pDI);
-  TRACE("Shift length:%d\n", pDI->member.run.strText->nLen);
-  ME_PropagateCharOffset(tmp.pRun, pDI->member.run.strText->nLen);
-  ME_GetParagraph(tmp.pRun)->member.para.nFlags |= MEPF_REWRAP;
-
+  pDI = ME_InsertRunAtCursor(editor, &tmp, pItem->member.run.style,
+                             pItem->member.run.strText->szData,
+                             pItem->member.run.strText->nLen,
+                             pItem->member.run.nFlags);
+  
   return pDI;
 }
 
+/******************************************************************************
+ * ME_InsertRunAtCursor
+ * 
+ * Inserts a new run with given style, flags and content at a given position,
+ * which is passed as a cursor structure (which consists of a run and 
+ * a run-relative character offset). 
+ */   
+ME_DisplayItem *
+ME_InsertRunAtCursor(ME_TextEditor *editor, ME_Cursor *cursor, ME_Style *style,
+                     const WCHAR *str, int len, int flags)
+{
+  ME_DisplayItem *pDI;
+  ME_UndoItem *pUI;
+  
+  if (cursor->nOffset) {
+  	/* We're inserting at the middle of the existing run, which means that
+		 * that run must be split. It isn't always necessary, but */
+    cursor->pRun = ME_SplitRunSimple(editor, cursor->pRun, cursor->nOffset);
+    cursor->nOffset = 0;
+  }
+  
+  pUI = ME_AddUndoItem(editor, diUndoDeleteRun, NULL);
+  if (pUI) {
+    pUI->nStart = (ME_GetParagraph(cursor->pRun)->member.para.nCharOfs
+                   + cursor->pRun->member.run.nCharOfs);
+    pUI->nLen = len;
+  }
+  
+  pDI = ME_MakeRun(style, ME_MakeStringN(str, len), flags);
+  pDI->member.run.nCharOfs = cursor->pRun->member.run.nCharOfs;
+  ME_InsertBefore(cursor->pRun, pDI);
+  TRACE("Shift length:%d\n", len);
+  ME_PropagateCharOffset(cursor->pRun, len);
+  ME_GetParagraph(cursor->pRun)->member.para.nFlags |= MEPF_REWRAP;
+  return pDI;
+}
+
+/******************************************************************************
+ * ME_UpdateRunFlags
+ * 
+ * Determine some of run attributes given its content (style, text content).
+ * Some flags cannot be determined by this function (MERF_GRAPHICS, 
+ * MERF_ENDPARA)     
+ */ 
 void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run)
 {
   assert(run->nCharOfs != -1);
+
+  if (RUN_IS_HIDDEN(run))
+    run->nFlags |= MERF_HIDDEN;
+  else
+    run->nFlags &= ~MERF_HIDDEN;
+
   if (ME_IsSplitable(run->strText))
     run->nFlags |= MERF_SPLITTABLE;
   else
@@ -351,6 +467,12 @@ void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run)
     run->nFlags &= ~(MERF_WHITESPACE | MERF_STARTWHITE | MERF_ENDWHITE);
 }
 
+/******************************************************************************
+ * ME_GetGraphicsSize
+ * 
+ * Sets run extent for graphics runs. This functionality is just a placeholder
+ * for future OLE object support, and will be removed.
+ */     
 void ME_GetGraphicsSize(ME_TextEditor *editor, ME_Run *run, SIZE *pSize)
 {
   assert(run->nFlags & MERF_GRAPHICS);
@@ -358,7 +480,14 @@ void ME_GetGraphicsSize(ME_TextEditor *editor, ME_Run *run, SIZE *pSize)
   pSize->cy = 64;
 }
 
-int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Paragraph *para, ME_Run *run)
+/******************************************************************************
+ * ME_CharFromPoint
+ * 
+ * Returns a character position inside the run given a run-relative
+ * pixel horizontal position. This version rounds left (ie. if the second
+ * character is at pixel position 8, then for cx=0..7 it returns 0).  
+ */     
+int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run)
 {
   int fit = 0;
   HGDIOBJ hOldFont;
@@ -367,9 +496,9 @@ int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Paragraph *para, ME_Run *
   if (!run->strText->nLen)
     return 0;
 
-  if (run->nFlags & MERF_TAB)
+  if (run->nFlags & (MERF_TAB | MERF_CELL))
   {
-    if (cx < run->nWidth/2)
+    if (cx < run->nWidth/2) 
       return 0;
     return 1;
   }
@@ -383,15 +512,41 @@ int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Paragraph *para, ME_Run *
   }
   hDC = GetDC(editor->hWnd);
   hOldFont = ME_SelectStyleFont(editor, hDC, run->style);
-  GetTextExtentExPointW(hDC, run->strText->szData, run->strText->nLen,
-    cx, &fit, NULL, &sz);
+  
+  if (editor->cPasswordMask)
+  {
+    ME_String *strMasked = ME_MakeStringR(editor->cPasswordMask,ME_StrVLen(run->strText));
+    GetTextExtentExPointW(hDC, strMasked->szData, run->strText->nLen,
+      cx, &fit, NULL, &sz);
+    ME_DestroyString(strMasked);
+  }
+  else
+  {
+    GetTextExtentExPointW(hDC, run->strText->szData, run->strText->nLen,
+      cx, &fit, NULL, &sz);
+  }
+  
   ME_UnselectStyleFont(editor, hDC, run->style, hOldFont);
   ReleaseDC(editor->hWnd, hDC);
   return fit;
 }
 
+/******************************************************************************
+ * ME_CharFromPointCursor
+ * 
+ * Returns a character position inside the run given a run-relative
+ * pixel horizontal position. This version rounds to the nearest character edge 
+ * (ie. if the second character is at pixel position 8, then for cx=0..3 
+ * it returns 0, and for cx=4..7 it returns 1).
+ * 
+ * It is used for mouse click handling, for better usability (and compatibility
+ * with the native control).        
+ */     
 int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
 {
+  ME_String *strRunText;
+  /* This could point to either the run's real text, or it's masked form in a password control */
+	
   int fit = 0, fit1 = 0;
   HGDIOBJ hOldFont;
   HDC hDC;
@@ -399,7 +554,7 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
   if (!run->strText->nLen)
     return 0;
 
-  if (run->nFlags & MERF_TAB)
+  if (run->nFlags & (MERF_TAB | MERF_CELL))
   {
     if (cx < run->nWidth/2)
       return 0;
@@ -413,31 +568,48 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
       return 0;
     return 1;
   }
+  
+  if (editor->cPasswordMask)
+    strRunText = ME_MakeStringR(editor->cPasswordMask,ME_StrVLen(run->strText));
+  else
+    strRunText = run->strText;
 
   hDC = GetDC(editor->hWnd);
   hOldFont = ME_SelectStyleFont(editor, hDC, run->style);
-  GetTextExtentExPointW(hDC, run->strText->szData, run->strText->nLen,
+  GetTextExtentExPointW(hDC, strRunText->szData, strRunText->nLen,
     cx, &fit, NULL, &sz);
-  if (fit != run->strText->nLen)
+  if (fit != strRunText->nLen)
   {
     int chars = 1;
 
-    GetTextExtentPoint32W(hDC, run->strText->szData, fit, &sz2);
-    fit1 = ME_StrRelPos(run->strText, fit, &chars);
-    GetTextExtentPoint32W(hDC, run->strText->szData, fit1, &sz3);
+    GetTextExtentPoint32W(hDC, strRunText->szData, fit, &sz2);
+    fit1 = ME_StrRelPos(strRunText, fit, &chars);
+    GetTextExtentPoint32W(hDC, strRunText->szData, fit1, &sz3);
     if (cx >= (sz2.cx+sz3.cx)/2)
       fit = fit1;
   }
+  
+  if (editor->cPasswordMask)
+    ME_DestroyString(strRunText);
+  
   ME_UnselectStyleFont(editor, hDC, run->style, hOldFont);
   ReleaseDC(editor->hWnd, hDC);
   return fit;
 }
 
+/******************************************************************************
+ * ME_PointFromChar
+ * 
+ * Returns a run-relative pixel position given a run-relative character
+ * position (character offset)
+ */     
 int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset)
 {
   SIZE size;
   HDC hDC = GetDC(editor->hWnd);
   HGDIOBJ hOldFont;
+  ME_String *strRunText;
+  /* This could point to either the run's real text, or it's masked form in a password control */
 
   if (pRun->nFlags & MERF_GRAPHICS)
   {
@@ -445,15 +617,27 @@ int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset)
     ME_GetGraphicsSize(editor, pRun, &size);
     return 1;
   }
+  
+   if (editor->cPasswordMask)
+    strRunText = ME_MakeStringR(editor->cPasswordMask,ME_StrVLen(pRun->strText));
+  else
+    strRunText = pRun->strText;
+  
   hOldFont = ME_SelectStyleFont(editor, hDC, pRun->style);
-  GetTextExtentPoint32W(hDC, pRun->strText->szData, nOffset, &size);
+  GetTextExtentPoint32W(hDC, strRunText->szData, nOffset, &size);
   ME_UnselectStyleFont(editor, hDC, pRun->style, hOldFont);
   ReleaseDC(editor->hWnd, hDC);
+  if (editor->cPasswordMask)
+    ME_DestroyString(strRunText);
   return size.cx;
 }
 
-void ME_GetTextExtent(ME_Context *c, LPCWSTR szText, int nChars, ME_Style *s,
-  SIZE *size)
+/******************************************************************************
+ * ME_GetTextExtent
+ *
+ * Finds a width and a height of the text using a specified style
+ */
+static void ME_GetTextExtent(ME_Context *c, LPCWSTR szText, int nChars, ME_Style *s, SIZE *size)
 {
   HDC hDC = c->hDC;
   HGDIOBJ hOldFont;
@@ -462,7 +646,14 @@ void ME_GetTextExtent(ME_Context *c, LPCWSTR szText, int nChars, ME_Style *s,
   ME_UnselectStyleFont(c->editor, hDC, s, hOldFont);
 }
 
-SIZE ME_GetRunSizeCommon(ME_Context *c, ME_Paragraph *para, ME_Run *run, int nLen, int *pAscent, int *pDescent)
+/******************************************************************************
+ * ME_GetRunSizeCommon
+ * 
+ * Finds width, height, ascent and descent of a run, up to given character
+ * (nLen).
+ */
+static SIZE ME_GetRunSizeCommon(ME_Context *c, ME_Paragraph *para, ME_Run *run, int nLen,
+                                int *pAscent, int *pDescent)
 {
   SIZE size;
   int nMaxLen = ME_StrVLen(run->strText);
@@ -471,10 +662,20 @@ SIZE ME_GetRunSizeCommon(ME_Context *c, ME_Paragraph *para, ME_Run *run, int nLe
     nLen = nMaxLen;
 
   /* FIXME the following call also ensures that TEXTMETRIC structure is filled
-   * this is wasteful for graphics and TAB runs, but that shouldn't matter
+   * this is wasteful for MERF_NONTEXT runs, but that shouldn't matter
    * in practice
    */
-  ME_GetTextExtent(c, run->strText->szData, nLen, run->style, &size);
+  
+  if (c->editor->cPasswordMask)
+  {
+    ME_String *szMasked = ME_MakeStringR(c->editor->cPasswordMask,nLen);
+    ME_GetTextExtent(c, szMasked->szData, nLen,run->style, &size); 
+    ME_DestroyString(szMasked);
+  }
+  else
+  {
+    ME_GetTextExtent(c, run->strText->szData, nLen, run->style, &size);
+  }
   *pAscent = run->style->tm.tmAscent;
   *pDescent = run->style->tm.tmDescent;
   size.cy = *pAscent + *pDescent;
@@ -511,31 +712,67 @@ SIZE ME_GetRunSizeCommon(ME_Context *c, ME_Paragraph *para, ME_Run *run, int nLe
     /* descent is unchanged */
     return size;
   }
+  if (run->nFlags & MERF_CELL)
+  {
+    int lpsx = GetDeviceCaps(c->hDC, LOGPIXELSX);
 
+    size.cx = run->pCell->nRightBoundary * lpsx / 1440 - run->pt.x;
+    return size;
+  }
   return size;
 }
 
+/******************************************************************************
+ * ME_GetRunSize
+ * 
+ * Finds width and height (but not ascent and descent) of a part of the run
+ * up to given character.    
+ */     
 SIZE ME_GetRunSize(ME_Context *c, ME_Paragraph *para, ME_Run *run, int nLen)
 {
   int asc, desc;
   return ME_GetRunSizeCommon(c, para, run, nLen, &asc, &desc);
 }
 
+/******************************************************************************
+ * ME_CalcRunExtent
+ * 
+ * Updates the size of the run (fills width, ascent and descent). The height
+ * is calculated based on whole row's ascent and descent anyway, so no need
+ * to use it here.        
+ */     
 void ME_CalcRunExtent(ME_Context *c, ME_Paragraph *para, ME_Run *run)
 {
-  int nEnd = ME_StrVLen(run->strText);
-  SIZE size = ME_GetRunSizeCommon(c, para, run, nEnd, &run->nAscent, &run->nDescent);
-  run->nWidth = size.cx;
-  if (!size.cx)
-    WARN("size.cx == 0\n");
+  if (run->nFlags & MERF_HIDDEN)
+    run->nWidth = 0;
+  else
+  {
+    int nEnd = ME_StrVLen(run->strText);
+    SIZE size = ME_GetRunSizeCommon(c, para, run, nEnd, &run->nAscent, &run->nDescent);
+    run->nWidth = size.cx;
+    if (!size.cx)
+      WARN("size.cx == 0\n");
+  }
 }
 
+/******************************************************************************
+ * ME_MustBeWrapped
+ * 
+ * This should ensure that the given paragraph is wrapped so that its screen
+ * row structure may be used. But it doesn't, yet. 
+ */     
 void ME_MustBeWrapped(ME_Context *c, ME_DisplayItem *para)
 {
   assert(para->type == diParagraph);
   /* FIXME */
 }
 
+/******************************************************************************
+ * ME_SetSelectionCharFormat
+ * 
+ * Applies a style change, either to a current selection, or to insert cursor
+ * (ie. the style next typed characters will use).
+ */     
 void ME_SetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt)
 {
   int nFrom, nTo;
@@ -553,6 +790,11 @@ void ME_SetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt)
     ME_SetCharFormat(editor, nFrom, nTo-nFrom, pFmt);
 }
 
+/******************************************************************************
+ * ME_SetCharFormat
+ * 
+ * Applies a style change to the specified part of the text
+ */     
 void ME_SetCharFormat(ME_TextEditor *editor, int nOfs, int nChars, CHARFORMAT2W *pFmt)
 {
   ME_Cursor tmp, tmp2;
@@ -597,6 +839,11 @@ void ME_SetCharFormat(ME_TextEditor *editor, int nOfs, int nChars, CHARFORMAT2W 
   }
 }
 
+/******************************************************************************
+ * ME_SetDefaultCharFormat
+ * 
+ * Applies a style change to the default character style.
+ */     
 void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod)
 {
   ME_Style *style;
@@ -618,11 +865,17 @@ void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod)
   /*  pcf = editor->pBuffer->pDefaultStyle->fmt; */
 }
 
-void ME_GetRunCharFormat(ME_TextEditor *editor, ME_DisplayItem *run, CHARFORMAT2W *pFmt)
+static void ME_GetRunCharFormat(ME_TextEditor *editor, ME_DisplayItem *run, CHARFORMAT2W *pFmt)
 {
   ME_CopyCharFormat(pFmt, &run->member.run.style->fmt);
 }
 
+/******************************************************************************
+ * ME_GetDefaultCharFormat
+ * 
+ * Retrieves the current default character style (the one applied where no
+ * other style was applied) .
+ */     
 void ME_GetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt)
 {
   int nFrom, nTo;
@@ -630,6 +883,12 @@ void ME_GetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt)
   ME_CopyCharFormat(pFmt, &editor->pBuffer->pDefaultStyle->fmt);
 }
 
+/******************************************************************************
+ * ME_GetSelectionCharFormat
+ * 
+ * If selection exists, it returns all style elements that are set consistently
+ * in the whole selection. If not, it just returns the current style.  
+ */     
 void ME_GetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt)
 {
   int nFrom, nTo;
@@ -642,6 +901,12 @@ void ME_GetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt)
   ME_GetCharFormat(editor, nFrom, nTo, pFmt);
 }
 
+/******************************************************************************
+ * ME_GetCharFormat
+ * 
+ * Returns the style consisting of those attributes which are consistently set
+ * in the whole character range.    
+ */     
 void ME_GetCharFormat(ME_TextEditor *editor, int nFrom, int nTo, CHARFORMAT2W *pFmt)
 {
   ME_DisplayItem *run, *run_end;
