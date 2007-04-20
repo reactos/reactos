@@ -6,6 +6,7 @@
 	<include base="ReactOS">include/crt</include>
 	<include base="ReactOS">include/psdk</include>
 	<include base="mingw_common">include</include>
+	<dependency>psdk</dependency>
 	<file>cpu_features.c</file>
 	<file>CRTfmode.c</file>
 	<file>CRTglob.c</file>
