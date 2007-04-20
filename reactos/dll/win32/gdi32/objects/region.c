@@ -43,6 +43,7 @@ CreatePolyPolygonRgn( const POINT* Point,
                                   (ULONG) inPolygons,
                                           GdiPolyPolyRgn );
 */
+   return (HRGN) NULL;
 }
 
 
