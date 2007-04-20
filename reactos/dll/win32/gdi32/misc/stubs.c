@@ -1699,18 +1699,6 @@ GdiDrawStream(HDC dc, ULONG l, VOID *v)
 /*
  * @unimplemented
  */
-HGDIOBJ 
-STDCALL
-GdiFixUpHandle(HGDIOBJ hobj)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
 DWORD 
 STDCALL
 GdiGetCodePage(HDC hdc)
