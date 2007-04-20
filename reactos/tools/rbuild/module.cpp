@@ -583,7 +583,13 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			if ( parseContext.ifData )
 				parseContext.ifData->data.compilationUnits.push_back ( pCompilationUnit );
 			else
-				non_if_data.compilationUnits.push_back ( pCompilationUnit );
+			{
+				string ext = GetExtension ( e.value );
+				if ( !stricmp ( ext.c_str(), ".idl" ) )
+					non_if_data.compilationUnits.insert ( non_if_data.compilationUnits.begin(), pCompilationUnit );
+				else
+					non_if_data.compilationUnits.push_back ( pCompilationUnit );
+			}
 		}
 		if ( parseContext.ifData )
 			parseContext.ifData->data.files.push_back ( pFile );
