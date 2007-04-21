@@ -397,8 +397,6 @@ ERRCODES_RC = dll$(SEP)win32$(SEP)kernel32$(SEP)errcodes.rc
 # will not be autogenretaed for right 
 # platforms. 
 
-ARCH :=i386
-
 include lib/lib.mak
 include tools/tools.mak
 include boot/freeldr/bootsect/bootsect.mak
@@ -413,12 +411,17 @@ PREAUTO := \
 	$(BUGCODES_RC) \
 	$(ERRCODES_H) \
 	$(ERRCODES_RC) \
-	$(NCI_SERVICE_FILES) \
 	$(GENDIB_DIB_FILES)
+
+POSTAUTO : \
+	psdk \
+	$(IDL_FILES) \
+	$(NCI_SERVICE_FILES)
 
 $(ROS_AUTOMAKE): $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) mingw
+	@$(MAKE) POSTAUTO
 
 world: all bootcd livecd
 
