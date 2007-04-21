@@ -394,6 +394,29 @@ GetDCOrg(
 }
 
 
+int   
+GetNonFontObject(HGDIOBJ Handle, int Size, LPVOID Buffer)
+{
+  INT Type = GDI_HANDLE_GET_TYPE(Handle);
+  
+  if (Type == GDI_OBJECT_TYPE_REGION) // Not on the check list, so bye.
+  {
+     SetLastError(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+
+  if (Buffer == NULL)
+  {
+     if (Type == GDI_OBJECT_TYPE_PEN) return sizeof(LOGPEN);
+     else if (Type == GDI_OBJECT_TYPE_REGION) return sizeof(LOGBRUSH);
+  }
+  
+  //Handle = GdiFixUpHandle(Handle); new system is not ready
+  
+  return NtGdiExtGetObjectW(Handle, Size, Buffer);
+}
+
+
 /*
  * @unimplemented
  */
@@ -401,36 +424,51 @@ int
 STDCALL 
 GetObjectA(HGDIOBJ Handle, int Size, LPVOID Buffer)
 {
-  LOGFONTW LogFontW;
+  EXTLOGFONTW ExtLogFontW;
   DWORD Type;
-  int Result;
+  int Result = 0;
 
-  Type = NtGdiGetObjectType(Handle);
-  if (0 == Type)
-    {
-      /* From Wine: GetObject does not SetLastError() on a null object */
-      SetLastError(0);
-      return 0;
-    }
+  Type = GDI_HANDLE_GET_TYPE(Handle);
+  
+  if((Type == GDI_OBJECT_TYPE_DC)       ||
+     (Type == GDI_OBJECT_TYPE_METAFILE) ||
+     (Type == GDI_OBJECT_TYPE_ENHMETAFILE))
+  {
+     SetLastError(ERROR_INVALID_HANDLE);
+     return 0;
+  }
 
-  if (OBJ_FONT == Type)
+  if(Type == GDI_OBJECT_TYPE_COLORSPACE)
+  {
+     SetLastError(ERROR_NOT_SUPPORTED);
+     return 0;
+  }  
+
+  if (Type == GDI_OBJECT_TYPE_FONT)
     {
+      if ( Buffer == NULL) return sizeof(LOGFONTA);
+      
       if (Size < (int)sizeof(LOGFONTA))
         {
           SetLastError(ERROR_BUFFER_OVERFLOW);
           return 0;
         }
-      Result = NtGdiExtGetObjectW(Handle, sizeof(LOGFONTW), &LogFontW);
+      Result = NtGdiExtGetObjectW(Handle, sizeof(EXTLOGFONTW), &ExtLogFontW);
       if (0 == Result)
         {
           return 0;
         }
-      LogFontW2A((LPLOGFONTA) Buffer, &LogFontW);
+/*
+    During testing of font objects, I passed ENUM/EXT/LOGFONT/EX/W to NtGdiExtGetObjectW.
+    I think it likes EXTLOGFONTW. So,,, How do we handle the rest when a
+    caller wants to use E/E/L/E/A structures. Check for size? More research~
+ */
+      LogFontW2A((LPLOGFONTA) Buffer, &ExtLogFontW.elfLogFont);
       Result = sizeof(LOGFONTA);
     }
   else
     {
-      Result = NtGdiExtGetObjectW(Handle, Size, Buffer);
+      Result = GetNonFontObject(Handle, Size, Buffer);
     }
 
   return Result;
@@ -444,7 +482,38 @@ int
 STDCALL 
 GetObjectW(HGDIOBJ Handle, int Size, LPVOID Buffer)
 {
-  return NtGdiExtGetObjectW(Handle, Size, Buffer);
+
+  INT Type = GDI_HANDLE_GET_TYPE(Handle);
+/*
+  Check List:
+  MSDN, "This can be a handle to one of the following: logical bitmap, a brush,
+  a font, a palette, a pen, or a device independent bitmap created by calling
+  the CreateDIBSection function."
+ */
+  if((Type == GDI_OBJECT_TYPE_DC)       || // Yes, can not pass a normal DC!
+     (Type == GDI_OBJECT_TYPE_METAFILE) ||
+     (Type == GDI_OBJECT_TYPE_ENHMETAFILE))
+  {
+     SetLastError(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+
+  if(Type == GDI_OBJECT_TYPE_COLORSPACE)
+  {
+     SetLastError(ERROR_NOT_SUPPORTED); // Not supported yet.
+     return 0;
+  }  
+
+  if(Type == GDI_OBJECT_TYPE_FONT)
+  {
+     if(Buffer == NULL) return sizeof(LOGFONTW);
+
+     if(Size > sizeof(EXTLOGFONTW)) Size = sizeof(EXTLOGFONTW);
+     
+     return NtGdiExtGetObjectW(Handle, Size, Buffer);
+  }
+  else
+     return GetNonFontObject(Handle, Size, Buffer);
 }
 
 
