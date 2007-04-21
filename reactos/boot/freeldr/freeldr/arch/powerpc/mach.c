@@ -616,10 +616,11 @@ void beep() {
 }
 
 UCHAR NTAPI READ_PORT_UCHAR(PUCHAR Address) {
-    return 0xff;
+    return GetPhysByte(((ULONG)Address)+0x80000000);
 }
 
 void WRITE_PORT_UCHAR(PUCHAR Address, UCHAR Value) {
+    SetPhysByte(((ULONG)Address)+0x80000000, Value);
 }
 
 void DiskStopFloppyMotor() {
