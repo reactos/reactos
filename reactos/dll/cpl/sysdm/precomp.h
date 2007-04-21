@@ -1,8 +1,12 @@
 #ifndef __CPL_PRECOMP_H
 #define __CPL_PRECOMP_H
 
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
+#include <windows.h>
 #include <windows.h>
 #include <commctrl.h>
+#include <powrprof.h>
 #include <tchar.h>
 #include <stdio.h>
 #include <cpl.h>

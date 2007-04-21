@@ -3667,6 +3667,17 @@ typedef struct _SYSTEM_BATTERY_STATE {
 	ULONG  DefaultAlert2;
 } SYSTEM_BATTERY_STATE, *PSYSTEM_BATTERY_STATE;
 
+#ifndef __NTDDK_H /* HACK!!! ntddk.h shouldn't include winnt.h! */
+typedef struct _PROCESSOR_POWER_INFORMATION {
+	ULONG Number;
+	ULONG MaxMhz;
+	ULONG CurrentMhz;
+	ULONG MhzLimit;
+	ULONG MaxIdleState;
+	ULONG CurrentIdleState;
+} PROCESSOR_POWER_INFORMATION, *PPROCESSOR_POWER_INFORMATION;
+#endif
+
 typedef DWORD EXECUTION_STATE;
 typedef enum _POWER_INFORMATION_LEVEL {
 	SystemPowerPolicyAc,

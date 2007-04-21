@@ -205,24 +205,33 @@ SetProcSpeed(HWND hwnd,
 
 {
     TCHAR szBuf[64];
-    DWORD dwBuf;
     DWORD BufSize = sizeof(DWORD);
     DWORD Type = REG_SZ;
+    PROCESSOR_POWER_INFORMATION ppi;
 
-    if (RegQueryValueEx(hKey,
+    ZeroMemory(&ppi,
+               sizeof(ppi));
+
+    if ((CallNtPowerInformation(ProcessorInformation,
+                                NULL,
+                                0,
+                                (PVOID)&ppi,
+                                sizeof(ppi)) == STATUS_SUCCESS &&
+         ppi.CurrentMhz != 0) ||
+        RegQueryValueEx(hKey,
                         Value,
                         NULL,
                         &Type,
-                        (PBYTE)&dwBuf,
+                        (PBYTE)&ppi.CurrentMhz,
                         &BufSize) == ERROR_SUCCESS)
     {
-        if (dwBuf < 1000)
+        if (ppi.CurrentMhz < 1000)
         {
-            _stprintf(szBuf, _T("%.2f MHz"), dwBuf);
+            _stprintf(szBuf, _T("%lu MHz"), ppi.CurrentMhz);
         }
         else
         {
-            double flt = dwBuf / 1000.0;
+            double flt = ppi.CurrentMhz / 1000.0;
             _stprintf(szBuf, _T("%.2f GHz"), flt);
         }
 

@@ -25,6 +25,9 @@
 <directory name="ncpa">
 	<xi:include href="ncpa/ncpa.rbuild" />
 </directory>
+<directory name="odbccp32">
+	<xi:include href="odbccp32/odbccp32.rbuild" />
+</directory>
 <directory name="powercfg">
 	<xi:include href="powercfg/powercfg.rbuild" />
 </directory>
