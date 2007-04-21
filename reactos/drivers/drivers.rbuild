@@ -11,6 +11,9 @@
 <directory name="input">
 	<xi:include href="input/directory.rbuild" />
 </directory>
+<directory name="ksfilter">
+	<xi:include href="ksfilter/directory.rbuild" />
+</directory>
 <directory name="multimedia">
 	<xi:include href="multimedia/directory.rbuild" />
 </directory>
