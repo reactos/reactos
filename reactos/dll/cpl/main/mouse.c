@@ -567,15 +567,27 @@ RefreshCursorList(HWND hwndDlg, BOOL bInit)
 
     SendDlgItemMessage(hwndDlg, IDC_IMAGE_CURRENT_CURSOR, STM_SETIMAGE, IMAGE_CURSOR,
                        (LPARAM)g_CursorData[nSel].hCursor);
+
+    EnableWindow(GetDlgItem(hwndDlg,IDC_BUTTON_USE_DEFAULT_CURSOR), (g_CursorData[nSel].szCursorPath[0] != 0));
 }
 
 
 static BOOL
-DeleteUserCursorScheme(TCHAR * szScheme)
+DeleteUserCursorScheme(HWND hwndDlg)
 {
+    TCHAR szSchemeName[MAX_PATH];
+    HWND hDlgCtrl;
     HKEY hCuKey;
     HKEY hCuCursorKey;
-    LONG Result;
+    LONG lResult;
+    INT nSel;
+
+    hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMBO_CURSOR_SCHEME);
+    nSel = SendMessage(hDlgCtrl, CB_GETCURSEL, 0, 0);
+    if (nSel == CB_ERR)
+        return FALSE;
+
+    SendMessage(hDlgCtrl, CB_GETLBTEXT, nSel, (LPARAM)szSchemeName);
 
     if (RegOpenCurrentUser(KEY_READ | KEY_SET_VALUE, &hCuKey) != ERROR_SUCCESS)
         return FALSE;
@@ -586,12 +598,18 @@ DeleteUserCursorScheme(TCHAR * szScheme)
         return FALSE;
     }
 
-    Result = RegDeleteValue(hCuCursorKey, szScheme);
+    lResult = RegDeleteValue(hCuCursorKey, szSchemeName);
 
     RegCloseKey(hCuCursorKey);
     RegCloseKey(hCuKey);
 
-    return (Result == ERROR_SUCCESS);
+    if (lResult == ERROR_SUCCESS)
+    {
+        SendMessage(hDlgCtrl, CB_DELETESTRING, nSel, 0);
+        SendMessage(hDlgCtrl, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+    }
+
+    return (lResult == ERROR_SUCCESS);
 }
 
 
@@ -625,11 +643,22 @@ SaveSchemeProc(IN HWND hwndDlg,
 
 
 static BOOL
-BrowseCursor(TCHAR * szFileName, HWND hwndDlg)
+BrowseCursor(HWND hwndDlg)
 {
-    //FIXME load text resources from string
+    TCHAR szFileName[MAX_PATH];
     OPENFILENAME ofn;
+    INT nSel;
+
+    /* FIXME load text resources from string */
     static TCHAR szFilter[] = _T("Cursors\0*.ani;*.cur\0Animated Cursors\0*.ani\0Static Cursors\0*.cur\0All Files\0*.*\0\0");
+
+    memset(szFileName, 0x0, sizeof(szFileName));
+    nSel = SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_GETCURSEL, 0, 0);
+    if (nSel == LB_ERR)
+    {
+        MessageBox(hwndDlg, _T("LB_ERR"), _T(""),MB_ICONERROR);
+        return FALSE;
+    }
 
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
 
@@ -640,18 +669,21 @@ BrowseCursor(TCHAR * szFileName, HWND hwndDlg)
     ofn.lpstrFile = szFileName;
     ofn.nMaxFile = MAX_PATH;
     ofn.lpstrInitialDir = _T("%WINDIR%\\Cursors");
-    ofn.lpstrTitle = _T("Browse");
+    ofn.lpstrTitle = _T("Browse"); /* FIXME load text resources from string */
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST;
 
-    if (GetOpenFileName(&ofn))
-        return TRUE;
-    else
+    if (!GetOpenFileName(&ofn))
         return FALSE;
+
+    /* Store the new cursor file path */
+    _tcsncpy(g_CursorData[nSel].szCursorPath, szFileName, MAX_PATH);
+
+    return TRUE;
 }
 
 
 static VOID
-LoadCurrentCursorScheme(LPTSTR lpName, BOOL bSystem)
+LoadCursorScheme(LPTSTR lpName, BOOL bSystem)
 {
     UINT index, i;
 
@@ -664,17 +696,6 @@ LoadCurrentCursorScheme(LPTSTR lpName, BOOL bSystem)
         }
         g_CursorData[i].szCursorPath[0] = 0;
     }
-
-#if 0
-    if (lpName == NULL)
-    {
-        for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
-        {
-            g_CursorData[i].hCursor = LoadCursor(NULL, g_CursorData[i].uDefaultCursorId);
-        }
-    }
-    else
-#endif
 
     if (lpName != NULL)
     {
@@ -703,7 +724,9 @@ LoadCurrentCursorScheme(LPTSTR lpName, BOOL bSystem)
     for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
     {
         if (g_CursorData[i].szCursorPath[0] == 0)
-            g_CursorData[i].hCursor = LoadCursor(NULL, g_CursorData[i].uDefaultCursorId);
+            g_CursorData[i].hCursor = (HCURSOR)LoadImage(NULL, g_CursorData[i].uDefaultCursorId,
+                                                         IMAGE_CURSOR, 0, 0,
+                                                         LR_DEFAULTSIZE | LR_SHARED);
         else
             g_CursorData[i].hCursor = (HCURSOR)LoadImage(NULL, g_CursorData[i].szCursorPath,
                                                          IMAGE_CURSOR, 0, 0,
@@ -723,7 +746,9 @@ ReloadCurrentCursorScheme(VOID)
             DestroyCursor(g_CursorData[i].hCursor);
 
         if (g_CursorData[i].szCursorPath[0] == 0)
-            g_CursorData[i].hCursor = LoadCursor(NULL, g_CursorData[i].uDefaultCursorId);
+            g_CursorData[i].hCursor = (HCURSOR)LoadImage(NULL, g_CursorData[i].uDefaultCursorId,
+                                                         IMAGE_CURSOR, 0, 0,
+                                                         LR_DEFAULTSIZE | LR_SHARED);
         else
             g_CursorData[i].hCursor = (HCURSOR)LoadImage(NULL, g_CursorData[i].szCursorPath,
                                                          IMAGE_CURSOR, 0, 0,
@@ -787,31 +812,58 @@ OnDrawItem(UINT idCtl,
 }
 
 
+static VOID
+LoadNewCursorScheme(HWND hwndDlg, BOOL bInit)
+{
+    TCHAR buffer[MAX_PATH];
+    TCHAR szSystemScheme[MAX_PATH];
+    HWND hDlgCtrl;
+    BOOL bEnable;
+    LPTSTR lpName;
+    INT nSel;
+
+    nSel = SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETCURSEL, 0, 0);
+    if (nSel == CB_ERR)
+       return;
+
+    SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETLBTEXT, nSel, (LPARAM)buffer);
+
+    LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
+    if (_tcsstr(buffer, szSystemScheme) || nSel == 0) //avoid the default scheme can be deleted
+        bEnable = FALSE;
+    else
+        bEnable = TRUE;
+
+    /* delete button */
+    hDlgCtrl = GetDlgItem(hwndDlg, IDC_BUTTON_DELETE_SCHEME);
+    EnableWindow(hDlgCtrl, bEnable);
+
+    lpName = (LPTSTR)SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETITEMDATA, nSel, 0);
+    LoadCursorScheme(lpName, !bEnable);
+    RefreshCursorList(hwndDlg, bInit);
+}
+
+
 static INT_PTR CALLBACK
 PointerProc(IN HWND hwndDlg,
             IN UINT uMsg,
             IN WPARAM wParam,
             IN LPARAM lParam)
 {
-    LPPSHNOTIFY lppsn;
-    TCHAR buffer[MAX_PATH];
-    TCHAR szSystemScheme[MAX_PATH];
-    HWND hDlgCtrl;
-    LRESULT lResult;
-
     PPOINTER_DATA pPointerData;
+    LPPSHNOTIFY lppsn;
+    INT nSel;
 
     pPointerData = (PPOINTER_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
             pPointerData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(POINTER_DATA));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pPointerData);
 
             EnumerateCursorSchemes(hwndDlg);
-            LoadCurrentCursorScheme(NULL, FALSE);
-            RefreshCursorList(hwndDlg, TRUE);
+            LoadNewCursorScheme(hwndDlg, TRUE);
 
             /* Get drop shadow setting */
             if (!SystemParametersInfo(SPI_GETDROPSHADOW, 0, &pPointerData->bDropShadow, 0))
@@ -821,8 +873,7 @@ PointerProc(IN HWND hwndDlg,
 
             if (pPointerData->bDropShadow)
             {
-                hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_DROP_SHADOW);
-                SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                SendDlgItemMessage(hwndDlg, IDC_CHECK_DROP_SHADOW, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
             }
 
             if ((INT)wParam == IDC_LISTBOX_CURSOR)
@@ -850,7 +901,6 @@ PointerProc(IN HWND hwndDlg,
 #if (WINVER >= 0x0500)
                 SystemParametersInfo(SPI_SETDROPSHADOW, 0, (PVOID)pPointerData->bDropShadow, SPIF_SENDCHANGE);
 #endif
-//                SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
             else if (lppsn->hdr.code == PSN_RESET)
@@ -866,39 +916,17 @@ PointerProc(IN HWND hwndDlg,
             {
                 case IDC_COMBO_CURSOR_SCHEME:
                     if (HIWORD(wParam) == CBN_SELENDOK)
-                    {
-                        BOOL bEnable;
-                        LPTSTR lpName;
-
-                        wParam = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
-                        if(wParam == CB_ERR)
-                           break;
-
-                        SendMessage((HWND)lParam, CB_GETLBTEXT, wParam, (LPARAM)buffer);
-                        LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
-                        if(_tcsstr(buffer, szSystemScheme) || wParam == 0) //avoid the default scheme can be deleted
-                            bEnable = FALSE;
-                        else
-                            bEnable = TRUE;
-
-                        /* delete button */
-                        hDlgCtrl = GetDlgItem(hwndDlg, IDC_BUTTON_DELETE_SCHEME);
-                        EnableWindow(hDlgCtrl, bEnable);
-
-                        lpName = (LPTSTR)SendMessage((HWND)lParam, CB_GETITEMDATA, wParam, 0);
-                        LoadCurrentCursorScheme(lpName, !bEnable);
-                        RefreshCursorList(hwndDlg, FALSE);
-                    }
+                        LoadNewCursorScheme(hwndDlg, FALSE);
                     break;
 
                 case IDC_LISTBOX_CURSOR:
                     if (HIWORD(wParam) == LBN_SELCHANGE)
                     {
-                        UINT uSel, uIndex;
-                        uSel = SendMessage((HWND)lParam, LB_GETCURSEL, 0, 0);
-                        uIndex = (UINT)SendMessage((HWND)lParam, LB_GETITEMDATA, (WPARAM)uSel, 0);
+                        nSel = SendMessage((HWND)lParam, LB_GETCURSEL, 0, 0);
                         SendDlgItemMessage(hwndDlg, IDC_IMAGE_CURRENT_CURSOR, STM_SETIMAGE, IMAGE_CURSOR,
-                                           (LPARAM)g_CursorData[uIndex].hCursor);
+                                           (LPARAM)g_CursorData[nSel].hCursor);
+                        EnableWindow(GetDlgItem(hwndDlg,IDC_BUTTON_USE_DEFAULT_CURSOR),
+                                     (g_CursorData[nSel].szCursorPath[0] != 0));
                     }
                     break;
 
@@ -910,47 +938,35 @@ PointerProc(IN HWND hwndDlg,
                     break;
 
                 case IDC_BUTTON_USE_DEFAULT_CURSOR:
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTBOX_CURSOR);
-                    lResult = SendMessage(hDlgCtrl, LB_GETCURSEL, 0, 0);
-                    if (lResult != LB_ERR)
+                    nSel = SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_GETCURSEL, 0, 0);
+                    if (nSel != LB_ERR)
                     {
                         /* Clean the path of the currently selected cursor */
-                        memset(g_CursorData[lResult].szCursorPath, 0x0, MAX_PATH * sizeof(TCHAR));
+                        memset(g_CursorData[nSel].szCursorPath, 0x0, MAX_PATH * sizeof(TCHAR));
 
                         /* Update cursor list and preview */
                         ReloadCurrentCursorScheme();
                         RefreshCursorList(hwndDlg, FALSE);
+
+                        /* Disable the "Set Default" button */
+                        EnableWindow(GetDlgItem(hwndDlg,IDC_BUTTON_USE_DEFAULT_CURSOR), FALSE);
                     }
                     break;
 
                 case IDC_BUTTON_BROWSE_CURSOR:
-                    memset(buffer, 0x0, sizeof(buffer));
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTBOX_CURSOR);
-                    lResult = SendMessage(hDlgCtrl, LB_GETCURSEL, 0, 0);
-                    if (lResult == LB_ERR)
-                        MessageBox(hwndDlg, _T("LB_ERR"), _T(""),MB_ICONERROR);
-                    if (BrowseCursor(buffer, hwndDlg))
+                    if (BrowseCursor(hwndDlg))
                     {
-                        /* Store the new cursor file path */
-                        _tcsncpy(g_CursorData[lResult].szCursorPath, buffer, MAX_PATH);
-
                         /* Update cursor list and preview */
                         ReloadCurrentCursorScheme();
                         RefreshCursorList(hwndDlg, FALSE);
+
+                        /* Enable the "Set Default" button */
+                        EnableWindow(GetDlgItem(hwndDlg,IDC_BUTTON_USE_DEFAULT_CURSOR), TRUE);
                     }
                     break;
 
                 case IDC_BUTTON_DELETE_SCHEME:
-                    hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMBO_CURSOR_SCHEME);
-                    wParam = SendMessage(hDlgCtrl, CB_GETCURSEL, 0, 0);
-                    if(wParam == CB_ERR)
-                        break;
-                    SendMessage(hDlgCtrl, CB_GETLBTEXT, wParam, (LPARAM)buffer);
-                    if (DeleteUserCursorScheme(buffer))
-                    {
-                        SendMessage(hDlgCtrl, CB_DELETESTRING, wParam, 0);
-                        SendMessage(hDlgCtrl, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
-                    }
+                    DeleteUserCursorScheme(hwndDlg);
                     break;
 
                 case IDC_CHECK_DROP_SHADOW:
