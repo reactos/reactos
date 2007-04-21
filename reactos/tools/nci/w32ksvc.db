@@ -137,7 +137,6 @@ NtGdiGetMetaRgn				2
 NtGdiGetMiterLimit			2
 NtGdiGetNearestColor			2
 NtGdiGetNearestPaletteIndex		2
-NtGdiGetObjectType			1
 NtGdiGetOutlineTextMetrics		3
 NtGdiGetPaletteEntries			4
 NtGdiGetPath				4

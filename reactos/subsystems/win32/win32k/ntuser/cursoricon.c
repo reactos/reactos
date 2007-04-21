@@ -1417,7 +1417,7 @@ UserDrawIconEx(
          UserGetSystemMetrics(SM_CYICON) : IconSize.cy);
 
    DoFlickerFree = (hbrFlickerFreeDraw && 
-      (NtGdiGetObjectType(hbrFlickerFreeDraw) == OBJ_BRUSH));
+      (GDI_HANDLE_GET_TYPE(hbrFlickerFreeDraw) == GDI_OBJECT_TYPE_BRUSH));
 
    if(DoFlickerFree)
    {

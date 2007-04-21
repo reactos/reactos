@@ -640,9 +640,6 @@ NtGdiGetMetaRgn (
 	HRGN	hrgn
 	);
 
-/* Should be done in user-mode using shared GDI Objects. */
-DWORD STDCALL  NtGdiGetObjectType(HGDIOBJ  hGDIObj);
-
 /* Use NtGdiGetOutlineTextMetricsInternalW. */
 UINT
 STDCALL
