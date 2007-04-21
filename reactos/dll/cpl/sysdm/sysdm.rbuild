@@ -17,6 +17,7 @@
 	<library>shell32</library>
 	<library>shlwapi</library>
 	<library>ole32</library>
+	<library>powrprof</library>
 	<file>advanced.c</file>
 	<file>environment.c</file>
 	<file>general.c</file>
