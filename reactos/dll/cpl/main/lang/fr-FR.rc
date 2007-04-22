@@ -164,4 +164,8 @@ BEGIN
   IDS_SYSTEM_SCHEME "(Arrangement système)"
   IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
   IDS_BROWSE_TITLE "Browse"
+  IDS_REMOVE_TITLE "Confirm Scheme Removal"
+  IDS_REMOVE_TEXT "Are you sure you want to remove the cursor scheme '%s'?"
+  IDS_OVERWRITE_TITLE "Confirm Cursor Scheme Overwrite"
+  IDS_OVERWRITE_TEXT "The cursor scheme name you chose is already in use. Do you want to overwrite the existing cursor scheme?"
 END

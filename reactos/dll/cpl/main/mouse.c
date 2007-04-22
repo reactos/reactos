@@ -568,6 +568,9 @@ static BOOL
 DeleteUserCursorScheme(HWND hwndDlg)
 {
     TCHAR szSchemeName[MAX_PATH];
+    TCHAR szTitle[128];
+    TCHAR szRawText[256];
+    TCHAR szText[256];
     HWND hDlgCtrl;
     HKEY hCuKey;
     HKEY hCuCursorKey;
@@ -580,6 +583,15 @@ DeleteUserCursorScheme(HWND hwndDlg)
         return FALSE;
 
     SendMessage(hDlgCtrl, CB_GETLBTEXT, nSel, (LPARAM)szSchemeName);
+
+    LoadString(hApplet, IDS_REMOVE_TITLE, szTitle, 128);
+    LoadString(hApplet, IDS_REMOVE_TEXT, szRawText, 256);
+
+    _stprintf(szText, szRawText, szSchemeName);
+
+    /* Confirm scheme removal */
+    if (MessageBox(hwndDlg, szText, szTitle, MB_YESNO | MB_ICONQUESTION) == IDNO)
+        return TRUE;
 
     if (RegOpenCurrentUser(KEY_READ | KEY_SET_VALUE, &hCuKey) != ERROR_SUCCESS)
         return FALSE;
@@ -646,12 +658,18 @@ SaveCursorScheme(HWND hwndDlg)
 {
     TCHAR szSystemScheme[MAX_PATH];
     TCHAR szSchemeName[MAX_PATH];
+    TCHAR szNewSchemeName[MAX_PATH];
+    TCHAR szTitle[128];
+    TCHAR szText[256];
     INT nSel;
     INT index, i, nLength;
     LPTSTR lpSchemeData;
     HKEY hCuKey;
     HKEY hCuCursorKey;
     LONG lResult = ERROR_SUCCESS;
+    BOOL bSchemeExists;
+
+    LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
 
     nSel = SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETCURSEL, 0, 0);
     if (nSel == CB_ERR)
@@ -663,55 +681,83 @@ SaveCursorScheme(HWND hwndDlg)
     }
     else
     {
-        SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETLBTEXT, nSel, (LPARAM)szSchemeName);
+        SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETLBTEXT, nSel, (LPARAM)szNewSchemeName);
 
-        LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
-
-        if (_tcsstr(szSchemeName, szSystemScheme))
+        if (_tcsstr(szNewSchemeName, szSystemScheme))
         {
-            szSchemeName[_tcslen(szSchemeName) - _tcslen(szSystemScheme) - 1] = 0;
+            szNewSchemeName[_tcslen(szNewSchemeName) - _tcslen(szSystemScheme) - 1] = 0;
         }
     }
 
-    if (DialogBoxParam(hApplet, MAKEINTRESOURCE(IDD_CURSOR_SCHEME_SAVEAS),
-                       hwndDlg, SaveSchemeProc, (LPARAM)szSchemeName))
+    /* Ask for a name for the new cursor scheme */
+    if (!DialogBoxParam(hApplet, MAKEINTRESOURCE(IDD_CURSOR_SCHEME_SAVEAS),
+                        hwndDlg, SaveSchemeProc, (LPARAM)szNewSchemeName))
+        return TRUE;
+
+    /* Check all non-system schemes for the new name */
+    nSel = SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETCOUNT, 0, 0);
+    if (nSel == CB_ERR)
+        return FALSE;
+
+    bSchemeExists = FALSE;
+    for (i = 0; i < nSel; i++)
     {
-        /* Save the cursor scheme */
-        nLength = 0;
-        for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+        SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETLBTEXT, i, (LPARAM)szSchemeName);
+        if (_tcsstr(szSchemeName, szSystemScheme) == NULL)
         {
-            if (i > 0)
-                nLength++;
-            nLength += _tcslen(g_CursorData[i].szCursorPath);
+            if (_tcscmp(szSchemeName, szNewSchemeName) == 0)
+            {
+                bSchemeExists = TRUE;
+                break;
+            }
         }
-        nLength++;
-
-        lpSchemeData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nLength * sizeof(TCHAR));
-
-        for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
-        {
-            if (i > 0)
-                _tcscat(lpSchemeData, _T(","));
-            _tcscat(lpSchemeData, g_CursorData[i].szCursorPath);
-        }
-
-        if (RegOpenCurrentUser(KEY_READ | KEY_SET_VALUE, &hCuKey) != ERROR_SUCCESS)
-            return FALSE;
-
-        if (RegOpenKeyEx(hCuKey, _T("Control Panel\\Cursors\\Schemes"), 0, KEY_READ | KEY_SET_VALUE, &hCuCursorKey) != ERROR_SUCCESS)
-        {
-            RegCloseKey(hCuKey);
-            return FALSE;
-        }
-
-        lResult = RegSetValueEx(hCuCursorKey, szSchemeName, 0, REG_EXPAND_SZ,
-                                (LPBYTE)lpSchemeData, nLength * sizeof(TCHAR));
-
-        RegCloseKey(hCuCursorKey);
-        RegCloseKey(hCuKey);
-
-        HeapFree(GetProcessHeap(), 0, lpSchemeData);
     }
+
+    if (bSchemeExists)
+    {
+        LoadString(hApplet, IDS_OVERWRITE_TITLE, szTitle, 128);
+        LoadString(hApplet, IDS_OVERWRITE_TEXT, szText, 256);
+
+         /* Confirm scheme overwrite */
+        if (MessageBox(hwndDlg, szText, szTitle, MB_YESNO | MB_ICONQUESTION) == IDNO)
+            return TRUE;
+    }
+
+    /* Save the cursor scheme */
+    nLength = 0;
+    for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+    {
+        if (i > 0)
+            nLength++;
+        nLength += _tcslen(g_CursorData[i].szCursorPath);
+    }
+    nLength++;
+
+    lpSchemeData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nLength * sizeof(TCHAR));
+
+    for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+    {
+        if (i > 0)
+            _tcscat(lpSchemeData, _T(","));
+        _tcscat(lpSchemeData, g_CursorData[i].szCursorPath);
+    }
+
+    if (RegOpenCurrentUser(KEY_READ | KEY_SET_VALUE, &hCuKey) != ERROR_SUCCESS)
+        return FALSE;
+
+    if (RegOpenKeyEx(hCuKey, _T("Control Panel\\Cursors\\Schemes"), 0, KEY_READ | KEY_SET_VALUE, &hCuCursorKey) != ERROR_SUCCESS)
+    {
+        RegCloseKey(hCuKey);
+        return FALSE;
+    }
+
+    lResult = RegSetValueEx(hCuCursorKey, szNewSchemeName, 0, REG_EXPAND_SZ,
+                            (LPBYTE)lpSchemeData, nLength * sizeof(TCHAR));
+
+    RegCloseKey(hCuCursorKey);
+    RegCloseKey(hCuKey);
+
+    HeapFree(GetProcessHeap(), 0, lpSchemeData);
 
     return (lResult == ERROR_SUCCESS);
 }

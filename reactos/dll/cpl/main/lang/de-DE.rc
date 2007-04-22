@@ -165,4 +165,9 @@ BEGIN
   IDS_SYSTEM_SCHEME "(Systemschema)"
   IDS_BROWSE_FILTER "Cursor (*.ani, *.cur)\0*.ani;*.cur\0Animierte Cursor (*.ani)\0*.ani\0Statische Cursor (*.cur)\0*.cur\0Alle Dateien\0*.*\0\0"
   IDS_BROWSE_TITLE "Durchsuchen"
+  IDS_REMOVE_TITLE "Löschen des Cursorschemas bestätigen"
+  IDS_REMOVE_TEXT "Soll das Cursorschema '%s' wirklich gelöscht werden?"
+  IDS_OVERWRITE_TITLE "Cursorschema überscheiben"
+  IDS_OVERWRITE_TEXT "Ein Cursorschema mit diesem Namen existiert bereits. Möchen Sie das existierende Cursorschema überscheiben?"
 END
+
