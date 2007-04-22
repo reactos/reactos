@@ -157,6 +157,12 @@ LogFontW2A(
     CONST LOGFONTW *pW
 );
 
+VOID
+STDCALL
+EnumLogFontExW2A( 
+    LPENUMLOGFONTEXA fontA,
+    CONST ENUMLOGFONTEXW *fontW );
+
 /* FIXME: Put in some public header */
 UINT
 WINAPI
