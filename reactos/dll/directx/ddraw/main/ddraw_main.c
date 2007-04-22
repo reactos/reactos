@@ -34,10 +34,13 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
     else
     {
         *obj = NULL;
+        DX_STUB_str("E_NOINTERFACE");
         return E_NOINTERFACE;
     }
 
+
     Main_DirectDraw_AddRef(iface);
+    DX_STUB_str("DD_OK");
     return DD_OK;
 }
 

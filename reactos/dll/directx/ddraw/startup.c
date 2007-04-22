@@ -41,7 +41,10 @@ Create_DirectDraw (LPGUID pGUID,
         This = memThis;
         if (This == NULL)
         {
-            if (memThis != NULL) DxHeapMemFree(memThis);
+            if (memThis != NULL)
+                DxHeapMemFree(memThis);
+
+            DX_STUB_str("DDERR_OUTOFMEMORY");
             return DDERR_OUTOFMEMORY;
         }
     }
@@ -51,13 +54,18 @@ Create_DirectDraw (LPGUID pGUID,
         LPDDRAWI_DIRECTDRAW_INT  newThis;
         newThis = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
         if (newThis == NULL)
+        {
+            DX_STUB_str("DDERR_OUTOFMEMORY");
             return DDERR_OUTOFMEMORY;
+        }
+
         /* we need check the GUID lpGUID what type it is */
         if (pGUID != (LPGUID)DDCREATE_HARDWAREONLY)
         {
             if (pGUID !=NULL)
             {
                 This = newThis;
+                DX_STUB_str("DDERR_INVALIDDIRECTDRAWGUID");
                 return DDERR_INVALIDDIRECTDRAWGUID;
             }
         }
@@ -68,15 +76,24 @@ Create_DirectDraw (LPGUID pGUID,
     /* Fixme release memory alloc if we fail */
     This->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
     if (This->lpLcl == NULL)
+    {
+        DX_STUB_str("DDERR_OUTOFMEMORY");
         return DDERR_OUTOFMEMORY;
+    }
+    This->lpLcl->lpGbl = &ddgbl;
 
     *pIface = (LPDIRECTDRAW)This;
 
     /* Get right interface we whant */
-    if (Main_DirectDraw_QueryInterface((LPDIRECTDRAW7)This, id, (void**)&pIface))
+    if (Main_DirectDraw_QueryInterface((LPDIRECTDRAW7)This, id, (void**)&pIface) == DD_OK)
     {
+        DX_STUB_str("Got iface");
+
         if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID, FALSE) == DD_OK);
         {
+            DX_STUB_str("here");
+
+            /*
             RtlZeroMemory(&wnd_class, sizeof(wnd_class));
             wnd_class.style = CS_HREDRAW | CS_VREDRAW;
             wnd_class.lpfnWndProc = DefWindowProcW;
@@ -90,13 +107,17 @@ Create_DirectDraw (LPGUID pGUID,
             wnd_class.lpszClassName = classname;
             if(!RegisterClassW(&wnd_class))
             {
+                DX_STUB_str("DDERR_GENERIC");
                 return DDERR_GENERIC;
             }
+            */
 
+            DX_STUB_str("DD_OK");
             return DD_OK;
         }
     }
 
+    DX_STUB_str("DDERR_INVALIDPARAMS");
     return DDERR_INVALIDPARAMS;
 }
 
@@ -123,6 +144,7 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
      */
 
 
+
     if (reenable == FALSE)
     {
         if (This->lpLink == NULL)
@@ -140,6 +162,8 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
             }
         }
     }
+
+    DX_STUB_str("here");
 
     if (reenable == FALSE)
     {
@@ -248,7 +272,7 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
     This->lpLcl->hDD = This->lpLcl->lpGbl->hDD;
     ddgbl.hDD = This->lpLcl->lpGbl->hDD;
 
-
+    DX_STUB_str("DD_OK");
     return DD_OK;
 }
 
