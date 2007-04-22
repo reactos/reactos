@@ -169,4 +169,6 @@ BEGIN
   IDS_HAND "Вибір посилання"
   IDS_NONE "(Немає)"
   IDS_SYSTEM_SCHEME "(системна схема)"
+  IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
+  IDS_BROWSE_TITLE "Browse"
 END

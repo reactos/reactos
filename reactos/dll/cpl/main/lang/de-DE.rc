@@ -163,4 +163,6 @@ BEGIN
   IDS_HAND "Verknüpfungsauswahl"
   IDS_NONE "(Kein)"
   IDS_SYSTEM_SCHEME "(Systemschema)"
+  IDS_BROWSE_FILTER "Cursor (*.ani, *.cur)\0*.ani;*.cur\0Animierte Cursor (*.ani)\0*.ani\0Statische Cursor (*.cur)\0*.cur\0Alle Dateien\0*.*\0\0"
+  IDS_BROWSE_TITLE "Durchsuchen"
 END

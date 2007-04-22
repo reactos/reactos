@@ -162,4 +162,6 @@ BEGIN
   IDS_HAND "Link Select"
   IDS_NONE "(None)"
   IDS_SYSTEM_SCHEME "(system scheme)"
+  IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
+  IDS_BROWSE_TITLE "Browse"
 END

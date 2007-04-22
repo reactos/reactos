@@ -26,12 +26,8 @@
  */
 
 //TODO:
-//detect slider changes - for apply stuff
-//          cursor icon shows - may need overriden items
-//			implement Pointer-APPLY
-//			implement Pointer-Browser
-//			add missing icons
-//			Options- pointer precision
+//  add missing icons
+//  Options- pointer precision
 
 #define WINVER 0x0501
 
@@ -134,8 +130,6 @@ CURSOR_DATA g_CursorData[] =
  {IDS_UPARROW,     IDC_UPARROW,     0, _T(""), _T("")},
  {IDS_HAND,        IDC_HAND,        0, _T(""), _T("")}};
 
-
-TCHAR g_szNewScheme[MAX_PATH];
 
 #if 0
 static VOID
@@ -517,8 +511,6 @@ EnumerateCursorSchemes(HWND hwndDlg)
             *p = 0;
         }
 
-//        DebugMsg(_T("szCurrentScheme: \"%s\"\nszValueName: \"%s\""), szCurrentScheme, szValueName);
-
         if (_tcscmp(szValueName, szCurrentScheme) == 0)
         {
             nSchemeIndex = (INT)i;
@@ -619,16 +611,23 @@ SaveSchemeProc(IN HWND hwndDlg,
                IN WPARAM wParam,
                IN LPARAM lParam)
 {
-    HWND hDlgCtrl;
-    UNREFERENCED_PARAMETER(lParam);
+    LPTSTR pSchemeName;
 
-    switch(uMsg)
+    switch (uMsg)
     {
+        case WM_INITDIALOG:
+            pSchemeName = (LPTSTR)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSchemeName);
+            SendDlgItemMessage(hwndDlg, IDC_EDIT_SCHEME_NAME, WM_SETTEXT,
+                               0, (LPARAM)pSchemeName);
+            break;
+
         case WM_COMMAND:
             if (LOWORD(wParam) == IDOK)
             {
-                hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_SCHEME_NAME);
-                SendMessage(hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)g_szNewScheme);
+                pSchemeName = (LPTSTR)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                SendDlgItemMessage(hwndDlg, IDC_EDIT_SCHEME_NAME, WM_GETTEXT,
+                                   (WPARAM)MAX_PATH, (LPARAM)pSchemeName);
                 EndDialog(hwndDlg, TRUE);
             }
             else if (LOWORD(wParam) == IDCANCEL)
@@ -643,25 +642,102 @@ SaveSchemeProc(IN HWND hwndDlg,
 
 
 static BOOL
+SaveCursorScheme(HWND hwndDlg)
+{
+    TCHAR szSystemScheme[MAX_PATH];
+    TCHAR szSchemeName[MAX_PATH];
+    INT nSel;
+    INT index, i, nLength;
+    LPTSTR lpSchemeData;
+    HKEY hCuKey;
+    HKEY hCuCursorKey;
+    LONG lResult = ERROR_SUCCESS;
+
+    nSel = SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETCURSEL, 0, 0);
+    if (nSel == CB_ERR)
+       return FALSE;
+
+    if (nSel == 0)
+    {
+        szSchemeName[0] = 0;
+    }
+    else
+    {
+        SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETLBTEXT, nSel, (LPARAM)szSchemeName);
+
+        LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
+
+        if (_tcsstr(szSchemeName, szSystemScheme))
+        {
+            szSchemeName[_tcslen(szSchemeName) - _tcslen(szSystemScheme) - 1] = 0;
+        }
+    }
+
+    if (DialogBoxParam(hApplet, MAKEINTRESOURCE(IDD_CURSOR_SCHEME_SAVEAS),
+                       hwndDlg, SaveSchemeProc, (LPARAM)szSchemeName))
+    {
+        /* Save the cursor scheme */
+        nLength = 0;
+        for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+        {
+            if (i > 0)
+                nLength++;
+            nLength += _tcslen(g_CursorData[i].szCursorPath);
+        }
+        nLength++;
+
+        lpSchemeData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nLength * sizeof(TCHAR));
+
+        for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+        {
+            if (i > 0)
+                _tcscat(lpSchemeData, _T(","));
+            _tcscat(lpSchemeData, g_CursorData[i].szCursorPath);
+        }
+
+        if (RegOpenCurrentUser(KEY_READ | KEY_SET_VALUE, &hCuKey) != ERROR_SUCCESS)
+            return FALSE;
+
+        if (RegOpenKeyEx(hCuKey, _T("Control Panel\\Cursors\\Schemes"), 0, KEY_READ | KEY_SET_VALUE, &hCuCursorKey) != ERROR_SUCCESS)
+        {
+            RegCloseKey(hCuKey);
+            return FALSE;
+        }
+
+        lResult = RegSetValueEx(hCuCursorKey, szSchemeName, 0, REG_EXPAND_SZ,
+                                (LPBYTE)lpSchemeData, nLength * sizeof(TCHAR));
+
+        RegCloseKey(hCuCursorKey);
+        RegCloseKey(hCuKey);
+
+        HeapFree(GetProcessHeap(), 0, lpSchemeData);
+    }
+
+    return (lResult == ERROR_SUCCESS);
+}
+
+
+static BOOL
 BrowseCursor(HWND hwndDlg)
 {
     TCHAR szFileName[MAX_PATH];
+    TCHAR szFilter[MAX_PATH];
+    TCHAR szTitle[MAX_PATH];
     OPENFILENAME ofn;
     INT nSel;
 
-    /* FIXME load text resources from string */
-    static TCHAR szFilter[] = _T("Cursors\0*.ani;*.cur\0Animated Cursors\0*.ani\0Static Cursors\0*.cur\0All Files\0*.*\0\0");
+    LoadString(hApplet, IDS_BROWSE_FILTER, szFilter, MAX_PATH);
+    LoadString(hApplet, IDS_BROWSE_TITLE, szTitle, MAX_PATH);
 
     memset(szFileName, 0x0, sizeof(szFileName));
     nSel = SendDlgItemMessage(hwndDlg, IDC_LISTBOX_CURSOR, LB_GETCURSEL, 0, 0);
     if (nSel == LB_ERR)
     {
-        MessageBox(hwndDlg, _T("LB_ERR"), _T(""),MB_ICONERROR);
+        MessageBox(hwndDlg, _T("LB_ERR"), _T(""), MB_ICONERROR);
         return FALSE;
     }
 
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
-
     ofn.lStructSize = sizeof(OPENFILENAME);
     ofn.hwndOwner = hwndDlg;
     ofn.lpstrFilter = szFilter;
@@ -669,7 +745,7 @@ BrowseCursor(HWND hwndDlg)
     ofn.lpstrFile = szFileName;
     ofn.nMaxFile = MAX_PATH;
     ofn.lpstrInitialDir = _T("%WINDIR%\\Cursors");
-    ofn.lpstrTitle = _T("Browse"); /* FIXME load text resources from string */
+    ofn.lpstrTitle = szTitle;
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST;
 
     if (!GetOpenFileName(&ofn))
@@ -844,6 +920,15 @@ LoadNewCursorScheme(HWND hwndDlg, BOOL bInit)
 }
 
 
+static BOOL
+ApplyCursorScheme(HWND hwndDlg)
+{
+    /* FIXME: Apply the cursor scheme */
+
+    return TRUE;
+}
+
+
 static INT_PTR CALLBACK
 PointerProc(IN HWND hwndDlg,
             IN UINT uMsg,
@@ -898,6 +983,7 @@ PointerProc(IN HWND hwndDlg,
             lppsn = (LPPSHNOTIFY) lParam;
             if (lppsn->hdr.code == PSN_APPLY)
             {
+                ApplyCursorScheme(hwndDlg);
 #if (WINVER >= 0x0500)
                 SystemParametersInfo(SPI_SETDROPSHADOW, 0, (PVOID)pPointerData->bDropShadow, SPIF_SENDCHANGE);
 #endif
@@ -920,20 +1006,34 @@ PointerProc(IN HWND hwndDlg,
                     break;
 
                 case IDC_LISTBOX_CURSOR:
-                    if (HIWORD(wParam) == LBN_SELCHANGE)
+                    switch (HIWORD(wParam))
                     {
-                        nSel = SendMessage((HWND)lParam, LB_GETCURSEL, 0, 0);
-                        SendDlgItemMessage(hwndDlg, IDC_IMAGE_CURRENT_CURSOR, STM_SETIMAGE, IMAGE_CURSOR,
-                                           (LPARAM)g_CursorData[nSel].hCursor);
-                        EnableWindow(GetDlgItem(hwndDlg,IDC_BUTTON_USE_DEFAULT_CURSOR),
-                                     (g_CursorData[nSel].szCursorPath[0] != 0));
+                        case LBN_SELCHANGE:
+                            nSel = SendMessage((HWND)lParam, LB_GETCURSEL, 0, 0);
+                            SendDlgItemMessage(hwndDlg, IDC_IMAGE_CURRENT_CURSOR, STM_SETIMAGE, IMAGE_CURSOR,
+                                               (LPARAM)g_CursorData[nSel].hCursor);
+                            EnableWindow(GetDlgItem(hwndDlg,IDC_BUTTON_USE_DEFAULT_CURSOR),
+                                         (g_CursorData[nSel].szCursorPath[0] != 0));
+                            break;
+
+                        case LBN_DBLCLK:
+                            if (BrowseCursor(hwndDlg))
+                            {
+                                /* Update cursor list and preview */
+                                ReloadCurrentCursorScheme();
+                                RefreshCursorList(hwndDlg, FALSE);
+
+                                /* Enable the "Set Default" button */
+                                EnableWindow(GetDlgItem(hwndDlg,IDC_BUTTON_USE_DEFAULT_CURSOR), TRUE);
+                            }
+                            break;
                     }
                     break;
 
                 case IDC_BUTTON_SAVEAS_SCHEME:
-                    if (DialogBox(hApplet, MAKEINTRESOURCE(IDD_CURSOR_SCHEME_SAVEAS), hwndDlg, SaveSchemeProc))
+                    if (SaveCursorScheme(hwndDlg))
                     {
-                        /* FIXME: save the cursor scheme */
+
                     }
                     break;
 

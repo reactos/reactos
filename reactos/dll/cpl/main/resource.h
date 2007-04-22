@@ -25,7 +25,6 @@
 #define IDS_CPLDESCRIPTION_1			1001
 #define IDS_CPLNAME_2				1002
 #define IDS_CPLDESCRIPTION_2			1003
-
 #define IDS_ARROW				1016
 #define IDS_HELP				1017
 #define IDS_APPSTARTING				1018
@@ -43,6 +42,8 @@
 #define IDS_HAND				1030
 #define IDS_NONE				1031
 #define IDS_SYSTEM_SCHEME			1032
+#define IDS_BROWSE_FILTER			1033
+#define IDS_BROWSE_TITLE			1034
 
 
 #define IDC_SWAP_MOUSE_BUTTONS 			2000
