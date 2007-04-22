@@ -13,34 +13,17 @@
 ULONG WINAPI
 DirectDrawPalette_Release( LPDIRECTDRAWPALETTE iface)
 {    
-    LPDDRAWI_DDRAWPALETTE_INT This = (LPDDRAWI_DDRAWPALETTE_INT)iface;
+  DX_WINDBG_trace();
 
-    DX_WINDBG_trace();
-    /* FIXME 
-       This is not right exiame how it should be done 
-     */
-    DX_STUB_str("FIXME This is not right exiame how it should be done\n");
-    return This->dwIntRefCnt;
+   DX_STUB;  
 }
 
 ULONG WINAPI 
 DirectDrawPalette_AddRef( LPDIRECTDRAWPALETTE iface) 
 {         
-   LPDDRAWI_DDRAWPALETTE_INT This = (LPDDRAWI_DDRAWPALETTE_INT)iface;   
+  DX_WINDBG_trace();
 
-   DX_WINDBG_trace();
-
-    if (iface!=NULL)
-    {
-        This->dwIntRefCnt++;
-        This->lpLcl->dwLocalRefCnt++;
-
-        if (This->lpLcl->lpGbl != NULL)
-        {
-            This->lpLcl->lpGbl->dwRefCnt++;
-        }
-    }
-    return This->dwIntRefCnt;
+   DX_STUB;  
 }
 
 HRESULT WINAPI

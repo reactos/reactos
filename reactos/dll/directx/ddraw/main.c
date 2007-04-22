@@ -31,30 +31,30 @@ HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags,
 HRESULT 
 WINAPI 
 DirectDrawCreate (LPGUID lpGUID, 
-				  LPDIRECTDRAW* lplpDD, 
-				  LPUNKNOWN pUnkOuter) 
-{   	
-	/* 
-	   remove this when UML digram are in place 
-	   this api is finish and is working as it should
-	*/
-	DX_WINDBG_trace();
+                  LPDIRECTDRAW* lplpDD, 
+                  LPUNKNOWN pUnkOuter) 
+{
+    /* 
+       remove this when UML digram are in place 
+       this api is finish and is working as it should
+    */
+    DX_WINDBG_trace();
 
-	/* check the pointer if it vaild to read from */
-	if (IsBadWritePtr( lplpDD, sizeof( LPVOID )) )
-	{
-		return DDERR_INVALIDPARAMS;
-	}
+    /* check the pointer if it vaild to read from */
+    if (IsBadWritePtr( lplpDD, sizeof( LPVOID )) )
+    {
+        return DDERR_INVALIDPARAMS;
+    }
 
-	/* check see if pUnkOuter is null or not */
-	if (pUnkOuter)
-	{
-		/* we are using same error code as MS*/
-		return  CLASS_E_NOAGGREGATION; 
-	}
-	
-	/* Create our DirectDraw interface */
-	return Create_DirectDraw (lpGUID, lplpDD, &IID_IDirectDraw7, FALSE);
+    /* check see if pUnkOuter is null or not */
+    if (pUnkOuter)
+    {
+        /* we are using same error code as MS*/
+        return  CLASS_E_NOAGGREGATION; 
+    }
+
+    /* Create our DirectDraw interface */
+    return Create_DirectDraw (lpGUID, lplpDD, &IID_IDirectDraw7, FALSE);
 }
 
 /*
@@ -64,37 +64,37 @@ DirectDrawCreate (LPGUID lpGUID,
 
 HRESULT 
 WINAPI 
-DirectDrawCreateEx(LPGUID lpGUID, 
-				   LPVOID* lplpDD, 
-				   REFIID id, 
-				   LPUNKNOWN pUnkOuter)
-{   
-	/* 
-	   remove this when UML digram are in place 
-	   this api is finish and is working as it should
-	*/
-	DX_WINDBG_trace();
+DirectDrawCreateEx(LPGUID lpGUID,
+                   LPVOID* lplpDD,
+                   REFIID id, 
+                   LPUNKNOWN pUnkOuter)
+{
+    /* 
+        remove this when UML digram are in place 
+        this api is finish and is working as it should
+    */
+    DX_WINDBG_trace();
 
-	/* check the pointer if it vaild to read from */
-	if (IsBadWritePtr( lplpDD, sizeof( LPVOID )) )
-	{
-		return DDERR_INVALIDPARAMS;
-	}
+    /* check the pointer if it vaild to read from */
+    if (IsBadWritePtr( lplpDD, sizeof( LPVOID )) )
+    {
+        return DDERR_INVALIDPARAMS;
+    }
 
-	/* check see if pUnkOuter is null or not */
-	if (pUnkOuter)
-	{
-		/* we are using same error code as MS*/
-		return CLASS_E_NOAGGREGATION; 
-	}
-	
-	/* Is it a DirectDraw 7 Request or not */
-	if (!IsEqualGUID(id, &IID_IDirectDraw7)) 
-	{
-	  return DDERR_INVALIDPARAMS;
-	}
+    /* check see if pUnkOuter is null or not */
+    if (pUnkOuter)
+    {
+        /* we are using same error code as MS*/
+        return CLASS_E_NOAGGREGATION; 
+    }
 
-	/* Create our DirectDraw interface */
+    /* Is it a DirectDraw 7 Request or not */
+    if (!IsEqualGUID(id, &IID_IDirectDraw7)) 
+    {
+        return DDERR_INVALIDPARAMS;
+    }
+
+    /* Create our DirectDraw interface */
     return Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, id, TRUE);
 }
 
@@ -231,15 +231,15 @@ D3DParseUnknownCommand( LPVOID lpCmd,
 VOID 
 WINAPI 
 AcquireDDThreadLock()
-{   
-   EnterCriticalSection(&ddcs);   
+{
+   EnterCriticalSection(&ddcs);
 }
 
 VOID 
 WINAPI  
 ReleaseDDThreadLock()
 {
-   LeaveCriticalSection(&ddcs);      
+   LeaveCriticalSection(&ddcs);
 }
 
 BOOL APIENTRY 
@@ -248,21 +248,21 @@ DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved )
   BOOL retStatus;
   switch(ul_reason_for_call)
   {
-     case DLL_PROCESS_DETACH:									                       
-           DeleteCriticalSection( &ddcs );           
-           retStatus = TRUE;                                              
+     case DLL_PROCESS_DETACH:
+           DeleteCriticalSection( &ddcs );
+           retStatus = TRUE;
            break;
 
      case DLL_PROCESS_ATTACH:
-		  DisableThreadLibraryCalls( hModule );
-		  InitializeCriticalSection( &ddcs );
-          EnterCriticalSection( &ddcs );
-		  LeaveCriticalSection( &ddcs );     
-		  retStatus = FALSE;
-		  break;
+        DisableThreadLibraryCalls( hModule );
+        InitializeCriticalSection( &ddcs );
+        EnterCriticalSection( &ddcs );
+        LeaveCriticalSection( &ddcs ); 
+        retStatus = FALSE;
+        break;
 
-	 default:
-		 retStatus = TRUE;                                              
+    default:
+        retStatus = TRUE;
          break;
   }
   return retStatus;

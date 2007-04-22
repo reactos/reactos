@@ -21,6 +21,7 @@
 extern DDRAWI_DIRECTDRAW_GBL ddgbl;
 extern DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;
 
+
 HRESULT WINAPI StartDirectDraw(LPDIRECTDRAW* iface, LPGUID pGUID, BOOL reenable);
 HRESULT WINAPI StartDirectDrawHal(LPDIRECTDRAW* iface, BOOL reenable);
 HRESULT WINAPI StartDirectDrawHel(LPDIRECTDRAW* iface, BOOL reenable);
@@ -32,7 +33,7 @@ HRESULT WINAPI ReCreateDirectDraw(LPDIRECTDRAW* iface);
 VOID Cleanup(LPDIRECTDRAW7 iface);
 
 /* own macro to alloc memmory */
-#define DxHeapMemAlloc(m)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, m) 
+#define DxHeapMemAlloc(m)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, m)
 #define DxHeapMemFree(p)   HeapFree(GetProcessHeap(), 0, p); \
                            p = NULL;
 
@@ -45,15 +46,15 @@ VOID WINAPI ReleaseDDThreadLock();
 HRESULT WINAPI Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 , REFIID , LPVOID *);
 ULONG   WINAPI Main_DirectDraw_AddRef(LPDIRECTDRAW7 );
 ULONG   WINAPI Main_DirectDraw_Release(LPDIRECTDRAW7 );
-HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 ); 
+HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 );
 HRESULT WINAPI Main_DirectDraw_CreateClipper(LPDIRECTDRAW7, DWORD, LPDIRECTDRAWCLIPPER *, IUnknown *);
 HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7, DWORD, LPPALETTEENTRY, LPDIRECTDRAWPALETTE*, LPUNKNOWN);
 HRESULT WINAPI Main_DirectDraw_CreateSurface(LPDIRECTDRAW7, LPDDSURFACEDESC2, LPDIRECTDRAWSURFACE7 *, IUnknown *);
-HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7, LPDIRECTDRAWSURFACE7, LPDIRECTDRAWSURFACE7*); 
+HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7, LPDIRECTDRAWSURFACE7, LPDIRECTDRAWSURFACE7*);
 HRESULT WINAPI Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW7, LPDDDEVICEIDENTIFIER2, DWORD);
 
-HRESULT WINAPI Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7, DWORD, LPDDSURFACEDESC2, LPVOID, 
-											LPDDENUMSURFACESCALLBACK7); 
+HRESULT WINAPI Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7, DWORD, LPDDSURFACEDESC2, LPVOID,
+											LPDDENUMSURFACESCALLBACK7);
 
 HRESULT WINAPI Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7);
 HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7, LPDDSURFACEDESC2);
@@ -118,7 +119,7 @@ HRESULT WINAPI Main_DDrawSurface_Unlock (LPDIRECTDRAWSURFACE7, LPRECT);
 HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7, LPDIRECTDRAW, LPDDSURFACEDESC2);
 HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7, LPRECT, LPDDSURFACEDESC2, DWORD, HANDLE);
 HRESULT WINAPI Main_DDrawSurface_Restore(LPDIRECTDRAWSURFACE7);
-HRESULT WINAPI Main_DDrawSurface_UpdateOverlay (LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, 
+HRESULT WINAPI Main_DDrawSurface_UpdateOverlay (LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT,
 												DWORD, LPDDOVERLAYFX);
 
 
@@ -131,24 +132,24 @@ HRESULT CreateOverlaySurface(LPDDRAWI_DIRECTDRAW_INT This, LPDDRAWI_DDRAWSURFACE
 HRESULT CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This, LPDDRAWI_DDRAWSURFACE_INT *That, LPDDRAWI_DDRAWSURFACE_LCL *lpLcl, LPDDSURFACEDESC2 pDDSD);
 HRESULT CreatePrimarySurface(LPDDRAWI_DIRECTDRAW_INT This, LPDDRAWI_DDRAWSURFACE_INT *That,LPDDRAWI_DDRAWSURFACE_LCL *lpLcl, LPDDSURFACEDESC2 pDDSD);
 
-/* DirectDraw Object struct 
+/* DirectDraw Object struct
 
-   DDRAWI_DIRECTDRAW_INT 
+   DDRAWI_DIRECTDRAW_INT
    it is the the return pointer from ddraw.dll to the program
-   
+
    DDRAWI_DIRECTDRAW_LCL
-   It is the program own private data 
+   It is the program own private data
 
    DDRAWI_DIRECTDRAW_GBL
    This struct is gboal for whole ddraw.dll for all program
-   it is static in ddraw if it change it change for all 
-   program 
-   
-   The struct 
+   it is static in ddraw if it change it change for all
+   program
 
-   from http://msdn2.microsoft.com/en-us/library/ms898267.aspx 
-   it was not document for windows 2000/xp/2003 but ms did document it 
-   for windows ce 5.0 the link are to windows ce 5.0 arch 
+   The struct
+
+   from http://msdn2.microsoft.com/en-us/library/ms898267.aspx
+   it was not document for windows 2000/xp/2003 but ms did document it
+   for windows ce 5.0 the link are to windows ce 5.0 arch
 
 typedef struct _DDRAWI_DIRECTDRAW_INT {
   LPVOID lpVtbl;
@@ -157,7 +158,7 @@ typedef struct _DDRAWI_DIRECTDRAW_INT {
   DWORD dwIntRefCnt;
 } DDRAWI_DIRECTDRAW_INT;
 
- rest of the struct are from msdn for windows 2000/xp/2003 
+ rest of the struct are from msdn for windows 2000/xp/2003
 typedef struct _DDRAWI_DIRECTDRAW_LCL {
   DWORD  lpDDMore;
   LPDDRAWI_DIRECTDRAW_GBL  lpGbl; // fill it from function Create_DirectDraw with static pointer ddgbl
@@ -168,9 +169,9 @@ typedef struct _DDRAWI_DIRECTDRAW_LCL {
   IUnknown FAR  *pUnkOuter;
   DWORD  dwObsolete1;
   ULONG_PTR  hWnd;
-  ULONG_PTR  hDC;                       // create HDC and save it to this pointer 
+  ULONG_PTR  hDC;                       // create HDC and save it to this pointer
   DWORD  dwErrorMode;
-  LPDDRAWI_DDRAWSURFACE_INT  lpPrimary; 
+  LPDDRAWI_DDRAWSURFACE_INT  lpPrimary;
   LPDDRAWI_DDRAWSURFACE_INT  lpCB;
   DWORD   dwPreferredMode;
   HINSTANCE  hD3DInstance;
@@ -182,9 +183,9 @@ typedef struct _DDRAWI_DIRECTDRAW_LCL {
   DWORD   dwHotTracking;
   DWORD   dwIMEState;
   ULONG_PTR  hWndPopup;
-  ULONG_PTR  hDD;                
+  ULONG_PTR  hDD;
   ULONG_PTR  hGammaCalibrator;
-  LPDDGAMMACALIBRATORPROC  lpGammaCalibrator; 
+  LPDDGAMMACALIBRATORPROC  lpGammaCalibrator;
 } DDRAWI_DIRECTDRAW_LCL;
 
 
@@ -203,7 +204,7 @@ typedef struct _DDRAWI_DIRECTDRAW_GBL {
   DWORD  dwMaxOverlays;
   DWORD  dwCurrOverlays;
   DWORD  dwMonitorFrequency;
-  DDCORECAPS  ddHELCaps;       
+  DDCORECAPS  ddHELCaps;
   DWORD  dwUnused2[50];
   DDCOLORKEY  ddckCKDestOverlay;
   DDCOLORKEY  ddckCKSrcOverlay;
@@ -220,7 +221,7 @@ typedef struct _DDRAWI_DIRECTDRAW_GBL {
   DWORD  dwSurfaceLockCount;
   DWORD  dwAliasedLockCnt;
   ULONG_PTR  dwReserved3;
-  ULONG_PTR  hDD;               // GdiEntry1 are filling this pointer 
+  ULONG_PTR  hDD;               // GdiEntry1 are filling this pointer
   char  cObsolete[12];
   DWORD  dwReserved1;
   DWORD  dwReserved2;
@@ -252,7 +253,7 @@ typedef struct _DDRAWI_DIRECTDRAW_GBL {
   ULONG_PTR  lpD3DExtendedCaps;
   DWORD  dwDOSBoxEvent;
   RECT  rectDesktop;
-  char  cDriverName[MAX_DRIVER_NAME]; 
+  char  cDriverName[MAX_DRIVER_NAME];
   ULONG_PTR   lpD3DHALCallbacks3;
   DWORD  dwNumZPixelFormats;
   LPDDPIXELFORMAT  lpZPixelFormats;
@@ -262,22 +263,22 @@ typedef struct _DDRAWI_DIRECTDRAW_GBL {
 } DDRAWI_DIRECTDRAW_GBL;
 
 
-*/ 
+*/
 
 
-/* Clipper Object struct 
-   DDRAWI_DDRAWCLIPPER_INT 
+/* Clipper Object struct
+   DDRAWI_DDRAWCLIPPER_INT
    it is the the return pointer from ddraw.dll to the program
-   
+
    DDRAWI_DDRAWCLIPPER_LCL
-   It is the program own private data 
+   It is the program own private data
 
    DDRAWI_DDRAWCLIPPER_GBL
    This struct is gboal for whole ddraw.dll for all program
-   it is static in ddraw if it change it change for all 
-   program 
-   
-   The struct 
+   it is static in ddraw if it change it change for all
+   program
+
+   The struct
 
 typedef struct _DDRAWI_DDRAWCLIPPER_INT {
   LPVOID  lpVtbl;
@@ -413,7 +414,7 @@ typedef struct _DDRAWI_DDRAWSURFACE_GBL {
 */
 
 
-/* This comment info maybe is wrong 
+/* This comment info maybe is wrong
    bare in mind I am using logic thinking
    for follow info does not exists in MSDN
    so I am drawing clude how previews stuffs
@@ -434,13 +435,13 @@ DDRAWI_DDKERNELSURFACE_INT
 DDRAWI_DDKERNELSURFACE_LCL
 DDRAWI_DDKERNELSURFACE_GBL
 
-follow struct can be easy create 
+follow struct can be easy create
 DDRAWI_DDGAMMACONTROL_INT
 DDRAWI_DDCOLORCONTROL_INT
 DDRAWI_KERNEL_INT
 
 the DDRAWI_DDGAMMACONTROL_INT should looking like this
-typedef struct _DDRAWI_DDGAMMACONTROL_INT 
+typedef struct _DDRAWI_DDGAMMACONTROL_INT
 {
   LPVOID  lpVtbl;
   LPDDRAWI_DDGAMMACONTROL_LCL  lpLcl;
@@ -448,11 +449,11 @@ typedef struct _DDRAWI_DDGAMMACONTROL_INT
   DWORD  dwIntRefCnt;
 } DDRAWI_DDGAMMACONTROL_INT, *LPDDRAWI_DDGAMMACONTROL_INT
 
-how did I got this struct I looked at all other INT struct how they where 
+how did I got this struct I looked at all other INT struct how they where
 build. But it is not 100% sure this one is right untill I/we known how
 the DDRAWI_DDGAMMACONTROL_LCL works and  DDRAWI_DDCOLORCONTROL_GBL
 our internal struct will look like this
-typedef struct _DDRAWI_DDGAMMACONTROL_INT 
+typedef struct _DDRAWI_DDGAMMACONTROL_INT
 {
   LPVOID  lpVtbl;
   LPVOID  lpLcl;
@@ -462,7 +463,7 @@ typedef struct _DDRAWI_DDGAMMACONTROL_INT
 
 same goes for DDRAWI_DDCOLORCONTROL_INT
 
-typedef struct DDRAWI_DDCOLORCONTROL_INT 
+typedef struct DDRAWI_DDCOLORCONTROL_INT
 {
   LPVOID  lpVtbl;
   LPVOID  lpLcl;
@@ -471,7 +472,7 @@ typedef struct DDRAWI_DDCOLORCONTROL_INT
 } DDRAWI_DDCOLORCONTROL_INT, *LPDDRAWI_DDCOLORCONTROL_INT
 */
 
-typedef struct DDRAWI_DDCOLORCONTROL_INT 
+typedef struct DDRAWI_DDCOLORCONTROL_INT
 {
   LPVOID  lpVtbl;
   LPVOID  lpLcl;
@@ -480,7 +481,7 @@ typedef struct DDRAWI_DDCOLORCONTROL_INT
 } DDRAWI_DDCOLORCONTROL_INT, *LPDDRAWI_DDCOLORCONTROL_INT;
 
 
-typedef struct _DDRAWI_DDGAMMACONTROL_INT 
+typedef struct _DDRAWI_DDGAMMACONTROL_INT
 {
   LPVOID  lpVtbl;
   LPVOID  lpLcl;
@@ -488,7 +489,7 @@ typedef struct _DDRAWI_DDGAMMACONTROL_INT
   DWORD  dwIntRefCnt;
 } DDRAWI_DDGAMMACONTROL_INT, *LPDDRAWI_DDGAMMACONTROL_INT;
 
-typedef struct _DDRAWI_DDKERNEL_INT 
+typedef struct _DDRAWI_DDKERNEL_INT
 {
   LPVOID  lpVtbl;
   LPVOID  lpLcl;
@@ -496,7 +497,7 @@ typedef struct _DDRAWI_DDKERNEL_INT
   DWORD  dwIntRefCnt;
 } DDRAWI_KERNEL_INT, *LPDDRAWI_KERNEL_INT;
 
-typedef struct _DDRAWI_DDKERNELSURFACE_INT 
+typedef struct _DDRAWI_DDKERNELSURFACE_INT
 {
   LPVOID  lpVtbl;
   LPVOID  lpLcl;
@@ -535,28 +536,28 @@ HRESULT WINAPI Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFla
 HRESULT WINAPI Main_DDrawSurface_SetSurfaceDesc(LPDIRECTDRAWSURFACE7 iface, DDSURFACEDESC2 *DDSD, DWORD Flags);
 
 
-HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps, LPDWORD total, LPDWORD free); 
+HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps, LPDWORD total, LPDWORD free);
 
 
 VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 );
-HRESULT Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7, LPDDSCAPS2, LPDWORD, LPDWORD );	
-HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7, DWORD, HANDLE ); 
+HRESULT Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7, LPDDSCAPS2, LPDWORD, LPDWORD );
+HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7, DWORD, HANDLE );
 HRESULT Hal_DirectDraw_GetScanLine(LPDIRECTDRAW7 , LPDWORD );
-HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 ); 
+HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 );
 HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7, DWORD, DWORD, DWORD, DWORD, DWORD );
 HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, DWORD, LPDDBLTFX );
 HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURFACEDESC2 pDDSD, DWORD flags, HANDLE event);
 HRESULT Hal_DDrawSurface_Flip(LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAWSURFACE7 override, DWORD dwFlags);
 HRESULT Hal_DDrawSurface_SetColorKey (LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags, LPDDCOLORKEY pCKey);
-HRESULT Hal_DDrawSurface_Unlock(LPDIRECTDRAWSURFACE7 iface, LPRECT pRect);	
+HRESULT Hal_DDrawSurface_Unlock(LPDIRECTDRAWSURFACE7 iface, LPRECT pRect);
 HRESULT Hal_DDrawSurface_GetBltStatus(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags);
 HRESULT Hal_DDrawSurface_UpdateOverlayDisplay (LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags);
 
 HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 );
 HRESULT Hel_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 );
 VOID Hel_DirectDraw_Release (LPDIRECTDRAW7 );
-HRESULT Hel_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 , LPDDSCAPS2 ddsaps, LPDWORD , LPDWORD );	
-HRESULT Hel_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7, DWORD, HANDLE ); 
+HRESULT Hel_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 , LPDDSCAPS2 ddsaps, LPDWORD , LPDWORD );
+HRESULT Hel_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7, DWORD, HANDLE );
 HRESULT Hel_DirectDraw_GetScanLine(LPDIRECTDRAW7 , LPDWORD );
 HRESULT Hel_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 );
 HRESULT Hel_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 , DWORD , DWORD ,DWORD , DWORD , DWORD );
@@ -605,22 +606,22 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 
 /*********** Macros ***********/
 
-/* 
-   use this macro to close 
-   down the debuger text complete 
+/*
+   use this macro to close
+   down the debuger text complete
    no debuging at all, it will
-   crash ms debuger in VS 
+   crash ms debuger in VS
 */
 
-//#define DX_WINDBG_trace()  
+//#define DX_WINDBG_trace()
 //#define DX_STUB
-//#define DX_STUB_DD_OK return DD_OK; 	
-//#define DX_STUB_str(x) 
+//#define DX_STUB_DD_OK return DD_OK;
+//#define DX_STUB_str(x)
 //#define DX_WINDBG_trace_res
 
 
-/* 
-   Use this macro if you want deboug in visual studio or 
+/*
+   Use this macro if you want deboug in visual studio or
    if you have a program to look at the _INT struct from
    ReactOS ddraw.dll or ms ddraw.dll, so you can see what
    value ms are being setup.
@@ -629,16 +630,16 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 */
 
 
-//#define DX_WINDBG_trace()  
+//#define DX_WINDBG_trace()
 //#define DX_STUB
-//#define DX_STUB_DD_OK return DD_OK; 	
+//#define DX_STUB_DD_OK return DD_OK;
 //#define DX_STUB_str(x) printf("%s",x);
 //#define DX_WINDBG_trace_res
 
-/* 
+/*
    use this if want doing a trace from a program
    like a game and ReactOS ddraw.dll in windows
-   so you can figout what going wrong and what 
+   so you can figout what going wrong and what
    api are being call or if it hel or is it hal
 
    This marco does not create warings when you compile
@@ -655,8 +656,8 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 		firstcall = FALSE; \
 	} \
 } \
-	return DDERR_UNSUPPORTED; 
-	
+	return DDERR_UNSUPPORTED;
+
 
 
 #define DX_STUB_DD_OK \
@@ -670,8 +671,8 @@ DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLay
 		firstcall = FALSE; \
 	} \
 } \
-	return DD_OK; 	
-	
+	return DD_OK;
+
 
 #define DX_STUB_str(x) \
 		{ \

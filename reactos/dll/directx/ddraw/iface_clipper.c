@@ -14,34 +14,17 @@
 ULONG WINAPI 
 DirectDrawClipper_Release(LPDIRECTDRAWCLIPPER iface) 
 {
-    LPDDRAWI_DDRAWCLIPPER_INT This = (LPDDRAWI_DDRAWCLIPPER_INT)iface;
- 
-    DX_WINDBG_trace();
-    /* FIXME 
-       This is not right exiame how it should be done 
-     */
-    DX_STUB_str("FIXME This is not right exiame how it should be done\n");
-    return This->dwIntRefCnt;
+  DX_WINDBG_trace();
+
+   DX_STUB;
 }
 
 ULONG WINAPI 
 DirectDrawClipper_AddRef (LPDIRECTDRAWCLIPPER iface)
 {
-    LPDDRAWI_DDRAWCLIPPER_INT This = (LPDDRAWI_DDRAWCLIPPER_INT)iface;
+  DX_WINDBG_trace();
 
-    DX_WINDBG_trace();
-
-    if (iface!=NULL)
-    {
-        This->dwIntRefCnt++;
-        This->lpLcl->dwLocalRefCnt++;
-
-        if (This->lpLcl->lpGbl != NULL)
-        {
-            This->lpLcl->lpGbl->dwRefCnt++;
-        }
-    }
-    return This->dwIntRefCnt;
+   DX_STUB;  
 }
 
 HRESULT WINAPI 

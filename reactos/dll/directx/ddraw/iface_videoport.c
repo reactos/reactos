@@ -24,40 +24,24 @@ Main_DirectDrawVideoPort_QueryInterface (LPDIRECTDRAWVIDEOPORT iface, REFIID rii
 ULONG WINAPI 
 Main_DirectDrawVideoPort_AddRef (LPDIRECTDRAWVIDEOPORT iface) 
 {
-   LPDDRAWI_DDVIDEOPORT_INT This = (LPDDRAWI_DDVIDEOPORT_INT)iface;   
+  DX_WINDBG_trace();
 
-   DX_WINDBG_trace();
-
-    if (iface!=NULL)
-    {
-        This->dwIntRefCnt++;
-        //This->lpLcl->dwLocalRefCnt++;
-
-        //if (This->lpLcl->lpGbl != NULL)
-        //{
-        //    This->lpLcl->lpGbl->dwRefCnt++;
-        //}
-    }
-    return This->dwIntRefCnt;
+   DX_STUB;  
 }
 
 ULONG WINAPI 
 Main_DirectDrawVideoPort_Release (LPDIRECTDRAWVIDEOPORT iface)
 {
-    LPDDRAWI_DDVIDEOPORT_INT This = (LPDDRAWI_DDVIDEOPORT_INT)iface;
+  DX_WINDBG_trace();
 
-    DX_WINDBG_trace();
-    /* FIXME 
-       This is not right exiame how it should be done 
-     */
-    DX_STUB_str("FIXME This is not right exiame how it should be done\n");
-    return This->dwIntRefCnt;
+   DX_STUB;  
 }
 
 HRESULT WINAPI 
 Main_DirectDrawVideoPort_Flip (LPDIRECTDRAWVIDEOPORT iface, LPDIRECTDRAWSURFACE lpDDSurface, DWORD dwFlags)
 {
-   DX_WINDBG_trace();
+  DX_WINDBG_trace();
+
    DX_STUB;  
 }
 

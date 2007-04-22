@@ -16,47 +16,17 @@
 ULONG WINAPI 
 DirectDrawKernel_AddRef ( LPDIRECTDRAWKERNEL iface)
 {   
-      
-   LPDDRAWI_KERNEL_INT This = (LPDDRAWI_KERNEL_INT)iface;
-   
-   ULONG ref=0;
-   DX_WINDBG_trace();
-    
-   if (iface!=NULL)
-   {
-       This->dwIntRefCnt++;   
-	   ref =  This->dwIntRefCnt;
-   }    
-   return ref;    
+  DX_WINDBG_trace();
+
+   DX_STUB;  
 }
 
 ULONG WINAPI 
 DirectDrawKernel_Release ( LPDIRECTDRAWKERNEL iface)
 {    
-    LPDDRAWI_KERNEL_INT This = (LPDDRAWI_KERNEL_INT)iface;
-	ULONG ref=0;
+  DX_WINDBG_trace();
 
-	DX_WINDBG_trace();
-
-	if (iface!=NULL)
-	{	  	
-		This->dwIntRefCnt--;
-            
-		if (This->dwIntRefCnt == 0)
-		{		
-		    /* Add here if we need releae some memory pointer before 
-             * exists
-             */   
-		      			
-            if (This!=NULL)
-            {              
-			    HeapFree(GetProcessHeap(), 0, This);
-            }
-		}
-
-		ref = This->dwIntRefCnt;
-    }
-    return ref;
+   DX_STUB;
 }
 
 HRESULT WINAPI 

@@ -13,22 +13,9 @@
 ULONG WINAPI
 DirectDrawColorControl_AddRef( LPDIRECTDRAWCOLORCONTROL iface)
 {           
-   LPDDRAWI_DDCOLORCONTROL_INT This = (LPDDRAWI_DDCOLORCONTROL_INT)iface;
+  DX_WINDBG_trace();
 
-   DX_WINDBG_trace();
-
-    if (iface!=NULL)
-    {
-        This->dwIntRefCnt++;
-        // This->lpLcl->dwLocalRefCnt++;
-
-
-        //if (This->lpLcl->lpGbl != NULL)
-        //{
-        //    This->lpLcl->lpGbl->dwRefCnt++;
-        //}
-    }
-    return This->dwIntRefCnt;
+   DX_STUB;  
 }
 
 ULONG WINAPI
