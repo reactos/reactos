@@ -1076,7 +1076,7 @@ NoNpxThread:
     jmp AfterRestore
 
 FrRestore:
-    frstor [esi]
+    frstor [ecx]
 
 AfterRestore:
     /* Set state loaded */
