@@ -19,6 +19,8 @@
  */
 
 #include <freeldr.h>
+#include <elf/elf.h>
+#include <elf/reactos.h>
 #include <of_call.h>
 #include "ppcboot.h"
 #include "mmu.h"
@@ -90,6 +92,9 @@ BOOLEAN PaeModeEnabled;
 
 /* Kernel Entrypoint in Physical Memory */
 ULONG_PTR KernelEntry;
+
+/* Dummy to bring in memmove */
+PVOID memmove_dummy = memmove;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -305,6 +310,9 @@ FrLdrGetKernelBase(VOID)
 {
     PCHAR p;
 
+    /* Default kernel base at 2GB */
+    KernelBase = 0x80000000;
+
     /* Set KernelBase */
     LoaderBlock.KernelBase = KernelBase;
 
@@ -400,171 +408,229 @@ BOOLEAN
 NTAPI
 FrLdrMapKernel(FILE *KernelImage)
 {
-    PIMAGE_DOS_HEADER ImageHeader;
-    PIMAGE_NT_HEADERS NtHeader;
+    PIMAGE_DOS_HEADER ImageHeader = 0;
+    PIMAGE_NT_HEADERS NtHeader = 0;
     PIMAGE_SECTION_HEADER Section;
     ULONG SectionCount;
     ULONG ImageSize;
-    ULONG_PTR SourceSection;
-    ULONG_PTR TargetSection;
-    ULONG SectionSize;
-    INT i;
-    PIMAGE_DATA_DIRECTORY RelocationDDir;
-    PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
-    ULONG Count;
-    ULONG_PTR Address, MaxAddress;
-    PUSHORT TypeOffset;
-    ULONG_PTR Delta;
-    PUSHORT ShortPtr;
-    PULONG LongPtr;
+    INT i, j;
     PLOADER_MODULE ModuleData;
-
-    /* Allocate 1024 bytes for PE Header */
-    ImageHeader = (PIMAGE_DOS_HEADER)MmAllocateMemory(1024);
-
-    /* Make sure it was succesful */
-    if (ImageHeader == NULL) {
-
-        return FALSE;
-    }
-
-    /* Load the first 1024 bytes of the kernel image so we can read the PE header */
-    if (!FsReadFile(KernelImage, 1024, NULL, ImageHeader)) {
-
-        /* Fail if we couldn't read */
-        MmFreeMemory(ImageHeader);
-        return FALSE;
-    }
-
-    /* Now read the MZ header to get the offset to the PE Header */
-    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)ImageHeader + ImageHeader->e_lfanew);
+    int phsize, phnum, shsize, shnum, relsize, SectionAddr = 0;
+    PULONG SectionOffsets;
+    PCHAR sptr;
+    Elf32_Ehdr ehdr;
+    Elf32_Shdr *shdr;
 
     /* Get Kernel Base */
-    KernelBase = NtHeader->OptionalHeader.ImageBase;
     FrLdrGetKernelBase();
-
-    /* Save the Image Size */
-    ImageSize = NtHeader->OptionalHeader.SizeOfImage;
-
-    /* Free the Header */
-    MmFreeMemory(ImageHeader);
-
-    /* Set the file pointer to zero */
-    FsSetFilePointer(KernelImage, 0);
 
     /* Allocate kernel memory */
     KernelMemory = MmAllocateMemory(KernelMemorySize);
-
     printf("Kernel Memory @%x\n", (int)KernelMemory);
 
-    /* Save Entrypoint */
-    KernelEntry = NtHeader->OptionalHeader.AddressOfEntryPoint;
+    printf("Loading ntoskrnl (elf at %x)\n", KernelBase);
+
+    /* Load the first 1024 bytes of the kernel image so we can read the PE header */
+    if (!FsReadFile(KernelImage, sizeof(ehdr), NULL, &ehdr)) {
+
+        /* Fail if we couldn't read */
+	printf("Couldn't read the elf header\n");
+        return FALSE;
+    }
+
+    printf("Elf header: (%c%c%c type %d machine %d version %d entry %x shoff %x shentsize %d shnum %d)\n", 
+	   ehdr.e_ident[1], ehdr.e_ident[2], ehdr.e_ident[3],
+	   ehdr.e_type,
+	   ehdr.e_machine,
+	   ehdr.e_version,
+	   ehdr.e_entry,
+	   ehdr.e_shoff,
+	   ehdr.e_shentsize,
+	   ehdr.e_shnum);
+
+    /* Start by getting elf headers */
+    phsize = ehdr.e_phentsize;
+    phnum = ehdr.e_phnum;
+    shsize = ehdr.e_shentsize;
+    shnum = ehdr.e_shnum;
+    sptr = (PCHAR)MmAllocateMemory(shnum * shsize);
+    SectionOffsets = (PULONG)MmAllocateMemory(shnum * sizeof(ULONG));
+
+    /* Read section headers */
+    FsSetFilePointer(KernelImage,  ehdr.e_shoff);
+    FsReadFile(KernelImage, shsize * shnum, NULL, sptr);
+
+    printf("Loaded section headers\n");
+
+    /* Now we'll get the PE Header */
+    for( i = 0; i < shnum; i++ ) 
+    {
+	shdr = (Elf32_Shdr*)(sptr + (i * shsize));
+	printf("Header %d: type %d flags %x\n", i, shdr->sh_type, shdr->sh_flags);
+	/* Find the PE Header */
+	if (shdr->sh_type == TYPE_PEHEADER)
+	{
+	    FsSetFilePointer(KernelImage, shdr->sh_offset);
+	    FsReadFile(KernelImage, shdr->sh_size, NULL, KernelMemory);
+	    ImageHeader = (PIMAGE_DOS_HEADER)KernelMemory;
+	    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)KernelMemory + SWAPD(ImageHeader->e_lfanew));
+	    printf("NtHeader at %x\n", SWAPD(ImageHeader->e_lfanew));
+	    SectionOffsets[i] = 0;
+	    printf("SectionAlignment %x\n", 
+		   SWAPD(NtHeader->OptionalHeader.SectionAlignment));
+	    SectionAddr = ROUND_UP
+		(shdr->sh_size, SWAPD(NtHeader->OptionalHeader.SectionAlignment));
+	    printf("Header ends at %x\n", SectionAddr);
+	    break;
+	}
+    }
+
+    if(i == shnum) 
+    {
+	printf("No peheader section encountered :-(\n");
+	return 0;
+    }
+
+    /* Save the Image Size */
+    NtHeader->OptionalHeader.ImageBase = SWAPD(KernelBase);
 
     /* Load the file image */
-    FsReadFile(KernelImage, ImageSize, NULL, KernelMemory);
-
-    /* Reload the NT Header */
-    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)KernelMemory + ImageHeader->e_lfanew);
-
-    /* Load the first section */
     Section = IMAGE_FIRST_SECTION(NtHeader);
     SectionCount = NtHeader->FileHeader.NumberOfSections - 1;
 
-    /* Now go to the last section */
-    Section += SectionCount;
+    /* Walk each section */
+    for (i=0; i < SectionCount; i++, Section++)
+    {
+	shdr = (Elf32_Shdr*)(sptr + (i * shsize));
+	if ((shdr->sh_type != SHT_PROGBITS) && 
+	    (shdr->sh_type != SHT_NOBITS)) continue;
 
-    /* Walk each section backwards */
-    for (i=(INT)SectionCount; i >= 0; i--, Section--) {
-
-        /* Get the disk location and the memory location, and the size */
-        SourceSection = RaToPa(Section->PointerToRawData);
-        TargetSection = RaToPa(Section->VirtualAddress);
-        SectionSize = Section->SizeOfRawData;
-
-        /* If the section is already mapped correctly, go to the next */
-        if (SourceSection == TargetSection) continue;
-
-        /* Load it into memory */
-        memmove((PVOID)TargetSection, (PVOID)SourceSection, SectionSize);
-
-        /* Check for unitilizated data */
-        if (Section->SizeOfRawData < Section->Misc.VirtualSize) {
-
-            /* Zero it out */
-            memset((PVOID)RaToPa(Section->VirtualAddress + Section->SizeOfRawData),
-                   0,
-                   Section->Misc.VirtualSize - Section->SizeOfRawData);
-        }
-    }
-
-    /* Get the Relocation Data Directory */
-    RelocationDDir = &NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
-
-    /* Get the Relocation Section Start and End*/
-    RelocationDir = (PIMAGE_BASE_RELOCATION)(KernelMemory + RelocationDDir->VirtualAddress);
-    RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDDir->Size);
-
-    /* Calculate Difference between Real Base and Compiled Base*/
-    Delta = KernelBase - NtHeader->OptionalHeader.ImageBase;
-
-    /* Determine how far we shoudl relocate */
-    MaxAddress = (ULONG)KernelMemory + ImageSize;
-
-    /* Relocate until we've processed all the blocks */
-    while (RelocationDir < RelocationEnd && RelocationDir->SizeOfBlock > 0) {
-
-        /* See how many Relocation Blocks we have */
-        Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(USHORT);
-
-        /* Calculate the Address of this Directory */
-        Address = (ULONG)KernelMemory + RelocationDir->VirtualAddress;
-
-        /* Calculate the Offset of the Type */
-        TypeOffset = (PUSHORT)(RelocationDir + 1);
-
-        for (i = 0; i < (INT)Count; i++) {
-
-            ShortPtr = (PUSHORT)(Address + (*TypeOffset & 0xFFF));
-
-            switch (*TypeOffset >> 12) {
-
-                case IMAGE_REL_BASED_ABSOLUTE:
-                    break;
-
-                case IMAGE_REL_BASED_HIGH:
-                    *ShortPtr += HIWORD(Delta);
-                    break;
-
-	        case IMAGE_REL_BASED_HIGHADJ:
-		    *ShortPtr += 
-			HIWORD(Delta) + ((LOWORD(Delta) & 0x8000) ? 1 : 0);
-		    break;
-
-                case IMAGE_REL_BASED_LOW:
-                    *ShortPtr += LOWORD(Delta);
-                    break;
-
-                case IMAGE_REL_BASED_HIGHLOW:
-                    LongPtr = (PULONG)ShortPtr;
-                    *LongPtr += Delta;
-                    break;
-
-	        case IMAGE_REL_BASED_MIPS_JMPADDR:
-		    LongPtr = (PULONG)ShortPtr;
-		    *LongPtr = SignExtend24(*LongPtr,Delta);
-		    break;
-
-	        default:
-		    //printf("Unknown relocation %d\n", *TypeOffset >> 12);
-		    break;
-            }
-
-            TypeOffset++;
+	SectionOffsets[i] = SectionAddr;
+	
+	shdr = (Elf32_Shdr*)(sptr + (i * shsize));
+	
+	/* Get the disk location and the memory location, and the size */
+	Section->Misc.VirtualSize = SWAPD(shdr->sh_size);
+	Section->VirtualAddress = SWAPD(SectionAddr);
+	Section->SizeOfRawData = SWAPD(shdr->sh_size);
+	Section->PointerToRawData = SWAPD(shdr->sh_offset);
+	
+	if (shdr->sh_type == SHT_PROGBITS)
+	{
+	    /* Content area */
+	    printf("Loading section %d at %x\n", i, KernelBase + SectionAddr);
+	    FsSetFilePointer(KernelImage, shdr->sh_offset);
+	    FsReadFile(KernelImage, shdr->sh_size, NULL, KernelMemory + SectionAddr);
+	} 
+	else if (shdr->sh_type == SHT_NOBITS)
+	{
+	    /* Zero it out */
+	    printf("BSS section %d at %x\n", i, KernelBase + SectionAddr);
+	    memset(KernelMemory + SectionAddr, 0, 
+		   ROUND_UP(shdr->sh_size, 
+			    SWAPD(NtHeader->OptionalHeader.SectionAlignment)));
         }
 
-        /* Move to the next Relocation Table */
-        RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDir->SizeOfBlock);
+	SectionAddr += 
+	    ROUND_UP
+	    (shdr->sh_size, SWAPD(NtHeader->OptionalHeader.SectionAlignment));
     }
+
+    ImageSize = SectionAddr;
+    NtHeader->OptionalHeader.SizeOfImage = SWAPD(ImageSize);
+    printf("Total image size is %x\n", ImageSize);
+    
+    /* Handle relocation sections */
+    for (Section = IMAGE_FIRST_SECTION(NtHeader), i = 0; 
+	 i < SectionCount; 
+	 i++, Section++) {
+	Elf32_Rela reloc = { };
+	ULONG *Target32;
+	USHORT *Target16;
+	int numreloc, relstart, targetSection;
+	Elf32_Sym symbol;
+	
+	shdr = (Elf32_Shdr*)(sptr + (i * shsize));
+	/* Only relocs here */
+	if((shdr->sh_type != SHT_REL) &&
+	   (shdr->sh_type != SHT_RELA)) continue;
+	
+	relstart = shdr->sh_offset;
+	relsize = shdr->sh_type == SHT_RELA ? 12 : 8;
+	numreloc = shdr->sh_size / relsize;
+	targetSection = shdr->sh_info;
+	
+	printf("Found reloc section %d (symbols %d target %d)\n",
+	       i, shdr->sh_link, shdr->sh_info);
+	
+	/* Get the symbol section */
+	shdr = (Elf32_Shdr*)(sptr + (shdr->sh_link * shsize));
+	
+	for(j = 0; j < numreloc; j++)
+	{
+	    ULONG S,A,P;
+	    
+	    /* Get the reloc */
+	    FsSetFilePointer(KernelImage, relstart + (numreloc * relsize));
+	    FsReadFile(KernelImage, sizeof(reloc), NULL, &reloc);
+	    
+	    /* Get the symbol */
+	    FsSetFilePointer(KernelImage, shdr->sh_offset + ELF32_R_SYM(reloc.r_info) * sizeof(Elf32_Sym));
+	    FsReadFile(KernelImage, sizeof(symbol), NULL, &symbol);
+	    
+	    /* Compute addends */
+	    S = symbol.st_value + KernelBase + SectionOffsets[symbol.st_shndx];
+	    A = reloc.r_addend;
+	    P = reloc.r_offset + KernelBase + SectionOffsets[targetSection];
+	    
+	    Target32 = 
+		(ULONG*)(((PCHAR)KernelMemory) + SectionOffsets[targetSection]);
+	    Target16 = (USHORT *)Target32;
+	    
+	    switch (ELF32_R_TYPE(reloc.r_info))
+	    {
+	    case R_PPC_NONE:
+		break;
+	    case R_PPC_ADDR32:
+		*Target32 = S + A;
+		break;
+	    case R_PPC_UADDR32: /* Special: Treat as RVA */
+		*Target32 = S + A - KernelBase;
+		break;
+	    case R_PPC_ADDR24:
+		*Target32 = (ADDR24_MASK & (S+A)) | (*Target32 & ~ADDR24_MASK);
+		break;
+	    case R_PPC_REL24:
+		*Target32 = (ADDR24_MASK & (S+A-P)) | (*Target32 & ~ADDR24_MASK);
+		break;
+	    case R_PPC_ADDR16_LO:
+		*Target16 = S + A;
+		break;
+	    case R_PPC_ADDR16_HA:
+		*Target16 = (S + A + 0x8000) >> 16;
+		break;
+	    default:
+		printf("Unknown elf reloc type %x\n", ELF32_R_TYPE(reloc.r_info));
+		break;
+	    }
+	}
+    }
+
+#if 0
+    printf("-- Dumping ntoskrnl memory --\n");
+    for (i = 0; i < ImageSize; i++) {
+	if(!(i & 0xf)) {
+	    if(i) printf("\n");
+	    for (j = 0; j < 8; j++)
+		printf("%x", (((KernelBase + i) << (j * 4)) >> 28) & 0xf);
+	    printf(": ");
+	}
+	printf("%x%x ", 
+	       (*(((PCHAR)KernelMemory)+i)>>4)&0xf, 
+	       *(((PCHAR)KernelMemory)+i)&0xf);
+    }
+    printf("-- Dump done --\n");
+#endif
 
     ModuleData = &reactos_modules[LoaderBlock.ModsCount];
     ModuleData->ModStart = (ULONG)KernelMemory;

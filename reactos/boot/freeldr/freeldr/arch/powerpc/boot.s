@@ -6,10 +6,9 @@ _start:
 	sync                    
 	isync
 
-	lis     %r1,stack@ha    
-	addi    %r1,%r1,stack@l 
-	addi    %r1,%r1,16384 - 0x10
-          
+	lis     %r1,stackend@ha    
+	addi    %r1,%r1,stackend@l
+
 	/* Store ofw call addr */
 	mr	%r21,%r5
 	lis	%r10,ofw_call_addr@ha
@@ -89,12 +88,16 @@ ofw_memory_size:
 	.long	0
 	.long	0
 	.long	0
-	
-	.org	0x1000
+
+	.align	4
 stack:
 	.space	0x4000
-
+stackend:
+	.long	0,0,0,0
+	
 	.globl _bss
 	.section ".bss"
 _bss:
 	.long	0
+
+	.align	4
