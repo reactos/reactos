@@ -20,6 +20,8 @@
 /* DirectDraw startup code only internal use  */
 extern DDRAWI_DIRECTDRAW_GBL ddgbl;
 extern DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;
+extern WCHAR classname[128];
+extern WNDCLASSW wnd_class;
 
 
 HRESULT WINAPI StartDirectDraw(LPDIRECTDRAW* iface, LPGUID pGUID, BOOL reenable);

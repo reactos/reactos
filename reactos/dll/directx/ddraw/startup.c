@@ -13,9 +13,11 @@
 #include "d3dhal.h"
 #include "ddrawgdi.h"
 
-#include "ddrawi.h"
 DDRAWI_DIRECTDRAW_GBL ddgbl;
 DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;
+
+WCHAR classname[128];
+WNDCLASSW wnd_class;
 
 
 
@@ -74,7 +76,25 @@ Create_DirectDraw (LPGUID pGUID,
     if (Main_DirectDraw_QueryInterface((LPDIRECTDRAW7)This, id, (void**)&pIface))
     {
         if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID, FALSE) == DD_OK);
+        {
+            RtlZeroMemory(&wnd_class, sizeof(wnd_class));
+            wnd_class.style = CS_HREDRAW | CS_VREDRAW;
+            wnd_class.lpfnWndProc = DefWindowProcW;
+            wnd_class.cbClsExtra = 0;
+            wnd_class.cbWndExtra = 0;
+            wnd_class.hInstance = GetModuleHandleW(0);
+            wnd_class.hIcon = 0;
+            wnd_class.hCursor = 0;
+            wnd_class.hbrBackground = (HBRUSH) GetStockObject(BLACK_BRUSH);
+            wnd_class.lpszMenuName = NULL;
+            wnd_class.lpszClassName = classname;
+            if(!RegisterClassW(&wnd_class))
+            {
+                return DDERR_GENERIC;
+            }
+
             return DD_OK;
+        }
     }
 
     return DDERR_INVALIDPARAMS;
@@ -91,6 +111,7 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
     DWORD dwFlags = 0;
 
     DX_WINDBG_trace();
+
 
     /*
      * ddgbl.dwPDevice  is not longer in use in windows 2000 and higher
@@ -127,7 +148,8 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
             devicetypes= 1;
 
             /* Create HDC for default, hal and hel driver */
-            This->lpLcl->hDC =  (ULONG_PTR) GetDC(GetActiveWindow());
+            This->lpLcl->hWnd = (ULONG_PTR) GetActiveWindow();
+            This->lpLcl->hDC = (ULONG_PTR) GetDC((HWND)This->lpLcl->hWnd);
 
             /* cObsolete is undoc in msdn it being use in CreateDCA */
             RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
@@ -138,7 +160,8 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
         {
             devicetypes = 2;
             /* Create HDC for default, hal driver */
-            This->lpLcl->hDC =  (ULONG_PTR) GetDC(GetActiveWindow());
+            This->lpLcl->hWnd =(ULONG_PTR) GetActiveWindow();
+            This->lpLcl->hDC = (ULONG_PTR) GetDC((HWND)This->lpLcl->hWnd);
 
             /* cObsolete is undoc in msdn it being use in CreateDCA */
             RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
@@ -150,7 +173,8 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
             devicetypes = 3;
 
             /* Create HDC for default, hal and hel driver */
-            This->lpLcl->hDC =  (ULONG_PTR) GetDC(GetActiveWindow());
+            This->lpLcl->hWnd = (ULONG_PTR) GetActiveWindow();
+            This->lpLcl->hDC = (ULONG_PTR) GetDC((HWND)This->lpLcl->hWnd);
 
             /* cObsolete is undoc in msdn it being use in CreateDCA */
             RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
@@ -165,6 +189,7 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
              */
              devicetypes = 4;
              This->lpLcl->hDC = (ULONG_PTR) NULL ;
+             This->lpLcl->hWnd = (ULONG_PTR) GetActiveWindow();
         }
 
         if ( (HDC)This->lpLcl->hDC == NULL)
@@ -222,6 +247,7 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
     This->lpLcl->lpDDCB = This->lpLcl->lpGbl->lpDDCBtmp;
     This->lpLcl->hDD = This->lpLcl->lpGbl->hDD;
     ddgbl.hDD = This->lpLcl->lpGbl->hDD;
+
 
     return DD_OK;
 }
@@ -318,11 +344,11 @@ StartDirectDrawHal(LPDIRECTDRAW* iface, BOOL reenable)
     DDHAL_DDEXEBUFCALLBACKS mD3dBufferCallbacks;
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
-
     RtlZeroMemory(&mHALInfo, sizeof(DDHALINFO));
     RtlZeroMemory(&mD3dCallbacks, sizeof(D3DHAL_CALLBACKS));
     RtlZeroMemory(&mD3dDriverData, sizeof(D3DHAL_GLOBALDRIVERDATA));
     RtlZeroMemory(&mD3dBufferCallbacks, sizeof(DDHAL_DDEXEBUFCALLBACKS));
+
 
     if (reenable == FALSE)
     {
@@ -345,6 +371,8 @@ StartDirectDrawHal(LPDIRECTDRAW* iface, BOOL reenable)
        DxHeapMemFree(ddgbl.lpDDCBtmp);
        return DD_FALSE;
     }
+
+
 
     /* Some card disable the dx after it have been created so
      * we are force reanble it
