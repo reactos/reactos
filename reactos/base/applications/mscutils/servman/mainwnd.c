@@ -310,7 +310,7 @@ CreateListView(PMAIN_WND_INFO Info)
     LVCOLUMN lvc = { 0 };
     TCHAR szTemp[256];
 
-    Info->hListView = CreateWindowEx(0,
+    Info->hListView = CreateWindowEx(WS_EX_CLIENTEDGE,
                                      WC_LISTVIEW,
                                      NULL,
                                      WS_CHILD | WS_VISIBLE | LVS_REPORT | WS_BORDER |

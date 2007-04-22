@@ -154,7 +154,7 @@ pCreateToolbar(PMAIN_WND_INFO Info)
 static BOOL
 CreateTreeView(PMAIN_WND_INFO Info)
 {
-    Info->hTreeView = CreateWindowEx(0,
+    Info->hTreeView = CreateWindowEx(WS_EX_CLIENTEDGE,
                                      WC_TREEVIEW,
                                      NULL,
                                      WS_CHILD | WS_VISIBLE | WS_BORDER | TVS_HASLINES |
