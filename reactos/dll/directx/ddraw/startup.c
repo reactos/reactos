@@ -88,7 +88,7 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
     DWORD hal_ret = DD_FALSE;
     DWORD hel_ret = DD_FALSE;
     DWORD devicetypes = 0;
-    DWORD dwFlags;
+    DWORD dwFlags = 0;
 
     DX_WINDBG_trace();
 
@@ -218,8 +218,10 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
     }
 
     /* Fill some basic info for Surface */
-
-    This->lpLcl->hDD = ddgbl.hDD;
+    This->lpLcl->lpGbl->dwFlags = dwFlags | DDRAWI_ATTACHEDTODESKTOP;
+    This->lpLcl->lpDDCB = This->lpLcl->lpGbl->lpDDCBtmp;
+    This->lpLcl->hDD = This->lpLcl->lpGbl->hDD;
+    ddgbl.hDD = This->lpLcl->lpGbl->hDD;
 
     return DD_OK;
 }
