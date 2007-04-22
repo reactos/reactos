@@ -167,4 +167,6 @@ BEGIN
   IDS_HAND "Wybór ³¹cza"
   IDS_NONE "(Brak)"
   IDS_SYSTEM_SCHEME "(schemat systemu)"
+  IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
+  IDS_BROWSE_TITLE "Browse"
 END
