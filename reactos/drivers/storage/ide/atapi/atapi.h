@@ -418,10 +418,12 @@ NATIVE_MODE_CONTROLLER_INFORMATION const NativeModeAdapters[] = {
 #define AtapiSoftReset(BaseIoAddress,DeviceNumber) \
 {\
     UCHAR statusByte; \
+    ULONG i = 1000*1000;\
     ScsiPortWritePortUchar(&BaseIoAddress->DriveSelect,(UCHAR)(((DeviceNumber & 0x1) << 4) | 0xA0)); \
     ScsiPortStallExecution(500);\
     ScsiPortWritePortUchar(&BaseIoAddress->Command, IDE_COMMAND_ATAPI_RESET); \
-    ScsiPortStallExecution(1000*1000);\
+    while ((ScsiPortReadPortUchar(&BaseIoAddress->Command) & IDE_STATUS_BUSY) && i--)\
+        ScsiPortStallExecution(30);\
     ScsiPortWritePortUchar(&BaseIoAddress->DriveSelect,(UCHAR)((DeviceNumber << 4) | 0xA0)); \
     WaitOnBusy( ((PIDE_REGISTERS_2)((PUCHAR)BaseIoAddress + 0x206)), statusByte); \
     ScsiPortStallExecution(500);\
