@@ -53,8 +53,8 @@ INT FASTCALL
 BRUSH_GetObject (PGDIBRUSHOBJ BrushObject, INT Count, LPLOGBRUSH Buffer)
 {
    if( Buffer == NULL ) return sizeof(BRUSHOBJ);
-   if (Count < sizeof(BRUSHOBJ)) return 0;
-   if (Count > sizeof(BRUSHOBJ)) Count = sizeof(BRUSHOBJ);
+   if (Count == 0) return 0;
+   if ((UINT)Count < sizeof(BRUSHOBJ)) return 0;
 
    /* Set colour */
     Buffer->lbColor =  BrushObject->BrushAttr.lbColor;

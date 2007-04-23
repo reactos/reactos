@@ -47,6 +47,8 @@ INT      STDCALL  PALETTE_SetMapping(PALOBJ* palPtr, UINT uStart, UINT uNum, BOO
 #endif
 INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
 
+INT FASTCALL PALETTE_GetObject(PPALGDI pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer);
+
 PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
 
 #endif /* _WIN32K_PALETTE_H */

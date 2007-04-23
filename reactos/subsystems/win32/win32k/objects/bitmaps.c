@@ -1561,19 +1561,25 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 INT STDCALL
 BITMAP_GetObject(BITMAPOBJ * bmp, INT Count, LPVOID buffer)
 {
-	if( buffer == NULL ) return sizeof(BITMAP);
-	if (Count < sizeof(BITMAP)) return 0;
+	if ((UINT)Count < sizeof(BITMAP)) return 0;
+	if( buffer == NULL )
+	{
+		if ((UINT)Count < sizeof(DIBSECTION))
+		{
+			return sizeof(BITMAP);
+		}
+		return sizeof(DIBSECTION);
+	}
 
 	if(bmp->dib)
 	{
-
-		if(Count < (INT) sizeof(DIBSECTION))
+		if((UINT)Count < sizeof(DIBSECTION))
 		{
-			if (Count > (INT) sizeof(BITMAP)) Count = sizeof(BITMAP);
+			Count = sizeof(BITMAP);
 		}
 		else
 		{
-			if (Count > (INT) sizeof(DIBSECTION)) Count = sizeof(DIBSECTION);
+			Count = sizeof(DIBSECTION);
 		}
 		memcpy(buffer, bmp->dib, Count);
 		return Count;
@@ -1581,7 +1587,8 @@ BITMAP_GetObject(BITMAPOBJ * bmp, INT Count, LPVOID buffer)
 	else
 	{
 		BITMAP Bitmap;
-		if (Count > (INT) sizeof(BITMAP)) Count = sizeof(BITMAP);
+
+	Count = sizeof(BITMAP);
 		Bitmap.bmType = 0;
 		Bitmap.bmWidth = bmp->SurfObj.sizlBitmap.cx;
 		Bitmap.bmHeight = bmp->SurfObj.sizlBitmap.cy;

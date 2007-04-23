@@ -1755,123 +1755,117 @@ DC_GET_VAL( INT, NtGdiGetPolyFillMode, w.polyFillMode )
 
 
 INT FASTCALL
-IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
+IntGdiGetObject(HANDLE Handle, INT cbCount, LPVOID lpBuffer)
 {
-  PVOID GdiObject;
+  PVOID pGdiObject;
   INT Result = 0;
-  DWORD ObjectType;
+  DWORD dwObjectType;
 
-  GdiObject = GDIOBJ_LockObj(GdiHandleTable, Handle, GDI_OBJECT_TYPE_DONTCARE);
-  if (NULL == GdiObject)
+  pGdiObject = GDIOBJ_LockObj(GdiHandleTable, Handle, GDI_OBJECT_TYPE_DONTCARE);
+  if (!pGdiObject)
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
     }
 
-  ObjectType = GDIOBJ_GetObjectType(Handle);
-  switch (ObjectType)
+  dwObjectType = GDIOBJ_GetObjectType(Handle);
+  switch (dwObjectType)
     {
-
       case GDI_OBJECT_TYPE_PEN:
-        Result = PEN_GetObject((PGDIBRUSHOBJ) GdiObject, Count, (PLOGPEN) Buffer); // IntGdiCreatePenIndirect
+      case GDI_OBJECT_TYPE_EXTPEN:
+        Result = PEN_GetObject((PGDIBRUSHOBJ) pGdiObject, cbCount, (PLOGPEN) lpBuffer); // IntGdiCreatePenIndirect
         break;
 
       case GDI_OBJECT_TYPE_BRUSH:
-        Result = BRUSH_GetObject((PGDIBRUSHOBJ ) GdiObject, Count, (LPLOGBRUSH)Buffer);
+        Result = BRUSH_GetObject((PGDIBRUSHOBJ ) pGdiObject, cbCount, (LPLOGBRUSH)lpBuffer);
         break;
 
       case GDI_OBJECT_TYPE_BITMAP:
-        Result = BITMAP_GetObject((BITMAPOBJ *) GdiObject, Count, Buffer);
+        Result = BITMAP_GetObject((BITMAPOBJ *) pGdiObject, cbCount, lpBuffer);
         break;
       case GDI_OBJECT_TYPE_FONT:
-        Result = FontGetObject((PTEXTOBJ) GdiObject, Count, Buffer);
+        Result = FontGetObject((PTEXTOBJ) pGdiObject, cbCount, lpBuffer);
 #if 0
         // Fix the LOGFONT structure for the stock fonts
         if (FIRST_STOCK_HANDLE <= Handle && Handle <= LAST_STOCK_HANDLE)
           {
-            FixStockFontSizeW(Handle, Count, Buffer);
+            FixStockFontSizeW(Handle, cbCount, lpBuffer);
           }
 #endif
         break;
-#if 0
+
       case GDI_OBJECT_TYPE_PALETTE:
-        Result = PALETTE_GetObject((PALETTEOBJ *) GdiObject, Count, Buffer);
+        Result = PALETTE_GetObject((PPALGDI) pGdiObject, cbCount, lpBuffer);
         break;
-#endif
+
       default:
-        DPRINT1("GDI object type 0x%08x not implemented\n", ObjectType);
+        DPRINT1("GDI object type 0x%08x not implemented\n", dwObjectType);
         break;
     }
 
-  GDIOBJ_UnlockObjByPtr(GdiHandleTable, GdiObject);
+  GDIOBJ_UnlockObjByPtr(GdiHandleTable, pGdiObject);
 
   return Result;
 }
 
 INT STDCALL
-NtGdiExtGetObjectW(HANDLE handle, INT count, LPVOID buffer)
+NtGdiExtGetObjectW(HANDLE hGdiObj, INT cbCount, LPVOID lpUnsafeBuf)
 {
-  INT Ret = 0;
-  LPVOID SafeBuf;
+  LPVOID lpSafeBuf;
   NTSTATUS Status = STATUS_SUCCESS;
   INT RetCount = 0;
 
   /* From Wine: GetObject does not SetLastError() on a null object */
-  if (!handle) return Ret;
-
-  RetCount = IntGdiGetObject(handle, 0, NULL);
-  if ((count <= 0) || (!buffer))
+  if (!hGdiObj)
   {
-    return RetCount;
+    return 0;
   }
 
-  _SEH_TRY
+  if (!lpUnsafeBuf)
   {
-    ProbeForWrite(buffer, count, 1);
+    return IntGdiGetObject(hGdiObj, 0, NULL);
   }
-  _SEH_HANDLE
+
+  if (!cbCount)
   {
-    Status = _SEH_GetExceptionCode();
+    return 0;
   }
-  _SEH_END;
+
+  RetCount = IntGdiGetObject(hGdiObj, cbCount, NULL);
+  if ((UINT)cbCount > RetCount)
+  {
+    cbCount = RetCount;
+  }
+  lpSafeBuf = ExAllocatePoolWithTag(PagedPool, RetCount, TAG_GDIOBJ);
+  if(!lpSafeBuf)
+  {
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
+  RetCount = IntGdiGetObject(hGdiObj, cbCount, lpSafeBuf);
+  if (RetCount)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(lpUnsafeBuf, cbCount, 1);
+      RtlCopyMemory(lpUnsafeBuf, lpSafeBuf, cbCount);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+  }
+
+  ExFreePool(lpSafeBuf);
 
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
-    return Ret;
+    return 0;
   }
 
-  if ((RetCount) && (count))
-  {
-    SafeBuf = ExAllocatePoolWithTag(PagedPool, count, TAG_GDIOBJ);
-    if(!SafeBuf)
-    {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return Ret;
-    }
-    Ret = IntGdiGetObject(handle, count, SafeBuf);
-
-    _SEH_TRY
-    {
-        /* pointer already probed! */
-        RtlCopyMemory(buffer, SafeBuf, count);
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    ExFreePool(SafeBuf);
-
-    if(!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        return 0;
-    }
-  }
-
-  return Ret;
+  return RetCount;
 }
 
 
