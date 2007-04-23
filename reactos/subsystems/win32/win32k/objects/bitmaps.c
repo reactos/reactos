@@ -116,7 +116,7 @@ NtGdiBitBlt(
 	DestRect.right  = XDest+Width;
 	DestRect.bottom = YDest+Height;
 
-        IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
+	IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
 
 	SourcePoint.x = XSrc;
 	SourcePoint.y = YSrc;
@@ -128,7 +128,7 @@ NtGdiBitBlt(
 	BitmapDest = BITMAPOBJ_LockBitmap(DCDest->w.hBitmap);
 	if (UsesSource)
 	{
-	        if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
+		if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
 			BitmapSrc = BitmapDest;
 		else
 			BitmapSrc = BITMAPOBJ_LockBitmap(DCSrc->w.hBitmap);
@@ -149,11 +149,11 @@ NtGdiBitBlt(
 			}
 			if(BitmapDest != NULL)
 			{
-                                BITMAPOBJ_UnlockBitmap(BitmapDest);
+				BITMAPOBJ_UnlockBitmap(BitmapDest);
 			}
 			if(BitmapSrc != NULL && BitmapSrc != BitmapDest)
 			{
-                                BITMAPOBJ_UnlockBitmap(BitmapSrc);
+				BITMAPOBJ_UnlockBitmap(BitmapSrc);
 			}
 			DC_UnlockDc(DCDest);
 			SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -204,15 +204,15 @@ NtGdiBitBlt(
 				DC_UnlockDc(DCDest);
 				if(BitmapDest != NULL)
 				{
-                                	BITMAPOBJ_UnlockBitmap(BitmapDest);
+					BITMAPOBJ_UnlockBitmap(BitmapDest);
 				}
 				if(BitmapSrc != NULL && BitmapSrc != BitmapDest)
 				{
-                                	BITMAPOBJ_UnlockBitmap(BitmapSrc);
+					BITMAPOBJ_UnlockBitmap(BitmapSrc);
 				}
 				if(BrushObj != NULL)
 				{
-                                        BRUSHOBJ_UnlockBrush(BrushObj);
+					BRUSHOBJ_UnlockBrush(BrushObj);
 				}
 				SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 				return FALSE;
@@ -222,18 +222,18 @@ NtGdiBitBlt(
 
 	/* Perform the bitblt operation */
 	Status = IntEngBitBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj, NULL,
-                              DCDest->CombinedClip, XlateObj, &DestRect,
-                              &SourcePoint, NULL,
-                              BrushObj ? &BrushInst.BrushObject : NULL,
-	                      &BrushOrigin, ROP3_TO_ROP4(ROP));
+                          DCDest->CombinedClip, XlateObj, &DestRect,
+                          &SourcePoint, NULL,
+                          BrushObj ? &BrushInst.BrushObject : NULL,
+                          &BrushOrigin, ROP3_TO_ROP4(ROP));
 
 	if (UsesSource && XlateObj != NULL)
 		EngDeleteXlate(XlateObj);
 
-        if(BitmapDest != NULL)
-        {
-                BITMAPOBJ_UnlockBitmap(BitmapDest);
-        }
+	if(BitmapDest != NULL)
+	{
+		BITMAPOBJ_UnlockBitmap(BitmapDest);
+	}
 	if (UsesSource && BitmapSrc != BitmapDest)
 	{
 		BITMAPOBJ_UnlockBitmap(BitmapSrc);
@@ -439,8 +439,8 @@ IntCreateBitmapIndirect(CONST BITMAP *BM)
    bmp = BITMAPOBJ_LockBitmap( hBitmap );
    if (bmp == NULL)
    {
-	   /* FIXME should we free the hBitmap or return it ?? */
-	   return 0;
+      /* FIXME should we free the hBitmap or return it ?? */
+      return 0;
    }
    
    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
@@ -462,11 +462,11 @@ IntCreateBitmapIndirect(CONST BITMAP *BM)
 
 HBITMAP STDCALL
 NtGdiCreateBitmap(
-	INT  Width,
-	INT  Height,
-	UINT  Planes,
-	UINT  BitsPixel,
-	IN OPTIONAL LPBYTE Bits)
+    INT  Width,
+    INT  Height,
+    UINT  Planes,
+    UINT  BitsPixel,
+    IN OPTIONAL LPBYTE Bits)
 {
    BITMAP BM;
 
@@ -484,9 +484,9 @@ NtGdiCreateBitmap(
 BOOL INTERNAL_CALL
 BITMAP_Cleanup(PVOID ObjectBody)
 {
-        PBITMAPOBJ pBmp = (PBITMAPOBJ)ObjectBody;
+	PBITMAPOBJ pBmp = (PBITMAPOBJ)ObjectBody;
 	if (pBmp->SurfObj.pvBits != NULL &&
-	    (pBmp->flFlags & BITMAPOBJ_IS_APIBITMAP))
+		(pBmp->flFlags & BITMAPOBJ_IS_APIBITMAP))
 	{
 		if (pBmp->dib == NULL)
 		{
@@ -616,9 +616,9 @@ NtGdiExtFloodFill(
 	COLORREF  Color,
 	UINT  FillType)
 {
-   DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
+	DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
 
-   /* lie and say we succeded */
+	/* lie and say we succeded */
 	return TRUE;
 }
 
@@ -662,7 +662,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 	SURFOBJ *SurfaceObject;
 	HPALETTE Pal = 0;
 	XLATEOBJ *XlateObj;
-    HBITMAP hBmpTmp;
+	HBITMAP hBmpTmp;
 
 	dc = DC_LockDc (hDC);
 
@@ -1530,12 +1530,16 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 	BITMAP  bm;
 	BITMAPOBJ *Bitmap;
 
-        if (hBitmap == NULL)
+	if (hBitmap == NULL)
+	{
 		return 0;
+	}
 
 	Bitmap = GDIOBJ_LockObj(GdiHandleTable, hBitmap, GDI_OBJECT_TYPE_BITMAP);
-        if (Bitmap == NULL)
+	if (Bitmap == NULL)
+	{
 		return 0;
+	}
 
 	BITMAP_GetObject(Bitmap, sizeof(BITMAP), &bm);
 	bm.bmBits = NULL;
@@ -1588,7 +1592,7 @@ BITMAP_GetObject(BITMAPOBJ * bmp, INT Count, LPVOID buffer)
 	{
 		BITMAP Bitmap;
 
-	Count = sizeof(BITMAP);
+		Count = sizeof(BITMAP);
 		Bitmap.bmType = 0;
 		Bitmap.bmWidth = bmp->SurfObj.sizlBitmap.cx;
 		Bitmap.bmHeight = bmp->SurfObj.sizlBitmap.cy;
