@@ -1,5 +1,5 @@
 /*  
- * translated by xrogers
+ * translation by xrogers
  * xxrogers@users.sourceforge.net  
  * https://sourceforge.net/projects/reactospl  
  */ 
@@ -13,7 +13,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Powtarzanie znaku", -1, 5, 5, 230, 130
   ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
-  LTEXT "&opóŸnienie powtarzania:", -1, 40, 15, 50, 10
+  LTEXT "&OpóŸnienie powtarzania:", -1, 40, 15, 50, 10
   LTEXT "Du¿e", -1, 40, 30, 20, 10
   LTEXT "Ma³e", -1, 200, 30, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
@@ -167,10 +167,10 @@ BEGIN
   IDS_HAND "Wybór ³¹cza"
   IDS_NONE "(Brak)"
   IDS_SYSTEM_SCHEME "(schemat systemu)"
-  IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
-  IDS_BROWSE_TITLE "Browse"
-  IDS_REMOVE_TITLE "Confirm Scheme Removal"
-  IDS_REMOVE_TEXT "Are you sure you want to remove the cursor scheme '%s'?"
-  IDS_OVERWRITE_TITLE "Confirm Cursor Scheme Overwrite"
-  IDS_OVERWRITE_TEXT "The cursor scheme name you chose is already in use. Do you want to overwrite the existing cursor scheme?"
+  IDS_BROWSE_FILTER "Kursory (*.ani, *.cur)\0*.ani;*.cur\Animowane kusory (*.ani)\0*.ani\0Kursory statyczne (*.cur)\0*.cur\0Wszystkie pliki\0*.*\0\0"
+  IDS_BROWSE_TITLE "Przegl¹daj"
+  IDS_REMOVE_TITLE "PotwierdŸ usuniêcie schematu"
+  IDS_REMOVE_TEXT "Czy na pewno chcesz usun¹æ schemat kursorów '%s'?"
+  IDS_OVERWRITE_TITLE "PotwierdŸ nadpisanie schematu kursorów"
+  IDS_OVERWRITE_TEXT "Wybrana nazwa schematu kursorów jest ju¿ w u¿ytku. Czy chcesz nadpisaæ istniej¹cy schemat?"
 END
