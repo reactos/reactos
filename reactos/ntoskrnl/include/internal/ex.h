@@ -102,22 +102,13 @@ typedef struct
 #define MAX_HIGH_INDEX      (MID_LEVEL_ENTRIES * MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 
 //
-// Detect GCC 4.1.2+
+// Detect GCC
 //
-#if 1 // (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40102
+#ifdef __GNUC__
 
-//
-// Broken GCC with Alignment Bug. We'll do alignment ourselves at higher cost.
-//
-#define DEFINE_WAIT_BLOCK(x)                                \
-    struct _AlignHack                                       \
-    {                                                       \
-        UCHAR Hack[15];                                     \
-        EX_PUSH_LOCK_WAIT_BLOCK UnalignedBlock;             \
-    } WaitBlockBuffer;                                      \
-    PEX_PUSH_LOCK_WAIT_BLOCK x = (PEX_PUSH_LOCK_WAIT_BLOCK) \
-        ((ULONG_PTR)&WaitBlockBuffer.UnalignedBlock &~ 0xF);
-        
+#define DEFINE_WAIT_BLOCK(x)                                                        \
+    PEX_PUSH_LOCK_WAIT_BLOCK x = __builtin_alloca(sizeof(EX_PUSH_LOCK_WAIT_BLOCK));
+    
 #else
 
 //
@@ -125,8 +116,8 @@ typedef struct
 // local variable (the actual pointer) away, so we don't take any perf hit
 // by doing this.
 //
-#define DEFINE_WAIT_BLOCK(x)                                \
-    EX_PUSH_LOCK_WAIT_BLOCK WaitBlockBuffer;                \
+#define DEFINE_WAIT_BLOCK(x)                                                        \
+    EX_PUSH_LOCK_WAIT_BLOCK WaitBlockBuffer;                                        \
     PEX_PUSH_LOCK_WAIT_BLOCK x = &WaitBlockBuffer;
     
 #endif
@@ -725,7 +716,7 @@ ExAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
     if (InterlockedBitTestAndSet((PLONG)PushLock, EX_PUSH_LOCK_LOCK_V))
     {
         /* Someone changed it, use the slow path */
-        DbgPrint("%s - Contention!\n", __FUNCTION__);
+        // DbgPrint("%s - Contention!\n", __FUNCTION__);
         ExfAcquirePushLockExclusive(PushLock);
     }
 
@@ -763,7 +754,7 @@ ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
     if (ExpChangePushlock(PushLock, NewValue.Ptr, 0))
     {
         /* Someone changed it, use the slow path */
-        DbgPrint("%s - Contention!\n", __FUNCTION__);
+        // DbgPrint("%s - Contention!\n", __FUNCTION__);
         ExfAcquirePushLockShared(PushLock);
     }
 
@@ -977,7 +968,7 @@ ExReleasePushLock(PEX_PUSH_LOCK PushLock)
          OldValue.Ptr))
     {
         /* We have waiters, use the long path */
-        DbgPrint("%s - Contention!\n", __FUNCTION__);
+        // DbgPrint("%s - Contention!\n", __FUNCTION__);
         ExfReleasePushLock(PushLock);
     }
 }
