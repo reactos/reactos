@@ -395,125 +395,159 @@ GetDCOrg(
 
 
 int   
-GetNonFontObject(HGDIOBJ Handle, int Size, LPVOID Buffer)
+GetNonFontObject(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
-  INT Type = GDI_HANDLE_GET_TYPE(Handle);
-  
-  if (Type == GDI_OBJECT_TYPE_REGION) // Not on the check list, so bye.
-  {
-     SetLastError(ERROR_INVALID_HANDLE);
-     return 0;
-  }
+  INT dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
 
-  if (Buffer == NULL)
+  switch(dwType)
   {
-     if (Type == GDI_OBJECT_TYPE_PEN) return sizeof(LOGPEN);
-     else if (Type == GDI_OBJECT_TYPE_REGION) return sizeof(LOGBRUSH);
+    case GDI_OBJECT_TYPE_DC:
+    case GDI_OBJECT_TYPE_REGION:
+    case GDI_OBJECT_TYPE_METAFILE:
+    case GDI_OBJECT_TYPE_ENHMETAFILE:
+    case GDI_OBJECT_TYPE_EMF:
+      SetLastError(ERROR_INVALID_HANDLE);
+      return 0;
+
+    case GDI_OBJECT_TYPE_COLORSPACE:
+      SetLastError(ERROR_NOT_SUPPORTED);
+      return 0;
+
+    case GDI_OBJECT_TYPE_PEN:
+    case GDI_OBJECT_TYPE_BRUSH:
+    case GDI_OBJECT_TYPE_BITMAP:
+    case GDI_OBJECT_TYPE_PALETTE:
+    case GDI_OBJECT_TYPE_METADC:
+      if (!lpBuffer)
+      {
+  	    switch(dwType)
+  	    {
+          case GDI_OBJECT_TYPE_PEN:
+            return sizeof(LOGPEN);
+          case GDI_OBJECT_TYPE_BRUSH:
+            return sizeof(LOGBRUSH);
+          case GDI_OBJECT_TYPE_BITMAP:
+            return sizeof(BITMAP);
+          case GDI_OBJECT_TYPE_PALETTE:
+            return sizeof(WORD);
+          case GDI_OBJECT_TYPE_METADC:
+            /* Windows does not SetLastError() in this case, more investigation needed */
+            return 0;
+          case GDI_OBJECT_TYPE_COLORSPACE: /* yes, windows acts like this */
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return 60; // FIXME: what structure is this? */
+          case GDI_OBJECT_TYPE_EXTPEN: /* we don't know the size, ask win32k */
+            break;
+          default:
+		    /* Other invalid handle type, windows does not SetLastError() */
+          return 0;
+        }
+      }
+      //Handle = GdiFixUpHandle(hGdiObj); new system is not ready
+      return NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
   }
-  
-  //Handle = GdiFixUpHandle(Handle); new system is not ready
-  
-  return NtGdiExtGetObjectW(Handle, Size, Buffer);
+  return 0;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int   
 STDCALL 
-GetObjectA(HGDIOBJ Handle, int Size, LPVOID Buffer)
+GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
   EXTLOGFONTW ExtLogFontW;
-  DWORD Type;
+  LOGFONTA LogFontA;
+
+  DWORD dwType;
   int Result = 0;
 
-  Type = GDI_HANDLE_GET_TYPE(Handle);
-  
-  if((Type == GDI_OBJECT_TYPE_DC)       ||
-     (Type == GDI_OBJECT_TYPE_METAFILE) ||
-     (Type == GDI_OBJECT_TYPE_ENHMETAFILE))
-  {
-     SetLastError(ERROR_INVALID_HANDLE);
-     return 0;
-  }
+  dwType = GDI_HANDLE_GET_TYPE(hGdiObj);;
 
-  if(Type == GDI_OBJECT_TYPE_COLORSPACE)
+  if (dwType == GDI_OBJECT_TYPE_FONT)
   {
-     SetLastError(ERROR_NOT_SUPPORTED);
-     return 0;
-  }  
-
-  if (Type == GDI_OBJECT_TYPE_FONT)
+    if (!lpBuffer)
     {
-      if ( Buffer == NULL) return sizeof(LOGFONTA);
-      
-      if (Size < (int)sizeof(LOGFONTA))
-        {
-          SetLastError(ERROR_BUFFER_OVERFLOW);
-          return 0;
-        }
-      Result = NtGdiExtGetObjectW(Handle, sizeof(EXTLOGFONTW), &ExtLogFontW);
-      if (0 == Result)
-        {
-          return 0;
-        }
+      return sizeof(LOGFONTA);
+    }
+    if (cbSize == 0)
+    {
+      /* Windows does not SetLastError() */
+      return 0;
+    }
+    Result = NtGdiExtGetObjectW(hGdiObj, sizeof(EXTLOGFONTW), &ExtLogFontW);
+    if (0 == Result)
+    {
+      return 0;
+    }
+    LogFontW2A(&LogFontA, &ExtLogFontW.elfLogFont);
+
+    /* FIXME: windows writes up to 260 bytes */
+    /* What structure is that? */
+    if ((UINT)cbSize > 260)
+    {
+      cbSize = 260;
+    }
+    memcpy(lpBuffer, &LogFontA, cbSize);
 /*
     During testing of font objects, I passed ENUM/EXT/LOGFONT/EX/W to NtGdiExtGetObjectW.
     I think it likes EXTLOGFONTW. So,,, How do we handle the rest when a
     caller wants to use E/E/L/E/A structures. Check for size? More research~
  */
-      LogFontW2A((LPLOGFONTA) Buffer, &ExtLogFontW.elfLogFont);
-      Result = sizeof(LOGFONTA);
-    }
-  else
-    {
-      Result = GetNonFontObject(Handle, Size, Buffer);
-    }
+    return cbSize;
+  }
 
-  return Result;
+  return GetNonFontObject(hGdiObj, cbSize, lpBuffer);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int   
 STDCALL 
-GetObjectW(HGDIOBJ Handle, int Size, LPVOID Buffer)
+GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
+  DWORD dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
+  EXTLOGFONTW ExtLogFontW;
+  int Result = 0;
 
-  INT Type = GDI_HANDLE_GET_TYPE(Handle);
 /*
   Check List:
   MSDN, "This can be a handle to one of the following: logical bitmap, a brush,
   a font, a palette, a pen, or a device independent bitmap created by calling
   the CreateDIBSection function."
  */
-  if((Type == GDI_OBJECT_TYPE_DC)       || // Yes, can not pass a normal DC!
-     (Type == GDI_OBJECT_TYPE_METAFILE) ||
-     (Type == GDI_OBJECT_TYPE_ENHMETAFILE))
+
+  if (dwType == GDI_OBJECT_TYPE_FONT)
   {
-     SetLastError(ERROR_INVALID_HANDLE);
-     return 0;
+    if (!lpBuffer)
+    {
+      return sizeof(LOGFONTW);
+    }
+    if (cbSize == 0)
+    {
+      /* Windows does not SetLastError() */
+      return 0;
+    }
+    Result = NtGdiExtGetObjectW(hGdiObj, sizeof(EXTLOGFONTW), &ExtLogFontW);
+    if (0 == Result)
+    {
+      return 0;
+    }
+    /* FIXME: windows writes up to 356 bytes */
+    /* What structure is that? */
+    if ((UINT)cbSize > 356)
+    {
+      /* windows seems to delete the font in this case, more investigation needed */
+      cbSize = 356;
+    }
+    memcpy(lpBuffer, &ExtLogFontW.elfLogFont, cbSize);
+    return cbSize;
   }
 
-  if(Type == GDI_OBJECT_TYPE_COLORSPACE)
-  {
-     SetLastError(ERROR_NOT_SUPPORTED); // Not supported yet.
-     return 0;
-  }  
-
-  if(Type == GDI_OBJECT_TYPE_FONT)
-  {
-     if(Buffer == NULL) return sizeof(LOGFONTW);
-
-     if(Size > sizeof(EXTLOGFONTW)) Size = sizeof(EXTLOGFONTW);
-     
-     return NtGdiExtGetObjectW(Handle, Size, Buffer);
-  }
-  else
-     return GetNonFontObject(Handle, Size, Buffer);
+  return GetNonFontObject(hGdiObj, cbSize, lpBuffer);
 }
 
 
