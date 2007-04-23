@@ -78,6 +78,8 @@ typedef struct _POINTER_DATA
     BOOL bDropShadow;
     BOOL bOrigDropShadow;
 
+    INT cxCursor;
+    INT cyCursor;
 } POINTER_DATA, *PPOINTER_DATA;
 
 
@@ -881,7 +883,8 @@ ReloadCurrentCursorScheme(VOID)
 
 static VOID
 OnDrawItem(UINT idCtl,
-           LPDRAWITEMSTRUCT lpdis)
+           LPDRAWITEMSTRUCT lpdis,
+           PPOINTER_DATA pPointerData)
 {
     RECT rc;
 
@@ -919,7 +922,7 @@ OnDrawItem(UINT idCtl,
         if (g_CursorData[lpdis->itemData].hCursor != NULL)
         {
             DrawIcon(lpdis->hDC,
-                     lpdis->rcItem.right - 32 - 4,
+                     lpdis->rcItem.right - pPointerData->cxCursor - 4,
                      lpdis->rcItem.top + 2,
                      g_CursorData[lpdis->itemData].hCursor);
         }
@@ -993,6 +996,9 @@ PointerProc(IN HWND hwndDlg,
             pPointerData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(POINTER_DATA));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pPointerData);
 
+            pPointerData->cxCursor = GetSystemMetrics(SM_CXCURSOR);
+            pPointerData->cyCursor = GetSystemMetrics(SM_CYCURSOR);
+
             EnumerateCursorSchemes(hwndDlg);
             LoadNewCursorScheme(hwndDlg, TRUE);
 
@@ -1013,12 +1019,12 @@ PointerProc(IN HWND hwndDlg,
                 return FALSE;
 
         case WM_MEASUREITEM:
-            ((LPMEASUREITEMSTRUCT)lParam)->itemHeight = 32 + 4;
+            ((LPMEASUREITEMSTRUCT)lParam)->itemHeight = GetSystemMetrics(SM_CYCURSOR) + 4;
             break;
 
         case WM_DRAWITEM:
             if (wParam == IDC_LISTBOX_CURSOR)
-                OnDrawItem((UINT)wParam, (LPDRAWITEMSTRUCT)lParam);
+                OnDrawItem((UINT)wParam, (LPDRAWITEMSTRUCT)lParam, pPointerData);
             return TRUE;
 
         case WM_DESTROY:
@@ -1048,7 +1054,11 @@ PointerProc(IN HWND hwndDlg,
             {
                 case IDC_COMBO_CURSOR_SCHEME:
                     if (HIWORD(wParam) == CBN_SELENDOK)
+                    {
                         LoadNewCursorScheme(hwndDlg, FALSE);
+
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
                     break;
 
                 case IDC_LISTBOX_CURSOR:
@@ -1071,16 +1081,15 @@ PointerProc(IN HWND hwndDlg,
 
                                 /* Enable the "Set Default" button */
                                 EnableWindow(GetDlgItem(hwndDlg,IDC_BUTTON_USE_DEFAULT_CURSOR), TRUE);
+
+                                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             }
                             break;
                     }
                     break;
 
                 case IDC_BUTTON_SAVEAS_SCHEME:
-                    if (SaveCursorScheme(hwndDlg))
-                    {
-
-                    }
+                    SaveCursorScheme(hwndDlg);
                     break;
 
                 case IDC_BUTTON_USE_DEFAULT_CURSOR:
@@ -1096,6 +1105,8 @@ PointerProc(IN HWND hwndDlg,
 
                         /* Disable the "Set Default" button */
                         EnableWindow(GetDlgItem(hwndDlg,IDC_BUTTON_USE_DEFAULT_CURSOR), FALSE);
+
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
 
@@ -1108,6 +1119,8 @@ PointerProc(IN HWND hwndDlg,
 
                         /* Enable the "Set Default" button */
                         EnableWindow(GetDlgItem(hwndDlg,IDC_BUTTON_USE_DEFAULT_CURSOR), TRUE);
+
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
 
