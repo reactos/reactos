@@ -1,0 +1,12 @@
+#include "resource.h"
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH_MODERN
+STRINGTABLE DISCARDABLE
+{
+IDS_DllNotLoaded,   "El cargador de Librerias falló al cargar '%s'"
+IDS_MissingEntry, "Punto de entrada perdido:%s\nIn %s"
+}
