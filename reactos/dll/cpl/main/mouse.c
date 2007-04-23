@@ -108,7 +108,8 @@ typedef struct _WHEEL_DATA
 typedef struct _CURSOR_DATA
 {
     UINT uStringId;
-    LPWSTR uDefaultCursorId;
+    UINT uDefaultCursorId;
+    LPWSTR lpValueName;
     HCURSOR hCursor;
     TCHAR szCursorName[MAX_PATH];
     TCHAR szCursorPath[MAX_PATH];
@@ -116,21 +117,21 @@ typedef struct _CURSOR_DATA
 
 
 CURSOR_DATA g_CursorData[] =
-{{IDS_ARROW,       IDC_ARROW,       0, _T(""), _T("")},
- {IDS_HELP,        IDC_HELP,        0, _T(""), _T("")},
- {IDS_APPSTARTING, IDC_APPSTARTING, 0, _T(""), _T("")},
- {IDS_WAIT,        IDC_WAIT,        0, _T(""), _T("")},
- {IDS_CROSSHAIR,   IDC_CROSS,       0, _T(""), _T("")},
- {IDS_IBEAM,       IDC_IBEAM,       0, _T(""), _T("")},
- {IDS_NWPEN,       0/*IDC_NWPEN*/,       0, _T(""), _T("")}, /* FIXME */
- {IDS_NO,          IDC_NO,          0, _T(""), _T("")},
- {IDS_SIZENS,      IDC_SIZENS,      0, _T(""), _T("")},
- {IDS_SIZEWE,      IDC_SIZEWE,      0, _T(""), _T("")},
- {IDS_SIZENWSE,    IDC_SIZENWSE,    0, _T(""), _T("")},
- {IDS_SIZENESW,    IDC_SIZENESW,    0, _T(""), _T("")},
- {IDS_SIZEALL,     IDC_SIZEALL,     0, _T(""), _T("")},
- {IDS_UPARROW,     IDC_UPARROW,     0, _T(""), _T("")},
- {IDS_HAND,        IDC_HAND,        0, _T(""), _T("")}};
+{{IDS_ARROW,       100/*OCR_NORMAL*/,      _T("Arrow"),       0, _T(""), _T("")},
+ {IDS_HELP,        112/*OCR_HELP*/,        _T("Help"),        0, _T(""), _T("")},
+ {IDS_APPSTARTING, 111/*OCR_APPSTARTING*/, _T("AppStarting"), 0, _T(""), _T("")},
+ {IDS_WAIT,        102/*OCR_WAIT*/,        _T("Wait"),        0, _T(""), _T("")},
+ {IDS_CROSSHAIR,   103/*OCR_CROSS*/,       _T("Crosshair"),   0, _T(""), _T("")},
+ {IDS_IBEAM,       101/*OCR_IBEAM*/,       _T("IBeam"),       0, _T(""), _T("")},
+ {IDS_NWPEN,       113/*OCR_NWPEN*/,       _T("NWPen"),       0, _T(""), _T("")},
+ {IDS_NO,          110/*OCR_NO*/,          _T("No"),          0, _T(""), _T("")},
+ {IDS_SIZENS,      108/*OCR_SIZENS*/,      _T("SizeNS"),      0, _T(""), _T("")},
+ {IDS_SIZEWE,      107/*OCR_SIZEWE*/,      _T("SizeWE"),      0, _T(""), _T("")},
+ {IDS_SIZENWSE,    105/*OCR_SIZENWSE*/,    _T("SizeNWSE"),    0, _T(""), _T("")},
+ {IDS_SIZENESW,    106/*OCR_SIZENESW*/,    _T("SizeNESW"),    0, _T(""), _T("")},
+ {IDS_SIZEALL,     109/*OCR_SIZEALL*/,     _T("SizeAll"),     0, _T(""), _T("")},
+ {IDS_UPARROW,     104/*OCR_UP*/,          _T("UpArrow"),     0, _T(""), _T("")},
+ {IDS_HAND,        114/*OCR_HAND*/,        _T("Hand"),        0, _T(""), _T("")}};
 
 
 #if 0
@@ -848,7 +849,7 @@ LoadCursorScheme(LPTSTR lpName, BOOL bSystem)
     for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
     {
         if (g_CursorData[i].szCursorPath[0] == 0)
-            g_CursorData[i].hCursor = (HCURSOR)LoadImage(NULL, g_CursorData[i].uDefaultCursorId,
+            g_CursorData[i].hCursor = (HCURSOR)LoadImage(NULL, MAKEINTRESOURCE(g_CursorData[i].uDefaultCursorId),
                                                          IMAGE_CURSOR, 0, 0,
                                                          LR_DEFAULTSIZE | LR_SHARED);
         else
@@ -870,7 +871,7 @@ ReloadCurrentCursorScheme(VOID)
             DestroyCursor(g_CursorData[i].hCursor);
 
         if (g_CursorData[i].szCursorPath[0] == 0)
-            g_CursorData[i].hCursor = (HCURSOR)LoadImage(NULL, g_CursorData[i].uDefaultCursorId,
+            g_CursorData[i].hCursor = (HCURSOR)LoadImage(NULL, MAKEINTRESOURCE(g_CursorData[i].uDefaultCursorId),
                                                          IMAGE_CURSOR, 0, 0,
                                                          LR_DEFAULTSIZE | LR_SHARED);
         else
