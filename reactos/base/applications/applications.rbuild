@@ -55,8 +55,4 @@
 <directory name="wordpad">
 	<xi:include href="wordpad/wordpad.rbuild" />
 </directory>
-<directory name="winver">
-	<xi:include href="winver/winver.rbuild" />
-</directory>
-
 </group>
