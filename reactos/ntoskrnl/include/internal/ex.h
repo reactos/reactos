@@ -106,9 +106,15 @@ typedef struct
 //
 #ifdef __GNUC__
 
-#define DEFINE_WAIT_BLOCK(x)                                                        \
-    PEX_PUSH_LOCK_WAIT_BLOCK x = __builtin_alloca(sizeof(EX_PUSH_LOCK_WAIT_BLOCK));
-    
+#define DEFINE_WAIT_BLOCK(x)                                \
+    struct _AlignHack                                       \
+    {                                                       \
+        UCHAR Hack[15];                                     \
+        EX_PUSH_LOCK_WAIT_BLOCK UnalignedBlock;             \
+    } WaitBlockBuffer;                                      \
+    PEX_PUSH_LOCK_WAIT_BLOCK x = (PEX_PUSH_LOCK_WAIT_BLOCK) \
+        ((ULONG_PTR)&WaitBlockBuffer.UnalignedBlock &~ 0xF);
+        
 #else
 
 //
@@ -116,8 +122,8 @@ typedef struct
 // local variable (the actual pointer) away, so we don't take any perf hit
 // by doing this.
 //
-#define DEFINE_WAIT_BLOCK(x)                                                        \
-    EX_PUSH_LOCK_WAIT_BLOCK WaitBlockBuffer;                                        \
+#define DEFINE_WAIT_BLOCK(x)                                \
+    EX_PUSH_LOCK_WAIT_BLOCK WaitBlockBuffer;                \
     PEX_PUSH_LOCK_WAIT_BLOCK x = &WaitBlockBuffer;
     
 #endif
