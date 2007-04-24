@@ -1,0 +1,30 @@
+/*
+ *  reactos (Simplified Chinese resources)
+ *  (简体中文资源)
+ *  Copyright 2007 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+/* String Tables */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAPTION  " ReactOS 安装 "
+    IDS_TEXT     " 不能直接从这个 CD 安装 ReactOS! \n\n 请重新启动你的计算机选择从光盘引导来安装 ReactOS。"
+END
+
+/* EOF */

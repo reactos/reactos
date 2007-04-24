@@ -32,5 +32,6 @@ IDI_MAIN ICON "res/reactos.ico"
 #include "lang/sv-SE.rc"
 #include "lang/th-TH.rc"
 #include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"
 
 /* EOF */
