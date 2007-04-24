@@ -1832,6 +1832,10 @@ NtGdiExtGetObjectW(HANDLE hGdiObj, INT cbCount, LPVOID lpUnsafeBuf)
   }
 
   RetCount = IntGdiGetObject(hGdiObj, cbCount, NULL);
+  if (!RetCount)
+  {
+    return 0;
+  }
   if ((UINT)cbCount > RetCount)
   {
     cbCount = RetCount;
