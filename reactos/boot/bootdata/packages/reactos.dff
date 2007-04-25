@@ -440,6 +440,7 @@ modules\rosapps\sysutils\pedump\pedump.exe          1   optional
 modules\rosapps\sysutils\regexpl\regexpl.exe        1   optional
 modules\rosapps\sysutils\tcat\cat.exe               1   optional
 modules\rosapps\sysutils\tlist\tlist.exe            1   optional
+modules\rosapps\winver\winver.exe                   1   optional
 modules\rostests\winetests\advapi32\advapi32_winetest.exe   7   optional
 modules\rostests\winetests\cabinet\cabinet_winetest.exe     7   optional
 modules\rostests\winetests\comctl32\comctl32_winetest.exe   7   optional
