@@ -82,7 +82,7 @@ msi dll\win32\msi
 msimg32 dll\win32\msimg32
 msvcrt dll\win32\msvcrt
 msvcrt20 dll\win32\msvcrt20
-msvfw32 dll\win32\msvideo
+msvfw32 dll\win32\msvfw32
 mswsock dll\win32\mswsock
 netapi32 dll\win32\netapi32
 netcfgx dll\win32\netcfgx

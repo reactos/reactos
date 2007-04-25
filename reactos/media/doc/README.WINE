@@ -56,7 +56,7 @@ reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm           # Out of sync
 reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Autosync
-reactos/dll/win32/msvideo         # Out of sync
+reactos/dll/win32/msvfw32         # Autosync
 reactos/dll/win32/netapi32        # Synced to Wine-0_9_5
 reactos/dll/win32/objsel          # Autosync
 reactos/dll/win32/odbc32          # Out of sync. Depends on port of Linux ODBC.

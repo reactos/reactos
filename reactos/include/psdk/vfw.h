@@ -379,6 +379,15 @@ DECLARE_HANDLE(HDRAWDIB);
 typedef WORD TWOCC;
 typedef BOOL (CALLBACK *AVISAVECALLBACK)(INT);
 typedef struct {
+	LONG timeCount;
+	LONG timeDraw;
+	LONG timeDecompress;
+	LONG timeDither;
+	LONG timeStretch;
+	LONG timeBlt;
+	LONG timeSetDIBits;
+} DRAWDIBTIME, *LPDRAWDIBTIME;
+typedef struct {
 	DWORD dwSize;
 	DWORD fccType;
 	DWORD fccHandler;
