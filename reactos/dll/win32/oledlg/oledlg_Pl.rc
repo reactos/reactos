@@ -1,0 +1,96 @@
+/*
+ * Copyright 2003 Ulrich Czekalla for CodeWeavers
+ * Copyright 2006 Mikolaj Zalewski
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 310, 151
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wstaw objekt"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "Typ obiektu:",IDC_OBJTYPELBL,82,7,53,8,WS_VISIBLE
+    DEFPUSHBUTTON   "OK",IDOK,229,7,66,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,229,24,66,14
+    GROUPBOX        "Wynik",IDC_RESULT,7,103,208,41
+    CONTROL         "UtwÛrz nowy",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,7,20,62,10
+    CONTROL         "UtwÛrz kontrolkÍ",IDC_CREATECONTROL,"Button",
+                    BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,72,10
+    CONTROL         "UtwÛrz z pliku",IDC_CREATEFROMFILE,"Button",
+                    BS_AUTORADIOBUTTON,7,37,67,10
+    LTEXT           "",IDC_RESULTDESC,49,112,159,23
+    PUSHBUTTON      "&Dodaj kontrolkÍ...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
+    CONTROL         "Wyúwietlaj jako ikonÍ",IDC_ASICON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP | NOT WS_VISIBLE,223,58,84,10
+    PUSHBUTTON      "Przeglπdaj...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
+    LTEXT           "Plik:",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE
+    EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+END
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_RESULTOBJDESC	"Wstaw nowy objekt %s do dokumentu"
+  IDS_RESULTFILEOBJDESC	"Wstaw zawartoúÊ pliku jako obiekt do dokumentu. BÍdzie moøna go aktywowaÊ uøywajπc programu, ktÛry go stworzy≥."
+  IDS_BROWSE            "Przeglπdaj"
+  IDS_NOTOLEMOD         "Plik nie wydaje siÍ byÊ poprawnym modu≥em OLE. Nie uda≥o siÍ zarejestrowaÊ kontrolki OLE."
+  IDS_NOTOLEMODCAPTION  "Dodaj kontrolkÍ"
+}
+
+IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 309, 140
+STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wklej specjalnie"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT         "èrÛd≥o:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "&Wklej", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 55, 10
+    CONTROL       "Wklej &≥πczÍ", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 55, 10
+    LTEXT         "&Jako:", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 232, 6, 66, 14
+    CONTROL       "Anuluj", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 232, 23, 66, 14
+    CONTROL       "&Pomoc", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 232, 42, 66, 14
+    CONTROL       "W&yúwietlaj jako ikonÍ", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 84, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 232, 75, 66, 44
+    CONTROL       "ZmieÒ &ikonÍ...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 232, 123, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
+    CONTROL       "<< result text goes here >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
+    CONTROL       "Wynik", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PS_PASTE_DATA                     "Wstawia zawartoúÊ schowka do documentu jako %s."
+    IDS_PS_PASTE_OBJECT                   "Wstawia zawartoúÊ schowka do dokumentu, tak aby mÛg≥ byÊ aktywowany za pomocπ %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "Wstawia zawartoúÊ schowka do dokumentu, tak aby mÛg≥ byÊ aktywowany za pomocπ %s.  BÍdzie wyúwietlany jako ikona."
+    IDS_PS_PASTE_LINK_DATA                "Wstawia zawartoúÊ schowka do documentu jako %s.  Dane bÍdπ po≥πczone z plikiem ürÛd≥owym, dziÍki czemu zmiany w pliku bÍdπ odzwierciedlone w dokumencie."
+    IDS_PS_PASTE_LINK_OBJECT              "Wstawia zawartoúÊ schowka do documentu jako obraz.  Obraz bÍdzie po≥πczony z plikiem ürÛd≥owym, dziÍki czemu zmiany w pliku bÍdπ odzwierciedlone w dokumencie."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Wstawia do documentu skrÛt do zawartoúci schowka.  SkrÛt bÍdzie po≥πczony z plikiem ürÛd≥owym, dziÍki czemu zmiany w pliku bÍdπ odzwierciedlone w dokumencie."
+    IDS_PS_NON_OLE                        "Wstawia zawartoúÊ schowka do dokumentu"
+    IDS_PS_UNKNOWN_TYPE                   "Nieznany typ"
+    IDS_PS_UNKNOWN_SRC                    "Nieznane ürÛd≥o"
+    IDS_PS_UNKNOWN_APP                    "program ktÛry go stworzy≥"
+}

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL
 
 UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -52,4 +52,44 @@ STRINGTABLE DISCARDABLE
   IDS_BROWSE            "찾기"
   IDS_NOTOLEMOD         "이 파일은 올바른 OLE모듈이 아닌거로 보입니다. OLE컨트롤을 등록할수 없습니다."
   IDS_NOTOLEMODCAPTION  "컨트롤 더하기"
+}
+
+IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "특별하게  붙여넣기"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT         "원본:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "붙여넣기(&P)", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 55, 10
+    CONTROL       "링크로 붙여넣기(&L)", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 55, 10
+    LTEXT         "&As:", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "확인", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 224, 6, 66, 14
+    CONTROL       "취소", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 23, 66, 14
+    CONTROL       "도움말(&H)", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
+    CONTROL       "아이콘으로 보기(&D)", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
+    CONTROL       "아이콘 바꾸기(&I)...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
+    CONTROL       "<< 결과 텍스트는 여기다가 >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
+    CONTROL       "결과", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PS_PASTE_DATA                     "당신의 문서 %s에 클립보드의 내용 삽입하기."
+    IDS_PS_PASTE_OBJECT                   "당신의 문서에 클립보드의 내용들을 첨부하면  %s를 사용해서 이것을 실행할 수 있습니다."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "당신의 문서에 클립보드의 내용들을 첨부하면  %s를 사용해서 이것을 실행할 수 있습니다. 이것은 아이콘으로 나타내질 겁니다."
+    IDS_PS_PASTE_LINK_DATA                "당신의 문서 %s에 클립보드의 내용 삽입하기.  이 데이터는 원본 파일에 연결되어 있어서 파일이 바뀌면 당신의 문서도 바뀔겁니다."
+    IDS_PS_PASTE_LINK_OBJECT              "당신의 문서에 클립보드에 있는 그림을 집어넣습니다.  이 그림은 원본 파일에 연결되어 있어서 파일이 바뀌면 당신의 문서도 바뀔겁니다."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "당신의 문서에 클립보드에 있는 단축아이콘을 집어넣습니다.  이 단축아이콘은 원본 파일에 연결되어 있어서 파일이 바뀌면 당신의 문서도 바뀔겁니다t."
+    IDS_PS_NON_OLE                        "당신의 문서에 클립보드의 내용 삽입하기."
+    IDS_PS_UNKNOWN_TYPE                   "알수 없는 형식"
+    IDS_PS_UNKNOWN_SRC                    "알수 없는 원본"
+    IDS_PS_UNKNOWN_APP                    "이 프로그램은 알 수 없는 프로그램으로 만들어졌습니다"
 }

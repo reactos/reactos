@@ -57,7 +57,7 @@ typedef struct
 
 } InsertObjectDlgInfo;
 
-INT_PTR CALLBACK UIInsertObjectDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static INT_PTR CALLBACK UIInsertObjectDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT UIINSOBJDLG_OnWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam);
 static void UIINSERTOBJECTDLG_InitDialog(InsertObjectDlgInfo* pdlgInfo);
 static void UIINSERTOBJECTDLG_SelectCreateCtrl(InsertObjectDlgInfo* pdlgInfo);

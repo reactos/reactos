@@ -53,3 +53,43 @@ STRINGTABLE DISCARDABLE
   IDS_NOTOLEMOD         "File does not appear to be a valid OLE module. Unable to register OLE control."
   IDS_NOTOLEMODCAPTION  "Add Control"
 }
+
+IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Paste Special"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT         "Source:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "&Paste", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 55, 10
+    CONTROL       "Paste &Link", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 55, 10
+    LTEXT         "&As:", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 224, 6, 66, 14
+    CONTROL       "Cancel", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 23, 66, 14
+    CONTROL       "&Help", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
+    CONTROL       "&Display As Icon", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
+    CONTROL       "Change &Icon...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
+    CONTROL       "<< result text goes here >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
+    CONTROL       "Result", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PS_PASTE_DATA                     "Inserts the contents of the clipboard into your document as %s."
+    IDS_PS_PASTE_OBJECT                   "Inserts the contents of the clipboard into your document so that you can activate it using %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "Inserts the contents of the clipboard into your document so that you can activate it using %s.  It will be displayed as an icon."
+    IDS_PS_PASTE_LINK_DATA                "Inserts the contents of the clipboard into your document as %s.  The data is linked to the source file so that changes to the file will be reflected in your document."
+    IDS_PS_PASTE_LINK_OBJECT              "Inserts a picture of the clipboard contents into your document.  The picture is linked to the source file so that changes to the file will be reflected in your document."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Inserts a shortcut which points to the location of the clipboard contents.  The shortcut is linked to the source file so that changes to the file will be reflected in your document."
+    IDS_PS_NON_OLE                        "Inserts the contents of the clipboard into your document."
+    IDS_PS_UNKNOWN_TYPE                   "Unknown Type"
+    IDS_PS_UNKNOWN_SRC                    "Unknown Source"
+    IDS_PS_UNKNOWN_APP                    "the program which created it"
+}

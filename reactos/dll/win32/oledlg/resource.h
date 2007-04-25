@@ -38,3 +38,15 @@
 #define IDC_BROWSE                      1009
 #define IDC_FILELBL                     1010
 #define IDC_FILE                        1011
+
+/* String ids for Paste Special */
+#define IDS_PS_PASTE_DATA                 0x190
+#define IDS_PS_PASTE_OBJECT               0x191
+#define IDS_PS_PASTE_OBJECT_AS_ICON       0x192
+#define IDS_PS_PASTE_LINK_DATA            0x193
+#define IDS_PS_PASTE_LINK_OBJECT          0x194
+#define IDS_PS_PASTE_LINK_OBJECT_AS_ICON  0x195
+#define IDS_PS_NON_OLE                    0x196
+#define IDS_PS_UNKNOWN_TYPE               0x197
+#define IDS_PS_UNKNOWN_SRC                0x198
+#define IDS_PS_UNKNOWN_APP                0x199

@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COM_NO_WINDOWS_H
 #include <stdarg.h>
 
 #include "windef.h"
@@ -27,24 +26,69 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "oledlg.h"
-#include "wine/debug.h"
 #include "ole2.h"
+#include "oledlg_private.h"
+
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 HINSTANCE OLEDLG_hInstance = 0;
+
+UINT cf_embed_source;
+UINT cf_embedded_object;
+UINT cf_link_source;
+UINT cf_object_descriptor;
+UINT cf_link_src_descriptor;
+UINT cf_ownerlink;
+UINT cf_filename;
+UINT cf_filenamew;
+
+UINT oleui_msg_help;
+UINT oleui_msg_enddialog;
+
+static void register_clipboard_formats(void)
+{
+    /* These used to be declared in olestd.h, but that seems to have been removed from the api */
+    static const WCHAR CF_EMBEDSOURCEW[]          = { 'E','m','b','e','d',' ','S','o','u','r','c','e',0 };
+    static const WCHAR CF_EMBEDDEDOBJECTW[]       = { 'E','m','b','e','d','d','e','d',' ','O','b','j','e','c','t',0 };
+    static const WCHAR CF_LINKSOURCEW[]           = { 'L','i','n','k',' ','S','o','u','r','c','e',0 };
+    static const WCHAR CF_OBJECTDESCRIPTORW[]     = { 'O','b','j','e','c','t',' ','D','e','s','c','r','i','p','t','o','r',0 };
+    static const WCHAR CF_LINKSRCDESCRIPTORW[]    = { 'L','i','n','k',' ','S','o','u','r','c','e',' ','D','e','s','c','r','i','p','t','o','r',0 };
+    static const WCHAR CF_OWNERLINKW[]            = { 'O','w','n','e','r','L','i','n','k',0 };
+    static const WCHAR CF_FILENAMEW[]             = { 'F','i','l','e','N','a','m','e',0 };
+    static const WCHAR CF_FILENAMEWW[]            = { 'F','i','l','e','N','a','m','e','W',0 };
+
+    /* Load in the same order as native to make debugging easier */
+    cf_object_descriptor    = RegisterClipboardFormatW(CF_OBJECTDESCRIPTORW);
+    cf_link_src_descriptor  = RegisterClipboardFormatW(CF_LINKSRCDESCRIPTORW);
+    cf_embed_source         = RegisterClipboardFormatW(CF_EMBEDSOURCEW);
+    cf_embedded_object      = RegisterClipboardFormatW(CF_EMBEDDEDOBJECTW);
+    cf_link_source          = RegisterClipboardFormatW(CF_LINKSOURCEW);
+    cf_ownerlink            = RegisterClipboardFormatW(CF_OWNERLINKW);
+    cf_filename             = RegisterClipboardFormatW(CF_FILENAMEW);
+    cf_filenamew            = RegisterClipboardFormatW(CF_FILENAMEWW);
+}
+
+static void register_messages(void)
+{
+    oleui_msg_help             = RegisterWindowMessageW(SZOLEUI_MSG_HELPW);
+    oleui_msg_enddialog        = RegisterWindowMessageW(SZOLEUI_MSG_ENDDIALOGW);
+}
 
 /***********************************************************************
  *		DllMain
  */
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 {
-    TRACE("%p 0x%lx %p\n", hinstDLL, fdwReason, fImpLoad);
+    TRACE("%p 0x%x %p\n", hinstDLL, fdwReason, fImpLoad);
 
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
         OLEDLG_hInstance = hinstDLL;
+        register_clipboard_formats();
+        register_messages();
         break;
 
     case DLL_PROCESS_DETACH:
@@ -108,26 +152,6 @@ BOOL WINAPI OleUICanConvertOrActivateAs(
 UINT WINAPI OleUIInsertObjectW(LPOLEUIINSERTOBJECTW lpOleUIInsertObject)
 {
   FIXME("(%p): stub\n", lpOleUIInsertObject);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return OLEUI_FALSE;
-}
-
-/***********************************************************************
- *           OleUIPasteSpecialA (OLEDLG.4)
- */
-UINT WINAPI OleUIPasteSpecialA(LPOLEUIPASTESPECIALA lpOleUIPasteSpecial)
-{
-  FIXME("(%p): stub\n", lpOleUIPasteSpecial);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return OLEUI_FALSE;
-}
-
-/***********************************************************************
- *           OleUIPasteSpecialW (OLEDLG.22)
- */
-UINT WINAPI OleUIPasteSpecialW(LPOLEUIPASTESPECIALW lpOleUIPasteSpecial)
-{
-  FIXME("(%p): stub\n", lpOleUIPasteSpecial);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return OLEUI_FALSE;
 }
