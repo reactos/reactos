@@ -220,7 +220,7 @@ void QTMupdatemodel(struct QTMmodel *model, int sym) {
  *   OK:    0
  *   error: 1
  */
-int make_decode_table(cab_ULONG nsyms, cab_ULONG nbits, cab_UBYTE *length, cab_UWORD *table) {
+int make_decode_table(cab_ULONG nsyms, cab_ULONG nbits, const cab_UBYTE *length, cab_UWORD *table) {
   register cab_UWORD sym;
   register cab_ULONG leaf;
   register cab_UBYTE bit_num = 1;
@@ -293,7 +293,7 @@ int make_decode_table(cab_ULONG nsyms, cab_ULONG nbits, cab_UBYTE *length, cab_U
 /*************************************************************************
  * checksum (internal)
  */
-cab_ULONG checksum(cab_UBYTE *data, cab_UWORD bytes, cab_ULONG csum) {
+cab_ULONG checksum(const cab_UBYTE *data, cab_UWORD bytes, cab_ULONG csum) {
   int len;
   cab_ULONG ul = 0;
 
@@ -1132,16 +1132,16 @@ struct Ziphuft **t, cab_LONG *m, fdi_decomp_state *decomp_state)
 /*********************************************************
  * fdi_Zipinflate_codes (internal)
  */
-static cab_LONG fdi_Zipinflate_codes(struct Ziphuft *tl, struct Ziphuft *td,
+static cab_LONG fdi_Zipinflate_codes(const struct Ziphuft *tl, const struct Ziphuft *td,
   cab_LONG bl, cab_LONG bd, fdi_decomp_state *decomp_state)
 {
-  register cab_ULONG e;  /* table entry flag/number of extra bits */
-  cab_ULONG n, d;        /* length and index for copy */
-  cab_ULONG w;           /* current window position */
-  struct Ziphuft *t;     /* pointer to table entry */
-  cab_ULONG ml, md;      /* masks for bl and bd bits */
-  register cab_ULONG b;  /* bit buffer */
-  register cab_ULONG k;  /* number of bits in bit buffer */
+  register cab_ULONG e;     /* table entry flag/number of extra bits */
+  cab_ULONG n, d;           /* length and index for copy */
+  cab_ULONG w;              /* current window position */
+  const struct Ziphuft *t;  /* pointer to table entry */
+  cab_ULONG ml, md;         /* masks for bl and bd bits */
+  register cab_ULONG b;     /* bit buffer */
+  register cab_ULONG k;     /* number of bits in bit buffer */
 
   /* make local copies of globals */
   b = ZIP(bb);                       /* initialize bit buffer */
@@ -1507,7 +1507,6 @@ static int QTMfdi_decomp(int inlen, int outlen, fdi_decomp_state *decomp_state)
   cab_UBYTE *inpos  = CAB(inbuf);
   cab_UBYTE *window = QTM(window);
   cab_UBYTE *runsrc, *rundest;
-
   cab_ULONG window_posn = QTM(window_posn);
   cab_ULONG window_size = QTM(window_size);
 
@@ -1677,7 +1676,7 @@ static int fdi_lzx_read_lens(cab_UBYTE *lens, cab_ULONG first, cab_ULONG last, s
  */
 static int LZXfdi_decomp(int inlen, int outlen, fdi_decomp_state *decomp_state) {
   cab_UBYTE *inpos  = CAB(inbuf);
-  cab_UBYTE *endinp = inpos + inlen;
+  const cab_UBYTE *endinp = inpos + inlen;
   cab_UBYTE *window = LZX(window);
   cab_UBYTE *runsrc, *rundest;
   cab_UWORD *hufftbl; /* used in READ_HUFFSYM macro as chosen decoding table */
@@ -2007,7 +2006,7 @@ static int LZXfdi_decomp(int inlen, int outlen, fdi_decomp_state *decomp_state) 
  * is also where we jump to additional cabinets in the case of split
  * cab's, and provide (some of) the NEXT_CABINET notification semantics.
  */
-static int fdi_decomp(struct fdi_file *fi, int savemode, fdi_decomp_state *decomp_state,
+static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state *decomp_state,
   char *pszCabPath, PFNFDINOTIFY pfnfdin, void *pvUser)
 {
   cab_ULONG bytes = savemode ? fi->length : fi->offset - CAB(offset);
@@ -2108,7 +2107,7 @@ static int fdi_decomp(struct fdi_file *fi, int savemode, fdi_decomp_state *decom
 
           do {
 
-            pathlen = (userpath) ? strlen(userpath) : 0;
+            pathlen = strlen(userpath);
             filenamelen = (cab->mii.nextname) ? strlen(cab->mii.nextname) : 0;
 
             /* slight overestimation here to save CPU cycles in the developer's brain */

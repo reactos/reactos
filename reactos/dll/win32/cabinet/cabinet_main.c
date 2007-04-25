@@ -154,7 +154,7 @@ static long fdi_seek(INT_PTR hf, long dist, int seektype)
     return SetFilePointer(handle, dist, NULL, seektype);
 }
 
-static void fill_file_node(struct ExtractFileList *pNode, LPSTR szFilename)
+static void fill_file_node(struct ExtractFileList *pNode, LPCSTR szFilename)
 {
     pNode->next = NULL;
     pNode->flag = FALSE;
@@ -163,7 +163,7 @@ static void fill_file_node(struct ExtractFileList *pNode, LPSTR szFilename)
     lstrcpyA(pNode->filename, szFilename);
 }
 
-static BOOL file_in_list(struct ExtractFileList *pNode, LPSTR szFilename)
+static BOOL file_in_list(const struct ExtractFileList *pNode, LPCSTR szFilename)
 {
     while (pNode)
     {
