@@ -131,7 +131,7 @@
 	<xi:include href="msvcrt20/msvcrt20.rbuild" />
 </directory>
 <directory name="msvideo">
-	<xi:include href="msvideo/msvfw32.rbuild" />
+	<xi:include href="msvfw32/msvfw32.rbuild" />
 </directory>
 <directory name="mswsock">
 	<xi:include href="mswsock/mswsock.rbuild" />
