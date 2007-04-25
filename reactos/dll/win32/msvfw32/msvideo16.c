@@ -16,18 +16,21 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COM_NO_WINDOWS_H
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "msvideo_private.h"
+#include "windef.h"
+#include "winbase.h"
 #include "winver.h"
 #include "winnls.h"
 #include "winreg.h"
+#include "winuser.h"
 #include "vfw16.h"
+#include "msvideo_private.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvideo);
@@ -118,7 +121,7 @@ BOOL16 VFWAPI DrawDibStart16(HDRAWDIB16 hdd, DWORD rate)
 /*************************************************************************
  *		DrawDibStop		[MSVIDEO.119]
  */
-BOOL16 DrawDibStop16(HDRAWDIB16 hdd)
+BOOL16 VFWAPI DrawDibStop16(HDRAWDIB16 hdd)
 {
     return DrawDibStop(HDRAWDIB_32(hdd));
 }
@@ -151,7 +154,7 @@ LRESULT VFWAPIV ICMessage16( HIC16 hic, UINT16 msg, UINT16 cb, VA_LIST16 valist 
 
     lpData = HeapAlloc(GetProcessHeap(), 0, cb);
 
-    TRACE("0x%08lx, %u, %u, ...)\n", (DWORD) hic, msg, cb);
+    TRACE("0x%08x, %u, %u, ...)\n", (DWORD) hic, msg, cb);
 
     for (i = 0; i < cb / sizeof(WORD); i++) 
     {
@@ -172,7 +175,7 @@ LRESULT VFWAPI ICGetInfo16(HIC16 hic, ICINFO16 * picinfo, DWORD cb)
 {
     LRESULT ret;
 
-    TRACE("(0x%08lx,%p,%ld)\n", (DWORD) hic, picinfo, cb);
+    TRACE("(0x%08x,%p,%d)\n", (DWORD) hic, picinfo, cb);
     ret = ICSendMessage16(hic, ICM_GETINFO, (DWORD) picinfo, cb);
     TRACE("	-> 0x%08lx\n", ret);
     return ret;
@@ -203,7 +206,7 @@ DWORD VFWAPIV ICCompress16(HIC16 hic, DWORD dwFlags,
     ICCOMPRESS iccmp;
     SEGPTR seg_iccmp;
     
-    TRACE("(0x%08lx,%ld,%p,%p,%p,%p,...)\n", (DWORD) hic, dwFlags,
+    TRACE("(0x%08x,%d,%p,%p,%p,%p,...)\n", (DWORD) hic, dwFlags,
 	  lpbiOutput, lpData, lpbiInput, lpBits);
 
     iccmp.dwFlags = dwFlags;
@@ -237,7 +240,7 @@ DWORD VFWAPIV ICDecompress16(HIC16 hic, DWORD dwFlags,
     SEGPTR segptr;
     DWORD ret;
 
-    TRACE("(0x%08lx,%ld,%p,%p,%p,%p)\n", (DWORD) hic, dwFlags, lpbiFormat,
+    TRACE("(0x%08x,%d,%p,%p,%p,%p)\n", (DWORD) hic, dwFlags, lpbiFormat,
 	  lpData, lpbi, lpBits);
 
     icd.dwFlags = dwFlags;
@@ -276,7 +279,7 @@ DWORD VFWAPIV ICDrawBegin16(HIC16 hic,		/* [in] */
     ICDRAWBEGIN16 icdb;
     SEGPTR seg_icdb;
 
-    TRACE ("(0x%08lx,%ld,0x%08lx,0x%08lx,0x%08lx,%u,%u,%u,%u,%p,%u,%u,%u,%u,%ld,%ld)\n",
+    TRACE ("(0x%08x,%d,0x%08x,0x%08x,0x%08x,%u,%u,%u,%u,%p,%u,%u,%u,%u,%d,%d)\n",
 	   (DWORD) hic, dwFlags, (DWORD) hpal, (DWORD) hwnd, (DWORD) hdc,
 	   xDst, yDst, dxDst, dyDst, lpbi, xSrc, ySrc, dxSrc, dySrc, dwRate,
 	   dwScale);
@@ -315,7 +318,7 @@ DWORD VFWAPIV ICDraw16(HIC16 hic, DWORD dwFlags,
     ICDRAW icd;
     SEGPTR seg_icd;
 
-    TRACE("(0x%08lx,0x%08lx,%p,%p,%ld,%ld)\n", (DWORD) hic, dwFlags,
+    TRACE("(0x%08x,0x%08x,%p,%p,%d,%d)\n", (DWORD) hic, dwFlags,
 	  lpFormat, lpData, cbData, lTime);
     icd.dwFlags = dwFlags;
     icd.lpFormat = lpFormat;
@@ -670,12 +673,12 @@ BOOL16 VFWAPI ICInfo16(DWORD fccType, DWORD fccHandler, ICINFO16 *lpicinfo)
 static  LRESULT CALLBACK  IC_Callback3216(HIC hic, HDRVR hdrv, UINT msg, DWORD lp1, DWORD lp2)
 {
     WINE_HIC*   whic;
-    LRESULT     ret = 0;
     WORD args[8];
 
     whic = MSVIDEO_GetHicPtr(hic);
     if (whic)
     {
+        DWORD ret = 0;
         switch (msg)
         {
         case DRV_OPEN:
@@ -698,9 +701,9 @@ static  LRESULT CALLBACK  IC_Callback3216(HIC hic, HDRVR hdrv, UINT msg, DWORD l
             UnMapLS(lp2);
             break;
         }
+        return ret;
     }
-    else ret = ICERR_BADHANDLE;
-    return ret;
+    else return ICERR_BADHANDLE;
 }
 
 /***********************************************************************
@@ -730,6 +733,7 @@ LRESULT VFWAPI ICSendMessage16(HIC16 hic, UINT16 msg, DWORD lParam1, DWORD lPara
         if (whic->driverproc16)
         {
             WORD args[8];
+            DWORD result;
 
             /* FIXME: original code was passing hdrv first and hic second */
             /* but this doesn't match what IC_Callback3216 does */
@@ -741,7 +745,8 @@ LRESULT VFWAPI ICSendMessage16(HIC16 hic, UINT16 msg, DWORD lParam1, DWORD lPara
             args[2] = LOWORD(lParam1);
             args[1] = HIWORD(lParam2);
             args[0] = LOWORD(lParam2);
-            WOWCallback16Ex( (DWORD)whic->driverproc16, WCB16_PASCAL, sizeof(args), args, &ret );
+            WOWCallback16Ex( (DWORD)whic->driverproc16, WCB16_PASCAL, sizeof(args), args, &result );
+            ret = result;
         }
         else
         {
@@ -762,6 +767,7 @@ LRESULT VFWAPI ICSendMessage16(HIC16 hic, UINT16 msg, DWORD lParam1, DWORD lPara
 DWORD WINAPI VideoCapDriverDescAndVer16(WORD nr, LPSTR buf1, WORD buf1len,
                                         LPSTR buf2, WORD buf2len)
 {
+    static const char version_info_spec[] = "\\StringFileInfo\\040904E4\\FileDescription";
     DWORD	verhandle;
     DWORD	infosize;
     UINT	subblocklen;
@@ -787,7 +793,7 @@ DWORD WINAPI VideoCapDriverDescAndVer16(WORD nr, LPSTR buf1, WORD buf1len,
 	    if (strncasecmp(buf, "vid", 3)) continue;
 	    if (nr--) continue;
 	    fnLen = sizeof(fn);
-	    lRet = RegQueryValueExA(hKey, buf, 0, 0, fn, &fnLen);
+	    lRet = RegQueryValueExA(hKey, buf, 0, 0, (LPBYTE)fn, &fnLen);
 	    if (lRet == ERROR_SUCCESS) found = TRUE;
 	    break;
 	}
@@ -821,37 +827,37 @@ DWORD WINAPI VideoCapDriverDescAndVer16(WORD nr, LPSTR buf1, WORD buf1len,
     infobuf = HeapAlloc(GetProcessHeap(), 0, infosize);
     if (GetFileVersionInfoA(fn, verhandle, infosize, infobuf)) 
     {
-        char	vbuf[200];
         /* Yes, two space behind : */
         /* FIXME: test for buflen */
-        sprintf(vbuf, "Version:  %d.%d.%d.%d\n", 
+        snprintf(buf2, buf2len, "Version:  %d.%d.%d.%d\n",
                 ((WORD*)infobuf)[0x0f],
                 ((WORD*)infobuf)[0x0e],
                 ((WORD*)infobuf)[0x11],
                 ((WORD*)infobuf)[0x10]
 	    );
-        TRACE("version of %s is %s\n", fn, vbuf);
-        strncpy(buf2, vbuf, buf2len);
+        TRACE("version of %s is %s\n", fn, buf2);
     }
     else 
     {
         TRACE("GetFileVersionInfoA failed for %s.\n", fn);
-        strncpy(buf2, fn, buf2len); /* msvideo.dll appears to copy fn*/
+        lstrcpynA(buf2, fn, buf2len); /* msvideo.dll appears to copy fn*/
     }
     /* FIXME: language problem? */
     if (VerQueryValueA(	infobuf,
-                        "\\StringFileInfo\\040904E4\\FileDescription",
+                        version_info_spec,
                         &subblock,
                         &subblocklen
             )) 
     {
+        UINT copylen = min(subblocklen,buf1len-1);
+        memcpy(buf1, subblock, copylen);
+        buf1[copylen] = '\0';
         TRACE("VQA returned %s\n", (LPCSTR)subblock);
-        strncpy(buf1, subblock, buf1len);
     }
     else 
     {
         TRACE("VQA did not return on query \\StringFileInfo\\040904E4\\FileDescription?\n");
-        strncpy(buf1, fn, buf1len); /* msvideo.dll appears to copy fn*/
+        lstrcpynA(buf1, fn, buf1len); /* msvideo.dll appears to copy fn*/
     }
     HeapFree(GetProcessHeap(), 0, infobuf);
     return 0;
@@ -884,7 +890,7 @@ static  LRESULT CALLBACK IC_CallTo16(HDRVR hdrv, HIC hic, UINT msg, LPARAM lp1, 
 }
 
 /**************************************************************************
- *                      DllEntryPoint (MSVIDEO.300)
+ *                      DllEntryPoint (MSVIDEO.3)
  *
  * MSVIDEO DLL entry point
  *

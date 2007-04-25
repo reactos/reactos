@@ -1,4 +1,6 @@
+#1 pascal WEP(word)
 2 pascal VideoForWindowsVersion() VideoForWindowsVersion
+3 pascal DllEntryPoint(long word word word long word) VIDEO_LibMain
 20 stub VIDEOGETNUMDEVS
 21 stub VIDEOGETERRORTEXT
 22 pascal VideoCapDriverDescAndVer(word ptr word ptr word) VideoCapDriverDescAndVer16
@@ -64,5 +66,3 @@
 251 stub _MCIWNDREGISTERCLASS
 252 stub GETOPENFILENAMEPREVIEW
 253 stub GETSAVEFILENAMEPREVIEW
-
-300 pascal DllEntryPoint(long word word word long word) VIDEO_LibMain

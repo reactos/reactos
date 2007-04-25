@@ -1,0 +1,52 @@
+/*
+ * Copyright 2005 Dmitry Timoshkov
+ * Copyright 2006 Mikolaj Zalewski
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+ICM_CHOOSE_COMPRESSOR DIALOG DISCARDABLE  36, 24, 207, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Kompresja wideo"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON "&OK",IDOK,146,2,52,14
+    PUSHBUTTON "&Anuluj",IDCANCEL,146,18,52,14
+
+    LTEXT "Typ &kompresji:",-1,9,6,128,8
+    COMBOBOX 880,9,16,128,67,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
+
+    PUSHBUTTON "Kon&figuruj...",882,146,36,52,14
+    PUSHBUTTON "&Informacje...",883,146,52,52,14
+
+    SCROLLBAR 884,9,44,128,9,WS_TABSTOP
+
+    LTEXT "&Jakoœæ kompresji:",886,9,34,97,8
+
+    CONTROL "&Ramka kluczowa co",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,81,12
+    EDITTEXT 888,88,60,22,12
+    LTEXT "ramek",889,114,62,31,10
+
+    CONTROL "&Strumieñ",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,81,12
+    EDITTEXT 895,88,76,22,12
+    LTEXT "KB/sec",896,114,78,31,10
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FULLFRAMES "Pe³ne ramki (bez kompresji)"
+}

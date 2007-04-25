@@ -4,11 +4,11 @@
 2 stdcall VideoForWindowsVersion()
 
 @ stdcall DrawDibBegin(long long long long ptr long long long)
-@ stub    DrawDibChangePalette
+@ stdcall DrawDibChangePalette(long long long ptr)
 @ stdcall DrawDibClose(long)
 @ stdcall DrawDibDraw(long long long long long long ptr ptr long long long long long)
 @ stdcall DrawDibEnd(long)
-@ stub    DrawDibGetBuffer
+@ stdcall DrawDibGetBuffer(long ptr long long)
 @ stdcall DrawDibGetPalette(long)
 @ stdcall DrawDibOpen()
 @ stdcall DrawDibProfileDisplay(ptr)
@@ -16,8 +16,8 @@
 @ stdcall DrawDibSetPalette(long long)
 @ stdcall DrawDibStart(long long)
 @ stdcall DrawDibStop(long)
-@ stub    DrawDibTime
-@ stub    GetOpenFileNamePreview
+@ stdcall DrawDibTime(long ptr)
+@ stdcall GetOpenFileNamePreview(ptr) GetOpenFileNamePreviewA
 @ stdcall GetOpenFileNamePreviewA(ptr)
 @ stdcall GetOpenFileNamePreviewW(ptr)
 @ stdcall GetSaveFileNamePreviewA(ptr)
@@ -40,10 +40,10 @@
 @ stdcall ICOpen(long long long)
 @ stdcall ICOpenFunction(long long long ptr)
 @ stdcall ICRemove(long long long)
-@ stdcall ICSendMessage(long long long long)
-@ stub    ICSeqCompressFrame
-@ stub    ICSeqCompressFrameEnd
-@ stub    ICSeqCompressFrameStart
+@ stdcall ICSendMessage(long long ptr ptr)
+@ stdcall ICSeqCompressFrame(ptr long ptr ptr ptr)
+@ stdcall ICSeqCompressFrameEnd(ptr)
+@ stdcall ICSeqCompressFrameStart(ptr ptr)
 @ cdecl   MCIWndCreate (long long long str) MCIWndCreateA
 @ cdecl   MCIWndCreateA (long long long str)
 @ cdecl   MCIWndCreateW (long long long wstr)

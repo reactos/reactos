@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * FIXME:
  * Add support for all remaining MCI_ commands and MCIWNDM_ messages.
@@ -104,7 +104,7 @@ BOOL VFWAPIV MCIWndRegisterClass(void)
 HWND VFWAPIV MCIWndCreateW(HWND hwndParent, HINSTANCE hInstance,
                            DWORD dwStyle, LPCWSTR szFile)
 {
-    TRACE("%p %p %lx %s\n", hwndParent, hInstance, dwStyle, debugstr_w(szFile));
+    TRACE("%p %p %x %s\n", hwndParent, hInstance, dwStyle, debugstr_w(szFile));
 
     MCIWndRegisterClass();
 
@@ -244,7 +244,7 @@ static void MCIWND_UpdateState(MCIWndInfo *mwi)
         strcatW(buffer, r_braceW);
     }
 
-    TRACE("=> '%s'\n", debugstr_w(buffer));
+    TRACE("=> %s\n", debugstr_w(buffer));
     SetWindowTextW(mwi->hWnd, buffer);
 }
 
@@ -429,6 +429,21 @@ static LRESULT mci_get_devcaps(MCIWndInfo *mwi, UINT cap)
     return mci_devcaps.dwReturn;
 }
 
+static LRESULT MCIWND_KeyDown(MCIWndInfo *mwi, UINT key)
+{
+    TRACE("%p, key %04x\n", mwi->hWnd, key);
+
+    switch(key)
+    {
+    case VK_ESCAPE:
+        SendMessageW(mwi->hWnd, MCI_STOP, 0, 0);
+        return 0;
+
+    default:
+        return 0;
+    }
+}
+
 static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam)
 {
     MCIWndInfo *mwi;
@@ -476,6 +491,9 @@ static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lPa
 
     case WM_COMMAND:
         return MCIWND_Command(mwi, wParam, lParam);
+
+    case WM_KEYDOWN:
+        return MCIWND_KeyDown(mwi, wParam);
 
     case WM_NCACTIVATE:
         if (mwi->uTimer)
@@ -735,7 +753,7 @@ end_of_mci_open:
                 MCIWND_notify_error(mwi);
                 return 0;
             }
-            TRACE("MCIWNDM_GETLENGTH: %ld\n", mci_status.dwReturn);
+            TRACE("MCIWNDM_GETLENGTH: %d\n", mci_status.dwReturn);
             return mci_status.dwReturn;
         }
 
@@ -752,7 +770,7 @@ end_of_mci_open:
                 MCIWND_notify_error(mwi);
                 return 0;
             }
-            TRACE("MCIWNDM_GETSTART: %ld\n", mci_status.dwReturn);
+            TRACE("MCIWNDM_GETSTART: %d\n", mci_status.dwReturn);
             return mci_status.dwReturn;
         }
 
@@ -1010,7 +1028,7 @@ end_of_mci_open:
         return mwi->lasterror;
 
     case MCIWNDM_RETURNSTRINGW:
-        strncpyW((LPWSTR)lParam, mwi->return_string, wParam);
+        lstrcpynW((LPWSTR)lParam, mwi->return_string, wParam);
         TRACE("MCIWNDM_RETURNTRINGW %s\n", debugstr_wn((LPWSTR)lParam, wParam));
         return mwi->lasterror;
 
@@ -1048,7 +1066,7 @@ end_of_mci_open:
         return 0;
 
     case MCIWNDM_GETSTYLES:
-        TRACE("MCIWNDM_GETSTYLES: %08lx\n", mwi->dwStyle & 0xffff);
+        TRACE("MCIWNDM_GETSTYLES: %08x\n", mwi->dwStyle & 0xffff);
         return mwi->dwStyle & 0xffff;
 
     case MCIWNDM_GETDEVICEA:
@@ -1095,7 +1113,7 @@ end_of_mci_open:
     case MCIWNDM_GETFILENAMEW:
         TRACE("MCIWNDM_GETFILENAMEW: %s\n", debugstr_w(mwi->lpName));
         if (mwi->lpName)
-            strncpyW((LPWSTR)lParam, mwi->lpName, wParam);
+            lstrcpynW((LPWSTR)lParam, mwi->lpName, wParam);
         return 0;
 
     case MCIWNDM_GETTIMEFORMATA:
@@ -1328,11 +1346,8 @@ end_of_mci_open:
             mwi->mode = MCI_MODE_NOT_READY;
             mwi->position = -1;
 
-            if (mwi->lpName)
-            {
-                HeapFree(GetProcessHeap(), 0, mwi->lpName);
-                mwi->lpName = NULL;
-            }
+            HeapFree(GetProcessHeap(), 0, mwi->lpName);
+            mwi->lpName = NULL;
             MCIWND_UpdateState(mwi);
 
             GetClientRect(hWnd, &rc);
