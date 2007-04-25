@@ -763,8 +763,8 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
         static const WCHAR the_name[] = {'I','M','E','\0'};
 
         IMM_Register();
-        hwndDefault = CreateWindowExW( WS_EX_CLIENTEDGE, WC_IMECLASSNAME,
-                the_name, WS_POPUPWINDOW|WS_CAPTION, 0, 0, 120, 55, 0, 0,
+        hwndDefault = CreateWindowExW( WS_EX_TOOLWINDOW, WC_IMECLASSNAME,
+                the_name, WS_POPUP, 0, 0, 1, 1, 0, 0,
                 hImeInst, 0);
 
         TRACE("Default created (%p)\n",hwndDefault);
@@ -1556,6 +1556,7 @@ static void PaintDefaultIMEWnd(HWND hwnd)
     RECT rect;
     HDC hdc = BeginPaint(hwnd,&ps);
     GetClientRect(hwnd,&rect);
+    FillRect(hdc, &rect, (HBRUSH)(COLOR_WINDOW + 1));
 
     if (root_context->dwCompStringLength && root_context->CompositionString)
     {
@@ -1566,8 +1567,6 @@ static void PaintDefaultIMEWnd(HWND hwnd)
         if (root_context->textfont)
             oldfont = SelectObject(hdc,root_context->textfont);
 
-        TextOutW(hdc, 0,0,(LPWSTR)root_context->CompositionString,
-                 root_context->dwCompStringLength / sizeof(WCHAR));
 
         GetTextExtentPoint32W(hdc, (LPWSTR)root_context->CompositionString,
                               root_context->dwCompStringLength / sizeof(WCHAR),
@@ -1575,12 +1574,44 @@ static void PaintDefaultIMEWnd(HWND hwnd)
         pt.x = size.cx;
         pt.y = size.cy;
         LPtoDP(hdc,&pt,1);
-        rect.left = pt.x;
+
+        if (root_context->CompForm.dwStyle == CFS_POINT ||
+            root_context->CompForm.dwStyle == CFS_FORCE_POSITION)
+        {
+            POINT cpt = root_context->CompForm.ptCurrentPos;
+            ClientToScreen(root_context->hwnd,&cpt);
+            rect.left = cpt.x;
+            rect.top = cpt.y;
+            rect.right = rect.left + pt.x + 20;
+            rect.bottom = rect.top + pt.y + 20;
+        }
+        else if (root_context->CompForm.dwStyle == CFS_RECT)
+        {
+            POINT cpt;
+            cpt.x = root_context->CompForm.rcArea.left;
+            cpt.y = root_context->CompForm.rcArea.top;
+            ClientToScreen(root_context->hwnd,&cpt);
+            rect.left = cpt.x;
+            rect.top = cpt.y;
+            cpt.x = root_context->CompForm.rcArea.right;
+            cpt.y = root_context->CompForm.rcArea.bottom;
+            ClientToScreen(root_context->hwnd,&cpt);
+            rect.right = cpt.x;
+            rect.bottom = cpt.y;
+        }
+        else
+        {
+            rect.right = rect.left + pt.x + 20;
+            rect.bottom = rect.top + pt.y + 20;
+        }
+        MoveWindow(hwnd, rect.left, rect.top, rect.right - rect.left ,
+                   rect.bottom - rect.top, FALSE);
+        TextOutW(hdc, 10,10,(LPWSTR)root_context->CompositionString,
+                 root_context->dwCompStringLength / sizeof(WCHAR));
 
         if (oldfont)
             SelectObject(hdc,oldfont);
     }
-    FillRect(hdc,&rect, (HBRUSH) (COLOR_WINDOW+1));
     EndPaint(hwnd,&ps);
 }
 
