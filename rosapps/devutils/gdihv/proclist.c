@@ -3,7 +3,7 @@
  *
  *	proclist.c
  *
- *	Copyright (C) 2007	Timo kreuzer <timo <dot> kreuzer <at> web.de>
+ *	Copyright (C) 2007	Timo Kreuzer <timo <dot> kreuzer <at> web.de>
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by

@@ -3,7 +3,7 @@
  *
  *	handlelist.c
  *
- *	Copyright (C) 2007	Timo kreuzer <timo <dot> kreuzer <at> web.de>
+ *	Copyright (C) 2007	Timo Kreuzer <timo <dot> kreuzer <at> web.de>
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -58,6 +58,10 @@ HandleList_Create(HWND hListCtrl)
 	column.cx = 80;
 	(void)ListView_InsertColumn(hListCtrl, 6, &column);
 
+	column.pszText = L"Type";
+	column.cx = 80;
+	(void)ListView_InsertColumn(hListCtrl, 7, &column);
+
 	HandleList_Update(hListCtrl, 0);
 }
 
@@ -65,6 +69,7 @@ VOID
 HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 {
 	INT i, index;
+	HANDLE handle;
 	PGDI_TABLE_ENTRY pEntry;
 	LV_ITEM item;
 	TCHAR strText[80];
@@ -91,10 +96,11 @@ HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 				wsprintf(strText, L"%d", i);
 				ListView_SetItemText(hHandleListCtrl, index, 1, strText);
 
-				wsprintf(strText, L"%#08x", GDI_HANDLE_CREATE(i, pEntry->Type));
+				handle = GDI_HANDLE_CREATE(i, pEntry->Type);
+				wsprintf(strText, L"%#08x", handle);
 				ListView_SetItemText(hHandleListCtrl, index, 2, strText);
 
-				str2 = GetTypeName(pEntry->Type & GDI_HANDLE_TYPE_MASK);
+				str2 = GetTypeName(handle);
 				ListView_SetItemText(hHandleListCtrl, index, 3, str2);
 
 				wsprintf(strText, L"%#08x", (UINT)pEntry->ProcessId);
@@ -105,15 +111,19 @@ HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 
 				wsprintf(strText, L"%#08x", (UINT)pEntry->UserData);
 				ListView_SetItemText(hHandleListCtrl, index, 6, strText);
+
+				wsprintf(strText, L"%#08x", (UINT)pEntry->Type);
+				ListView_SetItemText(hHandleListCtrl, index, 7, strText);
 			}
 		}
 	}
 }
 
 TCHAR*
-GetTypeName(UINT Type)
+GetTypeName(HANDLE handle)
 {
 	TCHAR* strText;
+	UINT Type = GDI_HANDLE_GET_TYPE(handle);
 
 	switch (Type)
 	{
