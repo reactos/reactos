@@ -212,7 +212,7 @@ struct _IAVIFileImpl {
 
 static HRESULT AVIFILE_LoadFile(IAVIFileImpl *This);
 static HRESULT AVIFILE_LoadSunFile(IAVIFileImpl *This);
-static HRESULT AVIFILE_SaveFile(IAVIFileImpl *This);
+static HRESULT AVIFILE_SaveFile(const IAVIFileImpl *This);
 
 HRESULT AVIFILE_CreateWAVFile(REFIID riid, LPVOID *ppv)
 {
@@ -1248,7 +1248,7 @@ static HRESULT AVIFILE_LoadSunFile(IAVIFileImpl *This)
   return AVIERR_OK;
 }
 
-static HRESULT AVIFILE_SaveFile(IAVIFileImpl *This)
+static HRESULT AVIFILE_SaveFile(const IAVIFileImpl *This)
 {
   MMCKINFO ckRIFF;
   MMCKINFO ck;

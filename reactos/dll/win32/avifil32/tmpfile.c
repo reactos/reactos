@@ -16,16 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
 #include <stdarg.h>
 
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "winnls.h"
 #include "winerror.h"
-#include "mmsystem.h"
 #include "vfw.h"
 
 #include "avifile_private.h"
@@ -71,7 +68,7 @@ typedef struct _ITmpFileImpl {
   PAVISTREAM   *ppStreams;
 } ITmpFileImpl;
 
-PAVIFILE AVIFILE_CreateAVITempFile(int nStreams, PAVISTREAM *ppStreams) {
+PAVIFILE AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStreams) {
   ITmpFileImpl *tmpFile;
   int           i;
 

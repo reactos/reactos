@@ -23,7 +23,6 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "winnls.h"
 #include "winerror.h"
 #include "mmsystem.h"
 #include "vfw.h"

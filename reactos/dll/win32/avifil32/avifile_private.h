@@ -67,7 +67,7 @@ extern HRESULT AVIFILE_CreateACMStream(REFIID riid, LPVOID *ppobj);
 extern HRESULT AVIFILE_CreateICMStream(REFIID riid, LPVOID *ppobj);
 extern PAVIEDITSTREAM AVIFILE_CreateEditStream(PAVISTREAM pstream);
 extern PGETFRAME AVIFILE_CreateGetFrame(PAVISTREAM pstream);
-extern PAVIFILE  AVIFILE_CreateAVITempFile(int nStreams,PAVISTREAM *ppStreams);
+extern PAVIFILE  AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStreams);
 
 extern LPCWSTR  AVIFILE_BasenameW(LPCWSTR szFileName);
 

@@ -28,7 +28,6 @@
 #include "winreg.h"
 #include "winerror.h"
 
-#include "mmsystem.h"
 #include "vfw.h"
 #include "avifile_private.h"
 
