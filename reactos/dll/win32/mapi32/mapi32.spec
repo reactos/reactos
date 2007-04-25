@@ -7,8 +7,8 @@
  15 stdcall MAPIAllocateMore@12(long ptr ptr) MAPIAllocateMore
  16 stdcall MAPIFreeBuffer(ptr)
  17 stdcall MAPIFreeBuffer@4(ptr) MAPIFreeBuffer
- 18 stub MAPIAdminProfiles
- 19 stub MAPIAdminProfiles@8
+ 18 stdcall MAPIAdminProfiles(long ptr)
+ 19 stdcall MAPIAdminProfiles@8(long ptr) MAPIAdminProfiles
  20 stdcall MAPIInitialize(ptr)
  21 stdcall MAPIInitialize@4(ptr) MAPIInitialize
  22 stdcall MAPIUninitialize()

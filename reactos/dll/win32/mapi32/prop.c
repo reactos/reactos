@@ -665,7 +665,7 @@ VOID WINAPI FreePadrlist(LPADRLIST lpAddrs)
     TRACE("(%p)\n", lpAddrs);
 
     /* Structures are binary compatible; use the same implementation */
-    return FreeProws((LPSRowSet)lpAddrs);
+    FreeProws((LPSRowSet)lpAddrs);
 }
 
 /*************************************************************************

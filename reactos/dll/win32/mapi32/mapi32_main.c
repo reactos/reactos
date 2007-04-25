@@ -110,3 +110,10 @@ VOID WINAPI MAPIUninitialize(void)
 {
     FIXME("Stub\n");
 }
+
+HRESULT WINAPI MAPIAdminProfiles(ULONG ulFlags,  LPPROFADMIN *lppProfAdmin)
+{
+    FIXME("(%u, %p): stub\n", ulFlags, lppProfAdmin);
+    *lppProfAdmin = NULL;
+    return E_FAIL;
+}
