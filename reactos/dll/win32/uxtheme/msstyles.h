@@ -82,7 +82,7 @@ typedef struct _THEME_FILE {
     PTHEME_IMAGE images;
 } THEME_FILE, *PTHEME_FILE;
 
-typedef void* PUXINI_FILE;
+typedef struct _UXINI_FILE *PUXINI_FILE;
 
 HRESULT MSSTYLES_OpenThemeFile(LPCWSTR lpThemeFile, LPCWSTR pszColorName, LPCWSTR pszSizeName, PTHEME_FILE *tf);
 void MSSTYLES_CloseThemeFile(PTHEME_FILE tf);
