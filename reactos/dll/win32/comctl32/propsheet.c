@@ -167,7 +167,7 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
                                 int index,
                                 int skipdir,
                                 HPROPSHEETPAGE hpage);
-static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, PropSheetInfo* psInfo);
+static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, const PropSheetInfo* psInfo);
 static PADDING_INFO PROPSHEET_GetPaddingInfoWizard(HWND hwndDlg, const PropSheetInfo* psInfo);
 static BOOL PROPSHEET_DoCommand(HWND hwnd, WORD wID);
 
@@ -252,7 +252,7 @@ static void PROPSHEET_GetPageRect(const PropSheetInfo * psInfo, HWND hwndDlg,
  *
  * Find page index corresponding to page resource id.
  */
-static INT PROPSHEET_FindPageByResId(PropSheetInfo * psInfo, LRESULT resId)
+static INT PROPSHEET_FindPageByResId(const PropSheetInfo * psInfo, LRESULT resId)
 {
    INT i;
 
@@ -700,7 +700,7 @@ static INT_PTR PROPSHEET_CreateDialog(PropSheetInfo* psInfo)
  *     Verify that the tab control and the "largest" property sheet page dlg. template
  *     match in size.
  */
-static BOOL PROPSHEET_SizeMismatch(HWND hwndDlg, PropSheetInfo* psInfo)
+static BOOL PROPSHEET_SizeMismatch(HWND hwndDlg, const PropSheetInfo* psInfo)
 {
   HWND hwndTabCtrl = GetDlgItem(hwndDlg, IDC_TABCONTROL);
   RECT rcOrigTab, rcPage;
@@ -819,7 +819,7 @@ static BOOL PROPSHEET_AdjustSize(HWND hwndDlg, PropSheetInfo* psInfo)
  *
  * Resizes the property sheet to fit the largest page.
  */
-static BOOL PROPSHEET_AdjustSizeWizard(HWND hwndDlg, PropSheetInfo* psInfo)
+static BOOL PROPSHEET_AdjustSizeWizard(HWND hwndDlg, const PropSheetInfo* psInfo)
 {
   HWND hwndLine = GetDlgItem(hwndDlg, IDC_SUNKEN_LINE);
   RECT rc, lineRect, dialogRect;
@@ -856,7 +856,7 @@ static BOOL PROPSHEET_AdjustSizeWizard(HWND hwndDlg, PropSheetInfo* psInfo)
  *
  * Adjusts the buttons' positions.
  */
-static BOOL PROPSHEET_AdjustButtons(HWND hwndParent, PropSheetInfo* psInfo)
+static BOOL PROPSHEET_AdjustButtons(HWND hwndParent, const PropSheetInfo* psInfo)
 {
   HWND hwndButton = GetDlgItem(hwndParent, IDOK);
   RECT rcSheet;
@@ -955,7 +955,7 @@ static BOOL PROPSHEET_AdjustButtons(HWND hwndParent, PropSheetInfo* psInfo)
  * Adjusts the buttons' positions.
  */
 static BOOL PROPSHEET_AdjustButtonsWizard(HWND hwndParent,
-                                          PropSheetInfo* psInfo)
+                                          const PropSheetInfo* psInfo)
 {
   HWND hwndButton = GetDlgItem(hwndParent, IDCANCEL);
   HWND hwndLine = GetDlgItem(hwndParent, IDC_SUNKEN_LINE);
@@ -1173,7 +1173,7 @@ static PADDING_INFO PROPSHEET_GetPaddingInfoWizard(HWND hwndDlg, const PropSheet
  * Insert the tabs in the tab control.
  */
 static BOOL PROPSHEET_CreateTabControl(HWND hwndParent,
-                                       PropSheetInfo * psInfo)
+                                       const PropSheetInfo * psInfo)
 {
   HWND hwndTabCtrl = GetDlgItem(hwndParent, IDC_TABCONTROL);
   TCITEMW item;
@@ -2023,6 +2023,11 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
     return FALSE;
   }
 
+  /* unset active page while doing this transition. */
+  if (psInfo->active_page != -1)
+     ShowWindow(psInfo->proppage[psInfo->active_page].hwndPage, SW_HIDE);
+  psInfo->active_page = -1;
+
   while (1) {
     int result;
     PSHNOTIFY psn;
@@ -2704,7 +2709,7 @@ static BOOL PROPSHEET_RecalcPageSizes(HWND hwndDlg)
  * Given a HPROPSHEETPAGE, returns the index of the corresponding page from
  * the array of PropPageInfo.
  */
-static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, PropSheetInfo* psInfo)
+static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, const PropSheetInfo* psInfo)
 {
   BOOL found = FALSE;
   int index = 0;
@@ -2780,7 +2785,7 @@ static void PROPSHEET_CleanUp(HWND hwndDlg)
   GlobalFree((HGLOBAL)psInfo);
 }
 
-static INT do_loop(PropSheetInfo *psInfo)
+static INT do_loop(const PropSheetInfo *psInfo)
 {
     MSG msg;
     INT ret = -1;
@@ -3261,6 +3266,7 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
     WCHAR szBuffer[256];
     int nLength;
 
+    if (psInfo->active_page < 0) return 1;
     hdc = hdcParam ? hdcParam : BeginPaint(hwnd, &ps);
     if (!hdc) return 1;
 

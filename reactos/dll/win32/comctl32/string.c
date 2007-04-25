@@ -427,7 +427,7 @@ LPSTR WINAPI StrStrIA(LPCSTR lpszStr, LPCSTR lpszSearch)
  *   The signed integer value represented by the string, or 0 if no integer is
  *   present.
  */
-INT WINAPI StrToIntA (LPSTR lpszStr)
+INT WINAPI StrToIntA (LPCSTR lpszStr)
 {
     return atoi(lpszStr);
 }
@@ -449,7 +449,7 @@ LPWSTR WINAPI StrStrIW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
  *
  * See StrToIntA.
  */
-INT WINAPI StrToIntW (LPWSTR lpString)
+INT WINAPI StrToIntW (LPCWSTR lpString)
 {
     return atoiW(lpString);
 }

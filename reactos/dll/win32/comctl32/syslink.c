@@ -472,7 +472,7 @@ CheckParameter:
  * SYSLINK_RepaintLink
  * Repaints a link.
  */
-static VOID SYSLINK_RepaintLink (SYSLINK_INFO *infoPtr, PDOC_ITEM DocItem)
+static VOID SYSLINK_RepaintLink (const SYSLINK_INFO *infoPtr, const DOC_ITEM *DocItem)
 {
     PDOC_TEXTBLOCK bl;
     int n;
@@ -501,7 +501,7 @@ static VOID SYSLINK_RepaintLink (SYSLINK_INFO *infoPtr, PDOC_ITEM DocItem)
  * SYSLINK_GetLinkItemByIndex
  * Retrieves a document link by its index
  */
-static PDOC_ITEM SYSLINK_GetLinkItemByIndex (SYSLINK_INFO *infoPtr, int iLink)
+static PDOC_ITEM SYSLINK_GetLinkItemByIndex (const SYSLINK_INFO *infoPtr, int iLink)
 {
     PDOC_ITEM Current = infoPtr->Items;
 
@@ -520,7 +520,7 @@ static PDOC_ITEM SYSLINK_GetLinkItemByIndex (SYSLINK_INFO *infoPtr, int iLink)
  * SYSLINK_GetFocusLink
  * Retrieves the link that has the LIS_FOCUSED bit
  */
-static PDOC_ITEM SYSLINK_GetFocusLink (SYSLINK_INFO *infoPtr, int *LinkId)
+static PDOC_ITEM SYSLINK_GetFocusLink (const SYSLINK_INFO *infoPtr, int *LinkId)
 {
     PDOC_ITEM Current = infoPtr->Items;
     int id = 0;
@@ -546,7 +546,7 @@ static PDOC_ITEM SYSLINK_GetFocusLink (SYSLINK_INFO *infoPtr, int *LinkId)
  * SYSLINK_GetNextLink
  * Gets the next link
  */
-static PDOC_ITEM SYSLINK_GetNextLink (SYSLINK_INFO *infoPtr, PDOC_ITEM Current)
+static PDOC_ITEM SYSLINK_GetNextLink (const SYSLINK_INFO *infoPtr, PDOC_ITEM Current)
 {
     for(Current = (Current != NULL ? Current->Next : infoPtr->Items);
         Current != NULL;
@@ -564,7 +564,7 @@ static PDOC_ITEM SYSLINK_GetNextLink (SYSLINK_INFO *infoPtr, PDOC_ITEM Current)
  * SYSLINK_GetPrevLink
  * Gets the previous link
  */
-static PDOC_ITEM SYSLINK_GetPrevLink (SYSLINK_INFO *infoPtr, PDOC_ITEM Current)
+static PDOC_ITEM SYSLINK_GetPrevLink (const SYSLINK_INFO *infoPtr, PDOC_ITEM Current)
 {
     if(Current == NULL)
     {
@@ -643,7 +643,7 @@ static BOOL SYSLINK_WrapLine (HDC hdc, LPWSTR Text, WCHAR BreakChar, int *LineLe
  * SYSLINK_Render
  * Renders the document in memory
  */
-static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc, PRECT pRect)
+static VOID SYSLINK_Render (const SYSLINK_INFO *infoPtr, HDC hdc, PRECT pRect)
 {
     RECT rc;
     PDOC_ITEM Current;
@@ -824,7 +824,7 @@ static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc, PRECT pRect)
  * SYSLINK_Draw
  * Draws the SysLink control.
  */
-static LRESULT SYSLINK_Draw (SYSLINK_INFO *infoPtr, HDC hdc)
+static LRESULT SYSLINK_Draw (const SYSLINK_INFO *infoPtr, HDC hdc)
 {
     RECT rc;
     PDOC_ITEM Current;
@@ -894,7 +894,7 @@ static LRESULT SYSLINK_Draw (SYSLINK_INFO *infoPtr, HDC hdc)
  * SYSLINK_Paint
  * Handles the WM_PAINT message.
  */
-static LRESULT SYSLINK_Paint (SYSLINK_INFO *infoPtr, HDC hdcParam)
+static LRESULT SYSLINK_Paint (const SYSLINK_INFO *infoPtr, HDC hdcParam)
 {
     HDC hdc;
     PAINTSTRUCT ps;
@@ -1005,7 +1005,7 @@ static LRESULT SYSLINK_SetText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
  * If no document item is specified, the focus bit will be removed from all links.
  * Returns the previous focused item.
  */
-static PDOC_ITEM SYSLINK_SetFocusLink (SYSLINK_INFO *infoPtr, PDOC_ITEM DocItem)
+static PDOC_ITEM SYSLINK_SetFocusLink (const SYSLINK_INFO *infoPtr, const DOC_ITEM *DocItem)
 {
     PDOC_ITEM Current, PrevFocus = NULL;
     
@@ -1036,7 +1036,7 @@ static PDOC_ITEM SYSLINK_SetFocusLink (SYSLINK_INFO *infoPtr, PDOC_ITEM DocItem)
  *           SYSLINK_SetItem
  * Sets the states and attributes of a link item.
  */
-static LRESULT SYSLINK_SetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
+static LRESULT SYSLINK_SetItem (const SYSLINK_INFO *infoPtr, const LITEM *Item)
 {
     PDOC_ITEM di;
     int nc;
@@ -1126,7 +1126,7 @@ static LRESULT SYSLINK_SetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
  *           SYSLINK_GetItem
  * Retrieves the states and attributes of a link item.
  */
-static LRESULT SYSLINK_GetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
+static LRESULT SYSLINK_GetItem (const SYSLINK_INFO *infoPtr, PLITEM Item)
 {
     PDOC_ITEM di;
     
@@ -1184,7 +1184,7 @@ static LRESULT SYSLINK_GetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
  *           SYSLINK_PtInDocItem
  * Determines if a point is in the region of a document item
  */
-static BOOL SYSLINK_PtInDocItem (PDOC_ITEM DocItem, POINT pt)
+static BOOL SYSLINK_PtInDocItem (const DOC_ITEM *DocItem, POINT pt)
 {
     PDOC_TEXTBLOCK bl;
     int n;
@@ -1212,7 +1212,7 @@ static BOOL SYSLINK_PtInDocItem (PDOC_ITEM DocItem, POINT pt)
  *           SYSLINK_HitTest
  * Determines the link the user clicked on.
  */
-static LRESULT SYSLINK_HitTest (SYSLINK_INFO *infoPtr, PLHITTESTINFO HitTest)
+static LRESULT SYSLINK_HitTest (const SYSLINK_INFO *infoPtr, PLHITTESTINFO HitTest)
 {
     PDOC_ITEM Current;
     int id = 0;
@@ -1256,7 +1256,7 @@ static LRESULT SYSLINK_HitTest (SYSLINK_INFO *infoPtr, PLHITTESTINFO HitTest)
  *           SYSLINK_GetIdealHeight
  * Returns the preferred height of a link at the current control's width.
  */
-static LRESULT SYSLINK_GetIdealHeight (SYSLINK_INFO *infoPtr)
+static LRESULT SYSLINK_GetIdealHeight (const SYSLINK_INFO *infoPtr)
 {
     HDC hdc = GetDC(infoPtr->Self);
     if(hdc != NULL)
@@ -1285,7 +1285,7 @@ static LRESULT SYSLINK_GetIdealHeight (SYSLINK_INFO *infoPtr)
  *           SYSLINK_SendParentNotify
  * Sends a WM_NOTIFY message to the parent window.
  */
-static LRESULT SYSLINK_SendParentNotify (SYSLINK_INFO *infoPtr, UINT code, PDOC_ITEM Link, int iLink)
+static LRESULT SYSLINK_SendParentNotify (const SYSLINK_INFO *infoPtr, UINT code, const DOC_ITEM *Link, int iLink)
 {
     NMLINK nml;
 
@@ -1363,7 +1363,7 @@ static LRESULT SYSLINK_KillFocus (SYSLINK_INFO *infoPtr, HWND NewFocusWindow)
  *           SYSLINK_LinkAtPt
  * Returns a link at the specified position
  */
-static PDOC_ITEM SYSLINK_LinkAtPt (SYSLINK_INFO *infoPtr, POINT *pt, int *LinkId, BOOL MustBeEnabled)
+static PDOC_ITEM SYSLINK_LinkAtPt (const SYSLINK_INFO *infoPtr, const POINT *pt, int *LinkId, BOOL MustBeEnabled)
 {
     PDOC_ITEM Current;
     int id = 0;
@@ -1389,7 +1389,7 @@ static PDOC_ITEM SYSLINK_LinkAtPt (SYSLINK_INFO *infoPtr, POINT *pt, int *LinkId
  *           SYSLINK_LButtonDown
  * Handles mouse clicks
  */
-static LRESULT SYSLINK_LButtonDown (SYSLINK_INFO *infoPtr, DWORD Buttons, POINT *pt)
+static LRESULT SYSLINK_LButtonDown (SYSLINK_INFO *infoPtr, DWORD Buttons, const POINT *pt)
 {
     PDOC_ITEM Current, Old;
     int id;
@@ -1415,7 +1415,7 @@ static LRESULT SYSLINK_LButtonDown (SYSLINK_INFO *infoPtr, DWORD Buttons, POINT 
  *           SYSLINK_LButtonUp
  * Handles mouse clicks
  */
-static LRESULT SYSLINK_LButtonUp (SYSLINK_INFO *infoPtr, DWORD Buttons, POINT *pt)
+static LRESULT SYSLINK_LButtonUp (SYSLINK_INFO *infoPtr, DWORD Buttons, const POINT *pt)
 {
     if(infoPtr->MouseDownID > -1)
     {
@@ -1438,7 +1438,7 @@ static LRESULT SYSLINK_LButtonUp (SYSLINK_INFO *infoPtr, DWORD Buttons, POINT *p
  *           SYSLINK_OnEnter
  * Handles ENTER key events
  */
-static BOOL SYSLINK_OnEnter (SYSLINK_INFO *infoPtr)
+static BOOL SYSLINK_OnEnter (const SYSLINK_INFO *infoPtr)
 {
     if(infoPtr->HasFocus)
     {
@@ -1459,7 +1459,7 @@ static BOOL SYSLINK_OnEnter (SYSLINK_INFO *infoPtr)
  *           SYSKEY_SelectNextPrevLink
  * Changes the currently focused link
  */
-static BOOL SYSKEY_SelectNextPrevLink (SYSLINK_INFO *infoPtr, BOOL Prev)
+static BOOL SYSKEY_SelectNextPrevLink (const SYSLINK_INFO *infoPtr, BOOL Prev)
 {
     if(infoPtr->HasFocus)
     {
@@ -1497,7 +1497,7 @@ static BOOL SYSKEY_SelectNextPrevLink (SYSLINK_INFO *infoPtr, BOOL Prev)
  * Determines if there's a next or previous link to decide whether the control
  * should capture the tab key message
  */
-static BOOL SYSLINK_NoNextLink (SYSLINK_INFO *infoPtr, BOOL Prev)
+static BOOL SYSLINK_NoNextLink (const SYSLINK_INFO *infoPtr, BOOL Prev)
 {
     PDOC_ITEM Focus, NewFocus;
 
@@ -1514,7 +1514,7 @@ static BOOL SYSLINK_NoNextLink (SYSLINK_INFO *infoPtr, BOOL Prev)
  *           SYSLINK_GetIdealSize
  * Calculates the ideal size of a link control at a given maximum width.
  */
-static VOID SYSLINK_GetIdealSize (SYSLINK_INFO *infoPtr, int cxMaxWidth, LPSIZE lpSize)
+static VOID SYSLINK_GetIdealSize (const SYSLINK_INFO *infoPtr, int cxMaxWidth, LPSIZE lpSize)
 {
     RECT rc;
     HDC hdc;

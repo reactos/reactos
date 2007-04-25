@@ -380,7 +380,7 @@ void WINAPI FreeMRUList (HANDLE hMRUList)
 INT WINAPI FindMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData,
                         LPINT lpRegNum)
 {
-    LPWINEMRULIST mp = (LPWINEMRULIST)hList;
+    const WINEMRULIST *mp = (LPWINEMRULIST)hList;
     INT ret;
     UINT i;
     LPSTR dataA = NULL;
@@ -726,7 +726,7 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
  *
  * See CreateMRUListLazyA.
  */
-HANDLE WINAPI CreateMRUListLazyW (LPCREATEMRULISTW lpcml, DWORD dwParam2,
+HANDLE WINAPI CreateMRUListLazyW (const CREATEMRULISTW *lpcml, DWORD dwParam2,
                                   DWORD dwParam3, DWORD dwParam4)
 {
     LPWINEMRULIST mp;
@@ -760,7 +760,7 @@ HANDLE WINAPI CreateMRUListLazyW (LPCREATEMRULISTW lpcml, DWORD dwParam2,
  * RETURNS
  *     Handle to MRU list.
  */
-HANDLE WINAPI CreateMRUListLazyA (LPCREATEMRULISTA lpcml, DWORD dwParam2,
+HANDLE WINAPI CreateMRUListLazyA (const CREATEMRULISTA *lpcml, DWORD dwParam2,
                                   DWORD dwParam3, DWORD dwParam4)
 {
     LPWINEMRULIST mp;
@@ -787,7 +787,7 @@ HANDLE WINAPI CreateMRUListLazyA (LPCREATEMRULISTA lpcml, DWORD dwParam2,
  *
  * See CreateMRUListA.
  */
-HANDLE WINAPI CreateMRUListW (LPCREATEMRULISTW lpcml)
+HANDLE WINAPI CreateMRUListW (const CREATEMRULISTW *lpcml)
 {
     return CreateMRUListLazyW(lpcml, 0, 0, 0);
 }
@@ -803,7 +803,7 @@ HANDLE WINAPI CreateMRUListW (LPCREATEMRULISTW lpcml)
  * RETURNS
  *     Handle to MRU list.
  */
-HANDLE WINAPI CreateMRUListA (LPCREATEMRULISTA lpcml)
+HANDLE WINAPI CreateMRUListA (const CREATEMRULISTA *lpcml)
 {
      return CreateMRUListLazyA (lpcml, 0, 0, 0);
 }
@@ -830,8 +830,8 @@ HANDLE WINAPI CreateMRUListA (LPCREATEMRULISTA lpcml)
 INT WINAPI EnumMRUListW (HANDLE hList, INT nItemPos, LPVOID lpBuffer,
                          DWORD nBufferSize)
 {
-    LPWINEMRULIST mp = (LPWINEMRULIST) hList;
-    LPWINEMRUITEM witem;
+    const WINEMRULIST *mp = (LPWINEMRULIST) hList;
+    const WINEMRUITEM *witem;
     INT desired, datasize;
 
     if (nItemPos >= mp->cursize) return -1;
@@ -855,7 +855,7 @@ INT WINAPI EnumMRUListW (HANDLE hList, INT nItemPos, LPVOID lpBuffer,
 INT WINAPI EnumMRUListA (HANDLE hList, INT nItemPos, LPVOID lpBuffer,
                          DWORD nBufferSize)
 {
-    LPWINEMRULIST mp = (LPWINEMRULIST) hList;
+    const WINEMRULIST *mp = (LPWINEMRULIST) hList;
     LPWINEMRUITEM witem;
     INT desired, datasize;
     DWORD lenA;
@@ -1019,7 +1019,7 @@ typedef struct tagNOTIFYDATA
  * DoNotify [Internal]
  */
 
-static LRESULT DoNotify (LPNOTIFYDATA lpNotify, UINT uCode, LPNMHDR lpHdr)
+static LRESULT DoNotify (const NOTIFYDATA *lpNotify, UINT uCode, LPNMHDR lpHdr)
 {
     NMHDR nmhdr;
     LPNMHDR lpNmh = NULL;

@@ -608,7 +608,7 @@ ImageList_Create (INT cx, INT cy, UINT flags,
     himl->cx        = cx;
     himl->cy        = cy;
     himl->flags     = flags;
-    himl->cMaxImage = cInitial + cGrow;
+    himl->cMaxImage = cInitial + 1;
     himl->cInitial  = cInitial;
     himl->cGrow     = cGrow;
     himl->clrFg     = CLR_DEFAULT;
@@ -2037,14 +2037,15 @@ HIMAGELIST WINAPI ImageList_Read (LPSTREAM pstm)
  * RETURNS
  *     Success: TRUE
  *     Failure: FALSE
+ *
+ * FIXME: as the image list storage test shows, native comctl32 simply shifts
+ * images without creating a new bitmap.
  */
-
 BOOL WINAPI
 ImageList_Remove (HIMAGELIST himl, INT i)
 {
     HBITMAP hbmNewImage, hbmNewMask;
     HDC     hdcBmp;
-    INT     nCount;
     SIZE    sz;
 
     TRACE("(himl=%p i=%d)\n", himl, i);
@@ -2060,6 +2061,8 @@ ImageList_Remove (HIMAGELIST himl, INT i)
     }
 
     if (i == -1) {
+        INT nCount;
+
         /* remove all */
 	if (himl->cCurImage == 0) {
 	    /* remove all on empty ImageList is allowed */
@@ -2067,7 +2070,7 @@ ImageList_Remove (HIMAGELIST himl, INT i)
 	    return TRUE;
 	}
 
-        himl->cMaxImage = himl->cInitial + himl->cGrow;
+        himl->cMaxImage = himl->cInitial + himl->cGrow - 1;
         himl->cCurImage = 0;
         for (nCount = 0; nCount < MAX_OVERLAYIMAGE; nCount++)
              himl->nOvlIdx[nCount] = -1;
@@ -2091,16 +2094,12 @@ ImageList_Remove (HIMAGELIST himl, INT i)
         TRACE("Remove single image! %d\n", i);
 
         /* create new bitmap(s) */
-        nCount = (himl->cCurImage + himl->cGrow - 1);
-
         TRACE(" - Number of images: %d / %d (Old/New)\n",
                  himl->cCurImage, himl->cCurImage - 1);
-        TRACE(" - Max. number of images: %d / %d (Old/New)\n",
-                 himl->cMaxImage, himl->cCurImage + himl->cGrow - 1);
 
-        hbmNewImage = ImageList_CreateImage(himl->hdcImage, himl, nCount, himl->cx);
+        hbmNewImage = ImageList_CreateImage(himl->hdcImage, himl, himl->cMaxImage, himl->cx);
 
-        imagelist_get_bitmap_size(himl, nCount, himl->cx, &sz );
+        imagelist_get_bitmap_size(himl, himl->cMaxImage, himl->cx, &sz );
         if (himl->hbmMask)
             hbmNewMask = CreateBitmap (sz.cx, sz.cy, 1, 1, NULL);
         else
@@ -2126,13 +2125,13 @@ ImageList_Remove (HIMAGELIST himl, INT i)
             TRACE("Post image copy!\n");
 
             SelectObject (hdcBmp, hbmNewImage);
-            imagelist_copy_images( himl, himl->hdcImage, hdcBmp, i,
-                                   (himl->cCurImage - i - 1), i - 1 );
+            imagelist_copy_images( himl, himl->hdcImage, hdcBmp, i + 1,
+                                   (himl->cCurImage - i), i );
 
             if (himl->hbmMask) {
                 SelectObject (hdcBmp, hbmNewMask);
-                imagelist_copy_images( himl, himl->hdcMask, hdcBmp, i,
-                                       (himl->cCurImage - i - 1), i - 1 );
+                imagelist_copy_images( himl, himl->hdcMask, hdcBmp, i + 1,
+                                       (himl->cCurImage - i), i );
             }
         }
 
@@ -2149,7 +2148,6 @@ ImageList_Remove (HIMAGELIST himl, INT i)
         }
 
         himl->cCurImage--;
-        himl->cMaxImage = himl->cCurImage + himl->cGrow;
     }
 
     return TRUE;
@@ -2515,7 +2513,7 @@ ImageList_SetIconSize (HIMAGELIST himl, INT cx, INT cy)
 	return FALSE;
 
     /* remove all images */
-    himl->cMaxImage = himl->cInitial + himl->cGrow;
+    himl->cMaxImage = himl->cInitial + 1;
     himl->cCurImage = 0;
     himl->cx        = cx;
     himl->cy        = cy;
@@ -2690,7 +2688,7 @@ _write_bitmap(HBITMAP hBitmap, LPSTREAM pstm)
 
     /* setup BITMAPFILEHEADER */
     bmfh->bfType      = (('M' << 8) | 'B');
-    bmfh->bfSize      = 0;
+    bmfh->bfSize      = offBits;
     bmfh->bfReserved1 = 0;
     bmfh->bfReserved2 = 0;
     bmfh->bfOffBits   = offBits;

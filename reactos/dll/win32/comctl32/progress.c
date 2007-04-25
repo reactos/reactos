@@ -65,7 +65,7 @@ typedef struct
 #define ID_MARQUEE_TIMER  1
 
 /* Helper to obtain size of a progress bar chunk ("led"). */
-static inline int get_led_size ( PROGRESS_INFO *infoPtr, LONG style,
+static inline int get_led_size ( const PROGRESS_INFO *infoPtr, LONG style,
                                  const RECT* rect )
 {
     HTHEME theme = GetWindowTheme (infoPtr->Self);
@@ -83,7 +83,7 @@ static inline int get_led_size ( PROGRESS_INFO *infoPtr, LONG style,
 }
 
 /* Helper to obtain gap between progress bar chunks */
-static inline int get_led_gap ( PROGRESS_INFO *infoPtr )
+static inline int get_led_gap ( const PROGRESS_INFO *infoPtr )
 {
     HTHEME theme = GetWindowTheme (infoPtr->Self);
     if (theme)
@@ -121,7 +121,7 @@ static inline int get_bar_size( LONG style, const RECT* rect )
 }
 
 /* Compute the pixel position of a progress value */
-static inline int get_bar_position( PROGRESS_INFO *infoPtr, LONG style,
+static inline int get_bar_position( const PROGRESS_INFO *infoPtr, LONG style,
                                     const RECT* rect, INT value )
 {
     return MulDiv (value - infoPtr->MinVal, get_bar_size (style, rect),
@@ -134,7 +134,7 @@ static inline int get_bar_position( PROGRESS_INFO *infoPtr, LONG style,
  * Don't be too clever about invalidating the progress bar.
  * InstallShield depends on this simple behaviour.
  */
-static void PROGRESS_Invalidate( PROGRESS_INFO *infoPtr, INT old, INT new )
+static void PROGRESS_Invalidate( const PROGRESS_INFO *infoPtr, INT old, INT new )
 {
     InvalidateRect( infoPtr->Self, NULL, old > new );
 }

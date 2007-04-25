@@ -135,23 +135,23 @@ static LRESULT WINAPI COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam,
 static LRESULT COMBOEX_Destroy (COMBOEX_INFO *infoPtr);
 typedef INT (WINAPI *cmp_func_t)(LPCWSTR, LPCWSTR);
 
-inline static BOOL is_textW(LPCWSTR str)
+static inline BOOL is_textW(LPCWSTR str)
 {
     return str && str != LPSTR_TEXTCALLBACKW;
 }
 
-inline static BOOL is_textA(LPCSTR str)
+static inline BOOL is_textA(LPCSTR str)
 {
     return str && str != LPSTR_TEXTCALLBACKA;
 }
 
-inline static LPCSTR debugstr_txt(LPCWSTR str)
+static inline LPCSTR debugstr_txt(LPCWSTR str)
 {
     if (str == LPSTR_TEXTCALLBACKW) return "(callback)";
     return debugstr_w(str);
 }
 
-static void COMBOEX_DumpItem (CBE_ITEMDATA *item)
+static void COMBOEX_DumpItem (CBE_ITEMDATA const *item)
 {
     TRACE("item %p - mask=%08x, pszText=%p, cchTM=%d, iImage=%d\n",
           item, item->mask, item->pszText, item->cchTextMax, item->iImage);
@@ -162,7 +162,7 @@ static void COMBOEX_DumpItem (CBE_ITEMDATA *item)
 }
 
 
-static void COMBOEX_DumpInput (COMBOBOXEXITEMW *input)
+static void COMBOEX_DumpInput (COMBOBOXEXITEMW const *input)
 {
     TRACE("input - mask=%08x, iItem=%d, pszText=%p, cchTM=%d, iImage=%d\n",
           input->mask, input->iItem, input->pszText, input->cchTextMax,
@@ -174,13 +174,13 @@ static void COMBOEX_DumpInput (COMBOBOXEXITEMW *input)
 }
 
 
-inline static CBE_ITEMDATA *get_item_data(COMBOEX_INFO *infoPtr, INT index)
+static inline CBE_ITEMDATA *get_item_data(COMBOEX_INFO *infoPtr, INT index)
 {
     return (CBE_ITEMDATA *)SendMessageW (infoPtr->hwndCombo, CB_GETITEMDATA,
 		                         (WPARAM)index, 0);
 }
 
-inline static cmp_func_t get_cmp_func(COMBOEX_INFO *infoPtr)
+static inline cmp_func_t get_cmp_func(COMBOEX_INFO const *infoPtr)
 {
     return infoPtr->dwExtStyle & CBES_EX_CASESENSITIVE ? lstrcmpW : lstrcmpiW;
 }
@@ -283,11 +283,11 @@ static void COMBOEX_FreeText (CBE_ITEMDATA *item)
 }
 
 
-static INT COMBOEX_GetIndex(COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
+static INT COMBOEX_GetIndex(COMBOEX_INFO const *infoPtr, CBE_ITEMDATA const *item)
 {
-    CBE_ITEMDATA *moving;
+    CBE_ITEMDATA const *moving;
     INT index;
-    
+
     moving = infoPtr->items;
     index = infoPtr->nb_items - 1;
 
@@ -493,7 +493,7 @@ static CBE_ITEMDATA * COMBOEX_FindItem(COMBOEX_INFO *infoPtr, INT index)
 }
 
 
-static inline BOOL COMBOEX_HasEdit(COMBOEX_INFO *infoPtr)
+static inline BOOL COMBOEX_HasEdit(COMBOEX_INFO const *infoPtr)
 {
     return infoPtr->hwndEdit ? TRUE : FALSE;
 }
@@ -530,7 +530,7 @@ static UINT COMBOEX_GetListboxText(COMBOEX_INFO *infoPtr, int n, LPWSTR buf)
 
 static INT COMBOEX_DeleteItem (COMBOEX_INFO *infoPtr, INT index)
 {
-    CBE_ITEMDATA *item;
+    CBE_ITEMDATA const *item;
 
     TRACE("(index=%d)\n", index);
 
@@ -601,14 +601,14 @@ static BOOL COMBOEX_GetItemA (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMA *cit)
 }
 
 
-inline static BOOL COMBOEX_HasEditChanged (COMBOEX_INFO *infoPtr)
+static inline BOOL COMBOEX_HasEditChanged (COMBOEX_INFO const *infoPtr)
 {
     return COMBOEX_HasEdit(infoPtr) &&
 	   (infoPtr->flags & WCBE_EDITHASCHANGED) == WCBE_EDITHASCHANGED;
 }
 
 
-static INT COMBOEX_InsertItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
+static INT COMBOEX_InsertItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW const *cit)
 {
     INT index;
     CBE_ITEMDATA *item;
@@ -693,7 +693,7 @@ static INT COMBOEX_InsertItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
 }
 
 
-static INT COMBOEX_InsertItemA (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMA *cit)
+static INT COMBOEX_InsertItemA (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMA const *cit)
 {
     COMBOBOXEXITEMW citW;
     LPWSTR wstr = NULL;
@@ -817,7 +817,7 @@ static BOOL COMBOEX_SetItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
     return TRUE;
 }
 
-static BOOL COMBOEX_SetItemA (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMA *cit)
+static BOOL COMBOEX_SetItemA (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMA const *cit)
 {
     COMBOBOXEXITEMW citW;
     LPWSTR wstr = NULL;
@@ -875,7 +875,8 @@ COMBOEX_FindStringExact (COMBOEX_INFO *infoPtr, INT start, LPCWSTR str)
 
 static DWORD_PTR COMBOEX_GetItemData (COMBOEX_INFO *infoPtr, INT index)
 {
-    CBE_ITEMDATA *item1, *item2;
+    CBE_ITEMDATA const *item1;
+    CBE_ITEMDATA const *item2;
     DWORD_PTR ret = 0;
 
     item1 = get_item_data(infoPtr, index);
@@ -914,7 +915,8 @@ static INT COMBOEX_SetCursel (COMBOEX_INFO *infoPtr, INT index)
 
 static DWORD_PTR COMBOEX_SetItemData (COMBOEX_INFO *infoPtr, INT index, DWORD_PTR data)
 {
-    CBE_ITEMDATA *item1, *item2;
+    CBE_ITEMDATA *item1;
+    CBE_ITEMDATA const *item2;
 
     item1 = get_item_data(infoPtr, index);
     if ((item1 != NULL) && ((LRESULT)item1 != CB_ERR)) {
@@ -933,7 +935,7 @@ static DWORD_PTR COMBOEX_SetItemData (COMBOEX_INFO *infoPtr, INT index, DWORD_PT
 }
 
 
-static INT COMBOEX_SetItemHeight (COMBOEX_INFO *infoPtr, INT index, UINT height)
+static INT COMBOEX_SetItemHeight (COMBOEX_INFO const *infoPtr, INT index, UINT height)
 {
     RECT cb_wrect, cbx_wrect, cbx_crect;
 
@@ -967,7 +969,7 @@ static INT COMBOEX_SetItemHeight (COMBOEX_INFO *infoPtr, INT index, UINT height)
 /* ***  WM_xxx message support  *** */
 
 
-static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
+static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
 {
     static const WCHAR COMBOBOX[] = { 'C', 'o', 'm', 'b', 'o', 'B', 'o', 'x', 0 };
     static const WCHAR EDIT[] = { 'E', 'D', 'I', 'T', 0 };
@@ -1287,7 +1289,7 @@ static LRESULT COMBOEX_Command (COMBOEX_INFO *infoPtr, WPARAM wParam, LPARAM lPa
 }
 
 
-static BOOL COMBOEX_WM_DeleteItem (COMBOEX_INFO *infoPtr, DELETEITEMSTRUCT *dis)
+static BOOL COMBOEX_WM_DeleteItem (COMBOEX_INFO *infoPtr, DELETEITEMSTRUCT const *dis)
 {
     CBE_ITEMDATA *item, *olditem;
     NMCOMBOBOXEXW nmcit;
@@ -1333,7 +1335,7 @@ static BOOL COMBOEX_WM_DeleteItem (COMBOEX_INFO *infoPtr, DELETEITEMSTRUCT *dis)
 }
 
 
-static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT *dis)
+static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *dis)
 {
     static const WCHAR nil[] = { 0 };
     CBE_ITEMDATA *item = 0;
@@ -1606,7 +1608,7 @@ static LRESULT COMBOEX_Destroy (COMBOEX_INFO *infoPtr)
 }
 
 
-static LRESULT COMBOEX_MeasureItem (COMBOEX_INFO *infoPtr, MEASUREITEMSTRUCT *mis)
+static LRESULT COMBOEX_MeasureItem (COMBOEX_INFO const *infoPtr, MEASUREITEMSTRUCT *mis)
 {
     static const WCHAR strW[] = { 'W', 0 };
     SIZE mysize;

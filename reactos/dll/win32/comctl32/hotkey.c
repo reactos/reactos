@@ -63,7 +63,7 @@ static LRESULT HOTKEY_SetFont (HOTKEY_INFO *infoPtr, HFONT hFont, BOOL redraw);
 #define IsOnlySet(flags) (infoPtr->CurrMod == (flags))
 
 static BOOL
-HOTKEY_IsCombInv(HOTKEY_INFO *infoPtr)
+HOTKEY_IsCombInv(const HOTKEY_INFO *infoPtr)
 {
     TRACE("(infoPtr=%p)\n", infoPtr);
     if((infoPtr->InvComb & HKCOMB_NONE) && !infoPtr->CurrMod)
@@ -197,7 +197,7 @@ HOTKEY_Paint(HOTKEY_INFO *infoPtr, HDC hdc)
 }
 
 static LRESULT
-HOTKEY_GetHotKey(HOTKEY_INFO *infoPtr)
+HOTKEY_GetHotKey(const HOTKEY_INFO *infoPtr)
 {
     TRACE("(infoPtr=%p) Modifiers: 0x%x, Virtual Key: %d\n", infoPtr, 
           HIBYTE(infoPtr->HotKey), LOBYTE(infoPtr->HotKey));
@@ -226,7 +226,7 @@ HOTKEY_SetRules(HOTKEY_INFO *infoPtr, WORD invComb, WORD invMod)
 
 
 static LRESULT
-HOTKEY_Create (HOTKEY_INFO *infoPtr, LPCREATESTRUCTW lpcs)
+HOTKEY_Create (HOTKEY_INFO *infoPtr, const CREATESTRUCTW *lpcs)
 {
     infoPtr->hwndNotify = lpcs->hwndParent;
 
@@ -248,7 +248,7 @@ HOTKEY_Destroy (HOTKEY_INFO *infoPtr)
 
 
 static LRESULT
-HOTKEY_EraseBackground (HOTKEY_INFO *infoPtr, HDC hdc)
+HOTKEY_EraseBackground (const HOTKEY_INFO *infoPtr, HDC hdc)
 {
     HBRUSH hBrush, hSolidBrush = NULL;
     RECT   rc;
@@ -274,8 +274,8 @@ HOTKEY_EraseBackground (HOTKEY_INFO *infoPtr, HDC hdc)
 }
 
 
-inline static LRESULT
-HOTKEY_GetFont (HOTKEY_INFO *infoPtr)
+static inline LRESULT
+HOTKEY_GetFont (const HOTKEY_INFO *infoPtr)
 {
     return (LRESULT)infoPtr->hFont;
 }
@@ -393,7 +393,7 @@ HOTKEY_KillFocus (HOTKEY_INFO *infoPtr, HWND receiveFocus)
 
 
 static LRESULT
-HOTKEY_LButtonDown (HOTKEY_INFO *infoPtr)
+HOTKEY_LButtonDown (const HOTKEY_INFO *infoPtr)
 {
     if (!(GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & WS_DISABLED))
         SetFocus (infoPtr->hwndSelf);
@@ -402,8 +402,8 @@ HOTKEY_LButtonDown (HOTKEY_INFO *infoPtr)
 }
 
 
-inline static LRESULT
-HOTKEY_NCCreate (HWND hwnd, LPCREATESTRUCTW lpcs)
+static inline LRESULT
+HOTKEY_NCCreate (HWND hwnd, const CREATESTRUCTW *lpcs)
 {
     HOTKEY_INFO *infoPtr;
     DWORD dwExStyle = GetWindowLongW (hwnd, GWL_EXSTYLE);

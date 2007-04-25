@@ -45,7 +45,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(themingcombo);
 #define EDIT_CONTROL_PADDING   1
 
 /* paint text of combobox, needed for read-only drop downs. */
-static void paint_text (HWND hwnd, HDC hdc, DWORD dwStyle, COMBOBOXINFO* cbi)
+static void paint_text (HWND hwnd, HDC hdc, DWORD dwStyle, const COMBOBOXINFO *cbi)
 {
     INT  id, size = 0;
     LPWSTR pText = NULL;
