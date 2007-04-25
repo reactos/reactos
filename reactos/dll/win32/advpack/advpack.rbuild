@@ -9,6 +9,7 @@
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
 	<library>wine</library>
+	<library>ole32</library>
 	<library>setupapi</library>
 	<library>version</library>
 	<library>user32</library>

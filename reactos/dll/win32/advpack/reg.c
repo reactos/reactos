@@ -25,7 +25,6 @@
 #include "winerror.h"
 #include "winuser.h"
 #include "winternl.h"
-#include "setupapi.h"
 #include "advpub.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -221,7 +220,7 @@ static HRESULT write_predefined_strings(HMODULE hm, LPCWSTR ini_path)
  */
 HRESULT WINAPI RegInstallW(HMODULE hm, LPCWSTR pszSection, const STRTABLEW* pstTable)
 {
-    int i;
+    unsigned int i;
     CABINFOW cabinfo;
     WCHAR tmp_ini_path[MAX_PATH];
     HRESULT hr = E_FAIL;
