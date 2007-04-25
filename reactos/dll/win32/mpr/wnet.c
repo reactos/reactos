@@ -1489,7 +1489,7 @@ DWORD WINAPI WNetCancelConnection2W( LPCWSTR lpName, DWORD dwFlags, BOOL fForce 
 /*****************************************************************
  *  WNetRestoreConnectionA [MPR.@]
  */
-DWORD WINAPI WNetRestoreConnectionA( HWND hwndOwner, LPSTR lpszDevice )
+DWORD WINAPI WNetRestoreConnectionA( HWND hwndOwner, LPCSTR lpszDevice )
 {
     FIXME( "(%p, %s), stub\n", hwndOwner, debugstr_a(lpszDevice) );
 
@@ -1500,7 +1500,7 @@ DWORD WINAPI WNetRestoreConnectionA( HWND hwndOwner, LPSTR lpszDevice )
 /*****************************************************************
  *  WNetRestoreConnectionW [MPR.@]
  */
-DWORD WINAPI WNetRestoreConnectionW( HWND hwndOwner, LPWSTR lpszDevice )
+DWORD WINAPI WNetRestoreConnectionW( HWND hwndOwner, LPCWSTR lpszDevice )
 {
     FIXME( "(%p, %s), stub\n", hwndOwner, debugstr_w(lpszDevice) );
 
@@ -1700,11 +1700,40 @@ DWORD WINAPI WNetSetConnectionW( LPCWSTR lpName, DWORD dwProperty,
 DWORD WINAPI WNetGetUniversalNameA ( LPCSTR lpLocalPath, DWORD dwInfoLevel,
                                      LPVOID lpBuffer, LPDWORD lpBufferSize )
 {
+    DWORD err, size;
+
     FIXME( "(%s, 0x%08X, %p, %p): stub\n",
            debugstr_a(lpLocalPath), dwInfoLevel, lpBuffer, lpBufferSize);
 
-    SetLastError(WN_NO_NETWORK);
-    return WN_NO_NETWORK;
+    switch (dwInfoLevel)
+    {
+    case UNIVERSAL_NAME_INFO_LEVEL:
+    {
+        LPUNIVERSAL_NAME_INFOA info = (LPUNIVERSAL_NAME_INFOA)lpBuffer;
+
+        size = sizeof(*info) + lstrlenA(lpLocalPath) + 1;
+        if (*lpBufferSize < size)
+        {
+            err = WN_MORE_DATA;
+            break;
+        }
+        info->lpUniversalName = (char *)info + sizeof(*info);
+        lstrcpyA(info->lpUniversalName, lpLocalPath);
+        *lpBufferSize = size;
+        err = WN_NO_ERROR;
+        break;
+    }
+    case REMOTE_NAME_INFO_LEVEL:
+        err = WN_NO_NETWORK;
+        break;
+
+    default:
+        err = WN_BAD_VALUE;
+        break;
+    }
+
+    SetLastError(err);
+    return err;
 }
 
 /*****************************************************************
@@ -1713,8 +1742,7 @@ DWORD WINAPI WNetGetUniversalNameA ( LPCSTR lpLocalPath, DWORD dwInfoLevel,
 DWORD WINAPI WNetGetUniversalNameW ( LPCWSTR lpLocalPath, DWORD dwInfoLevel,
                                      LPVOID lpBuffer, LPDWORD lpBufferSize )
 {
-    LPUNIVERSAL_NAME_INFOW uniw;
-    DWORD err, len;
+    DWORD err, size;
 
     FIXME( "(%s, 0x%08X, %p, %p): stub\n",
            debugstr_w(lpLocalPath), dwInfoLevel, lpBuffer, lpBufferSize);
@@ -1722,23 +1750,28 @@ DWORD WINAPI WNetGetUniversalNameW ( LPCWSTR lpLocalPath, DWORD dwInfoLevel,
     switch (dwInfoLevel)
     {
     case UNIVERSAL_NAME_INFO_LEVEL:
-        err = WN_MORE_DATA;
-        len = sizeof (*uniw) + lstrlenW(lpLocalPath);
-        if (*lpBufferSize <= len)
+    {
+        LPUNIVERSAL_NAME_INFOW info = (LPUNIVERSAL_NAME_INFOW)lpBuffer;
+
+        size = sizeof(*info) + (lstrlenW(lpLocalPath) + 1) * sizeof(WCHAR);
+        if (*lpBufferSize < size)
+        {
+            err = WN_MORE_DATA;
             break;
-        uniw = lpBuffer;
-        uniw->lpUniversalName = (LPWSTR) &uniw[1];
-        lstrcpyW(uniw->lpUniversalName, lpLocalPath);
-        *lpBufferSize = len;
+        }
+        info->lpUniversalName = (LPWSTR)((char *)info + sizeof(*info));
+        lstrcpyW(info->lpUniversalName, lpLocalPath);
+        *lpBufferSize = size;
         err = WN_NO_ERROR;
         break;
-
+    }
     case REMOTE_NAME_INFO_LEVEL:
         err = WN_NO_NETWORK;
         break;
 
     default:
         err = WN_BAD_VALUE;
+        break;
     }
 
     SetLastError(err);
