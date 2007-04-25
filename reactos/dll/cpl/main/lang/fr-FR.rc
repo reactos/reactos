@@ -104,9 +104,9 @@ BEGIN
   GROUPBOX "Mouvement", -1, 5, 5, 230, 60
   LTEXT "Séle&ctionner une vitesse de curseur :", -1, 40, 15, 120, 10
   LTEXT "Lent", -1, 60, 30, 20, 10
-  CONTROL "",IDC_SLIDER_MOUSE_SENSITIVITY, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
+  CONTROL "",IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
   LTEXT "Rapide", -1, 170, 30, 30, 10
-  ICON -1, IDC_ICON_MOUSE_SENSITIVITY, 15, 15, 15, 15
+  ICON -1, IDC_ICON_MOUSE_SPEED, 15, 15, 15, 15
   CHECKBOX "&Augmenter la précision du pointeur", IDC_CHECK_POINTER_PRECISION, 40, 50, 130, 10
   GROUPBOX "Accrocher", -1, 5, 65, 230, 40
   CHECKBOX "", IDC_CHECK_SNAP_TO, 40, 80, 10, 10

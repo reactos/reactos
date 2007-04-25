@@ -99,15 +99,15 @@ END
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
-CAPTION "Zeiger Optionen"
+CAPTION "Zeigeroptionen"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Bewegung", -1, 5, 5, 230, 60
   LTEXT "&Zeigergeschwindigkeit auswählen:", -1, 60, 15, 110, 10
   LTEXT "Langsam", -1, 60, 30, 29, 10
-  CONTROL "",IDC_SLIDER_MOUSE_SENSITIVITY, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
+  CONTROL "",IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
   LTEXT "Schnell", -1, 170, 30, 23, 10
-  ICON -1, IDC_ICON_MOUSE_SENSITIVITY, 15, 15, 15, 15
+  ICON -1, IDC_ICON_MOUSE_SPEED, 15, 15, 15, 15
   CHECKBOX "Z&eigerbeschleunigung verbessern", IDC_CHECK_POINTER_PRECISION, 60, 50, 121, 10
   GROUPBOX "Zur Standardschaltfläche springen", -1, 5, 65, 230, 40
   CHECKBOX "", IDC_CHECK_SNAP_TO, 60, 75, 10, 10
