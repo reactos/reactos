@@ -1553,7 +1553,7 @@ BOOL WINAPI CryptHashSessionKey (HCRYPTHASH hHash, HCRYPTKEY hKey, DWORD dwFlags
  *  Success: TRUE
  *  Failure: FALSE
  */
-BOOL WINAPI CryptImportKey (HCRYPTPROV hProv, BYTE *pbData, DWORD dwDataLen,
+BOOL WINAPI CryptImportKey (HCRYPTPROV hProv, CONST BYTE *pbData, DWORD dwDataLen,
 		HCRYPTKEY hPubKey, DWORD dwFlags, HCRYPTKEY *phKey)
 {
 	PCRYPTPROV prov = (PCRYPTPROV)hProv;
@@ -1650,7 +1650,7 @@ BOOL WINAPI CryptSignHashW (HCRYPTHASH hHash, DWORD dwKeySpec, LPCWSTR sDescript
  *  Success: TRUE
  *  Failure: FALSE
  */
-BOOL WINAPI CryptSetHashParam (HCRYPTHASH hHash, DWORD dwParam, BYTE *pbData, DWORD dwFlags)
+BOOL WINAPI CryptSetHashParam (HCRYPTHASH hHash, DWORD dwParam, CONST BYTE *pbData, DWORD dwFlags)
 {
 	PCRYPTPROV prov;
 	PCRYPTHASH hash = (PCRYPTHASH)hHash;
@@ -1680,7 +1680,7 @@ BOOL WINAPI CryptSetHashParam (HCRYPTHASH hHash, DWORD dwParam, BYTE *pbData, DW
  *  Success: TRUE
  *  Failure: FALSE
  */
-BOOL WINAPI CryptSetKeyParam (HCRYPTKEY hKey, DWORD dwParam, BYTE *pbData, DWORD dwFlags)
+BOOL WINAPI CryptSetKeyParam (HCRYPTKEY hKey, DWORD dwParam, CONST BYTE *pbData, DWORD dwFlags)
 {
 	PCRYPTPROV prov;
 	PCRYPTKEY key = (PCRYPTKEY)hKey;
@@ -1834,7 +1834,7 @@ BOOL WINAPI CryptSetProviderExW (LPCWSTR pszProvName, DWORD dwProvType, DWORD *p
  *  Success: TRUE
  *  Failure: FALSE
  */
-BOOL WINAPI CryptSetProvParam (HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData, DWORD dwFlags)
+BOOL WINAPI CryptSetProvParam (HCRYPTPROV hProv, DWORD dwParam, CONST BYTE *pbData, DWORD dwFlags)
 {
 	PCRYPTPROV prov = (PCRYPTPROV)hProv;
 
@@ -1888,7 +1888,7 @@ BOOL WINAPI CryptSetProvParam (HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData, DW
  *  Success: TRUE
  *  Failure: FALSE
  */
-BOOL WINAPI CryptVerifySignatureA (HCRYPTHASH hHash, BYTE *pbSignature, DWORD dwSigLen,
+BOOL WINAPI CryptVerifySignatureA (HCRYPTHASH hHash, CONST BYTE *pbSignature, DWORD dwSigLen,
 		HCRYPTKEY hPubKey, LPCSTR sDescription, DWORD dwFlags)
 {
 	PCRYPTHASH hash = (PCRYPTHASH)hHash;
@@ -1914,7 +1914,7 @@ BOOL WINAPI CryptVerifySignatureA (HCRYPTHASH hHash, BYTE *pbSignature, DWORD dw
 
 BOOL WINAPI
 CryptVerifySignatureW (HCRYPTHASH hHash,
-			BYTE *pbSignature,
+			CONST BYTE *pbSignature,
 			DWORD dwSigLen,
 			HCRYPTKEY hPubKey,
 			LPCWSTR sDescription,
