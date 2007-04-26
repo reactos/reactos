@@ -31,6 +31,9 @@
 <directory name="cfgmgr32">
 	<xi:include href="cfgmgr32/cfgmgr32.rbuild" />
 </directory>
+<directory name="clusapi">
+	<xi:include href="clusapi/clusapi.rbuild" />
+</directory>
 <directory name="console">
 	<xi:include href="console/console.rbuild" />
 </directory>
