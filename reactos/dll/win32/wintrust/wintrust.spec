@@ -7,7 +7,7 @@
 @ stub CryptCATAdminPauseServiceForBackup
 @ stub CryptCATAdminReleaseCatalogContext
 @ stdcall CryptCATAdminReleaseContext(long long)
-@ stub CryptCATAdminRemoveCatalog
+@ stdcall CryptCATAdminRemoveCatalog(ptr wstr long)
 @ stub CryptCATAdminResolveCatalogPath
 @ stub CryptCATCDFClose
 @ stub CryptCATCDFEnumAttributes
@@ -18,28 +18,28 @@
 @ stub CryptCATCDFEnumMembersByCDFTagEx
 @ stub CryptCATCDFOpen
 @ stub CryptCATCatalogInfoFromContext
-@ stub CryptCATClose
+@ stdcall CryptCATClose(long)
 @ stub CryptCATEnumerateAttr
 @ stub CryptCATEnumerateCatAttr
-@ stub CryptCATEnumerateMember
+@ stdcall CryptCATEnumerateMember(long ptr)
 @ stub CryptCATGetAttrInfo
 @ stub CryptCATGetCatAttrInfo
 @ stub CryptCATGetMemberInfo
 @ stub CryptCATHandleFromStore
-@ stub CryptCATOpen
+@ stdcall CryptCATOpen(wstr long long long long)
 @ stub CryptCATPersistStore
 @ stub CryptCATPutAttrInfo
 @ stub CryptCATPutCatAttrInfo
 @ stub CryptCATPutMemberInfo
 @ stub CryptCATStoreFromHandle
 @ stub CryptCATVerifyMember
-@ stub CryptSIPCreateIndirectData
+@ stdcall CryptSIPCreateIndirectData(ptr ptr ptr)
 @ stub CryptSIPGetInfo
 @ stub CryptSIPGetRegWorkingFlags
-@ stub CryptSIPGetSignedDataMsg
-@ stub CryptSIPPutSignedDataMsg
-@ stub CryptSIPRemoveSignedDataMsg
-@ stub CryptSIPVerifyIndirectData
+@ stdcall CryptSIPGetSignedDataMsg(ptr ptr long ptr ptr)
+@ stdcall CryptSIPPutSignedDataMsg(ptr long ptr long ptr)
+@ stdcall CryptSIPRemoveSignedDataMsg(ptr long)
+@ stdcall CryptSIPVerifyIndirectData(ptr ptr)
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
 @ stub DriverCleanupPolicy
@@ -111,7 +111,7 @@
 @ stdcall WinVerifyTrust(long ptr ptr)
 @ stdcall WinVerifyTrustEx(long ptr ptr)
 @ stdcall WintrustAddActionID(ptr long ptr)
-@ stub WintrustAddDefaultForUsage
+@ stdcall WintrustAddDefaultForUsage(ptr ptr)
 @ stub WintrustCertificateTrust
 @ stub WintrustGetDefaultForUsage
 @ stdcall WintrustGetRegPolicyFlags(ptr)

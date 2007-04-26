@@ -2,9 +2,9 @@ Index: wintrust_main.c
 ===================================================================
 --- wintrust_main.c	(revision 23867)
 +++ wintrust_main.c	(working copy)
-@@ -152,7 +152,26 @@
+@@ -83,7 +83,26 @@
   */
- LONG WINAPI WinVerifyTrust( HWND hwnd, GUID *ActionID,  WINTRUST_DATA* ActionData )
+ LONG WINAPI WinVerifyTrust( HWND hwnd, GUID *ActionID, LPVOID ActionData )
  {
 +    static const GUID gen_verify_v2 = WINTRUST_ACTION_GENERIC_VERIFY_V2;
 +
