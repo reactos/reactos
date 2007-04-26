@@ -462,10 +462,23 @@ EnumerateCursorSchemes(HWND hwndDlg)
 
             if (_tcslen(szValueData) > 0)
             {
-               LPTSTR copy = _tcsdup(szValueData);
+                LPTSTR lpCopy, lpStart;
+
+                /* Remove quotation marks */
+                if (szValueData[0] == _T('"'))
+                {
+                    lpStart = szValueData + 1;
+                    szValueData[_tcslen(szValueData) - 1] = 0;
+                }
+                else
+                {
+                    lpStart = szValueData;
+                }
+
+                lpCopy = _tcsdup(lpStart);
 
                 lResult = SendMessage(hDlgCtrl, CB_ADDSTRING, (WPARAM)0, (LPARAM)szValueName);
-                SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)copy);
+                SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)lpCopy);
             }
         }
 
@@ -491,12 +504,26 @@ EnumerateCursorSchemes(HWND hwndDlg)
 
             if (_tcslen(szValueData) > 0)
             {
-                LPTSTR copy = _tcsdup(szValueData);
+                LPTSTR lpCopy, lpStart;
+
+                /* Remove quotation marks */
+                if (szValueData[0] == _T('"'))
+                {
+                    lpStart = szValueData + 1;
+                    szValueData[_tcslen(szValueData) - 1] = 0;
+                }
+                else
+                {
+                    lpStart = szValueData;
+                }
+
+                lpCopy = _tcsdup(lpStart);
+
                 _tcscat(szValueName, TEXT(" "));
                 _tcscat(szValueName, szSystemScheme);
 
                 lResult = SendMessage(hDlgCtrl, CB_ADDSTRING, (WPARAM)0, (LPARAM)szValueName);
-                SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)copy);
+                SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)lpCopy);
             }
         }
 
