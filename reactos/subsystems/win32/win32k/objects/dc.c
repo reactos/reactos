@@ -2264,10 +2264,42 @@ DC_AllocDC(PUNICODE_STRING Driver)
     }
     return  NULL;
   }
+#if 0
+#define TAG_DCATTR TAG('D', 'C', 'A', 'T')
+  PVOID NewMem = NULL;
+  ULONG MemSize = PAGE_SIZE; //sizeof(DC_ATTR);
+  NTSTATUS Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                                       &NewMem,
+                                                             0,
+                                                      &MemSize,
+                                                    MEM_COMMIT,
+                                                PAGE_READWRITE);
+  KeEnterCriticalRegion();
+  {
+    INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hDC);
+    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
 
+    if (NT_SUCCESS(Status))
+    {
+      RtlZeroMemory(NewMem, MemSize);
+      Entry->UserData  = NewMem; 
+      DPRINT1("DC_ATTR allocated! 0x%x\n",NewMem);
+    }
+    else
+    {
+       DPRINT1("DC_ATTR not allocated!\n");
+    }
+  }
+  KeLeaveCriticalRegion();
+#endif  
   NewDC = DC_LockDc(hDC);
   /* FIXME - Handle NewDC == NULL! */
-
+#if 0
+  if(NewMem)
+  {
+     NewDC->pDc_Attr = NewMem; // Store pointer
+  }
+#endif
   if (Driver != NULL)
   {
     RtlCopyMemory(&NewDC->DriverName, Driver, sizeof(UNICODE_STRING));
@@ -2331,6 +2363,23 @@ DC_InitDC(HDC  DCHandle)
 VOID FASTCALL
 DC_FreeDC(HDC  DCToFree)
 {
+#if 0
+  KeEnterCriticalRegion();
+  {
+    INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)DCToFree);
+    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+    if(Entry->UserData)
+    {
+      ULONG MemSize = PAGE_SIZE;
+      NTSTATUS Status = ZwFreeVirtualMemory(NtCurrentProcess(), 
+                                              &Entry->UserData,
+                                                      &MemSize,
+                                                  MEM_DECOMMIT);
+      if (NT_SUCCESS(Status)) Entry->UserData = NULL;
+    }
+  }
+  KeLeaveCriticalRegion();
+#endif
   if (!GDIOBJ_FreeObj(GdiHandleTable, DCToFree, GDI_OBJECT_TYPE_DC))
   {
     DPRINT("DC_FreeDC failed\n");
