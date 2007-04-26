@@ -1753,9 +1753,11 @@ NtGdiGetDeviceCaps(HDC  hDC,
 DC_GET_VAL( INT, NtGdiGetMapMode, w.MapMode )
 DC_GET_VAL( INT, NtGdiGetPolyFillMode, w.polyFillMode )
 
-
-INT FASTCALL
-IntGdiGetObject(HANDLE Handle, INT cbCount, LPVOID lpBuffer)
+INT
+FASTCALL
+IntGdiGetObject(IN HANDLE Handle,
+                IN INT cbCount,
+                IN LPVOID lpBuffer)
 {
   PVOID pGdiObject;
   INT Result = 0;
@@ -1808,70 +1810,101 @@ IntGdiGetObject(HANDLE Handle, INT cbCount, LPVOID lpBuffer)
   return Result;
 }
 
-INT STDCALL
-NtGdiExtGetObjectW(HANDLE hGdiObj, INT cbCount, LPVOID lpUnsafeBuf)
+INT
+NTAPI
+NtGdiExtGetObjectW(IN HANDLE hGdiObj,
+                   IN INT cbCount,
+                   OUT LPVOID lpBuffer)
 {
-  LPVOID lpSafeBuf;
-  NTSTATUS Status = STATUS_SUCCESS;
-  INT RetCount = 0;
-
-  /* From Wine: GetObject does not SetLastError() on a null object */
-  if (!hGdiObj)
-  {
-    return 0;
-  }
-
-  if (!lpUnsafeBuf)
-  {
-    return IntGdiGetObject(hGdiObj, 0, NULL);
-  }
-
-  if (!cbCount)
-  {
-    return 0;
-  }
-
-  RetCount = IntGdiGetObject(hGdiObj, cbCount, NULL);
-  if (!RetCount)
-  {
-    return 0;
-  }
-  if ((UINT)cbCount > RetCount)
-  {
-    cbCount = RetCount;
-  }
-  lpSafeBuf = ExAllocatePoolWithTag(PagedPool, RetCount, TAG_GDIOBJ);
-  if(!lpSafeBuf)
-  {
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-    return 0;
-  }
-  RetCount = IntGdiGetObject(hGdiObj, cbCount, lpSafeBuf);
-  if (RetCount)
-  {
-    _SEH_TRY
+    INT iRetCount = 0;
+    INT iObjectType;
+    INT cbRealCount = cbCount;
+    union
     {
-      ProbeForWrite(lpUnsafeBuf, cbCount, 1);
-      RtlCopyMemory(lpUnsafeBuf, lpSafeBuf, cbCount);
-    }
-    _SEH_HANDLE
+        BITMAP bmpObject;
+        DIBSECTION disObject;
+        LOGPEN lgpObject;
+        LOGBRUSH lgbObject;
+        LOGFONTW lgfObject;
+        EXTLOGFONTW elgfObject;
+    } Object;
+
+    //
+    // Get the object type
+    //
+    iObjectType = GDIOBJ_GetObjectType(hGdiObj);
+
+    //
+    // Check if the given size is too large
+    //
+    if (cbCount > sizeof(Object))
     {
-      Status = _SEH_GetExceptionCode();
+        //
+        // Normalize to the largest supported object size
+        //
+        DPRINT1("cbCount too big!\n");
+        cbCount = sizeof(Object);
     }
-    _SEH_END;
-  }
 
-  ExFreePool(lpSafeBuf);
+    //
+    // Check if this is a brush
+    //
+    if (iObjectType == GDI_OBJECT_TYPE_BRUSH)
+    {
+        //
+        // Windows GDI Hack: Manually correct the size
+        //
+        cbCount = sizeof(LOGBRUSH);
+    }
 
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return 0;
-  }
+    //
+    // Now do the actual call
+    //
+    iRetCount = IntGdiGetObject(hGdiObj, cbCount, lpBuffer ? &Object : NULL);
 
-  return RetCount;
+    //
+    // Check if this is a brush
+    //
+    if (iObjectType == GDI_OBJECT_TYPE_BRUSH)
+    {
+        //
+        // Fixup the size to account for our previous fixup
+        //
+        cbCount = min(cbCount, cbRealCount);
+    }
+
+    //
+    // Make sure we have a buffer and a return size
+    //
+    if ((iRetCount) && (lpBuffer))
+    {
+        //
+        // Enter SEH for buffer transfer
+        //
+        _SEH_TRY
+        {
+            //
+            // Probe the buffer and copy it
+            //
+            ProbeForWrite(lpBuffer, min(cbCount, cbRealCount), sizeof(WORD));
+            RtlCopyMemory(lpBuffer, &Object, min(cbCount, cbRealCount));
+        }
+        _SEH_HANDLE
+        {
+            //
+            // Clear the return value.
+            // Do *NOT* set last error here!
+            //
+            iRetCount = 0;
+        }
+        _SEH_END;
+    }
+
+    //
+    // Return the count
+    //
+    return iRetCount;
 }
-
 
 DC_GET_VAL( INT, NtGdiGetRelAbs, w.relAbsMode )
 DC_GET_VAL( INT, NtGdiGetROP2, w.ROPmode )
