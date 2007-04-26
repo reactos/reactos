@@ -144,6 +144,7 @@
 	</directory>
 	<directory name="objects">
 		<compilationunit name="objects.c">
+			<file>arc.c</file>
 			<file>bezier.c</file>
 			<file>bitmaps.c</file>
 			<file>brush.c</file>

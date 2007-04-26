@@ -37,13 +37,11 @@ CreatePolyPolygonRgn( const POINT* Point,
                       int inPolygons,
                       int Mode)
 {
-/*  return (HRGN) NtGdiPolyPolyDraw(  (HDC) Mode,
+  return (HRGN) NtGdiPolyPolyDraw(  (HDC) Mode,
                                  (PPOINT) Point,
                                  (PULONG) Count,
                                   (ULONG) inPolygons,
                                           GdiPolyPolyRgn );
-*/
-   return (HRGN) NULL;
 }
 
 

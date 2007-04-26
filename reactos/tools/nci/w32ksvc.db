@@ -6,6 +6,7 @@ NtGdiAlphaBlend				11
 NtGdiAngleArc				6
 NtGdiAnimatePalette			4
 NtGdiArc				9
+NtGdiArcInternal			10
 NtGdiArcTo				9
 NtGdiBeginPath				1
 NtGdiBitBlt				11
@@ -197,6 +198,7 @@ NtGdiPolyDraw				4
 NtGdiPolyline				3
 NtGdiPolylineTo				3
 NtGdiPolyPatBlt				5
+NtGdiPolyPolyDraw			5
 NtGdiPolyPolyline			4
 NtGdiPolyTextOut			3
 NtGdiPolygon				3
