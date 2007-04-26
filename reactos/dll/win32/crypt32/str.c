@@ -19,8 +19,10 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
+#include "winuser.h"
 #include "wincrypt.h"
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -29,14 +31,20 @@ DWORD WINAPI CertRDNValueToStrA(DWORD dwValueType, PCERT_RDN_VALUE_BLOB pValue,
 {
     DWORD ret = 0;
 
-    TRACE("(%ld, %p, %p, %ld)\n", dwValueType, pValue, psz, csz);
+    TRACE("(%d, %p, %p, %d)\n", dwValueType, pValue, psz, csz);
 
     switch (dwValueType)
     {
     case CERT_RDN_ANY_TYPE:
         break;
+    case CERT_RDN_NUMERIC_STRING:
     case CERT_RDN_PRINTABLE_STRING:
+    case CERT_RDN_TELETEX_STRING:
+    case CERT_RDN_VIDEOTEX_STRING:
     case CERT_RDN_IA5_STRING:
+    case CERT_RDN_GRAPHIC_STRING:
+    case CERT_RDN_VISIBLE_STRING:
+    case CERT_RDN_GENERAL_STRING:
         if (!psz || !csz)
             ret = pValue->cbData;
         else
@@ -52,7 +60,7 @@ DWORD WINAPI CertRDNValueToStrA(DWORD dwValueType, PCERT_RDN_VALUE_BLOB pValue,
         }
         break;
     default:
-        FIXME("string type %ld unimplemented\n", dwValueType);
+        FIXME("string type %d unimplemented\n", dwValueType);
     }
     if (psz && csz)
     {
@@ -62,7 +70,7 @@ DWORD WINAPI CertRDNValueToStrA(DWORD dwValueType, PCERT_RDN_VALUE_BLOB pValue,
     }
     else
         ret++;
-    TRACE("returning %ld (%s)\n", ret, debugstr_a(psz));
+    TRACE("returning %d (%s)\n", ret, debugstr_a(psz));
     return ret;
 }
 
@@ -71,14 +79,20 @@ DWORD WINAPI CertRDNValueToStrW(DWORD dwValueType, PCERT_RDN_VALUE_BLOB pValue,
 {
     DWORD ret = 0;
 
-    TRACE("(%ld, %p, %p, %ld)\n", dwValueType, pValue, psz, csz);
+    TRACE("(%d, %p, %p, %d)\n", dwValueType, pValue, psz, csz);
 
     switch (dwValueType)
     {
     case CERT_RDN_ANY_TYPE:
         break;
+    case CERT_RDN_NUMERIC_STRING:
     case CERT_RDN_PRINTABLE_STRING:
+    case CERT_RDN_TELETEX_STRING:
+    case CERT_RDN_VIDEOTEX_STRING:
     case CERT_RDN_IA5_STRING:
+    case CERT_RDN_GRAPHIC_STRING:
+    case CERT_RDN_VISIBLE_STRING:
+    case CERT_RDN_GENERAL_STRING:
         if (!psz || !csz)
             ret = pValue->cbData;
         else
@@ -97,7 +111,7 @@ DWORD WINAPI CertRDNValueToStrW(DWORD dwValueType, PCERT_RDN_VALUE_BLOB pValue,
         }
         break;
     default:
-        FIXME("string type %ld unimplemented\n", dwValueType);
+        FIXME("string type %d unimplemented\n", dwValueType);
     }
     if (psz && csz)
     {
@@ -107,7 +121,7 @@ DWORD WINAPI CertRDNValueToStrW(DWORD dwValueType, PCERT_RDN_VALUE_BLOB pValue,
     }
     else
         ret++;
-    TRACE("returning %ld (%s)\n", ret, debugstr_w(psz));
+    TRACE("returning %d (%s)\n", ret, debugstr_w(psz));
     return ret;
 }
 
@@ -120,7 +134,7 @@ static DWORD CRYPT_AddPrefixA(LPCSTR prefix, LPSTR psz, DWORD csz)
 {
     DWORD chars;
 
-    TRACE("(%s, %p, %ld)\n", debugstr_a(prefix), psz, csz);
+    TRACE("(%s, %p, %d)\n", debugstr_a(prefix), psz, csz);
 
     if (psz)
     {
@@ -150,10 +164,10 @@ DWORD WINAPI CertNameToStrA(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
     BOOL bRet;
     CERT_NAME_INFO *info;
 
-    TRACE("(%ld, %p, %08lx, %p, %ld)\n", dwCertEncodingType, pName, dwStrType,
+    TRACE("(%d, %p, %08x, %p, %d)\n", dwCertEncodingType, pName, dwStrType,
      psz, csz);
     if (dwStrType & unsupportedFlags)
-        FIXME("unsupported flags: %08lx\n", dwStrType & unsupportedFlags);
+        FIXME("unsupported flags: %08x\n", dwStrType & unsupportedFlags);
 
     bRet = CryptDecodeObjectEx(dwCertEncodingType, X509_NAME, pName->pbData,
      pName->cbData, CRYPT_DECODE_ALLOC_FLAG, NULL, &info, &bytes);
@@ -253,7 +267,7 @@ static DWORD CRYPT_AddPrefixAToW(LPCSTR prefix, LPWSTR psz, DWORD csz)
 {
     DWORD chars;
 
-    TRACE("(%s, %p, %ld)\n", debugstr_a(prefix), psz, csz);
+    TRACE("(%s, %p, %d)\n", debugstr_a(prefix), psz, csz);
 
     if (psz)
     {
@@ -281,7 +295,7 @@ static DWORD CRYPT_AddPrefixW(LPCWSTR prefix, LPWSTR psz, DWORD csz)
 {
     DWORD chars;
 
-    TRACE("(%s, %p, %ld)\n", debugstr_w(prefix), psz, csz);
+    TRACE("(%s, %p, %d)\n", debugstr_w(prefix), psz, csz);
 
     if (psz)
     {
@@ -311,10 +325,10 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
     BOOL bRet;
     CERT_NAME_INFO *info;
 
-    TRACE("(%ld, %p, %08lx, %p, %ld)\n", dwCertEncodingType, pName, dwStrType,
+    TRACE("(%d, %p, %08x, %p, %d)\n", dwCertEncodingType, pName, dwStrType,
      psz, csz);
     if (dwStrType & unsupportedFlags)
-        FIXME("unsupported flags: %08lx\n", dwStrType & unsupportedFlags);
+        FIXME("unsupported flags: %08x\n", dwStrType & unsupportedFlags);
 
     bRet = CryptDecodeObjectEx(dwCertEncodingType, X509_NAME, pName->pbData,
      pName->cbData, CRYPT_DECODE_ALLOC_FLAG, NULL, &info, &bytes);
@@ -408,12 +422,383 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
     return ret;
 }
 
+BOOL WINAPI CertStrToNameA(DWORD dwCertEncodingType, LPCSTR pszX500,
+ DWORD dwStrType, void *pvReserved, BYTE *pbEncoded, DWORD *pcbEncoded,
+ LPCSTR *ppszError)
+{
+    LPWSTR x500, errorStr;
+    BOOL ret;
+    int len;
+
+    TRACE("(%08x, %s, %08x, %p, %p, %p, %p)\n", dwCertEncodingType,
+     debugstr_a(pszX500), dwStrType, pvReserved, pbEncoded, pcbEncoded,
+     ppszError);
+
+    len = MultiByteToWideChar(CP_ACP, 0, pszX500, -1, NULL, 0);
+    x500 = CryptMemAlloc(len * sizeof(WCHAR));
+    if (x500)
+    {
+        MultiByteToWideChar(CP_ACP, 0, pszX500, -1, x500, len);
+        ret = CertStrToNameW(dwCertEncodingType, x500, dwStrType, pvReserved,
+         pbEncoded, pcbEncoded, ppszError ? (LPCWSTR *)&errorStr : NULL);
+        if (ppszError)
+        {
+            DWORD i;
+
+            *ppszError = pszX500;
+            for (i = 0; i < errorStr - x500; i++)
+                CharNextA(*ppszError);
+        }
+        CryptMemFree(x500);
+    }
+    else
+        ret = FALSE;
+    return ret;
+}
+
+struct KeynameKeeper
+{
+    WCHAR  buf[10]; /* big enough for L"GivenName" */
+    LPWSTR keyName; /* usually = buf, but may be allocated */
+    DWORD  keyLen;
+};
+
+static void CRYPT_InitializeKeynameKeeper(struct KeynameKeeper *keeper)
+{
+    keeper->keyName = keeper->buf;
+    keeper->keyLen = sizeof(keeper->buf) / sizeof(keeper->buf[0]);
+}
+
+static void CRYPT_FreeKeynameKeeper(struct KeynameKeeper *keeper)
+{
+    if (keeper->keyName != keeper->buf)
+        CryptMemFree(keeper->keyName);
+}
+
+struct X500TokenW
+{
+    LPCWSTR start;
+    LPCWSTR end;
+};
+
+static void CRYPT_KeynameKeeperFromTokenW(struct KeynameKeeper *keeper,
+ const struct X500TokenW *key)
+{
+    DWORD len = key->end - key->start;
+
+    if (len > keeper->keyLen)
+    {
+        if (keeper->keyName == keeper->buf)
+            keeper->keyName = CryptMemAlloc(len * sizeof(WCHAR));
+        else
+            keeper->keyName = CryptMemRealloc(keeper->keyName,
+             len * sizeof(WCHAR));
+        keeper->keyLen = len;
+    }
+    memcpy(keeper->keyName, key->start, (key->end - key->start) *
+     sizeof(WCHAR));
+    keeper->keyName[len] = '\0';
+    TRACE("Keyname is %s\n", debugstr_w(keeper->keyName));
+}
+
+static DWORD CRYPT_GetNextKeyW(LPCWSTR str, struct X500TokenW *token,
+ LPCWSTR *ppszError)
+{
+    DWORD ret = ERROR_SUCCESS;
+
+    while (*str && isspaceW(*str))
+        str++;
+    if (*str)
+    {
+        token->start = str;
+        while (*str && *str != '=' && !isspaceW(*str))
+            str++;
+        if (*str && (*str == '=' || isspaceW(*str)))
+            token->end = str;
+        else
+        {
+            TRACE("missing equals char at %s\n", debugstr_w(token->start));
+            if (ppszError)
+                *ppszError = token->start;
+            ret = CRYPT_E_INVALID_X500_STRING;
+        }
+    }
+    else
+        token->start = NULL;
+    return ret;
+}
+
+/* Assumes separators are characters in the 0-255 range */
+static DWORD CRYPT_GetNextValueW(LPCWSTR str, DWORD dwFlags, LPCWSTR separators,
+ struct X500TokenW *token, LPCWSTR *ppszError)
+{
+    DWORD ret = ERROR_SUCCESS;
+
+    TRACE("(%s, %s, %p, %p)\n", debugstr_w(str), debugstr_w(separators), token,
+     ppszError);
+
+    while (*str && isspaceW(*str))
+        str++;
+    if (*str)
+    {
+        token->start = str;
+        if (!(dwFlags & CERT_NAME_STR_NO_QUOTING_FLAG) && *str == '"')
+        {
+            token->end = NULL;
+            str++;
+            while (!token->end && !ret)
+            {
+                while (*str && *str != '"')
+                    str++;
+                if (*str == '"')
+                {
+                    if (*(str + 1) != '"')
+                        token->end = str + 1;
+                    else
+                        str += 2;
+                }
+                else
+                {
+                    TRACE("unterminated quote at %s\n", debugstr_w(str));
+                    if (ppszError)
+                        *ppszError = str;
+                    ret = CRYPT_E_INVALID_X500_STRING;
+                }
+            }
+        }
+        else
+        {
+            WCHAR map[256] = { 0 };
+
+            while (*separators)
+                map[*separators++] = 1;
+            while (*str && (*str >= 0xff || !map[*(const unsigned short *)str]))
+                str++;
+            token->end = str;
+        }
+    }
+    else
+    {
+        TRACE("missing value at %s\n", debugstr_w(str));
+        if (ppszError)
+            *ppszError = str;
+        ret = CRYPT_E_INVALID_X500_STRING;
+    }
+    return ret;
+}
+
+/* Encodes the string represented by value as the string type type into the
+ * CERT_NAME_BLOB output.  If there is an error and ppszError is not NULL,
+ * *ppszError is set to the first failing character.  If there is no error,
+ * output's pbData must be freed with LocalFree.
+ */
+static BOOL CRYPT_EncodeValueWithType(DWORD dwCertEncodingType,
+ const struct X500TokenW *value, PCERT_NAME_BLOB output, DWORD type,
+ LPCWSTR *ppszError)
+{
+    CERT_NAME_VALUE nameValue = { type, { 0, NULL } };
+    BOOL ret = FALSE;
+
+    nameValue.Value.pbData = CryptMemAlloc((value->end - value->start) *
+     sizeof(WCHAR));
+    if (nameValue.Value.pbData)
+    {
+        DWORD i;
+        LPWSTR ptr = (LPWSTR)nameValue.Value.pbData;
+
+        for (i = 0; i < value->end - value->start; i++)
+        {
+            *ptr++ = value->start[i];
+            if (value->start[i] == '"')
+                i++;
+        }
+        nameValue.Value.cbData = (LPBYTE)ptr - nameValue.Value.pbData;
+        ret = CryptEncodeObjectEx(dwCertEncodingType, X509_UNICODE_NAME_VALUE,
+         &nameValue, CRYPT_ENCODE_ALLOC_FLAG, NULL, &output->pbData,
+         &output->cbData);
+        if (!ret && ppszError)
+        {
+            if (type == CERT_RDN_NUMERIC_STRING &&
+             GetLastError() == CRYPT_E_INVALID_NUMERIC_STRING)
+                *ppszError = value->start + output->cbData;
+            else if (type == CERT_RDN_PRINTABLE_STRING &&
+             GetLastError() == CRYPT_E_INVALID_PRINTABLE_STRING)
+                *ppszError = value->start + output->cbData;
+            else if (type == CERT_RDN_IA5_STRING &&
+             GetLastError() == CRYPT_E_INVALID_IA5_STRING)
+                *ppszError = value->start + output->cbData;
+        }
+        CryptMemFree(nameValue.Value.pbData);
+    }
+    return ret;
+}
+
+static BOOL CRYPT_EncodeValue(DWORD dwCertEncodingType,
+ const struct X500TokenW *value, PCERT_NAME_BLOB output, const DWORD *types,
+ LPCWSTR *ppszError)
+{
+    DWORD i;
+    BOOL ret;
+
+    ret = FALSE;
+    for (i = 0; !ret && types[i]; i++)
+        ret = CRYPT_EncodeValueWithType(dwCertEncodingType, value, output,
+         types[i], ppszError);
+    return ret;
+}
+
+static BOOL CRYPT_ValueToRDN(DWORD dwCertEncodingType, PCERT_NAME_INFO info,
+ PCCRYPT_OID_INFO keyOID, struct X500TokenW *value, LPCWSTR *ppszError)
+{
+    BOOL ret = FALSE;
+
+    TRACE("OID %s, value %s\n", debugstr_a(keyOID->pszOID),
+     debugstr_wn(value->start, value->end - value->start));
+
+    if (!info->rgRDN)
+        info->rgRDN = CryptMemAlloc(sizeof(CERT_RDN));
+    else
+        info->rgRDN = CryptMemRealloc(info->rgRDN,
+         (info->cRDN + 1) * sizeof(CERT_RDN));
+    if (info->rgRDN)
+    {
+        /* FIXME: support multiple RDN attrs */
+        info->rgRDN[info->cRDN].rgRDNAttr =
+         CryptMemAlloc(sizeof(CERT_RDN_ATTR));
+        if (info->rgRDN[info->cRDN].rgRDNAttr)
+        {
+            static const DWORD defaultTypes[] = { CERT_RDN_PRINTABLE_STRING,
+             CERT_RDN_BMP_STRING, 0 };
+            const DWORD *types;
+
+            info->rgRDN[info->cRDN].cRDNAttr = 1;
+            info->rgRDN[info->cRDN].rgRDNAttr[0].pszObjId =
+             (LPSTR)keyOID->pszOID;
+            info->rgRDN[info->cRDN].rgRDNAttr[0].dwValueType =
+             CERT_RDN_ENCODED_BLOB;
+            if (keyOID->ExtraInfo.cbData)
+                types = (const DWORD *)keyOID->ExtraInfo.pbData;
+            else
+                types = defaultTypes;
+
+            /* Remove surrounding quotes */
+            if (value->start[0] == '"')
+            {
+                value->start++;
+                value->end--;
+            }
+            ret = CRYPT_EncodeValue(dwCertEncodingType, value,
+             &info->rgRDN[info->cRDN].rgRDNAttr[0].Value, types, ppszError);
+        }
+    }
+    if (ret)
+        info->cRDN++;
+    return ret;
+}
+
+BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType, LPCWSTR pszX500,
+ DWORD dwStrType, void *pvReserved, BYTE *pbEncoded, DWORD *pcbEncoded,
+ LPCWSTR *ppszError)
+{
+    CERT_NAME_INFO info = { 0, NULL };
+    LPCWSTR str;
+    struct KeynameKeeper keeper;
+    DWORD i, error = ERROR_SUCCESS;
+    BOOL ret = TRUE;
+
+    TRACE("(%08x, %s, %08x, %p, %p, %p, %p)\n", dwCertEncodingType,
+     debugstr_w(pszX500), dwStrType, pvReserved, pbEncoded, pcbEncoded,
+     ppszError);
+
+    CRYPT_InitializeKeynameKeeper(&keeper);
+    str = pszX500;
+    while (str && *str && !error && ret)
+    {
+        struct X500TokenW token;
+
+        error = CRYPT_GetNextKeyW(str, &token, ppszError);
+        if (!error && token.start)
+        {
+            PCCRYPT_OID_INFO keyOID;
+
+            CRYPT_KeynameKeeperFromTokenW(&keeper, &token);
+            keyOID = CryptFindOIDInfo(CRYPT_OID_INFO_NAME_KEY, keeper.keyName,
+             CRYPT_RDN_ATTR_OID_GROUP_ID);
+            if (!keyOID)
+            {
+                if (ppszError)
+                    *ppszError = token.start;
+                error = CRYPT_E_INVALID_X500_STRING;
+            }
+            else
+            {
+                str = token.end;
+                while (isspace(*str))
+                    str++;
+                if (*str != '=')
+                {
+                    if (ppszError)
+                        *ppszError = str;
+                    error = CRYPT_E_INVALID_X500_STRING;
+                }
+                else
+                {
+                    static const WCHAR commaSep[] = { ',',0 };
+                    static const WCHAR semiSep[] = { ';',0 };
+                    static const WCHAR crlfSep[] = { '\r','\n',0 };
+                    static const WCHAR allSeps[] = { ',',';','\r','\n',0 };
+                    LPCWSTR sep;
+
+                    str++;
+                    if (dwStrType & CERT_NAME_STR_COMMA_FLAG)
+                        sep = commaSep;
+                    else if (dwStrType & CERT_NAME_STR_SEMICOLON_FLAG)
+                        sep = semiSep;
+                    else if (dwStrType & CERT_NAME_STR_CRLF_FLAG)
+                        sep = crlfSep;
+                    else
+                        sep = allSeps;
+                    error = CRYPT_GetNextValueW(str, dwStrType, sep, &token,
+                     ppszError);
+                    if (!error)
+                    {
+                        str = token.end;
+                        ret = CRYPT_ValueToRDN(dwCertEncodingType, &info,
+                         keyOID, &token, ppszError);
+                    }
+                }
+            }
+        }
+    }
+    CRYPT_FreeKeynameKeeper(&keeper);
+    if (!error)
+    {
+        ret = CryptEncodeObjectEx(dwCertEncodingType, X509_NAME, &info,
+         0, NULL, pbEncoded, pcbEncoded);
+        for (i = 0; i < info.cRDN; i++)
+        {
+            DWORD j;
+
+            for (j = 0; j < info.rgRDN[i].cRDNAttr; j++)
+                LocalFree(info.rgRDN[i].rgRDNAttr[j].Value.pbData);
+            CryptMemFree(info.rgRDN[i].rgRDNAttr);
+        }
+        CryptMemFree(info.rgRDN);
+    }
+    else
+    {
+        SetLastError(error);
+        ret = FALSE;
+    }
+    return ret;
+}
+
 DWORD WINAPI CertGetNameStringA(PCCERT_CONTEXT pCertContext, DWORD dwType,
  DWORD dwFlags, void *pvTypePara, LPSTR pszNameString, DWORD cchNameString)
 {
     DWORD ret;
 
-    TRACE("(%p, %ld, %08lx, %p, %p, %ld)\n", pCertContext, dwType, dwFlags,
+    TRACE("(%p, %d, %08x, %p, %p, %d)\n", pCertContext, dwType, dwFlags,
      pvTypePara, pszNameString, cchNameString);
 
     if (pszNameString)
@@ -458,7 +843,7 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
     PCERT_NAME_BLOB name;
     LPCSTR altNameOID;
 
-    TRACE("(%p, %ld, %08lx, %p, %p, %ld)\n", pCertContext, dwType,
+    TRACE("(%p, %d, %08x, %p, %p, %d)\n", pCertContext, dwType,
      dwFlags, pvTypePara, pszNameString, cchNameString);
 
     if (dwFlags & CERT_NAME_ISSUER_FLAG)
@@ -534,7 +919,7 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
         break;
     }
     default:
-        FIXME("unimplemented for type %ld\n", dwType);
+        FIXME("unimplemented for type %d\n", dwType);
         ret = 0;
     }
     return ret;

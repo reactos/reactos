@@ -94,7 +94,7 @@ void *Context_CreateLinkContext(unsigned int contextSize, void *linked, unsigned
         linkContext->linked = linkedBase;
         if (addRef)
             InterlockedIncrement(&linkedBase->ref);
-        TRACE("%p's ref count is %ld\n", context, linkContext->ref);
+        TRACE("%p's ref count is %d\n", context, linkContext->ref);
     }
     return context;
 }
@@ -161,7 +161,7 @@ void Context_Release(void *context, size_t contextSize,
         CryptMemFree(context);
     }
     else
-        TRACE("%p's ref count is %ld\n", context, base->ref);
+        TRACE("%p's ref count is %d\n", context, base->ref);
 }
 
 void Context_CopyProperties(const void *to, const void *from,
@@ -192,6 +192,7 @@ struct ContextList *ContextList_Create(
         list->contextInterface = contextInterface;
         list->contextSize = contextSize;
         InitializeCriticalSection(&list->cs);
+        list->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": ContextList.cs");
         list_init(&list->contexts);
     }
     return list;
@@ -303,6 +304,7 @@ void ContextList_Empty(struct ContextList *list)
 void ContextList_Free(struct ContextList *list)
 {
     ContextList_Empty(list);
+    list->cs.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&list->cs);
     CryptMemFree(list);
 }

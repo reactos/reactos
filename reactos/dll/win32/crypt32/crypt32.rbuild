@@ -15,6 +15,7 @@
 	<library>ntdll</library>
 	<file>base64.c</file>
 	<file>cert.c</file>
+	<file>chain.c</file>
 	<file>crl.c</file>
 	<file>context.c</file>
 	<file>decode.c</file>
@@ -23,6 +24,7 @@
 	<file>proplist.c</file>
 	<file>protectdata.c</file>
 	<file>serialize.c</file>
+	<file>sip.c</file>
 	<file>store.c</file>
 	<file>str.c</file>
 	<file>main.c</file>

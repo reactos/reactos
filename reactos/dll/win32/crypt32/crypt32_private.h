@@ -104,6 +104,14 @@ extern PCWINE_CONTEXT_INTERFACE pCTLInterface;
 const void *CRYPT_ReadSerializedElement(const BYTE *pbElement,
  DWORD cbElement, DWORD dwContextTypeFlags, DWORD *pdwContentType);
 
+/* Writes contexts from the memory store to the file. */
+BOOL CRYPT_WriteSerializedFile(HANDLE file, HCERTSTORE store);
+
+/* Reads contexts serialized in the file into the memory store.  Returns FALSE
+ * if the file is not of the expected format.
+ */
+BOOL CRYPT_ReadSerializedFile(HANDLE file, HCERTSTORE store);
+
 /* Fixes up the the pointers in info, where info is assumed to be a
  * CRYPT_KEY_PROV_INFO, followed by its container name, provider name, and any
  * provider parameters, in a contiguous buffer, but where info's pointers are
