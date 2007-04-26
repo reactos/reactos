@@ -1,4 +1,4 @@
-<module name="clusapi" type="win32dll" baseaddress="${BASEADDRESS_CLUSAPI}" installbase="system32" installname="clusapi2.dll" allowwarnings="false">
+<module name="clusapi" type="win32dll" baseaddress="${BASEADDRESS_CLUSAPI}" installbase="system32" installname="clusapi.dll" allowwarnings="true">
 	<importlibrary definition="clusapi.spec.def" />
 	<include base="clusapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
@@ -9,7 +9,6 @@
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
 	<library>wine</library>
-	<library>user32</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>clusapi.c</file>
