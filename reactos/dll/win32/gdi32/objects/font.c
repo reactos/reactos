@@ -815,6 +815,9 @@ GetOutlineTextMetricsW(
 	)
 {
   return NtGdiGetOutlineTextMetrics(hdc, cbData, lpOTM);
+//  TMDIFF Tmd;   // Should not be zero.
+//  if ( lpOTM == NULL) return 0;
+//  return NtGdiGetOutlineTextMetricsInternalW(hdc, cbData, lpOTM, &Tmd);
 }
 
 
