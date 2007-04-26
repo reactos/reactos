@@ -4108,12 +4108,39 @@ FontGetObject(PTEXTOBJ Font, INT Count, PVOID Buffer)
 {
   if( Buffer == NULL ) return sizeof(LOGFONTW);
 
-  /* fixme  SetLastWin32Error(ERROR_BUFFER_OVERFLOW); in count<0*/
-  if (Count < sizeof(LOGFONTW)) return 0;
-  if (Count > sizeof(LOGFONTW)) Count = sizeof(LOGFONTW);
+  switch (Count)
+  {
+/* Everything will need to be converted over to ENUMLOGFONTEXDVW.
+     case sizeof(ENUMLOGFONTEXDVW):
+        RtlCopyMemory( (LPENUMLOGFONTEXDVW) Buffer.elfDesignVector, 
+                                            &Font->logFont.elfDesignVector,
+                                            sizeof(DESIGNVECTOR));
+     case sizeof(ENUMLOGFONTEXW):
+        RtlCopyMemory( (LPENUMLOGFONTEXW) Buffer, 
+                                          &Font->logFont.elfEnumLogfontEx,
+                                          sizeof(ENUMLOGFONTEXW));
+        break;             
 
-  RtlCopyMemory(Buffer, &Font->logfont, sizeof(LOGFONTW));
-  return sizeof(LOGFONTW);
+     case sizeof(EXTLOGFONTW):
+     case sizeof(ENUMLOGFONTW):
+        RtlCopyMemory((LPENUMLOGFONTW) Buffer, 
+                      (LPENUMLOGFONTW) &Font->logfont.elfEnumLogfontEx.elfLogFont,
+                                       sizeof(ENUMLOGFONTW));
+        break;
+*/
+     case sizeof(LOGFONTW):
+/*        RtlCopyMemory((LPLOGFONTW) Buffer,
+                                       &Font->logFont.elfEnumLogfontEx.elfLogFont,
+                                       sizeof(LOGFONTW));
+*/
+        RtlCopyMemory(Buffer, &Font->logfont, sizeof(LOGFONTW));
+        break;
+
+     default:
+        SetLastWin32Error(ERROR_BUFFER_OVERFLOW);
+        return 0;         
+  }
+  return Count;
 }
 
 
