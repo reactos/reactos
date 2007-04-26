@@ -998,6 +998,19 @@ NtGdiPolyPolygon(HDC           hDC,
   return Ret;
 }
 
+
+ULONG_PTR
+STDCALL
+NtGdiPolyPolyDraw( IN HDC hdc,
+                   IN PPOINT ppt,
+                   IN PULONG pcpt,
+                   IN ULONG ccpt,
+                   IN INT iFunc )
+{
+  return (ULONG_PTR) 0;
+}
+
+
 BOOL
 FASTCALL
 IntRectangle(PDC dc,
