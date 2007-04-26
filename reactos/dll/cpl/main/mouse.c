@@ -428,94 +428,96 @@ ButtonProc(IN HWND hwndDlg,
 static BOOL
 EnumerateCursorSchemes(HWND hwndDlg)
 {
-    HKEY hCuKey;
-    HKEY hCuCursorKey;
+    HKEY hCursorKey;
     DWORD dwIndex;
     TCHAR szValueName[MAX_PATH];
     DWORD dwValueName;
     TCHAR szSystemScheme[MAX_PATH];
     TCHAR szValueData[2000];
     DWORD dwValueData;
-    LONG dwResult;
+    LONG lError;
     HWND hDlgCtrl;
     LRESULT lResult;
-    BOOL ProcessedHKLM = FALSE;
     TCHAR szCurrentScheme[MAX_PATH];
     DWORD dwCurrentScheme;
     INT nSchemeIndex;
     INT i, nCount;
     LPTSTR p;
 
-    if (RegOpenCurrentUser(KEY_READ, &hCuKey) != ERROR_SUCCESS)
-        return FALSE;
-
-    if (RegOpenKeyEx(hCuKey, _T("Control Panel\\Cursors\\Schemes"), 0, KEY_READ, &hCuCursorKey) != ERROR_SUCCESS)
-    {
-        RegCloseKey(hCuKey);
-        return FALSE;
-    }
-
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMBO_CURSOR_SCHEME);
     SendMessage(hDlgCtrl, CB_RESETCONTENT, 0, 0);
-    dwIndex = 0;
 
-    for (;;)
+    /* Read the users cursor schemes */
+    lError = RegOpenKeyEx(HKEY_CURRENT_USER, _T("Control Panel\\Cursors\\Schemes"),
+                          0, KEY_READ | KEY_QUERY_VALUE , &hCursorKey);
+    if (lError == ERROR_SUCCESS)
     {
-        dwValueName = sizeof(szValueName) / sizeof(TCHAR);
-        dwValueData = sizeof(szValueData) / sizeof(TCHAR);
-        dwResult = RegEnumValue(hCuCursorKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (LPBYTE)szValueData, &dwValueData);
-
-        if (dwResult == ERROR_NO_MORE_ITEMS)
+        for (dwIndex = 0;; dwIndex++)
         {
-            if (!ProcessedHKLM)
+            dwValueName = sizeof(szValueName) / sizeof(TCHAR);
+            dwValueData = sizeof(szValueData) / sizeof(TCHAR);
+            lError = RegEnumValue(hCursorKey, dwIndex, szValueName, &dwValueName,
+                                  NULL, NULL, (LPBYTE)szValueData, &dwValueData);
+            if (lError == ERROR_NO_MORE_ITEMS)
+                break;
+
+            if (_tcslen(szValueData) > 0)
             {
-                RegCloseKey(hCuCursorKey);
-                dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
-                                        _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cursors\\Schemes"),
-                                        0, KEY_READ, &hCuCursorKey);
-                if (dwResult == ERROR_SUCCESS)
-                {
-                    dwIndex = 0;
-                    ProcessedHKLM = TRUE;
-                    LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
-                    continue;
-                }
+               LPTSTR copy = _tcsdup(szValueData);
+
+                lResult = SendMessage(hDlgCtrl, CB_ADDSTRING, (WPARAM)0, (LPARAM)szValueName);
+                SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)copy);
             }
-            break;
         }
 
-        if (_tcslen(szValueData) > 0)
-        {
-            TCHAR * copy = _tcsdup(szValueData);
-            if (ProcessedHKLM)
-            {
-               _tcscat(szValueName, TEXT(" "));
-               _tcscat(szValueName, szSystemScheme);
-            }
-            lResult = SendMessage(hDlgCtrl, CB_ADDSTRING, (WPARAM)0, (LPARAM)szValueName);
-            SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)copy);
-        }
-
-        dwIndex++;
+        RegCloseKey(hCursorKey);
     }
 
-    RegCloseKey(hCuCursorKey);
-    RegCloseKey(hCuKey);
+    /* Read the system cursor schemes */
+    lError = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                          _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cursors\\Schemes"),
+                          0, KEY_READ | KEY_QUERY_VALUE , &hCursorKey);
+    if (lError == ERROR_SUCCESS)
+    {
+        LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
+
+        for (dwIndex = 0;; dwIndex++)
+        {
+            dwValueName = sizeof(szValueName) / sizeof(TCHAR);
+            dwValueData = sizeof(szValueData) / sizeof(TCHAR);
+            lError = RegEnumValue(hCursorKey, dwIndex, szValueName, &dwValueName,
+                                  NULL, NULL, (LPBYTE)szValueData, &dwValueData);
+            if (lError == ERROR_NO_MORE_ITEMS)
+                break;
+
+            if (_tcslen(szValueData) > 0)
+            {
+                LPTSTR copy = _tcsdup(szValueData);
+                _tcscat(szValueName, TEXT(" "));
+                _tcscat(szValueName, szSystemScheme);
+
+                lResult = SendMessage(hDlgCtrl, CB_ADDSTRING, (WPARAM)0, (LPARAM)szValueName);
+                SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)copy);
+            }
+        }
+
+        RegCloseKey(hCursorKey);
+    }
 
     /* Add the "(none)" entry */
     LoadString(hApplet, IDS_NONE, szSystemScheme, MAX_PATH);
     lResult = SendMessage(hDlgCtrl, CB_ADDSTRING, (WPARAM)0, (LPARAM)szSystemScheme);
     SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)NULL);
 
-
     /* Get the name of the current cursor scheme */
     szCurrentScheme[0] = 0;
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Control Panel\\Cursors"), 0, KEY_READ, &hCuCursorKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Control Panel\\Cursors"), 0, KEY_READ | KEY_QUERY_VALUE, &hCursorKey) == ERROR_SUCCESS)
     {
         dwCurrentScheme = sizeof(szCurrentScheme) / sizeof(TCHAR);
-        if (RegQueryValueEx(hCuCursorKey, NULL, NULL, NULL, (LPBYTE)szCurrentScheme, &dwCurrentScheme))
+        if (RegQueryValueEx(hCursorKey, NULL, NULL, NULL, (LPBYTE)szCurrentScheme, &dwCurrentScheme))
             szCurrentScheme[0] = 0;
-        RegCloseKey(hCuCursorKey);
+
+        RegCloseKey(hCursorKey);
     }
 
     /* Search for the matching entry in the cursor scheme list */
