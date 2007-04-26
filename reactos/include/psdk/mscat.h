@@ -19,6 +19,8 @@
 #ifndef __WINE_MSCAT_H
 #define __WINE_MSCAT_H
 
+#include <mssip.h>
+
 typedef HANDLE HCATADMIN;
 typedef HANDLE HCATINFO;
 
@@ -26,10 +28,33 @@ typedef HANDLE HCATINFO;
 extern "C" {
 #endif
 
+
+#include <pshpack8.h>
+
+typedef struct CRYPTCATMEMBER_ {
+    DWORD cbStruct;
+    LPWSTR pwszReferenceTag;
+    LPWSTR pwszFileName;
+    GUID gSubjectType;
+    DWORD fdwMemberFlags;
+    struct SIP_INDIRECT_DATA_* pIndirectData;
+    DWORD dwCertVersion;
+    DWORD dwReserved;
+    HANDLE hReserved;
+    CRYPT_ATTR_BLOB sEncodedIndirectData;
+    CRYPT_ATTR_BLOB sEncodedMemberInfo;
+} CRYPTCATMEMBER;
+
+#include <poppack.h>
+
+
 BOOL      WINAPI CryptCATAdminAcquireContext(HCATADMIN*,const GUID*,DWORD);
 BOOL      WINAPI CryptCATAdminCalcHashFromFileHandle(HANDLE,DWORD*,BYTE*,DWORD);
 HCATINFO  WINAPI CryptCATAdminEnumCatalogFromHash(HCATADMIN,BYTE*,DWORD,DWORD,HCATINFO*);
 BOOL      WINAPI CryptCATAdminReleaseContext(HCATADMIN,DWORD);
+BOOL      WINAPI CryptCATClose(HANDLE);
+CRYPTCATMEMBER* WINAPI CryptCATEnumerateMember(HANDLE,CRYPTCATMEMBER*);
+HANDLE    WINAPI CryptCATOpen(LPWSTR,DWORD,HCRYPTPROV,DWORD,DWORD);
 
 #ifdef __cplusplus
 }

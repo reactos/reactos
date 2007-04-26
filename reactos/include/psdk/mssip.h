@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_MSSIP_H
@@ -115,7 +115,7 @@ typedef struct SIP_INDIRECT_DATA_ {
 #include <poppack.h>
 
 typedef BOOL (WINAPI * pCryptSIPGetSignedDataMsg)(SIP_SUBJECTINFO *,DWORD *,DWORD,DWORD *,BYTE *);
-typedef BOOL (WINAPI * pCryptSIPPutSignedDataMsg)(SIP_SUBJECTINFO *,DWORD,DWORD,DWORD,BYTE);
+typedef BOOL (WINAPI * pCryptSIPPutSignedDataMsg)(SIP_SUBJECTINFO *,DWORD,DWORD *,DWORD,BYTE *);
 typedef BOOL (WINAPI * pCryptSIPCreateIndirectData)(SIP_SUBJECTINFO *,DWORD *,SIP_INDIRECT_DATA *);
 typedef BOOL (WINAPI * pCryptSIPVerifyIndirectData)(SIP_SUBJECTINFO *,SIP_INDIRECT_DATA *);
 typedef BOOL (WINAPI * pCryptSIPRemoveSignedDataMsg)(SIP_SUBJECTINFO *,DWORD);
@@ -162,12 +162,13 @@ typedef struct SIP_ADD_NEWPROVIDER_
 /**********************************************************************/
 
 BOOL WINAPI CryptSIPGetSignedDataMsg(SIP_SUBJECTINFO *,DWORD *,DWORD,DWORD *,BYTE *);
-BOOL WINAPI CryptSIPPutSignedDataMsg(SIP_SUBJECTINFO *,DWORD,DWORD,DWORD,BYTE);
+BOOL WINAPI CryptSIPPutSignedDataMsg(SIP_SUBJECTINFO *,DWORD,DWORD *,DWORD,BYTE *);
 BOOL WINAPI CryptSIPCreateIndirectData(SIP_SUBJECTINFO *,DWORD *,SIP_INDIRECT_DATA *);
 BOOL WINAPI CryptSIPVerifyIndirectData(SIP_SUBJECTINFO *,SIP_INDIRECT_DATA *);
 BOOL WINAPI CryptSIPRemoveSignedDataMsg(SIP_SUBJECTINFO *,DWORD);
 
 BOOL WINAPI CryptSIPLoad(const GUID *,DWORD,SIP_DISPATCH_INFO *);
+BOOL WINAPI CryptSIPRetrieveSubjectGuid(LPCWSTR,HANDLE,GUID *);
 BOOL WINAPI CryptSIPRetrieveSubjectGuidForCatalogFile(LPCWSTR,HANDLE,GUID *);
 BOOL WINAPI CryptSIPAddProvider(SIP_ADD_NEWPROVIDER *);
 BOOL WINAPI CryptSIPRemoveProvider(GUID *);

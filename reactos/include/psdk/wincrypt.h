@@ -627,6 +627,11 @@ typedef struct _CMSG_SIGNER_INFO {
     CRYPT_ATTRIBUTES           UnauthAttrs;
 } CMSG_SIGNER_INFO, *PCMSG_SIGNER_INFO;
 
+#define CMSG_VERIFY_SIGNER_PUBKEY 1
+#define CMSG_VERIFY_SIGNER_CERT   2
+#define CMSG_VERIFY_SIGNER_CHAIN  3
+#define CMSG_VERIFY_SIGNER_NULL   4
+
 typedef struct _CERT_REVOCATION_CRL_INFO {
     DWORD         cbSize;
     PCCRL_CONTEXT pBaseCrlContext;
@@ -645,11 +650,102 @@ typedef struct _CERT_REVOCATION_INFO {
     PCERT_REVOCATION_CRL_INFO pCrlInfo;
 } CERT_REVOCATION_INFO, *PCERT_REVOCATION_INFO;
 
+typedef struct _CERT_REVOCATION_PARA {
+    DWORD                     cbSize;
+    PCCERT_CONTEXT            pIssuerCert;
+    DWORD                     cCertStore;
+    HCERTSTORE               *rgCertStore;
+    HCERTSTORE                hCrlStore;
+    LPFILETIME                pftTimeToUse;
+#ifdef CERT_REVOCATION_PARA_HAS_EXTRA_FIELDS
+    DWORD                     dwUrlRetrievalTimeout;
+    BOOL                      fCheckFreshnessTime;
+    DWORD                     dwFreshnessTime;
+    LPFILETIME                pftCurrentTime;
+    PCERT_REVOCATION_CRL_INFO pCrlInfo;
+#endif
+} CERT_REVOCATION_PARA, *PCERT_REVOCATION_PARA;
+
+#define CERT_CONTEXT_REVOCATION_TYPE 1
+#define CERT_VERIFY_REV_CHAIN_FLAG                0x00000001
+#define CERT_VERIFY_CACHE_ONLY_BASED_REVOCATION   0x00000002
+#define CERT_VERIFY_REV_ACCUMULATIVE_TIMEOUT_FLAG 0x00000004
+
+typedef struct _CTL_VERIFY_USAGE_PARA {
+    DWORD           cbSize;
+    CRYPT_DATA_BLOB ListIdentifier;
+    DWORD           cCtlStore;
+    HCERTSTORE     *rghCtlStore;
+    DWORD           cSignerStore;
+    HCERTSTORE     *rghSignerStore;
+} CTL_VERIFY_USAGE_PARA, *PCTL_VERIFY_USAGE_PARA;
+
+typedef struct _CTL_VERIFY_USAGE_STATUS {
+    DWORD           cbSize;
+    DWORD           dwError;
+    DWORD           dwFlags;
+    PCCTL_CONTEXT  *ppCtl;
+    DWORD           dwCtlEntryIndex;
+    PCCERT_CONTEXT *ppSigner;
+    DWORD           dwSignerIndex;
+} CTL_VERIFY_USAGE_STATUS, *PCTL_VERIFY_USAGE_STATUS;
+
+#define CERT_VERIFY_INHIBIT_CTL_UPDATE_FLAG 0x1
+#define CERT_VERIFY_TRUSTED_SIGNERS_FLAG    0x2
+#define CERT_VERIFY_NO_TIME_CHECK_FLAG      0x4
+#define CERT_VERIFY_ALLOW_MORE_USAGE_FLAG   0x8
+#define CERT_VERIFY_UPDATED_CTL_FLAG        0x1
+
+typedef struct _CERT_REVOCATION_STATUS {
+    DWORD cbSize;
+    DWORD dwIndex;
+    DWORD dwError;
+    DWORD dwReason;
+    BOOL  fHasFreshnessTime;
+    DWORD dwFreshnessTime;
+} CERT_REVOCATION_STATUS, *PCERT_REVOCATION_STATUS;
+
 typedef struct _CERT_TRUST_LIST_INFO {
     DWORD         cbSize;
     PCTL_ENTRY    pCtlEntry;
     PCCTL_CONTEXT pCtlContext;
 } CERT_TRUST_LIST_INFO, *PCERT_TRUST_LIST_INFO;
+
+#define CERT_TRUST_NO_ERROR                          0x00000000
+#define CERT_TRUST_IS_NOT_TIME_VALID                 0x00000001
+#define CERT_TRUST_IS_NOT_TIME_NESTED                0x00000002
+#define CERT_TRUST_IS_REVOKED                        0x00000004
+#define CERT_TRUST_IS_NOT_SIGNATURE_VALID            0x00000008
+#define CERT_TRUST_IS_NOT_VALID_FOR_USAGE            0x00000010
+#define CERT_TRUST_IS_UNTRUSTED_ROOT                 0x00000020
+#define CERT_TRUST_REVOCATION_STATUS_UNKNOWN         0x00000040
+#define CERT_TRUST_IS_CYCLIC                         0x00000080
+#define CERT_TRUST_INVALID_EXTENSION                 0x00000100
+#define CERT_TRUST_INVALID_POLICY_CONSTRAINTS        0x00000200
+#define CERT_TRUST_INVALID_BASIC_CONSTRAINTS         0x00000400
+#define CERT_TRUST_INVALID_NAME_CONSTRAINTS          0x00000800
+#define CERT_TRUST_HAS_NOT_SUPPORTED_NAME_CONSTRAINT 0x00001000
+#define CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT   0x00002000
+#define CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT 0x00004000
+#define CERT_TRUST_HAS_EXCLUDED_NAME_CONSTRAINT      0x00008000
+#define CERT_TRUST_IS_OFFLINE_REVOCATION             0x01000000
+#define CERT_TRUST_NO_ISSUANCE_CHAIN_POLICY          0x02000000
+
+#define CERT_TRUST_IS_PARTIAL_CHAIN                  0x00001000
+#define CERT_TRUST_CTL_IS_NOT_TIME_VALID             0x00002000
+#define CERT_TRUST_CTL_IS_NOT_SIGNATURE_VALID        0x00004000
+#define CERT_TRUST_CTL_IS_NOT_VALID_FOR_USAGE        0x00008000
+
+#define CERT_TRUST_HAS_EXACT_MATCH_ISSUER            0x00000001
+#define CERT_TRUST_HAS_KEY_MATCH_ISSUER              0x00000002
+#define CERT_TRUST_HAS_NAME_MATCH_ISSUER             0x00000004
+#define CERT_TRUST_IS_SELF_SIGNED                    0x00000008
+
+#define CERT_TRUST_HAS_PREFERRED_ISSUER              0x00000100
+#define CERT_TRUST_HAS_ISSUANCE_CHAIN_POLICY         0x00000200
+#define CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS        0x00000400
+
+#define CERT_TRUST_IS_COMPLEX_CHAIN                  0x00010000
 
 typedef struct _CERT_TRUST_STATUS {
     DWORD dwErrorStatus;
@@ -685,7 +781,7 @@ struct _CERT_CHAIN_CONTEXT {
     DWORD                 cChain;
     PCERT_SIMPLE_CHAIN   *rgpChain;
     DWORD                 cLowerQualityChainContext;
-    PCCERT_CHAIN_CONTEXT *rgbLowerQualityChainContext;
+    PCCERT_CHAIN_CONTEXT *rgpLowerQualityChainContext;
     BOOL                  fHasRevocationFreshnessTime;
     DWORD                 dwRevocationFreshnessTime;
 };
@@ -704,6 +800,52 @@ typedef struct _CERT_CHAIN_POLICY_STATUS {
     void *pvExtraPolicyStatus;
 } CERT_CHAIN_POLICY_STATUS, *PCERT_CHAIN_POLICY_STATUS;
 
+#define CERT_CHAIN_POLICY_BASE              ((LPCSTR)1)
+#define CERT_CHAIN_POLICY_AUTHENTICODE      ((LPCSTR)2)
+#define CERT_CHAIN_POLICY_AUTHENTICODE_TS   ((LPCSTR)3)
+#define CERT_CHAIN_POLICY_SSL               ((LPCSTR)4)
+#define CERT_CHAIN_POLICY_BASIC_CONSTRAINTS ((LPCSTR)5)
+#define CERT_CHAIN_POLICY_NT_AUTH           ((LPCSTR)6)
+#define CERT_CHAIN_POLICY_MICROSOFT_ROOT    ((LPCSTR)7)
+
+typedef struct _AUTHENTICODE_EXTRA_CERT_CHAIN_POLICY_PARA {
+    DWORD             cbSize;
+    DWORD             dwRegPolicySettings;
+    PCMSG_SIGNER_INFO pSignerInfo;
+} AUTHENTICODE_EXTRA_CERT_CHAIN_POLICY_PARA,
+ *PAUTHENTICODE_EXTRA_CERT_CHAIN_POLICY_PARA;
+
+typedef struct _AUTHENTICODE_EXTRA_CERT_CHAIN_POLICY_STATUS {
+    DWORD cbSize;
+    BOOL  fCommercial;
+} AUTHENTICODE_EXTRA_CERT_CHAIN_POLICY_STATUS,
+ *PAUTHENTICODE_EXTRA_CERT_CHAIN_POLICY_STATUS;
+
+typedef struct _AUTHENTICODE_TS_EXTRA_CERT_CHAIN_POLICY_PARA {
+    DWORD cbSize;
+    DWORD dwRegPolicySettings;
+    BOOL  fCommercial;
+} AUTHENTICODE_TS_EXTRA_CERT_CHAIN_POLICY_PARA,
+ *PAUTHENTICODE_TS_EXTRA_CERT_CHAIN_POLICY_PARA;
+
+typedef struct _HTTPSPolicyCallbackData {
+    union {
+        DWORD cbStruct;
+        DWORD cbSize;
+    } DUMMYUNIONNAME;
+    DWORD  dwAuthType;
+    DWORD  fdwChecks;
+    WCHAR *pwszServerName;
+} HTTPSPolicyCallbackData, *PHTTPSPolicyCallbackData;
+
+#define BASIC_CONSTRAINTS_CERT_CHAIN_POLICY_CA_FLAG         0x80000000
+#define BASIC_CONSTRAINTS_CERT_CHAIN_POLICY_END_ENTITY_FLAG 0x40000000
+
+#define MICROSOFT_ROOT_CERT_CHAIN_POLICY_ENABLE_TEST_ROOT_FLAG 0x00010000
+
+#define USAGE_MATCH_TYPE_AND 0x00000000
+#define USAGE_MATCH_TYPE_OR  0x00000001
+
 typedef struct _CERT_USAGE_MATCH {
     DWORD             dwType;
     CERT_ENHKEY_USAGE Usage;
@@ -713,6 +855,18 @@ typedef struct _CTL_USAGE_MATCH {
     DWORD     dwType;
     CTL_USAGE Usage;
 } CTL_USAGE_MATCH, *PCTL_USAGE_MATCH;
+
+#define CERT_CHAIN_REVOCATION_CHECK_END_CERT           0x10000000
+#define CERT_CHAIN_REVOCATION_CHECK_CHAIN              0x20000000
+#define CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT 0x40000000
+#define CERT_CHAIN_REVOCATION_CHECK_CACHE_ONLY         0x80000000
+
+#define CERT_CHAIN_REVOCATION_ACCUMULATIVE_TIMEOUT     0x08000000
+
+#define CERT_CHAIN_DISABLE_PASS1_QUALITY_FILTERING     0x00000040
+#define CERT_CHAIN_RETURN_LOWER_QUALITY_CONTEXTS       0x00000080
+#define CERT_CHAIN_DISABLE_AUTH_ROOT_AUTO_UPDATE       0x00000100
+#define CERT_CHAIN_TIMESTAMP_TIME                      0x00000200
 
 typedef struct _CERT_CHAIN_PARA {
     DWORD            cbSize;
@@ -1011,6 +1165,81 @@ typedef struct _CRYPT_URL_INFO {
     DWORD *rgcGroupEntry;
 } CRYPT_URL_INFO, *PCRYPT_URL_INFO;
 
+#define URL_OID_CERTIFICATE_ISSUER         ((LPCSTR)1)
+#define URL_OID_CERTIFICATE_CRL_DIST_POINT ((LPCSTR)2)
+#define URL_OID_CTL_ISSUER                 ((LPCSTR)3)
+#define URL_OID_CTL_NEXT_UPDATE            ((LPCSTR)4)
+#define URL_OID_CRL_ISSUER                 ((LPCSTR)5)
+#define URL_OID_CERTIFICATE_FRESHEST_CRL   ((LPCSTR)6)
+#define URL_OID_CRL_FRESHEST_CRL           ((LPCSTR)7)
+#define URL_OID_CROSS_CERT_DIST_POINT      ((LPCSTR)8)
+
+typedef HANDLE HCRYPTASYNC, *PHCRYPTASYNC;
+
+typedef void (WINAPI *PFN_CRYPT_ASYNC_PARAM_FREE_FUNC)(LPSTR pszParamOid,
+ LPVOID pvParam);
+
+typedef struct _CRYPT_CREDENTIALS {
+    DWORD  cbSize;
+    LPCSTR pszCredentialsOid;
+    LPVOID pvCredentials;
+} CRYPT_CREDENTIALS, *PCRYPT_CREDENTIALS;
+
+#define CREDENTIAL_OID_PASSWORD_CREDENTIALS_A ((LPCSTR)1)
+#define CREDENTIAL_OID_PASSWORD_CREDENTIALS_W ((LPCSTR)2)
+#define CREDENTIAL_OID_PASSWORD_CREDENTIALS \
+ WINELIB_NAME_AW(CREDENTIAL_OID_PASSWORD_CREDENTIALS_)
+
+typedef struct _CRYPT_PASSWORD_CREDENTIALSA {
+    DWORD cbSize;
+    LPSTR pszUsername;
+    LPSTR pszPassword;
+} CRYPT_PASSWORD_CREDENTIALSA, *PCRYPT_PASSWORD_CREDENTIALSA;
+
+typedef struct _CRYPT_PASSWORD_CREDENTIALSW {
+    DWORD  cbSize;
+    LPWSTR pszUsername;
+    LPWSTR pszPassword;
+} CRYPT_PASSWORD_CREDENTIALSW, *PCRYPT_PASSWORD_CREDENTIALSW;
+#define CRYPT_PASSWORD_CREDENTIALS WINELIB_NAME_AW(CRYPT_PASSWORD_CREDENTIALS)
+#define PCRYPT_PASSWORD_CREDENTIALS WINELIB_NAME_AW(PCRYPT_PASSWORD_CREDENTIALS)
+
+typedef struct _CRYPT_RETRIEVE_AUX_INFO {
+    DWORD     cbSize;
+    FILETIME *pLastSyncTime;
+    DWORD     dwMaxUrlRetrievalByteCount;
+} CRYPT_RETRIEVE_AUX_INFO, *PCRYPT_RETRIEVE_AUX_INFO;
+
+#define CONTEXT_OID_CREATE_OBJECT_CONTEXT_FUNC "ContextDllCreateObjectContext"
+
+#define CONTEXT_OID_CERTIFICATE ((LPCSTR)1)
+#define CONTEXT_OID_CRL         ((LPCSTR)2)
+#define CONTEXT_OID_CTL         ((LPCSTR)3)
+#define CONTEXT_OID_PKCS7       ((LPCSTR)4)
+#define CONTEXT_OID_CAPI2_ANY   ((LPCSTR)5)
+
+#define CRYPT_RETRIEVE_MULTIPLE_OBJECTS      0x00000001
+#define CRYPT_CACHE_ONLY_RETRIEVAL           0x00000002
+#define CRYPT_WIRE_ONLY_RETRIEVAL            0x00000004
+#define CRYPT_DONT_CACHE_RESULT              0x00000008
+#define CRYPT_ASYNC_RETRIEVAL                0x00000010
+#define CRYPT_STICKY_CACHE_RETRIEVAL         0x00001000
+#define CRYPT_LDAP_SCOPE_BASE_ONLY_RETRIEVAL 0x00002000
+#define CRYPT_OFFLINE_CHECK_RETRIEVAL        0x00004000
+#define CRYPT_LDAP_INSERT_ENTRY_ATTRIBUTE    0x00008000
+#define CRYPT_LDAP_SIGN_RETRIEVAL            0x00010000
+#define CRYPT_NO_AUTH_RETRIEVAL              0x00020000
+#define CRYPT_LDAP_AREC_EXCLUSIVE_RETRIEVAL  0x00040000
+#define CRYPT_AIA_RETRIEVAL                  0x00080000
+
+#define CRYPT_VERIFY_CONTEXT_SIGNATURE      0x00000020
+#define CRYPT_VERIFY_DATA_HASH              0x00000040
+#define CRYPT_KEEP_TIME_VALID               0x00000080
+#define CRYPT_DONT_VERIFY_SIGNATURE         0x00000100
+#define CRYPT_DONT_CHECK_TIME_VALIDITY      0x00000200
+#define CRYPT_CHECK_FRESHNESS_TIME_VALIDITY 0x00000400
+#define CRYPT_ACCUMULATIVE_TIMEOUT          0x00000800
+
 /* OID group IDs */
 #define CRYPT_HASH_ALG_OID_GROUP_ID     1
 #define CRYPT_ENCRYPT_ALG_OID_GROUP_ID  2
@@ -1093,7 +1322,7 @@ typedef struct _CRYPT_URL_INFO {
 #define ALG_SID_MD4                     2
 #define ALG_SID_MD5                     3
 #define ALG_SID_SHA                     4
-#define ALG_SID_SHA1                    CALG_SHA
+#define ALG_SID_SHA1                    ALG_SID_SHA
 #define ALG_SID_MAC                     5
 #define ALG_SID_RIPEMD                  6
 #define ALG_SID_RIPEMD160               7
@@ -1600,6 +1829,92 @@ static const WCHAR CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH[] =
   't','i','f','i','c','a','t','e','s',0 };
 #endif
 
+#if defined(__GNUC__)
+#define CERT_EFSBLOB_REGPATH (const WCHAR[])\
+{'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',\
+ 'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m','C','e','r',\
+ 't','i','f','i','c','a','t','e','s','\\','E','F','S',0 }
+#define CERT_EFSBLOB_VALUE_NAME (const WCHAR[]) {'E','F','S','B','l','o','b',0 }
+#elif defined(_MSC_VER)
+#define CERT_EFSBLOB_REGPATH CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH L"\\EFS"
+#define CERT_EFSBLOB_VALUE_NAME L"EFSBlob"
+#else
+static const WCHAR CERT_EFSBLOB_REGPATH[] =
+ {'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',
+  'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m','C','e','r',
+  't','i','f','i','c','a','t','e','s','\\','E','F','S',0 };
+static const CERT_EFSBLOB_VALUE_NAME[] = { 'E','F','S','B','l','o','b',0 };
+#endif
+
+#if defined(__GNUC__)
+#define CERT_PROT_ROOT_FLAGS_REGPATH (const WCHAR[])\
+{'\\','R','o','o','t','\\','P','r','o','t','e','c','t','e','d','R','o','o','t',\
+ 's',0 }
+#define CERT_PROT_ROOT_FLAGS_VALUE_NAME (const WCHAR[])\
+{'F','l','a','g','s',0 }
+#elif defined(_MSC_VER)
+#define CERT_PROT_ROOT_FLAGS_REGPATH L"\\Root\\ProtectedRoots"
+#define CERT_PROT_ROOT_FLAGS_VALUE_NAME L"Flags"
+#else
+static const WCHAR CERT_PROT_ROOT_FLAGS_REGPATH[] =
+ { '\\','R','o','o','t','\\','P','r','o','t','e','c','t','e','d','R','o','o',
+   't','s',0 };
+static const WCHAR CERT_PROT_ROOT_FLAGS_VALUE_NAME[] = {'F','l','a','g','s',0 };
+#endif
+
+#define CERT_PROT_ROOT_DISABLE_CURRENT_USER_FLAG                0x01
+#define CERT_PROT_ROOT_INHIBIT_ADD_AT_INIT_FLAG                 0x02
+#define CERT_PROT_ROOT_INHIBIT_PURGE_LM_FLAG                    0x04
+#define CERT_PROT_ROOT_DISABLE_LM_AUTH_FLAG                     0x08
+#define CERT_PROT_ROOT_DISABLE_NT_AUTH_REQUIRED_FLAG            0x10
+#define CERT_PROT_ROOT_DISABLE_NOT_DEFINED_NAME_CONSTRAINT_FLAG 0x20
+
+#if defined(__GNUC__)
+#define CERT_TRUST_PUB_SAFER_GROUP_POLICY_REGPATH (const WCHAR[])\
+{'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',\
+ 'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m','C','e','r',\
+ 't','i','f','i','c','a','t','e','s','\\','T','r','u','s','t','e','d',\
+ 'P','u','b','l','i','s','h','e','r','\\','S','a','f','e','r',0 }
+#elif defined(_MSC_VER)
+#define CERT_TRUST_PUB_SAFER_GROUP_POLICY_REGPATH \
+ CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH L"\\TrustedPublisher\\Safer"
+#else
+static const WCHAR CERT_TRUST_PUB_SAFER_GROUP_POLICY_REGPATH[] =
+ {'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',
+  'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m','C','e','r',
+  't','i','f','i','c','a','t','e','s','\\','T','r','u','s','t','e','d',
+  'P','u','b','l','i','s','h','e','r','\\','S','a','f','e','r',0 };
+#endif
+
+#if defined(__GNUC__)
+#define CERT_TRUST_PUB_SAFER_LOCAL_MACHINE_REGPATH (const WCHAR[])\
+{'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',\
+ 'S','y','s','t','e','m','C','e','r','t','i','f','i','c','a','t','e','s','\\',\
+ 'T','r','u','s','t','e','d','P','u','b','l','i','s','h','e','r','\\',\
+ 'S','a','f','e','r',0 }
+#define CERT_TRUST_PUB_AUTHENTICODE_FLAGS_VALUE_NAME (const WCHAR[])\
+{'A','u','t','h','e','n','t','i','c','o','d','e','F','l','a','g','s',0 };
+#elif defined(_MSC_VER)
+#define CERT_TRUST_PUB_SAFER_LOCAL_MACHINE_REGPATH \
+ CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH L"\\TrustedPublisher\\Safer"
+#define CERT_TRUST_PUB_AUTHENTICODE_FLAGS_VALUE_NAME L"AuthenticodeFlags"
+#else
+static const WCHAR CERT_TRUST_PUB_SAFER_LOCAL_MACHINE_REGPATH[] =
+ {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+  'S','y','s','t','e','m','C','e','r','t','i','f','i','c','a','t','e','s','\\',
+  'T','r','u','s','t','e','d','P','u','b','l','i','s','h','e','r','\\',
+  'S','a','f','e','r',0 };
+static const WCHAR CERT_TRUST_PUB_AUTHENTICODE_FLAGS_VALUE_NAME[] =
+ { 'A','u','t','h','e','n','t','i','c','o','d','e','F','l','a','g','s',0 };
+#endif
+
+#define CERT_TRUST_PUB_ALLOW_END_USER_TRUST         0x00000000
+#define CERT_TRUST_PUB_ALLOW_MACHINE_ADMIN_TRUST    0x00000001
+#define CERT_TRUST_PUB_ALLOW_ENTERPRISE_ADMIN_TRUST 0x00000002
+#define CERT_TRUST_PUB_ALLOW_TRUST_MASK             0x00000003
+#define CERT_TRUST_PUB_CHECK_PUBLISHER_REV_FLAG     0x00000100
+#define CERT_TRUST_PUB_CHECK_TIMESTAMP_REV_FLAG     0x00000200
+
 /* flags for CertOpenStore dwFlags */
 #define CERT_STORE_NO_CRYPT_RELEASE_FLAG            0x00000001
 #define CERT_STORE_SET_LOCALIZED_NAME_FLAG          0x00000002
@@ -1616,6 +1931,15 @@ static const WCHAR CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH[] =
 #define CERT_STORE_CREATE_NEW_FLAG                  0x00002000
 #define CERT_STORE_OPEN_EXISTING_FLAG               0x00004000
 #define CERT_STORE_READONLY_FLAG                    0x00008000
+
+#define CERT_REGISTRY_STORE_REMOTE_FLAG      0x00010000
+#define CERT_REGISTRY_STORE_SERIALIZED_FLAG  0x00020000
+#define CERT_REGISTRY_STORE_ROAMING_FLAG     0x00040000
+#define CERT_REGISTRY_STORE_MY_IE_DIRTY_FLAG 0x00080000
+#define CERT_REGISTRY_STORE_LM_GPT_FLAG      0x01000000
+#define CERT_REGISTRY_STORE_CLIENT_GPT_FLAG  0x80000000
+
+#define CERT_FILE_STORE_COMMIT_ENABLE_FLAG 0x00010000
 
 /* dwAddDisposition */
 #define CERT_STORE_ADD_NEW                                 1
@@ -2270,6 +2594,9 @@ typedef struct _CRL_FIND_ISSUED_FOR_PARA
 #ifndef szOID_SERVER_GATED_CRYPTO
 #define szOID_SERVER_GATED_CRYPTO            "1.3.6.1.4.1.311.10.3.3"
 #endif
+#ifndef szOID_SGC_NETSCAPE
+#define szOID_SGC_NETSCAPE                   "2.16.840.1.113730.4.1"
+#endif
 #define szOID_KP_EFS                         "1.3.6.1.4.1.311.10.3.4"
 #define szOID_EFS_RECOVERY                   "1.3.6.1.4.1.311.10.3.4.1"
 #define szOID_WHQL_CRYPTO                    "1.3.6.1.4.1.311.10.3.5"
@@ -2554,6 +2881,91 @@ typedef struct _CRL_FIND_ISSUED_FOR_PARA
 #define CERT_NAME_ISSUER_FLAG           0x00000001
 #define CERT_NAME_DISABLE_IE4_UTF8_FLAG 0x00010000
 
+/* CryptFormatObject flags */
+#define CRYPT_FORMAT_STR_MULTI_LINE 0x0001
+#define CRYPT_FORMAT_STR_NO_HEX     0x0010
+
+#define CRYPT_FORMAT_SIMPLE        0x0001
+#define CRYPT_FORMAT_X509          0x0002
+#define CRYPT_FORMAT_OID           0x0004
+#define CRYPT_FORMAT_RDN_SEMICOLON 0x0100
+#define CRYPT_FORMAT_RDN_CRLF      0x0200
+#define CRYPT_FORMAT_RDN_UNQUOTE   0x0400
+#define CRYPT_FORMAT_RDN_REVERSE   0x0800
+
+#define CRYPT_FORMAT_COMMA     0x1000
+#define CRYPT_FORMAT_SEMICOLON CRYPT_FORMAT_RDN_SEMICOLON
+#define CRYPT_FORMAT_CRLF      CRYPT_FORMAT_RDN_CRLF
+
+/* CryptQueryObject types and flags */
+#define CERT_QUERY_OBJECT_FILE 1
+#define CERT_QUERY_OBJECT_BLOB 2
+
+#define CERT_QUERY_CONTENT_CERT               1
+#define CERT_QUERY_CONTENT_CTL                2
+#define CERT_QUERY_CONTENT_CRL                3
+#define CERT_QUERY_CONTENT_SERIALIZED_STORE   4
+#define CERT_QUERY_CONTENT_SERIALIZED_CERT    5
+#define CERT_QUERY_CONTENT_SERIALIZED_CTL     6
+#define CERT_QUERY_CONTENT_SERIALIZED_CRL     7
+#define CERT_QUERY_CONTENT_PKCS7_SIGNED       8
+#define CERT_QUERY_CONTENT_PKCS7_UNSIGNED     9
+#define CERT_QUERY_CONTENT_PKCS7_SIGNED_EMBED 10
+#define CERT_QUERY_CONTENT_PKCS10             11
+#define CERT_QUERY_CONTENT_PFX                12
+#define CERT_QUERY_CONTENT_CERT_PAIR          13
+
+#define CERT_QUERY_CONTENT_FLAG_CERT      (1 << CERT_QUERY_CONTENT_CERT)
+#define CERT_QUERY_CONTENT_FLAG_CTL       (1 << CERT_QUERY_CONTENT_CTL)
+#define CERT_QUERY_CONTENT_FLAG_CRL       (1 << CERT_QUERY_CONTENT_CRL)
+#define CERT_QUERY_CONTENT_FLAG_SERIALIZED_STORE \
+ (1 << CERT_QUERY_CONTENT_SERIALIZED_STORE)
+#define CERT_QUERY_CONTENT_FLAG_SERIALIZED_CERT \
+ (1 << CERT_QUERY_CONTENT_SERIALIZED_CERT)
+#define CERT_QUERY_CONTENT_FLAG_SERIALIZED_CTL \
+ (1 << CERT_QUERY_CONTENT_SERIALIZED_CTL)
+#define CERT_QUERY_CONTENT_FLAG_SERIALIZED_CRL \
+ (1 << CERT_QUERY_CONTENT_SERIALIZED_CRL)
+#define CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED \
+ (1 << CERT_QUERY_CONTENT_PKCS7_SIGNED)
+#define CERT_QUERY_CONTENT_FLAG_PKCS7_UNSIGNED \
+ (1 << CERT_QUERY_CONTENT_PKCS7_UNSIGNED)
+#define CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED_EMBED \
+ (1 << CERT_QUERY_CONTENT_PKCS7_SIGNED_EMBED)
+#define CERT_QUERY_CONTENT_FLAG_PKCS10    (1 << CERT_QUERY_CONTENT_PKCS10)
+#define CERT_QUERY_CONTENT_FLAG_PFX       (1 << CERT_QUERY_CONTENT_PFX)
+#define CERT_QUERY_CONTENT_FLAG_CERT_PAIR (1 << CERT_QUERY_CONTENT_CERT_PAIR)
+
+#define CERT_QUERY_CONTENT_FLAG_ALL \
+ CERT_QUERY_CONTENT_FLAG_CERT | \
+ CERT_QUERY_CONTENT_FLAG_CTL | \
+ CERT_QUERY_CONTENT_FLAG_CRL | \
+ CERT_QUERY_CONTENT_FLAG_SERIALIZED_STORE | \
+ CERT_QUERY_CONTENT_FLAG_SERIALIZED_CERT | \
+ CERT_QUERY_CONTENT_FLAG_SERIALIZED_CTL | \
+ CERT_QUERY_CONTENT_FLAG_SERIALIZED_CRL | \
+ CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED | \
+ CERT_QUERY_CONTENT_FLAG_PKCS7_UNSIGNED | \
+ CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED_EMBED | \
+ CERT_QUERY_CONTENT_FLAG_PKCS10 | \
+ CERT_QUERY_CONTENT_FLAG_PFX | \
+ CERT_QUERY_CONTENT_FLAG_CERT_PAIR
+
+#define CERT_QUERY_FORMAT_BINARY                1
+#define CERT_QUERY_FORMAT_BASE64_ENCODED        2
+#define CERT_QUERY_FORMAT_ASN_ASCII_HEX_ENCODED 3
+
+#define CERT_QUERY_FORMAT_FLAG_BINARY (1 << CERT_QUERY_FORMAT_BINARY)
+#define CERT_QUERY_FORMAT_FLAG_BASE64_ENCODED \
+ (1 << CERT_QUERY_FORMAT_BASE64_ENCODED)
+#define CERT_QUERY_FORMAT_FLAG_ASN_ASCII_HEX_ENCODED \
+ (1 << CERT_QUERY_FORMAT_ASN_ASCII_HEX_ENCODED)
+
+#define CERT_QUERY_FORMAT_FLAG_ALL \
+ CERT_QUERY_FORMAT_FLAG_BINARY | \
+ CERT_QUERY_FORMAT_FLAG_BASE64_ENCODED | \
+ CERT_QUERY_FORMAT_FLAG_ASN_ASCII_HEX_ENCODED \
+
 #define CERT_SET_KEY_PROV_HANDLE_PROP_ID 0x00000001
 #define CERT_SET_KEY_CONTEXT_PROP_ID     0x00000001
 
@@ -2565,6 +2977,32 @@ typedef struct _CRL_FIND_ISSUED_FOR_PARA
 #define CRYPT_ACQUIRE_USE_PROV_INFO_FLAG 0x00000002
 #define CRYPT_ACQUIRE_COMPARE_KEY_FLAG   0x00000004
 #define CRYPT_ACQUIRE_SILENT_FLAG        0x00000040
+
+/* Chain engines and chains */
+typedef HANDLE HCERTCHAINENGINE;
+#define HCCE_CURRENT_USER  ((HCERTCHAINENGINE)NULL)
+#define HCCE_LOCAL_MACHINE ((HCERTCHAINENGINE)1)
+
+#define CERT_CHAIN_CACHE_END_CERT           0x00000001
+#define CERT_CHAIN_THREAD_STORE_SYNC        0x00000002
+#define CERT_CHAIN_CACHE_ONLY_URL_RETRIEVAL 0x00000004
+#define CERT_CHAIN_USE_LOCAL_MACHINE_STORE  0x00000008
+#define CERT_CHAIN_ENABLE_CACHE_AUTO_UPDATE 0x00000010
+#define CERT_CHAIN_ENABLE_SHARE_STORE       0x00000020
+
+typedef struct _CERT_CHAIN_ENGINE_CONFIG
+{
+    DWORD       cbSize;
+    HCERTSTORE  hRestrictedRoot;
+    HCERTSTORE  hRestrictedTrust;
+    HCERTSTORE  hRestrictedOther;
+    DWORD       cAdditionalStore;
+    HCERTSTORE *rghAdditionalStore;
+    DWORD       dwFlags;
+    DWORD       dwUrlRetrievalTimeout;
+    DWORD       MaximumCachedCertificates;
+    DWORD       CycleDetectionModulus;
+} CERT_CHAIN_ENGINE_CONFIG, *PCERT_CHAIN_ENGINE_CONFIG;
 
 /* function declarations */
 /* advapi32.dll */
@@ -2614,28 +3052,28 @@ BOOL WINAPI CryptGetDefaultProviderW (DWORD dwProvType, DWORD *pdwReserved,
 		DWORD dwFlags, LPWSTR pszProvName, DWORD *pcbProvName);
 #define CryptGetDefaultProvider WINELIB_NAME_AW(CryptGetDefaultProvider)
 BOOL WINAPI CryptGetUserKey (HCRYPTPROV hProv, DWORD dwKeySpec, HCRYPTKEY *phUserKey);
-BOOL WINAPI CryptHashData (HCRYPTHASH hHash, const BYTE *pbData, DWORD dwDataLen, DWORD dwFlags);
+BOOL WINAPI CryptHashData (HCRYPTHASH hHash, CONST BYTE *pbData, DWORD dwDataLen, DWORD dwFlags);
 BOOL WINAPI CryptHashSessionKey (HCRYPTHASH hHash, HCRYPTKEY hKey, DWORD dwFlags);
-BOOL WINAPI CryptImportKey (HCRYPTPROV hProv, BYTE *pbData, DWORD dwDataLen,
+BOOL WINAPI CryptImportKey (HCRYPTPROV hProv, CONST BYTE *pbData, DWORD dwDataLen,
 		HCRYPTKEY hPubKey, DWORD dwFlags, HCRYPTKEY *phKey);
 BOOL WINAPI CryptReleaseContext (HCRYPTPROV hProv, DWORD dwFlags);
-BOOL WINAPI CryptSetHashParam (HCRYPTHASH hHash, DWORD dwParam, BYTE *pbData, DWORD dwFlags);
-BOOL WINAPI CryptSetKeyParam (HCRYPTKEY hKey, DWORD dwParam, BYTE *pbData, DWORD dwFlags);
+BOOL WINAPI CryptSetHashParam (HCRYPTHASH hHash, DWORD dwParam, CONST BYTE *pbData, DWORD dwFlags);
+BOOL WINAPI CryptSetKeyParam (HCRYPTKEY hKey, DWORD dwParam, CONST BYTE *pbData, DWORD dwFlags);
 BOOL WINAPI CryptSetProviderA (LPCSTR pszProvName, DWORD dwProvType);
 BOOL WINAPI CryptSetProviderW (LPCWSTR pszProvName, DWORD dwProvType);
 #define CryptSetProvider WINELIB_NAME_AW(CryptSetProvider)
 BOOL WINAPI CryptSetProviderExA (LPCSTR pszProvName, DWORD dwProvType, DWORD *pdwReserved, DWORD dwFlags);
 BOOL WINAPI CryptSetProviderExW (LPCWSTR pszProvName, DWORD dwProvType, DWORD *pdwReserved, DWORD dwFlags);
 #define CryptSetProviderEx WINELIB_NAME_AW(CryptSetProviderEx)
-BOOL WINAPI CryptSetProvParam (HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData, DWORD dwFlags);
+BOOL WINAPI CryptSetProvParam (HCRYPTPROV hProv, DWORD dwParam, CONST BYTE *pbData, DWORD dwFlags);
 BOOL WINAPI CryptSignHashA (HCRYPTHASH hHash, DWORD dwKeySpec, LPCSTR sDescription,
 		DWORD dwFlags, BYTE *pbSignature, DWORD *pdwSigLen);
 BOOL WINAPI CryptSignHashW (HCRYPTHASH hHash, DWORD dwKeySpec, LPCWSTR sDescription,
 		DWORD dwFlags, BYTE *pbSignature, DWORD *pdwSigLen);
 #define CryptSignHash WINELIB_NAME_AW(CryptSignHash)
-BOOL WINAPI CryptVerifySignatureA (HCRYPTHASH hHash, BYTE *pbSignature, DWORD dwSigLen,
+BOOL WINAPI CryptVerifySignatureA (HCRYPTHASH hHash, CONST BYTE *pbSignature, DWORD dwSigLen,
 		HCRYPTKEY hPubKey, LPCSTR sDescription, DWORD dwFlags);
-BOOL WINAPI CryptVerifySignatureW (HCRYPTHASH hHash, BYTE *pbSignature, DWORD dwSigLen,
+BOOL WINAPI CryptVerifySignatureW (HCRYPTHASH hHash, CONST BYTE *pbSignature, DWORD dwSigLen,
 		HCRYPTKEY hPubKey, LPCWSTR sDescription, DWORD dwFlags);
 #define CryptVerifySignature WINELIB_NAME_AW(CryptVerifySignature)
 
@@ -2657,6 +3095,13 @@ BOOL WINAPI CryptStringToBinaryW(LPCWSTR pszString,
  DWORD cchString, DWORD dwFlags, BYTE *pbBinary, DWORD *pcbBinary,
  DWORD *pdwSkip, DWORD *pdwFlags);
 #define CryptStringToBinary WINELIB_NAME_AW(CryptStringToBinary)
+
+BOOL WINAPI CryptCreateAsyncHandle(DWORD dwFlags, PHCRYPTASYNC phAsync);
+BOOL WINAPI CryptSetAsyncParam(HCRYPTASYNC hAsync, LPSTR pszParamOid,
+ LPVOID pvParam, PFN_CRYPT_ASYNC_PARAM_FREE_FUNC pfnFree);
+BOOL WINAPI CryptGetAsyncParam(HCRYPTASYNC hAsync, LPSTR pszParamOid,
+ LPVOID *ppvParam, PFN_CRYPT_ASYNC_PARAM_FREE_FUNC *ppfnFree);
+BOOL WINAPI CryptCloseAsyncHandle(HCRYPTASYNC hAsync);
 
 BOOL WINAPI CryptRegisterDefaultOIDFunction(DWORD,LPCSTR,DWORD,LPCWSTR);
 BOOL WINAPI CryptRegisterOIDFunction(DWORD,LPCSTR,LPCSTR,LPCWSTR,LPCSTR);
@@ -2732,6 +3177,23 @@ BOOL WINAPI CertAddStoreToCollection(HCERTSTORE hCollectionStore,
 
 void WINAPI CertRemoveStoreFromCollection(HCERTSTORE hCollectionStore,
  HCERTSTORE hSiblingStore);
+
+BOOL WINAPI CertCreateCertificateChainEngine(PCERT_CHAIN_ENGINE_CONFIG pConfig,
+ HCERTCHAINENGINE *phChainEngine);
+
+BOOL WINAPI CertResyncCertificateChainEngine(HCERTCHAINENGINE hChainEngine);
+
+void WINAPI CertFreeCertificateChainEngine(HCERTCHAINENGINE hChainEngine);
+
+BOOL WINAPI CertGetCertificateChain(HCERTCHAINENGINE hChainEngine,
+ PCCERT_CONTEXT pCertContext, LPFILETIME pTime, HCERTSTORE hAdditionalStore,
+ PCERT_CHAIN_PARA pChainPara, DWORD dwFlags, LPVOID pvReserved,
+ PCCERT_CHAIN_CONTEXT *ppChainContext);
+
+PCCERT_CHAIN_CONTEXT WINAPI CertDuplicateCertificateChain(
+ PCCERT_CHAIN_CONTEXT pChainContext);
+
+void WINAPI CertFreeCertificateChain(PCCERT_CHAIN_CONTEXT pChainContext);
 
 PCCERT_CHAIN_CONTEXT WINAPI CertFindChainInStore(HCERTSTORE hCertStore,
  DWORD dwCertEncodingType, DWORD dwFindFlags, DWORD dwFindType,
@@ -2835,6 +3297,8 @@ BOOL WINAPI CertCompareIntegerBlob(PCRYPT_INTEGER_BLOB pInt1,
  PCRYPT_INTEGER_BLOB pInt2);
 BOOL WINAPI CertComparePublicKeyInfo(DWORD dwCertEncodingType,
  PCERT_PUBLIC_KEY_INFO pPublicKey1, PCERT_PUBLIC_KEY_INFO pPublicKey2);
+DWORD WINAPI CertGetPublicKeyLength(DWORD dwCertEncodingType,
+ PCERT_PUBLIC_KEY_INFO pPublicKey);
 
 const void *CertCreateContext(DWORD dwContextType, DWORD dwEncodingType,
  const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
@@ -2923,9 +3387,17 @@ BOOL WINAPI CryptDecodeObjectEx(DWORD dwCertEncodingType, LPCSTR lpszStructType,
  const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
  PCRYPT_DECODE_PARA pDecodePara, void *pvStructInfo, DWORD *pcbStructInfo);
 
+BOOL WINAPI CryptFormatObject(DWORD dwCertEncodingType, DWORD dwFormatType,
+ DWORD dwFormatStrType, void *pFormatStruct, LPCSTR lpszStructType,
+ const BYTE *pbEncoded, DWORD cbEncoded, void *pbFormat, DWORD *pcbFormat);
+
 BOOL WINAPI CryptHashCertificate(HCRYPTPROV hCryptProv, ALG_ID Algid,
  DWORD dwFlags, const BYTE *pbEncoded, DWORD cbEncoded, BYTE *pbComputedHash,
  DWORD *pcbComputedHash);
+
+BOOL WINAPI CryptHashPublicKeyInfo(HCRYPTPROV hCryptProv, ALG_ID Algid,
+ DWORD dwFlags, DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo,
+ BYTE *pbComputedHash, DWORD *pcbComputedHash);
 
 BOOL WINAPI CryptHashToBeSigned(HCRYPTPROV hCryptProv, DWORD dwCertEncodingType,
  const BYTE *pbEncoded, DWORD cbEncoded, BYTE *pbComputedHash,
@@ -2976,6 +3448,17 @@ LONG WINAPI CertVerifyCRLTimeValidity(LPFILETIME pTimeToVerify,
  PCRL_INFO pCrlInfo);
 LONG WINAPI CertVerifyTimeValidity(LPFILETIME pTimeToVerify,
  PCERT_INFO pCertInfo);
+BOOL WINAPI CertVerifyValidityNesting(PCERT_INFO pSubjectInfo,
+ PCERT_INFO pIssuerInfo);
+
+BOOL WINAPI CertVerifyCTLUsage(DWORD dwEncodingType, DWORD dwSubjectType,
+ void *pvSubject, PCTL_USAGE pSubjectUsage, DWORD dwFlags,
+ PCTL_VERIFY_USAGE_PARA pVerifyUsagePara,
+ PCTL_VERIFY_USAGE_STATUS pVerifyUsageStatus);
+
+BOOL WINAPI CertVerifyRevocation(DWORD dwEncodingType, DWORD dwRevType,
+ DWORD cContext, void *rgpvContext[], DWORD dwFlags,
+ PCERT_REVOCATION_PARA pRevPara, PCERT_REVOCATION_STATUS pRevStatus);
 
 BOOL WINAPI CryptExportPublicKeyInfo(HCRYPTPROV hCryptProv, DWORD dwKeySpec,
  DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD *pcbInfo);
@@ -3095,6 +3578,16 @@ BOOL WINAPI CryptVerifyDetachedMessageHash(PCRYPT_HASH_MESSAGE_PARA pHashPara,
 BOOL WINAPI CryptGetObjectUrl(LPCSTR pszUrlOid, LPVOID pvPara, DWORD dwFlags,
  PCRYPT_URL_ARRAY pUrlArray, DWORD *pcbUrlArray, PCRYPT_URL_INFO pUrlInfo,
  DWORD *pcbUrlInfo, LPVOID pvReserved);
+
+BOOL WINAPI CryptRetrieveObjectByUrlA(LPCSTR pszURL, LPCSTR pszObjectOid,
+ DWORD dwRetrievalFlags, DWORD dwTimeout, LPVOID *ppvObject,
+ HCRYPTASYNC hAsyncRetrieve, PCRYPT_CREDENTIALS pCredentials, LPVOID pvVerify,
+ PCRYPT_RETRIEVE_AUX_INFO pAuxInfo);
+BOOL WINAPI CryptRetrieveObjectByUrlW(LPCWSTR pszURL, LPCSTR pszObjectOid,
+ DWORD dwRetrievalFlags, DWORD dwTimeout, LPVOID *ppvObject,
+ HCRYPTASYNC hAsyncRetrieve, PCRYPT_CREDENTIALS pCredentials, LPVOID pvVerify,
+ PCRYPT_RETRIEVE_AUX_INFO pAuxInfo);
+#define CryptRetrieveObjectByUrl WINELIB_NAME_AW(CryptRetrieveObjectByUrl)
 
 #ifdef __cplusplus
 }
