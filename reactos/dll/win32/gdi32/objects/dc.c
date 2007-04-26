@@ -168,10 +168,27 @@ CreateDCW (
 	if(lpwszOutput)
 		RtlInitUnicodeString(&Driver, lpwszOutput);
 
-	return NtGdiCreateDC((lpwszDriver ? &Driver : NULL),
+	HDC hDC =  NtGdiCreateDC((lpwszDriver ? &Driver : NULL),
 						 (lpwszDevice ? &Device : NULL),
 						 (lpwszOutput ? &Output : NULL),
 						 (PDEVMODEW)lpInitData);
+/* DC_ATTR Tests.
+ if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
+ {
+    PDC_ATTR Dc_Attr;
+
+    GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr);
+    DPRINT1("Test DC_ATTR -> ! 0x%x\n", Dc_Attr);
+
+    DPRINT1("Test DC_ATTR access! 0x%x\n", Dc_Attr->pvLDC);
+    Dc_Attr->pvLDC = (PVOID)1;
+    DPRINT1("Test DC_ATTR access! 0x%x\n", Dc_Attr->pvLDC);
+    Dc_Attr->pvLDC = (PVOID)0;
+    DPRINT1("Test DC_ATTR access! 0x%x\n", Dc_Attr->pvLDC);
+
+ }
+ */
+   return hDC;
 }
 
 
@@ -405,20 +422,16 @@ GetNonFontObject(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
     case GDI_OBJECT_TYPE_REGION:
     case GDI_OBJECT_TYPE_METAFILE:
     case GDI_OBJECT_TYPE_ENHMETAFILE:
-    case GDI_OBJECT_TYPE_EMF:
+    case GDI_OBJECT_TYPE_EMF:    
+    case GDI_OBJECT_TYPE_METADC:
       SetLastError(ERROR_INVALID_HANDLE);
       return 0;
 
-    case GDI_OBJECT_TYPE_COLORSPACE:
-      SetLastError(ERROR_NOT_SUPPORTED);
-      return 0;
-
-    case GDI_OBJECT_TYPE_PEN:
-    case GDI_OBJECT_TYPE_BRUSH:
+    case GDI_OBJECT_TYPE_PEN: //Check the structures and see if A & W are the same.
+    case GDI_OBJECT_TYPE_BRUSH: // Mixing Apples and Oranges?
     case GDI_OBJECT_TYPE_BITMAP:
     case GDI_OBJECT_TYPE_PALETTE:
-    case GDI_OBJECT_TYPE_METADC:
-      if (!lpBuffer)
+      if (!lpBuffer) // Should pass it all to Win32k and let god sort it out. ;^)
       {
   	    switch(dwType)
   	    {
@@ -430,12 +443,6 @@ GetNonFontObject(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
             return sizeof(BITMAP);
           case GDI_OBJECT_TYPE_PALETTE:
             return sizeof(WORD);
-          case GDI_OBJECT_TYPE_METADC:
-            /* Windows does not SetLastError() in this case, more investigation needed */
-            return 0;
-          case GDI_OBJECT_TYPE_COLORSPACE: /* yes, windows acts like this */
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            return 60; // FIXME: what structure is this? */
           case GDI_OBJECT_TYPE_EXTPEN: /* we don't know the size, ask win32k */
             break;
           default:
@@ -443,7 +450,7 @@ GetNonFontObject(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
           return 0;
         }
       }
-      //Handle = GdiFixUpHandle(hGdiObj); new system is not ready
+      hGdiObj = (HANDLE)GdiFixUpHandle(hGdiObj);
       return NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
   }
   return 0;
@@ -457,13 +464,17 @@ int
 STDCALL 
 GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
-  EXTLOGFONTW ExtLogFontW;
-  LOGFONTA LogFontA;
-
+  ENUMLOGFONTEXDVW LogFont;
   DWORD dwType;
-  int Result = 0;
+  INT Result = 0;
 
   dwType = GDI_HANDLE_GET_TYPE(hGdiObj);;
+
+  if(dwType == GDI_OBJECT_TYPE_COLORSPACE) //Stays here, processes struct A
+  {
+     SetLastError(ERROR_NOT_SUPPORTED);
+     return 0;
+  } 
 
   if (dwType == GDI_OBJECT_TYPE_FONT)
   {
@@ -476,25 +487,35 @@ GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
       /* Windows does not SetLastError() */
       return 0;
     }
-    Result = NtGdiExtGetObjectW(hGdiObj, sizeof(EXTLOGFONTW), &ExtLogFontW);
+    // ENUMLOGFONTEXDVW is the default size and should be the structure for
+    // Entry->KernelData for Font objects.
+    Result = NtGdiExtGetObjectW(hGdiObj, sizeof(ENUMLOGFONTEXDVW), &LogFont);
+
     if (0 == Result)
     {
       return 0;
     }
-    LogFontW2A(&LogFontA, &ExtLogFontW.elfLogFont);
+  
+    switch (cbSize)
+      {
+         case sizeof(ENUMLOGFONTEXDVA):
+         // need to move more here.
+         case sizeof(ENUMLOGFONTEXA):
+            EnumLogFontExW2A( (LPENUMLOGFONTEXA) lpBuffer, &LogFont.elfEnumLogfontEx );
+            break;
+             
+         case sizeof(ENUMLOGFONTA):
+         // Same here, maybe? Check the structures.
+         case sizeof(EXTLOGFONTA):
+         // Same here
+         case sizeof(LOGFONTA):
+            LogFontW2A((LPLOGFONTA) lpBuffer, &LogFont.elfEnumLogfontEx.elfLogFont);
+            break;
 
-    /* FIXME: windows writes up to 260 bytes */
-    /* What structure is that? */
-    if ((UINT)cbSize > 260)
-    {
-      cbSize = 260;
-    }
-    memcpy(lpBuffer, &LogFontA, cbSize);
-/*
-    During testing of font objects, I passed ENUM/EXT/LOGFONT/EX/W to NtGdiExtGetObjectW.
-    I think it likes EXTLOGFONTW. So,,, How do we handle the rest when a
-    caller wants to use E/E/L/E/A structures. Check for size? More research~
- */
+         default:
+            SetLastError(ERROR_BUFFER_OVERFLOW);
+            return 0;         
+      }
     return cbSize;
   }
 
@@ -510,8 +531,7 @@ STDCALL
 GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
   DWORD dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
-  EXTLOGFONTW ExtLogFontW;
-  int Result = 0;
+  INT Result = 0;
 
 /*
   Check List:
@@ -519,6 +539,11 @@ GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
   a font, a palette, a pen, or a device independent bitmap created by calling
   the CreateDIBSection function."
  */
+  if(dwType == GDI_OBJECT_TYPE_COLORSPACE) //Stays here, processes struct W
+  {
+     SetLastError(ERROR_NOT_SUPPORTED); // Not supported yet.
+     return 0;
+  }
 
   if (dwType == GDI_OBJECT_TYPE_FONT)
   {
@@ -526,24 +551,22 @@ GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
     {
       return sizeof(LOGFONTW);
     }
+
     if (cbSize == 0)
     {
       /* Windows does not SetLastError() */
       return 0;
     }
-    Result = NtGdiExtGetObjectW(hGdiObj, sizeof(EXTLOGFONTW), &ExtLogFontW);
+    // Poorly written apps are not ReactOS problem!
+    // We fix it here if the size is larger than the default size.
+    if( cbSize > sizeof(ENUMLOGFONTEXDVW) ) cbSize = sizeof(ENUMLOGFONTEXDVW);
+
+    Result = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer); // Should handle the copy.
+
     if (0 == Result)
     {
       return 0;
     }
-    /* FIXME: windows writes up to 356 bytes */
-    /* What structure is that? */
-    if ((UINT)cbSize > 356)
-    {
-      /* windows seems to delete the font in this case, more investigation needed */
-      cbSize = 356;
-    }
-    memcpy(lpBuffer, &ExtLogFontW.elfLogFont, cbSize);
     return cbSize;
   }
 
