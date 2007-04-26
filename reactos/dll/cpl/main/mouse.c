@@ -27,7 +27,6 @@
 
 //TODO:
 //  add missing icons
-//  Options- pointer precision
 
 #define WINVER 0x0501
 
@@ -690,7 +689,7 @@ SaveCursorScheme(HWND hwndDlg)
     LPTSTR lpSchemeData;
     HKEY hCuKey;
     HKEY hCuCursorKey;
-    LONG lResult = ERROR_SUCCESS;
+    LONG lError = ERROR_SUCCESS;
     BOOL bSchemeExists;
 
     LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
@@ -775,15 +774,25 @@ SaveCursorScheme(HWND hwndDlg)
         return FALSE;
     }
 
-    lResult = RegSetValueEx(hCuCursorKey, szNewSchemeName, 0, REG_EXPAND_SZ,
-                            (LPBYTE)lpSchemeData, nLength * sizeof(TCHAR));
+    lError = RegSetValueEx(hCuCursorKey, szNewSchemeName, 0, REG_EXPAND_SZ,
+                           (LPBYTE)lpSchemeData, nLength * sizeof(TCHAR));
 
     RegCloseKey(hCuCursorKey);
     RegCloseKey(hCuKey);
 
+    /* Add the new scheme to the scheme list and select it */
+    if (lError == ERROR_SUCCESS)
+    {
+        LPTSTR copy = _tcsdup(lpSchemeData);
+
+        nSel = SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_ADDSTRING, (WPARAM)0, (LPARAM)szNewSchemeName);
+        SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_SETITEMDATA, (WPARAM)nSel, (LPARAM)copy);
+        SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_SETCURSEL, (WPARAM)nSel, (LPARAM)0);
+    }
+
     HeapFree(GetProcessHeap(), 0, lpSchemeData);
 
-    return (lResult == ERROR_SUCCESS);
+    return (lError == ERROR_SUCCESS);
 }
 
 
