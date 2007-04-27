@@ -440,7 +440,7 @@ MakeFullPath(TCHAR * DirPath)
     while ((p = _tcschr(p, _T('\\'))) != NULL)
     {
        n = p - DirPath + 1;
-       memcpy(path, DirPath, n);
+       _tcsncpy(path, DirPath, n);
        path[n] = _T('\0');
        if( !CreateDirectory(path, NULL) &&
            (GetLastError() != ERROR_ALREADY_EXISTS))
