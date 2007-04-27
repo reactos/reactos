@@ -163,6 +163,7 @@ dll\win32\fmifs\fmifs.dll                           1
 dll\win32\gdi32\gdi32.dll                           1
 dll\win32\gdiplus\gdiplus.dll                       1
 dll\win32\glu32\glu32.dll                           1
+dll\win32\hhctrl.ocx\hhctrl.ocx                     1
 dll\win32\hid\hid.dll                               1
 dll\win32\icmp\icmp.dll                             1
 dll\win32\imagehlp\imagehlp.dll                     1
