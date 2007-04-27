@@ -82,6 +82,9 @@
 <directory name="glu32">
 	<xi:include href="glu32/glu32.rbuild" />
 </directory>
+<directory name="hhctrl.ocx">
+	<xi:include href="hhctrl.ocx/hhctrl.ocx.rbuild" />
+</directory>
 <directory name="hid">
 	<xi:include href="hid/hid.rbuild" />
 </directory>
