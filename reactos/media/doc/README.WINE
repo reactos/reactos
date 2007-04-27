@@ -45,6 +45,7 @@ reactos/dll/win32/comctl32        # Autosync
 reactos/dll/win32/comdlg32        # Synced to Wine-0_9_16
 reactos/dll/win32/crypt32         # Autosync
 reactos/dll/win32/cryptdll        # Autosync
+reactos/dll/win32/cryptnet        # Autosync
 reactos/dll/win32/dbghelp         #
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
 reactos/dll/win32/imm32           # Autosync

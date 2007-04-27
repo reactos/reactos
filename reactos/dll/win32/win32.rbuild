@@ -52,6 +52,9 @@
 <directory name="cryptdll">
 	<xi:include href="cryptdll/cryptdll.rbuild" />
 </directory>
+<directory name="cryptnet">
+	<xi:include href="cryptnet/cryptnet.rbuild" />
+</directory>
 <directory name="cryptui">
 	<xi:include href="cryptui/cryptui.rbuild" />
 </directory>

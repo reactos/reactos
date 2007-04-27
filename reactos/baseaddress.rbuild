@@ -10,6 +10,7 @@
   <property name="BASEADDRESS_VDMDBG" value="0x5b0d0000" />
   <property name="BASEADDRESS_OBJSEL" value="0x5b400000" />
   <property name="BASEADDRESS_SLAYER" value="0x5c7e0000" />
+  <property name="BASEADDRESS_COMMCTRL" value="0x5d090000" />
   <property name="BASEADDRESS_DPLAYX" value="0x5e080000" />
   <property name="BASEADDRESS_DINPUT" value="0x5f580000" />
   <property name="BASEADDRESS_NETID" value="0x5f660000" />
@@ -82,8 +83,7 @@
   <property name="BASEADDRESS_CABINET" value="0x75120000" />
   <property name="BASEADDRESS_IPHLPAPI" value="0x75700000" />
   <property name="BASEADDRESS_MSGINA" value="0x75970000" />
-  <property name="BASEADDRESS_IMM32" value="0x75e60000" />
-  <property name="BASEADDRESS_COMMCTRL" value="0x75e60000" />
+  <property name="BASEADDRESS_CRYPTNET" value="0x75e60000" />
   <property name="BASEADDRESS_RPCRT4" value="0x76000000" />
   <property name="BASEADDRESS_SHLWAPI" value="0x76120000" />
   <property name="BASEADDRESS_COMCTL32" value="0x76160000" />
@@ -93,6 +93,7 @@
   <property name="BASEADDRESS_D3D8THK" value="0x76340000" />
   <property name="BASEADDRESS_RICHED20" value="0x76360000" />
   <property name="BASEADDRESS_TWAIN_32" value="0x76380000" />
+  <property name="BASEADDRESS_IMM32" value="0x76390000" />
   <property name="BASEADDRESS_LSASRV" value="0x76540000" />
   <property name="BASEADDRESS_MIDIMAP" value="0x76600000" />
   <property name="BASEADDRESS_ODBC32" value="0x76660000" />
