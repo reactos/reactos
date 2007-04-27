@@ -27,7 +27,6 @@
 #ifndef __MKHIVE_H__
 #define __MKHIVE_H__
 
-
 #define VOID void
 typedef void *PVOID;
 typedef char CHAR, *PCHAR;
@@ -41,6 +40,8 @@ typedef unsigned long ULONG, *PULONG;
 typedef unsigned long ULONG_PTR;
 
 typedef int BOOL, *PBOOL;
+
+#include "bytesex.h"
 
 #ifndef FALSE
 #define FALSE 0

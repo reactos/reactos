@@ -33,6 +33,8 @@
 #include "reginf.h"
 #include "binhive.h"
 
+EndianOrder order;
+
 #ifdef _MSC_VER
 #include <stdlib.h>
 #define PATH_MAX _MAX_PATH
@@ -99,6 +101,20 @@ int main (int argc, char *argv[])
       usage ();
       return 1;
     }
+
+  order = LE;
+  if (!strcmp(argv[1], "-be"))
+  {
+      order = BE;
+      argc--;
+      argv++;
+  }
+  else if(!strcmp(argv[1], "-le"))
+  {
+      order = LE;
+      argc--;
+      argv++;
+  }
 
   RegInitializeRegistry ();
 

@@ -35,6 +35,7 @@
 #include "binhive.h"
 #include "registry.h"
 
+using namespace ReactosBytesex;
 
 #define  REG_HIVE_ID                   0x66676572
 #define  REG_BIN_ID                    0x6e696268
@@ -56,7 +57,7 @@
 
 
 // BLOCK_OFFSET = offset in file after header block
-typedef ULONG BLOCK_OFFSET, *PBLOCK_OFFSET;
+typedef E_ULONG BLOCK_OFFSET, *PBLOCK_OFFSET;
 
 #ifdef _MSC_VER
 typedef unsigned __int64 FILETIME;
@@ -71,131 +72,131 @@ typedef unsigned long long FILETIME;
 /* header for registry hive file : */
 typedef struct _HIVE_HEADER
 {
-  /* Hive identifier "regf" (0x66676572) */
-  ULONG  BlockId;
+    /* Hive identifier "regf" (0x66676572) */
+    E_ULONG  BlockId;
+    
+    /* Update counter */
+    E_ULONG  UpdateCounter1;
 
-  /* Update counter */
-  ULONG  UpdateCounter1;
+    /* Update counter */
+    E_ULONG  UpdateCounter2;
 
-  /* Update counter */
-  ULONG  UpdateCounter2;
+    /* When this hive file was last modified */
+    E_FILETIME  DateModified;
 
-  /* When this hive file was last modified */
-  FILETIME  DateModified;
+    /* Registry format major version (1) */
+    E_ULONG  MajorVersion;
 
-  /* Registry format major version (1) */
-  ULONG  MajorVersion;
+    /* Registry format minor version (3)
+       Version 3 added fast indexes, version 5 has large value optimizations */
+    E_ULONG  MinorVersion;
 
-  /* Registry format minor version (3)
-     Version 3 added fast indexes, version 5 has large value optimizations */
-  ULONG  MinorVersion;
+    /* Registry file type (0 - Primary, 1 - Log) */
+    E_ULONG  Type;
 
-  /* Registry file type (0 - Primary, 1 - Log) */
-  ULONG  Type;
+    /* Registry format (1 is the only defined value so far) */
+    E_ULONG  Format;
 
-  /* Registry format (1 is the only defined value so far) */
-  ULONG  Format;
+    /* Offset into file from the byte after the end of the base block.
+       If the hive is volatile, this is the actual pointer to the KEY_CELL */
+    BLOCK_OFFSET  RootKeyOffset;
 
-  /* Offset into file from the byte after the end of the base block.
-     If the hive is volatile, this is the actual pointer to the KEY_CELL */
-  BLOCK_OFFSET  RootKeyOffset;
+    /* Size of each hive block ? */
+    E_ULONG  BlockSize;
 
-  /* Size of each hive block ? */
-  ULONG  BlockSize;
+    /* (1?) */
+    E_ULONG  Unused7;
 
-  /* (1?) */
-  ULONG  Unused7;
+    /* Name of hive file */
+    E_WCHAR  FileName[32];
+    
+    E_ULONG  Reserved[99];
 
-  /* Name of hive file */
-  WCHAR  FileName[32];
-
-  ULONG  Reserved[99];
-
-  /* Checksum of first 0x200 bytes */
-  ULONG  Checksum;
+    /* Checksum of first 0x200 bytes */
+    E_ULONG  Checksum;
 } GCC_PACKED HIVE_HEADER, *PHIVE_HEADER;
 
 typedef struct _HBIN
 {
-  /* Bin identifier "hbin" (0x6E696268) */
-  ULONG  HeaderId;
-
-  /* Block offset of this bin */
-  BLOCK_OFFSET  BinOffset;
-
-  /* Size in bytes, multiple of the block size (4KB) */
-  ULONG  BinSize;
-
-  ULONG  Reserved[2];
-
-  /* When this bin was last modified */
-  FILETIME  DateModified;
-
-  /* ? (In-memory only) */
-  ULONG  MemAlloc;
+    /* Bin identifier "hbin" (0x6E696268) */
+    E_ULONG  HeaderId;
+    
+    /* Block offset of this bin */
+    BLOCK_OFFSET  BinOffset;
+    
+    /* Size in bytes, multiple of the block size (4KB) */
+    E_ULONG  BinSize;
+    
+    E_ULONG  Reserved[2];
+    
+    /* When this bin was last modified */
+    E_FILETIME  DateModified;
+    
+    /* ? (In-memory only) */
+    E_ULONG  MemAlloc;
 } GCC_PACKED HBIN, *PHBIN;
 
 typedef struct _CELL_HEADER
 {
-  /* <0 if used, >0 if free */
-  LONG  CellSize;
+    /* <0 if used, >0 if free */
+    E_LONG  CellSize;
 } GCC_PACKED CELL_HEADER, *PCELL_HEADER;
 
 typedef struct _KEY_CELL
 {
-  /* Size of this cell */
-  LONG  CellSize;
-
-  /* Key cell identifier "kn" (0x6b6e) */
-  USHORT  Id;
-
-  /* ? */
-  USHORT  Type;
-
-  /* Time of last flush */
-  FILETIME  LastWriteTime;
-
-  /* ? */
-  ULONG  UnUsed1;
-
-  /* Block offset of parent key cell */
-  BLOCK_OFFSET  ParentKeyOffset;
-
-  /* Count of sub keys for the key in this key cell */
-  ULONG  NumberOfSubKeys;
-
-  /* ? */
-  ULONG  UnUsed2;
-
-  /* Block offset of has table for FIXME: subkeys/values? */
-  BLOCK_OFFSET  HashTableOffset;
-
-  /* ? */
-  ULONG  UnUsed3;
-
-  /* Count of values contained in this key cell */
-  ULONG  NumberOfValues;
-
-  /* Block offset of VALUE_LIST_CELL */
-  BLOCK_OFFSET  ValueListOffset;
-
-  /* Block offset of security cell */
-  BLOCK_OFFSET  SecurityKeyOffset;
-
-  /* Block offset of registry key class */
-  BLOCK_OFFSET  ClassNameOffset;
-
-  /* ? */
-  ULONG  Unused4[5];
-
-  /* Size in bytes of key name */
-  USHORT  NameSize;
-
-  /* Size of class name in bytes */
-  USHORT  ClassSize;
-
-  /* Name of key (not zero terminated) */
-  CHAR  Name[0];
+    /* Size of this cell */
+    E_LONG  CellSize;
+    
+    /* Key cell identifier "kn" (0x6b6e) */
+    E_USHORT  Id;
+    
+    /* ? */
+    E_USHORT  Type;
+    
+    /* Time of last flush */
+    E_FILETIME  LastWriteTime;
+    
+    /* ? */
+    E_ULONG  UnUsed1;
+    
+    /* Block offset of parent key cell */
+    BLOCK_OFFSET  ParentKeyOffset;
+    
+    /* Count of sub keys for the key in this key cell */
+    E_ULONG  NumberOfSubKeys;
+    
+    /* ? */
+    E_ULONG  UnUsed2;
+    
+    /* Block offset of has table for FIXME: subkeys/values? */
+    BLOCK_OFFSET  HashTableOffset;
+    
+    /* ? */
+    E_ULONG  UnUsed3;
+    
+    /* Count of values contained in this key cell */
+    E_ULONG  NumberOfValues;
+    
+    /* Block offset of VALUE_LIST_CELL */
+    BLOCK_OFFSET  ValueListOffset;
+    
+    /* Block offset of security cell */
+    BLOCK_OFFSET  SecurityKeyOffset;
+    
+    /* Block offset of registry key class */
+    BLOCK_OFFSET  ClassNameOffset;
+    
+    /* ? */
+    E_ULONG  Unused4[5];
+    
+    /* Size in bytes of key name */
+    E_USHORT  NameSize;
+    
+    /* Size of class name in bytes */
+    E_USHORT  ClassSize;
+    
+    /* Name of key (not zero terminated) */
+    CHAR  Name[0];
 } GCC_PACKED KEY_CELL, *PKEY_CELL;
 
 /* KEY_CELL.Type constants */
@@ -208,35 +209,35 @@ typedef struct _KEY_CELL
 // HashValue=four letters of value's name
 typedef struct _HASH_RECORD
 {
-  BLOCK_OFFSET  KeyOffset;
-  ULONG  HashValue;
+    BLOCK_OFFSET  KeyOffset;
+    E_ULONG  HashValue;
 } GCC_PACKED HASH_RECORD, *PHASH_RECORD;
 
 typedef struct _HASH_TABLE_CELL
 {
-  LONG  CellSize;
-  USHORT  Id;
-  USHORT  HashTableSize;
-  HASH_RECORD  Table[0];
+    E_LONG  CellSize;
+    E_USHORT  Id;
+    E_USHORT  HashTableSize;
+    HASH_RECORD  Table[0];
 } GCC_PACKED HASH_TABLE_CELL, *PHASH_TABLE_CELL;
 
 typedef struct _VALUE_LIST_CELL
 {
-  LONG  CellSize;
-  BLOCK_OFFSET  ValueOffset[0];
+    E_LONG  CellSize;
+    BLOCK_OFFSET  ValueOffset[0];
 } GCC_PACKED VALUE_LIST_CELL, *PVALUE_LIST_CELL;
 
 typedef struct _VALUE_CELL
 {
-  LONG  CellSize;
-  USHORT  Id;	// "kv"
-  USHORT  NameSize;	// length of Name
-  ULONG  DataSize;	// length of datas in the cell pointed by DataOffset
-  BLOCK_OFFSET  DataOffset;// datas are here if high bit of DataSize is set
-  ULONG  DataType;
-  USHORT  Flags;
-  USHORT  Unused1;
-  CHAR  Name[0]; /* warning : not zero terminated */
+    E_LONG  CellSize;
+    E_USHORT  Id;	// "kv"
+    E_USHORT  NameSize;	// length of Name
+    E_ULONG  DataSize;	// length of datas in the cell pointed by DataOffset
+    BLOCK_OFFSET  DataOffset;// datas are here if high bit of DataSize is set
+    E_ULONG  DataType;
+    E_USHORT  Flags;
+    E_USHORT  Unused1;
+    CHAR  Name[0]; /* warning : not zero terminated */
 } GCC_PACKED VALUE_CELL, *PVALUE_CELL;
 
 /* VALUE_CELL.Flags constants */
@@ -248,8 +249,8 @@ typedef struct _VALUE_CELL
 
 typedef struct _DATA_CELL
 {
-  LONG  CellSize;
-  CHAR  Data[0];
+    E_LONG  CellSize;
+    CHAR  Data[0];
 } GCC_PACKED DATA_CELL, *PDATA_CELL;
 
 #ifdef _MSC_VER
@@ -276,9 +277,10 @@ memexpand (PWCHAR Dst,
 	   ULONG Length)
 {
   ULONG i;
+  E_WCHAR *DstE = (E_WCHAR*)Dst;
 
   for (i = 0; i < Length; i++)
-    Dst[i] = (WCHAR)Src[i];
+      DstE[i] = (WCHAR)Src[i];
 }
 
 
@@ -375,7 +377,7 @@ CmiCreateRegistryHive (PCHAR KeyName)
 
   /* Allocate block list */
   Hive->BlockListSize = 1;
-  Hive->BlockList = malloc (sizeof(PHBIN) * Hive->BlockListSize);
+  Hive->BlockList = (PHBIN*)malloc (sizeof(PHBIN) * Hive->BlockListSize);
   if (Hive->BlockList == NULL)
     {
       free (Hive->HiveHeader);
@@ -385,7 +387,7 @@ CmiCreateRegistryHive (PCHAR KeyName)
 
   /* Allocate free cell list */
   Hive->FreeListMax = 32;
-  Hive->FreeList = malloc(sizeof(PCELL_HEADER) * Hive->FreeListMax);
+  Hive->FreeList = (PCELL_HEADER*)malloc(sizeof(PCELL_HEADER) * Hive->FreeListMax);
   if (Hive->FreeList == NULL)
     {
       free (Hive->BlockList);
@@ -393,7 +395,7 @@ CmiCreateRegistryHive (PCHAR KeyName)
       free (Hive);
       return NULL;
     }
-  Hive->FreeListOffset = malloc(sizeof(BLOCK_OFFSET) * Hive->FreeListMax);
+  Hive->FreeListOffset = (PBLOCK_OFFSET)malloc(sizeof(BLOCK_OFFSET) * Hive->FreeListMax);
   if (Hive->FreeListOffset == NULL)
     {
       free (Hive->FreeList);
@@ -630,13 +632,13 @@ CmiAddFree(PREGISTRY_HIVE RegistryHive,
 
   if ((RegistryHive->FreeListSize + 1) > RegistryHive->FreeListMax)
     {
-      tmpList = malloc (sizeof(PCELL_HEADER) * (RegistryHive->FreeListMax + 32));
+	tmpList = (PCELL_HEADER*)malloc (sizeof(PCELL_HEADER) * (RegistryHive->FreeListMax + 32));
       if (tmpList == NULL)
 	{
 	  return FALSE;
 	}
 
-      tmpListOffset = malloc (sizeof(BLOCK_OFFSET) * (RegistryHive->FreeListMax + 32));
+      tmpListOffset = (PBLOCK_OFFSET)malloc (sizeof(BLOCK_OFFSET) * (RegistryHive->FreeListMax + 32));
       if (tmpListOffset == NULL)
 	{
 	  free (tmpList);
@@ -723,7 +725,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   ULONG i;
 
   BinSize = BlockCount *REG_BLOCK_SIZE;
-  tmpBin = malloc (BinSize);
+  tmpBin = (PHBIN)malloc (BinSize);
   if (tmpBin == NULL)
     {
       return FALSE;
@@ -738,7 +740,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   tmpBin->MemAlloc = 0;
 
   /* Increase size of list of blocks */
-  tmpBlockList = malloc (sizeof(PHBIN) * (RegistryHive->BlockListSize + BlockCount));
+  tmpBlockList = (PHBIN *)malloc (sizeof(PHBIN) * (RegistryHive->BlockListSize + BlockCount));
   if (tmpBlockList == NULL)
     {
       free (tmpBin);
@@ -830,9 +832,11 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
       NewBlock = (PCELL_HEADER) ((ULONG_PTR) NewBlock + CellSize);
       NewBlock->CellSize = ((PCELL_HEADER) (*Block))->CellSize - CellSize;
       ((PCELL_HEADER) (*Block))->CellSize = CellSize;
+      BLOCK_OFFSET NewFree;
+      NewFree = *pBlockOffset + CellSize;
       CmiAddFree (RegistryHive,
 		  NewBlock,
-		  *pBlockOffset + CellSize,
+		  NewFree,
 		  TRUE);
     }
   else if (NewBlock->CellSize < CellSize)
@@ -885,16 +889,16 @@ CmiAddKeyToParentHashTable (PREGISTRY_HIVE Hive,
   PKEY_CELL ParentKeyCell;
   ULONG i;
 
-  ParentKeyCell = CmiGetCell (Hive,
-			      ParentKeyOffset,
-			      NULL);
+  ParentKeyCell = (PKEY_CELL)CmiGetCell (Hive,
+					 ParentKeyOffset,
+					 NULL);
   if (ParentKeyCell == NULL)
     {
       DPRINT1 ("CmiGetBlock() failed\n");
       return FALSE;
     }
 
-  HashBlock =CmiGetCell (Hive,
+  HashBlock = (PHASH_TABLE_CELL)CmiGetCell (Hive,
 			 ParentKeyCell->HashTableOffset,
 			 NULL);
   if (HashBlock == NULL)
@@ -933,7 +937,7 @@ CmiAllocateValueListCell (PREGISTRY_HIVE Hive,
 		  (ValueCount * sizeof(BLOCK_OFFSET));
   Status = CmiAllocateCell (Hive,
 			    ValueListSize,
-			    (PVOID)&ValueListCell,
+			    (PVOID*)&ValueListCell,
 			    ValueListOffset);
   if ((ValueListCell == NULL) || (Status == FALSE))
     {
@@ -993,14 +997,14 @@ CmiAddValueToKeyValueList(PREGISTRY_HIVE Hive,
   PVALUE_LIST_CELL ValueListCell;
   PKEY_CELL KeyCell;
 
-  KeyCell = CmiGetCell (Hive, KeyCellOffset, NULL);
+  KeyCell = (PKEY_CELL)CmiGetCell (Hive, KeyCellOffset, NULL);
   if (KeyCell == NULL)
     {
       DPRINT1 ("CmiGetBlock() failed\n");
       return FALSE;
     }
 
-  ValueListCell = CmiGetCell (Hive, KeyCell->ValueListOffset, NULL);
+  ValueListCell = (PVALUE_LIST_CELL)CmiGetCell (Hive, KeyCell->ValueListOffset, NULL);
   if (ValueListCell == NULL)
     {
       DPRINT1 ("CmiGetBlock() failed\n");
@@ -1148,7 +1152,7 @@ CmiExportSubKey (PREGISTRY_HIVE Hive,
 
   /* Allocate key cell */
   KeyCellSize = sizeof(KEY_CELL) + Key->NameSize - 1;
-  if (!CmiAllocateCell (Hive, KeyCellSize, (PVOID)&NewKeyCell, &NKBOffset))
+  if (!CmiAllocateCell (Hive, KeyCellSize, (PVOID*)&NewKeyCell, &NKBOffset))
     {
       DPRINT1 ("CmiAllocateBlock() failed\n");
       return FALSE;
@@ -1280,7 +1284,7 @@ CmiExportHive (PREGISTRY_HIVE Hive,
 
   DPRINT ("Name: %s\n", KeyName);
 
-  KeyCell = CmiGetCell (Hive,
+  KeyCell = (PKEY_CELL)CmiGetCell (Hive,
 			Hive->HiveHeader->RootKeyOffset,
 			NULL);
   if (KeyCell == NULL)

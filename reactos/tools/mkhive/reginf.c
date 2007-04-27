@@ -117,7 +117,7 @@ AppendMultiSzValue (HKEY KeyHandle,
       (Type != REG_MULTI_SZ))
     return;
 
-  Buffer = malloc (Size + StringSize);
+  Buffer = (char *)malloc (Size + StringSize);
   if (Buffer == NULL)
      return;
 
@@ -257,7 +257,7 @@ do_reg_operation(HKEY KeyHandle,
 
 	  if (Size)
 	    {
-	      Str = malloc (Size);
+	      Str = (char *)malloc (Size);
 	      if (Str == NULL)
 		return FALSE;
 
@@ -286,7 +286,7 @@ do_reg_operation(HKEY KeyHandle,
 
 	  if (Size)
 	    {
-	      Str = malloc (Size);
+	      Str = (char *)malloc (Size);
 	      if (Str == NULL)
 		return FALSE;
 
@@ -303,7 +303,7 @@ do_reg_operation(HKEY KeyHandle,
 	  RegSetValue (KeyHandle,
 		       ValueName,
 		       Type,
-		       (PVOID)&dw,
+		       (char *)&dw,
 		       sizeof(ULONG));
 	}
       else
@@ -315,7 +315,7 @@ do_reg_operation(HKEY KeyHandle,
 	      RegSetValue (KeyHandle,
 			   ValueName,
 			   Type,
-			   (PVOID)Str,
+			   (char *)Str,
 			   Size);
 	    }
 	  else
@@ -323,7 +323,7 @@ do_reg_operation(HKEY KeyHandle,
 	      RegSetValue (KeyHandle,
 			   ValueName,
 			   Type,
-			   (PVOID)&EmptyStr,
+			   (char *)&EmptyStr,
 			   sizeof(CHAR));
 	    }
 	}
@@ -338,18 +338,18 @@ do_reg_operation(HKEY KeyHandle,
 
       if (Size)
 	{
-	  Data = malloc (Size);
+	    Data = (char *)malloc (Size);
 	  if (Data == NULL)
 	    return FALSE;
 
 	  DPRINT("setting binary data %s len %lu\n", ValueName, Size);
-	  InfHostGetBinaryField (Context, 5, Data, Size, NULL);
+	  InfHostGetBinaryField (Context, 5, (unsigned char *)Data, Size, NULL);
 	}
 
       RegSetValue (KeyHandle,
 		   ValueName,
 		   Type,
-		   (PVOID)Data,
+		   (char *)Data,
 		   Size);
 
       free (Data);
@@ -403,7 +403,7 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
       else
         {
           /* get flags */
-          if (InfHostGetIntField (Context, 4, (PLONG)&Flags) != 0)
+          if (InfHostGetIntField (Context, 4, (PULONG)&Flags) != 0)
             Flags = 0;
         }
 
