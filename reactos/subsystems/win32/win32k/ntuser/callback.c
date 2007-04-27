@@ -195,8 +195,16 @@ co_IntCallWindowProc(WNDPROC Proc,
                                &ResultPointer,
                                &ResultLength);
 
-   /* Simulate old behaviour: copy into our local buffer */
-   RtlMoveMemory(Arguments, ResultPointer, ArgumentLength);
+   _SEH_TRY
+   {
+      /* Simulate old behaviour: copy into our local buffer */
+      RtlMoveMemory(Arguments, ResultPointer, ArgumentLength);
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
 
    UserEnterCo();
 
