@@ -263,12 +263,12 @@ UserRealizePalette ( HDC hDC )
 /*
  * @unimplemented
  */
-DWORD
+HANDLE
 WINAPI
 SetSysColorsTemp(
 		 const COLORREF *pPens,
 		 const HBRUSH   *pBrushes,
-		 DWORD           n
+		 INT            n
 		 )
 {
   UNIMPLEMENTED;
