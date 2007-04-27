@@ -33,18 +33,18 @@ BEGIN
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Paramè&tres",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
     PUSHBUTTON      "&Aperçu",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "Dé&lai",IDC_WAITTEXT, 14, 125, 16, 9
+    LTEXT           "Dé&lai: ",IDC_WAITTEXT, 14, 125, 16, 9
     EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
     LTEXT           "minutes", IDC_MINTEXT, 70, 125, 26, 9
     CONTROL         "À la reprise, demander un mot de &passe.",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 97, 120, 138, 19
     GROUPBOX        "G&estion de l'alimentation du moniteur", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Pour modifier les paramètres de l'alimentation du moniteur, cliquez sur Gestion de l'alimentation.",
-                    IDC_STATIC, 14, 166, 146 ,20
-    PUSHBUTTON      "&Gestion de l'alimentation...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+                    IDC_STATIC, 14, 166, 140, 20
+    PUSHBUTTON      "&Gestion de l'alimentation...", IDC_SCREENS_POWER_BUTTON, 140, 171, 93, 13
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -56,7 +56,7 @@ BEGIN
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Colorscheme", IDC_STATIC, 7, 140, 64, 7
     COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Avancée", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
+    PUSHBUTTON      "Avancé", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
@@ -104,13 +104,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Affichage:",1820,3,100,30,8
     LTEXT           "<aucun>",IDC_SETTINGS_DEVICE,9,109,224,8
-    GROUPBOX        "&Région de l'affichage",1818,3,120,115,43
+    GROUPBOX        "&Résolution de l'affichage",1818,3,120,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
     LTEXT           "Moins",1815,9,130,15,8,NOT WS_GROUP
     LTEXT           "Plus",1816,93,130,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "Qualité &Couleur",1817,125,120,115,43
+    GROUPBOX        "&Couleurs",1817,125,120,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
