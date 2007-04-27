@@ -2651,6 +2651,8 @@ HFONT WINAPI CreateFontA(int,int,int,int,int,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD
 HFONT WINAPI CreateFontW(int,int,int,int,int,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,LPCWSTR);
 HFONT WINAPI CreateFontIndirectA(const LOGFONTA*);
 HFONT WINAPI CreateFontIndirectW(const LOGFONTW*);
+HFONT WINAPI CreateFontIndirectExA(const ENUMLOGFONTEXDVA *);
+HFONT WINAPI CreateFontIndirectExW(const ENUMLOGFONTEXDVW *);
 HPALETTE WINAPI CreateHalftonePalette(HDC);
 HBRUSH WINAPI CreateHatchBrush(int,COLORREF);
 HDC WINAPI CreateICA(LPCSTR,LPCSTR,LPCSTR,const DEVMODEA*);
@@ -2997,6 +2999,7 @@ typedef DISPLAY_DEVICEW DISPLAY_DEVICE, *PDISPLAY_DEVICE, *LPDISPLAY_DEVICE;
 #define CreateEnhMetaFile CreateEnhMetaFileW
 #define CreateFont CreateFontW
 #define CreateFontIndirect CreateFontIndirectW
+#define CreateFontIndirectEx CreateFontIndirectExW
 #define CreateIC CreateICW
 #define CreateMetaFile CreateMetaFileW
 #define CreateScalableFontResource CreateScalableFontResourceW
@@ -3069,6 +3072,7 @@ typedef DISPLAY_DEVICEA DISPLAY_DEVICE, *PDISPLAY_DEVICE, *LPDISPLAY_DEVICE;
 #define CreateEnhMetaFile CreateEnhMetaFileA
 #define CreateFont CreateFontA
 #define CreateFontIndirect CreateFontIndirectA
+#define CreateFontIndirectEx CreateFontIndirectExA
 #define CreateIC CreateICA
 #define CreateMetaFile CreateMetaFileA
 #define CreateScalableFontResource CreateScalableFontResourceA

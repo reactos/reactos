@@ -33,8 +33,6 @@ NtGdiCreateDiscardableBitmap		3
 NtGdiCreateEllipticRgn			4
 NtGdiCreateEllipticRgnIndirect		1
 NtGdiCreateEnhMetaFile			4
-NtGdiCreateFont				14
-NtGdiCreateFontIndirect			1
 NtGdiCreateHalftonePalette		1
 NtGdiCreateHatchBrushInternal		3
 NtGdiCreateIC				4
@@ -138,7 +136,7 @@ NtGdiGetMetaRgn				2
 NtGdiGetMiterLimit			2
 NtGdiGetNearestColor			2
 NtGdiGetNearestPaletteIndex		2
-NtGdiGetOutlineTextMetrics		3
+NtGdiGetOutlineTextMetricsInternalW	4
 NtGdiGetPaletteEntries			4
 NtGdiGetPath				4
 NtGdiGetPixel				3
@@ -171,6 +169,7 @@ NtGdiGetWindowExtEx			2
 NtGdiGetWindowOrgEx			2
 NtGdiGetWorldTransform			2
 NtGdiGradientFill			6
+NtGdiHfontCreate			5
 NtGdiIntersectClipRect			5
 NtGdiInvertRgn				2
 NtGdiLPtoDP				3

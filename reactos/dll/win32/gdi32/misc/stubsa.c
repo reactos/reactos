@@ -277,9 +277,20 @@ HFONT
 STDCALL
 CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  if (elfexd)
+  {
+    ENUMLOGFONTEXDVW Logfont;
+
+    EnumLogFontExW2A( (LPENUMLOGFONTEXA) elfexd,
+                                      &Logfont.elfEnumLogfontEx );
+
+    RtlCopyMemory( &Logfont.elfDesignVector,
+                           (PVOID) &elfexd->elfDesignVector,
+                                             sizeof(DESIGNVECTOR));
+
+    return NtGdiHfontCreate( &Logfont, 0, 0, 0, NULL);
+  }
+  else return NULL;
 }
 
 /*

@@ -499,11 +499,12 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
     TextObj = TEXTOBJ_LockText(*NewFont);
     if (NULL != TextObj)
     {
-      memcpy(&TextObj->logfont, lf, sizeof(LOGFONTW));
+      memcpy(&TextObj->logfont.elfEnumLogfontEx.elfLogFont, lf, sizeof(LOGFONTW));
       if (lf->lfEscapement != lf->lfOrientation)
       {
         /* this should really depend on whether GM_ADVANCED is set */
-        TextObj->logfont.lfOrientation = TextObj->logfont.lfEscapement;
+        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation = 
+        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
       }
       TEXTOBJ_UnlockText(TextObj);
     }
@@ -600,6 +601,65 @@ NtGdiCreateFontIndirect(CONST LPLOGFONTW lf)
 
   return NT_SUCCESS(Status) ? NewFont : NULL;
 }
+
+
+HFONT
+STDCALL
+NtGdiHfontCreate(
+  IN PENUMLOGFONTEXDVW pelfw,
+  IN ULONG cjElfw,
+  IN LFTYPE lft,
+  IN FLONG  fl,
+  IN PVOID pvCliData )
+{
+ ENUMLOGFONTEXDVW SafeLogfont;
+ HFONT NewFont;
+ PTEXTOBJ TextObj;
+ NTSTATUS Status = STATUS_SUCCESS;
+ 
+  if (NULL != pelfw)
+  {
+    Status = MmCopyFromCaller(&SafeLogfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
+    if (NT_SUCCESS(Status))
+    {
+       NewFont = TEXTOBJ_AllocText();
+       if (NULL != NewFont)
+       {
+          TextObj = TEXTOBJ_LockText(NewFont);
+          
+          if (NULL != TextObj)
+          {
+             RtlCopyMemory ( &TextObj->logfont, 
+                                  &SafeLogfont,
+                                  sizeof(ENUMLOGFONTEXDVW));
+
+             if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement != 
+                 SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation)
+             {
+        /* this should really depend on whether GM_ADVANCED is set */
+                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation = 
+                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
+             }
+             TEXTOBJ_UnlockText(TextObj);
+          }
+          else
+          {
+/* FIXME */
+/*      ASSERT(FALSE);*/
+            Status = STATUS_INVALID_HANDLE;
+          }
+       }
+    }
+  }
+  else
+  {
+    Status = STATUS_INVALID_PARAMETER;
+  }
+ 
+ return NT_SUCCESS(Status) ? NewFont : NULL;
+
+}                    
+
 
 BOOL
 STDCALL
@@ -1824,17 +1884,17 @@ NtGdiExtTextOut(
 
    Render = IntIsFontRenderingEnabled();
    if (Render)
-      RenderMode = IntGetFontRenderMode(&TextObj->logfont);
+      RenderMode = IntGetFontRenderMode(&TextObj->logfont.elfEnumLogfontEx.elfLogFont);
    else
       RenderMode = FT_RENDER_MODE_MONO;
 
    error = FT_Set_Pixel_Sizes(
       face,
-      TextObj->logfont.lfWidth,
+      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
       /* FIXME should set character height if neg */
-      (TextObj->logfont.lfHeight < 0 ?
-      - TextObj->logfont.lfHeight :
-      TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
+      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
+      - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
+      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
    if (error)
    {
       DPRINT1("Error in setting pixel sizes: %u\n", error);
@@ -1884,7 +1944,8 @@ NtGdiExtTextOut(
       for (i = Start; i < Count; i++)
       {
          glyph_index = FT_Get_Char_Index(face, *TempText);
-         if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index, TextObj->logfont.lfHeight)))
+         if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index,
+         TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
          {
          error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
          if (error)
@@ -1893,7 +1954,8 @@ NtGdiExtTextOut(
          }
 
          glyph = face->glyph;
-            realglyph = NtGdiGlyphCacheSet(face, glyph_index, TextObj->logfont.lfHeight, glyph, RenderMode);
+            realglyph = NtGdiGlyphCacheSet(face, glyph_index, 
+            TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
          }
          /* retrieve kerning distance */
          if (use_kerning && previous && glyph_index)
@@ -1932,7 +1994,8 @@ NtGdiExtTextOut(
    for (i = 0; i < Count; i++)
    {
       glyph_index = FT_Get_Char_Index(face, *String);
-      if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index, TextObj->logfont.lfHeight)))
+      if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index, 
+      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
       {
       error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
@@ -1943,7 +2006,8 @@ NtGdiExtTextOut(
          goto fail;
       }
       glyph = face->glyph;
-         realglyph = NtGdiGlyphCacheSet(face, glyph_index, TextObj->logfont.lfHeight, glyph, RenderMode);
+         realglyph = NtGdiGlyphCacheSet(face, glyph_index, 
+         TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
       }
 //      DbgPrint("realglyph: %x\n", realglyph);
 //      DbgPrint("TextLeft: %d\n", TextLeft);
@@ -2238,10 +2302,10 @@ NtGdiGetCharABCWidths(HDC  hDC,
 
    IntLockFreeType;
    FT_Set_Pixel_Sizes(face,
-                      TextObj->logfont.lfWidth,
+                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                       /* FIXME should set character height if neg */
-                      (TextObj->logfont.lfHeight < 0 ? - TextObj->logfont.lfHeight :
-                       TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
+                      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
+                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
 
    for (i = FirstChar; i <= LastChar; i++)
    {
@@ -2382,11 +2446,11 @@ NtGdiGetCharWidth32(HDC  hDC,
 
    IntLockFreeType;
    FT_Set_Pixel_Sizes(face,
-                      TextObj->logfont.lfWidth,
+                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                       /* FIXME should set character height if neg */
-                      (TextObj->logfont.lfHeight < 0 ?
-                       - TextObj->logfont.lfHeight :
-                       TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
+                      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
+                       - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
+                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
 
    for (i = FirstChar; i <= LastChar; i++)
    {
@@ -2516,8 +2580,8 @@ NtGdiGetGlyphOutline(
   FontGDI = ObjToGDI(TextObj->Font, FONT);
   ft_face = FontGDI->face;
 
-  aveWidth = FT_IS_SCALABLE(ft_face) ? TextObj->logfont.lfWidth: 0;
-  orientation = FT_IS_SCALABLE(ft_face) ? TextObj->logfont.lfOrientation: 0;
+  aveWidth = FT_IS_SCALABLE(ft_face) ? TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth: 0;
+  orientation = FT_IS_SCALABLE(ft_face) ? TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation: 0;
 
   Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
   potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
@@ -2561,10 +2625,10 @@ NtGdiGetGlyphOutline(
     }
 
 //  FT_Set_Pixel_Sizes(ft_face,
-//                     TextObj->logfont.lfWidth,
+//                     TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                      /* FIXME should set character height if neg */
-//                     (TextObj->logfont.lfHeight < 0 ? - TextObj->logfont.lfHeight :
-//                      TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
+//                     (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
+//                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
 
   TEXTOBJ_UnlockText(TextObj);
 
@@ -3107,11 +3171,12 @@ NtGdiGetKerningPairs(HDC  hDC,
  From "Undocumented Windows 2000 Secrets" Appendix B, Table B-2, page
  472, this is NtGdiGetOutlineTextMetricsInternalW.
  */
-UINT
+ULONG
 STDCALL
-NtGdiGetOutlineTextMetrics(HDC  hDC,
-                                UINT  Data,
-                                LPOUTLINETEXTMETRICW  otm)
+NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
+                                   ULONG  Data,
+                      OUTLINETEXTMETRICW  *otm,
+                                   TMDIFF *Tmd)
 {
   PDC dc;
   PTEXTOBJ TextObj;
@@ -3343,11 +3408,11 @@ TextIntGetTextExtentPoint(PDC dc,
 
   IntLockFreeType;
   error = FT_Set_Pixel_Sizes(face,
-                             TextObj->logfont.lfWidth,
+                             TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                              /* FIXME should set character height if neg */
-                             (TextObj->logfont.lfHeight < 0 ?
-                              - TextObj->logfont.lfHeight :
-                              TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
+                             (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
+                              - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
+                              TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
   IntUnLockFreeType;
   if (error)
     {
@@ -3395,7 +3460,7 @@ TextIntGetTextExtentPoint(PDC dc,
     }
 
   Size->cx = (TotalWidth + 32) >> 6;
-  Size->cy = (TextObj->logfont.lfHeight < 0 ? - TextObj->logfont.lfHeight : TextObj->logfont.lfHeight);
+  Size->cy = (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight);
   Size->cy = EngMulDiv(Size->cy, IntGdiGetDeviceCaps(dc, LOGPIXELSY), 72);
 
   return TRUE;
@@ -3657,8 +3722,8 @@ NtGdiGetTextFace(HDC hDC, INT Count, LPWSTR FaceName)
 
    TextObj = TEXTOBJ_LockText(hFont);
    ASSERT(TextObj != NULL);
-   Count = min(Count, wcslen(TextObj->logfont.lfFaceName));
-   Status = MmCopyToCaller(FaceName, TextObj->logfont.lfFaceName, Count * sizeof(WCHAR));
+   Count = min(Count, wcslen(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName));
+   Status = MmCopyToCaller(FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName, Count * sizeof(WCHAR));
    TEXTOBJ_UnlockText(TextObj);
    if (!NT_SUCCESS(Status))
    {
@@ -3704,11 +3769,11 @@ NtGdiGetTextMetrics(HDC hDC,
       Face = FontGDI->face;
       IntLockFreeType;
       Error = FT_Set_Pixel_Sizes(Face,
-	                         TextObj->logfont.lfWidth,
+	                         TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
 	                         /* FIXME should set character height if neg */
-                                 (TextObj->logfont.lfHeight < 0 ?
-                                  - TextObj->logfont.lfHeight :
-                                  TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
+                                 (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
+                                  - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
+                                  TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
       IntUnLockFreeType;
       if (0 != Error)
 	{
@@ -4059,7 +4124,7 @@ TextIntRealizeFont(HFONT FontHandle)
       return STATUS_SUCCESS;
     }
 
-  if (! RtlCreateUnicodeString(&FaceName, TextObj->logfont.lfFaceName))
+  if (! RtlCreateUnicodeString(&FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName))
     {
       TEXTOBJ_UnlockText(TextObj);
       return STATUS_NO_MEMORY;
@@ -4072,21 +4137,21 @@ TextIntRealizeFont(HFONT FontHandle)
   Win32Process = PsGetCurrentProcessWin32Process();
   IntLockProcessPrivateFonts(Win32Process);
   FindBestFontFromList(&TextObj->Font, &MatchScore,
-                       &TextObj->logfont, &FaceName,
+                       &TextObj->logfont.elfEnumLogfontEx.elfLogFont, &FaceName,
                        &Win32Process->PrivateFontListHead);
   IntUnLockProcessPrivateFonts(Win32Process);
 
   /* Search system fonts */
   IntLockGlobalFonts;
   FindBestFontFromList(&TextObj->Font, &MatchScore,
-                       &TextObj->logfont, &FaceName,
+                       &TextObj->logfont.elfEnumLogfontEx.elfLogFont, &FaceName,
                        &FontListHead);
   IntUnLockGlobalFonts;
 
   if (NULL == TextObj->Font)
     {
       DPRINT1("Requested font %S not found, no fonts loaded at all\n",
-              TextObj->logfont.lfFaceName);
+              TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName);
       Status = STATUS_NOT_FOUND;
     }
   else
@@ -4104,36 +4169,35 @@ TextIntRealizeFont(HFONT FontHandle)
 }
 
 INT FASTCALL
-FontGetObject(PTEXTOBJ Font, INT Count, PVOID Buffer)
+FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
 {
   if( Buffer == NULL ) return sizeof(LOGFONTW);
 
   switch (Count)
   {
-/* Everything will need to be converted over to ENUMLOGFONTEXDVW.
+
      case sizeof(ENUMLOGFONTEXDVW):
-        RtlCopyMemory( (LPENUMLOGFONTEXDVW) Buffer.elfDesignVector, 
-                                            &Font->logFont.elfDesignVector,
-                                            sizeof(DESIGNVECTOR));
+        RtlCopyMemory( (LPENUMLOGFONTEXDVW) Buffer, 
+                                            &TFont->logfont,
+                                            sizeof(ENUMLOGFONTEXDVW));
+        break;
      case sizeof(ENUMLOGFONTEXW):
         RtlCopyMemory( (LPENUMLOGFONTEXW) Buffer, 
-                                          &Font->logFont.elfEnumLogfontEx,
+                                          &TFont->logfont.elfEnumLogfontEx,
                                           sizeof(ENUMLOGFONTEXW));
         break;             
 
      case sizeof(EXTLOGFONTW):
      case sizeof(ENUMLOGFONTW):
         RtlCopyMemory((LPENUMLOGFONTW) Buffer, 
-                      (LPENUMLOGFONTW) &Font->logfont.elfEnumLogfontEx.elfLogFont,
+                                    &TFont->logfont.elfEnumLogfontEx.elfLogFont,
                                        sizeof(ENUMLOGFONTW));
         break;
-*/
+
      case sizeof(LOGFONTW):
-/*        RtlCopyMemory((LPLOGFONTW) Buffer,
-                                       &Font->logFont.elfEnumLogfontEx.elfLogFont,
-                                       sizeof(LOGFONTW));
-*/
-        RtlCopyMemory(Buffer, &Font->logfont, sizeof(LOGFONTW));
+        RtlCopyMemory((LPLOGFONTW) Buffer,
+                                   &TFont->logfont.elfEnumLogfontEx.elfLogFont,
+                                   sizeof(LOGFONTW));
         break;
 
      default:

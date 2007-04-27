@@ -353,9 +353,11 @@ HFONT
 STDCALL
 CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  if ( elfexd )
+  {
+   return NtGdiHfontCreate((PENUMLOGFONTEXDVW) elfexd, 0, 0, 0, NULL );
+  }
+  else return NULL;
 }
 
 /*

@@ -282,7 +282,7 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
             Info[i].FontType, lParam);
         }
       else
-        {
+        { // Could use EnumLogFontExW2A here?
           LogFontW2A(&EnumLogFontExA.elfLogFont, &Info[i].EnumLogFontEx.elfLogFont);
           WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfFullName, -1,
                               (LPSTR)EnumLogFontExA.elfFullName, LF_FULLFACESIZE, NULL, NULL);
@@ -814,10 +814,9 @@ GetOutlineTextMetricsW(
 	LPOUTLINETEXTMETRICW	lpOTM
 	)
 {
-  return NtGdiGetOutlineTextMetrics(hdc, cbData, lpOTM);
-//  TMDIFF Tmd;   // Should not be zero.
-//  if ( lpOTM == NULL) return 0;
-//  return NtGdiGetOutlineTextMetricsInternalW(hdc, cbData, lpOTM, &Tmd);
+  TMDIFF Tmd;   // Should not be zero.
+
+  return NtGdiGetOutlineTextMetricsInternalW(hdc, cbData, lpOTM, &Tmd);
 }
 
 
@@ -830,14 +829,14 @@ CreateFontIndirectA(
 	CONST LOGFONTA		*lplf
 	)
 {
-  LOGFONTW tlf;
-  
   if (lplf)
     {
+      LOGFONTW tlf;
+
       LogFontA2W(&tlf, lplf);
-      return NtGdiCreateFontIndirect(&tlf);
+      return CreateFontIndirectW(&tlf);
     }
-  else return NtGdiCreateFontIndirect(NULL);
+  else return NULL;
 }
 
 
@@ -850,7 +849,25 @@ CreateFontIndirectW(
 	CONST LOGFONTW		*lplf
 	)
 {
-	return NtGdiCreateFontIndirect((CONST LPLOGFONTW)lplf);
+ if (lplf)
+ {
+    ENUMLOGFONTEXDVW Logfont;
+
+    RtlCopyMemory( &Logfont.elfEnumLogfontEx.elfLogFont, lplf, sizeof(LOGFONTW));
+    // Need something other than just cleaning memory here.
+    // Guess? Use caller data to determine the rest.
+    RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfFullName,
+                                 sizeof(Logfont.elfEnumLogfontEx.elfFullName));
+    RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfStyle,
+                                 sizeof(Logfont.elfEnumLogfontEx.elfStyle));
+    RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfScript,
+                                 sizeof(Logfont.elfEnumLogfontEx.elfScript));
+    
+    RtlZeroMemory( &Logfont.elfDesignVector, sizeof(DESIGNVECTOR));
+
+    return CreateFontIndirectExW(&Logfont);
+ }
+ else return NULL;
 }
 
 
@@ -883,8 +900,20 @@ CreateFontA(
 	RtlInitAnsiString(&StringA, (LPSTR)lpszFace);
 	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-        ret = CreateFontW(nHeight, nWidth, nEscapement, nOrientation, fnWeight, fdwItalic, fdwUnderline, fdwStrikeOut,
-                          fdwCharSet, fdwOutputPrecision, fdwClipPrecision, fdwQuality, fdwPitchAndFamily, StringU.Buffer);
+        ret = CreateFontW(nHeight, 
+                           nWidth,
+                      nEscapement,
+                     nOrientation,
+                         fnWeight,
+                        fdwItalic,
+                     fdwUnderline,
+                     fdwStrikeOut,
+                       fdwCharSet,
+               fdwOutputPrecision,
+                 fdwClipPrecision,
+                       fdwQuality,
+                fdwPitchAndFamily,
+                   StringU.Buffer);
 
 	RtlFreeUnicodeString(&StringU);
 
@@ -914,8 +943,35 @@ CreateFontW(
 	LPCWSTR	lpszFace
 	)
 {
-  return NtGdiCreateFont(nHeight, nWidth, nEscapement, nOrientation, nWeight, fnItalic, fdwUnderline, fdwStrikeOut,
-                         fdwCharSet, fdwOutputPrecision, fdwClipPrecision, fdwQuality, fdwPitchAndFamily, lpszFace);
+  LOGFONTW logfont;
+
+  logfont.lfHeight = nHeight;
+  logfont.lfWidth = nWidth;
+  logfont.lfEscapement = nEscapement;
+  logfont.lfOrientation = nOrientation;
+  logfont.lfWeight = nWeight;
+  logfont.lfItalic = fnItalic;
+  logfont.lfUnderline = fdwUnderline;
+  logfont.lfStrikeOut = fdwStrikeOut;
+  logfont.lfCharSet = fdwCharSet;
+  logfont.lfOutPrecision = fdwOutputPrecision;
+  logfont.lfClipPrecision = fdwClipPrecision;
+  logfont.lfQuality = fdwQuality;
+  logfont.lfPitchAndFamily = fdwPitchAndFamily;
+
+  if (NULL != lpszFace)
+  {
+    int Size = sizeof(logfont.lfFaceName) / sizeof(WCHAR);
+    wcsncpy((wchar_t *)logfont.lfFaceName, lpszFace, Size - 1);
+    /* Be 101% sure to have '\0' at end of string */
+    logfont.lfFaceName[Size - 1] = '\0';
+  }
+  else
+  {
+    logfont.lfFaceName[0] = L'\0';
+  }
+
+  return CreateFontIndirectW(&logfont);
 }
 
 
