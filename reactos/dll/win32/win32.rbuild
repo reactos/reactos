@@ -298,4 +298,7 @@
 <directory name="wsock32">
 	<xi:include href="wsock32/wsock32.rbuild" />
 </directory>
+<directory name="wtsapi32">
+	<xi:include href="wtsapi32/wtsapi32.rbuild" />
+</directory>
 </group>
