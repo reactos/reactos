@@ -7,54 +7,10 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "resource.h"
-#define APSTUDIO_HIDDEN_SYMBOLS
-#include "windows.h"
-#undef APSTUDIO_HIDDEN_SYMBOLS
+#include <windows.h>
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
-
-/////////////////////////////////////////////////////////////////////////////
-// German (Germany) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
-#ifdef _WIN32
-LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
-#pragma code_page(1252)
-#endif //_WIN32
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "#include ""resource.h""\r\n"
-    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""windows.h""\r\n"
-    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-#endif    // German (Germany) resources
-/////////////////////////////////////////////////////////////////////////////
-
 
 /////////////////////////////////////////////////////////////////////////////
 // French (France) resources
@@ -81,9 +37,9 @@ BEGIN
     POPUP "&Affichage"
     BEGIN
         MENUITEM "Barre d'&outils",             ID_VIEW_TOOL_BAR
-        MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
+        MENUITEM "Barre d'&extras",             ID_VIEW_EXTRA_BAR
         MENUITEM "&Barre des lecteurs",         ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "S&ide Bar",                   ID_VIEW_SIDE_BAR
+        MENUITEM "&Volet latéral",              ID_VIEW_SIDE_BAR
         MENUITEM "Barre d'&état",               ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "A&ctualiser\tF5",             ID_REFRESH
@@ -106,8 +62,8 @@ BEGIN
     POPUP "&Aide"
     BEGIN
         MENUITEM "&FAQ de l'explorateur...",    ID_EXPLORER_FAQ
-        MENUITEM "&A propos de l'explorateur...", ID_ABOUT_EXPLORER
-        MENUITEM "A propos de l'&OS...",        ID_ABOUT_WINDOWS
+        MENUITEM "&À propos de l'explorateur...", ID_ABOUT_EXPLORER
+        MENUITEM "À propos de l'&OS...",        ID_ABOUT_WINDOWS
     END
 END
 
@@ -118,7 +74,7 @@ BEGIN
         MENUITEM "&Paramètres...",              ID_DESKTOPBAR_SETTINGS
         MENUITEM "&Gestionnaire de tâches...",  ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&A propos de l'explorateur...", ID_ABOUT_EXPLORER
+        MENUITEM "&À propos de l'explorateur...", ID_ABOUT_EXPLORER
     END
 END
 
@@ -135,12 +91,12 @@ IDM_NOTIFYAREA MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Afficher les icônes cachés", ID_SHOW_HIDDEN_ICONS
-        MENUITEM "Afficher l'icône &Boutton",   ID_SHOW_ICON_BUTTON
-        MENUITEM "&Configurer les Notifications...", ID_CONFIG_NOTIFYAREA
-        MENUITEM "Ajuster Date/&Heure...",      ID_CONFIG_TIME
+        MENUITEM "&Afficher les icônes cachées", ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Afficher le bouton des icônes", ID_SHOW_ICON_BUTTON
+        MENUITEM "&Configurer les notifications...", ID_CONFIG_NOTIFYAREA
+        MENUITEM "Ajuster la date/l'&heure...", ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&A propos de l'explorateur...", ID_ABOUT_EXPLORER
+        MENUITEM "&À propos de l'explorateur...", ID_ABOUT_EXPLORER
     END
 END
 
@@ -155,7 +111,7 @@ BEGIN
     POPUP "&Affichage"
     BEGIN
         MENUITEM "&Barre d'outils",             ID_VIEW_TOOL_BAR
-        MENUITEM "S&ide Bar",                   ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Volet latéral",              ID_VIEW_SIDE_BAR, GRAYED
         MENUITEM "&Barre d'état",               ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "A&ctualiser\tF5",             ID_REFRESH
@@ -169,8 +125,8 @@ BEGIN
     POPUP "&Aide"
     BEGIN
         MENUITEM "&FAQ de l'explorateur...",    ID_EXPLORER_FAQ
-        MENUITEM "&A propos de l'explorateur...", ID_ABOUT_EXPLORER
-        MENUITEM "A propos de l'&OS...",        ID_ABOUT_WINDOWS
+        MENUITEM "&À propos de l'explorateur...", ID_ABOUT_EXPLORER
+        MENUITEM "À propos de l'&OS...",        ID_ABOUT_WINDOWS
     END
 END
 
@@ -208,7 +164,7 @@ BEGIN
     CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
                     LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
                     WS_TABSTOP,7,25,186,33
-    PUSHBUTTON      "&Vérifier les entrées",IDC_CHECK_ENTRIES,143,7,50,14
+    PUSHBUTTON      "&Rechercher",IDC_CHECK_ENTRIES,143,7,50,14
 END
 
 IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
@@ -216,25 +172,25 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Propriétés du bureau"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Please select your prefered icon alignment algorithm:",
+    LTEXT           "Veuillez sélectionner votre algorithme d'alignement des icônes:",
                     IDC_STATIC,7,7,166,8
-    CONTROL         "gauche/haut descend",IDC_ICON_ALIGN_0,"Button",
+    CONTROL         "gauche/haut bas",IDC_ICON_ALIGN_0,"Button",
                     BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,7,25,46,44
     CONTROL         "gauche/haut droite",IDC_ICON_ALIGN_1,"Button",
                     BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "droite/haut left",IDC_ICON_ALIGN_2,"Button",
+    CONTROL         "droite/haut gauche",IDC_ICON_ALIGN_2,"Button",
                     BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "droite/haut descend",IDC_ICON_ALIGN_3,"Button",
+    CONTROL         "droite/haut bas",IDC_ICON_ALIGN_3,"Button",
                     BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "gauche/fond monte",IDC_ICON_ALIGN_4,"Button",
+    CONTROL         "gauche/bas haut",IDC_ICON_ALIGN_4,"Button",
                     BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,7,73,46,44
-    CONTROL         "gauche/fond right",IDC_ICON_ALIGN_5,"Button",
+    CONTROL         "gauche/bas droite",IDC_ICON_ALIGN_5,"Button",
                     BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "droite/fond gauche",IDC_ICON_ALIGN_6,"Button",
+    CONTROL         "droite/bas gauche",IDC_ICON_ALIGN_6,"Button",
                     BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "rdroite/fond. descend",IDC_ICON_ALIGN_7,"Button",
+    CONTROL         "droite/bas bas",IDC_ICON_ALIGN_7,"Button",
                     BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,159,73,46,44
-    CONTROL         "bord descend",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+    CONTROL         "haut vers bas",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,121,46,44
     CONTROL         "bord H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,57,121,46,44
@@ -243,7 +199,7 @@ BEGIN
     CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
                     WS_TABSTOP,159,121,46,44
     CONTROL         "Afficher le numéro de la &version",ID_DESKTOP_VERSION,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,177,120,10
 END
 
 IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
@@ -251,10 +207,11 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Propriétés de la barre de tâches"
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "afficher l'&heure",ID_SHOW_CLOCK,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,152,52,10
-    CONTROL         "&masquer les icônes inactives",ID_HIDE_INACTIVE_ICONS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,174,111,10
+    CONTROL         "Afficher l'&heure",ID_SHOW_CLOCK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,152,70,10
+    CONTROL         "&Masquer les icônes inactives",
+                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,174,111,10
     PUSHBUTTON      "&Notifications...",ID_CONFIG_NOTIFYAREA,153,173,50,14
 END
 
@@ -269,30 +226,29 @@ IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
 STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Configurer Icônes de Notification"
+CAPTION "Configurer les Icônes de Notification"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
-    LTEXT           "&Texte conseil:",IDC_LABEL1,7,44,40,8
-    EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
-    LTEXT           "Titre de la &fenêtre:",IDC_LABEL2,7,63,44,8
-    EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
-    LTEXT           "&Repertoire du module:",IDC_LABEL3,7,81,43,8
-    EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
-    GROUPBOX        "&Mode d'affichage",IDC_LABEL4,7,96,157,28
+    LTEXT           "&Texte conseil:",IDC_LABEL1,7,44,70,8
+    EDITTEXT        IDC_NOTIFY_TOOLTIP,79,42,122,14,ES_AUTOHSCROLL
+    LTEXT           "Titre de la &fenêtre:",IDC_LABEL2,7,63,61,8
+    EDITTEXT        IDC_NOTIFY_TITLE,79,60,123,14,ES_AUTOHSCROLL
+    LTEXT           "&Repertoire du module:",IDC_LABEL3,7,81,71,8
+    EDITTEXT        IDC_NOTIFY_MODULE,79,78,123,14,ES_AUTOHSCROLL
+    GROUPBOX        "&Mode d'affichage",IDC_LABEL4,7,96,174,28
     CONTROL         "&afficher",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
-                    WS_TABSTOP,15,108,33,10
-    CONTROL         "&cacher",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
-                    108,29,10
+                    WS_TABSTOP,12,108,35,10
+    CONTROL         "&cacher",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,51,108,34,10
     CONTROL         "&cacher automatiquement",IDC_NOTIFY_AUTOHIDE,"Button",
-                    BS_AUTORADIOBUTTON,112,108,43,10
-    ICON            "",IDC_PICTURE,173,101,21,20
-    LTEXT           "&Dernier changement:",IDC_LABEL6,7,132,43,8
-    EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL | 
+                    BS_AUTORADIOBUTTON,89,108,91,10
+    ICON            "",IDC_PICTURE,183,101,21,20
+    LTEXT           "&Dernier changement:",IDC_LABEL6,7,132,69,8
+    EDITTEXT        IDC_LAST_CHANGE,77,129,105,14,ES_AUTOHSCROLL | 
                     ES_READONLY
-    CONTROL         "afficher les cac&hés",ID_SHOW_HIDDEN_ICONS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,56,10
+    CONTROL         "Afficher les cac&hés",ID_SHOW_HIDDEN_ICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,70,10
     DEFPUSHBUTTON   "&OK",IDOK,91,153,50,14,WS_GROUP
     PUSHBUTTON      "&Annuler",IDCANCEL,151,153,50,14
 END
@@ -300,7 +256,7 @@ END
 IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Veuillez choisir un mode de fenêtres pour explorateur"
+CAPTION "Veuillez choisir un mode de fenêtres pour l'explorateur"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "Veuillez sélectionner l'interface que vous préférez pour l'explorateur:",
@@ -311,7 +267,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,7,62,118,10
     CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
     CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
-    CONTROL         "Ouvrir les sous-dossiers dans des fenêtres s&éparrées",
+    CONTROL         "Ouvrir les sous-dossiers dans des fenêtres s&éparées",
                     IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,90,135,10
     LTEXT           "Ce paramètre sera utilisé par défaut.",IDC_STATIC,7,111,
@@ -322,7 +278,7 @@ END
 
 IDD_ABOUT_EXPLORER DIALOG DISCARDABLE  0, 0, 199, 106
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "A propos de ReactOS Explorer"
+CAPTION "À propos de ReactOS Explorer"
 FONT 10, "MS Sans Serif"
 BEGIN
     LTEXT           "ReactOS Explorer",IDC_ROS_EXPLORER,91,13,104,11
@@ -334,6 +290,32 @@ BEGIN
     CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
                     154,90,38,12
 END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -363,7 +345,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STARTMENU           "Menu démarrer"
-    IDS_MINIMIZE_ALL        "mimimiser toutes les fenêtres"
+    IDS_MINIMIZE_ALL        "Mimimiser toutes les fenêtres"
     IDS_DESKTOP_NUM         "Bureau %d"
     IDS_VOLUME              "Volume"
     IDS_ITEMS_CUR           "objets actuels"
@@ -373,16 +355,16 @@ BEGIN
     IDS_NOTIFY_SHOW         "afficher"
     IDS_NOTIFY_HIDE         "cacher"
     IDS_NOTIFY_AUTOHIDE     "cacher automatiquement"
-    IDS_SHOW_HIDDEN_ICONS   "Afficher les icones cachés"
-    IDS_HIDE_ICONS          "Cacher les icones"
+    IDS_SHOW_HIDDEN_ICONS   "Afficher les icônes cachées"
+    IDS_HIDE_ICONS          "Cacher les icônes"
     IDS_TERMINATE           "Fermer ROS Explorer"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_NETWORK             "Réseaux"
-    IDS_CONNECTIONS         "Connections Réseaux"
-    IDS_DRIVES              "Drives"
+    IDS_CONNECTIONS         "Connections réseau"
+    IDS_DRIVES              "Lecteurs"
     IDS_SEARCH_COMPUTER     "Rechercher un ordinateur..."
     IDS_SETTINGS_MENU       "Paramètres du menu"
     IDS_CONTROL_PANEL       "Panneau de configuration"
@@ -391,9 +373,9 @@ BEGIN
     IDS_SEARCH_PRG          "Rechercher un programme..."
     IDS_ALL_USERS           "Tous les utilisateurs\\"
     IDS_SEARCH              "Rechercher"
-    IDS_ABOUT_EXPLORER      "&A propos de l'explorateur..."
+    IDS_ABOUT_EXPLORER      "&À propos de l'explorateur..."
     IDS_LAUNCH_MANY_PROGRAMS 
-                            "Vous avez selectionné plus d'un programme.\nEtes vous sur de vouloir tous les lancer?"
+                            "Vous avez sélectionné plus d'un programme.\nÊtes-vous sûr de vouloir tous les lancer?"
     IDS_DESKTOPBAR_SETTINGS "Paramètres du bureau"
     IDS_DESKTOP             "Bureau"
     IDS_TASKBAR             "Barre de tâches"

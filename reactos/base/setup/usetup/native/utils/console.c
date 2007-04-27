@@ -254,7 +254,6 @@ WriteConsoleOutputCharacterW(
 	/* FIXME: use real unicode->oem conversion */
 	for (i = 0; i < nLength; i++)
 		pText[i] = (CHAR)lpCharacter[i];
-	pText[i] = 0;
 
 	Status = NtDeviceIoControlFile(
 		hConsoleOutput,
