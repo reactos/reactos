@@ -1225,6 +1225,7 @@ extern "C" {
 #define SPI_SETANIMATION 73
 #define SPI_SETBEEP 2
 #define SPI_SETBORDER 6
+#define SPI_SETCURSORS 87
 #define SPI_SETDEFAULTINPUTLANG 90
 #define SPI_SETDESKPATTERN 21
 #define SPI_SETDESKWALLPAPER 20
@@ -3975,6 +3976,7 @@ int WINAPI SetScrollInfo(HWND,int,LPCSCROLLINFO,BOOL);
 int WINAPI SetScrollPos(HWND,int,int,BOOL);
 BOOL WINAPI SetScrollRange(HWND,int,int,int,BOOL);
 BOOL WINAPI SetSysColors(int,const INT *,const COLORREF *);
+HANDLE WINAPI SetSysColorsTemp(const COLORREF *, const HBRUSH *, int);
 #define SetSysModalWindow(h) (NULL)
 BOOL WINAPI SetSystemCursor(HCURSOR,DWORD);
 BOOL WINAPI SetThreadDesktop(HDESK);
