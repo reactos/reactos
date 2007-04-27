@@ -1284,3 +1284,5 @@ cpp_quote("#define OInetCompareUrl CoInternetCompareUrl")
 cpp_quote("#define OInetGetSession CoInternetGetSession")
 
 cpp_quote("#define MKSYS_URLMONIKER 6")
+cpp_quote("#define URL_MK_LEGACY            0")
+cpp_quote("#define URL_MK_UNIFORM           1")

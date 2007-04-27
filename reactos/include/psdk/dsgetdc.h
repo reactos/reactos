@@ -65,21 +65,21 @@ typedef struct _DS_DOMAIN_TRUSTSW
 	GUID DomainGuid;
 } DS_DOMAIN_TRUSTSW, *PDS_DOMAIN_TRUSTSW;
 
-DWORD
+DWORD WINAPI
 DsEnumerateDomainTrustsA(
 	LPSTR ServerName,
 	ULONG Flags,
 	PDS_DOMAIN_TRUSTSA* Domains,
 	PULONG DomainCount);
 
-DWORD
+DWORD WINAPI
 DsEnumerateDomainTrustsW(
 	LPWSTR ServerName,
 	ULONG Flags,
 	PDS_DOMAIN_TRUSTSW* Domains,
 	PULONG DomainCount);
 
-DWORD
+DWORD WINAPI
 DsGetDcNameA(
 	LPCSTR ComputerName,
 	LPCSTR DomainName,
@@ -88,7 +88,7 @@ DsGetDcNameA(
 	ULONG Flags,
 	PDOMAIN_CONTROLLER_INFOA* DomainControllerInfo);
 
-DWORD
+DWORD WINAPI
 DsGetDcNameW(
 	LPCWSTR ComputerName,
 	LPCWSTR DomainName,
