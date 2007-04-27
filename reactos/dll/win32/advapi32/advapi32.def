@@ -360,7 +360,7 @@ LsaEnumerateAccountRights@16
 LsaEnumerateAccountsWithUserRight@16
 ;LsaEnumeratePrivileges@20
 ;LsaEnumeratePrivilegesOfAccount@8
-;LsaEnumerateTrustedDomains@20
+LsaEnumerateTrustedDomains@20
 ;LsaEnumerateTrustedDomainsEx
 LsaFreeMemory@4
 ;LsaGetQuotasForAccount@8
