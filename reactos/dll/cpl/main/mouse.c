@@ -122,7 +122,7 @@ typedef struct _CURSOR_DATA
 {
     UINT uStringId;
     UINT uDefaultCursorId;
-    LPWSTR lpValueName;
+    LPTSTR lpValueName;
     HCURSOR hCursor;
     TCHAR szCursorName[MAX_PATH];
     TCHAR szCursorPath[MAX_PATH];
@@ -1030,7 +1030,68 @@ LoadNewCursorScheme(HWND hwndDlg, BOOL bInit)
 static BOOL
 ApplyCursorScheme(HWND hwndDlg)
 {
-    /* FIXME: Apply the cursor scheme */
+    TCHAR szSchemeName[MAX_PATH];
+    TCHAR szSystemScheme[MAX_PATH];
+    LPTSTR lpSchemeData;
+    DWORD dwNameLength;
+    DWORD dwSchemeSource;
+    UINT index, i;
+    HKEY hCursorKey;
+    INT nSel;
+
+    nSel = SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETCURSEL, 0, 0);
+    if (nSel == CB_ERR)
+       return FALSE;
+
+    lpSchemeData = (LPTSTR)SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETITEMDATA, nSel, 0);
+    if (lpSchemeData == NULL)
+    {
+        /* "None" cursor scheme */
+        dwSchemeSource = 0;
+        szSchemeName[0] = 0;
+        dwNameLength = 0;
+    }
+    else
+    {
+        SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETLBTEXT, nSel, (LPARAM)szSchemeName);
+        LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
+
+        if (_tcsstr(szSchemeName, szSystemScheme))
+        {
+            /* System scheme */
+            dwSchemeSource = 2;
+            szSchemeName[_tcslen(szSchemeName) - _tcslen(szSystemScheme) - 1] = 0;
+        }
+        else
+        {
+            /* User scheme */
+            dwSchemeSource = 1;
+        }
+
+        dwNameLength = (_tcslen(szSchemeName) + 1) * sizeof(TCHAR);
+    }
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Control Panel\\Cursors"), 0,
+                     KEY_READ | KEY_SET_VALUE, &hCursorKey) != ERROR_SUCCESS)
+        return FALSE;
+
+    RegSetValueEx(hCursorKey, NULL, 0, REG_SZ,
+                  (LPBYTE)szSchemeName, dwNameLength);
+
+    RegSetValueEx(hCursorKey, _T("Scheme Source"), 0, REG_DWORD,
+                  (LPBYTE)&dwSchemeSource, sizeof(DWORD));
+
+    for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+    {
+        RegSetValueEx(hCursorKey, g_CursorData[i].lpValueName, 0,
+                      REG_EXPAND_SZ, (LPBYTE)g_CursorData[i].szCursorPath,
+                      (_tcslen(g_CursorData[i].szCursorPath) + 1) * sizeof(TCHAR));
+    }
+
+    RegCloseKey(hCursorKey);
+
+    /* Force the system to reload its cursors */
+    SystemParametersInfo(SPI_SETCURSORS, 0, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 
     return TRUE;
 }
