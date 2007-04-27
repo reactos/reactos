@@ -269,30 +269,6 @@ RemoveFontResourceExA(
 	return 0;
 }
 
-
-/*
- * @unimplemented
- */
-HFONT
-STDCALL
-CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd)
-{
-  if (elfexd)
-  {
-    ENUMLOGFONTEXDVW Logfont;
-
-    EnumLogFontExW2A( (LPENUMLOGFONTEXA) elfexd,
-                                      &Logfont.elfEnumLogfontEx );
-
-    RtlCopyMemory( &Logfont.elfDesignVector,
-                           (PVOID) &elfexd->elfDesignVector,
-                                             sizeof(DESIGNVECTOR));
-
-    return NtGdiHfontCreate( &Logfont, 0, 0, 0, NULL);
-  }
-  else return NULL;
-}
-
 /*
  * @unimplemented
  */

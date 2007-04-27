@@ -825,6 +825,48 @@ GetOutlineTextMetricsW(
  */
 HFONT
 STDCALL
+CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd)
+{
+  if (elfexd)
+  {
+    ENUMLOGFONTEXDVW Logfont;
+
+    EnumLogFontExW2A( (LPENUMLOGFONTEXA) elfexd,
+                                      &Logfont.elfEnumLogfontEx );
+
+    RtlCopyMemory( &Logfont.elfDesignVector,
+                           (PVOID) &elfexd->elfDesignVector,
+                                             sizeof(DESIGNVECTOR));
+
+    return NtGdiHfontCreate( &Logfont, 0, 0, 0, NULL);
+  }
+  else return NULL;
+}
+
+
+/*
+ * @implemented
+ */
+HFONT
+STDCALL
+CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd)
+{
+  /* Msdn: Note, this function ignores the elfDesignVector member in 
+           ENUMLOGFONTEXDV.
+   */
+  if ( elfexd )
+  {
+   return NtGdiHfontCreate((PENUMLOGFONTEXDVW) elfexd, 0, 0, 0, NULL );
+  }
+  else return NULL;
+}
+
+
+/*
+ * @implemented
+ */
+HFONT
+STDCALL
 CreateFontIndirectA(
 	CONST LOGFONTA		*lplf
 	)

@@ -349,20 +349,6 @@ bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unkno
 /*
  * @unimplemented
  */
-HFONT
-STDCALL
-CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd)
-{
-  if ( elfexd )
-  {
-   return NtGdiHfontCreate((PENUMLOGFONTEXDVW) elfexd, 0, 0, 0, NULL );
-  }
-  else return NULL;
-}
-
-/*
- * @unimplemented
- */
 DWORD
 STDCALL
 GetGlyphIndicesW(
