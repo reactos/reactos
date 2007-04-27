@@ -1,0 +1,58 @@
+/*
+ * HTML Help resources
+ * English Language Support
+ *
+ * Copyright 2005 James Hawkins
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_CONTENTS     "&Contents"
+    IDS_INDEX        "I&ndex"
+    IDS_SEARCH       "&Search"
+    IDS_FAVORITES    "Favor&ites"
+END
+
+STRINGTABLE
+BEGIN
+    IDTB_EXPAND      "Show"
+    IDTB_CONTRACT    "Hide"
+    IDTB_STOP        "Stop"
+    IDTB_REFRESH     "Refresh"
+    IDTB_BACK        "Back"
+    IDTB_HOME        "Home"
+    IDTB_SYNC        "Sync"
+    IDTB_PRINT       "Print"
+    IDTB_OPTIONS     "Options"
+    IDTB_FORWARD     "Forward"
+    IDTB_NOTES       "IDTB_NOTES"
+    IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
+    IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
+    IDTB_CONTENTS    "IDTB_CONTENTS"
+    IDTB_INDEX       "IDTB_INDEX"
+    IDTB_SEARCH      "IDTB_SEARCH"
+    IDTB_HISTORY     "IDTB_HISTORY"
+    IDTB_FAVORITES   "IDTB_FAVORITES"
+    IDTB_JUMP1       "Jump1"
+    IDTB_JUMP2       "Jump2"
+    IDTB_CUSTOMIZE   "Customize"
+    IDTB_ZOOM        "Zoom"
+    IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
+    IDTB_TOC_PREV    "IDTB_TOC_PREV"
+END

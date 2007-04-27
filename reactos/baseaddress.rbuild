@@ -136,6 +136,7 @@
   <property name="BASEADDRESS_MSVCRT20" value="0x78500000" />
   <property name="BASEADDRESS_KERNEL32" value="0x7c800000" />
   <property name="BASEADDRESS_NTDLL" value="0x7c900000" />
+  <property name="BASEADDRESS_HHCTRL" value="0x7e410000" />
   <property name="BASEADDRESS_FREETYPE" value="0x7f000000" />
 </group>
 </rbuild>
