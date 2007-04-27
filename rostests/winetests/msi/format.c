@@ -25,7 +25,6 @@
 #include <msiquery.h>
 
 #include "wine/test.h"
-#include "wine/windef.h"
 
 static MSIHANDLE helper_createpackage( const char *szName )
 {

@@ -24,7 +24,6 @@
 #include <msiquery.h>
 
 #include "wine/test.h"
-#include "wine/windef.h"
 
 static const char *msifile = "winetest.msi";
 

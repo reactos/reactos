@@ -23,7 +23,6 @@
 #include <msiquery.h>
 
 #include "wine/test.h"
-#include "wine/windef.h"
 
 static BOOL create_temp_file(char *name)
 {

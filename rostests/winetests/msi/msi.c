@@ -24,7 +24,6 @@
 #include <msiquery.h>
 
 #include "wine/test.h"
-#include "wine/windef.h"
 
 typedef struct test_MSIFILEHASHINFO {
     ULONG dwFileHashInfoSize;

@@ -26,7 +26,6 @@
 #include <msiquery.h>
 
 #include "wine/test.h"
-#include "wine/windef.h"
 
 /*
  * The following are defined in Windows SDK's msidefs.h

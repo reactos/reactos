@@ -27,7 +27,6 @@
 #include <fci.h>
 
 #include "wine/test.h"
-#include "wine/windef.h"
 
 static const char *msifile = "winetest.msi";
 CHAR CURR_DIR[MAX_PATH];
