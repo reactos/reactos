@@ -338,6 +338,19 @@ private:
 };
 
 
+class MingwWin32OCXModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwWin32OCXModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
+    std::string TypeSpecificLinkerFlags() { return module.useHostStdlib ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc"; }
+    void AddImplicitLibraries ( Module& module );
+private:
+	void GenerateWin32OCXModuleTarget ();
+};
+
+
 class MingwWin32CUIModuleHandler : public MingwModuleHandler
 {
 public:

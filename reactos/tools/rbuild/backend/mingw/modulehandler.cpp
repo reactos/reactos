@@ -222,6 +222,9 @@ MingwModuleHandler::InstanciateHandler (
 		case Win32DLL:
 			handler = new MingwWin32DLLModuleHandler ( module );
 			break;
+		case Win32OCX: 
+			handler = new MingwWin32OCXModuleHandler ( module );
+			break;
 		case KernelModeDriver:
         case ExportDriver: // maybe change this later
 			handler = new MingwKernelModeDriverModuleHandler ( module );
@@ -2648,6 +2651,13 @@ MingwWin32DLLModuleHandler::MingwWin32DLLModuleHandler (
 {
 }
 
+MingwWin32OCXModuleHandler::MingwWin32OCXModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
 static void
 MingwAddImplicitLibraries( Module &module )
 {
@@ -2693,6 +2703,59 @@ MingwWin32DLLModuleHandler::Process ()
 
 void
 MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ()
+{
+	string targetMacro ( GetTargetMacro (module) );
+	string workingDirectory = GetWorkingDirectory ( );
+	string objectsMacro = GetObjectsMacro ( module );
+	string linkDepsMacro = GetLinkingDependenciesMacro ();
+	string libsMacro = GetLibsMacro ();
+
+	GenerateImportLibraryTargetIfNeeded ();
+
+	if ( module.non_if_data.compilationUnits.size () > 0 )
+	{
+		GenerateRules ();
+
+		string dependencies = linkDepsMacro + " " + objectsMacro;
+
+		string linker;
+		if ( module.cplusplus )
+			linker = "${gpp}";
+		else
+			linker = "${gcc}";
+
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -shared",
+		                                     module.GetEntryPoint(true).c_str (),
+		                                     module.baseaddress.c_str () );
+		GenerateLinkerCommand ( dependencies,
+		                        linker,
+		                        linkerParameters,
+		                        objectsMacro,
+		                        libsMacro,
+		                        "" );
+	}
+	else
+	{
+		GeneratePhonyTarget();
+	}
+}
+
+
+void
+MingwWin32OCXModuleHandler::AddImplicitLibraries ( Module& module )
+{
+	MingwAddImplicitLibraries ( module );
+	MingwAddDebugSupportLibraries ( module, DebugUserMode );
+}
+
+void
+MingwWin32OCXModuleHandler::Process ()
+{
+	GenerateWin32OCXModuleTarget ();
+}
+
+void
+MingwWin32OCXModuleHandler::GenerateWin32OCXModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro (module) );
 	string workingDirectory = GetWorkingDirectory ( );

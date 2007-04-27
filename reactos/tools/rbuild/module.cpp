@@ -807,6 +807,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return NativeCUI;
 	if ( attribute.value == "win32dll" )
 		return Win32DLL;
+	if ( attribute.value == "win32ocx" )
+		return Win32OCX;
 	if ( attribute.value == "win32cui" )
 		return Win32CUI;
 	if ( attribute.value == "win32gui" )
@@ -865,6 +867,8 @@ Module::GetDefaultModuleExtension () const
 		case NativeDLL:
 		case Win32DLL:
 			return ".dll";
+		case Win32OCX:
+			return ".ocx";
 		case KernelModeDriver:
 		case BootLoader:
 		case ExportDriver:
@@ -907,6 +911,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case NativeCUI:
 			return "NtProcessStartup@4";
 		case Win32DLL:
+		case Win32OCX:
 			return "DllMain@12";
 		case Win32CUI:
 		case Test:
@@ -948,6 +953,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case Kernel:
 			return "0x80000000";
 		case Win32DLL:
+		case Win32OCX:
 			return "0x10000000";
 		case NativeDLL:
 		case NativeCUI:
@@ -997,6 +1003,7 @@ Module::IsDLL () const
 		case ExportDriver:
 		case NativeDLL:
 		case Win32DLL:
+		case Win32OCX:
 			return true;
 		case KernelModeDriver:
 		case NativeCUI:
@@ -1034,6 +1041,7 @@ Module::GenerateInOutputTree () const
 		case ExportDriver:
 		case NativeDLL:
 		case Win32DLL:
+		case Win32OCX:
 		case KernelModeDriver:
 		case NativeCUI:
 		case Win32CUI:
@@ -1523,6 +1531,7 @@ AutoRegister::IsSupportedModuleType ( ModuleType type )
 	switch ( type )
 	{
 		case Win32DLL:
+        case Win32OCX:
 			return true;
 		case Kernel:
 		case KernelModeDLL:
