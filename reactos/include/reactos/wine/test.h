@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
+#include <wingdi.h>
+#include <winreg.h>
 
 #ifdef __WINE_WINE_LIBRARY_H
 #error wine/library.h should not be used in Wine tests
