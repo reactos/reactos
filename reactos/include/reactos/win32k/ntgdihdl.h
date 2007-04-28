@@ -94,8 +94,30 @@
 #define DC_LAST_CLIPRGN_VALID               0x00008000
 #define DC_PRIMARY_DISPLAY                  0x00010000
 
-#define LDC_LDC     0x01    // (init) local DC other than a normal DC
-#define LDC_EMFLDC  0x02    // Enhance Meta File local DC
+/* DC_ATTR LCD Flags */
+#define LDC_LDC           0x00000001 // (init) local DC other than a normal DC
+#define LDC_EMFLDC        0x00000002 // Enhance Meta File local DC
+#define LDC_INIT_DOCUMENT 0x00000040
+#define LDC_INIT_PAGE     0x00000080
+#define LDC_KILL_DOCUMENT 0x00010000
+
+
+/* DC_ATTR Xform Flags */
+#define METAFILE_TO_WORLD_IDENTITY          0x00000001
+#define WORLD_TO_PAGE_IDENTITY              0x00000002
+#define DEVICE_TO_PAGE_INVALID              0x00000008
+#define DEVICE_TO_WORLD_INVALID             0x00000010
+#define WORLD_TRANSFORM_SET                 0x00000020
+#define POSITIVE_Y_IS_UP                    0x00000040
+#define INVALIDATE_ATTRIBUTES               0x00000080
+#define PTOD_EFM11_NEGATIVE                 0x00000100
+#define PTOD_EFM22_NEGATIVE                 0x00000200
+#define ISO_OR_ANISO_MAP_MODE               0x00000400
+#define PAGE_TO_DEVICE_IDENTITY             0x00000800
+#define PAGE_TO_DEVICE_SCALE_IDENTITY       0x00001000
+#define PAGE_XLATE_CHANGED                  0x00002000
+#define PAGE_EXTENTS_CHANGED                0x00004000
+#define WORLD_XFORM_CHANGED                 0x00008000
 
 /* TYPES *********************************************************************/
 
@@ -106,11 +128,6 @@ typedef struct _GDI_TABLE_ENTRY
     LONG Type;        /* the first 16 bit is the object type including the stock obj flag, the last 16 bits is just the object type */
     PVOID UserData;   /* Points to the user mode structure, usually NULL though */
 } GDI_TABLE_ENTRY, *PGDI_TABLE_ENTRY;
-
-
-#define GDI_HANDLE_TO_ENTRY(h) \
-  ((((ULONG_PTR)(h)) & GDI_HANDLE_INDEX_MASK) * sizeof(GDI_TABLE_ENTRY))
-
 
 typedef struct _RGNATTR
 {
@@ -127,6 +144,9 @@ typedef struct _LDC
     INT iType;
     PVOID pvEmfDC;        /* Pointer to ENHMETAFILE structure */
     ABORTPROC pAbortProc; /* AbortProc for Printing */
+    HANDLE hPrinter;      /* Local or Remote Printer driver */
+    INT iInitPage;        /* Start/Stop */
+    INT iInitDocument;
 } LDC, *PLDC;
 
 typedef struct _DC_ATTR
