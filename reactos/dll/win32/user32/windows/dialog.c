@@ -242,7 +242,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
 
     if (GET_WORD(p) == 0xffff)  /* Is it an integer id? */
     {
-        info->windowName = HeapAlloc( GetProcessHeap(), 0, 10 );
+        info->windowName = HeapAlloc( GetProcessHeap(), 0, sizeof(L"#65535") );
         swprintf((LPWSTR)info->windowName, L"#%d", GET_WORD(p + 1));
         info->windowNameFree = TRUE;
         p += 2;

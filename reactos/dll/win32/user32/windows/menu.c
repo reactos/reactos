@@ -236,6 +236,7 @@ MenuCleanupRosMenuItemInfo(PROSMENUITEMINFO ItemInfo)
   if (ItemInfo->dwTypeData != NULL)
     {
       HeapFree(GetProcessHeap(), 0, ItemInfo->dwTypeData);
+      ItemInfo->dwTypeData = NULL;
     }
 }
 

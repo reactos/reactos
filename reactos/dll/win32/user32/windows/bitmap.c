@@ -735,7 +735,7 @@ CopyImage(
 
                     /* Fill in biSizeImage */
                     GetDIBits(dc, hnd, 0, ds.dsBm.bmHeight, NULL, bi, DIB_RGB_COLORS);
-                    bits = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bi->bmiHeader.biSizeImage * 2); /* HACK */
+                    bits = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bi->bmiHeader.biSizeImage);
 
                     if (bits)
                     {
