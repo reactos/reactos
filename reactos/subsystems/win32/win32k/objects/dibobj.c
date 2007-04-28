@@ -396,23 +396,23 @@ NtGdiGetDIBits(HDC hDC,
    }
 
    if (Bits == NULL)
-   {  
+   {
       if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
-	  {		        
-		  BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
+      {
+	  BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
           coreheader->bcWidth =BitmapObj->SurfObj.sizlBitmap.cx;
           coreheader->bcPlanes = 1;
-          coreheader->bcBitCount =  BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);	 
+          coreheader->bcBitCount =  BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);
 
-		  coreheader->bcHeight = BitmapObj->SurfObj.sizlBitmap.cy;
-		  if (BitmapObj->SurfObj.lDelta > 0)
-           coreheader->bcHeight = -coreheader->bcHeight;
-		  		  
-		  Result = BitmapObj->SurfObj.sizlBitmap.cy;		 		 
-	  }
+	  coreheader->bcHeight = BitmapObj->SurfObj.sizlBitmap.cy;
+	  if (BitmapObj->SurfObj.lDelta > 0)
+	  coreheader->bcHeight = -coreheader->bcHeight;
 
-      if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))		  
-      {		  
+	  Result = BitmapObj->SurfObj.sizlBitmap.cy;
+      }
+
+      if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
+      {
          Info->bmiHeader.biWidth = BitmapObj->SurfObj.sizlBitmap.cx;
          Info->bmiHeader.biHeight = BitmapObj->SurfObj.sizlBitmap.cy;
          /* Report negtive height for top-down bitmaps. */
@@ -453,7 +453,7 @@ NtGdiGetDIBits(HDC hDC,
    else
    {
       if (StartScan > BitmapObj->SurfObj.sizlBitmap.cy)
-      {		 
+      {
          Result = 0;
       }
       else
@@ -462,34 +462,34 @@ NtGdiGetDIBits(HDC hDC,
          DestSize.cx = BitmapObj->SurfObj.sizlBitmap.cx;
          DestSize.cy = ScanLines;
 
-		 DestBitmap = NULL;
-		 if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))		
-		 {
-            DestBitmap = EngCreateBitmap( DestSize, 
-				                          DIB_GetDIBWidthBytes(DestSize.cx, Info->bmiHeader.biBitCount),
-                                          BitmapFormat(Info->bmiHeader.biBitCount, Info->bmiHeader.biCompression),
-                                          0 < Info->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
-                                          Bits);
-		 }
+	 DestBitmap = NULL;
+	 if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
+	 {
+            DestBitmap = EngCreateBitmap(DestSize,
+		                         /* DIB_GetDIBWidthBytes(DestSize.cx, Info->bmiHeader.biBitCount), */
+		                         DestSize.cx * (Info->bmiHeader.biBitCount >> 3), /* HACK */
+                                         BitmapFormat(Info->bmiHeader.biBitCount, Info->bmiHeader.biCompression),
+                                         0 < Info->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
+                                         Bits);
+	 }
 
-		 if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
-	     {		        
-		    BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
+	 if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+	 {
+	    BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
 
-			DestBitmap = EngCreateBitmap( DestSize, 
-				                          DIB_GetDIBWidthBytes(DestSize.cx, coreheader->bcBitCount),
-                                          BitmapFormat(coreheader->bcBitCount, BI_RGB),
-                                           0 < coreheader->bcHeight ? 0 : BMF_TOPDOWN,
-                                          Bits);
-		 }
+	    DestBitmap = EngCreateBitmap(DestSize,
+		                         DIB_GetDIBWidthBytes(DestSize.cx, coreheader->bcBitCount),
+                                         BitmapFormat(coreheader->bcBitCount, BI_RGB),
+                                         0 < coreheader->bcHeight ? 0 : BMF_TOPDOWN,
+                                         Bits);
+	 }
 
-         
          if(DestBitmap == NULL)
          {
             BITMAPOBJ_UnlockBitmap(BitmapObj);
             return 0;
          }
-         
+
          DestSurfObj = EngLockSurface((HSURF)DestBitmap);
 
          SourcePalette = PALETTE_LockPalette(hSourcePalette);
