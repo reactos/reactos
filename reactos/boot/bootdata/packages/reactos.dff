@@ -205,6 +205,7 @@ dll\win32\rpcrt4\rpcrt4.dll                         1
 dll\win32\samlib\samlib.dll                         1
 dll\win32\samsrv\samsrv.dll                         1
 dll\win32\secur32\secur32.dll                       1
+dll\win32\sensapi\sensapi.dll                       1
 dll\win32\serialui\serialui.dll                     1
 dll\win32\setupapi\setupapi.dll                     1
 dll\win32\shdocvw\shdocvw.dll                       1
