@@ -22,6 +22,7 @@ unsigned int g_NumPwrSchemesEnumerated = 0;
 unsigned int g_ActivePwrScheme = 3;
 unsigned int g_TempPwrScheme = 99;
 
+#if 0 // FIXME: needed to build. Please update pwrprof winetest.
 typedef struct _PROCESSOR_POWER_INFORMATION {
    ULONG Number;
    ULONG MaxMhz;
@@ -31,6 +32,7 @@ typedef struct _PROCESSOR_POWER_INFORMATION {
    ULONG CurrentIdleState;
 } PROCESSOR_POWER_INFORMATION,
 *PPROCESSOR_POWER_INFORMATION;
+#endif
 
 POWER_POLICY g_PowerPolicy;
 

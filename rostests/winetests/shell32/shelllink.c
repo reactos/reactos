@@ -45,7 +45,9 @@ extern void WINAPI ILFree(LPITEMIDLIST pidl);
 static const WCHAR lnkfile[]= { 'C',':','\\','t','e','s','t','.','l','n','k',0 };
 static const WCHAR notafile[]= { 'C',':','\\','n','o','n','e','x','i','s','t','e','n','t','\\','f','i','l','e',0 };
 
+#if 0 // FIXME: needed to build. Please update shell32 winetest.
 const GUID IID_IPersistFile = { 0x0000010b, 0x0000, 0x0000, { 0xc0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46 } };
+#endif
 
 /* For some reason SHILCreateFromPath does not work on Win98 and
  * SHSimpleIDListFromPathA does not work on NT4. But if we call both we
