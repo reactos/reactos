@@ -179,7 +179,7 @@ void FreeChangeNotifications(void)
 
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
 
-    DeleteCriticalSection(&SHELL32_ChangenotifyCS);
+    // DeleteCriticalSection(&SHELL32_ChangenotifyCS); // static
 }
 
 /*************************************************************************
