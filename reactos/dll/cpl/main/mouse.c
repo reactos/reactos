@@ -1357,6 +1357,8 @@ OptionProc(IN HWND hwndDlg,
             {
                 SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)5);
                 EnableWindow(hDlgCtrl, FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_TRAIL_SHORT), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_TRAIL_LONG), FALSE);
             }
             else
             {
@@ -1423,12 +1425,16 @@ OptionProc(IN HWND hwndDlg,
                     {
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
                         EnableWindow(hDlgCtrl, FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_TRAIL_SHORT), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_TRAIL_LONG), FALSE);
                         pOptionData->uMouseTrails = 0;
                     }
                     else
                     {
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                         EnableWindow(hDlgCtrl, TRUE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_TRAIL_SHORT), TRUE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_TRAIL_LONG), TRUE);
                         pOptionData->uMouseTrails = (UINT)SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0) + 2;
                     }
                     SystemParametersInfo(SPI_SETMOUSETRAILS, pOptionData->uMouseTrails, 0, 0);
