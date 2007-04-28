@@ -1785,30 +1785,6 @@ GdiIsPlayMetafileDC(HDC hdc)
  */
 BOOL
 STDCALL
-GdiReleaseDC(HDC hdc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GdiReleaseLocalDC(HDC hdc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 GdiSetAttrs(HDC hdc)
 {
 	UNIMPLEMENTED;

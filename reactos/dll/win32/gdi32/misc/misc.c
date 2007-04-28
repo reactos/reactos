@@ -123,3 +123,26 @@ GdiGetBatchLimit()
 }
 
 
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+GdiReleaseDC(HDC hdc)
+{
+	GdiReleaseLocalDC(hdc);
+	return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+GdiReleaseLocalDC(HDC hdc)
+{
+	return 0;
+}
+
+
