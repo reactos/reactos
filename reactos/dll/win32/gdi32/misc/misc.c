@@ -128,9 +128,8 @@ GdiGetBatchLimit()
  */
 BOOL
 STDCALL
-GdiReleaseDC(HDC hdc)
+GdiReleaseLocalDC(HDC hdc)
 {
-	GdiReleaseLocalDC(hdc);
 	return 0;
 }
 
@@ -140,9 +139,9 @@ GdiReleaseDC(HDC hdc)
  */
 BOOL
 STDCALL
-GdiReleaseLocalDC(HDC hdc)
+GdiReleaseDC(HDC hdc)
 {
+	GdiReleaseLocalDC(hdc);
 	return 0;
 }
-
 
