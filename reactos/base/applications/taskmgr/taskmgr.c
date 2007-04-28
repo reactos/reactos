@@ -1067,7 +1067,7 @@ LPTSTR GetLastErrorText(LPTSTR lpszBuf, DWORD dwSize)
         lpszBuf[0] = TEXT('\0');
     } else {
         lpszTemp[lstrlen(lpszTemp)-2] = TEXT('\0');  /*remove cr and newline character */
-        wsprintf(lpszBuf, TEXT("%s (0x%x)"), lpszTemp, (int)GetLastError());
+        _stprintf(lpszBuf, TEXT("%s (0x%x)"), lpszTemp, (int)GetLastError());
     }
     if (lpszTemp) {
         LocalFree((HLOCAL)lpszTemp);
