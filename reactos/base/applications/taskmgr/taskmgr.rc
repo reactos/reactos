@@ -9,7 +9,7 @@
 #endif
 
 /* BINRES taskmgr.ico */
-IDI_TASKMANAGER         ICON    DISCARDABLE res/taskmgr.ico
+IDI_TASKMANAGER         ICON    DISCARDABLE "res/taskmgr.ico"
 /* {
  '00 00 01 00 02 00 20 20 10 00 00 00 00 00 E8 02'
  '00 00 26 00 00 00 10 10 10 00 00 00 00 00 28 01'
@@ -82,7 +82,7 @@ IDI_TASKMANAGER         ICON    DISCARDABLE res/taskmgr.ico
 } */
 
 /* BINRES window.ico */
-IDI_WINDOW              ICON    DISCARDABLE res/window.ico
+IDI_WINDOW              ICON    DISCARDABLE "res/window.ico"
 /* {
  '00 00 01 00 01 00 20 20 10 00 00 00 00 00 E8 02'
  '00 00 16 00 00 00 28 00 00 00 20 00 00 00 40 00'
@@ -135,7 +135,7 @@ IDI_WINDOW              ICON    DISCARDABLE res/window.ico
 } */
 
 /* BINRES windowsm.ico */
-IDI_WINDOWSM            ICON    DISCARDABLE res/windowsm.ico
+IDI_WINDOWSM            ICON    DISCARDABLE "res/windowsm.ico"
 /* {
  '00 00 01 00 01 00 10 10 10 00 00 00 00 00 28 01'
  '00 00 16 00 00 00 28 00 00 00 10 00 00 00 20 00'
@@ -160,7 +160,7 @@ IDI_WINDOWSM            ICON    DISCARDABLE res/windowsm.ico
 } */
 
 /* BINRES traymask.bmp */
-IDB_TRAYMASK            BITMAP  DISCARDABLE res/traymask.bmp
+IDB_TRAYMASK            BITMAP  DISCARDABLE "res/traymask.bmp"
 /* {
  '42 4D F6 00 00 00 00 00 00 00 76 00 00 00 28 00'
  '00 00 10 00 00 00 10 00 00 00 01 00 04 00 00 00'
@@ -181,7 +181,7 @@ IDB_TRAYMASK            BITMAP  DISCARDABLE res/traymask.bmp
 } */
         
 /* BINRES trayicon.bmp */
-IDB_TRAYICON            BITMAP  DISCARDABLE res/trayicon.bmp
+IDB_TRAYICON            BITMAP  DISCARDABLE "res/trayicon.bmp"
 /* {
  '42 4D F6 00 00 00 00 00 00 00 76 00 00 00 28 00'
  '00 00 10 00 00 00 10 00 00 00 01 00 04 00 00 00'
@@ -210,9 +210,13 @@ IDB_TRAYICON            BITMAP  DISCARDABLE res/trayicon.bmp
 #include "lang/hu-HU.rc"
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
+#ifdef __GCC__
 #include "lang/ja-JP.rc"
+#endif
 #include "lang/nb-NO.rc"
 #include "lang/nl-NL.rc"
 #include "lang/pl-PL.rc"
 #include "lang/sv-SE.rc"
+#ifdef __GCC__
 #include "lang/uk-UA.rc"
+#endif
