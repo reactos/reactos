@@ -414,44 +414,43 @@ GetDCOrg(
 int   
 GetNonFontObject(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
-  INT dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
+  INT dwType;
+
+  hGdiObj = (HANDLE)GdiFixUpHandle(hGdiObj);
+  dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
+
+  if (!lpBuffer) // Should pass it all to Win32k and let god sort it out. ;^)
+  {
+    switch(dwType)
+    {
+      case GDI_OBJECT_TYPE_PEN:
+        return sizeof(LOGPEN);
+      case GDI_OBJECT_TYPE_BRUSH:
+        return sizeof(LOGBRUSH);
+      case GDI_OBJECT_TYPE_BITMAP:
+        return sizeof(BITMAP);
+      case GDI_OBJECT_TYPE_PALETTE:
+        return sizeof(WORD);
+      case GDI_OBJECT_TYPE_EXTPEN: /* we don't know the size, ask win32k */
+        break;
+    }
+  }
 
   switch(dwType)
   {
+    case GDI_OBJECT_TYPE_PEN: //Check the structures and see if A & W are the same.
+    case GDI_OBJECT_TYPE_EXTPEN:
+    case GDI_OBJECT_TYPE_BRUSH: // Mixing Apples and Oranges?
+    case GDI_OBJECT_TYPE_BITMAP:
+    case GDI_OBJECT_TYPE_PALETTE:
+      return NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
+
     case GDI_OBJECT_TYPE_DC:
     case GDI_OBJECT_TYPE_REGION:
     case GDI_OBJECT_TYPE_METAFILE:
     case GDI_OBJECT_TYPE_ENHMETAFILE:
     case GDI_OBJECT_TYPE_EMF:    
-    case GDI_OBJECT_TYPE_METADC:
       SetLastError(ERROR_INVALID_HANDLE);
-      return 0;
-
-    case GDI_OBJECT_TYPE_PEN: //Check the structures and see if A & W are the same.
-    case GDI_OBJECT_TYPE_BRUSH: // Mixing Apples and Oranges?
-    case GDI_OBJECT_TYPE_BITMAP:
-    case GDI_OBJECT_TYPE_PALETTE:
-      if (!lpBuffer) // Should pass it all to Win32k and let god sort it out. ;^)
-      {
-  	    switch(dwType)
-  	    {
-          case GDI_OBJECT_TYPE_PEN:
-            return sizeof(LOGPEN);
-          case GDI_OBJECT_TYPE_BRUSH:
-            return sizeof(LOGBRUSH);
-          case GDI_OBJECT_TYPE_BITMAP:
-            return sizeof(BITMAP);
-          case GDI_OBJECT_TYPE_PALETTE:
-            return sizeof(WORD);
-          case GDI_OBJECT_TYPE_EXTPEN: /* we don't know the size, ask win32k */
-            break;
-          default:
-		    /* Other invalid handle type, windows does not SetLastError() */
-          return 0;
-        }
-      }
-      hGdiObj = (HANDLE)GdiFixUpHandle(hGdiObj);
-      return NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
   }
   return 0;
 }
