@@ -1817,92 +1817,44 @@ NtGdiExtGetObjectW(IN HANDLE hGdiObj,
                    OUT LPVOID lpBuffer)
 {
     INT iRetCount = 0;
-    INT iObjectType;
-    INT cbRealCount = cbCount;
+    INT cbCopyCount;
     union
     {
-        BITMAP bmpObject;
-        DIBSECTION disObject;
-        LOGPEN lgpObject;
-        LOGBRUSH lgbObject;
-        LOGFONTW lgfObject;
-        EXTLOGFONTW elgfObject;
+        BITMAP bitmap;
+        DIBSECTION dibsection;
+        LOGPEN logpen;
+        LOGBRUSH logbrush;
+        LOGFONTW logfontw;
+        EXTLOGFONTW extlogfontw;
+        ENUMLOGFONTEXDVW enumlogfontexdvw;
     } Object;
 
-    //
-    // Get the object type
-    //
-    iObjectType = GDIOBJ_GetObjectType(hGdiObj);
+    // Normalize to the largest supported object size
+    cbCount = min((UINT)cbCount, sizeof(Object));
 
-    //
-    // Check if the given size is too large
-    //
-    if (cbCount > sizeof(Object))
-    {
-        //
-        // Normalize to the largest supported object size
-        //
-        DPRINT1("cbCount too big!\n");
-        cbCount = sizeof(Object);
-    }
-
-    //
-    // Check if this is a brush
-    //
-    if (iObjectType == GDI_OBJECT_TYPE_BRUSH)
-    {
-        //
-        // Windows GDI Hack: Manually correct the size
-        //
-        cbCount = sizeof(LOGBRUSH);
-    }
-
-    //
     // Now do the actual call
-    //
     iRetCount = IntGdiGetObject(hGdiObj, cbCount, lpBuffer ? &Object : NULL);
+    cbCopyCount = min((UINT)cbCount, (UINT)iRetCount);
 
-    //
-    // Check if this is a brush
-    //
-    if (iObjectType == GDI_OBJECT_TYPE_BRUSH)
+    // Make sure we have a buffer and a copy size
+    if ((cbCopyCount) && (lpBuffer))
     {
-        //
-        // Fixup the size to account for our previous fixup
-        //
-        cbCount = min(cbCount, cbRealCount);
-    }
-
-    //
-    // Make sure we have a buffer and a return size
-    //
-    if ((iRetCount) && (lpBuffer))
-    {
-        //
         // Enter SEH for buffer transfer
-        //
         _SEH_TRY
         {
-            //
             // Probe the buffer and copy it
-            //
-            ProbeForWrite(lpBuffer, min(cbCount, cbRealCount), sizeof(WORD));
-            RtlCopyMemory(lpBuffer, &Object, min(cbCount, cbRealCount));
+            ProbeForWrite(lpBuffer, cbCopyCount, 1);
+            RtlCopyMemory(lpBuffer, &Object, cbCopyCount);
         }
         _SEH_HANDLE
         {
-            //
             // Clear the return value.
             // Do *NOT* set last error here!
-            //
             iRetCount = 0;
         }
         _SEH_END;
     }
-
-    //
     // Return the count
-    //
     return iRetCount;
 }
 

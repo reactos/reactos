@@ -52,9 +52,8 @@ BRUSH_Cleanup(PVOID ObjectBody)
 INT FASTCALL
 BRUSH_GetObject (PGDIBRUSHOBJ BrushObject, INT Count, LPLOGBRUSH Buffer)
 {
-   if( Buffer == NULL ) return sizeof(BRUSHOBJ);
+   if( Buffer == NULL ) return sizeof(LOGBRUSH);
    if (Count == 0) return 0;
-   if ((UINT)Count < sizeof(BRUSHOBJ)) return 0;
 
    /* Set colour */
     Buffer->lbColor =  BrushObject->BrushAttr.lbColor;
@@ -106,7 +105,7 @@ BRUSH_GetObject (PGDIBRUSHOBJ BrushObject, INT Count, LPLOGBRUSH Buffer)
     */
 
     /* FIXME */
-    return sizeof(BRUSHOBJ);
+    return sizeof(LOGBRUSH);
 }
 
 
