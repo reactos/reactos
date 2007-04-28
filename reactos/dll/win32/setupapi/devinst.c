@@ -188,7 +188,7 @@ SetupDiCreateDeviceInfoListExW(
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto cleanup;
     }
-    ZeroMemory(list, sizeof(struct DeviceInfoSet));
+    ZeroMemory(list, FIELD_OFFSET(struct DeviceInfoSet, szData));
 
     list->magic = SETUP_DEV_INFO_SET_MAGIC;
     memcpy(
