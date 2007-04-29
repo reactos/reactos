@@ -15,12 +15,16 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
 {
  UNICODE_STRING Device, Output;
  HDC hDC = NULL;
- BOOL Display = FALSE;
+ BOOL Display = FALSE, Default = TRUE;
  ULONG UMdhpdev = 0;
  
  HANDLE hspool = NULL;
                 
- if ((!lpwszDevice) && (!lpwszDriver)) return hDC;
+ if ((!lpwszDevice) && (!lpwszDriver))
+ {
+     Default = FALSE;  // Ask Win32k to set Default device.
+     Display = TRUE;   // Most likely to be DISPLAY.
+ }
  else
  {
     if (lpwszDevice) // First
@@ -47,14 +51,14 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
     DPRINT1("Not a DISPLAY device! %wZ\n", &Device);
  }
         
- hDC = NtGdiOpenDCW( &Device,
+ hDC = NtGdiOpenDCW( (Default ? &Device : NULL),
                      (PDEVMODEW) lpInitData,
                      (lpwszOutput ? &Output : NULL),
                       iType,             // DCW 0 and ICW 1.
                       hspool,
                      (PVOID) NULL,       // NULL for now.
                      (PVOID) &UMdhpdev );
-
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -68,8 +72,9 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
     Dc_Attr->pvLDC = pLDC;
     pLDC->hDC = hDC;
     pLDC->iType = LDC_LDC; // 1 (init) local DC, 2 EMF LDC
+    DbgPrint("DC_ATTR Allocated -> 0x%x\n",Dc_Attr);
  }
-
+#endif
  return hDC;     
 }
 
@@ -83,67 +88,58 @@ CreateDCA (
 	LPCSTR		lpszDriver,
 	LPCSTR		lpszDevice,
 	LPCSTR		lpszOutput,
-	CONST DEVMODEA	* lpInitData
+	CONST DEVMODEA	* lpdvmInit
 	)
 {
-        ANSI_STRING DriverA, DeviceA, OutputA;
-        UNICODE_STRING DriverU, DeviceU, OutputU;
-	HDC	hDC;
-	DEVMODEW *lpInitDataW;
+ ANSI_STRING DriverA, DeviceA, OutputA;
+ UNICODE_STRING DriverU, DeviceU, OutputU;
+ LPDEVMODEW dvmInitW = NULL;
+ HDC hDC;
 
-	/*
-	 * If needed, convert to Unicode
-	 * any string parameter.
-	 */
+/*
+ * If needed, convert to Unicode
+ * any string parameter.
+ */
 
-	if (NULL != lpszDriver)
-	{
-		RtlInitAnsiString(&DriverA, (LPSTR)lpszDriver);
-		RtlAnsiStringToUnicodeString(&DriverU, &DriverA, TRUE);
-	} else
-		DriverU.Buffer = NULL;
-	if (NULL != lpszDevice)
-	{
-		RtlInitAnsiString(&DeviceA, (LPSTR)lpszDevice);
-		RtlAnsiStringToUnicodeString(&DeviceU, &DeviceA, TRUE);
-	} else
-		DeviceU.Buffer = NULL;
-	if (NULL != lpszOutput)
-	{
-		RtlInitAnsiString(&OutputA, (LPSTR)lpszOutput);
-		RtlAnsiStringToUnicodeString(&OutputU, &OutputA, TRUE);
-	} else
-		OutputU.Buffer = NULL;
+ if (NULL != lpszDriver)
+ {
+    RtlInitAnsiString(&DriverA, (LPSTR)lpszDriver);
+    RtlAnsiStringToUnicodeString(&DriverU, &DriverA, TRUE);
+ } else
+   DriverU.Buffer = NULL;
+ if (NULL != lpszDevice)
+ {
+   RtlInitAnsiString(&DeviceA, (LPSTR)lpszDevice);
+   RtlAnsiStringToUnicodeString(&DeviceU, &DeviceA, TRUE);
+ } else
+   DeviceU.Buffer = NULL;
+ if (NULL != lpszOutput)
+ {
+   RtlInitAnsiString(&OutputA, (LPSTR)lpszOutput);
+   RtlAnsiStringToUnicodeString(&OutputU, &OutputA, TRUE);
+ } else
+   OutputU.Buffer = NULL;
 
-	if (NULL != lpInitData)
-	{
-//		lpInitDataW = HeapAllocMem(
-	} else
-		lpInitDataW = NULL;
+ if ( lpdvmInit )
+   dvmInitW = GdiConvertToDevmodeW((LPDEVMODEA)lpdvmInit);
 
-	/*
-	 * Call the Unicode version
-	 * of CreateDC.
-	 */
+ hDC = IntCreateDICW ( DriverU.Buffer,
+                       DeviceU.Buffer,
+                       OutputU.Buffer,
+                            lpdvmInit ? dvmInitW : NULL,
+                                    0 );
+ HEAP_free (dvmInitW);
+/*
+ * Free Unicode parameters.
+ */
+ RtlFreeUnicodeString(&DriverU);
+ RtlFreeUnicodeString(&DeviceU);
+ RtlFreeUnicodeString(&OutputU);
 
-	hDC = CreateDCW (
-		DriverU.Buffer,
-		DeviceU.Buffer,
-		OutputU.Buffer,
-		NULL);
-//		lpInitDataW);
-	/*
-	 * Free Unicode parameters.
-	 */
-	RtlFreeUnicodeString(&DriverU);
-	RtlFreeUnicodeString(&DeviceU);
-	RtlFreeUnicodeString(&OutputU);
-
-	/*
-	 * Return the possible DC handle.
-	 */
-
-	return hDC;
+/*
+ * Return the possible DC handle.
+ */
+ return hDC;
 }
 
 
@@ -156,39 +152,15 @@ CreateDCW (
 	LPCWSTR		lpwszDriver,
 	LPCWSTR		lpwszDevice,
 	LPCWSTR		lpwszOutput,
-	CONST DEVMODEW	* lpInitData
+	CONST DEVMODEW	*lpInitData
 	)
 {
-	UNICODE_STRING Driver, Device, Output;
 
-	if(lpwszDriver)
-		RtlInitUnicodeString(&Driver, lpwszDriver);
-	if(lpwszDevice)
-		RtlInitUnicodeString(&Driver, lpwszDevice);
-	if(lpwszOutput)
-		RtlInitUnicodeString(&Driver, lpwszOutput);
-
-	HDC hDC =  NtGdiCreateDC((lpwszDriver ? &Driver : NULL),
-						 (lpwszDevice ? &Device : NULL),
-						 (lpwszOutput ? &Output : NULL),
-						 (PDEVMODEW)lpInitData);
-/* DC_ATTR Tests.
- if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
- {
-    PDC_ATTR Dc_Attr;
-
-    GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr);
-    DPRINT1("Test DC_ATTR -> ! 0x%x\n", Dc_Attr);
-
-    DPRINT1("Test DC_ATTR access! 0x%x\n", Dc_Attr->pvLDC);
-    Dc_Attr->pvLDC = (PVOID)1;
-    DPRINT1("Test DC_ATTR access! 0x%x\n", Dc_Attr->pvLDC);
-    Dc_Attr->pvLDC = (PVOID)0;
-    DPRINT1("Test DC_ATTR access! 0x%x\n", Dc_Attr->pvLDC);
-
- }
- */
-   return hDC;
+ return  IntCreateDICW ( lpwszDriver,
+                         lpwszDevice,
+                         lpwszOutput,
+              (PDEVMODEW) lpInitData,
+                                   0 );
 }
 
 
@@ -198,24 +170,17 @@ CreateDCW (
 HDC
 STDCALL
 CreateICW(
-	LPCWSTR			lpszDriver,
-	LPCWSTR			lpszDevice,
-	LPCWSTR			lpszOutput,
-	CONST DEVMODEW *	lpdvmInit
+	LPCWSTR		lpszDriver,
+	LPCWSTR		lpszDevice,
+	LPCWSTR		lpszOutput,
+	CONST DEVMODEW *lpdvmInit
 	)
 {
-  UNICODE_STRING Driver, Device, Output;
-  
-  if(lpszDriver)
-    RtlInitUnicodeString(&Driver, lpszDriver);
-  if(lpszDevice)
-    RtlInitUnicodeString(&Device, lpszDevice);
-  if(lpszOutput)
-    RtlInitUnicodeString(&Output, lpszOutput);
-  return NtGdiCreateIC ((lpszDriver ? &Driver : NULL),
-		      (lpszDevice ? &Device : NULL),
-		      (lpszOutput ? &Output : NULL),
-		      (CONST PDEVMODEW)lpdvmInit );
+ return IntCreateDICW ( lpszDriver,
+                        lpszDevice,
+                        lpszOutput,
+             (PDEVMODEW) lpdvmInit,
+                                 1 );
 }
 
 
@@ -225,22 +190,21 @@ CreateICW(
 HDC
 STDCALL
 CreateICA(
-	LPCSTR			lpszDriver,
-	LPCSTR			lpszDevice,
-	LPCSTR			lpszOutput,
-	CONST DEVMODEA *	lpdvmInit
+	LPCSTR		lpszDriver,
+	LPCSTR		lpszDevice,
+	LPCSTR		lpszOutput,
+	CONST DEVMODEA *lpdvmInit
 	)
 {
-  NTSTATUS Status;
-  LPWSTR lpszDriverW, lpszDeviceW, lpszOutputW;
-  UNICODE_STRING Driver, Device, Output;
-  LPDEVMODEW dvmInitW = NULL;
-  HDC rc = 0;
+ NTSTATUS Status;
+ LPWSTR lpszDriverW, lpszDeviceW, lpszOutputW;
+ LPDEVMODEW dvmInitW = NULL;
+ HDC rc = 0;
 
-  Status = HEAP_strdupA2W ( &lpszDriverW, lpszDriver );
-  if (!NT_SUCCESS (Status))
+ Status = HEAP_strdupA2W ( &lpszDriverW, lpszDriver );
+ if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
-  else
+ else
   {
     Status = HEAP_strdupA2W ( &lpszDeviceW, lpszDevice );
     if (!NT_SUCCESS (Status))
@@ -253,23 +217,21 @@ CreateICA(
 	else
 	  {
 	    if ( lpdvmInit )
-          dvmInitW = GdiConvertToDevmodeW((LPDEVMODEA)lpdvmInit);
+               dvmInitW = GdiConvertToDevmodeW((LPDEVMODEA)lpdvmInit);
         
-        RtlInitUnicodeString(&Driver, lpszDriverW);
-        RtlInitUnicodeString(&Device, lpszDeviceW);
-        RtlInitUnicodeString(&Output, lpszOutputW);
-	    rc = NtGdiCreateIC ( &Driver,
-				&Device,
-				&Output,
-				lpdvmInit ? dvmInitW : NULL );
-        HEAP_free (dvmInitW);
+               rc = IntCreateDICW ( lpszDriverW,
+                                    lpszDeviceW,
+                                    lpszOutputW,
+                                      lpdvmInit ? dvmInitW : NULL,
+                                              1 );
+            HEAP_free (dvmInitW);
 	    HEAP_free ( lpszOutputW );
 	  }
 	HEAP_free ( lpszDeviceW );
       }
     HEAP_free ( lpszDriverW );
   }
-  return rc;
+ return rc;
 }
 
 

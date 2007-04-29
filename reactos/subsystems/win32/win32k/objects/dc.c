@@ -1105,7 +1105,6 @@ NtGdiOpenDCW( PUNICODE_STRING Device,
     Status = IntSafeCopyUnicodeString(&SafeDevice, Device);
     if(!NT_SUCCESS(Status))
     {
-      RtlFreeUnicodeString(&SafeDevice);
       SetLastNtError(Status);
       return NULL;
     }
@@ -2340,7 +2339,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   NewDC->vportExtY = 1.0f;
 
   NewDC->w.textColor = 0;
-//  NewDC->pDc_Attr->ulForegroundClr = 0; Already Zero
+//  NewDC->pDc_Attr->ulForegroundClr = 0; // Already Zero
 //  NewDC->pDc_Attr->crForegroundClr = 0;
 
   NewDC->w.backgroundColor = 0xffffff;
