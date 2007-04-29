@@ -49,7 +49,6 @@ LONG
 APIENTRY
 Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 {
-
     PROPSHEETPAGE PsPage[NUM_SHEETS];
     PROPSHEETHEADER psh;
     TCHAR Caption[MAX_STR_SIZE];
@@ -63,7 +62,7 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK | PSH_PROPTITLE;
+    psh.dwFlags =  PSH_PROPSHEETPAGE;
     psh.hwndParent = NULL;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
@@ -73,8 +72,8 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
     psh.ppsp = PsPage;
 
     InitPropSheetPage(&PsPage[0], IDD_REGOPTSPAGE, RegOptsProc);
-    InitPropSheetPage(&PsPage[1], IDD_EXTRAOPTSPAGE, ExtraOptsProc);
-    InitPropSheetPage(&PsPage[2], IDD_LANGSOPTSPAGE, LangsOptsProc);
+    InitPropSheetPage(&PsPage[1], IDD_LANGSOPTSPAGE, LangsOptsProc);
+    InitPropSheetPage(&PsPage[2], IDD_EXTRAOPTSPAGE, ExtraOptsProc);
 
     return (LONG)(PropertySheet(&psh) != -1);
 }

@@ -136,7 +136,7 @@ BEGIN
     LTEXT "Time afternoon notation (PM):", -1, 10, 104, 147, 10
     COMBOBOX IDC_TIMEPM_COMBO, 161, 102, 84, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE 
     GROUPBOX "", IDC_GROUPBOX, 7, 132, 238, 80
-    LTEXT "The designation of the time format\nh = hour     m = minute     s = second    t = Äå or êå\n\nh = 12-hour day format\nH = 24-hour day format\n\nhh, mm, ss = with zeroes in beginning\nh, m, s = without zeroes", -1, 13, 141, 226, 65
+    LTEXT "The designation of the time format\nh = hour     m = minute     s = second    t = AM or PM\n\nh = 12-hour day format\nH = 24-hour day format\n\nhh, mm, ss = with zeroes in beginning\nh, m, s = without zeroes", -1, 13, 141, 226, 65
 END
 
 IDD_DATEOPTSSETUP DIALOGEX 0, 0, 252, 236
@@ -146,7 +146,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Calendar", IDC_GROUPBOX, 5, 7, 242, 74
     LTEXT "If year typed as two digits, then show it as year between:", -1, 13, 18, 225, 8
-    EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "and", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 77, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "",IDC_SCR_MAX_YEAR, "msctls_updown32", UDS_NOTHOUSANDS | UDS_WRAP | UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 113, 30, 10, 12

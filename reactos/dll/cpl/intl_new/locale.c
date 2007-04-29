@@ -59,7 +59,7 @@ CreateLocationsList(HWND hWnd)
 
     EnumSystemGeoID(GEOCLASS_NATION, 0, LocationsEnumProc);
 
-    // Select current location
+    /* Select current location */
     userGeoID = GetUserGeoID(GEOCLASS_NATION);
     GetGeoInfo(userGeoID,
                GEO_FRIENDLYNAME,
@@ -109,7 +109,7 @@ CreateLanguagesList(HWND hWnd)
 
     EnumSystemLocalesW(LocalesEnumProc, LCID_INSTALLED);
 
-    // Select current locale
+    /* Select current locale */
     GetLocaleInfo(GetUserDefaultLCID(),
                   LOCALE_SLANGUAGE,
                   langSel,
@@ -175,7 +175,7 @@ SetNewLocale(LCID LcidLocale)
 
     //SetUserDefaultLCID(LcidLocale); // Not implemented in MS :(
 
-    if(!IsValidLocale(LcidLocale, LCID_INSTALLED)) 
+    if(!IsValidLocale(LcidLocale, LCID_INSTALLED))
     {
         MessageBoxW(NULL, L"Invalid locale.", L"Critical error",
             MB_OK | MB_ICONERROR);
@@ -230,7 +230,7 @@ RegOptsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CreateLanguagesList(GetDlgItem(hwndDlg, IDC_SETREG_COMBO));
             /* Update locale samples */
             UpdateLocaleSample(hwndDlg, LOCALE_USER_DEFAULT);
-        break;
+            break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
