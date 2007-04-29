@@ -55,6 +55,8 @@ powerpc-unknown-linux-gnu-ld \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/mboot.o \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/prep.o \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/prep_ide.o \
+	obj-ppc/boot/freeldr/freeldr/arch/powerpc/prep_pci.o \
+	obj-ppc/boot/freeldr/freeldr/arch/powerpc/prep_vga.o \
 	obj-ppc/boot/freeldr/freeldr/bootmgr.o \
 	obj-ppc/boot/freeldr/freeldr/drivemap.o \
 	obj-ppc/boot/freeldr/freeldr/miscboot.o \

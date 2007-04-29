@@ -210,8 +210,9 @@ FrLdrStartup(ULONG Magic)
 	(ULONG_PTR)MmAllocateMemory(128*1024);
     DIRECTORY_ENTRY *Entry;
     LoaderBlock.ArchExtra = (ULONG)LocalBootInfo;
+    int msr = GetMSR();
 
-    printf("Translation map: %x\n", TranslationMap);
+    printf("Translation map: %x (msr %x)\n", TranslationMap, msr);
     NewMapSdr = XROUNDUP(NewMapSdr,64*1024);
     printf("New SDR1 value will be %x\n", NewMapSdr);
 
@@ -257,9 +258,12 @@ FrLdrStartup(ULONG Magic)
 
     /* Tell them we're booting */
     DrawNumber(LocalBootInfo,(ULONG)&LoaderBlock,10,100);
-    DrawNumber(LocalBootInfo,(ULONG)KernelEntryAddress,100,100);
 
     SetSDR1( NewMapSdr );
+    msr |= 0x30;
+    printf("About to set msr (%x)!!!\n", msr);
+    __asm__("mtmsr %0" : : "r" (msr) );
+    DrawNumber(LocalBootInfo,(ULONG)KernelEntryAddress,100,100);
     KernelEntryAddress( (void*)&LoaderBlock );
     /* Nothing more */
     while(1);

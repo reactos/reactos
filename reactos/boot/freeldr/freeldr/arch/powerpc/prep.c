@@ -62,7 +62,9 @@ void PpcPrepVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth )
 
 void PpcPrepVideoPrepareForReactOS()
 {
+    pci_setup(&pci1_desc);
 }
+
 ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 			   ULONG MaxMemoryMapSize )
 {
