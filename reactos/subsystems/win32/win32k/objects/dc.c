@@ -1063,16 +1063,62 @@ NtGdiCreateIC(PUNICODE_STRING Driver,
 }
 
 HDC STDCALL
-NtGdiOpenDCW( PUNICODE_STRING pustrDevice,
-              DEVMODEW *pdm,
+NtGdiOpenDCW( PUNICODE_STRING Device,
+              DEVMODEW *InitData,
               PUNICODE_STRING pustrLogAddr,
               ULONG iType,
               HANDLE hspool,
               VOID *pDriverInfo2,
               VOID *pUMdhpdev )
 {
-  UNIMPLEMENTED;
-  return 0;
+  UNICODE_STRING SafeDevice;
+  DEVMODEW SafeInitData;
+  HDC Ret;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if(InitData)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(InitData,
+                   sizeof(DEVMODEW),
+                   1);
+      RtlCopyMemory(&SafeInitData,
+                    InitData,
+                    sizeof(DEVMODEW));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return NULL;
+    }
+    /* FIXME - InitData can have some more bytes! */
+  }
+
+  if(Device)
+  {
+    Status = IntSafeCopyUnicodeString(&SafeDevice, Device);
+    if(!NT_SUCCESS(Status))
+    {
+      RtlFreeUnicodeString(&SafeDevice);
+      SetLastNtError(Status);
+      return NULL;
+    }
+  }
+
+  Ret = IntGdiCreateDC(NULL == Device ? NULL : &SafeDevice,
+                       NULL,
+                       NULL,
+                       NULL == InitData ? NULL : &SafeInitData,
+                       (BOOL) iType); // FALSE 0 DCW, TRUE 1 ICW
+
+  return Ret;
+
 }
 
 BOOL STDCALL
@@ -2196,7 +2242,8 @@ DC_AllocDC(PUNICODE_STRING Driver)
   PDC  NewDC;
   HDC  hDC;
   PWSTR Buf = NULL;
-
+//  PDC_ATTR DC_Attr = NULL;
+  
   if (Driver != NULL)
   {
     Buf = ExAllocatePoolWithTag(PagedPool, Driver->MaximumLength, TAG_DC);
@@ -2217,9 +2264,8 @@ DC_AllocDC(PUNICODE_STRING Driver)
     return  NULL;
   }
 #if 0
-#define TAG_DCATTR TAG('D', 'C', 'A', 'T')
   PVOID NewMem = NULL;
-  ULONG MemSize = PAGE_SIZE; //sizeof(DC_ATTR);
+  ULONG MemSize = sizeof(DC_ATTR); //PAGE_SIZE it will allocate that size
   NTSTATUS Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
                                                        &NewMem,
                                                              0,
@@ -2235,11 +2281,11 @@ DC_AllocDC(PUNICODE_STRING Driver)
     {
       RtlZeroMemory(NewMem, MemSize);
       Entry->UserData  = NewMem; 
-      DPRINT1("DC_ATTR allocated! 0x%x\n",NewMem);
+      DPRINT("DC_ATTR allocated! 0x%x\n",NewMem);
     }
     else
     {
-       DPRINT1("DC_ATTR not allocated!\n");
+       DPRINT("DC_ATTR not allocated!\n");
     }
   }
   KeLeaveCriticalRegion();
@@ -2250,6 +2296,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   if(NewMem)
   {
      NewDC->pDc_Attr = NewMem; // Store pointer
+     DC_Attr = NewMem;
   }
 #endif
   if (Driver != NULL)
@@ -2258,26 +2305,52 @@ DC_AllocDC(PUNICODE_STRING Driver)
     NewDC->DriverName.Buffer = Buf;
   }
 
+//  gxf_long a;
+//  a.f = 1.0f;
+
   NewDC->w.xformWorld2Wnd.eM11 = 1.0f;
-  NewDC->w.xformWorld2Wnd.eM12 = 0.0f;
+//  DC_Attr->mxWorldToPage.efM11.lExp  =  XFPEXP(a);
+//  DC_Attr->mxWorldToPage.efM11.lMant = XFPMANT(a);
+
+  NewDC->w.xformWorld2Wnd.eM12 = 0.0f; //Already Zero!
   NewDC->w.xformWorld2Wnd.eM21 = 0.0f;
+
   NewDC->w.xformWorld2Wnd.eM22 = 1.0f;
-  NewDC->w.xformWorld2Wnd.eDx = 0.0f;
+//  DC_Attr->mxWorldToPage.efM22.lExp  =  XFPEXP(a);
+//  DC_Attr->mxWorldToPage.efM22.lMant = XFPMANT(a);
+  
+  NewDC->w.xformWorld2Wnd.eDx = 0.0f; //Already Zero!
   NewDC->w.xformWorld2Wnd.eDy = 0.0f;
+
   NewDC->w.xformWorld2Vport = NewDC->w.xformWorld2Wnd;
+//  DC_Attr->mxWorldToDevice = DC_Attr->mxWorldToPage; 
+
   NewDC->w.xformVport2World = NewDC->w.xformWorld2Wnd;
+//  DC_Attr->mxDevicetoWorld = DC_Attr->mxWorldToPage; 
+
   NewDC->w.vport2WorldValid = TRUE;
+//  DC_Attr->flXform = DEVICE_TO_PAGE_INVALID; // More research.
+
   NewDC->w.MapMode = MM_TEXT;
+//  DC_Attr->iMapMode = MM_TEXT;
+
   NewDC->wndExtX = 1.0f;
   NewDC->wndExtY = 1.0f;
   NewDC->vportExtX = 1.0f;
   NewDC->vportExtY = 1.0f;
+
   NewDC->w.textColor = 0;
+//  NewDC->pDc_Attr->ulForegroundClr = 0; Already Zero
+//  NewDC->pDc_Attr->crForegroundClr = 0;
+
   NewDC->w.backgroundColor = 0xffffff;
+//  DC_Attr->ulBackgroundClr = 0xffffff;
+//  DC_Attr->crBackgroundClr = 0xffffff;
 
   NewDC->w.hFont = NtGdiGetStockObject(SYSTEM_FONT);
   TextIntRealizeFont(NewDC->w.hFont);
-
+//  DC_Attr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
+  
   NewDC->w.hPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
 
   DC_UnlockDc(NewDC);
@@ -2322,12 +2395,16 @@ DC_FreeDC(HDC  DCToFree)
     PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
     if(Entry->UserData)
     {
-      ULONG MemSize = PAGE_SIZE;
+      ULONG MemSize = sizeof(DC_ATTR); //PAGE_SIZE;
       NTSTATUS Status = ZwFreeVirtualMemory(NtCurrentProcess(), 
                                               &Entry->UserData,
                                                       &MemSize,
                                                   MEM_DECOMMIT);
-      if (NT_SUCCESS(Status)) Entry->UserData = NULL;
+      if (NT_SUCCESS(Status))
+      {
+        DPRINT("DC_FreeDC DC_ATTR 0x%x\n", Entry->UserData);
+        Entry->UserData = NULL;
+      }
     }
   }
   KeLeaveCriticalRegion();
