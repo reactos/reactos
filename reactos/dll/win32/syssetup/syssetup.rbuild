@@ -1,9 +1,7 @@
-<module name="syssetup" type="win32dll" baseaddress="${BASEADDRESS_SYSSETUP}" installbase="system32" installname="syssetup.dll">
+<module name="syssetup" type="win32dll" baseaddress="${BASEADDRESS_SYSSETUP}" installbase="system32" installname="syssetup.dll" unicode="yes" allowwarnings="true">
 	<importlibrary definition="syssetup.def" />
 	<include base="syssetup">.</include>
 	<define name="__USE_W32API" />
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="_WIN32_IE">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="_SETUPAPI_VER">0x0501</define>

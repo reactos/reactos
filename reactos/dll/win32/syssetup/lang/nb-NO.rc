@@ -222,4 +222,20 @@ BEGIN
     IDS_REASON_UNKNOWN          ""
 END
 
+STRINGTABLE
+BEGIN
+    IDS_SHORT_CMD        "Command Prompt.lnk"
+    IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
+    IDS_SHORT_DOWNLOADER "Download !.lnk"
+    IDS_SHORT_FIREFOX    "Get Firefox.lnk"
+    IDS_SHORT_SERVICE    "Service Manager.lnk"
+    IDS_SHORT_DEVICE     "Device Manager.lnk"
+    IDS_SHORT_CALC       "Calculator.lnk"
+    IDS_SHORT_REGEDIT    "Regedit.lnk"
+    IDS_SHORT_NOTEPAD    "Notepad.lnk"
+    IDS_SHORT_WORDPAD    "WordPad.lnk"
+    IDS_SHORT_SNAP       "SnapShot.lnk"
+    IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
+    IDS_SHORT_WINEMINE   "WineMine.lnk"
+END
 /* EOF */

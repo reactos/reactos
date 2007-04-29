@@ -49,6 +49,8 @@
 #include "globals.h"
 #include "resource.h"
 
+#include <debug.h>
+
 DWORD WINAPI
 CMP_WaitNoPendingInstallEvents(DWORD dwTimeout);
 
@@ -136,10 +138,11 @@ HRESULT CreateShellLink(LPCTSTR linkPath, LPCTSTR cmd, LPCTSTR arg, LPCTSTR dir,
 
 
 static BOOL
-CreateShortcut(int csidl, LPCTSTR folder, LPCTSTR linkName, LPCTSTR command, UINT nIdTitle)
+CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nIdTitle)
 {
   TCHAR path[MAX_PATH];
   TCHAR title[256];
+  TCHAR name[256];
   LPTSTR p = path;
 
   if (!SHGetSpecialFolderPath(0, path, csidl, TRUE))
@@ -152,7 +155,10 @@ CreateShortcut(int csidl, LPCTSTR folder, LPCTSTR linkName, LPCTSTR command, UIN
     }
 
   p = PathAddBackslash(p);
-  _tcscpy(p, linkName);
+
+  if(!LoadString(hDllInstance, nIdName, name, 256))
+    return FALSE;
+  _tcscpy(p, name);
 
   if (!LoadString(hDllInstance, nIdTitle, title, 256))
     return FALSE;
@@ -524,50 +530,52 @@ InstallReactOS (HINSTANCE hInstance)
     }
 
   CoInitialize(NULL);
+  SetUserDefaultLCID(GetSystemDefaultLCID());
+  SetThreadLocale(GetSystemDefaultLCID());
 
   /* create desktop shortcuts */
-  CreateShortcut(CSIDL_DESKTOP, NULL, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
+  CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_CMD, _T("cmd.exe"), IDS_CMT_CMD);
 
   /* create program startmenu shortcuts */
-  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("ReactOS Explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
+  CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_EXPLORER, _T("explorer.exe"), IDS_CMT_EXPLORER);
   /* workaround to stop empty links for trunk builds */
   if(GetSystemDirectory(szBuffer, MAX_PATH)) 
   {
     _tcscpy(Path, szBuffer);
     if((_taccess(_tcscat(Path, _T("\\downloader.exe")), 0 )) != -1)
-        CreateShortcut(CSIDL_PROGRAMS, NULL, _T("Download !.lnk"), _T("downloader.exe"), IDS_CMT_DOWNLOADER);
+        CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_DOWNLOADER, _T("downloader.exe"), IDS_CMT_DOWNLOADER);
 
     _tcscpy(Path, szBuffer);
     if((_taccess(_tcscat(Path, _T("\\getfirefox.exe")), 0 )) != -1)
-      CreateShortcut(CSIDL_PROGRAMS, NULL, _T("Get Firefox.lnk"), _T("getfirefox.exe"), IDS_CMT_GETFIREFOX);
+      CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_FIREFOX, _T("getfirefox.exe"), IDS_CMT_GETFIREFOX);
   }
 
 
   /* create administritive tools startmenu shortcuts */
-  CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, _T("Service Manager.lnk"), _T("servman.exe"), IDS_CMT_SERVMAN);
-  CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, _T("Device Manager.lnk"), _T("devmgmt.exe"), IDS_CMT_DEVMGMT);
+  CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_SERVICE, _T("servman.exe"), IDS_CMT_SERVMAN);
+  CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_DEVICE, _T("devmgmt.exe"), IDS_CMT_DEVMGMT);
 
   /* create and fill Accessories subfolder */
   if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) 
   {
-	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Calculator.lnk"), _T("calc.exe"), IDS_CMT_CALC);
-	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
-    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Notepad.lnk"), _T("notepad.exe"), IDS_CMT_NOTEPAD);
-    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Regedit.lnk"), _T("regedit.exe"), IDS_CMT_REGEDIT);
-    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("WordPad.lnk"), _T("wordpad.exe"), IDS_CMT_WORDPAD);
+	CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_CALC, _T("calc.exe"), IDS_CMT_CALC);
+	CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_CMD, _T("cmd.exe"), IDS_CMT_CMD);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_NOTEPAD, _T("notepad.exe"), IDS_CMT_NOTEPAD);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_REGEDIT, _T("regedit.exe"), IDS_CMT_REGEDIT);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_WORDPAD, _T("wordpad.exe"), IDS_CMT_WORDPAD);
     if(GetSystemDirectory(szBuffer, MAX_PATH)) 
     {
       _tcscpy(Path, szBuffer);
       if((_taccess(_tcscat(Path, _T("\\screenshot.exe")), 0 )) != -1)
-        CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("SnapShot.lnk"), _T("screenshot.exe"), IDS_CMT_SCREENSHOT);
+        CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_SNAP, _T("screenshot.exe"), IDS_CMT_SCREENSHOT);
     }
   }
 
   /* create Games subfolder and fill if the exe is available */
   if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, sGames, 256)) 
   {
-    CreateShortcut(CSIDL_PROGRAMS, sGames, _T("Solitaire.lnk"), _T("sol.exe"), IDS_CMT_SOLITAIRE);
-    CreateShortcut(CSIDL_PROGRAMS, sGames, _T("WineMine.lnk"), _T("winemine.exe"), IDS_CMT_WINEMINE);
+    CreateShortcut(CSIDL_PROGRAMS, sGames, IDS_SHORT_SOLITAIRE, _T("sol.exe"), IDS_CMT_SOLITAIRE);
+    CreateShortcut(CSIDL_PROGRAMS, sGames, IDS_SHORT_WINEMINE, _T("winemine.exe"), IDS_CMT_WINEMINE);
   }
 
   CoUninitialize();

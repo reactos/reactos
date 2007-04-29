@@ -890,6 +890,8 @@ SetThreadUILanguage@4
 SetTimerQueueTimer@24
 SetTimeZoneInformation@4
 SetUnhandledExceptionFilter@4
+SetUserDefaultLCID@4
+SetUserDefaultUILanguage@4
 SetUserGeoID@4
 SetVDMCurrentDirectories@8
 SetVolumeLabelA@8

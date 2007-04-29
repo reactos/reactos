@@ -1574,6 +1574,42 @@ BOOL WINAPI SetThreadLocale( LCID lcid )
 
 
 /*
+ * @implemented
+ */
+BOOL STDCALL
+SetUserDefaultLCID(LCID lcid)
+{
+  NTSTATUS Status;
+
+  Status = NtSetDefaultLocale(TRUE, lcid);
+  if (!NT_SUCCESS(Status))
+  {
+      SetLastErrorByStatus(Status);
+      return 0;
+  }
+  return 1;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+SetUserDefaultUILanguage(LANGID LangId)
+{
+  NTSTATUS Status;
+
+  Status = NtSetDefaultUILanguage(LangId);
+  if (!NT_SUCCESS(Status))
+  {
+      SetLastErrorByStatus(Status);
+      return 0;
+  }
+  return 1;
+}
+
+
+/*
  * @unimplemented
  */
 BOOL

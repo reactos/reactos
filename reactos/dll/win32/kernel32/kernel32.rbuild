@@ -1,4 +1,4 @@
-<module name="kernel32_base" type="objectlibrary">
+<module name="kernel32_base" type="objectlibrary" allowwarnings="true">
 	<include base="kernel32_base">.</include>
 	<include base="kernel32_base">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>

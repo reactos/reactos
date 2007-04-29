@@ -18,7 +18,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 
 IDD_WELCOMEPAGE DIALOG DISCARDABLE  0, 0, 317, 193
@@ -220,4 +220,20 @@ BEGIN
     IDS_REASON_UNKNOWN          ""
 END
 
+STRINGTABLE
+BEGIN
+    IDS_SHORT_CMD        "Invite de commandes.lnk"
+    IDS_SHORT_EXPLORER   "Explorateur ReactOS.lnk"
+    IDS_SHORT_DOWNLOADER "Télécharger !.lnk"
+    IDS_SHORT_FIREFOX    "Rélécharger FireFox.lnk"
+    IDS_SHORT_SERVICE    "Gestionnaire de services.lnk"
+    IDS_SHORT_DEVICE     "Gestionnaire de périphériques.lnk"
+    IDS_SHORT_CALC       "Calculatrice.lnk"
+    IDS_SHORT_REGEDIT    "Regedit.lnk"
+    IDS_SHORT_NOTEPAD    "Notepad.lnk"
+    IDS_SHORT_WORDPAD    "WordPad.lnk"
+    IDS_SHORT_SNAP       "Capture d'écran.lnk"
+    IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
+    IDS_SHORT_WINEMINE   "WineMine.lnk"
+END
 /* EOF */
