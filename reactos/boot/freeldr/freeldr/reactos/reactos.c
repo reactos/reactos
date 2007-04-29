@@ -415,6 +415,11 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
         rc = RegQueryValue(hOrderKey, GroupName, NULL, (PUCHAR)OrderList, &BufferSize);
         if (rc != ERROR_SUCCESS) OrderList[0] = 0;
 
+#ifdef _M_PPC
+	for (TagIndex = 0; TagIndex < BufferSize / sizeof(OrderList[0]); TagIndex++)
+	    OrderList[TagIndex] = SWAPD(OrderList[TagIndex]);
+#endif
+
         /* enumerate all drivers */
         for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++) {
 
@@ -452,6 +457,11 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                     DriverGroupSize = sizeof(DriverGroup);
                     rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
                     DbgPrint((DPRINT_REACTOS, "  Group: '%S'  \n", DriverGroup));
+
+#ifdef _M_PPC
+		    StartValue = SWAPD(StartValue);
+		    TagValue = SWAPD(TagValue);
+#endif
 
                     /* Make sure it should be started */
                     if ((StartValue == 0) &&
