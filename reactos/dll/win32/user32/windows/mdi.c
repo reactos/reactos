@@ -161,6 +161,8 @@ HWND* WIN_ListChildren (HWND hWndparent)
       return 0;
     }
 
+  pHwnd[dwCount] = (HWND) 0;
+
   return pHwnd;
 }
 
