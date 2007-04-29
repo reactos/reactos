@@ -16,7 +16,7 @@ idectl_desc ide1_desc = { 0x800001f0 };
 
 void ide_seek( void *extension, int low, int high ) {
     idectl_desc *desc = (idectl_desc *)extension;
-    long long seekto = ((((long long)high) << 32) | (low & 0xffffffff)) / desc->bytespersec;
+    long long seekto = ((((long long)high) << 32) | (low & 0xffffffff));
     /* order = sector, head, cylinder */
     desc->seek_sector = seekto % desc->sectors;
     seekto /= desc->sectors;
@@ -50,7 +50,6 @@ void ide_bsy( void *extension ) {
 int ide_read( void *extension, char *buffer, int bytes ) {
     idectl_desc *desc = (idectl_desc *)extension;
     short *databuf = (short *)buffer;
-    short in;
     int inwords;
 
     ide_bsy( extension );
@@ -62,9 +61,7 @@ int ide_read( void *extension, char *buffer, int bytes ) {
     SetPhysByte(desc->port+7, 0x20);
     
     for( inwords = 0; inwords < desc->bytespersec / sizeof(short); inwords++ ) {
-	in = GetPhysHalf(desc->port);
-	databuf[inwords] = SWAP_W(in);
-	sync();
+	databuf[inwords] = GetPhysHalf(desc->port);
     }
 
     desc->seekto += desc->bytespersec;

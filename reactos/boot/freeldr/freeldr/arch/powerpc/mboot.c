@@ -381,32 +381,22 @@ FrLdrSetupPageDirectory(VOID)
 {
 }
 
-ULONG SignExtend24(ULONG Base, ULONG Delta)
-{
-    Delta = (Base & 0xfffffc) + Delta;
-    return (Base & 0xff000003) | (Delta & 0xfffffc);
-}
-
 /*++
- * FrLdrMapKernel
+ * FrLdrMapModule
  * INTERNAL
  *
- *     Maps the Kernel into memory, does PE Section Mapping, initalizes the
- *     uninitialized data sections, and relocates the image.
+ *     Loads the indicated elf image as PE.  The target will appear to be
+ *     a PE image whose ImageBase has ever been KernelAddr.
  *
  * Params:
- *     KernelImage - FILE Structure representing the ntoskrnl image file.
- *
- * Returns:
- *     TRUE if the Kernel was mapped.
- *
- * Remarks:
- *     None.
- *
+ *     Image -- File to load
+ *     ImageName -- Name of image for the modules list
+ *     MemLoadAddr -- Freeldr address of module
+ *     KernelAddr -- Kernel address of module
  *--*/
 BOOLEAN
 NTAPI
-FrLdrMapKernel(FILE *KernelImage)
+FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG KernelAddr)
 {
     PIMAGE_DOS_HEADER ImageHeader = 0;
     PIMAGE_NT_HEADERS NtHeader = 0;
@@ -421,14 +411,7 @@ FrLdrMapKernel(FILE *KernelImage)
     Elf32_Ehdr ehdr;
     Elf32_Shdr *shdr;
 
-    /* Get Kernel Base */
-    FrLdrGetKernelBase();
-
-    /* Allocate kernel memory */
-    KernelMemory = MmAllocateMemory(KernelMemorySize);
-    printf("Kernel Memory @%x\n", (int)KernelMemory);
-
-    printf("Loading ntoskrnl (elf at %x)\n", KernelBase);
+    printf("Loading file (elf at %x)\n", KernelAddr);
 
     /* Load the first 1024 bytes of the kernel image so we can read the PE header */
     if (!FsReadFile(KernelImage, sizeof(ehdr), NULL, &ehdr)) {
@@ -492,7 +475,7 @@ FrLdrMapKernel(FILE *KernelImage)
     }
 
     /* Save the Image Size */
-    NtHeader->OptionalHeader.ImageBase = SWAPD(KernelBase);
+    NtHeader->OptionalHeader.ImageBase = SWAPD(KernelAddr);
 
     /* Load the file image */
     Section = IMAGE_FIRST_SECTION(NtHeader);
@@ -518,14 +501,14 @@ FrLdrMapKernel(FILE *KernelImage)
 	if (shdr->sh_type == SHT_PROGBITS)
 	{
 	    /* Content area */
-	    printf("Loading section %d at %x\n", i, KernelBase + SectionAddr);
+	    printf("Loading section %d at %x\n", i, KernelAddr + SectionAddr);
 	    FsSetFilePointer(KernelImage, shdr->sh_offset);
 	    FsReadFile(KernelImage, shdr->sh_size, NULL, KernelMemory + SectionAddr);
 	} 
 	else if (shdr->sh_type == SHT_NOBITS)
 	{
 	    /* Zero it out */
-	    printf("BSS section %d at %x\n", i, KernelBase + SectionAddr);
+	    printf("BSS section %d at %x\n", i, KernelAddr + SectionAddr);
 	    memset(KernelMemory + SectionAddr, 0, 
 		   ROUND_UP(shdr->sh_size, 
 			    SWAPD(NtHeader->OptionalHeader.SectionAlignment)));
@@ -579,9 +562,9 @@ FrLdrMapKernel(FILE *KernelImage)
 	    FsReadFile(KernelImage, sizeof(symbol), NULL, &symbol);
 	    
 	    /* Compute addends */
-	    S = symbol.st_value + KernelBase + SectionOffsets[symbol.st_shndx];
+	    S = symbol.st_value + KernelAddr + SectionOffsets[symbol.st_shndx];
 	    A = reloc.r_addend;
-	    P = reloc.r_offset + KernelBase + SectionOffsets[targetSection];
+	    P = reloc.r_offset + KernelAddr + SectionOffsets[targetSection];
 	    
 	    Target32 = 
 		(ULONG*)(((PCHAR)KernelMemory) + SectionOffsets[targetSection]);
@@ -595,7 +578,7 @@ FrLdrMapKernel(FILE *KernelImage)
 		*Target32 = S + A;
 		break;
 	    case R_PPC_UADDR32: /* Special: Treat as RVA */
-		*Target32 = S + A - KernelBase;
+		*Target32 = S + A - KernelAddr;
 		break;
 	    case R_PPC_ADDR24:
 		*Target32 = (ADDR24_MASK & (S+A)) | (*Target32 & ~ADDR24_MASK);
@@ -622,7 +605,7 @@ FrLdrMapKernel(FILE *KernelImage)
 	if(!(i & 0xf)) {
 	    if(i) printf("\n");
 	    for (j = 0; j < 8; j++)
-		printf("%x", (((KernelBase + i) << (j * 4)) >> 28) & 0xf);
+		printf("%x", (((KernelAddr + i) << (j * 4)) >> 28) & 0xf);
 	    printf(": ");
 	}
 	printf("%x%x ", 
@@ -637,11 +620,43 @@ FrLdrMapKernel(FILE *KernelImage)
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP((ULONG)KernelMemory + ImageSize, PAGE_SIZE);
     ModuleData->ModEnd = NextModuleBase;
-    ModuleData->String = (ULONG)"ntoskrnl.exe";
+    ModuleData->String = (ULONG)MmAllocateMemory(strlen(ImageName)+1);
+    strcpy((PCHAR)ModuleData->String, ImageName);
     LoaderBlock.ModsCount++;
 
     /* Return Success */
     return TRUE;
+}
+
+/*++
+ * FrLdrMapKernel
+ * INTERNAL
+ *
+ *     Maps the Kernel into memory, does PE Section Mapping, initalizes the
+ *     uninitialized data sections, and relocates the image.
+ *
+ * Params:
+ *     KernelImage - FILE Structure representing the ntoskrnl image file.
+ *
+ * Returns:
+ *     TRUE if the Kernel was mapped.
+ *
+ * Remarks:
+ *     None.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+FrLdrMapKernel(FILE *KernelImage)
+{
+    /* Get Kernel Base */
+    FrLdrGetKernelBase();
+
+    /* Allocate kernel memory */
+    KernelMemory = MmAllocateMemory(KernelMemorySize);
+    printf("Kernel Memory @%x\n", (int)KernelMemory);
+
+    return FrLdrMapModule(KernelImage, "ntoskrnl.exe", KernelMemory, KernelBase);
 }
 
 ULONG_PTR
