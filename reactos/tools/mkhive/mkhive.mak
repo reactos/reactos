@@ -19,16 +19,16 @@ MKHIVE_TARGET = \
 	$(EXEPREFIX)$(MKHIVE_OUT_)mkhive$(EXEPOSTFIX)
 
 MKHIVE_SOURCES = $(addprefix $(MKHIVE_BASE_), \
-	binhive.c \
-	mkhive.c \
-	reginf.c \
-	registry.c \
+	binhive.cpp \
+	mkhive.cpp \
+	reginf.cpp \
+	registry.cpp \
 	)
 
 MKHIVE_OBJECTS = \
-	$(addprefix $(INTERMEDIATE_), $(MKHIVE_SOURCES:.c=.o))
+	$(addprefix $(INTERMEDIATE_), $(MKHIVE_SOURCES:.cpp=.o))
 
-MKHIVE_HOST_CFLAGS = $(xTOOLS_CFLAGS) -I$(INFLIB_BASE) -g3 -xc++
+MKHIVE_HOST_CXXFLAGS = $(xTOOLS_CFLAGS) -I$(INFLIB_BASE) -g3
 
 MKHIVE_HOST_LFLAGS = $(xTOOLS_LFLAGS) -g3 -lstdc++
 
@@ -39,21 +39,21 @@ $(MKHIVE_TARGET): $(MKHIVE_OBJECTS) $(INFLIB_HOST_OBJECTS) | $(MKHIVE_OUT)
 	$(ECHO_LD)
 	${host_gcc} $(MKHIVE_OBJECTS) $(INFLIB_HOST_OBJECTS) $(MKHIVE_HOST_LFLAGS) -o $@
 
-$(MKHIVE_INT_)binhive.o: $(MKHIVE_BASE_)binhive.c | $(MKHIVE_INT)
+$(MKHIVE_INT_)binhive.o: $(MKHIVE_BASE_)binhive.cpp | $(MKHIVE_INT)
 	$(ECHO_CC)
-	${host_gcc} $(MKHIVE_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(MKHIVE_HOST_CXXFLAGS) -c $< -o $@
 
-$(MKHIVE_INT_)mkhive.o: $(MKHIVE_BASE_)mkhive.c | $(MKHIVE_INT)
+$(MKHIVE_INT_)mkhive.o: $(MKHIVE_BASE_)mkhive.cpp | $(MKHIVE_INT)
 	$(ECHO_CC)
-	${host_gcc} $(MKHIVE_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(MKHIVE_HOST_CXXFLAGS) -c $< -o $@
 
-$(MKHIVE_INT_)reginf.o: $(MKHIVE_BASE_)reginf.c | $(MKHIVE_INT)
+$(MKHIVE_INT_)reginf.o: $(MKHIVE_BASE_)reginf.cpp | $(MKHIVE_INT)
 	$(ECHO_CC)
-	${host_gcc} $(MKHIVE_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(MKHIVE_HOST_CXXFLAGS) -c $< -o $@
 
-$(MKHIVE_INT_)registry.o: $(MKHIVE_BASE_)registry.c | $(MKHIVE_INT)
+$(MKHIVE_INT_)registry.o: $(MKHIVE_BASE_)registry.cpp | $(MKHIVE_INT)
 	$(ECHO_CC)
-	${host_gcc} $(MKHIVE_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(MKHIVE_HOST_CXXFLAGS) -c $< -o $@
 
 .PHONY: mkhive_clean
 mkhive_clean:

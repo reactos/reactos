@@ -113,7 +113,7 @@ typedef struct _HIVE_HEADER
     E_ULONG  Reserved[99];
 
     /* Checksum of first 0x200 bytes */
-    E_ULONG  Checksum;
+    ULONG  Checksum;
 } GCC_PACKED HIVE_HEADER, *PHIVE_HEADER;
 
 typedef struct _HBIN
