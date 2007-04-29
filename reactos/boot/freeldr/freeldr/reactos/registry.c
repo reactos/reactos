@@ -141,6 +141,10 @@ RegInitCurrentControlSet(BOOLEAN LastKnownGood)
 
   CurrentSet = (LastKnownGood == TRUE) ? LastKnownGoodSet : DefaultSet;
   wcscpy(ControlSetKeyName, L"ControlSet");
+  // Swap this binary value for now.  We'll decide on a policy for these later
+#ifdef _M_PPC
+  CurrentSet = SWAPD(CurrentSet);
+#endif
   switch(CurrentSet)
     {
       case 1:
