@@ -44,38 +44,6 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
   psp->pfnDlgProc = DlgProc;
 }
 
-/* Property Sheet Callback */
-int CALLBACK
-PropSheetProc(
-	HWND hwndDlg,
-	UINT uMsg,
-	LPARAM lParam
-)
-{
-  UNREFERENCED_PARAMETER(hwndDlg);
-  switch(uMsg)
-  {
-    case PSCB_BUTTONPRESSED:
-      switch(lParam)
-      {
-        case PSBTN_OK: /* OK */
-          break;
-        case PSBTN_CANCEL: /* Cancel */
-          break;
-        case PSBTN_APPLYNOW: /* Apply now */
-          break;
-        case PSBTN_FINISH: /* Close */
-          break;
-        default:
-          return FALSE;
-      }
-      break;
-      
-    case PSCB_INITIALIZED:
-      break;
-  }
-  return TRUE;
-}
 
 /* First Applet */
 
@@ -90,7 +58,7 @@ SystemApplet(VOID)
   
   ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK | PSH_PROPTITLE;
+  psh.dwFlags =  PSH_PROPSHEETPAGE;
   psh.hwndParent = NULL;
   psh.hInstance = hApplet;
   psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLACCESS));
@@ -98,7 +66,6 @@ SystemApplet(VOID)
   psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
   psh.nStartPage = 0;
   psh.ppsp = psp;
-  psh.pfnCallback = PropSheetProc;
   
   InitPropSheetPage(&psp[0], IDD_PROPPAGEKEYBOARD, (DLGPROC) KeyboardPageProc);
   InitPropSheetPage(&psp[1], IDD_PROPPAGESOUND, (DLGPROC) SoundPageProc);
