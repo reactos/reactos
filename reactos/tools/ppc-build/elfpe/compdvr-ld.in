@@ -1,0 +1,28 @@
+#!/bin/sh
+
+DIR=@PREFIX@
+BPREFIX=@BPREFIX@
+TARGET=@TARGET@
+
+if [ "x$*" = x-v ] ; then
+	exec ${BPREFIX}ld -v
+fi
+
+TEMP=`mktemp -d`
+export TEMP
+if [ ! -d $TEMP ] ; then
+    echo "Could not make temp dir $TEMP"
+    exit 1
+fi
+TMP=$TEMP
+
+`dirname $0`/${TARGET}driver-ld \
+    -ldscript ${DIR}/lib/ldscript \
+    -mingw-lib-dir ${DIR}/lib \
+    -link-stage-name ${BPREFIX}ld \
+    $*
+
+RES=$?
+
+rm -rf $TEMP
+exit $RES
