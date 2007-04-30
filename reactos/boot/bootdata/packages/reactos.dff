@@ -176,7 +176,7 @@ dll\win32\mapi32\mapi32.dll                         1
 dll\win32\winmm\midimap\midimap.dll                 1
 dll\win32\mmdrv\mmdrv.dll                           1
 dll\win32\mpr\mpr.dll                               1
-dll\win32\msacm\msacm32.dll                         1
+dll\win32\msacm32\msacm32.dll                       1
 dll\win32\msafd\msafd.dll                           1
 dll\win32\msgina\msgina.dll                         1
 dll\win32\msi\msi.dll                               1

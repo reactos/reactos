@@ -118,8 +118,8 @@
 <directory name="mpr">
 	<xi:include href="mpr/mpr.rbuild" />
 </directory>
-<directory name="msacm">
-	<xi:include href="msacm/msacm32.rbuild" />
+<directory name="msacm32">
+	<xi:include href="msacm32/msacm32.rbuild" />
 </directory>
 <directory name="msafd">
 	<xi:include href="msafd/msafd.rbuild" />
