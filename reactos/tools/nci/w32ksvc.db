@@ -98,6 +98,7 @@ NtGdiGetBrushOrgEx			2
 NtGdiGetCharABCWidths			4
 NtGdiGetCharABCWidthsFloat		4
 NtGdiGetCharacterPlacement		6
+NtGdiGetCharSet				1
 NtGdiGetCharWidth32			4
 NtGdiGetCharWidthFloat			4
 NtGdiGetClipBox				2
@@ -152,7 +153,6 @@ NtGdiGetStretchBltMode			1
 NtGdiGetSystemPaletteEntries		4
 NtGdiGetSystemPaletteUse		1
 NtGdiGetTextAlign			1
-NtGdiGetTextCharset			1
 NtGdiGetTextCharsetInfo			3
 NtGdiGetTextColor			1
 NtGdiGetTextExtentExPoint		7
