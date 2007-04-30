@@ -1,8 +1,18 @@
+#line 1 "GetObject.c"
+
 #include "..\gditest.h"
 
 BOOL
 Test_General(INT* passed, INT* failed)
 {
+	struct
+	{
+		LOGBRUSH logbrush;
+		BYTE additional[5];
+	} TestStruct;
+	PLOGBRUSH plogbrush;
+	HBRUSH hBrush;
+
 	/* Test null pointer and invalid handles */
 	SetLastError(ERROR_SUCCESS);
 	TEST(GetObjectA(0, 0, NULL) == 0);
@@ -40,6 +50,15 @@ Test_General(INT* passed, INT* failed)
 	SetLastError(ERROR_SUCCESS);
 	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_ENHMETAFILE, 0, NULL) == 0);
 	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+
+	/* Test need of alignment */
+	hBrush = GetStockObject(WHITE_BRUSH);
+	plogbrush = (PVOID)((ULONG_PTR)&TestStruct.logbrush);
+	TEST(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == sizeof(LOGBRUSH));
+	plogbrush = (PVOID)((ULONG_PTR)&TestStruct.logbrush + 2);
+	TEST(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == sizeof(LOGBRUSH));
+	plogbrush = (PVOID)((ULONG_PTR)&TestStruct.logbrush + 1);
+	TEST(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == 0);
 
     return TRUE;
 }
@@ -383,7 +402,7 @@ BOOL Test_GetObject(INT* passed, INT* failed)
 	TEST(GetLastError() == ERROR_INVALID_HANDLE);
 	DeleteObject(hRgn);
 
-	Test_Font(passed, failed);
+//	Test_Font(passed, failed);
 	Test_Colorspace(passed, failed);
 	Test_General(passed, failed);
 	Test_Bitmap(passed, failed);
@@ -391,7 +410,7 @@ BOOL Test_GetObject(INT* passed, INT* failed)
 	Test_Palette(passed, failed);
 	Test_Brush(passed, failed);
 	Test_Pen(passed, failed);
-//	Test_ExtPpen(passed, failed); // not implemented yet in ROS
+//	Test_ExtPen(passed, failed); // not implemented yet in ROS
 	Test_MetaDC(passed, failed);
 
 	return TRUE;

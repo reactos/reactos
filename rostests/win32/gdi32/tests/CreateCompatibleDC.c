@@ -1,3 +1,5 @@
+#line 1 "CreateCompatibleDC.c"
+
 #include "..\gditest.h"
 
 BOOL Test_CreateCompatibleDC(INT* passed, INT* failed)

@@ -16,7 +16,7 @@
 		(*passed)++;\
 	} else {\
 		(*failed)++;\
-		printf("Test failed in file %s line %d\n", __FILE__, __LINE__);\
+		printf("Test failed in %s:%d (%s)\n", __FILE__, __LINE__, #x);\
 	};
 
 #define GDI_HANDLE_INDEX_MASK 0x00003fff // (GDI_HANDLE_COUNT - 1)

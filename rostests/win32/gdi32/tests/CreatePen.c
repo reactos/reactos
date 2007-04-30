@@ -1,3 +1,5 @@
+#line 1 "CreatePen.c"
+
 #include "..\gditest.h"
 
 BOOL

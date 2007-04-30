@@ -1,3 +1,5 @@
+#line 1 "GetStockObject.c"
+
 #include "..\gditest.h"
 
 BOOL Test_GetStockObject(INT* passed, INT* failed)
