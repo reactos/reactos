@@ -23,12 +23,11 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL
-STDCALL
+VOID
+APIENTRY
 NtGdiFlush(VOID)
 {
   UNIMPLEMENTED;
-  return FALSE;
 }
 
 DWORD

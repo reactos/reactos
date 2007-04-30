@@ -3162,7 +3162,6 @@ NtGdiGetRasterizerCaps(
 }
 
 DWORD
-STDCALL
 NtGdiGetCharSet(HDC  hDC)
 {
   UNIMPLEMENTED;
