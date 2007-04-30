@@ -1888,7 +1888,7 @@ NtGdiExtGetObjectW(IN HANDLE hGdiObj,
         _SEH_TRY
         {
             // Probe the buffer and copy it
-            ProbeForWrite(lpBuffer, cbCopyCount, 1);
+            ProbeForWrite(lpBuffer, cbCopyCount, sizeof(WORD));
             RtlCopyMemory(lpBuffer, &Object, cbCopyCount);
         }
         _SEH_HANDLE
