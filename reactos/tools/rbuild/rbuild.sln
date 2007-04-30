@@ -1,19 +1,21 @@
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+Microsoft Visual Studio Solution File, Format Version 8.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rbuild", "rbuild.vcproj", "{D9305AFB-499E-49F1-A865-99DD7E19E762}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Win32 = Debug|Win32
-		Release|Win32 = Release|Win32
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
 	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D9305AFB-499E-49F1-A865-99DD7E19E762}.Debug|Win32.ActiveCfg = Debug|Win32
-		{D9305AFB-499E-49F1-A865-99DD7E19E762}.Debug|Win32.Build.0 = Debug|Win32
-		{D9305AFB-499E-49F1-A865-99DD7E19E762}.Release|Win32.ActiveCfg = Release|Win32
-		{D9305AFB-499E-49F1-A865-99DD7E19E762}.Release|Win32.Build.0 = Release|Win32
+	GlobalSection(ProjectConfiguration) = postSolution
+		{D9305AFB-499E-49F1-A865-99DD7E19E762}.Debug.ActiveCfg = Debug|Win32
+		{D9305AFB-499E-49F1-A865-99DD7E19E762}.Debug.Build.0 = Debug|Win32
+		{D9305AFB-499E-49F1-A865-99DD7E19E762}.Release.ActiveCfg = Release|Win32
+		{D9305AFB-499E-49F1-A865-99DD7E19E762}.Release.Build.0 = Release|Win32
 	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
 	EndGlobalSection
 EndGlobal
