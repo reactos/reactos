@@ -703,10 +703,14 @@ CBBackend::_generate_cbproj ( const Module& module )
 
 	fprintf ( OUT, "\t\t</Build>\r\n" );
 
+#ifdef FORCE_CPP
+	CompilerVar = "CPP"
+#else
 	if ( module.cplusplus )
 		CompilerVar = "CPP";
 	else
 		CompilerVar = "CC";
+#endif
 
 	/* header files */
 	for ( i = 0; i < header_files.size(); i++ )
