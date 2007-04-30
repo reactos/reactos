@@ -127,25 +127,6 @@ NtGdiGetCharWidth32(
     LPINT Buffer
 );
 
-/* Use NtGdiOpenDCW */
-HDC
-NTAPI 
-NtGdiCreateDC(
-    PUNICODE_STRING Driver,
-    PUNICODE_STRING Device,
-    PUNICODE_STRING Output,
-    CONST PDEVMODEW InitData
-);
-
-HDC
-NTAPI
-NtGdiCreateIC(
-    PUNICODE_STRING Driver,
-    PUNICODE_STRING Device,
-    PUNICODE_STRING Output,
-    CONST PDEVMODEW DevMode
-);
-
 /* Use NtGdiAddFontResourceW */
 int
 STDCALL

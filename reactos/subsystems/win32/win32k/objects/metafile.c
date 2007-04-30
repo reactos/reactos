@@ -280,7 +280,11 @@ NtGdiCopyMetaFile(HMETAFILE  Src,
   UNIMPLEMENTED;
   return 0;
 }
-
+//
+//
+// Rewrite is in progress, this function is subject to change at any time.
+// 04/30/2007
+//
 HDC
 STDCALL
 NtGdiCreateEnhMetaFile(HDC  hDCRef,
@@ -301,8 +305,15 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
 	    * Shall we create hdc NtGdiHdcCompatible hdc ?? 
 		*/
 	   UNICODE_STRING DriverName;
-	   RtlInitUnicodeString(&DriverName, L"DISPLAY");
-	   tempHDC = NtGdiCreateDC(&DriverName, NULL, NULL, NULL); //IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
+	   RtlInitUnicodeString(&DriverName, L"DISPLAY");              
+	   //IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
+           tempHDC = NtGdiOpenDCW( &DriverName,
+                                          NULL,
+                                          NULL,
+                                             0,  // DCW 0 and ICW 1.
+                                          NULL,
+                                  (PVOID) NULL,
+                                  (PVOID) NULL );                                                                                                                                 
    }
 
    GDIOBJ_SetOwnership(GdiHandleTable, tempHDC, PsGetCurrentProcess());

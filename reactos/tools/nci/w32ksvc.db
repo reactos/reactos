@@ -25,7 +25,6 @@ NtGdiCreateBitmapIndirect		1
 NtGdiCreateColorSpace			1
 NtGdiCreateCompatibleBitmap		3
 NtGdiCreateCompatibleDC			1
-NtGdiCreateDC				4
 NtGdiCreateDIBitmap			6
 NtGdiCreateDIBBrush			6
 NtGdiCreateDIBSection			9
@@ -35,7 +34,6 @@ NtGdiCreateEllipticRgnIndirect		1
 NtGdiCreateEnhMetaFile			4
 NtGdiCreateHalftonePalette		1
 NtGdiCreateHatchBrushInternal		3
-NtGdiCreateIC				4
 NtGdiCreateMetaFile			1
 NtGdiCreatePalette			1
 NtGdiCreatePatternBrushInternal	3
