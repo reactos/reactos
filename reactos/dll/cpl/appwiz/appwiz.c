@@ -273,7 +273,7 @@ SystemApplet(VOID)
 
   ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
+  psh.dwFlags =  PSH_PROPSHEETPAGE;
   psh.hwndParent = NULL;
   psh.hInstance = hApplet;
   psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
