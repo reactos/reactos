@@ -429,7 +429,7 @@ GetRasterizerCaps@8
 GetRegionData@12=NtGdiGetRegionData@12
 GetRelAbs@8
 GetRgnBox@8=NtGdiGetRgnBox@8
-GetStockObject@4=NtGdiGetStockObject@4
+GetStockObject@4
 GetStretchBltMode@4=NtGdiGetStretchBltMode@4
 GetStringBitmapA@20
 GetStringBitmapW@20
