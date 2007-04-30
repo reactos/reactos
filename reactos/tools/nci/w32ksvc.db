@@ -80,7 +80,7 @@ NtGdiFlattenPath			1
 NtGdiFloodFill				4
 NtGdiFrameRgn				5
 NtGdiGdiComment				3
-NtGdiGdiFlush				0
+NtGdiFlush				0
 NtGdiGdiGetBatchLimit			0
 #NtGdiGdiPlayDCScript			?
 #NtGdiGdiPlayJournal			?
