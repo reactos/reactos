@@ -49,31 +49,6 @@ typedef struct tagFONTFAMILYINFO
   DWORD FontType;
 } FONTFAMILYINFO, *PFONTFAMILYINFO;
 
-/* Should be using NtGdiHfontCreate with an ENUMLOGFONT */
-HFONT
-NTAPI
-NtGdiCreateFontIndirect(CONST LPLOGFONTW lf);
-
-/* Should be using NtGdiHfontCreate with an ENUMLOGFONT */
-HFONT
-NTAPI
-NtGdiCreateFont(
-    int  Height,
-    int  Width,
-    int  Escapement,
-    int  Orientation,
-    int  Weight,
-    DWORD  Italic,
-    DWORD  Underline,
-    DWORD  StrikeOut,
-    DWORD  CharSet,
-    DWORD  OutputPrecision,
-    DWORD  ClipPrecision,
-    DWORD  Quality,
-    DWORD  PitchAndFamily,
-    LPCWSTR  Face
-);
-
 /* Should be using NtGdiEnumFontChunk */
 INT
 NTAPI
@@ -620,13 +595,6 @@ NtGdiGetMetaRgn (
 	HDC	hDC,
 	HRGN	hrgn
 	);
-
-/* Use NtGdiGetOutlineTextMetricsInternalW. */
-UINT
-STDCALL
-NtGdiGetOutlineTextMetrics(HDC  hDC,
-                                UINT  Data,
-                                LPOUTLINETEXTMETRICW otm);
 
 /* Use NtGdiDoPalette with GdiPalGetEntries. */
 UINT
