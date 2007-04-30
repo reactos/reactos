@@ -31,6 +31,7 @@ extern HINSTANCE hApplet;
 
 /* dateandtime.c */
 INT_PTR CALLBACK DateTimePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL SystemSetLocalTime(LPSYSTEMTIME lpSystemTime);
 
 
 /* timezone.c */
@@ -56,10 +57,30 @@ VOID UnregisterClockControl(VOID);
 
 
 /* ntpclient.c */
-BOOL InitializeConnection(CHAR *szIpAddr);
-VOID DestroyConnection(VOID);
-BOOL SendData(VOID);
-ULONG RecieveData(VOID);
+// NTP timestamp
+typedef struct _TIMEPACKET
+{
+  DWORD dwInteger;
+  DWORD dwFractional;
+} TIMEPACKET, *PTIMEPACKET;
+
+// NTP packet
+typedef struct _NTPPACKET
+{
+  BYTE LiVnMode;
+  BYTE Stratum;
+  char Poll;
+  char Precision;
+  long RootDelay;
+  long RootDispersion;
+  char ReferenceID[4];
+  TIMEPACKET ReferenceTimestamp;
+  TIMEPACKET OriginateTimestamp;
+  TIMEPACKET ReceiveTimestamp;
+  TIMEPACKET TransmitTimestamp;
+}NTPPACKET, *PNTPPACKET;
+
+ULONG GetServerTime(LPWSTR lpAddress);
 
 
 /* monthcal.c */

@@ -136,15 +136,13 @@ SetNTPServer(HWND hwnd)
 
 /* get the domain name from the registry */
 static BOOL
-GetNTPServerAddress(LPSTR* lpAddress)
+GetNTPServerAddress(LPWSTR* lpAddress)
 {
     HKEY hKey;
     WCHAR szSel[4];
-    LPWSTR buf = NULL;
     DWORD dwSize;
     LONG Ret;
 
-    *lpAddress = NULL;
     Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
                         0,
@@ -172,14 +170,14 @@ GetNTPServerAddress(LPSTR* lpAddress)
                            szSel,
                            NULL,
                            NULL,
-                           NULL, //(LPBYTE)buf
+                           NULL,
                            &dwSize);
-    if (Ret == ERROR_MORE_DATA)
+    if (Ret == ERROR_SUCCESS)
     {
-        buf = (LPWSTR) HeapAlloc(GetProcessHeap(),
-                        0,
-                        dwSize);
-        if (buf == NULL)
+        (*lpAddress) = (LPWSTR) HeapAlloc(GetProcessHeap(),
+                                          0,
+                                          dwSize);
+        if ((*lpAddress) == NULL)
         {
             Ret = ERROR_NOT_ENOUGH_MEMORY;
             goto fail;
@@ -189,7 +187,7 @@ GetNTPServerAddress(LPSTR* lpAddress)
                                szSel,
                                NULL,
                                NULL,
-                               (LPBYTE)buf,
+                               (LPBYTE)*lpAddress,
                                &dwSize);
         if (Ret != ERROR_SUCCESS)
             goto fail;
@@ -198,38 +196,13 @@ GetNTPServerAddress(LPSTR* lpAddress)
     else
         goto fail;
 
-    /* We still allocate same amount of space for ASCII storage,
-     * as some chars may use several bytes */
-    *lpAddress = (LPSTR) HeapAlloc(GetProcessHeap(),
-                          0,
-                          sizeof(dwSize));
-    if (*lpAddress == NULL)
-        goto fail;
-
-    if (! WideCharToMultiByte(CP_ACP,
-                              0,
-                              buf,
-                              sizeof(dwSize),
-                              *lpAddress,
-                              sizeof(dwSize),
-                              NULL,
-                              NULL))
-    {
-        Ret = GetLastError();
-        goto fail;
-    }
-
     RegCloseKey(hKey);
-    HeapFree(GetProcessHeap(),
-             0,
-             buf);
 
     return TRUE;
 
 fail:
     DisplayWin32Error(Ret);
     if (hKey) RegCloseKey(hKey);
-    HeapFree(GetProcessHeap(), 0, buf);
     HeapFree(GetProcessHeap(), 0, *lpAddress);
     return FALSE;
 
@@ -240,25 +213,17 @@ fail:
 static ULONG
 GetTimeFromServer(VOID)
 {
-    LPSTR lpAddress = NULL;
+    LPWSTR lpAddress = NULL;
     ULONG ulTime = 0;
 
-    if (! GetNTPServerAddress(&lpAddress))
-        return 0;
-
-    if (InitializeConnection(lpAddress))
+    if (GetNTPServerAddress(&lpAddress))
     {
-        if (SendData())
-        {
-            ulTime = RecieveData();
-        }
+        ulTime = GetServerTime(lpAddress);
+
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpAddress);
     }
-
-    DestroyConnection();
-
-    HeapFree(GetProcessHeap(),
-             0,
-             lpAddress);
 
     return ulTime;
 }
@@ -303,11 +268,7 @@ UpdateSystemTime(ULONG ulTime)
         return;
     }
 
-    /*FIXME: Should we be calling SystemSetLocalTime
-             in order to maintain system privldges?
-             I thought SetSystemTime already dealt
-             with this */
-    if (! SetSystemTime(&stNew))
+    if (!SystemSetLocalTime(&stNew))
          DisplayWin32Error(GetLastError());
 
 }
@@ -364,7 +325,7 @@ GetSyncSetting(HWND hwnd)
 
 
 static VOID
-InitializeDialog(HWND hwnd)
+OnInitDialog(HWND hwnd)
 {
     GetSyncSetting(hwnd);
 
@@ -385,7 +346,7 @@ InetTimePageProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            InitializeDialog(hwndDlg);
+            OnInitDialog(hwndDlg);
         }
         break;
 

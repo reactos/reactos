@@ -13,7 +13,7 @@
 
 static WNDPROC pOldWndProc = NULL;
 
-static BOOL
+BOOL
 SystemSetLocalTime(LPSYSTEMTIME lpSystemTime)
 {
     HANDLE hToken;

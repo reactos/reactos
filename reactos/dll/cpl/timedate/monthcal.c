@@ -176,7 +176,7 @@ MonthCalUpdate(IN PMONTHCALWND infoPtr)
     pDayEnd = pDay + MonthLength;
     while (pDay != pDayEnd)
     {
-        *(pDay++) = ++d;
+        *(pDay++) = (BYTE)++d;
     }
 
     /* repaint the control */
