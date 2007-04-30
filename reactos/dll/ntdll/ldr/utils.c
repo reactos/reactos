@@ -45,6 +45,7 @@ typedef struct _TLS_DATA
    PLDR_DATA_TABLE_ENTRY Module;
 } TLS_DATA, *PTLS_DATA;
 
+static BOOLEAN LdrpDllShutdownInProgress = FALSE;
 static PTLS_DATA LdrpTlsArray = NULL;
 static ULONG LdrpTlsCount = 0;
 static ULONG LdrpTlsSize = 0;
@@ -2485,6 +2486,9 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
    DPRINT("LdrpDetachProcess() called for %wZ\n",
            &ExeModule->BaseDllName);
 
+   if (UnloadAll)
+     LdrpDllShutdownInProgress = TRUE;
+
    CallingCount++;
 
    ModuleListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
@@ -2612,6 +2616,15 @@ LdrpAttachProcess(VOID)
    DPRINT("LdrpAttachProcess() done\n");
 
    return Status;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN NTAPI
+RtlDllShutdownInProgress (VOID)
+{
+  return LdrpDllShutdownInProgress;
 }
 
 /*

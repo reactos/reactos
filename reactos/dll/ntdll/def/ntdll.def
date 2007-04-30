@@ -411,6 +411,7 @@ RtlDestroyHeap@4
 RtlDestroyProcessParameters@4
 RtlDestroyQueryDebugBuffer@4
 RtlDetermineDosPathNameType_U@4
+RtlDllShutdownInProgress@0
 RtlDoesFileExists_U@4
 RtlDosPathNameToNtPathName_U@16
 RtlDosPathNameToRelativeNtPathName_U@16
