@@ -19,6 +19,9 @@
 <directory name="games">
 	<xi:include href="games/games.rbuild" />
 </directory>
+<directory name="hh">
+	<xi:include href="hh/hh.rbuild" />
+</directory>
 <directory name="hostname">
 	<xi:include href="hostname/hostname.rbuild" />
 </directory>
