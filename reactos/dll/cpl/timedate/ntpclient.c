@@ -7,7 +7,7 @@
  *
  */
 
-#include "timedate.h"
+#include <timedate.h>
 
 #define TIMEOUT 4000 /* 4 second timeout */
 
@@ -171,10 +171,12 @@ GetServerTime(LPWSTR lpAddress)
 
             DestroyConnection();
         }
-
-        HeapFree(GetProcessHeap(), 0, pInfo);
-        HeapFree(GetProcessHeap(), 0, lpAddr);
     }
+
+    if (pInfo)
+        HeapFree(GetProcessHeap(), 0, pInfo);
+    if (lpAddr)
+        HeapFree(GetProcessHeap(), 0, lpAddr);
 
     return ulTime;
 
