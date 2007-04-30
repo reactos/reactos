@@ -649,7 +649,7 @@ SystemFunction040@12
 SystemFunction041@12
 ;TraceEvent
 ;TraceEventInstance
-;TraceMessage
+TraceMessage
 ;TraceMessageVa
 TreeResetNamedSecurityInfoA@44
 TreeResetNamedSecurityInfoW@44

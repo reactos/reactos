@@ -34,6 +34,7 @@
 			<file>msi.c</file>
 			<file>shutdown.c</file>
 			<file>sysfunc.c</file>
+			<file>trace.c</file>
 		</compilationunit>
 	</directory>
 	<directory name="reg">
