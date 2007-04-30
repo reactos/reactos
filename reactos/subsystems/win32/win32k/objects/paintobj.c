@@ -25,7 +25,7 @@
 
 BOOL
 STDCALL
-NtGdiGdiFlush(VOID)
+NtGdiFlush(VOID)
 {
   UNIMPLEMENTED;
   return FALSE;

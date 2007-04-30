@@ -378,9 +378,6 @@ NtGdiGdiComment (
 	CONST LPBYTE	Data
 	);
 
-/* Should be NtGdiFlush. */
-BOOL STDCALL NtGdiGdiFlush (VOID);
-
 /* Should be done in user-mode. */
 DWORD STDCALL NtGdiGdiGetBatchLimit (VOID);
 
