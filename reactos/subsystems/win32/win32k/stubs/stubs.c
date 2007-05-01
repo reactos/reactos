@@ -60,6 +60,7 @@ EngUnmapFontFile ( ULONG_PTR iFile )
   return EngUnmapFontFileFD ( iFile );
 }
 
+#if 0
 /*
  * @unimplemented
  */
@@ -82,6 +83,7 @@ EngTextOut (
   UNIMPLEMENTED;
   return FALSE;
 }
+#endif
 
 /*
  * @unimplemented

@@ -43,6 +43,7 @@
 #define TAG_PRINT	TAG('P', 'R', 'N', 'T') /* print */
 #define TAG_REGION	TAG('R', 'G', 'N', 'O') /* region */
 #define TAG_GDITEXT	TAG('T', 'X', 'T', 'O') /* text */
+#define TAG_EXTPEN	TAG('X', 'P', 'E', 'N') /* extpen */
 
 /* Eng objects */
 #define TAG_CLIPOBJ	TAG('C', 'L', 'P', 'O') /* clip object */

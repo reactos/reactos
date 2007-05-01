@@ -49,8 +49,8 @@ IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color);
 
 /* Pen functions */
 
-HPEN FASTCALL
-IntGdiCreatePenIndirect(PLOGPEN lgpn);
+HPEN STDCALL
+IntGdiExtCreatePen(DWORD, DWORD, IN ULONG, IN ULONG, IN ULONG_PTR, IN ULONG_PTR, DWORD, PULONG, IN ULONG, IN BOOL, IN OPTIONAL HBRUSH);
 
 VOID FASTCALL
 IntGdiSetSolidPenColor(HPEN hPen, COLORREF Color);
