@@ -4,5 +4,4 @@
 	<define name="__USE_W32API" />
 	<library>ks</library>
 	<library>ntoskrnl</library>
-	<file>entry.c</file>
 </module>
