@@ -15,39 +15,35 @@
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
-SoundPageProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
+SoundPageProc(HWND hwndDlg,
+              UINT uMsg,
+              WPARAM wParam,
+              LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam);
-  UNREFERENCED_PARAMETER(hwndDlg);
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-    case WM_COMMAND:
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(hwndDlg);
+
+    switch (uMsg)
     {
-      switch(LOWORD(wParam))
-      {
-        case IDC_SENTRY_BOX:
-        {
-          break;
-        }
-        case IDC_SENTRY_BUTTON:
-        {
-          break;
-        }
-        case IDC_SSHOW_BOX:
-        {
-          break;
-        }
-        default:  
-          break;
-      }
+        case WM_INITDIALOG:
+            break;
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_SENTRY_BOX:
+                    break;
+
+                case IDC_SENTRY_BUTTON:
+                    break;
+
+                case IDC_SSHOW_BOX:
+                    break;
+
+                default:
+                    break;
+            }
+            break;
     }
-  }
-  return FALSE;
+
+    return FALSE;
 }

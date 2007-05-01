@@ -25,37 +25,34 @@ typedef struct _GLOBAL_DATA
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
-StickyKeysDlgProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
+StickyKeysDlgProc(HWND hwndDlg,
+                  UINT uMsg,
+                  WPARAM wParam,
+                  LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam);
-  UNREFERENCED_PARAMETER(hwndDlg);
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-    case WM_COMMAND:
+    switch (uMsg)
     {
-      switch(LOWORD(wParam))
-      {
-        case IDOK:
-          EndDialog(hwndDlg, TRUE);
-          break;
+        case WM_INITDIALOG:
+            break;
 
-        case IDCANCEL:
-          EndDialog(hwndDlg, FALSE);
-          break;
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwndDlg, TRUE);
+                    break;
 
-        default:
-          break;
-      }
+                case IDCANCEL:
+                    EndDialog(hwndDlg, FALSE);
+                    break;
+
+                default:
+                    break;
+            }
+            break;
     }
-  }
-  return FALSE;
+
+    return FALSE;
 }
 
 

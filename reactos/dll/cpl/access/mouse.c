@@ -15,35 +15,32 @@
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
-MousePageProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
+MousePageProc(HWND hwndDlg,
+              UINT uMsg,
+              WPARAM wParam,
+              LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam);
-  UNREFERENCED_PARAMETER(hwndDlg);
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-    case WM_COMMAND:
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(hwndDlg);
+
+    switch (uMsg)
     {
-      switch(LOWORD(wParam))
-      {      
-        case IDC_MOUSE_BOX:
-        {
-          break;
-        }
-        case IDC_MOUSE_BUTTON:
-        {
-          break;
-        }
-        default:
-          break;
-      }
+        case WM_INITDIALOG:
+            break;
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_MOUSE_BOX:
+                    break;
+
+                case IDC_MOUSE_BUTTON:
+                    break;
+
+                default:
+                    break;
+            }
+            break;
     }
-  }
-  return FALSE;
+
+    return FALSE;
 }

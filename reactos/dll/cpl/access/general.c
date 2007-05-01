@@ -15,55 +15,48 @@
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
-GeneralPageProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
+GeneralPageProc(HWND hwndDlg,
+                UINT uMsg,
+                WPARAM wParam,
+                LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam);
-  UNREFERENCED_PARAMETER(hwndDlg);
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-    case WM_COMMAND:
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(hwndDlg);
+
+    switch (uMsg)
     {
-      switch(LOWORD(wParam))
-      {      
-        case IDC_RESET_BOX:
-        {
-          break;
-        }
-        case IDC_NOTIFICATION_MESSAGE:
-        {
-          break;
-        }
-        case IDC_NOTIFICATION_SOUND:
-        {
-          break;
-        }
-        case IDC_SERIAL_BOX:
-        {
-          break;
-        }
-        case IDC_SERIAL_BUTTON:
-        {
-          break;
-        }
-        case IDC_ADMIN_LOGON_BOX:
-        {
-          break;
-        }
-        case IDC_ADMIN_USERS_BOX:
-        {
-          break;
-        }
-        default:
-         break;
-      }
+        case WM_INITDIALOG:
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_RESET_BOX:
+                    break;
+
+                case IDC_NOTIFICATION_MESSAGE:
+                    break;
+
+                case IDC_NOTIFICATION_SOUND:
+                    break;
+
+                case IDC_SERIAL_BOX:
+                    break;
+
+                case IDC_SERIAL_BUTTON:
+                    break;
+
+                case IDC_ADMIN_LOGON_BOX:
+                    break;
+
+                case IDC_ADMIN_USERS_BOX:
+                    break;
+
+                default:
+                    break;
+            }
+            break;
     }
-  }
-  return FALSE;
+
+    return FALSE;
 }
