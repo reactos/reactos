@@ -980,7 +980,9 @@ DispatchToUser:
 
                 /* Set EIP to the User-mode Dispatcher */
                 TrapFrame->Eip = (ULONG)KeUserExceptionDispatcher;
-                _SEH_LEAVE;
+
+                /* Dispatch exception to user-mode */
+                return;
             }
             _SEH_EXCEPT(KiCopyInformation)
             {
@@ -1000,9 +1002,6 @@ DispatchToUser:
                 }
             }
             _SEH_END;
-
-            /* Dispatch exception to user-mode */
-            return;
         }
 
         /* Try second chance */
@@ -1018,6 +1017,7 @@ DispatchToUser:
         }
 
         /* 3rd strike, kill the process */
+        DPRINT1("Kill the process\n");
         ZwTerminateProcess(NtCurrentProcess(), ExceptionRecord->ExceptionCode);
         KeBugCheckEx(KMODE_EXCEPTION_NOT_HANDLED,
                      ExceptionRecord->ExceptionCode,
