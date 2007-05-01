@@ -135,7 +135,8 @@ uint32_t ElfPeHeader::getSectionRvas(std::vector<section_mapping_t> &rvas) const
     for(int i = 0; i < eof->getNumSections(); i++) {
 	{ 
 	    const ElfObjectFile::Section &sect = eof->getSection(i);
-	    if(sect.getType() == SHT_PROGBITS) {
+	    if((sect.getType() == SHT_PROGBITS) && 
+	       (sect.getFlags() & SHF_ALLOC)) {
 		limit = roundup(start + sect.logicalSize(), sectionalign);
 		fprintf(stderr, "rva[%02d:%s] = (%x %x %d)\n",
 			rvas.size(), sect.getName().c_str(), &sect, start, i);

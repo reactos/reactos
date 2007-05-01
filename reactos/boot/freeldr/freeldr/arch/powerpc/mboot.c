@@ -487,20 +487,6 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 
     printf("Section headers at %x\n", ((PCHAR)Section) - ((PCHAR)KernelAddr));
 
-    printf("-- Dumping ntoskrnl memory --\n");
-    for (i = 0; i < 0x1000; i++) {
-	if(!(i & 0xf)) {
-	    if(i) printf("\n");
-	    for (j = 0; j < 8; j++)
-		printf("%x", (((KernelAddr + i) << (j * 4)) >> 28) & 0xf);
-	    printf(": ");
-	}
-	printf("%x%x ", 
-	       (*(((PCHAR)KernelMemory)+i)>>4)&0xf, 
-	       *(((PCHAR)KernelMemory)+i)&0xf);
-    }
-    printf("-- Dump done --\n");
-
     /* Walk each section */
     for (i=0; i < SectionCount; i++, Section++)
     {
@@ -532,14 +518,13 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     printf("Total image size is %x\n", ImageSize);
     
     /* Handle relocation sections */
-    for (Section = COFF_FIRST_SECTION(NtHeader), i = 0; 
-	 i < SectionCount; 
-	 i++, Section++) {
+    for (i = 0; i < shnum; i++) {
 	Elf32_Rela reloc = { };
 	ULONG *Target32;
 	USHORT *Target16;
 	int numreloc, relstart, targetSection;
 	Elf32_Sym symbol;
+	PCHAR RelocSection, SymbolSection;
 	
 	shdr = ELF_SECTION(i);
 	/* Only relocs here */
@@ -551,25 +536,32 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	numreloc = shdr->sh_size / relsize;
 	targetSection = shdr->sh_info;
 	
-	printf("Found reloc section %d (symbols %d target %d)\n",
-	       i, shdr->sh_link, shdr->sh_info);
+	printf("Found reloc section %d (symbols %d target %d) with %d relocs\n",
+	       i, shdr->sh_link, shdr->sh_info, numreloc);
 	
+	RelocSection = MmAllocateMemory(shdr->sh_size);
+	FsSetFilePointer(KernelImage, relstart);
+	FsReadFile(KernelImage, shdr->sh_size, NULL, RelocSection);
+
 	/* Get the symbol section */
 	shdr = ELF_SECTION(shdr->sh_link);
-	
+
+	SymbolSection = MmAllocateMemory(shdr->sh_size);
+	FsSetFilePointer(KernelImage, shdr->sh_offset);
+	FsReadFile(KernelImage, shdr->sh_size, NULL, SymbolSection);
+
 	for(j = 0; j < numreloc; j++)
 	{
 	    ULONG S,A,P;
 	    
+	    if((j%0x1000)==0) printf(".");
 
 	    /* Get the reloc */
-	    FsSetFilePointer(KernelImage, relstart + (numreloc * relsize));
-	    FsReadFile(KernelImage, sizeof(reloc), NULL, &reloc);
-	    
+	    memcpy(&reloc, RelocSection + (j * relsize), sizeof(reloc));
+
 	    /* Get the symbol */
-	    FsSetFilePointer(KernelImage, shdr->sh_offset + ELF32_R_SYM(reloc.r_info) * sizeof(Elf32_Sym));
-	    FsReadFile(KernelImage, sizeof(symbol), NULL, &symbol);
-	    
+	    memcpy(&symbol, SymbolSection + (ELF32_R_SYM(reloc.r_info) * sizeof(symbol)), sizeof(symbol));
+
 	    /* Compute addends */
 	    S = symbol.st_value + KernelAddr + ELF_SECTION(symbol.st_shndx)->sh_addr;
 	    A = reloc.r_addend;
@@ -585,6 +577,9 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 		break;
 	    case R_PPC_ADDR32:
 		*Target32 = S + A;
+		break;
+	    case R_PPC_REL32:
+		*Target32 = S + A - P;
 		break;
 	    case R_PPC_UADDR32: /* Special: Treat as RVA */
 		*Target32 = S + A - KernelAddr;
@@ -602,11 +597,23 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 		*Target16 = (S + A + 0x8000) >> 16;
 		break;
 	    default:
-		printf("Unknown elf reloc type %x\n", ELF32_R_TYPE(reloc.r_info));
+		printf("reloc[%d]: (type %x sym %d val %d) off %x add %x\n", 
+		       j,
+		       ELF32_R_TYPE(reloc.r_info),
+		       ELF32_R_SYM(reloc.r_info), 
+		       symbol.st_value,
+		       reloc.r_offset, reloc.r_addend);	    
 		break;
 	    }
 	}
+
+	MmFreeMemory(SymbolSection);
+	MmFreeMemory(RelocSection);
+
+	printf("\n");
     }
+
+    MmFreeMemory(sptr);
 
     ModuleData = &reactos_modules[LoaderBlock.ModsCount];
     ModuleData->ModStart = (ULONG)KernelMemory;

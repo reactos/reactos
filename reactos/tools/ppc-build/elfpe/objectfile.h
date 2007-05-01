@@ -54,6 +54,10 @@ public:
 	    return e32shdr->sh_info;
 	}
 
+	int getFlags() const {
+	    return e32shdr->sh_flags;
+	}
+
 	int logicalSize() const {
 	    return e32shdr->sh_size;
 	}
