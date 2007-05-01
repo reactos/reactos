@@ -1,11 +1,13 @@
 #include <libelf/libelf.h>
 #include <fcntl.h>
+#include "util.h"
 #include "objectfile.h"
 
 ElfObjectFile::ElfObjectFile(const std::string &filename) : fd(-1)
 {
     Elf_Scn *s = 0;
     Elf32_Ehdr *ehdr;
+    Section *sect;
     fd = open(filename.c_str(), O_RDWR, 0);
     if(fd >= 0) {
 	if(elf_version(EV_CURRENT) == EV_NONE) {
@@ -21,13 +23,17 @@ ElfObjectFile::ElfObjectFile(const std::string &filename) : fd(-1)
 	shnum = ehdr->e_shnum;
 	phnum = ehdr->e_phnum;
 	shstrndx = ehdr->e_shstrndx;
+	/* Populate section table */
 	for(size_t i = 0; i < shnum; i++)
 	{
 	    s = elf_nextscn(elfHeader, s);
 	    if(!s) break;
-	    sections.push_back(new Section(*this, s));
-	    fprintf(stderr, "Got section %04d %s\n", i, sections[i]->getName().c_str());
+	    sect = new Section(*this, s);
+	    sections.push_back(sect);
+	    sections_by_name.insert(std::make_pair(sect->getName(), sect));
 	}
+
+	populateSymbolTable();
     }
 }
 
@@ -35,6 +41,32 @@ ElfObjectFile::~ElfObjectFile()
 {
     if(elfHeader) elf_end(elfHeader);
     if(fd >= 0) close(fd);
+}
+
+void ElfObjectFile::populateSymbolTable()
+{
+    int i = 0, j;
+    int type, link, flags, section;
+    uint32_t offset;
+    std::string name;
+    uint8_t *data, *symptr;
+    Elf32_Sym *sym;
+    Symbol *ourSym;
+
+    for( i = 0; i < getNumSections(); i++ ) {
+	type = getSection(i).getType();
+	link = getSection(i).getLink();
+	if( (type == SHT_SYMTAB) || (type == SHT_DYNSYM) ) {
+	    /* Read a symbol */
+	    sym = (Elf32_Sym*)getSection(i).getSectionData();
+	    for (j = 0; j < getSection(i).logicalSize() / sizeof(Elf32_Sym); j++) {
+		name = elf_strptr(elfHeader, link, sym[j].st_name);
+		ourSym = new Symbol(name, sym[j].st_value, sym[j].st_shndx, sym[j].st_info);
+		symbols.push_back(ourSym);
+		symbols_by_name.insert(std::make_pair(name, ourSym));
+	    }
+	}
+    }
 }
 
 uint32_t ElfObjectFile::getEntryPoint() const
@@ -66,7 +98,7 @@ void ElfObjectFile::addSection(const std::string &name, const secdata_t &data, i
     /* Finish the section */
     shdr->sh_name = newstrdata->d_off;
     shdr->sh_type = type;
-    shdr->sh_flags = 0;
+    shdr->sh_flags = SHF_ALLOC;
     shdr->sh_addr = 0;
     shdr->sh_link = 0;
     shdr->sh_info = 0;
@@ -76,8 +108,18 @@ void ElfObjectFile::addSection(const std::string &name, const secdata_t &data, i
 
 const ElfObjectFile::Section *ElfObjectFile::getNamedSection(const std::string &name) const
 {
-    for(size_t i = 0; i < sections.size(); i++) {
-	if(sections[i]->getName() == name) return sections[i];
-    }
-    return NULL;
+    std::map<std::string, const ElfObjectFile::Section *>::const_iterator i =
+	sections_by_name.find(name);
+    if(i != sections_by_name.end())
+	return i->second;
+    else return NULL;
+}
+
+const ElfObjectFile::Symbol *ElfObjectFile::getNamedSymbol(const std::string &name) const
+{
+    std::map<std::string, const ElfObjectFile::Symbol *>::const_iterator i =
+	symbols_by_name.find(name);
+    if(i != symbols_by_name.end())
+	return i->second;
+    else return NULL;
 }

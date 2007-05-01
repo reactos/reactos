@@ -127,11 +127,12 @@ int run_ld( bool verbose, bool nostdlib, bool nostartfiles, bool is_dll,
     bool use_libgcc = false;
     std::vector<std::string> args = arg_vect;
     std::string real_output,
-	entry_point = "0x1000", 
+	entry_point = "_main", 
 	image_base = "0x400000", subsystem = "windows", 
 	make_dll, 
 	file_align = "0x1000", 
 	section_align = "0x1000", base_file;
+    const ElfObjectFile::Symbol *entry_sym;
     std::vector<std::string>::iterator i =
 	std::find(args.begin(),args.end(),"-lgcc");
 
@@ -163,8 +164,6 @@ int run_ld( bool verbose, bool nostdlib, bool nostartfiles, bool is_dll,
     args.insert(args.begin()+1,"-T");
     args.insert(args.begin()+2,ldscript);
     args.insert(args.begin()+1,"-r");
-    args.insert(args.begin()+1,"--start-group");
-    args.push_back("--end-group");
     
     for( size_t i = 0; i < args.size(); i++ ) {
 	if( args[i] == "-o" && i < args.size()-1 ) {
@@ -201,16 +200,19 @@ int run_ld( bool verbose, bool nostdlib, bool nostartfiles, bool is_dll,
     
     if(!eof) return 1;
 
+    entry_sym = eof.getNamedSymbol(entry_point);
+
     ElfPeHeader header
 	(strtoul(image_base.c_str(), 0, 0),
 	 strtoul(section_align.c_str(), 0, 0),
 	 strtoul(file_align.c_str(), 0, 0),
+	 entry_sym,
 	 0x10000,
 	 0x100000,
 	 0x10000,
 	 0x100000,
-	 is_dll,
 	 atoi(subsystem.c_str()),
+	 is_dll,
 	 &eof);
     
     eof.addSection(".peheader", header.getData(), TYPE_PEHEADER);
@@ -307,7 +309,9 @@ int main( int argc, char **argv ) {
 	    
 	    if( subcmd_args[0].find("collect2") != std::string::npos ||
 		subcmd_args[0].find("ld") != std::string::npos ) {
-		if( run_ld( verbose, nostdlib, nostartfiles, is_dll, make_map,
+		subcmd_args[0] = linker_name;
+		if( status = 
+		    run_ld( verbose, nostdlib, nostartfiles, is_dll, make_map,
 			    mingw_lib_dir, ldscript, subcmd_args ) )
 		    goto final;
 		else
@@ -317,7 +321,7 @@ int main( int argc, char **argv ) {
 	    if( verbose ) 
 		subcmd_args.insert(subcmd_args.begin()+1,"-v");
 	    
-	    if( execute_command
+	    if( status = execute_command
 		( verbose, subcmd_args ) )
 		goto final;
 	} else if( verbose ) 
@@ -326,7 +330,6 @@ int main( int argc, char **argv ) {
     goto theend;
 
  final:
-    status = 1;
  theend:
     if( verbose ) {
 	fprintf( stderr, "<status>%d</status>\n", status );

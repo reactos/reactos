@@ -1,5 +1,8 @@
 #include <freeldr.h>
 #include "prep.h"
+#include "ppcboot.h"
+
+extern boot_infos_t BootInfo;
 
 struct _vga_desc {
     char *port;
@@ -20,6 +23,7 @@ void vga_setup( struct _pci_desc *desc, struct _vga_desc *vga_desc,
         print_bar( &bar_data );
         if( (bar_data.data > 0x10000) || ((bar_data.data&1) == 1) ) {
             vga_desc->addr = (char *)(0xc0000000 + (bar_data.data & ~0x7ff));
+	    BootInfo.dispDeviceBase = vga_desc->addr;
             break;
         }
     }
