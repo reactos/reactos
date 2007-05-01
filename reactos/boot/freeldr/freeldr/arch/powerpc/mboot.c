@@ -454,6 +454,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     for( i = 0; i < shnum; i++ ) 
     {
 	shdr = ELF_SECTION(i);
+	shdr->sh_addr = 0;
 
 	/* Find the PE Header */
 	if (shdr->sh_type == TYPE_PEHEADER)
@@ -534,8 +535,10 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	relstart = shdr->sh_offset;
 	relsize = shdr->sh_type == SHT_RELA ? 12 : 8;
 	numreloc = shdr->sh_size / relsize;
-	targetSection = shdr->sh_info;
-	
+	targetSection = shdr->sh_info - 1;
+
+	if (!ELF_SECTION(targetSection)->sh_addr) continue;
+
 	printf("Found reloc section %d (symbols %d target %d) with %d relocs\n",
 	       i, shdr->sh_link, shdr->sh_info, numreloc);
 	
@@ -554,8 +557,6 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	{
 	    ULONG S,A,P;
 	    
-	    if((j%0x1000)==0) printf(".");
-
 	    /* Get the reloc */
 	    memcpy(&reloc, RelocSection + (j * relsize), sizeof(reloc));
 
@@ -609,8 +610,6 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 
 	MmFreeMemory(SymbolSection);
 	MmFreeMemory(RelocSection);
-
-	printf("\n");
     }
 
     MmFreeMemory(sptr);
