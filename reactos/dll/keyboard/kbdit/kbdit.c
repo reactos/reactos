@@ -30,78 +30,139 @@
 #define KNUMS    0xc00  /* Special + number pad */
 #define KMEXT    0x300  /* Multi + ext */
 
+#define SHFT_INVALID 0x0F
+
 ROSDATA USHORT scancode_to_vk[] = {
-  /* Numbers Row */
-  /* - 00 - */
-  /* 1 ...         2 ...         3 ...         4 ... */     
-  VK_EMPTY,     VK_ESCAPE,    '1',          '2',
-  '3',          '4',          '5',          '6',
-  '7',          '8',          '9',          '0',
-  VK_OEM_MINUS, VK_OEM_PLUS,  VK_BACK,
-  /* - 0f - */
-  /* First Letters Row */
-  VK_TAB,       'Q',          'W',          'E',
-  'R',          'T',          'Y',          'U',
-  'I',          'O',          'P',          
-  VK_OEM_4,     VK_OEM_6,     VK_RETURN,
-  /* - 1d - */
-  /* Second Letters Row */
-  VK_LCONTROL,  
-  'A',          'S',          'D',          'F',
-  'G',          'H',          'J',          'K',
-  'L',          VK_OEM_1,     VK_OEM_7,     VK_OEM_3, 
-  VK_LSHIFT,    VK_OEM_5,
-  /* - 2c - */
-  /* Third letters row */
-  'Z',          'X',          'C',          'V',
-  'B',          'N',          'M',          VK_OEM_COMMA,
-  VK_OEM_PERIOD,VK_OEM_2,     VK_RSHIFT,
-  /* - 37 - */
-  /* Bottom Row */
-  VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
-  
-  /* - 3b - */
-  /* F-Keys */
-  VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, 
-  VK_F7, VK_F8, VK_F9, VK_F10,
-  /* - 45 - */
-  /* Locks */
-  VK_NUMLOCK | KMEXT,   
-  VK_SCROLL | KMULTI,    
-  /* - 47 - */
-  /* Number-Pad */
-  VK_HOME | KNUMS,      VK_UP | KNUMS,         VK_PRIOR | KNUMS, VK_SUBTRACT,
-  VK_LEFT | KNUMS,      VK_CLEAR | KNUMS,      VK_RIGHT | KNUMS, VK_ADD,
-  VK_END | KNUMS,       VK_DOWN | KNUMS,       VK_NEXT | KNUMS,
-  VK_INSERT | KNUMS,    VK_DELETE | KNUMS,
-  /* - 54 - */
-  /* Presumably PrtSc */
-  VK_SNAPSHOT,
-  /* - 55 - */
-  /* Oddities, and the remaining standard F-Keys */
-  VK_EMPTY,     VK_EMPTY,     VK_F11,       VK_F12,
-  /* - 59 - */
-  VK_CLEAR,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* EREOF */
-  VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* ZOOM */
-  VK_HELP,      
-  /* - 64 - */
-  /* Even more F-Keys (for example, NCR keyboards from the early 90's) */
-  VK_F13, VK_F14, VK_F15, VK_F16, VK_F17, VK_F18, VK_F19, VK_F20,
-  VK_F21, VK_F22, VK_F23, 
-  /* - 6f - */
-  /* Not sure who uses these codes */
-  VK_EMPTY, VK_EMPTY, VK_EMPTY,
-  /* - 72 - */
-  VK_EMPTY, VK_EMPTY, VK_EMPTY, VK_EMPTY,
-  /* - 76 - */
-  /* One more f-key */
-  VK_F24,
-  /* - 77 - */
-  VK_EMPTY, VK_EMPTY, VK_EMPTY, VK_EMPTY,
-  VK_EMPTY, VK_EMPTY, VK_EMPTY, VK_EMPTY, /* PA1 */
-  VK_EMPTY,
-  /* - 80 - */
-  0
+/* 00 */  VK_EMPTY, 	
+/* 01 */  VK_ESCAPE,	
+/* 02 */  '1',		
+/* 03 */  '2',		
+/* 04 */  '3',		
+/* 05 */  '4',		
+/* 06 */  '5',		
+/* 07 */  '6',		
+/* 08 */  '7',    	     
+/* 09 */  '8',    	 
+/* 0a */  '9',  	       
+/* 0b */  '0',		
+/* 0c */  VK_OEM_4, 	
+/* 0d */  VK_OEM_6,    
+/* 0e */  VK_BACK,	
+/* 0f */  VK_TAB, 	     
+/* 10 */  'Q', 		    
+/* 11 */  'W',		        
+/* 12 */  'E',		
+/* 13 */  'R',  	      
+/* 14 */  'T', 		      
+/* 15 */  'Y', 		         
+/* 16 */  'U',  	
+/* 17 */  'I',          
+/* 18 */  'O',          
+/* 19 */  'P',         
+/* 1a */  VK_OEM_1,     
+/* 1b */  VK_OEM_PLUS,     
+/* 1c */  VK_RETURN,
+/* 1d */  VK_LCONTROL, 
+/* 1e */  'A',          
+/* 1f */  'S',          
+/* 20 */  'D',          
+/* 21 */  'F',
+/* 22 */  'G',          
+/* 23 */  'H',          
+/* 24 */  'J',          
+/* 25 */  'K',
+/* 26 */  'L',         
+/* 27 */  VK_OEM_3,                           
+/* 28 */  VK_OEM_7,               
+/* 29 */  VK_OEM_2,
+/* 2a */  VK_LSHIFT,    
+/* 2b */  VK_OEM_5,     
+/* 2c */  'Z',          
+/* 2d */  'X',          
+/* 2e */  'C',         
+/* 2f */  'V',         
+/* 30 */  'B',          
+/* 31 */  'N',          
+/* 32 */  'M',                                
+/* 33 */  VK_OEM_COMMA,
+/* 34 */  VK_OEM_PERIOD, 
+/* 35 */  VK_OEM_MINUS,     
+/* 36 */  VK_RSHIFT,
+/* 37 */  VK_MULTIPLY,  
+/* 38 */  VK_LMENU,     
+/* 39 */  VK_SPACE,     
+/* 3a */  VK_CAPITAL,
+/* 3b */  VK_F1, 
+/* 3c */  VK_F2, 
+/* 3d */  VK_F3, 
+/* 3e */  VK_F4, 
+/* 3f */  VK_F5, 
+/* 40 */  VK_F6,
+/* 41 */  VK_F7,
+/* 42 */  VK_F8,
+/* 43 */  VK_F9, 
+/* 44 */  VK_F10,
+/* 45 */  VK_NUMLOCK | KMEXT,  
+/* 46 */  VK_SCROLL | KMULTI, 
+/* 47 */  VK_HOME | KNUMS,    
+/* 48 */  VK_UP | KNUMS,        
+/* 49 */  VK_PRIOR | KNUMS,       
+/* 4a */  VK_SUBTRACT,
+/* 4b */  VK_LEFT | KNUMS,
+/* 4c */  VK_CLEAR | KNUMS,      
+/* 4d */  VK_RIGHT | KNUMS,       
+/* 4e */  VK_ADD,
+/* 4f */  VK_END | KNUMS, 
+/* 50 */  VK_DOWN | KNUMS,      
+/* 51 */  VK_NEXT | KNUMS,       
+/* 52 */  VK_INSERT | KNUMS, 
+/* 53 */  VK_DELETE | KNUMS,   
+/* 54 */  VK_SNAPSHOT,
+/* 55 */  VK_EMPTY,     
+/* 56 */  VK_OEM_102,  
+/* 57 */  VK_F11,           
+/* 58 */  VK_F12,
+/* 59 */  VK_EMPTY,     
+/* 5a */  VK_CLEAR,     
+/* 5b */  VK_EMPTY,     
+/* 5c */  VK_EMPTY,     
+/* 5d */  VK_EMPTY,     
+/* 5e */  VK_EMPTY, /* EREOF */
+/* 5f */  VK_EMPTY,     
+/* 60 */  VK_EMPTY,     
+/* 61 */  VK_EMPTY,     
+/* 62 */  VK_EMPTY,     
+/* 63 */  VK_EMPTY, /* ZOOM */
+/* 64 */  VK_HELP,     
+/* 65 */  VK_F13, 
+/* 66 */  VK_F14, 
+/* 67 */  VK_F15, 
+/* 68 */  VK_F16, 
+/* 69 */  VK_F17, 
+/* 6a */  VK_F18, 
+/* 6b */  VK_F19, 
+/* 6c */  VK_F20,
+/* 6d */  VK_F21, 
+/* 6e */  VK_F22, 
+/* 6f */  VK_F23,
+/* 70 */  VK_EMPTY, 
+/* 71 */  VK_EMPTY, 
+/* 72 */  VK_EMPTY,
+/* 73 */  VK_EMPTY,
+/* 74 */  VK_EMPTY, 
+/* 75 */  VK_EMPTY, 
+/* 76 */  VK_EMPTY,
+/* 77 */  VK_F24,
+/* 78 */  VK_EMPTY,
+/* 79 */  VK_EMPTY, 
+/* 7a */  VK_EMPTY, 
+/* 7b */  VK_EMPTY,
+/* 7c */  VK_EMPTY, 
+/* 7d */  VK_EMPTY, 
+/* 7e */  VK_EMPTY, 
+/* 7f */  VK_EMPTY, 
+/* 80 */  VK_EMPTY,
+/* 00 */  0
 };
 
 ROSDATA VSC_VK extcode0_to_vk[] = {
@@ -121,8 +182,8 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
-  3,
-  { 0, 1, 2, 3 } /* Modifier bit order, NONE, SHIFT, CTRL, ALT */
+  6,
+  {   0,     1,    2,          4,   SHFT_INVALID, SHFT_INVALID, 3  } 
 };
 
 #define NOCAPS 0
@@ -132,11 +193,11 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* Normal vs Shifted */
   /* The numbers */
   { '1',         NOCAPS, {'1', '!'} },
-  /* Ctrl-2 generates NUL */
-  { '3',         NOCAPS, {'3', '£'} },
+  { '2',         NOCAPS, {'2', '"'} },
+  { '3',         NOCAPS, {'3', 0x00a3} },
   { '4',         NOCAPS, {'4', '$'} },
   { '5',         NOCAPS, {'5', '%'} },
-  /* Ctrl-6 generates RS */
+  { '6',         NOCAPS, {'6', '&'} },
   { '7',         NOCAPS, {'7', '/'} },
   { '8',         NOCAPS, {'8', '('} },
   { '9',         NOCAPS, {'9', ')'} },
@@ -144,13 +205,12 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 
   /* Specials */
   /* Ctrl-_ generates US */
-  { VK_OEM_PLUS    ,NOCAPS, {'ì', '^'} },
-  { VK_OEM_1       ,NOCAPS, {'ò', 'ç'} },
-  { VK_OEM_7       ,NOCAPS, {'à', '°'} },
-  { VK_OEM_3       ,NOCAPS, {'ù', '§'} },
+  { VK_OEM_2       ,NOCAPS, {'\\', '|'} },
+  { VK_OEM_4       ,NOCAPS, {'\'', '?'} },
+  { VK_OEM_102     ,NOCAPS, {'<', '>'} }, 
   { VK_OEM_COMMA   ,NOCAPS, {',', ';'} },
   { VK_OEM_PERIOD  ,NOCAPS, {'.', ':'} },
-  { VK_OEM_2       ,NOCAPS, {'-', '_'} },
+  { VK_OEM_MINUS   ,NOCAPS, {'-', '_'} },
   /* Keys that do not have shift states */
   { VK_TAB     ,NOCAPS, {'\t','\t'} },
   { VK_ADD     ,NOCAPS, {'+', '+'} },
@@ -159,28 +219,25 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { VK_DIVIDE  ,NOCAPS, {'/', '/'} },
   { VK_ESCAPE  ,NOCAPS, {'\x1b','\x1b'} },
   { VK_SPACE   ,NOCAPS, {' ', ' '} },
+  { VK_OEM_5   ,NOCAPS, {0x00f9, 0x00a7} },//ù§
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
   /* Legacy (telnet-style) ascii escapes */
-  { VK_OEM_4, 0, {'è', 'é', 0x1b /* ESC */} },
-  { VK_OEM_6, 0, {'+', '*', 0x1d /* GS */} },
-  { VK_OEM_5, 0, {'\\','|', 0x1c /* FS */} },
   { VK_RETURN,0, {'\r', '\r', '\n'} },
   { 0,0 }
 };
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, Shifted, Ctrl, C-S-x */
-//VK_OEM_1,     VK_OEM_7,     VK_OEM_3, 
-  { VK_OEM_1,         CAPS,   {'ò', 'ç', 0x01, '@'} },
-  { VK_OEM_7,         CAPS,   {'à', '°', 0x01, '#'} },
+  { VK_OEM_6,  NOCAPS, {0x00ec, '^', WCH_NONE, '~' } },
+  { VK_OEM_3,  NOCAPS, {0x00f2, 0x00e7, WCH_NONE, '@' } },//òç
+  { VK_OEM_7,  NOCAPS, {0x00e0, 0x00b0, WCH_NONE, '#'} },//à°
   
-  //VK_OEM_4,     VK_OEM_6
-  { VK_OEM_4,         CAPS,   {'è', 'é', '{', '['} },
-  { VK_OEM_6,         CAPS,   {'+', '*', '}', ']'} },
+  { VK_OEM_1,  NOCAPS,   {0x00e8, 0x00e9, '{', '['} },// èé
+  { VK_OEM_PLUS,NOCAPS,   {'+', '*', '}', ']'} },
 
   /* The alphabet */
   { 'A',         CAPS,   {'a', 'A', 0x01, 0x01} },
@@ -211,9 +268,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { 'Z',         CAPS,   {'z', 'Z', 0x1a, 0x1a} },
 
   /* Legacy Ascii generators */
-  { '2', NOCAPS, {'2', '"', WCH_NONE, 0} },
-  { '6', NOCAPS, {'6', '&', WCH_NONE, 0x1e /* RS */} },
-  { VK_OEM_MINUS, NOCAPS, {'\'', '?', WCH_NONE, 0x1f /* US */} },
+//zz  { VK_OEM_MINUS, NOCAPS, {'\'', '?', WCH_NONE, 0x1f /* US */} },
   { 0, 0 }
 };
 
@@ -350,7 +405,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 
   MAKELONG(0,1), /* Version 1.0 */
 
-  /* Ligatures -- English doesn't have any */
+  /* Ligatures */
   0,
   0,
   NULL
