@@ -65,7 +65,6 @@
 			<file>semaphor.c</file>
 			<file>sort.c</file>
 			<file>surface.c</file>
-			<file>engtext.c</file>
 			<file>transblt.c</file>
 			<file>engwindow.c</file>
 			<file>xlate.c</file>
