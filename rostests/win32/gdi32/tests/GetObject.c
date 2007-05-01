@@ -1,4 +1,4 @@
-#line 1 "GetObject.c"
+#line 2 "GetObject.c"
 
 #include "..\gditest.h"
 
@@ -213,11 +213,16 @@ BOOL Test_Pen(INT* passed, INT* failed)
 	TEST(GetObject(hPen, 5, NULL) == sizeof(LOGPEN));
 	TEST(GetObject(hPen, -5, NULL) == sizeof(LOGPEN));
 	TEST(GetObject(hPen, sizeof(LOGPEN), &logpen) == sizeof(LOGPEN));
+	TEST(GetObject(hPen, sizeof(LOGPEN)-1, &logpen) == 0);
 	TEST(GetObject(hPen, sizeof(LOGPEN)+2, &logpen) == sizeof(LOGPEN));
 	TEST(GetObject(hPen, 0, &logpen) == 0);
-	TEST(GetObject(hPen, 5, &logpen) == 0);
 	TEST(GetObject(hPen, -5, &logpen) == sizeof(LOGPEN));
 	TEST(GetLastError() == ERROR_SUCCESS);
+
+	/* test if the fields are filled correctly */
+	TEST(logpen.lopnStyle == PS_SOLID);
+	
+
 	DeleteObject(hPen);
 	return TRUE;
 }
@@ -227,6 +232,12 @@ BOOL Test_ExtPen(INT* passed, INT* failed)
 	HPEN hPen;
 	EXTLOGPEN extlogpen;
 	LOGBRUSH logbrush;
+	DWORD dwStyles[17] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+	struct
+	{
+		EXTLOGPEN extlogpen;
+		DWORD dwStyles[50];
+	} elpUserStyle;
 
 	SetLastError(ERROR_SUCCESS);
 	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_EXTPEN, 0, NULL) == 0);
@@ -236,8 +247,8 @@ BOOL Test_ExtPen(INT* passed, INT* failed)
 	FillMemory(&extlogpen, sizeof(EXTLOGPEN), 0x77);
 	logbrush.lbStyle = BS_SOLID;
 	logbrush.lbColor = RGB(1,2,3);
-	logbrush.lbHatch = 0;
-	hPen = ExtCreatePen(PS_GEOMETRIC | PS_SOLID, 5, &logbrush, 0, NULL);
+	logbrush.lbHatch = 22;
+	hPen = ExtCreatePen(PS_GEOMETRIC | PS_DASH, 5, &logbrush, 0, NULL);
 
 	TEST(GDI_HANDLE_GET_TYPE(hPen) == GDI_OBJECT_TYPE_EXTPEN);
 	TEST(GetObject((HANDLE)GDI_OBJECT_TYPE_EXTPEN, 0, NULL) == 0);
@@ -254,17 +265,29 @@ BOOL Test_ExtPen(INT* passed, INT* failed)
 	TEST(extlogpen.elpWidth == 0x77777777);
 
 	TEST(GetObject(hPen, sizeof(EXTLOGPEN), &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
+	TEST(GetObject(hPen, sizeof(EXTLOGPEN)-sizeof(DWORD), &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
+	TEST(GetObject(hPen, sizeof(EXTLOGPEN)-sizeof(DWORD)-1, &extlogpen) == 0);
 	TEST(GetObject(hPen, sizeof(EXTLOGPEN)+2, &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
 	TEST(GetObject(hPen, -5, &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
 
 	/* test if the fields are filled correctly */
-	TEST(extlogpen.elpPenStyle == PS_GEOMETRIC);
+	TEST(extlogpen.elpPenStyle == (PS_GEOMETRIC | PS_DASH));
 	TEST(extlogpen.elpWidth == 5);
 	TEST(extlogpen.elpBrushStyle == 0);
 	TEST(extlogpen.elpColor == RGB(1,2,3));
-	TEST(extlogpen.elpHatch == 0);
+	TEST(extlogpen.elpHatch == 22);
 	TEST(extlogpen.elpNumEntries == 0);
 	DeleteObject(hPen);
+
+	/* A maximum of 16 Styles is allowed */
+	hPen = ExtCreatePen(PS_GEOMETRIC | PS_USERSTYLE, 5, &logbrush, 16, (CONST DWORD*)&dwStyles);
+	TEST(GetObject(hPen, 0, NULL) == sizeof(EXTLOGPEN) + 15*sizeof(DWORD));
+	TEST(GetObject(hPen, sizeof(EXTLOGPEN) + 15*sizeof(DWORD), &elpUserStyle) == sizeof(EXTLOGPEN) + 15*sizeof(DWORD));
+	TEST(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[0] == 0);
+	TEST(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[1] == 1);
+	TEST(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[15] == 15);
+	DeleteObject(hPen);
+
 	return TRUE;
 }
 
@@ -402,7 +425,7 @@ BOOL Test_GetObject(INT* passed, INT* failed)
 	TEST(GetLastError() == ERROR_INVALID_HANDLE);
 	DeleteObject(hRgn);
 
-//	Test_Font(passed, failed);
+	Test_Font(passed, failed);
 	Test_Colorspace(passed, failed);
 	Test_General(passed, failed);
 	Test_Bitmap(passed, failed);
@@ -410,7 +433,7 @@ BOOL Test_GetObject(INT* passed, INT* failed)
 	Test_Palette(passed, failed);
 	Test_Brush(passed, failed);
 	Test_Pen(passed, failed);
-//	Test_ExtPen(passed, failed); // not implemented yet in ROS
+	Test_ExtPen(passed, failed); // not implemented yet in ROS
 	Test_MetaDC(passed, failed);
 
 	return TRUE;

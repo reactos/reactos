@@ -1,4 +1,4 @@
-#line 1 "SelectObject.c"
+#line 2 "SelectObject.c"
 
 #include "..\gditest.h"
 

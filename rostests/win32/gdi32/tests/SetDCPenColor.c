@@ -1,4 +1,4 @@
-#line 1 "SetDCPenColor.c"
+#line 2 "SetDCPenColor.c"
 
 #include "..\gditest.h"
 

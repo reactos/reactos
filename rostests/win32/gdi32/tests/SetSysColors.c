@@ -1,4 +1,4 @@
-#line 1 "SetSysColors.c"
+#line 2 "SetSysColors.c"
 
 #include "..\gditest.h"
 

@@ -1,4 +1,4 @@
-#line 1 "GetStockObject.c"
+#line 2 "GetStockObject.c"
 
 #include "..\gditest.h"
 

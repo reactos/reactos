@@ -1,4 +1,4 @@
-#line 1 "CreateCompatibleDC.c"
+#line 2 "CreateCompatibleDC.c"
 
 #include "..\gditest.h"
 
