@@ -14,6 +14,10 @@ typedef BOOL (STDCALL *PDEVMGREXEC)(HWND hWndParent, HINSTANCE hInst, PVOID Unkn
 
 BOOL LaunchDeviceManager(HWND hWndParent)
 {
+/* hack for ROS to start our devmgmt until we have mmc */
+#ifdef __REACTOS__
+    return ((INT)ShellExecuteW(NULL, L"open", L"devmgmt.exe", NULL, NULL, SW_SHOWNORMAL) > 32);
+#else
     HMODULE hDll;
     PDEVMGREXEC DevMgrExec;
     BOOL Ret;
@@ -33,6 +37,7 @@ BOOL LaunchDeviceManager(HWND hWndParent)
     Ret = DevMgrExec(hWndParent, hApplet, NULL /* ??? */, SW_SHOW);
     FreeLibrary(hDll);
     return Ret;
+#endif /* __REACTOS__ */
 }
 
 /* Property page dialog callback */
