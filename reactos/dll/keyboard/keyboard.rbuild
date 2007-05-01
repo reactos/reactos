@@ -59,4 +59,7 @@
 	<directory name="kbdja">
 		<xi:include href="kbdja/kbdja.rbuild" />
 	</directory>
+	<directory name="kbdpl1">
+		<xi:include href="kbdpl1/kbdpl1.rbuild" />
+	</directory>
 </group>

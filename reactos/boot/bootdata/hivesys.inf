@@ -56,6 +56,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040c","Layout File",0
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040c","Layout Text",0x00000000,"French"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000410","Layout File",0x00000000,"kbdit.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000410","Layout Text",0x00000000,"Italian"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000415","Layout File",0x00000000,"kbdpl1.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000415","Layout Text",0x00000000,"Polish (programmer's)"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000419","Layout File",0x00000000,"kbdru.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000419","Layout Text",0x00000000,"Russian"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000041d","Layout File",0x00000000,"kbdsw.dll"
