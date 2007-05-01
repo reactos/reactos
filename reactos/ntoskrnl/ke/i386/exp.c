@@ -982,7 +982,7 @@ DispatchToUser:
                 TrapFrame->Eip = (ULONG)KeUserExceptionDispatcher;
 
                 /* Dispatch exception to user-mode */
-                return;
+                _SEH_YIELD(return);
             }
             _SEH_EXCEPT(KiCopyInformation)
             {
