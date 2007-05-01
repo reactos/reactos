@@ -309,7 +309,6 @@ int main( int argc, char **argv ) {
 	    
 	    if( subcmd_args[0].find("collect2") != std::string::npos ||
 		subcmd_args[0].find("ld") != std::string::npos ) {
-		subcmd_args[0] = linker_name;
 		if( status = 
 		    run_ld( verbose, nostdlib, nostartfiles, is_dll, make_map,
 			    mingw_lib_dir, ldscript, subcmd_args ) )
