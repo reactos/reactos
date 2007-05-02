@@ -975,7 +975,7 @@ DispatchToUser:
                 TrapFrame->SegCs = Ke386SanitizeSeg(KGDT_R3_CODE, PreviousMode);
                 TrapFrame->SegDs = Ke386SanitizeSeg(KGDT_R3_DATA, PreviousMode);
                 TrapFrame->SegEs = Ke386SanitizeSeg(KGDT_R3_DATA, PreviousMode);
-                TrapFrame->SegFs = Ke386SanitizeSeg(KGDT_R3_TEB, PreviousMode);
+                TrapFrame->SegFs = Ke386SanitizeSeg(KGDT_R3_TEB,  PreviousMode);
                 TrapFrame->SegGs = 0;
 
                 /* Set EIP to the User-mode Dispatcher */
@@ -998,7 +998,7 @@ DispatchToUser:
                                   sizeof(EXCEPTION_RECORD));
 
                     /* Do the exception again */
-                    goto DispatchToUser;
+                    _SEH_YIELD(goto DispatchToUser);
                 }
             }
             _SEH_END;
