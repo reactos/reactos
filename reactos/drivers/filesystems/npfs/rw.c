@@ -688,7 +688,6 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 				NULL);
 			DPRINT("Finished waiting (%S)! Status: %x\n", Fcb->PipeName.Buffer, Status);
 
-			ExAcquireFastMutex(&ReaderCcb->DataListLock);
 			/*
 			* It's possible that the event was signaled because the
 			* other side of pipe was closed.
@@ -697,9 +696,11 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 			{
 				DPRINT("PipeState: %x\n", Ccb->PipeState);
 				Status = STATUS_PIPE_BROKEN;
-				ExReleaseFastMutex(&ReaderCcb->DataListLock);
+				// ExReleaseFastMutex(&ReaderCcb->DataListLock);
 				goto done;
 			}
+
+			ExAcquireFastMutex(&ReaderCcb->DataListLock);
 		}
 
 		if (Fcb->WriteMode == FILE_PIPE_BYTE_STREAM_MODE)
