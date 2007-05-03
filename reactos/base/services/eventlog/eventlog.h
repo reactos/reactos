@@ -3,10 +3,9 @@
  * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             services/eventlog/eventlog.h
  * PURPOSE:          Event logging service
- * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov            
+ * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov
  */
- 
- 
+
 #ifndef __EVENTLOG_H__
 #define __EVENTLOG_H__
 
@@ -23,7 +22,6 @@
 #include <pseh/pseh.h>
 #include "eventlogrpc_s.h"
 
-
 typedef struct _IO_ERROR_LPC
 {
     PORT_MESSAGE Header;
@@ -36,8 +34,7 @@ typedef struct _IO_ERROR_LPC
 /*
  *  Our file format will be compatible with NT's
  */
-
-#define LOGFILE_SIGNATURE 0x654c664c 
+#define LOGFILE_SIGNATURE 0x654c664c
 
 /*  
  *  FIXME
@@ -48,63 +45,68 @@ typedef struct _IO_ERROR_LPC
 #define LOGFILE_FLAG3 4
 #define LOGFILE_FLAG4 8
 
-typedef struct {
-	DWORD SizeOfHeader;
-	DWORD Signature;
-	DWORD MajorVersion;
-	DWORD MinorVersion;
-	DWORD FirstRecordOffset;
-	DWORD EofOffset;
-	DWORD NextRecord;
-	DWORD OldestRecord;
-	DWORD unknown1;
-	DWORD Flags;
-	DWORD unknown2; 
-	DWORD SizeOfHeader2; 
+typedef struct
+{
+    DWORD SizeOfHeader;
+    DWORD Signature;
+    DWORD MajorVersion;
+    DWORD MinorVersion;
+    DWORD FirstRecordOffset;
+    DWORD EofOffset;
+    DWORD NextRecord;
+    DWORD OldestRecord;
+    DWORD unknown1;
+    DWORD Flags;
+    DWORD unknown2;
+    DWORD SizeOfHeader2;
 } FILE_HEADER, *PFILE_HEADER;
 
-typedef struct {
-	DWORD Size1;
-	DWORD Ones; // Must be 0x11111111
-	DWORD Twos; // Must be 0x22222222
-	DWORD Threes; // Must be 0x33333333
-	DWORD Fours; // Must be 0x44444444
-	DWORD StartOffset;
-	DWORD EndOffset;
-	DWORD NextRecordNumber;
-	DWORD OldestRecordNumber;
-	DWORD Size2;
+typedef struct
+{
+    DWORD Size1;
+    DWORD Ones;                 // Must be 0x11111111
+    DWORD Twos;                 // Must be 0x22222222
+    DWORD Threes;               // Must be 0x33333333
+    DWORD Fours;                // Must be 0x44444444
+    DWORD StartOffset;
+    DWORD EndOffset;
+    DWORD NextRecordNumber;
+    DWORD OldestRecordNumber;
+    DWORD Size2;
 } EOF_RECORD, *PEOF_RECORD;
 
-typedef struct {
-	ULONG EventNumber;
-	ULONG EventOffset;
+typedef struct
+{
+    ULONG EventNumber;
+    ULONG EventOffset;
 } EVENT_OFFSET_INFO, *PEVENT_OFFSET_INFO;
 
-typedef struct {
-	HANDLE hFile;
-	FILE_HEADER Header;
-	WCHAR *LogName;
-	WCHAR *FileName;
+typedef struct
+{
+    HANDLE hFile;
+    FILE_HEADER Header;
+    WCHAR *LogName;
+    WCHAR *FileName;
     CRITICAL_SECTION cs;
-	PEVENT_OFFSET_INFO OffsetInfo;
-	ULONG OffsetInfoSize;
-	ULONG OffsetInfoNext;
-	PVOID Next;
-	PVOID Prev;
+    PEVENT_OFFSET_INFO OffsetInfo;
+    ULONG OffsetInfoSize;
+    ULONG OffsetInfoNext;
+    LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
 
 /* file.c */
-PLOGFILE LogfListHead();
+VOID LogfListInitialize(VOID);
 
-INT LogfListItemCount();
+PLOGFILE LogfListHead(VOID);
+
+INT LogfListItemCount(VOID);
 
 PLOGFILE LogfListItemByIndex(INT Index);
 
-PLOGFILE LogfListItemByName(WCHAR *Name);
+PLOGFILE LogfListItemByName(WCHAR * Name);
 
-INT LogfListItemIndexByName(WCHAR *Name);
+INT LogfListItemIndexByName(WCHAR * Name);
 
 VOID LogfListAddItem(PLOGFILE Item);
 
@@ -115,17 +117,19 @@ BOOL LogfReadEvent(PLOGFILE LogFile,
                    DWORD RecordNumber,
                    DWORD BufSize,
                    PBYTE Buffer,
-                   DWORD *BytesRead,
-                   DWORD *BytesNeeded);
+                   DWORD * BytesRead,
+                   DWORD * BytesNeeded);
 
 BOOL LogfWriteData(PLOGFILE LogFile,
-                    DWORD BufSize,
-                    PBYTE Buffer);
+                   DWORD BufSize,
+                   PBYTE Buffer);
 
-PLOGFILE LogfCreate(WCHAR *LogName, 
-                    WCHAR *FileName);
+PLOGFILE LogfCreate(WCHAR * LogName,
+                    WCHAR * FileName);
 
 VOID LogfClose(PLOGFILE LogFile);
+
+VOID LogfCloseAll(VOID);
 
 BOOL LogfInitializeNew(PLOGFILE LogFile);
 
@@ -134,25 +138,25 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile);
 DWORD LogfGetOldestRecord(PLOGFILE LogFile);
 
 ULONG LogfOffsetByNumber(PLOGFILE LogFile,
-						 DWORD RecordNumber);
+                         DWORD RecordNumber);
 
-BOOL LogfAddOffsetInformation(PLOGFILE LogFile, 
-							  ULONG ulNumber,
-							  ULONG ulOffset);
+BOOL LogfAddOffsetInformation(PLOGFILE LogFile,
+                              ULONG ulNumber,
+                              ULONG ulOffset);
 
 PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
-						 DWORD dwRecordNumber,
-						 WORD wType,
-						 WORD wCategory,
-						 DWORD dwEventId,
-						 LPCWSTR SourceName,
-						 LPCWSTR ComputerName,
-						 DWORD dwSidLength,
-						 PSID lpUserSid,
-						 WORD wNumStrings,
-						 WCHAR *lpStrings,
-						 DWORD dwDataSize,
-						 LPVOID lpRawData);
+                                 DWORD dwRecordNumber,
+                                 WORD wType,
+                                 WORD wCategory,
+                                 DWORD dwEventId,
+                                 LPCWSTR SourceName,
+                                 LPCWSTR ComputerName,
+                                 DWORD dwSidLength,
+                                 PSID lpUserSid,
+                                 WORD wNumStrings,
+                                 WCHAR * lpStrings,
+                                 DWORD dwDataSize,
+                                 LPVOID lpRawData);
 
 void __inline LogfFreeRecord(LPVOID Rec);
 
@@ -161,11 +165,11 @@ VOID PRINT_HEADER(PFILE_HEADER header);
 
 VOID PRINT_RECORD(PEVENTLOGRECORD pRec);
 
-VOID EventTimeToSystemTime(DWORD EventTime, 
-						   SYSTEMTIME *SystemTime);
+VOID EventTimeToSystemTime(DWORD EventTime,
+                           SYSTEMTIME * SystemTime);
 
-VOID SystemTimeToEventTime(SYSTEMTIME *pSystemTime,
-						   DWORD *pEventTime);
+VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime,
+                           DWORD * pEventTime);
 
 /* logport.c */
 NTSTATUS STDCALL PortThreadRoutine(PVOID Param);
@@ -177,6 +181,4 @@ NTSTATUS ProcessPortMessage(VOID);
 /* rpc.c */
 DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter);
 
-
-#endif /* __EVENTLOG_H__ */
-
+#endif  /* __EVENTLOG_H__ */
