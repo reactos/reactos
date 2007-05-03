@@ -600,9 +600,7 @@ void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d, BOOL d
   {
     if (d->extension[0] != 0)
     {
-      if (joliet)
-        d->extension_on_cd[0] = 0;
-      else
+      if (!joliet)
         error_exit("Directory with extension %s", filename);
     }
     d->flags = DIRECTORY_FLAG;
