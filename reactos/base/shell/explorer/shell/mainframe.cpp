@@ -732,7 +732,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 	ccs.hWindowMenu = _hMenuWindow;
 	ccs.idFirstChild = IDW_FIRST_CHILD;
 
-	_hmdiclient = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("MDICLIENT"), NULL,
+	_hmdiclient = CreateWindowEx(WS_EX_CLIENTEDGE|WS_EX_NOPARENTNOTIFY, TEXT("MDICLIENT"), NULL,
 					WS_CHILD|WS_CLIPCHILDREN|WS_VSCROLL|WS_HSCROLL|WS_VISIBLE|WS_BORDER,
 					0, 0, 0, 0,
 					hwnd, 0, g_Globals._hInstance, &ccs);
