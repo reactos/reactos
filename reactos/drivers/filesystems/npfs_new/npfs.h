@@ -4,6 +4,12 @@
 #include <ntifs.h>
 #include <ndk/iotypes.h>
 
+#include <stdarg.h>
+#include <stdio.h>
+
+/* Debug Levels */
+#define NPFS_DEBUG_HIGHEST 0x0
+
 typedef struct _NPFS_DEVICE_EXTENSION
 {
 	LIST_ENTRY PipeListHead;
@@ -98,25 +104,29 @@ extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 
 #define PAGE_ROUND_UP(x) ( (((ULONG_PTR)x)%PAGE_SIZE) ? ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG_PTR)x) )
 
-NTSTATUS STDCALL NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL NpfsCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL NpfsClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS STDCALL NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL NpfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS STDCALL NpfsFlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsFlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS STDCALL NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS STDCALL NpfsQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL NpfsSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS STDCALL NpfsQueryVolumeInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI NpfsQueryVolumeInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
 			PUNICODE_STRING RegistryPath);
+
+VOID NTAPI
+NpfsDbgPrint(ULONG Level, char *fmt, ...);
 
 #endif /* __DRIVERS_FS_NP_NPFS_H */

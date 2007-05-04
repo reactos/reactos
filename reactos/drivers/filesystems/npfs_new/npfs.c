@@ -13,9 +13,11 @@
 //#define NDEBUG
 #include <debug.h>
 
+ULONG NpfsDebugLevel = NPFS_DEBUG_HIGHEST;
+
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
 			PUNICODE_STRING RegistryPath)
 {
@@ -24,33 +26,25 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 	UNICODE_STRING DeviceName;
 	NTSTATUS Status;
 
-	DPRINT("Named Pipe FSD 0.0.2\n");
+	DPRINT("Named Pipe File System Driver v0.1\n");
 
 	ASSERT (sizeof(NPFS_CONTEXT) <= FIELD_OFFSET(IRP, Tail.Overlay.DriverContext));
 	ASSERT (sizeof(NPFS_WAITER_ENTRY) <= FIELD_OFFSET(IRP, Tail.Overlay.DriverContext));
 
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = NpfsCreate;
-	DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] =
-		NpfsCreateNamedPipe;
+	DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] = NpfsCreateNamedPipe;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = NpfsClose;
 	DriverObject->MajorFunction[IRP_MJ_READ] = NpfsRead;
 	DriverObject->MajorFunction[IRP_MJ_WRITE] = NpfsWrite;
-	DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
-		NpfsQueryInformation;
-	DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
-		NpfsSetInformation;
-	DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
-		NpfsQueryVolumeInformation;
+	DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = NpfsQueryInformation;
+	DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = NpfsSetInformation;
+	DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = NpfsQueryVolumeInformation;
 	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = NpfsCleanup;
 	DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpfsFlushBuffers;
-	//   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-	//     NpfsDirectoryControl;
-	DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
-		NpfsFileSystemControl;
-	//   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] =
-	//     NpfsQuerySecurity;
-	//   DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] =
-	//     NpfsSetSecurity;
+	DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = NpfsDirectoryControl;
+	DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = NpfsFileSystemControl;
+	//DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] = NpfsQuerySecurity;
+	//DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] = NpfsSetSecurity;
 
 	DriverObject->DriverUnload = NULL;
 
@@ -85,5 +79,21 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
 	return STATUS_SUCCESS;
 }
+
+VOID NTAPI
+NpfsDbgPrint(ULONG Level, char *fmt, ...)
+{
+	va_list args;
+	char str[300];
+
+	if ((NpfsDebugLevel & Level) == 0)
+		return;
+
+	va_start(args, fmt);
+	vsnprintf(str, sizeof(str), fmt, args);
+	va_end(args);
+	DbgPrint ("%4.4d: NPFS %s", PsGetCurrentProcessId(), str);
+}
+
 
 /* EOF */

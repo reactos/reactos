@@ -15,5 +15,19 @@
 
 /* FUNCTIONS ****************************************************************/
 
+NTSTATUS NTAPI
+NpfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+	FsRtlEnterFileSystem();
+
+	NpfsDbgPrint(NPFS_DEBUG_HIGHEST, "NpfsQueryVolumeInformation()\n");
+
+	/* TODO: Implement */
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	FsRtlExitFileSystem();
+
+	return STATUS_SUCCESS;
+}
 
 /* EOF */

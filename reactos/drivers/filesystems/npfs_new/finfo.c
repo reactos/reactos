@@ -15,4 +15,34 @@
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS NTAPI
+NpfsQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+	FsRtlEnterFileSystem();
+
+	NpfsDbgPrint(NPFS_DEBUG_HIGHEST, "NpfsQueryInformation()\n");
+
+	/* TODO: Implement */
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	FsRtlExitFileSystem();
+
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS NTAPI
+NpfsSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+	FsRtlEnterFileSystem();
+
+	NpfsDbgPrint(NPFS_DEBUG_HIGHEST, "NpfsSetInformation()\n");
+
+	/* TODO: Implement */
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	FsRtlExitFileSystem();
+
+	return STATUS_SUCCESS;
+}
+
 /* EOF */
