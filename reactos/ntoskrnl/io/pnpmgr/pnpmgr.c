@@ -155,11 +155,12 @@ IopStartDevice(
       &IoStatusBlock,
       IRP_MN_FILTER_RESOURCE_REQUIREMENTS,
       &Stack);
-   /* FIXME: Take care of return code */
    if (!NT_SUCCESS(Status))
    {
       DPRINT("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
+      return Status;
    }
+   DeviceNode->ResourceRequirements = Stack.Parameters.FilterResourceRequirements.IoResourceRequirementList;
 
    Status = IopAssignDeviceResources(DeviceNode, &RequiredLength);
    if (NT_SUCCESS(Status))
@@ -989,9 +990,12 @@ IopInitiatePnpIrp(PDEVICE_OBJECT DeviceObject,
       &Event,
       IoStatusBlock);
 
-   /* PNP IRPs are always initialized with a status code of
+   /* Most of PNP IRPs are initialized with a status code of
    STATUS_NOT_IMPLEMENTED */
-   Irp->IoStatus.Status = MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS ? STATUS_SUCCESS : STATUS_NOT_IMPLEMENTED; // hpoussin's hack of doom
+   if (MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS)
+      Irp->IoStatus.Status = STATUS_SUCCESS;
+   else
+      Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
    Irp->IoStatus.Information = 0;
 
    IrpSp = IoGetNextIrpStackLocation(Irp);
