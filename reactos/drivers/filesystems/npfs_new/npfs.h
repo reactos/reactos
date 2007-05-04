@@ -11,20 +11,23 @@
 #define NPFS_DL_NONE      0x00000000
 #define NPFS_DL_API_TRACE 0x00000001
 
-typedef struct _NPFS_DEVICE_EXTENSION
+/* Node type codes for NPFS */
+#define NPFS_NODETYPE_VCB 0x401
+#define NPFS_NODETYPE_DCB 0x402
+#define NPFS_NODETYPE_FCB 0x404
+#define NPFS_NODETYPE_CCB 0x406
+
+typedef struct _NPFS_VCB
 {
-	LIST_ENTRY PipeListHead;
-	LIST_ENTRY ThreadListHead;
-	KMUTEX PipeListLock;
-	ULONG EmptyWaiterCount;
-	ULONG MinQuota;
-	ULONG DefaultQuota;
-	ULONG MaxQuota;
-} NPFS_DEVICE_EXTENSION, *PNPFS_DEVICE_EXTENSION;
+	/* Common node header */
+	CSHORT NodeTypeCode;
+	CSHORT NodeByteSize;
+
+} NPFS_VCB, *PNPFS_VCB;
 
 typedef struct _NPFS_FCB
 {
-	FSRTL_COMMON_FCB_HEADER RFCB;
+	FSRTL_COMMON_FCB_HEADER RFCB; /* Includes common node header */
 	UNICODE_STRING PipeName;
 	LIST_ENTRY PipeListEntry;
 	KMUTEX CcbListLock;
@@ -46,6 +49,10 @@ typedef struct _NPFS_FCB
 
 typedef struct _NPFS_CCB
 {
+	/* Common node header */
+	CSHORT NodeTypeCode;
+	CSHORT NodeByteSize;
+
 	LIST_ENTRY CcbListEntry;
 	struct _NPFS_CCB* OtherSide;
 	struct ETHREAD *Thread;
@@ -67,6 +74,20 @@ typedef struct _NPFS_CCB
 
 	FAST_MUTEX DataListLock;	/* Data queue lock */
 } NPFS_CCB, *PNPFS_CCB;
+
+typedef struct _NPFS_DEVICE_EXTENSION
+{
+	LIST_ENTRY PipeListHead;
+	LIST_ENTRY ThreadListHead;
+	KMUTEX PipeListLock;
+	ULONG EmptyWaiterCount;
+	ULONG MinQuota;
+	ULONG DefaultQuota;
+	ULONG MaxQuota;
+
+	NPFS_VCB Vcb;
+} NPFS_DEVICE_EXTENSION, *PNPFS_DEVICE_EXTENSION;
+
 
 typedef struct _NPFS_CONTEXT
 {
@@ -90,7 +111,6 @@ typedef struct _NPFS_WAITER_ENTRY
 	LIST_ENTRY Entry;
 	PNPFS_CCB Ccb;
 } NPFS_WAITER_ENTRY, *PNPFS_WAITER_ENTRY;
-
 
 extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 

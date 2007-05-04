@@ -15,6 +15,8 @@
 
 ULONG NpfsDebugLevel = NPFS_DL_API_TRACE;
 
+static VOID NpfsInitializeVcb(PNPFS_VCB Vcb);
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS NTAPI
@@ -67,6 +69,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
 	/* initialize the device extension */
 	DeviceExtension = DeviceObject->DeviceExtension;
+
+	NpfsInitializeVcb(&DeviceExtension->Vcb);
+
 	InitializeListHead(&DeviceExtension->PipeListHead);
 	InitializeListHead(&DeviceExtension->ThreadListHead);
 	KeInitializeMutex(&DeviceExtension->PipeListLock, 0);
@@ -78,6 +83,22 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 	DeviceExtension->MaxQuota = 64 * PAGE_SIZE;
 
 	return STATUS_SUCCESS;
+}
+
+static VOID
+NpfsInitializeVcb(PNPFS_VCB Vcb)
+{
+	/* Initialize Volume Control Block, it's one per whole named pipe
+	   file system. */
+
+	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsInitializeVcb(), Vcb = %p\n", Vcb);
+
+	/* Zero-init whole VCB */
+	RtlZeroMemory(Vcb, sizeof(NPFS_VCB));
+
+	/* Initialize the common header */
+	Vcb->NodeTypeCode = NPFS_NODETYPE_VCB;
+	Vcb->NodeByteSize = sizeof(NPFS_VCB);
 }
 
 VOID NTAPI
