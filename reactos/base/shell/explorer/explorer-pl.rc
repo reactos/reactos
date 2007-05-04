@@ -371,7 +371,7 @@ BEGIN
     IDS_CONTROL_PANEL       "Panel sterowania"
     IDS_PRINTERS            "Drukarki"
     IDS_BROWSE              "Przeglπdaj"
-    IDS_SEARCH_PRG          "Znajdü progarm..."
+    IDS_SEARCH_PRG          "Znajdü program..."
     IDS_ALL_USERS           "All Users\\"
     IDS_SEARCH              "Szukaj"
     IDS_ABOUT_EXPLORER      "ReactOS Explorer - &Informacje"
