@@ -1,6 +1,6 @@
 #line 2 "CreatePen.c"
 
-#include "..\gditest.h"
+#include "../gditest.h"
 
 BOOL
 Test_CreatePen(INT* passed, INT* failed)

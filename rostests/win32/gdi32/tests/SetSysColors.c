@@ -1,6 +1,6 @@
 #line 2 "SetSysColors.c"
 
-#include "..\gditest.h"
+#include "../gditest.h"
 
 #define NUM_SYSCOLORS 31
 

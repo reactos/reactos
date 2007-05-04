@@ -1,6 +1,6 @@
 #line 2 "SetDCPenColor.c"
 
-#include "..\gditest.h"
+#include "../gditest.h"
 
 BOOL Test_SetDCPenColor(INT* passed, INT* failed)
 {

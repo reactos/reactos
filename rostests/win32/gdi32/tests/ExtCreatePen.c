@@ -1,6 +1,6 @@
 #line 2 "ExtCreatePen.c"
 
-#include "..\gditest.h"
+#include "../gditest.h"
 
 BOOL
 Test_ExtCreatePen(INT* passed, INT* failed)

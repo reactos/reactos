@@ -1,6 +1,6 @@
 #line 2 "GetObject.c"
 
-#include "..\gditest.h"
+#include "../gditest.h"
 
 BOOL
 Test_General(INT* passed, INT* failed)
