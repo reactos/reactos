@@ -20,3 +20,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/ru-RU.rc"
 #include "lang/sv-SE.rc"
 #include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"
