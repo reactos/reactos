@@ -8,7 +8,8 @@
 #include <stdio.h>
 
 /* Debug Levels */
-#define NPFS_DEBUG_HIGHEST 0x0
+#define NPFS_DL_NONE      0x00000000
+#define NPFS_DL_API_TRACE 0x00000001
 
 typedef struct _NPFS_DEVICE_EXTENSION
 {

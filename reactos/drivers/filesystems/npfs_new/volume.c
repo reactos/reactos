@@ -20,7 +20,7 @@ NpfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DEBUG_HIGHEST, "NpfsQueryVolumeInformation()\n");
+	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsQueryVolumeInformation()\n");
 
 	/* TODO: Implement */
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);

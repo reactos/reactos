@@ -13,7 +13,7 @@
 //#define NDEBUG
 #include <debug.h>
 
-ULONG NpfsDebugLevel = NPFS_DEBUG_HIGHEST;
+ULONG NpfsDebugLevel = NPFS_DL_API_TRACE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -86,7 +86,7 @@ NpfsDbgPrint(ULONG Level, char *fmt, ...)
 	va_list args;
 	char str[300];
 
-	if ((NpfsDebugLevel & Level) == 0)
+	if (!(NpfsDebugLevel & Level))
 		return;
 
 	va_start(args, fmt);

@@ -48,7 +48,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DEBUG_HIGHEST, "NpfsRead()\n");
+	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsRead()\n");
 
 	/* TODO: Implement */
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -63,7 +63,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DEBUG_HIGHEST, "NpfsWrite()\n");
+	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsWrite()\n");
 
 	/* TODO: Implement */
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -78,7 +78,7 @@ NpfsFlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DEBUG_HIGHEST, "NpfsFlushBuffers()\n");
+	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsFlushBuffers()\n");
 
 	/* TODO: Implement */
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);

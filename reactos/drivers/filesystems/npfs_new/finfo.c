@@ -20,7 +20,7 @@ NpfsQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DEBUG_HIGHEST, "NpfsQueryInformation()\n");
+	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsQueryInformation()\n");
 
 	/* TODO: Implement */
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -35,7 +35,7 @@ NpfsSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DEBUG_HIGHEST, "NpfsSetInformation()\n");
+	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsSetInformation()\n");
 
 	/* TODO: Implement */
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);

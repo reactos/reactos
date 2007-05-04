@@ -20,7 +20,7 @@ NpfsDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DEBUG_HIGHEST, "NpfsDirectoryControl()\n");
+	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsDirectoryControl()\n");
 
 	/* TODO: Implement */
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -35,7 +35,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DEBUG_HIGHEST, "NpfsFileSystemControl()\n");
+	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsFileSystemControl()\n");
 
 	/* TODO: Implement */
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
