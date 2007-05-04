@@ -20,27 +20,27 @@
 
 class CCABManager : public CDFParser {
 public:
-    CCABManager();
-    virtual ~CCABManager();
-    bool ParseCmdline(int argc, char* argv[]);
-    bool Run();
+	CCABManager();
+	virtual ~CCABManager();
+	bool ParseCmdline(int argc, char* argv[]);
+	bool Run();
 private:
-    void Usage();
-    bool CreateCabinet();
-    bool CreateSimpleCabinet();
-    bool DisplayCabinet();
-    bool ExtractFromCabinet();
-    /* Event handlers */
-    virtual bool OnOverwrite(PCFFILE File, char* FileName);
-    virtual void OnExtract(PCFFILE File, char* FileName);
-    virtual void OnDiskChange(char* CabinetName, char* DiskLabel);
-    virtual void OnAdd(PCFFILE Entry, char* FileName);
-    /* Configuration */
-    bool ProcessAll;
-    unsigned long Mode;
-    bool PromptOnOverwrite;
-    char Location[MAX_PATH];
-    char FileName[MAX_PATH];
+	void Usage();
+	bool CreateCabinet();
+	bool CreateSimpleCabinet();
+	bool DisplayCabinet();
+	bool ExtractFromCabinet();
+	/* Event handlers */
+	virtual bool OnOverwrite(PCFFILE File, char* FileName);
+	virtual void OnExtract(PCFFILE File, char* FileName);
+	virtual void OnDiskChange(char* CabinetName, char* DiskLabel);
+	virtual void OnAdd(PCFFILE Entry, char* FileName);
+	/* Configuration */
+	bool ProcessAll;
+	unsigned long Mode;
+	bool PromptOnOverwrite;
+	char Location[MAX_PATH];
+	char FileName[MAX_PATH];
 };
 
 #endif /* __CABMAN_H */

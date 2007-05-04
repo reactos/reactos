@@ -4,9 +4,11 @@
  * FILE:        tools/cabman/raw.cpp
  * PURPOSE:     CAB codec for uncompressed "raw" data
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Colin Finck <mail@colinfinck.de>
  * REVISIONS:
  *   CSH 21/03-2001 Created
  *   CSH 15/08-2003 Made it portable
+ *   CF  04/05-2007 Reformatted the code to be more consistent and use TABs instead of spaces
  */
 #include "raw.h"
 
@@ -30,9 +32,9 @@ CRawCodec::~CRawCodec()
 
 
 unsigned long CRawCodec::Compress(void* OutputBuffer,
-    void* InputBuffer,
-    unsigned long InputLength,
-    unsigned long* OutputLength)
+                                  void* InputBuffer,
+                                  unsigned long InputLength,
+                                  unsigned long* OutputLength)
 /*
  * FUNCTION: Compresses data in a buffer
  * ARGUMENTS:
@@ -42,15 +44,15 @@ unsigned long CRawCodec::Compress(void* OutputBuffer,
  *     OutputLength = Address of buffer to place size of compressed data
  */
 {
-    memcpy(OutputBuffer, InputBuffer, InputLength);
-    *OutputLength = InputLength;
-    return CS_SUCCESS;
+	memcpy(OutputBuffer, InputBuffer, InputLength);
+	*OutputLength = InputLength;
+	return CS_SUCCESS;
 }
 
 unsigned long CRawCodec::Uncompress(void* OutputBuffer,
-    void* InputBuffer,
-    unsigned long InputLength,
-    unsigned long* OutputLength)
+                                    void* InputBuffer,
+                                    unsigned long InputLength,
+                                    unsigned long* OutputLength)
 /*
  * FUNCTION: Uncompresses data in a buffer
  * ARGUMENTS:
@@ -60,9 +62,9 @@ unsigned long CRawCodec::Uncompress(void* OutputBuffer,
  *     OutputLength = Address of buffer to place size of uncompressed data
  */
 {
-    memcpy(OutputBuffer, InputBuffer, InputLength);
-    *OutputLength = InputLength;
-    return CS_SUCCESS;
+	memcpy(OutputBuffer, InputBuffer, InputLength);
+	*OutputLength = InputLength;
+	return CS_SUCCESS;
 }
 
 /* EOF */
