@@ -1,0 +1,95 @@
+/*
+ *  cacls (Simplified Chinese resources)
+ *  (简体中文资源)
+ *  Copyright 2007 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_HELP, "显示或者修改文件的访问控制表 \n\n\
+CACLS filename [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
+               [/P user:perm [...]] [/D user [...]]\n\
+   filename      显示 ACLs。\n\
+   /T            更改当前目录及其所有子目录中\n\
+                 指定文件的 ACL。\n\
+   /E            编辑 ACL 而不替换。\n\
+   /C            在出现拒绝访问错误时继续。\n\
+   /G user:perm  赋予指定用户访问权限。\n\
+                 Perm 可以是: R  读取 \n\
+                              W  写入 \n\
+                              C  更改(写入) \n\
+                              F  完全控制 \n\
+   /R user       撤销指定用户的访问权限(仅在与 /E 一起使用时合法)。\n\
+   /P user:perm  替换指定用户的访问权限。\n\
+                 Perm 可以是: N  无 \n\
+                              R  读取 \n\
+                              W  写入 \n\
+                              C  更改(写入) \n\
+                              F  完全控制 \n\
+   /D user       拒绝指定用户的访问。\n\
+在命令中可以使用通配符指定多个文件。\n\
+您也可以在命令中指定多个用户。\n\n\
+缩写: \n\
+   CI - 容器继承。\n\
+        ACE会由目录继承。\n\
+   OI - 对象继承。\n\
+        ACE 会由文件继承。\n\
+   IO - 只继承。\n\
+        ACE 不适用于当前文件/目录。\n"
+
+IDS_ABBR_CI, "(CI)"
+IDS_ABBR_OI, "(OI)"
+IDS_ABBR_IO, "(IO)"
+IDS_ABBR_FULL, "F"
+IDS_ABBR_READ, "R"
+IDS_ABBR_WRITE, "W"
+IDS_ABBR_CHANGE, "C"
+IDS_ABBR_NONE, "N"
+IDS_ALLOW, ""
+IDS_DENY, "(DENY)"
+IDS_SPECIAL_ACCESS, "(special access:)"
+IDS_GENERIC_READ, "GENERIC_READ"
+IDS_GENERIC_WRITE, "GENERIC_WRITE"
+IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"
+IDS_GENERIC_ALL, "GENERIC_ALL"
+IDS_FILE_GENERIC_EXECUTE, "FILE_GENERIC_EXECUTE"
+IDS_FILE_GENERIC_READ, "FILE_GENERIC_READ"
+IDS_FILE_GENERIC_WRITE, "FILE_GENERIC_WRITE"
+IDS_FILE_READ_DATA, "FILE_READ_DATA"
+IDS_FILE_WRITE_DATA, "FILE_WRITE_DATA"
+IDS_FILE_APPEND_DATA, "FILE_APPEND_DATA"
+IDS_FILE_READ_EA, "FILE_READ_EA"
+IDS_FILE_WRITE_EA, "FILE_WRITE_EA"
+IDS_FILE_EXECUTE, "FILE_EXECUTE"
+IDS_FILE_DELETE_CHILD, "FILE_DELETE_CHILD"
+IDS_FILE_READ_ATTRIBUTES, "FILE_READ_ATTRIBUTES"
+IDS_FILE_WRITE_ATTRIBUTES, "FILE_WRITE_ATTRIBUTES"
+IDS_MAXIMUM_ALLOWED, "MAXIMUM_ALLOWED"
+IDS_ACCESS_SYSTEM_SECURITY, "ACCESS_SYSTEM_SECURITY"
+IDS_SPECIFIC_RIGHTS_ALL, "SPECIFIC_RIGHTS_ALL"
+IDS_STANDARD_RIGHTS_REQUIRED, "STANDARD_RIGHTS_REQUIRED"
+IDS_SYNCHRONIZE, "SYNCHRONIZE"
+IDS_WRITE_OWNER, "WRITE_OWNER"
+IDS_WRITE_DAC, "WRITE_DAC"
+IDS_READ_CONTROL, "READ_CONTROL"
+IDS_DELETE, "DELETE"
+IDS_STANDARD_RIGHTS_ALL, "STANDARD_RIGHTS_ALL"
+}

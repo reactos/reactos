@@ -1,0 +1,459 @@
+/*
+ *  Regedit (Simplified Chinese resources)
+ *  (简体中文资源)
+ *  Copyright 2007 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+ID_ACCEL ACCELERATORS
+{
+    VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
+    "^F", ID_EDIT_FIND
+    VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+}
+
+/*
+ * Menu
+ */
+
+IDC_REGEDIT MENU DISCARDABLE
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "退出(&X)",                    ID_REGISTRY_EXIT
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "关于注册表编辑器(&A)...",     ID_HELP_ABOUT
+    END
+END
+
+IDR_REGEDIT_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "导入(&I)...", ID_REGISTRY_IMPORTREGISTRYFILE
+
+        MENUITEM "导出(&E)...", ID_REGISTRY_EXPORTREGISTRYFILE
+
+        MENUITEM SEPARATOR
+		MENUITEM "加载配置单元...",	ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "卸载配置单元...",	ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM SEPARATOR
+        MENUITEM "连接网络注册表(&C)...",       ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "断开网络注册表(&C)...",       ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "打印(&P)...\tCtrl+P",         ID_REGISTRY_PRINT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)",                    ID_REGISTRY_EXIT
+    END
+    POPUP "编辑(&E)"
+    BEGIN
+        MENUITEM "修改(&M)",                    ID_EDIT_MODIFY
+        MENUITEM SEPARATOR
+        POPUP "新建(&N)"
+        BEGIN
+            MENUITEM "项(&K)",                  ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "字符串值(&S)",            ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "二进制值(&B)",            ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 值(&D)",            ID_EDIT_NEW_DWORDVALUE
+			MENUITEM "多字符串值(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "可扩充字符串值(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "权限(&P)...",                 ID_EDIT_PERMISSIONS
+        MENUITEM SEPARATOR
+        MENUITEM "删除(&D)\tDel",               ID_EDIT_DELETE
+        MENUITEM "重命名(&R)",                  ID_EDIT_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "复制项名称(&C)",              ID_EDIT_COPYKEYNAME
+        MENUITEM SEPARATOR
+        MENUITEM "查找(&F)...\tCtrl+F",         ID_EDIT_FIND
+        MENUITEM "查找下一个(&X)\tF3",          ID_EDIT_FINDNEXT
+    END
+    POPUP "查看(&V)"
+    BEGIN
+        MENUITEM "状态栏(&B)",                  ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "拆分(&L)",                    ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "刷新(&R)\tF5",                ID_VIEW_REFRESH
+    END
+    POPUP "收藏夹(&F)"
+    BEGIN
+        MENUITEM "添加到收藏夹(&A)",            ID_FAVOURITES_ADDTOFAVOURITES
+        , GRAYED
+        MENUITEM "删除收藏夹(&R)",              ID_FAVOURITES_REMOVEFAVOURITE
+        , GRAYED
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "帮助主题(&H)\tF1",            ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "关于注册表编辑器(&A)...",     ID_HELP_ABOUT
+    END
+END
+
+IDR_POPUP_MENUS MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "修改(&M)",                    ID_EDIT_MODIFY
+	MENUITEM "修改二进位数据",              ID_EDIT_MODIFY_BIN
+	MENUITEM SEPARATOR
+	MENUITEM "删除(&D)\tDel",               ID_EDIT_DELETE
+	MENUITEM "重命名(&R)",                  ID_EDIT_RENAME
+  END
+  POPUP ""
+  BEGIN
+        POPUP "新建(&N)"
+        BEGIN
+            MENUITEM "项(&K)",                  ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "字符串值(&S)",            ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "二进制值(&B)",            ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 值(&D)",            ID_EDIT_NEW_DWORDVALUE
+        END
+  END
+  POPUP ""
+  BEGIN
+        MENUITEM "Expand/Collapse",             ID_TREE_EXPANDBRANCH
+        POPUP "新建(&N)"
+        BEGIN
+            MENUITEM "项(&K)",                  ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "字符串值(&S)",            ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "二进制值(&B)",            ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 值(&D)",            ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM "查找(&F)",                    ID_EDIT_FIND
+        MENUITEM SEPARATOR
+        MENUITEM "删除(&D)",                    ID_TREE_DELETE
+        MENUITEM "重命名(&R)",                  ID_TREE_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "导出(&E)",                    ID_TREE_EXPORT
+        MENUITEM "权限(&P)...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "复制项名称(&C)",              ID_EDIT_COPYKEYNAME
+  END
+END
+
+
+/*
+ * Dialog
+ */
+
+IDD_EDIT_STRING DIALOG  32, 24, 252, 84
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "编辑字符串"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "数值名称(&N):",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "数值数据(&V):",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,142,64,50,14
+    PUSHBUTTON      "取消",IDCANCEL,196,64,50,14
+END
+
+IDD_EDIT_MULTI_STRING DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "编辑多字符串"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "数值名称(&N):",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "数值数据(&V):",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,142,154,50,14
+    PUSHBUTTON      "取消",IDCANCEL,196,154,50,14
+END
+
+IDD_EDIT_BIN_DATA DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "编辑二进制数值"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "数值名称(&N):",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "数值数据(&V):",IDC_STATIC,6,35,161,8
+    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
+    DEFPUSHBUTTON   "确定",IDOK,142,154,50,14
+    PUSHBUTTON      "取消",IDCANCEL,196,154,50,14
+END
+
+
+IDD_EDIT_DWORD DIALOG  32, 24, 252, 104
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "编辑 DWORD 值"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "数值名称(&N):",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "数值数据(&V):",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
+    GROUPBOX        "基数",IDC_STATIC,130,35,116,39
+    AUTORADIOBUTTON "十六进制(&H)",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
+    AUTORADIOBUTTON "十进制(&D)",IDC_FORMAT_DEC,141,59,60,10
+    DEFPUSHBUTTON   "确定",IDOK,142,82,50,14
+    PUSHBUTTON      "取消",IDCANCEL,196,82,50,14
+END
+
+/*
+ * String Table
+ */
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LIST_COLUMN_NAME    "名称"
+    IDS_LIST_COLUMN_TYPE    "类型"
+    IDS_LIST_COLUMN_DATA    "数据"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_TITLE           "注册表编辑器"
+    IDC_REGEDIT             "REGEDIT"
+    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_MENU        "包含与整个注册表工作相关的命令。"
+    ID_EDIT_MENU            "包含编辑值或项的命令。"
+    ID_VIEW_MENU            "包含自定义注册表窗口的命令。"
+    ID_FAVOURITES_MENU      "包含访问常用项时所用的命令。"
+    ID_HELP_MENU            "包含显示帮助以及注册表编辑器有关信息的命令。"
+    ID_EDIT_NEW_MENU        "包含创建新项或值的命令。"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_EDIT_MODIFY          "修改该值的数据。"
+    ID_EDIT_NEW_KEY         "添加新项。"
+    ID_EDIT_NEW_STRINGVALUE "添加新字符串值。"
+    ID_EDIT_NEW_BINARYVALUE "添加新二进制值。"
+    ID_EDIT_NEW_DWORDVALUE  "添加新 DWORD 值。"
+    ID_REGISTRY_IMPORTREGISTRYFILE "将文件导入到注册表中。"
+    ID_REGISTRY_EXPORTREGISTRYFILE
+                            "将注册表全部或部分导出到文件中。"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY
+                            "连接到远程计算机的注册表。"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+                            "断开与远程计算机注册表的连接。"
+    ID_REGISTRY_PRINT       "打印所有或部分注册表。"
+/*    ID_HELP_HELPTOPICS    "打开注册表编辑器帮助。" */
+    ID_HELP_ABOUT           "显示程序信息、版本号和版权。"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_EXIT        "退出注册表编辑器。"
+    ID_FAVOURITES_ADDTOFAVOURITES "将项添加到收藏夹列表中。"
+    ID_FAVOURITES_REMOVEFAVOURITE "将项从收藏夹列表中删除。"
+    ID_VIEW_STATUSBAR       "显示或隐藏状态栏。"
+    ID_VIEW_SPLIT           "改变两窗格的拆分位置。"
+    ID_VIEW_REFRESH         "刷新窗口。"
+    ID_EDIT_DELETE          "删除所选内容。"
+    ID_EDIT_RENAME          "重命名选定内容。"
+    ID_EDIT_COPYKEYNAME     "将选定项的名称复制到剪贴板上。"
+    ID_EDIT_FIND            "在项、值或数据里找到文本字符串。"
+    ID_EDIT_FINDNEXT        "继续查找上次搜索的文本。"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR		    "错误"
+    IDS_WARNING		    "警告"
+    IDS_BAD_KEY             "Can't query key '%s'"
+    IDS_BAD_VALUE           "Can't query value '%s'"
+    IDS_UNSUPPORTED_TYPE    "Can't edit keys of this type (%ld)"
+    IDS_TOO_BIG_VALUE       "数值过大 (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 类型的数据不能包含空字符串。\r\n注册表编辑器将删除找到得空字符串。"
+    IDS_QUERY_DELETE_KEY_ONE     "确实要删除这个项吗?"
+    IDS_QUERY_DELETE_KEY_MORE    "确实要删除这些项吗?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "确认项删除"
+    IDS_QUERY_DELETE_ONE    "确实要删除此数值吗?"
+    IDS_QUERY_DELETE_MORE   "确实要删除这些数值吗?"
+    IDS_QUERY_DELETE_CONFIRM "确认数值删除"
+    IDS_ERR_DELVAL_CAPTION  "删除值时出错。"
+    IDS_ERR_DELETEVALUE     "无法删除所有指定的值!"
+    IDS_ERR_RENVAL_CAPTION  "重命名值时产生错误"
+    IDS_ERR_RENVAL_TOEMPTY  "注册表编辑器无法重命名 %s。指定的值名为空。请键入其他名称，再试一次。"
+    IDS_NEW_KEY             "新项 #%d"
+    IDS_NEW_VALUE           "新值 #%d"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BINARY_EMPTY	    "(长度为零的二进位值)"
+    IDS_DEFAULT_VALUE_NAME  "(默认)"
+    IDS_VALUE_NOT_SET       "(数值未设置)"
+    IDS_UNKNOWN_TYPE        "未知类型: (0x%lx)"
+    IDS_MY_COMPUTER         "My Computer"
+    IDS_IMPORT_REG_FILE     "导入注册表文件"
+    IDS_EXPORT_REG_FILE     "导出注册表文件"
+    IDS_INVALID_DWORD       "(不正确的 DWORD 值)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FLT_REGFILES        "注册文件"
+    IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 注册文件 (REGEDIT4)"
+    IDS_FLT_REGEDIT4_FLT    "*.reg"
+    IDS_FLT_ALLFILES        "所有文件 (*.*)"
+    IDS_FLT_ALLFILES_FLT    "*.*"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_ACCESS_FULLCONTROL        "完全控制"
+  IDS_ACCESS_READ               "读取"
+  IDS_ACCESS_QUERYVALUE         "查询数值"
+  IDS_ACCESS_SETVALUE           "设置数值"
+  IDS_ACCESS_CREATESUBKEY       "创建子项"
+  IDS_ACCESS_ENUMERATESUBKEYS   "枚举子项"
+  IDS_ACCESS_NOTIFY             "通知"
+  IDS_ACCESS_CREATELINK         "创建链接"
+  IDS_ACCESS_DELETE             "删除"
+  IDS_ACCESS_WRITEDAC           "写入 DAC"
+  IDS_ACCESS_WRITEOWNER         "写入所有者"
+  IDS_ACCESS_READCONTROL        "读取控制"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_INHERIT_THISKEYONLY        "只有该项"
+  IDS_INHERIT_THISKEYANDSUBKEYS  "该项及其子项"
+  IDS_INHERIT_SUBKEYSONLY        "只有子项"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_EXPAND                     "展开"
+  IDS_COLLAPSE                   "折叠"
+  IDS_GOTO_SUGGESTED_KEY         "转到(&G)'%s'"
+  IDS_FINISHEDFIND               "注册表搜索完毕。"
+END
+
+/*****************************************************************/
+
+
+/*
+ * Dialog
+ */
+
+IDD_EXPORTRANGE DIALOG DISCARDABLE  50, 50, 380, 50
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
+    WS_BORDER
+FONT 8, "MS Shell Dlg"
+BEGIN
+   GROUPBOX "导出范围",IDC_STATIC,2,0,350,48
+   CONTROL  "全部(&A)",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 35,11
+   CONTROL  "所选分支(&E)",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,310,12
+END
+
+IDD_ADDFAVORITES DIALOG DISCARDABLE  0, 0, 186, 46
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "添加到收藏夹"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,129,7,50,14
+    PUSHBUTTON      "取消",IDCANCEL,129,24,50,14
+    LTEXT           "收藏夹名(&F):",IDC_STATIC,7,7,70,10
+    EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
+END
+
+IDD_REMOVEFAVORITES DIALOG DISCARDABLE  0, 0, 164, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "删除收藏夹"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,107,114,50,14
+    PUSHBUTTON      "取消",IDCANCEL,7,114,50,14
+    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST | 
+                    WS_BORDER | WS_TABSTOP,7,20,150,90
+    LTEXT           "选择收藏夹(&S):",IDC_STATIC,7,7,99,12
+END
+
+IDD_FIND DIALOG DISCARDABLE  0, 0, 275, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "查找"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "查找下一个(&F)",IDOK,205,7,55,14
+    PUSHBUTTON      "取消",IDCANCEL,205,24,55,14
+    GROUPBOX        "查看",IDC_STATIC,7,25,63,51
+    LTEXT           "查找目标(&N):",IDC_STATIC,7,8,50,10
+    EDITTEXT        IDC_FINDWHAT,55,7,142,13,ES_AUTOHSCROLL
+    CONTROL         "项(&K)",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,36,35,8
+    CONTROL         "值(&V)",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,48,36,8
+    CONTROL         "数据(&D)",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,60,42,8
+    CONTROL         "全字匹配(&W)",IDC_MATCHSTRING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
+    CONTROL         "大小写匹配(&C)",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,83,48,90,12
+END
+
+IDD_FINDING DIALOGEX 0, 0, 145, 50
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "查找"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
+    PUSHBUTTON      "取消(&C)",IDCANCEL,93,29,45,14
+    LTEXT           "正在搜索注册表...",IDC_STATIC,33,12,83,8
+END
+
+/*
+ * TEXTINCLUDE
+ */
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+
+
+/*
+ * String Table
+ */
+
+/*
+ *STRINGTABLE DISCARDABLE
+ *BEGIN
+ *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
+ *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
+ *END
+ */
+
+/*****************************************************************/

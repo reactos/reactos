@@ -20,4 +20,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/nl-NL.rc"
 #include "lang/nb-NO.rc"
 #include "lang/th-TH.rc"
-
+#include "lang/zh-CN.rc"
