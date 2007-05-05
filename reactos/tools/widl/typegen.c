@@ -1495,6 +1495,8 @@ unsigned int get_required_buffer_size(const var_t *var, unsigned int *alignment,
                 }
                 return size;
             }
+            else
+                return get_required_buffer_size_type(var->type, 0 /* FIXME */, var->array, var->name, alignment);
         }
         return 0;
     }
