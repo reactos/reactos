@@ -1,8 +1,8 @@
 
  //
- // XML storage classes Version 1.1
+ // XML storage classes version 1.2
  //
- // Copyright (c) 2006 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2006, 2007 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
  /// \file xs-native.cpp
@@ -109,10 +109,14 @@ struct Buffer
 
 	const std::string& str(bool utf8)	// returns UTF-8 encoded buffer content
 	{
+#if defined(_WIN32) && !defined(XS_STRING_UTF8)
 		if (utf8)
+#endif
 			_buffer_str.assign(_buffer, _wptr-_buffer);
+#if defined(_WIN32) && !defined(XS_STRING_UTF8)
 		else
 			_buffer_str = get_utf8(_buffer, _wptr-_buffer);
+#endif
 
 		return _buffer_str;
 	}

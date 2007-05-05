@@ -1,8 +1,8 @@
 
  //
- // XML storage classes Version 1.1
+ // XML storage classes version 1.2
  //
- // Copyright (c) 2004, 2005, 2006 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005, 2006, 2007 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
  /// \file xmlstorage.h
@@ -38,6 +38,26 @@
 */
 
 #ifndef _XMLSTORAGE_H
+
+
+#ifdef UNICODE
+#ifndef _UNICODE
+#define _UNICODE
+#endif
+#else
+#ifdef _UNICODE
+#define UNICODE
+#endif
+#endif
+
+#ifndef _WIN32
+#ifdef UNICODE
+#error no UNICODE build in Unix version available
+#endif
+#ifndef XS_STRING_UTF8
+#define XS_STRING_UTF8
+#endif
+#endif
 
 
 #if _MSC_VER>=1400
@@ -129,20 +149,54 @@ typedef XMLCh XML_Char;
 #endif // _MSC_VER
 
 
-#ifdef UNICODE
-#ifndef _UNICODE
-#define _UNICODE
-#endif
-#else
-#ifdef _UNICODE
-#define UNICODE
-#endif
-#endif
+#ifdef _WIN32
 
 #include <windows.h>	// for LPCTSTR
-
 #include <tchar.h>
 #include <malloc.h>
+
+#else
+
+#include <wchar.h>
+#include <stdarg.h>
+
+typedef char CHAR;
+#ifdef _WCHAR_T_DEFINED
+#define	__wchar_t wchar_t
+#endif
+
+typedef __wchar_t WCHAR;
+typedef unsigned char UCHAR;
+typedef char* LPSTR;
+typedef const char* LPCSTR;
+typedef WCHAR* LPWSTR;
+typedef const WCHAR* LPCWSTR;
+
+#ifndef UNICODE
+#define TEXT(x) x
+typedef char TCHAR;
+typedef unsigned char _TUCHAR;
+typedef CHAR* PTSTR;
+typedef CHAR* LPTSTR;
+typedef const CHAR* LPCTSTR;
+
+#define _ttoi atoi
+#define _tfopen fopen
+#define _tcstod strtod
+#define _tcslen strlen
+#define _tcsstr strstr
+#define _snprintf snprintf
+#define _sntprintf snprintf
+#define _vsnprintf vsnprintf
+#define _vsntprintf vsnprintf
+#define _stricmp strcasecmp
+#define _tcsicmp strcasecmp
+#define strnicmp strncasecmp
+#define _tcsnicmp strncasecmp
+#endif
+
+#endif
+
 
 #include <fstream>
 #include <sstream>
@@ -168,7 +222,7 @@ namespace XMLStorage {
 #define LPXSSTR LPSTR
 #define LPCXSSTR LPCSTR
 #define	XS_cmp strcmp
-#define	XS_icmp stricmp
+#define	XS_icmp _stricmp
 #define	XS_ncmp strncmp
 #define	XS_nicmp strnicmp
 #define	XS_toi atoi
@@ -238,6 +292,7 @@ struct XS_String
 	XS_String(const super& other) : super(other) {}
 	XS_String(const XS_String& other) : super(other) {}
 
+#ifdef _WIN32
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	XS_String(LPCSTR s) {assign(s);}
 	XS_String(LPCSTR s, size_t l) {assign(s, l);}
@@ -251,13 +306,17 @@ struct XS_String
 	XS_String(const std::wstring& other) {assign(other.c_str());}
 	XS_String& operator=(LPCWSTR s) {assign(s); return *this;}
 #ifdef XS_STRING_UTF8
-	void assign(const XS_String& s) {assign(s.c_str());}
 	void assign(LPCWSTR s) {if (s) {size_t bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, (int)bl, b, (int)bl, 0, 0));} else erase();}
 	void assign(LPCWSTR s, size_t l) {size_t bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, (int)l, b, (int)bl, 0, 0));} else erase();}
 #else // if !UNICODE && !XS_STRING_UTF8
 	void assign(LPCWSTR s) {if (s) {size_t bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, (int)bl, b, (int)bl, 0, 0));} else erase();}
 	void assign(LPCWSTR s, size_t l) {size_t bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, (int)l, b, (int)bl, 0, 0));} else erase();}
 #endif
+#endif
+#endif // _WIN32
+
+#ifdef XS_STRING_UTF8
+	void assign(const XS_String& s) {assign(s.c_str());}
 #endif
 
 	XS_String& operator=(LPCXSSTR s) {if (s) super::assign(s); else erase(); return *this;}
@@ -267,12 +326,14 @@ struct XS_String
 
 	operator LPCXSSTR() const {return c_str();}
 
+#ifdef _WIN32
 #ifdef XS_STRING_UTF8
 	operator std::wstring() const {size_t bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_UTF8, 0, c_str(), bl, b, bl));}
 #elif defined(UNICODE)
 	operator std::string() const {size_t bl=length(); LPSTR b=(LPSTR)alloca(bl); return std::string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), bl, b, bl, 0, 0));}
 #else
 	operator std::wstring() const {size_t bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), (int)bl, b, (int)bl));}
+#endif
 #endif
 
 	XS_String& printf(LPCXSSTR fmt, ...)
@@ -950,7 +1011,7 @@ struct XMLNode : public XS_String
 #endif
 
 	 /// write node with children tree to output stream
-	std::ostream& write(std::ostream& out, const XMLFormat& format, WRITE_MODE mode=FORMAT_SMART, int indent=0) const
+	bool write(std::ostream& out, const XMLFormat& format, WRITE_MODE mode=FORMAT_SMART, int indent=0) const
 	{
 		switch(mode) {
 		  case FORMAT_PLAIN:
@@ -969,7 +1030,7 @@ struct XMLNode : public XS_String
 			smart_write_worker(out, format, indent);
 		}
 
-		return out;
+		return out.good();
 	}
 
 protected:
@@ -2136,6 +2197,102 @@ protected:
 #endif // XS_USE_XERCES
 
 
+#if defined(_MSC_VER) && _MSC_VER<1400
+
+struct fast_ostringbuffer : public std::streambuf
+{
+	typedef char _E;
+	typedef std::char_traits<_E> _Tr;
+
+	explicit fast_ostringbuffer()
+		{_Init(0, 0, std::_Noread);}	// optimized for ios::out mode
+
+	virtual ~fast_ostringbuffer()
+		{_Tidy();}
+
+	std::string str() const
+		{if (pptr() != 0)
+			{std::string _Str(pbase(),
+				(_Seekhigh<pptr()? pptr(): _Seekhigh) - pbase());
+			return _Str;}
+		else
+			return std::string();}
+
+protected:
+	virtual int_type overflow(int_type _C = _Tr::eof())
+		{if (_Tr::eq_int_type(_Tr::eof(), _C))
+			return _Tr::not_eof(_C);
+		else if (pptr() != 0 && pptr() < epptr())
+			{*_Pninc() = _Tr::to_char_type(_C);
+			return _C;}
+		else
+			{size_t _Os = gptr() == 0 ? 0 : epptr() - eback();
+			size_t _Ns = _Os + _Alsize;
+			_E *_P = _Al.allocate(_Ns, (void *)0);
+			if (0 < _Os)
+				_Tr::copy(_P, eback(), _Os);
+			else if (_ALSIZE < _Alsize)
+				_Alsize = _ALSIZE;
+
+			if (_Strmode & std::_Allocated)
+				_Al.deallocate(eback(), _Os);
+
+			_Strmode |= std::_Allocated;
+
+			if (_Os == 0)
+				{_Seekhigh = _P;
+				setp(_P, _P + _Ns);
+				setg(_P, _P, _P); }
+			else
+				{_Seekhigh = _Seekhigh - eback() + _P;
+				setp(pbase() - eback() + _P, pptr() - eback() + _P, _P + _Ns);
+				setg(_P, _P, _P);}
+			*_Pninc() = _Tr::to_char_type(_C);
+
+			return _C;}}
+
+	void _Init(const _E *_S, size_t _N, std::_Strstate _M)
+		{_Pendsave = 0, _Seekhigh = 0;
+		_Alsize = _MINSIZE, _Strmode = _M;
+		setg(0, 0, 0);
+		setp(0, 0);}
+
+	void _Tidy()
+		{if (_Strmode & std::_Allocated)
+			_Al.deallocate(eback(), (pptr() != 0 ? epptr() : egptr()) - eback());
+		_Seekhigh = 0;
+		_Strmode &= ~std::_Allocated;}
+
+private:
+	enum {_ALSIZE = 65536/*512*/, _MINSIZE = 32768/*32*/};	// bigger buffer sizes
+
+	_E *_Pendsave, *_Seekhigh;
+	int _Alsize;
+	std::_Strstate _Strmode;
+	std::allocator<_E> _Al;
+};
+
+struct fast_ostringstream : public std::iostream
+{
+	typedef std::iostream super;
+
+	explicit fast_ostringstream()
+		: super(&_Sb) {}
+
+	std::string str() const
+		{return _Sb.str();}
+
+private:
+	fast_ostringbuffer _Sb;
+};
+
+#else
+
+typedef std::ostringstream fast_ostringstream;
+
+#endif
+
+
  /// XML document holder
 struct XMLDoc : public XMLNode
 {
@@ -2221,18 +2378,22 @@ struct XMLDoc : public XMLNode
 	}
 
 	 /// write XML stream preserving previous white space and comments
-	std::ostream& write(std::ostream& out, WRITE_MODE mode=FORMAT_SMART) const
+	bool write(std::ostream& out, WRITE_MODE mode=FORMAT_SMART) const
 	{
 		_format.print_header(out, mode!=FORMAT_PLAIN);
 
-		if (!_children.empty())
+		if (_children.size() == 1)
 			_children.front()->write(out, _format, mode);
+		else if (!_children.empty()) {
+			//throw Exception("more than one XML root!");
+			return false;
+		}
 
-		return out;
+		return out.good();
 	}
 
 	 /// write XML stream with formating
-	std::ostream& write_formating(std::ostream& out) const
+	bool write_formating(std::ostream& out) const
 	{
 		return write(out, FORMAT_PRETTY);
 	}
@@ -2241,14 +2402,14 @@ struct XMLDoc : public XMLNode
 	{
 		tofstream out(path);
 
-		return write(out, mode).good();
+		return write(out, mode);
 	}
 
 	bool write_formating(LPCTSTR path) const
 	{
 		tofstream out(path);
 
-		return write_formating(out).good();
+		return write_formating(out);
 	}
 
 	XMLFormat		_format;

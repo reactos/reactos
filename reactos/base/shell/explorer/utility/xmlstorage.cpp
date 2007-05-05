@@ -1,8 +1,8 @@
 
  //
- // XML storage classes Version 1.1
+ // XML storage classes version 1.2
  //
- // Copyright (c) 2004, 2005, 2006 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005, 2006, 2007 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
  /// \file xmlstorage.cpp
@@ -284,30 +284,43 @@ std::string EncodeXMLString(const XS_String& str, bool cdata)
 	LPCXSSTR s = str.c_str();
 	size_t l = XS_len(s);
 
-	if (!cdata && l<=BUFFER_LEN) {
+	if (cdata) {
+		 // encode the whole string in a CDATA section
+		std::string ret = "<![CDATA[";
+
+#ifdef XS_STRING_UTF8
+		ret += str;
+#else
+		ret += get_utf8(str);
+#endif
+
+		ret += "]]>";
+
+		return ret;
+	} else if (l <= BUFFER_LEN) {
 		LPXSSTR buffer = (LPXSSTR)alloca(6*sizeof(XS_CHAR)*XS_len(s));	// worst case "&quot;" / "&apos;"
 		LPXSSTR o = buffer;
 
 		for(LPCXSSTR p=s; *p; ++p)
 			switch(*p) {
 			  case '&':
-				*o++ = '&';	*o++ = 'a';	*o++ = 'm';	*o++ = 'p';	*o++ = ';';
+				*o++ = '&';	*o++ = 'a';	*o++ = 'm';	*o++ = 'p';	*o++ = ';';				// "&amp;"
 				break;
 
 			  case '<':
-				*o++ = '&';	*o++ = 'l'; *o++ = 't';	*o++ = ';';
+				*o++ = '&';	*o++ = 'l'; *o++ = 't';	*o++ = ';';							// "&lt;"
 				break;
 
 			  case '>':
-				*o++ = '&';	*o++ = 'g'; *o++ = 't';	*o++ = ';';
+				*o++ = '&';	*o++ = 'g'; *o++ = 't';	*o++ = ';';							// "&gt;"
 				break;
 
 			  case '"':
-				*o++ = '&';	*o++ = 'q'; *o++ = 'u'; *o++ = 'o'; *o++ = 't';	*o++ = ';';
+				*o++ = '&';	*o++ = 'q'; *o++ = 'u'; *o++ = 'o'; *o++ = 't';	*o++ = ';';	// "&quot;"
 				break;
 
 			  case '\'':
-				*o++ = '&';	*o++ = 'a'; *o++ = 'p'; *o++ = 'o'; *o++ = 's';	*o++ = ';';
+				*o++ = '&';	*o++ = 'a'; *o++ = 'p'; *o++ = 'o'; *o++ = 's';	*o++ = ';';	// "&apos;"
 				break;
 
 			  default:
@@ -326,23 +339,9 @@ std::string EncodeXMLString(const XS_String& str, bool cdata)
 		return get_utf8(buffer, o-buffer);
 #endif
 	} else { // l > BUFFER_LEN
-		 // encode the whole string in a CDATA section
-		std::string ret = "<![CDATA[";
-
-#ifdef XS_STRING_UTF8
-		ret += str;
-#else
-		ret += get_utf8(str);
-#endif
-
-		ret += "]]>";
-
-		return ret;
-
-/* alternative code using ostringstream (beware: quite slow)
-#include <sstream>
-
-		std::ostringstream out;
+		 // alternative code for larger strings using ostringstream
+		 // and avoiding to use alloca() for preallocated memory
+		fast_ostringstream out;
 
 		LPCXSSTR s = str.c_str();
 
@@ -369,7 +368,7 @@ std::string EncodeXMLString(const XS_String& str, bool cdata)
 				break;
 
 			  default:
-				if ((unsigned)*p<20 && *p!='\t' *p!='\r' && *p!='\n')
+				if ((unsigned)*p<20 && *p!='\t' && *p!='\r' && *p!='\n')
 					out << "&" << (unsigned)*p << ";";
 				else
 					out << *p;
@@ -380,7 +379,6 @@ std::string EncodeXMLString(const XS_String& str, bool cdata)
 #else
 		return get_utf8(out.str());
 #endif
-	*/
 	}
 }
 
@@ -417,7 +415,7 @@ XS_String DecodeXMLString(const XS_String& str)
 				size_t l = e - p;
 				memcpy(o, p, l);
 				o += l;
-				p += 3;
+				p = e + 2;
 			} else
 				*o++ = *p;
 		} else
@@ -761,11 +759,15 @@ void XMLReaderBase::EndElementHandler()
 	const char* p = s;
 	const char* e = p + _content.length();
 
-	for(; p<e; ++p)
-		if (*p == '\n') {
-			++p;
-			break;
-		}
+	if (!strncmp(s,"<![CDATA[",9) && !strncmp(e-3,"]]>",3)) {
+		s += 9;
+		p = (e-=3);
+	} else
+		for(; p<e; ++p)
+			if (*p == '\n') {
+				++p;
+				break;
+			}
 
 	if (p != s)
 		if (_pos->_children.empty())	// no children in current node?
