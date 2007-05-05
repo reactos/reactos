@@ -10,14 +10,14 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
  *
- *    09-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    09-Jan-1999 (Eric Kohl)
  *        Added locale support.
  *
- *    19-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    19-Jan-1999 (Eric Kohl)
  *        Unicode and redirection safe!
  *        Added "/t" option.
  *
- *    04-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    04-Feb-1999 (Eric Kohl)
  *        Fixed time input bug.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

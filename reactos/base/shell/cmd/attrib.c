@@ -4,28 +4,28 @@
  *
  *  History:
  *
- *    04-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    04-Dec-1998 Eric Kohl
  *        started
  *
- *    09-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    09-Dec-1998 Eric Kohl
  *        implementation works, except recursion ("attrib /s").
  *
- *    05-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    05-Jan-1999 Eric Kohl
  *        major rewrite.
  *        fixed recursion ("attrib /s").
  *        started directory support ("attrib /s /d").
  *        updated help text.
  *
- *    14-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    14-Jan-1999 Eric Kohl
  *        Unicode ready!
  *
- *    19-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    19-Jan-1999 Eric Kohl
  *        Redirection ready!
  *
- *    21-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    21-Jan-1999 Eric Kohl
  *        Added check for invalid filenames.
  *
- *    23-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    23-Jan-1999 Eric Kohl
  *        Added handling of multiple filenames.
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

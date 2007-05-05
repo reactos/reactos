@@ -14,7 +14,7 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
  *
- *    25-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    25-Jan-1999 (Eric Kohl)
  *        Cleanup!
  *        Unicode and redirection safe!
  *

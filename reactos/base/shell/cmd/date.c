@@ -18,13 +18,13 @@
  *        fixed stand-alone mode.
  *        Added Pacific C compatible dos_getdate functions
  *
- *    09-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    09-Jan-1999 (Eric Kohl)
  *        Added locale support
  *
- *    23-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    23-Jan-1999 (Eric Kohl)
  *        Unicode and redirection safe!
  *
- *    04-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    04-Feb-1999 (Eric Kohl)
  *        Fixed date input bug.
  *
  *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

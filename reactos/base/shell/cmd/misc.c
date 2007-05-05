@@ -13,19 +13,19 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
  *
- *    18-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    18-Dec-1998 (Eric Kohl)
  *        Changed split() to accept quoted arguments.
  *        Removed parse_firstarg().
  *
- *    23-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    23-Jan-1999 (Eric Kohl)
  *        Fixed an ugly bug in split(). In rare cases (last character
  *        of the string is a space) it ignored the NULL character and
  *        tried to add the following to the argument list.
  *
- *    28-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    28-Jan-1999 (Eric Kohl)
  *        FileGetString() seems to be working now.
  *
- *    06-Nov-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    06-Nov-1999 (Eric Kohl)
  *        Added PagePrompt() and FilePrompt().
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

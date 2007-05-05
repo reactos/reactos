@@ -4,10 +4,10 @@
  *
  *  History:
  *
- *    09-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    09-Jan-1999 (Eric Kohl)
  *        Started.
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Unicode safe!
  */
 

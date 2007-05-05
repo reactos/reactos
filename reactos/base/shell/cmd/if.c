@@ -13,13 +13,13 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
  *
- *    07-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    07-Jan-1999 (Eric Kohl)
  *        Added help text ("if /?") and cleaned up.
  *
- *    21-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    21-Jan-1999 (Eric Kohl)
  *        Unicode and redirection ready!
  *
- *    01-Sep-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    01-Sep-1999 (Eric Kohl)
  *        Fixed help text.
  *
  *    17-Feb-2001 (ea)

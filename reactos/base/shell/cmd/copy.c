@@ -11,13 +11,13 @@
  *        fixed memory leak problem in copy function.
  *        fixed copy function so it would work with wildcards in the source
  *
- *    13-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    13-Dec-1998 (Eric Kohl)
  *        Added COPY command to CMD.
  *
- *    26-Jan-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    26-Jan-1998 (Eric Kohl)
  *        Replaced CRT io functions by Win32 io functions.
  *
- *    27-Oct-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    27-Oct-1998 (Eric Kohl)
  *        Disabled prompting when used in batch mode.
  *
  *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

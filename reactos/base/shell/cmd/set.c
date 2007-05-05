@@ -20,14 +20,14 @@
  *    28-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added set_env function to set env. variable without needing set command
  *
- *    09-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    09-Dec-1998 (Eric Kohl)
  *        Added help text ("/?").
  *
- *    24-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    24-Jan-1999 (Eric Kohl)
  *        Fixed Win32 environment handling.
  *        Unicode and redirection safe!
  *
- *    25-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    25-Feb-1999 (Eric Kohl)
  *        Fixed little bug.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

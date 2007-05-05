@@ -14,11 +14,11 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        Added config.h include
  *
- *    22-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    22-Jan-1999 (Eric Kohl)
  *        Unicode safe!
  *        Added new error redirection "2>" and "2>>".
  *
- *    26-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    26-Jan-1999 (Eric Kohl)
  *        Added new error AND output redirection "&>" and "&>>".
  *
  *    24-Jun-2005 (Brandon Turner <turnerb7@msu.edu>)

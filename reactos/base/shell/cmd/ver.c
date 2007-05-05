@@ -14,10 +14,10 @@
  *    30-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added text about where to send bug reports and get updates.
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Unicode and redirection safe!
  *
- *    26-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    26-Feb-1999 (Eric Kohl)
  *        New version info and some output changes.
  */
 

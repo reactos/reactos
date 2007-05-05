@@ -90,24 +90,24 @@
  *        added config.h include
  *
  *
- *    04-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    04-Dec-1998 (Eric Kohl)
  *        Converted source code to Win32, except recursive dir ("dir /s").
  *
- *    10-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    10-Dec-1998 (Eric Kohl)
  *        Fixed recursive dir ("dir /s").
  *
- *    14-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    14-Dec-1998 (Eric Kohl)
  *        Converted to Win32 directory functions and
  *        fixed some output bugs. There are still some more ;)
  *
- *    10-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    10-Jan-1999 (Eric Kohl)
  *        Added "/N" and "/4" options, "/O" is a dummy.
  *        Added locale support.
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Redirection safe!
  *
- *    01-Mar-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    01-Mar-1999 (Eric Kohl)
  *        Replaced all runtime io functions by their Win32 counterparts.
  *
  *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)

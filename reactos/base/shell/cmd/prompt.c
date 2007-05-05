@@ -26,21 +26,21 @@
  *    28-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        moved cmd_prompt from internal.c to here
  *
- *    09-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    09-Dec-1998 (Eric Kohl)
  *        Added help text ("/?").
  *
- *    14-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    14-Dec-1998 (Eric Kohl)
  *        Added "$+" option.
  *
- *    09-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    09-Jan-1999 (Eric Kohl)
  *        Added "$A", "$C" and "$F" option.
  *        Added locale support.
  *        Fixed "$V" option.
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Unicode and redirection safe!
  *
- *    24-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    24-Jan-1999 (Eric Kohl)
  *        Fixed Win32 environment handling.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

@@ -7,11 +7,11 @@
  *    31 Jul 1998 (John P Price)
  *        started.
  *
- *    18-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    18-Jan-1999 (Eric Kohl)
  *        VERIFY is just a dummy under Win32; it only exists
  *        for compatibility!!!
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Unicode and redirection ready!
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

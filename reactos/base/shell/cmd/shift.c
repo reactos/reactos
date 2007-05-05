@@ -13,10 +13,10 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
  *
- *    07-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    07-Jan-1999 (Eric Kohl)
  *        Added help text ("shift /?") and cleaned up.
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Unicode and redirection safe!
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

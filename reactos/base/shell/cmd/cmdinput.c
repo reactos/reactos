@@ -79,15 +79,15 @@
  *        Fixed carrage return output to better match MSDOS with echo
  *        on or off.(marked with "JPP 19980708")
  *
- *    13-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    13-Dec-1998 (Eric Kohl)
  *        Added insert/overwrite cursor.
  *
- *    25-Jan-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    25-Jan-1998 (Eric Kohl)
  *        Replaced CRT io functions by Win32 console io functions.
  *        This can handle <Shift>-<Tab> for 4NT filename completion.
  *        Unicode and redirection safe!
  *
- *    04-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    04-Feb-1999 (Eric Kohl)
  *        Fixed input bug. A "line feed" character remained in the keyboard
  *        input queue when you pressed <RETURN>. This sometimes caused
  *        some very strange effects.

@@ -13,7 +13,7 @@
  *    27 Jul 1998  John P. Price
  *        added config.h include
  *
- *    21-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    21-Jan-1999 (Eric Kohl)
  *        Unicode ready!
  */
 

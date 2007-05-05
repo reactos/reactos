@@ -16,10 +16,10 @@
  *        Terminate label on first space character, use only first 8 chars of
  *        label string
  *
- *    24-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    24-Jan-1999 (Eric Kohl)
  *        Unicode and redirection safe!
  *
- *    27-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    27-Jan-1999 (Eric Kohl)
  *        Added help text ("/?").
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

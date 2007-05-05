@@ -4,13 +4,13 @@
  *
  *  History:
  *
- *    13-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    13-Dec-1998 (Eric Kohl)
  *        Started.
  *
- *    19-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    19-Jan-1999 (Eric Kohl)
  *        Unicode ready!
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Redirection ready!
  *
  *    14-Oct-1999 (Paolo Pantaleo <paolopan@freemail.it>)

@@ -4,19 +4,19 @@
  *
  *  History:
  *
- *    03-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    03-Dec-1998 (Eric Kohl)
  *        Replaced DOS calls by Win32 calls.
  *
- *    08-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    08-Dec-1998 (Eric Kohl)
  *        Added help text ("/?").
  *
- *    07-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    07-Jan-1999 (Eric Kohl)
  *        Cleanup.
  *
- *    18-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    18-Jan-1999 (Eric Kohl)
  *        Unicode ready!
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Redirection ready!
  */
 

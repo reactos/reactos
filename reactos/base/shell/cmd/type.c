@@ -12,11 +12,11 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
  *
- *    07-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    07-Jan-1999 (Eric Kohl)
  *        Added support for quoted arguments (type "test file.dat").
  *        Cleaned up.
  *
- *    19-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    19-Jan-1999 (Eric Kohl)
  *        Unicode and redirection ready!
  *
  *    19-Jan-1999 (Paolo Pantaleo <paolopan@freemail.it>)

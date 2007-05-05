@@ -18,10 +18,10 @@
  *        lock-up that happened sometimes when calling a batch file from
  *        another batch file.
  *
- *    07-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    07-Jan-1999 (Eric Kohl)
  *        Added help text ("call /?") and cleaned up.
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Unicode and redirection safe!
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

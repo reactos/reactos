@@ -13,13 +13,13 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        Added config.h include
  *
- *    08-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    08-Dec-1998 (Eric Kohl)
  *        Added help text ("/?").
  *
- *    19-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    19-Jan-1999 (Eric Kohl)
  *        Unicode and redirection ready!
  *
- *    13-Jul-2000 (Eric Kohl <ekohl@rz-online.de>)
+ *    13-Jul-2000 (Eric Kohl)
  *        Implemented 'echo.' and 'echoerr.'.
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

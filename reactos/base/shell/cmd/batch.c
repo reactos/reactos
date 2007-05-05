@@ -47,7 +47,7 @@
  *    02-Aug-1998 (Hans B Pufal) [HBP_003]
  *        Fixed bug in ECHO flag restoration at exit from batch file
  *
- *    26-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    26-Jan-1999 Eric Kohl
  *        Replaced CRT io functions by Win32 io functions.
  *        Unicode safe!
  *

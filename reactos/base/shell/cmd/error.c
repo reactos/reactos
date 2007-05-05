@@ -10,10 +10,10 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
  *
- *    24-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    24-Jan-1999 (Eric Kohl)
  *        Redirection safe!
  *
- *    02-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    02-Feb-1999 (Eric Kohl)
  *        Use FormatMessage() for error reports.
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

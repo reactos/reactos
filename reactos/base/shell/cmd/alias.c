@@ -15,14 +15,14 @@
  *        added config.h include
  *        added ifdef's to disable aliases
  *
- *    09-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    09-Dec-1998 Eric Kohl
  *        Fixed crash when removing an alias in DeleteAlias().
  *        Added help text ("/?").
  *
- *    14-Jan-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    14-Jan-1998 Eric Kohl
  *        Clean up and Unicode safe!
  *
- *    24-Jan-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    24-Jan-1998 Eric Kohl
  *        Redirection safe!
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

@@ -4,21 +4,21 @@
 *
 *  History:
 *
-*    14-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+*    14-Dec-1998 (Eric Kohl)
 *        Started.
 *
-*    18-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+*    18-Jan-1999 (Eric Kohl)
 *        Unicode safe!
 *        Preliminary version!!!
 *
-*    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+*    20-Jan-1999 (Eric Kohl)
 *        Redirection safe!
 *
-*    27-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+*    27-Jan-1999 (Eric Kohl)
 *        Added help text ("/?").
 *        Added more error checks.
 *
-*    03-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+*    03-Feb-1999 (Eric Kohl)
 *        Added "/N" option.
 *
 *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

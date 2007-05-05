@@ -7,13 +7,13 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
  *
- *    18-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>
+ *    18-Dec-1998 (Eric Kohl)
  *        Added support for quoted long file names with spaces.
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>
+ *    20-Jan-1999 (Eric Kohl)
  *        Unicode and redirection safe!
  *
- *    17-Oct-2001 (Eric Kohl <ekohl@rz.online.de>
+ *    17-Oct-2001 (Eric Kohl)
  *        Implemented basic rename code.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

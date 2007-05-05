@@ -16,7 +16,7 @@
  *    30-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        Added compile date to version.
  *
- *    26-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    26-Feb-1999 (Eric Kohl)
  *        Introduced a new version string.
  *        Thanks to Emanuele Aliberti!
  */

@@ -21,7 +21,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS welcome/autorun application
  * FILE:        subsys/system/welcome/welcome.c
- * PROGRAMMERS: Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMMERS: Eric Kohl
  *              Casper S. Hornstrup (chorns@users.sourceforge.net)
  *
  * NOTE:

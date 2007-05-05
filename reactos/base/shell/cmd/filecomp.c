@@ -9,7 +9,7 @@
  *       made second TAB display list of filename matches
  *       made filename be lower case if last character typed is lower case
  *
- *    25-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    25-Jan-1999 (Eric Kohl)
  *       Cleanup. Unicode safe!
  *
  *    30-Apr-2004 (Filip Navara <xnavara@volny.cz>)

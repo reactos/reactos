@@ -97,26 +97,26 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
  *
- *    03-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    03-Dec-1998 (Eric Kohl)
  *        Replaced DOS calls by Win32 calls.
  *
- *    08-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    08-Dec-1998 (Eric Kohl)
  *        Added help texts ("/?").
  *
- *    18-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    18-Dec-1998 (Eric Kohl)
  *        Added support for quoted arguments (cd "program files").
  *
- *    07-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    07-Jan-1999 (Eric Kohl)
  *        Clean up.
  *
- *    26-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    26-Jan-1999 (Eric Kohl)
  *        Replaced remaining CRT io functions by Win32 io functions.
  *        Unicode safe!
  *
- *    30-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    30-Jan-1999 (Eric Kohl)
  *        Added "cd -" feature. Changes to the previous directory.
  *
- *    15-Mar-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    15-Mar-1999 (Eric Kohl)
  *        Fixed bug in "cd -" feature. If the previous directory was a root
  *        directory, it was ignored.
  *

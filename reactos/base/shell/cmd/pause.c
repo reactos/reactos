@@ -13,7 +13,7 @@
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
  *
- *    18-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    18-Jan-1999 (Eric Kohl)
  *        Unicode ready!
  */
 

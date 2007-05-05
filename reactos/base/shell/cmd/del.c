@@ -15,19 +15,19 @@
 *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
 *        added config.h include
 *
-*    09-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
+*    09-Dec-1998 (Eric Kohl)
 *        Fixed command line parsing bugs.
 *
-*    21-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
+*    21-Jan-1999 (Eric Kohl)
 *        Started major rewrite using a new structure.
 *
-*    03-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
+*    03-Feb-1999 (Eric Kohl)
 *        First working version.
 *
-*    30-Mar-1999 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
+*    30-Mar-1999 (Eric Kohl)
 *        Added quiet ("/Q"), wipe ("/W") and zap ("/Z") option.
 *
-*    06-Nov-1999 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
+*    06-Nov-1999 (Eric Kohl)
 *        Little fix to keep DEL quiet inside batch files.
 *
 *    28-Jan-2004 (Michael Fritscher <michael@fritscher.net>)

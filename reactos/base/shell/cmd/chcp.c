@@ -4,7 +4,7 @@
  *
  *  History:
  *
- *    23-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    23-Dec-1998 (Eric Kohl)
  *        Started.
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

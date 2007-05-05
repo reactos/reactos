@@ -4,13 +4,13 @@
  *
  *  History:
  *
- *    10-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    10-Dec-1998 (Eric Kohl)
  *        Started.
  *
- *    11-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    11-Dec-1998 (Eric Kohl)
  *        Finished.
  *
- *    19-Jan-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    19-Jan-1998 (Eric Kohl)
  *        Unicode ready!
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)

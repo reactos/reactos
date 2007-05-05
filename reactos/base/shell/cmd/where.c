@@ -54,21 +54,20 @@
  *        executable (does not have .bat, .com, or .exe extention).
  *        Before command would to execute any file with any extension (opps!)
  *
- *    03-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    03-Dec-1998 (Eric Kohl)
  *        Changed find_which().
  *
- *    07-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    07-Dec-1998 (Eric Kohl)
  *        Added ".CMD" extension.
  *        Replaced numeric constant by _NR_OF_EXTENSIONS.
  *
- *    26-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    26-Feb-1999 (Eric Kohl)
  *        Replaced find_which() by SearchForExecutable().
  *        Now files are searched using the right extension order.
  *
- *    20-Apr-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Apr-1999 (Eric Kohl)
  *        Some minor changes and improvements.
  *
-
  *    10-Jul-2004 (Jens Collin <jens.collin@lakhei.com>)
  *        Fixed searxhing for files with specific extensions in PATHEXT order..
  *

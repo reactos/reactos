@@ -84,36 +84,36 @@
  *        Fixed carrage return output to better match MSDOS with echo
  *        on or off. (marked with "JPP 19980708")
  *
- *    07-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    07-Dec-1998 (Eric Kohl)
  *        First ReactOS release.
  *        Extended length of commandline buffers to 512.
  *
- *    13-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    13-Dec-1998 (Eric Kohl)
  *        Added COMSPEC environment variable.
  *        Added "/t" support (color) on cmd command line.
  *
- *    07-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    07-Jan-1999 (Eric Kohl)
  *        Added help text ("cmd /?").
  *
- *    25-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    25-Jan-1999 (Eric Kohl)
  *        Unicode and redirection safe!
  *        Fixed redirections and piping.
  *        Piping is based on temporary files, but basic support
  *        for anonymous pipes already exists.
  *
- *    27-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    27-Jan-1999 (Eric Kohl)
  *        Replaced spawnl() by CreateProcess().
  *
- *    22-Oct-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    22-Oct-1999 (Eric Kohl)
  *        Added break handler.
  *
- *    15-Dec-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    15-Dec-1999 (Eric Kohl)
  *        Fixed current directory
  *
- *    28-Dec-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    28-Dec-1999 (Eric Kohl)
  *        Restore window title after program/batch execution
  *
- *    03-Feb-2001 (Eric Kohl <ekohl@rz-online.de>)
+ *    03-Feb-2001 (Eric Kohl)
  *        Workaround because argc[0] is NULL under ReactOS
  *
  *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)

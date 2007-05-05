@@ -4,13 +4,13 @@
  *
  *  History:
  *
- *    14-Dec-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    14-Dec-1998 (Eric Kohl)
  *        Implemented PUSHD and POPD command.
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Unicode and redirection safe!
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Added DIRS command.
  */
 
