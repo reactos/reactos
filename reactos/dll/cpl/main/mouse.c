@@ -437,11 +437,6 @@ EnumerateCursorSchemes(HWND hwndDlg)
     LONG lError;
     HWND hDlgCtrl;
     LRESULT lResult;
-    TCHAR szCurrentScheme[MAX_PATH];
-    DWORD dwCurrentScheme;
-    INT nSchemeIndex;
-    INT i, nCount;
-    LPTSTR p;
 
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMBO_CURSOR_SCHEME);
     SendMessage(hDlgCtrl, CB_RESETCONTENT, 0, 0);
@@ -534,49 +529,6 @@ EnumerateCursorSchemes(HWND hwndDlg)
     LoadString(hApplet, IDS_NONE, szSystemScheme, MAX_PATH);
     lResult = SendMessage(hDlgCtrl, CB_ADDSTRING, (WPARAM)0, (LPARAM)szSystemScheme);
     SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)NULL);
-
-    /* Get the name of the current cursor scheme */
-    szCurrentScheme[0] = 0;
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Control Panel\\Cursors"), 0, KEY_READ | KEY_QUERY_VALUE, &hCursorKey) == ERROR_SUCCESS)
-    {
-        dwCurrentScheme = sizeof(szCurrentScheme) / sizeof(TCHAR);
-        if (RegQueryValueEx(hCursorKey, NULL, NULL, NULL, (LPBYTE)szCurrentScheme, &dwCurrentScheme))
-            szCurrentScheme[0] = 0;
-
-        RegCloseKey(hCursorKey);
-    }
-
-    /* Search for the matching entry in the cursor scheme list */
-    LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
-    nSchemeIndex = -1;
-    nCount = (INT)SendMessage(hDlgCtrl, CB_GETCOUNT, 0, 0);
-    for (i = 0; i < nCount; i++)
-    {
-        SendMessage(hDlgCtrl, CB_GETLBTEXT, i, (LPARAM)szValueName);
-
-        p = _tcsstr(szValueName, szSystemScheme);
-        if (p)
-        {
-            p -= 1;
-            *p = 0;
-        }
-
-        if (_tcscmp(szValueName, szCurrentScheme) == 0)
-        {
-            nSchemeIndex = (INT)i;
-            break;
-        }
-    }
-
-    /* Select the matching entry */
-    if (nSchemeIndex != -1)
-        SendMessage(hDlgCtrl, CB_SETCURSEL, (WPARAM)nSchemeIndex, (LPARAM)0);
-    else
-    {
-        SendMessage(hDlgCtrl, CB_SETCURSEL, (WPARAM)lResult, (LPARAM)0);
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_BUTTON_DELETE_SCHEME);
-        EnableWindow(hDlgCtrl, FALSE);
-    }
 
     return TRUE;
 }
@@ -996,7 +948,7 @@ OnDrawItem(UINT idCtl,
 
 
 static VOID
-LoadNewCursorScheme(HWND hwndDlg, BOOL bInit)
+LoadNewCursorScheme(HWND hwndDlg)
 {
     TCHAR buffer[MAX_PATH];
     TCHAR szSystemScheme[MAX_PATH];
@@ -1023,7 +975,103 @@ LoadNewCursorScheme(HWND hwndDlg, BOOL bInit)
 
     lpName = (LPTSTR)SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETITEMDATA, nSel, 0);
     LoadCursorScheme(lpName, !bEnable);
-    RefreshCursorList(hwndDlg, bInit);
+    RefreshCursorList(hwndDlg, FALSE);
+}
+
+
+static VOID
+LoadInitialCursorScheme(HWND hwndDlg)
+{
+    TCHAR szSchemeName[256];
+    TCHAR szSystemScheme[256];
+    TCHAR szCursorPath[256];
+    HKEY hCursorKey;
+    LONG lError;
+    DWORD dwDataSize;
+    DWORD dwSchemeSource = 0;
+    UINT index, i;
+    DWORD dwType;
+    INT nSel;
+
+    for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+    {
+        g_CursorData[i].hCursor = 0;
+        g_CursorData[i].szCursorPath[0] = 0;
+    }
+
+    lError = RegOpenKeyEx(HKEY_CURRENT_USER,
+                          _T("Control Panel\\Cursors"),
+                          0,
+                          KEY_READ | KEY_QUERY_VALUE,
+                          &hCursorKey);
+    if (lError != ERROR_SUCCESS)
+        return;
+
+    dwDataSize = sizeof(DWORD);
+    lError = RegQueryValueEx(hCursorKey,
+                             _T("Scheme Source"),
+                             NULL,
+                             NULL,
+                             (LPBYTE)&dwSchemeSource,
+                             &dwDataSize);
+
+    if (dwSchemeSource != 0)
+    {
+        dwDataSize = 256 * sizeof(TCHAR);
+        lError = RegQueryValueEx(hCursorKey,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 (LPBYTE)szSchemeName,
+                                 &dwDataSize);
+
+        for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
+        {
+            dwDataSize = MAX_PATH * sizeof(TCHAR);
+            lError = RegQueryValueEx(hCursorKey,
+                                     g_CursorData[i].lpValueName,
+                                     NULL,
+                                     &dwType,
+                                     (LPBYTE)szCursorPath,
+                                     &dwDataSize);
+            if (lError == ERROR_SUCCESS)
+            {
+                if (dwType == REG_EXPAND_SZ)
+                {
+                    ExpandEnvironmentStrings(szCursorPath, g_CursorData[i].szCursorPath, MAX_PATH);
+                }
+                else
+                {
+                    _tcscpy(g_CursorData[i].szCursorPath, szCursorPath);
+                }
+            }
+        }
+    }
+
+    RegCloseKey(hCursorKey);
+
+    ReloadCurrentCursorScheme();
+    RefreshCursorList(hwndDlg, TRUE);
+
+    /* Build the full scheme name */
+    if (dwSchemeSource == 0)
+    {
+        LoadString(hApplet, IDS_NONE, szSchemeName, MAX_PATH);
+    }
+    else if (dwSchemeSource == 2)
+    {
+        LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
+        _tcscat(szSchemeName, _T(" "));
+        _tcscat(szSchemeName, szSystemScheme);
+    }
+
+    /* Search and select the curent scheme name from the scheme list */
+    nSel = SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_FINDSTRINGEXACT, -1, (LPARAM)szSchemeName);
+    if (nSel != CB_ERR)
+        SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_SETCURSEL, (WPARAM)nSel, (LPARAM)0);
+
+    /* Enable /disable delete button */
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DELETE_SCHEME), (dwSchemeSource == 1));
 }
 
 
@@ -1119,7 +1167,7 @@ PointerProc(IN HWND hwndDlg,
             pPointerData->cyCursor = GetSystemMetrics(SM_CYCURSOR);
 
             EnumerateCursorSchemes(hwndDlg);
-            LoadNewCursorScheme(hwndDlg, TRUE);
+            LoadInitialCursorScheme(hwndDlg);
 
             /* Get drop shadow setting */
             if (!SystemParametersInfo(SPI_GETDROPSHADOW, 0, &pPointerData->bDropShadow, 0))
@@ -1178,8 +1226,7 @@ PointerProc(IN HWND hwndDlg,
                 case IDC_COMBO_CURSOR_SCHEME:
                     if (HIWORD(wParam) == CBN_SELENDOK)
                     {
-                        LoadNewCursorScheme(hwndDlg, FALSE);
-
+                        LoadNewCursorScheme(hwndDlg);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
