@@ -720,7 +720,7 @@ QSI_DEF(SystemProcessInformation)
 
 		if (Size < sizeof(SYSTEM_PROCESS_INFORMATION))
 		{
-			return (STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
+			_SEH_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
 		}
 
 		syspr = PsGetNextProcess(NULL);
@@ -735,7 +735,7 @@ QSI_DEF(SystemProcessInformation)
 			int inLen=32; // image name len in bytes
 			PLIST_ENTRY current_entry;
 			PETHREAD current;
-            PSYSTEM_THREAD_INFORMATION ThreadInfo;
+			PSYSTEM_THREAD_INFORMATION ThreadInfo;
 
 			SpiCur = (PSYSTEM_PROCESS_INFORMATION)pCur;
 
@@ -756,7 +756,7 @@ QSI_DEF(SystemProcessInformation)
 				*ReqSize = ovlSize;
 				ObDereferenceObject(pr);
 
-				return (STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
+				_SEH_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
 			}
 
 			// fill system information
@@ -777,7 +777,7 @@ QSI_DEF(SystemProcessInformation)
 			}
 			else
 			{
-                		RtlInitUnicodeString(&SpiCur->ImageName, NULL);
+				RtlInitUnicodeString(&SpiCur->ImageName, NULL);
 			}
 
 			SpiCur->BasePriority = pr->Pcb.BasePriority;
@@ -796,15 +796,14 @@ QSI_DEF(SystemProcessInformation)
 			SpiCur->PagefileUsage = pr->QuotaUsage[2];
 			SpiCur->PeakPagefileUsage = pr->QuotaPeak[2];
 			SpiCur->PrivatePageCount = pr->CommitCharge;
-            ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCur + 1);
+			ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCur + 1);
 
-		        current_entry = pr->ThreadListHead.Flink;
-        		while (current_entry != &pr->ThreadListHead)
+			current_entry = pr->ThreadListHead.Flink;
+			while (current_entry != &pr->ThreadListHead)
 			{
 				current = CONTAINING_RECORD(current_entry, ETHREAD,
 				                            ThreadListEntry);
 
-                
 				ThreadInfo->KernelTime.QuadPart = current->Tcb.KernelTime * 100000LL;
 				ThreadInfo->UserTime.QuadPart = current->Tcb.UserTime * 100000LL;
 //				SpiCur->TH[i].CreateTime = current->CreateTime;
@@ -1828,7 +1827,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
        */
       if (SystemInformationClass >= MaxSystemInfoClass)
         {
-          return (STATUS_INVALID_INFO_CLASS);
+          _SEH_YIELD(return STATUS_INVALID_INFO_CLASS);
         }
 
       if (NULL != CallQS [SystemInformationClass].Query)

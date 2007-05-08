@@ -2800,7 +2800,7 @@ NtWriteFile(IN HANDLE FileHandle,
             {
                 /* We failed */
                 ObDereferenceObject(FileObject);
-                return STATUS_ACCESS_DENIED;
+                _SEH_YIELD(return STATUS_ACCESS_DENIED);
             }
 
             /* Probe the status block */

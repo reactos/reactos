@@ -839,7 +839,10 @@ ObQueryTypeInfo(IN POBJECT_TYPE ObjectType,
                          ALIGN_UP(ObjectType->Name.MaximumLength, ULONG);
 
         /* Check if thats too much though. */
-        if (Length < *ReturnLength) return STATUS_INFO_LENGTH_MISMATCH;
+        if (Length < *ReturnLength)
+        {
+            _SEH_YIELD(return STATUS_INFO_LENGTH_MISMATCH);
+        }
 
         /* Build the data */
         ObjectTypeInfo->TotalNumberOfHandles =
