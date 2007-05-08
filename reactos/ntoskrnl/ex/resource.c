@@ -1,19 +1,17 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ex/resource.c
- * PURPOSE:         ERESOURCE Implementation
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PURPOSE:         Executive Resource Implementation
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* WARNING:
+/*
+ * WARNING:
  * This implementation is the Windows NT 5.x one.
- * NT 6.0 beta has optimized the OwnerThread entry array
- * and the internals of ExpFindEntryForThread and ExpFindFreeEntry
- * need to be modified accordingly in order to support the WDK.
- * These changes will not be made here until NT 6.0 reaches RTM status since
- * there is a possibility that they will be removed; as such, do NOT
- * update ERESOURCE/relevant code to the WDK definition.
+ * Vista has optimized the OwnerThread entry array and the internals of
+ * ExpFindEntryForThread and ExpFindFreeEntry probably need to be modified
+ * accordingly in order to support the WDK.
  */
 
 /* INCLUDES *****************************************************************/
@@ -26,15 +24,65 @@
 #define IsExclusiveWaiting(r)   (r->NumberOfExclusiveWaiters)
 #define IsSharedWaiting(r)      (r->NumberOfSharedWaiters)
 #define IsOwnedExclusive(r)     (r->Flag & ResourceOwnedExclusive)
-#define IsBoostAllowed(r)       (r->Flag & ResourceHasDisabledPriorityBoost)
+#define IsBoostAllowed(r)       (!(r->Flag & ResourceHasDisabledPriorityBoost))
+
+#if (!(defined(CONFIG_SMP)) && !(defined(DBG)))
+
+VOID
+FORCEINLINE
+ExAcquireResourceLock(IN PERESOURCE_XP Resource,
+                      IN PKLOCK_QUEUE_HANDLE LockHandle)
+{
+    UNREFERENCED_PARAMETER(Resource);
+    UNREFERENCED_PARAMETER(LockHandle);
+
+    /* Simply disable interrupts */
+    _disable();
+}
+
+VOID
+FORCEINLINE
+ExReleaseResourceLock(IN PERESOURCE_XP Resource,
+                      IN PKLOCK_QUEUE_HANDLE LockHandle)
+{
+    UNREFERENCED_PARAMETER(Resource);
+    UNREFERENCED_PARAMETER(LockHandle);
+
+    /* Simply enable interrupts */
+    _disable();
+}
+
+#else
+
+VOID
+FORCEINLINE
+ExAcquireResourceLock(IN PERESOURCE_XP Resource,
+                      IN PKLOCK_QUEUE_HANDLE LockHandle)
+{
+    /* Acquire the lock */
+    KeAcquireInStackQueuedSpinLock(&Resource->SpinLock, LockHandle);
+}
+
+VOID
+FORCEINLINE
+ExReleaseResourceLock(IN PERESOURCE_XP Resource,
+                      IN PKLOCK_QUEUE_HANDLE LockHandle)
+{
+    UNREFERENCED_PARAMETER(Resource);
+
+    /* Release the lock */
+    KeReleaseInStackQueuedSpinLock(LockHandle);
+}
+#endif
 
 /* DATA***********************************************************************/
 
+LARGE_INTEGER ExShortTime = {{-100000, -1}};
 LARGE_INTEGER ExpTimeout;
 ULONG ExpResourceTimeoutCount = 90 * 3600 / 2;
 KSPIN_LOCK ExpResourceSpinLock;
 LIST_ENTRY ExpSystemResourcesList;
-BOOLEAN ExResourceStrict = FALSE; /* FIXME */
+BOOLEAN ExResourceStrict = TRUE;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -74,8 +122,8 @@ ExpVerifyResource(IN PERESOURCE_XP Resource)
  *     The ExpCheckForApcsDisabled routine checks if Kernel APCs are still
  *     enabled when they should be disabled, and optionally breakpoints.
  *
- * @param BreakIfTrue
- *        Specifies if we should break if an invalid APC State is detected.
+ * @param Irql
+ *        Specifies the IRQL during the acquire attempt.
  *
  * @param Resource
  *        Pointer to the resource being checked.
@@ -90,15 +138,15 @@ ExpVerifyResource(IN PERESOURCE_XP Resource)
  *--*/
 VOID
 NTAPI
-ExpCheckForApcsDisabled(IN BOOLEAN BreakIfTrue,
+ExpCheckForApcsDisabled(IN KIRQL Irql,
                         IN PERESOURCE_XP Resource,
-                        IN PETHREAD Thread)
+                        IN PKTHREAD Thread)
 {
     /* Check if we should care and check if we should break */
     if ((ExResourceStrict) &&
-        (BreakIfTrue) &&
-        !(Thread->SystemThread) &&
-        !(Thread->Tcb.CombinedApcDisable))
+        (Irql >= APC_LEVEL) &&
+        !(((PETHREAD)Thread)->SystemThread) &&
+        !(Thread->CombinedApcDisable))
     {
         /* Bad! */
         DPRINT1("EX: resource: APCs still enabled before resource %p acquire "
@@ -143,8 +191,8 @@ ExpResourceInitialization(VOID)
  * @param Resource
  *        Pointer to the resource.
  *
- * @param OldIrql
- *        Pointer to current IRQL. TBC: Pointer to in-stack queued spinlock.
+ * @param LockHandle
+ *        Pointer to in-stack queued spinlock.
  *
  * @return None.
  *
@@ -154,33 +202,44 @@ ExpResourceInitialization(VOID)
 VOID
 NTAPI
 ExpAllocateExclusiveWaiterEvent(IN PERESOURCE_XP Resource,
-                                IN PKIRQL OldIrql)
+                                IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
     PKEVENT Event;
 
     /* Release the lock */
-    ExReleaseResourceLock(&Resource->SpinLock, *OldIrql);
+    ExReleaseResourceLock(Resource, LockHandle);
 
-    /* Allocate the event */
-    Event = ExAllocatePoolWithTag(NonPagedPool,
-                                  sizeof(KEVENT),
-                                  TAG_RESOURCE_EVENT);
-
-    /* Initialize it */
-    KeInitializeEvent(Event, SynchronizationEvent, FALSE);
-
-    /* Set it */
-    if (InterlockedCompareExchangePointer(&Resource->ExclusiveWaiters,
-                                          Event,
-                                          NULL))
+    /* Loop as long as we keep running out of memory */
+    do
     {
-        /* Someone already set it, free our event */
-        DPRINT1("WARNING: Handling race condition\n");
-        ExFreePool(Event);
-    }
+        /* Allocate the event */
+        Event = ExAllocatePoolWithTag(NonPagedPool,
+                                      sizeof(KEVENT),
+                                      TAG_RESOURCE_EVENT);
+        if (Event)
+        {
+            /* Initialize it */
+            KeInitializeEvent(Event, SynchronizationEvent, FALSE);
+
+            /* Set it */
+            if (InterlockedCompareExchangePointer(&Resource->ExclusiveWaiters,
+                                                  Event,
+                                                  NULL))
+            {
+                /* Someone already set it, free our event */
+                DPRINT1("WARNING: Handling race condition\n");
+                ExFreePool(Event);
+            }
+
+            break;
+        }
+
+        /* Wait a bit before trying again */
+        KeDelayExecutionThread(KernelMode, FALSE, &ExShortTime);
+    } while (TRUE);
 
     /* Re-acquire the lock */
-    ExAcquireResourceLock(&Resource->SpinLock, OldIrql);
+    ExAcquireResourceLock(Resource, LockHandle);
 }
 
 /*++
@@ -192,8 +251,8 @@ ExpAllocateExclusiveWaiterEvent(IN PERESOURCE_XP Resource,
  * @param Resource
  *        Pointer to the resource.
  *
- * @param OldIrql
- *        Pointer to current IRQL. TBC: Pointer to in-stack queued spinlock.
+ * @param LockHandle
+ *        Pointer to in-stack queued spinlock.
  *
  * @return None.
  *
@@ -203,33 +262,44 @@ ExpAllocateExclusiveWaiterEvent(IN PERESOURCE_XP Resource,
 VOID
 NTAPI
 ExpAllocateSharedWaiterSemaphore(IN PERESOURCE_XP Resource,
-                                 IN PKIRQL OldIrql)
+                                 IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
     PKSEMAPHORE Semaphore;
 
     /* Release the lock */
-    ExReleaseResourceLock(&Resource->SpinLock, *OldIrql);
+    ExReleaseResourceLock(Resource, LockHandle);
 
-    /* Allocate the semaphore */
-    Semaphore = ExAllocatePoolWithTag(NonPagedPool,
-                                      sizeof(KSEMAPHORE),
-                                      TAG_RESOURCE_SEMAPHORE);
-
-    /* Initialize it */
-    KeInitializeSemaphore(Semaphore, 0, MAXLONG);
-
-    /* Set it */
-    if (InterlockedCompareExchangePointer(&Resource->SharedWaiters,
-                                          Semaphore,
-                                          NULL))
+    /* Loop as long as we keep running out of memory */
+    do
     {
-        /* Someone already set it, free our semaphore */
-        DPRINT1("WARNING: Handling race condition\n");
-        ExFreePool(Semaphore);
-    }
+        /* Allocate the semaphore */
+        Semaphore = ExAllocatePoolWithTag(NonPagedPool,
+                                          sizeof(KSEMAPHORE),
+                                          TAG_RESOURCE_SEMAPHORE);
+        if (Semaphore)
+        {
+            /* Initialize it */
+            KeInitializeSemaphore(Semaphore, 0, MAXLONG);
+
+            /* Set it */
+            if (InterlockedCompareExchangePointer(&Resource->SharedWaiters,
+                                                  Semaphore,
+                                                  NULL))
+            {
+                /* Someone already set it, free our semaphore */
+                DPRINT1("WARNING: Handling race condition\n");
+                ExFreePool(Semaphore);
+            }
+
+            break;
+        }
+
+        /* Wait a bit before trying again */
+        KeDelayExecutionThread(KernelMode, FALSE, &ExShortTime);
+    } while (TRUE);
 
     /* Re-acquire the lock */
-    ExAcquireResourceLock(&Resource->SpinLock, OldIrql);
+    ExAcquireResourceLock(Resource, LockHandle);
 }
 
 /*++
@@ -241,8 +311,8 @@ ExpAllocateSharedWaiterSemaphore(IN PERESOURCE_XP Resource,
  * @param Resource
  *        Pointer to the resource.
  *
- * @param OldIrql
- *        Pointer to current IRQL. TBC: Pointer to in-stack queued spinlock.
+ * @param LockHandle
+ *        Pointer to in-stack queued spinlock.
  *
  * @return None.
  *
@@ -252,12 +322,11 @@ ExpAllocateSharedWaiterSemaphore(IN PERESOURCE_XP Resource,
 VOID
 NTAPI
 ExpExpandResourceOwnerTable(IN PERESOURCE_XP Resource,
-                            IN PKIRQL OldIrql)
+                            IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
     POWNER_ENTRY Owner, Table;
-    KIRQL OldIrql2;
+    KIRQL OldIrql;
     ULONG NewSize, OldSize;
-    DPRINT("ExpExpandResourceOwnerTable: %p\n", Resource);
 
     /* Get the owner table */
     Owner = Resource->OwnerTable;
@@ -275,7 +344,7 @@ ExpExpandResourceOwnerTable(IN PERESOURCE_XP Resource,
     }
 
     /* Release the lock */
-    ExReleaseResourceLock(&Resource->SpinLock, *OldIrql);
+    ExReleaseResourceLock(Resource, LockHandle);
 
     /* Allocate memory for the table */
     Table = ExAllocatePoolWithTag(NonPagedPool,
@@ -287,38 +356,36 @@ ExpExpandResourceOwnerTable(IN PERESOURCE_XP Resource,
                   (NewSize - OldSize) * sizeof(OWNER_ENTRY));
 
     /* Lock the resource */
-    ExAcquireResourceLock(&Resource->SpinLock, OldIrql);
+    ExAcquireResourceLock(Resource, LockHandle);
 
     /* Make sure nothing has changed */
     if ((Owner != Resource->OwnerTable) ||
-        ((Owner) && (OldSize != Resource->OwnerTable->TableSize)))
+        ((Owner) && (OldSize != Owner->TableSize)))
     {
         /* Resource changed while we weren't holding the lock; bail out */
-        ExReleaseResourceLock(&Resource->SpinLock, *OldIrql);
+        ExReleaseResourceLock(Resource, LockHandle);
         ExFreePool(Table);
     }
     else
     {
         /* Copy the table */
-        RtlCopyMemory(Table,
-                      Owner,
-                      OldSize * sizeof(OWNER_ENTRY));
+        RtlCopyMemory(Table, Owner, OldSize * sizeof(OWNER_ENTRY));
 
         /* Acquire dispatcher lock to prevent thread boosting */
-        OldIrql2 = KiAcquireDispatcherLock();
+        OldIrql = KiAcquireDispatcherLock();
 
         /* Set the new table data */
         Table->TableSize = NewSize;
         Resource->OwnerTable = Table;
 
         /* Release dispatcher lock */
-        KiReleaseDispatcherLock(OldIrql2);
+        KiReleaseDispatcherLock(OldIrql);
 
         /* Sanity check */
         ExpVerifyResource(Resource);
 
         /* Release lock */
-        ExReleaseResourceLock(&Resource->SpinLock, *OldIrql);
+        ExReleaseResourceLock(Resource, LockHandle);
 
         /* Free the old table */
         if (Owner) ExFreePool(Owner);
@@ -331,7 +398,7 @@ ExpExpandResourceOwnerTable(IN PERESOURCE_XP Resource,
     KeGetCurrentThread()->ResourceIndex = (UCHAR)OldSize;
 
     /* Lock the resource again */
-    ExAcquireResourceLock(&Resource->SpinLock, OldIrql);
+    ExAcquireResourceLock(Resource, LockHandle);
 }
 
 /*++
@@ -344,8 +411,8 @@ ExpExpandResourceOwnerTable(IN PERESOURCE_XP Resource,
  * @param Resource
  *        Pointer to the resource.
  *
- * @param OldIrql
- *        Pointer to current IRQL. TBC: Pointer to in-stack queued spinlock.
+ * @param LockHandle
+ *        Pointer to in-stack queued spinlock.
  *
  * @return Pointer to an empty OWNER_ENTRY structure.
  *
@@ -355,13 +422,13 @@ ExpExpandResourceOwnerTable(IN PERESOURCE_XP Resource,
 POWNER_ENTRY
 FASTCALL
 ExpFindFreeEntry(IN PERESOURCE_XP Resource,
-                 IN PKIRQL OldIrql)
+                 IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
     POWNER_ENTRY Owner, Limit;
     POWNER_ENTRY FreeEntry = NULL;
 
     /* Sanity check */
-    ASSERT(OldIrql != 0);
+    ASSERT(LockHandle != 0);
     ASSERT(Resource->OwnerThreads[0].OwnerThread != 0);
 
     /* Check if the next built-in entry is free */
@@ -385,9 +452,8 @@ ExpFindFreeEntry(IN PERESOURCE_XP Resource,
                 if (!Owner->OwnerThread)
                 {
                     /* Update the resource entry and return it */
-                    KeGetCurrentThread()->ResourceIndex = (UCHAR)(Owner -
-                                                                  Resource->
-                                                                  OwnerTable);
+                    KeGetCurrentThread()->ResourceIndex =
+                        (UCHAR)(Owner - Resource->OwnerTable);
                     return Owner;
                 }
 
@@ -397,8 +463,7 @@ ExpFindFreeEntry(IN PERESOURCE_XP Resource,
         }
 
         /* No free entry, expand the table */
-        ExpExpandResourceOwnerTable(Resource, OldIrql);
-        FreeEntry = NULL;
+        ExpExpandResourceOwnerTable(Resource, LockHandle);
     }
 
     /* Return the entry found */
@@ -418,8 +483,8 @@ ExpFindFreeEntry(IN PERESOURCE_XP Resource,
  * @param Thread
  *        Pointer to the thread to find.
  *
- * @param OldIrql
- *        Pointer to current IRQL. TBC: Pointer to in-stack queued spinlock.
+ * @param LockHandle
+ *        Pointer to in-stack queued spinlock.
  *
  * @return Pointer to an empty OWNER_ENTRY structure.
  *
@@ -430,7 +495,7 @@ POWNER_ENTRY
 FASTCALL
 ExpFindEntryForThread(IN PERESOURCE_XP Resource,
                       IN ERESOURCE_THREAD Thread,
-                      IN PKIRQL OldIrql)
+                      IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
     POWNER_ENTRY FreeEntry, Owner, Limit;
 
@@ -456,9 +521,8 @@ ExpFindEntryForThread(IN PERESOURCE_XP Resource,
             if (Owner->OwnerThread == Thread)
             {
                 /* We did, update the index and return it */
-                KeGetCurrentThread()->ResourceIndex = (UCHAR)(Owner -
-                                                              Resource->
-                                                              OwnerTable);
+                KeGetCurrentThread()->ResourceIndex =
+                    (UCHAR)(Owner - Resource->OwnerTable);
                 return Owner;
             }
 
@@ -469,19 +533,19 @@ ExpFindEntryForThread(IN PERESOURCE_XP Resource,
     }
 
     /* Check if it's OK to do an expansion */
-    if (!OldIrql) return NULL;
+    if (!LockHandle) return NULL;
 
     /* If we found a free entry by now, return it */
     if (FreeEntry)
     {
         /* Set the resource index */
-        KeGetCurrentThread()->ResourceIndex = (UCHAR)(FreeEntry -
-                                                      Resource->OwnerTable);
+        KeGetCurrentThread()->ResourceIndex =
+            (UCHAR)(FreeEntry - Resource->OwnerTable);
         return FreeEntry;
     }
 
     /* No free entry, expand the table */
-    ExpExpandResourceOwnerTable(Resource, OldIrql);
+    ExpExpandResourceOwnerTable(Resource, LockHandle);
     return NULL;
 }
 
@@ -561,7 +625,7 @@ ExpWaitForResource(IN PERESOURCE_XP Resource,
     LARGE_INTEGER Timeout;
     PKTHREAD Thread, OwnerThread;
 #if DBG
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE LockHandle;
 #endif
 
     /* Increase contention count and use a 5 second timeout */
@@ -588,7 +652,7 @@ ExpWaitForResource(IN PERESOURCE_XP Resource,
             WaitCount = 0;
 #if DBG
             /* Lock the resource */
-            ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
+            ExAcquireResourceLock(Resource, &LockHandle);
 
             /* Dump debug information */
             DPRINT1("Resource @ %lx\n", Resource);
@@ -625,7 +689,7 @@ ExpWaitForResource(IN PERESOURCE_XP Resource,
             /* Break */
             DbgBreakPoint();
             DPRINT1("EX - Rewaiting\n");
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
 #endif
         }
 
@@ -709,10 +773,10 @@ ExpWaitForResource(IN PERESOURCE_XP Resource,
  *--*/
 BOOLEAN
 NTAPI
-ExAcquireResourceExclusiveLite(PERESOURCE resource,
-                               BOOLEAN Wait)
+ExAcquireResourceExclusiveLite(IN PERESOURCE resource,
+                               IN BOOLEAN Wait)
 {
-    KIRQL OldIrql = PASSIVE_LEVEL;
+    KLOCK_QUEUE_HANDLE LockHandle;
     ERESOURCE_THREAD Thread;
     BOOLEAN Success;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
@@ -728,8 +792,8 @@ ExAcquireResourceExclusiveLite(PERESOURCE resource,
     ExpVerifyResource(Resource);
 
     /* Acquire the lock */
-    ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
-    ExpCheckForApcsDisabled(TRUE, Resource, (PETHREAD)Thread);
+    ExAcquireResourceLock(Resource, &LockHandle);
+    ExpCheckForApcsDisabled(LockHandle.OldIrql, Resource, (PKTHREAD)Thread);
 
     /* Check if there is a shared owner or exclusive owner */
 TryAcquire:
@@ -760,20 +824,19 @@ TryAcquire:
                 if (!Resource->ExclusiveWaiters)
                 {
                     /* It doesn't, allocate the event and try acquiring again */
-                    ExpAllocateExclusiveWaiterEvent(Resource, &OldIrql);
+                    ExpAllocateExclusiveWaiterEvent(Resource, &LockHandle);
                     goto TryAcquire;
                 }
-                else
-                {
-                    /* Has exclusive waiters, wait on it */
-                    Resource->NumberOfExclusiveWaiters++;
-                    ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
-                    ExpWaitForResource(Resource, Resource->ExclusiveWaiters);
 
-                    /* Set owner and return success */
-                    Resource->OwnerThreads[0].OwnerThread = ExGetCurrentResourceThread();
-                    return TRUE;
-                }
+                /* Has exclusive waiters, wait on it */
+                Resource->NumberOfExclusiveWaiters++;
+                ExReleaseResourceLock(Resource, &LockHandle);
+                ExpWaitForResource(Resource, Resource->ExclusiveWaiters);
+
+                /* Set owner and return success */
+                Resource->OwnerThreads[0].OwnerThread =
+                    ExGetCurrentResourceThread();
+                return TRUE;
             }
         }
     }
@@ -788,7 +851,7 @@ TryAcquire:
     }
 
     /* Release the lock and return */
-    ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+    ExReleaseResourceLock(Resource, &LockHandle);
     return Success;
 }
 
@@ -824,10 +887,10 @@ TryAcquire:
  *--*/
 BOOLEAN
 NTAPI
-ExAcquireResourceSharedLite(PERESOURCE resource,
-                            BOOLEAN Wait)
+ExAcquireResourceSharedLite(IN PERESOURCE resource,
+                            IN BOOLEAN Wait)
 {
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE LockHandle;
     ERESOURCE_THREAD Thread;
     POWNER_ENTRY Owner;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
@@ -840,8 +903,8 @@ ExAcquireResourceSharedLite(PERESOURCE resource,
     ExpVerifyResource(Resource);
 
     /* Acquire the lock */
-    ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
-    ExpCheckForApcsDisabled(TRUE, Resource, (PETHREAD)Thread);
+    ExAcquireResourceLock(Resource, &LockHandle);
+    ExpCheckForApcsDisabled(LockHandle.OldIrql, Resource, (PKTHREAD)Thread);
 
     /* See if nobody owns us */
 TryAcquire:
@@ -854,7 +917,7 @@ TryAcquire:
         Resource->ActiveCount = 1;
 
         /* Release the lock and return */
-        ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+        ExReleaseResourceLock(Resource, &LockHandle);
         return TRUE;
     }
 
@@ -868,18 +931,18 @@ TryAcquire:
             Resource->OwnerThreads[0].OwnerCount++;
 
             /* Release the lock and return */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return TRUE;
         }
 
         /* Find a free entry */
-        Owner = ExpFindFreeEntry(Resource, &OldIrql);
+        Owner = ExpFindFreeEntry(Resource, &LockHandle);
         if (!Owner) goto TryAcquire;
     }
     else
     {
         /* Resource is shared, find who owns it */
-        Owner = ExpFindEntryForThread(Resource, Thread, &OldIrql);
+        Owner = ExpFindEntryForThread(Resource, Thread, &LockHandle);
         if (!Owner) goto TryAcquire;
 
         /* Is it us? */
@@ -890,7 +953,7 @@ TryAcquire:
             ASSERT(Owner->OwnerCount != 0);
 
             /* Release the lock and return */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return TRUE;
         }
 
@@ -903,7 +966,7 @@ TryAcquire:
             Resource->ActiveCount++;
 
             /* Release the lock and return */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return TRUE;
         }
     }
@@ -912,7 +975,7 @@ TryAcquire:
     if (!Wait)
     {
         /* Release the lock and return */
-        ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+        ExReleaseResourceLock(Resource, &LockHandle);
         return FALSE;
     }
 
@@ -920,7 +983,7 @@ TryAcquire:
     if (!Resource->SharedWaiters)
     {
         /* Allocate it and try another acquire */
-        ExpAllocateSharedWaiterSemaphore(Resource, &OldIrql);
+        ExpAllocateSharedWaiterSemaphore(Resource, &LockHandle);
         goto TryAcquire;
     }
 
@@ -930,7 +993,7 @@ TryAcquire:
     Resource->NumberOfSharedWaiters++;
 
     /* Release the lock and return */
-    ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+    ExReleaseResourceLock(Resource, &LockHandle);
     ExpWaitForResource(Resource, Resource->SharedWaiters);
     return TRUE;
 }
@@ -975,10 +1038,10 @@ TryAcquire:
  *--*/
 BOOLEAN
 NTAPI
-ExAcquireSharedStarveExclusive(PERESOURCE resource,
-                               BOOLEAN Wait)
+ExAcquireSharedStarveExclusive(IN PERESOURCE resource,
+                               IN BOOLEAN Wait)
 {
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE LockHandle;
     ERESOURCE_THREAD Thread;
     POWNER_ENTRY Owner;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
@@ -991,7 +1054,7 @@ ExAcquireSharedStarveExclusive(PERESOURCE resource,
     ExpVerifyResource(Resource);
 
     /* Acquire the lock */
-    ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
+    ExAcquireResourceLock(Resource, &LockHandle);
 
     /* See if nobody owns us */
 TryAcquire:
@@ -1003,7 +1066,7 @@ TryAcquire:
         Resource->OwnerThreads[1].OwnerCount = 1;
 
         /* Release the lock and return */
-        ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+        ExReleaseResourceLock(Resource, &LockHandle);
         return TRUE;
     }
 
@@ -1017,18 +1080,18 @@ TryAcquire:
             Resource->OwnerThreads[0].OwnerCount++;
 
             /* Release the lock and return */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return TRUE;
         }
 
         /* Find a free entry */
-        Owner = ExpFindFreeEntry(Resource, &OldIrql);
+        Owner = ExpFindFreeEntry(Resource, &LockHandle);
         if (!Owner) goto TryAcquire;
     }
     else
     {
         /* Resource is shared, find who owns it */
-        Owner = ExpFindEntryForThread(Resource, Thread, &OldIrql);
+        Owner = ExpFindEntryForThread(Resource, Thread, &LockHandle);
         if (!Owner) goto TryAcquire;
 
         /* Is it us? */
@@ -1039,7 +1102,7 @@ TryAcquire:
             ASSERT(Owner->OwnerCount != 0);
 
             /* Release the lock and return */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return TRUE;
         }
 
@@ -1049,7 +1112,7 @@ TryAcquire:
         Resource->ActiveCount++;
 
         /* Release the lock and return */
-        ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+        ExReleaseResourceLock(Resource, &LockHandle);
         return TRUE;
     }
 
@@ -1057,8 +1120,16 @@ TryAcquire:
     if (!Wait)
     {
         /* Release the lock and return */
-        ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+        ExReleaseResourceLock(Resource, &LockHandle);
         return TRUE;
+    }
+
+    /* Check if we have a shared waiters semaphore */
+    if (!Resource->SharedWaiters)
+    {
+        /* Allocate it and try another acquire */
+        ExpAllocateSharedWaiterSemaphore(Resource, &LockHandle);
+        goto TryAcquire;
     }
 
     /* Now wait for the resource */
@@ -1067,7 +1138,7 @@ TryAcquire:
     Resource->NumberOfSharedWaiters++;
 
     /* Release the lock and return */
-    ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+    ExReleaseResourceLock(Resource, &LockHandle);
     ExpWaitForResource(Resource, Resource->SharedWaiters);
     return TRUE;
 }
@@ -1108,7 +1179,7 @@ NTAPI
 ExAcquireSharedWaitForExclusive(IN PERESOURCE resource,
                                 IN BOOLEAN Wait)
 {
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE LockHandle;
     ERESOURCE_THREAD Thread;
     POWNER_ENTRY Owner;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
@@ -1121,7 +1192,7 @@ ExAcquireSharedWaitForExclusive(IN PERESOURCE resource,
     ExpVerifyResource(Resource);
 
     /* Acquire the lock */
-    ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
+    ExAcquireResourceLock(Resource, &LockHandle);
 
     /* See if nobody owns us */
 TryAcquire:
@@ -1133,7 +1204,7 @@ TryAcquire:
         Resource->OwnerThreads[1].OwnerCount = 1;
 
         /* Release the lock and return */
-        ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+        ExReleaseResourceLock(Resource, &LockHandle);
         return TRUE;
     }
 
@@ -1147,12 +1218,12 @@ TryAcquire:
             Resource->OwnerThreads[0].OwnerCount++;
 
             /* Release the lock and return */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return TRUE;
         }
 
         /* Find a free entry */
-        Owner = ExpFindFreeEntry(Resource, &OldIrql);
+        Owner = ExpFindFreeEntry(Resource, &LockHandle);
         if (!Owner) goto TryAcquire;
     }
     else
@@ -1164,7 +1235,7 @@ TryAcquire:
             if (!Wait)
             {
                 /* So bail out if we're not allowed */
-                ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+                ExReleaseResourceLock(Resource, &LockHandle);
                 return TRUE;
             }
 
@@ -1172,20 +1243,20 @@ TryAcquire:
             if (!Resource->SharedWaiters)
             {
                 /* Allocate one and try again */
-                ExpAllocateSharedWaiterSemaphore(Resource, &OldIrql);
+                ExpAllocateSharedWaiterSemaphore(Resource, &LockHandle);
                 goto TryAcquire;
             }
 
             /* Now wait for the resource */
             Resource->NumberOfSharedWaiters++;
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             ExpWaitForResource(Resource, Resource->SharedWaiters);
 
             /* Get the lock back */
-            ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
+            ExAcquireResourceLock(Resource, &LockHandle);
 
             /* Find who owns it now */
-            while (!(Owner = ExpFindEntryForThread(Resource, Thread, &OldIrql)));
+            while (!(Owner = ExpFindEntryForThread(Resource, Thread, &LockHandle)));
 
             /* Sanity checks */
             ASSERT(IsOwnedExclusive(Resource) == FALSE);
@@ -1197,13 +1268,13 @@ TryAcquire:
             Owner->OwnerCount = 1;
 
             /* Release the lock and return */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return TRUE;
         }
         else
         {
             /* Resource is shared, find who owns it */
-            Owner = ExpFindEntryForThread(Resource, Thread, &OldIrql);
+            Owner = ExpFindEntryForThread(Resource, Thread, &LockHandle);
             if (!Owner) goto TryAcquire;
 
             /* Is it us? */
@@ -1214,7 +1285,7 @@ TryAcquire:
                 ASSERT(Owner->OwnerCount != 0);
 
                 /* Release the lock and return */
-                ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+                ExReleaseResourceLock(Resource, &LockHandle);
                 return TRUE;
             }
 
@@ -1224,7 +1295,7 @@ TryAcquire:
             Resource->ActiveCount++;
 
             /* Release the lock and return */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return TRUE;
         }
     }
@@ -1233,7 +1304,7 @@ TryAcquire:
     if (!Wait)
     {
         /* So bail out if we're not allowed */
-        ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+        ExReleaseResourceLock(Resource, &LockHandle);
         return TRUE;
     }
 
@@ -1241,7 +1312,7 @@ TryAcquire:
     if (!Resource->SharedWaiters)
     {
         /* Allocate one and try again */
-        ExpAllocateSharedWaiterSemaphore(Resource, &OldIrql);
+        ExpAllocateSharedWaiterSemaphore(Resource,&LockHandle);
         goto TryAcquire;
     }
 
@@ -1251,7 +1322,7 @@ TryAcquire:
     Resource->NumberOfSharedWaiters++;
 
     /* Release the lock and return */
-    ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+    ExReleaseResourceLock(Resource, &LockHandle);
     ExpWaitForResource(Resource, Resource->SharedWaiters);
     return TRUE;
 }
@@ -1274,10 +1345,10 @@ TryAcquire:
  *--*/
 VOID
 NTAPI
-ExConvertExclusiveToSharedLite(PERESOURCE resource)
+ExConvertExclusiveToSharedLite(IN PERESOURCE resource)
 {
     ULONG OldWaiters;
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE LockHandle;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Sanity checks */
@@ -1287,7 +1358,7 @@ ExConvertExclusiveToSharedLite(PERESOURCE resource)
     ASSERT(Resource->OwnerThreads[0].OwnerThread == (ERESOURCE_THREAD)PsGetCurrentThread());
 
     /* Lock the resource */
-    ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
+    ExAcquireResourceLock(Resource, &LockHandle);
 
     /* Erase the exclusive flag */
     Resource->Flag &= ~ResourceOwnedExclusive;
@@ -1301,13 +1372,13 @@ ExConvertExclusiveToSharedLite(PERESOURCE resource)
         Resource->NumberOfSharedWaiters = 0;
 
         /* Release lock and wake the waiters */
-        ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+        ExReleaseResourceLock(Resource, &LockHandle);
         KeReleaseSemaphore(Resource->SharedWaiters, 0, OldWaiters, FALSE);
     }
     else
     {
         /* Release lock */
-        ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+        ExReleaseResourceLock(Resource, &LockHandle);
     }
 }
 
@@ -1329,9 +1400,9 @@ ExConvertExclusiveToSharedLite(PERESOURCE resource)
  *--*/
 NTSTATUS
 NTAPI
-ExDeleteResourceLite(PERESOURCE resource)
+ExDeleteResourceLite(IN PERESOURCE resource)
 {
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE LockHandle;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Sanity checks */
@@ -1341,13 +1412,13 @@ ExDeleteResourceLite(PERESOURCE resource)
     ExpVerifyResource(Resource);
 
     /* Lock the resource */
-    KeAcquireSpinLock(&ExpResourceSpinLock, &OldIrql);
+    KeAcquireInStackQueuedSpinLock(&ExpResourceSpinLock, &LockHandle);
 
     /* Remove the resource */
     RemoveEntryList(&Resource->SystemResourcesList);
 
     /* Release the lock */
-    KeReleaseSpinLock(&ExpResourceSpinLock, OldIrql);
+    KeReleaseInStackQueuedSpinLock(&LockHandle);
 
     /* Free every  structure */
     if (Resource->OwnerTable) ExFreePool(Resource->OwnerTable);
@@ -1375,22 +1446,22 @@ ExDeleteResourceLite(PERESOURCE resource)
  *--*/
 VOID
 NTAPI
-ExDisableResourceBoostLite(PERESOURCE resource)
+ExDisableResourceBoostLite(IN PERESOURCE resource)
 {
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE LockHandle;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Sanity check */
     ExpVerifyResource(Resource);
 
     /* Lock the resource */
-    ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
+    ExAcquireResourceLock(Resource, &LockHandle);
 
     /* Remove the flag */
     Resource->Flag |= ResourceHasDisabledPriorityBoost;
 
     /* Release the lock */
-    ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+    ExReleaseResourceLock(Resource, &LockHandle);
 }
 
 /*++
@@ -1410,7 +1481,7 @@ ExDisableResourceBoostLite(PERESOURCE resource)
  *--*/
 ULONG
 NTAPI
-ExGetExclusiveWaiterCount(PERESOURCE resource)
+ExGetExclusiveWaiterCount(IN PERESOURCE resource)
 {
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
@@ -1435,7 +1506,7 @@ ExGetExclusiveWaiterCount(PERESOURCE resource)
  *--*/
 ULONG
 NTAPI
-ExGetSharedWaiterCount(PERESOURCE resource)
+ExGetSharedWaiterCount(IN PERESOURCE resource)
 {
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
@@ -1461,9 +1532,10 @@ ExGetSharedWaiterCount(PERESOURCE resource)
  *--*/
 NTSTATUS
 NTAPI
-ExInitializeResourceLite(PERESOURCE resource)
+ExInitializeResourceLite(IN PERESOURCE resource)
 {
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
+    KLOCK_QUEUE_HANDLE LockHandle;
 
     /* Clear the structure */
     RtlZeroMemory(Resource, sizeof(ERESOURCE_XP));
@@ -1472,9 +1544,9 @@ ExInitializeResourceLite(PERESOURCE resource)
     KeInitializeSpinLock(&Resource->SpinLock);
 
     /* Add it into the system list */
-    ExInterlockedInsertTailList(&ExpSystemResourcesList,
-                                &Resource->SystemResourcesList,
-                                &ExpResourceSpinLock);
+    KeAcquireInStackQueuedSpinLock(&ExpResourceSpinLock, &LockHandle);
+    InsertTailList(&ExpSystemResourcesList, &Resource->SystemResourcesList);
+    KeReleaseInStackQueuedSpinLock(&LockHandle);
 
     /* Return success */
     return STATUS_SUCCESS;
@@ -1498,7 +1570,7 @@ ExInitializeResourceLite(PERESOURCE resource)
  *--*/
 BOOLEAN
 NTAPI
-ExIsResourceAcquiredExclusiveLite(PERESOURCE resource)
+ExIsResourceAcquiredExclusiveLite(IN PERESOURCE resource)
 {
     ERESOURCE_THREAD Thread = ExGetCurrentResourceThread();
     BOOLEAN IsAcquired = FALSE;
@@ -1544,12 +1616,15 @@ ExIsResourceAcquiredSharedLite(IN PERESOURCE resource)
     ERESOURCE_THREAD Thread;
     ULONG i, Size;
     ULONG Count = 0;
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE LockHandle;
     POWNER_ENTRY Owner;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Sanity check */
     ExpVerifyResource(Resource);
+
+    /* Check if nobody owns us */
+    if (!Resource->ActiveCount) return 0;
 
     /* Get the thread */
     Thread = ExGetCurrentResourceThread();
@@ -1560,50 +1635,57 @@ ExIsResourceAcquiredSharedLite(IN PERESOURCE resource)
         /* Found it, return count */
         Count = Resource->OwnerThreads[0].OwnerCount;
     }
-    else if (Resource->OwnerThreads[1].OwnerThread == Thread)
-    {
-        /* Found it on the second list, return count */
-        Count = Resource->OwnerThreads[1].OwnerCount;
-    }
     else
     {
-        /* Not in the list, do a full table look up */
-        Owner = Resource->OwnerTable;
-        if (Owner)
+        /* We can't own an exclusive resource at this point */
+        if (IsOwnedExclusive(Resource)) return 0;
+
+        /* Check if we are in the other thread list */
+        if (Resource->OwnerThreads[1].OwnerThread == Thread)
+        {
+            /* Found it on the second list, return count */
+            Count = Resource->OwnerThreads[1].OwnerCount;
+        }
+        else
         {
             /* Lock the resource */
-            ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
+            ExAcquireResourceLock(Resource, &LockHandle);
 
-            /* Get the resource index */
-            i = ((PKTHREAD)Thread)->ResourceIndex;
-            Size = Owner->TableSize;
-
-            /* Check if the index is valid and check if we don't match */
-            if ((i >= Size) || (Owner[i].OwnerThread != Thread))
+            /* Not in the list, do a full table look up */
+            Owner = Resource->OwnerTable;
+            if (Owner)
             {
-                /* Sh*t! We need to do a full search */
-                for (i = 1; i < Size; i++)
-                {
-                    /* Move to next owner */
-                    Owner++;
+                /* Get the resource index */
+                i = ((PKTHREAD)Thread)->ResourceIndex;
+                Size = Owner->TableSize;
 
-                    /* Try to find a match */
-                    if (Owner->OwnerThread == Thread)
+                /* Check if the index is valid and check if we don't match */
+                if ((i >= Size) || (Owner[i].OwnerThread != Thread))
+                {
+                    /* Sh*t! We need to do a full search */
+                    for (i = 1; i < Size; i++)
                     {
-                        /* Finally! */
-                        Count = Owner->OwnerCount;
-                        break;
+                        /* Move to next owner */
+                        Owner++;
+
+                        /* Try to find a match */
+                        if (Owner->OwnerThread == Thread)
+                        {
+                            /* Finally! */
+                            Count = Owner->OwnerCount;
+                            break;
+                        }
                     }
                 }
-            }
-            else
-            {
-                /* We found the match directlry */
-                Count = Owner[i].OwnerCount;
+                else
+                {
+                    /* We found the match directlry */
+                    Count = Owner[i].OwnerCount;
+                }
             }
 
             /* Release the lock */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
         }
     }
 
@@ -1637,7 +1719,7 @@ ExIsResourceAcquiredSharedLite(IN PERESOURCE resource)
  *--*/
 NTSTATUS
 NTAPI
-ExReinitializeResourceLite(PERESOURCE resource)
+ExReinitializeResourceLite(IN PERESOURCE resource)
 {
     PKEVENT Event;
     PKSEMAPHORE Semaphore;
@@ -1679,9 +1761,6 @@ ExReinitializeResourceLite(PERESOURCE resource)
     Resource->ContentionCount = 0;
     Resource->NumberOfSharedWaiters = 0;
     Resource->NumberOfExclusiveWaiters = 0;
-
-    /* Reset the spinlock */
-    KeInitializeSpinLock(&Resource->SpinLock);
     return STATUS_SUCCESS;
 }
 
@@ -1703,11 +1782,11 @@ ExReinitializeResourceLite(PERESOURCE resource)
  *--*/
 VOID
 FASTCALL
-ExReleaseResourceLite(PERESOURCE resource)
+ExReleaseResourceLite(IN PERESOURCE resource)
 {
     ERESOURCE_THREAD Thread;
     ULONG Count, i;
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE LockHandle;
     POWNER_ENTRY Owner, Limit;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
@@ -1716,19 +1795,18 @@ ExReleaseResourceLite(PERESOURCE resource)
 
     /* Get the thread and lock the resource */
     Thread = ExGetCurrentResourceThread();
-    ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
-    ExpCheckForApcsDisabled(TRUE, Resource, (PETHREAD)Thread);
+    ExAcquireResourceLock(Resource, &LockHandle);
+    ExpCheckForApcsDisabled(LockHandle.OldIrql, Resource, (PKTHREAD)Thread);
 
     /* Check if it's exclusively owned */
     if (IsOwnedExclusive(Resource))
     {
         /* Decrement owner count and check if we're done */
         ASSERT(Resource->OwnerThreads[0].OwnerCount > 0);
-        ASSERT(Resource->ActiveCount == 1);
         if (--Resource->OwnerThreads[0].OwnerCount)
         {
             /* Done, release lock! */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return;
         }
 
@@ -1745,13 +1823,13 @@ ExReleaseResourceLite(PERESOURCE resource)
                 /* Remove the exclusive flag */
                 Resource->Flag &= ~ResourceOwnedExclusive;
 
-                /* Give ownage to another thread */
+                /* Give ownership to another thread */
                 Count = Resource->NumberOfSharedWaiters;
                 Resource->ActiveCount = (SHORT)Count;
                 Resource->NumberOfSharedWaiters = 0;
 
                 /* Release lock and let someone else have it */
-                ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+                ExReleaseResourceLock(Resource, &LockHandle);
                 KeReleaseSemaphore(Resource->SharedWaiters, 0, Count, FALSE);
                 return;
             }
@@ -1764,7 +1842,7 @@ ExReleaseResourceLite(PERESOURCE resource)
                 Resource->NumberOfExclusiveWaiters--;
 
                 /* Release the lock and give it away */
-                ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+                ExReleaseResourceLock(Resource, &LockHandle);
                 KeSetEventBoostPriority(Resource->ExclusiveWaiters,
                                         (PKTHREAD*)
                                         &Resource->OwnerThreads[0].OwnerThread);
@@ -1843,7 +1921,7 @@ ExReleaseResourceLite(PERESOURCE resource)
         if (--Owner->OwnerCount)
         {
             /* Release lock */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return;
         }
 
@@ -1865,7 +1943,7 @@ ExReleaseResourceLite(PERESOURCE resource)
                 Resource->NumberOfExclusiveWaiters--;
 
                 /* Release the lock and give it away */
-                ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+                ExReleaseResourceLock(Resource, &LockHandle);
                 KeSetEventBoostPriority(Resource->ExclusiveWaiters,
                                         (PKTHREAD*)
                                         &Resource->OwnerThreads[0].OwnerThread);
@@ -1875,7 +1953,7 @@ ExReleaseResourceLite(PERESOURCE resource)
     }
 
     /* Release lock */
-    ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+    ExReleaseResourceLock(Resource, &LockHandle);
 }
 
 /*++
@@ -1899,32 +1977,32 @@ ExReleaseResourceLite(PERESOURCE resource)
  *--*/
 VOID
 NTAPI
-ExReleaseResourceForThreadLite(PERESOURCE resource,
-                               ERESOURCE_THREAD Thread)
+ExReleaseResourceForThreadLite(IN PERESOURCE resource,
+                               IN ERESOURCE_THREAD Thread)
 {
     ULONG i;
     ULONG Count;
-    KIRQL OldIrql;
-    POWNER_ENTRY Owner;
+    KLOCK_QUEUE_HANDLE LockHandle;
+    POWNER_ENTRY Owner, Limit;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
     ASSERT(Thread != 0);
 
     /* Get the thread and lock the resource */
-    ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
+    ExAcquireResourceLock(Resource, &LockHandle);
 
-    /* Sanity check */
+    /* Sanity checks */
     ExpVerifyResource(Resource);
+    ExpCheckForApcsDisabled(LockHandle.OldIrql, Resource, (PKTHREAD)Thread);
 
     /* Check if it's exclusively owned */
     if (IsOwnedExclusive(Resource))
     {
         /* Decrement owner count and check if we're done */
         ASSERT(Resource->OwnerThreads[0].OwnerThread == Thread);
-        ASSERT(Resource->OwnerThreads[0].OwnerCount > 0);
         if (--Resource->OwnerThreads[0].OwnerCount)
         {
             /* Done, release lock! */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return;
         }
 
@@ -1947,7 +2025,7 @@ ExReleaseResourceForThreadLite(PERESOURCE resource,
                 Resource->NumberOfSharedWaiters = 0;
 
                 /* Release lock and let someone else have it */
-                ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+                ExReleaseResourceLock(Resource, &LockHandle);
                 KeReleaseSemaphore(Resource->SharedWaiters, 0, Count, FALSE);
                 return;
             }
@@ -1960,7 +2038,7 @@ ExReleaseResourceForThreadLite(PERESOURCE resource,
                 Resource->NumberOfExclusiveWaiters--;
 
                 /* Release the lock and give it away */
-                ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+                ExReleaseResourceLock(Resource, &LockHandle);
                 KeSetEventBoostPriority(Resource->ExclusiveWaiters,
                                         (PKTHREAD*)
                                         &Resource->OwnerThreads[0].OwnerThread);
@@ -2000,10 +2078,22 @@ ExReleaseResourceForThreadLite(PERESOURCE resource,
             if ((i >= Owner->TableSize) || (Owner[i].OwnerThread != Thread))
             {
                 /* Get the last entry */
+                Limit = &Owner[Owner->TableSize];
                 for (;;)
                 {
                     /* Move to the next entry */
                     Owner++;
+
+                    /* Make sure we're not out of bounds */
+                    if (Owner >= Limit)
+                    {
+                        /* Bugcheck, nobody owns us */
+                        KeBugCheckEx(RESOURCE_NOT_OWNED,
+                                     (ULONG_PTR)Resource,
+                                     (ULONG_PTR)Thread,
+                                     (ULONG_PTR)Resource->OwnerTable,
+                                     (ULONG_PTR)3);
+                    }
 
                     /* Check for a match */
                     if (Owner->OwnerThread == Thread) break;
@@ -2024,7 +2114,7 @@ ExReleaseResourceForThreadLite(PERESOURCE resource,
         if (!(--Owner->OwnerCount))
         {
             /* Release lock */
-            ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+            ExReleaseResourceLock(Resource, &LockHandle);
             return;
         }
 
@@ -2039,13 +2129,14 @@ ExReleaseResourceForThreadLite(PERESOURCE resource,
             if (IsExclusiveWaiting(Resource))
             {
                 /* Give exclusive access */
+                Resource->Flag |= ResourceOwnedExclusive;
                 Resource->OwnerThreads[0].OwnerThread = 1;
                 Resource->OwnerThreads[0].OwnerCount = 1;
                 Resource->ActiveCount = 1;
                 Resource->NumberOfExclusiveWaiters--;
 
                 /* Release the lock and give it away */
-                ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+                ExReleaseResourceLock(Resource, &LockHandle);
                 KeSetEventBoostPriority(Resource->ExclusiveWaiters,
                                         (PKTHREAD*)
                                         &Resource->OwnerThreads[0].OwnerThread);
@@ -2055,7 +2146,7 @@ ExReleaseResourceForThreadLite(PERESOURCE resource,
     }
 
     /* Release lock */
-    ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+    ExReleaseResourceLock(Resource, &LockHandle);
 }
 
 /*++
@@ -2093,7 +2184,7 @@ ExSetResourceOwnerPointer(IN PERESOURCE resource,
                           IN PVOID OwnerPointer)
 {
     ERESOURCE_THREAD Thread;
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE LockHandle;
     POWNER_ENTRY Owner, ThisOwner;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
@@ -2107,7 +2198,7 @@ ExSetResourceOwnerPointer(IN PERESOURCE resource,
     ExpVerifyResource(Resource);
 
     /* Lock the resource */
-    ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
+    ExAcquireResourceLock(Resource, &LockHandle);
 
     /* Check if it's exclusive */
     if (IsOwnedExclusive(Resource))
@@ -2121,8 +2212,8 @@ ExSetResourceOwnerPointer(IN PERESOURCE resource,
     {
         /* Set the thread in both entries */
         ThisOwner = ExpFindEntryForThread(Resource,
-                                         (ERESOURCE_THREAD)OwnerPointer,
-                                         0);
+                                          (ERESOURCE_THREAD)OwnerPointer,
+                                          0);
         Owner = ExpFindEntryForThread(Resource, Thread, 0);
         if (!Owner)
         {
@@ -2144,10 +2235,15 @@ ExSetResourceOwnerPointer(IN PERESOURCE resource,
             ASSERT(Resource->ActiveCount >= 2);
             Resource->ActiveCount--;
         }
+        else
+        {
+            /* Update the owner entry instead */
+            Owner->OwnerThread = (ERESOURCE_THREAD)OwnerPointer;
+        }
     }
 
     /* Release the resource */
-    ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+    ExReleaseResourceLock(Resource, &LockHandle);
 }
 
 /*++
@@ -2168,10 +2264,10 @@ ExSetResourceOwnerPointer(IN PERESOURCE resource,
  *--*/
 BOOLEAN
 NTAPI
-ExTryToAcquireResourceExclusiveLite(PERESOURCE resource)
+ExTryToAcquireResourceExclusiveLite(IN PERESOURCE resource)
 {
     ERESOURCE_THREAD Thread;
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE LockHandle;
     BOOLEAN Acquired = FALSE;
     PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
@@ -2186,7 +2282,7 @@ ExTryToAcquireResourceExclusiveLite(PERESOURCE resource)
     ExpVerifyResource(Resource);
 
     /* Acquire the lock */
-    ExAcquireResourceLock(&Resource->SpinLock, &OldIrql);
+    ExAcquireResourceLock(Resource, &LockHandle);
 
     /* Check if there is an owner */
     if (!Resource->ActiveCount)
@@ -2207,7 +2303,7 @@ ExTryToAcquireResourceExclusiveLite(PERESOURCE resource)
     }
 
     /* Release the resource */
-    ExReleaseResourceLock(&Resource->SpinLock, OldIrql);
+    ExReleaseResourceLock(Resource, &LockHandle);
     return Acquired;
 }
 
@@ -2228,7 +2324,7 @@ ExTryToAcquireResourceExclusiveLite(PERESOURCE resource)
  *--*/
 PVOID
 NTAPI
-ExEnterCriticalRegionAndAcquireResourceExclusive(PERESOURCE Resource)
+ExEnterCriticalRegionAndAcquireResourceExclusive(IN PERESOURCE Resource)
 {
     /* Enter critical region */
     KeEnterCriticalRegion();
@@ -2257,7 +2353,7 @@ ExEnterCriticalRegionAndAcquireResourceExclusive(PERESOURCE Resource)
  *--*/
 VOID
 FASTCALL
-ExReleaseResourceAndLeaveCriticalRegion(PERESOURCE Resource)
+ExReleaseResourceAndLeaveCriticalRegion(IN PERESOURCE Resource)
 {
     /* Release the resource */
     ExReleaseResourceLite(Resource);

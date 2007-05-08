@@ -25,6 +25,7 @@ extern CHAR NtBuildLab[];
 extern ULONG CmNtCSDVersion;
 extern ULONG NtGlobalFlag;
 extern ULONG ExpInitializationPhase;
+extern ULONG ExpAltTimeZoneBias;
 
 typedef struct _EXHANDLE
 {
@@ -60,18 +61,6 @@ typedef struct
 } SYSTEM_CALLBACKS;
 
 #define MAX_FAST_REFS           7
-
-/* Note: we only use a spinlock on SMP. On UP, we cli/sti intead */
-#ifndef CONFIG_SMP
-#define ExAcquireResourceLock(l, i) { \
-    (void)i; \
-    _disable(); \
-}
-#define ExReleaseResourceLock(l, i) _enable();
-#else
-#define ExAcquireResourceLock(l, i) KeAcquireSpinLock(l, i);
-#define ExReleaseResourceLock(l, i) KeReleaseSpinLock(l, i);
-#endif
 
 #define ExAcquireRundownProtection                      _ExAcquireRundownProtection
 #define ExReleaseRundownProtection                      _ExReleaseRundownProtection
@@ -1011,6 +1000,18 @@ ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId);
 VOID
 NTAPI
 ExTimerRundown(VOID);
+
+VOID
+NTAPI
+HeadlessInit(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+XIPInit(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
 
 #define InterlockedDecrementUL(Addend) \
    (ULONG)InterlockedDecrement((PLONG)(Addend))
