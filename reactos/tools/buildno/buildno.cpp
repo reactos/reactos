@@ -65,6 +65,101 @@ int count_wide_string( wchar_t *str )
   return i;
 }
 
+char *
+GetRev(void)
+{
+  static char Unknown[] = "UNKNOWN";
+  static char Revision[10]; /* 999999999 revisions should be enough for everyone... */
+
+  /* SVN 1.4.x */
+  FILE	*fp = NULL;
+  char ch;
+  size_t count = 0, chars = 0;
+  fp = fopen(".svn/entries", "r");
+  if (fp != NULL)
+  {
+    if (fgetc(fp) == 56) /* some kind of header? */
+    {
+      while((ch=fgetc(fp)) != EOF)
+      {
+        if (ch == 10) count++; /* seems to used as a seperator */
+        if (count > 3)
+          break;
+        if ((count == 3) && (chars < sizeof(Revision)))
+        {
+          if (chars != 0)
+            Revision[chars - 1] = ch;
+          chars++;
+        }
+      }
+      fclose(fp);
+      return Revision;
+    }
+  }
+
+  try
+    {
+      XMLElement *head;
+
+      try
+        {
+          head = XMLLoadFile(".svn/entries");
+        }
+      catch(XMLFileNotFoundException)
+        {
+          head = XMLLoadFile("_svn/entries");
+        }
+      XMLElement *entries = head->subElements[0];
+      for (size_t i = 0; i < entries->subElements.size(); i++)
+      {
+          XMLElement *entry = entries->subElements[i];
+          if ("entry" == entry->name)
+            {
+              bool GotName = false;
+              bool GotKind = false;
+              bool GotRevision = false;
+              for (size_t j = 0; j < entry->attributes.size(); j++)
+                {
+                  XMLAttribute *Attribute = entry->attributes[j];
+                  if ("name" == Attribute->name && "" == Attribute->value)
+                    {
+                      GotName = true;
+                    }
+                  if ("kind" == Attribute->name && "dir" == Attribute->value)
+                    {
+                      GotKind = true;
+                    }
+                  if ("revision" == Attribute->name)
+                    {
+                      if (sizeof(Revision) <= Attribute->value.length() + 1)
+                        {
+                          strcpy(Revision, "revtoobig");
+                        }
+                      else
+                        {
+                          strcpy(Revision, Attribute->value.c_str());
+                        }
+                      GotRevision = true;
+                    }
+                  if (GotName && GotKind && GotRevision)
+                    {
+                      delete head;
+                      return Revision;
+                    }
+                }
+            }
+        }
+
+      delete head;
+    }
+  catch(...)
+    {
+      ;
+    }
+
+  return Unknown;
+}
+
 void
 write_h (int build, char *buildstr)
 {
@@ -82,6 +177,7 @@ write_h (int build, char *buildstr)
   s = s + sprintf (s, "#define _INC_REACTOS_BUILDNO\n" );
   
   s = s + sprintf (s, "#define KERNEL_VERSION_BUILD\t%d\n", build);
+  s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_HEX\t0x%x\n", atoi(GetRev()));
   s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_STR\t\"%s\"\n", buildstr);
   s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_RC\t\"%s\\0\"\n", buildstr);
   s = s + sprintf (s, "#define KERNEL_RELEASE_RC\t\"%d.%d",
@@ -182,102 +278,6 @@ write_h (int build, char *buildstr)
   fwrite(s1, 1, strlen(s1), h);
   fclose (h);
 }
-
-char *
-GetRev(void)
-{
-  static char Unknown[] = "UNKNOWN";
-  static char Revision[10]; /* 999999999 revisions should be enough for everyone... */
-
-  /* SVN 1.4.x */
-  FILE	*fp = NULL;
-  char ch;
-  size_t count = 0, chars = 0;
-  fp = fopen(".svn/entries", "r");
-  if (fp != NULL)
-  {
-    if (fgetc(fp) == 56) /* some kind of header? */
-    {
-      while((ch=fgetc(fp)) != EOF)
-      {
-        if (ch == 10) count++; /* seems to used as a seperator */
-        if (count > 3)
-          break;
-        if ((count == 3) && (chars < sizeof(Revision)))
-        {
-          if (chars != 0)
-            Revision[chars - 1] = ch;
-          chars++;
-        }
-      }
-      fclose(fp);
-      return Revision;
-    }
-  }
-
-  try
-    {
-      XMLElement *head;
-
-      try
-        {
-          head = XMLLoadFile(".svn/entries");
-        }
-      catch(XMLFileNotFoundException)
-        {
-          head = XMLLoadFile("_svn/entries");
-        }
-      XMLElement *entries = head->subElements[0];
-      for (size_t i = 0; i < entries->subElements.size(); i++)
-      {
-          XMLElement *entry = entries->subElements[i];
-          if ("entry" == entry->name)
-            {
-              bool GotName = false;
-              bool GotKind = false;
-              bool GotRevision = false;
-              for (size_t j = 0; j < entry->attributes.size(); j++)
-                {
-                  XMLAttribute *Attribute = entry->attributes[j];
-                  if ("name" == Attribute->name && "" == Attribute->value)
-                    {
-                      GotName = true;
-                    }
-                  if ("kind" == Attribute->name && "dir" == Attribute->value)
-                    {
-                      GotKind = true;
-                    }
-                  if ("revision" == Attribute->name)
-                    {
-                      if (sizeof(Revision) <= Attribute->value.length() + 1)
-                        {
-                          strcpy(Revision, "revtoobig");
-                        }
-                      else
-                        {
-                          strcpy(Revision, Attribute->value.c_str());
-                        }
-                      GotRevision = true;
-                    }
-                  if (GotName && GotKind && GotRevision)
-                    {
-                      delete head;
-                      return Revision;
-                    }
-                }
-            }
-        }
-
-      delete head;
-    }
-  catch(...)
-    {
-      ;
-    }
-
-  return Unknown;
-}
-
 
 void
 usage (void)
