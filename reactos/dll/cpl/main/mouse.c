@@ -424,6 +424,42 @@ ButtonProc(IN HWND hwndDlg,
 }
 
 
+static VOID
+CompressPath(LPTSTR lpShortPath, LPTSTR lpPath)
+{
+    TCHAR szUserProfile[MAX_PATH];
+    TCHAR szSystemRoot[MAX_PATH];
+    TCHAR szProgramFiles[MAX_PATH];
+    DWORD dwUserProfile;
+    DWORD dwSystemRoot;
+    DWORD dwProgramFiles;
+
+    dwUserProfile = GetEnvironmentVariable(_T("USERPROFILE"), szUserProfile, MAX_PATH);
+    dwSystemRoot = GetEnvironmentVariable(_T("SystemRoot"), szSystemRoot, MAX_PATH);
+    dwProgramFiles = GetEnvironmentVariable(_T("ProgramFiles"), szProgramFiles, MAX_PATH);
+
+    if (dwUserProfile > 0 && _tcsncmp(lpPath, szUserProfile, dwUserProfile) == 0)
+    {
+        _tcscpy(lpShortPath, _T("%USERPROFILE%"));
+        _tcscat(lpShortPath, &lpPath[dwUserProfile]);
+    }
+    else if (dwSystemRoot > 0 && _tcsncmp(lpPath, szSystemRoot, dwSystemRoot) == 0)
+    {
+        _tcscpy(lpShortPath, _T("%SystemRoot%"));
+        _tcscat(lpShortPath, &lpPath[dwSystemRoot]);
+    }
+    else if (dwProgramFiles > 0 && _tcsncmp(lpPath, szProgramFiles, dwProgramFiles) == 0)
+    {
+        _tcscpy(lpShortPath, _T("%ProgramFiles%"));
+        _tcscat(lpShortPath, &lpPath[dwProgramFiles]);
+    }
+    else
+    {
+        _tcscpy(lpShortPath, lpPath);
+    }
+}
+
+
 static BOOL
 EnumerateCursorSchemes(HWND hwndDlg)
 {
@@ -433,6 +469,7 @@ EnumerateCursorSchemes(HWND hwndDlg)
     DWORD dwValueName;
     TCHAR szSystemScheme[MAX_PATH];
     TCHAR szValueData[2000];
+    TCHAR szTempData[2000];
     DWORD dwValueData;
     LONG lError;
     HWND hDlgCtrl;
@@ -455,19 +492,21 @@ EnumerateCursorSchemes(HWND hwndDlg)
             if (lError == ERROR_NO_MORE_ITEMS)
                 break;
 
-            if (_tcslen(szValueData) > 0)
+            ExpandEnvironmentStrings(szValueData, szTempData, 2000);
+
+            if (_tcslen(szTempData) > 0)
             {
                 LPTSTR lpCopy, lpStart;
 
                 /* Remove quotation marks */
-                if (szValueData[0] == _T('"'))
+                if (szTempData[0] == _T('"'))
                 {
                     lpStart = szValueData + 1;
-                    szValueData[_tcslen(szValueData) - 1] = 0;
+                    szTempData[_tcslen(szTempData) - 1] = 0;
                 }
                 else
                 {
-                    lpStart = szValueData;
+                    lpStart = szTempData;
                 }
 
                 lpCopy = _tcsdup(lpStart);
@@ -661,6 +700,7 @@ SaveCursorScheme(HWND hwndDlg)
     TCHAR szSystemScheme[MAX_PATH];
     TCHAR szSchemeName[MAX_PATH];
     TCHAR szNewSchemeName[MAX_PATH];
+    TCHAR szTempPath[MAX_PATH];
     TCHAR szTitle[128];
     TCHAR szText[256];
     INT nSel;
@@ -739,9 +779,10 @@ SaveCursorScheme(HWND hwndDlg)
 
     for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
     {
+        CompressPath(szTempPath, g_CursorData[i].szCursorPath);
         if (i > 0)
             _tcscat(lpSchemeData, _T(","));
-        _tcscat(lpSchemeData, g_CursorData[i].szCursorPath);
+        _tcscat(lpSchemeData, szTempPath);
     }
 
     if (RegOpenCurrentUser(KEY_READ | KEY_SET_VALUE, &hCuKey) != ERROR_SUCCESS)
@@ -753,8 +794,9 @@ SaveCursorScheme(HWND hwndDlg)
         return FALSE;
     }
 
-    lError = RegSetValueEx(hCuCursorKey, szNewSchemeName, 0, REG_EXPAND_SZ,
-                           (LPBYTE)lpSchemeData, nLength * sizeof(TCHAR));
+    lError = RegSetValueEx(hCuCursorKey, szNewSchemeName, 0,
+                           REG_EXPAND_SZ, (LPBYTE)lpSchemeData,
+                           (_tcslen(lpSchemeData) + 1) * sizeof(TCHAR));
 
     RegCloseKey(hCuCursorKey);
     RegCloseKey(hCuKey);
@@ -1080,6 +1122,7 @@ ApplyCursorScheme(HWND hwndDlg)
 {
     TCHAR szSchemeName[MAX_PATH];
     TCHAR szSystemScheme[MAX_PATH];
+    TCHAR szTempPath[MAX_PATH];
     LPTSTR lpSchemeData;
     DWORD dwNameLength;
     DWORD dwSchemeSource;
@@ -1131,9 +1174,10 @@ ApplyCursorScheme(HWND hwndDlg)
 
     for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
     {
+        CompressPath(szTempPath, g_CursorData[i].szCursorPath);
         RegSetValueEx(hCursorKey, g_CursorData[i].lpValueName, 0,
-                      REG_EXPAND_SZ, (LPBYTE)g_CursorData[i].szCursorPath,
-                      (_tcslen(g_CursorData[i].szCursorPath) + 1) * sizeof(TCHAR));
+                      REG_EXPAND_SZ, (LPBYTE)szTempPath,
+                      (_tcslen(szTempPath) + 1) * sizeof(TCHAR));
     }
 
     RegCloseKey(hCursorKey);
