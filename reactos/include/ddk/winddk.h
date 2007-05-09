@@ -228,6 +228,8 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define DPFLTR_INFO_LEVEL                   3
 #define DPFLTR_MASK                         0x80000000
 
+#define DPFLTR_PREFETCHER_ID                63
+
 #define MAXIMUM_PROCESSORS                32
 
 #define MAXIMUM_WAIT_OBJECTS              64
