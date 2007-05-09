@@ -31,6 +31,71 @@ ULONG_PTR KiBugCheckData[5];
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+PVOID
+NTAPI
+KiPcToFileHeader(IN PVOID Eip,
+                 OUT PLDR_DATA_TABLE_ENTRY *LdrEntry,
+                 IN BOOLEAN DriversOnly,
+                 OUT PBOOLEAN InKernel)
+{
+    ULONG i = 0;
+    PVOID ImageBase, EipBase = NULL;
+    PLDR_DATA_TABLE_ENTRY Entry;
+    PLIST_ENTRY ListHead, NextEntry;
+
+    /* Check which list we should use */
+    ListHead = (KeLoaderBlock) ? &KeLoaderBlock->LoadOrderListHead :
+                                 &PsLoadedModuleList;
+
+    /* Assume no */
+    *InKernel = FALSE;
+
+    /* Set list pointers and make sure it's valid */
+    NextEntry = ListHead->Flink;
+    if (NextEntry)
+    {
+        /* Start loop */
+        while (NextEntry != ListHead)
+        {
+            /* Increase entry */
+            i++;
+
+            /* Check if this is a kernel entry and we only want drivers */
+            if ((i <= 2) && (DriversOnly == TRUE))
+            {
+                /* Skip it */
+                NextEntry = NextEntry->Flink;
+                continue;
+            }
+
+            /* Get the loader entry */
+            Entry = CONTAINING_RECORD(NextEntry,
+                                      LDR_DATA_TABLE_ENTRY,
+                                      InLoadOrderLinks);
+
+            /* Move to the next entry */
+            NextEntry = NextEntry->Flink;
+            ImageBase = Entry->DllBase;
+
+            /* Check if this is the right one */
+            if (((ULONG_PTR)Eip >= (ULONG_PTR)Entry->DllBase) &&
+                ((ULONG_PTR)Eip < ((ULONG_PTR)Entry->DllBase + Entry->SizeOfImage)))
+            {
+                /* Return this entry */
+                *LdrEntry = Entry;
+                EipBase = ImageBase;
+
+                /* Check if this was a kernel or HAL entry */
+                if (i <= 2) *InKernel = TRUE;
+                break;
+            }
+        }
+    }
+
+    /* Return the base address */
+    return EipBase;
+}
+
 BOOLEAN
 NTAPI
 KiRosPrintAddress(PVOID address)
@@ -74,6 +139,8 @@ KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
 {
     ULONG Frames[32];
     ULONG i, Addr;
+    BOOLEAN InSystem;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
 
     /* If the caller didn't ask, assume 32 frames */
     if (!FrameCount) FrameCount = 32;
@@ -98,8 +165,13 @@ KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
             continue;
         }
 
-        /* Print it out */
-        KiRosPrintAddress((PVOID)Addr);
+        /* Get the base for this file */
+        if (KiPcToFileHeader((PVOID)Addr, &LdrEntry, FALSE, &InSystem))
+        {
+            /* Print out the module name */
+            Addr -= (ULONG_PTR)LdrEntry->DllBase;
+            DbgPrint("<%wZ: %x>", &LdrEntry->FullDllName, Addr);
+        }
 
         /* Go to the next frame */
         DbgPrint("\n");
@@ -275,69 +347,6 @@ KiBugCheckDebugBreak(IN ULONG StatusCode)
     /* If KDBG isn't connected, freeze the CPU, otherwise, break */
     if (KdDebuggerNotPresent) for (;;) Ke386HaltProcessor();
     DbgBreakPointWithStatus(StatusCode);
-}
-
-PVOID
-NTAPI
-KiPcToFileHeader(IN PVOID Eip,
-                 OUT PLDR_DATA_TABLE_ENTRY *LdrEntry,
-                 IN BOOLEAN DriversOnly,
-                 OUT PBOOLEAN InKernel)
-{
-    ULONG i = 0;
-    PVOID ImageBase, EipBase = NULL;
-    PLDR_DATA_TABLE_ENTRY Entry;
-    PLIST_ENTRY ListHead, NextEntry;
-    extern LIST_ENTRY PsLoadedModuleList;
-
-    /* Assume no */
-    *InKernel = FALSE;
-
-    /* Set list pointers and make sure it's valid */
-    ListHead = &PsLoadedModuleList;
-    NextEntry = ListHead->Flink;
-    if (NextEntry)
-    {
-        /* Start loop */
-        while (NextEntry != ListHead)
-        {
-            /* Increase entry */
-            i++;
-
-            /* Check if this is a kernel entry and we only want drivers */
-            if ((i <= 2) && (DriversOnly == TRUE))
-            {
-                /* Skip it */
-                NextEntry = NextEntry->Flink;
-                continue;
-            }
-
-            /* Get the loader entry */
-            Entry = CONTAINING_RECORD(NextEntry,
-                                      LDR_DATA_TABLE_ENTRY,
-                                      InLoadOrderLinks);
-
-            /* Move to the next entry */
-            NextEntry = NextEntry->Flink;
-            ImageBase = Entry->DllBase;
-
-            /* Check if this is the right one */
-            if (((ULONG_PTR)Eip >= (ULONG_PTR)Entry->DllBase) &&
-                ((ULONG_PTR)Eip < ((ULONG_PTR)Entry->DllBase + Entry->SizeOfImage)))
-            {
-                /* Return this entry */
-                *LdrEntry = Entry;
-                EipBase = ImageBase;
-
-                /* Check if this was a kernel or HAL entry */
-                if (i <= 2) *InKernel = TRUE;
-                break;
-            }
-        }
-    }
-
-    /* Return the base address */
-    return EipBase;
 }
 
 PCHAR
