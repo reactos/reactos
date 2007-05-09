@@ -14,7 +14,26 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+PFSN_PREFETCHER_GLOBALS CcPfGlobals;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+CcPfInitializePrefetcher(VOID)
+{
+    /* Notify debugger */
+    DbgPrintEx(DPFLTR_PREFETCHER_ID,
+               DPFLTR_TRACE_LEVEL,
+               "CCPF: InitializePrefetecher()\n");
+
+    /* Setup the Prefetcher Data */
+    InitializeListHead(&CcPfGlobals.ActiveTraces);
+    InitializeListHead(&CcPfGlobals.CompletedTraces);
+    ExInitializeFastMutex(&CcPfGlobals.CompletedTracesLock);
+
+    /* FIXME: Setup the rest of the prefetecher */
+}
 
 BOOLEAN
 NTAPI

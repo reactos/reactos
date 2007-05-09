@@ -11,6 +11,29 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
+PKWIN32_POWEREVENT_CALLOUT PopEventCallout;
+extern PCALLBACK_OBJECT SetSystemTimeCallback;
+
+VOID
+NTAPI
+PoNotifySystemTimeSet(VOID)
+{
+    KIRQL OldIrql;
+
+    /* Check if Win32k registered a notification callback */
+    if (PopEventCallout)
+    {
+        /* Raise to dispatch */
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+        /* Notify the callback */
+        ExNotifyCallback(SetSystemTimeCallback, NULL, NULL);
+
+        /* Lower IRQL back */
+        KeLowerIrql(OldIrql);
+    }
+}
+
 NTSTATUS
 NTAPI
 PopAddRemoveSysCapsCallback(

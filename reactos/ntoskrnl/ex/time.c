@@ -21,6 +21,7 @@
 TIME_ZONE_INFORMATION ExpTimeZoneInfo;
 ULONG ExpLastTimeZoneBias = -1;
 LARGE_INTEGER ExpTimeZoneBias;
+ULONG ExpAltTimeZoneBias;
 ULONG ExpTimeZoneId;
 ULONG ExpTickCountMultiplier;
 ERESOURCE ExpTimeRefreshLock;

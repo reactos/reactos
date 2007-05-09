@@ -124,6 +124,7 @@
             <file>fmutex.c</file>
             <file>handle.c</file>
             <file>harderr.c</file>
+            <file>hdlsterm.c</file>
             <file>init.c</file>
             <file>keyedevt.c</file>
             <file>locale.c</file>
@@ -141,6 +142,7 @@
             <file>uuid.c</file>
             <file>win32k.c</file>
             <file>work.c</file>
+            <file>xipdisp.c</file>
             <file>zone.c</file>
     </directory>
     <directory name="fsrtl">

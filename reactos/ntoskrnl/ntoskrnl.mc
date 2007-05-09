@@ -1130,6 +1130,38 @@ The BIOS in this system is not fully ACPI compliant.  Please contact your
 system vendor for an updated BIOS.
 .
 
+MessageId=0xA8
+Severity=Informational
+Facility=System
+SymbolicName=BOOTING_IN_SAFEMODE_MINIMAL
+Language=English
+The system is booting in safemode - Minimal Services
+.
+
+MessageId=0xA9
+Severity=Informational
+Facility=System
+SymbolicName=BOOTING_IN_SAFEMODE_NETWORK
+Language=English
+The system is booting in safemode - Minimal Services with Network
+.
+
+MessageId=0xAA
+Severity=Informational
+Facility=System
+SymbolicName=BOOTING_IN_SAFEMODE_DSREPAIR
+Language=English
+The system is booting in safemode - Directory Services Repair
+.
+
+MessageId=0xB7
+Severity=Informational
+Facility=System
+SymbolicName=BOOTLOG_ENABLED
+Language=English
+Boot Logging Enabled
+.
+
 MessageId=0xBE
 Severity=Success
 Facility=System
@@ -1337,7 +1369,7 @@ Severity=Informational
 Facility=System
 SymbolicName=WINDOWS_NT_MP_STRING
 Language=English
-MulitProcessor Kernel
+MultiProcessor Kernel
 .
 
 MessageId=0x9D

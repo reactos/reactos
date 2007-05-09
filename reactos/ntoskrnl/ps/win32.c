@@ -20,6 +20,7 @@ PKWIN32_THREAD_CALLOUT PspW32ThreadCallout = NULL;
 extern PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete;
+extern PKWIN32_POWEREVENT_CALLOUT PopEventCallout;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -112,6 +113,7 @@ PsEstablishWin32Callouts(IN PWIN32_CALLOUTS_FPNS CalloutData)
     ExpWindowStationObjectParse = CalloutData->WindowStationParseProcedure;
     ExpWindowStationObjectDelete = CalloutData->WindowStationDeleteProcedure;
     ExpDesktopObjectDelete = CalloutData->DesktopDeleteProcedure;
+    PopEventCallout = CalloutData->PowerEventCallout;
 }
 
 NTSTATUS

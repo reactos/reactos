@@ -1,0 +1,77 @@
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/ex/xipdisp.c
+ * PURPOSE:         eXecute In Place (XIP) Support.
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ */
+
+/* INCLUDES ******************************************************************/
+
+#include <ntoskrnl.h>
+#include <debug.h>
+
+/* GLOBALS *******************************************************************/
+
+/* FUNCTIONS *****************************************************************/
+
+PMEMORY_ALLOCATION_DESCRIPTOR
+NTAPI
+XIPpFindMemoryDescriptor(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PLIST_ENTRY NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR Descriptor = NULL;
+
+    /* Loop the memory descriptors */
+    for (NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+         NextEntry != &LoaderBlock->MemoryDescriptorListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        /* Get the current descriptor and check if it's the XIP ROM */
+        Descriptor = CONTAINING_RECORD(NextEntry,
+                                       MEMORY_ALLOCATION_DESCRIPTOR,
+                                       ListEntry);
+        if (Descriptor->MemoryType == LoaderXIPRom) return Descriptor;
+    }
+
+    /* Nothing found if we got here */
+    return NULL;
+}
+
+VOID
+NTAPI
+XIPInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PCHAR CommandLine, XipBoot, XipRom, XipMegs, XipVerbose;
+    PMEMORY_ALLOCATION_DESCRIPTOR XipDescriptor;
+
+    /* Get the command line */
+    CommandLine = LoaderBlock->LoadOptions;
+    if (!CommandLine) return;
+
+    /* Get XIP settings */
+    XipBoot = strstr(CommandLine, "XIPBOOT");
+    XipRom = strstr(CommandLine, "XIPROM=");
+    XipMegs = strstr(CommandLine, "XIPMEGS=");
+    XipVerbose = strstr(CommandLine, "XIPVERBOSE");
+
+    /* Check if this is a verbose boot */
+    if (XipVerbose)
+    {
+        /* Print out our header */
+        DbgPrint("\n\nXIP: debug timestamp at line %d in %s:   <<<%s %s>>>\n\n",
+                 __LINE__,
+                 __FILE__,
+                 __DATE__,
+                 __TIME__);
+    }
+
+    /* Find the XIP memory descriptor */
+    XipDescriptor = XIPpFindMemoryDescriptor(LoaderBlock);
+    if (!XipDescriptor) return;
+
+    /* FIXME: TODO */
+    DPRINT1("ReactOS does not yet support eXecute In Place boot technology\n");
+}
+
+/* EOF */
