@@ -97,13 +97,22 @@ StartCustomService(
 
 	hSCManager = OpenSCManager(NULL, NULL, 0);
 	if (!hSCManager)
+	{
+		ERR("WL: Failed to OpenSCManager\n");
 		goto cleanup;
+	}
 
 	hService = OpenServiceW(hSCManager, ServiceName, SERVICE_START);
 	if (!hService)
+	{
+		ERR("WL: Failed to open the service\n");
 		goto cleanup;
+	}
 	if (!StartServiceW(hService, 0, NULL))
+	{
+		ERR("WL: Failed to start the service\n");
 		goto cleanup;
+	}
 
 	ret = TRUE;
 
