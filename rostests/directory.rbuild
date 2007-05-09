@@ -1,3 +1,6 @@
+<directory name="drivers">
+	<xi:include href="drivers/directory.rbuild" />
+</directory>
 <directory name="dxtest">
 	<xi:include href="dxtest/directory.rbuild" />
 </directory>
