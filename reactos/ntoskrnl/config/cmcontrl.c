@@ -112,6 +112,9 @@ CmGetSystemControlValues(IN PVOID SystemHiveData,
     BOOLEAN Auto, IsSmallKey;
     PVOID Buffer;
 
+    /* LUDDDIIIICRROOOUUSSSS KI^H^H HACKKKK */
+    if (!SystemHiveData) return;
+
     /* Initialize the Hive View List and the security cache */
     RtlZeroMemory(SystemHive, sizeof(SystemHive));
     CmpInitHiveViewList((PCMHIVE)SystemHive);
