@@ -10,6 +10,12 @@ RtlQueryAtomListInAtomTable(
     OUT RTL_ATOM *AtomList
 );
 
+VOID
+NTAPI
+RtlInitializeRangeListPackage(
+    VOID
+);
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_NLS_H */
 
 /* EOF */

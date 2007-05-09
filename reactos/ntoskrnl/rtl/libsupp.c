@@ -15,7 +15,29 @@
 
 extern ULONG NtGlobalFlag;
 
+typedef struct _RTL_RANGE_ENTRY
+{
+    LIST_ENTRY Entry;
+    RTL_RANGE Range;
+} RTL_RANGE_ENTRY, *PRTL_RANGE_ENTRY;
+
+PAGED_LOOKASIDE_LIST RtlpRangeListEntryLookasideList;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+RtlInitializeRangeListPackage(VOID)
+{
+    /* Setup the lookaside list for allocations (not used yet) */
+    ExInitializePagedLookasideList(&RtlpRangeListEntryLookasideList,
+                                   NULL,
+                                   NULL,
+                                   POOL_COLD_ALLOCATION,
+                                   sizeof(RTL_RANGE_ENTRY),
+                                   TAG('R', 'R', 'l', 'e'),
+                                   16);
+}
 
 BOOLEAN
 NTAPI
