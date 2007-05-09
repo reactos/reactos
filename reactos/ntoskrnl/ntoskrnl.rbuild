@@ -83,14 +83,23 @@
             <file>pin.c</file>
             <file>view.c</file>
     </directory>
+    <directory name="config">
+            <file>cmboot.c</file>
+            <file>cmcontrl.c</file>
+            <file>cmdata.c</file>
+            <file>cmindex.c</file>
+            <file>cmmapvw.c</file>
+            <file>cmname.c</file>
+            <file>cmparse.c</file>
+            <file>cmsecach.c</file>
+            <file>cmvalue.c</file>
+    </directory>
     <directory name="cm">
             <file>import.c</file>
             <file>ntfunc.c</file>
             <file>regfile.c</file>
             <file>registry.c</file>
             <file>regobj.c</file>
-            <file>newcm.c</file>
-            <file>cmdata.c</file>
     </directory>
     <directory name="dbgk">
         <file>dbgkutil.c</file>
